@@ -1,0 +1,50 @@
+import pg from 'pg';
+const { Pool } = pg;
+
+// Directly use env vars to prove persistence reality without lib dependencies
+const pool = new Pool({
+    host: process.env.DB_HOST || 'localhost',
+    port: parseInt(process.env.DB_PORT || '5432'),
+    user: process.env.DB_USER || 'symphony_admin',
+    password: process.env.DB_PASSWORD || 'symphony_pass',
+    database: process.env.DB_NAME || 'symphony',
+});
+
+async function runPersistenceProof() {
+    console.log("--- STARTING ROBUST PERSISTENCE PROOF (CRIT-SEC-001) ---");
+    const client = await pool.connect();
+    try {
+        const testId = `audit_proof_${Date.now()}`;
+        const timestamp = new Date().toISOString();
+
+        console.log(`Step 1: Writing evidence directly to audit_log... (Value: ${testId})`);
+        await client.query(
+            `INSERT INTO audit_log (id, actor, action, metadata, created_at) 
+             VALUES ($1, $2, $3, $4, $5)`,
+            [testId, 'ROBUST_PROVER', 'PERSISTENCE_VERIFY', { proof: testId, timestamp }, timestamp]
+        );
+
+        console.log("Step 2: Verification Query...");
+        const result = await client.query(
+            "SELECT metadata->>'proof' as proof FROM audit_log WHERE id = $1",
+            [testId]
+        );
+
+        if (result.rows.length > 0 && result.rows[0].proof === testId) {
+            console.log("✅ SUCCESS: Persistence reality verified. PostgreSQL substrate active.");
+        } else {
+            console.error("❌ FAILURE: Data not recovered.");
+            process.exit(1);
+        }
+    } catch (err) {
+        console.error("CRITICAL PROOF ERROR:", err);
+        process.exit(1);
+    } finally {
+        client.release();
+        await pool.end();
+    }
+    console.log("--- PROOF COMPLETE ---");
+    process.exit(0);
+}
+
+runPersistenceProof();

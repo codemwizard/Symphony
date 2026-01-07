@@ -1,0 +1,21 @@
+{
+    "policyVersion": "1.0.0",
+    "mode": "EMERGENCY_LOCKDOWN",
+    "capabilities": {
+        "service": {
+            "control-plane": [
+                "audit:read",
+                "policy:read",
+                "killswitch:deactivate"
+            ],
+            "executor-worker": [],
+            "ingest-api": [],
+            "read-api": [
+                "audit:read"
+            ]
+        },
+        "client": {
+            "default": []
+        }
+    }
+}

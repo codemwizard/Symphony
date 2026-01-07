@@ -1,0 +1,39 @@
+{
+  "name": "symphony",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "directories": {
+    "doc": "docs"
+  },
+  "scripts": {
+    "test": "node --loader ts-node/esm --test tests/*.test.js",
+    "security-check": "node --loader ts-node/esm scripts/ci/security-gates.ts",
+    "ci:compliance": "node scripts/ci/verify_mtls.js && node scripts/ci/verify_audit_integrity.cjs && node scripts/ci/verify_authorization.cjs && node scripts/ci/verify_identity_context.cjs && node scripts/ci/verify_runtime_bootstrap.cjs",
+    "ci:full": "npm run security-check && npm run test && npm run ci:compliance"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/codemwizard/Symphony.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "module",
+  "bugs": {
+    "url": "https://github.com/codemwizard/Symphony/issues"
+  },
+  "homepage": "https://github.com/codemwizard/Symphony#readme",
+  "dependencies": {
+    "@aws-sdk/client-kms": "^3.962.0",
+    "@types/pg": "^8.16.0",
+    "pg": "^8.16.3",
+    "pino": "^10.1.0",
+    "zod": "^4.3.5"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "ts-node": "^10.9.1",
+    "typescript": "^5.0.0"
+  }
+}

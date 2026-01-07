@@ -1,0 +1,26 @@
+# Dependencies
+node_modules/
+
+# Security & Secrets
+certs/
+.env
+.env.*
+!.env.example
+
+# Development & Tools
+.symphony/
+" .symphony/"
+.agent/
+.vscode/
+.idea/
+
+# Audit & Legacy (Optional, typically archived)
+_Legacy_V1/
+SYMPHONY_SECURITY_AUDIT_v[0-6]*.md
+Catchup.txt
+
+# Logs & Build
+*.log
+dist/
+build/
+.DS_Store

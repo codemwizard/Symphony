@@ -1,0 +1,16 @@
+CREATE TABLE clients (
+  id TEXT PRIMARY KEY DEFAULT generate_ulid(),
+  name TEXT NOT NULL,
+  iso20022_enabled BOOLEAN NOT NULL DEFAULT FALSE,
+  aml_enabled BOOLEAN NOT NULL DEFAULT FALSE,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+CREATE TABLE providers (
+  id TEXT PRIMARY KEY DEFAULT generate_ulid(),
+  name TEXT NOT NULL,
+  provider_type TEXT NOT NULL, -- MMO, BANK, SANDBOX
+  is_active BOOLEAN NOT NULL DEFAULT TRUE,
+  metadata JSONB NOT NULL DEFAULT '{}',
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);

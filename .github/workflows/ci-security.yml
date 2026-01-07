@@ -1,0 +1,69 @@
+name: Symphony Security & CI
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  analyze:
+    name: CodeQL Analysis
+    runs-on: ubuntu-latest
+    permissions:
+      actions: read
+      contents: read
+      security-events: write
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Initialize CodeQL
+      uses: github/codeql-action/init@v3
+      with:
+        languages: javascript-typescript
+
+    - name: Autobuild
+      uses: github/codeql-action/autobuild@v3
+
+    - name: Perform CodeQL Analysis
+      uses: github/codeql-action/analyze@v3
+
+  security-gates:
+    name: Security Invariants & Tests
+    runs-on: ubuntu-latest
+    
+    # Enforce Phase 6 until Phase 7 Ceremony unlocks it
+    env:
+      PHASE: 6
+      
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Use Node.js 20
+      uses: actions/setup-node@v4
+      with:
+        node-version: 20
+        cache: 'npm'
+        
+    - name: Install Dependencies
+      run: npm ci
+      
+    - name: Run Security Gates (Invariant Checks)
+      run: npm run security-check
+      
+    - name: Run Unit Tests
+      run: npm test
+
+    - name: Run Compliance Verification
+      run: npm run ci:compliance
+      
+    - name: Snyk Security Scan
+      uses: snyk/actions/node@master
+      continue-on-error: false # Fail-safe if SNYK_TOKEN is missing
+      env:
+        SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+        
+    - name: Audit Dependencies
+      run: npm audit --audit-level=high || echo "::warning::High severity vulnerabilities found"
