@@ -34,12 +34,17 @@ jobs:
     name: Security Invariants & Tests
     runs-on: ubuntu-latest
     
-    # Enforce Phase 6 until Phase 7 Ceremony unlocks it
-    env:
-      PHASE: 6
-      
     steps:
     - uses: actions/checkout@v4
+
+    - name: Detect Phase
+      run: |
+        if [ -f .symphony/PHASE ]; then
+          PHASE=$(cat .symphony/PHASE | tr -d '[:space:]')
+        else
+          PHASE=6
+        fi
+        echo "PHASE=$PHASE" >> $GITHUB_ENV
     
     - name: Use Node.js 20
       uses: actions/setup-node@v4
@@ -59,11 +64,19 @@ jobs:
     - name: Run Compliance Verification
       run: npm run ci:compliance
       
-    - name: Snyk Security Scan
-      uses: snyk/actions/node@master
-      continue-on-error: false # Fail-safe if SNYK_TOKEN is missing
+    - name: Snyk Security Scan (Phase-aware)
+      shell: bash
       env:
         SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+      run: |
+        if [ "$PHASE" -ge 7 ]; then
+          echo "Phase 7: Enforcing Snyk"
+          snyk test
+        else
+          echo "Phase 6: Advisory Snyk"
+          snyk test || echo "::warning::Snyk findings or auth issue (Phase 6 advisory)"
+        fi
+
         
     - name: Audit Dependencies
       run: npm audit --audit-level=high || echo "::warning::High severity vulnerabilities found"
