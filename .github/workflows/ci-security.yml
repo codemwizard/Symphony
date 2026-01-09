@@ -63,7 +63,13 @@ jobs:
 
     - name: Run Compliance Verification
       run: npm run ci:compliance
-      
+
+    - name: Install Snyk CLI
+      run: npm install -g snyk
+    
+    - name: Verify Snyk Installation
+      run: snyk --version
+
     - name: Snyk Security Scan (Phase-aware)
       shell: bash
       env:
