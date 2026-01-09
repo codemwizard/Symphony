@@ -18,6 +18,9 @@ jobs:
       security-events: write
 
     steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+      
     - name: Enforce Phase Monotonicity
       shell: bash
       run: |
@@ -33,9 +36,6 @@ jobs:
           echo "::error::Phase downgrade detected. Phase is monotonic once >=7."
           exit 1
         fi
-
-    - name: Checkout repository
-      uses: actions/checkout@v4
 
     - name: Initialize CodeQL
       uses: github/codeql-action/init@v3
