@@ -1,0 +1,8 @@
+# === Security governance ===
+.snyk                     @security-team
+.github/workflows/*.yml   @security-team
+.symphony/PHASE           @security-team
+
+# === Application code ===
+src/**                    @backend-team
+libs/**                   @platform-team
