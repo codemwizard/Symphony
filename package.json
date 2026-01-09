@@ -27,6 +27,7 @@
   "dependencies": {
     "@aws-sdk/client-kms": "^3.962.0",
     "@types/pg": "^8.16.0",
+    "lodash": "^4.17.20",
     "pg": "^8.16.3",
     "pino": "^10.1.0",
     "zod": "^4.3.5"
