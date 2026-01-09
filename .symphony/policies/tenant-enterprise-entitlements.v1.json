@@ -1,0 +1,16 @@
+{
+    "policyVersion": "1.0.0",
+    "tenantTier": "ENTERPRISE",
+    "capabilities": {
+        "client": {
+            "default": [
+                "instruction:submit",
+                "instruction:read",
+                "instruction:cancel"
+            ],
+            "ops": [
+                "status:read"
+            ]
+        }
+    }
+}
