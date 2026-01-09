@@ -1,0 +1,24 @@
+---
+trigger: always_on
+---
+
+NEVER Commit to GitHub without creating a Commit Task first asking for approval.
+
+For each Implementation Plan and Task you are asked to create, you should have:
+  - Phase Name
+  - Phase Key
+
+1. Naming convention for the documents is:
+	- [Phase Key]-[current naming convention]_[Phase Name]
+
+2. For GitHub/Jira:
+        - After Implementation Plan and Task has been complete, create commit message for that phase.
+	- git commit message will be the contents of approved final Task.md
+        - message will have header of Phase Name
+ 
+3. Phase Name is to be prepended to name of the following documents:
+	- Walkthrough.md
+	- Task.md
+	- Implementation.md
+	- Any final documents generated during the task. Only final documents are to be stored
+	- Create a directory for each phase where to save the documents. Folder name is the Phase Name

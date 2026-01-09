@@ -1,0 +1,13 @@
+{
+    "policyVersion": "1.0.0",
+    "tenantTier": "STANDARD",
+    "capabilities": {
+        "client": {
+            "default": [
+                "instruction:submit",
+                "instruction:read",
+                "instruction:cancel"
+            ]
+        }
+    }
+}

@@ -1,0 +1,35 @@
+{
+    "policyVersion": "1.0.0",
+    "issuedAt": "2026-01-01T00:00:00Z",
+    "description": "Global baseline policy for Symphony platform",
+    "capabilities": {
+        "service": {
+            "control-plane": [
+                "route:configure",
+                "route:activate",
+                "route:deactivate",
+                "provider:enable",
+                "provider:disable",
+                "provider:health:write",
+                "policy:read",
+                "policy:activate",
+                "killswitch:activate",
+                "killswitch:deactivate"
+            ],
+            "executor-worker": [
+                "execution:attempt",
+                "execution:retry",
+                "execution:abort"
+            ],
+            "ingest-api": [
+                "instruction:submit",
+                "instruction:cancel"
+            ],
+            "read-api": [
+                "audit:read",
+                "status:read",
+                "instruction:read"
+            ]
+        }
+    }
+}

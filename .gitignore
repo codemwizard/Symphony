@@ -8,9 +8,6 @@ certs/
 !.env.example
 
 # Development & Tools
-.symphony/
-" .symphony/"
-.agent/
 .vscode/
 .idea/
 
