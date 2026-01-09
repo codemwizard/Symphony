@@ -2,6 +2,10 @@
 trigger: always_on
 ---
 
+---
+trigger: always_on
+---
+
 NEVER Commit to GitHub without creating a Commit Task first asking for approval.
 
 For each Implementation Plan and Task you are asked to create, you should have:
@@ -22,3 +26,10 @@ For each Implementation Plan and Task you are asked to create, you should have:
 	- Implementation.md
 	- Any final documents generated during the task. Only final documents are to be stored
 	- Create a directory for each phase where to save the documents. Folder name is the Phase Name
+
+4. Every test that runs and fails shout have a detailed description of:
+ - A.I. Model that run the test
+ - Time test was run
+ - What test was run
+ - How and why it failed
+ - How it was fixed

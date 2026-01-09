@@ -1,6 +1,7 @@
 import crypto from "crypto";
 import { logger } from "../logging/logger.js";
-import { KMSClient, GenerateDataKeyCommand } from "@aws-sdk/client-kms";
+// This is a production key manager for the Symphony platform.
+import { KMSClient, GenerateDataKeyCommand, DecryptCommand } from "@aws-sdk/client-kms";
 
 /**
  * SYM-37: Cryptographic Governance Gates
