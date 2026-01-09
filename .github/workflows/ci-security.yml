@@ -1,3 +1,5 @@
+
+
 name: Symphony Security & CI
 
 on:
@@ -16,6 +18,22 @@ jobs:
       security-events: write
 
     steps:
+    - name: Enforce Phase Monotonicity
+      shell: bash
+      run: |
+        git fetch origin main
+    
+        CURRENT_PHASE=$(git show origin/main:.symphony/PHASE 2>/dev/null || echo "6")
+        PROPOSED_PHASE=$(cat .symphony/PHASE 2>/dev/null || echo "6")
+    
+        echo "Current Phase (main): $CURRENT_PHASE"
+        echo "Proposed Phase (branch): $PROPOSED_PHASE"
+    
+        if [ "$CURRENT_PHASE" -ge 7 ] && [ "$PROPOSED_PHASE" -lt "$CURRENT_PHASE" ]; then
+          echo "::error::Phase downgrade detected. Phase is monotonic once >=7."
+          exit 1
+        fi
+
     - name: Checkout repository
       uses: actions/checkout@v4
 
