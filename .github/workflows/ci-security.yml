@@ -33,7 +33,7 @@ jobs:
         echo "Proposed Phase (branch): $PROPOSED_PHASE"
     
         if [ "$CURRENT_PHASE" -ge 7 ] && [ "$PROPOSED_PHASE" -lt "$CURRENT_PHASE" ]; then
-          echo "::error::Phase downgrade detected. Phase is monotonic once >=7."
+          echo "::error::Phase downgrade detected. Phase is monotonic once Phase >=7."
           exit 1
         fi
 
