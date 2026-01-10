@@ -1,8 +1,8 @@
 # === Security governance ===
-.snyk                     @security-team
-.github/workflows/*.yml   @security-team
-.symphony/PHASE           @security-team
+.snyk                     @codemwizard
+.github/workflows/*.yml   @codemwizard
+.symphony/PHASE           @codemwizard
 
 # === Application code ===
-src/**                    @backend-team
-libs/**                   @platform-team
+src/**                    @codemwizard
+libs/**                   @codemwizard
