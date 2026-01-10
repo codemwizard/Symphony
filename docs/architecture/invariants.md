@@ -81,5 +81,10 @@ This document is the "Source of Truth" for all system laws. Violations are treat
   - This is a **Safety Invariant**: Dev environments must match production semantics (containerized Postgres).
   - Dev keys must be process-stable (deterministic) to ensure cross-service consistency.
 
+## 6. Governance Invariants (INV-GOV)
+- **INV-GOV-01: Phase Monotonicity**
+  - Once Phase ≥ 7 has been declared on a protected branch, Phase MUST NOT decrease.
+  - This is a governance invariant, not a test.
+
 ---
 **Enforcement:** Verified via CI/CD gates, PostgreSQL RBAC, and Fail-Closed Runtime Assertions.
