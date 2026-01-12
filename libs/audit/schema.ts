@@ -20,7 +20,25 @@ export type AuditEventType =
     | 'KILLSWITCH_ENGAGE'
     | 'EVIDENCE_EXPORT'
     | 'INCIDENT_SIGNAL'
-    | 'CONTAINMENT_ACTIVATE';
+    | 'CONTAINMENT_ACTIVATE'
+    // Phase 7.1: Participant Identity & Guard Events
+    | 'PARTICIPANT_RESOLVED'
+    | 'PARTICIPANT_RESOLUTION_FAILED'
+    | 'PARTICIPANT_STATUS_DENY'
+    | 'GUARD_IDENTITY_DENY'
+    | 'GUARD_AUTHORIZATION_DENY'
+    | 'GUARD_POLICY_DENY'
+    | 'GUARD_LEDGER_SCOPE_DENY'
+    // Phase 7.2: Execution, Retry & Repair Events
+    | 'EXECUTION_ATTEMPT_CREATED'
+    | 'EXECUTION_ATTEMPT_SENT'
+    | 'EXECUTION_ATTEMPT_RESOLVED'
+    | 'RETRY_EVALUATED'
+    | 'RETRY_ALLOWED'
+    | 'RETRY_BLOCKED'
+    | 'REPAIR_INITIATED'
+    | 'REPAIR_RECONCILIATION_RESULT_RECORDED'
+    | 'REPAIR_COMPLETED';
 
 export interface AuditRecordV1 {
     eventId: string;        // UUID
