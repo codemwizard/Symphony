@@ -1,0 +1,43 @@
+name: Symphony CI – Policy Bound
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  policy-enforced-ci:
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: symphony
+          POSTGRES_PASSWORD: symphony
+          POSTGRES_DB: symphony
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd="pg_isready"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=5
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check policy version
+        run: scripts/ci/check_policy_version.sh
+
+      - name: Apply schema
+        run: scripts/db/migrate.sh
+
+      - name: Kill-switch check
+        run: scripts/ci/kill_switch_check.sh
+
+      - name: Database invariants
+        run: scripts/ci/db_invariants.sh
+
+      - name: Architecture invariants
+        run: scripts/ci/architecture_invariants.sh

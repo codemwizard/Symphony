@@ -11,10 +11,11 @@ export function validate<T>(schema: ZodSchema<T>, data: unknown, context: string
     const result = schema.safeParse(data);
 
     if (!result.success) {
-        const errorDetails = result.error.errors.map(e => ({
+        const errorDetails = result.error.issues.map(e => ({
             path: e.path.join('.'),
             message: e.message
         }));
+
 
         logger.warn({
             context,

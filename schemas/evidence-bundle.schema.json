@@ -1,0 +1,451 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "$id": "https://symphony.dev/schemas/evidence-bundle.schema.json",
+    "title": "Symphony Evidence Bundle",
+    "description": "Regulatory-grade CI evidence bundle for sandbox compliance",
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+        "evidence_bundle_version",
+        "bundle_id",
+        "generated_at",
+        "environment",
+        "phase",
+        "issuer",
+        "immutability",
+        "build_attestation",
+        "source_provenance",
+        "policy_provenance",
+        "ai_usage",
+        "test_evidence",
+        "security_enforcement",
+        "governance",
+        "compliance_mapping",
+        "artifacts"
+    ],
+    "properties": {
+        "evidence_bundle_version": {
+            "type": "string",
+            "const": "1.0"
+        },
+        "bundle_id": {
+            "type": "string",
+            "format": "uuid"
+        },
+        "generated_at": {
+            "type": "string",
+            "format": "date-time"
+        },
+        "environment": {
+            "type": "string",
+            "enum": [
+                "sandbox",
+                "staging",
+                "production"
+            ]
+        },
+        "phase": {
+            "type": "string",
+            "minLength": 1
+        },
+        "issuer": {
+            "type": "string",
+            "minLength": 1
+        },
+        "immutability": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+                "hash_algorithm",
+                "bundle_hash"
+            ],
+            "properties": {
+                "hash_algorithm": {
+                    "type": "string",
+                    "enum": [
+                        "SHA-256",
+                        "SHA-512"
+                    ]
+                },
+                "bundle_hash": {
+                    "type": "string",
+                    "pattern": "^[a-f0-9]{64,128}$"
+                }
+            }
+        },
+        "build_attestation": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+                "ci_provider",
+                "ci_run_id",
+                "ci_conclusion",
+                "workflow_name",
+                "workflow_run_url",
+                "runner_os",
+                "build_status",
+                "build_started_at",
+                "build_finished_at"
+            ],
+            "properties": {
+                "ci_provider": {
+                    "type": "string"
+                },
+                "ci_run_id": {
+                    "type": "string"
+                },
+                "ci_conclusion": {
+                    "type": "string",
+                    "enum": [
+                        "success",
+                        "failure"
+                    ]
+                },
+                "workflow_name": {
+                    "type": "string"
+                },
+                "workflow_run_url": {
+                    "type": "string",
+                    "format": "uri"
+                },
+                "runner_os": {
+                    "type": "string"
+                },
+                "build_status": {
+                    "type": "string",
+                    "enum": [
+                        "success",
+                        "failure"
+                    ]
+                },
+                "build_started_at": {
+                    "type": "string",
+                    "format": "date-time"
+                },
+                "build_finished_at": {
+                    "type": "string",
+                    "format": "date-time"
+                }
+            }
+        },
+        "source_provenance": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+                "repository",
+                "commit_hash",
+                "commit_author",
+                "commit_timestamp",
+                "branch",
+                "signed_commit"
+            ],
+            "properties": {
+                "repository": {
+                    "type": "string"
+                },
+                "commit_hash": {
+                    "type": "string",
+                    "pattern": "^[a-f0-9]{7,40}$"
+                },
+                "commit_author": {
+                    "type": "string"
+                },
+                "commit_timestamp": {
+                    "type": "string",
+                    "format": "date-time"
+                },
+                "branch": {
+                    "type": "string"
+                },
+                "signed_commit": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "policy_provenance": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+                "policy_repository",
+                "policy_commit_hash",
+                "policy_lock_file",
+                "policy_version_verified",
+                "policy_scope"
+            ],
+            "properties": {
+                "policy_repository": {
+                    "type": "string"
+                },
+                "policy_commit_hash": {
+                    "type": "string",
+                    "pattern": "^[a-f0-9]{40}$"
+                },
+                "policy_lock_file": {
+                    "type": "string"
+                },
+                "policy_version_verified": {
+                    "type": "boolean"
+                },
+                "policy_scope": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    },
+                    "minItems": 1
+                }
+            }
+        },
+        "ai_usage": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+                "ai_assisted",
+                "declaration_source",
+                "enforcement_status",
+                "enforcement_active",
+                "policy_reference"
+            ],
+            "properties": {
+                "ai_assisted": {
+                    "type": "string",
+                    "enum": [
+                        "Yes",
+                        "No",
+                        "Undeclared"
+                    ]
+                },
+                "declaration_source": {
+                    "type": "string",
+                    "enum": [
+                        "PR_BODY",
+                        "COMMIT_TRAILER",
+                        "CI_DEFAULT"
+                    ]
+                },
+                "enforcement_status": {
+                    "type": "string",
+                    "enum": [
+                        "pass",
+                        "fail",
+                        "warning"
+                    ]
+                },
+                "enforcement_active": {
+                    "type": "boolean"
+                },
+                "enforcement_reason": {
+                    "type": "string"
+                },
+                "policy_reference": {
+                    "type": "string"
+                }
+            }
+        },
+        "test_evidence": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+                "test_framework",
+                "tests_executed",
+                "tests_passed",
+                "tests_failed",
+                "coverage",
+                "coverage_policy"
+            ],
+            "properties": {
+                "test_framework": {
+                    "type": "string"
+                },
+                "tests_executed": {
+                    "type": "integer",
+                    "minimum": 0
+                },
+                "tests_passed": {
+                    "type": "integer",
+                    "minimum": 0
+                },
+                "tests_failed": {
+                    "type": "integer",
+                    "minimum": 0
+                },
+                "coverage": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                        "lines",
+                        "branches",
+                        "functions",
+                        "statements"
+                    ],
+                    "properties": {
+                        "lines": {
+                            "type": "number",
+                            "minimum": 0,
+                            "maximum": 100
+                        },
+                        "branches": {
+                            "type": "number",
+                            "minimum": 0,
+                            "maximum": 100
+                        },
+                        "functions": {
+                            "type": "number",
+                            "minimum": 0,
+                            "maximum": 100
+                        },
+                        "statements": {
+                            "type": "number",
+                            "minimum": 0,
+                            "maximum": 100
+                        }
+                    }
+                },
+                "coverage_policy": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                        "ai_assisted_threshold",
+                        "non_ai_threshold",
+                        "threshold_met"
+                    ],
+                    "properties": {
+                        "ai_assisted_threshold": {
+                            "type": "number",
+                            "minimum": 0,
+                            "maximum": 100
+                        },
+                        "non_ai_threshold": {
+                            "type": "number",
+                            "minimum": 0,
+                            "maximum": 100
+                        },
+                        "threshold_met": {
+                            "type": "boolean"
+                        }
+                    }
+                }
+            }
+        },
+        "security_enforcement": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+                "typescript_strict",
+                "eslint",
+                "dependency_audit"
+            ],
+            "properties": {
+                "typescript_strict": {
+                    "type": "boolean"
+                },
+                "eslint": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                        "ruleset",
+                        "violations"
+                    ],
+                    "properties": {
+                        "ruleset": {
+                            "type": "string"
+                        },
+                        "violations": {
+                            "type": "integer",
+                            "minimum": 0
+                        }
+                    }
+                },
+                "dependency_audit": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                        "tool",
+                        "critical",
+                        "high",
+                        "status"
+                    ],
+                    "properties": {
+                        "tool": {
+                            "type": "string"
+                        },
+                        "critical": {
+                            "type": "integer",
+                            "minimum": 0
+                        },
+                        "high": {
+                            "type": "integer",
+                            "minimum": 0
+                        },
+                        "status": {
+                            "type": "string",
+                            "enum": [
+                                "pass",
+                                "fail"
+                            ]
+                        }
+                    }
+                }
+            }
+        },
+        "governance": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+                "phase",
+                "phase_file_hash",
+                "controls_active"
+            ],
+            "properties": {
+                "phase": {
+                    "type": "string"
+                },
+                "phase_file_hash": {
+                    "type": "string",
+                    "pattern": "^[a-f0-9]{64}$"
+                },
+                "controls_active": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                }
+            }
+        },
+        "compliance_mapping": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+                "bank_of_zambia",
+                "iso_27001",
+                "nps_act"
+            ],
+            "properties": {
+                "bank_of_zambia": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "iso_27001": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "nps_act": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                }
+            }
+        },
+        "artifacts": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+                "type": "string"
+            }
+        }
+    }
+}

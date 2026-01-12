@@ -91,7 +91,7 @@ describe('Phase 7.1: Runtime Guards', () => {
 
             const result = await executeIdentityGuard(context);
             expect(result.allowed).toBe(false);
-            if (!result.allowed) {
+            if (result.allowed === false) {
                 expect(result.reason).toBe('NO_MTLS_CONTEXT');
             }
         });
@@ -106,7 +106,7 @@ describe('Phase 7.1: Runtime Guards', () => {
 
             const result = await executeIdentityGuard(context);
             expect(result.allowed).toBe(false);
-            if (!result.allowed) {
+            if (result.allowed === false) {
                 expect(result.reason).toBe('NO_PARTICIPANT_RESOLVED');
             }
         });
@@ -121,7 +121,7 @@ describe('Phase 7.1: Runtime Guards', () => {
 
             const result = await executeIdentityGuard(context);
             expect(result.allowed).toBe(false);
-            if (!result.allowed) {
+            if (result.allowed === false) {
                 expect(result.reason).toBe('PARTICIPANT_STATUS_DENY');
             }
         });
@@ -136,7 +136,7 @@ describe('Phase 7.1: Runtime Guards', () => {
 
             const result = await executeIdentityGuard(context);
             expect(result.allowed).toBe(false);
-            if (!result.allowed) {
+            if (result.allowed === false) {
                 expect(result.reason).toBe('PARTICIPANT_STATUS_DENY');
             }
         });
@@ -165,7 +165,7 @@ describe('Phase 7.1: Runtime Guards', () => {
 
             const result = await executeAuthorizationGuard(context);
             expect(result.allowed).toBe(false);
-            if (!result.allowed) {
+            if (result.allowed === false) {
                 expect(result.reason).toBe('SUPERVISOR_CANNOT_EXECUTE');
             }
         });
@@ -180,7 +180,7 @@ describe('Phase 7.1: Runtime Guards', () => {
 
             const result = await executeAuthorizationGuard(context);
             expect(result.allowed).toBe(false);
-            if (!result.allowed) {
+            if (result.allowed === false) {
                 expect(result.reason).toBe('SUPERVISOR_CANNOT_EXECUTE');
             }
         });
@@ -223,7 +223,7 @@ describe('Phase 7.1: Runtime Guards', () => {
 
             const result = await executePolicyGuard(context);
             expect(result.allowed).toBe(false);
-            if (!result.allowed) {
+            if (result.allowed === false) {
                 expect(result.reason).toBe('AMOUNT_EXCEEDS_LIMIT');
             }
         });
@@ -240,7 +240,7 @@ describe('Phase 7.1: Runtime Guards', () => {
 
             const result = await executePolicyGuard(context);
             expect(result.allowed).toBe(false);
-            if (!result.allowed) {
+            if (result.allowed === false) {
                 expect(result.reason).toBe('MESSAGE_TYPE_NOT_ALLOWED');
             }
         });
@@ -273,7 +273,7 @@ describe('Phase 7.1: Runtime Guards', () => {
 
             const result = await executeLedgerGuard(context);
             expect(result.allowed).toBe(false);
-            if (!result.allowed) {
+            if (result.allowed === false) {
                 expect(result.reason).toBe('ACCOUNT_OUT_OF_SCOPE');
             }
         });
@@ -290,7 +290,7 @@ describe('Phase 7.1: Runtime Guards', () => {
 
             const result = await executeLedgerGuard(context);
             expect(result.allowed).toBe(false);
-            if (!result.allowed) {
+            if (result.allowed === false) {
                 expect(result.reason).toBe('ACCOUNT_OUT_OF_SCOPE');
             }
         });
