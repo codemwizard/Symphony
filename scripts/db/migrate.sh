@@ -9,7 +9,7 @@ SCHEMA_DIR="$BASE_DIR/schema/v1"
 
 for file in "$SCHEMA_DIR"/*.sql; do
   echo "Running $file"
-  psql symphony -f "$file"
+  psql "$DATABASE_URL" -f "$file"
 done
 
 echo "Schema applied successfully."
