@@ -6,7 +6,7 @@ POLICY_FILE=".symphony/policies/active-policy.json"
 POLICY_VERSION_FILE=$(jq -r '.policy_version' $POLICY_FILE)
 
 DB_POLICY_VERSION=$(psql "$DATABASE_URL" -t -c \
-  "SELECT version FROM policy_versions WHERE is_active = true;")
+  "SELECT id FROM policy_versions WHERE active = true;")
 
 if [[ "$POLICY_VERSION_FILE" != "$DB_POLICY_VERSION" ]]; then
   echo "❌ Policy version mismatch"
