@@ -1,4 +1,4 @@
-CREATE TABLE policy_versions (
+CREATE TABLE IF NOT EXISTS policy_versions (
   id TEXT PRIMARY KEY,
   description TEXT NOT NULL,
   active BOOLEAN NOT NULL DEFAULT TRUE,
