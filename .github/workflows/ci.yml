@@ -8,6 +8,8 @@ on:
 jobs:
   policy-enforced-ci:
     runs-on: ubuntu-latest
+    env:
+      DATABASE_URL: postgres://symphony:symphony@localhost:5432/symphony
 
     services:
       postgres:
@@ -27,11 +29,11 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Check policy version
-        run: scripts/ci/check_policy_version.sh
-
       - name: Apply schema
         run: scripts/db/migrate.sh
+
+      - name: Check policy version
+        run: scripts/ci/check_policy_version.sh
 
       - name: Kill-switch check
         run: scripts/ci/kill_switch_check.sh
