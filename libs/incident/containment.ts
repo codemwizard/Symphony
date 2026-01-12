@@ -48,8 +48,10 @@ export class IncidentContainment {
                 tenantId: 'symphony',
                 policyVersion: 'v1',
                 roles: ['system'],
-                signature: 'system-signed'
+                signature: 'system-signed',
+                trustTier: 'internal'
             },
+
             decision: 'EXECUTED',
             reason: `Automated response to ${signal.class} [${signal.severity}]: ${action}`
         });

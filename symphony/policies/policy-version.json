@@ -1,4 +1,35 @@
 {
-  "version": "0.1.0",
-  "policies": []
+  "version": "v1.0.0",
+  "description": "Symphony Policy Registry",
+  "lastUpdated": "2026-01-12T10:00:00Z",
+  "policies": [
+    {
+      "id": "global-policy.v1",
+      "name": "Global Baseline Policy",
+      "type": "capability",
+      "path": ".symphony/policies/global-policy.v1.json",
+      "status": "ACTIVE"
+    },
+    {
+      "id": "emergency-lockdown.v1",
+      "name": "Emergency Lockdown Policy",
+      "type": "capability",
+      "path": ".symphony/policies/emergency-lockdown.v1.json",
+      "status": "STANDBY"
+    },
+    {
+      "id": "tenant-standard.v1",
+      "name": "Standard Tenant Entitlements",
+      "type": "entitlement",
+      "path": ".symphony/policies/tenant-standard-entitlements.v1.json",
+      "status": "ACTIVE"
+    },
+    {
+      "id": "tenant-enterprise.v1",
+      "name": "Enterprise Tenant Entitlements",
+      "type": "entitlement",
+      "path": ".symphony/policies/tenant-enterprise-entitlements.v1.json",
+      "status": "ACTIVE"
+    }
+  ]
 }

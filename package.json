@@ -8,9 +8,10 @@
   },
   "scripts": {
     "test": "node --loader ts-node/esm --test tests/*.test.js",
+    "build": "tsc --noEmit",
     "security-check": "node --loader ts-node/esm scripts/ci/security-gates.ts",
     "ci:compliance": "node scripts/ci/verify_mtls.js && node scripts/ci/verify_audit_integrity.cjs && node scripts/ci/verify_authorization.cjs && node scripts/ci/verify_identity_context.cjs && node scripts/ci/verify_runtime_bootstrap.cjs",
-    "ci:full": "npm run security-check && npm run test && npm run ci:compliance"
+    "ci:full": "npm run security-check && npm run build && npm run test && npm run ci:compliance"
   },
   "repository": {
     "type": "git",

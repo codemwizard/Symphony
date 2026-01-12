@@ -1,16 +1,17 @@
-import { bootstrap } from "../../libs/bootstrap/startup.js";
-import { logger, getContextLogger } from "../../libs/logging/logger.js";
-import { ProductionKeyManager, KeyManager } from "../../libs/crypto/keyManager.js";
-import { ConfigGuard, CRYPTO_CONFIG_REQUIREMENTS } from "../../libs/bootstrap/config-guard.js";
-import { ErrorSanitizer } from "../../libs/errors/sanitizer.js";
-import { createValidator } from "../../libs/validation/zod-middleware.js";
-import { IdentityEnvelopeSchema } from "../../libs/validation/schema.js";
-import { db } from "../../libs/db/index.js";
-import { verifyIdentity } from "../../libs/context/verifyIdentity.js";
-import { RequestContext } from "../../libs/context/requestContext.js";
-import { IdentityEnvelopeV1 } from "../../libs/context/identity.js";
-import { requireCapability } from "../../libs/auth/requireCapability.js";
-import { auditLogger } from "../../libs/audit/logger.js";
+import { bootstrap } from "../../../libs/bootstrap/startup.js";
+import { logger, getContextLogger } from "../../../libs/logging/logger.js";
+import { ProductionKeyManager, KeyManager } from "../../../libs/crypto/keyManager.js";
+import { ConfigGuard, CRYPTO_CONFIG_REQUIREMENTS } from "../../../libs/bootstrap/config-guard.js";
+import { ErrorSanitizer } from "../../../libs/errors/sanitizer.js";
+import { createValidator } from "../../../libs/validation/zod-middleware.js";
+import { IdentityEnvelopeSchema } from "../../../libs/validation/schema.js";
+import { db } from "../../../libs/db/index.js";
+import { verifyIdentity } from "../../../libs/context/verifyIdentity.js";
+import { RequestContext } from "../../../libs/context/requestContext.js";
+import { IdentityEnvelopeV1 } from "../../../libs/context/identity.js";
+import { requireCapability } from "../../../libs/auth/requireCapability.js";
+import { auditLogger } from "../../../libs/audit/logger.js";
+
 
 async function main() {
     db.setRole("symphony_control");

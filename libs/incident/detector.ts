@@ -48,8 +48,10 @@ export class IncidentDetector {
                 tenantId: 'symphony',
                 policyVersion: 'v1',
                 roles: ['system'],
-                signature: 'system-signed'
+                signature: 'system-signed',
+                trustTier: 'internal'
             },
+
             decision: 'ALLOW', // Signal emission itself is an allowed act
             reason: `Incident ${signal.class} detected from ${signal.source}`
         });

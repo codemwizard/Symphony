@@ -1,0 +1,30 @@
+Developer CI restrictions
+
+This is the structure you created:
+org-security-policies/
+│
+├── README.md
+│
+├── secure-coding/
+│   ├── Secure_Coding_Policy.md
+│   ├── AI_Secure_Coding_Policy.md
+│
+├── standards/
+│   ├── Logging_Standard.md
+│   ├── Secrets_Management_Standard.md
+│   ├── Database_Transaction_Standard.md
+│
+├── ai-enforcement/
+│   ├── AI_Lint_Rules.md
+│   ├── Allowed_AI_Tools.md
+│
+├── compliance-mapping/
+│   ├── ISO27002_Control_Mapping.md
+│   ├── OWASP_ASVS_Mapping.md
+│
+├── exceptions/
+│   ├── Exception_Template.md
+│
+└── approvals/
+    ├── APPROVAL_LOG.md
+Wire one application repo to consume this policy
