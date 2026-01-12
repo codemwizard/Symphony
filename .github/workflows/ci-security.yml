@@ -172,10 +172,11 @@ jobs:
 
     - name: Validate Evidence Schema
       run: |
-        npx --yes ajv-cli@5.0.0 validate \
+        npx --yes -p ajv-cli@5.0.0 -p ajv-formats ajv validate \
           -s schemas/evidence-bundle.schema.json \
           -d evidence-bundle.json \
-          --strict=true
+          --strict=true \
+          -c ajv-formats
 
     - name: Package Evidence Bundle
       run: .ci/evidence/package_bundle.sh
