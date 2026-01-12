@@ -67,6 +67,8 @@ jobs:
   security-gates:
     name: Security Invariants & Tests
     runs-on: ubuntu-latest
+    env:
+      DATABASE_URL: postgres://symphony:symphony@localhost:5432/symphony
     
     steps:
     - uses: actions/checkout@v4
