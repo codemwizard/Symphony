@@ -1,14 +1,14 @@
 {
   "evidence_bundle_version": "1.0",
-  "bundle_id": "b8e6bdc0-1131-4b30-80ad-a94cb497331d",
-  "generated_at": "2026-01-12T13:38:56Z",
+  "bundle_id": "fe417b3c-248b-4ba7-9197-04ff8276366d",
+  "generated_at": "2026-01-13T00:52:40Z",
   "environment": "sandbox",
   "phase": "7",
   "issuer": "Symphony CI",
 
   "immutability": {
     "hash_algorithm": "SHA-256",
-    "bundle_hash": "57876de0b16abfed5b96f9998f0073a0285340da8b0abd5be2aecbede844e42c"
+    "bundle_hash": "85c9d7dd6e62028dd7fa7ecac8049c6a18ac8dfc2a6a6f35f69d20f9693044cb"
   },
 
   "build_attestation": {
@@ -19,17 +19,18 @@
     "workflow_run_url": "https://github.com/local/repo/actions/runs/0",
     "runner_os": "linux",
     "build_status": "success",
-    "build_started_at": "2026-01-12T13:38:56Z",
-    "build_finished_at": "2026-01-12T13:38:56Z"
+    "build_started_at": "2026-01-13T00:52:40Z",
+    "build_finished_at": "2026-01-13T00:52:40Z"
   },
 
   "source_provenance": {
     "repository": "local/repo",
-    "commit_hash": "d0c55e129c51f9bf50aa61210e67099786a52b0b",
+    "commit_hash": "89d900bf094c6d8ae27c86ef6cba2a427d036e0e",
     "commit_author": "codemwizard",
-    "commit_timestamp": "2026-01-12T05:55:01+02:00",
+    "commit_timestamp": "2026-01-12T19:30:47+02:00",
     "branch": "SYM-33-story-phase-7-governance-policy",
-    "signed_commit": false
+    "signed_commit": false,
+    "signature_policy": "Planned Phase-8 Enforcement"
   },
 
   "policy_provenance": {
@@ -63,7 +64,9 @@
     "coverage_policy": {
       "ai_assisted_threshold": 85,
       "non_ai_threshold": 75,
-      "threshold_met": true
+      "threshold_met": true,
+      "status": "waived",
+      "reason": "Phase-7 infrastructure-only changes"
     }
   },
 
