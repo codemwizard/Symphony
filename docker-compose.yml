@@ -1,7 +1,7 @@
 version: '3.8'
 services:
   db:
-    image: postgres:15-alpine
+    image: postgres:18-alpine
     container_name: symphony-postgres
     restart: always
     healthcheck:
@@ -34,6 +34,24 @@ services:
     networks:
       - symphony-network
     restart: unless-stopped
+
+  symphony-relayer:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: symphony-relayer
+    restart: always
+    environment:
+      DATABASE_URL: postgres://${POSTGRES_USER:-symphony_admin}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB:-symphony}
+      NODE_ENV: production
+      SERVICE_NAME: outbox-relayer
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - symphony-network
+    command: ["node", "-e", "require('./libs/outbox/OutboxRelayer').OutboxRelayer"]
+
 
 networks:
   symphony-network:

@@ -1,5 +1,5 @@
 {
-    "$schema": "http://json-schema.org/draft-07/schema#",
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
     "$id": "https://symphony.dev/schemas/evidence-bundle.schema.json",
     "title": "Symphony Evidence Bundle",
     "description": "Regulatory-grade CI evidence bundle for sandbox compliance",
@@ -159,6 +159,9 @@
                 },
                 "signed_commit": {
                     "type": "boolean"
+                },
+                "signature_policy": {
+                    "type": "string"
                 }
             }
         },
@@ -321,6 +324,16 @@
                         },
                         "threshold_met": {
                             "type": "boolean"
+                        },
+                        "status": {
+                            "type": "string",
+                            "enum": [
+                                "active",
+                                "waived"
+                            ]
+                        },
+                        "reason": {
+                            "type": "string"
                         }
                     }
                 }
@@ -446,6 +459,194 @@
             "items": {
                 "type": "string"
             }
+        },
+        "evidence_export": {
+            "type": "object",
+            "additionalProperties": false,
+            "description": "Phase-7R: Export-Ready surface for future out-of-domain persistence. Absence does not invalidate execution.",
+            "properties": {
+                "enabled": {
+                    "type": "boolean",
+                    "description": "Whether evidence export to out-of-domain storage is active"
+                },
+                "export_target": {
+                    "type": "string",
+                    "enum": [
+                        "out_of_domain",
+                        "s3_worm",
+                        "archive",
+                        "disabled"
+                    ],
+                    "description": "Target for evidence export"
+                },
+                "last_exported_at": {
+                    "type": [
+                        "string",
+                        "null"
+                    ],
+                    "format": "date-time",
+                    "description": "Timestamp of last successful export"
+                },
+                "export_lag_seconds": {
+                    "type": [
+                        "number",
+                        "null"
+                    ],
+                    "description": "Current lag between commit and export in seconds"
+                },
+                "status": {
+                    "type": "string",
+                    "enum": [
+                        "active",
+                        "planned",
+                        "disabled"
+                    ],
+                    "description": "Export pipeline status"
+                }
+            },
+            "required": [
+                "enabled",
+                "status"
+            ]
+        },
+        "attestation_gap": {
+            "type": "object",
+            "additionalProperties": false,
+            "description": "Phase-7R: Zero Attestation Gap metric. Gap > 0 = CI failure.",
+            "properties": {
+                "ingress_count": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "description": "Total ingress attestations in observation window"
+                },
+                "terminal_events": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "description": "Total terminal executions (SUCCESS + FAILED + REPAIRED)"
+                },
+                "gap": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "description": "ingress_count - terminal_events. MUST be 0."
+                },
+                "status": {
+                    "type": "string",
+                    "enum": [
+                        "PASS",
+                        "FAIL"
+                    ],
+                    "description": "PASS if gap == 0, FAIL otherwise"
+                }
+            },
+            "required": [
+                "ingress_count",
+                "terminal_events",
+                "gap",
+                "status"
+            ]
+        },
+        "dlq_metrics": {
+            "type": "object",
+            "additionalProperties": false,
+            "description": "Phase-7R: Dead Letter Queue metrics for outbox failures.",
+            "properties": {
+                "records_entered": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "description": "Total records that entered the outbox"
+                },
+                "records_recovered": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "description": "Records that were retried and succeeded"
+                },
+                "records_terminal": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "description": "Records that reached FAILED status (DLQ)"
+                }
+            },
+            "required": [
+                "records_entered",
+                "records_recovered",
+                "records_terminal"
+            ]
+        },
+        "revocation_bounds": {
+            "type": "object",
+            "additionalProperties": false,
+            "description": "Phase-7R: Certificate revocation SLA bounds.",
+            "properties": {
+                "cert_ttl_hours": {
+                    "type": "number",
+                    "maximum": 24,
+                    "description": "Maximum certificate TTL in hours (target: <= 4)"
+                },
+                "policy_propagation_seconds": {
+                    "type": "number",
+                    "description": "Time for policy changes to propagate across mesh"
+                },
+                "worst_case_revocation_seconds": {
+                    "type": "number",
+                    "description": "cert_ttl_hours * 3600 + policy_propagation_seconds"
+                }
+            },
+            "required": [
+                "cert_ttl_hours",
+                "policy_propagation_seconds"
+            ]
+        },
+        "idempotency_metrics": {
+            "type": "object",
+            "additionalProperties": false,
+            "description": "Phase-7R: Idempotency enforcement metrics.",
+            "properties": {
+                "duplicate_requests": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "description": "Total duplicate requests received"
+                },
+                "duplicates_blocked": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "description": "Duplicates correctly blocked by idempotency guard"
+                },
+                "terminal_reentry_attempts": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "description": "Attempts to modify terminal state (must be 0)"
+                },
+                "zombie_repairs": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "description": "Records auto-repaired after TTL expiry"
+                }
+            },
+            "required": [
+                "duplicate_requests",
+                "duplicates_blocked",
+                "terminal_reentry_attempts"
+            ]
         }
-    }
+    },
+    "allOf": [
+        {
+            "if": {
+                "properties": {
+                    "phase": {
+                        "const": "7R"
+                    }
+                }
+            },
+            "then": {
+                "required": [
+                    "evidence_export",
+                    "attestation_gap",
+                    "dlq_metrics",
+                    "revocation_bounds",
+                    "idempotency_metrics"
+                ]
+            }
+        }
+    ]
 }

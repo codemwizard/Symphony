@@ -1,0 +1,2381 @@
+Yes, the WORM I know is planned for already. But my issue is that if we get into sandbox and haven't addressed the actual client business needs, I might end up being in sandbox with very happy regulators and NO clients at all. I am not going to compromise on regulation standards, but we are building this system right now so there is opportunity to have the features that the clients would want add now.  I want you to look at the below analysis and understand that I DON"T WANT IT RIGHT NOW. But it has to be in the back of our heads as an opportunity to sell it as a future product to banks. Tell me what we can add incrementally so that as soon as we get the go-ahead in sandbox, telling a bank as a client for policy management won't be a stretch.
+We don't need to implement it but know that it has to be planned for:
+
+This gets to the heart of modern financial system architecture. Let me clarify the nuanced but critical distinction.
+
+Yes, There's a Fundamental Philosophical Difference
+They're often conflated, but they solve different problems with different trade-offs.
+
+1. Ledger-Centric, Append-Only Journaling
+Focus: What happened (facts)
+
+sql
+-- Traditional Double-Entry Accounting Model
+INSERT INTO journal_entries (id, timestamp, account_debit, account_credit, amount, description)
+VALUES ('txn_123', '2024-01-15 10:30:00', 'CASH', 'REVENUE', 100.00, 'Sale');
+
+-- Append-only: You can't modify, only correct with new entries
+INSERT INTO journal_entries (id, timestamp, account_debit, account_credit, amount, description)
+VALUES ('txn_124', '2024-01-15 10:31:00', 'REVENUE', 'CASH', 100.00, 'Void previous sale');
+Characteristics:
+
+Fact-based: Records what actually happened
+
+Immutable: Append-only, corrections create new entries
+
+Accounting-oriented: Designed for financial reporting
+
+State is derived: Balance = SUM(debits) - SUM(credits)
+
+Time-ordered: Strict chronological sequence
+
+Your Current WAL Approach is Journaling:
+
+plaintext
+Postgres WAL → Local File → WORM → Snowflake
+    ↓
+Records WHAT happened (database changes)
+    ↓
+State is IN THE DATABASE (derived)
+2. Event Sourcing
+Focus: Why it happened (intent + state)
+
+typescript
+// Event Sourcing: Captures intent and state transitions
+class PaymentEvents {
+  static PaymentInitiated = class {
+    constructor(
+      public paymentId: string,
+      public amount: number,
+      public currency: string,
+      public customerId: string,
+      public intent: 'purchase' | 'refund' | 'subscription',
+      public metadata: { /* Why */ }
+    ) {}
+  };
+
+  static PaymentAuthorized = class {
+    constructor(
+      public paymentId: string,
+      public gateway: string,
+      public authorizationCode: string,
+      public expiresAt: Date,
+      public availableBalance: number  // State at this moment
+    ) {}
+  };
+
+  static PaymentCompleted = class {
+    constructor(
+      public paymentId: string,
+      public settledAmount: number,
+      public fees: number,
+      public netAmount: number,
+      public newBalance: number  // New state
+    ) {}
+  };
+}
+Characteristics:
+
+Intent-based: Captures why something happened
+
+State-carrying: Each event contains the new state
+
+Behavior-oriented: Designed for business process modeling
+
+State is the events: Current state = replay all events
+
+Causality-focused: Events explain state transitions
+
+The Architectural Difference in Practice
+Payment Journaling (Your Current Approach):
+sql
+-- Database tables represent CURRENT STATE
+CREATE TABLE payments (
+  id UUID PRIMARY KEY,
+  status VARCHAR(50),
+  amount DECIMAL,
+  customer_id UUID,
+  updated_at TIMESTAMP,
+  version INTEGER  -- Optimistic locking
+);
+
+-- WAL captures CHANGES to this state
+-- When status changes from 'pending' → 'authorized':
+WAL: [UPDATE payments SET status='authorized' WHERE id='pay_123']
+
+-- State is IN THE TABLE
+-- WAL is just a CHANGE LOG
+Event Sourcing (Proposed Approach):
+typescript
+// No "payments" table with current state
+// Instead: Events ARE the source of truth
+class PaymentAggregate {
+  private events: PaymentEvent[] = [];
+  private currentState: PaymentState;
+  
+  constructor(paymentId: string) {
+    // State is DERIVED by replaying events
+    this.currentState = this.replayEvents(paymentId);
+  }
+  
+  async authorize(gateway: string, code: string): Promise<void> {
+    // 1. Validate business rules against current state
+    if (this.currentState.status !== 'pending') {
+      throw new Error('Payment already processed');
+    }
+    
+    // 2. Create event capturing INTENT and NEW STATE
+    const event = new PaymentAuthorized(
+      paymentId: this.id,
+      gateway,
+      code,
+      new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 days
+      // State at this moment:
+      availableBalance: this.currentState.amount,
+      authorizationTime: new Date(),
+      processorMetadata: { /* Why authorized */ }
+    );
+    
+    // 3. Append event (this IS the state change)
+    await this.eventStore.append(event);
+    
+    // 4. Apply event to in-memory state
+    this.applyEvent(event);
+  }
+  
+  private applyEvent(event: PaymentEvent): void {
+    // Event carries the new state
+    this.currentState = {
+      ...this.currentState,
+      status: 'authorized',
+      authorizedAt: event.authorizationTime,
+      gateway: event.gateway,
+      // etc.
+    };
+    
+    this.events.push(event);
+  }
+}
+Critical Distinction: Where Business Logic Lives
+Journaling: Logic in Application Code
+typescript
+// Business logic scattered in services
+class PaymentService {
+  async authorizePayment(paymentId: string) {
+    // 1. Read current state
+    const payment = await db.payments.findOne({ id: paymentId });
+    
+    // 2. Apply business rules
+    if (payment.status !== 'pending') {
+      throw new Error('Invalid state');
+    }
+    
+    // 3. Call gateway
+    const result = await stripe.authorize(payment.amount);
+    
+    // 4. Update state
+    await db.payments.update(
+      { id: paymentId },
+      { status: 'authorized', gatewayRef: result.id }
+    );
+    
+    // 5. Write to journal (separately!)
+    await db.journal_entries.insert({
+      type: 'payment_authorized',
+      payment_id: paymentId,
+      data: result
+    });
+    
+    // PROBLEM: Business logic NOT captured in journal
+    // Journal only sees the DB UPDATE, not the WHY
+  }
+}
+Event Sourcing: Logic in Events
+typescript
+// Business logic CAPTURED in events
+class PaymentAggregate {
+  async authorize(gateway: string): Promise<void> {
+    // All business logic validation
+    this.validateCanAuthorize();
+    
+    // Create event that CAPTURES:
+    // - What happened
+    // - Why it happened (business context)
+    // - The resulting state
+    const event = new PaymentAuthorized({
+      paymentId: this.id,
+      gateway,
+      reason: 'manual_authorization_by_user',
+      userContext: {
+        userId: 'user_123',
+        ip: '192.168.1.1',
+        userAgent: 'Mozilla/5.0'
+      },
+      businessRulesApplied: [
+        'max_amount_check',
+        'velocity_check', 
+        'geolocation_validation'
+      ],
+      // The NEW STATE is part of the event
+      newStatus: 'authorized',
+      availableBalance: this.calculateAvailableBalance(),
+      authorizationExpires: this.calculateExpiry()
+    });
+    
+    // Event IS the state change
+    await this.saveEvent(event);
+  }
+}
+Comparison Table
+Aspect	Journaling (WAL)	Event Sourcing
+Primary Purpose	Record what changed in the database	Capture business intent and state transitions
+State Storage	Current state in tables	Current state = sum of all events
+Business Logic	In application code	In event creation/validation
+Time Travel	Can see state changes	Can replay business decisions
+Audit Trail	Shows data modifications	Shows business decisions
+Debugging	"What data changed?"	"Why did this happen?"
+Schema Evolution	Migrations required	Events are versioned
+Performance	Fast reads (current state)	Fast writes, slower reads
+Use Case	Financial reporting, compliance	Business process modeling, complex domains
+The Payment Orchestration Implications
+Scenario: Payment Failed, Need to Understand Why
+With Journaling (Current):
+
+sql
+-- You see the data changes
+SELECT * FROM payment_audit_log 
+WHERE payment_id = 'pay_123'
+ORDER BY changed_at;
+
+-- Result:
+-- 1. status: pending → processing
+-- 2. status: processing → failed
+-- 3. error_code: NULL → 'insufficient_funds'
+
+-- BUT: Why was insufficient funds triggered?
+-- Which rule? What was the available balance?
+-- What was the customer's risk score?
+-- UNKNOWN - Not captured in journal
+With Event Sourcing:
+
+typescript
+// Replay events to understand the BUSINESS PROCESS
+const events = await eventStore.readStream('payment-pay_123');
+
+// Events tell the STORY:
+[
+  PaymentInitiated {
+    amount: 100,
+    currency: 'USD',
+    customer: { id: 'cust_123', tier: 'premium' },
+    intent: 'ecommerce_purchase'
+  },
+  
+  FraudCheckCompleted {
+    score: 85,
+    passed: true,
+    rules: ['velocity_ok', 'device_trusted', 'location_match']
+  },
+  
+  BalanceReserved {
+    amount: 100,
+    availableBalance: 50,  // ← Critical state!
+    reservationId: 'res_456'
+  },
+  
+  GatewayAuthorizationAttempted {
+    gateway: 'stripe',
+    requestedAmount: 100,
+    // BUSINESS LOGIC CAPTURED:
+    decision: 'insufficient_funds',
+    reason: 'Available balance (50) < requested amount (100)',
+    businessRule: 'must_have_available_balance',
+    fallbackAction: 'try_alternative_payment_method'
+  },
+  
+  AlternativePaymentMethodTriggered {
+    // Next step automatically triggered
+  }
+]
+
+// You can see EXACTLY why it failed and what happened next
+Your Current Architecture: Hybrid but Leaning Journaling
+typescript
+// You likely have something like this:
+class CurrentPaymentSystem {
+  async processPayment(request) {
+    // 1. Business logic (not captured)
+    const validation = this.validate(request);
+    
+    // 2. Update database state
+    const payment = await db.payments.create({
+      status: 'processing',
+      amount: request.amount
+    });
+    
+    // 3. Journal the database change (WAL)
+    // This captures the DATABASE CHANGE, not the BUSINESS DECISION
+    
+    // 4. More business logic (not captured)
+    const gateway = this.selectGateway(request);
+    
+    // 5. Another database update
+    await db.payments.update({
+      status: 'authorized',
+      gateway: gateway.name
+    });
+    
+    // 6. Another journal entry
+    // Still just database changes
+  }
+}
+
+// Your WORM pipeline captures:
+// - Database row changed from X to Y
+// - Timestamp of change
+// - Who made the change (maybe)
+
+// MISSING:
+// - Why gateway X was chosen over Y
+// - What business rules were evaluated
+// - What the available alternatives were
+// - The customer's context at that moment
+The True Power: Event Sourcing + Projections
+typescript
+// Event Sourcing gives you MULTIPLE derived states
+class PaymentSystem {
+  private eventStore: EventStore;
+  
+  // Write once (events)
+  async processPayment(request) {
+    const events = this.executeBusinessLogic(request);
+    await this.eventStore.append(events);  // Single source of truth
+  }
+  
+  // Read many ways (projections)
+  async getPaymentView(paymentId: string): Promise<PaymentView> {
+    const events = await this.eventStore.readStream(`payment-${paymentId}`);
+    
+    // Projection 1: Customer-facing view
+    const customerView = this.buildCustomerView(events);
+    
+    // Projection 2: Operational dashboard
+    const opsView = this.buildOpsView(events);
+    
+    // Projection 3: Accounting ledger (journal!)
+    const accountingEntries = this.buildJournalEntries(events);
+    
+    // Projection 4: Fraud analysis
+    const fraudPatterns = this.analyzeForFraud(events);
+    
+    return { customerView, opsView, accountingEntries, fraudPatterns };
+  }
+}
+
+// Key insight: Journaling IS A PROJECTION of event sourcing
+class AccountingProjection {
+  async buildJournalEntries(events: PaymentEvent[]): JournalEntry[] {
+    return events.flatMap(event => {
+      // Transform business events into accounting entries
+      if (event instanceof PaymentCompleted) {
+        return [
+          { debit: 'CASH', credit: 'REVENUE', amount: event.amount },
+          { debit: 'FEES_EXPENSE', credit: 'CASH', amount: event.fees }
+        ];
+      }
+      // etc.
+    });
+  }
+}
+The Ghost Payment Problem: Different Solutions
+Journaling Solution:
+sql
+-- Try to prevent with constraints
+ALTER TABLE payments ADD CONSTRAINT unique_request 
+UNIQUE (customer_id, amount, request_timestamp_window);
+
+-- Detect with reconciliation
+SELECT * FROM payments p
+WHERE NOT EXISTS (
+  SELECT 1 FROM journal_entries j 
+  WHERE j.payment_id = p.id 
+  AND j.type = 'completed'
+)
+AND p.status = 'completed';
+
+-- Problem: Detection is AFTER THE FACT
+-- Prevention relies on database constraints
+Event Sourcing Solution:
+typescript
+// Prevention at the business logic level
+class PaymentAggregate {
+  private processedRequests = new Set<string>();
+  
+  async process(request: PaymentRequest): Promise<void> {
+    // Deterministic request ID from business context
+    const requestId = this.generateRequestId(request);
+    
+    // Already processed? Return same event
+    if (this.processedRequests.has(requestId)) {
+      // Idempotent: Return the SAME events
+      return this.getPreviousEvents(requestId);
+    }
+    
+    // Business logic that PREVENTS duplicates
+    const events = this.executeBusinessLogic(request);
+    
+    // Append events atomically
+    await this.eventStore.append(events);
+    
+    // Mark as processed
+    this.processedRequests.add(requestId);
+  }
+  
+  // The event stream ITSELF prevents duplicates
+  // Because appending the same event twice would violate business rules
+}
+Recommendation for Your Payment Orchestrator
+Keep Journaling (WORM) For:
+Regulatory compliance - Financial authorities want journal entries
+
+External audit trails - Auditors understand double-entry
+
+Financial reporting - Balance sheets, income statements
+
+Legal evidence - Courts understand "ledger entries"
+
+Add Event Sourcing For:
+Orchestration logic - Why payments route certain ways
+
+Business process modeling - Payment state machines
+
+Debugging & support - Understanding payment failures
+
+Fraud analysis - Patterns across events
+
+Customer experience - Reconstructing payment journeys
+
+Hybrid Architecture:
+typescript
+// Best of both worlds
+class HybridPaymentSystem {
+  async processPayment(request: PaymentRequest): Promise<PaymentResult> {
+    // 1. Event Sourcing for business logic
+    const events = await this.paymentAggregate.process(request);
+    
+    // 2. Derive journal entries FROM events
+    const journalEntries = this.accountingProjection.project(events);
+    
+    // 3. Write to both systems
+    await Promise.all([
+      this.eventStore.append(events),           // Event sourcing store
+      this.journalStore.append(journalEntries), // Traditional ledger
+      this.wormStorage.append(journalEntries)   // WORM compliance
+    ]);
+    
+    // 4. Update read models (optional, for performance)
+    await this.updateReadModel(events);
+    
+    return this.buildResult(events);
+  }
+}
+Bottom Line
+You're currently doing Journaling (append-only recording of database changes).
+Event Sourcing is different - it's append-only recording of business decisions.
+
+For a payment orchestrator, you need BOTH:
+
+Event Sourcing to model complex payment workflows and prevent ghost payments at the business logic level
+
+Journaling to meet regulatory requirements and produce traditional financial reports
+
+The investment in event sourcing pays off by:
+
+Eliminating ghost payments through business-logic-level idempotency
+
+Making your system debuggable ("Why did this payment fail?")
+
+Enabling new features like payment replays, what-if analysis, and better customer support
+
+Providing a foundation for AI/ML analysis of payment patterns
+
+But you don't abandon journaling - you make journal entries a projection of your events, ensuring consistency between the two.
+
+Would you like me to show how to implement this hybrid model in your Node.js architecture?
+
+If I want to go fully into Pollicy Management as a Service, would journaling suffice? Especially catering for Banks and NGOs
+No. For Policy Management as a Service (PMaaS) targeting Banks and NGOs, journaling alone would be dangerously insufficient. This is a critical architectural decision that could make or break your business.
+
+Why Journaling Fails for Policy Management
+1. The Nature of Policies is Different from Payments
+Policies aren't simple transactions - they're complex state machines with temporal logic:
+
+typescript
+// A simple journal entry can't capture this complexity
+class InsurancePolicy {
+  // Policy lifecycle
+  states: [
+    'QUOTED', 'BOUND', 'ACTIVE', 
+    'SUSPENDED', 'CANCELLED', 'EXPIRED',
+    'CLAIM_PENDING', 'CLAIM_APPROVED', 'CLAIM_PAID',
+    'UNDER_REVIEW', 'LITIGATION'
+  ];
+  
+  // Temporal aspects
+  effectiveDate: Date;
+  renewalDate: Date;
+  anniversaryDate: Date;
+  gracePeriodEnd: Date;
+  
+  // Complex conditions
+  coverage: {
+    inclusions: CoverageItem[];
+    exclusions: CoverageItem[];
+    limits: CoverageLimit[];
+    deductibles: DeductibleSchedule[];
+    waitingPeriods: WaitingPeriod[];
+  };
+  
+  // Regulatory requirements
+  compliance: {
+    kycStatus: 'PENDING' | 'COMPLETE' | 'FAILED';
+    amlChecks: AMLResult[];
+    sanctionChecks: SanctionResult[];
+    privacyConsent: ConsentRecord[];
+  };
+}
+2. Banks & NGOs Require "Why" Not Just "What"
+When regulators audit, they don't just ask "what changed" but "why was this allowed?"
+
+typescript
+// Journaling shows WHAT:
+const journalEntry = {
+  timestamp: '2024-01-15T10:30:00Z',
+  table: 'policies',
+  operation: 'UPDATE',
+  old_value: { status: 'PENDING' },
+  new_value: { status: 'APPROVED' },
+  user: 'underwriter_123'
+};
+
+// MISSING:
+// - Which underwriting rules were evaluated?
+// - What was the risk score?
+// - Were any exceptions made?
+// - Who approved the exceptions?
+// - What documents were reviewed?
+// - What was the automated system's recommendation?
+The Critical Requirements for PMaaS
+1. Audit Trail ≠ Just Change Log
+Banks need decision audit trails for:
+
+Basel III/IV compliance - Risk-weighted asset calculations
+
+IFRS 9 - Expected credit loss models
+
+BCBS 239 - Risk data aggregation
+
+GDPR/CCPA - Right to explanation
+
+SOX - Internal controls over financial reporting
+
+typescript
+// What regulators actually want to see:
+class PolicyDecisionAudit {
+  decision: PolicyDecision;
+  timestamp: Date;
+  decisionMaker: User | System;
+  
+  // Inputs considered
+  inputs: {
+    applicantData: ApplicantProfile;
+    riskAssessment: RiskScore;
+    documentAnalysis: DocumentVerification[];
+    externalData: CreditBureauReport[];
+    historicalPatterns: SimilarPolicies[];
+  };
+  
+  // Rules evaluated
+  rulesEvaluated: UnderwritingRule[];
+  ruleResults: Map<RuleId, RuleResult>;
+  
+  // Overrides/exceptions
+  exceptions: Exception[];
+  exceptionApprovals: ApprovalChain[];
+  
+  // Model versions (for ML/AI)
+  modelVersion: string;
+  modelInputs: FeatureVector;
+  modelOutput: Prediction;
+  modelConfidence: number;
+  
+  // Human reasoning (for manual decisions)
+  underwriterNotes: string[];
+  supportingDocuments: DocumentReference[];
+  
+  // Compliance checks
+  complianceResults: ComplianceCheck[];
+  regulatoryFlags: RegulatoryFlag[];
+}
+2. Temporal Queries Are Essential
+Policies have effective dates, waiting periods, and retroactive adjustments:
+
+sql
+-- Journaling can't answer these questions easily:
+-- "What policies were in force on 2023-12-31?"
+-- "Which policies had coverage for flood damage during Hurricane Ian?"
+-- "Show me all policy modifications that affected premium calculations in Q3"
+-- "Reconstruct the exact policy terms as they existed on the claim date"
+
+-- With event sourcing:
+SELECT * FROM policy_events 
+WHERE policy_id = 'pol_123' 
+  AND timestamp <= '2023-12-31'
+ORDER BY timestamp;
+
+-- Replay events up to that date to get exact state
+3. Consent & Data Privacy Management
+GDPR Article 22 requires explanation of automated decisions:
+
+typescript
+class ConsentManagementEvent {
+  type: 'CONSENT_GIVEN' | 'CONSENT_WITHDRAWN' | 'DATA_ACCESS_REQUEST';
+  timestamp: Date;
+  policyId: string;
+  userId: string;
+  consentType: 'MARKETING' | 'DATA_PROCESSING' | 'THIRD_PARTY_SHARING';
+  legalBasis: 'CONSENT' | 'LEGITIMATE_INTEREST' | 'CONTRACTUAL';
+  disclosureVersion: string;  // Which privacy policy version
+  captureMethod: 'WEB_FORM' | 'CALL_CENTER' | 'MOBILE_APP';
+  sessionContext: {
+    ipAddress: string;
+    userAgent: string;
+    geolocation: string;
+  };
+  
+  // For withdrawals: explanation of consequences
+  withdrawalConsequences: string[];
+  retentionPeriodStart: Date;
+  dataPurgeScheduled: Date;
+}
+Event Sourcing vs Journaling for PMaaS
+Scenario: Policy Underwriting Decision
+Journaling Approach (Insufficient):
+
+sql
+-- Database changes only
+UPDATE policies SET status = 'APPROVED', premium = 1500 WHERE id = 'pol_123';
+INSERT INTO audit_log VALUES ('policy_updated', 'pol_123', current_user);
+
+-- What's missing for regulators:
+-- 1. Risk score calculation
+-- 2. Rule engine decisions  
+-- 3. Document verification results
+-- 4. Compliance checks performed
+-- 5. Override justifications
+-- 6. Model explanations (if AI used)
+Event Sourcing Approach (Compliant):
+
+typescript
+// Complete decision audit trail
+const underwritingEvents = [
+  new PolicyApplicationSubmitted({
+    applicationId: 'app_456',
+    applicantData: { /* PII redacted */ },
+    requestedCoverage: { /* coverage details */ },
+    timestamp: '2024-01-15T09:00:00Z'
+  }),
+  
+  new DocumentVerificationCompleted({
+    documentId: 'doc_789',
+    documentType: 'DRIVERS_LICENSE',
+    verificationMethod: 'AUTOMATED_OCR',
+    confidenceScore: 0.95,
+    extractedData: { /* verified data */ },
+    timestamp: '2024-01-15T09:02:00Z'
+  }),
+  
+  new RiskAssessmentCalculated({
+    modelVersion: 'risk_v2.3.1',
+    inputFeatures: { /* 150+ features */ },
+    riskScore: 0.23,
+    riskCategory: 'LOW',
+    keyFactors: [
+      { factor: 'credit_score', impact: 'positive', weight: 0.15 },
+      { factor: 'claim_history', impact: 'neutral', weight: 0.10 },
+      { factor: 'geographic_risk', impact: 'negative', weight: 0.08 }
+    ],
+    explanation: 'Low risk due to excellent credit history...',
+    timestamp: '2024-01-15T09:05:00Z'
+  }),
+  
+  new UnderwritingRulesEvaluated({
+    rules: [
+      {
+        ruleId: 'RULE_001',
+        description: 'Minimum credit score',
+        condition: 'credit_score >= 650',
+        result: 'PASS',
+        actualValue: 780
+      },
+      {
+        ruleId: 'RULE_042',
+        description: 'Maximum coverage for age group',
+        condition: 'coverage <= age_based_max',
+        result: 'FAIL',
+        actualValue: 500000,
+        maxAllowed: 250000,
+        overrideRequired: true
+      }
+    ],
+    overallDecision: 'REQUIRES_OVERRIDE',
+    timestamp: '2024-01-15T09:06:00Z'
+  }),
+  
+  new UnderwritingOverrideApproved({
+    ruleId: 'RULE_042',
+    requestedCoverage: 500000,
+    approvedCoverage: 500000,
+    approver: 'senior_underwriter_456',
+    justification: 'High-net-worth client with additional collateral',
+    approvalLevel: 'LEVEL_3',
+    supportingDocuments: ['collateral_agreement.pdf'],
+    timestamp: '2024-01-15T09:30:00Z'
+  }),
+  
+  new PolicyIssued({
+    policyId: 'pol_123',
+    status: 'ACTIVE',
+    premium: 1500,
+    coverage: 500000,
+    effectiveDate: '2024-02-01',
+    termsAndConditions: 'v2024.1',
+    disclosureDocuments: ['policy_doc.pdf', 'privacy_notice.pdf'],
+    timestamp: '2024-01-15T09:35:00Z'
+  })
+];
+The Regulatory Imperative
+Banking Regulations Requiring Event Sourcing:
+BCBS 239 (Risk Data Aggregation)
+
+"Banks must be able to aggregate risk data... quickly and accurately"
+
+Event sourcing enables: Reconstruct risk exposure at any historical point
+
+IFRS 9 (Financial Instruments)
+
+Requires staging of assets based on credit deterioration
+
+Event sourcing enables: Exact staging state at reporting dates
+
+SR 11-7 (Model Risk Management)
+
+Requires model version tracking and decision explanation
+
+Event sourcing enables: Link decisions to exact model version used
+
+GDPR Articles 13-15 & 22
+
+Right to meaningful information about automated decisions
+
+Event sourcing enables: Complete decision audit trails
+
+NGO-Specific Requirements:
+typescript
+class NGOPolicyEvent {
+  // Donor restrictions tracking
+  donorRestrictions: DonorRestriction[];
+  fundEarmarking: FundAllocation[];
+  
+  // Impact measurement
+  outcomeIndicators: OutcomeIndicator[];
+  beneficiaryTracking: BeneficiaryRecord[];
+  
+  // Grant compliance
+  grantConditions: GrantCondition[];
+  reportingRequirements: ReportingSchedule[];
+  
+  // Ethical sourcing
+  supplierVerification: EthicalAudit[];
+  conflictChecks: ConflictOfInterest[];
+}
+Architecture for PMaaS
+Hybrid But Event-Sourcing-First:
+typescript
+class PolicyManagementService {
+  // Primary store: Event Sourcing
+  private eventStore: EventStoreDBClient;
+  
+  // Secondary projections
+  private relationalDB: PostgreSQL;  // For queries
+  private documentDB: MongoDB;       // For full policy documents
+  private searchIndex: ElasticSearch; // For free-text search
+  private dataWarehouse: Snowflake;   // For analytics
+  private wormStorage: S3Glacier;     // For compliance
+  
+  async underwritePolicy(application: PolicyApplication): Promise<Policy> {
+    // 1. Execute business logic, generating events
+    const events = await this.executeUnderwritingWorkflow(application);
+    
+    // 2. Append events atomically (source of truth)
+    await this.eventStore.append(`policy-${application.id}`, events);
+    
+    // 3. Update all projections asynchronously
+    await this.updateProjections(events);
+    
+    // 4. Generate compliance artifacts
+    await this.generateComplianceReports(events);
+    
+    // 5. Return policy (from read model)
+    return await this.getPolicy(application.id);
+  }
+  
+  private async executeUnderwritingWorkflow(
+    application: PolicyApplication
+  ): Promise<PolicyEvent[]> {
+    const events: PolicyEvent[] = [];
+    
+    // Each step captures its decision process
+    events.push(await this.validateApplication(application));
+    events.push(await this.calculateRiskScore(application));
+    events.push(await this.evaluateUnderwritingRules(application));
+    events.push(await this.checkCompliance(application));
+    events.push(await this.determinePricing(application));
+    events.push(await this.finalizePolicy(application));
+    
+    return events;
+  }
+  
+  private async calculateRiskScore(
+    application: PolicyApplication
+  ): Promise<RiskAssessmentEvent> {
+    // Capture EVERYTHING for audit
+    return {
+      type: 'RISK_ASSESSMENT_CALCULATED',
+      timestamp: new Date(),
+      applicationId: application.id,
+      
+      // Inputs
+      inputData: {
+        // Note: PII would be hashed/tokenized
+        age: application.age,
+        location: application.location,
+        creditScore: await this.getCreditScore(application),
+        // ... 100+ other factors
+      },
+      
+      // Model metadata
+      model: {
+        version: 'risk_model_v3.2.1',
+        trainingDate: '2023-11-15',
+        performanceMetrics: {
+          accuracy: 0.89,
+          auc: 0.92,
+          biasAudit: 'PASSED'
+        }
+      },
+      
+      // Calculation
+      score: 0.23,
+      confidence: 0.87,
+      percentiles: {
+        overall: 15,  // Better than 85% of applicants
+        ageGroup: 10,
+        geographic: 20
+      },
+      
+      // Explainability (CRITICAL for regulators)
+      keyFactors: [
+        { factor: 'excellent_credit_history', impact: -0.15 },
+        { factor: 'low_claim_frequency_zip', impact: -0.08 },
+        { factor: 'high_value_property', impact: +0.12 }
+      ],
+      
+      // Decision support
+      recommendations: [
+        'APPROVE with standard terms',
+        'Consider higher deductible option'
+      ]
+    };
+  }
+}
+Compliance Reporting Capabilities
+What Event Sourcing Enables:
+typescript
+class ComplianceReporter {
+  // 1. Complete audit trail for any policy
+  async getPolicyAuditTrail(policyId: string): Promise<AuditReport> {
+    const events = await this.eventStore.readStream(`policy-${policyId}`);
+    return this.generateAuditReport(events);
+  }
+  
+  // 2. Regulator question: "Why was this policy approved?"
+  async explainPolicyDecision(policyId: string): Promise<DecisionExplanation> {
+    const events = await this.eventStore.readStream(`policy-${policyId}`);
+    
+    return {
+      summary: 'Policy approved with override for coverage limit',
+      timeline: events.map(e => ({
+        timestamp: e.timestamp,
+        decisionPoint: e.type,
+        outcome: e.data?.decision,
+        rationale: e.data?.explanation
+      })),
+      keyFactors: this.extractKeyFactors(events),
+      rulesEvaluated: this.extractRules(events),
+      exceptions: this.extractExceptions(events),
+      modelInfluence: this.assessModelInfluence(events)
+    };
+  }
+  
+  // 3. Temporal reporting: "What was our risk exposure on Dec 31?"
+  async getExposureAsOf(date: Date): Promise<RiskExposureReport> {
+    // Replay ALL policies to that date
+    const policies = await this.getAllPolicyIds();
+    
+    const exposures = await Promise.all(
+      policies.map(async policyId => {
+        const events = await this.eventStore.readStream(
+          `policy-${policyId}`,
+          { maxCount: 1000, until: date }
+        );
+        
+        // Reconstruct policy state as of that date
+        const state = this.replayEvents(events);
+        return state.active ? state.coverageAmount : 0;
+      })
+    );
+    
+    return {
+      asOfDate: date,
+      totalExposure: exposures.reduce((a, b) => a + b, 0),
+      policyCount: exposures.filter(e => e > 0).length,
+      exposureByProduct: this.aggregateByProduct(exposures),
+      exposureByRegion: this.aggregateByRegion(exposures)
+    };
+  }
+  
+  // 4. Model monitoring: "Did our AI model discriminate?"
+  async auditModelFairness(
+    modelVersion: string, 
+    dateRange: DateRange
+  ): Promise<FairnessAudit> {
+    // Find all decisions using this model version
+    const events = await this.eventStore.search({
+      type: 'RISK_ASSESSMENT_CALCULATED',
+      filter: e => e.model.version === modelVersion,
+      from: dateRange.start,
+      to: dateRange.end
+    });
+    
+    // Analyze for bias
+    return this.performBiasAnalysis(events);
+  }
+}
+Cost of Getting This Wrong
+Real-World Consequences:
+Regulatory Fines
+
+GDPR: Up to 4% global revenue or €20M
+
+Banking violations: Millions per incident
+
+Inability to prove compliance = automatic fail
+
+Legal Liability
+
+Class action lawsuits for discriminatory algorithms
+
+Contract disputes over policy interpretations
+
+Inability to defend decisions in court
+
+Business Impact
+
+Loss of banking/NGO clients who require auditability
+
+Failed compliance audits = lost contracts
+
+Inability to expand to regulated markets
+
+Implementation Roadmap for PMaaS
+Phase 1: Foundation (Months 1-3)
+typescript
+// Core event sourcing infrastructure
+class Phase1 {
+  deliverables = [
+    'Event Store (EventStoreDB or custom)',
+    'Basic event types for policy lifecycle',
+    'Event replay and state reconstruction',
+    'Immutable event storage with WORM compliance',
+    'Basic audit trail API'
+  ];
+  
+  investment = '$150k-250k';
+  targetClients = 'Early adopters, less regulated sectors';
+}
+Phase 2: Regulatory Features (Months 4-9)
+typescript
+class Phase2 {
+  deliverables = [
+    'Complete decision audit trails',
+    'Model version tracking and explainability',
+    'Temporal query capabilities',
+    'Compliance reporting engine',
+    'Integration with regulatory reporting systems'
+  ];
+  
+  investment = '$300k-500k';
+  targetClients = 'Mid-sized banks, larger NGOs';
+}
+Phase 3: Enterprise Scale (Months 10-18)
+typescript
+class Phase3 {
+  deliverables = [
+    'Multi-tenant event isolation',
+    'Real-time compliance monitoring',
+    'AI/ML decision logging',
+    'Cross-policy pattern analysis',
+    'Regulatory change management'
+  ];
+  
+  investment = '$500k-1M';
+  targetClients = 'Tier 1 banks, global NGOs, governments';
+}
+The Business Case
+For Banks:
+plaintext
+Value Proposition:
+- Reduce compliance audit costs by 70%
+- Cut regulatory reporting time from weeks to hours
+- Enable real-time risk monitoring
+- Provide defensible audit trails for regulators
+
+ROI Example:
+- Average bank compliance cost: $10M/year
+- 70% reduction: $7M savings
+- Implementation cost: $2M
+- Payback: <6 months
+For NGOs:
+plaintext
+Value Proposition:
+- Prove impact to donors with immutable records
+- Track fund allocation to specific outcomes
+- Ensure ethical sourcing compliance
+- Demonstrate accountability to beneficiaries
+
+ROI Example:
+- Major donor requires audit trail capability
+- Without it: Lose $5M/year funding
+- Implementation cost: $500k
+- Payback: Immediate (retain funding)
+Conclusion
+For Policy Management as a Service targeting Banks and NGOs:
+
+❌ Journaling alone is insufficient - it's a compliance checkbox, not a solution.
+
+✅ Event sourcing is mandatory - it's the only way to capture the "why" behind decisions.
+
+You need:
+
+Event sourcing as the source of truth for business decisions
+
+Journaling as a projection for financial reporting
+
+Multiple read models for different stakeholders
+
+Immutable storage with cryptographic attestation
+
+The investment is significant but:
+
+It's a competitive moat - competitors can't easily replicate
+
+It's a regulatory requirement - you can't operate without it
+
+It's a value proposition - clients will pay premium for auditability
+
+If you're serious about PMaaS for regulated entities, start with event sourcing from day one. The cost of retrofitting it later is exponentially higher, and the risk of non-compliance could sink the business.
+
+Would you like me to design the specific event schema for insurance policy management?
+
+Yes design the schema
+Policy Management as a Service (PMaaS) - Event Schema Design
+Core Architecture Principles
+typescript
+// 1. Immutable, versioned events
+// 2. Complete audit trail with business context
+// 3. Temporal query support
+// 4. Regulatory compliance baked in
+// 5. Multi-tenant from ground up
+Event Schema Foundation
+typescript
+// Base event interface
+interface PolicyEvent {
+  // Metadata
+  eventId: string;                 // Deterministic: sha256(tenantId + aggregateId + sequence)
+  eventType: string;              // e.g., "POLICY_CREATED"
+  aggregateId: string;            // Format: tenantId:policyType:policyId
+  sequenceNumber: number;         // Strict ordering within aggregate
+  timestamp: TrustedTimestamp;    // TPM/HSM-backed, not system clock
+  
+  // Business context
+  tenantId: string;               // Bank/NGO identifier
+  correlationId: string;          // Links related events across aggregates
+  causationId: string;            // Which event caused this event
+  
+  // Actor context
+  actor: {
+    id: string;                   // User ID or system component
+    type: 'USER' | 'SYSTEM' | 'API_CLIENT' | 'AUTOMATION';
+    role: string;                 // e.g., 'UNDERWRITER', 'CLAIMS_ADJUSTER'
+    sessionId: string;            // For audit trail
+    ipAddress: string;            // Hashed for privacy
+    userAgent: string;
+    geolocation?: string;         // Country/region
+  };
+  
+  // Data (event-specific payload)
+  data: any;
+  
+  // Compliance metadata
+  compliance: {
+    regulatoryJurisdiction: string[];  // e.g., ['EU', 'US-CFPB', 'UK-FCA']
+    dataClassification: 'PUBLIC' | 'INTERNAL' | 'CONFIDENTIAL' | 'RESTRICTED';
+    retentionPeriod: number;           // Years (varies by jurisdiction)
+    legalHold: boolean;                // Litigation hold flag
+  };
+  
+  // Cryptographic proof
+  cryptographicProof: {
+    eventHash: string;           // Hash of this event
+    previousEventHash: string;   // Chain of hashes
+    merkleProof?: MerkleProof;   // For batch attestation
+    signature?: string;          // HSM/TSS signature
+  };
+}
+Policy Lifecycle Events
+1. Policy Creation & Quotation Phase
+typescript
+// Stage 1: Inquiry
+interface PolicyInquiryInitiated extends PolicyEvent {
+  eventType: 'POLICY_INQUIRY_INITIATED';
+  data: {
+    inquiryId: string;
+    channel: 'WEB' | 'MOBILE' | 'CALL_CENTER' | 'BROKER_PORTAL';
+    productType: 'AUTO_INSURANCE' | 'HEALTH' | 'PROPERTY' | 'LIABILITY';
+    
+    // Applicant information (PII tokenized)
+    applicant: {
+      tokenizedId: string;               // Reference to PII vault
+      applicantType: 'INDIVIDUAL' | 'BUSINESS' | 'NGO';
+      riskCategory?: string;             // Preliminary classification
+    };
+    
+    // Coverage inquiry
+    coverageRequest: {
+      coverageType: string;
+      coverageAmount?: MonetaryAmount;
+      deductiblePreference?: MonetaryAmount;
+      termPreference?: Duration;
+    };
+    
+    // Regulatory context
+    jurisdiction: string;
+    regulatoryRequirements: string[];    // e.g., ['IFRS17', 'SOLVENCY_II']
+    
+    // Marketing/Sales context
+    campaignId?: string;
+    referralSource?: string;
+    salesAgentId?: string;
+  };
+}
+
+// Stage 2: Quote generation
+interface PolicyQuoteGenerated extends PolicyEvent {
+  eventType: 'POLICY_QUOTE_GENERATED';
+  data: {
+    quoteId: string;
+    inquiryId: string;
+    validFrom: Date;
+    validUntil: Date;
+    
+    // Pricing breakdown
+    premium: {
+      basePremium: MonetaryAmount;
+      taxes: TaxBreakdown[];
+      fees: FeeBreakdown[];
+      discounts: DiscountBreakdown[];
+      totalPremium: MonetaryAmount;
+    };
+    
+    // Coverage details
+    coverage: CoverageDetail[];
+    exclusions: ExclusionDetail[];
+    limits: LimitDetail[];
+    
+    // Terms and conditions
+    terms: PolicyTerm[];
+    disclosures: DisclosureRequirement[];
+    
+    // Generation metadata
+    pricingModel: {
+      version: string;
+      inputs: PricingInput[];
+      assumptions: PricingAssumption[];
+      sensitivityAnalysis?: SensitivityScenario[];
+    };
+    
+    // Compliance
+    regulatoryDisclosures: RegulatoryDisclosure[];
+    requiredDocuments: DocumentRequirement[];
+  };
+}
+2. Application & Underwriting Phase
+typescript
+// Stage 3: Application submission
+interface PolicyApplicationSubmitted extends PolicyEvent {
+  eventType: 'POLICY_APPLICATION_SUBMITTED';
+  data: {
+    applicationId: string;
+    quoteId: string;
+    
+    // Full application data
+    application: {
+      // Personal/business details
+      applicantDetails: ApplicantDetails;
+      insuredEntities: InsuredEntity[];
+      beneficiaries: Beneficiary[];
+      
+      // Risk information
+      riskDetails: RiskExposure[];
+      previousClaims: ClaimHistory[];
+      existingCoverage: ExistingPolicy[];
+      
+      // Financial information
+      financialInformation: FinancialDetails;
+      paymentPreferences: PaymentMethod[];
+      
+      // Supporting documents
+      documents: DocumentSubmission[];
+      declarations: Declaration[];
+      consents: ConsentRecord[];
+    };
+    
+    // Submission context
+    submissionMethod: 'DIGITAL' | 'PAPER' | 'BROKER';
+    completenessCheck: CompletenessResult;
+    initialValidation: ValidationResult[];
+  };
+}
+
+// Stage 4: Document verification
+interface DocumentVerificationCompleted extends PolicyEvent {
+  eventType: 'DOCUMENT_VERIFICATION_COMPLETED';
+  data: {
+    verificationId: string;
+    applicationId: string;
+    
+    verifiedDocuments: Array<{
+      documentId: string;
+      documentType: string;  // e.g., 'IDENTITY', 'PROOF_OF_ADDRESS', 'FINANCIAL_STATEMENT'
+      verificationMethod: 'MANUAL_REVIEW' | 'AUTOMATED_OCR' | 'THIRD_PARTY_API';
+      verificationResult: 'VERIFIED' | 'REJECTED' | 'PENDING';
+      confidenceScore?: number;  // 0-1 for automated verification
+      extractedData: Record<string, any>;  // Structured data from document
+      verificationNotes?: string;
+      reviewerId?: string;  // For manual reviews
+      reviewDuration?: number;  // Milliseconds
+    }>;
+    
+    overallVerificationStatus: 'COMPLETE' | 'PENDING' | 'FAILED';
+    nextActions?: string[];
+  };
+}
+
+// Stage 5: Risk assessment
+interface RiskAssessmentCalculated extends PolicyEvent {
+  eventType: 'RISK_ASSESSMENT_CALCULATED';
+  data: {
+    assessmentId: string;
+    applicationId: string;
+    
+    // Model information (critical for AI/ML explainability)
+    riskModel: {
+      modelId: string;
+      version: string;
+      modelType: 'SCORECARD' | 'MACHINE_LEARNING' | 'HYBRID';
+      trainingDate: Date;
+      performanceMetrics: {
+        accuracy: number;
+        precision: number;
+        recall: number;
+        auc: number;
+        biasScore: number;  // Fairness metric
+        driftScore: number; // Model drift detection
+      };
+      regulatoryApproval: {
+        approved: boolean;
+        approvalId?: string;
+        approvingAuthority?: string;
+        validUntil?: Date;
+      };
+    };
+    
+    // Input features (for reproducibility)
+    inputFeatures: Record<string, FeatureValue>;
+    featureEngineering: FeatureTransformation[];
+    
+    // Assessment results
+    riskScores: {
+      overall: number;
+      byDimension: Record<string, number>;  // e.g., { 'financial': 0.3, 'behavioral': 0.7 }
+      percentiles: Record<string, number>;  // Relative to population
+      confidenceInterval: [number, number];
+    };
+    
+    // Explainability (GDPR/Algorithmic Accountability compliance)
+    explanation: {
+      keyFactors: Array<{
+        feature: string;
+        impact: number;  // Positive/negative contribution
+        weight: number;
+        value: any;
+        comparison: any;  // Compared to population
+      }>;
+      counterfactuals?: Array<{
+        feature: string;
+        changeFrom: any;
+        changeTo: any;
+        impactOnScore: number;
+      }>;
+      localInterpretation?: any;  // SHAP/LIME values
+    };
+    
+    // Recommendations
+    recommendations: Array<{
+      type: 'UNDERWRITING' | 'PRICING' | 'COVERAGE';
+      action: string;
+      priority: 'HIGH' | 'MEDIUM' | 'LOW';
+      justification: string;
+      expectedImpact?: string;
+    }>;
+    
+    // Audit trail
+    calculationMetadata: {
+      processingTime: number;
+      computeCost?: number;
+      dataSources: DataSource[];
+      assumptions: RiskAssumption[];
+    };
+  };
+}
+
+// Stage 6: Underwriting rules evaluation
+interface UnderwritingRulesEvaluated extends PolicyEvent {
+  eventType: 'UNDERWRITING_RULES_EVALUATED';
+  data: {
+    evaluationId: string;
+    applicationId: string;
+    riskAssessmentId: string;
+    
+    // Rules engine context
+    rulesEngine: {
+      engineId: string;
+      version: string;
+      ruleSetVersion: string;
+      evaluationStrategy: 'SEQUENTIAL' | 'PARALLEL' | 'OPTIMIZED';
+    };
+    
+    // Individual rule evaluations
+    ruleEvaluations: Array<{
+      ruleId: string;
+      ruleName: string;
+      ruleCategory: 'ELIGIBILITY' | 'PRICING' | 'COVERAGE' | 'COMPLIANCE';
+      ruleVersion: string;
+      
+      // Business logic
+      condition: string;  // Human-readable
+      conditionLogic?: string;  // DSL/Code representation
+      
+      // Evaluation
+      inputs: Record<string, any>;
+      result: 'PASS' | 'FAIL' | 'NOT_APPLICABLE';
+      actualValue?: any;
+      expectedValue?: any;
+      threshold?: any;
+      
+      // Impact
+      action?: string;
+      severity: 'BLOCKER' | 'HIGH' | 'MEDIUM' | 'LOW';
+      message?: string;
+      
+      // For failed rules
+      overridePossible?: boolean;
+      overrideRequirements?: string[];
+      escalationPath?: string;
+    }>;
+    
+    // Overall evaluation
+    overallResult: {
+      decision: 'APPROVE' | 'DECLINE' | 'REFER' | 'PENDING';
+      summary: string;
+      nextStep: string;
+      referralReason?: string;
+      referralDepartment?: string;
+    };
+    
+    // Compliance tracking
+    regulatoryRuleCoverage: Array<{
+      regulation: string;
+      ruleId: string;
+      satisfied: boolean;
+      evidence?: string;
+    }>;
+  };
+}
+
+// Stage 7: Manual underwriting (if required)
+interface ManualUnderwritingPerformed extends PolicyEvent {
+  eventType: 'MANUAL_UNDERWRITING_PERFORMED';
+  data: {
+    underwritingId: string;
+    applicationId: string;
+    referralReason: string;
+    
+    underwriter: {
+      id: string;
+      level: 'JUNIOR' | 'SENIOR' | 'CHIEF';
+      department: string;
+      credentials: string[];  // Licenses/certifications
+    };
+    
+    // Review process
+    review: {
+      startTime: Date;
+      endTime: Date;
+      documentsReviewed: string[];
+      notes: string;
+      
+      // Decision factors considered
+      considerations: Array<{
+        factor: string;
+        assessment: string;
+        weight: number;
+        source?: string;  // Document, system, conversation
+      }>;
+      
+      // External consultations
+      consultations: Array<{
+        consultedWith: string;
+        role: string;
+        input: string;
+        recommendation?: string;
+      }>;
+    };
+    
+    // Decision
+    decision: {
+      outcome: 'APPROVE' | 'DECLINE' | 'MODIFY';
+      modifiedTerms?: PolicyModification[];
+      justification: string;
+      
+      // For modifications
+      changes: Array<{
+        field: string;
+        from: any;
+        to: any;
+        reason: string;
+      }>;
+      
+      // Authority check
+      authorityLevel: string;
+      requiresHigherApproval?: boolean;
+      escalationReason?: string;
+    };
+    
+    // Quality assurance
+    qualityCheck: {
+      required: boolean;
+      performedBy?: string;
+      result?: 'PASS' | 'FAIL' | 'PENDING';
+      findings?: string[];
+    };
+  };
+}
+3. Policy Issuance & Activation
+typescript
+// Stage 8: Policy issuance
+interface PolicyIssued extends PolicyEvent {
+  eventType: 'POLICY_ISSUED';
+  data: {
+    policyId: string;
+    applicationId: string;
+    
+    // Policy details
+    policy: {
+      policyNumber: string;
+      effectiveDate: Date;
+      expirationDate: Date;
+      status: 'ISSUED' | 'ACTIVE' | 'PENDING_ACTIVATION';
+      
+      // Parties
+      policyholder: Policyholder;
+      insureds: Insured[];
+      beneficiaries?: Beneficiary[];
+      additionalInterests?: AdditionalInterest[];
+      
+      // Coverage
+      coverageDetails: Coverage[];
+      exclusions: Exclusion[];
+      conditions: Condition[];
+      endorsements: Endorsement[];
+      
+      // Financial terms
+      premium: PremiumSchedule;
+      paymentTerms: PaymentTerms;
+      commission: CommissionSchedule;
+      
+      // Documents
+      policyDocument: DocumentReference;
+      schedule: DocumentReference;
+      certificates?: DocumentReference[];
+    };
+    
+    // Issuance context
+    issuanceMethod: 'ELECTRONIC' | 'PHYSICAL' | 'HYBRID';
+    delivery: {
+      method: 'EMAIL' | 'PORTAL' | 'MAIL' | 'BROKER';
+      deliveredTo: string[];
+      deliveryDate: Date;
+      confirmation?: DeliveryConfirmation;
+    };
+    
+    // Regulatory compliance
+    regulatoryFiling?: {
+      filingId: string;
+      filingDate: Date;
+      regulatoryBody: string;
+      status: 'FILED' | 'ACKNOWLEDGED' | 'REJECTED';
+    };
+    
+    // System integration
+    accountingEntry?: AccountingEntry;
+    reinsuranceNotification?: ReinsuranceNotice;
+  };
+}
+
+// Stage 9: Payment processing
+interface PolicyPaymentProcessed extends PolicyEvent {
+  eventType: 'POLICY_PAYMENT_PROCESSED';
+  data: {
+    paymentId: string;
+    policyId: string;
+    
+    payment: {
+      amount: MonetaryAmount;
+      dueDate: Date;
+      paidDate: Date;
+      paymentMethod: PaymentMethodDetails;
+      transactionId: string;
+      processor: string;  // e.g., 'STRIPE', 'ACH', 'CHECK'
+      
+      // Allocation
+      allocation: Array<{
+        type: 'PREMIUM' | 'TAX' | 'FEE' | 'PENALTY';
+        amount: MonetaryAmount;
+        description: string;
+      }>;
+      
+      // Reconciliation
+      reconciliationStatus: 'PENDING' | 'RECONCILED' | 'DISPUTED';
+      bankReference?: string;
+    };
+    
+    // Payment context
+    installmentNumber?: number;
+    totalInstallments?: number;
+    gracePeriodApplied?: boolean;
+    lateFeeWaived?: boolean;
+    
+    // Accounting impact
+    accountingImpact: {
+      entries: AccountingEntry[];
+      ledgerDate: Date;
+      postedBy: string;
+    };
+    
+    // Regulatory reporting
+    antiMoneyLaunderingCheck?: AMLResult;
+    sanctionsScreening?: SanctionsCheck;
+  };
+}
+
+// Stage 10: Policy activation
+interface PolicyActivated extends PolicyEvent {
+  eventType: 'POLICY_ACTIVATED';
+  data: {
+    activationId: string;
+    policyId: string;
+    
+    activation: {
+      effectiveDateTime: Date;
+      activationMethod: 'AUTOMATIC' | 'MANUAL' | 'CONDITIONAL';
+      activationReason: string;
+      
+      // Verification
+      prerequisites: Array<{
+        requirement: string;
+        status: 'MET' | 'WAIVED' | 'PENDING';
+        verifiedAt?: Date;
+        verifiedBy?: string;
+      }>;
+      
+      // Coverage verification
+      coverageConfirmed: boolean;
+      documentsDelivered: boolean;
+      paymentConfirmed: boolean;
+    };
+    
+    // System updates
+    statusTransition: {
+      from: string;
+      to: string;
+      triggeredBy: string;
+    };
+    
+    // Notifications sent
+    notifications: Array<{
+      recipient: string;
+      method: 'EMAIL' | 'SMS' | 'PORTAL' | 'MAIL';
+      template: string;
+      sentAt: Date;
+      deliveryStatus: 'SENT' | 'DELIVERED' | 'FAILED';
+    }>;
+    
+    // Regulatory timeline tracking
+    regulatoryTimeline: {
+      applicationToIssuance: number;  // Days
+      issuanceToActivation: number;   // Days
+      totalProcessingTime: number;    // Days
+    };
+  };
+}
+4. Policy Maintenance & Endorsements
+typescript
+// Policy changes (endorsements)
+interface PolicyEndorsementRequested extends PolicyEvent {
+  eventType: 'POLICY_ENDORSEMENT_REQUESTED';
+  data: {
+    endorsementId: string;
+    policyId: string;
+    
+    request: {
+      requestedBy: 'POLICYHOLDER' | 'BROKER' | 'INTERNAL';
+      requestDate: Date;
+      changeType: 'COVERAGE' | 'PREMIUM' | 'TERM' | 'PARTY' | 'OTHER';
+      
+      // Change details
+      requestedChanges: Array<{
+        field: string;
+        currentValue: any;
+        requestedValue: any;
+        reason: string;
+        supportingDocuments?: DocumentReference[];
+      }>;
+      
+      // Effective timing
+      requestedEffectiveDate: Date;
+      retroactive: boolean;
+      retroactiveJustification?: string;
+    };
+    
+    // Business impact assessment
+    impactAssessment?: {
+      premiumImpact: MonetaryAmount;
+      coverageImpact: string;
+      riskImpact: string;
+      underwritingRequired: boolean;
+    };
+  };
+}
+
+interface PolicyEndorsementApproved extends PolicyEvent {
+  eventType: 'POLICY_ENDORSEMENT_APPROVED';
+  data: {
+    endorsementId: string;
+    policyId: string;
+    
+    approval: {
+      approvedBy: string;
+      approvalDate: Date;
+      approvalLevel: string;
+      
+      // Approved changes (may differ from requested)
+      approvedChanges: Array<{
+        field: string;
+        previousValue: any;
+        newValue: any;
+        effectiveDate: Date;
+        reason: string;
+      }>;
+      
+      // Conditions/restrictions
+      conditions?: string[];
+      restrictions?: string[];
+      followUpActions?: string[];
+    };
+    
+    // Financial adjustments
+    premiumAdjustment: {
+      additionalPremium?: MonetaryAmount;
+      returnPremium?: MonetaryAmount;
+      effectiveDate: Date;
+      paymentTerms?: PaymentTerms;
+    };
+    
+    // Document generation
+    endorsementDocument: DocumentReference;
+    
+    // System updates required
+    systemUpdates: Array<{
+      system: string;
+      updateType: string;
+      status: 'PENDING' | 'COMPLETED' | 'FAILED';
+    }>;
+  };
+}
+
+// Renewals
+interface PolicyRenewalInitiated extends PolicyEvent {
+  eventType: 'POLICY_RENEWAL_INITIATED';
+  data: {
+    renewalId: string;
+    policyId: string;
+    
+    renewal: {
+      renewalDate: Date;
+      renewalType: 'AUTOMATIC' | 'MANUAL' | 'OPT_IN';
+      
+      // Renewal terms
+      proposedTerms: {
+        newExpirationDate: Date;
+        proposedPremium: MonetaryAmount;
+        coverageChanges?: CoverageChange[];
+        rateChangeJustification?: string;
+      };
+      
+      // Regulatory requirements
+      renewalDisclosures: Disclosure[];
+      renewalOptions: RenewalOption[];
+      
+      // Timeline
+      noticeSentDate?: Date;
+      responseDeadline?: Date;
+      gracePeriodEnd?: Date;
+    };
+    
+    // Underwriting review
+    renewalUnderwriting: {
+      required: boolean;
+      riskReassessment?: RiskAssessment;
+      ruleEvaluation?: RuleEvaluation;
+    };
+    
+    // Communication plan
+    communication: {
+      noticesRequired: number;
+      noticeMethods: string[];
+      regulatoryCompliance: boolean;
+    };
+  };
+}
+5. Claims Management Events
+typescript
+// Claims initiation
+interface ClaimReported extends PolicyEvent {
+  eventType: 'CLAIM_REPORTED';
+  data: {
+    claimId: string;
+    policyId: string;
+    
+    report: {
+      reportedBy: 'POLICYHOLDER' | 'THIRD_PARTY' | 'AUTHORITY';
+      reportDate: Date;
+      lossDate: Date;
+      discoveryDate?: Date;
+      
+      // Incident details
+      incidentType: string;
+      incidentDescription: string;
+      location: LossLocation;
+      
+      // Initial assessment
+      estimatedLoss: MonetaryAmount;
+      severity: 'MINOR' | 'MODERATE' | 'MAJOR' | 'CATASTROPHIC';
+      emergencyServicesInvolved: boolean;
+      
+      // Reporting channels
+      reportMethod: 'PHONE' | 'ONLINE' | 'MOBILE' | 'AGENT';
+      firstNoticeOfLoss: boolean;
+    };
+    
+    // Immediate actions
+    initialResponse: {
+      claimNumberAssigned: string;
+      adjusterAssigned?: string;
+      emergencyAssistanceDeployed?: boolean;
+      reservationOfRights?: boolean;
+      nextStepsCommunicated: string[];
+    };
+    
+    // Compliance checks
+    regulatoryReporting?: {
+      required: boolean;
+      reportTo: string[];
+      deadline: Date;
+    };
+    
+    // Fraud indicators
+    fraudIndicators: FraudIndicator[];
+    siuReferral?: boolean;
+  };
+}
+
+// Claims investigation
+interface ClaimInvestigationStarted extends PolicyEvent {
+  eventType: 'CLAIM_INVESTIGATION_STARTED';
+  data: {
+    investigationId: string;
+    claimId: string;
+    
+    investigation: {
+      assignedAdjuster: string;
+      investigationType: 'STANDARD' | 'COMPLEX' | 'SPECIAL';
+      scope: InvestigationScope;
+      
+      // Evidence collection
+      evidenceRequired: EvidenceRequirement[];
+      documentsRequested: DocumentRequest[];
+      inspectionsScheduled: InspectionSchedule[];
+      expertAssignments: ExpertAssignment[];
+      
+      // Timeline
+      estimatedCompletion: Date;
+      milestones: InvestigationMilestone[];
+    };
+    
+    // Coverage verification
+    coverageCheck: {
+      coverageConfirmed: boolean;
+      applicableCoverages: CoverageApplicability[];
+      exclusionsReview: ExclusionReview[];
+      limitsApplicable: LimitApplicability[];
+      
+      // Coverage questions
+      coverageQuestions: CoverageQuestion[];
+      underwritingReferral?: boolean;
+    };
+    
+    // Reserve setting
+    initialReserve: {
+      reserveType: 'INDEMNITY' | 'EXPENSE' | 'LAE';
+      amount: MonetaryAmount;
+      setBy: string;
+      justification: string;
+      confidenceLevel: 'LOW' | 'MEDIUM' | 'HIGH';
+    };
+  };
+}
+
+// Claims decision
+interface ClaimDecisionMade extends PolicyEvent {
+  eventType: 'CLAIM_DECISION_MADE';
+  data: {
+    decisionId: string;
+    claimId: string;
+    
+    decision: {
+      decision: 'APPROVED' | 'DENIED' | 'PARTIALLY_APPROVED' | 'SETTLED';
+      decisionDate: Date;
+      decisionMaker: string;
+      authorityLevel: string;
+      
+      // Decision rationale
+      rationale: string;
+      keyFindings: Finding[];
+      evidenceConsidered: EvidenceReference[];
+      legalOpinion?: LegalOpinion;
+      
+      // For denials
+      denialReason?: string;
+      denialCode?: string;
+      appealProcess?: AppealProcess;
+      
+      // For approvals
+      approvedAmount: MonetaryAmount;
+      paymentBreakdown: PaymentAllocation[];
+      settlementTerms?: SettlementTerms;
+    };
+    
+    // Coverage determination
+    coverageDetermination: {
+      coveredPerils: string[];
+      excludedPerils: string[];
+      coverageLimitsApplied: LimitApplication[];
+      deductibleApplied: MonetaryAmount;
+      subrogationPotential: boolean;
+    };
+    
+    // Regulatory compliance
+    regulatoryRequirements: {
+      disclosureRequirements: Disclosure[];
+      reportingRequirements: Report[];
+      timelineCompliance: boolean;
+    };
+    
+    // Communication
+    communication: {
+      decisionLetter: DocumentReference;
+      sentTo: string[];
+      sentDate: Date;
+      acknowledgmentRequired: boolean;
+    };
+  };
+}
+6. Compliance & Regulatory Events
+typescript
+// Regulatory change events
+interface RegulatoryChangeIdentified extends PolicyEvent {
+  eventType: 'REGULATORY_CHANGE_IDENTIFIED';
+  data: {
+    changeId: string;
+    
+    change: {
+      regulation: string;
+      jurisdiction: string;
+      changeType: 'NEW' | 'AMENDMENT' | 'REPEAL';
+      effectiveDate: Date;
+      complianceDeadline: Date;
+      
+      // Change details
+      summary: string;
+      impactAssessment: string;
+      affectedAreas: string[];  // e.g., ['UNDERWRITING', 'CLAIMS', 'PRIVACY']
+      
+      // Source
+      source: 'REGULATORY_BODY' | 'LEGISLATION' | 'COURT_RULING';
+      reference: string;
+      certainty: 'PROPOSED' | 'FINAL' | 'ENFORCED';
+    };
+    
+    // Impact analysis
+    impact: {
+      policiesAffected: number;
+      systemsAffected: string[];
+      processChangesRequired: string[];
+      costEstimate: MonetaryAmount;
+      riskLevel: 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL';
+    };
+    
+    // Action plan
+    actionPlan: {
+      owner: string;
+      tasks: RegulatoryTask[];
+      dependencies: string[];
+      timeline: RegulatoryTimeline;
+    };
+  };
+}
+
+// Compliance audit events
+interface ComplianceAuditStarted extends PolicyEvent {
+  eventType: 'COMPLIANCE_AUDIT_STARTED';
+  data: {
+    auditId: string;
+    
+    audit: {
+      auditor: string;  // Internal, external, regulator
+      auditType: 'REGULATORY' | 'INTERNAL' | 'CERTIFICATION';
+      scope: AuditScope;
+      criteria: AuditCriteria[];
+      
+      // Timeline
+      startDate: Date;
+      estimatedEndDate: Date;
+      reportingDeadline: Date;
+      
+      // Methodology
+      samplingMethod: string;
+      sampleSize: number;
+      testingProcedures: string[];
+    };
+    
+    // Focus areas
+    focusAreas: string[];
+    highRiskAreas: string[];
+    previousFindings?: PreviousFinding[];
+    
+    // Documentation
+    requestList: DocumentRequest[];
+    evidenceRequirements: EvidenceRequirement[];
+  };
+}
+
+interface ComplianceFindingRecorded extends PolicyEvent {
+  eventType: 'COMPLIANCE_FINDING_RECORDED';
+  data: {
+    findingId: string;
+    auditId: string;
+    
+    finding: {
+      severity: 'CRITICAL' | 'MAJOR' | 'MINOR' | 'OBSERVATION';
+      category: string;
+      description: string;
+      
+      // Evidence
+      evidence: Evidence[];
+      policyReference?: string;
+      regulationReference: string;
+      
+      // Impact
+      potentialImpact: string;
+      likelihood: 'RARE' | 'UNLIKELY' | 'POSSIBLE' | 'LIKELY' | 'CERTAIN';
+      riskRating: string;
+    };
+    
+    // Root cause analysis
+    rootCause: {
+      primaryCause: string;
+      contributingFactors: string[];
+      systemicIssue: boolean;
+    };
+    
+    // Corrective action
+    correctiveAction: {
+      actionRequired: string;
+      responsibleParty: string;
+      dueDate: Date;
+      estimatedCost?: MonetaryAmount;
+      successCriteria: string[];
+    };
+    
+    // Regulatory reporting
+    reportable: boolean;
+    reportTo?: string[];
+    reportDeadline?: Date;
+  };
+}
+7. Financial Events
+typescript
+// Premium accounting
+interface PremiumAccountingEntryCreated extends PolicyEvent {
+  eventType: 'PREMIUM_ACCOUNTING_ENTRY_CREATED';
+  data: {
+    entryId: string;
+    policyId: string;
+    
+    entry: {
+      accountingDate: Date;
+      entryType: 'PREMIUM_EARNED' | 'PREMIUM_UNEARNED' | 'PREMIUM_DEFERRED';
+      amount: MonetaryAmount;
+      currency: string;
+      
+      // Accounting details
+      debitAccount: string;
+      creditAccount: string;
+      description: string;
+      
+      // Period covered
+      accountingPeriod: DateRange;
+      effectiveDate: Date;
+      
+      // Reinsurance
+      reinsuranceShare?: MonetaryAmount;
+      netAmount?: MonetaryAmount;
+    };
+    
+    // System integration
+    posting: {
+      postedBy: string;
+      postingTime: Date;
+      systemOfRecord: string;
+      referenceId: string;
+      reversalAllowed: boolean;
+    };
+    
+    // Audit trail
+    calculation: {
+      basis: string;
+      assumptions: AccountingAssumption[];
+      methodology: string;
+      supportingDocuments: DocumentReference[];
+    };
+  };
+}
+
+// Reserving events
+interface LossReserveEstablished extends PolicyEvent {
+  eventType: 'LOSS_RESERVE_ESTABLISHED';
+  data: {
+    reserveId: string;
+    claimId?: string;
+    policyId?: string;
+    
+    reserve: {
+      reserveType: 'CASE' | 'IBNR' | 'LAE';
+      amount: MonetaryAmount;
+      currency: string;
+      establishedDate: Date;
+      
+      // Basis
+      basis: 'ACTUARIAL' | 'MANUAL' | 'STATISTICAL';
+      confidenceInterval: [number, number];
+      methodology: string;
+      assumptions: ReserveAssumption[];
+      
+      // For IBNR
+      developmentPeriod?: DateRange;
+      accidentPeriod?: DateRange;
+    };
+    
+    // Approval
+    approval: {
+      approvedBy: string;
+      approvalLevel: string;
+      reviewRequired: boolean;
+      nextReviewDate?: Date;
+    };
+    
+    // Regulatory compliance
+    regulatory: {
+      solvencyImpact: MonetaryAmount;
+      reportingCategory: string;
+      disclosureRequired: boolean;
+    };
+    
+    // Monitoring
+    monitoring: {
+      keyAssumptions: string[];
+      sensitivityAnalysis: SensitivityAnalysis[];
+      triggerEvents: TriggerEvent[];
+    };
+  };
+}
+8. System & Integration Events
+typescript
+// Third-party integrations
+interface ThirdPartyIntegrationCalled extends PolicyEvent {
+  eventType: 'THIRD_PARTY_INTEGRATION_CALLED';
+  data: {
+    integrationId: string;
+    
+    integration: {
+      provider: string;  // e.g., 'LEXISNEXIS', 'EQUIFAX', 'ISO'
+      service: string;   // e.g., 'CREDIT_REPORT', 'CLAIMS_HISTORY'
+      
+      // Request
+      request: {
+        timestamp: Date;
+        requestId: string;
+        parameters: Record<string, any>;
+        purpose: string;
+        consentReference?: string;
+      };
+      
+      // Response
+      response: {
+        timestamp: Date;
+        responseId: string;
+        success: boolean;
+        data?: any;
+        error?: IntegrationError;
+        
+        // For compliance
+        dataSourceAttribution: string;
+        dataFreshness: Date;
+        confidenceScore?: number;
+      };
+      
+      // Performance
+      performance: {
+        latency: number;  // Milliseconds
+        retries: number;
+        cacheHit: boolean;
+      };
+    };
+    
+    // Privacy & compliance
+    privacy: {
+      dataMinimization: boolean;
+      purposeLimitation: string;
+      retentionPeriod: number;
+      internationalTransfer?: boolean;
+    };
+    
+    // Cost tracking
+    cost: {
+      providerCost: MonetaryAmount;
+      internalCost: MonetaryAmount;
+      billedTo: 'INTERNAL' | 'CUSTOMER' | 'PARTNER';
+    };
+  };
+}
+
+// System health events
+interface SystemHealthEvent extends PolicyEvent {
+  eventType: 'SYSTEM_HEALTH_EVENT';
+  data: {
+    component: string;
+    severity: 'INFO' | 'WARNING' | 'ERROR' | 'CRITICAL';
+    
+    // Event details
+    details: {
+      eventCode: string;
+      description: string;
+      impact: string;
+      
+      // Technical context
+      stackTrace?: string;
+      errorCode?: string;
+      resourceMetrics?: ResourceMetrics;
+      
+      // Business impact
+      affectedPolicies?: string[];
+      affectedUsers?: number;
+      serviceDegradation?: boolean;
+    };
+    
+    // Response
+    response: {
+      automatedResponse: boolean;
+      actionsTaken: string[];
+      estimatedRecoveryTime?: number;
+      escalationLevel: string;
+    };
+    
+    // Monitoring
+    monitoring: {
+      detectedBy: string;
+      detectionTime: Date;
+      alertSent: boolean;
+      ticketCreated?: string;
+    };
+  };
+}
+Event Storage Schema (Database Level)
+sql
+-- Core event table (immutable, append-only)
+CREATE TABLE policy_events (
+  -- Event identification
+  event_id CHAR(64) PRIMARY KEY,  -- SHA-256 hash
+  event_type VARCHAR(100) NOT NULL,
+  aggregate_id VARCHAR(255) NOT NULL,  -- Format: tenant:type:id
+  sequence_number BIGINT NOT NULL,
+  
+  -- Tenant isolation
+  tenant_id VARCHAR(50) NOT NULL,
+  tenant_partition VARCHAR(50) NOT NULL,  -- For physical partitioning
+  
+  -- Temporal
+  event_timestamp TIMESTAMPTZ NOT NULL,
+  trusted_timestamp BYTEA,  -- TPM/HSM attestation
+  received_timestamp TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  
+  -- Context
+  correlation_id CHAR(36),
+  causation_id CHAR(36),
+  
+  -- Actor
+  actor_id VARCHAR(100),
+  actor_type VARCHAR(50),
+  actor_role VARCHAR(100),
+  session_id CHAR(36),
+  ip_hash CHAR(64),  -- Hashed for privacy
+  
+  -- Data (JSONB for flexibility + performance)
+  event_data JSONB NOT NULL,
+  event_metadata JSONB,  -- System metadata
+  
+  -- Compliance
+  regulatory_jurisdiction VARCHAR(50)[],
+  data_classification VARCHAR(20),
+  retention_period_years INTEGER,
+  legal_hold BOOLEAN DEFAULT FALSE,
+  legal_hold_reason TEXT,
+  
+  -- Cryptographic integrity
+  event_hash CHAR(64) NOT NULL,
+  previous_event_hash CHAR(64),
+  merkle_root CHAR(64),
+  merkle_proof JSONB,
+  digital_signature BYTEA,  -- HSM/TSS signature
+  
+  -- Indexes
+  UNIQUE(aggregate_id, sequence_number),
+  UNIQUE(tenant_id, event_id)
+) PARTITION BY LIST (tenant_partition);
+
+-- Create partitions per tenant (physical isolation)
+CREATE TABLE policy_events_tenant_abc 
+PARTITION OF policy_events FOR VALUES IN ('tenant_abc');
+
+-- Optimized indexes for common queries
+CREATE INDEX idx_events_aggregate ON policy_events (aggregate_id, sequence_number);
+CREATE INDEX idx_events_timestamp ON policy_events (event_timestamp DESC);
+CREATE INDEX idx_events_correlation ON policy_events (correlation_id);
+CREATE INDEX idx_events_type ON policy_events (event_type);
+CREATE INDEX idx_events_actor ON policy_events (actor_id, event_timestamp DESC);
+CREATE INDEX idx_events_data_gin ON policy_events USING GIN (event_data);
+CREATE INDEX idx_events_compliance ON policy_events (regulatory_jurisdiction, data_classification);
+
+-- Materialized view for current policy state (read optimization)
+CREATE MATERIALIZED VIEW current_policy_states AS
+SELECT 
+  p.aggregate_id,
+  p.policy_number,
+  p.status,
+  p.effective_date,
+  p.expiration_date,
+  p.policyholder_name,
+  p.coverage_details,
+  p.last_event_timestamp,
+  p.last_event_sequence
+FROM policy_projections p
+WHERE p.is_current = true
+WITH DATA;
+
+-- Refresh policy (consider incremental refresh)
+CREATE UNIQUE INDEX idx_current_policies 
+ON current_policy_states (aggregate_id);
+
+-- Event projection table (for read models)
+CREATE TABLE policy_projections (
+  projection_id CHAR(36) PRIMARY KEY,
+  aggregate_id VARCHAR(255) NOT NULL,
+  projection_type VARCHAR(50) NOT NULL,  -- e.g., 'POLICY_SUMMARY', 'CLAIM_DETAILS'
+  projection_version INTEGER NOT NULL,
+  
+  -- Projection state
+  projection_data JSONB NOT NULL,
+  is_current BOOLEAN DEFAULT TRUE,
+  
+  -- Event references
+  last_event_id CHAR(64),
+  last_event_sequence BIGINT,
+  last_event_timestamp TIMESTAMPTZ,
+  
+  -- Metadata
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW(),
+  
+  -- Indexes
+  UNIQUE(aggregate_id, projection_type),
+  INDEX idx_projections_current (aggregate_id, projection_type) WHERE is_current = TRUE
+);
+
+-- Compliance ledger (journaling projection)
+CREATE TABLE compliance_ledger (
+  ledger_entry_id CHAR(36) PRIMARY KEY,
+  tenant_id VARCHAR(50) NOT NULL,
+  
+  -- Accounting-style entry 
