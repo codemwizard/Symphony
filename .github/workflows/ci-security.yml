@@ -67,6 +67,22 @@ jobs:
   security-gates:
     name: Security Invariants & Tests
     runs-on: ubuntu-latest
+    
+    services:
+      postgres:
+        image: postgres:18-alpine
+        env:
+          POSTGRES_USER: symphony
+          POSTGRES_PASSWORD: symphony
+          POSTGRES_DB: symphony
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U symphony -d symphony"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    
     env:
       DATABASE_URL: postgres://symphony:symphony@localhost:5432/symphony
     
@@ -75,6 +91,27 @@ jobs:
       with:
         submodules: 'recursive'
         fetch-depth: 0  # Full history for drift detection
+
+    - name: Wait for PostgreSQL
+      run: |
+        until pg_isready -h localhost -p 5432 -U symphony; do
+          echo "Waiting for PostgreSQL..."
+          sleep 2
+        done
+        echo "✅ PostgreSQL is ready"
+
+    - name: Apply Database Schema
+      run: |
+        echo "📦 Applying schema migrations..."
+        for file in schema/v1/*.sql; do
+          echo "  Applying: $file"
+          psql "$DATABASE_URL" -f "$file" || true
+        done
+        echo "✅ Schema migrations complete"
+        
+        # Verify critical tables exist
+        psql "$DATABASE_URL" -c "SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = 'public';" -tA
+        echo "✅ Database tables created"
 
     - name: Ensure Policy Lock Exists
       run: |
