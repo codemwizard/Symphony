@@ -176,7 +176,7 @@ jobs:
           -s schemas/evidence-bundle.schema.json \
           -d evidence-bundle.json \
           --strict=true \
-          -c ajv-formats
+          -c ajv-formats --spec=draft2020
 
     - name: Package Evidence Bundle
       run: .ci/evidence/package_bundle.sh
