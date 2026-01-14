@@ -3,10 +3,13 @@ set -euo pipefail
 
 POLICY_FILE=".symphony/policies/active-policy.json"
 
-POLICY_VERSION_FILE=$(jq -r '.policy_version' $POLICY_FILE)
+POLICY_VERSION_FILE=$(jq -r '.policy_version' "$POLICY_FILE")
 
-DB_POLICY_VERSION=$(psql "$DATABASE_URL" -t -c \
-  "SELECT id FROM policy_versions WHERE active = true;")
+DB_POLICY_VERSION=$(
+  psql "$DATABASE_URL" -tA -c \
+    "SELECT id FROM policy_versions WHERE active = true;" \
+  | xargs
+)
 
 if [[ "$POLICY_VERSION_FILE" != "$DB_POLICY_VERSION" ]]; then
   echo "❌ Policy version mismatch"
