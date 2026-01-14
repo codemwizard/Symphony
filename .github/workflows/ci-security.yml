@@ -172,11 +172,15 @@ jobs:
 
     - name: Validate Evidence Schema
       run: |
-        npx --yes -p ajv-cli@5.0.0 -p ajv-formats ajv validate \
+        # Install AJV CLI with Draft 2020-12 support
+        npm install -g ajv-cli ajv-formats
+        # Validate using draft2020 spec
+        ajv validate \
           -s schemas/evidence-bundle.schema.json \
           -d evidence-bundle.json \
-          --strict=true \
-          -c ajv-formats --spec=draft2020
+          --spec=draft2020 \
+          -c ajv-formats \
+          --strict=true
 
     - name: Package Evidence Bundle
       run: .ci/evidence/package_bundle.sh

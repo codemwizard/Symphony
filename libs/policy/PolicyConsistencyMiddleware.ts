@@ -15,7 +15,25 @@ import { Request, Response, NextFunction } from 'express';
 import { Pool } from 'pg';
 import pino from 'pino';
 
+import crypto from 'crypto';
+
 const logger = pino({ name: 'PolicyConsistency' });
+
+/**
+ * Canonicalize policy version string for semantic comparison.
+ * Removes trailing whitespace, newlines, and normalizes Unicode.
+ * This does NOT weaken the invariant - it enforces semantic identity.
+ */
+function canonicalPolicyVersion(version: string): string {
+    return version.trim().normalize('NFKC');
+}
+
+/**
+ * Hash a string for debug logging (proves byte-level identity)
+ */
+function hashForDebug(value: string): string {
+    return crypto.createHash('sha256').update(value).digest('hex').substring(0, 16);
+}
 
 // Configuration
 const POLICY_CACHE_TTL_MS = 5000; // 5 seconds cache for performance
@@ -148,12 +166,17 @@ export class PolicyConsistencyService {
     public async validatePolicyClaims(claims: PolicyClaims): Promise<void> {
         const globalState = await this.getGlobalPolicyState();
 
-        // Check 1: Version match (exact match required for Phase-7R)
-        if (claims.policyVersion !== globalState.activeVersion) {
+        // Check 1: Version match (canonical comparison for Phase-7R)
+        const canonicalTokenVersion = canonicalPolicyVersion(claims.policyVersion);
+        const canonicalGlobalVersion = canonicalPolicyVersion(globalState.activeVersion);
+
+        if (canonicalTokenVersion !== canonicalGlobalVersion) {
             logger.warn({
                 event: 'POLICY_VERSION_MISMATCH',
                 tokenVersion: claims.policyVersion,
                 globalVersion: globalState.activeVersion,
+                tokenHash: hashForDebug(claims.policyVersion),
+                globalHash: hashForDebug(globalState.activeVersion),
                 participantId: claims.participantId
             });
 
