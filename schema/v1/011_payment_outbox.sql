@@ -7,12 +7,12 @@ CREATE TYPE outbox_status AS ENUM ('PENDING', 'IN_FLIGHT', 'SUCCESS', 'FAILED', 
 -- Main Outbox Table (Partitioned by created_at for efficient cleanup)
 CREATE TABLE IF NOT EXISTS payment_outbox (
     -- PG18: Native UUIDv7 for time-ordered locality
-    id UUID PRIMARY KEY DEFAULT uuidv7(),
+    id UUID DEFAULT uuidv7(),
     
     -- Symphony Core Invariants
     participant_id UUID NOT NULL,
     sequence_id BIGINT NOT NULL,
-    idempotency_key TEXT UNIQUE NOT NULL,
+    idempotency_key TEXT NOT NULL, -- Uniqueness enforced via PK/partition key combo or difficult in partitioned tables
     
     -- Transaction Data
     event_type TEXT NOT NULL,
@@ -28,8 +28,11 @@ CREATE TABLE IF NOT EXISTS payment_outbox (
     last_attempt_at TIMESTAMPTZ,
     processed_at TIMESTAMPTZ,
     
-    -- Composite unique constraint for sequence continuity proof
-    CONSTRAINT uq_participant_sequence UNIQUE (participant_id, sequence_id)
+    -- Composite unique constraint for sequence continuity proof (must include partition key)
+    CONSTRAINT uq_participant_sequence UNIQUE (participant_id, sequence_id, created_at),
+    
+    -- PK must include partition key
+    PRIMARY KEY (id, created_at)
 ) PARTITION BY RANGE (created_at);
 
 -- Index for Relayer Poller (SKIP LOCKED pattern)

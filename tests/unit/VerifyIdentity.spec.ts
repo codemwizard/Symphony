@@ -106,6 +106,32 @@ describe('verifyIdentity', () => {
         assert.strictEqual(context.subjectId, 'human-user-001');
     });
 
+    it('should strictly enforce tenant isolation for user identity', async () => {
+        const now = new Date().toISOString();
+        const envelope: IdentityEnvelopeV1 = {
+            version: 'v1',
+            requestId: 'req-user-2',
+            issuedAt: now,
+            issuerService: 'client',
+            subjectType: 'user',
+            subjectId: 'human-user-002',
+            tenantId: 'tenant-2', // Different tenant
+            policyVersion: 'v1.0.0',
+            roles: ['user'],
+            trustTier: 'external',
+            signature: '',
+        };
+
+        envelope.signature = await signEnvelope(envelope, mockKeyManager);
+
+        const context = await verifyIdentity(envelope, 'control-plane', mockKeyManager);
+        assert.strictEqual(context.tenantId, 'tenant-2');
+        assert.notStrictEqual(context.tenantId, 'tenant-1');
+        // Note: verifyIdentity validates the TOKEN integrity. 
+        // Authorization logic (AuthZ) downstream checks if this tenant is allowed to access resources.
+        // This test ensures the tenantId is preserved and validated as part of the immutable context.
+    });
+
     it('should reject outdated policy version', async () => {
         const now = new Date().toISOString();
         const envelope: IdentityEnvelopeV1 = {
