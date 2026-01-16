@@ -639,6 +639,13 @@
                 }
             },
             "then": {
+                "properties": {
+                    "evidence_export": true,
+                    "attestation_gap": true,
+                    "dlq_metrics": true,
+                    "revocation_bounds": true,
+                    "idempotency_metrics": true
+                },
                 "required": [
                     "evidence_export",
                     "attestation_gap",
