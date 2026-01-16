@@ -70,6 +70,7 @@ jobs:
     
     env:
       DATABASE_URL: postgres://symphony:symphony@localhost:5432/symphony
+      PGSSLMODE: disable
     
     steps:
     - uses: actions/checkout@v4
