@@ -7,10 +7,10 @@
  * @see PHASE-7R-implementation_plan.md Section "Ingress Attestation"
  */
 
-import { Request, Response, NextFunction } from 'express';
+import type { Request, Response, NextFunction } from 'express';
 import { Pool } from 'pg';
-import pino from 'pino';
-import crypto from 'crypto';
+import { pino } from 'pino';
+import * as crypto from 'crypto';
 
 const logger = pino({ name: 'IngressAttestation' });
 
@@ -143,10 +143,10 @@ export class IngressAttestationService {
     /**
      * Mark attestation as execution started
      */
-    public async markExecutionStarted(attestationId: string): Promise<void> {
+    public async markExecutionStarted(attestationId: string, attestedAt: Date): Promise<void> {
         await this.pool.query(
-            `UPDATE ingress_attestations SET execution_started = TRUE WHERE id = $1`,
-            [attestationId]
+            `UPDATE ingress_attestations SET execution_started = TRUE WHERE id = $1 AND attested_at = $2`,
+            [attestationId, attestedAt]
         );
     }
 
@@ -155,13 +155,14 @@ export class IngressAttestationService {
      */
     public async markExecutionCompleted(
         attestationId: string,
+        attestedAt: Date,
         status: 'SUCCESS' | 'FAILED' | 'REPAIRED'
     ): Promise<void> {
         await this.pool.query(
             `UPDATE ingress_attestations 
-             SET execution_completed = TRUE, terminal_status = $2 
-             WHERE id = $1`,
-            [attestationId, status]
+             SET execution_completed = TRUE, terminal_status = $3 
+             WHERE id = $1 AND attested_at = $2`,
+            [attestationId, attestedAt, status]
         );
     }
 
@@ -210,12 +211,12 @@ export function createIngressAttestationMiddleware(pool: Pool) {
             (req as { attestation?: AttestationRecord }).attestation = attestation;
 
             // Mark execution started
-            await service.markExecutionStarted(attestation.id);
+            await service.markExecutionStarted(attestation.id, attestation.attestedAt);
 
             // Capture completion on response finish
             res.on('finish', async () => {
                 const status = res.statusCode < 400 ? 'SUCCESS' : 'FAILED';
-                await service.markExecutionCompleted(attestation.id, status);
+                await service.markExecutionCompleted(attestation.id, attestation.attestedAt, status);
             });
 
             next();

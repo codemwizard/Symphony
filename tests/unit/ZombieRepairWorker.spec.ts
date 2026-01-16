@@ -7,20 +7,16 @@
  * @see libs/repair/ZombieRepairWorker.ts
  */
 
-import { describe, it, before, beforeEach, mock } from 'node:test';
-import assert from 'node:assert';
+import { describe, it, beforeEach, mock } from 'node:test';
+import * as assert from 'node:assert';
 import { Pool } from 'pg';
+import { ZombieRepairWorker } from '../../libs/repair/ZombieRepairWorker.js';
 
 describe('ZombieRepairWorker', () => {
-    let ZombieRepairWorker: typeof import('../../libs/repair/ZombieRepairWorker.js').ZombieRepairWorker;
-    let worker: InstanceType<typeof import('../../libs/repair/ZombieRepairWorker.js').ZombieRepairWorker>;
+    let worker: ZombieRepairWorker;
     let mockPool: { connect: ReturnType<typeof mock.fn>; query: ReturnType<typeof mock.fn> };
     let mockClient: { query: ReturnType<typeof mock.fn>; release: ReturnType<typeof mock.fn> };
 
-    before(async () => {
-        const module = await import('../../libs/repair/ZombieRepairWorker.js');
-        ZombieRepairWorker = module.ZombieRepairWorker;
-    });
 
     beforeEach(() => {
         mockClient = {
@@ -29,12 +25,43 @@ describe('ZombieRepairWorker', () => {
         };
         mockPool = {
             connect: mock.fn(async () => mockClient),
-            query: mock.fn()
+            query: mock.fn(async () => ({ rows: [], rowCount: 0 }))
         };
         worker = new ZombieRepairWorker(mockPool as unknown as Pool);
     });
 
     describe('runRepairCycle()', () => {
+        it('should execute repair queries with correct SQL', async () => {
+            // Mock DB response to ensure all branches are taken
+            mockClient.query.mock.mockImplementation(async () => {
+                return { rows: [{ id: '123' }], rowCount: 1 };
+            });
+
+            const result = await worker.runRepairCycle();
+
+            assert.ok(result);
+
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            const queries = mockClient.query.mock.calls.map((c: any) => c.arguments[0] as string);
+            // console.log('CAPTURED QUERIES:', JSON.stringify(queries, null, 2));
+
+            // Check soft zombie update
+            assert.ok(queries.some((q) => q.includes("UPDATE payment_outbox") && q.includes("status = 'RECOVERING'")));
+
+            // Check hard failure update
+            assert.ok(queries.some((q) => q.includes("UPDATE payment_outbox") && q.includes("status = 'FAILED'")));
+
+            // Check ghost recovery insert
+            assert.ok(queries.some((q) => q.includes("INSERT INTO payment_outbox") && q.includes("GHOST_RECOVERY")));
+
+            // Check attestation update (optimized)
+            assert.ok(queries.some((q) =>
+                q.includes("UPDATE ingress_attestations") &&
+                q.includes("FROM payment_outbox out") &&
+                q.includes("CAST(NULLIF(regexp_replace")
+            ));
+        });
+
         it('should define transaction boundaries', async () => {
             const result = await worker.runRepairCycle();
 
