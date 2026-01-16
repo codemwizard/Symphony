@@ -1,6 +1,4 @@
 import https from 'https';
-import fs from 'fs';
-import { logger } from '../logging/logger.js';
 
 /**
  * INV-SEC-03: mTLS Primitives (Phase-6_Addendum_2)

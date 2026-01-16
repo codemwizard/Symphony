@@ -26,7 +26,7 @@ async function exportEvidence(auditLogPath: string, outputPath: string) {
     // 2. Generate Manifest
     const lines = fs.readFileSync(auditLogPath, "utf8").trim().split("\n");
     const recordCount = lines.length;
-    const lastLine = JSON.parse(lines[recordCount - 1]);
+    const lastLine = JSON.parse(lines[recordCount - 1]!);
 
     const manifest = {
         exportVersion: "v1.0.0",

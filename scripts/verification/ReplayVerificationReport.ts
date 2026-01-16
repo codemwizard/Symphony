@@ -18,7 +18,7 @@ import pino from 'pino';
 import crypto from 'crypto';
 import fs from 'fs/promises';
 import path from 'path';
-import { LedgerReplayEngine, ReplayResult, ReconstructedBalance, ReplayConfig } from './ledger_replay.js';
+import { LedgerReplayEngine, ReconstructedBalance, ReplayConfig } from './ledger_replay.js';
 
 const logger = pino({ name: 'ReplayVerificationReport' });
 

@@ -2,11 +2,13 @@
  * Phase-7R Unit Tests: Evidence Bundle Schema
  * 
  * Tests validation of Phase-7R metrics sections.
+ * Migrated to node:test
  * 
  * @see schemas/evidence-bundle.schema.json
  */
 
-import { describe, it, expect } from '@jest/globals';
+import { describe, it } from 'node:test';
+import assert from 'node:assert';
 
 describe('Evidence Bundle Schema - Phase-7R Sections', () => {
     describe('attestation_gap Section', () => {
@@ -18,8 +20,8 @@ describe('Evidence Bundle Schema - Phase-7R Sections', () => {
                 status: 'PASS'
             };
 
-            expect(attestationGap.gap).toBe(0);
-            expect(attestationGap.status).toBe('PASS');
+            assert.strictEqual(attestationGap.gap, 0);
+            assert.strictEqual(attestationGap.status, 'PASS');
         });
 
         it('should fail when gap > 0', () => {
@@ -30,8 +32,8 @@ describe('Evidence Bundle Schema - Phase-7R Sections', () => {
                 status: 'FAIL'
             };
 
-            expect(attestationGap.gap).toBeGreaterThan(0);
-            expect(attestationGap.status).toBe('FAIL');
+            assert.ok(attestationGap.gap > 0);
+            assert.strictEqual(attestationGap.status, 'FAIL');
         });
 
         it('should require all fields', () => {
@@ -44,16 +46,16 @@ describe('Evidence Bundle Schema - Phase-7R Sections', () => {
             };
 
             for (const field of requiredFields) {
-                expect(field in attestationGap).toBe(true);
+                assert.ok(field in attestationGap);
             }
         });
 
         it('should validate status enum', () => {
             const validStatuses = ['PASS', 'FAIL'];
 
-            expect(validStatuses).toContain('PASS');
-            expect(validStatuses).toContain('FAIL');
-            expect(validStatuses).not.toContain('UNKNOWN');
+            assert.ok(validStatuses.includes('PASS'));
+            assert.ok(validStatuses.includes('FAIL'));
+            assert.ok(!validStatuses.includes('UNKNOWN'));
         });
     });
 
@@ -65,8 +67,8 @@ describe('Evidence Bundle Schema - Phase-7R Sections', () => {
                 records_terminal: 20
             };
 
-            expect(dlqMetrics.records_entered).toBe(500);
-            expect(dlqMetrics.records_recovered + dlqMetrics.records_terminal).toBe(500);
+            assert.strictEqual(dlqMetrics.records_entered, 500);
+            assert.strictEqual(dlqMetrics.records_recovered + dlqMetrics.records_terminal, 500);
         });
 
         it('should require all fields', () => {
@@ -78,7 +80,7 @@ describe('Evidence Bundle Schema - Phase-7R Sections', () => {
             };
 
             for (const field of requiredFields) {
-                expect(field in dlqMetrics).toBe(true);
+                assert.ok(field in dlqMetrics);
             }
         });
 
@@ -89,9 +91,9 @@ describe('Evidence Bundle Schema - Phase-7R Sections', () => {
                 records_terminal: 5
             };
 
-            expect(dlqMetrics.records_entered).toBeGreaterThanOrEqual(0);
-            expect(dlqMetrics.records_recovered).toBeGreaterThanOrEqual(0);
-            expect(dlqMetrics.records_terminal).toBeGreaterThanOrEqual(0);
+            assert.ok(dlqMetrics.records_entered >= 0);
+            assert.ok(dlqMetrics.records_recovered >= 0);
+            assert.ok(dlqMetrics.records_terminal >= 0);
         });
     });
 
@@ -103,15 +105,15 @@ describe('Evidence Bundle Schema - Phase-7R Sections', () => {
                 worst_case_revocation_seconds: 14460
             };
 
-            expect(revocationBounds.cert_ttl_hours).toBe(4);
-            expect(revocationBounds.policy_propagation_seconds).toBe(60);
+            assert.strictEqual(revocationBounds.cert_ttl_hours, 4);
+            assert.strictEqual(revocationBounds.policy_propagation_seconds, 60);
         });
 
         it('should enforce cert_ttl_hours <= 24', () => {
             const validTtl = 4;
             const maxTtl = 24;
 
-            expect(validTtl).toBeLessThanOrEqual(maxTtl);
+            assert.ok(validTtl <= maxTtl);
         });
 
         it('should correctly calculate worst_case', () => {
@@ -119,7 +121,7 @@ describe('Evidence Bundle Schema - Phase-7R Sections', () => {
             const policyPropagationSeconds = 60;
             const worstCase = certTtlHours * 3600 + policyPropagationSeconds;
 
-            expect(worstCase).toBe(14460);
+            assert.strictEqual(worstCase, 14460);
         });
 
         it('should require ttl and propagation fields', () => {
@@ -130,7 +132,7 @@ describe('Evidence Bundle Schema - Phase-7R Sections', () => {
             };
 
             for (const field of requiredFields) {
-                expect(field in revocationBounds).toBe(true);
+                assert.ok(field in revocationBounds);
             }
         });
     });
@@ -144,13 +146,13 @@ describe('Evidence Bundle Schema - Phase-7R Sections', () => {
                 zombie_repairs: 3
             };
 
-            expect(idempotencyMetrics.terminal_reentry_attempts).toBe(0);
+            assert.strictEqual(idempotencyMetrics.terminal_reentry_attempts, 0);
         });
 
         it('should require terminal_reentry_attempts = 0 for healthy system', () => {
             const idempotencyMetrics = { terminal_reentry_attempts: 0 };
 
-            expect(idempotencyMetrics.terminal_reentry_attempts).toBe(0);
+            assert.strictEqual(idempotencyMetrics.terminal_reentry_attempts, 0);
         });
 
         it('should require core fields', () => {
@@ -162,7 +164,7 @@ describe('Evidence Bundle Schema - Phase-7R Sections', () => {
             };
 
             for (const field of requiredFields) {
-                expect(field in idempotencyMetrics).toBe(true);
+                assert.ok(field in idempotencyMetrics);
             }
         });
 
@@ -170,8 +172,8 @@ describe('Evidence Bundle Schema - Phase-7R Sections', () => {
             const withZombie = { zombie_repairs: 5 };
             const withoutZombie = {};
 
-            expect('zombie_repairs' in withZombie).toBe(true);
-            expect('zombie_repairs' in withoutZombie).toBe(false);
+            assert.ok('zombie_repairs' in withZombie);
+            assert.ok(!('zombie_repairs' in withoutZombie));
         });
     });
 
@@ -185,23 +187,23 @@ describe('Evidence Bundle Schema - Phase-7R Sections', () => {
                 status: 'planned'
             };
 
-            expect(evidenceExport.enabled).toBe(false);
-            expect(evidenceExport.status).toBe('planned');
+            assert.strictEqual(evidenceExport.enabled, false);
+            assert.strictEqual(evidenceExport.status, 'planned');
         });
 
         it('should validate status enum', () => {
             const validStatuses = ['active', 'planned', 'disabled'];
 
-            expect(validStatuses).toContain('active');
-            expect(validStatuses).toContain('planned');
-            expect(validStatuses).toContain('disabled');
+            assert.ok(validStatuses.includes('active'));
+            assert.ok(validStatuses.includes('planned'));
+            assert.ok(validStatuses.includes('disabled'));
         });
 
         it('should validate export_target enum', () => {
             const validTargets = ['out_of_domain', 's3_worm', 'archive', 'disabled'];
 
             for (const target of validTargets) {
-                expect(validTargets).toContain(target);
+                assert.ok(validTargets.includes(target));
             }
         });
 
@@ -213,8 +215,8 @@ describe('Evidence Bundle Schema - Phase-7R Sections', () => {
                 export_lag_seconds: null
             };
 
-            expect(evidenceExport.last_exported_at).toBeNull();
-            expect(evidenceExport.export_lag_seconds).toBeNull();
+            assert.strictEqual(evidenceExport.last_exported_at, null);
+            assert.strictEqual(evidenceExport.export_lag_seconds, null);
         });
 
         it('should require enabled and status fields', () => {
@@ -222,7 +224,7 @@ describe('Evidence Bundle Schema - Phase-7R Sections', () => {
             const evidenceExport = { enabled: false, status: 'planned' };
 
             for (const field of requiredFields) {
-                expect(field in evidenceExport).toBe(true);
+                assert.ok(field in evidenceExport);
             }
         });
     });

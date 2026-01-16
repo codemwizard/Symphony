@@ -18,8 +18,14 @@ export const IdentityEnvelopeSchema = z.object({
     policyVersion: z.string().regex(/^v\d+\.\d+\.\d+$/),
     roles: z.array(z.string()).min(1),
     signature: z.string().regex(/^[a-f0-9]{64}$/), // SHA-256 Hex
+    trustTier: z.enum(['external', 'internal']),
     // Phase 6.4 mTLS addendum
-    certFingerprint: z.string().optional()
+    certFingerprint: z.string().optional(),
+
+    // Phase 7.1: Participant Identity
+    participantId: z.string().optional(),
+    participantRole: z.enum(['BANK', 'PSP', 'OPERATOR', 'SUPERVISOR']).optional(),
+    participantStatus: z.enum(['ACTIVE', 'SUSPENDED', 'REVOKED']).optional(),
 });
 
 // --- Financial Schemas ---

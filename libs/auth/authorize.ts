@@ -23,7 +23,7 @@ export async function authorize(
     activePolicy: Policy
 ): Promise<boolean> {
 
-    const { subjectId, subjectType, tenantId, policyVersion } = context;
+    const { subjectId, subjectType, policyVersion } = context;
 
     // Guard 1: Emergency Lockdown Short-Circuit
     if (activePolicy.mode === 'EMERGENCY_LOCKDOWN') {

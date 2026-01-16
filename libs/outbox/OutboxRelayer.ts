@@ -11,7 +11,7 @@
  * - Outbox ID used as external rail idempotency key
  */
 
-import { Pool, PoolClient } from 'pg';
+import { Pool } from 'pg';
 import pino from 'pino';
 
 const logger = pino({ name: 'OutboxRelayer' });
@@ -224,4 +224,4 @@ export class OutboxRelayer {
 }
 
 // Export for testing
-export { RailClient, OutboxRecord };
+export type { RailClient, OutboxRecord };

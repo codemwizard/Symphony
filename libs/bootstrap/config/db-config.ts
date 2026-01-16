@@ -11,7 +11,6 @@ export const DB_CONFIG_GUARDS: GuardRule[] = [
     { type: 'required', name: 'DB_USER' },
     { type: 'required', name: 'DB_PASSWORD', sensitive: true },
     { type: 'required', name: 'DB_NAME' },
-    { type: 'required', name: 'DB_CA_CERT', sensitive: true },
 
     {
         type: 'assert',

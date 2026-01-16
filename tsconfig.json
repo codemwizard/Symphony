@@ -1,20 +1,42 @@
 {
     "compilerOptions": {
-        "target": "ESNext",
-        "module": "ESNext",
-        "moduleResolution": "node",
+        "target": "ES2022",
+        "lib": [
+            "ES2022"
+        ],
+        "module": "NodeNext",
+        "moduleResolution": "NodeNext",
+        "rootDir": ".",
+        "outDir": "dist",
+        "strict": true,
+        "noImplicitAny": true,
+        "exactOptionalPropertyTypes": true,
+        "noUncheckedIndexedAccess": true,
+        "useUnknownInCatchVariables": true,
+        "noFallthroughCasesInSwitch": true,
         "esModuleInterop": true,
-        "skipLibCheck": true,
         "forceConsistentCasingInFileNames": true,
-        "allowJs": true,
+        "skipLibCheck": true,
         "resolveJsonModule": true,
-        "isolatedModules": true,
-        "noEmit": true,
-        "baseUrl": ".",
-        "allowImportingTsExtensions": true
+        "types": [
+            "node"
+        ]
     },
-    "ts-node": {
-        "esm": true,
-        "experimentalSpecifierResolution": "node"
-    }
+    "include": [
+        "libs/**/*.ts",
+        "services/**/*.ts",
+        "scripts/**/*.ts",
+        ".ci/**/*.ts",
+        "ci/**/*.ts",
+        "tests/**/*.ts",
+        "test-parity.ts",
+        "**/*.d.ts"
+    ],
+    "exclude": [
+        "node_modules",
+        "dist",
+        "coverage",
+        "**/*.js",
+        "**/*.cjs"
+    ]
 }

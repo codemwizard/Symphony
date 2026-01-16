@@ -2,16 +2,18 @@
  * Phase-7R Unit Tests: Monotonic ID Generator with Clock-Safety
  * 
  * Tests the "Wait State" safeguard for backward-clock detection.
+ * Migrated to node:test
  * 
  * @see libs/id/MonotonicIdGenerator.ts
  */
 
-import { describe, it, expect, beforeEach, jest } from '@jest/globals';
+import { describe, it, beforeEach } from 'node:test';
+import assert from 'node:assert';
 import {
     MonotonicIdGenerator,
     ClockMovedBackwardsError,
     createIdGenerator
-} from '../../libs/id/MonotonicIdGenerator';
+} from '../../libs/id/MonotonicIdGenerator.js';
 
 describe('MonotonicIdGenerator', () => {
     let generator: MonotonicIdGenerator;
@@ -25,7 +27,7 @@ describe('MonotonicIdGenerator', () => {
             const id1 = await generator.generate();
             const id2 = await generator.generate();
 
-            expect(id1).not.toBe(id2);
+            assert.notStrictEqual(id1, id2);
         });
 
         it('should generate monotonically increasing IDs', async () => {
@@ -33,34 +35,34 @@ describe('MonotonicIdGenerator', () => {
             const id2 = await generator.generate();
             const id3 = await generator.generate();
 
-            expect(id2).toBeGreaterThan(id1);
-            expect(id3).toBeGreaterThan(id2);
+            assert.ok(id2 > id1, 'id2 should be > id1');
+            assert.ok(id3 > id2, 'id3 should be > id2');
         });
 
         it('should generate IDs as strings', async () => {
             const idStr = await generator.generateString();
 
-            expect(typeof idStr).toBe('string');
-            expect(idStr).toMatch(/^\d+$/);
+            assert.strictEqual(typeof idStr, 'string');
+            assert.match(idStr, /^\d+$/);
         });
     });
 
     describe('Worker ID Validation', () => {
         it('should accept valid worker IDs (0-1023)', () => {
-            expect(() => new MonotonicIdGenerator(0)).not.toThrow();
-            expect(() => new MonotonicIdGenerator(512)).not.toThrow();
-            expect(() => new MonotonicIdGenerator(1023)).not.toThrow();
+            assert.doesNotThrow(() => new MonotonicIdGenerator(0));
+            assert.doesNotThrow(() => new MonotonicIdGenerator(512));
+            assert.doesNotThrow(() => new MonotonicIdGenerator(1023));
         });
 
         it('should reject invalid worker IDs', () => {
-            expect(() => new MonotonicIdGenerator(-1)).toThrow();
-            expect(() => new MonotonicIdGenerator(1024)).toThrow();
+            assert.throws(() => new MonotonicIdGenerator(-1));
+            assert.throws(() => new MonotonicIdGenerator(1024));
         });
     });
 
     describe('Clock-Safety: Wait State', () => {
         it('should not be in wait state initially', () => {
-            expect(generator.isInWaitState()).toBe(false);
+            assert.strictEqual(generator.isInWaitState(), false);
         });
 
         it('should handle sequence overflow within same millisecond', async () => {
@@ -72,14 +74,14 @@ describe('MonotonicIdGenerator', () => {
 
             // All IDs should be unique
             const uniqueIds = new Set(ids.map(id => id.toString()));
-            expect(uniqueIds.size).toBe(100);
+            assert.strictEqual(uniqueIds.size, 100);
         });
     });
 
     describe('Factory Function', () => {
         it('should create generator with specified worker ID', () => {
             const gen = createIdGenerator(42);
-            expect(gen).toBeInstanceOf(MonotonicIdGenerator);
+            assert.ok(gen instanceof MonotonicIdGenerator);
         });
     });
 });
@@ -88,12 +90,12 @@ describe('ClockMovedBackwardsError', () => {
     it('should have correct error properties', () => {
         const error = new ClockMovedBackwardsError(1000, 900, 100);
 
-        expect(error.name).toBe('ClockMovedBackwardsError');
-        expect(error.code).toBe('CLOCK_MOVED_BACKWARDS');
-        expect(error.statusCode).toBe(503);
-        expect(error.lastTimestamp).toBe(1000);
-        expect(error.currentTimestamp).toBe(900);
-        expect(error.driftMs).toBe(100);
-        expect(error.message).toContain('100ms');
+        assert.strictEqual(error.name, 'ClockMovedBackwardsError');
+        assert.strictEqual(error.code, 'CLOCK_MOVED_BACKWARDS');
+        assert.strictEqual(error.statusCode, 503);
+        assert.strictEqual(error.lastTimestamp, 1000);
+        assert.strictEqual(error.currentTimestamp, 900);
+        assert.strictEqual(error.driftMs, 100);
+        assert.ok(error.message.includes('100ms'));
     });
 });

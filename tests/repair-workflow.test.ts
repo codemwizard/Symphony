@@ -5,14 +5,12 @@
 
 import { describe, it, expect, jest } from '@jest/globals';
 import {
-    ReconciliationResult,
-    RepairContext,
-    RepairOutcome
+    ReconciliationResult
 } from '../libs/execution/repairTypes.js';
 
 // Mock dependencies
 jest.mock('../libs/audit/guardLogger.js', () => ({
-    guardAuditLogger: { log: jest.fn().mockResolvedValue(undefined) }
+    guardAuditLogger: { log: jest.fn<() => Promise<void>>().mockResolvedValue(undefined) }
 }));
 
 jest.mock('../libs/logging/logger.js', () => ({
@@ -25,7 +23,7 @@ jest.mock('../libs/logging/logger.js', () => ({
 }));
 
 jest.mock('../libs/db/index.js', () => ({
-    db: { query: jest.fn().mockResolvedValue({ rows: [] }) }
+    db: { query: jest.fn<(...args: unknown[]) => Promise<{ rows: never[] }>>().mockResolvedValue({ rows: [] }) }
 }));
 
 describe('Phase 7.2: Repair Workflow', () => {
@@ -33,13 +31,13 @@ describe('Phase 7.2: Repair Workflow', () => {
     describe('Repair Guarantees', () => {
         it('repair should only advance to terminal state, never regress', () => {
             // Allowed transitions from repair
-            const allowedTransitions: ('COMPLETED' | 'FAILED')[] = ['COMPLETED', 'FAILED'];
+            const allowedTransitions = ['COMPLETED', 'FAILED'];
 
             // These are the only terminal states repair can recommend
             expect(allowedTransitions).toContain('COMPLETED');
             expect(allowedTransitions).toContain('FAILED');
-            expect(allowedTransitions).not.toContain('EXECUTING' as any);
-            expect(allowedTransitions).not.toContain('AUTHORIZED' as any);
+            expect(allowedTransitions).not.toContain('EXECUTING');
+            expect(allowedTransitions).not.toContain('AUTHORIZED');
         });
 
         it('repair events should be append-only', () => {
@@ -111,11 +109,11 @@ describe('Phase 7.2: Repair Workflow', () => {
     describe('Advisory Transition Commands', () => {
         it('transition requests are advisory, may be rejected by .NET', () => {
             // This is a structural test
-            const transitionRequest = {
-                instructionId: 'instr-001',
-                targetState: 'COMPLETED' as const,
-                reason: 'Repair reconciliation confirmed success'
-            };
+            // const transitionRequest = { ... };
+            // instructionId: 'instr-001',
+            //     targetState: 'COMPLETED' as const,
+            //         reason: 'Repair reconciliation confirmed success'
+            // };
 
             // .NET may reject if invariant conditions not met
             const possibleResponse = {

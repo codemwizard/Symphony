@@ -26,41 +26,41 @@ async function main() {
     const keyManager: KeyManager = new ProductionKeyManager();
 
     // Simulated Task Execution
-    async function executeTask(envelope: IdentityEnvelopeV1) {
+    async function _executeTask(envelope: IdentityEnvelopeV1) {
         // HIGH-SEC-002: Input Validation (Zod)
         const validateEnvelope = createValidator(IdentityEnvelopeSchema);
         validateEnvelope(envelope, "ExecutorWorker:Identity");
 
-        try {
-            // Phase 6.3: Refactored to use KeyManager injection
-            const context = await verifyIdentity(envelope, "executor-worker", keyManager);
-            RequestContext.set(context);
+        // Phase 6.3: Refactored to use KeyManager injection
+        const context = await verifyIdentity(envelope, "executor-worker", keyManager);
 
-            // Phase 6.3: Authorization
-            await requireCapability('execution:attempt', 'executor-worker');
+        // SEC-7R-FIX: Use AsyncLocalStorage run() for request-scoped context
+        return RequestContext.run(context, async () => {
+            try {
+                // Phase 6.3: Authorization
+                await requireCapability('execution:attempt', 'executor-worker');
 
-            // Phase 6.5: Audit
-            await auditLogger.log({
-                type: 'IDENTITY_VERIFY',
-                context,
-                decision: 'ALLOW'
-            });
+                // Phase 6.5: Audit
+                await auditLogger.log({
+                    type: 'IDENTITY_VERIFY',
+                    context,
+                    decision: 'ALLOW'
+                });
 
-            await auditLogger.log({
-                type: 'EXECUTION_ATTEMPT',
-                context,
-                decision: 'EXECUTED'
-            });
+                await auditLogger.log({
+                    type: 'EXECUTION_ATTEMPT',
+                    context,
+                    decision: 'EXECUTED'
+                });
 
-            getContextLogger(context).info("Executing task under verified authority and authorized capability");
+                getContextLogger(context).info("Executing task under verified authority and authorized capability");
 
-            // Execute attempt...
-        } catch (err) {
-            // HIGH-SEC-003: Prevent information disclosure
-            throw ErrorSanitizer.sanitize(err, "ExecutorWorker:TaskExecution");
-        } finally {
-            RequestContext.clear();
-        }
+                // Execute attempt...
+            } catch (err) {
+                // HIGH-SEC-003: Prevent information disclosure
+                throw ErrorSanitizer.sanitize(err, "ExecutorWorker:TaskExecution");
+            }
+        });
     }
 }
 

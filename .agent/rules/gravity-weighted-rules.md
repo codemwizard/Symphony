@@ -37,3 +37,12 @@ For each Implementation Plan and Task you are asked to create, you should have:
  - What test was run
  - How and why it failed
  - How it was fixed
+  i) A test is invalid evidence if it:
+       - asserts on string fragments only
+       - does not call the class method under test
+       - uses fake state transitions without DB boundary or method execution
+  ii) A test is valid if it:
+       - imports the production implementation
+       - exercises at least one success path and one failure path
+       - asserts an observable outcome (DB call sequence, thrown error, status transition, emitted event)
+

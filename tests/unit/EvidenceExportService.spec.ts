@@ -2,241 +2,219 @@
  * Phase-7B: Unit Tests for EvidenceExportService
  * 
  * Tests batch export, hashing, and high-water mark functionality.
+ * Migrated to node:test
  */
 
-import { jest, describe, it, expect, beforeEach, afterEach } from '@jest/globals';
-
-// Mock types for testing
-interface MockPoolClient {
-    query: jest.Mock;
-    release: jest.Mock;
-}
-
-interface MockPool {
-    connect: jest.Mock<() => Promise<MockPoolClient>>;
-}
-
-// ------------------ Test Helpers ------------------
-
-function createMockPool(): MockPool {
-    const mockClient: MockPoolClient = {
-        query: jest.fn(),
-        release: jest.fn(),
-    };
-
-    return {
-        connect: jest.fn().mockResolvedValue(mockClient),
-    };
-}
-
-function createMockClientWithData(
-    highWaterMarks: { max_ingress_id: string; max_outbox_id: string; max_ledger_id: string },
-    ingressRows: object[] = [],
-    outboxRows: object[] = [],
-    ledgerRows: object[] = []
-): MockPoolClient {
-    const mockQuery = jest.fn()
-        .mockResolvedValueOnce({ rows: [highWaterMarks] }) // High water marks query
-        .mockResolvedValueOnce({ rows: [] }) // BEGIN
-        .mockResolvedValueOnce({ rows: ingressRows }) // Ingress records
-        .mockResolvedValueOnce({ rows: outboxRows }) // Outbox records
-        .mockResolvedValueOnce({ rows: ledgerRows }) // Ledger records
-        .mockResolvedValueOnce({ rows: [] }) // Last export state
-        .mockResolvedValueOnce({ rows: [] }) // Export log insert
-        .mockResolvedValueOnce({ rows: [] }); // COMMIT
-
-    return {
-        query: mockQuery,
-        release: jest.fn(),
-    };
-}
-
-// ------------------ Tests ------------------
+import { describe, it, beforeEach, mock } from 'node:test';
+import assert from 'node:assert';
+import { Pool } from 'pg';
+import { EvidenceExportService, ExportConfig } from '../../libs/export/EvidenceExportService.js';
 
 describe('EvidenceExportService', () => {
-    describe('High-Water Marks', () => {
-        it('should fetch current high-water marks from all source tables', async () => {
-            const mockPool = createMockPool();
-            const mockClient = mockPool.connect as jest.Mock;
-            const client: MockPoolClient = {
-                query: jest.fn().mockResolvedValue({
-                    rows: [{
-                        max_ingress_id: '1000',
-                        max_outbox_id: '500',
-                        max_ledger_id: '2000',
-                    }],
-                }),
-                release: jest.fn(),
-            };
-            mockClient.mockResolvedValue(client);
+    let service: EvidenceExportService;
+    let mockPool: { connect: ReturnType<typeof mock.fn> };
+    let mockClient: { query: ReturnType<typeof mock.fn>; release: ReturnType<typeof mock.fn> };
+    let mockFs: { mkdir: ReturnType<typeof mock.fn>; writeFile: ReturnType<typeof mock.fn> };
+    let mockQuery: ReturnType<typeof mock.fn>;
+    let mockRelease: ReturnType<typeof mock.fn>;
 
-            // Simulate getHighWaterMarks behavior
-            const result = await client.query(`
-                SELECT
-                    (SELECT COALESCE(MAX(id)::text, '0') FROM ingress_attestations) AS max_ingress_id,
-                    (SELECT COALESCE(MAX(id)::text, '0') FROM payment_outbox) AS max_outbox_id,
-                    (SELECT COALESCE(MAX(id)::text, '0') FROM ledger_entries) AS max_ledger_id
-            `);
+    const MOCK_CONFIG: ExportConfig = {
+        outputDir: '/tmp/test_evidence',
+        schemaVersion: '7B.1.0',
+        batchSize: 100
+    };
 
-            expect(result.rows[0].max_ingress_id).toBe('1000');
-            expect(result.rows[0].max_outbox_id).toBe('500');
-            expect(result.rows[0].max_ledger_id).toBe('2000');
-            expect(client.release).not.toHaveBeenCalled(); // Would be called by service
-        });
+    beforeEach(() => {
+        // Setup PG Mocks
+        mockQuery = mock.fn(async () => ({ rows: [] }));
+        mockRelease = mock.fn();
+        mockClient = {
+            query: mockQuery,
+            release: mockRelease
+        };
 
-        it('should return zero marks for empty tables', async () => {
-            const client: MockPoolClient = {
-                query: jest.fn().mockResolvedValue({
-                    rows: [{
-                        max_ingress_id: '0',
-                        max_outbox_id: '0',
-                        max_ledger_id: '0',
-                    }],
-                }),
-                release: jest.fn(),
-            };
+        mockPool = {
+            connect: mock.fn(async () => mockClient)
+        };
 
-            const result = await client.query('SELECT ...');
+        // Mock Filesystem
+        mockFs = {
+            mkdir: mock.fn(async () => undefined),
+            writeFile: mock.fn(async () => undefined)
+        };
 
-            expect(result.rows[0].max_ingress_id).toBe('0');
-            expect(result.rows[0].max_outbox_id).toBe('0');
-            expect(result.rows[0].max_ledger_id).toBe('0');
+        // Instantiate Service with injected fs
+        service = new EvidenceExportService(mockPool as unknown as Pool, MOCK_CONFIG, mockFs as unknown as typeof import('fs/promises'));
+    });
+
+    describe('getHighWaterMarks', () => {
+        it('should fetch marks from DB using coalesced max IDs', async () => {
+            mockQuery = mock.fn(async () => ({
+                rows: [{
+                    max_ingress_id: '100',
+                    max_outbox_id: '50',
+                    max_ledger_id: '200'
+                }]
+            }));
+            mockClient.query = mockQuery;
+
+            const marks = await service.getHighWaterMarks();
+
+            assert.strictEqual(marks.maxIngressId, '100');
+            assert.strictEqual(marks.maxOutboxId, '50');
+            assert.strictEqual(marks.maxLedgerId, '200');
+
+            const queryCall = mockQuery.mock.calls[0]!;
+            assert.match((queryCall.arguments as [string])[0], /MAX\(id\)/);
+            assert.strictEqual(mockRelease.mock.calls.length, 1);
         });
     });
 
-    describe('Batch Hashing', () => {
-        it('should compute deterministic SHA-256 hash of sorted records', () => {
-            const crypto = require('crypto');
+    describe('getLastExportState', () => {
+        it('should return null if no logs exist', async () => {
+            mockQuery = mock.fn(async () => ({ rows: [] }));
+            mockClient.query = mockQuery;
 
-            const records = [
-                { id: '3', data: 'c' },
-                { id: '1', data: 'a' },
-                { id: '2', data: 'b' },
-            ];
+            const state = await service.getLastExportState();
+            assert.strictEqual(state, null);
+        });
 
-            const sorted = [...records].sort((a, b) => a.id.localeCompare(b.id));
-            const payload = JSON.stringify({
-                schemaVersion: '7B.1.0',
-                batchId: 'test_batch',
-                records: sorted,
+        it('should return last batch state if exists', async () => {
+            mockQuery = mock.fn(async () => ({
+                rows: [{
+                    batch_id: 'batch_prev',
+                    max_ingress_id: '90',
+                    max_outbox_id: '40',
+                    max_ledger_id: '190'
+                }]
+            }));
+            mockClient.query = mockQuery;
+
+            const state = await service.getLastExportState();
+            assert.ok(state);
+            assert.strictEqual(state.batchId, 'batch_prev');
+            assert.strictEqual(state.highWaterMarks.maxIngressId, '90');
+        });
+    });
+
+    describe('exportBatch', () => {
+        it('should orchestrate full export flow (fetch -> hash -> write -> log)', async () => {
+            // Mock sequence:
+            // 1. getHighWaterMarks (Current)
+            // 2. pool.connect() for Transaction
+            // 3. BEGIN
+            // 4. Record fetches (Ingress, Outbox, Ledger)
+            // 5. getLastExportState (Inside exportBatch logic for previous ID) -> Handled via separate query? 
+            //    Wait, `previousBatchId: fromMarks ? (await this.getLastExportState())?.batchId : null`
+            //    If fromMarks is null, getLastExportState is skipped.
+
+            const currentMarks = { max_ingress_id: '200', max_outbox_id: '100', max_ledger_id: '400' };
+
+            mockQuery = mock.fn(async (sql: string) => {
+                if (sql.includes('SELECT COALESCE(MAX(id)')) return { rows: [currentMarks] };
+                if (sql === 'BEGIN') return {};
+                if (sql.includes('FROM ingress_attestations')) return { rows: [{ id: '101', data: 'test' }] };
+                if (sql.includes('FROM payment_outbox')) return { rows: [] };
+                if (sql.includes('FROM ledger_entries')) return { rows: [] };
+                if (sql === 'COMMIT') return {};
+                if (sql.includes('INSERT INTO evidence_export_log')) return {};
+                return { rows: [] };
             });
-            const hash = crypto.createHash('sha256').update(payload).digest('hex');
+            mockClient.query = mockQuery;
 
-            expect(hash).toHaveLength(64);
-            expect(hash).toMatch(/^[a-f0-9]{64}$/);
+            const result = await service.exportBatch(null);
+
+            assert.match(result.batchId, /^batch_/);
+            assert.strictEqual(result.highWaterMarks.maxIngressId, '200');
+            assert.strictEqual(result.recordCounts.ingress, 1);
+            assert.strictEqual(result.recordCounts.outbox, 0);
+
+            // Verify FS calls
+            assert.strictEqual(mockFs.mkdir.mock.calls.length, 1);
+            assert.strictEqual(mockFs.writeFile.mock.calls.length, 2); // json + hash
+
+            const writeCall = mockFs.writeFile.mock.calls[0]!;
+            const firstWriteArgs = writeCall.arguments as [string, string];
+            assert.ok(firstWriteArgs[0].includes(result.batchId + '.json'));
         });
 
-        it('should produce same hash for same input regardless of initial order', () => {
-            const crypto = require('crypto');
+        it('should link to previous batch ID when fromMarks provided', async () => {
+            // Mock getHighWaterMarks
+            mockQuery = mock.fn(async (sql: string) => {
+                if (sql.includes('SELECT COALESCE(MAX(id)')) return { rows: [{ max_ingress_id: '300', max_outbox_id: '150', max_ledger_id: '600' }] };
+                if (sql.includes('FROM evidence_export_log')) return { rows: [{ batch_id: 'batch_old' }] };
+                if (sql === 'BEGIN') return {};
+                if (sql.includes('FROM ingress_attestations')) return { rows: [] };
+                if (sql.includes('FROM payment_outbox')) return { rows: [] };
+                if (sql.includes('FROM ledger_entries')) return { rows: [] };
+                if (sql === 'COMMIT') return {};
+                if (sql.includes('INSERT INTO evidence_export_log')) return {};
+                return { rows: [] };
+            });
+            mockClient.query = mockQuery;
 
-            const computeHash = (records: object[]) => {
-                const sorted = [...records].sort((a: any, b: any) => a.id.localeCompare(b.id));
-                const payload = JSON.stringify({ records: sorted });
-                return crypto.createHash('sha256').update(payload).digest('hex');
-            };
+            const fromMarks = { maxIngressId: '200', maxOutboxId: '100', maxLedgerId: '400' };
+            const result = await service.exportBatch(fromMarks);
 
-            const order1 = [{ id: '2' }, { id: '1' }, { id: '3' }];
-            const order2 = [{ id: '1' }, { id: '3' }, { id: '2' }];
-
-            expect(computeHash(order1)).toBe(computeHash(order2));
+            assert.strictEqual(result.previousBatchId, 'batch_old');
         });
-    });
 
-    describe('Batch Boundaries', () => {
-        it('should use exclusive lower bound and inclusive upper bound', async () => {
-            const client: MockPoolClient = {
-                query: jest.fn().mockResolvedValue({ rows: [] }),
-                release: jest.fn(),
-            };
+        it('should rollback and throw on error', async () => {
+            mockQuery = mock.fn(async (sql: string) => {
+                if (sql.includes('SELECT COALESCE(MAX(id)')) {
+                    return { rows: [{ max_ingress_id: '1', max_outbox_id: '0', max_ledger_id: '0' }] };
+                }
+                if (sql === 'BEGIN') return {};
+                if (sql.includes('FROM ingress_attestations') && sql.includes('WHERE id > $1')) {
+                    throw new Error('DB Connection Failed');
+                }
+                return { rows: [] };
+            });
+            mockClient.query = mockQuery;
 
-            // Simulate query with boundaries
-            await client.query(
-                'SELECT * FROM ingress_attestations WHERE id > $1 AND id <= $2 ORDER BY id ASC LIMIT $3',
-                ['100', '200', 10000]
+            await assert.rejects(
+                async () => service.exportBatch(null),
+                { message: 'DB Connection Failed' }
             );
 
-            expect(client.query).toHaveBeenCalledWith(
-                expect.stringContaining('id > $1 AND id <= $2'),
-                ['100', '200', 10000]
-            );
-        });
-
-        it('should prevent overlapping batches', () => {
-            // Given two batch ranges, verify no overlap
-            const batch1 = { from: '0', to: '100' };
-            const batch2 = { from: '100', to: '200' }; // Starts exactly at batch1.to
-
-            // For exclusive lower bound (>), ID 100 is NOT in batch2
-            // For inclusive upper bound (<=), ID 100 IS in batch1
-            // Therefore: batch1 includes 1-100, batch2 includes 101-200
-            expect(parseInt(batch2.from)).toBe(parseInt(batch1.to));
+            // Verify ROLLBACK was called
+            const calls = mockQuery.mock.calls.map((c: { arguments: unknown[] }) => c.arguments[0]);
+            assert.ok(calls.includes('ROLLBACK'));
         });
     });
 
-    describe('Export Metadata', () => {
-        it('should include view_version and generated_at', () => {
-            const metadata = {
-                batchId: 'batch_123',
-                schemaVersion: '7B.1.0',
-                exportedAt: new Date().toISOString(),
-                viewVersion: '7B.1.0',
-                generatedAt: new Date().toISOString(),
+    describe('Hashing Logic (Deterministic)', () => {
+        it('should produce consistent hash for same data', async () => {
+            const setupMocks = () => {
+                mockQuery = mock.fn(async (sql: string) => {
+                    if (sql.includes('SELECT COALESCE(MAX(id)')) return { rows: [{ max_ingress_id: '10', max_outbox_id: '0', max_ledger_id: '0' }] };
+                    if (sql === 'BEGIN') return {};
+                    if (sql.includes('FROM ingress_attestations')) {
+                        // Unsorted in DB response to test sorting
+                        return {
+                            rows: [
+                                { id: '2', data: 'b' },
+                                { id: '1', data: 'a' }
+                            ]
+                        };
+                    }
+                    if (sql.includes('FROM payment_outbox')) return { rows: [] };
+                    if (sql.includes('FROM ledger_entries')) return { rows: [] };
+                    if (sql === 'COMMIT') return {};
+                    if (sql.includes('INSERT INTO evidence_export_log')) return {};
+                    return { rows: [] };
+                });
+                mockClient.query = mockQuery;
             };
 
-            expect(metadata.viewVersion).toBe('7B.1.0');
-            expect(metadata.generatedAt).toMatch(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}/);
+            setupMocks();
+            const result1 = await service.exportBatch(null);
+
+            assert.ok(result1.batchHash);
+            assert.strictEqual(result1.batchHash.length, 64);
+
+            // Note: different batch IDs will produce different hashes, so we just verify format here
+            // unless we mock generateBatchId which is private.
         });
-
-        it('should include previous batch ID for chain continuity', () => {
-            const metadata = {
-                batchId: 'batch_456',
-                previousBatchId: 'batch_123',
-            };
-
-            expect(metadata.previousBatchId).toBe('batch_123');
-        });
-    });
-
-    describe('Error Handling', () => {
-        it('should not affect runtime systems on export failure', async () => {
-            const client: MockPoolClient = {
-                query: jest.fn()
-                    .mockResolvedValueOnce({ rows: [] }) // BEGIN
-                    .mockRejectedValueOnce(new Error('Export failed')) // Query error
-                    .mockResolvedValueOnce({ rows: [] }), // ROLLBACK
-                release: jest.fn(),
-            };
-
-            try {
-                await client.query('BEGIN');
-                await client.query('SELECT * FROM ingress_attestations');
-            } catch (error) {
-                await client.query('ROLLBACK');
-                expect(client.query).toHaveBeenCalledWith('ROLLBACK');
-            }
-        });
-    });
-});
-
-describe('ExportError', () => {
-    it('should have correct error properties', () => {
-        class ExportError extends Error {
-            readonly code: string;
-            readonly statusCode: number;
-
-            constructor(message: string, code: string, statusCode: number) {
-                super(message);
-                this.name = 'ExportError';
-                this.code = code;
-                this.statusCode = statusCode;
-            }
-        }
-
-        const error = new ExportError('Batch failed', 'BATCH_EXPORT_FAILED', 500);
-
-        expect(error.name).toBe('ExportError');
-        expect(error.code).toBe('BATCH_EXPORT_FAILED');
-        expect(error.statusCode).toBe(500);
-        expect(error.message).toBe('Batch failed');
     });
 });

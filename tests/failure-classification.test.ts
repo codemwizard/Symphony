@@ -5,7 +5,6 @@
 
 import { describe, it, expect } from '@jest/globals';
 import {
-    FailureClass,
     FAILURE_CLASS_METADATA,
     TIMEOUT_CLARIFICATION
 } from '../libs/execution/failureTypes.js';

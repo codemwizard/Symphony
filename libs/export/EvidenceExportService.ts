@@ -111,10 +111,12 @@ export class EvidenceExportService {
     private readonly pool: Pool;
     private readonly config: ExportConfig;
     private readonly VIEW_VERSION = '7B.1.0';
+    private readonly fs: typeof fs;
 
-    constructor(pool: Pool, config: ExportConfig) {
+    constructor(pool: Pool, config: ExportConfig, filesystem?: typeof fs) {
         this.pool = pool;
         this.config = config;
+        this.fs = filesystem ?? fs;
     }
 
     /**
@@ -326,12 +328,12 @@ export class EvidenceExportService {
         const filename = `${batch.metadata.batchId}.json`;
         const filepath = path.join(this.config.outputDir, filename);
 
-        await fs.mkdir(this.config.outputDir, { recursive: true });
-        await fs.writeFile(filepath, JSON.stringify(batch, null, 2), 'utf-8');
+        await this.fs.mkdir(this.config.outputDir, { recursive: true });
+        await this.fs.writeFile(filepath, JSON.stringify(batch, null, 2), 'utf-8');
 
         // Write hash file for integrity verification
         const hashFilepath = `${filepath}.sha256`;
-        await fs.writeFile(hashFilepath, batch.metadata.batchHash, 'utf-8');
+        await this.fs.writeFile(hashFilepath, batch.metadata.batchHash, 'utf-8');
 
         logger.info({ filepath, hashFilepath }, 'Batch written to filesystem');
     }

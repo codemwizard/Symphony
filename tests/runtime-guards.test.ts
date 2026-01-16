@@ -9,7 +9,7 @@
  * - Ledger scope guard validation
  */
 
-import { describe, it, expect, beforeEach, jest } from '@jest/globals';
+import { describe, it, expect, jest } from '@jest/globals';
 import {
     executeIdentityGuard,
     IdentityGuardContext
@@ -32,7 +32,7 @@ import { PolicyProfile } from '../libs/policy/index.js';
 // Mock the audit logger to avoid DB calls in tests
 jest.mock('../libs/audit/guardLogger.js', () => ({
     guardAuditLogger: {
-        log: jest.fn().mockResolvedValue(undefined)
+        log: jest.fn<() => Promise<void>>().mockResolvedValue(undefined)
     }
 }));
 

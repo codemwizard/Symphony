@@ -13,7 +13,7 @@ export type GuardRule =
 export const CRYPTO_CONFIG_REQUIREMENTS: GuardRule[] = [
     { type: 'required', name: 'KMS_ENDPOINT', sensitive: false },
     { type: 'required', name: 'KMS_KEY_ARN', sensitive: true },
-    { type: 'forbidIf', name: 'DEV_KMS_CHECK', when: () => process.env['NODE_ENV'] === 'production' && process.env['KMS_ENDPOINT']?.includes('localhost'), message: 'Production cannot use localhost KMS' },
+    { type: 'forbidIf', name: 'DEV_KMS_CHECK', when: () => process.env['NODE_ENV'] === 'production' && (process.env['KMS_ENDPOINT']?.includes('localhost') ?? false), message: 'Production cannot use localhost KMS' },
 ];
 
 
@@ -51,8 +51,9 @@ export class ConfigGuard {
                         break;
                     }
                 }
-            } catch (err: any) {
-                errors.push(`Check failed for rule: ${err.message}`);
+            } catch (err: unknown) {
+                const message = err instanceof Error ? err.message : 'Unknown error';
+                errors.push(`Check failed for rule: ${message}`);
             }
         }
 
