@@ -8,7 +8,7 @@
  */
 
 import { Request, Response, NextFunction } from 'express';
-import { Pool, PoolClient } from 'pg';
+import { Pool } from 'pg';
 import pino from 'pino';
 import crypto from 'crypto';
 
@@ -225,4 +225,4 @@ export function createIngressAttestationMiddleware(pool: Pool) {
     };
 }
 
-export { IngressAttestationService };
+

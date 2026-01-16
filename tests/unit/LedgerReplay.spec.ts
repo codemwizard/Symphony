@@ -2,9 +2,11 @@
  * Phase-7B: Unit Tests for Ledger Replay Engine
  * 
  * Tests deterministic reconstruction and verification report generation.
+ * Migrated to node:test
  */
 
-import { jest, describe, it, expect } from '@jest/globals';
+import { describe, it } from 'node:test';
+import assert from 'node:assert';
 import crypto from 'crypto';
 
 // ------------------ Test Helpers ------------------
@@ -60,13 +62,13 @@ describe('LedgerReplayEngine', () => {
             const acc001 = balances.get('ACC001:ZMW');
             const acc002 = balances.get('ACC002:ZMW');
 
-            expect(acc001).toBeDefined();
-            expect(acc001!.credit).toBe(150.00); // 100 + 50
-            expect(acc001!.debit).toBe(25.00);
+            assert.ok(acc001);
+            assert.strictEqual(acc001.credit, 150.00); // 100 + 50
+            assert.strictEqual(acc001.debit, 25.00);
 
-            expect(acc002).toBeDefined();
-            expect(acc002!.credit).toBe(500.00);
-            expect(acc002!.debit).toBe(0);
+            assert.ok(acc002);
+            assert.strictEqual(acc002.credit, 500.00);
+            assert.strictEqual(acc002.debit, 0);
         });
 
         it('should calculate correct net balance', () => {
@@ -76,12 +78,12 @@ describe('LedgerReplayEngine', () => {
             const acc001 = balances.get('ACC001:ZMW')!;
             const netBalance = acc001.credit - acc001.debit;
 
-            expect(netBalance).toBe(125.00); // 150 - 25
+            assert.strictEqual(netBalance, 125.00); // 150 - 25
         });
 
         it('should handle empty ledger', () => {
             const balances = reconstructBalances([]);
-            expect(balances.size).toBe(0);
+            assert.strictEqual(balances.size, 0);
         });
 
         it('should handle multiple currencies for same account', () => {
@@ -92,10 +94,10 @@ describe('LedgerReplayEngine', () => {
 
             const balances = reconstructBalances(ledger);
 
-            expect(balances.has('ACC001:ZMW')).toBe(true);
-            expect(balances.has('ACC001:USD')).toBe(true);
-            expect(balances.get('ACC001:ZMW')!.credit).toBe(100.00);
-            expect(balances.get('ACC001:USD')!.credit).toBe(50.00);
+            assert.ok(balances.has('ACC001:ZMW'));
+            assert.ok(balances.has('ACC001:USD'));
+            assert.strictEqual(balances.get('ACC001:ZMW')!.credit, 100.00);
+            assert.strictEqual(balances.get('ACC001:USD')!.credit, 50.00);
         });
     });
 
@@ -106,7 +108,7 @@ describe('LedgerReplayEngine', () => {
             const hash1 = crypto.createHash('sha256').update(JSON.stringify(data)).digest('hex');
             const hash2 = crypto.createHash('sha256').update(JSON.stringify(data)).digest('hex');
 
-            expect(hash1).toBe(hash2);
+            assert.strictEqual(hash1, hash2);
         });
 
         it('should produce different hash for different input data', () => {
@@ -116,7 +118,7 @@ describe('LedgerReplayEngine', () => {
             const hash1 = crypto.createHash('sha256').update(JSON.stringify(data1)).digest('hex');
             const hash2 = crypto.createHash('sha256').update(JSON.stringify(data2)).digest('hex');
 
-            expect(hash1).not.toBe(hash2);
+            assert.notStrictEqual(hash1, hash2);
         });
     });
 
@@ -127,8 +129,8 @@ describe('LedgerReplayEngine', () => {
             const result1 = reconstructBalances(ledger);
             const result2 = reconstructBalances(ledger);
 
-            expect(result1.get('ACC001:ZMW')).toEqual(result2.get('ACC001:ZMW'));
-            expect(result1.get('ACC002:ZMW')).toEqual(result2.get('ACC002:ZMW'));
+            assert.deepStrictEqual(result1.get('ACC001:ZMW'), result2.get('ACC001:ZMW'));
+            assert.deepStrictEqual(result1.get('ACC002:ZMW'), result2.get('ACC002:ZMW'));
         });
     });
 });
@@ -140,7 +142,7 @@ describe('ReplayVerificationReport', () => {
             const actual = { balance: '125.00' };
 
             const match = parseFloat(reconstructed.balance) === parseFloat(actual.balance);
-            expect(match).toBe(true);
+            assert.strictEqual(match, true);
         });
 
         it('should detect deviations', () => {
@@ -148,7 +150,8 @@ describe('ReplayVerificationReport', () => {
             const actual = { balance: '124.99' };
 
             const difference = parseFloat(reconstructed.balance) - parseFloat(actual.balance);
-            expect(difference).toBeCloseTo(0.01, 2);
+            // Close to 0.01
+            assert.ok(Math.abs(difference - 0.01) < 0.00001);
         });
 
         it('should tolerate rounding within 1 cent', () => {
@@ -158,7 +161,7 @@ describe('ReplayVerificationReport', () => {
             const diff = Math.abs(parseFloat(reconstructed.balance) - parseFloat(actual.balance));
             const match = diff < 0.01;
 
-            expect(match).toBe(true);
+            assert.strictEqual(match, true);
         });
     });
 
@@ -167,14 +170,14 @@ describe('ReplayVerificationReport', () => {
             const deviations: unknown[] = [];
             const status = deviations.length === 0 ? 'PASS' : 'FAIL';
 
-            expect(status).toBe('PASS');
+            assert.strictEqual(status, 'PASS');
         });
 
         it('should return WARNING for 1-3 deviations', () => {
             const deviations = [{ accountId: 'ACC001' }];
             const status = deviations.length <= 3 ? 'WARNING' : 'FAIL';
 
-            expect(status).toBe('WARNING');
+            assert.strictEqual(status, 'WARNING');
         });
 
         it('should return FAIL for >3 deviations', () => {
@@ -186,7 +189,7 @@ describe('ReplayVerificationReport', () => {
             ];
             const status = deviations.length > 3 ? 'FAIL' : 'WARNING';
 
-            expect(status).toBe('FAIL');
+            assert.strictEqual(status, 'FAIL');
         });
     });
 
@@ -198,9 +201,9 @@ describe('ReplayVerificationReport', () => {
                 ledger: crypto.createHash('sha256').update('ledger').digest('hex'),
             };
 
-            expect(inputHashes.attestations).toHaveLength(64);
-            expect(inputHashes.outbox).toHaveLength(64);
-            expect(inputHashes.ledger).toHaveLength(64);
+            assert.strictEqual(inputHashes.attestations.length, 64);
+            assert.strictEqual(inputHashes.outbox.length, 64);
+            assert.strictEqual(inputHashes.ledger.length, 64);
         });
 
         it('should include hash of final report', () => {
@@ -212,7 +215,7 @@ describe('ReplayVerificationReport', () => {
 
             const reportHash = crypto.createHash('sha256').update(JSON.stringify(report)).digest('hex');
 
-            expect(reportHash).toHaveLength(64);
+            assert.strictEqual(reportHash.length, 64);
         });
     });
 });

@@ -1,13 +1,16 @@
+
 import crypto from "crypto";
-import { IncidentSignal } from "../../libs/incident/taxonomy";
-import { logger } from "../../libs/logging/logger";
+import { IncidentSignal, IncidentClass, IncidentSeverity } from "../../libs/incident/taxonomy.js";
+import fs from "fs";
+import path from "path";
+import { logger } from "../../libs/logging/logger.js";
 
 /**
  * Symphony Incident Evidence Capture
  * Automatically packages forensic evidence for regulator review.
  */
 export async function captureIncidentEvidence(signal: IncidentSignal, auditLogPath: string, outputPath: string) {
-    console.log(`--- Automated Evidence Capture Initiated [Incident: ${signal.id}] ---`);
+    logger.info(`--- Automated Evidence Capture Initiated [Incident: ${signal.id}] ---`);
 
     const timestamp = new Date().toISOString().replace(/[:.]/g, "-");
     const bundleDir = path.join(outputPath, `incident-evidence-${signal.class}-${timestamp}`);
@@ -67,8 +70,8 @@ export async function captureIncidentEvidence(signal: IncidentSignal, auditLogPa
 if (require.main === module) {
     const mockSignal: IncidentSignal = {
         id: "manual-" + crypto.randomUUID(),
-        class: "SEC-1" as any,
-        severity: "CRITICAL" as any,
+        class: IncidentClass.SEC_1,
+        severity: IncidentSeverity.CRITICAL,
         source: "manual-trigger",
         timestamp: new Date().toISOString(),
         details: "Manual forensic capture requested"

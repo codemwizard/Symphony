@@ -3,12 +3,12 @@
  * Phase Key: SYS-7-2
  */
 
-import { describe, it, expect, jest, beforeEach } from '@jest/globals';
+import { describe, it, expect, jest } from '@jest/globals';
 import { FailureClassification } from '../libs/execution/failureTypes.js';
 
 // Mock dependencies
 jest.mock('../libs/audit/guardLogger.js', () => ({
-    guardAuditLogger: { log: jest.fn().mockResolvedValue(undefined) }
+    guardAuditLogger: { log: jest.fn<() => Promise<void>>().mockResolvedValue(undefined) }
 }));
 
 jest.mock('../libs/logging/logger.js', () => ({

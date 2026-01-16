@@ -51,7 +51,7 @@ class AuditLogger {
     ): Promise<void> {
         await this.ensureChainInitialized();
 
-        const { type, context, action, decision, reason } = event;
+        const { type, context, reason } = event;
 
         const record: Partial<AuditRecordV1> = {
             eventId: crypto.randomUUID(),
@@ -60,14 +60,14 @@ class AuditLogger {
             requestId: context.requestId,
             tenantId: context.tenantId,
             subject: {
-                type: context.subjectType,
+                type: context.subjectType === 'user' ? 'client' : context.subjectType,
                 id: context.subjectId,
                 ou: context.issuerService
             },
-            action,
-            decision,
+            ...(event.action ? { action: event.action } : {}),
+            decision: event.decision,
             policyVersion: context.policyVersion,
-            reason
+            ...(reason ? { reason } : {})
         };
 
         // Construct Integrity Hash

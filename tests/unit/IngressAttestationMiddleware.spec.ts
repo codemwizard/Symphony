@@ -1,227 +1,112 @@
 /**
- * Phase-7R Unit Tests: Ingress Attestation Middleware
+ * Unit Tests: Ingress Attestation Middleware
  * 
  * Tests envelope validation and hash-chaining.
+ * Refactored to use node:test and call production code.
  * 
  * @see libs/attestation/IngressAttestationMiddleware.ts
  */
 
-import { describe, it, expect, beforeEach, jest, afterEach } from '@jest/globals';
+import { describe, it, beforeEach, mock } from 'node:test';
+import assert from 'node:assert';
 import { Pool } from 'pg';
-import crypto from 'crypto';
+import { IngressAttestationService, IngressEnvelope } from '../../libs/attestation/IngressAttestationMiddleware.js';
 
-describe('IngressAttestationMiddleware', () => {
-    let mockPool: Partial<Pool>;
-    let mockClient: {
-        query: jest.Mock;
-        release: jest.Mock;
-    };
+describe('IngressAttestationService', () => {
+    let service: IngressAttestationService;
+    let mockPool: { connect: ReturnType<typeof mock.fn>; query: ReturnType<typeof mock.fn> };
+    let mockClient: { query: ReturnType<typeof mock.fn>; release: ReturnType<typeof mock.fn> };
 
     beforeEach(() => {
         mockClient = {
-            query: jest.fn(),
-            release: jest.fn()
+            query: mock.fn(),
+            release: mock.fn()
         };
-
         mockPool = {
-            connect: jest.fn().mockResolvedValue(mockClient),
-            query: jest.fn()
+            connect: mock.fn(async () => mockClient),
+            query: mock.fn() // method not used by service directly, but good to have
         };
+        service = new IngressAttestationService(mockPool as unknown as Pool);
     });
 
-    afterEach(() => {
-        jest.clearAllMocks();
-    });
+    describe('attest()', () => {
+        it('should validate and insert attestation record', async () => {
+            mockClient.query = mock.fn(async (sql: string) => {
+                if (typeof sql === 'string' && sql.includes('SELECT record_hash')) {
+                    return { rows: [{ record_hash: 'prev-hash-123' }] };
+                }
+                if (typeof sql === 'string' && sql.includes('INSERT INTO')) {
+                    return {
+                        rows: [{
+                            id: 'att-1',
+                            request_id: 'req-1',
+                            idempotency_key: 'idempotency-key-1',
+                            record_hash: 'new-hash-456',
+                            attested_at: new Date()
+                        }]
+                    };
+                }
+                return { rows: [] };
+            });
 
-    describe('Envelope Validation', () => {
-        it('should require requestId', () => {
             const envelope = {
+                requestId: 'req-1',
+                idempotencyKey: 'idempotency-key-1',
+                callerId: 'tenant-1',
+                signature: 'sig-1',
+                timestamp: new Date().toISOString()
+            };
+
+            const result = await service.attest(envelope);
+
+            assert.strictEqual(result.id, 'att-1');
+            assert.strictEqual(result.recordHash, 'new-hash-456');
+
+            // Verify calls
+            assert.strictEqual(mockPool.connect.mock.calls.length, 1);
+            assert.strictEqual(mockClient.query.mock.calls.length, 2); // Select prev + Insert
+            assert.strictEqual(mockClient.release.mock.calls.length, 1);
+        });
+
+        it('should throw InvalidEnvelopeError for missing fields', async () => {
+            const envelope: Partial<IngressEnvelope> = {
+                requestId: 'req-1',
+                // Missing idempotencyKey
+                callerId: 'tenant-1',
+                signature: 'sig-1',
+                timestamp: new Date().toISOString()
+            };
+
+            await assert.rejects(
+                async () => service.attest(envelope as IngressEnvelope),
+                { name: 'InvalidEnvelopeError' }
+            );
+        });
+
+        it('should release client on error', async () => {
+            mockClient.query = mock.fn(async () => {
+                throw new Error('DB Error');
+            });
+
+            const envelope: IngressEnvelope = {
+                requestId: 'req-1',
                 idempotencyKey: 'key-1',
                 callerId: 'tenant-1',
                 signature: 'sig-1',
                 timestamp: new Date().toISOString()
             };
 
-            const isValid = Boolean(envelope.idempotencyKey && envelope.callerId);
-            expect(isValid).toBe(true);
-
-            // Missing requestId
-            const hasRequestId = 'requestId' in envelope;
-            expect(hasRequestId).toBe(false);
-        });
-
-        it('should require idempotencyKey', () => {
-            const envelope = {
-                requestId: 'req-1',
-                callerId: 'tenant-1',
-                signature: 'sig-1'
-            };
-
-            const hasIdempotencyKey = 'idempotencyKey' in envelope;
-            expect(hasIdempotencyKey).toBe(false);
-        });
-
-        it('should require callerId', () => {
-            const envelope = {
-                requestId: 'req-1',
-                idempotencyKey: 'key-1',
-                signature: 'sig-1'
-            };
-
-            const hasCallerId = 'callerId' in envelope;
-            expect(hasCallerId).toBe(false);
-        });
-
-        it('should require signature', () => {
-            const envelope = {
-                requestId: 'req-1',
-                idempotencyKey: 'key-1',
-                callerId: 'tenant-1'
-            };
-
-            const hasSignature = 'signature' in envelope;
-            expect(hasSignature).toBe(false);
-        });
-
-        it('should accept valid complete envelope', () => {
-            const envelope = {
-                requestId: crypto.randomUUID(),
-                idempotencyKey: crypto.randomUUID(),
-                callerId: 'tenant-123',
-                signature: 'valid-signature',
-                timestamp: new Date().toISOString()
-            };
-
-            const isValid =
-                typeof envelope.requestId === 'string' &&
-                typeof envelope.idempotencyKey === 'string' &&
-                typeof envelope.callerId === 'string' &&
-                typeof envelope.signature === 'string';
-
-            expect(isValid).toBe(true);
-        });
-    });
-
-    describe('Hash-Chaining', () => {
-        it('should compute record hash correctly', () => {
-            const record = {
-                id: 'uuid-1',
-                requestId: 'req-1',
-                idempotencyKey: 'key-1',
-                callerId: 'tenant-1',
-                prevHash: 'prev-hash-value'
-            };
-
-            const hashInput = `${record.id}${record.requestId}${record.idempotencyKey}${record.callerId}${record.prevHash}`;
-            const hash = crypto.createHash('sha256').update(hashInput).digest('hex');
-
-            expect(hash).toHaveLength(64);
-            expect(hash).toMatch(/^[a-f0-9]+$/);
-        });
-
-        it('should link records via prev_hash', () => {
-            const record1Hash = crypto.createHash('sha256').update('record1').digest('hex');
-
-            const record2 = {
-                id: 'uuid-2',
-                prevHash: record1Hash
-            };
-
-            expect(record2.prevHash).toBe(record1Hash);
-        });
-
-        it('should have empty prev_hash for first record', () => {
-            const firstRecord = {
-                id: 'uuid-1',
-                prevHash: ''
-            };
-
-            expect(firstRecord.prevHash).toBe('');
-        });
-    });
-
-    describe('Attestation Insertion', () => {
-        it('should insert attestation before execution', async () => {
-            const insertQuery = `
-                INSERT INTO ingress_attestations (
-                    request_id, idempotency_key, caller_identity, signature, prev_hash
-                ) VALUES ($1, $2, $3, $4, $5)
-                RETURNING id, record_hash, attested_at;
-            `;
-
-            mockClient.query.mockResolvedValueOnce({
-                rows: [{
-                    id: 'att-1',
-                    record_hash: 'hash-value',
-                    attested_at: new Date()
-                }]
-            });
-
-            const result = await mockClient.query(insertQuery, [
-                'req-1', 'key-1', 'tenant-1', 'sig-1', ''
-            ]);
-
-            expect(result.rows[0].id).toBe('att-1');
-            expect(result.rows[0].record_hash).toBeDefined();
-        });
-    });
-
-    describe('Execution Tracking', () => {
-        it('should mark execution_started = TRUE after attestation', async () => {
-            mockClient.query.mockResolvedValueOnce({ rowCount: 1 });
-
-            await mockClient.query(
-                'UPDATE ingress_attestations SET execution_started = TRUE WHERE id = $1',
-                ['att-1']
+            await assert.rejects(
+                async () => service.attest(envelope),
+                { message: /Could not create attestation/ }
             );
 
-            expect(mockClient.query).toHaveBeenCalledWith(
-                expect.stringContaining('execution_started = TRUE'),
-                ['att-1']
-            );
-        });
-
-        it('should mark execution_completed with terminal status', async () => {
-            const statuses = ['SUCCESS', 'FAILED', 'REPAIRED'];
-
-            for (const status of statuses) {
-                mockClient.query.mockResolvedValueOnce({ rowCount: 1 });
-
-                await mockClient.query(
-                    'UPDATE ingress_attestations SET execution_completed = TRUE, terminal_status = $2 WHERE id = $1',
-                    ['att-1', status]
-                );
-            }
-
-            expect(mockClient.query).toHaveBeenCalledTimes(3);
+            assert.strictEqual(mockClient.release.mock.calls.length, 1, 'Should release client even on error');
         });
     });
-});
 
-describe('InvalidEnvelopeError', () => {
-    it('should have correct error properties', () => {
-        const error = {
-            name: 'InvalidEnvelopeError',
-            code: 'INVALID_ENVELOPE',
-            statusCode: 400,
-            message: 'Missing requestId'
-        };
-
-        expect(error.code).toBe('INVALID_ENVELOPE');
-        expect(error.statusCode).toBe(400);
-    });
-});
-
-describe('AttestationFailedError', () => {
-    it('should have correct error properties', () => {
-        const error = {
-            name: 'AttestationFailedError',
-            code: 'ATTESTATION_FAILED',
-            statusCode: 503,
-            message: 'DB connection failed'
-        };
-
-        expect(error.code).toBe('ATTESTATION_FAILED');
-        expect(error.statusCode).toBe(503);
-    });
+    // Polyfill for beforeEach since node:test doesn't have it natively in older versions or strictly typed
+    // Actually node:test supports beforeEach/afterEach in recent versions.
+    // But since I used 'before' and manual setup in previous tests, I'll stick to manual setup inside tests or use a helper if needed.
+    // Wait, node:test DOES have beforeEach. I will use a simple setup function instead to be safe and explicit.
 });

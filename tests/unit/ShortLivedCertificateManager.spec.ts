@@ -2,13 +2,21 @@
  * Phase-7R Unit Tests: Short-Lived Certificate Manager (Kill-Switch)
  * 
  * Tests certificate lifecycle, revocation, and TTL enforcement.
+ * Migrated to node:test
  * 
  * @see libs/pki/ShortLivedCertificateManager.ts
  */
 
-import { describe, it, expect, beforeEach, afterEach } from '@jest/globals';
+import { describe, it } from 'node:test';
+import assert from 'node:assert';
 
 describe('ShortLivedCertificateManager', () => {
+    type TestCertificate = {
+        fingerprint: string;
+        revoked: boolean;
+        revokedAt?: Date;
+        revokedReason?: string;
+    };
     const DEFAULT_TTL_HOURS = 4;
     const MAX_TTL_HOURS = 24;
 
@@ -25,18 +33,18 @@ describe('ShortLivedCertificateManager', () => {
             };
 
             const actualTtlHours = (cert.expiresAt.getTime() - cert.issuedAt.getTime()) / (60 * 60 * 1000);
-            expect(actualTtlHours).toBe(4);
+            assert.strictEqual(actualTtlHours, 4);
         });
 
         it('should reject TTL > 24 hours', () => {
             const invalidTtl = 48;
             const isValid = invalidTtl <= MAX_TTL_HOURS;
 
-            expect(isValid).toBe(false);
+            assert.strictEqual(isValid, false);
         });
 
         it('should default to 4-hour TTL', () => {
-            expect(DEFAULT_TTL_HOURS).toBe(4);
+            assert.strictEqual(DEFAULT_TTL_HOURS, 4);
         });
 
         it('should calculate correct renewal window (30 min before expiry)', () => {
@@ -46,17 +54,15 @@ describe('ShortLivedCertificateManager', () => {
             const renewAfter = new Date(expiresAt.getTime() - RENEWAL_WINDOW_MINUTES * 60 * 1000);
 
             const renewalWindow = (expiresAt.getTime() - renewAfter.getTime()) / (60 * 1000);
-            expect(renewalWindow).toBe(30);
+            assert.strictEqual(renewalWindow, 30);
         });
     });
 
     describe('Certificate Revocation', () => {
         it('should mark certificate as revoked', () => {
-            const cert = {
-                fingerprint: 'abc123',
-                revoked: false,
-                revokedAt: undefined as Date | undefined,
-                revokedReason: undefined as string | undefined
+            const cert: TestCertificate = {
+                fingerprint: 'fp-1',
+                revoked: false
             };
 
             // Revoke
@@ -64,9 +70,9 @@ describe('ShortLivedCertificateManager', () => {
             cert.revokedAt = new Date();
             cert.revokedReason = 'Participant suspended';
 
-            expect(cert.revoked).toBe(true);
-            expect(cert.revokedAt).toBeDefined();
-            expect(cert.revokedReason).toBe('Participant suspended');
+            assert.strictEqual(cert.revoked, true);
+            assert.ok(cert.revokedAt);
+            assert.strictEqual(cert.revokedReason, 'Participant suspended');
         });
 
         it('should add fingerprint to revoked set', () => {
@@ -75,7 +81,7 @@ describe('ShortLivedCertificateManager', () => {
 
             revokedFingerprints.add(fingerprint);
 
-            expect(revokedFingerprints.has(fingerprint)).toBe(true);
+            assert.ok(revokedFingerprints.has(fingerprint));
         });
     });
 
@@ -97,10 +103,10 @@ describe('ShortLivedCertificateManager', () => {
                 }
             }
 
-            expect(revokedCount).toBe(2);
-            expect(certificates[0].revoked).toBe(true);
-            expect(certificates[1].revoked).toBe(true);
-            expect(certificates[2].revoked).toBe(false); // Different participant
+            assert.strictEqual(revokedCount, 2);
+            assert.strictEqual(certificates[0]!.revoked, true);
+            assert.strictEqual(certificates[1]!.revoked, true);
+            assert.strictEqual(certificates[2]!.revoked, false); // Different participant
         });
     });
 
@@ -109,21 +115,21 @@ describe('ShortLivedCertificateManager', () => {
             const cert = { revoked: true, expiresAt: new Date(Date.now() + 10000) };
 
             const isValid = !cert.revoked && cert.expiresAt > new Date();
-            expect(isValid).toBe(false);
+            assert.strictEqual(isValid, false);
         });
 
         it('should reject expired certificates', () => {
             const cert = { revoked: false, expiresAt: new Date(Date.now() - 10000) };
 
             const isValid = !cert.revoked && cert.expiresAt > new Date();
-            expect(isValid).toBe(false);
+            assert.strictEqual(isValid, false);
         });
 
         it('should accept valid certificates', () => {
             const cert = { revoked: false, expiresAt: new Date(Date.now() + 10000) };
 
             const isValid = !cert.revoked && cert.expiresAt > new Date();
-            expect(isValid).toBe(true);
+            assert.strictEqual(isValid, true);
         });
     });
 
@@ -134,7 +140,7 @@ describe('ShortLivedCertificateManager', () => {
 
             const worstCaseRevocationSeconds = certTtlHours * 3600 + policyPropagationSeconds;
 
-            expect(worstCaseRevocationSeconds).toBe(14460); // 4h 1min in seconds
+            assert.strictEqual(worstCaseRevocationSeconds, 14460); // 4h 1min in seconds
         });
 
         it('should return correct bounds object', () => {
@@ -144,9 +150,9 @@ describe('ShortLivedCertificateManager', () => {
                 worstCaseRevocationSeconds: 4 * 3600 + 60
             };
 
-            expect(bounds.certTtlHours).toBe(4);
-            expect(bounds.policyPropagationSeconds).toBe(60);
-            expect(bounds.worstCaseRevocationSeconds).toBe(14460);
+            assert.strictEqual(bounds.certTtlHours, 4);
+            assert.strictEqual(bounds.policyPropagationSeconds, 60);
+            assert.strictEqual(bounds.worstCaseRevocationSeconds, 14460);
         });
     });
 
@@ -161,7 +167,7 @@ describe('ShortLivedCertificateManager', () => {
             const hasExistingCerts = participantCerts.length > 0;
 
             const shouldBlockIssuance = allRevoked && hasExistingCerts;
-            expect(shouldBlockIssuance).toBe(true);
+            assert.strictEqual(shouldBlockIssuance, true);
         });
     });
 });
@@ -177,8 +183,8 @@ describe('CertificateError', () => {
         ];
 
         for (const err of errorCodes) {
-            expect(err.code).toBeDefined();
-            expect(err.statusCode).toBeGreaterThanOrEqual(400);
+            assert.ok(err.code);
+            assert.ok(err.statusCode >= 400);
         }
     });
 });

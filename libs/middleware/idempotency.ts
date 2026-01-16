@@ -20,8 +20,8 @@ export class IdempotencyGuard {
                 [idempotencyKey]
             );
             return true;
-        } catch (err: any) {
-            if (err.code === '23505') { // Unique violation
+        } catch (err: unknown) {
+            if (typeof err === 'object' && err !== null && 'code' in err && (err as { code: unknown }).code === '23505') { // Unique violation
                 logger.info({ idempotencyKey }, "IdempotencyGuard: Key already exists");
                 return false;
             }
@@ -32,13 +32,13 @@ export class IdempotencyGuard {
     /**
      * Marks a request ID as completed with a response snapshot.
      */
-    static async finalize(idempotencyKey: string, responseSnapshot: any): Promise<void> {
+    static async finalize(idempotencyKey: string, responseSnapshot: unknown): Promise<void> {
         try {
             await db.query(
                 "UPDATE idempotency_keys SET status = 'COMPLETED', response = $2, updated_at = NOW() WHERE key = $1",
                 [idempotencyKey, JSON.stringify(responseSnapshot)]
             );
-        } catch (err: any) {
+        } catch (err: unknown) {
             throw ErrorSanitizer.sanitize(err, "IdempotencyGuard:FinalizeFailure");
         }
     }

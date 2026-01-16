@@ -10,7 +10,7 @@
  * @see PHASE-7R-implementation_plan.md Section "Temporal Idempotency"
  */
 
-import { Pool, PoolClient } from 'pg';
+import { Pool } from 'pg';
 import pino from 'pino';
 
 const logger = pino({ name: 'ZombieRepairWorker' });

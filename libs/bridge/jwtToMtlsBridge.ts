@@ -2,13 +2,31 @@ import { IdentityEnvelopeV1, ValidatedIdentityContext } from "../context/identit
 import { SymphonyKeyManager, KeyManager } from "../crypto/keyManager.js";
 import { logger } from "../logging/logger.js";
 import crypto from "crypto";
+import { jwtVerify, JWTPayload } from 'jose';
+import { getJWKS } from '../crypto/jwks.js';
 
 // KeyManager singleton (Unified for Dev/Prod Parity)
 const keyManager: KeyManager = new SymphonyKeyManager();
 
+// SEC-7R-FIX: JWT verification configuration
+const JWT_ISSUER = 'symphony-idp';
+const JWT_AUDIENCE = 'symphony-api';
+const CLOCK_TOLERANCE_SECONDS = 30;
+
+/**
+ * Extended JWT payload with Symphony-specific claims
+ */
+interface SymphonyJWTPayload extends JWTPayload {
+    sub: string;
+    scope?: string;
+    tenant_id?: string;
+}
+
 /**
  * INV-SEC-03: Trust Tier Isolation & JWT->mTLS Bridge
  * This bridge is the "Singularity Point" where external identities terminate and internal service identities begin.
+ * 
+ * SEC-7R-FIX: Implements real ES256 JWT verification via jose library.
  */
 export const jwtToMtlsBridge = {
     /**
@@ -21,25 +39,27 @@ export const jwtToMtlsBridge = {
         rawJwtToken: string,
         clientCertFingerprint?: string
     ): Promise<ValidatedIdentityContext> => {
-        // 1. Verify JWT Signature (Placeholder for real Verify logic)
-        // In a real implementation, we would use jsonwebtoken.verify() with a public key.
-        // For Phase 6, we simulate verification and create a verified context.
-
-        // Simulating JWT decode
-        const mockClaims = {
-            sub: "client_123", // client_id or user_id
-            iss: "symphony-idp",
-            aud: "symphony-api",
-            scope: "read:financial write:instruction"
-        };
-
         if (!rawJwtToken) {
             throw new Error("Missing JWT Token");
         }
 
-        // 2. Terminate Claims - Do NOT propagate raw JWT.
-        // We create a new Envelope.
+        // SEC-7R-FIX: Real ES256 JWT verification
+        let claims: SymphonyJWTPayload;
+        try {
+            const { payload } = await jwtVerify(rawJwtToken, getJWKS(), {
+                issuer: JWT_ISSUER,
+                audience: JWT_AUDIENCE,
+                clockTolerance: CLOCK_TOLERANCE_SECONDS,
+                requiredClaims: ['sub', 'iss', 'aud', 'exp', 'iat'],
+            });
+            claims = payload as SymphonyJWTPayload;
+        } catch (error: unknown) {
+            const errorMessage = error instanceof Error ? error.message : String(error);
+            logger.warn({ error: errorMessage }, 'JWT verification failed');
+            throw new Error(`JWT verification failed: ${errorMessage}`);
+        }
 
+        // 2. Terminate Claims - Do NOT propagate raw JWT.
         const now = new Date().toISOString();
         const requestId = crypto.randomUUID();
 
@@ -48,20 +68,34 @@ export const jwtToMtlsBridge = {
             version: 'v1',
             requestId: requestId,
             issuedAt: now,
-            issuerService: 'ingress-gateway', // The Bridge IS the issuer now
+            issuerService: 'ingress-gateway',
             subjectType: 'client',
-            subjectId: mockClaims.sub,
-            tenantId: 'tenant_default', // In real app, derived from claims/path
-            policyVersion: 'v1-active',
-            roles: ['authenticated_user'], // Derived, not just copied
-            trustTier: 'external', // CRITICAL: Downgraded trust tier
-            signature: '', // Will be signed below
-            certFingerprint: clientCertFingerprint
+            subjectId: claims.sub,
+            tenantId: 'tenant_default',
+            policyVersion: 'v1.0.0',
+            roles: ['authenticated_user'],
+            trustTier: 'external',
+            signature: '',
+            ...(clientCertFingerprint ? { certFingerprint: clientCertFingerprint } : {})
         };
 
-        // 4. Sign the Context
+        // 4. SEC-7R-FIX: Sign with canonical JSON (sorted keys) matching verifyIdentity.ts
+        const dataToSign = JSON.stringify({
+            certFingerprint: context.certFingerprint ?? null,
+            issuedAt: context.issuedAt,
+            issuerService: context.issuerService,
+            policyVersion: context.policyVersion,
+            requestId: context.requestId,
+            roles: context.roles.slice().sort(),
+            subjectId: context.subjectId,
+            subjectType: context.subjectType,
+            tenantId: context.tenantId,
+            trustTier: context.trustTier ?? null,
+            version: context.version,
+        });
+
         const signature = crypto.createHmac('sha256', await keyManager.deriveKey('identity/hmac'))
-            .update(JSON.stringify(context)) // Naive serialization for MVP, use canonical JSON in prod
+            .update(dataToSign)
             .digest('hex');
 
         context.signature = signature;
@@ -82,19 +116,39 @@ export const jwtToMtlsBridge = {
      * Throws if raw JWT claims are detected or signatures are invalid.
      */
     assertInternalSafety: async (context: ValidatedIdentityContext): Promise<void> => {
-        if ((context as any).jwt || (context as any).rawToken) {
+        const contextFields = context as Record<string, unknown>;
+        if (contextFields.jwt || contextFields.rawToken) {
             throw new Error("CRITICAL: Raw JWT leakage detected in internal context.");
         }
 
         // Verify Signature
+        // Verify Signature
+        // 4. SEC-7R-FIX: Canonical JSON (sorted keys) matching verifyIdentity.ts
+        const dataToSign = JSON.stringify({
+            certFingerprint: context.certFingerprint ?? null,
+            issuedAt: context.issuedAt,
+            issuerService: context.issuerService,
+            policyVersion: context.policyVersion,
+            requestId: context.requestId,
+            roles: context.roles.slice().sort(), // Sorted for determinism
+            subjectId: context.subjectId,
+            subjectType: context.subjectType,
+            tenantId: context.tenantId,
+            trustTier: context.trustTier ?? null,
+            version: context.version,
+        });
+
         const expectedSig = crypto.createHmac('sha256', await keyManager.deriveKey('identity/hmac'))
-            .update(JSON.stringify({ ...context, signature: '' })) // Re-construct payload
+            .update(dataToSign)
             .digest('hex');
 
-        // Note: Real verify would exclude signature field cleanly. 
-        // Logic simplified for MVP demonstration of the *check*.
+        // SEC-7R-FIX: Timing-safe comparison
+        const sigBuffer = Buffer.from(context.signature, 'hex');
+        const expectedBuffer = Buffer.from(expectedSig, 'hex');
 
-        // INV-SEC-01: Identity Provenance
-        // If signature fails, provenance is broken.
+        if (sigBuffer.length !== expectedBuffer.length ||
+            !crypto.timingSafeEqual(sigBuffer, expectedBuffer)) {
+            throw new Error("CRITICAL: Internal identity integrity check failed (Invalid Signature).");
+        }
     }
 };

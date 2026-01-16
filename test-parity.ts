@@ -1,3 +1,4 @@
+/* eslint-disable no-console */
 
 import { SymphonyKeyManager } from './libs/crypto/keyManager.js';
 
@@ -13,8 +14,8 @@ async function testKMS() {
     try {
         const key = await mgr.deriveKey('parity/refactor');
         console.log("SUCCESS: Key derived:", key);
-    } catch (e: any) {
-        console.error("FAILURE:", e.message);
+    } catch (e: unknown) {
+        console.error("FAILURE:", (e instanceof Error) ? e.message : String(e));
     }
 }
 

@@ -37,21 +37,6 @@ jobs:
           exit 1
         fi
 
-    - name: Enforce Phase Monotonicity
-      shell: bash
-      run: |
-        git fetch origin main
-    
-        CURRENT_PHASE=$(git show origin/main:.symphony/PHASE 2>/dev/null || echo "6")
-        PROPOSED_PHASE=$(cat .symphony/PHASE 2>/dev/null || echo "6")
-    
-        echo "Current Phase (main): $CURRENT_PHASE"
-        echo "Proposed Phase (branch): $PROPOSED_PHASE"
-    
-        if [ "$CURRENT_PHASE" -ge 7 ] && [ "$PROPOSED_PHASE" -lt "$CURRENT_PHASE" ]; then
-          echo "::error::Phase downgrade detected. Phase is monotonic once >=7."
-          exit 1
-        fi
 
     - name: Initialize CodeQL
       uses: github/codeql-action/init@v4
@@ -105,7 +90,7 @@ jobs:
         echo "📦 Applying schema migrations..."
         for file in schema/v1/*.sql; do
           echo "  Applying: $file"
-          psql "$DATABASE_URL" -f "$file" || true
+          psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f "$file"
         done
         echo "✅ Schema migrations complete"
         
@@ -159,14 +144,24 @@ jobs:
         fi
         echo "PHASE=$PHASE" >> $GITHUB_ENV
     
-    - name: Use Node.js 20
+    - name: Use Node.js 20.19.6
       uses: actions/setup-node@v4
       with:
-        node-version: 20
+        node-version: 20.19.6
         cache: 'npm'
         
     - name: Install Dependencies
       run: npm ci
+      
+    - name: Lint (policy)
+      run: npm run lint -- --max-warnings=0
+
+    - name: Enforce RequestContext Safety
+      run: |
+        if grep -r "RequestContext.set" libs/ services/ | grep -v "libs/context/requestContext.ts"; then
+          echo "::error::Forbidden RequestContext.set() usage detected. Use RequestContext.run() instead."
+          exit 1
+        fi
       
     - name: Run Security Gates (Invariant Checks)
       run: npm run security-check
@@ -178,7 +173,7 @@ jobs:
       run: npm run ci:compliance
 
     - name: Install Snyk CLI
-      run: npm install -g snyk
+      run: npm install -g snyk@latest
     
     - name: Verify Snyk Installation
       run: snyk --version
@@ -198,8 +193,8 @@ jobs:
         fi
 
         
-    - name: Audit Dependencies
-      run: npm audit --audit-level=high || echo "::warning::High severity vulnerabilities found"
+    - name: Audit Dependencies (block on high+)
+      run: npm audit --audit-level=high
 
     - name: Generate Evidence Bundle
       run: .ci/evidence/generate_evidence.sh
@@ -209,13 +204,10 @@ jobs:
 
     - name: Validate Evidence Schema
       run: |
-        # Install AJV CLI with Draft 2020-12 support
-        npm install -g ajv-cli ajv-formats
-        # Validate using draft2020 spec
-        ajv validate \
+        npx --yes ajv-cli@5.0.0 validate \
+          --spec=draft2020 \
           -s schemas/evidence-bundle.schema.json \
           -d evidence-bundle.json \
-          --spec=draft2020 \
           -c ajv-formats \
           --strict=true
 

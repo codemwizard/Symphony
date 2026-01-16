@@ -1,7 +1,6 @@
-import crypto from "crypto";
 import { logger } from "../logging/logger.js";
 // This is a production key manager for the Symphony platform.
-import { KMSClient, GenerateDataKeyCommand, DecryptCommand } from "@aws-sdk/client-kms";
+import { KMSClient, GenerateDataKeyCommand } from "@aws-sdk/client-kms";
 
 /**
  * SYM-37: Cryptographic Governance Gates
@@ -25,8 +24,8 @@ export class SymphonyKeyManager implements KeyManager {
 
     constructor() {
         this.client = new KMSClient({
-            region: process.env.KMS_REGION,
-            endpoint: process.env.KMS_ENDPOINT,
+            ...(process.env.KMS_REGION ? { region: process.env.KMS_REGION } : {}),
+            ...(process.env.KMS_ENDPOINT ? { endpoint: process.env.KMS_ENDPOINT } : {}),
             credentials: {
                 accessKeyId: process.env.KMS_ACCESS_KEY_ID!,
                 secretAccessKey: process.env.KMS_SECRET_ACCESS_KEY!,
@@ -35,12 +34,13 @@ export class SymphonyKeyManager implements KeyManager {
     }
 
     async deriveKey(purpose: string): Promise<string> {
+        // Mapping purpose to KeyId. 
+        // In a real scenario, this would be more sophisticated or use Aliases.
+        // For now, we assume a single Master Key or Alias available in the local KMS.
+        // Using 'alias/symphony-root' as a default if not configured (though ConfigGuard ensures it is).
+        const keyId = process.env.KMS_KEY_ARN || 'alias/symphony-root';
+
         try {
-            // Mapping purpose to KeyId. 
-            // In a real scenario, this would be more sophisticated or use Aliases.
-            // For now, we assume a single Master Key or Alias available in the local KMS.
-            // Using 'alias/symphony-root' as a default if not configured.
-            const keyId = process.env.KMS_KEY_ID || 'alias/symphony-root';
 
             const command = new GenerateDataKeyCommand({
                 KeyId: keyId,
@@ -58,15 +58,17 @@ export class SymphonyKeyManager implements KeyManager {
             }
 
             return Buffer.from(response.Plaintext).toString('base64');
-        } catch (error: any) {
+        } catch (error: unknown) {
+            const err = error as { message?: string; code?: string; stack?: string };
             logger.error({
-                error: error.message,
-                code: error.code,
-                purpose
-            }, "KMS derivation failed");
+                error: err.message || String(error),
+                code: err.code,
+                operation: 'decrypt',
+                keyId
+            }, 'KMS Decryption failed');
 
             // Fail-Closed: Do not fallback.
-            throw new Error(`SymphonyKeyManager: KMS derivation failed for purpose '${purpose}': ${error.message}`);
+            throw new Error(`KMS Decryption failed: ${err.message || String(error)}`);
         }
     }
 }

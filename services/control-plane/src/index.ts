@@ -26,36 +26,35 @@ async function main() {
     const keyManager: KeyManager = new ProductionKeyManager();
 
     // Simulated Request Handler
-    async function handleRequest(envelope: IdentityEnvelopeV1) {
-        try {
-            // HIGH-SEC-002: Input Validation (Zod)
-            const validateEnvelope = createValidator(IdentityEnvelopeSchema);
-            validateEnvelope(envelope, "ControlPlane:Identity");
+    async function _handleRequest(envelope: IdentityEnvelopeV1) {
+        // HIGH-SEC-002: Input Validation (Zod)
+        const validateEnvelope = createValidator(IdentityEnvelopeSchema);
+        validateEnvelope(envelope, "ControlPlane:Identity");
 
-            const context = await verifyIdentity(envelope, "control-plane", keyManager);
-            RequestContext.set(context);
+        const context = await verifyIdentity(envelope, "control-plane", keyManager);
 
-            // Phase 6.3: Authorization
-            await requireCapability('route:configure', 'control-plane');
+        // SEC-7R-FIX: Use AsyncLocalStorage run() for request-scoped context
+        return RequestContext.run(context, async () => {
+            try {
+                // Phase 6.3: Authorization
+                await requireCapability('route:configure', 'control-plane');
 
-            // Phase 6.5: Audit
-            await auditLogger.log({
-                type: 'IDENTITY_VERIFY',
-                context,
-                decision: 'ALLOW'
-            });
+                // Phase 6.5: Audit
+                await auditLogger.log({
+                    type: 'IDENTITY_VERIFY',
+                    context,
+                    decision: 'ALLOW'
+                });
 
-            const ctxLogger = getContextLogger(context);
-            ctxLogger.info("Processing request under verified context and authorized capability");
+                const ctxLogger = getContextLogger(context);
+                ctxLogger.info("Processing request under verified context and authorized capability");
 
-            // Handler logic here...
-
-        } catch (err) {
-            // HIGH-SEC-003: Prevent information disclosure
-            throw ErrorSanitizer.sanitize(err, "ControlPlane:RequestHandler");
-        } finally {
-            RequestContext.clear();
-        }
+                // Handler logic here...
+            } catch (err) {
+                // HIGH-SEC-003: Prevent information disclosure
+                throw ErrorSanitizer.sanitize(err, "ControlPlane:RequestHandler");
+            }
+        });
     }
 }
 

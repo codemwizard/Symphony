@@ -47,23 +47,34 @@ export const Iso20022Mapper = {
     /**
      * Map Internal Instruction -> OUTBOUND pacs.008 Envelope
      */
-    toPacs008: (instruction: any): Iso20022Envelope => {
+    mapToIso: (instruction: unknown): Iso20022Envelope => {
+        const instr = instruction as {
+            id: string;
+            amount: number;
+            currency: string;
+            creditorAccount: string;
+            debtorAccount: string;
+            remittanceInfo?: string;
+            createdAt: string; // Assuming createdAt is part of the instruction for mapping
+            debtorId: string; // Assuming debtorId is part of the instruction for mapping
+            creditorId: string; // Assuming creditorId is part of the instruction for mapping
+        };
         // STRICT: Instruction must have all fields. No generation of IDs or Dates here.
-        if (!instruction.createdAt) throw new Error("Mapping failure: Missing deterministic timestamp");
+        if (!instr.createdAt) throw new Error("Mapping failure: Missing deterministic timestamp");
 
         return {
             messageType: 'pacs.008',
-            messageId: instruction.id,
-            creationDateTime: instruction.createdAt,
+            messageId: instr.id,
+            creationDateTime: instr.createdAt,
             debtor: {
-                accountId: instruction.debtorId
+                accountId: instr.debtorId
             },
             creditor: {
-                accountId: instruction.creditorId
+                accountId: instr.creditorId
             },
             amount: {
-                value: instruction.amount.toString(),
-                currency: instruction.currency
+                value: instr.amount.toString(),
+                currency: instr.currency
             }
         };
     },

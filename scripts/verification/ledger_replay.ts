@@ -18,7 +18,7 @@
  * - Offline / read-only execution
  */
 
-import { Pool } from 'pg';
+import { Pool, PoolClient } from 'pg';
 import pino from 'pino';
 import crypto from 'crypto';
 
@@ -161,7 +161,7 @@ export class LedgerReplayEngine {
     // ------------------ Private Methods ------------------
 
     private async fetchAttestations(
-        client: ReturnType<Pool['connect']> extends Promise<infer T> ? T : never,
+        client: PoolClient,
         config: ReplayConfig
     ): Promise<AttestationRecord[]> {
         let query = `
@@ -187,7 +187,7 @@ export class LedgerReplayEngine {
     }
 
     private async fetchOutbox(
-        client: ReturnType<Pool['connect']> extends Promise<infer T> ? T : never,
+        client: PoolClient,
         config: ReplayConfig
     ): Promise<OutboxRecord[]> {
         let query = `
@@ -213,7 +213,7 @@ export class LedgerReplayEngine {
     }
 
     private async fetchLedger(
-        client: ReturnType<Pool['connect']> extends Promise<infer T> ? T : never,
+        client: PoolClient,
         config: ReplayConfig
     ): Promise<LedgerRecord[]> {
         let query = `
@@ -273,7 +273,7 @@ export class LedgerReplayEngine {
 
         const results: ReconstructedBalance[] = [];
         for (const [key, value] of balanceMap) {
-            const [accountId] = key.split(':');
+            const accountId = key.split(':')[0]!;
             const netBalance = value.creditTotal - value.debitTotal;
 
             results.push({

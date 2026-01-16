@@ -13,7 +13,7 @@ export interface IdentityEnvelopeV1 {
     requestId: string;
     issuedAt: string;        // ISO-8601
     issuerService: string;   // e.g. 'control-plane', 'ingest-api'
-    subjectType: 'client' | 'service';
+    subjectType: 'client' | 'service' | 'user';
     subjectId: string;       // client_id or service_id
     tenantId: string;
     policyVersion: string;

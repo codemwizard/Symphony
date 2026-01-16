@@ -1,6 +1,5 @@
-import { ZodSchema, ZodError } from 'zod';
+import { ZodSchema } from 'zod';
 import { logger } from '../logging/logger.js';
-import { RequestContext } from '../context/requestContext.js';
 
 /**
  * HIGH-SEC-002: Validation Middleware
