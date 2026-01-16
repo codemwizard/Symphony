@@ -4,7 +4,7 @@
 -- Ingress Attestation Table (7-day rolling partitions)
 CREATE TABLE IF NOT EXISTS ingress_attestations (
     -- PG18: Native UUIDv7 for time-ordered locality
-    id UUID PRIMARY KEY DEFAULT uuidv7(),
+    id UUID DEFAULT uuidv7(),
     
     -- Request Provenance
     request_id UUID NOT NULL,
@@ -31,7 +31,10 @@ CREATE TABLE IF NOT EXISTS ingress_attestations (
     -- Export Metadata (Phase-7R: Export-Ready, Phase-7B+: Export-Enabled)
     -- Makes future out-of-domain persistence pluggable without schema changes
     exported_at TIMESTAMPTZ,
-    export_batch_id UUID
+    export_batch_id UUID,
+
+    -- PK must include partition key
+    PRIMARY KEY (id, attested_at)
 ) PARTITION BY RANGE (attested_at);
 
 -- Index for gap detection (unexecuted attestations)
