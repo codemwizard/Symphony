@@ -207,7 +207,7 @@ jobs:
       run: |
     - name: Validate Evidence Schema
       run: |
-        npx --yes -p ajv-cli@5.0.0 -p ajv-formats@3.0.1 ajv validate \
+        npx --yes -p ajv-cli@5.0.0 -p ajv-formats@2.1.1 ajv validate \
           --spec=draft2020 \
           -s schemas/evidence-bundle.schema.json \
           -d evidence-bundle.json \
