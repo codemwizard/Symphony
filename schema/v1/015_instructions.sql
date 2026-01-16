@@ -50,4 +50,10 @@ WHERE state = 'COMPLETED';
 CREATE INDEX ix_instruction_terminal
 ON instructions (instruction_id, is_terminal);
 
+-- Trigger for updated_at
+CREATE TRIGGER update_instructions_updated_at
+    BEFORE UPDATE ON instructions
+    FOR EACH ROW
+    EXECUTE FUNCTION update_updated_at_column();
+
 COMMENT ON TABLE instructions IS 'Authoritative instruction state. Single row per intent. Phase 7.3.';
