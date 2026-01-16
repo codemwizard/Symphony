@@ -12,7 +12,7 @@
  */
 
 import { Pool } from 'pg';
-import pino from 'pino';
+import { pino } from 'pino';
 
 const logger = pino({ name: 'OutboxRelayer' });
 
@@ -107,7 +107,7 @@ export class OutboxRelayer {
             // Atomic pick-up with SKIP LOCKED
             const query = `
                 WITH target_records AS (
-                    SELECT id FROM payment_outbox
+                    SELECT id, created_at FROM payment_outbox
                     WHERE status IN ('PENDING', 'RECOVERING')
                       AND (last_attempt_at IS NULL OR last_attempt_at < NOW() - INTERVAL '${RECOVERY_TIMEOUT_SECONDS} seconds')
                     ORDER BY created_at ASC
@@ -120,6 +120,7 @@ export class OutboxRelayer {
                     retry_count = retry_count + 1
                 FROM target_records
                 WHERE payment_outbox.id = target_records.id
+                  AND payment_outbox.created_at = target_records.created_at
                 RETURNING 
                     payment_outbox.id,
                     payment_outbox.participant_id,

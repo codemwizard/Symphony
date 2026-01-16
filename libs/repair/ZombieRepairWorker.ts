@@ -1,17 +1,5 @@
-/**
- * Phase-7R: Temporal Idempotency & Zombie Repair Worker
- * 
- * This module implements the "Zombie Repair" mechanism that prevents
- * indefinite client lockout from stuck transactions.
- * 
- * Invariant: No transaction should remain in PENDING/IN_PROGRESS state
- * for more than the TTL window without being auto-repaired or escalated.
- * 
- * @see PHASE-7R-implementation_plan.md Section "Temporal Idempotency"
- */
-
 import { Pool } from 'pg';
-import pino from 'pino';
+import { pino } from 'pino';
 
 const logger = pino({ name: 'ZombieRepairWorker' });
 
@@ -24,7 +12,7 @@ const REPAIR_INTERVAL_MS = 30000;       // Run every 30 seconds
 /**
  * Zombie Repair Result
  */
-interface RepairResult {
+export interface RepairResult {
     zombiesRepaired: number;
     recordsEscalated: number;
     attestationsReconciled: number;
@@ -97,8 +85,8 @@ export class ZombieRepairWorker {
             const softZombies = await client.query(`
                 UPDATE payment_outbox
                 SET status = 'RECOVERING',
-                    last_error = 'ZOMBIE_REPAIR: Stuck in flight > ${ZOMBIE_THRESHOLD_SECONDS}s',
-                    retry_count = retry_count + 1
+                last_error = 'ZOMBIE_REPAIR: Stuck in flight > ${ZOMBIE_THRESHOLD_SECONDS}s',
+                retry_count = retry_count + 1
                 WHERE status = 'IN_FLIGHT'
                   AND last_attempt_at < NOW() - INTERVAL '${ZOMBIE_THRESHOLD_SECONDS} seconds'
                   AND last_attempt_at > NOW() - INTERVAL '${HARD_FAILURE_TTL_SECONDS} seconds'
@@ -111,8 +99,8 @@ export class ZombieRepairWorker {
             const hardFailures = await client.query(`
                 UPDATE payment_outbox
                 SET status = 'FAILED',
-                    last_error = 'ESCALATED: Transaction exceeded TTL of ${HARD_FAILURE_TTL_SECONDS}s',
-                    processed_at = NOW()
+                last_error = 'ESCALATED: Transaction exceeded TTL of ${HARD_FAILURE_TTL_SECONDS}s',
+                processed_at = NOW()
                 WHERE status IN ('PENDING', 'IN_FLIGHT', 'RECOVERING')
                   AND created_at < NOW() - INTERVAL '${HARD_FAILURE_TTL_SECONDS} seconds'
                 RETURNING id, participant_id, sequence_id;
@@ -154,14 +142,10 @@ export class ZombieRepairWorker {
                 await client.query(`
                     UPDATE ingress_attestations
                     SET execution_started = TRUE
-                    WHERE id IN (
-                        SELECT ing.id
-                        FROM ingress_attestations ing
-                        INNER JOIN payment_outbox out 
-                            ON ing.idempotency_key = REPLACE(out.idempotency_key, 'GHOST_RECOVERED_', '')
-                        WHERE out.event_type = 'GHOST_RECOVERY'
-                          AND ing.execution_started = FALSE
-                    );
+                    FROM payment_outbox out
+                    WHERE ingress_attestations.id = CAST(NULLIF(regexp_replace(out.idempotency_key, '^GHOST_RECOVERED_', ''), out.idempotency_key) AS UUID)
+                      AND out.event_type = 'GHOST_RECOVERY'
+                      AND ingress_attestations.execution_started = FALSE;
                 `);
             }
 

@@ -8,7 +8,7 @@
  */
 
 import { describe, it, beforeEach, mock } from 'node:test';
-import assert from 'node:assert';
+import * as assert from 'node:assert';
 import { Pool } from 'pg';
 import { OutboxRelayer, OutboxRecord } from '../../libs/outbox/OutboxRelayer.js';
 
