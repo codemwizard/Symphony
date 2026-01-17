@@ -12,7 +12,24 @@ export class LedgerInvariants {
      * Ensures an account has sufficient balance before debiting.
      * Prevents overdraft creation unless explicitly authorized (not in scope for Phase 7).
      */
-    static async ensureSufficientFunds(accountId: string, amount: number): Promise<void> {
+    private static async getBalance(accountId: string, client?: unknown): Promise<number> {
+        const dbClient = client as
+            | { query: (sql: string, params: unknown[]) => Promise<{ rows: { balance: string }[] }> }
+            | undefined;
+        const queryClient = dbClient || db;
+
+        const res = await queryClient.query(
+            "SELECT balance FROM accounts WHERE id = $1 FOR UPDATE",
+            [accountId]
+        );
+
+        if (res.rows.length === 0) {
+            throw new Error("LedgerInvariant: Account not found");
+        }
+        return parseFloat(res.rows[0].balance);
+    }
+
+    static async ensureSufficientFunds(accountId: string, amount: number, client?: unknown): Promise<void> {
         if (amount <= 0) {
             throw new Error("LedgerInvariant: Amount must be positive");
         }
@@ -21,24 +38,16 @@ export class LedgerInvariants {
             // Check current verified balance
             // Note: This presumes a 'balances' table exists from previous phases or we query ledger sum.
             // For Phase 7 stub, we assume a `get_balance` function or direct query.
-            const res = await db.query(
-                "SELECT balance FROM accounts WHERE id = $1 FOR UPDATE",
-                [accountId]
-            );
+            const currentBalance = await LedgerInvariants.getBalance(accountId, client);
 
-            if (res.rows.length === 0) {
-                throw new Error("LedgerInvariant: Account not found");
-            }
-
-            const currentBalance = parseFloat(res.rows[0].balance);
             if (currentBalance < amount) {
                 logger.warn({ accountId, currentBalance, required: amount }, "LedgerInvariant: Insufficient funds");
                 throw new Error("LedgerInvariant: Insufficient funds");
             }
 
-        } catch (err: any) {
+        } catch (err: unknown) {
             // Re-throw known invariant errors, sanitize DB errors
-            if (err.message.startsWith("LedgerInvariant")) throw err;
+            if (err instanceof Error && err.message.startsWith("LedgerInvariant")) throw err;
             throw ErrorSanitizer.sanitize(err, "LedgerInvariant:ProofOfFunds");
         }
     }
@@ -47,19 +56,22 @@ export class LedgerInvariants {
      * E-3: Idempotency Protection
      * Ensures a transaction ID has not already been processed.
      */
-    static async ensureIdempotency(txId: string): Promise<void> {
+    static async ensureIdempotency(txId: string, client?: unknown): Promise<void> {
+        const dbClient = client as
+            | { query: (sql: string, params: unknown[]) => Promise<{ rows: unknown[] }> }
+            | undefined;
+        const queryClient = dbClient || db;
         try {
-            const res = await db.query(
+            const res = await queryClient.query(
                 "SELECT id FROM transactions WHERE id = $1",
                 [txId]
             );
 
             if (res.rows.length > 0) {
-                logger.warn({ txId }, "LedgerInvariant: Duplicate transaction detected");
-                throw new Error("LedgerInvariant: Idempotency violation - Duplicate Transaction");
+                throw new Error("LedgerInvariant: Idempotency violation: Duplicate transaction detected");
             }
-        } catch (err: any) {
-            if (err.message.startsWith("LedgerInvariant")) throw err;
+        } catch (err: unknown) {
+            if (err instanceof Error && err.message.startsWith("LedgerInvariant")) throw err;
             throw ErrorSanitizer.sanitize(err, "LedgerInvariant:Idempotency");
         }
     }

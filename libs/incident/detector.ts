@@ -1,7 +1,7 @@
-import { IncidentSignal, IncidentClass, IncidentSeverity, isMaterial } from "./taxonomy";
-import { logger } from "../logging/logger";
-import { auditLogger } from "../audit/logger";
-import { IncidentContainment } from "./containment";
+import { IncidentSignal, IncidentClass, IncidentSeverity, isMaterial } from "./taxonomy.js";
+import { logger } from "../logging/logger.js";
+import { auditLogger } from "../audit/logger.js";
+import { IncidentContainment } from "./containment.js";
 import crypto from "crypto";
 
 /**
@@ -48,8 +48,10 @@ export class IncidentDetector {
                 tenantId: 'symphony',
                 policyVersion: 'v1',
                 roles: ['system'],
-                signature: 'system-signed'
+                signature: 'system-signed',
+                trustTier: 'internal'
             },
+
             decision: 'ALLOW', // Signal emission itself is an allowed act
             reason: `Incident ${signal.class} detected from ${signal.source}`
         });

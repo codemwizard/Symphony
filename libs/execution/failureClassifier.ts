@@ -144,11 +144,11 @@ export function classifyFailure(context: ClassificationContext): FailureClassifi
 
     const eligibility = FAILURE_CLASS_METADATA[failureClass];
     const classification: FailureClassification = {
+        classifiedAt: new Date().toISOString(),
+        ...(errorMessage ? { errorMessage: sanitizeErrorMessage(errorMessage) as string } : {}),
+        ...(errorCode ? { errorCode } : {}),
         failureClass,
-        eligibility,
-        errorCode,
-        errorMessage: sanitizeErrorMessage(errorMessage),
-        classifiedAt: new Date().toISOString()
+        eligibility
     };
 
     logger.info({

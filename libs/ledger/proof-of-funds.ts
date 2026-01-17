@@ -43,7 +43,7 @@ export class ProofOfFunds {
             }
 
             return true;
-        } catch (err: any) {
+        } catch (err: unknown) {
             throw ErrorSanitizer.sanitize(err, "PoF:SufficientFundsCheck");
         }
     }
@@ -66,7 +66,7 @@ export class ProofOfFunds {
             logger.info({ currency, totalBalances: totalBalances.toString() }, "PoF: Global invariant check");
 
             return true;
-        } catch (err: any) {
+        } catch (err: unknown) {
             throw ErrorSanitizer.sanitize(err, "PoF:GlobalInvariantCheck");
         }
     }

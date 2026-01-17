@@ -1,11 +1,6 @@
 import { db } from "../../libs/db/index.js";
-import { logger } from "../../libs/logging/logger.js";
 import { ProofOfFunds } from "../../libs/ledger/proof-of-funds.js";
 
-/**
- * PHASE-7 VERIFICATION: Invariant Scanner
- * Runs as part of the Ceremony Step 2 and Step 5 to verify ledger integrity.
- */
 async function scan() {
     console.log("🔍 Starting Global Invariant Scan...");
 
@@ -37,8 +32,9 @@ async function scan() {
             process.exit(1);
         }
 
-    } catch (err: any) {
-        console.error("💥 Scanner Crash:", err.message);
+    } catch (err: unknown) {
+        const message = err instanceof Error ? err.message : String(err);
+        console.error("💥 Scanner Crash:", message);
         process.exit(1);
     }
 }

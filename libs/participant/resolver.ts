@@ -20,7 +20,6 @@ import { TrustFabric } from '../auth/trustFabric.js';
 import { logger } from '../logging/logger.js';
 import { guardAuditLogger } from '../audit/guardLogger.js';
 import {
-    ResolvedParticipant,
     ParticipantResolutionResult,
     ParticipantResolutionFailure
 } from './participant.js';

@@ -1,6 +1,3 @@
-import fs from "fs";
-import path from "path";
-import crypto from "crypto";
 import { HealthVerifier } from "../../libs/bcdr/healthVerifier.js";
 import { auditLogger } from "../../libs/audit/logger.js";
 import { logger } from "../../libs/logging/logger.js";
@@ -46,6 +43,7 @@ export async function restoreFromBackup(params: {
             tenantId: 'symphony',
             policyVersion: 'v1',
             roles: ['system'],
+            trustTier: 'internal',
             signature: 'system-signed'
         },
         decision: 'EXECUTED',
@@ -59,7 +57,6 @@ import { fileURLToPath } from 'url';
 
 // Standalone implementation
 if (process.argv[1] === fileURLToPath(import.meta.url)) {
-    const auditPath = path.join(process.cwd(), "logs", "audit.jsonl");
     restoreFromBackup({
         backupPath: "/tmp/backup.sql",
         incidentId: "INC-999",

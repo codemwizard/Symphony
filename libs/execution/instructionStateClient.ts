@@ -29,7 +29,7 @@ export type InstructionState =
 /**
  * Terminal states (irreversible).
  */
-const TERMINAL_STATES: readonly InstructionState[] = ['COMPLETED', 'FAILED'];
+// const _TERMINAL_STATES: readonly InstructionState[] = ['COMPLETED', 'FAILED'];
 
 /**
  * Instruction state response from .NET.
@@ -106,7 +106,7 @@ export async function requestTransition(
     const request: TransitionRequest = {
         instructionId,
         targetState,
-        reason
+        ...(reason ? { reason } : {})
     };
 
     // Advisory command to .NET
@@ -134,7 +134,7 @@ export async function requestTransition(
 async function callDotNetApi<T>(
     endpoint: string,
     method: 'GET' | 'POST',
-    body?: unknown
+    _body?: unknown
 ): Promise<T> {
     const baseUrl = process.env.DOTNET_CORE_URL ?? 'http://localhost:5000';
     const url = `${baseUrl}${endpoint}`;

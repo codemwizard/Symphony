@@ -1,7 +1,6 @@
 import { AuditRecordV1 } from "./schema.js";
 import crypto from "crypto";
 import fs from "fs";
-import path from "path";
 
 /**
  * Audit Integrity Verifier
@@ -21,7 +20,9 @@ export function verifyAuditChain(auditFilePath: string): {
 
     for (let i = 0; i < lines.length; i++) {
         try {
-            const record = JSON.parse(lines[i]) as AuditRecordV1;
+            const line = lines[i];
+            if (!line) continue;
+            const record = JSON.parse(line) as AuditRecordV1;
 
             // Verify prevHash link
             if (record.integrity.prevHash !== lastHash) {
@@ -33,11 +34,10 @@ export function verifyAuditChain(auditFilePath: string): {
             }
 
             // Verify record hash
-            const recordCopy = { ...record };
             const actualHash = record.integrity.hash;
 
             // Remove integrity field to reconstruct the content that was hashed
-            const { integrity, ...contentsOnly } = record;
+            const { integrity: _integrity, ...contentsOnly } = record;
             const computedHash = crypto.createHash("sha256")
                 .update(JSON.stringify(contentsOnly) + record.integrity.prevHash)
                 .digest("hex");
@@ -52,10 +52,11 @@ export function verifyAuditChain(auditFilePath: string): {
 
             lastHash = actualHash;
         } catch (e) {
+            const errorMessage = e instanceof Error ? e.message : 'Parse error';
             return {
                 valid: false,
                 violationIndex: i,
-                reason: `Format error at record ${i}: ${eval(e as any).message}`
+                reason: `Format error at record ${i}: ${errorMessage}`
             };
         }
     }

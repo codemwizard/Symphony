@@ -14,3 +14,11 @@ END;
 $$ LANGUAGE plpgsql IMMUTABLE;
 
 COMMENT ON FUNCTION generate_ulid IS 'Generates a time-ordered, sortable 128-bit identifier. Note: This is time-ordered but not strictly canonical ULID spec compliant. Safe for Phase 1/2.';
+
+CREATE OR REPLACE FUNCTION update_updated_at_column()
+RETURNS TRIGGER AS $$
+BEGIN
+    NEW.updated_at = NOW();
+    RETURN NEW;
+END;
+$$ language 'plpgsql';

@@ -1,4 +1,3 @@
-import { cryptoAudit } from '../crypto/keyManager.js';
 import { logger } from '../logging/logger.js';
 import crypto from 'crypto';
 
@@ -14,7 +13,7 @@ export class SymphonyError extends Error {
 
     constructor(
         public readonly publicMessage: string,
-        public readonly internalDetails?: any,
+        public readonly internalDetails?: unknown,
         public readonly category: 'SEC' | 'OPS' | 'FIN' = 'OPS'
     ) {
         super(publicMessage);
@@ -35,14 +34,34 @@ export const ErrorSanitizer = {
     /**
      * Catches and wraps any error into a sanitized SymphonyError.
      */
-    sanitize: (err: any, contextLabel: string): SymphonyError => {
+    sanitize: (err: unknown, contextLabel: string): SymphonyError => {
         // If it's already a SymphonyError, just return it
         if (err instanceof SymphonyError) return err;
+
+        let originalErrorMessage: string | undefined;
+        let originalErrorStack: string | undefined;
+
+        if (err instanceof Error) {
+            originalErrorMessage = err.message;
+            originalErrorStack = err.stack;
+        } else if (typeof err === 'string') {
+            originalErrorMessage = err;
+        } else if (err && typeof err === 'object' && 'message' in err) {
+            const errObj = err as Record<string, unknown>;
+            if (typeof errObj.message === 'string') {
+                originalErrorMessage = errObj.message;
+            }
+            if (typeof errObj.stack === 'string') {
+                originalErrorStack = errObj.stack;
+            }
+        } else {
+            originalErrorMessage = String(err);
+        }
 
         // Otherwise, wrap it to hide raw DB/Stack details
         return new SymphonyError(
             `An internal system error occurred. Please contact support with ID: ${contextLabel}`,
-            { originalError: err.message, stack: err.stack, context: contextLabel },
+            { originalError: originalErrorMessage, stack: originalErrorStack, context: contextLabel },
             'OPS'
         );
     }

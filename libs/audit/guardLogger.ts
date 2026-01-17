@@ -69,13 +69,14 @@ class GuardAuditLogger {
         const timestamp = new Date().toISOString();
 
         const record = {
+            ...event, // Spread event first to include all its properties
             eventId,
-            eventType: event.type,
             timestamp,
-            requestId: event.requestId,
-            ingressSequenceId: event.ingressSequenceId,
+            // Explicitly override or ensure specific properties if needed after spread
+            // For example, participantId might be undefined in event, but we want null
             participantId: event.participantId ?? null,
-            ...event
+            // eventType is already in event.type, no need to re-assign unless overriding
+            // requestId and ingressSequenceId are also in event, no need to re-assign
         };
 
         // Construct integrity hash

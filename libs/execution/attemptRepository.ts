@@ -235,10 +235,10 @@ function mapRowToAttempt(row: AttemptRow): ExecutionAttempt {
         instructionId: row.instruction_id,
         sequenceNumber: row.sequence_number,
         state: row.state,
-        railResponse: row.rail_response ?? undefined,
-        failureClass: row.failure_class ?? undefined,
+        ...(row.rail_response ? { railResponse: row.rail_response } : {}),
+        ...(row.failure_class ? { failureClass: row.failure_class } : {}),
         createdAt: row.created_at,
-        resolvedAt: row.resolved_at ?? undefined,
+        ...(row.resolved_at ? { resolvedAt: row.resolved_at } : {}),
         ingressSequenceId: row.ingress_sequence_id,
         requestId: row.request_id
     });

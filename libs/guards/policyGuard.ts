@@ -118,24 +118,16 @@ function mergeEffectiveLimits(
     policyProfile: PolicyProfile,
     participantOverrides: SandboxLimits
 ): SandboxLimits {
+    const maxTransactionAmount = participantOverrides.maxTransactionAmount ?? policyProfile.maxTransactionAmount;
+    const maxTransactionsPerSecond = participantOverrides.maxTransactionsPerSecond ?? policyProfile.maxTransactionsPerSecond;
+    const dailyAggregateLimit = participantOverrides.dailyAggregateLimit ?? policyProfile.dailyAggregateLimit;
+    const allowedMessageTypes = participantOverrides.allowedMessageTypes ?? (policyProfile.allowedMessageTypes.length > 0 ? policyProfile.allowedMessageTypes : undefined);
+
     return {
-        maxTransactionAmount:
-            participantOverrides.maxTransactionAmount ??
-            policyProfile.maxTransactionAmount ??
-            undefined,
-        maxTransactionsPerSecond:
-            participantOverrides.maxTransactionsPerSecond ??
-            policyProfile.maxTransactionsPerSecond ??
-            undefined,
-        dailyAggregateLimit:
-            participantOverrides.dailyAggregateLimit ??
-            policyProfile.dailyAggregateLimit ??
-            undefined,
-        allowedMessageTypes:
-            participantOverrides.allowedMessageTypes ??
-            (policyProfile.allowedMessageTypes.length > 0
-                ? [...policyProfile.allowedMessageTypes]
-                : undefined)
+        ...(maxTransactionAmount ? { maxTransactionAmount } : {}),
+        ...(maxTransactionsPerSecond ? { maxTransactionsPerSecond } : {}),
+        ...(dailyAggregateLimit ? { dailyAggregateLimit } : {}),
+        ...(allowedMessageTypes ? { allowedMessageTypes } : {})
     };
 }
 

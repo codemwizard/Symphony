@@ -1,16 +1,17 @@
-import { bootstrap } from "../../libs/bootstrap/startup.js";
-import { logger, getContextLogger } from "../../libs/logging/logger.js";
-import { ProductionKeyManager, KeyManager } from "../../libs/crypto/keyManager.js";
-import { ConfigGuard, CRYPTO_CONFIG_REQUIREMENTS } from "../../libs/bootstrap/config-guard.js";
-import { ErrorSanitizer } from "../../libs/errors/sanitizer.js";
-import { createValidator } from "../../libs/validation/zod-middleware.js";
-import { IdentityEnvelopeSchema } from "../../libs/validation/schema.js";
-import { db } from "../../libs/db/index.js";
-import { verifyIdentity } from "../../libs/context/verifyIdentity.js";
-import { RequestContext } from "../../libs/context/requestContext.js";
-import { IdentityEnvelopeV1 } from "../../libs/context/identity.js";
-import { requireCapability } from "../../libs/auth/requireCapability.js";
-import { auditLogger } from "../../libs/audit/logger.js";
+import { bootstrap } from "../../../libs/bootstrap/startup.js";
+import { logger, getContextLogger } from "../../../libs/logging/logger.js";
+import { ProductionKeyManager, KeyManager } from "../../../libs/crypto/keyManager.js";
+import { ConfigGuard, CRYPTO_CONFIG_REQUIREMENTS } from "../../../libs/bootstrap/config-guard.js";
+import { ErrorSanitizer } from "../../../libs/errors/sanitizer.js";
+import { createValidator } from "../../../libs/validation/zod-middleware.js";
+import { IdentityEnvelopeSchema } from "../../../libs/validation/schema.js";
+import { db } from "../../../libs/db/index.js";
+import { verifyIdentity } from "../../../libs/context/verifyIdentity.js";
+import { RequestContext } from "../../../libs/context/requestContext.js";
+import { IdentityEnvelopeV1 } from "../../../libs/context/identity.js";
+import { requireCapability } from "../../../libs/auth/requireCapability.js";
+import { auditLogger } from "../../../libs/audit/logger.js";
+
 
 async function main() {
     db.setRole("symphony_readonly");
@@ -25,34 +26,34 @@ async function main() {
     const keyManager: KeyManager = new ProductionKeyManager();
 
     // Simulated Query Handler
-    async function handleQuery(envelope: IdentityEnvelopeV1) {
-        try {
-            // HIGH-SEC-002: Input Validation (Zod)
-            const validateEnvelope = createValidator(IdentityEnvelopeSchema);
-            validateEnvelope(envelope, "ReadAPI:Identity");
+    async function _handleQuery(envelope: IdentityEnvelopeV1) {
+        // HIGH-SEC-002: Input Validation (Zod)
+        const validateEnvelope = createValidator(IdentityEnvelopeSchema);
+        validateEnvelope(envelope, "ReadAPI:Identity");
 
-            const context = await verifyIdentity(envelope, "read-api", keyManager);
-            RequestContext.set(context);
+        const context = await verifyIdentity(envelope, "read-api", keyManager);
 
-            // Phase 6.3: Authorization
-            await requireCapability('instruction:read', 'read-api');
+        // SEC-7R-FIX: Use AsyncLocalStorage run() for request-scoped context
+        return RequestContext.run(context, async () => {
+            try {
+                // Phase 6.3: Authorization
+                await requireCapability('instruction:read', 'read-api');
 
-            // Phase 6.5: Audit
-            await auditLogger.log({
-                type: 'IDENTITY_VERIFY',
-                context,
-                decision: 'ALLOW'
-            });
+                // Phase 6.5: Audit
+                await auditLogger.log({
+                    type: 'IDENTITY_VERIFY',
+                    context,
+                    decision: 'ALLOW'
+                });
 
-            getContextLogger(context).info("Processing read request under authorized capability");
+                getContextLogger(context).info("Processing read request under authorized capability");
 
-            // Fetch data...
-        } catch (err) {
-            // HIGH-SEC-003: Prevent information disclosure
-            throw ErrorSanitizer.sanitize(err, "ReadAPI:QueryHandler");
-        } finally {
-            RequestContext.clear();
-        }
+                // Fetch data...
+            } catch (err) {
+                // HIGH-SEC-003: Prevent information disclosure
+                throw ErrorSanitizer.sanitize(err, "ReadAPI:QueryHandler");
+            }
+        });
     }
 }
 
