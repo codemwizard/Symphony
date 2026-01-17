@@ -47,10 +47,15 @@ export interface AuditRecordV1 {
     requestId: string;
     tenantId: string;
     subject: {
-        type: 'client' | 'service';
-        id: string;           // subjectId
-        ou: string;           // issuerService / currentService
-        certFingerprint?: string; // Phase 6.4: mTLS proof
+        type: 'client' | 'service' | 'user';
+        id: string; // client_id or service_id or user.sub
+        ou: string; // The service issuing the action (for services) or 'external'
+        certFingerprint?: string; // If mTLS was involved
+
+        // Tenant-anchored user fields
+        participantId?: string;
+        participantRole?: string;
+        participantStatus?: string;
     };
     action: {
         capability?: string;
