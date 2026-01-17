@@ -24,8 +24,25 @@ else
   AI_ENFORCEMENT_REASON="Pre-REGULATED phase"
 fi
 
-# Get policy commit
+# Get policy commit (submodule) + locked commit (fail-closed PaC)
 POLICY_COMMIT=$(cd .policies && git rev-parse HEAD)
+
+# STRICT PaC: Verify against lockfile
+LOCKED_COMMIT=$(grep -E '^commit:' .policy.lock | awk '{print $2}' | tr -d '[:space:]' || true)
+
+if [[ -z "${LOCKED_COMMIT:-}" ]]; then
+  echo "❌ .policy.lock missing commit pin"
+  exit 1
+fi
+
+if [[ "$LOCKED_COMMIT" != "$POLICY_COMMIT" ]]; then
+  echo "❌ Policy lock mismatch during evidence generation"
+  echo "Locked: $LOCKED_COMMIT"
+  echo "Actual: $POLICY_COMMIT"
+  exit 1
+fi
+
+POLICY_VERIFIED="true"
 
 # Get phase file hash
 PHASE_HASH=$(sha256sum .symphony/PHASE 2>/dev/null | awk '{print $1}' || echo "0000000000000000000000000000000000000000000000000000000000000000")
@@ -89,11 +106,11 @@ cat > "$OUT" <<EOF
   },
 
   "policy_provenance": {
-    "policy_repository": "codemwizard/org-security-policies",
-    "policy_commit_hash": "$POLICY_COMMIT",
+    "policy_repository": "https://github.com/codemwizard/Symphony-Policies",
+    "policy_commit_hash": "$LOCKED_COMMIT",
     "policy_lock_file": ".policy.lock",
-    "policy_version_verified": true,
-    "policy_scope": ["Secure_Coding_Policy", "AI_Secure_Coding_Policy", "Logging_Standard"]
+    "policy_version_verified": $POLICY_VERIFIED,
+    "policy_scope": ["security", "compliance", "sdlc"]
   },
 
   "ai_usage": {

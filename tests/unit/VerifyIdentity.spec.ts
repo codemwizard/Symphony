@@ -19,7 +19,7 @@ describe('VerifyIdentity (Phase 7B Hardening)', () => {
         process.env.DB_USER = 'test';
         process.env.DB_PASSWORD = 'test';
         process.env.DB_NAME = 'test_db';
-        process.env.KMS_KEY_ARN = 'alias/test-key';
+        process.env.KMS_KEY_REF = 'alias/test-key';
 
         const verifyModule = await import('../../libs/context/verifyIdentity.js');
         verifyIdentity = verifyModule.verifyIdentity;

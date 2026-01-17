@@ -16,5 +16,14 @@ export const DB_CONFIG_GUARDS: GuardRule[] = [
         type: 'assert',
         check: () => process.env.NODE_ENV !== 'production' || !!process.env.DB_HOST,
         message: 'DB_HOST must be explicitly set in production (no fallbacks)',
+    },
+
+    // SEC-FIX: Guard-level TLS enforcement (fail-closed)
+    {
+        type: 'assert',
+        check: () =>
+            !['production', 'staging'].includes(process.env.NODE_ENV ?? '') ||
+            !!process.env.DB_CA_CERT,
+        message: 'DB_CA_CERT is required in production/staging',
     }
 ];

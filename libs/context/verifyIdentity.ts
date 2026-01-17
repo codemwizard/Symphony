@@ -196,11 +196,10 @@ export async function verifyIdentity(
     }
 
     // 8) TrustFabric enforcement for services (certificate trust + serviceName binding)
+    // SEC-FIX: TrustFabric.resolveIdentity is now async and throws on failure
     if (envelope.subjectType === "service") {
-        const identity = TrustFabric.resolveIdentity(certFingerprint!);
-        if (!identity) {
-            throw new Error("mTLS Violation: Revoked or untrusted certificate.");
-        }
+        const identity = await TrustFabric.resolveIdentity(certFingerprint!);
+        // TrustFabric throws TrustViolationError if revoked/expired/inactive/unknown
 
         if (identity.serviceName !== envelope.issuerService) {
             throw new Error(
