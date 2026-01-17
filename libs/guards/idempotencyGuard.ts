@@ -63,10 +63,11 @@ export async function executeIdempotencyGuard(
 
     // Validate key format
     const validationResult = validateKeyFormat(idempotencyKey);
-    if (!validationResult.valid) {
+    if (validationResult.valid === false) {
         await logDenial(requestId, ingressSequenceId, participantId, validationResult.reason);
         return { allowed: false, reason: validationResult.reason };
     }
+
 
     // Check for existing instruction with same key
     const existing = await findExistingInstruction(idempotencyKey, participantId);

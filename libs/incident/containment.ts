@@ -1,7 +1,6 @@
-import { IncidentSignal, IncidentClass, IncidentSeverity } from "./taxonomy";
-import { logger } from "../logging/logger";
-import { auditLogger } from "../audit/logger";
-import { IncidentDetector } from "./detector";
+import { IncidentSignal, IncidentClass, IncidentSeverity } from "./taxonomy.js";
+import { logger } from "../logging/logger.js";
+import { auditLogger } from "../audit/logger.js";
 
 /**
  * Symphony Incident Containment
@@ -48,8 +47,10 @@ export class IncidentContainment {
                 tenantId: 'symphony',
                 policyVersion: 'v1',
                 roles: ['system'],
-                signature: 'system-signed'
+                signature: 'system-signed',
+                trustTier: 'internal'
             },
+
             decision: 'EXECUTED',
             reason: `Automated response to ${signal.class} [${signal.severity}]: ${action}`
         });

@@ -10,7 +10,9 @@ import assert from 'node:assert';
 import { Iso20022Validator } from '../libs/iso20022/validator.js';
 import { Iso20022Mapper } from '../libs/iso20022/mapping.js';
 
+
 describe('D. ISO-20022 Execution Control', () => {
+
 
     // Valid pacs.008 Payload Stub
     const validPacs008 = {
@@ -119,7 +121,7 @@ describe('D. ISO-20022 Execution Control', () => {
             };
 
             assert.throws(() => {
-                Iso20022Mapper.toPacs008(instruction);
+                Iso20022Mapper.mapToIso(instruction);
             }, /Missing deterministic timestamp/);
         });
     });

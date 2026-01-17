@@ -1,5 +1,4 @@
 import { db } from "../../libs/db/index.js";
-import { logger } from "../../libs/logging/logger.js";
 
 /**
  * SYM-41: Persistence Verification Proof

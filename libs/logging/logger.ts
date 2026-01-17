@@ -1,10 +1,16 @@
 import pino from "pino";
-import { ValidatedIdentityContext } from "../context/identity";
+import { ValidatedIdentityContext } from "../context/identity.js";
+
+import { REDACT_KEYS, REDACT_CENSOR } from "./redactionConfig.js";
 
 export const logger = pino({
   level: "info",
   base: {
     system: "symphony"
+  },
+  redact: {
+    paths: REDACT_KEYS,
+    censor: REDACT_CENSOR
   }
 });
 

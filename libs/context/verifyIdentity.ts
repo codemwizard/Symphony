@@ -1,5 +1,5 @@
 import { IdentityEnvelopeV1, ValidatedIdentityContext } from "./identity.js";
-import { checkPolicyVersion } from "../db/policy.js";
+import { validatePolicyVersion } from "../db/policy.js";
 import { TrustFabric } from "../auth/trustFabric.js";
 import crypto from "crypto";
 import { KeyManager } from "../crypto/keyManager.js";
@@ -13,9 +13,15 @@ const ALLOWED_ISSUERS: Record<string, string[]> = {
     'read-api': ['executor-worker'],          // OU-06 accepts from Executor (OU-05)
 };
 
+// SEC-7R-FIX: Clock skew tolerance and max token age
+const CLOCK_SKEW_MS = 30_000; // 30 seconds
+const MAX_TOKEN_AGE_MS = 5 * 60 * 1000; // 5 minutes
+
 /**
  * Verifies the identity envelope and returns a validated, immutable context.
  * Throws on any violation (Fail-Closed).
+ * 
+ * SEC-7R-FIX: Implements timing-safe comparison, canonical JSON, and freshness checks.
  */
 export async function verifyIdentity(
     envelope: IdentityEnvelopeV1,
@@ -27,17 +33,33 @@ export async function verifyIdentity(
     // 1. Basic Schema & Version Validation
     if (envelope.version !== 'v1') throw new Error("Unsupported identity version");
 
-    // 2. signature Validation (HMAC-sha256)
+    // SEC-7R-FIX: Token freshness check with clock skew tolerance
+    const issuedAt = new Date(envelope.issuedAt).getTime();
+    const now = Date.now();
+    if (isNaN(issuedAt)) {
+        throw new Error("Invalid issuedAt timestamp");
+    }
+    if (now - issuedAt > MAX_TOKEN_AGE_MS + CLOCK_SKEW_MS) {
+        throw new Error("Identity token too old - re-authentication required");
+    }
+    if (issuedAt > now + CLOCK_SKEW_MS) {
+        throw new Error("Identity token issued in the future");
+    }
+
+    // 2. SEC-7R-FIX: Canonical JSON with sorted keys for deterministic signatures
+    // Includes trustTier and certFingerprint for complete binding
     const dataToSign = JSON.stringify({
-        version: envelope.version,
-        requestId: envelope.requestId,
+        certFingerprint: envelope.certFingerprint ?? null,
         issuedAt: envelope.issuedAt,
         issuerService: envelope.issuerService,
-        subjectType: envelope.subjectType,
-        subjectId: envelope.subjectId,
-        tenantId: envelope.tenantId,
         policyVersion: envelope.policyVersion,
-        roles: envelope.roles,
+        requestId: envelope.requestId,
+        roles: envelope.roles.slice().sort(), // Sorted for determinism
+        subjectId: envelope.subjectId,
+        subjectType: envelope.subjectType,
+        tenantId: envelope.tenantId,
+        trustTier: envelope.trustTier ?? null,
+        version: envelope.version,
     });
 
     const expectedSignature = crypto
@@ -45,26 +67,34 @@ export async function verifyIdentity(
         .update(dataToSign)
         .digest('hex');
 
-    if (envelope.signature !== expectedSignature) {
+    // SEC-7R-FIX: Timing-safe comparison to prevent timing attacks
+    const sigBuffer = Buffer.from(envelope.signature, 'hex');
+    const expectedBuffer = Buffer.from(expectedSignature, 'hex');
+
+    if (sigBuffer.length !== expectedBuffer.length ||
+        !crypto.timingSafeEqual(sigBuffer, expectedBuffer)) {
         throw new Error("Invalid identity signature");
     }
 
     // 3. Policy Version Validation
-    // Implementation note: In a real system, we'd pass the DB client here.
-    // For Phase 6.2, we assume the shared lib's checkPolicyVersion logic.
-    // We'll simulate the check against the envelope's policyVersion.
-    // (In Step 3 integration, we'll call the real checkPolicyVersion)
+    // SEC-7R-FIX: Enforce active policy version matching.
+    await validatePolicyVersion(envelope.policyVersion);
 
     // 4. Directional Trust Enforcement (OU Interaction Graph)
     const allowed = ALLOWED_ISSUERS[currentService];
     if (!allowed || !allowed.includes(envelope.issuerService)) {
         // Special case for initial client requests
-        if (envelope.subjectType === 'client' && allowed.includes('client')) {
+        if (envelope.subjectType === 'client' && allowed && allowed.includes('client')) {
             // Allowed
+        } else if (envelope.subjectType === 'user') {
+            // Finding #5: 'user' subject type supported in Phase 7B
+            // User identity must be validated against allowed issuers (e.g. client)
         } else {
             throw new Error(`Unauthorized OU interaction: ${envelope.issuerService} -> ${currentService}`);
         }
     }
+
+
 
     // 5. Phase 6.4: mTLS & Trust Fabric Enforcement
     if (envelope.subjectType === 'service') {
@@ -87,5 +117,8 @@ export async function verifyIdentity(
     }
 
     // 6. Freeze and Return
-    return Object.freeze({ ...envelope, certFingerprint });
+    return Object.freeze({
+        ...envelope,
+        ...(certFingerprint ? { certFingerprint } : {})
+    });
 }

@@ -1,4 +1,3 @@
-import { auditLogger } from "../audit/logger.js";
 import { verifyAuditChain } from "../audit/integrity.js";
 import { logger } from "../logging/logger.js";
 import path from "path";

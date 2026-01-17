@@ -21,3 +21,5 @@ Catchup.txt
 dist/
 build/
 .DS_Store
+bin/
+obj/

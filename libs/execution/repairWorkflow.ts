@@ -91,13 +91,14 @@ export async function executeRepairWorkflow(
 
     // Step 3: Record reconciliation result (append-only)
     const repairEventId = crypto.randomUUID();
+    const recommendedTransition = determineTransition(reconciliationResult);
     const repairEvent: RepairEvent = {
         repairEventId,
         instructionId,
         attemptId,
         railId,
         reconciliationResult,
-        recommendedTransition: determineTransition(reconciliationResult),
+        ...(recommendedTransition ? { recommendedTransition } : {}),
         createdAt: new Date().toISOString(),
         requestId
     };
@@ -117,7 +118,7 @@ export async function executeRepairWorkflow(
     const outcome: RepairOutcome = {
         resolved: isResolved(reconciliationResult),
         reconciliationResult,
-        recommendedTransition: repairEvent.recommendedTransition,
+        ...(repairEvent.recommendedTransition ? { recommendedTransition: repairEvent.recommendedTransition } : {}),
         repairedAt: repairEvent.createdAt,
         repairEventId
     };

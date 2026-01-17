@@ -101,7 +101,7 @@ export class Iso20022Validator {
     /**
      * D-1: Structural Message Validation
      */
-    static validateSchema(message: any, type: 'pacs.008' | 'pacs.002' | 'camt.053' = 'pacs.008'): Iso20022Message {
+    static validateSchema(message: unknown, type: 'pacs.008' | 'pacs.002' | 'camt.053' = 'pacs.008'): Iso20022Message {
         try {
             switch (type) {
                 case 'pacs.008': return Pacs008Schema.parse(message);
@@ -109,9 +109,11 @@ export class Iso20022Validator {
                 case 'camt.053': return Camt053Schema.parse(message);
                 default: throw new Error(`Unsupported message type: ${type}`);
             }
-        } catch (err: any) {
-            logger.error({ errors: err.errors, type }, "ISO-20022: Schema validation failed");
-            throw ErrorSanitizer.sanitize(err, "ISO20022:SchemaValidation");
+        } catch (error: unknown) {
+            const errorMessage = error instanceof Error ? error.message : String(error);
+            const errorDetails = error instanceof z.ZodError ? error.issues : errorMessage;
+            logger.error({ errors: errorDetails, type }, "ISO-20022: Schema validation failed");
+            throw ErrorSanitizer.sanitize(error, "ISO20022:SchemaValidation");
         }
     }
 
@@ -122,7 +124,8 @@ export class Iso20022Validator {
     static validateSemantics(message: Iso20022Message): boolean {
         // We only enforce strict execution semantics on pacs.008
         // Other types are informational in this phase
-        const isPacs008 = (msg: any): msg is Pacs008Message => 'CdtTrfTxInf' in msg;
+        const isPacs008 = (msg: unknown): msg is Pacs008Message =>
+            typeof msg === 'object' && msg !== null && 'CdtTrfTxInf' in msg;
 
         if (!isPacs008(message)) {
             return true;

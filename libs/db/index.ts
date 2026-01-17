@@ -2,13 +2,12 @@ import pg from 'pg';
 import { ConfigGuard } from '../bootstrap/config-guard.js';
 import { DB_CONFIG_GUARDS } from '../bootstrap/config/db-config.js';
 import { ErrorSanitizer } from '../errors/sanitizer.js';
+import { logger } from '../logging/logger.js';
 
 const { Pool } = pg;
 
 // CRIT-SEC-002: Enforce strict configuration bootstrapping
 ConfigGuard.enforce(DB_CONFIG_GUARDS);
-
-const isProduction = process.env.NODE_ENV === 'production';
 
 /**
  * INV-PERSIST-01: Persistence Reality
@@ -24,11 +23,21 @@ const pool = new Pool({
     max: 20,
     idleTimeoutMillis: 30000,
     connectionTimeoutMillis: 2000,
-    ssl: process.env.DB_SSL_QUERY === 'true' ? {
-        rejectUnauthorized: true,
-        ca: process.env.DB_CA_CERT,
-    } : false
+    ssl: (process.env.NODE_ENV === 'production' || process.env.NODE_ENV === 'staging')
+        ? {
+            rejectUnauthorized: true,
+            ca: process.env.DB_CA_CERT,
+        }
+        : (process.env.DB_SSL_QUERY === 'true' ? {
+            rejectUnauthorized: true,
+            ca: process.env.DB_CA_CERT,
+        } : false)
 });
+
+// CRIT-SEC-002: Fail-Closed check for missing CA in protected environments
+if ((process.env.NODE_ENV === 'production' || process.env.NODE_ENV === 'staging') && !process.env.DB_CA_CERT) {
+    throw new Error("CRITICAL: Missing DB_CA_CERT in protected environment (production/staging). Database connection aborted.");
+}
 
 export let currentRole: string = "anon";
 
@@ -55,7 +64,7 @@ export const db = {
     /**
      * Executes a query with mandatory role enforcement and parameterization.
      */
-    query: async (text: string, params?: any[]) => {
+    query: async (text: string, params?: unknown[]) => {
         const client = await pool.connect();
         try {
             if (currentRole !== "anon") {
@@ -80,7 +89,7 @@ export const db = {
                 try {
                     await client.query('RESET ROLE');
                 } catch (resetErr) {
-                    console.error('[DB] Failed to reset role, connection may be tainted', resetErr);
+                    logger.error({ error: resetErr }, '[DB] Failed to reset role, connection may be tainted');
                 }
             }
             client.release();
@@ -92,7 +101,7 @@ export const db = {
      * Executes a callback within a managed transaction.
      * Automatically rolls back on error.
      */
-    executeTransaction: async <T>(callback: (client: any) => Promise<T>): Promise<T> => {
+    executeTransaction: async <T>(callback: (client: pg.PoolClient) => Promise<T>): Promise<T> => {
         const client = await pool.connect();
         try {
             await client.query('BEGIN');
@@ -109,7 +118,9 @@ export const db = {
             throw ErrorSanitizer.sanitize(err, "DatabaseLayer:TransactionFailed");
         } finally {
             if (currentRole !== "anon") {
-                try { await client.query('RESET ROLE'); } catch (e) { }
+                try { await client.query('RESET ROLE'); } catch (e) {
+                    logger.warn({ error: e }, "[DB] Failed to reset role in transaction cleanup");
+                }
             }
             client.release();
         }
