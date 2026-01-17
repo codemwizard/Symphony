@@ -48,7 +48,8 @@ export class IncidentContainment {
                 policyVersion: 'v1',
                 roles: ['system'],
                 signature: 'system-signed',
-                trustTier: 'internal'
+                trustTier: 'internal',
+                certFingerprint: 'system-internal'
             },
 
             decision: 'EXECUTED',

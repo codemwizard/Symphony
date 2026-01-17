@@ -9,18 +9,26 @@ export interface Policy {
     capabilities: {
         service?: Record<string, string[]>;
         client?: Record<string, string[]>;
+        user?: Record<string, string[]>; // Added user capabilities
     };
 }
 
+const TENANT_SCOPED_CAPABILITIES: Capability[] = [
+    'transaction:execute',
+    'account:read',
+    'ledger:write'
+];
+
 /**
  * Authorization Engine
- * Enforces the 4 critical architectural guards.
+ * Enforces the 4 critical architectural guards + Tenant Boundary (Guard 5).
  */
 export async function authorize(
     context: ValidatedIdentityContext,
     requestedCapability: Capability,
     currentService: string,
-    activePolicy: Policy
+    activePolicy: Policy,
+    resourceTenantId?: string
 ): Promise<boolean> {
 
     const { subjectId, subjectType, policyVersion } = context;
@@ -104,6 +112,42 @@ export async function authorize(
     if (subjectType === 'client') {
         const clientAllowed = (activePolicy.capabilities.client?.['default'] || []) as Capability[];
         if (!clientAllowed.includes(requestedCapability)) return false;
+    } else if (subjectType === 'user') {
+        const userAllowed = (activePolicy.capabilities.user?.['default'] || []) as Capability[];
+        if (!userAllowed.includes(requestedCapability)) {
+            await auditLogger.log({
+                type: 'AUTHZ_DENY',
+                context,
+                action: { capability: requestedCapability },
+                decision: 'DENY',
+                reason: 'CAPABILITY_NOT_ALLOWED'
+            });
+            return false;
+        }
+
+        // Guard 5: Tenant Boundary Enforcement
+        if (TENANT_SCOPED_CAPABILITIES.includes(requestedCapability)) {
+            if (!resourceTenantId) {
+                await auditLogger.log({
+                    type: 'AUTHZ_DENY',
+                    context,
+                    reason: 'TENANT_CONTEXT_MISSING',
+                    decision: 'DENY'
+                });
+                return false;
+            }
+            if (context.participantId !== resourceTenantId) {
+                await auditLogger.log({
+                    type: 'AUTHZ_DENY',
+                    context,
+                    reason: 'CROSS_TENANT_ACCESS_DENIED',
+                    decision: 'DENY'
+                    // metadata: { ... } - AuditLogger schema V1 doesn't support free-form metadata in log params yet, must rely on reason or action resource.
+                    // If we strictly follow AuditRecordV1, we can't add random fields. We'll simplify.
+                });
+                return false;
+            }
+        }
     }
 
     // Link 3: Policy Version Parity

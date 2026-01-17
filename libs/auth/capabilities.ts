@@ -37,7 +37,12 @@ export type Capability =
     | 'policy:read'
     | 'policy:activate'
     | 'killswitch:activate'
-    | 'killswitch:deactivate';
+    | 'killswitch:deactivate'
+
+    // Tenant-scoped User Capabilities (Phase 7B)
+    | 'transaction:execute'
+    | 'account:read'
+    | 'ledger:write';
 
 /**
  * Mapping of capabilities to their owning organizational units.
@@ -61,7 +66,12 @@ export const CAPABILITY_OU_MAP: Record<Capability, string> = {
     'policy:read': 'control-plane',
     'policy:activate': 'control-plane',
     'killswitch:activate': 'control-plane',
-    'killswitch:deactivate': 'control-plane'
+    'killswitch:deactivate': 'control-plane',
+
+    // User Capabilities Mapped to Ingest (Entrypoint)
+    'transaction:execute': 'ingest-api',
+    'account:read': 'ingest-api',
+    'ledger:write': 'ingest-api'
 };
 
 /**

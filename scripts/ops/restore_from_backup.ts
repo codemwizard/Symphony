@@ -44,7 +44,8 @@ export async function restoreFromBackup(params: {
             policyVersion: 'v1',
             roles: ['system'],
             trustTier: 'internal',
-            signature: 'system-signed'
+            signature: 'system-signed',
+            certFingerprint: 'system-internal'
         },
         decision: 'EXECUTED',
         reason: `Restoration complete for Incident ${params.incidentId}. Authorized by: ${params.authorizedBy.join(', ')}`
