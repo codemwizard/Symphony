@@ -17,11 +17,12 @@ export const DEV_CRYPTO_GUARDS: GuardRule[] = [
 
 /**
  * Production Crypto Config Guards (KMS)
+ * SEC-FIX: Standardized on KMS_KEY_REF (ID or ARN).
  */
 export const PROD_CRYPTO_GUARDS: GuardRule[] = [
     { type: 'required', name: 'KMS_ENDPOINT' },
     { type: 'required', name: 'KMS_REGION' },
-    { type: 'required', name: 'KMS_KEY_ID' },
+    { type: 'required', name: 'KMS_KEY_REF', sensitive: true },
     // Credentials might be implicit in IAM roles, but if explicit mode is used:
     // We enforce them if they seem to be required by the specific deployment model.
     // For now, mirroring strictness:
