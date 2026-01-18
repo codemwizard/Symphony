@@ -1,0 +1,10 @@
+{
+  "activePolicyVersion": "v1.0.0",
+  "hashes": {
+    ".symphony/policies/active-policy.json": "1fea217de650085edc0909eaa892a5824ea6bfa2f59c29d90acc06072bb714c9",
+    ".symphony/policies/emergency-lockdown.v1.json": "0efad2e6b0152e96606cc4409f87adb3cbc6d456f91f0c86c3d51eae82b86c2b",
+    ".symphony/policies/global-policy.v1.json": "0a11bdeb6a7f9e1475e21e085c74c8b9892e2c17d5afcd27539874d72f0c7fbb",
+    ".symphony/policies/tenant-enterprise-entitlements.v1.json": "6dd52697e62dc44bee89facbe1a7a71a59bfb3dd2d00467d3dd4821d90b96893",
+    ".symphony/policies/tenant-standard-entitlements.v1.json": "cb7b6eee6a58c3666929b337d66ce488ea6fd62f8757e2b38d6eebb9621aa241"
+  }
+}
