@@ -15,12 +15,13 @@ const TEST_JWKS_PATH = 'tests/unit/fixtures/test-jwks.json';
 let privateKey: KeyLike;
 let restoreMock: () => void;
 
-// Mock key for HMAC
-const MOCK_HMAC_KEY = crypto.createSecretKey(Buffer.from('test-secret-key-for-hmac-sha256-32b', 'utf-8'));
+// Mock key for HMAC: return base64 string or hex string as per KeyManager contract
+const MOCK_HMAC_KEY = crypto.randomBytes(32).toString('hex');
 
 describe('jwtToMtlsBridge', () => {
     before(async () => {
         // Mock KeyManager to avoid KMS
+        // We mock the prototype to affect the singleton instance used by imported modules
         const mockFn = mock.method(SymphonyKeyManager.prototype, 'deriveKey', async () => {
             return MOCK_HMAC_KEY;
         });
@@ -48,7 +49,7 @@ describe('jwtToMtlsBridge', () => {
         clearJWKSCache();
     });
 
-    it('should bridge valid JWT', async () => {
+    it('should bridge valid CLIENT JWT', async () => {
         const jwt = await new SignJWT({ sub: 'user-1', scope: 'foo' })
             .setProtectedHeader({ alg: 'ES256', kid: 'test-key' })
             .setIssuer('symphony-idp')
@@ -63,13 +64,40 @@ describe('jwtToMtlsBridge', () => {
         assert.strictEqual(context.issuerService, 'ingress-gateway');
     });
 
+    it('should bridge valid TENANT-ANCHORED USER JWT', async () => {
+        const jwt = await new SignJWT({
+            sub: 'user-alice',
+            scope: 'user_generic',
+            tenant_id: 'tenant-A'
+        })
+            .setProtectedHeader({ alg: 'ES256', kid: 'test-key' })
+            .setIssuer('symphony-idp')
+            .setAudience('symphony-api')
+            .setIssuedAt()
+            .setExpirationTime('1h')
+            .sign(privateKey);
+
+        const participantResolver = async (_tid: string) => ({ role: 'OPERATOR', status: 'ACTIVE' });
+
+        const context = await jwtToMtlsBridge.bridgeUserIdentity(jwt, participantResolver);
+        assert.strictEqual(context.subjectType, 'user');
+        assert.strictEqual(context.trustTier, 'user');
+        assert.strictEqual(context.tenantId, 'tenant-A');
+        assert.strictEqual(context.issuerService, 'ingest-api');
+
+        if (context.subjectType === 'user') { // Checking discrimination
+            assert.strictEqual(context.participantId, 'tenant-A');
+            assert.strictEqual(context.participantRole, 'OPERATOR');
+        }
+    });
+
     it('should reject invalid signature', async () => {
         // Sign with different key
         const { privateKey: badKey } = await generateKeyPair('ES256');
         const jwt = await new SignJWT({ sub: 'user-1' })
             .setProtectedHeader({ alg: 'ES256', kid: 'test-key' })
             .setIssuer('symphony-idp')
-            .setAudience('symphony-api')
+            .setAudience('symphony-api') // Correct audience
             .setIssuedAt()
             .setExpirationTime('1h')
             .sign(badKey);

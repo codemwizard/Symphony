@@ -12,6 +12,7 @@
     "test": "node --import ./tests/loader.mjs --test tests/*.test.js",
     "build": "tsc --noEmit",
     "security-check": "node --import ./tests/loader.mjs scripts/ci/security-gates.ts",
+    "ci:validate-evidence": "node scripts/ci/validate_evidence_schema.mjs",
     "ci:compliance": "node scripts/ci/verify_mtls.js && node scripts/ci/verify_audit_integrity.cjs && node scripts/ci/verify_authorization.cjs && node scripts/ci/verify_identity_context.cjs && node scripts/ci/verify_runtime_bootstrap.cjs",
     "ci:full": "npm run lint && security-check && npm run build && npm run test && npm run ci:compliance"
   },
@@ -33,6 +34,7 @@
     "express": "^5.2.1",
     "jose": "^6.1.3",
     "lodash": "^4.17.21",
+    "lru-cache": "^11.2.4",
     "pg": "^8.16.3",
     "pino": "^10.1.0",
     "zod": "^4.3.5"
@@ -43,6 +45,7 @@
     "@types/node": "^20.0.0",
     "@typescript-eslint/eslint-plugin": "^8.53.0",
     "@typescript-eslint/parser": "^8.53.0",
+    "ajv": "^8.12.0",
     "ajv-formats": "^3.0.1",
     "eslint": "^9.39.2",
     "jest": "^30.2.0",

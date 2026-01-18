@@ -9,10 +9,11 @@ export type GuardRule =
  * CRIT-SEC-003: Mandatory Crypto Configuration Requirements
  * Defines the essential environment variables for cryptographic operations.
  * All services MUST enforce these at startup.
+ * SEC-FIX: Standardized on KMS_KEY_REF (ID or ARN).
  */
 export const CRYPTO_CONFIG_REQUIREMENTS: GuardRule[] = [
     { type: 'required', name: 'KMS_ENDPOINT', sensitive: false },
-    { type: 'required', name: 'KMS_KEY_ARN', sensitive: true },
+    { type: 'required', name: 'KMS_KEY_REF', sensitive: true },
     { type: 'forbidIf', name: 'DEV_KMS_CHECK', when: () => process.env['NODE_ENV'] === 'production' && (process.env['KMS_ENDPOINT']?.includes('localhost') ?? false), message: 'Production cannot use localhost KMS' },
 ];
 

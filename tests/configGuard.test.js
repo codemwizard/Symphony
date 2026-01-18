@@ -59,7 +59,8 @@ describe('ConfigGuard Module', () => {
 
     describe('PROD_CRYPTO_GUARDS', () => {
         it('should include required KMS config keys', () => {
-            const requiredKeys = ['KMS_ENDPOINT', 'KMS_REGION', 'KMS_KEY_ID'];
+            // SEC-FIX: Standardized on KMS_KEY_REF
+            const requiredKeys = ['KMS_ENDPOINT', 'KMS_REGION', 'KMS_KEY_REF'];
 
             for (const key of requiredKeys) {
                 const found = PROD_CRYPTO_GUARDS.find(req => req.name === key);

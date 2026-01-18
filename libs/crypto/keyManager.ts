@@ -34,16 +34,16 @@ export class SymphonyKeyManager implements KeyManager {
     }
 
     async deriveKey(purpose: string): Promise<string> {
-        // Mapping purpose to KeyId. 
-        // In a real scenario, this would be more sophisticated or use Aliases.
-        // For now, we assume a single Master Key or Alias available in the local KMS.
-        // Using 'alias/symphony-root' as a default if not configured (though ConfigGuard ensures it is).
-        const keyId = process.env.KMS_KEY_ARN || 'alias/symphony-root';
+        // SEC-FIX: Read ONLY KMS_KEY_REF, no fallback, fail-closed
+        const keyRef = process.env.KMS_KEY_REF;
+
+        if (!keyRef || keyRef.trim() === '') {
+            throw new Error("CRITICAL: KMS_KEY_REF is missing (fail-closed).");
+        }
 
         try {
-
             const command = new GenerateDataKeyCommand({
-                KeyId: keyId,
+                KeyId: keyRef.trim(),
                 KeySpec: 'AES_256',
                 EncryptionContext: {
                     purpose: purpose,
@@ -60,15 +60,16 @@ export class SymphonyKeyManager implements KeyManager {
             return Buffer.from(response.Plaintext).toString('base64');
         } catch (error: unknown) {
             const err = error as { message?: string; code?: string; stack?: string };
+            // SEC-FIX: Correct operation label
             logger.error({
                 error: err.message || String(error),
                 code: err.code,
-                operation: 'decrypt',
-                keyId
-            }, 'KMS Decryption failed');
+                operation: 'deriveKey',
+                keyRef: keyRef.substring(0, 20) + '...' // Safe partial for audit
+            }, 'KMS key derivation failed');
 
             // Fail-Closed: Do not fallback.
-            throw new Error(`KMS Decryption failed: ${err.message || String(error)}`);
+            throw new Error(`KMS key derivation failed: ${err.message || String(error)}`);
         }
     }
 }
