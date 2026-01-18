@@ -11,17 +11,20 @@ import fs from 'fs';
 import path from 'path';
 import { logger } from '../logging/logger.js';
 
-// Cached JWKS for performance
+// Cached JWKS for performance with TTL
 let cachedJWKS: ReturnType<typeof createLocalJWKSet> | null = null;
+let lastCacheTime = 0;
+const CACHE_TTL_MS = 5 * 60 * 1000; // 5 minutes
 
 /**
  * Load public keys from static JWKS file.
- * Keys are cached for the lifetime of the process.
+ * Keys are cached for performance with periodic refresh.
  * 
  * @throws Error if JWKS file is missing or malformed
  */
 export function getJWKS(): ReturnType<typeof createLocalJWKSet> {
-    if (cachedJWKS) {
+    const now = Date.now();
+    if (cachedJWKS && (now - lastCacheTime < CACHE_TTL_MS)) {
         return cachedJWKS;
     }
 
@@ -29,15 +32,23 @@ export function getJWKS(): ReturnType<typeof createLocalJWKSet> {
         ? path.resolve(process.cwd(), process.env.JWKS_PATH)
         : path.resolve(process.cwd(), 'config', 'jwks.json');
 
+    // SECURITY: Path traversal check
+    if (!jwksPath.startsWith(process.cwd())) {
+        throw new Error('Security Violation: JWKS_PATH must be within application root');
+    }
+
     if (!fs.existsSync(jwksPath)) {
+        // CRITICAL: Fail closed in production/staging
+        if (process.env.NODE_ENV === 'production' || process.env.NODE_ENV === 'staging') {
+            throw new Error(`CRITICAL: JWKS file missing at ${jwksPath}. Cannot verify identities.`);
+        }
+
         logger.warn({ path: jwksPath }, 'JWKS file not found - using development fallback');
-        // Development fallback: create a minimal JWKS with the stored dev key
+        // Development fallback: only allowed in non-prod environments
         const devJwks: JSONWebKeySet = {
             keys: [{
                 kty: 'EC',
                 crv: 'P-256',
-                // These are placeholder values for development
-                // In production, this file MUST exist with real keys
                 x: 'placeholder',
                 y: 'placeholder',
                 kid: 'dev-key-1',
@@ -46,6 +57,7 @@ export function getJWKS(): ReturnType<typeof createLocalJWKSet> {
             }]
         };
         cachedJWKS = createLocalJWKSet(devJwks);
+        lastCacheTime = now;
         return cachedJWKS;
     }
 
@@ -58,6 +70,7 @@ export function getJWKS(): ReturnType<typeof createLocalJWKSet> {
         }
 
         cachedJWKS = createLocalJWKSet(raw);
+        lastCacheTime = now;
         logger.info({ keyCount: raw.keys.length }, 'JWKS loaded successfully');
         return cachedJWKS;
     } catch (err) {
