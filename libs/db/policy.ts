@@ -1,15 +1,29 @@
 import { db } from "./index.js";
 import { assertPolicyVersionPinned, readPolicyFile } from "../policy/policyIntegrity.js";
 
+type ActivePolicyFile = {
+    policy_version?: string;
+    policyVersion?: string;
+};
+
+function readActivePolicyVersion(): string {
+    const file = readPolicyFile<ActivePolicyFile>(".symphony/policies/active-policy.json");
+    const policyVersion = file.policy_version ?? file.policyVersion;
+    if (!policyVersion) {
+        throw new Error("Active policy file missing policy_version.");
+    }
+    assertPolicyVersionPinned(policyVersion);
+    return policyVersion;
+}
+
 export async function checkPolicyVersion() {
-    const file = readPolicyFile<{ policy_version: string }>(".symphony/policies/active-policy.json");
-    assertPolicyVersionPinned(file.policy_version);
+    const policyVersion = readActivePolicyVersion();
 
     const res = await db.query(
         "SELECT version FROM policy_versions WHERE is_active = true"
     );
 
-    if (res.rows[0].version !== file.policy_version) {
+    if (res.rows[0].version !== policyVersion) {
         throw new Error("Policy version mismatch");
     }
 }
@@ -19,9 +33,7 @@ export async function checkPolicyVersion() {
  * Used by Identity Verification to prevent stale/legacy policy usage.
  */
 export async function validatePolicyVersion(version: string): Promise<void> {
-    const file = readPolicyFile<{ policy_version: string }>(".symphony/policies/active-policy.json");
-    const activeVersion = file.policy_version;
-    assertPolicyVersionPinned(activeVersion);
+    const activeVersion = readActivePolicyVersion();
 
     if (version !== activeVersion) {
         throw new Error(`Policy version mismatch: expected ${activeVersion}, got ${version}`);

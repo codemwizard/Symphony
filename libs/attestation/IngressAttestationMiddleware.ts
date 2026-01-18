@@ -209,6 +209,10 @@ export function createIngressAttestationMiddleware(pool: Pool) {
             if (!signatureHeader || typeof signatureHeader !== 'string') {
                 throw new InvalidEnvelopeError('Missing x-signature header');
             }
+            const timestampHeader = req.headers['x-timestamp'];
+            if (!timestampHeader || typeof timestampHeader !== 'string') {
+                throw new InvalidEnvelopeError('Missing x-timestamp header');
+            }
 
             // Extract envelope from request
             const envelope: IngressEnvelope = {
@@ -216,7 +220,7 @@ export function createIngressAttestationMiddleware(pool: Pool) {
                 idempotencyKey: req.headers['x-idempotency-key'] as string ?? crypto.randomUUID(),
                 callerId: (req as { tenantId?: string }).tenantId ?? 'UNKNOWN',
                 signature: signatureHeader,
-                timestamp: new Date().toISOString()
+                timestamp: timestampHeader
             };
 
             const bodyHash = computeBodyHash(req.body);
@@ -325,4 +329,3 @@ async function verifyIngressSignature(envelope: IngressEnvelope, bodyHash: strin
         throw new InvalidEnvelopeError('Invalid ingress signature');
     }
 }
-
