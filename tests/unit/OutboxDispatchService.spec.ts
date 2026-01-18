@@ -80,7 +80,6 @@ describe('OutboxDispatchService', () => {
                 typeof c.arguments[0] === 'string' && (c.arguments[0] as string).includes('INSERT INTO payment_outbox')
             );
             assert.ok(insertCalls.length > 0, 'Should insert into outbox via client');
-
             // Verify call order: BEGIN -> Ledger -> Outbox -> COMMIT
             const queries = mockClient.query.mock.calls.map((c: { arguments: unknown[] }) => c.arguments[0]) as string[];
             assert.strictEqual(queries[0], 'BEGIN');

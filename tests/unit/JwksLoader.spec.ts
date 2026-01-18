@@ -17,17 +17,17 @@ describe('JWKS Loader (Security Hardened)', () => {
         clearJWKSCache();
         process.env.NODE_ENV = 'development';
         delete process.env.JWKS_PATH;
+        delete process.env.ALLOW_DEV_JWKS_FALLBACK;
     });
 
     it('should load JWKS from default path if exists', () => {
-        // Assuming config/jwks.json exists in dev env
         const jwks = getJWKS();
         assert.ok(jwks, 'Should return JWKSet');
     });
 
     it('should FAIL CLOSED in PRODUCTION if JWKS missing', () => {
         process.env.NODE_ENV = 'production';
-        process.env.JWKS_PATH = 'non-existent-jwks.json'; // Force mismatch
+        process.env.JWKS_PATH = 'non-existent-jwks.json';
 
         assert.throws(() => {
             getJWKS();
@@ -50,9 +50,6 @@ describe('JWKS Loader (Security Hardened)', () => {
     });
 
     it('should refresh cache after TTL', async () => {
-        // This test is tricky without mocking time, but we can verify cache logic structure
-        // manually or trust the implementation. For unit test, we'll verify calling it twice returns same object (cached)
-        // unless cleared.
         const first = getJWKS();
         const second = getJWKS();
         assert.equal(first, second, 'Should return cached instance');
