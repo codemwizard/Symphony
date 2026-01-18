@@ -7,26 +7,8 @@ import { z } from 'zod';
 
 // --- Identity Schemas ---
 
-export const IdentityEnvelopeSchema = z.object({
-    version: z.literal('v1'),
-    requestId: z.string().uuid(),
-    issuedAt: z.string().datetime(), // ISO 8601
-    issuerService: z.enum(['client', 'control-plane', 'ingest-api', 'executor-worker', 'read-api']),
-    subjectType: z.enum(['client', 'service', 'user']),
-    subjectId: z.string().min(1).max(128), // ULID or UUID
-    tenantId: z.string().min(1).max(64),
-    policyVersion: z.string().regex(/^v\d+\.\d+\.\d+$/),
-    roles: z.array(z.string()).min(1),
-    signature: z.string().regex(/^[a-f0-9]{64}$/), // SHA-256 Hex
-    trustTier: z.enum(['external', 'internal']),
-    // Phase 6.4 mTLS addendum
-    certFingerprint: z.string().optional(),
-
-    // Phase 7.1: Participant Identity
-    participantId: z.string().optional(),
-    participantRole: z.enum(['BANK', 'PSP', 'OPERATOR', 'SUPERVISOR']).optional(),
-    participantStatus: z.enum(['ACTIVE', 'SUSPENDED', 'REVOKED']).optional(),
-});
+// [DELETED] IdentityEnvelopeSchema - Use IdentityEnvelopeV1Schema from identitySchema.ts
+// This legacy schema is strictly removed to prevent unsafe validation.
 
 // --- Financial Schemas ---
 
