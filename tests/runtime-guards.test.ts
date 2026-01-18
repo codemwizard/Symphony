@@ -9,7 +9,7 @@
  * - Ledger scope guard validation
  */
 
-import { describe, it, expect, jest } from '@jest/globals';
+import { describe, it, expect, jest, beforeAll, afterAll } from '@jest/globals';
 import {
     executeIdentityGuard,
     IdentityGuardContext
@@ -28,25 +28,24 @@ import {
 } from '../libs/guards/ledgerGuard.js';
 import { ResolvedParticipant } from '../libs/participant/index.js';
 import { PolicyProfile } from '../libs/policy/index.js';
-
-// Mock the audit logger to avoid DB calls in tests
-jest.mock('../libs/audit/guardLogger.js', () => ({
-    guardAuditLogger: {
-        log: jest.fn<() => Promise<void>>().mockResolvedValue(undefined)
-    }
-}));
-
-// Mock logger
-jest.mock('../libs/logging/logger.js', () => ({
-    logger: {
-        debug: jest.fn(),
-        warn: jest.fn(),
-        info: jest.fn(),
-        error: jest.fn()
-    }
-}));
+import { guardAuditLogger } from '../libs/audit/guardLogger.js';
+import { logger } from '../libs/logging/logger.js';
 
 describe('Phase 7.1: Runtime Guards', () => {
+
+    beforeAll(() => {
+        // Spy on the singleton instances directly
+        jest.spyOn(guardAuditLogger, 'log').mockResolvedValue(undefined);
+
+        jest.spyOn(logger, 'debug').mockImplementation(() => { });
+        jest.spyOn(logger, 'warn').mockImplementation(() => { });
+        jest.spyOn(logger, 'info').mockImplementation(() => { });
+        jest.spyOn(logger, 'error').mockImplementation(() => { });
+    });
+
+    afterAll(() => {
+        jest.restoreAllMocks();
+    });
 
     const createParticipant = (overrides: Partial<ResolvedParticipant> = {}): ResolvedParticipant => ({
         participantId: 'test-participant-001',

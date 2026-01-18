@@ -4,6 +4,7 @@ import { Pool } from 'pg';
 import { IngressAttestationService, IngressEnvelope } from '../../libs/attestation/IngressAttestationMiddleware.js';
 
 console.log('DEBUG: IngressAttestationMiddleware.spec.ts loaded');
+const VALID_SIGNATURE = 'a'.repeat(64);
 describe('IngressAttestationService', () => {
     let service: IngressAttestationService;
     let mockPool: { connect: ReturnType<typeof mock.fn>; query: ReturnType<typeof mock.fn> };
@@ -53,7 +54,7 @@ describe('IngressAttestationService', () => {
                 requestId: 'req-1',
                 idempotencyKey: 'idempotency-key-1',
                 callerId: 'tenant-1',
-                signature: 'a'.repeat(64),
+                signature: VALID_SIGNATURE,
                 timestamp: new Date().toISOString()
             };
 
@@ -76,7 +77,7 @@ describe('IngressAttestationService', () => {
                 requestId: 'req-1',
                 // Missing idempotencyKey
                 callerId: 'tenant-1',
-                signature: 'a'.repeat(64),
+                signature: VALID_SIGNATURE,
                 timestamp: new Date().toISOString()
             };
 
@@ -97,7 +98,7 @@ describe('IngressAttestationService', () => {
                 requestId: 'req-1',
                 idempotencyKey: 'key-1',
                 callerId: 'tenant-1',
-                signature: 'a'.repeat(64),
+                signature: VALID_SIGNATURE,
                 timestamp: new Date().toISOString()
             };
 
