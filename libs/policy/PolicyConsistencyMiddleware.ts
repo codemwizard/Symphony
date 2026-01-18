@@ -21,8 +21,11 @@ import { Request, Response, NextFunction } from 'express';
 import { Pool } from 'pg';
 import pino from 'pino';
 import crypto from 'crypto';
+import { KeyManager, SymphonyKeyManager } from '../crypto/keyManager.js';
 
 const logger = pino({ name: 'PolicyConsistency' });
+const keyManager: KeyManager = new SymphonyKeyManager();
+let claimsKeyPromise: Promise<Buffer> | null = null;
 
 // =============================================================================
 // CONFIGURATION
@@ -453,6 +456,17 @@ export function createPolicyConsistencyMiddleware(
                 return next();
             }
 
+            const signatureHeader = req.headers['x-policy-claims-signature'];
+            if (!signatureHeader || typeof signatureHeader !== 'string') {
+                throw new PolicyViolationError(
+                    'POLICY_CLAIMS_UNSIGNED',
+                    'Policy claims signature is required',
+                    401
+                );
+            }
+
+            await verifyPolicyClaimsSignature(claims, signatureHeader);
+
             const result = await service.validatePolicyClaims(claims);
 
             // Add headers to signal frontend about policy state
@@ -505,4 +519,63 @@ export function createPolicyClaims(
     };
 }
 
+function stableStringify(value: unknown): string {
+    if (value === null || value === undefined) {
+        return JSON.stringify(value);
+    }
+
+    if (typeof value !== 'object') {
+        return JSON.stringify(value);
+    }
+
+    if (Array.isArray(value)) {
+        return `[${value.map(item => stableStringify(item)).join(',')}]`;
+    }
+
+    const record = value as Record<string, unknown>;
+    const keys = Object.keys(record).sort();
+    const entries = keys.map(key => `"${key}":${stableStringify(record[key])}`);
+    return `{${entries.join(',')}}`;
+}
+
+async function getClaimsKey(): Promise<Buffer> {
+    if (!claimsKeyPromise) {
+        claimsKeyPromise = keyManager
+            .deriveKey('policy/claims')
+            .then(key => Buffer.from(key, 'base64'));
+    }
+
+    return claimsKeyPromise;
+}
+
+export async function signPolicyClaims(claims: PolicyClaims): Promise<string> {
+    const key = await getClaimsKey();
+    const payload = stableStringify(claims);
+    return crypto.createHmac('sha256', key).update(payload).digest('hex');
+}
+
+async function verifyPolicyClaimsSignature(claims: PolicyClaims, signature: string): Promise<void> {
+    if (!/^[a-f0-9]{64}$/i.test(signature)) {
+        throw new PolicyViolationError(
+            'POLICY_CLAIMS_SIGNATURE_INVALID',
+            'Policy claims signature format is invalid',
+            401
+        );
+    }
+
+    const expected = await signPolicyClaims(claims);
+    const expectedBuffer = Buffer.from(expected, 'hex');
+    const providedBuffer = Buffer.from(signature.toLowerCase(), 'hex');
+
+    if (
+        expectedBuffer.length !== providedBuffer.length ||
+        !crypto.timingSafeEqual(expectedBuffer, providedBuffer)
+    ) {
+        throw new PolicyViolationError(
+            'POLICY_CLAIMS_SIGNATURE_INVALID',
+            'Policy claims signature verification failed',
+            401
+        );
+    }
+}
 

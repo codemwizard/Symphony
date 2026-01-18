@@ -11,7 +11,8 @@
 import { describe, it, beforeEach, afterEach, mock } from 'node:test';
 import assert from 'node:assert';
 import { Pool } from 'pg';
-import { PolicyConsistencyService, PolicyClaims } from '../../libs/policy/PolicyConsistencyMiddleware.js';
+import { PolicyConsistencyService, PolicyClaims, createPolicyConsistencyMiddleware, signPolicyClaims } from '../../libs/policy/PolicyConsistencyMiddleware.js';
+import { SymphonyKeyManager } from '../../libs/crypto/keyManager.js';
 
 // We cannot easily mock 'pino' import in node:test without loaders.
 // However, if the service imports pino directly, we just let it run.
@@ -213,6 +214,115 @@ describe('PolicyConsistencyService', () => {
             // Limit is 1000
             const allowed = await service.isOperationAllowed(claims, 'PAYMENT', 1500);
             assert.strictEqual(allowed, false);
+        });
+    });
+});
+
+describe('PolicyConsistencyMiddleware', () => {
+    const MOCK_SCOPE = 'TIER_1';
+    const baseClaims: PolicyClaims = {
+        participantId: 'user-123',
+        policyVersion: 'v1.2.3',
+        policyScope: MOCK_SCOPE,
+        capabilities: [],
+        issuedAt: Date.now(),
+        expiresAt: Date.now() + 3600000
+    };
+
+    let restoreMock: () => void;
+
+    beforeEach(() => {
+        const mockFn = mock.method(SymphonyKeyManager.prototype, 'deriveKey', async () => {
+            return Buffer.from('policy-claims-key').toString('base64');
+        });
+        restoreMock = () => mockFn.mock.restore();
+    });
+
+    afterEach(() => {
+        if (restoreMock) restoreMock();
+    });
+
+    const buildMockPool = () => ({
+        query: mock.fn(async (text: string) => {
+            if (text.includes('FROM policy_versions')) {
+                return {
+                    rows: [
+                        { version: baseClaims.policyVersion, status: 'ACTIVE', activated_at: new Date() }
+                    ]
+                };
+            }
+            if (text.includes('FROM policy_scopes')) {
+                return {
+                    rows: [{
+                        scope_id: MOCK_SCOPE,
+                        max_transaction_amount: 1000,
+                        allowed_operations: ['PAYMENT'],
+                        daily_limit: 10000,
+                        hourly_limit: 5000
+                    }]
+                };
+            }
+            return { rows: [] };
+        })
+    });
+
+    it('should accept policy claims with a valid signature header', async () => {
+        const pool = buildMockPool();
+        const middleware = createPolicyConsistencyMiddleware(pool as unknown as Pool);
+        const signature = await signPolicyClaims(baseClaims);
+
+        const req = {
+            policyClaims: baseClaims,
+            headers: { 'x-policy-claims-signature': signature }
+        } as unknown as { policyClaims: PolicyClaims; headers: Record<string, string> };
+        const res = { setHeader: mock.fn() } as unknown as { setHeader: ReturnType<typeof mock.fn> };
+
+        await new Promise<void>((resolve, reject) => {
+            middleware(req as unknown as Parameters<typeof middleware>[0], res as unknown as Parameters<typeof middleware>[1], (err?: unknown) => {
+                if (err) {
+                    reject(err);
+                } else {
+                    resolve();
+                }
+            });
+        });
+    });
+
+    it('should reject policy claims without a signature header', async () => {
+        const pool = buildMockPool();
+        const middleware = createPolicyConsistencyMiddleware(pool as unknown as Pool);
+
+        const req = {
+            policyClaims: baseClaims,
+            headers: {}
+        } as unknown as { policyClaims: PolicyClaims; headers: Record<string, string> };
+        const res = { setHeader: mock.fn() } as unknown as { setHeader: ReturnType<typeof mock.fn> };
+
+        await new Promise<void>((resolve) => {
+            middleware(req as unknown as Parameters<typeof middleware>[0], res as unknown as Parameters<typeof middleware>[1], (err?: unknown) => {
+                assert.ok(err instanceof Error);
+                assert.ok(err.message.includes('signature is required'));
+                resolve();
+            });
+        });
+    });
+
+    it('should reject policy claims with an invalid signature header', async () => {
+        const pool = buildMockPool();
+        const middleware = createPolicyConsistencyMiddleware(pool as unknown as Pool);
+
+        const req = {
+            policyClaims: baseClaims,
+            headers: { 'x-policy-claims-signature': 'deadbeef' }
+        } as unknown as { policyClaims: PolicyClaims; headers: Record<string, string> };
+        const res = { setHeader: mock.fn() } as unknown as { setHeader: ReturnType<typeof mock.fn> };
+
+        await new Promise<void>((resolve) => {
+            middleware(req as unknown as Parameters<typeof middleware>[0], res as unknown as Parameters<typeof middleware>[1], (err?: unknown) => {
+                assert.ok(err instanceof Error);
+                assert.ok(err.message.includes('signature format is invalid'));
+                resolve();
+            });
         });
     });
 });

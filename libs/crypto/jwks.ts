@@ -25,12 +25,24 @@ export function getJWKS(): ReturnType<typeof createLocalJWKSet> {
         return cachedJWKS;
     }
 
+    const baseDir = process.cwd();
     const jwksPath = process.env.JWKS_PATH
-        ? path.resolve(process.cwd(), process.env.JWKS_PATH)
-        : path.resolve(process.cwd(), 'config', 'jwks.json');
+        ? path.resolve(baseDir, process.env.JWKS_PATH)
+        : path.resolve(baseDir, 'config', 'jwks.json');
+
+    if (!jwksPath.startsWith(baseDir)) {
+        throw new Error(`Security Violation: JWKS_PATH must remain within ${baseDir}`);
+    }
+
+    const isProtectedEnv = ['production', 'staging'].includes(process.env.NODE_ENV ?? '');
+    const allowDevFallback = process.env.ALLOW_DEV_JWKS_FALLBACK === 'true';
 
     if (!fs.existsSync(jwksPath)) {
-        logger.warn({ path: jwksPath }, 'JWKS file not found - using development fallback');
+        if (isProtectedEnv || !allowDevFallback) {
+            throw new Error(`CRITICAL: JWKS file missing at ${jwksPath}. Fallback disabled.`);
+        }
+
+        logger.warn({ path: jwksPath }, 'JWKS file not found - using explicit development fallback');
         // Development fallback: create a minimal JWKS with the stored dev key
         const devJwks: JSONWebKeySet = {
             keys: [{
