@@ -53,7 +53,7 @@ describe('IngressAttestationService', () => {
                 requestId: 'req-1',
                 idempotencyKey: 'idempotency-key-1',
                 callerId: 'tenant-1',
-                signature: 'sig-1',
+                signature: 'a'.repeat(64),
                 timestamp: new Date().toISOString()
             };
 
@@ -76,7 +76,7 @@ describe('IngressAttestationService', () => {
                 requestId: 'req-1',
                 // Missing idempotencyKey
                 callerId: 'tenant-1',
-                signature: 'sig-1',
+                signature: 'a'.repeat(64),
                 timestamp: new Date().toISOString()
             };
 
@@ -97,7 +97,7 @@ describe('IngressAttestationService', () => {
                 requestId: 'req-1',
                 idempotencyKey: 'key-1',
                 callerId: 'tenant-1',
-                signature: 'sig-1',
+                signature: 'a'.repeat(64),
                 timestamp: new Date().toISOString()
             };
 

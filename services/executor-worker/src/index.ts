@@ -4,7 +4,7 @@ import { ProductionKeyManager, KeyManager } from "../../../libs/crypto/keyManage
 import { ConfigGuard, CRYPTO_CONFIG_REQUIREMENTS } from "../../../libs/bootstrap/config-guard.js";
 import { ErrorSanitizer } from "../../../libs/errors/sanitizer.js";
 import { createValidator } from "../../../libs/validation/zod-middleware.js";
-import { IdentityEnvelopeSchema } from "../../../libs/validation/schema.js";
+import { IdentityEnvelopeV1Schema } from "../../../libs/validation/identitySchema.js";
 import { db } from "../../../libs/db/index.js";
 import { verifyIdentity } from "../../../libs/context/verifyIdentity.js";
 import { RequestContext } from "../../../libs/context/requestContext.js";
@@ -28,7 +28,7 @@ async function main() {
     // Simulated Task Execution
     async function _executeTask(envelope: IdentityEnvelopeV1) {
         // HIGH-SEC-002: Input Validation (Zod)
-        const validateEnvelope = createValidator(IdentityEnvelopeSchema);
+        const validateEnvelope = createValidator(IdentityEnvelopeV1Schema);
         validateEnvelope(envelope, "ExecutorWorker:Identity");
 
         // Phase 6.3: Refactored to use KeyManager injection
