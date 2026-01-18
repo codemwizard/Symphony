@@ -2,8 +2,8 @@ import { RequestContext } from "../context/requestContext.js";
 import { Capability } from "./capabilities.js";
 import { authorize, Policy } from "./authorize.js";
 import { logger } from "../logging/logger.js";
-import fs from "fs";
 import path from "path";
+import { assertPolicyVersionPinned, readPolicyFile } from "../policy/policyIntegrity.js";
 
 /**
  * Reusable Authorization Guard
@@ -17,7 +17,8 @@ export async function requireCapability(
     // Load Active Policy (Simulated for Phase 6.3)
     // In v1, we assume the global policy is at the fixed location
     const policyPath = path.join(".symphony", "policies", "global-policy.v1.json");
-    const activePolicy: Policy = JSON.parse(fs.readFileSync(policyPath, "utf-8"));
+    const activePolicy = readPolicyFile<Policy>(policyPath);
+    assertPolicyVersionPinned(activePolicy.policyVersion);
 
     const isAuthorized = await authorize(context, requestedCapability, currentService, activePolicy);
 

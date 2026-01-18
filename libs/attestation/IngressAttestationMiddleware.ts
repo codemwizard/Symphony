@@ -11,8 +11,12 @@ import type { Request, Response, NextFunction } from 'express';
 import { Pool } from 'pg';
 import { pino } from 'pino';
 import * as crypto from 'crypto';
+import { KeyManager, SymphonyKeyManager } from '../crypto/keyManager.js';
 
 const logger = pino({ name: 'IngressAttestation' });
+const keyManager: KeyManager = new SymphonyKeyManager();
+let attestationKeyPromise: Promise<Buffer> | null = null;
+const MAX_TIMESTAMP_SKEW_MS = 5 * 60 * 1000;
 
 /**
  * Ingress Envelope - Required fields for every request
@@ -182,6 +186,12 @@ export class IngressAttestationService {
         if (!envelope.signature || typeof envelope.signature !== 'string') {
             throw new InvalidEnvelopeError('Missing or invalid signature');
         }
+        if (!/^[a-f0-9]{64}$/i.test(envelope.signature)) {
+            throw new InvalidEnvelopeError('Invalid signature format');
+        }
+        if (!envelope.timestamp || Number.isNaN(Date.parse(envelope.timestamp))) {
+            throw new InvalidEnvelopeError('Missing or invalid timestamp');
+        }
     }
 }
 
@@ -195,14 +205,22 @@ export function createIngressAttestationMiddleware(pool: Pool) {
 
     return async (req: Request, res: Response, next: NextFunction): Promise<void> => {
         try {
+            const signatureHeader = req.headers['x-signature'];
+            if (!signatureHeader || typeof signatureHeader !== 'string') {
+                throw new InvalidEnvelopeError('Missing x-signature header');
+            }
+
             // Extract envelope from request
             const envelope: IngressEnvelope = {
                 requestId: req.headers['x-request-id'] as string ?? crypto.randomUUID(),
                 idempotencyKey: req.headers['x-idempotency-key'] as string ?? crypto.randomUUID(),
                 callerId: (req as { tenantId?: string }).tenantId ?? 'UNKNOWN',
-                signature: req.headers['x-signature'] as string ?? 'UNSIGNED',
+                signature: signatureHeader,
                 timestamp: new Date().toISOString()
             };
+
+            const bodyHash = computeBodyHash(req.body);
+            await verifyIngressSignature(envelope, bodyHash);
 
             // Attest before execution
             const attestation = await service.attest(envelope);
@@ -226,4 +244,85 @@ export function createIngressAttestationMiddleware(pool: Pool) {
     };
 }
 
+function stableStringify(value: unknown): string {
+    if (value === null || value === undefined) {
+        return JSON.stringify(value);
+    }
+
+    if (typeof value !== 'object') {
+        return JSON.stringify(value);
+    }
+
+    if (Array.isArray(value)) {
+        return `[${value.map(item => stableStringify(item)).join(',')}]`;
+    }
+
+    const record = value as Record<string, unknown>;
+    const keys = Object.keys(record).sort();
+    const entries = keys.map(key => `"${key}":${stableStringify(record[key])}`);
+    return `{${entries.join(',')}}`;
+}
+
+function computeBodyHash(body: unknown): string {
+    if (body === undefined) {
+        return crypto.createHash('sha256').update('').digest('hex');
+    }
+
+    if (Buffer.isBuffer(body)) {
+        return crypto.createHash('sha256').update(body).digest('hex');
+    }
+
+    if (typeof body === 'string') {
+        return crypto.createHash('sha256').update(body).digest('hex');
+    }
+
+    const serialized = stableStringify(body);
+    return crypto.createHash('sha256').update(serialized).digest('hex');
+}
+
+async function getAttestationKey(): Promise<Buffer> {
+    if (!attestationKeyPromise) {
+        attestationKeyPromise = keyManager
+            .deriveKey('attestation/hmac')
+            .then(key => Buffer.from(key, 'base64'));
+    }
+
+    return attestationKeyPromise;
+}
+
+function buildSignaturePayload(envelope: IngressEnvelope, bodyHash: string): string {
+    return [
+        envelope.requestId,
+        envelope.idempotencyKey,
+        envelope.callerId,
+        envelope.timestamp,
+        bodyHash
+    ].join('|');
+}
+
+async function verifyIngressSignature(envelope: IngressEnvelope, bodyHash: string): Promise<void> {
+    const now = Date.now();
+    const issuedAt = Date.parse(envelope.timestamp);
+    if (Number.isNaN(issuedAt)) {
+        throw new InvalidEnvelopeError('Invalid timestamp');
+    }
+    if (Math.abs(now - issuedAt) > MAX_TIMESTAMP_SKEW_MS) {
+        throw new InvalidEnvelopeError('Ingress timestamp outside allowable skew');
+    }
+
+    const key = await getAttestationKey();
+    const payload = buildSignaturePayload(envelope, bodyHash);
+    const expected = crypto.createHmac('sha256', key).update(payload).digest('hex');
+
+    const provided = envelope.signature.toLowerCase();
+    const expectedBuffer = Buffer.from(expected, 'hex');
+    const providedBuffer = Buffer.from(provided, 'hex');
+
+    if (
+        expectedBuffer.length !== providedBuffer.length ||
+        !crypto.timingSafeEqual(expectedBuffer, providedBuffer)
+    ) {
+        throw new InvalidEnvelopeError('Invalid ingress signature');
+    }
+}
 

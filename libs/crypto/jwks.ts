@@ -28,23 +28,30 @@ export function getJWKS(): ReturnType<typeof createLocalJWKSet> {
         return cachedJWKS;
     }
 
+    const cwd = process.cwd();
     const jwksPath = process.env.JWKS_PATH
-        ? path.resolve(process.cwd(), process.env.JWKS_PATH)
-        : path.resolve(process.cwd(), 'config', 'jwks.json');
+        ? path.resolve(cwd, process.env.JWKS_PATH)
+        : path.resolve(cwd, 'config', 'jwks.json');
 
-    // SECURITY: Path traversal check
-    if (!jwksPath.startsWith(process.cwd())) {
-        throw new Error('Security Violation: JWKS_PATH must be within application root');
+    if (process.env.JWKS_PATH && !jwksPath.startsWith(`${cwd}${path.sep}`)) {
+        throw new Error('Security Violation: JWKS_PATH must resolve within project root.');
     }
 
+    const nodeEnv = process.env.NODE_ENV ?? '';
+    const isProtectedEnv = ['production', 'staging'].includes(nodeEnv);
+    const allowDevFallback =
+        ['development', 'test'].includes(nodeEnv) || process.env.ALLOW_DEV_JWKS_FALLBACK === 'true';
+
     if (!fs.existsSync(jwksPath)) {
-        // CRITICAL: Fail closed in production/staging
-        if (process.env.NODE_ENV === 'production' || process.env.NODE_ENV === 'staging') {
-            throw new Error(`CRITICAL: JWKS file missing at ${jwksPath}. Cannot verify identities.`);
+        if (isProtectedEnv) {
+            throw new Error(`CRITICAL: JWKS file missing at ${jwksPath}`);
+        }
+        if (!allowDevFallback) {
+            throw new Error(`JWKS file not found at ${jwksPath}. Fallback disabled.`);
         }
 
-        logger.warn({ path: jwksPath }, 'JWKS file not found - using development fallback');
-        // Development fallback: only allowed in non-prod environments
+        logger.warn({ path: jwksPath }, 'JWKS file not found - using explicit development fallback');
+        // Development fallback: create a minimal JWKS with the stored dev key
         const devJwks: JSONWebKeySet = {
             keys: [{
                 kty: 'EC',
