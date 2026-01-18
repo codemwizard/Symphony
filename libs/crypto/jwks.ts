@@ -28,26 +28,21 @@ export function getJWKS(): ReturnType<typeof createLocalJWKSet> {
         return cachedJWKS;
     }
 
-    const cwd = process.cwd();
+    const baseDir = process.cwd();
     const jwksPath = process.env.JWKS_PATH
-        ? path.resolve(cwd, process.env.JWKS_PATH)
-        : path.resolve(cwd, 'config', 'jwks.json');
+        ? path.resolve(baseDir, process.env.JWKS_PATH)
+        : path.resolve(baseDir, 'config', 'jwks.json');
 
-    if (process.env.JWKS_PATH && !jwksPath.startsWith(`${cwd}${path.sep}`)) {
-        throw new Error('Security Violation: JWKS_PATH must resolve within project root.');
+    if (!jwksPath.startsWith(baseDir)) {
+        throw new Error(`Security Violation: JWKS_PATH must remain within ${baseDir}`);
     }
 
-    const nodeEnv = process.env.NODE_ENV ?? '';
-    const isProtectedEnv = ['production', 'staging'].includes(nodeEnv);
-    const allowDevFallback =
-        ['development', 'test'].includes(nodeEnv) || process.env.ALLOW_DEV_JWKS_FALLBACK === 'true';
+    const isProtectedEnv = ['production', 'staging'].includes(process.env.NODE_ENV ?? '');
+    const allowDevFallback = process.env.ALLOW_DEV_JWKS_FALLBACK === 'true';
 
     if (!fs.existsSync(jwksPath)) {
-        if (isProtectedEnv) {
-            throw new Error(`CRITICAL: JWKS file missing at ${jwksPath}`);
-        }
-        if (!allowDevFallback) {
-            throw new Error(`JWKS file not found at ${jwksPath}. Fallback disabled.`);
+        if (isProtectedEnv || !allowDevFallback) {
+            throw new Error(`CRITICAL: JWKS file missing at ${jwksPath}. Fallback disabled.`);
         }
 
         logger.warn({ path: jwksPath }, 'JWKS file not found - using explicit development fallback');
