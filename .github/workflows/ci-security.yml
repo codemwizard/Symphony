@@ -1,5 +1,3 @@
-
-
 name: Symphony Security & CI
 
 on:
@@ -16,43 +14,38 @@ jobs:
       actions: read
       contents: read
       security-events: write
-
     steps:
-    - name: Checkout repository
-      uses: actions/checkout@v4
-      
-    - name: Enforce Phase Monotonicity
-      shell: bash
-      run: |
-        git fetch origin main
-    
-        CURRENT_PHASE=$(git show origin/main:.symphony/PHASE 2>/dev/null || echo "6")
-        PROPOSED_PHASE=$(cat .symphony/PHASE 2>/dev/null || echo "6")
-    
-        echo "Current Phase (main): $CURRENT_PHASE"
-        echo "Proposed Phase (branch): $PROPOSED_PHASE"
-    
-        if [ "$CURRENT_PHASE" -ge 7 ] && [ "$PROPOSED_PHASE" -lt "$CURRENT_PHASE" ]; then
-          echo "::error::Phase downgrade detected. Phase is monotonic once Phase >=7."
-          exit 1
-        fi
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
+      - name: Enforce Phase Monotonicity
+        shell: bash
+        run: |
+          git fetch origin main
+          CURRENT_PHASE=$(git show origin/main:.symphony/PHASE 2>/dev/null || echo "6")
+          PROPOSED_PHASE=$(cat .symphony/PHASE 2>/dev/null || echo "6")
+          echo "Current Phase (main): $CURRENT_PHASE"
+          echo "Proposed Phase (branch): $PROPOSED_PHASE"
+          if [ "$CURRENT_PHASE" -ge 7 ] && [ "$PROPOSED_PHASE" -lt "$CURRENT_PHASE" ]; then
+            echo "::error::Phase downgrade detected. Phase is monotonic once Phase >=7."
+            exit 1
+          fi
 
-    - name: Initialize CodeQL
-      uses: github/codeql-action/init@v4
-      with:
-        languages: javascript-typescript
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v4
+        with:
+          languages: javascript-typescript
 
-    - name: Autobuild
-      uses: github/codeql-action/autobuild@v4
+      - name: Autobuild
+        uses: github/codeql-action/autobuild@v4
 
-    - name: Perform CodeQL Analysis
-      uses: github/codeql-action/analyze@v4
+      - name: Perform CodeQL Analysis
+        uses: github/codeql-action/analyze@v4
 
   security-gates:
     name: Security Invariants & Tests
     runs-on: ubuntu-latest
-    
+
     services:
       postgres:
         image: postgres:18-alpine
@@ -67,170 +60,140 @@ jobs:
           --health-interval 10s
           --health-timeout 5s
           --health-retries 5
-    
+
     env:
       DATABASE_URL: postgres://symphony:symphony@localhost:5432/symphony
       PGSSLMODE: disable
-    
+
     steps:
-    - uses: actions/checkout@v4
-      with:
-        submodules: 'recursive'
-        fetch-depth: 0  # Full history for drift detection
+      - uses: actions/checkout@v4
+        with:
+          submodules: "recursive"
+          fetch-depth: 0
 
-    - name: Wait for PostgreSQL
-      run: |
-        until pg_isready -h localhost -p 5432 -U symphony; do
-          echo "Waiting for PostgreSQL..."
-          sleep 2
-        done
-        echo "✅ PostgreSQL is ready"
+      - name: Wait for PostgreSQL
+        run: |
+          until pg_isready -h localhost -p 5432 -U symphony; do
+            echo "Waiting for PostgreSQL..."
+            sleep 2
+          done
+          echo "✅ PostgreSQL is ready"
 
-    - name: Apply Database Schema
-      run: |
-        echo "📦 Applying schema migrations..."
-        for file in schema/v1/*.sql; do
-          echo "  Applying: $file"
-          psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f "$file"
-        done
-        echo "✅ Schema migrations complete"
-        
-        # Verify critical tables exist
-        psql "$DATABASE_URL" -c "SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = 'public';" -tA
-        echo "✅ Database tables created"
+      - name: Apply Database Schema
+        run: |
+          echo "📦 Applying schema migrations..."
+          for file in schema/v1/*.sql; do
+            echo "  Applying: $file"
+            psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f "$file"
+          done
+          echo "✅ Schema migrations complete"
 
-    - name: Ensure Policy Lock Exists
-      run: |
-        test -f .policy.lock || (
-          echo "❌ .policy.lock missing — policy version must be explicitly pinned."
-          exit 1
-        )
+      # -------------------- PaC: lock + submodule pin --------------------
+      - name: Verify Policy Lock (PaC)
+        run: bash scripts/ci/verify_policy_lock.sh
 
-    - name: Block Unapproved Policy Changes
-      run: |
-        git fetch origin main --quiet
-        git diff --name-only origin/main...HEAD | grep "^\.policies/" && (
-          echo "❌ Direct policy modification detected."
-          echo "Policy updates must be approved upstream in org-security-policies."
-          exit 1
-        ) || true
+      - name: Block Unapproved Policy Changes (PaC)
+        run: |
+          git fetch origin main --quiet
+          git diff --name-only origin/main...HEAD | grep "^\.policies/" && (
+            echo "❌ Direct policy modification detected."
+            echo "Policy updates must be approved upstream in org-security-policies."
+            exit 1
+          ) || true
 
-    - name: Verify Policy Version Lock
-      run: |
-        LOCKED=$(grep "commit:" .policy.lock | awk '{print $2}')
-        ACTUAL=$(cd .policies && git rev-parse HEAD)
-        if [ "$LOCKED" != "$ACTUAL" ]; then
-          echo "❌ Policy version mismatch"
-          echo "Locked: $LOCKED"
-          echo "Actual: $ACTUAL"
-          echo "Update .policy.lock via approved process."
-          exit 1
-        fi
-        echo "✅ Policy version verified: $LOCKED"
+      - name: Detect Phase
+        run: |
+          if [ -f .symphony/PHASE ]; then
+            PHASE=$(cat .symphony/PHASE | tr -d '[:space:]')
+          else
+            PHASE=6
+          fi
+          echo "PHASE=$PHASE" >> $GITHUB_ENV
 
-    - name: Validate Policies Loaded
-      run: |
-        test -d ".policies" || (echo "❌ Policies not loaded" && exit 1)
-        echo "✅ Security policies available at .policies/"
+      - name: Use Node.js 20.19.6
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20.19.6
+          cache: "npm"
 
+      - name: Install Dependencies
+        run: npm ci
 
+      - name: Lint
+        run: npm run lint -- --max-warnings=0
 
+      # -------------------- Migrated Checks (Legacy CI) --------------------
+      - name: Check Kill-Switches
+        run: scripts/ci/kill_switch_check.sh
 
-    - name: Detect Phase
-      run: |
-        if [ -f .symphony/PHASE ]; then
-          PHASE=$(cat .symphony/PHASE | tr -d '[:space:]')
-        else
-          PHASE=6
-        fi
-        echo "PHASE=$PHASE" >> $GITHUB_ENV
-    
-    - name: Use Node.js 20.19.6
-      uses: actions/setup-node@v4
-      with:
-        node-version: 20.19.6
-        cache: 'npm'
-        
-    - name: Install Dependencies
-      run: npm ci
-      
-    - name: Lint (policy)
-      run: npm run lint -- --max-warnings=0
+      - name: Check Database Invariants
+        run: scripts/ci/db_invariants.sh
 
-    - name: Enforce RequestContext Safety
-      run: |
-        if grep -r "RequestContext.set" libs/ services/ | grep -v "libs/context/requestContext.ts"; then
-          echo "::error::Forbidden RequestContext.set() usage detected. Use RequestContext.run() instead."
-          exit 1
-        fi
-      
-    - name: Run Security Gates (Invariant Checks)
-      run: npm run security-check
-      
-    - name: Run Unit Tests
-      run: npm test
+      - name: Check Architecture Invariants
+        run: scripts/ci/architecture_invariants.sh
+      # ---------------------------------------------------------------------
 
-    - name: Run Compliance Verification
-      run: npm run ci:compliance
+      - name: Enforce RequestContext Safety
+        run: |
+          if grep -r "RequestContext.set" libs/ services/ | grep -v "libs/context/requestContext.ts"; then
+            echo "::error::Forbidden RequestContext.set() usage detected. Use RequestContext.run() instead."
+            exit 1
+          fi
 
-    - name: Install Snyk CLI
-      run: npm install -g snyk@latest
-    
-    - name: Verify Snyk Installation
-      run: snyk --version
+      - name: Run Security Gates (Invariant Checks)
+        run: npm run security-check
 
+      - name: Run Unit Tests
+        run: npm test
 
-    - name: Snyk Security Scan (Phase-aware)
-      shell: bash
-      env:
-        SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
-      run: |
-        if [ "$PHASE" -ge 7 ]; then
-          echo "Phase 7: Enforcing Snyk"
-          snyk test
-        else
-          echo "Phase 6: Advisory Snyk"
-          snyk test || echo "::warning::Snyk findings or auth issue (Phase 6 advisory)"
-        fi
+      - name: Run Compliance Verification
+        run: npm run ci:compliance
 
-        
-    - name: Audit Dependencies (block on high+)
-      run: npm audit --audit-level=high
+      - name: Install Snyk CLI
+        run: npm install -g snyk@latest
 
-    - name: Generate Evidence Bundle
-      run: .ci/evidence/generate_evidence.sh
+      - name: Snyk Security Scan (Phase-aware)
+        shell: bash
+        env:
+          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+        run: |
+          if [ "$PHASE" -ge 7 ]; then
+            echo "Phase 7: Enforcing Snyk"
+            snyk test
+          else
+            echo "Phase 6: Advisory Snyk"
+            snyk test || echo "::warning::Snyk findings or auth issue (Phase 6 advisory)"
+          fi
 
-    - name: Compute Evidence Hash
-      run: .ci/evidence/compute_hash.sh
+      - name: Audit Dependencies (block on high+)
+        run: npm audit --audit-level=high
 
-    - name: Validate Evidence Schema
-      run: |
-    - name: Validate Evidence Schema
-      run: |
-        npx --yes -p ajv-cli@5.0.0 -p ajv-formats@2.1.1 ajv validate \
-          --spec=draft2020 \
-          -s schemas/evidence-bundle.schema.json \
-          -d evidence-bundle.json \
-          -c ajv-formats \
-          --strict=true
+      - name: Generate Evidence Bundle
+        run: .ci/evidence/generate_evidence.sh
 
-    - name: Package Evidence Bundle
-      run: .ci/evidence/package_bundle.sh
+      - name: Compute Evidence Hash
+        run: .ci/evidence/compute_hash.sh
 
-    - name: Upload Evidence Bundle
-      uses: actions/upload-artifact@v4
-      with:
-        name: evidence-bundle
-        path: |
-          evidence-bundle.json
-          evidence-bundle.sha256
-          evidence-bundle-*.zip
+      - name: Validate Evidence Schema (Ajv 2020 + formats v3)
+        run: npm run ci:validate-evidence
 
-    - name: Upload Phase Evidence
-      uses: actions/upload-artifact@v4
-      with:
-        name: phase-evidence
-        path: |
-          .symphony/PHASE
-          logs/
-          test-results/
+      - name: Package Evidence Bundle
+        run: .ci/evidence/package_bundle.sh
+
+      - name: Upload Evidence Bundle
+        uses: actions/upload-artifact@v4
+        with:
+          name: evidence-bundle
+          path: |
+            evidence-bundle.json
+            evidence-bundle.sha256
+            evidence-bundle-*.zip
+
+      - name: Upload Phase Evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: phase-evidence
+          path: |
+            .symphony/PHASE
+            logs/
+            test-results/

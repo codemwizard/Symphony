@@ -49,7 +49,8 @@ export class IncidentDetector {
                 policyVersion: 'v1',
                 roles: ['system'],
                 signature: 'system-signed',
-                trustTier: 'internal'
+                trustTier: 'internal',
+                certFingerprint: 'system-internal'
             },
 
             decision: 'ALLOW', // Signal emission itself is an allowed act

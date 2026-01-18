@@ -5,118 +5,210 @@ import crypto from "crypto";
 import { KeyManager } from "../crypto/keyManager.js";
 
 // OU Interaction Graph (Phase 3)
-// Allowed issuers for each service/OU
+// Allowed issuers for each service/OU (service-to-service directional trust)
 const ALLOWED_ISSUERS: Record<string, string[]> = {
-    'control-plane': ['client', 'ingest-api'], // OU-01/OU-03 accepts from Client or Ingest
-    'ingest-api': ['client'],                // OU-04 accepts from Client
-    'executor-worker': ['control-plane'],     // OU-05 accepts from Control Plane (OU-03)
-    'read-api': ['executor-worker'],          // OU-06 accepts from Executor (OU-05)
+    "control-plane": ["client", "ingest-api"],
+    "ingest-api": ["client", "ingest-api"],
+    "executor-worker": ["control-plane"],
+    "read-api": ["executor-worker"],
 };
+
+// IDENTITY-7B: user is only valid at ingest boundary and is wrapped by ingest-api.
+const USER_ENTRYPOINT_SERVICES = new Set(["ingest-api"]);
+const USER_ALLOWED_ISSUERS = new Set(["ingest-api"]); // issuerService on the envelope
 
 // SEC-7R-FIX: Clock skew tolerance and max token age
 const CLOCK_SKEW_MS = 30_000; // 30 seconds
 const MAX_TOKEN_AGE_MS = 5 * 60 * 1000; // 5 minutes
 
+function normalizeStr(v: string): string {
+    return v.trim();
+}
+
+function normalizeRoles(roles: string[]): string[] {
+    return roles
+        .map(r => r.trim())
+        .filter(Boolean)
+        .sort();
+}
+
+/**
+ * Build deterministic signed payload.
+ * IDENTITY-7B: user participant fields are cryptographically bound.
+ */
+function buildDataToSign(envelope: IdentityEnvelopeV1): string {
+    // Explicit null canonicalization for stability
+    const certFingerprint = envelope.subjectType === 'service'
+        ? envelope.certFingerprint
+        : null;
+
+    const base = {
+        certFingerprint: certFingerprint,
+        issuedAt: normalizeStr(envelope.issuedAt),
+        issuerService: normalizeStr(envelope.issuerService),
+        policyVersion: normalizeStr(envelope.policyVersion),
+        requestId: normalizeStr(envelope.requestId),
+        roles: normalizeRoles(envelope.roles),
+        subjectId: normalizeStr(envelope.subjectId),
+        subjectType: envelope.subjectType,
+        tenantId: normalizeStr(envelope.tenantId),
+        trustTier: envelope.trustTier,
+        version: envelope.version,
+    };
+
+    if (envelope.subjectType === "user") {
+        return JSON.stringify({
+            ...base,
+            participantId: normalizeStr(envelope.participantId),
+            participantRole: envelope.participantRole,
+            participantStatus: envelope.participantStatus,
+        });
+    }
+
+    return JSON.stringify(base);
+}
+
 /**
  * Verifies the identity envelope and returns a validated, immutable context.
  * Throws on any violation (Fail-Closed).
- * 
- * SEC-7R-FIX: Implements timing-safe comparison, canonical JSON, and freshness checks.
+ *
+ * IDENTITY-7B:
+ * - Users only permitted at ingest-api
+ * - User issuer allowlist
+ * - trustTier='user' required for user
+ * - user must not present mTLS proof
+ * - user must be tenant-anchored (participantId required)
+ * - participant fields are included in signature payload
+ *
+ * SEC-7R-FIX:
+ * - timing-safe HMAC comparison
+ * - freshness checks with skew tolerance
  */
 export async function verifyIdentity(
     envelope: IdentityEnvelopeV1,
     currentService: string,
-    keyManager: KeyManager, // Dependency Injection (INV-SEC-04)
-    certFingerprint?: string // Phase 6.4: Optional for clients, mandatory for services
+    keyManager: KeyManager,
+    certFingerprint?: string
 ): Promise<ValidatedIdentityContext> {
+    // 1) Basic Schema & Version Validation
+    if (envelope.version !== "v1") throw new Error("Unsupported identity version");
 
-    // 1. Basic Schema & Version Validation
-    if (envelope.version !== 'v1') throw new Error("Unsupported identity version");
-
-    // SEC-7R-FIX: Token freshness check with clock skew tolerance
-    const issuedAt = new Date(envelope.issuedAt).getTime();
+    // 2) Freshness check
+    const issuedAtMs = new Date(envelope.issuedAt).getTime();
     const now = Date.now();
-    if (isNaN(issuedAt)) {
-        throw new Error("Invalid issuedAt timestamp");
-    }
-    if (now - issuedAt > MAX_TOKEN_AGE_MS + CLOCK_SKEW_MS) {
+    if (Number.isNaN(issuedAtMs)) throw new Error("Invalid issuedAt timestamp");
+    if (now - issuedAtMs > MAX_TOKEN_AGE_MS + CLOCK_SKEW_MS) {
         throw new Error("Identity token too old - re-authentication required");
     }
-    if (issuedAt > now + CLOCK_SKEW_MS) {
+    if (issuedAtMs > now + CLOCK_SKEW_MS) {
         throw new Error("Identity token issued in the future");
     }
 
-    // 2. SEC-7R-FIX: Canonical JSON with sorted keys for deterministic signatures
-    // Includes trustTier and certFingerprint for complete binding
-    const dataToSign = JSON.stringify({
-        certFingerprint: envelope.certFingerprint ?? null,
-        issuedAt: envelope.issuedAt,
-        issuerService: envelope.issuerService,
-        policyVersion: envelope.policyVersion,
-        requestId: envelope.requestId,
-        roles: envelope.roles.slice().sort(), // Sorted for determinism
-        subjectId: envelope.subjectId,
-        subjectType: envelope.subjectType,
-        tenantId: envelope.tenantId,
-        trustTier: envelope.trustTier ?? null,
-        version: envelope.version,
-    });
+    // 3) IDENTITY-7B: User boundary enforcement (pre-HMAC: cheap fail-fast)
+    if (envelope.subjectType === "user") {
+        // Boundary: users only at ingest-api
+        if (!USER_ENTRYPOINT_SERVICES.has(currentService)) {
+            throw new Error(`User identity not permitted at ${currentService}`);
+        }
 
-    const expectedSignature = crypto
-        .createHmac('sha256', await keyManager.deriveKey('identity/hmac'))
-        .update(dataToSign)
-        .digest('hex');
+        // Issuer allowlist: user envelopes are produced by ingest-api after JWT verification
+        if (!USER_ALLOWED_ISSUERS.has(envelope.issuerService)) {
+            throw new Error(`Invalid user issuer: ${envelope.issuerService}`);
+        }
 
-    // SEC-7R-FIX: Timing-safe comparison to prevent timing attacks
-    const sigBuffer = Buffer.from(envelope.signature, 'hex');
-    const expectedBuffer = Buffer.from(expectedSignature, 'hex');
+        // Trust tier: MUST be 'user'
+        if ((envelope as Record<string, unknown>).trustTier !== "user") {
+            throw new Error(
+                `User identity requires trustTier='user', got '${(envelope as Record<string, unknown>).trustTier}'`
+            );
+        }
 
-    if (sigBuffer.length !== expectedBuffer.length ||
-        !crypto.timingSafeEqual(sigBuffer, expectedBuffer)) {
-        throw new Error("Invalid identity signature");
-    }
+        // mTLS rejection: check BOTH param and envelope field
+        // envelope check is handled by union type (property doesn't exist)
+        // verifyIdentity param check:
+        if (certFingerprint) {
+            throw new Error("User identity must not present mTLS proof");
+        }
 
-    // 3. Policy Version Validation
-    // SEC-7R-FIX: Enforce active policy version matching.
-    await validatePolicyVersion(envelope.policyVersion);
+        // Runtime check for envelope field leakage (though TS forbids it)
+        if ('certFingerprint' in envelope && (envelope as Record<string, unknown>).certFingerprint) {
+            throw new Error("User identity must not present mTLS proof (envelope field)");
+        }
 
-    // 4. Directional Trust Enforcement (OU Interaction Graph)
-    const allowed = ALLOWED_ISSUERS[currentService];
-    if (!allowed || !allowed.includes(envelope.issuerService)) {
-        // Special case for initial client requests
-        if (envelope.subjectType === 'client' && allowed && allowed.includes('client')) {
-            // Allowed
-        } else if (envelope.subjectType === 'user') {
-            // Finding #5: 'user' subject type supported in Phase 7B
-            // User identity must be validated against allowed issuers (e.g. client)
-        } else {
-            throw new Error(`Unauthorized OU interaction: ${envelope.issuerService} -> ${currentService}`);
+        // Tenant anchor required
+        if (!envelope.participantId?.trim()) {
+            throw new Error("User identity missing mandatory participantId anchor");
         }
     }
 
-
-
-    // 5. Phase 6.4: mTLS & Trust Fabric Enforcement
-    if (envelope.subjectType === 'service') {
+    // 4) Service mTLS binding (fail-closed, explicit)
+    if (envelope.subjectType === "service") {
+        // Both must exist
         if (!certFingerprint) {
             throw new Error("mTLS Violation: Service-to-service calls require cryptographic proof.");
         }
-
-        const identity = TrustFabric.resolveIdentity(certFingerprint);
-        if (!identity) {
-            throw new Error("mTLS Violation: Revoked or untrusted certificate.");
+        if (!envelope.certFingerprint) {
+            throw new Error("mTLS Violation: Service envelope missing certFingerprint binding.");
         }
 
-        // Bind mTLS claim to envelope subject
-        if (identity.serviceName !== envelope.issuerService) {
-            throw new Error(`mTLS Violation: Certificate identity (${identity.serviceName}) mismatch with claim (${envelope.issuerService}).`);
+        // Must match
+        if (envelope.certFingerprint !== certFingerprint) {
+            throw new Error("mTLS Violation: certFingerprint mismatch between transport and envelope.");
         }
-
-        // Ensure OU consistency
-        // In a real system, envelope.ou would be checked here if present.
     }
 
-    // 6. Freeze and Return
+    // 5) HMAC signature verification (now includes participant fields for user)
+    const dataToSign = buildDataToSign(envelope);
+
+    const expectedSignature = crypto
+        .createHmac("sha256", await keyManager.deriveKey("identity/hmac"))
+        .update(dataToSign)
+        .digest("hex");
+
+    const sigBuffer = Buffer.from(envelope.signature, "hex");
+    const expectedBuffer = Buffer.from(expectedSignature, "hex");
+
+    if (
+        sigBuffer.length !== expectedBuffer.length ||
+        !crypto.timingSafeEqual(sigBuffer, expectedBuffer)
+    ) {
+        throw new Error("Invalid identity signature");
+    }
+
+    // 6) Policy Version Validation (DB access)
+    await validatePolicyVersion(envelope.policyVersion);
+
+    // 7) Directional Trust Enforcement (OU interaction graph)
+    // - Users cannot appear here except at ingest-api (already enforced above)
+    const allowed = ALLOWED_ISSUERS[currentService];
+    if (!allowed || !allowed.includes(envelope.issuerService)) {
+        // Special case for initial client requests
+        if (envelope.subjectType === "client" && allowed && allowed.includes("client")) {
+            // allowed
+        } else if (envelope.subjectType === "user") {
+            // user already gated above; if we reached here, it's an OU config mismatch
+            throw new Error(`User identity OU policy mismatch at ${currentService}`);
+        } else {
+            throw new Error(
+                `Unauthorized OU interaction: ${envelope.issuerService} -> ${currentService}`
+            );
+        }
+    }
+
+    // 8) TrustFabric enforcement for services (certificate trust + serviceName binding)
+    // SEC-FIX: TrustFabric.resolveIdentity is now async and throws on failure
+    if (envelope.subjectType === "service") {
+        const identity = await TrustFabric.resolveIdentity(certFingerprint!);
+        // TrustFabric throws TrustViolationError if revoked/expired/inactive/unknown
+
+        if (identity.serviceName !== envelope.issuerService) {
+            throw new Error(
+                `mTLS Violation: Certificate identity (${identity.serviceName}) mismatch with claim (${envelope.issuerService}).`
+            );
+        }
+    }
+
+    // 9) Freeze and return
     return Object.freeze({
         ...envelope,
         ...(certFingerprint ? { certFingerprint } : {})
