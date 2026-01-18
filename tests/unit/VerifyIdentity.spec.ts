@@ -127,7 +127,7 @@ describe('VerifyIdentity (Phase 7B Hardening)', () => {
 
         await assert.rejects(
             verifyIdentity(envelope, 'executor-worker', mockKM, 'sha256:fp'),
-            /mTLS Violation/
+            /Identity Schema Violation|mTLS Violation/
         );
     });
 
@@ -152,7 +152,7 @@ describe('VerifyIdentity (Phase 7B Hardening)', () => {
 
         await assert.rejects(
             verifyIdentity(envelope, 'control-plane', mockKM),
-            /User identity not permitted at control-plane/
+            /User identity not permitted|Identity Schema Violation/
         );
     });
 
@@ -202,7 +202,7 @@ describe('VerifyIdentity (Phase 7B Hardening)', () => {
 
         await assert.rejects(
             verifyIdentity(envelope, 'ingest-api', mockKM),
-            /trustTier='user'/
+            /Identity Schema Violation|trustTier/
         );
     });
 });

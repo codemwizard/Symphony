@@ -13,7 +13,9 @@ export default {
     },
     moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'json', 'node'],
     roots: ['<rootDir>'],
-    testMatch: ['**/tests/unit/**/*.spec.ts'],
+    testMatch: ['**/tests/*.test.ts'],
+    setupFiles: ['<rootDir>/tests/jest.setup.js'],
+    testPathIgnorePatterns: ['/node_modules/', '/tests/unit/'],
     verbose: true,
     bail: 1 // Stop on first failure
 };

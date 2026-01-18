@@ -1,0 +1,2245 @@
+
+> symphony@1.0.0 test
+> npm run test:node && npm run test:jest
+
+
+> symphony@1.0.0 test:node
+> node --import ./tests/loader.mjs --test tests/unit/*.spec.ts tests/*.test.js
+
+TAP version 13
+# Subtest: ConfigGuard Module
+    # Subtest: Module Exports
+        # Subtest: should have ConfigGuard class
+        ok 1 - should have ConfigGuard class
+          ---
+          duration_ms: 14.434164
+          ...
+        # Subtest: should have DB_CONFIG_GUARDS
+        ok 2 - should have DB_CONFIG_GUARDS
+          ---
+          duration_ms: 1.006218
+          ...
+        # Subtest: should have CRYPTO_GUARDS
+        ok 3 - should have CRYPTO_GUARDS
+          ---
+          duration_ms: 0.813715
+          ...
+        1..3
+    ok 1 - Module Exports
+      ---
+      duration_ms: 17.732124
+      type: 'suite'
+      ...
+    # Subtest: DB_CONFIG_GUARDS
+        # Subtest: should include all required database config keys
+        ok 1 - should include all required database config keys
+          ---
+          duration_ms: 3.839971
+          ...
+        # Subtest: should mark DB_PASSWORD as sensitive
+        ok 2 - should mark DB_PASSWORD as sensitive
+          ---
+          duration_ms: 2.830451
+          ...
+        1..2
+    ok 2 - DB_CONFIG_GUARDS
+      ---
+      duration_ms: 16.215497
+      type: 'suite'
+      ...
+    # Subtest: PROD_CRYPTO_GUARDS
+        # Subtest: should include required KMS config keys
+        ok 1 - should include required KMS config keys
+          ---
+          duration_ms: 1.564528
+          ...
+        1..1
+    ok 3 - PROD_CRYPTO_GUARDS
+      ---
+      duration_ms: 1.940935
+      type: 'suite'
+      ...
+    1..3
+ok 1 - ConfigGuard Module
+  ---
+  duration_ms: 37.300183
+  type: 'suite'
+  ...
+# KeyManager tests loaded successfully
+# Subtest: KeyManager Module
+    # Subtest: Module Exports
+        # Subtest: should export KeyManager interface
+        ok 1 - should export KeyManager interface
+          ---
+          duration_ms: 14787.596449
+          ...
+        # Subtest: should export SymphonyKeyManager class
+        ok 2 - should export SymphonyKeyManager class
+          ---
+          duration_ms: 19.768787
+          ...
+        # Subtest: should export ProductionKeyManager as alias for SymphonyKeyManager
+        ok 3 - should export ProductionKeyManager as alias for SymphonyKeyManager
+          ---
+          duration_ms: 2.940926
+          ...
+        # Subtest: should export DevelopmentKeyManager class
+        ok 4 - should export DevelopmentKeyManager class
+          ---
+          duration_ms: 1675.18502
+          ...
+        # Subtest: should export cryptoAudit helper
+        ok 5 - should export cryptoAudit helper
+          ---
+          duration_ms: 16.945184
+          ...
+        1..5
+    ok 1 - Module Exports
+      ---
+      duration_ms: 16522.909444
+      type: 'suite'
+      ...
+# {"level":30,"time":1768712433223,"system":"symphony","msg":"Configuration guard passed."}
+    # Subtest: DevelopmentKeyManager
+        # Subtest: should extend SymphonyKeyManager
+        ok 1 - should extend SymphonyKeyManager
+          ---
+          duration_ms: 84.393871
+          ...
+        # Subtest: should have deriveKey method
+        ok 2 - should have deriveKey method
+          ---
+          duration_ms: 31.129121
+          ...
+        1..2
+    ok 2 - DevelopmentKeyManager
+      ---
+      duration_ms: 130.831892
+      type: 'suite'
+      ...
+# {"level":30,"time":1768712433272,"system":"symphony","msg":"DevelopmentKeyManager initialized (dev/prod parity via local-kms)"}
+# {"level":30,"time":1768712433289,"system":"symphony","msg":"Configuration guard passed."}
+# {"level":30,"time":1768712433317,"system":"symphony","msg":"DevelopmentKeyManager initialized (dev/prod parity via local-kms)"}
+    # Subtest: SymphonyKeyManager
+        # Subtest: should create instance successfully
+        ok 1 - should create instance successfully
+          ---
+          duration_ms: 93.399903
+          ...
+        # Subtest: should have deriveKey method
+        ok 2 - should have deriveKey method
+          ---
+          duration_ms: 34.355343
+          ...
+        1..2
+    ok 3 - SymphonyKeyManager
+      ---
+      duration_ms: 128.346217
+      type: 'suite'
+      ...
+    1..3
+ok 2 - KeyManager Module
+  ---
+  duration_ms: 16783.506543
+  type: 'suite'
+  ...
+# {"level":30,"time":1768712429889,"system":"symphony","msg":"Configuration guard passed."}
+# {"level":40,"time":1768712429911,"system":"symphony","accountId":"ACC_123","currentBalance":50,"required":100,"msg":"LedgerInvariant: Insufficient funds"}
+# Subtest: E. Ledger & Financial Invariants
+    # Subtest: E-2 Proof-of-Funds
+        # Subtest: should allow transaction if balance >= amount
+        ok 1 - should allow transaction if balance >= amount
+          ---
+          duration_ms: 2.660543
+          ...
+        # Subtest: should reject transaction if balance < amount
+        ok 2 - should reject transaction if balance < amount
+          ---
+          duration_ms: 2.347638
+          ...
+        # Subtest: should reject if account not found
+        ok 3 - should reject if account not found
+          ---
+          duration_ms: 0.650411
+          ...
+        1..3
+    ok 1 - E-2 Proof-of-Funds
+      ---
+      duration_ms: 7.177215
+      type: 'suite'
+      ...
+    # Subtest: E-3 Idempotency
+        # Subtest: should allow new transaction ID
+        ok 1 - should allow new transaction ID
+          ---
+          duration_ms: 1.477923
+          ...
+        # Subtest: should reject duplicate transaction ID
+        ok 2 - should reject duplicate transaction ID
+          ---
+          duration_ms: 13.948423
+          ...
+        1..2
+    ok 2 - E-3 Idempotency
+      ---
+      duration_ms: 16.130158
+      type: 'suite'
+      ...
+    1..2
+ok 3 - E. Ledger & Financial Invariants
+  ---
+  duration_ms: 13218.800353
+  type: 'suite'
+  ...
+# {"level":50,"time":1768712442951,"system":"symphony","errors":[{"expected":"string","code":"invalid_type","path":["GrpHdr","MsgId"],"message":"Invalid input: expected string, received undefined"}],"type":"pacs.008","msg":"ISO-20022: Schema validation failed"}
+# Subtest: D. ISO-20022 Execution Control
+    # Subtest: D-1 Structural Validation
+        # Subtest: should accept valid pacs.008 message
+        ok 1 - should accept valid pacs.008 message
+          ---
+          duration_ms: 14.48725
+          ...
+        # Subtest: should reject malformed schema (missing field)
+        ok 2 - should reject malformed schema (missing field)
+          ---
+          duration_ms: 11.930688
+          ...
+        # Subtest: should accept valid pacs.002 message
+        ok 3 - should accept valid pacs.002 message
+          ---
+          duration_ms: 11.628445
+          ...
+        1..3
+    ok 1 - D-1 Structural Validation
+      ---
+      duration_ms: 39.730521
+      type: 'suite'
+      ...
+    # Subtest: D-2 Semantic Execution Validation
+        # Subtest: should enforce positive amounts (Schema Level)
+        ok 1 - should enforce positive amounts (Schema Level)
+          ---
+          duration_ms: 14.021684
+          ...
+        # Subtest: should enforce currency consistency
+        ok 2 - should enforce currency consistency
+          ---
+          duration_ms: 1.478009
+          ...
+        # Subtest: should enforce instruction uniqueness
+        ok 3 - should enforce instruction uniqueness
+          ---
+          duration_ms: 0.982839
+          ...
+        1..3
+    ok 2 - D-2 Semantic Execution Validation
+      ---
+      duration_ms: 17.183031
+      type: 'suite'
+      ...
+    # Subtest: D-4 Deterministic Mapping
+        # Subtest: should map inbound pacs.008 deterministically
+        ok 1 - should map inbound pacs.008 deterministically
+          ---
+          duration_ms: 0.855521
+          ...
+        # Subtest: should fail outbound mapping if non-deterministic (missing date)
+        ok 2 - should fail outbound mapping if non-deterministic (missing date)
+          ---
+          duration_ms: 0.876824
+          ...
+        1..2
+    ok 3 - D-4 Deterministic Mapping
+      ---
+      duration_ms: 2.392139
+      type: 'suite'
+      ...
+    1..3
+ok 4 - D. ISO-20022 Execution Control
+  ---
+  duration_ms: 72.892213
+  type: 'suite'
+  ...
+# {"level":50,"time":1768712442955,"system":"symphony","incidentId":"c4e82b05-cdbe-4b18-9bba-07443c0c8b87","category":"OPS","internalDetails":{"originalError":"[\\n  {\\n    \\"expected\\": \\"string\\",\\n    \\"code\\": \\"invalid_type\\",\\n    \\"path\\": [\\n      \\"GrpHdr\\",\\n      \\"MsgId\\"\\n    ],\\n    \\"message\\": \\"Invalid input: expected string, received undefined\\"\\n  }\\n]","stack":"ZodError: [\\n  {\\n    \\"expected\\": \\"string\\",\\n    \\"code\\": \\"invalid_type\\",\\n    \\"path\\": [\\n      \\"GrpHdr\\",\\n      \\"MsgId\\"\\n    ],\\n    \\"message\\": \\"Invalid input: expected string, received undefined\\"\\n  }\\n]\\n    at Iso20022Validator.validateSchema (file:///home/mwiza/workspaces/Symphony/libs/iso20022/validator.ts:97:55)\\n    at file:///home/mwiza/workspaces/Symphony/tests/phase7-compliance.test.js:46:35\\n    at getActual (node:assert:498:5)\\n    at Function.throws (node:assert:644:24)\\n    at TestContext.<anonymous> (file:///home/mwiza/workspaces/Symphony/tests/phase7-compliance.test.js:45:20)\\n    at Test.runInAsyncScope (node:async_hooks:206:9)\\n    at Test.run (node:internal/test_runner/test:796:25)\\n    at Suite.processPendingSubtests (node:internal/test_runner/test:526:18)\\n    at Test.postRun (node:internal/test_runner/test:889:19)\\n    at Test.run (node:internal/test_runner/test:835:12)","context":"ISO20022:SchemaValidation"},"stack":"Error: An internal system error occurred. Please contact support with ID: ISO20022:SchemaValidation\\n    at Object.sanitize (file:///home/mwiza/workspaces/Symphony/libs/errors/sanitizer.ts:60:16)\\n    at Iso20022Validator.validateSchema (file:///home/mwiza/workspaces/Symphony/libs/iso20022/validator.ts:107:34)\\n    at file:///home/mwiza/workspaces/Symphony/tests/phase7-compliance.test.js:46:35\\n    at getActual (node:assert:498:5)\\n    at Function.throws (node:assert:644:24)\\n    at TestContext.<anonymous> (file:///home/mwiza/workspaces/Symphony/tests/phase7-compliance.test.js:45:20)\\n    at Test.runInAsyncScope (node:async_hooks:206:9)\\n    at Test.run (node:internal/test_runner/test:796:25)\\n    at Suite.processPendingSubtests (node:internal/test_runner/test:526:18)\\n    at Test.postRun (node:internal/test_runner/test:889:19)","msg":"An internal system error occurred. Please contact support with ID: ISO20022:SchemaValidation"}
+# {"level":50,"time":1768712442973,"system":"symphony","errors":[{"origin":"number","code":"too_small","minimum":0,"inclusive":false,"path":["CdtTrfTxInf",0,"IntrBkSttlmAmt","Amount"],"message":"Too small: expected number to be >0"}],"type":"pacs.008","msg":"ISO-20022: Schema validation failed"}
+# {"level":50,"time":1768712442974,"system":"symphony","incidentId":"a779f818-d31f-4271-b551-ef0e8075e6bd","category":"OPS","internalDetails":{"originalError":"[\\n  {\\n    \\"origin\\": \\"number\\",\\n    \\"code\\": \\"too_small\\",\\n    \\"minimum\\": 0,\\n    \\"inclusive\\": false,\\n    \\"path\\": [\\n      \\"CdtTrfTxInf\\",\\n      0,\\n      \\"IntrBkSttlmAmt\\",\\n      \\"Amount\\"\\n    ],\\n    \\"message\\": \\"Too small: expected number to be >0\\"\\n  }\\n]","stack":"ZodError: [\\n  {\\n    \\"origin\\": \\"number\\",\\n    \\"code\\": \\"too_small\\",\\n    \\"minimum\\": 0,\\n    \\"inclusive\\": false,\\n    \\"path\\": [\\n      \\"CdtTrfTxInf\\",\\n      0,\\n      \\"IntrBkSttlmAmt\\",\\n      \\"Amount\\"\\n    ],\\n    \\"message\\": \\"Too small: expected number to be >0\\"\\n  }\\n]\\n    at Iso20022Validator.validateSchema (file:///home/mwiza/workspaces/Symphony/libs/iso20022/validator.ts:97:55)\\n    at file:///home/mwiza/workspaces/Symphony/tests/phase7-compliance.test.js:70:35\\n    at getActual (node:assert:498:5)\\n    at Function.throws (node:assert:644:24)\\n    at TestContext.<anonymous> (file:///home/mwiza/workspaces/Symphony/tests/phase7-compliance.test.js:69:20)\\n    at Test.runInAsyncScope (node:async_hooks:206:9)\\n    at Test.run (node:internal/test_runner/test:796:25)\\n    at Test.start (node:internal/test_runner/test:702:17)\\n    at node:internal/test_runner/test:1133:71\\n    at node:internal/per_context/primordials:482:82","context":"ISO20022:SchemaValidation"},"stack":"Error: An internal system error occurred. Please contact support with ID: ISO20022:SchemaValidation\\n    at Object.sanitize (file:///home/mwiza/workspaces/Symphony/libs/errors/sanitizer.ts:60:16)\\n    at Iso20022Validator.validateSchema (file:///home/mwiza/workspaces/Symphony/libs/iso20022/validator.ts:107:34)\\n    at file:///home/mwiza/workspaces/Symphony/tests/phase7-compliance.test.js:70:35\\n    at getActual (node:assert:498:5)\\n    at Function.throws (node:assert:644:24)\\n    at TestContext.<anonymous> (file:///home/mwiza/workspaces/Symphony/tests/phase7-compliance.test.js:69:20)\\n    at Test.runInAsyncScope (node:async_hooks:206:9)\\n    at Test.run (node:internal/test_runner/test:796:25)\\n    at Test.start (node:internal/test_runner/test:702:17)\\n    at node:internal/test_runner/test:1133:71","msg":"An internal system error occurred. Please contact support with ID: ISO20022:SchemaValidation"}
+# {"level":40,"time":1768712442987,"system":"symphony","msg":"ISO-20022: Semantic failure - Multi-currency batch not supported in Phase 7"}
+# {"level":40,"time":1768712442989,"system":"symphony","msg":"ISO-20022: Semantic failure - Duplicate TxIds in batch"}
+# {"level":30,"time":1768712442044,"system":"symphony","msg":"Configuration guard passed."}
+# Subtest: F. Operational Safety Controls
+    # Subtest: F-1 Rate Limiting
+        # Subtest: should allow requests within capacity
+        ok 1 - should allow requests within capacity
+          ---
+          duration_ms: 1.726045
+          ...
+        # Subtest: should reject requests exceeding capacity
+        ok 2 - should reject requests exceeding capacity
+          ---
+          duration_ms: 6.902976
+          ...
+# {"level":40,"time":1768712442057,"system":"symphony","principalId":"user_2","msg":"OperationalSafety: Rate limit exceeded"}
+# {"level":40,"time":1768712442059,"system":"symphony","principalId":"user_3","msg":"OperationalSafety: Rate limit exceeded"}
+        # Subtest: should refill tokens over time
+        ok 3 - should refill tokens over time
+          ---
+          duration_ms: 159.615684
+          ...
+        1..3
+    ok 1 - F-1 Rate Limiting
+      ---
+      duration_ms: 173.982416
+      type: 'suite'
+      ...
+    # Subtest: F-2 Fail-Safe Behavior
+        # Subtest: should commit transaction on success
+        ok 1 - should commit transaction on success
+          ---
+          duration_ms: 0.463165
+          ...
+        1..1
+    ok 2 - F-2 Fail-Safe Behavior
+      ---
+      duration_ms: 13.609325
+      type: 'suite'
+      ...
+    1..2
+ok 5 - F. Operational Safety Controls
+  ---
+  duration_ms: 2281.844588
+  type: 'suite'
+  ...
+# Subtest: verifyAuditChain (Integrity)
+    # Subtest: should verify a valid chain
+    ok 1 - should verify a valid chain
+      ---
+      duration_ms: 9.190901
+      ...
+    # Subtest: should detect tamper (broken chain)
+    ok 2 - should detect tamper (broken chain)
+      ---
+      duration_ms: 4.275705
+      ...
+    # Subtest: should handle malformed JSON safely (no eval)
+    ok 3 - should handle malformed JSON safely (no eval)
+      ---
+      duration_ms: 1.779452
+      ...
+    1..3
+ok 6 - verifyAuditChain (Integrity)
+  ---
+  duration_ms: 17.637196
+  type: 'suite'
+  ...
+# Subtest: Authorization Engine Guards
+    # Subtest: Guard 1: Emergency Lockdown
+        # Subtest: should block all capabilities when EMERGENCY_LOCKDOWN is active
+        ok 1 - should block all capabilities when EMERGENCY_LOCKDOWN is active
+          ---
+          duration_ms: 1.598101
+          ...
+        1..1
+    ok 1 - Guard 1: Emergency Lockdown
+      ---
+      duration_ms: 13.856211
+      type: 'suite'
+      ...
+    # Subtest: Guard 2: OU Boundary Assertion
+        # Subtest: should deny when service attempts capability it does not own
+        ok 1 - should deny when service attempts capability it does not own
+          ---
+          duration_ms: 8.779907
+          ...
+        # Subtest: should allow when service owns the capability
+        ok 2 - should allow when service owns the capability
+          ---
+          duration_ms: 0.3914
+          ...
+        1..2
+    ok 2 - Guard 2: OU Boundary Assertion
+      ---
+      duration_ms: 9.723208
+      type: 'suite'
+      ...
+    # Subtest: Guard 3: Client Restriction Invariant
+        # Subtest: should block clients from execution-class activities
+        ok 1 - should block clients from execution-class activities
+          ---
+          duration_ms: 0.7226
+          ...
+        # Subtest: should allow clients for non-restricted activities
+        ok 2 - should allow clients for non-restricted activities
+          ---
+          duration_ms: 0.63
+          ...
+        1..2
+    ok 3 - Guard 3: Client Restriction Invariant
+      ---
+      duration_ms: 1.871801
+      type: 'suite'
+      ...
+    # Subtest: Guard 4: Policy Version Parity
+        # Subtest: should deny when policy versions mismatch
+        ok 1 - should deny when policy versions mismatch
+          ---
+          duration_ms: 1.374902
+          ...
+        # Subtest: should allow when policy versions match
+        ok 2 - should allow when policy versions match
+          ---
+          duration_ms: 0.7188
+          ...
+        1..2
+    ok 4 - Guard 4: Policy Version Parity
+      ---
+      duration_ms: 3.131003
+      type: 'suite'
+      ...
+    1..4
+ok 7 - Authorization Engine Guards
+  ---
+  duration_ms: 30.350824
+  type: 'suite'
+  ...
+# Subtest: IncidentContainment Rules
+    # Subtest: Rule 1: SEC-2 + CRITICAL triggers GLOBAL FREEZE
+        # Subtest: should trigger global kill switch for integrity breach
+        ok 1 - should trigger global kill switch for integrity breach
+          ---
+          duration_ms: 1.594401
+          ...
+        # Subtest: should NOT trigger for SEC-2 HIGH
+        ok 2 - should NOT trigger for SEC-2 HIGH
+          ---
+          duration_ms: 0.4014
+          ...
+        1..2
+    ok 1 - Rule 1: SEC-2 + CRITICAL triggers GLOBAL FREEZE
+      ---
+      duration_ms: 3.457702
+      type: 'suite'
+      ...
+    # Subtest: Rule 2: SEC-1 + CRITICAL triggers SCOPED LOCK
+        # Subtest: should trigger actor capability freeze for authz violation
+        ok 1 - should trigger actor capability freeze for authz violation
+          ---
+          duration_ms: 0.604001
+          ...
+        1..1
+    ok 2 - Rule 2: SEC-1 + CRITICAL triggers SCOPED LOCK
+      ---
+      duration_ms: 13.69421
+      type: 'suite'
+      ...
+    # Subtest: No Action for Non-Critical
+        # Subtest: should not trigger any action for non-critical signals
+        ok 1 - should not trigger any action for non-critical signals
+          ---
+          duration_ms: 0.3697
+          ...
+        1..1
+    ok 3 - No Action for Non-Critical
+      ---
+      duration_ms: 0.825
+      type: 'suite'
+      ...
+    1..3
+ok 8 - IncidentContainment Rules
+  ---
+  duration_ms: 30.61642
+  type: 'suite'
+  ...
+# Subtest: Database Configuration Guards
+    # Subtest: should enforce TLS in production environment
+    ok 1 - should enforce TLS in production environment
+      ---
+      duration_ms: 12876.903558
+      ...
+    # Subtest: should throw error if DB_CA_CERT is missing in production
+    ok 2 - should throw error if DB_CA_CERT is missing in production
+      ---
+      duration_ms: 10995.498036
+      ...
+    # Subtest: should throw error if DB_CA_CERT is missing in staging
+    ok 3 - should throw error if DB_CA_CERT is missing in staging
+      ---
+      duration_ms: 11505.691805
+      ...
+    # Subtest: should allow missing DB_CA_CERT in development (default)
+    ok 4 - should allow missing DB_CA_CERT in development (default)
+      ---
+      duration_ms: 10590.939924
+      ...
+    1..4
+ok 9 - Database Configuration Guards
+  ---
+  duration_ms: 45971.947331
+  type: 'suite'
+  ...
+# Subtest: Evidence Bundle Schema - Phase-7R Sections
+    # Subtest: attestation_gap Section
+        # Subtest: should validate complete attestation_gap object
+        ok 1 - should validate complete attestation_gap object
+          ---
+          duration_ms: 9.154967
+          ...
+        # Subtest: should fail when gap > 0
+        ok 2 - should fail when gap > 0
+          ---
+          duration_ms: 11.410995
+          ...
+        # Subtest: should require all fields
+        ok 3 - should require all fields
+          ---
+          duration_ms: 0.542638
+          ...
+        # Subtest: should validate status enum
+        ok 4 - should validate status enum
+          ---
+          duration_ms: 0.380611
+          ...
+        1..4
+    ok 1 - attestation_gap Section
+      ---
+      duration_ms: 23.37796
+      type: 'suite'
+      ...
+    # Subtest: dlq_metrics Section
+        # Subtest: should validate complete dlq_metrics object
+        ok 1 - should validate complete dlq_metrics object
+          ---
+          duration_ms: 0.750833
+          ...
+        # Subtest: should require all fields
+        ok 2 - should require all fields
+          ---
+          duration_ms: 0.679082
+          ...
+        # Subtest: should enforce non-negative integers
+        ok 3 - should enforce non-negative integers
+          ---
+          duration_ms: 0.457263
+          ...
+        1..3
+    ok 2 - dlq_metrics Section
+      ---
+      duration_ms: 2.764849
+      type: 'suite'
+      ...
+    # Subtest: revocation_bounds Section
+        # Subtest: should validate complete revocation_bounds object
+        ok 1 - should validate complete revocation_bounds object
+          ---
+          duration_ms: 0.774652
+          ...
+        # Subtest: should enforce cert_ttl_hours <= 24
+        ok 2 - should enforce cert_ttl_hours <= 24
+          ---
+          duration_ms: 0.43315
+          ...
+        # Subtest: should correctly calculate worst_case
+        ok 3 - should correctly calculate worst_case
+          ---
+          duration_ms: 0.671143
+          ...
+        # Subtest: should require ttl and propagation fields
+        ok 4 - should require ttl and propagation fields
+          ---
+          duration_ms: 12.699272
+          ...
+        1..4
+    ok 3 - revocation_bounds Section
+      ---
+      duration_ms: 33.13428
+      type: 'suite'
+      ...
+    # Subtest: idempotency_metrics Section
+        # Subtest: should validate complete idempotency_metrics object
+        ok 1 - should validate complete idempotency_metrics object
+          ---
+          duration_ms: 0.505685
+          ...
+        # Subtest: should require terminal_reentry_attempts = 0 for healthy system
+        ok 2 - should require terminal_reentry_attempts = 0 for healthy system
+          ---
+          duration_ms: 0.342972
+          ...
+        # Subtest: should require core fields
+        ok 3 - should require core fields
+          ---
+          duration_ms: 0.36091
+          ...
+        # Subtest: should allow optional zombie_repairs field
+        ok 4 - should allow optional zombie_repairs field
+          ---
+          duration_ms: 0.315722
+          ...
+        1..4
+    ok 4 - idempotency_metrics Section
+      ---
+      duration_ms: 2.211723
+      type: 'suite'
+      ...
+    # Subtest: evidence_export Section
+        # Subtest: should validate complete evidence_export object
+        ok 1 - should validate complete evidence_export object
+          ---
+          duration_ms: 0.46236
+          ...
+        # Subtest: should validate status enum
+        ok 2 - should validate status enum
+          ---
+          duration_ms: 0.303175
+          ...
+        # Subtest: should validate export_target enum
+        ok 3 - should validate export_target enum
+          ---
+          duration_ms: 8.09743
+          ...
+        # Subtest: should allow null for optional date fields
+        ok 4 - should allow null for optional date fields
+          ---
+          duration_ms: 3.716134
+          ...
+        # Subtest: should require enabled and status fields
+        ok 5 - should require enabled and status fields
+          ---
+          duration_ms: 0.415115
+          ...
+        1..5
+    ok 5 - evidence_export Section
+      ---
+      duration_ms: 13.790235
+      type: 'suite'
+      ...
+    1..5
+ok 10 - Evidence Bundle Schema - Phase-7R Sections
+  ---
+  duration_ms: 79.231015
+  type: 'suite'
+  ...
+# {"level":30,"time":1768712465189,"pid":37206,"hostname":"DESKTOP-VV0116A","name":"EvidenceExportService","filepath":"/tmp/test_evidence/batch_mkj9qgii_50946c47.json","hashFilepath":"/tmp/test_evidence/batch_mkj9qgii_50946c47.json.sha256","msg":"Batch written to filesystem"}
+# Subtest: EvidenceExportService
+    # Subtest: getHighWaterMarks
+        # Subtest: should fetch marks from DB using coalesced max IDs
+        ok 1 - should fetch marks from DB using coalesced max IDs
+          ---
+          duration_ms: 3.936315
+          ...
+        1..1
+    ok 1 - getHighWaterMarks
+      ---
+      duration_ms: 49.991227
+      type: 'suite'
+      ...
+    # Subtest: getLastExportState
+        # Subtest: should return null if no logs exist
+        ok 1 - should return null if no logs exist
+          ---
+          duration_ms: 1.375752
+          ...
+        # Subtest: should return last batch state if exists
+        ok 2 - should return last batch state if exists
+          ---
+          duration_ms: 1.255365
+          ...
+        1..2
+    ok 2 - getLastExportState
+      ---
+      duration_ms: 3.202456
+      type: 'suite'
+      ...
+    # Subtest: exportBatch
+        # Subtest: should orchestrate full export flow (fetch -> hash -> write -> log)
+        ok 1 - should orchestrate full export flow (fetch -> hash -> write -> log)
+          ---
+          duration_ms: 16.025698
+          ...
+        # Subtest: should link to previous batch ID when fromMarks provided
+        ok 2 - should link to previous batch ID when fromMarks provided
+          ---
+          duration_ms: 2.608125
+          ...
+        # Subtest: should rollback and throw on error
+        ok 3 - should rollback and throw on error
+          ---
+          duration_ms: 3.713108
+          ...
+        1..3
+    ok 3 - exportBatch
+      ---
+      duration_ms: 23.061352
+      type: 'suite'
+      ...
+    # Subtest: Hashing Logic (Deterministic)
+        # Subtest: should produce consistent hash for same data
+        ok 1 - should produce consistent hash for same data
+          ---
+          duration_ms: 48.664617
+          ...
+        1..1
+    ok 4 - Hashing Logic (Deterministic)
+      ---
+      duration_ms: 49.00525
+      type: 'suite'
+      ...
+    1..4
+ok 11 - EvidenceExportService
+  ---
+  duration_ms: 140.500318
+  type: 'suite'
+  ...
+# {"level":30,"time":1768712465192,"pid":37206,"hostname":"DESKTOP-VV0116A","name":"EvidenceExportService","batchId":"batch_mkj9qgii_50946c47","recordCounts":{"ingress":1,"outbox":0,"ledger":0},"batchHash":"1ef4fe4e31df884879f26de1e60a84d943d1628e3bfcc8d7e53b9e17a3ae027f","msg":"Evidence batch exported successfully"}
+# {"level":30,"time":1768712465195,"pid":37206,"hostname":"DESKTOP-VV0116A","name":"EvidenceExportService","filepath":"/tmp/test_evidence/batch_mkj9qgiy_cd362def.json","hashFilepath":"/tmp/test_evidence/batch_mkj9qgiy_cd362def.json.sha256","msg":"Batch written to filesystem"}
+# {"level":30,"time":1768712465195,"pid":37206,"hostname":"DESKTOP-VV0116A","name":"EvidenceExportService","batchId":"batch_mkj9qgiy_cd362def","recordCounts":{"ingress":0,"outbox":0,"ledger":0},"batchHash":"d7180ada02de66dfea5df897e0a21dddb61f459edc1244f3adacc187e08b2505","msg":"Evidence batch exported successfully"}
+# {"level":50,"time":1768712465197,"pid":37206,"hostname":"DESKTOP-VV0116A","name":"EvidenceExportService","error":{},"batchId":"batch_mkj9qgj0_8ccecb70","msg":"Evidence batch export failed"}
+# {"level":30,"time":1768712465248,"pid":37206,"hostname":"DESKTOP-VV0116A","name":"EvidenceExportService","filepath":"/tmp/test_evidence/batch_mkj9qgja_6441dc45.json","hashFilepath":"/tmp/test_evidence/batch_mkj9qgja_6441dc45.json.sha256","msg":"Batch written to filesystem"}
+# {"level":30,"time":1768712465248,"pid":37206,"hostname":"DESKTOP-VV0116A","name":"EvidenceExportService","batchId":"batch_mkj9qgja_6441dc45","recordCounts":{"ingress":2,"outbox":0,"ledger":0},"batchHash":"203102356a5c501e4c3d96b14c708d306e67fcecc56babe1b7881c855658dc08","msg":"Evidence batch exported successfully"}
+# {"level":30,"time":1768712471450,"system":"symphony","msg":"BC/DR: Commencing Health Verification..."}
+# Subtest: HealthVerifier
+    # Subtest: should detect missing audit file
+    ok 1 - should detect missing audit file
+      ---
+      duration_ms: 19.173319
+      ...
+    1..1
+ok 12 - HealthVerifier
+  ---
+  duration_ms: 919.850198
+  type: 'suite'
+  ...
+# {"level":30,"time":1768712471452,"system":"symphony","msg":"BC/DR: Policy parity verified."}
+# {"level":30,"time":1768712471452,"system":"symphony","msg":"BC/DR: Guardrail reconciliation complete."}
+# Subtest: Identity Schema Validation (Strict)
+    # Subtest: should ACCEPT a valid user envelope with trustTier: "user"
+    ok 1 - should ACCEPT a valid user envelope with trustTier: "user"
+      ---
+      duration_ms: 19.223316
+      ...
+    # Subtest: should REJECT a user envelope with trustTier: "external"
+    ok 2 - should REJECT a user envelope with trustTier: "external"
+      ---
+      duration_ms: 14.367501
+      ...
+    # Subtest: should REJECT a service envelope without certFingerprint
+    ok 3 - should REJECT a service envelope without certFingerprint
+      ---
+      duration_ms: 2.147298
+      ...
+    1..3
+ok 13 - Identity Schema Validation (Strict)
+  ---
+  duration_ms: 37.992469
+  type: 'suite'
+  ...
+# DEBUG: IngressAttestationMiddleware.spec.ts loaded
+# DEBUG: beforeEach started
+# DEBUG: service instantiated
+# DEBUG: test1 started
+# {"level":30,"time":1768712482933,"pid":37301,"hostname":"DESKTOP-VV0116A","name":"IngressAttestation","event":"INGRESS_ATTESTED","attestationId":"att-1","requestId":"req-1","recordHash":"new-hash-456..."}
+# DEBUG: attest called
+# DEBUG: test1 finished
+# DEBUG: beforeEach started
+# DEBUG: service instantiated
+# DEBUG: test2 started
+# DEBUG: test2 finished
+# DEBUG: beforeEach started
+# DEBUG: service instantiated
+# DEBUG: test3 started
+# DEBUG: test3 finished
+# DEBUG: beforeEach started
+# DEBUG: service instantiated
+# DEBUG: test4 started
+# DEBUG: test4 finished
+# DEBUG: beforeEach started
+# DEBUG: service instantiated
+# DEBUG: test5 started
+# DEBUG: test5 finished
+# Subtest: IngressAttestationService
+    # Subtest: attest()
+        # Subtest: should validate and insert attestation record
+        ok 1 - should validate and insert attestation record
+          ---
+          duration_ms: 19.671302
+          ...
+        # Subtest: should throw InvalidEnvelopeError for missing fields
+        ok 2 - should throw InvalidEnvelopeError for missing fields
+          ---
+          duration_ms: 15.018446
+          ...
+        # Subtest: should release client on error
+        ok 3 - should release client on error
+          ---
+          duration_ms: 14.549638
+          ...
+        1..3
+    ok 1 - attest()
+      ---
+      duration_ms: 62.608097
+      type: 'suite'
+      ...
+    # Subtest: markExecutionStarted()
+        # Subtest: should update execution_started with attestedAt pruning
+        ok 1 - should update execution_started with attestedAt pruning
+          ---
+          duration_ms: 15.514884
+          ...
+        1..1
+    ok 2 - markExecutionStarted()
+      ---
+      duration_ms: 16.078931
+      type: 'suite'
+      ...
+    # Subtest: markExecutionCompleted()
+        # Subtest: should update execution_completed with attestedAt pruning
+        ok 1 - should update execution_completed with attestedAt pruning
+          ---
+          duration_ms: 2.811126
+          ...
+        1..1
+    ok 3 - markExecutionCompleted()
+      ---
+      duration_ms: 3.318292
+      type: 'suite'
+      ...
+    1..3
+ok 14 - IngressAttestationService
+  ---
+  duration_ms: 83.435023
+  type: 'suite'
+  ...
+# {"level":50,"time":1768712482966,"pid":37301,"hostname":"DESKTOP-VV0116A","name":"IngressAttestation","error":"DB Error","msg":"Attestation failed"}
+# Subtest: InstructionStateClient
+    # Subtest: State Machine Validation
+        # Subtest: should identify COMPLETED as terminal
+        ok 1 - should identify COMPLETED as terminal
+          ---
+          duration_ms: 1.549954
+          ...
+        # Subtest: should identify FAILED as terminal
+        ok 2 - should identify FAILED as terminal
+          ---
+          duration_ms: 0.582802
+          ...
+        # Subtest: should identify EXECUTING as non-terminal
+        ok 3 - should identify EXECUTING as non-terminal
+          ---
+          duration_ms: 0.479073
+          ...
+        # Subtest: should have exactly 2 terminal states
+        ok 4 - should have exactly 2 terminal states
+          ---
+          duration_ms: 0.560032
+          ...
+        1..4
+    ok 1 - State Machine Validation
+      ---
+      duration_ms: 4.990393
+      type: 'suite'
+      ...
+    # Subtest: API Integration Contract
+        # Subtest: should use correct state query endpoint format
+        ok 1 - should use correct state query endpoint format
+          ---
+          duration_ms: 28.184646
+          ...
+        # Subtest: should use correct transition endpoint format
+        ok 2 - should use correct transition endpoint format
+          ---
+          duration_ms: 0.466322
+          ...
+        1..2
+    ok 2 - API Integration Contract
+      ---
+      duration_ms: 29.543335
+      type: 'suite'
+      ...
+    # Subtest: Transition Request Validation
+        # Subtest: should only allow COMPLETED or FAILED as target states
+        ok 1 - should only allow COMPLETED or FAILED as target states
+          ---
+          duration_ms: 0.752207
+          ...
+        1..1
+    ok 3 - Transition Request Validation
+      ---
+      duration_ms: 1.176431
+      type: 'suite'
+      ...
+    1..3
+ok 15 - InstructionStateClient
+  ---
+  duration_ms: 50.873312
+  type: 'suite'
+  ...
+# {"level":30,"time":1768712494493,"system":"symphony","keyCount":1,"msg":"JWKS loaded successfully"}
+# Subtest: JWKS Loader (Security Hardened)
+    # Subtest: should load JWKS from default path if exists
+    ok 1 - should load JWKS from default path if exists
+      ---
+      duration_ms: 18.660546
+      ...
+    # Subtest: should FAIL CLOSED in PRODUCTION if JWKS missing
+    ok 2 - should FAIL CLOSED in PRODUCTION if JWKS missing
+      ---
+      duration_ms: 2.133311
+      ...
+    # Subtest: should use fallback in DEVELOPMENT if JWKS missing
+    ok 3 - should use fallback in DEVELOPMENT if JWKS missing
+      ---
+      duration_ms: 31.755929
+      ...
+    # Subtest: should REJECT path traversal via JWKS_PATH
+    ok 4 - should REJECT path traversal via JWKS_PATH
+      ---
+      duration_ms: 2.193394
+      ...
+    # Subtest: should refresh cache after TTL
+    ok 5 - should refresh cache after TTL
+      ---
+      duration_ms: 15.5672
+      ...
+    1..5
+ok 16 - JWKS Loader (Security Hardened)
+  ---
+  duration_ms: 99.020148
+  type: 'suite'
+  ...
+# {"level":40,"time":1768712494513,"system":"symphony","path":"/home/mwiza/workspaces/Symphony/non-existent-jwks.json","msg":"JWKS file not found - using development fallback"}
+# {"level":30,"time":1768712494548,"system":"symphony","keyCount":1,"msg":"JWKS loaded successfully"}
+# {"level":30,"time":1768712494549,"system":"symphony","keyCount":1,"msg":"JWKS loaded successfully"}
+# {"level":30,"time":1768712504823,"system":"symphony","keyCount":1,"msg":"JWKS loaded successfully"}
+# {"level":30,"time":1768712504861,"system":"symphony","type":"IDENTITY_BRIDGE","requestId":"66805289-a0ef-440e-b3d0-eac76a9fe718","action":"TERMINATE_JWT_AND_BRIDGE_CLIENT","subjectId":"user-1","trustTier":"external","msg":"Bridged external client identity"}
+# Subtest: jwtToMtlsBridge
+    # Subtest: should bridge valid CLIENT JWT
+    ok 1 - should bridge valid CLIENT JWT
+      ---
+      duration_ms: 119.349993
+      ...
+    # Subtest: should bridge valid TENANT-ANCHORED USER JWT
+    ok 2 - should bridge valid TENANT-ANCHORED USER JWT
+      ---
+      duration_ms: 124.357064
+      ...
+# {"level":30,"time":1768712504985,"system":"symphony","type":"IDENTITY_BRIDGE","requestId":"726455cb-2f12-4de2-86ad-988a7c09b3b7","action":"TERMINATE_JWT_AND_BRIDGE_USER","subjectId":"user-alice","participantId":"tenant-A","trustTier":"user","msg":"Bridged tenant-anchored user identity"}
+# {"level":40,"time":1768712505075,"system":"symphony","error":"signature verification failed","msg":"JWT verification failed"}
+    # Subtest: should reject invalid signature
+    ok 3 - should reject invalid signature
+      ---
+      duration_ms: 76.162922
+      ...
+# {"level":40,"time":1768712505106,"system":"symphony","error":"\\"exp\\" claim timestamp check failed","msg":"JWT verification failed"}
+    # Subtest: should reject expired token
+    ok 4 - should reject expired token
+      ---
+      duration_ms: 29.784467
+      ...
+# {"level":40,"time":1768712505110,"system":"symphony","error":"unexpected \\"aud\\" claim value","msg":"JWT verification failed"}
+    # Subtest: should reject wrong audience
+    ok 5 - should reject wrong audience
+      ---
+      duration_ms: 4.231226
+      ...
+    1..5
+ok 17 - jwtToMtlsBridge
+  ---
+  duration_ms: 411.77275
+  type: 'suite'
+  ...
+# Subtest: SymphonyKeyManager (SEC-FIX)
+    # Subtest: KMS_KEY_REF Enforcement
+        # Subtest: should throw if KMS_KEY_REF is missing
+        ok 1 - should throw if KMS_KEY_REF is missing
+          ---
+          duration_ms: 2446.423801
+          ...
+        # Subtest: should throw if KMS_KEY_REF is empty string
+        ok 2 - should throw if KMS_KEY_REF is empty string
+          ---
+          duration_ms: 32.331947
+          ...
+        # Subtest: should NOT use alias/symphony-root fallback
+        ok 3 - should NOT use alias/symphony-root fallback
+          ---
+          duration_ms: 29.58268
+          ...
+# {"level":50,"time":1768712510169,"system":"symphony","error":"Region is missing","operation":"deriveKey","keyRef":"arn:aws:kms:us-east-...","msg":"KMS key derivation failed"}
+        # Subtest: should use KMS_KEY_REF when present
+        ok 4 - should use KMS_KEY_REF when present
+          ---
+          duration_ms: 49.749438
+          ...
+        1..4
+    ok 1 - KMS_KEY_REF Enforcement
+      ---
+      duration_ms: 2570.949247
+      type: 'suite'
+      ...
+    # Subtest: Logging Correctness
+        # Subtest: should log operation as deriveKey (not decrypt)
+        ok 1 - should log operation as deriveKey (not decrypt)
+          ---
+          duration_ms: 15.481058
+          ...
+        1..1
+    ok 2 - Logging Correctness
+      ---
+      duration_ms: 15.761007
+      type: 'suite'
+      ...
+    1..2
+ok 18 - SymphonyKeyManager (SEC-FIX)
+  ---
+  duration_ms: 2588.127596
+  type: 'suite'
+  ...
+# Subtest: LedgerReplayEngine
+    # Subtest: Balance Reconstruction
+        # Subtest: should correctly sum debits and credits per account
+        ok 1 - should correctly sum debits and credits per account
+          ---
+          duration_ms: 10.721413
+          ...
+        # Subtest: should calculate correct net balance
+        ok 2 - should calculate correct net balance
+          ---
+          duration_ms: 0.551689
+          ...
+        # Subtest: should handle empty ledger
+        ok 3 - should handle empty ledger
+          ---
+          duration_ms: 2.883909
+          ...
+        # Subtest: should handle multiple currencies for same account
+        ok 4 - should handle multiple currencies for same account
+          ---
+          duration_ms: 30.772108
+          ...
+        1..4
+    ok 1 - Balance Reconstruction
+      ---
+      duration_ms: 47.338981
+      type: 'suite'
+      ...
+    # Subtest: Deterministic Hashing
+        # Subtest: should produce consistent hash for same input data
+        ok 1 - should produce consistent hash for same input data
+          ---
+          duration_ms: 12.575382
+          ...
+        # Subtest: should produce different hash for different input data
+        ok 2 - should produce different hash for different input data
+          ---
+          duration_ms: 0.622625
+          ...
+        1..2
+    ok 2 - Deterministic Hashing
+      ---
+      duration_ms: 13.660951
+      type: 'suite'
+      ...
+    # Subtest: Replay Reproducibility
+        # Subtest: should produce identical results on repeated runs with same input
+        ok 1 - should produce identical results on repeated runs with same input
+          ---
+          duration_ms: 13.034023
+          ...
+        1..1
+    ok 3 - Replay Reproducibility
+      ---
+      duration_ms: 13.634437
+      type: 'suite'
+      ...
+    1..3
+ok 19 - LedgerReplayEngine
+  ---
+  duration_ms: 76.658828
+  type: 'suite'
+  ...
+# Subtest: ReplayVerificationReport
+    # Subtest: Balance Comparison
+        # Subtest: should detect matching balances
+        ok 1 - should detect matching balances
+          ---
+          duration_ms: 0.442331
+          ...
+        # Subtest: should detect deviations
+        ok 2 - should detect deviations
+          ---
+          duration_ms: 0.45854
+          ...
+        # Subtest: should tolerate rounding within 1 cent
+        ok 3 - should tolerate rounding within 1 cent
+          ---
+          duration_ms: 0.495359
+          ...
+        1..3
+    ok 1 - Balance Comparison
+      ---
+      duration_ms: 1.847667
+      type: 'suite'
+      ...
+    # Subtest: Report Status
+        # Subtest: should return PASS when all balances match
+        ok 1 - should return PASS when all balances match
+          ---
+          duration_ms: 0.577402
+          ...
+        # Subtest: should return WARNING for 1-3 deviations
+        ok 2 - should return WARNING for 1-3 deviations
+          ---
+          duration_ms: 11.612078
+          ...
+        # Subtest: should return FAIL for >3 deviations
+        ok 3 - should return FAIL for >3 deviations
+          ---
+          duration_ms: 0.588008
+          ...
+        1..3
+    ok 2 - Report Status
+      ---
+      duration_ms: 13.426628
+      type: 'suite'
+      ...
+    # Subtest: Report Hashing
+        # Subtest: should include hash of input datasets
+        ok 1 - should include hash of input datasets
+          ---
+          duration_ms: 1.752918
+          ...
+        # Subtest: should include hash of final report
+        ok 2 - should include hash of final report
+          ---
+          duration_ms: 0.553189
+          ...
+        1..2
+    ok 3 - Report Hashing
+      ---
+      duration_ms: 2.718223
+      type: 'suite'
+      ...
+    1..3
+ok 20 - ReplayVerificationReport
+  ---
+  duration_ms: 18.793637
+  type: 'suite'
+  ...
+# Subtest: MonotonicIdGenerator
+    # Subtest: ID Generation
+        # Subtest: should generate unique IDs
+        ok 1 - should generate unique IDs
+          ---
+          duration_ms: 3.224158
+          ...
+        # Subtest: should generate monotonically increasing IDs
+        ok 2 - should generate monotonically increasing IDs
+          ---
+          duration_ms: 0.992888
+          ...
+        # Subtest: should generate IDs as strings
+        ok 3 - should generate IDs as strings
+          ---
+          duration_ms: 6.623214
+          ...
+        1..3
+    ok 1 - ID Generation
+      ---
+      duration_ms: 12.605338
+      type: 'suite'
+      ...
+    # Subtest: Worker ID Validation
+        # Subtest: should accept valid worker IDs (0-1023)
+        ok 1 - should accept valid worker IDs (0-1023)
+          ---
+          duration_ms: 4.477042
+          ...
+        # Subtest: should reject invalid worker IDs
+        ok 2 - should reject invalid worker IDs
+          ---
+          duration_ms: 1.374782
+          ...
+        1..2
+    ok 2 - Worker ID Validation
+      ---
+      duration_ms: 6.582316
+      type: 'suite'
+      ...
+    # Subtest: Clock-Safety: Wait State
+        # Subtest: should not be in wait state initially
+        ok 1 - should not be in wait state initially
+          ---
+          duration_ms: 0.76409
+          ...
+        # Subtest: should handle sequence overflow within same millisecond
+        ok 2 - should handle sequence overflow within same millisecond
+          ---
+          duration_ms: 13.649024
+          ...
+        1..2
+    ok 3 - Clock-Safety: Wait State
+      ---
+      duration_ms: 15.4788
+      type: 'suite'
+      ...
+    # Subtest: Factory Function
+        # Subtest: should create generator with specified worker ID
+        ok 1 - should create generator with specified worker ID
+          ---
+          duration_ms: 0.833989
+          ...
+        1..1
+    ok 4 - Factory Function
+      ---
+      duration_ms: 1.292783
+      type: 'suite'
+      ...
+    1..4
+ok 21 - MonotonicIdGenerator
+  ---
+  duration_ms: 49.573761
+  type: 'suite'
+  ...
+# Subtest: ClockMovedBackwardsError
+    # Subtest: should have correct error properties
+    ok 1 - should have correct error properties
+      ---
+      duration_ms: 4.988036
+      ...
+    1..1
+ok 22 - ClockMovedBackwardsError
+  ---
+  duration_ms: 5.540328
+  type: 'suite'
+  ...
+# Subtest: MtlsGate
+    # Subtest: getServerOptions
+        # Subtest: should return hardened server options with rejectUnauthorized=true
+        ok 1 - should return hardened server options with rejectUnauthorized=true
+          ---
+          duration_ms: 1.22226
+          ...
+        # Subtest: should read from environment variables
+        ok 2 - should read from environment variables
+          ---
+          duration_ms: 0.350231
+          ...
+        1..2
+    ok 1 - getServerOptions
+      ---
+      duration_ms: 14.330881
+      type: 'suite'
+      ...
+    # Subtest: getAgent
+        # Subtest: should return HTTPS agent with rejectUnauthorized=true
+        ok 1 - should return HTTPS agent with rejectUnauthorized=true
+          ---
+          duration_ms: 0.503301
+          ...
+        1..1
+    ok 2 - getAgent
+      ---
+      duration_ms: 0.703862
+      type: 'suite'
+      ...
+    1..2
+ok 23 - MtlsGate
+  ---
+  duration_ms: 81.000665
+  type: 'suite'
+  ...
+# {"level":30,"time":1768712522448,"pid":37497,"hostname":"DESKTOP-VV0116A","name":"OutboxDispatch","event":"DISPATCH_QUEUED","outboxId":"outbox-1","sequenceId":"1234567890","participantId":"part-1","eventType":"PAYMENT"}
+# Subtest: OutboxDispatchService
+    # Subtest: atomic dispatch
+        # Subtest: should dispatch to outbox and ledger in same transaction
+        ok 1 - should dispatch to outbox and ledger in same transaction
+          ---
+          duration_ms: 32.86694
+          ...
+        # Subtest: should rollback on error
+        ok 2 - should rollback on error
+          ---
+          duration_ms: 14.282837
+          ...
+        1..2
+    ok 1 - atomic dispatch
+      ---
+      duration_ms: 49.590305
+      type: 'suite'
+      ...
+    # Subtest: idempotency
+        # Subtest: should return existing record on duplicate idempotency key
+        ok 1 - should return existing record on duplicate idempotency key
+          ---
+          duration_ms: 13.864417
+          ...
+        # Subtest: should handle concurrent insert race condition
+        ok 2 - should handle concurrent insert race condition
+          ---
+          duration_ms: 1.5497
+          ...
+        1..2
+    ok 2 - idempotency
+      ---
+      duration_ms: 15.982307
+      type: 'suite'
+      ...
+    1..2
+ok 24 - OutboxDispatchService
+  ---
+  duration_ms: 80.706985
+  type: 'suite'
+  ...
+# {"level":30,"time":1768712522449,"pid":37497,"hostname":"DESKTOP-VV0116A","name":"OutboxDispatch","event":"LEDGER_AND_DISPATCH_COMMITTED","outboxId":"outbox-1","ledgerEntries":1}
+# {"level":50,"time":1768712522468,"pid":37497,"hostname":"DESKTOP-VV0116A","name":"OutboxDispatch","error":"DB Error","msg":"Dispatch failed"}
+# {"level":30,"time":1768712522484,"pid":37497,"hostname":"DESKTOP-VV0116A","name":"OutboxDispatch","event":"DUPLICATE_DISPATCH","idempotencyKey":"idem-1","existingId":"existing-1","existingStatus":"PENDING"}
+# {"level":30,"time":1768712528512,"pid":37526,"hostname":"DESKTOP-VV0116A","name":"OutboxRelayer","correlationId":"uuid-1","railReference":"ref-123","msg":"Dispatch successful"}
+# Subtest: OutboxRelayer
+    # Subtest: poll() -> fetchNextBatch()
+        # Subtest: should process available records
+        ok 1 - should process available records
+          ---
+          duration_ms: 18.217813
+          ...
+        1..1
+    ok 1 - poll() -> fetchNextBatch()
+      ---
+      duration_ms: 30.750786
+      type: 'suite'
+      ...
+    # Subtest: processRecord()
+        # Subtest: should dispatch to rail and mark success
+        ok 1 - should dispatch to rail and mark success
+          ---
+          duration_ms: 3.052304
+          ...
+        # Subtest: should handle transient errors by marking RECOVERING
+        ok 2 - should handle transient errors by marking RECOVERING
+          ---
+          duration_ms: 15.426981
+          ...
+        # Subtest: should dlq after max retries
+        ok 3 - should dlq after max retries
+          ---
+          duration_ms: 1.465858
+          ...
+        1..3
+    ok 2 - processRecord()
+      ---
+      duration_ms: 20.739212
+      type: 'suite'
+      ...
+    1..2
+ok 25 - OutboxRelayer
+  ---
+  duration_ms: 52.660655
+  type: 'suite'
+  ...
+# {"level":50,"time":1768712528529,"pid":37526,"hostname":"DESKTOP-VV0116A","name":"OutboxRelayer","correlationId":"uuid-1","error":"ECONNRESET: Connection reset","msg":"Dispatch failure"}
+# {"level":40,"time":1768712528530,"pid":37526,"hostname":"DESKTOP-VV0116A","name":"OutboxRelayer","correlationId":"uuid-1","retryCount":5,"msg":"Moved to DLQ"}
+# {"level":30,"time":1768712531545,"system":"symphony","msg":"Configuration guard passed."}
+# Subtest: validatePolicyVersion
+    # Subtest: should accept matching policy version
+    ok 1 - should accept matching policy version
+      ---
+      duration_ms: 3.121885
+      ...
+    # Subtest: should reject mismatched policy version
+    ok 2 - should reject mismatched policy version
+      ---
+      duration_ms: 2.840924
+      ...
+    # Subtest: should reject invalid policy version format
+    ok 3 - should reject invalid policy version format
+      ---
+      duration_ms: 13.585346
+      ...
+    1..3
+ok 26 - validatePolicyVersion
+  ---
+  duration_ms: 2113.686999
+  type: 'suite'
+  ...
+# {"level":30,"time":1768712536328,"pid":37561,"hostname":"DESKTOP-VV0116A","name":"PolicyConsistency","event":"POLICY_STATE_REFRESHED","activeVersion":"v1.2.3","acceptedCount":2,"graceCount":1}
+# Subtest: PolicyConsistencyService
+    # Subtest: getGlobalPolicyState
+        # Subtest: should load and cache policy state from database
+        ok 1 - should load and cache policy state from database
+          ---
+          duration_ms: 16.048994
+          ...
+        1..1
+    ok 1 - getGlobalPolicyState
+      ---
+      duration_ms: 17.413965
+      type: 'suite'
+      ...
+    # Subtest: validatePolicyClaims
+        # Subtest: should validate a valid token with active version
+        ok 1 - should validate a valid token with active version
+          ---
+          duration_ms: 2.231107
+          ...
+        # Subtest: should allow token in grace period but flag for re-auth
+        ok 2 - should allow token in grace period but flag for re-auth
+          ---
+          duration_ms: 1.567753
+          ...
+        # Subtest: should reject retired or unknown versions
+        ok 3 - should reject retired or unknown versions
+          ---
+          duration_ms: 16.165913
+          ...
+        # Subtest: should reject tokens with invalid scope
+        ok 4 - should reject tokens with invalid scope
+          ---
+          duration_ms: 1.577699
+          ...
+        # Subtest: should reject expired tokens
+        ok 5 - should reject expired tokens
+          ---
+          duration_ms: 2.127484
+          ...
+        1..5
+    ok 2 - validatePolicyClaims
+      ---
+      duration_ms: 25.507274
+      type: 'suite'
+      ...
+    # Subtest: isOperationAllowed
+        # Subtest: should allow authorized operations within limits
+        ok 1 - should allow authorized operations within limits
+          ---
+          duration_ms: 13.223344
+          ...
+        # Subtest: should deny unauthorized operations
+        ok 2 - should deny unauthorized operations
+          ---
+          duration_ms: 1.649454
+          ...
+        # Subtest: should deny transaction amounts exceeding limit
+        ok 3 - should deny transaction amounts exceeding limit
+          ---
+          duration_ms: 1.516804
+          ...
+        1..3
+    ok 3 - isOperationAllowed
+      ---
+      duration_ms: 17.180228
+      type: 'suite'
+      ...
+    1..3
+ok 27 - PolicyConsistencyService
+  ---
+  duration_ms: 61.706976
+  type: 'suite'
+  ...
+# {"level":30,"time":1768712536336,"pid":37561,"hostname":"DESKTOP-VV0116A","name":"PolicyConsistency","event":"POLICY_CACHE_INVALIDATED"}
+# {"level":30,"time":1768712536344,"pid":37561,"hostname":"DESKTOP-VV0116A","name":"PolicyConsistency","event":"POLICY_STATE_REFRESHED","activeVersion":"v1.2.3","acceptedCount":2,"graceCount":1}
+# {"level":30,"time":1768712536344,"pid":37561,"hostname":"DESKTOP-VV0116A","name":"PolicyConsistency","event":"POLICY_CACHE_INVALIDATED"}
+# {"level":30,"time":1768712536345,"pid":37561,"hostname":"DESKTOP-VV0116A","name":"PolicyConsistency","event":"POLICY_STATE_REFRESHED","activeVersion":"v1.2.3","acceptedCount":2,"graceCount":1}
+# {"level":30,"time":1768712536345,"pid":37561,"hostname":"DESKTOP-VV0116A","name":"PolicyConsistency","event":"POLICY_VERSION_IN_GRACE","tokenVersion":"v1.2.2","activeVersion":"v1.2.3","participantId":"user-123"}
+# {"level":30,"time":1768712536346,"pid":37561,"hostname":"DESKTOP-VV0116A","name":"PolicyConsistency","event":"POLICY_CACHE_INVALIDATED"}
+# {"level":30,"time":1768712536359,"pid":37561,"hostname":"DESKTOP-VV0116A","name":"PolicyConsistency","event":"POLICY_STATE_REFRESHED","activeVersion":"v1.2.3","acceptedCount":2,"graceCount":1}
+# {"level":40,"time":1768712536360,"pid":37561,"hostname":"DESKTOP-VV0116A","name":"PolicyConsistency","event":"POLICY_VERSION_REJECTED","tokenVersion":"v1.0.0","activeVersion":"v1.2.3","tokenHash":"2485f4d55aae6c5b","activeHash":"e3cad1a6f905017f","participantId":"user-123","acceptedVersions":["v1.2.3","v1.2.2"]}
+# {"level":30,"time":1768712536362,"pid":37561,"hostname":"DESKTOP-VV0116A","name":"PolicyConsistency","event":"POLICY_CACHE_INVALIDATED"}
+# {"level":30,"time":1768712536364,"pid":37561,"hostname":"DESKTOP-VV0116A","name":"PolicyConsistency","event":"POLICY_STATE_REFRESHED","activeVersion":"v1.2.3","acceptedCount":2,"graceCount":1}
+# {"level":30,"time":1768712536364,"pid":37561,"hostname":"DESKTOP-VV0116A","name":"PolicyConsistency","event":"POLICY_CACHE_INVALIDATED"}
+# {"level":30,"time":1768712536366,"pid":37561,"hostname":"DESKTOP-VV0116A","name":"PolicyConsistency","event":"POLICY_STATE_REFRESHED","activeVersion":"v1.2.3","acceptedCount":2,"graceCount":1}
+# {"level":30,"time":1768712536366,"pid":37561,"hostname":"DESKTOP-VV0116A","name":"PolicyConsistency","event":"POLICY_CACHE_INVALIDATED"}
+# {"level":30,"time":1768712536368,"pid":37561,"hostname":"DESKTOP-VV0116A","name":"PolicyConsistency","event":"POLICY_STATE_REFRESHED","activeVersion":"v1.2.3","acceptedCount":2,"graceCount":1}
+# {"level":30,"time":1768712536369,"pid":37561,"hostname":"DESKTOP-VV0116A","name":"PolicyConsistency","event":"POLICY_CACHE_INVALIDATED"}
+# {"level":30,"time":1768712536382,"pid":37561,"hostname":"DESKTOP-VV0116A","name":"PolicyConsistency","event":"POLICY_STATE_REFRESHED","activeVersion":"v1.2.3","acceptedCount":2,"graceCount":1}
+# {"level":40,"time":1768712536382,"pid":37561,"hostname":"DESKTOP-VV0116A","name":"PolicyConsistency","event":"OPERATION_NOT_ALLOWED","operation":"REFUND","participantId":"user-123","scope":"TIER_1"}
+# {"level":30,"time":1768712536382,"pid":37561,"hostname":"DESKTOP-VV0116A","name":"PolicyConsistency","event":"POLICY_CACHE_INVALIDATED"}
+# {"level":30,"time":1768712536384,"pid":37561,"hostname":"DESKTOP-VV0116A","name":"PolicyConsistency","event":"POLICY_STATE_REFRESHED","activeVersion":"v1.2.3","acceptedCount":2,"graceCount":1}
+# {"level":40,"time":1768712536384,"pid":37561,"hostname":"DESKTOP-VV0116A","name":"PolicyConsistency","event":"AMOUNT_EXCEEDS_LIMIT","amount":1500,"limit":1000,"participantId":"user-123"}
+# {"level":30,"time":1768712536384,"pid":37561,"hostname":"DESKTOP-VV0116A","name":"PolicyConsistency","event":"POLICY_CACHE_INVALIDATED"}
+# Subtest: Log Redaction
+    # Subtest: should redact sensitive keys in objects
+    ok 1 - should redact sensitive keys in objects
+      ---
+      duration_ms: 45.986095
+      ...
+    1..1
+ok 28 - Log Redaction
+  ---
+  duration_ms: 48.105224
+  type: 'suite'
+  ...
+# Subtest: RequestContext
+    # Subtest: should throw when accessing context outside run()
+    ok 1 - should throw when accessing context outside run()
+      ---
+      duration_ms: 2.950671
+      ...
+    # Subtest: should return context inside run()
+    ok 2 - should return context inside run()
+      ---
+      duration_ms: 7.329039
+      ...
+    # Subtest: should maintain isolation between concurrent async requests
+    ok 3 - should maintain isolation between concurrent async requests
+      ---
+      duration_ms: 62.163908
+      ...
+    # Subtest: should forbid set() usage
+    ok 4 - should forbid set() usage
+      ---
+      duration_ms: 0.737071
+      ...
+    1..4
+ok 29 - RequestContext
+  ---
+  duration_ms: 76.066117
+  type: 'suite'
+  ...
+# Subtest: ParticipantResolver
+    # Subtest: Resolution Context Validation
+        # Subtest: should require requestId in context
+        ok 1 - should require requestId in context
+          ---
+          duration_ms: 1.392121
+          ...
+        1..1
+    ok 1 - Resolution Context Validation
+      ---
+      duration_ms: 2.426211
+      type: 'suite'
+      ...
+    # Subtest: Resolution Failure Reasons
+        # Subtest: should define all expected failure reasons
+        ok 1 - should define all expected failure reasons
+          ---
+          duration_ms: 0.796164
+          ...
+        # Subtest: should include CERTIFICATE_REVOKED for trust fabric failures
+        ok 2 - should include CERTIFICATE_REVOKED for trust fabric failures
+          ---
+          duration_ms: 0.393169
+          ...
+        # Subtest: should include FINGERPRINT_NOT_FOUND for unknown certs
+        ok 3 - should include FINGERPRINT_NOT_FOUND for unknown certs
+          ---
+          duration_ms: 7.211533
+          ...
+        # Subtest: should include PARTICIPANT_SUSPENDED for inactive participants
+        ok 4 - should include PARTICIPANT_SUSPENDED for inactive participants
+          ---
+          duration_ms: 0.378776
+          ...
+        1..4
+    ok 2 - Resolution Failure Reasons
+      ---
+      duration_ms: 14.213131
+      type: 'suite'
+      ...
+    # Subtest: Resolution Flow Steps
+        # Subtest: should have 5 resolution steps
+        ok 1 - should have 5 resolution steps
+          ---
+          duration_ms: 0.44131
+          ...
+        # Subtest: should validate certificate before participant lookup
+        ok 2 - should validate certificate before participant lookup
+          ---
+          duration_ms: 0.644694
+          ...
+        1..2
+    ok 3 - Resolution Flow Steps
+      ---
+      duration_ms: 1.587265
+      type: 'suite'
+      ...
+    1..3
+ok 30 - ParticipantResolver
+  ---
+  duration_ms: 32.435768
+  type: 'suite'
+  ...
+# {"level":50,"time":1768712549203,"system":"symphony","incidentId":"845ed72b-4fa0-41e1-9551-a771d772ef69","category":"SEC","internalDetails":{"secret":"[REDACTED]"},"stack":"Error: Test error\\n    at TestContext.<anonymous> (file:///home/mwiza/workspaces/Symphony/tests/unit/Sanitizer.spec.ts:31:23)\\n    at Test.runInAsyncScope (node:async_hooks:206:9)\\n    at Test.run (node:internal/test_runner/test:796:25)\\n    at async Promise.all (index 0)\\n    at async Suite.run (node:internal/test_runner/test:1135:7)\\n    at async Test.processPendingSubtests (node:internal/test_runner/test:526:7)","msg":"Test error"}
+# Subtest: ErrorSanitizer
+    # Subtest: should create SymphonyError with incidentId
+    ok 1 - should create SymphonyError with incidentId
+      ---
+      duration_ms: 16.448865
+      ...
+    # Subtest: should sanitize raw errors into SymphonyError
+    ok 2 - should sanitize raw errors into SymphonyError
+      ---
+      duration_ms: 11.897287
+      ...
+    # Subtest: should pass through existing SymphonyError unchanged
+    ok 3 - should pass through existing SymphonyError unchanged
+      ---
+      duration_ms: 1.287281
+      ...
+    1..3
+ok 31 - ErrorSanitizer
+  ---
+  duration_ms: 1039.339815
+  type: 'suite'
+  ...
+# {"level":50,"time":1768712549218,"system":"symphony","incidentId":"2d516fc8-c3ff-428f-a19e-c6bca6868691","category":"OPS","internalDetails":{"originalError":"Database connection failed: password=secret123","stack":"Error: Database connection failed: password=secret123\\n    at TestContext.<anonymous> (file:///home/mwiza/workspaces/Symphony/tests/unit/Sanitizer.spec.ts:38:26)\\n    at Test.runInAsyncScope (node:async_hooks:206:9)\\n    at Test.run (node:internal/test_runner/test:796:25)\\n    at async Suite.processPendingSubtests (node:internal/test_runner/test:526:7)","context":"db-op"},"stack":"Error: An internal system error occurred. Please contact support with ID: db-op\\n    at Object.sanitize (file:///home/mwiza/workspaces/Symphony/libs/errors/sanitizer.ts:60:16)\\n    at TestContext.<anonymous> (file:///home/mwiza/workspaces/Symphony/tests/unit/Sanitizer.spec.ts:39:42)\\n    at Test.runInAsyncScope (node:async_hooks:206:9)\\n    at Test.run (node:internal/test_runner/test:796:25)\\n    at async Suite.processPendingSubtests (node:internal/test_runner/test:526:7)","msg":"An internal system error occurred. Please contact support with ID: db-op"}
+# {"level":50,"time":1768712549230,"system":"symphony","incidentId":"c915f93f-33ca-4e6e-ab4b-40d1809e2b1d","category":"OPS","internalDetails":{"data":"test"},"stack":"Error: Original\\n    at TestContext.<anonymous> (file:///home/mwiza/workspaces/Symphony/tests/unit/Sanitizer.spec.ts:46:26)\\n    at Test.runInAsyncScope (node:async_hooks:206:9)\\n    at Test.run (node:internal/test_runner/test:796:25)\\n    at async Suite.processPendingSubtests (node:internal/test_runner/test:526:7)","msg":"Original"}
+# Subtest: ShortLivedCertificateManager
+    # Subtest: Certificate Issuance
+        # Subtest: should issue certificate with correct TTL
+        ok 1 - should issue certificate with correct TTL
+          ---
+          duration_ms: 14.191823
+          ...
+        # Subtest: should reject TTL > 24 hours
+        ok 2 - should reject TTL > 24 hours
+          ---
+          duration_ms: 0.423817
+          ...
+        # Subtest: should default to 4-hour TTL
+        ok 3 - should default to 4-hour TTL
+          ---
+          duration_ms: 0.334608
+          ...
+        # Subtest: should calculate correct renewal window (30 min before expiry)
+        ok 4 - should calculate correct renewal window (30 min before expiry)
+          ---
+          duration_ms: 0.433161
+          ...
+        1..4
+    ok 1 - Certificate Issuance
+      ---
+      duration_ms: 17.495315
+      type: 'suite'
+      ...
+    # Subtest: Certificate Revocation
+        # Subtest: should mark certificate as revoked
+        ok 1 - should mark certificate as revoked
+          ---
+          duration_ms: 0.979825
+          ...
+        # Subtest: should add fingerprint to revoked set
+        ok 2 - should add fingerprint to revoked set
+          ---
+          duration_ms: 0.463553
+          ...
+        1..2
+    ok 2 - Certificate Revocation
+      ---
+      duration_ms: 13.115217
+      type: 'suite'
+      ...
+    # Subtest: Kill-Switch: Revoke All for Participant
+        # Subtest: should revoke all certificates for a participant
+        ok 1 - should revoke all certificates for a participant
+          ---
+          duration_ms: 0.754687
+          ...
+        1..1
+    ok 3 - Kill-Switch: Revoke All for Participant
+      ---
+      duration_ms: 1.214503
+      type: 'suite'
+      ...
+    # Subtest: Certificate Validation
+        # Subtest: should reject revoked certificates
+        ok 1 - should reject revoked certificates
+          ---
+          duration_ms: 0.67738
+          ...
+        # Subtest: should reject expired certificates
+        ok 2 - should reject expired certificates
+          ---
+          duration_ms: 15.263415
+          ...
+        # Subtest: should accept valid certificates
+        ok 3 - should accept valid certificates
+          ---
+          duration_ms: 0.507125
+          ...
+        1..3
+    ok 4 - Certificate Validation
+      ---
+      duration_ms: 29.218299
+      type: 'suite'
+      ...
+    # Subtest: Revocation Bounds for Evidence Bundle
+        # Subtest: should calculate worst-case revocation window
+        ok 1 - should calculate worst-case revocation window
+          ---
+          duration_ms: 0.55227
+          ...
+        # Subtest: should return correct bounds object
+        ok 2 - should return correct bounds object
+          ---
+          duration_ms: 0.558466
+          ...
+        1..2
+    ok 5 - Revocation Bounds for Evidence Bundle
+      ---
+      duration_ms: 1.544586
+      type: 'suite'
+      ...
+    # Subtest: Suspended Participant Protection
+        # Subtest: should block certificate issuance for suspended participant
+        ok 1 - should block certificate issuance for suspended participant
+          ---
+          duration_ms: 12.223518
+          ...
+        1..1
+    ok 6 - Suspended Participant Protection
+      ---
+      duration_ms: 12.640844
+      type: 'suite'
+      ...
+    1..6
+ok 32 - ShortLivedCertificateManager
+  ---
+  duration_ms: 106.722044
+  type: 'suite'
+  ...
+# Subtest: CertificateError
+    # Subtest: should have correct error codes
+    ok 1 - should have correct error codes
+      ---
+      duration_ms: 0.549418
+      ...
+    1..1
+ok 33 - CertificateError
+  ---
+  duration_ms: 0.845765
+  type: 'suite'
+  ...
+# Subtest: TrustFabric (SEC-FIX)
+    # Subtest: TrustViolationError
+        # Subtest: should have correct error codes defined
+        ok 1 - should have correct error codes defined
+          ---
+          duration_ms: 2.244244
+          ...
+        # Subtest: should extend Error with correct name
+        ok 2 - should extend Error with correct name
+          ---
+          duration_ms: 0.532649
+          ...
+        1..2
+    ok 1 - TrustViolationError
+      ---
+      duration_ms: 8.487094
+      type: 'suite'
+      ...
+    # Subtest: Implementation Verification
+        # Subtest: should exist and be readable
+        ok 1 - should exist and be readable
+          ---
+          duration_ms: 2.989049
+          ...
+        # Subtest: should use async resolveIdentity
+        ok 2 - should use async resolveIdentity
+          ---
+          duration_ms: 13.429976
+          ...
+        # Subtest: should import and use LRUCache
+        ok 3 - should import and use LRUCache
+          ---
+          duration_ms: 0.701646
+          ...
+        # Subtest: should check revoked status
+        ok 4 - should check revoked status
+          ---
+          duration_ms: 0.523113
+          ...
+        # Subtest: should check expiry
+        ok 5 - should check expiry
+          ---
+          duration_ms: 0.500206
+          ...
+        # Subtest: should check participant status
+        ok 6 - should check participant status
+          ---
+          duration_ms: 0.571678
+          ...
+        # Subtest: should check environment binding
+        ok 7 - should check environment binding
+          ---
+          duration_ms: 11.828883
+          ...
+        # Subtest: should use queryAsRole for scoped DB access
+        ok 8 - should use queryAsRole for scoped DB access
+          ---
+          duration_ms: 20.941628
+          ...
+        # Subtest: should have stampede avoidance (inflight map)
+        ok 9 - should have stampede avoidance (inflight map)
+          ---
+          duration_ms: 0.592324
+          ...
+        # Subtest: should have negative cache
+        ok 10 - should have negative cache
+          ---
+          duration_ms: 0.369551
+          ...
+        1..10
+    ok 2 - Implementation Verification
+      ---
+      duration_ms: 56.363981
+      type: 'suite'
+      ...
+    1..2
+ok 34 - TrustFabric (SEC-FIX)
+  ---
+  duration_ms: 66.307061
+  type: 'suite'
+  ...
+# {"level":30,"time":1768712571841,"system":"symphony","msg":"Configuration guard passed."}
+# Subtest: VerifyIdentity (Phase 7B Hardening)
+    # Subtest: should verify a valid CLIENT identity
+    ok 1 - should verify a valid CLIENT identity # SKIP
+      ---
+      duration_ms: 12.51329
+      ...
+    # Subtest: should verify a valid SERVICE identity
+    ok 2 - should verify a valid SERVICE identity # SKIP
+      ---
+      duration_ms: 0.2648
+      ...
+    # Subtest: should verify a valid USER identity at Ingest boundary
+    ok 3 - should verify a valid USER identity at Ingest boundary # SKIP
+      ---
+      duration_ms: 0.165799
+      ...
+    # Subtest: should REJECT service identity if mTLS fingerprint mismatches
+    ok 4 - should REJECT service identity if mTLS fingerprint mismatches
+      ---
+      duration_ms: 43.588891
+      ...
+    # Subtest: should REJECT service identity if mTLS fingerprint missing from envelope
+    ok 5 - should REJECT service identity if mTLS fingerprint missing from envelope
+      ---
+      duration_ms: 18.286146
+      ...
+    # Subtest: should PREVENT USER LAUNDERING: reject user envelope at internal service boundary
+    ok 6 - should PREVENT USER LAUNDERING: reject user envelope at internal service boundary
+      ---
+      duration_ms: 5.201184
+      ...
+    # Subtest: should REJECT user identity if issuer is not ingest-api
+    ok 7 - should REJECT user identity if issuer is not ingest-api
+      ---
+      duration_ms: 1.868853
+      ...
+    # Subtest: should REJECT user identity if trustTier is not user
+    ok 8 - should REJECT user identity if trustTier is not user
+      ---
+      duration_ms: 5.495893
+      ...
+    1..8
+ok 35 - VerifyIdentity (Phase 7B Hardening)
+  ---
+  duration_ms: 5396.923662
+  type: 'suite'
+  ...
+# {"level":40,"time":1768712574354,"system":"symphony","context":"test-context","errors":[{"path":"id","message":"Invalid UUID"},{"path":"amount","message":"Too small: expected number to be >0"},{"path":"currency","message":"Invalid option: expected one of \\"USD\\"|\\"EUR\\"|\\"GBP\\""}],"msg":"Input Validation Failure (HIGH-SEC-002)"}
+# Subtest: Zod Middleware
+    # Subtest: should validate correct input
+    ok 1 - should validate correct input
+      ---
+      duration_ms: 46.361035
+      ...
+    # Subtest: should reject invalid input with detailed error
+    ok 2 - should reject invalid input with detailed error
+      ---
+      duration_ms: 50.169448
+      ...
+    # Subtest: should reject missing required fields
+    ok 3 - should reject missing required fields
+      ---
+      duration_ms: 29.202787
+      ...
+    # Subtest: should create reusable validator factory
+    ok 4 - should create reusable validator factory
+      ---
+      duration_ms: 0.639139
+      ...
+    1..4
+ok 36 - Zod Middleware
+  ---
+  duration_ms: 705.342329
+  type: 'suite'
+  ...
+# {"level":40,"time":1768712574357,"system":"symphony","context":"partial-test","errors":[{"path":"amount","message":"Invalid input: expected number, received undefined"},{"path":"currency","message":"Invalid option: expected one of \\"USD\\"|\\"EUR\\"|\\"GBP\\""}],"msg":"Input Validation Failure (HIGH-SEC-002)"}
+# {"level":30,"time":1768712569978,"pid":37764,"hostname":"DESKTOP-VV0116A","name":"ZombieRepairWorker","event":"REPAIR_CYCLE_COMPLETE","zombiesRepaired":1,"recordsEscalated":1,"attestationsReconciled":1}
+# Subtest: ZombieRepairWorker
+    # Subtest: runRepairCycle()
+        # Subtest: should execute repair queries with correct SQL
+        ok 1 - should execute repair queries with correct SQL
+          ---
+          duration_ms: 9.241478
+          ...
+        # Subtest: should define transaction boundaries
+        ok 2 - should define transaction boundaries
+          ---
+          duration_ms: 1.445196
+          ...
+        # Subtest: should rollback on error
+        ok 3 - should rollback on error
+          ---
+          duration_ms: 5.517967
+          ...
+        1..3
+    ok 1 - runRepairCycle()
+      ---
+      duration_ms: 18.719053
+      type: 'suite'
+      ...
+    # Subtest: getZombieCount()
+        # Subtest: should return count from DB
+        ok 1 - should return count from DB
+          ---
+          duration_ms: 1.221363
+          ...
+        1..1
+    ok 2 - getZombieCount()
+      ---
+      duration_ms: 13.059708
+      type: 'suite'
+      ...
+    1..2
+ok 37 - ZombieRepairWorker
+  ---
+  duration_ms: 36.629116
+  type: 'suite'
+  ...
+# {"level":50,"time":1768712569993,"pid":37764,"hostname":"DESKTOP-VV0116A","name":"ZombieRepairWorker","error":"DB Failure","msg":"Repair cycle failed"}
+# Sanity loading
+# Subtest: Sanity
+    # Subtest: should pass
+    ok 1 - should pass
+      ---
+      duration_ms: 1.701082
+      ...
+    1..1
+ok 38 - Sanity
+  ---
+  duration_ms: 4.94192
+  type: 'suite'
+  ...
+1..38
+# tests 213
+# suites 107
+# pass 210
+# fail 0
+# cancelled 0
+# skipped 3
+# todo 0
+# duration_ms 161972.79129
+
+> symphony@1.0.0 test:jest
+> node --experimental-vm-modules node_modules/jest/bin/jest.js
+
+(node:37887) ExperimentalWarning: VM Modules is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+PASS tests/retry-eligibility.test.ts (16.632 s)
+  Phase 7.2: Retry Eligibility
+    Retry Semantics
+      ✓ retry should use same instruction, not create new one (22 ms)
+    Failure Class Retry Eligibility
+      ✓ VALIDATION_FAILURE should block retry (8 ms)
+      ✓ TIMEOUT should redirect to repair (1 ms)
+      ✓ TRANSPORT_ERROR should allow retry (7 ms)
+    Invariant INV-PERSIST-03
+      ✓ retry must preserve idempotency key (3 ms)
+
+(node:37885) ExperimentalWarning: VM Modules is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+PASS tests/repair-workflow.test.ts (16.899 s)
+  Phase 7.2: Repair Workflow
+    Repair Guarantees
+      ✓ repair should only advance to terminal state, never regress (34 ms)
+      ✓ repair events should be append-only (4 ms)
+    Reconciliation Results
+      ✓ CONFIRMED_SUCCESS should yield COMPLETED transition (2 ms)
+      ✓ CONFIRMED_FAILURE should yield FAILED transition (2 ms)
+      ✓ NOT_FOUND should yield FAILED transition (12 ms)
+      ✓ STILL_PENDING should not yield transition (2 ms)
+      ✓ RAIL_UNAVAILABLE should not yield transition (1 ms)
+    Advisory Transition Commands
+      ✓ transition requests are advisory, may be rejected by .NET (12 ms)
+
+{"level":30,"time":1768712599111,"system":"symphony","requestId":"req-001","failureClass":"VALIDATION_FAILURE","retryAllowed":false,"repairRequired":false,"msg":"Failure classified"}
+(node:37884) ExperimentalWarning: VM Modules is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+PASS tests/failure-classification.test.ts (17.171 s)
+  Phase 7.2: Failure Classification
+    Failure Class Metadata
+      ✓ VALIDATION_FAILURE should not allow retry (16 ms)
+      ✓ AUTHZ_FAILURE should not allow retry (2 ms)
+      ✓ RAIL_REJECT should not allow retry (2 ms)
+      ✓ TIMEOUT should require repair, not retry (2 ms)
+      ✓ TRANSPORT_ERROR should allow retry (7 ms)
+      ✓ SYSTEM_FAILURE should allow retry (1 ms)
+    TIMEOUT Clarification
+      ✓ should state that TIMEOUT is unknown state, not failure (3 ms)
+    classifyFailure
+      ✓ should classify validation error as VALIDATION_FAILURE (20 ms)
+      ✓ should classify timeout as TIMEOUT (2 ms)
+      ✓ should classify connection refused as TRANSPORT_ERROR (17 ms)
+      ✓ should classify HTTP 401 as AUTHZ_FAILURE (2 ms)
+      ✓ should sanitize error messages (16 ms)
+    isRetryable
+      ✓ should return true for TRANSPORT_ERROR (13 ms)
+      ✓ should return true for SYSTEM_FAILURE (2 ms)
+      ✓ should return false for TIMEOUT (13 ms)
+      ✓ should return false for RAIL_REJECT (2 ms)
+    requiresRepair
+      ✓ should return true for TIMEOUT (1 ms)
+      ✓ should return false for TRANSPORT_ERROR (14 ms)
+
+{"level":30,"time":1768712599130,"system":"symphony","requestId":"req-001","failureClass":"TIMEOUT","retryAllowed":false,"repairRequired":true,"msg":"Failure classified"}
+{"level":30,"time":1768712599147,"system":"symphony","requestId":"req-001","failureClass":"TRANSPORT_ERROR","retryAllowed":true,"repairRequired":false,"msg":"Failure classified"}
+{"level":30,"time":1768712599150,"system":"symphony","requestId":"req-001","failureClass":"AUTHZ_FAILURE","retryAllowed":false,"repairRequired":false,"msg":"Failure classified"}
+{"level":30,"time":1768712599165,"system":"symphony","requestId":"req-001","failureClass":"SYSTEM_FAILURE","retryAllowed":true,"repairRequired":false,"msg":"Failure classified"}
+{"level":30,"time":1768712599979,"system":"symphony","msg":"Configuration guard passed."}
+{"level":40,"time":1768712600019,"system":"symphony","requestId":"req-001","reason":"NO_MTLS_CONTEXT","msg":"Identity guard denied request"}
+{"level":50,"time":1768712600165,"system":"symphony","error":{"errno":-111,"code":"ECONNREFUSED","syscall":"connect","address":"127.0.0.1","port":5432},"msg":"Failed to initialize audit chain"}
+{"level":40,"time":1768712600326,"system":"symphony","requestId":"req-001","reason":"NO_PARTICIPANT_RESOLVED","msg":"Identity guard denied request"}
+{"level":50,"time":1768712600341,"system":"symphony","error":{"errno":-111,"code":"ECONNREFUSED","syscall":"connect","address":"127.0.0.1","port":5432},"msg":"Failed to initialize audit chain"}
+{"level":40,"time":1768712600344,"system":"symphony","requestId":"req-001","participantId":"test-participant-001","status":"SUSPENDED","msg":"Participant status denial"}
+{"level":50,"time":1768712600383,"system":"symphony","error":{"errno":-111,"code":"ECONNREFUSED","syscall":"connect","address":"127.0.0.1","port":5432},"msg":"Failed to initialize audit chain"}
+{"level":40,"time":1768712600393,"system":"symphony","requestId":"req-001","participantId":"test-participant-001","status":"REVOKED","msg":"Participant status denial"}
+{"level":50,"time":1768712600411,"system":"symphony","error":{"errno":-111,"code":"ECONNREFUSED","syscall":"connect","address":"127.0.0.1","port":5432},"msg":"Failed to initialize audit chain"}
+{"level":40,"time":1768712600431,"system":"symphony","requestId":"req-001","participantId":"test-participant-001","role":"SUPERVISOR","capability":"execution:attempt","reason":"SUPERVISOR_CANNOT_EXECUTE","msg":"Authorization guard denied request"}
+{"level":50,"time":1768712600469,"system":"symphony","error":{"errno":-111,"code":"ECONNREFUSED","syscall":"connect","address":"127.0.0.1","port":5432},"msg":"Failed to initialize audit chain"}
+{"level":40,"time":1768712600504,"system":"symphony","requestId":"req-001","participantId":"test-participant-001","role":"SUPERVISOR","capability":"instruction:submit","reason":"SUPERVISOR_CANNOT_EXECUTE","msg":"Authorization guard denied request"}
+{"level":50,"time":1768712600513,"system":"symphony","error":{"errno":-111,"code":"ECONNREFUSED","syscall":"connect","address":"127.0.0.1","port":5432},"msg":"Failed to initialize audit chain"}
+{"level":40,"time":1768712600525,"system":"symphony","requestId":"req-001","participantId":"test-participant-001","reason":"AMOUNT_EXCEEDS_LIMIT","details":"Amount 5000.00 exceeds limit 1000.00","msg":"Policy guard denied request"}
+{"level":50,"time":1768712600532,"system":"symphony","error":{"errno":-111,"code":"ECONNREFUSED","syscall":"connect","address":"127.0.0.1","port":5432},"msg":"Failed to initialize audit chain"}
+{"level":40,"time":1768712600559,"system":"symphony","requestId":"req-001","participantId":"test-participant-001","reason":"MESSAGE_TYPE_NOT_ALLOWED","details":"Message type pain.001 not in whitelist","msg":"Policy guard denied request"}
+{"level":50,"time":1768712600561,"system":"symphony","error":{"errno":-111,"code":"ECONNREFUSED","syscall":"connect","address":"127.0.0.1","port":5432},"msg":"Failed to initialize audit chain"}
+{"level":40,"time":1768712600567,"system":"symphony","requestId":"req-001","participantId":"test-participant-001","reason":"ACCOUNT_OUT_OF_SCOPE","details":"Account acct-999 not in participant ledger scope","msg":"Ledger scope guard denied request"}
+{"level":50,"time":1768712600574,"system":"symphony","error":{"errno":-111,"code":"ECONNREFUSED","syscall":"connect","address":"127.0.0.1","port":5432},"msg":"Failed to initialize audit chain"}
+{"level":40,"time":1768712600578,"system":"symphony","requestId":"req-001","participantId":"test-participant-001","reason":"ACCOUNT_OUT_OF_SCOPE","details":"Account acct-001 not in participant ledger scope","msg":"Ledger scope guard denied request"}
+{"level":50,"time":1768712600580,"system":"symphony","error":{"errno":-111,"code":"ECONNREFUSED","syscall":"connect","address":"127.0.0.1","port":5432},"msg":"Failed to initialize audit chain"}
+{"level":30,"time":1768712600577,"system":"symphony","msg":"Configuration guard passed."}
+PASS tests/participant-identity.test.ts
+  Phase 7.1: Participant Identity
+    Participant Status Validation
+      ✓ should return true for ACTIVE participant (2 ms)
+      ✓ should return false for SUSPENDED participant (1 ms)
+      ✓ should return false for REVOKED participant (1 ms)
+    Participant Role Definitions
+      ✓ should have exactly 4 defined roles (1 ms)
+      ✓ should include BANK as executing role (2 ms)
+      ✓ should include PSP as executing role (3 ms)
+      ✓ should include OPERATOR as executing role (1 ms)
+      ✓ should include SUPERVISOR as non-executing role (2 ms)
+    INVARIANT SYS-7-1-A: No Execution Without Attestation
+      ✓ should require ingressSequenceId for resolution context (3 ms)
+    Regulatory Guarantees
+      ✓ participant should be treated as regulated actor, not tenant (2 ms)
+      ✓ status should be revocable at runtime (1 ms)
+
+FAIL tests/runtime-guards.test.ts
+  Phase 7.1: Runtime Guards
+    Identity Guard
+      ✕ should deny when mTLS context is missing (152 ms)
+      ✕ should deny when participant is not resolved (28 ms)
+      ✕ should deny SUSPENDED participant with PARTICIPANT_STATUS_DENY (47 ms)
+      ✕ should deny REVOKED participant with PARTICIPANT_STATUS_DENY (28 ms)
+      ✓ should allow ACTIVE participant (5 ms)
+    Authorization Guard — SUPERVISOR Blocking
+      ✕ should block SUPERVISOR from execution:attempt capability (56 ms)
+      ✕ should block SUPERVISOR from instruction:submit capability (12 ms)
+      ✓ should allow SUPERVISOR for audit:read capability (1 ms)
+      ✓ should allow BANK for execution:attempt capability (7 ms)
+    Policy Guard — Sandbox Exposure Limits
+      ✕ should deny amount exceeding limit (9 ms)
+      ✕ should deny message type not in whitelist (4 ms)
+      ✓ should allow amount within limit (3 ms)
+    Ledger Guard — Structural Scope Validation
+      ✕ should deny account not in scope (fail-closed) (9 ms)
+      ✕ should deny when ledger_scope is empty (fail-closed) (5 ms)
+      ✓ should allow account in scope (1 ms)
+
+  ● Phase 7.1: Runtime Guards › Identity Guard › should deny when mTLS context is missing
+
+    Audit substrate unavailable
+
+      56 |         } catch (error) {
+      57 |             logger.error({ error }, 'Failed to initialize audit chain');
+    > 58 |             throw new Error('Audit substrate unavailable');
+         |                   ^
+      59 |         }
+      60 |     }
+      61 |
+
+      at GuardAuditLogger.ensureChainInitialized (libs/audit/guardLogger.ts:58:19)
+      at GuardAuditLogger.log (libs/audit/guardLogger.ts:66:9)
+      at logDenial (libs/guards/identityGuard.ts:79:5)
+      at executeIdentityGuard (libs/guards/identityGuard.ts:52:9)
+      at Object.<anonymous> (tests/runtime-guards.test.ts:92:28)
+
+  ● Phase 7.1: Runtime Guards › Identity Guard › should deny when participant is not resolved
+
+    Audit substrate unavailable
+
+      56 |         } catch (error) {
+      57 |             logger.error({ error }, 'Failed to initialize audit chain');
+    > 58 |             throw new Error('Audit substrate unavailable');
+         |                   ^
+      59 |         }
+      60 |     }
+      61 |
+
+      at GuardAuditLogger.ensureChainInitialized (libs/audit/guardLogger.ts:58:19)
+      at GuardAuditLogger.log (libs/audit/guardLogger.ts:66:9)
+      at logDenial (libs/guards/identityGuard.ts:79:5)
+      at executeIdentityGuard (libs/guards/identityGuard.ts:58:9)
+      at Object.<anonymous> (tests/runtime-guards.test.ts:107:28)
+
+  ● Phase 7.1: Runtime Guards › Identity Guard › should deny SUSPENDED participant with PARTICIPANT_STATUS_DENY
+
+    Audit substrate unavailable
+
+      56 |         } catch (error) {
+      57 |             logger.error({ error }, 'Failed to initialize audit chain');
+    > 58 |             throw new Error('Audit substrate unavailable');
+         |                   ^
+      59 |         }
+      60 |     }
+      61 |
+
+      at GuardAuditLogger.ensureChainInitialized (libs/audit/guardLogger.ts:58:19)
+      at GuardAuditLogger.log (libs/audit/guardLogger.ts:66:9)
+      at logStatusDenial (libs/guards/identityGuard.ts:95:5)
+      at executeIdentityGuard (libs/guards/identityGuard.ts:64:9)
+      at Object.<anonymous> (tests/runtime-guards.test.ts:122:28)
+
+  ● Phase 7.1: Runtime Guards › Identity Guard › should deny REVOKED participant with PARTICIPANT_STATUS_DENY
+
+    Audit substrate unavailable
+
+      56 |         } catch (error) {
+      57 |             logger.error({ error }, 'Failed to initialize audit chain');
+    > 58 |             throw new Error('Audit substrate unavailable');
+         |                   ^
+      59 |         }
+      60 |     }
+      61 |
+
+      at GuardAuditLogger.ensureChainInitialized (libs/audit/guardLogger.ts:58:19)
+      at GuardAuditLogger.log (libs/audit/guardLogger.ts:66:9)
+      at logStatusDenial (libs/guards/identityGuard.ts:95:5)
+      at executeIdentityGuard (libs/guards/identityGuard.ts:64:9)
+      at Object.<anonymous> (tests/runtime-guards.test.ts:137:28)
+
+  ● Phase 7.1: Runtime Guards › Authorization Guard — SUPERVISOR Blocking › should block SUPERVISOR from execution:attempt capability
+
+    Audit substrate unavailable
+
+      56 |         } catch (error) {
+      57 |             logger.error({ error }, 'Failed to initialize audit chain');
+    > 58 |             throw new Error('Audit substrate unavailable');
+         |                   ^
+      59 |         }
+      60 |     }
+      61 |
+
+      at GuardAuditLogger.ensureChainInitialized (libs/audit/guardLogger.ts:58:19)
+      at GuardAuditLogger.log (libs/audit/guardLogger.ts:66:9)
+      at logDenial (libs/guards/authorizationGuard.ts:99:5)
+      at executeAuthorizationGuard (libs/guards/authorizationGuard.ts:61:13)
+      at Object.<anonymous> (tests/runtime-guards.test.ts:166:28)
+
+  ● Phase 7.1: Runtime Guards › Authorization Guard — SUPERVISOR Blocking › should block SUPERVISOR from instruction:submit capability
+
+    Audit substrate unavailable
+
+      56 |         } catch (error) {
+      57 |             logger.error({ error }, 'Failed to initialize audit chain');
+    > 58 |             throw new Error('Audit substrate unavailable');
+         |                   ^
+      59 |         }
+      60 |     }
+      61 |
+
+      at GuardAuditLogger.ensureChainInitialized (libs/audit/guardLogger.ts:58:19)
+      at GuardAuditLogger.log (libs/audit/guardLogger.ts:66:9)
+      at logDenial (libs/guards/authorizationGuard.ts:99:5)
+      at executeAuthorizationGuard (libs/guards/authorizationGuard.ts:61:13)
+      at Object.<anonymous> (tests/runtime-guards.test.ts:181:28)
+
+  ● Phase 7.1: Runtime Guards › Policy Guard — Sandbox Exposure Limits › should deny amount exceeding limit
+
+    Audit substrate unavailable
+
+      56 |         } catch (error) {
+      57 |             logger.error({ error }, 'Failed to initialize audit chain');
+    > 58 |             throw new Error('Audit substrate unavailable');
+         |                   ^
+      59 |         }
+      60 |     }
+      61 |
+
+      at GuardAuditLogger.ensureChainInitialized (libs/audit/guardLogger.ts:58:19)
+      at GuardAuditLogger.log (libs/audit/guardLogger.ts:66:9)
+      at logDenial (libs/guards/policyGuard.ts:148:5)
+      at executePolicyGuard (libs/guards/policyGuard.ts:74:13)
+      at Object.<anonymous> (tests/runtime-guards.test.ts:224:28)
+
+  ● Phase 7.1: Runtime Guards › Policy Guard — Sandbox Exposure Limits › should deny message type not in whitelist
+
+    Audit substrate unavailable
+
+      56 |         } catch (error) {
+      57 |             logger.error({ error }, 'Failed to initialize audit chain');
+    > 58 |             throw new Error('Audit substrate unavailable');
+         |                   ^
+      59 |         }
+      60 |     }
+      61 |
+
+      at GuardAuditLogger.ensureChainInitialized (libs/audit/guardLogger.ts:58:19)
+      at GuardAuditLogger.log (libs/audit/guardLogger.ts:66:9)
+      at logDenial (libs/guards/policyGuard.ts:148:5)
+      at executePolicyGuard (libs/guards/policyGuard.ts:83:13)
+      at Object.<anonymous> (tests/runtime-guards.test.ts:241:28)
+
+  ● Phase 7.1: Runtime Guards › Ledger Guard — Structural Scope Validation › should deny account not in scope (fail-closed)
+
+    Audit substrate unavailable
+
+      56 |         } catch (error) {
+      57 |             logger.error({ error }, 'Failed to initialize audit chain');
+    > 58 |             throw new Error('Audit substrate unavailable');
+         |                   ^
+      59 |         }
+      60 |     }
+      61 |
+
+      at GuardAuditLogger.ensureChainInitialized (libs/audit/guardLogger.ts:58:19)
+      at GuardAuditLogger.log (libs/audit/guardLogger.ts:66:9)
+      at logDenial (libs/guards/ledgerGuard.ts:134:5)
+      at executeLedgerGuard (libs/guards/ledgerGuard.ts:68:13)
+      at Object.<anonymous> (tests/runtime-guards.test.ts:274:28)
+
+  ● Phase 7.1: Runtime Guards › Ledger Guard — Structural Scope Validation › should deny when ledger_scope is empty (fail-closed)
+
+    Audit substrate unavailable
+
+      56 |         } catch (error) {
+      57 |             logger.error({ error }, 'Failed to initialize audit chain');
+    > 58 |             throw new Error('Audit substrate unavailable');
+         |                   ^
+      59 |         }
+      60 |     }
+      61 |
+
+      at GuardAuditLogger.ensureChainInitialized (libs/audit/guardLogger.ts:58:19)
+      at GuardAuditLogger.log (libs/audit/guardLogger.ts:66:9)
+      at logDenial (libs/guards/ledgerGuard.ts:134:5)
+      at executeLedgerGuard (libs/guards/ledgerGuard.ts:68:13)
+      at Object.<anonymous> (tests/runtime-guards.test.ts:291:28)
+
+Test Suites: 1 failed, 4 passed, 5 total
+Tests:       10 failed, 47 passed, 57 total
+Snapshots:   0 total
+Time:        21.068 s, estimated 32 s
+Ran all test suites.

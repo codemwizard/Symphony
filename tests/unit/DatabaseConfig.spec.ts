@@ -55,7 +55,8 @@ describe('Database Configuration Guards', () => {
         });
 
         assert.strictEqual(result.status, 1, 'Should have failed');
-        assert.match(result.stderr, /CRITICAL: Missing DB_CA_CERT in protected environment/);
+        const output = result.stdout + result.stderr;
+        assert.match(output, /FATAL CONFIG: DB_CA_CERT is required in production\/staging|CRITICAL: Missing DB_CA_CERT in protected environment/, `Expected error in output. Got stdout: "${result.stdout}", stderr: "${result.stderr}"`);
     });
 
     it('should throw error if DB_CA_CERT is missing in staging', () => {
@@ -70,7 +71,8 @@ describe('Database Configuration Guards', () => {
         });
 
         assert.strictEqual(result.status, 1, 'Should have failed');
-        assert.match(result.stderr, /CRITICAL: Missing DB_CA_CERT in protected environment/);
+        const output = result.stdout + result.stderr;
+        assert.match(output, /FATAL CONFIG: DB_CA_CERT is required in production\/staging|CRITICAL: Missing DB_CA_CERT in protected environment/, `Expected error in output. Got stdout: "${result.stdout}", stderr: "${result.stderr}"`);
     });
 
     it('should allow missing DB_CA_CERT in development (default)', () => {

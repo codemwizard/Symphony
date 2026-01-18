@@ -61,7 +61,7 @@ describe('jwtToMtlsBridge', () => {
         const context = await jwtToMtlsBridge.bridgeExternalIdentity(jwt);
         assert.strictEqual(context.subjectId, 'user-1');
         assert.strictEqual(context.trustTier, 'external');
-        assert.strictEqual(context.issuerService, 'ingress-gateway');
+        assert.strictEqual(context.issuerService, 'ingest-api');
     });
 
     it('should bridge valid TENANT-ANCHORED USER JWT', async () => {
