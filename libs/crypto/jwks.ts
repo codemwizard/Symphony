@@ -11,17 +11,20 @@ import fs from 'fs';
 import path from 'path';
 import { logger } from '../logging/logger.js';
 
-// Cached JWKS for performance
+// Cached JWKS for performance with TTL
 let cachedJWKS: ReturnType<typeof createLocalJWKSet> | null = null;
+let lastCacheTime = 0;
+const CACHE_TTL_MS = 5 * 60 * 1000; // 5 minutes
 
 /**
  * Load public keys from static JWKS file.
- * Keys are cached for the lifetime of the process.
+ * Keys are cached for performance with periodic refresh.
  * 
  * @throws Error if JWKS file is missing or malformed
  */
 export function getJWKS(): ReturnType<typeof createLocalJWKSet> {
-    if (cachedJWKS) {
+    const now = Date.now();
+    if (cachedJWKS && (now - lastCacheTime < CACHE_TTL_MS)) {
         return cachedJWKS;
     }
 
@@ -48,8 +51,6 @@ export function getJWKS(): ReturnType<typeof createLocalJWKSet> {
             keys: [{
                 kty: 'EC',
                 crv: 'P-256',
-                // These are placeholder values for development
-                // In production, this file MUST exist with real keys
                 x: 'placeholder',
                 y: 'placeholder',
                 kid: 'dev-key-1',
@@ -58,6 +59,7 @@ export function getJWKS(): ReturnType<typeof createLocalJWKSet> {
             }]
         };
         cachedJWKS = createLocalJWKSet(devJwks);
+        lastCacheTime = now;
         return cachedJWKS;
     }
 
@@ -70,6 +72,7 @@ export function getJWKS(): ReturnType<typeof createLocalJWKSet> {
         }
 
         cachedJWKS = createLocalJWKSet(raw);
+        lastCacheTime = now;
         logger.info({ keyCount: raw.keys.length }, 'JWKS loaded successfully');
         return cachedJWKS;
     } catch (err) {
