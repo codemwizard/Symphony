@@ -1,7 +1,7 @@
 import { describe, it, beforeEach, mock } from 'node:test';
 import * as assert from 'node:assert';
 import { Pool } from 'pg';
-import { IngressAttestationService, IngressEnvelope } from '../../libs/attestation/IngressAttestationMiddleware.js';
+import { IngressAttestationService, IngressEnvelope, InvalidEnvelopeError, createIngressAttestationMiddleware } from '../../libs/attestation/IngressAttestationMiddleware.js';
 
 console.log('DEBUG: IngressAttestationMiddleware.spec.ts loaded');
 const VALID_SIGNATURE = 'a'.repeat(64);
@@ -151,6 +151,33 @@ describe('IngressAttestationService', () => {
             assert.ok(sql.includes('WHERE id = $1 AND attested_at = $2'));
             assert.strictEqual(params[2], 'SUCCESS');
             console.log('DEBUG: test5 finished');
+        });
+    });
+
+    describe('createIngressAttestationMiddleware()', () => {
+        it('should require x-timestamp header', async () => {
+            const middleware = createIngressAttestationMiddleware(mockPool as unknown as Pool);
+            const req = {
+                headers: {
+                    'x-signature': VALID_SIGNATURE,
+                    'x-request-id': 'req-1',
+                    'x-idempotency-key': 'idem-1'
+                },
+                body: {}
+            } as unknown as import('express').Request;
+            const res = {
+                on: () => undefined,
+                statusCode: 200
+            } as unknown as import('express').Response;
+            let capturedError: unknown;
+            const next = (err?: unknown) => {
+                capturedError = err;
+            };
+
+            await middleware(req, res, next);
+
+            assert.ok(capturedError instanceof InvalidEnvelopeError);
+            assert.strictEqual((capturedError as InvalidEnvelopeError).message, 'Missing x-timestamp header');
         });
     });
 });
