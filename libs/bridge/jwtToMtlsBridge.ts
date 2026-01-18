@@ -51,6 +51,7 @@ export const jwtToMtlsBridge = {
                 audience: JWT_AUDIENCE,
                 clockTolerance: CLOCK_TOLERANCE_SECONDS,
                 requiredClaims: ['sub', 'iss', 'aud', 'exp', 'iat'],
+                algorithms: ['ES256'] // SECURITY: Prevent alg confusion
             });
             claims = payload as SymphonyJWTPayload;
         } catch (error: unknown) {
@@ -68,7 +69,7 @@ export const jwtToMtlsBridge = {
             version: 'v1',
             requestId: requestId,
             issuedAt: now,
-            issuerService: 'ingress-gateway',
+            issuerService: 'ingest-api',
             subjectType: 'client',
             subjectId: claims.sub,
             tenantId: 'tenant_default',

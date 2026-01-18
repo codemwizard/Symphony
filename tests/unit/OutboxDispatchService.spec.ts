@@ -74,6 +74,12 @@ describe('OutboxDispatchService', () => {
             assert.strictEqual(result.outboxId, 'outbox-1');
             assert.strictEqual(result.status, 'PENDING');
 
+            // Verify pool query uses atomic insert-select-notify
+            // The insert happens on the client, not the pool directly
+            const insertCalls = mockClient.query.mock.calls.filter((c: { arguments: unknown[] }) =>
+                typeof c.arguments[0] === 'string' && (c.arguments[0] as string).includes('INSERT INTO payment_outbox')
+            );
+            assert.ok(insertCalls.length > 0, 'Should insert into outbox via client');
             // Verify call order: BEGIN -> Ledger -> Outbox -> COMMIT
             const queries = mockClient.query.mock.calls.map((c: { arguments: unknown[] }) => c.arguments[0]) as string[];
             assert.strictEqual(queries[0], 'BEGIN');

@@ -1,11 +1,14 @@
 import { IdentityEnvelopeV1, ValidatedIdentityContext } from "./identity.js";
+import { IdentityEnvelopeV1Schema } from "../validation/identitySchema.js";
 import { validatePolicyVersion } from "../db/policy.js";
 import { TrustFabric } from "../auth/trustFabric.js";
 import crypto from "crypto";
 import { KeyManager } from "../crypto/keyManager.js";
+import { LRUCache } from "lru-cache";
 
 // OU Interaction Graph (Phase 3)
 // Allowed issuers for each service/OU (service-to-service directional trust)
+// DEFAULT DENY: Any service not listed here accepts NO issuers by default.
 const ALLOWED_ISSUERS: Record<string, string[]> = {
     "control-plane": ["client", "ingest-api"],
     "ingest-api": ["client", "ingest-api"],
@@ -20,6 +23,13 @@ const USER_ALLOWED_ISSUERS = new Set(["ingest-api"]); // issuerService on the en
 // SEC-7R-FIX: Clock skew tolerance and max token age
 const CLOCK_SKEW_MS = 30_000; // 30 seconds
 const MAX_TOKEN_AGE_MS = 5 * 60 * 1000; // 5 minutes
+
+// SEC-FIX: Replay Protection (In-Memory LRU)
+// Stores requestId for the duration of its validity window
+const replayCache = new LRUCache<string, boolean>({
+    max: 10000,
+    ttl: MAX_TOKEN_AGE_MS + CLOCK_SKEW_MS
+});
 
 function normalizeStr(v: string): string {
     return v.trim();
@@ -72,17 +82,13 @@ function buildDataToSign(envelope: IdentityEnvelopeV1): string {
  * Verifies the identity envelope and returns a validated, immutable context.
  * Throws on any violation (Fail-Closed).
  *
- * IDENTITY-7B:
- * - Users only permitted at ingest-api
- * - User issuer allowlist
- * - trustTier='user' required for user
- * - user must not present mTLS proof
- * - user must be tenant-anchored (participantId required)
- * - participant fields are included in signature payload
- *
- * SEC-7R-FIX:
- * - timing-safe HMAC comparison
- * - freshness checks with skew tolerance
+ * VALIDATION ORDER (SECURITY CRITICAL):
+ * 1. Schema & Type Safety (Fail-Fast)
+ * 2. Freshness & Replay (Fail-Fast)
+ * 3. OU & Policy Authorization (Pre-Computation)
+ * 4. mTLS Binding (Transport check)
+ * 5. HMAC Signature (Computationally Expensive - LAST)
+ * 6. Business Logic (Policy Version, TrustFabric) (Post-Auth)
  */
 export async function verifyIdentity(
     envelope: IdentityEnvelopeV1,
@@ -90,13 +96,22 @@ export async function verifyIdentity(
     keyManager: KeyManager,
     certFingerprint?: string
 ): Promise<ValidatedIdentityContext> {
-    // 1) Basic Schema & Version Validation
+    // 1) Schema Validation (Strict Entry Gate)
+    // Ensures trustTier checks and discriminated unions are respected before any logic runs.
+    try {
+        IdentityEnvelopeV1Schema.parse(envelope);
+    } catch (error) {
+        throw new Error(`Identity Schema Violation: ${error instanceof Error ? error.message : String(error)}`);
+    }
+
     if (envelope.version !== "v1") throw new Error("Unsupported identity version");
 
-    // 2) Freshness check
+    // 2) Freshness check & Replay Protection
     const issuedAtMs = new Date(envelope.issuedAt).getTime();
     const now = Date.now();
     if (Number.isNaN(issuedAtMs)) throw new Error("Invalid issuedAt timestamp");
+
+    // Check age
     if (now - issuedAtMs > MAX_TOKEN_AGE_MS + CLOCK_SKEW_MS) {
         throw new Error("Identity token too old - re-authentication required");
     }
@@ -104,35 +119,36 @@ export async function verifyIdentity(
         throw new Error("Identity token issued in the future");
     }
 
-    // 3) IDENTITY-7B: User boundary enforcement (pre-HMAC: cheap fail-fast)
+    // Check Replay
+    if (replayCache.has(envelope.requestId)) {
+        throw new Error(`Replay detected: requestId ${envelope.requestId} already processed`);
+    }
+    replayCache.set(envelope.requestId, true);
+
+    // 3) OU Interaction & Boundary Check (BEFORE Signature)
+    // Prevents Oracle attacks by validating expected topology first.
+
+    // A) User Boundary Enforcement
     if (envelope.subjectType === "user") {
         // Boundary: users only at ingest-api
         if (!USER_ENTRYPOINT_SERVICES.has(currentService)) {
             throw new Error(`User identity not permitted at ${currentService}`);
         }
 
-        // Issuer allowlist: user envelopes are produced by ingest-api after JWT verification
+        // Issuer allowlist: user envelopes are produced by ingest-api
         if (!USER_ALLOWED_ISSUERS.has(envelope.issuerService)) {
             throw new Error(`Invalid user issuer: ${envelope.issuerService}`);
         }
 
-        // Trust tier: MUST be 'user'
-        if ((envelope as Record<string, unknown>).trustTier !== "user") {
-            throw new Error(
-                `User identity requires trustTier='user', got '${(envelope as Record<string, unknown>).trustTier}'`
-            );
+        // Trust tier: MUST be 'user' (Redundant with Schema, but defensive depth)
+        if (envelope.trustTier !== "user") {
+            // Should never happen if schema passes
+            throw new Error(`Invariant Violation: User identity has non-user trustTier`);
         }
 
-        // mTLS rejection: check BOTH param and envelope field
-        // envelope check is handled by union type (property doesn't exist)
-        // verifyIdentity param check:
+        // mTLS rejection (Param check)
         if (certFingerprint) {
             throw new Error("User identity must not present mTLS proof");
-        }
-
-        // Runtime check for envelope field leakage (though TS forbids it)
-        if ('certFingerprint' in envelope && (envelope as Record<string, unknown>).certFingerprint) {
-            throw new Error("User identity must not present mTLS proof (envelope field)");
         }
 
         // Tenant anchor required
@@ -141,7 +157,23 @@ export async function verifyIdentity(
         }
     }
 
-    // 4) Service mTLS binding (fail-closed, explicit)
+    // B) Service/OU Allowlist (Default Deny)
+    const allowed = ALLOWED_ISSUERS[currentService];
+    if (!allowed) {
+        throw new Error(`Configuration Error: ${currentService} has no allowed issuers defined (Default Deny).`);
+    }
+
+    if (!allowed.includes(envelope.issuerService)) {
+        // Special case for initial client requests
+        const isClientAllowed = envelope.subjectType === "client" && allowed.includes("client");
+
+        if (!isClientAllowed) {
+            // Generic error message for external callers, log detail for audit
+            throw new Error(`Unauthorized OU interaction: Issuer not allowed at ${currentService}`);
+        }
+    }
+
+    // 4) Service mTLS binding (Fail-Closed)
     if (envelope.subjectType === "service") {
         // Both must exist
         if (!certFingerprint) {
@@ -157,9 +189,8 @@ export async function verifyIdentity(
         }
     }
 
-    // 5) HMAC signature verification (now includes participant fields for user)
+    // 5) HMAC Signature Verification (The Heavy Lift)
     const dataToSign = buildDataToSign(envelope);
-
     const expectedSignature = crypto
         .createHmac("sha256", await keyManager.deriveKey("identity/hmac"))
         .update(dataToSign)
@@ -175,31 +206,11 @@ export async function verifyIdentity(
         throw new Error("Invalid identity signature");
     }
 
-    // 6) Policy Version Validation (DB access)
+    // 6) Post-Auth Policy & TrustFabric Check
     await validatePolicyVersion(envelope.policyVersion);
 
-    // 7) Directional Trust Enforcement (OU interaction graph)
-    // - Users cannot appear here except at ingest-api (already enforced above)
-    const allowed = ALLOWED_ISSUERS[currentService];
-    if (!allowed || !allowed.includes(envelope.issuerService)) {
-        // Special case for initial client requests
-        if (envelope.subjectType === "client" && allowed && allowed.includes("client")) {
-            // allowed
-        } else if (envelope.subjectType === "user") {
-            // user already gated above; if we reached here, it's an OU config mismatch
-            throw new Error(`User identity OU policy mismatch at ${currentService}`);
-        } else {
-            throw new Error(
-                `Unauthorized OU interaction: ${envelope.issuerService} -> ${currentService}`
-            );
-        }
-    }
-
-    // 8) TrustFabric enforcement for services (certificate trust + serviceName binding)
-    // SEC-FIX: TrustFabric.resolveIdentity is now async and throws on failure
     if (envelope.subjectType === "service") {
         const identity = await TrustFabric.resolveIdentity(certFingerprint!);
-        // TrustFabric throws TrustViolationError if revoked/expired/inactive/unknown
 
         if (identity.serviceName !== envelope.issuerService) {
             throw new Error(
@@ -208,7 +219,7 @@ export async function verifyIdentity(
         }
     }
 
-    // 9) Freeze and return
+    // 7) Freeze and return
     return Object.freeze({
         ...envelope,
         ...(certFingerprint ? { certFingerprint } : {})
