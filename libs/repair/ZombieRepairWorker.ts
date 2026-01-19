@@ -4,29 +4,25 @@ import { pino } from 'pino';
 const logger = pino({ name: 'ZombieRepairWorker' });
 
 // Configuration
-const ZOMBIE_THRESHOLD_SECONDS = 60;    // Records stuck > 60s are zombies
-const HARD_FAILURE_TTL_SECONDS = 600;   // Records stuck > 10min need manual intervention
+const ZOMBIE_THRESHOLD_SECONDS = 120;    // Records stuck > 120s are zombies
 const REPAIR_BATCH_SIZE = 100;
-const REPAIR_INTERVAL_MS = 30000;       // Run every 30 seconds
+const REPAIR_INTERVAL_MS = 60000;       // Run every 60 seconds
 
 /**
  * Zombie Repair Result
  */
 export interface RepairResult {
-    zombiesRepaired: number;
-    recordsEscalated: number;
-    attestationsReconciled: number;
+    zombiesRequeued: number;
     errors: string[];
 }
 
 /**
  * Zombie Repair Worker
- * 
+ *
  * Runs periodically to:
- * 1. Identify "zombie" records stuck in PENDING/IN_FLIGHT state
- * 2. Reset them to RECOVERING for retry
- * 3. Escalate records past TTL to manual review
- * 4. Reconcile attestation gaps
+ * 1. Identify records whose latest attempt is DISPATCHING and stale
+ * 2. Requeue them to pending with the same outbox_id/sequence_id
+ * 3. Append a ZOMBIE_REQUEUE attempt for auditability
  */
 export class ZombieRepairWorker {
     private isRunning = false;
@@ -49,8 +45,8 @@ export class ZombieRepairWorker {
         logger.info('ZombieRepairWorker started');
 
         // Run immediately, then on interval
-        this.runRepairCycle();
-        this.intervalHandle = setInterval(() => this.runRepairCycle(), REPAIR_INTERVAL_MS);
+        void this.runRepairCycle();
+        this.intervalHandle = setInterval(() => void this.runRepairCycle(), REPAIR_INTERVAL_MS);
     }
 
     /**
@@ -70,9 +66,7 @@ export class ZombieRepairWorker {
      */
     public async runRepairCycle(): Promise<RepairResult> {
         const result: RepairResult = {
-            zombiesRepaired: 0,
-            recordsEscalated: 0,
-            attestationsReconciled: 0,
+            zombiesRequeued: 0,
             errors: []
         };
 
@@ -80,87 +74,116 @@ export class ZombieRepairWorker {
         try {
             await client.query('BEGIN');
 
-            // 1. REPAIR SOFT ZOMBIES (60s < age < TTL)
-            // These are transactions stuck in IN_FLIGHT that should be retried
-            const softZombies = await client.query(`
-                UPDATE payment_outbox
-                SET status = 'RECOVERING',
-                last_error = 'ZOMBIE_REPAIR: Stuck in flight > ${ZOMBIE_THRESHOLD_SECONDS}s',
-                retry_count = retry_count + 1
-                WHERE status = 'IN_FLIGHT'
-                  AND last_attempt_at < NOW() - INTERVAL '${ZOMBIE_THRESHOLD_SECONDS} seconds'
-                  AND last_attempt_at > NOW() - INTERVAL '${HARD_FAILURE_TTL_SECONDS} seconds'
-                RETURNING id, participant_id, sequence_id;
-            `);
-            result.zombiesRepaired = softZombies.rowCount ?? 0;
+            const staleAttempts = await client.query(`
+                SELECT latest.outbox_id,
+                       latest.instruction_id,
+                       latest.participant_id,
+                       latest.sequence_id,
+                       latest.idempotency_key,
+                       latest.rail_type,
+                       latest.payload,
+                       latest.attempt_no
+                FROM (
+                    SELECT DISTINCT ON (outbox_id)
+                        outbox_id,
+                        instruction_id,
+                        participant_id,
+                        sequence_id,
+                        idempotency_key,
+                        rail_type,
+                        payload,
+                        attempt_no,
+                        state,
+                        claimed_at
+                    FROM payment_outbox_attempts
+                    ORDER BY outbox_id, claimed_at DESC
+                ) AS latest
+                WHERE latest.state = 'DISPATCHING'
+                  AND latest.claimed_at < NOW() - INTERVAL '${ZOMBIE_THRESHOLD_SECONDS} seconds'
+                LIMIT $1;
+            `, [REPAIR_BATCH_SIZE]);
 
-            // 2. ESCALATE HARD FAILURES (age > TTL)
-            // These need manual intervention - move to FAILED with escalation flag
-            const hardFailures = await client.query(`
-                UPDATE payment_outbox
-                SET status = 'FAILED',
-                last_error = 'ESCALATED: Transaction exceeded TTL of ${HARD_FAILURE_TTL_SECONDS}s',
-                processed_at = NOW()
-                WHERE status IN ('PENDING', 'IN_FLIGHT', 'RECOVERING')
-                  AND created_at < NOW() - INTERVAL '${HARD_FAILURE_TTL_SECONDS} seconds'
-                RETURNING id, participant_id, sequence_id;
-            `);
-            result.recordsEscalated = hardFailures.rowCount ?? 0;
+            if (staleAttempts.rows.length > 0) {
+                const pendingValues: Array<unknown> = [];
+                const pendingPlaceholders: string[] = [];
+                const attemptValues: Array<unknown> = [];
+                const attemptPlaceholders: string[] = [];
 
-            // 3. RECONCILE GHOST ATTESTATIONS
-            // Find attestations that have no corresponding outbox entry and recover them
-            const ghostRecovery = await client.query(`
-                INSERT INTO payment_outbox (
-                    participant_id, 
-                    sequence_id, 
-                    idempotency_key, 
-                    event_type,
-                    payload, 
-                    status
-                )
-                SELECT 
-                    ing.participant_id,
-                    ing.sequence_id,
-                    'GHOST_RECOVERED_' || ing.id::TEXT,
-                    'GHOST_RECOVERY',
-                    '{"recovered": true}'::JSONB,
-                    'RECOVERING'
-                FROM ingress_attestations ing
-                LEFT JOIN payment_outbox out 
-                    ON ing.id = out.id
-                WHERE out.id IS NULL
-                  AND ing.execution_started = FALSE
-                  AND ing.attested_at < NOW() - INTERVAL '${ZOMBIE_THRESHOLD_SECONDS} seconds'
-                LIMIT ${REPAIR_BATCH_SIZE}
-                ON CONFLICT DO NOTHING
-                RETURNING id;
-            `);
-            result.attestationsReconciled = ghostRecovery.rowCount ?? 0;
+                staleAttempts.rows.forEach((row, index) => {
+                    const pendingOffset = index * 8;
+                    pendingPlaceholders.push(`($${pendingOffset + 1}, $${pendingOffset + 2}, $${pendingOffset + 3}, $${pendingOffset + 4}, $${pendingOffset + 5}, $${pendingOffset + 6}, $${pendingOffset + 7}, $${pendingOffset + 8}, NOW())`);
+                    pendingValues.push(
+                        row.outbox_id,
+                        row.instruction_id,
+                        row.participant_id,
+                        row.sequence_id,
+                        row.idempotency_key,
+                        row.rail_type,
+                        JSON.stringify(row.payload),
+                        row.attempt_no
+                    );
 
-            // 4. Update attestation execution flags for recovered ghosts
-            if (result.attestationsReconciled > 0) {
+                    const attemptOffset = index * 10;
+                    attemptPlaceholders.push(`($${attemptOffset + 1}, $${attemptOffset + 2}, $${attemptOffset + 3}, $${attemptOffset + 4}, $${attemptOffset + 5}, $${attemptOffset + 6}, $${attemptOffset + 7}, 'ZOMBIE_REQUEUE', $${attemptOffset + 8}, NOW(), NOW(), $${attemptOffset + 9}, $${attemptOffset + 10}, NOW())`);
+                    attemptValues.push(
+                        row.outbox_id,
+                        row.instruction_id,
+                        row.participant_id,
+                        row.sequence_id,
+                        row.idempotency_key,
+                        row.rail_type,
+                        JSON.stringify(row.payload),
+                        row.attempt_no,
+                        'ZOMBIE_REQUEUE',
+                        'Dispatch attempt exceeded threshold'
+                    );
+                });
+
                 await client.query(`
-                    UPDATE ingress_attestations
-                    SET execution_started = TRUE
-                    FROM payment_outbox out
-                    WHERE ingress_attestations.id = CAST(NULLIF(regexp_replace(out.idempotency_key, '^GHOST_RECOVERED_', ''), out.idempotency_key) AS UUID)
-                      AND out.event_type = 'GHOST_RECOVERY'
-                      AND ingress_attestations.execution_started = FALSE;
-                `);
+                    INSERT INTO payment_outbox_pending (
+                        outbox_id,
+                        instruction_id,
+                        participant_id,
+                        sequence_id,
+                        idempotency_key,
+                        rail_type,
+                        payload,
+                        attempt_count,
+                        next_attempt_at
+                    ) VALUES ${pendingPlaceholders.join(', ')}
+                    ON CONFLICT (instruction_id, idempotency_key)
+                    DO UPDATE SET
+                        attempt_count = EXCLUDED.attempt_count,
+                        next_attempt_at = NOW();
+                `, pendingValues);
+
+                await client.query(`
+                    INSERT INTO payment_outbox_attempts (
+                        outbox_id,
+                        instruction_id,
+                        participant_id,
+                        sequence_id,
+                        idempotency_key,
+                        rail_type,
+                        payload,
+                        state,
+                        attempt_no,
+                        claimed_at,
+                        completed_at,
+                        error_code,
+                        error_message,
+                        created_at
+                    ) VALUES ${attemptPlaceholders.join(', ')};
+                `, attemptValues);
+
+                result.zombiesRequeued = staleAttempts.rows.length;
             }
 
             await client.query('COMMIT');
 
-            // Log repair activity
-            if (result.zombiesRepaired > 0 || result.recordsEscalated > 0 || result.attestationsReconciled > 0) {
-                logger.info({
-                    event: 'REPAIR_CYCLE_COMPLETE',
-                    zombiesRepaired: result.zombiesRepaired,
-                    recordsEscalated: result.recordsEscalated,
-                    attestationsReconciled: result.attestationsReconciled
-                });
+            if (result.zombiesRequeued > 0) {
+                logger.info({ zombiesRequeued: result.zombiesRequeued }, 'Zombie requeue complete');
             }
-
         } catch (error: unknown) {
             await client.query('ROLLBACK');
             const errorMessage = error instanceof Error ? error.message : 'Unknown error';
@@ -179,24 +202,16 @@ export class ZombieRepairWorker {
     public async getZombieCount(): Promise<number> {
         const result = await this.pool.query(`
             SELECT COUNT(*) as count
-            FROM payment_outbox
-            WHERE status = 'IN_FLIGHT'
-              AND last_attempt_at < NOW() - INTERVAL '${ZOMBIE_THRESHOLD_SECONDS} seconds';
-        `);
-        return parseInt(result.rows[0]?.count ?? '0', 10);
-    }
-
-    /**
-     * Get ghost attestation count (for evidence bundle)
-     */
-    public async getGhostCount(): Promise<number> {
-        const result = await this.pool.query(`
-            SELECT COUNT(*) as count
-            FROM ingress_attestations ing
-            LEFT JOIN payment_outbox out ON ing.id = out.id
-            WHERE out.id IS NULL
-              AND ing.execution_started = FALSE
-              AND ing.attested_at < NOW() - INTERVAL '${ZOMBIE_THRESHOLD_SECONDS} seconds';
+            FROM (
+                SELECT DISTINCT ON (outbox_id)
+                    outbox_id,
+                    state,
+                    claimed_at
+                FROM payment_outbox_attempts
+                ORDER BY outbox_id, claimed_at DESC
+            ) AS latest
+            WHERE latest.state = 'DISPATCHING'
+              AND latest.claimed_at < NOW() - INTERVAL '${ZOMBIE_THRESHOLD_SECONDS} seconds';
         `);
         return parseInt(result.rows[0]?.count ?? '0', 10);
     }

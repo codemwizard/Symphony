@@ -75,12 +75,13 @@ export interface IngressRecord {
 }
 
 export interface OutboxRecord {
-    readonly id: string;
+    readonly outbox_id: string;
+    readonly instruction_id: string;
     readonly idempotency_key: string;
-    readonly status: string;
-    readonly retry_count: number;
+    readonly state: string;
+    readonly attempt_no: number;
     readonly created_at: string;
-    readonly updated_at: string;
+    readonly updated_at: string | null;
 }
 
 export interface LedgerRecord {
@@ -110,7 +111,7 @@ export interface ExportConfig {
 export class EvidenceExportService {
     private readonly pool: Pool;
     private readonly config: ExportConfig;
-    private readonly VIEW_VERSION = '7B.1.0';
+    private readonly VIEW_VERSION = '7B.2.0';
     private readonly fs: typeof fs;
 
     constructor(pool: Pool, config: ExportConfig, filesystem?: typeof fs) {
@@ -129,7 +130,11 @@ export class EvidenceExportService {
             const result = await client.query(`
                 SELECT
                     (SELECT COALESCE(MAX(id)::text, '0') FROM ingress_attestations) AS max_ingress_id,
-                    (SELECT COALESCE(MAX(id)::text, '0') FROM payment_outbox) AS max_outbox_id,
+                    (SELECT COALESCE(MAX(outbox_id)::text, '0') FROM (
+                        SELECT outbox_id FROM payment_outbox_pending
+                        UNION ALL
+                        SELECT outbox_id FROM payment_outbox_attempts
+                    ) AS outbox_ids) AS max_outbox_id,
                     (SELECT COALESCE(MAX(id)::text, '0') FROM ledger_entries) AS max_ledger_id
             `);
 
@@ -275,11 +280,20 @@ export class EvidenceExportService {
         toId: string
     ): Promise<OutboxRecord[]> {
         const result = await client.query(
-            `SELECT id, idempotency_key, status, retry_count, created_at, updated_at
-             FROM payment_outbox
-             WHERE id > $1 AND id <= $2
-             ORDER BY id ASC
-             LIMIT $3`,
+            `WITH latest_attempts AS (
+                SELECT DISTINCT ON (outbox_id)
+                    outbox_id,
+                    instruction_id,
+                    idempotency_key,
+                    state,
+                    attempt_no,
+                    created_at,
+                    completed_at
+                FROM payment_outbox_attempts
+                WHERE outbox_id::text > $1 AND outbox_id::text <= $2
+                ORDER BY outbox_id, created_at DESC
+            ),\n            pending AS (
+                SELECT\n                    outbox_id,\n                    instruction_id,\n                    idempotency_key,\n                    'PENDING' AS state,\n                    attempt_count AS attempt_no,\n                    created_at,\n                    NULL::timestamptz AS completed_at\n                FROM payment_outbox_pending\n                WHERE outbox_id::text > $1 AND outbox_id::text <= $2\n            ),\n            combined AS (\n                SELECT *, 1 AS priority FROM pending\n                UNION ALL\n                SELECT *, 2 AS priority FROM latest_attempts\n            )\n            SELECT DISTINCT ON (outbox_id)\n                outbox_id,\n                instruction_id,\n                idempotency_key,\n                state,\n                attempt_no,\n                created_at,\n                completed_at\n            FROM combined\n            ORDER BY outbox_id, priority ASC, created_at DESC\n            LIMIT $3`,
             [fromId, toId, this.config.batchSize]
         );
         return result.rows as OutboxRecord[];
@@ -310,7 +324,7 @@ export class EvidenceExportService {
     ): string {
         // Sort records by ID for deterministic hashing
         const sortedIngress = [...ingress].sort((a, b) => a.id.localeCompare(b.id));
-        const sortedOutbox = [...outbox].sort((a, b) => a.id.localeCompare(b.id));
+        const sortedOutbox = [...outbox].sort((a, b) => a.outbox_id.localeCompare(b.outbox_id));
         const sortedLedger = [...ledger].sort((a, b) => a.id.localeCompare(b.id));
 
         const payload = JSON.stringify({
