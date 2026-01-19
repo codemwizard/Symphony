@@ -1,7 +1,7 @@
 /**
  * Unit Tests: Zombie Repair Worker
  * 
- * Tests temporal idempotency and ghost reconciliation.
+ * Tests temporal idempotency and requeue behavior.
  * Refactored to use node:test and call production code.
  * 
  * @see libs/repair/ZombieRepairWorker.ts
@@ -33,8 +33,23 @@ describe('ZombieRepairWorker', () => {
     describe('runRepairCycle()', () => {
         it('should execute repair queries with correct SQL', async () => {
             // Mock DB response to ensure all branches are taken
-            mockClient.query.mock.mockImplementation(async () => {
-                return { rows: [{ id: '123' }], rowCount: 1 };
+            mockClient.query.mock.mockImplementation(async (sql: string) => {
+                if (sql === 'BEGIN' || sql === 'COMMIT') return {};
+                if (sql.includes('FROM payment_outbox_attempts')) {
+                    return {
+                        rows: [{
+                            outbox_id: 'outbox-1',
+                            instruction_id: 'instruction-1',
+                            participant_id: 'participant-1',
+                            sequence_id: 10,
+                            idempotency_key: 'idem-1',
+                            rail_type: 'PAYMENT',
+                            payload: { amount: 100, currency: 'USD', destination: 'dest' },
+                            attempt_no: 2
+                        }]
+                    };
+                }
+                return { rows: [], rowCount: 0 };
             });
 
             const result = await worker.runRepairCycle();
@@ -45,21 +60,14 @@ describe('ZombieRepairWorker', () => {
             const queries = mockClient.query.mock.calls.map((c: any) => c.arguments[0] as string);
             // console.log('CAPTURED QUERIES:', JSON.stringify(queries, null, 2));
 
-            // Check soft zombie update
-            assert.ok(queries.some((q) => q.includes("UPDATE payment_outbox") && q.includes("status = 'RECOVERING'")));
+            // Check stale dispatching lookup
+            assert.ok(queries.some((q) => q.includes('FROM payment_outbox_attempts')));
 
-            // Check hard failure update
-            assert.ok(queries.some((q) => q.includes("UPDATE payment_outbox") && q.includes("status = 'FAILED'")));
+            // Check requeue insert
+            assert.ok(queries.some((q) => q.includes('INSERT INTO payment_outbox_pending')));
 
-            // Check ghost recovery insert
-            assert.ok(queries.some((q) => q.includes("INSERT INTO payment_outbox") && q.includes("GHOST_RECOVERY")));
-
-            // Check attestation update (optimized)
-            assert.ok(queries.some((q) =>
-                q.includes("UPDATE ingress_attestations") &&
-                q.includes("FROM payment_outbox out") &&
-                q.includes("CAST(NULLIF(regexp_replace")
-            ));
+            // Check audit attempt insert
+            assert.ok(queries.some((q) => q.includes('INSERT INTO payment_outbox_attempts')));
         });
 
         it('should define transaction boundaries', async () => {

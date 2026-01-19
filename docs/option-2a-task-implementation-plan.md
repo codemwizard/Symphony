@@ -96,6 +96,9 @@ This plan replaces the current outbox **in place** with a hot pending queue plus
 - `instruction_id TEXT NOT NULL`
 - `participant_id TEXT NOT NULL`
 - `sequence_id BIGINT NOT NULL`
+- `idempotency_key TEXT NOT NULL`
+- `rail_type TEXT NOT NULL`
+- `payload JSONB NOT NULL`
 - `attempt_no INT NOT NULL`
 - `state TEXT NOT NULL` (enum recommended: DISPATCHING, DISPATCHED, RETRYABLE, FAILED, ZOMBIE_REQUEUE)
 - `claimed_at TIMESTAMPTZ NOT NULL DEFAULT NOW()`

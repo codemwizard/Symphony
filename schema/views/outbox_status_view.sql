@@ -1,77 +1,71 @@
--- Phase-7B: Outbox Status View
--- Exposes the state of the transactional outbox in supervisor terms.
---
--- Counts: Pending, Dispatched, Failed (DLQ), Retry counts and aging
--- 
--- Supervisors can detect backlog or failure patterns.
--- Data aligns exactly with outbox records.
+-- Phase-7B: Outbox Status View (Option 2A)
+-- Exposes the state of the hot pending queue and append-only attempts log.
 
 CREATE OR REPLACE VIEW supervisor_outbox_status AS
+WITH latest_attempts AS (
+    SELECT DISTINCT ON (outbox_id)
+        outbox_id,
+        state,
+        attempt_no,
+        claimed_at,
+        completed_at,
+        created_at
+    FROM payment_outbox_attempts
+    ORDER BY outbox_id, claimed_at DESC
+)
 SELECT
-    '7B.1.0' AS view_version,
+    '7B.2.0' AS view_version,
     NOW() AS generated_at,
-    
-    -- Status Counts
-    (SELECT COUNT(*) FROM payment_outbox WHERE status = 'PENDING') AS pending_count,
-    (SELECT COUNT(*) FROM payment_outbox WHERE status = 'IN_FLIGHT') AS in_flight_count,
-    (SELECT COUNT(*) FROM payment_outbox WHERE status = 'SUCCESS') AS success_count,
-    (SELECT COUNT(*) FROM payment_outbox WHERE status = 'FAILED') AS failed_count,
-    (SELECT COUNT(*) FROM payment_outbox WHERE status = 'RECOVERING') AS recovering_count,
-    
-    -- DLQ Analysis (status = FAILED)
-    (SELECT COUNT(*) FROM payment_outbox WHERE status = 'FAILED' AND retry_count >= 5) AS dlq_count,
-    
-    -- Retry Distribution
-    (SELECT COUNT(*) FROM payment_outbox WHERE retry_count = 0) AS retry_0,
-    (SELECT COUNT(*) FROM payment_outbox WHERE retry_count = 1) AS retry_1,
-    (SELECT COUNT(*) FROM payment_outbox WHERE retry_count = 2) AS retry_2,
-    (SELECT COUNT(*) FROM payment_outbox WHERE retry_count = 3) AS retry_3,
-    (SELECT COUNT(*) FROM payment_outbox WHERE retry_count = 4) AS retry_4,
-    (SELECT COUNT(*) FROM payment_outbox WHERE retry_count >= 5) AS retry_5_plus,
-    
-    -- Aging Analysis
-    (
-        SELECT COUNT(*) 
-        FROM payment_outbox 
-        WHERE status NOT IN ('SUCCESS', 'FAILED') 
-          AND created_at < NOW() - INTERVAL '1 minute'
-    ) AS stale_1m,
-    
-    (
-        SELECT COUNT(*) 
-        FROM payment_outbox 
-        WHERE status NOT IN ('SUCCESS', 'FAILED') 
-          AND created_at < NOW() - INTERVAL '5 minutes'
-    ) AS stale_5m,
-    
-    (
-        SELECT COUNT(*) 
-        FROM payment_outbox 
-        WHERE status NOT IN ('SUCCESS', 'FAILED') 
-          AND created_at < NOW() - INTERVAL '1 hour'
-    ) AS stale_1h,
-    
-    -- Oldest Non-Terminal Record
+
+    -- Pending counts
+    (SELECT COUNT(*) FROM payment_outbox_pending) AS pending_count,
+    (SELECT COUNT(*) FROM payment_outbox_pending WHERE next_attempt_at <= NOW()) AS due_pending_count,
+
+    -- Latest attempt state counts
+    (SELECT COUNT(*) FROM latest_attempts WHERE state = 'DISPATCHING') AS dispatching_count,
+    (SELECT COUNT(*) FROM latest_attempts WHERE state = 'DISPATCHED') AS dispatched_count,
+    (SELECT COUNT(*) FROM latest_attempts WHERE state = 'FAILED') AS failed_count,
+    (SELECT COUNT(*) FROM latest_attempts WHERE state = 'RETRYABLE') AS retryable_count,
+    (SELECT COUNT(*) FROM latest_attempts WHERE state = 'ZOMBIE_REQUEUE') AS zombie_requeue_count,
+
+    -- DLQ heuristic (attempt_no >= 5 and terminal)
+    (SELECT COUNT(*) FROM latest_attempts WHERE state = 'FAILED' AND attempt_no >= 5) AS dlq_count,
+
+    -- Attempt distribution (latest attempt_no)
+    (SELECT COUNT(*) FROM latest_attempts WHERE attempt_no = 1) AS attempt_1,
+    (SELECT COUNT(*) FROM latest_attempts WHERE attempt_no = 2) AS attempt_2,
+    (SELECT COUNT(*) FROM latest_attempts WHERE attempt_no = 3) AS attempt_3,
+    (SELECT COUNT(*) FROM latest_attempts WHERE attempt_no = 4) AS attempt_4,
+    (SELECT COUNT(*) FROM latest_attempts WHERE attempt_no >= 5) AS attempt_5_plus,
+
+    -- Aging analysis
     (
         SELECT EXTRACT(EPOCH FROM (NOW() - MIN(created_at)))::INTEGER
-        FROM payment_outbox
-        WHERE status NOT IN ('SUCCESS', 'FAILED')
+        FROM payment_outbox_pending
     ) AS oldest_pending_age_seconds,
-    
-    -- Throughput (Last Hour)
+
+    -- Stuck dispatching count
     (
-        SELECT COUNT(*) 
-        FROM payment_outbox 
-        WHERE status = 'SUCCESS' 
-          AND updated_at >= NOW() - INTERVAL '1 hour'
-    ) AS success_last_hour,
-    
+        SELECT COUNT(*)
+        FROM latest_attempts
+        WHERE state = 'DISPATCHING'
+          AND claimed_at < NOW() - INTERVAL '120 seconds'
+    ) AS stuck_dispatching_count,
+
+    -- Throughput (last hour)
     (
-        SELECT COUNT(*) 
-        FROM payment_outbox 
-        WHERE status = 'FAILED' 
-          AND updated_at >= NOW() - INTERVAL '1 hour'
+        SELECT COUNT(*)
+        FROM payment_outbox_attempts
+        WHERE state = 'DISPATCHED'
+          AND completed_at >= NOW() - INTERVAL '1 hour'
+    ) AS dispatched_last_hour,
+
+    (
+        SELECT COUNT(*)
+        FROM payment_outbox_attempts
+        WHERE state = 'FAILED'
+          AND completed_at >= NOW() - INTERVAL '1 hour'
     ) AS failed_last_hour;
 
-COMMENT ON VIEW supervisor_outbox_status IS 
-    'Phase-7B: Read-only supervisor view for transactional outbox status, retry distribution, and aging analysis.';
+COMMENT ON VIEW supervisor_outbox_status IS
+    'Phase-7B Option 2A: Supervisor view for pending depth, attempt states, aging, and dispatch throughput.';

@@ -16,7 +16,6 @@ describe('OutboxDispatchService', () => {
     let service: OutboxDispatchService;
     let mockPool: { connect: ReturnType<typeof mock.fn>; query: ReturnType<typeof mock.fn> };
     let mockClient: { query: ReturnType<typeof mock.fn>; release: ReturnType<typeof mock.fn> };
-    let mockIdGenerator: { generateString: ReturnType<typeof mock.fn> };
 
     beforeEach(() => {
         mockClient = {
@@ -29,12 +28,7 @@ describe('OutboxDispatchService', () => {
             query: mock.fn(async () => ({ rows: [] }))
         };
 
-        mockIdGenerator = {
-            generateString: mock.fn(async () => '1234567890')
-        };
-
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        service = new OutboxDispatchService(mockPool as unknown as Pool, mockIdGenerator as any);
+        service = new OutboxDispatchService(mockPool as unknown as Pool);
     });
 
     describe('atomic dispatch', () => {
@@ -42,8 +36,9 @@ describe('OutboxDispatchService', () => {
         it('should dispatch to outbox and ledger in same transaction', async () => {
             const request = {
                 participantId: 'part-1',
+                instructionId: 'instruction-1',
                 idempotencyKey: 'idem-1',
-                eventType: 'PAYMENT' as const,
+                railType: 'PAYMENT' as const,
                 payload: {
                     amount: 1000,
                     currency: 'ZMW',
@@ -61,9 +56,10 @@ describe('OutboxDispatchService', () => {
             mockClient.query = mock.fn(async (sql: string) => {
                 if (sql === 'BEGIN') return {};
                 if (sql.includes('INSERT INTO ledger_entries')) return {};
-                if (sql.includes('SELECT id, status FROM payment_outbox')) return { rows: [] }; // No duplicate
-                if (sql.includes('INSERT INTO payment_outbox')) {
-                    return { rows: [{ id: 'outbox-1', created_at: new Date() }] };
+                if (sql.includes('SELECT outbox_id, sequence_id, created_at FROM payment_outbox_pending')) return { rows: [] }; // No duplicate
+                if (sql.includes('SELECT bump_participant_outbox_seq')) return { rows: [{ sequence_id: 42 }] };
+                if (sql.includes('INSERT INTO payment_outbox_pending')) {
+                    return { rows: [{ outbox_id: 'outbox-1', created_at: new Date() }] };
                 }
                 if (sql === 'COMMIT') return {};
                 return { rows: [] };
@@ -77,7 +73,7 @@ describe('OutboxDispatchService', () => {
             // Verify pool query uses atomic insert-select-notify
             // The insert happens on the client, not the pool directly
             const insertCalls = mockClient.query.mock.calls.filter((c: { arguments: unknown[] }) =>
-                typeof c.arguments[0] === 'string' && (c.arguments[0] as string).includes('INSERT INTO payment_outbox')
+                typeof c.arguments[0] === 'string' && (c.arguments[0] as string).includes('INSERT INTO payment_outbox_pending')
             );
             assert.ok(insertCalls.length > 0, 'Should insert into outbox via client');
             // Verify call order: BEGIN -> Ledger -> Outbox -> COMMIT
@@ -90,8 +86,9 @@ describe('OutboxDispatchService', () => {
         it('should rollback on error', async () => {
             const request = {
                 participantId: 'part-1',
+                instructionId: 'instruction-1',
                 idempotencyKey: 'idem-1',
-                eventType: 'PAYMENT' as const,
+                railType: 'PAYMENT' as const,
                 payload: { amount: 100, currency: 'USD', destination: 'dest' }
             };
 
@@ -116,15 +113,16 @@ describe('OutboxDispatchService', () => {
         it('should return existing record on duplicate idempotency key', async () => {
             const request = {
                 participantId: 'part-1',
+                instructionId: 'instruction-1',
                 idempotencyKey: 'idem-1',
-                eventType: 'PAYMENT' as const,
+                railType: 'PAYMENT' as const,
                 payload: { amount: 100, currency: 'USD', destination: 'dest' }
             };
 
             // Mock finding duplicate
             mockClient.query = mock.fn(async (sql: string) => {
-                if (sql.includes('SELECT id, status FROM payment_outbox')) {
-                    return { rows: [{ id: 'existing-1', status: 'PENDING', created_at: new Date(), sequence_id: 'seq-1' }] };
+                if (sql.includes('SELECT outbox_id, sequence_id, created_at FROM payment_outbox_pending')) {
+                    return { rows: [{ outbox_id: 'existing-1', sequence_id: 10, created_at: new Date() }] };
                 }
                 return { rows: [] };
             });
@@ -143,25 +141,34 @@ describe('OutboxDispatchService', () => {
         it('should handle concurrent insert race condition', async () => {
             const request = {
                 participantId: 'part-1',
+                instructionId: 'instruction-1',
                 idempotencyKey: 'idem-1',
-                eventType: 'PAYMENT' as const,
+                railType: 'PAYMENT' as const,
                 payload: { amount: 100, currency: 'USD', destination: 'dest' }
             };
 
-            let callCount = 0;
+            let pendingQueryCount = 0;
+            let attemptQueryCount = 0;
             mockClient.query = mock.fn(async (sql: string) => {
                 // 1. First check returns nothing (simulate race)
-                if (sql.includes('SELECT id, status FROM payment_outbox') && callCount === 0) {
-                    callCount++;
+                if (sql.includes('SELECT outbox_id, sequence_id, created_at FROM payment_outbox_pending') && pendingQueryCount === 0) {
+                    pendingQueryCount++;
                     return { rows: [] };
                 }
                 // 2. Insert throws unique constraint violation
-                if (sql.includes('INSERT INTO payment_outbox')) {
+                if (sql.includes('INSERT INTO payment_outbox_pending')) {
                     throw new Error('duplicate key value violates unique constraint');
                 }
                 // 3. Second check (recovery) returns existing
-                if (sql.includes('SELECT id, status, created_at FROM payment_outbox')) {
-                    return { rows: [{ id: 'race-1', status: 'PENDING', created_at: new Date(), sequence_id: 'seq-1' }] };
+                if (sql.includes('SELECT outbox_id, sequence_id, created_at FROM payment_outbox_pending')) {
+                    return { rows: [{ outbox_id: 'race-1', sequence_id: 11, created_at: new Date() }] };
+                }
+                if (sql.includes('SELECT outbox_id, state, created_at, sequence_id FROM payment_outbox_attempts')) {
+                    attemptQueryCount += 1;
+                    if (attemptQueryCount === 1) {
+                        return { rows: [] };
+                    }
+                    return { rows: [{ outbox_id: 'race-1', state: 'DISPATCHED', created_at: new Date(), sequence_id: 11 }] };
                 }
                 return { rows: [] };
             });
