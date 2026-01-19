@@ -56,10 +56,8 @@ describe('OutboxDispatchService', () => {
             mockClient.query = mock.fn(async (sql: string) => {
                 if (sql === 'BEGIN') return {};
                 if (sql.includes('INSERT INTO ledger_entries')) return {};
-                if (sql.includes('SELECT outbox_id, sequence_id, created_at FROM payment_outbox_pending')) return { rows: [] }; // No duplicate
-                if (sql.includes('SELECT bump_participant_outbox_seq')) return { rows: [{ sequence_id: 42 }] };
-                if (sql.includes('INSERT INTO payment_outbox_pending')) {
-                    return { rows: [{ outbox_id: 'outbox-1', created_at: new Date() }] };
+                if (sql.includes('FROM enqueue_payment_outbox')) {
+                    return { rows: [{ outbox_id: 'outbox-1', sequence_id: 42, state: 'PENDING', created_at: new Date() }] };
                 }
                 if (sql === 'COMMIT') return {};
                 return { rows: [] };
@@ -70,12 +68,11 @@ describe('OutboxDispatchService', () => {
             assert.strictEqual(result.outboxId, 'outbox-1');
             assert.strictEqual(result.status, 'PENDING');
 
-            // Verify pool query uses atomic insert-select-notify
-            // The insert happens on the client, not the pool directly
-            const insertCalls = mockClient.query.mock.calls.filter((c: { arguments: unknown[] }) =>
-                typeof c.arguments[0] === 'string' && (c.arguments[0] as string).includes('INSERT INTO payment_outbox_pending')
+            // Verify enqueue happens on the client, not the pool directly
+            const enqueueCalls = mockClient.query.mock.calls.filter((c: { arguments: unknown[] }) =>
+                typeof c.arguments[0] === 'string' && (c.arguments[0] as string).includes('FROM enqueue_payment_outbox')
             );
-            assert.ok(insertCalls.length > 0, 'Should insert into outbox via client');
+            assert.ok(enqueueCalls.length > 0, 'Should enqueue outbox via client');
             // Verify call order: BEGIN -> Ledger -> Outbox -> COMMIT
             const queries = mockClient.query.mock.calls.map((c: { arguments: unknown[] }) => c.arguments[0]) as string[];
             assert.strictEqual(queries[0], 'BEGIN');
@@ -119,10 +116,10 @@ describe('OutboxDispatchService', () => {
                 payload: { amount: 100, currency: 'USD', destination: 'dest' }
             };
 
-            // Mock finding duplicate
+            // enqueue_payment_outbox handles idempotency; return existing record
             mockClient.query = mock.fn(async (sql: string) => {
-                if (sql.includes('SELECT outbox_id, sequence_id, created_at FROM payment_outbox_pending')) {
-                    return { rows: [{ outbox_id: 'existing-1', sequence_id: 10, created_at: new Date() }] };
+                if (sql.includes('FROM enqueue_payment_outbox')) {
+                    return { rows: [{ outbox_id: 'existing-1', sequence_id: 10, state: 'PENDING', created_at: new Date() }] };
                 }
                 return { rows: [] };
             });
@@ -130,12 +127,6 @@ describe('OutboxDispatchService', () => {
             const result = await service.dispatch(request);
 
             assert.strictEqual(result.outboxId, 'existing-1');
-            // Should NOT have inserted
-            const inserts = mockClient.query.mock.calls.filter((c: { arguments: unknown[] }) => {
-                const sql = c.arguments[0];
-                return typeof sql === 'string' && sql.includes('INSERT');
-            });
-            assert.strictEqual(inserts.length, 0);
         });
 
         it('should handle concurrent insert race condition', async () => {
@@ -147,28 +138,9 @@ describe('OutboxDispatchService', () => {
                 payload: { amount: 100, currency: 'USD', destination: 'dest' }
             };
 
-            let pendingQueryCount = 0;
-            let attemptQueryCount = 0;
             mockClient.query = mock.fn(async (sql: string) => {
-                // 1. First check returns nothing (simulate race)
-                if (sql.includes('SELECT outbox_id, sequence_id, created_at FROM payment_outbox_pending') && pendingQueryCount === 0) {
-                    pendingQueryCount++;
-                    return { rows: [] };
-                }
-                // 2. Insert throws unique constraint violation
-                if (sql.includes('INSERT INTO payment_outbox_pending')) {
-                    throw new Error('duplicate key value violates unique constraint');
-                }
-                // 3. Second check (recovery) returns existing
-                if (sql.includes('SELECT outbox_id, sequence_id, created_at FROM payment_outbox_pending')) {
-                    return { rows: [{ outbox_id: 'race-1', sequence_id: 11, created_at: new Date() }] };
-                }
-                if (sql.includes('SELECT outbox_id, state, created_at, sequence_id FROM payment_outbox_attempts')) {
-                    attemptQueryCount += 1;
-                    if (attemptQueryCount === 1) {
-                        return { rows: [] };
-                    }
-                    return { rows: [{ outbox_id: 'race-1', state: 'DISPATCHED', created_at: new Date(), sequence_id: 11 }] };
+                if (sql.includes('FROM enqueue_payment_outbox')) {
+                    return { rows: [{ outbox_id: 'race-1', sequence_id: 11, state: 'PENDING', created_at: new Date() }] };
                 }
                 return { rows: [] };
             });
