@@ -35,16 +35,19 @@ describe('OutboxRelayer', () => {
         relayer = new OutboxRelayer(mockPool as unknown as Pool, mockRailClient as any);
     });
 
-    describe('poll() -> fetchNextBatch()', () => {
+    describe('poll() -> claimNextBatch()', () => {
         it('should process available records', async () => {
             const mockRecord: OutboxRecord = {
-                id: 'uuid-1',
+                outbox_id: 'uuid-1',
+                instruction_id: 'instruction-1',
                 participant_id: 'p1',
-                sequence_id: 'seq-1',
+                sequence_id: 1,
                 idempotency_key: 'key-1',
-                event_type: 'PAYMENT',
-                payload: { amount: 100, destination: 'dest-1' },
-                retry_count: 0
+                rail_type: 'PAYMENT',
+                payload: { amount: 100, currency: 'USD', destination: 'dest-1' },
+                attempt_count: 0,
+                attempt_no: 1,
+                created_at: new Date()
             };
 
             // Mock fetchNextBatch query result
@@ -61,8 +64,8 @@ describe('OutboxRelayer', () => {
             // But poll is recursive, testing it is hard.
             // We can invoke the logic by iterating manually if we export it or test internals.
 
-            const relayerInternal = relayer as unknown as { fetchNextBatch: () => Promise<OutboxRecord[]> };
-            await relayerInternal.fetchNextBatch();
+            const relayerInternal = relayer as unknown as { claimNextBatch: () => Promise<OutboxRecord[]> };
+            await relayerInternal.claimNextBatch();
 
             // Verify SKIP LOCKED usage
             const queryCall = mockClient.query.mock.calls[0]!;
@@ -75,13 +78,16 @@ describe('OutboxRelayer', () => {
     describe('processRecord()', () => {
         it('should dispatch to rail and mark success', async () => {
             const mockRecord: OutboxRecord = {
-                id: 'uuid-1',
+                outbox_id: 'uuid-1',
+                instruction_id: 'instruction-1',
                 participant_id: 'p1',
-                sequence_id: 'seq-1',
+                sequence_id: 1,
                 idempotency_key: 'key-1',
-                event_type: 'PAYMENT',
-                payload: { amount: 100, destination: 'dest-1' },
-                retry_count: 0
+                rail_type: 'PAYMENT',
+                payload: { amount: 100, currency: 'USD', destination: 'dest-1' },
+                attempt_count: 0,
+                attempt_no: 1,
+                created_at: new Date()
             };
 
             const relayerInternal = relayer as unknown as { processRecord: (record: OutboxRecord) => Promise<void> };
@@ -95,8 +101,10 @@ describe('OutboxRelayer', () => {
 
             // Verify success mark (Pool query)
             assert.strictEqual(mockPool.query.mock.calls.length, 1);
-            const poolQueryArgs = mockPool.query.mock.calls[0]!.arguments as [string];
-            assert.ok(poolQueryArgs[0].includes("status = 'SUCCESS'"));
+            const poolQueryArgs = mockPool.query.mock.calls[0]!.arguments as [string, unknown[]];
+            assert.ok(poolQueryArgs[0].includes('INSERT INTO payment_outbox_attempts'));
+            const params = poolQueryArgs[1] as unknown[];
+            assert.strictEqual(params[7], 'DISPATCHED');
         });
 
         it('should handle transient errors by marking RECOVERING', async () => {
@@ -105,56 +113,62 @@ describe('OutboxRelayer', () => {
             });
 
             const mockRecord: OutboxRecord = {
-                id: 'uuid-1',
+                outbox_id: 'uuid-1',
+                instruction_id: 'instruction-1',
                 participant_id: 'p1',
-                sequence_id: 'seq-1',
+                sequence_id: 1,
                 idempotency_key: 'key-1',
-                event_type: 'PAYMENT',
-                payload: { amount: 100, destination: 'dest-1' },
-                retry_count: 0
+                rail_type: 'PAYMENT',
+                payload: { amount: 100, currency: 'USD', destination: 'dest-1' },
+                attempt_count: 0,
+                attempt_no: 1,
+                created_at: new Date()
             };
 
             const relayerInternal = relayer as unknown as { processRecord: (record: OutboxRecord) => Promise<void> };
             await relayerInternal.processRecord(mockRecord);
 
-            // Verify update to RECOVERING
-            assert.strictEqual(mockPool.query.mock.calls.length, 1);
-            const recoveringCall = mockPool.query.mock.calls[0]!;
-            const queryArgs = recoveringCall.arguments as [string, string[]];
-            const query = queryArgs[0];
-            const params = queryArgs[1];
-
-            assert.ok(query.includes("status = $1")); // Parameterized update
-            assert.strictEqual(params[0], 'RECOVERING');
+            // Verify outcome insert and requeue
+            assert.strictEqual(mockPool.query.mock.calls.length, 2);
+            const outcomeCall = mockPool.query.mock.calls[0]!;
+            const outcomeArgs = outcomeCall.arguments as [string, unknown[]];
+            assert.ok(outcomeArgs[0].includes('INSERT INTO payment_outbox_attempts'));
+            const outcomeParams = outcomeArgs[1] as unknown[];
+            assert.strictEqual(outcomeParams[7], 'RETRYABLE');
+            const requeueCall = mockPool.query.mock.calls[1]!;
+            const requeueArgs = requeueCall.arguments as [string];
+            assert.ok(requeueArgs[0].includes('INSERT INTO payment_outbox_pending'));
         });
 
-        it('should dlq after max retries', async () => {
+        it('should mark failed for terminal errors', async () => {
             mockRailClient.dispatch = mock.fn(async () => ({
                 success: false,
-                error: 'Permanent Error'
+                errorCode: 'INVALID_ACCOUNT',
+                errorMessage: 'Permanent Error'
             }));
 
             const mockRecord: OutboxRecord = {
-                id: 'uuid-1',
+                outbox_id: 'uuid-1',
+                instruction_id: 'instruction-1',
                 participant_id: 'p1',
-                sequence_id: 'seq-1',
+                sequence_id: 1,
                 idempotency_key: 'key-1',
-                event_type: 'PAYMENT',
-                payload: { amount: 100, destination: 'dest-1' },
-                retry_count: 5 // MAX_RETRIES reached
+                rail_type: 'PAYMENT',
+                payload: { amount: 100, currency: 'USD', destination: 'dest-1' },
+                attempt_count: 5,
+                attempt_no: 6,
+                created_at: new Date()
             };
 
             const relayerInternal = relayer as unknown as { processRecord: (record: OutboxRecord) => Promise<void> };
             await relayerInternal.processRecord(mockRecord);
 
-            // Verify update to FAILED (DLQ)
-            const dlqCall = mockPool.query.mock.calls[0]!;
-            const dlqQueryArgs = dlqCall.arguments as [string, string[]];
-            const params = dlqQueryArgs[1];
-            // The query for DLQ is specific: SET status = 'FAILED'
-            const query = dlqQueryArgs[0];
-            assert.ok(query.includes("status = 'FAILED'"));
-            assert.ok(params[1]?.includes('DLQ:'));
+            // Verify outcome insert
+            const failureCall = mockPool.query.mock.calls[0]!;
+            const failureArgs = failureCall.arguments as [string, unknown[]];
+            assert.ok(failureArgs[0].includes('INSERT INTO payment_outbox_attempts'));
+            const params = failureArgs[1] as unknown[];
+            assert.strictEqual(params[7], 'FAILED');
         });
     });
 });

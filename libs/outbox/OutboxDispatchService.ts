@@ -84,8 +84,7 @@ export class OutboxDispatchService {
         try {
             // Check for duplicate idempotency key
             const existing = await dbClient.query(`
-                SELECT outbox_id, sequence_id, created_at
-                FROM payment_outbox_pending
+                SELECT outbox_id, sequence_id, created_at FROM payment_outbox_pending
                 WHERE instruction_id = $1
                   AND idempotency_key = $2
                 LIMIT 1;
@@ -109,8 +108,7 @@ export class OutboxDispatchService {
             }
 
             const existingAttempt = await dbClient.query(`
-                SELECT outbox_id, sequence_id, state, created_at
-                FROM payment_outbox_attempts
+                SELECT outbox_id, sequence_id, state, created_at FROM payment_outbox_attempts
                 WHERE instruction_id = $1
                   AND idempotency_key = $2
                 ORDER BY created_at DESC
@@ -194,8 +192,7 @@ export class OutboxDispatchService {
             if (message.includes('duplicate key') || message.includes('unique constraint')) {
                 // Fetch the existing record
                 const existing = await dbClient.query(`
-                    SELECT outbox_id, sequence_id, created_at
-                    FROM payment_outbox_pending
+                    SELECT outbox_id, sequence_id, created_at FROM payment_outbox_pending
                     WHERE instruction_id = $1
                       AND idempotency_key = $2
                     LIMIT 1;
@@ -211,8 +208,7 @@ export class OutboxDispatchService {
                 }
 
                 const existingAttempt = await dbClient.query(`
-                    SELECT outbox_id, state, created_at, sequence_id
-                    FROM payment_outbox_attempts
+                    SELECT outbox_id, state, created_at, sequence_id FROM payment_outbox_attempts
                     WHERE instruction_id = $1
                       AND idempotency_key = $2
                     ORDER BY created_at DESC
