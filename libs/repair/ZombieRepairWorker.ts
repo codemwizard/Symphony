@@ -82,7 +82,8 @@ export class ZombieRepairWorker {
                        latest.idempotency_key,
                        latest.rail_type,
                        latest.payload,
-                       latest.attempt_no
+                       latest.attempt_no AS last_attempt_no,
+                       (latest.attempt_no + 1) AS next_attempt_no
                 FROM (
                     SELECT DISTINCT ON (outbox_id)
                         outbox_id,
@@ -120,7 +121,7 @@ export class ZombieRepairWorker {
                         row.idempotency_key,
                         row.rail_type,
                         JSON.stringify(row.payload),
-                        row.attempt_no
+                        row.last_attempt_no
                     );
 
                     const attemptOffset = index * 10;
@@ -133,7 +134,7 @@ export class ZombieRepairWorker {
                         row.idempotency_key,
                         row.rail_type,
                         JSON.stringify(row.payload),
-                        row.attempt_no,
+                        row.next_attempt_no,
                         'ZOMBIE_REQUEUE',
                         'Dispatch attempt exceeded threshold'
                     );
@@ -151,10 +152,11 @@ export class ZombieRepairWorker {
                         attempt_count,
                         next_attempt_at
                     ) VALUES ${pendingPlaceholders.join(', ')}
-                    ON CONFLICT (instruction_id, idempotency_key)
+                    ON CONFLICT (outbox_id)
                     DO UPDATE SET
-                        attempt_count = EXCLUDED.attempt_count,
-                        next_attempt_at = NOW();
+                        attempt_count = GREATEST(payment_outbox_pending.attempt_count, EXCLUDED.attempt_count),
+                        next_attempt_at = NOW(),
+                        payload = EXCLUDED.payload;
                 `, pendingValues);
 
                 await client.query(`
