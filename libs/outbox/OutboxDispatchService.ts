@@ -82,79 +82,12 @@ export class OutboxDispatchService {
         const dbClient = client ?? await this.pool.connect();
 
         try {
-            // Check for duplicate idempotency key
-            const existing = await dbClient.query(`
-                SELECT outbox_id, sequence_id, created_at FROM payment_outbox_pending
-                WHERE instruction_id = $1
-                  AND idempotency_key = $2
-                LIMIT 1;
-            `, [request.instructionId, request.idempotencyKey]);
-
-            if (existing.rows.length > 0) {
-                const existingRecord = existing.rows[0];
-                logger.info({
-                    event: 'DUPLICATE_DISPATCH',
-                    idempotencyKey: request.idempotencyKey,
-                    instructionId: request.instructionId,
-                    existingOutboxId: existingRecord.outbox_id
-                });
-
-                return {
-                    outboxId: existingRecord.outbox_id,
-                    sequenceId: Number(existingRecord.sequence_id),
-                    status: 'PENDING',
-                    createdAt: existingRecord.created_at
-                };
-            }
-
-            const existingAttempt = await dbClient.query(`
-                SELECT outbox_id, sequence_id, state, created_at FROM payment_outbox_attempts
-                WHERE instruction_id = $1
-                  AND idempotency_key = $2
-                ORDER BY created_at DESC
-                LIMIT 1;
-            `, [request.instructionId, request.idempotencyKey]);
-
-            if (existingAttempt.rows.length > 0) {
-                const attemptRecord = existingAttempt.rows[0];
-                logger.info({
-                    event: 'DUPLICATE_DISPATCH',
-                    idempotencyKey: request.idempotencyKey,
-                    instructionId: request.instructionId,
-                    existingOutboxId: attemptRecord.outbox_id
-                });
-
-                return {
-                    outboxId: attemptRecord.outbox_id,
-                    sequenceId: Number(attemptRecord.sequence_id),
-                    status: attemptRecord.state,
-                    createdAt: attemptRecord.created_at
-                };
-            }
-
-            const sequenceResult = await dbClient.query(`
-                SELECT bump_participant_outbox_seq($1) AS sequence_id;
-            `, [request.participantId]);
-            const sequenceId = Number(sequenceResult.rows[0]?.sequence_id);
-
-            // Insert into outbox (same transaction as ledger)
             const result = await dbClient.query(`
-                INSERT INTO payment_outbox_pending (
-                    instruction_id,
-                    participant_id,
-                    sequence_id,
-                    idempotency_key,
-                    rail_type,
-                    payload,
-                    attempt_count,
-                    next_attempt_at,
-                    created_at
-                ) VALUES ($1, $2, $3, $4, $5, $6, 0, NOW(), NOW())
-                RETURNING outbox_id, created_at;
+                SELECT outbox_id, sequence_id, created_at, state
+                FROM enqueue_payment_outbox($1, $2, $3, $4, $5);
             `, [
                 request.instructionId,
                 request.participantId,
-                sequenceId,
                 request.idempotencyKey,
                 request.railType,
                 JSON.stringify(request.payload)
@@ -165,7 +98,7 @@ export class OutboxDispatchService {
             logger.info({
                 event: 'DISPATCH_QUEUED',
                 outboxId: row.outbox_id,
-                sequenceId,
+                sequenceId: Number(row.sequence_id),
                 participantId: request.participantId,
                 railType: request.railType
             });
@@ -181,49 +114,12 @@ export class OutboxDispatchService {
 
             return {
                 outboxId: row.outbox_id,
-                sequenceId,
-                status: 'PENDING',
+                sequenceId: Number(row.sequence_id),
+                status: row.state,
                 createdAt: row.created_at
             };
         } catch (error: unknown) {
             const message = error instanceof Error ? error.message : 'Unknown error';
-
-            // Check for idempotency key collision (concurrent insert)
-            if (message.includes('duplicate key') || message.includes('unique constraint')) {
-                // Fetch the existing record
-                const existing = await dbClient.query(`
-                    SELECT outbox_id, sequence_id, created_at FROM payment_outbox_pending
-                    WHERE instruction_id = $1
-                      AND idempotency_key = $2
-                    LIMIT 1;
-                `, [request.instructionId, request.idempotencyKey]);
-
-                if (existing.rows.length > 0) {
-                    return {
-                        outboxId: existing.rows[0].outbox_id,
-                        sequenceId: Number(existing.rows[0].sequence_id),
-                        status: 'PENDING',
-                        createdAt: existing.rows[0].created_at
-                    };
-                }
-
-                const existingAttempt = await dbClient.query(`
-                    SELECT outbox_id, state, created_at, sequence_id FROM payment_outbox_attempts
-                    WHERE instruction_id = $1
-                      AND idempotency_key = $2
-                    ORDER BY created_at DESC
-                    LIMIT 1;
-                `, [request.instructionId, request.idempotencyKey]);
-
-                if (existingAttempt.rows.length > 0) {
-                    return {
-                        outboxId: existingAttempt.rows[0].outbox_id,
-                        sequenceId: Number(existingAttempt.rows[0].sequence_id),
-                        status: existingAttempt.rows[0].state,
-                        createdAt: existingAttempt.rows[0].created_at
-                    };
-                }
-            }
 
             logger.error({ error: message }, 'Dispatch failed');
             throw new DispatchError('DISPATCH_FAILED', message);
