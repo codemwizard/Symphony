@@ -68,9 +68,12 @@ describe('OutboxRelayer', () => {
             await relayerInternal.claimNextBatch();
 
             // Verify SKIP LOCKED usage
-            const queryCall = mockClient.query.mock.calls[0]!;
-            const queryArgs = queryCall.arguments as [string];
-            assert.ok(queryArgs[0].includes('FOR UPDATE SKIP LOCKED'), 'Should use SKIP LOCKED');
+            const queryCalls = mockClient.query.mock.calls;
+            const hasSkipLocked = queryCalls.some(call => {
+                const args = call.arguments as [string];
+                return typeof args[0] === 'string' && args[0].includes('FOR UPDATE SKIP LOCKED');
+            });
+            assert.ok(hasSkipLocked, 'Should use SKIP LOCKED');
             assert.strictEqual(mockClient.release.mock.calls.length, 1, 'Should release client');
         });
     });
