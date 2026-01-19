@@ -31,6 +31,8 @@ GRANT SELECT, UPDATE ON event_outbox TO symphony_executor; -- To mark processed
 REVOKE ALL ON TABLE payment_outbox_pending FROM PUBLIC;
 REVOKE ALL ON TABLE payment_outbox_attempts FROM PUBLIC;
 REVOKE ALL ON TABLE participant_outbox_sequences FROM PUBLIC;
+REVOKE EXECUTE ON FUNCTION enqueue_payment_outbox(TEXT, TEXT, TEXT, TEXT, JSONB) FROM PUBLIC;
+REVOKE EXECUTE ON FUNCTION bump_participant_outbox_seq(TEXT) FROM PUBLIC;
 
 GRANT EXECUTE ON FUNCTION enqueue_payment_outbox(TEXT, TEXT, TEXT, TEXT, JSONB) TO symphony_ingest;
 REVOKE ALL ON FUNCTION bump_participant_outbox_seq(TEXT) FROM symphony_ingest;
