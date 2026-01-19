@@ -332,23 +332,43 @@ export class OutboxRelayer {
             const latencyMs = Date.now() - start;
 
             if (result.success) {
-                await this.insertOutcome(record, 'DISPATCHED', {
-                    railReference: result.railReference,
-                    railCode: result.railCode,
-                    latencyMs
-                });
+                const details: {
+                    railReference?: string;
+                    railCode?: string;
+                    latencyMs?: number;
+                } = { latencyMs };
+                if (result.railReference !== undefined) {
+                    details.railReference = result.railReference;
+                }
+                if (result.railCode !== undefined) {
+                    details.railCode = result.railCode;
+                }
+                await this.insertOutcome(record, 'DISPATCHED', details);
                 logger.info({ correlationId, railReference: result.railReference }, 'Dispatch successful');
                 return;
             }
 
             const classification = this.classifyError(result);
-            await this.insertOutcome(record, classification.state, {
-                railReference: result.railReference,
-                railCode: result.railCode,
-                errorCode: result.errorCode,
+            const details: {
+                railReference?: string;
+                railCode?: string;
+                errorCode?: string;
+                errorMessage?: string;
+                latencyMs?: number;
+            } = {
                 errorMessage: result.errorMessage ?? 'Dispatch failed',
                 latencyMs
-            });
+            };
+            if (result.railReference !== undefined) {
+                details.railReference = result.railReference;
+            }
+            if (result.railCode !== undefined) {
+                details.railCode = result.railCode;
+            }
+            if (result.errorCode !== undefined) {
+                details.errorCode = result.errorCode;
+            }
+            await this.insertOutcome(record, classification.state, details);
 
             if (classification.state === 'RETRYABLE') {
                 await this.requeue(record);
