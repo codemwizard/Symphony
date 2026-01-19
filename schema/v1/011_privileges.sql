@@ -27,6 +27,22 @@ GRANT SELECT, INSERT ON transaction_attempts TO symphony_executor;
 GRANT SELECT, INSERT ON status_history TO symphony_executor;
 GRANT SELECT, UPDATE ON event_outbox TO symphony_executor; -- To mark processed
 
+-- Option 2A outbox (pending + attempts)
+REVOKE ALL ON TABLE payment_outbox_pending FROM PUBLIC;
+REVOKE ALL ON TABLE payment_outbox_attempts FROM PUBLIC;
+REVOKE ALL ON TABLE participant_outbox_sequences FROM PUBLIC;
+
+GRANT EXECUTE ON FUNCTION enqueue_payment_outbox(TEXT, TEXT, TEXT, TEXT, JSONB) TO symphony_ingest;
+REVOKE ALL ON FUNCTION bump_participant_outbox_seq(TEXT) FROM symphony_ingest;
+REVOKE ALL ON TABLE payment_outbox_pending FROM symphony_ingest;
+REVOKE SELECT ON participant_outbox_sequences FROM symphony_ingest;
+
+GRANT SELECT, INSERT, UPDATE, DELETE ON payment_outbox_pending TO symphony_executor;
+GRANT SELECT, INSERT ON payment_outbox_attempts TO symphony_executor;
+GRANT SELECT ON payment_outbox_pending TO symphony_control;
+GRANT SELECT ON payment_outbox_attempts TO symphony_control;
+GRANT SELECT ON participant_outbox_sequences TO symphony_control;
+
 -- 4. symphony_readonly (Read Plane)
 GRANT SELECT ON ALL TABLES IN SCHEMA public TO symphony_readonly;
 
@@ -40,5 +56,10 @@ GRANT SELECT ON ALL TABLES IN SCHEMA public TO symphony_auditor;
 -- (Already revoked from PUBLIC in Phase 1, but we explicitly deny here too)
 REVOKE UPDATE, DELETE ON audit_log FROM symphony_control, symphony_ingest, symphony_executor, symphony_readonly, symphony_auditor;
 REVOKE UPDATE, DELETE ON status_history FROM symphony_control, symphony_ingest, symphony_executor, symphony_readonly, symphony_auditor;
+REVOKE UPDATE, DELETE ON payment_outbox_attempts FROM symphony_control, symphony_ingest, symphony_executor, symphony_readonly, symphony_auditor;
+REVOKE INSERT, UPDATE, DELETE ON participant_outbox_sequences FROM symphony_control, symphony_ingest, symphony_executor, symphony_readonly, symphony_auditor;
+REVOKE TRUNCATE ON payment_outbox_attempts FROM symphony_control, symphony_ingest, symphony_executor, symphony_readonly, symphony_auditor;
+REVOKE TRUNCATE ON payment_outbox_pending FROM symphony_control, symphony_ingest, symphony_executor, symphony_readonly, symphony_auditor;
+REVOKE SELECT ON participant_outbox_sequences FROM symphony_readonly, symphony_auditor;
 
 -- REVOKE DELETE ON instructions FROM symphony_ingest, symphony_executor; -- Instructions are immutable once written.

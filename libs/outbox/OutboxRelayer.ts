@@ -228,20 +228,69 @@ export class OutboxRelayer {
                     ORDER BY next_attempt_at ASC, created_at ASC
                     LIMIT $1
                     FOR UPDATE SKIP LOCKED
+                ),
+                claimed AS (
+                    DELETE FROM payment_outbox_pending
+                    USING due
+                    WHERE payment_outbox_pending.outbox_id = due.outbox_id
+                    RETURNING
+                        payment_outbox_pending.outbox_id,
+                        payment_outbox_pending.instruction_id,
+                        payment_outbox_pending.participant_id,
+                        payment_outbox_pending.sequence_id,
+                        payment_outbox_pending.idempotency_key,
+                        payment_outbox_pending.rail_type,
+                        payment_outbox_pending.payload,
+                        payment_outbox_pending.created_at
+                ),
+                last_attempts AS (
+                    SELECT a.outbox_id, MAX(a.attempt_no) AS last_attempt_no
+                    FROM payment_outbox_attempts a
+                    JOIN claimed c ON c.outbox_id = a.outbox_id
+                    GROUP BY a.outbox_id
+                ),
+                inserted AS (
+                    INSERT INTO payment_outbox_attempts (
+                        outbox_id,
+                        instruction_id,
+                        participant_id,
+                        sequence_id,
+                        idempotency_key,
+                        rail_type,
+                        payload,
+                        state,
+                        attempt_no,
+                        claimed_at,
+                        created_at
+                    )
+                    SELECT
+                        c.outbox_id,
+                        c.instruction_id,
+                        c.participant_id,
+                        c.sequence_id,
+                        c.idempotency_key,
+                        c.rail_type,
+                        c.payload,
+                        'DISPATCHING',
+                        COALESCE(la.last_attempt_no, 0) + 1,
+                        NOW(),
+                        NOW()
+                    FROM claimed c
+                    LEFT JOIN last_attempts la ON la.outbox_id = c.outbox_id
+                    RETURNING outbox_id, attempt_no
                 )
-                DELETE FROM payment_outbox_pending
-                USING due
-                WHERE payment_outbox_pending.outbox_id = due.outbox_id
-                RETURNING
-                    payment_outbox_pending.outbox_id,
-                    payment_outbox_pending.instruction_id,
-                    payment_outbox_pending.participant_id,
-                    payment_outbox_pending.sequence_id,
-                    payment_outbox_pending.idempotency_key,
-                    payment_outbox_pending.rail_type,
-                    payment_outbox_pending.payload,
-                    payment_outbox_pending.attempt_count,
-                    payment_outbox_pending.created_at;
+                SELECT
+                    c.outbox_id,
+                    c.instruction_id,
+                    c.participant_id,
+                    c.sequence_id,
+                    c.idempotency_key,
+                    c.rail_type,
+                    c.payload,
+                    i.attempt_no,
+                    c.created_at
+                FROM claimed c
+                JOIN inserted i ON i.outbox_id = c.outbox_id;
             `;
 
             const result = await client.query(deleteQuery, [BATCH_SIZE]);
@@ -253,43 +302,9 @@ export class OutboxRelayer {
             const records = result.rows.map(row => ({
                 ...row,
                 sequence_id: Number(row.sequence_id),
-                attempt_no: Number(row.attempt_count) + 1
+                attempt_no: Number(row.attempt_no)
             })) as OutboxRecord[];
 
-            const attemptValues: Array<unknown> = [];
-            const placeholders: string[] = [];
-            records.forEach((row, index) => {
-                const offset = index * 10;
-                placeholders.push(`($${offset + 1}, $${offset + 2}, $${offset + 3}, $${offset + 4}, $${offset + 5}, $${offset + 6}, $${offset + 7}, 'DISPATCHING', $${offset + 8}, NOW(), NOW())`);
-                attemptValues.push(
-                    row.outbox_id,
-                    row.instruction_id,
-                    row.participant_id,
-                    row.sequence_id,
-                    row.idempotency_key,
-                    row.rail_type,
-                    JSON.stringify(row.payload),
-                    row.attempt_no
-                );
-            });
-
-            const insertAttempts = `
-                INSERT INTO payment_outbox_attempts (
-                    outbox_id,
-                    instruction_id,
-                    participant_id,
-                    sequence_id,
-                    idempotency_key,
-                    rail_type,
-                    payload,
-                    state,
-                    attempt_no,
-                    claimed_at,
-                    created_at
-                ) VALUES ${placeholders.join(', ')};
-            `;
-
-            await client.query(insertAttempts, attemptValues);
             await client.query('COMMIT');
 
             return records;
@@ -498,10 +513,11 @@ export class OutboxRelayer {
                 next_attempt_at,
                 created_at
             ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, NOW() + ($9 * INTERVAL '1 millisecond'), NOW())
-            ON CONFLICT (instruction_id, idempotency_key)
+            ON CONFLICT (outbox_id)
             DO UPDATE SET
-                attempt_count = EXCLUDED.attempt_count,
-                next_attempt_at = EXCLUDED.next_attempt_at;
+                attempt_count = GREATEST(payment_outbox_pending.attempt_count, EXCLUDED.attempt_count),
+                next_attempt_at = EXCLUDED.next_attempt_at,
+                payload = EXCLUDED.payload;
         `,
             [
                 record.outbox_id,
