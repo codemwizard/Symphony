@@ -20,7 +20,7 @@ describe('EvidenceExportService', () => {
 
     const MOCK_CONFIG: ExportConfig = {
         outputDir: '/tmp/test_evidence',
-        schemaVersion: '7B.1.0',
+        schemaVersion: '7B.2.0',
         batchSize: 100
     };
 
@@ -65,7 +65,7 @@ describe('EvidenceExportService', () => {
             assert.strictEqual(marks.maxLedgerId, '200');
 
             const queryCall = mockQuery.mock.calls[0]!;
-            assert.match((queryCall.arguments as [string])[0], /MAX\(id\)/);
+            assert.match((queryCall.arguments as [string])[0], /MAX\(outbox_id\)/);
             assert.strictEqual(mockRelease.mock.calls.length, 1);
         });
     });
@@ -114,7 +114,7 @@ describe('EvidenceExportService', () => {
                 if (sql.includes('SELECT COALESCE(MAX(id)')) return { rows: [currentMarks] };
                 if (sql === 'BEGIN') return {};
                 if (sql.includes('FROM ingress_attestations')) return { rows: [{ id: '101', data: 'test' }] };
-                if (sql.includes('FROM payment_outbox')) return { rows: [] };
+                if (sql.includes('FROM payment_outbox_pending') || sql.includes('FROM payment_outbox_attempts')) return { rows: [] };
                 if (sql.includes('FROM ledger_entries')) return { rows: [] };
                 if (sql === 'COMMIT') return {};
                 if (sql.includes('INSERT INTO evidence_export_log')) return {};
@@ -145,7 +145,7 @@ describe('EvidenceExportService', () => {
                 if (sql.includes('FROM evidence_export_log')) return { rows: [{ batch_id: 'batch_old' }] };
                 if (sql === 'BEGIN') return {};
                 if (sql.includes('FROM ingress_attestations')) return { rows: [] };
-                if (sql.includes('FROM payment_outbox')) return { rows: [] };
+                if (sql.includes('FROM payment_outbox_pending') || sql.includes('FROM payment_outbox_attempts')) return { rows: [] };
                 if (sql.includes('FROM ledger_entries')) return { rows: [] };
                 if (sql === 'COMMIT') return {};
                 if (sql.includes('INSERT INTO evidence_export_log')) return {};
@@ -198,7 +198,7 @@ describe('EvidenceExportService', () => {
                             ]
                         };
                     }
-                    if (sql.includes('FROM payment_outbox')) return { rows: [] };
+                    if (sql.includes('FROM payment_outbox_pending') || sql.includes('FROM payment_outbox_attempts')) return { rows: [] };
                     if (sql.includes('FROM ledger_entries')) return { rows: [] };
                     if (sql === 'COMMIT') return {};
                     if (sql.includes('INSERT INTO evidence_export_log')) return {};

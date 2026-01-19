@@ -5,7 +5,7 @@
  * 
  * Inputs:
  * - ingress_attestations
- * - payment_outbox
+ * - payment_outbox_pending / payment_outbox_attempts
  * - ledger snapshot views (read-only)
  * 
  * Outputs:
@@ -42,10 +42,10 @@ export interface AttestationRecord {
 }
 
 export interface OutboxRecord {
-    readonly id: string;
+    readonly outbox_id: string;
     readonly idempotency_key: string;
     readonly instruction_id: string;
-    readonly status: string;
+    readonly state: string;
     readonly payload: Record<string, unknown>;
     readonly created_at: Date;
 }
@@ -191,9 +191,15 @@ export class LedgerReplayEngine {
         config: ReplayConfig
     ): Promise<OutboxRecord[]> {
         let query = `
-            SELECT id, idempotency_key, instruction_id, status, payload, created_at
-            FROM payment_outbox
-            WHERE status IN ('SUCCESS', 'FAILED')
+            SELECT DISTINCT ON (outbox_id)
+                outbox_id,
+                idempotency_key,
+                instruction_id,
+                state,
+                payload,
+                COALESCE(completed_at, created_at) AS created_at
+            FROM payment_outbox_attempts
+            WHERE state IN ('DISPATCHED', 'FAILED')
         `;
         const params: unknown[] = [];
 
@@ -206,7 +212,7 @@ export class LedgerReplayEngine {
             query += ` AND created_at <= $${params.length}`;
         }
 
-        query += ' ORDER BY created_at ASC';
+        query += ' ORDER BY outbox_id, created_at DESC';
 
         const result = await client.query(query, params);
         return result.rows as OutboxRecord[];
@@ -306,18 +312,18 @@ export class LedgerReplayEngine {
         }
 
         for (const out of outbox) {
-            const eventType = out.status === 'SUCCESS' ? 'COMPLETED' : 'FAILED';
+            const eventType = out.state === 'DISPATCHED' ? 'COMPLETED' : 'FAILED';
             timeline.push({
                 timestamp: out.created_at,
                 eventType: 'DISPATCHED',
-                sourceId: out.id,
+                sourceId: out.outbox_id,
                 details: `Instruction ${out.instruction_id} (${out.idempotency_key})`,
             });
             timeline.push({
                 timestamp: out.created_at,
                 eventType,
-                sourceId: out.id,
-                details: `Status: ${out.status}`,
+                sourceId: out.outbox_id,
+                details: `Status: ${out.state}`,
             });
         }
 

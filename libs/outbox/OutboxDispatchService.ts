@@ -11,7 +11,6 @@
 
 import { Pool, PoolClient } from 'pg';
 import pino from 'pino';
-import { defaultIdGenerator, MonotonicIdGenerator } from '../id/MonotonicIdGenerator.js';
 
 const logger = pino({ name: 'OutboxDispatch' });
 
@@ -19,9 +18,10 @@ const logger = pino({ name: 'OutboxDispatch' });
  * Dispatch request payload
  */
 export interface DispatchRequest {
+    instructionId: string;
     participantId: string;
     idempotencyKey: string;
-    eventType: 'PAYMENT' | 'TRANSFER' | 'REFUND' | 'REVERSAL';
+    railType: 'PAYMENT' | 'TRANSFER' | 'REFUND' | 'REVERSAL';
     payload: {
         amount: number;
         currency: string;
@@ -37,8 +37,8 @@ export interface DispatchRequest {
  */
 export interface DispatchResult {
     outboxId: string;
-    sequenceId: string;
-    status: 'PENDING';
+    sequenceId: number;
+    status: 'PENDING' | 'DISPATCHING' | 'DISPATCHED' | 'RETRYABLE' | 'FAILED' | 'ZOMBIE_REQUEUE';
     createdAt: Date;
 }
 
@@ -64,13 +64,9 @@ export class DispatchError extends Error {
  * The Relayer will pick up and execute these asynchronously.
  */
 export class OutboxDispatchService {
-    private readonly idGenerator: MonotonicIdGenerator;
-
     constructor(
-        private readonly pool: Pool,
-        idGenerator?: MonotonicIdGenerator
+        private readonly pool: Pool
     ) {
-        this.idGenerator = idGenerator ?? defaultIdGenerator;
     }
 
     /**
@@ -86,50 +82,83 @@ export class OutboxDispatchService {
         const dbClient = client ?? await this.pool.connect();
 
         try {
-            // Generate sequence ID for gap detection
-            const sequenceId = await this.idGenerator.generateString();
-
             // Check for duplicate idempotency key
             const existing = await dbClient.query(`
-                SELECT id, status FROM payment_outbox
-                WHERE idempotency_key = $1
+                SELECT outbox_id, sequence_id, created_at
+                FROM payment_outbox_pending
+                WHERE instruction_id = $1
+                  AND idempotency_key = $2
                 LIMIT 1;
-            `, [request.idempotencyKey]);
+            `, [request.instructionId, request.idempotencyKey]);
 
             if (existing.rows.length > 0) {
                 const existingRecord = existing.rows[0];
                 logger.info({
                     event: 'DUPLICATE_DISPATCH',
                     idempotencyKey: request.idempotencyKey,
-                    existingId: existingRecord.id,
-                    existingStatus: existingRecord.status
+                    instructionId: request.instructionId,
+                    existingOutboxId: existingRecord.outbox_id
                 });
 
                 return {
-                    outboxId: existingRecord.id,
-                    sequenceId: sequenceId,
+                    outboxId: existingRecord.outbox_id,
+                    sequenceId: Number(existingRecord.sequence_id),
                     status: 'PENDING',
-                    createdAt: new Date()
+                    createdAt: existingRecord.created_at
                 };
             }
 
+            const existingAttempt = await dbClient.query(`
+                SELECT outbox_id, sequence_id, state, created_at
+                FROM payment_outbox_attempts
+                WHERE instruction_id = $1
+                  AND idempotency_key = $2
+                ORDER BY created_at DESC
+                LIMIT 1;
+            `, [request.instructionId, request.idempotencyKey]);
+
+            if (existingAttempt.rows.length > 0) {
+                const attemptRecord = existingAttempt.rows[0];
+                logger.info({
+                    event: 'DUPLICATE_DISPATCH',
+                    idempotencyKey: request.idempotencyKey,
+                    instructionId: request.instructionId,
+                    existingOutboxId: attemptRecord.outbox_id
+                });
+
+                return {
+                    outboxId: attemptRecord.outbox_id,
+                    sequenceId: Number(attemptRecord.sequence_id),
+                    status: attemptRecord.state,
+                    createdAt: attemptRecord.created_at
+                };
+            }
+
+            const sequenceResult = await dbClient.query(`
+                SELECT bump_participant_outbox_seq($1) AS sequence_id;
+            `, [request.participantId]);
+            const sequenceId = Number(sequenceResult.rows[0]?.sequence_id);
+
             // Insert into outbox (same transaction as ledger)
             const result = await dbClient.query(`
-                INSERT INTO payment_outbox (
+                INSERT INTO payment_outbox_pending (
+                    instruction_id,
                     participant_id,
                     sequence_id,
                     idempotency_key,
-                    event_type,
+                    rail_type,
                     payload,
-                    status,
+                    attempt_count,
+                    next_attempt_at,
                     created_at
-                ) VALUES ($1, $2, $3, $4, $5, 'PENDING', NOW())
-                RETURNING id, created_at;
+                ) VALUES ($1, $2, $3, $4, $5, $6, 0, NOW(), NOW())
+                RETURNING outbox_id, created_at;
             `, [
+                request.instructionId,
                 request.participantId,
                 sequenceId,
                 request.idempotencyKey,
-                request.eventType,
+                request.railType,
                 JSON.stringify(request.payload)
             ]);
 
@@ -137,10 +166,10 @@ export class OutboxDispatchService {
 
             logger.info({
                 event: 'DISPATCH_QUEUED',
-                outboxId: row.id,
+                outboxId: row.outbox_id,
                 sequenceId,
                 participantId: request.participantId,
-                eventType: request.eventType
+                railType: request.railType
             });
 
             // Update attestation if provided
@@ -153,7 +182,7 @@ export class OutboxDispatchService {
             }
 
             return {
-                outboxId: row.id,
+                outboxId: row.outbox_id,
                 sequenceId,
                 status: 'PENDING',
                 createdAt: row.created_at
@@ -165,17 +194,37 @@ export class OutboxDispatchService {
             if (message.includes('duplicate key') || message.includes('unique constraint')) {
                 // Fetch the existing record
                 const existing = await dbClient.query(`
-                    SELECT id, status, created_at FROM payment_outbox
-                    WHERE idempotency_key = $1
+                    SELECT outbox_id, sequence_id, created_at
+                    FROM payment_outbox_pending
+                    WHERE instruction_id = $1
+                      AND idempotency_key = $2
                     LIMIT 1;
-                `, [request.idempotencyKey]);
+                `, [request.instructionId, request.idempotencyKey]);
 
                 if (existing.rows.length > 0) {
                     return {
-                        outboxId: existing.rows[0].id,
-                        sequenceId: existing.rows[0].sequence_id,
+                        outboxId: existing.rows[0].outbox_id,
+                        sequenceId: Number(existing.rows[0].sequence_id),
                         status: 'PENDING',
                         createdAt: existing.rows[0].created_at
+                    };
+                }
+
+                const existingAttempt = await dbClient.query(`
+                    SELECT outbox_id, state, created_at, sequence_id
+                    FROM payment_outbox_attempts
+                    WHERE instruction_id = $1
+                      AND idempotency_key = $2
+                    ORDER BY created_at DESC
+                    LIMIT 1;
+                `, [request.instructionId, request.idempotencyKey]);
+
+                if (existingAttempt.rows.length > 0) {
+                    return {
+                        outboxId: existingAttempt.rows[0].outbox_id,
+                        sequenceId: Number(existingAttempt.rows[0].sequence_id),
+                        status: existingAttempt.rows[0].state,
+                        createdAt: existingAttempt.rows[0].created_at
                     };
                 }
             }
@@ -255,10 +304,25 @@ export class OutboxDispatchService {
         lastError?: string;
         processedAt?: Date;
     } | null> {
+        const pending = await this.pool.query(`
+            SELECT created_at
+            FROM payment_outbox_pending
+            WHERE outbox_id = $1
+            LIMIT 1;
+        `, [outboxId]);
+
+        if (pending.rows.length > 0) {
+            return {
+                status: 'PENDING',
+                processedAt: pending.rows[0].created_at
+            };
+        }
+
         const result = await this.pool.query(`
-            SELECT status, last_error, processed_at
-            FROM payment_outbox
-            WHERE id = $1
+            SELECT state, error_message, completed_at
+            FROM payment_outbox_attempts
+            WHERE outbox_id = $1
+            ORDER BY created_at DESC
             LIMIT 1;
         `, [outboxId]);
 
@@ -268,9 +332,9 @@ export class OutboxDispatchService {
 
         const row = result.rows[0];
         return {
-            status: row.status,
-            lastError: row.last_error,
-            processedAt: row.processed_at
+            status: row.state,
+            lastError: row.error_message,
+            processedAt: row.completed_at
         };
     }
 }
