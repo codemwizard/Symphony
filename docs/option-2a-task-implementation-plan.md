@@ -4,46 +4,64 @@
 This plan replaces the current outbox **in place** with a hot pending queue plus an append-only attempts archive. It enforces **strict participant sequencing**, adds **money-safety dispatch rails**, includes **NOTIFY + poll hybrid wakeup**, and provides **audit-grade observability**, all without keeping legacy tables or files.
 
 ## Task Plan
-### A) Migration (DB)
-- [x] Create `participant_outbox_sequences`
-- [x] Implement `bump_participant_outbox_seq(participant_id)`
-- [x] Create `payment_outbox_pending`
-- [x] Add `UNIQUE(participant_id, sequence_id)`
-- [x] Add `UNIQUE(instruction_id, idempotency_key)`
-- [x] Create `payment_outbox_attempts` (append-only)
-- [x] Add indexes (due claim, attempts lookup, dispatching age)
-- [x] Add NOTIFY trigger on pending insert
-- [x] Drop old outbox tables (no legacy)
+### A) Migration (DB authoritative, no legacy)
+- [x] Drop `supervisor_outbox_status` before legacy objects to avoid dependency drift.
+- [x] Drop legacy `payment_outbox` and `outbox_status` (no compat paths).
+- [x] Create `outbox_attempt_state` enum and type `payment_outbox_attempts.state` to the enum.
+- [x] Create `participant_outbox_sequences` + `bump_participant_outbox_seq(participant_id)` with `SECURITY DEFINER`, fixed `search_path`, and `OWNER TO symphony_control`.
+- [x] Create `payment_outbox_pending` with `UNIQUE(participant_id, sequence_id)` and `UNIQUE(instruction_id, idempotency_key)`.
+- [x] Create `payment_outbox_attempts` (append-only) with `UNIQUE(outbox_id, attempt_no)` for DB-enforced attempt numbering.
+- [x] Add indexes (due claim, attempts lookup, dispatching age, idempotency lookup).
+- [x] Add `notify_outbox_pending()` trigger with fixed `search_path` (non-definer).
+- [x] Add append-only trigger on attempts (UPDATE/DELETE -> SQLSTATE `P0001`).
+- [x] Add `enqueue_payment_outbox(...)` as `SECURITY DEFINER`, fixed `search_path`, `OWNER TO symphony_control`.
+- [x] Recreate `supervisor_outbox_status` from pending + attempts after tables exist.
 
-### B) Producer (Ingest)
-- [x] Allocate sequence via bump function **in txn**
-- [x] Insert pending with `outbox_id`, `instruction_id`, `rail_type`, etc.
-- [x] Handle idempotency conflict: return existing outbox record, don’t enqueue twice
+### B) Privileges (provably authoritative ACLs)
+- [x] Ingest: **EXECUTE enqueue only**; no pending DML; no sequence table access; no bump execute.
+- [x] Executor: pending `SELECT/DELETE/INSERT/UPDATE` (claim + `ON CONFLICT DO UPDATE` requeue), attempts `SELECT/INSERT` only.
+- [x] Control plane: explicit read-only on pending/attempts/sequences (policy decision).
+- [x] Readonly/Auditor: blanket `SELECT` grant followed by explicit revoke on `participant_outbox_sequences`.
+- [x] Revoke UPDATE/DELETE on attempts from all runtime roles.
+- [x] Revoke TRUNCATE on pending/attempts from PUBLIC and all runtime roles.
+- [x] Revoke EXECUTE on outbox functions from PUBLIC, then grant EXECUTE only to intended roles.
 
-### C) Relayer2A
-- [x] LISTEN + debounced wakeup
-- [x] fallback poll every 250–1000ms
-- [x] claimBatch = DELETE…RETURNING + DISPATCHING insert (same txn)
-- [x] bounded concurrency
-- [x] rail timeout
-- [x] payload validation (amount/currency/destination)
-- [x] explicit error taxonomy
-- [x] retry backoff + requeue
-- [x] terminal failures → FAILED attempt (DLQ)
+### C) Producer (Ingest path)
+- [x] Replace pre-check + bump + insert with a **single call** to `enqueue_payment_outbox(...)`.
+- [x] Ensure enqueue is the **only** write path for ingest (no direct pending DML).
+- [x] Preserve deterministic idempotency via unique-violation fallback in the DB function.
 
-### D) Zombie Reaper
-- [x] detect stale DISPATCHING attempts
-- [x] requeue pending idempotently
-- [x] insert ZOMBIE_REQUEUE attempt row
+### D) Relayer2A (claim + dispatch)
+- [x] LISTEN + debounced wakeup.
+- [x] fallback poll every 250–1000ms.
+- [x] Claim uses a **single set-based SQL statement**:
+  - due rows selected with `FOR UPDATE SKIP LOCKED`,
+  - deleted via `DELETE ... RETURNING`,
+  - `MAX(attempt_no)` computed only for the claimed outbox_ids,
+  - `DISPATCHING` attempts inserted with `last_attempt_no + 1`.
+- [x] bounded concurrency.
+- [x] rail timeout.
+- [x] payload validation (amount/currency/destination).
+- [x] explicit error taxonomy.
+- [x] retry backoff + requeue.
+- [x] terminal failures → FAILED attempt (DLQ).
 
-### E) Tests (minimum)
-- [x] sequence allocator monotonic per participant
-- [x] enqueue idempotency `(instruction_id, idempotency_key)` uniqueness
-- [x] claim removes pending + inserts DISPATCHING attempt
-- [x] success inserts DISPATCHED and does not requeue
-- [x] retry inserts RETRYABLE + requeues with backoff
-- [x] zombie repair requeues stale DISPATCHING
-- [x] notify wakeup + poll fallback both drive processing
+### E) Zombie Reaper
+- [x] detect stale DISPATCHING attempts.
+- [x] requeue pending by **outbox_id only** (`ON CONFLICT (outbox_id)`).
+- [x] set `attempt_count` as **last_attempt_no cache** using `GREATEST(...)`.
+- [x] insert `ZOMBIE_REQUEUE` attempt row with `attempt_no = last_attempt_no + 1`.
+
+### F) Tests / Proof Checks (minimum)
+- [ ] ingest cannot INSERT into pending directly; can only EXECUTE enqueue.
+- [ ] executor cannot UPDATE/DELETE attempts.
+- [ ] TRUNCATE fails for everyone on pending/attempts.
+- [ ] sequences table is not readable to readonly/auditor after blanket grants.
+- [ ] attempt numbering invariant: duplicate `(outbox_id, attempt_no)` fails.
+- [ ] claim removes pending + inserts DISPATCHING attempt in one set-based statement.
+- [ ] retry inserts RETRYABLE + requeues with `GREATEST(...)` on attempt_count.
+- [ ] zombie repair requeues stale DISPATCHING with `ON CONFLICT (outbox_id)`.
+- [ ] NOTIFY wakeup + poll fallback both drive processing.
 
 ## Implementation Plan
 ### Phase-7B-A — Database Migration (Replace In-Place)
@@ -62,6 +80,7 @@ This plan replaces the current outbox **in place** with a hot pending queue plus
 - `bump_participant_outbox_seq(participant_id)`:
   - atomic: `UPDATE ... SET next_sequence_id = next_sequence_id + 1 RETURNING ...`
   - creates row if missing (first bump) via upsert pattern
+  - **SECURITY DEFINER** with fixed `search_path`, owned by `symphony_control` (privilege-safe).
 
 **Invariant**
 - One monotonic sequence stream per participant.
@@ -100,7 +119,7 @@ This plan replaces the current outbox **in place** with a hot pending queue plus
 - `rail_type TEXT NOT NULL`
 - `payload JSONB NOT NULL`
 - `attempt_no INT NOT NULL`
-- `state TEXT NOT NULL` (enum recommended: DISPATCHING, DISPATCHED, RETRYABLE, FAILED, ZOMBIE_REQUEUE)
+- `state outbox_attempt_state NOT NULL` (enum enforced: DISPATCHING, DISPATCHED, RETRYABLE, FAILED, ZOMBIE_REQUEUE)
 - `claimed_at TIMESTAMPTZ NOT NULL DEFAULT NOW()`
 - `completed_at TIMESTAMPTZ`
 - `rail_reference TEXT`
@@ -115,9 +134,17 @@ This plan replaces the current outbox **in place** with a hot pending queue plus
 - `ix_attempts_dispatching_age (claimed_at) WHERE state = 'DISPATCHING'`
 - Optional: `ix_attempts_by_instruction (instruction_id, claimed_at DESC)`
 
+**Attempt numbering invariant**
+- `UNIQUE (outbox_id, attempt_no)` so numbering is DB-enforced.
+
+**Append-only proof**
+- ACL: no UPDATE/DELETE/ TRUNCATE for runtime roles.
+- Trigger: `BEFORE UPDATE OR DELETE` raises SQLSTATE `P0001`.
+
 #### A4) Wakeup trigger (NOTIFY)
 - Trigger on `INSERT` into `payment_outbox_pending`
 - `NOTIFY outbox_pending, 'new_work'`
+- `notify_outbox_pending()` sets a fixed `search_path` (non-definer).
 
 #### A5) Replace in-place (no legacy)
 - Drop old `payment_outbox` and any older outbox artifacts once migration is applied.
@@ -126,22 +153,29 @@ This plan replaces the current outbox **in place** with a hot pending queue plus
   - `payment_outbox_pending`
   - `payment_outbox_attempts`
 
+#### A6) Authoritative enqueue function (DB-only write path)
+**Function**
+- `enqueue_payment_outbox(instruction_id, participant_id, idempotency_key, rail_type, payload)`
+  - advisory lock with **distinct seeds** (`hashtextextended` per key)
+  - check pending → return existing
+  - check attempts → return existing
+  - bump sequence only if new
+  - insert pending with unique-violation fallback
+  - **SECURITY DEFINER** with fixed `search_path`, owned by `symphony_control`
+
 ### Phase-7B-B — Producer Path (Strict Sequencing + Idempotency)
 **Goal:** Enqueue is “money-safe” and deterministic.
 
-**Producer flow (single transaction)**
-1. `sequence_id := bump_participant_outbox_seq(participant_id)`
-2. `INSERT INTO payment_outbox_pending (...) VALUES (...)`
-3. Commit → trigger fires NOTIFY
+**Producer flow (single call, DB-authoritative)**
+1. `SELECT * FROM enqueue_payment_outbox(...)`
+2. Commit → trigger fires NOTIFY
 
 **Rules**
 - Retries **must reuse the same** `outbox_id` + `sequence_id`
 - No new sequence is allocated for retries (requeues do not bump)
 
 **Idempotency handling**
-- If `(instruction_id, idempotency_key)` conflicts:
-  - treat as “already enqueued / already done”
-  - return the existing `outbox_id` (query by instruction/idempotency)
+- `enqueue_payment_outbox` handles idempotency and **unique-violation fallback** to return the existing row deterministically.
 
 ### Phase-7B-C — Relayer2A (Hybrid Wakeup + Crash Consistent Claim)
 **Goal:** Very low latency when healthy, deterministic recovery when not.
@@ -151,11 +185,13 @@ This plan replaces the current outbox **in place** with a hot pending queue plus
 - Debounce NOTIFY (e.g., coalesce events for 25–50ms to avoid thundering herd)
 - Fallback poll every **250–1000ms** (SLA-tight, still cheap at your TPS)
 
-**Claim pattern (atomic)**
-Inside a DB transaction:
-1. `DELETE FROM payment_outbox_pending WHERE next_attempt_at <= NOW() ORDER BY next_attempt_at, created_at LIMIT $BATCH RETURNING *`
-2. For each returned row: `INSERT payment_outbox_attempts(state='DISPATCHING', attempt_no=attempt_count+1, ...)`
-3. Commit
+**Claim pattern (atomic, set-based)**
+Inside a single DB transaction:
+1. Select due rows with `FOR UPDATE SKIP LOCKED`.
+2. `DELETE ... RETURNING` by outbox_id (the same rows locked).
+3. Compute `MAX(attempt_no)` **only for claimed outbox_ids**.
+4. Insert `DISPATCHING` attempts with `last_attempt_no + 1`.
+5. Commit.
 
 **Outcome**
 - **Exactly-once claim** (DB is the arbiter)
@@ -190,9 +226,10 @@ Inside a DB transaction:
 - Find latest attempt per outbox_id where:
   - state = `DISPATCHING`
   - claimed_at < NOW() - timeout (e.g., 120s)
-- Requeue pending with same `outbox_id/sequence_id` (idempotent insert)
-- Insert an attempt row:
-  - `ZOMBIE_REQUEUE` (or `RETRYABLE` with error_code=`ZOMBIE_REQUEUE`)
+- Requeue pending with same `outbox_id/sequence_id` (idempotent insert).
+- Conflict target = `outbox_id` only (never `(instruction_id, idempotency_key)`).
+- Maintain cache monotonicity: `attempt_count = GREATEST(existing, excluded)`.
+- Insert a `ZOMBIE_REQUEUE` attempt row with `attempt_no = last_attempt_no + 1`.
 
 ### Phase-7B-F — Observability & Alerts (Required)
 **Goal:** Auditable operational posture without overbuilding.

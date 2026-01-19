@@ -14,7 +14,7 @@ WITH latest_attempts AS (
     ORDER BY outbox_id, claimed_at DESC
 )
 SELECT
-    '7B.2.0' AS view_version,
+    '7B.2.1' AS view_version,
     NOW() AS generated_at,
 
     -- Pending counts
@@ -26,8 +26,6 @@ SELECT
     (SELECT COUNT(*) FROM latest_attempts WHERE state = 'DISPATCHED') AS dispatched_count,
     (SELECT COUNT(*) FROM latest_attempts WHERE state = 'FAILED') AS failed_count,
     (SELECT COUNT(*) FROM latest_attempts WHERE state = 'RETRYABLE') AS retryable_count,
-    (SELECT COUNT(*) FROM latest_attempts WHERE state = 'ZOMBIE_REQUEUE') AS zombie_requeue_count,
-
     -- DLQ heuristic (attempt_no >= 5 and terminal)
     (SELECT COUNT(*) FROM latest_attempts WHERE state = 'FAILED' AND attempt_no >= 5) AS dlq_count,
 
