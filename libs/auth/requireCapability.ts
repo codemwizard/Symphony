@@ -4,11 +4,13 @@ import { authorize, Policy } from "./authorize.js";
 import { logger } from "../logging/logger.js";
 import path from "path";
 import { assertPolicyVersionPinned, readPolicyFile } from "../policy/policyIntegrity.js";
+import { DbRole } from "../db/roles.js";
 
 /**
  * Reusable Authorization Guard
  */
 export async function requireCapability(
+    role: DbRole,
     requestedCapability: Capability,
     currentService: string
 ) {
@@ -20,7 +22,7 @@ export async function requireCapability(
     const activePolicy = readPolicyFile<Policy>(policyPath);
     assertPolicyVersionPinned(activePolicy.policyVersion);
 
-    const isAuthorized = await authorize(context, requestedCapability, currentService, activePolicy);
+    const isAuthorized = await authorize(role, context, requestedCapability, currentService, activePolicy);
 
     if (!isAuthorized) {
         logger.error({

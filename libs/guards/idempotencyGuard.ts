@@ -15,6 +15,7 @@
 import { logger } from '../logging/logger.js';
 import { guardAuditLogger } from '../audit/guardLogger.js';
 import { db } from '../db/index.js';
+import { DbRole } from '../db/roles.js';
 
 /**
  * Idempotency guard context.
@@ -57,6 +58,7 @@ const KEY_PATTERN = /^[a-zA-Z0-9_-]+$/;
  * Enforces INV-PERSIST-03: Retries must be idempotent.
  */
 export async function executeIdempotencyGuard(
+    role: DbRole,
     context: IdempotencyGuardContext
 ): Promise<IdempotencyGuardResult> {
     const { idempotencyKey, requestId, ingressSequenceId, participantId } = context;
@@ -64,13 +66,13 @@ export async function executeIdempotencyGuard(
     // Validate key format
     const validationResult = validateKeyFormat(idempotencyKey);
     if (validationResult.valid === false) {
-        await logDenial(requestId, ingressSequenceId, participantId, validationResult.reason);
+        await logDenial(role, requestId, ingressSequenceId, participantId, validationResult.reason);
         return { allowed: false, reason: validationResult.reason };
     }
 
 
     // Check for existing instruction with same key
-    const existing = await findExistingInstruction(idempotencyKey, participantId);
+    const existing = await findExistingInstruction(role, idempotencyKey, participantId);
 
     if (!existing) {
         // No existing instruction — new creation allowed
@@ -86,7 +88,7 @@ export async function executeIdempotencyGuard(
     // Existing instruction found — check if it's terminal
     if (existing.isTerminal) {
         // Terminal instruction cannot be retried
-        await logDenial(requestId, ingressSequenceId, participantId, 'DUPLICATE_WITH_TERMINAL_STATE');
+        await logDenial(role, requestId, ingressSequenceId, participantId, 'DUPLICATE_WITH_TERMINAL_STATE');
         return { allowed: false, reason: 'DUPLICATE_WITH_TERMINAL_STATE' };
     }
 
@@ -132,11 +134,13 @@ interface ExistingInstruction {
  * Find existing instruction by idempotency key.
  */
 async function findExistingInstruction(
+    role: DbRole,
     idempotencyKey: string,
     participantId: string
 ): Promise<ExistingInstruction | null> {
     // Query local idempotency tracking table
-    const result = await db.query(
+    const result = await db.queryAsRole(
+        role,
         `SELECT instruction_id, is_terminal
          FROM instruction_idempotency
          WHERE idempotency_key = $1 AND participant_id = $2
@@ -156,6 +160,7 @@ async function findExistingInstruction(
 }
 
 async function logDenial(
+    role: DbRole,
     requestId: string,
     ingressSequenceId: string,
     participantId: string,
@@ -167,7 +172,7 @@ async function logDenial(
         reason
     }, 'Idempotency guard denied request');
 
-    await guardAuditLogger.log({
+    await guardAuditLogger.log(role, {
         type: 'GUARD_POLICY_DENY', // Reuse existing guard event type
         requestId,
         ingressSequenceId,

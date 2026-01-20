@@ -16,6 +16,7 @@ import crypto from 'crypto';
 import { logger } from '../logging/logger.js';
 import { guardAuditLogger } from '../audit/guardLogger.js';
 import { db } from '../db/index.js';
+import { DbRole } from '../db/roles.js';
 import {
     RepairContext,
     RepairOutcome,
@@ -42,6 +43,7 @@ export interface RailQueryService {
  * 4. Emit transition command to .NET (if determined)
  */
 export async function executeRepairWorkflow(
+    role: DbRole,
     context: RepairContext,
     railQuery: RailQueryService
 ): Promise<RepairOutcome> {
@@ -59,7 +61,7 @@ export async function executeRepairWorkflow(
     }
 
     // Step 1: Log repair initiation
-    await guardAuditLogger.log({
+    await guardAuditLogger.log(role, {
         type: 'REPAIR_INITIATED',
         requestId,
         ingressSequenceId,
@@ -103,9 +105,9 @@ export async function executeRepairWorkflow(
         requestId
     };
 
-    await persistRepairEvent(repairEvent);
+    await persistRepairEvent(role, repairEvent);
 
-    await guardAuditLogger.log({
+    await guardAuditLogger.log(role, {
         type: 'REPAIR_RECONCILIATION_RESULT_RECORDED',
         requestId,
         ingressSequenceId,
@@ -134,7 +136,7 @@ export async function executeRepairWorkflow(
         }, 'Transition requested to .NET');
     }
 
-    await guardAuditLogger.log({
+    await guardAuditLogger.log(role, {
         type: 'REPAIR_COMPLETED',
         requestId,
         ingressSequenceId,
@@ -183,8 +185,9 @@ function isResolved(result: ReconciliationResult): boolean {
 /**
  * Persist repair event (append-only).
  */
-async function persistRepairEvent(event: RepairEvent): Promise<void> {
-    await db.query(
+async function persistRepairEvent(role: DbRole, event: RepairEvent): Promise<void> {
+    await db.queryAsRole(
+        role,
         `INSERT INTO repair_events (
             repair_event_id,
             instruction_id,

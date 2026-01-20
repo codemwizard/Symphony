@@ -1,11 +1,11 @@
 import { bootstrap } from "../../../libs/bootstrap/startup.js";
 import { logger } from "../../../libs/logging/logger.js";
-import { db } from "../../../libs/db/index.js";
+import { DbRole } from "../../../libs/db/roles.js";
 
 
 async function main() {
-    db.setRole("symphony_ingest");
-    await bootstrap("ingest-api");
+    const role: DbRole = "symphony_ingest";
+    await bootstrap("ingest-api", role);
 
     logger.info("Ingest API initialized");
 }

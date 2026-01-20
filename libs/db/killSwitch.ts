@@ -1,7 +1,9 @@
 import { db } from "./index.js";
+import { DbRole } from "./roles.js";
 
-export async function checkKillSwitch() {
-    const res = await db.query(
+export async function checkKillSwitch(role: DbRole) {
+    const res = await db.queryAsRole(
+        role,
         "SELECT count(*) FROM kill_switches WHERE is_active = true"
     );
 

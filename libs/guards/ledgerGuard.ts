@@ -22,6 +22,7 @@
 import { logger } from '../logging/logger.js';
 import { guardAuditLogger } from '../audit/guardLogger.js';
 import { ResolvedParticipant, LedgerScope } from '../participant/index.js';
+import { DbRole } from '../db/roles.js';
 
 export interface LedgerGuardContext {
     /** Request ID for correlation */
@@ -49,6 +50,7 @@ export type LedgerGuardDenyReason =
  * Structural validation only — does NOT grant execution authority.
  */
 export async function executeLedgerGuard(
+    role: DbRole,
     context: LedgerGuardContext
 ): Promise<LedgerGuardResult> {
     const {
@@ -65,7 +67,7 @@ export async function executeLedgerGuard(
     for (const accountId of requestedAccountIds) {
         if (!isAccountInScope(accountId, scope)) {
             const details = `Account ${accountId} not in participant ledger scope`;
-            await logDenial(requestId, ingressSequenceId, participant.participantId, 'ACCOUNT_OUT_OF_SCOPE', details);
+            await logDenial(role, requestId, ingressSequenceId, participant.participantId, 'ACCOUNT_OUT_OF_SCOPE', details);
             return { allowed: false, reason: 'ACCOUNT_OUT_OF_SCOPE', details };
         }
     }
@@ -75,7 +77,7 @@ export async function executeLedgerGuard(
         for (const walletId of requestedWalletIds) {
             if (!isWalletInScope(walletId, scope)) {
                 const details = `Wallet ${walletId} not in participant ledger scope`;
-                await logDenial(requestId, ingressSequenceId, participant.participantId, 'WALLET_OUT_OF_SCOPE', details);
+                await logDenial(role, requestId, ingressSequenceId, participant.participantId, 'WALLET_OUT_OF_SCOPE', details);
                 return { allowed: false, reason: 'WALLET_OUT_OF_SCOPE', details };
             }
         }
@@ -118,6 +120,7 @@ function isWalletInScope(walletId: string, scope: LedgerScope): boolean {
 }
 
 async function logDenial(
+    role: DbRole,
     requestId: string,
     ingressSequenceId: string,
     participantId: string,
@@ -131,7 +134,7 @@ async function logDenial(
         details
     }, 'Ledger scope guard denied request');
 
-    await guardAuditLogger.log({
+    await guardAuditLogger.log(role, {
         type: 'GUARD_LEDGER_SCOPE_DENY',
         requestId,
         ingressSequenceId,

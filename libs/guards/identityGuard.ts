@@ -17,6 +17,7 @@
 import { logger } from '../logging/logger.js';
 import { guardAuditLogger } from '../audit/guardLogger.js';
 import { ResolvedParticipant, ParticipantStatus } from '../participant/index.js';
+import { DbRole } from '../db/roles.js';
 
 export interface IdentityGuardContext {
     /** Request ID for correlation */
@@ -43,25 +44,26 @@ export type IdentityGuardDenyReason =
  * Fail-closed: Any missing context results in denial.
  */
 export async function executeIdentityGuard(
+    role: DbRole,
     context: IdentityGuardContext
 ): Promise<IdentityGuardResult> {
     const { requestId, ingressSequenceId, certFingerprint, participant } = context;
 
     // Check 1: mTLS context must be present
     if (!certFingerprint) {
-        await logDenial(requestId, ingressSequenceId, 'NO_MTLS_CONTEXT');
+        await logDenial(role, requestId, ingressSequenceId, 'NO_MTLS_CONTEXT');
         return { allowed: false, reason: 'NO_MTLS_CONTEXT' };
     }
 
     // Check 2: Participant must be resolved
     if (!participant) {
-        await logDenial(requestId, ingressSequenceId, 'NO_PARTICIPANT_RESOLVED');
+        await logDenial(role, requestId, ingressSequenceId, 'NO_PARTICIPANT_RESOLVED');
         return { allowed: false, reason: 'NO_PARTICIPANT_RESOLVED' };
     }
 
     // Check 3: Participant must be ACTIVE
     if (participant.status !== 'ACTIVE') {
-        await logStatusDenial(requestId, ingressSequenceId, participant.participantId, participant.status);
+        await logStatusDenial(role, requestId, ingressSequenceId, participant.participantId, participant.status);
         return { allowed: false, reason: 'PARTICIPANT_STATUS_DENY' };
     }
 
@@ -70,13 +72,14 @@ export async function executeIdentityGuard(
 }
 
 async function logDenial(
+    role: DbRole,
     requestId: string,
     ingressSequenceId: string,
     reason: IdentityGuardDenyReason
 ): Promise<void> {
     logger.warn({ requestId, reason }, 'Identity guard denied request');
 
-    await guardAuditLogger.log({
+    await guardAuditLogger.log(role, {
         type: 'GUARD_IDENTITY_DENY',
         requestId,
         ingressSequenceId,
@@ -85,6 +88,7 @@ async function logDenial(
 }
 
 async function logStatusDenial(
+    role: DbRole,
     requestId: string,
     ingressSequenceId: string,
     participantId: string,
@@ -92,7 +96,7 @@ async function logStatusDenial(
 ): Promise<void> {
     logger.warn({ requestId, participantId, status }, 'Participant status denial');
 
-    await guardAuditLogger.log({
+    await guardAuditLogger.log(role, {
         type: 'PARTICIPANT_STATUS_DENY',
         requestId,
         ingressSequenceId,

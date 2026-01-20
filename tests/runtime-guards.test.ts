@@ -30,8 +30,10 @@ import { ResolvedParticipant } from '../libs/participant/index.js';
 import { PolicyProfile } from '../libs/policy/index.js';
 import { guardAuditLogger } from '../libs/audit/guardLogger.js';
 import { logger } from '../libs/logging/logger.js';
+import { DbRole } from '../libs/db/roles.js';
 
 describe('Phase 7.1: Runtime Guards', () => {
+    const role: DbRole = 'symphony_readonly';
 
     beforeAll(() => {
         // Spy on the singleton instances directly
@@ -88,7 +90,7 @@ describe('Phase 7.1: Runtime Guards', () => {
                 participant: undefined
             };
 
-            const result = await executeIdentityGuard(context);
+            const result = await executeIdentityGuard(role, context);
             expect(result.allowed).toBe(false);
             if (result.allowed === false) {
                 expect(result.reason).toBe('NO_MTLS_CONTEXT');
@@ -103,7 +105,7 @@ describe('Phase 7.1: Runtime Guards', () => {
                 participant: undefined
             };
 
-            const result = await executeIdentityGuard(context);
+            const result = await executeIdentityGuard(role, context);
             expect(result.allowed).toBe(false);
             if (result.allowed === false) {
                 expect(result.reason).toBe('NO_PARTICIPANT_RESOLVED');
@@ -118,7 +120,7 @@ describe('Phase 7.1: Runtime Guards', () => {
                 participant: createParticipant({ status: 'SUSPENDED' })
             };
 
-            const result = await executeIdentityGuard(context);
+            const result = await executeIdentityGuard(role, context);
             expect(result.allowed).toBe(false);
             if (result.allowed === false) {
                 expect(result.reason).toBe('PARTICIPANT_STATUS_DENY');
@@ -133,7 +135,7 @@ describe('Phase 7.1: Runtime Guards', () => {
                 participant: createParticipant({ status: 'REVOKED' })
             };
 
-            const result = await executeIdentityGuard(context);
+            const result = await executeIdentityGuard(role, context);
             expect(result.allowed).toBe(false);
             if (result.allowed === false) {
                 expect(result.reason).toBe('PARTICIPANT_STATUS_DENY');
@@ -148,7 +150,7 @@ describe('Phase 7.1: Runtime Guards', () => {
                 participant: createParticipant({ status: 'ACTIVE' })
             };
 
-            const result = await executeIdentityGuard(context);
+            const result = await executeIdentityGuard(role, context);
             expect(result.allowed).toBe(true);
         });
     });
@@ -162,7 +164,7 @@ describe('Phase 7.1: Runtime Guards', () => {
                 requestedCapability: 'execution:attempt'
             };
 
-            const result = await executeAuthorizationGuard(context);
+            const result = await executeAuthorizationGuard(role, context);
             expect(result.allowed).toBe(false);
             if (result.allowed === false) {
                 expect(result.reason).toBe('SUPERVISOR_CANNOT_EXECUTE');
@@ -177,7 +179,7 @@ describe('Phase 7.1: Runtime Guards', () => {
                 requestedCapability: 'instruction:submit'
             };
 
-            const result = await executeAuthorizationGuard(context);
+            const result = await executeAuthorizationGuard(role, context);
             expect(result.allowed).toBe(false);
             if (result.allowed === false) {
                 expect(result.reason).toBe('SUPERVISOR_CANNOT_EXECUTE');
@@ -192,7 +194,7 @@ describe('Phase 7.1: Runtime Guards', () => {
                 requestedCapability: 'audit:read'
             };
 
-            const result = await executeAuthorizationGuard(context);
+            const result = await executeAuthorizationGuard(role, context);
             expect(result.allowed).toBe(true);
         });
 
@@ -204,7 +206,7 @@ describe('Phase 7.1: Runtime Guards', () => {
                 requestedCapability: 'execution:attempt'
             };
 
-            const result = await executeAuthorizationGuard(context);
+            const result = await executeAuthorizationGuard(role, context);
             expect(result.allowed).toBe(true);
         });
     });
@@ -220,7 +222,7 @@ describe('Phase 7.1: Runtime Guards', () => {
                 messageType: 'pacs.008'
             };
 
-            const result = await executePolicyGuard(context);
+            const result = await executePolicyGuard(role, context);
             expect(result.allowed).toBe(false);
             if (result.allowed === false) {
                 expect(result.reason).toBe('AMOUNT_EXCEEDS_LIMIT');
@@ -237,7 +239,7 @@ describe('Phase 7.1: Runtime Guards', () => {
                 messageType: 'pain.001'  // Not in whitelist
             };
 
-            const result = await executePolicyGuard(context);
+            const result = await executePolicyGuard(role, context);
             expect(result.allowed).toBe(false);
             if (result.allowed === false) {
                 expect(result.reason).toBe('MESSAGE_TYPE_NOT_ALLOWED');
@@ -254,7 +256,7 @@ describe('Phase 7.1: Runtime Guards', () => {
                 messageType: 'pacs.008'
             };
 
-            const result = await executePolicyGuard(context);
+            const result = await executePolicyGuard(role, context);
             expect(result.allowed).toBe(true);
         });
     });
@@ -270,7 +272,7 @@ describe('Phase 7.1: Runtime Guards', () => {
                 requestedAccountIds: ['acct-999'] // Not in scope
             };
 
-            const result = await executeLedgerGuard(context);
+            const result = await executeLedgerGuard(role, context);
             expect(result.allowed).toBe(false);
             if (result.allowed === false) {
                 expect(result.reason).toBe('ACCOUNT_OUT_OF_SCOPE');
@@ -287,7 +289,7 @@ describe('Phase 7.1: Runtime Guards', () => {
                 requestedAccountIds: ['acct-001']
             };
 
-            const result = await executeLedgerGuard(context);
+            const result = await executeLedgerGuard(role, context);
             expect(result.allowed).toBe(false);
             if (result.allowed === false) {
                 expect(result.reason).toBe('ACCOUNT_OUT_OF_SCOPE');
@@ -304,7 +306,7 @@ describe('Phase 7.1: Runtime Guards', () => {
                 requestedAccountIds: ['acct-001']
             };
 
-            const result = await executeLedgerGuard(context);
+            const result = await executeLedgerGuard(role, context);
             expect(result.allowed).toBe(true);
         });
     });

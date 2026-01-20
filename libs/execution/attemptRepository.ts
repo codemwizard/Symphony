@@ -10,6 +10,7 @@
  */
 
 import { db } from '../db/index.js';
+import { DbRole } from '../db/roles.js';
 import { logger } from '../logging/logger.js';
 import { guardAuditLogger } from '../audit/guardLogger.js';
 import {
@@ -37,11 +38,12 @@ interface AttemptRow {
  * Create a new execution attempt.
  * Attempts are append-only; this creates a new record.
  */
-export async function createAttempt(input: CreateAttemptInput): Promise<ExecutionAttempt> {
+export async function createAttempt(role: DbRole, input: CreateAttemptInput): Promise<ExecutionAttempt> {
     const { instructionId, ingressSequenceId, requestId } = input;
 
     // Get next sequence number for this instruction
-    const seqResult = await db.query(
+    const seqResult = await db.queryAsRole(
+        role,
         `SELECT COALESCE(MAX(sequence_number), 0) + 1 as next_seq
          FROM execution_attempts
          WHERE instruction_id = $1`,
@@ -49,7 +51,8 @@ export async function createAttempt(input: CreateAttemptInput): Promise<Executio
     );
     const sequenceNumber = (seqResult.rows[0] as { next_seq: number }).next_seq;
 
-    const result = await db.query(
+    const result = await db.queryAsRole(
+        role,
         `INSERT INTO execution_attempts (
             instruction_id,
             sequence_number,
@@ -73,7 +76,7 @@ export async function createAttempt(input: CreateAttemptInput): Promise<Executio
 
     const attempt = mapRowToAttempt(result.rows[0] as AttemptRow);
 
-    await guardAuditLogger.log({
+    await guardAuditLogger.log(role, {
         type: 'EXECUTION_ATTEMPT_CREATED',
         requestId,
         ingressSequenceId,
@@ -95,21 +98,23 @@ export async function createAttempt(input: CreateAttemptInput): Promise<Executio
 /**
  * Mark attempt as sent to external rail.
  */
-export async function markAttemptSent(attemptId: string, requestId: string): Promise<void> {
-    await db.query(
+export async function markAttemptSent(role: DbRole, attemptId: string, requestId: string): Promise<void> {
+    await db.queryAsRole(
+        role,
         `UPDATE execution_attempts
          SET state = $1
          WHERE attempt_id = $2 AND state = 'CREATED'`,
         ['SENT', attemptId]
     );
 
-    const result = await db.query(
+    const result = await db.queryAsRole(
+        role,
         `SELECT ingress_sequence_id FROM execution_attempts WHERE attempt_id = $1 LIMIT 1`,
         [attemptId]
     );
 
     if (result.rows.length > 0) {
-        await guardAuditLogger.log({
+        await guardAuditLogger.log(role, {
             type: 'EXECUTION_ATTEMPT_SENT',
             requestId,
             ingressSequenceId: (result.rows[0] as { ingress_sequence_id: string }).ingress_sequence_id,
@@ -124,10 +129,11 @@ export async function markAttemptSent(attemptId: string, requestId: string): Pro
  * Resolve an attempt with final state.
  * This is append-like: we update state but never delete or regress.
  */
-export async function resolveAttempt(input: ResolveAttemptInput): Promise<ExecutionAttempt> {
+export async function resolveAttempt(role: DbRole, input: ResolveAttemptInput): Promise<ExecutionAttempt> {
     const { attemptId, state, railResponse, failureClass } = input;
 
-    const result = await db.query(
+    const result = await db.queryAsRole(
+        role,
         `UPDATE execution_attempts
          SET state = $1,
              rail_response = $2,
@@ -154,7 +160,7 @@ export async function resolveAttempt(input: ResolveAttemptInput): Promise<Execut
 
     const attempt = mapRowToAttempt(result.rows[0] as AttemptRow);
 
-    await guardAuditLogger.log({
+    await guardAuditLogger.log(role, {
         type: 'EXECUTION_ATTEMPT_RESOLVED',
         requestId: attempt.requestId,
         ingressSequenceId: attempt.ingressSequenceId,
@@ -176,8 +182,9 @@ export async function resolveAttempt(input: ResolveAttemptInput): Promise<Execut
 /**
  * Find attempts by instruction ID.
  */
-export async function findAttemptsByInstruction(instructionId: string): Promise<readonly ExecutionAttempt[]> {
-    const result = await db.query(
+export async function findAttemptsByInstruction(role: DbRole, instructionId: string): Promise<readonly ExecutionAttempt[]> {
+    const result = await db.queryAsRole(
+        role,
         `SELECT
             attempt_id,
             instruction_id,
@@ -202,8 +209,9 @@ export async function findAttemptsByInstruction(instructionId: string): Promise<
 /**
  * Get latest attempt for instruction.
  */
-export async function getLatestAttempt(instructionId: string): Promise<ExecutionAttempt | null> {
-    const result = await db.query(
+export async function getLatestAttempt(role: DbRole, instructionId: string): Promise<ExecutionAttempt | null> {
+    const result = await db.queryAsRole(
+        role,
         `SELECT
             attempt_id,
             instruction_id,

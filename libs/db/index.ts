@@ -1,8 +1,10 @@
 import pg from 'pg';
+import { AsyncLocalStorage } from 'node:async_hooks';
 import { ConfigGuard } from '../bootstrap/config-guard.js';
 import { DB_CONFIG_GUARDS } from '../bootstrap/config/db-config.js';
 import { ErrorSanitizer } from '../errors/sanitizer.js';
 import { logger } from '../logging/logger.js';
+import { assertDbRole, DB_ROLES, DbRole } from './roles.js';
 
 const { Pool } = pg;
 
@@ -45,96 +47,113 @@ const pool = new Pool({
         } : false)
 });
 
-// SEC-FIX: Valid roles allowlist (injection prevention via strict allowlist)
-const VALID_ROLES = [
-    "symphony_control",
-    "symphony_ingest",
-    "symphony_executor",
-    "symphony_readonly",
-    "symphony_auditor",
-    "symphony_auth",
-    "anon"
-] as const;
-type ValidRole = typeof VALID_ROLES[number];
+export type Queryable = {
+    query<T = pg.QueryResultRow>(text: string, params?: unknown[]): Promise<pg.QueryResult<T>>;
+};
 
-function isValidRole(role: string): role is ValidRole {
-    return VALID_ROLES.includes(role as ValidRole);
+export type TxClient = Queryable;
+
+export type RoleBoundClient = Queryable & {
+    transaction<T>(callback: (client: TxClient) => Promise<T>): Promise<T>;
+};
+
+const transactionContext = new AsyncLocalStorage<{ inTx: boolean }>();
+
+function quoteIdentifier(identifier: string): string {
+    const escaped = identifier.replace(/"/g, '""');
+    return `"${escaped}"`;
 }
 
-// @deprecated Use queryAsRole for concurrency-safe scoped queries
-export let currentRole: string = "anon";
+async function verifyRole(client: pg.PoolClient, role: DbRole): Promise<void> {
+    const roleCheck = await client.query('SELECT current_user');
+    const currentUser = roleCheck.rows[0]?.current_user;
+    if (currentUser !== role) {
+        throw new Error(`CRITICAL: Role enforcement failure. Target: ${role}, Actual: ${currentUser}`);
+    }
+}
+
+async function resetRole(client: pg.PoolClient, context: string): Promise<void> {
+    try {
+        await client.query('RESET ROLE');
+    } catch (error) {
+        logger.warn({ error }, `[DB] Failed to reset role during ${context}`);
+    }
+}
+
+async function runTransaction<T>(
+    client: pg.PoolClient,
+    role: DbRole,
+    callback: (tx: TxClient) => Promise<T>
+): Promise<T> {
+    const store = transactionContext.getStore();
+    if (store?.inTx) {
+        throw new Error('Nested transaction detected: transactionAsRole cannot be invoked within an active transaction.');
+    }
+
+    return transactionContext.run({ inTx: true }, async () => {
+        try {
+            await client.query('BEGIN');
+            await client.query(`SET LOCAL ROLE ${quoteIdentifier(role)}`);
+            await verifyRole(client, role);
+
+            const txClient: TxClient = {
+                query: (text: string, params?: unknown[]) => client.query(text, params)
+            };
+
+            const result = await callback(txClient);
+            await client.query('COMMIT');
+            return result;
+        } catch (error) {
+            try {
+                await client.query('ROLLBACK');
+            } catch (rollbackError) {
+                logger.error({ error: rollbackError }, '[DB] Failed to rollback transaction');
+            }
+            throw ErrorSanitizer.sanitize(error, 'DatabaseLayer:TransactionFailed');
+        }
+    });
+}
 
 export const db = {
-    /**
-     * @deprecated Use queryAsRole for concurrency-safe scoped queries.
-     * Set the database role for the next query.
-     */
-    setRole: (role: string) => {
-        if (!isValidRole(role)) {
-            throw new Error(`Invalid DB role attempt: ${role}`);
-        }
-        currentRole = role;
-    },
-
     /**
      * SEC-FIX: Concurrency-safe scoped role query.
      * Role is applied per-call, not globally.
      */
-    queryAsRole: async (role: ValidRole, text: string, params?: unknown[]) => {
-        if (!isValidRole(role)) {
-            throw new Error(`Invalid DB role: ${role}`);
-        }
+    queryAsRole: async (role: DbRole, text: string, params?: unknown[]) => {
+        const validatedRole = assertDbRole(role);
         const client = await pool.connect();
         try {
-            if (role !== "anon") {
-                // Injection safe: role validated against strict allowlist
-                await client.query(`SET ROLE ${role}`);
-            }
+            await client.query(`SET ROLE ${quoteIdentifier(validatedRole)}`);
+            await verifyRole(client, validatedRole);
             return await client.query(text, params);
-        } catch (err) {
-            throw ErrorSanitizer.sanitize(err, "DatabaseLayer:QueryAsRoleFailure");
+        } catch (error) {
+            throw ErrorSanitizer.sanitize(error, 'DatabaseLayer:QueryAsRoleFailure');
         } finally {
-            if (role !== "anon") {
-                try { await client.query('RESET ROLE'); } catch (e) {
-                    logger.warn({ error: e }, "[DB] Failed to reset role");
-                }
-            }
+            await resetRole(client, 'queryAsRole');
             client.release();
         }
     },
 
     /**
-     * Executes a query with mandatory role enforcement and parameterization.
-     * @deprecated Prefer queryAsRole for new code.
+     * Scoped client wrapper for multi-step work without forcing a transaction.
      */
-    query: async (text: string, params?: unknown[]) => {
+    withClientAsRole: async <T>(role: DbRole, callback: (client: RoleBoundClient) => Promise<T>): Promise<T> => {
+        const validatedRole = assertDbRole(role);
         const client = await pool.connect();
         try {
-            if (currentRole !== "anon") {
-                // INV-PERSIST-01: Protocol-level role enforcement
-                await client.query(`SET ROLE ${currentRole}`);
+            await client.query(`SET ROLE ${quoteIdentifier(validatedRole)}`);
+            await verifyRole(client, validatedRole);
 
-                // Verification of role (Hard Blocker requirement)
-                const roleCheck = await client.query('SELECT current_user');
-                if (roleCheck.rows[0].current_user !== currentRole) {
-                    throw new Error(`CRITICAL: Role enforcement failure. Target: ${currentRole}, Actual: ${roleCheck.rows[0].current_user}`);
-                }
-            }
+            const roleBoundClient: RoleBoundClient = {
+                query: (text: string, params?: unknown[]) => client.query(text, params),
+                transaction: async (txCallback) => runTransaction(client, validatedRole, txCallback)
+            };
 
-            // Zero-tolerance for unparameterized queries is enforced by the pg driver API usage requirement
-            return await client.query(text, params);
-        } catch (err) {
-            // HIGH-SEC-003: Prevent information disclosure
-            throw ErrorSanitizer.sanitize(err, "DatabaseLayer:QueryFailure");
+            return await callback(roleBoundClient);
+        } catch (error) {
+            throw ErrorSanitizer.sanitize(error, 'DatabaseLayer:WithClientAsRoleFailure');
         } finally {
-            // Clean up the connection state before returning to pool
-            if (currentRole !== "anon") {
-                try {
-                    await client.query('RESET ROLE');
-                } catch (resetErr) {
-                    logger.error({ error: resetErr }, '[DB] Failed to reset role, connection may be tainted');
-                }
-            }
+            await resetRole(client, 'withClientAsRole');
             client.release();
         }
     },
@@ -144,29 +163,42 @@ export const db = {
      * Executes a callback within a managed transaction.
      * Automatically rolls back on error.
      */
-    executeTransaction: async <T>(callback: (client: pg.PoolClient) => Promise<T>): Promise<T> => {
+    transactionAsRole: async <T>(role: DbRole, callback: (client: TxClient) => Promise<T>): Promise<T> => {
+        const validatedRole = assertDbRole(role);
         const client = await pool.connect();
         try {
-            await client.query('BEGIN');
-            if (currentRole !== "anon") {
-                await client.query(`SET ROLE ${currentRole}`);
-            }
-
-            const result = await callback(client);
-
-            await client.query('COMMIT');
-            return result;
-        } catch (err) {
-            await client.query('ROLLBACK');
-            throw ErrorSanitizer.sanitize(err, "DatabaseLayer:TransactionFailed");
+            return await runTransaction(client, validatedRole, callback);
         } finally {
-            if (currentRole !== "anon") {
-                try { await client.query('RESET ROLE'); } catch (e) {
-                    logger.warn({ error: e }, "[DB] Failed to reset role in transaction cleanup");
+            await resetRole(client, 'transactionAsRole');
+            client.release();
+        }
+    },
+
+    /**
+     * Boot-time probe to ensure DB_USER can SET ROLE into each required role.
+     */
+    probeRoles: async (): Promise<void> => {
+        const client = await pool.connect();
+        try {
+            for (const role of DB_ROLES) {
+                await client.query('BEGIN');
+                try {
+                    await client.query(`SET LOCAL ROLE ${quoteIdentifier(role)}`);
+                    await verifyRole(client, role);
+                    await client.query('ROLLBACK');
+                } catch (error) {
+                    try {
+                        await client.query('ROLLBACK');
+                    } catch (rollbackError) {
+                        logger.error({ error: rollbackError }, '[DB] Failed to rollback role probe');
+                    }
+                    throw ErrorSanitizer.sanitize(error, 'DatabaseLayer:ProbeRolesFailure');
                 }
             }
+        } finally {
             client.release();
         }
     }
 };
 
+export { DbRole };

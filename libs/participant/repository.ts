@@ -7,6 +7,7 @@
  */
 
 import { db } from '../db/index.js';
+import { DbRole } from '../db/roles.js';
 import {
     Participant,
     ParticipantStatus,
@@ -35,8 +36,9 @@ interface ParticipantRow {
  * Find participant by mTLS certificate fingerprint.
  * Returns null if not found — does NOT throw.
  */
-export async function findByFingerprint(fingerprint: string): Promise<Participant | null> {
-    const result = await db.query(
+export async function findByFingerprint(role: DbRole, fingerprint: string): Promise<Participant | null> {
+    const result = await db.queryAsRole(
+        role,
         `SELECT
             participant_id,
             legal_entity_ref,
@@ -69,8 +71,9 @@ export async function findByFingerprint(fingerprint: string): Promise<Participan
  * Find participant by ID.
  * Returns null if not found — does NOT throw.
  */
-export async function findById(participantId: string): Promise<Participant | null> {
-    const result = await db.query(
+export async function findById(role: DbRole, participantId: string): Promise<Participant | null> {
+    const result = await db.queryAsRole(
+        role,
         `SELECT
             participant_id,
             legal_entity_ref,
