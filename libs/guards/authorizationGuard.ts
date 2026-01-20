@@ -16,6 +16,7 @@ import { logger } from '../logging/logger.js';
 import { guardAuditLogger } from '../audit/guardLogger.js';
 import { ResolvedParticipant, ParticipantRole } from '../participant/index.js';
 import { Capability } from '../auth/capabilities.js';
+import { DbRole } from '../db/roles.js';
 
 export interface AuthorizationGuardContext {
     /** Request ID for correlation */
@@ -51,6 +52,7 @@ const SUPERVISOR_ALLOWED_CAPABILITIES: readonly Capability[] = [
  * Enforces role-based capability restrictions.
  */
 export async function executeAuthorizationGuard(
+    role: DbRole,
     context: AuthorizationGuardContext
 ): Promise<AuthorizationGuardResult> {
     const { requestId, ingressSequenceId, participant, requestedCapability } = context;
@@ -59,6 +61,7 @@ export async function executeAuthorizationGuard(
     if (participant.role === 'SUPERVISOR') {
         if (!SUPERVISOR_ALLOWED_CAPABILITIES.includes(requestedCapability)) {
             await logDenial(
+                role,
                 requestId,
                 ingressSequenceId,
                 participant.participantId,
@@ -81,6 +84,7 @@ export async function executeAuthorizationGuard(
 }
 
 async function logDenial(
+    role: DbRole,
     requestId: string,
     ingressSequenceId: string,
     participantId: string,
@@ -96,7 +100,7 @@ async function logDenial(
         reason
     }, 'Authorization guard denied request');
 
-    await guardAuditLogger.log({
+    await guardAuditLogger.log(role, {
         type: 'GUARD_AUTHORIZATION_DENY',
         requestId,
         ingressSequenceId,

@@ -1,7 +1,7 @@
 import { AuditRecordV1, AuditEventType } from "./schema.js";
 import { ValidatedIdentityContext } from "../context/identity.js";
 import { logger } from "../logging/logger.js";
-import { db } from "../db/index.js";
+import { db, DbRole } from "../db/index.js";
 import crypto from "crypto";
 
 /**
@@ -17,11 +17,12 @@ class AuditLogger {
     /**
      * Bootstraps the hash chain by fetching the last verified record from the DB.
      */
-    private async ensureChainInitialized() {
+    private async ensureChainInitialized(role: DbRole) {
         if (this.lastHash !== null) return;
 
         try {
-            const result = await db.query(
+            const result = await db.queryAsRole(
+                role,
                 `SELECT metadata->'integrity'->>'hash' as last_hash 
                  FROM audit_log 
                  ORDER BY created_at DESC 
@@ -41,6 +42,7 @@ class AuditLogger {
     }
 
     public async log(
+        role: DbRole,
         event: {
             type: AuditEventType;
             context: ValidatedIdentityContext;
@@ -49,7 +51,7 @@ class AuditLogger {
             reason?: string;
         }
     ): Promise<void> {
-        await this.ensureChainInitialized();
+        await this.ensureChainInitialized(role);
 
         const { type, context, reason } = event;
 
@@ -85,7 +87,8 @@ class AuditLogger {
         // INV-OPS-02: Audit records must be committed before external side-effects.
         // We use the database's transactional guarantee.
         try {
-            await db.query(
+            await db.queryAsRole(
+                role,
                 `INSERT INTO audit_log (id, actor, action, target_id, metadata, created_at) 
                  VALUES ($1, $2, $3, $4, $5, $6)`,
                 [

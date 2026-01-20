@@ -10,7 +10,7 @@
 
 import { AuditEventType } from './schema.js';
 import { logger } from '../logging/logger.js';
-import { db } from '../db/index.js';
+import { db, DbRole } from '../db/index.js';
 import crypto from 'crypto';
 
 interface LastHashRow {
@@ -36,11 +36,12 @@ export interface GuardAuditEvent {
 class GuardAuditLogger {
     private lastHash: string | null = null;
 
-    private async ensureChainInitialized(): Promise<void> {
+    private async ensureChainInitialized(role: DbRole): Promise<void> {
         if (this.lastHash !== null) return;
 
         try {
-            const result = await db.query(
+            const result = await db.queryAsRole(
+                role,
                 `SELECT metadata->'integrity'->>'hash' as last_hash 
                  FROM audit_log 
                  ORDER BY created_at DESC 
@@ -62,8 +63,8 @@ class GuardAuditLogger {
     /**
      * Log a guard audit event.
      */
-    public async log(event: GuardAuditEvent): Promise<void> {
-        await this.ensureChainInitialized();
+    public async log(role: DbRole, event: GuardAuditEvent): Promise<void> {
+        await this.ensureChainInitialized(role);
 
         const eventId = crypto.randomUUID();
         const timestamp = new Date().toISOString();
@@ -92,7 +93,8 @@ class GuardAuditLogger {
         };
 
         try {
-            await db.query(
+            await db.queryAsRole(
+                role,
                 `INSERT INTO audit_log (id, actor, action, target_id, metadata, created_at) 
                  VALUES ($1, $2, $3, $4, $5, $6)`,
                 [

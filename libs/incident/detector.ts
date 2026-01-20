@@ -2,6 +2,7 @@ import { IncidentSignal, IncidentClass, IncidentSeverity, isMaterial } from "./t
 import { logger } from "../logging/logger.js";
 import { auditLogger } from "../audit/logger.js";
 import { IncidentContainment } from "./containment.js";
+import { DbRole } from "../db/roles.js";
 import crypto from "crypto";
 
 /**
@@ -14,6 +15,7 @@ export class IncidentDetector {
      * Detects and emits an incident signal.
      */
     static async emitSignal(params: {
+        role: DbRole;
         class: IncidentClass;
         severity: IncidentSeverity;
         source: string;
@@ -25,18 +27,19 @@ export class IncidentDetector {
             systemicRisk: boolean;
         }
     }): Promise<IncidentSignal> {
+        const { role, ...signalParams } = params;
 
         const signal: IncidentSignal = {
             id: crypto.randomUUID(),
             timestamp: new Date().toISOString(),
-            ...params
+            ...signalParams
         };
 
         // Log to operational logger
         logger.error({ signal }, `INCIDENT SIGNAL EMITTED: ${signal.class} [${signal.severity}]`);
 
         // Synchronous Audit Log (Preserve evidence)
-        await auditLogger.log({
+        await auditLogger.log(role, {
             type: 'INCIDENT_SIGNAL',
             context: {
                 version: 'v1',
@@ -59,7 +62,7 @@ export class IncidentDetector {
 
         // Escalation logic placeholder (Next step)
         if (signal.severity === IncidentSeverity.CRITICAL || signal.severity === IncidentSeverity.HIGH) {
-            await this.triggerEscalation(signal);
+            await this.triggerEscalation(role, signal);
         }
 
         return signal;
@@ -68,8 +71,9 @@ export class IncidentDetector {
     /**
      * Specifically handles mTLS violations (Phase 6.4)
      */
-    static async detectMtlsFailure(source: string, details: string) {
+    static async detectMtlsFailure(role: DbRole, source: string, details: string) {
         return await this.emitSignal({
+            role,
             class: IncidentClass.SEC_1,
             severity: IncidentSeverity.HIGH,
             source,
@@ -81,7 +85,7 @@ export class IncidentDetector {
         });
     }
 
-    private static async triggerEscalation(signal: IncidentSignal) {
+    private static async triggerEscalation(role: DbRole, signal: IncidentSignal) {
         // Determine if regulator notification is mandatory
         const mandatoryDisclosure = signal.class === IncidentClass.REG_1 ||
             (signal.materiality && isMaterial(signal.materiality));
@@ -91,7 +95,7 @@ export class IncidentDetector {
 
         // Trigger Automated Containment
         if (signal.severity === IncidentSeverity.CRITICAL) {
-            await IncidentContainment.execute(signal);
+            await IncidentContainment.execute(role, signal);
         }
     }
 }
