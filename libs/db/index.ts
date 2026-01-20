@@ -26,6 +26,7 @@ if (isProtectedEnv && process.env.DB_SSL_QUERY === 'false') {
  * INV-PERSIST-01: Persistence Reality
  * Hardened PostgreSQL connection with connection pooling and mandatory role enforcement.
  */
+const poolMax = process.env.DB_POOL_MAX ? parseInt(process.env.DB_POOL_MAX, 10) : 20;
 const pool = new Pool({
     // CRIT-SEC-002 FIX: Removed silent fallbacks. All values must be explicitly configured.
     host: process.env.DB_HOST!,
@@ -33,7 +34,7 @@ const pool = new Pool({
     user: process.env.DB_USER!,
     password: process.env.DB_PASSWORD!,
     database: process.env.DB_NAME!,
-    max: 20,
+    max: Number.isFinite(poolMax) ? poolMax : 20,
     idleTimeoutMillis: 30000,
     connectionTimeoutMillis: 2000,
     ssl: isProtectedEnv
@@ -53,9 +54,7 @@ export type Queryable = {
 
 export type TxClient = Queryable;
 
-export type RoleBoundClient = Queryable & {
-    transaction<T>(callback: (client: TxClient) => Promise<T>): Promise<T>;
-};
+export type RoleBoundClient = Queryable;
 
 const transactionContext = new AsyncLocalStorage<{ inTx: boolean }>();
 
@@ -72,12 +71,38 @@ async function verifyRole(client: pg.PoolClient, role: DbRole): Promise<void> {
     }
 }
 
-async function resetRole(client: pg.PoolClient, context: string): Promise<void> {
+async function resetRole(client: pg.PoolClient, context: string): Promise<boolean> {
     try {
         await client.query('RESET ROLE');
+        return true;
     } catch (error) {
         logger.warn({ error }, `[DB] Failed to reset role during ${context}`);
+        return false;
     }
+}
+
+function releaseClient(client: pg.PoolClient, forceDestroy: boolean, context: string): void {
+    try {
+        if (forceDestroy) {
+            client.release(new Error(`[DB] Forcing client destroy after ${context}`));
+        } else {
+            client.release();
+        }
+    } catch (error) {
+        logger.error({ error }, `[DB] Failed to release client during ${context}`);
+    }
+}
+
+const TAINTED_CLIENT = Symbol('tainted_client');
+
+function markTainted(error: unknown): Error {
+    const wrapped = error instanceof Error ? error : new Error(String(error));
+    (wrapped as Error & { [TAINTED_CLIENT]?: boolean })[TAINTED_CLIENT] = true;
+    return wrapped;
+}
+
+function isTainted(error: unknown): boolean {
+    return Boolean((error as { [TAINTED_CLIENT]?: boolean } | undefined)?.[TAINTED_CLIENT]);
 }
 
 async function runTransaction<T>(
@@ -91,6 +116,7 @@ async function runTransaction<T>(
     }
 
     return transactionContext.run({ inTx: true }, async () => {
+        let commitAttempted = false;
         try {
             await client.query('BEGIN');
             await client.query(`SET LOCAL ROLE ${quoteIdentifier(role)}`);
@@ -102,15 +128,22 @@ async function runTransaction<T>(
             };
 
             const result = await callback(txClient);
+            commitAttempted = true;
             await client.query('COMMIT');
             return result;
         } catch (error) {
+            let rollbackFailed = false;
             try {
                 await client.query('ROLLBACK');
             } catch (rollbackError) {
+                rollbackFailed = true;
                 logger.error({ error: rollbackError }, '[DB] Failed to rollback transaction');
             }
-            throw ErrorSanitizer.sanitize(error, 'DatabaseLayer:TransactionFailed');
+            const sanitized = ErrorSanitizer.sanitize(error, 'DatabaseLayer:TransactionFailed');
+            if (commitAttempted || rollbackFailed) {
+                throw markTainted(sanitized);
+            }
+            throw sanitized;
         }
     });
 }
@@ -127,6 +160,7 @@ export const db = {
     ): Promise<pg.QueryResult<T>> => {
         const validatedRole = assertDbRole(role);
         const client = await pool.connect();
+        let forceDestroy = false;
         try {
             await client.query(`SET ROLE ${quoteIdentifier(validatedRole)}`);
             await verifyRole(client, validatedRole);
@@ -134,33 +168,35 @@ export const db = {
         } catch (error) {
             throw ErrorSanitizer.sanitize(error, 'DatabaseLayer:QueryAsRoleFailure');
         } finally {
-            await resetRole(client, 'queryAsRole');
-            client.release();
+            const resetOk = await resetRole(client, 'queryAsRole');
+            forceDestroy = !resetOk;
+            releaseClient(client, forceDestroy, 'queryAsRole');
         }
     },
 
     /**
      * Scoped client wrapper for multi-step work without forcing a transaction.
      */
-    withClientAsRole: async <T>(role: DbRole, callback: (client: RoleBoundClient) => Promise<T>): Promise<T> => {
+    withRoleClient: async <T>(role: DbRole, callback: (client: RoleBoundClient) => Promise<T>): Promise<T> => {
         const validatedRole = assertDbRole(role);
         const client = await pool.connect();
+        let forceDestroy = false;
         try {
             await client.query(`SET ROLE ${quoteIdentifier(validatedRole)}`);
             await verifyRole(client, validatedRole);
 
             const roleBoundClient: RoleBoundClient = {
                 query: <T extends pg.QueryResultRow = pg.QueryResultRow>(text: string, params?: unknown[]) =>
-                    client.query<T>(text, params),
-                transaction: async (txCallback) => runTransaction(client, validatedRole, txCallback)
+                    client.query<T>(text, params)
             };
 
             return await callback(roleBoundClient);
         } catch (error) {
-            throw ErrorSanitizer.sanitize(error, 'DatabaseLayer:WithClientAsRoleFailure');
+            throw ErrorSanitizer.sanitize(error, 'DatabaseLayer:WithRoleClientFailure');
         } finally {
-            await resetRole(client, 'withClientAsRole');
-            client.release();
+            const resetOk = await resetRole(client, 'withRoleClient');
+            forceDestroy = !resetOk;
+            releaseClient(client, forceDestroy, 'withRoleClient');
         }
     },
 
@@ -172,11 +208,18 @@ export const db = {
     transactionAsRole: async <T>(role: DbRole, callback: (client: TxClient) => Promise<T>): Promise<T> => {
         const validatedRole = assertDbRole(role);
         const client = await pool.connect();
+        let forceDestroy = false;
         try {
             return await runTransaction(client, validatedRole, callback);
+        } catch (error) {
+            if (isTainted(error)) {
+                forceDestroy = true;
+            }
+            throw error;
         } finally {
-            await resetRole(client, 'transactionAsRole');
-            client.release();
+            const resetOk = await resetRole(client, 'transactionAsRole');
+            forceDestroy = forceDestroy || !resetOk;
+            releaseClient(client, forceDestroy, 'transactionAsRole');
         }
     },
 
@@ -202,9 +245,23 @@ export const db = {
                 }
             }
         } finally {
-            client.release();
+            releaseClient(client, false, 'probeRoles');
         }
     }
 };
+
+export const __testOnly = process.env.NODE_ENV === 'test' ? {
+    async queryNoRole<T extends pg.QueryResultRow = pg.QueryResultRow>(
+        text: string,
+        params?: unknown[]
+    ): Promise<pg.QueryResult<T>> {
+        const client = await pool.connect();
+        try {
+            return await client.query<T>(text, params);
+        } finally {
+            releaseClient(client, false, 'queryNoRole');
+        }
+    }
+} : undefined;
 
 export { DbRole };

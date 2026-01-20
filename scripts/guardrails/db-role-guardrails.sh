@@ -1,0 +1,60 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+command -v rg >/dev/null 2>&1 || { echo "rg (ripgrep) is required"; exit 2; }
+
+ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
+cd "$ROOT"
+
+echo "[guardrails] Checking for forbidden legacy DB role APIs..."
+
+LEGACY_PATTERNS=(
+  "currentRole"
+  "setRole\\s*\\("
+  "executeTransaction\\s*\\("
+)
+
+for pat in "${LEGACY_PATTERNS[@]}"; do
+  if rg -n --hidden --glob '!**/node_modules/**' --glob '!**/*.md' --glob '!**/*.txt' "$pat" . >/dev/null; then
+    echo "❌ Forbidden legacy pattern found: $pat"
+    rg -n --hidden --glob '!**/node_modules/**' --glob '!**/*.md' --glob '!**/*.txt' "$pat" .
+    exit 1
+  fi
+done
+
+echo "[guardrails] Checking role SQL usage outside libs/db..."
+
+ROLE_SQL='SET ROLE|RESET ROLE|SET LOCAL ROLE'
+if rg -n --hidden --glob '!**/node_modules/**' --glob '!**/*.md' --glob '!**/*.txt' --glob '!libs/db/**' "$ROLE_SQL" . >/dev/null; then
+  echo "❌ Role SQL found outside libs/db (must be encapsulated in libs/db only):"
+  rg -n --hidden --glob '!**/node_modules/**' --glob '!**/*.md' --glob '!**/*.txt' --glob '!libs/db/**' "$ROLE_SQL" .
+  exit 1
+fi
+
+echo "[guardrails] Checking raw pg usage outside libs/db..."
+
+PG_IMPORT_PATTERNS=(
+  "from\\s+['\"]pg['\"]"
+  "require\\(['\"]pg['\"]\\)"
+  "new\\s+Pool\\s*\\("
+  "pool\\.query\\s*\\("
+)
+
+for pat in "${PG_IMPORT_PATTERNS[@]}"; do
+  if rg -n --hidden --glob '!**/node_modules/**' --glob '!**/*.md' --glob '!**/*.txt' --glob '!libs/db/**' "$pat" . >/dev/null; then
+    echo "❌ Raw pg usage found outside libs/db:"
+    rg -n --hidden --glob '!**/node_modules/**' --glob '!**/*.md' --glob '!**/*.txt' --glob '!libs/db/**' "$pat" .
+    exit 1
+  fi
+done
+
+if [[ "${ENFORCE_NO_DB_QUERY:-0}" == "1" ]]; then
+  echo "[guardrails] Phase B enabled: forbidding db.query(...) usage..."
+  if rg -n --hidden --glob '!**/node_modules/**' --glob '!**/*.md' --glob '!**/*.txt' "db\\.query\\s*\\(" . >/dev/null; then
+    echo "❌ Forbidden usage found: db.query("
+    rg -n --hidden --glob '!**/node_modules/**' --glob '!**/*.md' --glob '!**/*.txt' "db\\.query\\s*\\(" .
+    exit 1
+  fi
+fi
+
+echo "✅ DB role guardrails passed."

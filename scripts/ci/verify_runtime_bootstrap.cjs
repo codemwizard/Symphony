@@ -3,27 +3,25 @@ const path = require('path');
 
 // Mock components to test the logic
 const mockDb = {
-    currentRole: 'anon',
     policyVersion: 'v1.0.0',
     killSwitchCount: '0',
-    setRole(role) { this.currentRole = role; },
-    async query(text) {
+    async queryAsRole(_role, text) {
         if (text.includes("policy_versions")) return { rows: [{ version: this.policyVersion }] };
         if (text.includes("kill_switches")) return { rows: [{ count: this.killSwitchCount }] };
         return { rows: [] };
     }
 };
 
-async function checkPolicyVersion(db, policyFilePath) {
+async function checkPolicyVersion(db, role, policyFilePath) {
     const file = JSON.parse(fs.readFileSync(policyFilePath, "utf-8"));
-    const res = await db.query("SELECT version FROM policy_versions WHERE is_active = true");
+    const res = await db.queryAsRole(role, "SELECT version FROM policy_versions WHERE is_active = true");
     if (res.rows[0].version !== file.policy_version) {
         throw new Error("Policy version mismatch");
     }
 }
 
-async function checkKillSwitch(db) {
-    const res = await db.query("SELECT count(*) FROM kill_switches WHERE is_active = true");
+async function checkKillSwitch(db, role) {
+    const res = await db.queryAsRole(role, "SELECT count(*) FROM kill_switches WHERE is_active = true");
     if (Number(res.rows[0].count) > 0) {
         throw new Error("Kill-switch active — service startup blocked");
     }
@@ -38,8 +36,8 @@ async function runTest() {
     try {
         mockDb.policyVersion = 'v1.0.0';
         mockDb.killSwitchCount = '0';
-        await checkPolicyVersion(mockDb, policyPath);
-        await checkKillSwitch(mockDb);
+        await checkPolicyVersion(mockDb, 'symphony_control', policyPath);
+        await checkKillSwitch(mockDb, 'symphony_control');
         console.log("✅ Nominal startup passed.");
     } catch (e) {
         console.error("❌ Nominal startup failed:", e.message);
@@ -48,7 +46,7 @@ async function runTest() {
     // Test 2: Policy Mismatch
     try {
         mockDb.policyVersion = 'v0.9.0'; // Drifted
-        await checkPolicyVersion(mockDb, policyPath);
+        await checkPolicyVersion(mockDb, 'symphony_control', policyPath);
         console.error("❌ Policy mismatch check failed (should have thrown)");
     } catch (e) {
         if (e.message === "Policy version mismatch") {
@@ -62,7 +60,7 @@ async function runTest() {
     try {
         mockDb.policyVersion = 'v1.0.0';
         mockDb.killSwitchCount = '1'; // Triggered
-        await checkKillSwitch(mockDb);
+        await checkKillSwitch(mockDb, 'symphony_control');
         console.error("❌ Kill-switch check failed (should have thrown)");
     } catch (e) {
         if (e.message === "Kill-switch active — service startup blocked") {

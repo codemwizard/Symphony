@@ -14,7 +14,7 @@
 - Constrained `Queryable.query` and related wrappers to `T extends QueryResultRow`, and propagated generics through role-bound clients in `libs/db/index.ts`.
 - Renamed the duplicate `role` parameter to `dbRole` in `libs/guards/authorizationGuard.ts` and adjusted usage.
 - Made ledger invariants use `db.queryAsRole('symphony_control', ...)` when no client is provided in `libs/ledger/invariants.ts`.
-- Reworked persistence proof script to use `withClientAsRole` and `client.query` in `scripts/audit/verify_persistence.ts`.
+- Reworked persistence proof script to use `withRoleClient` and `client.query` in `scripts/audit/verify_persistence.ts`.
 - Passed explicit role to `auditLogger.log` in `scripts/ops/restore_from_backup.ts`.
 - Switched invariant scanner to `db.queryAsRole` and passed the role to `ProofOfFunds.validateGlobalInvariant` with typed rows in `scripts/validation/invariant-scanner.ts`.
 
