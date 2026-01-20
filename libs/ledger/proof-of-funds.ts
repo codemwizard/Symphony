@@ -1,4 +1,5 @@
 import { db } from "../db/index.js";
+import { DbRole } from "../db/roles.js";
 import { logger } from "../logging/logger.js";
 import { ErrorSanitizer } from "../errors/sanitizer.js";
 
@@ -18,11 +19,12 @@ export class ProofOfFunds {
      * Verifies that the account has sufficient funds for a debit operation.
      * SYM-PF-002: Zero-Overdraft Policy
      */
-    static async verifySufficientFunds(transaction: Transaction): Promise<boolean> {
+    static async verifySufficientFunds(role: DbRole, transaction: Transaction): Promise<boolean> {
         if (transaction.type !== 'DEBIT') return true;
 
         try {
-            const result = await db.query(
+            const result = await db.queryAsRole(
+                role,
                 "SELECT balance FROM ledger_balances WHERE account_id = $1 AND currency = $2 FOR UPDATE",
                 [transaction.accountId, transaction.currency]
             );
@@ -32,7 +34,13 @@ export class ProofOfFunds {
                 return false;
             }
 
-            const currentBalance = BigInt(result.rows[0].balance);
+            const row = result.rows[0];
+            if (!row) {
+                logger.warn({ accountId: transaction.accountId }, "PoF: Account not found for balance check");
+                return false;
+            }
+
+            const currentBalance = BigInt(row.balance);
             if (currentBalance < transaction.amount) {
                 logger.error({
                     accountId: transaction.accountId,
@@ -52,14 +60,16 @@ export class ProofOfFunds {
      * Enforces the Zero-Sum Invariant across the entire ledger.
      * SYM-PF-003: Asset Invariant (Total Supply = Total Balances)
      */
-    static async validateGlobalInvariant(currency: string): Promise<boolean> {
+    static async validateGlobalInvariant(role: DbRole, currency: string): Promise<boolean> {
         try {
-            const result = await db.query(
+            const result = await db.queryAsRole(
+                role,
                 "SELECT SUM(balance) as total_balances FROM ledger_balances WHERE currency = $1",
                 [currency]
             );
 
-            const totalBalances = BigInt(result.rows[0].total_balances || '0');
+            const row = result.rows[0];
+            const totalBalances = BigInt(row?.total_balances || '0');
 
             // In a real system, we'd compare this against an "issue" or "treasury" account
             // For now, we log the state for audit.

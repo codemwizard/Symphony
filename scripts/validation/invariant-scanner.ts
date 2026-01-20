@@ -6,8 +6,11 @@ async function scan() {
 
     try {
         // 1. Get all active currencies
-        const currenciesResult = await db.query("SELECT DISTINCT currency FROM ledger_balances");
-        const currencies = currenciesResult.rows.map(r => r.currency);
+        const currenciesResult = await db.queryAsRole<{ currency: string }>(
+            "symphony_control",
+            "SELECT DISTINCT currency FROM ledger_balances"
+        );
+        const currencies = currenciesResult.rows.map((row) => row.currency);
 
         if (currencies.length === 0) {
             console.log("✅ No active ledger balances found. System is clean.");
@@ -18,7 +21,7 @@ async function scan() {
 
         for (const currency of currencies) {
             console.log(`Checking [${currency}] balances...`);
-            const passed = await ProofOfFunds.validateGlobalInvariant(currency);
+            const passed = await ProofOfFunds.validateGlobalInvariant("symphony_control", currency);
 
             if (!passed) {
                 console.error(`❌ INVARIANT VIOLATION: ${currency} balances are inconsistent!`);

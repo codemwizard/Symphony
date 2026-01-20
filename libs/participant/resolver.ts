@@ -25,6 +25,7 @@ import {
 } from './participant.js';
 import { findByFingerprint, isParticipantActive } from './repository.js';
 import { findById as findPolicyProfile } from '../policy/repository.js';
+import { DbRole } from '../db/roles.js';
 
 export interface ParticipantResolutionContext {
     /** Request ID for correlation */
@@ -45,6 +46,7 @@ export interface ParticipantResolutionContext {
  * @returns Resolution result with participant or failure reason
  */
 export async function resolveParticipant(
+    role: DbRole,
     context: ParticipantResolutionContext
 ): Promise<ParticipantResolutionResult> {
     const { requestId, certFingerprint, ingressSequenceId } = context;
@@ -52,14 +54,14 @@ export async function resolveParticipant(
     // Step 1: Validate certificate is not revoked in Trust Fabric
     const trustIdentity = TrustFabric.resolveIdentity(certFingerprint);
     if (!trustIdentity) {
-        await logResolutionFailure(requestId, ingressSequenceId, 'CERTIFICATE_REVOKED', certFingerprint);
+        await logResolutionFailure(role, requestId, ingressSequenceId, 'CERTIFICATE_REVOKED', certFingerprint);
         return { success: false, reason: 'CERTIFICATE_REVOKED' };
     }
 
     // Step 2: Resolve participant from fingerprint
-    const participant = await findByFingerprint(certFingerprint);
+    const participant = await findByFingerprint(role, certFingerprint);
     if (!participant) {
-        await logResolutionFailure(requestId, ingressSequenceId, 'FINGERPRINT_NOT_FOUND', certFingerprint);
+        await logResolutionFailure(role, requestId, ingressSequenceId, 'FINGERPRINT_NOT_FOUND', certFingerprint);
         return { success: false, reason: 'FINGERPRINT_NOT_FOUND' };
     }
 
@@ -68,19 +70,19 @@ export async function resolveParticipant(
         const reason: ParticipantResolutionFailure =
             participant.status === 'SUSPENDED' ? 'PARTICIPANT_SUSPENDED' : 'PARTICIPANT_REVOKED';
 
-        await logResolutionFailure(requestId, ingressSequenceId, reason, certFingerprint, participant.participantId);
+        await logResolutionFailure(role, requestId, ingressSequenceId, reason, certFingerprint, participant.participantId);
         return { success: false, reason };
     }
 
     // Step 4: Validate policy profile exists
-    const policyProfile = await findPolicyProfile(participant.policyProfileId);
+    const policyProfile = await findPolicyProfile(role, participant.policyProfileId);
     if (!policyProfile) {
-        await logResolutionFailure(requestId, ingressSequenceId, 'POLICY_PROFILE_NOT_FOUND', certFingerprint, participant.participantId);
+        await logResolutionFailure(role, requestId, ingressSequenceId, 'POLICY_PROFILE_NOT_FOUND', certFingerprint, participant.participantId);
         return { success: false, reason: 'POLICY_PROFILE_NOT_FOUND' };
     }
 
     // Step 5: Log successful resolution
-    await guardAuditLogger.log({
+    await guardAuditLogger.log(role, {
         type: 'PARTICIPANT_RESOLVED',
         requestId,
         ingressSequenceId,
@@ -103,6 +105,7 @@ export async function resolveParticipant(
  * Log participant resolution failure for audit trail.
  */
 async function logResolutionFailure(
+    role: DbRole,
     requestId: string,
     ingressSequenceId: string,
     reason: ParticipantResolutionFailure,
@@ -115,7 +118,7 @@ async function logResolutionFailure(
         certFingerprint: certFingerprint.substring(0, 16) + '...' // Truncate for log safety
     }, 'Participant resolution failed');
 
-    await guardAuditLogger.log({
+    await guardAuditLogger.log(role, {
         type: 'PARTICIPANT_RESOLUTION_FAILED',
         requestId,
         ingressSequenceId,

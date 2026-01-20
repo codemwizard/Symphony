@@ -7,6 +7,7 @@
  */
 
 import { db } from '../db/index.js';
+import { DbRole } from '../db/roles.js';
 import { PolicyProfile } from './policyProfile.js';
 
 interface PolicyProfileRow {
@@ -27,8 +28,9 @@ interface PolicyProfileRow {
  * Find policy profile by ID.
  * Returns null if not found — does NOT throw.
  */
-export async function findById(policyProfileId: string): Promise<PolicyProfile | null> {
-    const result = await db.query(
+export async function findById(role: DbRole, policyProfileId: string): Promise<PolicyProfile | null> {
+    const result = await db.queryAsRole(
+        role,
         `SELECT
             policy_profile_id,
             name,
@@ -58,8 +60,9 @@ export async function findById(policyProfileId: string): Promise<PolicyProfile |
  * Find active policy profile by name.
  * Returns null if not found — does NOT throw.
  */
-export async function findActiveByName(name: string): Promise<PolicyProfile | null> {
-    const result = await db.query(
+export async function findActiveByName(role: DbRole, name: string): Promise<PolicyProfile | null> {
+    const result = await db.queryAsRole(
+        role,
         `SELECT
             policy_profile_id,
             name,
