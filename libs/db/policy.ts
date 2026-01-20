@@ -1,4 +1,5 @@
 import { db } from "./index.js";
+import { DbRole } from "./roles.js";
 import { assertPolicyVersionPinned, readPolicyFile } from "../policy/policyIntegrity.js";
 
 type ActivePolicyFile = {
@@ -16,14 +17,16 @@ function readActivePolicyVersion(): string {
     return policyVersion;
 }
 
-export async function checkPolicyVersion() {
+export async function checkPolicyVersion(role: DbRole) {
     const policyVersion = readActivePolicyVersion();
 
-    const res = await db.query(
+    const res = await db.queryAsRole<{ version: string }>(
+        role,
         "SELECT version FROM policy_versions WHERE is_active = true"
     );
 
-    if (res.rows[0].version !== policyVersion) {
+    const row = res.rows[0];
+    if (!row || row.version !== policyVersion) {
         throw new Error("Policy version mismatch");
     }
 }

@@ -16,7 +16,10 @@ export class LedgerInvariants {
         const dbClient = client as
             | { query: (sql: string, params: unknown[]) => Promise<{ rows: { balance: string }[] }> }
             | undefined;
-        const queryClient = dbClient || db;
+        const queryClient = dbClient ?? {
+            query: (sql: string, params: unknown[]) =>
+                db.queryAsRole<{ balance: string }>('symphony_control', sql, params)
+        };
 
         const res = await queryClient.query(
             "SELECT balance FROM accounts WHERE id = $1 FOR UPDATE",
@@ -26,7 +29,11 @@ export class LedgerInvariants {
         if (res.rows.length === 0) {
             throw new Error("LedgerInvariant: Account not found");
         }
-        return parseFloat(res.rows[0].balance);
+        const row = res.rows[0];
+        if (!row) {
+            throw new Error("LedgerInvariant: Account not found");
+        }
+        return parseFloat(row.balance);
     }
 
     static async ensureSufficientFunds(accountId: string, amount: number, client?: unknown): Promise<void> {
@@ -60,7 +67,10 @@ export class LedgerInvariants {
         const dbClient = client as
             | { query: (sql: string, params: unknown[]) => Promise<{ rows: unknown[] }> }
             | undefined;
-        const queryClient = dbClient || db;
+        const queryClient = dbClient ?? {
+            query: (sql: string, params: unknown[]) =>
+                db.queryAsRole<{ id: string }>('symphony_control', sql, params)
+        };
         try {
             const res = await queryClient.query(
                 "SELECT id FROM transactions WHERE id = $1",

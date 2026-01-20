@@ -5,7 +5,7 @@ import { ConfigGuard, CRYPTO_CONFIG_REQUIREMENTS } from "../../../libs/bootstrap
 import { ErrorSanitizer } from "../../../libs/errors/sanitizer.js";
 import { createValidator } from "../../../libs/validation/zod-middleware.js";
 import { IdentityEnvelopeV1Schema } from "../../../libs/validation/identitySchema.js";
-import { db } from "../../../libs/db/index.js";
+import { DbRole } from "../../../libs/db/roles.js";
 import { verifyIdentity } from "../../../libs/context/verifyIdentity.js";
 import { RequestContext } from "../../../libs/context/requestContext.js";
 import { IdentityEnvelopeV1 } from "../../../libs/context/identity.js";
@@ -14,8 +14,8 @@ import { auditLogger } from "../../../libs/audit/logger.js";
 
 
 async function main() {
-    db.setRole("symphony_readonly");
-    await bootstrap("read-api");
+    const role: DbRole = "symphony_readonly";
+    await bootstrap("read-api", role);
 
     // CRIT-SEC-003: Fail-Closed Security Configuration
     ConfigGuard.enforce(CRYPTO_CONFIG_REQUIREMENTS);
@@ -37,10 +37,10 @@ async function main() {
         return RequestContext.run(context, async () => {
             try {
                 // Phase 6.3: Authorization
-                await requireCapability('instruction:read', 'read-api');
+                await requireCapability(role, 'instruction:read', 'read-api');
 
                 // Phase 6.5: Audit
-                await auditLogger.log({
+                await auditLogger.log(role, {
                     type: 'IDENTITY_VERIFY',
                     context,
                     decision: 'ALLOW'

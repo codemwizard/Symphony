@@ -79,7 +79,15 @@ export class TrustFabric {
     }
 
     private static async fetchFromDB(fp: string): Promise<ServiceCertificateClaims> {
-        const result = await db.queryAsRole(
+        const result = await db.queryAsRole<{
+            serviceName: string;
+            ou: string;
+            env: string;
+            fingerprint: string;
+            revoked: boolean;
+            expires_at: string;
+            status: string;
+        }>(
             'symphony_auth',
             `SELECT p.name as "serviceName", p.ou, c.env, c.fingerprint, c.revoked, c.expires_at, p.status
              FROM participant_certificates c
@@ -94,6 +102,9 @@ export class TrustFabric {
         }
 
         const row = result.rows[0];
+        if (!row) {
+            throw new TrustViolationError('TRUST_CERT_UNKNOWN', fp);
+        }
 
         // SEC-FIX: Validate revoked
         if (row.revoked === true) {

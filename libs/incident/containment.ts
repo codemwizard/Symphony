@@ -1,6 +1,7 @@
 import { IncidentSignal, IncidentClass, IncidentSeverity } from "./taxonomy.js";
 import { logger } from "../logging/logger.js";
 import { auditLogger } from "../audit/logger.js";
+import { DbRole } from "../db/roles.js";
 
 /**
  * Symphony Incident Containment
@@ -11,7 +12,7 @@ export class IncidentContainment {
     /**
      * Executes automated containment based on signal classification.
      */
-    static async execute(signal: IncidentSignal) {
+    static async execute(role: DbRole, signal: IncidentSignal) {
         logger.info({ signalId: signal.id }, "Execution of automated containment started");
 
         const actions: string[] = [];
@@ -27,15 +28,15 @@ export class IncidentContainment {
         }
 
         for (const action of actions) {
-            await this.runAction(action, signal);
+            await this.runAction(role, action, signal);
         }
     }
 
-    private static async runAction(action: string, signal: IncidentSignal) {
+    private static async runAction(role: DbRole, action: string, signal: IncidentSignal) {
         logger.warn({ action, signalId: signal.id }, `CONTAINMENT ACTION TRIGGERED: ${action}`);
 
         // Audit the containment action (Synchronous)
-        await auditLogger.log({
+        await auditLogger.log(role, {
             type: 'CONTAINMENT_ACTIVATE',
             context: {
                 version: 'v1',

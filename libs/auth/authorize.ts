@@ -2,6 +2,7 @@ import { ValidatedIdentityContext } from "../context/identity.js";
 import { Capability, CAPABILITY_OU_MAP, RESTRICTED_CLIENT_CLASSES } from "./capabilities.js";
 import { logger } from "../logging/logger.js";
 import { auditLogger } from "../audit/logger.js";
+import { DbRole } from "../db/roles.js";
 
 export interface Policy {
     policyVersion: string;
@@ -24,6 +25,7 @@ const TENANT_SCOPED_CAPABILITIES: Capability[] = [
  * Enforces the 4 critical architectural guards + Tenant Boundary (Guard 5).
  */
 export async function authorize(
+    role: DbRole,
     context: ValidatedIdentityContext,
     requestedCapability: Capability,
     currentService: string,
@@ -40,7 +42,7 @@ export async function authorize(
         const allowed = (activePolicy.capabilities.service?.[currentService] || []) as Capability[];
         const isAllowed = allowed.includes(requestedCapability);
 
-        await auditLogger.log({
+        await auditLogger.log(role, {
             type: isAllowed ? 'AUTHZ_ALLOW' : 'AUTHZ_DENY',
             context,
             action: { capability: requestedCapability },
@@ -57,7 +59,7 @@ export async function authorize(
         const reason = "OU Boundary Violation: Service attempted to exercise capability it does not own";
         logger.error({ requestedCapability, currentService, owningOU }, reason);
 
-        await auditLogger.log({
+        await auditLogger.log(role, {
             type: 'AUTHZ_DENY',
             context,
             action: { capability: requestedCapability },
@@ -75,7 +77,7 @@ export async function authorize(
             const reason = "Client Restriction Violation: Client attempted execution-class activity";
             logger.error({ subjectId, requestedCapability }, reason);
 
-            await auditLogger.log({
+            await auditLogger.log(role, {
                 type: 'AUTHZ_DENY',
                 context,
                 action: { capability: requestedCapability },
@@ -92,7 +94,7 @@ export async function authorize(
         const reason = "Provider Isolation Violation: Client attempted health-poisoning activity";
         logger.error({ subjectId }, reason);
 
-        await auditLogger.log({
+        await auditLogger.log(role, {
             type: 'AUTHZ_DENY',
             context,
             action: { capability: requestedCapability },
@@ -115,7 +117,7 @@ export async function authorize(
     } else if (subjectType === 'user') {
         const userAllowed = (activePolicy.capabilities.user?.['default'] || []) as Capability[];
         if (!userAllowed.includes(requestedCapability)) {
-            await auditLogger.log({
+            await auditLogger.log(role, {
                 type: 'AUTHZ_DENY',
                 context,
                 action: { capability: requestedCapability },
@@ -128,7 +130,7 @@ export async function authorize(
         // Guard 5: Tenant Boundary Enforcement
         if (TENANT_SCOPED_CAPABILITIES.includes(requestedCapability)) {
             if (!resourceTenantId) {
-                await auditLogger.log({
+                await auditLogger.log(role, {
                     type: 'AUTHZ_DENY',
                     context,
                     reason: 'TENANT_CONTEXT_MISSING',
@@ -137,7 +139,7 @@ export async function authorize(
                 return false;
             }
             if (context.participantId !== resourceTenantId) {
-                await auditLogger.log({
+                await auditLogger.log(role, {
                     type: 'AUTHZ_DENY',
                     context,
                     reason: 'CROSS_TENANT_ACCESS_DENIED',
@@ -155,7 +157,7 @@ export async function authorize(
         const reason = "Policy Version Mismatch during Authorization";
         logger.error({ contextVersion: policyVersion, policyVersion: activePolicy.policyVersion }, reason);
 
-        await auditLogger.log({
+        await auditLogger.log(role, {
             type: 'AUTHZ_DENY',
             context,
             action: { capability: requestedCapability },
@@ -167,7 +169,7 @@ export async function authorize(
     }
 
     // Final Success Audit
-    await auditLogger.log({
+    await auditLogger.log(role, {
         type: 'AUTHZ_ALLOW',
         context,
         action: { capability: requestedCapability },

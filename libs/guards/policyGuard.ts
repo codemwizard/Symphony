@@ -20,6 +20,7 @@ import { logger } from '../logging/logger.js';
 import { guardAuditLogger } from '../audit/guardLogger.js';
 import { ResolvedParticipant, SandboxLimits } from '../participant/index.js';
 import { PolicyProfile } from '../policy/index.js';
+import { DbRole } from '../db/roles.js';
 
 export interface PolicyGuardContext {
     /** Request ID for correlation */
@@ -50,6 +51,7 @@ export type PolicyGuardDenyReason =
  * Enforces sandbox exposure limits (configurational, not infrastructural).
  */
 export async function executePolicyGuard(
+    role: DbRole,
     context: PolicyGuardContext
 ): Promise<PolicyGuardResult> {
     const {
@@ -71,7 +73,7 @@ export async function executePolicyGuard(
     if (effectiveLimits.maxTransactionAmount) {
         if (compareDecimalStrings(transactionAmount, effectiveLimits.maxTransactionAmount) > 0) {
             const details = `Amount ${transactionAmount} exceeds limit ${effectiveLimits.maxTransactionAmount}`;
-            await logDenial(requestId, ingressSequenceId, participant.participantId, 'AMOUNT_EXCEEDS_LIMIT', details);
+            await logDenial(role, requestId, ingressSequenceId, participant.participantId, 'AMOUNT_EXCEEDS_LIMIT', details);
             return { allowed: false, reason: 'AMOUNT_EXCEEDS_LIMIT', details };
         }
     }
@@ -80,7 +82,7 @@ export async function executePolicyGuard(
     if (effectiveLimits.allowedMessageTypes && effectiveLimits.allowedMessageTypes.length > 0) {
         if (!effectiveLimits.allowedMessageTypes.includes(messageType)) {
             const details = `Message type ${messageType} not in whitelist`;
-            await logDenial(requestId, ingressSequenceId, participant.participantId, 'MESSAGE_TYPE_NOT_ALLOWED', details);
+            await logDenial(role, requestId, ingressSequenceId, participant.participantId, 'MESSAGE_TYPE_NOT_ALLOWED', details);
             return { allowed: false, reason: 'MESSAGE_TYPE_NOT_ALLOWED', details };
         }
     }
@@ -132,6 +134,7 @@ function mergeEffectiveLimits(
 }
 
 async function logDenial(
+    role: DbRole,
     requestId: string,
     ingressSequenceId: string,
     participantId: string,
@@ -145,7 +148,7 @@ async function logDenial(
         details
     }, 'Policy guard denied request');
 
-    await guardAuditLogger.log({
+    await guardAuditLogger.log(role, {
         type: 'GUARD_POLICY_DENY',
         requestId,
         ingressSequenceId,

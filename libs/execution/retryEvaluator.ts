@@ -16,6 +16,7 @@ import { guardAuditLogger } from '../audit/guardLogger.js';
 import { FailureClassification, RetryDecision } from './failureTypes.js';
 import { isRetryable, requiresRepair } from './failureClassifier.js';
 import { isTerminal } from './instructionStateClient.js';
+import { DbRole } from '../db/roles.js';
 
 /**
  * Context for retry evaluation.
@@ -43,7 +44,7 @@ export interface RetryEvaluationContext {
  *
  * @returns RetryDecision with shouldRetry, shouldRepair, and reason
  */
-export async function evaluateRetry(context: RetryEvaluationContext): Promise<RetryDecision> {
+export async function evaluateRetry(role: DbRole, context: RetryEvaluationContext): Promise<RetryDecision> {
     const { instructionId, idempotencyKey, failureClassification, ingressSequenceId, requestId } = context;
     const failureClass = failureClassification.failureClass;
 
@@ -51,7 +52,7 @@ export async function evaluateRetry(context: RetryEvaluationContext): Promise<Re
     if (!idempotencyKey || idempotencyKey.trim() === '') {
         const decision = createDecision(false, false, 'Missing idempotency key', instructionId, '');
 
-        await logRetryDecision(requestId, ingressSequenceId, instructionId, decision, 'BLOCKED');
+        await logRetryDecision(role, requestId, ingressSequenceId, instructionId, decision, 'BLOCKED');
         return decision;
     }
 
@@ -61,13 +62,13 @@ export async function evaluateRetry(context: RetryEvaluationContext): Promise<Re
         if (requiresRepair(failureClass)) {
             const decision = createDecision(false, true, `Failure class ${failureClass} requires repair, not retry`, instructionId, idempotencyKey);
 
-            await logRetryDecision(requestId, ingressSequenceId, instructionId, decision, 'BLOCKED');
+            await logRetryDecision(role, requestId, ingressSequenceId, instructionId, decision, 'BLOCKED');
             return decision;
         }
 
         const decision = createDecision(false, false, `Failure class ${failureClass} does not allow retry`, instructionId, idempotencyKey);
 
-        await logRetryDecision(requestId, ingressSequenceId, instructionId, decision, 'BLOCKED');
+        await logRetryDecision(role, requestId, ingressSequenceId, instructionId, decision, 'BLOCKED');
         return decision;
     }
 
@@ -76,14 +77,14 @@ export async function evaluateRetry(context: RetryEvaluationContext): Promise<Re
     if (terminal) {
         const decision = createDecision(false, false, 'Instruction is already in terminal state', instructionId, idempotencyKey);
 
-        await logRetryDecision(requestId, ingressSequenceId, instructionId, decision, 'BLOCKED');
+        await logRetryDecision(role, requestId, ingressSequenceId, instructionId, decision, 'BLOCKED');
         return decision;
     }
 
     // All checks passed: retry is allowed
     const decision = createDecision(true, false, 'Retry allowed: non-terminal instruction with retryable failure', instructionId, idempotencyKey);
 
-    await logRetryDecision(requestId, ingressSequenceId, instructionId, decision, 'ALLOWED');
+    await logRetryDecision(role, requestId, ingressSequenceId, instructionId, decision, 'ALLOWED');
 
     logger.info({
         instructionId,
@@ -112,13 +113,14 @@ function createDecision(
 }
 
 async function logRetryDecision(
+    role: DbRole,
     requestId: string,
     ingressSequenceId: string,
     instructionId: string,
     decision: RetryDecision,
     outcome: 'ALLOWED' | 'BLOCKED'
 ): Promise<void> {
-    await guardAuditLogger.log({
+    await guardAuditLogger.log(role, {
         type: 'RETRY_EVALUATED',
         requestId,
         ingressSequenceId,
@@ -129,14 +131,14 @@ async function logRetryDecision(
     });
 
     if (outcome === 'ALLOWED') {
-        await guardAuditLogger.log({
+        await guardAuditLogger.log(role, {
             type: 'RETRY_ALLOWED',
             requestId,
             ingressSequenceId,
             instructionId
         });
     } else {
-        await guardAuditLogger.log({
+        await guardAuditLogger.log(role, {
             type: 'RETRY_BLOCKED',
             requestId,
             ingressSequenceId,
