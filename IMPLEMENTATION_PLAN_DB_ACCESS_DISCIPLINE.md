@@ -36,20 +36,20 @@ Remove the global mutable role surface and add **role-scoped** APIs only.
 
 **Add:**
 - `queryAsRole(role, text, params?)`
-- `withClientAsRole(role, fn)` (role-scoping client wrapper)
+- `withRoleClient(role, fn)` (role-scoping client wrapper)
 - `transactionAsRole(role, fn)`
 
 **Key contract & tighteners:**
 - **Never accept a raw string role** at DB entrypoints. Only `DbRole` is accepted. If the caller has a string (config/identity/header), it must be mapped/validated **once at the service boundary**, not inside `libs/db`.
-- **Role scoping is a client wrapper**: `withClientAsRole(role, fn)` provides a role-bound client wrapper so downstream code uses a scoped client, not global helpers.
-- **`withClientAsRole` does not expose a raw `PoolClient`.** It exposes a **RoleBoundClient** surface (`query`, optional `transaction`), preventing bypass of role discipline.
+- **Role scoping is a client wrapper**: `withRoleClient(role, fn)` provides a role-bound client wrapper so downstream code uses a scoped client, not global helpers.
+- **`withRoleClient` does not expose a raw `PoolClient`.** It exposes a **RoleBoundClient** surface (`query` only), preventing bypass of role discipline.
 - **`queryAsRole` uses `SET ROLE` + `RESET ROLE` on a dedicated client in a `try/finally`.** Avoid forcing every query into a transaction (performance); use transactions only when needed. Always reset the role before releasing the client.
 - **`queryAsRole` must be role-residue safe**: always `RESET ROLE` even if `SET ROLE` fails, before releasing the client to the pool. Optionally (dev/test) verify with `SELECT current_user` after reset. `SET ROLE` must be identifier-safe: accept only `DbRole`, defensively validate with `assertDbRole()`, and quote the identifier (e.g., `SET ROLE \"${role}\"`) before interpolating.
 - **`transactionAsRole` uses `BEGIN; SET LOCAL ROLE <role>; ... COMMIT/ROLLBACK`** on a single client.
 - **Prefer `SET LOCAL ROLE` wherever possible** (transactions and multi-step work), but do not force a `BEGIN` for single-statement queries.
 - **Role must be set once per transaction**: do not call `queryAsRole()` inside `transactionAsRole()`; pass the transaction client down.
 - **Make nested usage impossible by type/wrapper**: `transactionAsRole` passes a TxClient that does not expose role setters or `queryAsRole`, and no helper returns a raw pool client. If a TxClient is passed into `transactionAsRole`, throw immediately.
-- **Multi-step work must use a scoped client**: use `withClientAsRole` for multi-step independent queries, and `transactionAsRole` for atomic/consistent multi-step work (no repeated `queryAsRole` calls in loops).
+- **Multi-step work must use a scoped client**: use `withRoleClient` for multi-step independent queries, and `transactionAsRole` for atomic/consistent multi-step work (no repeated `queryAsRole` calls in loops).
 - **Add a runtime guard against nested transactions** via `AsyncLocalStorage` (or a wrapper-scoped flag), not by inspecting DB state: if `transactionAsRole` is invoked while already in a transaction, throw a clear error.
 - **TxClient must never expose a raw `PoolClient`** (no escape hatch); enforce this by wrapper/type branding rather than DB-state checks.
 
@@ -73,9 +73,9 @@ Add a test that proves per-call role isolation (no leakage) **and pooled-connect
 ### Step 5 — DB module cleanup verification checklist
 Use this checklist to confirm the DB module is fully migrated and safe:
 - **Remove legacy globals**: delete `currentRole`, `setRole`, role-implicit `query()`, and `executeTransaction()` from `libs/db/index.ts`.
-- **Export only explicit-role APIs**: `queryAsRole`, `withClientAsRole`, `transactionAsRole` (no shims).
+- **Export only explicit-role APIs**: `queryAsRole`, `withRoleClient`, `transactionAsRole` (no shims).
 - **Replace `ValidRole` with `DbRole`** everywhere inside `libs/db`.
-- **Role-bound wrappers only**: ensure `withClientAsRole` exposes a RoleBoundClient (no raw `PoolClient` leaks).
+- **Role-bound wrappers only**: ensure `withRoleClient` exposes a RoleBoundClient (no raw `PoolClient` leaks).
 - **Transaction scoping**: ensure `transactionAsRole` uses `SET LOCAL ROLE` and TxClient only.
 - **Role-residue safety**: ensure `queryAsRole` always `RESET ROLE` before releasing the client (even on errors).
 - **Boot-time role existence probe**: verify each `DbRole` can be `SET ROLE`’d at startup.

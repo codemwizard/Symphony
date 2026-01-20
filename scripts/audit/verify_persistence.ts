@@ -8,7 +8,7 @@ async function runPersistenceProof() {
     console.log("--- STARTING PERSISTENCE PROOF (CRIT-SEC-001) ---");
 
     try {
-        await db.withClientAsRole('symphony_control', async (client) => {
+        await db.withRoleClient('symphony_control', async (client) => {
             const timestamp = new Date().toISOString();
             const testId = `audit_proof_${Date.now()}`;
 

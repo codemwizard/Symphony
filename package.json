@@ -10,10 +10,11 @@
     "lint": "eslint",
     "lint-fix": "eslint . --fix",
     "test": "npm run test:node && npm run test:jest",
-    "test:node": "node --import ./tests/loader.mjs --test tests/unit/*.spec.ts tests/*.test.js",
+    "test:node": "node --import ./tests/loader.mjs --test tests/unit/*.spec.ts tests/*.test.js libs/db/__tests__/*.test.ts",
     "test:jest": "node --experimental-vm-modules node_modules/jest/bin/jest.js",
     "build": "tsc --noEmit",
     "security-check": "node --import ./tests/loader.mjs scripts/ci/security-gates.ts",
+    "guardrails:db": "./scripts/guardrails/db-role-guardrails.sh",
     "ci:validate-evidence": "node scripts/ci/validate_evidence_schema.mjs",
     "ci:compliance": "node scripts/ci/verify_mtls.js && node scripts/ci/verify_audit_integrity.cjs && node scripts/ci/verify_authorization.cjs && node scripts/ci/verify_identity_context.cjs && node scripts/ci/verify_runtime_bootstrap.cjs",
     "ci:full": "npm run lint && security-check && npm run build && npm run test && npm run ci:compliance"
