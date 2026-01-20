@@ -34,7 +34,13 @@ export class ProofOfFunds {
                 return false;
             }
 
-            const currentBalance = BigInt(result.rows[0].balance);
+            const row = result.rows[0];
+            if (!row) {
+                logger.warn({ accountId: transaction.accountId }, "PoF: Account not found for balance check");
+                return false;
+            }
+
+            const currentBalance = BigInt(row.balance);
             if (currentBalance < transaction.amount) {
                 logger.error({
                     accountId: transaction.accountId,
@@ -62,7 +68,8 @@ export class ProofOfFunds {
                 [currency]
             );
 
-            const totalBalances = BigInt(result.rows[0].total_balances || '0');
+            const row = result.rows[0];
+            const totalBalances = BigInt(row?.total_balances || '0');
 
             // In a real system, we'd compare this against an "issue" or "treasury" account
             // For now, we log the state for audit.

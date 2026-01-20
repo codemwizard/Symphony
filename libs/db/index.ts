@@ -48,7 +48,7 @@ const pool = new Pool({
 });
 
 export type Queryable = {
-    query<T = pg.QueryResultRow>(text: string, params?: unknown[]): Promise<pg.QueryResult<T>>;
+    query<T extends pg.QueryResultRow = pg.QueryResultRow>(text: string, params?: unknown[]): Promise<pg.QueryResult<T>>;
 };
 
 export type TxClient = Queryable;
@@ -97,7 +97,8 @@ async function runTransaction<T>(
             await verifyRole(client, role);
 
             const txClient: TxClient = {
-                query: (text: string, params?: unknown[]) => client.query(text, params)
+                query: <T extends pg.QueryResultRow = pg.QueryResultRow>(text: string, params?: unknown[]) =>
+                    client.query<T>(text, params)
             };
 
             const result = await callback(txClient);
@@ -119,13 +120,17 @@ export const db = {
      * SEC-FIX: Concurrency-safe scoped role query.
      * Role is applied per-call, not globally.
      */
-    queryAsRole: async (role: DbRole, text: string, params?: unknown[]) => {
+    queryAsRole: async <T extends pg.QueryResultRow = pg.QueryResultRow>(
+        role: DbRole,
+        text: string,
+        params?: unknown[]
+    ): Promise<pg.QueryResult<T>> => {
         const validatedRole = assertDbRole(role);
         const client = await pool.connect();
         try {
             await client.query(`SET ROLE ${quoteIdentifier(validatedRole)}`);
             await verifyRole(client, validatedRole);
-            return await client.query(text, params);
+            return await client.query<T>(text, params);
         } catch (error) {
             throw ErrorSanitizer.sanitize(error, 'DatabaseLayer:QueryAsRoleFailure');
         } finally {
@@ -145,7 +150,8 @@ export const db = {
             await verifyRole(client, validatedRole);
 
             const roleBoundClient: RoleBoundClient = {
-                query: (text: string, params?: unknown[]) => client.query(text, params),
+                query: <T extends pg.QueryResultRow = pg.QueryResultRow>(text: string, params?: unknown[]) =>
+                    client.query<T>(text, params),
                 transaction: async (txCallback) => runTransaction(client, validatedRole, txCallback)
             };
 

@@ -31,7 +31,7 @@ export async function restoreFromBackup(params: {
     }
 
     // 4. Record Recovery Audit Event
-    await auditLogger.log({
+    await auditLogger.log('symphony_control', {
         type: 'POLICY_ACTIVATE', // Nearest type for state transition
         context: {
             version: 'v1',

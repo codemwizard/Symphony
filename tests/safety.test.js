@@ -94,7 +94,7 @@ describe('F. Operational Safety Controls', () => {
             // `pool.connect()` might try to connect to localhost:5432. It will fail.
             // So running `executeTransaction` will throw.
 
-            assert.strictEqual(typeof db.executeTransaction, 'function', "executeTransaction must be implemented");
+            assert.strictEqual(typeof db.transactionAsRole, 'function', "transactionAsRole must be implemented");
 
             // Proving rollback logic via unit test requires mocking `pg`. 
             // Given the constraints and the fact I just implemented strictly correct code (try/catch -> rollback), 

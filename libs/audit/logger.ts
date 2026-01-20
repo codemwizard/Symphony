@@ -29,8 +29,9 @@ class AuditLogger {
                  LIMIT 1`
             );
 
-            if (result.rows.length > 0) {
-                this.lastHash = result.rows[0].last_hash;
+            const row = result.rows[0];
+            if (row?.last_hash) {
+                this.lastHash = row.last_hash;
             } else {
                 this.lastHash = "0".repeat(64); // Genesis Hash
             }
