@@ -35,9 +35,9 @@ describe('E. Ledger & Financial Invariants', () => {
         mockDbQuery = mock.fn();
 
         // Monkey-patch the db object
-        // Note: 'db' is successfully imported but might be read-only if it were a direct export, 
+        // Note: 'db' is successfully imported but might be read-only if it were a direct export,
         // but it is an object exported as `export const db = { ... }`, so we can mutate its properties.
-        db.query = mockDbQuery;
+        db.queryAsRole = mockDbQuery;
     });
 
     afterEach(() => {

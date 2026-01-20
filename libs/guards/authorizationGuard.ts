@@ -84,7 +84,7 @@ export async function executeAuthorizationGuard(
 }
 
 async function logDenial(
-    role: DbRole,
+    dbRole: DbRole,
     requestId: string,
     ingressSequenceId: string,
     participantId: string,
@@ -100,7 +100,7 @@ async function logDenial(
         reason
     }, 'Authorization guard denied request');
 
-    await guardAuditLogger.log(role, {
+    await guardAuditLogger.log(dbRole, {
         type: 'GUARD_AUTHORIZATION_DENY',
         requestId,
         ingressSequenceId,
