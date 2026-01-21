@@ -1,4 +1,4 @@
-import { describe, it, before } from 'node:test';
+import { describe, it, before, after } from 'node:test';
 import assert from 'node:assert';
 import { DbRole } from '../../libs/db/roles.js';
 
@@ -12,12 +12,19 @@ function assertSqlStateOneOf(err: unknown, allowed: string[]): boolean {
     return typeof sqlState === 'string' && allowed.includes(sqlState);
 }
 
+function getSqlState(err: unknown): string | undefined {
+    const anyErr = err as { sqlState?: string; code?: string; cause?: { sqlState?: string; code?: string } };
+    return anyErr?.sqlState ?? anyErr?.code ?? anyErr?.cause?.sqlState ?? anyErr?.cause?.code;
+}
+
 describeWithDb('Outbox privilege enforcement', () => {
     let db: Awaited<typeof import('../../libs/db/index.js')>['db'];
     let queryNoRole: typeof import('symphony/libs/db/testOnly')['queryNoRole'];
+    let originalNodeEnv: string | undefined;
 
     before(async () => {
         if (!databaseUrl) return;
+        originalNodeEnv = process.env.NODE_ENV;
         process.env.NODE_ENV = 'test';
         const url = new URL(databaseUrl);
         process.env.DB_HOST = url.hostname;
@@ -31,12 +38,18 @@ describeWithDb('Outbox privilege enforcement', () => {
         ({ queryNoRole } = await import('symphony/libs/db/testOnly'));
     });
 
+    after(() => {
+        if (!databaseUrl) return;
+        process.env.NODE_ENV = originalNodeEnv;
+    });
+
     async function queryAsRole<T>(role: DbRole, sql: string, params?: unknown[]): Promise<T> {
         const result = await db.queryAsRole(role, sql, params);
         return result as T;
     }
 
     async function insertAttemptRow(): Promise<string> {
+        const suffix = `${Date.now()}-${Math.random().toString(16).slice(2)}`;
         const result = await queryNoRole<{ attempt_id: string }>(
             `
             INSERT INTO payment_outbox_attempts (
@@ -52,17 +65,23 @@ describeWithDb('Outbox privilege enforcement', () => {
             )
             VALUES (
                 uuidv7(),
-                'inst-test',
-                'participant-test',
-                1,
-                'idem-test',
+                $1,
+                $2,
+                $3,
+                $4,
                 'PAYMENT',
                 '{"hello":"world"}'::jsonb,
                 1,
                 'DISPATCHING'
             )
             RETURNING attempt_id
-            `
+            `,
+            [
+                `inst-${suffix}`,
+                `participant-${suffix}`,
+                Math.floor(Math.random() * 100000) + 1,
+                `idem-${suffix}`
+            ]
         );
         const row = result.rows[0];
         assert.ok(row?.attempt_id);
@@ -84,7 +103,13 @@ describeWithDb('Outbox privilege enforcement', () => {
                 ) VALUES ('inst-test', 'participant-test', 1, 'idem-test', 'PAYMENT', '{}'::jsonb);
                 `
             ),
-            (err: unknown) => assertSqlStateOneOf(err, ['42501', '0LP01'])
+            (err: unknown) => {
+                const ok = assertSqlStateOneOf(err, ['42501']);
+                if (!ok) {
+                    console.error('unexpected sqlState for ingest insert pending:', getSqlState(err));
+                }
+                return ok;
+            }
         );
     });
 
@@ -103,7 +128,13 @@ describeWithDb('Outbox privilege enforcement', () => {
                 ) VALUES ('inst-test', 'participant-test', 1, 'idem-test', 'PAYMENT', '{}'::jsonb);
                 `
             ),
-            (err: unknown) => assertSqlStateOneOf(err, ['42501', '0LP01'])
+            (err: unknown) => {
+                const ok = assertSqlStateOneOf(err, ['42501']);
+                if (!ok) {
+                    console.error('unexpected sqlState for readonly insert pending:', getSqlState(err));
+                }
+                return ok;
+            }
         );
     });
 
@@ -115,7 +146,13 @@ describeWithDb('Outbox privilege enforcement', () => {
                 "UPDATE payment_outbox_attempts SET error_message = 'x' WHERE attempt_id = $1;",
                 [attemptId]
             ),
-            (err: unknown) => assertSqlStateOneOf(err, ['42501', '0LP01'])
+            (err: unknown) => {
+                const ok = assertSqlStateOneOf(err, ['42501']);
+                if (!ok) {
+                    console.error('unexpected sqlState for executor update attempts:', getSqlState(err));
+                }
+                return ok;
+            }
         );
 
         await assert.rejects(
@@ -124,31 +161,61 @@ describeWithDb('Outbox privilege enforcement', () => {
                 'DELETE FROM payment_outbox_attempts WHERE attempt_id = $1;',
                 [attemptId]
             ),
-            (err: unknown) => assertSqlStateOneOf(err, ['42501', '0LP01'])
+            (err: unknown) => {
+                const ok = assertSqlStateOneOf(err, ['42501']);
+                if (!ok) {
+                    console.error('unexpected sqlState for executor delete attempts:', getSqlState(err));
+                }
+                return ok;
+            }
         );
     });
 
     it('rejects TRUNCATE on outbox tables for runtime roles', async () => {
         await assert.rejects(
             () => queryAsRole('symphony_executor', 'TRUNCATE payment_outbox_attempts;'),
-            (err: unknown) => assertSqlStateOneOf(err, ['42501', '0LP01'])
+            (err: unknown) => {
+                const ok = assertSqlStateOneOf(err, ['42501']);
+                if (!ok) {
+                    console.error('unexpected sqlState for executor truncate attempts:', getSqlState(err));
+                }
+                return ok;
+            }
         );
 
         await assert.rejects(
             () => queryAsRole('symphony_executor', 'TRUNCATE payment_outbox_pending;'),
-            (err: unknown) => assertSqlStateOneOf(err, ['42501', '0LP01'])
+            (err: unknown) => {
+                const ok = assertSqlStateOneOf(err, ['42501']);
+                if (!ok) {
+                    console.error('unexpected sqlState for executor truncate pending:', getSqlState(err));
+                }
+                return ok;
+            }
         );
     });
 
     it('revokes sequence table visibility from readonly and auditor roles', async () => {
         await assert.rejects(
             () => queryAsRole('symphony_readonly', 'SELECT * FROM participant_outbox_sequences LIMIT 1;'),
-            (err: unknown) => assertSqlStateOneOf(err, ['42501', '0LP01'])
+            (err: unknown) => {
+                const ok = assertSqlStateOneOf(err, ['42501']);
+                if (!ok) {
+                    console.error('unexpected sqlState for readonly sequence select:', getSqlState(err));
+                }
+                return ok;
+            }
         );
 
         await assert.rejects(
             () => queryAsRole('symphony_auditor', 'SELECT * FROM participant_outbox_sequences LIMIT 1;'),
-            (err: unknown) => assertSqlStateOneOf(err, ['42501', '0LP01'])
+            (err: unknown) => {
+                const ok = assertSqlStateOneOf(err, ['42501']);
+                if (!ok) {
+                    console.error('unexpected sqlState for auditor sequence select:', getSqlState(err));
+                }
+                return ok;
+            }
         );
     });
 });

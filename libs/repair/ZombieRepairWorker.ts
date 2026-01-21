@@ -4,11 +4,6 @@ import { db, DbRole } from '../db/index.js';
 const logger = pino({ name: 'ZombieRepairWorker' });
 
 // Configuration
-const ZOMBIE_THRESHOLD_SECONDS = (() => {
-    const raw = process.env.ZOMBIE_THRESHOLD_SECONDS;
-    const parsed = raw ? Number(raw) : 120;
-    return Number.isFinite(parsed) && parsed > 0 ? parsed : 120;
-})();    // Records stuck > threshold are zombies
 const REPAIR_BATCH_SIZE = 100;
 const REPAIR_INTERVAL_MS = 60000;       // Run every 60 seconds
 
@@ -36,6 +31,12 @@ export class ZombieRepairWorker {
         private readonly role: DbRole = 'symphony_executor',
         private readonly dbClient = db
     ) { }
+
+    private getZombieThresholdSeconds(): number {
+        const raw = process.env.ZOMBIE_THRESHOLD_SECONDS;
+        const parsed = raw ? Number(raw) : 120;
+        return Number.isFinite(parsed) && parsed > 0 ? parsed : 120;
+    }
 
     /**
      * Start the repair worker
@@ -103,9 +104,9 @@ export class ZombieRepairWorker {
                     ORDER BY outbox_id, claimed_at DESC
                 ) AS latest
                 WHERE latest.state = 'DISPATCHING'
-                  AND latest.claimed_at < NOW() - INTERVAL '${ZOMBIE_THRESHOLD_SECONDS} seconds'
+                  AND latest.claimed_at < NOW() - ($2::int * INTERVAL '1 second')
                 LIMIT $1;
-            `, [REPAIR_BATCH_SIZE]);
+            `, [REPAIR_BATCH_SIZE, this.getZombieThresholdSeconds()]);
 
                 if (staleAttempts.rows.length > 0) {
                     const pendingValues: Array<unknown> = [];
@@ -113,35 +114,34 @@ export class ZombieRepairWorker {
                     const attemptValues: Array<unknown> = [];
                     const attemptPlaceholders: string[] = [];
 
-                staleAttempts.rows.forEach((row, index) => {
-                    const pendingOffset = index * 8;
-                    pendingPlaceholders.push(`($${pendingOffset + 1}, $${pendingOffset + 2}, $${pendingOffset + 3}, $${pendingOffset + 4}, $${pendingOffset + 5}, $${pendingOffset + 6}, $${pendingOffset + 7}, $${pendingOffset + 8}, NOW())`);
-                    pendingValues.push(
-                        row.outbox_id,
-                        row.instruction_id,
-                        row.participant_id,
-                        row.sequence_id,
-                        row.idempotency_key,
-                        row.rail_type,
-                        JSON.stringify(row.payload),
-                        row.last_attempt_no
-                    );
+                    staleAttempts.rows.forEach((row, index) => {
+                        const pendingOffset = index * 8;
+                        pendingPlaceholders.push(`($${pendingOffset + 1}, $${pendingOffset + 2}, $${pendingOffset + 3}, $${pendingOffset + 4}, $${pendingOffset + 5}, $${pendingOffset + 6}, $${pendingOffset + 7}, $${pendingOffset + 8}, NOW())`);
+                        pendingValues.push(
+                            row.outbox_id,
+                            row.instruction_id,
+                            row.participant_id,
+                            row.sequence_id,
+                            row.idempotency_key,
+                            row.rail_type,
+                            JSON.stringify(row.payload),
+                            row.last_attempt_no
+                        );
 
-                    const attemptOffset = index * 10;
-                    attemptPlaceholders.push(`($${attemptOffset + 1}, $${attemptOffset + 2}, $${attemptOffset + 3}, $${attemptOffset + 4}, $${attemptOffset + 5}, $${attemptOffset + 6}, $${attemptOffset + 7}, 'ZOMBIE_REQUEUE', $${attemptOffset + 8}, NOW(), NOW(), $${attemptOffset + 9}, $${attemptOffset + 10}, NOW())`);
-                    attemptValues.push(
-                        row.outbox_id,
-                        row.instruction_id,
-                        row.participant_id,
-                        row.sequence_id,
-                        row.idempotency_key,
-                        row.rail_type,
-                        JSON.stringify(row.payload),
-                        row.next_attempt_no,
-                        'ZOMBIE_REQUEUE',
-                        'Dispatch attempt exceeded threshold'
-                    );
-                });
+                        const attemptOffset = index * 9;
+                        attemptPlaceholders.push(`($${attemptOffset + 1}, $${attemptOffset + 2}, $${attemptOffset + 3}, $${attemptOffset + 4}, $${attemptOffset + 5}, $${attemptOffset + 6}, $${attemptOffset + 7}, 'ZOMBIE_REQUEUE', $${attemptOffset + 8}, NOW(), NOW(), 'ZOMBIE_REQUEUE', $${attemptOffset + 9}, NOW())`);
+                        attemptValues.push(
+                            row.outbox_id,
+                            row.instruction_id,
+                            row.participant_id,
+                            row.sequence_id,
+                            row.idempotency_key,
+                            row.rail_type,
+                            JSON.stringify(row.payload),
+                            row.next_attempt_no,
+                            'Dispatch attempt exceeded threshold'
+                        );
+                    });
 
                     await client.query(`
                     INSERT INTO payment_outbox_pending (
@@ -214,8 +214,8 @@ export class ZombieRepairWorker {
                 ORDER BY outbox_id, claimed_at DESC
             ) AS latest
             WHERE latest.state = 'DISPATCHING'
-              AND latest.claimed_at < NOW() - INTERVAL '${ZOMBIE_THRESHOLD_SECONDS} seconds';
-        `);
+              AND latest.claimed_at < NOW() - ($1::int * INTERVAL '1 second');
+        `, [this.getZombieThresholdSeconds()]);
         return parseInt(result.rows[0]?.count ?? '0', 10);
     }
 }
