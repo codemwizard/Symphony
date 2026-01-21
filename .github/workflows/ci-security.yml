@@ -122,6 +122,9 @@ jobs:
       - name: Lint
         run: npm run lint -- --max-warnings=0
 
+      - name: Install ripgrep
+        run: sudo apt-get update && sudo apt-get install -y ripgrep
+
       - name: DB Boundary Guardrails (Phase A + B)
         run: ENFORCE_NO_DB_QUERY=1 scripts/guardrails/db-role-guardrails.sh
 
