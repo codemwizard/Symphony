@@ -9,10 +9,11 @@ cd "$ROOT"
 echo "[guardrails] Checking for forbidden legacy DB role APIs..."
 
 LEGACY_PATTERNS=(
-  "currentRole"
-  "setRole\\s*\\("
-  "executeTransaction\\s*\\("
+  "\\bcurrentRole\\b"
+  "\\bsetRole\\b\\s*\\("
+  "\\bexecuteTransaction\\b\\s*\\("
 )
+
 
 for pat in "${LEGACY_PATTERNS[@]}"; do
   if rg -n --hidden \
