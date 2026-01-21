@@ -122,6 +122,9 @@ jobs:
       - name: Lint
         run: npm run lint -- --max-warnings=0
 
+      - name: DB Boundary Guardrails (Phase A + B)
+        run: ENFORCE_NO_DB_QUERY=1 scripts/guardrails/db-role-guardrails.sh
+
       # -------------------- Migrated Checks (Legacy CI) --------------------
       - name: Check Kill-Switches
         run: scripts/ci/kill_switch_check.sh

@@ -14,7 +14,7 @@ const describeWithDb = hasDbConfig ? describe : describe.skip;
 
 describeWithDb('Zombie repair proof', () => {
     let db: Awaited<typeof import('../../libs/db/index.js')>['db'];
-    let worker: Awaited<typeof import('../../libs/repair/ZombieRepairWorker.js')>['ZombieRepairWorker'];
+    let worker: InstanceType<Awaited<typeof import('../../libs/repair/ZombieRepairWorker.js')>['ZombieRepairWorker']>;
     let outboxId: string;
     let instructionId: string;
     let participantId: string;
