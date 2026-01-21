@@ -32,8 +32,9 @@ Use `db.queryAsRole` with explicit roles and assert SQLSTATE `42501`.
 #### C) Executor cannot update/delete attempts
 - Role: `symphony_executor`
 - SQL:
-  - `UPDATE payment_outbox_attempts SET ... WHERE 1=0`
-  - `DELETE FROM payment_outbox_attempts WHERE 1=0`
+  - Insert a real row via privileged connection (or `queryNoRole`).
+  - `UPDATE payment_outbox_attempts SET ... WHERE attempt_id = $1`
+  - `DELETE FROM payment_outbox_attempts WHERE attempt_id = $1`
 - Expect: `42501` (ACL boundary, not trigger `P0001`)
 
 #### D) Runtime roles cannot truncate outbox tables
@@ -60,3 +61,4 @@ Use `db.queryAsRole` with explicit roles and assert SQLSTATE `42501`.
 ## Notes / Risks
 - If a test receives `P0001`, it indicates the trigger fired before ACL; adjust role or SQL to hit ACL first.
 - If `DATABASE_URL` is missing, tests should be skipped.
+- Some privilege setups may surface `0LP01` (invalid_grant_operation); allowlist `['42501', '0LP01']` if you want more robust, future-proof assertions.
