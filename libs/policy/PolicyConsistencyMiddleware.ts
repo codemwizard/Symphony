@@ -18,10 +18,10 @@
  */
 
 import { Request, Response, NextFunction } from 'express';
-import { Pool } from 'pg';
 import pino from 'pino';
 import crypto from 'crypto';
 import { KeyManager, SymphonyKeyManager } from '../crypto/keyManager.js';
+import { db, DbRole } from '../db/index.js';
 
 const logger = pino({ name: 'PolicyConsistency' });
 const keyManager: KeyManager = new SymphonyKeyManager();
@@ -168,7 +168,8 @@ let policyCacheTime: number = 0;
  */
 export class PolicyConsistencyService {
     constructor(
-        private readonly pool: Pool,
+        private readonly role: DbRole,
+        private readonly dbClient = db,
         private readonly gracePeriodMs: number = POLICY_GRACE_PERIOD_MS
     ) { }
 
@@ -183,7 +184,9 @@ export class PolicyConsistencyService {
         }
 
         // Fetch all versions with their status
-        const result = await this.pool.query(`
+        const result = await this.dbClient.queryAsRole(
+            this.role,
+            `
             SELECT 
                 id AS version,
                 status,
@@ -195,7 +198,8 @@ export class PolicyConsistencyService {
             FROM policy_versions
             WHERE status IN ('ACTIVE', 'GRACE')
             ORDER BY activated_at DESC;
-        `);
+        `
+        );
 
         if (result.rows.length === 0) {
             throw new PolicyViolationError(
@@ -224,11 +228,15 @@ export class PolicyConsistencyService {
         }
 
         // Load scopes for active version
-        const scopesResult = await this.pool.query(`
+        const scopesResult = await this.dbClient.queryAsRole(
+            this.role,
+            `
             SELECT *
             FROM policy_scopes
             WHERE policy_version = $1;
-        `, [activeVersion]);
+        `,
+            [activeVersion]
+        );
 
         const scopes = new Map<string, PolicyScope>();
         for (const scope of scopesResult.rows) {
@@ -416,11 +424,15 @@ export class PolicyConsistencyService {
      * Use for emergency scenarios only.
      */
     public async forceImmediateRevocation(version: string): Promise<void> {
-        await this.pool.query(`
+        await this.dbClient.queryAsRole(
+            this.role,
+            `
             UPDATE policy_versions 
             SET status = 'RETIRED' 
             WHERE id = $1 AND status IN ('ACTIVE', 'GRACE');
-        `, [version]);
+        `,
+            [version]
+        );
 
         this.invalidateCache();
 
@@ -443,10 +455,11 @@ export class PolicyConsistencyService {
  * Adds response headers when re-authentication is recommended.
  */
 export function createPolicyConsistencyMiddleware(
-    pool: Pool,
-    options: { gracePeriodMs?: number } = {}
+    role: DbRole,
+    options: { gracePeriodMs?: number } = {},
+    dbClient = db
 ) {
-    const service = new PolicyConsistencyService(pool, options.gracePeriodMs);
+    const service = new PolicyConsistencyService(role, dbClient, options.gracePeriodMs);
 
     return async (req: Request, res: Response, next: NextFunction): Promise<void> => {
         try {
@@ -578,4 +591,3 @@ async function verifyPolicyClaimsSignature(claims: PolicyClaims, signature: stri
         );
     }
 }
-

@@ -9,32 +9,46 @@
 
 import { describe, it, beforeEach, mock } from 'node:test';
 import * as assert from 'node:assert';
-import { Pool } from 'pg';
 import { ZombieRepairWorker } from '../../libs/repair/ZombieRepairWorker.js';
+import { DbRole } from '../../libs/db/roles.js';
+import type { db } from '../../libs/db/index.js';
+
+type DbClient = typeof db;
 
 describe('ZombieRepairWorker', () => {
     let worker: ZombieRepairWorker;
-    let mockPool: { connect: ReturnType<typeof mock.fn>; query: ReturnType<typeof mock.fn> };
-    let mockClient: { query: ReturnType<typeof mock.fn>; release: ReturnType<typeof mock.fn> };
+    let mockDb: {
+        queryAsRole: ReturnType<typeof mock.fn>;
+        transactionAsRole: ReturnType<typeof mock.fn>;
+        withRoleClient: ReturnType<typeof mock.fn>;
+        listenAsRole: ReturnType<typeof mock.fn>;
+        probeRoles: ReturnType<typeof mock.fn>;
+    };
+    let mockClient: { query: ReturnType<typeof mock.fn> };
 
 
     beforeEach(() => {
         mockClient = {
-            query: mock.fn(async () => ({ rows: [], rowCount: 0 })),
-            release: mock.fn()
-        };
-        mockPool = {
-            connect: mock.fn(async () => mockClient),
             query: mock.fn(async () => ({ rows: [], rowCount: 0 }))
         };
-        worker = new ZombieRepairWorker(mockPool as unknown as Pool);
+        mockDb = {
+            queryAsRole: mock.fn(async () => ({ rows: [], rowCount: 0 })),
+            transactionAsRole: mock.fn(async (_role: DbRole, callback: (client: typeof mockClient) => Promise<unknown>) =>
+                callback(mockClient)
+            ),
+            withRoleClient: mock.fn(async (_role: DbRole, callback: (client: typeof mockClient) => Promise<unknown>) =>
+                callback(mockClient)
+            ),
+            listenAsRole: mock.fn(async () => ({ close: mock.fn(async () => undefined) })),
+            probeRoles: mock.fn(async () => undefined)
+        };
+        worker = new ZombieRepairWorker('symphony_executor', mockDb as unknown as DbClient);
     });
 
     describe('runRepairCycle()', () => {
         it('should execute repair queries with correct SQL', async () => {
             // Mock DB response to ensure all branches are taken
             mockClient.query.mock.mockImplementation(async (sql: string) => {
-                if (sql === 'BEGIN' || sql === 'COMMIT') return {};
                 if (sql.includes('FROM payment_outbox_attempts')) {
                     return {
                         rows: [{
@@ -70,21 +84,15 @@ describe('ZombieRepairWorker', () => {
             assert.ok(queries.some((q) => q.includes('INSERT INTO payment_outbox_attempts')));
         });
 
-        it('should define transaction boundaries', async () => {
+        it('should execute through transaction wrapper', async () => {
             const result = await worker.runRepairCycle();
 
             assert.ok(result);
-
-            // Verify transaction flow: BEGIN -> ... -> COMMIT
-            const queries = mockClient.query.mock.calls.map((c: { arguments: unknown[] }) => c.arguments[0]);
-            assert.strictEqual(queries[0], 'BEGIN');
-            assert.strictEqual(queries[queries.length - 1], 'COMMIT');
-            assert.strictEqual(mockClient.release.mock.calls.length, 1);
+            assert.strictEqual(mockDb.transactionAsRole.mock.calls.length, 1);
         });
 
         it('should rollback on error', async () => {
-            mockClient.query.mock.mockImplementation(async (sql: string) => {
-                if (sql === 'BEGIN' || sql === 'ROLLBACK') return {};
+            mockClient.query.mock.mockImplementation(async () => {
                 throw new Error('DB Failure');
             });
 
@@ -93,22 +101,13 @@ describe('ZombieRepairWorker', () => {
             assert.strictEqual(result.errors.length, 1);
             assert.strictEqual(result.errors[0], 'DB Failure');
 
-            // Verify connect was called
-            assert.strictEqual(mockPool.connect.mock.calls.length, 1);
-            const connectCall = mockPool.connect.mock.calls[0];
-            assert.ok(connectCall, 'Connect should be called');
-
-            // Verify ROLLBACK was called
-            const calls = mockClient.query.mock.calls;
-            const lastCall = calls[calls.length - 1]!;
-            const lastCallArgs = lastCall.arguments as [string];
-            assert.strictEqual(lastCallArgs[0], 'ROLLBACK');
+            assert.strictEqual(mockDb.transactionAsRole.mock.calls.length, 1);
         });
     });
 
     describe('getZombieCount()', () => {
         it('should return count from DB', async () => {
-            mockPool.query.mock.mockImplementationOnce(async () => ({
+            mockDb.queryAsRole.mock.mockImplementationOnce(async () => ({
                 rows: [{ count: '5' }]
             }));
 

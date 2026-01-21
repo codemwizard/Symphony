@@ -56,6 +56,10 @@ export type TxClient = Queryable;
 
 export type RoleBoundClient = Queryable;
 
+export type ListenHandle = {
+    close: () => Promise<void>;
+};
+
 const transactionContext = new AsyncLocalStorage<{ inTx: boolean }>();
 
 function quoteIdentifier(identifier: string): string {
@@ -221,6 +225,49 @@ export const db = {
             forceDestroy = forceDestroy || !resetOk;
             releaseClient(client, forceDestroy, 'transactionAsRole');
         }
+    },
+
+    listenAsRole: async (
+        role: DbRole,
+        channel: string,
+        onNotify: (notification: pg.Notification) => void
+    ): Promise<ListenHandle> => {
+        const validatedRole = assertDbRole(role);
+        const client = await pool.connect();
+        let listenerAttached = false;
+        const handler = (notification: pg.Notification) => {
+            if (notification.channel === channel) {
+                onNotify(notification);
+            }
+        };
+
+        try {
+            await client.query(`SET ROLE ${quoteIdentifier(validatedRole)}`);
+            await verifyRole(client, validatedRole);
+            await client.query(`LISTEN ${quoteIdentifier(channel)}`);
+            client.on('notification', handler);
+            listenerAttached = true;
+        } catch (error) {
+            const resetOk = await resetRole(client, 'listenAsRole');
+            releaseClient(client, !resetOk, 'listenAsRole');
+            throw ErrorSanitizer.sanitize(error, 'DatabaseLayer:ListenAsRoleFailure');
+        }
+
+        return {
+            close: async (): Promise<void> => {
+                if (!listenerAttached) return;
+                listenerAttached = false;
+                client.removeListener('notification', handler);
+                try {
+                    await client.query(`UNLISTEN ${quoteIdentifier(channel)}`);
+                } catch (error) {
+                    logger.warn({ error }, '[DB] Failed to unlisten channel');
+                } finally {
+                    const resetOk = await resetRole(client, 'listenAsRole');
+                    releaseClient(client, !resetOk, 'listenAsRole');
+                }
+            }
+        };
     },
 
     /**

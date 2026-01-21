@@ -9,8 +9,8 @@
  * DISPATCHING attempts in the same transaction for crash consistency.
  */
 
-import { Pool, PoolClient } from 'pg';
 import { pino } from 'pino';
+import { db, DbRole, ListenHandle } from '../db/index.js';
 
 const logger = pino({ name: 'OutboxRelayer' });
 
@@ -103,11 +103,12 @@ export class OutboxRelayer {
     private pendingWakeup = false;
     private debounceTimer: NodeJS.Timeout | null = null;
     private pollTimer: NodeJS.Timeout | null = null;
-    private listenClient: PoolClient | null = null;
+    private listenHandle: ListenHandle | null = null;
 
     constructor(
-        private readonly pool: Pool,
-        private readonly railClient: RailClient
+        private readonly railClient: RailClient,
+        private readonly role: DbRole = 'symphony_executor',
+        private readonly dbClient = db
     ) { }
 
     /**
@@ -143,20 +144,20 @@ export class OutboxRelayer {
             this.debounceTimer = null;
         }
 
-        if (this.listenClient) {
-            await this.listenClient.query('UNLISTEN outbox_pending');
-            this.listenClient.release();
-            this.listenClient = null;
+        if (this.listenHandle) {
+            await this.listenHandle.close();
+            this.listenHandle = null;
         }
 
         logger.info('OutboxRelayer stopped');
     }
 
     private async attachListener(): Promise<void> {
-        const client = await this.pool.connect();
-        await client.query('LISTEN outbox_pending');
-        client.on('notification', () => this.scheduleDebouncedPoll());
-        this.listenClient = client;
+        this.listenHandle = await this.dbClient.listenAsRole(
+            this.role,
+            'outbox_pending',
+            () => this.scheduleDebouncedPoll()
+        );
     }
 
     private scheduleDebouncedPoll(): void {
@@ -216,11 +217,7 @@ export class OutboxRelayer {
     }
 
     private async claimNextBatch(): Promise<OutboxRecord[]> {
-        const client = await this.pool.connect();
-        try {
-            await client.query('BEGIN');
-
-            const deleteQuery = `
+        const deleteQuery = `
                 WITH due AS (
                     SELECT outbox_id
                     FROM payment_outbox_pending
@@ -292,28 +289,18 @@ export class OutboxRelayer {
                 FROM claimed c
                 JOIN inserted i ON i.outbox_id = c.outbox_id;
             `;
-
+        return this.dbClient.transactionAsRole(this.role, async (client) => {
             const result = await client.query(deleteQuery, [BATCH_SIZE]);
             if (result.rows.length === 0) {
-                await client.query('COMMIT');
                 return [];
             }
 
-            const records = result.rows.map(row => ({
+            return result.rows.map(row => ({
                 ...row,
                 sequence_id: Number(row.sequence_id),
                 attempt_no: Number(row.attempt_no)
             })) as OutboxRecord[];
-
-            await client.query('COMMIT');
-
-            return records;
-        } catch (error) {
-            await client.query('ROLLBACK');
-            throw error;
-        } finally {
-            client.release();
-        }
+        });
     }
 
     private async processRecords(records: OutboxRecord[]): Promise<void> {
@@ -456,7 +443,8 @@ export class OutboxRelayer {
             latencyMs?: number;
         }
     ): Promise<void> {
-        await this.pool.query(
+        await this.dbClient.queryAsRole(
+            this.role,
             `
             INSERT INTO payment_outbox_attempts (
                 outbox_id,
@@ -499,7 +487,8 @@ export class OutboxRelayer {
 
     private async requeue(record: OutboxRecord): Promise<void> {
         const backoffMs = this.calculateBackoffMs(record.attempt_no);
-        await this.pool.query(
+        await this.dbClient.queryAsRole(
+            this.role,
             `
             INSERT INTO payment_outbox_pending (
                 outbox_id,
