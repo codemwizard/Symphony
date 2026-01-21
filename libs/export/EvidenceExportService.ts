@@ -10,11 +10,11 @@
  * - Each batch includes SHA-256 hash of sorted records + schema version + batch metadata
  */
 
-import { Pool, PoolClient } from 'pg';
 import pino from 'pino';
 import crypto from 'crypto';
 import fs from 'fs/promises';
 import path from 'path';
+import { db, DbRole, Queryable } from '../db/index.js';
 
 const logger = pino({ name: 'EvidenceExportService' });
 
@@ -109,13 +109,16 @@ export interface ExportConfig {
 // ------------------ Service ------------------
 
 export class EvidenceExportService {
-    private readonly pool: Pool;
     private readonly config: ExportConfig;
     private readonly VIEW_VERSION = '7B.2.0';
     private readonly fs: typeof fs;
 
-    constructor(pool: Pool, config: ExportConfig, filesystem?: typeof fs) {
-        this.pool = pool;
+    constructor(
+        private readonly role: DbRole,
+        config: ExportConfig,
+        filesystem?: typeof fs,
+        private readonly dbClient = db
+    ) {
         this.config = config;
         this.fs = filesystem ?? fs;
     }
@@ -125,9 +128,9 @@ export class EvidenceExportService {
      * These are used to define batch boundaries.
      */
     async getHighWaterMarks(): Promise<HighWaterMarks> {
-        const client = await this.pool.connect();
-        try {
-            const result = await client.query(`
+        const result = await this.dbClient.queryAsRole(
+            this.role,
+            `
                 SELECT
                     (SELECT COALESCE(MAX(id)::text, '0') FROM ingress_attestations) AS max_ingress_id,
                     (SELECT COALESCE(MAX(outbox_id)::text, '0') FROM (
@@ -136,17 +139,18 @@ export class EvidenceExportService {
                         SELECT outbox_id FROM payment_outbox_attempts
                     ) AS outbox_ids) AS max_outbox_id,
                     (SELECT COALESCE(MAX(id)::text, '0') FROM ledger_entries) AS max_ledger_id
-            `);
+            `
+        );
 
-            const row = result.rows[0];
-            return {
-                maxIngressId: row.max_ingress_id,
-                maxOutboxId: row.max_outbox_id,
-                maxLedgerId: row.max_ledger_id,
-            };
-        } finally {
-            client.release();
+        const row = result.rows[0];
+        if (!row) {
+            throw new ExportError('High-water mark query returned no rows', 'HIGH_WATER_MARK_MISSING');
         }
+        return {
+            maxIngressId: row.max_ingress_id,
+            maxOutboxId: row.max_outbox_id,
+            maxLedgerId: row.max_ledger_id,
+        };
     }
 
     /**
@@ -154,31 +158,32 @@ export class EvidenceExportService {
      * Returns null if no previous export exists.
      */
     async getLastExportState(): Promise<{ batchId: string; highWaterMarks: HighWaterMarks } | null> {
-        const client = await this.pool.connect();
-        try {
-            const result = await client.query(`
+        const result = await this.dbClient.queryAsRole(
+            this.role,
+            `
                 SELECT batch_id, max_ingress_id, max_outbox_id, max_ledger_id
                 FROM evidence_export_log
                 ORDER BY exported_at DESC
                 LIMIT 1
-            `);
+            `
+        );
 
-            if (result.rows.length === 0) {
-                return null;
-            }
-
-            const row = result.rows[0];
-            return {
-                batchId: row.batch_id,
-                highWaterMarks: {
-                    maxIngressId: row.max_ingress_id,
-                    maxOutboxId: row.max_outbox_id,
-                    maxLedgerId: row.max_ledger_id,
-                },
-            };
-        } finally {
-            client.release();
+        if (result.rows.length === 0) {
+            return null;
         }
+
+        const row = result.rows[0];
+        if (!row) {
+            return null;
+        }
+        return {
+            batchId: row.batch_id,
+            highWaterMarks: {
+                maxIngressId: row.max_ingress_id,
+                maxOutboxId: row.max_outbox_id,
+                maxLedgerId: row.max_ledger_id,
+            },
+        };
     }
 
     /**
@@ -190,62 +195,51 @@ export class EvidenceExportService {
         const exportedAt = new Date().toISOString();
         const currentMarks = await this.getHighWaterMarks();
 
-        const client = await this.pool.connect();
         try {
-            await client.query('BEGIN');
+            return await this.dbClient.transactionAsRole(this.role, async (client) => {
+                const ingress = await this.fetchIngressRecords(client, fromMarks?.maxIngressId ?? '0', currentMarks.maxIngressId);
+                const outbox = await this.fetchOutboxRecords(client, fromMarks?.maxOutboxId ?? '0', currentMarks.maxOutboxId);
+                const ledger = await this.fetchLedgerRecords(client, fromMarks?.maxLedgerId ?? '0', currentMarks.maxLedgerId);
 
-            // Fetch records since last export (read-only queries)
-            const ingress = await this.fetchIngressRecords(client, fromMarks?.maxIngressId ?? '0', currentMarks.maxIngressId);
-            const outbox = await this.fetchOutboxRecords(client, fromMarks?.maxOutboxId ?? '0', currentMarks.maxOutboxId);
-            const ledger = await this.fetchLedgerRecords(client, fromMarks?.maxLedgerId ?? '0', currentMarks.maxLedgerId);
+                const batchHash = this.computeBatchHash(ingress, outbox, ledger, this.config.schemaVersion, batchId);
 
-            // Compute batch hash (sorted records + schema version + metadata)
-            const batchHash = this.computeBatchHash(ingress, outbox, ledger, this.config.schemaVersion, batchId);
+                const metadata: ExportBatchMetadata = {
+                    batchId,
+                    schemaVersion: this.config.schemaVersion,
+                    exportedAt,
+                    highWaterMarks: currentMarks,
+                    previousBatchId: fromMarks ? (await this.getLastExportState())?.batchId ?? null : null,
+                    recordCounts: {
+                        ingress: ingress.length,
+                        outbox: outbox.length,
+                        ledger: ledger.length,
+                    },
+                    batchHash,
+                    viewVersion: this.VIEW_VERSION,
+                    generatedAt: exportedAt,
+                };
 
-            const metadata: ExportBatchMetadata = {
-                batchId,
-                schemaVersion: this.config.schemaVersion,
-                exportedAt,
-                highWaterMarks: currentMarks,
-                previousBatchId: fromMarks ? (await this.getLastExportState())?.batchId ?? null : null,
-                recordCounts: {
-                    ingress: ingress.length,
-                    outbox: outbox.length,
-                    ledger: ledger.length,
-                },
-                batchHash,
-                viewVersion: this.VIEW_VERSION,
-                generatedAt: exportedAt,
-            };
+                const batch: EvidenceBatch = {
+                    metadata,
+                    ingress,
+                    outbox,
+                    ledger,
+                };
 
-            const batch: EvidenceBatch = {
-                metadata,
-                ingress,
-                outbox,
-                ledger,
-            };
+                await this.writeBatchToFilesystem(batch);
+                await this.logExport(client, metadata);
 
-            // Write to filesystem (mock regulator bucket)
-            await this.writeBatchToFilesystem(batch);
+                logger.info({
+                    batchId,
+                    recordCounts: metadata.recordCounts,
+                    batchHash,
+                }, 'Evidence batch exported successfully');
 
-            // Log the export (audit trail)
-            await this.logExport(client, metadata);
-
-            await client.query('COMMIT');
-
-            logger.info({
-                batchId,
-                recordCounts: metadata.recordCounts,
-                batchHash,
-            }, 'Evidence batch exported successfully');
-
-            return metadata;
+                return metadata;
+            });
         } catch (error) {
-            await client.query('ROLLBACK');
             logger.error({ error, batchId }, 'Evidence batch export failed');
             throw error;
-        } finally {
-            client.release();
         }
     }
 
@@ -258,7 +252,7 @@ export class EvidenceExportService {
     }
 
     private async fetchIngressRecords(
-        client: PoolClient,
+        client: Queryable,
         fromId: string,
         toId: string
     ): Promise<IngressRecord[]> {
@@ -275,7 +269,7 @@ export class EvidenceExportService {
     }
 
     private async fetchOutboxRecords(
-        client: PoolClient,
+        client: Queryable,
         fromId: string,
         toId: string
     ): Promise<OutboxRecord[]> {
@@ -300,7 +294,7 @@ export class EvidenceExportService {
     }
 
     private async fetchLedgerRecords(
-        client: PoolClient,
+        client: Queryable,
         fromId: string,
         toId: string
     ): Promise<LedgerRecord[]> {
@@ -352,7 +346,7 @@ export class EvidenceExportService {
         logger.info({ filepath, hashFilepath }, 'Batch written to filesystem');
     }
 
-    private async logExport(client: PoolClient, metadata: ExportBatchMetadata): Promise<void> {
+    private async logExport(client: Queryable, metadata: ExportBatchMetadata): Promise<void> {
         await client.query(
             `INSERT INTO evidence_export_log 
              (batch_id, schema_version, exported_at, max_ingress_id, max_outbox_id, max_ledger_id, 
@@ -377,8 +371,8 @@ export class EvidenceExportService {
 
 // ------------------ Factory ------------------
 
-export function createEvidenceExportService(pool: Pool, outputDir: string): EvidenceExportService {
-    return new EvidenceExportService(pool, {
+export function createEvidenceExportService(outputDir: string, role: DbRole = 'symphony_control'): EvidenceExportService {
+    return new EvidenceExportService(role, {
         outputDir,
         schemaVersion: '7B.1.0',
         batchSize: 10000,

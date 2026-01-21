@@ -5,28 +5,18 @@
  */
 
 process.env.DB_HOST = "localhost";
+process.env.DB_PORT = "5432";
 process.env.DB_NAME = "symphony";
 process.env.DB_USER = "symphony_user";
 process.env.DB_PASSWORD = "password";
 process.env.DB_SSL_QUERY = "true";
 process.env.DB_CA_CERT = "-----BEGIN CERTIFICATE-----\nINVALID_CA\n-----END CERTIFICATE-----";
 
-import pg from 'pg';
-const { Pool } = pg;
-
 async function testSslEnforcement() {
     console.log("Starting DB SSL Enforcement Proof...");
-
-    const pool = new Pool({
-        host: process.env.DB_HOST,
-        ssl: {
-            rejectUnauthorized: true,
-            ca: process.env.DB_CA_CERT
-        }
-    });
-
     try {
-        await pool.connect();
+        const { db } = await import('../../libs/db/index.js');
+        await db.queryAsRole('symphony_control', 'SELECT 1');
         console.log("❌ FAILURE: Connection succeeded with invalid CA certificate.");
         process.exit(1);
     } catch (err) {

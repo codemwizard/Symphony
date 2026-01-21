@@ -10,15 +10,22 @@ import crypto from 'crypto';
 export class SymphonyError extends Error {
     public readonly incidentId: string;
     public readonly timestamp: string;
+    public readonly contextLabel: string | undefined;
+    public readonly sqlState: string | undefined;
+    public override cause: unknown | undefined;
 
     constructor(
         public readonly publicMessage: string,
         public readonly internalDetails?: unknown,
-        public readonly category: 'SEC' | 'OPS' | 'FIN' = 'OPS'
+        public readonly category: 'SEC' | 'OPS' | 'FIN' = 'OPS',
+        options?: { cause?: unknown; contextLabel?: string; sqlState?: string }
     ) {
         super(publicMessage);
         this.incidentId = crypto.randomUUID();
         this.timestamp = new Date().toISOString();
+        this.contextLabel = options?.contextLabel;
+        this.sqlState = options?.sqlState;
+        this.cause = options?.cause;
 
         // Log the full internal details with the IncidentID
         logger.error({
@@ -40,10 +47,14 @@ export const ErrorSanitizer = {
 
         let originalErrorMessage: string | undefined;
         let originalErrorStack: string | undefined;
+        let sqlState: string | undefined;
 
         if (err instanceof Error) {
             originalErrorMessage = err.message;
             originalErrorStack = err.stack;
+            sqlState = typeof (err as { code?: unknown }).code === 'string'
+                ? ((err as { code?: string }).code)
+                : undefined;
         } else if (typeof err === 'string') {
             originalErrorMessage = err;
         } else if (err && typeof err === 'object' && 'message' in err) {
@@ -54,15 +65,27 @@ export const ErrorSanitizer = {
             if (typeof errObj.stack === 'string') {
                 originalErrorStack = errObj.stack;
             }
+            if (typeof errObj.code === 'string') {
+                sqlState = errObj.code;
+            }
         } else {
             originalErrorMessage = String(err);
         }
 
         // Otherwise, wrap it to hide raw DB/Stack details
+        const options: { cause?: unknown; contextLabel?: string; sqlState?: string } = {
+            cause: err,
+            contextLabel
+        };
+        if (sqlState !== undefined) {
+            options.sqlState = sqlState;
+        }
+
         return new SymphonyError(
             `An internal system error occurred. Please contact support with ID: ${contextLabel}`,
             { originalError: originalErrorMessage, stack: originalErrorStack, context: contextLabel },
-            'OPS'
+            'OPS',
+            options
         );
     }
 };

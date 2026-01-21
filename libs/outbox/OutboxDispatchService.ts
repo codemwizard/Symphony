@@ -9,8 +9,8 @@
  * @see PHASE-7R-implementation_plan.md Section "Transactional Outbox"
  */
 
-import { Pool, PoolClient } from 'pg';
 import pino from 'pino';
+import { db, DbRole, Queryable } from '../db/index.js';
 
 const logger = pino({ name: 'OutboxDispatch' });
 
@@ -65,7 +65,8 @@ export class DispatchError extends Error {
  */
 export class OutboxDispatchService {
     constructor(
-        private readonly pool: Pool
+        private readonly role: DbRole = 'symphony_ingest',
+        private readonly dbClient = db
     ) {
     }
 
@@ -76,13 +77,11 @@ export class OutboxDispatchService {
      */
     public async dispatch(
         request: DispatchRequest,
-        client?: PoolClient
+        client?: Queryable
     ): Promise<DispatchResult> {
-        const shouldReleaseClient = !client;
-        const dbClient = client ?? await this.pool.connect();
-
         try {
-            const result = await dbClient.query(`
+            const result = client
+                ? await client.query(`
                 SELECT outbox_id, sequence_id, created_at, state
                 FROM enqueue_payment_outbox($1, $2, $3, $4, $5);
             `, [
@@ -91,9 +90,26 @@ export class OutboxDispatchService {
                 request.idempotencyKey,
                 request.railType,
                 JSON.stringify(request.payload)
-            ]);
+            ])
+                : await this.dbClient.queryAsRole(
+                    this.role,
+                    `
+                SELECT outbox_id, sequence_id, created_at, state
+                FROM enqueue_payment_outbox($1, $2, $3, $4, $5);
+            `,
+                    [
+                        request.instructionId,
+                        request.participantId,
+                        request.idempotencyKey,
+                        request.railType,
+                        JSON.stringify(request.payload)
+                    ]
+                );
 
             const row = result.rows[0];
+            if (!row) {
+                throw new DispatchError('DISPATCH_FAILED', 'Outbox enqueue returned no rows');
+            }
 
             logger.info({
                 event: 'DISPATCH_QUEUED',
@@ -105,11 +121,23 @@ export class OutboxDispatchService {
 
             // Update attestation if provided
             if (request.attestationId) {
-                await dbClient.query(`
-                    UPDATE ingress_attestations
-                    SET execution_started = TRUE
-                    WHERE id = $1;
-                `, [request.attestationId]);
+                if (client) {
+                    await client.query(`
+                        UPDATE ingress_attestations
+                        SET execution_started = TRUE
+                        WHERE id = $1;
+                    `, [request.attestationId]);
+                } else {
+                    await this.dbClient.queryAsRole(
+                        this.role,
+                        `
+                        UPDATE ingress_attestations
+                        SET execution_started = TRUE
+                        WHERE id = $1;
+                    `,
+                        [request.attestationId]
+                    );
+                }
             }
 
             return {
@@ -123,10 +151,6 @@ export class OutboxDispatchService {
 
             logger.error({ error: message }, 'Dispatch failed');
             throw new DispatchError('DISPATCH_FAILED', message);
-        } finally {
-            if (shouldReleaseClient) {
-                dbClient.release();
-            }
         }
     }
 
@@ -144,12 +168,7 @@ export class OutboxDispatchService {
             currency: string;
         }>
     ): Promise<DispatchResult> {
-        const client = await this.pool.connect();
-
-        try {
-            await client.query('BEGIN');
-
-            // 1. Write ledger entries
+        return this.dbClient.transactionAsRole(this.role, async (client) => {
             for (const entry of ledgerEntries) {
                 await client.query(`
                     INSERT INTO ledger_entries (
@@ -168,10 +187,7 @@ export class OutboxDispatchService {
                 ]);
             }
 
-            // 2. Write to outbox (same transaction)
             const result = await this.dispatch(request, client);
-
-            await client.query('COMMIT');
 
             logger.info({
                 event: 'LEDGER_AND_DISPATCH_COMMITTED',
@@ -180,12 +196,7 @@ export class OutboxDispatchService {
             });
 
             return result;
-        } catch (error) {
-            await client.query('ROLLBACK');
-            throw error;
-        } finally {
-            client.release();
-        }
+        });
     }
 
     /**
@@ -196,33 +207,45 @@ export class OutboxDispatchService {
         lastError?: string;
         processedAt?: Date;
     } | null> {
-        const pending = await this.pool.query(`
+        const pending = await this.dbClient.queryAsRole(
+            this.role,
+            `
             SELECT created_at
             FROM payment_outbox_pending
             WHERE outbox_id = $1
             LIMIT 1;
-        `, [outboxId]);
+        `,
+            [outboxId]
+        );
 
-        if (pending.rows.length > 0) {
+        const pendingRow = pending.rows[0];
+        if (pendingRow) {
             return {
                 status: 'PENDING',
-                processedAt: pending.rows[0].created_at
+                processedAt: pendingRow.created_at
             };
         }
 
-        const result = await this.pool.query(`
+        const result = await this.dbClient.queryAsRole(
+            this.role,
+            `
             SELECT state, error_message, completed_at
             FROM payment_outbox_attempts
             WHERE outbox_id = $1
             ORDER BY created_at DESC
             LIMIT 1;
-        `, [outboxId]);
+        `,
+            [outboxId]
+        );
 
         if (result.rows.length === 0) {
             return null;
         }
 
         const row = result.rows[0];
+        if (!row) {
+            return null;
+        }
         return {
             status: row.state,
             lastError: row.error_message,
@@ -234,6 +257,6 @@ export class OutboxDispatchService {
 /**
  * Factory function
  */
-export function createOutboxDispatchService(pool: Pool): OutboxDispatchService {
-    return new OutboxDispatchService(pool);
+export function createOutboxDispatchService(role: DbRole = 'symphony_ingest'): OutboxDispatchService {
+    return new OutboxDispatchService(role);
 }

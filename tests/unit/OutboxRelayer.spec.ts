@@ -9,30 +9,45 @@
 
 import { describe, it, beforeEach, mock } from 'node:test';
 import * as assert from 'node:assert';
-import { Pool } from 'pg';
 import { OutboxRelayer, OutboxRecord } from '../../libs/outbox/OutboxRelayer.js';
+import { DbRole } from '../../libs/db/roles.js';
+import type { db } from '../../libs/db/index.js';
+
+type DbClient = typeof db;
 
 describe('OutboxRelayer', () => {
     let relayer: OutboxRelayer;
-    let mockPool: { connect: ReturnType<typeof mock.fn>; query: ReturnType<typeof mock.fn> };
-    let mockClient: { query: ReturnType<typeof mock.fn>; release: ReturnType<typeof mock.fn> };
+    let mockTxClient: { query: ReturnType<typeof mock.fn> };
+    let mockDb: {
+        queryAsRole: ReturnType<typeof mock.fn>;
+        transactionAsRole: ReturnType<typeof mock.fn>;
+        listenAsRole: ReturnType<typeof mock.fn>;
+        withRoleClient: ReturnType<typeof mock.fn>;
+        probeRoles: ReturnType<typeof mock.fn>;
+    };
     let mockRailClient: { dispatch: ReturnType<typeof mock.fn> };
 
     beforeEach(() => {
-        mockClient = {
-            query: mock.fn(async () => ({ rows: [] })),
-            release: mock.fn()
+        mockTxClient = {
+            query: mock.fn(async () => ({ rows: [] }))
         };
-        mockPool = {
-            connect: mock.fn(async () => mockClient),
-            query: mock.fn()
+        mockDb = {
+            queryAsRole: mock.fn(async () => ({ rows: [] })),
+            transactionAsRole: mock.fn(async (_role: DbRole, callback: (client: typeof mockTxClient) => Promise<unknown>) =>
+                callback(mockTxClient)
+            ),
+            listenAsRole: mock.fn(async () => ({ close: mock.fn(async () => undefined) })),
+            withRoleClient: mock.fn(async (_role: DbRole, callback: (client: typeof mockTxClient) => Promise<unknown>) =>
+                callback(mockTxClient)
+            ),
+            probeRoles: mock.fn(async () => undefined)
         };
         mockRailClient = {
             dispatch: mock.fn(async () => ({ success: true, railReference: 'ref-123' }))
         };
 
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        relayer = new OutboxRelayer(mockPool as unknown as Pool, mockRailClient as any);
+        relayer = new OutboxRelayer(mockRailClient as any, 'symphony_executor', mockDb as unknown as DbClient);
     });
 
     describe('poll() -> claimNextBatch()', () => {
@@ -51,12 +66,9 @@ describe('OutboxRelayer', () => {
             };
 
             // Mock fetchNextBatch query result
-            mockClient.query = mock.fn(async () => ({
+            mockTxClient.query = mock.fn(async () => ({
                 rows: [mockRecord]
             }));
-
-            // Mock markSuccess query
-            mockPool.query = mock.fn(async () => ({}));
 
             // Access private method via casting or testing public side-effect
             // Since poll is private, we can test start() but that loops.
@@ -68,13 +80,12 @@ describe('OutboxRelayer', () => {
             await relayerInternal.claimNextBatch();
 
             // Verify SKIP LOCKED usage
-            const queryCalls = mockClient.query.mock.calls;
+            const queryCalls = mockTxClient.query.mock.calls;
             const hasSkipLocked = queryCalls.some(call => {
                 const args = call.arguments as [string];
                 return typeof args[0] === 'string' && args[0].includes('FOR UPDATE SKIP LOCKED');
             });
             assert.ok(hasSkipLocked, 'Should use SKIP LOCKED');
-            assert.strictEqual(mockClient.release.mock.calls.length, 1, 'Should release client');
         });
     });
 
@@ -103,10 +114,10 @@ describe('OutboxRelayer', () => {
             assert.strictEqual(dispatchArgs.reference, 'uuid-1');
 
             // Verify success mark (Pool query)
-            assert.strictEqual(mockPool.query.mock.calls.length, 1);
-            const poolQueryArgs = mockPool.query.mock.calls[0]!.arguments as [string, unknown[]];
-            assert.ok(poolQueryArgs[0].includes('INSERT INTO payment_outbox_attempts'));
-            const params = poolQueryArgs[1] as unknown[];
+            assert.strictEqual(mockDb.queryAsRole.mock.calls.length, 1);
+            const poolQueryArgs = mockDb.queryAsRole.mock.calls[0]!.arguments as [string, string, unknown[]];
+            assert.ok(poolQueryArgs[1].includes('INSERT INTO payment_outbox_attempts'));
+            const params = poolQueryArgs[2] as unknown[];
             assert.strictEqual(params[7], 'DISPATCHED');
         });
 
@@ -132,15 +143,15 @@ describe('OutboxRelayer', () => {
             await relayerInternal.processRecord(mockRecord);
 
             // Verify outcome insert and requeue
-            assert.strictEqual(mockPool.query.mock.calls.length, 2);
-            const outcomeCall = mockPool.query.mock.calls[0]!;
-            const outcomeArgs = outcomeCall.arguments as [string, unknown[]];
-            assert.ok(outcomeArgs[0].includes('INSERT INTO payment_outbox_attempts'));
-            const outcomeParams = outcomeArgs[1] as unknown[];
+            assert.strictEqual(mockDb.queryAsRole.mock.calls.length, 2);
+            const outcomeCall = mockDb.queryAsRole.mock.calls[0]!;
+            const outcomeArgs = outcomeCall.arguments as [string, string, unknown[]];
+            assert.ok(outcomeArgs[1].includes('INSERT INTO payment_outbox_attempts'));
+            const outcomeParams = outcomeArgs[2] as unknown[];
             assert.strictEqual(outcomeParams[7], 'RETRYABLE');
-            const requeueCall = mockPool.query.mock.calls[1]!;
-            const requeueArgs = requeueCall.arguments as [string];
-            assert.ok(requeueArgs[0].includes('INSERT INTO payment_outbox_pending'));
+            const requeueCall = mockDb.queryAsRole.mock.calls[1]!;
+            const requeueArgs = requeueCall.arguments as [string, string];
+            assert.ok(requeueArgs[1].includes('INSERT INTO payment_outbox_pending'));
         });
 
         it('should mark failed for terminal errors', async () => {
@@ -167,10 +178,10 @@ describe('OutboxRelayer', () => {
             await relayerInternal.processRecord(mockRecord);
 
             // Verify outcome insert
-            const failureCall = mockPool.query.mock.calls[0]!;
-            const failureArgs = failureCall.arguments as [string, unknown[]];
-            assert.ok(failureArgs[0].includes('INSERT INTO payment_outbox_attempts'));
-            const params = failureArgs[1] as unknown[];
+            const failureCall = mockDb.queryAsRole.mock.calls[0]!;
+            const failureArgs = failureCall.arguments as [string, string, unknown[]];
+            assert.ok(failureArgs[1].includes('INSERT INTO payment_outbox_attempts'));
+            const params = failureArgs[2] as unknown[];
             assert.strictEqual(params[7], 'FAILED');
         });
     });

@@ -8,10 +8,10 @@
  */
 
 import type { Request, Response, NextFunction } from 'express';
-import { Pool } from 'pg';
 import { pino } from 'pino';
 import * as crypto from 'crypto';
 import { KeyManager, SymphonyKeyManager } from '../crypto/keyManager.js';
+import { db, DbRole } from '../db/index.js';
 
 const logger = pino({ name: 'IngressAttestation' });
 const keyManager: KeyManager = new SymphonyKeyManager();
@@ -76,7 +76,8 @@ export class IngressAttestationService {
     private lastHash: string = '';
 
     constructor(
-        private readonly pool: Pool
+        private readonly role: DbRole,
+        private readonly dbClient = db
     ) { }
 
     /**
@@ -88,59 +89,61 @@ export class IngressAttestationService {
     public async attest(envelope: IngressEnvelope): Promise<AttestationRecord> {
         this.validateEnvelope(envelope);
 
-        const client = await this.pool.connect();
         try {
-            // Get the previous hash for hash-chaining
-            const prevHashResult = await client.query(`
-                SELECT record_hash FROM ingress_attestations
-                ORDER BY attested_at DESC, id DESC
-                LIMIT 1;
-            `);
-            const prevHash = prevHashResult.rows[0]?.record_hash ?? '';
+            return await this.dbClient.withRoleClient(this.role, async (client) => {
+                // Get the previous hash for hash-chaining
+                const prevHashResult = await client.query(`
+                    SELECT record_hash FROM ingress_attestations
+                    ORDER BY attested_at DESC, id DESC
+                    LIMIT 1;
+                `);
+                const prevHash = prevHashResult.rows[0]?.record_hash ?? '';
 
-            // Insert attestation with hash-chaining
-            const result = await client.query(`
-                INSERT INTO ingress_attestations (
-                    request_id,
-                    idempotency_key,
-                    caller_identity,
-                    signature,
-                    prev_hash,
-                    execution_started,
-                    execution_completed
-                ) VALUES ($1, $2, $3, $4, $5, FALSE, FALSE)
-                RETURNING id, request_id, idempotency_key, record_hash, attested_at;
-            `, [
-                envelope.requestId,
-                envelope.idempotencyKey,
-                envelope.callerId,
-                envelope.signature,
-                prevHash
-            ]);
+                // Insert attestation with hash-chaining
+                const result = await client.query(`
+                    INSERT INTO ingress_attestations (
+                        request_id,
+                        idempotency_key,
+                        caller_identity,
+                        signature,
+                        prev_hash,
+                        execution_started,
+                        execution_completed
+                    ) VALUES ($1, $2, $3, $4, $5, FALSE, FALSE)
+                    RETURNING id, request_id, idempotency_key, record_hash, attested_at;
+                `, [
+                    envelope.requestId,
+                    envelope.idempotencyKey,
+                    envelope.callerId,
+                    envelope.signature,
+                    prevHash
+                ]);
 
-            const row = result.rows[0];
-            this.lastHash = row.record_hash;
+                const row = result.rows[0];
+                if (!row) {
+                    throw new Error('Attestation insert returned no rows');
+                }
+                this.lastHash = row.record_hash;
 
-            logger.info({
-                event: 'INGRESS_ATTESTED',
-                attestationId: row.id,
-                requestId: envelope.requestId,
-                recordHash: row.record_hash.substring(0, 16) + '...'
+                logger.info({
+                    event: 'INGRESS_ATTESTED',
+                    attestationId: row.id,
+                    requestId: envelope.requestId,
+                    recordHash: row.record_hash.substring(0, 16) + '...'
+                });
+
+                return {
+                    id: row.id,
+                    requestId: row.request_id,
+                    idempotencyKey: row.idempotency_key,
+                    recordHash: row.record_hash,
+                    attestedAt: row.attested_at
+                };
             });
-
-            return {
-                id: row.id,
-                requestId: row.request_id,
-                idempotencyKey: row.idempotency_key,
-                recordHash: row.record_hash,
-                attestedAt: row.attested_at
-            };
         } catch (error: unknown) {
             const message = error instanceof Error ? error.message : 'Unknown error';
             logger.error({ error: message }, 'Attestation failed');
             throw new AttestationFailedError(`Could not create attestation: ${message}`);
-        } finally {
-            client.release();
         }
     }
 
@@ -148,7 +151,8 @@ export class IngressAttestationService {
      * Mark attestation as execution started
      */
     public async markExecutionStarted(attestationId: string, attestedAt: Date): Promise<void> {
-        await this.pool.query(
+        await this.dbClient.queryAsRole(
+            this.role,
             `UPDATE ingress_attestations SET execution_started = TRUE WHERE id = $1 AND attested_at = $2`,
             [attestationId, attestedAt]
         );
@@ -162,7 +166,8 @@ export class IngressAttestationService {
         attestedAt: Date,
         status: 'SUCCESS' | 'FAILED' | 'REPAIRED'
     ): Promise<void> {
-        await this.pool.query(
+        await this.dbClient.queryAsRole(
+            this.role,
             `UPDATE ingress_attestations 
              SET execution_completed = TRUE, terminal_status = $3 
              WHERE id = $1 AND attested_at = $2`,
@@ -200,8 +205,8 @@ export class IngressAttestationService {
  * 
  * Creates middleware that attests every request before passing to handlers.
  */
-export function createIngressAttestationMiddleware(pool: Pool) {
-    const service = new IngressAttestationService(pool);
+export function createIngressAttestationMiddleware(role: DbRole, dbClient = db) {
+    const service = new IngressAttestationService(role, dbClient);
 
     return async (req: Request, res: Response, next: NextFunction): Promise<void> => {
         try {

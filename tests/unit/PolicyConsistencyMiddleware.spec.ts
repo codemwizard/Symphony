@@ -10,9 +10,12 @@
 
 import { describe, it, beforeEach, afterEach, mock } from 'node:test';
 import assert from 'node:assert';
-import { Pool } from 'pg';
 import { PolicyConsistencyService, PolicyClaims, createPolicyConsistencyMiddleware, signPolicyClaims } from '../../libs/policy/PolicyConsistencyMiddleware.js';
 import { SymphonyKeyManager } from '../../libs/crypto/keyManager.js';
+import { DbRole } from '../../libs/db/roles.js';
+import type { db } from '../../libs/db/index.js';
+
+type DbClient = typeof db;
 
 // We cannot easily mock 'pino' import in node:test without loaders.
 // However, if the service imports pino directly, we just let it run.
@@ -21,8 +24,14 @@ import { SymphonyKeyManager } from '../../libs/crypto/keyManager.js';
 
 describe('PolicyConsistencyService', () => {
     let service: PolicyConsistencyService;
-    let mockPool: { query: ReturnType<typeof mock.fn> };
     let mockQuery: ReturnType<typeof mock.fn>;
+    let mockDb: {
+        queryAsRole: ReturnType<typeof mock.fn>;
+        withRoleClient: ReturnType<typeof mock.fn>;
+        transactionAsRole: ReturnType<typeof mock.fn>;
+        listenAsRole: ReturnType<typeof mock.fn>;
+        probeRoles: ReturnType<typeof mock.fn>;
+    };
 
     const MOCK_FLAGS = {
         ACTIVE_VERSION: 'v1.2.3',
@@ -34,7 +43,7 @@ describe('PolicyConsistencyService', () => {
 
     beforeEach(() => {
         // Setup PostgreSQL Mock
-        mockQuery = mock.fn(async (text: string) => {
+        mockQuery = mock.fn(async (_role: DbRole, text: string) => {
             if (text.includes('FROM policy_versions')) {
                 return {
                     rows: [
@@ -57,12 +66,20 @@ describe('PolicyConsistencyService', () => {
             return { rows: [] };
         });
 
-        mockPool = {
-            query: mockQuery
+        mockDb = {
+            queryAsRole: mockQuery,
+            withRoleClient: mock.fn(async (_role: DbRole, callback: (client: { query: typeof mockQuery }) => Promise<unknown>) =>
+                callback({ query: mockQuery })
+            ),
+            transactionAsRole: mock.fn(async (_role: DbRole, callback: (client: { query: typeof mockQuery }) => Promise<unknown>) =>
+                callback({ query: mockQuery })
+            ),
+            listenAsRole: mock.fn(async () => ({ close: mock.fn(async () => undefined) })),
+            probeRoles: mock.fn(async () => undefined)
         };
 
         // Instantiate Service
-        service = new PolicyConsistencyService(mockPool as unknown as Pool);
+        service = new PolicyConsistencyService('symphony_readonly', mockDb as unknown as DbClient);
     });
 
     afterEach(() => {
@@ -242,8 +259,8 @@ describe('PolicyConsistencyMiddleware', () => {
         if (restoreMock) restoreMock();
     });
 
-    const buildMockPool = () => ({
-        query: mock.fn(async (text: string) => {
+    const buildMockDb = () => ({
+        queryAsRole: mock.fn(async (_role: DbRole, text: string) => {
             if (text.includes('FROM policy_versions')) {
                 return {
                     rows: [
@@ -263,12 +280,20 @@ describe('PolicyConsistencyMiddleware', () => {
                 };
             }
             return { rows: [] };
-        })
+        }),
+        withRoleClient: mock.fn(async (_role: DbRole, callback: (client: { query: ReturnType<typeof mock.fn> }) => Promise<unknown>) =>
+            callback({ query: mock.fn(async () => ({ rows: [] })) })
+        ),
+        transactionAsRole: mock.fn(async (_role: DbRole, callback: (client: { query: ReturnType<typeof mock.fn> }) => Promise<unknown>) =>
+            callback({ query: mock.fn(async () => ({ rows: [] })) })
+        ),
+        listenAsRole: mock.fn(async () => ({ close: mock.fn(async () => undefined) })),
+        probeRoles: mock.fn(async () => undefined)
     });
 
     it('should accept policy claims with a valid signature header', async () => {
-        const pool = buildMockPool();
-        const middleware = createPolicyConsistencyMiddleware(pool as unknown as Pool);
+        const mockDb = buildMockDb();
+        const middleware = createPolicyConsistencyMiddleware('symphony_readonly', {}, mockDb as unknown as DbClient);
         const signature = await signPolicyClaims(baseClaims);
 
         const req = {
@@ -289,8 +314,8 @@ describe('PolicyConsistencyMiddleware', () => {
     });
 
     it('should reject policy claims without a signature header', async () => {
-        const pool = buildMockPool();
-        const middleware = createPolicyConsistencyMiddleware(pool as unknown as Pool);
+        const mockDb = buildMockDb();
+        const middleware = createPolicyConsistencyMiddleware('symphony_readonly', {}, mockDb as unknown as DbClient);
 
         const req = {
             policyClaims: baseClaims,
@@ -308,8 +333,8 @@ describe('PolicyConsistencyMiddleware', () => {
     });
 
     it('should reject policy claims with an invalid signature header', async () => {
-        const pool = buildMockPool();
-        const middleware = createPolicyConsistencyMiddleware(pool as unknown as Pool);
+        const mockDb = buildMockDb();
+        const middleware = createPolicyConsistencyMiddleware('symphony_readonly', {}, mockDb as unknown as DbClient);
 
         const req = {
             policyClaims: baseClaims,

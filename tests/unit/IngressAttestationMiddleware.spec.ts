@@ -1,27 +1,42 @@
 import { describe, it, beforeEach, mock } from 'node:test';
 import * as assert from 'node:assert';
-import { Pool } from 'pg';
 import { IngressAttestationService, IngressEnvelope, InvalidEnvelopeError, createIngressAttestationMiddleware } from '../../libs/attestation/IngressAttestationMiddleware.js';
+import { DbRole } from '../../libs/db/roles.js';
+import type { db } from '../../libs/db/index.js';
+
+type DbClient = typeof db;
 
 console.log('DEBUG: IngressAttestationMiddleware.spec.ts loaded');
 const VALID_SIGNATURE = 'a'.repeat(64);
 describe('IngressAttestationService', () => {
     let service: IngressAttestationService;
-    let mockPool: { connect: ReturnType<typeof mock.fn>; query: ReturnType<typeof mock.fn> };
-    let mockClient: { query: ReturnType<typeof mock.fn>; release: ReturnType<typeof mock.fn> };
+    let mockDb: {
+        queryAsRole: ReturnType<typeof mock.fn>;
+        withRoleClient: ReturnType<typeof mock.fn>;
+        transactionAsRole: ReturnType<typeof mock.fn>;
+        listenAsRole: ReturnType<typeof mock.fn>;
+        probeRoles: ReturnType<typeof mock.fn>;
+    };
+    let mockClient: { query: ReturnType<typeof mock.fn> };
 
     beforeEach(() => {
         console.log('DEBUG: beforeEach started');
         mockClient = {
-            query: mock.fn(async () => ({ rows: [], rowCount: 0 })),
-            release: mock.fn()
-        };
-        mockPool = {
-            connect: mock.fn(async () => mockClient),
             query: mock.fn(async () => ({ rows: [], rowCount: 0 }))
         };
+        mockDb = {
+            queryAsRole: mock.fn(async () => ({ rows: [], rowCount: 0 })),
+            withRoleClient: mock.fn(async (_role: DbRole, callback: (client: typeof mockClient) => Promise<unknown>) =>
+                callback(mockClient)
+            ),
+            transactionAsRole: mock.fn(async (_role: DbRole, callback: (client: typeof mockClient) => Promise<unknown>) =>
+                callback(mockClient)
+            ),
+            listenAsRole: mock.fn(async () => ({ close: mock.fn(async () => undefined) })),
+            probeRoles: mock.fn(async () => undefined)
+        };
         try {
-            service = new IngressAttestationService(mockPool as unknown as Pool);
+            service = new IngressAttestationService('symphony_ingest', mockDb as unknown as DbClient);
             console.log('DEBUG: service instantiated');
         } catch (error) {
             console.error('DEBUG: Error instantiating service', error);
@@ -65,9 +80,8 @@ describe('IngressAttestationService', () => {
             assert.strictEqual(result.recordHash, 'new-hash-456');
 
             // Verify calls
-            assert.strictEqual(mockPool.connect.mock.calls.length, 1);
+            assert.strictEqual(mockDb.withRoleClient.mock.calls.length, 1);
             assert.strictEqual(mockClient.query.mock.calls.length, 2); // Select prev + Insert
-            assert.strictEqual(mockClient.release.mock.calls.length, 1);
             console.log('DEBUG: test1 finished');
         });
 
@@ -107,7 +121,6 @@ describe('IngressAttestationService', () => {
                 { message: /Could not create attestation/ }
             );
 
-            assert.strictEqual(mockClient.release.mock.calls.length, 1, 'Should release client even on error');
             console.log('DEBUG: test3 finished');
         });
     });
@@ -119,12 +132,12 @@ describe('IngressAttestationService', () => {
 
             await service.markExecutionStarted('att-1', attestedAt);
 
-            assert.strictEqual(mockPool.query.mock.calls.length, 1, 'Pool query should be called exactly once');
-            const call = mockPool.query.mock.calls[0];
+            assert.strictEqual(mockDb.queryAsRole.mock.calls.length, 1, 'DB query should be called exactly once');
+            const call = mockDb.queryAsRole.mock.calls[0];
             assert.ok(call, 'Call should exist');
 
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            const [sql, params] = call.arguments as [string, any[]];
+            const [, sql, params] = call.arguments as [string, string, any[]];
 
             assert.ok(sql.includes('WHERE id = $1 AND attested_at = $2'));
             assert.strictEqual(params[0], 'att-1');
@@ -140,12 +153,12 @@ describe('IngressAttestationService', () => {
 
             await service.markExecutionCompleted('att-1', attestedAt, 'SUCCESS');
 
-            assert.strictEqual(mockPool.query.mock.calls.length, 1, 'Pool query should be called exactly once');
-            const call = mockPool.query.mock.calls[0];
+            assert.strictEqual(mockDb.queryAsRole.mock.calls.length, 1, 'DB query should be called exactly once');
+            const call = mockDb.queryAsRole.mock.calls[0];
             assert.ok(call, 'Call should exist');
 
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            const [sql, params] = call.arguments as [string, any[]];
+            const [, sql, params] = call.arguments as [string, string, any[]];
 
             assert.ok(sql.includes('terminal_status = $3'));
             assert.ok(sql.includes('WHERE id = $1 AND attested_at = $2'));
@@ -156,7 +169,7 @@ describe('IngressAttestationService', () => {
 
     describe('createIngressAttestationMiddleware()', () => {
         it('should require x-timestamp header', async () => {
-            const middleware = createIngressAttestationMiddleware(mockPool as unknown as Pool);
+            const middleware = createIngressAttestationMiddleware('symphony_ingest', mockDb as unknown as DbClient);
             const req = {
                 headers: {
                     'x-signature': VALID_SIGNATURE,
