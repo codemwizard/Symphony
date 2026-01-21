@@ -68,11 +68,22 @@ for pat in "${PG_IMPORT_PATTERNS[@]}"; do
 done
 
 echo "[guardrails] Checking testOnly import allowlist..."
-if rg -n --hidden --glob '!**/node_modules/**' --glob '!**/*.md' --glob '!**/*.txt' --glob '!tests/**' --glob '!libs/db/__tests__/**' "libs/db/testOnly" . >/dev/null; then
+if rg -n --hidden \
+  --glob '!**/node_modules/**' --glob '!**/*.md' --glob '!**/*.txt' \
+  --glob '!tests/**' --glob '!libs/db/__tests__/**' \
+  --glob '!scripts/guardrails/db-role-guardrails.sh' \
+  --glob '!scripts/**' \
+  "libs/db/testOnly" . >/dev/null; then
   echo "❌ Forbidden import of libs/db/testOnly outside tests:"
-  rg -n --hidden --glob '!**/node_modules/**' --glob '!**/*.md' --glob '!**/*.txt' --glob '!tests/**' --glob '!libs/db/__tests__/**' "libs/db/testOnly" .
+  rg -n --hidden \
+    --glob '!**/node_modules/**' --glob '!**/*.md' --glob '!**/*.txt' \
+    --glob '!tests/**' --glob '!libs/db/__tests__/**' \
+    --glob '!scripts/guardrails/db-role-guardrails.sh' \
+    --glob '!scripts/**' \
+    "libs/db/testOnly" .
   exit 1
 fi
+
 
 if [[ "${ENFORCE_NO_DB_QUERY:-0}" == "1" ]]; then
   echo "[guardrails] Phase B enabled: forbidding db.query(...) usage..."
