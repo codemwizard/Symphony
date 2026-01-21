@@ -18,9 +18,9 @@
  * - Offline / read-only execution
  */
 
-import { Pool, PoolClient } from 'pg';
 import pino from 'pino';
 import crypto from 'crypto';
+import { db, DbRole, Queryable } from '../../libs/db/index.js';
 
 const logger = pino({ name: 'LedgerReplay' });
 
@@ -95,11 +95,10 @@ export interface ReplayResult {
 // ------------------ Core Logic ------------------
 
 export class LedgerReplayEngine {
-    private readonly pool: Pool;
-
-    constructor(pool: Pool) {
-        this.pool = pool;
-    }
+    constructor(
+        private readonly role: DbRole,
+        private readonly dbClient = db
+    ) {}
 
     /**
      * Replay the ledger from source data.
@@ -110,9 +109,7 @@ export class LedgerReplayEngine {
 
         logger.info({ config }, 'Starting ledger replay');
 
-        const client = await this.pool.connect();
-        try {
-            // Fetch all source data (read-only)
+        return this.dbClient.withRoleClient(this.role, async (client) => {
             const attestations = await this.fetchAttestations(client, config);
             const outbox = await this.fetchOutbox(client, config);
             const ledger = await this.fetchLedger(client, config);
@@ -153,15 +150,13 @@ export class LedgerReplayEngine {
             }, 'Ledger replay completed');
 
             return { ...result, resultHash };
-        } finally {
-            client.release();
-        }
+        });
     }
 
     // ------------------ Private Methods ------------------
 
     private async fetchAttestations(
-        client: PoolClient,
+        client: Queryable,
         config: ReplayConfig
     ): Promise<AttestationRecord[]> {
         let query = `
@@ -187,7 +182,7 @@ export class LedgerReplayEngine {
     }
 
     private async fetchOutbox(
-        client: PoolClient,
+        client: Queryable,
         config: ReplayConfig
     ): Promise<OutboxRecord[]> {
         let query = `
@@ -219,7 +214,7 @@ export class LedgerReplayEngine {
     }
 
     private async fetchLedger(
-        client: PoolClient,
+        client: Queryable,
         config: ReplayConfig
     ): Promise<LedgerRecord[]> {
         let query = `
@@ -349,7 +344,7 @@ export class LedgerReplayEngine {
 
 // ------------------ CLI Entry Point ------------------
 
-export async function runReplay(pool: Pool, config: ReplayConfig): Promise<ReplayResult> {
-    const engine = new LedgerReplayEngine(pool);
+export async function runReplay(role: DbRole, config: ReplayConfig): Promise<ReplayResult> {
+    const engine = new LedgerReplayEngine(role);
     return engine.replay(config);
 }

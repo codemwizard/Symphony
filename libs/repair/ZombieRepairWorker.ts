@@ -1,5 +1,5 @@
-import { Pool } from 'pg';
 import { pino } from 'pino';
+import { db, DbRole } from '../db/index.js';
 
 const logger = pino({ name: 'ZombieRepairWorker' });
 
@@ -29,7 +29,8 @@ export class ZombieRepairWorker {
     private intervalHandle: NodeJS.Timeout | null = null;
 
     constructor(
-        private readonly pool: Pool
+        private readonly role: DbRole = 'symphony_executor',
+        private readonly dbClient = db
     ) { }
 
     /**
@@ -70,11 +71,9 @@ export class ZombieRepairWorker {
             errors: []
         };
 
-        const client = await this.pool.connect();
         try {
-            await client.query('BEGIN');
-
-            const staleAttempts = await client.query(`
+            return await this.dbClient.transactionAsRole(this.role, async (client) => {
+                const staleAttempts = await client.query(`
                 SELECT latest.outbox_id,
                        latest.instruction_id,
                        latest.participant_id,
@@ -104,11 +103,11 @@ export class ZombieRepairWorker {
                 LIMIT $1;
             `, [REPAIR_BATCH_SIZE]);
 
-            if (staleAttempts.rows.length > 0) {
-                const pendingValues: Array<unknown> = [];
-                const pendingPlaceholders: string[] = [];
-                const attemptValues: Array<unknown> = [];
-                const attemptPlaceholders: string[] = [];
+                if (staleAttempts.rows.length > 0) {
+                    const pendingValues: Array<unknown> = [];
+                    const pendingPlaceholders: string[] = [];
+                    const attemptValues: Array<unknown> = [];
+                    const attemptPlaceholders: string[] = [];
 
                 staleAttempts.rows.forEach((row, index) => {
                     const pendingOffset = index * 8;
@@ -140,7 +139,7 @@ export class ZombieRepairWorker {
                     );
                 });
 
-                await client.query(`
+                    await client.query(`
                     INSERT INTO payment_outbox_pending (
                         outbox_id,
                         instruction_id,
@@ -159,7 +158,7 @@ export class ZombieRepairWorker {
                         payload = EXCLUDED.payload;
                 `, pendingValues);
 
-                await client.query(`
+                    await client.query(`
                     INSERT INTO payment_outbox_attempts (
                         outbox_id,
                         instruction_id,
@@ -178,21 +177,19 @@ export class ZombieRepairWorker {
                     ) VALUES ${attemptPlaceholders.join(', ')};
                 `, attemptValues);
 
-                result.zombiesRequeued = staleAttempts.rows.length;
-            }
+                    result.zombiesRequeued = staleAttempts.rows.length;
+                }
 
-            await client.query('COMMIT');
+                if (result.zombiesRequeued > 0) {
+                    logger.info({ zombiesRequeued: result.zombiesRequeued }, 'Zombie requeue complete');
+                }
 
-            if (result.zombiesRequeued > 0) {
-                logger.info({ zombiesRequeued: result.zombiesRequeued }, 'Zombie requeue complete');
-            }
+                return result;
+            });
         } catch (error: unknown) {
-            await client.query('ROLLBACK');
             const errorMessage = error instanceof Error ? error.message : 'Unknown error';
             result.errors.push(errorMessage);
             logger.error({ error: errorMessage }, 'Repair cycle failed');
-        } finally {
-            client.release();
         }
 
         return result;
@@ -202,7 +199,7 @@ export class ZombieRepairWorker {
      * Get current zombie count (for monitoring)
      */
     public async getZombieCount(): Promise<number> {
-        const result = await this.pool.query(`
+        const result = await this.dbClient.queryAsRole(this.role, `
             SELECT COUNT(*) as count
             FROM (
                 SELECT DISTINCT ON (outbox_id)
@@ -222,6 +219,6 @@ export class ZombieRepairWorker {
 /**
  * Factory function for creating repair worker
  */
-export function createZombieRepairWorker(pool: Pool): ZombieRepairWorker {
-    return new ZombieRepairWorker(pool);
+export function createZombieRepairWorker(role: DbRole = 'symphony_executor'): ZombieRepairWorker {
+    return new ZombieRepairWorker(role);
 }
