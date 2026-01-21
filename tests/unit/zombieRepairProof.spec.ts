@@ -1,4 +1,4 @@
-import { describe, it, before, after } from 'node:test';
+import { describe, it, before, after, beforeEach } from 'node:test';
 import assert from 'node:assert';
 import crypto from 'node:crypto';
 
@@ -8,6 +8,7 @@ const describeWithDb = databaseUrl ? describe : describe.skip;
 describeWithDb('Zombie repair proof', () => {
     let db: Awaited<typeof import('../../libs/db/index.js')>['db'];
     let worker: InstanceType<Awaited<typeof import('../../libs/repair/ZombieRepairWorker.js')>['ZombieRepairWorker']>;
+    let queryNoRole: typeof import('../../libs/db/testOnly.js')['queryNoRole'];
     let outboxId: string;
     let instructionId: string;
     let participantId: string;
@@ -24,9 +25,22 @@ describeWithDb('Zombie repair proof', () => {
         process.env.DB_NAME = url.pathname.replace(/^\//, '');
         process.env.ZOMBIE_THRESHOLD_SECONDS = '1';
         const dbModule = await import('../../libs/db/index.js');
+        ({ queryNoRole } = await import('../../libs/db/testOnly.js'));
         const workerModule = await import('../../libs/repair/ZombieRepairWorker.js');
         db = dbModule.db;
         worker = new workerModule.ZombieRepairWorker('symphony_executor', db);
+    });
+
+    beforeEach(async () => {
+        if (!databaseUrl) return;
+        await queryNoRole(`
+            TRUNCATE
+                payment_outbox_pending,
+                payment_outbox_attempts,
+                participant_outbox_sequences
+            RESTART IDENTITY
+            CASCADE;
+        `);
     });
 
     after(async () => {
