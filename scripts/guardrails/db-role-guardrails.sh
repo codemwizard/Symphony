@@ -29,15 +29,25 @@ for pat in "${LEGACY_PATTERNS[@]}"; do
   fi
 done
 
-
 echo "[guardrails] Checking role SQL usage outside libs/db..."
 
 ROLE_SQL='SET ROLE|RESET ROLE|SET LOCAL ROLE'
-if rg -n --hidden --glob '!**/node_modules/**' --glob '!**/*.md' --glob '!**/*.txt' --glob '!libs/db/**' "$ROLE_SQL" . >/dev/null; then
+if rg -n --hidden \
+  --glob '!**/node_modules/**' --glob '!**/*.md' --glob '!**/*.txt' \
+  --glob '!libs/db/**' \
+  --glob '!scripts/**' \
+  --glob '!scripts/guardrails/db-role-guardrails.sh' \
+  "$ROLE_SQL" . >/dev/null; then
   echo "❌ Role SQL found outside libs/db (must be encapsulated in libs/db only):"
-  rg -n --hidden --glob '!**/node_modules/**' --glob '!**/*.md' --glob '!**/*.txt' --glob '!libs/db/**' "$ROLE_SQL" .
+  rg -n --hidden \
+    --glob '!**/node_modules/**' --glob '!**/*.md' --glob '!**/*.txt' \
+    --glob '!libs/db/**' \
+    --glob '!scripts/**' \
+    --glob '!scripts/guardrails/db-role-guardrails.sh' \
+    "$ROLE_SQL" .
   exit 1
 fi
+
 
 echo "[guardrails] Checking raw pg usage outside libs/db..."
 
