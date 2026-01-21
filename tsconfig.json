@@ -6,6 +6,12 @@
         ],
         "module": "NodeNext",
         "moduleResolution": "NodeNext",
+        "baseUrl": ".",
+        "paths": {
+            "symphony/*": [
+                "./*"
+            ]
+        },
         "rootDir": ".",
         "outDir": "dist",
         "strict": true,
