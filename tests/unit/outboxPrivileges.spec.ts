@@ -6,6 +6,12 @@ const databaseUrl = process.env.DATABASE_URL;
 
 const describeWithDb = databaseUrl ? describe : describe.skip;
 
+function assertSqlStateOneOf(err: unknown, allowed: string[]): boolean {
+    const anyErr = err as { sqlState?: string; code?: string; cause?: { sqlState?: string; code?: string } };
+    const sqlState = anyErr?.sqlState ?? anyErr?.code ?? anyErr?.cause?.sqlState ?? anyErr?.cause?.code;
+    return typeof sqlState === 'string' && allowed.includes(sqlState);
+}
+
 describeWithDb('Outbox privilege enforcement', () => {
     let db: Awaited<typeof import('../../libs/db/index.js')>['db'];
 
@@ -42,127 +48,62 @@ describeWithDb('Outbox privilege enforcement', () => {
                 ) VALUES ('inst-test', 'participant-test', 1, 'idem-test', 'PAYMENT', '{}'::jsonb);
                 `
             ),
-            (err: unknown) => {
-                if (err && typeof err === 'object') {
-                    const sqlState = (err as { sqlState?: string }).sqlState;
-                    const cause = (err as { cause?: { message?: string } }).cause;
-                    if (sqlState === '42501') {
-                        return true;
-                    }
-                    if (cause?.message && /permission denied/i.test(cause.message)) {
-                        return true;
-                    }
-                }
-                return false;
-            }
+            (err: unknown) => assertSqlStateOneOf(err, ['42501'])
+        );
+    });
+
+    it('blocks readonly from inserting into payment_outbox_pending', async () => {
+        await assert.rejects(
+            () => queryAsRole(
+                'symphony_readonly',
+                `
+                INSERT INTO payment_outbox_pending (
+                    instruction_id,
+                    participant_id,
+                    sequence_id,
+                    idempotency_key,
+                    rail_type,
+                    payload
+                ) VALUES ('inst-test', 'participant-test', 1, 'idem-test', 'PAYMENT', '{}'::jsonb);
+                `
+            ),
+            (err: unknown) => assertSqlStateOneOf(err, ['42501'])
         );
     });
 
     it('blocks executor from updating or deleting payment_outbox_attempts', async () => {
         await assert.rejects(
             () => queryAsRole('symphony_executor', "UPDATE payment_outbox_attempts SET error_message = 'x' WHERE 1=0;"),
-            (err: unknown) => {
-                if (err && typeof err === 'object') {
-                    const sqlState = (err as { sqlState?: string }).sqlState;
-                    const cause = (err as { cause?: { message?: string } }).cause;
-                    if (sqlState === '42501' || sqlState === 'P0001') {
-                        return true;
-                    }
-                    if (cause?.message && /permission denied|append-only/i.test(cause.message)) {
-                        return true;
-                    }
-                }
-                return false;
-            }
+            (err: unknown) => assertSqlStateOneOf(err, ['42501'])
         );
 
         await assert.rejects(
             () => queryAsRole('symphony_executor', 'DELETE FROM payment_outbox_attempts WHERE 1=0;'),
-            (err: unknown) => {
-                if (err && typeof err === 'object') {
-                    const sqlState = (err as { sqlState?: string }).sqlState;
-                    const cause = (err as { cause?: { message?: string } }).cause;
-                    if (sqlState === '42501' || sqlState === 'P0001') {
-                        return true;
-                    }
-                    if (cause?.message && /permission denied|append-only/i.test(cause.message)) {
-                        return true;
-                    }
-                }
-                return false;
-            }
+            (err: unknown) => assertSqlStateOneOf(err, ['42501'])
         );
     });
 
     it('rejects TRUNCATE on outbox tables for runtime roles', async () => {
         await assert.rejects(
             () => queryAsRole('symphony_executor', 'TRUNCATE payment_outbox_attempts;'),
-            (err: unknown) => {
-                if (err && typeof err === 'object') {
-                    const sqlState = (err as { sqlState?: string }).sqlState;
-                    const cause = (err as { cause?: { message?: string } }).cause;
-                    if (sqlState === '42501') {
-                        return true;
-                    }
-                    if (cause?.message && /permission denied/i.test(cause.message)) {
-                        return true;
-                    }
-                }
-                return false;
-            }
+            (err: unknown) => assertSqlStateOneOf(err, ['42501'])
         );
 
         await assert.rejects(
             () => queryAsRole('symphony_executor', 'TRUNCATE payment_outbox_pending;'),
-            (err: unknown) => {
-                if (err && typeof err === 'object') {
-                    const sqlState = (err as { sqlState?: string }).sqlState;
-                    const cause = (err as { cause?: { message?: string } }).cause;
-                    if (sqlState === '42501') {
-                        return true;
-                    }
-                    if (cause?.message && /permission denied/i.test(cause.message)) {
-                        return true;
-                    }
-                }
-                return false;
-            }
+            (err: unknown) => assertSqlStateOneOf(err, ['42501'])
         );
     });
 
     it('revokes sequence table visibility from readonly and auditor roles', async () => {
         await assert.rejects(
             () => queryAsRole('symphony_readonly', 'SELECT * FROM participant_outbox_sequences LIMIT 1;'),
-            (err: unknown) => {
-                if (err && typeof err === 'object') {
-                    const sqlState = (err as { sqlState?: string }).sqlState;
-                    const cause = (err as { cause?: { message?: string } }).cause;
-                    if (sqlState === '42501') {
-                        return true;
-                    }
-                    if (cause?.message && /permission denied/i.test(cause.message)) {
-                        return true;
-                    }
-                }
-                return false;
-            }
+            (err: unknown) => assertSqlStateOneOf(err, ['42501'])
         );
 
         await assert.rejects(
             () => queryAsRole('symphony_auditor', 'SELECT * FROM participant_outbox_sequences LIMIT 1;'),
-            (err: unknown) => {
-                if (err && typeof err === 'object') {
-                    const sqlState = (err as { sqlState?: string }).sqlState;
-                    const cause = (err as { cause?: { message?: string } }).cause;
-                    if (sqlState === '42501') {
-                        return true;
-                    }
-                    if (cause?.message && /permission denied/i.test(cause.message)) {
-                        return true;
-                    }
-                }
-                return false;
-            }
+            (err: unknown) => assertSqlStateOneOf(err, ['42501'])
         );
     });
 });

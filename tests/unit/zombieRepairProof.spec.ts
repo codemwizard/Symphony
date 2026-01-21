@@ -2,15 +2,8 @@ import { describe, it, before, after } from 'node:test';
 import assert from 'node:assert';
 import crypto from 'node:crypto';
 
-const hasDbConfig = process.env.RUN_DB_TESTS === 'true' && Boolean(
-    process.env.DB_HOST &&
-    process.env.DB_PORT &&
-    process.env.DB_USER &&
-    process.env.DB_PASSWORD &&
-    process.env.DB_NAME
-);
-
-const describeWithDb = hasDbConfig ? describe : describe.skip;
+const databaseUrl = process.env.DATABASE_URL;
+const describeWithDb = databaseUrl ? describe : describe.skip;
 
 describeWithDb('Zombie repair proof', () => {
     let db: Awaited<typeof import('../../libs/db/index.js')>['db'];
@@ -22,6 +15,13 @@ describeWithDb('Zombie repair proof', () => {
     let idempotencyKey: string;
 
     before(async () => {
+        if (!databaseUrl) return;
+        const url = new URL(databaseUrl);
+        process.env.DB_HOST = url.hostname;
+        process.env.DB_PORT = url.port || '5432';
+        process.env.DB_USER = decodeURIComponent(url.username);
+        process.env.DB_PASSWORD = decodeURIComponent(url.password);
+        process.env.DB_NAME = url.pathname.replace(/^\//, '');
         process.env.ZOMBIE_THRESHOLD_SECONDS = '1';
         const dbModule = await import('../../libs/db/index.js');
         const workerModule = await import('../../libs/repair/ZombieRepairWorker.js');
