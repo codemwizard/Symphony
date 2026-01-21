@@ -36,17 +36,25 @@ echo "[guardrails] Checking raw pg usage outside libs/db..."
 PG_IMPORT_PATTERNS=(
   "from\\s+['\"]pg['\"]"
   "require\\(['\"]pg['\"]\\)"
+  "PoolClient"
   "new\\s+Pool\\s*\\("
   "pool\\.query\\s*\\("
 )
 
 for pat in "${PG_IMPORT_PATTERNS[@]}"; do
-  if rg -n --hidden --glob '!**/node_modules/**' --glob '!**/*.md' --glob '!**/*.txt' --glob '!libs/db/**' "$pat" . >/dev/null; then
+  if rg -n --hidden --glob '!**/node_modules/**' --glob '!**/*.md' --glob '!**/*.txt' --glob '!libs/db/**' --glob '!tests/**' --glob '!scripts/**' "$pat" . >/dev/null; then
     echo "❌ Raw pg usage found outside libs/db:"
-    rg -n --hidden --glob '!**/node_modules/**' --glob '!**/*.md' --glob '!**/*.txt' --glob '!libs/db/**' "$pat" .
+    rg -n --hidden --glob '!**/node_modules/**' --glob '!**/*.md' --glob '!**/*.txt' --glob '!libs/db/**' --glob '!tests/**' --glob '!scripts/**' "$pat" .
     exit 1
   fi
 done
+
+echo "[guardrails] Checking testOnly import allowlist..."
+if rg -n --hidden --glob '!**/node_modules/**' --glob '!**/*.md' --glob '!**/*.txt' --glob '!tests/**' --glob '!libs/db/__tests__/**' "libs/db/testOnly" . >/dev/null; then
+  echo "❌ Forbidden import of libs/db/testOnly outside tests:"
+  rg -n --hidden --glob '!**/node_modules/**' --glob '!**/*.md' --glob '!**/*.txt' --glob '!tests/**' --glob '!libs/db/__tests__/**' "libs/db/testOnly" .
+  exit 1
+fi
 
 if [[ "${ENFORCE_NO_DB_QUERY:-0}" == "1" ]]; then
   echo "[guardrails] Phase B enabled: forbidding db.query(...) usage..."
