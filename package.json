@@ -10,9 +10,9 @@
     "lint": "eslint",
     "lint-fix": "eslint . --fix",
     "test": "npm run test:node && npm run test:jest",
-    "test:node": "node --import ./tests/loader.mjs --test tests/unit/*.spec.ts tests/*.test.js libs/db/__tests__/*.test.ts",
+    "test:node": "node --conditions=test --import ./tests/loader.mjs --test tests/unit/*.spec.ts tests/*.test.js libs/db/__tests__/*.test.ts",
     "test:jest": "node --experimental-vm-modules node_modules/jest/bin/jest.js",
-    "build": "tsc --noEmit",
+    "build": "tsc --noEmit -p tsconfig.build.json",
     "security-check": "node --import ./tests/loader.mjs scripts/ci/security-gates.ts",
     "guardrails:db": "./scripts/guardrails/db-role-guardrails.sh",
     "ci:validate-evidence": "node scripts/ci/validate_evidence_schema.mjs",
@@ -31,6 +31,12 @@
     "url": "https://github.com/codemwizard/Symphony/issues"
   },
   "homepage": "https://github.com/codemwizard/Symphony#readme",
+  "exports": {
+    "./libs/db/testOnly": {
+      "test": "./libs/db/testOnly.ts",
+      "default": null
+    }
+  },
   "dependencies": {
     "@aws-sdk/client-kms": "^3.962.0",
     "@types/pg": "^8.16.0",

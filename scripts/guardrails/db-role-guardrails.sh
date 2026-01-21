@@ -70,7 +70,7 @@ for pat in "${PG_IMPORT_PATTERNS[@]}"; do
 done
 
 echo "[guardrails] Checking testOnly import allowlist..."
-TESTONLY_IMPORT='from\\s+["'\'']libs/db/testOnly["'\'']|require\\(["'\'']libs/db/testOnly["'\'']\\)'
+TESTONLY_IMPORT='from\\s+["'\''](?:symphony/)?libs/db/testOnly["'\'']|require\\(["'\''](?:symphony/)?libs/db/testOnly["'\'']\\)'
 if rg -n --hidden \
   --glob '!**/node_modules/**' --glob '!**/*.md' --glob '!**/*.txt' \
   --glob '!tests/**' --glob '!libs/db/__tests__/**' \
