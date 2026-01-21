@@ -4,7 +4,11 @@ import { db, DbRole } from '../db/index.js';
 const logger = pino({ name: 'ZombieRepairWorker' });
 
 // Configuration
-const ZOMBIE_THRESHOLD_SECONDS = 120;    // Records stuck > 120s are zombies
+const ZOMBIE_THRESHOLD_SECONDS = (() => {
+    const raw = process.env.ZOMBIE_THRESHOLD_SECONDS;
+    const parsed = raw ? Number(raw) : 120;
+    return Number.isFinite(parsed) && parsed > 0 ? parsed : 120;
+})();    // Records stuck > threshold are zombies
 const REPAIR_BATCH_SIZE = 100;
 const REPAIR_INTERVAL_MS = 60000;       // Run every 60 seconds
 
