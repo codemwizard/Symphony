@@ -14,19 +14,17 @@ const describeWithDb = hasDbConfig ? describe : describe.skip;
 
 describeWithDb('DB role residue failure path', () => {
     let db: Awaited<typeof import('../index.js')>['db'];
-    let testOnly: Awaited<typeof import('../index.js')>['__testOnly'];
+    let testOnly: typeof import('../testOnly.js');
 
     before(async () => {
         process.env.NODE_ENV = 'test';
         process.env.DB_POOL_MAX = '1';
         const dbModule = await import('../index.js');
         db = dbModule.db;
-        testOnly = dbModule.__testOnly;
+        testOnly = await import('../testOnly.js');
     });
 
     it('cleans up role state after query errors', async () => {
-        assert.ok(testOnly?.queryNoRole, '__testOnly.queryNoRole must exist in NODE_ENV=test');
-
         const role: DbRole = 'symphony_control';
         await assert.rejects(
             () => db.queryAsRole(role, 'SELECT 1/0'),
