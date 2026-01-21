@@ -15,12 +15,19 @@ LEGACY_PATTERNS=(
 )
 
 for pat in "${LEGACY_PATTERNS[@]}"; do
-  if rg -n --hidden --glob '!**/node_modules/**' --glob '!**/*.md' --glob '!**/*.txt' "$pat" . >/dev/null; then
+  if rg -n --hidden \
+    --glob '!**/node_modules/**' --glob '!**/*.md' --glob '!**/*.txt' \
+    --glob '!scripts/guardrails/db-role-guardrails.sh' \
+    "$pat" . >/dev/null; then
     echo "❌ Forbidden legacy pattern found: $pat"
-    rg -n --hidden --glob '!**/node_modules/**' --glob '!**/*.md' --glob '!**/*.txt' "$pat" .
+    rg -n --hidden \
+      --glob '!**/node_modules/**' --glob '!**/*.md' --glob '!**/*.txt' \
+      --glob '!scripts/guardrails/db-role-guardrails.sh' \
+      "$pat" .
     exit 1
   fi
 done
+
 
 echo "[guardrails] Checking role SQL usage outside libs/db..."
 
