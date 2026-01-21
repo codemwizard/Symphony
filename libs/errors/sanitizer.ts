@@ -10,9 +10,9 @@ import crypto from 'crypto';
 export class SymphonyError extends Error {
     public readonly incidentId: string;
     public readonly timestamp: string;
-    public readonly contextLabel?: string;
-    public readonly sqlState?: string;
-    public override cause?: unknown;
+    public readonly contextLabel: string | undefined;
+    public readonly sqlState: string | undefined;
+    public override cause: unknown | undefined;
 
     constructor(
         public readonly publicMessage: string,
@@ -73,11 +73,19 @@ export const ErrorSanitizer = {
         }
 
         // Otherwise, wrap it to hide raw DB/Stack details
+        const options: { cause?: unknown; contextLabel?: string; sqlState?: string } = {
+            cause: err,
+            contextLabel
+        };
+        if (sqlState !== undefined) {
+            options.sqlState = sqlState;
+        }
+
         return new SymphonyError(
             `An internal system error occurred. Please contact support with ID: ${contextLabel}`,
             { originalError: originalErrorMessage, stack: originalErrorStack, context: contextLabel },
             'OPS',
-            { cause: err, contextLabel, sqlState }
+            options
         );
     }
 };
