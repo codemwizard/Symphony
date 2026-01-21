@@ -13,12 +13,12 @@
  * - Supervisor can run it independently
  */
 
-import { Pool } from 'pg';
 import pino from 'pino';
 import crypto from 'crypto';
 import fs from 'fs/promises';
 import path from 'path';
 import { LedgerReplayEngine, ReconstructedBalance, ReplayConfig } from './ledger_replay.js';
+import { db, DbRole } from '../../libs/db/index.js';
 
 const logger = pino({ name: 'ReplayVerificationReport' });
 
@@ -76,11 +76,10 @@ export interface VerificationReport {
 // ------------------ Core Logic ------------------
 
 export class ReplayVerificationReportGenerator {
-    private readonly pool: Pool;
-
-    constructor(pool: Pool) {
-        this.pool = pool;
-    }
+    constructor(
+        private readonly role: DbRole,
+        private readonly dbClient = db
+    ) {}
 
     /**
      * Generate a verification report comparing replayed vs actual state.
@@ -92,7 +91,7 @@ export class ReplayVerificationReportGenerator {
         logger.info({ reportId, config }, 'Generating verification report');
 
         // Step 1: Run replay
-        const replayEngine = new LedgerReplayEngine(this.pool);
+        const replayEngine = new LedgerReplayEngine(this.role, this.dbClient);
         const replayResult = await replayEngine.replay(config);
 
         // Step 2: Fetch actual balances from database
@@ -182,8 +181,7 @@ export class ReplayVerificationReportGenerator {
     }
 
     private async fetchActualBalances(config: ReplayConfig): Promise<ActualBalance[]> {
-        const client = await this.pool.connect();
-        try {
+        return this.dbClient.withRoleClient(this.role, async (client) => {
             let query = `
                 SELECT 
                     account_id AS "accountId",
@@ -203,9 +201,7 @@ export class ReplayVerificationReportGenerator {
 
             const result = await client.query(query, params);
             return result.rows as ActualBalance[];
-        } finally {
-            client.release();
-        }
+        });
     }
 
     private compareBalances(
@@ -276,11 +272,11 @@ export class ReplayVerificationReportGenerator {
 // ------------------ CLI Entry Point ------------------
 
 export async function generateVerificationReport(
-    pool: Pool,
+    role: DbRole,
     config: ReplayConfig,
     outputDir: string
 ): Promise<VerificationReport> {
-    const generator = new ReplayVerificationReportGenerator(pool);
+    const generator = new ReplayVerificationReportGenerator(role);
     const report = await generator.generate(config);
     await generator.saveReport(report, outputDir);
     return report;

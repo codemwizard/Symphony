@@ -9,26 +9,41 @@
 
 import { describe, it, beforeEach, mock } from 'node:test';
 import assert from 'node:assert';
-import { Pool } from 'pg';
 import { OutboxDispatchService } from '../../libs/outbox/OutboxDispatchService.js';
+import { DbRole } from '../../libs/db/roles.js';
+import type { db } from '../../libs/db/index.js';
+
+type DbClient = typeof db;
 
 describe('OutboxDispatchService', () => {
     let service: OutboxDispatchService;
-    let mockPool: { connect: ReturnType<typeof mock.fn>; query: ReturnType<typeof mock.fn> };
-    let mockClient: { query: ReturnType<typeof mock.fn>; release: ReturnType<typeof mock.fn> };
+    let mockDb: {
+        queryAsRole: ReturnType<typeof mock.fn>;
+        transactionAsRole: ReturnType<typeof mock.fn>;
+        withRoleClient: ReturnType<typeof mock.fn>;
+        listenAsRole: ReturnType<typeof mock.fn>;
+        probeRoles: ReturnType<typeof mock.fn>;
+    };
+    let mockClient: { query: ReturnType<typeof mock.fn> };
 
     beforeEach(() => {
         mockClient = {
-            query: mock.fn(async () => ({ rows: [] })),
-            release: mock.fn()
-        };
-
-        mockPool = {
-            connect: mock.fn(async () => mockClient),
             query: mock.fn(async () => ({ rows: [] }))
         };
 
-        service = new OutboxDispatchService(mockPool as unknown as Pool);
+        mockDb = {
+            queryAsRole: mock.fn(async () => ({ rows: [] })),
+            transactionAsRole: mock.fn(async (_role: DbRole, callback: (client: typeof mockClient) => Promise<unknown>) =>
+                callback(mockClient)
+            ),
+            withRoleClient: mock.fn(async (_role: DbRole, callback: (client: typeof mockClient) => Promise<unknown>) =>
+                callback(mockClient)
+            ),
+            listenAsRole: mock.fn(async () => ({ close: mock.fn(async () => undefined) })),
+            probeRoles: mock.fn(async () => undefined)
+        };
+
+        service = new OutboxDispatchService('symphony_ingest', mockDb as unknown as DbClient);
     });
 
     describe('atomic dispatch', () => {
@@ -54,12 +69,10 @@ describe('OutboxDispatchService', () => {
             }];
 
             mockClient.query = mock.fn(async (sql: string) => {
-                if (sql === 'BEGIN') return {};
                 if (sql.includes('INSERT INTO ledger_entries')) return {};
                 if (sql.includes('FROM enqueue_payment_outbox')) {
                     return { rows: [{ outbox_id: 'outbox-1', sequence_id: 42, state: 'PENDING', created_at: new Date() }] };
                 }
-                if (sql === 'COMMIT') return {};
                 return { rows: [] };
             });
 
@@ -73,11 +86,6 @@ describe('OutboxDispatchService', () => {
                 typeof c.arguments[0] === 'string' && (c.arguments[0] as string).includes('FROM enqueue_payment_outbox')
             );
             assert.ok(enqueueCalls.length > 0, 'Should enqueue outbox via client');
-            // Verify call order: BEGIN -> Ledger -> Outbox -> COMMIT
-            const queries = mockClient.query.mock.calls.map((c: { arguments: unknown[] }) => c.arguments[0]) as string[];
-            assert.strictEqual(queries[0], 'BEGIN');
-            assert.match(queries[queries.length - 1] as string, /COMMIT/);
-            assert.strictEqual(mockClient.release.mock.calls.length, 1);
         });
 
         it('should rollback on error', async () => {
@@ -89,8 +97,7 @@ describe('OutboxDispatchService', () => {
                 payload: { amount: 100, currency: 'USD', destination: 'dest' }
             };
 
-            mockClient.query = mock.fn(async (sql: string) => {
-                if (sql === 'BEGIN') return {};
+            mockClient.query = mock.fn(async () => {
                 throw new Error('DB Error');
             });
 
@@ -99,10 +106,7 @@ describe('OutboxDispatchService', () => {
                 { message: 'DB Error' }
             );
 
-            const calls = mockClient.query.mock.calls;
-            assert.ok(calls.length > 0);
-            const lastCall = calls[calls.length - 1]!;
-            assert.strictEqual((lastCall.arguments as [string])[0], 'ROLLBACK');
+            assert.ok(mockClient.query.mock.calls.length > 0);
         });
     });
 
@@ -117,7 +121,7 @@ describe('OutboxDispatchService', () => {
             };
 
             // enqueue_payment_outbox handles idempotency; return existing record
-            mockClient.query = mock.fn(async (sql: string) => {
+            mockDb.queryAsRole = mock.fn(async (role: string, sql: string) => {
                 if (sql.includes('FROM enqueue_payment_outbox')) {
                     return { rows: [{ outbox_id: 'existing-1', sequence_id: 10, state: 'PENDING', created_at: new Date() }] };
                 }
@@ -138,7 +142,7 @@ describe('OutboxDispatchService', () => {
                 payload: { amount: 100, currency: 'USD', destination: 'dest' }
             };
 
-            mockClient.query = mock.fn(async (sql: string) => {
+            mockDb.queryAsRole = mock.fn(async (_role: string, sql: string) => {
                 if (sql.includes('FROM enqueue_payment_outbox')) {
                     return { rows: [{ outbox_id: 'race-1', sequence_id: 11, state: 'PENDING', created_at: new Date() }] };
                 }

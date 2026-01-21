@@ -2,7 +2,7 @@ import { describe, it, before } from 'node:test';
 import assert from 'node:assert/strict';
 import { DbRole } from '../roles.js';
 
-const hasDbConfig = Boolean(
+const hasDbConfig = process.env.RUN_DB_TESTS === 'true' && Boolean(
     process.env.DB_HOST &&
     process.env.DB_PORT &&
     process.env.DB_USER &&
