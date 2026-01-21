@@ -84,7 +84,7 @@ if rg -n --hidden \
   exit 1
 fi
 
-
+TARGETS=(libs services)
 if [[ "${ENFORCE_NO_DB_QUERY:-0}" == "1" ]]; then
   echo "[guardrails] Phase B enabled: forbidding db.query(...) usage..."
   if rg -n --hidden --glob '!**/node_modules/**' --glob '!**/*.md' --glob '!**/*.txt' \
