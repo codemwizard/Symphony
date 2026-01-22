@@ -48,6 +48,21 @@ $$;
 CREATE EXTENSION IF NOT EXISTS pgcrypto;
 
 -- ------------------------------------------------------------
+-- 1b) Roles (from 0003_roles.sql)
+-- ------------------------------------------------------------
+DO $$ BEGIN IF NOT EXISTS (SELECT FROM pg_catalog.pg_roles WHERE rolname = 'symphony_control') THEN CREATE ROLE symphony_control; END IF; END $$;
+DO $$ BEGIN IF NOT EXISTS (SELECT FROM pg_catalog.pg_roles WHERE rolname = 'symphony_ingest') THEN CREATE ROLE symphony_ingest; END IF; END $$;
+DO $$ BEGIN IF NOT EXISTS (SELECT FROM pg_catalog.pg_roles WHERE rolname = 'symphony_executor') THEN CREATE ROLE symphony_executor; END IF; END $$;
+DO $$ BEGIN IF NOT EXISTS (SELECT FROM pg_catalog.pg_roles WHERE rolname = 'symphony_readonly') THEN CREATE ROLE symphony_readonly; END IF; END $$;
+DO $$ BEGIN IF NOT EXISTS (SELECT FROM pg_catalog.pg_roles WHERE rolname = 'symphony_auditor') THEN CREATE ROLE symphony_auditor; END IF; END $$;
+
+COMMENT ON ROLE symphony_control IS 'Control Plane administrator.';
+COMMENT ON ROLE symphony_ingest IS 'Data Plane Ingest service.';
+COMMENT ON ROLE symphony_executor IS 'Data Plane Executor worker.';
+COMMENT ON ROLE symphony_readonly IS 'Read Plane for reporting.';
+COMMENT ON ROLE symphony_auditor IS 'Read Plane for external auditors.';
+
+-- ------------------------------------------------------------
 -- 2) Attempt State Enum
 -- ------------------------------------------------------------
 CREATE TYPE outbox_attempt_state AS ENUM (
