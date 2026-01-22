@@ -62,6 +62,11 @@ COMMENT ON ROLE symphony_executor IS 'Data Plane Executor worker.';
 COMMENT ON ROLE symphony_readonly IS 'Read Plane for reporting.';
 COMMENT ON ROLE symphony_auditor IS 'Read Plane for external auditors.';
 
+-- Allow CI/Local/test users to SET ROLE into these if they exist
+DO $$ BEGIN IF EXISTS (SELECT FROM pg_roles WHERE rolname = 'symphony') THEN GRANT symphony_control, symphony_ingest, symphony_executor, symphony_readonly, symphony_auditor TO symphony; END IF; END $$;
+DO $$ BEGIN IF EXISTS (SELECT FROM pg_roles WHERE rolname = 'symphony_admin') THEN GRANT symphony_control, symphony_ingest, symphony_executor, symphony_readonly, symphony_auditor TO symphony_admin; END IF; END $$;
+DO $$ BEGIN IF EXISTS (SELECT FROM pg_roles WHERE rolname = 'test_user') THEN GRANT symphony_control, symphony_ingest, symphony_executor, symphony_readonly, symphony_auditor TO test_user; END IF; END $$;
+
 -- ------------------------------------------------------------
 -- 2) Attempt State Enum
 -- ------------------------------------------------------------

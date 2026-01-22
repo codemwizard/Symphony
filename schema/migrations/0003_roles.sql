@@ -30,11 +30,19 @@ END
 $$;
 
 -- Allow the CI login role (symphony) to SET ROLE into these
-GRANT symphony_control  TO symphony;
-GRANT symphony_ingest   TO symphony;
-GRANT symphony_executor TO symphony;
-GRANT symphony_readonly TO symphony;
-GRANT symphony_auditor  TO symphony;
+DO $$ BEGIN IF EXISTS (SELECT FROM pg_roles WHERE rolname = 'symphony') THEN
+  GRANT symphony_control, symphony_ingest, symphony_executor, symphony_readonly, symphony_auditor TO symphony;
+END IF; END $$;
+
+-- Allow the Local Admin role (symphony_admin) to SET ROLE into these
+DO $$ BEGIN IF EXISTS (SELECT FROM pg_roles WHERE rolname = 'symphony_admin') THEN
+  GRANT symphony_control, symphony_ingest, symphony_executor, symphony_readonly, symphony_auditor TO symphony_admin;
+END IF; END $$;
+
+-- Allow the Test user (test_user) to SET ROLE into these
+DO $$ BEGIN IF EXISTS (SELECT FROM pg_roles WHERE rolname = 'test_user') THEN
+  GRANT symphony_control, symphony_ingest, symphony_executor, symphony_readonly, symphony_auditor TO test_user;
+END IF; END $$;
 
 -- Role comments
 COMMENT ON ROLE symphony_control IS 'Control Plane administrator.';
