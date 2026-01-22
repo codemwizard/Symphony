@@ -109,7 +109,7 @@ for file in "${FILES_SORTED[@]}"; do
       exit 1
     fi
     echo "⏭️  Skipping already-applied: $base"
-    ((SKIPPED_COUNT++))
+    SKIPPED_COUNT=$((SKIPPED_COUNT + 1))
     continue
   fi
 
@@ -127,7 +127,7 @@ COMMIT;
 SQL
 
   echo "✅ Applied: $base"
-  ((APPLIED_COUNT++))
+  APPLIED_COUNT=$((APPLIED_COUNT + 1))
 done
 
 echo ""
