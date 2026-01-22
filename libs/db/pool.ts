@@ -23,6 +23,9 @@ if (isProtectedEnv && process.env.DB_SSL_QUERY === 'false') {
  * Hardened PostgreSQL connection with connection pooling and mandatory role enforcement.
  */
 const poolMax = process.env.DB_POOL_MAX ? parseInt(process.env.DB_POOL_MAX, 10) : 20;
+const connectionTimeoutMillis = process.env.DB_CONNECTION_TIMEOUT_MS
+    ? parseInt(process.env.DB_CONNECTION_TIMEOUT_MS, 10)
+    : 2000;
 export const pool = new Pool({
     // CRIT-SEC-002 FIX: Removed silent fallbacks. All values must be explicitly configured.
     host: process.env.DB_HOST!,
@@ -32,7 +35,9 @@ export const pool = new Pool({
     database: process.env.DB_NAME!,
     max: Number.isFinite(poolMax) ? poolMax : 20,
     idleTimeoutMillis: 30000,
-    connectionTimeoutMillis: 2000,
+    connectionTimeoutMillis: Number.isFinite(connectionTimeoutMillis)
+        ? connectionTimeoutMillis
+        : 2000,
     ssl: isProtectedEnv
         ? {
             rejectUnauthorized: true,

@@ -1,0 +1,1125 @@
+Got it. If “**fully append-only**” is non-negotiable (no UPDATEs to `payment_outbox_attempts`, ever), then yes: you need **major surgery**, because your current lease model (“delete-on-claim”) uses the DISPATCHING attempt row as the lease record.
+
+Below are **two append-only-pure architectures** that keep the system just as strong (arguably stronger), with an exact migration path. I’ll recommend one.
+
+---
+
+## North Star: what “fully append-only” must mean
+
+1. `payment_outbox_attempts`: **INSERT-only** forever.
+2. Completion must be represented by **new rows**, never updates.
+3. Attempt identity can’t rely on “same attempt_no row transitions,” because that implies updates.
+4. The worker lease cannot be “a row you later update,” so your lease must live somewhere else:
+
+   * either back on `payment_outbox_pending` (lease columns), or
+   * in a separate “inflight/leases” table, or
+   * via advisory locks + idempotent outcome inserts.
+
+---
+
+# Plan A (recommended): Lease-in-pending + append-only outcome attempts
+
+This is the cleanest, simplest, and most auditable.
+
+### A1) Change pending from delete-on-claim → lease-on-claim
+
+Add explicit lease columns:
+
+```sql
+ALTER TABLE payment_outbox_pending
+ADD COLUMN claimed_by TEXT,
+ADD COLUMN claimed_at TIMESTAMPTZ,
+ADD COLUMN lease_expires_at TIMESTAMPTZ;
+```
+
+Claiming becomes **UPDATE** pending rows (pending is allowed to be mutable; attempts are not):
+
+* Workers claim rows by setting `claimed_by`, `claimed_at`, `lease_expires_at = now() + interval 'X seconds'`
+* Use `FOR UPDATE SKIP LOCKED` to avoid contention
+* Rows remain in pending; they are “leased.”
+
+### A2) Move attempt number allocation to “outcome insert time” (append-only)
+
+Stop inserting `DISPATCHING` attempts at claim. Instead:
+
+* When the worker finishes an attempt, it inserts exactly one attempt row with `state IN ('DISPATCHED','FAILED','RETRYABLE')`.
+* `attempt_no` is computed as `MAX(attempt_no)+1` for that outbox_id at insert time.
+
+To make it concurrency-safe and avoid “two workers both insert outcome,” you do **one of**:
+
+* advisory lock on `outbox_id` in the completion function, or
+* rely on lease uniqueness + `WHERE claimed_by = $worker AND lease_expires_at > now()` in the completion function (plus SKIP LOCKED), or
+* both (belt + suspenders).
+
+### A3) Completion function (single DB transaction)
+
+Use a SECURITY DEFINER function `complete_outbox_attempt(...)` that:
+
+1. verifies the caller still owns the lease (or the lease is valid)
+2. inserts the outcome attempt row with computed `attempt_no`
+3. updates pending:
+
+   * if `DISPATCHED|FAILED`: delete from pending
+   * if `RETRYABLE`: keep row, set `next_attempt_at`, clear lease, update attempt_count monotonic
+
+This keeps:
+
+* ✅ attempts fully append-only
+* ✅ leasing explicit and recoverable (no zombie detection by scanning attempts)
+* ✅ crash safety: expired leases automatically re-claimable
+* ✅ you still can keep zombie repair, but it becomes “lease repair” (simpler)
+
+### Zombie repair becomes deterministic lease repair
+
+Instead of scanning DISPATCHING attempts, you scan:
+
+* `lease_expires_at < now()` and `claimed_by is not null`
+  and clear the lease + reschedule. No need to infer from attempts.
+
+### Why this is “major surgery” but worth it
+
+You’ll touch:
+
+* claim logic
+* worker logic (outcome writing)
+* zombie repair selection logic
+* tests (Phase 4 zombie proof becomes “lease expiry proof”)
+
+But the resulting system is cleaner and more obviously correct.
+
+---
+
+# Plan B (append-only but closer to today): Inflight lease table + append-only attempts
+
+If you want to keep “pending rows disappear from hot queue,” you can.
+
+### B1) Keep pending mostly the same (or still delete it)
+
+Replace “DISPATCHING attempt row as lease” with a separate mutable lease table:
+
+```sql
+CREATE TABLE payment_outbox_inflight (
+  outbox_id UUID PRIMARY KEY,
+  claimed_by TEXT NOT NULL,
+  claimed_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  lease_expires_at TIMESTAMPTZ NOT NULL,
+  attempt_no INT NOT NULL,
+  instruction_id TEXT NOT NULL,
+  participant_id TEXT NOT NULL,
+  sequence_id BIGINT NOT NULL,
+  idempotency_key TEXT NOT NULL,
+  rail_type TEXT NOT NULL,
+  payload JSONB NOT NULL
+);
+```
+
+Claim flow becomes:
+
+1. select due from pending (SKIP LOCKED)
+2. **move** row into `payment_outbox_inflight` (insert + delete pending) in one txn
+3. compute `attempt_no = MAX+1` at claim time and store it in inflight
+
+Completion becomes:
+
+* insert a new attempt row with that attempt_no and terminal/retryable state
+* delete inflight row
+* if retryable, reinsert into pending (same outbox_id) with next_attempt_at, attempt_count monotonic, etc.
+
+### Why this works
+
+* attempts remain append-only
+* you still get a durable “lease record” (inflight row) without needing to update attempts
+* zombie repair is now: “expired inflight rows” → move back to pending and append a `ZOMBIE_REQUEUE` attempt row
+
+### Downsides vs Plan A
+
+* more tables + more moving parts than lease-in-pending
+* more write amplification (pending ↔ inflight shuffles)
+* but it preserves your mental model of “pending hot queue” being only unclaimed work
+
+---
+
+# What you must change to keep your attempt_no invariant
+
+Right now, attempt_no is allocated during claim (DISPATCHING insert) and then reused. In append-only world:
+
+* Either **allocate attempt_no at outcome insert time** (Plan A), or
+* allocate it at claim time but store it in a lease record that is **not** the attempts table (Plan B).
+
+Both are valid. Plan A is simpler.
+
+---
+
+# Transition plan (how to migrate without downtime)
+
+### Step 0: Introduce new leasing mechanism alongside old (dual-path)
+
+* Add lease columns (Plan A) **or** create inflight table (Plan B).
+* Add new DB functions for claim + complete that use the new mechanism.
+* Keep old workers running while you canary new workers.
+
+### Step 1: Switch claim path first
+
+* Change worker claim to new claim function.
+* Ensure only one fleet uses it (feature flag / env gate).
+
+### Step 2: Switch outcome path
+
+* Replace `insertOutcome()` with `completeAttempt()` that inserts outcome attempt and releases lease.
+
+### Step 3: Replace zombie repair
+
+* Implement lease-repair: expired leases → release/requeue + append ZOMBIE_REQUEUE attempt row.
+
+### Step 4: Remove old delete-on-claim + DISPATCHING attempt insertion
+
+* Delete old SQL path and the now-buggy insertOutcome behavior.
+
+---
+
+# Which plan should you pick?
+
+If the priority is “append-only attempts above all else” and you’re okay changing the lease model:
+
+✅ **Pick Plan A (lease-in-pending)**
+It’s the most straightforward, least magical, and easiest to prove correct.
+
+Plan B is great if you strongly want “pending contains only unclaimed work,” but it’s more moving parts.
+
+---
+
+## Concrete deliverables for the “major surgery” PR sequence
+
+If you say “Plan A,” I’ll provide:
+
+1. exact SQL for:
+
+   * `claim_outbox_batch(batch_size, worker_id, lease_seconds)` (set-based, SKIP LOCKED)
+   * `complete_outbox_attempt(outbox_id, worker_id, outcome_state, …)` (insert attempt + pending update/delete)
+2. updated Phase 4 proof (lease expiry + ZOMBIE_REQUEUE append-only proof)
+3. updated Phase 5 proof (concurrent completion attempts are blocked via lease check + terminal uniqueness index)
+
+If you say “Plan B,” I’ll provide the inflight schema + functions and the revised proofs.
+
+Given your stated goal, **Plan A** is the best “append-only purity” architecture.
+
+
+Understood. If there’s no migration burden and you want **zero legacy** and **no shortcuts**, then we should redesign the outbox execution model so it is *mathematically consistent* with:
+
+* **append-only attempts** (INSERT-only; no UPDATE/DELETE/TRUNCATE for runtime roles)
+* **DB-authoritative attempt numbering** (derived from attempts history, not caches)
+* **robust leasing** that does **not** depend on “a row you later update”
+* **deterministic crash recovery** without inference hacks
+
+That means: **your current delete-on-claim + DISPATCHING-row-as-lease model must be replaced.** That’s the deep surgery. Here is the “get it right now” plan.
+
+---
+
+# The “No-Shortcuts” Architecture
+
+## Core change
+
+**Pending becomes the lease record.**
+Attempts become a pure append-only outcome/event ledger.
+
+### Tables
+
+#### `payment_outbox_pending` (mutable queue + leasing)
+
+Keep your existing columns, and add explicit lease fields:
+
+```sql
+ALTER TABLE payment_outbox_pending
+ADD COLUMN claimed_by TEXT,
+ADD COLUMN lease_expires_at TIMESTAMPTZ,
+ADD COLUMN lease_token UUID;
+```
+
+**Rules:**
+
+* A row is available iff:
+
+  * `next_attempt_at <= now()` AND
+  * (`lease_expires_at IS NULL` OR `lease_expires_at <= now()`)
+
+`lease_token` is critical: it gives you *idempotent completion* and prevents stale workers from completing after lease loss.
+
+#### `payment_outbox_attempts` (strict INSERT-only ledger)
+
+Keep as-is (your table definition is good). **No “completion via UPDATE.”**
+
+**Attempts represent events/outcomes**:
+
+* `RETRYABLE`, `FAILED`, `DISPATCHED`, `ZOMBIE_REQUEUE`
+  Optionally keep `DISPATCHING` **out** of attempts entirely (recommended). If you want an “in-flight” indicator, that belongs in pending via lease fields.
+
+---
+
+# DB API: two canonical functions (and nothing else)
+
+## 1) Claim function (set-based, SKIP LOCKED)
+
+A SECURITY DEFINER function that **leases** up to N rows and returns them.
+
+Signature sketch:
+
+```sql
+CREATE OR REPLACE FUNCTION claim_outbox_batch(
+  p_batch_size INT,
+  p_worker_id TEXT,
+  p_lease_seconds INT
+)
+RETURNS TABLE (
+  outbox_id UUID,
+  instruction_id TEXT,
+  participant_id TEXT,
+  sequence_id BIGINT,
+  idempotency_key TEXT,
+  rail_type TEXT,
+  payload JSONB,
+  attempt_count INT,
+  lease_token UUID,
+  lease_expires_at TIMESTAMPTZ
+)
+LANGUAGE sql
+SECURITY DEFINER
+SET search_path = pg_catalog, public
+AS $$
+WITH due AS (
+  SELECT outbox_id
+  FROM payment_outbox_pending
+  WHERE next_attempt_at <= now()
+    AND (lease_expires_at IS NULL OR lease_expires_at <= now())
+  ORDER BY next_attempt_at ASC, created_at ASC
+  LIMIT p_batch_size
+  FOR UPDATE SKIP LOCKED
+),
+leased AS (
+  UPDATE payment_outbox_pending p
+  SET
+    claimed_by = p_worker_id,
+    lease_token = gen_random_uuid(),
+    lease_expires_at = now() + make_interval(secs => p_lease_seconds)
+  FROM due
+  WHERE p.outbox_id = due.outbox_id
+  RETURNING
+    p.outbox_id, p.instruction_id, p.participant_id, p.sequence_id,
+    p.idempotency_key, p.rail_type, p.payload, p.attempt_count,
+    p.lease_token, p.lease_expires_at
+)
+SELECT * FROM leased;
+$$;
+```
+
+**Why this is “no shortcuts”:**
+
+* leasing is explicit
+* race-free under concurrency (`SKIP LOCKED`)
+* crashes are deterministic: leases expire; work becomes visible again
+* no inference from “stale DISPATCHING attempt rows”
+
+## 2) Complete function (single transaction, append-only attempt insert)
+
+A SECURITY DEFINER function that:
+
+1. verifies the caller still owns the lease **and** the lease_token matches
+2. inserts an attempt row with attempt_no derived from history
+3. updates pending:
+
+   * terminal: delete row
+   * retryable: schedule next attempt and clear lease
+4. appends a `ZOMBIE_REQUEUE` attempt when repairing an expired lease (separate function)
+
+Sketch:
+
+```sql
+CREATE OR REPLACE FUNCTION complete_outbox_attempt(
+  p_outbox_id UUID,
+  p_lease_token UUID,
+  p_worker_id TEXT,
+  p_state outbox_attempt_state,
+  p_rail_reference TEXT DEFAULT NULL,
+  p_rail_code TEXT DEFAULT NULL,
+  p_error_code TEXT DEFAULT NULL,
+  p_error_message TEXT DEFAULT NULL,
+  p_latency_ms INT DEFAULT NULL,
+  p_retry_delay_seconds INT DEFAULT NULL
+)
+RETURNS TABLE (attempt_no INT)
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = pg_catalog, public
+AS $$
+DECLARE
+  v instruction_id%TYPE;
+  v_participant_id TEXT;
+  v_sequence_id BIGINT;
+  v_idempotency_key TEXT;
+  v_rail_type TEXT;
+  v_payload JSONB;
+  v_next_attempt_no INT;
+BEGIN
+  -- 1) Verify lease ownership + token (prevents stale completion)
+  SELECT
+    instruction_id, participant_id, sequence_id, idempotency_key, rail_type, payload
+  INTO
+    v, v_participant_id, v_sequence_id, v_idempotency_key, v_rail_type, v_payload
+  FROM payment_outbox_pending
+  WHERE outbox_id = p_outbox_id
+    AND claimed_by = p_worker_id
+    AND lease_token = p_lease_token
+    AND lease_expires_at > now()
+  FOR UPDATE;
+
+  IF NOT FOUND THEN
+    RAISE EXCEPTION 'LEASE_LOST'
+      USING ERRCODE = 'P7002',
+            DETAIL = 'Lease missing/expired or token mismatch; refusing to complete';
+  END IF;
+
+  -- 2) Derive attempt_no from history (authoritative)
+  SELECT COALESCE(MAX(a.attempt_no), 0) + 1
+  INTO v_next_attempt_no
+  FROM payment_outbox_attempts a
+  WHERE a.outbox_id = p_outbox_id;
+
+  -- 3) Insert append-only attempt outcome
+  INSERT INTO payment_outbox_attempts (
+    outbox_id, instruction_id, participant_id, sequence_id, idempotency_key, rail_type, payload,
+    attempt_no, state, claimed_at, completed_at,
+    rail_reference, rail_code, error_code, error_message, latency_ms, worker_id
+  )
+  VALUES (
+    p_outbox_id, v, v_participant_id, v_sequence_id, v_idempotency_key, v_rail_type, v_payload,
+    v_next_attempt_no, p_state, now(),
+    CASE WHEN p_state IN ('DISPATCHED','FAILED') THEN now() ELSE NULL END,
+    p_rail_reference, p_rail_code, p_error_code, p_error_message, p_latency_ms, p_worker_id
+  );
+
+  -- 4) Pending state update (cache monotonic + schedule/delete)
+  IF p_state IN ('DISPATCHED','FAILED') THEN
+    DELETE FROM payment_outbox_pending WHERE outbox_id = p_outbox_id;
+  ELSIF p_state = 'RETRYABLE' THEN
+    UPDATE payment_outbox_pending
+    SET
+      attempt_count = GREATEST(attempt_count, v_next_attempt_no),
+      next_attempt_at = now() + make_interval(secs => COALESCE(p_retry_delay_seconds, 5)),
+      claimed_by = NULL,
+      lease_token = NULL,
+      lease_expires_at = NULL
+    WHERE outbox_id = p_outbox_id;
+  ELSE
+    RAISE EXCEPTION 'Invalid completion state %', p_state
+      USING ERRCODE = 'P7003';
+  END IF;
+
+  RETURN QUERY SELECT v_next_attempt_no;
+END;
+$$;
+```
+
+This is **fully append-only** for attempts, and the lease model is explicit and safe.
+
+---
+
+# Zombie repair becomes lease repair (and stays append-only)
+
+No more “stale DISPATCHING attempt older than threshold” inference. Instead:
+
+* Find pending rows with `lease_expires_at <= now() AND claimed_by IS NOT NULL`
+* Clear the lease, bump `next_attempt_at`, and append a `ZOMBIE_REQUEUE` attempt with attempt_no = last+1
+
+That’s deterministic and auditable.
+
+---
+
+# Phase proofs (no shortcuts versions)
+
+## Phase 4 proof (now lease-based, stronger)
+
+* Set `lease_seconds=1`, claim one row, do nothing, wait >1s
+* Run lease repair once
+* Assert:
+
+  * pending row exists and is re-available
+  * a `ZOMBIE_REQUEUE` attempt was appended
+  * attempt_no monotonic, attempt_count monotonic via `GREATEST`
+
+## Phase 5 proof (now correct for append-only attempts)
+
+Two subproofs:
+
+### 5A enqueue idempotency (unchanged)
+
+Your concurrent `enqueue_payment_outbox(...)` proof stays.
+
+### 5B completion concurrency (new, stronger)
+
+* Claim one row (worker A) obtain `lease_token`
+* Race M concurrent `complete_outbox_attempt(outbox_id, same lease_token, same worker_id, DISPATCHED)` calls
+* Exactly one succeeds; the rest fail with either:
+
+  * `23505` on `(outbox_id, attempt_no)` if you don’t lock, or
+  * better: add an advisory lock or `FOR UPDATE` on pending in completion (as shown), so the losers fail earlier with `P7002` or serialize cleanly.
+
+Even better: race **two different workers**:
+
+* worker A claims token A
+* worker B waits for expiry, claims token B
+* A attempts completion after B claimed → must fail with `P7002 LEASE_LOST`
+
+That’s the real-world “zombie worker wakes up late” proof.
+
+---
+
+# “No legacy” execution plan (rip and replace)
+
+Since you want zero compatibility:
+
+1. **Delete** claimNextBatch() delete-on-claim SQL entirely.
+2. Remove DISPATCHING attempts insertion entirely.
+3. Implement:
+
+   * `claim_outbox_batch`
+   * `complete_outbox_attempt`
+   * `repair_expired_leases` (or `zombie_repair_leases`)
+4. Rewrite relayer worker to:
+
+   * claim batch
+   * dispatch
+   * call complete
+5. Rewrite Phase 4/5 tests to match lease model.
+6. Keep guardrails: no raw SQL outside libs/db etc.
+
+This is the “deep surgery” version, but it produces the cleanest possible system.
+
+---
+
+## One last hard constraint check
+
+Your `payment_outbox_pending` currently has `attempt_count <= 20`. With append-only attempts and retries, that’s fine—but your completion function should refuse to retry once `attempt_count` hits 20 (or your policy), otherwise you’ll start failing updates. That policy should be explicit.
+
+---
+
+If you want, I’ll turn the above into:
+
+* exact SQL migration files for `schema/v1/`
+* exact TypeScript changes to `OutboxRelayer.ts` (claim + complete calls)
+* updated Phase 4 and Phase 5 test files (lease repair + stale worker proof)
+
+No dual paths, no shims, no shortcuts.
+
+
+It changes ZombieRepair **a lot**, but in a good way: it becomes **lease repair**, not “infer zombies from stale DISPATCHING attempts.”
+
+Right now:
+
+* **Claim deletes from `payment_outbox_pending`**
+* The only durable sign of “in-flight” work is a **`DISPATCHING` attempt row**
+* ZombieRepair has to scan attempts for “stale DISPATCHING” and requeue by `outbox_id`
+
+With the new “append-only attempts + lease-in-pending” architecture:
+
+* **Pending rows are never deleted on claim** (unless terminal)
+* “In-flight” is represented explicitly by **lease columns on pending**
+* ZombieRepair operates on **expired leases**, not attempt history
+
+## What ZombieRepair becomes
+
+### Old responsibility
+
+* Find outbox items whose latest attempt is `DISPATCHING` and `claimed_at` older than threshold
+* Reinsert into pending (by `outbox_id`)
+* Append `ZOMBIE_REQUEUE` attempt with `attempt_no = last + 1`
+
+### New responsibility (LeaseRepairWorker)
+
+* Find pending rows where:
+
+  * `claimed_by IS NOT NULL`
+  * `lease_expires_at <= now()`
+* For each such row:
+
+  1. clear the lease (`claimed_by=NULL, lease_token=NULL, lease_expires_at=NULL`)
+  2. schedule it (`next_attempt_at = now()` or backoff policy)
+  3. bump cache monotonic (`attempt_count = GREATEST(attempt_count, last_attempt_no)` if you want to sync)
+  4. append a `ZOMBIE_REQUEUE` attempt row (still append-only) with `attempt_no = last + 1`
+
+No more “requeue inserts into pending” because the row is already there; you’re just making it claimable again.
+
+## What you delete or simplify
+
+* You can delete the entire “reinsert pending by outbox_id” logic (that existed because pending was deleted).
+* You no longer need to interpret attempts to know if something is stuck; **lease expiry is authoritative**.
+* The supervisor “stuck dispatching count” view switches from attempts-based to pending-lease-based.
+
+## Proof/test impact (it gets cleaner)
+
+**Phase 4 Zombie Repair proof** becomes deterministic without backdating attempts:
+
+1. enqueue one row
+2. claim it with `lease_seconds = 1`
+3. wait > 1s (or set lease_expires_at manually in test using `queryNoRole`)
+4. run lease repair once
+5. assert:
+
+   * pending row exists and is now unleased + due
+   * a single `ZOMBIE_REQUEUE` attempt was appended for that `outbox_id`
+   * `attempt_no` monotonic (new = last + 1)
+   * `attempt_count` monotonic via `GREATEST`
+
+This is more “auditor-grade” than the old approach because it doesn’t rely on time interpretation of `claimed_at` in attempts.
+
+## Interactions with the rest of the relayer
+
+* **claimNextBatch()** becomes a call to `claim_outbox_batch(...)` which sets the lease fields and returns rows.
+* **insertOutcome()** becomes `complete_outbox_attempt(...)` which:
+
+  * verifies lease_token/owner
+  * appends an outcome attempt row
+  * clears lease and either deletes pending (terminal) or schedules retry (retryable)
+
+## What stays the same
+
+* You still keep the **append-only attempts ledger** as the audit source of truth.
+* You still keep `ZOMBIE_REQUEUE` as an attempts event (it’s now “lease expired and was repaired”).
+* Your role model stays the same; executor owns claim/complete/repair functions (likely SECURITY DEFINER) with strict grants.
+
+## What changes in operational semantics
+
+* “Zombie” is now defined as **lease expiry**, not “stale DISPATCHING attempt.”
+* Workers must either:
+
+  * complete within lease duration, or
+  * renew lease (optional future enhancement), or
+  * accept that another worker may reclaim after expiry (and completion must fail with LEASE_LOST).
+
+If you want, I can outline the exact SQL for `repair_expired_leases(batch_size, worker_id)` and show how the worker should log “LEASE_LOST” as a concurrency event (not a system error).
+
+This plan (lease-in-pending + append-only attempts) is one of those rare “deep surgery” moves that unlocks a bunch of *secondary* improvements almost for free. Here are the biggest areas you can improve immediately, in a “no shortcuts” way, ordered by payoff.
+
+## 1) Deterministic correctness gets simpler everywhere
+
+### Crash recovery becomes provable
+
+* Old: infer stuck work from stale `DISPATCHING` attempts (heuristic-ish).
+* New: **lease expiry is authoritative**. If `lease_expires_at <= now()`, it’s reclaimable. Full stop.
+
+### “Late worker wakes up” becomes safely ignorable
+
+With `lease_token` + ownership checks, stale workers can’t complete anything. That’s a huge distributed-systems hardening.
+
+**Upgrade you can add now:** a dedicated SQLSTATE for lease loss (`P7002` like we sketched) and treat it as a “Concurrency Event” in logs/metrics.
+
+---
+
+## 2) Better observability with less ambiguity
+
+You can build a **single authoritative picture** from pending + attempts:
+
+### Pending tells you operational state
+
+* due backlog: `next_attempt_at <= now()` and unleased
+* inflight: leased and not expired
+* stuck: leased but expired
+
+### Attempts tell you audit history
+
+* what happened, in what order, with who/latency/error codes
+
+**Easy win:** create a view `outbox_operational_status` that joins:
+
+* pending row (lease + scheduling)
+* latest attempt row (outcome history)
+* derived “state” columns for dashboards
+
+This beats “latest attempt == DISPATCHING means inflight” because inflight is now explicit.
+
+---
+
+## 3) Cleaner “exactly-once terminal outcome” story
+
+You already wanted the partial unique terminal index:
+
+* `UNIQUE(outbox_id) WHERE state IN ('DISPATCHED','FAILED')`
+
+In the lease model, this becomes a **belt** rather than the primary coordinator:
+
+* lease prevents duplicates operationally
+* index prevents duplicates even if a bug slips in
+
+That’s exactly how you sell “defense in depth” to auditors.
+
+---
+
+## 4) Retry policy becomes a first-class, DB-enforced rule
+
+Right now you have `attempt_count <= 20`. With the new model you can make retries fully deterministic:
+
+### Improvements you can do now
+
+* Enforce retry ceiling in `complete_outbox_attempt`:
+
+  * if `attempt_count >= 20` and state is RETRYABLE → force FAILED or raise a deterministic error
+* Move retry delay policy into DB:
+
+  * `next_attempt_at = now() + backoff(attempt_no)` where `backoff()` is a function (bounded exponential + jitter if allowed)
+
+If you want “no randomness,” skip jitter and keep it deterministic.
+
+---
+
+## 5) Stronger invariants around sequencing (participant_id, sequence_id)
+
+Because pending is no longer deleted and reinserted on claim, you reduce churn on:
+
+* `ux_pending_participant_sequence (participant_id, sequence_id)`
+
+That makes strict sequencing behavior more stable under contention.
+
+**Upgrade:** add a DB check that enforces “cannot lease a row if there exists an earlier sequence due and unleased,” if you really want strict FIFO per participant (optional; might be too strict).
+
+---
+
+## 6) Remove the need for “DISPATCHING” in attempts entirely
+
+This is a conceptual win:
+
+* attempts become “outcome records” (RETRYABLE/FAILED/DISPATCHED/ZOMBIE_REQUEUE)
+* inflight is purely a pending lease concern
+
+That makes your append-only audit ledger cleaner: every row is a completed event, not an in-progress marker.
+
+If you still want inflight audit trail, log it as a separate append-only event table (see next).
+
+---
+
+## 7) Bonus: split “audit events” from “attempt outcomes” (optional, very strong)
+
+If you want a truly regulator-friendly ledger, introduce:
+
+### `payment_outbox_events` (append-only)
+
+Event types:
+
+* `LEASE_CLAIMED`
+* `LEASE_EXPIRED_REPAIRED`
+* `ATTEMPT_COMPLETED` (points to attempt row)
+* `TERMINAL_BLOCKED` (duplicate attempt prevented)
+
+This is optional, but it gives you a clean narrative:
+
+* operational actions are events
+* attempts are outcomes
+
+The system becomes a deterministic state machine you can replay.
+
+---
+
+## 8) Security posture: fewer privileged write paths
+
+Today, delete-on-claim required:
+
+* deleting from pending
+* inserting dispatching attempts
+* reinserting pending on repair
+
+New model reduces operations to:
+
+* UPDATE pending lease fields
+* INSERT attempts outcomes
+* DELETE pending only on terminal completion
+
+Fewer moving parts → fewer privileges → easier least-privilege grants.
+
+---
+
+## 9) Testing becomes more “mathematical” and less time-based
+
+You can avoid flaky “wait N seconds” tests by seeding:
+
+* `lease_expires_at = now() - interval '1 second'` directly (via `queryNoRole` in test)
+* same for `next_attempt_at`
+
+That improves determinism and CI reliability.
+
+---
+
+# If you want to really take advantage: a “Fortune Bundle” checklist
+
+If you’re going all-in, I’d do these extra tighten-ups alongside the leasing refactor:
+
+1. **Add `lease_token` and enforce it everywhere**
+2. **Add terminal partial unique index** (`one_terminal_per_outbox`)
+3. **Add deterministic SQLSTATEs**
+
+   * `P7002` LEASE_LOST
+   * `P7001` ALREADY_TERMINAL (optional soft guard)
+4. **Create operational status view**
+5. **Rewrite Phase 4 and Phase 5 proofs** to cover:
+
+   * lease expiry repair
+   * stale worker cannot complete after lease loss
+   * concurrent completion: exactly one succeeds, others get LEASE_LOST / ALREADY_TERMINAL
+
+---
+
+If you want, I can lay out the exact PR breakdown (files + SQL + tests) in the order that keeps the repo green at each step—still “no shortcuts,” but with clean checkpoints.
+
+
+Yep. If we’re doing this **no-legacy, no dual paths, no shortcuts**, then we do **full surgery** and we do it **bottom-up** (DB invariants → DB functions → privileges → libs/db wrappers → workers → tests → views/ops).
+
+Below is the exact file + SQL + test breakdown in the order I’d implement it so every layer is “standing on rock,” not application convention.
+
+---
+
+# Phase 7C Ground-Up Refactor: Lease-in-Pending + Append-Only Attempts
+
+## 0) Delete the old model (conceptually)
+
+**Hard rule going forward**
+
+* `payment_outbox_attempts` is **INSERT-only**. No UPDATE path. No “complete attempt by updating DISPATCHING row.”
+* Pending is the *operational* record and is allowed to be mutable.
+* “In-flight” = **lease columns** on `payment_outbox_pending`.
+* “What happened” = append-only rows in `payment_outbox_attempts`.
+
+This means:
+
+* **OutboxRelayer.claimNextBatch()** cannot delete pending.
+* **DISPATCHING** should no longer be written as an “attempt row.” (Optional: keep enum value around for compatibility, but don’t insert it.)
+
+---
+
+# 1) Schema: add explicit leasing primitives (DB bedrock)
+
+## SQL file
+
+**`schema/v1/011_payment_outbox.sql`** (edit in place since you explicitly want “no migration / get it right now”)
+
+### 1.1 Add lease columns to pending
+
+Add:
+
+* `claimed_by TEXT`
+* `lease_token UUID`
+* `lease_expires_at TIMESTAMPTZ`
+
+Recommended DDL:
+
+```sql
+ALTER TABLE payment_outbox_pending
+  ADD COLUMN IF NOT EXISTS claimed_by TEXT,
+  ADD COLUMN IF NOT EXISTS lease_token UUID,
+  ADD COLUMN IF NOT EXISTS lease_expires_at TIMESTAMPTZ;
+```
+
+### 1.2 Add indexes for leasing
+
+You need to efficiently query:
+
+* due & unleased
+* expired leases
+* leased in-flight
+
+Add:
+
+```sql
+CREATE INDEX IF NOT EXISTS ix_pending_claimable
+  ON payment_outbox_pending (next_attempt_at, created_at)
+  WHERE lease_expires_at IS NULL OR lease_expires_at <= now();
+
+CREATE INDEX IF NOT EXISTS ix_pending_lease_expired
+  ON payment_outbox_pending (lease_expires_at)
+  WHERE lease_expires_at IS NOT NULL;
+
+CREATE INDEX IF NOT EXISTS ix_pending_claimed_by
+  ON payment_outbox_pending (claimed_by, lease_expires_at)
+  WHERE claimed_by IS NOT NULL;
+```
+
+(If you prefer “no now() in index predicates,” keep the WHERE predicate simpler and enforce “now()” filtering in queries. I’m fine either way; correctness doesn’t depend on the predicate.)
+
+### 1.3 Keep `attempt_count` contract as-is
+
+Your comment is perfect and becomes *more true* with this design:
+
+> attempt_count is a non-authoritative cache; next attempt is derived from attempts history.
+
+We’ll enforce monotonicity in DB functions with `GREATEST()`.
+
+---
+
+# 2) DB Functions: the only legal execution paths (authoritative state machine)
+
+All of these go into **`schema/v1/011_payment_outbox.sql`** (or split into a new `v1/012_outbox_leasing.sql` if you want clean separation; since you said no migration concerns, either is fine).
+
+## 2.1 `claim_outbox_batch(...)` — set-based lease claim
+
+**Purpose:** claim rows without deleting them; return claimed work + lease token.
+
+* Uses `FOR UPDATE SKIP LOCKED`.
+* Updates lease columns.
+* Returns the row payload needed to dispatch.
+
+## 2.2 `complete_outbox_attempt(...)` — append-only outcome insert + pending update/delete
+
+**Purpose:** atomically:
+
+1. verify the lease (`outbox_id + lease_token + claimed_by + not expired`)
+2. derive `attempt_no = MAX(attempt_no)+1` from history
+3. INSERT attempt outcome row (RETRYABLE/FAILED/DISPATCHED)
+4. update pending:
+
+   * terminal → DELETE pending
+   * retryable → schedule `next_attempt_at`, clear lease, bump `attempt_count`
+
+This is where you enforce:
+
+* retry ceiling (attempt_count <= 20)
+* deterministic SQLSTATEs:
+
+  * `P7002` for `LEASE_LOST` (stale worker can’t complete)
+
+## 2.3 `repair_expired_leases(...)` — lease repair + ZOMBIE_REQUEUE attempt append
+
+**Purpose:** what ZombieRepair becomes.
+
+It:
+
+* finds pending rows with `claimed_by IS NOT NULL AND lease_expires_at <= now()`
+* clears the lease and reschedules (or sets `next_attempt_at=now()`)
+* appends a `ZOMBIE_REQUEUE` attempt with `attempt_no = last + 1`
+* bumps `attempt_count = GREATEST(attempt_count, new_attempt_no)`
+
+This produces the same audit artifact (`ZOMBIE_REQUEUE`) but the trigger is **authoritative lease expiry**, not inference from stale DISPATCHING attempt rows.
+
+---
+
+# 3) Privileges: least privilege, but aligned to the new primitives
+
+## SQL file
+
+**`schema/v1/011_privileges.sql`**
+
+### 3.1 Pending table privileges change
+
+Old model likely granted executor DELETE on pending to claim. New model requires:
+
+* `UPDATE` on pending lease columns and scheduling columns
+* `DELETE` on pending only for terminal completion (executor-only)
+
+Suggested:
+
+* `symphony_executor`: SELECT/UPDATE/DELETE on pending (with column discipline optionally enforced via views or function-only access)
+* `symphony_ingest`: cannot update pending; still must enqueue via function only
+* `readonly/auditor`: may SELECT pending but never lease it (depending on your audit posture)
+
+### 3.2 Function execution rights
+
+Grant:
+
+* `EXECUTE` on `claim_outbox_batch`, `complete_outbox_attempt`, `repair_expired_leases` to `symphony_executor` only
+
+And keep:
+
+* `enqueue_payment_outbox` executable by `symphony_ingest`
+
+### 3.3 Attempts table privileges stay strict
+
+* executor can INSERT attempts (or only through SECURITY DEFINER functions; your call)
+* nobody can UPDATE/DELETE attempts (append-only proof remains valid)
+
+---
+
+# 4) Views: update supervisor/ops visibility to lease-aware truth
+
+## SQL file
+
+**`schema/views/outbox_status_view.sql`**
+
+Replace “stuck dispatching count” logic:
+
+* Old: “latest attempt is DISPATCHING and claimed_at older than threshold”
+* New: “pending rows with `lease_expires_at <= now()` and `claimed_by is not null`”
+
+Also add fields that become first-class now:
+
+* `leased_count`
+* `expired_lease_count`
+* `due_unleased_count`
+* optionally `time_to_due` / `lease_age_seconds`
+
+This view becomes materially more accurate and less inference-based.
+
+---
+
+# 5) libs/db: add role-scoped wrappers for the new functions (no raw SQL elsewhere)
+
+## Files
+
+* **`libs/db/index.ts`** (or a new `libs/outbox/db.ts` wrapper if you prefer domain isolation)
+
+Add typed helpers like:
+
+* `claimOutboxBatch(role: DbRole, batchSize, workerId, leaseSeconds)`
+* `completeOutboxAttempt(role: DbRole, args...)`
+* `repairExpiredLeases(role: DbRole, batchSize, workerId, leaseSeconds?)`
+
+This keeps all SQL invocation centralized and consistent with your Phase 3 discipline.
+
+---
+
+# 6) OutboxRelayer surgery: remove delete-on-claim; remove DISPATCHING inserts; complete via DB function
+
+## File
+
+* **`libs/outbox/OutboxRelayer.ts`** (from your repomix)
+
+### 6.1 Replace `claimNextBatch()` implementation
+
+Old path:
+
+* lock → delete pending → insert DISPATCHING attempt (lease record)
+
+New path:
+
+* call `claim_outbox_batch(...)`
+* receive rows including `lease_token` and `lease_expires_at`
+
+Your in-memory `OutboxRecord` must now include:
+
+* `lease_token`
+* `claimed_by` (or worker id)
+* `lease_expires_at`
+
+### 6.2 Replace `insertOutcome()` entirely
+
+No more `INSERT INTO attempts using record.attempt_no` (that was the bug).
+Instead call `complete_outbox_attempt(...)` and let the DB:
+
+* verify lease token
+* derive attempt_no from history
+* append outcome row
+* delete/schedule pending
+
+### 6.3 Handle lease-loss deterministically
+
+If `complete_outbox_attempt` raises:
+
+* `P7002 LEASE_LOST` → log as `CONCURRENCY_EVENT` and stop; do not retry this completion.
+
+This addresses your “no paging for normal races” requirement.
+
+---
+
+# 7) ZombieRepair becomes LeaseRepairWorker (simpler, more correct)
+
+## File
+
+* **Rename** `libs/repair/ZombieRepairWorker.ts` → `libs/repair/LeaseRepairWorker.ts` (recommended; “Zombie” becomes a lease concept now)
+
+Changes:
+
+* remove scanning attempts for stale DISPATCHING
+* call `repair_expired_leases(batchSize, workerId)` on an interval
+* log:
+
+  * `expired_leases_detected`
+  * `leases_repaired`
+  * list of outbox_ids optionally (bounded)
+
+---
+
+# 8) Tests: bottom-up proofs, updated to the new ground truth
+
+## 8.1 Keep existing “attempts immutability” proof
+
+* **`tests/unit/outboxAppendOnlyTrigger.spec.ts`** stays, but you should strengthen it:
+
+  * UPDATE attempts fails (P0001)
+  * DELETE attempts fails (P0001)
+  * INSERT works
+
+## 8.2 Phase 4 becomes “Lease expiry repair proof”
+
+Replace the old stale DISPATCHING proof.
+
+### Update file
+
+* **`tests/unit/zombieRepairProof.spec.ts`** → rename to **`tests/unit/leaseRepairProof.spec.ts`** (recommended)
+  Assertions:
+
+1. enqueue a pending row
+2. claim it with `lease_seconds=1`
+3. force expiry deterministically (set `lease_expires_at = now() - interval '1 second'` using `queryNoRole`, no sleeps)
+4. run one repair cycle
+5. assert:
+
+   * pending row is unleased + due
+   * `ZOMBIE_REQUEUE` attempt appended for same outbox_id
+   * `attempt_no` monotonic (`last + 1`)
+   * `attempt_count` monotonic via `GREATEST`
+
+## 8.3 Phase 5 becomes strictly better (and matches reality)
+
+### Keep: enqueue concurrency proof
+
+* **`tests/integration/outboxConcurrency.test.ts`** (or your new `outboxConcurrencyIdempotencyProof.spec.ts`)
+  Still asserts: N concurrent enqueues → single outbox_id.
+
+### Add: stale worker cannot complete after lease loss (critical)
+
+Create:
+
+* **`tests/integration/outboxLeaseLossProof.spec.ts`**
+  Proof:
+
+1. claim row → get lease_token A
+2. forcibly expire lease in DB
+3. claim again → lease_token B
+4. attempt completion using token A → must fail with `P7002`
+5. completion with token B succeeds
+
+This is the regulator-grade “zombie worker wakes up late” proof.
+
+### Add: concurrent completion attempts are safe
+
+Create:
+
+* **`tests/integration/outboxCompleteConcurrencyProof.spec.ts`**
+  Proof:
+
+1. claim row → token A
+2. race M `complete_outbox_attempt(outbox_id, token A, ...)`
+3. exactly one succeeds; others fail deterministically (either `P7002` if you enforce single-consumer completion by locking pending row, or `23505` if the race collapses at attempt_no uniqueness—prefer the former for semantic clarity)
+
+---
+
+# 9) Guardrails: ban the old anti-patterns forever
+
+Update your guardrails scripts (where relevant) to detect:
+
+* any SQL in app code that deletes from `payment_outbox_pending` as a claim mechanism
+* any insertion of `DISPATCHING` attempts (if you decide that attempts never store DISPATCHING)
+
+This locks in the new model.
+
+---
+
+# The exact bottom-up build order (so you never build on sand)
+
+1. **Schema changes**: pending lease columns + indexes
+2. **DB functions**: claim / complete / repair-expired-leases
+3. **Privileges**: grants for new functions + pending updates; keep attempts append-only restrictions
+4. **Views**: outbox_status_view becomes lease-aware
+5. **libs/db wrappers** for calling these functions (role-scoped)
+6. **OutboxRelayer**: new claim + complete paths (delete old SQL)
+7. **LeaseRepairWorker**: replace ZombieRepairWorker logic
+8. **Unit proofs**: append-only attempts still proven; new lease repair proof
+9. **Integration proofs**: enqueue concurrency + lease-loss + completion concurrency
+10. **Guardrails**: ban regressions
+
+---
+
+If you want, I can write the *actual SQL bodies* for the three functions (claim/complete/repair) in the exact style you already use (SECURITY DEFINER, fixed search_path, SQLSTATE discipline), and the exact shape of the TS return types for OutboxRecord (including lease_token).

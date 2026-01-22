@@ -5,12 +5,13 @@
  * - LISTEN/NOTIFY for low-latency wakeups
  * - fallback polling to ensure SLA stability
  *
- * It uses DELETE ... RETURNING from payment_outbox_pending and appends
- * DISPATCHING attempts in the same transaction for crash consistency.
+ * It uses lease-based claim and DB-authoritative completion functions.
  */
 
 import { pino } from 'pino';
-import { db, DbRole, ListenHandle } from '../db/index.js';
+import os from 'node:os';
+import { db, DbRole, isLeaseLostError, ListenHandle } from '../db/index.js';
+import { claimOutboxBatch, completeOutboxAttempt } from './db.js';
 
 const logger = pino({ name: 'OutboxRelayer' });
 
@@ -20,6 +21,9 @@ const POLL_INTERVAL_MS = 500;
 const NOTIFY_DEBOUNCE_MS = 50;
 const MAX_CONCURRENCY = 10;
 const DISPATCH_TIMEOUT_MS = 30_000;
+const DEFAULT_LEASE_SECONDS = Number(process.env.OUTBOX_LEASE_SECONDS ?? '30');
+const SAFE_LEASE_SECONDS = Number.isFinite(DEFAULT_LEASE_SECONDS) && DEFAULT_LEASE_SECONDS > 0 ? DEFAULT_LEASE_SECONDS : 30;
+const DEFAULT_WORKER_ID = process.env.OUTBOX_WORKER_ID ?? `${os.hostname()}-${process.pid}`;
 
 const TERMINAL_RAIL_CODES = new Set([
     'INVALID_ACCOUNT',
@@ -64,8 +68,9 @@ interface OutboxRecord {
         [key: string]: unknown;
     };
     attempt_count: number;
-    attempt_no: number;
     created_at: Date;
+    lease_token: string;
+    lease_expires_at: Date;
 }
 
 class Semaphore {
@@ -108,7 +113,9 @@ export class OutboxRelayer {
     constructor(
         private readonly railClient: RailClient,
         private readonly role: DbRole = 'symphony_executor',
-        private readonly dbClient = db
+        private readonly dbClient = db,
+        private readonly workerId: string = DEFAULT_WORKER_ID,
+        private readonly leaseSeconds: number = SAFE_LEASE_SECONDS
     ) { }
 
     /**
@@ -217,90 +224,12 @@ export class OutboxRelayer {
     }
 
     private async claimNextBatch(): Promise<OutboxRecord[]> {
-        const deleteQuery = `
-                WITH due AS (
-                    SELECT outbox_id
-                    FROM payment_outbox_pending
-                    WHERE next_attempt_at <= NOW()
-                    ORDER BY next_attempt_at ASC, created_at ASC
-                    LIMIT $1
-                    FOR UPDATE SKIP LOCKED
-                ),
-                claimed AS (
-                    DELETE FROM payment_outbox_pending
-                    USING due
-                    WHERE payment_outbox_pending.outbox_id = due.outbox_id
-                    RETURNING
-                        payment_outbox_pending.outbox_id,
-                        payment_outbox_pending.instruction_id,
-                        payment_outbox_pending.participant_id,
-                        payment_outbox_pending.sequence_id,
-                        payment_outbox_pending.idempotency_key,
-                        payment_outbox_pending.rail_type,
-                        payment_outbox_pending.payload,
-                        payment_outbox_pending.created_at
-                ),
-                last_attempts AS (
-                    SELECT a.outbox_id, MAX(a.attempt_no) AS last_attempt_no
-                    FROM payment_outbox_attempts a
-                    JOIN claimed c ON c.outbox_id = a.outbox_id
-                    GROUP BY a.outbox_id
-                ),
-                inserted AS (
-                    INSERT INTO payment_outbox_attempts (
-                        outbox_id,
-                        instruction_id,
-                        participant_id,
-                        sequence_id,
-                        idempotency_key,
-                        rail_type,
-                        payload,
-                        state,
-                        attempt_no,
-                        claimed_at,
-                        created_at
-                    )
-                    SELECT
-                        c.outbox_id,
-                        c.instruction_id,
-                        c.participant_id,
-                        c.sequence_id,
-                        c.idempotency_key,
-                        c.rail_type,
-                        c.payload,
-                        'DISPATCHING',
-                        COALESCE(la.last_attempt_no, 0) + 1,
-                        NOW(),
-                        NOW()
-                    FROM claimed c
-                    LEFT JOIN last_attempts la ON la.outbox_id = c.outbox_id
-                    RETURNING outbox_id, attempt_no
-                )
-                SELECT
-                    c.outbox_id,
-                    c.instruction_id,
-                    c.participant_id,
-                    c.sequence_id,
-                    c.idempotency_key,
-                    c.rail_type,
-                    c.payload,
-                    i.attempt_no,
-                    c.created_at
-                FROM claimed c
-                JOIN inserted i ON i.outbox_id = c.outbox_id;
-            `;
-        return this.dbClient.transactionAsRole(this.role, async (client) => {
-            const result = await client.query(deleteQuery, [BATCH_SIZE]);
-            if (result.rows.length === 0) {
-                return [];
-            }
-
-            return result.rows.map(row => ({
-                ...row,
-                sequence_id: Number(row.sequence_id),
-                attempt_no: Number(row.attempt_no)
-            })) as OutboxRecord[];
-        });
+        const rows = await claimOutboxBatch(this.role, BATCH_SIZE, this.workerId, this.leaseSeconds, this.dbClient);
+        return rows.map(row => ({
+            ...row,
+            sequence_id: Number(row.sequence_id),
+            attempt_count: Number(row.attempt_count)
+        })) as OutboxRecord[];
     }
 
     private async processRecords(records: OutboxRecord[]): Promise<void> {
@@ -320,73 +249,74 @@ export class OutboxRelayer {
         const validationError = this.validatePayload(record.payload);
 
         if (validationError) {
-            await this.insertOutcome(record, 'FAILED', {
+            const completed = await this.completeOutcome(record, 'FAILED', {
                 errorCode: validationError.code,
                 errorMessage: validationError.message
             });
+            if (completed === 'lease_lost') return;
             logger.warn({ correlationId, errorCode: validationError.code }, 'Validation failed');
             return;
         }
 
         const start = Date.now();
+        let result: Awaited<ReturnType<RailClient['dispatch']>>;
         try {
-            const result = await this.dispatchWithTimeout(record);
+            result = await this.dispatchWithTimeout(record);
+        } catch (error: unknown) {
             const latencyMs = Date.now() - start;
+            const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+            const errorCode = errorMessage === 'DISPATCH_TIMEOUT' ? 'DISPATCH_TIMEOUT' : 'DISPATCH_ERROR';
+            const completed = await this.completeOutcome(record, 'RETRYABLE', {
+                errorCode,
+                errorMessage,
+                latencyMs
+            });
+            if (completed === 'lease_lost') return;
+            logger.error({ correlationId, error: errorMessage }, 'Dispatch failure');
+            return;
+        }
 
-            if (result.success) {
-                const details: {
-                    railReference?: string;
-                    railCode?: string;
-                    latencyMs?: number;
-                } = { latencyMs };
-                if (result.railReference !== undefined) {
-                    details.railReference = result.railReference;
-                }
-                if (result.railCode !== undefined) {
-                    details.railCode = result.railCode;
-                }
-                await this.insertOutcome(record, 'DISPATCHED', details);
-                logger.info({ correlationId, railReference: result.railReference }, 'Dispatch successful');
-                return;
-            }
-
-            const classification = this.classifyError(result);
+        const latencyMs = Date.now() - start;
+        if (result.success) {
             const details: {
                 railReference?: string;
                 railCode?: string;
-                errorCode?: string;
-                errorMessage?: string;
                 latencyMs?: number;
-            } = {
-                errorMessage: result.errorMessage ?? 'Dispatch failed',
-                latencyMs
-            };
+            } = { latencyMs };
             if (result.railReference !== undefined) {
                 details.railReference = result.railReference;
             }
             if (result.railCode !== undefined) {
                 details.railCode = result.railCode;
             }
-            if (result.errorCode !== undefined) {
-                details.errorCode = result.errorCode;
-            }
-            await this.insertOutcome(record, classification.state, details);
-
-            if (classification.state === 'RETRYABLE') {
-                await this.requeue(record);
-            }
-        } catch (error: unknown) {
-            const latencyMs = Date.now() - start;
-            const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-            const errorCode = errorMessage === 'DISPATCH_TIMEOUT' ? 'DISPATCH_TIMEOUT' : 'DISPATCH_ERROR';
-            await this.insertOutcome(record, 'RETRYABLE', {
-                errorCode,
-                errorMessage,
-                latencyMs
-            });
-            await this.requeue(record);
-            logger.error({ correlationId, error: errorMessage }, 'Dispatch failure');
+            const completed = await this.completeOutcome(record, 'DISPATCHED', details);
+            if (completed === 'lease_lost') return;
+            logger.info({ correlationId, railReference: result.railReference }, 'Dispatch successful');
+            return;
         }
+
+        const classification = this.classifyError(result);
+        const details: {
+            railReference?: string;
+            railCode?: string;
+            errorCode?: string;
+            errorMessage?: string;
+            latencyMs?: number;
+        } = {
+            errorMessage: result.errorMessage ?? 'Dispatch failed',
+            latencyMs
+        };
+        if (result.railReference !== undefined) {
+            details.railReference = result.railReference;
+        }
+        if (result.railCode !== undefined) {
+            details.railCode = result.railCode;
+        }
+        if (result.errorCode !== undefined) {
+            details.errorCode = result.errorCode;
+        }
+        const completed = await this.completeOutcome(record, classification.state, details);
+        if (completed === 'lease_lost') return;
     }
 
     private validatePayload(payload: OutboxRecord['payload']): { code: string; message: string } | null {
@@ -406,11 +336,8 @@ export class OutboxRelayer {
     }
 
     private async dispatchWithTimeout(record: OutboxRecord): Promise<Awaited<ReturnType<RailClient['dispatch']>>> {
-        const timeoutPromise = new Promise<never>((_, reject) => {
-            setTimeout(() => reject(new Error('DISPATCH_TIMEOUT')), DISPATCH_TIMEOUT_MS);
-        });
-
-        return Promise.race([
+        return new Promise((resolve, reject) => {
+            const timeout = setTimeout(() => reject(new Error('DISPATCH_TIMEOUT')), DISPATCH_TIMEOUT_MS);
             this.railClient.dispatch({
                 reference: record.outbox_id,
                 amount: record.payload.amount,
@@ -419,9 +346,14 @@ export class OutboxRelayer {
                 participantId: record.participant_id,
                 railType: record.rail_type,
                 payload: record.payload
-            }),
-            timeoutPromise
-        ]);
+            }).then(result => {
+                clearTimeout(timeout);
+                resolve(result);
+            }).catch(error => {
+                clearTimeout(timeout);
+                reject(error);
+            });
+        });
     }
 
     private classifyError(result: Awaited<ReturnType<RailClient['dispatch']>>): { state: 'RETRYABLE' | 'FAILED' } {
@@ -432,7 +364,7 @@ export class OutboxRelayer {
         return { state: 'RETRYABLE' };
     }
 
-    private async insertOutcome(
+    private async completeOutcome(
         record: OutboxRecord,
         state: 'DISPATCHED' | 'RETRYABLE' | 'FAILED',
         details: {
@@ -442,90 +374,38 @@ export class OutboxRelayer {
             errorMessage?: string;
             latencyMs?: number;
         }
-    ): Promise<void> {
-        await this.dbClient.queryAsRole(
-            this.role,
-            `
-            INSERT INTO payment_outbox_attempts (
-                outbox_id,
-                instruction_id,
-                participant_id,
-                sequence_id,
-                idempotency_key,
-                rail_type,
-                payload,
+    ): Promise<'completed' | 'lease_lost'> {
+        try {
+            await completeOutboxAttempt(this.role, {
+                outbox_id: record.outbox_id,
+                lease_token: record.lease_token,
+                worker_id: this.workerId,
                 state,
-                attempt_no,
-                claimed_at,
-                completed_at,
-                rail_reference,
-                rail_code,
-                error_code,
-                error_message,
-                latency_ms,
-                created_at
-            ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, NOW(), NOW(), $10, $11, $12, $13, $14, NOW());
-        `,
-            [
-                record.outbox_id,
-                record.instruction_id,
-                record.participant_id,
-                record.sequence_id,
-                record.idempotency_key,
-                record.rail_type,
-                JSON.stringify(record.payload),
-                state,
-                record.attempt_no,
-                details.railReference ?? null,
-                details.railCode ?? null,
-                details.errorCode ?? null,
-                details.errorMessage ?? null,
-                details.latencyMs ?? null
-            ]
-        );
+                rail_reference: details.railReference ?? null,
+                rail_code: details.railCode ?? null,
+                error_code: details.errorCode ?? null,
+                error_message: details.errorMessage ?? null,
+                latency_ms: details.latencyMs ?? null,
+                retry_delay_seconds:
+                    state === 'RETRYABLE' ? this.calculateBackoffSeconds(record.attempt_count + 1) : null
+            }, this.dbClient);
+            return 'completed';
+        } catch (error) {
+            if (isLeaseLostError(error)) {
+                logger.warn(
+                    { correlationId: record.outbox_id, leaseToken: record.lease_token },
+                    'Lease lost before completion'
+                );
+                return 'lease_lost';
+            }
+            throw error;
+        }
     }
 
-    private async requeue(record: OutboxRecord): Promise<void> {
-        const backoffMs = this.calculateBackoffMs(record.attempt_no);
-        await this.dbClient.queryAsRole(
-            this.role,
-            `
-            INSERT INTO payment_outbox_pending (
-                outbox_id,
-                instruction_id,
-                participant_id,
-                sequence_id,
-                idempotency_key,
-                rail_type,
-                payload,
-                attempt_count,
-                next_attempt_at,
-                created_at
-            ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, NOW() + ($9 * INTERVAL '1 millisecond'), NOW())
-            ON CONFLICT (outbox_id)
-            DO UPDATE SET
-                attempt_count = GREATEST(payment_outbox_pending.attempt_count, EXCLUDED.attempt_count),
-                next_attempt_at = EXCLUDED.next_attempt_at,
-                payload = EXCLUDED.payload;
-        `,
-            [
-                record.outbox_id,
-                record.instruction_id,
-                record.participant_id,
-                record.sequence_id,
-                record.idempotency_key,
-                record.rail_type,
-                JSON.stringify(record.payload),
-                record.attempt_no,
-                backoffMs
-            ]
-        );
-    }
-
-    private calculateBackoffMs(attemptNo: number): number {
-        const base = 1000;
+    private calculateBackoffSeconds(attemptNo: number): number {
+        const base = 1;
         const backoff = base * Math.pow(2, Math.max(0, attemptNo - 1));
-        return Math.min(backoff, 60_000);
+        return Math.min(backoff, 60);
     }
 }
 

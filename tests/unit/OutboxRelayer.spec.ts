@@ -61,12 +61,13 @@ describe('OutboxRelayer', () => {
                 rail_type: 'PAYMENT',
                 payload: { amount: 100, currency: 'USD', destination: 'dest-1' },
                 attempt_count: 0,
-                attempt_no: 1,
-                created_at: new Date()
+                created_at: new Date(),
+                lease_token: 'lease-token-1',
+                lease_expires_at: new Date(Date.now() + 60_000)
             };
 
-            // Mock fetchNextBatch query result
-            mockTxClient.query = mock.fn(async () => ({
+            // Mock claim_outbox_batch result
+            mockDb.queryAsRole = mock.fn(async () => ({
                 rows: [mockRecord]
             }));
 
@@ -80,17 +81,20 @@ describe('OutboxRelayer', () => {
             await relayerInternal.claimNextBatch();
 
             // Verify SKIP LOCKED usage
-            const queryCalls = mockTxClient.query.mock.calls;
-            const hasSkipLocked = queryCalls.some(call => {
-                const args = call.arguments as [string];
-                return typeof args[0] === 'string' && args[0].includes('FOR UPDATE SKIP LOCKED');
+            const queryCalls = mockDb.queryAsRole.mock.calls;
+            const hasClaimFunction = queryCalls.some(call => {
+                const args = call.arguments as [string, string];
+                return typeof args[1] === 'string' && args[1].includes('claim_outbox_batch');
             });
-            assert.ok(hasSkipLocked, 'Should use SKIP LOCKED');
+            assert.ok(hasClaimFunction, 'Should call claim_outbox_batch');
         });
     });
 
     describe('processRecord()', () => {
         it('should dispatch to rail and mark success', async () => {
+            mockDb.queryAsRole = mock.fn(async () => ({
+                rows: [{ attempt_no: 1, state: 'DISPATCHED' }]
+            }));
             const mockRecord: OutboxRecord = {
                 outbox_id: 'uuid-1',
                 instruction_id: 'instruction-1',
@@ -100,8 +104,9 @@ describe('OutboxRelayer', () => {
                 rail_type: 'PAYMENT',
                 payload: { amount: 100, currency: 'USD', destination: 'dest-1' },
                 attempt_count: 0,
-                attempt_no: 1,
-                created_at: new Date()
+                created_at: new Date(),
+                lease_token: 'lease-token-1',
+                lease_expires_at: new Date(Date.now() + 60_000)
             };
 
             const relayerInternal = relayer as unknown as { processRecord: (record: OutboxRecord) => Promise<void> };
@@ -116,15 +121,18 @@ describe('OutboxRelayer', () => {
             // Verify success mark (Pool query)
             assert.strictEqual(mockDb.queryAsRole.mock.calls.length, 1);
             const poolQueryArgs = mockDb.queryAsRole.mock.calls[0]!.arguments as [string, string, unknown[]];
-            assert.ok(poolQueryArgs[1].includes('INSERT INTO payment_outbox_attempts'));
+            assert.ok(poolQueryArgs[1].includes('complete_outbox_attempt'));
             const params = poolQueryArgs[2] as unknown[];
-            assert.strictEqual(params[7], 'DISPATCHED');
+            assert.strictEqual(params[3], 'DISPATCHED');
         });
 
         it('should handle transient errors by marking RECOVERING', async () => {
             mockRailClient.dispatch = mock.fn(async () => {
                 throw new Error('ECONNRESET: Connection reset');
             });
+            mockDb.queryAsRole = mock.fn(async () => ({
+                rows: [{ attempt_no: 1, state: 'RETRYABLE' }]
+            }));
 
             const mockRecord: OutboxRecord = {
                 outbox_id: 'uuid-1',
@@ -135,23 +143,21 @@ describe('OutboxRelayer', () => {
                 rail_type: 'PAYMENT',
                 payload: { amount: 100, currency: 'USD', destination: 'dest-1' },
                 attempt_count: 0,
-                attempt_no: 1,
-                created_at: new Date()
+                created_at: new Date(),
+                lease_token: 'lease-token-1',
+                lease_expires_at: new Date(Date.now() + 60_000)
             };
 
             const relayerInternal = relayer as unknown as { processRecord: (record: OutboxRecord) => Promise<void> };
             await relayerInternal.processRecord(mockRecord);
 
-            // Verify outcome insert and requeue
-            assert.strictEqual(mockDb.queryAsRole.mock.calls.length, 2);
+            // Verify completion via DB function
+            assert.strictEqual(mockDb.queryAsRole.mock.calls.length, 1);
             const outcomeCall = mockDb.queryAsRole.mock.calls[0]!;
             const outcomeArgs = outcomeCall.arguments as [string, string, unknown[]];
-            assert.ok(outcomeArgs[1].includes('INSERT INTO payment_outbox_attempts'));
+            assert.ok(outcomeArgs[1].includes('complete_outbox_attempt'));
             const outcomeParams = outcomeArgs[2] as unknown[];
-            assert.strictEqual(outcomeParams[7], 'RETRYABLE');
-            const requeueCall = mockDb.queryAsRole.mock.calls[1]!;
-            const requeueArgs = requeueCall.arguments as [string, string];
-            assert.ok(requeueArgs[1].includes('INSERT INTO payment_outbox_pending'));
+            assert.strictEqual(outcomeParams[3], 'RETRYABLE');
         });
 
         it('should mark failed for terminal errors', async () => {
@@ -159,6 +165,9 @@ describe('OutboxRelayer', () => {
                 success: false,
                 errorCode: 'INVALID_ACCOUNT',
                 errorMessage: 'Permanent Error'
+            }));
+            mockDb.queryAsRole = mock.fn(async () => ({
+                rows: [{ attempt_no: 6, state: 'FAILED' }]
             }));
 
             const mockRecord: OutboxRecord = {
@@ -170,8 +179,9 @@ describe('OutboxRelayer', () => {
                 rail_type: 'PAYMENT',
                 payload: { amount: 100, currency: 'USD', destination: 'dest-1' },
                 attempt_count: 5,
-                attempt_no: 6,
-                created_at: new Date()
+                created_at: new Date(),
+                lease_token: 'lease-token-1',
+                lease_expires_at: new Date(Date.now() + 60_000)
             };
 
             const relayerInternal = relayer as unknown as { processRecord: (record: OutboxRecord) => Promise<void> };
@@ -180,9 +190,9 @@ describe('OutboxRelayer', () => {
             // Verify outcome insert
             const failureCall = mockDb.queryAsRole.mock.calls[0]!;
             const failureArgs = failureCall.arguments as [string, string, unknown[]];
-            assert.ok(failureArgs[1].includes('INSERT INTO payment_outbox_attempts'));
+            assert.ok(failureArgs[1].includes('complete_outbox_attempt'));
             const params = failureArgs[2] as unknown[];
-            assert.strictEqual(params[7], 'FAILED');
+            assert.strictEqual(params[3], 'FAILED');
         });
     });
 });

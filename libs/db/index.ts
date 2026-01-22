@@ -255,3 +255,4 @@ export const db = {
 };
 
 export { DbRole };
+export { isLeaseLostError } from './errors.js';

@@ -7,6 +7,8 @@ ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 cd "$ROOT"
 
 TARGETS=(libs services)
+# NOTE: These guardrails are scoped to application code in libs/services only.
+# DML in DB functions (schema/) is allowed and intentionally out of scope here.
 
 echo "[guardrails] Checking for forbidden legacy DB role APIs..."
 
@@ -91,6 +93,48 @@ if [[ "${ENFORCE_NO_DB_QUERY:-0}" == "1" ]]; then
     rg -n --hidden --glob '!**/node_modules/**' --glob '!**/*.md' --glob '!**/*.txt' "db\\.query\\s*\\(" "${TARGETS[@]}"
     exit 1
   fi
+fi
+
+echo "[guardrails] Checking outbox anti-patterns..."
+
+# Narrow match: old delete-on-claim CTE shape (WITH due + SKIP LOCKED + DELETE ... USING due)
+DELETE_ON_CLAIM_REGEX='WITH\\s+due\\s+AS\\s*\\([\\s\\S]{0,5000}?FOR\\s+UPDATE\\s+SKIP\\s+LOCKED[\\s\\S]{0,5000}?\\)[\\s\\S]{0,5000}?DELETE\\s+FROM\\s+payment_outbox_pending[\\s\\S]{0,5000}?USING\\s+due'
+if rg -n -U --pcre2 --hidden \
+  --glob '!**/node_modules/**' --glob '!**/*.md' --glob '!**/*.txt' --glob '!reports/**' \
+  "$DELETE_ON_CLAIM_REGEX" "${TARGETS[@]}" >/dev/null; then
+  echo "❌ delete-on-claim CTE pattern found"
+  rg -n -U --pcre2 --hidden \
+    --glob '!**/node_modules/**' --glob '!**/*.md' --glob '!**/*.txt' --glob '!reports/**' \
+    "$DELETE_ON_CLAIM_REGEX" "${TARGETS[@]}"
+  exit 1
+fi
+
+# Narrow match: INSERT into attempts with DISPATCHING nearby
+DISPATCHING_INSERT_REGEX="INSERT\\s+INTO\\s+payment_outbox_attempts[\\s\\S]{0,400}\\b(?:DISPATCHING|'DISPATCHING')(?:\\s*::\\s*outbox_attempt_state)?\\b"
+if rg -n -U --pcre2 --hidden \
+  --glob '!**/node_modules/**' --glob '!**/*.md' --glob '!**/*.txt' --glob '!reports/**' \
+  "$DISPATCHING_INSERT_REGEX" "${TARGETS[@]}" >/dev/null; then
+  echo "❌ DISPATCHING insert found (payment_outbox_attempts)"
+  rg -n -U --pcre2 --hidden \
+    --glob '!**/node_modules/**' --glob '!**/*.md' --glob '!**/*.txt' --glob '!reports/**' \
+    "$DISPATCHING_INSERT_REGEX" "${TARGETS[@]}"
+  exit 1
+fi
+
+if rg -n --hidden --glob '!**/node_modules/**' --glob '!**/*.md' --glob '!**/*.txt' --glob '!reports/**' \
+  "(INSERT INTO|UPDATE|DELETE FROM)\\s+payment_outbox_pending" "${TARGETS[@]}" >/dev/null; then
+  echo "❌ Direct DML against payment_outbox_pending found outside DB functions"
+  rg -n --hidden --glob '!**/node_modules/**' --glob '!**/*.md' --glob '!**/*.txt' --glob '!reports/**' \
+    "(INSERT INTO|UPDATE|DELETE FROM)\\s+payment_outbox_pending" "${TARGETS[@]}"
+  exit 1
+fi
+
+if rg -n --hidden --glob '!**/node_modules/**' --glob '!**/*.md' --glob '!**/*.txt' --glob '!reports/**' \
+  "(INSERT INTO|UPDATE|DELETE FROM)\\s+payment_outbox_attempts" "${TARGETS[@]}" >/dev/null; then
+  echo "❌ Direct DML against payment_outbox_attempts found outside DB functions"
+  rg -n --hidden --glob '!**/node_modules/**' --glob '!**/*.md' --glob '!**/*.txt' --glob '!reports/**' \
+    "(INSERT INTO|UPDATE|DELETE FROM)\\s+payment_outbox_attempts" "${TARGETS[@]}"
+  exit 1
 fi
 
 echo "✅ DB role guardrails passed."

@@ -64,6 +64,7 @@ jobs:
     env:
       DATABASE_URL: postgres://symphony:symphony@localhost:5432/symphony
       PGSSLMODE: disable
+      OUTBOX_EVIDENCE_DB_URL: ${{ secrets.OUTBOX_EVIDENCE_DB_URL }}
 
     steps:
       - uses: actions/checkout@v4
@@ -79,14 +80,10 @@ jobs:
           done
           echo "✅ PostgreSQL is ready"
 
-      - name: Apply Database Schema
+      - name: Apply Database Schema (migrations)
         run: |
-          echo "📦 Applying schema migrations..."
-          for file in schema/v1/*.sql; do
-            echo "  Applying: $file"
-            psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f "$file"
-          done
-          echo "✅ Schema migrations complete"
+          chmod +x scripts/db/reset_and_migrate.sh scripts/db/migrate.sh
+          scripts/db/reset_and_migrate.sh
 
       # -------------------- PaC: lock + submodule pin --------------------
       - name: Verify Policy Lock (PaC)
@@ -137,6 +134,9 @@ jobs:
 
       - name: Check Architecture Invariants
         run: scripts/ci/architecture_invariants.sh
+
+      - name: Enforce Archive Guardrails
+        run: scripts/ci/archive_guardrail.sh
       # ---------------------------------------------------------------------
 
       - name: Enforce RequestContext Safety
@@ -151,6 +151,20 @@ jobs:
 
       - name: Run Unit Tests
         run: npm test
+
+      - name: Run Integration Tests
+        run: node --conditions=test --import ./tests/loader.mjs --test tests/integration/*.spec.ts tests/integration/*.test.ts
+
+      - name: Enforce DISPATCHING Regression Query
+        run: |
+          echo "🔎 Checking invariant: no DISPATCHING attempts exist..."
+          COUNT=$(psql "$DATABASE_URL" -tA -X -v ON_ERROR_STOP=1 -c \
+            "SELECT COUNT(*) FROM public.payment_outbox_attempts WHERE state='DISPATCHING';")
+          echo "DISPATCHING count: $COUNT"
+          if [ "$COUNT" -ne 0 ]; then
+            echo "::error::DISPATCHING attempts detected: $COUNT"
+            exit 1
+          fi
 
       - name: Run Compliance Verification
         run: npm run ci:compliance
@@ -175,19 +189,24 @@ jobs:
         run: npm audit --audit-level=high
 
       - name: Generate Evidence Bundle
+        if: always()
         run: .ci/evidence/generate_evidence.sh
 
       - name: Compute Evidence Hash
+        if: always()
         run: .ci/evidence/compute_hash.sh
 
       - name: Validate Evidence Schema (Ajv 2020 + formats v3)
+        if: always()
         run: npm run ci:validate-evidence
 
       - name: Package Evidence Bundle
+        if: always()
         run: .ci/evidence/package_bundle.sh
 
       - name: Upload Evidence Bundle
         uses: actions/upload-artifact@v4
+        if: always()
         with:
           name: evidence-bundle
           path: |
@@ -195,8 +214,23 @@ jobs:
             evidence-bundle.sha256
             evidence-bundle-*.zip
 
+      - name: Generate Outbox Evidence Bundle
+        if: always()
+        env:
+          OUTBOX_EVIDENCE_DB_URL: ${{ env.DATABASE_URL }}
+        run: scripts/reports/generate-outbox-evidence.sh
+
+      - name: Upload Outbox Evidence Bundle
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: outbox-evidence
+          path: reports/outbox-evidence/
+          retention-days: 14
+
       - name: Upload Phase Evidence
         uses: actions/upload-artifact@v4
+        if: always()
         with:
           name: phase-evidence
           path: |

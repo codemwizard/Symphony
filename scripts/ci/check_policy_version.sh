@@ -55,7 +55,7 @@ if [[ -n "${DATABASE_URL:-}" ]]; then
     )
 
     if [[ -n "$DB_POLICY_VERSION" ]] && [[ "$POLICY_VERSION_FILE" != "$DB_POLICY_VERSION" ]]; then
-      echo "⚠️  CI seed mismatch (update schema/v1/010_seed_policy.sql)"
+      echo "⚠️  CI seed mismatch (update schema/migrations seed or baseline)"
       echo "File: $POLICY_VERSION_FILE"
       echo "Seed: $DB_POLICY_VERSION"
       # Warning only - seed is for testing, not authoritative

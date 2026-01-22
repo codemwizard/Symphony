@@ -1,0 +1,14 @@
+# Outbox proof/test manifest (deterministic)
+
+Unit:
+- tests/unit/outboxAppendOnlyTrigger.spec.ts (expects SQLSTATE P0001 on UPDATE/DELETE)
+- tests/unit/leaseRepairProof.spec.ts
+- tests/unit/OutboxRelayer.spec.ts
+
+Integration (DB-gated):
+- tests/integration/outboxLeaseLossProof.spec.ts (expects SQLSTATE P7002 on stale lease completion)
+- tests/integration/outboxCompleteConcurrencyProof.spec.ts (expects SQLSTATE P7002 on losers)
+- tests/integration/outboxConcurrency.test.ts
+
+Optional regression query:
+SELECT COUNT(*) FROM payment_outbox_attempts WHERE state='DISPATCHING';
