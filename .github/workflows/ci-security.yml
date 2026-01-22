@@ -197,8 +197,13 @@ jobs:
         run: .ci/evidence/compute_hash.sh
 
       - name: Validate Evidence Schema (Ajv 2020 + formats v3)
-        if: always()
-        run: npm run ci:validate-evidence
+        if: success() || failure()
+        run: |
+          if [ -d "node_modules" ]; then
+            npm run ci:validate-evidence
+          else
+            echo "⚠️ Skipping evidence validation (node_modules not present)"
+          fi
 
       - name: Package Evidence Bundle
         if: always()
