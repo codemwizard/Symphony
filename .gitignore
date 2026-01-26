@@ -21,19 +21,6 @@ build/
 .DS_Store
 bin/
 obj/infra/docker/.env
-*:Zone.Identifier
-*.xml
-# Windows download metadata
-*:Zone.Identifier
-
-# Repomix artifacts
-Good-repomix.xml
-Bad-repomix.xml
-repomix-output.xml
-
-# Repomix artifacts
-Good-repomix.xml
-repomix-output.xml
-
-# Windows download metadata
 *:Zone.Identifier*
+Good-repomix.xml
+repomix-output.xml
