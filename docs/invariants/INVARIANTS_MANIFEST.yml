@@ -1,0 +1,15 @@
+- id: INV-001
+  title: "All tables must have primary key"
+  status: roadmap
+  severity: P0
+  owners: ["team-db"]
+  sla_days: 7
+  verification: "sql_gate: check_primary_keys"
+
+- id: INV-002
+  title: "search_path must be set explicitly"
+  status: implemented
+  severity: P1
+  owners: ["team-platform"]
+  sla_days: 14
+  verification: "lint: lint_search_path.sh"
