@@ -45,4 +45,3 @@ For each Implementation Plan and Task you are asked to create, you should have:
        - imports the production implementation
        - exercises at least one success path and one failure path
        - asserts an observable outcome (DB call sequence, thrown error, status transition, emitted event)
-
