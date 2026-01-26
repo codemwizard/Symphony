@@ -1,0 +1,275 @@
+name: Invariants (Mechanical + Codex + DB Verify)
+
+on:
+  pull_request:
+    branches: ["main"]
+  push:
+    branches: ["main"]
+  schedule:
+    - cron: "0 8 * * *"
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+
+jobs:
+  mechanical_invariants:
+    name: Phase I — Mechanical gates
+    runs-on: ubuntu-latest
+    outputs:
+      structural_change: ${{ steps.detect.outputs.structural_change }}
+      confidence_hint: ${{ steps.detect.outputs.confidence_hint }}
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Unit tests for detectors
+        if: github.event_name != 'schedule'
+        run: |
+          python3 -m pip install --upgrade pip
+          python3 -m pip install pytest
+          pytest -q scripts/audit/tests/test_detect_structural_sql_changes.py
+
+      - name: Compute diff + detect structural change
+        id: detect
+        if: github.event_name != 'schedule'
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/invariants_ai
+
+          if [[ "${{ github.event_name }}" == "pull_request" ]]; then
+            RANGE="${{ github.event.pull_request.base.sha }}...${{ github.event.pull_request.head.sha }}"
+          else
+            RANGE="${{ github.event.before }}...${{ github.sha }}"
+          fi
+
+          git diff --no-color --no-ext-diff --unified=0 "$RANGE" > /tmp/invariants_ai/pr.diff
+          python3 scripts/audit/detect_structural_changes.py --diff-file /tmp/invariants_ai/pr.diff --out /tmp/invariants_ai/detect.json
+
+          structural="$(python3 - <<'PY'
+import json
+d=json.load(open("/tmp/invariants_ai/detect.json"))
+print("true" if d.get("structural_change") else "false")
+PY
+)"
+          hint="$(python3 - <<'PY'
+import json
+d=json.load(open("/tmp/invariants_ai/detect.json"))
+print(d.get("confidence_hint", 0.0))
+PY
+)"
+          echo "structural_change=$structural" >> "$GITHUB_OUTPUT"
+          echo "confidence_hint=$hint" >> "$GITHUB_OUTPUT"
+
+      - name: Enforce Rule 1 (docs/manifest or exception)
+        if: github.event_name != 'schedule' && steps.detect.outputs.structural_change == 'true'
+        shell: bash
+        run: |
+          set -euo pipefail
+          chmod +x scripts/audit/*.sh || true
+          BASE_REF="origin/main" HEAD_REF="HEAD" scripts/audit/enforce_change_rule.sh
+
+      - name: Promotion gate
+        if: github.event_name != 'schedule'
+        run: |
+          chmod +x scripts/audit/enforce_invariant_promotion.sh
+          scripts/audit/enforce_invariant_promotion.sh
+
+      - name: Validate exception templates
+        if: github.event_name != 'schedule'
+        run: |
+          chmod +x scripts/audit/verify_exception_template.sh
+          scripts/audit/verify_exception_template.sh
+
+      - name: Generate QUICK + ensure committed output matches
+        if: github.event_name != 'schedule'
+        run: |
+          chmod +x scripts/audit/generate_invariants_quick
+          scripts/audit/generate_invariants_quick
+          git diff --exit-code docs/invariants/INVARIANTS_QUICK.md
+
+      - name: Upload detector artifacts
+        if: github.event_name != 'schedule' && always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: invariants-detector
+          path: |
+            /tmp/invariants_ai/pr.diff
+            /tmp/invariants_ai/detect.json
+
+  codex_invariants_review:
+    name: Phase II — Codex authoring (docs/manifest only)
+    runs-on: ubuntu-latest
+    needs: [mechanical_invariants]
+    if: >
+      github.event_name == 'pull_request' &&
+      always() &&
+      needs.mechanical_invariants.outputs.structural_change == 'true'
+    permissions:
+      contents: read
+      pull-requests: write
+
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          ref: refs/pull/${{ github.event.pull_request.number }}/merge
+          fetch-depth: 0
+
+      - name: Pre-fetch base and head refs
+        shell: bash
+        run: |
+          git fetch --no-tags origin \
+            ${{ github.event.pull_request.base.ref }} \
+            +refs/pull/${{ github.event.pull_request.number }}/head
+
+      - name: Prepare diff for Codex
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/invariants_ai
+          git diff --no-color --no-ext-diff --unified=0 \
+            "${{ github.event.pull_request.base.sha }}...${{ github.event.pull_request.head.sha }}" \
+            > /tmp/invariants_ai/pr.diff
+
+      - name: Run Codex
+        uses: openai/codex-action@v1
+        id: codex
+        with:
+          openai-api-key: ${{ secrets.OPENAI_API_KEY }}
+          model: gpt-5.2-codex
+          effort: medium
+          sandbox: workspace-write
+          safety-strategy: drop-sudo
+          prompt-file: .github/codex/prompts/invariants_review.md
+          output-file: /tmp/invariants_ai/codex_final_message.md
+          codex-args: '["--full-auto"]'
+
+      - name: Capture Codex patch + upload artifacts
+        if: always()
+        shell: bash
+        run: |
+          set -euo pipefail
+          git diff > /tmp/invariants_ai/codex-invariants.patch || true
+          if [[ ! -s /tmp/invariants_ai/codex-invariants.patch ]]; then
+            echo "No changes produced by Codex." > /tmp/invariants_ai/codex-invariants.patch
+          fi
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: codex-invariants-review
+          path: |
+            /tmp/invariants_ai/pr.diff
+            /tmp/invariants_ai/codex_final_message.md
+            /tmp/invariants_ai/ai_confidence.json
+            /tmp/invariants_ai/codex_summary.md
+            /tmp/invariants_ai/codex-invariants.patch
+
+      - name: Comment on PR
+        if: always()
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ github.token }}
+          script: |
+            const fs = require('fs');
+            const readOr = (p, fb) => { try { return fs.readFileSync(p,'utf8'); } catch { return fb; } };
+
+            const confText = readOr('/tmp/invariants_ai/ai_confidence.json', '{"classification":"unclear","confidence":0,"invariants":[],"rationale":"missing ai_confidence.json","recommended_action":"human_decide"}');
+            const conf = JSON.parse(confText);
+            const summary = readOr('/tmp/invariants_ai/codex_summary.md', '(missing codex_summary.md)');
+
+            const body = [
+              "## Codex invariants review",
+              "",
+              `**Classification:** ${conf.classification}`,
+              `**Confidence:** ${conf.confidence}`,
+              `**Invariants:** ${(conf.invariants && conf.invariants.length) ? conf.invariants.join(", ") : "(none)"}`,
+              "",
+              "**Rationale:**",
+              conf.rationale || "(none)",
+              "",
+              "**Recommended action:**",
+              conf.recommended_action || "human_decide",
+              "",
+              "_Artifact: `codex-invariants-review` (patch + summary + confidence)._",
+              "",
+              "---",
+              "",
+              summary.slice(0, 6000)
+            ].join("\n");
+
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.payload.pull_request.number,
+              body
+            });
+
+  db_verify_invariants:
+    name: DB verify_invariants.sh (Postgres service)
+    runs-on: ubuntu-latest
+    needs: [mechanical_invariants]
+    if: always() && github.event_name != 'schedule'
+    services:
+      postgres:
+        image: postgres:18
+        env:
+          POSTGRES_USER: symphony
+          POSTGRES_PASSWORD: symphony
+          POSTGRES_DB: symphony
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U symphony -d symphony"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 30
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Wait for Postgres
+        env:
+          PGPASSWORD: symphony
+        run: |
+          set -euo pipefail
+          for i in {1..60}; do
+            if pg_isready -h localhost -p 5432 -U symphony -d symphony; then
+              exit 0
+            fi
+            sleep 2
+          done
+          exit 1
+
+      - name: Run DB verify entrypoint
+        env:
+          DATABASE_URL: postgres://symphony:symphony@localhost:5432/symphony
+          SKIP_POLICY_SEED: "1"
+        run: |
+          set -euo pipefail
+          chmod +x scripts/db/verify_invariants.sh
+          scripts/db/verify_invariants.sh
+
+  exception_audit:
+    name: Scheduled — exception audit
+    runs-on: ubuntu-latest
+    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+      - name: Validate exception templates + record summary
+        run: |
+          set -euo pipefail
+          chmod +x scripts/audit/verify_exception_template.sh
+          scripts/audit/verify_exception_template.sh
+          chmod +x scripts/audit/record_invariants_exception.sh
+          scripts/audit/record_invariants_exception.sh
