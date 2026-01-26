@@ -1,0 +1,1 @@
+-- baseline.sql (derived). Intentionally empty placeholder.
