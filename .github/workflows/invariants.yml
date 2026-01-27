@@ -53,18 +53,8 @@ jobs:
           git diff --no-color --no-ext-diff --unified=0 "$RANGE" > /tmp/invariants_ai/pr.diff
           python3 scripts/audit/detect_structural_changes.py --diff-file /tmp/invariants_ai/pr.diff --out /tmp/invariants_ai/detect.json
 
-          structural="$(python3 - <<'PY'
-import json
-d=json.load(open("/tmp/invariants_ai/detect.json"))
-print("true" if d.get("structural_change") else "false")
-PY
-)"
-          hint="$(python3 - <<'PY'
-import json
-d=json.load(open("/tmp/invariants_ai/detect.json"))
-print(d.get("confidence_hint", 0.0))
-PY
-)"
+          structural="$(python3 -c 'import json; d=json.load(open("/tmp/invariants_ai/detect.json")); print("true" if d.get("structural_change") else "false")')"
+          hint="$(python3 -c 'import json; d=json.load(open("/tmp/invariants_ai/detect.json")); print(d.get("confidence_hint", 0.0))')"
           echo "structural_change=$structural" >> "$GITHUB_OUTPUT"
           echo "confidence_hint=$hint" >> "$GITHUB_OUTPUT"
 
