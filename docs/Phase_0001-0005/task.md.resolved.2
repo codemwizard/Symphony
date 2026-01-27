@@ -1,0 +1,75 @@
+# Phase-2 System Verification Tasks
+
+## 1. Script Presence Verification
+
+### Audit Scripts (Phase I - Cheap/No-DB)
+- [x] [scripts/audit/run_invariants_fast_checks.sh](file:///home/mwiza/workspaces/Symphony/scripts/audit/run_invariants_fast_checks.sh)
+- [x] [scripts/audit/enforce_change_rule.sh](file:///home/mwiza/workspaces/Symphony/scripts/audit/enforce_change_rule.sh)
+- [x] [scripts/audit/enforce_invariant_promotion.sh](file:///home/mwiza/workspaces/Symphony/scripts/audit/enforce_invariant_promotion.sh)
+- [x] [scripts/audit/verify_exception_template.sh](file:///home/mwiza/workspaces/Symphony/scripts/audit/verify_exception_template.sh)
+- [x] [scripts/audit/record_invariants_exception.sh](file:///home/mwiza/workspaces/Symphony/scripts/audit/record_invariants_exception.sh)
+- [x] [scripts/audit/generate_invariants_quick](file:///home/mwiza/workspaces/Symphony/scripts/audit/generate_invariants_quick) (wrapper created)
+- [x] [scripts/audit/generate_invariants_quick.py](file:///home/mwiza/workspaces/Symphony/scripts/audit/generate_invariants_quick.py)
+- [x] [scripts/audit/detect_structural_changes.py](file:///home/mwiza/workspaces/Symphony/scripts/audit/detect_structural_changes.py)
+- [x] [scripts/audit/detect_structural_sql_changes.py](file:///home/mwiza/workspaces/Symphony/scripts/audit/detect_structural_sql_changes.py)
+- [x] [scripts/audit/validate_invariants_manifest.py](file:///home/mwiza/workspaces/Symphony/scripts/audit/validate_invariants_manifest.py)
+- [x] [scripts/audit/check_docs_match_manifest.py](file:///home/mwiza/workspaces/Symphony/scripts/audit/check_docs_match_manifest.py)
+
+### DB Scripts (Phase II - Postgres)
+- [x] [scripts/db/verify_invariants.sh](file:///home/mwiza/workspaces/Symphony/scripts/db/verify_invariants.sh)
+- [x] [scripts/db/migrate.sh](file:///home/mwiza/workspaces/Symphony/scripts/db/migrate.sh)
+- [x] [scripts/db/lint_migrations.sh](file:///home/mwiza/workspaces/Symphony/scripts/db/lint_migrations.sh)
+- [x] [scripts/db/lint_search_path.sh](file:///home/mwiza/workspaces/Symphony/scripts/db/lint_search_path.sh)
+- [x] [scripts/db/ci_invariant_gate.sql](file:///home/mwiza/workspaces/Symphony/scripts/db/ci_invariant_gate.sql)
+- [x] [scripts/db/tests/test_db_functions.sh](file:///home/mwiza/workspaces/Symphony/scripts/db/tests/test_db_functions.sh) (NEW - created)
+
+### Seed Scripts
+- [x] [schema/seeds/dev/seed_policy_from_file.sh](file:///home/mwiza/workspaces/Symphony/schema/seeds/dev/seed_policy_from_file.sh)
+- [x] [schema/seeds/ci/seed_policy_from_env.sh](file:///home/mwiza/workspaces/Symphony/schema/seeds/ci/seed_policy_from_env.sh)
+
+## 2. Documentation Presence
+- [x] [docs/invariants/INVARIANTS_MANIFEST.yml](file:///home/mwiza/workspaces/Symphony/docs/invariants/INVARIANTS_MANIFEST.yml)
+- [x] [docs/invariants/INVARIANTS_IMPLEMENTED.md](file:///home/mwiza/workspaces/Symphony/docs/invariants/INVARIANTS_IMPLEMENTED.md)
+- [x] [docs/invariants/INVARIANTS_ROADMAP.md](file:///home/mwiza/workspaces/Symphony/docs/invariants/INVARIANTS_ROADMAP.md)
+- [x] [docs/invariants/INVARIANTS_QUICK.md](file:///home/mwiza/workspaces/Symphony/docs/invariants/INVARIANTS_QUICK.md) (regenerated)
+- [x] [docs/invariants/INVARIANTS_PROCESS.md](file:///home/mwiza/workspaces/Symphony/docs/invariants/INVARIANTS_PROCESS.md)
+- [x] [docs/invariants/exceptions/EXCEPTION_TEMPLATE.md](file:///home/mwiza/workspaces/Symphony/docs/invariants/exceptions/EXCEPTION_TEMPLATE.md) (fixed)
+
+## 3. CI Pipeline Components
+- [x] [.github/workflows/invariants.yml](file:///home/mwiza/workspaces/Symphony/.github/workflows/invariants.yml) exists
+- [x] [.github/codex/prompts/invariants_review.md](file:///home/mwiza/workspaces/Symphony/.github/codex/prompts/invariants_review.md) exists
+
+## 4. Test Execution
+- [x] [scripts/audit/tests/test_detect_structural_sql_changes.py](file:///home/mwiza/workspaces/Symphony/scripts/audit/tests/test_detect_structural_sql_changes.py) - imports real modules
+- [x] [scripts/db/tests/test_db_functions.sh](file:///home/mwiza/workspaces/Symphony/scripts/db/tests/test_db_functions.sh) - 8 tests, all PASS
+
+## 5. Local Wiring Verification
+- [x] All scripts made executable
+- [x] Windows line endings fixed (CRLF → LF)
+- [x] [scripts/audit/run_invariants_fast_checks.sh](file:///home/mwiza/workspaces/Symphony/scripts/audit/run_invariants_fast_checks.sh) passes
+- [x] [scripts/db/lint_migrations.sh](file:///home/mwiza/workspaces/Symphony/scripts/db/lint_migrations.sh) passes
+- [x] [scripts/db/lint_search_path.sh](file:///home/mwiza/workspaces/Symphony/scripts/db/lint_search_path.sh) passes
+- [x] DB verification chain passes (verify_invariants.sh)
+
+## 6. Coding Standards Compliance
+- [x] No hardcoded secrets in scripts (credentials in gitignored [.env](file:///home/mwiza/workspaces/Symphony/.env))
+- [x] Secrets sourced from env/.env files only
+- [x] Scripts use `set -euo pipefail`
+
+## 7. Tests Executed and Results
+
+| Test Suite | Tests | Result |
+|------------|-------|--------|
+| Fast Invariant Checks | 7 checks | ✅ ALL PASS |
+| DB Verification | 1 entrypoint | ✅ PASS |
+| DB Function Tests | 8 tests | ✅ ALL PASS |
+
+### DB Function Tests Detail:
+1. uuid_v7_or_random returns valid UUID: ✅ PASS
+2. uuid_strategy returns known strategy: ✅ PASS
+3. bump_participant_outbox_seq is monotonic: ✅ PASS
+4. outbox_retry_ceiling is finite: ✅ PASS
+5. append-only trigger exists: ✅ PASS
+6. policy_versions has is_active column: ✅ PASS
+7. boot query shape works: ✅ PASS
+8. no PUBLIC privileges on payment_outbox_pending: ✅ PASS

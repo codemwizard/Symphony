@@ -1,0 +1,66 @@
+# Phase 0001-0005 Walkthrough
+
+## Summary
+
+Phase 0001-0005 establishes the database foundation with all invariants mechanically enforced and verified. This includes migrations 0001-0005, secure credential management, comprehensive CI gating, and production-ready DB function tests.
+
+## What Was Implemented
+
+### Database Migrations (0001-0005)
+
+| Migration | Purpose |
+|-----------|---------|
+| [0001_init.sql](file:///home/mwiza/workspaces/Symphony/schema/migrations/0001_init.sql) | Bootstrap with `uuid_strategy()` and search_path hardening |
+| `0002_outbox.sql` | Payment outbox with append-only trigger |
+| `0003_policy.sql` | Policy versions with `is_active` flag |
+| `0004_ledger.sql` | Ledger entries with monotonic sequences |
+| `0005_outbox_functions.sql` | Retry ceiling and sequence management |
+
+### Invariant Verification
+
+**8 DB Function Tests** (all passing):
+
+1. ✅ UUID generation exists
+2. ✅ UUID strategy returns known value
+3. ✅ Monotonic sequence allocator works
+4. ✅ Finite retry ceiling (max_retries ≤ 10)
+5. ✅ Append-only trigger exists
+6. ✅ `policy_versions.is_active` column exists
+7. ✅ **Exactly one ACTIVE policy** at boot
+8. ✅ No PUBLIC privileges on core tables
+
+### CI Pipeline Integration
+
+```yaml
+# .github/workflows/invariants.yml
+- name: Run DB function tests
+  run: scripts/db/tests/test_db_functions.sh
+```
+
+## Key Files
+
+| File | Purpose |
+|------|---------|
+| [test_db_functions.sh](file:///home/mwiza/workspaces/Symphony/scripts/db/tests/test_db_functions.sh) | 8 comprehensive DB tests |
+| [verify_invariants.sh](file:///home/mwiza/workspaces/Symphony/scripts/db/verify_invariants.sh) | DB verification entrypoint |
+| [invariants.yml](file:///home/mwiza/workspaces/Symphony/.github/workflows/invariants.yml) | CI workflow with DB tests |
+
+## Verification Evidence
+
+```
+==> TEST 1: uuid_strategy function exists — PASS
+==> TEST 2: uuid_strategy returns known strategy — PASS
+==> TEST 3: allocate_outbox_sequence monotonic — PASS
+==> TEST 4: retry ceiling finite — PASS
+==> TEST 5: append-only trigger exists — PASS
+==> TEST 6: policy_versions.is_active column — PASS
+==> TEST 7: exactly one ACTIVE policy at boot — PASS
+==> TEST 8: no PUBLIC privileges on core tables — PASS
+
+All 8 DB function tests passed.
+```
+
+## Caveats Addressed
+
+1. **Test 7 Strengthened**: Now asserts `active_count = 1` (exactly one active policy)
+2. **CI Integration**: DB function tests wired into workflow after [verify_invariants.sh](file:///home/mwiza/workspaces/Symphony/scripts/db/verify_invariants.sh)

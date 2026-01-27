@@ -6,15 +6,14 @@ certs/
 .env
 .env.*
 !.env.example
+infra/docker/.env
 
 # Development & Tools
 .vscode/
 .idea/
 
 # Audit & Legacy (Optional, typically archived)
-_Legacy_V1/
-SYMPHONY_SECURITY_AUDIT_v[0-6]*.md
-Catchup.txt
+archive/
 
 # Logs & Build
 *.log
@@ -22,4 +21,14 @@ dist/
 build/
 .DS_Store
 bin/
-obj/
+
+
+# Windows download metadata
+*:Zone.Identifier*
+
+# Repomix artifacts
+Good-repomix.xml
+repomix-output.xml
+
+__pycache__/
+*.pyc
