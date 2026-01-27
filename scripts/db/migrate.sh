@@ -1,34 +1,79 @@
 #!/usr/bin/env bash
-set -e
+# ============================================================
+# migrate.sh — Forward-only DB-MIG migration runner
+# ============================================================
+# Usage: scripts/db/migrate.sh
+# Requires: DATABASE_URL environment variable
+#
+# Behavior:
+# - Ensures public.schema_migrations exists
+# - Applies new migrations in order (schema/migrations/*.sql)
+# - Wraps each migration in its own transaction
+# - Records checksum in schema_migrations
+# - Fails hard on checksum mismatch (immutability)
+# ============================================================
+set -euo pipefail
 
-echo "Applying Symphony schema v1..."
+: "${DATABASE_URL:?DATABASE_URL is required}"
 
-# Ensure we are in the project root or adjust path
-BASE_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../../" && pwd)"
-SCHEMA_DIR="$BASE_DIR/schema/v1"
+ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
+MIG_DIR="$ROOT_DIR/schema/migrations"
 
-# Use DATABASE_URL if set, otherwise fall back to local connection
-DB_CONN="${DATABASE_URL:-symphony}"
+if [[ ! -d "$MIG_DIR" ]]; then
+  echo "Migration directory not found: $MIG_DIR" >&2
+  exit 1
+fi
 
-# Function to run SQL
-run_sql() {
-  local file="$1"
-  if command -v psql &> /dev/null; then
-    psql "$DB_CONN" -f "$file"
-  elif docker ps | grep -q symphony-postgres; then
-    # Fallback to Docker if local psql is missing but container is running
-    echo "⚠️  Local psql not found. Running inside Docker container..."
-    docker exec -i symphony-postgres psql -U symphony_admin -d symphony -f - < "$file"
-  else
-    echo "❌ Error: 'psql' command not found and 'symphony-postgres' container not running."
-    echo "   Please install postgresql-client or start the docker container."
-    exit 1
+psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -X <<'SQL'
+CREATE TABLE IF NOT EXISTS public.schema_migrations (
+  version TEXT PRIMARY KEY,
+  checksum TEXT NOT NULL,
+  applied_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+REVOKE ALL ON TABLE public.schema_migrations FROM PUBLIC;
+SQL
+
+echo "🧭 Running migrations from: $MIG_DIR"
+
+# Ensure stable ordering
+mapfile -t files < <(ls -1 "$MIG_DIR"/*.sql 2>/dev/null | sort)
+
+if [[ ${#files[@]} -eq 0 ]]; then
+  echo "No migrations found in $MIG_DIR" >&2
+  exit 1
+fi
+
+for file in "${files[@]}"; do
+  version="$(basename "$file")"
+
+  # sha256 checksum
+  checksum="$(sha256sum "$file" | awk '{print $1}')"
+
+  existing_checksum="$(psql "$DATABASE_URL" -X -t -A -v ON_ERROR_STOP=1 \
+    -c "SELECT checksum FROM public.schema_migrations WHERE version = '$version'")"
+
+  if [[ -n "$existing_checksum" ]]; then
+    if [[ "$existing_checksum" != "$checksum" ]]; then
+      echo "❌ Checksum mismatch for $version" >&2
+      echo "   applied: $existing_checksum" >&2
+      echo "   current: $checksum" >&2
+      exit 1
+    fi
+    echo "✅ Skipping already applied migration: $version"
+    continue
   fi
-}
 
-for file in "$SCHEMA_DIR"/*.sql; do
-  echo "Running $file"
-  run_sql "$file"
+  echo "➡️  Applying migration: $version"
+
+  # Apply inside a transaction; forbid top-level BEGIN/COMMIT in files via lint script
+  psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -X <<SQL
+BEGIN;
+\i '$file'
+INSERT INTO public.schema_migrations(version, checksum) VALUES ('$version', '$checksum');
+COMMIT;
+SQL
+
+  echo "✅ Applied: $version"
 done
 
-echo "Schema applied successfully."
+echo "🏁 All migrations applied."
