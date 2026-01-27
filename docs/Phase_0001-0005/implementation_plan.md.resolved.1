@@ -1,0 +1,269 @@
+# Phase-2: System Verification Implementation Plan
+
+**Derived from:** [docs/invariants/INVARIANTS_PROCESS.md](file:///home/mwiza/workspaces/Symphony/docs/invariants/INVARIANTS_PROCESS.md)
+
+## Goal
+Verify that all components defined in the Invariants Process are correctly implemented, executable, and integrated per the CI execution contract.
+
+---
+
+## Scope (from INVARIANTS_PROCESS.md)
+
+### 1. Script Presence
+All scripts referenced in the process document and CI workflow must exist.
+
+### 2. Test Execution
+Tests must import real modules and pass.
+
+### 3. Local Component Wiring
+Scripts must execute without errors locally.
+
+### 4. CI Pipeline
+GitHub Actions workflow must be correctly wired per the CI execution contract.
+
+### 5. Coding Standards Compliance
+All implementations must meet AI Secure Coding Standard Policy.
+
+---
+
+## Verification Checklists
+
+### 1. Scripts Presence (Phase I - Cheap/No-DB)
+
+| Script | Path | Required | Status |
+|--------|------|----------|--------|
+| Fast checks wrapper | [scripts/audit/run_invariants_fast_checks.sh](file:///home/mwiza/workspaces/Symphony/scripts/audit/run_invariants_fast_checks.sh) | ✓ | TBD |
+| Change rule gate | [scripts/audit/enforce_change_rule.sh](file:///home/mwiza/workspaces/Symphony/scripts/audit/enforce_change_rule.sh) | ✓ | TBD |
+| Promotion gate | [scripts/audit/enforce_invariant_promotion.sh](file:///home/mwiza/workspaces/Symphony/scripts/audit/enforce_invariant_promotion.sh) | ✓ | TBD |
+| Exception validator | [scripts/audit/verify_exception_template.sh](file:///home/mwiza/workspaces/Symphony/scripts/audit/verify_exception_template.sh) | ✓ | TBD |
+| Exception recorder | [scripts/audit/record_invariants_exception.sh](file:///home/mwiza/workspaces/Symphony/scripts/audit/record_invariants_exception.sh) | ✓ | TBD |
+| QUICK generator | `scripts/audit/generate_invariants_quick` | ✓ | TBD |
+| Structural detector | [scripts/audit/detect_structural_changes.py](file:///home/mwiza/workspaces/Symphony/scripts/audit/detect_structural_changes.py) | ✓ | TBD |
+| SQL structural detector | [scripts/audit/detect_structural_sql_changes.py](file:///home/mwiza/workspaces/Symphony/scripts/audit/detect_structural_sql_changes.py) | ✓ | TBD |
+| Manifest validator | [scripts/audit/validate_invariants_manifest.py](file:///home/mwiza/workspaces/Symphony/scripts/audit/validate_invariants_manifest.py) | ✓ | TBD |
+| Docs-manifest checker | [scripts/audit/check_docs_match_manifest.py](file:///home/mwiza/workspaces/Symphony/scripts/audit/check_docs_match_manifest.py) | ✓ | TBD |
+
+### 2. Scripts Presence (Phase II - DB/Postgres)
+
+| Script | Path | Required | Status |
+|--------|------|----------|--------|
+| DB verify entrypoint | [scripts/db/verify_invariants.sh](file:///home/mwiza/workspaces/Symphony/scripts/db/verify_invariants.sh) | ✓ | TBD |
+| Migration runner | [scripts/db/migrate.sh](file:///home/mwiza/workspaces/Symphony/scripts/db/migrate.sh) | ✓ | TBD |
+| Migration linter | [scripts/db/lint_migrations.sh](file:///home/mwiza/workspaces/Symphony/scripts/db/lint_migrations.sh) | ✓ | TBD |
+| Search path linter | [scripts/db/lint_search_path.sh](file:///home/mwiza/workspaces/Symphony/scripts/db/lint_search_path.sh) | ✓ | TBD |
+| CI invariant gate | [scripts/db/ci_invariant_gate.sql](file:///home/mwiza/workspaces/Symphony/scripts/db/ci_invariant_gate.sql) | ✓ | TBD |
+| Policy seed (dev) | [schema/seeds/dev/seed_policy_from_file.sh](file:///home/mwiza/workspaces/Symphony/schema/seeds/dev/seed_policy_from_file.sh) | ✓ | TBD |
+| Policy seed (CI) | [schema/seeds/ci/seed_policy_from_env.sh](file:///home/mwiza/workspaces/Symphony/schema/seeds/ci/seed_policy_from_env.sh) | ✓ | TBD |
+
+### 3. Documentation Presence
+
+| Document | Path | Required | Status |
+|----------|------|----------|--------|
+| Manifest (source of truth) | [docs/invariants/INVARIANTS_MANIFEST.yml](file:///home/mwiza/workspaces/Symphony/docs/invariants/INVARIANTS_MANIFEST.yml) | ✓ | TBD |
+| Implemented narrative | [docs/invariants/INVARIANTS_IMPLEMENTED.md](file:///home/mwiza/workspaces/Symphony/docs/invariants/INVARIANTS_IMPLEMENTED.md) | ✓ | TBD |
+| Roadmap narrative | [docs/invariants/INVARIANTS_ROADMAP.md](file:///home/mwiza/workspaces/Symphony/docs/invariants/INVARIANTS_ROADMAP.md) | ✓ | TBD |
+| Quick reference (generated) | [docs/invariants/INVARIANTS_QUICK.md](file:///home/mwiza/workspaces/Symphony/docs/invariants/INVARIANTS_QUICK.md) | ✓ | TBD |
+| Exception template | `docs/invariants/exceptions/exception_template.md` | ✓ | TBD |
+| Process document | [docs/invariants/INVARIANTS_PROCESS.md](file:///home/mwiza/workspaces/Symphony/docs/invariants/INVARIANTS_PROCESS.md) | ✓ | TBD |
+
+### 4. Tests
+
+| Test File | Imports Real Module | Status |
+|-----------|---------------------|--------|
+| [scripts/audit/tests/test_detect_structural_sql_changes.py](file:///home/mwiza/workspaces/Symphony/scripts/audit/tests/test_detect_structural_sql_changes.py) | TBD | TBD |
+
+---
+
+## Verification Commands
+
+### Phase I - Mechanical Gates (Local)
+
+```bash
+# 1. Ensure all scripts are executable
+chmod +x scripts/audit/*.sh scripts/db/*.sh schema/seeds/**/*.sh
+
+# 2. Run fast checks wrapper
+scripts/audit/run_invariants_fast_checks.sh
+
+# 3. Run change rule gate (simulate PR context)
+BASE_REF="origin/main" HEAD_REF="HEAD" scripts/audit/enforce_change_rule.sh
+
+# 4. Run promotion gate
+scripts/audit/enforce_invariant_promotion.sh
+
+# 5. Run exception validator
+scripts/audit/verify_exception_template.sh
+
+# 6. Generate QUICK and verify no drift
+scripts/audit/generate_invariants_quick
+git diff --exit-code docs/invariants/INVARIANTS_QUICK.md
+
+# 7. Run detector unit tests
+python3 -m pytest -q scripts/audit/tests/test_detect_structural_sql_changes.py
+```
+
+### Phase II - DB Verification (Requires Postgres)
+
+```bash
+# Source credentials
+source infra/docker/.env
+export DATABASE_URL="postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@localhost:5432/${POSTGRES_DB}"
+
+# Run DB verification entrypoint
+scripts/db/verify_invariants.sh
+```
+
+---
+
+## CI Pipeline Verification
+
+### Workflow File Validation
+```bash
+# Check workflow syntax (requires yamllint or actionlint)
+yamllint .github/workflows/invariants.yml 2>/dev/null || echo "yamllint not installed"
+```
+
+### Job Dependencies per CI Execution Contract
+
+| Job | Name | Depends On | Condition | Status |
+|-----|------|------------|-----------|--------|
+| 1 | `mechanical_invariants` | (none) | Always (skip most on schedule) | TBD |
+| 2 | `codex_invariants_review` | mechanical_invariants | PR + structural_change | TBD |
+| 3 | `db_verify_invariants` | mechanical_invariants | Not schedule | TBD |
+| 4 | `exception_audit` | (none) | Schedule or workflow_dispatch | TBD |
+
+### Required Secrets
+
+| Secret | Used By Job | Status |
+|--------|-------------|--------|
+| `OPENAI_API_KEY` | codex_invariants_review | TBD |
+
+### Codex Prompt File
+| File | Path | Status |
+|------|------|--------|
+| Invariants review prompt | [.github/codex/prompts/invariants_review.md](file:///home/mwiza/workspaces/Symphony/.github/codex/prompts/invariants_review.md) | TBD |
+
+---
+
+## Coding Standards Compliance
+
+### AI Secure Coding Standard Policy Checks
+
+| Rule | Check | Status |
+|------|-------|--------|
+| No hardcoded secrets | `grep -rn "password\|secret\|token" --include="*.sh" --include="*.sql" --include="*.yml"` | TBD |
+| Secrets from env/.env only | Manual review | TBD |
+| Explicit error handling | All scripts use `set -euo pipefail` | TBD |
+| Parameterized SQL | No string interpolation in SQL | TBD |
+| Structured logging | Check pino/winston usage (if applicable) | TBD |
+
+---
+
+## Verification Script (All-in-One)
+
+```bash
+#!/usr/bin/env bash
+# Phase-2 System Verification Script
+# Run this locally to verify all components before CI
+set -euo pipefail
+
+echo "=========================================="
+echo "Phase-2 System Verification"
+echo "=========================================="
+
+echo ""
+echo "1. Checking script presence..."
+MISSING=()
+for script in \
+  scripts/audit/run_invariants_fast_checks.sh \
+  scripts/audit/enforce_change_rule.sh \
+  scripts/audit/enforce_invariant_promotion.sh \
+  scripts/audit/verify_exception_template.sh \
+  scripts/audit/record_invariants_exception.sh \
+  scripts/audit/generate_invariants_quick \
+  scripts/audit/detect_structural_changes.py \
+  scripts/audit/detect_structural_sql_changes.py \
+  scripts/audit/validate_invariants_manifest.py \
+  scripts/audit/check_docs_match_manifest.py \
+  scripts/db/verify_invariants.sh \
+  scripts/db/migrate.sh \
+  scripts/db/lint_migrations.sh \
+  scripts/db/lint_search_path.sh \
+  scripts/db/ci_invariant_gate.sql \
+  schema/seeds/dev/seed_policy_from_file.sh \
+  schema/seeds/ci/seed_policy_from_env.sh
+do
+  if [[ ! -f "$script" ]]; then
+    MISSING+=("$script")
+  fi
+done
+
+if [[ ${#MISSING[@]} -gt 0 ]]; then
+  echo "❌ Missing scripts:"
+  printf '  - %s\n' "${MISSING[@]}"
+  exit 1
+else
+  echo "✅ All scripts present"
+fi
+
+echo ""
+echo "2. Checking documentation presence..."
+MISSING_DOCS=()
+for doc in \
+  docs/invariants/INVARIANTS_MANIFEST.yml \
+  docs/invariants/INVARIANTS_IMPLEMENTED.md \
+  docs/invariants/INVARIANTS_ROADMAP.md \
+  docs/invariants/INVARIANTS_QUICK.md \
+  docs/invariants/INVARIANTS_PROCESS.md \
+  docs/invariants/exceptions/exception_template.md
+do
+  if [[ ! -f "$doc" ]]; then
+    MISSING_DOCS+=("$doc")
+  fi
+done
+
+if [[ ${#MISSING_DOCS[@]} -gt 0 ]]; then
+  echo "❌ Missing documents:"
+  printf '  - %s\n' "${MISSING_DOCS[@]}"
+  exit 1
+else
+  echo "✅ All documents present"
+fi
+
+echo ""
+echo "3. Making scripts executable..."
+chmod +x scripts/audit/*.sh scripts/db/*.sh schema/seeds/**/*.sh 2>/dev/null || true
+echo "✅ Permissions set"
+
+echo ""
+echo "4. Running detector unit tests..."
+python3 -m pytest -q scripts/audit/tests/test_detect_structural_sql_changes.py
+
+echo ""
+echo "5. Running fast checks..."
+scripts/audit/run_invariants_fast_checks.sh
+
+echo ""
+echo "=========================================="
+echo "✅ Phase-2 Verification Complete (No-DB)"
+echo "=========================================="
+echo ""
+echo "To run DB verification, ensure Postgres is running and execute:"
+echo "  source infra/docker/.env"
+echo "  export DATABASE_URL=\"postgres://\${POSTGRES_USER}:\${POSTGRES_PASSWORD}@localhost:5432/\${POSTGRES_DB}\""
+echo "  scripts/db/verify_invariants.sh"
+```
+
+---
+
+## Acceptance Criteria
+
+1. ✅ All 17 audit/db scripts exist
+2. ✅ All 6 documentation files exist
+3. ✅ `pytest` passes for detector unit tests
+4. ✅ [run_invariants_fast_checks.sh](file:///home/mwiza/workspaces/Symphony/scripts/audit/run_invariants_fast_checks.sh) passes
+5. ✅ `generate_invariants_quick` produces output matching committed QUICK.md
+6. ✅ [verify_invariants.sh](file:///home/mwiza/workspaces/Symphony/scripts/db/verify_invariants.sh) passes against Postgres
+7. ✅ GitHub Actions workflow syntax is valid
+8. ✅ Codex prompt file exists at [.github/codex/prompts/invariants_review.md](file:///home/mwiza/workspaces/Symphony/.github/codex/prompts/invariants_review.md)
+9. ✅ No hardcoded secrets in version-controlled files

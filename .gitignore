@@ -29,3 +29,6 @@ bin/
 # Repomix artifacts
 Good-repomix.xml
 repomix-output.xml
+
+__pycache__/
+*.pyc
