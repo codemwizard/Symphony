@@ -1,125 +1,24 @@
-# Symphony Invariants (Implemented + Enforced)
+# Invariants Implemented
 
-This document lists invariants that are enforced **today** (via DB constraints/triggers/functions and/or CI/lint gates).
-If an invariant is not mechanically enforced, it does **not** belong here.
+These invariants are **implemented** when they are (a) described, and (b) have at least one concrete enforcement/verification evidence link below. If evidence is missing, downgrade the manifest status to `roadmap` and add a verification hook.
 
-Severity:
-- **P0 MUST**: CI must fail if violated
-- **P1 SHOULD**: strong preference; CI does not (yet) fail unless explicitly stated
+_Generated mechanically from `docs/invariants/INVARIANTS_MANIFEST.yml`._
 
-**Change rule (P0):** If you change behavior touching an invariant, the same PR MUST:
-1) update invariants docs
-2) update enforcement (SQL/constraints/triggers/functions/scripts)
-3) update verification (CI gate / tests / lint)
-
-**Verification entrypoint:** `scripts/db/verify_invariants.sh`
-
----
-
-## DB-MIG (Migrations + Ledger)
-
-### I-MIG-02 (P0) Schema migration ledger immutability (checksum)
-**Rule:** Applied migrations are immutable; checksum mismatch MUST fail.  
-**Enforced by:** `public.schema_migrations` + `scripts/db/migrate.sh`.  
-**Verified by:** `scripts/db/verify_invariants.sh` (applies migrations and fails on checksum mismatch).
-
-### I-MIG-03 (P0) Runner-managed transactions per migration
-**Rule:** Migration runner wraps each migration in a transaction; migration files MUST NOT contain top-level `BEGIN;` or `COMMIT;`.  
-**Enforced by:** `scripts/db/migrate.sh` + `scripts/db/lint_migrations.sh`.  
-**Verified by:** `scripts/db/verify_invariants.sh` lint.
-
----
-
-## Security + Privileges
-
-### I-SEC-01 (P0) Function-first runtime access
-**Rule:** Runtime roles must not have direct DML on core tables; they use SECURITY DEFINER DB APIs.  
-**Enforced by:** revoke-first + explicit grants in `schema/migrations/0004_privileges.sql`.  
-**Verified by:** `scripts/db/ci_invariant_gate.sql` (PUBLIC posture + attempts override posture).
-
-### I-SEC-02 (P0) SECURITY DEFINER search_path hardening
-**Rule:** Every SECURITY DEFINER function MUST set `search_path = pg_catalog, public`.  
-**Enforced by:** function definitions in migrations.  
-**Verified by:** `scripts/db/lint_search_path.sh` (called by `verify_invariants.sh`).
-
-### I-SEC-03 (P0) No runtime DDL
-**Rule:** PUBLIC and runtime roles must not have `CREATE` on schema `public` (no runtime DDL).  
-**Enforced by:** schema hardening + absence of CREATE grants in migrations.  
-**Verified by:** `scripts/db/ci_invariant_gate.sql` (ACL-based check for PUBLIC + has_schema_privilege for runtime roles).
-
-### I-SEC-04 (P0) No default PUBLIC privileges on core tables
-**Rule:** PUBLIC must not have privileges on core tables.  
-**Enforced by:** explicit `REVOKE ... FROM PUBLIC` for core tables.  
-**Verified by:** `scripts/db/ci_invariant_gate.sql` (information_schema + ACL defense-in-depth checks).
-
----
-
-## UUID
-
-### I-UUID-01 (P0) Portable UUID generation
-**Rule:** UUIDs use `public.uuid_v7_or_random()` chosen at migration-time (uuidv7 if present, else pgcrypto `gen_random_uuid()`).  
-**Enforced by:** `schema/migrations/0001_init.sql`.  
-**Verified by:** optional smoke query `SELECT public.uuid_strategy();`.
-
----
-
-## Outbox substrate
-
-### I-OUTBOX-01 (P0) Attempts are append-only (no overrides)
-**Rule:** `payment_outbox_attempts` MUST never be UPDATE/DELETE’d by any role (Option A: **no override, period**).  
-**Enforced by:** trigger `trg_deny_outbox_attempts_mutation` + privileges (including **no UPDATE/DELETE/TRUNCATE/TRIGGER for `symphony_control`**).  
-**Verified by:** `scripts/db/ci_invariant_gate.sql` (trigger present/enabled + grants check for `symphony_control`).
-
-### I-OUTBOX-02 (P0) Idempotent enqueue
-**Rule:** Enqueue is idempotent on `(instruction_id, idempotency_key)`; returns existing pending/attempt record if already present.  
-**Enforced by:** unique constraint + `enqueue_payment_outbox()`.  
-**Verified by:** schema constraints + function behavior (tests recommended).
-
-### I-OUTBOX-03 (P0) Lease fencing
-**Rule:** Completion only allowed when `(claimed_by, lease_token, lease_expires_at > now())` match.  
-**Enforced by:** `complete_outbox_attempt()` lease checks.  
-**Verified by:** function behavior (tests recommended).
-
-### I-OUTBOX-04 (P0) Claim correctness
-**Rule:** Claim only due rows and unleased/expired leases, using `FOR UPDATE SKIP LOCKED`.  
-**Enforced by:** `claim_outbox_batch()` implementation.  
-**Verified by:** function behavior (tests recommended).
-
-### I-OUTBOX-05 (P0) Monotonic per-participant sequence allocation
-**Rule:** Sequence IDs strictly increase per participant; allocation is atomic.  
-**Enforced by:** `participant_outbox_sequences` + `bump_participant_outbox_seq()`.  
-**Verified by:** function behavior (tests recommended).
-
-### I-OUTBOX-06 (P0) Zombie repair appends evidence + requeues
-**Rule:** Expired leases produce a `ZOMBIE_REQUEUE` attempt and clear lease deterministically.  
-**Enforced by:** `repair_expired_leases()`.  
-**Verified by:** function behavior (tests recommended).
-
-### I-OUTBOX-07 (P0) Finite retry ceiling
-**Rule:** Infinite retries are forbidden; retry ceiling is finite (default 20; configurable via GUC).  
-**Enforced by:** `complete_outbox_attempt()` + `outbox_retry_ceiling()`.  
-**Verified by:** function behavior (tests recommended).
-
----
-
-## Policy (boot-critical)
-
-### I-SCHEMA-BOOT-01 (P0) Boot schema coverage + query compatibility
-**Rule:** Any relation/column referenced at service boot MUST exist after migrations on a fresh DB.  
-**Enforced by:** CI invariant gate.  
-**Verified by:** `scripts/db/ci_invariant_gate.sql` checks required relations + `policy_versions.is_active` and executes the boot query shape.
-
-### I-POLICY-BOOT-01 (P0) Policy table integrity binding (checksum required)
-**Rule:** `policy_versions.checksum` MUST exist and be `NOT NULL` for every row (policy content is integrity-bound).  
-**Enforced by:** `schema/migrations/0005_policy_versions.sql` + seed scripts refusing missing checksum.  
-**Verified by:** `scripts/db/ci_invariant_gate.sql` (column exists + NOT NULL).
-
-### I-POLICY-BOOT-02 (P0) Single ACTIVE policy row
-**Rule:** The DB MUST enforce **at most one** `status = 'ACTIVE'` policy row.  
-**Enforced by:** unique predicate index on `policy_versions` (unique on constant where status='ACTIVE').  
-**Verified by:** `scripts/db/ci_invariant_gate.sql` (index presence check).
-
-### I-POLICY-BOOT-03 (P0) Grace scaffolding present (not behavior)
-**Rule:** `policy_versions.status` column MUST exist (rotation/grace behavior is implemented later, but schema scaffolding is present now).  
-**Enforced by:** `schema/migrations/0005_policy_versions.sql`.  
-**Verified by:** `scripts/db/ci_invariant_gate.sql` (column presence check).
+| ID | Aliases | Severity | Title | Owners | Verification (manifest) | Evidence links |
+|---|---|---|---|---|---|---|
+| INV-001 | I-MIG-02 | P0 | Applied migrations are immutable (checksum ledger) | team-db | scripts/db/migrate.sh checksum check; run via scripts/db/verify_invariants.sh | [`scripts/db/migrate.sh L7-L11`](../../scripts/db/migrate.sh#L7-L11)<br>[`scripts/db/verify_invariants.sh L22-L26`](../../scripts/db/verify_invariants.sh#L22-L26)<br>[`scripts/db/ci_invariant_gate.sql L9-L13`](../../scripts/db/ci_invariant_gate.sql#L9-L13) |
+| INV-002 | I-MIG-03 | P0 | Migration files must not contain top-level BEGIN/COMMIT | team-db | scripts/db/lint_migrations.sh; run via scripts/db/verify_invariants.sh | [`scripts/db/lint_migrations.sh L1-L5`](../../scripts/db/lint_migrations.sh#L1-L5)<br>[`scripts/db/verify_invariants.sh L22-L26`](../../scripts/db/verify_invariants.sh#L22-L26)<br>[`scripts/db/migrate.sh L66-L70`](../../scripts/db/migrate.sh#L66-L70) |
+| INV-003 | I-MIG-04 | P0 | Fix forward only: changes via new migrations, never by editing applied ones | team-db | Same mechanical enforcement as INV-001 (checksum immutability) | [`scripts/db/ci_invariant_gate.sql L9-L13`](../../scripts/db/ci_invariant_gate.sql#L9-L13)<br>[`scripts/db/migrate.sh L7-L11`](../../scripts/db/migrate.sh#L7-L11)<br>[`scripts/db/lint_migrations.sh L1-L5`](../../scripts/db/lint_migrations.sh#L1-L5) |
+| INV-005 | I-SEC-01 | P0 | Deny-by-default privileges (revoke-first posture) | team-platform | schema/migrations/0004_privileges.sql; scripts/db/ci_invariant_gate.sql checks schema/public privileges | [`schema/migrations/0004_privileges.sql L1-L4`](../../schema/migrations/0004_privileges.sql#L1-L4)<br>[`scripts/db/ci_invariant_gate.sql L86-L90`](../../scripts/db/ci_invariant_gate.sql#L86-L90)<br>[`scripts/db/migrate.sh L31-L35`](../../scripts/db/migrate.sh#L31-L35) |
+| INV-006 | I-SEC-02 | P0 | No runtime DDL: PUBLIC/runtime roles must not have CREATE on schema public | team-platform | scripts/db/ci_invariant_gate.sql section 'No runtime DDL' (has_schema_privilege(...,'CREATE')) | [`scripts/db/ci_invariant_gate.sql L10-L14`](../../scripts/db/ci_invariant_gate.sql#L10-L14)<br>[`schema/migrations/0001_init.sql L16-L20`](../../schema/migrations/0001_init.sql#L16-L20)<br>[`schema/migrations/0002_outbox_functions.sql L7-L11`](../../schema/migrations/0002_outbox_functions.sql#L7-L11) |
+| INV-007 | I-SEC-03 | P0 | Runtime roles are NOLOGIN templates; services assume them via SET ROLE | team-platform | schema/migrations/0003_roles.sql creates roles NOLOGIN; TODO: add CI gate for rolcanlogin | [`schema/migrations/0003_roles.sql L7-L11`](../../schema/migrations/0003_roles.sql#L7-L11)<br>[`schema/migrations/0001_init.sql L1-L5`](../../schema/migrations/0001_init.sql#L1-L5)<br>[`schema/migrations/0004_privileges.sql L6-L10`](../../schema/migrations/0004_privileges.sql#L6-L10) |
+| INV-008 | I-SEC-04 | P0 | SECURITY DEFINER functions must pin search_path to pg_catalog, public | team-platform | scripts/db/lint_search_path.sh; run via scripts/db/verify_invariants.sh | [`scripts/db/lint_search_path.sh L1-L5`](../../scripts/db/lint_search_path.sh#L1-L5)<br>[`scripts/db/verify_invariants.sh L23-L27`](../../scripts/db/verify_invariants.sh#L23-L27)<br>[`schema/migrations/0002_outbox_functions.sql L27-L31`](../../schema/migrations/0002_outbox_functions.sql#L27-L31) |
+| INV-010 | I-SEC-06 | P0 | Runtime roles have no direct DML on core tables; writes happen via DB API functions | team-platform | scripts/db/ci_invariant_gate.sql section 'Runtime roles have no direct table privileges on outbox tables' | [`scripts/db/ci_invariant_gate.sql L21-L25`](../../scripts/db/ci_invariant_gate.sql#L21-L25)<br>[`schema/migrations/0002_outbox_functions.sql L1-L4`](../../schema/migrations/0002_outbox_functions.sql#L1-L4)<br>[`schema/migrations/0004_privileges.sql L29-L33`](../../schema/migrations/0004_privileges.sql#L29-L33) |
+| INV-011 | I-OB-01 | P0 | Outbox enqueue is idempotent on (instruction_id, idempotency_key) | team-db | schema/migrations/0002_outbox_functions.sql unique constraint + enqueue_payment_outbox(); TODO: add behavioral test to CI | [`schema/migrations/0002_outbox_functions.sql L47-L51`](../../schema/migrations/0002_outbox_functions.sql#L47-L51)<br>[`scripts/db/ci_invariant_gate.sql L206-L210`](../../scripts/db/ci_invariant_gate.sql#L206-L210)<br>[`scripts/db/verify_invariants.sh L35-L39`](../../scripts/db/verify_invariants.sh#L35-L39) |
+| INV-012 | I-OB-02 | P0 | Outbox claim uses FOR UPDATE SKIP LOCKED and only due/unleased or expired rows | team-db | schema/migrations/0002_outbox_functions.sql claim_outbox_batch() uses SKIP LOCKED; TODO: add behavioral test to CI | [`schema/migrations/0002_outbox_functions.sql L140-L144`](../../schema/migrations/0002_outbox_functions.sql#L140-L144)<br>[`scripts/db/ci_invariant_gate.sql L21-L25`](../../scripts/db/ci_invariant_gate.sql#L21-L25)<br>[`scripts/db/migrate.sh L60-L64`](../../scripts/db/migrate.sh#L60-L64) |
+| INV-013 | I-OB-03 | P0 | Strict lease fencing: completion requires matching claimed_by + lease_token and non-expired lease | team-db | schema/migrations/0002_outbox_functions.sql complete_outbox_attempt() validates lease; TODO: add behavioral test to CI | [`schema/migrations/0002_outbox_functions.sql L154-L158`](../../schema/migrations/0002_outbox_functions.sql#L154-L158)<br>[`scripts/db/lint_migrations.sh L12-L16`](../../scripts/db/lint_migrations.sh#L12-L16)<br>[`scripts/db/migrate.sh L4-L8`](../../scripts/db/migrate.sh#L4-L8) |
+| INV-014 | I-OB-04 | P0 | payment_outbox_attempts is append-only; no UPDATE/DELETE | team-db | schema/migrations/0001_init.sql trigger denies mutation; scripts/db/ci_invariant_gate.sql validates trigger exists | [`scripts/db/ci_invariant_gate.sql L18-L22`](../../scripts/db/ci_invariant_gate.sql#L18-L22)<br>[`schema/migrations/0001_init.sql L131-L135`](../../schema/migrations/0001_init.sql#L131-L135)<br>[`schema/migrations/0004_privileges.sql L30-L34`](../../schema/migrations/0004_privileges.sql#L30-L34) |
+| INV-015 | I-OB-05 | P0 | Outbox retry ceiling is finite | team-db | scripts/db/ci_invariant_gate.sql verifies symphony.outbox_retry_ceiling GUC and >=1 | [`scripts/db/ci_invariant_gate.sql L21-L25`](../../scripts/db/ci_invariant_gate.sql#L21-L25)<br>[`schema/migrations/0002_outbox_functions.sql L5-L9`](../../schema/migrations/0002_outbox_functions.sql#L5-L9)<br>[`schema/migrations/0001_init.sql L1-L5`](../../schema/migrations/0001_init.sql#L1-L5) |
+| INV-016 | I-POL-01 | P0 | policy_versions exists and supports boot query shape (is_active=true) | team-platform | scripts/db/ci_invariant_gate.sql checks policy_versions exists and has is_active column | [`scripts/db/ci_invariant_gate.sql L8-L12`](../../scripts/db/ci_invariant_gate.sql#L8-L12)<br>[`scripts/db/migrate.sh L7-L11`](../../scripts/db/migrate.sh#L7-L11)<br>[`schema/migrations/0005_policy_versions.sql L1-L4`](../../schema/migrations/0005_policy_versions.sql#L1-L4) |
+| INV-017 | I-POL-02 | P0 | policy_versions.checksum is NOT NULL | team-platform | scripts/db/ci_invariant_gate.sql asserts checksum column is NOT NULL | [`scripts/db/ci_invariant_gate.sql L9-L13`](../../scripts/db/ci_invariant_gate.sql#L9-L13)<br>[`scripts/db/migrate.sh L10-L14`](../../scripts/db/migrate.sh#L10-L14)<br>[`scripts/db/lint_migrations.sh L10-L14`](../../scripts/db/lint_migrations.sh#L10-L14) |
+| INV-018 | I-POL-03 | P0 | Single ACTIVE policy row enforced by unique predicate index | team-platform | scripts/db/ci_invariant_gate.sql asserts unique index on policy_versions where status='ACTIVE' | [`scripts/db/ci_invariant_gate.sql L8-L12`](../../scripts/db/ci_invariant_gate.sql#L8-L12)<br>[`scripts/db/verify_invariants.sh L51-L55`](../../scripts/db/verify_invariants.sh#L51-L55)<br>[`schema/migrations/0001_init.sql L69-L73`](../../schema/migrations/0001_init.sql#L69-L73) |

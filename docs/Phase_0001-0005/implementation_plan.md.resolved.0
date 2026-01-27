@@ -1,0 +1,165 @@
+# Phase-2: System Verification Implementation Plan
+
+## Goal
+Verify that all previously implemented components are correctly wired, functional, and compliant with coding standards. This is a **verification-only** phase—no new features, only validation.
+
+---
+
+## Scope
+
+### 1. Script Presence Verification
+Confirm all scripts referenced in CI and documentation exist and are executable.
+
+### 2. Test Execution Verification
+Confirm tests exist, import real modules, and pass.
+
+### 3. Local Component Wiring
+Confirm local dev environment runs without build/lint errors.
+
+### 4. CI Pipeline Validation
+Confirm GitHub Actions workflow is correctly wired and jobs would succeed.
+
+### 5. Coding Standards Compliance
+Validate against AI Coding Best Practices and AI Secure Coding Standard Policy.
+
+---
+
+## Deliverables
+
+### 1. Script Presence Checklist
+
+#### [VERIFY] `scripts/db/*.sh`
+| Script | Expected | Status |
+|--------|----------|--------|
+| [migrate.sh](file:///home/mwiza/workspaces/Symphony/scripts/db/migrate.sh) | Exists + Executable | TBD |
+| [reset_and_migrate.sh](file:///home/mwiza/workspaces/Symphony/scripts/db/reset_and_migrate.sh) | Exists + Executable | TBD |
+| [verify_invariants.sh](file:///home/mwiza/workspaces/Symphony/scripts/db/verify_invariants.sh) | Exists + Executable | TBD |
+| [lint_migrations.sh](file:///home/mwiza/workspaces/Symphony/scripts/db/lint_migrations.sh) | Exists + Executable | TBD |
+| [lint_search_path.sh](file:///home/mwiza/workspaces/Symphony/scripts/db/lint_search_path.sh) | Exists + Executable | TBD |
+| [ci_invariant_gate.sql](file:///home/mwiza/workspaces/Symphony/scripts/db/ci_invariant_gate.sql) | Exists | TBD |
+| [seed_policy_from_env.sh](file:///home/mwiza/workspaces/Symphony/scripts/db/seed_policy_from_env.sh) | Exists + Executable | TBD |
+
+#### [VERIFY] `scripts/audit/*.sh` and `*.py`
+| Script | Expected | Status |
+|--------|----------|--------|
+| [detect_structural_changes.py](file:///home/mwiza/workspaces/Symphony/scripts/audit/detect_structural_changes.py) | Exists | TBD |
+| [detect_structural_sql_changes.py](file:///home/mwiza/workspaces/Symphony/scripts/audit/detect_structural_sql_changes.py) | Exists | TBD |
+| [enforce_change_rule.sh](file:///home/mwiza/workspaces/Symphony/scripts/audit/enforce_change_rule.sh) | Exists + Executable | TBD |
+| [enforce_invariant_promotion.sh](file:///home/mwiza/workspaces/Symphony/scripts/audit/enforce_invariant_promotion.sh) | Exists + Executable | TBD |
+| [verify_exception_template.sh](file:///home/mwiza/workspaces/Symphony/scripts/audit/verify_exception_template.sh) | Exists + Executable | TBD |
+| [generate_invariants_quick.py](file:///home/mwiza/workspaces/Symphony/scripts/audit/generate_invariants_quick.py) | Exists | TBD |
+| [validate_invariants_manifest.py](file:///home/mwiza/workspaces/Symphony/scripts/audit/validate_invariants_manifest.py) | Exists | TBD |
+| [record_invariants_exception.sh](file:///home/mwiza/workspaces/Symphony/scripts/audit/record_invariants_exception.sh) | Exists + Executable | TBD |
+
+#### [VERIFY] `schema/seeds/**/*.sh`
+| Script | Expected | Status |
+|--------|----------|--------|
+| [schema/seeds/dev/seed_policy_from_file.sh](file:///home/mwiza/workspaces/Symphony/schema/seeds/dev/seed_policy_from_file.sh) | Exists + Executable | TBD |
+| [schema/seeds/ci/seed_policy_from_env.sh](file:///home/mwiza/workspaces/Symphony/schema/seeds/ci/seed_policy_from_env.sh) | Exists + Executable | TBD |
+
+---
+
+### 2. Test Execution Verification
+
+#### [VERIFY] Python Tests
+| Test File | Imports | Status |
+|-----------|---------|--------|
+| [scripts/audit/tests/test_detect_structural_sql_changes.py](file:///home/mwiza/workspaces/Symphony/scripts/audit/tests/test_detect_structural_sql_changes.py) | Real module | TBD |
+
+**Verification Command:**
+```bash
+python3 -m pytest -q scripts/audit/tests/test_detect_structural_sql_changes.py
+```
+
+---
+
+### 3. Local Wiring Verification
+
+#### [VERIFY] DB Verification Chain
+```bash
+source infra/docker/.env
+export DATABASE_URL="postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@localhost:5432/${POSTGRES_DB}"
+scripts/db/verify_invariants.sh
+```
+
+#### [VERIFY] Lint Migrations (No Errors)
+```bash
+scripts/db/lint_migrations.sh
+```
+
+#### [VERIFY] Lint Search Path (No Errors)
+```bash
+scripts/db/lint_search_path.sh
+```
+
+#### [VERIFY] Audit Scripts (Fast Checks)
+```bash
+scripts/audit/run_invariants_fast_checks.sh
+```
+
+---
+
+### 4. CI Pipeline Validation
+
+#### [VERIFY] Workflow File Syntax
+```bash
+# Use actionlint or yamllint
+yamllint .github/workflows/invariants.yml
+```
+
+#### [VERIFY] Job Dependencies
+| Job | Depends On | Condition |
+|-----|------------|-----------|
+| `mechanical_invariants` | (none) | Always |
+| `codex_invariants_review` | `mechanical_invariants` | PR + structural_change |
+| `db_verify_invariants` | `mechanical_invariants` | Not schedule |
+| `exception_audit` | (none) | Schedule or manual |
+
+#### [VERIFY] Required Secrets
+| Secret | Used By |
+|--------|---------|
+| `OPENAI_API_KEY` | `codex_invariants_review` job |
+
+---
+
+### 5. Coding Standards Compliance
+
+#### [VERIFY] AI Secure Coding Standard Policy
+- [ ] No hardcoded secrets in repo (check docker-compose, scripts)
+- [ ] Secrets sourced from env or gitignored files
+- [ ] No `any` type in TypeScript (if applicable)
+- [ ] No `SELECT *` in SQL
+- [ ] Parameterized queries only
+- [ ] Explicit transaction boundaries
+- [ ] Structured logging (pino/winston)
+
+#### [VERIFY] AI Coding Best Practices
+- [ ] Error handling is fail-closed
+- [ ] No silent catch blocks
+- [ ] Correlation IDs in logging (if applicable)
+- [ ] Idempotency keys for state-changing operations
+
+---
+
+## Verification Plan
+
+### Automated Checks
+1. **Script Presence**: `find` + `test -x` for all scripts
+2. **Test Execution**: `pytest` run
+3. **Lint Checks**: [lint_migrations.sh](file:///home/mwiza/workspaces/Symphony/scripts/db/lint_migrations.sh), [lint_search_path.sh](file:///home/mwiza/workspaces/Symphony/scripts/db/lint_search_path.sh)
+4. **DB Invariants**: [verify_invariants.sh](file:///home/mwiza/workspaces/Symphony/scripts/db/verify_invariants.sh) (requires Postgres)
+5. **Workflow Syntax**: `yamllint` or `actionlint`
+
+### Manual Checks
+1. **Secrets not in repo**: `grep -r` for password patterns
+2. **Coding standards**: Review critical files
+
+---
+
+## Acceptance Criteria!
+1. All scripts in the checklist exist and are executable
+2. `pytest` passes for all test files
+3. [verify_invariants.sh](file:///home/mwiza/workspaces/Symphony/scripts/db/verify_invariants.sh) passes against local Postgres
+4. [lint_migrations.sh](file:///home/mwiza/workspaces/Symphony/scripts/db/lint_migrations.sh) and [lint_search_path.sh](file:///home/mwiza/workspaces/Symphony/scripts/db/lint_search_path.sh) pass
+5. GitHub Actions workflow file is valid YAML
+6. No hardcoded secrets in version-controlled files

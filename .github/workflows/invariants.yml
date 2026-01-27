@@ -258,6 +258,14 @@ PY
           chmod +x scripts/db/verify_invariants.sh
           scripts/db/verify_invariants.sh
 
+      - name: Run DB function tests
+        env:
+          DATABASE_URL: postgres://symphony:symphony@localhost:5432/symphony
+        run: |
+          set -euo pipefail
+          chmod +x scripts/db/tests/test_db_functions.sh
+          scripts/db/tests/test_db_functions.sh
+
   exception_audit:
     name: Scheduled — exception audit
     runs-on: ubuntu-latest

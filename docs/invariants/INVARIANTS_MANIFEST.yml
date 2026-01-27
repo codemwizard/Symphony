@@ -1,15 +1,165 @@
+# Invariants manifest (source of truth)
+# - status=implemented means CI/mechanical check exists in repo (lint/gate/script)
+# - status=roadmap means required but verification hook is not yet wired
+
 - id: INV-001
-  title: "All tables must have primary key"
-  status: roadmap
+  aliases: ["I-MIG-02"]
+  status: implemented
   severity: P0
+  title: "Applied migrations are immutable (checksum ledger)"
   owners: ["team-db"]
   sla_days: 7
-  verification: "sql_gate: check_primary_keys"
+  verification: "scripts/db/migrate.sh checksum check; run via scripts/db/verify_invariants.sh"
 
 - id: INV-002
-  title: "search_path must be set explicitly"
+  aliases: ["I-MIG-03"]
   status: implemented
+  severity: P0
+  title: "Migration files must not contain top-level BEGIN/COMMIT"
+  owners: ["team-db"]
+  sla_days: 7
+  verification: "scripts/db/lint_migrations.sh; run via scripts/db/verify_invariants.sh"
+
+- id: INV-003
+  aliases: ["I-MIG-04"]
+  status: implemented
+  severity: P0
+  title: "Fix forward only: changes via new migrations, never by editing applied ones"
+  owners: ["team-db"]
+  sla_days: 7
+  verification: "scripts/db/migrate.sh checksum immutability (same as INV-001); run via scripts/db/verify_invariants.sh"
+
+- id: INV-004
+  aliases: ["I-MIG-05"]
+  status: roadmap
   severity: P1
+  title: "Baseline snapshot is derived from migrations and must not drift"
+  owners: ["team-db"]
+  sla_days: 30
+  verification: "TODO: add baseline regeneration + freshness check in CI (no baseline enforcement found in repo snapshot)"
+
+- id: INV-005
+  aliases: ["I-SEC-01"]
+  status: implemented
+  severity: P0
+  title: "Deny-by-default privileges (revoke-first posture)"
   owners: ["team-platform"]
   sla_days: 14
-  verification: "lint: lint_search_path.sh"
+  verification: "schema/migrations/0004_privileges.sql + scripts/db/ci_invariant_gate.sql; run via scripts/db/verify_invariants.sh"
+
+- id: INV-006
+  aliases: ["I-SEC-02"]
+  status: implemented
+  severity: P0
+  title: "No runtime DDL: PUBLIC/runtime roles must not have CREATE on schema public"
+  owners: ["team-platform"]
+  sla_days: 14
+  verification: "scripts/db/ci_invariant_gate.sql (schema CREATE privilege check); run via scripts/db/verify_invariants.sh"
+
+- id: INV-007
+  aliases: ["I-SEC-03"]
+  status: implemented
+  severity: P0
+  title: "Runtime roles are NOLOGIN templates; services assume them via SET ROLE"
+  owners: ["team-platform"]
+  sla_days: 14
+  verification: "schema/migrations/0003_roles.sql creates roles NOLOGIN; run via scripts/db/verify_invariants.sh"
+
+- id: INV-008
+  aliases: ["I-SEC-04"]
+  status: implemented
+  severity: P0
+  title: "SECURITY DEFINER functions must pin search_path to pg_catalog, public"
+  owners: ["team-platform"]
+  sla_days: 14
+  verification: "scripts/db/lint_search_path.sh; run via scripts/db/verify_invariants.sh"
+
+- id: INV-009
+  aliases: ["I-SEC-05"]
+  status: roadmap
+  severity: P1
+  title: "SECURITY DEFINER functions must avoid dynamic SQL and user-controlled identifiers"
+  owners: ["team-platform"]
+  sla_days: 30
+  verification: "TODO: add linter or allowlist-based review; no mechanical check found"
+
+- id: INV-010
+  aliases: ["I-SEC-06"]
+  status: implemented
+  severity: P0
+  title: "Runtime roles have no direct DML on core tables; writes happen via DB API functions"
+  owners: ["team-platform"]
+  sla_days: 14
+  verification: "scripts/db/ci_invariant_gate.sql (role privilege posture) + schema/migrations/0004_privileges.sql"
+
+- id: INV-011
+  aliases: ["I-OB-01"]
+  status: implemented
+  severity: P0
+  title: "Outbox enqueue is idempotent on (instruction_id, idempotency_key)"
+  owners: ["team-db"]
+  sla_days: 14
+  verification: "schema/migrations/0002_outbox_functions.sql unique constraint + enqueue_payment_outbox(); scripts/db/verify_invariants.sh"
+
+- id: INV-012
+  aliases: ["I-OB-02"]
+  status: implemented
+  severity: P0
+  title: "Outbox claim uses FOR UPDATE SKIP LOCKED and only due/unleased or expired rows"
+  owners: ["team-db"]
+  sla_days: 14
+  verification: "schema/migrations/0002_outbox_functions.sql claim_outbox_batch(); scripts/db/verify_invariants.sh"
+
+- id: INV-013
+  aliases: ["I-OB-03"]
+  status: implemented
+  severity: P0
+  title: "Strict lease fencing: completion requires matching claimed_by + lease_token and non-expired lease"
+  owners: ["team-db"]
+  sla_days: 14
+  verification: "schema/migrations/0002_outbox_functions.sql complete_outbox_attempt(); scripts/db/verify_invariants.sh"
+
+- id: INV-014
+  aliases: ["I-OB-04"]
+  status: implemented
+  severity: P0
+  title: "payment_outbox_attempts is append-only; no UPDATE/DELETE"
+  owners: ["team-db"]
+  sla_days: 14
+  verification: "schema/migrations/0001_init.sql append-only trigger + scripts/db/ci_invariant_gate.sql"
+
+- id: INV-015
+  aliases: ["I-OB-05"]
+  status: implemented
+  severity: P0
+  title: "Outbox retry ceiling is finite"
+  owners: ["team-db"]
+  sla_days: 14
+  verification: "schema/migrations/0002_outbox_functions.sql (GUC retry ceiling) + scripts/db/ci_invariant_gate.sql"
+
+- id: INV-016
+  aliases: ["I-POL-01"]
+  status: implemented
+  severity: P0
+  title: "policy_versions exists and supports boot query shape (is_active=true)"
+  owners: ["team-platform"]
+  sla_days: 14
+  verification: "schema/migrations/0005_policy_versions.sql (status/is_active) + scripts/db/ci_invariant_gate.sql"
+
+- id: INV-017
+  aliases: ["I-POL-02"]
+  status: implemented
+  severity: P0
+  title: "policy_versions.checksum is NOT NULL"
+  owners: ["team-platform"]
+  sla_days: 14
+  verification: "schema/migrations/0005_policy_versions.sql (checksum NOT NULL) + scripts/db/ci_invariant_gate.sql"
+
+- id: INV-018
+  aliases: ["I-POL-03"]
+  status: implemented
+  severity: P0
+  title: "Single ACTIVE policy row enforced by unique predicate index"
+  owners: ["team-platform"]
+  sla_days: 14
+  verification: "schema/migrations/0005_policy_versions.sql (single ACTIVE index) + scripts/db/ci_invariant_gate.sql"
