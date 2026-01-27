@@ -58,6 +58,35 @@ jobs:
           echo "structural_change=$structural" >> "$GITHUB_OUTPUT"
           echo "confidence_hint=$hint" >> "$GITHUB_OUTPUT"
 
+      - name: Show changed files (diagnostic)
+        if: github.event_name != 'schedule' && steps.detect.outputs.structural_change == 'true'
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [[ "${{ github.event_name }}" == "pull_request" ]]; then
+            RANGE="${{ github.event.pull_request.base.sha }}...${{ github.event.pull_request.head.sha }}"
+          else
+            RANGE="${{ github.event.before }}...${{ github.sha }}"
+          fi
+          echo "Diff range: $RANGE"
+          git diff --name-only "$RANGE" | sed 's/^/ - /'
+
+      - name: Show structural detection evidence (diagnostic)
+        if: github.event_name != 'schedule' && steps.detect.outputs.structural_change == 'true'
+        shell: bash
+        run: |
+          set -euo pipefail
+          echo "detect.json:"
+          cat /tmp/invariants_ai/detect.json
+          echo ""
+          echo "Top matches:"
+          python3 - <<'PY'
+          import json
+          d = json.load(open("/tmp/invariants_ai/detect.json"))
+          for m in d.get("matches", [])[:30]:
+              print(f"- {m.get('type')} {m.get('file')} {m.get('sign')}: {m.get('line')}")
+          PY
+
       - name: Enforce Rule 1 (docs/manifest or exception)
         if: github.event_name != 'schedule' && steps.detect.outputs.structural_change == 'true'
         shell: bash
