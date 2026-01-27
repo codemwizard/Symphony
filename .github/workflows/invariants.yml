@@ -261,226 +261,226 @@ jobs:
           chmod +x scripts/db/tests/test_db_functions.sh
           scripts/db/tests/test_db_functions.sh
 
-security_scan:
-  name: Phase I.5 — Security fast checks (mechanical)
-  runs-on: ubuntu-latest
-  needs: [mechanical_invariants]
-  if: always() && github.event_name != 'schedule'
-  steps:
-    - uses: actions/checkout@v4
-      with:
-        fetch-depth: 0
+  security_scan:
+    name: Phase I.5 — Security fast checks (mechanical)
+    runs-on: ubuntu-latest
+    needs: [mechanical_invariants]
+    if: always() && github.event_name != 'schedule'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
-    - name: Run security fast checks (if present)
-      shell: bash
-      run: |
-        set -euo pipefail
-        if [[ -x scripts/audit/run_security_fast_checks.sh ]]; then
-          scripts/audit/run_security_fast_checks.sh
-        else
-          echo "scripts/audit/run_security_fast_checks.sh not found/executable; skipping (Phase 1 repo may not include it yet)."
-        fi
+      - name: Run security fast checks (if present)
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [[ -x scripts/audit/run_security_fast_checks.sh ]]; then
+            scripts/audit/run_security_fast_checks.sh
+          else
+            echo "scripts/audit/run_security_fast_checks.sh not found/executable; skipping (Phase 1 repo may not include it yet)."
+          fi
 
-ai_security_review:
-  name: Phase II.5 — Codex security review (advisory)
-  runs-on: ubuntu-latest
-  needs: [mechanical_invariants]
-  if: >
-    github.event_name == 'pull_request' &&
-    always() &&
-    needs.mechanical_invariants.outputs.structural_change == 'true'
-  permissions:
-    contents: read
-    pull-requests: write
-  steps:
-    - uses: actions/checkout@v5
-      with:
-        ref: refs/pull/${{ github.event.pull_request.number }}/merge
-        fetch-depth: 0
+  ai_security_review:
+    name: Phase II.5 — Codex security review (advisory)
+    runs-on: ubuntu-latest
+    needs: [mechanical_invariants]
+    if: >
+      github.event_name == 'pull_request' &&
+      always() &&
+      needs.mechanical_invariants.outputs.structural_change == 'true'
+    permissions:
+      contents: read
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          ref: refs/pull/${{ github.event.pull_request.number }}/merge
+          fetch-depth: 0
 
-    - name: Pre-fetch base and head refs
-      shell: bash
-      run: |
-        git fetch --no-tags origin \
-          ${{ github.event.pull_request.base.ref }} \
-          +refs/pull/${{ github.event.pull_request.number }}/head
+      - name: Pre-fetch base and head refs
+        shell: bash
+        run: |
+          git fetch --no-tags origin \
+            ${{ github.event.pull_request.base.ref }} \
+            +refs/pull/${{ github.event.pull_request.number }}/head
 
-    - name: Prepare diff for Codex
-      shell: bash
-      run: |
-        set -euo pipefail
-        mkdir -p /tmp/security_ai
-        git diff --no-color --no-ext-diff --unified=0 \
-          "${{ github.event.pull_request.base.sha }}...${{ github.event.pull_request.head.sha }}" \
-          > /tmp/security_ai/pr.diff
+      - name: Prepare diff for Codex
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/security_ai
+          git diff --no-color --no-ext-diff --unified=0 \
+            "${{ github.event.pull_request.base.sha }}...${{ github.event.pull_request.head.sha }}" \
+            > /tmp/security_ai/pr.diff
 
-    - name: Run Codex (security)
-      uses: openai/codex-action@v1
-      id: codex
-      with:
-        openai-api-key: ${{ secrets.OPENAI_API_KEY }}
-        model: gpt-5.2-codex
-        effort: medium
-        sandbox: workspace-write
-        safety-strategy: drop-sudo
-        prompt-file: .github/codex/prompts/security_review.md
-        output-file: /tmp/security_ai/codex_final_message.md
-        codex-args: '["--full-auto"]'
+      - name: Run Codex (security)
+        uses: openai/codex-action@v1
+        id: codex
+        with:
+          openai-api-key: ${{ secrets.OPENAI_API_KEY }}
+          model: gpt-5.2-codex
+          effort: medium
+          sandbox: workspace-write
+          safety-strategy: drop-sudo
+          prompt-file: .github/codex/prompts/security_review.md
+          output-file: /tmp/security_ai/codex_final_message.md
+          codex-args: '["--full-auto"]'
 
-    - name: Capture Codex patch + upload artifacts
-      if: always()
-      shell: bash
-      run: |
-        set -euo pipefail
-        git diff > /tmp/security_ai/codex-security.patch || true
-        if [[ ! -s /tmp/security_ai/codex-security.patch ]]; then
-          echo "No changes produced by Codex." > /tmp/security_ai/codex-security.patch
-        fi
+      - name: Capture Codex patch + upload artifacts
+        if: always()
+        shell: bash
+        run: |
+          set -euo pipefail
+          git diff > /tmp/security_ai/codex-security.patch || true
+          if [[ ! -s /tmp/security_ai/codex-security.patch ]]; then
+            echo "No changes produced by Codex." > /tmp/security_ai/codex-security.patch
+          fi
 
-    - uses: actions/upload-artifact@v4
-      if: always()
-      with:
-        name: codex-security-review
-        path: |
-          /tmp/security_ai/pr.diff
-          /tmp/security_ai/codex_final_message.md
-          /tmp/security_ai/ai_confidence.json
-          /tmp/security_ai/codex_summary.md
-          /tmp/security_ai/codex-security.patch
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: codex-security-review
+          path: |
+            /tmp/security_ai/pr.diff
+            /tmp/security_ai/codex_final_message.md
+            /tmp/security_ai/ai_confidence.json
+            /tmp/security_ai/codex_summary.md
+            /tmp/security_ai/codex-security.patch
 
-    - name: Comment on PR (security)
-      if: always()
-      uses: actions/github-script@v7
-      with:
-        script: |
-          const fs = require('fs');
-          const path = '/tmp/security_ai/codex_summary.md';
-          let body = '### Codex Security Review\n';
-          if (fs.existsSync(path)) {
-            body += fs.readFileSync(path, 'utf8');
-          } else {
-            body += '_No codex_summary.md produced._';
-          }
-          github.rest.issues.createComment({
-            owner: context.repo.owner,
-            repo: context.repo.repo,
-            issue_number: context.issue.number,
-            body
-          });
+      - name: Comment on PR (security)
+        if: always()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const path = '/tmp/security_ai/codex_summary.md';
+            let body = '### Codex Security Review\n';
+            if (fs.existsSync(path)) {
+              body += fs.readFileSync(path, 'utf8');
+            } else {
+              body += '_No codex_summary.md produced._';
+            }
+            github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              body
+            });
 
-ai_compliance_review:
-  name: Phase II.6 — Codex compliance review (advisory)
-  runs-on: ubuntu-latest
-  needs: [mechanical_invariants]
-  if: >
-    github.event_name == 'pull_request' &&
-    always() &&
-    needs.mechanical_invariants.outputs.structural_change == 'true'
-  permissions:
-    contents: read
-    pull-requests: write
-  env:
-    COMPLIANCE_STANDARDS: "ISO 20022; NIST 800-207 (Zero Trust)"
-  steps:
-    - uses: actions/checkout@v5
-      with:
-        ref: refs/pull/${{ github.event.pull_request.number }}/merge
-        fetch-depth: 0
+  ai_compliance_review:
+    name: Phase II.6 — Codex compliance review (advisory)
+    runs-on: ubuntu-latest
+    needs: [mechanical_invariants]
+    if: >
+      github.event_name == 'pull_request' &&
+      always() &&
+      needs.mechanical_invariants.outputs.structural_change == 'true'
+    permissions:
+      contents: read
+      pull-requests: write
+    env:
+      COMPLIANCE_STANDARDS: "ISO 20022; NIST 800-207 (Zero Trust)"
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          ref: refs/pull/${{ github.event.pull_request.number }}/merge
+          fetch-depth: 0
 
-    - name: Pre-fetch base and head refs
-      shell: bash
-      run: |
-        git fetch --no-tags origin \
-          ${{ github.event.pull_request.base.ref }} \
-          +refs/pull/${{ github.event.pull_request.number }}/head
+      - name: Pre-fetch base and head refs
+        shell: bash
+        run: |
+          git fetch --no-tags origin \
+            ${{ github.event.pull_request.base.ref }} \
+            +refs/pull/${{ github.event.pull_request.number }}/head
 
-    - name: Prepare diff for Codex
-      shell: bash
-      run: |
-        set -euo pipefail
-        mkdir -p /tmp/compliance_ai
-        echo "Standards: $COMPLIANCE_STANDARDS" > /tmp/compliance_ai/standards.txt
-        git diff --no-color --no-ext-diff --unified=0 \
-          "${{ github.event.pull_request.base.sha }}...${{ github.event.pull_request.head.sha }}" \
-          > /tmp/compliance_ai/pr.diff
+      - name: Prepare diff for Codex
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/compliance_ai
+          echo "Standards: $COMPLIANCE_STANDARDS" > /tmp/compliance_ai/standards.txt
+          git diff --no-color --no-ext-diff --unified=0 \
+            "${{ github.event.pull_request.base.sha }}...${{ github.event.pull_request.head.sha }}" \
+            > /tmp/compliance_ai/pr.diff
 
-    - name: Run Codex (compliance)
-      uses: openai/codex-action@v1
-      id: codex
-      with:
-        openai-api-key: ${{ secrets.OPENAI_API_KEY }}
-        model: gpt-5.2-codex
-        effort: medium
-        sandbox: workspace-write
-        safety-strategy: drop-sudo
-        prompt-file: .github/codex/prompts/compliance_review.md
-        output-file: /tmp/compliance_ai/codex_final_message.md
-        codex-args: '["--full-auto"]'
+      - name: Run Codex (compliance)
+        uses: openai/codex-action@v1
+        id: codex
+        with:
+          openai-api-key: ${{ secrets.OPENAI_API_KEY }}
+          model: gpt-5.2-codex
+          effort: medium
+          sandbox: workspace-write
+          safety-strategy: drop-sudo
+          prompt-file: .github/codex/prompts/compliance_review.md
+          output-file: /tmp/compliance_ai/codex_final_message.md
+          codex-args: '["--full-auto"]'
 
-    - name: Capture Codex patch + upload artifacts
-      if: always()
-      shell: bash
-      run: |
-        set -euo pipefail
-        git diff > /tmp/compliance_ai/codex-compliance.patch || true
-        if [[ ! -s /tmp/compliance_ai/codex-compliance.patch ]]; then
-          echo "No changes produced by Codex." > /tmp/compliance_ai/codex-compliance.patch
-        fi
+      - name: Capture Codex patch + upload artifacts
+        if: always()
+        shell: bash
+        run: |
+          set -euo pipefail
+          git diff > /tmp/compliance_ai/codex-compliance.patch || true
+          if [[ ! -s /tmp/compliance_ai/codex-compliance.patch ]]; then
+            echo "No changes produced by Codex." > /tmp/compliance_ai/codex-compliance.patch
+          fi
 
-    - uses: actions/upload-artifact@v4
-      if: always()
-      with:
-        name: codex-compliance-review
-        path: |
-          /tmp/compliance_ai/standards.txt
-          /tmp/compliance_ai/pr.diff
-          /tmp/compliance_ai/codex_final_message.md
-          /tmp/compliance_ai/ai_confidence.json
-          /tmp/compliance_ai/codex_summary.md
-          /tmp/compliance_ai/codex-compliance.patch
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: codex-compliance-review
+          path: |
+            /tmp/compliance_ai/standards.txt
+            /tmp/compliance_ai/pr.diff
+            /tmp/compliance_ai/codex_final_message.md
+            /tmp/compliance_ai/ai_confidence.json
+            /tmp/compliance_ai/codex_summary.md
+            /tmp/compliance_ai/codex-compliance.patch
 
-    - name: Comment on PR (compliance)
-      if: always()
-      uses: actions/github-script@v7
-      with:
-        script: |
-          const fs = require('fs');
-          const stdPath = '/tmp/compliance_ai/standards.txt';
-          const sumPath = '/tmp/compliance_ai/codex_summary.md';
-          let body = '### Codex Compliance Review\n';
-          if (fs.existsSync(stdPath)) {
-            body += '\n**Scope:** ' + fs.readFileSync(stdPath, 'utf8').trim() + '\n\n';
-          }
-          if (fs.existsSync(sumPath)) {
-            body += fs.readFileSync(sumPath, 'utf8');
-          } else {
-            body += '_No codex_summary.md produced._';
-          }
-          github.rest.issues.createComment({
-            owner: context.repo.owner,
-            repo: context.repo.repo,
-            issue_number: context.issue.number,
-            body
-          });
+      - name: Comment on PR (compliance)
+        if: always()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const stdPath = '/tmp/compliance_ai/standards.txt';
+            const sumPath = '/tmp/compliance_ai/codex_summary.md';
+            let body = '### Codex Compliance Review\n';
+            if (fs.existsSync(stdPath)) {
+              body += '\n**Scope:** ' + fs.readFileSync(stdPath, 'utf8').trim() + '\n\n';
+            }
+            if (fs.existsSync(sumPath)) {
+              body += fs.readFileSync(sumPath, 'utf8');
+            } else {
+              body += '_No codex_summary.md produced._';
+            }
+            github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              body
+            });
 
-research_scout:
-  name: Phase V — Research scout (scheduled, non-blocking)
-  runs-on: ubuntu-latest
-  if: github.event_name == 'schedule'
-  steps:
-    - uses: actions/checkout@v4
-      with:
-        fetch-depth: 1
+  research_scout:
+    name: Phase V — Research scout (scheduled, non-blocking)
+    runs-on: ubuntu-latest
+    if: github.event_name == 'schedule'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
 
-    - name: Run research scout (if present)
-      shell: bash
-      run: |
-        set -euo pipefail
-        if [[ -x scripts/audit/research_scout.sh ]]; then
-          scripts/audit/research_scout.sh
-        else
-          echo "scripts/audit/research_scout.sh not found/executable; skipping."
-        fi
+      - name: Run research scout (if present)
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [[ -x scripts/audit/research_scout.sh ]]; then
+            scripts/audit/research_scout.sh
+          else
+            echo "scripts/audit/research_scout.sh not found/executable; skipping."
+          fi
 
   exception_audit:
     name: Scheduled — exception audit
