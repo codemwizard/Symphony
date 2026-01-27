@@ -14,9 +14,29 @@ set -euo pipefail
 # Idempotent: only insert if version does not exist
 # Does NOT mutate existing rows (control-plane rotation handles changes)
 psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -X <<SQL
-INSERT INTO policy_versions (version, status, checksum)
-VALUES ('$POLICY_VERSION', 'ACTIVE', '$POLICY_CHECKSUM')
-ON CONFLICT (version) DO NOTHING;
+DO \$\$
+DECLARE
+  v_existing_checksum TEXT;
+BEGIN
+  INSERT INTO policy_versions (version, status, checksum)
+  VALUES ('$POLICY_VERSION', 'ACTIVE', '$POLICY_CHECKSUM')
+  ON CONFLICT (version) DO NOTHING;
+
+  SELECT checksum
+    INTO v_existing_checksum
+    FROM policy_versions
+   WHERE version = '$POLICY_VERSION';
+
+  IF v_existing_checksum IS NULL THEN
+    RAISE EXCEPTION 'Policy version % missing after seed attempt', '$POLICY_VERSION';
+  END IF;
+
+  IF v_existing_checksum <> '$POLICY_CHECKSUM' THEN
+    RAISE EXCEPTION 'Policy checksum mismatch for version %: expected %, found %',
+      '$POLICY_VERSION', '$POLICY_CHECKSUM', v_existing_checksum;
+  END IF;
+END
+\$\$;
 SQL
 
 echo "✅ Policy version '$POLICY_VERSION' seeded (checksum: ${POLICY_CHECKSUM:0:16}...)."
