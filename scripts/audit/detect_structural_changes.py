@@ -174,14 +174,36 @@ def scan(diff_text: str) -> Dict:
     score = min(1.0, score + boost)
 
     confidence_hint = round(score if structural else 0.0, 2)
+    # Derive reason types and matched files for better diagnostics/automation.
+    reason_types = sorted({m.get("type") for m in matches if m.get("type")})
+    matched_files = sorted({m.get("file") for m in matches if m.get("file")})
+    match_counts = {}
+    for m in matches:
+        t = m.get("type") or "unknown"
+        match_counts[t] = match_counts.get(t, 0) + 1
+
+    # Pick a primary reason for labeling (security > ddl > migration file add/del > other)
+    primary_reason = "other"
+    if "security" in reason_types:
+        primary_reason = "security"
+    elif "ddl" in reason_types:
+        primary_reason = "ddl"
+    elif "migration_file_added_or_deleted" in reason_types:
+        primary_reason = "migration_file_added_or_deleted"
+
     summary = "No structural invariant-affecting changes detected."
     if structural:
-        summary = f"Structural or privilege/security changes detected (confidence_hint={confidence_hint})."
+        types = ",".join(reason_types) if reason_types else "unknown"
+        summary = f"Structural or privilege/security changes detected (types={types}, confidence_hint={confidence_hint})."
 
     return {
         "structural_change": bool(structural),
         "confidence_hint": confidence_hint,
         "matches": matches[:200],
+        "reason_types": reason_types,
+        "primary_reason": primary_reason,
+        "matched_files": matched_files,
+        "match_counts": match_counts,
         "summary": summary,
     }
 

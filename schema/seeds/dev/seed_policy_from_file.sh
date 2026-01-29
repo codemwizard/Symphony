@@ -38,15 +38,23 @@ JSON
 {"policyVersion":"v-selftest-A"}
 JSON
 
+  if ! command -v python3 >/dev/null 2>&1; then
+    echo "❌ Self-test failed: python3 not found" >&2
+    exit 1
+  fi
+
   got="$(
-    node -e "
-      const fs=require('fs');
-      const p=process.argv[1];
-      const o=JSON.parse(fs.readFileSync(p,'utf8'));
-      const v=o.policyVersion || o.policy_version || o.policy_version_id || o.version;
-      if(!v) process.exit(2);
-      process.stdout.write(String(v).trim());
-    " "$tmpdir/A.json"
+    python3 - <<'PY' "$tmpdir/A.json"
+import json, sys
+path = sys.argv[1]
+data = json.load(open(path, "r", encoding="utf-8"))
+for k in ("policyVersion", "version", "policy_version"):
+    v = data.get(k)
+    if isinstance(v, str) and v.strip():
+        print(v.strip())
+        sys.exit(0)
+sys.exit(2)
+PY
   )"
 
   if [[ "$got" != "v-selftest-A" ]]; then
@@ -54,14 +62,14 @@ JSON
     exit 1
   fi
 
-  # 3) Check checksum computation works in Node.
+  # 3) Check checksum computation works in python3.
   cs="$(
-    node -e "
-      const fs=require('fs');
-      const crypto=require('crypto');
-      const b=fs.readFileSync(process.argv[1]);
-      process.stdout.write(crypto.createHash('sha256').update(b).digest('hex'));
-    " "$tmpdir/A.json"
+    python3 - <<'PY' "$tmpdir/A.json"
+import hashlib, sys
+p = sys.argv[1]
+b = open(p, "rb").read()
+print(hashlib.sha256(b).hexdigest())
+PY
   )"
   if [[ ! "$cs" =~ ^[0-9a-f]{64}$ ]]; then
     echo "❌ Self-test failed: checksum not valid sha256 hex: '$cs'" >&2
@@ -83,32 +91,48 @@ if [[ ! -f "$POLICY_FILE" ]]; then
 fi
 
 # Extract version from the provided file (never hard-code a path).
-VERSION="$(
-  node -e "
-    const fs=require('fs');
-    const p=process.argv[1];
-    const o=JSON.parse(fs.readFileSync(p,'utf8'));
-    const v=o.policyVersion || o.policy_version || o.policy_version_id || o.version;
-    if(!v || typeof v !== 'string' || !v.trim()) process.exit(2);
-    process.stdout.write(v.trim());
-  " "$POLICY_FILE"   || true
-)"
+if [[ -n "${SEED_POLICY_VERSION:-}" ]]; then
+  VERSION="$SEED_POLICY_VERSION"
+else
+  if ! command -v python3 >/dev/null 2>&1; then
+    echo "ERROR: python3 not found; cannot parse policy version." >&2
+    echo "Set SEED_POLICY_VERSION explicitly to bypass parsing." >&2
+    exit 1
+  fi
+
+  VERSION="$(
+    python3 - <<'PY' "$POLICY_FILE"
+import json, sys
+path = sys.argv[1]
+data = json.load(open(path, "r", encoding="utf-8"))
+for k in ("policyVersion", "version", "policy_version"):
+    v = data.get(k)
+    if isinstance(v, str) and v.strip():
+        print(v.strip())
+        sys.exit(0)
+sys.stderr.write("Could not determine policy version. Expected JSON key: policyVersion (preferred) or version/policy_version\n")
+sys.exit(1)
+PY
+  )"
+fi
 
 if [[ -z "${VERSION:-}" ]]; then
   echo "❌ Could not determine policy version from $POLICY_FILE" >&2
-  echo "   Expected JSON key: policyVersion (preferred) or version/policy_version" >&2
   exit 1
 fi
 
-# Compute SHA-256 checksum in Node for portability (no jq/sha256sum required).
-CHECKSUM="$(
-  node -e "
-    const fs=require('fs');
-    const crypto=require('crypto');
-    const b=fs.readFileSync(process.argv[1]);
-    process.stdout.write(crypto.createHash('sha256').update(b).digest('hex'));
-  " "$POLICY_FILE"
-)"
+if [[ -n "${SEED_POLICY_CHECKSUM:-}" ]]; then
+  CHECKSUM="$SEED_POLICY_CHECKSUM"
+else
+  CHECKSUM="$(
+    python3 - <<'PY' "$POLICY_FILE"
+import hashlib, sys
+p = sys.argv[1]
+b = open(p, "rb").read()
+print(hashlib.sha256(b).hexdigest())
+PY
+  )"
+fi
 
 if [[ -z "${CHECKSUM:-}" ]]; then
   echo "❌ Failed to compute checksum for $POLICY_FILE" >&2
