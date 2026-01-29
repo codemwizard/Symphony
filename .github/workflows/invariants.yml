@@ -157,6 +157,8 @@ jobs:
   codex_invariants_review:
     name: Phase II — Codex authoring (docs/manifest only)
     runs-on: ubuntu-latest
+    env:
+      CODEX_HOME: ${{ runner.temp }}/codex-home
     needs: [mechanical_invariants]
     if: >
       github.event_name == 'pull_request' &&
@@ -193,15 +195,55 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          rm -rf "${{ runner.temp }}/codex-home"
-          mkdir -p "${{ runner.temp }}/codex-home"
+          rm -rf "$CODEX_HOME"
+          mkdir -p "$CODEX_HOME"
+          chmod 700 "$CODEX_HOME"
+          echo "CODEX_HOME=$CODEX_HOME"
+
+      - name: Require OPENAI_API_KEY (fail fast)
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [[ -z "${{ secrets.OPENAI_API_KEY }}" ]]; then
+            echo "::error title=Missing secret::OPENAI_API_KEY is not set or is not available to this workflow event."
+            echo "If this is a PR from a fork, GitHub will not provide repo secrets to pull_request workflows."
+            exit 1
+          fi
+
+      - name: OpenAI API preflight (detect invalid key vs quota)
+        shell: bash
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/invariants_ai
+          code="$(curl -sS -o /tmp/invariants_ai/openai_preflight.json -w "%{http_code}" \
+            https://api.openai.com/v1/models \
+            -H "Authorization: Bearer $OPENAI_API_KEY")" || true
+          echo "OpenAI /v1/models HTTP $code"
+          if [[ "$code" == "200" ]]; then
+            exit 0
+          fi
+          if [[ "$code" == "401" ]]; then
+            echo "::error title=OpenAI auth failed::OPENAI_API_KEY is invalid (401)."
+            cat /tmp/invariants_ai/openai_preflight.json || true
+            exit 1
+          fi
+          if [[ "$code" == "402" || "$code" == "429" ]]; then
+            echo "::error title=OpenAI quota/billing::OpenAI returned HTTP $code (quota/billing/rate-limit)."
+            cat /tmp/invariants_ai/openai_preflight.json || true
+            exit 1
+          fi
+          echo "::error title=OpenAI preflight failed::Unexpected HTTP $code from OpenAI."
+          cat /tmp/invariants_ai/openai_preflight.json || true
+          exit 1
 
       - name: Run Codex
         uses: openai/codex-action@v1
         id: codex
         continue-on-error: true
         env:
-          CODEX_HOME: ${{ runner.temp }}/codex-home
+          CODEX_HOME: ${{ env.CODEX_HOME }}
         with:
           openai-api-key: ${{ secrets.OPENAI_API_KEY }}
           model: gpt-5.2-codex
@@ -212,28 +254,27 @@ jobs:
           output-file: /tmp/invariants_ai/codex_final_message.md
           codex-args: '["--full-auto"]'
 
-      - name: Assert Codex produced valid outputs
+      - name: Validate Codex outputs (deterministic contract)
         if: always()
         shell: bash
         run: |
           set -euo pipefail
-
-          # If the action step truly failed, this catches it deterministically.
-          if [[ "${{ steps.codex.outcome }}" != "success" ]]; then
-            echo "::error::Codex action step outcome was ${{ steps.codex.outcome }}"
-            exit 1
-          fi
-
-          # Now enforce your real contract: artifacts must exist + be valid.
           required=(
             /tmp/invariants_ai/codex_final_message.md
             /tmp/invariants_ai/ai_confidence.json
             /tmp/invariants_ai/codex_summary.md
           )
 
+          echo "==> Codex output directory listing:"
+          ls -la /tmp/invariants_ai || true
+          echo ""
+          echo "==> Codex home listing:"
+          ls -la "$CODEX_HOME" || true
+          echo ""
+
           for f in "${required[@]}"; do
             if [[ ! -s "$f" ]]; then
-              echo "::error::Codex did not produce required file (missing or empty): $f"
+              echo "::error title=Codex output missing::Codex did not produce required file (missing or empty): $f"
               exit 1
             fi
           done

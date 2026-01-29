@@ -19,6 +19,12 @@ Codex advisory jobs were intermittently failing with a “server info file missi
    - CI skips policy seeding during DB verification, so a fresh DB can have zero ACTIVE policies.
    - Updated the DB function test to enforce the true invariant: **no more than one ACTIVE** row.
 
+5) **Add deterministic Codex preflight + output contract**
+   - Fail fast if `OPENAI_API_KEY` is missing in this event context.
+   - Call OpenAI `/v1/models` to detect invalid key vs quota/rate-limit vs other errors.
+   - Validate required Codex output files and parse `ai_confidence.json`.
+   - Print Codex output/home directory listings to make failures diagnosable.
+
 ## Files Updated
 - `.github/workflows/invariants.yml`
 - `docs/operations/codex_action_reliability_plan.md`
