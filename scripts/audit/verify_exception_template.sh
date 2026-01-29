@@ -19,7 +19,10 @@ if [[ "$#" -gt 0 ]]; then
   files=("$@")
 else
   if [[ -d "${EX_DIR}" ]]; then
-    while IFS= read -r -d '' f; do files+=("$f"); done < <(find "${EX_DIR}" -maxdepth 1 -type f -name "*.md" -print0)
+    while IFS= read -r -d '' f; do
+      [[ "$(basename "$f")" == "EXCEPTION_TEMPLATE.md" ]] && continue
+      files+=("$f")
+    done < <(find "${EX_DIR}" -maxdepth 1 -type f -name "*.md" -print0)
   fi
 fi
 
@@ -71,6 +74,14 @@ for path in sys.argv[1:]:
     for key in REQUIRED:
         if not meta.get(key):
             errors.append(f"{path}: missing required field '{key}'")
+    # Reject template placeholders (accountability)
+    if meta.get("exception_id") == "EXC-000":
+        errors.append(f"{path}: exception_id must not be EXC-000 (template placeholder)")
+    fut = meta.get("follow_up_ticket","")
+    if fut.startswith("PLACEHOLDER-"):
+        errors.append(f"{path}: follow_up_ticket must not be PLACEHOLDER-*")
+    if meta.get("reason","").startswith("This is a template file"):
+        errors.append(f"{path}: reason must be a real reason, not the template default")
     # inv_scope format: "change-rule" or comma-separated INV-###
     scope = meta.get("inv_scope","")
     if scope:

@@ -13,6 +13,10 @@ Output JSON:
   "structural_change": true|false,
   "confidence_hint": 0.0-1.0,
   "matches": [{"type": "...", "pattern": "...", "line": "...", "file": "...", "sign": "+"|"-"}],
+  "reason_types": ["ddl","security",...],
+  "primary_reason": "ddl|security|migration_file_added_or_deleted|other",
+  "matched_files": ["path1",...],
+  "match_counts": {"ddl":1,...},
   "summary": "..."
 }
 """
@@ -73,6 +77,19 @@ HIGH_CONF_PATHS = (
     "libs/db/",
 )
 
+DDL_ELIGIBLE_PREFIXES = (
+    "schema/migrations/",
+    "migrations/",
+)
+
+SECURITY_ELIGIBLE_PREFIXES = (
+    "schema/migrations/",
+    "migrations/",
+    "scripts/security/",
+    "scripts/db/",
+    ".github/workflows/",
+)
+
 def _is_header_line(line: str) -> bool:
     return line.startswith("diff --git") or line.startswith("index ") or line.startswith("@@")
 
@@ -92,6 +109,28 @@ def _score_for_type(t: str) -> float:
         return 0.70
     return 0.30
 
+def _is_sql_file(path: str) -> bool:
+    return path.lower().endswith(".sql")
+
+def _has_prefix(path: str, prefixes) -> bool:
+    return any(path.startswith(p) for p in prefixes)
+
+def _eligible_for(kind: str, path: str) -> bool:
+    if not path:
+        return False
+    if kind == "ddl":
+        return _is_sql_file(path) and _has_prefix(path, DDL_ELIGIBLE_PREFIXES)
+    if kind == "security":
+        return (
+            (_is_sql_file(path) and _has_prefix(path, ("schema/migrations/", "migrations/")))
+            or _has_prefix(path, ("scripts/security/", "scripts/db/", ".github/workflows/"))
+        )
+    if kind == "migration_file_added_or_deleted":
+        return _is_sql_file(path) and (
+            MIGRATION_PATH_RE.search(path) is not None or MIGRATION_FILE_RE.search(path) is not None
+        )
+    return False
+
 def scan(diff_text: str) -> Dict:
     current_file: str = ""
     matches: List[Dict] = []
@@ -100,20 +139,61 @@ def scan(diff_text: str) -> Dict:
 
     # track whether we saw a migration file added/deleted (even without token hits)
     saw_migration_add_del = False
+    saw_migration_add_del_file: Optional[str] = None
+
+    match_counts: Dict[str, int] = {}
+    matched_files_set = set()
+    reason_types_set = set()
+    primary_reason: Optional[str] = None
+    primary_reason_score = 0.0
+
+    def record(kind: str, pat: str, content: str, sign: str) -> None:
+        nonlocal structural, score, primary_reason, primary_reason_score
+        matches.append({
+            "type": kind,
+            "pattern": pat,
+            "line": content[:300],
+            "file": current_file,
+            "sign": sign,
+        })
+
+        if not _eligible_for(kind, current_file):
+            return
+
+        structural = True
+        score += _score_for_type(kind)
+        match_counts[kind] = match_counts.get(kind, 0) + 1
+        matched_files_set.add(current_file)
+        reason_types_set.add(kind)
+
+        s = _score_for_type(kind)
+        if s > primary_reason_score:
+            primary_reason_score = s
+            primary_reason = kind
 
     for raw in diff_text.splitlines():
+        # Capture file from diff header early (new file mode can appear before +++).
+        if raw.startswith("diff --git "):
+            parts = raw.split()
+            if len(parts) >= 4 and parts[-1].startswith("b/"):
+                current_file = parts[-1][2:]
+            else:
+                current_file = ""
+            continue
+
         # Track current file path from +++ b/...
         if raw.startswith("+++ b/"):
             current_file = raw[len("+++ b/"):].strip()
             continue
-        if raw.startswith("--- a/"):
+        if raw.startswith("--- a/") or raw.startswith("--- /dev/null"):
             continue
 
         # Detect new/deleted file mode (applies to the next file header usually)
         if NEW_FILE_RE.match(raw) or DELETED_FILE_RE.match(raw):
             # if we're in a migration file context, treat as structural
-            if current_file and (MIGRATION_PATH_RE.search(current_file) or MIGRATION_FILE_RE.search(current_file)):
+            if current_file and _eligible_for("migration_file_added_or_deleted", current_file):
                 saw_migration_add_del = True
+                saw_migration_add_del_file = current_file
             continue
 
         if _is_header_line(raw):
@@ -128,60 +208,52 @@ def scan(diff_text: str) -> Dict:
         # DDL patterns
         for pat in DDL_PATTERNS:
             if re.search(pat, content, flags=re.IGNORECASE):
-                structural = True
-                matches.append({
-                    "type": "ddl",
-                    "pattern": pat,
-                    "line": content[:300],
-                    "file": current_file,
-                    "sign": sign,
-                })
-                score += _score_for_type("ddl")
+                record("ddl", pat, content, sign)
                 break
 
         # Security/privilege patterns
         for pat in SECURITY_PATTERNS:
             if re.search(pat, content, flags=re.IGNORECASE):
-                structural = True
-                matches.append({
-                    "type": "security",
-                    "pattern": pat,
-                    "line": content[:300],
-                    "file": current_file,
-                    "sign": sign,
-                })
-                score += _score_for_type("security")
+                record("security", pat, content, sign)
                 break
 
-    if saw_migration_add_del:
-        structural = True
-        matches.append({
-            "type": "migration_file_added_or_deleted",
-            "pattern": "new/deleted migration file",
-            "line": "(migration file added or deleted)",
-            "file": current_file,
-            "sign": "+",
-        })
-        score += _score_for_type("migration_file_added_or_deleted")
+    if saw_migration_add_del and saw_migration_add_del_file:
+        current_file = saw_migration_add_del_file
+        record(
+            "migration_file_added_or_deleted",
+            "new/deleted migration file",
+            "(migration file added or deleted)",
+            "+",
+        )
 
     # Confidence boost if touched files fall under high-confidence paths
     boost = 0.0
-    for m in matches:
-        f = m.get("file") or ""
+    for f in matched_files_set:
         for hp in HIGH_CONF_PATHS:
             if f.startswith(hp):
                 boost = max(boost, 0.10)
     score = min(1.0, score + boost)
 
     confidence_hint = round(score if structural else 0.0, 2)
+    reason_types = sorted(reason_types_set)
+    matched_files = sorted(matched_files_set)
+    primary = primary_reason or "other"
+    if not structural:
+        primary = "other"
+
     summary = "No structural invariant-affecting changes detected."
     if structural:
-        summary = f"Structural or privilege/security changes detected (confidence_hint={confidence_hint})."
+        types = ",".join(reason_types) if reason_types else "unknown"
+        summary = f"Structural or privilege/security changes detected (types={types}, confidence_hint={confidence_hint})."
 
     return {
         "structural_change": bool(structural),
         "confidence_hint": confidence_hint,
         "matches": matches[:200],
+        "reason_types": reason_types,
+        "primary_reason": primary,
+        "matched_files": matched_files,
+        "match_counts": match_counts,
         "summary": summary,
     }
 
