@@ -161,7 +161,8 @@ jobs:
     if: >
       github.event_name == 'pull_request' &&
       always() &&
-      needs.mechanical_invariants.outputs.structural_change == 'true'
+      needs.mechanical_invariants.outputs.structural_change == 'true' &&
+      github.event.pull_request.head.repo.full_name == github.repository
     permissions:
       contents: read
       pull-requests: write
@@ -188,9 +189,19 @@ jobs:
             "${{ github.event.pull_request.base.sha }}...${{ github.event.pull_request.head.sha }}" \
             > /tmp/invariants_ai/pr.diff
 
+      - name: Prepare Codex home (fresh, writable)
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm -rf "${{ runner.temp }}/codex-home"
+          mkdir -p "${{ runner.temp }}/codex-home"
+
       - name: Run Codex
         uses: openai/codex-action@v1
         id: codex
+        continue-on-error: true
+        env:
+          CODEX_HOME: ${{ runner.temp }}/codex-home
         with:
           openai-api-key: ${{ secrets.OPENAI_API_KEY }}
           model: gpt-5.2-codex
@@ -348,7 +359,8 @@ jobs:
     if: >
       github.event_name == 'pull_request' &&
       always() &&
-      needs.mechanical_invariants.outputs.structural_change == 'true'
+      needs.mechanical_invariants.outputs.structural_change == 'true' &&
+      github.event.pull_request.head.repo.full_name == github.repository
     permissions:
       contents: read
       pull-requests: write
@@ -374,9 +386,19 @@ jobs:
             "${{ github.event.pull_request.base.sha }}...${{ github.event.pull_request.head.sha }}" \
             > /tmp/security_ai/pr.diff
 
+      - name: Prepare Codex home (fresh, writable)
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm -rf "${{ runner.temp }}/codex-home"
+          mkdir -p "${{ runner.temp }}/codex-home"
+
       - name: Run Codex (security)
         uses: openai/codex-action@v1
         id: codex
+        continue-on-error: true
+        env:
+          CODEX_HOME: ${{ runner.temp }}/codex-home
         with:
           openai-api-key: ${{ secrets.OPENAI_API_KEY }}
           model: gpt-5.2-codex
@@ -435,7 +457,8 @@ jobs:
     if: >
       github.event_name == 'pull_request' &&
       always() &&
-      needs.mechanical_invariants.outputs.structural_change == 'true'
+      needs.mechanical_invariants.outputs.structural_change == 'true' &&
+      github.event.pull_request.head.repo.full_name == github.repository
     permissions:
       contents: read
       pull-requests: write
@@ -464,9 +487,19 @@ jobs:
             "${{ github.event.pull_request.base.sha }}...${{ github.event.pull_request.head.sha }}" \
             > /tmp/compliance_ai/pr.diff
 
+      - name: Prepare Codex home (fresh, writable)
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm -rf "${{ runner.temp }}/codex-home"
+          mkdir -p "${{ runner.temp }}/codex-home"
+
       - name: Run Codex (compliance)
         uses: openai/codex-action@v1
         id: codex
+        continue-on-error: true
+        env:
+          CODEX_HOME: ${{ runner.temp }}/codex-home
         with:
           openai-api-key: ${{ secrets.OPENAI_API_KEY }}
           model: gpt-5.2-codex
