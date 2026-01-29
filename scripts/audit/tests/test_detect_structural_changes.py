@@ -26,8 +26,8 @@ def run_detector(diff_text: str):
 class TestDetectStructuralChanges(unittest.TestCase):
     def test_detects_security_and_reason_metadata(self):
         diff = """
-        diff --git a/docs/notes.md b/docs/notes.md
-        +++ b/docs/notes.md
+        diff --git a/schema/migrations/0001_init.sql b/schema/migrations/0001_init.sql
+        +++ b/schema/migrations/0001_init.sql
         @@ -1 +1 @@
         +GRANT SELECT ON users TO app_read;
         """
@@ -37,6 +37,20 @@ class TestDetectStructuralChanges(unittest.TestCase):
         self.assertEqual(data["primary_reason"], "security")
         self.assertTrue(data["matched_files"])
         self.assertGreaterEqual(data["match_counts"]["security"], 1)
+
+    def test_docs_keyword_is_not_structural(self):
+        diff = """
+        diff --git a/docs/notes.md b/docs/notes.md
+        +++ b/docs/notes.md
+        @@ -1 +1 @@
+        +GRANT SELECT ON users TO app_read;
+        """
+        data = run_detector(diff)
+        self.assertFalse(data["structural_change"])
+        self.assertEqual(data["reason_types"], [])
+        self.assertEqual(data["primary_reason"], "other")
+        self.assertEqual(data["matched_files"], [])
+        self.assertEqual(data["match_counts"], {})
 
     def test_non_structural_has_default_metadata(self):
         diff = """
@@ -51,6 +65,7 @@ class TestDetectStructuralChanges(unittest.TestCase):
         self.assertEqual(data["reason_types"], [])
         self.assertEqual(data["primary_reason"], "other")
         self.assertEqual(data["matched_files"], [])
+        self.assertEqual(data["match_counts"], {})
 
     def test_auto_exception_generator_uses_primary_reason(self):
         detect = {

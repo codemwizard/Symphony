@@ -10,6 +10,14 @@ ENV_FILE="infra/docker/.env"
 COMPOSE_FILE="infra/docker/docker-compose.yml"
 DB_CONTAINER="symphony-postgres"
 
+if [[ -x scripts/audit/preflight_structural_staged.sh ]]; then
+  echo "==> Structural preflight (staged) — change-rule"
+  scripts/audit/preflight_structural_staged.sh
+else
+  echo "ERROR: scripts/audit/preflight_structural_staged.sh not found"
+  exit 1
+fi
+
 if [[ -f "$ENV_FILE" ]]; then
   set -a
   # shellcheck disable=SC1090

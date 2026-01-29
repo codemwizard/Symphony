@@ -23,6 +23,37 @@ MANIFEST="docs/invariants/INVARIANTS_MANIFEST.yml"
 DOCS_DIR="docs/invariants"
 EXCEPTIONS_DIR="docs/invariants/exceptions"
 
+# Determine whether this range actually contains structural changes.
+structural="${STRUCTURAL_CHANGE:-}"
+summary=""
+
+if [[ -z "${structural}" ]]; then
+  TMPDIR="${TMPDIR:-/tmp/invariants_ai}"
+  mkdir -p "${TMPDIR}"
+  DIFF_FILE="${TMPDIR}/pr.diff"
+  DETECT_FILE="${TMPDIR}/detect.json"
+
+  git diff --no-color --no-ext-diff --unified=0 "${BASE_REF}...${HEAD_REF}" > "${DIFF_FILE}" || true
+  python3 scripts/audit/detect_structural_changes.py --diff-file "${DIFF_FILE}" --out "${DETECT_FILE}"
+
+  structural="$(python3 -c 'import json; d=json.load(open("'"${DETECT_FILE}"'")); print("true" if d.get("structural_change") else "false")')"
+  summary="$(python3 -c 'import json; d=json.load(open("'"${DETECT_FILE}"'")); print(d.get("summary",""))')"
+else
+  if [[ "${structural}" == "1" || "${structural}" == "yes" ]]; then structural="true"; fi
+  if [[ "${structural}" == "0" || "${structural}" == "no" ]]; then structural="false"; fi
+fi
+
+if [[ "${structural}" != "true" ]]; then
+  echo "✅ Change rule OK: no structural changes detected."
+  exit 0
+fi
+
+if [[ -n "${summary}" ]]; then
+  echo "⚠️  Structural change detected: ${summary}"
+else
+  echo "⚠️  Structural change detected."
+fi
+
 # Determine changed files
 changed_files="$(git diff --name-only "${BASE_REF}...${HEAD_REF}")"
 
