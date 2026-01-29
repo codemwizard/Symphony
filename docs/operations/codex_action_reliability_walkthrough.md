@@ -15,6 +15,10 @@ Codex advisory jobs were intermittently failing with a “server info file missi
 3) **Prevent Codex from running on fork PRs**
    - Added a guard to Codex jobs so they only run when the PR head repo matches the base repo (secrets available).
 
+4) **Align DB policy test with CI seeding behavior**
+   - CI skips policy seeding during DB verification, so a fresh DB can have zero ACTIVE policies.
+   - Updated the DB function test to enforce the true invariant: **no more than one ACTIVE** row.
+
 ## Files Updated
 - `.github/workflows/invariants.yml`
 - `docs/operations/codex_action_reliability_plan.md`

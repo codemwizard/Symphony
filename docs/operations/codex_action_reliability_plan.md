@@ -31,6 +31,11 @@ Patches covered:
    - Only run Codex jobs when the PR head repo matches the base repo.
    - Ensure secrets are available for Codex Action.
 
+4) **Align DB policy test with CI seeding behavior**
+   - CI runs DB tests with `SKIP_POLICY_SEED=1`, so the policy table may have zero ACTIVE rows.
+   - Update the DB function test to assert the real invariant: **no more than one ACTIVE** row.
+   - Keep CI deterministic without forcing policy seed.
+
 ## Tasks List
 ### A) Workflow updates
 - [ ] Add a "Prepare Codex home" step before each Codex step.
@@ -42,8 +47,10 @@ Patches covered:
 - [ ] Validate YAML syntax by running CI locally or using a linter (optional).
 - [ ] Confirm Codex jobs skip on fork PRs and run on same-repo PRs.
 - [ ] Confirm Codex failures do not fail the workflow.
+- [ ] Confirm DB function tests pass in CI when `SKIP_POLICY_SEED=1`.
 
 ## Success Criteria
 - Codex steps no longer fail with missing server-info file errors.
 - Advisory Codex jobs are non-blocking in CI.
 - Codex jobs do not run on fork PRs without secrets.
+- DB function tests do not fail when policy seeding is intentionally skipped.
