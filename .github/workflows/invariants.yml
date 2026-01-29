@@ -157,8 +157,6 @@ jobs:
   codex_invariants_review:
     name: Phase II — Codex authoring (docs/manifest only)
     runs-on: ubuntu-latest
-    env:
-      CODEX_HOME: ${{ runner.temp }}/codex-home
     needs: [mechanical_invariants]
     if: >
       github.event_name == 'pull_request' &&
@@ -193,6 +191,8 @@ jobs:
 
       - name: Prepare Codex home (fresh, writable)
         shell: bash
+        env:
+          CODEX_HOME: ${{ runner.temp }}/codex-home
         run: |
           set -euo pipefail
           rm -rf "$CODEX_HOME"
@@ -243,7 +243,7 @@ jobs:
         id: codex
         continue-on-error: true
         env:
-          CODEX_HOME: ${{ env.CODEX_HOME }}
+          CODEX_HOME: ${{ runner.temp }}/codex-home
         with:
           openai-api-key: ${{ secrets.OPENAI_API_KEY }}
           model: gpt-5.2-codex
@@ -257,6 +257,8 @@ jobs:
       - name: Validate Codex outputs (deterministic contract)
         if: always()
         shell: bash
+        env:
+          CODEX_HOME: ${{ runner.temp }}/codex-home
         run: |
           set -euo pipefail
           required=(
