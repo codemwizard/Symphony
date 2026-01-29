@@ -202,9 +202,11 @@ jobs:
 
       - name: Require OPENAI_API_KEY (fail fast)
         shell: bash
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
         run: |
           set -euo pipefail
-          if [[ -z "${{ secrets.OPENAI_API_KEY }}" ]]; then
+          if [[ -z "${OPENAI_API_KEY:-}" ]]; then
             echo "::error title=Missing secret::OPENAI_API_KEY is not set or is not available to this workflow event."
             echo "If this is a PR from a fork, GitHub will not provide repo secrets to pull_request workflows."
             exit 1
@@ -241,7 +243,6 @@ jobs:
       - name: Run Codex
         uses: openai/codex-action@v1
         id: codex
-        continue-on-error: true
         env:
           CODEX_HOME: ${{ runner.temp }}/codex-home
         with:
