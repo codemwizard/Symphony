@@ -243,6 +243,7 @@ jobs:
       - name: Run Codex
         uses: openai/codex-action@v1
         id: codex
+        continue-on-error: true
         env:
           CODEX_HOME: ${{ runner.temp }}/codex-home
         with:
@@ -255,19 +256,22 @@ jobs:
           output-file: /tmp/invariants_ai/codex_final_message.md
           codex-args: '["--full-auto"]'
 
-      - name: Validate Codex outputs (deterministic contract)
+      - name: Ensure Codex outputs exist (non-blocking, explainable)
         if: always()
         shell: bash
         env:
+          CODEX_OUTCOME: ${{ steps.codex.outcome }}
           CODEX_HOME: ${{ runner.temp }}/codex-home
         run: |
           set -euo pipefail
+          mkdir -p /tmp/invariants_ai
           required=(
             /tmp/invariants_ai/codex_final_message.md
             /tmp/invariants_ai/ai_confidence.json
             /tmp/invariants_ai/codex_summary.md
           )
 
+          echo "==> Codex step outcome: ${CODEX_OUTCOME:-unknown}"
           echo "==> Codex output directory listing:"
           ls -la /tmp/invariants_ai || true
           echo ""
@@ -275,12 +279,43 @@ jobs:
           ls -la "$CODEX_HOME" || true
           echo ""
 
+          missing=0
           for f in "${required[@]}"; do
             if [[ ! -s "$f" ]]; then
-              echo "::error title=Codex output missing::Codex did not produce required file (missing or empty): $f"
-              exit 1
+              echo "::warning title=Codex output missing::Missing or empty: $f (non-blocking)"
+              missing=1
             fi
           done
+
+          if [[ "$missing" -eq 1 ]]; then
+            if [[ ! -s /tmp/invariants_ai/codex_final_message.md ]]; then
+              printf '%s\n' \
+                "(Codex did not produce a final message. This is non-blocking. See workflow logs for the underlying Codex error such as quota/401/network.)" \
+                > /tmp/invariants_ai/codex_final_message.md
+            fi
+
+            if [[ ! -s /tmp/invariants_ai/ai_confidence.json ]]; then
+              printf '%s\n' \
+                '{' \
+                '  "classification": "unclear",' \
+                '  "confidence": 0.0,' \
+                '  "invariants": [],' \
+                "  \"rationale\": \"Codex did not produce required outputs. Step outcome: ${CODEX_OUTCOME:-unknown}. Check logs for quota/401/network errors.\"," \
+                '  "recommended_action": "human_decide"' \
+                '}' \
+                > /tmp/invariants_ai/ai_confidence.json
+            fi
+
+            if [[ ! -s /tmp/invariants_ai/codex_summary.md ]]; then
+              printf '%s\n' \
+                '## Codex invariants review (non-blocking)' \
+                '- **Status:** FAILED (non-blocking)' \
+                "- **Step outcome:** ${CODEX_OUTCOME:-unknown}" \
+                '- **Reason:** Codex did not produce one or more required outputs.' \
+                '- **Action:** Check workflow logs for the Codex failure cause (quota/401/network). Fix billing/secret/network and rerun.' \
+                > /tmp/invariants_ai/codex_summary.md
+            fi
+          fi
 
           # Validate JSON is parseable (prevents “file exists but junk”).
           python3 - <<'PY'
@@ -486,6 +521,64 @@ jobs:
           output-file: /tmp/security_ai/codex_final_message.md
           codex-args: '["--full-auto"]'
 
+      - name: Ensure Codex outputs exist (security, non-blocking)
+        if: always()
+        shell: bash
+        env:
+          CODEX_OUTCOME: ${{ steps.codex.outcome }}
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/security_ai
+          required=(
+            /tmp/security_ai/codex_final_message.md
+            /tmp/security_ai/ai_confidence.json
+            /tmp/security_ai/codex_summary.md
+          )
+
+          missing=0
+          for f in "${required[@]}"; do
+            if [[ ! -s "$f" ]]; then
+              echo "::warning title=Codex output missing::Missing or empty: $f (non-blocking)"
+              missing=1
+            fi
+          done
+
+          if [[ "$missing" -eq 1 ]]; then
+            if [[ ! -s /tmp/security_ai/codex_final_message.md ]]; then
+              printf '%s\n' \
+                "(Codex did not produce a final message. This is non-blocking. See workflow logs for the underlying Codex error such as quota/401/network.)" \
+                > /tmp/security_ai/codex_final_message.md
+            fi
+
+            if [[ ! -s /tmp/security_ai/ai_confidence.json ]]; then
+              printf '%s\n' \
+                '{' \
+                '  "classification": "unclear",' \
+                '  "confidence": 0.0,' \
+                '  "invariants": [],' \
+                "  \"rationale\": \"Codex did not produce required outputs. Step outcome: ${CODEX_OUTCOME:-unknown}. Check logs for quota/401/network errors.\"," \
+                '  "recommended_action": "human_decide"' \
+                '}' \
+                > /tmp/security_ai/ai_confidence.json
+            fi
+
+            if [[ ! -s /tmp/security_ai/codex_summary.md ]]; then
+              printf '%s\n' \
+                '## Codex security review (non-blocking)' \
+                '- **Status:** FAILED (non-blocking)' \
+                "- **Step outcome:** ${CODEX_OUTCOME:-unknown}" \
+                '- **Reason:** Codex did not produce one or more required outputs.' \
+                '- **Action:** Check workflow logs for the Codex failure cause (quota/401/network). Fix billing/secret/network and rerun.' \
+                > /tmp/security_ai/codex_summary.md
+            fi
+          fi
+
+          python3 - <<'PY'
+          import json
+          json.load(open("/tmp/security_ai/ai_confidence.json"))
+          print("ai_confidence.json: OK")
+          PY
+
       - name: Capture Codex patch + upload artifacts
         if: always()
         shell: bash
@@ -586,6 +679,64 @@ jobs:
           prompt-file: .github/codex/prompts/compliance_review.md
           output-file: /tmp/compliance_ai/codex_final_message.md
           codex-args: '["--full-auto"]'
+
+      - name: Ensure Codex outputs exist (compliance, non-blocking)
+        if: always()
+        shell: bash
+        env:
+          CODEX_OUTCOME: ${{ steps.codex.outcome }}
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/compliance_ai
+          required=(
+            /tmp/compliance_ai/codex_final_message.md
+            /tmp/compliance_ai/ai_confidence.json
+            /tmp/compliance_ai/codex_summary.md
+          )
+
+          missing=0
+          for f in "${required[@]}"; do
+            if [[ ! -s "$f" ]]; then
+              echo "::warning title=Codex output missing::Missing or empty: $f (non-blocking)"
+              missing=1
+            fi
+          done
+
+          if [[ "$missing" -eq 1 ]]; then
+            if [[ ! -s /tmp/compliance_ai/codex_final_message.md ]]; then
+              printf '%s\n' \
+                "(Codex did not produce a final message. This is non-blocking. See workflow logs for the underlying Codex error such as quota/401/network.)" \
+                > /tmp/compliance_ai/codex_final_message.md
+            fi
+
+            if [[ ! -s /tmp/compliance_ai/ai_confidence.json ]]; then
+              printf '%s\n' \
+                '{' \
+                '  "classification": "unclear",' \
+                '  "confidence": 0.0,' \
+                '  "invariants": [],' \
+                "  \"rationale\": \"Codex did not produce required outputs. Step outcome: ${CODEX_OUTCOME:-unknown}. Check logs for quota/401/network errors.\"," \
+                '  "recommended_action": "human_decide"' \
+                '}' \
+                > /tmp/compliance_ai/ai_confidence.json
+            fi
+
+            if [[ ! -s /tmp/compliance_ai/codex_summary.md ]]; then
+              printf '%s\n' \
+                '## Codex compliance review (non-blocking)' \
+                '- **Status:** FAILED (non-blocking)' \
+                "- **Step outcome:** ${CODEX_OUTCOME:-unknown}" \
+                '- **Reason:** Codex did not produce one or more required outputs.' \
+                '- **Action:** Check workflow logs for the Codex failure cause (quota/401/network). Fix billing/secret/network and rerun.' \
+                > /tmp/compliance_ai/codex_summary.md
+            fi
+          fi
+
+          python3 - <<'PY'
+          import json
+          json.load(open("/tmp/compliance_ai/ai_confidence.json"))
+          print("ai_confidence.json: OK")
+          PY
 
       - name: Capture Codex patch + upload artifacts
         if: always()

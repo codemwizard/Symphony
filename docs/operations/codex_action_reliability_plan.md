@@ -23,8 +23,9 @@ Patches covered:
    - Create `${{ runner.temp }}/codex-home` before each Codex step.
    - Use `CODEX_HOME` env on each Codex step.
 
-2) **Make Codex steps non-blocking**
+2) **Make Codex steps non-blocking with deterministic placeholders**
    - Add `continue-on-error: true` to each Codex step.
+   - Replace hard-fail output assertions with warnings and placeholder outputs.
    - Keep artifact upload and PR comment steps as `if: always()`.
 
 3) **Guard Codex jobs for fork PRs**
@@ -39,7 +40,7 @@ Patches covered:
 5) **Add deterministic Codex preflight + output contract (invariants job)**
    - Fail fast if `OPENAI_API_KEY` is missing in the PR context.
    - Call OpenAI `/v1/models` to distinguish invalid key vs quota vs other errors.
-   - After Codex runs, assert required output files exist and JSON is parseable.
+   - After Codex runs, warn on missing outputs, emit placeholders, and ensure JSON is parseable.
    - Print directory listings to make Codex failures diagnosable.
 
 ## Tasks List
@@ -49,7 +50,7 @@ Patches covered:
 - [ ] Add `continue-on-error: true` to each Codex step.
 - [ ] Guard Codex jobs to skip fork PRs (`head.repo.full_name == github.repository`).
 - [ ] Add Codex preflight (secret check + `/v1/models`) in the invariants job.
-- [ ] Add deterministic Codex output validation in the invariants job.
+- [ ] Add non-blocking Codex output enforcement with placeholders in all Codex jobs.
 
 ### B) Verification
 - [ ] Validate YAML syntax by running CI locally or using a linter (optional).
@@ -63,4 +64,4 @@ Patches covered:
 - Advisory Codex jobs are non-blocking in CI.
 - Codex jobs do not run on fork PRs without secrets.
 - DB function tests do not fail when policy seeding is intentionally skipped.
-- Codex failures are deterministic and actionable (preflight + output contract).
+- Codex failures are deterministic and actionable (preflight + non-blocking output contract).
