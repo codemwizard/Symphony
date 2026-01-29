@@ -53,20 +53,70 @@ jobs:
           git diff --no-color --no-ext-diff --unified=0 "$RANGE" > /tmp/invariants_ai/pr.diff
           python3 scripts/audit/detect_structural_changes.py --diff-file /tmp/invariants_ai/pr.diff --out /tmp/invariants_ai/detect.json
 
-          structural="$(python3 - <<'PY'
-import json
-d=json.load(open("/tmp/invariants_ai/detect.json"))
-print("true" if d.get("structural_change") else "false")
-PY
-)"
-          hint="$(python3 - <<'PY'
-import json
-d=json.load(open("/tmp/invariants_ai/detect.json"))
-print(d.get("confidence_hint", 0.0))
-PY
-)"
+          structural="$(python3 -c 'import json; d=json.load(open("/tmp/invariants_ai/detect.json")); print("true" if d.get("structural_change") else "false")')"
+          hint="$(python3 -c 'import json; d=json.load(open("/tmp/invariants_ai/detect.json")); print(d.get("confidence_hint", 0.0))')"
           echo "structural_change=$structural" >> "$GITHUB_OUTPUT"
           echo "confidence_hint=$hint" >> "$GITHUB_OUTPUT"
+
+      - name: Show changed files (diagnostic)
+        if: github.event_name != 'schedule' && steps.detect.outputs.structural_change == 'true'
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [[ "${{ github.event_name }}" == "pull_request" ]]; then
+            RANGE="${{ github.event.pull_request.base.sha }}...${{ github.event.pull_request.head.sha }}"
+          else
+            RANGE="${{ github.event.before }}...${{ github.sha }}"
+          fi
+          echo "Diff range: $RANGE"
+          git diff --name-only "$RANGE" | sed 's/^/ - /'
+
+      - name: Show structural detection evidence (diagnostic)
+        if: github.event_name != 'schedule' && steps.detect.outputs.structural_change == 'true'
+        shell: bash
+        run: |
+          set -euo pipefail
+          echo "detect.json:"
+          cat /tmp/invariants_ai/detect.json
+          echo ""
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+
+          d = json.loads(Path("/tmp/invariants_ai/detect.json").read_text())
+          matches = d.get("matches", [])
+          types = d.get("reason_types")
+          primary = d.get("primary_reason")
+          files = d.get("matched_files")
+
+          if not types:
+              types = sorted({m.get("type") for m in matches if m.get("type")})
+          if not primary:
+              primary = "security" if "security" in types else ("ddl" if "ddl" in types else (types[0] if types else "other"))
+          if not files:
+              files = sorted({m.get("file") for m in matches if m.get("file")})
+
+          print(f"structural_change={d.get('structural_change')} confidence_hint={d.get('confidence_hint')}")
+          print(f"primary_reason={primary}")
+          print(f"reason_types={','.join(types) if types else 'none'}")
+          print("")
+          print("Matched files (top):")
+          for f in files[:30]:
+              print(f" - {f}")
+          print("")
+          print("Top matches:")
+          for m in matches[:30]:
+              print(f"- {m.get('type')} {m.get('file')} {m.get('sign')}: {m.get('line')}")
+
+          print("")
+          print("GitHub annotations (top 10):")
+          for m in matches[:10]:
+              f = m.get("file", "")
+              line = (m.get("line", "") or "").strip()
+              t = m.get("type", "structural")
+              if f:
+                  print(f"::warning file={f}::Structural match [{t}]: {line}")
+          PY
 
       - name: Enforce Rule 1 (docs/manifest or exception)
         if: github.event_name != 'schedule' && steps.detect.outputs.structural_change == 'true'
@@ -111,7 +161,8 @@ PY
     if: >
       github.event_name == 'pull_request' &&
       always() &&
-      needs.mechanical_invariants.outputs.structural_change == 'true'
+      needs.mechanical_invariants.outputs.structural_change == 'true' &&
+      github.event.pull_request.head.repo.full_name == github.repository
     permissions:
       contents: read
       pull-requests: write
@@ -138,9 +189,63 @@ PY
             "${{ github.event.pull_request.base.sha }}...${{ github.event.pull_request.head.sha }}" \
             > /tmp/invariants_ai/pr.diff
 
+      - name: Prepare Codex home (fresh, writable)
+        shell: bash
+        env:
+          CODEX_HOME: ${{ runner.temp }}/codex-home
+        run: |
+          set -euo pipefail
+          rm -rf "$CODEX_HOME"
+          mkdir -p "$CODEX_HOME"
+          chmod 700 "$CODEX_HOME"
+          echo "CODEX_HOME=$CODEX_HOME"
+
+      - name: Require OPENAI_API_KEY (fail fast)
+        shell: bash
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+        run: |
+          set -euo pipefail
+          if [[ -z "${OPENAI_API_KEY:-}" ]]; then
+            echo "::error title=Missing secret::OPENAI_API_KEY is not set or is not available to this workflow event."
+            echo "If this is a PR from a fork, GitHub will not provide repo secrets to pull_request workflows."
+            exit 1
+          fi
+
+      - name: OpenAI API preflight (detect invalid key vs quota)
+        shell: bash
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/invariants_ai
+          code="$(curl -sS -o /tmp/invariants_ai/openai_preflight.json -w "%{http_code}" \
+            https://api.openai.com/v1/models \
+            -H "Authorization: Bearer $OPENAI_API_KEY")" || true
+          echo "OpenAI /v1/models HTTP $code"
+          if [[ "$code" == "200" ]]; then
+            exit 0
+          fi
+          if [[ "$code" == "401" ]]; then
+            echo "::error title=OpenAI auth failed::OPENAI_API_KEY is invalid (401)."
+            cat /tmp/invariants_ai/openai_preflight.json || true
+            exit 1
+          fi
+          if [[ "$code" == "402" || "$code" == "429" ]]; then
+            echo "::error title=OpenAI quota/billing::OpenAI returned HTTP $code (quota/billing/rate-limit)."
+            cat /tmp/invariants_ai/openai_preflight.json || true
+            exit 1
+          fi
+          echo "::error title=OpenAI preflight failed::Unexpected HTTP $code from OpenAI."
+          cat /tmp/invariants_ai/openai_preflight.json || true
+          exit 1
+
       - name: Run Codex
         uses: openai/codex-action@v1
         id: codex
+        continue-on-error: true
+        env:
+          CODEX_HOME: ${{ runner.temp }}/codex-home
         with:
           openai-api-key: ${{ secrets.OPENAI_API_KEY }}
           model: gpt-5.2-codex
@@ -150,6 +255,74 @@ PY
           prompt-file: .github/codex/prompts/invariants_review.md
           output-file: /tmp/invariants_ai/codex_final_message.md
           codex-args: '["--full-auto"]'
+
+      - name: Ensure Codex outputs exist (non-blocking, explainable)
+        if: always()
+        shell: bash
+        env:
+          CODEX_OUTCOME: ${{ steps.codex.outcome }}
+          CODEX_HOME: ${{ runner.temp }}/codex-home
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/invariants_ai
+          required=(
+            /tmp/invariants_ai/codex_final_message.md
+            /tmp/invariants_ai/ai_confidence.json
+            /tmp/invariants_ai/codex_summary.md
+          )
+
+          echo "==> Codex step outcome: ${CODEX_OUTCOME:-unknown}"
+          echo "==> Codex output directory listing:"
+          ls -la /tmp/invariants_ai || true
+          echo ""
+          echo "==> Codex home listing:"
+          ls -la "$CODEX_HOME" || true
+          echo ""
+
+          missing=0
+          for f in "${required[@]}"; do
+            if [[ ! -s "$f" ]]; then
+              echo "::warning title=Codex output missing::Missing or empty: $f (non-blocking)"
+              missing=1
+            fi
+          done
+
+          if [[ "$missing" -eq 1 ]]; then
+            if [[ ! -s /tmp/invariants_ai/codex_final_message.md ]]; then
+              printf '%s\n' \
+                "(Codex did not produce a final message. This is non-blocking. See workflow logs for the underlying Codex error such as quota/401/network.)" \
+                > /tmp/invariants_ai/codex_final_message.md
+            fi
+
+            if [[ ! -s /tmp/invariants_ai/ai_confidence.json ]]; then
+              printf '%s\n' \
+                '{' \
+                '  "classification": "unclear",' \
+                '  "confidence": 0.0,' \
+                '  "invariants": [],' \
+                "  \"rationale\": \"Codex did not produce required outputs. Step outcome: ${CODEX_OUTCOME:-unknown}. Check logs for quota/401/network errors.\"," \
+                '  "recommended_action": "human_decide"' \
+                '}' \
+                > /tmp/invariants_ai/ai_confidence.json
+            fi
+
+            if [[ ! -s /tmp/invariants_ai/codex_summary.md ]]; then
+              printf '%s\n' \
+                '## Codex invariants review (non-blocking)' \
+                '- **Status:** FAILED (non-blocking)' \
+                "- **Step outcome:** ${CODEX_OUTCOME:-unknown}" \
+                '- **Reason:** Codex did not produce one or more required outputs.' \
+                '- **Action:** Check workflow logs for the Codex failure cause (quota/401/network). Fix billing/secret/network and rerun.' \
+                > /tmp/invariants_ai/codex_summary.md
+            fi
+          fi
+
+          # Validate JSON is parseable (prevents “file exists but junk”).
+          python3 - <<'PY'
+          import json
+          json.load(open("/tmp/invariants_ai/ai_confidence.json"))
+          print("ai_confidence.json: OK")
+          PY
 
       - name: Capture Codex patch + upload artifacts
         if: always()
@@ -270,6 +443,365 @@ PY
           set -euo pipefail
           chmod +x scripts/db/tests/test_db_functions.sh
           scripts/db/tests/test_db_functions.sh
+
+  security_scan:
+    name: Phase I.5 — Security fast checks (mechanical)
+    runs-on: ubuntu-latest
+    needs: [mechanical_invariants]
+    if: always() && github.event_name != 'schedule'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Run security fast checks (if present)
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [[ -x scripts/audit/run_security_fast_checks.sh ]]; then
+            scripts/audit/run_security_fast_checks.sh
+          else
+            echo "scripts/audit/run_security_fast_checks.sh not found/executable; skipping (Phase 1 repo may not include it yet)."
+          fi
+
+  ai_security_review:
+    name: Phase II.5 — Codex security review (advisory)
+    runs-on: ubuntu-latest
+    needs: [mechanical_invariants]
+    if: >
+      github.event_name == 'pull_request' &&
+      always() &&
+      needs.mechanical_invariants.outputs.structural_change == 'true' &&
+      github.event.pull_request.head.repo.full_name == github.repository
+    permissions:
+      contents: read
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          ref: refs/pull/${{ github.event.pull_request.number }}/merge
+          fetch-depth: 0
+
+      - name: Pre-fetch base and head refs
+        shell: bash
+        run: |
+          git fetch --no-tags origin \
+            ${{ github.event.pull_request.base.ref }} \
+            +refs/pull/${{ github.event.pull_request.number }}/head
+
+      - name: Prepare diff for Codex
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/security_ai
+          git diff --no-color --no-ext-diff --unified=0 \
+            "${{ github.event.pull_request.base.sha }}...${{ github.event.pull_request.head.sha }}" \
+            > /tmp/security_ai/pr.diff
+
+      - name: Prepare Codex home (fresh, writable)
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm -rf "${{ runner.temp }}/codex-home"
+          mkdir -p "${{ runner.temp }}/codex-home"
+
+      - name: Run Codex (security)
+        uses: openai/codex-action@v1
+        id: codex
+        continue-on-error: true
+        env:
+          CODEX_HOME: ${{ runner.temp }}/codex-home
+        with:
+          openai-api-key: ${{ secrets.OPENAI_API_KEY }}
+          model: gpt-5.2-codex
+          effort: medium
+          sandbox: workspace-write
+          safety-strategy: drop-sudo
+          prompt-file: .github/codex/prompts/security_review.md
+          output-file: /tmp/security_ai/codex_final_message.md
+          codex-args: '["--full-auto"]'
+
+      - name: Ensure Codex outputs exist (security, non-blocking)
+        if: always()
+        shell: bash
+        env:
+          CODEX_OUTCOME: ${{ steps.codex.outcome }}
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/security_ai
+          required=(
+            /tmp/security_ai/codex_final_message.md
+            /tmp/security_ai/ai_confidence.json
+            /tmp/security_ai/codex_summary.md
+          )
+
+          missing=0
+          for f in "${required[@]}"; do
+            if [[ ! -s "$f" ]]; then
+              echo "::warning title=Codex output missing::Missing or empty: $f (non-blocking)"
+              missing=1
+            fi
+          done
+
+          if [[ "$missing" -eq 1 ]]; then
+            if [[ ! -s /tmp/security_ai/codex_final_message.md ]]; then
+              printf '%s\n' \
+                "(Codex did not produce a final message. This is non-blocking. See workflow logs for the underlying Codex error such as quota/401/network.)" \
+                > /tmp/security_ai/codex_final_message.md
+            fi
+
+            if [[ ! -s /tmp/security_ai/ai_confidence.json ]]; then
+              printf '%s\n' \
+                '{' \
+                '  "classification": "unclear",' \
+                '  "confidence": 0.0,' \
+                '  "invariants": [],' \
+                "  \"rationale\": \"Codex did not produce required outputs. Step outcome: ${CODEX_OUTCOME:-unknown}. Check logs for quota/401/network errors.\"," \
+                '  "recommended_action": "human_decide"' \
+                '}' \
+                > /tmp/security_ai/ai_confidence.json
+            fi
+
+            if [[ ! -s /tmp/security_ai/codex_summary.md ]]; then
+              printf '%s\n' \
+                '## Codex security review (non-blocking)' \
+                '- **Status:** FAILED (non-blocking)' \
+                "- **Step outcome:** ${CODEX_OUTCOME:-unknown}" \
+                '- **Reason:** Codex did not produce one or more required outputs.' \
+                '- **Action:** Check workflow logs for the Codex failure cause (quota/401/network). Fix billing/secret/network and rerun.' \
+                > /tmp/security_ai/codex_summary.md
+            fi
+          fi
+
+          python3 - <<'PY'
+          import json
+          json.load(open("/tmp/security_ai/ai_confidence.json"))
+          print("ai_confidence.json: OK")
+          PY
+
+      - name: Capture Codex patch + upload artifacts
+        if: always()
+        shell: bash
+        run: |
+          set -euo pipefail
+          git diff > /tmp/security_ai/codex-security.patch || true
+          if [[ ! -s /tmp/security_ai/codex-security.patch ]]; then
+            echo "No changes produced by Codex." > /tmp/security_ai/codex-security.patch
+          fi
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: codex-security-review
+          path: |
+            /tmp/security_ai/pr.diff
+            /tmp/security_ai/codex_final_message.md
+            /tmp/security_ai/ai_confidence.json
+            /tmp/security_ai/codex_summary.md
+            /tmp/security_ai/codex-security.patch
+
+      - name: Comment on PR (security)
+        if: always()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const path = '/tmp/security_ai/codex_summary.md';
+            let body = '### Codex Security Review\n';
+            if (fs.existsSync(path)) {
+              body += fs.readFileSync(path, 'utf8');
+            } else {
+              body += '_No codex_summary.md produced._';
+            }
+            github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              body
+            });
+
+  ai_compliance_review:
+    name: Phase II.6 — Codex compliance review (advisory)
+    runs-on: ubuntu-latest
+    needs: [mechanical_invariants]
+    if: >
+      github.event_name == 'pull_request' &&
+      always() &&
+      needs.mechanical_invariants.outputs.structural_change == 'true' &&
+      github.event.pull_request.head.repo.full_name == github.repository
+    permissions:
+      contents: read
+      pull-requests: write
+    env:
+      COMPLIANCE_STANDARDS: "ISO 20022; NIST 800-207 (Zero Trust)"
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          ref: refs/pull/${{ github.event.pull_request.number }}/merge
+          fetch-depth: 0
+
+      - name: Pre-fetch base and head refs
+        shell: bash
+        run: |
+          git fetch --no-tags origin \
+            ${{ github.event.pull_request.base.ref }} \
+            +refs/pull/${{ github.event.pull_request.number }}/head
+
+      - name: Prepare diff for Codex
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/compliance_ai
+          echo "Standards: $COMPLIANCE_STANDARDS" > /tmp/compliance_ai/standards.txt
+          git diff --no-color --no-ext-diff --unified=0 \
+            "${{ github.event.pull_request.base.sha }}...${{ github.event.pull_request.head.sha }}" \
+            > /tmp/compliance_ai/pr.diff
+
+      - name: Prepare Codex home (fresh, writable)
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm -rf "${{ runner.temp }}/codex-home"
+          mkdir -p "${{ runner.temp }}/codex-home"
+
+      - name: Run Codex (compliance)
+        uses: openai/codex-action@v1
+        id: codex
+        continue-on-error: true
+        env:
+          CODEX_HOME: ${{ runner.temp }}/codex-home
+        with:
+          openai-api-key: ${{ secrets.OPENAI_API_KEY }}
+          model: gpt-5.2-codex
+          effort: medium
+          sandbox: workspace-write
+          safety-strategy: drop-sudo
+          prompt-file: .github/codex/prompts/compliance_review.md
+          output-file: /tmp/compliance_ai/codex_final_message.md
+          codex-args: '["--full-auto"]'
+
+      - name: Ensure Codex outputs exist (compliance, non-blocking)
+        if: always()
+        shell: bash
+        env:
+          CODEX_OUTCOME: ${{ steps.codex.outcome }}
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/compliance_ai
+          required=(
+            /tmp/compliance_ai/codex_final_message.md
+            /tmp/compliance_ai/ai_confidence.json
+            /tmp/compliance_ai/codex_summary.md
+          )
+
+          missing=0
+          for f in "${required[@]}"; do
+            if [[ ! -s "$f" ]]; then
+              echo "::warning title=Codex output missing::Missing or empty: $f (non-blocking)"
+              missing=1
+            fi
+          done
+
+          if [[ "$missing" -eq 1 ]]; then
+            if [[ ! -s /tmp/compliance_ai/codex_final_message.md ]]; then
+              printf '%s\n' \
+                "(Codex did not produce a final message. This is non-blocking. See workflow logs for the underlying Codex error such as quota/401/network.)" \
+                > /tmp/compliance_ai/codex_final_message.md
+            fi
+
+            if [[ ! -s /tmp/compliance_ai/ai_confidence.json ]]; then
+              printf '%s\n' \
+                '{' \
+                '  "classification": "unclear",' \
+                '  "confidence": 0.0,' \
+                '  "invariants": [],' \
+                "  \"rationale\": \"Codex did not produce required outputs. Step outcome: ${CODEX_OUTCOME:-unknown}. Check logs for quota/401/network errors.\"," \
+                '  "recommended_action": "human_decide"' \
+                '}' \
+                > /tmp/compliance_ai/ai_confidence.json
+            fi
+
+            if [[ ! -s /tmp/compliance_ai/codex_summary.md ]]; then
+              printf '%s\n' \
+                '## Codex compliance review (non-blocking)' \
+                '- **Status:** FAILED (non-blocking)' \
+                "- **Step outcome:** ${CODEX_OUTCOME:-unknown}" \
+                '- **Reason:** Codex did not produce one or more required outputs.' \
+                '- **Action:** Check workflow logs for the Codex failure cause (quota/401/network). Fix billing/secret/network and rerun.' \
+                > /tmp/compliance_ai/codex_summary.md
+            fi
+          fi
+
+          python3 - <<'PY'
+          import json
+          json.load(open("/tmp/compliance_ai/ai_confidence.json"))
+          print("ai_confidence.json: OK")
+          PY
+
+      - name: Capture Codex patch + upload artifacts
+        if: always()
+        shell: bash
+        run: |
+          set -euo pipefail
+          git diff > /tmp/compliance_ai/codex-compliance.patch || true
+          if [[ ! -s /tmp/compliance_ai/codex-compliance.patch ]]; then
+            echo "No changes produced by Codex." > /tmp/compliance_ai/codex-compliance.patch
+          fi
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: codex-compliance-review
+          path: |
+            /tmp/compliance_ai/standards.txt
+            /tmp/compliance_ai/pr.diff
+            /tmp/compliance_ai/codex_final_message.md
+            /tmp/compliance_ai/ai_confidence.json
+            /tmp/compliance_ai/codex_summary.md
+            /tmp/compliance_ai/codex-compliance.patch
+
+      - name: Comment on PR (compliance)
+        if: always()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const stdPath = '/tmp/compliance_ai/standards.txt';
+            const sumPath = '/tmp/compliance_ai/codex_summary.md';
+            let body = '### Codex Compliance Review\n';
+            if (fs.existsSync(stdPath)) {
+              body += '\n**Scope:** ' + fs.readFileSync(stdPath, 'utf8').trim() + '\n\n';
+            }
+            if (fs.existsSync(sumPath)) {
+              body += fs.readFileSync(sumPath, 'utf8');
+            } else {
+              body += '_No codex_summary.md produced._';
+            }
+            github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              body
+            });
+
+  research_scout:
+    name: Phase V — Research scout (scheduled, non-blocking)
+    runs-on: ubuntu-latest
+    if: github.event_name == 'schedule'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Run research scout (if present)
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [[ -x scripts/audit/research_scout.sh ]]; then
+            scripts/audit/research_scout.sh
+          else
+            echo "scripts/audit/research_scout.sh not found/executable; skipping."
+          fi
 
   exception_audit:
     name: Scheduled — exception audit
