@@ -212,6 +212,39 @@ jobs:
           output-file: /tmp/invariants_ai/codex_final_message.md
           codex-args: '["--full-auto"]'
 
+      - name: Assert Codex produced valid outputs
+        if: always()
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          # If the action step truly failed, this catches it deterministically.
+          if [[ "${{ steps.codex.outcome }}" != "success" ]]; then
+            echo "::error::Codex action step outcome was ${{ steps.codex.outcome }}"
+            exit 1
+          fi
+
+          # Now enforce your real contract: artifacts must exist + be valid.
+          required=(
+            /tmp/invariants_ai/codex_final_message.md
+            /tmp/invariants_ai/ai_confidence.json
+            /tmp/invariants_ai/codex_summary.md
+          )
+
+          for f in "${required[@]}"; do
+            if [[ ! -s "$f" ]]; then
+              echo "::error::Codex did not produce required file (missing or empty): $f"
+              exit 1
+            fi
+          done
+
+          # Validate JSON is parseable (prevents “file exists but junk”).
+          python3 - <<'PY'
+          import json
+          json.load(open("/tmp/invariants_ai/ai_confidence.json"))
+          print("ai_confidence.json: OK")
+          PY
+
       - name: Capture Codex patch + upload artifacts
         if: always()
         shell: bash
