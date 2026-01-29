@@ -1,0 +1,36 @@
+controls:
+  - id: SEC-DB-001
+    title: "SECURITY DEFINER functions must set safe search_path"
+    standards:
+      - "NIST 800-207 (Zero Trust)"
+      - "ISO 27001/27002"
+    enforced_by:
+      - "scripts/security/lint_sql_injection.sh"
+      - "scripts/db/lint_search_path.sh"
+    verified_by:
+      - "scripts/audit/run_security_fast_checks.sh"
+      - "scripts/db/verify_invariants.sh"
+    owner: "team-db"
+
+  - id: SEC-DB-002
+    title: "Runtime roles and PUBLIC must not regain CREATE on schema public"
+    standards:
+      - "NIST 800-207 (Zero Trust)"
+      - "ISO 27001/27002"
+    enforced_by:
+      - "scripts/security/lint_privilege_grants.sh"
+      - "schema/migrations/* (revoke-first posture)"
+    verified_by:
+      - "scripts/audit/run_security_fast_checks.sh"
+      - "scripts/db/verify_invariants.sh"
+    owner: "team-db"
+
+  - id: SEC-INT-001
+    title: "ISO 20022 message integrity expectations are documented and testable"
+    standards:
+      - "ISO 20022"
+    enforced_by:
+      - "docs/security/SECURITY_MANIFEST.yml (this control)"
+    verified_by:
+      - "Phase 2+ adapter contract tests (planned)"
+    owner: "team-platform"

@@ -55,6 +55,7 @@ echo "==> Python syntax checks"
 PY_FILES=(
   "scripts/audit/detect_structural_changes.py"
   "scripts/audit/detect_structural_sql_changes.py"
+  "scripts/audit/auto_create_exception_from_detect.py"
   "scripts/audit/generate_invariants_quick.py"
   "scripts/audit/validate_invariants_manifest.py"
   "scripts/audit/check_docs_match_manifest.py"

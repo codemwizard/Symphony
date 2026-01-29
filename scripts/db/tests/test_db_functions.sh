@@ -22,14 +22,14 @@ run_test() {
   if result=$(psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -X -t -A -c "$sql" 2>&1); then
     if [[ "$result" == "PASS" ]]; then
       echo "✅ PASS"
-      ((PASS++))
+      PASS=$((PASS+1))
     else
       echo "❌ FAIL (got: $result)"
-      ((FAIL++))
+      FAIL=$((FAIL+1))
     fi
   else
     echo "❌ ERROR: $result"
-    ((FAIL++))
+    FAIL=$((FAIL+1))
   fi
 }
 
@@ -88,10 +88,11 @@ run_test "no PUBLIC privileges on payment_outbox_pending" \
 # Summary
 # ============================================================
 echo ""
-echo "==> Test Summary: $PASS passed, $FAIL failed"
+echo "Summary: $PASS passed, $FAIL failed"
 
 if [[ $FAIL -gt 0 ]]; then
+  echo "exit code 1"
   exit 1
 fi
 
-echo "✅ All DB function tests passed."
+echo "exit code 0"
