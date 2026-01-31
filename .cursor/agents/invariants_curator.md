@@ -1,7 +1,3 @@
----
-name: invariants_curator
-model: fast
----
 
 ---
 name: invariants_curator
