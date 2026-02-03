@@ -145,7 +145,7 @@ SELECT pg_sleep(0.2);
 UNLISTEN *;
 SQL
 )"
-if echo "$notify_output" | rg -q "Asynchronous notification \"symphony_outbox\""; then
+if echo "$notify_output" | grep -q "Asynchronous notification \"symphony_outbox\""; then
   echo "  outbox notify emitted: ✅ PASS"
   PASS=$((PASS+1))
   notify_result="PASS"

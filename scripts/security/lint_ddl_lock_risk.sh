@@ -25,21 +25,30 @@ patterns=(
   "CLUSTER"
 )
 
+pattern_re="ALTER TABLE|CREATE INDEX|DROP INDEX|REINDEX|VACUUM FULL|CLUSTER"
+
 matches=()
-
 while IFS= read -r -d '' file; do
-  while IFS= read -r line; do
-    matches+=("$file:$line")
-  done < <(rg -n -i \
-      -e "ALTER TABLE" \
-      -e "CREATE INDEX" \
-      -e "DROP INDEX" \
-      -e "REINDEX" \
-      -e "VACUUM FULL" \
-      -e "CLUSTER" \
-      "$file" || true)
-
+  if command -v rg >/dev/null 2>&1; then
+    while IFS= read -r line; do
+      matches+=("$file:$line")
+    done < <(rg -n -i -e "$pattern_re" "$file" || true)
+  else
+    while IFS= read -r line; do
+      matches+=("$file:$line")
+    done < <(grep -nEi "$pattern_re" "$file" || true)
+  fi
 done < <(find "$MIGRATIONS_DIR" -type f -name '*.sql' -print0)
+
+entry_match() {
+  local entry="$1"
+  local regex="$2"
+  if command -v rg >/dev/null 2>&1; then
+    echo "$entry" | rg -qi "$regex"
+  else
+    echo "$entry" | grep -qiE "$regex"
+  fi
+}
 
 # Filter out CREATE INDEX CONCURRENTLY (considered lower risk for Phase-0 lint)
 filtered=()
@@ -50,34 +59,34 @@ hot_tables=(
 )
 for entry in "${matches[@]}"; do
   # Allowlist known-safe indexes in existing baseline migrations.
-  if echo "$entry" | rg -qi "0001_init\\.sql:165:CREATE INDEX idx_attempts_instruction_idempotency"; then
+  if entry_match "$entry" "0001_init\\.sql:165:CREATE INDEX idx_attempts_instruction_idempotency"; then
     continue
   fi
-  if echo "$entry" | rg -qi "0001_init\\.sql:168:CREATE INDEX idx_attempts_outbox_id"; then
+  if entry_match "$entry" "0001_init\\.sql:168:CREATE INDEX idx_attempts_outbox_id"; then
     continue
   fi
-  if echo "$entry" | rg -qi "0005_policy_versions\\.sql:49:CREATE INDEX IF NOT EXISTS idx_policy_versions_is_active"; then
+  if entry_match "$entry" "0005_policy_versions\\.sql:49:CREATE INDEX IF NOT EXISTS idx_policy_versions_is_active"; then
     continue
   fi
   # Allow legacy due-claim index (grandfathered)
-  if echo "$entry" | rg -qi "0007_outbox_pending_indexes\\.sql:4:CREATE INDEX IF NOT EXISTS idx_payment_outbox_pending_due_claim"; then
+  if entry_match "$entry" "0007_outbox_pending_indexes\\.sql:4:CREATE INDEX IF NOT EXISTS idx_payment_outbox_pending_due_claim"; then
     continue
   fi
-  if echo "$entry" | rg -qi "0009_pending_fillfactor\\.sql:4:ALTER TABLE public\\.payment_outbox_pending"; then
+  if entry_match "$entry" "0009_pending_fillfactor\\.sql:4:ALTER TABLE public\\.payment_outbox_pending"; then
     continue
   fi
   # Allow ALTER TABLE SET (...) for reloptions
-  if echo "$entry" | rg -qi "ALTER TABLE" && echo "$entry" | rg -qi "SET \\(.*\\)"; then
+  if entry_match "$entry" "ALTER TABLE" && entry_match "$entry" "SET \\(.*\\)"; then
     continue
   fi
-  if echo "$entry" | rg -qi "CREATE INDEX" && echo "$entry" | rg -qi "CONCURRENTLY"; then
+  if entry_match "$entry" "CREATE INDEX" && entry_match "$entry" "CONCURRENTLY"; then
     continue
   fi
   # Allow CREATE INDEX on non-hot tables
-  if echo "$entry" | rg -qi "CREATE INDEX"; then
+  if entry_match "$entry" "CREATE INDEX"; then
     skip=0
     for t in "${hot_tables[@]}"; do
-      if echo "$entry" | rg -qi "ON (public\\.)?${t}"; then
+      if entry_match "$entry" "ON (public\\.)?${t}"; then
         skip=1
         break
       fi

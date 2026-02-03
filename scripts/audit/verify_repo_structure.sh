@@ -40,7 +40,6 @@ required_dirs=(
   ".codex/rules"
   ".cursor/agents"
   ".cursor/rules"
-  "archive"
 )
 
 required_files=(

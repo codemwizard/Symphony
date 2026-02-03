@@ -26,8 +26,8 @@ for f in "$MIG_DIR"/*.sql; do
     echo "❌ Migration contains top-level COMMIT (unindented): $f" >&2
     fail=1
   fi
-  if rg -qi "CREATE INDEX[[:space:]]+CONCURRENTLY" "$f"; then
-    if ! rg -qi "symphony:no_tx" "$f"; then
+  if grep -qiE "CREATE INDEX[[:space:]]+CONCURRENTLY" "$f"; then
+    if ! grep -qiE "symphony:no_tx" "$f"; then
       echo "❌ Missing -- symphony:no_tx marker for CONCURRENTLY: $f" >&2
       violations+=("$f")
       fail=1
