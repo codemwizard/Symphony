@@ -13,6 +13,13 @@ mkdir -p "$EVIDENCE_DIR"
 
 echo "==> No-tx migration test"
 
+# Unit check: marker detection must match no-tx migration files
+if ! grep -qE '^[[:space:]]*--[[:space:]]*symphony:no_tx' \
+  "$ROOT_DIR/schema/migrations/0013_outbox_pending_indexes_concurrently.sql"; then
+  echo "❌ No-tx marker not detected in 0013_outbox_pending_indexes_concurrently.sql" >&2
+  exit 1
+fi
+
 # Ensure migrations are applied (idempotent)
 "$ROOT_DIR/scripts/db/migrate.sh"
 
