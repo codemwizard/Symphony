@@ -6,7 +6,8 @@ Note: _This is purely the output of the chat conversation and does not contain a
 
 Create an Implementation Plan for the process of database migration outlined in the information below:
 
-Cool — then we can do the fast, clean sequence where the **flip PR** might go red briefly, and we don’t waste time on “keep CI green at all costs” scaffolding.
+
+Cool — then we can do the fast, clean sequence where the **flip PR** might go red briefly, and we don’t waste time on “keep CI green at all costs” scaffolding.
 
 Also quick note: the system says **some earlier uploads have expired**, so if you refer back to older repomix packs later you may need to re-upload them. Not a blocker for this plan.
 
@@ -1112,7 +1113,8 @@ Now I'll create the implementation plan and task breakdown:
 
 Below is a rewritten, definitive version of your **DB-MIG phase implementation plan**, corrected to match your real contract (baseline for dev/CI now, migrations for staging/prod later) and aligned with industry standards. 
 Update the Implementation Plan with the exact information below. Show me for approval
-
+
+
 ---
 
 # Database Migration Baseline System (DB-MIG)
@@ -10954,7 +10956,8 @@ You have it indirectly via CI gate, but I would add it explicitly into Phase 1 s
 
 ---
 
-## The correct Phase 1: Use the  `0005_policy_versions.sql` file that is in the migrations folder exactly as it is without changing anything.
+## The correct Phase 1: Use the 
+ `0005_policy_versions.sql` file that is in the migrations folder exactly as it is without changing anything.
 ```
 
 * Under CI gate checks, add:
@@ -12641,7 +12644,7 @@ How does the process that detects that logic covered by an invariant has been to
 
 ### Planner Response
 
-The user is asking for a detailed process trace of how invariant violations are detected, using specific examples for both Technical and Process invariants. This requires explaining the "detect" step, which for technical invariants is automated (CI/scripts) and for process invariants is manual (review).
+The user is asking for a detailed process trace of how invariant violations are detected, using specific examples for both Technical and Process invariants. This requires explaining the "detect" step, which for technical invariants is automated (CI/scripts) and for process invariants is manual (review).      
 
 I will formulate a response that traces the lifecycle of a change:
 1.  **Technical Invariant Example**: `I-OUTBOX-01` (Append-only outbox).

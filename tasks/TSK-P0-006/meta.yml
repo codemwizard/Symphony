@@ -1,0 +1,42 @@
+phase: "0"
+task_id: "TSK-P0-006"
+title: "OpenBao dev parity harness with deny test"
+owner_role: "PLATFORM"
+Depends On: TSK-P0-001
+Touches:
+  - "infra/openbao/docker-compose.yml"
+  - "scripts/security/openbao_bootstrap.sh"
+  - "scripts/security/openbao_smoke_test.sh"
+  - ".github/workflows/invariants.yml"
+  - "docs/invariants/INVARIANTS_MANIFEST.yml"
+  - "tasks/TSK-P0-006/meta.yml"
+Invariant(s): "INV-024 (OpenBao AppRole auth + deny policy)"
+Work:
+  - "Add OpenBao docker compose for dev/testing."
+  - "Bootstrap script to enable secrets engine, AppRole, policies, and audit log."
+  - "Smoke test that authenticates via AppRole and asserts forbidden read is denied."
+  - "Wire into CI and produce evidence."
+Acceptance Criteria:
+  - "AppRole auth succeeds for allowed path and fails for forbidden path."
+  - "Evidence report generated under ./evidence/phase0/openbao_smoke.json."
+Verification Commands:
+  - "scripts/security/openbao_bootstrap.sh"
+  - "scripts/security/openbao_smoke_test.sh"
+Evidence Artifact(s):
+  - "./evidence/phase0/openbao_smoke.json"
+Failure Modes:
+  - "Auth failure or policy bypass must fail."
+must_read:
+  - "docs/invariants/INVARIANTS_MANIFEST.yml"
+  - "scripts/db/verify_invariants.sh"
+  - "scripts/db/ci_invariant_gate.sql"
+evidence:
+  - "./evidence/phase0/openbao_smoke.json"
+verification:
+  - "scripts/security/openbao_bootstrap.sh"
+  - "scripts/security/openbao_smoke_test.sh"
+status: "completed"
+notes: ""
+client: "codex_cli"
+assigned_agent: "security_guardian"
+model: "<UNASSIGNED>"

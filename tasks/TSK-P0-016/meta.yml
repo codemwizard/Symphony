@@ -1,0 +1,34 @@
+phase: "0"
+task_id: "TSK-P0-016"
+title: "Batching rules evidence generator"
+owner_role: "SECURITY_GUARDIAN"
+Depends On: TSK-P0-008
+Touches:
+  - "scripts/audit/verify_batching_rules.sh"
+  - ".github/workflows/invariants.yml"
+  - "tasks/TSK-P0-016/meta.yml"
+Invariant(s): "INV-027 (Batching rules defined and enforced)"
+Work:
+  - "Extend batching rules verifier to emit evidence JSON with thresholds and hash."
+  - "Wire to CI as a hard gate."
+Acceptance Criteria:
+  - "Evidence JSON is generated and contains thresholds + hash."
+Verification Commands:
+  - "scripts/audit/verify_batching_rules.sh"
+Evidence Artifact(s):
+  - "./evidence/phase0/batching_rules.json"
+Failure Modes:
+  - "Missing evidence or invalid thresholds must fail."
+must_read:
+  - "docs/invariants/INVARIANTS_MANIFEST.yml"
+  - "scripts/db/verify_invariants.sh"
+  - "scripts/db/ci_invariant_gate.sql"
+evidence:
+  - "./evidence/phase0/batching_rules.json"
+verification:
+  - "scripts/audit/verify_batching_rules.sh"
+status: "completed"
+notes: ""
+client: "codex_cli"
+assigned_agent: "security_guardian"
+model: "<UNASSIGNED>"

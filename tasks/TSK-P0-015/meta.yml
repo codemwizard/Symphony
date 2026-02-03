@@ -1,0 +1,37 @@
+phase: "0"
+task_id: "TSK-P0-015"
+title: "Routing fallback rules schema + validator (not a paper gate)"
+owner_role: "ARCHITECT"
+Depends On: TSK-P0-007
+Touches:
+  - "docs/architecture/routing_fallback.yml"
+  - "docs/architecture/routing_fallback.schema.json"
+  - "scripts/audit/validate_routing_fallback.sh"
+  - "tasks/TSK-P0-015/meta.yml"
+Invariant(s): "INV-026 (Routing fallback invariant)"
+Work:
+  - "Define routing fallback rules file with required fields (SLOs, actions, evidence emission rules)."
+  - "Add JSON schema and validator that fails on missing/invalid fields."
+  - "Emit evidence artifact proving validation ran."
+Acceptance Criteria:
+  - "CI fails if routing fallback rules are missing or invalid."
+  - "Evidence artifact produced from validator run."
+Verification Commands:
+  - "scripts/audit/validate_routing_fallback.sh"
+Evidence Artifact(s):
+  - "./evidence/phase0/routing_fallback_validation.json"
+Failure Modes:
+  - "Missing file, invalid schema, or missing required fields must fail."
+must_read:
+  - "docs/invariants/INVARIANTS_MANIFEST.yml"
+  - "scripts/db/verify_invariants.sh"
+  - "scripts/db/ci_invariant_gate.sql"
+evidence:
+  - "./evidence/phase0/routing_fallback_validation.json"
+verification:
+  - "scripts/audit/validate_routing_fallback.sh"
+status: "completed"
+notes: ""
+client: "codex_cli"
+assigned_agent: "architect"
+model: "<UNASSIGNED>"

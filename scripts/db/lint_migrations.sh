@@ -6,8 +6,11 @@ set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 MIG_DIR="$ROOT_DIR/schema/migrations"
+EVIDENCE_DIR="$ROOT_DIR/evidence/phase0"
+EVIDENCE_FILE="$EVIDENCE_DIR/no_tx_marker_lint.json"
 
 fail=0
+violations=()
 
 shopt -s nullglob
 for f in "$MIG_DIR"/*.sql; do
@@ -23,7 +26,23 @@ for f in "$MIG_DIR"/*.sql; do
     echo "❌ Migration contains top-level COMMIT (unindented): $f" >&2
     fail=1
   fi
+  if rg -qi "CREATE INDEX[[:space:]]+CONCURRENTLY" "$f"; then
+    if ! rg -qi "symphony:no_tx" "$f"; then
+      echo "❌ Missing -- symphony:no_tx marker for CONCURRENTLY: $f" >&2
+      violations+=("$f")
+      fail=1
+    fi
+  fi
 done
+
+mkdir -p "$EVIDENCE_DIR"
+printf '%s\n' "${violations[@]}" | python3 - <<PY
+import json, sys
+lines = [ln.strip() for ln in sys.stdin.read().splitlines() if ln.strip()]
+out = {"status": "fail" if lines else "pass", "violations": lines}
+with open("$EVIDENCE_FILE", "w", encoding="utf-8") as f:
+    json.dump(out, f, indent=2)
+PY
 
 if [[ $fail -ne 0 ]]; then
   exit 1

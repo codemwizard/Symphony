@@ -1,0 +1,35 @@
+phase: "0"
+task_id: "TSK-P0-029"
+title: "Expand DDL lock-risk lint for blocking operations"
+owner_role: "SECURITY_GUARDIAN"
+Depends On: TSK-P0-004, TSK-P0-030
+Touches:
+  - "scripts/security/lint_ddl_lock_risk.sh"
+Invariant(s): "INV-040 (Blocking DDL policy enforced)"
+Work:
+  - "For hot tables, require CREATE INDEX CONCURRENTLY and forbid blocking ALTER patterns."
+  - "Keep this as migration lint (not runtime privilege gate)."
+  - "Ensure lint emits ./evidence/phase0/ddl_blocking_policy.json."
+Acceptance Criteria:
+  - "CI fails on blocked patterns in migrations."
+  - "Evidence file is written by the verification step."
+Verification Commands:
+  - "scripts/security/lint_ddl_lock_risk.sh"
+Evidence Artifact(s):
+  - "./evidence/phase0/ddl_blocking_policy.json"
+Failure Modes:
+  - "Unsafe DDL passes lint."
+  - "Evidence file missing."
+must_read:
+  - "docs/invariants/INVARIANTS_MANIFEST.yml"
+  - "scripts/db/verify_invariants.sh"
+  - "scripts/db/ci_invariant_gate.sql"
+evidence:
+  - "./evidence/phase0/ddl_blocking_policy.json"
+verification:
+  - "scripts/security/lint_ddl_lock_risk.sh"
+status: "completed"
+notes: "Invariant registration is handled by TSK-P0-009."
+client: "codex_cli"
+assigned_agent: "security_guardian"
+model: "<UNASSIGNED>"

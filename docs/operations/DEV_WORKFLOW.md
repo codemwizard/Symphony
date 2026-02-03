@@ -43,6 +43,55 @@ If this is green, your PR should be green on the first CI run.
 
 ---
 
+## Pre-implementation checklist (must pass before coding)
+
+1) Create/confirm you are on a feature branch (no direct work on `main`).
+2) Run fast invariants checks:
+   ```bash
+   scripts/audit/run_invariants_fast_checks.sh
+   ```
+3) Run fast security checks:
+   ```bash
+   scripts/audit/run_security_fast_checks.sh
+   ```
+4) If secrets/identity changes are involved, run OpenBao smoke:
+   ```bash
+   scripts/security/openbao_bootstrap.sh
+   scripts/security/openbao_smoke_test.sh
+   ```
+4) If structural changes are expected:
+   - plan manifest/doc updates or exception in advance
+   - ensure `INV-###` references will be included
+5) If DB changes are expected:
+   ```bash
+   scripts/db/verify_invariants.sh
+   scripts/db/tests/test_db_functions.sh
+   ```
+   DB test variants (run when relevant):
+   ```bash
+   scripts/db/tests/test_idempotency_zombie.sh
+   scripts/db/tests/test_no_tx_migrations.sh
+   scripts/db/tests/test_outbox_pending_indexes.sh
+   ```
+6) If manifest changes are expected:
+   ```bash
+   scripts/audit/generate_invariants_quick
+   git add docs/invariants/INVARIANTS_QUICK.md
+   scripts/audit/run_invariants_fast_checks.sh
+   ```
+
+See `docs/operations/TASK_CREATION_PROCESS.md` before drafting new tasks.
+
+---
+
+## Branch policy (strict)
+
+- **Do not push to `main`.**
+- **Do not pull directly from `main` into your working branch.**
+- Always work on a feature branch and open a PR against `main`.
+
+---
+
 ## When your change is “structural”
 
 A change is considered **structural / invariant-affecting** when it touches things like:
@@ -94,10 +143,28 @@ In Cursor:
 scripts/audit/run_invariants_fast_checks.sh
 ```
 
+If the invariants manifest changes, regenerate and stage QUICK first:
+
+```bash
+scripts/audit/generate_invariants_quick
+git add docs/invariants/INVARIANTS_QUICK.md
+scripts/audit/run_invariants_fast_checks.sh
+```
+
 This ensures:
 - Manifest validates
 - Docs ↔ Manifest match
 - QUICK regenerated matches generator output
+
+## No-tx migrations (CONCURRENTLY)
+
+If a migration must run **outside** an explicit transaction (e.g., `CREATE INDEX CONCURRENTLY`), add this marker near the top of the migration file:
+
+```sql
+-- symphony:no_tx
+```
+
+Migrations without this marker are wrapped in `BEGIN/COMMIT` by `scripts/db/migrate.sh`.
 
 ### Step 4 — commit the docs/exception with the code change
 ```bash

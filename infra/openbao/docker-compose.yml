@@ -1,0 +1,15 @@
+services:
+  openbao:
+    image: openbao/openbao:latest
+    container_name: symphony-openbao
+    environment:
+      OPENBAO_DEV_ROOT_TOKEN_ID: root
+      BAO_ADDR: http://127.0.0.1:8200
+    command: "server -dev -dev-root-token-id=root -dev-listen-address=0.0.0.0:8200"
+    ports:
+      - "8200:8200"
+    volumes:
+      - openbao_data:/openbao
+
+volumes:
+  openbao_data:

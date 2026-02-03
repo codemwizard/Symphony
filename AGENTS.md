@@ -9,6 +9,8 @@ AI output is never authoritative unless backed by enforcement + verification.
 - SECURITY DEFINER functions must harden: `SET search_path = pg_catalog, public`.
 - Revoke-first privilege posture; runtime roles must not regain CREATE on schemas.
 - Append-only outbox attempts must remain append-only.
+- **No direct push to `main`.** Work only on feature branches and open PRs.
+- **No direct pull from `main` into working branches.** Use PRs for integration.
 
 ## Agents
 

@@ -20,6 +20,7 @@ echo "==> Required security scripts present"
 REQ=(
   "scripts/security/lint_sql_injection.sh"
   "scripts/security/lint_privilege_grants.sh"
+  "scripts/security/lint_core_boundary.sh"
 )
 for f in "${REQ[@]}"; do
   if [[ ! -f "$f" ]]; then
@@ -32,6 +33,7 @@ echo ""
 echo "==> Run security lints"
 run scripts/security/lint_sql_injection.sh
 run scripts/security/lint_privilege_grants.sh
+run scripts/security/lint_core_boundary.sh
 
 echo ""
 echo "✅ Fast security checks passed"

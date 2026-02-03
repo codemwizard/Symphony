@@ -1,0 +1,38 @@
+phase: "0"
+task_id: "TSK-P0-008"
+title: "Batching invariant definition and verifier"
+owner_role: "ARCHITECT"
+Depends On: TSK-P0-001
+Touches:
+  - "docs/architecture/batching_rules.yml"
+  - "scripts/audit/verify_batching_rules.sh"
+  - "docs/invariants/INVARIANTS_MANIFEST.yml"
+  - ".github/workflows/invariants.yml"
+  - "tasks/TSK-P0-008/meta.yml"
+Invariant(s): "INV-027 (Batching rules defined and enforced)"
+Work:
+  - "Add canonical batching rules file with size/time/max-wait thresholds."
+  - "Implement verifier to ensure required fields exist and are non-zero."
+  - "Wire into CI as fail-closed gate."
+Acceptance Criteria:
+  - "CI fails if batching rules are missing or invalid."
+  - "Evidence report generated under ./evidence/phase0/batching_rules.json."
+Verification Commands:
+  - "scripts/audit/verify_batching_rules.sh"
+Evidence Artifact(s):
+  - "./evidence/phase0/batching_rules.json"
+Failure Modes:
+  - "Missing or zero thresholds must fail."
+must_read:
+  - "docs/invariants/INVARIANTS_MANIFEST.yml"
+  - "scripts/db/verify_invariants.sh"
+  - "scripts/db/ci_invariant_gate.sql"
+evidence:
+  - "./evidence/phase0/batching_rules.json"
+verification:
+  - "scripts/audit/verify_batching_rules.sh"
+status: "completed"
+notes: ""
+client: "codex_cli"
+assigned_agent: "architect"
+model: "<UNASSIGNED>"

@@ -1,0 +1,14 @@
+You must not edit any files or run commands yet.
+First, produce a detailed plan and write it to docs/<current phase>/PLANS.md including:
+ 1. Objectives and non-goals
+ 2. Exact files/directories you’ll touch
+ 3. Step-by-step tasks in execution order (granular)
+ 4. New invariants needed (if any), and how they will be verified (tests/scripts/metrics)
+ 5. Any existing invariants impacted, and proof you will not weaken them
+ 6. Verification commands to run after each milestone
+ 7. Rollback strategy (git checkpoints)
+
+After writing PLANS.md, stop and ask me to approve before doing any modifications.
+
+
+Now execute the plan in PLANS.md step-by-step. After each step: show the diff summary, run the verification commands listed, and stop if any invariant fails.

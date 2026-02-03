@@ -31,12 +31,12 @@
 
 - id: INV-004
   aliases: ["I-MIG-05"]
-  status: roadmap
+  status: implemented
   severity: P1
   title: "Baseline snapshot is derived from migrations and must not drift"
   owners: ["team-db"]
   sla_days: 30
-  verification: "TODO: add baseline regeneration + freshness check in CI (no baseline enforcement found in repo snapshot)"
+  verification: "scripts/db/check_baseline_drift.sh"
 
 - id: INV-005
   aliases: ["I-SEC-01"]
@@ -163,3 +163,246 @@
   owners: ["team-platform"]
   sla_days: 14
   verification: "schema/migrations/0005_policy_versions.sql (single ACTIVE index) + scripts/db/ci_invariant_gate.sql"
+
+- id: INV-019
+  aliases: ["I-REPO-01"]
+  status: implemented
+  severity: P0
+  title: "Repo structure is enforced (required directories + doc references)"
+  owners: ["team-platform"]
+  sla_days: 14
+  verification: "scripts/audit/verify_repo_structure.sh"
+
+- id: INV-020
+  aliases: ["I-EVID-01"]
+  status: implemented
+  severity: P0
+  title: "Evidence anchoring: git SHA + schema hash"
+  owners: ["team-platform"]
+  sla_days: 14
+  verification: "scripts/audit/generate_evidence.sh"
+
+- id: INV-021
+  aliases: ["I-DB-01"]
+  status: implemented
+  severity: P0
+  title: "N-1 compatibility gate"
+  owners: ["team-db"]
+  sla_days: 14
+  verification: "scripts/db/n_minus_one_check.sh"
+
+- id: INV-022
+  aliases: ["I-DB-LOCK-01"]
+  status: implemented
+  severity: P0
+  title: "DDL lock-risk lint (blocking operations)"
+  owners: ["team-security"]
+  sla_days: 14
+  verification: "scripts/security/lint_ddl_lock_risk.sh"
+
+- id: INV-023
+  aliases: ["I-DB-IDEMP-01"]
+  status: implemented
+  severity: P0
+  title: "Idempotency zombie replay safety"
+  owners: ["team-db"]
+  sla_days: 14
+  verification: "scripts/db/tests/test_idempotency_zombie.sh"
+
+- id: INV-024
+  aliases: ["I-OB-OPENBAO-01"]
+  status: implemented
+  severity: P0
+  title: "OpenBao AppRole auth + deny policy"
+  owners: ["team-security"]
+  sla_days: 14
+  verification: "scripts/security/openbao_smoke_test.sh (after openbao_bootstrap.sh)"
+
+- id: INV-025
+  aliases: ["I-BG-01"]
+  status: implemented
+  severity: P0
+  title: "Blue/Green rollback compatibility"
+  owners: ["team-platform"]
+  sla_days: 14
+  verification: "scripts/audit/verify_routing_fallback.sh"
+
+- id: INV-026
+  aliases: ["I-BG-02"]
+  status: implemented
+  severity: P0
+  title: "Routing fallback invariant"
+  owners: ["team-platform"]
+  sla_days: 14
+  verification: "scripts/audit/validate_routing_fallback.sh"
+
+- id: INV-027
+  aliases: ["I-BATCH-01"]
+  status: implemented
+  severity: P0
+  title: "Batching rules defined and enforced"
+  owners: ["team-platform"]
+  sla_days: 14
+  verification: "scripts/audit/verify_batching_rules.sh"
+
+- id: INV-028
+  aliases: ["I-EVID-02"]
+  status: implemented
+  severity: P0
+  title: "Evidence schema validation"
+  owners: ["team-platform"]
+  sla_days: 14
+  verification: "scripts/audit/validate_evidence_schema.sh"
+
+- id: INV-029
+  aliases: ["I-EVID-03"]
+  status: implemented
+  severity: P0
+  title: "Evidence provenance required"
+  owners: ["team-platform"]
+  sla_days: 14
+  verification: "scripts/audit/generate_evidence.sh + scripts/audit/validate_evidence_schema.sh"
+
+- id: INV-030
+  aliases: ["I-DOCS-01"]
+  status: implemented
+  severity: P1
+  title: "Threat/compliance docs updated on structural change"
+  owners: ["team-platform"]
+  sla_days: 30
+  verification: "scripts/audit/enforce_change_rule.sh"
+
+- id: INV-031
+  aliases: ["I-OB-INDEX-01"]
+  status: implemented
+  severity: P0
+  title: "Outbox claim index required"
+  owners: ["team-db"]
+  sla_days: 14
+  verification: "scripts/db/tests/test_outbox_pending_indexes.sh"
+
+- id: INV-032
+  aliases: ["I-OB-TERM-01"]
+  status: implemented
+  severity: P0
+  title: "One terminal attempt per outbox_id"
+  owners: ["team-db"]
+  sla_days: 14
+  verification: "scripts/db/tests/test_db_functions.sh (terminal uniqueness)"
+
+- id: INV-033
+  aliases: ["I-OB-MVCC-01"]
+  status: implemented
+  severity: P1
+  title: "Outbox MVCC posture enforced"
+  owners: ["team-db"]
+  sla_days: 30
+  verification: "scripts/db/verify_invariants.sh (reloptions check)"
+
+- id: INV-034
+  aliases: ["I-OB-NOTIFY-01"]
+  status: implemented
+  severity: P1
+  title: "Outbox wakeup notification"
+  owners: ["team-db"]
+  sla_days: 30
+  verification: "scripts/db/tests/test_db_functions.sh (NOTIFY emission)"
+
+- id: INV-035
+  aliases: ["I-ING-ATT-01"]
+  status: implemented
+  severity: P1
+  title: "Ingress attestation append-only"
+  owners: ["team-db"]
+  sla_days: 30
+  verification: "scripts/db/verify_invariants.sh (ingress_attestations checks)"
+
+- id: INV-036
+  aliases: ["I-REV-01"]
+  status: implemented
+  severity: P0
+  title: "Revocation tables present + append-only"
+  owners: ["team-security"]
+  sla_days: 14
+  verification: "scripts/db/verify_invariants.sh (revocation tables checks)"
+
+- id: INV-037
+  aliases: ["I-CORE-BOUND-01"]
+  status: implemented
+  severity: P1
+  title: "Core code boundary enforced"
+  owners: ["team-security"]
+  sla_days: 30
+  verification: "scripts/security/lint_core_boundary.sh"
+
+- id: INV-038
+  aliases: ["I-ARCH-ALIGN-01"]
+  status: implemented
+  severity: P1
+  title: "Architecture doc alignment"
+  owners: ["team-platform"]
+  sla_days: 30
+  verification: "rg -n \"node|Node.js\" docs/overview/architecture.md docs/decisions/ADR-0001-repo-structure.md"
+
+- id: INV-039
+  aliases: ["I-DB-FAILCLOSED-01"]
+  status: roadmap
+  severity: P1
+  title: "Fail-closed under DB exhaustion"
+  owners: ["team-platform"]
+  sla_days: 30
+  verification: "TODO: define and wire fail-closed verification"
+
+- id: INV-040
+  aliases: ["I-DB-DDL-02"]
+  status: implemented
+  severity: P0
+  title: "Blocking DDL policy enforced (hot tables)"
+  owners: ["team-security"]
+  sla_days: 14
+  verification: "scripts/security/lint_ddl_lock_risk.sh"
+
+- id: INV-041
+  aliases: ["I-MIG-NOTX-01"]
+  status: implemented
+  severity: P0
+  title: "No-tx migrations supported"
+  owners: ["team-db"]
+  sla_days: 14
+  verification: "scripts/db/tests/test_no_tx_migrations.sh"
+
+- id: INV-042
+  aliases: ["I-MIG-NOTX-02"]
+  status: implemented
+  severity: P0
+  title: "Concurrent index requires no-tx marker"
+  owners: ["team-db"]
+  sla_days: 14
+  verification: "scripts/db/lint_migrations.sh"
+
+- id: INV-043
+  aliases: ["I-MIG-NOTX-03"]
+  status: implemented
+  severity: P1
+  title: "No-tx migration guidance"
+  owners: ["team-platform"]
+  sla_days: 30
+  verification: "rg -n \"symphony:no_tx\" docs/operations/DEV_WORKFLOW.md"
+
+- id: INV-044
+  aliases: ["I-DOCS-DRIFT-01"]
+  status: implemented
+  severity: P0
+  title: "Invariants docs match manifest"
+  owners: ["team-platform"]
+  sla_days: 14
+  verification: "scripts/audit/check_docs_match_manifest.py"
+
+- id: INV-048
+  aliases: ["I-ZECHL-01", "PROXY-VERIFY"]
+  status: roadmap
+  severity: P1
+  title: "Proxy/Alias resolution required before dispatch"
+  owners: ["team-platform"]
+  sla_days: 30
+  verification: "TODO: add Phase-0 static verifier for invariant declaration + ADR + schema design hooks"

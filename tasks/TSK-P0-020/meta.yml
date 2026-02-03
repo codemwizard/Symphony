@@ -1,0 +1,35 @@
+phase: "0"
+task_id: "TSK-P0-020"
+title: "Add due-claim indexes for payment_outbox_pending"
+owner_role: "DB_FOUNDATION"
+Depends On: none
+Touches:
+  - "schema/migrations/0007_outbox_pending_indexes.sql"
+  - "scripts/db/verify_invariants.sh"
+  - "docs/invariants/INVARIANTS_MANIFEST.yml"
+  - "tasks/TSK-P0-020/meta.yml"
+Invariant(s): "INV-031 (Outbox claim index required)"
+Work:
+  - "Add migration to create due-claim index on payment_outbox_pending."
+  - "Wire invariant verification in CI or DB verify."
+Acceptance Criteria:
+  - "Index exists with expected definition."
+Verification Commands:
+  - "scripts/db/verify_invariants.sh"
+Evidence Artifact(s):
+  - "./evidence/phase0/outbox_pending_indexes.json"
+Failure Modes:
+  - "Missing index or wrong definition."
+must_read:
+  - "docs/invariants/INVARIANTS_MANIFEST.yml"
+  - "scripts/db/verify_invariants.sh"
+  - "scripts/db/ci_invariant_gate.sql"
+evidence:
+  - "./evidence/phase0/outbox_pending_indexes.json"
+verification:
+  - "scripts/db/verify_invariants.sh"
+status: "completed"
+notes: ""
+client: "codex_cli"
+assigned_agent: "db_foundation"
+model: "<UNASSIGNED>"

@@ -1,0 +1,37 @@
+phase: "0"
+task_id: "TSK-P0-030"
+title: "Add no-tx migration marker support in migrate.sh"
+owner_role: "DB_FOUNDATION"
+Depends On: none
+Touches:
+  - "scripts/db/migrate.sh"
+  - "scripts/db/tests/test_no_tx_migrations.sh"
+Invariant(s): "INV-041 (No-tx migrations supported)"
+Work:
+  - "Implement -- symphony:no_tx marker parsing."
+  - "Run marked migrations outside explicit transaction."
+  - "Add a DB test to apply a CONCURRENTLY migration via migrate.sh."
+  - "Ensure test emits ./evidence/phase0/no_tx_migrations.json."
+Acceptance Criteria:
+  - "Migrations with marker succeed with CONCURRENTLY."
+  - "Evidence file is written by the verification step."
+Verification Commands:
+  - "scripts/db/tests/test_no_tx_migrations.sh"
+Evidence Artifact(s):
+  - "./evidence/phase0/no_tx_migrations.json"
+Failure Modes:
+  - "Concurrent index migration fails due to transaction wrapping."
+  - "Evidence file missing."
+must_read:
+  - "docs/invariants/INVARIANTS_MANIFEST.yml"
+  - "scripts/db/verify_invariants.sh"
+  - "scripts/db/ci_invariant_gate.sql"
+evidence:
+  - "./evidence/phase0/no_tx_migrations.json"
+verification:
+  - "scripts/db/tests/test_no_tx_migrations.sh"
+status: "completed"
+notes: ""
+client: "codex_cli"
+assigned_agent: "db_foundation"
+model: "<UNASSIGNED>"

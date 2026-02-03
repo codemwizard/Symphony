@@ -1,0 +1,40 @@
+phase: '0'
+task_id: TSK-P0-021
+title: Enforce terminal uniqueness on outbox attempts (DISPATCHED + FAILED)
+owner_role: DB_FOUNDATION
+Depends On: none
+Touches:
+- schema/migrations/0008_outbox_terminal_uniqueness.sql
+- scripts/db/tests/test_db_functions.sh
+Invariant(s): INV-032 (One terminal attempt per outbox_id)
+Work:
+- Add partial unique index on payment_outbox_attempts(outbox_id) where state IN (DISPATCHED,
+  FAILED).
+- Add DB test to assert SQLSTATE 23505 and constraint/index name on duplicate terminal
+  insert.
+- Ensure test emits ./evidence/phase0/outbox_terminal_uniqueness.json.
+- 'Note: terminal set currently {DISPATCHED, FAILED}; future terminal states must
+  update the predicate.'
+Acceptance Criteria:
+- Duplicate terminal insert fails at DB level.
+- Evidence file is written by the verification step.
+Verification Commands:
+- scripts/db/tests/test_db_functions.sh
+Evidence Artifact(s):
+- ./evidence/phase0/outbox_terminal_uniqueness.json
+Failure Modes:
+- Duplicate terminal attempt succeeds.
+- Evidence file missing.
+must_read:
+- docs/invariants/INVARIANTS_MANIFEST.yml
+- scripts/db/verify_invariants.sh
+- scripts/db/ci_invariant_gate.sql
+evidence:
+- ./evidence/phase0/outbox_terminal_uniqueness.json
+verification:
+- scripts/db/tests/test_db_functions.sh
+status: completed
+notes: Invariant registration is handled by TSK-P0-009.
+client: codex_cli
+assigned_agent: db_foundation
+model: <UNASSIGNED>
