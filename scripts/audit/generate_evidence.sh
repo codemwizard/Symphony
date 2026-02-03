@@ -36,5 +36,5 @@ out = {
   }
 }
 Path("$EVIDENCE_FILE").write_text(json.dumps(out, indent=2))
-print(f"Evidence written: {"$EVIDENCE_FILE"}")
+print("Evidence written: " + "$EVIDENCE_FILE")
 PY
