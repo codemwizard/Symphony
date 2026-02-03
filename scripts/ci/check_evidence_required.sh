@@ -4,24 +4,49 @@ set -euo pipefail
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 TASKS_DIR="$ROOT_DIR/tasks"
 
-python3 - <<'PY'
+ROOT_DIR="$ROOT_DIR" TASKS_DIR="$TASKS_DIR" python3 - <<'PY'
 import sys
 from pathlib import Path
 import glob
-import yaml
-
-root = Path("/home/mwiza/workspaces/Symphony")
-tasks_dir = root / "tasks"
-
-# pass CI_ONLY from env
 import os
+
+root = Path(os.environ["ROOT_DIR"])
+tasks_dir = Path(os.environ["TASKS_DIR"])
+
 ci_only = os.environ.get("CI_ONLY", "0") == "1"
 
 missing = []
 checked = []
 
+def parse_meta(path: Path) -> dict:
+    data = {"phase": None, "status": None, "evidence": []}
+    lines = path.read_text(encoding="utf-8", errors="ignore").splitlines()
+    in_evidence = False
+    for line in lines:
+        if not line.strip():
+            continue
+        if line.startswith("phase:"):
+            data["phase"] = line.split(":", 1)[1].strip().strip('"')
+            in_evidence = False
+            continue
+        if line.startswith("status:"):
+            data["status"] = line.split(":", 1)[1].strip().strip('"')
+            in_evidence = False
+            continue
+        if line.startswith("evidence:"):
+            in_evidence = True
+            continue
+        if in_evidence:
+            if line.lstrip().startswith("- "):
+                data["evidence"].append(line.split("- ", 1)[1].strip().strip('"'))
+                continue
+            # end of evidence block on next top-level key
+            if not line.startswith("  "):
+                in_evidence = False
+    return data
+
 for meta in sorted(tasks_dir.glob("TSK-P0-*/meta.yml")):
-    data = yaml.safe_load(meta.read_text()) or {}
+    data = parse_meta(meta)
     if str(data.get("phase")) != "0":
         continue
     if str(data.get("status", "")).lower() == "deferred":
