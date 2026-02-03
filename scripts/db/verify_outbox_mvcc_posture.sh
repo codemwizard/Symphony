@@ -16,7 +16,7 @@ relopts="$(psql "$DATABASE_URL" -X -A -t -v ON_ERROR_STOP=1 -c "SELECT reloption
 
 ff=""
 if [[ -n "$relopts" && "$relopts" != "" ]]; then
-  ff="$(echo "$relopts" | tr '{,}' '\n' | rg -o "fillfactor=\d+" | head -n 1 | cut -d '=' -f 2 || true)"
+  ff="$(echo "$relopts" | tr '{,}' '\n' | grep -Eo "fillfactor=[0-9]+" | head -n 1 | cut -d '=' -f 2 || true)"
 fi
 
 ok=1

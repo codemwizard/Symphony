@@ -37,7 +37,7 @@ PY
 
 if [[ "$structural" == "true" ]]; then
   # Require threat/compliance doc updates
-  if ! git diff --name-only "$BASE_REF...$HEAD_REF" | rg -q "docs/architecture/(THREAT_MODEL|COMPLIANCE_MAP)\.md"; then
+  if ! git diff --name-only "$BASE_REF...$HEAD_REF" | grep -Eq "docs/architecture/(THREAT_MODEL|COMPLIANCE_MAP)\.md"; then
     python3 - <<PY
 import json
 from pathlib import Path
