@@ -32,11 +32,14 @@ for line in Path("$BASELINE").read_text().splitlines():
 Path("/tmp/symphony_baseline_norm.sql").write_text("\\n".join(out) + "\\n")
 PY
 
-# Prefer pg_dump from the running DB container to avoid version mismatch
-DUMP_CMD=(pg_dump "$DATABASE_URL" --schema-only --no-owner --no-privileges)
+# Prefer pg_dump from a running DB container to avoid version mismatch
+DUMP_CMD=(pg_dump "$DATABASE_URL" --schema-only --no-owner --no-privileges --no-comments --schema=public)
 
-if docker ps --format '{{.Names}}' | rg -q '^symphony-postgres$'; then
-  DUMP_CMD=(docker exec symphony-postgres pg_dump "$DATABASE_URL" --schema-only --no-owner --no-privileges)
+if command -v docker >/dev/null 2>&1; then
+  pg_container="$(docker ps --format '{{.Names}}' | grep -E 'postgres' | head -n 1 || true)"
+  if [[ -n "$pg_container" ]]; then
+    DUMP_CMD=(docker exec "$pg_container" pg_dump "$DATABASE_URL" --schema-only --no-owner --no-privileges --no-comments --schema=public)
+  fi
 fi
 
 "${DUMP_CMD[@]}" > /tmp/symphony_schema_dump_raw.sql
