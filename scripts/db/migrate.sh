@@ -66,7 +66,7 @@ for file in "${files[@]}"; do
 
   echo "➡️  Applying migration: $version"
 
-  if grep -qE '^[[:space:]]*--[[:space:]]*symphony:no_tx' "$file"; then
+  if grep -q "symphony:no_tx" "$file"; then
     echo "   ↪ no-tx migration detected (-- symphony:no_tx)."
     # Run outside explicit transaction (required for CONCURRENTLY).
     psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -X -f "$file"
