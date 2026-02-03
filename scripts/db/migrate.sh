@@ -9,6 +9,7 @@
 # - Ensures public.schema_migrations exists
 # - Applies new migrations in order (schema/migrations/*.sql)
 # - Wraps each migration in its own transaction
+# - Supports no-tx migrations via marker: -- symphony:no_tx
 # - Records checksum in schema_migrations
 # - Fails hard on checksum mismatch (immutability)
 # ============================================================
@@ -65,13 +66,22 @@ for file in "${files[@]}"; do
 
   echo "➡️  Applying migration: $version"
 
-  # Apply inside a transaction; forbid top-level BEGIN/COMMIT in files via lint script
-  psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -X <<SQL
+  if grep -qE '^\s*--\s*symphony:no_tx\b' "$file"; then
+    echo "   ↪ no-tx migration detected (-- symphony:no_tx)."
+    # Run outside explicit transaction (required for CONCURRENTLY).
+    psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -X -f "$file"
+    psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -X \
+      -c "INSERT INTO public.schema_migrations(version, checksum) VALUES ('$version', '$checksum');"
+  else
+    # Apply inside a transaction; forbid top-level BEGIN/COMMIT in files via lint script
+    psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -X \
+      -v version="$version" -v checksum="$checksum" -v file="$file" <<'SQL'
 BEGIN;
-\i '$file'
-INSERT INTO public.schema_migrations(version, checksum) VALUES ('$version', '$checksum');
+\i :file
+INSERT INTO public.schema_migrations(version, checksum) VALUES (:'version', :'checksum');
 COMMIT;
 SQL
+  fi
 
   echo "✅ Applied: $version"
 done

@@ -1,0 +1,35 @@
+phase: "0"
+task_id: "TSK-P0-011"
+title: "Evidence schema validation gate"
+owner_role: "SECURITY_GUARDIAN"
+Depends On: TSK-P0-002
+Touches:
+  - "scripts/audit/validate_evidence_schema.sh"
+  - ".github/workflows/invariants.yml"
+  - "tasks/TSK-P0-011/meta.yml"
+Invariant(s): "INV-028 (Evidence schema validation)"
+Work:
+  - "Add validator script to enforce evidence JSON schema correctness."
+  - "Wire into mechanical_invariants job; fail-closed on invalid evidence."
+Acceptance Criteria:
+  - "CI fails if evidence JSON does not validate against schema."
+  - "Evidence validation report generated under ./evidence/phase0/evidence_validation.json."
+Verification Commands:
+  - "scripts/audit/validate_evidence_schema.sh"
+Evidence Artifact(s):
+  - "./evidence/phase0/evidence_validation.json"
+Failure Modes:
+  - "Missing or invalid evidence JSON must fail."
+must_read:
+  - "docs/invariants/INVARIANTS_MANIFEST.yml"
+  - "scripts/db/verify_invariants.sh"
+  - "scripts/db/ci_invariant_gate.sql"
+evidence:
+  - "./evidence/phase0/evidence_validation.json"
+verification:
+  - "scripts/audit/validate_evidence_schema.sh"
+status: "completed"
+notes: ""
+client: "codex_cli"
+assigned_agent: "security_guardian"
+model: "<UNASSIGNED>"

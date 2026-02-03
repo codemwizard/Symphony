@@ -20,7 +20,7 @@
 |-----------|---------|--------|
 | `schema/migrations/` | Database DDL | ✅ Phase 0 |
 | `scripts/db/` | Migration tooling | ✅ Phase 0 |
-| `packages/node/db/` | Node.js DB adapter | 🔜 Phase 1 |
+| `src/Symphony.DbAdapter/` | .NET DB adapter (planned) | 🔜 Phase 1 |
 | `services/outbox-relayer/` | Payment dispatch | 🔜 Phase 1 |
 
 ## Database Roles

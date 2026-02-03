@@ -145,6 +145,24 @@ jobs:
           scripts/audit/generate_invariants_quick
           git diff --exit-code docs/invariants/INVARIANTS_QUICK.md
 
+      - name: Verify repo structure (Phase 0)
+        if: github.event_name != 'schedule'
+        run: |
+          chmod +x scripts/audit/verify_repo_structure.sh
+          scripts/audit/verify_repo_structure.sh
+
+      - name: Generate evidence anchor (Phase 0)
+        if: github.event_name != 'schedule'
+        run: |
+          chmod +x scripts/audit/generate_evidence.sh
+          scripts/audit/generate_evidence.sh
+
+      - name: Require Phase-0 evidence (fail-closed)
+        if: github.event_name != 'schedule'
+        run: |
+          chmod +x scripts/ci/check_evidence_required.sh
+          CI_ONLY=1 scripts/ci/check_evidence_required.sh
+
       - name: Upload detector artifacts
         if: github.event_name != 'schedule' && always()
         uses: actions/upload-artifact@v4
@@ -153,6 +171,14 @@ jobs:
           path: |
             /tmp/invariants_ai/pr.diff
             /tmp/invariants_ai/detect.json
+
+      - name: Upload Phase-0 evidence artifact
+        if: github.event_name != 'schedule' && always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: phase0-evidence
+          path: |
+            evidence/**
 
   codex_invariants_review:
     name: Phase II — Codex authoring (docs/manifest only)
@@ -435,6 +461,14 @@ jobs:
           set -euo pipefail
           chmod +x scripts/db/verify_invariants.sh
           scripts/db/verify_invariants.sh
+
+      - name: Run N-1 compatibility gate
+        env:
+          DATABASE_URL: postgres://symphony:symphony@localhost:5432/symphony
+        run: |
+          set -euo pipefail
+          chmod +x scripts/db/n_minus_one_check.sh
+          scripts/db/n_minus_one_check.sh
 
       - name: Run DB function tests
         env:

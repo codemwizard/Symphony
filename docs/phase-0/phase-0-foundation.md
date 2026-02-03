@@ -16,6 +16,9 @@ Create a clean-slate repo that can be safely extended bottom-up without inheriti
 
 ### 1. Repo Structure
 Create the following directory structure:
+- `src/` - .NET services and libraries
+- `tests/` - Test projects
+- `tools/` - Build and ops tooling
 - `services/` - Application services
 - `packages/` - Shared Node.js and .NET packages
 - `schema/` - Database migrations and seeds
@@ -23,6 +26,10 @@ Create the following directory structure:
 - `docs/` - Documentation (design, invariants, decisions, operations)
 - `infra/` - Docker and infrastructure configs
 - `archive/` - Legacy codebase (frozen, read-only)
+
+### 1b. Repo Structure Verifier
+- `scripts/audit/verify_repo_structure.sh` - Fails if required directories or doc references are missing
+- Evidence: `./evidence/phase0/repo_structure.json`
 
 ### 2. Invariants Contract
 - `docs/invariants/INVARIANTS_QUICK.md` - One-line per invariant

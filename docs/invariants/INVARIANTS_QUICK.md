@@ -7,6 +7,7 @@ _Generated from `docs/invariants/INVARIANTS_MANIFEST.yml` (do not edit by hand).
 | INV-001 | P0 | Applied migrations are immutable (checksum ledger) | ["team-db"] | scripts/db/migrate.sh checksum check; run via scripts/db/verify_invariants.sh |
 | INV-002 | P0 | Migration files must not contain top-level BEGIN/COMMIT | ["team-db"] | scripts/db/lint_migrations.sh; run via scripts/db/verify_invariants.sh |
 | INV-003 | P0 | Fix forward only: changes via new migrations, never by editing applied ones | ["team-db"] | scripts/db/migrate.sh checksum immutability (same as INV-001); run via scripts/db/verify_invariants.sh |
+| INV-004 | P1 | Baseline snapshot is derived from migrations and must not drift | ["team-db"] | scripts/db/check_baseline_drift.sh |
 | INV-005 | P0 | Deny-by-default privileges (revoke-first posture) | ["team-platform"] | schema/migrations/0004_privileges.sql + scripts/db/ci_invariant_gate.sql; run via scripts/db/verify_invariants.sh |
 | INV-006 | P0 | No runtime DDL: PUBLIC/runtime roles must not have CREATE on schema public | ["team-platform"] | scripts/db/ci_invariant_gate.sql (schema CREATE privilege check); run via scripts/db/verify_invariants.sh |
 | INV-007 | P0 | Runtime roles are NOLOGIN templates; services assume them via SET ROLE | ["team-platform"] | schema/migrations/0003_roles.sql creates roles NOLOGIN; run via scripts/db/verify_invariants.sh |
@@ -20,3 +21,28 @@ _Generated from `docs/invariants/INVARIANTS_MANIFEST.yml` (do not edit by hand).
 | INV-016 | P0 | policy_versions exists and supports boot query shape (is_active=true) | ["team-platform"] | schema/migrations/0005_policy_versions.sql (status/is_active) + scripts/db/ci_invariant_gate.sql |
 | INV-017 | P0 | policy_versions.checksum is NOT NULL | ["team-platform"] | schema/migrations/0005_policy_versions.sql (checksum NOT NULL) + scripts/db/ci_invariant_gate.sql |
 | INV-018 | P0 | Single ACTIVE policy row enforced by unique predicate index | ["team-platform"] | schema/migrations/0005_policy_versions.sql (single ACTIVE index) + scripts/db/ci_invariant_gate.sql |
+| INV-019 | P0 | Repo structure is enforced (required directories + doc references) | ["team-platform"] | scripts/audit/verify_repo_structure.sh |
+| INV-020 | P0 | Evidence anchoring: git SHA + schema hash | ["team-platform"] | scripts/audit/generate_evidence.sh |
+| INV-021 | P0 | N-1 compatibility gate | ["team-db"] | scripts/db/n_minus_one_check.sh |
+| INV-022 | P0 | DDL lock-risk lint (blocking operations) | ["team-security"] | scripts/security/lint_ddl_lock_risk.sh |
+| INV-023 | P0 | Idempotency zombie replay safety | ["team-db"] | scripts/db/tests/test_idempotency_zombie.sh |
+| INV-024 | P0 | OpenBao AppRole auth + deny policy | ["team-security"] | scripts/security/openbao_smoke_test.sh (after openbao_bootstrap.sh) |
+| INV-025 | P0 | Blue/Green rollback compatibility | ["team-platform"] | scripts/audit/verify_routing_fallback.sh |
+| INV-026 | P0 | Routing fallback invariant | ["team-platform"] | scripts/audit/validate_routing_fallback.sh |
+| INV-027 | P0 | Batching rules defined and enforced | ["team-platform"] | scripts/audit/verify_batching_rules.sh |
+| INV-028 | P0 | Evidence schema validation | ["team-platform"] | scripts/audit/validate_evidence_schema.sh |
+| INV-029 | P0 | Evidence provenance required | ["team-platform"] | scripts/audit/generate_evidence.sh + scripts/audit/validate_evidence_schema.sh |
+| INV-030 | P1 | Threat/compliance docs updated on structural change | ["team-platform"] | scripts/audit/enforce_change_rule.sh |
+| INV-031 | P0 | Outbox claim index required | ["team-db"] | scripts/db/tests/test_outbox_pending_indexes.sh |
+| INV-032 | P0 | One terminal attempt per outbox_id | ["team-db"] | scripts/db/tests/test_db_functions.sh (terminal uniqueness) |
+| INV-033 | P1 | Outbox MVCC posture enforced | ["team-db"] | scripts/db/verify_invariants.sh (reloptions check) |
+| INV-034 | P1 | Outbox wakeup notification | ["team-db"] | scripts/db/tests/test_db_functions.sh (NOTIFY emission) |
+| INV-035 | P1 | Ingress attestation append-only | ["team-db"] | scripts/db/verify_invariants.sh (ingress_attestations checks) |
+| INV-036 | P0 | Revocation tables present + append-only | ["team-security"] | scripts/db/verify_invariants.sh (revocation tables checks) |
+| INV-037 | P1 | Core code boundary enforced | ["team-security"] | scripts/security/lint_core_boundary.sh |
+| INV-038 | P1 | Architecture doc alignment | ["team-platform"] | rg -n \"node|Node.js\" docs/overview/architecture.md docs/decisions/ADR-0001-repo-structure.md |
+| INV-040 | P0 | Blocking DDL policy enforced (hot tables) | ["team-security"] | scripts/security/lint_ddl_lock_risk.sh |
+| INV-041 | P0 | No-tx migrations supported | ["team-db"] | scripts/db/tests/test_no_tx_migrations.sh |
+| INV-042 | P0 | Concurrent index requires no-tx marker | ["team-db"] | scripts/db/lint_migrations.sh |
+| INV-043 | P1 | No-tx migration guidance | ["team-platform"] | rg -n \"symphony:no_tx\" docs/operations/DEV_WORKFLOW.md |
+| INV-044 | P0 | Invariants docs match manifest | ["team-platform"] | scripts/audit/check_docs_match_manifest.py |

@@ -1,0 +1,6 @@
+0001_init.sql:32:      EXECUTE $fn$
+0001_init.sql:42:      EXECUTE $fn$
+0004_privileges.sql:46:      EXECUTE 'REVOKE ALL ON TABLE public.policy_versions FROM PUBLIC';
+0004_privileges.sql:47:      EXECUTE 'REVOKE ALL ON TABLE public.policy_versions FROM symphony_ingest, symphony_executor, symphony_readonly, symphony_auditor, symphony_control, test_user';
+0004_privileges.sql:55:      EXECUTE 'REVOKE ALL ON TABLE public.schema_migrations FROM PUBLIC';
+0004_privileges.sql:105:      EXECUTE 'GRANT SELECT ON TABLE public.policy_versions TO symphony_executor, symphony_control, symphony_readonly, symphony_auditor, test_user';

@@ -1,0 +1,36 @@
+phase: "0"
+task_id: "TSK-P0-022"
+title: "Enforce MVCC posture for payment_outbox_pending"
+owner_role: "DB_FOUNDATION"
+Depends On: TSK-P0-020
+Touches:
+  - "schema/migrations/0009_pending_fillfactor.sql"
+  - "scripts/db/verify_invariants.sh"
+Invariant(s): "INV-033 (Outbox MVCC posture enforced)"
+Work:
+  - "Set fillfactor=80 (and optional autovacuum reloptions) for payment_outbox_pending."
+  - "Add verification in scripts/db/verify_invariants.sh to fail if reloptions missing."
+  - "Ensure verifier emits ./evidence/phase0/outbox_mvcc_posture.json."
+Acceptance Criteria:
+  - "Table reloptions show fillfactor set (and vacuum settings if declared)."
+  - "Evidence file is written by the verification step."
+Verification Commands:
+  - "scripts/db/verify_invariants.sh"
+Evidence Artifact(s):
+  - "./evidence/phase0/outbox_mvcc_posture.json"
+Failure Modes:
+  - "Fillfactor/vacuum posture not enforced."
+  - "Evidence file missing."
+must_read:
+  - "docs/invariants/INVARIANTS_MANIFEST.yml"
+  - "scripts/db/verify_invariants.sh"
+  - "scripts/db/ci_invariant_gate.sql"
+evidence:
+  - "./evidence/phase0/outbox_mvcc_posture.json"
+verification:
+  - "scripts/db/verify_invariants.sh"
+status: "completed"
+notes: "Documentation updates (if needed) should be handled by ARCHITECT."
+client: "codex_cli"
+assigned_agent: "db_foundation"
+model: "<UNASSIGNED>"

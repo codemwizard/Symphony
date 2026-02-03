@@ -1,0 +1,33 @@
+phase: "0"
+task_id: "TSK-P0-017"
+title: "Structural change linkage for threat/compliance docs"
+owner_role: "SECURITY_GUARDIAN"
+Depends On: TSK-P0-001
+Touches:
+  - "scripts/audit/enforce_change_rule.sh"
+  - "tasks/TSK-P0-017/meta.yml"
+Invariant(s): "INV-030 (Threat/compliance docs updated on structural change)"
+Work:
+  - "Extend change-rule gate to require updates to threat model and compliance map on structural changes."
+  - "Fail-closed when structural_change is true and docs are untouched."
+Acceptance Criteria:
+  - "CI fails if structural changes occur without updating required docs."
+Verification Commands:
+  - "scripts/audit/enforce_change_rule.sh"
+Evidence Artifact(s):
+  - "./evidence/phase0/structural_doc_linkage.json"
+Failure Modes:
+  - "Structural change without docs update must fail."
+must_read:
+  - "docs/invariants/INVARIANTS_MANIFEST.yml"
+  - "scripts/db/verify_invariants.sh"
+  - "scripts/db/ci_invariant_gate.sql"
+evidence:
+  - "./evidence/phase0/structural_doc_linkage.json"
+verification:
+  - "scripts/audit/enforce_change_rule.sh"
+status: "completed"
+notes: ""
+client: "codex_cli"
+assigned_agent: "security_guardian"
+model: "<UNASSIGNED>"

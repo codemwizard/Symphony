@@ -1,0 +1,39 @@
+phase: "0"
+task_id: "TSK-P0-034"
+title: "Enforce invariants docs match manifest"
+owner_role: "INVARIANTS_CURATOR"
+Depends On: TSK-P0-009
+Touches:
+  - "scripts/audit/run_invariants_fast_checks.sh"
+  - "docs/invariants/INVARIANTS_MANIFEST.yml"
+  - "docs/invariants/INVARIANTS_IMPLEMENTED.md"
+  - "docs/invariants/INVARIANTS_ROADMAP.md"
+  - "docs/invariants/INVARIANTS_QUICK.md"
+  - "tasks/TSK-P0-034/meta.yml"
+Invariant(s): "INV-044 (Docs match manifest)"
+Work:
+  - "Ensure scripts/audit/check_docs_match_manifest.py is run in fast checks."
+  - "Emit evidence ./evidence/phase0/invariants_docs_match.json."
+Acceptance Criteria:
+  - "Fast checks fail if docs drift from manifest."
+  - "Evidence file is written by the verification step."
+Verification Commands:
+  - "scripts/audit/run_invariants_fast_checks.sh"
+Evidence Artifact(s):
+  - "./evidence/phase0/invariants_docs_match.json"
+Failure Modes:
+  - "Drift between docs and manifest goes undetected."
+  - "Evidence file missing."
+must_read:
+  - "docs/invariants/INVARIANTS_MANIFEST.yml"
+  - "scripts/db/verify_invariants.sh"
+  - "scripts/db/ci_invariant_gate.sql"
+evidence:
+  - "./evidence/phase0/invariants_docs_match.json"
+verification:
+  - "scripts/audit/run_invariants_fast_checks.sh"
+status: "completed"
+notes: ""
+client: "codex_cli"
+assigned_agent: "invariants_curator"
+model: "<UNASSIGNED>"
