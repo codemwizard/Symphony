@@ -2,7 +2,7 @@
 -- PostgreSQL database dump
 --
 
-\restrict XutmxgL7Ya4ahrQazxUfiqZOigQBOVggaGgabXHNVP6HWLhamg1hqXqAdiMflLw
+\restrict DymYYcepWF9BudGoEbEML0VRdKGVJlp8K4uJETYspsXZf2VAQgSoFCSe6zXJwbg
 
 -- Dumped from database version 18.1 (Debian 18.1-1.pgdg13+2)
 -- Dumped by pg_dump version 18.1 (Debian 18.1-1.pgdg13+2)
@@ -20,17 +20,10 @@ SET client_min_messages = warning;
 SET row_security = off;
 
 --
--- Name: pgcrypto; Type: EXTENSION; Schema: -; Owner: -
+-- Name: public; Type: SCHEMA; Schema: -; Owner: -
 --
 
-CREATE EXTENSION IF NOT EXISTS pgcrypto WITH SCHEMA public;
-
-
---
--- Name: EXTENSION pgcrypto; Type: COMMENT; Schema: -; Owner: -
---
-
-COMMENT ON EXTENSION pgcrypto IS 'cryptographic functions';
+CREATE SCHEMA public;
 
 
 --
@@ -328,13 +321,6 @@ $$;
 
 
 --
--- Name: FUNCTION outbox_retry_ceiling(); Type: COMMENT; Schema: public; Owner: -
---
-
-COMMENT ON FUNCTION public.outbox_retry_ceiling() IS 'Returns the configured retry ceiling (symphony.outbox_retry_ceiling) or default 20.';
-
-
---
 -- Name: repair_expired_leases(integer, text); Type: FUNCTION; Schema: public; Owner: -
 --
 
@@ -412,13 +398,6 @@ $$;
 
 
 --
--- Name: FUNCTION uuid_strategy(); Type: COMMENT; Schema: public; Owner: -
---
-
-COMMENT ON FUNCTION public.uuid_strategy() IS 'Reports which UUID strategy is active (uuidv7 vs gen_random_uuid).';
-
-
---
 -- Name: uuid_v7_or_random(); Type: FUNCTION; Schema: public; Owner: -
 --
 
@@ -427,13 +406,6 @@ CREATE FUNCTION public.uuid_v7_or_random() RETURNS uuid
     AS $$
           SELECT gen_random_uuid();
         $$;
-
-
---
--- Name: FUNCTION uuid_v7_or_random(); Type: COMMENT; Schema: public; Owner: -
---
-
-COMMENT ON FUNCTION public.uuid_v7_or_random() IS 'UUID generator chosen at migration-time: uuidv7() if available, else pgcrypto gen_random_uuid().';
 
 
 SET default_tablespace = '';
@@ -496,13 +468,6 @@ CREATE TABLE public.payment_outbox_attempts (
 
 
 --
--- Name: TABLE payment_outbox_attempts; Type: COMMENT; Schema: public; Owner: -
---
-
-COMMENT ON TABLE public.payment_outbox_attempts IS 'Append-only outbox attempt ledger (authoritative status history). No UPDATE/DELETE.';
-
-
---
 -- Name: payment_outbox_pending; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -527,27 +492,6 @@ WITH (fillfactor='80');
 
 
 --
--- Name: TABLE payment_outbox_pending; Type: COMMENT; Schema: public; Owner: -
---
-
-COMMENT ON TABLE public.payment_outbox_pending IS 'Active hot queue for payment instructions waiting for dispatch or retry.';
-
-
---
--- Name: COLUMN payment_outbox_pending.attempt_count; Type: COMMENT; Schema: public; Owner: -
---
-
-COMMENT ON COLUMN public.payment_outbox_pending.attempt_count IS 'Total number of attempts made so far (used for backoff).';
-
-
---
--- Name: COLUMN payment_outbox_pending.lease_token; Type: COMMENT; Schema: public; Owner: -
---
-
-COMMENT ON COLUMN public.payment_outbox_pending.lease_token IS 'Random UUID token proving ownership of the claim (fencing token).';
-
-
---
 -- Name: policy_versions; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -563,13 +507,6 @@ CREATE TABLE public.policy_versions (
     CONSTRAINT ck_policy_checksum_nonempty CHECK ((length(checksum) > 0)),
     CONSTRAINT ck_policy_grace_requires_expiry CHECK (((status <> 'GRACE'::public.policy_version_status) OR (grace_expires_at IS NOT NULL)))
 );
-
-
---
--- Name: TABLE policy_versions; Type: COMMENT; Schema: public; Owner: -
---
-
-COMMENT ON TABLE public.policy_versions IS 'Boot-critical policy version ledger. Current runtime expects is_active=true row; future supports rotation with GRACE.';
 
 
 --
@@ -792,5 +729,5 @@ CREATE TRIGGER trg_deny_revoked_tokens_mutation BEFORE DELETE OR UPDATE ON publi
 -- PostgreSQL database dump complete
 --
 
-\unrestrict XutmxgL7Ya4ahrQazxUfiqZOigQBOVggaGgabXHNVP6HWLhamg1hqXqAdiMflLw
+\unrestrict DymYYcepWF9BudGoEbEML0VRdKGVJlp8K4uJETYspsXZf2VAQgSoFCSe6zXJwbg
 

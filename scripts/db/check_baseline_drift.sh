@@ -29,7 +29,7 @@ for line in Path("$BASELINE").read_text().splitlines():
     if line.startswith("\\\\restrict") or line.startswith("\\\\unrestrict"):
         continue
     out.append(line)
-Path("/tmp/symphony_baseline_norm.sql").write_text("\\n".join(out) + "\\n")
+Path("/tmp/symphony_baseline_norm.sql").write_text("\\n".join(sorted(out)) + "\\n")
 PY
 
 # Prefer pg_dump from a running DB container to avoid version mismatch
@@ -53,7 +53,7 @@ for line in Path("/tmp/symphony_schema_dump_raw.sql").read_text().splitlines():
     if line.startswith("\\\\restrict") or line.startswith("\\\\unrestrict"):
         continue
     out.append(line)
-Path("/tmp/symphony_schema_dump.sql").write_text("\\n".join(out) + "\\n")
+Path("/tmp/symphony_schema_dump.sql").write_text("\\n".join(sorted(out)) + "\\n")
 PY
 
 if ! diff -q /tmp/symphony_baseline_norm.sql /tmp/symphony_schema_dump.sql >/dev/null; then
