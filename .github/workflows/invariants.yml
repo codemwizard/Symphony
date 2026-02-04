@@ -601,11 +601,13 @@ jobs:
             echo ""
         
             echo "Recursively list anything under evidence* (up to 6 levels):"
-            for d in $(compgen -G "evidence*") || true; do
-              echo "---- $d ----"
-              ls -la "$d" || true
-              echo ""
-            done
+              shopt -s nullglob
+              for d in evidence*; do
+                echo "---- $d ----"
+                ls -la "$d" || true
+                echo ""
+              done
+              shopt -u nullglob
         
             echo "Find any TSK-P0 files (anywhere):"
             mapfile -t found < <(find . -type f -iname 'TSK-P0-*' -print)
