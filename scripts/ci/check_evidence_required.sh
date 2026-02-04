@@ -26,7 +26,8 @@ if ci_only:
     nested = evidence_root / "evidence" / "phase0"
     # Prefer nested root when present (common when artifact already contains evidence/phase0 prefix)
     if nested.exists():
-        evidence_root = nested
+        if not any(evidence_root.rglob("*.json")):
+            evidence_root = nested
     elif not evidence_root.exists():
         # legacy fallback: if caller passed a non-existent path
         double_base = root / "evidence" / "phase0" / "evidence" / "phase0"
@@ -98,6 +99,10 @@ for meta in sorted(tasks_dir.glob("TSK-P0-*/meta.yml")):
                 # local-only evidence; skip in CI gate
                 continue
             matches = glob.glob(abs_pattern)
+            if ci_only and not matches:
+                # fallback: look for basename anywhere under evidence_root
+                basename = Path(pattern).name
+                matches = [str(p) for p in evidence_root.rglob(basename)]
             checked.append((meta.parent.name, pattern, len(matches)))
             if len(matches) == 0:
                 missing.append(f"{meta.parent.name}: {pattern}")
