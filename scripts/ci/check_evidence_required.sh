@@ -22,10 +22,17 @@ evidence_root = Path(os.environ["EVIDENCE_ROOT"])
 ci_only = os.environ.get("CI_ONLY", "0") == "1"
 
 # In CI, artifacts may be extracted under evidence/phase0/evidence/phase0
-if ci_only and not evidence_root.exists():
-    double_base = root / "evidence" / "phase0" / "evidence" / "phase0"
-    if double_base.exists():
-        evidence_root = double_base
+if ci_only:
+    nested = evidence_root / "evidence" / "phase0"
+    # Prefer nested root when present (common when artifact already contains evidence/phase0 prefix)
+    if nested.exists():
+        evidence_root = nested
+    elif not evidence_root.exists():
+        # legacy fallback: if caller passed a non-existent path
+        double_base = root / "evidence" / "phase0" / "evidence" / "phase0"
+        if double_base.exists():
+            evidence_root = double_base
+
 
 missing = []
 checked = []
