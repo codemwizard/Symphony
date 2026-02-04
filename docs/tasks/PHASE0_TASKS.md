@@ -787,3 +787,27 @@ Failure Modes:
 - INV-048 missing or malformed.
 - ADR/schema design doc missing.
 - Evidence file missing.
+
+TASK ID: TSK-P0-036
+Title: Local CI parity runner (wipe + full pipeline)
+Owner Role: PLATFORM
+Depends On: TSK-P0-010, TSK-P0-030, TSK-P0-034
+Touches: `scripts/ci/run_ci_locally.sh`, `docs/operations/LOCAL_CI_PARITY.md`, `docs/operations/DEV_WORKFLOW.md`, `tasks/TSK-P0-036/meta.yml`
+Invariant(s): NEW INV-049 (Local CI parity enforced)
+Work:
+- Add a destructive local CI runner that mirrors GitHub Actions job order.
+- Require `CI_WIPE=1` to proceed; wipe and recreate the dev DB before running.
+- Use the same Postgres major version as CI (18) by running against the docker service.
+- Emit `./evidence/phase0/local_ci_parity.json`.
+Acceptance Criteria:
+- Runner exits non-zero on any failed step.
+- Runner wipes DB only when `CI_WIPE=1` is set.
+- Evidence file is written by the runner.
+Verification Commands:
+- `CI_WIPE=1 DATABASE_URL=postgres://symphony_admin:symphony_pass@127.0.0.1:5432/symphony scripts/ci/run_ci_locally.sh`
+Evidence Artifact(s):
+- `./evidence/phase0/local_ci_parity.json`
+Failure Modes:
+- Evidence file missing.
+- Runner does not wipe DB when required.
+- Local CI steps diverge from CI workflow order.
