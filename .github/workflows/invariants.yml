@@ -586,6 +586,26 @@ jobs:
           merge-multiple: true
           path: .
 
+      # Insert under jobs.phase0_evidence_gate.steps immediately after the "Download evidence artifacts" step
+      - name: Normalize evidence layout (ensure evidence/phase0 exists)
+        run: |
+          set -euo pipefail
+          # If artifacts produced evidence/* but validator expects evidence/phase0, move them.
+          if [[ -d "evidence" && ! -d "evidence/phase0" ]]; then
+            mkdir -p evidence/phase0
+            shopt -s dotglob
+            for p in evidence/*; do
+              # skip the directory we just created
+              if [[ "$p" == "evidence/phase0" ]]; then
+                continue
+              fi
+              mv -v "$p" evidence/phase0/ || true
+            done
+            shopt -u dotglob
+          fi
+          echo "Listing evidence/phase0:"
+          ls -la evidence/phase0 || true
+          
       - name: Require Phase-0 evidence (fail-closed)
         run: |
           chmod +x scripts/ci/check_evidence_required.sh
