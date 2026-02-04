@@ -80,6 +80,15 @@ If this is green, your PR should be green on the first CI run.
    scripts/audit/run_invariants_fast_checks.sh
    ```
 
+## Local CI parity (destructive)
+
+For a CI-equivalent local run (including a fresh DB wipe), use:
+
+```bash
+CI_WIPE=1 DATABASE_URL=postgres://symphony_admin:symphony_pass@127.0.0.1:5432/symphony \
+  scripts/ci/run_ci_locally.sh
+```
+
 See `docs/operations/TASK_CREATION_PROCESS.md` before drafting new tasks.
 
 ---

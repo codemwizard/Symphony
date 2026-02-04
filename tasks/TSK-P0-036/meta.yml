@@ -1,0 +1,41 @@
+phase: "0"
+task_id: "TSK-P0-036"
+title: "Local CI parity runner (wipe + full pipeline)"
+owner_role: "PLATFORM"
+Depends On: TSK-P0-010, TSK-P0-030, TSK-P0-034
+Touches:
+  - "scripts/ci/run_ci_locally.sh"
+  - "docs/operations/LOCAL_CI_PARITY.md"
+  - "docs/operations/DEV_WORKFLOW.md"
+  - "tasks/TSK-P0-036/meta.yml"
+Invariant(s): "INV-049 (Local CI parity enforced)"
+Work:
+  - "Add destructive local CI runner that mirrors GitHub Actions job order."
+  - "Require CI_WIPE=1 to proceed; wipe and recreate dev DB before running."
+  - "Use Postgres 18 via docker service for parity."
+  - "Emit ./evidence/phase0/local_ci_parity.json."
+Acceptance Criteria:
+  - "Runner exits non-zero on any failed step."
+  - "Runner wipes DB only when CI_WIPE=1 is set."
+  - "Evidence file is written by the runner."
+Verification Commands:
+  - "CI_WIPE=1 DATABASE_URL=postgres://symphony_admin:symphony_pass@127.0.0.1:5432/symphony scripts/ci/run_ci_locally.sh"
+Evidence Artifact(s):
+  - "./evidence/phase0/local_ci_parity.json"
+Failure Modes:
+  - "Evidence file missing."
+  - "Runner does not wipe DB when required."
+  - "Local CI steps diverge from CI workflow order."
+must_read:
+  - "docs/invariants/INVARIANTS_MANIFEST.yml"
+  - "scripts/db/verify_invariants.sh"
+  - "scripts/db/ci_invariant_gate.sql"
+evidence:
+  - "./evidence/phase0/local_ci_parity.json"
+verification:
+  - "CI_WIPE=1 DATABASE_URL=postgres://symphony_admin:symphony_pass@127.0.0.1:5432/symphony scripts/ci/run_ci_locally.sh"
+status: "completed"
+notes: ""
+client: "codex_cli"
+assigned_agent: "platform"
+model: "<UNASSIGNED>"

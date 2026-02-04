@@ -80,12 +80,36 @@ SQL
     local checksum
     checksum="$(sha256sum "$file" | awk '{print $1}')"
 
-    psql "$db_url" -v ON_ERROR_STOP=1 -X <<SQL
+    no_tx=0
+    if head -n 50 "$file" | sed '1s/^\xEF\xBB\xBF//' | grep -Eq '^[[:space:]]*--[[:space:]]*symphony:no_tx' || grep -qiE "CREATE INDEX[[:space:]]+CONCURRENTLY" "$file"; then
+      no_tx=1
+    fi
+    if [[ "$version" == *"concurrently"* ]]; then
+      no_tx=1
+    fi
+    if grep -qiE "CREATE INDEX[[:space:]]+CONCURRENTLY" "$file" && [[ "$no_tx" -ne 1 ]]; then
+      echo "❌ CONCURRENTLY detected but no-tx not set for $version" >&2
+      exit 1
+    fi
+
+    if [[ "$no_tx" -eq 1 ]]; then
+      psql "$db_url" -v ON_ERROR_STOP=1 -X -f "$file"
+      psql "$db_url" -v ON_ERROR_STOP=1 -X \
+        -c "INSERT INTO public.schema_migrations(version, checksum) VALUES ('$version', '$checksum') ON CONFLICT (version) DO NOTHING;"
+      existing_checksum="$(psql "$db_url" -X -t -A -v ON_ERROR_STOP=1 \
+        -c "SELECT checksum FROM public.schema_migrations WHERE version = '$version'")"
+      if [[ -n "$existing_checksum" && "$existing_checksum" != "$checksum" ]]; then
+        echo "❌ Checksum mismatch for $version after no-tx apply" >&2
+        exit 1
+      fi
+    else
+      psql "$db_url" -v ON_ERROR_STOP=1 -X <<SQL
 BEGIN;
 \i '$file'
 INSERT INTO public.schema_migrations(version, checksum) VALUES ('$version', '$checksum');
 COMMIT;
 SQL
+    fi
   done
 }
 
