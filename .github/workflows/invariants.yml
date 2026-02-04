@@ -138,7 +138,12 @@ jobs:
           chmod +x scripts/audit/verify_exception_template.sh
           scripts/audit/verify_exception_template.sh
 
-      
+      - name: Generate QUICK + ensure committed output matches
+        if: github.event_name != 'schedule'
+        run: |
+          chmod +x scripts/audit/generate_invariants_quick
+          scripts/audit/generate_invariants_quick
+          git diff --exit-code docs/invariants/INVARIANTS_QUICK.md
 
       - name: Verify repo structure (Phase 0)
         if: github.event_name != 'schedule'
