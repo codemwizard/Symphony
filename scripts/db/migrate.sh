@@ -67,12 +67,18 @@ for file in "${files[@]}"; do
   echo "➡️  Applying migration: $version"
 
   no_tx=0
-  # Marker must appear near the top to be unambiguous
-  if head -n 50 "$file" | grep -Eq '^[[:space:]]*--[[:space:]]*symphony:no_tx' || grep -qiE "CREATE INDEX[[:space:]]+CONCURRENTLY" "$file"; then
+  # Marker must appear near the top to be unambiguous (strip UTF-8 BOM if present)
+  if head -n 50 "$file" | sed '1s/^\xEF\xBB\xBF//' | grep -Eq '^[[:space:]]*--[[:space:]]*symphony:no_tx' || grep -qiE "CREATE INDEX[[:space:]]+CONCURRENTLY" "$file"; then
     no_tx=1
   fi
   if [[ "$version" == *"concurrently"* ]]; then
     no_tx=1
+  fi
+
+  # Hard fail if a CONCURRENTLY migration would run inside a transaction
+  if grep -qiE "CREATE INDEX[[:space:]]+CONCURRENTLY" "$file" && [[ "$no_tx" -ne 1 ]]; then
+    echo "❌ CONCURRENTLY detected but no-tx not set for $version" >&2
+    exit 1
   fi
 
   if [[ "$no_tx" -eq 1 ]]; then
