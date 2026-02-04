@@ -15,20 +15,21 @@ tasks_dir = Path(os.environ["TASKS_DIR"])
 
 ci_only = os.environ.get("CI_ONLY", "0") == "1"
 
-# In CI, artifacts may be extracted under evidence/phase0 (or nested under evidence/phase0/evidence/phase0)
+evidence_root = root
+
+# In CI, artifacts may be extracted under evidence/phase0 or nested paths.
 ci_base = root / "evidence" / "phase0"
 double_base = ci_base / "evidence" / "phase0"
 if ci_only and double_base.exists():
-    root = double_base
+    evidence_root = double_base
 elif ci_only and ci_base.exists():
-    root = ci_base
-
-# If still not pointing to files, search for a known marker file
-if ci_only:
+    evidence_root = ci_base
+else:
+    # search for a known marker file
     marker_names = {"evidence.json", "baseline_drift.json", "repo_structure.json"}
     for p in (root / "evidence").rglob("*.json"):
         if p.name in marker_names:
-            root = p.parent
+            evidence_root = p.parent
             break
 
 missing = []
@@ -90,10 +91,12 @@ for meta in sorted(tasks_dir.glob("TSK-P0-*/meta.yml")):
                 pattern = pattern[2:]
             if ci_only and pattern.startswith("evidence/phase0/"):
                 pattern = pattern[len("evidence/phase0/"):]
+                abs_pattern = str(evidence_root / pattern)
+            else:
+                abs_pattern = str(root / pattern)
             if ci_only and pattern == "evidence/phase0/local_ci_parity.json":
                 # local-only evidence; skip in CI gate
                 continue
-            abs_pattern = str(root / pattern)
             matches = glob.glob(abs_pattern)
             checked.append((meta.parent.name, pattern, len(matches)))
             if len(matches) == 0:
