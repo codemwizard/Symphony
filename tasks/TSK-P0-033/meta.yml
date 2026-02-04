@@ -12,10 +12,11 @@ Work:
 Acceptance Criteria:
   - "Guidance present in DEV workflow docs."
 Verification Commands:
-  - "rg -n "symphony:no_tx" docs/operations/DEV_WORKFLOW.md"
+  - "scripts/audit/verify_no_tx_docs.sh"
 Evidence Artifact(s):
   - "./evidence/phase0/no_tx_docs.json"
 Failure Modes:
+  - "Evidence file missing."
   - "No documentation present."
 must_read:
   - "docs/invariants/INVARIANTS_MANIFEST.yml"
@@ -24,7 +25,7 @@ must_read:
 evidence:
   - "./evidence/phase0/no_tx_docs.json"
 verification:
-  - "rg -n "symphony:no_tx" docs/operations/DEV_WORKFLOW.md"
+  - "scripts/audit/verify_no_tx_docs.sh"
 status: "completed"
 notes: ""
 client: "codex_cli"

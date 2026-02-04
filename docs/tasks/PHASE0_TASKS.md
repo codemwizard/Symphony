@@ -53,6 +53,7 @@ Verification Commands:
 Evidence Artifact(s):
 - `./evidence/phase0/repo_structure.json`
 Failure Modes:
+- Evidence file missing.
 - Missing required directory or stale doc reference must fail the job.
 Notes:
 - Include `tasks/TSK-P0-001/meta.yml` with assigned role/model and must-read files.
@@ -76,6 +77,7 @@ Verification Commands:
 Evidence Artifact(s):
 - `./evidence/phase0/evidence.json`
 Failure Modes:
+- Evidence file missing.
 - Missing git SHA or schema hash must fail.
 Notes:
 - Must-read files in meta: `docs/invariants/INVARIANTS_MANIFEST.yml`, `scripts/db/verify_invariants.sh`.
@@ -98,6 +100,7 @@ Verification Commands:
 Evidence Artifact(s):
 - `./evidence/phase0/n_minus_one.json`
 Failure Modes:
+- Evidence file missing.
 - Missing baseline or incompatible migration must hard-fail.
 Notes:
 - If baseline is missing, create a bootstrap sub-step that fails until baseline exists.
@@ -120,6 +123,7 @@ Verification Commands:
 Evidence Artifact(s):
 - `./evidence/phase0/ddl_lock_risk.json`
 Failure Modes:
+- Evidence file missing.
 - Any risky DDL must fail.
 
 TASK ID: TSK-P0-005
@@ -140,6 +144,7 @@ Verification Commands:
 Evidence Artifact(s):
 - `./evidence/phase0/idempotency_zombie.json`
 Failure Modes:
+- Evidence file missing.
 - Any duplicate insert/complete must fail.
 
 TASK ID: TSK-P0-006
@@ -162,6 +167,7 @@ Verification Commands:
 Evidence Artifact(s):
 - `./evidence/phase0/openbao_smoke.json`
 Failure Modes:
+- Evidence file missing.
 - Auth failure or policy bypass must fail.
 
 TASK ID: TSK-P0-007
@@ -182,6 +188,7 @@ Verification Commands:
 Evidence Artifact(s):
 - `./evidence/phase0/routing_fallback.json`
 Failure Modes:
+- Evidence file missing.
 - Missing fallback rules must hard-fail.
 
 TASK ID: TSK-P0-008
@@ -202,6 +209,7 @@ Verification Commands:
 Evidence Artifact(s):
 - `./evidence/phase0/batching_rules.json`
 Failure Modes:
+- Evidence file missing.
 - Missing or zero thresholds must fail.
 
 TASK ID: TSK-P0-009
@@ -220,6 +228,7 @@ Verification Commands:
 Evidence Artifact(s):
 - `./evidence/phase0/invariants_quick.json`
 Failure Modes:
+- Evidence file missing.
 - Manifest/QUICK drift must fail.
 
 TASK ID: TSK-P0-010
@@ -244,6 +253,7 @@ Verification Commands:
 Evidence Artifact(s):
 - `./evidence/phase0/*.json`
 Failure Modes:
+- Evidence file missing.
 - Missing evidence file in CI must fail.
 
 TASK ID: TSK-P0-019
@@ -257,10 +267,11 @@ Work:
 Acceptance Criteria:
 - CI run produces artifact `phase0-evidence` with `evidence/**`.
 Verification Commands:
-- CI: run workflow invariants.yml; confirm phase0-evidence artifact
+- `scripts/ci/check_evidence_required.sh` (CI_ONLY=1, after artifact download)
 Evidence Artifact(s):
 - `phase0-evidence` (CI artifact)
 Failure Modes:
+- Evidence file missing.
 - CI run does not upload phase0-evidence.
 
 TASK ID: TSK-P0-011
@@ -280,6 +291,7 @@ Verification Commands:
 Evidence Artifact(s):
 - `./evidence/phase0/evidence_validation.json`
 Failure Modes:
+- Evidence file missing.
 - Missing or invalid evidence JSON must fail.
 
 TASK ID: TSK-P0-012
@@ -299,6 +311,7 @@ Verification Commands:
 Evidence Artifact(s):
 - `./evidence/phase0/evidence.json`
 Failure Modes:
+- Evidence file missing.
 - Missing provenance field must fail.
 
 TASK ID: TSK-P0-013
@@ -317,6 +330,7 @@ Verification Commands:
 Evidence Artifact(s):
 - `./evidence/phase0/baseline_drift.json`
 Failure Modes:
+- Evidence file missing.
 - Baseline drift or missing baseline must fail.
 
 TASK ID: TSK-P0-014
@@ -335,6 +349,7 @@ Verification Commands:
 Evidence Artifact(s):
 - `./evidence/phase0/security_definer_dynamic_sql.json`
 Failure Modes:
+- Evidence file missing.
 - Any dynamic SQL violation must fail.
 
 TASK ID: TSK-P0-015
@@ -355,6 +370,7 @@ Verification Commands:
 Evidence Artifact(s):
 - `./evidence/phase0/routing_fallback_validation.json`
 Failure Modes:
+- Evidence file missing.
 - Missing file, invalid schema, or missing required fields must fail.
 
 TASK ID: TSK-P0-016
@@ -373,6 +389,7 @@ Verification Commands:
 Evidence Artifact(s):
 - `./evidence/phase0/batching_rules.json`
 Failure Modes:
+- Evidence file missing.
 - Missing evidence or invalid thresholds must fail.
 
 TASK ID: TSK-P0-017
@@ -391,6 +408,7 @@ Verification Commands:
 Evidence Artifact(s):
 - `./evidence/phase0/structural_doc_linkage.json`
 Failure Modes:
+- Evidence file missing.
 - Structural change without docs update must fail.
 
 TASK ID: TSK-P0-018
@@ -410,6 +428,7 @@ Verification Commands:
 Evidence Artifact(s):
 - `./evidence/phase0/openbao_audit_log.json`
 Failure Modes:
+- Evidence file missing.
 - Missing audit log or bypass must fail.
 
 3. GAPS (If any)
@@ -448,6 +467,7 @@ Verification Commands:
 Evidence Artifact(s):
 - `./evidence/phase0/outbox_pending_indexes.json`
 Failure Modes:
+- Evidence file missing.
 - Missing index or wrong definition.
 
 TASK ID: TSK-P0-021
@@ -473,7 +493,6 @@ Failure Modes:
 - Evidence file missing.
 Notes:
 - Invariant registration is handled by TSK-P0-009.
-
 TASK ID: TSK-P0-022
 Title: Enforce MVCC posture for payment_outbox_pending
 Owner Role: DB_FOUNDATION
@@ -496,7 +515,6 @@ Failure Modes:
 - Evidence file missing.
 Notes:
 - Documentation updates (if needed) should be handled by ARCHITECT.
-
 TASK ID: TSK-P0-023
 Title: Add LISTEN/NOTIFY wakeup hook (wakeup-only semantics)
 Owner Role: DB_FOUNDATION
@@ -520,7 +538,6 @@ Failure Modes:
 - Evidence file missing.
 Notes:
 - Documentation updates (if needed) should be handled by ARCHITECT.
-
 TASK ID: TSK-P0-024
 Title: Add ingress attestation schema (append-only skeleton)
 Owner Role: DB_FOUNDATION
@@ -545,7 +562,6 @@ Failure Modes:
 - Evidence file missing.
 Notes:
 - Invariant registration is handled by TSK-P0-009.
-
 TASK ID: TSK-P0-025
 Title: Add durable revocation tables (certs + tokens)
 Owner Role: DB_FOUNDATION
@@ -570,7 +586,6 @@ Failure Modes:
 - Evidence file missing.
 Notes:
 - Invariant registration is handled by TSK-P0-009.
-
 TASK ID: TSK-P0-026
 Title: Core boundary guard (no Node in core paths)
 Owner Role: SECURITY_GUARDIAN
@@ -593,7 +608,6 @@ Failure Modes:
 - Evidence file missing.
 Notes:
 - Invariant registration is handled by TSK-P0-009.
-
 TASK ID: TSK-P0-027
 Title: Phase-0 doc drift cleanup (.NET-only core)
 Owner Role: ARCHITECT
@@ -606,10 +620,11 @@ Work:
 Acceptance Criteria:
 - Core architecture docs have no Node-as-core references.
 Verification Commands:
-- `rg -n "node|Node.js" docs/overview/architecture.md docs/decisions/ADR-0001-repo-structure.md`
+- `scripts/audit/verify_doc_alignment.sh`
 Evidence Artifact(s):
 - `./evidence/phase0/doc_alignment.json`
 Failure Modes:
+- Evidence file missing.
 - Node references remain in core docs.
 
 TASK ID: TSK-P0-028
@@ -627,6 +642,7 @@ Verification Commands:
 Evidence Artifact(s):
 - `./evidence/phase0/db_fail_closed_roadmap.json`
 Failure Modes:
+- Evidence file missing.
 - Marked implemented without tests.
 
 TASK ID: TSK-P0-029
@@ -651,7 +667,6 @@ Failure Modes:
 - Evidence file missing.
 Notes:
 - Invariant registration is handled by TSK-P0-009.
-
 TASK ID: TSK-P0-030
 Title: Add no-tx migration marker support in migrate.sh
 Owner Role: DB_FOUNDATION
@@ -673,7 +688,6 @@ Evidence Artifact(s):
 Failure Modes:
 - Concurrent index migration fails due to transaction wrapping.
 - Evidence file missing.
-
 TASK ID: TSK-P0-031
 Title: Enforce no-tx marker for concurrent index migrations
 Owner Role: DB_FOUNDATION
@@ -693,7 +707,6 @@ Evidence Artifact(s):
 Failure Modes:
 - Concurrent index migration without marker passes lint.
 - Evidence file missing.
-
 TASK ID: TSK-P0-032
 Title: Update outbox index migration to use no-tx marker
 Owner Role: DB_FOUNDATION
@@ -714,7 +727,6 @@ Evidence Artifact(s):
 Failure Modes:
 - Migration fails due to transaction wrapping.
 - Evidence file missing.
-
 TASK ID: TSK-P0-033
 Title: Document no-tx marker usage
 Owner Role: ARCHITECT
@@ -726,10 +738,11 @@ Work:
 Acceptance Criteria:
 - Guidance present in DEV workflow docs.
 Verification Commands:
-- `rg -n "symphony:no_tx" docs/operations/DEV_WORKFLOW.md`
+- `scripts/audit/verify_no_tx_docs.sh`
 Evidence Artifact(s):
 - `./evidence/phase0/no_tx_docs.json`
 Failure Modes:
+- Evidence file missing.
 - No documentation present.
 
 TASK ID: TSK-P0-034
@@ -751,7 +764,6 @@ Evidence Artifact(s):
 Failure Modes:
 - Drift between docs and manifest goes undetected.
 - Evidence file missing.
-
 TASK ID: TSK-P0-035
 Title: Declare Proxy/Alias Resolution invariant (roadmap) + schema design hooks
 Owner Role: INVARIANTS_CURATOR
