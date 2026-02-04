@@ -15,6 +15,14 @@ tasks_dir = Path(os.environ["TASKS_DIR"])
 
 ci_only = os.environ.get("CI_ONLY", "0") == "1"
 
+# In CI, artifacts may be extracted under evidence/phase0/evidence/phase0
+ci_base = root / "evidence" / "phase0"
+double_base = ci_base / "evidence" / "phase0"
+if ci_only and double_base.exists():
+    root = double_base
+elif ci_only and ci_base.exists():
+    root = ci_base
+
 missing = []
 checked = []
 
@@ -72,6 +80,8 @@ for meta in sorted(tasks_dir.glob("TSK-P0-*/meta.yml")):
             # normalize to repo root
             if pattern.startswith("./"):
                 pattern = pattern[2:]
+            if ci_only and pattern.startswith("evidence/phase0/"):
+                pattern = pattern[len("evidence/phase0/"):]
             if ci_only and pattern == "evidence/phase0/local_ci_parity.json":
                 # local-only evidence; skip in CI gate
                 continue
