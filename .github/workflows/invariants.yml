@@ -533,7 +533,7 @@ jobs:
       - name: Require Phase-0 evidence (fail-closed)
         run: |
           chmod +x scripts/ci/check_evidence_required.sh
-          CI_ONLY=1 scripts/ci/check_evidence_required.sh
+          CI_ONLY=1 scripts/ci/check_evidence_required.sh evidence/phase0
 
   ai_security_review:
     name: Phase II.5 — Codex security review (advisory)
