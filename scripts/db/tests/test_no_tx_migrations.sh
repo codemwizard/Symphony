@@ -78,7 +78,7 @@ status="pass"
 if [[ "$applied" != "t" || "$index_exists" != "t" ]]; then
   status="fail"
 fi
-if [[ -z "$index_validity" || "$index_validity" != *"|t|t" ]]; then
+if [[ -z "$index_validity" || ( "$index_validity" != *"|t|t" && "$index_validity" != *"|true|true" ) ]]; then
   status="fail"
 fi
 

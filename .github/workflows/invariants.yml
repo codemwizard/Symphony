@@ -157,12 +157,6 @@ jobs:
           chmod +x scripts/audit/generate_evidence.sh
           scripts/audit/generate_evidence.sh
 
-      - name: Require Phase-0 evidence (fail-closed)
-        if: github.event_name != 'schedule'
-        run: |
-          chmod +x scripts/ci/check_evidence_required.sh
-          CI_ONLY=1 scripts/ci/check_evidence_required.sh
-
       - name: Upload detector artifacts
         if: github.event_name != 'schedule' && always()
         uses: actions/upload-artifact@v4
@@ -483,6 +477,14 @@ jobs:
           chmod +x scripts/db/tests/test_db_functions.sh
           scripts/db/tests/test_db_functions.sh
 
+      - name: Upload Phase-0 DB evidence artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: phase0-evidence-db
+          path: |
+            evidence/**
+
   security_scan:
     name: Phase I.5 — Security fast checks (mechanical)
     runs-on: ubuntu-latest
@@ -502,6 +504,34 @@ jobs:
           else
             echo "scripts/audit/run_security_fast_checks.sh not found/executable; skipping (Phase 1 repo may not include it yet)."
           fi
+
+      - name: Upload Phase-0 security evidence artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: phase0-evidence-security
+          path: |
+            evidence/**
+
+  phase0_evidence_gate:
+    name: Phase 0 — Evidence gate (cross-job)
+    runs-on: ubuntu-latest
+    needs: [mechanical_invariants, db_verify_invariants, security_scan]
+    if: always() && github.event_name != 'schedule'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Download evidence artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: evidence
+
+      - name: Require Phase-0 evidence (fail-closed)
+        run: |
+          chmod +x scripts/ci/check_evidence_required.sh
+          CI_ONLY=1 scripts/ci/check_evidence_required.sh
 
   ai_security_review:
     name: Phase II.5 — Codex security review (advisory)

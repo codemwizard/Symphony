@@ -66,8 +66,16 @@ for file in "${files[@]}"; do
 
   echo "➡️  Applying migration: $version"
 
+  no_tx=0
   if grep -q "symphony:no_tx" "$file" || grep -qiE "CREATE INDEX[[:space:]]+CONCURRENTLY" "$file"; then
-    echo "   ↪ no-tx migration detected (-- symphony:no_tx)."
+    no_tx=1
+  fi
+  if [[ "$version" == *"concurrently"* ]]; then
+    no_tx=1
+  fi
+
+  if [[ "$no_tx" -eq 1 ]]; then
+    echo "   ↪ no-tx migration detected (-- symphony:no_tx / CONCURRENTLY / filename)."
     # Run outside explicit transaction (required for CONCURRENTLY).
     psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -X -f "$file"
     psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -X \
