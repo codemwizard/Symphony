@@ -72,6 +72,9 @@ for meta in sorted(tasks_dir.glob("TSK-P0-*/meta.yml")):
             # normalize to repo root
             if pattern.startswith("./"):
                 pattern = pattern[2:]
+            if ci_only and pattern == "evidence/phase0/local_ci_parity.json":
+                # local-only evidence; skip in CI gate
+                continue
             abs_pattern = str(root / pattern)
             matches = glob.glob(abs_pattern)
             checked.append((meta.parent.name, pattern, len(matches)))
