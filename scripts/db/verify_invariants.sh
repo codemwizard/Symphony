@@ -37,6 +37,7 @@ echo "🔒 Linting SECURITY DEFINER search_path..."
 "$SCRIPT_DIR/lint_search_path.sh"
 
 echo "🧱 Applying migrations (idempotent)..."
+echo "🔎 Using migrate.sh from: $SCRIPT_DIR/migrate.sh"
 "$SCRIPT_DIR/migrate.sh"
 
 echo "🧭 Verifying outbox pending indexes..."
