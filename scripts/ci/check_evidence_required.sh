@@ -4,13 +4,9 @@ set -euo pipefail
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 TASKS_DIR="$ROOT_DIR/tasks"
 
-EVIDENCE_ROOT="${1:-}"
-if [[ -n "$EVIDENCE_ROOT" ]]; then
-  if [[ "$EVIDENCE_ROOT" = /* ]]; then
-    :
-  else
-    EVIDENCE_ROOT="$ROOT_DIR/$EVIDENCE_ROOT"
-  fi
+EVIDENCE_ROOT="${1:-$ROOT_DIR/evidence/phase0}"
+if [[ "$EVIDENCE_ROOT" != /* ]]; then
+  EVIDENCE_ROOT="$ROOT_DIR/$EVIDENCE_ROOT"
 fi
 
 ROOT_DIR="$ROOT_DIR" TASKS_DIR="$TASKS_DIR" EVIDENCE_ROOT="$EVIDENCE_ROOT" python3 - <<'PY'
@@ -21,27 +17,15 @@ import os
 
 root = Path(os.environ["ROOT_DIR"])
 tasks_dir = Path(os.environ["TASKS_DIR"])
-evidence_root = os.environ.get("EVIDENCE_ROOT") or ""
+evidence_root = Path(os.environ["EVIDENCE_ROOT"])
 
 ci_only = os.environ.get("CI_ONLY", "0") == "1"
 
-evidence_root = Path(evidence_root) if evidence_root else root
-
-# In CI, artifacts may be extracted under evidence/phase0 or nested paths.
-ci_base = root / "evidence" / "phase0"
-double_base = ci_base / "evidence" / "phase0"
-if ci_only and not os.environ.get("EVIDENCE_ROOT"):
+# In CI, artifacts may be extracted under evidence/phase0/evidence/phase0
+if ci_only and not evidence_root.exists():
+    double_base = root / "evidence" / "phase0" / "evidence" / "phase0"
     if double_base.exists():
         evidence_root = double_base
-    elif ci_base.exists():
-        evidence_root = ci_base
-    else:
-        # search for a known marker file
-        marker_names = {"evidence.json", "baseline_drift.json", "repo_structure.json"}
-        for p in (root / "evidence").rglob("*.json"):
-            if p.name in marker_names:
-                evidence_root = p.parent
-                break
 
 missing = []
 checked = []
@@ -88,11 +72,11 @@ for meta in sorted(tasks_dir.glob("TSK-P0-*/meta.yml")):
         # CI-only artifact name handling
         if pattern == "phase0-evidence":
             if ci_only:
-                matches = glob.glob(str(root / "evidence" / "**"), recursive=True)
-                count = len([m for m in matches if Path(m).is_file()])
+                matches = list(evidence_root.rglob("*.json"))
+                count = len(matches)
                 checked.append((meta.parent.name, pattern, count))
                 if count == 0:
-                    missing.append(f"{meta.parent.name}: {pattern} (no evidence files found)")
+                    missing.append(f"{meta.parent.name}: {pattern} (no evidence/phase0/*.json found)")
             else:
                 # skip CI-only artifact in local mode
                 continue
@@ -102,9 +86,7 @@ for meta in sorted(tasks_dir.glob("TSK-P0-*/meta.yml")):
                 pattern = pattern[2:]
             if ci_only and pattern.startswith("evidence/phase0/"):
                 pattern = pattern[len("evidence/phase0/"):]
-                abs_pattern = str(evidence_root / pattern)
-            else:
-                abs_pattern = str(evidence_root / pattern) if evidence_root else str(root / pattern)
+            abs_pattern = str(evidence_root / pattern) if ci_only else str(root / pattern)
             if ci_only and pattern == "evidence/phase0/local_ci_parity.json":
                 # local-only evidence; skip in CI gate
                 continue
