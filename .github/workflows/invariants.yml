@@ -526,7 +526,9 @@ jobs:
       - name: Download evidence artifacts
         uses: actions/download-artifact@v4
         with:
-          path: evidence
+          pattern: phase0-evidence*
+          merge-multiple: true
+          path: evidence/phase0
 
       - name: Require Phase-0 evidence (fail-closed)
         run: |
