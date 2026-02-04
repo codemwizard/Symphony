@@ -80,6 +80,16 @@ Mitigations:
 - Signed policy bundles, checksum enforcement
 - Promotion workflow with audit logs and approvals
 
+### CI/CD Pipeline
+- Tampering: unsafe DDL or privilege changes merged
+- Repudiation: missing evidence for invariant claims
+- Supply-chain: unreviewed changes to security posture
+
+Mitigations:
+- Mechanical gates: evidence schema validation + required artifact checks
+- Security lints: DDL lock-risk lint, SECURITY DEFINER dynamic SQL lint
+- Structural change rule: threat/compliance docs updated or timeboxed exception
+
 ### Data Plane (PostgreSQL)
 - Tampering: direct DML or DDL
 - Repudiation: missing evidence on writes
@@ -90,6 +100,8 @@ Mitigations:
 - Revoke-first posture, no runtime DDL
 - SECURITY DEFINER functions with pinned search_path
 - CI invariant gates for privileges and append-only rules
+- DDL lock-risk lint and blocking policy enforcement
+- SECURITY DEFINER dynamic SQL lint
 
 ## Priority security actions
 1) Implement service identity and mTLS for internal calls.

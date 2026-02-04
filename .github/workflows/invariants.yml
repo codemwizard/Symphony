@@ -33,7 +33,7 @@ jobs:
         if: github.event_name != 'schedule'
         run: |
           python3 -m pip install --upgrade pip
-          python3 -m pip install pytest
+          python3 -m pip install pytest pyyaml jsonschema
           pytest -q scripts/audit/tests/test_detect_structural_sql_changes.py
 
       - name: Compute diff + detect structural change
@@ -59,7 +59,7 @@ jobs:
           echo "confidence_hint=$hint" >> "$GITHUB_OUTPUT"
 
       - name: Show changed files (diagnostic)
-        if: github.event_name != 'schedule' && steps.detect.outputs.structural_change == 'true'
+        if: github.event_name != 'schedule'
         shell: bash
         run: |
           set -euo pipefail
@@ -72,7 +72,7 @@ jobs:
           git diff --name-only "$RANGE" | sed 's/^/ - /'
 
       - name: Show structural detection evidence (diagnostic)
-        if: github.event_name != 'schedule' && steps.detect.outputs.structural_change == 'true'
+        if: github.event_name != 'schedule'
         shell: bash
         run: |
           set -euo pipefail
@@ -119,7 +119,7 @@ jobs:
           PY
 
       - name: Enforce Rule 1 (docs/manifest or exception)
-        if: github.event_name != 'schedule' && steps.detect.outputs.structural_change == 'true'
+        if: github.event_name != 'schedule'
         shell: bash
         run: |
           set -euo pipefail
@@ -156,6 +156,24 @@ jobs:
         run: |
           chmod +x scripts/audit/generate_evidence.sh
           scripts/audit/generate_evidence.sh
+
+
+      - name: Validate evidence schema (Phase 0)
+        if: github.event_name != 'schedule'
+        run: |
+          chmod +x scripts/audit/validate_evidence_schema.sh
+          scripts/audit/validate_evidence_schema.sh
+
+      - name: Phase-0 docs/rules verifiers
+        if: github.event_name != 'schedule'
+        run: |
+          chmod +x scripts/audit/*.sh
+          scripts/audit/verify_batching_rules.sh
+          scripts/audit/verify_routing_fallback.sh
+          scripts/audit/validate_routing_fallback.sh
+          scripts/audit/verify_doc_alignment.sh
+          scripts/audit/verify_no_tx_docs.sh
+          scripts/audit/run_invariants_fast_checks.sh
 
       - name: Upload detector artifacts
         if: github.event_name != 'schedule' && always()
@@ -477,6 +495,22 @@ jobs:
           chmod +x scripts/db/tests/test_db_functions.sh
           scripts/db/tests/test_db_functions.sh
 
+      - name: Run idempotency zombie test
+        env:
+          DATABASE_URL: postgres://symphony:symphony@localhost:5432/symphony
+        run: |
+          set -euo pipefail
+          chmod +x scripts/db/tests/test_idempotency_zombie.sh
+          scripts/db/tests/test_idempotency_zombie.sh
+
+      - name: Run no-tx migrations test
+        env:
+          DATABASE_URL: postgres://symphony:symphony@localhost:5432/symphony
+        run: |
+          set -euo pipefail
+          chmod +x scripts/db/tests/test_no_tx_migrations.sh
+          scripts/db/tests/test_no_tx_migrations.sh
+
       - name: Upload Phase-0 DB evidence artifact
         if: always()
         uses: actions/upload-artifact@v4
@@ -504,6 +538,28 @@ jobs:
           else
             echo "scripts/audit/run_security_fast_checks.sh not found/executable; skipping (Phase 1 repo may not include it yet)."
           fi
+
+      - name: Run DDL lock-risk lint
+        shell: bash
+        run: |
+          set -euo pipefail
+          chmod +x scripts/security/lint_ddl_lock_risk.sh
+          scripts/security/lint_ddl_lock_risk.sh
+
+      - name: Run SECURITY DEFINER dynamic SQL lint
+        shell: bash
+        run: |
+          set -euo pipefail
+          chmod +x scripts/security/lint_security_definer_dynamic_sql.sh
+          scripts/security/lint_security_definer_dynamic_sql.sh
+
+      - name: Run OpenBao bootstrap + smoke test
+        shell: bash
+        run: |
+          set -euo pipefail
+          chmod +x scripts/security/openbao_bootstrap.sh scripts/security/openbao_smoke_test.sh
+          scripts/security/openbao_bootstrap.sh
+          scripts/security/openbao_smoke_test.sh
 
       - name: Upload Phase-0 security evidence artifact
         if: always()

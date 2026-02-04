@@ -94,7 +94,7 @@ for meta in sorted(tasks_dir.glob("TSK-P0-*/meta.yml")):
             if ci_only and pattern.startswith("evidence/phase0/"):
                 pattern = pattern[len("evidence/phase0/"):]
             abs_pattern = str(evidence_root / pattern) if ci_only else str(root / pattern)
-            if ci_only and pattern == "evidence/phase0/local_ci_parity.json":
+            if ci_only and pattern in ("evidence/phase0/local_ci_parity.json", "local_ci_parity.json"):
                 # local-only evidence; skip in CI gate
                 continue
             matches = glob.glob(abs_pattern)
