@@ -76,6 +76,8 @@ for file in "${files[@]}"; do
   fi
 
   # Hard fail if a CONCURRENTLY migration would run inside a transaction
+  echo "MIGRATE: $version no_tx=$no_tx file=$file"
+
   if grep -qiE "CREATE INDEX[[:space:]]+CONCURRENTLY" "$file" && [[ "$no_tx" -ne 1 ]]; then
     echo "❌ CONCURRENTLY detected but no-tx not set for $version" >&2
     exit 1
