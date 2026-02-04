@@ -61,7 +61,7 @@ echo "==> 5) Security fast checks"
 scripts/audit/run_security_fast_checks.sh
 
 echo "==> 6) Evidence gate (CI_ONLY)"
-CI_ONLY=1 scripts/ci/check_evidence_required.sh
+CI_ONLY=1 scripts/ci/check_evidence_required.sh evidence/phase0
 
 python3 - <<PY
 import json
