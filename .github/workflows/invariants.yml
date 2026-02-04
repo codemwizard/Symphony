@@ -586,26 +586,59 @@ jobs:
           merge-multiple: true
           path: evidence/phase0
 
-      # Insert under jobs.phase0_evidence_gate.steps immediately after the "Download evidence artifacts" step
-      - name: Normalize evidence layout (ensure evidence/phase0 exists)
+      - name: Debug & normalize artifact layout (show artifact contents, collect TSK-P0 files)
         run: |
-          set -euo pipefail
-          mkdir -p evidence/phase0
-          # If artifacts produced evidence/* but validator expects evidence/phase0, move them.
-          if [[ -d "evidence" && ! -d "evidence/phase0" ]]; then
-            mkdir -p evidence/phase0
-            shopt -s dotglob
-            for p in evidence/*; do
-              # skip the directory we just created
-              if [[ "$p" == "evidence/phase0" ]]; then
-                continue
-              fi
-              mv -v "$p" evidence/phase0/ || true
+            set -euo pipefail
+        
+            echo "WORKSPACE: $(pwd)"
+            echo ""
+            echo "Top-level listing:"
+            ls -la || true
+            echo ""
+        
+            echo "Show all artifact-related directories (maxdepth 3):"
+            find . -maxdepth 3 -type d -name '*evidence*' -print -exec ls -la {} \; || true
+            echo ""
+        
+            echo "Recursively list anything under evidence* (up to 6 levels):"
+            for d in $(compgen -G "evidence*") || true; do
+              echo "---- $d ----"
+              ls -la "$d" || true
+              echo ""
             done
-            shopt -u dotglob
-          fi
-          echo "Listing evidence/phase0:"
-          ls -la evidence/phase0 || true
+        
+            echo "Find any TSK-P0 files (anywhere):"
+            mapfile -t found < <(find . -type f -iname 'TSK-P0-*' -print)
+            if [[ ${#found[@]} -eq 0 ]]; then
+              echo "No TSK-P0-* files found."
+            else
+              echo "Found ${#found[@]} file(s):"
+              for f in "${found[@]}"; do
+                echo " - $f"
+              done
+        
+              mkdir -p evidence/phase0
+              echo ""
+              echo "Moving TSK-P0 files into evidence/phase0 (skipping duplicates):"
+              for f in "${found[@]}"; do
+                b="$(basename "$f")"
+                # Avoid moving if source is already the desired destination
+                if [[ "$f" == "./evidence/phase0/"* || "$f" == "evidence/phase0/"* ]]; then
+                  echo " - $f is already under evidence/phase0; skipping"
+                  continue
+                fi
+                if [[ -e "evidence/phase0/$b" ]]; then
+                  echo " - evidence/phase0/$b exists -> skipping move of $f"
+                else
+                  echo " - mv '$f' -> evidence/phase0/$b"
+                  mv -v "$f" "evidence/phase0/$b" || true
+                fi
+              done
+        
+              echo ""
+              echo "Final evidence/phase0 contents:"
+              ls -la evidence/phase0 || true
+            fi
           
       - name: Require Phase-0 evidence (fail-closed)
         run: |
