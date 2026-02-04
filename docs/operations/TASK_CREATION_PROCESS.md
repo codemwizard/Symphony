@@ -61,11 +61,18 @@ Every task must:
 - Run a deterministic verification command
 - Produce evidence under `./evidence/phase0/...`
 - Fail if verification or evidence is missing
+- Include a **failure mode** explicitly stating: `Evidence file missing`
+- Ensure the verification command **writes** the declared evidence (not just checks text)
 
 **Mark completion** in `tasks/<TASK_ID>/meta.yml`:
 - `status: "completed"`
 - `verification:` includes commands actually run
 - `evidence:` lists actual evidence artifacts
+
+**Guardrails (enforced):**
+- Completed tasks without evidence are rejected by `scripts/ci/check_evidence_required.sh`.
+- Task definitions missing the “Evidence file missing” failure mode are rejected by `scripts/audit/verify_task_evidence_contract.sh`.
+- Tasks that declare evidence but don’t use a script to emit it must remain `planned`.
 
 ## 5) Workflow wiring
 
@@ -79,4 +86,3 @@ Every task must:
 - Allowing tasks to touch files outside the assigned agent’s allowed paths
 - Failing to emit evidence artifacts
 - Missing `Depends On` when a verifier relies on earlier work
-

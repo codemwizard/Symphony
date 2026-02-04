@@ -100,6 +100,33 @@ else
   exit 1
 fi
 
+echo ""
+echo "==> Doc alignment (core language)"
+if [[ -x "scripts/audit/verify_doc_alignment.sh" || -f "scripts/audit/verify_doc_alignment.sh" ]]; then
+  run scripts/audit/verify_doc_alignment.sh
+else
+  echo "ERROR: scripts/audit/verify_doc_alignment.sh not found"
+  exit 1
+fi
+
+echo ""
+echo "==> No-tx docs verification"
+if [[ -x "scripts/audit/verify_no_tx_docs.sh" || -f "scripts/audit/verify_no_tx_docs.sh" ]]; then
+  run scripts/audit/verify_no_tx_docs.sh
+else
+  echo "ERROR: scripts/audit/verify_no_tx_docs.sh not found"
+  exit 1
+fi
+
+echo ""
+echo "==> Task evidence contract (definitions)"
+if [[ -x "scripts/audit/verify_task_evidence_contract.sh" || -f "scripts/audit/verify_task_evidence_contract.sh" ]]; then
+  run scripts/audit/verify_task_evidence_contract.sh
+else
+  echo "ERROR: scripts/audit/verify_task_evidence_contract.sh not found"
+  exit 1
+fi
+
 EVIDENCE_DIR="$ROOT/evidence/phase0"
 mkdir -p "$EVIDENCE_DIR"
 python3 - <<PY

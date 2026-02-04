@@ -14,10 +14,11 @@ Work:
 Acceptance Criteria:
   - "Core architecture docs have no Node-as-core references."
 Verification Commands:
-  - "rg -n "node|Node.js" docs/overview/architecture.md docs/decisions/ADR-0001-repo-structure.md"
+  - "scripts/audit/verify_doc_alignment.sh"
 Evidence Artifact(s):
   - "./evidence/phase0/doc_alignment.json"
 Failure Modes:
+  - "Evidence file missing."
   - "Node references remain in core docs."
 must_read:
   - "docs/invariants/INVARIANTS_MANIFEST.yml"
@@ -26,7 +27,7 @@ must_read:
 evidence:
   - "./evidence/phase0/doc_alignment.json"
 verification:
-  - "rg -n "node|Node.js" docs/overview/architecture.md docs/decisions/ADR-0001-repo-structure.md"
+  - "scripts/audit/verify_doc_alignment.sh"
 status: "completed"
 notes: ""
 client: "codex_cli"
