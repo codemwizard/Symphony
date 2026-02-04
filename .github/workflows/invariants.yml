@@ -528,7 +528,7 @@ jobs:
         with:
           pattern: phase0-evidence*
           merge-multiple: true
-          path: evidence/phase0
+          path: .
 
       - name: Require Phase-0 evidence (fail-closed)
         run: |
