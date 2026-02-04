@@ -49,7 +49,8 @@ for meta in sorted(tasks_dir.glob("TSK-P0-*/meta.yml")):
     data = parse_meta(meta)
     if str(data.get("phase")) != "0":
         continue
-    if str(data.get("status", "")).lower() == "deferred":
+    status = str(data.get("status", "")).lower()
+    if status != "completed":
         continue
     globs = data.get("evidence", []) or []
     for pattern in globs:
