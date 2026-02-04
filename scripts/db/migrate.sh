@@ -68,7 +68,7 @@ for file in "${files[@]}"; do
 
   no_tx=0
   # Marker must appear near the top to be unambiguous
-  if head -n 50 "$file" | grep -Eq '^\s*--\s*symphony:no_tx\s*$' || grep -qiE "CREATE INDEX[[:space:]]+CONCURRENTLY" "$file"; then
+  if head -n 50 "$file" | grep -Eq '^[[:space:]]*--[[:space:]]*symphony:no_tx' || grep -qiE "CREATE INDEX[[:space:]]+CONCURRENTLY" "$file"; then
     no_tx=1
   fi
   if [[ "$version" == *"concurrently"* ]]; then
