@@ -15,13 +15,21 @@ tasks_dir = Path(os.environ["TASKS_DIR"])
 
 ci_only = os.environ.get("CI_ONLY", "0") == "1"
 
-# In CI, artifacts may be extracted under evidence/phase0/evidence/phase0
+# In CI, artifacts may be extracted under evidence/phase0 (or nested under evidence/phase0/evidence/phase0)
 ci_base = root / "evidence" / "phase0"
 double_base = ci_base / "evidence" / "phase0"
 if ci_only and double_base.exists():
     root = double_base
 elif ci_only and ci_base.exists():
     root = ci_base
+
+# If still not pointing to files, search for a known marker file
+if ci_only:
+    marker_names = {"evidence.json", "baseline_drift.json", "repo_structure.json"}
+    for p in (root / "evidence").rglob("*.json"):
+        if p.name in marker_names:
+            root = p.parent
+            break
 
 missing = []
 checked = []
