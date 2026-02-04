@@ -7,12 +7,16 @@
 | ISO 20022 | Mapping discipline and versioning | Policy Service, Contracts | Policy bundle version pinning | Policy bundle checksum logs |
 | ISO 27001/27002 | Access control, least privilege | DB roles, Service Mesh | Revoke-first grants, mTLS auth | CI gate logs, access audit logs |
 | ISO 27001/27002 | Change management | Policy Service, CI | Promotion workflow, checksum gates | Promotion logs, approvals |
+| ISO 27001/27002 | Secure SDLC / Change control | CI/CD | Structural change rule + evidence gates | evidence/phase0/*.json, invariants-detector logs |
+| ISO 27001/27002 | Secure configuration | DB, CI | DDL lock-risk lint, no runtime DDL | ddl_lock_risk.json, ddl_blocking_policy.json |
+| ISO 27001/27002 | Secure coding (DB) | DB | SECURITY DEFINER dynamic SQL lint | security_definer_dynamic_sql.json |
 | PCI DSS | Segmentation and tokenization | PCI Zone, Adapter | Network policies, tokenization service | Segmentation config, token logs |
 | PCI DSS | Logging and monitoring | Evidence/Audit | Immutable audit logs | Audit bundles, retention logs |
 | OWASP ASVS 5.0 | Input validation | Edge Gateway, Ingest | OpenAPI validation, schema tests | API validation logs |
 | OWASP ASVS 5.0 | AuthN/Z and session security | Gateway, Services | mTLS, JWT, RBAC | Auth logs, config evidence |
 | Zero Trust | Continuous verification | Service Mesh | mTLS, service identity | mTLS cert inventory |
 | Zero Trust | Least privilege | DB, Service roles | Role-based access, stored procs | Privilege audit reports |
+| Zero Trust | Continuous verification | CI/CD | Evidence gate + invariant checks | evidence/phase0/*.json |
 
 ## Notes
 - Controls map to enforcement points in CI and runtime policy checks.
