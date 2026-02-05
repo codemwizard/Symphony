@@ -3,6 +3,7 @@ set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 COMPOSE_FILE="$ROOT_DIR/infra/openbao/docker-compose.yml"
+CONFIG_FILE="$ROOT_DIR/infra/openbao/openbao.hcl"
 STATE_DIR="/tmp/symphony_openbao"
 ROLE_NAME="symphony-app"
 POLICY_NAME="symphony-read"
@@ -13,6 +14,10 @@ mkdir -p "$STATE_DIR"
 
 if [[ ! -f "$COMPOSE_FILE" ]]; then
   echo "OpenBao compose file not found: $COMPOSE_FILE" >&2
+  exit 1
+fi
+if [[ ! -f "$CONFIG_FILE" ]]; then
+  echo "OpenBao config file not found: $CONFIG_FILE" >&2
   exit 1
 fi
 
@@ -35,8 +40,7 @@ bao_exec() {
   docker exec -e BAO_ADDR="$BAO_ADDR" -e BAO_TOKEN="$ROOT_TOKEN" symphony-openbao bao "$@"
 }
 
-# Enable audit log (ignore if already enabled)
-bao_exec audit enable file file_path=/openbao/audit.log || true
+# Audit device is managed declaratively via config (see infra/openbao/openbao.hcl)
 
 # Enable kv-v2 (ignore if exists)
 bao_exec secrets enable -path=kv kv-v2 || true

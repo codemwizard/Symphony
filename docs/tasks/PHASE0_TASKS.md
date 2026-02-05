@@ -976,3 +976,130 @@ Evidence Artifact(s):
 Failure Modes:
 - Evidence file missing.
 - SQLSTATE map drift.
+
+TASK ID: TSK-P0-044
+Title: Baseline change governance enforcement
+Owner Role: PLATFORM
+Depends On: TSK-P0-013
+Touches: `scripts/audit/verify_baseline_change_governance.sh`, `docs/decisions/ADR-0010-baseline-policy.md`, `docs/PHASE0/phase0_contract.yml`, `docs/invariants/INVARIANTS_MANIFEST.yml`, `tasks/TSK-P0-044/meta.yml`
+Invariant(s): INV-067 (Baseline change governance enforced)
+Work:
+- Add a fail-closed governance check: if `schema/baseline.sql` changes, require at least one migration change and a baseline-update explanation in ADR-0010.
+- Emit `baseline_governance.json` even on failure.
+Acceptance Criteria:
+- Baseline changes without migration + ADR update fail.
+- Evidence file is written on pass/fail.
+Verification Commands:
+- `scripts/audit/verify_baseline_change_governance.sh`
+Evidence Artifact(s):
+- `./evidence/phase0/baseline_governance.json`
+Failure Modes:
+- Evidence file missing.
+- Baseline changed without migration + ADR update.
+
+TASK ID: TSK-P0-045
+Title: DDL allowlist governance (fingerprints + expiry + review)
+Owner Role: SECURITY_GUARDIAN
+Depends On: TSK-P0-029
+Touches: `docs/security/ddl_allowlist.json`, `scripts/security/verify_ddl_allowlist_governance.sh`, `scripts/security/lint_ddl_lock_risk.sh`, `docs/PHASE0/phase0_contract.yml`, `docs/invariants/INVARIANTS_MANIFEST.yml`, `tasks/TSK-P0-045/meta.yml`
+Invariant(s): INV-068 (DDL allowlist governance enforced)
+Work:
+- Introduce a fingerprinted DDL allowlist file with expiry + reviewer metadata.
+- Validate allowlist structure and expiry; emit evidence even on failure.
+- Allow lint to skip allowlisted fingerprints and record allowlist hits in evidence.
+Acceptance Criteria:
+- Allowlist schema validates; expired entries fail.
+- Evidence file includes allowlist hit counts.
+Verification Commands:
+- `scripts/security/verify_ddl_allowlist_governance.sh`
+Evidence Artifact(s):
+- `./evidence/phase0/ddl_allowlist_governance.json`
+Failure Modes:
+- Evidence file missing.
+- Allowlist entry expired or malformed.
+
+TASK ID: TSK-P0-046
+Title: Phase‑0 implementation plan reflects current scope
+Owner Role: ARCHITECT
+Depends On: TSK-P0-041
+Touches: `docs/Phase_0001-0005/implementation_plan.md`, `scripts/audit/verify_phase0_impl_plan.sh`, `docs/PHASE0/phase0_contract.yml`, `docs/invariants/INVARIANTS_MANIFEST.yml`, `tasks/TSK-P0-046/meta.yml`
+Invariant(s): INV-069 (Phase‑0 implementation plan is current)
+Work:
+- Update the Phase‑0001‑0005 plan to include tenant/client/member rails + new Phase‑0 gates.
+- Add a verifier that asserts the plan references migrations 0014–0019 and tenant/member rails.
+- Emit evidence even on failure.
+Acceptance Criteria:
+- Plan includes tenant/client/member migrations and governance gates.
+- Evidence file is written on pass/fail.
+Verification Commands:
+- `scripts/audit/verify_phase0_impl_plan.sh`
+Evidence Artifact(s):
+- `./evidence/phase0/phase0_impl_plan.json`
+Failure Modes:
+- Evidence file missing.
+- Plan missing required references.
+
+TASK ID: TSK-P0-047
+Title: Document day-zero rebaseline decision (ADR + decision memo)
+Owner Role: ARCHITECT
+Depends On: TSK-P0-044
+Touches: `docs/architecture/adrs/ADR-0011-rebaseline-dayzero-schema.md`, `docs/decisions/Rebaseline-Decision.md`, `tasks/TSK-P0-047/meta.yml`
+Invariant(s): INV-070 (Day-zero rebaseline strategy documented)
+Work:
+- Document the day-zero rebaseline strategy and baseline-first migration posture in ADR-0011.
+- Create the Rebaseline Decision memo referencing ADR-0011.
+- Ensure the decision is explicit about scope, risks, and governance.
+Acceptance Criteria:
+- ADR exists and is referenced by the decision memo.
+- Evidence file is written on pass/fail.
+Verification Commands:
+- `scripts/audit/verify_rebaseline_strategy.sh`
+Evidence Artifact(s):
+- `./evidence/phase0/rebaseline_decision.json`
+Failure Modes:
+- Evidence file missing.
+- ADR or decision memo missing.
+
+TASK ID: TSK-P0-048
+Title: Add baseline snapshot generator + canonicalization
+Owner Role: DB_FOUNDATION
+Depends On: TSK-P0-047
+Touches: `scripts/db/generate_baseline_snapshot.sh`, `scripts/db/canonicalize_schema_dump.sh`, `scripts/db/check_baseline_drift.sh`, `schema/baselines/**`, `tasks/TSK-P0-048/meta.yml`
+Invariant(s): INV-070 (Day-zero rebaseline strategy documented)
+Work:
+- Add canonicalization helper for deterministic schema diff.
+- Add baseline snapshot generator to create day-zero baseline and metadata.
+- Keep baseline drift check using canonicalization + provenance fields.
+Acceptance Criteria:
+- Generator script exists and produces baseline + metadata when run.
+- Drift check emits provenance fields in evidence.
+- Evidence file is written on pass/fail.
+Verification Commands:
+- `scripts/audit/verify_rebaseline_strategy.sh`
+- `scripts/db/check_baseline_drift.sh`
+Evidence Artifact(s):
+- `./evidence/phase0/baseline_snapshot.json`
+Failure Modes:
+- Evidence file missing.
+- Baseline snapshot or canonicalizer missing.
+
+TASK ID: TSK-P0-049
+Title: Support baseline strategy in migrate.sh
+Owner Role: DB_FOUNDATION
+Depends On: TSK-P0-048
+Touches: `scripts/db/migrate.sh`, `scripts/audit/verify_rebaseline_strategy.sh`, `tasks/TSK-P0-049/meta.yml`
+Invariant(s): INV-070 (Day-zero rebaseline strategy documented)
+Work:
+- Add baseline strategy flags to migrate.sh (baseline, baseline_then_migrations).
+- Enforce baseline-only on empty schema_migrations unless override is set.
+- Honor baseline cutoff when applying post-baseline migrations.
+Acceptance Criteria:
+- migrate.sh supports baseline strategy without running pre-baseline migrations.
+- Evidence file is written on pass/fail.
+Verification Commands:
+- `scripts/audit/verify_rebaseline_strategy.sh`
+Evidence Artifact(s):
+- `./evidence/phase0/baseline_strategy.json`
+Failure Modes:
+- Evidence file missing.
+- Baseline strategy flags missing in migrate.sh.

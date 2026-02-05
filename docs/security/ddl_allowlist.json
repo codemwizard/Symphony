@@ -1,0 +1,77 @@
+{
+  "version": 1,
+  "entries": [
+    {
+      "id": "DDL-ALLOW-0001",
+      "migration": "schema/migrations/0017_ingress_tenant_attribution.sql",
+      "statement_fingerprint": "1aaf332fe2df87f4f425c5d8bbd289dc1aff6799600a2e3b849c8436c3515730",
+      "reason": "Phase-0 tenant attribution (type conversion for tenant_id)",
+      "expires_on": "2026-12-31",
+      "reviewed_by": "security_guardian",
+      "approved_at": "2026-02-05"
+    },
+    {
+      "id": "DDL-ALLOW-0002",
+      "migration": "schema/migrations/0017_ingress_tenant_attribution.sql",
+      "statement_fingerprint": "f64200154c302d45280a7003a3eb7da36509441d71a1fd0fd1190225b112b6a5",
+      "reason": "Phase-0 tenant attribution (tenant_id NOT NULL on ingress)",
+      "expires_on": "2026-12-31",
+      "reviewed_by": "security_guardian",
+      "approved_at": "2026-02-05"
+    },
+    {
+      "id": "DDL-ALLOW-0003",
+      "migration": "schema/migrations/0017_ingress_tenant_attribution.sql",
+      "statement_fingerprint": "b1633786b4b13786accfd36ea99dfbc949f2e2c400e03a9921a48a8ca9adebc8",
+      "reason": "Phase-0 tenant attribution columns on ingress attestations",
+      "expires_on": "2026-12-31",
+      "reviewed_by": "security_guardian",
+      "approved_at": "2026-02-05"
+    },
+    {
+      "id": "DDL-ALLOW-0004",
+      "migration": "schema/migrations/0018_outbox_tenant_attribution.sql",
+      "statement_fingerprint": "35643800773556eef8c5e42dd7727309f163a01224914f55ae609c927c006526",
+      "reason": "Phase-0 expand-first tenant_id on outbox_pending",
+      "expires_on": "2026-12-31",
+      "reviewed_by": "security_guardian",
+      "approved_at": "2026-02-05"
+    },
+    {
+      "id": "DDL-ALLOW-0005",
+      "migration": "schema/migrations/0018_outbox_tenant_attribution.sql",
+      "statement_fingerprint": "917b6186750016583c5a5a4c9c4b8f2a783aef53ba701f901e292a260549278d",
+      "reason": "Phase-0 expand-first tenant/member on outbox_attempts",
+      "expires_on": "2026-12-31",
+      "reviewed_by": "security_guardian",
+      "approved_at": "2026-02-05"
+    },
+    {
+      "id": "DDL-ALLOW-0006",
+      "migration": "schema/migrations/0017_ingress_tenant_attribution.sql",
+      "statement_fingerprint": "adefba95e50c238d1dad178364d1518f9ef33a8d5da263268abed740caa6ca78",
+      "reason": "Line-level lock-risk lint allowlist for ingress ALTER TABLE",
+      "expires_on": "2026-12-31",
+      "reviewed_by": "security_guardian",
+      "approved_at": "2026-02-05"
+    },
+    {
+      "id": "DDL-ALLOW-0007",
+      "migration": "schema/migrations/0018_outbox_tenant_attribution.sql",
+      "statement_fingerprint": "51082d1f8ac574df036d305d6b88fba1e48d27f9c07fb6b7d74896d5c7a696da",
+      "reason": "Line-level lock-risk lint allowlist for outbox_pending ALTER TABLE",
+      "expires_on": "2026-12-31",
+      "reviewed_by": "security_guardian",
+      "approved_at": "2026-02-05"
+    },
+    {
+      "id": "DDL-ALLOW-0008",
+      "migration": "schema/migrations/0018_outbox_tenant_attribution.sql",
+      "statement_fingerprint": "3ae717510d0e2d98601b8e32969bd9f4e26aa4cdc1728a3e61a95d6baa9e8d51",
+      "reason": "Line-level lock-risk lint allowlist for outbox_attempts ALTER TABLE",
+      "expires_on": "2026-12-31",
+      "reviewed_by": "security_guardian",
+      "approved_at": "2026-02-05"
+    }
+  ]
+}

@@ -405,7 +405,7 @@
   title: "Proxy/Alias resolution required before dispatch"
   owners: ["team-platform"]
   sla_days: 30
-  verification: "TODO: add Phase-0 static verifier for invariant declaration + ADR + schema design hooks"
+  verification: "scripts/audit/verify_proxy_resolution_invariant.sh"
 
 - id: INV-060
   aliases: ["I-P0-CONTRACT-01"]
@@ -469,3 +469,39 @@
   owners: ["team-db"]
   sla_days: 30
   verification: "scripts/db/verify_tenant_member_hooks.sh"
+
+- id: INV-067
+  aliases: ["I-BASELINE-GOV-01"]
+  status: implemented
+  severity: P1
+  title: "Baseline changes require migration + ADR update"
+  owners: ["team-platform"]
+  sla_days: 30
+  verification: "scripts/audit/verify_baseline_change_governance.sh"
+
+- id: INV-068
+  aliases: ["I-DDL-ALLOWLIST-01"]
+  status: implemented
+  severity: P1
+  title: "DDL allowlist governance enforced (fingerprints + expiry + review)"
+  owners: ["team-security"]
+  sla_days: 30
+  verification: "scripts/security/verify_ddl_allowlist_governance.sh"
+
+- id: INV-069
+  aliases: ["I-P0-PLAN-01"]
+  status: implemented
+  severity: P1
+  title: "Phase-0 implementation plan is current"
+  owners: ["team-platform"]
+  sla_days: 30
+  verification: "scripts/audit/verify_phase0_impl_plan.sh"
+
+- id: INV-070
+  aliases: ["I-BASELINE-REB-01"]
+  status: implemented
+  severity: P1
+  title: "Day-zero rebaseline strategy is documented and enforced"
+  owners: ["team-platform", "team-db"]
+  sla_days: 30
+  verification: "scripts/audit/verify_rebaseline_strategy.sh"

@@ -1,0 +1,21 @@
+# ADR-0010: Baseline Governance Policy
+
+## Status
+Accepted (Phase-0)
+
+## Context
+Schema baseline snapshots are used for drift detection and auditability. Without governance, baselines can be updated without a corresponding migration or rationale, which erodes integrity.
+
+## Decision
+Baseline updates are **governed** and **fail-closed**:
+
+1) If `schema/baseline.sql` changes, **at least one migration** must change in the same diff.
+2) If `schema/baseline.sql` changes, this ADR **must be updated** with a human-readable note.
+3) Baseline generation should use a deterministic, container-based `pg_dump` when possible.
+
+## Consequences
+- Baseline updates are explicit, auditable, and tied to migrations.
+- CI/local checks will fail if governance requirements are not met.
+
+## Baseline Update Log
+- 2026-02-05: Baseline regenerated after tenant/client/member migrations (0014–0019).

@@ -53,3 +53,7 @@ _Generated from `docs/invariants/INVARIANTS_MANIFEST.yml` (do not edit by hand).
 | INV-064 | P1 | Member/tenant consistency guard enforced on ingress | ["team-db"] | scripts/db/verify_tenant_member_hooks.sh |
 | INV-065 | P1 | Outbox tables include tenant/member attribution columns (expand-first) | ["team-db"] | scripts/db/verify_tenant_member_hooks.sh |
 | INV-066 | P1 | Ingress attestations are unique per (tenant_id, instruction_id) | ["team-db"] | scripts/db/verify_tenant_member_hooks.sh |
+| INV-067 | P1 | Baseline changes require migration + ADR update | ["team-platform"] | scripts/audit/verify_baseline_change_governance.sh |
+| INV-068 | P1 | DDL allowlist governance enforced (fingerprints + expiry + review) | ["team-security"] | scripts/security/verify_ddl_allowlist_governance.sh |
+| INV-069 | P1 | Phase-0 implementation plan is current | ["team-platform"] | scripts/audit/verify_phase0_impl_plan.sh |
+| INV-070 | P1 | Day-zero rebaseline strategy is documented and enforced | ["team-platform", "team-db"] | scripts/audit/verify_rebaseline_strategy.sh |

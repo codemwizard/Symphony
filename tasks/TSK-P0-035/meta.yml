@@ -35,7 +35,7 @@ evidence:
   - "./evidence/phase0/proxy_resolution_invariant.json"
 verification:
   - "scripts/audit/verify_proxy_resolution_invariant.sh"
-status: "planned"
+status: "completed"
 notes: ""
 client: "codex_cli"
 assigned_agent: "invariants_curator"

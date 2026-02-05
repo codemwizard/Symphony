@@ -48,11 +48,22 @@ with open("$EVIDENCE_FILE", "w", encoding="utf-8") as f:
   json.dump(out, f, indent=2)
 PY
 
-# Emit audit evidence placeholder (dev mode may not support API-managed audit)
+# Check audit log file produced by declarative audit config
+AUDIT_BYTES=$(docker exec symphony-openbao sh -c 'stat -c %s /openbao/audit.log 2>/dev/null || echo 0')
+AUDIT_PRESENT="false"
+if [[ "$AUDIT_BYTES" -gt 0 ]]; then
+  AUDIT_PRESENT="true"
+fi
+
 python3 - <<PY
 import json
 from pathlib import Path
-out = {"status": "pass", "note": "audit device may require declarative config in dev mode"}
+out = {
+  "status": "pass" if "$AUDIT_PRESENT" == "true" else "fail",
+  "audit_log_bytes": int("$AUDIT_BYTES"),
+  "audit_log_present": "$AUDIT_PRESENT" == "true",
+  "path": "/openbao/audit.log"
+}
 Path("$AUDIT_EVIDENCE_FILE").write_text(json.dumps(out, indent=2))
 PY
 
@@ -62,6 +73,10 @@ if [[ "$ALLOWED" != "ok" ]]; then
 fi
 if [[ $FORBIDDEN_STATUS -eq 0 ]]; then
   echo "OpenBao forbidden read unexpectedly succeeded" >&2
+  exit 1
+fi
+if [[ "$AUDIT_PRESENT" != "true" ]]; then
+  echo "OpenBao audit log not present or empty" >&2
   exit 1
 fi
 
