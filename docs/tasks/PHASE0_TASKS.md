@@ -811,3 +811,99 @@ Failure Modes:
 - Evidence file missing.
 - Runner does not wipe DB when required.
 - Local CI steps diverge from CI workflow order.
+
+TASK ID: TSK-P0-037
+Title: Phase‑0 evidence contract + gate switch (authoritative)
+Owner Role: PLATFORM
+Depends On: TSK-P0-010, TSK-P0-034
+Touches: `docs/PHASE0/PHASE0_CONTRACT.md`, `docs/PHASE0/phase0_contract.yml`, `scripts/ci/check_evidence_required.sh`, `scripts/audit/verify_phase0_contract.sh`, `scripts/audit/run_invariants_fast_checks.sh`, `tasks/TSK-P0-037/meta.yml`
+Invariant(s): NEW INV-060 (Phase‑0 contract governs evidence gate)
+Work:
+- Create `docs/PHASE0/phase0_contract.yml` as the single source of truth for evidence enforcement.
+- Require contract fields: `task_id`, `status`, `verification_mode`, `evidence_required`, `evidence_paths`, `evidence_scope`, `notes`.
+- Ensure every `tasks/TSK-P0-*/meta.yml` has a corresponding contract row; fail on unknown/duplicate IDs.
+- Update `scripts/ci/check_evidence_required.sh` to enforce only completed tasks with `evidence_required=true` and normalize evidence paths in CI.
+- Add `scripts/audit/verify_phase0_contract.sh` to validate schema + completeness and emit evidence even on failure.
+Acceptance Criteria:
+- Contract validates and lists every Phase‑0 task.
+- Evidence gate enforces only `status=completed AND evidence_required=true`.
+- Evidence checker passes with `merge-multiple: true` artifact layouts.
+- Evidence file is emitted even when validation fails.
+Verification Commands:
+- `scripts/audit/verify_phase0_contract.sh`
+- `CI_ONLY=1 scripts/ci/check_evidence_required.sh evidence/phase0`
+Evidence Artifact(s):
+- `./evidence/phase0/phase0_contract.json`
+Failure Modes:
+- Evidence file missing.
+- Missing/duplicate task rows in contract.
+- Evidence gate fails on tasks not marked completed.
+- CI evidence layout not normalized (false missing).
+
+TASK ID: TSK-P0-038
+Title: SQLSTATE registry + drift check (scoped, deterministic)
+Owner Role: PLATFORM
+Depends On: TSK-P0-034
+Touches: `docs/contracts/sqlstate_map.yml`, `scripts/audit/check_sqlstate_map_drift.sh`, `scripts/audit/run_invariants_fast_checks.sh`, `tasks/TSK-P0-038/meta.yml`
+Invariant(s): NEW INV-061 (SQLSTATE registry drift‑free)
+Work:
+- Create `docs/contracts/sqlstate_map.yml` with required fields (`class`, `subsystem`, `meaning`, `retryable`) and optional `canonical/aliases`.
+- Implement drift check for `P[0-9]{4}` codes across `schema/migrations/**/*.sql`, `scripts/**/*.sh`, `docs/**/*.md`.
+- Exclude `schema/baseline.sql`, `docs/**/INVARIANTS_QUICK.md`, `.git`, `bin`, `obj`.
+- Emit evidence even on failure.
+Acceptance Criteria:
+- Drift check fails if any `Pxxxx` appears outside the map.
+- Drift check passes when all codes are mapped.
+- Evidence file is written deterministically.
+Verification Commands:
+- `scripts/audit/check_sqlstate_map_drift.sh`
+Evidence Artifact(s):
+- `./evidence/phase0/sqlstate_map_drift.json`
+Failure Modes:
+- Evidence file missing.
+- False positives from generated files.
+- Registry missing required fields.
+
+TASK ID: TSK-P0-039
+Title: Register SQLSTATE + contract invariants in manifest
+Owner Role: INVARIANTS_CURATOR
+Depends On: TSK-P0-037, TSK-P0-038
+Touches: `docs/invariants/INVARIANTS_MANIFEST.yml`, `docs/invariants/INVARIANTS_QUICK.md`, `tasks/TSK-P0-039/meta.yml`
+Invariant(s): INV-060, INV-061
+Work:
+- Add INV‑060 + INV‑061 with verification scripts.
+- Regenerate `INVARIANTS_QUICK.md` to prevent drift.
+Acceptance Criteria:
+- Manifest validates.
+- Quick doc matches manifest after regeneration.
+Verification Commands:
+- `scripts/audit/generate_invariants_quick`
+- `scripts/audit/run_invariants_fast_checks.sh`
+Evidence Artifact(s):
+- `./evidence/phase0/invariants_quick.json`
+Failure Modes:
+- Quick doc drift.
+- Evidence file missing.
+
+TASK ID: TSK-P0-040
+Title: Wire contract + SQLSTATE drift checks into CI
+Owner Role: SECURITY_GUARDIAN
+Depends On: TSK-P0-037, TSK-P0-038
+Touches: `.github/workflows/invariants.yml`, `tasks/TSK-P0-040/meta.yml`
+Invariant(s): INV-060, INV-061
+Work:
+- Ensure contract + SQLSTATE drift checks run in the fast-checks job.
+- Ensure evidence uploads include `evidence/phase0/**`.
+Acceptance Criteria:
+- Checks run before upload step.
+- Evidence artifacts include `phase0_contract.json` and `sqlstate_map_drift.json`.
+Verification Commands:
+- `scripts/audit/run_invariants_fast_checks.sh`
+- `actionlint .github/workflows/invariants.yml`
+Evidence Artifact(s):
+- `./evidence/phase0/phase0_contract.json`
+- `./evidence/phase0/sqlstate_map_drift.json`
+Failure Modes:
+- Evidence file missing.
+- Checks not executed in fast‑checks job.
+- Evidence not uploaded.

@@ -46,3 +46,5 @@ _Generated from `docs/invariants/INVARIANTS_MANIFEST.yml` (do not edit by hand).
 | INV-042 | P0 | Concurrent index requires no-tx marker | ["team-db"] | scripts/db/lint_migrations.sh |
 | INV-043 | P1 | No-tx migration guidance | ["team-platform"] | rg -n \"symphony:no_tx\" docs/operations/DEV_WORKFLOW.md |
 | INV-044 | P0 | Invariants docs match manifest | ["team-platform"] | scripts/audit/check_docs_match_manifest.py |
+| INV-060 | P1 | Phase-0 contract governs evidence gate | ["team-platform"] | scripts/audit/verify_phase0_contract.sh |
+| INV-061 | P1 | SQLSTATE registry is complete and drift-free | ["team-platform"] | scripts/audit/check_sqlstate_map_drift.sh |

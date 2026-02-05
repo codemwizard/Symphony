@@ -1,0 +1,38 @@
+phase: "0"
+task_id: "TSK-P0-038"
+title: "SQLSTATE registry + drift check (scoped, deterministic)"
+owner_role: "PLATFORM"
+Depends On: TSK-P0-034
+Touches:
+  - "docs/contracts/sqlstate_map.yml"
+  - "scripts/audit/check_sqlstate_map_drift.sh"
+  - "scripts/audit/run_invariants_fast_checks.sh"
+  - "tasks/TSK-P0-038/meta.yml"
+Invariant(s): "INV-061 (SQLSTATE registry drift-free)"
+Work:
+  - "Create sqlstate_map.yml with required fields and canonical/alias handling."
+  - "Implement drift check across migrations/scripts/docs with explicit exclusions."
+  - "Emit evidence even on failure."
+Acceptance Criteria:
+  - "Drift check fails on unmapped codes."
+  - "Evidence file is written deterministically."
+Verification Commands:
+  - "scripts/audit/check_sqlstate_map_drift.sh"
+Evidence Artifact(s):
+  - "./evidence/phase0/sqlstate_map_drift.json"
+Failure Modes:
+  - "Evidence file missing."
+  - "Registry missing required fields."
+must_read:
+  - "docs/invariants/INVARIANTS_MANIFEST.yml"
+  - "scripts/db/verify_invariants.sh"
+  - "scripts/db/ci_invariant_gate.sql"
+evidence:
+  - "./evidence/phase0/sqlstate_map_drift.json"
+verification:
+  - "scripts/audit/check_sqlstate_map_drift.sh"
+status: "planned"
+notes: ""
+client: "codex_cli"
+assigned_agent: "platform"
+model: "<UNASSIGNED>"

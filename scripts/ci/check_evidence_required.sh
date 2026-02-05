@@ -2,110 +2,98 @@
 set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
-TASKS_DIR="$ROOT_DIR/tasks"
-
 EVIDENCE_ROOT="${1:-$ROOT_DIR/evidence/phase0}"
+CONTRACT_PATH="$ROOT_DIR/docs/PHASE0/phase0_contract.yml"
+
 if [[ "$EVIDENCE_ROOT" != /* ]]; then
   EVIDENCE_ROOT="$ROOT_DIR/$EVIDENCE_ROOT"
 fi
 
-ROOT_DIR="$ROOT_DIR" TASKS_DIR="$TASKS_DIR" EVIDENCE_ROOT="$EVIDENCE_ROOT" python3 - <<'PY'
+ROOT_DIR="$ROOT_DIR" EVIDENCE_ROOT="$EVIDENCE_ROOT" CONTRACT_PATH="$CONTRACT_PATH" python3 - <<'PY'
+import json
+import os
 import sys
 from pathlib import Path
 import glob
-import os
 
 root = Path(os.environ["ROOT_DIR"])
-tasks_dir = Path(os.environ["TASKS_DIR"])
 evidence_root = Path(os.environ["EVIDENCE_ROOT"])
+contract_path = Path(os.environ["CONTRACT_PATH"])
 
 ci_only = os.environ.get("CI_ONLY", "0") == "1"
 
-# In CI, artifacts may be extracted under evidence/phase0/evidence/phase0
-if ci_only:
-    nested = evidence_root / "evidence" / "phase0"
-    # Prefer nested root when present (common when artifact already contains evidence/phase0 prefix)
-    if nested.exists():
-        if not any(evidence_root.rglob("*.json")):
-            evidence_root = nested
-    elif not evidence_root.exists():
-        # legacy fallback: if caller passed a non-existent path
-        double_base = root / "evidence" / "phase0" / "evidence" / "phase0"
-        if double_base.exists():
-            evidence_root = double_base
+if not contract_path.exists():
+    print(f"ERROR: contract not found: {contract_path}")
+    sys.exit(1)
 
+try:
+    contract = json.loads(contract_path.read_text(encoding="utf-8"))
+except Exception as e:
+    print(f"ERROR: failed to parse contract: {e}")
+    sys.exit(1)
+
+if not isinstance(contract, list):
+    print("ERROR: contract must be a list")
+    sys.exit(1)
 
 missing = []
 checked = []
 
-def parse_meta(path: Path) -> dict:
-    data = {"phase": None, "status": None, "evidence": []}
-    lines = path.read_text(encoding="utf-8", errors="ignore").splitlines()
-    in_evidence = False
-    for line in lines:
-        if not line.strip():
-            continue
-        if line.startswith("phase:"):
-            data["phase"] = line.split(":", 1)[1].strip().strip('"')
-            in_evidence = False
-            continue
-        if line.startswith("status:"):
-            data["status"] = line.split(":", 1)[1].strip().strip('"')
-            in_evidence = False
-            continue
-        if line.startswith("evidence:"):
-            in_evidence = True
-            continue
-        if in_evidence:
-            if line.lstrip().startswith("- "):
-                data["evidence"].append(line.split("- ", 1)[1].strip().strip('"'))
-                continue
-            # end of evidence block on next top-level key
-            if not line.startswith("  "):
-                in_evidence = False
-    return data
+def matches_for_path(path: str):
+    path = path.strip()
+    if not path:
+        return []
+    if path.startswith("./"):
+        path = path[2:]
 
-for meta in sorted(tasks_dir.glob("TSK-P0-*/meta.yml")):
-    data = parse_meta(meta)
-    if str(data.get("phase")) != "0":
+    candidates = []
+    if ci_only:
+        rel = path
+        if rel.startswith("evidence/phase0/"):
+            rel = rel[len("evidence/phase0/"):]
+        candidates.append(evidence_root / rel)
+        candidates.append(evidence_root / "evidence" / "phase0" / rel)
+    else:
+        candidates.append(root / path)
+
+    matches = []
+    for cand in candidates:
+        matches.extend(glob.glob(str(cand)))
+
+    if ci_only and not matches:
+        # fallback: search basename anywhere under evidence_root
+        basename = Path(path).name
+        matches = [str(p) for p in evidence_root.rglob(basename)]
+
+    return matches
+
+for row in contract:
+    if not isinstance(row, dict):
         continue
-    status = str(data.get("status", "")).lower()
+    status = str(row.get("status", "")).lower()
     if status != "completed":
         continue
-    globs = data.get("evidence", []) or []
-    for pattern in globs:
-        pattern = str(pattern)
-        if not pattern:
+    if row.get("evidence_required") is not True:
+        continue
+
+    verification_mode = row.get("verification_mode", "both")
+    if ci_only and verification_mode == "local":
+        continue
+    if (not ci_only) and verification_mode == "ci":
+        continue
+
+    task_id = row.get("task_id", "(unknown)")
+    evidence_paths = row.get("evidence_paths") or []
+
+    for path in evidence_paths:
+        path = str(path)
+        if ci_only and path in ("evidence/phase0/local_ci_parity.json", "local_ci_parity.json"):
+            # local-only evidence; skip in CI gate
             continue
-        # CI-only artifact name handling
-        if pattern == "phase0-evidence":
-            if ci_only:
-                matches = list(evidence_root.rglob("*.json"))
-                count = len(matches)
-                checked.append((meta.parent.name, pattern, count))
-                if count == 0:
-                    missing.append(f"{meta.parent.name}: {pattern} (no evidence/phase0/*.json found)")
-            else:
-                # skip CI-only artifact in local mode
-                continue
-        else:
-            # normalize to repo root
-            if pattern.startswith("./"):
-                pattern = pattern[2:]
-            if ci_only and pattern.startswith("evidence/phase0/"):
-                pattern = pattern[len("evidence/phase0/"):]
-            abs_pattern = str(evidence_root / pattern) if ci_only else str(root / pattern)
-            if ci_only and pattern in ("evidence/phase0/local_ci_parity.json", "local_ci_parity.json"):
-                # local-only evidence; skip in CI gate
-                continue
-            matches = glob.glob(abs_pattern)
-            if ci_only and not matches:
-                # fallback: look for basename anywhere under evidence_root
-                basename = Path(pattern).name
-                matches = [str(p) for p in evidence_root.rglob(basename)]
-            checked.append((meta.parent.name, pattern, len(matches)))
-            if len(matches) == 0:
-                missing.append(f"{meta.parent.name}: {pattern}")
+        matches = matches_for_path(path)
+        checked.append((task_id, path, len(matches)))
+        if len(matches) == 0:
+            missing.append(f"{task_id}: {path}")
 
 if missing:
     print("Missing evidence artifacts:")

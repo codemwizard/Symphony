@@ -127,6 +127,24 @@ else
   exit 1
 fi
 
+echo ""
+echo "==> Phase-0 contract validation"
+if [[ -x "scripts/audit/verify_phase0_contract.sh" || -f "scripts/audit/verify_phase0_contract.sh" ]]; then
+  run bash scripts/audit/verify_phase0_contract.sh
+else
+  echo "ERROR: scripts/audit/verify_phase0_contract.sh not found"
+  exit 1
+fi
+
+echo ""
+echo "==> SQLSTATE map drift check"
+if [[ -x "scripts/audit/check_sqlstate_map_drift.sh" || -f "scripts/audit/check_sqlstate_map_drift.sh" ]]; then
+  run bash scripts/audit/check_sqlstate_map_drift.sh
+else
+  echo "ERROR: scripts/audit/check_sqlstate_map_drift.sh not found"
+  exit 1
+fi
+
 EVIDENCE_DIR="$ROOT/evidence/phase0"
 mkdir -p "$EVIDENCE_DIR"
 python3 - <<PY

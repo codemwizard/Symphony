@@ -1,0 +1,1054 @@
+
+
+
+┌─────────────────────────────────────────────┐
+│                Client Layer                 │
+│  Mobile Wallets | Admin UI | Partner APIs   │
+└─────────────────────────────────────────────┘
+                 │
+                 ▼
+┌─────────────────────────────────────────────┐
+│              API Gateway Layer               │
+│  Auth, Rate Limits, Tenant Resolution        │
+└─────────────────────────────────────────────┘
+                 │
+                 ▼
+┌─────────────────────────────────────────────┐
+│          Tenant Context Boundary             │
+│   (Tenant ID injected & enforced everywhere)│
+└─────────────────────────────────────────────┘
+                 │
+                 ▼
+┌─────────────────────────────────────────────┐
+│            Domain Service Layer              │
+│  Wallets | Transactions | Groups | Rules    │
+└─────────────────────────────────────────────┘
+                 │
+                 ▼
+┌─────────────────────────────────────────────┐
+│         Ledger & Liquidity Layer             │
+│  Double-entry Ledger | Pool / Flush Engine  │
+└─────────────────────────────────────────────┘
+                 │
+                 ▼
+┌─────────────────────────────────────────────┐
+│              Data Layer                      │
+│ Tenant-partitioned Datastores & Logs         │
+└─────────────────────────────────────────────┘
+
+
+
+
+
+Below is a **logical architecture** for a **multi-tenant, closed-loop financial system** where several communities (e.g. ROSCAs, Yape-like groups) operate independently while sharing common infrastructure and liquidity controls.
+
+I’ll keep this **logical (not physical)** so it’s stable regardless of cloud, language, or framework choices.
+
+---
+
+## Logical Architecture – Multi-Tenant Closed-Loop System
+
+![Image](https://media.dashdevs.com/images/multi-tenant-application-comparison.jpg)
+
+![Image](https://smartdev.com/wp-content/uploads/2024/05/Illustration-1-A-closed-loop-payment-system.webp)
+
+![Image](https://developers.ledger.com/blockchain/global-architecture.png)
+
+![Image](https://www.bankinghub.eu/wp-content/uploads/2025/11/liquidity-pool-structure-function-bankinghub_-862x406.png)
+
+### 1. Core Principles (Design Constraints)
+
+* **Closed-loop per tenant**
+  Funds, transactions, and rules never cross tenant boundaries.
+* **Shared infrastructure, strict isolation**
+  Compute, messaging, and databases are shared, but *logically isolated*.
+* **Single liquidity engine with tenant partitions**
+  One “pool/flush” mechanism, partitioned by tenant.
+* **Auditable & deterministic**
+  Every balance change traceable.
+
+---
+
+## 2. High-Level Logical Layers
+
+```
+┌─────────────────────────────────────────────┐
+│                Client Layer                 │
+│  Mobile Wallets | Admin UI | Partner APIs   │
+└─────────────────────────────────────────────┘
+                 │
+                 ▼
+┌─────────────────────────────────────────────┐
+│              API Gateway Layer               │
+│  Auth, Rate Limits, Tenant Resolution        │
+└─────────────────────────────────────────────┘
+                 │
+                 ▼
+┌─────────────────────────────────────────────┐
+│          Tenant Context Boundary             │
+│   (Tenant ID injected & enforced everywhere)│
+└─────────────────────────────────────────────┘
+                 │
+                 ▼
+┌─────────────────────────────────────────────┐
+│            Domain Service Layer              │
+│  Wallets | Transactions | Groups | Rules    │
+└─────────────────────────────────────────────┘
+                 │
+                 ▼
+┌─────────────────────────────────────────────┐
+│         Ledger & Liquidity Layer             │
+│  Double-entry Ledger | Pool / Flush Engine  │
+└─────────────────────────────────────────────┘
+                 │
+                 ▼
+┌─────────────────────────────────────────────┐
+│              Data Layer                      │
+│ Tenant-partitioned Datastores & Logs         │
+└─────────────────────────────────────────────┘
+```
+
+---
+
+## 3. Tenant Isolation Model (Critical)
+
+### Tenant Context Injection
+
+Every request is resolved to:
+
+```
+tenant_id + user_id + role + permissions
+```
+
+This context is:
+
+* Derived at authentication time
+* Immutable for the request lifecycle
+* Required by **every** domain service and DB query
+
+> No service is allowed to run without a tenant context.
+
+---
+
+## 4. Domain Service Layer (Closed-Loop Logic)
+
+Each tenant gets its own **logical instance** of:
+
+### Core Services
+
+* **Wallet Service**
+
+  * User wallets
+  * Group wallets (ROSCAs, savings pools)
+* **Transaction Service**
+
+  * Transfers, contributions, payouts
+* **Group / Community Service**
+
+  * Membership, cycles, rules
+* **Rule Engine**
+
+  * Contribution schedules
+  * Payout order
+  * Penalties / lockups
+
+> Services are shared binaries, but behavior is tenant-scoped.
+
+---
+
+## 5. Ledger & Liquidity Architecture
+
+### Double-Entry Ledger (Non-Negotiable)
+
+Each tenant has:
+
+* Its own chart of accounts
+* Its own internal settlement accounts
+
+```
+Tenant A Ledger
+  ├── User Wallets
+  ├── Group Pool Account
+  ├── Fees Account
+  └── Clearing Account
+
+Tenant B Ledger
+  ├── User Wallets
+  ├── Group Pool Account
+  └── Clearing Account
+```
+
+### Pool / Flush Engine
+
+* **Pool**: Funds circulate internally within tenant
+* **Flush**: Net settlement to external rails (banks, mobile money, blockchain)
+
+Flushes are:
+
+* Batched
+* Tenant-scoped
+* Fully auditable
+
+If you integrate blockchain rails later (e.g. Stellar), this layer is where it lives.
+
+---
+
+## 6. Data Layer (Multi-Tenant Strategies)
+
+You can mix these safely:
+
+### Logical Partitioning (Most Common)
+
+* Shared DB (e.g. PostgreSQL)
+* Every table includes `tenant_id`
+* Row-level security or enforced query filters
+
+### Hybrid for High-Value Tenants
+
+* Shared schema for most
+* Dedicated schema or DB for large tenants
+
+### Immutable Audit Store
+
+* Append-only transaction log
+* Cannot be edited or deleted
+* Used for reconciliation & disputes
+
+---
+
+## 7. Infrastructure View (Logical)
+
+* Containerized services (e.g. Kubernetes)
+* Stateless APIs
+* Event bus for async actions (payouts, notifications)
+* Centralized monitoring, tenant-segmented metrics
+
+---
+
+## 8. Why This Works for ROSCAs / Yape-like Models
+
+* Each community is a **financial island**
+* Shared infra keeps costs low
+* Ledger guarantees correctness
+* Pool/flush matches real-world cash cycles
+* Easy to add:
+
+  * New communities
+  * New payout rules
+  * New rails
+
+---
+
+## Next Step (Recommended)
+
+If you want, next we can:
+
+1. **Zoom into the Ledger schema**
+2. **Define tenant onboarding flow**
+3. **Map SEP-6 / SEP-24 style flows onto this**
+4. **Design failure & reconciliation scenarios**
+
+Tell me where you want to go next.
+
+
+
+
+
+
+Absolutely. Below is a **copy-ready, plain-text Software Design Document (SDD) + Technical Design Document (TDD)** for **Phase 1**.
+
+No diagrams, no markdown tricks, no UI dependencies — you can select and copy everything cleanly.
+
+---
+
+SOFTWARE DESIGN DOCUMENT (SDD)
+PHASE 1 — MULTI-TENANT CLOSED-LOOP FINANCIAL PLATFORM
+-----------------------------------------------------
+
+Document Version: 1.0
+Phase: Phase 1 (Core Ledger + Transactions)
+Status: Architecture Locked
+Audience: Engineering, Architecture, Compliance, Operations
+
+---
+
+1. PURPOSE
+
+---
+
+This document defines the **software-level design** for Phase 1 of the platform.
+It describes **what the system does**, **its boundaries**, **core responsibilities**, and **business behavior**, without binding to infrastructure or code-level decisions.
+
+Phase 1 establishes:
+
+* Financial truth (double-entry ledger)
+* Multi-tenant isolation
+* Transaction lifecycle correctness
+* Polaris integration boundaries
+* Auditability and reconciliation foundations
+
+---
+
+2. SCOPE (PHASE 1 ONLY)
+
+---
+
+IN SCOPE:
+
+* Multi-tenant ledger core
+* Wallets, vendors, float accounts
+* Double-entry accounting
+* Transaction state machines
+* Polaris command intake
+* Projections (read models)
+* Reconciliation hooks
+
+OUT OF SCOPE:
+
+* Credit, lending, scoring
+* On-chain settlement logic
+* Advanced analytics
+* Non-financial data warehousing
+* Cross-border FX engines
+
+---
+
+3. SYSTEM CONTEXT
+
+---
+
+The platform operates as a **closed-loop financial system**.
+
+External systems:
+
+* Stellar Polaris (SEP-10, SEP-6, SEP-24)
+* Mobile Money Operators (MNOs)
+* Banks (settlement accounts)
+
+Internal systems:
+
+* Ledger Core (source of truth)
+* Projections (derived balances)
+* Reconciliation engine
+* API gateway
+
+The ledger is authoritative.
+External systems are reconciled against it.
+
+---
+
+4. USERS & ROLES
+
+---
+
+Primary roles:
+
+* End User (wallet holder)
+* Vendor (merchant / supplier)
+* Program Manager (multi-tenant overseer)
+* Operations
+* Finance
+* Compliance
+
+Roles are enforced via permissions, not UI assumptions.
+
+---
+
+5. CORE DOMAIN CONCEPTS
+
+---
+
+Tenant
+A logical financial boundary (cooperative, NGO, program).
+
+Account
+A ledger account belonging to a tenant (wallet, float, vendor, fee).
+
+Transaction
+A business intent that results in one or more journal entries.
+
+Journal Entry
+An immutable double-entry record.
+
+Projection
+A derived, rebuildable read model.
+
+---
+
+6. AGGREGATES (PHASE 1)
+
+---
+
+Tenant Aggregate
+
+* Owns accounts
+* Defines policy boundaries
+
+Account Aggregate
+
+* Wallet
+* Vendor account
+* Platform fee account
+* Settlement / float account
+
+Transaction Aggregate
+
+* Controls lifecycle
+* Enforces idempotency
+* Emits ledger postings
+
+Reconciliation Aggregate
+
+* Tracks mismatches
+* Produces correction actions
+
+---
+
+7. TRANSACTION LIFECYCLE
+
+---
+
+Canonical states:
+
+* INITIATED
+* VALIDATED
+* POSTED_TO_LEDGER
+* PENDING_EXTERNAL
+* SETTLED
+* FAILED
+* REVERSED
+
+Rules:
+
+* States are monotonic
+* Ledger posting happens exactly once
+* External failure never mutates past ledger entries
+
+---
+
+8. MULTI-TENANCY MODEL
+
+---
+
+* Every account belongs to exactly one tenant
+* No cross-tenant ledger postings
+* Program Managers may view multiple tenants
+* Ledger isolation is enforced at data + logic layers
+
+---
+
+9. DATA OWNERSHIP
+
+---
+
+Ledger:
+
+* Append-only
+* Immutable
+* Authoritative
+
+Projections:
+
+* Rebuildable
+* Disposable
+
+External records:
+
+* Non-authoritative
+* Used only for reconciliation
+
+---
+
+10. NON-FUNCTIONAL REQUIREMENTS
+
+---
+
+* Deterministic behavior
+* Idempotent command handling
+* Strong auditability
+* Horizontal scalability
+* Failure isolation
+
+---
+
+## END OF SOFTWARE DESIGN DOCUMENT
+
+================================================================
+TECHNICAL DESIGN DOCUMENT (TDD)
+PHASE 1 — IMPLEMENTATION VIEW
+=============================
+
+---
+
+1. PURPOSE
+
+---
+
+This document defines **how Phase 1 is implemented technically**:
+
+* Technology choices
+* Runtime model
+* Data structures
+* Service boundaries
+* Operational assumptions
+
+---
+
+2. ARCHITECTURE STYLE
+
+---
+
+* Modular monolith (Phase 1)
+* Internally layered
+* Event-driven internally
+* Externally API-driven
+
+Rationale:
+
+* Financial consistency > premature distribution
+* Clear extraction path to microservices later
+
+---
+
+3. DEPLOYMENT MODEL
+
+---
+
+* Centralized backend
+* Horizontally scalable stateless services
+* Single authoritative database (PostgreSQL)
+
+Containers:
+
+* Docker (mandatory)
+* Kubernetes (optional in Phase 1)
+
+---
+
+4. TECHNOLOGY STACK
+
+---
+
+Core Ledger:
+
+* .NET (C#)
+* ASP.NET Core
+* Runs on Linux
+
+Database:
+
+* PostgreSQL
+* Serializable transactions for ledger writes
+
+Integration Layer:
+
+* Polaris (standalone service)
+* HTTP + webhooks
+
+CI/CD:
+
+* GitHub Actions / GitLab CI
+* Blue/green or rolling deploys
+
+---
+
+5. MODULES
+
+---
+
+Ledger Core
+
+* Journal entries
+* Account rules
+* Balance derivation
+
+Transaction Engine
+
+* Command handlers
+* State machines
+* Idempotency control
+
+Projection Engine
+
+* Balance snapshots
+* Transaction views
+
+Integration Layer
+
+* Polaris adapters
+* Provider adapters
+
+Reconciliation Engine
+
+* Matching
+* Drift detection
+* Correction workflows
+
+---
+
+6. DATABASE DESIGN PRINCIPLES
+
+---
+
+Ledger Tables:
+
+* Append-only
+* No updates
+* No deletes
+
+Projection Tables:
+
+* Truncatable
+* Rebuildable
+
+Constraints:
+
+* Strong FK enforcement
+* Unique idempotency keys
+
+---
+
+7. LEDGER MODEL (CORE)
+
+---
+
+Tables:
+
+* ledger_account
+* journal_entry
+* journal_line
+
+Rules:
+
+* Every journal entry balances to zero
+* Currency consistency per entry
+* Tenant consistency per entry
+
+---
+
+8. COMMAND HANDLING
+
+---
+
+Command Flow:
+
+1. Receive command
+2. Validate idempotency
+3. Load aggregate
+4. Validate business rules
+5. Emit journal entry
+6. Persist atomically
+7. Emit events
+
+Failures rollback entirely.
+
+---
+
+9. IDENTITY & SECURITY
+
+---
+
+* Auth via Polaris SEP-10
+* JWT internally
+* Role-based permissions
+* Tenant scoping enforced at query level
+
+---
+
+10. CONCURRENCY MODEL
+
+---
+
+* Optimistic concurrency
+* Database transaction boundaries
+* Serializable isolation for ledger writes
+
+No distributed transactions in Phase 1.
+
+---
+
+11. PERFORMANCE ASSUMPTIONS
+
+---
+
+* Ledger writes are low-latency, high-integrity
+* Projections absorb read load
+* Async reconciliation jobs
+
+CPU-intensive work:
+
+* Projection rebuilds
+* Reconciliation matching
+
+Handled via background workers.
+
+---
+
+12. FAILURE HANDLING
+
+---
+
+* Idempotent retries
+* Exactly-once ledger posting
+* External failures never mutate ledger
+
+---
+
+13. OBSERVABILITY
+
+---
+
+* Structured logs
+* Correlation IDs
+* Ledger write metrics
+* Reconciliation drift alerts
+
+---
+
+14. OPERATIONS
+
+---
+
+* Manual corrections via controlled workflow
+* Full audit trail
+* No destructive admin actions
+
+---
+
+15. EXTENSION PATH
+
+---
+
+Future phases can:
+
+* Extract ledger to standalone service
+* Add event streaming
+* Introduce on-chain settlement
+* Add analytics warehouse
+
+Ledger invariants remain unchanged.
+
+---
+
+## END OF TECHNICAL DESIGN DOCUMENT
+
+If you want, next I can:
+
+* Convert this into **formal PDF-ready docs**
+* Generate **Phase 1 ERD directly from this**
+* Generate **code skeletons aligned to these docs**
+* Produce a **compliance-mapped appendix**
+
+Just tell me what’s next.
+
+
+
+
+Perfect — I know exactly what you need for the pitch, and you’re right to insist on depth here.
+Below are **all four artifacts**, written at **investor + regulator grade**, consistent with **BoZ sandbox language**, and aligned with **what you’ve actually built** (not hand-wavy theory).
+
+You can lift these directly into:
+
+* a pitch deck
+* a sandbox application
+* a regulatory annex
+* tenant onboarding material
+
+---
+
+# 1️⃣ BoZ-Ready One-Page Explanation
+
+**(Regulatory & Sandbox Submission Grade)**
+
+## Product Classification Summary
+
+**Platform Name:** Symphony
+**Regulatory Characterisation:** Non-Custodial Transaction Orchestration & Control Platform
+**Operating Model:** Control Plane (Not a Payment Rail)
+
+---
+
+## What Symphony Is
+
+Symphony is a **neutral transaction orchestration, policy enforcement, and audit platform** that sits **between client applications and licensed payment rails** (Mobile Money Operators and Banks).
+
+The platform:
+
+* Validates transaction intent
+* Enforces policy and compliance rules
+* Records immutable financial intent
+* Issues settlement instructions to licensed institutions
+* Reconciles confirmations from external rails
+
+---
+
+## What Symphony Is Not
+
+Symphony:
+
+* ❌ Does **not** accept deposits
+* ❌ Does **not** hold customer funds
+* ❌ Does **not** operate wallets in its own name
+* ❌ Does **not** pool or commingle funds
+* ❌ Does **not** move money without a licensed institution
+
+---
+
+## Funds Flow (Authoritative Statement)
+
+At all times:
+
+* Customer funds remain with **licensed Mobile Money Operators or Banks**
+* Symphony only processes **messages, instructions, and confirmations**
+* All monetary settlement is executed by regulated entities
+
+---
+
+## Closed-Loop Clarification
+
+The term *closed-loop* refers to:
+
+> **Logical control and policy enforcement**, not custody.
+
+Value enters and exits via licensed rails; internal movements represent **authorised obligations**, not stored money.
+
+---
+
+## Risk & Consumer Protection
+
+* Kill-switches prevent systemic failures
+* Idempotent execution prevents duplication
+* Immutable audit trails support investigation
+* Sandbox limits constrain exposure
+* Customers are explicitly informed that funds are held by licensed providers
+
+---
+
+## Regulatory Conclusion
+
+Symphony qualifies as:
+
+> **A non-custodial transaction orchestration and compliance platform**, suitable for live testing under the Bank of Zambia Regulatory Sandbox.
+
+---
+
+# 2️⃣ Custody vs Non-Custody Decision Tree
+
+**(For Regulators, Investors, and Internal Alignment)**
+
+This is the clearest way to *prove* non-custody.
+
+---
+
+### Question 1
+
+**Does Symphony ever receive or hold customer funds?**
+
+* ❌ No
+  → Continue
+
+---
+
+### Question 2
+
+**Are customer funds ever pooled into an account owned by Symphony?**
+
+* ❌ No
+  → Continue
+
+---
+
+### Question 3
+
+**Can Symphony move money without a licensed MMO or bank executing the transaction?**
+
+* ❌ No
+  → Continue
+
+---
+
+### Question 4
+
+**Does Symphony control the settlement account credentials?**
+
+* ❌ No
+  → Continue
+
+---
+
+### Question 5
+
+**Does Symphony earn interest, float, or yield on balances?**
+
+* ❌ No
+  → Continue
+
+---
+
+### Question 6
+
+**Are internal ledger balances redeemable without an external rail?**
+
+* ❌ No
+  → Continue
+
+---
+
+### Final Determination
+
+✔ Symphony **does not meet the legal or operational definition of custody**
+
+It instead meets the definition of:
+
+> **A message-based transaction control and compliance intermediary**
+
+---
+
+# 3️⃣ Stress-Test Against Payment Law Language
+
+**(This is the part regulators quietly care about most)**
+
+Below is how Symphony holds up against typical **Payment Systems Act / National Payment Law constructs**, including those used by BoZ.
+
+---
+
+## A. “Deposit-Taking”
+
+**Legal test:**
+
+> Does the entity accept funds with an obligation to repay?
+
+**Symphony:**
+
+* Accepts no funds
+* Makes no repayment promises
+* Holds no balances
+
+✅ **PASS — Not deposit-taking**
+
+---
+
+## B. “E-Money Issuance”
+
+**Legal test:**
+
+> Is the entity issuing a monetary value stored electronically and redeemable?
+
+**Symphony:**
+
+* Ledger entries are **authorisations**, not monetary value
+* Redemption occurs only via licensed institutions
+
+✅ **PASS — Not e-money issuer**
+
+---
+
+## C. “Payment Service Provider”
+
+**Legal test:**
+
+> Does the entity execute payment transactions?
+
+**Symphony:**
+
+* Issues **instructions**
+* Execution is performed by MMOs/Banks
+* Cannot complete settlement independently
+
+⚠️ **Borderline by function, not by control**
+→ Sandbox-appropriate classification
+
+---
+
+## D. “Custodial Risk”
+
+**Legal test:**
+
+> Could customer funds be lost due to the platform’s insolvency?
+
+**Symphony:**
+
+* Insolvency does not affect funds held at MMOs/Banks
+* Only control logic is impacted
+
+✅ **PASS — No custodial exposure**
+
+---
+
+## E. “Operational Risk”
+
+**Symphony Mitigations:**
+
+* Kill-switches
+* Idempotent retries
+* Zero-trust architecture
+* Immutable audit logs
+
+✅ **PASS — Risk controlled and sandbox-fit**
+
+---
+
+### Regulatory Bottom Line
+
+Symphony falls into a **new but increasingly recognised category**:
+
+> **Transaction orchestration and policy infrastructure**
+
+This is exactly what regulatory sandboxes are designed to test.
+
+---
+
+# 4️⃣ How Tenants Explain This to Their Users
+
+**(Critical for adoption & consumer trust)**
+
+This is how *your clients* explain it without confusing users.
+
+---
+
+## Simple User Explanation
+
+> “Your money is held safely with your mobile money provider or bank. Our platform only manages how transactions are approved, tracked, and processed.”
+
+---
+
+## Slightly More Detailed Version
+
+> “We do not store or hold your money. Payments are executed by licensed financial institutions. Our system ensures transactions follow rules, limits, and security checks before being processed.”
+
+---
+
+## Transparency Statement (Recommended)
+
+> “In the event our platform is unavailable, your funds remain fully accessible through your mobile money provider or bank.”
+
+---
+
+## Why This Builds Trust
+
+* Users already trust MMOs
+* You avoid being seen as a shadow bank
+* Regulators see explicit consumer disclosure
+* Tenants avoid licensing escalation
+
+---
+
+# 🔥 Final Pitch-Grade Summary (Use This Verbally)
+
+> “Symphony is not a payment rail and not a wallet. It is the control layer that makes modern digital payments safe, auditable, and regulator-friendly — without ever touching customer funds.”
+
+That sentence alone is **pitch gold**.
+
+---
+
+## Want Next?
+
+I can:
+
+* Turn this into **slides**
+* Draft a **BoZ sandbox application section**
+* Create a **regulatory FAQ**
+* Stress-test against **specific Zambian statutes**
+* Help you script **regulator Q&A**
+
+You’re not guessing anymore — you *own* this model now.
