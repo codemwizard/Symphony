@@ -19,16 +19,34 @@ PY
 fi
 
 missing=()
+have_rg() { command -v rg >/dev/null 2>&1; }
+plan_has() {
+  local needle="$1"
+  if have_rg; then
+    rg -q "$needle" "$PLAN"
+  else
+    grep -q -- "$needle" "$PLAN"
+  fi
+}
+plan_has_i() {
+  local needle="$1"
+  if have_rg; then
+    rg -qi "$needle" "$PLAN"
+  else
+    grep -qi -- "$needle" "$PLAN"
+  fi
+}
+
 for token in 0014_tenants.sql 0015_tenant_clients.sql 0016_tenant_members.sql 0017_ingress_tenant_attribution.sql 0018_outbox_tenant_attribution.sql 0019_member_tenant_consistency_guard.sql; do
-  if ! rg -q "$token" "$PLAN"; then
+  if ! plan_has "$token"; then
     missing+=("$token")
   fi
 done
 
-if ! rg -qi "tenant" "$PLAN"; then
+if ! plan_has_i "tenant"; then
   missing+=("tenant keyword")
 fi
-if ! rg -qi "member" "$PLAN"; then
+if ! plan_has_i "member"; then
   missing+=("member keyword")
 fi
 
