@@ -147,7 +147,7 @@ done
 
 # Emit evidence JSON for general lock-risk lint
 ALLOWLIST_HITS_JOINED="$(printf '%s\n' "${allowlist_hits[@]}")"
-ALLOWLIST_HITS_JOINED="$ALLOWLIST_HITS_JOINED" printf '%s\n' "${filtered[@]}" | python3 - <<'PY'
+ALLOWLIST_HITS_JOINED="$ALLOWLIST_HITS_JOINED" printf '%s\n' "${filtered[@]}" | python3 - <<PY
 import json, os, sys
 lines = [ln.strip() for ln in sys.stdin.read().splitlines() if ln.strip()]
 allowlist_hits = [ln.strip() for ln in os.environ.get("ALLOWLIST_HITS_JOINED", "").split("\\n") if ln.strip()]
