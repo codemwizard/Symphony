@@ -907,3 +907,72 @@ Failure Modes:
 - Evidence file missing.
 - Checks not executed in fast‑checks job.
 - Evidence not uploaded.
+
+TASK ID: TSK-P0-041
+Title: Draft tenant/client/member migrations (Phase‑0 rails)
+Owner Role: DB_FOUNDATION
+Depends On: TSK-P0-021, TSK-P0-024
+Touches: `schema/migrations/0014_tenants.sql`, `schema/migrations/0015_tenant_clients.sql`, `schema/migrations/0016_tenant_members.sql`, `schema/migrations/0017_ingress_tenant_attribution.sql`, `schema/migrations/0018_outbox_tenant_attribution.sql`, `schema/migrations/0019_member_tenant_consistency_guard.sql`, `tasks/TSK-P0-041/meta.yml`
+Invariant(s): INV-062..INV-065 (Tenant rails)
+Work:
+- Add tenants, tenant_clients, and tenant_members tables (append-only posture).
+- Add tenant/client/member attribution columns (tenant required on ingress; nullable on outbox for expand-first).
+- Add member/tenant consistency guard function + trigger (ingress only).
+- Ensure no-tx patterns used for hot table indexes if needed.
+Acceptance Criteria:
+- Migrations are forward-only and pass lint/verify.
+- tenant_id is NOT NULL on ingress_attestations.
+- member/tenant guard function exists and trigger is installed on ingress_attestations.
+Verification Commands:
+- `scripts/db/verify_invariants.sh`
+- `scripts/db/tests/test_db_functions.sh`
+Evidence Artifact(s):
+- `./evidence/phase0/tenant_member_hooks.json`
+Failure Modes:
+- Evidence file missing.
+- Tenant attribution missing on ingress_attestations.
+- Member/tenant guard missing or incorrect.
+
+TASK ID: TSK-P0-042
+Title: Add tenant/member invariants + evidence contract entries
+Owner Role: PLATFORM
+Depends On: TSK-P0-041
+Touches: `docs/invariants/INVARIANTS_MANIFEST.yml`, `docs/invariants/INVARIANTS_QUICK.md`, `docs/PHASE0/phase0_contract.yml`, `tasks/TSK-P0-042/meta.yml`
+Invariant(s): INV-062..INV-066 (Tenant rails + member consistency)
+Work:
+- Add tenant/client/member invariants to the manifest.
+- Add phase0 contract row for tenant/member hooks evidence.
+- Regenerate INVARIANTS_QUICK.md and ensure docs match.
+Acceptance Criteria:
+- Manifest validates and docs match.
+- Contract row exists for tenant/member evidence.
+Verification Commands:
+- `scripts/audit/generate_invariants_quick`
+- `scripts/audit/run_invariants_fast_checks.sh`
+Evidence Artifact(s):
+- `./evidence/phase0/invariants_quick.json`
+Failure Modes:
+- Docs drift from manifest.
+- Evidence file missing.
+
+TASK ID: TSK-P0-043
+Title: Implement tenant/member verifier + SQLSTATE map updates
+Owner Role: DB_FOUNDATION
+Depends On: TSK-P0-041
+Touches: `scripts/db/verify_invariants.sh`, `scripts/db/verify_tenant_member_hooks.sh`, `docs/contracts/sqlstate_map.yml`, `tasks/TSK-P0-043/meta.yml`
+Invariant(s): INV-062..INV-066
+Work:
+- Add verifier script for tenant/member hooks (schema + trigger checks) and emit evidence.
+- Wire verifier into db invariants.
+- Add P7201/P7202 to sqlstate_map.yml.
+Acceptance Criteria:
+- Verifier emits `tenant_member_hooks.json` even on failure.
+- DB invariants include tenant/member checks.
+- SQLSTATE map includes P7201/P7202.
+Verification Commands:
+- `scripts/db/verify_invariants.sh`
+Evidence Artifact(s):
+- `./evidence/phase0/tenant_member_hooks.json`
+Failure Modes:
+- Evidence file missing.
+- SQLSTATE map drift.

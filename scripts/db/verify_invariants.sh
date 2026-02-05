@@ -185,6 +185,14 @@ out = {
 Path("$EVIDENCE_DIR/ingress_attestation.json").write_text(json.dumps(out, indent=2))
 PY
 
+echo "🔎 Verifying tenant/client/member hooks..."
+if [[ -x "scripts/db/verify_tenant_member_hooks.sh" || -f "scripts/db/verify_tenant_member_hooks.sh" ]]; then
+  bash scripts/db/verify_tenant_member_hooks.sh
+else
+  echo "ERROR: scripts/db/verify_tenant_member_hooks.sh not found"
+  fail=1
+fi
+
 echo "🔎 Verifying revocation tables append-only..."
 rev_certs="$(
   psql "$DATABASE_URL" -q -t -A -v ON_ERROR_STOP=1 -X \
