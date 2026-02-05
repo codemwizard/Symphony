@@ -1,0 +1,36 @@
+phase: "0"
+task_id: "TSK-P0-039"
+title: "Register SQLSTATE + contract invariants in manifest"
+owner_role: "INVARIANTS_CURATOR"
+Depends On: TSK-P0-037, TSK-P0-038
+Touches:
+  - "docs/invariants/INVARIANTS_MANIFEST.yml"
+  - "docs/invariants/INVARIANTS_QUICK.md"
+  - "tasks/TSK-P0-039/meta.yml"
+Invariant(s): "INV-060, INV-061"
+Work:
+  - "Add INV-060 and INV-061 with verification scripts."
+  - "Regenerate INVARIANTS_QUICK.md."
+Acceptance Criteria:
+  - "Manifest validates and QUICK matches manifest."
+Verification Commands:
+  - "scripts/audit/generate_invariants_quick"
+  - "scripts/audit/run_invariants_fast_checks.sh"
+Evidence Artifact(s):
+  - "./evidence/phase0/invariants_quick.json"
+Failure Modes:
+  - "Quick doc drift."
+  - "Evidence file missing."
+must_read:
+  - "docs/invariants/INVARIANTS_MANIFEST.yml"
+  - "scripts/db/verify_invariants.sh"
+  - "scripts/db/ci_invariant_gate.sql"
+evidence:
+  - "./evidence/phase0/invariants_quick.json"
+verification:
+  - "scripts/audit/run_invariants_fast_checks.sh"
+status: "planned"
+notes: ""
+client: "codex_cli"
+assigned_agent: "invariants_curator"
+model: "<UNASSIGNED>"

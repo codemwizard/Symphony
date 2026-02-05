@@ -406,3 +406,21 @@
   owners: ["team-platform"]
   sla_days: 30
   verification: "TODO: add Phase-0 static verifier for invariant declaration + ADR + schema design hooks"
+
+- id: INV-060
+  aliases: ["I-P0-CONTRACT-01"]
+  status: implemented
+  severity: P1
+  title: "Phase-0 contract governs evidence gate"
+  owners: ["team-platform"]
+  sla_days: 14
+  verification: "scripts/audit/verify_phase0_contract.sh"
+
+- id: INV-061
+  aliases: ["I-SQLSTATE-REGISTRY-01"]
+  status: implemented
+  severity: P1
+  title: "SQLSTATE registry is complete and drift-free"
+  owners: ["team-platform"]
+  sla_days: 14
+  verification: "scripts/audit/check_sqlstate_map_drift.sh"

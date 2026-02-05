@@ -6,6 +6,7 @@ follow_up_ticket: FOLLOWUP-CHANGE-RULE-SCOPING
 reason: Change-rule detector scoping adjustments are structural but docs linkage is pending; allow this PR to proceed.
 author: codex
 created_at: 2026-01-29
+closed_at: 2026-02-05
 ---
 
 # Exception: change-rule detector scoping update

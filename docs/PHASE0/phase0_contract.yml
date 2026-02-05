@@ -1,0 +1,443 @@
+[
+  {
+    "task_id": "TSK-P0-001",
+    "status": "completed",
+    "verification_mode": "both",
+    "evidence_required": true,
+    "evidence_paths": [
+      "evidence/phase0/repo_structure.json"
+    ],
+    "evidence_scope": "ci_artifact",
+    "notes": ""
+  },
+  {
+    "task_id": "TSK-P0-002",
+    "status": "completed",
+    "verification_mode": "both",
+    "evidence_required": true,
+    "evidence_paths": [
+      "evidence/phase0/evidence.json"
+    ],
+    "evidence_scope": "ci_artifact",
+    "notes": ""
+  },
+  {
+    "task_id": "TSK-P0-003",
+    "status": "completed",
+    "verification_mode": "both",
+    "evidence_required": true,
+    "evidence_paths": [
+      "evidence/phase0/n_minus_one.json"
+    ],
+    "evidence_scope": "ci_artifact",
+    "notes": ""
+  },
+  {
+    "task_id": "TSK-P0-004",
+    "status": "completed",
+    "verification_mode": "both",
+    "evidence_required": true,
+    "evidence_paths": [
+      "evidence/phase0/ddl_lock_risk.json"
+    ],
+    "evidence_scope": "ci_artifact",
+    "notes": ""
+  },
+  {
+    "task_id": "TSK-P0-005",
+    "status": "completed",
+    "verification_mode": "both",
+    "evidence_required": true,
+    "evidence_paths": [
+      "evidence/phase0/idempotency_zombie.json"
+    ],
+    "evidence_scope": "ci_artifact",
+    "notes": ""
+  },
+  {
+    "task_id": "TSK-P0-006",
+    "status": "completed",
+    "verification_mode": "both",
+    "evidence_required": true,
+    "evidence_paths": [
+      "evidence/phase0/openbao_smoke.json"
+    ],
+    "evidence_scope": "ci_artifact",
+    "notes": ""
+  },
+  {
+    "task_id": "TSK-P0-007",
+    "status": "completed",
+    "verification_mode": "both",
+    "evidence_required": true,
+    "evidence_paths": [
+      "evidence/phase0/routing_fallback.json"
+    ],
+    "evidence_scope": "ci_artifact",
+    "notes": ""
+  },
+  {
+    "task_id": "TSK-P0-008",
+    "status": "completed",
+    "verification_mode": "both",
+    "evidence_required": true,
+    "evidence_paths": [
+      "evidence/phase0/batching_rules.json"
+    ],
+    "evidence_scope": "ci_artifact",
+    "notes": ""
+  },
+  {
+    "task_id": "TSK-P0-009",
+    "status": "completed",
+    "verification_mode": "both",
+    "evidence_required": true,
+    "evidence_paths": [
+      "evidence/phase0/invariants_quick.json"
+    ],
+    "evidence_scope": "ci_artifact",
+    "notes": ""
+  },
+  {
+    "task_id": "TSK-P0-010",
+    "status": "completed",
+    "verification_mode": "ci",
+    "evidence_required": true,
+    "evidence_paths": [
+      "evidence/phase0/*.json"
+    ],
+    "evidence_scope": "ci_artifact",
+    "notes": ""
+  },
+  {
+    "task_id": "TSK-P0-011",
+    "status": "completed",
+    "verification_mode": "both",
+    "evidence_required": true,
+    "evidence_paths": [
+      "evidence/phase0/evidence_validation.json"
+    ],
+    "evidence_scope": "ci_artifact",
+    "notes": ""
+  },
+  {
+    "task_id": "TSK-P0-012",
+    "status": "completed",
+    "verification_mode": "both",
+    "evidence_required": true,
+    "evidence_paths": [
+      "evidence/phase0/evidence.json"
+    ],
+    "evidence_scope": "ci_artifact",
+    "notes": ""
+  },
+  {
+    "task_id": "TSK-P0-013",
+    "status": "completed",
+    "verification_mode": "both",
+    "evidence_required": true,
+    "evidence_paths": [
+      "evidence/phase0/baseline_drift.json"
+    ],
+    "evidence_scope": "ci_artifact",
+    "notes": ""
+  },
+  {
+    "task_id": "TSK-P0-014",
+    "status": "completed",
+    "verification_mode": "both",
+    "evidence_required": true,
+    "evidence_paths": [
+      "evidence/phase0/security_definer_dynamic_sql.json"
+    ],
+    "evidence_scope": "ci_artifact",
+    "notes": ""
+  },
+  {
+    "task_id": "TSK-P0-015",
+    "status": "completed",
+    "verification_mode": "both",
+    "evidence_required": true,
+    "evidence_paths": [
+      "evidence/phase0/routing_fallback_validation.json"
+    ],
+    "evidence_scope": "ci_artifact",
+    "notes": ""
+  },
+  {
+    "task_id": "TSK-P0-016",
+    "status": "completed",
+    "verification_mode": "both",
+    "evidence_required": true,
+    "evidence_paths": [
+      "evidence/phase0/batching_rules.json"
+    ],
+    "evidence_scope": "ci_artifact",
+    "notes": ""
+  },
+  {
+    "task_id": "TSK-P0-017",
+    "status": "completed",
+    "verification_mode": "both",
+    "evidence_required": true,
+    "evidence_paths": [
+      "evidence/phase0/structural_doc_linkage.json"
+    ],
+    "evidence_scope": "ci_artifact",
+    "notes": ""
+  },
+  {
+    "task_id": "TSK-P0-018",
+    "status": "completed",
+    "verification_mode": "both",
+    "evidence_required": true,
+    "evidence_paths": [
+      "evidence/phase0/openbao_audit_log.json"
+    ],
+    "evidence_scope": "ci_artifact",
+    "notes": ""
+  },
+  {
+    "task_id": "TSK-P0-019",
+    "status": "planned",
+    "verification_mode": "both",
+    "evidence_required": true,
+    "evidence_paths": [
+      "phase0-evidence"
+    ],
+    "evidence_scope": "ci_artifact",
+    "notes": ""
+  },
+  {
+    "task_id": "TSK-P0-020",
+    "status": "completed",
+    "verification_mode": "both",
+    "evidence_required": true,
+    "evidence_paths": [
+      "evidence/phase0/outbox_pending_indexes.json"
+    ],
+    "evidence_scope": "ci_artifact",
+    "notes": ""
+  },
+  {
+    "task_id": "TSK-P0-021",
+    "status": "completed",
+    "verification_mode": "both",
+    "evidence_required": true,
+    "evidence_paths": [
+      "evidence/phase0/outbox_terminal_uniqueness.json"
+    ],
+    "evidence_scope": "ci_artifact",
+    "notes": ""
+  },
+  {
+    "task_id": "TSK-P0-022",
+    "status": "completed",
+    "verification_mode": "both",
+    "evidence_required": true,
+    "evidence_paths": [
+      "evidence/phase0/outbox_mvcc_posture.json"
+    ],
+    "evidence_scope": "ci_artifact",
+    "notes": ""
+  },
+  {
+    "task_id": "TSK-P0-023",
+    "status": "completed",
+    "verification_mode": "both",
+    "evidence_required": true,
+    "evidence_paths": [
+      "evidence/phase0/outbox_notify.json"
+    ],
+    "evidence_scope": "ci_artifact",
+    "notes": ""
+  },
+  {
+    "task_id": "TSK-P0-024",
+    "status": "completed",
+    "verification_mode": "both",
+    "evidence_required": true,
+    "evidence_paths": [
+      "evidence/phase0/ingress_attestation.json"
+    ],
+    "evidence_scope": "ci_artifact",
+    "notes": ""
+  },
+  {
+    "task_id": "TSK-P0-025",
+    "status": "completed",
+    "verification_mode": "both",
+    "evidence_required": true,
+    "evidence_paths": [
+      "evidence/phase0/revocation_tables.json"
+    ],
+    "evidence_scope": "ci_artifact",
+    "notes": ""
+  },
+  {
+    "task_id": "TSK-P0-026",
+    "status": "completed",
+    "verification_mode": "both",
+    "evidence_required": true,
+    "evidence_paths": [
+      "evidence/phase0/core_boundary.json"
+    ],
+    "evidence_scope": "ci_artifact",
+    "notes": ""
+  },
+  {
+    "task_id": "TSK-P0-027",
+    "status": "completed",
+    "verification_mode": "both",
+    "evidence_required": true,
+    "evidence_paths": [
+      "evidence/phase0/doc_alignment.json"
+    ],
+    "evidence_scope": "ci_artifact",
+    "notes": ""
+  },
+  {
+    "task_id": "TSK-P0-028",
+    "status": "completed",
+    "verification_mode": "both",
+    "evidence_required": true,
+    "evidence_paths": [
+      "evidence/phase0/db_fail_closed_roadmap.json"
+    ],
+    "evidence_scope": "ci_artifact",
+    "notes": ""
+  },
+  {
+    "task_id": "TSK-P0-029",
+    "status": "completed",
+    "verification_mode": "both",
+    "evidence_required": true,
+    "evidence_paths": [
+      "evidence/phase0/ddl_blocking_policy.json"
+    ],
+    "evidence_scope": "ci_artifact",
+    "notes": ""
+  },
+  {
+    "task_id": "TSK-P0-030",
+    "status": "completed",
+    "verification_mode": "both",
+    "evidence_required": true,
+    "evidence_paths": [
+      "evidence/phase0/no_tx_migrations.json"
+    ],
+    "evidence_scope": "ci_artifact",
+    "notes": ""
+  },
+  {
+    "task_id": "TSK-P0-031",
+    "status": "completed",
+    "verification_mode": "both",
+    "evidence_required": true,
+    "evidence_paths": [
+      "evidence/phase0/no_tx_marker_lint.json"
+    ],
+    "evidence_scope": "ci_artifact",
+    "notes": ""
+  },
+  {
+    "task_id": "TSK-P0-032",
+    "status": "completed",
+    "verification_mode": "both",
+    "evidence_required": true,
+    "evidence_paths": [
+      "evidence/phase0/outbox_pending_indexes.json"
+    ],
+    "evidence_scope": "ci_artifact",
+    "notes": ""
+  },
+  {
+    "task_id": "TSK-P0-033",
+    "status": "completed",
+    "verification_mode": "both",
+    "evidence_required": true,
+    "evidence_paths": [
+      "evidence/phase0/no_tx_docs.json"
+    ],
+    "evidence_scope": "ci_artifact",
+    "notes": ""
+  },
+  {
+    "task_id": "TSK-P0-034",
+    "status": "completed",
+    "verification_mode": "both",
+    "evidence_required": true,
+    "evidence_paths": [
+      "evidence/phase0/invariants_docs_match.json"
+    ],
+    "evidence_scope": "ci_artifact",
+    "notes": ""
+  },
+  {
+    "task_id": "TSK-P0-035",
+    "status": "planned",
+    "verification_mode": "both",
+    "evidence_required": true,
+    "evidence_paths": [
+      "evidence/phase0/proxy_resolution_invariant.json"
+    ],
+    "evidence_scope": "ci_artifact",
+    "notes": ""
+  },
+  {
+    "task_id": "TSK-P0-036",
+    "status": "completed",
+    "verification_mode": "local",
+    "evidence_required": true,
+    "evidence_paths": [
+      "evidence/phase0/local_ci_parity.json"
+    ],
+    "evidence_scope": "repo",
+    "notes": ""
+  },
+  {
+    "task_id": "TSK-P0-037",
+    "status": "planned",
+    "verification_mode": "both",
+    "evidence_required": true,
+    "evidence_paths": [
+      "evidence/phase0/phase0_contract.json"
+    ],
+    "evidence_scope": "ci_artifact",
+    "notes": ""
+  },
+  {
+    "task_id": "TSK-P0-038",
+    "status": "planned",
+    "verification_mode": "both",
+    "evidence_required": true,
+    "evidence_paths": [
+      "evidence/phase0/sqlstate_map_drift.json"
+    ],
+    "evidence_scope": "ci_artifact",
+    "notes": ""
+  },
+  {
+    "task_id": "TSK-P0-039",
+    "status": "planned",
+    "verification_mode": "both",
+    "evidence_required": true,
+    "evidence_paths": [
+      "evidence/phase0/invariants_quick.json"
+    ],
+    "evidence_scope": "ci_artifact",
+    "notes": ""
+  },
+  {
+    "task_id": "TSK-P0-040",
+    "status": "planned",
+    "verification_mode": "both",
+    "evidence_required": true,
+    "evidence_paths": [
+      "evidence/phase0/phase0_contract.json",
+      "evidence/phase0/sqlstate_map_drift.json"
+    ],
+    "evidence_scope": "ci_artifact",
+    "notes": ""
+  }
+]

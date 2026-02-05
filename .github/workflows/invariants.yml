@@ -173,6 +173,8 @@ jobs:
           scripts/audit/validate_routing_fallback.sh
           scripts/audit/verify_doc_alignment.sh
           scripts/audit/verify_no_tx_docs.sh
+          scripts/audit/verify_phase0_contract.sh
+          scripts/audit/check_sqlstate_map_drift.sh
           scripts/audit/run_invariants_fast_checks.sh
 
       - name: Upload detector artifacts
