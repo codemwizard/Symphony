@@ -18,6 +18,15 @@ else
   exit 1
 fi
 
+CLEAN_EVIDENCE="${CLEAN_EVIDENCE:-1}"
+if [[ "$CLEAN_EVIDENCE" == "1" ]]; then
+  if [[ -x scripts/ci/clean_evidence.sh ]]; then
+    scripts/ci/clean_evidence.sh
+  else
+    echo "WARN: scripts/ci/clean_evidence.sh not found; skipping"
+  fi
+fi
+
 if [[ -f "$ENV_FILE" ]]; then
   set -a
   # shellcheck disable=SC1090
