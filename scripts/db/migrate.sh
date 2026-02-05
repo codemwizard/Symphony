@@ -19,10 +19,23 @@ set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 MIG_DIR="$ROOT_DIR/schema/migrations"
+STRATEGY="${SCHEMA_MIGRATION_STRATEGY:-migrations}"
+BASELINE_PATH="${SCHEMA_BASELINE_PATH:-$ROOT_DIR/schema/baselines/current/0001_baseline.sql}"
+BASELINE_CUTOFF="${SCHEMA_BASELINE_CUTOFF:-}"
+if [[ -z "$BASELINE_CUTOFF" && -f "$ROOT_DIR/schema/baselines/current/baseline.cutoff" ]]; then
+  BASELINE_CUTOFF="$(cat "$ROOT_DIR/schema/baselines/current/baseline.cutoff" | tr -d '\n' || true)"
+fi
 
 if [[ ! -d "$MIG_DIR" ]]; then
   echo "Migration directory not found: $MIG_DIR" >&2
   exit 1
+fi
+
+if [[ "$STRATEGY" != "migrations" ]]; then
+  if [[ ! -f "$BASELINE_PATH" ]]; then
+    echo "Baseline file not found: $BASELINE_PATH" >&2
+    exit 1
+  fi
 fi
 
 psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -X <<'SQL'
@@ -44,8 +57,51 @@ if [[ ${#files[@]} -eq 0 ]]; then
   exit 1
 fi
 
+if [[ "$STRATEGY" == "baseline" || "$STRATEGY" == "baseline_then_migrations" ]]; then
+  echo "🧱 Baseline strategy: $STRATEGY"
+  baseline_version="baseline@$(basename "$(dirname "$BASELINE_PATH")")"
+  baseline_checksum="$(sha256sum "$BASELINE_PATH" | awk '{print $1}')"
+
+  existing_count="$(psql "$DATABASE_URL" -X -t -A -v ON_ERROR_STOP=1 -c "SELECT COUNT(*) FROM public.schema_migrations")"
+  if [[ "$existing_count" != "0" && "${ALLOW_BASELINE_ON_NONEMPTY:-0}" != "1" ]]; then
+    echo "❌ Baseline strategy requires an empty schema_migrations table (set ALLOW_BASELINE_ON_NONEMPTY=1 to override)" >&2
+    exit 1
+  fi
+
+  existing_checksum="$(psql "$DATABASE_URL" -X -t -A -v ON_ERROR_STOP=1 \
+    -c "SELECT checksum FROM public.schema_migrations WHERE version = '$baseline_version'")"
+
+  if [[ -n "$existing_checksum" ]]; then
+    if [[ "$existing_checksum" != "$baseline_checksum" ]]; then
+      echo "❌ Baseline checksum mismatch for $baseline_version" >&2
+      echo "   applied: $existing_checksum" >&2
+      echo "   current: $baseline_checksum" >&2
+      exit 1
+    fi
+    echo "✅ Baseline already applied: $baseline_version"
+  else
+    echo "➡️  Applying baseline: $baseline_version"
+    psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -X -f "$BASELINE_PATH"
+    psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -X \
+      -c "INSERT INTO public.schema_migrations(version, checksum) VALUES ('$baseline_version', '$baseline_checksum');"
+    echo "✅ Baseline applied: $baseline_version"
+  fi
+
+  if [[ "$STRATEGY" == "baseline" ]]; then
+    echo "🏁 Baseline-only strategy complete."
+    exit 0
+  fi
+fi
+
 for file in "${files[@]}"; do
   version="$(basename "$file")"
+
+  if [[ "$STRATEGY" == "baseline_then_migrations" && -n "$BASELINE_CUTOFF" ]]; then
+    if [[ "$version" < "$BASELINE_CUTOFF" || "$version" == "$BASELINE_CUTOFF" ]]; then
+      echo "⏭️  Skipping pre-baseline migration: $version"
+      continue
+    fi
+  fi
 
   # sha256 checksum
   checksum="$(sha256sum "$file" | awk '{print $1}')"

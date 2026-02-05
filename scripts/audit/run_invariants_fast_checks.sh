@@ -145,6 +145,42 @@ else
   exit 1
 fi
 
+echo ""
+echo "==> Baseline change governance"
+if [[ -x "scripts/audit/verify_baseline_change_governance.sh" || -f "scripts/audit/verify_baseline_change_governance.sh" ]]; then
+  run bash scripts/audit/verify_baseline_change_governance.sh
+else
+  echo "ERROR: scripts/audit/verify_baseline_change_governance.sh not found"
+  exit 1
+fi
+
+echo ""
+echo "==> Rebaseline strategy (day-zero baseline)"
+if [[ -x "scripts/audit/verify_rebaseline_strategy.sh" || -f "scripts/audit/verify_rebaseline_strategy.sh" ]]; then
+  run bash scripts/audit/verify_rebaseline_strategy.sh
+else
+  echo "ERROR: scripts/audit/verify_rebaseline_strategy.sh not found"
+  exit 1
+fi
+
+echo ""
+echo "==> Phase-0 implementation plan check"
+if [[ -x "scripts/audit/verify_phase0_impl_plan.sh" || -f "scripts/audit/verify_phase0_impl_plan.sh" ]]; then
+  run bash scripts/audit/verify_phase0_impl_plan.sh
+else
+  echo "ERROR: scripts/audit/verify_phase0_impl_plan.sh not found"
+  exit 1
+fi
+
+echo ""
+echo "==> Proxy resolution invariant (roadmap declaration)"
+if [[ -x "scripts/audit/verify_proxy_resolution_invariant.sh" || -f "scripts/audit/verify_proxy_resolution_invariant.sh" ]]; then
+  run bash scripts/audit/verify_proxy_resolution_invariant.sh
+else
+  echo "ERROR: scripts/audit/verify_proxy_resolution_invariant.sh not found"
+  exit 1
+fi
+
 EVIDENCE_DIR="$ROOT/evidence/phase0"
 mkdir -p "$EVIDENCE_DIR"
 python3 - <<PY

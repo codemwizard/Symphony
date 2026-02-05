@@ -3,6 +3,10 @@ set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 BASELINE="$ROOT_DIR/schema/baseline.sql"
+if [[ -f "$ROOT_DIR/schema/baselines/current/0001_baseline.sql" ]]; then
+  BASELINE="$ROOT_DIR/schema/baselines/current/0001_baseline.sql"
+fi
+CANON_SCRIPT="$ROOT_DIR/scripts/db/canonicalize_schema_dump.sh"
 EVIDENCE_DIR="$ROOT_DIR/evidence/phase0"
 EVIDENCE_FILE="$EVIDENCE_DIR/baseline_drift.json"
 
@@ -18,49 +22,48 @@ if [[ -z "${DATABASE_URL:-}" ]]; then
   exit 1
 fi
 
-# Normalize baseline (strip comments, blank lines, and pg_dump restrict lines)
-python3 - <<PY
-from pathlib import Path
-out = []
-for line in Path("$BASELINE").read_text().splitlines():
-    line = line.split("--", 1)[0].rstrip()
-    if not line.strip():
-        continue
-    if line.startswith("\\\\restrict") or line.startswith("\\\\unrestrict"):
-        continue
-    out.append(line)
-Path("/tmp/symphony_baseline_norm.sql").write_text("\\n".join(sorted(out)) + "\\n")
-PY
+# Normalize baseline (canonicalize for deterministic diff)
+if [[ ! -x "$CANON_SCRIPT" ]]; then
+  echo "Missing canonicalizer: $CANON_SCRIPT" >&2
+  exit 1
+fi
+"$CANON_SCRIPT" "$BASELINE" "/tmp/symphony_baseline_norm.sql"
+BASELINE_HASH="$(sha256sum /tmp/symphony_baseline_norm.sql | awk '{print $1}')"
 
 # Prefer pg_dump from a running DB container to avoid version mismatch
 DUMP_CMD=(pg_dump "$DATABASE_URL" --schema-only --no-owner --no-privileges --no-comments --schema=public)
+DUMP_SOURCE="host"
+PG_DUMP_VERSION="$(pg_dump --version 2>/dev/null || true)"
+PG_SERVER_VERSION="$(psql "$DATABASE_URL" -t -A -X -c "SHOW server_version;" 2>/dev/null || true)"
 
 if command -v docker >/dev/null 2>&1; then
   pg_container="$(docker ps --format '{{.Names}}' | grep -E 'postgres' | head -n 1 || true)"
   if [[ -n "$pg_container" ]]; then
     DUMP_CMD=(docker exec "$pg_container" pg_dump "$DATABASE_URL" --schema-only --no-owner --no-privileges --no-comments --schema=public)
+    DUMP_SOURCE="container:$pg_container"
+    PG_DUMP_VERSION="$(docker exec "$pg_container" pg_dump --version 2>/dev/null || true)"
+    PG_SERVER_VERSION="$(docker exec "$pg_container" psql "$DATABASE_URL" -t -A -X -c "SHOW server_version;" 2>/dev/null || true)"
   fi
 fi
 
 "${DUMP_CMD[@]}" > /tmp/symphony_schema_dump_raw.sql
-python3 - <<PY
-from pathlib import Path
-out = []
-for line in Path("/tmp/symphony_schema_dump_raw.sql").read_text().splitlines():
-    line = line.split("--", 1)[0].rstrip()
-    if not line.strip():
-        continue
-    if line.startswith("\\\\restrict") or line.startswith("\\\\unrestrict"):
-        continue
-    out.append(line)
-Path("/tmp/symphony_schema_dump.sql").write_text("\\n".join(sorted(out)) + "\\n")
-PY
+"$CANON_SCRIPT" "/tmp/symphony_schema_dump_raw.sql" "/tmp/symphony_schema_dump.sql"
+DUMP_HASH="$(sha256sum /tmp/symphony_schema_dump.sql | awk '{print $1}')"
 
 if ! diff -q /tmp/symphony_baseline_norm.sql /tmp/symphony_schema_dump.sql >/dev/null; then
   python3 - <<PY
 import json
 from pathlib import Path
-out = {"status":"fail","reason":"baseline drift"}
+  out = {
+  "status":"fail",
+  "reason":"baseline drift",
+  "baseline_path":"$BASELINE",
+  "baseline_hash":"$BASELINE_HASH",
+  "current_hash":"$DUMP_HASH",
+  "pg_dump_version":"$PG_DUMP_VERSION",
+  "pg_server_version":"$PG_SERVER_VERSION",
+  "dump_source":"$DUMP_SOURCE"
+}
 Path("$EVIDENCE_FILE").write_text(json.dumps(out, indent=2))
 PY
   echo "Baseline drift detected" >&2
@@ -70,7 +73,15 @@ fi
 python3 - <<PY
 import json
 from pathlib import Path
-out = {"status":"pass"}
+out = {
+  "status":"pass",
+  "baseline_path":"$BASELINE",
+  "baseline_hash":"$BASELINE_HASH",
+  "current_hash":"$DUMP_HASH",
+  "pg_dump_version":"$PG_DUMP_VERSION",
+  "pg_server_version":"$PG_SERVER_VERSION",
+  "dump_source":"$DUMP_SOURCE"
+}
 Path("$EVIDENCE_FILE").write_text(json.dumps(out, indent=2))
 PY
 

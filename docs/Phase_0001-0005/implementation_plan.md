@@ -54,6 +54,24 @@ Establish the database foundation for Symphony with mechanically enforced invari
 #### [NEW] `schema/migrations/0013_outbox_pending_indexes_concurrently.sql`
 - no-tx CONCURRENTLY index for hot table
 
+#### [NEW] `schema/migrations/0014_tenants.sql`
+- Tenant hierarchy root table (append-only posture)
+
+#### [NEW] `schema/migrations/0015_tenant_clients.sql`
+- Tenant client identities for integration channels
+
+#### [NEW] `schema/migrations/0016_tenant_members.sql`
+- Tenant member registry (optional attribution rails)
+
+#### [NEW] `schema/migrations/0017_ingress_tenant_attribution.sql`
+- Tenant/client/member attribution on ingress (tenant required)
+
+#### [NEW] `schema/migrations/0018_outbox_tenant_attribution.sql`
+- Expand-first tenant/member attribution on outbox tables
+
+#### [NEW] `schema/migrations/0019_member_tenant_consistency_guard.sql`
+- Enforce member/tenant match when member_id provided (P7201/P7202)
+
 ---
 
 ### Test Suite
@@ -76,6 +94,14 @@ Due-claim index verification.
 
 #### [MODIFY] `.github/workflows/invariants.yml`
 - Runs invariants fast checks, DB verify, and DB tests
+
+### Governance Gates
+
+#### [NEW] Baseline change governance
+- Baseline updates require migration + ADR update (fail-closed)
+
+#### [NEW] DDL allowlist governance
+- Fingerprinted allowlist with expiry + reviewer metadata
 
 ## Verification Plan
 

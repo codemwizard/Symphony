@@ -34,6 +34,15 @@ echo "==> Run security lints"
 run scripts/security/lint_sql_injection.sh
 run scripts/security/lint_privilege_grants.sh
 run scripts/security/lint_core_boundary.sh
+if [[ -x scripts/security/lint_ddl_lock_risk.sh || -f scripts/security/lint_ddl_lock_risk.sh ]]; then
+  run scripts/security/lint_ddl_lock_risk.sh
+fi
+if [[ -x scripts/security/lint_security_definer_dynamic_sql.sh || -f scripts/security/lint_security_definer_dynamic_sql.sh ]]; then
+  run scripts/security/lint_security_definer_dynamic_sql.sh
+fi
+if [[ -x scripts/security/verify_ddl_allowlist_governance.sh || -f scripts/security/verify_ddl_allowlist_governance.sh ]]; then
+  run scripts/security/verify_ddl_allowlist_governance.sh
+fi
 
 echo ""
 echo "✅ Fast security checks passed"

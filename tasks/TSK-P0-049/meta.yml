@@ -1,0 +1,37 @@
+phase: "0"
+task_id: "TSK-P0-049"
+title: "Support baseline strategy in migrate.sh"
+owner_role: "DB_FOUNDATION"
+Depends On: TSK-P0-048
+Touches:
+  - "scripts/db/migrate.sh"
+  - "scripts/audit/verify_rebaseline_strategy.sh"
+  - "tasks/TSK-P0-049/meta.yml"
+Invariant(s): "INV-070 (Day-zero rebaseline strategy documented)"
+Work:
+  - "Add baseline strategy flags to migrate.sh (baseline, baseline_then_migrations)."
+  - "Enforce baseline-only on empty schema_migrations unless override is set."
+  - "Honor baseline cutoff when applying post-baseline migrations."
+Acceptance Criteria:
+  - "migrate.sh supports baseline strategy without running pre-baseline migrations."
+  - "Evidence file is written on pass/fail."
+Verification Commands:
+  - "scripts/audit/verify_rebaseline_strategy.sh"
+Evidence Artifact(s):
+  - "./evidence/phase0/baseline_strategy.json"
+Failure Modes:
+  - "Evidence file missing."
+  - "Baseline strategy flags missing in migrate.sh."
+must_read:
+  - "docs/invariants/INVARIANTS_MANIFEST.yml"
+  - "scripts/db/verify_invariants.sh"
+  - "scripts/db/ci_invariant_gate.sql"
+evidence:
+  - "./evidence/phase0/baseline_strategy.json"
+verification:
+  - "scripts/audit/verify_rebaseline_strategy.sh"
+status: "completed"
+notes: ""
+client: "codex_cli"
+assigned_agent: "db_foundation"
+model: "<UNASSIGNED>"

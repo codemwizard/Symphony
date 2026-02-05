@@ -375,7 +375,7 @@
   },
   {
     "task_id": "TSK-P0-035",
-    "status": "planned",
+    "status": "completed",
     "verification_mode": "both",
     "evidence_required": true,
     "evidence_paths": [
@@ -472,5 +472,71 @@
     ],
     "evidence_scope": "ci_artifact",
     "notes": ""
+  },
+  {
+    "task_id": "TSK-P0-044",
+    "status": "completed",
+    "verification_mode": "both",
+    "evidence_required": true,
+    "evidence_paths": [
+      "evidence/phase0/baseline_governance.json"
+    ],
+    "evidence_scope": "ci_artifact",
+    "notes": ""
+  },
+  {
+    "task_id": "TSK-P0-045",
+    "status": "completed",
+    "verification_mode": "both",
+    "evidence_required": true,
+    "evidence_paths": [
+      "evidence/phase0/ddl_allowlist_governance.json"
+    ],
+    "evidence_scope": "ci_artifact",
+    "notes": ""
+  },
+  {
+    "task_id": "TSK-P0-046",
+    "status": "completed",
+    "verification_mode": "both",
+    "evidence_required": true,
+    "evidence_paths": [
+      "evidence/phase0/phase0_impl_plan.json"
+    ],
+    "evidence_scope": "ci_artifact",
+    "notes": ""
+  },
+  {
+    "task_id": "TSK-P0-047",
+    "status": "completed",
+    "verification_mode": "both",
+    "evidence_required": true,
+    "evidence_paths": [
+      "evidence/phase0/rebaseline_decision.json"
+    ],
+    "evidence_scope": "ci_artifact",
+    "notes": "Day-zero rebaseline ADR + decision."
+  },
+  {
+    "task_id": "TSK-P0-048",
+    "status": "completed",
+    "verification_mode": "both",
+    "evidence_required": true,
+    "evidence_paths": [
+      "evidence/phase0/baseline_snapshot.json"
+    ],
+    "evidence_scope": "ci_artifact",
+    "notes": "Baseline snapshot generator + canonicalization."
+  },
+  {
+    "task_id": "TSK-P0-049",
+    "status": "completed",
+    "verification_mode": "both",
+    "evidence_required": true,
+    "evidence_paths": [
+      "evidence/phase0/baseline_strategy.json"
+    ],
+    "evidence_scope": "ci_artifact",
+    "notes": "migrate.sh baseline strategy support."
   }
 ]

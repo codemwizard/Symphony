@@ -6,6 +6,7 @@ MIGRATIONS_DIR="$ROOT_DIR/schema/migrations"
 EVIDENCE_DIR="$ROOT_DIR/evidence/phase0"
 EVIDENCE_FILE="$EVIDENCE_DIR/ddl_lock_risk.json"
 POLICY_EVIDENCE_FILE="$EVIDENCE_DIR/ddl_blocking_policy.json"
+ALLOWLIST_FILE="$ROOT_DIR/docs/security/ddl_allowlist.json"
 
 mkdir -p "$EVIDENCE_DIR"
 
@@ -28,6 +29,45 @@ patterns=(
 pattern_re="ALTER TABLE|CREATE INDEX|DROP INDEX|REINDEX|VACUUM FULL|CLUSTER"
 
 matches=()
+allowlist_hits=()
+
+declare -A ALLOWLIST_MAP
+if [[ -f "$ALLOWLIST_FILE" ]]; then
+  while IFS='|' read -r fp aid; do
+    [[ -n "$fp" ]] || continue
+    ALLOWLIST_MAP["$fp"]="$aid"
+  done < <(python3 - <<'PY'
+import json
+from pathlib import Path
+
+path = Path("docs/security/ddl_allowlist.json")
+if not path.exists():
+    raise SystemExit(0)
+data = json.loads(path.read_text(encoding="utf-8"))
+for entry in data.get("entries", []):
+    fp = entry.get("statement_fingerprint", "")
+    eid = entry.get("id", "")
+    if fp:
+        print(f"{fp}|{eid}")
+PY
+)
+fi
+
+fingerprint() {
+  TEXT="$1" python3 - <<'PY'
+import hashlib
+import os
+
+text = os.environ.get("TEXT", "")
+lines = []
+for line in text.splitlines():
+    line = line.split("--", 1)[0]
+    if line.strip():
+        lines.append(line)
+norm = " ".join(" ".join(lines).lower().split())
+print(hashlib.sha256(norm.encode("utf-8")).hexdigest())
+PY
+}
 while IFS= read -r -d '' file; do
   if command -v rg >/dev/null 2>&1; then
     while IFS= read -r line; do
@@ -95,17 +135,27 @@ for entry in "${matches[@]}"; do
       continue
     fi
   fi
+  content="${entry#*:}"
+  content="${content#*:}"
+  fp="$(fingerprint "$content")"
+  if [[ -n "${ALLOWLIST_MAP[$fp]:-}" ]]; then
+    allowlist_hits+=("${ALLOWLIST_MAP[$fp]}:$entry")
+    continue
+  fi
   filtered+=("$entry")
 done
 
 # Emit evidence JSON for general lock-risk lint
-printf '%s\n' "${filtered[@]}" | python3 - <<PY
-import json, sys
+ALLOWLIST_HITS_JOINED="$(printf '%s\n' "${allowlist_hits[@]}")"
+ALLOWLIST_HITS_JOINED="$ALLOWLIST_HITS_JOINED" printf '%s\n' "${filtered[@]}" | python3 - <<'PY'
+import json, os, sys
 lines = [ln.strip() for ln in sys.stdin.read().splitlines() if ln.strip()]
+allowlist_hits = [ln.strip() for ln in os.environ.get("ALLOWLIST_HITS_JOINED", "").split("\\n") if ln.strip()]
 out = {
     "status": "fail" if lines else "pass",
     "match_count": len(lines),
     "matches": lines,
+    "allowlist_hits": allowlist_hits,
 }
 with open("$EVIDENCE_FILE", "w", encoding="utf-8") as f:
     json.dump(out, f, indent=2)
@@ -113,6 +163,7 @@ PY
 
 # Blocking DDL policy (hot tables must use CONCURRENTLY; forbid ALTER on hot tables)
 python3 - <<PY
+import hashlib
 import json
 from pathlib import Path
 
@@ -121,6 +172,26 @@ hot_tables = [
     "payment_outbox_attempts",
     "policy_versions",
 ]
+
+allowlist = {}
+allowlist_hits = []
+allowlist_path = Path("$ALLOWLIST_FILE")
+if allowlist_path.exists():
+    data = json.loads(allowlist_path.read_text(encoding="utf-8"))
+    for entry in data.get("entries", []):
+        fp = entry.get("statement_fingerprint")
+        eid = entry.get("id")
+        if fp:
+            allowlist[fp] = eid
+
+def fingerprint(text: str) -> str:
+    lines = []
+    for line in text.splitlines():
+        line = line.split("--", 1)[0]
+        if line.strip():
+            lines.append(line)
+    norm = " ".join(" ".join(lines).lower().split())
+    return hashlib.sha256(norm.encode("utf-8")).hexdigest()
 
 violations = []
 for p in Path("$MIGRATIONS_DIR").glob("*.sql"):
@@ -138,6 +209,10 @@ for p in Path("$MIGRATIONS_DIR").glob("*.sql"):
                     # Allow reloptions SET (...) for hot tables
                     if " set (" in s_low:
                         continue
+                    fp = fingerprint(s)
+                    if fp in allowlist:
+                        allowlist_hits.append(f"{allowlist[fp]}:{p.name}")
+                        continue
                     violations.append(f"{p.name}: ALTER TABLE on hot table: {t}")
         # CREATE INDEX on hot tables must be CONCURRENTLY
         if "create index" in s_low and "concurrently" not in s_low:
@@ -146,9 +221,17 @@ for p in Path("$MIGRATIONS_DIR").glob("*.sql"):
                     # Allow legacy index migration
                     if p.name in ("0007_outbox_pending_indexes.sql", "0001_init.sql", "0005_policy_versions.sql"):
                         continue
+                    fp = fingerprint(s)
+                    if fp in allowlist:
+                        allowlist_hits.append(f"{allowlist[fp]}:{p.name}")
+                        continue
                     violations.append(f"{p.name}: CREATE INDEX without CONCURRENTLY on hot table: {t}")
 
-out = {"status": "fail" if violations else "pass", "violations": violations}
+out = {
+    "status": "fail" if violations else "pass",
+    "violations": violations,
+    "allowlist_hits": allowlist_hits,
+}
 Path("$POLICY_EVIDENCE_FILE").write_text(json.dumps(out, indent=2))
 PY
 
