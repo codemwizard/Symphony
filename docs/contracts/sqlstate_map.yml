@@ -45,6 +45,18 @@
       "subsystem": "outbox",
       "meaning": "invalid attempt completion state",
       "retryable": false
+    },
+    "P7201": {
+      "class": "B",
+      "subsystem": "ingress",
+      "meaning": "tenant_id required when member_id is set",
+      "retryable": false
+    },
+    "P7202": {
+      "class": "B",
+      "subsystem": "ingress",
+      "meaning": "member/tenant mismatch",
+      "retryable": false
     }
   }
 }

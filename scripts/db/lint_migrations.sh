@@ -14,16 +14,39 @@ violations=()
 
 shopt -s nullglob
 for f in "$MIG_DIR"/*.sql; do
-  # Ignore BEGIN/COMMIT inside dollar-quoted blocks? We keep it simple and strict:
-  # If your migration truly needs explicit transaction control, it must be handled
-  # by the runner, not in the file.
-  # Relaxed rule: Only catch unindented BEGIN/COMMIT (assumes blocks are indented)
-  if grep -nE '^BEGIN\s*;?\s*$' "$f" >/dev/null; then
-    echo "❌ Migration contains top-level BEGIN (unindented): $f" >&2
-    fail=1
-  fi
-  if grep -nE '^COMMIT\s*;?\s*$' "$f" >/dev/null; then
-    echo "❌ Migration contains top-level COMMIT (unindented): $f" >&2
+  # Detect BEGIN/COMMIT outside dollar-quoted blocks (function bodies).
+  python3 - "$f" <<'PY'
+import re, sys
+path = sys.argv[1]
+tag = None
+in_block = False
+
+begin_re = re.compile(r'^BEGIN\s*;?\s*$')
+commit_re = re.compile(r'^COMMIT\s*;?\s*$')
+tag_re = re.compile(r'\$[A-Za-z0-9_]*\$')
+
+with open(path, 'r', encoding='utf-8', errors='ignore') as fh:
+    for lineno, line in enumerate(fh, 1):
+        # Toggle dollar-quoted blocks
+        for m in tag_re.finditer(line):
+            tok = m.group(0)
+            if not in_block:
+                in_block = True
+                tag = tok
+            elif tok == tag:
+                in_block = False
+                tag = None
+        if in_block:
+            continue
+        if begin_re.match(line):
+            print(f"❌ Migration contains top-level BEGIN: {path}:{lineno}", file=sys.stderr)
+            sys.exit(1)
+        if commit_re.match(line):
+            print(f"❌ Migration contains top-level COMMIT: {path}:{lineno}", file=sys.stderr)
+            sys.exit(1)
+sys.exit(0)
+PY
+  if [[ $? -ne 0 ]]; then
     fail=1
   fi
   if grep -qiE "CREATE INDEX[[:space:]]+CONCURRENTLY" "$f"; then

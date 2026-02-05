@@ -2,7 +2,7 @@
 -- PostgreSQL database dump
 --
 
-\restrict DymYYcepWF9BudGoEbEML0VRdKGVJlp8K4uJETYspsXZf2VAQgSoFCSe6zXJwbg
+\restrict zZ4gOuitbEQME1k6FfQS52An54P8bfmTlFs5vNzUJ4oiweeS5UnjU7S88jwFzDR
 
 -- Dumped from database version 18.1 (Debian 18.1-1.pgdg13+2)
 -- Dumped by pg_dump version 18.1 (Debian 18.1-1.pgdg13+2)
@@ -222,6 +222,44 @@ $$;
 
 
 --
+-- Name: enforce_member_tenant_match(); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.enforce_member_tenant_match() RETURNS trigger
+    LANGUAGE plpgsql
+    AS $$
+DECLARE
+  m_tenant uuid;
+BEGIN
+  IF NEW.member_id IS NULL THEN
+    RETURN NEW;
+  END IF;
+
+  SELECT tenant_id INTO m_tenant
+  FROM public.tenant_members
+  WHERE member_id = NEW.member_id;
+
+  IF m_tenant IS NULL THEN
+    RAISE EXCEPTION 'member_id not found'
+      USING ERRCODE = '23503';
+  END IF;
+
+  IF NEW.tenant_id IS NULL THEN
+    RAISE EXCEPTION 'tenant_id required when member_id is set'
+      USING ERRCODE = 'P7201';
+  END IF;
+
+  IF m_tenant <> NEW.tenant_id THEN
+    RAISE EXCEPTION 'member/tenant mismatch'
+      USING ERRCODE = 'P7202';
+  END IF;
+
+  RETURN NEW;
+END;
+$$;
+
+
+--
 -- Name: enqueue_payment_outbox(text, text, text, text, jsonb); Type: FUNCTION; Schema: public; Owner: -
 --
 
@@ -419,10 +457,16 @@ SET default_table_access_method = heap;
 CREATE TABLE public.ingress_attestations (
     attestation_id uuid DEFAULT public.uuid_v7_or_random() NOT NULL,
     instruction_id text NOT NULL,
-    tenant_id text,
+    tenant_id uuid NOT NULL,
     payload_hash text NOT NULL,
     signature_hash text,
-    received_at timestamp with time zone DEFAULT now() NOT NULL
+    received_at timestamp with time zone DEFAULT now() NOT NULL,
+    client_id uuid,
+    client_id_hash text,
+    member_id uuid,
+    participant_id text,
+    cert_fingerprint_sha256 text,
+    token_jti_hash text
 );
 
 
@@ -461,6 +505,8 @@ CREATE TABLE public.payment_outbox_attempts (
     latency_ms integer,
     worker_id text,
     created_at timestamp with time zone DEFAULT now() NOT NULL,
+    tenant_id uuid,
+    member_id uuid,
     CONSTRAINT ck_attempts_payload_is_object CHECK ((jsonb_typeof(payload) = 'object'::text)),
     CONSTRAINT payment_outbox_attempts_attempt_no_check CHECK ((attempt_no >= 1)),
     CONSTRAINT payment_outbox_attempts_latency_ms_check CHECK (((latency_ms IS NULL) OR (latency_ms >= 0)))
@@ -485,6 +531,7 @@ CREATE TABLE public.payment_outbox_pending (
     claimed_by text,
     lease_token uuid,
     lease_expires_at timestamp with time zone,
+    tenant_id uuid,
     CONSTRAINT ck_pending_payload_is_object CHECK ((jsonb_typeof(payload) = 'object'::text)),
     CONSTRAINT payment_outbox_pending_attempt_count_check CHECK ((attempt_count >= 0))
 )
@@ -543,6 +590,53 @@ CREATE TABLE public.schema_migrations (
     version text NOT NULL,
     checksum text NOT NULL,
     applied_at timestamp with time zone DEFAULT now() NOT NULL
+);
+
+
+--
+-- Name: tenant_clients; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.tenant_clients (
+    client_id uuid DEFAULT gen_random_uuid() NOT NULL,
+    tenant_id uuid NOT NULL,
+    client_key text NOT NULL,
+    display_name text NOT NULL,
+    status text DEFAULT 'ACTIVE'::text NOT NULL,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    CONSTRAINT tenant_clients_status_check CHECK ((status = ANY (ARRAY['ACTIVE'::text, 'SUSPENDED'::text, 'REVOKED'::text])))
+);
+
+
+--
+-- Name: tenant_members; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.tenant_members (
+    member_id uuid DEFAULT gen_random_uuid() NOT NULL,
+    tenant_id uuid NOT NULL,
+    member_ref text NOT NULL,
+    status text DEFAULT 'ACTIVE'::text NOT NULL,
+    tpin_hash bytea,
+    msisdn_hash bytea,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    CONSTRAINT tenant_members_status_check CHECK ((status = ANY (ARRAY['ACTIVE'::text, 'SUSPENDED'::text, 'EXITED'::text])))
+);
+
+
+--
+-- Name: tenants; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.tenants (
+    tenant_id uuid DEFAULT gen_random_uuid() NOT NULL,
+    tenant_key text NOT NULL,
+    tenant_name text NOT NULL,
+    tenant_type text NOT NULL,
+    status text DEFAULT 'ACTIVE'::text NOT NULL,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    CONSTRAINT tenants_status_check CHECK ((status = ANY (ARRAY['ACTIVE'::text, 'SUSPENDED'::text, 'CLOSED'::text]))),
+    CONSTRAINT tenants_tenant_type_check CHECK ((tenant_type = ANY (ARRAY['NGO'::text, 'COOPERATIVE'::text, 'GOVERNMENT'::text, 'COMMERCIAL'::text])))
 );
 
 
@@ -611,6 +705,54 @@ ALTER TABLE ONLY public.schema_migrations
 
 
 --
+-- Name: tenant_clients tenant_clients_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.tenant_clients
+    ADD CONSTRAINT tenant_clients_pkey PRIMARY KEY (client_id);
+
+
+--
+-- Name: tenant_clients tenant_clients_tenant_id_client_key_key; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.tenant_clients
+    ADD CONSTRAINT tenant_clients_tenant_id_client_key_key UNIQUE (tenant_id, client_key);
+
+
+--
+-- Name: tenant_members tenant_members_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.tenant_members
+    ADD CONSTRAINT tenant_members_pkey PRIMARY KEY (member_id);
+
+
+--
+-- Name: tenant_members tenant_members_tenant_id_member_ref_key; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.tenant_members
+    ADD CONSTRAINT tenant_members_tenant_id_member_ref_key UNIQUE (tenant_id, member_ref);
+
+
+--
+-- Name: tenants tenants_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.tenants
+    ADD CONSTRAINT tenants_pkey PRIMARY KEY (tenant_id);
+
+
+--
+-- Name: tenants tenants_tenant_key_key; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.tenants
+    ADD CONSTRAINT tenants_tenant_key_key UNIQUE (tenant_key);
+
+
+--
 -- Name: payment_outbox_attempts ux_attempts_outbox_attempt_no; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -649,10 +791,24 @@ CREATE INDEX idx_attempts_outbox_id ON public.payment_outbox_attempts USING btre
 
 
 --
+-- Name: idx_ingress_attestations_cert_fpr; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_ingress_attestations_cert_fpr ON public.ingress_attestations USING btree (cert_fingerprint_sha256) WHERE (cert_fingerprint_sha256 IS NOT NULL);
+
+
+--
 -- Name: idx_ingress_attestations_instruction; Type: INDEX; Schema: public; Owner: -
 --
 
 CREATE INDEX idx_ingress_attestations_instruction ON public.ingress_attestations USING btree (instruction_id);
+
+
+--
+-- Name: idx_ingress_attestations_member_received; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_ingress_attestations_member_received ON public.ingress_attestations USING btree (member_id, received_at) WHERE (member_id IS NOT NULL);
 
 
 --
@@ -677,10 +833,52 @@ CREATE INDEX idx_payment_outbox_pending_due_claim ON public.payment_outbox_pendi
 
 
 --
+-- Name: idx_payment_outbox_pending_tenant_due; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_payment_outbox_pending_tenant_due ON public.payment_outbox_pending USING btree (tenant_id, next_attempt_at) WHERE (tenant_id IS NOT NULL);
+
+
+--
 -- Name: idx_policy_versions_is_active; Type: INDEX; Schema: public; Owner: -
 --
 
 CREATE INDEX idx_policy_versions_is_active ON public.policy_versions USING btree (is_active) WHERE (is_active = true);
+
+
+--
+-- Name: idx_tenant_clients_tenant; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_tenant_clients_tenant ON public.tenant_clients USING btree (tenant_id);
+
+
+--
+-- Name: idx_tenant_members_status; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_tenant_members_status ON public.tenant_members USING btree (status);
+
+
+--
+-- Name: idx_tenant_members_tenant; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_tenant_members_tenant ON public.tenant_members USING btree (tenant_id);
+
+
+--
+-- Name: idx_tenants_status; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_tenants_status ON public.tenants USING btree (status);
+
+
+--
+-- Name: ux_ingress_attestations_tenant_instruction; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE UNIQUE INDEX ux_ingress_attestations_tenant_instruction ON public.ingress_attestations USING btree (tenant_id, instruction_id);
 
 
 --
@@ -726,8 +924,71 @@ CREATE TRIGGER trg_deny_revoked_tokens_mutation BEFORE DELETE OR UPDATE ON publi
 
 
 --
+-- Name: ingress_attestations trg_ingress_member_tenant_match; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER trg_ingress_member_tenant_match BEFORE INSERT ON public.ingress_attestations FOR EACH ROW EXECUTE FUNCTION public.enforce_member_tenant_match();
+
+
+--
+-- Name: ingress_attestations ingress_attestations_client_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.ingress_attestations
+    ADD CONSTRAINT ingress_attestations_client_id_fkey FOREIGN KEY (client_id) REFERENCES public.tenant_clients(client_id);
+
+
+--
+-- Name: ingress_attestations ingress_attestations_member_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.ingress_attestations
+    ADD CONSTRAINT ingress_attestations_member_id_fkey FOREIGN KEY (member_id) REFERENCES public.tenant_members(member_id);
+
+
+--
+-- Name: payment_outbox_attempts payment_outbox_attempts_member_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.payment_outbox_attempts
+    ADD CONSTRAINT payment_outbox_attempts_member_id_fkey FOREIGN KEY (member_id) REFERENCES public.tenant_members(member_id);
+
+
+--
+-- Name: payment_outbox_attempts payment_outbox_attempts_tenant_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.payment_outbox_attempts
+    ADD CONSTRAINT payment_outbox_attempts_tenant_id_fkey FOREIGN KEY (tenant_id) REFERENCES public.tenants(tenant_id);
+
+
+--
+-- Name: payment_outbox_pending payment_outbox_pending_tenant_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.payment_outbox_pending
+    ADD CONSTRAINT payment_outbox_pending_tenant_id_fkey FOREIGN KEY (tenant_id) REFERENCES public.tenants(tenant_id);
+
+
+--
+-- Name: tenant_clients tenant_clients_tenant_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.tenant_clients
+    ADD CONSTRAINT tenant_clients_tenant_id_fkey FOREIGN KEY (tenant_id) REFERENCES public.tenants(tenant_id);
+
+
+--
+-- Name: tenant_members tenant_members_tenant_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.tenant_members
+    ADD CONSTRAINT tenant_members_tenant_id_fkey FOREIGN KEY (tenant_id) REFERENCES public.tenants(tenant_id);
+
+
+--
 -- PostgreSQL database dump complete
 --
 
-\unrestrict DymYYcepWF9BudGoEbEML0VRdKGVJlp8K4uJETYspsXZf2VAQgSoFCSe6zXJwbg
+\unrestrict zZ4gOuitbEQME1k6FfQS52An54P8bfmTlFs5vNzUJ4oiweeS5UnjU7S88jwFzDR
 

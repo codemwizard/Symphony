@@ -424,3 +424,48 @@
   owners: ["team-platform"]
   sla_days: 14
   verification: "scripts/audit/check_sqlstate_map_drift.sh"
+
+- id: INV-062
+  aliases: ["I-TEN-01"]
+  status: implemented
+  severity: P1
+  title: "Tenant hierarchy tables exist (tenants, tenant_clients, tenant_members)"
+  owners: ["team-db"]
+  sla_days: 30
+  verification: "scripts/db/verify_tenant_member_hooks.sh"
+
+- id: INV-063
+  aliases: ["I-TEN-02"]
+  status: implemented
+  severity: P1
+  title: "Ingress attestations require tenant attribution and support client/member linkage"
+  owners: ["team-db"]
+  sla_days: 30
+  verification: "scripts/db/verify_tenant_member_hooks.sh"
+
+- id: INV-064
+  aliases: ["I-TEN-03"]
+  status: implemented
+  severity: P1
+  title: "Member/tenant consistency guard enforced on ingress"
+  owners: ["team-db"]
+  sla_days: 30
+  verification: "scripts/db/verify_tenant_member_hooks.sh"
+
+- id: INV-065
+  aliases: ["I-TEN-04"]
+  status: implemented
+  severity: P1
+  title: "Outbox tables include tenant/member attribution columns (expand-first)"
+  owners: ["team-db"]
+  sla_days: 30
+  verification: "scripts/db/verify_tenant_member_hooks.sh"
+
+- id: INV-066
+  aliases: ["I-TEN-05"]
+  status: implemented
+  severity: P1
+  title: "Ingress attestations are unique per (tenant_id, instruction_id)"
+  owners: ["team-db"]
+  sla_days: 30
+  verification: "scripts/db/verify_tenant_member_hooks.sh"

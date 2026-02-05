@@ -1,0 +1,45 @@
+phase: "0"
+task_id: "TSK-P0-041"
+title: "Draft tenant/client/member migrations (Phase-0 rails)"
+owner_role: "DB_FOUNDATION"
+Depends On: TSK-P0-021, TSK-P0-024
+Touches:
+  - "schema/migrations/0014_tenants.sql"
+  - "schema/migrations/0015_tenant_clients.sql"
+  - "schema/migrations/0016_tenant_members.sql"
+  - "schema/migrations/0017_ingress_tenant_attribution.sql"
+  - "schema/migrations/0018_outbox_tenant_attribution.sql"
+  - "schema/migrations/0019_member_tenant_consistency_guard.sql"
+  - "tasks/TSK-P0-041/meta.yml"
+Invariant(s): "INV-062..INV-065 (Tenant rails)"
+Work:
+  - "Add tenants, tenant_clients, and tenant_members tables (append-only posture)."
+  - "Add tenant/client/member attribution columns (tenant required on ingress; nullable on outbox for expand-first)."
+  - "Add member/tenant consistency guard function + trigger (ingress only)."
+  - "Ensure no-tx patterns used for hot table indexes if needed."
+Acceptance Criteria:
+  - "Migrations are forward-only and pass lint/verify."
+  - "tenant_id is NOT NULL on ingress_attestations."
+  - "member/tenant guard function exists and trigger is installed on ingress_attestations."
+Verification Commands:
+  - "scripts/db/verify_invariants.sh"
+  - "scripts/db/tests/test_db_functions.sh"
+Evidence Artifact(s):
+  - "./evidence/phase0/tenant_member_hooks.json"
+Failure Modes:
+  - "Evidence file missing."
+  - "Tenant attribution missing on ingress_attestations."
+  - "Member/tenant guard missing or incorrect."
+must_read:
+  - "docs/invariants/INVARIANTS_MANIFEST.yml"
+  - "scripts/db/verify_invariants.sh"
+  - "scripts/db/tests/test_db_functions.sh"
+evidence:
+  - "./evidence/phase0/tenant_member_hooks.json"
+verification:
+  - "scripts/db/verify_invariants.sh"
+status: "planned"
+notes: ""
+client: "codex_cli"
+assigned_agent: "db_foundation"
+model: "<UNASSIGNED>"

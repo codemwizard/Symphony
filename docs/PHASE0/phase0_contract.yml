@@ -439,5 +439,38 @@
     ],
     "evidence_scope": "ci_artifact",
     "notes": ""
+  },
+  {
+    "task_id": "TSK-P0-041",
+    "status": "planned",
+    "verification_mode": "both",
+    "evidence_required": true,
+    "evidence_paths": [
+      "evidence/phase0/tenant_member_hooks.json"
+    ],
+    "evidence_scope": "ci_artifact",
+    "notes": ""
+  },
+  {
+    "task_id": "TSK-P0-042",
+    "status": "planned",
+    "verification_mode": "both",
+    "evidence_required": true,
+    "evidence_paths": [
+      "evidence/phase0/invariants_quick.json"
+    ],
+    "evidence_scope": "ci_artifact",
+    "notes": ""
+  },
+  {
+    "task_id": "TSK-P0-043",
+    "status": "planned",
+    "verification_mode": "both",
+    "evidence_required": true,
+    "evidence_paths": [
+      "evidence/phase0/tenant_member_hooks.json"
+    ],
+    "evidence_scope": "ci_artifact",
+    "notes": ""
   }
 ]
