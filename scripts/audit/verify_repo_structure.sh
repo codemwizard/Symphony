@@ -49,7 +49,7 @@ required_dirs=(
 
 required_files=(
   "docs/agents/ARCHITECT_PHASE0_PROMPT.md"
-  "docs/phase-0/phase-0-foundation.md"
+  "docs/PHASE0/phase-0-foundation.md"
   "docs/invariants/INVARIANTS_MANIFEST.yml"
   "docs/invariants/INVARIANTS_IMPLEMENTED.md"
   "docs/invariants/INVARIANTS_ROADMAP.md"
@@ -58,8 +58,8 @@ required_files=(
 )
 
 required_refs=(
-  "docs/phase-0/phase-0-foundation.md::scripts/audit/verify_repo_structure.sh"
-  "docs/phase-0/phase-0-foundation.md::./evidence/phase0/repo_structure.json"
+  "docs/PHASE0/phase-0-foundation.md::scripts/audit/verify_repo_structure.sh"
+  "docs/PHASE0/phase-0-foundation.md::./evidence/phase0/repo_structure.json"
   "docs/agents/ARCHITECT_PHASE0_PROMPT.md::verify_repo_structure.sh"
 )
 

@@ -32,3 +32,5 @@ notes: ''
 client: codex_cli
 assigned_agent: architect
 model: <UNASSIGNED>
+implementation_plan: docs/plans/phase0/TSK-P0-012/PLAN.md
+implementation_log: docs/plans/phase0/TSK-P0-012/EXEC_LOG.md

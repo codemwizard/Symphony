@@ -67,3 +67,10 @@ _Generated from `docs/invariants/INVARIANTS_MANIFEST.yml` (do not edit by hand).
 | INV-079 | P1 | CI toolchain is pinned (PyYAML + ripgrep) | ["team-security"] | scripts/audit/verify_ci_toolchain.sh |
 | INV-080 | P1 | Phase-0 contract evidence status semantics enforced | ["team-platform"] | scripts/audit/verify_phase0_contract_evidence_status.sh |
 | INV-081 | P1 | Pre-CI and CI run the same ordered Phase-0 checks | ["team-platform"] | scripts/audit/verify_ci_order.sh |
+| INV-090 | P1 | Billing usage ledger hook exists and is append-only | ["team-db"] | scripts/db/verify_business_foundation_hooks.sh |
+| INV-091 | P1 | External proofs hook exists and is append-only | ["team-db"] | scripts/db/verify_business_foundation_hooks.sh |
+| INV-092 | P1 | Correlation stitching hooks exist on ingress and outbox tables | ["team-db"] | scripts/db/verify_business_foundation_hooks.sh |
+| INV-093 | P1 | Evidence pack primitives exist and are append-only | ["team-db"] | scripts/db/verify_business_foundation_hooks.sh |
+| INV-094 | P1 | Tenant billable hierarchy hooks exist (billable root + parent) | ["team-db"] | scripts/db/verify_business_foundation_hooks.sh |
+| INV-095 | P1 | Ingress multi-signature hook exists with safe default | ["team-db"] | scripts/db/verify_business_foundation_hooks.sh |
+| INV-096 | P1 | Business foundation hooks are mechanically verified in DB gate | ["team-db", "team-platform"] | scripts/db/verify_business_foundation_hooks.sh; wired via scripts/db/verify_invariants.sh |

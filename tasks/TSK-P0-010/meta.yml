@@ -29,3 +29,5 @@ notes: ''
 client: codex_cli
 assigned_agent: worker
 model: <UNASSIGNED>
+implementation_plan: docs/plans/phase0/TSK-P0-010/PLAN.md
+implementation_log: docs/plans/phase0/TSK-P0-010/EXEC_LOG.md

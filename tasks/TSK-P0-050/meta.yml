@@ -38,3 +38,5 @@ notes: ''
 client: codex_cli
 assigned_agent: architect
 model: <UNASSIGNED>
+implementation_plan: docs/plans/phase0/TSK-P0-050_three_pillars/PLAN.md
+implementation_log: docs/plans/phase0/TSK-P0-050_three_pillars/EXEC_LOG.md

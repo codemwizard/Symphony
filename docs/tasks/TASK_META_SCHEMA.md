@@ -8,6 +8,8 @@ This schema is **normative** for all `tasks/**/meta.yml` files.
 - `title` (string)
 - `owner_role` (string)
 - `status` (string: planned | in_progress | completed)
+- `implementation_plan` (string; required when status is in_progress|completed)
+- `implementation_log` (string; required when status is in_progress|completed)
 
 ## List Keys (arrays only)
 - `depends_on`
@@ -24,6 +26,7 @@ This schema is **normative** for all `tasks/**/meta.yml` files.
 - Keys must be **lower_snake_case**.
 - Paths must be **repo‑relative**.
 - Evidence paths must be **gate‑scoped**, not task‑scoped.
+- `implementation_plan` and `implementation_log` must point to existing files for in‑progress or completed tasks.
 
 ## Reference Template
 See `tasks/_template/meta.yml` for canonical structure.

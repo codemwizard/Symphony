@@ -72,6 +72,33 @@
       "expires_on": "2026-12-31",
       "reviewed_by": "security_guardian",
       "approved_at": "2026-02-05"
+    },
+    {
+      "id": "DDL-ALLOW-0009",
+      "migration": "schema/migrations/0020_business_foundation_hooks.sql",
+      "statement_fingerprint": "95b0aebe4b955ad4865b3ec970986c23a52798da5a3def8c4835cd3a5b1c9828",
+      "reason": "Phase-0 correlation stitching columns on outbox_pending (expand-first)",
+      "expires_on": "2026-12-31",
+      "reviewed_by": "security_guardian",
+      "approved_at": "2026-02-06"
+    },
+    {
+      "id": "DDL-ALLOW-0010",
+      "migration": "schema/migrations/0020_business_foundation_hooks.sql",
+      "statement_fingerprint": "27ad1e207c441a98e89ba818a2de47433a1e0ae4136fff0ef3523146ba5cd134",
+      "reason": "Phase-0 correlation stitching columns on outbox_attempts (expand-first)",
+      "expires_on": "2026-12-31",
+      "reviewed_by": "security_guardian",
+      "approved_at": "2026-02-06"
+    },
+    {
+      "id": "DDL-ALLOW-0011",
+      "migration": "schema/migrations/0020_business_foundation_hooks.sql",
+      "statement_fingerprint": "712a5e10b077749a927ce98e5f086573c033eecdcb47e71e1eeaefb3fba3009a",
+      "reason": "Phase-0 tenant hierarchy expansion via ALTER TABLE tenants",
+      "expires_on": "2026-12-31",
+      "reviewed_by": "security_guardian",
+      "approved_at": "2026-02-06"
     }
   ]
 }

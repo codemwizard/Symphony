@@ -1,0 +1,38 @@
+phase: '0'
+task_id: TSK-P0-084
+title: Add billable client hierarchy hooks for tenants
+owner_role: DB_FOUNDATION
+status: planned
+depends_on:
+- TSK-P0-073
+touches:
+- schema/migrations/**
+- scripts/db/**
+- tasks/TSK-P0-084/meta.yml
+invariants:
+- INV-094 (Tenant billable hierarchy hook exists)
+work:
+- Add billable_clients and tenant linkage hooks (billable_client_id, parent_tenant_id) via forward-only migration.
+- Use expand-first posture for constraints when backfill may be needed.
+- Add required FKs/indexes for auditably billable hierarchy.
+acceptance_criteria:
+- Billable root and tenant hierarchy hooks exist and are queryable.
+- FK/index posture is present per migration plan.
+verification:
+- scripts/db/verify_invariants.sh
+- scripts/db/tests/test_db_functions.sh
+evidence:
+- evidence/phase0/business_foundation_hooks.json
+failure_modes:
+- Billable hierarchy columns/FKs missing.
+- Expand-first governance not followed.
+- Evidence file missing.
+must_read:
+- docs/PHASE0/BUSINESS_INVARIANTS_ADDITION_IMPLEMENTATION.md
+- docs/plans/phase0/TSK-P0-080_business_invariants_addition/PLAN.md
+implementation_plan: ''
+implementation_log: ''
+notes: ''
+client: codex_cli
+assigned_agent: db_foundation
+model: <UNASSIGNED>

@@ -155,6 +155,12 @@ jobs:
           chmod +x scripts/audit/verify_exception_template.sh
           scripts/audit/verify_exception_template.sh
 
+      - name: Verify task plan/log presence
+        if: github.event_name != 'schedule'
+        run: |
+          chmod +x scripts/audit/verify_task_plans_present.sh
+          scripts/audit/verify_task_plans_present.sh
+
       - name: Phase-0 ordered checks
         if: github.event_name != 'schedule'
         run: |

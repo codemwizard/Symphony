@@ -21,6 +21,9 @@ failure_modes: []
 
 must_read: []
 
+implementation_plan: ""
+implementation_log: ""
+
 notes: ""
 client: "codex_cli"
 assigned_agent: "architect"

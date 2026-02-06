@@ -1,0 +1,10 @@
+{
+  "baseline_date": "2026-02-06",
+  "baseline_path": "/home/mwiza/workspaces/Symphony/schema/baselines/2026-02-06/0001_baseline.sql",
+  "baseline_cutoff": "0021_correlation_indexes_concurrently.sql",
+  "normalized_schema_sha256": "1395fc88c05e06bf0d0ca726cc2207a7173070e229821206776299cd308dafdc",
+  "pg_dump_version": "pg_dump (PostgreSQL) 18.1 (Debian 18.1-1.pgdg13+2)",
+  "pg_server_version": "18.1 (Debian 18.1-1.pgdg13+2)",
+  "dump_source": "container:symphony-postgres",
+  "generated_at_utc": "2026-02-06T21:20:43.354956+00:00"
+}

@@ -33,3 +33,5 @@ notes: Invariant registration is handled by TSK-P0-009.
 client: codex_cli
 assigned_agent: db_foundation
 model: <UNASSIGNED>
+implementation_plan: docs/plans/phase0/TSK-P0-025/PLAN.md
+implementation_log: docs/plans/phase0/TSK-P0-025/EXEC_LOG.md

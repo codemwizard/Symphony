@@ -1,6 +1,6 @@
 phase: '0'
 task_id: TSK-P0-066
-title: "Add regression tests for Phase-0 contract validator"
+title: Add regression tests for Phase-0 contract validator
 owner_role: INVARIANTS_CURATOR
 status: completed
 depends_on:
@@ -11,11 +11,11 @@ touches:
 invariants:
 - INV-077
 work:
-- "Add test harness for valid YAML (PASS), invalid YAML (FAIL), non-list YAML (FAIL)."
-- "Ensure evidence is written in all cases."
+- Add test harness for valid YAML (PASS), invalid YAML (FAIL), non-list YAML (FAIL).
+- Ensure evidence is written in all cases.
 acceptance_criteria:
-- "Tests pass locally and in CI."
-- "Evidence file emitted even on failures."
+- Tests pass locally and in CI.
+- Evidence file emitted even on failures.
 verification:
 - scripts/audit/tests/test_phase0_contract_validation.sh
 evidence:
@@ -29,3 +29,5 @@ notes: ''
 client: codex_cli
 assigned_agent: architect
 model: <UNASSIGNED>
+implementation_plan: docs/plans/phase0/TSK-P0-066/PLAN.md
+implementation_log: docs/plans/phase0/TSK-P0-066/EXEC_LOG.md

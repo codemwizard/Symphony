@@ -1,0 +1,1216 @@
+We need to describe foundational Invariables for the business model. Look at the below and see what needs to be implemented at the Phase-0 level:
+
+This is an "Industry Auditor’s Executive Briefing" on the **Symphony Phase-0 Foundation**. This assessment is based on the provided repository, the `PHASE0_AUDIT_REPORT.md`, and the mechanical implementation of your security gates.
+
+---
+
+### **1. Executive Summary: The "Brutal" Reality**
+
+Most projects at this stage have "Security Theater." **Symphony has "Security Mechanics."** You have successfully moved from promising compliance to enforcing it through code. However, you are currently at risk of **"Gate-Induced Blindness"**—where you trust the *existence* of a check more than the *depth* of the check itself.
+
+**Overall Posture:** **Tier-1 Credible.** You have better "Day Zero" governance than most mid-market fintechs. But to satisfy a Tier-1 Bank (e.g., ABSA, Standard Bank) or the Bank of Zambia (BoZ), you must bridge the gap between "scripts that pass" and "reproducible evidence."
+
+---
+
+### **2. The "Fair" Strengths (High-Performance Indicators)**
+
+* **Mechanical Invariants (NIST PR.DS / ISO 27002 8.28):** The `n_minus_one_check.sh` and the deterministic schema baseline are top-tier. Most teams ignore the "Operational Rollback" risk; you’ve made it a blocking CI gate. This is a fundamental requirement for **ISO 27001:2022 (Control 8.25)**.
+* **Zero Trust Secrets (PCI DSS Req 7 / NIST 800-207):** Integrating **OpenBao** (a Vault fork) in Phase-0 instead of using `.env` files is the single most important decision you made. It establishes the "Identity-as-the-Perimeter" posture required for modern banking.
+* **The Evidence Harness (ISO 27001 Clause 9 / PCI Req 10):** The `scripts/audit/verify_task_evidence_contract.sh` is your "Golden Path." It ensures that no task is marked "Done" without a non-committable, CI-verified JSON proof. This is "Evidence-Grade" by design.
+
+---
+
+### **3. The "Brutal" Gaps (Audit Failures if not addressed)**
+
+#### **A. The SAST "Heuristic" Fallacy (OWASP ASVS / PCI Req 6.2)**
+
+* **The Issue:** Your security lints (e.g., `lint_sql_injection.sh`, `lint_privilege_grants.sh`) are largely based on `grep` and heuristics.
+* **The Risk:** A Tier-1 Auditor will dismiss these as "shallow." Regex-based security cannot detect complex data-flow vulnerabilities or context-specific injection.
+* **The Fix:** You must transition from custom `grep` scripts to a formal **SAST tool** (like Semgrep or Snyk) using custom rules that enforce your `Secure_Coding_Policy.md`.
+
+#### **B. The "Evidence is just a Status" Problem (NIST SP 800-53 / ISO 27002 8.15)**
+
+* **The Issue:** Many of your `./evidence/phase0/*.json` files likely contain just a `timestamp` and a `status: pass`.
+* **The Risk:** In a forensic audit, "It passed on Tuesday" is not evidence. Evidence is: "Here is the list of 42 files scanned, the specific Git SHA of the scanner, and the checksum of the result."
+* **The Fix:** Update `generate_evidence.sh` to include the **inputs** and **environment metadata** of the test, not just the result.
+
+#### **C. The Supply Chain "Dark Zone" (NIST CSF ID.SC / ISO 27001 A.5.21)**
+
+* **The Issue:** You have no automated governance for your `package.json` or Docker base images in your current invariant list.
+* **The Risk:** You are building a vault with 10-inch steel doors but using a generic, unvetted "hinge" (npm package) that might have a backdoor.
+* **The Fix:** Add an **INV-070: Dependency Integrity Gate** that runs `npm audit` and checks for "unapproved" licenses or high-severity CVEs as a blocking CI step.
+
+---
+
+### **4. Standards Mapping Matrix**
+
+| Standard | Status | Evidence in Repo |
+| --- | --- | --- |
+| **PCI DSS v4.0** | **Strong (Phase 0)** | Req 1 (Network Security) via OpenBao AppRole; Req 10 (Logging) via Evidence Harness. |
+| **ISO-20022** | **Roadmap** | Logic foundations in `outbox` and `ingress_attestations` tables; message structure validation is missing. |
+| **OWASP ASVS 4.0** | **Moderate** | `Secure_Coding_Policy.md` is the gold standard, but enforcement (the lints) is currently "shallow." |
+| **NIST 800-53** | **Strong** | Excellent "Identify" and "Protect" posture through Invariants Manifest and OpenBao. |
+
+---
+
+### **5. Closing Recommendation: "Watch the Watcher"**
+
+Your biggest risk is that your **Security Agent** or **Invariants Curator** starts "hallucinating" that a test passed when the underlying environment failed silently.
+
+**Next Immediate Action:** Implement the **"Local/CI Parity Guardrail"** mentioned in your Audit Report. Ensure that `scripts/ci/run_ci_locally.sh` is the *exact* same path as the GitHub Action. If a developer can pass locally but fail in CI, your "Evidence-Grade" claim is mathematically broken.
+
+**Verdict:** Phase-0 is **Solid and Defensible.** You have built a "Compensating Control" for every major technical risk. Address the "SAST depth" and "Evidence reproducibility" in Phase-1, and you will be ready for a Tier-1 pre-audit.
+
+To achieve **Tier-1 "Evidence-Grade" status**, you should absolutely run Snyk locally. In your current "Symphony" architecture, this isn't just a convenience—it's a requirement of your **Local/CI Parity** philosophy.
+
+### 1. The "Parity" Mandate
+
+Your project already enforces a strict `scripts/dev/pre_ci.sh` routine. If Snyk only runs in GitHub Actions, you violate the core principle documented in your `LOCAL_CI_PARITY.md`.
+
+* **The Risk**: A developer pushes code that passes local "fast checks" but fails in CI due to a Snyk finding. This creates "Structural Debt" and breaks the developer's flow.
+* **The Solution**: Integrate `snyk test` and `snyk iac test` directly into `scripts/security/run_security_fast_checks.sh`.
+
+### 2. Immediate Feedback (Shift-Left)
+
+Running Snyk locally (via CLI or IDE extension) provides **sub-second feedback** during the coding process.
+
+* **Vulnerability Remediation**: It is 10x cheaper to fix a SQL injection or a vulnerable dependency at the IDE level than to wait for a 10-minute CI pipeline to fail.
+* **IDE Integration**: Use the Snyk extension for VS Code or IntelliJ. It will highlight the exact line in your `schema/migrations/*.sql` or `src/` files that violates your **Secure Coding Policy**.
+
+### 3. Anchoring Local Evidence
+
+Your "Symphony" project requires non-committable JSON proofs for every task.
+
+* By running Snyk locally, you can generate a `snyk_report.json` and place it in the `evidence/phase0/` directory.
+* This allows the **Security Guardian** agent to verify the scan *before* the code even hits the remote repository, fulfilling the **INV-020 (Evidence anchoring)** requirement.
+
+---
+
+### Recommended Implementation Strategy
+
+| Action | Command / Tool | Purpose |
+| --- | --- | --- |
+| **Pre-Push Gate** | `snyk test --json > evidence/phase0/snyk_scan.json` | Captures local security proof for the **Evidence Harness**. |
+| **Infrastructure Check** | `snyk iac test infra/openbao/` | Validates your **OpenBao/Vault** HCL configs before they are deployed. |
+| **IDE Guardrail** | Snyk VS Code Extension | Real-time linting against your `Secure_Coding_Policy.md`. |
+
+### How to Update your Workflow
+
+Update your `scripts/security/run_security_fast_checks.sh` to include a check for the Snyk binary:
+
+```bash
+# Example logic for your security script
+if command -v snyk &> /dev/null; then
+  echo "Running local SAST (Snyk)..."
+  snyk test --severity-threshold=high --json > ./evidence/phase0/snyk_report.json
+else
+  echo "⚠️ Snyk CLI not found. Falling back to heuristic lints."
+fi
+
+```
+
+By running Snyk locally, you transition from **Heuristic Linting** (grep) to **Context-Aware Security**, which is exactly what a Tier-1 auditor (PCI DSS / NIST) will expect to see in your Phase-0 closeout report.
+
+
+
+
+
+
+
+To be **satisfied** that Phase-0 is ready for a Tier-1 Audit, we must distinguish between **Security Integrity** (what the code does) and **Governance Provenance** (how we prove the system remains safe over time).
+
+While the "Brutal Gaps" (SAST, Evidence Metadata, Supply Chain) harden the *integrity* of your foundation, the **Phase-0 Audit Report** and the project’s own **Closeout Checklist** identify a final "Last Mile" of governance requirements that are mandatory for banking standards like ISO-27001 and PCI DSS.
+
+### The "Last Mile" Checklist (Beyond the Brutal Gaps)
+
+To truly close Phase-0, you must check off these five **Governance & Provenance** items found in your audit report:
+
+1. **Canonical Baseline Provenance (ISO 27001 A.8.25 / 8.28)**:
+* Currently, you have a `baseline.sql`. You need a formal "Seal" or checksum evidence that proves this baseline was generated from the approved migrations and has not been manually tampered with since.
+
+
+2. **Audit Logging & Retention Policy (PCI Req 10 / NIST 800-92)**:
+* You have the mechanism (OpenBao logs), but you lack the **Policy Document**. An auditor needs to see the *stated* retention period (e.g., 7 years), the time-sync (NTP) requirement, and the daily review cadence.
+
+
+3. **Key Management Policy Stub (NIST SP 800-57)**:
+* Even if you aren't using HSMs yet, you need a "stub" policy in `docs/security/` defining how your evidence-signing keys (used by the Security Guardian) will be rotated and protected.
+
+
+4. **Sealed DDL Allowlist Governance**:
+* You have a `ddl_allowlist.json`, but you need a gate (`verify_ddl_allowlist_governance.sh`) that triggers a "Hard Failure" if any migration introduces a command (like `DROP TABLE`) not explicitly on that list.
+
+
+5. **The "Proxy Resolution" Decision (ISO-20022 Alignment)**:
+* Your audit report highlights a missing **ADR (Architecture Decision Record)** regarding whether you resolve aliases (MSISDN/TPIN) *before* or *after* enqueuing a payment. This is a critical logical invariant for preventing "Ghost Beneficiary" errors.
+
+
+
+---
+
+### Phase-0 "Definition of Done" Matrix
+
+| Category | Item | Status with "Brutal Gaps" | Satisfied? |
+| --- | --- | --- | --- |
+| **Security** | SAST, Secrets (OpenBao), Supply Chain | **HEAVILY FORTIFIED** | ✅ |
+| **Integrity** | Invariants, DB SQLSTATEs, Baseline | **MECHANICALLY SOUND** | ✅ |
+| **Evidence** | JSON Proofs, Metadata, Anchoring | **AUDIT-READY** | ✅ |
+| **Governance** | ADRs, Policies, DDL Allowlist, Baselines | **PARTIAL / MISSING** | ❌ |
+
+### Final Verdict
+
+If you implement the **Brutal Gaps** + the **Governance Gaps** (ADRs and Policies), I will be satisfied. Without the governance layer, an auditor will see a "secure system" that lacks "managed control," which is a common reason for Tier-1 banks to reject otherwise excellent technical platforms.
+
+**My Recommendation:** Finish the **Brutal Gaps** (technical) first as they are your "Force Multipliers." Then, spend one final "Governance Sprint" creating the ADRs and Policies to wrap the phase in a bow.
+
+
+
+
+
+
+
+Based on a "brutal" audit of your **Business Plan** against the technical foundation of **Phase-0**, you have a world-class architectural vision, but there are **four critical implementation gaps** at the database and governance level that must be addressed before you can claim Phase-0 is "closed."
+
+To satisfy your business model (charging K5–K15 for "Risk Certainty" ), your Phase-0 foundation must not just be "secure"; it must be **"billable"** and **"interconnected."**
+
+### 1. The "Revenue-Event" Invariant (Missing usage tracking)
+
+Your business plan relies on "printing evidence for K0.50 and selling it for K15.00".
+
+* 
+**The Gap:** Your current Phase-0 schema (based on the `outbox` and `ingress_attestation` tables) focuses on transaction state but lacks a **Billing/Usage Ledger**.
+
+
+* **The Fix:** You need a Phase-0 invariant (**INV-090: Atomic Revenue Event**) and a `billing_usage` table. This ensures that every time a "Signed Evidence Bundle" is generated, a corresponding "billable event" is durably written in the same transaction. Without this, you cannot prove to your partners (Zanaco, Access Bank) exactly how many K10.00 fees you are owed.
+
+
+
+### 2. The "External Proof" Schema (PACRA/ZECHL Integration)
+
+The **Escrow-as-a-Service** model depends on "Automated Verification" via the **PACRA API** and **ZECHL Central Proxy Registry**.
+
+* **The Gap:** Phase-0 is currently "introverted"—it only cares about its own internal state. It lacks the schema structures to store **Third-Party Attestations** (e.g., a hash of the PACRA TPIN validation response).
+
+
+* **The Fix:** Add an `external_proofs` table to Phase-0. This table must store the hash of external API responses and link them to your `ingress_attestation_id`. This is the "Evidence" you are selling to the Miller/Farmer in your Mkushi maize example.
+
+
+
+### 3. The "Client vs. Tenant" Governance (The NGO/GRZ Gap)
+
+You correctly identified that multi-tenancy is "not optional" for NGOs and Government (GRZ) programs.
+
+* 
+**The Gap:** Your plan mentions that **Cooperatives** are billable "Clients" while **NGO Programs** are "Tenants". Your current Phase-0 implementation likely treats these as the same entity.
+
+
+* **The Fix:** You must implement a **Hierarchical Tenant Schema** in Phase-0. A `system_client` (The billable entity, e.g., an NGO) must own multiple `logical_tenants` (The programs, e.g., "Maize Program 2026"). Your `tenant_id` check in the evidence harness must be aware of this hierarchy to prevent data-leakage between programs.
+
+
+
+### 4. IPDR "Lifecycle Stitching" (The Chain of Custody)
+
+The **Inter-Participant Dispute Resolution (IPDR)** revenue line requires "stitched lifecycle references".
+
+* **The Gap:** Your Phase-0 `ingress_attestations` and `outbox` entries are likely "atomic" (stand-alone). They lack a dedicated **Correlation Chain ID** or a `parent_evidence_hash` column.
+
+
+* 
+**The Fix:** To support the "immutable referee" packs you promised, every record in Phase-0 must include a `correlation_id`. This allows you to "stitch" the Miller’s payment instruction to the Farmer’s delivery note evidence and the final NFS dispatch into a single, contiguous story for an auditor.
+
+
+
+---
+
+### Phase-0 Implementation Checklist (Business Alignment)
+
+| Feature | Missing Implementation Requirement | Business Value |
+| --- | --- | --- |
+| **EaaS** | <br>`bundle_manifests` table to group 5+ evidence files into one "Pack." 
+
+ | Enables "Case Pack" sales. |
+| **Escrow** | <br>`attestation_method` must include `EXTERNAL_PROXY_SIGNED`. 
+
+ | Validates TPIN/NFS Proxy logic. |
+| **IPDR** | <br>`parent_evidence_hash` column on all ledger tables. 
+
+ | Proof-of-chain for disputes. |
+| **Tenant** | Distinguish between `billable_client_id` and `data_tenant_id`. 
+
+ | Multi-entity reporting for GRZ. |
+
+**Verdict:** Your business plan is **economically brilliant** (high margin, low-cost "evidence printing"). However, your Phase-0 code is currently a "Store" without a "Cash Register" (Billing Ledger) or a "Supply Chain Tracker" (Correlation IDs). If you add these 4 items, you will have a "Turnkey" foundation for Phase-1.
+
+
+
+This document serves as the Strategic Engineering Directive for the Symphony-Zambia platform. It defines the three core business models and their foundational architectural requirements (Invariants) to ensure the Phase-0 schema is "National Utility" ready.
+Strategic Directive: Symphony-Zambia Multi-Model Foundation
+Target: AI Developer Agents / Engineering Team
+Objective: Implement Phase-0 Schema and Invariant Manifest for a Triple-Threat Payment Infrastructure.
+Core Architecture: Non-Custodial, .NET Monotypic Core, Forward-Only Migrations, HSM-Signed Evidence.
+Model 1: Escrow-as-a-Service (EaaS)
+Purpose: Programmatic trust for SME supply chains (e.g., Agriculture/Trade).
+Market Gap: Replaces expensive manual bank escrow (K500+) with automated, policy-enforced release (K10).
+Phase-0 Schema Invariants:
+INV-EAS-01 (State Finality): An escrow record must reach a terminal state of either RELEASED or REFUNDED. Logic must enforce mutual exclusion using a Partial Unique Index.
+INV-EAS-02 (Net-Zero Balance): The sum of all ledger entries for a specific escrow_id must never exceed the committed_amount. Enforce via DB Trigger or Check Constraint.
+INV-EAS-03 (MDR Compliance): Automated fee enforcement for MSME accounts. Total fees must be ≤ 2.0% of principal value.
+Model 2: Evidence-as-a-Service (Audit/Compliance)
+Purpose: Automated incident reconstruction and 10-year record retention for BoZ/FIC.
+Market Gap: Mitigates the K1.00 technical decline penalty and replaces the legal utility of phased-out cheques.
+Phase-0 Schema Invariants:
+INV-EVID-01 (Detached Digital Signature): Every terminal outcome must store an HSM-backed PKCS#7 detached signature. Column must be NOT NULL.
+INV-EVID-02 (WORM Anchoring): Schema must support a batch_root_hash column for periodic anchoring to external immutable storage.
+INV-EVID-03 (Durable Ingress): No instruction is accepted without a pre-committed ingress_attestation row (Fail-Closed logic).
+Model 3: Inter-Participant Dispute Resolution (IPDR)
+Purpose: The "Immutable Referee" for Bank-to-MMO or Participant-to-NFS conflicts.
+Market Gap: Bridges the ~43.7% reconciliation gap by providing a multi-party signed source of truth.
+Phase-0 Schema Invariants:
+INV-IPDR-01 (Multi-Signature Support): The ingress_attestations table must utilize a JSONB or ARRAY column to store N signatures from multiple participants (e.g., Bank Sender + MMO Receiver).
+INV-IPDR-02 (Sequence Mapping): Outbox and Ledger tables must include upstream_ref (Bank ID) and nfs_sequence_ref (ZECHL ID) to "stitch" transaction lifecycles across participants.
+Implementation Task List for AI Agents
+1. Schema Definition (Postgres/DDL)
+Create participants table with mandatory PACRA/TPIN fields.
+Create escrow_ledger with Append-Only triggers (No UPDATE/DELETE).
+Implement the Partial Unique Index for INV-EAS-01.
+Define check_mdr_compliance constraint for INV-EAS-03.
+2. Invariant Manifest Update
+Add INV-049 through INV-058 to the invariants.yaml manifest.
+Wire scripts/db/verify_invariants.sh to check for the presence of the 2% MDR check and multi-signature columns.
+3. Documentation Generation
+Generate ADR (Architecture Decision Records) for the use of Detached Signatures vs. Database Encryption.
+Update the PRD to include the IPDR model as a foundation-level "dormant" feature.
+Document the NFS Sequence Mapping logic for Tier-1 Bank integration.
+Roadmap: From Foundation to Utility
+Phase 0 (Foundation): Schema lock with all 58 Invariants. (Target: Feb 2026).
+Phase 1 (Sandbox Pilot): SME EaaS Live Traffic (capped). Demonstrate INV-EAS-03 to BoZ.
+Phase 2 (Evidence Expansion): Launch Evidence-as-a-Service for Cheque Phase-out corporate clients.
+Phase 3 (National Utility): Activate IPDR for Inter-Bank dispute arbitration via the ZECHL NFS Proxy.
+Strategic Note for Developers:
+Every line of code must answer to an Invariant. If a feature bypasses an Invariant, the CI/CD pipeline must fail-closed. This is how we build Tier-1 trust in Zambia.
+Action: Please initialize the Phase-0 Schema and generate the SQL migrations for the Multi-Signature Ingress (INV-IPDR-01)
+
+Here’s what **must exist at Phase-0** (schema + invariants + governance hooks) to make the **business model “real”**—not just technically safe.
+
+You’re basically trying to encode **commercial truth** (“what is billable / defensible / attributable”) into the same kind of **mechanical truth** you already enforce for migrations/outbox.
+
+---
+
+## What Phase-0 must implement for business-model invariants
+
+### 1) Revenue events must be mechanically countable
+
+**Business promise:** you can charge for *instruction lifecycles*, *exceptions*, *evidence bundles*, *case packs*, *retention/anchoring*.
+
+**Phase-0 requirement (hook):**
+
+* Add an **append-only billing/usage ledger** that can be written **atomically** with evidence pack generation (later runtime), and is queryable by tenant/client.
+
+**Phase-0 DDL (minimum):**
+
+* `billing_usage_events` (append-only)
+
+  * `event_id` (uuid)
+  * `occurred_at`
+  * `tenant_id`, `client_id` (nullable for non-tenant flows)
+  * `instruction_id` or `correlation_id`
+  * `event_type` enum (`EVIDENCE_BUNDLE`, `CASE_PACK`, `EXCEPTION_TRIAGE`, `RETENTION_ANCHOR`, etc.)
+  * `quantity`, `units`
+  * `evidence_pack_id` (nullable FK)
+
+**Phase-0 invariant:**
+
+* **INV-BILL-01 Atomic Revenue Event Hook:** table exists, append-only enforced, and foreign keys support linking to evidence packs/instructions.
+
+> Phase-0 does *not* need pricing logic—just the durable “cash register tape”.
+
+---
+
+### 2) “External proof” must be first-class (Escrow + KYB/KYC-adjacent)
+
+**Business promise:** escrow/disbursement assurance depends on proofs like PACRA/TPIN checks, proxy registry validations, supplier eligibility checks, etc.
+
+**Phase-0 requirement (hook):**
+
+* Add an **external proofs** table where you store hashes + metadata of third-party validations and bind them to an ingress attestation / instruction.
+
+**Phase-0 DDL (minimum):**
+
+* `external_proofs`
+
+  * `proof_id` uuid
+  * `attestation_id` FK → `ingress_attestations`
+  * `provider` (`PACRA`, `ZECHL_PROXY`, `KYC_VENDOR`, etc.)
+  * `request_hash`, `response_hash`
+  * `provider_ref` (provider’s reference id)
+  * `verified_at`, `expires_at` (nullable)
+  * append-only enforcement
+
+**Phase-0 invariant:**
+
+* **INV-PROOF-01 Third-Party Proof Hook:** schema exists; it’s impossible to delete/alter proofs.
+
+---
+
+### 3) Correlation stitching must exist everywhere (IPDR “chain of custody”)
+
+**Business promise:** IPDR and “incident packs” require stitching across participants and rails.
+
+**Phase-0 requirement (hook):**
+
+* Add a `correlation_id` to the core ledgers so later you can build dispute packs without redesign.
+
+**Phase-0 DDL (minimum):**
+
+* Add `correlation_id UUID` to:
+
+  * `ingress_attestations`
+  * `payment_outbox`
+  * `payment_outbox_attempts`
+* Add placeholder fields for cross-rail stitching (nullable in Phase-0):
+
+  * `upstream_ref` (sender/bank reference)
+  * `downstream_ref` (receiver reference)
+  * `nfs_sequence_ref` (ZECHL/NFS sequence)
+* Indexes: `(tenant_id, correlation_id)`, `(correlation_id)`
+
+**Phase-0 invariant:**
+
+* **INV-IPDR-STITCH-01 Stitchability Hook:** those columns exist and are indexed (even if unused).
+
+---
+
+### 4) Evidence packs must be a product primitive (not just loose JSON files)
+
+**Business promise:** “case packs” and “evidence bundles” are monetizable units.
+
+**Phase-0 requirement (hook):**
+
+* Add a pack/grouping table with a deterministic root hash so you can anchor to WORM later.
+
+**Phase-0 DDL (minimum):**
+
+* `evidence_packs`
+
+  * `pack_id` uuid
+  * `pack_type` (`INSTRUCTION_BUNDLE`, `INCIDENT_PACK`, `DISPUTE_PACK`)
+  * `correlation_id` (nullable)
+  * `root_hash` (nullable in Phase-0, required later)
+  * `created_at`
+* `evidence_pack_items`
+
+  * `pack_id` FK
+  * `artifact_path` (or `artifact_hash`)
+  * `artifact_hash`
+  * append-only
+
+**Phase-0 invariant:**
+
+* **INV-EVID-PACK-01 Pack Primitive Exists:** schema + append-only; supports later signing/anchoring.
+
+---
+
+### 5) Tenant vs Client hierarchy must match the revenue model (NGO/GRZ programs)
+
+Right now you have:
+
+* `tenants`
+* `tenant_clients`
+* `tenant_members`
+
+That’s good, but your business model needs:
+
+* **billable entity** (NGO / ministry / bank)
+* **logical tenant/program** (FISP 2026, Program X)
+
+**Phase-0 requirement (hook):**
+
+* Introduce an explicit “billable owner” vs “data tenant” boundary.
+
+**Phase-0 DDL (minimum options):**
+**Option A (cleanest):**
+
+* `billable_clients` (legal/commercial entity)
+* `tenants` gain `billable_client_id FK`
+
+**Option B (minimal change):**
+
+* Add `parent_tenant_id` to `tenants` and enforce “program tenants” are children of “billable tenants”.
+
+**Phase-0 invariant:**
+
+* **INV-TEN-HIER-01 Billable Ownership Hook:** every tenant resolves to a billable parent (directly or via hierarchy).
+
+---
+
+### 6) Multi-signature ingress (INV-IPDR-01) must be added as a dormant foundation
+
+Your current `ingress_attestations` migration (0011) looks like it only supports a single `signature_hash`.
+
+**Phase-0 requirement (hook):**
+
+* Support N signatures **without runtime logic** yet.
+
+**Phase-0 DDL (minimum):**
+
+* Add a JSONB column (preferred) that can store multiple signatures + signer metadata:
+
+  * `signatures JSONB NOT NULL DEFAULT '[]'::jsonb`
+  * Each element: `{ "signer": "...", "sig_hash": "...", "alg": "...", "kid": "...", "ts": "..." }`
+* Keep `signature_hash` temporarily if you need backward compatibility, but mark it as legacy in docs.
+
+**Phase-0 invariant:**
+
+* **INV-IPDR-SIG-01 Multi-Signature Hook:** column exists + default is `[]` + evidence checks assert it’s present.
+
+---
+
+## What should *not* be forced into Phase-0
+
+These are important, but they’re Phase-1/2 enforcement depth:
+
+* Full ISO-20022 message validation (schema-level hooks only in Phase-0)
+* Full SAST “deep” toolchain (you can add the gate wiring + SKIPPED semantics in Phase-0, but deep dataflow enforcement is Phase-1 hardening)
+* WORM anchoring to external immutable storage (Phase-0 supports schema + evidence pack root hash)
+
+---
+
+## Concrete Phase-0 task list I’d add (business-alignment cluster)
+
+If you want this to be auditable, treat it like your other Phase-0 clusters:
+
+1. **TSK-P0-08x — Billing usage ledger hook**
+2. **TSK-P0-08x — External proofs hook**
+3. **TSK-P0-08x — Correlation stitching columns**
+4. **TSK-P0-08x — Evidence pack primitive**
+5. **TSK-P0-08x — Tenant billable hierarchy**
+6. **TSK-P0-08x — Multi-signature ingress (INV-IPDR-01)**
+
+Each task:
+
+* is delivered via a forward-only migration
+* has a DB invariant check (schema presence + constraints + append-only posture)
+* emits evidence JSON that includes: **tables/columns checked + schema fingerprint + git sha**
+
+---
+
+## About the “npm audit / supply chain” part
+
+That audit text is generic. In your **single-stack .NET Core** world, Phase-0 should instead require:
+
+* `dotnet list package --vulnerable --include-transitive` (CI gate)
+* optional: lockfile controls (`packages.lock.json`) + NuGet source policy (later)
+
+---
+
+If you want, I can convert the above into:
+
+* **exact invariant IDs** (INV-BILL-01, INV-PROOF-01, etc.),
+* **migration filenames**, and
+* **verify_invariants.sh checks** (pure schema checks, Phase-0 safe)
+
+…and I can also draft the **SQL migration** for the multi-signature ingress hook (INV-IPDR-01) in the same style as your existing migrations.
+
+
+
+
+Assess this:
+Yes, your proposed Phase-0 additions **technically allow** for a hierarchy that scales from a Ministry (Client) down to a Farmer (Member), but to make it **"auditably billable"** at the member level, there is a subtle but critical distinction you must implement in the schema now.
+
+In the Zambian context (e.g., a FISP program or a dairy cooperative), you have **"Financial Responsibility"** (who pays Symphony) vs. **"Operational Responsibility"** (who owns the data) vs. **"Identity Responsibility"** (who performed the action).
+
+Here is how you refine your Phase-0 plan to ensure the "Member" level is captured without breaking your "Non-Custodial" architecture.
+
+### 1. Refined Hierarchy: The "Three-Sleeve" Model
+
+To support a multi-layered cooperative (e.g., *ZNFU -> District Coop -> Primary Coop -> Farmer*), you shouldn't just have one `parent_tenant_id`. You need to distinguish between the **Billable Root** and the **Immediate Parent**.
+
+**Recommended DDL Refinement for Item 5:**
+
+```sql
+ALTER TABLE tenants 
+ADD COLUMN billable_client_id UUID NOT NULL, -- The legal entity that pays the K15 fee
+ADD COLUMN parent_tenant_id UUID NULL,       -- For nested coops (District vs Primary)
+ADD COLUMN tenant_type TEXT NOT NULL;        -- 'UNION', 'COOP', 'PROGRAM'
+
+```
+
+* **Why?** This allows you to run a query for "Total revenue owed by Ministry of Agriculture" (Billable Client) while still being able to show "Usage for Mkushi District" (Data Tenant).
+
+### 2. The Member-Level "Atomic Hook"
+
+If you want to bill down to the **Cooperative Member**, your `billing_usage_events` table (Item 1) is currently missing the **"Subject"**.
+
+**Recommended DDL Refinement for Item 1:**
+
+```sql
+-- Add this to your billing_usage_events
+ALTER TABLE billing_usage_events 
+ADD COLUMN subject_participant_id UUID NOT NULL, -- The Farmer/Member being billed for
+ADD COLUMN metadata JSONB; -- To store things like 'crop_type' or 'subsidy_id'
+
+```
+
+* **The Invariant (INV-BILL-02):** "No billing event can exist without a `subject_participant_id` that is mapped to the `tenant_id`." This prevents a billing error where one cooperative is accidentally charged for another's members.
+
+### 3. IPDR "Stitching" at the Member Level (Item 3)
+
+For the **Inter-Participant Dispute Resolution** revenue line, a "Dispute Pack" isn't just about the money; it's about the **Member's Identity Proof**.
+
+* **The Gap:** Your `ingress_attestations` need to link the `participant_id` (the Member) to the `correlation_id` (the transaction).
+* **The Fix:** Ensure that in Phase-0, the `ingress_attestations` table has a mandatory `participant_id`.
+* **The Result:** When a farmer claims they never received their Mkushi maize payment, your **IPDR "Immutable Referee"** pack can instantly pull every attestation where that specific `participant_id` was the subject.
+
+### 4. Implementation Checklist: The "Business Foundation" Update
+
+To truly close Phase-0 with these "Commercial Invariants," you should add these specific checks to your `verify_invariants.sh`:
+
+1. **INV-TEN-02 (Member Isolation):** Assert that every `participant` record has a `tenant_id` and that the `tenant_id` resolves back to a `billable_client_id`.
+2. **INV-BILL-03 (The 'Cash Register' Integrity):** Assert that `billing_usage_events` is **INSERT-ONLY** (no UPDATE/DELETE permissions for the runtime app role). This is a Tier-1 requirement for revenue assurance.
+3. **INV-SIG-02 (Multi-Sig Subject):** Assert that for `CASE_PACK` evidence, at least one signature in the `signatures` JSONB column (Item 6) matches the `participant_id` of the member (e.g., their digital thumbprint or mobile wallet public key).
+
+---
+
+### Does this plan allow for your business model?
+
+**Yes, but with one "Brutal" caveat:** Your plan is currently strong on **"What happened"** but slightly weak on **"Who is paying for it"** at the sub-tenant level.
+
+By adding the `billable_client_id` (The Payer) and `subject_participant_id` (The Member) to your Phase-0 hooks now, you avoid a massive database migration in Phase-2 when you actually start generating invoices.
+
+**Next Step Recommendation:** I can provide the exact SQL for **Migration 0013: Business Foundation Hooks**, which combines your Items 1, 5, and 6 into a single "Commercial Truth" update. Should I generate that for you?
+
+
+
+
+
+
+
+
+
+
+Your “three-sleeve” observation is **correct in spirit** (and important): Tier-1 buyers won’t just ask “what happened?”, they’ll ask **who is financially accountable**, **who owns the operational context**, and **who actually acted**—and those are not the same thing.
+
+That said, a few parts of the proposed DDL/invariants need tightening so you don’t bake in the wrong semantics or force Phase-0 into runtime-only assertions.
+
+---
+
+## What’s right (keep)
+
+### 1) Separate **billable root** from **tenant hierarchy**
+
+Adding a stable **billable root** (payer) and a separate **parent_tenant_id** (organizational nesting) is exactly how you make NGO/GRZ/co-op programs **auditably billable** *and* operationally sliceable.
+
+Recommended model is sound:
+
+* `billable_client_id`: “who pays Symphony”
+* `parent_tenant_id`: “nested program structure”
+* `tenant_type`: “what kind of tenant is this (program/coop/etc.)”
+
+This aligns with how enterprise SaaS typically models: **Account (payer)** → **Workspaces/Projects (data tenants)** → **Actors/Subjects**.
+
+---
+
+## What needs correction (before you implement in Phase-0)
+
+### 2) Don’t use `participant_id` to mean “farmer/member”
+
+In your repo language, **participants** are “external rail identities” (banks/MMOs/rails participants). A farmer/member is not a “participant” in that sense.
+
+So this proposal is semantically dangerous:
+
+```sql
+subject_participant_id UUID NOT NULL -- The Farmer/Member being billed for
+```
+
+**Better Phase-0 design:**
+
+* Use `subject_member_id UUID NULL` (FK → `tenant_members`)
+* Optionally also allow `subject_client_id UUID NULL` (FK → `tenant_clients`) for cases where the “subject” is a cooperative or implementer, not an individual.
+* Add a strict check constraint: **exactly one subject column set**.
+
+Example:
+
+* `subject_member_id` for “farmer”
+* `subject_client_id` for “cooperative entity”
+* Later, if needed, introduce a typed “subject” table; but Phase-0 can do this cleanly with two columns.
+
+### 3) “Mandatory participant_id in ingress_attestations” is too strong
+
+This statement:
+
+> “Ensure ingress_attestations has a mandatory participant_id.”
+
+…will break legitimate flows that don’t have a member subject (e.g., bank-to-bank flows, internal ops, non-NGO bank integrations).
+
+**Phase-0-safe alternative:**
+
+* Keep `member_id` optional in `ingress_attestations`, but enforce **consistency when present**:
+
+  * If `member_id` is present ⇒ `tenant_id` must be present and valid
+  * If `member_id` is present ⇒ `client_id` should typically be present (depending on your model)
+
+This preserves your current “member optional but enforced if present” posture.
+
+### 4) Multi-sig subject check is not a Phase-0 invariant (yet)
+
+This proposed invariant:
+
+> “for CASE_PACK evidence, at least one signature matches participant_id”
+
+…requires runtime behavior and signature verification semantics. Phase-0 can’t prove that without a functioning evidence pack generator and signature validation logic.
+
+**Phase-0 should only establish the hook:**
+
+* `signatures jsonb NOT NULL DEFAULT '[]'::jsonb` exists
+* evidence pack tables exist
+* FK relationships support later enforcement
+
+Later (Phase-1/2) you can add:
+
+* signature verification checks
+* “must contain signer-of-record for subject” rules
+
+---
+
+## What you should implement at Phase-0 (clean, auditably billable, non-custodial)
+
+### A) Tenancy: Billable root + hierarchy (expand-first)
+
+**Do NOT** add `billable_client_id NOT NULL` in a single migration if you already have data—Phase-0 should follow your expand/contract discipline.
+
+Phase-0 expand:
+
+* add nullable `billable_client_id`
+* backfill (if applicable)
+* only later enforce NOT NULL
+
+**Invariant (Phase-0):**
+
+* Column exists
+* FK exists
+* Index exists
+* Optional: check constraint to prevent impossible combinations (e.g., a “PROGRAM” without a billable root)
+
+### B) Billing usage events: introduce “subject” correctly
+
+Minimum Phase-0 schema hook:
+
+* `billing_usage_events` append-only
+* includes:
+
+  * `tenant_id`
+  * `billable_client_id`
+  * `subject_member_id` nullable FK → `tenant_members`
+  * `subject_client_id` nullable FK → `tenant_clients`
+  * `correlation_id` (or instruction_id)
+  * `event_type`, `units`, `quantity`
+
+**Invariant (Phase-0):**
+
+* Append-only enforcement exists (no UPDATE/DELETE privileges + trigger if you use it)
+* Subject identity is well-formed: `exactly_one_subject` check constraint
+
+### C) Correlation stitching: keep it universal
+
+This part is good and should be universal in Phase-0:
+
+* `correlation_id` columns exist on ledgers
+* indexes exist
+
+### D) External proofs: bind to ingress attestation
+
+Good Phase-0 hook:
+
+* `external_proofs` exists and is append-only
+* binds to `ingress_attestation_id` (or `instruction_id`)
+* stores request/response hashes + provider refs
+
+---
+
+## Revised “Three Sleeve” vocabulary (make it unambiguous)
+
+To prevent future confusion, define these terms explicitly (and use them in schema naming):
+
+1. **billable_client** = payer / contractual entity
+2. **tenant** = data boundary / program boundary
+3. **actor** = identity that performed the action (workload/client cert, user, client)
+4. **subject** = entity the action is “about” (member/farmer/co-op)
+
+That makes “auditably billable at member level” trivial:
+
+* payer = billable_client_id
+* program = tenant_id
+* subject = subject_member_id
+* actor = client_id + cert_fingerprint + token jti hash
+
+---
+
+## Verdict on the proposal you pasted
+
+* **The core insight is correct** and you should adopt it.
+* Two key corrections:
+
+  1. **subject_participant_id should not exist** (wrong domain term); use `subject_member_id`/`subject_client_id`.
+  2. **mandatory participant_id in ingress_attestations** is too rigid; keep member optional, enforce consistency when present.
+* The “multi-sig subject verification” is **Phase-1/2**, not Phase-0—Phase-0 should only add the schema hook.
+
+If you want, I can turn this into a precise Phase-0 “Business Foundation Hooks” migration spec (expand/contract compliant) and the corresponding `verify_invariants.sh` checks (schema-level only).
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Below is a **precise, Phase-0 “Business Foundation Hooks” migration spec** written to match your **forward-only / expand-contract / no-data-rollback** posture and your “member optional but enforced if present” rule.
+
+I’m treating this as **one Phase-0 cluster** implemented as **two migrations** (expand now, contract later) so you don’t paint yourself into a corner with NOT NULL on day zero.
+
+---
+
+# Migration Spec: Phase-0 Business Foundation Hooks
+
+## Goals
+
+Phase-0 must make the business model mechanically possible by adding *hooks* for:
+
+1. **Billable Root** (payer) distinct from data tenancy (program boundary)
+2. **Usage/Billing events** that are append-only and attributable (tenant/client/member)
+3. **Stitching** primitives for later packs/disputes (correlation id)
+4. **Member subject** without corrupting your “participant” meaning
+
+This is **schema-only + invariant checks** (no runtime required).
+
+---
+
+## Definitions
+
+* **billable_client**: the legal entity that pays Symphony (Ministry/NGO/Bank/Co-op federation)
+* **tenant**: the data boundary (program/co-op unit)
+* **client**: operational actor inside tenant (district office, implementer, cooperative)
+* **member**: end subject (farmer/member), optional attribution
+* **actor identity** is already handled via ingress attestation (cert/token fingerprints)
+
+---
+
+# Migration 00XX — Expand: Business foundation hooks (safe additive)
+
+### File name (example)
+
+`schema/migrations/00XX_business_foundation_expand.sql`
+
+### Constraints
+
+* Additive only.
+* No blocking DDL on hot tables (avoid rewriting large tables).
+* Create indexes concurrently if table is hot; use your `-- symphony:no_tx` marker where needed.
+
+---
+
+## A) Billable root + tenant hierarchy
+
+### 1) Create `billable_clients` (new table)
+
+Purpose: a stable payer identity you can attach to tenants.
+
+**DDL**
+
+```sql
+CREATE TABLE IF NOT EXISTS billable_clients (
+  billable_client_id UUID PRIMARY KEY,
+  legal_name TEXT NOT NULL,
+  client_type TEXT NOT NULL CHECK (client_type IN ('BANK','MMO','NGO','GOV_PROGRAM','COOP_FEDERATION','ENTERPRISE')),
+  regulator_ref TEXT NULL,
+  status TEXT NOT NULL DEFAULT 'ACTIVE' CHECK (status IN ('ACTIVE','SUSPENDED','CLOSED')),
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+```
+
+### 2) Expand `tenants` with billable + hierarchy
+
+**Add columns (nullable in expand)**
+
+```sql
+ALTER TABLE tenants
+  ADD COLUMN IF NOT EXISTS billable_client_id UUID NULL,
+  ADD COLUMN IF NOT EXISTS parent_tenant_id UUID NULL,
+  ADD COLUMN IF NOT EXISTS tenant_type TEXT NULL;
+```
+
+**Add FK constraints as NOT VALID first (safe posture)**
+
+```sql
+ALTER TABLE tenants
+  ADD CONSTRAINT tenants_billable_client_fk
+  FOREIGN KEY (billable_client_id) REFERENCES billable_clients(billable_client_id)
+  NOT VALID;
+
+ALTER TABLE tenants
+  ADD CONSTRAINT tenants_parent_tenant_fk
+  FOREIGN KEY (parent_tenant_id) REFERENCES tenants(tenant_id)
+  NOT VALID;
+```
+
+**Tenant type constraint as NOT VALID**
+
+```sql
+ALTER TABLE tenants
+  ADD CONSTRAINT tenants_tenant_type_chk
+  CHECK (tenant_type IS NULL OR tenant_type IN ('UNION','COOP','PROGRAM','BANK_TENANT','MMO_TENANT','ENTERPRISE_TENANT'))
+  NOT VALID;
+```
+
+**Indexes**
+
+* These are usually not hot tables, but still safe:
+
+```sql
+CREATE INDEX IF NOT EXISTS idx_tenants_billable_client_id ON tenants(billable_client_id);
+CREATE INDEX IF NOT EXISTS idx_tenants_parent_tenant_id ON tenants(parent_tenant_id);
+```
+
+**Validation (still Phase-0, optional)**
+If you want, you can validate constraints in a later migration after any backfill:
+
+```sql
+ALTER TABLE tenants VALIDATE CONSTRAINT tenants_billable_client_fk;
+ALTER TABLE tenants VALIDATE CONSTRAINT tenants_parent_tenant_fk;
+ALTER TABLE tenants VALIDATE CONSTRAINT tenants_tenant_type_chk;
+```
+
+---
+
+## B) Billing/Usage “cash register tape” (append-only)
+
+### 1) Create `billing_usage_events`
+
+This is *usage accounting* (not pricing). It’s the primitive you will invoice from later.
+
+**DDL**
+
+```sql
+CREATE TABLE IF NOT EXISTS billing_usage_events (
+  event_id UUID PRIMARY KEY,
+  occurred_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+
+  billable_client_id UUID NOT NULL REFERENCES billable_clients(billable_client_id),
+  tenant_id UUID NULL REFERENCES tenants(tenant_id),
+  client_id UUID NULL REFERENCES clients(client_id),
+
+  -- Subject: exactly one of these can be set.
+  subject_member_id UUID NULL REFERENCES tenant_members(member_id),
+  subject_client_id UUID NULL REFERENCES clients(client_id),
+
+  correlation_id UUID NULL,
+
+  event_type TEXT NOT NULL CHECK (
+    event_type IN ('EVIDENCE_BUNDLE','CASE_PACK','EXCEPTION_TRIAGE','RETENTION_ANCHOR','ESCROW_RELEASE','DISPUTE_PACK')
+  ),
+  units TEXT NOT NULL CHECK (units IN ('count','bytes','seconds','events')),
+  quantity BIGINT NOT NULL CHECK (quantity > 0),
+
+  metadata JSONB NULL
+);
+```
+
+### 2) Subject well-formedness (Phase-0 enforceable)
+
+**Check constraint**: “exactly one subject is set OR none (if you truly want to allow non-subject events)”.
+
+Pick one of these patterns:
+
+**Strict (recommended for auditability): require a subject**
+
+```sql
+ALTER TABLE billing_usage_events
+  ADD CONSTRAINT billing_usage_events_subject_exactly_one_chk
+  CHECK (
+    (subject_member_id IS NOT NULL)::int + (subject_client_id IS NOT NULL)::int = 1
+  );
+```
+
+**Flexible: allow subject-less platform events**
+
+```sql
+ALTER TABLE billing_usage_events
+  ADD CONSTRAINT billing_usage_events_subject_zero_or_one_chk
+  CHECK (
+    (subject_member_id IS NOT NULL)::int + (subject_client_id IS NOT NULL)::int <= 1
+  );
+```
+
+### 3) Tenant/subject consistency (Phase-0 safe variant)
+
+If `subject_member_id` is present, the event must be tenant-bound.
+
+```sql
+ALTER TABLE billing_usage_events
+  ADD CONSTRAINT billing_usage_events_member_requires_tenant_chk
+  CHECK (
+    subject_member_id IS NULL OR tenant_id IS NOT NULL
+  );
+```
+
+**Note:** The strong form (“member belongs to tenant”) requires a trigger join to `tenant_members`. That’s okay in Phase-0 if you want (see below), but it’s optional.
+
+### 4) Append-only enforcement
+
+Do it the same way you already do ledger append-only:
+
+* deny UPDATE/DELETE privileges to app role
+* optionally install triggers to hard-fail even for elevated roles
+
+**Trigger (strong)**
+
+```sql
+CREATE OR REPLACE FUNCTION billing_usage_events_no_ud()
+RETURNS trigger LANGUAGE plpgsql AS $$
+BEGIN
+  RAISE EXCEPTION 'billing_usage_events is append-only' USING ERRCODE = 'P9001';
+END;
+$$;
+
+CREATE TRIGGER trg_billing_usage_events_no_update
+BEFORE UPDATE ON billing_usage_events
+FOR EACH ROW EXECUTE FUNCTION billing_usage_events_no_ud();
+
+CREATE TRIGGER trg_billing_usage_events_no_delete
+BEFORE DELETE ON billing_usage_events
+FOR EACH ROW EXECUTE FUNCTION billing_usage_events_no_ud();
+```
+
+---
+
+## C) Correlation stitching (universal hook)
+
+Add `correlation_id` to durable ledgers so you can stitch later without redesign.
+
+**DDL (expand)**
+
+```sql
+ALTER TABLE ingress_attestations
+  ADD COLUMN IF NOT EXISTS correlation_id UUID NULL;
+
+ALTER TABLE payment_outbox
+  ADD COLUMN IF NOT EXISTS correlation_id UUID NULL;
+
+ALTER TABLE payment_outbox_attempts
+  ADD COLUMN IF NOT EXISTS correlation_id UUID NULL;
+```
+
+**Indexes**
+If these are hot, do concurrently with your no-tx marker.
+
+```sql
+-- symphony:no_tx
+CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_outbox_correlation_id ON payment_outbox(correlation_id);
+
+-- symphony:no_tx
+CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_attempts_correlation_id ON payment_outbox_attempts(correlation_id);
+```
+
+---
+
+# Migration 00XY — Contract: validate + tighten (deferred)
+
+### File name
+
+`schema/migrations/00XY_business_foundation_contract.sql`
+
+### Purpose
+
+Only once you’ve backfilled / stabilized semantics.
+
+**Actions**
+
+1. Validate `NOT VALID` constraints:
+
+```sql
+ALTER TABLE tenants VALIDATE CONSTRAINT tenants_billable_client_fk;
+ALTER TABLE tenants VALIDATE CONSTRAINT tenants_parent_tenant_fk;
+ALTER TABLE tenants VALIDATE CONSTRAINT tenants_tenant_type_chk;
+```
+
+2. Optional: enforce that every tenant has a billable root
+
+* **Don’t** do this until you’re ready; it can break existing tenants.
+* Expand-first approach would be:
+
+  * ensure backfill exists
+  * then:
+
+```sql
+ALTER TABLE tenants
+  ALTER COLUMN billable_client_id SET NOT NULL;
+```
+
+3. Optional: enforce tenant type NOT NULL
+
+```sql
+ALTER TABLE tenants
+  ALTER COLUMN tenant_type SET NOT NULL;
+```
+
+---
+
+# Phase-0 Invariants to add (schema-verifiable)
+
+These are Phase-0 safe because they check presence/constraints/triggers, not runtime behavior.
+
+### INV-BILL-01 Billing usage ledger exists + append-only
+
+Checks:
+
+* `billing_usage_events` exists
+* UPDATE/DELETE triggers exist OR privileges deny update/delete for runtime role
+* evidence includes list of triggers/privileges observed
+
+### INV-TEN-BILL-01 Tenant billable root hook exists
+
+Checks:
+
+* `tenants.billable_client_id` exists
+* FK exists (valid or not valid acceptable in Phase-0)
+* index exists
+
+### INV-TEN-HIER-01 Tenant hierarchy hook exists
+
+Checks:
+
+* `tenants.parent_tenant_id` exists
+* FK exists
+
+### INV-STITCH-01 Correlation stitching hook exists
+
+Checks:
+
+* correlation_id columns exist on ingress/outbox/attempts
+* indexes exist (or documented as roadmap if too early)
+
+### INV-BILL-SUBJECT-01 Billing event subject well-formed
+
+Checks:
+
+* subject columns exist
+* exactly-one (or <=1) check constraint exists
+* member_requires_tenant constraint exists
+
+---
+
+# Evidence expectations (Phase-0)
+
+Each verifier should emit evidence JSON that includes:
+
+* `status: PASS|FAIL|SKIPPED`
+* checked tables/columns/constraints/triggers
+* git sha + schema fingerprint
+* the exact SQL used for introspection (or a checksum of it)
+
+Example evidence artifact:
+
+* `evidence/phase0/business_foundation_hooks.json`
+
+---
+
+# Verification additions (how to check in Phase-0)
+
+Add a new verifier (Phase-0 safe):
+
+* `scripts/db/verify_business_foundation_hooks.sh`
+
+  * inspects `information_schema`, `pg_constraint`, `pg_trigger`, `pg_indexes`
+  * emits `evidence/phase0/business_foundation_hooks.json`
+
+Wire into:
+
+* `scripts/db/verify_invariants.sh`
+* `scripts/audit/run_invariants_fast_checks.sh` (optional if it’s quick)
+
+---
+
+## Notes on the “three-sleeve” model correctness
+
+* **Financial responsibility** is `billable_client_id`
+* **Operational responsibility** is `tenant_id` and `parent_tenant_id`
+* **Identity responsibility** is existing attestation identity: cert fingerprint + token jti + client_id (actor)
+* **Subject responsibility** is `subject_member_id` / `subject_client_id` (not “participant”)
+
+That’s clean, auditor-legible, and doesn’t conflict with your non-custodial stance.
+
+---
+
+If you want, I can turn this spec into:
+
+1. the **exact SQL migration files** (expand + contract) in your repo style, and
+2. the **verify script** that emits evidence with full checked inputs.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+I generated a **Phase-0 “Business Foundation Hooks”** migration + verifier, and wired it into your existing invariants flow.
+
+**Download:** [symphony_business_foundation_patch_bundle.zip](sandbox:/mnt/data/symphony_business_foundation_patch_bundle.zip)
+
+## What’s inside (files created/updated)
+
+### New
+
+* `schema/migrations/0020_business_foundation_hooks.sql`
+
+  * Adds:
+
+    * `public.billable_clients`
+    * `public.tenants.billable_client_id` + `public.tenants.parent_tenant_id`
+
+      * `billable_client_id` enforced for **new rows** via a `CHECK ... NOT VALID`
+    * `correlation_id` (+ `upstream_ref`, `nfs_sequence_ref`) on:
+
+      * `public.ingress_attestations`
+      * `public.payment_outbox_pending`
+      * `public.payment_outbox_attempts`
+    * `public.billing_usage_events` (append-only)
+    * `public.external_proofs` (append-only)
+    * shared `public.deny_append_only_mutation()` trigger function (ERRCODE `P9001`)
+* `scripts/db/verify_business_foundation_hooks.sh`
+
+  * Emits `evidence/phase0/business_foundation_hooks.json`
+  * Fails closed if any required structure/trigger/NOT NULL correlation hook is missing
+* `docs/PHASE0/BUSINESS_FOUNDATION_HOOKS.md`
+
+  * Human-readable spec for auditors + engineers
+
+### Updated
+
+* `scripts/db/verify_invariants.sh`
+
+  * Calls `bash scripts/db/verify_business_foundation_hooks.sh` (after tenant/member hooks)
+* `docs/invariants/INVARIANTS_MANIFEST.yml`
+
+  * Adds `INV-090` as **implemented**, pointing at the new verifier
+
+If you want, I can also output a **unified diff patch snippet** against your repo once you paste the current versions of `scripts/db/verify_invariants.sh` and `docs/invariants/INVARIANTS_MANIFEST.yml` (repomix can lag your working tree).

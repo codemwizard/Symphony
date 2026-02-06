@@ -2,7 +2,7 @@
 -- PostgreSQL database dump
 --
 
-\restrict zZ4gOuitbEQME1k6FfQS52An54P8bfmTlFs5vNzUJ4oiweeS5UnjU7S88jwFzDR
+\restrict EFWq0ohtsGwEgaXtgTx5uRiSzoaf3rX9H6Hr6aNCyGsXfOA9p3mDTwstec3AvpQ
 
 -- Dumped from database version 18.1 (Debian 18.1-1.pgdg13+2)
 -- Dumped by pg_dump version 18.1 (Debian 18.1-1.pgdg13+2)
@@ -175,6 +175,20 @@ CREATE FUNCTION public.complete_outbox_attempt(p_outbox_id uuid, p_lease_token u
     END IF;
   
     RETURN QUERY SELECT v_next_attempt_no, v_effective_state;
+  END;
+$$;
+
+
+--
+-- Name: deny_append_only_mutation(); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.deny_append_only_mutation() RETURNS trigger
+    LANGUAGE plpgsql
+    AS $$
+  BEGIN
+    RAISE EXCEPTION '% is append-only', TG_TABLE_NAME
+      USING ERRCODE = 'P0001';
   END;
 $$;
 
@@ -451,6 +465,93 @@ SET default_tablespace = '';
 SET default_table_access_method = heap;
 
 --
+-- Name: billable_clients; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.billable_clients (
+    billable_client_id uuid DEFAULT public.uuid_v7_or_random() NOT NULL,
+    legal_name text NOT NULL,
+    client_type text NOT NULL,
+    regulator_ref text,
+    status text DEFAULT 'ACTIVE'::text NOT NULL,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    CONSTRAINT billable_clients_client_type_check CHECK ((client_type = ANY (ARRAY['BANK'::text, 'MMO'::text, 'NGO'::text, 'GOV_PROGRAM'::text, 'COOP_FEDERATION'::text, 'ENTERPRISE'::text]))),
+    CONSTRAINT billable_clients_status_check CHECK ((status = ANY (ARRAY['ACTIVE'::text, 'SUSPENDED'::text, 'CLOSED'::text])))
+);
+
+
+--
+-- Name: billing_usage_events; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.billing_usage_events (
+    event_id uuid DEFAULT public.uuid_v7_or_random() NOT NULL,
+    occurred_at timestamp with time zone DEFAULT now() NOT NULL,
+    billable_client_id uuid NOT NULL,
+    tenant_id uuid,
+    client_id uuid,
+    subject_member_id uuid,
+    subject_client_id uuid,
+    correlation_id uuid,
+    event_type text NOT NULL,
+    units text NOT NULL,
+    quantity bigint NOT NULL,
+    metadata jsonb,
+    CONSTRAINT billing_usage_events_event_type_check CHECK ((event_type = ANY (ARRAY['EVIDENCE_BUNDLE'::text, 'CASE_PACK'::text, 'EXCEPTION_TRIAGE'::text, 'RETENTION_ANCHOR'::text, 'ESCROW_RELEASE'::text, 'DISPUTE_PACK'::text]))),
+    CONSTRAINT billing_usage_events_member_requires_tenant_chk CHECK (((subject_member_id IS NULL) OR (tenant_id IS NOT NULL))),
+    CONSTRAINT billing_usage_events_quantity_check CHECK ((quantity > 0)),
+    CONSTRAINT billing_usage_events_subject_zero_or_one_chk CHECK (((((subject_member_id IS NOT NULL))::integer + ((subject_client_id IS NOT NULL))::integer) <= 1)),
+    CONSTRAINT billing_usage_events_units_check CHECK ((units = ANY (ARRAY['count'::text, 'bytes'::text, 'seconds'::text, 'events'::text])))
+);
+
+
+--
+-- Name: evidence_pack_items; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.evidence_pack_items (
+    item_id uuid DEFAULT public.uuid_v7_or_random() NOT NULL,
+    pack_id uuid NOT NULL,
+    artifact_path text,
+    artifact_hash text NOT NULL,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    CONSTRAINT evidence_pack_items_path_or_hash_chk CHECK (((artifact_path IS NOT NULL) OR (artifact_hash IS NOT NULL)))
+);
+
+
+--
+-- Name: evidence_packs; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.evidence_packs (
+    pack_id uuid DEFAULT public.uuid_v7_or_random() NOT NULL,
+    pack_type text NOT NULL,
+    correlation_id uuid,
+    root_hash text,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    CONSTRAINT evidence_packs_pack_type_check CHECK ((pack_type = ANY (ARRAY['INSTRUCTION_BUNDLE'::text, 'INCIDENT_PACK'::text, 'DISPUTE_PACK'::text])))
+);
+
+
+--
+-- Name: external_proofs; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.external_proofs (
+    proof_id uuid DEFAULT public.uuid_v7_or_random() NOT NULL,
+    attestation_id uuid NOT NULL,
+    provider text NOT NULL,
+    request_hash text NOT NULL,
+    response_hash text NOT NULL,
+    provider_ref text,
+    verified_at timestamp with time zone,
+    expires_at timestamp with time zone,
+    metadata jsonb,
+    created_at timestamp with time zone DEFAULT now() NOT NULL
+);
+
+
+--
 -- Name: ingress_attestations; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -466,7 +567,12 @@ CREATE TABLE public.ingress_attestations (
     member_id uuid,
     participant_id text,
     cert_fingerprint_sha256 text,
-    token_jti_hash text
+    token_jti_hash text,
+    correlation_id uuid,
+    signatures jsonb DEFAULT '[]'::jsonb NOT NULL,
+    upstream_ref text,
+    downstream_ref text,
+    nfs_sequence_ref text
 );
 
 
@@ -507,6 +613,10 @@ CREATE TABLE public.payment_outbox_attempts (
     created_at timestamp with time zone DEFAULT now() NOT NULL,
     tenant_id uuid,
     member_id uuid,
+    correlation_id uuid,
+    upstream_ref text,
+    downstream_ref text,
+    nfs_sequence_ref text,
     CONSTRAINT ck_attempts_payload_is_object CHECK ((jsonb_typeof(payload) = 'object'::text)),
     CONSTRAINT payment_outbox_attempts_attempt_no_check CHECK ((attempt_no >= 1)),
     CONSTRAINT payment_outbox_attempts_latency_ms_check CHECK (((latency_ms IS NULL) OR (latency_ms >= 0)))
@@ -532,6 +642,10 @@ CREATE TABLE public.payment_outbox_pending (
     lease_token uuid,
     lease_expires_at timestamp with time zone,
     tenant_id uuid,
+    correlation_id uuid,
+    upstream_ref text,
+    downstream_ref text,
+    nfs_sequence_ref text,
     CONSTRAINT ck_pending_payload_is_object CHECK ((jsonb_typeof(payload) = 'object'::text)),
     CONSTRAINT payment_outbox_pending_attempt_count_check CHECK ((attempt_count >= 0))
 )
@@ -635,9 +749,51 @@ CREATE TABLE public.tenants (
     tenant_type text NOT NULL,
     status text DEFAULT 'ACTIVE'::text NOT NULL,
     created_at timestamp with time zone DEFAULT now() NOT NULL,
+    billable_client_id uuid,
+    parent_tenant_id uuid,
     CONSTRAINT tenants_status_check CHECK ((status = ANY (ARRAY['ACTIVE'::text, 'SUSPENDED'::text, 'CLOSED'::text]))),
     CONSTRAINT tenants_tenant_type_check CHECK ((tenant_type = ANY (ARRAY['NGO'::text, 'COOPERATIVE'::text, 'GOVERNMENT'::text, 'COMMERCIAL'::text])))
 );
+
+
+--
+-- Name: billable_clients billable_clients_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.billable_clients
+    ADD CONSTRAINT billable_clients_pkey PRIMARY KEY (billable_client_id);
+
+
+--
+-- Name: billing_usage_events billing_usage_events_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.billing_usage_events
+    ADD CONSTRAINT billing_usage_events_pkey PRIMARY KEY (event_id);
+
+
+--
+-- Name: evidence_pack_items evidence_pack_items_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.evidence_pack_items
+    ADD CONSTRAINT evidence_pack_items_pkey PRIMARY KEY (item_id);
+
+
+--
+-- Name: evidence_packs evidence_packs_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.evidence_packs
+    ADD CONSTRAINT evidence_packs_pkey PRIMARY KEY (pack_id);
+
+
+--
+-- Name: external_proofs external_proofs_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.external_proofs
+    ADD CONSTRAINT external_proofs_pkey PRIMARY KEY (proof_id);
 
 
 --
@@ -761,6 +917,14 @@ ALTER TABLE ONLY public.payment_outbox_attempts
 
 
 --
+-- Name: evidence_pack_items ux_evidence_pack_items_pack_hash; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.evidence_pack_items
+    ADD CONSTRAINT ux_evidence_pack_items_pack_hash UNIQUE (pack_id, artifact_hash);
+
+
+--
 -- Name: payment_outbox_pending ux_pending_idempotency; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -791,10 +955,38 @@ CREATE INDEX idx_attempts_outbox_id ON public.payment_outbox_attempts USING btre
 
 
 --
+-- Name: idx_billing_usage_events_correlation_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_billing_usage_events_correlation_id ON public.billing_usage_events USING btree (correlation_id);
+
+
+--
+-- Name: idx_evidence_packs_correlation_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_evidence_packs_correlation_id ON public.evidence_packs USING btree (correlation_id);
+
+
+--
+-- Name: idx_external_proofs_attestation_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_external_proofs_attestation_id ON public.external_proofs USING btree (attestation_id);
+
+
+--
 -- Name: idx_ingress_attestations_cert_fpr; Type: INDEX; Schema: public; Owner: -
 --
 
 CREATE INDEX idx_ingress_attestations_cert_fpr ON public.ingress_attestations USING btree (cert_fingerprint_sha256) WHERE (cert_fingerprint_sha256 IS NOT NULL);
+
+
+--
+-- Name: idx_ingress_attestations_correlation_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_ingress_attestations_correlation_id ON public.ingress_attestations USING btree (correlation_id) WHERE (correlation_id IS NOT NULL);
 
 
 --
@@ -819,6 +1011,13 @@ CREATE INDEX idx_ingress_attestations_received_at ON public.ingress_attestations
 
 
 --
+-- Name: idx_ingress_attestations_tenant_correlation; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_ingress_attestations_tenant_correlation ON public.ingress_attestations USING btree (tenant_id, correlation_id) WHERE (correlation_id IS NOT NULL);
+
+
+--
 -- Name: idx_ingress_attestations_tenant_received; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -826,10 +1025,38 @@ CREATE INDEX idx_ingress_attestations_tenant_received ON public.ingress_attestat
 
 
 --
+-- Name: idx_payment_outbox_attempts_correlation_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_payment_outbox_attempts_correlation_id ON public.payment_outbox_attempts USING btree (correlation_id) WHERE (correlation_id IS NOT NULL);
+
+
+--
+-- Name: idx_payment_outbox_attempts_tenant_correlation; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_payment_outbox_attempts_tenant_correlation ON public.payment_outbox_attempts USING btree (tenant_id, correlation_id) WHERE (correlation_id IS NOT NULL);
+
+
+--
+-- Name: idx_payment_outbox_pending_correlation_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_payment_outbox_pending_correlation_id ON public.payment_outbox_pending USING btree (correlation_id) WHERE (correlation_id IS NOT NULL);
+
+
+--
 -- Name: idx_payment_outbox_pending_due_claim; Type: INDEX; Schema: public; Owner: -
 --
 
 CREATE INDEX idx_payment_outbox_pending_due_claim ON public.payment_outbox_pending USING btree (next_attempt_at, lease_expires_at, created_at);
+
+
+--
+-- Name: idx_payment_outbox_pending_tenant_correlation; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_payment_outbox_pending_tenant_correlation ON public.payment_outbox_pending USING btree (tenant_id, correlation_id) WHERE (correlation_id IS NOT NULL);
 
 
 --
@@ -868,6 +1095,20 @@ CREATE INDEX idx_tenant_members_tenant ON public.tenant_members USING btree (ten
 
 
 --
+-- Name: idx_tenants_billable_client_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_tenants_billable_client_id ON public.tenants USING btree (billable_client_id);
+
+
+--
+-- Name: idx_tenants_parent_tenant_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_tenants_parent_tenant_id ON public.tenants USING btree (parent_tenant_id);
+
+
+--
 -- Name: idx_tenants_status; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -893,6 +1134,34 @@ CREATE UNIQUE INDEX ux_outbox_attempts_one_terminal_per_outbox ON public.payment
 --
 
 CREATE UNIQUE INDEX ux_policy_versions_single_active ON public.policy_versions USING btree ((1)) WHERE (status = 'ACTIVE'::public.policy_version_status);
+
+
+--
+-- Name: billing_usage_events trg_deny_billing_usage_events_mutation; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER trg_deny_billing_usage_events_mutation BEFORE DELETE OR UPDATE ON public.billing_usage_events FOR EACH ROW EXECUTE FUNCTION public.deny_append_only_mutation();
+
+
+--
+-- Name: evidence_pack_items trg_deny_evidence_pack_items_mutation; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER trg_deny_evidence_pack_items_mutation BEFORE DELETE OR UPDATE ON public.evidence_pack_items FOR EACH ROW EXECUTE FUNCTION public.deny_append_only_mutation();
+
+
+--
+-- Name: evidence_packs trg_deny_evidence_packs_mutation; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER trg_deny_evidence_packs_mutation BEFORE DELETE OR UPDATE ON public.evidence_packs FOR EACH ROW EXECUTE FUNCTION public.deny_append_only_mutation();
+
+
+--
+-- Name: external_proofs trg_deny_external_proofs_mutation; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER trg_deny_external_proofs_mutation BEFORE DELETE OR UPDATE ON public.external_proofs FOR EACH ROW EXECUTE FUNCTION public.deny_append_only_mutation();
 
 
 --
@@ -928,6 +1197,62 @@ CREATE TRIGGER trg_deny_revoked_tokens_mutation BEFORE DELETE OR UPDATE ON publi
 --
 
 CREATE TRIGGER trg_ingress_member_tenant_match BEFORE INSERT ON public.ingress_attestations FOR EACH ROW EXECUTE FUNCTION public.enforce_member_tenant_match();
+
+
+--
+-- Name: billing_usage_events billing_usage_events_billable_client_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.billing_usage_events
+    ADD CONSTRAINT billing_usage_events_billable_client_id_fkey FOREIGN KEY (billable_client_id) REFERENCES public.billable_clients(billable_client_id);
+
+
+--
+-- Name: billing_usage_events billing_usage_events_client_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.billing_usage_events
+    ADD CONSTRAINT billing_usage_events_client_id_fkey FOREIGN KEY (client_id) REFERENCES public.tenant_clients(client_id);
+
+
+--
+-- Name: billing_usage_events billing_usage_events_subject_client_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.billing_usage_events
+    ADD CONSTRAINT billing_usage_events_subject_client_id_fkey FOREIGN KEY (subject_client_id) REFERENCES public.tenant_clients(client_id);
+
+
+--
+-- Name: billing_usage_events billing_usage_events_subject_member_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.billing_usage_events
+    ADD CONSTRAINT billing_usage_events_subject_member_id_fkey FOREIGN KEY (subject_member_id) REFERENCES public.tenant_members(member_id);
+
+
+--
+-- Name: billing_usage_events billing_usage_events_tenant_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.billing_usage_events
+    ADD CONSTRAINT billing_usage_events_tenant_id_fkey FOREIGN KEY (tenant_id) REFERENCES public.tenants(tenant_id);
+
+
+--
+-- Name: evidence_pack_items evidence_pack_items_pack_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.evidence_pack_items
+    ADD CONSTRAINT evidence_pack_items_pack_id_fkey FOREIGN KEY (pack_id) REFERENCES public.evidence_packs(pack_id);
+
+
+--
+-- Name: external_proofs external_proofs_attestation_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.external_proofs
+    ADD CONSTRAINT external_proofs_attestation_id_fkey FOREIGN KEY (attestation_id) REFERENCES public.ingress_attestations(attestation_id);
 
 
 --
@@ -987,8 +1312,24 @@ ALTER TABLE ONLY public.tenant_members
 
 
 --
+-- Name: tenants tenants_billable_client_fk; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.tenants
+    ADD CONSTRAINT tenants_billable_client_fk FOREIGN KEY (billable_client_id) REFERENCES public.billable_clients(billable_client_id) NOT VALID;
+
+
+--
+-- Name: tenants tenants_parent_tenant_fk; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.tenants
+    ADD CONSTRAINT tenants_parent_tenant_fk FOREIGN KEY (parent_tenant_id) REFERENCES public.tenants(tenant_id) NOT VALID;
+
+
+--
 -- PostgreSQL database dump complete
 --
 
-\unrestrict zZ4gOuitbEQME1k6FfQS52An54P8bfmTlFs5vNzUJ4oiweeS5UnjU7S88jwFzDR
+\unrestrict EFWq0ohtsGwEgaXtgTx5uRiSzoaf3rX9H6Hr6aNCyGsXfOA9p3mDTwstec3AvpQ
 

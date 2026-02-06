@@ -34,3 +34,5 @@ notes: ''
 client: codex_cli
 assigned_agent: platform
 model: <UNASSIGNED>
+implementation_plan: docs/plans/phase0/TSK-P0-044/PLAN.md
+implementation_log: docs/plans/phase0/TSK-P0-044/EXEC_LOG.md

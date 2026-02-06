@@ -3,7 +3,7 @@ set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 MANIFEST="$ROOT_DIR/docs/invariants/INVARIANTS_MANIFEST.yml"
-ADR="$ROOT_DIR/docs/architecture/adrs/ADR-0008-proxy-resolution-strategy.md"
+ADR="$ROOT_DIR/docs/decisions/ADR-0008-proxy-resolution-strategy.md"
 SCHEMA_DOC="$ROOT_DIR/docs/architecture/schema/proxy_resolution_schema.md"
 EVIDENCE_DIR="$ROOT_DIR/evidence/phase0"
 EVIDENCE_FILE="$EVIDENCE_DIR/proxy_resolution_invariant.json"

@@ -36,3 +36,5 @@ notes: Verifier proof artifact is compliance_manifest_verify.json.
 client: codex_cli
 assigned_agent: security_guardian
 model: <UNASSIGNED>
+implementation_plan: docs/plans/phase0/TSK-P0-054_compliance_verifier/PLAN.md
+implementation_log: docs/plans/phase0/TSK-P0-054_compliance_verifier/EXEC_LOG.md

@@ -10,7 +10,7 @@ We will rebaseline the schema to a day-zero snapshot that already includes tenan
 - **Governance preserved**: We keep lock-risk linting strict and maintain allowlisted exceptions for historical migrations.
 
 ## ADR Reference
-- `docs/architecture/adrs/ADR-0011-rebaseline-dayzero-schema.md`
+- `docs/decisions/ADR-0011-rebaseline-dayzero-schema.md`
 
 ## Implementation Plan
 1) Generate a baseline snapshot and canonicalized hash:

@@ -1,6 +1,6 @@
 phase: '0'
 task_id: TSK-P0-069
-title: "Extend contract evidence status tests for YAML parse failures"
+title: Extend contract evidence status tests for YAML parse failures
 owner_role: SECURITY_GUARDIAN
 status: completed
 depends_on:
@@ -12,11 +12,11 @@ touches:
 invariants:
 - INV-080
 work:
-- "Add a regression case that triggers a YAML parse error."
-- "Assert evidence is written with contract_parse_failed and exit non-zero."
+- Add a regression case that triggers a YAML parse error.
+- Assert evidence is written with contract_parse_failed and exit non-zero.
 acceptance_criteria:
-- "Parse-error case fails closed and writes evidence."
-- "Existing tests continue to pass."
+- Parse-error case fails closed and writes evidence.
+- Existing tests continue to pass.
 verification:
 - scripts/audit/tests/test_phase0_contract_checker.sh
 evidence:
@@ -31,3 +31,5 @@ notes: ''
 client: codex_cli
 assigned_agent: security_guardian
 model: <UNASSIGNED>
+implementation_plan: docs/plans/phase0/TSK-P0-069_contract_parse_test/PLAN.md
+implementation_log: docs/plans/phase0/TSK-P0-069_contract_parse_test/EXEC_LOG.md

@@ -32,6 +32,7 @@ command -v psql >/dev/null 2>&1 || { echo "❌ Error: psql not found in PATH"; e
 [[ -f "$SCRIPT_DIR/ci_invariant_gate.sql" ]] || { echo "❌ Error: missing ci_invariant_gate.sql"; exit 2; }
 [[ -x "$SCRIPT_DIR/verify_outbox_pending_indexes.sh" ]] || { echo "❌ Error: missing verify_outbox_pending_indexes.sh"; exit 2; }
 [[ -x "$SCRIPT_DIR/verify_outbox_mvcc_posture.sh" ]] || { echo "❌ Error: missing verify_outbox_mvcc_posture.sh"; exit 2; }
+[[ -x "$SCRIPT_DIR/verify_business_foundation_hooks.sh" ]] || { echo "❌ Error: missing verify_business_foundation_hooks.sh"; exit 2; }
 [[ -x "$REPO_ROOT/schema/seeds/dev/seed_policy_from_file.sh" ]] || { echo "❌ Error: missing seed_policy_from_file.sh"; exit 2; }
 
 # --- 2. Execution ---
@@ -219,6 +220,14 @@ if [[ -x "scripts/db/verify_tenant_member_hooks.sh" || -f "scripts/db/verify_ten
   bash scripts/db/verify_tenant_member_hooks.sh
 else
   echo "ERROR: scripts/db/verify_tenant_member_hooks.sh not found"
+  fail=1
+fi
+
+echo "🔎 Verifying business foundation hooks..."
+if [[ -x "scripts/db/verify_business_foundation_hooks.sh" || -f "scripts/db/verify_business_foundation_hooks.sh" ]]; then
+  bash scripts/db/verify_business_foundation_hooks.sh
+else
+  echo "ERROR: scripts/db/verify_business_foundation_hooks.sh not found"
   fail=1
 fi
 

@@ -20,6 +20,13 @@ EXPECTED_PYYAML_VERSION="${PYYAML_VERSION:-6.0.1}"
 EXPECTED_JSONSCHEMA_VERSION="${JSONSCHEMA_VERSION:-4.23.0}"
 EXPECTED_RIPGREP_VERSION="${RIPGREP_VERSION:-14.1.0}"
 
+# Prefer repo-local venv python when present (for local/CI parity).
+PYTHON_BIN="python3"
+if [[ -x "$ROOT_DIR/.venv/bin/python3" ]]; then
+  PYTHON_BIN="$ROOT_DIR/.venv/bin/python3"
+fi
+export PYTHON_BIN
+
 rg_present=0
 rg_version=""
 if command -v rg >/dev/null 2>&1; then
@@ -34,7 +41,7 @@ EVIDENCE_FILE="$ROOT_DIR/evidence/phase0/ci_toolchain.json"
 export EVIDENCE_FILE
 mkdir -p "$(dirname "$EVIDENCE_FILE")"
 
-python3 - <<'PY'
+"$PYTHON_BIN" - <<'PY'
 import json
 import os
 from pathlib import Path

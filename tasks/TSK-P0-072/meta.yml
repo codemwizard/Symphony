@@ -1,0 +1,35 @@
+phase: '0'
+task_id: TSK-P0-072
+title: "Plan/log verifier (fail-closed)"
+owner_role: ARCHITECT
+status: completed
+depends_on:
+- TSK-P0-071
+touches:
+- scripts/audit/verify_task_plans_present.sh
+- tasks/TSK-P0-072/meta.yml
+invariants: []
+work:
+- "Implement verifier that enforces plan/log presence for in_progress/completed tasks."
+- "Require EXEC_LOG to reference PLAN and both files to mention task_id."
+- "Require completed tasks to include a Final summary."
+- "Emit evidence to evidence/phase0/task_plans_present.json."
+acceptance_criteria:
+- "Verifier fails when required plan/log files are missing."
+- "Verifier emits evidence even on failure."
+verification:
+- scripts/audit/verify_task_plans_present.sh
+evidence:
+- evidence/phase0/task_plans_present.json
+failure_modes:
+- Evidence file missing.
+- Plan/log requirements not enforced.
+must_read:
+- docs/tasks/TASK_META_SCHEMA.md
+- docs/operations/STYLE_GUIDE.md
+notes: ''
+client: codex_cli
+assigned_agent: architect
+model: <UNASSIGNED>
+implementation_plan: docs/plans/phase0/TSK-P0-072_plan_log_verifier/PLAN.md
+implementation_log: docs/plans/phase0/TSK-P0-072_plan_log_verifier/EXEC_LOG.md
