@@ -9,6 +9,11 @@ EVIDENCE_DIR="$ROOT/evidence/phase0"
 OUT="$EVIDENCE_DIR/outbox_pending_indexes.json"
 
 mkdir -p "$EVIDENCE_DIR"
+source "$ROOT/scripts/lib/evidence.sh"
+EVIDENCE_TS="$(evidence_now_utc)"
+EVIDENCE_GIT_SHA="$(git_sha)"
+EVIDENCE_SCHEMA_FP="$(schema_fingerprint)"
+export EVIDENCE_TS EVIDENCE_GIT_SHA EVIDENCE_SCHEMA_FP
 
 EXPECTED_INDEX="idx_payment_outbox_pending_due_claim"
 EXPECTED_COLS="next_attempt_at,lease_expires_at,created_at"
@@ -56,6 +61,11 @@ import os
 from pathlib import Path
 
 out = {
+    "check_id": "DB-OUTBOX-PENDING-INDEXES",
+    "timestamp_utc": os.environ.get("EVIDENCE_TS"),
+    "git_sha": os.environ.get("EVIDENCE_GIT_SHA"),
+    "schema_fingerprint": os.environ.get("EVIDENCE_SCHEMA_FP"),
+    "status": "PASS" if os.environ.get("OK") == "1" else "FAIL",
     "ok": os.environ.get("OK") == "1",
     "expected_index": os.environ.get("EXPECTED_INDEX"),
     "expected_columns": os.environ.get("EXPECTED_COLS"),

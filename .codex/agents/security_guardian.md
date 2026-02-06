@@ -16,6 +16,11 @@ Allowed paths (from .codex/rules/03-security-contract.md):
 - docs/security/**
 - .github/workflows/**
 - CI workflows related to gates
+- infra/**
+- src/**
+- packages/**
+- Dockerfile
+- dependency manifests (package.json, package-lock.json, global.json) if present
 
 Must:
 - keep SECURITY DEFINER search_path hardening intact

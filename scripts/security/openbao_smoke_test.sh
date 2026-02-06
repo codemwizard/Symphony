@@ -9,6 +9,11 @@ AUDIT_EVIDENCE_FILE="$EVIDENCE_DIR/openbao_audit_log.json"
 BAO_ADDR="http://127.0.0.1:8200"
 
 mkdir -p "$EVIDENCE_DIR"
+source "$ROOT_DIR/scripts/lib/evidence.sh"
+EVIDENCE_TS="$(evidence_now_utc)"
+EVIDENCE_GIT_SHA="$(git_sha)"
+EVIDENCE_SCHEMA_FP="$(schema_fingerprint)"
+export EVIDENCE_TS EVIDENCE_GIT_SHA EVIDENCE_SCHEMA_FP
 
 ROLE_ID_FILE="$STATE_DIR/role_id"
 SECRET_ID_FILE="$STATE_DIR/secret_id"
@@ -40,9 +45,13 @@ set -e
 python3 - <<PY
 import json
 out = {
+  "check_id": "SEC-OPENBAO-SMOKE",
+  "timestamp_utc": "${EVIDENCE_TS}",
+  "git_sha": "${EVIDENCE_GIT_SHA}",
+  "schema_fingerprint": "${EVIDENCE_SCHEMA_FP}",
   "allowed_read": "$ALLOWED",
   "forbidden_status": $FORBIDDEN_STATUS,
-  "status": "pass" if "$ALLOWED" == "ok" and $FORBIDDEN_STATUS != 0 else "fail",
+  "status": "PASS" if "$ALLOWED" == "ok" and $FORBIDDEN_STATUS != 0 else "FAIL",
 }
 with open("$EVIDENCE_FILE", "w", encoding="utf-8") as f:
   json.dump(out, f, indent=2)
@@ -59,7 +68,11 @@ python3 - <<PY
 import json
 from pathlib import Path
 out = {
-  "status": "pass" if "$AUDIT_PRESENT" == "true" else "fail",
+  "check_id": "SEC-OPENBAO-AUDIT",
+  "timestamp_utc": "${EVIDENCE_TS}",
+  "git_sha": "${EVIDENCE_GIT_SHA}",
+  "schema_fingerprint": "${EVIDENCE_SCHEMA_FP}",
+  "status": "PASS" if "$AUDIT_PRESENT" == "true" else "FAIL",
   "audit_log_bytes": int("$AUDIT_BYTES"),
   "audit_log_present": "$AUDIT_PRESENT" == "true",
   "path": "/openbao/audit.log"

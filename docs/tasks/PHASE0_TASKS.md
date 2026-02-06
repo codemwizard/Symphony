@@ -1103,3 +1103,258 @@ Evidence Artifact(s):
 Failure Modes:
 - Evidence file missing.
 - Baseline strategy flags missing in migrate.sh.
+
+TASK ID: TSK-P0-056
+Title: Evidence schema canonicalization
+Owner Role: ARCHITECT
+Depends On: none
+Touches: `docs/architecture/evidence_schema.json`, `scripts/audit/validate_evidence_schema.sh`, `docs/PHASE0/phase0_contract.yml`, `tasks/TSK-P0-056/meta.yml`
+Invariant(s): NEW INV-077 (Evidence schema normalized)
+Work:
+- Require evidence fields: `check_id`, `timestamp_utc`, `git_sha`, `status` (+ optional `schema_fingerprint`).
+- Treat `SKIPPED` as first-class status.
+- Validate all `evidence/phase0/*.json` and fail on malformed evidence.
+Acceptance Criteria:
+- Evidence schema requires the canonical fields.
+- Validator fails on any malformed evidence JSON.
+Verification Commands:
+- `scripts/audit/validate_evidence_schema.sh`
+Evidence Artifact(s):
+- `./evidence/phase0/evidence_validation.json`
+Failure Modes:
+- Evidence file missing.
+- Evidence validation missing or malformed.
+
+TASK ID: TSK-P0-057
+Title: YAML normalization + meta schema enforcement
+Owner Role: ARCHITECT
+Depends On: TSK-P0-056
+Touches: `tasks/**/meta.yml`, `tasks/_template/meta.yml`, `docs/operations/STYLE_GUIDE.md`, `scripts/audit/lint_yaml_conventions.sh`, `tasks/TSK-P0-057/meta.yml`
+Invariant(s): NEW INV-078 (YAML conventions enforced)
+Work:
+- Convert YAML keys to `lower_snake_case` across tasks/docs/.github.
+- Enforce canonical meta schema (arrays vs strings).
+- Forbid mixed key variants (Depends On vs depends_on).
+Acceptance Criteria:
+- YAML lint passes with no key violations.
+- Task metas conform to canonical schema.
+Verification Commands:
+- `scripts/audit/lint_yaml_conventions.sh`
+Evidence Artifact(s):
+- `./evidence/phase0/yaml_conventions_lint.json`
+Failure Modes:
+- Evidence file missing.
+- Snake_case violations or schema mismatch.
+
+TASK ID: TSK-P0-058
+Title: CI toolchain pinning (PyYAML + ripgrep)
+Owner Role: SECURITY_GUARDIAN
+Depends On: TSK-P0-057
+Touches: `.github/workflows/invariants.yml`, `scripts/audit/ci_toolchain_versions.env`, `scripts/audit/verify_ci_toolchain.sh`, `scripts/audit/run_invariants_fast_checks.sh`, `tasks/TSK-P0-058/meta.yml`
+Invariant(s): NEW INV-079 (CI toolchain pinned)
+Work:
+- Install pinned PyYAML and ripgrep in CI.
+- Add verifier to assert toolchain versions.
+Acceptance Criteria:
+- CI logs show pinned tool versions.
+- Verifier emits evidence on pass/fail.
+Verification Commands:
+- `scripts/audit/verify_ci_toolchain.sh`
+Evidence Artifact(s):
+- `./evidence/phase0/ci_toolchain.json`
+Failure Modes:
+- Evidence file missing.
+- Tools missing or version mismatch.
+
+TASK ID: TSK-P0-060
+Title: Contract semantics PASS/SKIPPED (gate-scoped)
+Owner Role: ARCHITECT
+Depends On: TSK-P0-051
+Touches: `docs/PHASE0/phase0_contract.yml`, `scripts/audit/verify_phase0_contract_evidence_status.sh`, `tasks/TSK-P0-060/meta.yml`
+Invariant(s): NEW INV-080 (Contract evidence semantics enforced)
+Work:
+- Update contract rows to reference gate IDs (not evidence paths).
+- Enforce: completed ⇒ PASS; not completed ⇒ SKIPPED or PASS.
+Acceptance Criteria:
+- Contract validator passes with new semantics.
+- Verifier emits evidence on pass/fail.
+Verification Commands:
+- `scripts/audit/verify_phase0_contract_evidence_status.sh`
+Evidence Artifact(s):
+- `./evidence/phase0/phase0_contract_evidence_status.json`
+Failure Modes:
+- Evidence file missing.
+- Contract semantics violated or evidence missing.
+
+TASK ID: TSK-P0-061
+Title: Pre‑CI/CI execution order alignment
+Owner Role: ARCHITECT
+Depends On: TSK-P0-060
+Touches: `scripts/dev/pre_ci.sh`, `.github/workflows/invariants.yml`, `tasks/TSK-P0-061/meta.yml`
+Invariant(s): NEW INV-081 (Execution order enforced)
+Work:
+- Ensure ordered checks: YAML lint → control-plane drift → plane checks → evidence schema validate → contract check.
+- Make pre-CI and CI sequences identical.
+Acceptance Criteria:
+- Pre-CI and CI run the same ordered checks.
+- Evidence emitted for order validation.
+Verification Commands:
+- `scripts/audit/verify_ci_order.sh`
+Evidence Artifact(s):
+- `./evidence/phase0/ci_order.json`
+Failure Modes:
+- Evidence file missing.
+- Order drift between pre-CI and CI.
+
+TASK ID: TSK-P0-062
+Title: Normalize legacy task metas to canonical schema
+Owner Role: ARCHITECT
+Depends On: TSK-P0-057
+Touches: `tasks/TSK-P0-050/meta.yml`, `tasks/TSK-P0-051/meta.yml`, `tasks/TSK-P0-052/meta.yml`, `tasks/TSK-P0-053/meta.yml`, `tasks/TSK-P0-054/meta.yml`, `tasks/TSK-P0-055/meta.yml`, `tasks/TSK-P0-062/meta.yml`
+Invariant(s): NEW INV-082 (Task meta schema consistency)
+Work:
+- Convert legacy task metas to lower_snake_case keys and canonical schema.
+- Remove duplicate fields and keep single source of truth.
+- Ensure evidence paths are gate-scoped.
+Acceptance Criteria:
+- Legacy task metas match canonical schema.
+- YAML conventions lint passes.
+Verification Commands:
+- `scripts/audit/lint_yaml_conventions.sh`
+Evidence Artifact(s):
+- `./evidence/phase0/yaml_conventions_lint.json`
+Failure Modes:
+- Evidence file missing.
+- Snake_case violations or schema mismatch in legacy metas.
+
+TASK ID: TSK-P0-050
+Title: Publish Three‑Pillar control‑plane model + execution guarantee
+Owner Role: ARCHITECT
+Depends On: TSK-P0-037
+Touches: `docs/security/THREE_PILLARS_SECURITY.md`, `scripts/audit/verify_three_pillars_doc.sh`, `docs/invariants/INVARIANTS_MANIFEST.yml`, `docs/PHASE0/phase0_contract.yml`, `tasks/TSK-P0-050/meta.yml`
+Invariant(s): NEW INV-071 (Three‑Pillar control‑plane model documented)
+Work:
+- Document the Three‑Pillar model, current implementation, gaps, and proposed improvements.
+- Add execution guarantee: pre‑CI + CI enforcement (not post‑task only).
+- Add a verifier that asserts required sections exist and emits evidence.
+- Register INV‑071 in the manifest and contract.
+Acceptance Criteria:
+- Document exists with required sections (Current, Weaknesses, Proposed, Execution Guarantee).
+- Verifier emits evidence on pass/fail.
+Verification Commands:
+- `scripts/audit/verify_three_pillars_doc.sh`
+Evidence Artifact(s):
+- `./evidence/phase0/three_pillars_doc.json`
+Failure Modes:
+- Evidence file missing.
+- Document missing required sections.
+
+TASK ID: TSK-P0-051
+Title: Define control planes + drift checker
+Owner Role: ARCHITECT
+Depends On: TSK-P0-050
+Touches: `docs/control_planes/CONTROL_PLANES.yml`, `scripts/audit/verify_control_planes_drift.sh`, `scripts/dev/pre_ci.sh`, `.github/workflows/invariants.yml`, `docs/invariants/INVARIANTS_MANIFEST.yml`, `docs/PHASE0/phase0_contract.yml`, `tasks/TSK-P0-051/meta.yml`
+Invariant(s): NEW INV-072 (Control‑plane drift prevented)
+Work:
+- Create CONTROL_PLANES.yml (Security / Integrity / Governance ownership, scope, required gates).
+- Implement drift verifier (ensures gates exist, evidence paths match wrappers).
+- Wire into pre‑CI and CI (fail‑closed).
+- Register INV‑072 and evidence path in manifest + contract.
+Acceptance Criteria:
+- CONTROL_PLANES.yml exists and is parseable.
+- Drift checker fails on missing gates/evidence mismatch.
+- Evidence emitted on pass/fail.
+Verification Commands:
+- `scripts/audit/verify_control_planes_drift.sh`
+Evidence Artifact(s):
+- `./evidence/phase0/control_planes_drift.json`
+Failure Modes:
+- Evidence file missing.
+- Control‑plane gate mismatch or missing script.
+
+TASK ID: TSK-P0-052
+Title: Expand Security plane guardrails (infra/deps/src)
+Owner Role: SECURITY_GUARDIAN
+Depends On: TSK-P0-051
+Touches: `scripts/security/scan_secrets.sh`, `scripts/security/dotnet_dependency_audit.sh`, `scripts/security/lint_secure_config.sh`, `scripts/security/lint_insecure_patterns.sh`, `scripts/audit/run_security_fast_checks.sh`, `.github/workflows/invariants.yml`, `docs/PHASE0/phase0_contract.yml`, `tasks/TSK-P0-052/meta.yml`
+Invariant(s): NEW INV-073 (Security control‑plane baseline enforced)
+Work:
+- Add secrets scan (fail‑closed, evidence on pass/fail).
+- Add .NET dependency audit (no npm; evidence on pass/fail).
+- Add secure config lint for infra/workflows.
+- Add static insecure‑pattern lint for src/.
+- Wire into fast security checks + CI.
+- Register INV‑073 and evidence paths in contract.
+Acceptance Criteria:
+- All new scripts emit evidence under `./evidence/phase0/`.
+- CI runs the checks and fails on violations.
+Verification Commands:
+- `scripts/audit/run_security_fast_checks.sh`
+Evidence Artifact(s):
+- `./evidence/phase0/security_secrets_scan.json`
+- `./evidence/phase0/security_dotnet_deps_audit.json`
+- `./evidence/phase0/security_secure_config_lint.json`
+- `./evidence/phase0/security_insecure_patterns.json`
+Failure Modes:
+- Evidence file missing.
+- Any guardrail violation must fail the job.
+
+TASK ID: TSK-P0-053
+Title: Expand compliance mapping (PCI/NIST/OWASP/ISO)
+Owner Role: COMPLIANCE_MAPPER
+Depends On: TSK-P0-051
+Touches: `docs/security/SECURITY_MANIFEST.yml`, `docs/architecture/COMPLIANCE_MAP.md`, `tasks/TSK-P0-053/meta.yml`
+Invariant(s): NEW INV-074 (Compliance mapping maintained)
+Work:
+- Add mappings for PCI DSS v4.0, NIST CSF/800‑53, OWASP ASVS, ISO‑20022, ISO‑27001/27002.
+- Reference evidence artifacts and responsible control planes.
+Acceptance Criteria:
+- Mapping covers each required standard with control references.
+- No duplicate/ambiguous control IDs.
+Verification Commands:
+- `scripts/audit/verify_compliance_manifest.sh`
+Evidence Artifact(s):
+- `./evidence/phase0/compliance_manifest.json`
+Failure Modes:
+- Evidence file missing.
+- Missing standard or unmapped control.
+
+TASK ID: TSK-P0-054
+Title: Compliance manifest verifier + CI wiring
+Owner Role: SECURITY_GUARDIAN
+Depends On: TSK-P0-053
+Touches: `scripts/audit/verify_compliance_manifest.sh`, `.github/workflows/invariants.yml`, `docs/invariants/INVARIANTS_MANIFEST.yml`, `docs/PHASE0/phase0_contract.yml`, `tasks/TSK-P0-054/meta.yml`
+Invariant(s): NEW INV-075 (Compliance manifest verified)
+Work:
+- Implement compliance manifest verifier (fails closed, emits evidence on pass/fail).
+- Wire into CI (mechanical invariants job).
+- Register INV‑075 + evidence path.
+Acceptance Criteria:
+- Verifier fails on missing standards or evidence references.
+- Evidence emitted under `./evidence/phase0/`.
+Verification Commands:
+- `scripts/audit/verify_compliance_manifest.sh`
+Evidence Artifact(s):
+- `./evidence/phase0/compliance_manifest.json`
+Failure Modes:
+- Evidence file missing.
+- Compliance mapping incomplete or malformed.
+
+TASK ID: TSK-P0-055
+Title: Align agent scopes with control planes
+Owner Role: ARCHITECT
+Depends On: TSK-P0-051
+Touches: `AGENTS.md`, `.codex/agents/security_guardian.md`, `.codex/agents/invariants_curator.md`, `.codex/agents/compliance_mapper.md`, `tasks/TSK-P0-055/meta.yml`
+Invariant(s): NEW INV-076 (Agent scope aligned to control planes)
+Work:
+- Update agent scopes to match CONTROL_PLANES.yml (infra/**, dependency manifests, src/** for Security).
+- Ensure Compliance agent has read‑only access to evidence outputs in docs.
+Acceptance Criteria:
+- Agent scopes match control‑plane ownership and scope.
+Verification Commands:
+- `scripts/audit/verify_control_planes_drift.sh`
+Evidence Artifact(s):
+- `./evidence/phase0/control_planes_drift.json`
+Failure Modes:
+- Evidence file missing.
+- Agent scope conflicts with control plane definitions.

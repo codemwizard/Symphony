@@ -7,6 +7,11 @@ EVIDENCE_DIR="$ROOT_DIR/evidence/phase0"
 EVIDENCE_FILE="$EVIDENCE_DIR/task_evidence_contract.json"
 
 mkdir -p "$EVIDENCE_DIR"
+source "$ROOT_DIR/scripts/lib/evidence.sh"
+EVIDENCE_TS="$(evidence_now_utc)"
+EVIDENCE_GIT_SHA="$(git_sha)"
+EVIDENCE_SCHEMA_FP="$(schema_fingerprint)"
+export EVIDENCE_TS EVIDENCE_GIT_SHA EVIDENCE_SCHEMA_FP
 
 if [[ ! -f "$TASKS_DOC" ]]; then
   echo "Missing tasks doc: $TASKS_DOC" >&2
@@ -53,7 +58,11 @@ for block in blocks:
             issues.append(f"{task_id}: missing Verification Commands section")
 
 out = {
-    "status": "fail" if issues else "pass",
+    "check_id": "TASK-EVIDENCE-CONTRACT",
+    "timestamp_utc": os.environ.get("EVIDENCE_TS"),
+    "git_sha": os.environ.get("EVIDENCE_GIT_SHA"),
+    "schema_fingerprint": os.environ.get("EVIDENCE_SCHEMA_FP"),
+    "status": "FAIL" if issues else "PASS",
     "checked_tasks": checked,
     "issues": issues,
 }

@@ -7,6 +7,11 @@ EVIDENCE_DIR="$ROOT_DIR/evidence/phase0"
 EVIDENCE_OUT="$EVIDENCE_DIR/sqlstate_map_drift.json"
 
 mkdir -p "$EVIDENCE_DIR"
+source "$ROOT_DIR/scripts/lib/evidence.sh"
+EVIDENCE_TS="$(evidence_now_utc)"
+EVIDENCE_GIT_SHA="$(git_sha)"
+EVIDENCE_SCHEMA_FP="$(schema_fingerprint)"
+export EVIDENCE_TS EVIDENCE_GIT_SHA EVIDENCE_SCHEMA_FP
 
 ROOT_DIR="$ROOT_DIR" MAP_PATH="$MAP_PATH" EVIDENCE_OUT="$EVIDENCE_OUT" python3 - <<'PY'
 import json
@@ -14,7 +19,6 @@ import os
 import re
 import subprocess
 from pathlib import Path
-from datetime import datetime, timezone
 
 root = Path(os.environ["ROOT_DIR"])
 map_path = Path(os.environ["MAP_PATH"])
@@ -30,11 +34,7 @@ details = {
     "unused_codes": [],
 }
 
-def git_sha():
-    try:
-        return subprocess.check_output(["git", "rev-parse", "HEAD"], text=True).strip()
-    except Exception:
-        return "unknown"
+# git_sha provided by environment
 
 # Load map (JSON-compatible YAML)
 if not map_path.exists():
@@ -130,11 +130,11 @@ if details["missing_codes"] or details["invalid_entries"] or errors:
     errors.append("sqlstate_map_drift")
 
 result = {
-    "task_id": "TSK-P0-038",
-    "check": "sqlstate_map_drift",
-    "result": "pass" if not errors else "fail",
-    "timestamp_utc": datetime.now(timezone.utc).isoformat(),
-    "git_sha": git_sha(),
+    "check_id": "SQLSTATE-MAP-DRIFT",
+    "timestamp_utc": os.environ.get("EVIDENCE_TS"),
+    "git_sha": os.environ.get("EVIDENCE_GIT_SHA"),
+    "schema_fingerprint": os.environ.get("EVIDENCE_SCHEMA_FP"),
+    "status": "PASS" if not errors else "FAIL",
     "details": details,
 }
 

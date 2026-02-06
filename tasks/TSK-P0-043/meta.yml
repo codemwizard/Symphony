@@ -1,39 +1,37 @@
-phase: "0"
-task_id: "TSK-P0-043"
-title: "Implement tenant/member verifier + SQLSTATE map updates"
-owner_role: "DB_FOUNDATION"
-Depends On: TSK-P0-041
-Touches:
-  - "scripts/db/verify_invariants.sh"
-  - "scripts/db/verify_tenant_member_hooks.sh"
-  - "docs/contracts/sqlstate_map.yml"
-  - "tasks/TSK-P0-043/meta.yml"
-Invariant(s): "INV-062..INV-066"
-Work:
-  - "Add verifier script for tenant/member hooks (schema + trigger checks) and emit evidence."
-  - "Wire verifier into db invariants."
-  - "Add P7201/P7202 to sqlstate_map.yml."
-Acceptance Criteria:
-  - "Verifier emits tenant_member_hooks.json even on failure."
-  - "DB invariants include tenant/member checks."
-  - "SQLSTATE map includes P7201/P7202."
-Verification Commands:
-  - "scripts/db/verify_invariants.sh"
-Evidence Artifact(s):
-  - "./evidence/phase0/tenant_member_hooks.json"
-Failure Modes:
-  - "Evidence file missing."
-  - "SQLSTATE map drift."
-must_read:
-  - "docs/invariants/INVARIANTS_MANIFEST.yml"
-  - "scripts/db/verify_invariants.sh"
-  - "scripts/db/ci_invariant_gate.sql"
-evidence:
-  - "./evidence/phase0/tenant_member_hooks.json"
+phase: '0'
+task_id: TSK-P0-043
+title: Implement tenant/member verifier + SQLSTATE map updates
+owner_role: DB_FOUNDATION
+status: planned
+depends_on:
+- TSK-P0-041
+touches:
+- scripts/db/verify_invariants.sh
+- scripts/db/verify_tenant_member_hooks.sh
+- docs/contracts/sqlstate_map.yml
+- tasks/TSK-P0-043/meta.yml
+invariants:
+- INV-062..INV-066
+work:
+- Add verifier script for tenant/member hooks (schema + trigger checks) and emit evidence.
+- Wire verifier into db invariants.
+- Add P7201/P7202 to sqlstate_map.yml.
+acceptance_criteria:
+- Verifier emits tenant_member_hooks.json even on failure.
+- DB invariants include tenant/member checks.
+- SQLSTATE map includes P7201/P7202.
 verification:
-  - "scripts/db/verify_invariants.sh"
-status: "planned"
-notes: ""
-client: "codex_cli"
-assigned_agent: "db_foundation"
-model: "<UNASSIGNED>"
+- scripts/db/verify_invariants.sh
+evidence:
+- ./evidence/phase0/tenant_member_hooks.json
+failure_modes:
+- Evidence file missing.
+- SQLSTATE map drift.
+must_read:
+- docs/invariants/INVARIANTS_MANIFEST.yml
+- scripts/db/verify_invariants.sh
+- scripts/db/ci_invariant_gate.sql
+notes: ''
+client: codex_cli
+assigned_agent: db_foundation
+model: <UNASSIGNED>

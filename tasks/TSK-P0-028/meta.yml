@@ -1,33 +1,30 @@
-phase: "0"
-task_id: "TSK-P0-028"
-title: "Define DB distress invariant (roadmap only)"
-owner_role: "INVARIANTS_CURATOR"
-Depends On: none
-Touches:
-  - "docs/invariants/INVARIANTS_MANIFEST.yml"
-  - "docs/invariants/INVARIANTS_ROADMAP.md"
-  - "tasks/TSK-P0-028/meta.yml"
-Invariant(s): "INV-039 (Fail-closed under DB exhaustion — roadmap)"
-Work:
-  - "Define invariant as roadmap with verification notes."
-Acceptance Criteria:
-  - "Invariant listed as roadmap, not implemented."
-Verification Commands:
-  - "scripts/audit/run_invariants_fast_checks.sh"
-Evidence Artifact(s):
-  - "./evidence/phase0/db_fail_closed_roadmap.json"
-Failure Modes:
-  - "Marked implemented without tests."
-must_read:
-  - "docs/invariants/INVARIANTS_MANIFEST.yml"
-  - "scripts/db/verify_invariants.sh"
-  - "scripts/db/ci_invariant_gate.sql"
-evidence:
-  - "./evidence/phase0/db_fail_closed_roadmap.json"
+phase: '0'
+task_id: TSK-P0-028
+title: Define DB distress invariant (roadmap only)
+owner_role: INVARIANTS_CURATOR
+status: completed
+depends_on: []
+touches:
+- docs/invariants/INVARIANTS_MANIFEST.yml
+- docs/invariants/INVARIANTS_ROADMAP.md
+- tasks/TSK-P0-028/meta.yml
+invariants:
+- "INV-039 (Fail-closed under DB exhaustion \u2014 roadmap)"
+work:
+- Define invariant as roadmap with verification notes.
+acceptance_criteria:
+- Invariant listed as roadmap, not implemented.
 verification:
-  - "scripts/audit/run_invariants_fast_checks.sh"
-status: "completed"
-notes: ""
-client: "codex_cli"
-assigned_agent: "invariants_curator"
-model: "<UNASSIGNED>"
+- scripts/audit/run_invariants_fast_checks.sh
+evidence:
+- ./evidence/phase0/db_fail_closed_roadmap.json
+failure_modes:
+- Marked implemented without tests.
+must_read:
+- docs/invariants/INVARIANTS_MANIFEST.yml
+- scripts/db/verify_invariants.sh
+- scripts/db/ci_invariant_gate.sql
+notes: ''
+client: codex_cli
+assigned_agent: invariants_curator
+model: <UNASSIGNED>

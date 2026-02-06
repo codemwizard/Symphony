@@ -1,37 +1,35 @@
-phase: "0"
-task_id: "TSK-P0-004"
-title: "Add DDL lock-risk linting gate for migrations"
-owner_role: "SECURITY_GUARDIAN"
-Depends On: TSK-P0-001
-Touches:
-  - "scripts/security/lint_ddl_lock_risk.sh"
-  - ".github/workflows/invariants.yml"
-  - "docs/invariants/INVARIANTS_MANIFEST.yml"
-  - "tasks/TSK-P0-004/meta.yml"
-Invariant(s): "INV-022 (DDL lock-risk lint)"
-Work:
-  - "Implement lint script to scan schema/migrations for risky patterns."
-  - "Wire into mechanical_invariants job."
-  - "Add invariant entry with verification command."
-Acceptance Criteria:
-  - "CI fails on disallowed DDL patterns."
-  - "Evidence report generated under ./evidence/phase0/ddl_lock_risk.json."
-Verification Commands:
-  - "scripts/security/lint_ddl_lock_risk.sh"
-Evidence Artifact(s):
-  - "./evidence/phase0/ddl_lock_risk.json"
-Failure Modes:
-  - "Any risky DDL must fail."
-must_read:
-  - "docs/invariants/INVARIANTS_MANIFEST.yml"
-  - "scripts/db/verify_invariants.sh"
-  - "scripts/db/ci_invariant_gate.sql"
-evidence:
-  - "./evidence/phase0/ddl_lock_risk.json"
+phase: '0'
+task_id: TSK-P0-004
+title: Add DDL lock-risk linting gate for migrations
+owner_role: SECURITY_GUARDIAN
+status: completed
+depends_on:
+- TSK-P0-001
+touches:
+- scripts/security/lint_ddl_lock_risk.sh
+- .github/workflows/invariants.yml
+- docs/invariants/INVARIANTS_MANIFEST.yml
+- tasks/TSK-P0-004/meta.yml
+invariants:
+- INV-022 (DDL lock-risk lint)
+work:
+- Implement lint script to scan schema/migrations for risky patterns.
+- Wire into mechanical_invariants job.
+- Add invariant entry with verification command.
+acceptance_criteria:
+- CI fails on disallowed DDL patterns.
+- Evidence report generated under ./evidence/phase0/ddl_lock_risk.json.
 verification:
-  - "scripts/security/lint_ddl_lock_risk.sh"
-status: "completed"
-notes: ""
-client: "codex_cli"
-assigned_agent: "security_guardian"
-model: "<UNASSIGNED>"
+- scripts/security/lint_ddl_lock_risk.sh
+evidence:
+- ./evidence/phase0/ddl_lock_risk.json
+failure_modes:
+- Any risky DDL must fail.
+must_read:
+- docs/invariants/INVARIANTS_MANIFEST.yml
+- scripts/db/verify_invariants.sh
+- scripts/db/ci_invariant_gate.sql
+notes: ''
+client: codex_cli
+assigned_agent: security_guardian
+model: <UNASSIGNED>

@@ -1,23 +1,26 @@
 # Compliance Map
 
 ## Mapping table
-| Framework | Requirement / Control | Component(s) | Enforcement points | Evidence artifacts |
-|---|---|---|---|---|
-| ISO 20022 | Canonical message model + validation | Ingest, Orchestration, Adapter | Schema validation, contract tests | Validation reports, test logs |
-| ISO 20022 | Mapping discipline and versioning | Policy Service, Contracts | Policy bundle version pinning | Policy bundle checksum logs |
-| ISO 27001/27002 | Access control, least privilege | DB roles, Service Mesh | Revoke-first grants, mTLS auth | CI gate logs, access audit logs |
-| ISO 27001/27002 | Change management | Policy Service, CI | Promotion workflow, checksum gates | Promotion logs, approvals |
-| ISO 27001/27002 | Secure SDLC / Change control | CI/CD | Structural change rule + evidence gates | evidence/phase0/*.json, invariants-detector logs |
-| ISO 27001/27002 | Secure configuration | DB, CI | DDL lock-risk lint, no runtime DDL | ddl_lock_risk.json, ddl_blocking_policy.json |
-| ISO 27001/27002 | Secure coding (DB) | DB | SECURITY DEFINER dynamic SQL lint | security_definer_dynamic_sql.json |
-| PCI DSS | Segmentation and tokenization | PCI Zone, Adapter | Network policies, tokenization service | Segmentation config, token logs |
-| PCI DSS | Logging and monitoring | Evidence/Audit | Immutable audit logs | Audit bundles, retention logs |
-| OWASP ASVS 5.0 | Input validation | Edge Gateway, Ingest | OpenAPI validation, schema tests | API validation logs |
-| OWASP ASVS 5.0 | AuthN/Z and session security | Gateway, Services | mTLS, JWT, RBAC | Auth logs, config evidence |
-| Zero Trust | Continuous verification | Service Mesh | mTLS, service identity | mTLS cert inventory |
-| Zero Trust | Least privilege | DB, Service roles | Role-based access, stored procs | Privilege audit reports |
-| Zero Trust | Continuous verification | CI/CD | Evidence gate + invariant checks | evidence/phase0/*.json |
+| Framework | Requirement / Control | Control Plane | Gate IDs | Enforcement points | Evidence artifacts |
+|---|---|---|---|---|---|
+| ISO 20022 | Message integrity + attestation hooks | Integrity | INT-G08, INT-G11, INT-G12 | Ingress attestation + routing/batching docs | proxy_resolution_invariant.json, routing_fallback.json, batching_rules.json |
+| ISO 20022 | Canonical message model + validation | Integrity | INT-G07 | Phase-0 implementation plan gate | phase0_impl_plan.json |
+| ISO 27001/27002 | Access control, least privilege | Security | SEC-G01, SEC-G02, SEC-G03 | Revoke-first grants, SECURITY DEFINER hardening | core_boundary.json, ddl_lock_risk.json, security_definer_dynamic_sql.json |
+| ISO 27001/27002 | Secure configuration | Security | SEC-G09 | Infra/workflow config lint | security_secure_config_lint.json |
+| ISO 27001/27002 | Secure SDLC / Change control | Integrity | INT-G01, INT-G02, INT-G03 | Evidence schema + contract gates | evidence_validation.json, task_evidence_contract.json, phase0_contract.json |
+| ISO 27001/27002 | Dependency governance | Security | SEC-G08 | .NET dependency audit | security_dotnet_deps_audit.json |
+| PCI DSS v4.0 | Secure development + vuln mgmt | Security | SEC-G07, SEC-G08, SEC-G10 | Secrets scan + dependency audit + insecure pattern lint | security_secrets_scan.json, security_dotnet_deps_audit.json, security_insecure_patterns.json |
+| PCI DSS v4.0 | Access control and key mgmt | Security | SEC-G05 | OpenBao AppRole smoke test | openbao_smoke.json |
+| PCI DSS v4.0 | Change control / DDL governance | Security | SEC-G02, SEC-G04 | DDL lock-risk lint + allowlist governance | ddl_lock_risk.json, ddl_allowlist_governance.json |
+| NIST CSF / NIST 800-53 | Configuration management | Security | SEC-G09 | Secure config lint | security_secure_config_lint.json |
+| NIST CSF / NIST 800-53 | Access control + least privilege | Security | SEC-G01, SEC-G03 | Core boundary + SECURITY DEFINER lint | core_boundary.json, security_definer_dynamic_sql.json |
+| NIST CSF / NIST 800-53 | Integrity & auditability | Integrity | INT-G01, INT-G05, INT-G06 | Evidence schema + baseline governance | evidence_validation.json, baseline_governance.json, rebaseline_decision.json |
+| OWASP ASVS 4.0+ | Input validation + injection prevention | Security | SEC-G10, SEC-G03 | Insecure pattern lint + SECURITY DEFINER lint | security_insecure_patterns.json, security_definer_dynamic_sql.json |
+| OWASP ASVS 4.0+ | Secrets management | Security | SEC-G07, SEC-G05 | Secrets scan + OpenBao smoke | security_secrets_scan.json, openbao_smoke.json |
+| Zero Trust | Continuous verification (policy) | Integrity | INT-G02, INT-G03 | Evidence contract + phase0 contract | task_evidence_contract.json, phase0_contract.json |
+| Zero Trust | Continuous verification (security) | Security | SEC-G06 | CI toolchain pinned | ci_toolchain.json |
 
 ## Notes
-- Controls map to enforcement points in CI and runtime policy checks.
-- Evidence artifacts must be immutable and retained per retention policy.
+- Control-plane gates (SEC/INT) are the authoritative enforcement points for Phase-0.
+- Evidence artifacts are the proof objects; mapping does not imply production readiness.
+- Where controls are roadmap-only, evidence will be document-based (Phase-0).

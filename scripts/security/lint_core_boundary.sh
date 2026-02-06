@@ -6,6 +6,11 @@ EVIDENCE_DIR="$ROOT_DIR/evidence/phase0"
 EVIDENCE_FILE="$EVIDENCE_DIR/core_boundary.json"
 
 mkdir -p "$EVIDENCE_DIR"
+source "$ROOT_DIR/scripts/lib/evidence.sh"
+EVIDENCE_TS="$(evidence_now_utc)"
+EVIDENCE_GIT_SHA="$(git_sha)"
+EVIDENCE_SCHEMA_FP="$(schema_fingerprint)"
+export EVIDENCE_TS EVIDENCE_GIT_SHA EVIDENCE_SCHEMA_FP
 
 core_dirs=(
   "$ROOT_DIR/src/Symphony.Core"
@@ -27,7 +32,14 @@ import json
 import sys
 from pathlib import Path
 lines = [l.strip() for l in sys.stdin.read().splitlines() if l.strip()]
-out = {"status": "fail" if lines else "pass", "matches": lines}
+out = {
+    "check_id": "SEC-CORE-BOUNDARY",
+    "timestamp_utc": "${EVIDENCE_TS}",
+    "git_sha": "${EVIDENCE_GIT_SHA}",
+    "schema_fingerprint": "${EVIDENCE_SCHEMA_FP}",
+    "status": "FAIL" if lines else "PASS",
+    "matches": lines,
+}
 Path("$EVIDENCE_FILE").write_text(json.dumps(out, indent=2))
 PY
 

@@ -1,36 +1,35 @@
-phase: "0"
-task_id: "TSK-P0-032"
-title: "Update outbox index migration to use no-tx marker"
-owner_role: "DB_FOUNDATION"
-Depends On: TSK-P0-030, TSK-P0-031
-Touches:
-  - "schema/migrations/0007_outbox_pending_indexes.sql"
-  - "scripts/db/tests/test_outbox_pending_indexes.sh"
-Invariant(s): "INV-031 (Outbox claim index required)"
-Work:
-  - "Add -- symphony:no_tx to concurrent index migration."
-  - "Ensure IF NOT EXISTS is used."
-  - "Add DB test to verify index exists and emit evidence."
-Acceptance Criteria:
-  - "Migration runs successfully via migrate.sh."
-  - "Evidence file is written by the verification step."
-Verification Commands:
-  - "scripts/db/tests/test_outbox_pending_indexes.sh"
-Evidence Artifact(s):
-  - "./evidence/phase0/outbox_pending_indexes.json"
-Failure Modes:
-  - "Migration fails due to transaction wrapping."
-  - "Evidence file missing."
-must_read:
-  - "docs/invariants/INVARIANTS_MANIFEST.yml"
-  - "scripts/db/verify_invariants.sh"
-  - "scripts/db/ci_invariant_gate.sql"
-evidence:
-  - "./evidence/phase0/outbox_pending_indexes.json"
+phase: '0'
+task_id: TSK-P0-032
+title: Update outbox index migration to use no-tx marker
+owner_role: DB_FOUNDATION
+status: completed
+depends_on:
+- TSK-P0-030
+- TSK-P0-031
+touches:
+- schema/migrations/0007_outbox_pending_indexes.sql
+- scripts/db/tests/test_outbox_pending_indexes.sh
+invariants:
+- INV-031 (Outbox claim index required)
+work:
+- Add -- symphony:no_tx to concurrent index migration.
+- Ensure IF NOT EXISTS is used.
+- Add DB test to verify index exists and emit evidence.
+acceptance_criteria:
+- Migration runs successfully via migrate.sh.
+- Evidence file is written by the verification step.
 verification:
-  - "scripts/db/tests/test_outbox_pending_indexes.sh"
-status: "completed"
-notes: ""
-client: "codex_cli"
-assigned_agent: "db_foundation"
-model: "<UNASSIGNED>"
+- scripts/db/tests/test_outbox_pending_indexes.sh
+evidence:
+- ./evidence/phase0/outbox_pending_indexes.json
+failure_modes:
+- Migration fails due to transaction wrapping.
+- Evidence file missing.
+must_read:
+- docs/invariants/INVARIANTS_MANIFEST.yml
+- scripts/db/verify_invariants.sh
+- scripts/db/ci_invariant_gate.sql
+notes: ''
+client: codex_cli
+assigned_agent: db_foundation
+model: <UNASSIGNED>

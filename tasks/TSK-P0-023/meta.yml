@@ -1,37 +1,35 @@
-phase: "0"
-task_id: "TSK-P0-023"
-title: "Add LISTEN/NOTIFY wakeup hook (wakeup-only semantics)"
-owner_role: "DB_FOUNDATION"
-Depends On: TSK-P0-020
-Touches:
-  - "schema/migrations/0010_outbox_notify.sql"
-  - "scripts/db/tests/test_db_functions.sh"
-Invariant(s): "INV-034 (Outbox wakeup notification)"
-Work:
-  - "Emit NOTIFY on enqueue as a wakeup only (minimal/empty payload)."
-  - "Emit once per enqueue call (not per inserted row in a batch)."
-  - "Add a basic DB test to confirm NOTIFY emission with a short timeout."
-  - "Ensure test emits ./evidence/phase0/outbox_notify.json."
-Acceptance Criteria:
-  - "Notification channel exists and emits on enqueue."
-  - "Evidence file is written by the verification step."
-Verification Commands:
-  - "scripts/db/tests/test_db_functions.sh"
-Evidence Artifact(s):
-  - "./evidence/phase0/outbox_notify.json"
-Failure Modes:
-  - "Notification not emitted."
-  - "Evidence file missing."
-must_read:
-  - "docs/invariants/INVARIANTS_MANIFEST.yml"
-  - "scripts/db/verify_invariants.sh"
-  - "scripts/db/ci_invariant_gate.sql"
-evidence:
-  - "./evidence/phase0/outbox_notify.json"
+phase: '0'
+task_id: TSK-P0-023
+title: Add LISTEN/NOTIFY wakeup hook (wakeup-only semantics)
+owner_role: DB_FOUNDATION
+status: completed
+depends_on:
+- TSK-P0-020
+touches:
+- schema/migrations/0010_outbox_notify.sql
+- scripts/db/tests/test_db_functions.sh
+invariants:
+- INV-034 (Outbox wakeup notification)
+work:
+- Emit NOTIFY on enqueue as a wakeup only (minimal/empty payload).
+- Emit once per enqueue call (not per inserted row in a batch).
+- Add a basic DB test to confirm NOTIFY emission with a short timeout.
+- Ensure test emits ./evidence/phase0/outbox_notify.json.
+acceptance_criteria:
+- Notification channel exists and emits on enqueue.
+- Evidence file is written by the verification step.
 verification:
-  - "scripts/db/tests/test_db_functions.sh"
-status: "completed"
-notes: "Documentation updates (if needed) should be handled by ARCHITECT."
-client: "codex_cli"
-assigned_agent: "db_foundation"
-model: "<UNASSIGNED>"
+- scripts/db/tests/test_db_functions.sh
+evidence:
+- ./evidence/phase0/outbox_notify.json
+failure_modes:
+- Notification not emitted.
+- Evidence file missing.
+must_read:
+- docs/invariants/INVARIANTS_MANIFEST.yml
+- scripts/db/verify_invariants.sh
+- scripts/db/ci_invariant_gate.sql
+notes: Documentation updates (if needed) should be handled by ARCHITECT.
+client: codex_cli
+assigned_agent: db_foundation
+model: <UNASSIGNED>

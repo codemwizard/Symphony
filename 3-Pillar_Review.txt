@@ -1,0 +1,1047 @@
+
+
+Thanks — this is enough to do a **tight review** of what you’ve got *so far* (doc + PHASE0_TASKS + the meta blocks). I’ll treat this as “Tier-1 auditor reading + CI engineer implementing.”
+
+Also: yes, a bunch of earlier repo files have expired on my side; I’m reviewing only what you pasted here.
+
+---
+
+## 1) Three-Pillar doc review
+
+### What’s strong
+
+* It clearly states **why** pillars exist (avoid paper compliance drift).
+* It separates **current state** vs **gaps** vs **proposed improvements**.
+* The **execution guarantee** is the right posture: “agents run on every change.”
+
+### One thing you must tighten (wording)
+
+Right now the doc says agents run “on every change” and evidence gate enforces only completed tasks — good — but it does **not explicitly specify** the bootstrap behavior for non-completed gates (PASS/FAIL/SKIPPED).
+
+Add a short explicit clause:
+
+> “All checks execute every change. If a gate is not yet implemented, it must emit **SKIPPED evidence** (or fail in strict mode). The Phase-0 contract enforces PASS only for tasks marked `completed`.”
+
+That single sentence prevents an auditor from interpreting “run every change” as “all controls are active already.”
+
+---
+
+## 2) PHASE0_TASKS.md: critical governance issues
+
+### A) Evidence collisions and duplicates (Tier-1 blocker)
+
+You already have many tasks pointing at the **same evidence path**, e.g.:
+
+* `TSK-P0-002` and `TSK-P0-012` → `evidence/phase0/evidence.json`
+* `TSK-P0-008` and `TSK-P0-016` → `evidence/phase0/batching_rules.json`
+* `TSK-P0-020` and `TSK-P0-032` → `evidence/phase0/outbox_pending_indexes.json`
+* Several tasks reuse `invariants_quick.json`
+
+This is not automatically wrong, but it becomes wrong unless you define a rule like:
+
+> “Evidence artifacts are **per check**, and multiple tasks may reference the same evidence only if they are explicitly the same check / same gate.”
+
+Right now you don’t have that rule written anywhere in the contract or tasks file, so an auditor can call it “ambiguous evidence” (one artifact allegedly proving multiple distinct deliverables).
+
+**Fix options (choose one and standardize):**
+
+1. **Preferred:** Make evidence unique per task
+
+   * Rename duplicates to task-scoped evidence, e.g.
+     `evidence/phase0/TSK-P0-016_batching_rules.json`
+
+2. **Acceptable (and cleaner long-term):** Make tasks reference **gate evidence**, not “task evidence”
+
+   * Explicitly introduce “Gate IDs” and have tasks link to gates
+   * Then duplicates are correct (one gate, many tasks), but you must formalize it.
+
+Right now you’re halfway between the two models.
+
+### B) `TSK-P0-010` is dangerously broad
+
+`evidence_paths: ["evidence/phase0/*.json"]` will eventually make your enforcement nonsensical:
+
+* It implicitly requires “everything under evidence/phase0” to exist, including unrelated new gates.
+* It makes it impossible to reason about what “completed” means.
+
+**Fix:** Replace it with a single, explicit aggregator artifact, e.g.
+
+* `evidence/phase0/phase0_evidence_index.json`
+  …and build that index deterministically.
+
+### C) Planned tasks with `evidence_required: true` but placeholder evidence
+
+Example:
+
+* `TSK-P0-019` → evidence_paths: `["phase0-evidence"]`
+
+This should either be:
+
+* a real path (even if it will be SKIPPED until implemented), or
+* `evidence_required: false` until it becomes implementable.
+
+---
+
+## 3) Task meta for TSK-P0-050 → 055: tight review
+
+### A) Evidence collision between TSK-P0-053 and TSK-P0-054 (must fix)
+
+You’ve done it again here:
+
+* TSK-P0-053 evidence: `./evidence/phase0/compliance_manifest.json`
+* TSK-P0-054 evidence: `./evidence/phase0/compliance_manifest.json`
+
+That’s a Tier-1 red flag because these are clearly **different intents**:
+
+* 053 = maintain mapping content
+* 054 = verifier + CI wiring
+
+**Fix:**
+
+* TSK-P0-053 → evidence: `evidence/phase0/compliance_manifest_build.json` (or even no evidence; docs-only)
+* TSK-P0-054 → evidence: `evidence/phase0/compliance_manifest_verify.json`
+
+Even better: make 053 docs-only and let 054 produce the evidence.
+
+### B) Owner mismatch (should fix)
+
+TSK-P0-054 is owned by **SECURITY_GUARDIAN**, but it’s a **governance/compliance verifier**.
+
+This belongs to:
+
+* **COMPLIANCE_MAPPER** (best), or
+* **INVARIANTS_CURATOR** (if you treat it as “watch-the-watcher” integrity)
+
+Security Guardian can *run* it, but shouldn’t *own* compliance correctness.
+
+### C) Your YAML meta format is internally inconsistent (will bite CI tooling)
+
+Across these meta blocks you have keys like:
+
+* `Depends On:` (with a space)
+* `Invariant(s):`
+* `Evidence Artifact(s):`
+* plus you repeat the same info again under `evidence:` and `verification:`
+
+This is a parsing nightmare if you later write tooling. Tier-1 governance needs deterministic parsing.
+
+**Fix: standardize keys, one canonical place:**
+
+Use **lower_snake_case** only, single source of truth, e.g.:
+
+```yaml
+phase: "0"
+task_id: "TSK-P0-054"
+title: "Compliance manifest verifier + CI wiring"
+owner_role: "COMPLIANCE_MAPPER"
+depends_on: ["TSK-P0-053"]
+touches: [...]
+invariants: ["INV-075"]
+verification:
+  - "scripts/audit/verify_compliance_manifest.sh"
+evidence:
+  - "evidence/phase0/compliance_manifest_verify.json"
+status: "planned"
+```
+
+And delete the duplicated narrative fields *or* move them to `notes:`.
+
+### D) Dependency chain risk: TSK-P0-050 depends on TSK-P0-037
+
+But in PHASE0_TASKS, **TSK-P0-037 is planned**.
+
+If you’re using dependencies for sequencing, this is fine. If you’re using dependencies to decide what can be merged, you just created a deadlock.
+
+**Fix:** Either:
+
+* mark TSK-P0-037 as “in_progress” with guarded SKIPPED semantics, or
+* remove it as a hard dependency and reference it as “must align with”.
+
+---
+
+## 4) One concrete rule you should add immediately
+
+Add this rule to your Three-Pillar doc *and* to a governance doc / contract comment:
+
+> **Evidence is either per-task or per-gate, but not mixed.**
+>
+> * If per-task: every `task_id` must have unique evidence paths.
+> * If per-gate: tasks reference gates; gates reference evidence.
+
+Right now your repo behaves like “per-gate,” but your task meta reads like “per-task.” That mismatch is what auditors punish.
+
+---
+
+## Exactly what I would change right now
+
+1. **Rename evidence for P0-053 / P0-054**
+
+   * 053: `evidence/phase0/compliance_manifest_build.json` (or none)
+   * 054: `evidence/phase0/compliance_manifest_verify.json`
+
+2. **Change owner for P0-054**
+
+   * from `SECURITY_GUARDIAN` → `COMPLIANCE_MAPPER` (or `INVARIANTS_CURATOR`)
+
+3. **Remove or replace `TSK-P0-010` wildcard evidence**
+
+   * replace with `phase0_evidence_index.json`
+
+4. **Standardize meta.yml schema**
+
+   * unify keys (`depends_on`, `touches`, `invariants`, `verification`, `evidence`)
+   * remove duplicated sections that repeat the same fields in different spellings
+
+---
+
+If you paste `docs/PHASE0/phase0_contract.yml` (you referenced it but didn’t include it), I can also tell you **exactly how to encode SKIPPED semantics** so “agents run every change” stays true without forcing unfinished tasks to PASS.
+
+
+
+
+
+
+
+
+
+
+
+### First: SKIPPED semantics — how to encode it **exactly** in `phase0_contract.yml`
+
+Right now your contract is a **list of task rows** (no global policy header). To avoid breaking existing tooling, keep the structure as-is and add **two optional fields** per row that your verifier script enforces:
+
+* `evidence_status_when_completed`: allowed evidence statuses when `status: completed`
+* `evidence_status_when_not_completed`: allowed evidence statuses when `status != completed`
+
+**Rule you want:**
+
+* If **completed** → evidence must exist and must be **PASS**
+* If **not completed** → evidence must exist and must be **SKIPPED** or **PASS**
+
+  * (FAIL should already fail the pipeline earlier, so you don’t need to “allow” it here)
+
+#### Example row update (minimal and mechanical)
+
+```yaml
+- task_id: TSK-P0-051
+  status: planned
+  verification_mode: both
+  evidence_required: true
+  evidence_paths:
+    - evidence/phase0/control_planes_drift.json
+  evidence_scope: ci_artifact
+  evidence_status_when_completed: ["PASS"]
+  evidence_status_when_not_completed: ["SKIPPED", "PASS"]
+  notes: ""
+```
+
+#### Contract-wide default (so you don’t repeat it 60 times)
+
+Because your file is a list, you can’t naturally define defaults without changing shape. The practical approach is:
+
+* Your verifier script enforces **defaults** if those fields are missing:
+
+  * completed ⇒ PASS
+  * not completed ⇒ SKIPPED or PASS
+
+So you only add these fields for exceptions.
+
+✅ This matches your “agents run on every change” requirement:
+
+* planned/in-progress gates can emit **SKIPPED evidence** via guarded wrappers
+* completed tasks must emit **PASS evidence** or CI fails
+
+---
+
+## 1) Evidence collisions: what “cleaner long-term” means + which is better
+
+You basically have two models:
+
+### Model A — **Task-scoped evidence** (rename duplicates)
+
+Every task has unique evidence paths (e.g. `evidence/phase0/TSK-P0-054_...json`).
+
+**Pros**
+
+* Simple mental model: “one task → one evidence file”
+* No ambiguity if you never reuse evidence
+
+**Cons**
+
+* Over time, you end up duplicating the same check evidence under different names
+* Refactors become expensive: if you split/merge tasks, you must rename evidence and rewrite history
+* Compliance mapping becomes messier: standards map to “checks”, not project-management tasks
+
+### Model B — **Gate-scoped evidence with explicit Gate IDs** (cleaner long-term)
+
+A **Gate** is a stable “control/check” (e.g. `SEC-G02 dotnet dependency audit`).
+Tasks are just project-management wrappers around building/enabling gates.
+
+* Gate produces evidence at a stable path (e.g. `evidence/phase0/security_dotnet_deps_audit.json`)
+* Multiple tasks may reference the same gate (that’s OK, because the gate is the thing being proven)
+
+**Why it’s cleaner long-term**
+
+* Auditors care about **controls**, not your task list.
+* Control planes + compliance mapping naturally attach to **Gate IDs**.
+* You can reorganize tasks without renaming evidence.
+* Drift checking becomes straightforward: “every gate declared must be executed + produce evidence”.
+
+**Which is better long-term?**
+✅ **Gate IDs is better long-term** *for Tier-1 compliance* because it matches how auditors think and how control catalogs work.
+
+**What you should do now**
+
+* For the messy existing duplicates: don’t rename everything immediately.
+* Introduce Gate IDs going forward (TSK-P0-050 → 055 is the perfect place).
+* Gradually migrate old duplicated tasks to reference gates.
+
+**Concrete rule to adopt:**
+
+* Evidence filenames and IDs are **gate-scoped** (stable).
+* Tasks may reference one or more gates; tasks are not the proof primitive.
+
+---
+
+## 2) Enforcing lower_snake_case everywhere: where + how (exactly)
+
+This must be **mechanical**, not “remembered.”
+
+### Best place to define the convention (human-readable)
+
+1. `docs/operations/STYLE_GUIDE.md`
+
+   * Put a short normative section:
+
+     * “All YAML keys MUST be lower_snake_case”
+     * “No Title Case keys, no spaces, no parentheses”
+     * “Canonical task meta schema: …”
+
+2. Add a template the architect/agents will copy:
+
+   * `tasks/_template/meta.yml`
+
+### Best place to enforce it (mechanical gate)
+
+Create a linter script and run it in **pre-CI and CI**:
+
+* `scripts/audit/lint_yaml_conventions.sh`
+  Checks:
+
+  * any YAML key containing uppercase letters
+  * any YAML key containing spaces
+  * optionally forbids `Depends On:` / `Invariant(s):` style keys
+
+Then:
+
+* call it from `scripts/dev/pre_ci.sh`
+* call it from `.github/workflows/invariants.yml`
+
+### Best place for the architect to “remember”
+
+Don’t rely on memory—wire it into the architect’s workflow:
+
+* Add to `AGENTS.md` under “Architect responsibilities”
+* Add to `.codex/agents/architect.md` mission prompt:
+
+  * “Reject YAML that violates lower_snake_case”
+* Put the **template path** in the prompt:
+
+  * “Use `tasks/_template/meta.yml`”
+
+**Exact minimal enforcement combo**
+
+* `docs/operations/STYLE_GUIDE.md` (normative)
+* `tasks/_template/meta.yml` (copy-paste correctness)
+* `scripts/audit/lint_yaml_conventions.sh` (mechanical)
+* pre-CI + CI wiring (unavoidable)
+
+---
+
+## One extra must-fix you already have (related)
+
+Your meta blocks currently use inconsistent keys (`Depends On:` vs `depends_on`, `Invariant(s):` etc.). Even if you enforce snake_case, you should also enforce **a schema**.
+
+Where to define schema:
+
+* `docs/tasks/TASK_META_SCHEMA.md` (single source of truth)
+* and optionally a JSON Schema file:
+
+  * `docs/tasks/task_meta.schema.json` (later)
+
+---
+
+If you want, I’ll generate:
+
+1. `scripts/audit/lint_yaml_conventions.sh` (fail-closed, evidence-producing JSON)
+2. `scripts/audit/verify_phase0_contract_evidence_status.sh` that reads your `phase0_contract.yml`, inspects evidence JSON files, and enforces the SKIPPED/PASS rules above (with defaults).
+
+
+
+
+
+
+
+
+
+
+Done — here are the two scripts:
+
+1. **YAML convention linter** (enforces `lower_snake_case` keys repo-wide)
+2. **Phase-0 contract evidence status verifier** (enforces `PASS` for completed, `SKIPPED/PASS` for not-completed, with sane defaults + overrides)
+
+They are **fail-closed**, **.NET-stack friendly**, and **emit evidence JSON** under `./evidence/phase0/`.
+
+> Note: some earlier uploads in this chat session have expired on my side, but I don’t need them to generate these scripts. Your uploaded contract file is available at `/mnt/data/phase0_contract.yml`, and the scripts below default to `docs/PHASE0/phase0_contract.yml` but let you override.
+
+---
+
+# 1) YAML convention linter (lower_snake_case keys)
+
+### `scripts/audit/lint_yaml_conventions.sh`
+
+```bash
+#!/usr/bin/env bash
+set -euo pipefail
+
+ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
+cd "$ROOT"
+
+# Requires: python3 + PyYAML (yaml)
+# Evidence helper expected at scripts/lib/evidence.sh (created earlier).
+if [[ ! -f "scripts/lib/evidence.sh" ]]; then
+  echo "Missing scripts/lib/evidence.sh"
+  exit 1
+fi
+source "scripts/lib/evidence.sh"
+
+OUT="evidence/phase0/yaml_conventions_lint.json"
+ts="$(evidence_now_utc)"
+sha="$(git_sha)"
+schema_fp="$(schema_fingerprint)"
+
+# Where to lint. Override with YAML_LINT_PATHS="a b c"
+DEFAULT_PATHS=(
+  "tasks"
+  "docs"
+  "schema"
+  ".github"
+)
+IFS=' ' read -r -a LINT_PATHS <<< "${YAML_LINT_PATHS:-${DEFAULT_PATHS[*]}}"
+
+mkdir -p "$(dirname "$OUT")"
+
+# Find YAML files (exclude evidence + build dirs)
+mapfile -t YAML_FILES < <(
+  find "${LINT_PATHS[@]}" -type f \( -name "*.yml" -o -name "*.yaml" \) \
+    ! -path "*/.git/*" \
+    ! -path "*/bin/*" \
+    ! -path "*/obj/*" \
+    ! -path "*/evidence/*" \
+    2>/dev/null | LC_ALL=C sort
+)
+
+if [[ "${#YAML_FILES[@]}" -eq 0 ]]; then
+  write_json "$OUT" \
+    "\"check_id\": \"LINT-YAML-01\"" \
+    "\"timestamp_utc\": \"${ts}\"" \
+    "\"git_sha\": \"${sha}\"" \
+    "\"schema_fingerprint\": \"${schema_fp}\"" \
+    "\"status\": \"PASS\"" \
+    "\"note\": \"No YAML files found in lint scope\"" \
+    "\"lint_paths\": $(python3 - <<'PY'
+import json,os,sys
+paths=os.environ.get("YAML_LINT_PATHS","").split() if os.environ.get("YAML_LINT_PATHS") else ["tasks","docs","schema",".github"]
+print(json.dumps(paths))
+PY
+)"
+  echo "YAML lint: no files found (PASS). Evidence: $OUT"
+  exit 0
+fi
+
+# Run python lint (keys must be lower_snake_case)
+python3 - <<'PY' "${YAML_FILES[@]}" > /tmp/_symphony_yaml_lint_report.json
+import sys, re, json
+
+try:
+  import yaml
+except Exception as e:
+  print(json.dumps({"error":"PyYAML not available", "detail": str(e)}))
+  sys.exit(0)
+
+snake = re.compile(r"^[a-z0-9_]+$")
+
+def walk(node, path, out, file):
+  if isinstance(node, dict):
+    for k, v in node.items():
+      key_str = str(k)
+      if not snake.match(key_str):
+        out.append({
+          "file": file,
+          "path": path,
+          "key": key_str,
+          "reason": "Key must be lower_snake_case (^[a-z0-9_]+$)"
+        })
+      walk(v, f"{path}.{key_str}" if path else key_str, out, file)
+  elif isinstance(node, list):
+    for i, item in enumerate(node):
+      walk(item, f"{path}[{i}]" if path else f"[{i}]", out, file)
+
+findings=[]
+files=sys.argv[1:]
+for f in files:
+  try:
+    with open(f, "r", encoding="utf-8") as fh:
+      data = yaml.safe_load(fh)
+    walk(data, "", findings, f)
+  except Exception as e:
+    findings.append({"file": f, "path": "", "key": "", "reason": f"YAML parse error: {e}"})
+
+print(json.dumps({
+  "file_count": len(files),
+  "finding_count": len(findings),
+  "findings": findings[:5000]  # cap
+}, indent=2))
+PY
+
+# Handle missing PyYAML
+if grep -q '"error":"PyYAML not available"' /tmp/_symphony_yaml_lint_report.json; then
+  write_json "$OUT" \
+    "\"check_id\": \"LINT-YAML-01\"" \
+    "\"timestamp_utc\": \"${ts}\"" \
+    "\"git_sha\": \"${sha}\"" \
+    "\"schema_fingerprint\": \"${schema_fp}\"" \
+    "\"status\": \"FAIL\"" \
+    "\"error\": \"PyYAML not available; install with: pip install pyyaml\""
+  cat /tmp/_symphony_yaml_lint_report.json
+  rm -f /tmp/_symphony_yaml_lint_report.json
+  exit 1
+fi
+
+report="$(cat /tmp/_symphony_yaml_lint_report.json)"
+rm -f /tmp/_symphony_yaml_lint_report.json
+
+finding_count="$(python3 - <<'PY' <<<"$report"
+import json,sys
+r=json.load(sys.stdin)
+print(r.get("finding_count",0))
+PY
+)"
+
+status="PASS"
+if [[ "$finding_count" != "0" ]]; then
+  status="FAIL"
+fi
+
+# Emit evidence JSON (include report subset)
+write_json "$OUT" \
+  "\"check_id\": \"LINT-YAML-01\"" \
+  "\"timestamp_utc\": \"${ts}\"" \
+  "\"git_sha\": \"${sha}\"" \
+  "\"schema_fingerprint\": \"${schema_fp}\"" \
+  "\"status\": \"${status}\"" \
+  "\"lint_file_count\": $(python3 - <<'PY' <<<"$report"
+import json,sys
+r=json.load(sys.stdin)
+print(r.get("file_count",0))
+PY
+)" \
+  "\"finding_count\": ${finding_count}" \
+  "\"report\": $(python3 - <<'PY' <<<"$report"
+import json,sys
+r=json.load(sys.stdin)
+print(json.dumps(r))
+PY
+)"
+
+if [[ "$status" == "FAIL" ]]; then
+  echo "YAML convention lint FAILED. Evidence: $OUT"
+  exit 1
+fi
+
+echo "YAML convention lint PASSED. Evidence: $OUT"
+```
+
+---
+
+# 2) Phase-0 contract evidence status verifier (PASS/SKIPPED semantics)
+
+This script enforces:
+
+* If `status: completed` ⇒ evidence must exist and `status` in evidence JSON must be **PASS** (unless overridden by contract fields)
+* If not completed ⇒ evidence must exist and be **SKIPPED** or **PASS** (unless overridden)
+
+It supports contract rows optionally containing:
+
+* `evidence_status_when_completed: ["PASS"]`
+* `evidence_status_when_not_completed: ["SKIPPED","PASS"]`
+
+Defaults if absent:
+
+* completed ⇒ `["PASS"]`
+* not completed ⇒ `["SKIPPED","PASS"]`
+
+### `scripts/audit/verify_phase0_contract_evidence_status.sh`
+
+```bash
+#!/usr/bin/env bash
+set -euo pipefail
+
+ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
+cd "$ROOT"
+
+if [[ ! -f "scripts/lib/evidence.sh" ]]; then
+  echo "Missing scripts/lib/evidence.sh"
+  exit 1
+fi
+source "scripts/lib/evidence.sh"
+
+OUT="evidence/phase0/phase0_contract_evidence_status.json"
+ts="$(evidence_now_utc)"
+sha="$(git_sha)"
+schema_fp="$(schema_fingerprint)"
+
+# Default contract path in-repo; can override:
+#   PHASE0_CONTRACT_PATH=/mnt/data/phase0_contract.yml scripts/audit/verify_phase0_contract_evidence_status.sh
+CONTRACT_PATH="${PHASE0_CONTRACT_PATH:-docs/PHASE0/phase0_contract.yml}"
+
+# Strictness knobs
+# - SYMPHONY_CONTRACT_STRICT_GLOBS=1 -> wildcard evidence_paths must match at least 1 file; else FAIL
+# - SYMPHONY_ALLOW_MISSING_EVIDENCE_NOT_COMPLETED=1 -> planned/in_progress may omit evidence (not recommended)
+STRICT_GLOBS="${SYMPHONY_CONTRACT_STRICT_GLOBS:-1}"
+ALLOW_MISSING_NOT_COMPLETED="${SYMPHONY_ALLOW_MISSING_EVIDENCE_NOT_COMPLETED:-0}"
+
+mkdir -p "$(dirname "$OUT")"
+
+if [[ ! -f "$CONTRACT_PATH" ]]; then
+  write_json "$OUT" \
+    "\"check_id\": \"CONTRACT-EVIDENCE-01\"" \
+    "\"timestamp_utc\": \"${ts}\"" \
+    "\"git_sha\": \"${sha}\"" \
+    "\"schema_fingerprint\": \"${schema_fp}\"" \
+    "\"status\": \"FAIL\"" \
+    "\"error\": $(json_escape "Contract file not found: ${CONTRACT_PATH}")"
+  echo "Contract file not found: $CONTRACT_PATH"
+  exit 1
+fi
+
+python3 - <<'PY' "$CONTRACT_PATH" "$STRICT_GLOBS" "$ALLOW_MISSING_NOT_COMPLETED" > /tmp/_symphony_contract_evidence_report.json
+import sys, os, json, glob
+
+try:
+  import yaml
+except Exception as e:
+  print(json.dumps({"error":"PyYAML not available", "detail": str(e)}))
+  sys.exit(0)
+
+contract_path = sys.argv[1]
+strict_globs = sys.argv[2] == "1"
+allow_missing_not_completed = sys.argv[3] == "1"
+
+doc = yaml.safe_load(open(contract_path, "r", encoding="utf-8"))
+
+if not isinstance(doc, list):
+  print(json.dumps({"error":"Contract must be a YAML list of rows"}))
+  sys.exit(0)
+
+def read_status(p):
+  try:
+    j = json.load(open(p, "r", encoding="utf-8"))
+    s = j.get("status")
+    return s, None
+  except Exception as e:
+    return None, str(e)
+
+failures=[]
+warnings=[]
+checked=0
+
+for row in doc:
+  task_id = row.get("task_id")
+  task_status = (row.get("status") or "").strip().lower()
+  evidence_required = bool(row.get("evidence_required"))
+  evidence_paths = row.get("evidence_paths") or []
+  if isinstance(evidence_paths, str):
+    evidence_paths = [evidence_paths]
+
+  if not evidence_required:
+    continue
+
+  # Defaults (unless overridden in row)
+  allowed_completed = row.get("evidence_status_when_completed") or ["PASS"]
+  allowed_not_completed = row.get("evidence_status_when_not_completed") or ["SKIPPED", "PASS"]
+
+  is_completed = (task_status == "completed")
+
+  for ep in evidence_paths:
+    if not ep:
+      failures.append({"task_id": task_id, "evidence_path": ep, "reason": "Empty evidence_path"})
+      continue
+
+    # Handle wildcard globs
+    paths=[]
+    if any(ch in ep for ch in ["*", "?", "["]):
+      matches = sorted(glob.glob(ep))
+      if strict_globs and len(matches) == 0:
+        failures.append({"task_id": task_id, "evidence_path": ep, "reason": "Glob matched no files"})
+        continue
+      if len(matches) == 0:
+        warnings.append({"task_id": task_id, "evidence_path": ep, "reason": "Glob matched no files"})
+        continue
+      paths = matches
+    else:
+      paths = [ep]
+
+    for p in paths:
+      checked += 1
+      if not os.path.isfile(p):
+        if is_completed or not allow_missing_not_completed:
+          failures.append({"task_id": task_id, "evidence_path": p, "reason": "Evidence file missing"})
+        else:
+          warnings.append({"task_id": task_id, "evidence_path": p, "reason": "Evidence missing (allowed for not-completed)"})
+        continue
+
+      status, err = read_status(p)
+      if err:
+        failures.append({"task_id": task_id, "evidence_path": p, "reason": f"Evidence JSON read error: {err}"})
+        continue
+
+      allowed = allowed_completed if is_completed else allowed_not_completed
+      if status not in allowed:
+        failures.append({
+          "task_id": task_id,
+          "task_status": task_status,
+          "evidence_path": p,
+          "evidence_status": status,
+          "allowed_statuses": allowed,
+          "reason": "Evidence status not allowed for task status"
+        })
+
+print(json.dumps({
+  "checked_evidence_files": checked,
+  "failure_count": len(failures),
+  "warning_count": len(warnings),
+  "failures": failures[:5000],
+  "warnings": warnings[:5000],
+  "contract_path": contract_path,
+  "strict_globs": strict_globs,
+  "allow_missing_not_completed": allow_missing_not_completed
+}, indent=2))
+PY
+
+# Handle missing PyYAML
+if grep -q '"error":"PyYAML not available"' /tmp/_symphony_contract_evidence_report.json; then
+  write_json "$OUT" \
+    "\"check_id\": \"CONTRACT-EVIDENCE-01\"" \
+    "\"timestamp_utc\": \"${ts}\"" \
+    "\"git_sha\": \"${sha}\"" \
+    "\"schema_fingerprint\": \"${schema_fp}\"" \
+    "\"status\": \"FAIL\"" \
+    "\"error\": \"PyYAML not available; install with: pip install pyyaml\""
+  cat /tmp/_symphony_contract_evidence_report.json
+  rm -f /tmp/_symphony_contract_evidence_report.json
+  exit 1
+fi
+
+report="$(cat /tmp/_symphony_contract_evidence_report.json)"
+rm -f /tmp/_symphony_contract_evidence_report.json
+
+failure_count="$(python3 - <<'PY' <<<"$report"
+import json,sys
+r=json.load(sys.stdin)
+print(r.get("failure_count",0))
+PY
+)"
+
+status="PASS"
+if [[ "$failure_count" != "0" ]]; then
+  status="FAIL"
+fi
+
+write_json "$OUT" \
+  "\"check_id\": \"CONTRACT-EVIDENCE-01\"" \
+  "\"timestamp_utc\": \"${ts}\"" \
+  "\"git_sha\": \"${sha}\"" \
+  "\"schema_fingerprint\": \"${schema_fp}\"" \
+  "\"status\": \"${status}\"" \
+  "\"report\": $(python3 - <<'PY' <<<"$report"
+import json,sys
+r=json.load(sys.stdin)
+print(json.dumps(r))
+PY
+)"
+
+if [[ "$status" == "FAIL" ]]; then
+  echo "Phase-0 contract evidence status verification FAILED. Evidence: $OUT"
+  exit 1
+fi
+
+echo "Phase-0 contract evidence status verification PASSED. Evidence: $OUT"
+```
+
+---
+
+# 3) Wire them into pre-CI + CI (exact places)
+
+### Add to `scripts/dev/pre_ci.sh` near the top
+
+```bash
+# Conventions + contract evidence semantics (fail-closed)
+scripts/audit/lint_yaml_conventions.sh
+scripts/audit/verify_phase0_contract_evidence_status.sh
+```
+
+### Add to `.github/workflows/invariants.yml` (same stage as invariant checks)
+
+Run them **before** running plane checks, so you fail early on drift.
+
+---
+
+# 4) Make executable
+
+```bash
+chmod +x \
+  scripts/audit/lint_yaml_conventions.sh \
+  scripts/audit/verify_phase0_contract_evidence_status.sh
+```
+
+---
+
+# How to use with your uploaded contract right now
+
+If your in-repo contract isn’t present yet but your uploaded one is:
+
+```bash
+PHASE0_CONTRACT_PATH=/mnt/data/phase0_contract.yml \
+  scripts/audit/verify_phase0_contract_evidence_status.sh
+```
+
+---
+
+If you want, I’ll also generate a tiny **`tasks/_template/meta.yml`** and a **`docs/operations/STYLE_GUIDE.md`** snippet so the convention is both *copyable* and *mechanically enforced*.
+
+
+
+
+
+
+
+
+
+Got it — I’ll “make it so” by giving you the **exact files to add** (template + style guide) and the **exact wiring** so the convention is both **copyable** and **mechanically enforced**.
+
+A quick heads-up: some earlier uploaded files in this chat have expired on my side. I don’t need them to generate these new files, but if you later want me to patch your existing repo files directly, you may need to re-upload them.
+
+---
+
+## 1) Add the canonical task meta template
+
+### `tasks/_template/meta.yml`
+
+```yaml
+# Canonical Task Meta Template
+# Conventions:
+# - All keys MUST be lower_snake_case.
+# - Lists are preferred over comma-separated strings.
+# - Paths MUST be repo-relative.
+# - evidence paths MUST be stable (prefer gate-scoped evidence, not task-scoped).
+# - Avoid duplicated fields (do not repeat evidence/verification in multiple sections).
+
+phase: "0"
+task_id: "TSK-P0-XXX"
+title: "Short imperative title"
+owner_role: "ARCHITECT"   # ARCHITECT | SECURITY_GUARDIAN | INVARIANTS_CURATOR | COMPLIANCE_MAPPER
+status: "planned"         # planned | in_progress | completed
+
+depends_on: []            # e.g. ["TSK-P0-050"]
+
+touches: []               # list of file/glob paths
+invariants: []            # e.g. ["INV-072"]
+
+work: []                  # bullet list of actions
+acceptance_criteria: []   # bullet list of AC
+
+verification: []          # list of commands/scripts
+evidence: []              # list of evidence json paths
+
+failure_modes: []         # bullet list
+
+must_read: []             # list of docs/scripts required context
+
+notes: ""
+client: "codex_cli"
+assigned_agent: "architect"
+model: "<UNASSIGNED>"
+```
+
+Why this matters: it forces **one canonical schema**, and your YAML linter can keep it honest.
+
+---
+
+## 2) Add a normative style guide
+
+### `docs/operations/STYLE_GUIDE.md`
+
+```markdown
+# Style Guide (Normative)
+
+This document is **normative**. CI and pre-CI checks enforce these rules.
+
+## YAML Conventions
+
+### Required
+- YAML keys **MUST** be `lower_snake_case` (`^[a-z0-9_]+$`).
+- YAML keys **MUST NOT** contain spaces, uppercase letters, or punctuation like `(` `)` `-`.
+- YAML documents used for governance MUST be parseable with `yaml.safe_load`.
+
+### Prohibited
+- Title Case keys (e.g., `Depends On:`)
+- Keys with spaces (e.g., `Evidence Artifact(s):`)
+- Duplicate re-statement of the same data in different spellings (e.g., `Evidence Artifact(s)` plus `evidence`)
+
+## Task Meta Schema (Phase 0)
+
+Task meta files MUST conform to `tasks/_template/meta.yml` shape:
+- `depends_on` is an array
+- `touches`, `invariants`, `verification`, `evidence` are arrays
+- Evidence paths MUST be stable and repo-relative
+
+## Evidence Semantics
+
+- Evidence JSON files MUST include a top-level `status` field.
+- For tasks marked `completed`, required evidence MUST be `PASS` (unless explicitly overridden by contract).
+- For tasks not completed, evidence may be `SKIPPED` or `PASS` (bootstrap support).
+
+## Enforcement
+
+These conventions are enforced by:
+- `scripts/audit/lint_yaml_conventions.sh`
+- `scripts/audit/verify_phase0_contract_evidence_status.sh`
+```
+
+---
+
+## 3) Wire enforcement into pre-CI (exact placement)
+
+In `scripts/dev/pre_ci.sh`, put this **before** running any plane wrappers:
+
+```bash
+# Style + governance gates (fail-closed)
+scripts/audit/lint_yaml_conventions.sh
+scripts/audit/verify_phase0_contract_evidence_status.sh
+
+# (Optional but recommended) Control plane drift
+# scripts/audit/verify_control_planes_drift.sh
+
+# Then run planes
+scripts/audit/run_security_fast_checks.sh
+scripts/audit/run_invariants_fast_checks.sh
+scripts/audit/run_governance_fast_checks.sh
+```
+
+This ensures conventions fail fast before running heavier checks.
+
+---
+
+## 4) Wire enforcement into CI (invariants workflow)
+
+In `.github/workflows/invariants.yml` add steps **before** your existing invariant/security steps:
+
+```yaml
+- name: Lint YAML conventions
+  run: scripts/audit/lint_yaml_conventions.sh
+
+- name: Verify Phase-0 contract evidence status semantics
+  run: scripts/audit/verify_phase0_contract_evidence_status.sh
+```
+
+Now the architect never has to “remember” — CI enforces.
+
+---
+
+## 5) Strengthen “remembering” via agent docs (exact places)
+
+Add one bullet to **each** of these:
+
+### `AGENTS.md`
+
+Under Architect responsibilities:
+
+* “Reject any YAML keys not in lower_snake_case; use `tasks/_template/meta.yml`.”
+
+### `.codex/agents/architect.md`
+
+Add to the mission prompt:
+
+* “Always write task meta in lower_snake_case; start from `tasks/_template/meta.yml`. Any violation must be fixed before completion.”
+
+And similarly for the other roles (they’ll be editing YAML too).
+
+---
+
+## 6) One small upgrade to your YAML linter (optional but strong)
+
+If you want the linter to enforce **task meta schema** (not just snake_case), I can extend `lint_yaml_conventions.sh` to:
+
+* validate any `tasks/**/meta.yml` contains required keys (`task_id`, `title`, `owner_role`, `status`, etc.)
+* enforce array types for `depends_on`, `touches`, `evidence`, `verification`
+
+Say: **“extend linter to validate meta schema”** and I’ll paste the patch.
+
+---
+
+If you want me to produce these as actual files in your repo (not just pasted text), upload a repo zip or re-upload the relevant directory snapshot and I’ll write them into place.
+
+
+
+
+
+
+
+
+
+
+
+I produced the **actual files** as a patch bundle you can drop into your repo.
+
+**Download:** [symphony_patch_bundle.zip](sandbox:/mnt/data/symphony_patch_bundle.zip)
+
+## What’s inside (created/updated files)
+
+### Added
+
+* `tasks/_template/meta.yml` (canonical task meta template, all `lower_snake_case`)
+* `docs/operations/STYLE_GUIDE.md` (normative convention doc)
+* `scripts/lib/evidence.sh` (evidence helper used by the linters/verifiers)
+* `scripts/lib/guarded_run.sh` (guarded wrapper to emit `SKIPPED`/`FAIL` evidence for missing scripts)
+* `scripts/audit/lint_yaml_conventions.sh` (fail-closed YAML key linter; emits `evidence/phase0/yaml_conventions_lint.json`)
+* `scripts/audit/verify_phase0_contract_evidence_status.sh` (enforces PASS/SKIPPED semantics from contract; emits `evidence/phase0/phase0_contract_evidence_status.json`)
+
+### Patched
+
+* `scripts/dev/pre_ci.sh` (inserts YAML lint early; inserts contract evidence status check at the end)
+
+A `README.md` is included in the zip with apply instructions.
+
+## Apply instructions (quick)
+
+Unzip at repo root (preserve paths), then:
+
+```bash
+chmod +x scripts/lib/evidence.sh scripts/lib/guarded_run.sh \
+  scripts/audit/lint_yaml_conventions.sh scripts/audit/verify_phase0_contract_evidence_status.sh \
+  scripts/dev/pre_ci.sh
+```
+
+Run:
+
+```bash
+scripts/dev/pre_ci.sh
+```
+
+If your contract file isn’t yet at `docs/PHASE0/phase0_contract.yml`, you can point the verifier at the uploaded one:
+
+```bash
+PHASE0_CONTRACT_PATH=/mnt/data/phase0_contract.yml \
+  scripts/audit/verify_phase0_contract_evidence_status.sh
+```

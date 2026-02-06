@@ -8,6 +8,11 @@ EVIDENCE_FILE="$EVIDENCE_DIR/security_definer_dynamic_sql.json"
 ALLOWLIST_FILE="$ROOT_DIR/docs/security/security_definer_dynamic_sql_allowlist.txt"
 
 mkdir -p "$EVIDENCE_DIR"
+source "$ROOT_DIR/scripts/lib/evidence.sh"
+EVIDENCE_TS="$(evidence_now_utc)"
+EVIDENCE_GIT_SHA="$(git_sha)"
+EVIDENCE_SCHEMA_FP="$(schema_fingerprint)"
+export EVIDENCE_TS EVIDENCE_GIT_SHA EVIDENCE_SCHEMA_FP
 
 if [[ ! -d "$MIGRATIONS_DIR" ]]; then
   echo "Migrations directory not found: $MIGRATIONS_DIR" >&2
@@ -63,7 +68,11 @@ printf '%s\n' "${filtered[@]}" | python3 - <<PY
 import json, sys
 lines = [ln.strip() for ln in sys.stdin.read().splitlines() if ln.strip()]
 out = {
-    "status": "fail" if lines else "pass",
+    "check_id": "SEC-SECDEF-DYNAMIC-SQL",
+    "timestamp_utc": "${EVIDENCE_TS}",
+    "git_sha": "${EVIDENCE_GIT_SHA}",
+    "schema_fingerprint": "${EVIDENCE_SCHEMA_FP}",
+    "status": "FAIL" if lines else "PASS",
     "match_count": len(lines),
     "matches": lines,
 }

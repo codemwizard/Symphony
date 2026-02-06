@@ -8,6 +8,11 @@ EVIDENCE_DIR="$ROOT_DIR/evidence/phase0"
 EVIDENCE_OUT="$EVIDENCE_DIR/phase0_contract.json"
 
 mkdir -p "$EVIDENCE_DIR"
+source "$ROOT_DIR/scripts/lib/evidence.sh"
+EVIDENCE_TS="$(evidence_now_utc)"
+EVIDENCE_GIT_SHA="$(git_sha)"
+EVIDENCE_SCHEMA_FP="$(schema_fingerprint)"
+export EVIDENCE_TS EVIDENCE_GIT_SHA EVIDENCE_SCHEMA_FP
 
 CONTRACT_PATH="$CONTRACT_PATH" TASKS_DIR="$TASKS_DIR" EVIDENCE_OUT="$EVIDENCE_OUT" python3 - <<'PY'
 import json
@@ -15,7 +20,6 @@ import os
 import re
 import subprocess
 from pathlib import Path
-from datetime import datetime, timezone
 
 contract_path = Path(os.environ["CONTRACT_PATH"])
 tasks_dir = Path(os.environ["TASKS_DIR"])
@@ -35,11 +39,7 @@ details = {
     "bad_paths": [],
 }
 
-def git_sha():
-    try:
-        return subprocess.check_output(["git", "rev-parse", "HEAD"], text=True).strip()
-    except Exception:
-        return "unknown"
+# git_sha provided by environment
 
 if not contract_path.exists():
     errors.append(f"contract_not_found: {contract_path}")
@@ -65,9 +65,10 @@ for idx, row in enumerate(data):
     mode = row.get("verification_mode")
     evidence_required = row.get("evidence_required")
     evidence_paths = row.get("evidence_paths")
+    gate_ids = row.get("gate_ids")
     scope = row.get("evidence_scope")
 
-    missing_fields = [k for k in ("task_id","status","verification_mode","evidence_required","evidence_paths","evidence_scope","notes") if k not in row]
+    missing_fields = [k for k in ("task_id","status","verification_mode","evidence_required","evidence_paths","evidence_scope","notes","gate_ids") if k not in row]
     if missing_fields:
         details["invalid_rows"].append({"task_id": task_id, "missing_fields": missing_fields})
 
@@ -94,8 +95,13 @@ for idx, row in enumerate(data):
         details["invalid_rows"].append({"task_id": task_id, "evidence_paths": "not_list"})
         evidence_paths = []
 
+    if not isinstance(gate_ids, list):
+        details["invalid_rows"].append({"task_id": task_id, "gate_ids": "not_list"})
+        gate_ids = []
+
     if evidence_required and not evidence_paths:
-        details["invalid_rows"].append({"task_id": task_id, "evidence_paths": "required_but_empty"})
+        if not gate_ids:
+            details["invalid_rows"].append({"task_id": task_id, "evidence_paths": "required_but_empty"})
 
     for p in evidence_paths:
         if not isinstance(p, str) or not p:
@@ -128,11 +134,11 @@ if details["missing_tasks"] or details["unknown_tasks"] or details["duplicate_ta
     errors.append("contract_validation_failed")
 
 result = {
-    "task_id": "TSK-P0-037",
-    "check": "phase0_contract",
-    "result": "pass" if not errors else "fail",
-    "timestamp_utc": datetime.now(timezone.utc).isoformat(),
-    "git_sha": git_sha(),
+    "check_id": "PHASE0-CONTRACT",
+    "timestamp_utc": os.environ.get("EVIDENCE_TS"),
+    "git_sha": os.environ.get("EVIDENCE_GIT_SHA"),
+    "schema_fingerprint": os.environ.get("EVIDENCE_SCHEMA_FP"),
+    "status": "PASS" if not errors else "FAIL",
     "details": details,
 }
 

@@ -1,36 +1,34 @@
-phase: "0"
-task_id: "TSK-P0-047"
-title: "Document day-zero rebaseline decision (ADR + decision memo)"
-owner_role: "ARCHITECT"
-Depends On: TSK-P0-044
-Touches:
-  - "docs/architecture/adrs/ADR-0011-rebaseline-dayzero-schema.md"
-  - "docs/decisions/Rebaseline-Decision.md"
-  - "tasks/TSK-P0-047/meta.yml"
-Invariant(s): "INV-070 (Day-zero rebaseline strategy documented)"
-Work:
-  - "Create ADR-0011 documenting day-zero rebaseline strategy."
-  - "Create Rebaseline-Decision.md referencing ADR-0011."
-Acceptance Criteria:
-  - "ADR and decision memo exist and reference each other."
-  - "Evidence file is written on pass/fail."
-Verification Commands:
-  - "scripts/audit/verify_rebaseline_strategy.sh"
-Evidence Artifact(s):
-  - "./evidence/phase0/rebaseline_decision.json"
-Failure Modes:
-  - "Evidence file missing."
-  - "ADR or decision memo missing."
-must_read:
-  - "docs/invariants/INVARIANTS_MANIFEST.yml"
-  - "scripts/db/verify_invariants.sh"
-  - "scripts/db/ci_invariant_gate.sql"
-evidence:
-  - "./evidence/phase0/rebaseline_decision.json"
+phase: '0'
+task_id: TSK-P0-047
+title: Document day-zero rebaseline decision (ADR + decision memo)
+owner_role: ARCHITECT
+status: completed
+depends_on:
+- TSK-P0-044
+touches:
+- docs/architecture/adrs/ADR-0011-rebaseline-dayzero-schema.md
+- docs/decisions/Rebaseline-Decision.md
+- tasks/TSK-P0-047/meta.yml
+invariants:
+- INV-070 (Day-zero rebaseline strategy documented)
+work:
+- Create ADR-0011 documenting day-zero rebaseline strategy.
+- Create Rebaseline-Decision.md referencing ADR-0011.
+acceptance_criteria:
+- ADR and decision memo exist and reference each other.
+- Evidence file is written on pass/fail.
 verification:
-  - "scripts/audit/verify_rebaseline_strategy.sh"
-status: "completed"
-notes: ""
-client: "codex_cli"
-assigned_agent: "architect"
-model: "<UNASSIGNED>"
+- scripts/audit/verify_rebaseline_strategy.sh
+evidence:
+- ./evidence/phase0/rebaseline_decision.json
+failure_modes:
+- Evidence file missing.
+- ADR or decision memo missing.
+must_read:
+- docs/invariants/INVARIANTS_MANIFEST.yml
+- scripts/db/verify_invariants.sh
+- scripts/db/ci_invariant_gate.sql
+notes: ''
+client: codex_cli
+assigned_agent: architect
+model: <UNASSIGNED>

@@ -2,27 +2,37 @@ controls:
   - id: SEC-DB-001
     title: "SECURITY DEFINER functions must set safe search_path"
     standards:
+      - "NIST 800-53 (AC-6, CM-6)"
       - "NIST 800-207 (Zero Trust)"
-      - "ISO 27001/27002"
+      - "NIST CSF"
+      - "ISO 27001/27002 (A.8, A.12)"
+      - "PCI DSS v4.0 (Req 6.2)"
     enforced_by:
       - "scripts/security/lint_sql_injection.sh"
       - "scripts/db/lint_search_path.sh"
     verified_by:
       - "scripts/audit/run_security_fast_checks.sh"
       - "scripts/db/verify_invariants.sh"
+    gate_ids:
+      - "SEC-G03"
     owner: "team-db"
 
   - id: SEC-DB-002
     title: "Runtime roles and PUBLIC must not regain CREATE on schema public"
     standards:
+      - "NIST 800-53 (AC-6, CM-6)"
       - "NIST 800-207 (Zero Trust)"
-      - "ISO 27001/27002"
+      - "NIST CSF"
+      - "ISO 27001/27002 (A.8, A.12)"
+      - "PCI DSS v4.0 (Req 7.2, Req 8)"
     enforced_by:
       - "scripts/security/lint_privilege_grants.sh"
       - "schema/migrations/* (revoke-first posture)"
     verified_by:
       - "scripts/audit/run_security_fast_checks.sh"
       - "scripts/db/verify_invariants.sh"
+    gate_ids:
+      - "SEC-G01"
     owner: "team-db"
 
   - id: SEC-INT-001
@@ -34,3 +44,101 @@ controls:
     verified_by:
       - "Phase 2+ adapter contract tests (planned)"
     owner: "team-platform"
+
+  - id: SEC-DDL-001
+    title: "DDL lock-risk lint enforced for hot tables"
+    standards:
+      - "PCI DSS v4.0 (Req 6.4, Req 11.2)"
+      - "ISO 27001/27002 (A.12)"
+      - "NIST 800-53 (CM-3)"
+    enforced_by:
+      - "scripts/security/lint_ddl_lock_risk.sh"
+    verified_by:
+      - "scripts/audit/run_security_fast_checks.sh"
+    gate_ids:
+      - "SEC-G02"
+    owner: "team-security"
+
+  - id: SEC-DDL-002
+    title: "DDL allowlist governance (fingerprints + expiry + review)"
+    standards:
+      - "PCI DSS v4.0 (Req 6.4)"
+      - "ISO 27001/27002 (A.12)"
+      - "NIST 800-53 (CM-3)"
+    enforced_by:
+      - "scripts/security/verify_ddl_allowlist_governance.sh"
+    verified_by:
+      - "scripts/audit/run_security_fast_checks.sh"
+    gate_ids:
+      - "SEC-G04"
+    owner: "team-security"
+
+  - id: SEC-IAM-001
+    title: "OpenBao AppRole auth smoke test (secrets access control)"
+    standards:
+      - "PCI DSS v4.0 (Req 3, Req 8)"
+      - "ISO 27001/27002 (A.5, A.8)"
+      - "NIST 800-53 (IA-2)"
+    enforced_by:
+      - "scripts/security/openbao_smoke_test.sh"
+    verified_by:
+      - "scripts/audit/run_security_fast_checks.sh"
+    gate_ids:
+      - "SEC-G05"
+    owner: "team-security"
+
+  - id: SEC-SEC-001
+    title: "Secrets leakage scan (repo static)"
+    standards:
+      - "PCI DSS v4.0 (Req 3, Req 4)"
+      - "OWASP ASVS (V14)"
+      - "ISO 27001/27002 (A.8)"
+    enforced_by:
+      - "scripts/security/scan_secrets.sh"
+    verified_by:
+      - "scripts/audit/run_security_fast_checks.sh"
+    gate_ids:
+      - "SEC-G07"
+    owner: "team-security"
+
+  - id: SEC-DEP-001
+    title: ".NET dependency vulnerability audit"
+    standards:
+      - "PCI DSS v4.0 (Req 6.3, Req 11.3)"
+      - "OWASP ASVS (V1, V14)"
+      - "ISO 27001/27002 (A.12)"
+    enforced_by:
+      - "scripts/security/dotnet_dependency_audit.sh"
+    verified_by:
+      - "scripts/audit/run_security_fast_checks.sh"
+    gate_ids:
+      - "SEC-G08"
+    owner: "team-security"
+
+  - id: SEC-CONF-001
+    title: "Secure configuration lint (infra/workflows)"
+    standards:
+      - "PCI DSS v4.0 (Req 2.2)"
+      - "ISO 27001/27002 (A.12)"
+      - "NIST 800-53 (CM-6)"
+    enforced_by:
+      - "scripts/security/lint_secure_config.sh"
+    verified_by:
+      - "scripts/audit/run_security_fast_checks.sh"
+    gate_ids:
+      - "SEC-G09"
+    owner: "team-security"
+
+  - id: SEC-CODE-001
+    title: "Insecure code patterns lint (static)"
+    standards:
+      - "OWASP ASVS (V5, V10)"
+      - "PCI DSS v4.0 (Req 6.2)"
+      - "ISO 27001/27002 (A.14)"
+    enforced_by:
+      - "scripts/security/lint_insecure_patterns.sh"
+    verified_by:
+      - "scripts/audit/run_security_fast_checks.sh"
+    gate_ids:
+      - "SEC-G10"
+    owner: "team-security"

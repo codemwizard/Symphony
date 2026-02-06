@@ -1,0 +1,30 @@
+phase: '0'
+task_id: TSK-P0-053
+title: Expand compliance mapping (PCI/NIST/OWASP/ISO)
+owner_role: COMPLIANCE_MAPPER
+status: completed
+depends_on:
+- TSK-P0-051
+touches:
+- docs/security/SECURITY_MANIFEST.yml
+- docs/architecture/COMPLIANCE_MAP.md
+- tasks/TSK-P0-053/meta.yml
+invariants:
+- INV-074
+work:
+- "Add mappings for PCI DSS v4.0, NIST CSF/800\u201153, OWASP ASVS, ISO\u201120022,\
+  \ ISO\u201127001/27002."
+- Reference control planes and gate IDs in the mapping.
+acceptance_criteria:
+- Mapping covers each required standard with control references.
+- No duplicate/ambiguous control IDs.
+verification: []
+evidence: []
+failure_modes:
+- Required standards missing or mapping ambiguous.
+must_read:
+- docs/security/SECURITY_MANIFEST.yml
+notes: "Docs\u2011only mapping task; verifier is in TSK\u2011P0\u2011054."
+client: codex_cli
+assigned_agent: compliance_mapper
+model: <UNASSIGNED>

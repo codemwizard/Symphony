@@ -1,0 +1,40 @@
+phase: '0'
+task_id: TSK-P0-050
+title: "Publish Three\u2011Pillar control\u2011plane model + execution guarantee"
+owner_role: ARCHITECT
+status: completed
+depends_on:
+- TSK-P0-037
+touches:
+- docs/security/THREE_PILLARS_SECURITY.md
+- scripts/audit/verify_three_pillars_doc.sh
+- docs/invariants/INVARIANTS_MANIFEST.yml
+- docs/PHASE0/phase0_contract.yml
+- tasks/TSK-P0-050/meta.yml
+invariants:
+- INV-071
+work:
+- "Document the Three\u2011Pillar model, current implementation, gaps, and proposed\
+  \ improvements."
+- "Add execution guarantee: pre\u2011CI + CI enforcement (not post\u2011task only)."
+- Add a verifier that asserts required sections exist and emits evidence.
+- "Register INV\u2011071 in the manifest and contract."
+acceptance_criteria:
+- Document exists with required sections (Current, Weaknesses, Proposed, Execution
+  Guarantee).
+- Verifier emits evidence on pass/fail.
+verification:
+- scripts/audit/verify_three_pillars_doc.sh
+evidence:
+- evidence/phase0/three_pillars_doc.json
+failure_modes:
+- Evidence file missing.
+- Document missing required sections.
+must_read:
+- docs/invariants/INVARIANTS_MANIFEST.yml
+- scripts/db/verify_invariants.sh
+- scripts/db/ci_invariant_gate.sql
+notes: ''
+client: codex_cli
+assigned_agent: architect
+model: <UNASSIGNED>

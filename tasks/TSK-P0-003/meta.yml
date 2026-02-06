@@ -1,37 +1,35 @@
-phase: "0"
-task_id: "TSK-P0-003"
-title: "Implement N-1 compatibility gate"
-owner_role: "DB_FOUNDATION"
-Depends On: TSK-P0-002
-Touches:
-  - "scripts/db/n_minus_one_check.sh"
-  - ".github/workflows/invariants.yml"
-  - "docs/invariants/INVARIANTS_MANIFEST.yml"
-  - "tasks/TSK-P0-003/meta.yml"
-Invariant(s): "INV-021 (N-1 compatibility gate)"
-Work:
-  - "Create n_minus_one_check.sh to validate migrations against N-1 baseline."
-  - "Wire into db_verify_invariants job and fail-closed."
-  - "Add invariant entry with verification command."
-Acceptance Criteria:
-  - "CI fails if N-1 compatibility check fails."
-  - "Evidence file written to ./evidence/phase0/n_minus_one.json."
-Verification Commands:
-  - "scripts/db/n_minus_one_check.sh"
-Evidence Artifact(s):
-  - "./evidence/phase0/n_minus_one.json"
-Failure Modes:
-  - "Missing baseline or incompatible migration must hard-fail."
-must_read:
-  - "docs/invariants/INVARIANTS_MANIFEST.yml"
-  - "scripts/db/verify_invariants.sh"
-  - "scripts/db/ci_invariant_gate.sql"
-evidence:
-  - "./evidence/phase0/n_minus_one.json"
+phase: '0'
+task_id: TSK-P0-003
+title: Implement N-1 compatibility gate
+owner_role: DB_FOUNDATION
+status: completed
+depends_on:
+- TSK-P0-002
+touches:
+- scripts/db/n_minus_one_check.sh
+- .github/workflows/invariants.yml
+- docs/invariants/INVARIANTS_MANIFEST.yml
+- tasks/TSK-P0-003/meta.yml
+invariants:
+- INV-021 (N-1 compatibility gate)
+work:
+- Create n_minus_one_check.sh to validate migrations against N-1 baseline.
+- Wire into db_verify_invariants job and fail-closed.
+- Add invariant entry with verification command.
+acceptance_criteria:
+- CI fails if N-1 compatibility check fails.
+- Evidence file written to ./evidence/phase0/n_minus_one.json.
 verification:
-  - "scripts/db/n_minus_one_check.sh"
-status: "completed"
-notes: ""
-client: "codex_cli"
-assigned_agent: "db_foundation"
-model: "<UNASSIGNED>"
+- scripts/db/n_minus_one_check.sh
+evidence:
+- ./evidence/phase0/n_minus_one.json
+failure_modes:
+- Missing baseline or incompatible migration must hard-fail.
+must_read:
+- docs/invariants/INVARIANTS_MANIFEST.yml
+- scripts/db/verify_invariants.sh
+- scripts/db/ci_invariant_gate.sql
+notes: ''
+client: codex_cli
+assigned_agent: db_foundation
+model: <UNASSIGNED>

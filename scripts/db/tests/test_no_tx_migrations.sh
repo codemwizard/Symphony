@@ -10,6 +10,11 @@ ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../../.." && pwd)"
 EVIDENCE_DIR="$ROOT_DIR/evidence/phase0"
 EVIDENCE_FILE="$EVIDENCE_DIR/no_tx_migrations.json"
 mkdir -p "$EVIDENCE_DIR"
+source "$ROOT_DIR/scripts/lib/evidence.sh"
+EVIDENCE_TS="$(evidence_now_utc)"
+EVIDENCE_GIT_SHA="$(git_sha)"
+EVIDENCE_SCHEMA_FP="$(schema_fingerprint)"
+export EVIDENCE_TS EVIDENCE_GIT_SHA EVIDENCE_SCHEMA_FP
 
 echo "==> No-tx migration test"
 
@@ -74,18 +79,22 @@ index_validity="$(
     -c "SELECT indexrelid::regclass::text || '|' || indisvalid || '|' || indisready FROM pg_index JOIN pg_class ON pg_class.oid=indexrelid WHERE relname = 'idx_payment_outbox_pending_due_claim';"
 )"
 
-status="pass"
+status="PASS"
 if [[ "$applied" != "t" || "$index_exists" != "t" ]]; then
-  status="fail"
+  status="FAIL"
 fi
 if [[ -z "$index_validity" || ( "$index_validity" != *"|t|t" && "$index_validity" != *"|true|true" ) ]]; then
-  status="fail"
+  status="FAIL"
 fi
 
 python3 - <<PY
 import json
 from pathlib import Path
 out = {
+  "check_id": "DB-NO-TX-MIGRATIONS",
+  "timestamp_utc": "${EVIDENCE_TS}",
+  "git_sha": "${EVIDENCE_GIT_SHA}",
+  "schema_fingerprint": "${EVIDENCE_SCHEMA_FP}",
   "status": "$status",
   "migration_applied": "$applied",
   "index_exists": "$index_exists",
@@ -95,7 +104,7 @@ out = {
 Path("$EVIDENCE_FILE").write_text(json.dumps(out, indent=2))
 PY
 
-if [[ "$status" != "pass" ]]; then
+if [[ "$status" != "PASS" ]]; then
   echo "❌ No-tx migration test failed"
   exit 1
 fi

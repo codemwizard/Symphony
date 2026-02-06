@@ -1,39 +1,37 @@
-phase: "0"
-task_id: "TSK-P0-040"
-title: "Wire contract + SQLSTATE drift checks into CI"
-owner_role: "SECURITY_GUARDIAN"
-Depends On: TSK-P0-037, TSK-P0-038
-Touches:
-  - ".github/workflows/invariants.yml"
-  - "tasks/TSK-P0-040/meta.yml"
-Invariant(s): "INV-060, INV-061"
-Work:
-  - "Ensure contract + SQLSTATE drift checks run in the fast-checks job."
-  - "Ensure evidence uploads include evidence/phase0/**."
-Acceptance Criteria:
-  - "Checks run before upload step."
-  - "Evidence artifacts include phase0_contract.json and sqlstate_map_drift.json."
-Verification Commands:
-  - "scripts/audit/run_invariants_fast_checks.sh"
-  - "actionlint .github/workflows/invariants.yml"
-Evidence Artifact(s):
-  - "./evidence/phase0/phase0_contract.json"
-  - "./evidence/phase0/sqlstate_map_drift.json"
-Failure Modes:
-  - "Evidence file missing."
-  - "Checks not executed in fast-checks job."
-  - "Evidence not uploaded."
-must_read:
-  - "docs/invariants/INVARIANTS_MANIFEST.yml"
-  - "scripts/db/verify_invariants.sh"
-  - "scripts/db/ci_invariant_gate.sql"
-evidence:
-  - "./evidence/phase0/phase0_contract.json"
-  - "./evidence/phase0/sqlstate_map_drift.json"
+phase: '0'
+task_id: TSK-P0-040
+title: Wire contract + SQLSTATE drift checks into CI
+owner_role: SECURITY_GUARDIAN
+status: planned
+depends_on:
+- TSK-P0-037
+- TSK-P0-038
+touches:
+- .github/workflows/invariants.yml
+- tasks/TSK-P0-040/meta.yml
+invariants:
+- INV-060
+- INV-061
+work:
+- Ensure contract + SQLSTATE drift checks run in the fast-checks job.
+- Ensure evidence uploads include evidence/phase0/**.
+acceptance_criteria:
+- Checks run before upload step.
+- Evidence artifacts include phase0_contract.json and sqlstate_map_drift.json.
 verification:
-  - "actionlint .github/workflows/invariants.yml"
-status: "planned"
-notes: ""
-client: "codex_cli"
-assigned_agent: "security_guardian"
-model: "<UNASSIGNED>"
+- actionlint .github/workflows/invariants.yml
+evidence:
+- ./evidence/phase0/phase0_contract.json
+- ./evidence/phase0/sqlstate_map_drift.json
+failure_modes:
+- Evidence file missing.
+- Checks not executed in fast-checks job.
+- Evidence not uploaded.
+must_read:
+- docs/invariants/INVARIANTS_MANIFEST.yml
+- scripts/db/verify_invariants.sh
+- scripts/db/ci_invariant_gate.sql
+notes: ''
+client: codex_cli
+assigned_agent: security_guardian
+model: <UNASSIGNED>

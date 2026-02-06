@@ -9,6 +9,11 @@ EVIDENCE_DIR="$ROOT_DIR/evidence/phase0"
 EVIDENCE_FILE="$EVIDENCE_DIR/proxy_resolution_invariant.json"
 
 mkdir -p "$EVIDENCE_DIR"
+source "$ROOT_DIR/scripts/lib/evidence.sh"
+EVIDENCE_TS="$(evidence_now_utc)"
+EVIDENCE_GIT_SHA="$(git_sha)"
+EVIDENCE_SCHEMA_FP="$(schema_fingerprint)"
+export EVIDENCE_TS EVIDENCE_GIT_SHA EVIDENCE_SCHEMA_FP
 
 MANIFEST="$MANIFEST" ADR="$ADR" SCHEMA_DOC="$SCHEMA_DOC" EVIDENCE_FILE="$EVIDENCE_FILE" python3 - <<'PY'
 import json
@@ -20,7 +25,7 @@ manifest = Path(os.environ["MANIFEST"]).read_text(encoding="utf-8")
 adr = Path(os.environ["ADR"])
 schema = Path(os.environ["SCHEMA_DOC"])
 
-status = "pass"
+status = "PASS"
 issues = []
 
 # Check manifest entry
@@ -57,15 +62,19 @@ else:
         issues.append("Schema doc missing proxy_resolutions table")
 
 if issues:
-    status = "fail"
+    status = "FAIL"
 
 out = {
+    "check_id": "PROXY-RESOLUTION-INVARIANT",
+    "timestamp_utc": os.environ.get("EVIDENCE_TS"),
+    "git_sha": os.environ.get("EVIDENCE_GIT_SHA"),
+    "schema_fingerprint": os.environ.get("EVIDENCE_SCHEMA_FP"),
     "status": status,
     "issues": issues,
 }
 Path(os.environ["EVIDENCE_FILE"]).write_text(json.dumps(out, indent=2))
 
-if status != "pass":
+if status != "PASS":
     print("Proxy resolution invariant verification failed")
     raise SystemExit(1)
 

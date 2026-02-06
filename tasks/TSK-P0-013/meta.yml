@@ -1,34 +1,32 @@
-phase: "0"
-task_id: "TSK-P0-013"
-title: "Baseline drift gate (schema baseline freshness)"
-owner_role: "DB_FOUNDATION"
-Depends On: TSK-P0-002
-Touches:
-  - "scripts/db/check_baseline_drift.sh"
-  - "scripts/db/verify_invariants.sh"
-  - "tasks/TSK-P0-013/meta.yml"
-Invariant(s): "INV-004 (Baseline snapshot must not drift)"
-Work:
-  - "Add baseline drift check script that compares baseline to regenerated schema."
-  - "Wire into scripts/db/verify_invariants.sh so CI runs it by default."
-Acceptance Criteria:
-  - "CI fails if baseline snapshot does not match regenerated schema."
-Verification Commands:
-  - "scripts/db/check_baseline_drift.sh"
-Evidence Artifact(s):
-  - "./evidence/phase0/baseline_drift.json"
-Failure Modes:
-  - "Baseline drift or missing baseline must fail."
-must_read:
-  - "docs/invariants/INVARIANTS_MANIFEST.yml"
-  - "scripts/db/verify_invariants.sh"
-  - "scripts/db/ci_invariant_gate.sql"
-evidence:
-  - "./evidence/phase0/baseline_drift.json"
+phase: '0'
+task_id: TSK-P0-013
+title: Baseline drift gate (schema baseline freshness)
+owner_role: DB_FOUNDATION
+status: completed
+depends_on:
+- TSK-P0-002
+touches:
+- scripts/db/check_baseline_drift.sh
+- scripts/db/verify_invariants.sh
+- tasks/TSK-P0-013/meta.yml
+invariants:
+- INV-004 (Baseline snapshot must not drift)
+work:
+- Add baseline drift check script that compares baseline to regenerated schema.
+- Wire into scripts/db/verify_invariants.sh so CI runs it by default.
+acceptance_criteria:
+- CI fails if baseline snapshot does not match regenerated schema.
 verification:
-  - "scripts/db/check_baseline_drift.sh"
-status: "completed"
-notes: ""
-client: "codex_cli"
-assigned_agent: "db_foundation"
-model: "<UNASSIGNED>"
+- scripts/db/check_baseline_drift.sh
+evidence:
+- ./evidence/phase0/baseline_drift.json
+failure_modes:
+- Baseline drift or missing baseline must fail.
+must_read:
+- docs/invariants/INVARIANTS_MANIFEST.yml
+- scripts/db/verify_invariants.sh
+- scripts/db/ci_invariant_gate.sql
+notes: ''
+client: codex_cli
+assigned_agent: db_foundation
+model: <UNASSIGNED>

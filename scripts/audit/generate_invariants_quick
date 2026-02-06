@@ -6,12 +6,22 @@ EVIDENCE_DIR="$ROOT_DIR/evidence/phase0"
 EVIDENCE_FILE="$EVIDENCE_DIR/invariants_quick.json"
 
 mkdir -p "$EVIDENCE_DIR"
+source "$ROOT_DIR/scripts/lib/evidence.sh"
+EVIDENCE_TS="$(evidence_now_utc)"
+EVIDENCE_GIT_SHA="$(git_sha)"
+EVIDENCE_SCHEMA_FP="$(schema_fingerprint)"
 
 python3 "$ROOT_DIR/scripts/audit/generate_invariants_quick.py" > "$ROOT_DIR/docs/invariants/INVARIANTS_QUICK.md"
 
 python3 - <<PY
 import json
 from pathlib import Path
-out = {"status": "pass"}
+out = {
+  "check_id": "INVARIANTS-QUICK",
+  "timestamp_utc": "$EVIDENCE_TS",
+  "git_sha": "$EVIDENCE_GIT_SHA",
+  "schema_fingerprint": "$EVIDENCE_SCHEMA_FP",
+  "status": "PASS",
+}
 Path("$EVIDENCE_FILE").write_text(json.dumps(out, indent=2))
 PY

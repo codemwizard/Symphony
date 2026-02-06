@@ -1,42 +1,39 @@
-phase: "0"
-task_id: "TSK-P0-048"
-title: "Add baseline snapshot generator + canonicalization"
-owner_role: "DB_FOUNDATION"
-Depends On: TSK-P0-047
-Touches:
-  - "scripts/db/generate_baseline_snapshot.sh"
-  - "scripts/db/canonicalize_schema_dump.sh"
-  - "scripts/db/check_baseline_drift.sh"
-  - "schema/baselines/current/0001_baseline.sql"
-  - "schema/baselines/current/baseline.cutoff"
-  - "tasks/TSK-P0-048/meta.yml"
-Invariant(s): "INV-070 (Day-zero rebaseline strategy documented)"
-Work:
-  - "Add canonicalization helper for deterministic schema diff."
-  - "Add baseline snapshot generator for day-zero baseline + metadata."
-  - "Ensure drift check emits provenance fields in evidence."
-Acceptance Criteria:
-  - "Generator script exists and produces baseline + metadata when run."
-  - "Drift check emits provenance fields."
-  - "Evidence file is written on pass/fail."
-Verification Commands:
-  - "scripts/audit/verify_rebaseline_strategy.sh"
-  - "scripts/db/check_baseline_drift.sh"
-Evidence Artifact(s):
-  - "./evidence/phase0/baseline_snapshot.json"
-Failure Modes:
-  - "Evidence file missing."
-  - "Baseline snapshot or canonicalizer missing."
-must_read:
-  - "docs/invariants/INVARIANTS_MANIFEST.yml"
-  - "scripts/db/verify_invariants.sh"
-  - "scripts/db/ci_invariant_gate.sql"
-evidence:
-  - "./evidence/phase0/baseline_snapshot.json"
+phase: '0'
+task_id: TSK-P0-048
+title: Add baseline snapshot generator + canonicalization
+owner_role: DB_FOUNDATION
+status: completed
+depends_on:
+- TSK-P0-047
+touches:
+- scripts/db/generate_baseline_snapshot.sh
+- scripts/db/canonicalize_schema_dump.sh
+- scripts/db/check_baseline_drift.sh
+- schema/baselines/current/0001_baseline.sql
+- schema/baselines/current/baseline.cutoff
+- tasks/TSK-P0-048/meta.yml
+invariants:
+- INV-070 (Day-zero rebaseline strategy documented)
+work:
+- Add canonicalization helper for deterministic schema diff.
+- Add baseline snapshot generator for day-zero baseline + metadata.
+- Ensure drift check emits provenance fields in evidence.
+acceptance_criteria:
+- Generator script exists and produces baseline + metadata when run.
+- Drift check emits provenance fields.
+- Evidence file is written on pass/fail.
 verification:
-  - "scripts/audit/verify_rebaseline_strategy.sh"
-status: "completed"
-notes: ""
-client: "codex_cli"
-assigned_agent: "db_foundation"
-model: "<UNASSIGNED>"
+- scripts/audit/verify_rebaseline_strategy.sh
+evidence:
+- ./evidence/phase0/baseline_snapshot.json
+failure_modes:
+- Evidence file missing.
+- Baseline snapshot or canonicalizer missing.
+must_read:
+- docs/invariants/INVARIANTS_MANIFEST.yml
+- scripts/db/verify_invariants.sh
+- scripts/db/ci_invariant_gate.sql
+notes: ''
+client: codex_cli
+assigned_agent: db_foundation
+model: <UNASSIGNED>

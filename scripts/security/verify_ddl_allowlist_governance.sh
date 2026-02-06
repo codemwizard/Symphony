@@ -7,12 +7,25 @@ EVIDENCE_DIR="$ROOT_DIR/evidence/phase0"
 EVIDENCE_FILE="$EVIDENCE_DIR/ddl_allowlist_governance.json"
 
 mkdir -p "$EVIDENCE_DIR"
+source "$ROOT_DIR/scripts/lib/evidence.sh"
+EVIDENCE_TS="$(evidence_now_utc)"
+EVIDENCE_GIT_SHA="$(git_sha)"
+EVIDENCE_SCHEMA_FP="$(schema_fingerprint)"
+export EVIDENCE_TS EVIDENCE_GIT_SHA EVIDENCE_SCHEMA_FP
 
 if [[ ! -f "$ALLOWLIST" ]]; then
   python3 - <<PY
 import json
 from pathlib import Path
-Path("$EVIDENCE_FILE").write_text(json.dumps({"status":"fail","reason":"missing allowlist"}, indent=2))
+out = {
+    "check_id": "SEC-DDL-ALLOWLIST-GOV",
+    "timestamp_utc": "${EVIDENCE_TS}",
+    "git_sha": "${EVIDENCE_GIT_SHA}",
+    "schema_fingerprint": "${EVIDENCE_SCHEMA_FP}",
+    "status": "FAIL",
+    "reason": "missing allowlist",
+}
+Path("$EVIDENCE_FILE").write_text(json.dumps(out, indent=2))
 PY
   echo "❌ Missing allowlist: $ALLOWLIST" >&2
   exit 1
@@ -61,7 +74,11 @@ for e in entries:
 status = 'pass' if not issues and not expired else 'fail'
 
 out = {
-    'status': status,
+    'check_id': "SEC-DDL-ALLOWLIST-GOV",
+    'timestamp_utc': os.environ.get("EVIDENCE_TS"),
+    'git_sha': os.environ.get("EVIDENCE_GIT_SHA"),
+    'schema_fingerprint': os.environ.get("EVIDENCE_SCHEMA_FP"),
+    'status': "PASS" if status == "pass" else "FAIL",
     'entry_count': len(entries),
     'expired': expired,
     'issues': issues,
