@@ -2,10 +2,10 @@
 set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
-CONTRACT_PATH="$ROOT_DIR/docs/PHASE0/phase0_contract.yml"
-TASKS_DIR="$ROOT_DIR/tasks"
-EVIDENCE_DIR="$ROOT_DIR/evidence/phase0"
-EVIDENCE_OUT="$EVIDENCE_DIR/phase0_contract.json"
+CONTRACT_PATH="${CONTRACT_PATH:-$ROOT_DIR/docs/PHASE0/phase0_contract.yml}"
+TASKS_DIR="${TASKS_DIR:-$ROOT_DIR/tasks}"
+EVIDENCE_DIR="${EVIDENCE_DIR:-$ROOT_DIR/evidence/phase0}"
+EVIDENCE_OUT="${EVIDENCE_OUT:-$EVIDENCE_DIR/phase0_contract.json}"
 
 mkdir -p "$EVIDENCE_DIR"
 source "$ROOT_DIR/scripts/lib/evidence.sh"
@@ -14,7 +14,8 @@ EVIDENCE_GIT_SHA="$(git_sha)"
 EVIDENCE_SCHEMA_FP="$(schema_fingerprint)"
 export EVIDENCE_TS EVIDENCE_GIT_SHA EVIDENCE_SCHEMA_FP
 
-CONTRACT_PATH="$CONTRACT_PATH" TASKS_DIR="$TASKS_DIR" EVIDENCE_OUT="$EVIDENCE_OUT" python3 - <<'PY'
+export CONTRACT_PATH TASKS_DIR EVIDENCE_OUT
+python3 - <<'PY'
 import json
 import os
 import re
@@ -41,15 +42,21 @@ details = {
 
 # git_sha provided by environment
 
-if not contract_path.exists():
-    errors.append(f"contract_not_found: {contract_path}")
+try:
+    import yaml  # type: ignore
+except Exception as e:
+    errors.append(f"pyyaml_missing: {e}")
     data = []
 else:
-    try:
-        data = json.loads(contract_path.read_text(encoding="utf-8"))
-    except Exception as e:
-        errors.append(f"contract_parse_error: {e}")
+    if not contract_path.exists():
+        errors.append(f"contract_not_found: {contract_path}")
         data = []
+    else:
+        try:
+            data = yaml.safe_load(contract_path.read_text(encoding="utf-8")) or []
+        except Exception as e:
+            errors.append(f"contract_parse_error: {e}")
+            data = []
 
 if not isinstance(data, list):
     errors.append("contract_not_list")
@@ -142,6 +149,7 @@ result = {
     "details": details,
 }
 
+evidence_out.parent.mkdir(parents=True, exist_ok=True)
 evidence_out.write_text(json.dumps(result, indent=2))
 
 if errors:
