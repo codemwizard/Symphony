@@ -55,6 +55,9 @@ export SYMPHONY_SKIP_CONTRACT_EVIDENCE_STATUS=1
 scripts/audit/run_invariants_fast_checks.sh
 unset SYMPHONY_SKIP_CONTRACT_EVIDENCE_STATUS
 
+echo "==> 1b) Structural change linkage evidence"
+scripts/audit/enforce_change_rule.sh
+
 echo "==> 2) DB verify (fresh)"
 SKIP_POLICY_SEED=1 scripts/db/verify_invariants.sh
 
@@ -63,6 +66,12 @@ scripts/db/n_minus_one_check.sh
 
 echo "==> 4) DB function tests"
 scripts/db/tests/test_db_functions.sh
+
+echo "==> 4b) Idempotency zombie test"
+scripts/db/tests/test_idempotency_zombie.sh
+
+echo "==> 4c) No-tx migrations test"
+scripts/db/tests/test_no_tx_migrations.sh
 
 echo "==> 5) Security fast checks"
 scripts/audit/run_security_fast_checks.sh
