@@ -665,7 +665,7 @@ jobs:
       - name: Verify Phase-0 contract evidence status (merged artifacts)
         run: |
           chmod +x scripts/audit/verify_phase0_contract_evidence_status.sh
-          CI_ONLY=1 scripts/audit/verify_phase0_contract_evidence_status.sh
+          CI_ONLY=1 EVIDENCE_ROOT="evidence/phase0" scripts/audit/verify_phase0_contract_evidence_status.sh
           
       - name: Require Phase-0 evidence (fail-closed)
         run: |
