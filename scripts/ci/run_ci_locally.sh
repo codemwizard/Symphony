@@ -51,7 +51,9 @@ psql "$ADMIN_URL" -X -v ON_ERROR_STOP=1 -c "DROP DATABASE IF EXISTS \"$TARGET_DB
 psql "$ADMIN_URL" -X -v ON_ERROR_STOP=1 -c "CREATE DATABASE \"$TARGET_DB\";" >/dev/null
 
 echo "==> 1) Fast invariants checks"
+export SYMPHONY_SKIP_CONTRACT_EVIDENCE_STATUS=1
 scripts/audit/run_invariants_fast_checks.sh
+unset SYMPHONY_SKIP_CONTRACT_EVIDENCE_STATUS
 
 echo "==> 2) DB verify (fresh)"
 SKIP_POLICY_SEED=1 scripts/db/verify_invariants.sh
@@ -64,6 +66,18 @@ scripts/db/tests/test_db_functions.sh
 
 echo "==> 5) Security fast checks"
 scripts/audit/run_security_fast_checks.sh
+
+echo "==> 5b) OpenBao smoke"
+if [[ -x scripts/security/openbao_bootstrap.sh && -x scripts/security/openbao_smoke_test.sh ]]; then
+  scripts/security/openbao_bootstrap.sh
+  scripts/security/openbao_smoke_test.sh
+else
+  echo "ERROR: OpenBao scripts missing"
+  exit 1
+fi
+
+echo "==> 5c) Contract evidence status"
+CI_ONLY=1 scripts/audit/verify_phase0_contract_evidence_status.sh
 
 echo "==> 6) Evidence gate (CI_ONLY)"
 CI_ONLY=1 scripts/ci/check_evidence_required.sh evidence/phase0

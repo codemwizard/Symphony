@@ -1443,3 +1443,23 @@ Evidence Artifact(s):
 Failure Modes:
 - Evidence file missing.
 - Missing evidence on parse failure.
+
+TASK ID: TSK-P0-067
+Title: Reorder contract evidence status gate to run last
+Owner Role: ARCHITECT
+Depends On: TSK-P0-061
+Touches: `scripts/audit/run_phase0_ordered_checks.sh`, `scripts/ci/run_ci_locally.sh`, `tasks/TSK-P0-067/meta.yml`
+Invariant(s): INV-081 (Pre-CI/CI order alignment)
+Work:
+- Skip contract evidence status inside `run_invariants_fast_checks.sh` (exported env).
+- Run OpenBao smoke before evidence status in ordered checks.
+- Run `verify_phase0_contract_evidence_status.sh` as the final gate.
+Acceptance Criteria:
+- Evidence status check does not run before OpenBao evidence exists.
+- Local parity run mirrors CI order.
+Verification Commands:
+- `scripts/audit/verify_ci_order.sh`
+Evidence Artifact(s):
+- `./evidence/phase0/ci_order.json`
+Failure Modes:
+- Evidence status gate runs before evidence producers.

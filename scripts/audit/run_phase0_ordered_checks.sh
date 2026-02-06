@@ -19,15 +19,30 @@ run scripts/audit/validate_routing_fallback.sh
 
 run scripts/audit/run_security_fast_checks.sh
 
+# OpenBao smoke must run before evidence status checks (contract requires openbao_smoke.json)
+if [[ -x scripts/security/openbao_bootstrap.sh && -x scripts/security/openbao_smoke_test.sh ]]; then
+  run scripts/security/openbao_bootstrap.sh
+  run scripts/security/openbao_smoke_test.sh
+else
+  echo "ERROR: OpenBao scripts missing"
+  exit 1
+fi
+
 # Contract evidence status is evaluated after evidence aggregation (cross-job) in CI.
 # Skip inside ordered checks to avoid false negatives when evidence isn't yet merged.
 if [[ "${GITHUB_ACTIONS:-}" != "true" ]]; then
   export SYMPHONY_SKIP_TOOLCHAIN_CHECK=1
 fi
-SYMPHONY_SKIP_CONTRACT_EVIDENCE_STATUS=1 run scripts/audit/run_invariants_fast_checks.sh
+export SYMPHONY_SKIP_CONTRACT_EVIDENCE_STATUS=1
+run scripts/audit/run_invariants_fast_checks.sh
+unset SYMPHONY_SKIP_CONTRACT_EVIDENCE_STATUS
 
 run scripts/audit/validate_evidence_schema.sh
 run bash scripts/audit/verify_phase0_contract.sh
+
+# Run contract evidence status after all evidence producers
+run bash scripts/audit/verify_phase0_contract_evidence_status.sh
+
 run bash scripts/audit/verify_ci_order.sh
 
 echo "✅ Phase-0 ordered checks PASSED."
