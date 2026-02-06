@@ -57,3 +57,13 @@ _Generated from `docs/invariants/INVARIANTS_MANIFEST.yml` (do not edit by hand).
 | INV-068 | P1 | DDL allowlist governance enforced (fingerprints + expiry + review) | ["team-security"] | scripts/security/verify_ddl_allowlist_governance.sh |
 | INV-069 | P1 | Phase-0 implementation plan is current | ["team-platform"] | scripts/audit/verify_phase0_impl_plan.sh |
 | INV-070 | P1 | Day-zero rebaseline strategy is documented and enforced | ["team-platform", "team-db"] | scripts/audit/verify_rebaseline_strategy.sh |
+| INV-071 | P1 | Three-Pillar control-plane model is documented and enforced | ["team-platform"] | scripts/audit/verify_three_pillars_doc.sh |
+| INV-072 | P1 | Control-plane gates are declared and drift-checked | ["team-platform"] | scripts/audit/verify_control_planes_drift.sh |
+| INV-073 | P1 | Security plane guardrails are enforced (secrets/deps/config/code) | ["team-security"] | scripts/audit/run_security_fast_checks.sh |
+| INV-075 | P1 | Compliance manifest is complete and gate-mapped | ["team-compliance"] | scripts/audit/verify_compliance_manifest.sh |
+| INV-076 | P1 | Agent scopes align with control-plane ownership | ["team-platform"] | scripts/audit/verify_control_planes_drift.sh |
+| INV-077 | P1 | Evidence schema is canonical and validated | ["team-platform"] | scripts/audit/validate_evidence_schema.sh |
+| INV-078 | P1 | YAML conventions are normalized and linted | ["team-platform"] | scripts/audit/lint_yaml_conventions.sh |
+| INV-079 | P1 | CI toolchain is pinned (PyYAML + ripgrep) | ["team-security"] | scripts/audit/verify_ci_toolchain.sh |
+| INV-080 | P1 | Phase-0 contract evidence status semantics enforced | ["team-platform"] | scripts/audit/verify_phase0_contract_evidence_status.sh |
+| INV-081 | P1 | Pre-CI and CI run the same ordered Phase-0 checks | ["team-platform"] | scripts/audit/verify_ci_order.sh |
