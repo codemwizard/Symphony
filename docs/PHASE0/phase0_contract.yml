@@ -800,5 +800,61 @@
     "gate_ids": [
       "INT-G16"
     ]
+  },
+  {
+    "task_id": "TSK-P0-063",
+    "status": "completed",
+    "verification_mode": "both",
+    "evidence_required": true,
+    "evidence_paths": [
+      "evidence/phase0/phase0_contract_evidence_status.json"
+    ],
+    "evidence_scope": "ci_artifact",
+    "notes": "",
+    "gate_ids": [
+      "INT-G19"
+    ]
+  },
+  {
+    "task_id": "TSK-P0-064",
+    "status": "completed",
+    "verification_mode": "both",
+    "evidence_required": true,
+    "evidence_paths": [
+      "evidence/phase0/phase0_contract_evidence_status.json"
+    ],
+    "evidence_scope": "ci_artifact",
+    "notes": "",
+    "gate_ids": [
+      "INT-G19"
+    ]
+  },
+  {
+    "task_id": "TSK-P0-065",
+    "status": "completed",
+    "verification_mode": "both",
+    "evidence_required": true,
+    "evidence_paths": [
+      "evidence/phase0/phase0_contract.json"
+    ],
+    "evidence_scope": "ci_artifact",
+    "notes": "",
+    "gate_ids": [
+      "INT-G03"
+    ]
+  },
+  {
+    "task_id": "TSK-P0-066",
+    "status": "completed",
+    "verification_mode": "both",
+    "evidence_required": true,
+    "evidence_paths": [
+      "evidence/phase0/phase0_contract.json"
+    ],
+    "evidence_scope": "ci_artifact",
+    "notes": "",
+    "gate_ids": [
+      "INT-G03"
+    ]
   }
 ]
