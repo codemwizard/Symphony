@@ -40,10 +40,9 @@ unset SYMPHONY_SKIP_CONTRACT_EVIDENCE_STATUS
 
 run scripts/audit/validate_evidence_schema.sh
 run bash scripts/audit/verify_phase0_contract.sh
+run bash scripts/audit/verify_ci_order.sh
 
 # Run contract evidence status after all evidence producers
 run bash scripts/audit/verify_phase0_contract_evidence_status.sh
-
-run bash scripts/audit/verify_ci_order.sh
 
 echo "✅ Phase-0 ordered checks PASSED."

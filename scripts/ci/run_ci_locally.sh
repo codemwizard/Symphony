@@ -88,6 +88,9 @@ fi
 echo "==> 5c) Contract evidence status"
 CI_ONLY=1 scripts/audit/verify_phase0_contract_evidence_status.sh
 
+echo "==> 5d) CI order verification"
+scripts/audit/verify_ci_order.sh
+
 echo "==> 6) Evidence gate (CI_ONLY)"
 CI_ONLY=1 scripts/ci/check_evidence_required.sh evidence/phase0
 
