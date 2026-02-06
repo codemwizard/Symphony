@@ -28,7 +28,7 @@ evidence_decision = Path(os.environ["EVIDENCE_DECISION"])
 evidence_snapshot = Path(os.environ["EVIDENCE_SNAPSHOT"])
 evidence_strategy = Path(os.environ["EVIDENCE_STRATEGY"])
 
-adr = root / "docs/architecture/adrs/ADR-0011-rebaseline-dayzero-schema.md"
+adr = root / "docs/decisions/ADR-0011-rebaseline-dayzero-schema.md"
 decision = root / "docs/decisions/Rebaseline-Decision.md"
 baseline = root / "schema/baselines/current/0001_baseline.sql"
 cutoff = root / "schema/baselines/current/baseline.cutoff"

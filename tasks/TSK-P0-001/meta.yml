@@ -8,7 +8,7 @@ touches:
 - scripts/audit/verify_repo_structure.sh
 - .github/workflows/invariants.yml
 - docs/agents/ARCHITECT_PHASE0_PROMPT.md
-- docs/phase-0/phase-0-foundation.md
+- docs/PHASE0/phase-0-foundation.md
 - tasks/TSK-P0-001/meta.yml
 invariants:
 - INV-019 (Repo structure enforced)
@@ -34,3 +34,5 @@ notes: ''
 client: codex_ide
 assigned_agent: architect
 model: GPT-5.2-Codex
+implementation_plan: docs/plans/phase0/TSK-P0-001/PLAN.md
+implementation_log: docs/plans/phase0/TSK-P0-001/EXEC_LOG.md

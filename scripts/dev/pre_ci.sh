@@ -10,6 +10,15 @@ ENV_FILE="infra/docker/.env"
 COMPOSE_FILE="infra/docker/docker-compose.yml"
 DB_CONTAINER="symphony-postgres"
 
+echo "==> Toolchain parity bootstrap (local)"
+if [[ -x scripts/audit/bootstrap_local_ci_toolchain.sh ]]; then
+  scripts/audit/bootstrap_local_ci_toolchain.sh
+  export PATH="$ROOT/.toolchain/bin:$PATH"
+else
+  echo "ERROR: scripts/audit/bootstrap_local_ci_toolchain.sh not found"
+  exit 1
+fi
+
 if [[ -x scripts/audit/preflight_structural_staged.sh ]]; then
   echo "==> Structural preflight (staged) — change-rule"
   scripts/audit/preflight_structural_staged.sh
@@ -25,6 +34,14 @@ if [[ "$CLEAN_EVIDENCE" == "1" ]]; then
   else
     echo "WARN: scripts/ci/clean_evidence.sh not found; skipping"
   fi
+fi
+
+echo "==> Governance preflight: task plan/log presence"
+if [[ -x scripts/audit/verify_task_plans_present.sh ]]; then
+  scripts/audit/verify_task_plans_present.sh
+else
+  echo "ERROR: scripts/audit/verify_task_plans_present.sh not found"
+  exit 1
 fi
 
 if [[ -f "$ENV_FILE" ]]; then

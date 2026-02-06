@@ -32,3 +32,5 @@ notes: Invariant registration is handled by TSK-P0-009.
 client: codex_cli
 assigned_agent: security_guardian
 model: <UNASSIGNED>
+implementation_plan: docs/plans/phase0/TSK-P0-026/PLAN.md
+implementation_log: docs/plans/phase0/TSK-P0-026/EXEC_LOG.md

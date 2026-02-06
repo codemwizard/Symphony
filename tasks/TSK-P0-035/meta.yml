@@ -7,7 +7,7 @@ depends_on:
 - TSK-P0-009
 touches:
 - docs/invariants/INVARIANTS_MANIFEST.yml
-- docs/architecture/adrs/ADR-0008-proxy-resolution-strategy.md
+- docs/decisions/ADR-0008-proxy-resolution-strategy.md
 - docs/architecture/schema/proxy_resolution_schema.md
 - scripts/audit/verify_proxy_resolution_invariant.sh
 - tasks/TSK-P0-035/meta.yml
@@ -41,3 +41,5 @@ notes: ''
 client: codex_cli
 assigned_agent: invariants_curator
 model: <UNASSIGNED>
+implementation_plan: docs/plans/phase0/TSK-P0-035/PLAN.md
+implementation_log: docs/plans/phase0/TSK-P0-035/EXEC_LOG.md

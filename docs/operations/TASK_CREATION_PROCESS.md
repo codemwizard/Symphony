@@ -86,3 +86,16 @@ Every task must:
 - Allowing tasks to touch files outside the assigned agent’s allowed paths
 - Failing to emit evidence artifacts
 - Missing `Depends On` when a verifier relies on earlier work
+
+## 7) Document placement (for task touch lists)
+
+When listing `Touches`, place new documents in canonical locations:
+- Phase-0 governance/contracts docs: `docs/PHASE0/**`
+- Authoritative ADRs: `docs/decisions/**`
+- Task plans/logs: `docs/plans/phase0/**`
+
+Legacy locations still exist but are not default targets for new documents:
+- `docs/phase-0/**`
+- `docs/architecture/adrs/**`
+
+See `docs/operations/DOCUMENT_PLACEMENT.md`.

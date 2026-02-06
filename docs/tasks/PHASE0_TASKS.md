@@ -24,7 +24,7 @@ Completion checklist (per task)
 - Invariants gates/scripts: `scripts/audit/run_invariants_fast_checks.sh`, `scripts/audit/enforce_change_rule.sh`, `scripts/db/verify_invariants.sh`, `scripts/db/ci_invariant_gate.sql`.
 - Security fast checks: `scripts/audit/run_security_fast_checks.sh`, `scripts/security/lint_privilege_grants.sh`, `scripts/security/lint_sql_injection.sh`.
 - CI workflow: `.github/workflows/invariants.yml` (mechanical invariants, DB verify, security checks).
-- Phase-0 docs exist: `docs/phase-0/phase-0-foundation.md`.
+- Phase-0 docs exist: `docs/PHASE0/phase-0-foundation.md`.
 - Architecture docs exist: `docs/architecture/*` including `SDD.md`, `ARCHITECTURE_DIAGRAM.md`, `ROADMAP.md`.
 - No .NET 10 `src/` or `tests/` layout exists at repo root (NOT FOUND).
 - No OpenBao compose or scripts exist (NOT FOUND).
@@ -38,7 +38,7 @@ TASK ID: TSK-P0-001
 Title: Establish repo structure verifier and agents layout
 Owner Role: ARCHITECT
 Depends On: none
-Touches: `scripts/audit/verify_repo_structure.sh`, `.github/workflows/invariants.yml`, `docs/agents/ARCHITECT_PHASE0_PROMPT.md`, `docs/phase-0/phase-0-foundation.md`, `tasks/TSK-P0-001/meta.yml`
+Touches: `scripts/audit/verify_repo_structure.sh`, `.github/workflows/invariants.yml`, `docs/agents/ARCHITECT_PHASE0_PROMPT.md`, `docs/PHASE0/phase-0-foundation.md`, `tasks/TSK-P0-001/meta.yml`
 Invariant(s): NEW INV-019 (Repo structure enforced)
 Work:
 - Define required directories for .NET 10-friendly layout: `src/`, `tests/`, `tools/`, `infra/`, `scripts/`, `docs/`, `docs/agents/`, `docs/architecture/`, `docs/invariants/`, `docs/tasks/`.
@@ -768,7 +768,7 @@ TASK ID: TSK-P0-035
 Title: Declare Proxy/Alias Resolution invariant (roadmap) + schema design hooks
 Owner Role: INVARIANTS_CURATOR
 Depends On: TSK-P0-009
-Touches: `docs/invariants/INVARIANTS_MANIFEST.yml`, `docs/architecture/adrs/ADR-0008-proxy-resolution-strategy.md`, `docs/architecture/schema/proxy_resolution_schema.md`, `scripts/audit/verify_proxy_resolution_invariant.sh`, `tasks/TSK-P0-035/meta.yml`
+Touches: `docs/invariants/INVARIANTS_MANIFEST.yml`, `docs/decisions/ADR-0008-proxy-resolution-strategy.md`, `docs/architecture/schema/proxy_resolution_schema.md`, `scripts/audit/verify_proxy_resolution_invariant.sh`, `tasks/TSK-P0-035/meta.yml`
 Invariant(s): NEW INV-048 (Proxy/Alias resolution required before dispatch)
 Work:
 - Add invariant as `roadmap`, explicitly defining resolve point, durable record fields (hash-only), fail-closed rule, and outbox/idempotency linkage.
@@ -1043,7 +1043,7 @@ TASK ID: TSK-P0-047
 Title: Document day-zero rebaseline decision (ADR + decision memo)
 Owner Role: ARCHITECT
 Depends On: TSK-P0-044
-Touches: `docs/architecture/adrs/ADR-0011-rebaseline-dayzero-schema.md`, `docs/decisions/Rebaseline-Decision.md`, `tasks/TSK-P0-047/meta.yml`
+Touches: `docs/decisions/ADR-0011-rebaseline-dayzero-schema.md`, `docs/decisions/Rebaseline-Decision.md`, `tasks/TSK-P0-047/meta.yml`
 Invariant(s): INV-070 (Day-zero rebaseline strategy documented)
 Work:
 - Document the day-zero rebaseline strategy and baseline-first migration posture in ADR-0011.
@@ -1507,3 +1507,250 @@ Evidence Artifact(s):
 Failure Modes:
 - Evidence file missing.
 - YAML parse errors do not emit evidence.
+
+TASK ID: TSK-P0-070
+Title: Plan/log scaffolding
+Owner Role: ARCHITECT
+Depends On: none
+Touches: `docs/plans/phase0/_template/PLAN.md`, `docs/plans/phase0/_template/EXEC_LOG.md`, `docs/plans/phase0/INDEX.md`, `docs/plans/phase0/TSK-P0-050_three_pillars/PLAN.md`, `docs/plans/phase0/TSK-P0-050_three_pillars/EXEC_LOG.md`, `docs/plans/phase0/TSK-P0-051_control_planes/PLAN.md`, `docs/plans/phase0/TSK-P0-051_control_planes/EXEC_LOG.md`, `docs/plans/phase0/TSK-P0-052_security_plane_expansion/PLAN.md`, `docs/plans/phase0/TSK-P0-052_security_plane_expansion/EXEC_LOG.md`, `docs/plans/phase0/TSK-P0-053_compliance_mapping/PLAN.md`, `docs/plans/phase0/TSK-P0-053_compliance_mapping/EXEC_LOG.md`, `docs/plans/phase0/TSK-P0-054_compliance_verifier/PLAN.md`, `docs/plans/phase0/TSK-P0-054_compliance_verifier/EXEC_LOG.md`, `docs/plans/phase0/TSK-P0-055_agent_scopes_alignment/PLAN.md`, `docs/plans/phase0/TSK-P0-055_agent_scopes_alignment/EXEC_LOG.md`, `docs/plans/phase0/TSK-P0-070_plan_log_scaffolding/PLAN.md`, `docs/plans/phase0/TSK-P0-070_plan_log_scaffolding/EXEC_LOG.md`, `docs/plans/phase0/TSK-P0-071_task_meta_schema_update/PLAN.md`, `docs/plans/phase0/TSK-P0-071_task_meta_schema_update/EXEC_LOG.md`, `docs/plans/phase0/TSK-P0-072_plan_log_verifier/PLAN.md`, `docs/plans/phase0/TSK-P0-072_plan_log_verifier/EXEC_LOG.md`, `docs/plans/phase0/TSK-P0-073_ci_pre_ci_wiring/PLAN.md`, `docs/plans/phase0/TSK-P0-073_ci_pre_ci_wiring/EXEC_LOG.md`
+Invariant(s): N/A (plan/log scaffolding)
+Work:
+- Create PLAN/EXEC_LOG templates under `docs/plans/phase0/_template`.
+- Scaffold plan/log folders for active three‑pillar cluster tasks.
+- Add `docs/plans/phase0/INDEX.md` for discovery.
+Acceptance Criteria:
+- Templates exist and are reusable.
+- Plan/log folders exist for active clusters.
+- INDEX lists clusters and status.
+Verification Commands:
+- `rg -n "Phase-0 Plans Index" docs/plans/phase0/INDEX.md`
+Failure Modes:
+- Plan/log templates missing.
+- Plan/log scaffolds missing for active clusters.
+
+TASK ID: TSK-P0-071
+Title: Task meta schema update for plan/log linkage
+Owner Role: ARCHITECT
+Depends On: TSK-P0-070
+Touches: `tasks/_template/meta.yml`, `docs/tasks/TASK_META_SCHEMA.md`, `docs/operations/STYLE_GUIDE.md`, `scripts/audit/lint_yaml_conventions.sh`, `tasks/TSK-P0-*/meta.yml`, `docs/plans/phase0/TSK-P0-068_audit_report_update/PLAN.md`, `docs/plans/phase0/TSK-P0-068_audit_report_update/EXEC_LOG.md`, `docs/plans/phase0/TSK-P0-069_contract_parse_test/PLAN.md`, `docs/plans/phase0/TSK-P0-069_contract_parse_test/EXEC_LOG.md`
+Invariant(s): N/A (task meta plan/log linkage)
+Work:
+- Add `implementation_plan` and `implementation_log` to the task meta template.
+- Update task meta schema and style guide with plan/log requirements.
+- Allow YAML lint to recognize new keys and enforce them for in_progress/completed tasks.
+- Backfill implementation_plan/log for active tasks and scaffold missing plan/log files.
+Acceptance Criteria:
+- Task meta template includes implementation_plan/log fields.
+- YAML lint accepts new keys and enforces them for in_progress/completed tasks.
+- Active tasks have plan/log paths populated.
+Verification Commands:
+- `scripts/audit/lint_yaml_conventions.sh`
+Evidence Artifact(s):
+- `./evidence/phase0/yaml_conventions_lint.json`
+Failure Modes:
+- Evidence file missing.
+- Missing implementation_plan/log for in_progress/completed tasks.
+
+TASK ID: TSK-P0-072
+Title: Plan/log verifier (fail-closed)
+Owner Role: ARCHITECT
+Depends On: TSK-P0-071
+Touches: `scripts/audit/verify_task_plans_present.sh`, `tasks/TSK-P0-072/meta.yml`
+Invariant(s): N/A (plan/log verification)
+Work:
+- Implement verifier enforcing plan/log presence for in_progress/completed tasks.
+- Require EXEC_LOG to reference PLAN and both files to mention task_id.
+- Require completed tasks to include a Final summary.
+- Emit evidence at `evidence/phase0/task_plans_present.json`.
+Acceptance Criteria:
+- Verifier fails when required plan/log files are missing.
+- Verifier emits evidence even on failure.
+Verification Commands:
+- `scripts/audit/verify_task_plans_present.sh`
+Evidence Artifact(s):
+- `./evidence/phase0/task_plans_present.json`
+Failure Modes:
+- Evidence file missing.
+- Plan/log requirements not enforced.
+
+TASK ID: TSK-P0-073
+Title: Wire plan/log verifier into pre-CI and CI
+Owner Role: ARCHITECT
+Depends On: TSK-P0-072
+Touches: `scripts/dev/pre_ci.sh`, `.github/workflows/invariants.yml`, `tasks/TSK-P0-073/meta.yml`
+Invariant(s): N/A (plan/log enforcement wiring)
+Work:
+- Add `verify_task_plans_present.sh` to pre-CI before heavier gates.
+- Add `verify_task_plans_present.sh` to CI mechanical job.
+Acceptance Criteria:
+- Verifier runs in pre-CI and CI before evidence aggregation.
+Verification Commands:
+- `scripts/audit/verify_task_plans_present.sh`
+Evidence Artifact(s):
+- `./evidence/phase0/task_plans_present.json`
+Failure Modes:
+- Evidence file missing.
+- Verifier not invoked in CI or pre-CI.
+
+TASK ID: TSK-P0-080
+Title: Add billing usage ledger Phase-0 hook (append-only)
+Owner Role: DB_FOUNDATION
+Depends On: TSK-P0-073
+Touches: `schema/migrations/**`, `scripts/db/**`, `tasks/TSK-P0-080/meta.yml`
+Invariant(s): NEW INV-090 (Atomic revenue event hook exists)
+Work:
+- Add a forward-only migration creating `billing_usage_events` with attribution fields and append-only posture.
+- Add constraints/indexes needed for schema-level billable traceability in Phase-0.
+- Keep runtime pricing logic out of scope; schema hook only.
+Acceptance Criteria:
+- `billing_usage_events` exists with required attribution and correlation fields.
+- UPDATE/DELETE protection is enforced (trigger and/or privilege posture).
+Verification Commands:
+- `scripts/db/verify_invariants.sh`
+- `scripts/db/tests/test_db_functions.sh`
+Evidence Artifact(s):
+- `./evidence/phase0/business_foundation_hooks.json`
+Failure Modes:
+- Billing usage table missing required columns/constraints.
+- Append-only enforcement missing.
+- Evidence file missing.
+
+TASK ID: TSK-P0-081
+Title: Add external proofs Phase-0 hook (append-only)
+Owner Role: DB_FOUNDATION
+Depends On: TSK-P0-073
+Touches: `schema/migrations/**`, `scripts/db/**`, `tasks/TSK-P0-081/meta.yml`
+Invariant(s): NEW INV-091 (Third-party proof hook exists)
+Work:
+- Add a forward-only migration creating `external_proofs` bound to ingress attestation identifiers.
+- Store provider refs and request/response hashes without introducing runtime resolver behavior.
+- Enforce append-only semantics.
+Acceptance Criteria:
+- `external_proofs` exists with attestation linkage and hash metadata.
+- UPDATE/DELETE mutation is blocked.
+Verification Commands:
+- `scripts/db/verify_invariants.sh`
+- `scripts/db/tests/test_db_functions.sh`
+Evidence Artifact(s):
+- `./evidence/phase0/business_foundation_hooks.json`
+Failure Modes:
+- External proofs table missing.
+- Proof mutation is possible via UPDATE/DELETE.
+- Evidence file missing.
+
+TASK ID: TSK-P0-082
+Title: Add correlation stitching hooks to ingress/outbox tables
+Owner Role: DB_FOUNDATION
+Depends On: TSK-P0-073
+Touches: `schema/migrations/**`, `scripts/db/**`, `tasks/TSK-P0-082/meta.yml`
+Invariant(s): NEW INV-092 (Correlation stitching hooks exist)
+Work:
+- Add `correlation_id` and cross-rail reference hook columns to ingress/outbox tables via forward-only migration.
+- Add indexes required for stitchability lookups.
+- Preserve existing outbox/idempotency invariants and no-tx migration rules where applicable.
+Acceptance Criteria:
+- Stitching columns exist on required tables.
+- Required indexes exist.
+Verification Commands:
+- `scripts/db/verify_invariants.sh`
+- `scripts/db/tests/test_db_functions.sh`
+- `scripts/db/tests/test_no_tx_migrations.sh`
+Evidence Artifact(s):
+- `./evidence/phase0/business_foundation_hooks.json`
+Failure Modes:
+- One or more stitching columns are missing.
+- Required index missing.
+- Evidence file missing.
+
+TASK ID: TSK-P0-083
+Title: Add evidence pack primitives (pack + items)
+Owner Role: DB_FOUNDATION
+Depends On: TSK-P0-073
+Touches: `schema/migrations/**`, `scripts/db/**`, `tasks/TSK-P0-083/meta.yml`
+Invariant(s): NEW INV-093 (Evidence pack primitive exists)
+Work:
+- Add forward-only migration for `evidence_packs` and `evidence_pack_items` schema hooks.
+- Include root-hash hook fields and append-only behavior.
+- Keep signing/anchoring runtime behavior out of scope.
+Acceptance Criteria:
+- Evidence pack tables exist with required linkage/hash fields.
+- Pack item mutations are append-only.
+Verification Commands:
+- `scripts/db/verify_invariants.sh`
+- `scripts/db/tests/test_db_functions.sh`
+Evidence Artifact(s):
+- `./evidence/phase0/business_foundation_hooks.json`
+Failure Modes:
+- Pack primitive tables missing.
+- Mutable pack item behavior allowed.
+- Evidence file missing.
+
+TASK ID: TSK-P0-084
+Title: Add billable client hierarchy hooks for tenants
+Owner Role: DB_FOUNDATION
+Depends On: TSK-P0-073
+Touches: `schema/migrations/**`, `scripts/db/**`, `tasks/TSK-P0-084/meta.yml`
+Invariant(s): NEW INV-094 (Tenant billable hierarchy hook exists)
+Work:
+- Add `billable_clients` and tenant linkage hooks (`billable_client_id`, `parent_tenant_id`) via forward-only migration.
+- Use expand-first posture for constraints when backfill may be needed.
+- Add required FKs/indexes for auditably billable hierarchy.
+Acceptance Criteria:
+- Billable root and tenant hierarchy hooks exist and are queryable.
+- FK/index posture is present per migration plan.
+Verification Commands:
+- `scripts/db/verify_invariants.sh`
+- `scripts/db/tests/test_db_functions.sh`
+Evidence Artifact(s):
+- `./evidence/phase0/business_foundation_hooks.json`
+Failure Modes:
+- Billable hierarchy columns/FKs missing.
+- Expand-first governance not followed.
+- Evidence file missing.
+
+TASK ID: TSK-P0-085
+Title: Add multi-signature ingress schema hook
+Owner Role: DB_FOUNDATION
+Depends On: TSK-P0-073
+Touches: `schema/migrations/**`, `scripts/db/**`, `tasks/TSK-P0-085/meta.yml`
+Invariant(s): NEW INV-095 (Multi-signature ingress hook exists)
+Work:
+- Add `signatures JSONB NOT NULL DEFAULT '[]'::jsonb` to `ingress_attestations` in a forward-only migration.
+- Preserve legacy single-signature compatibility fields for Phase-0.
+- Keep deep signature validation behavior out of scope.
+Acceptance Criteria:
+- Multi-signature column exists with correct type/default/not-null posture.
+- Existing ingress invariants remain intact.
+Verification Commands:
+- `scripts/db/verify_invariants.sh`
+- `scripts/db/tests/test_db_functions.sh`
+Evidence Artifact(s):
+- `./evidence/phase0/business_foundation_hooks.json`
+Failure Modes:
+- `signatures` column missing or wrong default.
+- Regression in existing ingress invariants.
+- Evidence file missing.
+
+TASK ID: TSK-P0-086
+Title: Add business foundation hooks verifier and invariant wiring
+Owner Role: INVARIANTS_CURATOR
+Depends On: TSK-P0-080, TSK-P0-081, TSK-P0-082, TSK-P0-083, TSK-P0-084, TSK-P0-085
+Touches: `scripts/db/verify_business_foundation_hooks.sh`, `scripts/db/verify_invariants.sh`, `docs/invariants/INVARIANTS_MANIFEST.yml`, `docs/invariants/INVARIANTS_IMPLEMENTED.md`, `docs/tasks/PHASE0_TASKS.md`, `tasks/TSK-P0-086/meta.yml`
+Invariant(s): NEW INV-096 (Business foundation hooks are mechanically verified)
+Work:
+- Implement schema-introspection verifier for all business foundation hooks.
+- Emit deterministic evidence JSON with checked tables/columns/constraints/indexes/triggers.
+- Wire verifier into DB invariant flow and update invariants docs only with real verification pointers.
+Acceptance Criteria:
+- Verifier fails closed when a required hook is missing.
+- Verifier writes evidence on both pass and failure paths.
+- Manifest/docs reflect verification hooks without paper promotion.
+Verification Commands:
+- `scripts/audit/run_invariants_fast_checks.sh`
+- `scripts/db/verify_invariants.sh`
+Evidence Artifact(s):
+- `./evidence/phase0/business_foundation_hooks.json`
+Failure Modes:
+- Hooks pass without actual schema checks.
+- Verifier not wired into DB invariant flow.
+- Evidence file missing.

@@ -595,3 +595,66 @@
   owners: ["team-platform"]
   sla_days: 30
   verification: "scripts/audit/verify_ci_order.sh"
+
+- id: INV-090
+  aliases: ["I-BILL-HOOK-01"]
+  status: implemented
+  severity: P1
+  title: "Billing usage ledger hook exists and is append-only"
+  owners: ["team-db"]
+  sla_days: 30
+  verification: "scripts/db/verify_business_foundation_hooks.sh"
+
+- id: INV-091
+  aliases: ["I-PROOF-HOOK-01"]
+  status: implemented
+  severity: P1
+  title: "External proofs hook exists and is append-only"
+  owners: ["team-db"]
+  sla_days: 30
+  verification: "scripts/db/verify_business_foundation_hooks.sh"
+
+- id: INV-092
+  aliases: ["I-STITCH-HOOK-01"]
+  status: implemented
+  severity: P1
+  title: "Correlation stitching hooks exist on ingress and outbox tables"
+  owners: ["team-db"]
+  sla_days: 30
+  verification: "scripts/db/verify_business_foundation_hooks.sh"
+
+- id: INV-093
+  aliases: ["I-EVID-PACK-01"]
+  status: implemented
+  severity: P1
+  title: "Evidence pack primitives exist and are append-only"
+  owners: ["team-db"]
+  sla_days: 30
+  verification: "scripts/db/verify_business_foundation_hooks.sh"
+
+- id: INV-094
+  aliases: ["I-TEN-BILL-01"]
+  status: implemented
+  severity: P1
+  title: "Tenant billable hierarchy hooks exist (billable root + parent)"
+  owners: ["team-db"]
+  sla_days: 30
+  verification: "scripts/db/verify_business_foundation_hooks.sh"
+
+- id: INV-095
+  aliases: ["I-IPDR-SIG-01"]
+  status: implemented
+  severity: P1
+  title: "Ingress multi-signature hook exists with safe default"
+  owners: ["team-db"]
+  sla_days: 30
+  verification: "scripts/db/verify_business_foundation_hooks.sh"
+
+- id: INV-096
+  aliases: ["I-BIZ-HOOKS-VERIFY-01"]
+  status: implemented
+  severity: P1
+  title: "Business foundation hooks are mechanically verified in DB gate"
+  owners: ["team-db", "team-platform"]
+  sla_days: 30
+  verification: "scripts/db/verify_business_foundation_hooks.sh; wired via scripts/db/verify_invariants.sh"

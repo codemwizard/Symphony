@@ -36,3 +36,5 @@ notes: Set to completed after YAML lint and schema checks pass.
 client: codex_cli
 assigned_agent: architect
 model: <UNASSIGNED>
+implementation_plan: docs/plans/phase0/TSK-P0-062/PLAN.md
+implementation_log: docs/plans/phase0/TSK-P0-062/EXEC_LOG.md

@@ -1,6 +1,6 @@
 phase: '0'
 task_id: TSK-P0-068
-title: "Update Phase-0 audit report with governance remediation status"
+title: Update Phase-0 audit report with governance remediation status
 owner_role: ARCHITECT
 status: completed
 depends_on:
@@ -13,12 +13,13 @@ touches:
 - tasks/TSK-P0-068/meta.yml
 invariants: []
 work:
-- "Add a dated status update section covering resolved governance gaps."
-- "Update executive summary to reflect remediations and remaining gaps."
-- "Reference current Phase-0 artifacts (audit logging plan, baseline governance, allowlist governance, local/CI parity)."
+- Add a dated status update section covering resolved governance gaps.
+- Update executive summary to reflect remediations and remaining gaps.
+- Reference current Phase-0 artifacts (audit logging plan, baseline governance, allowlist
+  governance, local/CI parity).
 acceptance_criteria:
-- "Audit report no longer lists resolved governance items as open gaps."
-- "Remaining gaps are explicitly called out as Phase-1/2 roadmap."
+- Audit report no longer lists resolved governance items as open gaps.
+- Remaining gaps are explicitly called out as Phase-1/2 roadmap.
 verification:
 - rg -n "Status Update" docs/PHASE0_AUDIT_REPORT.md
 evidence: []
@@ -33,3 +34,5 @@ notes: ''
 client: codex_cli
 assigned_agent: architect
 model: <UNASSIGNED>
+implementation_plan: docs/plans/phase0/TSK-P0-068_audit_report_update/PLAN.md
+implementation_log: docs/plans/phase0/TSK-P0-068_audit_report_update/EXEC_LOG.md

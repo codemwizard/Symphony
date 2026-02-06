@@ -1,0 +1,32 @@
+phase: '0'
+task_id: TSK-P0-073
+title: "Wire plan/log verifier into pre-CI and CI"
+owner_role: ARCHITECT
+status: completed
+depends_on:
+- TSK-P0-072
+touches:
+- scripts/dev/pre_ci.sh
+- .github/workflows/invariants.yml
+- tasks/TSK-P0-073/meta.yml
+invariants: []
+work:
+- "Add verify_task_plans_present.sh to pre-CI before heavier gates."
+- "Add verify_task_plans_present.sh to CI mechanical job."
+acceptance_criteria:
+- "Verifier runs in pre-CI and CI before evidence aggregation."
+verification:
+- scripts/audit/verify_task_plans_present.sh
+evidence:
+- evidence/phase0/task_plans_present.json
+failure_modes:
+- Evidence file missing.
+- Verifier not invoked in CI or pre-CI.
+must_read:
+- scripts/audit/verify_task_plans_present.sh
+notes: ''
+client: codex_cli
+assigned_agent: architect
+model: <UNASSIGNED>
+implementation_plan: docs/plans/phase0/TSK-P0-073_ci_pre_ci_wiring/PLAN.md
+implementation_log: docs/plans/phase0/TSK-P0-073_ci_pre_ci_wiring/EXEC_LOG.md

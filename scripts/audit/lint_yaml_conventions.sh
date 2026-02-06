@@ -41,7 +41,7 @@ canonical_keys = {
     "phase","task_id","title","owner_role","status",
     "depends_on","touches","invariants","work","acceptance_criteria",
     "verification","evidence","failure_modes","must_read","notes",
-    "client","assigned_agent","model"
+    "client","assigned_agent","model","implementation_plan","implementation_log"
 }
 
 list_fields = {
@@ -50,7 +50,15 @@ list_fields = {
 }
 
 scalar_fields = {
-    "phase","task_id","title","owner_role","status","notes","client","assigned_agent","model"
+    "phase","task_id","title","owner_role","status","notes","client","assigned_agent","model",
+    "implementation_plan","implementation_log"
+}
+
+required_keys = {
+    "phase","task_id","title","owner_role","status",
+    "depends_on","touches","invariants","work","acceptance_criteria",
+    "verification","evidence","failure_modes","must_read","notes",
+    "client","assigned_agent","model"
 }
 
 legacy_markers = [
@@ -115,10 +123,16 @@ for meta in sorted(ROOT.glob("tasks/TSK-P0-*/meta.yml")):
         if k not in canonical_keys:
             errors.append(f"{meta}: unknown key: {k}")
 
-    # required keys
-    for req in canonical_keys:
+    # required keys (always)
+    for req in required_keys:
         if req not in data:
             errors.append(f"{meta}: missing required key: {req}")
+
+    status = str(data.get("status", "")).lower()
+    if status in ("in_progress", "completed"):
+        for req in ("implementation_plan", "implementation_log"):
+            if req not in data:
+                errors.append(f"{meta}: missing required key: {req} for status {status}")
 
     # type checks
     for k in list_fields:

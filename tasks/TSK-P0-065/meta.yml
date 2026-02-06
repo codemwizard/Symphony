@@ -1,6 +1,6 @@
 phase: '0'
 task_id: TSK-P0-065
-title: "Fix Phase-0 contract validator to parse YAML"
+title: Fix Phase-0 contract validator to parse YAML
 owner_role: INVARIANTS_CURATOR
 status: completed
 depends_on:
@@ -11,12 +11,12 @@ touches:
 invariants:
 - INV-077
 work:
-- "Parse phase0_contract.yml via yaml.safe_load."
-- "Emit evidence on parse failure (fail-closed with evidence)."
-- "Preserve existing validation semantics."
+- Parse phase0_contract.yml via yaml.safe_load.
+- Emit evidence on parse failure (fail-closed with evidence).
+- Preserve existing validation semantics.
 acceptance_criteria:
-- "YAML contracts parse correctly."
-- "Evidence is written on parse failure."
+- YAML contracts parse correctly.
+- Evidence is written on parse failure.
 verification:
 - scripts/audit/verify_phase0_contract.sh
 evidence:
@@ -30,3 +30,5 @@ notes: ''
 client: codex_cli
 assigned_agent: architect
 model: <UNASSIGNED>
+implementation_plan: docs/plans/phase0/TSK-P0-065/PLAN.md
+implementation_log: docs/plans/phase0/TSK-P0-065/EXEC_LOG.md

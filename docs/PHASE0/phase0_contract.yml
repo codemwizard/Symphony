@@ -892,5 +892,117 @@
     "evidence_scope": "ci_artifact",
     "notes": "Regression test for contract parse failure evidence.",
     "gate_ids": []
+  },
+  {
+    "task_id": "TSK-P0-070",
+    "status": "completed",
+    "verification_mode": "both",
+    "evidence_required": false,
+    "evidence_paths": [],
+    "evidence_scope": "repo",
+    "notes": "Plan/log scaffolding and index.",
+    "gate_ids": []
+  },
+  {
+    "task_id": "TSK-P0-071",
+    "status": "completed",
+    "verification_mode": "both",
+    "evidence_required": false,
+    "evidence_paths": [],
+    "evidence_scope": "repo",
+    "notes": "Task meta schema update for plan/log linkage.",
+    "gate_ids": []
+  },
+  {
+    "task_id": "TSK-P0-072",
+    "status": "completed",
+    "verification_mode": "both",
+    "evidence_required": true,
+    "evidence_paths": [
+      "evidence/phase0/task_plans_present.json"
+    ],
+    "evidence_scope": "ci_artifact",
+    "notes": "Plan/log verifier evidence.",
+    "gate_ids": []
+  },
+  {
+    "task_id": "TSK-P0-073",
+    "status": "completed",
+    "verification_mode": "both",
+    "evidence_required": false,
+    "evidence_paths": [],
+    "evidence_scope": "repo",
+    "notes": "Wire plan/log verifier into pre-CI and CI.",
+    "gate_ids": []
+  },
+  {
+    "task_id": "TSK-P0-080",
+    "status": "planned",
+    "verification_mode": "both",
+    "evidence_required": false,
+    "evidence_paths": [],
+    "evidence_scope": "repo",
+    "notes": "Billing usage ledger hook (append-only) planned.",
+    "gate_ids": []
+  },
+  {
+    "task_id": "TSK-P0-081",
+    "status": "planned",
+    "verification_mode": "both",
+    "evidence_required": false,
+    "evidence_paths": [],
+    "evidence_scope": "repo",
+    "notes": "External proofs hook (append-only) planned.",
+    "gate_ids": []
+  },
+  {
+    "task_id": "TSK-P0-082",
+    "status": "planned",
+    "verification_mode": "both",
+    "evidence_required": false,
+    "evidence_paths": [],
+    "evidence_scope": "repo",
+    "notes": "Correlation stitching hook planned.",
+    "gate_ids": []
+  },
+  {
+    "task_id": "TSK-P0-083",
+    "status": "planned",
+    "verification_mode": "both",
+    "evidence_required": false,
+    "evidence_paths": [],
+    "evidence_scope": "repo",
+    "notes": "Evidence pack primitive hook planned.",
+    "gate_ids": []
+  },
+  {
+    "task_id": "TSK-P0-084",
+    "status": "planned",
+    "verification_mode": "both",
+    "evidence_required": false,
+    "evidence_paths": [],
+    "evidence_scope": "repo",
+    "notes": "Billable hierarchy hook planned.",
+    "gate_ids": []
+  },
+  {
+    "task_id": "TSK-P0-085",
+    "status": "planned",
+    "verification_mode": "both",
+    "evidence_required": false,
+    "evidence_paths": [],
+    "evidence_scope": "repo",
+    "notes": "Multi-signature ingress hook planned.",
+    "gate_ids": []
+  },
+  {
+    "task_id": "TSK-P0-086",
+    "status": "planned",
+    "verification_mode": "both",
+    "evidence_required": false,
+    "evidence_paths": [],
+    "evidence_scope": "repo",
+    "notes": "Business foundation hook verifier and invariant wiring planned.",
+    "gate_ids": []
   }
 ]

@@ -37,3 +37,5 @@ notes: ''
 client: codex_cli
 assigned_agent: security_guardian
 model: <UNASSIGNED>
+implementation_plan: docs/plans/phase0/TSK-P0-006/PLAN.md
+implementation_log: docs/plans/phase0/TSK-P0-006/EXEC_LOG.md

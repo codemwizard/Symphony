@@ -8,5 +8,5 @@
 | ADR-0003 | Zero Trust, secrets, and key management boundaries | Proposed |
 
 ## Notes
-- These ADRs are new and specific to architecture planning. Existing ADRs in
-  `docs/decisions/` remain authoritative for DB foundation rules.
+- New authoritative ADRs must be created in `docs/decisions/`.
+- ADRs under `docs/architecture/adrs/` are legacy/planning references unless explicitly promoted.

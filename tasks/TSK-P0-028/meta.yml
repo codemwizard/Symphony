@@ -28,3 +28,5 @@ notes: ''
 client: codex_cli
 assigned_agent: invariants_curator
 model: <UNASSIGNED>
+implementation_plan: docs/plans/phase0/TSK-P0-028/PLAN.md
+implementation_log: docs/plans/phase0/TSK-P0-028/EXEC_LOG.md

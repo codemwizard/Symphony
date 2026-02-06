@@ -28,3 +28,5 @@ notes: "Docs\u2011only mapping task; verifier is in TSK\u2011P0\u2011054."
 client: codex_cli
 assigned_agent: compliance_mapper
 model: <UNASSIGNED>
+implementation_plan: docs/plans/phase0/TSK-P0-053_compliance_mapping/PLAN.md
+implementation_log: docs/plans/phase0/TSK-P0-053_compliance_mapping/EXEC_LOG.md

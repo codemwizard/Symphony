@@ -36,6 +36,12 @@ run() {
   "$@"
 }
 
+# Prefer repo-local venv python when present (for local/CI parity).
+PYTHON_BIN="python3"
+if [[ -x "$ROOT/.venv/bin/python3" ]]; then
+  PYTHON_BIN="$ROOT/.venv/bin/python3"
+fi
+
 # ---- 1) Shell syntax checks ----
 echo ""
 echo "==> Shell syntax checks"
@@ -66,7 +72,7 @@ PY_FILES=(
 )
 for f in "${PY_FILES[@]}"; do
   if [[ -f "$f" ]]; then
-    run python3 -m py_compile "$f"
+    run "$PYTHON_BIN" -m py_compile "$f"
   fi
 done
 
@@ -79,7 +85,7 @@ if have_cmd pytest && [[ -d "scripts/audit/tests" ]]; then
 elif [[ -f "scripts/audit/tests/test_detect_structural_changes.py" ]]; then
   # Run as unittest module if it is written that way
   # (If it isn't, this will fail loudly, which is fine — you can switch to pytest.)
-  run python3 -m unittest -q scripts.audit.tests.test_detect_structural_changes
+  run "$PYTHON_BIN" -m unittest -q scripts.audit.tests.test_detect_structural_changes
 else
   echo "   (no tests found; skipping)"
 fi
@@ -88,7 +94,7 @@ fi
 echo ""
 echo "==> Manifest validation"
 if [[ -f "scripts/audit/validate_invariants_manifest.py" ]]; then
-  run python3 scripts/audit/validate_invariants_manifest.py
+  run "$PYTHON_BIN" scripts/audit/validate_invariants_manifest.py
 else
   echo "ERROR: scripts/audit/validate_invariants_manifest.py not found"
   exit 1
@@ -98,7 +104,7 @@ fi
 echo ""
 echo "==> Docs ↔ Manifest consistency"
 if [[ -f "scripts/audit/check_docs_match_manifest.py" ]]; then
-  run python3 scripts/audit/check_docs_match_manifest.py
+  run "$PYTHON_BIN" scripts/audit/check_docs_match_manifest.py
 else
   echo "ERROR: scripts/audit/check_docs_match_manifest.py not found"
   exit 1

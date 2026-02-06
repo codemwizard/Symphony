@@ -1,0 +1,53 @@
+phase: '0'
+task_id: TSK-P0-070
+title: "Plan/log scaffolding"
+owner_role: ARCHITECT
+status: completed
+depends_on: []
+touches:
+- docs/plans/phase0/_template/PLAN.md
+- docs/plans/phase0/_template/EXEC_LOG.md
+- docs/plans/phase0/INDEX.md
+- docs/plans/phase0/TSK-P0-050_three_pillars/PLAN.md
+- docs/plans/phase0/TSK-P0-050_three_pillars/EXEC_LOG.md
+- docs/plans/phase0/TSK-P0-051_control_planes/PLAN.md
+- docs/plans/phase0/TSK-P0-051_control_planes/EXEC_LOG.md
+- docs/plans/phase0/TSK-P0-052_security_plane_expansion/PLAN.md
+- docs/plans/phase0/TSK-P0-052_security_plane_expansion/EXEC_LOG.md
+- docs/plans/phase0/TSK-P0-053_compliance_mapping/PLAN.md
+- docs/plans/phase0/TSK-P0-053_compliance_mapping/EXEC_LOG.md
+- docs/plans/phase0/TSK-P0-054_compliance_verifier/PLAN.md
+- docs/plans/phase0/TSK-P0-054_compliance_verifier/EXEC_LOG.md
+- docs/plans/phase0/TSK-P0-055_agent_scopes_alignment/PLAN.md
+- docs/plans/phase0/TSK-P0-055_agent_scopes_alignment/EXEC_LOG.md
+- docs/plans/phase0/TSK-P0-070_plan_log_scaffolding/PLAN.md
+- docs/plans/phase0/TSK-P0-070_plan_log_scaffolding/EXEC_LOG.md
+- docs/plans/phase0/TSK-P0-071_task_meta_schema_update/PLAN.md
+- docs/plans/phase0/TSK-P0-071_task_meta_schema_update/EXEC_LOG.md
+- docs/plans/phase0/TSK-P0-072_plan_log_verifier/PLAN.md
+- docs/plans/phase0/TSK-P0-072_plan_log_verifier/EXEC_LOG.md
+- docs/plans/phase0/TSK-P0-073_ci_pre_ci_wiring/PLAN.md
+- docs/plans/phase0/TSK-P0-073_ci_pre_ci_wiring/EXEC_LOG.md
+invariants: []
+work:
+- "Create PLAN/EXEC_LOG templates under docs/plans/phase0/_template."
+- "Scaffold initial plan/log folders for the three‑pillar cluster and related Phase‑0 tasks."
+- "Add a Phase‑0 plans index for discovery."
+acceptance_criteria:
+- "Templates exist and are reusable."
+- "Plan/log folders exist for active clusters."
+- "INDEX.md lists the clusters and status."
+verification:
+- rg -n "Phase-0 Plans Index" docs/plans/phase0/INDEX.md
+evidence: []
+failure_modes:
+- Plan/log templates missing.
+- Plan/log scaffolds missing for active clusters.
+must_read:
+- docs/operations/STYLE_GUIDE.md
+notes: ''
+client: codex_cli
+assigned_agent: architect
+model: <UNASSIGNED>
+implementation_plan: docs/plans/phase0/TSK-P0-070_plan_log_scaffolding/PLAN.md
+implementation_log: docs/plans/phase0/TSK-P0-070_plan_log_scaffolding/EXEC_LOG.md

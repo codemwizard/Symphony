@@ -33,3 +33,5 @@ notes: ''
 client: codex_cli
 assigned_agent: qa_verifier
 model: <UNASSIGNED>
+implementation_plan: docs/plans/phase0/TSK-P0-005/PLAN.md
+implementation_log: docs/plans/phase0/TSK-P0-005/EXEC_LOG.md

@@ -32,3 +32,5 @@ notes: Documentation updates (if needed) should be handled by ARCHITECT.
 client: codex_cli
 assigned_agent: db_foundation
 model: <UNASSIGNED>
+implementation_plan: docs/plans/phase0/TSK-P0-022/PLAN.md
+implementation_log: docs/plans/phase0/TSK-P0-022/EXEC_LOG.md

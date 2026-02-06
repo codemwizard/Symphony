@@ -30,3 +30,5 @@ notes: ''
 client: codex_cli
 assigned_agent: db_foundation
 model: <UNASSIGNED>
+implementation_plan: docs/plans/phase0/TSK-P0-031/PLAN.md
+implementation_log: docs/plans/phase0/TSK-P0-031/EXEC_LOG.md

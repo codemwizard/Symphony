@@ -6,7 +6,7 @@ status: completed
 depends_on:
 - TSK-P0-044
 touches:
-- docs/architecture/adrs/ADR-0011-rebaseline-dayzero-schema.md
+- docs/decisions/ADR-0011-rebaseline-dayzero-schema.md
 - docs/decisions/Rebaseline-Decision.md
 - tasks/TSK-P0-047/meta.yml
 invariants:
@@ -32,3 +32,5 @@ notes: ''
 client: codex_cli
 assigned_agent: architect
 model: <UNASSIGNED>
+implementation_plan: docs/plans/phase0/TSK-P0-047/PLAN.md
+implementation_log: docs/plans/phase0/TSK-P0-047/EXEC_LOG.md
