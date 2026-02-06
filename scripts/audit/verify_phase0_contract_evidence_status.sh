@@ -23,6 +23,12 @@ from pathlib import Path
 contract_path = Path(os.environ["CONTRACT_PATH"])
 cp_path = Path(os.environ["CONTROL_PLANES_PATH"])
 evidence_out = Path(os.environ["EVIDENCE_FILE"])
+repo_root = Path(os.environ.get("ROOT_DIR") or Path.cwd())
+evidence_root_env = os.environ.get("EVIDENCE_ROOT")
+evidence_root = None
+if evidence_root_env:
+    p = Path(evidence_root_env)
+    evidence_root = p if p.is_absolute() else (repo_root / p)
 
 ci_only = os.environ.get("CI_ONLY") == "1" or os.environ.get("GITHUB_ACTIONS") == "true"
 
@@ -92,15 +98,34 @@ for row in contract:
         if not ev_rel:
             errors.append(f"{task_id}:gate_not_declared:{gid}")
             continue
+
+        # Skip self-evidence regardless of file presence to avoid recursion.
+        expected_rel = os.path.relpath(evidence_out, repo_root)
+        if str(ev_rel) == expected_rel:
+            continue
         ev_path = Path(ev_rel)
         if not ev_path.is_absolute():
-            ev_path = Path(os.environ.get("ROOT_DIR", Path.cwd())) / ev_path
+            base = evidence_root or repo_root
+            ev_path = base / ev_path
 
-        if ev_path.resolve() == evidence_out.resolve():
+        # If artifacts were downloaded into evidence/phase0, we may end up with:
+        #   evidence/phase0/evidence/phase0/<file>.json
+        # Support a fallback to the basename when the contract path is prefixed.
+        candidates = [ev_path]
+        if str(ev_rel).startswith("evidence/phase0/"):
+            candidates.append((evidence_root or repo_root) / Path(ev_rel).name)
+
+        ev_path = None
+        for c in candidates:
+            if c.exists():
+                ev_path = c
+                break
+
+        if ev_path and ev_path.resolve() == evidence_out.resolve():
             # Skip self-evidence to avoid recursion
             continue
 
-        if not ev_path.exists():
+        if ev_path is None or not ev_path.exists():
             errors.append(f"{task_id}:missing_evidence:{gid}:{ev_rel}")
             continue
 
