@@ -121,6 +121,16 @@ for row in contract:
                 ev_path = c
                 break
 
+        # As a last resort, search for the basename anywhere under evidence_root.
+        if ev_path is None and evidence_root is not None:
+            basename = Path(ev_rel).name
+            matches = [p for p in evidence_root.rglob(basename)]
+            if len(matches) == 1:
+                ev_path = matches[0]
+            elif len(matches) > 1:
+                errors.append(f"{task_id}:multiple_evidence_matches:{gid}:{basename}")
+                continue
+
         if ev_path and ev_path.resolve() == evidence_out.resolve():
             # Skip self-evidence to avoid recursion
             continue
