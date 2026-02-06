@@ -1,0 +1,35 @@
+phase: '0'
+task_id: TSK-P0-061
+title: "Pre\u2011CI/CI execution order alignment"
+owner_role: ARCHITECT
+status: completed
+depends_on:
+- TSK-P0-060
+touches:
+- scripts/dev/pre_ci.sh
+- .github/workflows/invariants.yml
+- scripts/audit/verify_ci_order.sh
+- tasks/TSK-P0-061/meta.yml
+invariants:
+- INV-081
+work:
+- "Order: YAML lint \u2192 control\u2011plane drift \u2192 plane checks \u2192 evidence\
+  \ schema validate \u2192 contract check."
+- "Make pre\u2011CI and CI sequences identical."
+acceptance_criteria:
+- "Pre\u2011CI and CI run the same ordered checks."
+- Evidence emitted for order validation.
+verification:
+- scripts/audit/verify_ci_order.sh
+evidence:
+- evidence/phase0/ci_order.json
+failure_modes:
+- "Order drift between pre\u2011CI and CI."
+- Evidence file missing.
+must_read:
+- scripts/dev/pre_ci.sh
+- .github/workflows/invariants.yml
+notes: ''
+client: codex_cli
+assigned_agent: architect
+model: <UNASSIGNED>

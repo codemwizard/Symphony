@@ -20,6 +20,10 @@ set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 cd "$ROOT"
+source "$ROOT/scripts/lib/evidence.sh"
+EVIDENCE_TS="$(evidence_now_utc)"
+EVIDENCE_GIT_SHA="$(git_sha)"
+EVIDENCE_SCHEMA_FP="$(schema_fingerprint)"
 
 echo "==> Fast invariants checks (no DB)"
 
@@ -110,6 +114,46 @@ else
 fi
 
 echo ""
+echo "==> Three-Pillar model doc verification"
+if [[ -x "scripts/audit/verify_three_pillars_doc.sh" || -f "scripts/audit/verify_three_pillars_doc.sh" ]]; then
+  run scripts/audit/verify_three_pillars_doc.sh
+else
+  echo "ERROR: scripts/audit/verify_three_pillars_doc.sh not found"
+  exit 1
+fi
+
+echo ""
+echo "==> Control-plane drift verification"
+if [[ -x "scripts/audit/verify_control_planes_drift.sh" || -f "scripts/audit/verify_control_planes_drift.sh" ]]; then
+  run scripts/audit/verify_control_planes_drift.sh
+else
+  echo "ERROR: scripts/audit/verify_control_planes_drift.sh not found"
+  exit 1
+fi
+
+echo ""
+echo "==> CI toolchain verification"
+if [[ -x "scripts/audit/verify_ci_toolchain.sh" || -f "scripts/audit/verify_ci_toolchain.sh" ]]; then
+  if [[ "${SYMPHONY_SKIP_TOOLCHAIN_CHECK:-0}" == "1" ]]; then
+    echo "   (skipping CI toolchain check; SYMPHONY_SKIP_TOOLCHAIN_CHECK=1)"
+  else
+    run scripts/audit/verify_ci_toolchain.sh
+  fi
+else
+  echo "ERROR: scripts/audit/verify_ci_toolchain.sh not found"
+  exit 1
+fi
+
+echo ""
+echo "==> YAML conventions lint"
+if [[ -x "scripts/audit/lint_yaml_conventions.sh" || -f "scripts/audit/lint_yaml_conventions.sh" ]]; then
+  run scripts/audit/lint_yaml_conventions.sh
+else
+  echo "ERROR: scripts/audit/lint_yaml_conventions.sh not found"
+  exit 1
+fi
+
+echo ""
 echo "==> No-tx docs verification"
 if [[ -x "scripts/audit/verify_no_tx_docs.sh" || -f "scripts/audit/verify_no_tx_docs.sh" ]]; then
   run scripts/audit/verify_no_tx_docs.sh
@@ -133,6 +177,28 @@ if [[ -x "scripts/audit/verify_phase0_contract.sh" || -f "scripts/audit/verify_p
   run bash scripts/audit/verify_phase0_contract.sh
 else
   echo "ERROR: scripts/audit/verify_phase0_contract.sh not found"
+  exit 1
+fi
+
+echo ""
+echo "==> Phase-0 contract evidence status"
+if [[ -x "scripts/audit/verify_phase0_contract_evidence_status.sh" || -f "scripts/audit/verify_phase0_contract_evidence_status.sh" ]]; then
+  if [[ "${SYMPHONY_SKIP_CONTRACT_EVIDENCE_STATUS:-0}" == "1" ]]; then
+    echo "   (skipping contract evidence status; SYMPHONY_SKIP_CONTRACT_EVIDENCE_STATUS=1)"
+  else
+    run bash scripts/audit/verify_phase0_contract_evidence_status.sh
+  fi
+else
+  echo "ERROR: scripts/audit/verify_phase0_contract_evidence_status.sh not found"
+  exit 1
+fi
+
+echo ""
+echo "==> Compliance manifest verification"
+if [[ -x "scripts/audit/verify_compliance_manifest.sh" || -f "scripts/audit/verify_compliance_manifest.sh" ]]; then
+  run bash scripts/audit/verify_compliance_manifest.sh
+else
+  echo "ERROR: scripts/audit/verify_compliance_manifest.sh not found"
   exit 1
 fi
 
@@ -186,7 +252,14 @@ mkdir -p "$EVIDENCE_DIR"
 python3 - <<PY
 import json
 from pathlib import Path
-out = {"status": "pass", "check": "docs_match_manifest"}
+out = {
+  "check_id": "INVARIANTS-DOCS-MATCH",
+  "timestamp_utc": "$EVIDENCE_TS",
+  "git_sha": "$EVIDENCE_GIT_SHA",
+  "schema_fingerprint": "$EVIDENCE_SCHEMA_FP",
+  "status": "PASS",
+  "check": "docs_match_manifest",
+}
 Path(f"$EVIDENCE_DIR/invariants_docs_match.json").write_text(json.dumps(out, indent=2))
 PY
 
@@ -223,7 +296,15 @@ mkdir -p "$EVIDENCE_DIR"
 python3 - <<PY
 import json
 from pathlib import Path
-out = {"status": "pass", "invariant": "INV-039", "note": "roadmap only"}
+out = {
+  "check_id": "DB-FAIL-CLOSED-ROADMAP",
+  "timestamp_utc": "$EVIDENCE_TS",
+  "git_sha": "$EVIDENCE_GIT_SHA",
+  "schema_fingerprint": "$EVIDENCE_SCHEMA_FP",
+  "status": "PASS",
+  "invariant": "INV-039",
+  "note": "roadmap only"
+}
 Path(f"$EVIDENCE_DIR/db_fail_closed_roadmap.json").write_text(json.dumps(out, indent=2))
 PY
 

@@ -8,7 +8,8 @@
       "evidence/phase0/repo_structure.json"
     ],
     "evidence_scope": "ci_artifact",
-    "notes": ""
+    "notes": "",
+    "gate_ids": []
   },
   {
     "task_id": "TSK-P0-002",
@@ -19,7 +20,8 @@
       "evidence/phase0/evidence.json"
     ],
     "evidence_scope": "ci_artifact",
-    "notes": ""
+    "notes": "",
+    "gate_ids": []
   },
   {
     "task_id": "TSK-P0-003",
@@ -30,7 +32,8 @@
       "evidence/phase0/n_minus_one.json"
     ],
     "evidence_scope": "ci_artifact",
-    "notes": ""
+    "notes": "",
+    "gate_ids": []
   },
   {
     "task_id": "TSK-P0-004",
@@ -41,7 +44,10 @@
       "evidence/phase0/ddl_lock_risk.json"
     ],
     "evidence_scope": "ci_artifact",
-    "notes": ""
+    "notes": "",
+    "gate_ids": [
+      "SEC-G02"
+    ]
   },
   {
     "task_id": "TSK-P0-005",
@@ -52,7 +58,8 @@
       "evidence/phase0/idempotency_zombie.json"
     ],
     "evidence_scope": "ci_artifact",
-    "notes": ""
+    "notes": "",
+    "gate_ids": []
   },
   {
     "task_id": "TSK-P0-006",
@@ -63,7 +70,10 @@
       "evidence/phase0/openbao_smoke.json"
     ],
     "evidence_scope": "ci_artifact",
-    "notes": ""
+    "notes": "",
+    "gate_ids": [
+      "SEC-G05"
+    ]
   },
   {
     "task_id": "TSK-P0-007",
@@ -74,7 +84,10 @@
       "evidence/phase0/routing_fallback.json"
     ],
     "evidence_scope": "ci_artifact",
-    "notes": ""
+    "notes": "",
+    "gate_ids": [
+      "INT-G12"
+    ]
   },
   {
     "task_id": "TSK-P0-008",
@@ -85,7 +98,10 @@
       "evidence/phase0/batching_rules.json"
     ],
     "evidence_scope": "ci_artifact",
-    "notes": ""
+    "notes": "",
+    "gate_ids": [
+      "INT-G11"
+    ]
   },
   {
     "task_id": "TSK-P0-009",
@@ -96,7 +112,8 @@
       "evidence/phase0/invariants_quick.json"
     ],
     "evidence_scope": "ci_artifact",
-    "notes": ""
+    "notes": "",
+    "gate_ids": []
   },
   {
     "task_id": "TSK-P0-010",
@@ -107,7 +124,8 @@
       "evidence/phase0/*.json"
     ],
     "evidence_scope": "ci_artifact",
-    "notes": ""
+    "notes": "",
+    "gate_ids": []
   },
   {
     "task_id": "TSK-P0-011",
@@ -118,7 +136,10 @@
       "evidence/phase0/evidence_validation.json"
     ],
     "evidence_scope": "ci_artifact",
-    "notes": ""
+    "notes": "",
+    "gate_ids": [
+      "INT-G01"
+    ]
   },
   {
     "task_id": "TSK-P0-012",
@@ -129,7 +150,8 @@
       "evidence/phase0/evidence.json"
     ],
     "evidence_scope": "ci_artifact",
-    "notes": ""
+    "notes": "",
+    "gate_ids": []
   },
   {
     "task_id": "TSK-P0-013",
@@ -140,7 +162,8 @@
       "evidence/phase0/baseline_drift.json"
     ],
     "evidence_scope": "ci_artifact",
-    "notes": ""
+    "notes": "",
+    "gate_ids": []
   },
   {
     "task_id": "TSK-P0-014",
@@ -151,7 +174,10 @@
       "evidence/phase0/security_definer_dynamic_sql.json"
     ],
     "evidence_scope": "ci_artifact",
-    "notes": ""
+    "notes": "",
+    "gate_ids": [
+      "SEC-G03"
+    ]
   },
   {
     "task_id": "TSK-P0-015",
@@ -162,7 +188,10 @@
       "evidence/phase0/routing_fallback_validation.json"
     ],
     "evidence_scope": "ci_artifact",
-    "notes": ""
+    "notes": "",
+    "gate_ids": [
+      "INT-G13"
+    ]
   },
   {
     "task_id": "TSK-P0-016",
@@ -173,7 +202,10 @@
       "evidence/phase0/batching_rules.json"
     ],
     "evidence_scope": "ci_artifact",
-    "notes": ""
+    "notes": "",
+    "gate_ids": [
+      "INT-G11"
+    ]
   },
   {
     "task_id": "TSK-P0-017",
@@ -184,7 +216,8 @@
       "evidence/phase0/structural_doc_linkage.json"
     ],
     "evidence_scope": "ci_artifact",
-    "notes": ""
+    "notes": "",
+    "gate_ids": []
   },
   {
     "task_id": "TSK-P0-018",
@@ -195,7 +228,8 @@
       "evidence/phase0/openbao_audit_log.json"
     ],
     "evidence_scope": "ci_artifact",
-    "notes": ""
+    "notes": "",
+    "gate_ids": []
   },
   {
     "task_id": "TSK-P0-019",
@@ -206,7 +240,8 @@
       "phase0-evidence"
     ],
     "evidence_scope": "ci_artifact",
-    "notes": ""
+    "notes": "",
+    "gate_ids": []
   },
   {
     "task_id": "TSK-P0-020",
@@ -217,7 +252,8 @@
       "evidence/phase0/outbox_pending_indexes.json"
     ],
     "evidence_scope": "ci_artifact",
-    "notes": ""
+    "notes": "",
+    "gate_ids": []
   },
   {
     "task_id": "TSK-P0-021",
@@ -228,7 +264,8 @@
       "evidence/phase0/outbox_terminal_uniqueness.json"
     ],
     "evidence_scope": "ci_artifact",
-    "notes": ""
+    "notes": "",
+    "gate_ids": []
   },
   {
     "task_id": "TSK-P0-022",
@@ -239,7 +276,8 @@
       "evidence/phase0/outbox_mvcc_posture.json"
     ],
     "evidence_scope": "ci_artifact",
-    "notes": ""
+    "notes": "",
+    "gate_ids": []
   },
   {
     "task_id": "TSK-P0-023",
@@ -250,7 +288,8 @@
       "evidence/phase0/outbox_notify.json"
     ],
     "evidence_scope": "ci_artifact",
-    "notes": ""
+    "notes": "",
+    "gate_ids": []
   },
   {
     "task_id": "TSK-P0-024",
@@ -261,7 +300,8 @@
       "evidence/phase0/ingress_attestation.json"
     ],
     "evidence_scope": "ci_artifact",
-    "notes": ""
+    "notes": "",
+    "gate_ids": []
   },
   {
     "task_id": "TSK-P0-025",
@@ -272,7 +312,8 @@
       "evidence/phase0/revocation_tables.json"
     ],
     "evidence_scope": "ci_artifact",
-    "notes": ""
+    "notes": "",
+    "gate_ids": []
   },
   {
     "task_id": "TSK-P0-026",
@@ -283,7 +324,10 @@
       "evidence/phase0/core_boundary.json"
     ],
     "evidence_scope": "ci_artifact",
-    "notes": ""
+    "notes": "",
+    "gate_ids": [
+      "SEC-G01"
+    ]
   },
   {
     "task_id": "TSK-P0-027",
@@ -294,7 +338,10 @@
       "evidence/phase0/doc_alignment.json"
     ],
     "evidence_scope": "ci_artifact",
-    "notes": ""
+    "notes": "",
+    "gate_ids": [
+      "INT-G09"
+    ]
   },
   {
     "task_id": "TSK-P0-028",
@@ -305,7 +352,10 @@
       "evidence/phase0/db_fail_closed_roadmap.json"
     ],
     "evidence_scope": "ci_artifact",
-    "notes": ""
+    "notes": "",
+    "gate_ids": [
+      "INT-G18"
+    ]
   },
   {
     "task_id": "TSK-P0-029",
@@ -316,7 +366,8 @@
       "evidence/phase0/ddl_blocking_policy.json"
     ],
     "evidence_scope": "ci_artifact",
-    "notes": ""
+    "notes": "",
+    "gate_ids": []
   },
   {
     "task_id": "TSK-P0-030",
@@ -327,7 +378,8 @@
       "evidence/phase0/no_tx_migrations.json"
     ],
     "evidence_scope": "ci_artifact",
-    "notes": ""
+    "notes": "",
+    "gate_ids": []
   },
   {
     "task_id": "TSK-P0-031",
@@ -338,7 +390,8 @@
       "evidence/phase0/no_tx_marker_lint.json"
     ],
     "evidence_scope": "ci_artifact",
-    "notes": ""
+    "notes": "",
+    "gate_ids": []
   },
   {
     "task_id": "TSK-P0-032",
@@ -349,7 +402,8 @@
       "evidence/phase0/outbox_pending_indexes.json"
     ],
     "evidence_scope": "ci_artifact",
-    "notes": ""
+    "notes": "",
+    "gate_ids": []
   },
   {
     "task_id": "TSK-P0-033",
@@ -360,7 +414,10 @@
       "evidence/phase0/no_tx_docs.json"
     ],
     "evidence_scope": "ci_artifact",
-    "notes": ""
+    "notes": "",
+    "gate_ids": [
+      "INT-G10"
+    ]
   },
   {
     "task_id": "TSK-P0-034",
@@ -371,7 +428,10 @@
       "evidence/phase0/invariants_docs_match.json"
     ],
     "evidence_scope": "ci_artifact",
-    "notes": ""
+    "notes": "",
+    "gate_ids": [
+      "INT-G17"
+    ]
   },
   {
     "task_id": "TSK-P0-035",
@@ -382,7 +442,10 @@
       "evidence/phase0/proxy_resolution_invariant.json"
     ],
     "evidence_scope": "ci_artifact",
-    "notes": ""
+    "notes": "",
+    "gate_ids": [
+      "INT-G08"
+    ]
   },
   {
     "task_id": "TSK-P0-036",
@@ -393,7 +456,8 @@
       "evidence/phase0/local_ci_parity.json"
     ],
     "evidence_scope": "repo",
-    "notes": ""
+    "notes": "",
+    "gate_ids": []
   },
   {
     "task_id": "TSK-P0-037",
@@ -404,7 +468,10 @@
       "evidence/phase0/phase0_contract.json"
     ],
     "evidence_scope": "ci_artifact",
-    "notes": ""
+    "notes": "",
+    "gate_ids": [
+      "INT-G03"
+    ]
   },
   {
     "task_id": "TSK-P0-038",
@@ -415,7 +482,10 @@
       "evidence/phase0/sqlstate_map_drift.json"
     ],
     "evidence_scope": "ci_artifact",
-    "notes": ""
+    "notes": "",
+    "gate_ids": [
+      "INT-G04"
+    ]
   },
   {
     "task_id": "TSK-P0-039",
@@ -426,7 +496,8 @@
       "evidence/phase0/invariants_quick.json"
     ],
     "evidence_scope": "ci_artifact",
-    "notes": ""
+    "notes": "",
+    "gate_ids": []
   },
   {
     "task_id": "TSK-P0-040",
@@ -438,7 +509,11 @@
       "evidence/phase0/sqlstate_map_drift.json"
     ],
     "evidence_scope": "ci_artifact",
-    "notes": ""
+    "notes": "",
+    "gate_ids": [
+      "INT-G03",
+      "INT-G04"
+    ]
   },
   {
     "task_id": "TSK-P0-041",
@@ -449,7 +524,8 @@
       "evidence/phase0/tenant_member_hooks.json"
     ],
     "evidence_scope": "ci_artifact",
-    "notes": ""
+    "notes": "",
+    "gate_ids": []
   },
   {
     "task_id": "TSK-P0-042",
@@ -460,7 +536,8 @@
       "evidence/phase0/invariants_quick.json"
     ],
     "evidence_scope": "ci_artifact",
-    "notes": ""
+    "notes": "",
+    "gate_ids": []
   },
   {
     "task_id": "TSK-P0-043",
@@ -471,7 +548,8 @@
       "evidence/phase0/tenant_member_hooks.json"
     ],
     "evidence_scope": "ci_artifact",
-    "notes": ""
+    "notes": "",
+    "gate_ids": []
   },
   {
     "task_id": "TSK-P0-044",
@@ -482,7 +560,10 @@
       "evidence/phase0/baseline_governance.json"
     ],
     "evidence_scope": "ci_artifact",
-    "notes": ""
+    "notes": "",
+    "gate_ids": [
+      "INT-G05"
+    ]
   },
   {
     "task_id": "TSK-P0-045",
@@ -493,7 +574,10 @@
       "evidence/phase0/ddl_allowlist_governance.json"
     ],
     "evidence_scope": "ci_artifact",
-    "notes": ""
+    "notes": "",
+    "gate_ids": [
+      "SEC-G04"
+    ]
   },
   {
     "task_id": "TSK-P0-046",
@@ -504,7 +588,10 @@
       "evidence/phase0/phase0_impl_plan.json"
     ],
     "evidence_scope": "ci_artifact",
-    "notes": ""
+    "notes": "",
+    "gate_ids": [
+      "INT-G07"
+    ]
   },
   {
     "task_id": "TSK-P0-047",
@@ -515,7 +602,10 @@
       "evidence/phase0/rebaseline_decision.json"
     ],
     "evidence_scope": "ci_artifact",
-    "notes": "Day-zero rebaseline ADR + decision."
+    "notes": "Day-zero rebaseline ADR + decision.",
+    "gate_ids": [
+      "INT-G06"
+    ]
   },
   {
     "task_id": "TSK-P0-048",
@@ -526,7 +616,8 @@
       "evidence/phase0/baseline_snapshot.json"
     ],
     "evidence_scope": "ci_artifact",
-    "notes": "Baseline snapshot generator + canonicalization."
+    "notes": "Baseline snapshot generator + canonicalization.",
+    "gate_ids": []
   },
   {
     "task_id": "TSK-P0-049",
@@ -537,6 +628,177 @@
       "evidence/phase0/baseline_strategy.json"
     ],
     "evidence_scope": "ci_artifact",
-    "notes": "migrate.sh baseline strategy support."
+    "notes": "migrate.sh baseline strategy support.",
+    "gate_ids": []
+  },
+  {
+    "task_id": "TSK-P0-050",
+    "status": "completed",
+    "verification_mode": "both",
+    "evidence_required": true,
+    "evidence_paths": [
+      "evidence/phase0/three_pillars_doc.json"
+    ],
+    "evidence_scope": "ci_artifact",
+    "notes": "",
+    "gate_ids": [
+      "INT-G14"
+    ]
+  },
+  {
+    "task_id": "TSK-P0-051",
+    "status": "completed",
+    "verification_mode": "both",
+    "evidence_required": true,
+    "evidence_paths": [
+      "evidence/phase0/control_planes_drift.json"
+    ],
+    "evidence_scope": "ci_artifact",
+    "notes": "",
+    "gate_ids": [
+      "INT-G15"
+    ]
+  },
+  {
+    "task_id": "TSK-P0-052",
+    "status": "completed",
+    "verification_mode": "both",
+    "evidence_required": true,
+    "evidence_paths": [
+      "evidence/phase0/security_secrets_scan.json",
+      "evidence/phase0/security_dotnet_deps_audit.json",
+      "evidence/phase0/security_secure_config_lint.json",
+      "evidence/phase0/security_insecure_patterns.json"
+    ],
+    "evidence_scope": "ci_artifact",
+    "notes": "",
+    "gate_ids": [
+      "SEC-G07",
+      "SEC-G08",
+      "SEC-G09",
+      "SEC-G10"
+    ]
+  },
+  {
+    "task_id": "TSK-P0-053",
+    "status": "completed",
+    "verification_mode": "both",
+    "evidence_required": false,
+    "evidence_paths": [],
+    "evidence_scope": "repo",
+    "notes": "Docs\u2011only mapping task; verifier is in TSK\u2011P0\u2011054.",
+    "gate_ids": []
+  },
+  {
+    "task_id": "TSK-P0-054",
+    "status": "completed",
+    "verification_mode": "both",
+    "evidence_required": true,
+    "evidence_paths": [
+      "evidence/phase0/compliance_manifest_verify.json"
+    ],
+    "evidence_scope": "ci_artifact",
+    "notes": "Verifier proof artifact is compliance_manifest_verify.json.",
+    "gate_ids": [
+      "GOV-G01"
+    ]
+  },
+  {
+    "task_id": "TSK-P0-055",
+    "status": "completed",
+    "verification_mode": "both",
+    "evidence_required": true,
+    "evidence_paths": [
+      "evidence/phase0/control_planes_drift.json"
+    ],
+    "evidence_scope": "ci_artifact",
+    "notes": "",
+    "gate_ids": [
+      "INT-G15"
+    ]
+  },
+  {
+    "task_id": "TSK-P0-056",
+    "status": "completed",
+    "verification_mode": "both",
+    "evidence_required": true,
+    "evidence_paths": [
+      "evidence/phase0/evidence_validation.json"
+    ],
+    "evidence_scope": "ci_artifact",
+    "notes": "",
+    "gate_ids": [
+      "INT-G01"
+    ]
+  },
+  {
+    "task_id": "TSK-P0-057",
+    "status": "completed",
+    "verification_mode": "both",
+    "evidence_required": true,
+    "evidence_paths": [
+      "evidence/phase0/yaml_conventions_lint.json"
+    ],
+    "evidence_scope": "ci_artifact",
+    "notes": "",
+    "gate_ids": [
+      "INT-G16"
+    ]
+  },
+  {
+    "task_id": "TSK-P0-058",
+    "status": "completed",
+    "verification_mode": "ci",
+    "evidence_required": true,
+    "evidence_paths": [
+      "evidence/phase0/ci_toolchain.json"
+    ],
+    "evidence_scope": "ci_artifact",
+    "notes": "",
+    "gate_ids": [
+      "SEC-G06"
+    ]
+  },
+  {
+    "task_id": "TSK-P0-060",
+    "status": "completed",
+    "verification_mode": "both",
+    "evidence_required": true,
+    "evidence_paths": [
+      "evidence/phase0/phase0_contract_evidence_status.json"
+    ],
+    "evidence_scope": "ci_artifact",
+    "notes": "",
+    "gate_ids": [
+      "INT-G19"
+    ]
+  },
+  {
+    "task_id": "TSK-P0-061",
+    "status": "completed",
+    "verification_mode": "both",
+    "evidence_required": true,
+    "evidence_paths": [
+      "evidence/phase0/ci_order.json"
+    ],
+    "evidence_scope": "ci_artifact",
+    "notes": "",
+    "gate_ids": [
+      "INT-G20"
+    ]
+  },
+  {
+    "task_id": "TSK-P0-062",
+    "status": "in_progress",
+    "verification_mode": "both",
+    "evidence_required": true,
+    "evidence_paths": [
+      "evidence/phase0/yaml_conventions_lint.json"
+    ],
+    "evidence_scope": "ci_artifact",
+    "notes": "Set to completed after YAML lint and schema checks pass.",
+    "gate_ids": [
+      "INT-G16"
+    ]
   }
 ]

@@ -505,3 +505,93 @@
   owners: ["team-platform", "team-db"]
   sla_days: 30
   verification: "scripts/audit/verify_rebaseline_strategy.sh"
+
+- id: INV-071
+  aliases: ["I-3P-01"]
+  status: implemented
+  severity: P1
+  title: "Three-Pillar control-plane model is documented and enforced"
+  owners: ["team-platform"]
+  sla_days: 30
+  verification: "scripts/audit/verify_three_pillars_doc.sh"
+
+- id: INV-072
+  aliases: ["I-3P-02"]
+  status: implemented
+  severity: P1
+  title: "Control-plane gates are declared and drift-checked"
+  owners: ["team-platform"]
+  sla_days: 30
+  verification: "scripts/audit/verify_control_planes_drift.sh"
+
+- id: INV-073
+  aliases: ["I-SEC-PLANE-01"]
+  status: implemented
+  severity: P1
+  title: "Security plane guardrails are enforced (secrets/deps/config/code)"
+  owners: ["team-security"]
+  sla_days: 30
+  verification: "scripts/audit/run_security_fast_checks.sh"
+
+- id: INV-075
+  aliases: ["I-COMP-VERIFY-01"]
+  status: implemented
+  severity: P1
+  title: "Compliance manifest is complete and gate-mapped"
+  owners: ["team-compliance"]
+  sla_days: 30
+  verification: "scripts/audit/verify_compliance_manifest.sh"
+
+- id: INV-076
+  aliases: ["I-AGENT-SCOPE-01"]
+  status: implemented
+  severity: P1
+  title: "Agent scopes align with control-plane ownership"
+  owners: ["team-platform"]
+  sla_days: 30
+  verification: "scripts/audit/verify_control_planes_drift.sh"
+
+- id: INV-077
+  aliases: ["I-EVIDENCE-SCHEMA-01"]
+  status: implemented
+  severity: P1
+  title: "Evidence schema is canonical and validated"
+  owners: ["team-platform"]
+  sla_days: 30
+  verification: "scripts/audit/validate_evidence_schema.sh"
+
+- id: INV-078
+  aliases: ["I-YAML-01"]
+  status: implemented
+  severity: P1
+  title: "YAML conventions are normalized and linted"
+  owners: ["team-platform"]
+  sla_days: 30
+  verification: "scripts/audit/lint_yaml_conventions.sh"
+
+- id: INV-079
+  aliases: ["I-CI-TOOLCHAIN-01"]
+  status: implemented
+  severity: P1
+  title: "CI toolchain is pinned (PyYAML + ripgrep)"
+  owners: ["team-security"]
+  sla_days: 30
+  verification: "scripts/audit/verify_ci_toolchain.sh"
+
+- id: INV-080
+  aliases: ["I-CONTRACT-STATUS-01"]
+  status: implemented
+  severity: P1
+  title: "Phase-0 contract evidence status semantics enforced"
+  owners: ["team-platform"]
+  sla_days: 30
+  verification: "scripts/audit/verify_phase0_contract_evidence_status.sh"
+
+- id: INV-081
+  aliases: ["I-CI-ORDER-01"]
+  status: implemented
+  severity: P1
+  title: "Pre-CI and CI run the same ordered Phase-0 checks"
+  owners: ["team-platform"]
+  sla_days: 30
+  verification: "scripts/audit/verify_ci_order.sh"

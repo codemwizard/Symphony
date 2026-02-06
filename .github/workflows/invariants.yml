@@ -29,11 +29,28 @@ jobs:
         with:
           python-version: "3.11"
 
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "10.0.x"
+
+      - name: Install CI toolchain (pinned)
+        shell: bash
+        run: |
+          set -euo pipefail
+          source scripts/audit/ci_toolchain_versions.env
+          python3 -m pip install --upgrade pip
+          python3 -m pip install "pyyaml==${PYYAML_VERSION}" "jsonschema==${JSONSCHEMA_VERSION}" pytest
+
+          curl -sSL -o /tmp/rg.tgz \
+            "https://github.com/BurntSushi/ripgrep/releases/download/${RIPGREP_VERSION}/ripgrep-${RIPGREP_VERSION}-x86_64-unknown-linux-musl.tar.gz"
+          tar -xzf /tmp/rg.tgz -C /tmp
+          sudo install -m 0755 "/tmp/ripgrep-${RIPGREP_VERSION}-x86_64-unknown-linux-musl/rg" /usr/local/bin/rg
+
+          rg --version
+
       - name: Unit tests for detectors
         if: github.event_name != 'schedule'
         run: |
-          python3 -m pip install --upgrade pip
-          python3 -m pip install pytest pyyaml jsonschema
           pytest -q scripts/audit/tests/test_detect_structural_sql_changes.py
 
       - name: Compute diff + detect structural change
@@ -138,44 +155,12 @@ jobs:
           chmod +x scripts/audit/verify_exception_template.sh
           scripts/audit/verify_exception_template.sh
 
-      - name: Generate QUICK + ensure committed output matches
-        if: github.event_name != 'schedule'
-        run: |
-          chmod +x scripts/audit/generate_invariants_quick
-          scripts/audit/generate_invariants_quick
-          git diff --exit-code docs/invariants/INVARIANTS_QUICK.md
-
-      - name: Verify repo structure (Phase 0)
-        if: github.event_name != 'schedule'
-        run: |
-          chmod +x scripts/audit/verify_repo_structure.sh
-          scripts/audit/verify_repo_structure.sh
-
-      - name: Generate evidence anchor (Phase 0)
-        if: github.event_name != 'schedule'
-        run: |
-          chmod +x scripts/audit/generate_evidence.sh
-          scripts/audit/generate_evidence.sh
-
-
-      - name: Validate evidence schema (Phase 0)
-        if: github.event_name != 'schedule'
-        run: |
-          chmod +x scripts/audit/validate_evidence_schema.sh
-          scripts/audit/validate_evidence_schema.sh
-
-      - name: Phase-0 docs/rules verifiers
+      - name: Phase-0 ordered checks
         if: github.event_name != 'schedule'
         run: |
           chmod +x scripts/audit/*.sh
-          scripts/audit/verify_batching_rules.sh
-          scripts/audit/verify_routing_fallback.sh
-          scripts/audit/validate_routing_fallback.sh
-          scripts/audit/verify_doc_alignment.sh
-          scripts/audit/verify_no_tx_docs.sh
-          scripts/audit/verify_phase0_contract.sh
-          scripts/audit/check_sqlstate_map_drift.sh
-          scripts/audit/run_invariants_fast_checks.sh
+          chmod +x scripts/security/*.sh
+          scripts/audit/run_phase0_ordered_checks.sh
 
       - name: Upload detector artifacts
         if: github.event_name != 'schedule' && always()
@@ -453,7 +438,7 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y ca-certificates wget lsb-release
-          echo "deb http://apt.postgresql.org/pub/repos/apt $(lsb_release -cs)-pgdg main" | sudo tee /etc/apt/sources.list.d/pgdg.list
+          echo "deb https://apt.postgresql.org/pub/repos/apt $(lsb_release -cs)-pgdg main" | sudo tee /etc/apt/sources.list.d/pgdg.list
           wget -qO- https://www.postgresql.org/media/keys/ACCC4CF8.asc | sudo tee /etc/apt/trusted.gpg.d/postgresql.asc >/dev/null
           sudo apt-get update
           sudo apt-get install -y postgresql-client-18
@@ -531,6 +516,21 @@ jobs:
         with:
           fetch-depth: 0
 
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "10.0.x"
+
+      - name: Install ripgrep (pinned)
+        shell: bash
+        run: |
+          set -euo pipefail
+          source scripts/audit/ci_toolchain_versions.env
+          curl -sSL -o /tmp/rg.tgz \
+            "https://github.com/BurntSushi/ripgrep/releases/download/${RIPGREP_VERSION}/ripgrep-${RIPGREP_VERSION}-x86_64-unknown-linux-musl.tar.gz"
+          tar -xzf /tmp/rg.tgz -C /tmp
+          sudo install -m 0755 "/tmp/ripgrep-${RIPGREP_VERSION}-x86_64-unknown-linux-musl/rg" /usr/local/bin/rg
+          rg --version
+
       - name: Run security fast checks (if present)
         shell: bash
         run: |
@@ -580,6 +580,24 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install CI toolchain (pinned)
+        shell: bash
+        run: |
+          set -euo pipefail
+          source scripts/audit/ci_toolchain_versions.env
+          python3 -m pip install --upgrade pip
+          python3 -m pip install "pyyaml==${PYYAML_VERSION}" "jsonschema==${JSONSCHEMA_VERSION}"
+
+          curl -sSL -o /tmp/rg.tgz \
+            "https://github.com/BurntSushi/ripgrep/releases/download/${RIPGREP_VERSION}/ripgrep-${RIPGREP_VERSION}-x86_64-unknown-linux-musl.tar.gz"
+          tar -xzf /tmp/rg.tgz -C /tmp
+          sudo install -m 0755 "/tmp/ripgrep-${RIPGREP_VERSION}-x86_64-unknown-linux-musl/rg" /usr/local/bin/rg
+          rg --version
 
       - name: Download evidence artifacts
         uses: actions/download-artifact@v4
@@ -643,6 +661,11 @@ jobs:
               echo "Final evidence/phase0 contents:"
               ls -la evidence/phase0 || true
             fi
+
+      - name: Verify Phase-0 contract evidence status (merged artifacts)
+        run: |
+          chmod +x scripts/audit/verify_phase0_contract_evidence_status.sh
+          CI_ONLY=1 scripts/audit/verify_phase0_contract_evidence_status.sh
           
       - name: Require Phase-0 evidence (fail-closed)
         run: |

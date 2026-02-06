@@ -71,17 +71,11 @@ if ! docker exec "$DB_CONTAINER" pg_isready -U "$POSTGRES_USER" -d "$POSTGRES_DB
   exit 1
 fi
 
-if [[ -x scripts/audit/run_invariants_fast_checks.sh ]]; then
-  scripts/audit/run_invariants_fast_checks.sh
+if [[ -x scripts/audit/run_phase0_ordered_checks.sh ]]; then
+  scripts/audit/run_phase0_ordered_checks.sh
 else
-  echo "ERROR: scripts/audit/run_invariants_fast_checks.sh not found"
+  echo "ERROR: scripts/audit/run_phase0_ordered_checks.sh not found"
   exit 1
-fi
-
-if [[ -x scripts/audit/run_security_fast_checks.sh ]]; then
-  scripts/audit/run_security_fast_checks.sh
-else
-  echo "WARN: scripts/audit/run_security_fast_checks.sh not found; skipping"
 fi
 
 if [[ -n "${DATABASE_URL:-}" ]]; then
