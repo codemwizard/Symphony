@@ -1,6 +1,6 @@
 # Phase‑0 Audit Report (Symphony)
 
-**Date:** 2026‑02‑03  
+**Date:** 2026‑02‑06  
 **Scope:** Phase‑0 foundation (DB/migrations, invariants, CI gates, evidence harness, OpenBao dev parity, docs)  
 **Inputs:**
 - `Product-Requirement-Document_V2.txt`
@@ -16,12 +16,14 @@
 
 **Overall posture:** Strong Phase‑0 mechanical gating and evidence discipline. Core invariants, DB checks, evidence anchoring, and OpenBao dev parity are in place. The Phase‑0 base is credible for an evidence‑grade middleware foundation.
 
-**Primary gaps (Phase‑0 appropriate):**
-1) **Canonical baseline governance** (provenance + change‑control gate) for `schema/baseline.sql` beyond deterministic dumps.
-2) **Audit‑grade logging policy** (retention, time sync, review cadence, failure detection) aligned to standard guidance. citeturn0search1turn1search0
-3) **Key management policy** for evidence signing (even if signatures are Phase‑1/2). citeturn0search3
-4) **Sealed DDL allowlist governance** (expiration + security review + evidence of allowlist hits).
-5) **Local/CI parity check** to prevent workflow drift.
+**Remaining gaps (Phase‑1/2 roadmap):**
+1) **Key management policy** for evidence signing (policy stub + roadmap invariant still pending). citeturn0search3
+
+**Status update (2026‑02‑06):**
+- **Canonical baseline governance** is now enforced (baseline change gate + rebaseline strategy evidence).
+- **Audit logging policy** is documented in `docs/security/AUDIT_LOGGING_PLAN.md` (mechanical enforcement remains Phase‑1/2).
+- **Sealed DDL allowlist governance** is enforced with expiry + security review + evidence of allowlist hits.
+- **Local/CI parity** is implemented via destructive parity run and CI order checks.
 
 These gaps are governance‑level and **Phase‑0‑sized**: they strengthen audit‑grade posture without pulling runtime features forward.
 
@@ -41,22 +43,12 @@ These gaps are governance‑level and **Phase‑0‑sized**: they strengthen aud
 ## 3) Audit‑grade Gaps vs PRD + External Standards
 
 ### Gap A — Canonical baseline governance (Phase‑0)
-**Issue:** The baseline drift check exists, but canonicalization and provenance are not formalized; baseline updates can occur without a deliberate “why” artifact.
+**Status:** **Resolved** via baseline change governance and rebaseline strategy checks.
 
-**Why it matters:** Auditors prefer immutable, explainable baselines with stable, reproducible generation steps and provenance. This is standard log‑management rigor applied to schema evidence. citeturn0search1
-
-**Phase‑0 fix:**
-- Add a canonicalizer (`scripts/db/canonicalize_schema_dump.sh`) and include `pg_dump` provenance fields (dump source, versions, normalized hash).
-- Enforce “baseline change requires migration + explanation artifact.”
+**Evidence:** `scripts/audit/verify_baseline_change_governance.sh` and `scripts/audit/verify_rebaseline_strategy.sh` now emit Phase‑0 evidence.
 
 ### Gap B — Audit logging policy (retention, time sync, review cadence)
-**Issue:** Phase‑0 includes evidence artifacts but does not define or enforce core audit logging governance. External standards emphasize log management discipline and daily review intent for critical systems. citeturn0search1turn1search0
-
-**Phase‑0 fix:**
-- Add a policy doc and verification hooks:
-  - log retention (e.g., 12 months, 3 months hot) citeturn0search3
-  - time synchronization controls
-  - failure detection for logging pipelines
+**Status:** **Documented** in `docs/security/AUDIT_LOGGING_PLAN.md`; mechanical enforcement remains Phase‑1/2.
 
 ### Gap C — Key management policy for evidence signing
 **Issue:** PRD expects signed evidence bundles. Phase‑0 lacks key management policy language or stub controls.
@@ -67,16 +59,10 @@ These gaps are governance‑level and **Phase‑0‑sized**: they strengthen aud
 - Introduce a key management policy stub (not implementation) and a roadmap invariant that evidence signing must use managed keys with rotation and access controls.
 
 ### Gap D — DDL allowlist governance
-**Issue:** DDL lint allowlisting exists but needs a **sealed exception process** (expiry + security review + evidence of allowlist hits). This is a common audit concern in high‑assurance environments.
-
-**Phase‑0 fix:**
-- Add allowlist metadata (`expires_on`, reason, fingerprint) + CODEOWNERS review + evidence reporting of allowlist hits.
+**Status:** **Resolved** with fingerprinted allowlist + expiry + security review and evidence reporting.
 
 ### Gap E — Local/CI parity guardrail
-**Issue:** Local checks can drift from CI steps (already seen with CI‑only verification). This is a common cause of Phase‑0 instability.
-
-**Phase‑0 fix:**
-- Add `scripts/ci/verify_local_ci_parity.sh` to ensure referenced scripts/evidence paths match between dev and CI.
+**Status:** **Resolved** with destructive local parity runner and CI‑order verification.
 
 ---
 
@@ -94,13 +80,7 @@ These gaps are governance‑level and **Phase‑0‑sized**: they strengthen aud
 
 ## 5) Recommended Phase‑0 Additions (summary)
 
-1) **Canonical baseline generation + provenance evidence**
-2) **Baseline change governance gate** (migration + explanation required)
-3) **Audit logging policy + verification hooks** (retention, time sync, daily review) citeturn0search3turn0search0
-4) **Key management policy stub for evidence signing** citeturn0search2
-5) **Sealed DDL allowlist governance**
-6) **Local/CI parity verification**
-7) **Proxy resolution ADR + schema design + static verification (roadmap)**
+1) **Key management policy stub for evidence signing** (Phase‑1/2 roadmap) citeturn0search2
 
 ---
 

@@ -870,5 +870,27 @@
     "gate_ids": [
       "INT-G20"
     ]
+  },
+  {
+    "task_id": "TSK-P0-068",
+    "status": "completed",
+    "verification_mode": "both",
+    "evidence_required": false,
+    "evidence_paths": [],
+    "evidence_scope": "repo",
+    "notes": "Audit report alignment for resolved governance gaps.",
+    "gate_ids": []
+  },
+  {
+    "task_id": "TSK-P0-069",
+    "status": "completed",
+    "verification_mode": "both",
+    "evidence_required": true,
+    "evidence_paths": [
+      "evidence/phase0/phase0_contract_evidence_status.json"
+    ],
+    "evidence_scope": "ci_artifact",
+    "notes": "Regression test for contract parse failure evidence.",
+    "gate_ids": []
   }
 ]

@@ -129,6 +129,14 @@ run_case "invalid_yaml" \
 "FAIL" \
 "contract_not_list"
 
+# 3b) YAML parse error -> FAIL, exit non-zero with evidence
+run_case "parse_error_yaml" \
+"[unterminated" \
+"no" \
+"1" \
+"FAIL" \
+"contract_parse_failed"
+
 # 4) gate_ids + control planes + PASS evidence -> PASS, exit 0
 run_case "gateids_with_cp" \
 "- task_id: TSK-P0-TEST\n  status: completed\n  verification_mode: both\n  gate_ids: [INT-G01]\n" \

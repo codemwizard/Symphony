@@ -1469,3 +1469,41 @@ Evidence Artifact(s):
 Failure Modes:
 - Evidence status gate runs before evidence producers.
 - Evidence file missing.
+
+TASK ID: TSK-P0-068
+Title: Update Phase‑0 audit report with governance remediation status
+Owner Role: ARCHITECT
+Depends On: TSK-P0-044, TSK-P0-045, TSK-P0-047, TSK-P0-061
+Touches: `docs/PHASE0_AUDIT_REPORT.md`, `tasks/TSK-P0-068/meta.yml`
+Invariant(s): N/A (governance report alignment)
+Work:
+- Add a dated “Status Update” section that lists resolved governance gaps and remaining gaps.
+- Update Executive Summary to reflect resolved baseline governance, audit logging plan, DDL allowlist governance, and local/CI parity.
+- Ensure references point to the current Phase‑0 artifacts (audit logging plan, baseline governance gate, allowlist governance, parity workflow).
+Acceptance Criteria:
+- Audit report no longer lists resolved items as open gaps.
+- Remaining gaps (if any) are explicitly called out as Phase‑1/2 roadmap.
+Verification Commands:
+- `rg -n "Status Update" docs/PHASE0_AUDIT_REPORT.md`
+Failure Modes:
+- Report still lists resolved governance items as open gaps.
+
+TASK ID: TSK-P0-069
+Title: Extend contract evidence status tests for YAML parse failures
+Owner Role: SECURITY_GUARDIAN
+Depends On: TSK-P0-063, TSK-P0-064
+Touches: `scripts/audit/tests/test_phase0_contract_checker.sh`, `tasks/TSK-P0-069/meta.yml`
+Invariant(s): INV-080 (Phase‑0 contract evidence status semantics enforced)
+Work:
+- Add a regression case that triggers a YAML parse error and asserts evidence is still written.
+- Ensure the failure path reports `contract_parse_failed` and exits non‑zero.
+Acceptance Criteria:
+- New parse‑error test fails closed and writes evidence.
+- Existing tests continue to pass.
+Verification Commands:
+- `scripts/audit/tests/test_phase0_contract_checker.sh`
+Evidence Artifact(s):
+- `./evidence/phase0/phase0_contract_evidence_status.json`
+Failure Modes:
+- Evidence file missing.
+- YAML parse errors do not emit evidence.
