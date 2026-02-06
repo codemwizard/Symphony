@@ -1463,3 +1463,4 @@ Evidence Artifact(s):
 - `./evidence/phase0/ci_order.json`
 Failure Modes:
 - Evidence status gate runs before evidence producers.
+- Evidence file missing.
