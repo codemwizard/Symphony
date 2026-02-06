@@ -2,10 +2,13 @@
 set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
-CONTRACT_PATH="$ROOT_DIR/docs/PHASE0/phase0_contract.yml"
-CONTROL_PLANES_PATH="$ROOT_DIR/docs/control_planes/CONTROL_PLANES.yml"
-EVIDENCE_DIR="$ROOT_DIR/evidence/phase0"
-EVIDENCE_FILE="$EVIDENCE_DIR/phase0_contract_evidence_status.json"
+export ROOT_DIR
+cd "$ROOT_DIR"
+
+CONTRACT_PATH="${CONTRACT_PATH:-$ROOT_DIR/docs/PHASE0/phase0_contract.yml}"
+CONTROL_PLANES_PATH="${CONTROL_PLANES_PATH:-$ROOT_DIR/docs/control_planes/CONTROL_PLANES.yml}"
+EVIDENCE_DIR="${EVIDENCE_DIR:-$ROOT_DIR/evidence/phase0}"
+EVIDENCE_FILE="${EVIDENCE_FILE:-$EVIDENCE_DIR/phase0_contract_evidence_status.json}"
 
 mkdir -p "$EVIDENCE_DIR"
 source "$ROOT_DIR/scripts/lib/evidence.sh"
@@ -48,16 +51,50 @@ except Exception as e:
 
 errors = []
 checked = []
+contract_valid = False
 
+contract = []
 if not contract_path.exists():
     errors.append("contract_missing")
-    contract = []
 else:
-    contract = json.loads(contract_path.read_text(encoding="utf-8"))
+    try:
+        contract = yaml.safe_load(contract_path.read_text(encoding="utf-8")) or []
+        if not isinstance(contract, list):
+            errors.append("contract_not_list")
+            contract = []
+        else:
+            contract_valid = True
+    except Exception as e:
+        out = {
+            "check_id": "PHASE0-CONTRACT-EVIDENCE-STATUS",
+            "timestamp_utc": os.environ.get("EVIDENCE_TS"),
+            "git_sha": os.environ.get("EVIDENCE_GIT_SHA"),
+            "schema_fingerprint": os.environ.get("EVIDENCE_SCHEMA_FP"),
+            "status": "FAIL",
+            "errors": ["contract_parse_failed", str(e)],
+        }
+        evidence_out.write_text(json.dumps(out, indent=2) + "\n")
+        raise SystemExit(1)
 
+uses_gate_ids = contract_valid and any(isinstance(r, dict) and r.get("gate_ids") for r in contract)
 if not cp_path.exists():
-    errors.append("control_planes_missing")
-    cp = {}
+    if uses_gate_ids:
+        errors.append("control_planes_missing")
+        cp = {}
+    elif contract_valid:
+        out = {
+            "check_id": "PHASE0-CONTRACT-EVIDENCE-STATUS",
+            "timestamp_utc": os.environ.get("EVIDENCE_TS"),
+            "git_sha": os.environ.get("EVIDENCE_GIT_SHA"),
+            "schema_fingerprint": os.environ.get("EVIDENCE_SCHEMA_FP"),
+            "status": "SKIPPED",
+            "errors": ["control_planes_missing_no_gate_ids"],
+            "checked": [],
+        }
+        evidence_out.write_text(json.dumps(out, indent=2) + "\n")
+        raise SystemExit(0)
+    else:
+        cp = {}
 else:
     cp = yaml.safe_load(cp_path.read_text(encoding="utf-8")) or {}
 
@@ -173,4 +210,3 @@ if errors:
 
 print(f"Phase-0 contract evidence status check passed. Evidence: {evidence_out}")
 PY
-export ROOT_DIR

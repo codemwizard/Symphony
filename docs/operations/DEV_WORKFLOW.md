@@ -93,6 +93,30 @@ See `docs/operations/TASK_CREATION_PROCESS.md` before drafting new tasks.
 
 ---
 
+## Addendum — Codex review & detector artifacts (schema gaps)
+
+The CI workflow uploads additional artifacts such as:
+- `codex-security-review*.zip`
+- `codex-invariants-review*.zip`
+- `codex-compliance-review*.zip`
+- `invariants-detector*.zip`
+
+These **are not Phase‑0 evidence artifacts** and do **not** match the Phase‑0 evidence schema
+(`docs/architecture/evidence_schema.json`). Their JSON payloads (e.g., `ai_confidence.json`,
+`detect.json`) are missing required fields such as `check_id`, `timestamp_utc`, `git_sha`,
+and `status`.
+
+**Current stance (Phase‑0):**
+- Treat these artifacts as **auxiliary** diagnostics only.
+- Do **not** enforce Phase‑0 evidence schema validation on them.
+
+**Planned resolution (Phase‑2 target):**
+- Define a **separate schema** for AI‑review and detector artifacts, or
+- Emit **wrapper evidence** that converts them into schema‑compliant records.
+
+Until that Phase‑2 enhancement lands, only the `phase0-evidence*` artifacts are considered
+schema‑authoritative for Phase‑0 gating.
+
 ## Branch policy (strict)
 
 - **Do not push to `main`.**
