@@ -1402,3 +1402,44 @@ Evidence Artifact(s):
 Failure Modes:
 - Evidence file missing.
 - Missing evidence on parse failure.
+
+TASK ID: TSK-P0-065
+Title: Fix Phase-0 contract validator to parse YAML
+Owner Role: INVARIANTS_CURATOR
+Depends On: TSK-P0-037
+Touches: `scripts/audit/verify_phase0_contract.sh`, `tasks/TSK-P0-065/meta.yml`
+Invariant(s): INV-077 (Phase-0 contract is valid and complete)
+Work:
+- Parse `docs/PHASE0/phase0_contract.yml` using `yaml.safe_load`.
+- Emit evidence on parse failures (fail-closed with evidence).
+- Preserve existing validation semantics.
+Acceptance Criteria:
+- YAML contracts parse correctly.
+- Evidence is written on parse failure.
+Verification Commands:
+- `scripts/audit/verify_phase0_contract.sh`
+Evidence Artifact(s):
+- `./evidence/phase0/phase0_contract.json`
+Failure Modes:
+- Evidence file missing.
+- YAML parse errors do not emit evidence.
+
+TASK ID: TSK-P0-066
+Title: Add regression tests for Phase-0 contract validator
+Owner Role: INVARIANTS_CURATOR
+Depends On: TSK-P0-065
+Touches: `scripts/audit/tests/test_phase0_contract_validation.sh`, `tasks/TSK-P0-066/meta.yml`
+Invariant(s): INV-077 (Phase-0 contract is valid and complete)
+Work:
+- Add test harness for valid YAML (PASS), invalid YAML (FAIL), non-list YAML (FAIL).
+- Ensure evidence is written in all cases.
+Acceptance Criteria:
+- Tests pass locally and in CI.
+- Evidence file emitted even on failures.
+Verification Commands:
+- `scripts/audit/tests/test_phase0_contract_validation.sh`
+Evidence Artifact(s):
+- `./evidence/phase0/phase0_contract.json`
+Failure Modes:
+- Evidence file missing.
+- Missing evidence on parse failure.
