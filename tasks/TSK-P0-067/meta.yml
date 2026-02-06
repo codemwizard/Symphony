@@ -24,6 +24,7 @@ evidence:
 - evidence/phase0/ci_order.json
 failure_modes:
 - Evidence status gate runs before evidence producers.
+- Evidence file missing.
 must_read:
 - scripts/audit/run_phase0_ordered_checks.sh
 - scripts/ci/run_ci_locally.sh
