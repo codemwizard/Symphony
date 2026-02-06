@@ -15,9 +15,11 @@ work:
 - "Skip contract evidence status inside run_invariants_fast_checks via exported env."
 - "Run OpenBao smoke before evidence status in ordered checks."
 - "Run verify_phase0_contract_evidence_status.sh as the final gate."
+- "Ensure local CI parity run executes evidence producers: enforce_change_rule, test_idempotency_zombie, test_no_tx_migrations."
 acceptance_criteria:
 - "Evidence status check does not run before OpenBao evidence exists."
 - "Local parity run mirrors CI order."
+- "Idempotency, no-tx, and structural linkage evidence exist before evidence gate."
 verification:
 - scripts/audit/verify_ci_order.sh
 evidence:

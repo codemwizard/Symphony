@@ -1454,9 +1454,14 @@ Work:
 - Skip contract evidence status inside `run_invariants_fast_checks.sh` (exported env).
 - Run OpenBao smoke before evidence status in ordered checks.
 - Run `verify_phase0_contract_evidence_status.sh` as the final gate.
+- Ensure local CI parity run executes evidence producers required by the contract:
+  - `scripts/audit/enforce_change_rule.sh` → `structural_doc_linkage.json`
+  - `scripts/db/tests/test_idempotency_zombie.sh` → `idempotency_zombie.json`
+  - `scripts/db/tests/test_no_tx_migrations.sh` → `no_tx_migrations.json`
 Acceptance Criteria:
 - Evidence status check does not run before OpenBao evidence exists.
 - Local parity run mirrors CI order.
+- Evidence files for idempotency, no‑tx, and structural linkage exist before the evidence gate.
 Verification Commands:
 - `scripts/audit/verify_ci_order.sh`
 Evidence Artifact(s):

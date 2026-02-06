@@ -13,6 +13,7 @@ run scripts/audit/lint_yaml_conventions.sh
 run scripts/audit/verify_control_planes_drift.sh
 run scripts/audit/verify_repo_structure.sh
 run scripts/audit/generate_evidence.sh
+run scripts/audit/enforce_change_rule.sh
 run scripts/audit/verify_batching_rules.sh
 run scripts/audit/verify_routing_fallback.sh
 run scripts/audit/validate_routing_fallback.sh
