@@ -9,6 +9,11 @@ POLICY_EVIDENCE_FILE="$EVIDENCE_DIR/ddl_blocking_policy.json"
 ALLOWLIST_FILE="$ROOT_DIR/docs/security/ddl_allowlist.json"
 
 mkdir -p "$EVIDENCE_DIR"
+source "$ROOT_DIR/scripts/lib/evidence.sh"
+EVIDENCE_TS="$(evidence_now_utc)"
+EVIDENCE_GIT_SHA="$(git_sha)"
+EVIDENCE_SCHEMA_FP="$(schema_fingerprint)"
+export EVIDENCE_TS EVIDENCE_GIT_SHA EVIDENCE_SCHEMA_FP
 
 if [[ ! -d "$MIGRATIONS_DIR" ]]; then
   echo "Migrations directory not found: $MIGRATIONS_DIR" >&2
@@ -152,7 +157,11 @@ import json, os, sys
 lines = [ln.strip() for ln in sys.stdin.read().splitlines() if ln.strip()]
 allowlist_hits = [ln.strip() for ln in os.environ.get("ALLOWLIST_HITS_JOINED", "").split("\\n") if ln.strip()]
 out = {
-    "status": "fail" if lines else "pass",
+    "check_id": "SEC-DDL-LOCK-RISK",
+    "timestamp_utc": os.environ.get("EVIDENCE_TS"),
+    "git_sha": os.environ.get("EVIDENCE_GIT_SHA"),
+    "schema_fingerprint": os.environ.get("EVIDENCE_SCHEMA_FP"),
+    "status": "FAIL" if lines else "PASS",
     "match_count": len(lines),
     "matches": lines,
     "allowlist_hits": allowlist_hits,
@@ -165,6 +174,7 @@ PY
 python3 - <<PY
 import hashlib
 import json
+import os
 from pathlib import Path
 
 hot_tables = [
@@ -228,7 +238,11 @@ for p in Path("$MIGRATIONS_DIR").glob("*.sql"):
                     violations.append(f"{p.name}: CREATE INDEX without CONCURRENTLY on hot table: {t}")
 
 out = {
-    "status": "fail" if violations else "pass",
+    "check_id": "SEC-DDL-BLOCKING-POLICY",
+    "timestamp_utc": os.environ.get("EVIDENCE_TS"),
+    "git_sha": os.environ.get("EVIDENCE_GIT_SHA"),
+    "schema_fingerprint": os.environ.get("EVIDENCE_SCHEMA_FP"),
+    "status": "FAIL" if violations else "PASS",
     "violations": violations,
     "allowlist_hits": allowlist_hits,
 }
@@ -245,7 +259,7 @@ if python3 - <<PY
 import json
 from pathlib import Path
 data = json.loads(Path("$POLICY_EVIDENCE_FILE").read_text())
-print("fail" if data.get("status") == "fail" else "pass")
+print("fail" if data.get("status") == "FAIL" else "pass")
 PY
 then
   :
@@ -255,9 +269,9 @@ if [[ "$(python3 - <<PY
 import json
 from pathlib import Path
 data = json.loads(Path("$POLICY_EVIDENCE_FILE").read_text())
-print(data.get("status", "pass"))
+print(data.get("status", "PASS"))
 PY
-)" == "fail" ]]; then
+)" == "FAIL" ]]; then
   echo "Blocking DDL policy failed. See $POLICY_EVIDENCE_FILE" >&2
   exit 1
 fi

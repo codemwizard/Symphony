@@ -11,6 +11,11 @@ EVIDENCE_DIR="$ROOT_DIR/evidence/phase0"
 EVIDENCE_FILE="$EVIDENCE_DIR/baseline_drift.json"
 
 mkdir -p "$EVIDENCE_DIR"
+source "$ROOT_DIR/scripts/lib/evidence.sh"
+EVIDENCE_TS="$(evidence_now_utc)"
+EVIDENCE_GIT_SHA="$(git_sha)"
+EVIDENCE_SCHEMA_FP="$(schema_fingerprint)"
+export EVIDENCE_TS EVIDENCE_GIT_SHA EVIDENCE_SCHEMA_FP
 
 if [[ ! -f "$BASELINE" ]]; then
   echo "Missing baseline: $BASELINE" >&2
@@ -54,8 +59,12 @@ if ! diff -q /tmp/symphony_baseline_norm.sql /tmp/symphony_schema_dump.sql >/dev
   python3 - <<PY
 import json
 from pathlib import Path
-  out = {
-  "status":"fail",
+out = {
+  "check_id": "DB-BASELINE-DRIFT",
+  "timestamp_utc": "${EVIDENCE_TS}",
+  "git_sha": "${EVIDENCE_GIT_SHA}",
+  "schema_fingerprint": "${EVIDENCE_SCHEMA_FP}",
+  "status":"FAIL",
   "reason":"baseline drift",
   "baseline_path":"$BASELINE",
   "baseline_hash":"$BASELINE_HASH",
@@ -74,7 +83,11 @@ python3 - <<PY
 import json
 from pathlib import Path
 out = {
-  "status":"pass",
+  "check_id": "DB-BASELINE-DRIFT",
+  "timestamp_utc": "${EVIDENCE_TS}",
+  "git_sha": "${EVIDENCE_GIT_SHA}",
+  "schema_fingerprint": "${EVIDENCE_SCHEMA_FP}",
+  "status":"PASS",
   "baseline_path":"$BASELINE",
   "baseline_hash":"$BASELINE_HASH",
   "current_hash":"$DUMP_HASH",

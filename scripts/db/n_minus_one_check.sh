@@ -9,6 +9,13 @@ MIG_DIR="$ROOT/schema/migrations"
 EVIDENCE_DIR="$ROOT/evidence/phase0"
 OUT="$EVIDENCE_DIR/n_minus_one.json"
 
+mkdir -p "$EVIDENCE_DIR"
+source "$ROOT/scripts/lib/evidence.sh"
+EVIDENCE_TS="$(evidence_now_utc)"
+EVIDENCE_GIT_SHA="$(git_sha)"
+EVIDENCE_SCHEMA_FP="$(schema_fingerprint)"
+export EVIDENCE_TS EVIDENCE_GIT_SHA EVIDENCE_SCHEMA_FP
+
 if [[ ! -d "$MIG_DIR" ]]; then
   echo "ERROR: migrations directory not found: $MIG_DIR" >&2
   exit 2
@@ -179,6 +186,11 @@ for table, cols in prev.items():
 ok = not missing_tables and not missing_columns and not type_mismatches
 
 out = {
+    "check_id": "DB-N-1-COMPAT",
+    "timestamp_utc": os.environ.get("EVIDENCE_TS"),
+    "git_sha": os.environ.get("EVIDENCE_GIT_SHA"),
+    "schema_fingerprint": os.environ.get("EVIDENCE_SCHEMA_FP"),
+    "status": "PASS" if ok else "FAIL",
     "ok": ok,
     "last_migration": os.environ.get("LAST_MIGRATION"),
     "missing_tables": missing_tables,

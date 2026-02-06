@@ -1,0 +1,27 @@
+# Canonical Task Meta Template (lower_snake_case)
+
+phase: "0"
+task_id: "TSK-P0-XXX"
+title: "Short imperative title"
+owner_role: "ARCHITECT"
+status: "planned"   # planned | in_progress | completed
+
+depends_on: []
+
+touches: []
+invariants: []
+
+work: []
+acceptance_criteria: []
+
+verification: []
+evidence: []
+
+failure_modes: []
+
+must_read: []
+
+notes: ""
+client: "codex_cli"
+assigned_agent: "architect"
+model: "<UNASSIGNED>"

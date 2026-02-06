@@ -173,12 +173,21 @@ EVIDENCE_DIR="$ROOT_DIR/evidence/phase0"
 EVIDENCE_FILE="$EVIDENCE_DIR/outbox_terminal_uniqueness.json"
 NOTIFY_EVIDENCE_FILE="$EVIDENCE_DIR/outbox_notify.json"
 mkdir -p "$EVIDENCE_DIR"
+source "$ROOT_DIR/scripts/lib/evidence.sh"
+EVIDENCE_TS="$(evidence_now_utc)"
+EVIDENCE_GIT_SHA="$(git_sha)"
+EVIDENCE_SCHEMA_FP="$(schema_fingerprint)"
+export EVIDENCE_TS EVIDENCE_GIT_SHA EVIDENCE_SCHEMA_FP
 
 python3 - <<PY
 import json
 from pathlib import Path
 out = {
-  "status": "pass" if "$terminal_uniqueness_result" == "PASS" else "fail",
+  "check_id": "DB-OUTBOX-TERMINAL-UNIQUENESS",
+  "timestamp_utc": "${EVIDENCE_TS}",
+  "git_sha": "${EVIDENCE_GIT_SHA}",
+  "schema_fingerprint": "${EVIDENCE_SCHEMA_FP}",
+  "status": "PASS" if "$terminal_uniqueness_result" == "PASS" else "FAIL",
   "terminal_uniqueness_result": "$terminal_uniqueness_result",
   "tests_passed": $PASS,
   "tests_failed": $FAIL,
@@ -190,7 +199,11 @@ python3 - <<PY
 import json
 from pathlib import Path
 out = {
-  "status": "pass" if "$notify_result" == "PASS" else "fail",
+  "check_id": "DB-OUTBOX-NOTIFY",
+  "timestamp_utc": "${EVIDENCE_TS}",
+  "git_sha": "${EVIDENCE_GIT_SHA}",
+  "schema_fingerprint": "${EVIDENCE_SCHEMA_FP}",
+  "status": "PASS" if "$notify_result" == "PASS" else "FAIL",
   "notify_result": "$notify_result",
   "tests_passed": $PASS,
   "tests_failed": $FAIL,

@@ -8,8 +8,8 @@ SCHEMA_HASH_FILE="$EVIDENCE_DIR/schema_hash.txt"
 
 mkdir -p "$EVIDENCE_DIR"
 
-GIT_SHA=$(git -C "$ROOT_DIR" rev-parse HEAD)
-TIMESTAMP=$(date -u +%Y-%m-%dT%H:%M:%SZ)
+GIT_SHA=$(git -C "$ROOT_DIR" rev-parse HEAD 2>/dev/null || echo "UNKNOWN")
+TIMESTAMP_UTC=$(date -u +%Y-%m-%dT%H:%M:%SZ)
 PRODUCER="generate_evidence.sh"
 
 # deterministic schema hash from migrations
@@ -26,9 +26,11 @@ import json
 from pathlib import Path
 
 out = {
+  "check_id": "EVIDENCE-GENERATE",
+  "timestamp_utc": "$TIMESTAMP_UTC",
   "git_sha": "$GIT_SHA",
-  "schema_hash": "$SCHEMA_HASH",
-  "timestamp": "$TIMESTAMP",
+  "schema_fingerprint": "$SCHEMA_HASH",
+  "status": "PASS",
   "producer": "$PRODUCER",
   "inputs": {
     "schema_hash_file": "${SCHEMA_HASH_FILE}",

@@ -2,7 +2,9 @@ ROLE: COMPLIANCE MAPPER (non-blocking)
 
 Allowed paths:
 - docs/security/**
+- docs/architecture/**
 - docs/operations/** (only if documenting evidence workflow)
+- evidence/** (read-only)
 
 Job:
 Maintain a “control -> evidence” map that is real.

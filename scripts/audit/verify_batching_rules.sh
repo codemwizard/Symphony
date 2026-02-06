@@ -7,6 +7,10 @@ EVIDENCE_DIR="$ROOT_DIR/evidence/phase0"
 EVIDENCE_FILE="$EVIDENCE_DIR/batching_rules.json"
 
 mkdir -p "$EVIDENCE_DIR"
+source "$ROOT_DIR/scripts/lib/evidence.sh"
+EVIDENCE_TS="$(evidence_now_utc)"
+EVIDENCE_GIT_SHA="$(git_sha)"
+EVIDENCE_SCHEMA_FP="$(schema_fingerprint)"
 
 if [[ ! -f "$RULES_FILE" ]]; then
   echo "Missing batching rules file: $RULES_FILE" >&2
@@ -36,7 +40,11 @@ if "strategy" not in b["backpressure"] or not isinstance(b["backpressure"]["stra
     raise SystemExit("Missing backpressure.strategy")
 
 out = {
-    "status": "pass",
+    "check_id": "BATCHING-RULES",
+    "timestamp_utc": "$EVIDENCE_TS",
+    "git_sha": "$EVIDENCE_GIT_SHA",
+    "schema_fingerprint": "$EVIDENCE_SCHEMA_FP",
+    "status": "PASS",
     "batching": b,
 }
 Path("$EVIDENCE_FILE").write_text(json.dumps(out, indent=2))

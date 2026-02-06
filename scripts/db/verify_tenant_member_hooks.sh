@@ -8,6 +8,11 @@ EVIDENCE_DIR="$ROOT_DIR/evidence/phase0"
 EVIDENCE_OUT="$EVIDENCE_DIR/tenant_member_hooks.json"
 
 mkdir -p "$EVIDENCE_DIR"
+source "$ROOT_DIR/scripts/lib/evidence.sh"
+EVIDENCE_TS="$(evidence_now_utc)"
+EVIDENCE_GIT_SHA="$(git_sha)"
+EVIDENCE_SCHEMA_FP="$(schema_fingerprint)"
+export EVIDENCE_TS EVIDENCE_GIT_SHA EVIDENCE_SCHEMA_FP
 
 failures=()
 checks=()
@@ -51,30 +56,27 @@ check_bool "outbox_pending_tenant_id_col" "SELECT EXISTS (SELECT 1 FROM informat
 check_bool "outbox_attempts_tenant_id_col" "SELECT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema='public' AND table_name='payment_outbox_attempts' AND column_name='tenant_id');"
 check_bool "outbox_attempts_member_id_col" "SELECT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema='public' AND table_name='payment_outbox_attempts' AND column_name='member_id');"
 
-result="pass"
+result="PASS"
 if [[ ${#failures[@]} -gt 0 ]]; then
-  result="fail"
+  result="FAIL"
 fi
-
-git_sha=$(git -C "$ROOT_DIR" rev-parse HEAD 2>/dev/null || echo "unknown")
 
 CHECKS_JOINED="$(printf '%s\n' "${checks[@]}")"
 FAILURES_JOINED="$(printf '%s\n' "${failures[@]}")"
 
 CHECKS_JOINED="$CHECKS_JOINED" FAILURES_JOINED="$FAILURES_JOINED" python3 - <<PY
 import json
-from datetime import datetime, timezone
 import os
 
 checks = [c for c in os.environ.get("CHECKS_JOINED","").split("\\n") if c]
 failures = [c for c in os.environ.get("FAILURES_JOINED","").split("\\n") if c]
 
 out = {
-  "task_id": "TSK-P0-043",
-  "check": "tenant_member_hooks",
-  "result": "${result}",
-  "timestamp_utc": datetime.now(timezone.utc).isoformat(),
-  "git_sha": "${git_sha}",
+  "check_id": "DB-TENANT-MEMBER-HOOKS",
+  "timestamp_utc": "${EVIDENCE_TS}",
+  "git_sha": "${EVIDENCE_GIT_SHA}",
+  "schema_fingerprint": "${EVIDENCE_SCHEMA_FP}",
+  "status": "${result}",
   "details": {
     "checks": checks,
     "failures": failures
@@ -85,7 +87,7 @@ with open("${EVIDENCE_OUT}", "w", encoding="utf-8") as f:
     json.dump(out, f, indent=2)
 PY
 
-if [[ "$result" == "fail" ]]; then
+if [[ "$result" == "FAIL" ]]; then
   echo "Tenant/member hooks verification failed." >&2
   exit 1
 fi

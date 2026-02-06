@@ -11,6 +11,12 @@ EVIDENCE_FILE="$EVIDENCE_DIR/no_tx_marker_lint.json"
 
 fail=0
 violations=()
+mkdir -p "$EVIDENCE_DIR"
+source "$ROOT_DIR/scripts/lib/evidence.sh"
+EVIDENCE_TS="$(evidence_now_utc)"
+EVIDENCE_GIT_SHA="$(git_sha)"
+EVIDENCE_SCHEMA_FP="$(schema_fingerprint)"
+export EVIDENCE_TS EVIDENCE_GIT_SHA EVIDENCE_SCHEMA_FP
 
 shopt -s nullglob
 for f in "$MIG_DIR"/*.sql; do
@@ -58,11 +64,17 @@ PY
   fi
 done
 
-mkdir -p "$EVIDENCE_DIR"
 printf '%s\n' "${violations[@]}" | python3 - <<PY
 import json, sys
 lines = [ln.strip() for ln in sys.stdin.read().splitlines() if ln.strip()]
-out = {"status": "fail" if lines else "pass", "violations": lines}
+out = {
+  "check_id": "DB-NO-TX-MARKER-LINT",
+  "timestamp_utc": "${EVIDENCE_TS}",
+  "git_sha": "${EVIDENCE_GIT_SHA}",
+  "schema_fingerprint": "${EVIDENCE_SCHEMA_FP}",
+  "status": "FAIL" if lines else "PASS",
+  "violations": lines,
+}
 with open("$EVIDENCE_FILE", "w", encoding="utf-8") as f:
     json.dump(out, f, indent=2)
 PY

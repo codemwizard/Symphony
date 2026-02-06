@@ -9,6 +9,11 @@ EVIDENCE_DIR="$ROOT/evidence/phase0"
 OUT="$EVIDENCE_DIR/outbox_mvcc_posture.json"
 
 mkdir -p "$EVIDENCE_DIR"
+source "$ROOT/scripts/lib/evidence.sh"
+EVIDENCE_TS="$(evidence_now_utc)"
+EVIDENCE_GIT_SHA="$(git_sha)"
+EVIDENCE_SCHEMA_FP="$(schema_fingerprint)"
+export EVIDENCE_TS EVIDENCE_GIT_SHA EVIDENCE_SCHEMA_FP
 
 EXPECTED_FILLFACTOR="80"
 
@@ -31,6 +36,11 @@ import os
 from pathlib import Path
 
 out = {
+    "check_id": "DB-OUTBOX-MVCC",
+    "timestamp_utc": os.environ.get("EVIDENCE_TS"),
+    "git_sha": os.environ.get("EVIDENCE_GIT_SHA"),
+    "schema_fingerprint": os.environ.get("EVIDENCE_SCHEMA_FP"),
+    "status": "PASS" if os.environ.get("OK") == "1" else "FAIL",
     "ok": os.environ.get("OK") == "1",
     "expected_fillfactor": os.environ.get("EXPECTED_FILLFACTOR"),
     "reloptions": os.environ.get("RELOPTIONS") or "",

@@ -38,6 +38,11 @@ ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../../.." && pwd)"
 EVIDENCE_DIR="$ROOT_DIR/evidence/phase0"
 EVIDENCE_FILE="$EVIDENCE_DIR/idempotency_zombie.json"
 mkdir -p "$EVIDENCE_DIR"
+source "$ROOT_DIR/scripts/lib/evidence.sh"
+EVIDENCE_TS="$(evidence_now_utc)"
+EVIDENCE_GIT_SHA="$(git_sha)"
+EVIDENCE_SCHEMA_FP="$(schema_fingerprint)"
+export EVIDENCE_TS EVIDENCE_GIT_SHA EVIDENCE_SCHEMA_FP
 
 # Clean pending (append-only attempts must not be deleted)
 psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -X -c "DELETE FROM public.payment_outbox_pending;"
@@ -81,16 +86,29 @@ run_test "re-enqueue after zombie is idempotent" \
 echo ""
 echo "Summary: $PASS passed, $FAIL failed"
 
+status="PASS"
 if [[ $FAIL -gt 0 ]]; then
-  echo "exit code 1"
-  exit 1
+  status="FAIL"
 fi
 
 python3 - <<PY
 import json
 from pathlib import Path
-out = {"status": "pass", "tests_passed": $PASS, "tests_failed": $FAIL}
+out = {
+  "check_id": "DB-IDEMPOTENCY-ZOMBIE",
+  "timestamp_utc": "${EVIDENCE_TS}",
+  "git_sha": "${EVIDENCE_GIT_SHA}",
+  "schema_fingerprint": "${EVIDENCE_SCHEMA_FP}",
+  "status": "${status}",
+  "tests_passed": $PASS,
+  "tests_failed": $FAIL,
+}
 Path("$EVIDENCE_FILE").write_text(json.dumps(out, indent=2))
 PY
+
+if [[ $FAIL -gt 0 ]]; then
+  echo "exit code 1"
+  exit 1
+fi
 
 echo "exit code 0"

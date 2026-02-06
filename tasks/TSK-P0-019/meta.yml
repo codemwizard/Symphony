@@ -1,31 +1,30 @@
-phase: "0"
-task_id: "TSK-P0-019"
-title: "CI artifact upload verification (integration)"
-owner_role: "PLATFORM"
-Depends On: TSK-P0-010
-Touches:
-  - "tasks/TSK-P0-019/meta.yml"
-Invariant(s): "INV-020 (Evidence anchoring)"
-Work:
-  - "Run invariants.yml in CI and confirm phase0-evidence artifact exists and contains evidence files."
-Acceptance Criteria:
-  - "CI run produces artifact phase0-evidence with evidence/**."
-Verification Commands:
-  - "scripts/ci/check_evidence_required.sh (CI_ONLY=1, after artifact download)"
-Evidence Artifact(s):
-  - "phase0-evidence"
-Failure Modes:
-  - "CI run does not upload phase0-evidence."
-must_read:
-  - "docs/invariants/INVARIANTS_MANIFEST.yml"
-  - "scripts/db/verify_invariants.sh"
-  - "scripts/db/ci_invariant_gate.sql"
-evidence:
-  - "phase0-evidence"
+phase: '0'
+task_id: TSK-P0-019
+title: CI artifact upload verification (integration)
+owner_role: PLATFORM
+status: planned
+depends_on:
+- TSK-P0-010
+touches:
+- tasks/TSK-P0-019/meta.yml
+invariants:
+- INV-020 (Evidence anchoring)
+work:
+- Run invariants.yml in CI and confirm phase0-evidence artifact exists and contains
+  evidence files.
+acceptance_criteria:
+- CI run produces artifact phase0-evidence with evidence/**.
 verification:
-  - "scripts/ci/check_evidence_required.sh (CI_ONLY=1, after artifact download)"
-status: "planned"
-notes: ""
-client: "codex_cli"
-assigned_agent: "worker"
-model: "<UNASSIGNED>"
+- scripts/ci/check_evidence_required.sh (CI_ONLY=1, after artifact download)
+evidence:
+- phase0-evidence
+failure_modes:
+- CI run does not upload phase0-evidence.
+must_read:
+- docs/invariants/INVARIANTS_MANIFEST.yml
+- scripts/db/verify_invariants.sh
+- scripts/db/ci_invariant_gate.sql
+notes: ''
+client: codex_cli
+assigned_agent: worker
+model: <UNASSIGNED>

@@ -26,17 +26,17 @@ Must run: `scripts/db/verify_invariants.sh`, `scripts/db/tests/test_db_functions
 Never: weaken fencing semantics, grants, or append-only guarantees.
 
 ### Invariants Curator Agent
-Allowed paths: `docs/invariants/**`, `.github/codex/prompts/invariants_review.md`
+Allowed paths: `docs/invariants/**`, `docs/PHASE0/**`, `docs/tasks/**`, `scripts/audit/**`, `scripts/db/**`, `schema/**`, `.github/codex/prompts/invariants_review.md`
 Must run: `scripts/audit/run_invariants_fast_checks.sh`
 Never: mark implemented without enforcement + verification evidence.
 
 ### Security Guardian Agent
-Allowed paths: `scripts/security/**`, `scripts/audit/**`, `docs/security/**`, `.github/workflows/**`
+Allowed paths: `scripts/security/**`, `scripts/audit/**`, `docs/security/**`, `.github/workflows/**`, `infra/**`, `src/**`, `packages/**`, `Dockerfile`
 Must run: `scripts/audit/run_security_fast_checks.sh`
 Never: broaden privileges, weaken SECURITY DEFINER hardening, add runtime DDL.
 
 ### Compliance Mapper Agent (non-blocking)
-Allowed paths: `docs/security/**`
+Allowed paths: `docs/security/**`, `docs/architecture/**`, `evidence/**` (read-only)
 Produces control-matrix updates and gaps. No code changes.
 
 ### Research Scout (scheduled)

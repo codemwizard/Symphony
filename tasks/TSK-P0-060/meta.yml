@@ -1,0 +1,32 @@
+phase: '0'
+task_id: TSK-P0-060
+title: "Contract semantics PASS/SKIPPED (gate\u2011scoped)"
+owner_role: ARCHITECT
+status: completed
+depends_on:
+- TSK-P0-051
+touches:
+- docs/PHASE0/phase0_contract.yml
+- scripts/audit/verify_phase0_contract_evidence_status.sh
+- tasks/TSK-P0-060/meta.yml
+invariants:
+- INV-080
+work:
+- Update contract to reference gate_id(s) instead of evidence paths.
+- "Enforce completed \u21D2 PASS; not completed \u21D2 SKIPPED or PASS."
+acceptance_criteria:
+- Contract validator passes with new semantics.
+- Verifier emits evidence on pass/fail.
+verification:
+- scripts/audit/verify_phase0_contract_evidence_status.sh
+evidence:
+- evidence/phase0/phase0_contract_evidence_status.json
+failure_modes:
+- Contract semantics violated or evidence missing.
+- Evidence file missing.
+must_read:
+- docs/PHASE0/phase0_contract.yml
+notes: ''
+client: codex_cli
+assigned_agent: architect
+model: <UNASSIGNED>

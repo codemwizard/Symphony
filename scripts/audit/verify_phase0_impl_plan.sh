@@ -7,12 +7,25 @@ EVIDENCE_DIR="$ROOT_DIR/evidence/phase0"
 EVIDENCE_FILE="$EVIDENCE_DIR/phase0_impl_plan.json"
 
 mkdir -p "$EVIDENCE_DIR"
+source "$ROOT_DIR/scripts/lib/evidence.sh"
+EVIDENCE_TS="$(evidence_now_utc)"
+EVIDENCE_GIT_SHA="$(git_sha)"
+EVIDENCE_SCHEMA_FP="$(schema_fingerprint)"
+export EVIDENCE_TS EVIDENCE_GIT_SHA EVIDENCE_SCHEMA_FP
 
 if [[ ! -f "$PLAN" ]]; then
   python3 - <<PY
 import json
 from pathlib import Path
-Path("$EVIDENCE_FILE").write_text(json.dumps({"status":"fail","reason":"missing plan"}, indent=2))
+out = {
+  "check_id": "PHASE0-IMPL-PLAN",
+  "timestamp_utc": "$EVIDENCE_TS",
+  "git_sha": "$EVIDENCE_GIT_SHA",
+  "schema_fingerprint": "$EVIDENCE_SCHEMA_FP",
+  "status": "FAIL",
+  "reason": "missing plan"
+}
+Path("$EVIDENCE_FILE").write_text(json.dumps(out, indent=2))
 PY
   echo "❌ Missing plan: $PLAN" >&2
   exit 1
@@ -50,9 +63,9 @@ if ! plan_has_i "member"; then
   missing+=("member keyword")
 fi
 
-status="pass"
+status="PASS"
 if [[ ${#missing[@]} -gt 0 ]]; then
-  status="fail"
+  status="FAIL"
 fi
 
 MISSING_JOINED="$(printf '%s\n' "${missing[@]}")" STATUS="$status" python3 - <<PY
@@ -61,13 +74,17 @@ from pathlib import Path
 import os
 missing = [m for m in os.environ.get("MISSING_JOINED", "").split("\n") if m]
 out = {
-  "status": os.environ.get("STATUS", "pass"),
+  "check_id": "PHASE0-IMPL-PLAN",
+  "timestamp_utc": os.environ.get("EVIDENCE_TS"),
+  "git_sha": os.environ.get("EVIDENCE_GIT_SHA"),
+  "schema_fingerprint": os.environ.get("EVIDENCE_SCHEMA_FP"),
+  "status": os.environ.get("STATUS", "PASS"),
   "missing": missing
 }
 Path("$EVIDENCE_FILE").write_text(json.dumps(out, indent=2))
 PY
 
-if [[ "$status" == "fail" ]]; then
+if [[ "$status" == "FAIL" ]]; then
   echo "❌ Phase-0 implementation plan check failed" >&2
   exit 1
 fi

@@ -1,0 +1,38 @@
+phase: '0'
+task_id: TSK-P0-062
+title: Normalize legacy task metas to canonical schema
+owner_role: ARCHITECT
+status: in_progress
+depends_on:
+- TSK-P0-057
+touches:
+- tasks/TSK-P0-050/meta.yml
+- tasks/TSK-P0-051/meta.yml
+- tasks/TSK-P0-052/meta.yml
+- tasks/TSK-P0-053/meta.yml
+- tasks/TSK-P0-054/meta.yml
+- tasks/TSK-P0-055/meta.yml
+- tasks/TSK-P0-062/meta.yml
+invariants:
+- INV-082
+work:
+- Convert legacy task metas to lower_snake_case keys and canonical schema.
+- Remove duplicate fields and keep single source of truth.
+- "Ensure evidence paths are gate\u2011scoped."
+acceptance_criteria:
+- Legacy task metas match tasks/_template/meta.yml schema.
+- YAML conventions lint passes.
+verification:
+- scripts/audit/lint_yaml_conventions.sh
+evidence:
+- evidence/phase0/yaml_conventions_lint.json
+failure_modes:
+- Snake_case violations or schema mismatch in legacy metas.
+- Evidence file missing.
+must_read:
+- docs/tasks/TASK_META_SCHEMA.md
+- tasks/_template/meta.yml
+notes: Set to completed after YAML lint and schema checks pass.
+client: codex_cli
+assigned_agent: architect
+model: <UNASSIGNED>

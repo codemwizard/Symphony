@@ -1,42 +1,43 @@
-phase: "0"
-task_id: "TSK-P0-035"
-title: "Declare Proxy/Alias Resolution invariant (roadmap) + schema design hooks"
-owner_role: "INVARIANTS_CURATOR"
-Depends On: TSK-P0-009
-Touches:
-  - "docs/invariants/INVARIANTS_MANIFEST.yml"
-  - "docs/architecture/adrs/ADR-0008-proxy-resolution-strategy.md"
-  - "docs/architecture/schema/proxy_resolution_schema.md"
-  - "scripts/audit/verify_proxy_resolution_invariant.sh"
-  - "tasks/TSK-P0-035/meta.yml"
-Invariant(s): "INV-048 (Proxy/Alias resolution required before dispatch)"
-Work:
-  - "Add invariant as roadmap with resolve point, durable record fields (hash-only), fail-closed rule, and outbox/idempotency linkage."
-  - "ADR documents resolve-before-enqueue vs resolve-before-dispatch decision, failure modes, and evidence requirements."
-  - "Add schema design doc describing proxy_resolutions (append-only) and optional proxy_resolution_current (cache), including indexes and prohibited fields."
-  - "Verification script performs static checks only and emits evidence."
-Acceptance Criteria:
-  - "Invariant exists with status roadmap and a concrete verification hook."
-  - "ADR + schema design doc exist and are referenced."
-  - "Evidence artifact emitted and passes schema validation/anchoring rules."
-Verification Commands:
-  - "scripts/audit/verify_proxy_resolution_invariant.sh"
-Evidence Artifact(s):
-  - "./evidence/phase0/proxy_resolution_invariant.json"
-Failure Modes:
-  - "INV-048 missing or malformed."
-  - "ADR/schema design doc missing."
-  - "Evidence file missing."
-must_read:
-  - "docs/invariants/INVARIANTS_MANIFEST.yml"
-  - "scripts/db/verify_invariants.sh"
-  - "scripts/db/ci_invariant_gate.sql"
-evidence:
-  - "./evidence/phase0/proxy_resolution_invariant.json"
+phase: '0'
+task_id: TSK-P0-035
+title: Declare Proxy/Alias Resolution invariant (roadmap) + schema design hooks
+owner_role: INVARIANTS_CURATOR
+status: completed
+depends_on:
+- TSK-P0-009
+touches:
+- docs/invariants/INVARIANTS_MANIFEST.yml
+- docs/architecture/adrs/ADR-0008-proxy-resolution-strategy.md
+- docs/architecture/schema/proxy_resolution_schema.md
+- scripts/audit/verify_proxy_resolution_invariant.sh
+- tasks/TSK-P0-035/meta.yml
+invariants:
+- INV-048 (Proxy/Alias resolution required before dispatch)
+work:
+- Add invariant as roadmap with resolve point, durable record fields (hash-only),
+  fail-closed rule, and outbox/idempotency linkage.
+- ADR documents resolve-before-enqueue vs resolve-before-dispatch decision, failure
+  modes, and evidence requirements.
+- Add schema design doc describing proxy_resolutions (append-only) and optional proxy_resolution_current
+  (cache), including indexes and prohibited fields.
+- Verification script performs static checks only and emits evidence.
+acceptance_criteria:
+- Invariant exists with status roadmap and a concrete verification hook.
+- ADR + schema design doc exist and are referenced.
+- Evidence artifact emitted and passes schema validation/anchoring rules.
 verification:
-  - "scripts/audit/verify_proxy_resolution_invariant.sh"
-status: "completed"
-notes: ""
-client: "codex_cli"
-assigned_agent: "invariants_curator"
-model: "<UNASSIGNED>"
+- scripts/audit/verify_proxy_resolution_invariant.sh
+evidence:
+- ./evidence/phase0/proxy_resolution_invariant.json
+failure_modes:
+- INV-048 missing or malformed.
+- ADR/schema design doc missing.
+- Evidence file missing.
+must_read:
+- docs/invariants/INVARIANTS_MANIFEST.yml
+- scripts/db/verify_invariants.sh
+- scripts/db/ci_invariant_gate.sql
+notes: ''
+client: codex_cli
+assigned_agent: invariants_curator
+model: <UNASSIGNED>

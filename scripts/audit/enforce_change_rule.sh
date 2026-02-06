@@ -6,6 +6,11 @@ EVIDENCE_DIR="$ROOT_DIR/evidence/phase0"
 EVIDENCE_FILE="$EVIDENCE_DIR/structural_doc_linkage.json"
 
 mkdir -p "$EVIDENCE_DIR"
+source "$ROOT_DIR/scripts/lib/evidence.sh"
+EVIDENCE_TS="$(evidence_now_utc)"
+EVIDENCE_GIT_SHA="$(git_sha)"
+EVIDENCE_SCHEMA_FP="$(schema_fingerprint)"
+CHECK_ID="STRUCTURAL-DOC-LINKAGE"
 
 # Default range for local usage if not provided
 BASE_REF="${BASE_REF:-origin/main}"
@@ -17,7 +22,16 @@ if ! git rev-parse "$BASE_REF" >/dev/null 2>&1; then
   python3 - <<PY
 import json
 from pathlib import Path
-Path("$EVIDENCE_FILE").write_text(json.dumps({"status":"pass","structural_change":False}, indent=2))
+out = {
+  "check_id": "$CHECK_ID",
+  "timestamp_utc": "$EVIDENCE_TS",
+  "git_sha": "$EVIDENCE_GIT_SHA",
+  "schema_fingerprint": "$EVIDENCE_SCHEMA_FP",
+  "status": "SKIPPED",
+  "structural_change": False,
+  "reason": "BASE_REF not found"
+}
+Path("$EVIDENCE_FILE").write_text(json.dumps(out, indent=2))
 PY
   exit 0
 fi
@@ -41,7 +55,15 @@ if [[ "$structural" == "true" ]]; then
     python3 - <<PY
 import json
 from pathlib import Path
-Path("$EVIDENCE_FILE").write_text(json.dumps({"status":"fail","reason":"missing threat/compliance updates"}, indent=2))
+out = {
+  "check_id": "$CHECK_ID",
+  "timestamp_utc": "$EVIDENCE_TS",
+  "git_sha": "$EVIDENCE_GIT_SHA",
+  "schema_fingerprint": "$EVIDENCE_SCHEMA_FP",
+  "status": "FAIL",
+  "reason": "missing threat/compliance updates"
+}
+Path("$EVIDENCE_FILE").write_text(json.dumps(out, indent=2))
 PY
     echo "❌ Structural change detected but threat/compliance docs not updated" >&2
     exit 1
@@ -51,7 +73,15 @@ fi
 python3 - <<PY
 import json
 from pathlib import Path
-Path("$EVIDENCE_FILE").write_text(json.dumps({"status":"pass","structural_change": "$structural" == "true"}, indent=2))
+out = {
+  "check_id": "$CHECK_ID",
+  "timestamp_utc": "$EVIDENCE_TS",
+  "git_sha": "$EVIDENCE_GIT_SHA",
+  "schema_fingerprint": "$EVIDENCE_SCHEMA_FP",
+  "status": "PASS",
+  "structural_change": "$structural" == "true"
+}
+Path("$EVIDENCE_FILE").write_text(json.dumps(out, indent=2))
 PY
 
 echo "✅ Change rule OK: no structural changes detected."

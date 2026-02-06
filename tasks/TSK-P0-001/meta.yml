@@ -1,39 +1,36 @@
-phase: "0"
-task_id: "TSK-P0-001"
-title: "Establish repo structure verifier and agents layout"
-owner_role: "ARCHITECT"
-Depends On: none
-Touches:
-  - "scripts/audit/verify_repo_structure.sh"
-  - ".github/workflows/invariants.yml"
-  - "docs/agents/ARCHITECT_PHASE0_PROMPT.md"
-  - "docs/phase-0/phase-0-foundation.md"
-  - "tasks/TSK-P0-001/meta.yml"
-Invariant(s): "INV-019 (Repo structure enforced)"
-Work:
-  - "Define required directories for .NET 10-friendly layout and agents/docs structure."
-  - "Create verify_repo_structure.sh to fail when required dirs or references are missing."
-  - "Wire verifier into mechanical_invariants job."
-  - "Update Phase-0 docs to reference verifier."
-Acceptance Criteria:
-  - "CI fails if any required directory is missing."
-  - "Verifier emits a machine-readable report under ./evidence/."
-Verification Commands:
-  - "scripts/audit/verify_repo_structure.sh"
-Evidence Artifact(s):
-  - "./evidence/phase0/repo_structure.json"
-Failure Modes:
-  - "Missing required directory or stale doc reference must fail the job."
-must_read:
-  - "docs/invariants/INVARIANTS_MANIFEST.yml"
-  - "scripts/db/verify_invariants.sh"
-  - "scripts/db/ci_invariant_gate.sql"
-evidence:
-  - "./evidence/phase0/repo_structure.json"
+phase: '0'
+task_id: TSK-P0-001
+title: Establish repo structure verifier and agents layout
+owner_role: ARCHITECT
+status: completed
+depends_on: []
+touches:
+- scripts/audit/verify_repo_structure.sh
+- .github/workflows/invariants.yml
+- docs/agents/ARCHITECT_PHASE0_PROMPT.md
+- docs/phase-0/phase-0-foundation.md
+- tasks/TSK-P0-001/meta.yml
+invariants:
+- INV-019 (Repo structure enforced)
+work:
+- Define required directories for .NET 10-friendly layout and agents/docs structure.
+- Create verify_repo_structure.sh to fail when required dirs or references are missing.
+- Wire verifier into mechanical_invariants job.
+- Update Phase-0 docs to reference verifier.
+acceptance_criteria:
+- CI fails if any required directory is missing.
+- Verifier emits a machine-readable report under ./evidence/.
 verification:
-  - "scripts/audit/verify_repo_structure.sh"
-status: "completed"
-notes: ""
-client: "codex_ide"
-assigned_agent: "architect"
-model: "GPT-5.2-Codex"
+- scripts/audit/verify_repo_structure.sh
+evidence:
+- ./evidence/phase0/repo_structure.json
+failure_modes:
+- Missing required directory or stale doc reference must fail the job.
+must_read:
+- docs/invariants/INVARIANTS_MANIFEST.yml
+- scripts/db/verify_invariants.sh
+- scripts/db/ci_invariant_gate.sql
+notes: ''
+client: codex_ide
+assigned_agent: architect
+model: GPT-5.2-Codex

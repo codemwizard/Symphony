@@ -21,6 +21,10 @@ REQ=(
   "scripts/security/lint_sql_injection.sh"
   "scripts/security/lint_privilege_grants.sh"
   "scripts/security/lint_core_boundary.sh"
+  "scripts/security/scan_secrets.sh"
+  "scripts/security/dotnet_dependency_audit.sh"
+  "scripts/security/lint_secure_config.sh"
+  "scripts/security/lint_insecure_patterns.sh"
 )
 for f in "${REQ[@]}"; do
   if [[ ! -f "$f" ]]; then
@@ -34,6 +38,10 @@ echo "==> Run security lints"
 run scripts/security/lint_sql_injection.sh
 run scripts/security/lint_privilege_grants.sh
 run scripts/security/lint_core_boundary.sh
+run scripts/security/scan_secrets.sh
+run scripts/security/dotnet_dependency_audit.sh
+run scripts/security/lint_secure_config.sh
+run scripts/security/lint_insecure_patterns.sh
 if [[ -x scripts/security/lint_ddl_lock_risk.sh || -f scripts/security/lint_ddl_lock_risk.sh ]]; then
   run scripts/security/lint_ddl_lock_risk.sh
 fi

@@ -8,6 +8,11 @@ EVIDENCE_DIR="$ROOT_DIR/evidence/phase0"
 EVIDENCE_FILE="$EVIDENCE_DIR/routing_fallback.json"
 
 mkdir -p "$EVIDENCE_DIR"
+source "$ROOT_DIR/scripts/lib/evidence.sh"
+EVIDENCE_TS="$(evidence_now_utc)"
+EVIDENCE_GIT_SHA="$(git_sha)"
+EVIDENCE_SCHEMA_FP="$(schema_fingerprint)"
+export EVIDENCE_TS EVIDENCE_GIT_SHA EVIDENCE_SCHEMA_FP
 
 if [[ ! -f "$RULES_FILE" ]]; then
   echo "Missing routing fallback rules: $RULES_FILE" >&2
@@ -20,7 +25,7 @@ fi
 
 # Validate YAML against schema using python (pyyaml + jsonschema)
 python3 - <<PY
-import json, sys
+import json, sys, os
 from pathlib import Path
 
 try:
@@ -47,7 +52,11 @@ if missing:
     sys.exit(1)
 
 out = {
-    "status": "pass",
+    "check_id": "ROUTING-FALLBACK",
+    "timestamp_utc": os.environ.get("EVIDENCE_TS"),
+    "git_sha": os.environ.get("EVIDENCE_GIT_SHA"),
+    "schema_fingerprint": os.environ.get("EVIDENCE_SCHEMA_FP"),
+    "status": "PASS",
     "required_fields": required,
 }
 Path("$EVIDENCE_FILE").write_text(json.dumps(out, indent=2))

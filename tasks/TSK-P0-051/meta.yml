@@ -1,0 +1,42 @@
+phase: '0'
+task_id: TSK-P0-051
+title: Define control planes + drift checker
+owner_role: ARCHITECT
+status: completed
+depends_on:
+- TSK-P0-050
+touches:
+- docs/control_planes/CONTROL_PLANES.yml
+- scripts/audit/verify_control_planes_drift.sh
+- scripts/dev/pre_ci.sh
+- .github/workflows/invariants.yml
+- docs/invariants/INVARIANTS_MANIFEST.yml
+- docs/PHASE0/phase0_contract.yml
+- tasks/TSK-P0-051/meta.yml
+invariants:
+- INV-072
+work:
+- Create CONTROL_PLANES.yml (Security / Integrity / Governance ownership, scope, required
+  gates).
+- Implement drift verifier (ensures gates exist, evidence paths match wrappers).
+- "Wire into pre\u2011CI and CI (fail\u2011closed)."
+- "Register INV\u2011072 and evidence path in manifest + contract."
+acceptance_criteria:
+- CONTROL_PLANES.yml exists and is parseable.
+- Drift checker fails on missing gates/evidence mismatch.
+- Evidence emitted on pass/fail.
+verification:
+- scripts/audit/verify_control_planes_drift.sh
+evidence:
+- evidence/phase0/control_planes_drift.json
+failure_modes:
+- Evidence file missing.
+- "Control\u2011plane gate mismatch or missing script."
+must_read:
+- docs/invariants/INVARIANTS_MANIFEST.yml
+- scripts/db/verify_invariants.sh
+- scripts/db/ci_invariant_gate.sql
+notes: ''
+client: codex_cli
+assigned_agent: architect
+model: <UNASSIGNED>

@@ -8,6 +8,11 @@ EVIDENCE_SNAPSHOT="$EVIDENCE_DIR/baseline_snapshot.json"
 EVIDENCE_STRATEGY="$EVIDENCE_DIR/baseline_strategy.json"
 
 mkdir -p "$EVIDENCE_DIR"
+source "$ROOT_DIR/scripts/lib/evidence.sh"
+EVIDENCE_TS="$(evidence_now_utc)"
+EVIDENCE_GIT_SHA="$(git_sha)"
+EVIDENCE_SCHEMA_FP="$(schema_fingerprint)"
+export EVIDENCE_TS EVIDENCE_GIT_SHA EVIDENCE_SCHEMA_FP
 
 ROOT_DIR="$ROOT_DIR" \
 EVIDENCE_DECISION="$EVIDENCE_DECISION" \
@@ -17,8 +22,6 @@ python3 - <<'PY'
 import json
 import os
 from pathlib import Path
-from datetime import datetime, timezone
-import subprocess
 
 root = Path(os.environ["ROOT_DIR"])
 evidence_decision = Path(os.environ["EVIDENCE_DECISION"])
@@ -78,23 +81,23 @@ if details["missing"]:
     errors.append("rebaseline_missing_files")
 
 base_result = {
-    "check": "rebaseline_strategy",
-    "result": "pass" if not errors else "fail",
-    "timestamp_utc": datetime.now(timezone.utc).isoformat(),
-    "git_sha": subprocess.getoutput("git rev-parse HEAD"),
+    "timestamp_utc": os.environ.get("EVIDENCE_TS"),
+    "git_sha": os.environ.get("EVIDENCE_GIT_SHA"),
+    "schema_fingerprint": os.environ.get("EVIDENCE_SCHEMA_FP"),
+    "status": "PASS" if not errors else "FAIL",
     "details": details,
 }
 
 outputs = [
-    ("TSK-P0-047", evidence_decision),
-    ("TSK-P0-048", evidence_snapshot),
-    ("TSK-P0-049", evidence_strategy),
+    ("REBASELINE-DECISION", evidence_decision),
+    ("BASELINE-SNAPSHOT", evidence_snapshot),
+    ("BASELINE-STRATEGY", evidence_strategy),
 ]
 
 # Always write evidence (even on failure)
-for task_id, path in outputs:
+for check_id, path in outputs:
     payload = dict(base_result)
-    payload["task_id"] = task_id
+    payload["check_id"] = check_id
     path.write_text(json.dumps(payload, indent=2), encoding="utf-8")
 
 if errors:

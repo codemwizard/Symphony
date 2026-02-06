@@ -16,6 +16,11 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
+source "$REPO_ROOT/scripts/lib/evidence.sh"
+EVIDENCE_TS="$(evidence_now_utc)"
+EVIDENCE_GIT_SHA="$(git_sha)"
+EVIDENCE_SCHEMA_FP="$(schema_fingerprint)"
+export EVIDENCE_TS EVIDENCE_GIT_SHA EVIDENCE_SCHEMA_FP
 
 # --- 1. Pre-flight existence checks (Requirement #2 & Hardening) ---
 
@@ -117,18 +122,27 @@ indexdef="$(
     -c "SELECT indexdef FROM pg_indexes WHERE schemaname='public' AND indexname='idx_payment_outbox_pending_due_claim';" \
     | tr -d '\n'
 )"
-idx_status="pass"
+idx_status="PASS"
 if [[ -z "$indexdef" ]]; then
-  idx_status="fail"
+  idx_status="FAIL"
   fail=1
 elif [[ "$indexdef" != *"(next_attempt_at"* || "$indexdef" != *"created_at"* ]]; then
-  idx_status="fail"
+  idx_status="FAIL"
   fail=1
+else
+  idx_status="PASS"
 fi
 python3 - <<PY
 import json
 from pathlib import Path
-out = {"status": "$idx_status", "indexdef": "$indexdef"}
+out = {
+  "check_id": "DB-OUTBOX-PENDING-INDEXES",
+  "timestamp_utc": "${EVIDENCE_TS}",
+  "git_sha": "${EVIDENCE_GIT_SHA}",
+  "schema_fingerprint": "${EVIDENCE_SCHEMA_FP}",
+  "status": "$idx_status",
+  "indexdef": "$indexdef",
+}
 Path("$EVIDENCE_DIR/outbox_pending_indexes.json").write_text(json.dumps(out, indent=2))
 PY
 
@@ -138,15 +152,24 @@ relopts="$(
     -c "SELECT array_to_string(reloptions, ',') FROM pg_class c JOIN pg_namespace n ON n.oid = c.relnamespace WHERE n.nspname='public' AND c.relname='payment_outbox_pending';" \
     | tr -d '\n'
 )"
-mvcc_status="pass"
+mvcc_status="PASS"
 if [[ "$relopts" != *"fillfactor=80"* ]]; then
-  mvcc_status="fail"
+  mvcc_status="FAIL"
   fail=1
+else
+  mvcc_status="PASS"
 fi
 python3 - <<PY
 import json
 from pathlib import Path
-out = {"status": "$mvcc_status", "reloptions": "$relopts"}
+out = {
+  "check_id": "DB-OUTBOX-MVCC",
+  "timestamp_utc": "${EVIDENCE_TS}",
+  "git_sha": "${EVIDENCE_GIT_SHA}",
+  "schema_fingerprint": "${EVIDENCE_SCHEMA_FP}",
+  "status": "$mvcc_status",
+  "reloptions": "$relopts",
+}
 Path("$EVIDENCE_DIR/outbox_mvcc_posture.json").write_text(json.dumps(out, indent=2))
 PY
 
@@ -167,15 +190,21 @@ ingress_trigger="$(
   psql "$DATABASE_URL" -q -t -A -v ON_ERROR_STOP=1 -X \
     -c "SELECT EXISTS (SELECT 1 FROM pg_trigger WHERE tgname='trg_deny_ingress_attestations_mutation');"
 )"
-ingress_status="pass"
+ingress_status="PASS"
 if [[ "$ingress_exists" != "t" || "$ingress_idx_instruction" != "t" || "$ingress_idx_received" != "t" || "$ingress_trigger" != "t" ]]; then
-  ingress_status="fail"
+  ingress_status="FAIL"
   fail=1
+else
+  ingress_status="PASS"
 fi
 python3 - <<PY
 import json
 from pathlib import Path
 out = {
+  "check_id": "DB-INGRESS-ATTESTATION",
+  "timestamp_utc": "${EVIDENCE_TS}",
+  "git_sha": "${EVIDENCE_GIT_SHA}",
+  "schema_fingerprint": "${EVIDENCE_SCHEMA_FP}",
   "status": "$ingress_status",
   "table_exists": "$ingress_exists",
   "index_instruction_id": "$ingress_idx_instruction",
@@ -210,15 +239,21 @@ rev_trigger_tokens="$(
   psql "$DATABASE_URL" -q -t -A -v ON_ERROR_STOP=1 -X \
     -c "SELECT EXISTS (SELECT 1 FROM pg_trigger WHERE tgname='trg_deny_revoked_tokens_mutation');"
 )"
-rev_status="pass"
+rev_status="PASS"
 if [[ "$rev_certs" != "t" || "$rev_tokens" != "t" || "$rev_trigger_certs" != "t" || "$rev_trigger_tokens" != "t" ]]; then
-  rev_status="fail"
+  rev_status="FAIL"
   fail=1
+else
+  rev_status="PASS"
 fi
 python3 - <<PY
 import json
 from pathlib import Path
 out = {
+  "check_id": "DB-REVOCATION-TABLES",
+  "timestamp_utc": "${EVIDENCE_TS}",
+  "git_sha": "${EVIDENCE_GIT_SHA}",
+  "schema_fingerprint": "${EVIDENCE_SCHEMA_FP}",
   "status": "$rev_status",
   "revoked_client_certs": "$rev_certs",
   "revoked_tokens": "$rev_tokens",
