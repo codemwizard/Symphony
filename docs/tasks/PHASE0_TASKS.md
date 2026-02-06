@@ -1358,3 +1358,47 @@ Evidence Artifact(s):
 Failure Modes:
 - Evidence file missing.
 - Agent scope conflicts with control plane definitions.
+
+TASK ID: TSK-P0-063
+Title: Fix Phase-0 contract evidence checker (YAML + fail-closed evidence)
+Owner Role: INVARIANTS_CURATOR
+Depends On: TSK-P0-037, TSK-P0-040, TSK-P0-051
+Touches: `scripts/audit/verify_phase0_contract_evidence_status.sh`, `tasks/TSK-P0-063/meta.yml`
+Invariant(s): INV-080 (Phase-0 contract evidence status semantics enforced)
+Work:
+- Export `ROOT_DIR` and `cd` before invoking Python.
+- Parse `docs/PHASE0/phase0_contract.yml` via `yaml.safe_load` (reject non-list).
+- Always emit evidence on parse failure.
+- Require CONTROL_PLANES only if any `gate_ids` exist; otherwise emit SKIPPED evidence.
+Acceptance Criteria:
+- YAML contract parses correctly (no JSON-only parsing).
+- Evidence file is written even on failure.
+- Missing CONTROL_PLANES yields SKIPPED unless `gate_ids` are present.
+Verification Commands:
+- `CI_ONLY=1 scripts/audit/verify_phase0_contract_evidence_status.sh`
+Evidence Artifact(s):
+- `./evidence/phase0/phase0_contract_evidence_status.json`
+Failure Modes:
+- Evidence file missing.
+- Contract parse errors do not emit evidence.
+- CONTROL_PLANES missing fails even with no `gate_ids`.
+
+TASK ID: TSK-P0-064
+Title: Add regression tests for Phase-0 contract checker
+Owner Role: INVARIANTS_CURATOR
+Depends On: TSK-P0-063
+Touches: `scripts/audit/tests/test_phase0_contract_checker.sh`, `tasks/TSK-P0-064/meta.yml`
+Invariant(s): INV-080 (Phase-0 contract evidence status semantics enforced)
+Work:
+- Add test harness covering YAML parse success/fail, control-plane missing behavior, and PASS/SKIPPED enforcement.
+- Ensure evidence is written in all outcomes.
+Acceptance Criteria:
+- Tests pass locally and in CI.
+- Evidence file is emitted even on failures.
+Verification Commands:
+- `scripts/audit/tests/test_phase0_contract_checker.sh`
+Evidence Artifact(s):
+- `./evidence/phase0/phase0_contract_evidence_status.json`
+Failure Modes:
+- Evidence file missing.
+- Missing evidence on parse failure.
