@@ -2,6 +2,14 @@
 
 This repo treats tasks as **mechanical contracts**: a task is only “real” if it has verifiable checks and evidence artifacts. Use this process whenever creating new tasks.
 
+## 0) Remediation trace requirement (bugfix discipline)
+
+If the change touches production-affecting surfaces (schema/scripts/workflows/runtime code, or enforcement/policy docs), the change must include a durable remediation trace:
+- either a remediation casefile under `docs/plans/**/REM-*`, or
+- an explicitly-marked fix plan/log under `docs/plans/**/TSK-*` (with required remediation markers).
+
+See: `docs/operations/REMEDIATION_TRACE_WORKFLOW.md`.
+
 ## 1) Requirements analysis
 
 1. **Read invariants first**

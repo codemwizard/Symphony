@@ -1,0 +1,39 @@
+phase: '0'
+task_id: TSK-P0-089
+title: Tier-1 gap audit addendum (ISO 27001/27002, ISO 20022, Zero Trust, migrations)
+owner_role: ARCHITECT
+status: completed
+depends_on:
+- TSK-P0-088
+touches:
+- docs/audits/TIER1_GAP_AUDIT_ADDENDUM_2026-02-07.md
+- docs/tasks/PHASE0_TASKS.md
+- tasks/TSK-P0-089/meta.yml
+invariants: []
+work:
+- Extend the Tier-1 gap audit with ISO/IEC 27001:2022 and ISO/IEC 27002:2022 mapping (Phase-0 posture and gaps).
+- Extend the Tier-1 gap audit with ISO 20022 expectations (message definitions, validation, integrity, non-repudiation) and Phase-0-safe hooks.
+- Assess the current repo posture against Zero Trust Architecture principles and identify Phase-0 mechanical gaps.
+- Document the exact forward-only, blue/green migration process in this repo, including preparatory invariants required for safe rollback-by-routing.
+acceptance_criteria:
+- Addendum is evidence-minded and references concrete scripts/docs/paths used in this repo.
+- Addendum explicitly avoids compliance/certification claims and distinguishes Phase-0 hooks from runtime enforcement.
+- Addendum includes concrete recommendations that do not violate hard constraints (no runtime DDL, forward-only migrations, append-only ledgers, revoke-first posture).
+verification:
+- scripts/audit/run_invariants_fast_checks.sh
+evidence: []
+failure_modes:
+- Addendum over-claims compliance or misstates the repo’s migration mechanics.
+must_read:
+- docs/audits/TIER1_GAP_AUDIT_2026-02-06.md
+- scripts/db/migrate.sh
+- scripts/db/n_minus_one_check.sh
+- docs/invariants/INVARIANTS_MANIFEST.yml
+- docs/security/SECURITY_MANIFEST.yml
+implementation_plan: docs/plans/phase0/TSK-P0-089_tier1_gap_audit_addendum/PLAN.md
+implementation_log: docs/plans/phase0/TSK-P0-089_tier1_gap_audit_addendum/EXEC_LOG.md
+notes: ''
+client: codex_cli
+assigned_agent: architect
+model: <UNASSIGNED>
+

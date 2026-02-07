@@ -1,0 +1,37 @@
+phase: "0"
+task_id: "TSK-P0-094"
+title: "PK/FK type stability lint for migrations"
+owner_role: "DB_FOUNDATION"
+status: "completed"
+depends_on:
+- "TSK-P0-093"
+touches:
+- "scripts/db/lint_pk_fk_type_changes.sh"
+- "scripts/db/verify_invariants.sh"
+- "scripts/dev/pre_ci.sh"
+- "docs/invariants/INVARIANTS_MANIFEST.yml"
+- "tasks/TSK-P0-094/meta.yml"
+invariants:
+- "NEW: PK/FK type stability (forbid ALTER COLUMN TYPE on keys without explicit ADR waiver)"
+work:
+- "Add a migration linter that forbids ALTER COLUMN TYPE on primary key / foreign key columns."
+- "Introduce an explicit waiver marker that requires an ADR reference for rare exceptions."
+- "Emit evidence artifact describing scanned files and violations."
+acceptance_criteria:
+- "Lint fails closed when key type changes are detected without an ADR waiver marker."
+- "Evidence artifact is emitted with scanned files, marker presence, and findings."
+verification:
+- "scripts/db/lint_pk_fk_type_changes.sh"
+evidence:
+- "evidence/phase0/pk_fk_type_stability.json"
+failure_modes:
+- "Key type changes slip through and break blue/green rollback-by-routing."
+- "Evidence file missing."
+must_read:
+- "docs/audits/TIER1_GAP_AUDIT_ADDENDUM_2026-02-07.md"
+implementation_plan: "docs/plans/phase0/TSK-P0-090_audit_gap_closeout/PLAN.md"
+implementation_log: "docs/plans/phase0/TSK-P0-090_audit_gap_closeout/EXEC_LOG.md"
+notes: ""
+client: "codex_cli"
+assigned_agent: "db_foundation"
+model: "<UNASSIGNED>"

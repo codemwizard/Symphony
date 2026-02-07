@@ -1,0 +1,37 @@
+phase: "0"
+task_id: "TSK-P0-096"
+title: "Register new closeout invariants and update invariant docs"
+owner_role: "INVARIANTS_CURATOR"
+status: "completed"
+depends_on:
+- "TSK-P0-093"
+- "TSK-P0-094"
+- "TSK-P0-095"
+touches:
+- "docs/invariants/INVARIANTS_MANIFEST.yml"
+- "docs/invariants/INVARIANTS_IMPLEMENTED.md"
+- "docs/invariants/INVARIANTS_QUICK.md"
+- "scripts/audit/generate_invariants_quick.py"
+- "tasks/TSK-P0-096/meta.yml"
+invariants:
+- "Meta: new invariants are declared and discoverable in the manifest"
+work:
+- "Add invariant entries for the new migration guardrails and table conventions verifier."
+- "Update implemented/quick invariant docs and ensure regeneration is stable."
+acceptance_criteria:
+- "New invariants appear in manifest and quick/implemented docs are consistent."
+- "Fast checks do not report doc/manifest drift."
+verification:
+- "scripts/audit/run_invariants_fast_checks.sh"
+evidence: []
+failure_modes:
+- "Invariants are implemented but not declared (audit/control mapping drift)."
+must_read:
+- "docs/invariants/INVARIANTS_MANIFEST.yml"
+implementation_plan: "docs/plans/phase0/TSK-P0-090_audit_gap_closeout/PLAN.md"
+implementation_log: "docs/plans/phase0/TSK-P0-090_audit_gap_closeout/EXEC_LOG.md"
+notes: ""
+client: "codex_cli"
+assigned_agent: "invariants_curator"
+model: "<UNASSIGNED>"
+

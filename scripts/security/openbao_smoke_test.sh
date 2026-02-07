@@ -33,14 +33,23 @@ bao_exec() {
 # Login via approle
 TOKEN=$(bao_exec write -field=token auth/approle/login role_id="$ROLE_ID" secret_id="$SECRET_ID")
 
-# Allowed read should succeed
-ALLOWED=$(docker exec -e BAO_ADDR="$BAO_ADDR" -e BAO_TOKEN="$TOKEN" symphony-openbao bao kv get -field=value kv/allowed/test || true)
+# Allowed read should succeed; capture without weakening `set -euo pipefail`.
+ALLOWED=""
+ALLOWED_STATUS=0
+if ALLOWED="$(docker exec -e BAO_ADDR="$BAO_ADDR" -e BAO_TOKEN="$TOKEN" symphony-openbao bao kv get -field=value kv/allowed/test)"; then
+  ALLOWED_STATUS=0
+else
+  ALLOWED_STATUS=$?
+fi
 
-# Forbidden read should fail
-set +e
-FORBIDDEN=$(docker exec -e BAO_ADDR="$BAO_ADDR" -e BAO_TOKEN="$TOKEN" symphony-openbao bao kv get -field=value kv/forbidden/test 2>/dev/null)
-FORBIDDEN_STATUS=$?
-set -e
+# Forbidden read should fail (non-zero).
+FORBIDDEN=""
+FORBIDDEN_STATUS=0
+if FORBIDDEN="$(docker exec -e BAO_ADDR="$BAO_ADDR" -e BAO_TOKEN="$TOKEN" symphony-openbao bao kv get -field=value kv/forbidden/test)"; then
+  FORBIDDEN_STATUS=0
+else
+  FORBIDDEN_STATUS=$?
+fi
 
 python3 - <<PY
 import json
@@ -49,6 +58,7 @@ out = {
   "timestamp_utc": "${EVIDENCE_TS}",
   "git_sha": "${EVIDENCE_GIT_SHA}",
   "schema_fingerprint": "${EVIDENCE_SCHEMA_FP}",
+  "allowed_status": $ALLOWED_STATUS,
   "allowed_read": "$ALLOWED",
   "forbidden_status": $FORBIDDEN_STATUS,
   "status": "PASS" if "$ALLOWED" == "ok" and $FORBIDDEN_STATUS != 0 else "FAIL",
@@ -58,7 +68,7 @@ with open("$EVIDENCE_FILE", "w", encoding="utf-8") as f:
 PY
 
 # Check audit log file produced by declarative audit config
-AUDIT_BYTES=$(docker exec symphony-openbao sh -c 'stat -c %s /openbao/audit.log 2>/dev/null || echo 0')
+AUDIT_BYTES=$(docker exec symphony-openbao sh -c 'stat -c %s /openbao/audit.log || echo 0')
 AUDIT_PRESENT="false"
 if [[ "$AUDIT_BYTES" -gt 0 ]]; then
   AUDIT_PRESENT="true"

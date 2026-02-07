@@ -99,6 +99,24 @@
       "expires_on": "2026-12-31",
       "reviewed_by": "security_guardian",
       "approved_at": "2026-02-06"
+    },
+    {
+      "id": "DDL-ALLOW-0012",
+      "migration": "schema/migrations/0023_evidence_packs_signing_anchoring_hooks.sql",
+      "statement_fingerprint": "0aaa5f64063823903f2c31fd111b31fc9ed747255a35d7dc2964af3c6b8be887",
+      "reason": "Phase-0 expand-first: add signing/anchoring columns to evidence_packs (ALTER TABLE)",
+      "expires_on": "2026-12-31",
+      "reviewed_by": "security_guardian",
+      "approved_at": "2026-02-07"
+    },
+    {
+      "id": "DDL-ALLOW-0013",
+      "migration": "schema/migrations/0024_business_tables_privilege_hygiene_and_usage_event_conventions.sql",
+      "statement_fingerprint": "40842715172a7b0fd9943995e1c2e21fecc70ccbc603b73e8c8a7032ba384f69",
+      "reason": "Phase-0 expand-first: add convention columns to billing_usage_events (ALTER TABLE)",
+      "expires_on": "2026-12-31",
+      "reviewed_by": "security_guardian",
+      "approved_at": "2026-02-07"
     }
   ]
 }

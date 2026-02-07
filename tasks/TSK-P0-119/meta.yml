@@ -1,0 +1,50 @@
+# Canonical Task Meta Template (lower_snake_case)
+
+phase: "0"
+task_id: "TSK-P0-119"
+title: "Pre-CI parity: run N-1 check and no-tx migrations test locally"
+owner_role: "DB_FOUNDATION"
+status: "completed"   # planned | in_progress | completed
+
+depends_on:
+  - "TSK-P0-118"
+
+touches:
+  - "scripts/dev/pre_ci.sh"
+  - "docs/tasks/PHASE0_TASKS.md"
+  - "docs/PHASE0/phase0_contract.yml"
+  - "tasks/TSK-P0-119/meta.yml"
+
+invariants:
+  - "INV-021"
+  - "INV-041"
+
+work:
+  - "Update scripts/dev/pre_ci.sh to run scripts/db/n_minus_one_check.sh and scripts/db/tests/test_no_tx_migrations.sh against the same local docker-postgres environment."
+
+acceptance_criteria:
+  - "`scripts/dev/pre_ci.sh` runs both checks and stays green."
+  - "Local failure modes match CI for INV-021 and INV-041."
+
+verification:
+  - "scripts/dev/pre_ci.sh"
+
+evidence:
+  - "evidence/phase0/n_minus_one.json"
+  - "evidence/phase0/no_tx_migrations.json"
+
+failure_modes:
+  - "Evidence file missing"
+  - "Local pre-ci passes but CI fails due to missing N-1/no-tx checks"
+
+must_read:
+  - "scripts/db/n_minus_one_check.sh"
+  - "scripts/db/tests/test_no_tx_migrations.sh"
+
+implementation_plan: "docs/plans/phase0/TSK-P0-118_pre_ci_db_parity/PLAN.md"
+implementation_log: "docs/plans/phase0/TSK-P0-118_pre_ci_db_parity/EXEC_LOG.md"
+
+notes: ""
+client: "codex_cli"
+assigned_agent: "db_foundation"
+model: "gpt-5.3-codex"

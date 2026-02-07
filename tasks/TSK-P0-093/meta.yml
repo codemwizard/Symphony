@@ -1,0 +1,45 @@
+phase: "0"
+task_id: "TSK-P0-093"
+title: "Expand/contract migration guardrail lint (no destructive DDL, nullability safety)"
+owner_role: "DB_FOUNDATION"
+status: "completed"
+depends_on:
+- "TSK-P0-073"
+- "TSK-P0-089"
+touches:
+- "scripts/db/lint_expand_contract_policy.sh"
+- "scripts/db/verify_invariants.sh"
+- "scripts/dev/pre_ci.sh"
+- "docs/invariants/INVARIANTS_MANIFEST.yml"
+- "tasks/TSK-P0-093/meta.yml"
+invariants:
+- "NEW: Phase-0 forbids destructive DDL in migrations"
+- "NEW: Phase-0 forbids any contract cleanup marker in migrations"
+- "NEW: Phase-0 forbids any ADD COLUMN ... NOT NULL (2-step pattern required)"
+work:
+- "Add migration policy linter that blocks destructive/contract operations during Expand/Transition by default."
+- "Enforce nullability safety rules to preserve N-1 rollback-by-routing viability."
+- "Fail closed if the contract cleanup marker appears (Phase-0 forbidden)."
+acceptance_criteria:
+- "Lint fails on any destructive DDL (DROP/TRUNCATE/contract ops) in Phase-0."
+- "Lint fails on any ADD COLUMN ... NOT NULL in Phase-0."
+- "Lint fails if a contract cleanup marker appears in a migration."
+- "Evidence artifact is emitted describing scanned files and violations."
+verification:
+- "scripts/db/lint_expand_contract_policy.sh"
+evidence:
+- "evidence/phase0/migration_expand_contract_policy.json"
+failure_modes:
+- "Lint is too permissive (allows destructive DDL or NOT NULL adds)."
+- "Evidence does not include file/statement attribution."
+- "Evidence file missing."
+must_read:
+- "scripts/db/migrate.sh"
+- "scripts/db/n_minus_one_check.sh"
+- "docs/audits/TIER1_GAP_AUDIT_ADDENDUM_2026-02-07.md"
+implementation_plan: "docs/plans/phase0/TSK-P0-090_audit_gap_closeout/PLAN.md"
+implementation_log: "docs/plans/phase0/TSK-P0-090_audit_gap_closeout/EXEC_LOG.md"
+notes: ""
+client: "codex_cli"
+assigned_agent: "db_foundation"
+model: "<UNASSIGNED>"

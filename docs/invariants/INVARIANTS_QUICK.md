@@ -10,12 +10,12 @@ _Generated from `docs/invariants/INVARIANTS_MANIFEST.yml` (do not edit by hand).
 | INV-004 | P1 | Baseline snapshot is derived from migrations and must not drift | ["team-db"] | scripts/db/check_baseline_drift.sh |
 | INV-005 | P0 | Deny-by-default privileges (revoke-first posture) | ["team-platform"] | schema/migrations/0004_privileges.sql + scripts/db/ci_invariant_gate.sql; run via scripts/db/verify_invariants.sh |
 | INV-006 | P0 | No runtime DDL: PUBLIC/runtime roles must not have CREATE on schema public | ["team-platform"] | scripts/db/ci_invariant_gate.sql (schema CREATE privilege check); run via scripts/db/verify_invariants.sh |
-| INV-007 | P0 | Runtime roles are NOLOGIN templates; services assume them via SET ROLE | ["team-platform"] | schema/migrations/0003_roles.sql creates roles NOLOGIN; run via scripts/db/verify_invariants.sh |
+| INV-007 | P0 | Runtime roles are NOLOGIN templates; services assume them via SET ROLE | ["team-platform"] | scripts/db/verify_role_login_posture.sh; wired via scripts/db/verify_invariants.sh |
 | INV-008 | P0 | SECURITY DEFINER functions must pin search_path to pg_catalog, public | ["team-platform"] | scripts/db/lint_search_path.sh; run via scripts/db/verify_invariants.sh |
 | INV-010 | P0 | Runtime roles have no direct DML on core tables; writes happen via DB API functions | ["team-platform"] | scripts/db/ci_invariant_gate.sql (role privilege posture) + schema/migrations/0004_privileges.sql |
-| INV-011 | P0 | Outbox enqueue is idempotent on (instruction_id, idempotency_key) | ["team-db"] | schema/migrations/0002_outbox_functions.sql unique constraint + enqueue_payment_outbox(); scripts/db/verify_invariants.sh |
-| INV-012 | P0 | Outbox claim uses FOR UPDATE SKIP LOCKED and only due/unleased or expired rows | ["team-db"] | schema/migrations/0002_outbox_functions.sql claim_outbox_batch(); scripts/db/verify_invariants.sh |
-| INV-013 | P0 | Strict lease fencing: completion requires matching claimed_by + lease_token and non-expired lease | ["team-db"] | schema/migrations/0002_outbox_functions.sql complete_outbox_attempt(); scripts/db/verify_invariants.sh |
+| INV-011 | P0 | Outbox enqueue is idempotent on (instruction_id, idempotency_key) | ["team-db"] | scripts/db/tests/test_idempotency_zombie.sh (behavior) + schema/migrations/0002_outbox_functions.sql (definition) |
+| INV-012 | P0 | Outbox claim uses FOR UPDATE SKIP LOCKED and only due/unleased or expired rows | ["team-db"] | scripts/db/tests/test_outbox_claim_semantics.sh (behavior + definitional SKIP LOCKED check) |
+| INV-013 | P0 | Strict lease fencing: completion requires matching claimed_by + lease_token and non-expired lease | ["team-db"] | scripts/db/tests/test_outbox_lease_fencing.sh (behavioral SQLSTATE P7002 on lease loss) |
 | INV-014 | P0 | payment_outbox_attempts is append-only; no UPDATE/DELETE | ["team-db"] | schema/migrations/0001_init.sql append-only trigger + scripts/db/ci_invariant_gate.sql |
 | INV-015 | P0 | Outbox retry ceiling is finite | ["team-db"] | schema/migrations/0002_outbox_functions.sql (GUC retry ceiling) + scripts/db/ci_invariant_gate.sql |
 | INV-016 | P0 | policy_versions exists and supports boot query shape (is_active=true) | ["team-platform"] | schema/migrations/0005_policy_versions.sql (status/is_active) + scripts/db/ci_invariant_gate.sql |
@@ -74,3 +74,12 @@ _Generated from `docs/invariants/INVARIANTS_MANIFEST.yml` (do not edit by hand).
 | INV-094 | P1 | Tenant billable hierarchy hooks exist (billable root + parent) | ["team-db"] | scripts/db/verify_business_foundation_hooks.sh |
 | INV-095 | P1 | Ingress multi-signature hook exists with safe default | ["team-db"] | scripts/db/verify_business_foundation_hooks.sh |
 | INV-096 | P1 | Business foundation hooks are mechanically verified in DB gate | ["team-db", "team-platform"] | scripts/db/verify_business_foundation_hooks.sh; wired via scripts/db/verify_invariants.sh |
+| INV-097 | P0 | Phase-0 migration expand/contract policy is enforced (no cleanup marker; no ADD COLUMN NOT NULL) | ["team-db"] | scripts/db/lint_expand_contract_policy.sh; wired via scripts/db/verify_invariants.sh |
+| INV-098 | P0 | PK/FK type stability guardrail enforced (ALTER COLUMN TYPE requires waiver) | ["team-db"] | scripts/db/lint_pk_fk_type_changes.sh; wired via scripts/db/verify_invariants.sh |
+| INV-099 | P1 | Table conventions are verified from pg_catalog (explicit allowlist) | ["team-db"] | scripts/db/verify_table_conventions.sh; wired via scripts/db/verify_invariants.sh |
+| INV-100 | P1 | Evidence harness integrity guardrail enforced (anti-bypass bans) | ["team-platform"] | scripts/audit/verify_evidence_harness_integrity.sh; wired via scripts/audit/run_invariants_fast_checks.sh |
+| INV-101 | P1 | Semgrep SAST baseline is enforced (pinned in CI; evidence emitted) | ["team-security"] | scripts/security/run_semgrep_sast.sh; wired via scripts/audit/run_security_fast_checks.sh |
+| INV-102 | P1 | Participant registry schema hook exists (participant_id identity) | ["team-db"] | scripts/db/verify_business_foundation_hooks.sh |
+| INV-103 | P1 | Evidence packs include signing/anchoring metadata hooks | ["team-db"] | scripts/db/verify_business_foundation_hooks.sh |
+| INV-104 | P0 | PUBLIC retains no privileges on business tables (explicit REVOKE hygiene) | ["team-db", "team-security"] | scripts/db/verify_business_foundation_hooks.sh |
+| INV-105 | P1 | Production-affecting changes require remediation trace (casefile or explicit fix plan/log) | ["team-security", "team-invariants"] | scripts/audit/verify_remediation_trace.sh; wired via scripts/audit/run_invariants_fast_checks.sh |

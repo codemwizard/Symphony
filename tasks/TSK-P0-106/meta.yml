@@ -1,0 +1,52 @@
+# Canonical Task Meta Template (lower_snake_case)
+
+phase: "0"
+task_id: "TSK-P0-106"
+title: "Remediation trace verifier + wiring (Option 2, low noise)"
+owner_role: "SECURITY"
+status: "completed"   # planned | in_progress | completed
+
+depends_on:
+  - "TSK-P0-105"
+
+touches:
+  - "scripts/audit/verify_remediation_trace.sh"
+  - "scripts/audit/verify_remediation_workflow_doc.sh"
+  - "scripts/audit/run_invariants_fast_checks.sh"
+
+invariants:
+  - "INV-105"
+
+work:
+  - "Implement verify_remediation_trace gate (Option 2 trigger surfaces; staged diff + range fallback)."
+  - "Implement workflow doc verifier."
+  - "Wire into fast checks so pre-push and CI enforce it."
+
+acceptance_criteria:
+  - "Gate emits evidence under evidence/phase0 and fails when production-affecting changes lack remediation trace."
+  - "Gate is low-noise: does not require remediation trace for non-enforcement narrative docs."
+
+verification:
+  - "scripts/audit/run_invariants_fast_checks.sh"
+  - "scripts/dev/pre_ci.sh"
+
+evidence:
+  - "evidence/phase0/remediation_trace.json"
+  - "evidence/phase0/remediation_workflow_doc.json"
+
+failure_modes:
+  - "Evidence file missing"
+  - "Triggered diff but remediation trace doc missing"
+  - "Remediation trace doc present but missing required markers"
+
+must_read:
+  - "AGENTS.md"
+  - "docs/operations/REMEDIATION_TRACE_WORKFLOW.md"
+
+implementation_plan: "docs/plans/phase0/TSK-P0-105_remediation_trace_gate/PLAN.md"
+implementation_log: "docs/plans/phase0/TSK-P0-105_remediation_trace_gate/EXEC_LOG.md"
+
+notes: ""
+client: "codex_cli"
+assigned_agent: "security_guardian"
+model: "gpt-5.3-codex"

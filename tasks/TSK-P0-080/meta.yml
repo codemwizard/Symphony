@@ -2,7 +2,7 @@ phase: '0'
 task_id: TSK-P0-080
 title: Add billing usage ledger Phase-0 hook (append-only)
 owner_role: DB_FOUNDATION
-status: planned
+status: completed
 depends_on:
 - TSK-P0-073
 touches:
@@ -30,8 +30,8 @@ failure_modes:
 must_read:
 - docs/PHASE0/BUSINESS_INVARIANTS_ADDITION_IMPLEMENTATION.md
 - docs/plans/phase0/TSK-P0-080_business_invariants_addition/PLAN.md
-implementation_plan: ''
-implementation_log: ''
+implementation_plan: docs/plans/phase0/TSK-P0-080_business_invariants_addition/PLAN.md
+implementation_log: docs/plans/phase0/TSK-P0-080_business_invariants_addition/EXEC_LOG.md
 notes: ''
 client: codex_cli
 assigned_agent: db_foundation

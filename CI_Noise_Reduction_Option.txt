@@ -1,0 +1,287 @@
+
+
+
+The architect agent’s proposed **remediation-trace gate** is directionally good, and it fixes the exact weakness you’re pointing at: today you can “fix CI” and merge with **no durable forensic trail** that (a) points to the original failure, (b) captures the root cause, and (c) records the verified resolution steps.
+
+### What’s good about the proposed solution
+
+* **Plan-driven remediation** is the right primitive: a remediation folder is the “case file” that outlives CI logs.
+* The **failure_signature** idea is excellent: it makes incidents searchable and creates an incident taxonomy over time.
+* The gate is framed correctly: it enforces *trace existence* and *linkage*, not just “some doc exists somewhere”.
+* It aligns with your existing discipline: “mechanical enforcement + evidence artifact”.
+
+### What needs tightening (so it doesn’t become noisy or bypassable)
+
+1. **Define what counts as “remediation”** mechanically, otherwise the gate becomes either annoying or toothless.
+2. **Avoid forcing remediation traces for all docs changes**, or you’ll create meaningless REM folders (noise kills audit value).
+3. **Make the gate check *staged diff* (git diff --cached)** so it’s stable across pre-ci and CI, and doesn’t depend on workspace state.
+4. Require at least these fields in the remediation PLAN/EXEC_LOG:
+
+   * `failure_signature`
+   * `origin_task_id` (or `origin_gate_id`)
+   * `first_observed_utc`
+   * `repro_command`
+   * `verification_commands_run`
+   * `final_status` (PASS/FAIL/SKIPPED)
+
+---
+
+## Answer to the decision: remediation-trace gate Option 1 vs Option 2
+
+### ✅ Choose **Option 2**
+
+> Only require remediation trace for “production-affecting” surfaces (schema/**, scripts/**, .github/**, src/**, packages/**), and exclude pure docs unless they change a contract/policy.
+
+**Why this is better:**
+
+* Tier-1 audit wants **signal**, not paperwork volume.
+* Option 1 forces remediation logs for routine changes, creating **low-quality incident records** that auditors will treat as “checkbox compliance”.
+* Option 2 keeps remediation traces meaningful: they become a log of *actual defect remediation* and *control-plane changes*.
+
+### The exact rule I’d implement (so Option 2 isn’t ambiguous)
+
+Require a remediation trace **if and only if** the staged diff includes any of:
+
+**Production-affecting surfaces**
+
+* `schema/**` (migrations, baseline, seeds)
+* `scripts/**` (any gate, verifier, migration runner, evidence harness)
+* `.github/workflows/**`
+* `src/**` (.NET runtime code)
+* `infra/**` (if you keep infra in repo)
+* `docs/PHASE0/**` or `docs/invariants/**` or `docs/control_planes/**` (because those *change enforcement semantics*)
+* `docs/security/**` **only if** it is a *policy* (not general narrative)
+
+**Do NOT require remediation trace for**
+
+* Pure documentation edits outside those enforcement/policy areas
+
+---
+
+## One extra improvement (prevents false negatives)
+
+Add an escape hatch for legitimate feature work:
+
+### Allowed alternatives to “REM-*”
+
+A PR may satisfy the gate by including **either**:
+
+1. a new remediation folder (`docs/plans/**/REM-*`) **or**
+2. a normal task plan folder (`docs/plans/**/TSK-*`) **that explicitly includes**:
+
+   * `failure_signature` and `origin_gate_id` (meaning it’s a fix task, not a feature)
+
+This prevents forcing everything into REM folders while still guaranteeing traceability.
+
+---
+
+## Bottom line
+
+* The solution is good.
+* Pick **Option 2**.
+* Tighten Option 2 by treating **policy/contract/control-plane docs** as “production-affecting surfaces”.
+* Ensure the gate checks the **staged diff** and enforces **minimum required fields** to keep remediation traces audit-grade.
+
+
+
+
+
+
+
+
+
+
+
+## 1) Exact minimal delta: `scripts/audit/verify_remediation_trace.sh`
+
+Below is a **drop-in new file** in the same repo style as `verify_task_plans_present.sh` (bash wrapper → python core → evidence JSON).
+
+It enforces **Option 2** semantics:
+
+* It inspects the **staged diff** (`git diff --name-only --cached`).
+* If the diff touches any **production-affecting surfaces**, it requires the diff to include **at least one remediation trace doc**:
+
+  * `docs/plans/**/REM-*/PLAN.md` **or**
+  * `docs/plans/**/REM-*/EXEC_LOG.md`
+* If no production-affecting surfaces are touched, it emits **SKIPPED** evidence and exits `0`.
+
+> **Patch snippet (unified diff):**
+
+```diff
+diff --git a/scripts/audit/verify_remediation_trace.sh b/scripts/audit/verify_remediation_trace.sh
+new file mode 100755
+index 0000000..b1c2d3e
+--- /dev/null
++++ b/scripts/audit/verify_remediation_trace.sh
+@@ -0,0 +1,190 @@
++#!/usr/bin/env bash
++set -euo pipefail
++
++ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
++EVIDENCE_DIR="$ROOT_DIR/evidence/phase0"
++EVIDENCE_FILE="$EVIDENCE_DIR/remediation_trace.json"
++
++mkdir -p "$EVIDENCE_DIR"
++source "$ROOT_DIR/scripts/lib/evidence.sh"
++EVIDENCE_TS="$(evidence_now_utc)"
++EVIDENCE_GIT_SHA="$(git_sha)"
++EVIDENCE_SCHEMA_FP="$(schema_fingerprint)"
++export EVIDENCE_TS EVIDENCE_GIT_SHA EVIDENCE_SCHEMA_FP
++
++EVIDENCE_FILE="$EVIDENCE_FILE" ROOT_DIR="$ROOT_DIR" python3 - <<'PY'
++import json
++import os
++import re
++import subprocess
++from pathlib import Path
++
++root = Path(os.environ["ROOT_DIR"])
++evidence_out = Path(os.environ["EVIDENCE_FILE"])
++
++def run(cmd: list[str]) -> str:
++    p = subprocess.run(cmd, cwd=root, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
++    if p.returncode != 0:
++        raise RuntimeError(f"cmd_failed: {' '.join(cmd)}\n{p.stderr.strip()}")
++    return p.stdout
++
++ts = os.environ.get("EVIDENCE_TS")
++git_sha = os.environ.get("EVIDENCE_GIT_SHA")
++schema_fp = os.environ.get("EVIDENCE_SCHEMA_FP")
++
++check_id = "REMEDIATION-TRACE"
++
++errors: list[str] = []
++details: dict = {}
++
++# We intentionally use the *staged* diff so this can run pre-CI / pre-push consistently.
++try:
++    changed = [ln.strip() for ln in run(["git", "diff", "--name-only", "--cached"]).splitlines() if ln.strip()]
++except Exception as e:
++    out = {
++        "check_id": check_id,
++        "timestamp_utc": ts,
++        "git_sha": git_sha,
++        "schema_fingerprint": schema_fp,
++        "status": "FAIL",
++        "errors": [f"git_diff_failed:{e}"],
++        "changed_files": [],
++    }
++    evidence_out.write_text(json.dumps(out, indent=2) + "\n")
++    raise SystemExit(1)
++
++# Production-affecting surfaces (Option 2):
++trigger_prefixes = (
++    "schema/",
++    "scripts/",
++    ".github/workflows/",
++    "src/",
++    "infra/",
++    "docs/PHASE0/",
++    "docs/invariants/",
++    "docs/control_planes/",
++)
++
++def is_trigger(path: str) -> bool:
++    if path.startswith(trigger_prefixes):
++        return True
++    # docs/security is only "production-affecting" if it's policy-ish; keep it strict and explicit:
++    # (You can broaden later with a manifest, but this is the minimal safe rule.)
++    if path.startswith("docs/security/") and any(tok in path.lower() for tok in ("policy", "retention", "key_management", "sdlc", "standard")):
++        return True
++    return False
++
++triggered_files = [p for p in changed if is_trigger(p)]
++details["changed_files_count"] = len(changed)
++details["triggered_files_count"] = len(triggered_files)
++details["triggered_files"] = triggered_files
++
++# If nothing production-affecting changed, remediation trace is not required.
++if not triggered_files:
++    out = {
++        "check_id": check_id,
++        "timestamp_utc": ts,
++        "git_sha": git_sha,
++        "schema_fingerprint": schema_fp,
++        "status": "SKIPPED",
++        "reason": "no_production_affecting_changes",
++        "changed_files": changed,
++        "triggered_files": triggered_files,
++    }
++    evidence_out.write_text(json.dumps(out, indent=2) + "\n")
++    raise SystemExit(0)
++
++# Require at least one remediation trace doc in the staged diff
++remediation_doc_re = re.compile(r"^docs/plans/.+/REM-[^/]+/(PLAN\.md|EXEC_LOG\.md)$")
++remediation_docs = [p for p in changed if remediation_doc_re.match(p)]
++details["remediation_docs"] = remediation_docs
++
++if not remediation_docs:
++    errors.append("missing_remediation_trace_doc: expected docs/plans/**/REM-*/PLAN.md or EXEC_LOG.md in staged diff")
++
++# Minimal content sanity: ensure remediation docs contain required linkage markers
++required_markers = (
++    "failure_signature",
++    "origin_task_id",
++    "repro_command",
++)
++
++missing_markers: dict[str, list[str]] = {}
++for rel in remediation_docs:
++    fp = root / rel
++    if not fp.exists():
++        errors.append(f"remediation_doc_missing_on_disk:{rel}")
++        continue
++    txt = fp.read_text(encoding="utf-8", errors="ignore").lower()
++    mm = [m for m in required_markers if m not in txt]
++    if mm:
++        missing_markers[rel] = mm
++
++if missing_markers:
++    errors.append(f"remediation_doc_missing_required_markers:{missing_markers}")
++
++out = {
++    "check_id": check_id,
++    "timestamp_utc": ts,
++    "git_sha": git_sha,
++    "schema_fingerprint": schema_fp,
++    "status": "PASS" if not errors else "FAIL",
++    "changed_files": changed,
++    "triggered_files": triggered_files,
++    "remediation_docs": remediation_docs,
++    "errors": errors,
++}
++
++evidence_out.parent.mkdir(parents=True, exist_ok=True)
++evidence_out.write_text(json.dumps(out, indent=2) + "\n")
++
++if errors:
++    print("Remediation trace verification failed")
++    for err in errors:
++        print(f" - {err}")
++    raise SystemExit(1)
++
++print("Remediation trace verification passed")
++PY
++
++echo "Remediation trace evidence: $EVIDENCE_FILE"
+```
+
+---
+
+## 2) Can this be enforced before CI run?
+
+Yes—**that’s exactly why this script uses `git diff --cached`**.
+
+You can enforce it **before CI** via:
+
+* **`scripts/dev/pre_ci.sh`** (best): run it early so developers get immediate feedback.
+* Optionally, a **pre-push hook** or **pre-commit hook** (extra strict), but your repo already treats `pre_ci.sh` as the canonical “local gate,” so wiring it there is consistent with your existing workflow.
+
+If you want the absolute minimal wiring, add one line to `scripts/dev/pre_ci.sh`:
+
+```bash
+scripts/audit/verify_remediation_trace.sh
+```
+
+(Place it before the heavier checks, right after basic lint/convention checks.)
+

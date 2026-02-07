@@ -41,6 +41,12 @@ If this is green, your PR should be green on the first CI run.
    ```
 3) Commit + push + open PR
 
+## Remediation workflow (mandatory for fixes)
+
+When you are fixing a failure (CI or local) and the fix touches production-affecting surfaces, you must create a durable remediation trace casefile and keep it updated during implementation.
+
+See: `docs/operations/REMEDIATION_TRACE_WORKFLOW.md`.
+
 ---
 
 ## Pre-implementation checklist (must pass before coding)

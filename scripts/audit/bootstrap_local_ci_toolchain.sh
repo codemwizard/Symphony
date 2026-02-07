@@ -23,6 +23,7 @@ fi
 "$VENV_DIR/bin/python3" -m pip install \
   "pyyaml==${PYYAML_VERSION}" \
   "jsonschema==${JSONSCHEMA_VERSION}" \
+  "semgrep==${SEMGREP_VERSION}" \
   pytest >/dev/null
 
 # Install pinned rg binary into repo toolchain bin if missing/mismatched.
@@ -44,6 +45,14 @@ if [[ "$need_rg" == "1" ]]; then
   install -m 0755 "$dir/rg" "$BIN_DIR/rg"
 fi
 
+# Expose semgrep in the repo-local toolchain bin so PATH wiring matches CI intent.
+if [[ -x "$VENV_DIR/bin/semgrep" ]]; then
+  ln -sf "$VENV_DIR/bin/semgrep" "$BIN_DIR/semgrep"
+fi
+
 echo "Local toolchain bootstrapped:"
 echo "  python: $VENV_DIR/bin/python3"
 echo "  rg: $("$BIN_DIR/rg" --version | head -n1)"
+if [[ -x "$BIN_DIR/semgrep" ]]; then
+  echo "  semgrep: $("$BIN_DIR/semgrep" --version | tr -d '\n')"
+fi

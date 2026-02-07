@@ -42,6 +42,11 @@ if [[ -x "$ROOT/.venv/bin/python3" ]]; then
   PYTHON_BIN="$ROOT/.venv/bin/python3"
 fi
 
+# Prefer repo-local pinned toolchain binaries when present.
+if [[ -x "$ROOT/.toolchain/bin/rg" ]]; then
+  export PATH="$ROOT/.toolchain/bin:$PATH"
+fi
+
 # ---- 1) Shell syntax checks ----
 echo ""
 echo "==> Shell syntax checks"
@@ -80,8 +85,13 @@ done
 echo ""
 echo "==> Detector unit tests"
 # Prefer pytest if available, otherwise try unittest
-if have_cmd pytest && [[ -d "scripts/audit/tests" ]]; then
-  run pytest -q scripts/audit/tests
+if [[ -d "scripts/audit/tests" ]]; then
+  if have_cmd pytest; then
+    run "$PYTHON_BIN" -m pytest -q scripts/audit/tests
+  else
+    # If PATH doesn't expose pytest, try via venv/module invocation.
+    run "$PYTHON_BIN" -m pytest -q scripts/audit/tests
+  fi
 elif [[ -f "scripts/audit/tests/test_detect_structural_changes.py" ]]; then
   # Run as unittest module if it is written that way
   # (If it isn't, this will fail loudly, which is fine — you can switch to pytest.)
@@ -138,6 +148,15 @@ else
 fi
 
 echo ""
+echo "==> Evidence harness integrity (watch-the-watcher)"
+if [[ -x "scripts/audit/verify_evidence_harness_integrity.sh" || -f "scripts/audit/verify_evidence_harness_integrity.sh" ]]; then
+  run scripts/audit/verify_evidence_harness_integrity.sh
+else
+  echo "ERROR: scripts/audit/verify_evidence_harness_integrity.sh not found"
+  exit 1
+fi
+
+echo ""
 echo "==> CI toolchain verification"
 if [[ -x "scripts/audit/verify_ci_toolchain.sh" || -f "scripts/audit/verify_ci_toolchain.sh" ]]; then
   if [[ "${SYMPHONY_SKIP_TOOLCHAIN_CHECK:-0}" == "1" ]]; then
@@ -174,6 +193,24 @@ if [[ -x "scripts/audit/verify_task_evidence_contract.sh" || -f "scripts/audit/v
   run scripts/audit/verify_task_evidence_contract.sh
 else
   echo "ERROR: scripts/audit/verify_task_evidence_contract.sh not found"
+  exit 1
+fi
+
+echo ""
+echo "==> Remediation workflow doc verification"
+if [[ -x "scripts/audit/verify_remediation_workflow_doc.sh" || -f "scripts/audit/verify_remediation_workflow_doc.sh" ]]; then
+  run bash scripts/audit/verify_remediation_workflow_doc.sh
+else
+  echo "ERROR: scripts/audit/verify_remediation_workflow_doc.sh not found"
+  exit 1
+fi
+
+echo ""
+echo "==> Remediation trace gate (production-affecting changes)"
+if [[ -x "scripts/audit/verify_remediation_trace.sh" || -f "scripts/audit/verify_remediation_trace.sh" ]]; then
+  run bash scripts/audit/verify_remediation_trace.sh
+else
+  echo "ERROR: scripts/audit/verify_remediation_trace.sh not found"
   exit 1
 fi
 

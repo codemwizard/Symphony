@@ -15,9 +15,13 @@ export EVIDENCE_TS EVIDENCE_GIT_SHA EVIDENCE_SCHEMA_FP
 
 found=0
 if command -v rg >/dev/null 2>&1; then
-  rg -q "symphony:no_tx" "$DOC" && found=1 || true
+  if rg -q "symphony:no_tx" "$DOC"; then
+    found=1
+  fi
 else
-  grep -q "symphony:no_tx" "$DOC" && found=1 || true
+  if grep -q "symphony:no_tx" "$DOC"; then
+    found=1
+  fi
 fi
 
 status="PASS"

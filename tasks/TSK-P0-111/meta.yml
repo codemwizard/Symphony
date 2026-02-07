@@ -1,0 +1,54 @@
+# Canonical Task Meta Template (lower_snake_case)
+
+phase: "0"
+task_id: "TSK-P0-111"
+title: "Outbox claim and lease-fencing semantics tests (evidence-producing)"
+owner_role: "QA_VERIFIER"
+status: "completed"   # planned | in_progress | completed
+
+depends_on:
+  - "TSK-P0-109"
+
+touches:
+  - "scripts/db/tests/test_outbox_claim_semantics.sh"
+  - "scripts/db/tests/test_outbox_lease_fencing.sh"
+
+invariants:
+  - "INV-011"
+  - "INV-012"
+  - "INV-013"
+
+work:
+  - "Add deterministic DB tests verifying outbox due/lease selection and lease fencing errors."
+  - "Emit evidence artifacts under evidence/phase0/."
+
+acceptance_criteria:
+  - "Tests are deterministic and pass on fresh DB."
+  - "Evidence artifacts are emitted and fail closed on regression."
+
+verification:
+  - "scripts/db/tests/test_idempotency_zombie.sh"
+  - "scripts/db/tests/test_outbox_claim_semantics.sh"
+  - "scripts/db/tests/test_outbox_lease_fencing.sh"
+
+evidence:
+  - "evidence/phase0/idempotency_zombie.json"
+  - "evidence/phase0/outbox_claim_semantics.json"
+  - "evidence/phase0/outbox_lease_fencing.json"
+
+failure_modes:
+  - "Evidence file missing"
+  - "Claim returns rows when next_attempt_at is in the future"
+  - "Completion succeeds with mismatched lease token/worker or expired lease"
+
+must_read:
+  - "schema/migrations/0002_outbox_functions.sql"
+  - "scripts/db/tests/test_idempotency_zombie.sh"
+
+implementation_plan: "docs/plans/phase0/TSK-P0-109_invariant_implemented_alignment/PLAN.md"
+implementation_log: "docs/plans/phase0/TSK-P0-109_invariant_implemented_alignment/EXEC_LOG.md"
+
+notes: ""
+client: "codex_cli"
+assigned_agent: "qa_verifier"
+model: "gpt-5.3-codex"

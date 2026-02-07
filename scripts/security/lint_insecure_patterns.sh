@@ -51,7 +51,7 @@ rg_scan() {
     --glob '!**/obj/**' \
     --glob '!**/.venv/**' \
     --glob '!**/node_modules/**' \
-    | awk -F: -v n="$name" '{print n ":" $1 ":" $2}' >> "$tmp_hits" || true
+    | awk -F: -v n="$name" '{print n ":" $1 ":" $2}' >> "$tmp_hits" || true # symphony:allow_or_true
 }
 
 grep_scan() {
@@ -72,7 +72,7 @@ grep_scan() {
     --include '*.json' \
     --include '*.config' \
     "$regex" "$path" \
-    | awk -F: -v n="$name" '{print n ":" $1 ":" $2}' >> "$tmp_hits" || true
+    | awk -F: -v n="$name" '{print n ":" $1 ":" $2}' >> "$tmp_hits" || true # symphony:allow_or_true
 }
 
 for p in "${scan_roots[@]}"; do

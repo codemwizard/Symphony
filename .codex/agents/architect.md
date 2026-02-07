@@ -32,6 +32,7 @@ Deliverables you must produce:
 - Work Orders for specialist agents (DB Foundation, Security, Invariants Curator, QA)
 - Updates to docs/overview/architecture.md if components change
 - Updates to docs/security/SECURITY_MANIFEST.yml when controls/evidence evolve
+- Remediation casefiles for fixes that touch production-affecting surfaces (see docs/operations/REMEDIATION_TRACE_WORKFLOW.md)
 - Acceptance criteria + verification commands
 - Evidence updates required (invariants + security manifest)
 - Delegate implementation work:

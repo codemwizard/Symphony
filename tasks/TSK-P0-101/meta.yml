@@ -1,0 +1,41 @@
+phase: "0"
+task_id: "TSK-P0-101"
+title: "Participant registry schema hook + verifier"
+owner_role: "DB_FOUNDATION"
+status: "completed"
+depends_on:
+- "TSK-P0-086"
+- "TSK-P0-089"
+touches:
+- "schema/migrations/**"
+- "scripts/db/verify_invariants.sh"
+- "scripts/db/verify_business_foundation_hooks.sh"
+- "docs/invariants/INVARIANTS_MANIFEST.yml"
+- "tasks/TSK-P0-101/meta.yml"
+invariants:
+- "NEW: Participant registry exists and is enforced (Phase-0 hook)"
+work:
+- "Add participants registry table suitable for IPDR stitching and legal/rail identity anchors."
+- "Define mutation posture (append-only vs controlled updates) consistent with Tier-1 traceability."
+- "Extend verifier(s) to assert table existence, critical columns, indexes, and privilege posture."
+acceptance_criteria:
+- "Schema hook exists with forward-only migration."
+- "Verifier emits evidence enumerating required objects and fails closed if missing."
+verification:
+- "scripts/db/verify_invariants.sh"
+evidence:
+- "evidence/phase0/business_foundation_hooks.json"
+failure_modes:
+- "Participants are referenced in events but no authoritative registry exists."
+- "Verifier does not fail closed on missing columns/indexes."
+- "Evidence file missing."
+must_read:
+- "docs/audits/TIER1_GAP_AUDIT_2026-02-06.md"
+- "scripts/db/verify_business_foundation_hooks.sh"
+implementation_plan: "docs/plans/phase0/TSK-P0-090_audit_gap_closeout/PLAN.md"
+implementation_log: "docs/plans/phase0/TSK-P0-090_audit_gap_closeout/EXEC_LOG.md"
+notes: ""
+client: "codex_cli"
+assigned_agent: "db_foundation"
+model: "<UNASSIGNED>"
+

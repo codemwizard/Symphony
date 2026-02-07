@@ -13,6 +13,7 @@ Routing rules:
 Must enforce:
 - scripts/dev/pre_ci.sh passes before PR
 - if “structural”, change-rule is satisfied (manifest updated or exception recorded)
+- remediation trace exists for fixes that touch production-affecting surfaces (see docs/operations/REMEDIATION_TRACE_WORKFLOW.md)
 
 Never allow:
 - runtime DDL

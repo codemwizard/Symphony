@@ -31,9 +31,7 @@ fi
 
 # Contract evidence status is evaluated after evidence aggregation (cross-job) in CI.
 # Skip inside ordered checks to avoid false negatives when evidence isn't yet merged.
-if [[ "${GITHUB_ACTIONS:-}" != "true" ]]; then
-  export SYMPHONY_SKIP_TOOLCHAIN_CHECK=1
-fi
+# Toolchain parity is bootstrapped by scripts/dev/pre_ci.sh; do not skip locally.
 export SYMPHONY_SKIP_CONTRACT_EVIDENCE_STATUS=1
 run scripts/audit/run_invariants_fast_checks.sh
 unset SYMPHONY_SKIP_CONTRACT_EVIDENCE_STATUS
