@@ -126,19 +126,50 @@ def doc_has_markers(rel: str) -> tuple[bool, list[str]]:
     mm = policy.missing_markers(txt)
     return (len(mm) == 0), mm
 
+def pair_has_markers(plan_rel: str, log_rel: str) -> tuple[bool, list[str]]:
+    """Allow required markers to be satisfied across the PLAN+EXEC_LOG pair."""
+    plan_path = root / plan_rel
+    log_path = root / log_rel
+    missing: list[str] = []
+    if not plan_path.exists():
+        missing.append(f"missing_on_disk:{plan_rel}")
+    if not log_path.exists():
+        missing.append(f"missing_on_disk:{log_rel}")
+    if missing:
+        return False, missing
+    combined = read_text_best_effort(root, plan_rel) + "\n\n" + read_text_best_effort(root, log_rel)
+    mm = policy.missing_markers(combined)
+    return (len(mm) == 0), mm
+
 satisfying_docs: list[str] = []
 missing_markers: dict[str, list[str]] = {}
 
 if rem_docs:
-    # If REM casefile docs are present, they must satisfy markers (keep the meaning of REM strict).
-    satisfying_docs = rem_docs
+    # If REM casefile docs are present, require a folder with BOTH PLAN.md and EXEC_LOG.md.
+    # Markers may be satisfied across the pair (folder-level), matching the intent of casefiles.
+    by_dir: dict[str, set[str]] = {}
     for rel in rem_docs:
-        ok, mm = doc_has_markers(rel)
-        if not ok:
-            missing_markers[rel] = mm
+        by_dir.setdefault(str(Path(rel).parent), set()).add(Path(rel).name)
+
+    diag_missing: dict[str, list[str]] = {}
+    for d, names in sorted(by_dir.items()):
+        if not {"PLAN.md", "EXEC_LOG.md"}.issubset(names):
+            continue
+        plan = f"{d}/PLAN.md"
+        log = f"{d}/EXEC_LOG.md"
+        ok, mm = pair_has_markers(plan, log)
+        if ok:
+            satisfying_docs = [plan, log]
+            break
+        if len(diag_missing) < 12:
+            diag_missing[plan] = mm
+            diag_missing[log] = mm
+
+    if not satisfying_docs:
+        missing_markers = diag_missing
 else:
     # Otherwise, allow a normal task plan/log to satisfy the gate iff it contains remediation markers.
-    # Require a folder that includes both PLAN.md and EXEC_LOG.md and both have markers.
+    # Require a folder that includes both PLAN.md and EXEC_LOG.md; markers may be satisfied across the pair.
     by_dir: dict[str, set[str]] = {}
     for rel in tsk_docs:
         by_dir.setdefault(str(Path(rel).parent), set()).add(Path(rel).name)
@@ -149,18 +180,15 @@ else:
             continue
         plan = f"{d}/PLAN.md"
         log = f"{d}/EXEC_LOG.md"
-        plan_ok, plan_mm = doc_has_markers(plan)
-        log_ok, log_mm = doc_has_markers(log)
-        if plan_ok and log_ok:
+        ok, mm = pair_has_markers(plan, log)
+        if ok:
             satisfying_docs = [plan, log]
             break
         # Only keep diagnostics; do not fail because unrelated historical TSK plan/log folders exist.
         # If we ultimately fail to find any satisfying casefile, we'll surface these.
         if len(diag_missing) < 12:
-            if not plan_ok:
-                diag_missing[plan] = plan_mm
-            if not log_ok:
-                diag_missing[log] = log_mm
+            diag_missing[plan] = mm
+            diag_missing[log] = mm
 
     if not satisfying_docs:
         missing_markers = diag_missing

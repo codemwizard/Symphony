@@ -28,7 +28,9 @@ Remediation trace is required only when the change touches any of:
 
 ## Required fields (minimum)
 
-Whichever artifact satisfies the remediation trace requirement (REM casefile or an explicit fix task plan/log) must contain these strings (case-insensitive):
+Whichever artifact satisfies the remediation trace requirement (REM casefile or an explicit fix task plan/log) must contain these strings (case-insensitive).
+
+Markers may be satisfied across the `{PLAN.md, EXEC_LOG.md}` pair within the same casefile folder (folder-level), not necessarily in each file individually:
 - `failure_signature`
 - `origin_task_id` (or `origin_gate_id`)
 - `repro_command`
@@ -78,4 +80,3 @@ Optionally extract stable “next time” learnings into `docs/operations/troubl
 To avoid forcing everything into `REM-*`, the remediation trace gate is satisfied by either:
 1. A remediation casefile `docs/plans/**/REM-*/{PLAN.md,EXEC_LOG.md}`, or
 2. A normal task plan/log `docs/plans/**/TSK-*/{PLAN.md,EXEC_LOG.md}` that includes the required remediation fields above (meaning the work is explicitly tracked as a fix, not feature-only).
-
