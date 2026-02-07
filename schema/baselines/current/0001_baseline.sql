@@ -2,7 +2,7 @@
 -- PostgreSQL database dump
 --
 
-\restrict EFWq0ohtsGwEgaXtgTx5uRiSzoaf3rX9H6Hr6aNCyGsXfOA9p3mDTwstec3AvpQ
+\restrict laLrBLjnXYt5YCu42W1LrhMuJKCAABbmVEB24cN0xh7nOhrLO1DbqRHej6MCp3Y
 
 -- Dumped from database version 18.1 (Debian 18.1-1.pgdg13+2)
 -- Dumped by pg_dump version 18.1 (Debian 18.1-1.pgdg13+2)
@@ -497,6 +497,8 @@ CREATE TABLE public.billing_usage_events (
     units text NOT NULL,
     quantity bigint NOT NULL,
     metadata jsonb,
+    created_at timestamp with time zone DEFAULT now(),
+    idempotency_key text,
     CONSTRAINT billing_usage_events_event_type_check CHECK ((event_type = ANY (ARRAY['EVIDENCE_BUNDLE'::text, 'CASE_PACK'::text, 'EXCEPTION_TRIAGE'::text, 'RETENTION_ANCHOR'::text, 'ESCROW_RELEASE'::text, 'DISPUTE_PACK'::text]))),
     CONSTRAINT billing_usage_events_member_requires_tenant_chk CHECK (((subject_member_id IS NULL) OR (tenant_id IS NOT NULL))),
     CONSTRAINT billing_usage_events_quantity_check CHECK ((quantity > 0)),
@@ -529,6 +531,13 @@ CREATE TABLE public.evidence_packs (
     correlation_id uuid,
     root_hash text,
     created_at timestamp with time zone DEFAULT now() NOT NULL,
+    signer_participant_id text,
+    signature_alg text,
+    signature text,
+    signed_at timestamp with time zone,
+    anchor_type text,
+    anchor_ref text,
+    anchored_at timestamp with time zone,
     CONSTRAINT evidence_packs_pack_type_check CHECK ((pack_type = ANY (ARRAY['INSTRUCTION_BUNDLE'::text, 'INCIDENT_PACK'::text, 'DISPUTE_PACK'::text])))
 );
 
@@ -584,6 +593,21 @@ CREATE TABLE public.participant_outbox_sequences (
     participant_id text NOT NULL,
     next_sequence_id bigint NOT NULL,
     CONSTRAINT participant_outbox_sequences_next_sequence_id_check CHECK ((next_sequence_id >= 1))
+);
+
+
+--
+-- Name: participants; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.participants (
+    participant_id text NOT NULL,
+    legal_name text NOT NULL,
+    participant_kind text NOT NULL,
+    status text DEFAULT 'ACTIVE'::text NOT NULL,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    CONSTRAINT participants_participant_kind_check CHECK ((participant_kind = ANY (ARRAY['BANK'::text, 'MMO'::text, 'NGO'::text, 'GOV_PROGRAM'::text, 'COOP_FEDERATION'::text, 'ENTERPRISE'::text, 'INTERNAL'::text]))),
+    CONSTRAINT participants_status_check CHECK ((status = ANY (ARRAY['ACTIVE'::text, 'SUSPENDED'::text, 'CLOSED'::text])))
 );
 
 
@@ -813,6 +837,14 @@ ALTER TABLE ONLY public.participant_outbox_sequences
 
 
 --
+-- Name: participants participants_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.participants
+    ADD CONSTRAINT participants_pkey PRIMARY KEY (participant_id);
+
+
+--
 -- Name: payment_outbox_attempts payment_outbox_attempts_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -959,6 +991,13 @@ CREATE INDEX idx_attempts_outbox_id ON public.payment_outbox_attempts USING btre
 --
 
 CREATE INDEX idx_billing_usage_events_correlation_id ON public.billing_usage_events USING btree (correlation_id);
+
+
+--
+-- Name: idx_evidence_packs_anchor_ref; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_evidence_packs_anchor_ref ON public.evidence_packs USING btree (anchor_ref) WHERE (anchor_ref IS NOT NULL);
 
 
 --
@@ -1113,6 +1152,13 @@ CREATE INDEX idx_tenants_parent_tenant_id ON public.tenants USING btree (parent_
 --
 
 CREATE INDEX idx_tenants_status ON public.tenants USING btree (status);
+
+
+--
+-- Name: ux_billing_usage_events_idempotency; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE UNIQUE INDEX ux_billing_usage_events_idempotency ON public.billing_usage_events USING btree (billable_client_id, idempotency_key) WHERE (idempotency_key IS NOT NULL);
 
 
 --
@@ -1331,5 +1377,5 @@ ALTER TABLE ONLY public.tenants
 -- PostgreSQL database dump complete
 --
 
-\unrestrict EFWq0ohtsGwEgaXtgTx5uRiSzoaf3rX9H6Hr6aNCyGsXfOA9p3mDTwstec3AvpQ
+\unrestrict laLrBLjnXYt5YCu42W1LrhMuJKCAABbmVEB24cN0xh7nOhrLO1DbqRHej6MCp3Y
 

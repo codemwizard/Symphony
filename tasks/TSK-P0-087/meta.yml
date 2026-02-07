@@ -1,0 +1,45 @@
+phase: '0'
+task_id: TSK-P0-087
+title: Local/CI toolchain parity (pinned)
+owner_role: SECURITY_GUARDIAN
+status: completed
+depends_on:
+- TSK-P0-073
+touches:
+- scripts/audit/ci_toolchain_versions.env
+- scripts/audit/bootstrap_local_ci_toolchain.sh
+- scripts/audit/verify_ci_toolchain.sh
+- scripts/audit/run_invariants_fast_checks.sh
+- scripts/dev/pre_ci.sh
+- docs/tasks/PHASE0_TASKS.md
+- tasks/TSK-P0-087/meta.yml
+invariants:
+- INV-079 (CI toolchain is pinned)
+work:
+- Update pinned rg version to match installed rg (and CI install).
+- Add repo-local toolchain bootstrap script (pinned python deps + pinned rg).
+- Update toolchain verifier and fast checks to prefer repo-local toolchain.
+- Wire bootstrap into pre-CI for local parity.
+acceptance_criteria:
+- scripts/audit/verify_ci_toolchain.sh passes locally.
+- scripts/audit/run_invariants_fast_checks.sh passes locally without manual PATH exports.
+- Evidence is emitted for toolchain check.
+verification:
+- scripts/audit/bootstrap_local_ci_toolchain.sh
+- scripts/audit/verify_ci_toolchain.sh
+- scripts/audit/run_invariants_fast_checks.sh
+evidence:
+- evidence/phase0/ci_toolchain.json
+failure_modes:
+- Toolchain mismatch between local and CI.
+- Fast checks rely on global site-packages.
+- Evidence file missing.
+must_read:
+- scripts/audit/verify_ci_toolchain.sh
+- scripts/audit/ci_toolchain_versions.env
+implementation_plan: docs/plans/phase0/TSK-P0-087_toolchain_parity/PLAN.md
+implementation_log: docs/plans/phase0/TSK-P0-087_toolchain_parity/EXEC_LOG.md
+notes: ''
+client: codex_cli
+assigned_agent: security_guardian
+model: <UNASSIGNED>

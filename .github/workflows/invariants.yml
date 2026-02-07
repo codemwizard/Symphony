@@ -39,7 +39,7 @@ jobs:
           set -euo pipefail
           source scripts/audit/ci_toolchain_versions.env
           python3 -m pip install --upgrade pip
-          python3 -m pip install "pyyaml==${PYYAML_VERSION}" "jsonschema==${JSONSCHEMA_VERSION}" pytest
+          python3 -m pip install "pyyaml==${PYYAML_VERSION}" "jsonschema==${JSONSCHEMA_VERSION}" "semgrep==${SEMGREP_VERSION}" pytest
 
           curl -sSL -o /tmp/rg.tgz \
             "https://github.com/BurntSushi/ripgrep/releases/download/${RIPGREP_VERSION}/ripgrep-${RIPGREP_VERSION}-x86_64-unknown-linux-musl.tar.gz"
@@ -495,6 +495,22 @@ jobs:
           set -euo pipefail
           chmod +x scripts/db/tests/test_idempotency_zombie.sh
           scripts/db/tests/test_idempotency_zombie.sh
+
+      - name: Run outbox claim semantics test
+        env:
+          DATABASE_URL: postgres://symphony:symphony@localhost:5432/symphony
+        run: |
+          set -euo pipefail
+          chmod +x scripts/db/tests/test_outbox_claim_semantics.sh
+          scripts/db/tests/test_outbox_claim_semantics.sh
+
+      - name: Run outbox lease fencing test
+        env:
+          DATABASE_URL: postgres://symphony:symphony@localhost:5432/symphony
+        run: |
+          set -euo pipefail
+          chmod +x scripts/db/tests/test_outbox_lease_fencing.sh
+          scripts/db/tests/test_outbox_lease_fencing.sh
 
       - name: Run no-tx migrations test
         env:

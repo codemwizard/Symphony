@@ -60,7 +60,7 @@ rg_scan() {
     --glob '!**/obj/**' \
     --glob '!**/.venv/**' \
     --glob '!**/node_modules/**' \
-    | awk -F: -v n="$name" '{ if ($1 ~ /scan_secrets\.sh$/) next; print n ":" $1 ":" $2 }' >> "$tmp_hits" || true
+    | awk -F: -v n="$name" '{ if ($1 ~ /scan_secrets\.sh$/) next; print n ":" $1 ":" $2 }' >> "$tmp_hits" || true # symphony:allow_or_true
 }
 
 grep_scan() {
@@ -88,7 +88,7 @@ grep_scan() {
     --include '*.config' \
     --include 'Dockerfile*' \
     "$regex" "$path" \
-    | awk -F: -v n="$name" '{ if ($1 ~ /scan_secrets\.sh$/) next; print n ":" $1 ":" $2 }' >> "$tmp_hits" || true
+    | awk -F: -v n="$name" '{ if ($1 ~ /scan_secrets\.sh$/) next; print n ":" $1 ":" $2 }' >> "$tmp_hits" || true # symphony:allow_or_true
 }
 
 for root in "${scan_roots[@]}"; do

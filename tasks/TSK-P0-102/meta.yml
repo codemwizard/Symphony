@@ -1,0 +1,40 @@
+phase: "0"
+task_id: "TSK-P0-102"
+title: "Evidence pack signing and anchoring schema hooks + verifier"
+owner_role: "DB_FOUNDATION"
+status: "completed"
+depends_on:
+- "TSK-P0-086"
+- "TSK-P0-089"
+touches:
+- "schema/migrations/**"
+- "scripts/db/verify_business_foundation_hooks.sh"
+- "docs/invariants/INVARIANTS_MANIFEST.yml"
+- "tasks/TSK-P0-102/meta.yml"
+invariants:
+- "NEW: Evidence packs have canonical signing/anchoring fields (Phase-0 hook)"
+work:
+- "Extend evidence pack schema with canonical detached signature metadata fields."
+- "Extend evidence pack schema with anchoring metadata fields (anchor method + external reference)."
+- "Ensure append-only posture remains enforced for evidence pack tables."
+- "Extend verifier to assert columns exist and remain append-only."
+acceptance_criteria:
+- "New columns exist via forward-only migration(s)."
+- "Verifier emits evidence listing expected columns and fails closed if missing."
+verification:
+- "scripts/db/verify_business_foundation_hooks.sh"
+evidence:
+- "evidence/phase0/business_foundation_hooks.json"
+failure_modes:
+- "Evidence packs exist but lack canonical signing/anchoring hooks."
+- "Append-only posture is weakened by schema changes."
+- "Evidence file missing."
+must_read:
+- "docs/audits/TIER1_GAP_AUDIT_2026-02-06.md"
+implementation_plan: "docs/plans/phase0/TSK-P0-090_audit_gap_closeout/PLAN.md"
+implementation_log: "docs/plans/phase0/TSK-P0-090_audit_gap_closeout/EXEC_LOG.md"
+notes: ""
+client: "codex_cli"
+assigned_agent: "db_foundation"
+model: "<UNASSIGNED>"
+

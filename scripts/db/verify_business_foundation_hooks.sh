@@ -29,6 +29,7 @@ check_bool() {
 }
 
 # Core tables
+check_bool "participants_table" "SELECT to_regclass('public.participants') IS NOT NULL;"
 check_bool "billable_clients_table" "SELECT to_regclass('public.billable_clients') IS NOT NULL;"
 check_bool "billing_usage_events_table" "SELECT to_regclass('public.billing_usage_events') IS NOT NULL;"
 check_bool "external_proofs_table" "SELECT to_regclass('public.external_proofs') IS NOT NULL;"
@@ -77,6 +78,29 @@ check_bool "trg_deny_evidence_packs_mutation" "SELECT EXISTS (SELECT 1 FROM pg_t
 check_bool "trg_deny_evidence_pack_items_mutation" "SELECT EXISTS (SELECT 1 FROM pg_trigger WHERE tgname='trg_deny_evidence_pack_items_mutation');"
 check_bool "billing_subject_zero_or_one_chk" "SELECT EXISTS (SELECT 1 FROM pg_constraint WHERE conname='billing_usage_events_subject_zero_or_one_chk' AND conrelid='public.billing_usage_events'::regclass);"
 check_bool "billing_member_requires_tenant_chk" "SELECT EXISTS (SELECT 1 FROM pg_constraint WHERE conname='billing_usage_events_member_requires_tenant_chk' AND conrelid='public.billing_usage_events'::regclass);"
+
+# Evidence pack signing/anchoring schema hooks
+check_bool "evidence_packs_signer_participant_id_col" "SELECT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema='public' AND table_name='evidence_packs' AND column_name='signer_participant_id');"
+check_bool "evidence_packs_signature_alg_col" "SELECT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema='public' AND table_name='evidence_packs' AND column_name='signature_alg');"
+check_bool "evidence_packs_signature_col" "SELECT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema='public' AND table_name='evidence_packs' AND column_name='signature');"
+check_bool "evidence_packs_signed_at_col" "SELECT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema='public' AND table_name='evidence_packs' AND column_name='signed_at');"
+check_bool "evidence_packs_anchor_type_col" "SELECT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema='public' AND table_name='evidence_packs' AND column_name='anchor_type');"
+check_bool "evidence_packs_anchor_ref_col" "SELECT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema='public' AND table_name='evidence_packs' AND column_name='anchor_ref');"
+check_bool "evidence_packs_anchored_at_col" "SELECT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema='public' AND table_name='evidence_packs' AND column_name='anchored_at');"
+check_bool "idx_evidence_packs_anchor_ref" "SELECT to_regclass('public.idx_evidence_packs_anchor_ref') IS NOT NULL;"
+
+# Billing usage convention hooks
+check_bool "billing_usage_events_created_at_col" "SELECT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema='public' AND table_name='billing_usage_events' AND column_name='created_at');"
+check_bool "billing_usage_events_idempotency_key_col" "SELECT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema='public' AND table_name='billing_usage_events' AND column_name='idempotency_key');"
+check_bool "ux_billing_usage_events_idempotency" "SELECT to_regclass('public.ux_billing_usage_events_idempotency') IS NOT NULL;"
+
+# Revoke-first posture: PUBLIC must not retain privileges on business tables.
+check_bool "public_no_privs_participants" "SELECT NOT (has_table_privilege('public','public.participants','SELECT') OR has_table_privilege('public','public.participants','INSERT') OR has_table_privilege('public','public.participants','UPDATE') OR has_table_privilege('public','public.participants','DELETE') OR has_table_privilege('public','public.participants','TRUNCATE') OR has_table_privilege('public','public.participants','REFERENCES') OR has_table_privilege('public','public.participants','TRIGGER'));"
+check_bool "public_no_privs_billable_clients" "SELECT NOT (has_table_privilege('public','public.billable_clients','SELECT') OR has_table_privilege('public','public.billable_clients','INSERT') OR has_table_privilege('public','public.billable_clients','UPDATE') OR has_table_privilege('public','public.billable_clients','DELETE') OR has_table_privilege('public','public.billable_clients','TRUNCATE') OR has_table_privilege('public','public.billable_clients','REFERENCES') OR has_table_privilege('public','public.billable_clients','TRIGGER'));"
+check_bool "public_no_privs_billing_usage_events" "SELECT NOT (has_table_privilege('public','public.billing_usage_events','SELECT') OR has_table_privilege('public','public.billing_usage_events','INSERT') OR has_table_privilege('public','public.billing_usage_events','UPDATE') OR has_table_privilege('public','public.billing_usage_events','DELETE') OR has_table_privilege('public','public.billing_usage_events','TRUNCATE') OR has_table_privilege('public','public.billing_usage_events','REFERENCES') OR has_table_privilege('public','public.billing_usage_events','TRIGGER'));"
+check_bool "public_no_privs_external_proofs" "SELECT NOT (has_table_privilege('public','public.external_proofs','SELECT') OR has_table_privilege('public','public.external_proofs','INSERT') OR has_table_privilege('public','public.external_proofs','UPDATE') OR has_table_privilege('public','public.external_proofs','DELETE') OR has_table_privilege('public','public.external_proofs','TRUNCATE') OR has_table_privilege('public','public.external_proofs','REFERENCES') OR has_table_privilege('public','public.external_proofs','TRIGGER'));"
+check_bool "public_no_privs_evidence_packs" "SELECT NOT (has_table_privilege('public','public.evidence_packs','SELECT') OR has_table_privilege('public','public.evidence_packs','INSERT') OR has_table_privilege('public','public.evidence_packs','UPDATE') OR has_table_privilege('public','public.evidence_packs','DELETE') OR has_table_privilege('public','public.evidence_packs','TRUNCATE') OR has_table_privilege('public','public.evidence_packs','REFERENCES') OR has_table_privilege('public','public.evidence_packs','TRIGGER'));"
+check_bool "public_no_privs_evidence_pack_items" "SELECT NOT (has_table_privilege('public','public.evidence_pack_items','SELECT') OR has_table_privilege('public','public.evidence_pack_items','INSERT') OR has_table_privilege('public','public.evidence_pack_items','UPDATE') OR has_table_privilege('public','public.evidence_pack_items','DELETE') OR has_table_privilege('public','public.evidence_pack_items','TRUNCATE') OR has_table_privilege('public','public.evidence_pack_items','REFERENCES') OR has_table_privilege('public','public.evidence_pack_items','TRIGGER'));"
 
 result="PASS"
 if [[ ${#failures[@]} -gt 0 ]]; then

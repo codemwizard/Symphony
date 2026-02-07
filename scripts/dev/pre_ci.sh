@@ -95,10 +95,36 @@ else
   exit 1
 fi
 
+echo "==> DB verify_invariants.sh"
+if [[ -x scripts/db/verify_invariants.sh ]]; then
+  SKIP_POLICY_SEED=1 scripts/db/verify_invariants.sh
+else
+  echo "ERROR: scripts/db/verify_invariants.sh not found"
+  exit 1
+fi
+
 if [[ -n "${DATABASE_URL:-}" ]]; then
   if [[ -x scripts/db/tests/test_db_functions.sh ]]; then
     scripts/db/tests/test_db_functions.sh
   fi
+  if [[ -x scripts/db/tests/test_idempotency_zombie.sh ]]; then
+    scripts/db/tests/test_idempotency_zombie.sh
+  fi
+  if [[ -x scripts/db/tests/test_outbox_claim_semantics.sh ]]; then
+    scripts/db/tests/test_outbox_claim_semantics.sh
+  fi
+  if [[ -x scripts/db/tests/test_outbox_lease_fencing.sh ]]; then
+    scripts/db/tests/test_outbox_lease_fencing.sh
+  fi
+
+  # CI parity: these DB checks run in GitHub Actions db_verify_invariants job.
+  if [[ -x scripts/db/n_minus_one_check.sh ]]; then
+    scripts/db/n_minus_one_check.sh
+  fi
+  if [[ -x scripts/db/tests/test_no_tx_migrations.sh ]]; then
+    scripts/db/tests/test_no_tx_migrations.sh
+  fi
+
   echo "==> Policy seed checksum tests"
   if [[ -x scripts/db/tests/test_seed_policy_checksum.sh ]]; then
     scripts/db/tests/test_seed_policy_checksum.sh

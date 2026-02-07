@@ -1,0 +1,53 @@
+# Canonical Task Meta Template (lower_snake_case)
+
+phase: "0"
+task_id: "TSK-P0-105"
+title: "Remediation trace gate (Option 2) cluster plan + normative workflow"
+owner_role: "ARCHITECT"
+status: "completed"   # planned | in_progress | completed
+
+depends_on: []
+
+touches:
+  - "docs/operations/REMEDIATION_TRACE_WORKFLOW.md"
+  - "docs/operations/DEV_WORKFLOW.md"
+  - "docs/operations/TASK_CREATION_PROCESS.md"
+  - "docs/plans/phase0/TSK-P0-105_remediation_trace_gate/PLAN.md"
+  - "docs/plans/phase0/TSK-P0-105_remediation_trace_gate/EXEC_LOG.md"
+  - "docs/plans/phase0/INDEX.md"
+  - ".codex/agents/supervisor.md"
+  - ".codex/agents/architect.md"
+
+invariants:
+  - "INV-105"
+
+work:
+  - "Define remediation casefile workflow and noise-controlled trigger surfaces."
+  - "Ensure tasks/agents reference the workflow and mechanical enforcement exists."
+
+acceptance_criteria:
+  - "Normative remediation workflow exists under docs/operations/ and is referenced from DEV_WORKFLOW and TASK_CREATION_PROCESS."
+  - "Plan + EXEC_LOG exist for this cluster and include Task IDs."
+
+verification:
+  - "scripts/audit/run_invariants_fast_checks.sh"
+
+evidence:
+  - "evidence/phase0/remediation_workflow_doc.json"
+
+failure_modes:
+  - "Evidence file missing"
+  - "Workflow doc missing required tokens"
+
+must_read:
+  - "AGENTS.md"
+  - "docs/operations/REMEDIATION_TRACE_WORKFLOW.md"
+  - "docs/operations/TASK_CREATION_PROCESS.md"
+
+implementation_plan: "docs/plans/phase0/TSK-P0-105_remediation_trace_gate/PLAN.md"
+implementation_log: "docs/plans/phase0/TSK-P0-105_remediation_trace_gate/EXEC_LOG.md"
+
+notes: ""
+client: "codex_cli"
+assigned_agent: "architect"
+model: "gpt-5.3-codex"

@@ -1,0 +1,50 @@
+# Canonical Task Meta Template (lower_snake_case)
+
+phase: "0"
+task_id: "TSK-P0-116"
+title: "Authoritative ADR stubs for BOZ finality, ZDPA survivability, and IPDR truth anchors"
+owner_role: "ARCHITECT"
+status: "completed"   # planned | in_progress | completed
+
+depends_on:
+  - "TSK-P0-115"
+
+touches:
+  - "docs/decisions/ADR-0012-payment-finality-model-deferred.md"
+  - "docs/decisions/ADR-0013-zdpa-pii-decoupling-strategy.md"
+  - "docs/decisions/ADR-0014-nfs-sequence-continuity-ipdr.md"
+  - "docs/tasks/PHASE0_TASKS.md"
+  - "tasks/TSK-P0-116/meta.yml"
+
+invariants:
+  - "INV-BOZ-04"
+  - "INV-ZDPA-01"
+  - "INV-IPDR-02"
+
+work:
+  - "Create ADRs that define the model, boundaries, and the mechanical checks required to promote roadmap -> implemented in Phase-1/2."
+
+acceptance_criteria:
+  - "ADRs clearly state Phase-0 boundary (no schema enforcement) and Phase-1 activation prerequisites."
+  - "ADRs include explicit failure modes and audit artifacts required."
+
+verification:
+  - "scripts/audit/run_invariants_fast_checks.sh"
+
+evidence: []
+
+failure_modes:
+  - "ADR placed in legacy folder or uses unstable naming."
+  - "ADR claims compliance rather than declaring scope + roadmap."
+
+must_read:
+  - "docs/operations/DOCUMENT_PLACEMENT.md"
+  - "docs/decisions/ADR-0002-db-mig-ledger.md"
+
+implementation_plan: "docs/plans/phase0/TSK-P0-114_zambia_regulatory_invariants_roadmap/PLAN.md"
+implementation_log: "docs/plans/phase0/TSK-P0-114_zambia_regulatory_invariants_roadmap/EXEC_LOG.md"
+
+notes: ""
+client: "codex_cli"
+assigned_agent: "architect"
+model: "gpt-5.3-codex"

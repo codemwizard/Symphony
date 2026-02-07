@@ -1754,3 +1754,713 @@ Failure Modes:
 - Hooks pass without actual schema checks.
 - Verifier not wired into DB invariant flow.
 - Evidence file missing.
+
+TASK ID: TSK-P0-087
+Title: Local/CI toolchain parity (pinned)
+Owner Role: SECURITY_GUARDIAN
+Depends On: TSK-P0-073
+Touches: `scripts/audit/ci_toolchain_versions.env`, `scripts/audit/bootstrap_local_ci_toolchain.sh`, `scripts/audit/verify_ci_toolchain.sh`, `scripts/audit/run_invariants_fast_checks.sh`, `scripts/dev/pre_ci.sh`, `docs/tasks/PHASE0_TASKS.md`, `tasks/TSK-P0-087/meta.yml`
+Invariant(s): INV-079 (CI toolchain is pinned)
+Work:
+- Update pinned rg version to match installed rg and CI install.
+- Add repo-local toolchain bootstrap script (pinned python deps in `./.venv`, pinned `rg` in `./.toolchain/bin`).
+- Update toolchain verifier and fast checks to prefer repo-local toolchain by default.
+- Wire bootstrap into `scripts/dev/pre_ci.sh` to enforce local parity.
+Acceptance Criteria:
+- `scripts/audit/verify_ci_toolchain.sh` passes locally.
+- `scripts/audit/run_invariants_fast_checks.sh` passes locally without manual PATH exports.
+- Evidence is emitted for toolchain verification.
+Verification Commands:
+- `scripts/audit/bootstrap_local_ci_toolchain.sh`
+- `scripts/audit/verify_ci_toolchain.sh`
+- `scripts/audit/run_invariants_fast_checks.sh`
+Evidence Artifact(s):
+- `./evidence/phase0/ci_toolchain.json`
+Failure Modes:
+- Toolchain mismatch between local and CI.
+- Fast checks rely on global site-packages.
+- Evidence file missing.
+
+TASK ID: TSK-P0-088
+Title: Tier-1 gap audit vs business goals (Phase-0)
+Owner Role: ARCHITECT
+Depends On: none
+Touches: `docs/audits/TIER1_GAP_AUDIT_2026-02-06.md`, `docs/tasks/PHASE0_TASKS.md`, `tasks/TSK-P0-088/meta.yml`
+Invariant(s): N/A (audit report)
+Work:
+- Produce an audit report mapping business goals to Phase-0 mechanical enforcement.
+- Identify Tier-1 blocking gaps and Phase-0-safe fixes.
+Acceptance Criteria:
+- Report is evidence-minded and references concrete scripts/docs/paths.
+- Report distinguishes Phase-0 hooks from Phase-1/2 runtime enforcement.
+Verification Commands:
+- `scripts/audit/run_invariants_fast_checks.sh`
+Failure Modes:
+- Report over-claims implemented controls.
+
+TASK ID: TSK-P0-089
+Title: Tier-1 gap audit addendum (ISO 27001/27002, ISO 20022, Zero Trust, migrations)
+Owner Role: ARCHITECT
+Depends On: TSK-P0-088
+Touches: `docs/audits/TIER1_GAP_AUDIT_ADDENDUM_2026-02-07.md`, `docs/tasks/PHASE0_TASKS.md`, `tasks/TSK-P0-089/meta.yml`
+Invariant(s): N/A (audit report addendum)
+Work:
+- Extend the Tier-1 gap audit with ISO/IEC 27001:2022 and ISO/IEC 27002:2022 mapping (Phase-0 posture and gaps).
+- Extend the Tier-1 gap audit with ISO 20022 expectations and Phase-0-safe hooks.
+- Assess Zero Trust Architecture posture and identify Phase-0 mechanical gaps.
+- Document the exact forward-only, blue/green migration process used by this repo, including preparatory invariants required for safe rollback-by-routing.
+Acceptance Criteria:
+- Addendum references concrete scripts/docs/paths and does not over-claim compliance.
+- Addendum distinguishes Phase-0 hooks from Phase-1/2 runtime enforcement.
+Verification Commands:
+- `scripts/audit/run_invariants_fast_checks.sh`
+Failure Modes:
+- Addendum misstates migration mechanics or implies certification/compliance.
+
+TASK ID: TSK-P0-090
+Title: Key management policy stub + mechanical verifier
+Owner Role: SECURITY_GUARDIAN
+Depends On: TSK-P0-089
+Touches: `docs/security/KEY_MANAGEMENT_POLICY.md`, `docs/security/SECURITY_MANIFEST.yml`, `scripts/audit/verify_key_management_policy.sh`, `tasks/TSK-P0-090/meta.yml`
+Invariant(s): NEW (Key management policy exists + referenced)
+Work:
+- Add Phase-0 key management policy stub (OpenBao now; KMS/HSM later) with lifecycle controls and ownership.
+- Add verifier that fails if the policy is missing or not referenced by SECURITY_MANIFEST.
+- Emit evidence artifact for policy presence/reference verification.
+Acceptance Criteria:
+- Policy doc exists and is referenced by SECURITY_MANIFEST.
+- Verifier fails closed if doc is missing or unreferenced.
+Verification Commands:
+- `scripts/audit/verify_key_management_policy.sh`
+Evidence Artifact(s):
+- `evidence/phase0/key_management_policy.json`
+Failure Modes:
+- Policy exists but is not referenced by control manifest.
+- Verifier does not fail closed when doc is missing.
+- Evidence file missing.
+
+TASK ID: TSK-P0-091
+Title: Audit logging retention and review policy stub + verifier
+Owner Role: SECURITY_GUARDIAN
+Depends On: TSK-P0-089
+Touches: `docs/security/AUDIT_LOGGING_RETENTION_POLICY.md`, `docs/security/AUDIT_LOGGING_PLAN.md`, `docs/security/SECURITY_MANIFEST.yml`, `scripts/audit/verify_audit_logging_retention_policy.sh`, `tasks/TSK-P0-091/meta.yml`
+Invariant(s): NEW (Audit logging retention/review policy exists + referenced)
+Work:
+- Add Phase-0 audit logging retention/review policy stub (retention targets, review cadence, time sync expectations, access controls).
+- Add verifier that fails if the policy is missing or not referenced by SECURITY_MANIFEST.
+- Emit evidence artifact for policy presence/reference verification.
+Acceptance Criteria:
+- Retention policy doc exists and is referenced by SECURITY_MANIFEST.
+- Verifier fails closed if doc is missing or unreferenced.
+Verification Commands:
+- `scripts/audit/verify_audit_logging_retention_policy.sh`
+Evidence Artifact(s):
+- `evidence/phase0/audit_logging_retention_policy.json`
+Failure Modes:
+- Logging plan exists but retention/review requirements are not explicitly declared.
+- Verifier passes without an explicit retention declaration.
+- Evidence file missing.
+
+TASK ID: TSK-P0-092
+Title: Secure SDLC policy stub + Semgrep SAST baseline (pinned)
+Owner Role: SECURITY_GUARDIAN
+Depends On: TSK-P0-087, TSK-P0-089
+Touches: `docs/security/SECURE_SDLC_POLICY.md`, `.github/workflows/invariants.yml`, `security/semgrep/rules.yml`, `scripts/security/run_semgrep_sast.sh`, `scripts/audit/verify_semgrep_sast_evidence.sh`, `docs/security/SECURITY_MANIFEST.yml`, `tasks/TSK-P0-092/meta.yml`
+Invariant(s): NEW (SAST baseline emits evidence; parity preserved)
+Work:
+- Add Secure SDLC policy stub defining minimum static gates and evidence expectations in Phase-0.
+- Introduce Phase-0 Semgrep baseline (minimal repo-managed ruleset, pinned tool version) and emit evidence with tool version + scanned paths.
+- Wire SAST baseline into CI/pre-CI gating and map it in SECURITY_MANIFEST.
+Acceptance Criteria:
+- SAST runner is deterministic and runs in both local and CI.
+- Evidence includes tool version, git_sha, scanned file set, and status.
+Verification Commands:
+- `scripts/security/run_semgrep_sast.sh`
+- `scripts/audit/verify_semgrep_sast_evidence.sh`
+Evidence Artifact(s):
+- `evidence/phase0/semgrep_sast.json`
+Failure Modes:
+- SAST baseline only runs in CI (local parity broken).
+- Output is non-deterministic or missing provenance.
+- Evidence file missing.
+
+TASK ID: TSK-P0-093
+Title: Expand/contract migration guardrail lint (no destructive DDL, nullability safety)
+Owner Role: DB_FOUNDATION
+Depends On: TSK-P0-073, TSK-P0-089
+Touches: `scripts/db/lint_expand_contract_policy.sh`, `scripts/db/verify_invariants.sh`, `scripts/dev/pre_ci.sh`, `docs/invariants/INVARIANTS_MANIFEST.yml`, `tasks/TSK-P0-093/meta.yml`
+Invariant(s): NEW (Expand/Transition forbids destructive DDL; nullability/default safety)
+Work:
+- Add migration policy linter blocking destructive/contract operations during Expand/Transition by default.
+- Enforce nullability safety rules to preserve N-1 rollback-by-routing viability.
+- Fail closed if a contract cleanup marker appears in a migration (Phase-0 forbidden).
+Acceptance Criteria:
+- Lint fails on any destructive DDL (DROP/TRUNCATE/contract ops) in Phase-0.
+- Lint fails on any ADD COLUMN ... NOT NULL in Phase-0.
+- Lint fails if a contract cleanup marker appears in a migration.
+Verification Commands:
+- `scripts/db/lint_expand_contract_policy.sh`
+Evidence Artifact(s):
+- `evidence/phase0/migration_expand_contract_policy.json`
+Failure Modes:
+- Lint is too permissive (allows destructive DDL or NOT NULL adds).
+- Evidence file missing.
+
+TASK ID: TSK-P0-094
+Title: PK/FK type stability lint for migrations
+Owner Role: DB_FOUNDATION
+Depends On: TSK-P0-093
+Touches: `scripts/db/lint_pk_fk_type_changes.sh`, `scripts/db/verify_invariants.sh`, `scripts/dev/pre_ci.sh`, `docs/invariants/INVARIANTS_MANIFEST.yml`, `tasks/TSK-P0-094/meta.yml`
+Invariant(s): NEW (PK/FK type stability)
+Work:
+- Add migration linter forbidding ALTER COLUMN TYPE on primary key/foreign key columns without explicit ADR waiver marker.
+- Emit evidence artifact describing scanned files and violations.
+Acceptance Criteria:
+- Lint fails closed when key type changes are detected without an ADR waiver marker.
+Verification Commands:
+- `scripts/db/lint_pk_fk_type_changes.sh`
+Evidence Artifact(s):
+- `evidence/phase0/pk_fk_type_stability.json`
+Failure Modes:
+- Key type changes slip through and break blue/green rollback-by-routing.
+- Evidence file missing.
+
+TASK ID: TSK-P0-095
+Title: Table conventions spec + catalog verifier (idempotency + lineage)
+Owner Role: DB_FOUNDATION
+Depends On: TSK-P0-093
+Touches: `schema/table_conventions.yml`, `scripts/db/verify_table_conventions.sh`, `scripts/db/verify_invariants.sh`, `docs/invariants/INVARIANTS_MANIFEST.yml`, `tasks/TSK-P0-095/meta.yml`
+Invariant(s): NEW (Table conventions enforced via catalog checks)
+Work:
+- Define table conventions spec with an explicit allowlist of ledger/transactional tables.
+- Add verifier that checks migrated schema (information_schema/pg_catalog) against the spec.
+- Emit evidence artifact with violations per table.
+Acceptance Criteria:
+- Conventions are enforced mechanically against the actual schema, not only via regex.
+Verification Commands:
+- `scripts/db/verify_table_conventions.sh`
+Evidence Artifact(s):
+- `evidence/phase0/table_conventions.json`
+Failure Modes:
+- Conventions exist only as docs or verifier does not reflect actual migrated schema.
+- Evidence file missing.
+
+TASK ID: TSK-P0-100
+Title: Evidence harness integrity verifier (watch-the-watcher)
+Owner Role: INVARIANTS_CURATOR
+Depends On: TSK-P0-090, TSK-P0-091, TSK-P0-092, TSK-P0-093, TSK-P0-094, TSK-P0-095
+Touches: `scripts/audit/verify_evidence_harness_integrity.sh`, `scripts/audit/run_invariants_fast_checks.sh`, `docs/invariants/INVARIANTS_MANIFEST.yml`, `tasks/TSK-P0-100/meta.yml`
+Invariant(s): NEW (Evidence harness integrity enforced)
+Work:
+- Add a verifier that checks evidence-producing gate scripts for high-signal anti-bypass properties.
+- Enforce structural requirements and minimal pattern bans (set +e, unannotated || true, unannotated 2>/dev/null).
+- Emit evidence artifact with the targets scanned and any violations.
+Acceptance Criteria:
+- Verifier fails closed on violations and produces actionable evidence.
+- Verifier is high-signal and avoids noisy shell linting.
+Verification Commands:
+- `scripts/audit/verify_evidence_harness_integrity.sh`
+Evidence Artifact(s):
+- `evidence/phase0/evidence_harness_integrity.json`
+Failure Modes:
+- Verifier is too permissive and can be bypassed.
+- Verifier becomes noisy and developers start ignoring it.
+- Evidence file missing.
+
+TASK ID: TSK-P0-101
+Title: Participant registry schema hook + verifier
+Owner Role: DB_FOUNDATION
+Depends On: TSK-P0-086, TSK-P0-089
+Touches: `schema/migrations/**`, `scripts/db/verify_invariants.sh`, `scripts/db/verify_business_foundation_hooks.sh`, `docs/invariants/INVARIANTS_MANIFEST.yml`, `tasks/TSK-P0-101/meta.yml`
+Invariant(s): NEW (Participant registry exists + is enforced)
+Work:
+- Add participants registry table suitable for IPDR stitching and legal/rail identity anchors.
+- Define mutation posture consistent with Tier-1 traceability.
+- Extend verifier(s) to assert table existence, critical columns, indexes, and privilege posture.
+Acceptance Criteria:
+- Forward-only migration adds the registry hook.
+- Verifier emits evidence and fails closed if missing.
+Verification Commands:
+- `scripts/db/verify_invariants.sh`
+Evidence Artifact(s):
+- `evidence/phase0/business_foundation_hooks.json`
+Failure Modes:
+- Participants referenced but no authoritative registry exists.
+- Verifier does not fail closed on missing columns/indexes.
+- Evidence file missing.
+
+TASK ID: TSK-P0-102
+Title: Evidence pack signing and anchoring schema hooks + verifier
+Owner Role: DB_FOUNDATION
+Depends On: TSK-P0-086, TSK-P0-089
+Touches: `schema/migrations/**`, `scripts/db/verify_business_foundation_hooks.sh`, `docs/invariants/INVARIANTS_MANIFEST.yml`, `tasks/TSK-P0-102/meta.yml`
+Invariant(s): NEW (Evidence packs have canonical signing/anchoring fields)
+Work:
+- Extend evidence pack schema with canonical detached signature metadata fields.
+- Extend evidence pack schema with anchoring metadata fields (anchor method + external reference).
+- Ensure append-only posture remains enforced for evidence pack tables.
+- Extend verifier to assert columns exist and remain append-only.
+Acceptance Criteria:
+- Forward-only migration(s) add the hooks without weakening append-only.
+- Verifier emits evidence and fails closed if missing.
+Verification Commands:
+- `scripts/db/verify_business_foundation_hooks.sh`
+Evidence Artifact(s):
+- `evidence/phase0/business_foundation_hooks.json`
+Failure Modes:
+- Evidence packs exist but lack canonical signing/anchoring hooks.
+- Append-only posture is weakened.
+- Evidence file missing.
+
+TASK ID: TSK-P0-103
+Title: Privilege posture closeout for business tables (REVOKE hygiene)
+Owner Role: DB_FOUNDATION
+Depends On: TSK-P0-086, TSK-P0-089
+Touches: `schema/migrations/**`, `scripts/db/verify_invariants.sh`, `docs/invariants/INVARIANTS_MANIFEST.yml`, `tasks/TSK-P0-103/meta.yml`
+Invariant(s): NEW (Revoke-first posture explicitly applied to new business tables)
+Work:
+- Add forward-only migration(s) to explicitly REVOKE ALL ON new business tables FROM PUBLIC.
+- Add/extend verifier coverage so privilege posture on the new tables is mechanically asserted.
+Acceptance Criteria:
+- PUBLIC has no implicit privileges on new business tables.
+- Verifier fails closed on privilege drift.
+Verification Commands:
+- `scripts/db/verify_invariants.sh`
+Failure Modes:
+- New tables rely on implicit privilege defaults.
+- Privilege drift is not detected mechanically.
+- Evidence file missing.
+
+TASK ID: TSK-P0-104
+Title: Closeout checklist matrix doc (Checklist -> Gate/Invariant/Task)
+Owner Role: INVARIANTS_CURATOR
+Depends On: TSK-P0-090, TSK-P0-091, TSK-P0-092, TSK-P0-093, TSK-P0-094, TSK-P0-095, TSK-P0-096, TSK-P0-097, TSK-P0-098, TSK-P0-099, TSK-P0-100, TSK-P0-101, TSK-P0-102, TSK-P0-103
+Touches: `docs/PHASE0/CLOSEOUT_CHECKLIST_MATRIX.md`, `docs/tasks/PHASE0_TASKS.md`, `tasks/TSK-P0-104/meta.yml`
+Invariant(s): N/A (docs)
+Work:
+- Create a dedicated matrix mapping closeout checklist items to mechanical enforcement (gates/invariants/scripts) and evidence artifacts.
+- Include the planned closeout task IDs where checklist items are not yet mechanically enforced.
+Acceptance Criteria:
+- Matrix is evidence-minded and does not over-claim enforcement.
+- Matrix includes gate IDs from CONTROL_PLANES where applicable.
+Verification Commands:
+- `scripts/audit/run_invariants_fast_checks.sh`
+Failure Modes:
+- Matrix over-claims enforcement without a referenced script/gate/evidence.
+
+TASK ID: TSK-P0-096
+Title: Register new closeout invariants and update invariant docs
+Owner Role: INVARIANTS_CURATOR
+Depends On: TSK-P0-093, TSK-P0-094, TSK-P0-095
+Touches: `docs/invariants/INVARIANTS_MANIFEST.yml`, `docs/invariants/INVARIANTS_IMPLEMENTED.md`, `docs/invariants/INVARIANTS_QUICK.md`, `scripts/audit/generate_invariants_quick.py`, `tasks/TSK-P0-096/meta.yml`
+Invariant(s): N/A (meta)
+Work:
+- Add invariant entries for the new migration guardrails and table conventions verifier.
+- Update implemented/quick invariant docs and ensure regeneration is stable.
+Acceptance Criteria:
+- New invariants appear in manifest and quick/implemented docs are consistent.
+Verification Commands:
+- `scripts/audit/run_invariants_fast_checks.sh`
+Failure Modes:
+- Invariants are implemented but not declared (audit/control mapping drift).
+
+TASK ID: TSK-P0-097
+Title: Wire closeout verifiers into pre-CI and CI (parity)
+Owner Role: SECURITY_GUARDIAN
+Depends On: TSK-P0-090, TSK-P0-091, TSK-P0-092, TSK-P0-093, TSK-P0-094, TSK-P0-095
+Touches: `scripts/dev/pre_ci.sh`, `.github/workflows/invariants.yml`, `scripts/audit/run_invariants_fast_checks.sh`, `scripts/audit/run_security_fast_checks.sh`, `tasks/TSK-P0-097/meta.yml`
+Invariant(s): N/A (wiring)
+Work:
+- Ensure new verifiers execute in both local pre-CI and CI workflows.
+- Preserve local/CI parity guarantees and evidence artifacts.
+Acceptance Criteria:
+- `scripts/dev/pre_ci.sh` locally executes the same gates as CI for this scope.
+Verification Commands:
+- `scripts/dev/pre_ci.sh`
+- `scripts/audit/run_invariants_fast_checks.sh`
+- `scripts/audit/run_security_fast_checks.sh`
+Failure Modes:
+- Checks only run in CI or only locally (parity drift).
+
+TASK ID: TSK-P0-098
+Title: Reconcile Phase-0 governance status for implemented business foundation hooks
+Owner Role: INVARIANTS_CURATOR
+Depends On: TSK-P0-086
+Touches: `docs/PHASE0/phase0_contract.yml`, `docs/tasks/PHASE0_TASKS.md`, `tasks/TSK-P0-080/meta.yml`, `tasks/TSK-P0-081/meta.yml`, `tasks/TSK-P0-082/meta.yml`, `tasks/TSK-P0-083/meta.yml`, `tasks/TSK-P0-084/meta.yml`, `tasks/TSK-P0-085/meta.yml`, `tasks/TSK-P0-086/meta.yml`, `tasks/TSK-P0-098/meta.yml`
+Invariant(s): N/A (governance reconciliation)
+Work:
+- Mark already-implemented business foundation hook tasks as completed in task meta and Phase-0 contract.
+- Ensure evidence paths reference the verifier artifact (`business_foundation_hooks.json`).
+Acceptance Criteria:
+- Phase-0 contract and task metas reflect implemented state and point to real evidence artifacts.
+Verification Commands:
+- `scripts/audit/verify_phase0_contract.sh`
+- `scripts/audit/verify_phase0_contract_evidence_status.sh`
+Failure Modes:
+- Implemented hooks remain marked planned (audit traceability failure).
+
+TASK ID: TSK-P0-099
+Title: ISO 20022 and Zero Trust closeout hooks (Phase-0 safe)
+Owner Role: SECURITY_GUARDIAN
+Depends On: TSK-P0-089
+Touches: `docs/security/ISO20022_READINESS.md`, `docs/iso20022/contract_registry.yml`, `docs/security/ZERO_TRUST_POSTURE.md`, `docs/security/SECURITY_MANIFEST.yml`, `scripts/audit/verify_iso20022_readiness_docs.sh`, `scripts/audit/verify_iso20022_contract_registry.sh`, `scripts/audit/verify_zero_trust_posture_docs.sh`, `tasks/TSK-P0-099/meta.yml`
+Invariant(s): NEW (ISO 20022 readiness docs and Zero Trust posture docs exist + referenced)
+Work:
+- Define Phase-0 ISO 20022 readiness posture and planned adapter contract tests.
+- Define Phase-0 Zero Trust posture with explicit Phase-1/2 follow-ups.
+- Add verifiers that fail closed if posture docs are missing or unreferenced by SECURITY_MANIFEST.
+- Add a verifier that fails closed if the ISO 20022 contract registry is missing/unparseable and emits presence evidence.
+Acceptance Criteria:
+- Docs exist, are referenced, and verifiers emit evidence.
+Verification Commands:
+- `scripts/audit/verify_iso20022_readiness_docs.sh`
+- `scripts/audit/verify_iso20022_contract_registry.sh`
+- `scripts/audit/verify_zero_trust_posture_docs.sh`
+Evidence Artifact(s):
+- `evidence/phase0/iso20022_readiness.json`
+- `evidence/phase0/iso20022_contract_registry.json`
+- `evidence/phase0/zero_trust_posture.json`
+Failure Modes:
+- Docs exist but are not referenced, or verifiers do not fail closed.
+- Evidence file missing.
+
+---
+
+TASK ID: TSK-P0-105
+Title: Remediation trace gate (Option 2) cluster plan + normative workflow
+Owner Role: ARCHITECT
+Depends On: (none)
+Touches: `docs/operations/REMEDIATION_TRACE_WORKFLOW.md`, `docs/operations/DEV_WORKFLOW.md`, `docs/operations/TASK_CREATION_PROCESS.md`, `docs/plans/phase0/TSK-P0-105_remediation_trace_gate/PLAN.md`, `docs/plans/phase0/TSK-P0-105_remediation_trace_gate/EXEC_LOG.md`, `docs/plans/phase0/INDEX.md`, `.codex/agents/supervisor.md`, `.codex/agents/architect.md`, `tasks/TSK-P0-105/meta.yml`
+Invariant(s): INV-105 (Remediation trace required for production-affecting fixes)
+Work:
+- Define remediation casefile workflow (REM casefile PLAN + EXEC_LOG) and required fields.
+- Define the noise-controlled trigger surfaces (Option 2) for when remediation trace is required.
+- Update developer workflow and task creation process docs to reference the remediation workflow.
+- Reinforce agent prompts to treat remediation workflow as mandatory when fixing failures.
+Acceptance Criteria:
+- `docs/operations/REMEDIATION_TRACE_WORKFLOW.md` exists and is referenced by `docs/operations/DEV_WORKFLOW.md` and `docs/operations/TASK_CREATION_PROCESS.md`.
+- Cluster plan/log exist and reference all task IDs.
+Verification Commands:
+- `scripts/audit/run_invariants_fast_checks.sh`
+Evidence Artifact(s):
+- `./evidence/phase0/remediation_workflow_doc.json`
+Failure Modes:
+- Evidence file missing.
+- Workflow doc missing required tokens/fields.
+- Plan/log missing task ID linkage.
+
+---
+
+TASK ID: TSK-P0-106
+Title: Remediation trace verifier + wiring (Option 2, low noise)
+Owner Role: SECURITY_GUARDIAN
+Depends On: TSK-P0-105
+Touches: `scripts/audit/verify_remediation_trace.sh`, `scripts/audit/verify_remediation_workflow_doc.sh`, `scripts/audit/run_invariants_fast_checks.sh`, `tasks/TSK-P0-106/meta.yml`
+Invariant(s): INV-105
+Work:
+- Implement `scripts/audit/verify_remediation_trace.sh`:
+- Determine diff from staged changes if present, otherwise use `BASE_REF...HEAD_REF` (defaults: `origin/main...HEAD`).
+- If diff touches production-affecting surfaces, require remediation trace docs in diff:
+- `docs/plans/**/REM-*/PLAN.md` or `EXEC_LOG.md`, OR
+- `docs/plans/**/TSK-*/PLAN.md` or `EXEC_LOG.md` that contain required remediation markers.
+- Validate minimum remediation markers exist in whichever plan/log is present.
+- Emit evidence `evidence/phase0/remediation_trace.json` with PASS/FAIL/SKIPPED and diagnostics.
+- Implement `scripts/audit/verify_remediation_workflow_doc.sh` and emit `evidence/phase0/remediation_workflow_doc.json`.
+- Wire both into `scripts/audit/run_invariants_fast_checks.sh` so pre-push and CI enforce it.
+Acceptance Criteria:
+- Production-affecting changes without remediation trace fail fast checks.
+- Non-enforcement narrative docs do not trigger the requirement.
+Verification Commands:
+- `scripts/audit/run_invariants_fast_checks.sh`
+- `scripts/dev/pre_ci.sh`
+Evidence Artifact(s):
+- `./evidence/phase0/remediation_trace.json`
+- `./evidence/phase0/remediation_workflow_doc.json`
+Failure Modes:
+- Evidence file missing.
+- Triggered diff but missing remediation docs in diff.
+- Remediation doc present but missing required markers.
+
+---
+
+TASK ID: TSK-P0-107
+Title: Register remediation trace invariant (INV-105) and Phase-0 contract wiring
+Owner Role: INVARIANTS_CURATOR
+Depends On: TSK-P0-106
+Touches: `docs/invariants/INVARIANTS_MANIFEST.yml`, `docs/invariants/INVARIANTS_IMPLEMENTED.md`, `docs/invariants/INVARIANTS_QUICK.md`, `docs/tasks/PHASE0_TASKS.md`, `docs/PHASE0/phase0_contract.yml`, `tasks/TSK-P0-107/meta.yml`
+Invariant(s): INV-105
+Work:
+- Add `INV-105` to manifest with enforced_by/verified_by pointing to remediation verifiers.
+- Update implemented invariants doc.
+- Regenerate QUICK and ensure it matches generator output.
+- Add contract row(s) for the remediation tasks with evidence paths.
+Acceptance Criteria:
+- `scripts/audit/run_invariants_fast_checks.sh` passes and QUICK is in sync.
+Verification Commands:
+- `scripts/audit/run_invariants_fast_checks.sh`
+- `bash scripts/audit/verify_phase0_contract.sh`
+Evidence Artifact(s):
+- `./evidence/phase0/invariants_quick.json`
+- `./evidence/phase0/phase0_contract.json`
+Failure Modes:
+- Evidence file missing.
+- Manifest drift or QUICK mismatch.
+- Contract validation fails.
+
+---
+
+TASK ID: TSK-P0-108
+Title: Tests for remediation trace verifier
+Owner Role: QA_VERIFIER
+Depends On: TSK-P0-106
+Touches: `scripts/audit/tests/test_verify_remediation_trace.py`, `scripts/audit/remediation_trace_lib.py`, `tasks/TSK-P0-108/meta.yml`
+Invariant(s): INV-105
+Work:
+- Add deterministic tests for remediation-trace policy behavior:
+- trigger surface classification
+- docs/security low-noise behavior
+- remediation doc path matching
+- required marker checks
+Acceptance Criteria:
+- `pytest -q scripts/audit/tests` passes.
+Verification Commands:
+- `python3 -m pytest -q scripts/audit/tests`
+Failure Modes:
+- Tests depend on non-deterministic external state.
+
+---
+
+TASK ID: TSK-P0-109
+Title: Align implemented invariants with mechanical verification (plan + task cluster)
+Owner Role: ARCHITECT
+Depends On: (none)
+Touches: `docs/plans/phase0/TSK-P0-109_invariant_implemented_alignment/PLAN.md`, `docs/plans/phase0/TSK-P0-109_invariant_implemented_alignment/EXEC_LOG.md`, `docs/plans/phase0/INDEX.md`, `tasks/TSK-P0-109/meta.yml`
+Invariant(s): INV-007, INV-011, INV-012, INV-013
+Work:
+- Create plan and task cluster to reconcile invariants marked implemented but lacking up-to-date mechanical verification references.
+Acceptance Criteria:
+- Plan/log exist and enumerate tasks.
+Verification Commands:
+- `scripts/audit/run_invariants_fast_checks.sh`
+Evidence Artifact(s):
+- `./evidence/phase0/task_plans_present.json`
+Failure Modes:
+- Evidence file missing.
+- Plan/log missing task IDs.
+
+---
+
+TASK ID: TSK-P0-110
+Title: Verify runtime roles are NOLOGIN (rolcanlogin=false) with evidence
+Owner Role: DB_FOUNDATION
+Depends On: TSK-P0-109
+Touches: `scripts/db/verify_role_login_posture.sh`, `scripts/db/verify_invariants.sh`, `docs/invariants/INVARIANTS_MANIFEST.yml`, `tasks/TSK-P0-110/meta.yml`
+Invariant(s): INV-007
+Work:
+- Add a DB verifier that queries `pg_roles` and asserts runtime roles have `rolcanlogin=false`.
+- Emit evidence and wire into `scripts/db/verify_invariants.sh` so CI and local pre-ci run it.
+Acceptance Criteria:
+- Fails closed if any runtime role has login enabled.
+- Evidence emitted at `evidence/phase0/role_login_posture.json`.
+Verification Commands:
+- `SKIP_POLICY_SEED=1 scripts/db/verify_invariants.sh`
+Evidence Artifact(s):
+- `./evidence/phase0/role_login_posture.json`
+Failure Modes:
+- Evidence file missing.
+- Runtime role can login.
+
+---
+
+TASK ID: TSK-P0-111
+Title: Outbox claim and lease-fencing semantics tests (evidence-producing)
+Owner Role: QA_VERIFIER
+Depends On: TSK-P0-109
+Touches: `scripts/db/tests/test_outbox_claim_semantics.sh`, `scripts/db/tests/test_outbox_lease_fencing.sh`, `tasks/TSK-P0-111/meta.yml`
+Invariant(s): INV-011, INV-012, INV-013
+Work:
+- Add deterministic tests for:
+- enqueue idempotency (reuse existing zombie test evidence)
+- claim semantics: due time and lease gating + SKIP LOCKED presence
+- lease fencing: completion fails on mismatched token/worker and expired lease
+- Emit evidence artifacts for each new test.
+Acceptance Criteria:
+- Tests pass deterministically and emit evidence under `evidence/phase0/`.
+Verification Commands:
+- `scripts/db/tests/test_idempotency_zombie.sh`
+- `scripts/db/tests/test_outbox_claim_semantics.sh`
+- `scripts/db/tests/test_outbox_lease_fencing.sh`
+Evidence Artifact(s):
+- `./evidence/phase0/idempotency_zombie.json`
+- `./evidence/phase0/outbox_claim_semantics.json`
+- `./evidence/phase0/outbox_lease_fencing.json`
+Failure Modes:
+- Evidence file missing.
+- Claim/lease fencing regressions go undetected.
+
+---
+
+TASK ID: TSK-P0-112
+Title: Wire outbox semantics tests into local pre-ci and CI DB job
+Owner Role: SECURITY_GUARDIAN
+Depends On: TSK-P0-110, TSK-P0-111
+Touches: `scripts/dev/pre_ci.sh`, `.github/workflows/invariants.yml`, `tasks/TSK-P0-112/meta.yml`
+Invariant(s): INV-011, INV-012, INV-013
+Work:
+- Update `scripts/dev/pre_ci.sh` to run idempotency and outbox semantics tests.
+- Update CI DB job to run the new tests and upload evidence.
+Acceptance Criteria:
+- Local pre-ci and CI run the same failure modes for these invariants.
+Verification Commands:
+- `scripts/dev/pre_ci.sh`
+Evidence Artifact(s): N/A (producer scripts emit evidence)
+Failure Modes:
+- Evidence file missing.
+- Pre-ci passes but CI fails (parity drift).
+
+---
+
+TASK ID: TSK-P0-113
+Title: Update invariant docs: remove stale TODO and point to real verifiers
+Owner Role: INVARIANTS_CURATOR
+Depends On: TSK-P0-110, TSK-P0-111, TSK-P0-112
+Touches: `docs/invariants/INVARIANTS_MANIFEST.yml`, `docs/invariants/INVARIANTS_IMPLEMENTED.md`, `docs/invariants/INVARIANTS_QUICK.md`, `docs/tasks/PHASE0_TASKS.md`, `tasks/TSK-P0-113/meta.yml`
+Invariant(s): INV-007, INV-011, INV-012, INV-013
+Work:
+- Update manifest verification strings to reference actual verifiers/tests.
+- Remove stale TODO wording from implemented invariants doc.
+- Regenerate QUICK.
+Acceptance Criteria:
+- `scripts/audit/run_invariants_fast_checks.sh` passes and QUICK is in sync.
+Verification Commands:
+- `scripts/audit/run_invariants_fast_checks.sh`
+Evidence Artifact(s):
+- `./evidence/phase0/invariants_quick.json`
+Failure Modes:
+- Evidence file missing.
+- Doc drift or stale TODO persists.
+
+---
+
+TASK ID: TSK-P0-114
+Title: Zambia regulatory invariants: Phase-0 roadmap declarations + ADR stubs (plan + task cluster)
+Owner Role: ARCHITECT
+Depends On: (none)
+Touches: `docs/plans/phase0/TSK-P0-114_zambia_regulatory_invariants_roadmap/PLAN.md`, `docs/plans/phase0/TSK-P0-114_zambia_regulatory_invariants_roadmap/EXEC_LOG.md`, `docs/plans/phase0/INDEX.md`, `tasks/TSK-P0-114/meta.yml`
+Invariant(s): INV-BOZ-04, INV-ZDPA-01, INV-IPDR-02
+Work:
+- Create a Phase-0 plan and task cluster to register BOZ/ZDPA/IPDR requirements as roadmap invariants and produce authoritative ADR stubs.
+Acceptance Criteria:
+- Plan/log exist and enumerate all tasks in the cluster.
+Verification Commands:
+- `scripts/audit/run_invariants_fast_checks.sh`
+Evidence Artifact(s): N/A
+Failure Modes:
+- Evidence file missing.
+- Plan/log missing task IDs.
+
+---
+
+TASK ID: TSK-P0-115
+Title: Register BOZ/ZDPA/IPDR roadmap invariants in manifest + keep roadmap doc in sync
+Owner Role: INVARIANTS_CURATOR
+Depends On: TSK-P0-114
+Touches: `docs/invariants/INVARIANTS_MANIFEST.yml`, `docs/invariants/INVARIANTS_ROADMAP.md`, `docs/tasks/PHASE0_TASKS.md`, `tasks/TSK-P0-115/meta.yml`
+Invariant(s): INV-BOZ-04, INV-ZDPA-01, INV-IPDR-02
+Work:
+- Add numeric INV-### entries with status `roadmap` and directive IDs as aliases.
+- Update `docs/invariants/INVARIANTS_ROADMAP.md` so coverage gates stay satisfied.
+Acceptance Criteria:
+- `scripts/audit/validate_invariants_manifest.py` passes.
+- `scripts/audit/check_docs_match_manifest.py` passes (coverage ON).
+Verification Commands:
+- `scripts/audit/run_invariants_fast_checks.sh`
+Evidence Artifact(s): N/A
+Failure Modes:
+- Evidence file missing.
+- Manifest invalid or alias collisions.
+- Roadmap doc drift breaks coverage.
+
+---
+
+TASK ID: TSK-P0-116
+Title: Authoritative ADR stubs for BOZ finality, ZDPA survivability, and IPDR truth anchors
+Owner Role: ARCHITECT
+Depends On: TSK-P0-115
+Touches: `docs/decisions/ADR-0012-payment-finality-model-deferred.md`, `docs/decisions/ADR-0013-zdpa-pii-decoupling-strategy.md`, `docs/decisions/ADR-0014-nfs-sequence-continuity-ipdr.md`, `docs/tasks/PHASE0_TASKS.md`, `tasks/TSK-P0-116/meta.yml`
+Invariant(s): INV-BOZ-04, INV-ZDPA-01, INV-IPDR-02
+Work:
+- Create ADRs that define intended semantics and activation prerequisites for Phase-1/2 enforcement, without changing Phase-0 schema.
+Acceptance Criteria:
+- ADRs clearly state Phase-0 boundary and list the future mechanical checks needed for roadmap -> implemented promotion.
+Verification Commands:
+- `scripts/audit/run_invariants_fast_checks.sh`
+Evidence Artifact(s): N/A
+Failure Modes:
+- Evidence file missing.
+- ADR is placed in a legacy folder or makes compliance claims beyond scope.
+
+---
+
+TASK ID: TSK-P0-117
+Title: Zambia regulatory documentation stubs (CII brief, ZDPA map, activation preconditions)
+Owner Role: COMPLIANCE_MAPPER
+Depends On: TSK-P0-116
+Touches: `docs/PHASE0/ZAMBIA_CII_DESIGNATION_BRIEF.md`, `docs/security/ZDPA_COMPLIANCE_MAP.md`, `docs/PHASE0/REGULATORY_ACTIVATION_PRECONDITIONS.md`, `docs/tasks/PHASE0_TASKS.md`, `tasks/TSK-P0-117/meta.yml`
+Invariant(s): INV-BOZ-04, INV-ZDPA-01, INV-IPDR-02
+Work:
+- Produce Phase-0 documentation that provides auditor/regulator line-of-sight without claiming certification:
+- CII designation brief (BoZ/ZICTA framing).
+- ZDPA compliance map (sections-to-controls placeholder).
+- Activation preconditions (what triggers Phase-1 enforcement work).
+Acceptance Criteria:
+- Docs exist in canonical locations and clearly distinguish Phase-0 vs Phase-1/2 enforcement.
+Verification Commands:
+- `scripts/audit/run_invariants_fast_checks.sh`
+Evidence Artifact(s): N/A
+Failure Modes:
+- Evidence file missing.
+- Docs over-claim compliance or include raw PII examples.
+
+---
+
+TASK ID: TSK-P0-118
+Title: Pre-CI parity: plan + tasks for wiring CI DB checks into local runner
+Owner Role: ARCHITECT
+Depends On: (none)
+Touches: `docs/plans/phase0/TSK-P0-118_pre_ci_db_parity/PLAN.md`, `docs/plans/phase0/TSK-P0-118_pre_ci_db_parity/EXEC_LOG.md`, `docs/plans/phase0/INDEX.md`, `docs/PHASE0/phase0_contract.yml`, `tasks/TSK-P0-118/meta.yml`
+Invariant(s): INV-021, INV-041
+Work:
+- Create a Phase-0 plan and tasks to wire CI DB checks into `scripts/dev/pre_ci.sh` for Tier-1 parity.
+Acceptance Criteria:
+- Plan/log exist and enumerate all tasks in the cluster.
+Verification Commands:
+- `scripts/audit/run_invariants_fast_checks.sh`
+Evidence Artifact(s):
+- `./evidence/phase0/task_plans_present.json`
+Failure Modes:
+- Evidence file missing.
+- Plan/log missing task IDs.
+
+---
+
+TASK ID: TSK-P0-119
+Title: Pre-CI parity: run N-1 check and no-tx migrations test locally
+Owner Role: DB_FOUNDATION
+Depends On: TSK-P0-118
+Touches: `scripts/dev/pre_ci.sh`, `docs/tasks/PHASE0_TASKS.md`, `docs/PHASE0/phase0_contract.yml`, `tasks/TSK-P0-119/meta.yml`
+Invariant(s): INV-021, INV-041
+Work:
+- Update `scripts/dev/pre_ci.sh` to run:
+- `scripts/db/n_minus_one_check.sh`
+- `scripts/db/tests/test_no_tx_migrations.sh`
+Acceptance Criteria:
+- `scripts/dev/pre_ci.sh` runs both checks and stays green.
+Verification Commands:
+- `scripts/dev/pre_ci.sh`
+Evidence Artifact(s):
+- `./evidence/phase0/n_minus_one.json`
+- `./evidence/phase0/no_tx_migrations.json`
+Failure Modes:
+- Evidence file missing.
+- Local pre-ci passes but CI fails due to missing N-1/no-tx checks.

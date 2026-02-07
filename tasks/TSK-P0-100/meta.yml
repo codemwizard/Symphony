@@ -1,0 +1,44 @@
+phase: "0"
+task_id: "TSK-P0-100"
+title: "Evidence harness integrity verifier (watch-the-watcher)"
+owner_role: "INVARIANTS_CURATOR"
+status: "completed"
+depends_on:
+- "TSK-P0-090"
+- "TSK-P0-091"
+- "TSK-P0-092"
+- "TSK-P0-093"
+- "TSK-P0-094"
+- "TSK-P0-095"
+touches:
+- "scripts/audit/verify_evidence_harness_integrity.sh"
+- "scripts/audit/run_invariants_fast_checks.sh"
+- "docs/invariants/INVARIANTS_MANIFEST.yml"
+- "tasks/TSK-P0-100/meta.yml"
+invariants:
+- "NEW: Evidence harness integrity (structural + anti-bypass bans) enforced"
+work:
+- "Add a verifier that checks evidence-producing gate scripts for high-signal anti-bypass properties."
+- "Enforce structural requirements (exists, strict-mode, emits evidence) and minimal pattern bans (set +e, unannotated || true, unannotated 2>/dev/null)."
+- "Emit evidence artifact with the targets scanned and any violations."
+acceptance_criteria:
+- "Verifier fails closed on violations and produces actionable evidence."
+- "Verifier is high-signal (avoid noisy shell lint; focus on bypass patterns only)."
+verification:
+- "scripts/audit/verify_evidence_harness_integrity.sh"
+evidence:
+- "evidence/phase0/evidence_harness_integrity.json"
+failure_modes:
+- "Verifier is too permissive and can be bypassed."
+- "Verifier becomes noisy and developers start ignoring it."
+- "Evidence file missing."
+must_read:
+- "docs/architecture/evidence_schema.json"
+- "scripts/audit/validate_evidence_schema.sh"
+implementation_plan: "docs/plans/phase0/TSK-P0-090_audit_gap_closeout/PLAN.md"
+implementation_log: "docs/plans/phase0/TSK-P0-090_audit_gap_closeout/EXEC_LOG.md"
+notes: ""
+client: "codex_cli"
+assigned_agent: "invariants_curator"
+model: "<UNASSIGNED>"
+

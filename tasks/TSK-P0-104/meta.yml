@@ -1,0 +1,47 @@
+phase: "0"
+task_id: "TSK-P0-104"
+title: "Closeout checklist matrix doc (Checklist -> Gate/Invariant/Task)"
+owner_role: "INVARIANTS_CURATOR"
+status: "completed"
+depends_on:
+- "TSK-P0-090"
+- "TSK-P0-091"
+- "TSK-P0-092"
+- "TSK-P0-093"
+- "TSK-P0-094"
+- "TSK-P0-095"
+- "TSK-P0-096"
+- "TSK-P0-097"
+- "TSK-P0-098"
+- "TSK-P0-099"
+- "TSK-P0-100"
+- "TSK-P0-101"
+- "TSK-P0-102"
+- "TSK-P0-103"
+touches:
+- "docs/PHASE0/CLOSEOUT_CHECKLIST_MATRIX.md"
+- "docs/tasks/PHASE0_TASKS.md"
+- "tasks/TSK-P0-104/meta.yml"
+invariants: []
+work:
+- "Create a dedicated matrix mapping closeout checklist items to mechanical enforcement (gates/invariants/scripts) and evidence artifacts."
+- "Include links to the planned closeout tasks where checklist items are not yet mechanically enforced."
+acceptance_criteria:
+- "Matrix is evidence-minded and does not over-claim enforcement."
+- "Matrix includes gate IDs from CONTROL_PLANES where applicable."
+verification:
+- "scripts/audit/run_invariants_fast_checks.sh"
+evidence: []
+failure_modes:
+- "Matrix over-claims enforcement without a referenced script/gate/evidence."
+must_read:
+- "docs/control_planes/CONTROL_PLANES.yml"
+- "docs/invariants/INVARIANTS_MANIFEST.yml"
+- "docs/PHASE0/PHASE0_AUDIT_GAP_CLOSEOUT_IMPLEMENTATION.md"
+implementation_plan: "docs/plans/phase0/TSK-P0-104_closeout_checklist_matrix/PLAN.md"
+implementation_log: "docs/plans/phase0/TSK-P0-104_closeout_checklist_matrix/EXEC_LOG.md"
+notes: ""
+client: "codex_cli"
+assigned_agent: "invariants_curator"
+model: "<UNASSIGNED>"
+

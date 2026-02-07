@@ -1,0 +1,25 @@
+rules:
+  - id: symphony-dotnet-sql-commandtext-concat
+    languages: [csharp]
+    message: "Potential SQL injection: CommandText built via string concatenation. Use parameters."
+    severity: ERROR
+    patterns:
+      - pattern-either:
+          - pattern: |
+              $CMD.CommandText = $A + $B;
+          - pattern: |
+              $CMD.CommandText += $X;
+
+  - id: symphony-dotnet-hardcoded-secret
+    languages: [csharp]
+    message: "Possible hardcoded secret/token. Use OpenBao/KMS or secure config provider."
+    severity: ERROR
+    pattern-regex: '(?i)(api[_-]?key|secret|token|password)\\s*=\\s*\".{8,}\"'
+
+  - id: symphony-dotnet-insecure-rng
+    languages: [csharp]
+    message: "Insecure RNG detected. Use RandomNumberGenerator instead of Random for security-sensitive values."
+    severity: ERROR
+    pattern: |
+      new Random(...)
+

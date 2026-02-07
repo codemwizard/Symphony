@@ -1,0 +1,42 @@
+# Canonical Task Meta Template (lower_snake_case)
+
+phase: "0"
+task_id: "TSK-P0-108"
+title: "Tests for remediation trace verifier"
+owner_role: "QA"
+status: "completed"   # planned | in_progress | completed
+
+depends_on:
+  - "TSK-P0-106"
+
+touches:
+  - "scripts/audit/tests/test_verify_remediation_trace.py"
+  - "scripts/audit/remediation_trace_lib.py"
+
+invariants:
+  - "INV-105"
+
+work:
+  - "Add deterministic tests for remediation trace policy logic and basic script shape."
+
+acceptance_criteria:
+  - "pytest passes under scripts/audit/run_invariants_fast_checks.sh."
+
+verification:
+  - "python3 -m pytest -q scripts/audit/tests"
+
+evidence: []
+
+failure_modes:
+  - "Tests are flaky or depend on external state"
+
+must_read:
+  - "docs/operations/REMEDIATION_TRACE_WORKFLOW.md"
+
+implementation_plan: "docs/plans/phase0/TSK-P0-105_remediation_trace_gate/PLAN.md"
+implementation_log: "docs/plans/phase0/TSK-P0-105_remediation_trace_gate/EXEC_LOG.md"
+
+notes: ""
+client: "codex_cli"
+assigned_agent: "qa_verifier"
+model: "gpt-5.3-codex"

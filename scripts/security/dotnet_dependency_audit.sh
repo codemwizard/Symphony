@@ -34,7 +34,7 @@ target=""
 if ls "$ROOT_DIR"/*.sln >/dev/null 2>&1; then
   target="$(ls -1 "$ROOT_DIR"/*.sln | head -n 1)"
 else
-  sln_found="$(find "$ROOT_DIR" -maxdepth 4 -name '*.sln' | head -n 1 || true)"
+  sln_found="$(find "$ROOT_DIR" -maxdepth 4 -name '*.sln' | head -n 1)"
   if [[ -n "$sln_found" ]]; then
     target="$sln_found"
   fi
@@ -60,7 +60,7 @@ else
   fi
 fi
 
-raw_output="$(cat "$tmp_out" 2>/dev/null || true)"
+raw_output="$(cat "$tmp_out")"
 if [[ "$status" == "PASS" ]]; then
   if command -v rg >/dev/null 2>&1; then
     if echo "$raw_output" | rg -qi "has the following vulnerable packages"; then

@@ -63,7 +63,7 @@
   title: "Runtime roles are NOLOGIN templates; services assume them via SET ROLE"
   owners: ["team-platform"]
   sla_days: 14
-  verification: "schema/migrations/0003_roles.sql creates roles NOLOGIN; run via scripts/db/verify_invariants.sh"
+  verification: "scripts/db/verify_role_login_posture.sh; wired via scripts/db/verify_invariants.sh"
 
 - id: INV-008
   aliases: ["I-SEC-04"]
@@ -99,7 +99,7 @@
   title: "Outbox enqueue is idempotent on (instruction_id, idempotency_key)"
   owners: ["team-db"]
   sla_days: 14
-  verification: "schema/migrations/0002_outbox_functions.sql unique constraint + enqueue_payment_outbox(); scripts/db/verify_invariants.sh"
+  verification: "scripts/db/tests/test_idempotency_zombie.sh (behavior) + schema/migrations/0002_outbox_functions.sql (definition)"
 
 - id: INV-012
   aliases: ["I-OB-02"]
@@ -108,7 +108,7 @@
   title: "Outbox claim uses FOR UPDATE SKIP LOCKED and only due/unleased or expired rows"
   owners: ["team-db"]
   sla_days: 14
-  verification: "schema/migrations/0002_outbox_functions.sql claim_outbox_batch(); scripts/db/verify_invariants.sh"
+  verification: "scripts/db/tests/test_outbox_claim_semantics.sh (behavior + definitional SKIP LOCKED check)"
 
 - id: INV-013
   aliases: ["I-OB-03"]
@@ -117,7 +117,7 @@
   title: "Strict lease fencing: completion requires matching claimed_by + lease_token and non-expired lease"
   owners: ["team-db"]
   sla_days: 14
-  verification: "schema/migrations/0002_outbox_functions.sql complete_outbox_attempt(); scripts/db/verify_invariants.sh"
+  verification: "scripts/db/tests/test_outbox_lease_fencing.sh (behavioral SQLSTATE P7002 on lease loss)"
 
 - id: INV-014
   aliases: ["I-OB-04"]
@@ -658,3 +658,112 @@
   owners: ["team-db", "team-platform"]
   sla_days: 30
   verification: "scripts/db/verify_business_foundation_hooks.sh; wired via scripts/db/verify_invariants.sh"
+
+- id: INV-097
+  aliases: ["I-MIG-PAC-01"]
+  status: implemented
+  severity: P0
+  title: "Phase-0 migration expand/contract policy is enforced (no cleanup marker; no ADD COLUMN NOT NULL)"
+  owners: ["team-db"]
+  sla_days: 30
+  verification: "scripts/db/lint_expand_contract_policy.sh; wired via scripts/db/verify_invariants.sh"
+
+- id: INV-098
+  aliases: ["I-MIG-PKFK-01"]
+  status: implemented
+  severity: P0
+  title: "PK/FK type stability guardrail enforced (ALTER COLUMN TYPE requires waiver)"
+  owners: ["team-db"]
+  sla_days: 30
+  verification: "scripts/db/lint_pk_fk_type_changes.sh; wired via scripts/db/verify_invariants.sh"
+
+- id: INV-099
+  aliases: ["I-TBL-CONV-01"]
+  status: implemented
+  severity: P1
+  title: "Table conventions are verified from pg_catalog (explicit allowlist)"
+  owners: ["team-db"]
+  sla_days: 30
+  verification: "scripts/db/verify_table_conventions.sh; wired via scripts/db/verify_invariants.sh"
+
+- id: INV-100
+  aliases: ["I-EVID-HARNESS-01"]
+  status: implemented
+  severity: P1
+  title: "Evidence harness integrity guardrail enforced (anti-bypass bans)"
+  owners: ["team-platform"]
+  sla_days: 30
+  verification: "scripts/audit/verify_evidence_harness_integrity.sh; wired via scripts/audit/run_invariants_fast_checks.sh"
+
+- id: INV-101
+  aliases: ["I-SAST-SEM-01"]
+  status: implemented
+  severity: P1
+  title: "Semgrep SAST baseline is enforced (pinned in CI; evidence emitted)"
+  owners: ["team-security"]
+  sla_days: 30
+  verification: "scripts/security/run_semgrep_sast.sh; wired via scripts/audit/run_security_fast_checks.sh"
+
+- id: INV-102
+  aliases: ["I-PARTICIPANTS-01"]
+  status: implemented
+  severity: P1
+  title: "Participant registry schema hook exists (participant_id identity)"
+  owners: ["team-db"]
+  sla_days: 30
+  verification: "scripts/db/verify_business_foundation_hooks.sh"
+
+- id: INV-103
+  aliases: ["I-EVID-PACK-SIGN-01"]
+  status: implemented
+  severity: P1
+  title: "Evidence packs include signing/anchoring metadata hooks"
+  owners: ["team-db"]
+  sla_days: 30
+  verification: "scripts/db/verify_business_foundation_hooks.sh"
+
+- id: INV-104
+  aliases: ["I-BIZ-PRIV-01"]
+  status: implemented
+  severity: P0
+  title: "PUBLIC retains no privileges on business tables (explicit REVOKE hygiene)"
+  owners: ["team-db", "team-security"]
+  sla_days: 30
+  verification: "scripts/db/verify_business_foundation_hooks.sh"
+
+- id: INV-105
+  aliases: ["I-REMED-TRACE-01"]
+  status: implemented
+  severity: P1
+  title: "Production-affecting changes require remediation trace (casefile or explicit fix plan/log)"
+  owners: ["team-security", "team-invariants"]
+  sla_days: 30
+  enforcement: "scripts/audit/verify_remediation_trace.sh"
+  verification: "scripts/audit/verify_remediation_trace.sh; wired via scripts/audit/run_invariants_fast_checks.sh"
+
+- id: INV-106
+  aliases: ["INV-BOZ-04"]
+  status: roadmap
+  severity: P0
+  title: "Payment finality / instruction irrevocability (reversal-only via ISO 20022 camt.056)"
+  owners: ["team-db", "team-platform"]
+  sla_days: 14
+  verification: "Phase-1 activation: enforce finality state machine + camt.056 reversal workflow; add mechanical DB constraints/triggers and CI tests. Phase-0 is declarative only."
+
+- id: INV-107
+  aliases: ["INV-ZDPA-01"]
+  status: roadmap
+  severity: P0
+  title: "PII decoupling + right-to-be-forgotten survivability (evidence remains valid after PII purge)"
+  owners: ["team-security", "team-db", "team-platform"]
+  sla_days: 14
+  verification: "Phase-1/2 activation: tokenization/vault tables + retention hooks + evidence signing over identity_hash; add mechanical purge tests and signature verification. Phase-0 is declarative only."
+
+- id: INV-108
+  aliases: ["INV-IPDR-02"]
+  status: roadmap
+  severity: P0
+  title: "Rail truth-anchor sequence continuity (generic; jurisdiction profiles e.g. ZM-NFS)"
+  owners: ["team-db", "team-platform"]
+  sla_days: 14
+  verification: "Phase-1 activation: require non-null rail sequence ref on success + uniqueness scoped to (rail_sequence_ref, rail_participant_id); add DB constraints/indexes and CI integration tests. Phase-0 is declarative only."

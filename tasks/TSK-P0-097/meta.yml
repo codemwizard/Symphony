@@ -1,0 +1,42 @@
+phase: "0"
+task_id: "TSK-P0-097"
+title: "Wire closeout verifiers into pre-CI and CI (parity)"
+owner_role: "SECURITY_GUARDIAN"
+status: "completed"
+depends_on:
+- "TSK-P0-090"
+- "TSK-P0-091"
+- "TSK-P0-092"
+- "TSK-P0-093"
+- "TSK-P0-094"
+- "TSK-P0-095"
+touches:
+- "scripts/dev/pre_ci.sh"
+- ".github/workflows/invariants.yml"
+- "scripts/audit/run_invariants_fast_checks.sh"
+- "scripts/audit/run_security_fast_checks.sh"
+- "tasks/TSK-P0-097/meta.yml"
+invariants:
+- "Meta: local pre-CI and CI run the same ordered gates for Tier-1 posture"
+work:
+- "Ensure new verifiers are executed in both local pre-CI and CI workflows."
+- "Preserve local/CI parity guarantees and evidence artifacts."
+acceptance_criteria:
+- "Running scripts/dev/pre_ci.sh locally executes the same gates as CI for this scope."
+- "CI workflow includes the new checks and fails closed on violations."
+verification:
+- "scripts/dev/pre_ci.sh"
+- "scripts/audit/run_invariants_fast_checks.sh"
+- "scripts/audit/run_security_fast_checks.sh"
+evidence: []
+failure_modes:
+- "Checks only run in CI or only locally (parity drift)."
+must_read:
+- "docs/operations/LOCAL_CI_PARITY.md"
+implementation_plan: "docs/plans/phase0/TSK-P0-090_audit_gap_closeout/PLAN.md"
+implementation_log: "docs/plans/phase0/TSK-P0-090_audit_gap_closeout/EXEC_LOG.md"
+notes: ""
+client: "codex_cli"
+assigned_agent: "security_guardian"
+model: "<UNASSIGNED>"
+

@@ -53,4 +53,55 @@ if [[ -x scripts/security/verify_ddl_allowlist_governance.sh || -f scripts/secur
 fi
 
 echo ""
+echo "==> SAST baseline (Semgrep; pinned in CI)"
+if [[ -x scripts/security/run_semgrep_sast.sh || -f scripts/security/run_semgrep_sast.sh ]]; then
+  run scripts/security/run_semgrep_sast.sh
+  if [[ -x scripts/audit/verify_semgrep_sast_evidence.sh || -f scripts/audit/verify_semgrep_sast_evidence.sh ]]; then
+    run scripts/audit/verify_semgrep_sast_evidence.sh
+  else
+    echo "ERROR: scripts/audit/verify_semgrep_sast_evidence.sh not found"
+    exit 1
+  fi
+else
+  echo "ERROR: scripts/security/run_semgrep_sast.sh not found"
+  exit 1
+fi
+
+echo ""
+echo "==> Policy stubs (presence + manifest reference)"
+if [[ -x scripts/audit/verify_key_management_policy.sh || -f scripts/audit/verify_key_management_policy.sh ]]; then
+  run scripts/audit/verify_key_management_policy.sh
+else
+  echo "ERROR: scripts/audit/verify_key_management_policy.sh not found"
+  exit 1
+fi
+if [[ -x scripts/audit/verify_audit_logging_retention_policy.sh || -f scripts/audit/verify_audit_logging_retention_policy.sh ]]; then
+  run scripts/audit/verify_audit_logging_retention_policy.sh
+else
+  echo "ERROR: scripts/audit/verify_audit_logging_retention_policy.sh not found"
+  exit 1
+fi
+
+echo ""
+echo "==> ISO 20022 and Zero Trust docs (presence + manifest reference)"
+if [[ -x scripts/audit/verify_iso20022_readiness_docs.sh || -f scripts/audit/verify_iso20022_readiness_docs.sh ]]; then
+  run scripts/audit/verify_iso20022_readiness_docs.sh
+else
+  echo "ERROR: scripts/audit/verify_iso20022_readiness_docs.sh not found"
+  exit 1
+fi
+if [[ -x scripts/audit/verify_iso20022_contract_registry.sh || -f scripts/audit/verify_iso20022_contract_registry.sh ]]; then
+  run scripts/audit/verify_iso20022_contract_registry.sh
+else
+  echo "ERROR: scripts/audit/verify_iso20022_contract_registry.sh not found"
+  exit 1
+fi
+if [[ -x scripts/audit/verify_zero_trust_posture_docs.sh || -f scripts/audit/verify_zero_trust_posture_docs.sh ]]; then
+  run scripts/audit/verify_zero_trust_posture_docs.sh
+else
+  echo "ERROR: scripts/audit/verify_zero_trust_posture_docs.sh not found"
+  exit 1
+fi
+
+echo ""
 echo "✅ Fast security checks passed"

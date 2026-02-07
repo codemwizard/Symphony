@@ -1,0 +1,45 @@
+# Canonical Task Meta Template (lower_snake_case)
+
+phase: "0"
+task_id: "TSK-P0-114"
+title: "Zambia regulatory invariants: Phase-0 roadmap declarations + ADR stubs (plan + task cluster)"
+owner_role: "ARCHITECT"
+status: "completed"   # planned | in_progress | completed
+
+depends_on: []
+
+touches:
+  - "docs/plans/phase0/TSK-P0-114_zambia_regulatory_invariants_roadmap/PLAN.md"
+  - "docs/plans/phase0/TSK-P0-114_zambia_regulatory_invariants_roadmap/EXEC_LOG.md"
+  - "docs/plans/phase0/INDEX.md"
+
+invariants:
+  - "INV-BOZ-04"
+  - "INV-ZDPA-01"
+  - "INV-IPDR-02"
+
+work:
+  - "Create Phase-0 plan and task cluster to register BOZ/ZDPA/IPDR requirements as roadmap invariants and produce authoritative ADR stubs."
+
+acceptance_criteria:
+  - "Plan and EXEC_LOG exist and enumerate all task IDs in this cluster."
+
+verification:
+  - "scripts/audit/run_invariants_fast_checks.sh"
+
+evidence: []
+
+failure_modes:
+  - "Plan/log missing task IDs"
+
+must_read:
+  - "docs/operations/DOCUMENT_PLACEMENT.md"
+  - "docs/invariants/INVARIANTS_PROCESS.md"
+
+implementation_plan: "docs/plans/phase0/TSK-P0-114_zambia_regulatory_invariants_roadmap/PLAN.md"
+implementation_log: "docs/plans/phase0/TSK-P0-114_zambia_regulatory_invariants_roadmap/EXEC_LOG.md"
+
+notes: ""
+client: "codex_cli"
+assigned_agent: "architect"
+model: "gpt-5.3-codex"

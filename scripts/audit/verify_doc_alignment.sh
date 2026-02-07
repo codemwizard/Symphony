@@ -17,8 +17,10 @@ export EVIDENCE_TS EVIDENCE_GIT_SHA EVIDENCE_SCHEMA_FP
 
 matches=""
 if command -v rg >/dev/null 2>&1; then
+  # symphony:allow_or_true (no-match exit codes should not fail the gate; matches are the signal)
   matches="$(rg -n "node|Node.js" "$DOC1" "$DOC2" || true)"
 else
+  # symphony:allow_or_true (no-match exit codes should not fail the gate; matches are the signal)
   matches="$(grep -nE "node|Node.js" "$DOC1" "$DOC2" || true)"
 fi
 

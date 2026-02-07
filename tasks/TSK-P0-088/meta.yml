@@ -1,0 +1,32 @@
+phase: '0'
+task_id: TSK-P0-088
+title: Tier-1 gap audit vs business goals (Phase-0)
+owner_role: ARCHITECT
+status: completed
+depends_on: []
+touches:
+- docs/audits/TIER1_GAP_AUDIT_2026-02-06.md
+- docs/tasks/PHASE0_TASKS.md
+- tasks/TSK-P0-088/meta.yml
+invariants: []
+work:
+- Produce an audit report mapping business goals to Phase-0 mechanical enforcement.
+- Identify Tier-1 blocking gaps and Phase-0-safe fixes.
+acceptance_criteria:
+- Report is evidence-minded and references concrete scripts/docs/paths.
+- Report distinguishes Phase-0 hooks from Phase-1/2 runtime enforcement.
+verification:
+- scripts/audit/run_invariants_fast_checks.sh
+evidence: []
+failure_modes:
+- Report over-claims implemented controls.
+must_read:
+- docs/PHASE0/BUSINESS_INVARIANTS_ADDITION_IMPLEMENTATION.md
+- docs/invariants/INVARIANTS_MANIFEST.yml
+- docs/security/SECURITY_MANIFEST.yml
+implementation_plan: docs/plans/phase0/TSK-P0-088_tier1_gap_audit/PLAN.md
+implementation_log: docs/plans/phase0/TSK-P0-088_tier1_gap_audit/EXEC_LOG.md
+notes: ''
+client: codex_cli
+assigned_agent: architect
+model: <UNASSIGNED>

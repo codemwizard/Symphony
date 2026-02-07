@@ -1,0 +1,39 @@
+phase: "0"
+task_id: "TSK-P0-095"
+title: "Table conventions spec + catalog verifier (idempotency + lineage)"
+owner_role: "DB_FOUNDATION"
+status: "completed"
+depends_on:
+- "TSK-P0-093"
+touches:
+- "schema/table_conventions.yml"
+- "scripts/db/verify_table_conventions.sh"
+- "scripts/db/verify_invariants.sh"
+- "docs/invariants/INVARIANTS_MANIFEST.yml"
+- "tasks/TSK-P0-095/meta.yml"
+invariants:
+- "NEW: Table conventions enforced by catalog checks (explicit table-class allowlist)"
+work:
+- "Define a table conventions spec with an explicit allowlist of ledger/transactional tables."
+- "Add a verifier that checks the migrated schema (information_schema/pg_catalog) against the spec."
+- "Emit evidence artifact with missing columns/constraints per table."
+acceptance_criteria:
+- "Conventions are expressed as a repo file and enforced mechanically against the actual schema."
+- "Verifier fails closed on violations and emits actionable evidence."
+verification:
+- "scripts/db/verify_table_conventions.sh"
+evidence:
+- "evidence/phase0/table_conventions.json"
+failure_modes:
+- "Conventions exist only as docs (non-authoritative)."
+- "Verifier is regex-only and does not reflect actual migrated schema."
+- "Evidence file missing."
+must_read:
+- "docs/invariants/INVARIANTS_MANIFEST.yml"
+- "scripts/db/verify_invariants.sh"
+implementation_plan: "docs/plans/phase0/TSK-P0-090_audit_gap_closeout/PLAN.md"
+implementation_log: "docs/plans/phase0/TSK-P0-090_audit_gap_closeout/EXEC_LOG.md"
+notes: ""
+client: "codex_cli"
+assigned_agent: "db_foundation"
+model: "<UNASSIGNED>"

@@ -27,6 +27,11 @@ if [[ -x "$ROOT_DIR/.venv/bin/python3" ]]; then
 fi
 export PYTHON_BIN
 
+# Prefer repo-local pinned rg binary when present.
+if [[ -x "$ROOT_DIR/.toolchain/bin/rg" ]]; then
+  export PATH="$ROOT_DIR/.toolchain/bin:$PATH"
+fi
+
 rg_present=0
 rg_version=""
 if command -v rg >/dev/null 2>&1; then

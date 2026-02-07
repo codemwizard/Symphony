@@ -1,0 +1,46 @@
+# Canonical Task Meta Template (lower_snake_case)
+
+phase: "0"
+task_id: "TSK-P0-118"
+title: "Pre-CI parity: plan + tasks for wiring CI DB checks into local runner"
+owner_role: "ARCHITECT"
+status: "completed"   # planned | in_progress | completed
+
+depends_on: []
+
+touches:
+  - "docs/plans/phase0/TSK-P0-118_pre_ci_db_parity/PLAN.md"
+  - "docs/plans/phase0/TSK-P0-118_pre_ci_db_parity/EXEC_LOG.md"
+  - "docs/plans/phase0/INDEX.md"
+  - "docs/PHASE0/phase0_contract.yml"
+
+invariants:
+  - "INV-021"
+  - "INV-041"
+
+work:
+  - "Create a Phase-0 plan and tasks to wire CI DB checks (N-1 + no-tx migrations test) into local pre_ci for Tier-1 parity."
+
+acceptance_criteria:
+  - "Plan/log exist and enumerate all tasks in this cluster."
+
+verification:
+  - "scripts/audit/run_invariants_fast_checks.sh"
+
+evidence:
+  - "evidence/phase0/task_plans_present.json"
+
+failure_modes:
+  - "Evidence file missing"
+  - "Plan/log missing task IDs"
+
+must_read:
+  - "docs/operations/TASK_CREATION_PROCESS.md"
+
+implementation_plan: "docs/plans/phase0/TSK-P0-118_pre_ci_db_parity/PLAN.md"
+implementation_log: "docs/plans/phase0/TSK-P0-118_pre_ci_db_parity/EXEC_LOG.md"
+
+notes: ""
+client: "codex_cli"
+assigned_agent: "architect"
+model: "gpt-5.3-codex"

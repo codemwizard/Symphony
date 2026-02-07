@@ -33,6 +33,7 @@ PY
   exit 0
 fi
 
+# symphony:allow_or_true (git diff may be unavailable in some local contexts; evidence still produced)
 changed_files=$( (git diff --name-only "$BASE_REF...$HEAD_REF" || true; git diff --name-only --cached || true; git diff --name-only || true) | sort -u )
 
 baseline_changed=false

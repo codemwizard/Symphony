@@ -1,0 +1,49 @@
+# Canonical Task Meta Template (lower_snake_case)
+
+phase: "0"
+task_id: "TSK-P0-115"
+title: "Register BOZ/ZDPA/IPDR roadmap invariants in manifest + keep roadmap doc in sync"
+owner_role: "INVARIANTS_CURATOR"
+status: "completed"   # planned | in_progress | completed
+
+depends_on:
+  - "TSK-P0-114"
+
+touches:
+  - "docs/invariants/INVARIANTS_MANIFEST.yml"
+  - "docs/invariants/INVARIANTS_ROADMAP.md"
+  - "docs/tasks/PHASE0_TASKS.md"
+  - "tasks/TSK-P0-115/meta.yml"
+
+invariants:
+  - "INV-BOZ-04"
+  - "INV-ZDPA-01"
+  - "INV-IPDR-02"
+
+work:
+  - "Add numeric INV-### entries (status roadmap) with aliases: INV-BOZ-04, INV-ZDPA-01, INV-IPDR-02."
+  - "Update INVARIANTS_ROADMAP.md to include the new roadmap entries (coverage gate)."
+
+acceptance_criteria:
+  - "`scripts/audit/validate_invariants_manifest.py` passes."
+  - "`scripts/audit/check_docs_match_manifest.py` passes (coverage ON)."
+
+verification:
+  - "scripts/audit/run_invariants_fast_checks.sh"
+
+evidence: []
+
+failure_modes:
+  - "Manifest invalid (id/aliases/status/severity/owners/verification)."
+  - "Docs drift: roadmap doc missing manifest roadmap entries."
+
+must_read:
+  - "docs/invariants/INVARIANTS_PROCESS.md"
+
+implementation_plan: "docs/plans/phase0/TSK-P0-114_zambia_regulatory_invariants_roadmap/PLAN.md"
+implementation_log: "docs/plans/phase0/TSK-P0-114_zambia_regulatory_invariants_roadmap/EXEC_LOG.md"
+
+notes: ""
+client: "codex_cli"
+assigned_agent: "invariants_curator"
+model: "gpt-5.3-codex"

@@ -77,11 +77,11 @@ while IFS= read -r -d '' file; do
   if command -v rg >/dev/null 2>&1; then
     while IFS= read -r line; do
       matches+=("$file:$line")
-    done < <(rg -n -i -e "$pattern_re" "$file" || true)
+    done < <(rg -n -i -e "$pattern_re" "$file" || true) # symphony:allow_or_true
   else
     while IFS= read -r line; do
       matches+=("$file:$line")
-    done < <(grep -nEi "$pattern_re" "$file" || true)
+    done < <(grep -nEi "$pattern_re" "$file" || true) # symphony:allow_or_true
   fi
 done < <(find "$MIGRATIONS_DIR" -type f -name '*.sql' -print0)
 
