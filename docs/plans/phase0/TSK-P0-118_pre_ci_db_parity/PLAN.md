@@ -44,3 +44,9 @@ This creates a parity gap where an invariant can pass locally but fail in CI.
 - Local DB user lacks `CREATEDB`, causing N-1/no-tx tests to fail (should be fixed by using the local docker DB role).
 - Parity drift: CI runs a DB check not executed locally.
 
+## Remediation Markers (Required By Gate)
+failure_signature: P0.PRE_CI_DB_PARITY
+origin_task_id: TSK-P0-118
+repro_command: scripts/dev/pre_ci.sh
+verification_commands_run: scripts/dev/pre_ci.sh
+final_status: PASS

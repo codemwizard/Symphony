@@ -21,3 +21,9 @@ Plan: `docs/plans/phase0/TSK-P0-118_pre_ci_db_parity/PLAN.md`
 
 ## Final summary
 - Completed. Local pre_ci now includes CI DB checks for INV-021 and INV-041, closing a parity gap.
+
+failure_signature: P0.PRE_CI_DB_PARITY
+origin_task_id: TSK-P0-118
+repro_command: scripts/dev/pre_ci.sh
+verification_commands_run: scripts/dev/pre_ci.sh
+final_status: PASS
