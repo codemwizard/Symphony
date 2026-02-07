@@ -2464,3 +2464,26 @@ Evidence Artifact(s):
 Failure Modes:
 - Evidence file missing.
 - Local pre-ci passes but CI fails due to missing N-1/no-tx checks.
+
+---
+
+TASK ID: TSK-P0-120
+Title: Pre-CI parity: enforce remediation trace gate locally
+Owner Role: ARCHITECT
+Depends On: TSK-P0-105, TSK-P0-119
+Touches: `scripts/dev/pre_ci.sh`, `docs/plans/phase0/TSK-P0-120_pre_ci_remediation_trace_parity/PLAN.md`, `docs/plans/phase0/TSK-P0-120_pre_ci_remediation_trace_parity/EXEC_LOG.md`, `docs/plans/phase0/INDEX.md`, `docs/tasks/PHASE0_TASKS.md`, `tasks/TSK-P0-120/meta.yml`
+Invariant(s): GOV-REMEDIATION-TRACE
+Work:
+- Wire `scripts/audit/verify_remediation_trace.sh` into `scripts/dev/pre_ci.sh` for CI parity.
+- Fail closed locally when running in range mode but `BASE_REF` is missing (avoid local SKIP while CI fails).
+Acceptance Criteria:
+- `scripts/dev/pre_ci.sh` invokes the remediation trace verifier.
+- In a clean index/worktree run, if `BASE_REF` is missing, `pre_ci.sh` exits non-zero with an actionable message.
+Verification Commands:
+- `bash scripts/dev/pre_ci.sh`
+Evidence Artifact(s):
+- `evidence/phase0/remediation_trace.json`
+Failure Modes:
+- Evidence file missing.
+- Local pre_ci skips remediation trace due to missing `BASE_REF`, allowing CI failure.
+- Remediation trace verifier is not invoked in local runner.

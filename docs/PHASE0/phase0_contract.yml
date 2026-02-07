@@ -1349,5 +1349,15 @@
     "evidence_scope": "repo",
     "notes": "Implement: run n_minus_one_check and test_no_tx_migrations in scripts/dev/pre_ci.sh.",
     "gate_ids": []
+  },
+  {
+    "task_id": "TSK-P0-120",
+    "status": "completed",
+    "verification_mode": "both",
+    "evidence_required": false,
+    "evidence_paths": [],
+    "evidence_scope": "repo",
+    "notes": "Pre-CI parity: enforce remediation trace gate locally (wire verify_remediation_trace.sh into scripts/dev/pre_ci.sh and fail-closed when BASE_REF is missing in range mode).",
+    "gate_ids": []
   }
 ]
