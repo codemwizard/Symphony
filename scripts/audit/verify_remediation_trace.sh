@@ -194,9 +194,11 @@ else:
         missing_markers = diag_missing
 
 if not satisfying_docs:
-    errors.append("missing_remediation_trace_doc: expected docs/plans/**/REM-*/(PLAN.md|EXEC_LOG.md) or a docs/plans/**/TSK-*/ casefile with required remediation markers")
-elif missing_markers:
-    errors.append(f"remediation_doc_missing_required_markers:{missing_markers}")
+    if trace_docs:
+        # We found candidate remediation docs in the diff, but none satisfied required markers.
+        errors.append(f"remediation_doc_missing_required_markers:{missing_markers}")
+    else:
+        errors.append("missing_remediation_trace_doc: expected docs/plans/**/REM-*/(PLAN.md|EXEC_LOG.md) or a docs/plans/**/TSK-*/ casefile with required remediation markers")
 
 out = {
     "check_id": check_id,
