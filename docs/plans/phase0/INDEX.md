@@ -26,3 +26,6 @@
 | TSK-P0-118_pre_ci_db_parity | TSK-P0-118..119 | completed |
 | TSK-P0-120_pre_ci_remediation_trace_parity | TSK-P0-120 | completed |
 | TSK-P0-121_ci_filemode_parity | TSK-P0-121 | completed |
+| TSK-P0-122_evidence_fingerprint_semantics | TSK-P0-122 | completed |
+| TSK-P0-123_ci_semgrep_parity | TSK-P0-123 | in_progress |
+| TSK-P0-124_ci_security_toolchain_failclosed | TSK-P0-124 | in_progress |

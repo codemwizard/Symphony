@@ -30,8 +30,14 @@ if [[ ! -f "$RULES" ]]; then
   errors+=("missing_ruleset:security/semgrep/rules.yml")
 else
   if ! command -v semgrep >/dev/null 2>&1; then
-    status="SKIPPED"
-    errors+=("semgrep_not_installed")
+    # Tier-1 / CI parity: CI must not silently degrade SAST to SKIPPED.
+    if [[ "${GITHUB_ACTIONS:-}" == "true" ]]; then
+      status="FAIL"
+      errors+=("semgrep_not_installed")
+    else
+      status="SKIPPED"
+      errors+=("semgrep_not_installed")
+    fi
   else
     semgrep_version="$(semgrep --version | tr -d '\n' || echo "UNKNOWN")"
     scanned=("src" "packages")

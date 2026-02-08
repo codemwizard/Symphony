@@ -2507,3 +2507,70 @@ Evidence Artifact(s):
 Failure Modes:
 - Evidence file missing.
 - CI still runs remediation-trace in worktree mode due to filemode diffs.
+
+---
+
+TASK ID: TSK-P0-122
+Title: Normalize evidence schema_fingerprint semantics (baseline canonical)
+Owner Role: INVARIANTS_CURATOR
+Depends On: TSK-P0-002, TSK-P0-011
+Touches: `scripts/audit/generate_evidence.sh`, `docs/plans/phase0/TSK-P0-122_evidence_fingerprint_semantics/PLAN.md`, `docs/plans/phase0/TSK-P0-122_evidence_fingerprint_semantics/EXEC_LOG.md`, `docs/tasks/PHASE0_TASKS.md`, `docs/plans/phase0/INDEX.md`, `docs/PHASE0/phase0_contract.yml`, `tasks/TSK-P0-122/meta.yml`
+Invariant(s): INV-020, INV-029
+Work:
+- Standardize `schema_fingerprint` in `evidence/phase0/evidence.json` to the baseline hash and preserve the migrations hash separately as `migrations_fingerprint`.
+Acceptance Criteria:
+- CI `phase0-evidence` artifact shows a single `schema_fingerprint` across Phase-0 evidence JSONs.
+- `phase0/evidence.json` includes `migrations_fingerprint`.
+Verification Commands:
+- `bash scripts/audit/generate_evidence.sh`
+- `bash scripts/audit/validate_evidence_schema.sh`
+Evidence Artifact(s):
+- `evidence/phase0/evidence.json`
+- `evidence/phase0/evidence_validation.json`
+Failure Modes:
+- Evidence file missing.
+- `schema_fingerprint` semantics remain mixed across evidence producers.
+
+---
+
+TASK ID: TSK-P0-123
+Title: CI parity: install Semgrep in security_scan job
+Owner Role: SECURITY_GUARDIAN
+Depends On: TSK-P0-087
+Touches: `.github/workflows/invariants.yml`, `docs/plans/phase0/TSK-P0-123_ci_semgrep_parity/PLAN.md`, `docs/plans/phase0/TSK-P0-123_ci_semgrep_parity/EXEC_LOG.md`, `docs/tasks/PHASE0_TASKS.md`, `docs/plans/phase0/INDEX.md`, `docs/PHASE0/phase0_contract.yml`, `tasks/TSK-P0-123/meta.yml`
+Invariant(s): SEC-G11
+Work:
+- Install pinned Semgrep in the CI `security_scan` job so `semgrep_sast.json` is `PASS`, not `SKIPPED`.
+Acceptance Criteria:
+- `phase0-evidence-security` contains `semgrep_sast.json` with `status: PASS` and pinned version.
+Verification Commands:
+- `bash scripts/security/run_semgrep_sast.sh`
+Evidence Artifact(s):
+- `evidence/phase0/semgrep_sast.json`
+Failure Modes:
+- Evidence file missing.
+- `semgrep_sast.json` remains `SKIPPED` due to missing toolchain install.
+
+---
+
+TASK ID: TSK-P0-124
+Title: CI guardrail: fail closed on missing Semgrep/toolchain drift
+Owner Role: SECURITY_GUARDIAN
+Depends On: TSK-P0-123
+Touches: `scripts/audit/verify_ci_toolchain.sh`, `scripts/security/run_semgrep_sast.sh`, `.github/workflows/invariants.yml`, `docs/plans/phase0/TSK-P0-124_ci_security_toolchain_failclosed/PLAN.md`, `docs/plans/phase0/TSK-P0-124_ci_security_toolchain_failclosed/EXEC_LOG.md`, `docs/tasks/PHASE0_TASKS.md`, `docs/plans/phase0/INDEX.md`, `docs/PHASE0/phase0_contract.yml`, `tasks/TSK-P0-124/meta.yml`
+Invariant(s): SEC-G06, SEC-G11
+Work:
+- Extend CI toolchain verification to check Semgrep presence/version.
+- Fail Semgrep SAST in CI if Semgrep is missing (no silent `SKIPPED`).
+Acceptance Criteria:
+- `security_scan` job fails if Semgrep is missing.
+- `phase0-evidence-security` includes `ci_toolchain.json` as `PASS`.
+Verification Commands:
+- `bash scripts/audit/verify_ci_toolchain.sh`
+- `bash scripts/security/run_semgrep_sast.sh`
+Evidence Artifact(s):
+- `evidence/phase0/ci_toolchain.json`
+- `evidence/phase0/semgrep_sast.json`
+Failure Modes:
+- Evidence file missing.
+- Semgrep still `SKIPPED` in CI due to missing toolchain install.

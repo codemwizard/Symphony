@@ -119,6 +119,14 @@
 ### Root Cause (One‑line version)
 **CI was enforcing evidence files listed in task metadata, but the workflow didn’t run the scripts that generate them (or lacked dependencies), so evidence artifacts were never created or uploaded.**
 
+## Note: Schema Fingerprints (Baseline vs Migrations)
+
+Phase-0 evidence uses `schema_fingerprint` as a schema anchor. Convention:
+- `schema_fingerprint`: hash of `schema/baseline.sql` (canonical Phase-0 schema artifact)
+- `migrations_fingerprint`: hash of `schema/migrations/*.sql` in sorted order (migration stream anchor)
+
+If these are mixed under a single field name, evidence becomes semantically inconsistent even if each hash is deterministic.
+
 ### How to Fix It Next Time (Summary)
 1) Identify the missing artifacts in CI.
 2) Map each file to its producer script.

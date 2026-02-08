@@ -19,6 +19,7 @@ fi
 EXPECTED_PYYAML_VERSION="${PYYAML_VERSION:-6.0.1}"
 EXPECTED_JSONSCHEMA_VERSION="${JSONSCHEMA_VERSION:-4.23.0}"
 EXPECTED_RIPGREP_VERSION="${RIPGREP_VERSION:-14.1.0}"
+EXPECTED_SEMGREP_VERSION="${SEMGREP_VERSION:-}"
 
 # Prefer repo-local venv python when present (for local/CI parity).
 PYTHON_BIN="python3"
@@ -39,8 +40,16 @@ if command -v rg >/dev/null 2>&1; then
   rg_version="$(rg --version | head -n1 | awk '{print $2}')"
 fi
 
+semgrep_present=0
+semgrep_version=""
+if command -v semgrep >/dev/null 2>&1; then
+  semgrep_present=1
+  semgrep_version="$(semgrep --version | tr -d '\n' || echo "")"
+fi
+
 export EXPECTED_PYYAML_VERSION EXPECTED_JSONSCHEMA_VERSION EXPECTED_RIPGREP_VERSION
 export RG_PRESENT="$rg_present" RG_VERSION="$rg_version"
+export EXPECTED_SEMGREP_VERSION SEMGREP_PRESENT="$semgrep_present" SEMGREP_VERSION_ACTUAL="$semgrep_version"
 
 EVIDENCE_FILE="$ROOT_DIR/evidence/phase0/ci_toolchain.json"
 export EVIDENCE_FILE
@@ -54,9 +63,12 @@ from pathlib import Path
 expected_pyyaml = os.environ.get("EXPECTED_PYYAML_VERSION", "")
 expected_jsonschema = os.environ.get("EXPECTED_JSONSCHEMA_VERSION", "")
 expected_rg = os.environ.get("EXPECTED_RIPGREP_VERSION", "")
+expected_semgrep = os.environ.get("EXPECTED_SEMGREP_VERSION", "")
 
 rg_present = os.environ.get("RG_PRESENT", "0") == "1"
 rg_version = os.environ.get("RG_VERSION") or ""
+semgrep_present = os.environ.get("SEMGREP_PRESENT", "0") == "1"
+semgrep_version = os.environ.get("SEMGREP_VERSION_ACTUAL") or ""
 
 missing = []
 mismatched = []
@@ -98,6 +110,14 @@ if actual_pyyaml and expected_pyyaml and actual_pyyaml != expected_pyyaml:
 if actual_jsonschema and expected_jsonschema and actual_jsonschema != expected_jsonschema:
     mismatched.append(f"jsonschema:{actual_jsonschema}!={expected_jsonschema}")
 
+# Check Semgrep (CI parity). Enforce when a pinned version is declared.
+if expected_semgrep:
+    if not semgrep_present:
+        missing.append("semgrep")
+    else:
+        if semgrep_version and semgrep_version != expected_semgrep:
+            mismatched.append(f"semgrep:{semgrep_version}!={expected_semgrep}")
+
 status = "PASS"
 if missing or mismatched or errors:
     status = "FAIL"
@@ -112,11 +132,13 @@ out = {
         "ripgrep": expected_rg,
         "pyyaml": expected_pyyaml,
         "jsonschema": expected_jsonschema,
+        "semgrep": expected_semgrep or None,
     },
     "actual": {
         "ripgrep": rg_version if rg_present else None,
         "pyyaml": actual_pyyaml or None,
         "jsonschema": actual_jsonschema or None,
+        "semgrep": semgrep_version if semgrep_present else None,
     },
     "missing": missing,
     "mismatched": mismatched,
