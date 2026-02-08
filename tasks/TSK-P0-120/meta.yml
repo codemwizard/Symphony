@@ -18,7 +18,7 @@ touches:
   - "docs/tasks/PHASE0_TASKS.md"
 
 invariants:
-  - "GOV-REMEDIATION-TRACE"
+  - "GOV-G02"
 
 work:
   - "Wire scripts/audit/verify_remediation_trace.sh into scripts/dev/pre_ci.sh for CI parity."

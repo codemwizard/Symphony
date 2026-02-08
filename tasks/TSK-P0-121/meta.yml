@@ -19,7 +19,7 @@ touches:
   - "docs/PHASE0/phase0_contract.yml"
 
 invariants:
-  - "GOV-REMEDIATION-TRACE"
+  - "GOV-G02"
   - "INT-CI-PARITY"
 
 work:
