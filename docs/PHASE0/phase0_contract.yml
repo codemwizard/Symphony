@@ -1371,7 +1371,7 @@
     "evidence_scope": "ci_artifact",
     "notes": "CI parity: ensure workflow chmod does not create filemode-only worktree diffs that break remediation-trace (prefer diff_mode=range).",
     "gate_ids": [
-      "GOV-REMEDIATION-TRACE"
+      "GOV-G02"
     ]
   }
 ]

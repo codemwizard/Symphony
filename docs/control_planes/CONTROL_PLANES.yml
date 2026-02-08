@@ -144,3 +144,6 @@ control_planes:
       - gate_id: GOV-G01
         script: scripts/audit/verify_compliance_manifest.sh
         evidence: evidence/phase0/compliance_manifest_verify.json
+      - gate_id: GOV-G02
+        script: scripts/audit/verify_remediation_trace.sh
+        evidence: evidence/phase0/remediation_trace.json
