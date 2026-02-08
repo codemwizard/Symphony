@@ -2487,3 +2487,23 @@ Failure Modes:
 - Evidence file missing.
 - Local pre_ci skips remediation trace due to missing `BASE_REF`, allowing CI failure.
 - Remediation trace verifier is not invoked in local runner.
+
+---
+
+TASK ID: TSK-P0-121
+Title: CI parity: eliminate chmod-induced filemode diffs that break remediation-trace
+Owner Role: SECURITY_GUARDIAN
+Depends On: TSK-P0-105
+Touches: `scripts/audit/verify_remediation_trace.sh`, `scripts/audit/verify_remediation_workflow_doc.sh`, `docs/plans/phase0/TSK-P0-121_ci_filemode_parity/PLAN.md`, `docs/plans/phase0/TSK-P0-121_ci_filemode_parity/EXEC_LOG.md`, `docs/plans/phase0/INDEX.md`, `docs/tasks/PHASE0_TASKS.md`, `tasks/TSK-P0-121/meta.yml`
+Invariant(s): GOV-REMEDIATION-TRACE, INT-CI-PARITY
+Work:
+- Commit executable bits (100755) for scripts that CI chmods, so CI remains clean and remediation-trace uses range diff.
+Acceptance Criteria:
+- CI no longer shows remediation-trace failures caused by chmod/filemode-only worktree diffs.
+Verification Commands:
+- `bash scripts/audit/verify_remediation_trace.sh`
+Evidence Artifact(s):
+- `evidence/phase0/remediation_trace.json`
+Failure Modes:
+- Evidence file missing.
+- CI still runs remediation-trace in worktree mode due to filemode diffs.
