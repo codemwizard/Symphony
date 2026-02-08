@@ -18,6 +18,11 @@ run scripts/audit/verify_batching_rules.sh
 run scripts/audit/verify_routing_fallback.sh
 run scripts/audit/validate_routing_fallback.sh
 
+# DB-gated checks can only run when DATABASE_URL is present (local pre-CI and CI DB job).
+if [[ -n "${DATABASE_URL:-}" ]]; then
+  run bash scripts/db/tests/test_outbox_pending_indexes.sh
+fi
+
 run scripts/audit/run_security_fast_checks.sh
 
 # OpenBao smoke must run before evidence status checks (contract requires openbao_smoke.json)
@@ -40,7 +45,13 @@ run scripts/audit/validate_evidence_schema.sh
 run bash scripts/audit/verify_phase0_contract.sh
 run bash scripts/audit/verify_ci_order.sh
 
-# Run contract evidence status after all evidence producers
-run bash scripts/audit/verify_phase0_contract_evidence_status.sh
+# Contract evidence status is evaluated after evidence aggregation (cross-job) in CI.
+# Running it in the mechanical job will produce false negatives for DB/security evidence.
+if [[ "${GITHUB_ACTIONS:-}" == "true" ]]; then
+  echo ""
+  echo "-> (skipping) scripts/audit/verify_phase0_contract_evidence_status.sh (CI evidence is merged in contract_evidence_gate)"
+else
+  run bash scripts/audit/verify_phase0_contract_evidence_status.sh
+fi
 
 echo "✅ Phase-0 ordered checks PASSED."

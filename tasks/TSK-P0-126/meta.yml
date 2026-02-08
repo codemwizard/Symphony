@@ -1,0 +1,44 @@
+phase: "0"
+task_id: "TSK-P0-126"
+title: "Reconcile Sovereign plan with existing Phase-0 migration/table invariants (no duplicate implementation)"
+owner_role: "ARCHITECT"
+status: "completed"   # planned | in_progress | completed
+
+depends_on:
+  - "TSK-P0-125"
+
+touches:
+  - "tasks/TSK-P0-126/meta.yml"
+  - "docs/plans/phase0/TSK-P0-125_sovereign_hybrid_cloud_reg_machine/PLAN.md"
+
+invariants: []
+
+work:
+  - "Confirm and document that migration expand/contract enforcement and PK/FK stability already exist as INV-097/INV-098."
+  - "Confirm and document that table conventions verification already exists as INV-099."
+  - "Update the Sovereign Hybrid Cloud Phase-0 plan to reuse these invariants rather than creating new IDs/scripts."
+
+acceptance_criteria:
+  - "Sovereign Hybrid Cloud Phase-0 plan references INV-097/INV-098/INV-099 and does not propose duplicate implementations."
+
+verification:
+  - "N/A (planning reconciliation only)"
+
+evidence: []
+
+failure_modes:
+  - "Plan proposes new invariants that collide with existing invariant meanings."
+  - "Plan schedules redundant work that already exists and is enforced."
+
+must_read:
+  - "docs/invariants/INVARIANTS_MANIFEST.yml"
+  - "docs/control_planes/CONTROL_PLANES.yml"
+  - "Soverign-Hybrid-Cloud_Refinement-Draft.md"
+
+implementation_plan: "docs/plans/phase0/TSK-P0-126_reconcile_sovereign_reuse_invariants/PLAN.md"
+implementation_log: "docs/plans/phase0/TSK-P0-126_reconcile_sovereign_reuse_invariants/EXEC_LOG.md"
+
+notes: "This task is complete when the plan is corrected to reuse existing invariants INV-097/INV-098/INV-099."
+client: "codex_cli"
+assigned_agent: "architect"
+model: "gpt-5-codex"

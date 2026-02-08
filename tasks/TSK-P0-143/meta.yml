@@ -1,0 +1,33 @@
+phase: "0"
+task_id: "TSK-P0-143"
+title: "Wire INV-031 performance gate into control-plane (INT-G22)"
+owner_role: "ARCHITECT"
+depends_on:
+  - "TSK-P0-142"
+touches:
+  - "docs/control_planes/CONTROL_PLANES.yml"
+  - "tasks/TSK-P0-143/meta.yml"
+invariants:
+  - "INV-031"
+work:
+  - "Add INT-G22 mapping INV-031 -> test_outbox_pending_indexes verifier -> outbox_pending_indexes.json evidence."
+  - "Keep gate_id non-colliding and stable."
+acceptance_criteria:
+  - "CONTROL_PLANES.yml contains INT-G22 with invariant_id INV-031 and correct verifier/evidence_path."
+verification:
+  - "bash scripts/audit/verify_control_planes_drift.sh"
+evidence:
+  - "evidence/phase0/control_planes_drift.json"
+failure_modes:
+  - "Gate ID collision."
+  - "Verifier/evidence path mismatch."
+status: "completed"
+notes: ""
+client: "codex_cli"
+assigned_agent: "architect"
+model: "<UNASSIGNED>"
+implementation_plan: "docs/plans/phase0/TSK-P0-143_inv031_control_plane_int_g22/PLAN.md"
+implementation_log: "docs/plans/phase0/TSK-P0-143_inv031_control_plane_int_g22/EXEC_LOG.md"
+must_read:
+  - "docs/control_planes/CONTROL_PLANES.yml"
+  - "scripts/audit/verify_control_planes_drift.sh"

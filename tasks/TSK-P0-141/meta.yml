@@ -1,0 +1,46 @@
+phase: "0"
+task_id: "TSK-P0-141"
+title: "Performance: Phase-0 performance posture spec (tables/classes, indexes, timeouts, waivers)"
+owner_role: "ARCHITECT"
+status: "planned"   # planned | in_progress | completed
+
+depends_on:
+  - "TSK-P0-140"
+
+touches:
+  - "docs/PHASE0/PHASE0_PERFORMANCE_POSTURE.md"
+  - "docs/plans/phase0/TSK-P0-141_phase0_performance_posture_spec/PLAN.md"
+  - "docs/plans/phase0/TSK-P0-141_phase0_performance_posture_spec/EXEC_LOG.md"
+  - "tasks/TSK-P0-141/meta.yml"
+
+invariants: []
+
+work:
+  - "Define Phase-0 performance posture in an auditor-legible doc: table classes, required indexes, required DB timeout posture, and waiver marker format tied to ADR references."
+  - "Declare which checks are structural (catalog-based) vs static (SQL text scan) and what evidence artifacts they emit."
+  - "Keep Phase-0 scope: no runtime load tests, no SLO enforcement."
+
+acceptance_criteria:
+  - "Doc exists under docs/PHASE0 and is referenced by the performance task cluster plans."
+  - "Waiver format is explicit and machine-detectable (marker + ADR reference)."
+
+verification:
+  - "N/A (spec document)"
+
+evidence: []
+
+failure_modes:
+  - "Spec is not actionable (no machine-detectable waiver format; unclear required indexes/timeouts)."
+
+must_read:
+  - "docs/PHASE0/PHASE0_CONTRACT.md"
+  - "docs/invariants/INVARIANTS_MANIFEST.yml"
+
+implementation_plan: "docs/plans/phase0/TSK-P0-141_phase0_performance_posture_spec/PLAN.md"
+implementation_log: "docs/plans/phase0/TSK-P0-141_phase0_performance_posture_spec/EXEC_LOG.md"
+
+notes: ""
+client: "codex_cli"
+assigned_agent: "architect"
+model: "gpt-5-codex"
+

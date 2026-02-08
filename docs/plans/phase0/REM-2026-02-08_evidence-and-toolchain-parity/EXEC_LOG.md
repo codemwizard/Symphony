@@ -22,5 +22,8 @@ origin_task_id: TSK-P0-122
 - bash scripts/security/run_semgrep_sast.sh
 
 ## final_status
-OPEN (expected PASS after CI reruns and artifacts are inspected)
+PASS
 
+## closeout_evidence
+- `cievidence/phase0-evidence (3).zip` shows `phase0/evidence.json` includes `migrations_fingerprint` and all Phase-0 evidence JSON files share a single `schema_fingerprint`.
+- `cievidence/phase0-evidence-security (1).zip` shows `phase0/semgrep_sast.json` is `PASS` with pinned Semgrep version and `ci_toolchain.json` is present.

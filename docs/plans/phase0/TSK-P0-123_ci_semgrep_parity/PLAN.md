@@ -27,5 +27,4 @@ Out of scope:
 verification_commands_run:
 - CI run (Phase I.5 security_scan)
 
-final_status: OPEN
-
+final_status: PASS

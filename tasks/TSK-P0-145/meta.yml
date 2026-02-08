@@ -1,0 +1,34 @@
+phase: "0"
+task_id: "TSK-P0-145"
+title: "Add INV-031 evidence path to Phase-0 contract (no SKIPPED traps)"
+owner_role: "ARCHITECT"
+depends_on:
+  - "TSK-P0-144"
+touches:
+  - "docs/PHASE0/phase0_contract.yml"
+  - "tasks/TSK-P0-145/meta.yml"
+invariants:
+  - "INV-031"
+work:
+  - "Add a contract entry so INV-031 evidence is required only after the verifier is wired and emitting deterministically."
+  - "Ensure ordering is consistent with run_phase0_ordered_checks.sh execution order."
+acceptance_criteria:
+  - "phase0_contract.yml requires evidence/phase0/outbox_pending_indexes.json only after the gate exists."
+  - "verify_phase0_contract_evidence_status.sh passes (no missing evidence)."
+verification:
+  - "bash scripts/audit/verify_phase0_contract_evidence_status.sh"
+evidence:
+  - "evidence/phase0/outbox_pending_indexes.json"
+failure_modes:
+  - "Contract requires evidence that CI/pre-CI does not produce."
+status: "completed"
+notes: ""
+client: "codex_cli"
+assigned_agent: "architect"
+model: "<UNASSIGNED>"
+implementation_plan: "docs/plans/phase0/TSK-P0-145_inv031_contract_gate/PLAN.md"
+implementation_log: "docs/plans/phase0/TSK-P0-145_inv031_contract_gate/EXEC_LOG.md"
+must_read:
+  - "docs/PHASE0/phase0_contract.yml"
+  - "docs/control_planes/CONTROL_PLANES.yml"
+  - "scripts/audit/verify_phase0_contract_evidence_status.sh"

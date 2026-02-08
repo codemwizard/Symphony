@@ -4,7 +4,7 @@ phase: "0"
 task_id: "TSK-P0-124"
 title: "CI guardrail: fail closed on missing Semgrep/toolchain drift"
 owner_role: "SECURITY_GUARDIAN"
-status: "in_progress"   # planned | in_progress | completed
+status: "completed"   # planned | in_progress | completed
 
 depends_on:
   - "TSK-P0-123"
