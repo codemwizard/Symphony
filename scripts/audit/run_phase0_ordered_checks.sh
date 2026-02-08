@@ -40,13 +40,7 @@ run scripts/audit/validate_evidence_schema.sh
 run bash scripts/audit/verify_phase0_contract.sh
 run bash scripts/audit/verify_ci_order.sh
 
-# Contract evidence status is evaluated after evidence aggregation (cross-job) in CI.
-# Running it in the mechanical job will produce false negatives for DB/security evidence.
-if [[ "${GITHUB_ACTIONS:-}" == "true" ]]; then
-  echo ""
-  echo "-> (skipping) scripts/audit/verify_phase0_contract_evidence_status.sh (CI evidence is merged in contract_evidence_gate)"
-else
-  run bash scripts/audit/verify_phase0_contract_evidence_status.sh
-fi
+echo ""
+echo "-> (skipping) scripts/audit/verify_phase0_contract_evidence_status.sh (runs after evidence aggregation in CI; runs after DB checks in scripts/dev/pre_ci.sh)"
 
 echo "✅ Phase-0 ordered checks PASSED."

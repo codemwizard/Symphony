@@ -324,6 +324,7 @@ Primary fixes implemented:
 - Ensure hooks are installed.
 - Ensure `pre_ci.sh` runs the same invariants and security fast checks as CI.
 - Add staged structural preflight to catch issues before pushing.
+- Ensure `pre_ci.sh` runs DB checks against a **fresh ephemeral database** by default (`FRESH_DB=1`) to match CI's fresh Postgres service behavior.
 
 ### 8.3 Codex step failures (401/402/429/network)
 

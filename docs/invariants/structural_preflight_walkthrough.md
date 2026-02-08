@@ -65,7 +65,12 @@ CI still enforces Rule 1. The local hook prevents most reruns by catching missin
 Before pushing, the pre-push hook runs `scripts/dev/pre_ci.sh`, which executes:
 - invariants fast checks
 - security fast checks
-- DB tests if `DATABASE_URL` is set
+- DB tests against a **fresh ephemeral database** by default (`FRESH_DB=1`), to match CI freshness and avoid “passes locally, fails in CI” drift.
+
+Fresh DB behavior:
+- Default: `FRESH_DB=1` (ephemeral database created per run; dropped on exit)
+- Optional: `KEEP_TEMP_DB=1` keeps the ephemeral database for debugging
+- `FRESH_DB=0` disables ephemeral DB behavior (not recommended for Tier-1 parity)
 
 ## Troubleshooting
 - If the hook does not run, confirm it is executable:

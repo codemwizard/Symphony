@@ -26,9 +26,15 @@ This should:
 1) start Postgres via compose (dev only)
 2) run **fast invariants** checks (no DB)
 3) run **fast security** checks (no DB)
-4) run DB function tests (and any extra DB tests you wire in)
+4) create a **fresh ephemeral DB** by default (`FRESH_DB=1`) and run DB migrations/tests against it (CI-parity)
 
 If this is green, your PR should be green on the first CI run.
+
+### Fresh DB parity (enforced)
+Local pre-CI defaults to CI-equivalent DB freshness:
+- `FRESH_DB=1` (default): create a per-run ephemeral DB, run migrations/tests, drop it on exit
+- `KEEP_TEMP_DB=1`: keep the ephemeral DB for debugging (not for normal use)
+- `FRESH_DB=0`: disable ephemeral DB (not recommended for Tier-1 parity)
 
 ---
 
