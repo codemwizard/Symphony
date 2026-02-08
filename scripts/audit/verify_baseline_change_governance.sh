@@ -40,15 +40,16 @@ baseline_changed=false
 migration_changed=false
 adr_changed=false
 
-if echo "$changed_files" | grep -q "^schema/baseline\.sql$"; then
+# Use line-exact matching to avoid edge cases with large diff lists and newline handling.
+if printf '%s\n' "$changed_files" | grep -qx "schema/baseline.sql"; then
   baseline_changed=true
 fi
 
-if echo "$changed_files" | grep -q "^schema/migrations/.*\.sql$"; then
+if printf '%s\n' "$changed_files" | grep -qE "^schema/migrations/.*\\.sql$"; then
   migration_changed=true
 fi
 
-if echo "$changed_files" | grep -q "^docs/decisions/ADR-0010-baseline-policy\.md$"; then
+if printf '%s\n' "$changed_files" | grep -qx "docs/decisions/ADR-0010-baseline-policy.md"; then
   adr_changed=true
 fi
 
