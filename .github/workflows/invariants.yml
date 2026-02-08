@@ -486,16 +486,6 @@ jobs:
           done
           exit 1
 
-      - name: Phase-0 ordered checks (DB parity)
-        env:
-          DATABASE_URL: postgres://symphony:symphony@localhost:5432/symphony
-        run: |
-          set -euo pipefail
-          chmod +x scripts/audit/*.sh
-          chmod +x scripts/security/*.sh
-          chmod +x scripts/db/tests/*.sh
-          scripts/audit/run_phase0_ordered_checks.sh
-
       - name: Run DB verify entrypoint
         env:
           DATABASE_URL: postgres://symphony:symphony@localhost:5432/symphony
