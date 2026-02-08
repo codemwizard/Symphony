@@ -37,6 +37,10 @@ Markers may be satisfied across the `{PLAN.md, EXEC_LOG.md}` pair within the sam
 - `verification_commands_run`
 - `final_status`
 
+Diff semantics:
+- The gate is diff-triggered (production-affecting surfaces), but the remediation casefile itself is treated as a folder.
+- If either `PLAN.md` or `EXEC_LOG.md` in a casefile folder appears in the diff, the gate reads both files from disk and evaluates markers across the pair.
+
 ## Workflow (mandatory)
 
 ### 1) When an error occurs
