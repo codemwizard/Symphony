@@ -1,0 +1,55 @@
+phase: "0"
+task_id: "TSK-P0-125"
+title: "Sovereign Hybrid Cloud Phase-0: regulatory machine plan + task scaffolding"
+owner_role: "ARCHITECT"
+status: "completed"   # planned | in_progress | completed
+
+depends_on:
+  - "TSK-P0-124"
+
+touches:
+  - "docs/plans/phase0/TSK-P0-125_sovereign_hybrid_cloud_reg_machine/PLAN.md"
+  - "docs/plans/phase0/TSK-P0-125_sovereign_hybrid_cloud_reg_machine/EXEC_LOG.md"
+  - "tasks/TSK-P0-125/meta.yml"
+  - "tasks/TSK-P0-126/meta.yml"
+  - "tasks/TSK-P0-127/meta.yml"
+  - "tasks/TSK-P0-128/meta.yml"
+  - "tasks/TSK-P0-129/meta.yml"
+  - "tasks/TSK-P0-130/meta.yml"
+  - "docs/plans/phase0/INDEX.md"
+
+invariants: []
+
+work:
+  - "Read archive/Soverign-Hybrid-Cloud.md top-to-bottom and reconcile with existing Phase-0 gate/contract reality."
+  - "Allocate non-colliding gate IDs and invariant IDs for the Sovereign Hybrid Cloud workstream."
+  - "Create a single cluster plan + detailed task meta scaffolding for implementation work (no implementation in this task)."
+  - "Prepare a bundle-alignment review against symphony_reg_machine_patch_bundle.zip (performed in-plan; implementation deferred)."
+
+acceptance_criteria:
+  - "Cluster plan exists with explicit ID allocation and a natural implementation order."
+  - "Tasks exist (TSK-P0-126..130) with owners aligned to AGENTS.md scopes."
+
+verification:
+  - "N/A (planning/scaffolding only)"
+
+evidence: []
+
+failure_modes:
+  - "Gate ID collisions introduced in the plan."
+  - "Tasks do not respect AGENTS.md scoping constraints (DB vs Security vs Invariants)."
+
+must_read:
+  - "archive/Soverign-Hybrid-Cloud.md"
+  - "Soverign-Hybrid-Cloud_Refinement-Draft.md"
+  - "docs/control_planes/CONTROL_PLANES.yml"
+  - "docs/invariants/INVARIANTS_MANIFEST.yml"
+  - "docs/PHASE0/phase0_contract.yml"
+
+implementation_plan: "docs/plans/phase0/TSK-P0-125_sovereign_hybrid_cloud_reg_machine/PLAN.md"
+implementation_log: "docs/plans/phase0/TSK-P0-125_sovereign_hybrid_cloud_reg_machine/EXEC_LOG.md"
+
+notes: ""
+client: "codex_cli"
+assigned_agent: "architect"
+model: "gpt-5-codex"

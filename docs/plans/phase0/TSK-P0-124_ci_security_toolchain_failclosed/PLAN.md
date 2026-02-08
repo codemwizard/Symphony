@@ -33,5 +33,4 @@ verification_commands_run:
 - bash scripts/audit/verify_ci_toolchain.sh
 - bash scripts/security/run_semgrep_sast.sh
 
-final_status: OPEN
-
+final_status: PASS

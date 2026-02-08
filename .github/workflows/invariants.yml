@@ -440,6 +440,29 @@ jobs:
         with:
           fetch-depth: 0
 
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "10.0.x"
+
+      - name: Install CI toolchain (pinned)
+        shell: bash
+        run: |
+          set -euo pipefail
+          source scripts/audit/ci_toolchain_versions.env
+          python3 -m pip install --upgrade pip
+          python3 -m pip install "pyyaml==${PYYAML_VERSION}" "jsonschema==${JSONSCHEMA_VERSION}" "semgrep==${SEMGREP_VERSION}" pytest
+
+          curl -sSL -o /tmp/rg.tgz \
+            "https://github.com/BurntSushi/ripgrep/releases/download/${RIPGREP_VERSION}/ripgrep-${RIPGREP_VERSION}-x86_64-unknown-linux-musl.tar.gz"
+          tar -xzf /tmp/rg.tgz -C /tmp
+          sudo install -m 0755 "/tmp/ripgrep-${RIPGREP_VERSION}-x86_64-unknown-linux-musl/rg" /usr/local/bin/rg
+
+          rg --version
+
       - name: Install psql client
         run: |
           sudo apt-get update
@@ -463,12 +486,23 @@ jobs:
           done
           exit 1
 
+      - name: Phase-0 ordered checks (DB parity)
+        env:
+          DATABASE_URL: postgres://symphony:symphony@localhost:5432/symphony
+        run: |
+          set -euo pipefail
+          chmod +x scripts/audit/*.sh
+          chmod +x scripts/security/*.sh
+          chmod +x scripts/db/tests/*.sh
+          scripts/audit/run_phase0_ordered_checks.sh
+
       - name: Run DB verify entrypoint
         env:
           DATABASE_URL: postgres://symphony:symphony@localhost:5432/symphony
           SKIP_POLICY_SEED: "1"
         run: |
           set -euo pipefail
+          # Control-plane reference (INV-031 / INT-G22): scripts/db/tests/test_outbox_pending_indexes.sh
           chmod +x scripts/db/verify_invariants.sh
           scripts/db/verify_invariants.sh
 

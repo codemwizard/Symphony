@@ -17,10 +17,9 @@ verification_commands_run:
 - bash scripts/security/run_semgrep_sast.sh
 
 ## Status
-final_status: OPEN
+final_status: PASS
 
 ## Final Summary
 - Root cause: security job could degrade to SKIPPED Semgrep without CI failing.
 - Fix: verify pinned Semgrep in CI toolchain gate and fail closed if missing/drifted.
-- Verification: local checks pass; CI should now fail if Semgrep is absent and pass when installed.
-
+- Verification: CI artifacts show `phase0-evidence-security/phase0/ci_toolchain.json` PASS and `phase0-evidence-security/phase0/semgrep_sast.json` PASS.

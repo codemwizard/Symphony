@@ -1,0 +1,36 @@
+phase: "0"
+task_id: "TSK-P0-144"
+title: "Normalize INV-031 evidence emission (deterministic PASS/FAIL)"
+owner_role: "INVARIANTS_CURATOR"
+depends_on:
+  - "TSK-P0-143"
+touches:
+  - "scripts/db/tests/test_outbox_pending_indexes.sh"
+  - "scripts/db/verify_invariants.sh"
+  - "tasks/TSK-P0-144/meta.yml"
+invariants:
+  - "INV-031"
+work:
+  - "Ensure test_outbox_pending_indexes writes evidence/phase0/outbox_pending_indexes.json on PASS and FAIL."
+  - "Evidence must include: status (PASS|FAIL|SKIPPED), timestamp, checked_objects, schema_fingerprint, git_sha."
+acceptance_criteria:
+  - "Running the verifier always produces evidence JSON."
+  - "On violation the script exits non-zero and evidence status is FAIL (not missing)."
+verification:
+  - "bash scripts/db/tests/test_outbox_pending_indexes.sh"
+evidence:
+  - "evidence/phase0/outbox_pending_indexes.json"
+failure_modes:
+  - "Evidence file missing."
+  - "Lowercase or non-canonical status values."
+status: "completed"
+notes: ""
+client: "codex_cli"
+assigned_agent: "invariants_curator"
+model: "<UNASSIGNED>"
+implementation_plan: "docs/plans/phase0/TSK-P0-144_inv031_deterministic_evidence/PLAN.md"
+implementation_log: "docs/plans/phase0/TSK-P0-144_inv031_deterministic_evidence/EXEC_LOG.md"
+must_read:
+  - "docs/invariants/INVARIANTS_MANIFEST.yml"
+  - "scripts/db/tests/test_outbox_pending_indexes.sh"
+  - "scripts/db/verify_invariants.sh"

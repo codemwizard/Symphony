@@ -133,36 +133,6 @@ mkdir -p "$EVIDENCE_DIR"
 
 fail=0
 
-echo "🔎 Verifying outbox pending claim index..."
-indexdef="$(
-  psql "$DATABASE_URL" -q -t -A -v ON_ERROR_STOP=1 -X \
-    -c "SELECT indexdef FROM pg_indexes WHERE schemaname='public' AND indexname='idx_payment_outbox_pending_due_claim';" \
-    | tr -d '\n'
-)"
-idx_status="PASS"
-if [[ -z "$indexdef" ]]; then
-  idx_status="FAIL"
-  fail=1
-elif [[ "$indexdef" != *"(next_attempt_at"* || "$indexdef" != *"created_at"* ]]; then
-  idx_status="FAIL"
-  fail=1
-else
-  idx_status="PASS"
-fi
-python3 - <<PY
-import json
-from pathlib import Path
-out = {
-  "check_id": "DB-OUTBOX-PENDING-INDEXES",
-  "timestamp_utc": "${EVIDENCE_TS}",
-  "git_sha": "${EVIDENCE_GIT_SHA}",
-  "schema_fingerprint": "${EVIDENCE_SCHEMA_FP}",
-  "status": "$idx_status",
-  "indexdef": "$indexdef",
-}
-Path("$EVIDENCE_DIR/outbox_pending_indexes.json").write_text(json.dumps(out, indent=2))
-PY
-
 echo "🔎 Verifying outbox pending MVCC posture..."
 relopts="$(
   psql "$DATABASE_URL" -q -t -A -v ON_ERROR_STOP=1 -X \

@@ -4,7 +4,7 @@ phase: "0"
 task_id: "TSK-P0-123"
 title: "CI parity: install Semgrep in security_scan job"
 owner_role: "SECURITY_GUARDIAN"
-status: "in_progress"   # planned | in_progress | completed
+status: "completed"   # planned | in_progress | completed
 
 depends_on:
   - "TSK-P0-087"

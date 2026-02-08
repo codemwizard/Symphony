@@ -16,10 +16,9 @@ verification_commands_run:
 - CI run (Phase I.5 security_scan)
 
 ## Status
-final_status: OPEN
+final_status: PASS
 
 ## Final Summary
 - Root cause: security_scan job emitted evidence without installing Semgrep.
 - Fix: install pinned Semgrep in security_scan before running security fast checks.
-- Verification: expect `phase0-evidence-security/phase0/semgrep_sast.json` to report PASS with correct version.
-
+- Verification: `phase0-evidence-security/phase0/semgrep_sast.json` reports `PASS` with `semgrep_version: 1.150.0`.

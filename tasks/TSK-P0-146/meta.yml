@@ -1,0 +1,38 @@
+phase: "0"
+task_id: "TSK-P0-146"
+title: "Wire INV-031 gate ordering into pre-CI and CI parity runners"
+owner_role: "ARCHITECT"
+depends_on:
+  - "TSK-P0-145"
+touches:
+  - "scripts/audit/run_phase0_ordered_checks.sh"
+  - "scripts/dev/pre_ci.sh"
+  - ".github/workflows/invariants.yml"
+  - "tasks/TSK-P0-146/meta.yml"
+invariants:
+  - "INV-031"
+work:
+  - "Ensure INT-G22 is executed in the ordered Phase-0 runner."
+  - "Ensure pre_ci.sh and CI call the same ordered runner (no CI-only gates)."
+acceptance_criteria:
+  - "Local pre-CI and CI run INT-G22 in the same order."
+  - "verify_phase0_contract_evidence_status.sh passes end-to-end."
+verification:
+  - "bash scripts/dev/pre_ci.sh"
+  - "bash scripts/audit/run_phase0_ordered_checks.sh"
+evidence:
+  - "evidence/phase0/outbox_pending_indexes.json"
+failure_modes:
+  - "Gate wired in CI but not pre-CI (parity violation)."
+  - "Gate wired but not executed in ordered runner."
+status: "completed"
+notes: ""
+client: "codex_cli"
+assigned_agent: "architect"
+model: "<UNASSIGNED>"
+implementation_plan: "docs/plans/phase0/TSK-P0-146_inv031_parity_ordering/PLAN.md"
+implementation_log: "docs/plans/phase0/TSK-P0-146_inv031_parity_ordering/EXEC_LOG.md"
+must_read:
+  - "scripts/audit/run_phase0_ordered_checks.sh"
+  - "scripts/dev/pre_ci.sh"
+  - ".github/workflows/invariants.yml"

@@ -253,7 +253,9 @@
     ],
     "evidence_scope": "ci_artifact",
     "notes": "",
-    "gate_ids": []
+    "gate_ids": [
+      "INT-G22"
+    ]
   },
   {
     "task_id": "TSK-P0-021",
@@ -403,7 +405,9 @@
     ],
     "evidence_scope": "ci_artifact",
     "notes": "",
-    "gate_ids": []
+    "gate_ids": [
+      "INT-G22"
+    ]
   },
   {
     "task_id": "TSK-P0-033",
@@ -1386,7 +1390,7 @@
   },
   {
     "task_id": "TSK-P0-123",
-    "status": "in_progress",
+    "status": "completed",
     "verification_mode": "ci",
     "evidence_required": false,
     "evidence_paths": [],
@@ -1396,12 +1400,142 @@
   },
   {
     "task_id": "TSK-P0-124",
-    "status": "in_progress",
+    "status": "completed",
     "verification_mode": "both",
     "evidence_required": false,
     "evidence_paths": [],
     "evidence_scope": "repo",
     "notes": "Fail closed on missing Semgrep/toolchain drift in CI (verify_ci_toolchain includes semgrep; semgrep_sast fails in CI if missing).",
+    "gate_ids": []
+  },
+  {
+    "task_id": "TSK-P0-125",
+    "status": "completed",
+    "verification_mode": "both",
+    "evidence_required": false,
+    "evidence_paths": [],
+    "evidence_scope": "repo",
+    "notes": "Sovereign Hybrid Cloud Phase-0 cluster plan + task scaffolding (no implementation).",
+    "gate_ids": []
+  },
+  {
+    "task_id": "TSK-P0-126",
+    "status": "completed",
+    "verification_mode": "both",
+    "evidence_required": false,
+    "evidence_paths": [],
+    "evidence_scope": "repo",
+    "notes": "Plan reconciliation: reuse existing INV-097/INV-098/INV-099; no duplicate implementations.",
+    "gate_ids": []
+  },
+  {
+    "task_id": "TSK-P0-127",
+    "status": "planned",
+    "verification_mode": "both",
+    "evidence_required": false,
+    "evidence_paths": [],
+    "evidence_scope": "repo",
+    "notes": "Planned: ZDPA-oriented PII leakage payload lint (SEC plane).",
+    "gate_ids": []
+  },
+  {
+    "task_id": "TSK-P0-128",
+    "status": "planned",
+    "verification_mode": "both",
+    "evidence_required": false,
+    "evidence_paths": [],
+    "evidence_scope": "repo",
+    "notes": "Planned: BoZ/regulator observability read-only role + verifier (INT plane).",
+    "gate_ids": []
+  },
+  {
+    "task_id": "TSK-P0-129",
+    "status": "planned",
+    "verification_mode": "both",
+    "evidence_required": false,
+    "evidence_paths": [],
+    "evidence_scope": "repo",
+    "notes": "Planned: anchor-sync structural readiness verifier (INT plane).",
+    "gate_ids": []
+  },
+  {
+    "task_id": "TSK-P0-130",
+    "status": "planned",
+    "verification_mode": "both",
+    "evidence_required": false,
+    "evidence_paths": [],
+    "evidence_scope": "repo",
+    "notes": "Planned: wire sovereign gates into control planes, contract, and CI/pre-CI parity runners.",
+    "gate_ids": []
+  },
+  {
+    "task_id": "TSK-P0-140",
+    "status": "planned",
+    "verification_mode": "both",
+    "evidence_required": false,
+    "evidence_paths": [],
+    "evidence_scope": "repo",
+    "notes": "Planned: invariants docs alignment maintenance task.",
+    "gate_ids": []
+  },
+  {
+    "task_id": "TSK-P0-141",
+    "status": "planned",
+    "verification_mode": "both",
+    "evidence_required": false,
+    "evidence_paths": [],
+    "evidence_scope": "repo",
+    "notes": "Planned: Phase-0 performance posture spec (docs).",
+    "gate_ids": []
+  },
+  {
+    "task_id": "TSK-P0-142",
+    "status": "completed",
+    "verification_mode": "both",
+    "evidence_required": false,
+    "evidence_paths": [],
+    "evidence_scope": "repo",
+    "notes": "Performance invariants plan + docs alignment for INV-031.",
+    "gate_ids": []
+  },
+  {
+    "task_id": "TSK-P0-143",
+    "status": "completed",
+    "verification_mode": "both",
+    "evidence_required": false,
+    "evidence_paths": [],
+    "evidence_scope": "repo",
+    "notes": "Pinned INV-031 into control planes as INT-G22 and verified drift wiring.",
+    "gate_ids": []
+  },
+  {
+    "task_id": "TSK-P0-144",
+    "status": "completed",
+    "verification_mode": "both",
+    "evidence_required": false,
+    "evidence_paths": [],
+    "evidence_scope": "repo",
+    "notes": "Normalized INV-031 evidence emission for deterministic PASS/FAIL and single writer.",
+    "gate_ids": []
+  },
+  {
+    "task_id": "TSK-P0-145",
+    "status": "completed",
+    "verification_mode": "both",
+    "evidence_required": false,
+    "evidence_paths": [],
+    "evidence_scope": "repo",
+    "notes": "Bound existing completed tasks to INT-G22 in contract and ensured CI avoids false negatives pre-merge.",
+    "gate_ids": []
+  },
+  {
+    "task_id": "TSK-P0-146",
+    "status": "completed",
+    "verification_mode": "both",
+    "evidence_required": false,
+    "evidence_paths": [],
+    "evidence_scope": "repo",
+    "notes": "Ensured INT-G22 executes under ordered checks in DB-capable contexts (local pre-CI and CI DB job).",
     "gate_ids": []
   }
 ]

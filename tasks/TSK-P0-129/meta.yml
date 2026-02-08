@@ -1,0 +1,51 @@
+phase: "0"
+task_id: "TSK-P0-129"
+title: "DB: Hybrid anchor-sync structural readiness verifier (and migration only if required)"
+owner_role: "DB_FOUNDATION"
+status: "planned"   # planned | in_progress | completed
+
+depends_on:
+  - "TSK-P0-125"
+
+touches:
+  - "scripts/db/verify_anchor_sync_hooks.sh"
+  - "scripts/db/verify_invariants.sh"
+  - "docs/plans/phase0/TSK-P0-129_anchor_sync_hooks_verifier/PLAN.md"
+  - "docs/plans/phase0/TSK-P0-129_anchor_sync_hooks_verifier/EXEC_LOG.md"
+  - "tasks/TSK-P0-129/meta.yml"
+
+invariants:
+  - "INV-111"
+
+work:
+  - "Define what 'anchor-sync readiness' means for Phase-0 structural correctness, aligned to existing evidence anchoring hooks (e.g., columns/indexes on public.evidence_packs from migration 0023)."
+  - "Implement a catalog-based verifier that proves required anchor-sync hooks exist (Phase-0 structural only; no operational job queue tables)."
+  - "Emit Phase-0 evidence JSON with git SHA + schema fingerprint and explicit objects checked."
+  - "Wire verifier into `scripts/db/verify_invariants.sh`."
+
+acceptance_criteria:
+  - "Verifier PASS implies the schema contains all structural hooks required for Phase-1 anchor dispatch without schema rewrite."
+  - "Verifier checks the Phase-0 anchor-sync readiness checklist from docs/plans/phase0/TSK-P0-125_sovereign_hybrid_cloud_reg_machine/PLAN.md (public.evidence_packs columns + idx_evidence_packs_anchor_ref)."
+  - "Evidence is emitted on PASS and FAIL."
+
+verification:
+  - "source infra/docker/.env && export DATABASE_URL=\"postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@localhost:5432/${POSTGRES_DB}\" && scripts/db/verify_anchor_sync_hooks.sh"
+
+evidence:
+  - "evidence/phase0/anchor_sync_hooks.json"
+
+failure_modes:
+  - "Verifier checks are too weak (false PASS)."
+  - "Verifier requires runtime services (should not; Phase-0 is structural only)."
+
+must_read:
+  - "schema/migrations/0023_evidence_packs_signing_anchoring_hooks.sql"
+  - "scripts/lib/evidence.sh"
+
+implementation_plan: "docs/plans/phase0/TSK-P0-129_anchor_sync_hooks_verifier/PLAN.md"
+implementation_log: "docs/plans/phase0/TSK-P0-129_anchor_sync_hooks_verifier/EXEC_LOG.md"
+
+notes: "Phase-0 anchor-sync readiness is structural only; do not add a job-tracking table in this task."
+client: "codex_cli"
+assigned_agent: "db_foundation"
+model: "gpt-5-codex"

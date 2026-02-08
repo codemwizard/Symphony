@@ -1,4 +1,8 @@
 control_planes:
+  # Plane semantics (Tier-1 drift prevention):
+  # - SEC-* gates: prevent leakage and enforce security guardrails (data exposure, unsafe patterns, toolchain fail-closed posture).
+  # - INT-* gates: prove DB state, schema posture, and mechanical correctness (catalog verifiers, schema hooks, invariants posture).
+  # - GOV-* gates: prove governance/assurance posture and cross-plane mappings (e.g., compliance manifests, remediation trace discipline).
   security:
     owner: SECURITY_GUARDIAN
     scope:
@@ -133,6 +137,15 @@ control_planes:
       - gate_id: INT-G21
         script: scripts/audit/verify_evidence_harness_integrity.sh
         evidence: evidence/phase0/evidence_harness_integrity.json
+      - gate_id: "INT-G22"
+        # Canonical Phase-0 performance hot-path posture gate (INV-031).
+        invariant_id: "INV-031"
+        title: "Outbox pending indexes present (performance hot-path posture)"
+        verifier: "scripts/db/tests/test_outbox_pending_indexes.sh"
+        evidence_path: "evidence/phase0/outbox_pending_indexes.json"
+        mode: "both"
+        script: scripts/db/tests/test_outbox_pending_indexes.sh
+        evidence: evidence/phase0/outbox_pending_indexes.json
 
   governance:
     owner: COMPLIANCE_MAPPER

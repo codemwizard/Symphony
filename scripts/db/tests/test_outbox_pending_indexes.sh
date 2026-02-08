@@ -18,31 +18,77 @@ export EVIDENCE_TS EVIDENCE_GIT_SHA EVIDENCE_SCHEMA_FP
 
 echo "==> Outbox pending index test"
 
-indexdef="$(
-  psql "$DATABASE_URL" -q -t -A -v ON_ERROR_STOP=1 -X \
-    -c "SELECT indexdef FROM pg_indexes WHERE schemaname='public' AND indexname='idx_payment_outbox_pending_due_claim';"
+EXPECTED_INDEX="idx_payment_outbox_pending_due_claim"
+EXPECTED_COLS="next_attempt_at,lease_expires_at,created_at"
+
+index_info="$(
+  psql "$DATABASE_URL" -X -A -t -v ON_ERROR_STOP=1 -c "
+    SELECT i.relname,
+           string_agg(a.attname, ',' ORDER BY x.ordinality) AS cols,
+           pg_get_indexdef(i.oid) AS def
+    FROM pg_class t
+    JOIN pg_namespace n ON n.oid = t.relnamespace
+    JOIN pg_index ix ON t.oid = ix.indrelid
+    JOIN pg_class i ON i.oid = ix.indexrelid
+    JOIN LATERAL unnest(ix.indkey) WITH ORDINALITY AS x(attnum, ordinality) ON true
+    JOIN pg_attribute a ON a.attrelid = t.oid AND a.attnum = x.attnum
+    WHERE n.nspname = 'public'
+      AND t.relname = 'payment_outbox_pending'
+      AND i.relname = '${EXPECTED_INDEX}'
+    GROUP BY i.relname, i.oid;
+  "
 )"
 
-status="PASS"
-if [[ -z "$indexdef" || "$indexdef" != *"(next_attempt_at"* || "$indexdef" != *"created_at"* ]]; then
-  status="FAIL"
+ok=1
+idx_name=""
+idx_cols=""
+idx_def=""
+errors=()
+
+if [[ -n "$index_info" ]]; then
+  idx_name="$(echo "$index_info" | cut -d '|' -f 1)"
+  idx_cols="$(echo "$index_info" | cut -d '|' -f 2)"
+  idx_def="$(echo "$index_info" | cut -d '|' -f 3-)"
+else
+  ok=0
+  errors+=("missing_index")
 fi
 
-python3 - <<PY
+if [[ "$idx_cols" != "$EXPECTED_COLS" ]]; then
+  ok=0
+  errors+=("index_columns_mismatch")
+fi
+
+OK="$ok" EXPECTED_INDEX="$EXPECTED_INDEX" EXPECTED_COLS="$EXPECTED_COLS" \
+IDX_NAME="$idx_name" IDX_COLS="$idx_cols" IDX_DEF="$idx_def" ERRORS="${errors[*]}" \
+EVIDENCE_FILE="$EVIDENCE_FILE" python3 - <<'PY'
 import json
+import os
 from pathlib import Path
+
+errors = [e for e in os.environ.get("ERRORS", "").split() if e]
 out = {
   "check_id": "DB-OUTBOX-PENDING-INDEXES",
-  "timestamp_utc": "${EVIDENCE_TS}",
-  "git_sha": "${EVIDENCE_GIT_SHA}",
-  "schema_fingerprint": "${EVIDENCE_SCHEMA_FP}",
-  "status": "$status",
-  "indexdef": "$indexdef",
+  "timestamp_utc": os.environ.get("EVIDENCE_TS"),
+  "git_sha": os.environ.get("EVIDENCE_GIT_SHA"),
+  "schema_fingerprint": os.environ.get("EVIDENCE_SCHEMA_FP"),
+  "status": "PASS" if os.environ.get("OK") == "1" else "FAIL",
+  "ok": os.environ.get("OK") == "1",
+  "checked_objects": [
+    "public.payment_outbox_pending",
+    "public." + (os.environ.get("EXPECTED_INDEX") or ""),
+  ],
+  "expected_index": os.environ.get("EXPECTED_INDEX"),
+  "expected_columns": os.environ.get("EXPECTED_COLS"),
+  "index_name": os.environ.get("IDX_NAME"),
+  "index_columns": os.environ.get("IDX_COLS"),
+  "index_definition": os.environ.get("IDX_DEF"),
+  "errors": errors,
 }
-Path("$EVIDENCE_FILE").write_text(json.dumps(out, indent=2))
+Path(os.environ["EVIDENCE_FILE"]).write_text(json.dumps(out, indent=2, sort_keys=True) + "\n", encoding="utf-8")
 PY
 
-if [[ "$status" != "PASS" ]]; then
+if [[ "$ok" -ne 1 ]]; then
   echo "❌ Outbox pending index test failed"
   exit 1
 fi

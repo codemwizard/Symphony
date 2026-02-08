@@ -1,0 +1,70 @@
+phase: "0"
+task_id: "TSK-P0-130"
+title: "Integrate Sovereign Hybrid Cloud gates into control planes, contract ordering, and CI/pre-CI parity runner"
+owner_role: "ARCHITECT"
+status: "planned"   # planned | in_progress | completed
+
+depends_on:
+  - "TSK-P0-126"
+  - "TSK-P0-127"
+  - "TSK-P0-128"
+  - "TSK-P0-129"
+
+touches:
+  - "docs/control_planes/CONTROL_PLANES.yml"
+  - "docs/invariants/INVARIANTS_MANIFEST.yml"
+  - "docs/PHASE0/phase0_contract.yml"
+  - "scripts/audit/run_phase0_ordered_checks.sh"
+  - "scripts/dev/pre_ci.sh"
+  - ".github/workflows/invariants.yml"
+  - "docs/tasks/PHASE0_TASKS.md"
+  - "docs/plans/phase0/INDEX.md"
+  - "docs/plans/phase0/TSK-P0-130_wire_sovereign_gates_parity/PLAN.md"
+  - "docs/plans/phase0/TSK-P0-130_wire_sovereign_gates_parity/EXEC_LOG.md"
+  - "tasks/TSK-P0-130/meta.yml"
+
+invariants:
+  - "INV-109"
+  - "INV-110"
+  - "INV-111"
+
+work:
+  - "Add non-colliding gate IDs to `docs/control_planes/CONTROL_PLANES.yml` and map them to the new verifier scripts and evidence paths."
+  - "Register the new invariants in `docs/invariants/INVARIANTS_MANIFEST.yml` with status=implemented and correct verification commands."
+  - "Add the new gates to Phase-0 contract ordering (`docs/PHASE0/phase0_contract.yml`) with explicit gating status and required evidence paths."
+  - "Wire the gates into the single source-of-truth ordered runner (`scripts/audit/run_phase0_ordered_checks.sh`) and ensure `scripts/dev/pre_ci.sh` and CI use it."
+  - "Update CI workflow to avoid job-specific hidden checks; ensure evidence artifacts are included in expected phase0 artifacts."
+  - "Ensure local parity runner behavior is fail-closed even when `origin/main` is not present (same principle as remediation trace gate)."
+
+acceptance_criteria:
+  - "Local `scripts/dev/pre_ci.sh` and CI both exercise all newly declared gates in the same order."
+  - "Phase-0 contract evidence status gate reports no missing evidence for the new required gates."
+  - "No existing gate IDs change; no collisions introduced."
+
+verification:
+  - "bash scripts/dev/pre_ci.sh"
+  - "(CI) full Phase-0 run; validate artifacts via scripts/audit/verify_phase0_contract_evidence_status.sh"
+
+evidence:
+  - "evidence/phase0/boz_observability_role.json"
+  - "evidence/phase0/pii_leakage_payloads.json"
+  - "evidence/phase0/anchor_sync_hooks.json"
+
+failure_modes:
+  - "Gate declared but script missing or non-executable."
+  - "Gate runs but evidence path mismatched to CONTROL_PLANES or contract."
+  - "CI-only wiring causes local/CI parity drift."
+
+must_read:
+  - "docs/control_planes/CONTROL_PLANES.yml"
+  - "docs/PHASE0/PHASE0_CONTRACT.md"
+  - "scripts/audit/verify_control_planes_drift.sh"
+  - "scripts/audit/verify_phase0_contract_evidence_status.sh"
+
+implementation_plan: "docs/plans/phase0/TSK-P0-130_wire_sovereign_gates_parity/PLAN.md"
+implementation_log: "docs/plans/phase0/TSK-P0-130_wire_sovereign_gates_parity/EXEC_LOG.md"
+
+notes: ""
+client: "codex_cli"
+assigned_agent: "architect"
+model: "gpt-5-codex"
