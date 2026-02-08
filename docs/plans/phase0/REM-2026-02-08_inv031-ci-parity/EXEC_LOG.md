@@ -15,6 +15,8 @@ bash scripts/db/tests/test_outbox_pending_indexes.sh
 - Kept `scripts/audit/run_phase0_ordered_checks.sh` mechanical-only (no DB assertions).
 - Fixed local pre-push ordering: `scripts/audit/verify_phase0_contract_evidence_status.sh` now runs after DB verification in `scripts/dev/pre_ci.sh` (so required DB evidence exists before the contract evidence gate is evaluated).
 - Enforced fresh DB parity locally: `scripts/dev/pre_ci.sh` now defaults to `FRESH_DB=1` and creates a per-run ephemeral database, runs migrations/tests against it, then drops it on exit.
+- Enforced CI-equivalent diff refs in local pre-push: `scripts/dev/pre_ci.sh` now exports `BASE_REF=origin/main` and `HEAD_REF=HEAD` to prevent developer shell env from overriding governance/remediation diff semantics.
+- Hardened baseline governance ADR detection: `scripts/audit/verify_baseline_change_governance.sh` now uses line-exact matching (`grep -qx`) against the diff list to avoid false negatives that incorrectly fail pushes.
 
 ## verification_commands_run
 - scripts/dev/pre_ci.sh

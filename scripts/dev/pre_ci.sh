@@ -12,6 +12,10 @@ DB_CONTAINER="symphony-postgres"
 FRESH_DB="${FRESH_DB:-1}"   # enforce CI parity by default (ephemeral DB per run)
 KEEP_TEMP_DB="${KEEP_TEMP_DB:-0}" # set to 1 to keep temp DB for debugging
 
+# For strict parity with GitHub Actions, do not allow a developer shell to override diff refs.
+export BASE_REF="origin/main"
+export HEAD_REF="HEAD"
+
 echo "==> Toolchain parity bootstrap (local)"
 if [[ -x scripts/audit/bootstrap_local_ci_toolchain.sh ]]; then
   scripts/audit/bootstrap_local_ci_toolchain.sh
