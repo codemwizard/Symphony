@@ -9,6 +9,8 @@ echo "==> Pre-CI local checks"
 ENV_FILE="infra/docker/.env"
 COMPOSE_FILE="infra/docker/docker-compose.yml"
 DB_CONTAINER="symphony-postgres"
+FRESH_DB="${FRESH_DB:-1}"   # enforce CI parity by default (ephemeral DB per run)
+KEEP_TEMP_DB="${KEEP_TEMP_DB:-0}" # set to 1 to keep temp DB for debugging
 
 echo "==> Toolchain parity bootstrap (local)"
 if [[ -x scripts/audit/bootstrap_local_ci_toolchain.sh ]]; then
@@ -108,6 +110,45 @@ if ! docker exec "$DB_CONTAINER" pg_isready -U "$POSTGRES_USER" -d "$POSTGRES_DB
   exit 1
 fi
 
+# Fresh DB parity: create an ephemeral database per run and drop it on exit.
+# This avoids mutating a developer's long-lived dev DB while still giving CI-equivalent freshness.
+TEMP_DB=""
+cleanup_temp_db() {
+  if [[ "${FRESH_DB}" != "1" ]]; then
+    return 0
+  fi
+  if [[ -z "${TEMP_DB}" ]]; then
+    return 0
+  fi
+  if [[ "${KEEP_TEMP_DB}" == "1" ]]; then
+    echo "==> KEEP_TEMP_DB=1 set; leaving temp DB in place: ${TEMP_DB}"
+    return 0
+  fi
+  echo "==> Dropping temp DB: ${TEMP_DB}"
+  # terminate connections then drop
+  docker exec "$DB_CONTAINER" psql -U "$POSTGRES_USER" -d postgres -v ON_ERROR_STOP=1 -X \
+    -c "SELECT pg_terminate_backend(pid) FROM pg_stat_activity WHERE datname = '${TEMP_DB}' AND pid <> pg_backend_pid();" >/dev/null 2>&1 || true
+  docker exec "$DB_CONTAINER" psql -U "$POSTGRES_USER" -d postgres -v ON_ERROR_STOP=1 -X \
+    -c "DROP DATABASE IF EXISTS \"${TEMP_DB}\";" >/dev/null 2>&1 || true
+}
+trap cleanup_temp_db EXIT
+
+if [[ "${FRESH_DB}" == "1" ]]; then
+  echo "==> Fresh DB parity enabled (FRESH_DB=1): creating ephemeral DB"
+  # Postgres DB identifiers must be <=63 chars, lowercase + underscores are safest.
+  ts="$(date -u +%Y%m%d%H%M%S)"
+  rand="$RANDOM"
+  base="symphony_pre_ci_${ts}_${rand}"
+  TEMP_DB="$(echo "$base" | tr '[:upper:]' '[:lower:]' | tr -cd 'a-z0-9_')"
+  docker exec "$DB_CONTAINER" psql -U "$POSTGRES_USER" -d postgres -v ON_ERROR_STOP=1 -X \
+    -c "CREATE DATABASE \"${TEMP_DB}\";" >/dev/null
+  DATABASE_URL="postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@localhost:5432/${TEMP_DB}"
+  export DATABASE_URL
+  echo "   DATABASE_URL set to ephemeral DB: ${TEMP_DB}"
+else
+  echo "==> Fresh DB parity disabled (FRESH_DB=${FRESH_DB}); using DATABASE_URL as provided"
+fi
+
 if [[ -x scripts/audit/run_phase0_ordered_checks.sh ]]; then
   scripts/audit/run_phase0_ordered_checks.sh
 else
@@ -150,6 +191,14 @@ if [[ -n "${DATABASE_URL:-}" ]]; then
   if [[ -x scripts/db/tests/test_seed_policy_checksum.sh ]]; then
     scripts/db/tests/test_seed_policy_checksum.sh
   fi
+fi
+
+echo "==> Phase-0 contract evidence status (post-DB parity)"
+if [[ -x scripts/audit/verify_phase0_contract_evidence_status.sh ]]; then
+  scripts/audit/verify_phase0_contract_evidence_status.sh
+else
+  echo "ERROR: scripts/audit/verify_phase0_contract_evidence_status.sh not found"
+  exit 1
 fi
 
 echo "✅ Pre-CI local checks PASSED."
