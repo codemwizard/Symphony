@@ -1,0 +1,55 @@
+# Canonical Task Meta Template (lower_snake_case)
+
+phase: "0"
+task_id: "TSK-P0-124"
+title: "CI guardrail: fail closed on missing Semgrep/toolchain drift"
+owner_role: "SECURITY_GUARDIAN"
+status: "in_progress"   # planned | in_progress | completed
+
+depends_on:
+  - "TSK-P0-123"
+
+touches:
+  - "scripts/audit/verify_ci_toolchain.sh"
+  - "scripts/security/run_semgrep_sast.sh"
+  - ".github/workflows/invariants.yml"
+  - "docs/plans/phase0/TSK-P0-124_ci_security_toolchain_failclosed/PLAN.md"
+  - "docs/plans/phase0/TSK-P0-124_ci_security_toolchain_failclosed/EXEC_LOG.md"
+  - "docs/tasks/PHASE0_TASKS.md"
+  - "docs/plans/phase0/INDEX.md"
+  - "docs/PHASE0/phase0_contract.yml"
+
+invariants:
+  - "SEC-G06"
+  - "SEC-G11"
+
+work:
+  - "Make missing semgrep/toolchain drift fail closed in CI (no SKIPPED SAST due to missing deps)."
+
+acceptance_criteria:
+  - "CI security_scan job fails if semgrep is missing."
+  - "phase0-evidence-security includes ci_toolchain.json PASS."
+
+verification:
+  - "bash scripts/audit/verify_ci_toolchain.sh"
+  - "bash scripts/security/run_semgrep_sast.sh"
+
+evidence:
+  - "evidence/phase0/ci_toolchain.json"
+  - "evidence/phase0/semgrep_sast.json"
+
+failure_modes:
+  - "Evidence file missing"
+  - "Semgrep still SKIPPED in CI due to missing toolchain install"
+
+must_read:
+  - ".github/workflows/invariants.yml"
+  - "scripts/audit/ci_toolchain_versions.env"
+
+implementation_plan: "docs/plans/phase0/TSK-P0-124_ci_security_toolchain_failclosed/PLAN.md"
+implementation_log: "docs/plans/phase0/TSK-P0-124_ci_security_toolchain_failclosed/EXEC_LOG.md"
+
+notes: ""
+client: "codex_cli"
+assigned_agent: "security_guardian"
+model: "gpt-5.3-codex"

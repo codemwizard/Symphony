@@ -1373,5 +1373,35 @@
     "gate_ids": [
       "GOV-G02"
     ]
+  },
+  {
+    "task_id": "TSK-P0-122",
+    "status": "completed",
+    "verification_mode": "both",
+    "evidence_required": false,
+    "evidence_paths": [],
+    "evidence_scope": "repo",
+    "notes": "Normalize schema_fingerprint semantics (baseline canonical) and preserve migrations_fingerprint in evidence.json.",
+    "gate_ids": []
+  },
+  {
+    "task_id": "TSK-P0-123",
+    "status": "in_progress",
+    "verification_mode": "ci",
+    "evidence_required": false,
+    "evidence_paths": [],
+    "evidence_scope": "repo",
+    "notes": "Install pinned Semgrep in CI security_scan job so security evidence is parity-correct.",
+    "gate_ids": []
+  },
+  {
+    "task_id": "TSK-P0-124",
+    "status": "in_progress",
+    "verification_mode": "both",
+    "evidence_required": false,
+    "evidence_paths": [],
+    "evidence_scope": "repo",
+    "notes": "Fail closed on missing Semgrep/toolchain drift in CI (verify_ci_toolchain includes semgrep; semgrep_sast fails in CI if missing).",
+    "gate_ids": []
   }
 ]

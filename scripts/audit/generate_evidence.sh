@@ -4,22 +4,26 @@ set -euo pipefail
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 EVIDENCE_DIR="$ROOT_DIR/evidence/phase0"
 EVIDENCE_FILE="$EVIDENCE_DIR/evidence.json"
-SCHEMA_HASH_FILE="$EVIDENCE_DIR/schema_hash.txt"
+MIGRATIONS_HASH_FILE="$EVIDENCE_DIR/schema_hash.txt"
 
 mkdir -p "$EVIDENCE_DIR"
 
-GIT_SHA=$(git -C "$ROOT_DIR" rev-parse HEAD 2>/dev/null || echo "UNKNOWN")
-TIMESTAMP_UTC=$(date -u +%Y-%m-%dT%H:%M:%SZ)
+source "$ROOT_DIR/scripts/lib/evidence.sh"
+GIT_SHA="$(git_sha)"
+TIMESTAMP_UTC="$(evidence_now_utc)"
 PRODUCER="generate_evidence.sh"
 
-# deterministic schema hash from migrations
-SCHEMA_HASH=$(find "$ROOT_DIR/schema/migrations" -type f -name '*.sql' -print0 \
+# Canonical schema fingerprint is the baseline schema (Phase-0 schema anchor).
+SCHEMA_FP="$(schema_fingerprint)"
+
+# Deterministic migrations fingerprint (separate from baseline fingerprint).
+MIGRATIONS_FP=$(find "$ROOT_DIR/schema/migrations" -type f -name '*.sql' -print0 \
   | sort -z \
   | xargs -0 sha256sum \
   | sha256sum \
   | awk '{print $1}')
 
-printf '%s' "$SCHEMA_HASH" > "$SCHEMA_HASH_FILE"
+printf '%s' "$MIGRATIONS_FP" > "$MIGRATIONS_HASH_FILE"
 
 python3 - <<PY
 import json
@@ -29,11 +33,12 @@ out = {
   "check_id": "EVIDENCE-GENERATE",
   "timestamp_utc": "$TIMESTAMP_UTC",
   "git_sha": "$GIT_SHA",
-  "schema_fingerprint": "$SCHEMA_HASH",
+  "schema_fingerprint": "$SCHEMA_FP",
+  "migrations_fingerprint": "$MIGRATIONS_FP",
   "status": "PASS",
   "producer": "$PRODUCER",
   "inputs": {
-    "schema_hash_file": "${SCHEMA_HASH_FILE}",
+    "migrations_hash_file": "${MIGRATIONS_HASH_FILE}",
     "migrations_dir": "schema/migrations"
   }
 }

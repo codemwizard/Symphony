@@ -538,6 +538,10 @@ jobs:
         with:
           fetch-depth: 0
 
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
       - uses: actions/setup-dotnet@v4
         with:
           dotnet-version: "10.0.x"
@@ -552,6 +556,22 @@ jobs:
           tar -xzf /tmp/rg.tgz -C /tmp
           sudo install -m 0755 "/tmp/ripgrep-${RIPGREP_VERSION}-x86_64-unknown-linux-musl/rg" /usr/local/bin/rg
           rg --version
+
+      - name: Install CI python toolchain (pinned, incl Semgrep)
+        shell: bash
+        run: |
+          set -euo pipefail
+          source scripts/audit/ci_toolchain_versions.env
+          python3 -m pip install --upgrade pip
+          python3 -m pip install "pyyaml==${PYYAML_VERSION}" "jsonschema==${JSONSCHEMA_VERSION}" "semgrep==${SEMGREP_VERSION}" pytest
+          semgrep --version
+
+      - name: Verify CI toolchain (pinned)
+        shell: bash
+        run: |
+          set -euo pipefail
+          chmod +x scripts/audit/verify_ci_toolchain.sh
+          scripts/audit/verify_ci_toolchain.sh
 
       - name: Run security fast checks (if present)
         shell: bash

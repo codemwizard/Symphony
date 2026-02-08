@@ -1,0 +1,52 @@
+# Canonical Task Meta Template (lower_snake_case)
+
+phase: "0"
+task_id: "TSK-P0-122"
+title: "Normalize evidence schema_fingerprint semantics (baseline canonical)"
+owner_role: "INVARIANTS_CURATOR"
+status: "completed"   # planned | in_progress | completed
+
+depends_on:
+  - "TSK-P0-002"
+  - "TSK-P0-011"
+
+touches:
+  - "scripts/audit/generate_evidence.sh"
+  - "docs/plans/phase0/TSK-P0-122_evidence_fingerprint_semantics/PLAN.md"
+  - "docs/plans/phase0/TSK-P0-122_evidence_fingerprint_semantics/EXEC_LOG.md"
+  - "docs/tasks/PHASE0_TASKS.md"
+  - "docs/plans/phase0/INDEX.md"
+  - "docs/PHASE0/phase0_contract.yml"
+
+invariants:
+  - "INV-020"
+  - "INV-029"
+
+work:
+  - "Standardize schema_fingerprint to baseline hash in generate_evidence.sh; preserve migrations hash as migrations_fingerprint."
+
+acceptance_criteria:
+  - "CI evidence artifact shows a single schema_fingerprint value across Phase-0 evidence JSONs."
+
+verification:
+  - "bash scripts/audit/generate_evidence.sh"
+  - "bash scripts/audit/validate_evidence_schema.sh"
+
+evidence:
+  - "evidence/phase0/evidence.json"
+  - "evidence/phase0/evidence_validation.json"
+
+failure_modes:
+  - "Evidence file missing"
+  - "schema_fingerprint semantics remain mixed across evidence producers"
+
+must_read:
+  - "docs/architecture/evidence_schema.json"
+
+implementation_plan: "docs/plans/phase0/TSK-P0-122_evidence_fingerprint_semantics/PLAN.md"
+implementation_log: "docs/plans/phase0/TSK-P0-122_evidence_fingerprint_semantics/EXEC_LOG.md"
+
+notes: ""
+client: "codex_cli"
+assigned_agent: "invariants_curator"
+model: "gpt-5.3-codex"
