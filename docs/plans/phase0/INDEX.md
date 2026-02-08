@@ -25,3 +25,4 @@
 | TSK-P0-114_zambia_regulatory_invariants_roadmap | TSK-P0-114..117 | completed |
 | TSK-P0-118_pre_ci_db_parity | TSK-P0-118..119 | completed |
 | TSK-P0-120_pre_ci_remediation_trace_parity | TSK-P0-120 | completed |
+| TSK-P0-121_ci_filemode_parity | TSK-P0-121 | completed |

@@ -1359,5 +1359,19 @@
     "evidence_scope": "repo",
     "notes": "Pre-CI parity: enforce remediation trace gate locally (wire verify_remediation_trace.sh into scripts/dev/pre_ci.sh and fail-closed when BASE_REF is missing in range mode).",
     "gate_ids": []
+  },
+  {
+    "task_id": "TSK-P0-121",
+    "status": "completed",
+    "verification_mode": "ci",
+    "evidence_required": true,
+    "evidence_paths": [
+      "evidence/phase0/remediation_trace.json"
+    ],
+    "evidence_scope": "ci_artifact",
+    "notes": "CI parity: ensure workflow chmod does not create filemode-only worktree diffs that break remediation-trace (prefer diff_mode=range).",
+    "gate_ids": [
+      "GOV-REMEDIATION-TRACE"
+    ]
   }
 ]
