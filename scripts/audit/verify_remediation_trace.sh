@@ -145,7 +145,9 @@ satisfying_docs: list[str] = []
 missing_markers: dict[str, list[str]] = {}
 
 if rem_docs:
-    # If REM casefile docs are present, require a folder with BOTH PLAN.md and EXEC_LOG.md.
+    # If any REM casefile doc is present in the diff, treat its parent folder as the remediation casefile
+    # and read BOTH files from disk. (Only one file might change in the PR; requiring both to be in-diff
+    # would create false failures even when a complete casefile exists in the checkout.)
     # Markers may be satisfied across the pair (folder-level), matching the intent of casefiles.
     by_dir: dict[str, set[str]] = {}
     for rel in rem_docs:
@@ -153,8 +155,6 @@ if rem_docs:
 
     diag_missing: dict[str, list[str]] = {}
     for d, names in sorted(by_dir.items()):
-        if not {"PLAN.md", "EXEC_LOG.md"}.issubset(names):
-            continue
         plan = f"{d}/PLAN.md"
         log = f"{d}/EXEC_LOG.md"
         ok, mm = pair_has_markers(plan, log)
@@ -169,15 +169,14 @@ if rem_docs:
         missing_markers = diag_missing
 else:
     # Otherwise, allow a normal task plan/log to satisfy the gate iff it contains remediation markers.
-    # Require a folder that includes both PLAN.md and EXEC_LOG.md; markers may be satisfied across the pair.
+    # If either PLAN.md or EXEC_LOG.md is present in the diff, treat its parent folder as the task casefile
+    # and read BOTH files from disk.
     by_dir: dict[str, set[str]] = {}
     for rel in tsk_docs:
         by_dir.setdefault(str(Path(rel).parent), set()).add(Path(rel).name)
 
     diag_missing: dict[str, list[str]] = {}
     for d, names in sorted(by_dir.items()):
-        if not {"PLAN.md", "EXEC_LOG.md"}.issubset(names):
-            continue
         plan = f"{d}/PLAN.md"
         log = f"{d}/EXEC_LOG.md"
         ok, mm = pair_has_markers(plan, log)
