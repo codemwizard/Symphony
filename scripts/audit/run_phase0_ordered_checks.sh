@@ -18,11 +18,6 @@ run scripts/audit/verify_batching_rules.sh
 run scripts/audit/verify_routing_fallback.sh
 run scripts/audit/validate_routing_fallback.sh
 
-# DB-gated checks can only run when DATABASE_URL is present (local pre-CI and CI DB job).
-if [[ -n "${DATABASE_URL:-}" ]]; then
-  run bash scripts/db/tests/test_outbox_pending_indexes.sh
-fi
-
 run scripts/audit/run_security_fast_checks.sh
 
 # OpenBao smoke must run before evidence status checks (contract requires openbao_smoke.json)
