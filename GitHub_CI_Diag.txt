@@ -1,0 +1,2848 @@
+1s
+Current runner version: '2.331.0'
+Runner Image Provisioner
+Operating System
+Runner Image
+GITHUB_TOKEN Permissions
+Secret source: Actions
+Prepare workflow directory
+Prepare all required actions
+Getting action download info
+Download action repository 'actions/checkout@v4' (SHA:34e114876b0b11c390a56381ad16ebd13914f8d5)
+Download action repository 'actions/setup-python@v5' (SHA:a26af69be951a213d495a4c3e4e4022e16d87065)
+Download action repository 'actions/setup-dotnet@v4' (SHA:67a3573c9a986a3f9c594539f4ab511d57bb3ce9)
+Download action repository 'actions/upload-artifact@v4' (SHA:ea165f8d65b6e75b540449e92b4886f43607fa02)
+Complete job name: Phase I — Mechanical gates
+1s
+Run actions/checkout@v4
+Syncing repository: codemwizard/Symphony
+Getting Git version info
+Temporarily overriding HOME='/home/runner/work/_temp/3c21689a-a372-49fa-9e68-0631601c7246' before making global git config changes
+Adding repository directory to the temporary git global config as a safe directory
+/usr/bin/git config --global --add safe.directory /home/runner/work/Symphony/Symphony
+Deleting the contents of '/home/runner/work/Symphony/Symphony'
+Initializing the repository
+Disabling automatic garbage collection
+Setting up auth
+Fetching the repository
+Determining the checkout info
+/usr/bin/git sparse-checkout disable
+/usr/bin/git config --local --unset-all extensions.worktreeConfig
+Checking out the ref
+/usr/bin/git log -1 --format=%H
+cf06d1e36692e75535a31d69be8336b0e431316c
+0s
+Run actions/setup-python@v5
+  with:
+    python-version: 3.11
+    check-latest: false
+    token: ***
+    update-environment: true
+    allow-prereleases: false
+    freethreaded: false
+Installed versions
+  Successfully set up CPython (3.11.14)
+1s
+Run actions/setup-dotnet@v4
+  with:
+    dotnet-version: 10.0.x
+    cache: false
+  env:
+    pythonLocation: /opt/hostedtoolcache/Python/3.11.14/x64
+    PKG_CONFIG_PATH: /opt/hostedtoolcache/Python/3.11.14/x64/lib/pkgconfig
+    Python_ROOT_DIR: /opt/hostedtoolcache/Python/3.11.14/x64
+    Python2_ROOT_DIR: /opt/hostedtoolcache/Python/3.11.14/x64
+    Python3_ROOT_DIR: /opt/hostedtoolcache/Python/3.11.14/x64
+    LD_LIBRARY_PATH: /opt/hostedtoolcache/Python/3.11.14/x64/lib
+/home/runner/work/_actions/actions/setup-dotnet/v4/externals/install-dotnet.sh --skip-non-versioned-files --runtime dotnet --channel LTS
+dotnet-install: .NET Core Runtime with version '10.0.2' is already installed.
+/home/runner/work/_actions/actions/setup-dotnet/v4/externals/install-dotnet.sh --skip-non-versioned-files --channel 10.0
+dotnet-install: .NET Core SDK with version '10.0.102' is already installed.
+12s
+Run set -euo pipefail
+Requirement already satisfied: pip in /opt/hostedtoolcache/Python/3.11.14/x64/lib/python3.11/site-packages (26.0)
+Collecting pip
+  Downloading pip-26.0.1-py3-none-any.whl.metadata (4.7 kB)
+Downloading pip-26.0.1-py3-none-any.whl (1.8 MB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 1.8/1.8 MB 99.1 MB/s  0:00:00
+Installing collected packages: pip
+  Attempting uninstall: pip
+    Found existing installation: pip 26.0
+    Uninstalling pip-26.0:
+      Successfully uninstalled pip-26.0
+Successfully installed pip-26.0.1
+Collecting pyyaml==6.0.1
+  Downloading PyYAML-6.0.1-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.whl.metadata (2.1 kB)
+Collecting jsonschema==4.25.1
+  Downloading jsonschema-4.25.1-py3-none-any.whl.metadata (7.6 kB)
+Collecting semgrep==1.150.0
+  Downloading semgrep-1.150.0-cp310.cp311.cp312.cp313.cp314.py310.py311.py312.py313.py314-none-musllinux_1_0_x86_64.manylinux2014_x86_64.whl.metadata (2.2 kB)
+Collecting pytest
+  Downloading pytest-9.0.2-py3-none-any.whl.metadata (7.6 kB)
+Collecting attrs>=22.2.0 (from jsonschema==4.25.1)
+  Downloading attrs-25.4.0-py3-none-any.whl.metadata (10 kB)
+Collecting jsonschema-specifications>=2023.03.6 (from jsonschema==4.25.1)
+  Downloading jsonschema_specifications-2025.9.1-py3-none-any.whl.metadata (2.9 kB)
+Collecting referencing>=0.28.4 (from jsonschema==4.25.1)
+  Downloading referencing-0.37.0-py3-none-any.whl.metadata (2.8 kB)
+Collecting rpds-py>=0.7.1 (from jsonschema==4.25.1)
+  Downloading rpds_py-0.30.0-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.whl.metadata (4.1 kB)
+Collecting boltons~=21.0 (from semgrep==1.150.0)
+  Downloading boltons-21.0.0-py2.py3-none-any.whl.metadata (1.5 kB)
+Collecting click-option-group~=0.5 (from semgrep==1.150.0)
+  Downloading click_option_group-0.5.9-py3-none-any.whl.metadata (5.8 kB)
+Collecting click~=8.1.8 (from semgrep==1.150.0)
+  Downloading click-8.1.8-py3-none-any.whl.metadata (2.3 kB)
+Collecting colorama~=0.4.0 (from semgrep==1.150.0)
+  Downloading colorama-0.4.6-py2.py3-none-any.whl.metadata (17 kB)
+Collecting exceptiongroup~=1.2.0 (from semgrep==1.150.0)
+  Downloading exceptiongroup-1.2.2-py3-none-any.whl.metadata (6.6 kB)
+Collecting glom~=22.1 (from semgrep==1.150.0)
+  Downloading glom-22.1.0-py2.py3-none-any.whl.metadata (4.9 kB)
+Collecting mcp==1.23.3 (from semgrep==1.150.0)
+  Downloading mcp-1.23.3-py3-none-any.whl.metadata (89 kB)
+Collecting opentelemetry-api~=1.37.0 (from semgrep==1.150.0)
+  Downloading opentelemetry_api-1.37.0-py3-none-any.whl.metadata (1.5 kB)
+Collecting opentelemetry-sdk~=1.37.0 (from semgrep==1.150.0)
+  Downloading opentelemetry_sdk-1.37.0-py3-none-any.whl.metadata (1.5 kB)
+Collecting opentelemetry-exporter-otlp-proto-http~=1.37.0 (from semgrep==1.150.0)
+  Downloading opentelemetry_exporter_otlp_proto_http-1.37.0-py3-none-any.whl.metadata (2.3 kB)
+Collecting opentelemetry-instrumentation-requests~=0.58b0 (from semgrep==1.150.0)
+  Downloading opentelemetry_instrumentation_requests-0.60b1-py3-none-any.whl.metadata (2.6 kB)
+Collecting opentelemetry-instrumentation-threading~=0.58b0 (from semgrep==1.150.0)
+  Downloading opentelemetry_instrumentation_threading-0.60b1-py3-none-any.whl.metadata (2.1 kB)
+Collecting packaging>=21.0 (from semgrep==1.150.0)
+  Downloading packaging-26.0-py3-none-any.whl.metadata (3.3 kB)
+Collecting peewee~=3.14 (from semgrep==1.150.0)
+  Downloading peewee-3.19.0-py3-none-any.whl.metadata (7.0 kB)
+Collecting pyjwt~=2.4 (from pyjwt[crypto]~=2.4->semgrep==1.150.0)
+  Downloading pyjwt-2.11.0-py3-none-any.whl.metadata (4.0 kB)
+Collecting requests~=2.22 (from semgrep==1.150.0)
+  Downloading requests-2.32.5-py3-none-any.whl.metadata (4.9 kB)
+Collecting rich~=13.5.2 (from semgrep==1.150.0)
+  Downloading rich-13.5.3-py3-none-any.whl.metadata (18 kB)
+Collecting ruamel.yaml>=0.18.15 (from semgrep==1.150.0)
+  Downloading ruamel_yaml-0.19.1-py3-none-any.whl.metadata (16 kB)
+Collecting ruamel.yaml.clib==0.2.14 (from semgrep==1.150.0)
+  Downloading ruamel.yaml.clib-0.2.14-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.whl.metadata (3.0 kB)
+Collecting semantic-version~=2.10.0 (from semgrep==1.150.0)
+  Downloading semantic_version-2.10.0-py2.py3-none-any.whl.metadata (9.7 kB)
+Collecting tomli~=2.0.1 (from semgrep==1.150.0)
+  Downloading tomli-2.0.2-py3-none-any.whl.metadata (10.0 kB)
+Collecting typing-extensions~=4.2 (from semgrep==1.150.0)
+  Downloading typing_extensions-4.15.0-py3-none-any.whl.metadata (3.3 kB)
+Collecting urllib3~=2.0 (from semgrep==1.150.0)
+  Downloading urllib3-2.6.3-py3-none-any.whl.metadata (6.9 kB)
+Collecting wcmatch~=8.3 (from semgrep==1.150.0)
+  Downloading wcmatch-8.5.2-py3-none-any.whl.metadata (4.8 kB)
+Collecting anyio>=4.5 (from mcp==1.23.3->semgrep==1.150.0)
+  Downloading anyio-4.12.1-py3-none-any.whl.metadata (4.3 kB)
+Collecting httpx-sse>=0.4 (from mcp==1.23.3->semgrep==1.150.0)
+  Downloading httpx_sse-0.4.3-py3-none-any.whl.metadata (9.7 kB)
+Collecting httpx>=0.27.1 (from mcp==1.23.3->semgrep==1.150.0)
+  Downloading httpx-0.28.1-py3-none-any.whl.metadata (7.1 kB)
+Collecting pydantic-settings>=2.5.2 (from mcp==1.23.3->semgrep==1.150.0)
+  Downloading pydantic_settings-2.12.0-py3-none-any.whl.metadata (3.4 kB)
+Collecting pydantic<3.0.0,>=2.11.0 (from mcp==1.23.3->semgrep==1.150.0)
+  Downloading pydantic-2.12.5-py3-none-any.whl.metadata (90 kB)
+Collecting python-multipart>=0.0.9 (from mcp==1.23.3->semgrep==1.150.0)
+  Downloading python_multipart-0.0.22-py3-none-any.whl.metadata (1.8 kB)
+Collecting sse-starlette>=1.6.1 (from mcp==1.23.3->semgrep==1.150.0)
+  Downloading sse_starlette-3.2.0-py3-none-any.whl.metadata (12 kB)
+Collecting starlette>=0.27 (from mcp==1.23.3->semgrep==1.150.0)
+  Downloading starlette-0.52.1-py3-none-any.whl.metadata (6.3 kB)
+Collecting typing-inspection>=0.4.1 (from mcp==1.23.3->semgrep==1.150.0)
+  Downloading typing_inspection-0.4.2-py3-none-any.whl.metadata (2.6 kB)
+Collecting uvicorn>=0.31.1 (from mcp==1.23.3->semgrep==1.150.0)
+  Downloading uvicorn-0.40.0-py3-none-any.whl.metadata (6.7 kB)
+Collecting face>=20.1.0 (from glom~=22.1->semgrep==1.150.0)
+  Downloading face-24.0.0-py3-none-any.whl.metadata (1.1 kB)
+Collecting importlib-metadata<8.8.0,>=6.0 (from opentelemetry-api~=1.37.0->semgrep==1.150.0)
+  Downloading importlib_metadata-8.7.1-py3-none-any.whl.metadata (4.7 kB)
+Collecting zipp>=3.20 (from importlib-metadata<8.8.0,>=6.0->opentelemetry-api~=1.37.0->semgrep==1.150.0)
+  Downloading zipp-3.23.0-py3-none-any.whl.metadata (3.6 kB)
+Collecting googleapis-common-protos~=1.52 (from opentelemetry-exporter-otlp-proto-http~=1.37.0->semgrep==1.150.0)
+  Downloading googleapis_common_protos-1.72.0-py3-none-any.whl.metadata (9.4 kB)
+Collecting opentelemetry-exporter-otlp-proto-common==1.37.0 (from opentelemetry-exporter-otlp-proto-http~=1.37.0->semgrep==1.150.0)
+  Downloading opentelemetry_exporter_otlp_proto_common-1.37.0-py3-none-any.whl.metadata (1.8 kB)
+Collecting opentelemetry-proto==1.37.0 (from opentelemetry-exporter-otlp-proto-http~=1.37.0->semgrep==1.150.0)
+  Downloading opentelemetry_proto-1.37.0-py3-none-any.whl.metadata (2.3 kB)
+Collecting protobuf<7.0,>=5.0 (from opentelemetry-proto==1.37.0->opentelemetry-exporter-otlp-proto-http~=1.37.0->semgrep==1.150.0)
+  Downloading protobuf-6.33.5-cp39-abi3-manylinux2014_x86_64.whl.metadata (593 bytes)
+Collecting opentelemetry-instrumentation==0.60b1 (from opentelemetry-instrumentation-requests~=0.58b0->semgrep==1.150.0)
+  Downloading opentelemetry_instrumentation-0.60b1-py3-none-any.whl.metadata (7.2 kB)
+Collecting opentelemetry-semantic-conventions==0.60b1 (from opentelemetry-instrumentation-requests~=0.58b0->semgrep==1.150.0)
+  Downloading opentelemetry_semantic_conventions-0.60b1-py3-none-any.whl.metadata (2.4 kB)
+Collecting opentelemetry-util-http==0.60b1 (from opentelemetry-instrumentation-requests~=0.58b0->semgrep==1.150.0)
+  Downloading opentelemetry_util_http-0.60b1-py3-none-any.whl.metadata (2.6 kB)
+Collecting wrapt<2.0.0,>=1.0.0 (from opentelemetry-instrumentation==0.60b1->opentelemetry-instrumentation-requests~=0.58b0->semgrep==1.150.0)
+  Downloading wrapt-1.17.3-cp311-cp311-manylinux1_x86_64.manylinux_2_28_x86_64.manylinux_2_5_x86_64.whl.metadata (6.4 kB)
+INFO: pip is looking at multiple versions of opentelemetry-semantic-conventions to determine which version is compatible with other requirements. This could take a while.
+Collecting opentelemetry-instrumentation-requests~=0.58b0 (from semgrep==1.150.0)
+  Downloading opentelemetry_instrumentation_requests-0.60b0-py3-none-any.whl.metadata (2.6 kB)
+Collecting opentelemetry-instrumentation==0.60b0 (from opentelemetry-instrumentation-requests~=0.58b0->semgrep==1.150.0)
+  Downloading opentelemetry_instrumentation-0.60b0-py3-none-any.whl.metadata (7.2 kB)
+Collecting opentelemetry-semantic-conventions==0.60b0 (from opentelemetry-instrumentation-requests~=0.58b0->semgrep==1.150.0)
+  Downloading opentelemetry_semantic_conventions-0.60b0-py3-none-any.whl.metadata (2.4 kB)
+Collecting opentelemetry-util-http==0.60b0 (from opentelemetry-instrumentation-requests~=0.58b0->semgrep==1.150.0)
+  Downloading opentelemetry_util_http-0.60b0-py3-none-any.whl.metadata (2.6 kB)
+Collecting opentelemetry-instrumentation-requests~=0.58b0 (from semgrep==1.150.0)
+  Downloading opentelemetry_instrumentation_requests-0.59b0-py3-none-any.whl.metadata (2.6 kB)
+Collecting opentelemetry-instrumentation==0.59b0 (from opentelemetry-instrumentation-requests~=0.58b0->semgrep==1.150.0)
+  Downloading opentelemetry_instrumentation-0.59b0-py3-none-any.whl.metadata (7.1 kB)
+Collecting opentelemetry-semantic-conventions==0.59b0 (from opentelemetry-instrumentation-requests~=0.58b0->semgrep==1.150.0)
+  Downloading opentelemetry_semantic_conventions-0.59b0-py3-none-any.whl.metadata (2.4 kB)
+Collecting opentelemetry-util-http==0.59b0 (from opentelemetry-instrumentation-requests~=0.58b0->semgrep==1.150.0)
+  Downloading opentelemetry_util_http-0.59b0-py3-none-any.whl.metadata (2.6 kB)
+Collecting opentelemetry-instrumentation-requests~=0.58b0 (from semgrep==1.150.0)
+  Downloading opentelemetry_instrumentation_requests-0.58b0-py3-none-any.whl.metadata (2.6 kB)
+Collecting opentelemetry-instrumentation==0.58b0 (from opentelemetry-instrumentation-requests~=0.58b0->semgrep==1.150.0)
+  Downloading opentelemetry_instrumentation-0.58b0-py3-none-any.whl.metadata (7.1 kB)
+Collecting opentelemetry-semantic-conventions==0.58b0 (from opentelemetry-instrumentation-requests~=0.58b0->semgrep==1.150.0)
+  Downloading opentelemetry_semantic_conventions-0.58b0-py3-none-any.whl.metadata (2.4 kB)
+Collecting opentelemetry-util-http==0.58b0 (from opentelemetry-instrumentation-requests~=0.58b0->semgrep==1.150.0)
+  Downloading opentelemetry_util_http-0.58b0-py3-none-any.whl.metadata (2.6 kB)
+INFO: pip is looking at multiple versions of opentelemetry-instrumentation-threading to determine which version is compatible with other requirements. This could take a while.
+Collecting opentelemetry-instrumentation-threading~=0.58b0 (from semgrep==1.150.0)
+  Downloading opentelemetry_instrumentation_threading-0.60b0-py3-none-any.whl.metadata (2.1 kB)
+  Downloading opentelemetry_instrumentation_threading-0.59b0-py3-none-any.whl.metadata (2.1 kB)
+  Downloading opentelemetry_instrumentation_threading-0.58b0-py3-none-any.whl.metadata (2.1 kB)
+Collecting annotated-types>=0.6.0 (from pydantic<3.0.0,>=2.11.0->mcp==1.23.3->semgrep==1.150.0)
+  Downloading annotated_types-0.7.0-py3-none-any.whl.metadata (15 kB)
+Collecting pydantic-core==2.41.5 (from pydantic<3.0.0,>=2.11.0->mcp==1.23.3->semgrep==1.150.0)
+  Downloading pydantic_core-2.41.5-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.whl.metadata (7.3 kB)
+Collecting cryptography>=3.4.0 (from pyjwt[crypto]~=2.4->semgrep==1.150.0)
+  Downloading cryptography-46.0.4-cp311-abi3-manylinux_2_34_x86_64.whl.metadata (5.7 kB)
+Collecting charset_normalizer<4,>=2 (from requests~=2.22->semgrep==1.150.0)
+  Downloading charset_normalizer-3.4.4-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl.metadata (37 kB)
+Collecting idna<4,>=2.5 (from requests~=2.22->semgrep==1.150.0)
+  Downloading idna-3.11-py3-none-any.whl.metadata (8.4 kB)
+Collecting certifi>=2017.4.17 (from requests~=2.22->semgrep==1.150.0)
+  Downloading certifi-2026.1.4-py3-none-any.whl.metadata (2.5 kB)
+Collecting markdown-it-py>=2.2.0 (from rich~=13.5.2->semgrep==1.150.0)
+  Downloading markdown_it_py-4.0.0-py3-none-any.whl.metadata (7.3 kB)
+Collecting pygments<3.0.0,>=2.13.0 (from rich~=13.5.2->semgrep==1.150.0)
+  Downloading pygments-2.19.2-py3-none-any.whl.metadata (2.5 kB)
+Collecting bracex>=2.1.1 (from wcmatch~=8.3->semgrep==1.150.0)
+  Downloading bracex-2.6-py3-none-any.whl.metadata (3.6 kB)
+Collecting iniconfig>=1.0.1 (from pytest)
+  Downloading iniconfig-2.3.0-py3-none-any.whl.metadata (2.5 kB)
+Collecting pluggy<2,>=1.5 (from pytest)
+  Downloading pluggy-1.6.0-py3-none-any.whl.metadata (4.8 kB)
+Collecting cffi>=2.0.0 (from cryptography>=3.4.0->pyjwt[crypto]~=2.4->semgrep==1.150.0)
+  Downloading cffi-2.0.0-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.whl.metadata (2.6 kB)
+Collecting pycparser (from cffi>=2.0.0->cryptography>=3.4.0->pyjwt[crypto]~=2.4->semgrep==1.150.0)
+  Downloading pycparser-3.0-py3-none-any.whl.metadata (8.2 kB)
+Collecting httpcore==1.* (from httpx>=0.27.1->mcp==1.23.3->semgrep==1.150.0)
+  Downloading httpcore-1.0.9-py3-none-any.whl.metadata (21 kB)
+Collecting h11>=0.16 (from httpcore==1.*->httpx>=0.27.1->mcp==1.23.3->semgrep==1.150.0)
+  Downloading h11-0.16.0-py3-none-any.whl.metadata (8.3 kB)
+Collecting mdurl~=0.1 (from markdown-it-py>=2.2.0->rich~=13.5.2->semgrep==1.150.0)
+  Downloading mdurl-0.1.2-py3-none-any.whl.metadata (1.6 kB)
+Collecting python-dotenv>=0.21.0 (from pydantic-settings>=2.5.2->mcp==1.23.3->semgrep==1.150.0)
+  Downloading python_dotenv-1.2.1-py3-none-any.whl.metadata (25 kB)
+Downloading PyYAML-6.0.1-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (757 kB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 757.7/757.7 kB 90.7 MB/s  0:00:00
+Downloading jsonschema-4.25.1-py3-none-any.whl (90 kB)
+Downloading semgrep-1.150.0-cp310.cp311.cp312.cp313.cp314.py310.py311.py312.py313.py314-none-musllinux_1_0_x86_64.manylinux2014_x86_64.whl (50.5 MB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 50.5/50.5 MB 99.3 MB/s  0:00:00
+Downloading mcp-1.23.3-py3-none-any.whl (231 kB)
+Downloading ruamel.yaml.clib-0.2.14-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (738 kB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 738.1/738.1 kB 120.7 MB/s  0:00:00
+Downloading boltons-21.0.0-py2.py3-none-any.whl (193 kB)
+Downloading click-8.1.8-py3-none-any.whl (98 kB)
+Downloading click_option_group-0.5.9-py3-none-any.whl (11 kB)
+Downloading colorama-0.4.6-py2.py3-none-any.whl (25 kB)
+Downloading exceptiongroup-1.2.2-py3-none-any.whl (16 kB)
+Downloading glom-22.1.0-py2.py3-none-any.whl (100 kB)
+Downloading opentelemetry_api-1.37.0-py3-none-any.whl (65 kB)
+Downloading importlib_metadata-8.7.1-py3-none-any.whl (27 kB)
+Downloading opentelemetry_exporter_otlp_proto_http-1.37.0-py3-none-any.whl (19 kB)
+Downloading opentelemetry_exporter_otlp_proto_common-1.37.0-py3-none-any.whl (18 kB)
+Downloading opentelemetry_proto-1.37.0-py3-none-any.whl (72 kB)
+Downloading googleapis_common_protos-1.72.0-py3-none-any.whl (297 kB)
+Downloading opentelemetry_instrumentation_requests-0.58b0-py3-none-any.whl (12 kB)
+Downloading opentelemetry_instrumentation-0.58b0-py3-none-any.whl (33 kB)
+Downloading opentelemetry_semantic_conventions-0.58b0-py3-none-any.whl (207 kB)
+Downloading opentelemetry_util_http-0.58b0-py3-none-any.whl (7.7 kB)
+Downloading opentelemetry_instrumentation_threading-0.58b0-py3-none-any.whl (9.3 kB)
+Downloading opentelemetry_sdk-1.37.0-py3-none-any.whl (131 kB)
+Downloading peewee-3.19.0-py3-none-any.whl (411 kB)
+Downloading protobuf-6.33.5-cp39-abi3-manylinux2014_x86_64.whl (323 kB)
+Downloading pydantic-2.12.5-py3-none-any.whl (463 kB)
+Downloading pydantic_core-2.41.5-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (2.1 MB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 2.1/2.1 MB 206.4 MB/s  0:00:00
+Downloading pyjwt-2.11.0-py3-none-any.whl (28 kB)
+Downloading requests-2.32.5-py3-none-any.whl (64 kB)
+Downloading charset_normalizer-3.4.4-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl (151 kB)
+Downloading idna-3.11-py3-none-any.whl (71 kB)
+Downloading rich-13.5.3-py3-none-any.whl (239 kB)
+Downloading pygments-2.19.2-py3-none-any.whl (1.2 MB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 1.2/1.2 MB 160.4 MB/s  0:00:00
+Downloading semantic_version-2.10.0-py2.py3-none-any.whl (15 kB)
+Downloading tomli-2.0.2-py3-none-any.whl (13 kB)
+Downloading typing_extensions-4.15.0-py3-none-any.whl (44 kB)
+Downloading urllib3-2.6.3-py3-none-any.whl (131 kB)
+Downloading wcmatch-8.5.2-py3-none-any.whl (39 kB)
+Downloading wrapt-1.17.3-cp311-cp311-manylinux1_x86_64.manylinux_2_28_x86_64.manylinux_2_5_x86_64.whl (82 kB)
+Downloading pytest-9.0.2-py3-none-any.whl (374 kB)
+Downloading pluggy-1.6.0-py3-none-any.whl (20 kB)
+Downloading annotated_types-0.7.0-py3-none-any.whl (13 kB)
+Downloading anyio-4.12.1-py3-none-any.whl (113 kB)
+Downloading attrs-25.4.0-py3-none-any.whl (67 kB)
+Downloading bracex-2.6-py3-none-any.whl (11 kB)
+Downloading certifi-2026.1.4-py3-none-any.whl (152 kB)
+Downloading cryptography-46.0.4-cp311-abi3-manylinux_2_34_x86_64.whl (4.5 MB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 4.5/4.5 MB 249.7 MB/s  0:00:00
+Downloading cffi-2.0.0-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.whl (215 kB)
+Downloading face-24.0.0-py3-none-any.whl (54 kB)
+Downloading httpx-0.28.1-py3-none-any.whl (73 kB)
+Downloading httpcore-1.0.9-py3-none-any.whl (78 kB)
+Downloading h11-0.16.0-py3-none-any.whl (37 kB)
+Downloading httpx_sse-0.4.3-py3-none-any.whl (9.0 kB)
+Downloading iniconfig-2.3.0-py3-none-any.whl (7.5 kB)
+Downloading jsonschema_specifications-2025.9.1-py3-none-any.whl (18 kB)
+Downloading markdown_it_py-4.0.0-py3-none-any.whl (87 kB)
+Downloading mdurl-0.1.2-py3-none-any.whl (10.0 kB)
+Downloading packaging-26.0-py3-none-any.whl (74 kB)
+Downloading pydantic_settings-2.12.0-py3-none-any.whl (51 kB)
+Downloading python_dotenv-1.2.1-py3-none-any.whl (21 kB)
+Downloading python_multipart-0.0.22-py3-none-any.whl (24 kB)
+Downloading referencing-0.37.0-py3-none-any.whl (26 kB)
+Downloading rpds_py-0.30.0-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (390 kB)
+Downloading ruamel_yaml-0.19.1-py3-none-any.whl (118 kB)
+Downloading sse_starlette-3.2.0-py3-none-any.whl (12 kB)
+Downloading starlette-0.52.1-py3-none-any.whl (74 kB)
+Downloading typing_inspection-0.4.2-py3-none-any.whl (14 kB)
+Downloading uvicorn-0.40.0-py3-none-any.whl (68 kB)
+Downloading zipp-3.23.0-py3-none-any.whl (10 kB)
+Downloading pycparser-3.0-py3-none-any.whl (48 kB)
+Installing collected packages: peewee, boltons, zipp, wrapt, urllib3, typing-extensions, tomli, semantic-version, ruamel.yaml.clib, ruamel.yaml, rpds-py, pyyaml, python-multipart, python-dotenv, pyjwt, pygments, pycparser, protobuf, pluggy, packaging, opentelemetry-util-http, mdurl, iniconfig, idna, httpx-sse, h11, face, exceptiongroup, colorama, click, charset_normalizer, certifi, bracex, attrs, annotated-types, wcmatch, uvicorn, typing-inspection, requests, referencing, pytest, pydantic-core, opentelemetry-proto, markdown-it-py, importlib-metadata, httpcore, googleapis-common-protos, glom, click-option-group, cffi, anyio, starlette, rich, pydantic, opentelemetry-exporter-otlp-proto-common, opentelemetry-api, jsonschema-specifications, httpx, cryptography, sse-starlette, pydantic-settings, opentelemetry-semantic-conventions, jsonschema, opentelemetry-sdk, opentelemetry-instrumentation, mcp, opentelemetry-instrumentation-threading, opentelemetry-instrumentation-requests, opentelemetry-exporter-otlp-proto-http, semgrep
+
+Successfully installed annotated-types-0.7.0 anyio-4.12.1 attrs-25.4.0 boltons-21.0.0 bracex-2.6 certifi-2026.1.4 cffi-2.0.0 charset_normalizer-3.4.4 click-8.1.8 click-option-group-0.5.9 colorama-0.4.6 cryptography-46.0.4 exceptiongroup-1.2.2 face-24.0.0 glom-22.1.0 googleapis-common-protos-1.72.0 h11-0.16.0 httpcore-1.0.9 httpx-0.28.1 httpx-sse-0.4.3 idna-3.11 importlib-metadata-8.7.1 iniconfig-2.3.0 jsonschema-4.25.1 jsonschema-specifications-2025.9.1 markdown-it-py-4.0.0 mcp-1.23.3 mdurl-0.1.2 opentelemetry-api-1.37.0 opentelemetry-exporter-otlp-proto-common-1.37.0 opentelemetry-exporter-otlp-proto-http-1.37.0 opentelemetry-instrumentation-0.58b0 opentelemetry-instrumentation-requests-0.58b0 opentelemetry-instrumentation-threading-0.58b0 opentelemetry-proto-1.37.0 opentelemetry-sdk-1.37.0 opentelemetry-semantic-conventions-0.58b0 opentelemetry-util-http-0.58b0 packaging-26.0 peewee-3.19.0 pluggy-1.6.0 protobuf-6.33.5 pycparser-3.0 pydantic-2.12.5 pydantic-core-2.41.5 pydantic-settings-2.12.0 pygments-2.19.2 pyjwt-2.11.0 pytest-9.0.2 python-dotenv-1.2.1 python-multipart-0.0.22 pyyaml-6.0.1 referencing-0.37.0 requests-2.32.5 rich-13.5.3 rpds-py-0.30.0 ruamel.yaml-0.19.1 ruamel.yaml.clib-0.2.14 semantic-version-2.10.0 semgrep-1.150.0 sse-starlette-3.2.0 starlette-0.52.1 tomli-2.0.2 typing-extensions-4.15.0 typing-inspection-0.4.2 urllib3-2.6.3 uvicorn-0.40.0 wcmatch-8.5.2 wrapt-1.17.3 zipp-3.23.0
+ripgrep 14.1.1 (rev 4649aa9700)
+
+features:+pcre2
+simd(compile):+SSE2,-SSSE3,-AVX2
+simd(runtime):+SSE2,+SSSE3,+AVX2
+
+PCRE2 10.43 is available (JIT is available)
+1s
+Run pytest -q scripts/audit/tests/test_detect_structural_sql_changes.py
+  pytest -q scripts/audit/tests/test_detect_structural_sql_changes.py
+  shell: /usr/bin/bash -e {0}
+  env:
+    pythonLocation: /opt/hostedtoolcache/Python/3.11.14/x64
+    PKG_CONFIG_PATH: /opt/hostedtoolcache/Python/3.11.14/x64/lib/pkgconfig
+    Python_ROOT_DIR: /opt/hostedtoolcache/Python/3.11.14/x64
+    Python2_ROOT_DIR: /opt/hostedtoolcache/Python/3.11.14/x64
+    Python3_ROOT_DIR: /opt/hostedtoolcache/Python/3.11.14/x64
+    LD_LIBRARY_PATH: /opt/hostedtoolcache/Python/3.11.14/x64/lib
+    DOTNET_ROOT: /usr/share/dotnet
+...                                                                      [100%]
+3 passed in 0.12s
+2s
+Run set -euo pipefail
+  set -euo pipefail
+  mkdir -p /tmp/invariants_ai
+  
+  if [[ "pull_request" == "pull_request" ]]; then
+    RANGE="ebf55c45f7c0ee8eb15f2aae59fa51752273863b...249daedfdfe0ca9767588eb030878145ead3d86c"
+  else
+    RANGE="fd14a5bf5a76e92308ea5d576e4e789a6021508a...cf06d1e36692e75535a31d69be8336b0e431316c"
+  fi
+  
+  git diff --no-color --no-ext-diff --unified=0 "$RANGE" > /tmp/invariants_ai/pr.diff
+  python3 scripts/audit/detect_structural_changes.py --diff-file /tmp/invariants_ai/pr.diff --out /tmp/invariants_ai/detect.json
+  
+  structural="$(python3 -c 'import json; d=json.load(open("/tmp/invariants_ai/detect.json")); print("true" if d.get("structural_change") else "false")')"
+  hint="$(python3 -c 'import json; d=json.load(open("/tmp/invariants_ai/detect.json")); print(d.get("confidence_hint", 0.0))')"
+  echo "structural_change=$structural" >> "$GITHUB_OUTPUT"
+  echo "confidence_hint=$hint" >> "$GITHUB_OUTPUT"
+  shell: /usr/bin/bash --noprofile --norc -e -o pipefail {0}
+  env:
+    pythonLocation: /opt/hostedtoolcache/Python/3.11.14/x64
+    PKG_CONFIG_PATH: /opt/hostedtoolcache/Python/3.11.14/x64/lib/pkgconfig
+    Python_ROOT_DIR: /opt/hostedtoolcache/Python/3.11.14/x64
+    Python2_ROOT_DIR: /opt/hostedtoolcache/Python/3.11.14/x64
+    Python3_ROOT_DIR: /opt/hostedtoolcache/Python/3.11.14/x64
+    LD_LIBRARY_PATH: /opt/hostedtoolcache/Python/3.11.14/x64/lib
+    DOTNET_ROOT: /usr/share/dotnet
+0s
+Run set -euo pipefail
+Diff range: ebf55c45f7c0ee8eb15f2aae59fa51752273863b...249daedfdfe0ca9767588eb030878145ead3d86c
+ - .codex/PromptPattern.txt
+ - .codex/agents/architect.md
+ - .codex/agents/compliance_mapper.md
+ - .codex/agents/db_foundation.md
+ - .codex/agents/integration_contracts.md
+ - .codex/agents/invariants_curator.md
+ - .codex/agents/qa_verifier.md
+ - .codex/agents/security_guardian.md
+ - .codex/agents/supervisor.md
+ - .codex/agents/worker.md
+ - .codex/chatsummary/phase-0-implementation
+ - .codex/rules/00-nonnegotiables.md
+ - .codex/rules/01-hard-constraints.md
+ - .codex/rules/02-invariants-contract.md
+ - .codex/rules/03-security-contract.md
+ - .codex/rules/10-architecture-workflow.md
+ - .codex/rules/20-coding-standards.md
+ - .codex/session/phase0_context.md
+ - .github/workflows/invariants.yml
+ - .gitignore
+ - 3-Pillar_Review.txt
+ - AGENTS.md
+ - AuditAnswers.txt
+ - BusinessInvariantsAddition.txt
+ - BusinessModelSummary.txt
+ - CI_Noise_Reduction_Option.txt
+ - Closed-Loop-Requirements_From-Logical_Architectural_Diagram-2.txt
+ - Cursor-agentic-setup_Architect-agent-prompt_V2.txt
+ - Debugprocess.txt
+ - PROXY_RESOLUTION_INTEGRATION_REVIEW.md
+ - Phase0LeftOvers.txt
+ - Phase0_Audit-Gap_Closeout_Plan_Draft.txt
+ - Product-Requirement-Document_V2.txt
+ - Proxy_Request_Invariant.txt
+ - Symphony_BusinessPlan_Implementation.txt
+ - Symphony_Client-Tenant_Invariants.txt
+ - client-tenant_schema_migration.txt
+ - client-tenant_schema_migration_approval.txt
+ - docs/PHASE0/BUSINESS_INVARIANTS_ADDITION_IMPLEMENTATION.md
+ - docs/PHASE0/CLOSEOUT_CHECKLIST_MATRIX.md
+ - docs/PHASE0/PHASE0_AUDIT_GAP_CLOSEOUT_IMPLEMENTATION.md
+ - docs/PHASE0/PHASE0_CLOSEOUT_CHECKLIST.md
+ - docs/PHASE0/PHASE0_CONTRACT.md
+ - docs/PHASE0/PHASE0_CONTRACT_EVIDENCE_STATUS_PLAN.md
+ - docs/PHASE0/PLANS.md
+ - docs/PHASE0/REGULATORY_ACTIVATION_PRECONDITIONS.md
+ - docs/PHASE0/THREE_PILLAR_PLAN.md
+ - docs/PHASE0/Tenant-Client-Member_Migration_Plan.md
+ - docs/PHASE0/ZAMBIA_CII_DESIGNATION_BRIEF.md
+ - docs/PHASE0/phase-0-foundation.md
+ - docs/PHASE0/phase0_contract.yml
+ - docs/PHASE0_AUDIT_REPORT.md
+ - docs/PHASE0_CLOSEOUT_CHECKLIST.md
+ - docs/PHASE0_SQLSTATE_REPORT.md
+ - docs/PLANS-addendum_1.md
+ - docs/Phase_0001-0005/implementation_plan.md
+ - docs/agents/ARCHITECT_PHASE0_PROMPT.md
+ - docs/architecture/ADR_INDEX.md
+ - docs/architecture/ARCHITECTURE_DIAGRAM.md
+ - docs/architecture/BACKLOG.md
+ - docs/architecture/COMPLIANCE_MAP.md
+ - docs/architecture/ROADMAP.md
+ - docs/architecture/SDD.md
+ - docs/architecture/THREAT_MODEL.md
+ - docs/architecture/adrs/ADR-0001-service-boundaries-dotnet.md
+ - docs/architecture/adrs/ADR-0002-ledger-immutability-reconciliation.md
+ - docs/architecture/adrs/ADR-0003-zero-trust-secrets-boundaries.md
+ - docs/architecture/adrs/ADR-0008-proxy-resolution-strategy.md
+ - docs/architecture/adrs/ADR-0011-rebaseline-dayzero-schema.md
+ - docs/architecture/adrs/README.md
+ - docs/architecture/batching_rules.yml
+ - docs/architecture/evidence_schema.json
+ - docs/architecture/routing_fallback.schema.json
+ - docs/architecture/routing_fallback.yml
+ - docs/architecture/schema/proxy_resolution_schema.md
+ - docs/audits/TIER1_GAP_AUDIT_2026-02-06.md
+ - docs/audits/TIER1_GAP_AUDIT_ADDENDUM_2026-02-07.md
+ - docs/contracts/ERROR_MAPPING_SPEC.md
+ - docs/contracts/sqlstate_map.yml
+ - docs/control_planes/CONTROL_PLANES.yml
+ - docs/decisions/ADR-0008-proxy-resolution-strategy.md
+ - docs/decisions/ADR-0010-baseline-policy.md
+ - docs/decisions/ADR-0011-rebaseline-dayzero-schema.md
+ - docs/decisions/ADR-0012-payment-finality-model-deferred.md
+ - docs/decisions/ADR-0013-zdpa-pii-decoupling-strategy.md
+ - docs/decisions/ADR-0014-nfs-sequence-continuity-ipdr.md
+ - docs/decisions/Rebaseline-Decision.md
+ - docs/invariants/INVARIANTS_IMPLEMENTED.md
+ - docs/invariants/INVARIANTS_MANIFEST.yml
+ - docs/invariants/INVARIANTS_QUICK.md
+ - docs/invariants/INVARIANTS_ROADMAP.md
+ - docs/invariants/exceptions/exception_change-rule_detector-scope_2026-01-29.md
+ - docs/invariants/exceptions/exception_change-rule_security_2026-02-04.md
+ - docs/iso20022/contract_registry.yml
+ - docs/operations/DEV_WORKFLOW.md
+ - docs/operations/DOCUMENT_PLACEMENT.md
+ - docs/operations/LOCAL_CI_PARITY.md
+ - docs/operations/PARITY_GAPS.md
+ - docs/operations/REMEDIATION_TRACE_WORKFLOW.md
+ - docs/operations/STYLE_GUIDE.md
+ - docs/operations/Symphony-Repo_specific_Agent_Operating_Manual.md
+ - docs/operations/TASK_CREATION_PROCESS.md
+ - docs/operations/troubleshooting/CI-Troubleshooting.md
+ - docs/operations/troubleshooting/CI-Troubleshooting_Github.md
+ - docs/operations/troubleshooting/Troubleshooting-Guide.md
+ - docs/overview/architecture.md
+ - docs/phase-0/README.md
+ - docs/phase-0/phase-0-foundation.md
+ - docs/phase-1/Phase 2 Verification and Refinement.md
+ - docs/plans/phase0/INDEX.md
+ - docs/plans/phase0/REM-2026-02-07_ci-remediation/EXEC_LOG.md
+ - docs/plans/phase0/REM-2026-02-07_ci-remediation/PLAN.md
+ - docs/plans/phase0/REM-2026-02-07_remediation-trace-ci-miss/EXEC_LOG.md
+ - docs/plans/phase0/REM-2026-02-07_remediation-trace-ci-miss/PLAN.md
+ - docs/plans/phase0/TSK-P0-001/EXEC_LOG.md
+ - docs/plans/phase0/TSK-P0-001/PLAN.md
+ - docs/plans/phase0/TSK-P0-002/EXEC_LOG.md
+ - docs/plans/phase0/TSK-P0-002/PLAN.md
+ - docs/plans/phase0/TSK-P0-003/EXEC_LOG.md
+ - docs/plans/phase0/TSK-P0-003/PLAN.md
+ - docs/plans/phase0/TSK-P0-004/EXEC_LOG.md
+ - docs/plans/phase0/TSK-P0-004/PLAN.md
+ - docs/plans/phase0/TSK-P0-005/EXEC_LOG.md
+ - docs/plans/phase0/TSK-P0-005/PLAN.md
+ - docs/plans/phase0/TSK-P0-006/EXEC_LOG.md
+ - docs/plans/phase0/TSK-P0-006/PLAN.md
+ - docs/plans/phase0/TSK-P0-007/EXEC_LOG.md
+ - docs/plans/phase0/TSK-P0-007/PLAN.md
+ - docs/plans/phase0/TSK-P0-008/EXEC_LOG.md
+ - docs/plans/phase0/TSK-P0-008/PLAN.md
+ - docs/plans/phase0/TSK-P0-009/EXEC_LOG.md
+ - docs/plans/phase0/TSK-P0-009/PLAN.md
+ - docs/plans/phase0/TSK-P0-010/EXEC_LOG.md
+ - docs/plans/phase0/TSK-P0-010/PLAN.md
+ - docs/plans/phase0/TSK-P0-011/EXEC_LOG.md
+ - docs/plans/phase0/TSK-P0-011/PLAN.md
+ - docs/plans/phase0/TSK-P0-012/EXEC_LOG.md
+ - docs/plans/phase0/TSK-P0-012/PLAN.md
+ - docs/plans/phase0/TSK-P0-013/EXEC_LOG.md
+ - docs/plans/phase0/TSK-P0-013/PLAN.md
+ - docs/plans/phase0/TSK-P0-014/EXEC_LOG.md
+ - docs/plans/phase0/TSK-P0-014/PLAN.md
+ - docs/plans/phase0/TSK-P0-015/EXEC_LOG.md
+ - docs/plans/phase0/TSK-P0-015/PLAN.md
+ - docs/plans/phase0/TSK-P0-016/EXEC_LOG.md
+ - docs/plans/phase0/TSK-P0-016/PLAN.md
+ - docs/plans/phase0/TSK-P0-017/EXEC_LOG.md
+ - docs/plans/phase0/TSK-P0-017/PLAN.md
+ - docs/plans/phase0/TSK-P0-018/EXEC_LOG.md
+ - docs/plans/phase0/TSK-P0-018/PLAN.md
+ - docs/plans/phase0/TSK-P0-020/EXEC_LOG.md
+ - docs/plans/phase0/TSK-P0-020/PLAN.md
+ - docs/plans/phase0/TSK-P0-021/EXEC_LOG.md
+ - docs/plans/phase0/TSK-P0-021/PLAN.md
+ - docs/plans/phase0/TSK-P0-022/EXEC_LOG.md
+ - docs/plans/phase0/TSK-P0-022/PLAN.md
+ - docs/plans/phase0/TSK-P0-023/EXEC_LOG.md
+ - docs/plans/phase0/TSK-P0-023/PLAN.md
+ - docs/plans/phase0/TSK-P0-024/EXEC_LOG.md
+ - docs/plans/phase0/TSK-P0-024/PLAN.md
+ - docs/plans/phase0/TSK-P0-025/EXEC_LOG.md
+ - docs/plans/phase0/TSK-P0-025/PLAN.md
+ - docs/plans/phase0/TSK-P0-026/EXEC_LOG.md
+ - docs/plans/phase0/TSK-P0-026/PLAN.md
+ - docs/plans/phase0/TSK-P0-027/EXEC_LOG.md
+ - docs/plans/phase0/TSK-P0-027/PLAN.md
+ - docs/plans/phase0/TSK-P0-028/EXEC_LOG.md
+ - docs/plans/phase0/TSK-P0-028/PLAN.md
+ - docs/plans/phase0/TSK-P0-029/EXEC_LOG.md
+ - docs/plans/phase0/TSK-P0-029/PLAN.md
+ - docs/plans/phase0/TSK-P0-030/EXEC_LOG.md
+ - docs/plans/phase0/TSK-P0-030/PLAN.md
+ - docs/plans/phase0/TSK-P0-031/EXEC_LOG.md
+ - docs/plans/phase0/TSK-P0-031/PLAN.md
+ - docs/plans/phase0/TSK-P0-032/EXEC_LOG.md
+ - docs/plans/phase0/TSK-P0-032/PLAN.md
+ - docs/plans/phase0/TSK-P0-033/EXEC_LOG.md
+ - docs/plans/phase0/TSK-P0-033/PLAN.md
+ - docs/plans/phase0/TSK-P0-034/EXEC_LOG.md
+ - docs/plans/phase0/TSK-P0-034/PLAN.md
+ - docs/plans/phase0/TSK-P0-035/EXEC_LOG.md
+ - docs/plans/phase0/TSK-P0-035/PLAN.md
+ - docs/plans/phase0/TSK-P0-036/EXEC_LOG.md
+ - docs/plans/phase0/TSK-P0-036/PLAN.md
+ - docs/plans/phase0/TSK-P0-044/EXEC_LOG.md
+ - docs/plans/phase0/TSK-P0-044/PLAN.md
+ - docs/plans/phase0/TSK-P0-045/EXEC_LOG.md
+ - docs/plans/phase0/TSK-P0-045/PLAN.md
+ - docs/plans/phase0/TSK-P0-046/EXEC_LOG.md
+ - docs/plans/phase0/TSK-P0-046/PLAN.md
+ - docs/plans/phase0/TSK-P0-047/EXEC_LOG.md
+ - docs/plans/phase0/TSK-P0-047/PLAN.md
+ - docs/plans/phase0/TSK-P0-048/EXEC_LOG.md
+ - docs/plans/phase0/TSK-P0-048/PLAN.md
+ - docs/plans/phase0/TSK-P0-049/EXEC_LOG.md
+ - docs/plans/phase0/TSK-P0-049/PLAN.md
+ - docs/plans/phase0/TSK-P0-050_three_pillars/EXEC_LOG.md
+ - docs/plans/phase0/TSK-P0-050_three_pillars/PLAN.md
+ - docs/plans/phase0/TSK-P0-051_control_planes/EXEC_LOG.md
+ - docs/plans/phase0/TSK-P0-051_control_planes/PLAN.md
+ - docs/plans/phase0/TSK-P0-052_security_plane_expansion/EXEC_LOG.md
+ - docs/plans/phase0/TSK-P0-052_security_plane_expansion/PLAN.md
+ - docs/plans/phase0/TSK-P0-053_compliance_mapping/EXEC_LOG.md
+ - docs/plans/phase0/TSK-P0-053_compliance_mapping/PLAN.md
+ - docs/plans/phase0/TSK-P0-054_compliance_verifier/EXEC_LOG.md
+ - docs/plans/phase0/TSK-P0-054_compliance_verifier/PLAN.md
+ - docs/plans/phase0/TSK-P0-055_agent_scopes_alignment/EXEC_LOG.md
+ - docs/plans/phase0/TSK-P0-055_agent_scopes_alignment/PLAN.md
+ - docs/plans/phase0/TSK-P0-056/EXEC_LOG.md
+ - docs/plans/phase0/TSK-P0-056/PLAN.md
+ - docs/plans/phase0/TSK-P0-057/EXEC_LOG.md
+ - docs/plans/phase0/TSK-P0-057/PLAN.md
+ - docs/plans/phase0/TSK-P0-058/EXEC_LOG.md
+ - docs/plans/phase0/TSK-P0-058/PLAN.md
+ - docs/plans/phase0/TSK-P0-060/EXEC_LOG.md
+ - docs/plans/phase0/TSK-P0-060/PLAN.md
+ - docs/plans/phase0/TSK-P0-061/EXEC_LOG.md
+ - docs/plans/phase0/TSK-P0-061/PLAN.md
+ - docs/plans/phase0/TSK-P0-062/EXEC_LOG.md
+ - docs/plans/phase0/TSK-P0-062/PLAN.md
+ - docs/plans/phase0/TSK-P0-063/EXEC_LOG.md
+ - docs/plans/phase0/TSK-P0-063/PLAN.md
+ - docs/plans/phase0/TSK-P0-064/EXEC_LOG.md
+ - docs/plans/phase0/TSK-P0-064/PLAN.md
+ - docs/plans/phase0/TSK-P0-065/EXEC_LOG.md
+ - docs/plans/phase0/TSK-P0-065/PLAN.md
+ - docs/plans/phase0/TSK-P0-066/EXEC_LOG.md
+ - docs/plans/phase0/TSK-P0-066/PLAN.md
+ - docs/plans/phase0/TSK-P0-067/EXEC_LOG.md
+ - docs/plans/phase0/TSK-P0-067/PLAN.md
+ - docs/plans/phase0/TSK-P0-068_audit_report_update/EXEC_LOG.md
+ - docs/plans/phase0/TSK-P0-068_audit_report_update/PLAN.md
+ - docs/plans/phase0/TSK-P0-069_contract_parse_test/EXEC_LOG.md
+ - docs/plans/phase0/TSK-P0-069_contract_parse_test/PLAN.md
+ - docs/plans/phase0/TSK-P0-070_plan_log_scaffolding/EXEC_LOG.md
+ - docs/plans/phase0/TSK-P0-070_plan_log_scaffolding/PLAN.md
+ - docs/plans/phase0/TSK-P0-071_task_meta_schema_update/EXEC_LOG.md
+ - docs/plans/phase0/TSK-P0-071_task_meta_schema_update/PLAN.md
+ - docs/plans/phase0/TSK-P0-072_plan_log_verifier/EXEC_LOG.md
+ - docs/plans/phase0/TSK-P0-072_plan_log_verifier/PLAN.md
+ - docs/plans/phase0/TSK-P0-073_ci_pre_ci_wiring/EXEC_LOG.md
+ - docs/plans/phase0/TSK-P0-073_ci_pre_ci_wiring/PLAN.md
+ - docs/plans/phase0/TSK-P0-080_business_invariants_addition/EXEC_LOG.md
+ - docs/plans/phase0/TSK-P0-080_business_invariants_addition/PLAN.md
+ - docs/plans/phase0/TSK-P0-087_toolchain_parity/EXEC_LOG.md
+ - docs/plans/phase0/TSK-P0-087_toolchain_parity/PLAN.md
+ - docs/plans/phase0/TSK-P0-088_tier1_gap_audit/EXEC_LOG.md
+ - docs/plans/phase0/TSK-P0-088_tier1_gap_audit/PLAN.md
+ - docs/plans/phase0/TSK-P0-089_tier1_gap_audit_addendum/EXEC_LOG.md
+ - docs/plans/phase0/TSK-P0-089_tier1_gap_audit_addendum/PLAN.md
+ - docs/plans/phase0/TSK-P0-090_audit_gap_closeout/EXEC_LOG.md
+ - docs/plans/phase0/TSK-P0-090_audit_gap_closeout/PLAN.md
+ - docs/plans/phase0/TSK-P0-104_closeout_checklist_matrix/EXEC_LOG.md
+ - docs/plans/phase0/TSK-P0-104_closeout_checklist_matrix/PLAN.md
+ - docs/plans/phase0/TSK-P0-105_remediation_trace_gate/EXEC_LOG.md
+ - docs/plans/phase0/TSK-P0-105_remediation_trace_gate/PLAN.md
+ - docs/plans/phase0/TSK-P0-109_invariant_implemented_alignment/EXEC_LOG.md
+ - docs/plans/phase0/TSK-P0-109_invariant_implemented_alignment/PLAN.md
+ - docs/plans/phase0/TSK-P0-114_zambia_regulatory_invariants_roadmap/EXEC_LOG.md
+ - docs/plans/phase0/TSK-P0-114_zambia_regulatory_invariants_roadmap/PLAN.md
+ - docs/plans/phase0/TSK-P0-118_pre_ci_db_parity/EXEC_LOG.md
+ - docs/plans/phase0/TSK-P0-118_pre_ci_db_parity/PLAN.md
+ - docs/plans/phase0/TSK-P0-120_pre_ci_remediation_trace_parity/EXEC_LOG.md
+ - docs/plans/phase0/TSK-P0-120_pre_ci_remediation_trace_parity/PLAN.md
+ - docs/plans/phase0/_template/EXEC_LOG.md
+ - docs/plans/phase0/_template/PLAN.md
+ - docs/product/PM_Delta_Assessment.md
+ - docs/product/PM_Product_Description.md
+ - docs/security/AUDIT_LOGGING_PLAN.md
+ - docs/security/AUDIT_LOGGING_RETENTION_POLICY.md
+ - docs/security/ISO20022_READINESS.md
+ - docs/security/KEY_MANAGEMENT_POLICY.md
+ - docs/security/SECURE_SDLC_POLICY.md
+ - docs/security/SECURITY_MANIFEST.yml
+ - docs/security/THREE_PILLARS_SECURITY.md
+ - docs/security/ZDPA_COMPLIANCE_MAP.md
+ - docs/security/ZERO_TRUST_POSTURE.md
+ - docs/security/ddl_allowlist.json
+ - docs/security/security_definer_dynamic_sql_allowlist.txt
+ - docs/tasks/PHASE0_TASKS.md
+ - docs/tasks/TASK_META_SCHEMA.md
+ - docs/tasks/THREE_PILLAR_TASKS.md
+ - gitpush.txt
+ - infra/openbao/docker-compose.yml
+ - infra/openbao/openbao.hcl
+ - packages/.gitkeep
+ - prompt.txt
+ - schema/baseline.sql
+ - schema/baselines/2026-02-05/0001_baseline.sql
+ - schema/baselines/2026-02-05/baseline.cutoff
+ - schema/baselines/2026-02-06/0001_baseline.sql
+ - schema/baselines/2026-02-06/baseline.cutoff
+ - schema/baselines/2026-02-06/baseline.meta.json
+ - schema/baselines/2026-02-06/baseline.normalized.sql
+ - schema/baselines/2026-02-07/0001_baseline.sql
+ - schema/baselines/2026-02-07/baseline.cutoff
+ - schema/baselines/2026-02-07/baseline.meta.json
+ - schema/baselines/2026-02-07/baseline.normalized.sql
+ - schema/baselines/current/0001_baseline.sql
+ - schema/baselines/current/baseline.cutoff
+ - schema/baselines/current/baseline.meta.json
+ - schema/migrations/0007_outbox_pending_indexes.sql
+ - schema/migrations/0008_outbox_terminal_uniqueness.sql
+ - schema/migrations/0009_pending_fillfactor.sql
+ - schema/migrations/0010_outbox_notify.sql
+ - schema/migrations/0011_ingress_attestations.sql
+ - schema/migrations/0012_revocation_tables.sql
+ - schema/migrations/0013_outbox_pending_indexes_concurrently.sql
+ - schema/migrations/0014_tenants.sql
+ - schema/migrations/0015_tenant_clients.sql
+ - schema/migrations/0016_tenant_members.sql
+ - schema/migrations/0017_ingress_tenant_attribution.sql
+ - schema/migrations/0018_outbox_tenant_attribution.sql
+ - schema/migrations/0019_member_tenant_consistency_guard.sql
+ - schema/migrations/0020_business_foundation_hooks.sql
+ - schema/migrations/0021_correlation_indexes_concurrently.sql
+ - schema/migrations/0022_participants_registry.sql
+ - schema/migrations/0023_evidence_packs_signing_anchoring_hooks.sql
+ - schema/migrations/0024_business_tables_privilege_hygiene_and_usage_event_conventions.sql
+ - schema/table_conventions.yml
+ - scripts/audit/bootstrap_local_ci_toolchain.sh
+ - scripts/audit/check_sqlstate_map_drift.sh
+ - scripts/audit/ci_toolchain_versions.env
+ - scripts/audit/enforce_change_rule.sh
+ - scripts/audit/generate_evidence.sh
+ - scripts/audit/generate_invariants_quick
+ - scripts/audit/lint_yaml_conventions.sh
+ - scripts/audit/prepare_invariants_curator_inputs.sh
+ - scripts/audit/remediation_trace_lib.py
+ - scripts/audit/run_invariants_fast_checks.sh
+ - scripts/audit/run_phase0_ordered_checks.sh
+ - scripts/audit/run_security_fast_checks.sh
+ - scripts/audit/tests/test_phase0_contract_checker.sh
+ - scripts/audit/tests/test_phase0_contract_validation.sh
+ - scripts/audit/tests/test_verify_remediation_trace.py
+ - scripts/audit/validate_evidence_schema.sh
+ - scripts/audit/validate_routing_fallback.sh
+ - scripts/audit/verify_audit_logging_retention_policy.sh
+ - scripts/audit/verify_baseline_change_governance.sh
+ - scripts/audit/verify_batching_rules.sh
+ - scripts/audit/verify_ci_order.sh
+ - scripts/audit/verify_ci_toolchain.sh
+ - scripts/audit/verify_compliance_manifest.sh
+ - scripts/audit/verify_control_planes_drift.sh
+ - scripts/audit/verify_doc_alignment.sh
+ - scripts/audit/verify_evidence_harness_integrity.sh
+ - scripts/audit/verify_iso20022_contract_registry.sh
+ - scripts/audit/verify_iso20022_readiness_docs.sh
+ - scripts/audit/verify_key_management_policy.sh
+ - scripts/audit/verify_no_tx_docs.sh
+ - scripts/audit/verify_phase0_contract.sh
+ - scripts/audit/verify_phase0_contract_evidence_status.sh
+ - scripts/audit/verify_phase0_impl_plan.sh
+ - scripts/audit/verify_proxy_resolution_invariant.sh
+ - scripts/audit/verify_rebaseline_strategy.sh
+ - scripts/audit/verify_remediation_trace.sh
+ - scripts/audit/verify_remediation_workflow_doc.sh
+ - scripts/audit/verify_repo_structure.sh
+ - scripts/audit/verify_routing_fallback.sh
+ - scripts/audit/verify_semgrep_sast_evidence.sh
+ - scripts/audit/verify_task_evidence_contract.sh
+ - scripts/audit/verify_task_plans_present.sh
+ - scripts/audit/verify_three_pillars_doc.sh
+ - scripts/audit/verify_zero_trust_posture_docs.sh
+ - scripts/ci/check_evidence_required.sh
+ - scripts/ci/clean_evidence.sh
+ - scripts/ci/run_ci_locally.sh
+ - scripts/db/canonicalize_schema_dump.sh
+ - scripts/db/check_baseline_drift.sh
+ - scripts/db/generate_baseline_snapshot.sh
+ - scripts/db/lint_expand_contract_policy.sh
+ - scripts/db/lint_migrations.sh
+ - scripts/db/lint_pk_fk_type_changes.sh
+ - scripts/db/migrate.sh
+ - scripts/db/n_minus_one_check.sh
+ - scripts/db/tests/test_db_functions.sh
+ - scripts/db/tests/test_idempotency_zombie.sh
+ - scripts/db/tests/test_no_tx_migrations.sh
+ - scripts/db/tests/test_outbox_claim_semantics.sh
+ - scripts/db/tests/test_outbox_lease_fencing.sh
+ - scripts/db/tests/test_outbox_pending_indexes.sh
+ - scripts/db/verify_business_foundation_hooks.sh
+ - scripts/db/verify_invariants.sh
+ - scripts/db/verify_outbox_mvcc_posture.sh
+ - scripts/db/verify_outbox_pending_indexes.sh
+ - scripts/db/verify_role_login_posture.sh
+ - scripts/db/verify_table_conventions.sh
+ - scripts/db/verify_tenant_member_hooks.sh
+ - scripts/dev/pre_ci.sh
+ - scripts/lib/evidence.sh
+ - scripts/security/dotnet_dependency_audit.sh
+ - scripts/security/lint_core_boundary.sh
+ - scripts/security/lint_ddl_lock_risk.sh
+ - scripts/security/lint_insecure_patterns.sh
+ - scripts/security/lint_secure_config.sh
+ - scripts/security/lint_security_definer_dynamic_sql.sh
+ - scripts/security/openbao_bootstrap.sh
+ - scripts/security/openbao_smoke_test.sh
+ - scripts/security/run_semgrep_sast.sh
+ - scripts/security/scan_secrets.sh
+ - scripts/security/verify_ddl_allowlist_governance.sh
+ - security/semgrep/rules.yml
+ - services/.gitkeep
+ - sqlstates_mapping.md
+ - src/.gitkeep
+ - tasks/TSK-P0-001/meta.yml
+ - tasks/TSK-P0-002/meta.yml
+ - tasks/TSK-P0-003/meta.yml
+ - tasks/TSK-P0-004/meta.yml
+ - tasks/TSK-P0-005/meta.yml
+ - tasks/TSK-P0-006/meta.yml
+ - tasks/TSK-P0-007/meta.yml
+ - tasks/TSK-P0-008/meta.yml
+ - tasks/TSK-P0-009/meta.yml
+ - tasks/TSK-P0-010/meta.yml
+ - tasks/TSK-P0-011/meta.yml
+ - tasks/TSK-P0-012/meta.yml
+ - tasks/TSK-P0-013/meta.yml
+ - tasks/TSK-P0-014/meta.yml
+ - tasks/TSK-P0-015/meta.yml
+ - tasks/TSK-P0-016/meta.yml
+ - tasks/TSK-P0-017/meta.yml
+ - tasks/TSK-P0-018/meta.yml
+ - tasks/TSK-P0-019/meta.yml
+ - tasks/TSK-P0-020/meta.yml
+ - tasks/TSK-P0-021/meta.yml
+ - tasks/TSK-P0-022/meta.yml
+ - tasks/TSK-P0-023/meta.yml
+ - tasks/TSK-P0-024/meta.yml
+ - tasks/TSK-P0-025/meta.yml
+ - tasks/TSK-P0-026/meta.yml
+ - tasks/TSK-P0-027/meta.yml
+ - tasks/TSK-P0-028/meta.yml
+ - tasks/TSK-P0-029/meta.yml
+ - tasks/TSK-P0-030/meta.yml
+ - tasks/TSK-P0-031/meta.yml
+ - tasks/TSK-P0-032/meta.yml
+ - tasks/TSK-P0-033/meta.yml
+ - tasks/TSK-P0-034/meta.yml
+ - tasks/TSK-P0-035/meta.yml
+ - tasks/TSK-P0-036/meta.yml
+ - tasks/TSK-P0-037/meta.yml
+ - tasks/TSK-P0-038/meta.yml
+ - tasks/TSK-P0-039/meta.yml
+ - tasks/TSK-P0-040/meta.yml
+ - tasks/TSK-P0-041/meta.yml
+ - tasks/TSK-P0-042/meta.yml
+ - tasks/TSK-P0-043/meta.yml
+ - tasks/TSK-P0-044/meta.yml
+ - tasks/TSK-P0-045/meta.yml
+ - tasks/TSK-P0-046/meta.yml
+ - tasks/TSK-P0-047/meta.yml
+ - tasks/TSK-P0-048/meta.yml
+ - tasks/TSK-P0-049/meta.yml
+ - tasks/TSK-P0-050/meta.yml
+ - tasks/TSK-P0-051/meta.yml
+ - tasks/TSK-P0-052/meta.yml
+ - tasks/TSK-P0-053/meta.yml
+ - tasks/TSK-P0-054/meta.yml
+ - tasks/TSK-P0-055/meta.yml
+ - tasks/TSK-P0-056/meta.yml
+ - tasks/TSK-P0-057/meta.yml
+ - tasks/TSK-P0-058/meta.yml
+ - tasks/TSK-P0-060/meta.yml
+ - tasks/TSK-P0-061/meta.yml
+ - tasks/TSK-P0-062/meta.yml
+ - tasks/TSK-P0-063/meta.yml
+ - tasks/TSK-P0-064/meta.yml
+ - tasks/TSK-P0-065/meta.yml
+ - tasks/TSK-P0-066/meta.yml
+ - tasks/TSK-P0-067/meta.yml
+ - tasks/TSK-P0-068/meta.yml
+ - tasks/TSK-P0-069/meta.yml
+ - tasks/TSK-P0-070/meta.yml
+ - tasks/TSK-P0-071/meta.yml
+ - tasks/TSK-P0-072/meta.yml
+ - tasks/TSK-P0-073/meta.yml
+ - tasks/TSK-P0-080/meta.yml
+ - tasks/TSK-P0-081/meta.yml
+ - tasks/TSK-P0-082/meta.yml
+ - tasks/TSK-P0-083/meta.yml
+ - tasks/TSK-P0-084/meta.yml
+ - tasks/TSK-P0-085/meta.yml
+ - tasks/TSK-P0-086/meta.yml
+ - tasks/TSK-P0-087/meta.yml
+ - tasks/TSK-P0-088/meta.yml
+ - tasks/TSK-P0-089/meta.yml
+ - tasks/TSK-P0-090/meta.yml
+ - tasks/TSK-P0-091/meta.yml
+ - tasks/TSK-P0-092/meta.yml
+ - tasks/TSK-P0-093/meta.yml
+ - tasks/TSK-P0-094/meta.yml
+ - tasks/TSK-P0-095/meta.yml
+ - tasks/TSK-P0-096/meta.yml
+ - tasks/TSK-P0-097/meta.yml
+ - tasks/TSK-P0-098/meta.yml
+ - tasks/TSK-P0-099/meta.yml
+ - tasks/TSK-P0-100/meta.yml
+ - tasks/TSK-P0-101/meta.yml
+ - tasks/TSK-P0-102/meta.yml
+ - tasks/TSK-P0-103/meta.yml
+ - tasks/TSK-P0-104/meta.yml
+ - tasks/TSK-P0-105/meta.yml
+ - tasks/TSK-P0-106/meta.yml
+ - tasks/TSK-P0-107/meta.yml
+ - tasks/TSK-P0-108/meta.yml
+ - tasks/TSK-P0-109/meta.yml
+ - tasks/TSK-P0-110/meta.yml
+ - tasks/TSK-P0-111/meta.yml
+ - tasks/TSK-P0-112/meta.yml
+ - tasks/TSK-P0-113/meta.yml
+ - tasks/TSK-P0-114/meta.yml
+ - tasks/TSK-P0-115/meta.yml
+ - tasks/TSK-P0-116/meta.yml
+ - tasks/TSK-P0-117/meta.yml
+ - tasks/TSK-P0-118/meta.yml
+ - tasks/TSK-P0-119/meta.yml
+ - tasks/TSK-P0-120/meta.yml
+ - tasks/_template/meta.yml
+ - tests/.gitkeep
+ - tools/.gitkeep
+0s
+Run set -euo pipefail
+detect.json:
+{
+  "structural_change": true,
+  "confidence_hint": 1.0,
+  "matches": [
+    {
+      "type": "security",
+      "pattern": "\\bSECURITY\\s+DEFINER\\b",
+      "line": "- No runtime DDL. Forward-only migrations. SECURITY DEFINER must harden search_path.",
+      "file": ".codex/agents/architect.md",
+      "sign": "+"
+    },
+    {
+      "type": "security",
+      "pattern": "\\bSET\\s+ROLE\\b",
+      "line": "- Runtime roles are NOLOGIN templates; applications use SET ROLE.",
+      "file": ".codex/agents/architect.md",
+      "sign": "+"
+    },
+    {
+      "type": "security",
+      "pattern": "\\bSECURITY\\s+DEFINER\\b",
+      "line": "- SECURITY DEFINER must harden search_path.",
+      "file": ".codex/agents/db_foundation.md",
+      "sign": "+"
+    },
+    {
+      "type": "security",
+      "pattern": "\\bSECURITY\\s+DEFINER\\b",
+      "line": "- introduce dynamic SQL into SECURITY DEFINER functions without an ADR + Security Guardian review",
+      "file": ".codex/agents/db_foundation.md",
+      "sign": "+"
+    },
+    {
+      "type": "ddl",
+      "pattern": "\\bREFERENCES\\b",
+      "line": "- Adapter code directories are planned but not present in snapshot (docs/overview/architecture.md references services/outbox-relayer and packages/node/db).",
+      "file": ".codex/agents/integration_contracts.md",
+      "sign": "+"
+    },
+    {
+      "type": "ddl",
+      "pattern": "\\bREFERENCES\\b",
+      "line": "- Ensure at least one doc line references `INV-###` token(s)",
+      "file": ".codex/agents/invariants_curator.md",
+      "sign": "+"
+    },
+    {
+      "type": "ddl",
+      "pattern": "\\bREFERENCES\\b",
+      "line": "- enforced_by + verified_by references",
+      "file": ".codex/agents/invariants_curator.md",
+      "sign": "+"
+    },
+    {
+      "type": "security",
+      "pattern": "\\bSECURITY\\s+DEFINER\\b",
+      "line": "- keep SECURITY DEFINER search_path hardening intact",
+      "file": ".codex/agents/security_guardian.md",
+      "sign": "+"
+    },
+    {
+      "type": "security",
+      "pattern": "\\bREVOKE\\b",
+      "line": "- keep revoke-first posture intact (no broad grants)",
+      "file": ".codex/agents/security_guardian.md",
+      "sign": "+"
+    },
+    {
+      "type": "security",
+      "pattern": "\\bSECURITY\\s+DEFINER\\b",
+      "line": "- weakening DB grants/roles/SECURITY DEFINER posture",
+      "file": ".codex/agents/supervisor.md",
+      "sign": "+"
+    },
+    {
+      "type": "security",
+      "pattern": "\\bSECURITY\\s+DEFINER\\b",
+      "line": "- SECURITY DEFINER functions must harden: `SET search_path = pg_catalog, public`.",
+      "file": ".codex/rules/01-hard-constraints.md",
+      "sign": "+"
+    },
+    {
+      "type": "security",
+      "pattern": "\\bSET\\s+ROLE\\b",
+      "line": "- Runtime roles are NOLOGIN templates; app uses SET ROLE.",
+      "file": ".codex/rules/01-hard-constraints.md",
+      "sign": "+"
+    },
+    {
+      "type": "security",
+      "pattern": "\\bSECURITY\\s+DEFINER\\b",
+      "line": "- weaken DB grants / roles / SECURITY DEFINER posture",
+      "file": ".codex/rules/03-security-contract.md",
+      "sign": "+"
+    },
+    {
+      "type": "security",
+      "pattern": "\\bSECURITY\\s+DEFINER\\b",
+      "line": "- introduce dynamic SQL in SECURITY DEFINER without explicit justification and review",
+      "file": ".codex/rules/03-security-contract.md",
+      "sign": "+"
+    },
+    {
+      "type": "security",
+      "pattern": "\\bSECURITY\\s+DEFINER\\b",
+      "line": "- No dynamic SQL in SECURITY DEFINER functions unless formally proven safe.",
+      "file": ".codex/rules/20-coding-standards.md",
+      "sign": "+"
+    },
+    {
+      "type": "ddl",
+      "pattern": "\\bREFERENCES\\b",
+      "line": "- Enforces: plan/log required for in_progress/completed; log references plan; both mention task_id; completed \u21d2 Final summary.",
+      "file": ".codex/session/phase0_context.md",
+      "sign": "+"
+    },
+    {
+      "type": "security",
+      "pattern": "\\bSECURITY\\s+DEFINER\\b",
+      "line": "- name: Run SECURITY DEFINER dynamic SQL lint",
+      "file": ".github/workflows/invariants.yml",
+      "sign": "+"
+    },
+    {
+      "type": "ddl",
+      "pattern": "\\bADD\\s+COLUMN\\b",
+      "line": "**Choose: Option B (forbid `ADD COLUMN ... NOT NULL` entirely in Phase-0).**",
+      "file": "AuditAnswers.txt",
+      "sign": "+"
+    },
+    {
+      "type": "ddl",
+      "pattern": "\\bSET\\s+NOT\\s+NULL\\b",
+      "line": "3. later contract phase: set NOT NULL / drop old",
+      "file": "AuditAnswers.txt",
+      "sign": "+"
+    },
+    {
+      "type": "ddl",
+      "pattern": "\\bADD\\s+COLUMN\\b",
+      "line": "* In Expand/Transition: **reject any `ADD COLUMN ... NOT NULL`** (regardless of DEFAULT)",
+      "file": "AuditAnswers.txt",
+      "sign": "+"
+    },
+    {
+      "type": "ddl",
+      "pattern": "\\bADD\\s+COLUMN\\b",
+      "line": "* `ADD COLUMN <col> <type>` (nullable)",
+      "file": "AuditAnswers.txt",
+      "sign": "+"
+    },
+    {
+      "type": "ddl",
+      "pattern": "\\bADD\\s+COLUMN\\b",
+      "line": "* `ADD COLUMN <col> <type> DEFAULT <const>` **only if column remains nullable**",
+      "file": "AuditAnswers.txt",
+      "sign": "+"
+    },
+    {
+      "type": "ddl",
+      "pattern": "\\bADD\\s+COLUMN\\b",
+      "line": "2. **Nullability:** Option B (no `ADD COLUMN NOT NULL` in Phase-0)",
+      "file": "AuditAnswers.txt",
+      "sign": "+"
+    },
+    {
+      "type": "ddl",
+      "pattern": "\\bADD\\s+COLUMN\\b",
+      "line": "* **Nullability rule = Option B** (forbid `ADD COLUMN ... NOT NULL` entirely)",
+      "file": "AuditAnswers.txt",
+      "sign": "+"
+    },
+    {
+      "type": "ddl",
+      "pattern": "\\bADD\\s+COLUMN\\b",
+      "line": "* **FAIL** on *any* `ADD COLUMN ... NOT NULL` (even if DEFAULT exists)",
+      "file": "AuditAnswers.txt",
+      "sign": "+"
+    },
+    {
+      "type": "ddl",
+      "pattern": "\\bALTER\\s+TABLE\\b",
+      "line": "#      - DROP TABLE / DROP COLUMN / TRUNCATE / ALTER TABLE ... DROP ...",
+      "file": "AuditAnswers.txt",
+      "sign": "+"
+    },
+    {
+      "type": "ddl",
+      "pattern": "\\bADD\\s+COLUMN\\b",
+      "line": "-#      - Reject \"ADD COLUMN ... NOT NULL\" unless the statement includes DEFAULT.",
+      "file": "AuditAnswers.txt",
+      "sign": "+"
+    },
+    {
+      "type": "ddl",
+      "pattern": "\\bADD\\s+COLUMN\\b",
+      "line": "+#      - Reject ANY \"ADD COLUMN ... NOT NULL\" in Phase-0 (2-step pattern required).",
+      "file": "AuditAnswers.txt",
+      "sign": "+"
+    },
+    {
+      "type": "ddl",
+      "pattern": "\\bADD\\s+COLUMN\\b",
+      "line": "+        # Phase-0 rule: forbid ADD COLUMN ... NOT NULL entirely.",
+      "file": "AuditAnswers.txt",
+      "sign": "+"
+    },
+    {
+      "type": "ddl",
+      "pattern": "\\bDROP\\s+TABLE\\b",
+      "line": "* You have a `ddl_allowlist.json`, but you need a gate (`verify_ddl_allowlist_governance.sh`) that triggers a \"Hard Failure\" if any migration introduces a command (like `DROP TABLE`) not explicitly on that list.",
+      "file": "BusinessInvariantsAddition.txt",
+      "sign": "+"
+    },
+    {
+      "type": "ddl",
+      "pattern": "\\bREFERENCES\\b",
+      "line": "The **Inter-Participant Dispute Resolution (IPDR)** revenue line requires \"stitched lifecycle references\".",
+      "file": "BusinessInvariantsAddition.txt",
+      "sign": "+"
+    },
+    {
+      "type": "ddl",
+      "pattern": "\\bCHECK\\s*\\(",
+      "line": "* has a DB invariant check (schema presence + constraints + append-only posture)",
+      "file": "BusinessInvariantsAddition.txt",
+      "sign": "+"
+    },
+    {
+      "type": "ddl",
+      "pattern": "\\bALTER\\s+TABLE\\b",
+      "line": "ALTER TABLE tenants",
+      "file": "BusinessInvariantsAddition.txt",
+      "sign": "+"
+    },
+    {
+      "type": "ddl",
+      "pattern": "\\bADD\\s+COLUMN\\b",
+      "line": "ADD COLUMN billable_client_id UUID NOT NULL, -- The legal entity that pays the K15 fee",
+      "file": "BusinessInvariantsAddition.txt",
+      "sign": "+"
+    },
+    {
+      "type": "ddl",
+      "pattern": "\\bADD\\s+COLUMN\\b",
+      "line": "ADD COLUMN parent_tenant_id UUID NULL,       -- For nested coops (District vs Primary)",
+      "file": "BusinessInvariantsAddition.txt",
+      "sign": "+"
+    },
+    {
+      "type": "ddl",
+      "pattern": "\\bADD\\s+COLUMN\\b",
+      "line": "ADD COLUMN tenant_type TEXT NOT NULL;        -- 'UNION', 'COOP', 'PROGRAM'",
+      "file": "BusinessInvariantsAddition.txt",
+      "sign": "+"
+    },
+    {
+      "type": "ddl",
+      "pattern": "\\bALTER\\s+TABLE\\b",
+      "line": "ALTER TABLE billing_usage_events",
+      "file": "BusinessInvariantsAddition.txt",
+      "sign": "+"
+    },
+    {
+      "type": "ddl",
+      "pattern": "\\bADD\\s+COLUMN\\b",
+      "line": "ADD COLUMN subject_participant_id UUID NOT NULL, -- The Farmer/Member being billed for",
+      "file": "BusinessInvariantsAddition.txt",
+      "sign": "+"
+    },
+    {
+      "type": "ddl",
+      "pattern": "\\bADD\\s+COLUMN\\b",
+      "line": "ADD COLUMN metadata JSONB; -- To store things like 'crop_type' or 'subsidy_id'",
+      "file": "BusinessInvariantsAddition.txt",
+      "sign": "+"
+    },
+    {
+      "type": "ddl",
+      "pattern": "\\bCREATE\\s+TABLE\\b",
+      "line": "CREATE TABLE IF NOT EXISTS billable_clients (",
+      "file": "BusinessInvariantsAddition.txt",
+      "sign": "+"
+    },
+    {
+      "type": "ddl",
+      "pattern": "\\bCHECK\\s*\\(",
+      "line": "client_type TEXT NOT NULL CHECK (client_type IN ('BANK','MMO','NGO','GOV_PROGRAM','COOP_FEDERATION','ENTERPRISE')),",
+      "file": "BusinessInvariantsAddition.txt",
+      "sign": "+"
+    },
+    {
+      "type": "ddl",
+      "pattern": "\\bCHECK\\s*\\(",
+      "line": "status TEXT NOT NULL DEFAULT 'ACTIVE' CHECK (status IN ('ACTIVE','SUSPENDED','CLOSED')),",
+      "file": "BusinessInvariantsAddition.txt",
+      "sign": "+"
+    },
+    {
+      "type": "ddl",
+      "pattern": "\\bALTER\\s+TABLE\\b",
+      "line": "ALTER TABLE tenants",
+      "file": "BusinessInvariantsAddition.txt",
+      "sign": "+"
+    },
+    {
+      "type": "ddl",
+      "pattern": "\\bADD\\s+COLUMN\\b",
+      "line": "ADD COLUMN IF NOT EXISTS billable_client_id UUID NULL,",
+      "file": "BusinessInvariantsAddition.txt",
+      "sign": "+"
+    },
+    {
+      "type": "ddl",
+      "pattern": "\\bADD\\s+COLUMN\\b",
+      "line": "ADD COLUMN IF NOT EXISTS parent_tenant_id UUID NULL,",
+      "file": "BusinessInvariantsAddition.txt",
+      "sign": "+"
+    },
+    {
+      "type": "ddl",
+      "pattern": "\\bADD\\s+COLUMN\\b",
+      "line": "ADD COLUMN IF NOT EXISTS tenant_type TEXT NULL;",
+      "file": "BusinessInvariantsAddition.txt",
+      "sign": "+"
+    },
+    {
+      "type": "ddl",
+      "pattern": "\\bALTER\\s+TABLE\\b",
+      "line": "ALTER TABLE tenants",
+      "file": "BusinessInvariantsAddition.txt",
+      "sign": "+"
+    },
+    {
+      "type": "ddl",
+      "pattern": "\\bADD\\s+CONSTRAINT\\b",
+      "line": "ADD CONSTRAINT tenants_billable_client_fk",
+      "file": "BusinessInvariantsAddition.txt",
+      "sign": "+"
+    },
+    {
+      "type": "ddl",
+      "pattern": "\\bREFERENCES\\b",
+      "line": "FOREIGN KEY (billable_client_id) REFERENCES billable_clients(billable_client_id)",
+      "file": "BusinessInvariantsAddition.txt",
+      "sign": "+"
+    },
+    {
+      "type": "ddl",
+      "pattern": "\\bALTER\\s+TABLE\\b",
+      "line": "ALTER TABLE tenants",
+      "file": "BusinessInvariantsAddition.txt",
+      "sign": "+"
+    },
+    {
+      "type": "ddl",
+      "pattern": "\\bADD\\s+CONSTRAINT\\b",
+      "line": "ADD CONSTRAINT tenants_parent_tenant_fk",
+      "file": "BusinessInvariantsAddition.txt",
+      "sign": "+"
+    },
+    {
+      "type": "ddl",
+      "pattern": "\\bREFERENCES\\b",
+      "line": "FOREIGN KEY (parent_tenant_id) REFERENCES tenants(tenant_id)",
+      "file": "BusinessInvariantsAddition.txt",
+      "sign": "+"
+    },
+    {
+      "type": "ddl",
+      "pattern": "\\bALTER\\s+TABLE\\b",
+      "line": "ALTER TABLE tenants",
+      "file": "BusinessInvariantsAddition.txt",
+      "sign": "+"
+    },
+    {
+      "type": "ddl",
+      "pattern": "\\bADD\\s+CONSTRAINT\\b",
+      "line": "ADD CONSTRAINT tenants_tenant_type_chk",
+      "file": "BusinessInvariantsAddition.txt",
+      "sign": "+"
+    },
+    {
+      "type": "ddl",
+      "pattern": "\\bCHECK\\s*\\(",
+      "line": "CHECK (tenant_type IS NULL OR tenant_type IN ('UNION','COOP','PROGRAM','BANK_TENANT','MMO_TENANT','ENTERPRISE_TENANT'))",
+      "file": "BusinessInvariantsAddition.txt",
+      "sign": "+"
+    },
+    {
+      "type": "ddl",
+      "pattern": "\\bCREATE\\s+(UNIQUE\\s+)?INDEX\\b",
+      "line": "CREATE INDEX IF NOT EXISTS idx_tenants_billable_client_id ON tenants(billable_client_id);",
+      "file": "BusinessInvariantsAddition.txt",
+      "sign": "+"
+    },
+    {
+      "type": "ddl",
+      "pattern": "\\bCREATE\\s+(UNIQUE\\s+)?INDEX\\b",
+      "line": "CREATE INDEX IF NOT EXISTS idx_tenants_parent_tenant_id ON tenants(parent_tenant_id);",
+      "file": "BusinessInvariantsAddition.txt",
+      "sign": "+"
+    },
+    {
+      "type": "ddl",
+      "pattern": "\\bALTER\\s+TABLE\\b",
+      "line": "ALTER TABLE tenants VALIDATE CONSTRAINT tenants_billable_client_fk;",
+      "file": "BusinessInvariantsAddition.txt",
+      "sign": "+"
+    },
+    {
+      "type": "ddl",
+      "pattern": "\\bALTER\\s+TABLE\\b",
+      "line": "ALTER TABLE tenants VALIDATE CONSTRAINT tenants_parent_tenant_fk;",
+      "file": "BusinessInvariantsAddition.txt",
+      "sign": "+"
+    },
+    {
+      "type": "ddl",
+      "pattern": "\\bALTER\\s+TABLE\\b",
+      "line": "ALTER TABLE tenants VALIDATE CONSTRAINT tenants_tenant_type_chk;",
+      "file": "BusinessInvariantsAddition.txt",
+      "sign": "+"
+    },
+    {
+      "type": "ddl",
+      "pattern": "\\bCREATE\\s+TABLE\\b",
+      "line": "CREATE TABLE IF NOT EXISTS billing_usage_events (",
+      "file": "BusinessInvariantsAddition.txt",
+      "sign": "+"
+    },
+    {
+      "type": "ddl",
+      "pattern": "\\bREFERENCES\\b",
+      "line": "billable_client_id UUID NOT NULL REFERENCES billable_clients(billable_client_id),",
+      "file": "BusinessInvariantsAddition.txt",
+      "sign": "+"
+    },
+    {
+      "type": "ddl",
+      "pattern": "\\bREFERENCES\\b",
+      "line": "tenant_id UUID NULL REFERENCES tenants(tenant_id),",
+      "file": "BusinessInvariantsAddition.txt",
+      "sign": "+"
+    },
+    {
+      "type": "ddl",
+      "pattern": "\\bREFERENCES\\b",
+      "line": "client_id UUID NULL REFERENCES clients(client_id),",
+      "file": "BusinessInvariantsAddition.txt",
+      "sign": "+"
+    },
+    {
+      "type": "ddl",
+      "pattern": "\\bREFERENCES\\b",
+      "line": "subject_member_id UUID NULL REFERENCES tenant_members(member_id),",
+      "file": "BusinessInvariantsAddition.txt",
+      "sign": "+"
+    },
+    {
+      "type": "ddl",
+      "pattern": "\\bREFERENCES\\b",
+      "line": "subject_client_id UUID NULL REFERENCES clients(client_id),",
+      "file": "BusinessInvariantsAddition.txt",
+      "sign": "+"
+    },
+    {
+      "type": "ddl",
+      "pattern": "\\bCHECK\\s*\\(",
+      "line": "event_type TEXT NOT NULL CHECK (",
+      "file": "BusinessInvariantsAddition.txt",
+      "sign": "+"
+    },
+    {
+      "type": "ddl",
+      "pattern": "\\bCHECK\\s*\\(",
+      "line": "units TEXT NOT NULL CHECK (units IN ('count','bytes','seconds','events')),",
+      "file": "BusinessInvariantsAddition.txt",
+      "sign": "+"
+    },
+    {
+      "type": "ddl",
+      "pattern": "\\bCHECK\\s*\\(",
+      "line": "quantity BIGINT NOT NULL CHECK (quantity > 0),",
+      "file": "BusinessInvariantsAddition.txt",
+      "sign": "+"
+    },
+    {
+      "type": "ddl",
+      "pattern": "\\bALTER\\s+TABLE\\b",
+      "line": "ALTER TABLE billing_usage_events",
+      "file": "BusinessInvariantsAddition.txt",
+      "sign": "+"
+    },
+    {
+      "type": "ddl",
+      "pattern": "\\bADD\\s+CONSTRAINT\\b",
+      "line": "ADD CONSTRAINT billing_usage_events_subject_exactly_one_chk",
+      "file": "BusinessInvariantsAddition.txt",
+      "sign": "+"
+    },
+    {
+      "type": "ddl",
+      "pattern": "\\bCHECK\\s*\\(",
+      "line": "CHECK (",
+      "file": "BusinessInvariantsAddition.txt",
+      "sign": "+"
+    },
+    {
+      "type": "ddl",
+      "pattern": "\\bALTER\\s+TABLE\\b",
+      "line": "ALTER TABLE billing_usage_events",
+      "file": "BusinessInvariantsAddition.txt",
+      "sign": "+"
+    },
+    {
+      "type": "ddl",
+      "pattern": "\\bADD\\s+CONSTRAINT\\b",
+      "line": "ADD CONSTRAINT billing_usage_events_subject_zero_or_one_chk",
+      "file": "BusinessInvariantsAddition.txt",
+      "sign": "+"
+    },
+    {
+      "type": "ddl",
+      "pattern": "\\bCHECK\\s*\\(",
+      "line": "CHECK (",
+      "file": "BusinessInvariantsAddition.txt",
+      "sign": "+"
+    },
+    {
+      "type": "ddl",
+      "pattern": "\\bALTER\\s+TABLE\\b",
+      "line": "ALTER TABLE billing_usage_events",
+      "file": "BusinessInvariantsAddition.txt",
+      "sign": "+"
+    },
+    {
+      "type": "ddl",
+      "pattern": "\\bADD\\s+CONSTRAINT\\b",
+      "line": "ADD CONSTRAINT billing_usage_events_member_requires_tenant_chk",
+      "file": "BusinessInvariantsAddition.txt",
+      "sign": "+"
+    },
+    {
+      "type": "ddl",
+      "pattern": "\\bCHECK\\s*\\(",
+      "line": "CHECK (",
+      "file": "BusinessInvariantsAddition.txt",
+      "sign": "+"
+    },
+    {
+      "type": "ddl",
+      "pattern": "\\bALTER\\s+TABLE\\b",
+      "line": "ALTER TABLE ingress_attestations",
+      "file": "BusinessInvariantsAddition.txt",
+      "sign": "+"
+    },
+    {
+      "type": "ddl",
+      "pattern": "\\bADD\\s+COLUMN\\b",
+      "line": "ADD COLUMN IF NOT EXISTS correlation_id UUID NULL;",
+      "file": "BusinessInvariantsAddition.txt",
+      "sign": "+"
+    },
+    {
+      "type": "ddl",
+      "pattern": "\\bALTER\\s+TABLE\\b",
+      "line": "ALTER TABLE payment_outbox",
+      "file": "BusinessInvariantsAddition.txt",
+      "sign": "+"
+    },
+    {
+      "type": "ddl",
+      "pattern": "\\bADD\\s+COLUMN\\b",
+      "line": "ADD COLUMN IF NOT EXISTS correlation_id UUID NULL;",
+      "file": "BusinessInvariantsAddition.txt",
+      "sign": "+"
+    },
+    {
+      "type": "ddl",
+      "pattern": "\\bALTER\\s+TABLE\\b",
+      "line": "ALTER TABLE payment_outbox_attempts",
+      "file": "BusinessInvariantsAddition.txt",
+      "sign": "+"
+    },
+    {
+      "type": "ddl",
+      "pattern": "\\bADD\\s+COLUMN\\b",
+      "line": "ADD COLUMN IF NOT EXISTS correlation_id UUID NULL;",
+      "file": "BusinessInvariantsAddition.txt",
+      "sign": "+"
+    },
+    {
+      "type": "ddl",
+      "pattern": "\\bCREATE\\s+(UNIQUE\\s+)?INDEX\\b",
+      "line": "CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_outbox_correlation_id ON payment_outbox(correlation_id);",
+      "file": "BusinessInvariantsAddition.txt",
+      "sign": "+"
+    },
+    {
+      "type": "ddl",
+      "pattern": "\\bCREATE\\s+(UNIQUE\\s+)?INDEX\\b",
+      "line": "CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_attempts_correlation_id ON payment_outbox_attempts(correlation_id);",
+      "file": "BusinessInvariantsAddition.txt",
+      "sign": "+"
+    },
+    {
+      "type": "ddl",
+      "pattern": "\\bALTER\\s+TABLE\\b",
+      "line": "ALTER TABLE tenants VALIDATE CONSTRAINT tenants_billable_client_fk;",
+      "file": "BusinessInvariantsAddition.txt",
+      "sign": "+"
+    },
+    {
+      "type": "ddl",
+      "pattern": "\\bALTER\\s+TABLE\\b",
+      "line": "ALTER TABLE tenants VALIDATE CONSTRAINT tenants_parent_tenant_fk;",
+      "file": "BusinessInvariantsAddition.txt",
+      "sign": "+"
+    },
+    {
+      "type": "ddl",
+      "pattern": "\\bALTER\\s+TABLE\\b",
+      "line": "ALTER TABLE tenants VALIDATE CONSTRAINT tenants_tenant_type_chk;",
+      "file": "BusinessInvariantsAddition.txt",
+      "sign": "+"
+    },
+    {
+      "type": "ddl",
+      "pattern": "\\bALTER\\s+TABLE\\b",
+      "line": "ALTER TABLE tenants",
+      "file": "BusinessInvariantsAddition.txt",
+      "sign": "+"
+    },
+    {
+      "type": "ddl",
+      "pattern": "\\bALTER\\s+COLUMN\\b",
+      "line": "ALTER COLUMN billable_client_id SET NOT NULL;",
+      "file": "BusinessInvariantsAddition.txt",
+      "sign": "+"
+    },
+    {
+      "type": "ddl",
+      "pattern": "\\bALTER\\s+TABLE\\b",
+      "line": "ALTER TABLE tenants",
+      "file": "BusinessInvariantsAddition.txt",
+      "sign": "+"
+    },
+    {
+      "type": "ddl",
+      "pattern": "\\bALTER\\s+COLUMN\\b",
+      "line": "ALTER COLUMN tenant_type SET NOT NULL;",
+      "file": "BusinessInvariantsAddition.txt",
+      "sign": "+"
+    },
+    {
+      "type": "ddl",
+      "pattern": "\\bCHECK\\s*\\(",
+      "line": "2) Code reality check (based on what\u2019s implemented today)",
+      "file": "BusinessModelSummary.txt",
+      "sign": "+"
+    },
+    {
+      "type": "security",
+      "pattern": "\\bSECURITY\\s+DEFINER\\b",
+      "line": "Your invariants manifest shows 18 invariants defined, with 16 implemented and treated as P0 (\u201cmust not break\u201d). The two not yet mechanically enforced are both P1 roadmap items: baseline snapshot drift + dynamic-SQL linting in SECURITY DEFINER functions.",
+      "file": "BusinessModelSummary.txt",
+      "sign": "+"
+    },
+    {
+      "type": "security",
+      "pattern": "\\bsearch_path\\b",
+      "line": "This aligns with your docs claiming DB roles, append-only enforcement, search_path pinning, and TRUNCATE revocation as built-in controls.",
+      "file": "BusinessModelSummary.txt",
+      "sign": "+"
+    },
+    {
+      "type": "security",
+      "pattern": "\\bREVOKE\\b",
+      "line": "You\u2019re explicitly enforcing \u201crevoke-first posture,\u201d NOLOGIN runtime roles, and \u201cno runtime DDL\u201d on public. This is the kind of thing auditors ac",
+      "file": "BusinessModelSummary.txt",
+      "sign": "+"
+    },
+    {
+      "type": "security",
+      "pattern": "\\bSECURITY\\s+DEFINER\\b",
+      "line": "INV-009 (SECURITY DEFINER must avoid dynamic SQL / user-controlled identifiers) is marked roadmap. Even if today\u2019s functions are clean, regulators/auditors will ask how you prevent future foot-guns. Right now the answer is \u201cprocess + review,\u201d not \u201cmechanical prevention.\u201d",
+      "file": "BusinessModelSummary.txt",
+      "sign": "+"
+    },
+    {
+      "type": "security",
+      "pattern": "\\bSECURITY\\s+DEFINER\\b",
+      "line": "mechanical guard for SECURITY DEFINER dynamic SQL risks (INV-009),",
+      "file": "BusinessModelSummary.txt",
+      "sign": "+"
+    },
+    {
+      "type": "security",
+      "pattern": "\\bsearch_path\\b",
+      "line": "restricted search_path for privileged functions,",
+      "file": "BusinessModelSummary.txt",
+      "sign": "+"
+    },
+    {
+      "type": "security",
+      "pattern": "\\bSECURITY\\s+DEFINER\\b",
+      "line": "tightly controlled SECURITY DEFINER usage.",
+      "file": "BusinessModelSummary.txt",
+      "sign": "+"
+    },
+    {
+      "type": "security",
+      "pattern": "\\bGRANT\\b",
+      "line": "Evidence to show: role matrix + grant scripts + a \u201cleast privilege proof\u201d statement.",
+      "file": "BusinessModelSummary.txt",
+      "sign": "+"
+    },
+    {
+      "type": "security",
+      "pattern": "\\bSECURITY\\s+DEFINER\\b",
+      "line": "SECURITY DEFINER functions without strong guardrails",
+      "file": "BusinessModelSummary.txt",
+      "sign": "+"
+    },
+    {
+      "type": "ddl",
+      "pattern": "\\bREFERENCES\\b",
+      "line": "a sandbox submission pack that explicitly references your implemented controls (without mentioning roadmap gaps as failures).",
+      "file": "BusinessModelSummary.txt",
+      "sign": "+"
+    },
+    {
+      "type": "ddl",
+      "pattern": "\\bREFERENCES\\b",
+      "line": "ZECHL Cheque Image Clearing Rules (dispute resolution references; duplicates/undue enrichment language).",
+      "file": "BusinessModelSummary.txt",
+      "sign": "+"
+    },
+    {
+      "type": "ddl",
+      "pattern": "\\bCHECK\\s*\\(",
+      "line": "0) Reality check (brutally honest, but useful)",
+      "file": "BusinessModelSummary.txt",
+      "sign": "+"
+    },
+    {
+      "type": "security",
+      "pattern": "\\bSECURITY\\s+DEFINER\\b",
+      "line": "- No dynamic SQL in SECURITY DEFINER functions unless formally proven safe.",
+      "file": "BusinessModelSummary.txt",
+      "sign": "+"
+    },
+    {
+      "type": "security",
+      "pattern": "\\bSECURITY\\s+DEFINER\\b",
+      "line": "Least-privilege DB roles and hardening tactics like role scoping and fixed search_path for SECURITY DEFINER functions.",
+      "file": "BusinessModelSummary.txt",
+      "sign": "+"
+    },
+    {
+      "type": "ddl",
+      "pattern": "\\bREFERENCES\\b",
+      "line": "amount, currency, party references (minimize sensitive fields)",
+      "file": "BusinessModelSummary.txt",
+      "sign": "+"
+    },
+    {
+      "type": "security",
+      "pattern": "\\bSECURITY\\s+DEFINER\\b",
+      "line": "SECURITY DEFINER hardening must include safe search_path",
+      "file": "BusinessModelSummary.txt",
+      "sign": "+"
+    },
+    {
+      "type": "security",
+      "pattern": "\\bSET\\s+ROLE\\b",
+      "line": "Runtime roles are NOLOGIN templates; app uses SET ROLE",
+      "file": "BusinessModelSummary.txt",
+      "sign": "+"
+    },
+    {
+      "type": "security",
+      "pattern": "\\bSECURITY\\s+DEFINER\\b",
+      "line": "DB DDL and DB APIs (including SECURITY DEFINER functions).",
+      "file": "BusinessModelSummary.txt",
+      "sign": "+"
+    },
+    {
+      "type": "security",
+      "pattern": "\\bGRANT\\b",
+      "line": "SQL injection checks, grant linting, search_path checks.",
+      "file": "BusinessModelSummary.txt",
+      "sign": "+"
+    },
+    {
+      "type": "security",
+      "pattern": "\\bSECURITY\\s+DEFINER\\b",
+      "line": "- No runtime DDL. Forward-only migrations. SECURITY DEFINER must harden search_path.",
+      "file": "BusinessModelSummary.txt",
+      "sign": "+"
+    },
+    {
+      "type": "security",
+      "pattern": "\\bSET\\s+ROLE\\b",
+      "line": "- Runtime roles are NOLOGIN templates; applications use SET ROLE.",
+      "file": "BusinessModelSummary.txt",
+      "sign": "+"
+    },
+    {
+      "type": "security",
+      "pattern": "\\bSECURITY\\s+DEFINER\\b",
+      "line": "- weakening DB grants/roles/SECURITY DEFINER posture",
+      "file": "BusinessModelSummary.txt",
+      "sign": "+"
+    },
+    {
+      "type": "security",
+      "pattern": "\\bSECURITY\\s+DEFINER\\b",
+      "line": "- introduce dynamic SQL into SECURITY DEFINER functions without an ADR + Security Guardian review",
+      "file": "BusinessModelSummary.txt",
+      "sign": "+"
+    },
+    {
+      "type": "security",
+      "pattern": "\\bSECURITY\\s+DEFINER\\b",
+      "line": "- keep SECURITY DEFINER search_path hardening intact",
+      "file": "BusinessModelSummary.txt",
+      "sign": "+"
+    },
+    {
+      "type": "security",
+      "pattern": "\\bREVOKE\\b",
+      "line": "- keep revoke-first posture intact (no broad grants)",
+      "file": "BusinessModelSummary.txt",
+      "sign": "+"
+    },
+    {
+      "type": "ddl",
+      "pattern": "\\bREFERENCES\\b",
+      "line": "- Adapter code directories are planned but not present in snapshot (docs/overview/architecture.md references services/outbox-relayer and packages/node/db).",
+      "file": "BusinessModelSummary.txt",
+      "sign": "+"
+    },
+    {
+      "type": "security",
+      "pattern": "\\bSECURITY\\s+DEFINER\\b",
+      "line": "SECURITY DEFINER patterns",
+      "file": "BusinessModelSummary.txt",
+      "sign": "+"
+    },
+    {
+      "type": "security",
+      "pattern": "\\bSECURITY\\s+DEFINER\\b",
+      "line": "SECURITY DEFINER must avoid dynamic SQL/user-controlled identifiers",
+      "file": "BusinessModelSummary.txt",
+      "sign": "+"
+    },
+    {
+      "type": "security",
+      "pattern": "\\bSECURITY\\s+DEFINER\\b",
+      "line": "search_path hardening for SECURITY DEFINER, enforced by lint scripts",
+      "file": "BusinessModelSummary.txt",
+      "sign": "+"
+    },
+    {
+      "type": "security",
+      "pattern": "\\bREVOKE\\b",
+      "line": "revoke-first posture to prevent CREATE privileges regaining",
+      "file": "BusinessModelSummary.txt",
+      "sign": "+"
+    },
+    {
+      "type": "ddl",
+      "pattern": "\\bREFERENCES\\b",
+      "line": "Update invariants manifest and add references to tests/metrics",
+      "file": "BusinessModelSummary.txt",
+      "sign": "+"
+    },
+    {
+      "type": "security",
+      "pattern": "\\bSECURITY\\s+DEFINER\\b",
+      "line": "- SECURITY DEFINER must harden search_path.",
+      "file": "BusinessModelSummary.txt",
+      "sign": "+"
+    },
+    {
+      "type": "ddl",
+      "pattern": "\\bREFERENCES\\b",
+      "line": "- docs/overview/architecture.md references future Node services/packages, but there are no services/ or",
+      "file": "BusinessModelSummary.txt",
+      "sign": "+"
+    },
+    {
+      "type": "ddl",
+      "pattern": "\\bREFERENCES\\b",
+      "line": "It correctly noticed the repo is currently \u201cDB + invariants + scripts first\u201d and that service/runtime code isn\u2019t in this snapshot. That\u2019s consistent with your docs/overview/architecture.md (which references future Node folders that aren\u2019t present yet).",
+      "file": "BusinessModelSummary.txt",
+      "sign": "+"
+    },
+    {
+      "type": "ddl",
+      "pattern": "\\bREFERENCES\\b",
+      "line": "keep docs/architecture/ but add a short \u201cdoc map\u201d file stating this is now the canonical location and update any references.",
+      "file": "BusinessModelSummary.txt",
+      "sign": "+"
+    },
+    {
+      "type": "security",
+      "pattern": "\\bSET\\s+ROLE\\b",
+      "line": "DB role usage strategy (SET ROLE model remains consistent with your DB posture)",
+      "file": "BusinessModelSummary.txt",
+      "sign": "+"
+    },
+    {
+      "type": "security",
+      "pattern": "\\bSECURITY\\s+DEFINER\\b",
+      "line": "bypass your existing DB hard-constraints (SECURITY DEFINER hardening, role templates, no runtime DDL, lint scripts)",
+      "file": "BusinessModelSummary.txt",
+      "sign": "+"
+    },
+    {
+      "type": "security",
+      "pattern": "\\bSECURITY\\s+DEFINER\\b",
+      "line": "it must follow your SECURITY DEFINER + search_path hardening rules",
+      "file": "BusinessModelSummary.txt",
+      "sign": "+"
+    },
+    {
+      "type": "security",
+      "pattern": "\\bGRANT\\b",
+      "line": "keep your existing grant linting scripts as the \u201cproof generator\u201d",
+      "file": "BusinessModelSummary.txt",
+      "sign": "+"
+    },
+    {
+      "type": "ddl",
+      "pattern": "\\bREFERENCES\\b",
+      "line": "Evidence updates required (manifest entries, ADR references)",
+      "file": "BusinessModelSummary.txt",
+      "sign": "+"
+    },
+    {
+      "type": "ddl",
+      "pattern": "\\bREFERENCES\\b",
+      "line": "I can do it in one pass (rewrite with the added sections and corrected references), but I\u2019ll need to actually open the file and then output a revised draft.",
+      "file": "BusinessModelSummary.txt",
+      "sign": "+"
+    },
+    {
+      "type": "ddl",
+      "pattern": "\\bREFERENCES\\b",
+      "line": "- timestamps, rail references, error taxonomy fields, latency.",
+      "file": "BusinessModelSummary.txt",
+      "sign": "+"
+    },
+    {
+      "type": "ddl",
+      "pattern": "\\bCREATE\\s+(UNIQUE\\s+)?INDEX\\b",
+      "line": "* **The Fix:** Section 5 (Data Model) must include the **SQL Constraint Definitions** as code snippets, not just prose. An AI agent is 5x more likely to follow a CREATE UNIQUE INDEX snippet than a sentence saying \"Ensure uniqueness.\"",
+      "file": "BusinessModelSummary.txt",
+      "sign": "+"
+    },
+    {
+      "type": "ddl",
+      "pattern": "\\bDROP\\s+TABLE\\b",
+      "line": "| **NEG-SEC-01** | symphony_executor | DROP TABLE payment_outbox_pending; | **Fail:** 42501 (insufficient_privilege) |",
+      "file": "BusinessModelSummary.txt",
+      "sign": "+"
+    },
+    {
+      "type": "security",
+      "pattern": "\\bREVOKE\\b",
+      "line": "**Note: This assumes your \"Append-Only\" invariant is enforced via REVOKE UPDATE on the attempts table.*",
+      "file": "BusinessModelSummary.txt",
+      "sign": "+"
+    },
+    {
+      "type": "ddl",
+      "pattern": "\\bCREATE\\s+TYPE\\b",
+      "line": "CREATE TYPE outbox_attempt_state AS ENUM (",
+      "file": "BusinessModelSummary.txt",
+      "sign": "+"
+    },
+    {
+      "type": "ddl",
+      "pattern": "\\bCREATE\\s+TYPE\\b",
+      "line": "CREATE TYPE outbox_attempt_state AS ENUM (",
+      "file": "BusinessModelSummary.txt",
+      "sign": "+"
+    },
+    {
+      "type": "ddl",
+      "pattern": "\\bCREATE\\s+(UNIQUE\\s+)?INDEX\\b",
+      "line": "CREATE UNIQUE INDEX ux_attempts_one_terminal_per_outbox",
+      "file": "BusinessModelSummary.txt",
+      "sign": "+"
+    },
+    {
+      "type": "ddl",
+      "pattern": "\\bALTER\\s+TABLE\\b",
+      "line": "Optional: ALTER TABLE \u2026 DISABLE TRIGGER is impossible for runtime roles (because they don\u2019t own the table and don\u2019t have privilege).",
+      "file": "BusinessModelSummary.txt",
+      "sign": "+"
+    },
+    {
+      "type": "security",
+      "pattern": "\\bSECURITY\\s+DEFINER\\b",
+      "line": "If you use \u201cstored-procedure-only DB access\u201d, runtime roles should not have direct table DML at all (except possibly INSERT during early development), and should instead call controlled SECURITY DEFINER functions.",
+      "file": "BusinessModelSummary.txt",
+      "sign": "+"
+    },
+    {
+      "type": "ddl",
+      "pattern": "\\bREFERENCES\\b",
+      "line": "proof references (query outputs showing privileges; trigger presence; SQLSTATE assertions)",
+      "file": "BusinessModelSummary.txt",
+      "sign": "+"
+    },
+    {
+      "type": "ddl",
+      "pattern": "\\bCREATE\\s+(UNIQUE\\s+)?INDEX\\b",
+      "line": "CREATE UNIQUE INDEX ux_attempts_one_terminal_per_outbox",
+      "file": "BusinessModelSummary.txt",
+      "sign": "+"
+    },
+    {
+      "type": "security",
+      "pattern": "\\bREVOKE\\b",
+      "line": "Yes, I cover some of those but will sharpen them for this process:# Invariants manifest (source of truth)# - status=implemented means CI/mechanical check exists in repo (lint/gate/script)# - status=roadmap means required but verification hook is not yet wired- id: INV-001 aliases: [\"I-MIG-02\"] statu",
+      "file": "BusinessModelSummary.txt",
+      "sign": "+"
+    },
+    {
+      "type": "security",
+      "pattern": "\\bSECURITY\\s+DEFINER\\b",
+      "line": "Regarding INV-009 (Dynamic SQL in Security Definer): This is a major PCI DSS v4.0 and OWASP ASVS risk. In a payment engine, dynamic SQL in SECURITY DEFINER functions is a primary vector for privilege escalation. Use a linter like plpgsql_check to automate this.",
+      "file": "BusinessModelSummary.txt",
+      "sign": "+"
+    },
+    {
+      "type": "security",
+      "pattern": "\\bSECURITY\\s+DEFINER\\b",
+      "line": "Schema lint rules pass (e.g., no top-level BEGIN/COMMIT, SECURITY DEFINER search_path pinned).",
+      "file": "BusinessModelSummary.txt",
+      "sign": "+"
+    },
+    {
+      "type": "security",
+      "pattern": "\\bSECURITY\\s+DEFINER\\b",
+      "line": "SECURITY DEFINER hardening (search_path pinned; dynamic SQL constrained)",
+      "file": "BusinessModelSummary.txt",
+      "sign": "+"
+    },
+    {
+      "type": "ddl",
+      "pattern": "\\bALTER\\s+TABLE\\b",
+      "line": "Fix: Your PaC (Policy-as-Code) must strictly forbid Blocking DDL on hot tables. You should mandate CREATE INDEX CONCURRENTLY. If a migration requires a table rewrite, your \"Forward-Only\" strategy must involve a Shadow Table move, not an ALTER TABLE.",
+      "file": "BusinessModelSummary.txt",
+      "sign": "+"
+    },
+    {
+      "type": "ddl",
+      "pattern": "\\bCREATE\\s+(UNIQUE\\s+)?INDEX\\b",
+      "line": "CREATE INDEX must be appended with CONCURRENTLY.",
+      "file": "BusinessModelSummary.txt",
+      "sign": "+"
+    },
+    {
+      "type": "ddl",
+      "pattern": "\\bALTER\\s+TABLE\\b",
+      "line": "ALTER TABLE ... ADD COLUMN must either be nullable or have a default value that doesn't trigger a full table rewrite (Postgres 11+).",
+      "file": "BusinessModelSummary.txt",
+      "sign": "+"
+    },
+    {
+      "type": "ddl",
+      "pattern": "\\bDROP\\s+TABLE\\b",
+      "line": "DROP TABLE or DROP COLUMN is strictly forbidden in the Expand phase.",
+      "file": "BusinessModelSummary.txt",
+      "sign": "+"
+    },
+    {
+      "type": "ddl",
+      "pattern": "\\bCREATE\\s+(UNIQUE\\s+)?INDEX\\b",
+      "line": "CREATE INDEX CONCURRENTLY cannot run inside a transaction. You already have an invariant that forbids top-level BEGIN/COMMIT in migration files, but you also need to ensure your migration runner does not wrap migrations in a transaction automatically when a file contains CONCURRENTLY statements.",
+      "file": "BusinessModelSummary.txt",
+      "sign": "+"
+    },
+    {
+      "type": "ddl",
+      "pattern": "\\bALTER\\s+TABLE\\b",
+      "line": "ALTER TABLE \u2026 ADD COLUMN DEFAULT \u2026 is \u201cfast\u201d in modern Postgres, but it can still take locks and can still be risky on hot tables. The safest expand rule is:",
+      "file": "BusinessModelSummary.txt",
+      "sign": "+"
+    },
+    {
+      "type": "ddl",
+      "pattern": "\\bREFERENCES\\b",
+      "line": "Create a dedicated invariant (even if INV-019 references it):",
+      "file": "BusinessModelSummary.txt",
+      "sign": "+"
+    },
+    {
+      "type": "ddl",
+      "pattern": "\\bCREATE\\s+(UNIQUE\\s+)?INDEX\\b",
+      "line": "CREATE INDEX CONCURRENTLY where applicable",
+      "file": "BusinessModelSummary.txt",
+      "sign": "+"
+    },
+    {
+      "type": "ddl",
+      "pattern": "\\bSET\\s+NOT\\s+NULL\\b",
+      "line": "then set NOT NULL later",
+      "file": "BusinessModelSummary.txt",
+      "sign": "+"
+    },
+    {
+      "type": "ddl",
+      "pattern": "\\bCREATE\\s+(UNIQUE\\s+)?INDEX\\b",
+      "line": "If you allow CREATE INDEX CONCURRENTLY, your migration runner must support non-transactional migrations for those files. So the gate should also verify:",
+      "file": "BusinessModelSummary.txt",
+      "sign": "+"
+    },
+    {
+      "type": "ddl",
+      "pattern": "\\bCREATE\\s+(UNIQUE\\s+)?INDEX\\b",
+      "line": "- Blocking DDL on hot tables is forbidden; prefer CREATE INDEX CONCURRENTLY and expand/contract patterns.",
+      "file": "BusinessModelSummary.txt",
+      "sign": "+"
+    },
+    {
+      "type": "ddl",
+      "pattern": "\\bREFERENCES\\b",
+      "line": "and the metadata references evidence outputs.",
+      "file": "BusinessModelSummary.txt",
+      "sign": "+"
+    },
+    {
+      "type": "ddl",
+      "pattern": "\\bREFERENCES\\b",
+      "line": "a minimal GitHub Actions workflow that blocks merges to rewrite/dotnet10-core unless the task metadata includes model + evidence references.",
+      "file": "BusinessModelSummary.txt",
+      "sign": "+"
+    },
+    {
+      "type": "ddl",
+      "pattern": "\\bREFERENCES\\b",
+      "line": "a minimal GitHub Actions workflow that blocks merges to rewrite/dotnet10-core unless task metadata includes model + agent role + evidence references.",
+      "file": "BusinessModelSummary.txt",
+      "sign": "+"
+    },
+    {
+      "type": "ddl",
+      "pattern": "\\bREFERENCES\\b",
+      "line": "PR/branch references a TSK-... task ID",
+      "file": "BusinessModelSummary.txt",
+      "sign": "+"
+    },
+    {
+      "type": "ddl",
+      "pattern": "\\bREFERENCES\\b",
+      "line": "Tokenization References: Store tokens rather than Primary Account Numbers (PANs). The database schema should link the \"attested request\" to a token vault entry rather than raw card data.",
+      "file": "BusinessModelSummary.txt",
+      "sign": "+"
+    },
+    {
+      "type": "security",
+      "pattern": "\\bSET\\s+ROLE\\b",
+      "line": "set session context variables on DB connection (SET ROLE \u2026; SET symphony.current_* \u2026;) so DB-level audit can attribute actions.",
+      "file": "BusinessModelSummary.txt",
+      "sign": "+"
+    },
+    {
+      "type": "ddl",
+      "pattern": "\\bCHECK\\s*\\(",
+      "line": "PoP binding check (cnf.x5t#S256 / DPoP) before any enqueue",
+      "file": "BusinessModelSummary.txt",
+      "sign": "+"
+    },
+    {
+      "type": "ddl",
+      "pattern": "\\bREFERENCES\\b",
+      "line": "Outbox enqueue is linkable: payment_outbox_pending references parent_attestation_id (or equivalent).",
+      "file": "BusinessModelSummary.txt",
+      "sign": "+"
+    },
+    {
+      "type": "ddl",
+      "pattern": "\\bREFERENCES\\b",
+      "line": "Outbox record references attestation row.",
+      "file": "BusinessModelSummary.txt",
+      "sign": "+"
+    },
+    {
+      "type": "ddl",
+      "pattern": "\\bCHECK\\s*\\(",
+      "line": "explicit maximum lifetime check (reject if too long)",
+      "file": "BusinessModelSummary.txt",
+      "sign": "+"
+    },
+    {
+      "type": "security",
+      "pattern": "\\bSECURITY\\s+DEFINER\\b",
+      "line": "- SECURITY DEFINER functions with hardened `search_path` and least-privilege roles",
+      "file": "Cursor-agentic-setup_Architect-agent-prompt_V2.txt",
+      "sign": "+"
+    },
+    {
+      "type": "ddl",
+      "pattern": "\\bREFERENCES\\b",
+      "line": "- threat/compliance references",
+      "file": "Cursor-agentic-setup_Architect-agent-prompt_V2.txt",
+      "sign": "+"
+    },
+    {
+      "type": "ddl",
+      "pattern": "\\bREFERENCES\\b",
+      "line": "* You must be **specific** (file/module references, clear APIs, clear tables/invariants).",
+      "file": "Cursor-agentic-setup_Architect-agent-prompt_V2.txt",
+      "sign": "+"
+    },
+    {
+      "type": "ddl",
+      "pattern": "\\bREFERENCES\\b",
+      "line": "* enforce that EXEC_LOG.md references PLAN.md (simple check: contains plan path)",
+      "file": "Debugprocess.txt",
+      "sign": "+"
+    },
+    {
+      "type": "ddl",
+      "pattern": "\\bCREATE\\s+TABLE\\b",
+      "line": "CREATE TABLE proxy_resolutions (",
+      "file": "PROXY_RESOLUTION_INTEGRATION_REVIEW.md",
+      "sign": "+"
+    },
+    {
+      "type": "ddl",
+      "pattern": "\\bCHECK\\s*\\(",
+      "line": "CONSTRAINT chk_resolution_status CHECK (resolution_status IN (",
+      "file": "PROXY_RESOLUTION_INTEGRATION_REVIEW.md",
+      "sign": "+"
+    },
+    {
+      "type": "ddl",
+      "pattern": "\\bCREATE\\s+(UNIQUE\\s+)?INDEX\\b",
+      "line": "CREATE INDEX ix_proxy_resolutions_instruction",
+      "file": "PROXY_RESOLUTION_INTEGRATION_REVIEW.md",
+      "sign": "+"
+    },
+    {
+      "type": "ddl",
+      "pattern": "\\bCREATE\\s+(UNIQUE\\s+)?INDEX\\b",
+      "line": "CREATE INDEX ix_proxy_resolutions_hash",
+      "file": "PROXY_RESOLUTION_INTEGRATION_REVIEW.md",
+      "sign": "+"
+    },
+    {
+      "type": "ddl",
+      "pattern": "\\bCREATE\\s+TABLE\\b",
+      "line": "CREATE TABLE proxy_resolutions_2026_02 PARTITION OF proxy_resolutions",
+      "file": "PROXY_RESOLUTION_INTEGRATION_REVIEW.md",
+      "sign": "+"
+    },
+    {
+      "type": "security",
+      "pattern": "\\bGRANT\\b",
+      "line": "GRANT INSERT ON proxy_resolutions TO ingest_writer;",
+      "file": "PROXY_RESOLUTION_INTEGRATION_REVIEW.md",
+      "sign": "+"
+    },
+    {
+      "type": "security",
+      "pattern": "\\bREVOKE\\b",
+      "line": "REVOKE UPDATE, DELETE ON proxy_resolutions FROM ingest_writer;",
+      "file": "PROXY_RESOLUTION_INTEGRATION_REVIEW.md",
+      "sign": "+"
+    },
+    {
+      "type": "ddl",
+      "pattern": "\\bCREATE\\s+TABLE\\b",
+      "line": "CREATE TABLE proxy_resolution_current (",
+      "file": "PROXY_RESOLUTION_INTEGRATION_REVIEW.md",
+      "sign": "+"
+    },
+    {
+      "type": "ddl",
+      "pattern": "\\bREFERENCES\\b",
+      "line": "source_resolution_id UUID NOT NULL REFERENCES proxy_resolutions(resolution_id)",
+      "file": "PROXY_RESOLUTION_INTEGRATION_REVIEW.md",
+      "sign": "+"
+    },
+    {
+      "type": "ddl",
+      "pattern": "\\bCREATE\\s+(UNIQUE\\s+)?INDEX\\b",
+      "line": "CREATE INDEX ix_proxy_current_expiry",
+      "file": "PROXY_RESOLUTION_INTEGRATION_REVIEW.md",
+      "sign": "+"
+    },
+    {
+      "type": "security",
+      "pattern": "\\bSECURITY\\s+DEFINER\\b",
+      "line": "* `SECURITY DEFINER` functions with pinned `search_path` + linting to prevent unsafe search_path usage.",
+      "file": "Phase0LeftOvers.txt",
+      "sign": "+"
+    },
+    {
+      "type": "ddl",
+      "pattern": "\\bCREATE\\s+(UNIQUE\\s+)?INDEX\\b",
+      "line": "CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_pending_due_claim",
+      "file": "Phase0LeftOvers.txt",
+      "sign": "+"
+    },
+    {
+      "type": "ddl",
+      "pattern": "\\bCREATE\\s+(UNIQUE\\s+)?INDEX\\b",
+      "line": "CREATE UNIQUE INDEX CONCURRENTLY IF NOT EXISTS ux_attempts_one_dispatched_per_outbox",
+      "file": "Phase0LeftOvers.txt",
+      "sign": "+"
+    },
+    {
+      "type": "ddl",
+      "pattern": "\\bALTER\\s+TABLE\\b",
+      "line": "ALTER TABLE payment_outbox_pending SET (fillfactor = 80);",
+      "file": "Phase0LeftOvers.txt",
+      "sign": "+"
+    },
+    {
+      "type": "ddl",
+      "pattern": "\\bREFERENCES\\b",
+      "line": "Example: `docs/overview/architecture.md` still references future Node packages/services.",
+      "file": "Phase0LeftOvers.txt",
+      "sign": "+"
+    },
+    {
+      "type": "security",
+      "pattern": "\\bsearch_path\\b",
+      "line": "You already lint `BEGIN/COMMIT` and `search_path`. Add migration linting for:",
+      "file": "Phase0LeftOvers.txt",
+      "sign": "+"
+    },
+    {
+      "type": "ddl",
+      "pattern": "\\bCREATE\\s+(UNIQUE\\s+)?INDEX\\b",
+      "line": "* `CREATE INDEX` must be `CONCURRENTLY` on hot tables",
+      "file": "Phase0LeftOvers.txt",
+      "sign": "+"
+    },
+    {
+      "type": "ddl",
+      "pattern": "\\bALTER\\s+TABLE\\b",
+      "line": "* forbid `ALTER TABLE ... SET NOT NULL` on large/hot tables unless in controlled expand/contract pattern",
+      "file": "Phase0LeftOvers.txt",
+      "sign": "+"
+    },
+    {
+      "type": "security",
+      "pattern": "\\bREVOKE\\b",
+      "line": "| **DB Role Lock** | \u2705 Strong | Revoke `PUBLIC` on all new tables automatically. |",
+      "file": "Phase0LeftOvers.txt",
+      "sign": "+"
+    },
+    {
+      "type": "security",
+      "pattern": "\\bREVOKE\\b",
+      "line": "* \u201cRevoke PUBLIC on all new tables automatically\u201d is best done via:",
+      "file": "Phase0LeftOvers.txt",
+      "sign": "+"
+    },
+    {
+      "type": "security",
+      "pattern": "\\bREVOKE\\b",
+      "line": "* `ALTER DEFAULT PRIVILEGES REVOKE ... FROM PUBLIC;` (per role/schema), plus",
+      "file": "Phase0LeftOvers.txt",
+      "sign": "+"
+    },
+    {
+      "type": "ddl",
+      "pattern": "\\bADD\\s+COLUMN\\b",
+      "line": "No gate blocks `ADD COLUMN ... NOT NULL` without `DEFAULT`, nor `SET NOT NULL` during Expand.",
+      "file": "Phase0_Audit-Gap_Closeout_Plan_Draft.txt",
+      "sign": "+"
+    },
+    {
+      "type": "ddl",
+      "pattern": "\\bALTER\\s+TYPE\\b",
+      "line": "### 5) Primary Key stability (forbid ALTER TYPE for PK/FK)",
+      "file": "Phase0_Audit-Gap_Closeout_Plan_Draft.txt",
+      "sign": "+"
+    },
+    {
+      "type": "ddl",
+      "pattern": "\\bALTER\\s+TABLE\\b",
+      "line": "No gate prevents `ALTER TABLE ... ALTER COLUMN ... TYPE ...` on PK/FK columns.",
+      "file": "Phase0_Audit-Gap_Closeout_Plan_Draft.txt",
+      "sign": "+"
+    },
+    {
+      "type": "ddl",
+      "pattern": "\\bALTER\\s+TABLE\\b",
+      "line": "* Fail if migrations contain: `DROP TABLE`, `DROP COLUMN`, `TRUNCATE`, `ALTER TABLE ... DROP COLUMN`, `ALTER TABLE ... ALTER COLUMN ... DROP NOT NULL`",
+      "file": "Phase0_Audit-Gap_Closeout_Plan_Draft.txt",
+      "sign": "+"
+    }
+  ],
+  "reason_types": [
+    "ddl",
+    "migration_file_added_or_deleted",
+    "security"
+  ],
+  "primary_reason": "ddl",
+  "matched_files": [
+    ".github/workflows/invariants.yml",
+    "schema/migrations/0007_outbox_pending_indexes.sql",
+    "schema/migrations/0008_outbox_terminal_uniqueness.sql",
+    "schema/migrations/0009_pending_fillfactor.sql",
+    "schema/migrations/0010_outbox_notify.sql",
+    "schema/migrations/0011_ingress_attestations.sql",
+    "schema/migrations/0012_revocation_tables.sql",
+    "schema/migrations/0013_outbox_pending_indexes_concurrently.sql",
+    "schema/migrations/0014_tenants.sql",
+    "schema/migrations/0015_tenant_clients.sql",
+    "schema/migrations/0016_tenant_members.sql",
+    "schema/migrations/0017_ingress_tenant_attribution.sql",
+    "schema/migrations/0018_outbox_tenant_attribution.sql",
+    "schema/migrations/0020_business_foundation_hooks.sql",
+    "schema/migrations/0021_correlation_indexes_concurrently.sql",
+    "schema/migrations/0022_participants_registry.sql",
+    "schema/migrations/0023_evidence_packs_signing_anchoring_hooks.sql",
+    "schema/migrations/0024_business_tables_privilege_hygiene_and_usage_event_conventions.sql",
+    "scripts/db/n_minus_one_check.sh",
+    "scripts/db/verify_business_foundation_hooks.sh",
+    "scripts/security/lint_security_definer_dynamic_sql.sh",
+    "scripts/security/openbao_bootstrap.sh"
+  ],
+  "match_counts": {
+    "security": 18,
+    "ddl": 117,
+    "migration_file_added_or_deleted": 1
+  },
+  "summary": "Structural or privilege/security changes detected (types=ddl,migration_file_added_or_deleted,security, confidence_hint=1.0)."
+}
+structural_change=True confidence_hint=1.0
+primary_reason=ddl
+reason_types=ddl,migration_file_added_or_deleted,security
+
+Matched files (top):
+ - .github/workflows/invariants.yml
+ - schema/migrations/0007_outbox_pending_indexes.sql
+ - schema/migrations/0008_outbox_terminal_uniqueness.sql
+ - schema/migrations/0009_pending_fillfactor.sql
+ - schema/migrations/0010_outbox_notify.sql
+ - schema/migrations/0011_ingress_attestations.sql
+ - schema/migrations/0012_revocation_tables.sql
+ - schema/migrations/0013_outbox_pending_indexes_concurrently.sql
+ - schema/migrations/0014_tenants.sql
+ - schema/migrations/0015_tenant_clients.sql
+ - schema/migrations/0016_tenant_members.sql
+ - schema/migrations/0017_ingress_tenant_attribution.sql
+ - schema/migrations/0018_outbox_tenant_attribution.sql
+ - schema/migrations/0020_business_foundation_hooks.sql
+ - schema/migrations/0021_correlation_indexes_concurrently.sql
+ - schema/migrations/0022_participants_registry.sql
+ - schema/migrations/0023_evidence_packs_signing_anchoring_hooks.sql
+ - schema/migrations/0024_business_tables_privilege_hygiene_and_usage_event_conventions.sql
+ - scripts/db/n_minus_one_check.sh
+ - scripts/db/verify_business_foundation_hooks.sh
+ - scripts/security/lint_security_definer_dynamic_sql.sh
+ - scripts/security/openbao_bootstrap.sh
+
+Top matches:
+- security .codex/agents/architect.md +: - No runtime DDL. Forward-only migrations. SECURITY DEFINER must harden search_path.
+- security .codex/agents/architect.md +: - Runtime roles are NOLOGIN templates; applications use SET ROLE.
+- security .codex/agents/db_foundation.md +: - SECURITY DEFINER must harden search_path.
+- security .codex/agents/db_foundation.md +: - introduce dynamic SQL into SECURITY DEFINER functions without an ADR + Security Guardian review
+- ddl .codex/agents/integration_contracts.md +: - Adapter code directories are planned but not present in snapshot (docs/overview/architecture.md references services/outbox-relayer and packages/node/db).
+- ddl .codex/agents/invariants_curator.md +: - Ensure at least one doc line references `INV-###` token(s)
+- ddl .codex/agents/invariants_curator.md +: - enforced_by + verified_by references
+- security .codex/agents/security_guardian.md +: - keep SECURITY DEFINER search_path hardening intact
+- security .codex/agents/security_guardian.md +: - keep revoke-first posture intact (no broad grants)
+- security .codex/agents/supervisor.md +: - weakening DB grants/roles/SECURITY DEFINER posture
+- security .codex/rules/01-hard-constraints.md +: - SECURITY DEFINER functions must harden: `SET search_path = pg_catalog, public`.
+- security .codex/rules/01-hard-constraints.md +: - Runtime roles are NOLOGIN templates; app uses SET ROLE.
+- security .codex/rules/03-security-contract.md +: - weaken DB grants / roles / SECURITY DEFINER posture
+- security .codex/rules/03-security-contract.md +: - introduce dynamic SQL in SECURITY DEFINER without explicit justification and review
+- security .codex/rules/20-coding-standards.md +: - No dynamic SQL in SECURITY DEFINER functions unless formally proven safe.
+- ddl .codex/session/phase0_context.md +: - Enforces: plan/log required for in_progress/completed; log references plan; both mention task_id; completed ⇒ Final summary.
+- security .github/workflows/invariants.yml +: - name: Run SECURITY DEFINER dynamic SQL lint
+- ddl AuditAnswers.txt +: **Choose: Option B (forbid `ADD COLUMN ... NOT NULL` entirely in Phase-0).**
+- ddl AuditAnswers.txt +: 3. later contract phase: set NOT NULL / drop old
+- ddl AuditAnswers.txt +: * In Expand/Transition: **reject any `ADD COLUMN ... NOT NULL`** (regardless of DEFAULT)
+- ddl AuditAnswers.txt +: * `ADD COLUMN <col> <type>` (nullable)
+- ddl AuditAnswers.txt +: * `ADD COLUMN <col> <type> DEFAULT <const>` **only if column remains nullable**
+- ddl AuditAnswers.txt +: 2. **Nullability:** Option B (no `ADD COLUMN NOT NULL` in Phase-0)
+- ddl AuditAnswers.txt +: * **Nullability rule = Option B** (forbid `ADD COLUMN ... NOT NULL` entirely)
+- ddl AuditAnswers.txt +: * **FAIL** on *any* `ADD COLUMN ... NOT NULL` (even if DEFAULT exists)
+- ddl AuditAnswers.txt +: #      - DROP TABLE / DROP COLUMN / TRUNCATE / ALTER TABLE ... DROP ...
+- ddl AuditAnswers.txt +: -#      - Reject "ADD COLUMN ... NOT NULL" unless the statement includes DEFAULT.
+- ddl AuditAnswers.txt +: +#      - Reject ANY "ADD COLUMN ... NOT NULL" in Phase-0 (2-step pattern required).
+- ddl AuditAnswers.txt +: +        # Phase-0 rule: forbid ADD COLUMN ... NOT NULL entirely.
+- ddl BusinessInvariantsAddition.txt +: * You have a `ddl_allowlist.json`, but you need a gate (`verify_ddl_allowlist_governance.sh`) that triggers a "Hard Failure" if any migration introduces a command (like `DROP TABLE`) not explicitly on that list.
+
+GitHub annotations (top 10):
+Warning: Structural match [security]: - No runtime DDL. Forward-only migrations. SECURITY DEFINER must harden search_path.
+Warning: Structural match [security]: - Runtime roles are NOLOGIN templates; applications use SET ROLE.
+Warning: Structural match [security]: - SECURITY DEFINER must harden search_path.
+Warning: Structural match [security]: - introduce dynamic SQL into SECURITY DEFINER functions without an ADR + Security Guardian review
+Warning: Structural match [ddl]: - Adapter code directories are planned but not present in snapshot (docs/overview/architecture.md references services/outbox-relayer and packages/node/db).
+Warning: Structural match [ddl]: - Ensure at least one doc line references `INV-###` token(s)
+Warning: Structural match [ddl]: - enforced_by + verified_by references
+Warning: Structural match [security]: - keep SECURITY DEFINER search_path hardening intact
+Warning: Structural match [security]: - keep revoke-first posture intact (no broad grants)
+Warning: Structural match [security]: - weakening DB grants/roles/SECURITY DEFINER posture
+3s
+Run set -euo pipefail
+✅ Change rule OK: no structural changes detected.
+0s
+Run chmod +x scripts/audit/enforce_invariant_promotion.sh
+✅ Promotion gate passed.
+0s
+Run chmod +x scripts/audit/verify_exception_template.sh
+✅ Exception template validation passed.
+0s
+18s
+Run chmod +x scripts/audit/*.sh
+==> Phase-0 ordered checks (canonical order)
+
+-> scripts/audit/lint_yaml_conventions.sh
+YAML conventions lint passed.
+YAML conventions lint passed. Evidence: /home/runner/work/Symphony/Symphony/evidence/phase0/yaml_conventions_lint.json
+
+-> scripts/audit/verify_control_planes_drift.sh
+Control planes drift check passed. Evidence: /home/runner/work/Symphony/Symphony/evidence/phase0/control_planes_drift.json
+
+-> scripts/audit/verify_repo_structure.sh
+Repo structure verification OK. Evidence: /home/runner/work/Symphony/Symphony/evidence/phase0/repo_structure.json
+
+-> scripts/audit/generate_evidence.sh
+Evidence written: /home/runner/work/Symphony/Symphony/evidence/phase0/evidence.json
+
+-> scripts/audit/enforce_change_rule.sh
+✅ Change rule OK: no structural changes detected.
+
+-> scripts/audit/verify_batching_rules.sh
+OK
+Batching rules validation passed. Evidence: /home/runner/work/Symphony/Symphony/evidence/phase0/batching_rules.json
+
+-> scripts/audit/verify_routing_fallback.sh
+OK
+Routing fallback validation passed. Evidence: /home/runner/work/Symphony/Symphony/evidence/phase0/routing_fallback.json
+
+-> scripts/audit/validate_routing_fallback.sh
+OK
+Routing fallback validation passed. Evidence: /home/runner/work/Symphony/Symphony/evidence/phase0/routing_fallback.json
+
+-> scripts/audit/run_security_fast_checks.sh
+==> Fast security checks (cheap, deterministic)
+
+==> Shell syntax checks (scripts/security/*.sh)
+
+-> bash -n scripts/security/dotnet_dependency_audit.sh
+
+-> bash -n scripts/security/lint_core_boundary.sh
+
+-> bash -n scripts/security/lint_ddl_lock_risk.sh
+
+-> bash -n scripts/security/lint_insecure_patterns.sh
+
+-> bash -n scripts/security/lint_privilege_grants.sh
+
+-> bash -n scripts/security/lint_secure_config.sh
+
+-> bash -n scripts/security/lint_security_definer_dynamic_sql.sh
+
+-> bash -n scripts/security/lint_sql_injection.sh
+
+-> bash -n scripts/security/openbao_bootstrap.sh
+
+-> bash -n scripts/security/openbao_smoke_test.sh
+
+-> bash -n scripts/security/run_semgrep_sast.sh
+
+-> bash -n scripts/security/scan_secrets.sh
+
+-> bash -n scripts/security/verify_ddl_allowlist_governance.sh
+
+==> Required security scripts present
+
+==> Run security lints
+
+-> scripts/security/lint_sql_injection.sh
+==> Checking SECURITY DEFINER function hardening (search_path) in migrations
+✅ SECURITY DEFINER hardening looks OK
+
+-> scripts/security/lint_privilege_grants.sh
+==> Checking for privilege regressions in migrations
+✅ No obvious CREATE-grants regression detected
+
+-> scripts/security/lint_core_boundary.sh
+Core boundary lint passed. Evidence: /home/runner/work/Symphony/Symphony/evidence/phase0/core_boundary.json
+
+-> scripts/security/scan_secrets.sh
+Secrets scan passed. Evidence: /home/runner/work/Symphony/Symphony/evidence/phase0/security_secrets_scan.json
+
+-> scripts/security/dotnet_dependency_audit.sh
+Dependency audit passed. Evidence: /home/runner/work/Symphony/Symphony/evidence/phase0/security_dotnet_deps_audit.json
+
+-> scripts/security/lint_secure_config.sh
+Secure config lint passed. Evidence: /home/runner/work/Symphony/Symphony/evidence/phase0/security_secure_config_lint.json
+
+-> scripts/security/lint_insecure_patterns.sh
+Insecure pattern lint passed. Evidence: /home/runner/work/Symphony/Symphony/evidence/phase0/security_insecure_patterns.json
+
+-> scripts/security/lint_ddl_lock_risk.sh
+pass
+Lock-risk lint passed. Evidence: /home/runner/work/Symphony/Symphony/evidence/phase0/ddl_lock_risk.json and /home/runner/work/Symphony/Symphony/evidence/phase0/ddl_blocking_policy.json
+
+-> scripts/security/lint_security_definer_dynamic_sql.sh
+SECURITY DEFINER dynamic SQL lint passed. Evidence: /home/runner/work/Symphony/Symphony/evidence/phase0/security_definer_dynamic_sql.json
+
+-> scripts/security/verify_ddl_allowlist_governance.sh
+DDL allowlist governance OK. Evidence: /home/runner/work/Symphony/Symphony/evidence/phase0/ddl_allowlist_governance.json
+
+==> SAST baseline (Semgrep; pinned in CI)
+
+-> scripts/security/run_semgrep_sast.sh
+               
+               
+┌─────────────┐
+│ Scan Status │
+└─────────────┘
+  Scanning 2 files tracked by git with 3 Code rules:
+  Nothing to scan.
+                
+                
+┌──────────────┐
+│ Scan Summary │
+└──────────────┘
+✅ Scan completed successfully.
+ • Findings: 0 (0 blocking)
+ • Rules run: 3
+ • Targets scanned: 0
+ • Parsed lines: an unknown percentage
+ • Scan was limited to files tracked by git
+ • For a detailed list of skipped files and lines, run semgrep with the --verbose flag
+Ran 3 rules on 0 files: 0 findings.
+If Semgrep missed a finding, please send us feedback to let us know!
+See https://semgrep.dev/docs/reporting-false-negatives/
+Semgrep SAST: PASS. Evidence: /home/runner/work/Symphony/Symphony/evidence/phase0/semgrep_sast.json
+
+-> scripts/audit/verify_semgrep_sast_evidence.sh
+OK
+Semgrep evidence verification OK: evidence/phase0/semgrep_sast.json
+
+==> Policy stubs (presence + manifest reference)
+
+-> scripts/audit/verify_key_management_policy.sh
+Key management policy verification OK. Evidence: /home/runner/work/Symphony/Symphony/evidence/phase0/key_management_policy.json
+
+-> scripts/audit/verify_audit_logging_retention_policy.sh
+Audit logging retention policy verification OK. Evidence: /home/runner/work/Symphony/Symphony/evidence/phase0/audit_logging_retention_policy.json
+
+==> ISO 20022 and Zero Trust docs (presence + manifest reference)
+
+-> scripts/audit/verify_iso20022_readiness_docs.sh
+ISO 20022 readiness docs verification OK. Evidence: /home/runner/work/Symphony/Symphony/evidence/phase0/iso20022_readiness.json
+
+-> scripts/audit/verify_iso20022_contract_registry.sh
+ok
+ISO 20022 registry verification OK. Evidence: /home/runner/work/Symphony/Symphony/evidence/phase0/iso20022_contract_registry.json
+
+-> scripts/audit/verify_zero_trust_posture_docs.sh
+Zero Trust posture docs verification OK. Evidence: /home/runner/work/Symphony/Symphony/evidence/phase0/zero_trust_posture.json
+
+✅ Fast security checks passed
+
+-> scripts/security/openbao_bootstrap.sh
+ openbao Pulling 
+ 589002ba0eae Pulling fs layer 
+ 374487a65170 Pulling fs layer 
+ 64931614f517 Pulling fs layer 
+ c65db7ae1ab3 Pulling fs layer 
+ 3b96bb281de7 Pulling fs layer 
+ c1e0d58ac26c Pulling fs layer 
+ ef1ef83a3ec4 Pulling fs layer 
+ 436469a6b62a Pulling fs layer 
+ c65db7ae1ab3 Waiting 
+ 3b96bb281de7 Waiting 
+ c1e0d58ac26c Waiting 
+ ef1ef83a3ec4 Waiting 
+ 64931614f517 Downloading [=====================================>             ]     721B/949B
+ 64931614f517 Downloading [==================================================>]     949B/949B
+ 64931614f517 Download complete 
+ 589002ba0eae Downloading [>                                                  ]  39.46kB/3.862MB
+ 589002ba0eae Verifying Checksum 
+ 589002ba0eae Download complete 
+ 589002ba0eae Extracting [>                                                  ]  65.54kB/3.862MB
+ 374487a65170 Downloading [======>                                            ]     720B/5.388kB
+ 374487a65170 Downloading [==================================================>]  5.388kB/5.388kB
+ 374487a65170 Verifying Checksum 
+ 374487a65170 Download complete 
+ c65db7ae1ab3 Downloading [>                                                  ]  3.456kB/255.2kB
+ c65db7ae1ab3 Verifying Checksum 
+ c65db7ae1ab3 Download complete 
+ 589002ba0eae Extracting [==================================================>]  3.862MB/3.862MB
+ 589002ba0eae Extracting [==================================================>]  3.862MB/3.862MB
+ 3b96bb281de7 Downloading [>                                                  ]  530.1kB/72.47MB
+ 589002ba0eae Pull complete 
+ 374487a65170 Extracting [==================================================>]  5.388kB/5.388kB
+ 374487a65170 Extracting [==================================================>]  5.388kB/5.388kB
+ c1e0d58ac26c Downloading [==================================================>]     126B/126B
+ c1e0d58ac26c Verifying Checksum 
+ c1e0d58ac26c Download complete 
+ ef1ef83a3ec4 Downloading [==================================================>]     154B/154B
+ ef1ef83a3ec4 Verifying Checksum 
+ ef1ef83a3ec4 Download complete 
+ 3b96bb281de7 Downloading [====================>                              ]  29.34MB/72.47MB
+ 436469a6b62a Downloading [=====================>                             ]     720B/1.688kB
+ 436469a6b62a Downloading [==================================================>]  1.688kB/1.688kB
+ 436469a6b62a Verifying Checksum 
+ 436469a6b62a Download complete 
+ 3b96bb281de7 Downloading [=====================================>             ]  54.42MB/72.47MB
+ 3b96bb281de7 Verifying Checksum 
+ 3b96bb281de7 Download complete 
+ 374487a65170 Pull complete 
+ 64931614f517 Extracting [==================================================>]     949B/949B
+ 64931614f517 Extracting [==================================================>]     949B/949B
+ 64931614f517 Pull complete 
+ c65db7ae1ab3 Extracting [======>                                            ]  32.77kB/255.2kB
+ c65db7ae1ab3 Extracting [==================================================>]  255.2kB/255.2kB
+ c65db7ae1ab3 Extracting [==================================================>]  255.2kB/255.2kB
+ c65db7ae1ab3 Pull complete 
+ 3b96bb281de7 Extracting [>                                                  ]  557.1kB/72.47MB
+ 3b96bb281de7 Extracting [======>                                            ]  8.913MB/72.47MB
+ 3b96bb281de7 Extracting [===========>                                       ]  16.71MB/72.47MB
+ 3b96bb281de7 Extracting [================>                                  ]  24.51MB/72.47MB
+ 3b96bb281de7 Extracting [====================>                              ]  29.52MB/72.47MB
+ 3b96bb281de7 Extracting [==========================>                        ]  38.99MB/72.47MB
+ 3b96bb281de7 Extracting [============================================>      ]  64.62MB/72.47MB
+ 3b96bb281de7 Extracting [==================================================>]  72.47MB/72.47MB
+ 3b96bb281de7 Pull complete 
+ c1e0d58ac26c Extracting [==================================================>]     126B/126B
+ c1e0d58ac26c Extracting [==================================================>]     126B/126B
+ c1e0d58ac26c Pull complete 
+ ef1ef83a3ec4 Extracting [==================================================>]     154B/154B
+ ef1ef83a3ec4 Extracting [==================================================>]     154B/154B
+ ef1ef83a3ec4 Pull complete 
+ 436469a6b62a Extracting [==================================================>]  1.688kB/1.688kB
+ 436469a6b62a Extracting [==================================================>]  1.688kB/1.688kB
+ 436469a6b62a Pull complete 
+ openbao Pulled 
+ Network openbao_default  Creating
+ Network openbao_default  Created
+ Volume "openbao_openbao_data"  Creating
+ Volume "openbao_openbao_data"  Created
+ Container symphony-openbao  Creating
+ Container symphony-openbao  Created
+ Container symphony-openbao  Starting
+ Container symphony-openbao  Started
+curl: (56) Recv failure: Connection reset by peer
+Success! Enabled the kv-v2 secrets engine at: kv/
+Success! Enabled approle auth method at: approle/
+Success! Uploaded policy: symphony-read
+Success! Data written to: auth/approle/role/symphony-app
+==== Secret Path ====
+kv/data/allowed/test
+
+======= Metadata =======
+Key                Value
+---                -----
+created_time       2026-02-07T21:15:56.158973109Z
+custom_metadata    <nil>
+deletion_time      n/a
+destroyed          false
+version            1
+===== Secret Path =====
+kv/data/forbidden/test
+
+======= Metadata =======
+Key                Value
+---                -----
+created_time       2026-02-07T21:15:56.308140677Z
+custom_metadata    <nil>
+deletion_time      n/a
+destroyed          false
+version            1
+OpenBao bootstrap complete. role_id and secret_id saved to /tmp/symphony_openbao.
+
+-> scripts/security/openbao_smoke_test.sh
+Error reading kv/data/forbidden/test: Error making API request.
+
+URL: GET http://127.0.0.1:8200/v1/kv/data/forbidden/test
+Code: 403. Errors:
+
+* 1 error occurred:
+	* permission denied
+
+
+OpenBao smoke test passed. Evidence: /home/runner/work/Symphony/Symphony/evidence/phase0/openbao_smoke.json
+
+-> scripts/audit/run_invariants_fast_checks.sh
+==> Fast invariants checks (no DB)
+
+==> Shell syntax checks
+
+-> bash -n scripts/audit/enforce_change_rule.sh
+
+-> bash -n scripts/audit/enforce_invariant_promotion.sh
+
+-> bash -n scripts/audit/new_invariant.sh
+
+-> bash -n scripts/audit/record_invariants_exception.sh
+
+-> bash -n scripts/audit/verify_exception_template.sh
+
+-> bash -n scripts/audit/verify_invariants_local.sh
+
+==> Python syntax checks
+
+-> python3 -m py_compile scripts/audit/detect_structural_changes.py
+
+-> python3 -m py_compile scripts/audit/detect_structural_sql_changes.py
+
+-> python3 -m py_compile scripts/audit/auto_create_exception_from_detect.py
+
+-> python3 -m py_compile scripts/audit/generate_invariants_quick.py
+
+-> python3 -m py_compile scripts/audit/validate_invariants_manifest.py
+
+-> python3 -m py_compile scripts/audit/check_docs_match_manifest.py
+
+==> Detector unit tests
+
+-> python3 -m pytest -q scripts/audit/tests
+............                                                             [100%]
+12 passed in 0.29s
+
+==> Manifest validation
+
+-> python3 scripts/audit/validate_invariants_manifest.py
+OK: Manifest valid (85 entries).
+
+==> Docs ↔ Manifest consistency
+
+-> python3 scripts/audit/check_docs_match_manifest.py
+OK: Docs match manifest (coverage ON).
+
+==> Doc alignment (core language)
+
+-> scripts/audit/verify_doc_alignment.sh
+Doc alignment verification OK. Evidence: /home/runner/work/Symphony/Symphony/evidence/phase0/doc_alignment.json
+
+==> Three-Pillar model doc verification
+
+-> scripts/audit/verify_three_pillars_doc.sh
+Three‑Pillar doc verification OK. Evidence: /home/runner/work/Symphony/Symphony/evidence/phase0/three_pillars_doc.json
+
+==> Control-plane drift verification
+
+-> scripts/audit/verify_control_planes_drift.sh
+Control planes drift check passed. Evidence: /home/runner/work/Symphony/Symphony/evidence/phase0/control_planes_drift.json
+
+==> Evidence harness integrity (watch-the-watcher)
+
+-> scripts/audit/verify_evidence_harness_integrity.sh
+Evidence harness integrity OK. Evidence: /home/runner/work/Symphony/Symphony/evidence/phase0/evidence_harness_integrity.json
+
+==> CI toolchain verification
+
+-> scripts/audit/verify_ci_toolchain.sh
+CI toolchain verification passed. Evidence: /home/runner/work/Symphony/Symphony/evidence/phase0/ci_toolchain.json
+
+==> YAML conventions lint
+
+-> scripts/audit/lint_yaml_conventions.sh
+YAML conventions lint passed.
+YAML conventions lint passed. Evidence: /home/runner/work/Symphony/Symphony/evidence/phase0/yaml_conventions_lint.json
+
+==> No-tx docs verification
+
+-> scripts/audit/verify_no_tx_docs.sh
+No-tx docs verification OK. Evidence: /home/runner/work/Symphony/Symphony/evidence/phase0/no_tx_docs.json
+
+==> Task evidence contract (definitions)
+
+-> scripts/audit/verify_task_evidence_contract.sh
+Task evidence contract OK
+
+==> Remediation workflow doc verification
+
+-> bash scripts/audit/verify_remediation_workflow_doc.sh
+Remediation workflow doc verification passed
+Remediation workflow doc evidence: /home/runner/work/Symphony/Symphony/evidence/phase0/remediation_workflow_doc.json
+
+==> Remediation trace gate (production-affecting changes)
+
+-> bash scripts/audit/verify_remediation_trace.sh
+Remediation trace verification failed
+ - missing_remediation_trace_doc: expected docs/plans/**/REM-*/(PLAN.md|EXEC_LOG.md) or a docs/plans/**/TSK-*/ casefile with required remediation markers
+Error: Process completed with exit code 1.
+33s
+Run actions/upload-artifact@v4
+Multiple search paths detected. Calculating the least common ancestor of all paths
+The least common ancestor is /tmp/invariants_ai. This will be the root directory of the artifact
+With the provided path, there will be 2 files uploaded
+Artifact name is valid!
+Root directory input is valid!
+Beginning upload of artifact content to blob storage
+Uploaded bytes 841540
+Finished uploading artifact content to blob storage!
+SHA256 digest of uploaded artifact zip is d82a7f45e422c6fb0f5de3fce7feed2a86b367b66d9a3c19f2c10d1dd9d9aeda
+Finalizing artifact upload
+Attempt 1 of 5 failed with error: Unexpected token '<', "<!DOCTYPE "... is not valid JSON. Retrying request in 3000 ms...
+Artifact invariants-detector.zip successfully finalized. Artifact ID 5418913696
+Artifact invariants-detector has been successfully uploaded! Final size is 841540 bytes. Artifact ID is 5418913696
+Artifact download URL: https://github.com/codemwizard/Symphony/actions/runs/21786996558/artifacts/5418913696
+1s
+Run actions/upload-artifact@v4
+With the provided path, there will be 41 files uploaded
+Artifact name is valid!
+Root directory input is valid!
+Beginning upload of artifact content to blob storage
+Uploaded bytes 16928
+Finished uploading artifact content to blob storage!
+SHA256 digest of uploaded artifact zip is c1784cf435b098889ba6407f81089161cc016ede2637be44530a054d1c1a1fd3
+Finalizing artifact upload
+Artifact phase0-evidence.zip successfully finalized. Artifact ID 5418913750
+Artifact phase0-evidence has been successfully uploaded! Final size is 16928 bytes. Artifact ID is 5418913750
+Artifact download URL: https://github.com/codemwizard/Symphony/actions/runs/21786996558/artifacts/5418913750
+0s
+0s
+0s
+Post job cleanup.
+/usr/bin/git version
+git version 2.52.0
+Temporarily overriding HOME='/home/runner/work/_temp/dd13a56c-a395-4e34-ade9-ec3f4b3a8431' before making global git config changes
+Adding repository directory to the temporary git global config as a safe directory
+/usr/bin/git config --global --add safe.directory /home/runner/work/Symphony/Symphony
+/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+http.https://github.com/.extraheader
+/usr/bin/git config --local --unset-all http.https://github.com/.extraheader
+/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+0s
+Evaluate and set job outputs
+Set output 'structural_change'
+Set output 'confidence_hint'
+Cleaning up orphan processes
