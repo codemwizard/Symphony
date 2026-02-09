@@ -64,7 +64,9 @@ if [[ -f scripts/audit/verify_remediation_trace.sh ]]; then
       exit 1
     fi
   fi
-  bash scripts/audit/verify_remediation_trace.sh
+  # Pre-push parity: pushes are based on committed range, not staged/worktree state.
+  # Force the remediation trace verifier to evaluate the same range diff CI uses.
+  REMEDIATION_TRACE_DIFF_MODE=range bash scripts/audit/verify_remediation_trace.sh
 else
   echo "ERROR: scripts/audit/verify_remediation_trace.sh not found"
   exit 1

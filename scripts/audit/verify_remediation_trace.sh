@@ -28,6 +28,9 @@ root = Path(os.environ["ROOT_DIR"])
 evidence_out = Path(os.environ["EVIDENCE_FILE"])
 base_ref = os.environ.get("BASE_REF", "origin/main")
 head_ref = os.environ.get("HEAD_REF", "HEAD")
+force_mode = os.environ.get("REMEDIATION_TRACE_DIFF_MODE", "").strip().lower()
+if force_mode and force_mode not in ("staged", "worktree", "range"):
+    raise SystemExit(f"invalid_REMEDIATION_TRACE_DIFF_MODE:{force_mode} expected staged|worktree|range")
 
 policy = RemediationTracePolicy()
 check_id = "REMEDIATION-TRACE"
@@ -65,16 +68,26 @@ def range_changed_files() -> list[str]:
 errors: list[str] = []
 
 try:
-    diff_changed = staged_changed_files()
-    if diff_changed:
+    if force_mode == "staged":
         diff_mode = "staged"
-    else:
+        diff_changed = staged_changed_files()
+    elif force_mode == "worktree":
+        diff_mode = "worktree"
         diff_changed = worktree_changed_files()
+    elif force_mode == "range":
+        diff_mode = "range"
+        diff_changed = range_changed_files()
+    else:
+        diff_changed = staged_changed_files()
         if diff_changed:
-            diff_mode = "worktree"
+            diff_mode = "staged"
         else:
-            diff_mode = "range"
-            diff_changed = range_changed_files()
+            diff_changed = worktree_changed_files()
+            if diff_changed:
+                diff_mode = "worktree"
+            else:
+                diff_mode = "range"
+                diff_changed = range_changed_files()
 
     # For local workflows, remediation docs are commonly created as new files first.
     # We include untracked docs/plans casefiles as candidates, but we do not let untracked files
