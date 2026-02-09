@@ -52,20 +52,7 @@ fi
 
 echo "==> Remediation trace gate (production-affecting changes)"
 if [[ -f scripts/audit/verify_remediation_trace.sh ]]; then
-  # If we are in a clean worktree and clean index, the remediation verifier runs in "range" mode
-  # (BASE_REF...HEAD_REF). For parity with CI, fail closed if the base ref is missing, otherwise
-  # the gate may SKIP locally while failing in CI.
-  if [[ -z "$(git diff --name-only --cached)" && -z "$(git diff --name-only)" ]]; then
-    BASE_REF="${BASE_REF:-origin/main}"
-    if ! git rev-parse "$BASE_REF" >/dev/null 2>&1; then
-      echo "ERROR: remediation trace gate requires BASE_REF to exist for CI-parity diff checks."
-      echo "  missing_ref: $BASE_REF"
-      echo "  hint: git fetch origin main (or export BASE_REF/HEAD_REF)"
-      exit 1
-    fi
-  fi
-  # Pre-push parity: pushes are based on committed range, not staged/worktree state.
-  # Force the remediation trace verifier to evaluate the same range diff CI uses.
+  export REMEDIATION_TRACE_BASE_REF="${REMEDIATION_TRACE_BASE_REF:-origin/rewrite/dotnet10-core}"
   REMEDIATION_TRACE_DIFF_MODE=range bash scripts/audit/verify_remediation_trace.sh
 else
   echo "ERROR: scripts/audit/verify_remediation_trace.sh not found"
