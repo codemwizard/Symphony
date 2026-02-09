@@ -4,7 +4,7 @@
 Phase-0 ADR stub (roadmap-backed). No Phase-0 schema enforcement.
 
 ## Invariants
-- Roadmap invariant: `INV-108` (alias: `INV-IPDR-02`)
+- Roadmap invariant: `INV-116` (alias: `INV-IPDR-02`)
 - Related Phase-0 schema hooks:
   - `nfs_sequence_ref` columns exist (nullable) as Phase-0 expand-first hooks.
 
@@ -68,4 +68,3 @@ Mechanical checks required for promotion:
 ## Open Questions (Phase-1)
 - What table is the canonical "successful dispatch" record (attempts ledger vs dedicated dispatch receipts)?
 - How to handle rails that do not provide a strict global sequence number (derive alternative truth anchors).
-

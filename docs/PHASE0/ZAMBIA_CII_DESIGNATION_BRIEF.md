@@ -27,7 +27,7 @@ Phase-0 focuses on mechanisms that can be audited mechanically (scripts, gates, 
 
 ## Payment Finality (Roadmap)
 Payment finality is a P0-impact regulatory requirement. In Phase-0 it is declared (roadmap) rather than enforced in schema:
-- Roadmap invariant: `INV-106` (alias `INV-BOZ-04`)
+- Roadmap invariant: `INV-114` (alias `INV-BOZ-04`)
 - ADR: `docs/decisions/ADR-0012-payment-finality-model-deferred.md`
 
 Activation to Phase-1 includes:
@@ -49,4 +49,3 @@ This supports blue/green style cutovers where new schema versions are deployed f
 ## Next Milestones (For Zambia CII Track)
 - Phase-1: Activate payment finality enforcement (reversal-only) and rail truth-anchor sequence enforcement for sandbox participant gate.
 - Phase-2: Expand operational controls and evidence retention for CII designation readiness.
-

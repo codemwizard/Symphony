@@ -2,7 +2,7 @@ phase: "0"
 task_id: "TSK-P0-127"
 title: "Security: ZDPA-oriented PII leakage payload lint (fail-closed)"
 owner_role: "SECURITY_GUARDIAN"
-status: "planned"   # planned | in_progress | completed
+status: "completed"   # planned | in_progress | completed
 
 depends_on:
   - "TSK-P0-125"
@@ -15,7 +15,7 @@ touches:
   - "tasks/TSK-P0-127/meta.yml"
 
 invariants:
-  - "INV-110"
+  - "INV-112"
 
 work:
   - "Implement a conservative, fail-closed lint that scans regulated surfaces (schema, scripts, app code, infra manifests where applicable) for raw PII patterns in payload/log/evidence contexts."

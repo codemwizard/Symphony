@@ -233,11 +233,11 @@
   },
   {
     "task_id": "TSK-P0-019",
-    "status": "planned",
-    "verification_mode": "both",
+    "status": "completed",
+    "verification_mode": "ci",
     "evidence_required": true,
     "evidence_paths": [
-      "phase0-evidence"
+      "evidence/phase0/ci_artifact_upload_verified.json"
     ],
     "evidence_scope": "ci_artifact",
     "notes": "",
@@ -465,7 +465,7 @@
   },
   {
     "task_id": "TSK-P0-037",
-    "status": "planned",
+    "status": "completed",
     "verification_mode": "both",
     "evidence_required": true,
     "evidence_paths": [
@@ -479,7 +479,7 @@
   },
   {
     "task_id": "TSK-P0-038",
-    "status": "planned",
+    "status": "completed",
     "verification_mode": "both",
     "evidence_required": true,
     "evidence_paths": [
@@ -493,7 +493,7 @@
   },
   {
     "task_id": "TSK-P0-039",
-    "status": "planned",
+    "status": "completed",
     "verification_mode": "both",
     "evidence_required": true,
     "evidence_paths": [
@@ -505,7 +505,7 @@
   },
   {
     "task_id": "TSK-P0-040",
-    "status": "planned",
+    "status": "completed",
     "verification_mode": "both",
     "evidence_required": true,
     "evidence_paths": [
@@ -521,7 +521,7 @@
   },
   {
     "task_id": "TSK-P0-041",
-    "status": "planned",
+    "status": "completed",
     "verification_mode": "both",
     "evidence_required": true,
     "evidence_paths": [
@@ -533,7 +533,7 @@
   },
   {
     "task_id": "TSK-P0-042",
-    "status": "planned",
+    "status": "completed",
     "verification_mode": "both",
     "evidence_required": true,
     "evidence_paths": [
@@ -545,7 +545,7 @@
   },
   {
     "task_id": "TSK-P0-043",
-    "status": "planned",
+    "status": "completed",
     "verification_mode": "both",
     "evidence_required": true,
     "evidence_paths": [
@@ -793,7 +793,7 @@
   },
   {
     "task_id": "TSK-P0-062",
-    "status": "in_progress",
+    "status": "completed",
     "verification_mode": "both",
     "evidence_required": true,
     "evidence_paths": [
@@ -863,7 +863,7 @@
   },
   {
     "task_id": "TSK-P0-067",
-    "status": "in_progress",
+    "status": "completed",
     "verification_mode": "both",
     "evidence_required": true,
     "evidence_paths": [
@@ -1470,7 +1470,7 @@
   },
   {
     "task_id": "TSK-P0-140",
-    "status": "planned",
+    "status": "completed",
     "verification_mode": "both",
     "evidence_required": false,
     "evidence_paths": [],
@@ -1480,7 +1480,7 @@
   },
   {
     "task_id": "TSK-P0-141",
-    "status": "planned",
+    "status": "completed",
     "verification_mode": "both",
     "evidence_required": false,
     "evidence_paths": [],
@@ -1536,6 +1536,60 @@
     "evidence_paths": [],
     "evidence_scope": "repo",
     "notes": "Ensured INT-G22 executes under ordered checks in DB-capable contexts (local pre-CI and CI DB job).",
+    "gate_ids": []
+  },
+  {
+    "task_id": "TSK-P0-147",
+    "status": "completed",
+    "verification_mode": "both",
+    "evidence_required": false,
+    "evidence_paths": [],
+    "evidence_scope": "repo",
+    "notes": "Canonicalize INV-106..INV-116 and wire non-colliding control-plane gates (placeholder emitters where enforcement is deferred).",
+    "gate_ids": []
+  },
+  {
+    "task_id": "TSK-P0-148",
+    "status": "completed",
+    "verification_mode": "both",
+    "evidence_required": false,
+    "evidence_paths": [],
+    "evidence_scope": "repo",
+    "notes": "Approach B policy doc + SKIPPED stub hardening (helper + verifier).",
+    "gate_ids": []
+  },
+  {
+    "task_id": "TSK-P0-149",
+    "status": "completed",
+    "verification_mode": "both",
+    "evidence_required": true,
+    "evidence_paths": [
+      "evidence/phase0/business_foundation_hooks.json"
+    ],
+    "evidence_scope": "repo",
+    "notes": "Business hooks delta tightening (new-row enforcement for billability + stitchability) completed; evidence is required.",
+    "gate_ids": []
+  },
+  {
+    "task_id": "TSK-P0-150",
+    "status": "completed",
+    "verification_mode": "both",
+    "evidence_required": true,
+    "evidence_paths": [
+      "evidence/phase0/business_foundation_hooks.json"
+    ],
+    "evidence_scope": "repo",
+    "notes": "Update business foundation verifier to prove delta enforcement completed; evidence is required.",
+    "gate_ids": []
+  },
+  {
+    "task_id": "TSK-P0-151",
+    "status": "completed",
+    "verification_mode": "both",
+    "evidence_required": false,
+    "evidence_paths": [],
+    "evidence_scope": "repo",
+    "notes": "Docs alignment for business hooks delta completed (Phase-0 audit narrative).",
     "gate_ids": []
   }
 ]

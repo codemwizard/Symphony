@@ -1,0 +1,50 @@
+phase: "0"
+task_id: "TSK-P0-151"
+title: "Docs: Business hooks delta documentation alignment (Phase-0 audit narrative)"
+owner_role: "INVARIANTS_CURATOR"
+status: "completed"   # planned | in_progress | completed
+
+depends_on:
+  - "TSK-P0-149"
+  - "TSK-P0-150"
+
+touches:
+  - "docs/PHASE0/BUSINESS_FOUNDATION_HOOKS.md"
+  - "docs/PHASE0/BUSINESS_HOOK_DELTA_RESOLUTION_REVIEW.md"
+  - "docs/plans/phase0/TSK-P0-151_business_hooks_docs_alignment/PLAN.md"
+  - "docs/plans/phase0/TSK-P0-151_business_hooks_docs_alignment/EXEC_LOG.md"
+  - "tasks/TSK-P0-151/meta.yml"
+
+invariants:
+  - "INV-090"
+  - "INV-092"
+  - "INV-094"
+
+work:
+  - "Move business hooks spec to docs/PHASE0/ and update to match implemented semantics."
+  - "Document Phase-0 strict enforcement for new rows only (NOT VALID constraints) and explicit Phase-1+ validation/backfill."
+  - "Document external_proofs direct billability (tenant_id + billable_client_id) and correlation trigger semantics."
+
+acceptance_criteria:
+  - "Docs are placed under docs/PHASE0/ and reflect the actual schema/verifier behavior."
+  - "Audit narrative clearly distinguishes Phase-0 enforcement vs Phase-1 validation/backfill."
+
+verification:
+  - "bash scripts/audit/run_invariants_fast_checks.sh"
+
+evidence: []
+
+failure_modes:
+  - "Doc claims differ from schema/verifier behavior."
+
+must_read:
+  - "Business-Hook_Delta_resolution.txt"
+  - "docs/PHASE0/BUSINESS_HOOK_DELTA_RESOLUTION_REVIEW.md"
+
+implementation_plan: "docs/plans/phase0/TSK-P0-151_business_hooks_docs_alignment/PLAN.md"
+implementation_log: "docs/plans/phase0/TSK-P0-151_business_hooks_docs_alignment/EXEC_LOG.md"
+
+notes: ""
+client: "codex_cli"
+assigned_agent: "invariants_curator"
+model: "gpt-5-codex"

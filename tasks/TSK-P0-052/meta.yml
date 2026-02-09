@@ -28,12 +28,12 @@ acceptance_criteria:
 - All new scripts emit evidence under evidence/phase0/.
 - CI runs the checks and fails on violations.
 verification:
-- scripts/audit/run_security_fast_checks.sh
+  - scripts/audit/run_security_fast_checks.sh
 evidence:
-- evidence/phase0/security_secrets_scan.json
-- evidence/phase0/security_dotnet_deps_audit.json
-- evidence/phase0/security_secure_config_lint.json
-- evidence/phase0/security_insecure_patterns.json
+  - evidence/phase0/security_secrets_scan.json
+  - evidence/phase0/security_dotnet_deps_audit.json
+  - evidence/phase0/security_secure_config_lint.json
+  - evidence/phase0/security_insecure_patterns.json
 failure_modes:
 - Evidence file missing.
 - Any guardrail violation must fail the job.

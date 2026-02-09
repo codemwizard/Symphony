@@ -58,13 +58,13 @@ Phase-0 in this repo is explicitly a mechanically defensible foundation without 
 Manifest schema in this repo requires numeric IDs (`INV-###`). Directive IDs are captured as **aliases**.
 
 Recommended new IDs (next after `INV-105`):
-- `INV-106` Payment Finality (alias `INV-BOZ-04`)
-- `INV-107` ZDPA Erasure Survivability (alias `INV-ZDPA-01`)
-- `INV-108` Rail Truth-Anchor Sequence (alias `INV-IPDR-02`)
+- `INV-114` Payment Finality (alias `INV-BOZ-04`)
+- `INV-115` ZDPA Erasure Survivability (alias `INV-ZDPA-01`)
+- `INV-116` Rail Truth-Anchor Sequence (alias `INV-IPDR-02`)
 
 Draft entries (Phase-0 = roadmap only; activation described in `verification`):
 ```yaml
-- id: INV-106
+- id: INV-114
   aliases: ["INV-BOZ-04"]
   status: roadmap
   severity: P0
@@ -73,7 +73,7 @@ Draft entries (Phase-0 = roadmap only; activation described in `verification`):
   sla_days: 14
   verification: "Phase-1 activation: enforce finality state machine + camt.056 reversal workflow; add mechanical DB constraints/triggers and CI tests; Phase-0 is declarative only."
 
-- id: INV-107
+- id: INV-115
   aliases: ["INV-ZDPA-01"]
   status: roadmap
   severity: P0
@@ -82,7 +82,7 @@ Draft entries (Phase-0 = roadmap only; activation described in `verification`):
   sla_days: 14
   verification: "Phase-1/2 activation: tokenization/vault tables + retention hooks + evidence signing over identity_hash; add mechanical purge tests and signature verification; Phase-0 is declarative only."
 
-- id: INV-108
+- id: INV-116
   aliases: ["INV-IPDR-02"]
   status: roadmap
   severity: P0

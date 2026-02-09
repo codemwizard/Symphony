@@ -2,7 +2,7 @@ phase: '0'
 task_id: TSK-P0-062
 title: Normalize legacy task metas to canonical schema
 owner_role: ARCHITECT
-status: in_progress
+status: completed
 depends_on:
 - TSK-P0-057
 touches:

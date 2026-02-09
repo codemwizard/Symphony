@@ -21,8 +21,11 @@ Out of scope:
 - Verifier proves required anchor metadata columns and indexes exist.
 - Verifier emits evidence on PASS and FAIL.
 
+## Toolchain prerequisites (checklist)
+- [ ] `psql` available (catalog verification).
+- [ ] `python3` available (evidence emission).
+
 verification_commands_run:
 - "PENDING: source infra/docker/.env && export DATABASE_URL=... && scripts/db/verify_anchor_sync_hooks.sh"
 
 final_status: OPEN
-

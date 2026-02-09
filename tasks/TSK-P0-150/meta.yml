@@ -1,0 +1,53 @@
+phase: "0"
+task_id: "TSK-P0-150"
+title: "DB: Update business hooks verifier to prove delta enforcement"
+owner_role: "DB_FOUNDATION"
+status: "completed"   # planned | in_progress | completed
+
+depends_on:
+  - "TSK-P0-149"
+
+touches:
+  - "scripts/db/verify_business_foundation_hooks.sh"
+  - "docs/plans/phase0/TSK-P0-150_business_hooks_verifier_update/PLAN.md"
+  - "docs/plans/phase0/TSK-P0-150_business_hooks_verifier_update/EXEC_LOG.md"
+  - "tasks/TSK-P0-150/meta.yml"
+
+invariants:
+  - "INV-090"
+  - "INV-091"
+  - "INV-092"
+  - "INV-094"
+  - "INV-096"
+
+work:
+  - "Extend the verifier to check presence of new-row enforcement constraints and triggers (correlation + payer attribution)."
+  - "Add checks for billable_clients.client_key uniqueness index and constraint presence."
+  - "Add checks for external_proofs tenant_id + billable_client_id columns and derivation trigger presence."
+  - "Keep evidence deterministic and emitted on PASS/FAIL."
+
+acceptance_criteria:
+  - "Verifier PASS implies the delta enforcement mechanisms are present (constraints + triggers + index)."
+  - "Evidence JSON includes the new checks as explicit booleans."
+
+verification:
+  - "bash scripts/dev/pre_ci.sh"
+
+evidence:
+  - "evidence/phase0/business_foundation_hooks.json"
+
+failure_modes:
+  - "Verifier is too weak (false PASS)."
+  - "Verifier fails to emit evidence on FAIL."
+
+must_read:
+  - "docs/PHASE0/BUSINESS_HOOK_DELTA_RESOLUTION_REVIEW.md"
+  - "scripts/db/verify_business_foundation_hooks.sh"
+
+implementation_plan: "docs/plans/phase0/TSK-P0-150_business_hooks_verifier_update/PLAN.md"
+implementation_log: "docs/plans/phase0/TSK-P0-150_business_hooks_verifier_update/EXEC_LOG.md"
+
+notes: ""
+client: "codex_cli"
+assigned_agent: "db_foundation"
+model: "gpt-5-codex"

@@ -4,7 +4,7 @@
 Phase-0 ADR stub (roadmap-backed). No Phase-0 schema enforcement.
 
 ## Invariants
-- Roadmap invariant: `INV-107` (alias: `INV-ZDPA-01`)
+- Roadmap invariant: `INV-115` (alias: `INV-ZDPA-01`)
 - Related implemented invariant: `INV-020` (evidence anchoring: git SHA + schema hash)
 
 ## Decision
@@ -70,4 +70,3 @@ Mechanical checks required for promotion:
 ## Open Questions (Phase-1)
 - Whether identity_hash is computed in DB, app, or a dedicated security service.
 - Key/salt rotation strategy and how verifiers bind historical signatures.
-

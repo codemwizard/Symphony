@@ -20,9 +20,9 @@ work:
 acceptance_criteria:
 - "Agent scopes match control\u2011plane ownership and scope."
 verification:
-- scripts/audit/verify_control_planes_drift.sh
+  - scripts/audit/verify_control_planes_drift.sh
 evidence:
-- evidence/phase0/control_planes_drift.json
+  - evidence/phase0/control_planes_drift.json
 failure_modes:
 - Agent scope conflicts with control plane definitions.
 - Evidence file missing.

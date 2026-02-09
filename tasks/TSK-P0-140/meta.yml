@@ -2,7 +2,7 @@ phase: "0"
 task_id: "TSK-P0-140"
 title: "Performance cluster: invariants docs alignment (manifest implemented vs implemented.md)"
 owner_role: "INVARIANTS_CURATOR"
-status: "planned"   # planned | in_progress | completed
+status: "completed"   # planned | in_progress | completed
 
 depends_on:
   - "TSK-P0-125"
@@ -51,4 +51,3 @@ notes: "INV-031 is already present in INVARIANTS_IMPLEMENTED.md in current repo 
 client: "codex_cli"
 assigned_agent: "invariants_curator"
 model: "gpt-5-codex"
-

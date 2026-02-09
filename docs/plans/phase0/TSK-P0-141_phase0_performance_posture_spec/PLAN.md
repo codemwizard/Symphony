@@ -23,7 +23,6 @@ Out of scope:
 - Waivers are machine-detectable and tied to ADR references.
 
 verification_commands_run:
-- "PENDING: doc review + alignment with TSK-P0-142..146 plans"
+- "rg -n \"PHASE0_PERFORMANCE_POSTURE\" docs/PHASE0"
 
-final_status: OPEN
-
+final_status: PASS

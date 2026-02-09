@@ -20,4 +20,7 @@ Plan: PLAN.md
 - Outcome:
 
 ## Final summary
-- <fill in>
+- 2026-02-09
+- Verified CI and pre-CI both reference the canonical ordered runner (`scripts/audit/run_phase0_ordered_checks.sh`).
+- Evidence emitted: `evidence/phase0/ci_order.json` (PASS).
+- Note: OpenBao runtime execution still requires Docker; order verification is non-runtime and is checked mechanically.

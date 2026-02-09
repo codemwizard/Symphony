@@ -2,13 +2,15 @@ phase: '0'
 task_id: TSK-P0-042
 title: Add tenant/member invariants + evidence contract entries
 owner_role: PLATFORM
-status: planned
+status: completed
 depends_on:
 - TSK-P0-041
 touches:
 - docs/invariants/INVARIANTS_MANIFEST.yml
 - docs/invariants/INVARIANTS_QUICK.md
 - docs/PHASE0/phase0_contract.yml
+- docs/plans/phase0/TSK-P0-042_tenant_member_invariants_contract/PLAN.md
+- docs/plans/phase0/TSK-P0-042_tenant_member_invariants_contract/EXEC_LOG.md
 - tasks/TSK-P0-042/meta.yml
 invariants:
 - INV-062..INV-066 (Tenant rails + member consistency)
@@ -34,3 +36,5 @@ notes: ''
 client: codex_cli
 assigned_agent: invariants_curator
 model: <UNASSIGNED>
+implementation_plan: docs/plans/phase0/TSK-P0-042_tenant_member_invariants_contract/PLAN.md
+implementation_log: docs/plans/phase0/TSK-P0-042_tenant_member_invariants_contract/EXEC_LOG.md

@@ -2,7 +2,7 @@
 -- PostgreSQL database dump
 --
 
-\restrict laLrBLjnXYt5YCu42W1LrhMuJKCAABbmVEB24cN0xh7nOhrLO1DbqRHej6MCp3Y
+\restrict NYEmA86X9uFNayGVJrvww9n07JFjGtjW0ilFce3U0tRj61vff50EhcG5FdcFUBG
 
 -- Dumped from database version 18.1 (Debian 18.1-1.pgdg13+2)
 -- Dumped by pg_dump version 18.1 (Debian 18.1-1.pgdg13+2)
@@ -436,6 +436,72 @@ $$;
 
 
 --
+-- Name: set_correlation_id_if_null(); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.set_correlation_id_if_null() RETURNS trigger
+    LANGUAGE plpgsql
+    AS $$
+BEGIN
+  IF NEW.correlation_id IS NULL THEN
+    NEW.correlation_id := public.uuid_v7_or_random();
+  END IF;
+  RETURN NEW;
+END;
+$$;
+
+
+--
+-- Name: set_external_proofs_attribution(); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.set_external_proofs_attribution() RETURNS trigger
+    LANGUAGE plpgsql
+    AS $$
+DECLARE
+  derived_tenant_id UUID;
+  derived_billable_client_id UUID;
+BEGIN
+  SELECT ia.tenant_id
+    INTO derived_tenant_id
+    FROM public.ingress_attestations ia
+   WHERE ia.attestation_id = NEW.attestation_id;
+
+  IF derived_tenant_id IS NULL THEN
+    RAISE EXCEPTION 'external_proofs requires tenant attribution via ingress_attestations'
+      USING ERRCODE = 'P0001';
+  END IF;
+
+  SELECT t.billable_client_id
+    INTO derived_billable_client_id
+    FROM public.tenants t
+   WHERE t.tenant_id = derived_tenant_id;
+
+  IF derived_billable_client_id IS NULL THEN
+    RAISE EXCEPTION 'external_proofs requires billable_client_id attribution via tenant'
+      USING ERRCODE = 'P0001';
+  END IF;
+
+  IF NEW.tenant_id IS NULL THEN
+    NEW.tenant_id := derived_tenant_id;
+  ELSIF NEW.tenant_id <> derived_tenant_id THEN
+    RAISE EXCEPTION 'external_proofs tenant_id does not match derived tenant_id'
+      USING ERRCODE = 'P0001';
+  END IF;
+
+  IF NEW.billable_client_id IS NULL THEN
+    NEW.billable_client_id := derived_billable_client_id;
+  ELSIF NEW.billable_client_id <> derived_billable_client_id THEN
+    RAISE EXCEPTION 'external_proofs billable_client_id does not match derived billable_client_id'
+      USING ERRCODE = 'P0001';
+  END IF;
+
+  RETURN NEW;
+END;
+$$;
+
+
+--
 -- Name: uuid_strategy(); Type: FUNCTION; Schema: public; Owner: -
 --
 
@@ -475,6 +541,7 @@ CREATE TABLE public.billable_clients (
     regulator_ref text,
     status text DEFAULT 'ACTIVE'::text NOT NULL,
     created_at timestamp with time zone DEFAULT now() NOT NULL,
+    client_key text,
     CONSTRAINT billable_clients_client_type_check CHECK ((client_type = ANY (ARRAY['BANK'::text, 'MMO'::text, 'NGO'::text, 'GOV_PROGRAM'::text, 'COOP_FEDERATION'::text, 'ENTERPRISE'::text]))),
     CONSTRAINT billable_clients_status_check CHECK ((status = ANY (ARRAY['ACTIVE'::text, 'SUSPENDED'::text, 'CLOSED'::text])))
 );
@@ -556,7 +623,10 @@ CREATE TABLE public.external_proofs (
     verified_at timestamp with time zone,
     expires_at timestamp with time zone,
     metadata jsonb,
-    created_at timestamp with time zone DEFAULT now() NOT NULL
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    tenant_id uuid,
+    billable_client_id uuid,
+    subject_member_id uuid
 );
 
 
@@ -781,6 +851,14 @@ CREATE TABLE public.tenants (
 
 
 --
+-- Name: billable_clients billable_clients_client_key_required_new_rows_chk; Type: CHECK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE public.billable_clients
+    ADD CONSTRAINT billable_clients_client_key_required_new_rows_chk CHECK (((client_key IS NOT NULL) AND (length(btrim(client_key)) > 0))) NOT VALID;
+
+
+--
 -- Name: billable_clients billable_clients_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -813,11 +891,35 @@ ALTER TABLE ONLY public.evidence_packs
 
 
 --
+-- Name: external_proofs external_proofs_billable_client_required_new_rows_chk; Type: CHECK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE public.external_proofs
+    ADD CONSTRAINT external_proofs_billable_client_required_new_rows_chk CHECK ((billable_client_id IS NOT NULL)) NOT VALID;
+
+
+--
 -- Name: external_proofs external_proofs_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.external_proofs
     ADD CONSTRAINT external_proofs_pkey PRIMARY KEY (proof_id);
+
+
+--
+-- Name: external_proofs external_proofs_tenant_required_new_rows_chk; Type: CHECK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE public.external_proofs
+    ADD CONSTRAINT external_proofs_tenant_required_new_rows_chk CHECK ((tenant_id IS NOT NULL)) NOT VALID;
+
+
+--
+-- Name: ingress_attestations ingress_attestations_correlation_required_new_rows_chk; Type: CHECK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE public.ingress_attestations
+    ADD CONSTRAINT ingress_attestations_correlation_required_new_rows_chk CHECK ((correlation_id IS NOT NULL)) NOT VALID;
 
 
 --
@@ -845,11 +947,27 @@ ALTER TABLE ONLY public.participants
 
 
 --
+-- Name: payment_outbox_attempts payment_outbox_attempts_correlation_required_new_rows_chk; Type: CHECK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE public.payment_outbox_attempts
+    ADD CONSTRAINT payment_outbox_attempts_correlation_required_new_rows_chk CHECK ((correlation_id IS NOT NULL)) NOT VALID;
+
+
+--
 -- Name: payment_outbox_attempts payment_outbox_attempts_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.payment_outbox_attempts
     ADD CONSTRAINT payment_outbox_attempts_pkey PRIMARY KEY (attempt_id);
+
+
+--
+-- Name: payment_outbox_pending payment_outbox_pending_correlation_required_new_rows_chk; Type: CHECK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE public.payment_outbox_pending
+    ADD CONSTRAINT payment_outbox_pending_correlation_required_new_rows_chk CHECK ((correlation_id IS NOT NULL)) NOT VALID;
 
 
 --
@@ -922,6 +1040,14 @@ ALTER TABLE ONLY public.tenant_members
 
 ALTER TABLE ONLY public.tenant_members
     ADD CONSTRAINT tenant_members_tenant_id_member_ref_key UNIQUE (tenant_id, member_ref);
+
+
+--
+-- Name: tenants tenants_billable_client_required_new_rows_chk; Type: CHECK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE public.tenants
+    ADD CONSTRAINT tenants_billable_client_required_new_rows_chk CHECK ((billable_client_id IS NOT NULL)) NOT VALID;
 
 
 --
@@ -1155,6 +1281,13 @@ CREATE INDEX idx_tenants_status ON public.tenants USING btree (status);
 
 
 --
+-- Name: ux_billable_clients_client_key; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE UNIQUE INDEX ux_billable_clients_client_key ON public.billable_clients USING btree (client_key) WHERE (client_key IS NOT NULL);
+
+
+--
 -- Name: ux_billing_usage_events_idempotency; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -1246,6 +1379,34 @@ CREATE TRIGGER trg_ingress_member_tenant_match BEFORE INSERT ON public.ingress_a
 
 
 --
+-- Name: ingress_attestations trg_set_corr_id_ingress_attestations; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER trg_set_corr_id_ingress_attestations BEFORE INSERT ON public.ingress_attestations FOR EACH ROW EXECUTE FUNCTION public.set_correlation_id_if_null();
+
+
+--
+-- Name: payment_outbox_attempts trg_set_corr_id_payment_outbox_attempts; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER trg_set_corr_id_payment_outbox_attempts BEFORE INSERT ON public.payment_outbox_attempts FOR EACH ROW EXECUTE FUNCTION public.set_correlation_id_if_null();
+
+
+--
+-- Name: payment_outbox_pending trg_set_corr_id_payment_outbox_pending; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER trg_set_corr_id_payment_outbox_pending BEFORE INSERT ON public.payment_outbox_pending FOR EACH ROW EXECUTE FUNCTION public.set_correlation_id_if_null();
+
+
+--
+-- Name: external_proofs trg_set_external_proofs_attribution; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER trg_set_external_proofs_attribution BEFORE INSERT ON public.external_proofs FOR EACH ROW EXECUTE FUNCTION public.set_external_proofs_attribution();
+
+
+--
 -- Name: billing_usage_events billing_usage_events_billable_client_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -1299,6 +1460,30 @@ ALTER TABLE ONLY public.evidence_pack_items
 
 ALTER TABLE ONLY public.external_proofs
     ADD CONSTRAINT external_proofs_attestation_id_fkey FOREIGN KEY (attestation_id) REFERENCES public.ingress_attestations(attestation_id);
+
+
+--
+-- Name: external_proofs external_proofs_billable_client_fk; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.external_proofs
+    ADD CONSTRAINT external_proofs_billable_client_fk FOREIGN KEY (billable_client_id) REFERENCES public.billable_clients(billable_client_id) NOT VALID;
+
+
+--
+-- Name: external_proofs external_proofs_subject_member_fk; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.external_proofs
+    ADD CONSTRAINT external_proofs_subject_member_fk FOREIGN KEY (subject_member_id) REFERENCES public.tenant_members(member_id) NOT VALID;
+
+
+--
+-- Name: external_proofs external_proofs_tenant_fk; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.external_proofs
+    ADD CONSTRAINT external_proofs_tenant_fk FOREIGN KEY (tenant_id) REFERENCES public.tenants(tenant_id) NOT VALID;
 
 
 --
@@ -1377,5 +1562,5 @@ ALTER TABLE ONLY public.tenants
 -- PostgreSQL database dump complete
 --
 
-\unrestrict laLrBLjnXYt5YCu42W1LrhMuJKCAABbmVEB24cN0xh7nOhrLO1DbqRHej6MCp3Y
+\unrestrict NYEmA86X9uFNayGVJrvww9n07JFjGtjW0ilFce3U0tRj61vff50EhcG5FdcFUBG
 

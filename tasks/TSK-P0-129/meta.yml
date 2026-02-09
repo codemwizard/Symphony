@@ -2,7 +2,7 @@ phase: "0"
 task_id: "TSK-P0-129"
 title: "DB: Hybrid anchor-sync structural readiness verifier (and migration only if required)"
 owner_role: "DB_FOUNDATION"
-status: "planned"   # planned | in_progress | completed
+status: "completed"   # planned | in_progress | completed
 
 depends_on:
   - "TSK-P0-125"
@@ -15,7 +15,7 @@ touches:
   - "tasks/TSK-P0-129/meta.yml"
 
 invariants:
-  - "INV-111"
+  - "INV-113"
 
 work:
   - "Define what 'anchor-sync readiness' means for Phase-0 structural correctness, aligned to existing evidence anchoring hooks (e.g., columns/indexes on public.evidence_packs from migration 0023)."

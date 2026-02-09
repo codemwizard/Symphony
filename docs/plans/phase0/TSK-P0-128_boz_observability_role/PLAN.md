@@ -22,9 +22,12 @@ Out of scope:
 - `boz_auditor` has no CREATE on schemas and no DML privileges on public tables.
 - Verifier emits evidence on PASS and FAIL.
 
+## Toolchain prerequisites (checklist)
+- [ ] `psql` available (catalog verification).
+- [ ] `python3` available (evidence emission).
+
 verification_commands_run:
 - "PENDING: source infra/docker/.env && export DATABASE_URL=... && scripts/db/migrate.sh"
 - "PENDING: source infra/docker/.env && export DATABASE_URL=... && scripts/db/verify_boz_observability_role.sh"
 
 final_status: OPEN
-

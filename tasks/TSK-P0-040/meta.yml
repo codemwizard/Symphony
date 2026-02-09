@@ -2,12 +2,14 @@ phase: '0'
 task_id: TSK-P0-040
 title: Wire contract + SQLSTATE drift checks into CI
 owner_role: SECURITY_GUARDIAN
-status: planned
+status: completed
 depends_on:
 - TSK-P0-037
 - TSK-P0-038
 touches:
 - .github/workflows/invariants.yml
+- docs/plans/phase0/TSK-P0-040_ci_wiring_contract_sqlstate/PLAN.md
+- docs/plans/phase0/TSK-P0-040_ci_wiring_contract_sqlstate/EXEC_LOG.md
 - tasks/TSK-P0-040/meta.yml
 invariants:
 - INV-060
@@ -19,7 +21,7 @@ acceptance_criteria:
 - Checks run before upload step.
 - Evidence artifacts include phase0_contract.json and sqlstate_map_drift.json.
 verification:
-- actionlint .github/workflows/invariants.yml
+  - actionlint .github/workflows/invariants.yml
 evidence:
 - ./evidence/phase0/phase0_contract.json
 - ./evidence/phase0/sqlstate_map_drift.json
@@ -32,6 +34,8 @@ must_read:
 - scripts/db/verify_invariants.sh
 - scripts/db/ci_invariant_gate.sql
 notes: ''
+implementation_plan: docs/plans/phase0/TSK-P0-040_ci_wiring_contract_sqlstate/PLAN.md
+implementation_log: docs/plans/phase0/TSK-P0-040_ci_wiring_contract_sqlstate/EXEC_LOG.md
 client: codex_cli
 assigned_agent: security_guardian
 model: <UNASSIGNED>

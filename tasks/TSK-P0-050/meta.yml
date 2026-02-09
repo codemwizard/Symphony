@@ -24,9 +24,9 @@ acceptance_criteria:
   Guarantee).
 - Verifier emits evidence on pass/fail.
 verification:
-- scripts/audit/verify_three_pillars_doc.sh
+  - scripts/audit/verify_three_pillars_doc.sh
 evidence:
-- evidence/phase0/three_pillars_doc.json
+  - evidence/phase0/three_pillars_doc.json
 failure_modes:
 - Evidence file missing.
 - Document missing required sections.

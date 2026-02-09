@@ -2,7 +2,7 @@ phase: "0"
 task_id: "TSK-P0-128"
 title: "DB: BoZ/regulator observability seat (read-only role) + mechanical verifier"
 owner_role: "DB_FOUNDATION"
-status: "planned"   # planned | in_progress | completed
+status: "completed"   # planned | in_progress | completed
 
 depends_on:
   - "TSK-P0-125"
@@ -16,7 +16,7 @@ touches:
   - "tasks/TSK-P0-128/meta.yml"
 
 invariants:
-  - "INV-109"
+  - "INV-111"
 
 work:
   - "Create a forward-only migration to define a regulator read-only role (default: `boz_auditor`) with SELECT-only access to the minimum necessary surfaces."

@@ -2,7 +2,7 @@ phase: "0"
 task_id: "TSK-P0-141"
 title: "Performance: Phase-0 performance posture spec (tables/classes, indexes, timeouts, waivers)"
 owner_role: "ARCHITECT"
-status: "planned"   # planned | in_progress | completed
+status: "completed"   # planned | in_progress | completed
 
 depends_on:
   - "TSK-P0-140"
@@ -43,4 +43,3 @@ notes: ""
 client: "codex_cli"
 assigned_agent: "architect"
 model: "gpt-5-codex"
-

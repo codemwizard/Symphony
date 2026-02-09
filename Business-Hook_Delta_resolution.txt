@@ -1,0 +1,475 @@
+
+
+Here’s my take on each “left out” bundle idea, framed as: **does it materially improve the Phase-0 business hooks (“auditably billable” + stitchable) without breaking Expand/Contract + forward-only posture?**
+
+## 1) “Enforce for new rows now” via `NOT VALID` CHECK constraints
+
+**Yes — you should add this.** This is one of the cleanest Phase-0 moves because it strengthens guarantees **without forcing an immediate backfill**.
+
+* **Problem today (as you described):** You have `billable_client_id` present and a `NOT VALID` FK, but **new rows can still be inserted without billable linkage** if you haven’t added a “must be present” constraint.
+* **Phase-0 best practice:** Add `CHECK (...) NOT VALID` constraints that:
+
+  * **apply to all new writes immediately**
+  * do **not** validate historical rows yet (avoids operational risk)
+* **Recommended examples:**
+
+  * Tenants: `CHECK (billable_client_id IS NOT NULL) NOT VALID`
+  * Correlation: `CHECK (correlation_id IS NOT NULL) NOT VALID` (see #5 for how to do this safely)
+
+✅ **Net:** Strong “auditably billable” posture improvement for Phase-0.
+
+---
+
+## 2) Stable payer identifier (`billable_clients.client_key`)
+
+**Yes — add it (Phase-0 safe, high audit value).**
+
+UUIDs are fine internally, but auditors and billing ops love a **stable, human-governed business key**:
+
+* prevents “legal_name changed” breaking reconciliation
+* makes invoices and dispute packs referencable outside the database
+
+**Phase-0 safe pattern:**
+
+* add nullable `client_key TEXT`
+* add `UNIQUE (client_key)` (unique indexes allow multiple NULLs)
+* add `CHECK (client_key IS NOT NULL) NOT VALID` to enforce **new rows** have it (without forcing backfill)
+* later validate + tighten
+
+✅ **Net:** Big improvement to billing traceability with minimal risk.
+
+---
+
+## 3) Partial indexes for tenant hierarchy FKs
+
+**Nice-to-have (performance/size), not required for auditability.**
+
+Partial indexes (e.g., `WHERE parent_tenant_id IS NOT NULL`) reduce bloat and help queries that only target populated relationships, but they don’t change the **truth** of the business hooks.
+
+**Recommendation:**
+
+* Phase-0: optional
+* If you already have unconditional indexes, I wouldn’t churn them unless you have measured bloat/latency pain.
+
+🟡 **Net:** Useful later; not a must for “auditably billable.”
+
+---
+
+## 4) External proofs model keyed directly to `tenant_id + billable_client_id`
+
+**Yes, but only if you want external proofs to be directly billable without multi-hop joins.**
+
+Your current design (“must have attestation_id, then join back to tenant/billable”) is technically correct, but it weakens the **billing narrative**:
+
+* “who paid for this proof?” is indirect unless you always join through attestation → tenant → billable_client
+
+**Phase-0 best compromise (no breaking changes):**
+
+* add `tenant_id` and `billable_client_id` columns to `external_proofs` (nullable)
+* populate them for **new rows** in the writer (preferred) or via a DB trigger (works but more brittle)
+* add a verifier/invariant that enforces one of:
+
+  * **either** `(tenant_id, billable_client_id) are present`
+  * **or** `attestation_id` is present AND the join path to tenant/billable is guaranteed
+
+✅ **Net:** Meaningful improvement if you’re selling “proof events” as billable units.
+
+---
+
+## 5) Correlation IDs mandatory (hard stitching)
+
+**Yes in principle, but do it in a Phase-0 safe way (avoid table rewrites / app breakage).**
+
+Making correlation mandatory is a *big* audit/storytelling win:
+
+* “every instruction/outbox attempt is stitchable by construction”
+
+**But:** doing `ADD COLUMN correlation_id UUID NOT NULL DEFAULT gen_random_uuid()` can be risky (DB rewrite depending on Postgres version / volatility of default).
+
+**Phase-0 safe pattern:**
+
+1. `ADD COLUMN correlation_id UUID NULL`
+2. add a **BEFORE INSERT trigger** that sets `correlation_id` if NULL
+3. add `CHECK (correlation_id IS NOT NULL) NOT VALID`
+   → enforces new rows immediately, no backfill required
+4. later: backfill + validate + convert to NOT NULL when ready
+
+✅ **Net:** Strong improvement, but implement via trigger+NOT VALID check (not NOT NULL+default).
+
+---
+
+# Bottom line: what you should add (in priority order)
+
+### Must-add for “auditably billable” Phase-0
+
+1. **NOT VALID “required for new rows” CHECKs** (tenants billable linkage, correlation present)
+2. **`billable_clients.client_key` stable business identifier**
+
+### Strongly recommended (if external proofs are billable units)
+
+3. **Direct payer linkage on `external_proofs`** (or enforce guaranteed join-path via invariant)
+
+### Optional / later optimization
+
+4. **Partial indexes** for hierarchy columns
+
+---
+
+# If you want a clean next step
+
+I can turn the “must-add” items (#1, #2, and the safe version of #5) into a single **forward-only “tightening” migration** (expand-first) plus a verifier update that proves:
+
+* new tenants cannot be created without billable linkage
+* new instructions/outbox rows are always correlation-stitchable
+* billable_clients have stable keys for invoicing/audit trails
+
+Just tell me whether you want:
+
+* **Strict Phase-0 enforcement for new rows only** (recommended), or
+* **Immediate full validation/backfill** (riskier; usually Phase-1).
+
+
+
+
+
+
+
+
+
+
+
+
+Yes — **“strict Phase-0 enforcement for new rows only”** is exactly what Postgres `NOT VALID` constraints are for.
+
+Key fact (the trick that makes this work):
+**A `NOT VALID` constraint is enforced for *all new writes immediately*, but it is not checked against existing rows until you later `VALIDATE CONSTRAINT`.**
+So you get “expand-first” safety without backfill work *yet*, while still preventing new noncompliant rows.
+
+Below is how to apply that to each of the “left-out” items you listed, in a way that improves the “auditably billable” story **without breaking Phase-0**.
+
+---
+
+## Phase-0 strict enforcement (new rows only): recommended deltas
+
+### 1) “Enforce for new rows now” (billable_client_id + correlation_id)
+
+**Goal:** existing nulls allowed, **new rows must comply**.
+
+**Tenants: require billable root on new rows**
+
+```sql
+ALTER TABLE public.tenants
+  ADD CONSTRAINT tenants_billable_client_required_new_rows
+  CHECK (billable_client_id IS NOT NULL)
+  NOT VALID;
+```
+
+**Correlation IDs: keep column nullable for legacy rows, enforce non-null on new rows**
+
+```sql
+-- Ensure a default so new inserts get it automatically
+ALTER TABLE public.ingress_attestations
+  ALTER COLUMN correlation_id SET DEFAULT gen_random_uuid();
+
+ALTER TABLE public.ingress_attestations
+  ADD CONSTRAINT ingress_attestations_correlation_required_new_rows
+  CHECK (correlation_id IS NOT NULL)
+  NOT VALID;
+```
+
+Repeat the same pattern for outbox tables (pending/attempts) if they have `correlation_id`.
+
+**Why this is better than `NOT NULL` in Phase-0:**
+`NOT NULL` forces you to backfill old rows immediately. The `CHECK ... NOT VALID` pattern avoids that, but still blocks new bad rows.
+
+---
+
+### 2) Stable payer identifier (`billable_clients.client_key`)
+
+**Goal:** don’t rely on UUID+name for audit/billing; add a stable business key.
+
+**Add the column + enforce for new rows only + uniqueness**
+
+```sql
+ALTER TABLE public.billable_clients
+  ADD COLUMN client_key text;
+
+ALTER TABLE public.billable_clients
+  ADD CONSTRAINT billable_clients_client_key_required_new_rows
+  CHECK (client_key IS NOT NULL AND length(trim(client_key)) > 0)
+  NOT VALID;
+
+CREATE UNIQUE INDEX CONCURRENTLY IF NOT EXISTS ux_billable_clients_client_key
+  ON public.billable_clients (client_key)
+  WHERE client_key IS NOT NULL;
+```
+
+**Why:** regulators/banks like *stable human/business identifiers* for reconciliation and invoice trails. UUIDs are fine technically but weaker for ops/audit narratives.
+
+---
+
+### 3) Tenant hierarchy indexes: use partial indexes (lower bloat, better semantics)
+
+If your repo currently has unconditional indexes, switch/add partials:
+
+```sql
+CREATE INDEX CONCURRENTLY IF NOT EXISTS ix_tenants_billable_client_id_nn
+  ON public.tenants (billable_client_id)
+  WHERE billable_client_id IS NOT NULL;
+
+CREATE INDEX CONCURRENTLY IF NOT EXISTS ix_tenants_parent_tenant_id_nn
+  ON public.tenants (parent_tenant_id)
+  WHERE parent_tenant_id IS NOT NULL;
+```
+
+(You can keep old ones for now; Phase-0 can add partials first, then drop old ones later in a Contract/Cleanup phase.)
+
+---
+
+### 4) External proofs: make “who paid for this proof?” mechanically visible
+
+If `external_proofs` is currently only keyed to `attestation_id`, you have two Phase-0 safe options:
+
+**Option A (best audit story): add explicit payer fields and enforce on new rows**
+
+```sql
+ALTER TABLE public.external_proofs
+  ADD COLUMN tenant_id uuid,
+  ADD COLUMN billable_client_id uuid;
+
+ALTER TABLE public.external_proofs
+  ADD CONSTRAINT external_proofs_tenant_required_new_rows
+  CHECK (tenant_id IS NOT NULL)
+  NOT VALID;
+
+ALTER TABLE public.external_proofs
+  ADD CONSTRAINT external_proofs_billable_required_new_rows
+  CHECK (billable_client_id IS NOT NULL)
+  NOT VALID;
+```
+
+**Option B (no app changes, DB derives it): trigger to populate from attestation**
+If `ingress_attestations` already links to `tenant_id` (and tenant links to billable), you can set these automatically in DB. This improves “auditably billable” without requiring app writes to change in Phase-0.
+
+(If you want this, I can give the exact trigger function; it depends on your exact schema names/columns.)
+
+---
+
+### 5) Correlation IDs should be “hard”
+
+Same pattern as #1: default + NOT VALID CHECK.
+This yields the claim: **“every new instruction/outbox attempt is stitchable by construction”** while keeping Phase-0 expand safety.
+
+---
+
+## How enforcement happens under Approach A
+
+You’re thinking about this correctly:
+
+* **Approach A** = you **do not** add new evidence paths / gates to the Phase-0 contract until the scripts + wiring exist and run in CI/pre-CI.
+* For schema constraints like the above, enforcement happens **as soon as the migration is applied** (i.e., in the DB), because these are real constraints.
+
+So with “strict new rows only”:
+
+* The constraint is present immediately.
+* **New inserts/updates are blocked immediately** if they violate it.
+* Existing bad rows remain until later backfill + `VALIDATE CONSTRAINT`.
+
+That’s ideal Phase-0 behavior.
+
+---
+
+## What you should add to your verifiers (to keep evidence-grade)
+
+Update your “business foundation hooks” verifier to assert:
+
+* these `NOT VALID` constraints exist (by name)
+* defaults are set (`correlation_id` default)
+* partial indexes exist where expected
+* client_key column + partial unique index exists
+
+This ensures your audit evidence says: *“we enforce it for all new writes; legacy rows are tolerated until Contract phase.”*
+
+---
+
+## Bottom line
+
+For “Phase-0 strict enforcement for new rows only,” you **should implement items (1), (2), (3), (5)** immediately using `CHECK ... NOT VALID` + defaults + partial indexes.
+Item (4) is also worth doing, but choose **Option A** (explicit columns) if you’re okay changing writers later, or **Option B** (DB-derived trigger) if you want Phase-0 improvements without app changes.
+
+If you want, paste (or upload) your current `tenants`, `billable_clients`, `external_proofs`, and `ingress_attestations` table definitions (or the relevant migration snippets), and I’ll produce the exact **single forward-only migration** that matches your repo conventions (including `CONCURRENTLY` / `no_tx` handling).
+
+
+
+
+
+
+
+
+
+
+
+I opened `migrations.zip` and the “business foundation hooks” you’re referring to are primarily in:
+
+* `migrations/0020_business_foundation_hooks.sql` (adds `billable_clients`, adds `tenants.billable_client_id`, adds nullable `correlation_id` columns, etc.)
+* `migrations/0021_correlation_indexes_concurrently.sql` (indexes)
+* `migrations/0024_business_tables_privilege_hygiene_and_usage_event_conventions.sql` (privileges/conventions)
+
+You’re right: as currently written, **new rows are not forced** to include `billable_client_id` or `correlation_id` (because those columns are nullable, with no “new-rows-only” CHECK constraints and no defaults).
+
+Below is the **exact forward-only “strict Phase-0 enforcement for new rows only”** patch I’d add as a new migration (you can name/number it to match your repo’s next slot).
+
+---
+
+## Add a new migration: “strict new rows only” (Postgres NOT VALID pattern)
+
+> **Why this works for your requirement:** In Postgres, a `CHECK ... NOT VALID` constraint is **enforced for all new rows immediately**, but it does **not** require validating existing rows.
+
+Create a new file, e.g.:
+
+`schema/migrations/0026_business_hooks_strict_new_rows_only.sql`
+
+```sql
+-- 0026_business_hooks_strict_new_rows_only.sql
+-- Phase-0: strict enforcement for NEW rows only (do not retro-validate historical rows).
+-- Pattern: CHECK ... NOT VALID is enforced for new/updated rows immediately.
+
+-- --------------------------
+-- 1) Tenants: billable root required for new tenant rows
+-- --------------------------
+ALTER TABLE public.tenants
+  ADD CONSTRAINT tenants_billable_client_required_new_rows
+  CHECK (billable_client_id IS NOT NULL)
+  NOT VALID;
+
+-- --------------------------
+-- 2) Correlation IDs: make stitching guaranteed at insert time (new rows only)
+--    - Set DEFAULT so app doesn’t have to provide it
+--    - Add NOT VALID CHECK to prevent explicit NULL
+-- --------------------------
+ALTER TABLE public.ingress_attestations
+  ALTER COLUMN correlation_id SET DEFAULT gen_random_uuid();
+
+ALTER TABLE public.ingress_attestations
+  ADD CONSTRAINT ingress_attestations_correlation_required_new_rows
+  CHECK (correlation_id IS NOT NULL)
+  NOT VALID;
+
+ALTER TABLE public.payment_outbox_pending
+  ALTER COLUMN correlation_id SET DEFAULT gen_random_uuid();
+
+ALTER TABLE public.payment_outbox_pending
+  ADD CONSTRAINT payment_outbox_pending_correlation_required_new_rows
+  CHECK (correlation_id IS NOT NULL)
+  NOT VALID;
+
+ALTER TABLE public.payment_outbox_attempts
+  ALTER COLUMN correlation_id SET DEFAULT gen_random_uuid();
+
+ALTER TABLE public.payment_outbox_attempts
+  ADD CONSTRAINT payment_outbox_attempts_correlation_required_new_rows
+  CHECK (correlation_id IS NOT NULL)
+  NOT VALID;
+
+ALTER TABLE public.billing_usage_events
+  ALTER COLUMN correlation_id SET DEFAULT gen_random_uuid();
+
+ALTER TABLE public.billing_usage_events
+  ADD CONSTRAINT billing_usage_events_correlation_required_new_rows
+  CHECK (correlation_id IS NOT NULL)
+  NOT VALID;
+
+ALTER TABLE public.external_proofs
+  ALTER COLUMN correlation_id SET DEFAULT gen_random_uuid();
+
+ALTER TABLE public.external_proofs
+  ADD CONSTRAINT external_proofs_correlation_required_new_rows
+  CHECK (correlation_id IS NOT NULL)
+  NOT VALID;
+
+ALTER TABLE public.evidence_packs
+  ALTER COLUMN correlation_id SET DEFAULT gen_random_uuid();
+
+ALTER TABLE public.evidence_packs
+  ADD CONSTRAINT evidence_packs_correlation_required_new_rows
+  CHECK (correlation_id IS NOT NULL)
+  NOT VALID;
+
+-- --------------------------
+-- 3) Stable payer identifier on billable_clients (client_key)
+--    - Add nullable column
+--    - Enforce for new rows only via NOT VALID CHECK
+--    - Add partial UNIQUE index (existing rows may be null until backfill)
+-- --------------------------
+ALTER TABLE public.billable_clients
+  ADD COLUMN IF NOT EXISTS client_key TEXT;
+
+ALTER TABLE public.billable_clients
+  ADD CONSTRAINT billable_clients_client_key_required_new_rows
+  CHECK (client_key IS NOT NULL)
+  NOT VALID;
+
+-- NOTE: If your repo standard prefers CONCURRENTLY, keep it.
+-- If you run migrations inside a transaction wrapper, remove CONCURRENTLY.
+CREATE UNIQUE INDEX IF NOT EXISTS billable_clients_client_key_uq
+  ON public.billable_clients (client_key)
+  WHERE client_key IS NOT NULL;
+
+-- --------------------------
+-- 4) Optional: tighter (partial) tenant hierarchy indexes (keep old ones for now)
+-- --------------------------
+CREATE INDEX IF NOT EXISTS tenants_billable_client_id_notnull_idx
+  ON public.tenants (billable_client_id)
+  WHERE billable_client_id IS NOT NULL;
+
+CREATE INDEX IF NOT EXISTS tenants_parent_tenant_id_notnull_idx
+  ON public.tenants (parent_tenant_id)
+  WHERE parent_tenant_id IS NOT NULL;
+```
+
+### Notes about this patch vs your “left out” list
+
+* **(1) “Enforce for new rows now” via NOT VALID CHECK constraints**
+  ✅ This migration adds exactly that for `tenants.billable_client_id` and all the `correlation_id` columns.
+
+* **(2) Stable payer identifier (client_key)**
+  ✅ Adds `billable_clients.client_key` with “new rows only” enforcement + unique.
+
+* **(3) Tenant hierarchy partial indexes**
+  ✅ Adds partial indexes without deleting existing unconditional ones (safe Phase-0 posture). Cleanup/drop can be Contract-phase.
+
+* **(5) Correlation IDs hard**
+  ✅ Achieved by `DEFAULT gen_random_uuid()` + `CHECK ... NOT VALID` (new inserts are stitchable by construction, without breaking historical rows).
+
+* **(4) External proofs model** (tenant/billable_client linkage)
+  ⚠️ I did **not** force new rows to carry `tenant_id/billable_client_id` in `external_proofs` here, because your current schema makes `external_proofs.attestation_id NOT NULL`, and adding “new-row required” tenant/billable columns would require app-side write changes. If you want it *now*, we can add *nullable columns + NOT VALID checks* and then immediately update writers in the same PR to avoid production write breaks.
+
+---
+
+## If you also want the verifier to assert these “new rows only” constraints exist
+
+Add checks to your DB verifier (wherever you verify business hooks / table conventions). The invariant should assert presence of:
+
+* constraint names:
+
+  * `tenants_billable_client_required_new_rows`
+  * `*_correlation_required_new_rows` (all listed)
+  * `billable_clients_client_key_required_new_rows`
+* defaults on correlation_id columns
+* the partial unique index on `billable_clients(client_key)` (with predicate `client_key IS NOT NULL`)
+
+If you paste your current business hooks verifier filename (the repo one, not the bundle), I’ll give you the exact `pg_constraint` / `pg_attrdef` / `pg_index` SQL fragments to drop in.
+
+---
+
+## Answering your question directly: “Is this all Phase-0? When does enforcement happen under Approach A?”
+
+* Under **Approach A**, **enforcement begins the moment the gate is wired into the ordered pre-CI + CI scripts**, and the evidence path is added to the contract **only in the same PR** where:
+
+  1. the script/migration exists,
+  2. it runs in `run_phase0_ordered_checks.sh`,
+  3. it emits PASS/FAIL evidence deterministically.
+
+* **You do NOT need SKIPPED stubs** unless you add the invariant/evidence path into `phase0_contract.yml` *before* the scripts are wired to emit it.
+
+So: with Approach A, you keep the contract clean until the enforcement is real; then the enforcement is immediate (local pre-CI + CI on every change), with no “missing evidence” traps.

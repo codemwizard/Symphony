@@ -17,6 +17,11 @@ bash scripts/db/tests/test_outbox_pending_indexes.sh
 - Enforced fresh DB parity locally: `scripts/dev/pre_ci.sh` now defaults to `FRESH_DB=1` and creates a per-run ephemeral database, runs migrations/tests against it, then drops it on exit.
 - Enforced CI-equivalent diff refs in local pre-push: `scripts/dev/pre_ci.sh` now exports `BASE_REF=origin/main` and `HEAD_REF=HEAD` to prevent developer shell env from overriding governance/remediation diff semantics.
 - Hardened baseline governance ADR detection: `scripts/audit/verify_baseline_change_governance.sh` now uses line-exact matching (`grep -qx`) against the diff list to avoid false negatives that incorrectly fail pushes.
+- Canonicalized the INV-106..INV-116 block to avoid ID/meaning collisions and wired non-colliding gate IDs into `docs/control_planes/CONTROL_PLANES.yml` per `106-103_INV_IMP.txt` (with placeholder SKIPPED emitters for not-yet-implemented gates).
+- Implemented Phase-0 Approach B hardening and performance posture documentation:
+  - `docs/PHASE0/PLANNED_SKIPPED_GATES_POLICY.md`
+  - `scripts/audit/emit_skipped_evidence.sh` + `scripts/audit/verify_skipped_gate_stubs.sh`
+  - `docs/PHASE0/PHASE0_PERFORMANCE_POSTURE.md` (Phase-0 performance as mechanical safety)
 
 ## verification_commands_run
 - scripts/dev/pre_ci.sh
