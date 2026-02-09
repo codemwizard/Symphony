@@ -13,7 +13,34 @@ EVIDENCE_SCHEMA_FP="$(schema_fingerprint)"
 export EVIDENCE_TS EVIDENCE_GIT_SHA EVIDENCE_SCHEMA_FP
 
 # Default range for local usage if not provided. Mirrors enforce_change_rule.sh conventions.
-BASE_REF="${BASE_REF:-origin/main}"
+if [[ -z "${BASE_REF:-}" ]]; then
+  if [[ -n "${REMEDIATION_TRACE_BASE_REF:-}" ]]; then
+    BASE_REF="${REMEDIATION_TRACE_BASE_REF}"
+  elif [[ -n "${GITHUB_BASE_REF:-}" ]]; then
+    BASE_REF="origin/${GITHUB_BASE_REF}"
+  else
+    # symphony:allow_or_true symphony:allow_stderr_suppress
+    UPSTREAM="$(git rev-parse --abbrev-ref --symbolic-full-name '@{upstream}' 2>/dev/null || true)"
+    if [[ -n "$UPSTREAM" ]]; then
+      BASE_REF="$UPSTREAM"
+    else
+      BASE_REF="origin/rewrite/dotnet10-core"
+    fi
+  fi
+fi
+
+if [[ "$BASE_REF" == origin/* ]]; then
+    if ! git show-ref --verify --quiet "refs/remotes/${BASE_REF}"; then
+      # symphony:allow_or_true symphony:allow_stderr_suppress
+      git fetch --no-tags --prune origin "${BASE_REF#origin/}:${BASE_REF}" >/dev/null 2>&1 || true
+    fi
+fi
+
+if ! git rev-parse --verify "$BASE_REF" >/dev/null 2>&1; then
+  echo "ERROR: base_ref_not_found:$BASE_REF"
+  exit 1
+fi
+
 HEAD_REF="${HEAD_REF:-HEAD}"
 
 ROOT_DIR="$ROOT_DIR" EVIDENCE_FILE="$EVIDENCE_FILE" BASE_REF="$BASE_REF" HEAD_REF="$HEAD_REF" python3 - <<'PY'
@@ -28,9 +55,6 @@ root = Path(os.environ["ROOT_DIR"])
 evidence_out = Path(os.environ["EVIDENCE_FILE"])
 base_ref = os.environ.get("BASE_REF", "origin/main")
 head_ref = os.environ.get("HEAD_REF", "HEAD")
-force_mode = os.environ.get("REMEDIATION_TRACE_DIFF_MODE", "").strip().lower()
-if force_mode and force_mode not in ("staged", "worktree", "range"):
-    raise SystemExit(f"invalid_REMEDIATION_TRACE_DIFF_MODE:{force_mode} expected staged|worktree|range")
 
 policy = RemediationTracePolicy()
 check_id = "REMEDIATION-TRACE"
@@ -41,58 +65,21 @@ def run(cmd: list[str]) -> str:
         raise RuntimeError(f"cmd_failed:{' '.join(cmd)}:{p.stderr.strip()}")
     return p.stdout
 
-def staged_changed_files() -> list[str]:
-    out = run(["git", "diff", "--name-only", "--cached"])
+def range_changed_files() -> tuple[str, list[str]]:
+    merge_base_out = run(["git", "merge-base", base_ref, head_ref])
+    merge_base = merge_base_out.strip()
+    if not merge_base:
+        raise RuntimeError(f"merge_base_missing:{base_ref}...{head_ref}")
+    out = run(["git", "diff", "--name-only", f"{merge_base}...{head_ref}"])
     files = [ln.strip() for ln in out.splitlines() if ln.strip()]
-    return files
-
-def worktree_changed_files() -> list[str]:
-    out = run(["git", "diff", "--name-only"])
-    files = [ln.strip() for ln in out.splitlines() if ln.strip()]
-    return files
-
-def untracked_files() -> list[str]:
-    out = run(["git", "ls-files", "--others", "--exclude-standard"])
-    files = [ln.strip() for ln in out.splitlines() if ln.strip()]
-    return files
-
-def range_changed_files() -> list[str]:
-    # If BASE_REF is missing locally (no remote yet), skip instead of failing closed.
-    p = subprocess.run(["git", "rev-parse", base_ref], cwd=root, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
-    if p.returncode != 0:
-        return []
-    out = run(["git", "diff", "--name-only", f"{base_ref}...{head_ref}"])
-    files = [ln.strip() for ln in out.splitlines() if ln.strip()]
-    return files
+    return merge_base, files
 
 errors: list[str] = []
 
 try:
-    if force_mode == "staged":
-        diff_mode = "staged"
-        diff_changed = staged_changed_files()
-    elif force_mode == "worktree":
-        diff_mode = "worktree"
-        diff_changed = worktree_changed_files()
-    elif force_mode == "range":
-        diff_mode = "range"
-        diff_changed = range_changed_files()
-    else:
-        diff_changed = staged_changed_files()
-        if diff_changed:
-            diff_mode = "staged"
-        else:
-            diff_changed = worktree_changed_files()
-            if diff_changed:
-                diff_mode = "worktree"
-            else:
-                diff_mode = "range"
-                diff_changed = range_changed_files()
-
-    # For local workflows, remediation docs are commonly created as new files first.
-    # We include untracked docs/plans casefiles as candidates, but we do not let untracked files
-    # influence trigger detection (only the diff does).
-    untracked = untracked_files() if diff_mode in ("staged", "worktree") else []
+    diff_mode = "range"
+    merge_base, diff_changed = range_changed_files()
+    untracked: list[str] = []
 except Exception as e:
     out = {
         "check_id": check_id,
