@@ -117,6 +117,42 @@
       "expires_on": "2026-12-31",
       "reviewed_by": "security_guardian",
       "approved_at": "2026-02-07"
+    },
+    {
+      "id": "DDL-ALLOW-0014",
+      "migration": "schema/migrations/0026_business_foundation_delta_tightening.sql",
+      "statement_fingerprint": "5bdb6a4fdce7811f570aacb24bf2b4155be850308573fb3bd664a40bb40a1d0a",
+      "reason": "Phase-0 expand-first: add billable client stable key + new-row-only constraints/triggers (ALTER TABLE billable_clients) for auditably billable hooks.",
+      "expires_on": "2026-12-31",
+      "reviewed_by": "boz_auditor",
+      "approved_at": "2026-02-09"
+    },
+    {
+      "id": "DDL-ALLOW-0015",
+      "migration": "schema/migrations/0026_business_foundation_delta_tightening.sql",
+      "statement_fingerprint": "93b2bc3b87d78e06faafb4bd287cb12f873da199ea8731a2bd6f5217d408ff7c",
+      "reason": "Phase-0 expand-first: add external_proofs direct billability attribution columns + derived attribution trigger (ALTER TABLE external_proofs).",
+      "expires_on": "2026-12-31",
+      "reviewed_by": "boz_auditor",
+      "approved_at": "2026-02-09"
+    },
+    {
+      "id": "DDL-ALLOW-0016",
+      "migration": "schema/migrations/0026_business_foundation_delta_tightening.sql",
+      "statement_fingerprint": "b6ae0d8f8e73086420ba8c086d14e65b02ce2f888c8c23109d05a3224312cf2a",
+      "reason": "Phase-0 expand-first: new-row-only correlation_id non-null check on payment_outbox_pending (hot table). NOT VALID + idempotent DO block reduces migration risk; allowlisted for Phase-0 tightening.",
+      "expires_on": "2026-12-31",
+      "reviewed_by": "boz_auditor",
+      "approved_at": "2026-02-09"
+    },
+    {
+      "id": "DDL-ALLOW-0017",
+      "migration": "schema/migrations/0026_business_foundation_delta_tightening.sql",
+      "statement_fingerprint": "ab760cc86fcd0c0eee5c09e98c2630ead9325a7f2af30b63d7dcc53c4937a3a2",
+      "reason": "Phase-0 expand-first: new-row-only correlation_id non-null check on payment_outbox_attempts (hot table). NOT VALID + idempotent DO block reduces migration risk; allowlisted for Phase-0 tightening.",
+      "expires_on": "2026-12-31",
+      "reviewed_by": "boz_auditor",
+      "approved_at": "2026-02-09"
     }
   ]
 }

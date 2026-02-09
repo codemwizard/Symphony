@@ -4,7 +4,7 @@
 Phase-0 ADR stub (roadmap-backed). No Phase-0 schema enforcement.
 
 ## Invariants
-- Roadmap invariant: `INV-106` (alias: `INV-BOZ-04`)
+- Roadmap invariant: `INV-114` (alias: `INV-BOZ-04`)
 
 ## Decision
 Symphony will model **payment finality** as an explicit, mechanically enforced state machine in Phase-1:
@@ -62,4 +62,3 @@ Mechanical checks required for promotion:
 ## Open Questions (Phase-1)
 - Which table represents the canonical instruction outcome: pending/outbox, a dedicated instruction ledger table, or an evidence pack anchor table?
 - What constitutes "rail committed" for each rail profile (e.g., NFS/ZIPSS)?
-

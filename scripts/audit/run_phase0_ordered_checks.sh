@@ -39,6 +39,7 @@ unset SYMPHONY_SKIP_CONTRACT_EVIDENCE_STATUS
 run scripts/audit/validate_evidence_schema.sh
 run bash scripts/audit/verify_phase0_contract.sh
 run bash scripts/audit/verify_ci_order.sh
+run bash scripts/audit/verify_ci_artifact_upload_phase0_evidence.sh
 
 echo ""
 echo "-> (skipping) scripts/audit/verify_phase0_contract_evidence_status.sh (runs after evidence aggregation in CI; runs after DB checks in scripts/dev/pre_ci.sh)"

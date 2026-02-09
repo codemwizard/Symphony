@@ -43,6 +43,12 @@ check_bool "tenants_billable_client_fk" "SELECT EXISTS (SELECT 1 FROM pg_constra
 check_bool "tenants_parent_tenant_fk" "SELECT EXISTS (SELECT 1 FROM pg_constraint WHERE conname='tenants_parent_tenant_fk' AND conrelid='public.tenants'::regclass);"
 check_bool "idx_tenants_billable_client_id" "SELECT to_regclass('public.idx_tenants_billable_client_id') IS NOT NULL;"
 check_bool "idx_tenants_parent_tenant_id" "SELECT to_regclass('public.idx_tenants_parent_tenant_id') IS NOT NULL;"
+check_bool "tenants_billable_client_required_new_rows_chk" "SELECT EXISTS (SELECT 1 FROM pg_constraint WHERE conname='tenants_billable_client_required_new_rows_chk' AND conrelid='public.tenants'::regclass);"
+
+# Billable clients stable key (auditably billable)
+check_bool "billable_clients_client_key_col" "SELECT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema='public' AND table_name='billable_clients' AND column_name='client_key');"
+check_bool "billable_clients_client_key_required_new_rows_chk" "SELECT EXISTS (SELECT 1 FROM pg_constraint WHERE conname='billable_clients_client_key_required_new_rows_chk' AND conrelid='public.billable_clients'::regclass);"
+check_bool "ux_billable_clients_client_key" "SELECT to_regclass('public.ux_billable_clients_client_key') IS NOT NULL;"
 
 # Multi-signature ingress hook
 check_bool "ingress_signatures_col" "SELECT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema='public' AND table_name='ingress_attestations' AND column_name='signatures' AND udt_name='jsonb');"
@@ -53,6 +59,12 @@ check_bool "ingress_signatures_default" "SELECT EXISTS (SELECT 1 FROM informatio
 check_bool "ingress_correlation_col" "SELECT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema='public' AND table_name='ingress_attestations' AND column_name='correlation_id');"
 check_bool "pending_correlation_col" "SELECT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema='public' AND table_name='payment_outbox_pending' AND column_name='correlation_id');"
 check_bool "attempts_correlation_col" "SELECT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema='public' AND table_name='payment_outbox_attempts' AND column_name='correlation_id');"
+check_bool "trg_set_corr_id_ingress_attestations" "SELECT EXISTS (SELECT 1 FROM pg_trigger WHERE tgname='trg_set_corr_id_ingress_attestations');"
+check_bool "trg_set_corr_id_payment_outbox_pending" "SELECT EXISTS (SELECT 1 FROM pg_trigger WHERE tgname='trg_set_corr_id_payment_outbox_pending');"
+check_bool "trg_set_corr_id_payment_outbox_attempts" "SELECT EXISTS (SELECT 1 FROM pg_trigger WHERE tgname='trg_set_corr_id_payment_outbox_attempts');"
+check_bool "ingress_attestations_correlation_required_new_rows_chk" "SELECT EXISTS (SELECT 1 FROM pg_constraint WHERE conname='ingress_attestations_correlation_required_new_rows_chk' AND conrelid='public.ingress_attestations'::regclass);"
+check_bool "payment_outbox_pending_correlation_required_new_rows_chk" "SELECT EXISTS (SELECT 1 FROM pg_constraint WHERE conname='payment_outbox_pending_correlation_required_new_rows_chk' AND conrelid='public.payment_outbox_pending'::regclass);"
+check_bool "payment_outbox_attempts_correlation_required_new_rows_chk" "SELECT EXISTS (SELECT 1 FROM pg_constraint WHERE conname='payment_outbox_attempts_correlation_required_new_rows_chk' AND conrelid='public.payment_outbox_attempts'::regclass);"
 check_bool "ingress_upstream_ref_col" "SELECT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema='public' AND table_name='ingress_attestations' AND column_name='upstream_ref');"
 check_bool "ingress_downstream_ref_col" "SELECT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema='public' AND table_name='ingress_attestations' AND column_name='downstream_ref');"
 check_bool "ingress_nfs_sequence_ref_col" "SELECT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema='public' AND table_name='ingress_attestations' AND column_name='nfs_sequence_ref');"
@@ -78,6 +90,17 @@ check_bool "trg_deny_evidence_packs_mutation" "SELECT EXISTS (SELECT 1 FROM pg_t
 check_bool "trg_deny_evidence_pack_items_mutation" "SELECT EXISTS (SELECT 1 FROM pg_trigger WHERE tgname='trg_deny_evidence_pack_items_mutation');"
 check_bool "billing_subject_zero_or_one_chk" "SELECT EXISTS (SELECT 1 FROM pg_constraint WHERE conname='billing_usage_events_subject_zero_or_one_chk' AND conrelid='public.billing_usage_events'::regclass);"
 check_bool "billing_member_requires_tenant_chk" "SELECT EXISTS (SELECT 1 FROM pg_constraint WHERE conname='billing_usage_events_member_requires_tenant_chk' AND conrelid='public.billing_usage_events'::regclass);"
+
+# External proofs direct billability (new rows)
+check_bool "external_proofs_tenant_id_col" "SELECT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema='public' AND table_name='external_proofs' AND column_name='tenant_id');"
+check_bool "external_proofs_billable_client_id_col" "SELECT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema='public' AND table_name='external_proofs' AND column_name='billable_client_id');"
+check_bool "external_proofs_subject_member_id_col" "SELECT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema='public' AND table_name='external_proofs' AND column_name='subject_member_id');"
+check_bool "external_proofs_tenant_fk" "SELECT EXISTS (SELECT 1 FROM pg_constraint WHERE conname='external_proofs_tenant_fk' AND conrelid='public.external_proofs'::regclass);"
+check_bool "external_proofs_billable_client_fk" "SELECT EXISTS (SELECT 1 FROM pg_constraint WHERE conname='external_proofs_billable_client_fk' AND conrelid='public.external_proofs'::regclass);"
+check_bool "external_proofs_subject_member_fk" "SELECT EXISTS (SELECT 1 FROM pg_constraint WHERE conname='external_proofs_subject_member_fk' AND conrelid='public.external_proofs'::regclass);"
+check_bool "trg_set_external_proofs_attribution" "SELECT EXISTS (SELECT 1 FROM pg_trigger WHERE tgname='trg_set_external_proofs_attribution');"
+check_bool "external_proofs_tenant_required_new_rows_chk" "SELECT EXISTS (SELECT 1 FROM pg_constraint WHERE conname='external_proofs_tenant_required_new_rows_chk' AND conrelid='public.external_proofs'::regclass);"
+check_bool "external_proofs_billable_client_required_new_rows_chk" "SELECT EXISTS (SELECT 1 FROM pg_constraint WHERE conname='external_proofs_billable_client_required_new_rows_chk' AND conrelid='public.external_proofs'::regclass);"
 
 # Evidence pack signing/anchoring schema hooks
 check_bool "evidence_packs_signer_participant_id_col" "SELECT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema='public' AND table_name='evidence_packs' AND column_name='signer_participant_id');"

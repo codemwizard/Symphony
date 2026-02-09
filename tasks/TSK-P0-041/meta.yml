@@ -2,7 +2,7 @@ phase: '0'
 task_id: TSK-P0-041
 title: Draft tenant/client/member migrations (Phase-0 rails)
 owner_role: DB_FOUNDATION
-status: planned
+status: completed
 depends_on:
 - TSK-P0-021
 - TSK-P0-024
@@ -13,6 +13,8 @@ touches:
 - schema/migrations/0017_ingress_tenant_attribution.sql
 - schema/migrations/0018_outbox_tenant_attribution.sql
 - schema/migrations/0019_member_tenant_consistency_guard.sql
+- docs/plans/phase0/TSK-P0-041_tenant_member_migrations/PLAN.md
+- docs/plans/phase0/TSK-P0-041_tenant_member_migrations/EXEC_LOG.md
 - tasks/TSK-P0-041/meta.yml
 invariants:
 - INV-062..INV-065 (Tenant rails)
@@ -39,6 +41,8 @@ must_read:
 - scripts/db/verify_invariants.sh
 - scripts/db/tests/test_db_functions.sh
 notes: ''
+implementation_plan: docs/plans/phase0/TSK-P0-041_tenant_member_migrations/PLAN.md
+implementation_log: docs/plans/phase0/TSK-P0-041_tenant_member_migrations/EXEC_LOG.md
 client: codex_cli
 assigned_agent: db_foundation
 model: <UNASSIGNED>

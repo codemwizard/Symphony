@@ -2,7 +2,7 @@ phase: "0"
 task_id: "TSK-P0-130"
 title: "Integrate Sovereign Hybrid Cloud gates into control planes, contract ordering, and CI/pre-CI parity runner"
 owner_role: "ARCHITECT"
-status: "planned"   # planned | in_progress | completed
+status: "completed"   # planned | in_progress | completed
 
 depends_on:
   - "TSK-P0-126"
@@ -24,9 +24,10 @@ touches:
   - "tasks/TSK-P0-130/meta.yml"
 
 invariants:
-  - "INV-109"
   - "INV-110"
   - "INV-111"
+  - "INV-112"
+  - "INV-113"
 
 work:
   - "Add non-colliding gate IDs to `docs/control_planes/CONTROL_PLANES.yml` and map them to the new verifier scripts and evidence paths."

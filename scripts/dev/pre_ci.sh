@@ -169,6 +169,14 @@ else
   exit 1
 fi
 
+echo "==> Sovereign/Regulator DB posture verifiers (Phase-0 placeholders until implemented)"
+if [[ -x scripts/db/verify_boz_observability_role.sh ]]; then
+  scripts/db/verify_boz_observability_role.sh
+fi
+if [[ -x scripts/db/verify_anchor_sync_hooks.sh ]]; then
+  scripts/db/verify_anchor_sync_hooks.sh
+fi
+
 if [[ -n "${DATABASE_URL:-}" ]]; then
   if [[ -x scripts/db/tests/test_db_functions.sh ]]; then
     scripts/db/tests/test_db_functions.sh

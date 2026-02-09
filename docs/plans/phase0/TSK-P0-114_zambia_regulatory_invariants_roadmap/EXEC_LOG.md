@@ -14,9 +14,9 @@ Plan: `docs/plans/phase0/TSK-P0-114_zambia_regulatory_invariants_roadmap/PLAN.md
 - Context: Introduce BOZ/ZDPA/IPDR requirements as Phase-0 roadmap invariants and ADR stubs (no Phase-0 schema enforcement).
 - Changes:
   - Registered roadmap invariants:
-    - `INV-106` (alias `INV-BOZ-04`) payment finality (deferred).
-    - `INV-107` (alias `INV-ZDPA-01`) PII decoupling + erasure survivability (deferred).
-    - `INV-108` (alias `INV-IPDR-02`) rail truth-anchor sequence continuity (generic; deferred).
+    - `INV-114` (alias `INV-BOZ-04`) payment finality (deferred).
+    - `INV-115` (alias `INV-ZDPA-01`) PII decoupling + erasure survivability (deferred).
+    - `INV-116` (alias `INV-IPDR-02`) rail truth-anchor sequence continuity (generic; deferred).
   - Updated roadmap doc to include new entries to satisfy docs coverage gates.
   - Added ADR stubs:
     - `docs/decisions/ADR-0012-payment-finality-model-deferred.md`

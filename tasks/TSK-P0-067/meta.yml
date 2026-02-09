@@ -2,7 +2,7 @@ phase: '0'
 task_id: TSK-P0-067
 title: Reorder contract evidence status gate to run last
 owner_role: ARCHITECT
-status: in_progress
+status: completed
 depends_on:
 - TSK-P0-061
 touches:

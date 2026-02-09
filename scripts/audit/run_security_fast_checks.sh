@@ -104,4 +104,21 @@ else
 fi
 
 echo ""
+echo "==> Regulated payload guardrails (Phase-0)"
+if [[ -x scripts/audit/lint_pii_leakage_payloads.sh || -f scripts/audit/lint_pii_leakage_payloads.sh ]]; then
+  run scripts/audit/lint_pii_leakage_payloads.sh
+else
+  echo "ERROR: scripts/audit/lint_pii_leakage_payloads.sh not found"
+  exit 1
+fi
+
+echo ""
+echo "==> Unit/self-tests (security plane)"
+if [[ -x scripts/audit/tests/test_lint_pii_leakage_payloads.sh ]]; then
+  run scripts/audit/tests/test_lint_pii_leakage_payloads.sh
+else
+  echo "   (no shell self-tests found; skipping)"
+fi
+
+echo ""
 echo "✅ Fast security checks passed"

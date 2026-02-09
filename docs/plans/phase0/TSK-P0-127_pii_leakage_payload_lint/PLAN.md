@@ -14,7 +14,7 @@ In scope:
 - Minimal unit/self-test script under `scripts/audit/tests/`
 
 Out of scope:
-- Implementing `INV-ZDPA-01` (tokenization/erasure survivability) (roadmap `INV-107`)
+- Implementing `INV-ZDPA-01` (tokenization/erasure survivability) (roadmap `INV-115`)
 - Runtime redaction wrappers (Phase-0 optional unless contract requires)
 
 ## Acceptance
@@ -22,9 +22,12 @@ Out of scope:
 - Lint fails on clear PII patterns in regulated contexts unless explicitly marked as redacted test fixture.
 - CI and local pre-CI parity: gate runs in both via ordered runner once wired (TSK-P0-130).
 
+## Toolchain prerequisites (checklist)
+- [ ] `rg` (ripgrep) available (fail-closed if missing).
+- [ ] `python3` available (used to emit evidence JSON).
+
 verification_commands_run:
 - "PENDING: bash scripts/audit/lint_pii_leakage_payloads.sh"
 - "PENDING: bash scripts/audit/tests/test_lint_pii_leakage_payloads.sh"
 
 final_status: OPEN
-

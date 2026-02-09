@@ -742,6 +742,83 @@
   verification: "scripts/audit/verify_remediation_trace.sh; wired via scripts/audit/run_invariants_fast_checks.sh"
 
 - id: INV-106
+  aliases: ["I-POL-KEYMGMT-01"]
+  status: implemented
+  severity: P1
+  title: "Key management policy stub present + referenced (governance)"
+  owners: ["team-security", "team-platform"]
+  sla_days: 30
+  enforcement: "scripts/audit/verify_policy_key_management_stub.sh"
+  verification: "scripts/audit/verify_policy_key_management_stub.sh; docs/security/KEY_MANAGEMENT_POLICY.md; referenced in docs/security/SECURITY_MANIFEST.yml"
+
+- id: INV-107
+  aliases: ["I-POL-AUDITLOG-01"]
+  status: implemented
+  severity: P1
+  title: "Audit logging retention/review policy stub present + referenced (governance)"
+  owners: ["team-security", "team-platform"]
+  sla_days: 30
+  enforcement: "scripts/audit/verify_policy_audit_logging_stub.sh"
+  verification: "scripts/audit/verify_policy_audit_logging_stub.sh; docs/security/AUDIT_LOGGING_RETENTION_POLICY.md; referenced in docs/security/SECURITY_MANIFEST.yml"
+
+- id: INV-108
+  aliases: ["I-SDLC-SAST-01"]
+  status: implemented
+  severity: P1
+  title: "Secure SDLC / SAST readiness gate emits evidence (governance)"
+  owners: ["team-security", "team-platform"]
+  sla_days: 30
+  enforcement: "scripts/audit/verify_sdlc_sast_readiness.sh"
+  verification: "scripts/audit/verify_sdlc_sast_readiness.sh; docs/security/SECURE_SDLC_POLICY.md; Semgrep baseline wired via scripts/audit/run_security_fast_checks.sh"
+
+- id: INV-109
+  aliases: ["I-ISO20022-REG-01"]
+  status: implemented
+  severity: P1
+  title: "ISO 20022 contract registry declared + presence validated (Phase-0)"
+  owners: ["team-platform"]
+  sla_days: 30
+  enforcement: "scripts/audit/verify_iso20022_contract_registry.sh"
+  verification: "scripts/audit/verify_iso20022_contract_registry.sh; wired via scripts/audit/run_security_fast_checks.sh"
+
+- id: INV-110
+  aliases: ["I-SOV-VPC-POSTURE-01"]
+  status: implemented
+  severity: P0
+  title: "Deploy-in-customer-VPC posture declared: data residency boundary and off-domain attestation constraints are documented"
+  owners: ["team-platform", "team-compliance"]
+  sla_days: 21
+  enforcement: "scripts/audit/verify_sovereign_vpc_posture_doc.sh"
+  verification: "scripts/audit/verify_sovereign_vpc_posture_doc.sh; docs/security/SOVEREIGN_VPC_POSTURE.md; referenced in docs/security/SECURITY_MANIFEST.yml"
+
+- id: INV-111
+  aliases: ["I-BOZ-SEAT-01"]
+  status: roadmap
+  severity: P0
+  title: "BoZ observability role exists + provably read-only (DB structural)"
+  owners: ["team-db", "team-platform"]
+  sla_days: 21
+  verification: "Phase-0/1 activation: forward-only migration defining boz_auditor role; catalog verifier proves read-only posture; CI DB job emits evidence."
+
+- id: INV-112
+  aliases: ["I-ZDPA-PII-LINT-01"]
+  status: roadmap
+  severity: P0
+  title: "ZDPA PII leakage prevention lint (fail-closed on regulated payload surfaces)"
+  owners: ["team-security", "team-platform"]
+  sla_days: 21
+  verification: "Phase-0 activation: implement scripts/audit/lint_pii_leakage_payloads.sh (fail-closed, deterministic) + tests; emit evidence in CI/pre-CI."
+
+- id: INV-113
+  aliases: ["I-ANCHOR-HOOKS-01"]
+  status: roadmap
+  severity: P0
+  title: "Hybrid anchor-sync schema hooks present (Phase-0 structural readiness)"
+  owners: ["team-db", "team-platform"]
+  sla_days: 21
+  verification: "Phase-0 activation: catalog verifier checks structural anchor hooks on evidence packs; Phase-1 adds operational queue semantics."
+
+- id: INV-114
   aliases: ["INV-BOZ-04"]
   status: roadmap
   severity: P0
@@ -750,7 +827,7 @@
   sla_days: 14
   verification: "Phase-1 activation: enforce finality state machine + camt.056 reversal workflow; add mechanical DB constraints/triggers and CI tests. Phase-0 is declarative only."
 
-- id: INV-107
+- id: INV-115
   aliases: ["INV-ZDPA-01"]
   status: roadmap
   severity: P0
@@ -759,7 +836,7 @@
   sla_days: 14
   verification: "Phase-1/2 activation: tokenization/vault tables + retention hooks + evidence signing over identity_hash; add mechanical purge tests and signature verification. Phase-0 is declarative only."
 
-- id: INV-108
+- id: INV-116
   aliases: ["INV-IPDR-02"]
   status: roadmap
   severity: P0

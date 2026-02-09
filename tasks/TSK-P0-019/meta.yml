@@ -2,11 +2,14 @@ phase: '0'
 task_id: TSK-P0-019
 title: CI artifact upload verification (integration)
 owner_role: PLATFORM
-status: planned
+status: completed
 depends_on:
 - TSK-P0-010
 touches:
 - tasks/TSK-P0-019/meta.yml
+- docs/plans/phase0/TSK-P0-019_ci_artifact_upload_verification/PLAN.md
+- docs/plans/phase0/TSK-P0-019_ci_artifact_upload_verification/EXEC_LOG.md
+- scripts/audit/verify_ci_artifact_upload_phase0_evidence.sh
 invariants:
 - INV-020 (Evidence anchoring)
 work:
@@ -25,6 +28,8 @@ must_read:
 - scripts/db/verify_invariants.sh
 - scripts/db/ci_invariant_gate.sql
 notes: ''
+implementation_plan: docs/plans/phase0/TSK-P0-019_ci_artifact_upload_verification/PLAN.md
+implementation_log: docs/plans/phase0/TSK-P0-019_ci_artifact_upload_verification/EXEC_LOG.md
 client: codex_cli
 assigned_agent: worker
 model: <UNASSIGNED>

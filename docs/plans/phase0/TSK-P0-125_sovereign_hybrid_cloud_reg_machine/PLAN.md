@@ -22,8 +22,8 @@ This plan treats control plane assignment as part of the contract:
 - `INT-*` gates: prove DB state, schema posture, and mechanical correctness (catalog verifiers, schema hooks, invariants posture).
 
 This is why:
-- `INV-110` PII leakage lint stays under Security (`SEC-G17`) even though it supports compliance.
-- `INV-109` BoZ read-only role and `INV-111` anchor-sync hooks are Integrity (`INT-G23/INT-G24`) because they are DB structural proofs.
+- `INV-112` PII leakage lint stays under Security (`SEC-G17`) even though it supports compliance.
+- `INV-111` BoZ read-only role and `INV-113` anchor-sync hooks are Integrity (`INT-G23/INT-G24`) because they are DB structural proofs.
 
 ### B. Canonical ordering rule (single source of truth)
 Phase-0 ordered execution is defined by `scripts/audit/run_phase0_ordered_checks.sh`.
@@ -63,9 +63,9 @@ Phase-0 (implement now, mechanical only):
 - Hybrid anchor-sync structural readiness verifier (schema shape and contract readiness).
 
 Phase-1/2 (P0-severity but deferred enforcement, already modeled in repo):
-- `INV-106` (alias: `INV-BOZ-04` payment finality / instruction irrevocability): Phase-1 activation.
-- `INV-107` (alias: `INV-ZDPA-01` right-to-be-forgotten survivability with cryptographic validity): Phase-1/2 activation.
-- `INV-108` (alias: `INV-IPDR-02` rail truth-anchor sequence continuity): Phase-1 activation.
+- `INV-114` (alias: `INV-BOZ-04` payment finality / instruction irrevocability): Phase-1 activation.
+- `INV-115` (alias: `INV-ZDPA-01` right-to-be-forgotten survivability with cryptographic validity): Phase-1/2 activation.
+- `INV-116` (alias: `INV-IPDR-02` rail truth-anchor sequence continuity): Phase-1 activation.
 
 Clarification (to avoid misinterpretation):
 - These roadmap invariants are Phase-0 declared (P0-severity) so they are audit-visible now.
@@ -89,9 +89,9 @@ Repo reality note (from `docs/invariants/INVARIANTS_MANIFEST.yml`):
 This plan does not duplicate those invariants.
 
 New invariants (add to `docs/invariants/INVARIANTS_MANIFEST.yml`):
-- `INV-109` BoZ observability seat (DB role `boz_auditor` is provably read-only) (P0, implemented)
-- `INV-110` ZDPA PII leakage payload lint (regulated payload surfaces) (P0, implemented)
-- `INV-111` Hybrid anchor-sync hooks present (schema supports local signing -> remote anchoring lifecycle) (P0, implemented; Phase-0 structural)
+- `INV-111` BoZ observability seat (DB role `boz_auditor` is provably read-only) (P0, implemented)
+- `INV-112` ZDPA PII leakage payload lint (regulated payload surfaces) (P0, implemented)
+- `INV-113` Hybrid anchor-sync hooks present (schema supports local signing -> remote anchoring lifecycle) (P0, implemented; Phase-0 structural)
 
 New gates (add to `docs/control_planes/CONTROL_PLANES.yml`):
 - Integrity plane:
@@ -109,9 +109,9 @@ Evidence paths (all under `evidence/phase0/`):
 This section exists to prevent later ambiguity and control-plane drift.
 
 - Note: `INT-G22` is reserved for `INV-031` (Phase-0 performance hot-path posture) and is not available for this cluster.
-- `INV-110` -> `SEC-G17` -> `scripts/audit/lint_pii_leakage_payloads.sh` -> `evidence/phase0/pii_leakage_payloads.json`
-- `INV-109` -> `INT-G23` -> `scripts/db/verify_boz_observability_role.sh` -> `evidence/phase0/boz_observability_role.json`
-- `INV-111` -> `INT-G24` -> `scripts/db/verify_anchor_sync_hooks.sh` -> `evidence/phase0/anchor_sync_hooks.json`
+- `INV-112` -> `SEC-G17` -> `scripts/audit/lint_pii_leakage_payloads.sh` -> `evidence/phase0/pii_leakage_payloads.json`
+- `INV-111` -> `INT-G23` -> `scripts/db/verify_boz_observability_role.sh` -> `evidence/phase0/boz_observability_role.json`
+- `INV-113` -> `INT-G24` -> `scripts/db/verify_anchor_sync_hooks.sh` -> `evidence/phase0/anchor_sync_hooks.json`
 
 ## Anchor-Sync Readiness Checklist (Phase-0 structural only)
 Phase-0 does not introduce operational queue semantics (no job tables). Readiness means the schema already contains the structural hooks needed for Phase-1 anchoring workflows.
@@ -149,17 +149,13 @@ Non-goals (explicit):
    - CI full Phase-0 run with artifacts checked via `scripts/audit/verify_phase0_contract_evidence_status.sh`
 
 ## Contract/Evidence Strategy (to avoid CI "missing evidence" failures mid-flight)
-Decision (per refinement draft): Approach A.
-- Do not add the new evidence paths to `docs/PHASE0/phase0_contract.yml` until the corresponding scripts exist and are wired in CI/pre-CI.
-- When implementation begins, land each evidence-producing gate in the same PR as:
-  - its script/migration,
-  - its control-plane registration,
-  - its contract update (if it becomes required in Phase-0),
-  - and a casefile that satisfies the remediation-trace markers.
+Decision (repo policy): Approach B (planned gates land early with deterministic SKIPPED evidence until implemented).
+- Policy: `docs/PHASE0/PLANNED_SKIPPED_GATES_POLICY.md`.
+- Declare gates in `docs/control_planes/CONTROL_PLANES.yml` early to reserve IDs and lock semantics.
+- Provide deterministic `SKIPPED` evidence stubs for planned gates until real PASS/FAIL implementation lands.
 
 Operational rule (explicit):
-- No `docs/PHASE0/phase0_contract.yml` entry for a new required evidence path until CI and local pre-CI deterministically emit PASS/FAIL (and therefore never "missing evidence").
-- If a team decides to declare a gate in the contract earlier than wiring, it must have a stub that emits SKIPPED evidence in CI/pre-CI (not the default approach for this cluster).
+- Contract promotion (making evidence required in `docs/PHASE0/phase0_contract.yml`) must only happen after a gate emits deterministic PASS/FAIL (not SKIPPED) in both local pre-CI and CI.
 
 ## Remediation Trace Gate Compatibility (required for production-affecting surfaces)
 Any PR touching trigger surfaces (e.g., `scripts/**`, `schema/**`, `.github/workflows/**`, `docs/PHASE0/**`) must satisfy `INV-105` (`scripts/audit/verify_remediation_trace.sh`).

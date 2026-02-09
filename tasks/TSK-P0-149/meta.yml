@@ -1,0 +1,58 @@
+phase: "0"
+task_id: "TSK-P0-149"
+title: "DB: Tighten business hooks delta (new-row enforcement for billability + stitchability)"
+owner_role: "DB_FOUNDATION"
+status: "completed"   # planned | in_progress | completed
+
+depends_on:
+  - "TSK-P0-080"   # business foundation cluster exists
+
+touches:
+  - "schema/migrations/0026_business_foundation_delta_tightening.sql"
+  - "schema/migrations/0027_billable_clients_client_key_index_concurrently.sql"
+  - "docs/plans/phase0/TSK-P0-149_business_hooks_delta_tightening/PLAN.md"
+  - "docs/plans/phase0/TSK-P0-149_business_hooks_delta_tightening/EXEC_LOG.md"
+  - "tasks/TSK-P0-149/meta.yml"
+
+invariants:
+  - "INV-090"
+  - "INV-091"
+  - "INV-092"
+  - "INV-094"
+
+work:
+  - "Implement forward-only migrations to enforce new-row billability + stitchability (expand-first)."
+  - "Add NOT VALID CHECK constraints: tenants.billable_client_id required; correlation_id required on ingress/outbox for new rows."
+  - "Add billable_clients.client_key (stable payer key) with unique index (CONCURRENTLY) and NOT VALID CHECK required for new rows."
+  - "Make external_proofs directly billable for new rows: add tenant_id + billable_client_id and a fail-closed trigger to derive/verify attribution from attestation chain."
+
+acceptance_criteria:
+  - "New tenants cannot be inserted without billable_client_id (enforced)."
+  - "New ingress/outbox rows always have correlation_id (set-if-null trigger + NOT VALID CHECK)."
+  - "New external_proofs rows have tenant_id + billable_client_id (derived and enforced)."
+  - "Migrations are forward-only and pass DB lints/tests."
+
+verification:
+  - "bash scripts/dev/pre_ci.sh"
+
+evidence:
+  - "evidence/phase0/business_foundation_hooks.json"
+
+failure_modes:
+  - "Constraint names drift and verifiers cannot prove enforcement."
+  - "Triggers are missing, causing inserts to fail rather than auto-populate correlation_id."
+  - "External proofs attribution derivation is ambiguous or not fail-closed."
+
+must_read:
+  - "Business-Hook_Delta_resolution.txt"
+  - "docs/PHASE0/BUSINESS_HOOK_DELTA_RESOLUTION_REVIEW.md"
+  - "schema/migrations/0020_business_foundation_hooks.sql"
+  - "scripts/db/verify_business_foundation_hooks.sh"
+
+implementation_plan: "docs/plans/phase0/TSK-P0-149_business_hooks_delta_tightening/PLAN.md"
+implementation_log: "docs/plans/phase0/TSK-P0-149_business_hooks_delta_tightening/EXEC_LOG.md"
+
+notes: ""
+client: "codex_cli"
+assigned_agent: "db_foundation"
+model: "gpt-5-codex"

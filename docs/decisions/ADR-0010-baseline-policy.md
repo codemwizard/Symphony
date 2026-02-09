@@ -20,3 +20,4 @@ Baseline updates are **governed** and **fail-closed**:
 ## Baseline Update Log
 - 2026-02-05: Baseline regenerated after tenant/client/member migrations (0014–0019).
 - 2026-02-07: Baseline regenerated after Phase-0 audit gap closeout migrations (0022–0024).
+- 2026-02-09: Baseline regenerated after business foundation delta tightening (0025–0027).

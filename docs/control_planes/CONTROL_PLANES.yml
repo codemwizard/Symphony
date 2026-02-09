@@ -64,6 +64,10 @@ control_planes:
         script: scripts/audit/verify_zero_trust_posture_docs.sh
         evidence: evidence/phase0/zero_trust_posture.json
 
+      - gate_id: SEC-G17
+        script: scripts/audit/lint_pii_leakage_payloads.sh
+        evidence: evidence/phase0/pii_leakage_payloads.json
+
   integrity:
     owner: INVARIANTS_CURATOR
     scope:
@@ -147,6 +151,14 @@ control_planes:
         script: scripts/db/tests/test_outbox_pending_indexes.sh
         evidence: evidence/phase0/outbox_pending_indexes.json
 
+      - gate_id: INT-G23
+        script: scripts/db/verify_boz_observability_role.sh
+        evidence: evidence/phase0/boz_observability_role.json
+
+      - gate_id: INT-G24
+        script: scripts/db/verify_anchor_sync_hooks.sh
+        evidence: evidence/phase0/anchor_sync_hooks.json
+
   governance:
     owner: COMPLIANCE_MAPPER
     scope:
@@ -160,3 +172,7 @@ control_planes:
       - gate_id: GOV-G02
         script: scripts/audit/verify_remediation_trace.sh
         evidence: evidence/phase0/remediation_trace.json
+
+      - gate_id: GOV-G03
+        script: scripts/audit/verify_sovereign_vpc_posture_doc.sh
+        evidence: evidence/phase0/sovereign_vpc_posture_doc.json

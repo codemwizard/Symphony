@@ -2,13 +2,15 @@ phase: '0'
 task_id: TSK-P0-043
 title: Implement tenant/member verifier + SQLSTATE map updates
 owner_role: DB_FOUNDATION
-status: planned
+status: completed
 depends_on:
 - TSK-P0-041
 touches:
 - scripts/db/verify_invariants.sh
 - scripts/db/verify_tenant_member_hooks.sh
 - docs/contracts/sqlstate_map.yml
+- docs/plans/phase0/TSK-P0-043_tenant_member_verifier/PLAN.md
+- docs/plans/phase0/TSK-P0-043_tenant_member_verifier/EXEC_LOG.md
 - tasks/TSK-P0-043/meta.yml
 invariants:
 - INV-062..INV-066
@@ -32,6 +34,8 @@ must_read:
 - scripts/db/verify_invariants.sh
 - scripts/db/ci_invariant_gate.sql
 notes: ''
+implementation_plan: docs/plans/phase0/TSK-P0-043_tenant_member_verifier/PLAN.md
+implementation_log: docs/plans/phase0/TSK-P0-043_tenant_member_verifier/EXEC_LOG.md
 client: codex_cli
 assigned_agent: db_foundation
 model: <UNASSIGNED>

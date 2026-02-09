@@ -8,9 +8,9 @@ This avoids:
 - and ambiguity during audits ("why is this not enforced yet?").
 
 ## Roadmap Invariants Covered
-- `INV-106` (alias `INV-BOZ-04`) Payment finality / instruction irrevocability
-- `INV-107` (alias `INV-ZDPA-01`) PII decoupling + erasure survivability
-- `INV-108` (alias `INV-IPDR-02`) Rail truth-anchor sequence continuity
+- `INV-114` (alias `INV-BOZ-04`) Payment finality / instruction irrevocability
+- `INV-115` (alias `INV-ZDPA-01`) PII decoupling + erasure survivability
+- `INV-116` (alias `INV-IPDR-02`) Rail truth-anchor sequence continuity
 
 ## Preconditions (Common)
 Before promotion, each invariant must have:
@@ -20,20 +20,20 @@ Before promotion, each invariant must have:
 - Evidence artifacts emitted for verification (and uploaded in CI).
 
 ## Preconditions Per Invariant
-### INV-106 (Finality)
+### INV-114 (Finality)
 - ISO 20022 reversal workflow modeled and implemented (camt.056 semantics).
 - Rail adapter produces a durable, auditable "committed/accepted" signal.
 - DB constraints/triggers block forbidden cancel/void transitions after finality.
 - Tests prove fail-closed behavior and verify reversal-only pathway.
 
-### INV-107 (ZDPA Erasure Survivability)
+### INV-115 (ZDPA Erasure Survivability)
 - PII vault/tokenization design exists (raw PII isolation).
 - Ledger references identity_hash or tokens, not raw PII.
 - Key/salt management procedures exist and are auditable.
 - Purge/mask mechanism exists and is mechanically tested.
 - Evidence verification succeeds pre- and post-purge.
 
-### INV-108 (Rail Truth-Anchor Sequence)
+### INV-116 (Rail Truth-Anchor Sequence)
 - Rail profiles defined (e.g., ZM-NFS) with:
 - scoping attributes (rail_participant_id, rail_id/profile),
 - sequence reference columns,
@@ -51,4 +51,3 @@ Before promotion, each invariant must have:
    - `docs/invariants/INVARIANTS_ROADMAP.md`
    - `docs/invariants/INVARIANTS_QUICK.md`
 4. Ensure `scripts/audit/run_invariants_fast_checks.sh` is green.
-

@@ -26,9 +26,9 @@ acceptance_criteria:
 - Drift checker fails on missing gates/evidence mismatch.
 - Evidence emitted on pass/fail.
 verification:
-- scripts/audit/verify_control_planes_drift.sh
+  - scripts/audit/verify_control_planes_drift.sh
 evidence:
-- evidence/phase0/control_planes_drift.json
+  - evidence/phase0/control_planes_drift.json
 failure_modes:
 - Evidence file missing.
 - "Control\u2011plane gate mismatch or missing script."

@@ -157,6 +157,15 @@ else
 fi
 
 echo ""
+echo "==> SKIPPED gate stub hardening (Approach B)"
+if [[ -x "scripts/audit/verify_skipped_gate_stubs.sh" || -f "scripts/audit/verify_skipped_gate_stubs.sh" ]]; then
+  run scripts/audit/verify_skipped_gate_stubs.sh
+else
+  echo "ERROR: scripts/audit/verify_skipped_gate_stubs.sh not found"
+  exit 1
+fi
+
+echo ""
 echo "==> CI toolchain verification"
 if [[ -x "scripts/audit/verify_ci_toolchain.sh" || -f "scripts/audit/verify_ci_toolchain.sh" ]]; then
   if [[ "${SYMPHONY_SKIP_TOOLCHAIN_CHECK:-0}" == "1" ]]; then
@@ -242,6 +251,15 @@ if [[ -x "scripts/audit/verify_compliance_manifest.sh" || -f "scripts/audit/veri
   run bash scripts/audit/verify_compliance_manifest.sh
 else
   echo "ERROR: scripts/audit/verify_compliance_manifest.sh not found"
+  exit 1
+fi
+
+echo ""
+echo "==> Sovereign posture docs (presence + manifest reference)"
+if [[ -x "scripts/audit/verify_sovereign_vpc_posture_doc.sh" || -f "scripts/audit/verify_sovereign_vpc_posture_doc.sh" ]]; then
+  run bash scripts/audit/verify_sovereign_vpc_posture_doc.sh
+else
+  echo "ERROR: scripts/audit/verify_sovereign_vpc_posture_doc.sh not found"
   exit 1
 fi
 

@@ -2,13 +2,15 @@ phase: '0'
 task_id: TSK-P0-039
 title: Register SQLSTATE + contract invariants in manifest
 owner_role: INVARIANTS_CURATOR
-status: planned
+status: completed
 depends_on:
 - TSK-P0-037
 - TSK-P0-038
 touches:
 - docs/invariants/INVARIANTS_MANIFEST.yml
 - docs/invariants/INVARIANTS_QUICK.md
+- docs/plans/phase0/TSK-P0-039_manifest_register_contract_sqlstate/PLAN.md
+- docs/plans/phase0/TSK-P0-039_manifest_register_contract_sqlstate/EXEC_LOG.md
 - tasks/TSK-P0-039/meta.yml
 invariants:
 - INV-060
@@ -19,7 +21,7 @@ work:
 acceptance_criteria:
 - Manifest validates and QUICK matches manifest.
 verification:
-- scripts/audit/run_invariants_fast_checks.sh
+  - scripts/audit/run_invariants_fast_checks.sh
 evidence:
 - ./evidence/phase0/invariants_quick.json
 failure_modes:
@@ -30,6 +32,8 @@ must_read:
 - scripts/db/verify_invariants.sh
 - scripts/db/ci_invariant_gate.sql
 notes: ''
+implementation_plan: docs/plans/phase0/TSK-P0-039_manifest_register_contract_sqlstate/PLAN.md
+implementation_log: docs/plans/phase0/TSK-P0-039_manifest_register_contract_sqlstate/EXEC_LOG.md
 client: codex_cli
 assigned_agent: invariants_curator
 model: <UNASSIGNED>
