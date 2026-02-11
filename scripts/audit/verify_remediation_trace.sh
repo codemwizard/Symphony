@@ -24,7 +24,7 @@ if [[ -z "${BASE_REF:-}" ]]; then
     if [[ -n "$UPSTREAM" ]]; then
       BASE_REF="$UPSTREAM"
     else
-      BASE_REF="origin/rewrite/dotnet10-core"
+      BASE_REF="origin/main"
     fi
   fi
 fi
