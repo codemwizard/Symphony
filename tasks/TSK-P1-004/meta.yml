@@ -1,0 +1,31 @@
+phase: "1"
+task_id: "TSK-P1-004"
+title: "Verify Agent Conformance Spec"
+owner_role: "SUPERVISOR"
+depends_on:
+  - "TSK-P1-001"
+touches:
+  - "docs/operations/VERIFY_AGENT_CONFORMANCE_SPEC.md"
+  - "docs/operations/approval_metadata.schema.json"
+  - "docs/operations/approval_sidecar.schema.json"
+  - "docs/operations/AI_AGENT_OPERATION_MANUAL.md"
+invariants: []
+work:
+  - "Draft `docs/operations/VERIFY_AGENT_CONFORMANCE_SPEC.md` with detailed checks (canonical docs, stop conditions, role tags, regulated surfaces, approval metadata, evidence schema, failure codes)."
+  - "Include approval artifact/sidecar schema templates and sample files."
+  - "Document the integration points (pre-CI, CI, enforcement, PII heuristics) and point to the manual as the authority."
+acceptance_criteria:
+  - "Spec doc exists, references the manual, lists failure codes, describes evidence output, and includes approval artifact templates."
+verification_commands:
+  - "scripts/audit/verify_task_plans_present.sh"
+evidence_artifacts:
+  - "evidence/phase1/verify_agent_conformance_spec.json"
+failure_modes:
+  - "Spec doc missing or incomplete sections (canonical docs, regulated surfaces, approval metadata, failure codes)."
+status: "in_progress"
+must_read: []
+evidence: []
+verification: []
+client: "codex_cli"
+assigned_agent: "supervisor"
+model: "<UNASSIGNED>"

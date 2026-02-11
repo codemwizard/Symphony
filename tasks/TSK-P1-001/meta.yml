@@ -1,0 +1,34 @@
+phase: "1"
+task_id: "TSK-P1-001"
+title: "Phase-1 Agent System Rollout"
+owner_role: "SUPERVISOR"
+depends_on: []
+touches:
+  - "AGENTS.md"
+  - "docs/operations/AGENT_ROLE_RECONCILIATION.md"
+  - ".codex/agents/**/*.md"
+  - ".cursor/agents/**/*.md"
+  - "docs/operations/AI_AGENT_OPERATION_MANUAL.md"
+invariants: []
+work:
+  - "Reference the canonical agent contract from `docs/operations/AGENT_ROLE_RECONCILIATION.md` in every agent prompt and rule file."
+  - "Document the Phase-1 roles (Evidence & Audit, Human Approver) within `AGENTS.md` and the operation manual."
+  - "Update `.codex/agents/` and `.cursor/agents/` prompts to cite the canonical rules and note the stop/escalation conditions."
+  - "Describe the approval artifact structure (prompt/model hash, approver ID) in `docs/operations/AI_AGENT_OPERATION_MANUAL.md`."
+acceptance_criteria:
+  - "All agent prompts reference `docs/operations/AGENT_ROLE_RECONCILIATION.md` and the new Role definitions appear in `AGENTS.md`."
+  - "`docs/operations/AI_AGENT_OPERATION_MANUAL.md` outlines how approvals/evidence map to the Evidence & Audit agent."
+verification_commands:
+  - "scripts/audit/verify_agent_conformance.sh"
+evidence_artifacts:
+  - "evidence/phase1/agent_role_mapping.json"
+failure_modes:
+  - "Agent files missing canonical contract reference."
+  - "No evidence artifact for approval metadata."
+status: "in_progress"
+must_read: []
+evidence: []
+verification: []
+client: "codex_cli"
+assigned_agent: "supervisor"
+model: "<UNASSIGNED>"
