@@ -1,0 +1,1525 @@
+Below is a **companion spec** for `scripts/audit/verify_agent_conformance.sh`. It is written so an engineer (or Codex) can implement it deterministically, with clear inputs/outputs, failure codes, and required evidence emission.
+
+You can save this as: `docs/operations/VERIFY_AGENT_CONFORMANCE_SPEC.md`
+
+---
+
+```md
+# verify_agent_conformance.sh — Specification (Phase-1)
+
+## Purpose
+`verify_agent_conformance.sh` enforces the Phase-1 AI-agent governance contract by failing fast when:
+- agent prompt files drift from canonical rules,
+- required “Stop Conditions / Escalation” guidance is missing,
+- regulated-surface changes lack required AI trace + human approval metadata.
+
+It must run in:
+- local pre-CI (via `scripts/dev/pre_ci.sh`)
+- CI (ordered checks)
+
+It must emit deterministic evidence under:
+- `evidence/phase1/agent_conformance.json`
+
+---
+
+## Non-Negotiables
+- Must NOT invent invariant IDs.
+- Must NOT modify or bypass existing Phase-0 verifiers.
+- Must be deterministic: same repo state ⇒ same output JSON (except timestamp).
+- Evidence must never contain raw PII.
+
+---
+
+## Inputs
+
+### 1) Repo filesystem
+The script operates on the working directory at repo root.
+
+### 2) Canonical documents (must exist)
+- `docs/operations/AI_AGENT_WORKFLOW_AND_ROLE_PLAN_v2.md`
+- `docs/operations/AGENT_ROLE_RECONCILIATION.md`
+- `docs/operations/AI_AGENT_OPERATION_MANUAL.md`
+
+### 3) Agent prompt locations (must exist, at least one file)
+- `.codex/agents/**`
+- `.cursor/agents/**`
+- `AGENTS.md`
+
+### 4) Regulated surfaces list (canonical source)
+- Must be defined in `docs/operations/AI_AGENT_OPERATION_MANUAL.md` under a clearly labeled section:
+  - `## Definitions (Phase-1 Regulated Surfaces)` or equivalent
+- The script must parse this section and extract path globs.
+
+### 5) Change scope (CI-aware)
+The script must support two modes:
+
+**Mode A — Full scan (default):**
+- Validate conformance of prompts/docs regardless of git diff.
+- Validate approval metadata if any evidence/remediation artifacts exist (see below).
+
+**Mode B — Diff-aware (if CI provides base ref):**
+- If env var `BASE_REF` is set, use:
+  - `git diff --name-only "$BASE_REF"...HEAD`
+- Else if `GITHUB_BASE_REF` is available, use it.
+- Else fall back to Mode A.
+
+Rationale:
+- In local runs, full scan is fine.
+- In CI, diff-aware enforcement improves signal.
+
+---
+
+## Required Checks
+
+### CHECK 1 — Canonical docs exist and are non-empty
+Fail if any required file is missing or empty.
+
+Failure code: `CONFORMANCE_001_CANONICAL_MISSING`
+
+---
+
+### CHECK 2 — Agent prompt files reference canonical docs
+For every agent prompt file found under:
+- `.codex/agents/**`
+- `.cursor/agents/**`
+- plus `AGENTS.md`
+
+Require presence of BOTH substrings:
+- `docs/operations/AI_AGENT_WORKFLOW_AND_ROLE_PLAN_v2.md`
+- `docs/operations/AGENT_ROLE_RECONCILIATION.md`
+
+Fail if any file missing either reference.
+
+Failure code: `CONFORMANCE_002_CANONICAL_REFERENCE_MISSING`
+
+Notes:
+- “Reference” can be plain text or markdown link target.
+- Case sensitive match recommended to avoid drift.
+
+---
+
+### CHECK 3 — Agent prompt files include Stop Conditions / Escalation section
+For every agent prompt file (same set as CHECK 2), require at least one of:
+- `Stop Conditions`
+- `Escalation`
+- `Stop and Escalate`
+- `HALT AND ESCALATE`
+
+Fail if absent.
+
+Failure code: `CONFORMANCE_003_STOP_CONDITIONS_MISSING`
+
+---
+
+### CHECK 4 — Role reconciliation: each agent file declares a role name from reconciliation doc
+`docs/operations/AGENT_ROLE_RECONCILIATION.md` must contain a canonical list of roles, e.g.:
+- `DB / Schema Agent`
+- `Runtime / Orchestration Agent`
+- `Security Guardian Agent`
+- `Evidence & Audit Agent`
+- `QA Verifier`
+- `Supervisor`
+- `Human Approver`
+
+Each agent prompt file must contain exactly one role declaration, matching one of the canonical role names.
+
+Implementation options:
+- enforce a line like `Role: <ROLE_NAME>`
+- or enforce a YAML header block
+- or enforce a standard tag `@role(<ROLE_NAME>)`
+
+Fail if:
+- no role tag found, or
+- multiple role tags found, or
+- role not in canonical list.
+
+Failure code: `CONFORMANCE_004_ROLE_TAG_INVALID`
+
+---
+
+### CHECK 5 — Regulated surface change requires approval metadata (diff-aware preferred)
+If any file changed (by diff list) matches a regulated-surface glob, then require that this PR/run includes approval metadata.
+
+#### What counts as “approval metadata present”:
+At least one of the following must exist in the repo after the changes:
+- `evidence/phase1/approval_metadata.json`
+- OR a remediation casefile containing required fields (see CHECK 6)
+- OR a dedicated approval artifact file referenced by evidence (see below)
+
+Approval metadata must include these fields (non-empty strings):
+- `ai_prompt_hash`
+- `model_id`
+- `approver_id`
+- `approval_artifact_ref`
+- `change_reason`
+
+Fail if regulated surface changed but metadata missing.
+
+Failure code: `CONFORMANCE_005_APPROVAL_METADATA_MISSING`
+
+Notes:
+- The script must not require approval metadata if no regulated surfaces were touched (diff-aware mode).
+- In full scan mode, the script may skip this check unless it detects regulated-surface modifications via `git status --porcelain`.
+
+---
+
+### CHECK 6 — Approval metadata schema validation (no PII; required keys)
+If an approval metadata artifact is present, validate:
+- required keys exist
+- values are non-empty
+- no raw PII markers appear
+
+PII heuristic (simple, fail-closed):
+- reject if values match common sensitive patterns like:
+  - NRC-like formats (configurable)
+  - phone number-like sequences
+  - email addresses
+  - long digit sequences > 10 (configurable)
+
+Failure code: `CONFORMANCE_006_APPROVAL_METADATA_INVALID`
+
+---
+
+### CHECK 7 — Evidence emission: agent_conformance.json must be produced
+On success OR failure, the script must write:
+- `evidence/phase1/agent_conformance.json`
+
+It must include:
+- `status`: PASS/FAIL
+- `checked_at_utc`
+- `git_commit`
+- `mode`: FULL_SCAN or DIFF_AWARE
+- `canonical_docs`: presence + hashes
+- `agent_files_checked`: count + list (or truncated list)
+- `failures`: array of failure objects:
+  - `code`
+  - `message`
+  - `files` (optional)
+- `regulated_surface_changes_detected`: boolean
+- `approval_metadata_present`: boolean
+- `approval_metadata_ref`: path (if present)
+
+Failure code if evidence cannot be written:
+`CONFORMANCE_007_EVIDENCE_WRITE_FAILED`
+
+Determinism:
+- Use stable ordering when listing files.
+- Avoid including nondeterministic content beyond timestamp + commit SHA.
+
+---
+
+## Exit Behavior
+- If any check fails: exit code 1
+- If all checks pass: exit code 0
+
+The script must print a clear summary to stdout:
+- PASS/FAIL
+- which check failed (first failure)
+- where evidence was written
+
+---
+
+## Suggested Implementation Notes (non-binding)
+- Use `set -euo pipefail`
+- Prefer `git ls-files` to enumerate tracked prompt files
+- For glob matching, use a simple `case` pattern list derived from the operation manual
+- Keep parsing logic minimal: strict section markers > fuzzy parsing
+
+---
+
+## Test Cases
+
+### TC1: Missing canonical docs
+- Delete one canonical doc → script fails with CONFORMANCE_001
+
+### TC2: Agent file missing canonical references
+- Remove link in one agent prompt → fails CONFORMANCE_002
+
+### TC3: Agent file missing Stop Conditions
+- Remove section → fails CONFORMANCE_003
+
+### TC4: Invalid role tag
+- Put unknown role → fails CONFORMANCE_004
+
+### TC5: Modify schema migration without approval metadata
+- Add file under schema/migrations → fails CONFORMANCE_005
+
+### TC6: Approval metadata missing required keys
+- Present approval_metadata.json but missing approver_id → fails CONFORMANCE_006
+
+### TC7: Successful run
+- All checks satisfied → PASS and evidence emitted
+
+---
+
+## Integration
+- Called by `scripts/dev/pre_ci.sh`
+- Called in CI ordered checks (Phase-0 ordering preserved)
+- Must be “fail closed”: CI must fail if this script fails
+```
+
+---
+
+If you want, I can also output a **skeleton `approval_metadata.json` schema** (example file contents) that the spec expects, so Codex can generate it deterministically.
+
+
+
+## 1) What `verify_agent_conformance.sh` *does* and how it would have caught issues in your plan
+
+Think of `verify_agent_conformance.sh` as a **pre-merge “governance lint”** for AI work. It’s the script that makes sure your agent system can’t drift into “productive but non-compliant.”
+
+### What it does (in detail)
+
+#### A. Ensures there is exactly one canonical source of truth for agent behavior
+
+It checks that these required governance docs exist and are non-empty:
+
+* `docs/operations/AI_AGENT_WORKFLOW_AND_ROLE_PLAN_v2.md`
+* `docs/operations/AGENT_ROLE_RECONCILIATION.md`
+* `docs/operations/AI_AGENT_OPERATION_MANUAL.md`
+
+**Why:** if any of these are missing, agents will improvise, and drift becomes inevitable.
+
+---
+
+#### B. Ensures every agent prompt points to the canonical contract (no drift)
+
+It scans:
+
+* `AGENTS.md`
+* `.codex/agents/**`
+* `.cursor/agents/**`
+
+…and fails if any file **does not reference** the canonical doc paths exactly.
+
+**Why:** this prevents a “split brain” where Codex agents follow one set of rules and Cursor agents follow another.
+
+---
+
+#### C. Ensures every agent prompt includes “Stop Conditions / Escalation”
+
+It requires each agent prompt to contain an explicit section like:
+
+* “Stop Conditions”
+* “Escalation”
+* “Stop and Escalate”
+
+**Why:** AI agents need hard halting rules. If they aren’t in the prompt, they won’t reliably stop.
+
+---
+
+#### D. Ensures every agent prompt declares a valid role
+
+It enforces that each prompt declares **one role** that matches the role list in `AGENT_ROLE_RECONCILIATION.md`.
+
+**Why:** prevents “agent overreach” (e.g., Runtime agent making schema changes, or Security agent editing control planes).
+
+---
+
+#### E. Enforces “regulated-surface changes require approval metadata”
+
+It detects whether a PR touches “regulated surfaces” (like migrations, invariant truth holders, control planes, audit scripts, evidence harness).
+If yes, it requires an approval metadata artifact exists and contains required fields:
+
+* `ai_prompt_hash`
+* `model_id`
+* `approver_id`
+* `approval_artifact_ref`
+* `change_reason`
+
+**Why:** this is the “human approval gate” made mechanical.
+
+---
+
+#### F. Emits evidence (PASS/FAIL) so the governance itself is auditable
+
+Whether it passes or fails, it writes:
+
+* `evidence/phase1/agent_conformance.json`
+
+**Why:** even governance checks must be evidence-producing in Symphony.
+
+---
+
+### How it would have helped with the issues in your plan file
+
+Your `AI-workflow-plan_tasks.md` had several specific drift risks. Here’s how this script would catch them:
+
+#### 1) Wrong canonical doc path / name drift
+
+You referenced a canonical doc path that likely didn’t exist (ex: `ai_agent_workflow_and_role_plan_v_2.md`).
+`verify_agent_conformance.sh` would fail immediately under:
+
+* **CONFORMANCE_001_CANONICAL_MISSING** (doc doesn’t exist)
+* or **CONFORMANCE_002_CANONICAL_REFERENCE_MISSING** (prompts aren’t pointing to the same canonical location)
+
+✅ Outcome: you would have been forced to standardize the canonical path *before* agents start coding.
+
+---
+
+#### 2) Placeholder invariant IDs (`INV-001/002/003`)
+
+This is exactly the kind of thing that becomes “real by accident.”
+
+The conformance script doesn’t validate invariants directly (that’s the invariant manifest’s job), but it **would have pushed you away from placeholders** by enforcing:
+
+* role tags
+* canonical doc references
+* regulated-surface approval metadata
+
+In practice, placeholders don’t survive once the workflow becomes “fail closed with evidence,” because they trigger review.
+
+✅ Outcome: it would force the plan to use either real invariant IDs or none.
+
+---
+
+#### 3) “Phase-1 surfaces” not defined
+
+Your plan said “when Phase-1 surfaces are touched” but didn’t define them.
+The conformance script requires the regulated surfaces list to exist in the operation manual and be parseable—otherwise it fails with:
+
+* **CONFORMANCE_001_CANONICAL_MISSING** or a parse failure mode
+
+✅ Outcome: you’d have been forced to define the surface list so enforcement is deterministic.
+
+---
+
+#### 4) Missing stop/escalation rules in prompts
+
+Even if a prompt references the canonical doc, agents often don’t follow links.
+`verify_agent_conformance.sh` forces the *content* to be present.
+
+✅ Outcome: no silent “agent kept going” failures.
+
+---
+
+#### 5) Regulated changes without recorded human approval
+
+If Codex edits `schema/migrations/**` or `INVARIANTS_MANIFEST.yml` without the approval metadata file, the script fails under:
+
+* **CONFORMANCE_005_APPROVAL_METADATA_MISSING**
+
+✅ Outcome: it blocks “AI changed regulated surfaces without approval” at the exact moment it happens.
+
+---
+
+## 2) Skeleton `approval_metadata.json` schema (repo-ready)
+
+Here’s a minimal, deterministic skeleton you can commit as:
+
+* `docs/operations/approval_metadata.schema.json` (JSON Schema)
+* plus an example instance file under `evidence/phase1/approval_metadata.json`
+
+### A) JSON Schema: `docs/operations/approval_metadata.schema.json`
+
+```json
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "symphony://schemas/approval_metadata.schema.json",
+  "title": "Symphony Phase-1 Approval Metadata",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "generated_at_utc",
+    "git_commit",
+    "change_scope",
+    "ai",
+    "human_approval"
+  ],
+  "properties": {
+    "schema_version": {
+      "type": "string",
+      "const": "1.0"
+    },
+    "generated_at_utc": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "git_commit": {
+      "type": "string",
+      "minLength": 7
+    },
+    "change_scope": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["regulated_surfaces_touched", "paths_changed"],
+      "properties": {
+        "regulated_surfaces_touched": { "type": "boolean" },
+        "paths_changed": {
+          "type": "array",
+          "items": { "type": "string", "minLength": 1 },
+          "minItems": 1
+        }
+      }
+    },
+    "ai": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["ai_prompt_hash", "model_id"],
+      "properties": {
+        "ai_prompt_hash": { "type": "string", "minLength": 16 },
+        "model_id": { "type": "string", "minLength": 1 },
+        "tooling": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["client"],
+          "properties": {
+            "client": {
+              "type": "string",
+              "enum": ["codex_cli", "cursor_codex", "unknown"]
+            },
+            "session_id": { "type": "string" }
+          }
+        }
+      }
+    },
+    "human_approval": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["approver_id", "approval_artifact_ref", "change_reason"],
+      "properties": {
+        "approver_id": { "type": "string", "minLength": 1 },
+        "approval_artifact_ref": { "type": "string", "minLength": 1 },
+        "change_reason": { "type": "string", "minLength": 1 },
+        "approved_at_utc": { "type": "string", "format": "date-time" }
+      }
+    },
+    "notes": { "type": "string" }
+  }
+}
+```
+
+### B) Example instance: `evidence/phase1/approval_metadata.json`
+
+```json
+{
+  "schema_version": "1.0",
+  "generated_at_utc": "2026-02-11T12:00:00Z",
+  "git_commit": "abcdef1234567890",
+  "change_scope": {
+    "regulated_surfaces_touched": true,
+    "paths_changed": [
+      "schema/migrations/0031_phase1_instruction_finality.sql",
+      "scripts/audit/verify_agent_conformance.sh"
+    ]
+  },
+  "ai": {
+    "ai_prompt_hash": "b2d3c4e5f6a7b8c9d0e1f2a3b4c5d6e7",
+    "model_id": "gpt-5.2-codex",
+    "tooling": {
+      "client": "codex_cli",
+      "session_id": "local-dev-001"
+    }
+  },
+  "human_approval": {
+    "approver_id": "engineering_lead",
+    "approval_artifact_ref": "approvals/2026-02-11/PR-1234.md",
+    "change_reason": "Phase-1 regulated surface update: instruction finality enforcement + verifier",
+    "approved_at_utc": "2026-02-11T12:05:00Z"
+  },
+  "notes": "No raw PII included. Approval recorded prior to merge."
+}
+```
+
+If you want, I can also draft the companion `approvals/<date>/PR-<id>.md` template so your team has a consistent “human approval artifact” format that the conformance script can validate.
+
+
+
+
+
+
+
+
+Below is a **repo-ready companion approval artifact template** that is deliberately:
+
+* **human-legible**
+* **machine-parseable**
+* **auditor-friendly**
+* **aligned with `approval_metadata.json`**
+* **safe for Codex + Cursor workflows**
+
+You can standardize on this **exact format** so `verify_agent_conformance.sh` can reliably validate references.
+
+---
+
+# 📄 Approval Artifact Template
+
+**Canonical path pattern (recommended):**
+
+```
+approvals/YYYY-MM-DD/PR-<number>.md
+```
+
+Example:
+
+```
+approvals/2026-02-11/PR-1234.md
+```
+
+---
+
+## `approvals/YYYY-MM-DD/PR-<number>.md`
+
+```md
+# Approval Record — PR-<number>
+
+Approval Type: Phase-1 Regulated Change  
+Status: APPROVED  
+Approval Date (UTC): <YYYY-MM-DDTHH:MM:SSZ>
+
+---
+
+## 1. Summary of Change
+
+**Short description (required):**  
+<One–two sentences describing what is being approved. Must be human-readable.>
+
+**Reason for change (required):**  
+<Why this change is necessary now. Business / regulatory / technical justification.>
+
+---
+
+## 2. Scope of Impact
+
+### Regulated Surfaces Touched
+- [ ] schema/migrations/**
+- [ ] scripts/audit/**
+- [ ] scripts/db/**
+- [ ] invariant truth holders (INVARIANTS_*.md / .yml)
+- [ ] control planes (CONTROL_PLANES.yml)
+- [ ] evidence harness / schema
+- [ ] agent governance / operations docs
+
+> At least one box **must** be checked for Phase-1 approvals.
+
+### Files / Paths Affected (required)
+```
+
+<explicit list of files or directories changed>
+```
+
+---
+
+## 3. Invariants & Phase Discipline
+
+**Invariant IDs involved (if any):**
+
+```
+<INV-xxx list or NONE>
+```
+
+**Phase boundary check:**
+
+* [ ] No Phase-0 invariants redefined
+* [ ] Phase-1 work only promotes or enforces existing roadmap invariants
+* [ ] No backward phase leakage
+
+---
+
+## 4. AI Involvement Disclosure
+
+**AI used:** YES / NO
+
+If YES:
+
+* Tooling:
+
+  * [ ] Codex CLI
+  * [ ] Cursor Codex
+  * [ ] Other: <describe>
+
+* AI Prompt Hash:
+
+```
+<hex / base64 hash — must match approval_metadata.json>
+```
+
+* Model ID:
+
+```
+<e.g., gpt-5.2-codex>
+```
+
+**Statement:**
+
+> AI assistance was used to propose changes.
+> All regulated changes were reviewed and approved by a human approver.
+
+---
+
+## 5. Verification & Evidence
+
+**Verification commands run (required):**
+
+```
+scripts/dev/pre_ci.sh
+```
+
+(Optional additional commands):
+
+```
+<other verification commands>
+```
+
+**Expected evidence artifacts:**
+
+```
+evidence/phase1/<artifact>.json
+```
+
+---
+
+## 6. Risk Assessment
+
+**Risk level:**
+
+* [ ] Low
+* [ ] Medium
+* [ ] High
+
+**Identified risks:** <brief description>
+
+**Mitigations:** <how risk is mitigated or bounded>
+
+---
+
+## 7. Approval
+
+**Approved by (required):**
+
+```
+<approver_id — must match approval_metadata.json>
+```
+
+**Role / Authority:**
+
+```
+<e.g., Engineering Lead, Compliance Officer>
+```
+
+**Approval Statement:**
+
+> I confirm that I have reviewed the changes listed above,
+> that they comply with Phase-1 governance and invariant discipline,
+> and that I approve them for merge.
+
+**Signature (typed is sufficient):**
+
+```
+<name or identifier>
+```
+
+**Approved at (UTC):**
+
+```
+<YYYY-MM-DDTHH:MM:SSZ>
+```
+
+---
+
+## 8. Cross-References (Machine-Readable)
+
+This approval record is referenced by:
+
+* `approval_metadata.json` at:
+
+```
+<relative path to approval_metadata.json>
+```
+
+Git commit (if known at approval time):
+
+```
+<commit SHA or PENDING>
+```
+
+---
+
+## 9. Notes (Optional)
+
+<Any additional context useful for auditors or future reviewers.>
+```
+
+---
+
+## Why this template works (briefly)
+
+* **Auditors** can read it without repo knowledge
+* **Machines** can validate:
+
+  * approver_id
+  * prompt hash
+  * model ID
+  * regulated surface scope
+* **Codex** can be instructed to:
+
+  * generate it
+  * pause for human fill-in
+* **verify_agent_conformance.sh** can:
+
+  * ensure the file exists
+  * ensure required sections are present
+  * ensure it is referenced by `approval_metadata.json`
+
+---
+
+## Recommended next step (optional but strong)
+
+If you want to go one step further, I can:
+
+* add a **mini JSON sidecar** (`PR-1234.approval.json`) for strict machine parsing, or
+* update the conformance spec to **require specific section headers**, making enforcement airtight.
+
+But as-is, this template is already **Phase-1-safe, audit-grade, and agent-compatible**.
+
+
+
+
+
+
+
+
+## 1) Updated conformance spec: require specific section headers (airtight)
+
+Below is a **patch-style replacement** for the relevant parts of `docs/operations/VERIFY_AGENT_CONFORMANCE_SPEC.md`. It makes enforcement strict by requiring **exact section headers** in:
+
+* agent prompt files (`.codex/agents/**`, `.cursor/agents/**`)
+* approval artifacts (`approvals/YYYY-MM-DD/PR-<n>.md`)
+* operation manual sections
+
+You can paste this over the existing spec sections (or treat it as v1.1).
+
+---
+
+### ✅ Add these new required headers
+
+#### A) Agent prompt files — required headers (exact text, case-sensitive)
+
+Every agent prompt markdown must contain these headings **as markdown H2**:
+
+* `## Role`
+* `## Scope`
+* `## Non-Negotiables`
+* `## Stop Conditions`
+* `## Verification Commands`
+* `## Evidence Outputs`
+* `## Canonical References`
+
+**Also require that `## Canonical References` includes both exact paths:**
+
+* `docs/operations/AI_AGENT_WORKFLOW_AND_ROLE_PLAN_v2.md`
+* `docs/operations/AGENT_ROLE_RECONCILIATION.md`
+
+**Updated checks**
+
+* Replace old CHECK 2 + CHECK 3 + CHECK 4 with:
+
+**CHECK 2 (revised) — Required headers present in agent prompts**
+Fail if any required header missing.
+Failure code: `CONFORMANCE_002_PROMPT_HEADERS_MISSING`
+
+**CHECK 3 (revised) — Role value format**
+Under `## Role`, require a single line:
+
+* `Role: <ROLE_NAME>`
+
+`<ROLE_NAME>` must match one of the canonical roles in `AGENT_ROLE_RECONCILIATION.md`.
+Failure code: `CONFORMANCE_003_ROLE_INVALID`
+
+**CHECK 4 (revised) — Canonical references block is complete**
+Under `## Canonical References`, require both canonical doc paths present.
+Failure code: `CONFORMANCE_004_CANONICAL_REFERENCE_MISSING`
+
+**CHECK 5 (revised) — Stop conditions must be explicit bullets**
+Under `## Stop Conditions`, require at least **3 bullet points** starting with `- `.
+Failure code: `CONFORMANCE_005_STOP_CONDITIONS_INVALID`
+
+---
+
+#### B) Approval artifact markdown — required headers (exact text, case-sensitive)
+
+Every approval record `approvals/YYYY-MM-DD/PR-<n>.md` must contain these headings **as markdown H2**:
+
+* `## 1. Summary of Change`
+* `## 2. Scope of Impact`
+* `## 3. Invariants & Phase Discipline`
+* `## 4. AI Involvement Disclosure`
+* `## 5. Verification & Evidence`
+* `## 6. Risk Assessment`
+* `## 7. Approval`
+* `## 8. Cross-References (Machine-Readable)`
+
+**Updated check**
+Add:
+
+**CHECK A1 — Approval markdown headers present**
+Triggered when approval metadata references an approval artifact.
+Failure code: `CONFORMANCE_A1_APPROVAL_HEADERS_MISSING`
+
+**CHECK A2 — Cross-reference block must include sidecar reference**
+Under `## 8. Cross-References (Machine-Readable)`, require a line:
+
+* `Approval Sidecar JSON: approvals/YYYY-MM-DD/PR-<n>.approval.json`
+
+Failure code: `CONFORMANCE_A2_APPROVAL_SIDECAR_REF_MISSING`
+
+---
+
+#### C) Operation manual — required headers (exact text)
+
+`docs/operations/AI_AGENT_OPERATION_MANUAL.md` must contain:
+
+* `## Definitions (Phase-1 Regulated Surfaces)`
+* `## Required Metadata for Regulated Surfaces`
+* `## Approval Artifact Format`
+
+**Updated check**
+Add:
+
+**CHECK M1 — Operation manual sections present**
+Failure code: `CONFORMANCE_M1_OPERATION_MANUAL_HEADERS_MISSING`
+
+---
+
+### ✅ Deterministic parsing rule
+
+The script must treat headings as **literal markers** and parse only within the section until the next same/higher heading level.
+
+If a required header is absent: fail closed.
+
+---
+
+## 2) Mini JSON sidecar: what it is, how it works, and the template
+
+### What it is
+
+For each approval markdown file (human-readable), you also generate a **machine-readable JSON sidecar**:
+
+* Markdown (human/audit): `approvals/YYYY-MM-DD/PR-1234.md`
+* Sidecar JSON (machine/verification): `approvals/YYYY-MM-DD/PR-1234.approval.json`
+
+### Why it helps
+
+Markdown is flexible and easy for people, but **hard to validate perfectly**.
+
+The sidecar JSON lets `verify_agent_conformance.sh` enforce:
+
+* required fields exist
+* values are non-empty
+* `approver_id` matches `approval_metadata.json`
+* prompt hash + model id match
+* regulated surfaces touched matches changed paths (optional, but possible)
+* timestamps are present and well-formed
+
+So:
+
+* Humans read the `.md`
+* Machines validate the `.approval.json`
+* The `.md` references the `.approval.json` in a fixed header block
+* `approval_metadata.json` references the `.md` (and optionally the `.approval.json`)
+
+### How it works end-to-end
+
+1. PR touches regulated surfaces
+2. Developer/agent creates:
+
+   * `evidence/phase1/approval_metadata.json` (runtime evidence of approval metadata)
+   * `approvals/YYYY-MM-DD/PR-<n>.md` (human approval record)
+   * `approvals/YYYY-MM-DD/PR-<n>.approval.json` (machine sidecar)
+3. Conformance verifier checks:
+
+   * the sidecar exists
+   * JSON schema is valid
+   * sidecar values match approval_metadata.json
+   * the markdown has required headings and cross-ref line
+
+If anything doesn’t match: **fail closed**.
+
+---
+
+### Sidecar JSON schema (recommended)
+
+Save as: `docs/operations/approval_sidecar.schema.json`
+
+```json
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "symphony://schemas/approval_sidecar.schema.json",
+  "title": "Symphony Approval Sidecar",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "approval_record",
+    "approval",
+    "ai",
+    "scope",
+    "verification"
+  ],
+  "properties": {
+    "schema_version": { "type": "string", "const": "1.0" },
+    "approval_record": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["pr_number", "date_utc", "markdown_ref"],
+      "properties": {
+        "pr_number": { "type": "integer", "minimum": 1 },
+        "date_utc": { "type": "string", "pattern": "^\\d{4}-\\d{2}-\\d{2}$" },
+        "markdown_ref": { "type": "string", "minLength": 1 },
+        "commit": { "type": "string" }
+      }
+    },
+    "approval": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["status", "approver_id", "approved_at_utc", "role_authority", "change_reason"],
+      "properties": {
+        "status": { "type": "string", "enum": ["APPROVED", "REJECTED"] },
+        "approver_id": { "type": "string", "minLength": 1 },
+        "approved_at_utc": { "type": "string", "format": "date-time" },
+        "role_authority": { "type": "string", "minLength": 1 },
+        "change_reason": { "type": "string", "minLength": 1 }
+      }
+    },
+    "ai": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["ai_used", "ai_prompt_hash", "model_id", "client"],
+      "properties": {
+        "ai_used": { "type": "boolean" },
+        "ai_prompt_hash": { "type": "string", "minLength": 16 },
+        "model_id": { "type": "string", "minLength": 1 },
+        "client": { "type": "string", "enum": ["codex_cli", "cursor_codex", "unknown"] },
+        "session_id": { "type": "string" }
+      }
+    },
+    "scope": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["regulated_surfaces_touched", "paths_changed"],
+      "properties": {
+        "regulated_surfaces_touched": { "type": "boolean" },
+        "paths_changed": {
+          "type": "array",
+          "items": { "type": "string", "minLength": 1 },
+          "minItems": 1
+        },
+        "invariants": {
+          "type": "array",
+          "items": { "type": "string", "minLength": 1 }
+        },
+        "phase_boundary_ok": { "type": "boolean" }
+      }
+    },
+    "verification": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["commands", "pre_ci_passed"],
+      "properties": {
+        "commands": {
+          "type": "array",
+          "items": { "type": "string", "minLength": 1 },
+          "minItems": 1
+        },
+        "pre_ci_passed": { "type": "boolean" },
+        "notes": { "type": "string" }
+      }
+    }
+  }
+}
+```
+
+---
+
+### Example sidecar file (template)
+
+Create as: `approvals/YYYY-MM-DD/PR-<number>.approval.json`
+
+```json
+{
+  "schema_version": "1.0",
+  "approval_record": {
+    "pr_number": 1234,
+    "date_utc": "2026-02-11",
+    "markdown_ref": "approvals/2026-02-11/PR-1234.md",
+    "commit": "PENDING"
+  },
+  "approval": {
+    "status": "APPROVED",
+    "approver_id": "engineering_lead",
+    "approved_at_utc": "2026-02-11T12:05:00Z",
+    "role_authority": "Engineering Lead",
+    "change_reason": "Phase-1 regulated surface update: instruction finality enforcement + verifier"
+  },
+  "ai": {
+    "ai_used": true,
+    "ai_prompt_hash": "b2d3c4e5f6a7b8c9d0e1f2a3b4c5d6e7",
+    "model_id": "gpt-5.2-codex",
+    "client": "codex_cli",
+    "session_id": "local-dev-001"
+  },
+  "scope": {
+    "regulated_surfaces_touched": true,
+    "paths_changed": [
+      "schema/migrations/0031_phase1_instruction_finality.sql",
+      "scripts/audit/verify_agent_conformance.sh"
+    ],
+    "invariants": ["INV-114", "INV-111"],
+    "phase_boundary_ok": true
+  },
+  "verification": {
+    "commands": ["scripts/dev/pre_ci.sh"],
+    "pre_ci_passed": true,
+    "notes": "No raw PII included."
+  }
+}
+```
+
+---
+
+### What to change in `verify_agent_conformance.sh` to use the sidecar
+
+* If `approval_metadata.json` exists and indicates regulated surfaces touched:
+
+  * require `approval_artifact_ref` exists (markdown)
+  * require the markdown contains the header `## 8. Cross-References (Machine-Readable)`
+  * parse the sidecar path from the exact line:
+    `Approval Sidecar JSON: ...`
+  * require the sidecar JSON exists and validates against `approval_sidecar.schema.json`
+  * require key fields match the `approval_metadata.json` values:
+
+    * `ai_prompt_hash`
+    * `model_id`
+    * `approver_id`
+
+Fail closed if mismatch.
+
+---
+
+If you want, I can now output a **fully updated** `VERIFY_AGENT_CONFORMANCE_SPEC.md` (complete file) incorporating all these header requirements and the sidecar checks, rather than patch notes.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+```md
+# VERIFY_AGENT_CONFORMANCE_SPEC.md
+
+## 0. Status
+**Phase:** 1  
+**Audience:** Engineers, AI Agents (Codex/Cursor), CI Owners, Audit Reviewers  
+**Canonical:** YES (this spec defines the required behavior of `scripts/audit/verify_agent_conformance.sh`)  
+**Failure Mode:** Fail-closed
+
+---
+
+## 1. Purpose
+
+`verify_agent_conformance.sh` enforces the Phase-1 AI-agent governance contract by failing fast when:
+
+1) agent prompt files drift from canonical governance rules,  
+2) required “Stop Conditions / Escalation” guidance is missing or non-specific,  
+3) regulated-surface changes lack required AI trace + human approval metadata,  
+4) approval artifacts are missing required machine-parseable structure (markdown headers + JSON sidecar),  
+5) evidence for thisC (agent conformance) is not emitted deterministically.
+
+This verifier must run in:
+- **local pre-CI** (via `scripts/dev/pre_ci.sh`)
+- **CI ordered checks** (Phase-0 ordering parity preserved)
+
+It must emit evidence at:
+- `evidence/phase1/agent_conformance.json`
+
+---
+
+## 2. Non-Negotiables
+
+- Must NOT invent, rename, or reinterpret invariant IDs.
+- Must NOT modify or bypass existing Phase-0 verifiers.
+- Must be deterministic: same repo state ⇒ same result content (except timestamp).
+- Evidence must never contain raw PII.
+- Must be **fail-closed**: if checks cannot run or parse required sections, the verifier fails.
+
+---
+
+## 3. Inputs
+
+### 3.1 Required canonical documents (must exist and be non-empty)
+
+- `docs/operations/AI_AGENT_WORKFLOW_AND_ROLE_PLAN_v2.md`
+- `docs/operations/AGENT_ROLE_RECONCILIATION.md`
+- `docs/operations/AI_AGENT_OPERATION_MANUAL.md`
+
+### 3.2 Agent prompt sources (must exist; at least one prompt file required)
+
+- `AGENTS.md`
+- `.codex/agents/**` (markdown)
+- `.cursor/agents/**` (markdown)
+
+### 3.3 Approval artifacts (only required when regulated surfaces are touched)
+
+- Evidence approval metadata:
+  - `evidence/phase1/approval_metadata.json` (preferred canonical evidence for the run)
+- Human approval markdown record:
+  - `approvals/YYYY-MM-DD/PR-<number>.md`
+- Machine approval sidecar JSON:
+  - `approvals/YYYY-MM-DD/PR-<number>.approval.json`
+
+### 3.4 Schema documents (required for JSON validation)
+
+- `docs/operations/approval_metadata.schema.json`
+- `docs/operations/approval_sidecar.schema.json`
+
+---
+
+## 4. Modes of Operation
+
+The verifier supports two modes:
+
+### Mode A — FULL_SCAN (default)
+- Validate all agent prompts and canonical docs regardless of git diff.
+- Approval enforcement is performed only if the verifier detects regulated surface modifications from `git status --porcelain`.
+
+### Mode B — DIFF_AWARE (CI preferred)
+If any of the following environment variables are present, the verifier must run diff-aware:
+
+- `BASE_REF` (preferred)
+- `GITHUB_BASE_REF` (fallback)
+- `CI_BASE_REF` (optional fallback)
+
+In DIFF_AWARE:
+- Determine changed files using:
+  - `git diff --name-only "$BASE_REF"...HEAD` (preferred)
+  - otherwise `git diff --name-only "origin/$GITHUB_BASE_REF"...HEAD`
+- Regulated-surface enforcement triggers if any changed path matches the regulated surface globs parsed from the operation manual.
+
+The verifier must record the chosen mode in the conformance evidence output.
+
+---
+
+## 5. Canonical Parsing Rules (Deterministic)
+
+### 5.1 Markdown header parsing
+When validating markdown sections, headings must match **literal markers**:
+
+- Heading level must be **H2** (`## `).
+- Heading text must match exactly (case-sensitive).
+- Content for a section is everything until the next H2 header.
+
+If any required header is absent, the verifier fails.
+
+### 5.2 Stable ordering
+Whenever listing files or failures, the verifier must sort paths lexicographically for deterministic output.
+
+---
+
+## 6. Required Headers (Airtight)
+
+### 6.1 Required H2 headers in every agent prompt markdown
+
+For every agent prompt file under:
+- `AGENTS.md`
+- `.codex/agents/**/*.md`
+- `.cursor/agents/**/*.md`
+
+Require the following exact H2 headings:
+
+- `## Role`
+- `## Scope`
+- `## Non-Negotiables`
+- `## Stop Conditions`
+- `## Verification Commands`
+- `## Evidence Outputs`
+- `## Canonical References`
+
+**Additional structural requirements:**
+
+1) Under `## Role`, the file must contain exactly one line formatted:
+   - `Role: <ROLE_NAME>`
+   where `<ROLE_NAME>` must match one of the canonical roles enumerated in
+   `docs/operations/AGENT_ROLE_RECONCILIATION.md`.
+
+2) Under `## Stop Conditions`, require at least **three bullet items** starting with `- `.
+
+3) Under `## Canonical References`, require exact occurrences of both:
+   - `docs/operations/AI_AGENT_WORKFLOW_AND_ROLE_PLAN_v2.md`
+   - `docs/operations/AGENT_ROLE_RECONCILIATION.md`
+
+---
+
+### 6.2 Required H2 headers in every approval markdown record
+
+For approval artifacts at:
+- `approvals/YYYY-MM-DD/PR-<number>.md`
+
+Require these exact H2 headings:
+
+- `## 1. Summary of Change`
+- `## 2. Scope of Impact`
+- `## 3. Invariants & Phase Discipline`
+- `## 4. AI Involvement Disclosure`
+- `## 5. Verification & Evidence`
+- `## 6. Risk Assessment`
+- `## 7. Approval`
+- `## 8. Cross-References (Machine-Readable)`
+
+**Cross-reference requirement (mandatory):**
+Under `## 8. Cross-References (Machine-Readable)`, require an exact line:
+
+- `Approval Sidecar JSON: approvals/YYYY-MM-DD/PR-<number>.approval.json`
+
+The verifier must:
+- extract the sidecar path from this line,
+- confirm it exists,
+- validate it against `docs/operations/approval_sidecar.schema.json`.
+
+---
+
+### 6.3 Required H2 headers in the operation manual
+
+In `docs/operations/AI_AGENT_OPERATION_MANUAL.md`, require these exact H2 headings:
+
+- `## Definitions (Phase-1 Regulated Surfaces)`
+- `## Required Metadata for Regulated Surfaces`
+- `## Approval Artifact Format`
+
+The verifier must parse the regulated-surface globs from the section:
+`## Definitions (Phase-1 Regulated Surfaces)`.
+
+---
+
+## 7. Regulated Surface Enforcement
+
+### 7.1 Determining regulated-surface changes
+If in DIFF_AWARE:
+- Use the diff file list.
+If in FULL_SCAN:
+- Use `git status --porcelain` to infer changed paths.
+
+A “regulated-surface change” is detected if any changed path matches any glob from the operation manual’s regulated surfaces section.
+
+### 7.2 Required evidence when regulated surfaces are touched
+If regulated-surface changes are detected, the verifier must require:
+
+- `evidence/phase1/approval_metadata.json` exists and validates against:
+  - `docs/operations/approval_metadata.schema.json`
+
+The verifier must enforce required non-empty string fields inside `approval_metadata.json`:
+- `ai.ai_prompt_hash`
+- `ai.model_id`
+- `human_approval.approver_id`
+- `human_approval.approval_artifact_ref`
+- `human_approval.change_reason`
+
+Additionally:
+- `human_approval.approval_artifact_ref` must point to an existing markdown approval record.
+- That approval record must satisfy the required headers and cross-reference rules above.
+- The referenced sidecar JSON must exist and validate against `approval_sidecar.schema.json`.
+
+### 7.3 Cross-file consistency checks (approval metadata ↔ sidecar)
+If approval metadata is required, then:
+
+- `approval_metadata.json`’s:
+  - `ai.ai_prompt_hash`
+  - `ai.model_id`
+  - `human_approval.approver_id`
+must exactly match the sidecar JSON fields:
+  - `ai.ai_prompt_hash`
+  - `ai.model_id`
+  - `approval.approver_id`
+
+Fail if any mismatch.
+
+---
+
+## 8. PII Safety Checks (Fail-Closed)
+
+The verifier must scan the following for obvious raw PII leakage patterns:
+- `evidence/phase1/approval_metadata.json`
+- approval sidecar JSON
+- `evidence/phase1/agent_conformance.json` (before writing, or validate no leak post-write)
+
+Minimum heuristic rules (configurable, but must exist):
+- Reject any string value containing `@` (email-like)
+- Reject long digit sequences (e.g. >= 11 digits contiguous)
+- Reject obvious phone formats (e.g. `+` followed by many digits)
+- Reject lines containing `NRC` or `National Registration` (case-insensitive)
+
+If such patterns appear, fail closed.
+
+---
+
+## 9. Required Checks and Failure Codes
+
+### CHECK 1 — Canonical docs exist and non-empty
+Failure code: `CONFORMANCE_001_CANONICAL_MISSING`
+
+### CHECK 2 — Agent prompt required headers present
+Failure code: `CONFORMANCE_002_PROMPT_HEADERS_MISSING`
+
+### CHECK 3 — Role line format and value valid
+Failure code: `CONFORMANCE_003_ROLE_INVALID`
+
+### CHECK 4 — Canonical references block complete
+Failure code: `CONFORMANCE_004_CANONICAL_REFERENCE_MISSING`
+
+### CHECK 5 — Stop conditions bullets present (>=3)
+Failure code: `CONFORMANCE_005_STOP_CONDITIONS_INVALID`
+
+### CHECK 6 — Operation manual required headers present and regulated surfaces parsable
+Failure code: `CONFORMANCE_006_OPERATION_MANUAL_INVALID`
+
+### CHECK 7 — Approval metadata required when regulated surfaces touched
+Failure code: `CONFORMANCE_007_APPROVAL_METADATA_MISSING`
+
+### CHECK 8 — Approval metadata schema validation and required keys
+Failure code: `CONFORMANCE_008_APPROVAL_METADATA_INVALID`
+
+### CHECK 9 — Approval markdown required headers and sidecar reference present
+Failure code: `CONFORMANCE_009_APPROVAL_MARKDOWN_INVALID`
+
+### CHECK 10 — Approval sidecar exists and validates against schema
+Failure code: `CONFORMANCE_010_APPROVAL_SIDECAR_INVALID`
+
+### CHECK 11 — Cross-file consistency (metadata ↔ sidecar)
+Failure code: `CONFORMANCE_011_APPROVAL_MISMATCH`
+
+### CHECK 12 — PII heuristic scan
+Failure code: `CONFORMANCE_012_PII_LEAK_DETECTED`
+
+### CHECK 13 — Evidence write success
+Failure code: `CONFORMANCE_013_EVIDENCE_WRITE_FAILED`
+
+---
+
+## 10. Evidence Output (Always Emitted)
+
+The verifier must always write:
+
+- `evidence/phase1/agent_conformance.json`
+
+on both PASS and FAIL (best-effort; but failure to write is itself a failure).
+
+### 10.1 Required fields in agent_conformance.json
+
+- `schema_version` (string, e.g. `"1.0"`)
+- `status` (`"PASS"` or `"FAIL"`)
+- `checked_at_utc` (RFC3339)
+- `git_commit` (SHA)
+- `mode` (`"FULL_SCAN"` or `"DIFF_AWARE"`)
+- `canonical_docs`:
+  - presence booleans
+  - sha256 hashes (optional but recommended)
+- `agent_files_checked`:
+  - `count`
+  - `files` (stable sorted; may truncate after N entries, but include count)
+- `required_headers`:
+  - list of required prompt headers
+  - list of required approval headers
+- `regulated_surface_changes_detected` (boolean)
+- `regulated_surface_changed_paths` (array, stable sorted; optional truncation)
+- `approval_required` (boolean)
+- `approval_metadata_present` (boolean)
+- `approval_metadata_ref` (string or null)
+- `approval_markdown_ref` (string or null)
+- `approval_sidecar_ref` (string or null)
+- `failures` (array of objects):
+  - `code`
+  - `message`
+  - `files` (array optional)
+  - `details` (optional)
+
+Determinism rules:
+- stable ordering for lists
+- do not include random IDs
+- timestamps allowed
+
+---
+
+## 11. Exit Behavior
+
+- Exit code `0` if all checks pass.
+- Exit code `1` if any check fails.
+- Output a short stdout summary:
+  - PASS/FAIL
+  - first failure code + message
+  - path to evidence json
+
+---
+
+## 12. Test Cases (Must Be Implemented as Smoke Scenarios)
+
+### TC1 — Missing canonical doc
+Remove `docs/operations/AI_AGENT_WORKFLOW_AND_ROLE_PLAN_v2.md` ⇒ `CONFORMANCE_001`
+
+### TC2 — Agent prompt missing `## Stop Conditions`
+Edit one agent prompt ⇒ `CONFORMANCE_002` or `CONFORMANCE_005`
+
+### TC3 — Role invalid
+Set `Role: RandomAgent` ⇒ `CONFORMANCE_003`
+
+### TC4 — Canonical reference missing
+Remove canonical paths from `## Canonical References` ⇒ `CONFORMANCE_004`
+
+### TC5 — Operation manual missing regulated surface section
+Remove required header ⇒ `CONFORMANCE_006`
+
+### TC6 — Regulated surface touched without approval metadata
+Modify `schema/migrations/*` without `evidence/phase1/approval_metadata.json` ⇒ `CONFORMANCE_007`
+
+### TC7 — Approval metadata missing required keys
+Remove `approver_id` ⇒ `CONFORMANCE_008`
+
+### TC8 — Approval markdown missing required headers
+Remove `## 8. Cross-References (Machine-Readable)` ⇒ `CONFORMANCE_009`
+
+### TC9 — Sidecar missing or invalid
+Missing sidecar or schema mismatch ⇒ `CONFORMANCE_010`
+
+### TC10 — Sidecar mismatch (prompt hash differs)
+Different `ai_prompt_hash` between metadata and sidecar ⇒ `CONFORMANCE_011`
+
+### TC11 — PII-like data present
+Put `test@example.com` into approval metadata ⇒ `CONFORMANCE_012`
+
+### TC12 — PASS case
+All headers present, approval artifacts consistent, no PII ⇒ PASS + evidence emitted
+
+---
+
+## 13. Integration Requirements
+
+- Must be called by `scripts/dev/pre_ci.sh` (local parity).
+- Must run in CI **before** any Phase-1 invariant promotion steps.
+- Must not change Phase-0 check ordering semantics.
+
+---
+
+## 14. Implementation Notes (Non-Binding)
+
+Suggested bash practices:
+- `set -euo pipefail`
+- Use `git ls-files` for tracked prompts where possible.
+- Prefer literal grep checks and simple section parsing with awk/sed.
+- Always write evidence JSON via a small helper that enforces stable ordering.
+
+---
+
+## 15. Versioning
+
+Any change to this spec must be:
+- reviewed by human approver
+- logged as a regulated surface change
+- accompanied by approval metadata + approval artifacts
+- produce new evidence under `evidence/phase1/agent_conformance.json`
+```

@@ -59,6 +59,14 @@ else
   exit 1
 fi
 
+echo "==> Agent conformance verification"
+if [[ -x scripts/audit/verify_agent_conformance.sh ]]; then
+  scripts/audit/verify_agent_conformance.sh
+else
+  echo "ERROR: scripts/audit/verify_agent_conformance.sh not found"
+  exit 1
+fi
+
 if [[ -f "$ENV_FILE" ]]; then
   set -a
   # shellcheck disable=SC1090

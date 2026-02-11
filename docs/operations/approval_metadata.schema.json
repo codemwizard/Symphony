@@ -1,0 +1,56 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "symphony://schemas/approval_metadata.schema.json",
+  "title": "Phase-1 Approval Metadata",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "generated_at_utc",
+    "git_commit",
+    "change_scope",
+    "ai",
+    "human_approval"
+  ],
+  "properties": {
+    "schema_version": { "type": "string", "const": "1.0" },
+    "generated_at_utc": { "type": "string", "format": "date-time" },
+    "git_commit": { "type": "string", "minLength": 7 },
+    "change_scope": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["regulated_surfaces_touched", "paths_changed"],
+      "properties": {
+        "regulated_surfaces_touched": { "type": "boolean" },
+        "paths_changed": {
+          "type": "array",
+          "items": { "type": "string", "minLength": 1 },
+          "minItems": 1
+        }
+      }
+    },
+    "ai": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["ai_prompt_hash", "model_id"],
+      "properties": {
+        "ai_prompt_hash": { "type": "string", "minLength": 16 },
+        "model_id": { "type": "string", "minLength": 1 },
+        "client": { "type": "string", "enum": ["codex_cli", "cursor_codex", "unknown"] },
+        "session_id": { "type": "string" }
+      }
+    },
+    "human_approval": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["approver_id", "approval_artifact_ref", "change_reason"],
+      "properties": {
+        "approver_id": { "type": "string", "minLength": 1 },
+        "approval_artifact_ref": { "type": "string", "minLength": 1 },
+        "change_reason": { "type": "string", "minLength": 1 },
+        "approved_at_utc": { "type": "string", "format": "date-time" }
+      }
+    },
+    "notes": { "type": "string" }
+  }
+}

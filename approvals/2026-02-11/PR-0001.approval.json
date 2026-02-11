@@ -1,0 +1,40 @@
+{
+  "schema_version": "1.0",
+  "approval_record": {
+    "pr_number": 1,
+    "date_utc": "2026-02-11",
+    "markdown_ref": "approvals/2026-02-11/PR-0001.md",
+    "commit": "55a48dcfcc8243352f75b87dbfe7d632a81a088e"
+  },
+  "approval": {
+    "status": "APPROVED",
+    "approver_id": "phase1-lead",
+    "approved_at_utc": "2026-02-11T12:30:00Z",
+    "role_authority": "Engineering Lead",
+    "change_reason": "Phase-1 governance and verifier enforcement"
+  },
+  "ai": {
+    "ai_used": true,
+    "ai_prompt_hash": "abc123abc123abc1",
+    "model_id": "gpt-5.2-codex",
+    "client": "codex_cli",
+    "session_id": "local-2026-02-11"
+  },
+  "scope": {
+    "regulated_surfaces_touched": true,
+    "paths_changed": [
+      "docs/operations/AI_AGENT_OPERATION_MANUAL.md",
+      "docs/operations/AI_AGENT_WORKFLOW_AND_ROLE_PLAN_v2.md",
+      "docs/operations/AGENT_ROLE_RECONCILIATION.md",
+      "scripts/audit/verify_agent_conformance.sh",
+      "scripts/dev/pre_ci.sh"
+    ],
+    "invariants": ["INV-114", "INV-111"],
+    "phase_boundary_ok": true
+  },
+  "verification": {
+    "commands": ["scripts/dev/pre_ci.sh"],
+    "pre_ci_passed": true,
+    "notes": "Conformance verifier enforces manual integrity."
+  }
+}

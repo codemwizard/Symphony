@@ -1,0 +1,35 @@
+phase: "1"
+task_id: "TSK-P1-002"
+title: "Phase-1 Evidence + Approval Metadata"
+owner_role: "EVIDENCE_AGENT"
+depends_on:
+  - "TSK-P1-001"
+touches:
+  - "scripts/audit/verify_remediation_trace.sh"
+  - "scripts/audit/verify_evidence_harness_integrity.sh"
+  - "scripts/audit/verify_task_plans_present.sh"
+  - "evidence/phase0"
+  - "evidence/phase1"
+invariants: []
+work:
+  - "Enhance existing evidence-generating scripts to include `ai_prompt_hash`, `model_id`, and `approver_id` fields for regulated surfaces."
+  - "Add approval artifact conventions under `docs/operations/AI_AGENT_OPERATION_MANUAL.md` and ensure evidence files reference them."
+  - "Document how human approvals tie to remediation casefiles (include metadata when machines fix issues)."
+acceptance_criteria:
+  - "Any evidence file produced when Phase-1 surfaces are touched contains prompt/model + approval metadata."
+  - "Approval metadata appears in remediation casefiles and is validated by `verify_remediation_trace.sh`."
+verification_commands:
+  - "scripts/audit/verify_evidence_harness_integrity.sh"
+  - "scripts/audit/verify_remediation_trace.sh"
+evidence_artifacts:
+  - "evidence/phase1/approval_metadata.json"
+failure_modes:
+  - "Evidence JSON missing prompt/model metadata when required."
+  - "Remediation case files lack approval entries."
+status: "in_progress"
+must_read: []
+evidence: []
+verification: []
+client: "codex_cli"
+assigned_agent: "evidence_agent"
+model: "<UNASSIGNED>"
