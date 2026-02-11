@@ -22,6 +22,10 @@ run scripts/audit/run_security_fast_checks.sh
 
 # OpenBao smoke must run before evidence status checks (contract requires openbao_smoke.json)
 if [[ -x scripts/security/openbao_bootstrap.sh && -x scripts/security/openbao_smoke_test.sh ]]; then
+  if ! command -v docker >/dev/null 2>&1; then
+    echo "ERROR: Docker is required for OpenBao smoke tests and is not available" >&2
+    exit 1
+  fi
   run scripts/security/openbao_bootstrap.sh
   run scripts/security/openbao_smoke_test.sh
 else

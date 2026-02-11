@@ -12,6 +12,11 @@ ROOT_TOKEN="root"
 
 mkdir -p "$STATE_DIR"
 
+if [[ "${SKIP_OPENBAO_BOOTSTRAP:-0}" == "1" ]]; then
+  echo "Skipping OpenBao bootstrap because SKIP_OPENBAO_BOOTSTRAP=1" >&2
+  exit 0
+fi
+
 if [[ ! -f "$COMPOSE_FILE" ]]; then
   echo "OpenBao compose file not found: $COMPOSE_FILE" >&2
   exit 1
