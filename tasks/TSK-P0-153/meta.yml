@@ -1,0 +1,41 @@
+phase: "0"
+task_id: "TSK-P0-153"
+title: "Parity: Add shared git diff helper (range-only enforcement)"
+owner_role: "INVARIANTS_CURATOR"
+status: "completed"   # planned | in_progress | completed
+
+depends_on:
+  - "TSK-P0-152"
+
+touches:
+  - "scripts/lib/git_diff.sh"
+  - "docs/plans/phase0/TSK-P0-153_git_diff_helper/PLAN.md"
+  - "docs/plans/phase0/TSK-P0-153_git_diff_helper/EXEC_LOG.md"
+  - "tasks/TSK-P0-153/meta.yml"
+
+invariants: []
+
+work:
+  - "Implement a shared bash helper for range-only diff computation."
+  - "Document base-ref resolution precedence and forbid staged/worktree fallback for enforcement."
+
+acceptance_criteria:
+  - "Helper emits stable newline-separated changed-file list for a given base/head."
+  - "Helper is used by parity-critical enforcement scripts in subsequent tasks."
+
+verification:
+  - "bash -n scripts/lib/git_diff.sh"
+
+evidence: []
+must_read: []
+
+failure_modes:
+  - "Gates compute diffs differently causing CI/local drift."
+
+implementation_plan: "docs/plans/phase0/TSK-P0-153_git_diff_helper/PLAN.md"
+implementation_log: "docs/plans/phase0/TSK-P0-153_git_diff_helper/EXEC_LOG.md"
+
+notes: ""
+client: "codex_cli"
+assigned_agent: "invariants_curator"
+model: "gpt-5-codex"
