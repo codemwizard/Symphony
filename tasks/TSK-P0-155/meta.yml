@@ -1,0 +1,43 @@
+phase: "0"
+task_id: "TSK-P0-155"
+title: "Parity: Add diff semantics regression verifier and wire into gates"
+owner_role: "SECURITY_GUARDIAN"
+status: "completed"   # planned | in_progress | completed
+
+depends_on:
+  - "TSK-P0-154"
+
+touches:
+  - "scripts/audit/verify_diff_semantics_parity.sh"
+  - "scripts/audit/run_phase0_ordered_checks.sh"
+  - ".github/workflows/invariants.yml"
+  - "docs/plans/phase0/TSK-P0-155_diff_semantics_regression_verifier/PLAN.md"
+  - "docs/plans/phase0/TSK-P0-155_diff_semantics_regression_verifier/EXEC_LOG.md"
+  - "tasks/TSK-P0-155/meta.yml"
+
+invariants: []
+
+work:
+  - "Implement a fast verifier that detects forbidden diff semantics in parity-critical scripts."
+  - "Wire the verifier into local pre-ci and CI before enforcement gates run."
+
+acceptance_criteria:
+  - "Verifier fails deterministically on staged/worktree union-diff patterns in enforcement scripts."
+  - "Verifier passes when enforcement scripts use only the shared helper (range mode)."
+
+verification:
+  - "bash scripts/audit/run_phase0_ordered_checks.sh"
+
+evidence: []
+must_read: []
+
+failure_modes:
+  - "Parity regressions reintroduced by staged/worktree diff heuristics."
+
+implementation_plan: "docs/plans/phase0/TSK-P0-155_diff_semantics_regression_verifier/PLAN.md"
+implementation_log: "docs/plans/phase0/TSK-P0-155_diff_semantics_regression_verifier/EXEC_LOG.md"
+
+notes: ""
+client: "codex_cli"
+assigned_agent: "security_guardian"
+model: "gpt-5-codex"

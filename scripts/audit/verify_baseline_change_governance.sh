@@ -14,8 +14,10 @@ export EVIDENCE_TS EVIDENCE_GIT_SHA EVIDENCE_SCHEMA_FP
 
 BASE_REF="${BASE_REF:-origin/main}"
 HEAD_REF="${HEAD_REF:-HEAD}"
+source "$ROOT_DIR/scripts/lib/git_diff.sh"
+BASE_REF="${BASE_REF:-$(git_resolve_base_ref)}"
 
-if ! git rev-parse "$BASE_REF" >/dev/null 2>&1; then
+if ! git_ensure_ref "$BASE_REF"; then
   python3 - <<PY
 import json
 from pathlib import Path
@@ -24,17 +26,16 @@ out = {
   "timestamp_utc": "$EVIDENCE_TS",
   "git_sha": "$EVIDENCE_GIT_SHA",
   "schema_fingerprint": "$EVIDENCE_SCHEMA_FP",
-  "status": "SKIPPED",
+  "status": "FAIL",
   "reason": "BASE_REF not found",
 }
 Path("$EVIDENCE_FILE").write_text(json.dumps(out, indent=2))
 PY
-  echo "⚠️  BASE_REF not found; skipping baseline governance check"
-  exit 0
+  echo "❌ BASE_REF not found; cannot enforce baseline governance (fail-closed)" >&2
+  exit 1
 fi
 
-# symphony:allow_or_true (git diff may be unavailable in some local contexts; evidence still produced)
-changed_files=$( (git diff --name-only "$BASE_REF...$HEAD_REF" || true; git diff --name-only --cached || true; git diff --name-only || true) | sort -u )
+changed_files="$(git_changed_files_range "$BASE_REF" "$HEAD_REF")"
 
 baseline_changed=false
 migration_changed=false

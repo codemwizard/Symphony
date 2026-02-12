@@ -13,12 +13,13 @@ EVIDENCE_SCHEMA_FP="$(schema_fingerprint)"
 CHECK_ID="STRUCTURAL-DOC-LINKAGE"
 
 # Default range for local usage if not provided
-BASE_REF="${BASE_REF:-origin/main}"
 HEAD_REF="${HEAD_REF:-HEAD}"
+source "$ROOT_DIR/scripts/lib/git_diff.sh"
+BASE_REF="${BASE_REF:-$(git_resolve_base_ref)}"
 
-# Compute diff range; if git refs missing, assume no structural change
-if ! git rev-parse "$BASE_REF" >/dev/null 2>&1; then
-  echo "⚠️  BASE_REF not found; skipping structural check"
+# Compute diff range (parity-critical). If base ref is missing, fail closed.
+if ! git_ensure_ref "$BASE_REF"; then
+  echo "❌ BASE_REF not found; cannot enforce change-rule (fail-closed)" >&2
   python3 - <<PY
 import json
 from pathlib import Path
@@ -27,20 +28,21 @@ out = {
   "timestamp_utc": "$EVIDENCE_TS",
   "git_sha": "$EVIDENCE_GIT_SHA",
   "schema_fingerprint": "$EVIDENCE_SCHEMA_FP",
-  "status": "SKIPPED",
+  "status": "FAIL",
   "structural_change": False,
   "reason": "BASE_REF not found"
 }
 Path("$EVIDENCE_FILE").write_text(json.dumps(out, indent=2))
 PY
-  exit 0
+  exit 1
 fi
 
 # Run detector
 TMP_DIR=/tmp/invariants_ai
 mkdir -p "$TMP_DIR"
 
-git diff --no-color --no-ext-diff --unified=0 "$BASE_REF...$HEAD_REF" > "$TMP_DIR/pr.diff"
+merge_base="$(git merge-base "$BASE_REF" "$HEAD_REF")"
+git diff --no-color --no-ext-diff --unified=0 "$merge_base...$HEAD_REF" > "$TMP_DIR/pr.diff"
 python3 "$ROOT_DIR/scripts/audit/detect_structural_changes.py" --diff-file "$TMP_DIR/pr.diff" --out "$TMP_DIR/detect.json"
 
 structural=$(python3 - <<PY
@@ -51,7 +53,7 @@ PY
 
 if [[ "$structural" == "true" ]]; then
   # Require threat/compliance doc updates
-  if ! git diff --name-only "$BASE_REF...$HEAD_REF" | grep -Eq "docs/architecture/(THREAT_MODEL|COMPLIANCE_MAP)\.md"; then
+  if ! git_changed_files_range "$BASE_REF" "$HEAD_REF" | grep -Eq "docs/architecture/(THREAT_MODEL|COMPLIANCE_MAP)\.md"; then
     python3 - <<PY
 import json
 from pathlib import Path

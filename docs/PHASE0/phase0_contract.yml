@@ -1591,5 +1591,45 @@
     "evidence_scope": "repo",
     "notes": "Docs alignment for business hooks delta completed (Phase-0 audit narrative).",
     "gate_ids": []
+  },
+  {
+    "task_id": "TSK-P0-152",
+    "status": "completed",
+    "verification_mode": "both",
+    "evidence_required": false,
+    "evidence_paths": [],
+    "evidence_scope": "repo",
+    "notes": "Plan: canonicalize git diff semantics (range-only) across parity-critical enforcement gates.",
+    "gate_ids": []
+  },
+  {
+    "task_id": "TSK-P0-153",
+    "status": "completed",
+    "verification_mode": "both",
+    "evidence_required": false,
+    "evidence_paths": [],
+    "evidence_scope": "repo",
+    "notes": "Implement shared git diff helper for range-only enforcement.",
+    "gate_ids": []
+  },
+  {
+    "task_id": "TSK-P0-154",
+    "status": "completed",
+    "verification_mode": "both",
+    "evidence_required": false,
+    "evidence_paths": [],
+    "evidence_scope": "repo",
+    "notes": "Refactor parity-critical diff-based gates to use shared helper (range-only).",
+    "gate_ids": []
+  },
+  {
+    "task_id": "TSK-P0-155",
+    "status": "completed",
+    "verification_mode": "both",
+    "evidence_required": false,
+    "evidence_paths": [],
+    "evidence_scope": "repo",
+    "notes": "Add regression verifier to prevent staged/worktree diff semantics in enforcement gates.",
+    "gate_ids": []
   }
 ]
