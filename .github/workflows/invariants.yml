@@ -48,6 +48,13 @@ jobs:
 
           rg --version
 
+      - name: Load Phase-0 parity env
+        shell: bash
+        run: |
+          set -euo pipefail
+          source scripts/audit/env/phase0_flags.sh
+          chmod +x scripts/audit/env/phase0_flags.sh
+
       - name: Unit tests for detectors
         if: github.event_name != 'schedule'
         run: |

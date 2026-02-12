@@ -33,19 +33,13 @@ else
   exit 1
 fi
 
-# Contract evidence status is evaluated after evidence aggregation (cross-job) in CI.
-# Skip inside ordered checks to avoid false negatives when evidence isn't yet merged.
-# Toolchain parity is bootstrapped by scripts/dev/pre_ci.sh; do not skip locally.
-export SYMPHONY_SKIP_CONTRACT_EVIDENCE_STATUS=1
-run scripts/audit/run_invariants_fast_checks.sh
-unset SYMPHONY_SKIP_CONTRACT_EVIDENCE_STATUS
+# Contract evidence status is a cross-job/local-final gate. Skip it during the
+# fast invariants pass; it will be executed after all evidence is produced.
+run env SYMPHONY_SKIP_CONTRACT_EVIDENCE_STATUS=1 scripts/audit/run_invariants_fast_checks.sh
 
 run scripts/audit/validate_evidence_schema.sh
 run bash scripts/audit/verify_phase0_contract.sh
 run bash scripts/audit/verify_ci_order.sh
 run bash scripts/audit/verify_ci_artifact_upload_phase0_evidence.sh
-
-echo ""
-echo "-> (skipping) scripts/audit/verify_phase0_contract_evidence_status.sh (runs after evidence aggregation in CI; runs after DB checks in scripts/dev/pre_ci.sh)"
 
 echo "✅ Phase-0 ordered checks PASSED."
