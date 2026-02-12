@@ -152,10 +152,18 @@ done
 
 # Emit evidence JSON for general lock-risk lint
 ALLOWLIST_HITS_JOINED="$(printf '%s\n' "${allowlist_hits[@]}")"
-ALLOWLIST_HITS_JOINED="$ALLOWLIST_HITS_JOINED" printf '%s\n' "${filtered[@]}" | python3 - <<PY
-import json, os, sys
-lines = [ln.strip() for ln in sys.stdin.read().splitlines() if ln.strip()]
-allowlist_hits = [ln.strip() for ln in os.environ.get("ALLOWLIST_HITS_JOINED", "").split("\\n") if ln.strip()]
+FILTERED_TMP="$(mktemp)"
+trap 'rm -f "$FILTERED_TMP"' EXIT
+printf '%s\n' "${filtered[@]}" > "$FILTERED_TMP"
+ALLOWLIST_HITS_JOINED="$ALLOWLIST_HITS_JOINED" FILTERED_FILE="$FILTERED_TMP" EVIDENCE_OUT="$EVIDENCE_FILE" python3 - <<'PY'
+import json
+import os
+from pathlib import Path
+
+filtered_file = Path(os.environ["FILTERED_FILE"])
+lines = [ln.strip() for ln in filtered_file.read_text(encoding="utf-8").splitlines() if ln.strip()]
+allowlist_hits = [ln.strip() for ln in os.environ.get("ALLOWLIST_HITS_JOINED", "").split("\n") if ln.strip()]
+
 out = {
     "check_id": "SEC-DDL-LOCK-RISK",
     "timestamp_utc": os.environ.get("EVIDENCE_TS"),
@@ -166,8 +174,7 @@ out = {
     "matches": lines,
     "allowlist_hits": allowlist_hits,
 }
-with open("$EVIDENCE_FILE", "w", encoding="utf-8") as f:
-    json.dump(out, f, indent=2)
+Path(os.environ["EVIDENCE_OUT"]).write_text(json.dumps(out, indent=2) + "\n", encoding="utf-8")
 PY
 
 # Blocking DDL policy (hot tables must use CONCURRENTLY; forbid ALTER on hot tables)
