@@ -4,6 +4,11 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 cd "$ROOT"
 
+if [[ -f scripts/audit/env/phase0_flags.sh ]]; then
+  # shellcheck disable=SC1090
+  source scripts/audit/env/phase0_flags.sh
+fi
+
 echo "==> Pre-CI local checks"
 
 ENV_FILE="infra/docker/.env"
@@ -50,10 +55,18 @@ else
   exit 1
 fi
 
+echo "==> Phase-0 parity verification (static)"
+if [[ -x scripts/audit/verify_phase0_parity.sh ]]; then
+  scripts/audit/verify_phase0_parity.sh
+else
+  echo "ERROR: scripts/audit/verify_phase0_parity.sh not found"
+  exit 1
+fi
+
 echo "==> Remediation trace gate (production-affecting changes)"
 if [[ -f scripts/audit/verify_remediation_trace.sh ]]; then
-  export REMEDIATION_TRACE_BASE_REF="${REMEDIATION_TRACE_BASE_REF:-origin/rewrite/dotnet10-core}"
-  REMEDIATION_TRACE_DIFF_MODE=range bash scripts/audit/verify_remediation_trace.sh
+  # Range diff is required for parity with CI (commit-range, not worktree/staged).
+  REMEDIATION_TRACE_DIFF_MODE="${REMEDIATION_TRACE_DIFF_MODE:-range}" bash scripts/audit/verify_remediation_trace.sh
 else
   echo "ERROR: scripts/audit/verify_remediation_trace.sh not found"
   exit 1
@@ -163,6 +176,14 @@ if [[ -x scripts/db/verify_invariants.sh ]]; then
   SKIP_POLICY_SEED=1 scripts/db/verify_invariants.sh
 else
   echo "ERROR: scripts/db/verify_invariants.sh not found"
+  exit 1
+fi
+
+echo "==> Phase-0 contract evidence status (merged local evidence)"
+if [[ -x scripts/audit/verify_phase0_contract_evidence_status.sh ]]; then
+  CI_ONLY=1 EVIDENCE_ROOT="evidence/phase0" scripts/audit/verify_phase0_contract_evidence_status.sh
+else
+  echo "ERROR: scripts/audit/verify_phase0_contract_evidence_status.sh not found"
   exit 1
 fi
 

@@ -101,7 +101,9 @@ if not triggered_files:
         "timestamp_utc": os.environ.get("EVIDENCE_TS"),
         "git_sha": os.environ.get("EVIDENCE_GIT_SHA"),
         "schema_fingerprint": os.environ.get("EVIDENCE_SCHEMA_FP"),
-        "status": "SKIPPED",
+        # Gate executed and evaluated the diff; when nothing production-affecting changed,
+        # this is a PASS (no remediation trace required), not a SKIPPED.
+        "status": "PASS",
         "reason": "no_production_affecting_changes",
         "diff_mode": diff_mode,
         "base_ref": base_ref,
