@@ -153,6 +153,15 @@
       "expires_on": "2026-12-31",
       "reviewed_by": "boz_auditor",
       "approved_at": "2026-02-09"
+    },
+    {
+      "id": "DDL-ALLOW-0018",
+      "migration": "schema/migrations/0028_instruction_finality_enforcement.sql",
+      "statement_fingerprint": "fd2ecd8c25437dc407fbc87251ffba86e750776e6e407f53ad1216a6abf024c7",
+      "reason": "Phase-1 finality ledger migration uses idempotent ALTER TABLE in DO block to attach self-reference reversal FK.",
+      "expires_on": "2026-12-31",
+      "reviewed_by": "security_guardian",
+      "approved_at": "2026-02-13"
     }
   ]
 }
