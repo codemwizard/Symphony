@@ -59,6 +59,19 @@
       "meaning": "invalid purge operation or direct vault mutation",
       "retryable": false
     },
+    "P7005": {
+      "canonical": "P7105",
+      "class": "B",
+      "subsystem": "rail_anchor",
+      "meaning": "missing or invalid rail sequence truth anchor on dispatch",
+      "retryable": false
+    },
+    "P7105": {
+      "class": "B",
+      "subsystem": "rail_anchor",
+      "meaning": "missing or invalid rail sequence truth anchor on dispatch",
+      "retryable": false
+    },
     "P7201": {
       "class": "B",
       "subsystem": "ingress",

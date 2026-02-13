@@ -170,6 +170,10 @@ control_planes:
         script: scripts/db/verify_pii_decoupling_hooks.sh
         evidence: evidence/phase1/pii_decoupling_invariant.json
 
+      - gate_id: INT-G27
+        script: scripts/db/verify_rail_sequence_truth_anchor.sh
+        evidence: evidence/phase1/rail_sequence_truth_anchor.json
+
       - gate_id: INT-G28
         script: scripts/audit/verify_phase1_contract.sh
         evidence: evidence/phase1/phase1_contract_status.json

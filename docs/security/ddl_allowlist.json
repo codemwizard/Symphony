@@ -171,6 +171,15 @@
       "expires_on": "2026-12-31",
       "reviewed_by": "security_guardian",
       "approved_at": "2026-02-13"
+    },
+    {
+      "id": "DDL-ALLOW-0020",
+      "migration": "schema/migrations/0031_rail_sequence_truth_anchor_continuity.sql",
+      "statement_fingerprint": "40d6edb713aed31321ec50ea6c34dc69047dc4905113defa013d2cfe227e75ad",
+      "reason": "Phase-1 rail truth-anchor migration uses idempotent ALTER TABLE in DO block to attach attempt FK.",
+      "expires_on": "2026-12-31",
+      "reviewed_by": "security_guardian",
+      "approved_at": "2026-02-13"
     }
   ]
 }
