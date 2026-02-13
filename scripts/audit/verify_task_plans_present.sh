@@ -39,7 +39,10 @@ except Exception as e:
 errors = []
 checked = []
 
-for meta in sorted(tasks_dir.glob("TSK-P0-*/meta.yml")):
+for meta in sorted(tasks_dir.glob("TSK-P*/meta.yml")):
+    parent = meta.parent.name
+    if not parent.startswith("TSK-P") or parent == "TSK-P":
+        continue
     data = yaml.safe_load(meta.read_text(encoding="utf-8")) or {}
     if not isinstance(data, dict):
         errors.append(f"{meta}: meta_not_mapping")

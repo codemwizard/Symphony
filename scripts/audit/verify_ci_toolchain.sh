@@ -21,6 +21,17 @@ EXPECTED_JSONSCHEMA_VERSION="${JSONSCHEMA_VERSION:-4.23.0}"
 EXPECTED_RIPGREP_VERSION="${RIPGREP_VERSION:-14.1.0}"
 EXPECTED_SEMGREP_VERSION="${SEMGREP_VERSION:-}"
 
+# Keep semgrep runtime paths repo-local to avoid host permission drift.
+SEMGREP_RUNTIME_DIR="${SYMPHONY_SEMGREP_RUNTIME_DIR:-$ROOT_DIR/.cache/semgrep}"
+mkdir -p "$SEMGREP_RUNTIME_DIR"
+export XDG_CONFIG_HOME="${XDG_CONFIG_HOME:-$ROOT_DIR/.cache/xdg/config}"
+export XDG_CACHE_HOME="${XDG_CACHE_HOME:-$ROOT_DIR/.cache/xdg/cache}"
+mkdir -p "$XDG_CONFIG_HOME" "$XDG_CACHE_HOME"
+export SEMGREP_SETTINGS_FILE="${SEMGREP_SETTINGS_FILE:-$SEMGREP_RUNTIME_DIR/settings.yml}"
+if [[ ! -f "$SEMGREP_SETTINGS_FILE" ]]; then
+  printf '{}\n' > "$SEMGREP_SETTINGS_FILE"
+fi
+
 # Prefer repo-local venv python when present (for local/CI parity).
 PYTHON_BIN="python3"
 if [[ -x "$ROOT_DIR/.venv/bin/python3" ]]; then
@@ -44,7 +55,7 @@ semgrep_present=0
 semgrep_version=""
 if command -v semgrep >/dev/null 2>&1; then
   semgrep_present=1
-  semgrep_version="$(semgrep --version | tr -d '\n' || echo "")"
+  semgrep_version="$("$PYTHON_BIN" -c 'from importlib import metadata as m; print(m.version("semgrep"))' || echo "")"
 fi
 
 export EXPECTED_PYYAML_VERSION EXPECTED_JSONSCHEMA_VERSION EXPECTED_RIPGREP_VERSION

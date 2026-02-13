@@ -102,10 +102,10 @@ run_test "terminal uniqueness enforced" \
    BEGIN
      INSERT INTO public.payment_outbox_attempts(
        outbox_id, instruction_id, participant_id, sequence_id,
-       idempotency_key, rail_type, payload, attempt_no, state
+       idempotency_key, rail_type, payload, attempt_no, state, rail_reference
      ) VALUES (
        v_outbox_id, v_instruction_id, v_participant_id, 1,
-       v_idempotency_key, 'TEST', '{}'::jsonb, 1, 'DISPATCHED'
+       v_idempotency_key, 'TEST', '{}'::jsonb, 1, 'DISPATCHED', 'seq_' || v_outbox_id::text
      );
 
      BEGIN

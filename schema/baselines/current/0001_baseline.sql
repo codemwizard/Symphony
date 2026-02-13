@@ -2,7 +2,7 @@
 -- PostgreSQL database dump
 --
 
-\restrict NYEmA86X9uFNayGVJrvww9n07JFjGtjW0ilFce3U0tRj61vff50EhcG5FdcFUBG
+\restrict Thqu4QFTiSn4oo0CYjk84rFEi3NCOE5QMkCBcm5O6ddFOL2ofrWfyDhBjAo98H3
 
 -- Dumped from database version 18.1 (Debian 18.1-1.pgdg13+2)
 -- Dumped by pg_dump version 18.1 (Debian 18.1-1.pgdg13+2)
@@ -48,6 +48,54 @@ CREATE TYPE public.policy_version_status AS ENUM (
     'GRACE',
     'RETIRED'
 );
+
+
+--
+-- Name: anchor_dispatched_outbox_attempt(); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.anchor_dispatched_outbox_attempt() RETURNS trigger
+    LANGUAGE plpgsql
+    AS $$
+DECLARE
+  v_sequence_ref TEXT;
+  v_profile TEXT;
+BEGIN
+  IF NEW.state <> 'DISPATCHED' THEN
+    RETURN NEW;
+  END IF;
+
+  v_sequence_ref := NULLIF(BTRIM(NEW.rail_reference), '');
+  IF v_sequence_ref IS NULL THEN
+    RAISE EXCEPTION 'dispatch requires rail sequence reference'
+      USING ERRCODE = 'P7005';
+  END IF;
+
+  v_profile := COALESCE(NULLIF(BTRIM(NEW.rail_type), ''), 'GENERIC');
+
+  INSERT INTO public.rail_dispatch_truth_anchor(
+    attempt_id,
+    outbox_id,
+    instruction_id,
+    participant_id,
+    rail_participant_id,
+    rail_profile,
+    rail_sequence_ref,
+    state
+  ) VALUES (
+    NEW.attempt_id,
+    NEW.outbox_id,
+    NEW.instruction_id,
+    NEW.participant_id,
+    NEW.participant_id,
+    v_profile,
+    v_sequence_ref,
+    NEW.state
+  );
+
+  RETURN NEW;
+END;
+$$;
 
 
 --
@@ -194,6 +242,23 @@ $$;
 
 
 --
+-- Name: deny_final_instruction_mutation(); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.deny_final_instruction_mutation() RETURNS trigger
+    LANGUAGE plpgsql
+    AS $$
+BEGIN
+  IF OLD.is_final IS TRUE THEN
+    RAISE EXCEPTION 'final instruction cannot be mutated'
+      USING ERRCODE = 'P7003';
+  END IF;
+  RETURN OLD;
+END;
+$$;
+
+
+--
 -- Name: deny_ingress_attestations_mutation(); Type: FUNCTION; Schema: public; Owner: -
 --
 
@@ -222,6 +287,28 @@ $$;
 
 
 --
+-- Name: deny_pii_vault_mutation(); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.deny_pii_vault_mutation() RETURNS trigger
+    LANGUAGE plpgsql
+    AS $$
+BEGIN
+  IF TG_OP = 'UPDATE' THEN
+    IF current_setting('symphony.allow_pii_purge', true) = 'on' THEN
+      RETURN NEW;
+    END IF;
+    RAISE EXCEPTION 'pii_vault_records updates require purge executor'
+      USING ERRCODE = 'P7004';
+  END IF;
+
+  RAISE EXCEPTION 'pii_vault_records is non-deletable'
+    USING ERRCODE = 'P7004';
+END;
+$$;
+
+
+--
 -- Name: deny_revocation_mutation(); Type: FUNCTION; Schema: public; Owner: -
 --
 
@@ -232,6 +319,46 @@ CREATE FUNCTION public.deny_revocation_mutation() RETURNS trigger
     RAISE EXCEPTION 'revocation tables are append-only'
       USING ERRCODE = 'P0001';
   END;
+$$;
+
+
+--
+-- Name: enforce_instruction_reversal_source(); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.enforce_instruction_reversal_source() RETURNS trigger
+    LANGUAGE plpgsql
+    AS $$
+DECLARE
+  v_source_state TEXT;
+  v_source_final BOOLEAN;
+BEGIN
+  IF NEW.is_final IS DISTINCT FROM TRUE THEN
+    RAISE EXCEPTION 'instruction settlement rows must be final'
+      USING ERRCODE = 'P7003';
+  END IF;
+
+  IF NEW.reversal_of_instruction_id IS NULL THEN
+    RETURN NEW;
+  END IF;
+
+  SELECT final_state, is_final
+  INTO v_source_state, v_source_final
+  FROM public.instruction_settlement_finality
+  WHERE instruction_id = NEW.reversal_of_instruction_id;
+
+  IF NOT FOUND THEN
+    RAISE EXCEPTION 'reversal requires existing instruction %', NEW.reversal_of_instruction_id
+      USING ERRCODE = 'P7003';
+  END IF;
+
+  IF v_source_state <> 'SETTLED' OR v_source_final IS DISTINCT FROM TRUE THEN
+    RAISE EXCEPTION 'reversal source instruction must be final and SETTLED: %', NEW.reversal_of_instruction_id
+      USING ERRCODE = 'P7003';
+  END IF;
+
+  RETURN NEW;
+END;
 $$;
 
 
@@ -359,6 +486,70 @@ $$;
 
 
 --
+-- Name: execute_pii_purge(uuid, text); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.execute_pii_purge(p_purge_request_id uuid, p_executor text) RETURNS TABLE(purge_request_id uuid, rows_affected integer, already_purged boolean)
+    LANGUAGE plpgsql
+    AS $$
+DECLARE
+  v_subject_token TEXT;
+  v_rows INTEGER := 0;
+  v_prior INTEGER := 0;
+BEGIN
+  SELECT r.subject_token
+  INTO v_subject_token
+  FROM public.pii_purge_requests r
+  WHERE r.purge_request_id = p_purge_request_id;
+
+  IF NOT FOUND THEN
+    RAISE EXCEPTION 'purge request not found: %', p_purge_request_id
+      USING ERRCODE = 'P7004';
+  END IF;
+
+  SELECT e.rows_affected
+  INTO v_prior
+  FROM public.pii_purge_events e
+  WHERE e.purge_request_id = p_purge_request_id
+    AND e.event_type = 'PURGED'
+  LIMIT 1;
+
+  IF FOUND THEN
+    RETURN QUERY SELECT p_purge_request_id, v_prior, TRUE;
+    RETURN;
+  END IF;
+
+  PERFORM set_config('symphony.allow_pii_purge', 'on', true);
+
+  UPDATE public.pii_vault_records
+     SET protected_payload = NULL,
+         purged_at = NOW(),
+         purge_request_id = p_purge_request_id
+   WHERE subject_token = v_subject_token
+     AND purged_at IS NULL;
+
+  GET DIAGNOSTICS v_rows = ROW_COUNT;
+
+  INSERT INTO public.pii_purge_events(
+    purge_request_id,
+    event_type,
+    rows_affected,
+    metadata
+  ) VALUES (
+    p_purge_request_id,
+    'PURGED',
+    v_rows,
+    jsonb_build_object('executor', p_executor)
+  )
+  ON CONFLICT ON CONSTRAINT ux_pii_purge_events_request_event
+  DO NOTHING;
+
+  RETURN QUERY SELECT p_purge_request_id, v_rows, FALSE;
+END;
+$$;
+
+
+--
 -- Name: outbox_retry_ceiling(); Type: FUNCTION; Schema: public; Owner: -
 --
 
@@ -432,6 +623,44 @@ CREATE FUNCTION public.repair_expired_leases(p_batch_size integer, p_worker_id t
     END LOOP;
     RETURN;
   END;
+$$;
+
+
+--
+-- Name: request_pii_purge(text, text, text); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.request_pii_purge(p_subject_token text, p_requested_by text, p_request_reason text) RETURNS uuid
+    LANGUAGE plpgsql
+    AS $$
+DECLARE
+  v_request_id UUID;
+BEGIN
+  INSERT INTO public.pii_purge_requests(
+    subject_token,
+    requested_by,
+    request_reason
+  ) VALUES (
+    p_subject_token,
+    p_requested_by,
+    p_request_reason
+  )
+  RETURNING purge_request_id INTO v_request_id;
+
+  INSERT INTO public.pii_purge_events(
+    purge_request_id,
+    event_type,
+    rows_affected,
+    metadata
+  ) VALUES (
+    v_request_id,
+    'REQUESTED',
+    0,
+    jsonb_build_object('subject_token', p_subject_token)
+  );
+
+  RETURN v_request_id;
+END;
 $$;
 
 
@@ -656,6 +885,29 @@ CREATE TABLE public.ingress_attestations (
 
 
 --
+-- Name: instruction_settlement_finality; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.instruction_settlement_finality (
+    finality_id uuid DEFAULT public.uuid_v7_or_random() NOT NULL,
+    instruction_id text NOT NULL,
+    participant_id text NOT NULL,
+    is_final boolean DEFAULT true NOT NULL,
+    final_state text NOT NULL,
+    rail_message_type text NOT NULL,
+    reversal_of_instruction_id text,
+    finalized_at timestamp with time zone DEFAULT now() NOT NULL,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    metadata jsonb,
+    CONSTRAINT instruction_settlement_finality_final_state_check CHECK ((final_state = ANY (ARRAY['SETTLED'::text, 'REVERSED'::text]))),
+    CONSTRAINT instruction_settlement_finality_is_final_true_chk CHECK ((is_final = true)),
+    CONSTRAINT instruction_settlement_finality_rail_message_type_check CHECK ((rail_message_type = ANY (ARRAY['pacs.008'::text, 'camt.056'::text]))),
+    CONSTRAINT instruction_settlement_finality_self_reversal_chk CHECK (((reversal_of_instruction_id IS NULL) OR (reversal_of_instruction_id <> instruction_id))),
+    CONSTRAINT instruction_settlement_finality_shape_chk CHECK ((((final_state = 'SETTLED'::text) AND (reversal_of_instruction_id IS NULL) AND (rail_message_type = 'pacs.008'::text)) OR ((final_state = 'REVERSED'::text) AND (reversal_of_instruction_id IS NOT NULL) AND (rail_message_type = 'camt.056'::text))))
+);
+
+
+--
 -- Name: participant_outbox_sequences; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -747,6 +999,51 @@ WITH (fillfactor='80');
 
 
 --
+-- Name: pii_purge_events; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.pii_purge_events (
+    purge_event_id uuid DEFAULT public.uuid_v7_or_random() NOT NULL,
+    purge_request_id uuid NOT NULL,
+    event_type text NOT NULL,
+    rows_affected integer DEFAULT 0 NOT NULL,
+    occurred_at timestamp with time zone DEFAULT now() NOT NULL,
+    metadata jsonb,
+    CONSTRAINT pii_purge_events_event_type_check CHECK ((event_type = ANY (ARRAY['REQUESTED'::text, 'PURGED'::text]))),
+    CONSTRAINT pii_purge_events_rows_affected_check CHECK ((rows_affected >= 0))
+);
+
+
+--
+-- Name: pii_purge_requests; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.pii_purge_requests (
+    purge_request_id uuid DEFAULT public.uuid_v7_or_random() NOT NULL,
+    subject_token text NOT NULL,
+    requested_by text NOT NULL,
+    request_reason text NOT NULL,
+    requested_at timestamp with time zone DEFAULT now() NOT NULL
+);
+
+
+--
+-- Name: pii_vault_records; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.pii_vault_records (
+    vault_id uuid DEFAULT public.uuid_v7_or_random() NOT NULL,
+    subject_token text NOT NULL,
+    identity_hash text NOT NULL,
+    protected_payload jsonb,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    purged_at timestamp with time zone,
+    purge_request_id uuid,
+    CONSTRAINT pii_vault_records_purge_shape_chk CHECK ((((purged_at IS NULL) AND (protected_payload IS NOT NULL) AND (purge_request_id IS NULL)) OR ((purged_at IS NOT NULL) AND (protected_payload IS NULL) AND (purge_request_id IS NOT NULL))))
+);
+
+
+--
 -- Name: policy_versions; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -761,6 +1058,25 @@ CREATE TABLE public.policy_versions (
     CONSTRAINT ck_policy_active_has_no_grace_expiry CHECK (((status <> 'ACTIVE'::public.policy_version_status) OR (grace_expires_at IS NULL))),
     CONSTRAINT ck_policy_checksum_nonempty CHECK ((length(checksum) > 0)),
     CONSTRAINT ck_policy_grace_requires_expiry CHECK (((status <> 'GRACE'::public.policy_version_status) OR (grace_expires_at IS NOT NULL)))
+);
+
+
+--
+-- Name: rail_dispatch_truth_anchor; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.rail_dispatch_truth_anchor (
+    anchor_id uuid DEFAULT public.uuid_v7_or_random() NOT NULL,
+    attempt_id uuid NOT NULL,
+    outbox_id uuid NOT NULL,
+    instruction_id text NOT NULL,
+    participant_id text NOT NULL,
+    rail_participant_id text NOT NULL,
+    rail_profile text NOT NULL,
+    rail_sequence_ref text NOT NULL,
+    state public.outbox_attempt_state NOT NULL,
+    anchored_at timestamp with time zone DEFAULT now() NOT NULL,
+    CONSTRAINT rail_truth_anchor_state_chk CHECK ((state = 'DISPATCHED'::public.outbox_attempt_state))
 );
 
 
@@ -931,6 +1247,14 @@ ALTER TABLE ONLY public.ingress_attestations
 
 
 --
+-- Name: instruction_settlement_finality instruction_settlement_finality_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.instruction_settlement_finality
+    ADD CONSTRAINT instruction_settlement_finality_pkey PRIMARY KEY (finality_id);
+
+
+--
 -- Name: participant_outbox_sequences participant_outbox_sequences_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -979,11 +1303,43 @@ ALTER TABLE ONLY public.payment_outbox_pending
 
 
 --
+-- Name: pii_purge_events pii_purge_events_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.pii_purge_events
+    ADD CONSTRAINT pii_purge_events_pkey PRIMARY KEY (purge_event_id);
+
+
+--
+-- Name: pii_purge_requests pii_purge_requests_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.pii_purge_requests
+    ADD CONSTRAINT pii_purge_requests_pkey PRIMARY KEY (purge_request_id);
+
+
+--
+-- Name: pii_vault_records pii_vault_records_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.pii_vault_records
+    ADD CONSTRAINT pii_vault_records_pkey PRIMARY KEY (vault_id);
+
+
+--
 -- Name: policy_versions policy_versions_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.policy_versions
     ADD CONSTRAINT policy_versions_pkey PRIMARY KEY (version);
+
+
+--
+-- Name: rail_dispatch_truth_anchor rail_dispatch_truth_anchor_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.rail_dispatch_truth_anchor
+    ADD CONSTRAINT rail_dispatch_truth_anchor_pkey PRIMARY KEY (anchor_id);
 
 
 --
@@ -1083,6 +1439,14 @@ ALTER TABLE ONLY public.evidence_pack_items
 
 
 --
+-- Name: instruction_settlement_finality ux_instruction_settlement_finality_instruction; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.instruction_settlement_finality
+    ADD CONSTRAINT ux_instruction_settlement_finality_instruction UNIQUE (instruction_id);
+
+
+--
 -- Name: payment_outbox_pending ux_pending_idempotency; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -1096,6 +1460,38 @@ ALTER TABLE ONLY public.payment_outbox_pending
 
 ALTER TABLE ONLY public.payment_outbox_pending
     ADD CONSTRAINT ux_pending_participant_sequence UNIQUE (participant_id, sequence_id);
+
+
+--
+-- Name: pii_purge_events ux_pii_purge_events_request_event; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.pii_purge_events
+    ADD CONSTRAINT ux_pii_purge_events_request_event UNIQUE (purge_request_id, event_type);
+
+
+--
+-- Name: pii_vault_records ux_pii_vault_records_subject_token; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.pii_vault_records
+    ADD CONSTRAINT ux_pii_vault_records_subject_token UNIQUE (subject_token);
+
+
+--
+-- Name: rail_dispatch_truth_anchor ux_rail_truth_anchor_attempt_id; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.rail_dispatch_truth_anchor
+    ADD CONSTRAINT ux_rail_truth_anchor_attempt_id UNIQUE (attempt_id);
+
+
+--
+-- Name: rail_dispatch_truth_anchor ux_rail_truth_anchor_sequence_scope; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.rail_dispatch_truth_anchor
+    ADD CONSTRAINT ux_rail_truth_anchor_sequence_scope UNIQUE (rail_sequence_ref, rail_participant_id, rail_profile);
 
 
 --
@@ -1190,6 +1586,13 @@ CREATE INDEX idx_ingress_attestations_tenant_received ON public.ingress_attestat
 
 
 --
+-- Name: idx_instruction_settlement_finality_participant_finalized; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_instruction_settlement_finality_participant_finalized ON public.instruction_settlement_finality USING btree (participant_id, finalized_at DESC);
+
+
+--
 -- Name: idx_payment_outbox_attempts_correlation_id; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -1232,10 +1635,24 @@ CREATE INDEX idx_payment_outbox_pending_tenant_due ON public.payment_outbox_pend
 
 
 --
+-- Name: idx_pii_purge_requests_subject_requested; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_pii_purge_requests_subject_requested ON public.pii_purge_requests USING btree (subject_token, requested_at DESC);
+
+
+--
 -- Name: idx_policy_versions_is_active; Type: INDEX; Schema: public; Owner: -
 --
 
 CREATE INDEX idx_policy_versions_is_active ON public.policy_versions USING btree (is_active) WHERE (is_active = true);
+
+
+--
+-- Name: idx_rail_truth_anchor_participant_anchored; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_rail_truth_anchor_participant_anchored ON public.rail_dispatch_truth_anchor USING btree (rail_participant_id, anchored_at DESC);
 
 
 --
@@ -1302,6 +1719,13 @@ CREATE UNIQUE INDEX ux_ingress_attestations_tenant_instruction ON public.ingress
 
 
 --
+-- Name: ux_instruction_settlement_finality_one_reversal_per_original; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE UNIQUE INDEX ux_instruction_settlement_finality_one_reversal_per_original ON public.instruction_settlement_finality USING btree (reversal_of_instruction_id) WHERE (reversal_of_instruction_id IS NOT NULL);
+
+
+--
 -- Name: ux_outbox_attempts_one_terminal_per_outbox; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -1313,6 +1737,13 @@ CREATE UNIQUE INDEX ux_outbox_attempts_one_terminal_per_outbox ON public.payment
 --
 
 CREATE UNIQUE INDEX ux_policy_versions_single_active ON public.policy_versions USING btree ((1)) WHERE (status = 'ACTIVE'::public.policy_version_status);
+
+
+--
+-- Name: payment_outbox_attempts trg_anchor_dispatched_outbox_attempt; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER trg_anchor_dispatched_outbox_attempt AFTER INSERT ON public.payment_outbox_attempts FOR EACH ROW EXECUTE FUNCTION public.anchor_dispatched_outbox_attempt();
 
 
 --
@@ -1344,6 +1775,13 @@ CREATE TRIGGER trg_deny_external_proofs_mutation BEFORE DELETE OR UPDATE ON publ
 
 
 --
+-- Name: instruction_settlement_finality trg_deny_final_instruction_mutation; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER trg_deny_final_instruction_mutation BEFORE DELETE OR UPDATE ON public.instruction_settlement_finality FOR EACH ROW EXECUTE FUNCTION public.deny_final_instruction_mutation();
+
+
+--
 -- Name: ingress_attestations trg_deny_ingress_attestations_mutation; Type: TRIGGER; Schema: public; Owner: -
 --
 
@@ -1358,6 +1796,34 @@ CREATE TRIGGER trg_deny_outbox_attempts_mutation BEFORE DELETE OR UPDATE ON publ
 
 
 --
+-- Name: pii_purge_events trg_deny_pii_purge_events_mutation; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER trg_deny_pii_purge_events_mutation BEFORE DELETE OR UPDATE ON public.pii_purge_events FOR EACH ROW EXECUTE FUNCTION public.deny_append_only_mutation();
+
+
+--
+-- Name: pii_purge_requests trg_deny_pii_purge_requests_mutation; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER trg_deny_pii_purge_requests_mutation BEFORE DELETE OR UPDATE ON public.pii_purge_requests FOR EACH ROW EXECUTE FUNCTION public.deny_append_only_mutation();
+
+
+--
+-- Name: pii_vault_records trg_deny_pii_vault_mutation; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER trg_deny_pii_vault_mutation BEFORE DELETE OR UPDATE ON public.pii_vault_records FOR EACH ROW EXECUTE FUNCTION public.deny_pii_vault_mutation();
+
+
+--
+-- Name: rail_dispatch_truth_anchor trg_deny_rail_dispatch_truth_anchor_mutation; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER trg_deny_rail_dispatch_truth_anchor_mutation BEFORE DELETE OR UPDATE ON public.rail_dispatch_truth_anchor FOR EACH ROW EXECUTE FUNCTION public.deny_append_only_mutation();
+
+
+--
 -- Name: revoked_client_certs trg_deny_revoked_client_certs_mutation; Type: TRIGGER; Schema: public; Owner: -
 --
 
@@ -1369,6 +1835,13 @@ CREATE TRIGGER trg_deny_revoked_client_certs_mutation BEFORE DELETE OR UPDATE ON
 --
 
 CREATE TRIGGER trg_deny_revoked_tokens_mutation BEFORE DELETE OR UPDATE ON public.revoked_tokens FOR EACH ROW EXECUTE FUNCTION public.deny_revocation_mutation();
+
+
+--
+-- Name: instruction_settlement_finality trg_enforce_instruction_reversal_source; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER trg_enforce_instruction_reversal_source BEFORE INSERT ON public.instruction_settlement_finality FOR EACH ROW EXECUTE FUNCTION public.enforce_instruction_reversal_source();
 
 
 --
@@ -1503,6 +1976,14 @@ ALTER TABLE ONLY public.ingress_attestations
 
 
 --
+-- Name: instruction_settlement_finality instruction_settlement_finality_reversal_fk; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.instruction_settlement_finality
+    ADD CONSTRAINT instruction_settlement_finality_reversal_fk FOREIGN KEY (reversal_of_instruction_id) REFERENCES public.instruction_settlement_finality(instruction_id) DEFERRABLE;
+
+
+--
 -- Name: payment_outbox_attempts payment_outbox_attempts_member_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -1524,6 +2005,30 @@ ALTER TABLE ONLY public.payment_outbox_attempts
 
 ALTER TABLE ONLY public.payment_outbox_pending
     ADD CONSTRAINT payment_outbox_pending_tenant_id_fkey FOREIGN KEY (tenant_id) REFERENCES public.tenants(tenant_id);
+
+
+--
+-- Name: pii_purge_events pii_purge_events_purge_request_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.pii_purge_events
+    ADD CONSTRAINT pii_purge_events_purge_request_id_fkey FOREIGN KEY (purge_request_id) REFERENCES public.pii_purge_requests(purge_request_id);
+
+
+--
+-- Name: pii_vault_records pii_vault_records_purge_request_fk; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.pii_vault_records
+    ADD CONSTRAINT pii_vault_records_purge_request_fk FOREIGN KEY (purge_request_id) REFERENCES public.pii_purge_requests(purge_request_id) DEFERRABLE;
+
+
+--
+-- Name: rail_dispatch_truth_anchor rail_truth_anchor_attempt_fk; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.rail_dispatch_truth_anchor
+    ADD CONSTRAINT rail_truth_anchor_attempt_fk FOREIGN KEY (attempt_id) REFERENCES public.payment_outbox_attempts(attempt_id) DEFERRABLE;
 
 
 --
@@ -1562,5 +2067,5 @@ ALTER TABLE ONLY public.tenants
 -- PostgreSQL database dump complete
 --
 
-\unrestrict NYEmA86X9uFNayGVJrvww9n07JFjGtjW0ilFce3U0tRj61vff50EhcG5FdcFUBG
+\unrestrict Thqu4QFTiSn4oo0CYjk84rFEi3NCOE5QMkCBcm5O6ddFOL2ofrWfyDhBjAo98H3
 

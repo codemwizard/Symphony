@@ -2,7 +2,7 @@ phase: '1'
 task_id: TSK-P1-013
 title: Local Gate Runtime Parity Hardening
 owner_role: SUPERVISOR
-status: planned
+status: completed
 depends_on:
 - TSK-P1-006
 touches:

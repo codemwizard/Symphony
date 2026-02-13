@@ -2,7 +2,7 @@ phase: '1'
 task_id: TSK-P1-008
 title: INV-115 PII Decoupling and Purge Survivability
 owner_role: DB_FOUNDATION
-status: planned
+status: completed
 depends_on:
 - TSK-P1-002
 - TSK-P1-006

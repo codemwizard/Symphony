@@ -4,6 +4,7 @@
 | Framework | Requirement / Control | Control Plane | Gate IDs | Enforcement points | Evidence artifacts |
 |---|---|---|---|---|---|
 | ISO 20022 | Message integrity + attestation hooks | Integrity | INT-G08, INT-G11, INT-G12 | Ingress attestation + routing/batching docs | proxy_resolution_invariant.json, routing_fallback.json, batching_rules.json |
+| ISO 20022 | Reversal-only finality workflow (camt.056) | Integrity | INT-G25 | Instruction finality invariant + reversal source enforcement | instruction_finality_invariant.json, instruction_finality_runtime.json |
 | ISO 20022 | Canonical message model + validation | Integrity | INT-G07 | Phase-0 implementation plan gate | phase0_impl_plan.json |
 | ISO 27001/27002 | Access control, least privilege | Security | SEC-G01, SEC-G02, SEC-G03 | Revoke-first grants, SECURITY DEFINER hardening | core_boundary.json, ddl_lock_risk.json, security_definer_dynamic_sql.json |
 | ISO 27001/27002 | Secure configuration | Security | SEC-G09 | Infra/workflow config lint | security_secure_config_lint.json |
@@ -15,6 +16,7 @@
 | NIST CSF / NIST 800-53 | Configuration management | Security | SEC-G09 | Secure config lint | security_secure_config_lint.json |
 | NIST CSF / NIST 800-53 | Access control + least privilege | Security | SEC-G01, SEC-G03 | Core boundary + SECURITY DEFINER lint | core_boundary.json, security_definer_dynamic_sql.json |
 | NIST CSF / NIST 800-53 | Integrity & auditability | Integrity | INT-G01, INT-G05, INT-G06 | Evidence schema + baseline governance | evidence_validation.json, baseline_governance.json, rebaseline_decision.json |
+| NIST CSF / NIST 800-53 | Transaction integrity / non-repudiation | Integrity | INT-G25 | Final instruction mutation block + compensating reversal records only | instruction_finality_invariant.json, instruction_finality_runtime.json |
 | OWASP ASVS 4.0+ | Input validation + injection prevention | Security | SEC-G10, SEC-G03 | Insecure pattern lint + SECURITY DEFINER lint | security_insecure_patterns.json, security_definer_dynamic_sql.json |
 | OWASP ASVS 4.0+ | Secrets management | Security | SEC-G07, SEC-G05 | Secrets scan + OpenBao smoke | security_secrets_scan.json, openbao_smoke.json |
 | Zero Trust | Continuous verification (policy) | Integrity | INT-G02, INT-G03 | Evidence contract + phase0 contract | task_evidence_contract.json, phase0_contract.json |

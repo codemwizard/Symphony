@@ -15,3 +15,8 @@ origin_task_id: TSK-P1-002
 
 ## final_status
 COMPLETED
+
+Plan: `docs/plans/phase1/TSK-P1-002_phase_1_evidence_and_approval_metadata_harness/PLAN.md`
+
+## Final Summary
+- Approval metadata and regulated-surface evidence checks are enforced and passing.
