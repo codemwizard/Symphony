@@ -1,0 +1,41 @@
+phase: '1'
+task_id: TSK-P1-019
+title: Pilot Integration Contract and Sandbox Harness
+owner_role: SUPERVISOR
+status: planned
+depends_on:
+- TSK-P1-015
+- TSK-P1-016
+- TSK-P1-017
+touches:
+- docs/operations/**
+- scripts/audit/**
+- scripts/dev/**
+invariants:
+- INV-028
+- INV-029
+- INV-072
+- INV-081
+- INV-105
+work:
+- Publish pilot contract, sample payloads, runbook, and deterministic sandbox harness.
+- Define onboarding checklist for technical/compliance handoff.
+acceptance_criteria:
+- Pilot harness replay is deterministic and reproducible.
+- Malformed participant payloads fail with deterministic contract errors.
+verification:
+- scripts/dev/pre_ci.sh
+evidence:
+- evidence/phase1/pilot_harness_replay.json
+- evidence/phase1/pilot_onboarding_readiness.json
+failure_modes:
+- Pilot harness outcomes are non-deterministic.
+- Evidence file missing.
+must_read:
+- docs/operations/DEV_WORKFLOW.md
+implementation_plan: docs/plans/phase1/TSK-P1-019_pilot_integration_contract_and_sandbox_harness/PLAN.md
+implementation_log: docs/plans/phase1/TSK-P1-019_pilot_integration_contract_and_sandbox_harness/EXEC_LOG.md
+notes: Bridges implementation to pilot onboarding readiness.
+client: codex_cli
+assigned_agent: supervisor
+model: <UNASSIGNED>

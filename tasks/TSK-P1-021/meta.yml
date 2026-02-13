@@ -1,0 +1,34 @@
+phase: '1'
+task_id: TSK-P1-021
+title: Canonical Git Diff Library
+owner_role: INVARIANTS_CURATOR
+status: completed
+depends_on:
+- TSK-P1-006
+touches:
+- scripts/audit/lib/git_diff.sh
+- scripts/audit/**
+invariants:
+- INV-081
+- INV-105
+work:
+- Implement shared git diff helper for range/staged/worktree modes.
+- Refactor diff-consuming scripts to use shared semantics.
+acceptance_criteria:
+- Diff-consuming gates use one canonical library.
+- Paritiy evidence shows stable mode/refs/merge-base behavior.
+verification:
+- scripts/dev/pre_ci.sh
+evidence:
+- evidence/phase1/git_diff_semantics.json
+failure_modes:
+- Different scripts compute different changed-file sets for same mode/refs.
+- Evidence file missing.
+must_read:
+- scripts/audit/verify_ci_order.sh
+implementation_plan: docs/plans/phase1/TSK-P1-021_canonical_git_diff_library/PLAN.md
+implementation_log: docs/plans/phase1/TSK-P1-021_canonical_git_diff_library/EXEC_LOG.md
+notes: Prevents recurring local/CI diff semantics drift bugs.
+client: codex_cli
+assigned_agent: invariants_curator
+model: <UNASSIGNED>

@@ -1,0 +1,36 @@
+phase: '1'
+task_id: TSK-P1-012
+title: Phase-1 Task Plan Log Enforcement Extension
+owner_role: INVARIANTS_CURATOR
+status: planned
+depends_on:
+- TSK-P1-006
+touches:
+- scripts/audit/verify_task_plans_present.sh
+- tasks/TSK-P1-*/meta.yml
+- docs/operations/STYLE_GUIDE.md
+invariants:
+- INV-105
+work:
+- Extend task plan/log verification to include TSK-P1-* with same fail-closed semantics
+  used for TSK-P0-* where applicable.
+- Ensure consistent schema/key checks for Phase-1 task metadata.
+acceptance_criteria:
+- Phase-1 tasks cannot be in_progress/completed without valid plan/log links.
+- Verifier emits deterministic errors for missing or malformed plan/log links.
+verification:
+- scripts/audit/verify_task_plans_present.sh
+- scripts/dev/pre_ci.sh
+evidence:
+- evidence/phase0/task_plans_present.json
+failure_modes:
+- Phase-1 tasks bypass plan/log enforcement.
+- Evidence file missing.
+must_read:
+- docs/tasks/TASK_META_SCHEMA.md
+implementation_plan: docs/plans/phase1/TSK-P1-012_phase_1_task_plan_log_enforcement_extension/PLAN.md
+implementation_log: docs/plans/phase1/TSK-P1-012_phase_1_task_plan_log_enforcement_extension/EXEC_LOG.md
+notes: Governance completeness for Phase-1 delivery discipline.
+client: codex_cli
+assigned_agent: invariants_curator
+model: <UNASSIGNED>

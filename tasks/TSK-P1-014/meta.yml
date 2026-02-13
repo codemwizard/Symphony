@@ -1,0 +1,40 @@
+phase: '1'
+task_id: TSK-P1-014
+title: Policy Seed Phase-1 Plan Closeout
+owner_role: DB_FOUNDATION
+status: planned
+depends_on:
+- TSK-P1-013
+touches:
+- schema/seeds/ci/seed_policy_from_env.sh
+- scripts/db/tests/test_seed_policy_checksum.sh
+- docs/operations/policy_seed_phase1_plan.md
+invariants:
+- INV-016
+- INV-017
+- INV-018
+work:
+- Finalize policy seed deterministic behavior and mark plan checklist complete with
+  evidence-backed outcomes.
+- Ensure no side effects and stable failure signatures for checksum mismatch/version
+  conflict paths.
+acceptance_criteria:
+- Policy seed tests pass with deterministic output and no residual side effects.
+- Plan checklist and verification outcomes are updated consistently.
+verification:
+- bash -x scripts/db/tests/test_seed_policy_checksum.sh
+- scripts/db/tests/test_db_functions.sh
+- scripts/dev/pre_ci.sh
+evidence:
+- evidence/phase0/policy_seed_checksum.json
+failure_modes:
+- Seed path mutates active policy unexpectedly.
+- Evidence file missing.
+must_read:
+- docs/operations/policy_seed_phase1_plan.md
+implementation_plan: docs/plans/phase1/TSK-P1-014_policy_seed_phase_1_plan_closeout/PLAN.md
+implementation_log: docs/plans/phase1/TSK-P1-014_policy_seed_phase_1_plan_closeout/EXEC_LOG.md
+notes: Completes open policy seed Phase-1 checklist.
+client: codex_cli
+assigned_agent: db_foundation
+model: <UNASSIGNED>

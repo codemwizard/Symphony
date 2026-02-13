@@ -1,0 +1,58 @@
+phase: "1"
+task_id: "TSK-P1-025"
+title: "Regulator and Tier-1 Demo-Proof Pack"
+owner_role: "SUPERVISOR"
+status: "planned"
+
+depends_on:
+  - "TSK-P1-017"
+  - "TSK-P1-018"
+  - "TSK-P1-019"
+  - "TSK-P1-020"
+  - "TSK-P1-024"
+
+touches:
+  - "docs/operations/**"
+  - "scripts/audit/**"
+  - "evidence/phase1/**"
+  - "docs/security/**"
+
+invariants:
+  - "INV-105"
+  - "INV-111"
+  - "INV-112"
+  - "INV-113"
+  - "INV-114"
+  - "INV-115"
+  - "INV-116"
+
+work:
+  - "Produce replayable BoZ and Tier-1 demo-proof artifacts tied to raw technical evidence."
+  - "Package deterministic demo flow outputs for regulator seat, finality, purge survivability, and dispute/evidence surfaces."
+
+acceptance_criteria:
+  - "All required demo scenarios execute deterministically from scripted commands."
+  - "Executive summary references and links every underlying machine evidence artifact."
+
+verification:
+  - "scripts/dev/pre_ci.sh"
+
+evidence:
+  - "evidence/phase1/regulator_demo_pack.json"
+  - "evidence/phase1/tier1_pilot_demo_pack.json"
+
+failure_modes:
+  - "Demo pack claims are not backed by machine-generated evidence."
+  - "Evidence file missing."
+
+must_read:
+  - "Phase1-Draft_Plan.md"
+  - "Symphony_BusinessPlan_Implementation.txt"
+
+implementation_plan: "docs/plans/phase1/TSK-P1-025_regulator_and_tier_1_demo_proof_pack/PLAN.md"
+implementation_log: "docs/plans/phase1/TSK-P1-025_regulator_and_tier_1_demo_proof_pack/EXEC_LOG.md"
+
+notes: "Bridges technical completion to regulator/commercial narrative proof."
+client: "codex_cli"
+assigned_agent: "supervisor"
+model: "<UNASSIGNED>"

@@ -1,0 +1,53 @@
+phase: "1"
+task_id: "TSK-P1-024"
+title: "INV-113 Operational Anchor-Sync Enforcement"
+owner_role: "DB_FOUNDATION"
+status: "planned"
+
+depends_on:
+  - "TSK-P1-006"
+  - "TSK-P1-017"
+
+touches:
+  - "schema/migrations/**"
+  - "scripts/db/**"
+  - "scripts/audit/**"
+  - "docs/invariants/**"
+  - "docs/control_planes/CONTROL_PLANES.yml"
+
+invariants:
+  - "INV-097"
+  - "INV-105"
+  - "INV-113"
+
+work:
+  - "Operationalize anchor-sync behavior as a deterministic state machine with crash-resume semantics."
+  - "Enforce completion-gating so records cannot transition to completed unless anchored."
+  - "Add verifier/test coverage to prove operational semantics, not only schema hooks."
+
+acceptance_criteria:
+  - "Anchor-sync completion without anchored state fails deterministically."
+  - "Resume-after-crash path is deterministic and verifiable by automated tests."
+
+verification:
+  - "scripts/dev/pre_ci.sh"
+
+evidence:
+  - "evidence/phase1/anchor_sync_operational_invariant.json"
+  - "evidence/phase1/anchor_sync_resume_semantics.json"
+
+failure_modes:
+  - "Anchor completion allowed without anchored prerequisite state."
+  - "Evidence file missing."
+
+must_read:
+  - "docs/invariants/INVARIANTS_MANIFEST.yml"
+  - "docs/control_planes/CONTROL_PLANES.yml"
+
+implementation_plan: "docs/plans/phase1/TSK-P1-024_inv_113_operational_anchor_sync_enforcement/PLAN.md"
+implementation_log: "docs/plans/phase1/TSK-P1-024_inv_113_operational_anchor_sync_enforcement/EXEC_LOG.md"
+
+notes: "Closes INV-113 operational behavior gap for regulator-grade proof."
+client: "codex_cli"
+assigned_agent: "db_foundation"
+model: "<UNASSIGNED>"

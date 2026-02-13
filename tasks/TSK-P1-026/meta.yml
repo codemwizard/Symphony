@@ -1,0 +1,48 @@
+phase: '1'
+task_id: TSK-P1-026
+title: .NET 10 Lint and Quality Gate
+owner_role: SECURITY_GUARDIAN
+status: completed
+depends_on:
+- TSK-P1-006
+touches:
+- scripts/security/lint_dotnet_quality.sh
+- scripts/security/tests/test_lint_dotnet_quality.sh
+- scripts/audit/run_security_fast_checks.sh
+- docs/control_planes/CONTROL_PLANES.yml
+- docs/security/SECURITY_MANIFEST.yml
+- docs/PHASE1/phase1_contract.yml
+- scripts/dev/pre_ci.sh
+- .github/workflows/invariants.yml
+invariants:
+- INV-081
+- INV-105
+work:
+- Add deterministic .NET quality lint gate using dotnet format verify-no-changes and
+  warning-as-error build.
+- Keep fail-closed behavior when dotnet projects exist but dotnet CLI is unavailable.
+- Emit phase1 evidence and wire gate in security control plane.
+acceptance_criteria:
+- Dotnet quality lint gate emits deterministic evidence under evidence/phase1.
+- Security fast checks and pre-CI execute the gate.
+- RUN_PHASE1_GATES=1 mode passes with phase1 contract including this gate.
+verification:
+- scripts/security/lint_dotnet_quality.sh
+- scripts/security/tests/test_lint_dotnet_quality.sh
+- scripts/audit/run_security_fast_checks.sh
+- scripts/audit/verify_phase1_contract.sh
+- scripts/dev/pre_ci.sh
+evidence:
+- evidence/phase1/dotnet_lint_quality.json
+failure_modes:
+- Dotnet projects bypass format/build lint checks.
+- Evidence file missing.
+must_read:
+- Phase1-Draft_Plan.md
+- docs/control_planes/CONTROL_PLANES.yml
+implementation_plan: docs/plans/phase1/TSK-P1-026_dotnet_10_lint_and_quality_gate/PLAN.md
+implementation_log: docs/plans/phase1/TSK-P1-026_dotnet_10_lint_and_quality_gate/EXEC_LOG.md
+notes: Adds .NET quality gate without introducing a new ordered runner.
+client: codex_cli
+assigned_agent: security_guardian
+model: <UNASSIGNED>

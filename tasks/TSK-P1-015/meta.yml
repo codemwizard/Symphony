@@ -1,0 +1,48 @@
+phase: '1'
+task_id: TSK-P1-015
+title: Ingress API MVP Pilot Surface
+owner_role: SECURITY_GUARDIAN
+status: planned
+depends_on:
+- TSK-P1-002
+- TSK-P1-006
+touches:
+- src/**
+- services/**
+- packages/**
+- docs/operations/**
+invariants:
+- INV-011
+- INV-012
+- INV-013
+- INV-028
+- INV-029
+- INV-062
+- INV-063
+- INV-064
+- INV-065
+- INV-066
+- INV-092
+- INV-105
+work:
+- Deliver minimal ingress API with fail-closed ack-after-attestation semantics.
+- Expose deterministic request/response contract for pilot integration.
+acceptance_criteria:
+- ACK is emitted only after durable attestation persistence.
+- Ingress contract tests include deterministic fail-closed negative cases.
+verification:
+- scripts/dev/pre_ci.sh
+evidence:
+- evidence/phase1/ingress_api_contract_tests.json
+- evidence/phase1/ingress_ack_attestation_semantics.json
+failure_modes:
+- Ingress acknowledges without durable attestation write.
+- Evidence file missing.
+must_read:
+- Product-Requirement-Document_V2.txt
+implementation_plan: docs/plans/phase1/TSK-P1-015_ingress_api_mvp_pilot_surface/PLAN.md
+implementation_log: docs/plans/phase1/TSK-P1-015_ingress_api_mvp_pilot_surface/EXEC_LOG.md
+notes: First customer-facing pilot integration surface.
+client: codex_cli
+assigned_agent: security_guardian
+model: <UNASSIGNED>
