@@ -2,7 +2,7 @@ phase: '1'
 task_id: TSK-P1-009
 title: INV-116 Rail Sequence Truth-Anchor Continuity
 owner_role: DB_FOUNDATION
-status: planned
+status: completed
 depends_on:
 - TSK-P1-002
 - TSK-P1-006

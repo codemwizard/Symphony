@@ -2,7 +2,7 @@
 -- PostgreSQL database dump
 --
 
-\restrict DEdBei0Z1nXiO88bhReXgaBdN9Nwm2Taq6tpKZoYxOmsnvACVbfaa8LCRhKUT5B
+\restrict Thqu4QFTiSn4oo0CYjk84rFEi3NCOE5QMkCBcm5O6ddFOL2ofrWfyDhBjAo98H3
 
 -- Dumped from database version 18.1 (Debian 18.1-1.pgdg13+2)
 -- Dumped by pg_dump version 18.1 (Debian 18.1-1.pgdg13+2)
@@ -48,6 +48,54 @@ CREATE TYPE public.policy_version_status AS ENUM (
     'GRACE',
     'RETIRED'
 );
+
+
+--
+-- Name: anchor_dispatched_outbox_attempt(); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.anchor_dispatched_outbox_attempt() RETURNS trigger
+    LANGUAGE plpgsql
+    AS $$
+DECLARE
+  v_sequence_ref TEXT;
+  v_profile TEXT;
+BEGIN
+  IF NEW.state <> 'DISPATCHED' THEN
+    RETURN NEW;
+  END IF;
+
+  v_sequence_ref := NULLIF(BTRIM(NEW.rail_reference), '');
+  IF v_sequence_ref IS NULL THEN
+    RAISE EXCEPTION 'dispatch requires rail sequence reference'
+      USING ERRCODE = 'P7005';
+  END IF;
+
+  v_profile := COALESCE(NULLIF(BTRIM(NEW.rail_type), ''), 'GENERIC');
+
+  INSERT INTO public.rail_dispatch_truth_anchor(
+    attempt_id,
+    outbox_id,
+    instruction_id,
+    participant_id,
+    rail_participant_id,
+    rail_profile,
+    rail_sequence_ref,
+    state
+  ) VALUES (
+    NEW.attempt_id,
+    NEW.outbox_id,
+    NEW.instruction_id,
+    NEW.participant_id,
+    NEW.participant_id,
+    v_profile,
+    v_sequence_ref,
+    NEW.state
+  );
+
+  RETURN NEW;
+END;
+$$;
 
 
 --
@@ -1014,6 +1062,25 @@ CREATE TABLE public.policy_versions (
 
 
 --
+-- Name: rail_dispatch_truth_anchor; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.rail_dispatch_truth_anchor (
+    anchor_id uuid DEFAULT public.uuid_v7_or_random() NOT NULL,
+    attempt_id uuid NOT NULL,
+    outbox_id uuid NOT NULL,
+    instruction_id text NOT NULL,
+    participant_id text NOT NULL,
+    rail_participant_id text NOT NULL,
+    rail_profile text NOT NULL,
+    rail_sequence_ref text NOT NULL,
+    state public.outbox_attempt_state NOT NULL,
+    anchored_at timestamp with time zone DEFAULT now() NOT NULL,
+    CONSTRAINT rail_truth_anchor_state_chk CHECK ((state = 'DISPATCHED'::public.outbox_attempt_state))
+);
+
+
+--
 -- Name: revoked_client_certs; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -1268,6 +1335,14 @@ ALTER TABLE ONLY public.policy_versions
 
 
 --
+-- Name: rail_dispatch_truth_anchor rail_dispatch_truth_anchor_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.rail_dispatch_truth_anchor
+    ADD CONSTRAINT rail_dispatch_truth_anchor_pkey PRIMARY KEY (anchor_id);
+
+
+--
 -- Name: revoked_client_certs revoked_client_certs_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -1401,6 +1476,22 @@ ALTER TABLE ONLY public.pii_purge_events
 
 ALTER TABLE ONLY public.pii_vault_records
     ADD CONSTRAINT ux_pii_vault_records_subject_token UNIQUE (subject_token);
+
+
+--
+-- Name: rail_dispatch_truth_anchor ux_rail_truth_anchor_attempt_id; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.rail_dispatch_truth_anchor
+    ADD CONSTRAINT ux_rail_truth_anchor_attempt_id UNIQUE (attempt_id);
+
+
+--
+-- Name: rail_dispatch_truth_anchor ux_rail_truth_anchor_sequence_scope; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.rail_dispatch_truth_anchor
+    ADD CONSTRAINT ux_rail_truth_anchor_sequence_scope UNIQUE (rail_sequence_ref, rail_participant_id, rail_profile);
 
 
 --
@@ -1558,6 +1649,13 @@ CREATE INDEX idx_policy_versions_is_active ON public.policy_versions USING btree
 
 
 --
+-- Name: idx_rail_truth_anchor_participant_anchored; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_rail_truth_anchor_participant_anchored ON public.rail_dispatch_truth_anchor USING btree (rail_participant_id, anchored_at DESC);
+
+
+--
 -- Name: idx_tenant_clients_tenant; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -1642,6 +1740,13 @@ CREATE UNIQUE INDEX ux_policy_versions_single_active ON public.policy_versions U
 
 
 --
+-- Name: payment_outbox_attempts trg_anchor_dispatched_outbox_attempt; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER trg_anchor_dispatched_outbox_attempt AFTER INSERT ON public.payment_outbox_attempts FOR EACH ROW EXECUTE FUNCTION public.anchor_dispatched_outbox_attempt();
+
+
+--
 -- Name: billing_usage_events trg_deny_billing_usage_events_mutation; Type: TRIGGER; Schema: public; Owner: -
 --
 
@@ -1709,6 +1814,13 @@ CREATE TRIGGER trg_deny_pii_purge_requests_mutation BEFORE DELETE OR UPDATE ON p
 --
 
 CREATE TRIGGER trg_deny_pii_vault_mutation BEFORE DELETE OR UPDATE ON public.pii_vault_records FOR EACH ROW EXECUTE FUNCTION public.deny_pii_vault_mutation();
+
+
+--
+-- Name: rail_dispatch_truth_anchor trg_deny_rail_dispatch_truth_anchor_mutation; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER trg_deny_rail_dispatch_truth_anchor_mutation BEFORE DELETE OR UPDATE ON public.rail_dispatch_truth_anchor FOR EACH ROW EXECUTE FUNCTION public.deny_append_only_mutation();
 
 
 --
@@ -1912,6 +2024,14 @@ ALTER TABLE ONLY public.pii_vault_records
 
 
 --
+-- Name: rail_dispatch_truth_anchor rail_truth_anchor_attempt_fk; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.rail_dispatch_truth_anchor
+    ADD CONSTRAINT rail_truth_anchor_attempt_fk FOREIGN KEY (attempt_id) REFERENCES public.payment_outbox_attempts(attempt_id) DEFERRABLE;
+
+
+--
 -- Name: tenant_clients tenant_clients_tenant_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -1947,5 +2067,5 @@ ALTER TABLE ONLY public.tenants
 -- PostgreSQL database dump complete
 --
 
-\unrestrict DEdBei0Z1nXiO88bhReXgaBdN9Nwm2Taq6tpKZoYxOmsnvACVbfaa8LCRhKUT5B
+\unrestrict Thqu4QFTiSn4oo0CYjk84rFEi3NCOE5QMkCBcm5O6ddFOL2ofrWfyDhBjAo98H3
 

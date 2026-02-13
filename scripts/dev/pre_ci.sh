@@ -208,6 +208,9 @@ fi
 if [[ -x scripts/db/verify_pii_decoupling_hooks.sh ]]; then
   scripts/db/verify_pii_decoupling_hooks.sh
 fi
+if [[ -x scripts/db/verify_rail_sequence_truth_anchor.sh ]]; then
+  scripts/db/verify_rail_sequence_truth_anchor.sh
+fi
 
 if [[ -n "${DATABASE_URL:-}" ]]; then
   if [[ -x scripts/db/tests/test_db_functions.sh ]]; then
@@ -227,6 +230,9 @@ if [[ -n "${DATABASE_URL:-}" ]]; then
   fi
   if [[ -x scripts/db/tests/test_pii_decoupling.sh ]]; then
     scripts/db/tests/test_pii_decoupling.sh
+  fi
+  if [[ -x scripts/db/tests/test_rail_sequence_continuity.sh ]]; then
+    scripts/db/tests/test_rail_sequence_continuity.sh
   fi
 
   # CI parity: these DB checks run in GitHub Actions db_verify_invariants job.

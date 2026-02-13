@@ -94,6 +94,7 @@
       USING ERRCODE = 'P7003';
       USING ERRCODE = 'P7004';
       USING ERRCODE = 'P7004';
+      USING ERRCODE = 'P7005';
       USING ERRCODE = 'P7201';
       USING ERRCODE = 'P7202';
       VALUES (
@@ -179,6 +180,8 @@
     ADD CONSTRAINT pii_vault_records_pkey PRIMARY KEY (vault_id);
     ADD CONSTRAINT pii_vault_records_purge_request_fk FOREIGN KEY (purge_request_id) REFERENCES public.pii_purge_requests(purge_request_id) DEFERRABLE;
     ADD CONSTRAINT policy_versions_pkey PRIMARY KEY (version);
+    ADD CONSTRAINT rail_dispatch_truth_anchor_pkey PRIMARY KEY (anchor_id);
+    ADD CONSTRAINT rail_truth_anchor_attempt_fk FOREIGN KEY (attempt_id) REFERENCES public.payment_outbox_attempts(attempt_id) DEFERRABLE;
     ADD CONSTRAINT revoked_client_certs_pkey PRIMARY KEY (cert_fingerprint_sha256);
     ADD CONSTRAINT revoked_tokens_pkey PRIMARY KEY (token_jti);
     ADD CONSTRAINT schema_migrations_pkey PRIMARY KEY (version);
@@ -200,8 +203,11 @@
     ADD CONSTRAINT ux_pending_participant_sequence UNIQUE (participant_id, sequence_id);
     ADD CONSTRAINT ux_pii_purge_events_request_event UNIQUE (purge_request_id, event_type);
     ADD CONSTRAINT ux_pii_vault_records_subject_token UNIQUE (subject_token);
+    ADD CONSTRAINT ux_rail_truth_anchor_attempt_id UNIQUE (attempt_id);
+    ADD CONSTRAINT ux_rail_truth_anchor_sequence_scope UNIQUE (rail_sequence_ref, rail_participant_id, rail_profile);
     AND (p.lease_expires_at IS NULL OR p.lease_expires_at <= NOW())
     AND e.event_type = 'PURGED'
+    AS $$
     AS $$
     AS $$
     AS $$
@@ -251,6 +257,7 @@
     CONSTRAINT pii_purge_events_event_type_check CHECK ((event_type = ANY (ARRAY['REQUESTED'::text, 'PURGED'::text]))),
     CONSTRAINT pii_purge_events_rows_affected_check CHECK ((rows_affected >= 0))
     CONSTRAINT pii_vault_records_purge_shape_chk CHECK ((((purged_at IS NULL) AND (protected_payload IS NOT NULL) AND (purge_request_id IS NULL)) OR ((purged_at IS NOT NULL) AND (protected_payload IS NULL) AND (purge_request_id IS NOT NULL))))
+    CONSTRAINT rail_truth_anchor_state_chk CHECK ((state = 'DISPATCHED'::public.outbox_attempt_state))
     CONSTRAINT tenant_clients_status_check CHECK ((status = ANY (ARRAY['ACTIVE'::text, 'SUSPENDED'::text, 'REVOKED'::text])))
     CONSTRAINT tenant_members_status_check CHECK ((status = ANY (ARRAY['ACTIVE'::text, 'SUSPENDED'::text, 'EXITED'::text])))
     CONSTRAINT tenants_status_check CHECK ((status = ANY (ARRAY['ACTIVE'::text, 'SUSPENDED'::text, 'CLOSED'::text]))),
@@ -302,6 +309,7 @@
     LANGUAGE plpgsql
     LANGUAGE plpgsql
     LANGUAGE plpgsql
+    LANGUAGE plpgsql
     LANGUAGE plpgsql SECURITY DEFINER
     LANGUAGE plpgsql SECURITY DEFINER
     LANGUAGE plpgsql SECURITY DEFINER
@@ -313,8 +321,14 @@
     LIMIT 1;
     LIMIT 1;
     LOOP
+    NEW.attempt_id,
     NEW.billable_client_id := derived_billable_client_id;
     NEW.correlation_id := public.uuid_v7_or_random();
+    NEW.instruction_id,
+    NEW.outbox_id,
+    NEW.participant_id,
+    NEW.participant_id,
+    NEW.state
     NEW.tenant_id := derived_tenant_id;
     NULLIF(current_setting('symphony.outbox_retry_ceiling', true), '')::int,
     ON CONFLICT (participant_id)
@@ -322,6 +336,7 @@
     PERFORM pg_advisory_xact_lock(
     PERFORM pg_notify('symphony_outbox', '');
     RAISE EXCEPTION '% is append-only', TG_TABLE_NAME
+    RAISE EXCEPTION 'dispatch requires rail sequence reference'
     RAISE EXCEPTION 'external_proofs billable_client_id does not match derived billable_client_id'
     RAISE EXCEPTION 'external_proofs requires billable_client_id attribution via tenant'
     RAISE EXCEPTION 'external_proofs requires tenant attribution via ingress_attestations'
@@ -338,6 +353,7 @@
     RAISE EXCEPTION 'reversal source instruction must be final and SETTLED: %', NEW.reversal_of_instruction_id
     RAISE EXCEPTION 'revocation tables are append-only'
     RAISE EXCEPTION 'tenant_id required when member_id is set'
+    RETURN NEW;
     RETURN NEW;
     RETURN NEW;
     RETURN QUERY SELECT existing_pending.outbox_id, existing_pending.sequence_id, existing_pending.created_at, 'PENDING';
@@ -366,14 +382,18 @@
     allocated BIGINT;
     allocated_sequence := bump_participant_outbox_seq(p_participant_id);
     allocated_sequence BIGINT;
+    anchor_id uuid DEFAULT public.uuid_v7_or_random() NOT NULL,
     anchor_ref text,
     anchor_type text,
+    anchored_at timestamp with time zone DEFAULT now() NOT NULL,
     anchored_at timestamp with time zone,
     applied_at timestamp with time zone DEFAULT now() NOT NULL
     artifact_hash text NOT NULL,
     artifact_path text,
     attempt_count integer DEFAULT 0 NOT NULL,
     attempt_id uuid DEFAULT public.uuid_v7_or_random() NOT NULL,
+    attempt_id uuid NOT NULL,
+    attempt_id,
     attempt_no integer NOT NULL,
     attestation_id uuid DEFAULT public.uuid_v7_or_random() NOT NULL,
     attestation_id uuid NOT NULL,
@@ -442,6 +462,8 @@
     instruction_id text NOT NULL,
     instruction_id text NOT NULL,
     instruction_id text NOT NULL,
+    instruction_id text NOT NULL,
+    instruction_id,
     is_active boolean GENERATED ALWAYS AS ((status = 'ACTIVE'::public.policy_version_status)) STORED,
     is_final boolean DEFAULT true NOT NULL,
     item_id uuid DEFAULT public.uuid_v7_or_random() NOT NULL,
@@ -472,6 +494,8 @@
     occurred_at timestamp with time zone DEFAULT now() NOT NULL,
     outbox_id uuid DEFAULT public.uuid_v7_or_random() NOT NULL,
     outbox_id uuid NOT NULL,
+    outbox_id uuid NOT NULL,
+    outbox_id,
     p_purge_request_id,
     p_request_reason
     p_requested_by,
@@ -485,7 +509,9 @@
     participant_id text NOT NULL,
     participant_id text NOT NULL,
     participant_id text NOT NULL,
+    participant_id text NOT NULL,
     participant_id text,
+    participant_id,
     participant_kind text NOT NULL,
     payload jsonb NOT NULL,
     payload jsonb NOT NULL,
@@ -504,7 +530,13 @@
     quantity bigint NOT NULL,
     rail_code text,
     rail_message_type text NOT NULL,
+    rail_participant_id text NOT NULL,
+    rail_participant_id,
+    rail_profile text NOT NULL,
+    rail_profile,
     rail_reference text,
+    rail_sequence_ref text NOT NULL,
+    rail_sequence_ref,
     rail_type text NOT NULL,
     rail_type text NOT NULL,
     reason_code text,
@@ -535,6 +567,8 @@
     signatures jsonb DEFAULT '[]'::jsonb NOT NULL,
     signed_at timestamp with time zone,
     signer_participant_id text,
+    state
+    state public.outbox_attempt_state NOT NULL,
     state public.outbox_attempt_state NOT NULL,
     status public.policy_version_status DEFAULT 'ACTIVE'::public.policy_version_status NOT NULL,
     status text DEFAULT 'ACTIVE'::text NOT NULL,
@@ -571,11 +605,13 @@
     v_instruction_id TEXT; v_participant_id TEXT; v_sequence_id BIGINT;
     v_next_attempt_no INT;
     v_next_attempt_no INT; v_effective_state outbox_attempt_state;
+    v_profile,
     v_record RECORD;
     v_request_id,
     v_retry_ceiling := public.outbox_retry_ceiling();
     v_retry_ceiling INT;
     v_rows,
+    v_sequence_ref,
     vault_id uuid DEFAULT public.uuid_v7_or_random() NOT NULL,
     verified_at timestamp with time zone,
     version text NOT NULL,
@@ -594,6 +630,8 @@
   ) VALUES (
   ) VALUES (
   ) VALUES (
+  ) VALUES (
+  );
   );
   );
   BEGIN
@@ -611,6 +649,8 @@
   DO NOTHING;
   ELSIF NEW.billable_client_id <> derived_billable_client_id THEN
   ELSIF NEW.tenant_id <> derived_tenant_id THEN
+  END IF;
+  END IF;
   END IF;
   END IF;
   END IF;
@@ -650,6 +690,7 @@
   IF NEW.is_final IS DISTINCT FROM TRUE THEN
   IF NEW.member_id IS NULL THEN
   IF NEW.reversal_of_instruction_id IS NULL THEN
+  IF NEW.state <> 'DISPATCHED' THEN
   IF NEW.tenant_id IS NULL THEN
   IF NEW.tenant_id IS NULL THEN
   IF NOT FOUND THEN
@@ -660,10 +701,12 @@
   IF derived_tenant_id IS NULL THEN
   IF m_tenant <> NEW.tenant_id THEN
   IF m_tenant IS NULL THEN
+  IF v_sequence_ref IS NULL THEN
   IF v_source_state <> 'SETTLED' OR v_source_final IS DISTINCT FROM TRUE THEN
   INSERT INTO public.pii_purge_events(
   INSERT INTO public.pii_purge_events(
   INSERT INTO public.pii_purge_requests(
+  INSERT INTO public.rail_dispatch_truth_anchor(
   INTO v_prior
   INTO v_source_state, v_source_final
   INTO v_subject_token
@@ -673,6 +716,7 @@
   ORDER BY p.next_attempt_at ASC, p.created_at ASC
   PERFORM set_config('symphony.allow_pii_purge', 'on', true);
   RAISE EXCEPTION 'pii_vault_records is non-deletable'
+  RETURN NEW;
   RETURN NEW;
   RETURN NEW;
   RETURN NEW;
@@ -700,8 +744,12 @@
   derived_tenant_id UUID;
   m_tenant uuid;
   v_prior INTEGER := 0;
+  v_profile := COALESCE(NULLIF(BTRIM(NEW.rail_type), ''), 'GENERIC');
+  v_profile TEXT;
   v_request_id UUID;
   v_rows INTEGER := 0;
+  v_sequence_ref := NULLIF(BTRIM(NEW.rail_reference), '');
+  v_sequence_ref TEXT;
   v_source_final BOOLEAN;
   v_source_state TEXT;
   v_subject_token TEXT;
@@ -728,7 +776,9 @@ $$;
 $$;
 $$;
 $$;
+$$;
 )
+);
 );
 );
 );
@@ -791,6 +841,10 @@ ALTER TABLE ONLY public.pii_vault_records
 ALTER TABLE ONLY public.pii_vault_records
 ALTER TABLE ONLY public.pii_vault_records
 ALTER TABLE ONLY public.policy_versions
+ALTER TABLE ONLY public.rail_dispatch_truth_anchor
+ALTER TABLE ONLY public.rail_dispatch_truth_anchor
+ALTER TABLE ONLY public.rail_dispatch_truth_anchor
+ALTER TABLE ONLY public.rail_dispatch_truth_anchor
 ALTER TABLE ONLY public.revoked_client_certs
 ALTER TABLE ONLY public.revoked_tokens
 ALTER TABLE ONLY public.schema_migrations
@@ -819,6 +873,8 @@ BEGIN
 BEGIN
 BEGIN
 BEGIN
+BEGIN
+CREATE FUNCTION public.anchor_dispatched_outbox_attempt() RETURNS trigger
 CREATE FUNCTION public.bump_participant_outbox_seq(p_participant_id text) RETURNS bigint
 CREATE FUNCTION public.claim_outbox_batch(p_batch_size integer, p_worker_id text, p_lease_seconds integer) RETURNS TABLE(outbox_id uuid, instruction_id text, participant_id text, sequence_id bigint, idempotency_key text, rail_type text, payload jsonb, attempt_count integer, lease_token uuid, lease_expires_at timestamp with time zone)
 CREATE FUNCTION public.complete_outbox_attempt(p_outbox_id uuid, p_lease_token uuid, p_worker_id text, p_state public.outbox_attempt_state, p_rail_reference text DEFAULT NULL::text, p_rail_code text DEFAULT NULL::text, p_error_code text DEFAULT NULL::text, p_error_message text DEFAULT NULL::text, p_latency_ms integer DEFAULT NULL::integer, p_retry_delay_seconds integer DEFAULT 1) RETURNS TABLE(attempt_no integer, state public.outbox_attempt_state)
@@ -861,6 +917,7 @@ CREATE INDEX idx_payment_outbox_pending_tenant_correlation ON public.payment_out
 CREATE INDEX idx_payment_outbox_pending_tenant_due ON public.payment_outbox_pending USING btree (tenant_id, next_attempt_at) WHERE (tenant_id IS NOT NULL);
 CREATE INDEX idx_pii_purge_requests_subject_requested ON public.pii_purge_requests USING btree (subject_token, requested_at DESC);
 CREATE INDEX idx_policy_versions_is_active ON public.policy_versions USING btree (is_active) WHERE (is_active = true);
+CREATE INDEX idx_rail_truth_anchor_participant_anchored ON public.rail_dispatch_truth_anchor USING btree (rail_participant_id, anchored_at DESC);
 CREATE INDEX idx_tenant_clients_tenant ON public.tenant_clients USING btree (tenant_id);
 CREATE INDEX idx_tenant_members_status ON public.tenant_members USING btree (status);
 CREATE INDEX idx_tenant_members_tenant ON public.tenant_members USING btree (tenant_id);
@@ -883,12 +940,14 @@ CREATE TABLE public.pii_purge_events (
 CREATE TABLE public.pii_purge_requests (
 CREATE TABLE public.pii_vault_records (
 CREATE TABLE public.policy_versions (
+CREATE TABLE public.rail_dispatch_truth_anchor (
 CREATE TABLE public.revoked_client_certs (
 CREATE TABLE public.revoked_tokens (
 CREATE TABLE public.schema_migrations (
 CREATE TABLE public.tenant_clients (
 CREATE TABLE public.tenant_members (
 CREATE TABLE public.tenants (
+CREATE TRIGGER trg_anchor_dispatched_outbox_attempt AFTER INSERT ON public.payment_outbox_attempts FOR EACH ROW EXECUTE FUNCTION public.anchor_dispatched_outbox_attempt();
 CREATE TRIGGER trg_deny_billing_usage_events_mutation BEFORE DELETE OR UPDATE ON public.billing_usage_events FOR EACH ROW EXECUTE FUNCTION public.deny_append_only_mutation();
 CREATE TRIGGER trg_deny_evidence_pack_items_mutation BEFORE DELETE OR UPDATE ON public.evidence_pack_items FOR EACH ROW EXECUTE FUNCTION public.deny_append_only_mutation();
 CREATE TRIGGER trg_deny_evidence_packs_mutation BEFORE DELETE OR UPDATE ON public.evidence_packs FOR EACH ROW EXECUTE FUNCTION public.deny_append_only_mutation();
@@ -899,6 +958,7 @@ CREATE TRIGGER trg_deny_outbox_attempts_mutation BEFORE DELETE OR UPDATE ON publ
 CREATE TRIGGER trg_deny_pii_purge_events_mutation BEFORE DELETE OR UPDATE ON public.pii_purge_events FOR EACH ROW EXECUTE FUNCTION public.deny_append_only_mutation();
 CREATE TRIGGER trg_deny_pii_purge_requests_mutation BEFORE DELETE OR UPDATE ON public.pii_purge_requests FOR EACH ROW EXECUTE FUNCTION public.deny_append_only_mutation();
 CREATE TRIGGER trg_deny_pii_vault_mutation BEFORE DELETE OR UPDATE ON public.pii_vault_records FOR EACH ROW EXECUTE FUNCTION public.deny_pii_vault_mutation();
+CREATE TRIGGER trg_deny_rail_dispatch_truth_anchor_mutation BEFORE DELETE OR UPDATE ON public.rail_dispatch_truth_anchor FOR EACH ROW EXECUTE FUNCTION public.deny_append_only_mutation();
 CREATE TRIGGER trg_deny_revoked_client_certs_mutation BEFORE DELETE OR UPDATE ON public.revoked_client_certs FOR EACH ROW EXECUTE FUNCTION public.deny_revocation_mutation();
 CREATE TRIGGER trg_deny_revoked_tokens_mutation BEFORE DELETE OR UPDATE ON public.revoked_tokens FOR EACH ROW EXECUTE FUNCTION public.deny_revocation_mutation();
 CREATE TRIGGER trg_enforce_instruction_reversal_source BEFORE INSERT ON public.instruction_settlement_finality FOR EACH ROW EXECUTE FUNCTION public.enforce_instruction_reversal_source();
@@ -920,6 +980,8 @@ DECLARE
 DECLARE
 DECLARE
 DECLARE
+DECLARE
+END;
 END;
 END;
 END;
