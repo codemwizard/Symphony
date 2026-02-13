@@ -2,7 +2,7 @@ phase: '1'
 task_id: TSK-P1-001
 title: Phase-1 Agent System Rollout
 owner_role: SUPERVISOR
-status: planned
+status: completed
 depends_on: []
 touches:
 - AGENTS.md

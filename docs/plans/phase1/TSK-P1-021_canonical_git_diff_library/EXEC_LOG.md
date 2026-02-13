@@ -14,3 +14,8 @@ origin_task_id: TSK-P1-021
 
 ## final_status
 COMPLETED
+
+Plan: `docs/plans/phase1/TSK-P1-021_canonical_git_diff_library/PLAN.md`
+
+## Final Summary
+- Canonical diff semantics are centralized and parity checks now produce deterministic evidence.

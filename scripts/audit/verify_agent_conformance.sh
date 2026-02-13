@@ -4,8 +4,10 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 EVIDENCE_DIR="$ROOT/evidence/phase1"
 EVIDENCE_FILE="$EVIDENCE_DIR/agent_conformance.json"
+ROLE_MAPPING_EVIDENCE_FILE="$EVIDENCE_DIR/agent_role_mapping.json"
 
 export EVIDENCE_FILE
+export ROLE_MAPPING_EVIDENCE_FILE
 
 mkdir -p "$EVIDENCE_DIR"
 source "$ROOT/scripts/lib/evidence.sh"
@@ -69,13 +71,17 @@ def ensure_canonical_docs():
             fail("CONFORMANCE_001_CANONICAL_MISSING", f"Missing or empty canonical doc: {doc}", [str(doc)])
 
 def validate_agent_prompts():
+    role_rows = []
     for path in AGENT_PROMPT_PATHS:
         if not path.exists():
             fail("CONFORMANCE_001_CANONICAL_MISSING", f"Agent prompt missing: {path}", [str(path)])
             continue
         content = read_file(path)
-        if "docs/operations/AI_AGENT_WORKFLOW_AND_ROLE_PLAN_v2.md" not in content or \
-           "docs/operations/AGENT_ROLE_RECONCILIATION.md" not in content:
+        if (
+            "docs/operations/AI_AGENT_WORKFLOW_AND_ROLE_PLAN_v2.md" not in content
+            or "docs/operations/AGENT_ROLE_RECONCILIATION.md" not in content
+            or "docs/operations/AI_AGENT_OPERATION_MANUAL.md" not in content
+        ):
             fail("CONFORMANCE_004_CANONICAL_REFERENCE_MISSING",
                  f"Missing canonical doc reference in {path}", [str(path)])
         if not re.search(r"^##\s+Stop Conditions", content, re.MULTILINE) and \
@@ -86,13 +92,18 @@ def validate_agent_prompts():
         role_match = re.search(r"^Role:\s*(.+)$", content, re.MULTILINE)
         if not role_match:
             fail("CONFORMANCE_003_ROLE_INVALID", f"Role declaration missing in {path}", [str(path)])
+            role_rows.append({"path": str(path), "role": "", "valid": False})
         else:
             role_value = role_match.group(1).strip()
             if role_value not in CANONICAL_ROLES:
                 fail("CONFORMANCE_003_ROLE_INVALID", f"Invalid role '{role_value}' in {path}", [str(path)])
+                role_rows.append({"path": str(path), "role": role_value, "valid": False})
+            else:
+                role_rows.append({"path": str(path), "role": role_value, "valid": True})
         for heading in ["Scope", "Non-Negotiables", "Verification Commands", "Evidence Outputs", "Canonical References"]:
             if not re.search(rf"^##\s+{heading}", content, re.MULTILINE):
                 fail("CONFORMANCE_002_PROMPT_HEADERS_MISSING", f"Missing header '{heading}' in {path}", [str(path)])
+    return role_rows
 
 def parse_regulated_surfaces():
     manual = read_file(ROOT / "docs/operations/AI_AGENT_OPERATION_MANUAL.md")
@@ -198,7 +209,7 @@ def compute_hash(path):
 
 def main():
     ensure_canonical_docs()
-    validate_agent_prompts()
+    role_rows = validate_agent_prompts()
     surfaces = parse_regulated_surfaces()
     mode, changed_files = determine_changed_files()
     regulated_changed = any(matches_regulated(path, surfaces) for path in changed_files)
@@ -238,6 +249,18 @@ def main():
     }
     EVIDENCE_FILE.parent.mkdir(parents=True, exist_ok=True)
     EVIDENCE_FILE.write_text(json.dumps(evidence, indent=2) + "\n", encoding="utf-8")
+    role_mapping_evidence = {
+        "check_id": "AGENT-ROLE-MAPPING",
+        "timestamp_utc": os.environ.get("EVIDENCE_TS"),
+        "git_sha": os.environ.get("EVIDENCE_GIT_SHA"),
+        "schema_fingerprint": os.environ.get("EVIDENCE_SCHEMA_FP"),
+        "status": "PASS" if not FAILURES else "FAIL",
+        "canonical_roles": sorted(CANONICAL_ROLES),
+        "agent_role_rows": role_rows,
+    }
+    Path(os.environ["ROLE_MAPPING_EVIDENCE_FILE"]).write_text(
+        json.dumps(role_mapping_evidence, indent=2) + "\n", encoding="utf-8"
+    )
     print("CONFORMANCE", "FAIL" if FAILURES else "PASS")
     if FAILURES:
         for f in FAILURES:
