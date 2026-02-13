@@ -1,0 +1,43 @@
+phase: '1'
+task_id: TSK-P1-022
+title: Pilot AuthN AuthZ and Tenant Boundary Enforcement
+owner_role: SECURITY_GUARDIAN
+status: planned
+depends_on:
+- TSK-P1-015
+- TSK-P1-017
+touches:
+- src/**
+- services/**
+- packages/**
+- docs/security/**
+- scripts/security/**
+invariants:
+- INV-062
+- INV-063
+- INV-064
+- INV-065
+- INV-066
+- INV-105
+work:
+- Implement pilot-safe authentication mode and tenant/participant authz boundary checks.
+- Add BoZ read-only boundary checks where applicable.
+acceptance_criteria:
+- Cross-tenant/participant access is denied by default.
+- AuthN/AuthZ behavior is deterministic and auditable.
+verification:
+- scripts/dev/pre_ci.sh
+evidence:
+- evidence/phase1/authz_tenant_boundary.json
+- evidence/phase1/boz_access_boundary_runtime.json
+failure_modes:
+- External caller can access cross-tenant resources.
+- Evidence file missing.
+must_read:
+- docs/security/ZERO_TRUST_POSTURE.md
+implementation_plan: docs/plans/phase1/TSK-P1-022_pilot_authn_authz_and_tenant_boundary_enforcement/PLAN.md
+implementation_log: docs/plans/phase1/TSK-P1-022_pilot_authn_authz_and_tenant_boundary_enforcement/EXEC_LOG.md
+notes: 'Pilot safety gate: required for external customer exposure.'
+client: codex_cli
+assigned_agent: security_guardian
+model: <UNASSIGNED>

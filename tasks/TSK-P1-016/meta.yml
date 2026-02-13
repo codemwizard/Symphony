@@ -1,0 +1,45 @@
+phase: '1'
+task_id: TSK-P1-016
+title: Executor Worker MVP Deterministic Dispatch
+owner_role: SECURITY_GUARDIAN
+status: planned
+depends_on:
+- TSK-P1-015
+- TSK-P1-007
+- TSK-P1-008
+- TSK-P1-009
+touches:
+- src/**
+- services/**
+- packages/**
+- scripts/db/tests/**
+invariants:
+- INV-011
+- INV-012
+- INV-013
+- INV-014
+- INV-031
+- INV-032
+- INV-105
+work:
+- Implement worker dispatch path with deterministic retries and append-only attempts.
+- Preserve lease fencing/idempotency semantics in runtime behavior.
+acceptance_criteria:
+- Worker runtime tests pass for success, retry, and fail-closed cases.
+- No mutation of append-only attempt history in negative paths.
+verification:
+- scripts/dev/pre_ci.sh
+evidence:
+- evidence/phase1/executor_worker_runtime.json
+- evidence/phase1/executor_worker_fail_closed_paths.json
+failure_modes:
+- Worker bypasses lease fencing or idempotency semantics.
+- Evidence file missing.
+must_read:
+- docs/phase-1/phase-1-db-foundation.md
+implementation_plan: docs/plans/phase1/TSK-P1-016_executor_worker_mvp_deterministic_dispatch/PLAN.md
+implementation_log: docs/plans/phase1/TSK-P1-016_executor_worker_mvp_deterministic_dispatch/EXEC_LOG.md
+notes: Runtime pilot core paired with ingress API surface.
+client: codex_cli
+assigned_agent: security_guardian
+model: <UNASSIGNED>

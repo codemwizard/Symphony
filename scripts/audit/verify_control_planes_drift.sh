@@ -116,8 +116,8 @@ for plane_name, plane in (planes or {}).items():
         if not evidence:
             errors.append(f"{gate_id}:missing_evidence")
         else:
-            if not str(evidence).startswith("evidence/phase0/"):
-                errors.append(f"{gate_id}:evidence_path_not_phase0:{evidence}")
+            if not (str(evidence).startswith("evidence/phase0/") or str(evidence).startswith("evidence/phase1/")):
+                errors.append(f"{gate_id}:evidence_path_not_phase0_or_phase1:{evidence}")
             if evidence in all_evidence:
                 errors.append(f"duplicate_evidence_path:{evidence}")
             all_evidence.add(evidence)

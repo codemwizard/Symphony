@@ -177,6 +177,20 @@ controls:
       - "SEC-G08"
     owner: "team-security"
 
+  - id: SEC-DEP-002
+    title: ".NET quality lint (format + warning-as-error build)"
+    standards:
+      - "OWASP ASVS (V1, V14)"
+      - "PCI DSS v4.0 (Req 6.2)"
+      - "ISO 27001/27002 (A.14)"
+    enforced_by:
+      - "scripts/security/lint_dotnet_quality.sh"
+    verified_by:
+      - "scripts/audit/run_security_fast_checks.sh"
+    gate_ids:
+      - "SEC-G18"
+    owner: "team-security"
+
   - id: SEC-CONF-001
     title: "Secure configuration lint (infra/workflows)"
     standards:

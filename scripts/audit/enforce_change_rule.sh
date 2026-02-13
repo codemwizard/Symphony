@@ -14,7 +14,7 @@ CHECK_ID="STRUCTURAL-DOC-LINKAGE"
 
 # Default range for local usage if not provided
 HEAD_REF="${HEAD_REF:-HEAD}"
-source "$ROOT_DIR/scripts/lib/git_diff.sh"
+source "$ROOT_DIR/scripts/audit/lib/git_diff.sh"
 BASE_REF="${BASE_REF:-$(git_resolve_base_ref)}"
 
 # Compute diff range (parity-critical). If base ref is missing, fail closed.

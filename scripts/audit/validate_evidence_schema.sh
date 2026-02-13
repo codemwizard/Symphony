@@ -4,6 +4,7 @@ set -euo pipefail
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 SCHEMA_FILE="$ROOT_DIR/docs/architecture/evidence_schema.json"
 EVIDENCE_DIR="$ROOT_DIR/evidence/phase0"
+EVIDENCE_DIR_PHASE1="$ROOT_DIR/evidence/phase1"
 REPORT_FILE="$EVIDENCE_DIR/evidence_validation.json"
 
 mkdir -p "$EVIDENCE_DIR"
@@ -27,7 +28,11 @@ import jsonschema
 import os
 
 schema = json.loads(Path("$SCHEMA_FILE").read_text())
-files = sorted(glob.glob(os.path.join("$EVIDENCE_DIR", "*.json")))
+dirs = ["$EVIDENCE_DIR", "$EVIDENCE_DIR_PHASE1"]
+files = []
+for d in dirs:
+    if Path(d).exists():
+        files.extend(sorted(glob.glob(os.path.join(d, "*.json"))))
 errors = []
 
 if not files:
@@ -47,6 +52,7 @@ out = {
     "git_sha": os.environ.get("EVIDENCE_GIT_SHA"),
     "schema_fingerprint": os.environ.get("EVIDENCE_SCHEMA_FP"),
     "status": status,
+    "checked_dirs": dirs,
     "checked_files": files,
     "errors": errors,
 }

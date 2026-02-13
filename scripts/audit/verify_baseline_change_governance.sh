@@ -14,7 +14,7 @@ export EVIDENCE_TS EVIDENCE_GIT_SHA EVIDENCE_SCHEMA_FP
 
 BASE_REF="${BASE_REF:-origin/main}"
 HEAD_REF="${HEAD_REF:-HEAD}"
-source "$ROOT_DIR/scripts/lib/git_diff.sh"
+source "$ROOT_DIR/scripts/audit/lib/git_diff.sh"
 BASE_REF="${BASE_REF:-$(git_resolve_base_ref)}"
 
 if ! git_ensure_ref "$BASE_REF"; then

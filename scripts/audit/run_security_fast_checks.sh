@@ -23,6 +23,7 @@ REQ=(
   "scripts/security/lint_core_boundary.sh"
   "scripts/security/scan_secrets.sh"
   "scripts/security/dotnet_dependency_audit.sh"
+  "scripts/security/lint_dotnet_quality.sh"
   "scripts/security/lint_secure_config.sh"
   "scripts/security/lint_insecure_patterns.sh"
 )
@@ -40,6 +41,7 @@ run scripts/security/lint_privilege_grants.sh
 run scripts/security/lint_core_boundary.sh
 run scripts/security/scan_secrets.sh
 run scripts/security/dotnet_dependency_audit.sh
+run scripts/security/lint_dotnet_quality.sh
 run scripts/security/lint_secure_config.sh
 run scripts/security/lint_insecure_patterns.sh
 if [[ -x scripts/security/lint_ddl_lock_risk.sh || -f scripts/security/lint_ddl_lock_risk.sh ]]; then
@@ -118,6 +120,9 @@ if [[ -x scripts/audit/tests/test_lint_pii_leakage_payloads.sh ]]; then
   run scripts/audit/tests/test_lint_pii_leakage_payloads.sh
 else
   echo "   (no shell self-tests found; skipping)"
+fi
+if [[ -x scripts/security/tests/test_lint_dotnet_quality.sh ]]; then
+  run scripts/security/tests/test_lint_dotnet_quality.sh
 fi
 
 echo ""

@@ -1,34 +1,37 @@
-phase: "1"
-task_id: "TSK-P1-003"
-title: "Agent Conformance Verification"
-owner_role: "QA_VERIFIER"
+phase: '1'
+task_id: TSK-P1-003
+title: Agent Conformance Verification Closure
+owner_role: INVARIANTS_CURATOR
+status: planned
 depends_on:
-  - "TSK-P1-001"
-  - "TSK-P1-002"
+- TSK-P1-001
+- TSK-P1-002
 touches:
-  - "scripts/audit/verify_agent_conformance.sh"
-  - "docs/operations/AGENT_ROLE_RECONCILIATION.md"
-  - ".codex/agents/**/*.md"
-  - ".cursor/agents/**/*.md"
-invariants: []
+- scripts/audit/verify_agent_conformance.sh
+- scripts/dev/pre_ci.sh
+- .github/workflows/invariants.yml
+invariants:
+- INV-105
 work:
-  - "Write `scripts/audit/verify_agent_conformance.sh` to ensure each agent file references the canonical agent contract and includes the mapped Phase-1 role name."
-  - "Ensure the script fails if a production-affecting task lacks a plan/log/approval artifact or if any agent prompt diverges."
-  - "Wire the script into `scripts/dev/pre_ci.sh` and CI to run before merges."
+- Finalize deterministic conformance checks for agent prompts and regulated-surface
+  metadata requirements.
+- Ensure pre-CI and CI integration is fail-closed.
 acceptance_criteria:
-  - "The verification script runs in pre-CI/CI and emits evidence under `evidence/phase1/agent_conformance.json`."
-  - "No agent file can be merged without referencing the master contract text."
-verification_commands:
-  - "scripts/audit/verify_agent_conformance.sh"
-evidence_artifacts:
-  - "evidence/phase1/agent_conformance.json"
+- Conformance verifier runs in pre-CI and CI.
+- Verifier emits Phase-1 evidence and fails on canonical reference drift.
+verification:
+- scripts/audit/verify_agent_conformance.sh
+- scripts/dev/pre_ci.sh
+evidence:
+- evidence/phase1/agent_conformance.json
 failure_modes:
-  - "Agent files lacking master contract reference."
-  - "Missing evidence metadata for approvals."
-status: "in_progress"
-must_read: []
-evidence: []
-verification: []
-client: "codex_cli"
-assigned_agent: "qa_verifier"
-model: "<UNASSIGNED>"
+- Conformance verifier does not run in CI/pre-CI paths.
+- Evidence file missing.
+must_read:
+- docs/operations/VERIFY_AGENT_CONFORMANCE_SPEC.md
+implementation_plan: docs/plans/phase1/TSK-P1-003_agent_conformance_verification_closure/PLAN.md
+implementation_log: docs/plans/phase1/TSK-P1-003_agent_conformance_verification_closure/EXEC_LOG.md
+notes: Execution verifier for agent-governance contract.
+client: codex_cli
+assigned_agent: invariants_curator
+model: <UNASSIGNED>
