@@ -162,6 +162,15 @@
       "expires_on": "2026-12-31",
       "reviewed_by": "security_guardian",
       "approved_at": "2026-02-13"
+    },
+    {
+      "id": "DDL-ALLOW-0019",
+      "migration": "schema/migrations/0029_pii_decoupling_and_purge_hooks.sql",
+      "statement_fingerprint": "4e894fd7cf52dc8a9a47f945d495132243f261b4ef91651961eb9be570d055a1",
+      "reason": "Phase-1 pii vault migration uses idempotent ALTER TABLE in DO block to attach purge request FK.",
+      "expires_on": "2026-12-31",
+      "reviewed_by": "security_guardian",
+      "approved_at": "2026-02-13"
     }
   ]
 }

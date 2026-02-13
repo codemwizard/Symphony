@@ -16,6 +16,8 @@
           v_record.idempotency_key, v_record.rail_type, v_record.payload,
           v_record.outbox_id, v_record.instruction_id, v_record.participant_id, v_record.sequence_id,
           v_record.outbox_id, v_record.instruction_id, v_record.participant_id, v_record.sequence_id,
+         purge_request_id = p_purge_request_id
+         purged_at = NOW(),
         $$;
         ) VALUES (
         ) VALUES (
@@ -66,6 +68,7 @@
       ORDER BY p.lease_expires_at ASC, p.created_at ASC LIMIT p_batch_size FOR UPDATE SKIP LOCKED
       RAISE EXCEPTION 'Invalid completion state %', p_state USING ERRCODE = 'P7003';
       RAISE EXCEPTION 'LEASE_LOST' USING ERRCODE = 'P7002',
+      RETURN NEW;
       RETURN NEXT;
       RETURN QUERY SELECT existing_attempt.outbox_id, existing_attempt.sequence_id, existing_attempt.created_at, existing_attempt.state::TEXT;
       RETURN QUERY SELECT existing_pending.outbox_id, existing_pending.sequence_id, existing_pending.created_at, 'PENDING';
@@ -89,6 +92,8 @@
       USING ERRCODE = 'P7003';
       USING ERRCODE = 'P7003';
       USING ERRCODE = 'P7003';
+      USING ERRCODE = 'P7004';
+      USING ERRCODE = 'P7004';
       USING ERRCODE = 'P7201';
       USING ERRCODE = 'P7202';
       VALUES (
@@ -105,6 +110,8 @@
       p_rail_reference, p_rail_code, p_error_code, p_error_message, p_latency_ms, p_worker_id
       v_effective_state := 'FAILED';
       v_next_attempt_no, v_effective_state, NOW(),
+     AND purged_at IS NULL;
+     SET protected_payload = NULL,
      claimed_by = p_worker_id,
      lease_expires_at = NOW() + make_interval(secs => p_lease_seconds)
      lease_token = public.uuid_v7_or_random(),
@@ -123,12 +130,15 @@
     'DISPATCHING',
     'FAILED',
     'GRACE',
+    'PURGED',
+    'REQUESTED',
     'RETIRED'
     'RETRYABLE',
     'ZOMBIE_REQUEUE'
     ) VALUES (
     );
     );
+    0,
     20
     ADD CONSTRAINT billable_clients_client_key_required_new_rows_chk CHECK (((client_key IS NOT NULL) AND (length(btrim(client_key)) > 0))) NOT VALID;
     ADD CONSTRAINT billable_clients_pkey PRIMARY KEY (billable_client_id);
@@ -163,6 +173,11 @@
     ADD CONSTRAINT payment_outbox_pending_correlation_required_new_rows_chk CHECK ((correlation_id IS NOT NULL)) NOT VALID;
     ADD CONSTRAINT payment_outbox_pending_pkey PRIMARY KEY (outbox_id);
     ADD CONSTRAINT payment_outbox_pending_tenant_id_fkey FOREIGN KEY (tenant_id) REFERENCES public.tenants(tenant_id);
+    ADD CONSTRAINT pii_purge_events_pkey PRIMARY KEY (purge_event_id);
+    ADD CONSTRAINT pii_purge_events_purge_request_id_fkey FOREIGN KEY (purge_request_id) REFERENCES public.pii_purge_requests(purge_request_id);
+    ADD CONSTRAINT pii_purge_requests_pkey PRIMARY KEY (purge_request_id);
+    ADD CONSTRAINT pii_vault_records_pkey PRIMARY KEY (vault_id);
+    ADD CONSTRAINT pii_vault_records_purge_request_fk FOREIGN KEY (purge_request_id) REFERENCES public.pii_purge_requests(purge_request_id) DEFERRABLE;
     ADD CONSTRAINT policy_versions_pkey PRIMARY KEY (version);
     ADD CONSTRAINT revoked_client_certs_pkey PRIMARY KEY (cert_fingerprint_sha256);
     ADD CONSTRAINT revoked_tokens_pkey PRIMARY KEY (token_jti);
@@ -183,7 +198,13 @@
     ADD CONSTRAINT ux_instruction_settlement_finality_instruction UNIQUE (instruction_id);
     ADD CONSTRAINT ux_pending_idempotency UNIQUE (instruction_id, idempotency_key);
     ADD CONSTRAINT ux_pending_participant_sequence UNIQUE (participant_id, sequence_id);
+    ADD CONSTRAINT ux_pii_purge_events_request_event UNIQUE (purge_request_id, event_type);
+    ADD CONSTRAINT ux_pii_vault_records_subject_token UNIQUE (subject_token);
     AND (p.lease_expires_at IS NULL OR p.lease_expires_at <= NOW())
+    AND e.event_type = 'PURGED'
+    AS $$
+    AS $$
+    AS $$
     AS $$
     AS $$
     AS $$
@@ -227,6 +248,9 @@
     CONSTRAINT payment_outbox_attempts_attempt_no_check CHECK ((attempt_no >= 1)),
     CONSTRAINT payment_outbox_attempts_latency_ms_check CHECK (((latency_ms IS NULL) OR (latency_ms >= 0)))
     CONSTRAINT payment_outbox_pending_attempt_count_check CHECK ((attempt_count >= 0))
+    CONSTRAINT pii_purge_events_event_type_check CHECK ((event_type = ANY (ARRAY['REQUESTED'::text, 'PURGED'::text]))),
+    CONSTRAINT pii_purge_events_rows_affected_check CHECK ((rows_affected >= 0))
+    CONSTRAINT pii_vault_records_purge_shape_chk CHECK ((((purged_at IS NULL) AND (protected_payload IS NOT NULL) AND (purge_request_id IS NULL)) OR ((purged_at IS NOT NULL) AND (protected_payload IS NULL) AND (purge_request_id IS NOT NULL))))
     CONSTRAINT tenant_clients_status_check CHECK ((status = ANY (ARRAY['ACTIVE'::text, 'SUSPENDED'::text, 'REVOKED'::text])))
     CONSTRAINT tenant_members_status_check CHECK ((status = ANY (ARRAY['ACTIVE'::text, 'SUSPENDED'::text, 'EXITED'::text])))
     CONSTRAINT tenants_status_check CHECK ((status = ANY (ARRAY['ACTIVE'::text, 'SUSPENDED'::text, 'CLOSED'::text]))),
@@ -234,6 +258,7 @@
     DO UPDATE
     ELSE
     ELSE 'gen_random_uuid'
+    END IF;
     END IF;
     END IF;
     END IF;
@@ -254,6 +279,7 @@
     IF FOUND THEN
     IF FOUND THEN
     IF NOT FOUND THEN
+    IF current_setting('symphony.allow_pii_purge', true) = 'on' THEN
     IF p_state = 'RETRYABLE' AND v_next_attempt_no >= public.outbox_retry_ceiling() THEN
     IF p_state NOT IN ('DISPATCHED', 'FAILED', 'RETRYABLE') THEN
     IF v_effective_state IN ('DISPATCHED', 'FAILED') THEN
@@ -264,6 +290,9 @@
     INTO existing_attempt
     INTO existing_pending
     INTO v_instruction_id, v_participant_id, v_sequence_id, v_idempotency_key, v_rail_type, v_payload
+    LANGUAGE plpgsql
+    LANGUAGE plpgsql
+    LANGUAGE plpgsql
     LANGUAGE plpgsql
     LANGUAGE plpgsql
     LANGUAGE plpgsql
@@ -303,6 +332,8 @@
     RAISE EXCEPTION 'member/tenant mismatch'
     RAISE EXCEPTION 'member_id not found'
     RAISE EXCEPTION 'payment_outbox_attempts is append-only'
+    RAISE EXCEPTION 'pii_vault_records updates require purge executor'
+    RAISE EXCEPTION 'purge request not found: %', p_purge_request_id
     RAISE EXCEPTION 'reversal requires existing instruction %', NEW.reversal_of_instruction_id
     RAISE EXCEPTION 'reversal source instruction must be final and SETTLED: %', NEW.reversal_of_instruction_id
     RAISE EXCEPTION 'revocation tables are append-only'
@@ -310,8 +341,10 @@
     RETURN NEW;
     RETURN NEW;
     RETURN QUERY SELECT existing_pending.outbox_id, existing_pending.sequence_id, existing_pending.created_at, 'PENDING';
+    RETURN QUERY SELECT p_purge_request_id, v_prior, TRUE;
     RETURN QUERY SELECT v_next_attempt_no, v_effective_state;
     RETURN allocated;
+    RETURN;
     RETURN;
     RETURNING (participant_outbox_sequences.next_sequence_id - 1) INTO allocated;
     SELECT COALESCE(MAX(a.attempt_no), 0) + 1 INTO v_next_attempt_no
@@ -323,6 +356,7 @@
     SET search_path TO 'pg_catalog', 'public'
     SET search_path TO 'pg_catalog', 'public'
     SET search_path TO 'pg_catalog', 'public'
+    USING ERRCODE = 'P7004';
     VALUES (p_participant_id, 2)
     WHEN to_regprocedure('public.uuidv7()') IS NOT NULL THEN 'uuidv7'
     WHERE a.instruction_id = p_instruction_id
@@ -378,6 +412,7 @@
     created_at timestamp with time zone DEFAULT now() NOT NULL,
     created_at timestamp with time zone DEFAULT now() NOT NULL,
     created_at timestamp with time zone DEFAULT now() NOT NULL,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
     created_at timestamp with time zone DEFAULT now(),
     display_name text NOT NULL,
     downstream_ref text,
@@ -387,6 +422,9 @@
     error_message text,
     event_id uuid DEFAULT public.uuid_v7_or_random() NOT NULL,
     event_type text NOT NULL,
+    event_type text NOT NULL,
+    event_type,
+    event_type,
     existing_attempt RECORD;
     existing_pending RECORD;
     expires_at timestamp with time zone,
@@ -399,6 +437,7 @@
     idempotency_key text NOT NULL,
     idempotency_key text NOT NULL,
     idempotency_key text,
+    identity_hash text NOT NULL,
     instruction_id text NOT NULL,
     instruction_id text NOT NULL,
     instruction_id text NOT NULL,
@@ -406,6 +445,8 @@
     is_active boolean GENERATED ALWAYS AS ((status = 'ACTIVE'::public.policy_version_status)) STORED,
     is_final boolean DEFAULT true NOT NULL,
     item_id uuid DEFAULT public.uuid_v7_or_random() NOT NULL,
+    jsonb_build_object('executor', p_executor)
+    jsonb_build_object('subject_token', p_subject_token)
     latency_ms integer,
     lease_expires_at timestamp with time zone,
     lease_token uuid,
@@ -415,6 +456,9 @@
     member_id uuid,
     member_id uuid,
     member_ref text NOT NULL,
+    metadata
+    metadata
+    metadata jsonb,
     metadata jsonb,
     metadata jsonb,
     metadata jsonb,
@@ -425,8 +469,13 @@
     nfs_sequence_ref text,
     nfs_sequence_ref text,
     occurred_at timestamp with time zone DEFAULT now() NOT NULL,
+    occurred_at timestamp with time zone DEFAULT now() NOT NULL,
     outbox_id uuid DEFAULT public.uuid_v7_or_random() NOT NULL,
     outbox_id uuid NOT NULL,
+    p_purge_request_id,
+    p_request_reason
+    p_requested_by,
+    p_subject_token,
     pack_id uuid DEFAULT public.uuid_v7_or_random() NOT NULL,
     pack_id uuid NOT NULL,
     pack_type text NOT NULL,
@@ -442,8 +491,16 @@
     payload jsonb NOT NULL,
     payload_hash text NOT NULL,
     proof_id uuid DEFAULT public.uuid_v7_or_random() NOT NULL,
+    protected_payload jsonb,
     provider text NOT NULL,
     provider_ref text,
+    purge_event_id uuid DEFAULT public.uuid_v7_or_random() NOT NULL,
+    purge_request_id uuid DEFAULT public.uuid_v7_or_random() NOT NULL,
+    purge_request_id uuid NOT NULL,
+    purge_request_id uuid,
+    purge_request_id,
+    purge_request_id,
+    purged_at timestamp with time zone,
     quantity bigint NOT NULL,
     rail_code text,
     rail_message_type text NOT NULL,
@@ -455,6 +512,11 @@
     received_at timestamp with time zone DEFAULT now() NOT NULL,
     regulator_ref text,
     request_hash text NOT NULL,
+    request_reason
+    request_reason text NOT NULL,
+    requested_at timestamp with time zone DEFAULT now() NOT NULL
+    requested_by text NOT NULL,
+    requested_by,
     response_hash text NOT NULL,
     reversal_of_instruction_id text,
     revoked_at timestamp with time zone DEFAULT now() NOT NULL,
@@ -462,6 +524,9 @@
     revoked_by text
     revoked_by text
     root_hash text,
+    rows_affected integer DEFAULT 0 NOT NULL,
+    rows_affected,
+    rows_affected,
     sequence_id bigint NOT NULL,
     sequence_id bigint NOT NULL,
     signature text,
@@ -480,6 +545,9 @@
     subject_client_id uuid,
     subject_member_id uuid
     subject_member_id uuid,
+    subject_token text NOT NULL,
+    subject_token text NOT NULL,
+    subject_token,
     tenant_id uuid DEFAULT gen_random_uuid() NOT NULL,
     tenant_id uuid NOT NULL,
     tenant_id uuid NOT NULL,
@@ -504,8 +572,11 @@
     v_next_attempt_no INT;
     v_next_attempt_no INT; v_effective_state outbox_attempt_state;
     v_record RECORD;
+    v_request_id,
     v_retry_ceiling := public.outbox_retry_ceiling();
     v_retry_ceiling INT;
+    v_rows,
+    vault_id uuid DEFAULT public.uuid_v7_or_random() NOT NULL,
     verified_at timestamp with time zone,
     version text NOT NULL,
     version text NOT NULL,
@@ -516,7 +587,14 @@
    UPDATE payment_outbox_pending p
    WHERE ia.attestation_id = NEW.attestation_id;
    WHERE p.outbox_id = due.outbox_id
+   WHERE subject_token = v_subject_token
    WHERE t.tenant_id = derived_tenant_id;
+  )
+  )
+  ) VALUES (
+  ) VALUES (
+  ) VALUES (
+  );
   );
   BEGIN
   BEGIN
@@ -530,8 +608,12 @@
   DECLARE
   DECLARE
   DECLARE
+  DO NOTHING;
   ELSIF NEW.billable_client_id <> derived_billable_client_id THEN
   ELSIF NEW.tenant_id <> derived_tenant_id THEN
+  END IF;
+  END IF;
+  END IF;
   END IF;
   END IF;
   END IF;
@@ -558,7 +640,11 @@
   FOR UPDATE SKIP LOCKED
   FROM payment_outbox_pending p
   FROM public.instruction_settlement_finality
+  FROM public.pii_purge_events e
+  FROM public.pii_purge_requests r
   FROM public.tenant_members
+  GET DIAGNOSTICS v_rows = ROW_COUNT;
+  IF FOUND THEN
   IF NEW.billable_client_id IS NULL THEN
   IF NEW.correlation_id IS NULL THEN
   IF NEW.is_final IS DISTINCT FROM TRUE THEN
@@ -567,35 +653,58 @@
   IF NEW.tenant_id IS NULL THEN
   IF NEW.tenant_id IS NULL THEN
   IF NOT FOUND THEN
+  IF NOT FOUND THEN
   IF OLD.is_final IS TRUE THEN
+  IF TG_OP = 'UPDATE' THEN
   IF derived_billable_client_id IS NULL THEN
   IF derived_tenant_id IS NULL THEN
   IF m_tenant <> NEW.tenant_id THEN
   IF m_tenant IS NULL THEN
   IF v_source_state <> 'SETTLED' OR v_source_final IS DISTINCT FROM TRUE THEN
+  INSERT INTO public.pii_purge_events(
+  INSERT INTO public.pii_purge_events(
+  INSERT INTO public.pii_purge_requests(
+  INTO v_prior
   INTO v_source_state, v_source_final
+  INTO v_subject_token
+  LIMIT 1;
   LIMIT p_batch_size
+  ON CONFLICT ON CONSTRAINT ux_pii_purge_events_request_event
   ORDER BY p.next_attempt_at ASC, p.created_at ASC
+  PERFORM set_config('symphony.allow_pii_purge', 'on', true);
+  RAISE EXCEPTION 'pii_vault_records is non-deletable'
   RETURN NEW;
   RETURN NEW;
   RETURN NEW;
   RETURN NEW;
   RETURN OLD;
+  RETURN QUERY SELECT p_purge_request_id, v_rows, FALSE;
+  RETURN v_request_id;
+  RETURNING purge_request_id INTO v_request_id;
   SELECT CASE
   SELECT COALESCE(
+  SELECT e.rows_affected
   SELECT final_state, is_final
   SELECT ia.tenant_id
   SELECT p.outbox_id
+  SELECT r.subject_token
   SELECT t.billable_client_id
   SELECT tenant_id INTO m_tenant
+  UPDATE public.pii_vault_records
+  WHERE e.purge_request_id = p_purge_request_id
   WHERE instruction_id = NEW.reversal_of_instruction_id;
   WHERE member_id = NEW.member_id;
   WHERE p.next_attempt_at <= NOW()
+  WHERE r.purge_request_id = p_purge_request_id;
   derived_billable_client_id UUID;
   derived_tenant_id UUID;
   m_tenant uuid;
+  v_prior INTEGER := 0;
+  v_request_id UUID;
+  v_rows INTEGER := 0;
   v_source_final BOOLEAN;
   v_source_state TEXT;
+  v_subject_token TEXT;
  $$;
  )
  ),
@@ -616,7 +725,13 @@ $$;
 $$;
 $$;
 $$;
+$$;
+$$;
+$$;
 )
+);
+);
+);
 );
 );
 );
@@ -668,6 +783,13 @@ ALTER TABLE ONLY public.payment_outbox_pending
 ALTER TABLE ONLY public.payment_outbox_pending
 ALTER TABLE ONLY public.payment_outbox_pending
 ALTER TABLE ONLY public.payment_outbox_pending
+ALTER TABLE ONLY public.pii_purge_events
+ALTER TABLE ONLY public.pii_purge_events
+ALTER TABLE ONLY public.pii_purge_events
+ALTER TABLE ONLY public.pii_purge_requests
+ALTER TABLE ONLY public.pii_vault_records
+ALTER TABLE ONLY public.pii_vault_records
+ALTER TABLE ONLY public.pii_vault_records
 ALTER TABLE ONLY public.policy_versions
 ALTER TABLE ONLY public.revoked_client_certs
 ALTER TABLE ONLY public.revoked_tokens
@@ -694,6 +816,9 @@ BEGIN
 BEGIN
 BEGIN
 BEGIN
+BEGIN
+BEGIN
+BEGIN
 CREATE FUNCTION public.bump_participant_outbox_seq(p_participant_id text) RETURNS bigint
 CREATE FUNCTION public.claim_outbox_batch(p_batch_size integer, p_worker_id text, p_lease_seconds integer) RETURNS TABLE(outbox_id uuid, instruction_id text, participant_id text, sequence_id bigint, idempotency_key text, rail_type text, payload jsonb, attempt_count integer, lease_token uuid, lease_expires_at timestamp with time zone)
 CREATE FUNCTION public.complete_outbox_attempt(p_outbox_id uuid, p_lease_token uuid, p_worker_id text, p_state public.outbox_attempt_state, p_rail_reference text DEFAULT NULL::text, p_rail_code text DEFAULT NULL::text, p_error_code text DEFAULT NULL::text, p_error_message text DEFAULT NULL::text, p_latency_ms integer DEFAULT NULL::integer, p_retry_delay_seconds integer DEFAULT 1) RETURNS TABLE(attempt_no integer, state public.outbox_attempt_state)
@@ -701,12 +826,15 @@ CREATE FUNCTION public.deny_append_only_mutation() RETURNS trigger
 CREATE FUNCTION public.deny_final_instruction_mutation() RETURNS trigger
 CREATE FUNCTION public.deny_ingress_attestations_mutation() RETURNS trigger
 CREATE FUNCTION public.deny_outbox_attempts_mutation() RETURNS trigger
+CREATE FUNCTION public.deny_pii_vault_mutation() RETURNS trigger
 CREATE FUNCTION public.deny_revocation_mutation() RETURNS trigger
 CREATE FUNCTION public.enforce_instruction_reversal_source() RETURNS trigger
 CREATE FUNCTION public.enforce_member_tenant_match() RETURNS trigger
 CREATE FUNCTION public.enqueue_payment_outbox(p_instruction_id text, p_participant_id text, p_idempotency_key text, p_rail_type text, p_payload jsonb) RETURNS TABLE(outbox_id uuid, sequence_id bigint, created_at timestamp with time zone, state text)
+CREATE FUNCTION public.execute_pii_purge(p_purge_request_id uuid, p_executor text) RETURNS TABLE(purge_request_id uuid, rows_affected integer, already_purged boolean)
 CREATE FUNCTION public.outbox_retry_ceiling() RETURNS integer
 CREATE FUNCTION public.repair_expired_leases(p_batch_size integer, p_worker_id text) RETURNS TABLE(outbox_id uuid, attempt_no integer)
+CREATE FUNCTION public.request_pii_purge(p_subject_token text, p_requested_by text, p_request_reason text) RETURNS uuid
 CREATE FUNCTION public.set_correlation_id_if_null() RETURNS trigger
 CREATE FUNCTION public.set_external_proofs_attribution() RETURNS trigger
 CREATE FUNCTION public.uuid_strategy() RETURNS text
@@ -731,6 +859,7 @@ CREATE INDEX idx_payment_outbox_pending_correlation_id ON public.payment_outbox_
 CREATE INDEX idx_payment_outbox_pending_due_claim ON public.payment_outbox_pending USING btree (next_attempt_at, lease_expires_at, created_at);
 CREATE INDEX idx_payment_outbox_pending_tenant_correlation ON public.payment_outbox_pending USING btree (tenant_id, correlation_id) WHERE (correlation_id IS NOT NULL);
 CREATE INDEX idx_payment_outbox_pending_tenant_due ON public.payment_outbox_pending USING btree (tenant_id, next_attempt_at) WHERE (tenant_id IS NOT NULL);
+CREATE INDEX idx_pii_purge_requests_subject_requested ON public.pii_purge_requests USING btree (subject_token, requested_at DESC);
 CREATE INDEX idx_policy_versions_is_active ON public.policy_versions USING btree (is_active) WHERE (is_active = true);
 CREATE INDEX idx_tenant_clients_tenant ON public.tenant_clients USING btree (tenant_id);
 CREATE INDEX idx_tenant_members_status ON public.tenant_members USING btree (status);
@@ -750,6 +879,9 @@ CREATE TABLE public.participant_outbox_sequences (
 CREATE TABLE public.participants (
 CREATE TABLE public.payment_outbox_attempts (
 CREATE TABLE public.payment_outbox_pending (
+CREATE TABLE public.pii_purge_events (
+CREATE TABLE public.pii_purge_requests (
+CREATE TABLE public.pii_vault_records (
 CREATE TABLE public.policy_versions (
 CREATE TABLE public.revoked_client_certs (
 CREATE TABLE public.revoked_tokens (
@@ -764,6 +896,9 @@ CREATE TRIGGER trg_deny_external_proofs_mutation BEFORE DELETE OR UPDATE ON publ
 CREATE TRIGGER trg_deny_final_instruction_mutation BEFORE DELETE OR UPDATE ON public.instruction_settlement_finality FOR EACH ROW EXECUTE FUNCTION public.deny_final_instruction_mutation();
 CREATE TRIGGER trg_deny_ingress_attestations_mutation BEFORE DELETE OR UPDATE ON public.ingress_attestations FOR EACH ROW EXECUTE FUNCTION public.deny_ingress_attestations_mutation();
 CREATE TRIGGER trg_deny_outbox_attempts_mutation BEFORE DELETE OR UPDATE ON public.payment_outbox_attempts FOR EACH ROW EXECUTE FUNCTION public.deny_outbox_attempts_mutation();
+CREATE TRIGGER trg_deny_pii_purge_events_mutation BEFORE DELETE OR UPDATE ON public.pii_purge_events FOR EACH ROW EXECUTE FUNCTION public.deny_append_only_mutation();
+CREATE TRIGGER trg_deny_pii_purge_requests_mutation BEFORE DELETE OR UPDATE ON public.pii_purge_requests FOR EACH ROW EXECUTE FUNCTION public.deny_append_only_mutation();
+CREATE TRIGGER trg_deny_pii_vault_mutation BEFORE DELETE OR UPDATE ON public.pii_vault_records FOR EACH ROW EXECUTE FUNCTION public.deny_pii_vault_mutation();
 CREATE TRIGGER trg_deny_revoked_client_certs_mutation BEFORE DELETE OR UPDATE ON public.revoked_client_certs FOR EACH ROW EXECUTE FUNCTION public.deny_revocation_mutation();
 CREATE TRIGGER trg_deny_revoked_tokens_mutation BEFORE DELETE OR UPDATE ON public.revoked_tokens FOR EACH ROW EXECUTE FUNCTION public.deny_revocation_mutation();
 CREATE TRIGGER trg_enforce_instruction_reversal_source BEFORE INSERT ON public.instruction_settlement_finality FOR EACH ROW EXECUTE FUNCTION public.enforce_instruction_reversal_source();
@@ -783,6 +918,11 @@ CREATE UNIQUE INDEX ux_policy_versions_single_active ON public.policy_versions U
 DECLARE
 DECLARE
 DECLARE
+DECLARE
+DECLARE
+END;
+END;
+END;
 END;
 END;
 END;
