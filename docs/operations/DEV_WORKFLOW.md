@@ -14,6 +14,7 @@ Your job as a developer is to keep changes **cheap** by catching â€œstructuralâ€
 - Docker (or compatible container runtime)
 - `bash`, `python3`, `psql`
 - Git
+- Local Docker daemon access (`docker info` succeeds)
 
 ### One command
 From repo root:
@@ -251,6 +252,16 @@ cd infra/docker
 docker compose down -v
 docker compose up -d
 ```
+
+### Docker permission failures in `pre_ci`
+If `scripts/dev/pre_ci.sh` reports daemon or socket access errors:
+- Ensure Docker is running: `docker info`
+- If you see `/var/run/docker.sock` permission denied, add your user to the `docker` group and re-login
+
+### Semgrep permission failures in fast security checks
+Security fast checks use repo-local runtime paths under `.cache/`.
+If your shell exports conflicting Semgrep/XDG paths, unset them and re-run:
+- `unset SEMGREP_SETTINGS_FILE XDG_CONFIG_HOME XDG_CACHE_HOME`
 
 ---
 

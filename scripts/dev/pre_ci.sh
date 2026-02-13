@@ -21,6 +21,21 @@ KEEP_TEMP_DB="${KEEP_TEMP_DB:-0}" # set to 1 to keep temp DB for debugging
 export BASE_REF="origin/main"
 export HEAD_REF="HEAD"
 
+require_docker_access() {
+  if ! command -v docker >/dev/null 2>&1; then
+    echo "ERROR: docker is required to run DB tests"
+    echo "Hint: install Docker Desktop or Docker Engine and ensure 'docker' is on PATH."
+    return 1
+  fi
+
+  if ! docker info >/dev/null 2>&1; then
+    echo "ERROR: docker daemon is not reachable"
+    echo "Hint: start Docker and verify access with: docker info"
+    echo "Hint: if permission denied on /var/run/docker.sock, add your user to the docker group and re-login."
+    return 1
+  fi
+}
+
 echo "==> Toolchain parity bootstrap (local)"
 if [[ -x scripts/audit/bootstrap_local_ci_toolchain.sh ]]; then
   scripts/audit/bootstrap_local_ci_toolchain.sh
@@ -107,15 +122,14 @@ if [[ -z "${DATABASE_URL:-}" ]]; then
   exit 1
 fi
 
-if command -v docker >/dev/null 2>&1; then
-  if [[ -f "$COMPOSE_FILE" ]]; then
-    docker compose -f "$COMPOSE_FILE" --env-file "$ENV_FILE" up -d
-  else
-    echo "ERROR: $COMPOSE_FILE not found"
-    exit 1
-  fi
+if ! require_docker_access; then
+  exit 1
+fi
+
+if [[ -f "$COMPOSE_FILE" ]]; then
+  docker compose -f "$COMPOSE_FILE" --env-file "$ENV_FILE" up -d
 else
-  echo "ERROR: docker is required to run DB tests"
+  echo "ERROR: $COMPOSE_FILE not found"
   exit 1
 fi
 

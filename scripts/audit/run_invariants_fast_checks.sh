@@ -235,10 +235,17 @@ fi
 echo ""
 echo "==> Phase-0 contract evidence status"
 if [[ -x "scripts/audit/verify_phase0_contract_evidence_status.sh" || -f "scripts/audit/verify_phase0_contract_evidence_status.sh" ]]; then
+  # Standalone fast checks should not fail on ordering-only evidence absence.
+  # Contract evidence status runs in ordered/pre_ci flows after all producers.
+  # To force this check inside fast checks, set:
+  #   SYMPHONY_ENFORCE_CONTRACT_EVIDENCE_STATUS=1
   if [[ "${SYMPHONY_SKIP_CONTRACT_EVIDENCE_STATUS:-0}" == "1" ]]; then
     echo "   (skipping contract evidence status; SYMPHONY_SKIP_CONTRACT_EVIDENCE_STATUS=1)"
-  else
+  elif [[ "${SYMPHONY_ENFORCE_CONTRACT_EVIDENCE_STATUS:-0}" == "1" ]]; then
     run bash scripts/audit/verify_phase0_contract_evidence_status.sh
+  else
+    echo "   (skipping contract evidence status in standalone fast checks)"
+    echo "   (set SYMPHONY_ENFORCE_CONTRACT_EVIDENCE_STATUS=1 to run it here)"
   fi
 else
   echo "ERROR: scripts/audit/verify_phase0_contract_evidence_status.sh not found"

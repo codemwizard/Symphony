@@ -49,27 +49,27 @@ Patches covered by this plan:
 
 ## Tasks List
 ### A) Seed script correctness (CI)
-- [ ] Update `schema/seeds/ci/seed_policy_from_env.sh` with Phase-1 ACTIVE logic:
+- [x] Update `schema/seeds/ci/seed_policy_from_env.sh` with Phase-1 ACTIVE logic:
       - Detect existing ACTIVE row.
       - Fail closed on different version.
       - Verify checksum on match.
       - Insert ACTIVE only when none exists.
-- [ ] Ensure `POLICY_*` takes precedence over `SEED_*`.
-- [ ] Keep errors explicit and stable for test assertions.
+- [x] Ensure `POLICY_*` takes precedence over `SEED_*`.
+- [x] Keep errors explicit and stable for test assertions.
 
 ### B) Checksum test hardening
-- [ ] Add helpers for DB queries (active tuple, total rows, version row counts).
-- [ ] Add "no side effects" assertions after each test case.
-- [ ] Add 3rd test case: different version blocked (Phase 1 no-rotation).
-- [ ] Ensure `SEED_*` is unset before invoking the seed script.
-- [ ] Ensure cleanup only removes test-inserted row.
+- [x] Add helpers for DB queries (active tuple, total rows, version row counts).
+- [x] Add "no side effects" assertions after each test case.
+- [x] Add 3rd test case: different version blocked (Phase 1 no-rotation).
+- [x] Ensure `SEED_*` is unset before invoking the seed script.
+- [x] Ensure cleanup only removes test-inserted row.
 
 ### C) Verification
-- [ ] Run: `bash -x scripts/db/tests/test_seed_policy_checksum.sh`
+- [x] Run: `bash -x scripts/db/tests/test_seed_policy_checksum.sh`
       - Expect: `3 passed, 0 failed` and `exit code 0`.
-- [ ] Run: `scripts/db/tests/test_db_functions.sh`
+- [x] Run: `scripts/db/tests/test_db_functions.sh`
       - Expect: `Summary: N passed, 0 failed` and `exit code 0`.
-- [ ] Run: `scripts/dev/pre_ci.sh`
+- [x] Run: `scripts/dev/pre_ci.sh`
       - Expect: DB function tests pass, checksum tests pass, and no flakiness.
 
 ## Success Criteria
