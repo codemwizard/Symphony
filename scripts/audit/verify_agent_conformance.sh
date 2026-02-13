@@ -11,7 +11,8 @@ mkdir -p "$EVIDENCE_DIR"
 source "$ROOT/scripts/lib/evidence.sh"
 EVIDENCE_TS="$(evidence_now_utc)"
 EVIDENCE_GIT_SHA="$(git_sha)"
-export EVIDENCE_TS EVIDENCE_GIT_SHA
+EVIDENCE_SCHEMA_FP="$(schema_fingerprint)"
+export EVIDENCE_TS EVIDENCE_GIT_SHA EVIDENCE_SCHEMA_FP
 
 cd "$ROOT"
 
@@ -23,7 +24,7 @@ import subprocess
 import hashlib
 import sys
 from pathlib import Path
-from datetime import datetime
+from datetime import datetime, timezone
 
 ROOT = Path(os.getcwd())
 EVIDENCE_FILE = Path(os.environ["EVIDENCE_FILE"])
@@ -204,9 +205,13 @@ def main():
     approval_present = check_approval_metadata(regulated_changed)
 
     evidence = {
+        "check_id": "AGENT-CONFORMANCE",
+        "timestamp_utc": os.environ.get("EVIDENCE_TS"),
+        "git_sha": os.environ.get("EVIDENCE_GIT_SHA"),
+        "schema_fingerprint": os.environ.get("EVIDENCE_SCHEMA_FP"),
         "schema_version": "1.0",
         "status": "PASS" if not FAILURES else "FAIL",
-        "checked_at_utc": datetime.utcnow().isoformat() + "Z",
+        "checked_at_utc": datetime.now(timezone.utc).isoformat(),
         "git_commit": subprocess.check_output(["git", "rev-parse", "HEAD"], text=True).strip(),
         "mode": mode,
         "canonical_docs": [

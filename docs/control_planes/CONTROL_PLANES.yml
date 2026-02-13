@@ -67,6 +67,9 @@ control_planes:
       - gate_id: SEC-G17
         script: scripts/audit/lint_pii_leakage_payloads.sh
         evidence: evidence/phase0/pii_leakage_payloads.json
+      - gate_id: SEC-G18
+        script: scripts/security/lint_dotnet_quality.sh
+        evidence: evidence/phase1/dotnet_lint_quality.json
 
   integrity:
     owner: INVARIANTS_CURATOR
@@ -158,6 +161,10 @@ control_planes:
       - gate_id: INT-G24
         script: scripts/db/verify_anchor_sync_hooks.sh
         evidence: evidence/phase0/anchor_sync_hooks.json
+
+      - gate_id: INT-G28
+        script: scripts/audit/verify_phase1_contract.sh
+        evidence: evidence/phase1/phase1_contract_status.json
 
   governance:
     owner: COMPLIANCE_MAPPER

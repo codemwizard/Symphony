@@ -1,0 +1,48 @@
+phase: '1'
+task_id: TSK-P1-009
+title: INV-116 Rail Sequence Truth-Anchor Continuity
+owner_role: DB_FOUNDATION
+status: planned
+depends_on:
+- TSK-P1-002
+- TSK-P1-006
+touches:
+- schema/migrations/**
+- scripts/db/verify_rail_sequence_truth_anchor.sh
+- scripts/db/tests/test_rail_sequence_continuity.sh
+- scripts/db/verify_invariants.sh
+- docs/contracts/sqlstate_map.yml
+- docs/control_planes/CONTROL_PLANES.yml
+- docs/invariants/**
+invariants:
+- INV-061
+- INV-097
+- INV-116
+work:
+- Implement expand-then-constrain rail sequence continuity schema path.
+- Add INT-G27 verifier and runtime tests.
+- Register SQLSTATE P7005 and promote INV-116 when complete.
+acceptance_criteria:
+- DISPATCHED rail sequence continuity rules are mechanically enforced.
+- INT-G27 evidence is deterministic and schema-conformant.
+verification:
+- scripts/db/verify_rail_sequence_truth_anchor.sh
+- scripts/db/tests/test_rail_sequence_continuity.sh
+- scripts/audit/check_sqlstate_map_drift.sh
+- scripts/audit/verify_control_planes_drift.sh
+- scripts/audit/verify_phase1_contract.sh
+- scripts/dev/pre_ci.sh
+evidence:
+- evidence/phase1/rail_sequence_truth_anchor.json
+- evidence/phase1/rail_sequence_runtime.json
+failure_modes:
+- Rail sequence constraint/trigger semantics missing.
+- Evidence file missing.
+must_read:
+- docs/decisions/ADR-0014-nfs-sequence-continuity-ipdr.md
+implementation_plan: docs/plans/phase1/TSK-P1-009_inv_116_rail_sequence_truth_anchor_continuity/PLAN.md
+implementation_log: docs/plans/phase1/TSK-P1-009_inv_116_rail_sequence_truth_anchor_continuity/EXEC_LOG.md
+notes: Primary mechanical implementation for INV-116.
+client: codex_cli
+assigned_agent: db_foundation
+model: <UNASSIGNED>

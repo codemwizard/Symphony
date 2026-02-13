@@ -1,0 +1,50 @@
+phase: '1'
+task_id: TSK-P1-008
+title: INV-115 PII Decoupling and Purge Survivability
+owner_role: DB_FOUNDATION
+status: planned
+depends_on:
+- TSK-P1-002
+- TSK-P1-006
+touches:
+- schema/migrations/**
+- scripts/db/verify_pii_decoupling_hooks.sh
+- scripts/db/tests/test_pii_decoupling.sh
+- scripts/db/verify_invariants.sh
+- docs/contracts/sqlstate_map.yml
+- docs/control_planes/CONTROL_PLANES.yml
+- docs/invariants/**
+invariants:
+- INV-061
+- INV-097
+- INV-112
+- INV-115
+work:
+- Add vault/purge schema hooks and append-only purge protections.
+- Add INT-G26 verifier and runtime tests.
+- Register SQLSTATE P7004 and promote INV-115 when complete.
+acceptance_criteria:
+- PII purge survivability and decoupling hooks are mechanically enforced.
+- SEC-G17 compatibility is preserved while adding required schema fields.
+verification:
+- scripts/db/verify_pii_decoupling_hooks.sh
+- scripts/db/tests/test_pii_decoupling.sh
+- scripts/audit/lint_pii_leakage_payloads.sh
+- scripts/audit/check_sqlstate_map_drift.sh
+- scripts/audit/verify_control_planes_drift.sh
+- scripts/audit/verify_phase1_contract.sh
+- scripts/dev/pre_ci.sh
+evidence:
+- evidence/phase1/pii_decoupling_invariant.json
+- evidence/phase1/pii_decoupling_runtime.json
+failure_modes:
+- PII vault/purge integrity hooks missing.
+- Evidence file missing.
+must_read:
+- docs/decisions/ADR-0013-zdpa-pii-decoupling-strategy.md
+implementation_plan: docs/plans/phase1/TSK-P1-008_inv_115_pii_decoupling_and_purge_survivability/PLAN.md
+implementation_log: docs/plans/phase1/TSK-P1-008_inv_115_pii_decoupling_and_purge_survivability/EXEC_LOG.md
+notes: Security-sensitive DB implementation under DB foundation scope.
+client: codex_cli
+assigned_agent: db_foundation
+model: <UNASSIGNED>

@@ -1,0 +1,46 @@
+phase: '1'
+task_id: TSK-P1-006
+title: Phase-1 Contract and Evidence Schema Coverage
+owner_role: INVARIANTS_CURATOR
+status: completed
+depends_on:
+- TSK-P1-001
+- TSK-P1-002
+touches:
+- docs/PHASE1/phase1_contract.yml
+- docs/PHASE1/PHASE1_CONTRACT.md
+- scripts/audit/verify_phase1_contract.sh
+- scripts/audit/validate_evidence_schema.sh
+- docs/control_planes/CONTROL_PLANES.yml
+invariants:
+- INV-072
+- INV-077
+- INV-080
+- INV-105
+work:
+- Create Phase-1 contract file and verifier and wire INT-G28.
+- Extend evidence validation coverage to evidence/phase1/**.
+- Define required/optional semantics and RUN_PHASE1_GATES behavior in contract rules.
+acceptance_criteria:
+- INT-G28 is declared and enforced without regressing Phase-0 gates.
+- Phase-1 evidence schema validation is deterministic and fail-closed for required
+  rows.
+verification:
+- scripts/audit/verify_phase1_contract.sh
+- scripts/audit/verify_control_planes_drift.sh
+- scripts/audit/validate_evidence_schema.sh
+- scripts/dev/pre_ci.sh
+evidence:
+- evidence/phase1/phase1_contract_status.json
+failure_modes:
+- Required contract rows pass without required evidence.
+- Evidence file missing.
+must_read:
+- Phase1-Draft_Plan.md
+- docs/control_planes/CONTROL_PLANES.yml
+implementation_plan: docs/plans/phase1/TSK-P1-006_phase_1_contract_and_evidence_schema_coverage/PLAN.md
+implementation_log: docs/plans/phase1/TSK-P1-006_phase_1_contract_and_evidence_schema_coverage/EXEC_LOG.md
+notes: Contract anchor task for all Phase-1 required rows.
+client: codex_cli
+assigned_agent: invariants_curator
+model: <UNASSIGNED>

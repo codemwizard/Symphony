@@ -1,0 +1,37 @@
+phase: '1'
+task_id: TSK-P1-011
+title: Fast-Checks Contract Evidence Ordering Fix
+owner_role: INVARIANTS_CURATOR
+status: planned
+depends_on:
+- TSK-P1-006
+touches:
+- scripts/audit/run_invariants_fast_checks.sh
+- scripts/audit/verify_phase0_contract_evidence_status.sh
+- scripts/audit/run_phase0_ordered_checks.sh
+invariants:
+- INV-080
+- INV-081
+work:
+- Correct standalone fast-check ordering so contract evidence status runs only after
+  producers.
+- Maintain parity with canonical ordered runner behavior.
+acceptance_criteria:
+- Standalone invariants fast checks no longer fail due to ordering-only missing evidence.
+- Ordered runner semantics remain unchanged.
+verification:
+- scripts/audit/run_invariants_fast_checks.sh
+- scripts/audit/verify_phase0_contract_evidence_status.sh
+evidence:
+- evidence/phase0/phase0_contract_evidence_status.json
+failure_modes:
+- Ordering regression causes false missing-evidence failures.
+- Evidence file missing.
+must_read:
+- scripts/audit/run_phase0_ordered_checks.sh
+implementation_plan: docs/plans/phase1/TSK-P1-011_fast_checks_contract_evidence_ordering_fix/PLAN.md
+implementation_log: docs/plans/phase1/TSK-P1-011_fast_checks_contract_evidence_ordering_fix/EXEC_LOG.md
+notes: Parity/stability prerequisite before expanded Phase-1 gates.
+client: codex_cli
+assigned_agent: invariants_curator
+model: <UNASSIGNED>

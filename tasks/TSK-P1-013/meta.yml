@@ -1,0 +1,36 @@
+phase: '1'
+task_id: TSK-P1-013
+title: Local Gate Runtime Parity Hardening
+owner_role: SUPERVISOR
+status: planned
+depends_on:
+- TSK-P1-006
+touches:
+- scripts/dev/pre_ci.sh
+- scripts/audit/verify_ci_toolchain.sh
+- docs/operations/DEV_WORKFLOW.md
+invariants:
+- INV-079
+- INV-081
+work:
+- Harden local pre-CI behavior for deterministic Semgrep and Docker dependency handling.
+- Improve diagnostics for permission/env blockers without weakening fail-closed posture.
+acceptance_criteria:
+- Pre-CI parity failures are deterministic and actionable.
+- Toolchain checks remain fail-closed for missing required tools.
+verification:
+- scripts/dev/pre_ci.sh
+- scripts/audit/verify_ci_toolchain.sh
+evidence:
+- evidence/phase0/ci_toolchain.json
+failure_modes:
+- Local parity remains flaky or non-actionable.
+- Evidence file missing.
+must_read:
+- docs/operations/DEV_WORKFLOW.md
+implementation_plan: docs/plans/phase1/TSK-P1-013_local_gate_runtime_parity_hardening/PLAN.md
+implementation_log: docs/plans/phase1/TSK-P1-013_local_gate_runtime_parity_hardening/EXEC_LOG.md
+notes: Cross-surface parity hardening coordinated by supervisor.
+client: codex_cli
+assigned_agent: supervisor
+model: <UNASSIGNED>

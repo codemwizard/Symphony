@@ -1,0 +1,37 @@
+phase: '1'
+task_id: TSK-P1-020
+title: Product KPI Evidence Gate
+owner_role: INVARIANTS_CURATOR
+status: planned
+depends_on:
+- TSK-P1-019
+touches:
+- scripts/audit/**
+- docs/operations/**
+- evidence/phase1/**
+invariants:
+- INV-028
+- INV-029
+- INV-077
+- INV-081
+work:
+- Define KPI evidence artifacts for pilot commercial-readiness metrics.
+- Add freshness/completeness validation for KPI report artifact.
+acceptance_criteria:
+- KPI report generation is deterministic and CI/pre-CI compatible.
+- Stale KPI report fails validation.
+verification:
+- scripts/dev/pre_ci.sh
+evidence:
+- evidence/phase1/product_kpi_readiness_report.json
+failure_modes:
+- KPI report does not reflect current run context.
+- Evidence file missing.
+must_read:
+- Symphony_BusinessPlan_Implementation.txt
+implementation_plan: docs/plans/phase1/TSK-P1-020_product_kpi_evidence_gate/PLAN.md
+implementation_log: docs/plans/phase1/TSK-P1-020_product_kpi_evidence_gate/EXEC_LOG.md
+notes: Commercial-readiness proof layer for leadership sign-off.
+client: codex_cli
+assigned_agent: invariants_curator
+model: <UNASSIGNED>
