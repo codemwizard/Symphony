@@ -22,6 +22,7 @@ dist/
 build/
 .DS_Store
 bin/
+obj/
 *.zip
 
 
