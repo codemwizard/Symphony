@@ -168,6 +168,14 @@ jobs:
           chmod +x scripts/audit/verify_task_plans_present.sh
           scripts/audit/verify_task_plans_present.sh
 
+      - name: Verify agent conformance
+        if: github.event_name != 'schedule'
+        run: |
+          chmod +x scripts/audit/verify_agent_conformance.sh
+          chmod +x scripts/audit/verify_agent_conformance_spec.sh
+          scripts/audit/verify_agent_conformance.sh
+          scripts/audit/verify_agent_conformance_spec.sh
+
       - name: Phase-0 ordered checks
         if: github.event_name != 'schedule'
         run: |

@@ -2,7 +2,7 @@ phase: '1'
 task_id: TSK-P1-003
 title: Agent Conformance Verification Closure
 owner_role: INVARIANTS_CURATOR
-status: planned
+status: completed
 depends_on:
 - TSK-P1-001
 - TSK-P1-002

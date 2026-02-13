@@ -34,5 +34,6 @@ Role: Runtime/Orchestration Agent
 - Any gate evidence JSON referenced by the plan.
 
 ## Canonical References
+- `docs/operations/AI_AGENT_OPERATION_MANUAL.md`
 - `docs/operations/AI_AGENT_WORKFLOW_AND_ROLE_PLAN_v2.md`
 - `docs/operations/AGENT_ROLE_RECONCILIATION.md`

@@ -15,3 +15,8 @@ origin_task_id: TSK-P1-006
 
 ## final_status
 COMPLETED
+
+Plan: `docs/plans/phase1/TSK-P1-006_phase_1_contract_and_evidence_schema_coverage/PLAN.md`
+
+## Final Summary
+- Phase-1 contract, verifier, and gate wiring were completed with passing checks.

@@ -2,7 +2,7 @@ phase: '1'
 task_id: TSK-P1-005
 title: Truth-Sync Promotion for INV-111 INV-112 INV-113
 owner_role: INVARIANTS_CURATOR
-status: planned
+status: completed
 depends_on: []
 touches:
 - docs/invariants/INVARIANTS_MANIFEST.yml
