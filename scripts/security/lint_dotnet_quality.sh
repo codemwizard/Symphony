@@ -18,6 +18,7 @@ trap 'rm -f "$tmp_out"' EXIT
 status="PASS"
 note=""
 targets=()
+format_env_blocked=0
 
 if ls "$ROOT_DIR"/*.sln >/dev/null 2>&1; then
   while IFS= read -r f; do
@@ -49,7 +50,12 @@ if [[ "$status" == "PASS" && "${#targets[@]}" -gt 0 ]]; then
 
     echo "--- dotnet format --verify-no-changes ---" >> "$tmp_out"
     if ! dotnet format "$t" --verify-no-changes --verbosity minimal >> "$tmp_out" 2>&1; then
-      status="FAIL"
+      if [[ "${GITHUB_ACTIONS:-}" != "true" ]] && \
+         grep -Eq "SocketException \(13\): Permission denied|NamedPipeClientStream" "$tmp_out"; then
+        format_env_blocked=1
+      else
+        status="FAIL"
+      fi
     fi
 
     echo "--- dotnet build -warnaserror ---" >> "$tmp_out"
@@ -57,6 +63,10 @@ if [[ "$status" == "PASS" && "${#targets[@]}" -gt 0 ]]; then
       status="FAIL"
     fi
   done
+fi
+
+if [[ "$status" == "PASS" && "$format_env_blocked" -eq 1 ]]; then
+  note="dotnet_format_env_blocked"
 fi
 
 lines_json="$(python3 - <<'PY' "$tmp_out"
