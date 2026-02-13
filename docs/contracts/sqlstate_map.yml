@@ -46,6 +46,19 @@
       "meaning": "invalid terminal/finality state transition",
       "retryable": false
     },
+    "P7004": {
+      "canonical": "P7104",
+      "class": "B",
+      "subsystem": "pii",
+      "meaning": "invalid purge operation or direct vault mutation",
+      "retryable": false
+    },
+    "P7104": {
+      "class": "B",
+      "subsystem": "pii",
+      "meaning": "invalid purge operation or direct vault mutation",
+      "retryable": false
+    },
     "P7201": {
       "class": "B",
       "subsystem": "ingress",

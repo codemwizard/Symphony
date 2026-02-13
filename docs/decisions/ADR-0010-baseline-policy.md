@@ -22,3 +22,5 @@ Baseline updates are **governed** and **fail-closed**:
 - 2026-02-07: Baseline regenerated after Phase-0 audit gap closeout migrations (0022–0024).
 - 2026-02-09: Baseline regenerated after business foundation delta tightening (0025–0027).
 - 2026-02-13: Baseline regenerated after INV-114 instruction finality migration (0028).
+- 2026-02-13: Baseline regenerated after INV-115 pii decoupling migration (0029).
+- 2026-02-13: Baseline regenerated after follow-up fix migration for pii purge executor (0030).

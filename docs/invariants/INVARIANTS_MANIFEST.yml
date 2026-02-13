@@ -833,12 +833,13 @@
 
 - id: INV-115
   aliases: ["INV-ZDPA-01"]
-  status: roadmap
+  status: implemented
   severity: P0
   title: "PII decoupling + right-to-be-forgotten survivability (evidence remains valid after PII purge)"
   owners: ["team-security", "team-db", "team-platform"]
   sla_days: 14
-  verification: "Phase-1/2 activation: tokenization/vault tables + retention hooks + evidence signing over identity_hash; add mechanical purge tests and signature verification. Phase-0 is declarative only."
+  enforcement: "scripts/db/verify_pii_decoupling_hooks.sh"
+  verification: "scripts/db/verify_pii_decoupling_hooks.sh; scripts/db/tests/test_pii_decoupling.sh; evidence/phase1/pii_decoupling_invariant.json"
 
 - id: INV-116
   aliases: ["INV-IPDR-02"]
