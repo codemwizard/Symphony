@@ -35,5 +35,6 @@ Role: DB/Schema Agent
 - `evidence/phase1/agent_conformance.json`
 
 ## Canonical References
+- `docs/operations/AI_AGENT_OPERATION_MANUAL.md`
 - `docs/operations/AI_AGENT_WORKFLOW_AND_ROLE_PLAN_v2.md`
 - `docs/operations/AGENT_ROLE_RECONCILIATION.md`

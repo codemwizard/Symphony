@@ -168,6 +168,14 @@ jobs:
           chmod +x scripts/audit/verify_task_plans_present.sh
           scripts/audit/verify_task_plans_present.sh
 
+      - name: Verify agent conformance
+        if: github.event_name != 'schedule'
+        run: |
+          chmod +x scripts/audit/verify_agent_conformance.sh
+          chmod +x scripts/audit/verify_agent_conformance_spec.sh
+          scripts/audit/verify_agent_conformance.sh
+          scripts/audit/verify_agent_conformance_spec.sh
+
       - name: Phase-0 ordered checks
         if: github.event_name != 'schedule'
         run: |
@@ -542,6 +550,30 @@ jobs:
           set -euo pipefail
           chmod +x scripts/db/tests/test_outbox_lease_fencing.sh
           scripts/db/tests/test_outbox_lease_fencing.sh
+
+      - name: Run instruction finality runtime test
+        env:
+          DATABASE_URL: postgres://symphony:symphony@localhost:5432/symphony
+        run: |
+          set -euo pipefail
+          chmod +x scripts/db/tests/test_instruction_finality.sh
+          scripts/db/tests/test_instruction_finality.sh
+
+      - name: Run PII decoupling runtime test
+        env:
+          DATABASE_URL: postgres://symphony:symphony@localhost:5432/symphony
+        run: |
+          set -euo pipefail
+          chmod +x scripts/db/tests/test_pii_decoupling.sh
+          scripts/db/tests/test_pii_decoupling.sh
+
+      - name: Run rail sequence continuity runtime test
+        env:
+          DATABASE_URL: postgres://symphony:symphony@localhost:5432/symphony
+        run: |
+          set -euo pipefail
+          chmod +x scripts/db/tests/test_rail_sequence_continuity.sh
+          scripts/db/tests/test_rail_sequence_continuity.sh
 
       - name: Run no-tx migrations test
         env:

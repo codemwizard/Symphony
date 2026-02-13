@@ -30,8 +30,8 @@
     "P7003": {
       "canonical": "P7103",
       "class": "B",
-      "subsystem": "outbox",
-      "meaning": "invalid attempt completion state",
+      "subsystem": "state_machine",
+      "meaning": "invalid terminal/finality state transition",
       "retryable": false
     },
     "P7102": {
@@ -42,8 +42,34 @@
     },
     "P7103": {
       "class": "B",
-      "subsystem": "outbox",
-      "meaning": "invalid attempt completion state",
+      "subsystem": "state_machine",
+      "meaning": "invalid terminal/finality state transition",
+      "retryable": false
+    },
+    "P7004": {
+      "canonical": "P7104",
+      "class": "B",
+      "subsystem": "pii",
+      "meaning": "invalid purge operation or direct vault mutation",
+      "retryable": false
+    },
+    "P7104": {
+      "class": "B",
+      "subsystem": "pii",
+      "meaning": "invalid purge operation or direct vault mutation",
+      "retryable": false
+    },
+    "P7005": {
+      "canonical": "P7105",
+      "class": "B",
+      "subsystem": "rail_anchor",
+      "meaning": "missing or invalid rail sequence truth anchor on dispatch",
+      "retryable": false
+    },
+    "P7105": {
+      "class": "B",
+      "subsystem": "rail_anchor",
+      "meaning": "missing or invalid rail sequence truth anchor on dispatch",
       "retryable": false
     },
     "P7201": {

@@ -23,28 +23,28 @@
   notes: "Structural hooks exist in Phase-0; operational hardening is Phase-1."
 
 - invariant_id: "INV-114"
-  status: "planned"
-  required: false
+  status: "implemented"
+  required: true
   gate_id: "INT-G25"
   verifier: "scripts/db/verify_instruction_finality_invariant.sh"
   evidence_path: "evidence/phase1/instruction_finality_invariant.json"
-  notes: "Phase-1 runtime invariant to be promoted when implemented."
+  notes: "Phase-1 runtime invariant enforced with DB trigger semantics and runtime tests."
 
 - invariant_id: "INV-115"
-  status: "planned"
-  required: false
+  status: "implemented"
+  required: true
   gate_id: "INT-G26"
   verifier: "scripts/db/verify_pii_decoupling_hooks.sh"
   evidence_path: "evidence/phase1/pii_decoupling_invariant.json"
-  notes: "Phase-1 runtime invariant to be promoted when implemented."
+  notes: "Phase-1 runtime invariant enforced with vault/purge hooks and deterministic runtime tests."
 
 - invariant_id: "INV-116"
-  status: "planned"
-  required: false
+  status: "implemented"
+  required: true
   gate_id: "INT-G27"
   verifier: "scripts/db/verify_rail_sequence_truth_anchor.sh"
   evidence_path: "evidence/phase1/rail_sequence_truth_anchor.json"
-  notes: "Phase-1 runtime invariant to be promoted when implemented."
+  notes: "Phase-1 runtime invariant enforced through dispatch truth-anchor trigger and sequence scope uniqueness."
 
 - invariant_id: "INV-105"
   status: "implemented"

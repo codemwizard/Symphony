@@ -15,6 +15,17 @@ BIN_DIR="$TOOLCHAIN_DIR/bin"
 
 mkdir -p "$BIN_DIR"
 
+# Keep semgrep runtime paths repo-local to avoid host permission drift.
+SEMGREP_RUNTIME_DIR="${SYMPHONY_SEMGREP_RUNTIME_DIR:-$ROOT_DIR/.cache/semgrep}"
+mkdir -p "$SEMGREP_RUNTIME_DIR"
+export XDG_CONFIG_HOME="${XDG_CONFIG_HOME:-$ROOT_DIR/.cache/xdg/config}"
+export XDG_CACHE_HOME="${XDG_CACHE_HOME:-$ROOT_DIR/.cache/xdg/cache}"
+mkdir -p "$XDG_CONFIG_HOME" "$XDG_CACHE_HOME"
+export SEMGREP_SETTINGS_FILE="${SEMGREP_SETTINGS_FILE:-$SEMGREP_RUNTIME_DIR/settings.yml}"
+if [[ ! -f "$SEMGREP_SETTINGS_FILE" ]]; then
+  printf '{}\n' > "$SEMGREP_SETTINGS_FILE"
+fi
+
 if [[ ! -x "$VENV_DIR/bin/python3" ]]; then
   python3 -m venv "$VENV_DIR"
 fi
@@ -54,5 +65,6 @@ echo "Local toolchain bootstrapped:"
 echo "  python: $VENV_DIR/bin/python3"
 echo "  rg: $("$BIN_DIR/rg" --version | head -n1)"
 if [[ -x "$BIN_DIR/semgrep" ]]; then
-  echo "  semgrep: $("$BIN_DIR/semgrep" --version | tr -d '\n')"
+  semgrep_version="$("$VENV_DIR/bin/python3" -c 'from importlib import metadata as m; print(m.version("semgrep"))' || echo "UNAVAILABLE")"
+  echo "  semgrep: ${semgrep_version}"
 fi

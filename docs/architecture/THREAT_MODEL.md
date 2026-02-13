@@ -92,6 +92,7 @@ Mitigations:
 
 ### Data Plane (PostgreSQL)
 - Tampering: direct DML or DDL
+- Tampering: post-settlement mutation of finalized payment outcome
 - Repudiation: missing evidence on writes
 - DoS: lock contention
 - EoP: role privilege escalation
@@ -102,6 +103,7 @@ Mitigations:
 - CI invariant gates for privileges and append-only rules
 - DDL lock-risk lint and blocking policy enforcement
 - SECURITY DEFINER dynamic SQL lint
+- Instruction finality table with fail-closed trigger semantics (update/delete blocked with SQLSTATE `P7003`)
 
 ## Priority security actions
 1) Implement service identity and mTLS for internal calls.

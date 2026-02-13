@@ -8,6 +8,17 @@ echo "==> Fast security checks (cheap, deterministic)"
 
 run() { echo ""; echo "-> $*"; "$@"; }
 
+# Keep semgrep runtime/cache settings repo-local to avoid host-level permission drift.
+SEMGREP_RUNTIME_DIR="${SYMPHONY_SEMGREP_RUNTIME_DIR:-$ROOT/.cache/semgrep}"
+mkdir -p "$SEMGREP_RUNTIME_DIR"
+export XDG_CONFIG_HOME="${XDG_CONFIG_HOME:-$ROOT/.cache/xdg/config}"
+export XDG_CACHE_HOME="${XDG_CACHE_HOME:-$ROOT/.cache/xdg/cache}"
+mkdir -p "$XDG_CONFIG_HOME" "$XDG_CACHE_HOME"
+export SEMGREP_SETTINGS_FILE="${SEMGREP_SETTINGS_FILE:-$SEMGREP_RUNTIME_DIR/settings.yml}"
+if [[ ! -f "$SEMGREP_SETTINGS_FILE" ]]; then
+  printf '{}\n' > "$SEMGREP_SETTINGS_FILE"
+fi
+
 echo ""
 echo "==> Shell syntax checks (scripts/security/*.sh)"
 for f in scripts/security/*.sh; do
