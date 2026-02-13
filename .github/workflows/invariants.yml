@@ -551,6 +551,14 @@ jobs:
           chmod +x scripts/db/tests/test_outbox_lease_fencing.sh
           scripts/db/tests/test_outbox_lease_fencing.sh
 
+      - name: Run instruction finality runtime test
+        env:
+          DATABASE_URL: postgres://symphony:symphony@localhost:5432/symphony
+        run: |
+          set -euo pipefail
+          chmod +x scripts/db/tests/test_instruction_finality.sh
+          scripts/db/tests/test_instruction_finality.sh
+
       - name: Run no-tx migrations test
         env:
           DATABASE_URL: postgres://symphony:symphony@localhost:5432/symphony

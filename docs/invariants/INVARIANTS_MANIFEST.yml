@@ -823,12 +823,13 @@
 
 - id: INV-114
   aliases: ["INV-BOZ-04"]
-  status: roadmap
+  status: implemented
   severity: P0
   title: "Payment finality / instruction irrevocability (reversal-only via ISO 20022 camt.056)"
   owners: ["team-db", "team-platform"]
   sla_days: 14
-  verification: "Phase-1 activation: enforce finality state machine + camt.056 reversal workflow; add mechanical DB constraints/triggers and CI tests. Phase-0 is declarative only."
+  enforcement: "scripts/db/verify_instruction_finality_invariant.sh"
+  verification: "scripts/db/verify_instruction_finality_invariant.sh; scripts/db/tests/test_instruction_finality.sh; evidence/phase1/instruction_finality_invariant.json"
 
 - id: INV-115
   aliases: ["INV-ZDPA-01"]

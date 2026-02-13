@@ -2,7 +2,7 @@
 -- PostgreSQL database dump
 --
 
-\restrict NYEmA86X9uFNayGVJrvww9n07JFjGtjW0ilFce3U0tRj61vff50EhcG5FdcFUBG
+\restrict xAGdCvh0a8xrefcJpBfKjiWwAvus25ByIdQwcKiB6PuOPAp0MuybSgpvBWgqJhZ
 
 -- Dumped from database version 18.1 (Debian 18.1-1.pgdg13+2)
 -- Dumped by pg_dump version 18.1 (Debian 18.1-1.pgdg13+2)
@@ -194,6 +194,23 @@ $$;
 
 
 --
+-- Name: deny_final_instruction_mutation(); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.deny_final_instruction_mutation() RETURNS trigger
+    LANGUAGE plpgsql
+    AS $$
+BEGIN
+  IF OLD.is_final IS TRUE THEN
+    RAISE EXCEPTION 'final instruction cannot be mutated'
+      USING ERRCODE = 'P7003';
+  END IF;
+  RETURN OLD;
+END;
+$$;
+
+
+--
 -- Name: deny_ingress_attestations_mutation(); Type: FUNCTION; Schema: public; Owner: -
 --
 
@@ -232,6 +249,46 @@ CREATE FUNCTION public.deny_revocation_mutation() RETURNS trigger
     RAISE EXCEPTION 'revocation tables are append-only'
       USING ERRCODE = 'P0001';
   END;
+$$;
+
+
+--
+-- Name: enforce_instruction_reversal_source(); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.enforce_instruction_reversal_source() RETURNS trigger
+    LANGUAGE plpgsql
+    AS $$
+DECLARE
+  v_source_state TEXT;
+  v_source_final BOOLEAN;
+BEGIN
+  IF NEW.is_final IS DISTINCT FROM TRUE THEN
+    RAISE EXCEPTION 'instruction settlement rows must be final'
+      USING ERRCODE = 'P7003';
+  END IF;
+
+  IF NEW.reversal_of_instruction_id IS NULL THEN
+    RETURN NEW;
+  END IF;
+
+  SELECT final_state, is_final
+  INTO v_source_state, v_source_final
+  FROM public.instruction_settlement_finality
+  WHERE instruction_id = NEW.reversal_of_instruction_id;
+
+  IF NOT FOUND THEN
+    RAISE EXCEPTION 'reversal requires existing instruction %', NEW.reversal_of_instruction_id
+      USING ERRCODE = 'P7003';
+  END IF;
+
+  IF v_source_state <> 'SETTLED' OR v_source_final IS DISTINCT FROM TRUE THEN
+    RAISE EXCEPTION 'reversal source instruction must be final and SETTLED: %', NEW.reversal_of_instruction_id
+      USING ERRCODE = 'P7003';
+  END IF;
+
+  RETURN NEW;
+END;
 $$;
 
 
@@ -656,6 +713,29 @@ CREATE TABLE public.ingress_attestations (
 
 
 --
+-- Name: instruction_settlement_finality; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.instruction_settlement_finality (
+    finality_id uuid DEFAULT public.uuid_v7_or_random() NOT NULL,
+    instruction_id text NOT NULL,
+    participant_id text NOT NULL,
+    is_final boolean DEFAULT true NOT NULL,
+    final_state text NOT NULL,
+    rail_message_type text NOT NULL,
+    reversal_of_instruction_id text,
+    finalized_at timestamp with time zone DEFAULT now() NOT NULL,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    metadata jsonb,
+    CONSTRAINT instruction_settlement_finality_final_state_check CHECK ((final_state = ANY (ARRAY['SETTLED'::text, 'REVERSED'::text]))),
+    CONSTRAINT instruction_settlement_finality_is_final_true_chk CHECK ((is_final = true)),
+    CONSTRAINT instruction_settlement_finality_rail_message_type_check CHECK ((rail_message_type = ANY (ARRAY['pacs.008'::text, 'camt.056'::text]))),
+    CONSTRAINT instruction_settlement_finality_self_reversal_chk CHECK (((reversal_of_instruction_id IS NULL) OR (reversal_of_instruction_id <> instruction_id))),
+    CONSTRAINT instruction_settlement_finality_shape_chk CHECK ((((final_state = 'SETTLED'::text) AND (reversal_of_instruction_id IS NULL) AND (rail_message_type = 'pacs.008'::text)) OR ((final_state = 'REVERSED'::text) AND (reversal_of_instruction_id IS NOT NULL) AND (rail_message_type = 'camt.056'::text))))
+);
+
+
+--
 -- Name: participant_outbox_sequences; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -931,6 +1011,14 @@ ALTER TABLE ONLY public.ingress_attestations
 
 
 --
+-- Name: instruction_settlement_finality instruction_settlement_finality_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.instruction_settlement_finality
+    ADD CONSTRAINT instruction_settlement_finality_pkey PRIMARY KEY (finality_id);
+
+
+--
 -- Name: participant_outbox_sequences participant_outbox_sequences_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -1083,6 +1171,14 @@ ALTER TABLE ONLY public.evidence_pack_items
 
 
 --
+-- Name: instruction_settlement_finality ux_instruction_settlement_finality_instruction; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.instruction_settlement_finality
+    ADD CONSTRAINT ux_instruction_settlement_finality_instruction UNIQUE (instruction_id);
+
+
+--
 -- Name: payment_outbox_pending ux_pending_idempotency; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -1187,6 +1283,13 @@ CREATE INDEX idx_ingress_attestations_tenant_correlation ON public.ingress_attes
 --
 
 CREATE INDEX idx_ingress_attestations_tenant_received ON public.ingress_attestations USING btree (tenant_id, received_at) WHERE (tenant_id IS NOT NULL);
+
+
+--
+-- Name: idx_instruction_settlement_finality_participant_finalized; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_instruction_settlement_finality_participant_finalized ON public.instruction_settlement_finality USING btree (participant_id, finalized_at DESC);
 
 
 --
@@ -1302,6 +1405,13 @@ CREATE UNIQUE INDEX ux_ingress_attestations_tenant_instruction ON public.ingress
 
 
 --
+-- Name: ux_instruction_settlement_finality_one_reversal_per_original; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE UNIQUE INDEX ux_instruction_settlement_finality_one_reversal_per_original ON public.instruction_settlement_finality USING btree (reversal_of_instruction_id) WHERE (reversal_of_instruction_id IS NOT NULL);
+
+
+--
 -- Name: ux_outbox_attempts_one_terminal_per_outbox; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -1344,6 +1454,13 @@ CREATE TRIGGER trg_deny_external_proofs_mutation BEFORE DELETE OR UPDATE ON publ
 
 
 --
+-- Name: instruction_settlement_finality trg_deny_final_instruction_mutation; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER trg_deny_final_instruction_mutation BEFORE DELETE OR UPDATE ON public.instruction_settlement_finality FOR EACH ROW EXECUTE FUNCTION public.deny_final_instruction_mutation();
+
+
+--
 -- Name: ingress_attestations trg_deny_ingress_attestations_mutation; Type: TRIGGER; Schema: public; Owner: -
 --
 
@@ -1369,6 +1486,13 @@ CREATE TRIGGER trg_deny_revoked_client_certs_mutation BEFORE DELETE OR UPDATE ON
 --
 
 CREATE TRIGGER trg_deny_revoked_tokens_mutation BEFORE DELETE OR UPDATE ON public.revoked_tokens FOR EACH ROW EXECUTE FUNCTION public.deny_revocation_mutation();
+
+
+--
+-- Name: instruction_settlement_finality trg_enforce_instruction_reversal_source; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER trg_enforce_instruction_reversal_source BEFORE INSERT ON public.instruction_settlement_finality FOR EACH ROW EXECUTE FUNCTION public.enforce_instruction_reversal_source();
 
 
 --
@@ -1503,6 +1627,14 @@ ALTER TABLE ONLY public.ingress_attestations
 
 
 --
+-- Name: instruction_settlement_finality instruction_settlement_finality_reversal_fk; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.instruction_settlement_finality
+    ADD CONSTRAINT instruction_settlement_finality_reversal_fk FOREIGN KEY (reversal_of_instruction_id) REFERENCES public.instruction_settlement_finality(instruction_id) DEFERRABLE;
+
+
+--
 -- Name: payment_outbox_attempts payment_outbox_attempts_member_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -1562,5 +1694,5 @@ ALTER TABLE ONLY public.tenants
 -- PostgreSQL database dump complete
 --
 
-\unrestrict NYEmA86X9uFNayGVJrvww9n07JFjGtjW0ilFce3U0tRj61vff50EhcG5FdcFUBG
+\unrestrict xAGdCvh0a8xrefcJpBfKjiWwAvus25ByIdQwcKiB6PuOPAp0MuybSgpvBWgqJhZ
 

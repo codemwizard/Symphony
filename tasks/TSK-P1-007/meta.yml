@@ -2,7 +2,7 @@ phase: '1'
 task_id: TSK-P1-007
 title: INV-114 Instruction Finality Enforcement
 owner_role: DB_FOUNDATION
-status: planned
+status: completed
 depends_on:
 - TSK-P1-002
 - TSK-P1-006
