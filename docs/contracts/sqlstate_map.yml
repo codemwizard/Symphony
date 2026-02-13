@@ -30,8 +30,8 @@
     "P7003": {
       "canonical": "P7103",
       "class": "B",
-      "subsystem": "outbox",
-      "meaning": "invalid attempt completion state",
+      "subsystem": "state_machine",
+      "meaning": "invalid terminal/finality state transition",
       "retryable": false
     },
     "P7102": {
@@ -42,8 +42,8 @@
     },
     "P7103": {
       "class": "B",
-      "subsystem": "outbox",
-      "meaning": "invalid attempt completion state",
+      "subsystem": "state_machine",
+      "meaning": "invalid terminal/finality state transition",
       "retryable": false
     },
     "P7201": {

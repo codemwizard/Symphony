@@ -202,6 +202,9 @@ fi
 if [[ -x scripts/db/verify_anchor_sync_hooks.sh ]]; then
   scripts/db/verify_anchor_sync_hooks.sh
 fi
+if [[ -x scripts/db/verify_instruction_finality_invariant.sh ]]; then
+  scripts/db/verify_instruction_finality_invariant.sh
+fi
 
 if [[ -n "${DATABASE_URL:-}" ]]; then
   if [[ -x scripts/db/tests/test_db_functions.sh ]]; then
@@ -215,6 +218,9 @@ if [[ -n "${DATABASE_URL:-}" ]]; then
   fi
   if [[ -x scripts/db/tests/test_outbox_lease_fencing.sh ]]; then
     scripts/db/tests/test_outbox_lease_fencing.sh
+  fi
+  if [[ -x scripts/db/tests/test_instruction_finality.sh ]]; then
+    scripts/db/tests/test_instruction_finality.sh
   fi
 
   # CI parity: these DB checks run in GitHub Actions db_verify_invariants job.

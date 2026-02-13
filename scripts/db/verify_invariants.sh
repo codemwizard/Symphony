@@ -39,6 +39,7 @@ command -v psql >/dev/null 2>&1 || { echo "❌ Error: psql not found in PATH"; e
 [[ -x "$SCRIPT_DIR/verify_role_login_posture.sh" ]] || { echo "❌ Error: missing verify_role_login_posture.sh"; exit 2; }
 [[ -x "$SCRIPT_DIR/verify_boz_observability_role.sh" ]] || { echo "❌ Error: missing verify_boz_observability_role.sh"; exit 2; }
 [[ -x "$SCRIPT_DIR/verify_anchor_sync_hooks.sh" ]] || { echo "❌ Error: missing verify_anchor_sync_hooks.sh"; exit 2; }
+[[ -x "$SCRIPT_DIR/verify_instruction_finality_invariant.sh" ]] || { echo "❌ Error: missing verify_instruction_finality_invariant.sh"; exit 2; }
 [[ -x "$REPO_ROOT/schema/seeds/dev/seed_policy_from_file.sh" ]] || { echo "❌ Error: missing seed_policy_from_file.sh"; exit 2; }
 
 # --- 2. Execution ---
@@ -66,6 +67,9 @@ echo "👤 Verifying BoZ observability role (read-only seat)..."
 
 echo "🔗 Verifying anchor-sync structural hooks..."
 "$SCRIPT_DIR/verify_anchor_sync_hooks.sh"
+
+echo "🔐 Verifying instruction finality invariant..."
+"$SCRIPT_DIR/verify_instruction_finality_invariant.sh"
 
 echo "🧾 Verifying table conventions..."
 "$SCRIPT_DIR/verify_table_conventions.sh"

@@ -23,12 +23,12 @@
   notes: "Structural hooks exist in Phase-0; operational hardening is Phase-1."
 
 - invariant_id: "INV-114"
-  status: "planned"
-  required: false
+  status: "implemented"
+  required: true
   gate_id: "INT-G25"
   verifier: "scripts/db/verify_instruction_finality_invariant.sh"
   evidence_path: "evidence/phase1/instruction_finality_invariant.json"
-  notes: "Phase-1 runtime invariant to be promoted when implemented."
+  notes: "Phase-1 runtime invariant enforced with DB trigger semantics and runtime tests."
 
 - invariant_id: "INV-115"
   status: "planned"
