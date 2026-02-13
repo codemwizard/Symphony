@@ -40,6 +40,13 @@ run env SYMPHONY_SKIP_CONTRACT_EVIDENCE_STATUS=1 scripts/audit/run_invariants_fa
 
 run scripts/audit/validate_evidence_schema.sh
 run bash scripts/audit/verify_phase0_contract.sh
+
+if [[ "${RUN_PHASE1_GATES:-0}" == "1" ]]; then
+  echo "==> Phase-1 contract gate deferred to post-DB verification in pre_ci.sh"
+else
+  echo "==> Phase-1 contract gate skipped (RUN_PHASE1_GATES=0)"
+fi
+
 run bash scripts/audit/verify_ci_order.sh
 run bash scripts/audit/verify_ci_artifact_upload_phase0_evidence.sh
 

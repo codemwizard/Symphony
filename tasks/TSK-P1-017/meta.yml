@@ -1,0 +1,45 @@
+phase: '1'
+task_id: TSK-P1-017
+title: Evidence Pack API Customer Endpoint
+owner_role: SECURITY_GUARDIAN
+status: planned
+depends_on:
+- TSK-P1-015
+- TSK-P1-016
+touches:
+- src/**
+- services/**
+- packages/**
+- docs/security/**
+invariants:
+- INV-028
+- INV-029
+- INV-090
+- INV-091
+- INV-092
+- INV-093
+- INV-094
+- INV-095
+- INV-105
+work:
+- Expose evidence pack retrieval endpoint with tenant-safe access rules.
+- Stabilize API response schema for pilot customer consumption.
+acceptance_criteria:
+- Cross-tenant evidence access is fail-closed.
+- Evidence pack API contract is deterministic and versioned.
+verification:
+- scripts/dev/pre_ci.sh
+evidence:
+- evidence/phase1/evidence_pack_api_contract.json
+- evidence/phase1/evidence_pack_api_access_control.json
+failure_modes:
+- Evidence pack retrieval leaks cross-tenant data.
+- Evidence file missing.
+must_read:
+- Symphony_BusinessPlan_Implementation.txt
+implementation_plan: docs/plans/phase1/TSK-P1-017_evidence_pack_api_customer_endpoint/PLAN.md
+implementation_log: docs/plans/phase1/TSK-P1-017_evidence_pack_api_customer_endpoint/EXEC_LOG.md
+notes: Direct monetizable endpoint for EaaS pilot motion.
+client: codex_cli
+assigned_agent: security_guardian
+model: <UNASSIGNED>

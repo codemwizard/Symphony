@@ -6,5 +6,9 @@ origin_task_id: TSK-P1-004
 ## repro_command
 `scripts/audit/verify_agent_conformance.sh`
 
+## verification_commands_run
+- `bash scripts/audit/verify_agent_conformance_spec.sh`
+- `RUN_PHASE1_GATES=1 bash scripts/dev/pre_ci.sh`
+
 ## status
-OPEN
+COMPLETED

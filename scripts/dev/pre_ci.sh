@@ -80,6 +80,14 @@ else
   exit 1
 fi
 
+echo "==> Agent conformance spec verification"
+if [[ -x scripts/audit/verify_agent_conformance_spec.sh ]]; then
+  scripts/audit/verify_agent_conformance_spec.sh
+else
+  echo "ERROR: scripts/audit/verify_agent_conformance_spec.sh not found"
+  exit 1
+fi
+
 if [[ -f "$ENV_FILE" ]]; then
   set -a
   # shellcheck disable=SC1090
@@ -229,6 +237,16 @@ if [[ -x scripts/audit/verify_phase0_contract_evidence_status.sh ]]; then
 else
   echo "ERROR: scripts/audit/verify_phase0_contract_evidence_status.sh not found"
   exit 1
+fi
+
+if [[ "${RUN_PHASE1_GATES:-0}" == "1" ]]; then
+  echo "==> Phase-1 contract evidence status (post-DB parity)"
+  if [[ -x scripts/audit/verify_phase1_contract.sh ]]; then
+    scripts/audit/verify_phase1_contract.sh
+  else
+    echo "ERROR: scripts/audit/verify_phase1_contract.sh not found"
+    exit 1
+  fi
 fi
 
 echo "✅ Pre-CI local checks PASSED."

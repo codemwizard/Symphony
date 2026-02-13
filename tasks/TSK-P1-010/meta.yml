@@ -1,0 +1,66 @@
+phase: '1'
+task_id: TSK-P1-010
+title: Phase-1 Closeout Verification
+owner_role: SUPERVISOR
+status: planned
+depends_on:
+- TSK-P1-007
+- TSK-P1-008
+- TSK-P1-009
+- TSK-P1-015
+- TSK-P1-016
+- TSK-P1-017
+- TSK-P1-018
+- TSK-P1-019
+- TSK-P1-020
+- TSK-P1-024
+- TSK-P1-025
+- TSK-P1-026
+touches:
+- docs/invariants/**
+- docs/control_planes/CONTROL_PLANES.yml
+- scripts/audit/**
+- scripts/dev/pre_ci.sh
+- .github/workflows/invariants.yml
+- evidence/phase1/**
+invariants:
+- INV-044
+- INV-061
+- INV-072
+- INV-077
+- INV-080
+- INV-081
+- INV-105
+work:
+- Run Phase-1 closeout gate set and emit final closeout evidence.
+- Confirm deferred invariants remain explicitly deferred.
+- Verify regulator/tier-1 demo-proof scenarios are backed by deterministic machine evidence artifacts.
+acceptance_criteria:
+- All Phase-1 required rows pass under RUN_PHASE1_GATES=1.
+- Phase-0 path remains green with RUN_PHASE1_GATES=0.
+- BoZ seat/read-only denial, finality denial, purge-survivability, evidence-pack retrieval, and case-pack generation scenarios are proven by evidence artifacts.
+verification:
+- scripts/audit/verify_control_planes_drift.sh
+- scripts/audit/validate_evidence_schema.sh
+- scripts/audit/verify_phase1_contract.sh
+- python3 scripts/audit/check_docs_match_manifest.py
+- scripts/audit/check_sqlstate_map_drift.sh
+- scripts/audit/verify_remediation_trace.sh
+- scripts/audit/verify_ci_order.sh
+- scripts/dev/pre_ci.sh
+- RUN_PHASE1_GATES=1 scripts/dev/pre_ci.sh
+evidence:
+- evidence/phase1/phase1_closeout.json
+- evidence/phase1/regulator_demo_pack.json
+- evidence/phase1/tier1_pilot_demo_pack.json
+failure_modes:
+- Closeout passes with missing required Phase-1 evidence.
+- Evidence file missing.
+must_read:
+- Phase1-Draft_Plan.md
+implementation_plan: docs/plans/phase1/TSK-P1-010_phase_1_closeout_verification/PLAN.md
+implementation_log: docs/plans/phase1/TSK-P1-010_phase_1_closeout_verification/EXEC_LOG.md
+notes: Final approval gate for Phase-1 implementation readiness.
+client: codex_cli
+assigned_agent: supervisor
+model: <UNASSIGNED>

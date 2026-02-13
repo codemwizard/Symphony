@@ -1,0 +1,41 @@
+phase: '1'
+task_id: TSK-P1-023
+title: Sandbox Deployability Baseline and Redundancy Proof
+owner_role: SECURITY_GUARDIAN
+status: planned
+depends_on:
+- TSK-P1-016
+- TSK-P1-019
+touches:
+- infra/**
+- docs/security/**
+- scripts/security/**
+- scripts/audit/**
+invariants:
+- INV-072
+- INV-081
+- INV-105
+- INV-110
+work:
+- Provide minimal deploy artifacts and deterministic posture checks for pilot sandbox
+  deployment.
+- Validate baseline redundancy settings and secrets bootstrap posture without requiring
+  a live cluster.
+acceptance_criteria:
+- Deploy posture checker validates required sandbox settings deterministically.
+- Artifacts support participant VPC-style deployment baseline.
+verification:
+- scripts/dev/pre_ci.sh
+evidence:
+- evidence/phase1/sandbox_deploy_manifest_posture.json
+failure_modes:
+- Pilot deploy artifacts omit critical redundancy or boundary settings.
+- Evidence file missing.
+must_read:
+- docs/security/SOVEREIGN_VPC_POSTURE.md
+implementation_plan: docs/plans/phase1/TSK-P1-023_sandbox_deployability_baseline_and_redundancy_proof/PLAN.md
+implementation_log: docs/plans/phase1/TSK-P1-023_sandbox_deployability_baseline_and_redundancy_proof/EXEC_LOG.md
+notes: Converts pilot from code-ready to deploy-ready posture.
+client: codex_cli
+assigned_agent: security_guardian
+model: <UNASSIGNED>

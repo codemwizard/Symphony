@@ -1,0 +1,42 @@
+phase: '1'
+task_id: TSK-P1-018
+title: Exception Case Pack Generator
+owner_role: SECURITY_GUARDIAN
+status: planned
+depends_on:
+- TSK-P1-016
+- TSK-P1-017
+touches:
+- src/**
+- services/**
+- packages/**
+- docs/operations/**
+invariants:
+- INV-029
+- INV-092
+- INV-093
+- INV-095
+- INV-105
+- INV-116
+work:
+- Generate deterministic case packs for ambiguous/failure transaction classes.
+- Standardize case pack content and export readiness for dispute workflows.
+acceptance_criteria:
+- Case pack generation is reproducible with deterministic content rules.
+- Missing required lifecycle references fail generation deterministically.
+verification:
+- scripts/dev/pre_ci.sh
+evidence:
+- evidence/phase1/exception_case_pack_generation.json
+- evidence/phase1/exception_case_pack_completeness.json
+failure_modes:
+- Case packs generated with incomplete critical references.
+- Evidence file missing.
+must_read:
+- Product-Requirement-Document_V2.txt
+implementation_plan: docs/plans/phase1/TSK-P1-018_exception_case_pack_generator/PLAN.md
+implementation_log: docs/plans/phase1/TSK-P1-018_exception_case_pack_generator/EXEC_LOG.md
+notes: Core pilot primitive for IPDR/operations workflows.
+client: codex_cli
+assigned_agent: security_guardian
+model: <UNASSIGNED>
