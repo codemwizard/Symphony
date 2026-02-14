@@ -84,11 +84,13 @@ Mitigations:
 - Tampering: unsafe DDL or privilege changes merged
 - Repudiation: missing evidence for invariant claims
 - Supply-chain: unreviewed changes to security posture
+- Drift risk: inconsistent diff semantics between local gates and CI jobs
 
 Mitigations:
 - Mechanical gates: evidence schema validation + required artifact checks
 - Security lints: DDL lock-risk lint, SECURITY DEFINER dynamic SQL lint
 - Privilege lint hardening for multiline `GRANT CREATE ON SCHEMA public TO ...;` detection
+- Canonical diff helper (`scripts/lib/git_diff.sh`) for range/staged/worktree semantics
 - Structural change rule: threat/compliance docs updated or timeboxed exception
 
 ### Data Plane (PostgreSQL)

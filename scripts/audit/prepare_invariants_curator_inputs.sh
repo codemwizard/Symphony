@@ -3,6 +3,7 @@ set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 cd "$ROOT"
+source scripts/audit/lib/git_diff.sh
 
 OUT_DIR="/tmp/invariants_ai"
 mkdir -p "$OUT_DIR"
@@ -13,7 +14,7 @@ echo "Output dir: $OUT_DIR"
 echo ""
 
 # Staged diff only: this is what will go into the commit/PR.
-git diff --cached --no-color --no-ext-diff --unified=0 > "$OUT_DIR/pr.diff"
+git_write_unified_diff_staged "$OUT_DIR/pr.diff" 0
 
 echo "Wrote: $OUT_DIR/pr.diff"
 echo ""

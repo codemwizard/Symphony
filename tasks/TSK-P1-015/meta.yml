@@ -2,7 +2,7 @@ phase: '1'
 task_id: TSK-P1-015
 title: Ingress API MVP Pilot Surface
 owner_role: SECURITY_GUARDIAN
-status: in_progress
+status: completed
 depends_on:
 - TSK-P1-002
 - TSK-P1-006

@@ -41,8 +41,7 @@ fi
 TMP_DIR=/tmp/invariants_ai
 mkdir -p "$TMP_DIR"
 
-merge_base="$(git merge-base "$BASE_REF" "$HEAD_REF")"
-git diff --no-color --no-ext-diff --unified=0 "$merge_base...$HEAD_REF" > "$TMP_DIR/pr.diff"
+git_write_unified_diff_range "$BASE_REF" "$HEAD_REF" "$TMP_DIR/pr.diff" 0
 python3 "$ROOT_DIR/scripts/audit/detect_structural_changes.py" --diff-file "$TMP_DIR/pr.diff" --out "$TMP_DIR/detect.json"
 
 structural=$(python3 - <<PY
