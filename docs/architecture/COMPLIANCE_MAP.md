@@ -5,6 +5,7 @@
 |---|---|---|---|---|---|
 | ISO 20022 | Message integrity + attestation hooks | Integrity | INT-G08, INT-G11, INT-G12 | Ingress attestation + routing/batching docs | proxy_resolution_invariant.json, routing_fallback.json, batching_rules.json |
 | ISO 20022 | Reversal-only finality workflow (camt.056) | Integrity | INT-G25 | Instruction finality invariant + reversal source enforcement | instruction_finality_invariant.json, instruction_finality_runtime.json |
+| ISO 20022 | Anchor-sync operational integrity and completion gating | Integrity | INT-G29 | Anchor operation lease-fenced state machine with completion blocked until anchored | anchor_sync_operational_invariant.json, anchor_sync_resume_semantics.json |
 | ISO 20022 | Canonical message model + validation | Integrity | INT-G07 | Phase-0 implementation plan gate | phase0_impl_plan.json |
 | ISO 27001/27002 | Access control, least privilege | Security | SEC-G01, SEC-G02, SEC-G03 | Revoke-first grants, SECURITY DEFINER hardening | core_boundary.json, ddl_lock_risk.json, security_definer_dynamic_sql.json |
 | ISO 27001/27002 | Privilege regression prevention | Security | SEC-G01 | Multiline-safe lint for forbidden `GRANT CREATE ON SCHEMA public` posture | security_privilege_grants.json |
@@ -19,6 +20,7 @@
 | NIST CSF / NIST 800-53 | Access control + least privilege | Security | SEC-G01, SEC-G03 | Core boundary + SECURITY DEFINER lint | core_boundary.json, security_definer_dynamic_sql.json |
 | NIST CSF / NIST 800-53 | Integrity & auditability | Integrity | INT-G01, INT-G05, INT-G06 | Evidence schema + baseline governance | evidence_validation.json, baseline_governance.json, rebaseline_decision.json |
 | NIST CSF / NIST 800-53 | Transaction integrity / non-repudiation | Integrity | INT-G25 | Final instruction mutation block + compensating reversal records only | instruction_finality_invariant.json, instruction_finality_runtime.json |
+| NIST CSF / NIST 800-53 | Operational assurance and closeout evidence completeness | Integrity | INT-G30, INT-G31 | Demo-proof pack verifier + phase1 closeout verifier | regulator_demo_pack.json, tier1_pilot_demo_pack.json, phase1_closeout.json |
 | OWASP ASVS 4.0+ | Input validation + injection prevention | Security | SEC-G10, SEC-G03 | Insecure pattern lint + SECURITY DEFINER lint | security_insecure_patterns.json, security_definer_dynamic_sql.json |
 | OWASP ASVS 4.0+ | Secrets management | Security | SEC-G07, SEC-G05 | Secrets scan + OpenBao smoke | security_secrets_scan.json, openbao_smoke.json |
 | Zero Trust | Continuous verification (policy) | Integrity | INT-G02, INT-G03 | Evidence contract + phase0 contract | task_evidence_contract.json, phase0_contract.json |
