@@ -10,8 +10,8 @@ git_resolve_base_ref() {
   # Priority:
   # 1) BASE_REF env override (explicit)
   # 2) REMEDIATION_TRACE_BASE_REF (shared env file)
-  # 3) GitHub PR base ref (origin/<branch>)
-  # 4) origin/main
+  # 3) GitHub PR base ref (refs/remotes/origin/<branch>)
+  # 4) refs/remotes/origin/main
   if [[ -n "${BASE_REF:-}" ]]; then
     printf '%s\n' "$BASE_REF"
     return 0
@@ -21,10 +21,10 @@ git_resolve_base_ref() {
     return 0
   fi
   if [[ -n "${GITHUB_BASE_REF:-}" ]]; then
-    printf 'origin/%s\n' "$GITHUB_BASE_REF"
+    printf 'refs/remotes/origin/%s\n' "$GITHUB_BASE_REF"
     return 0
   fi
-  printf '%s\n' "origin/main"
+  printf '%s\n' "refs/remotes/origin/main"
 }
 
 git_ensure_ref() {
@@ -33,11 +33,11 @@ git_ensure_ref() {
     return 0
   fi
 
-  # Best-effort fetch for origin/<branch> refs to reduce local friction.
-  if [[ "$ref" == origin/* ]]; then
+  # Best-effort fetch for refs/remotes/origin/<branch> refs to reduce local friction.
+  if [[ "$ref" == refs/remotes/origin/* ]]; then
     if command -v git >/dev/null 2>&1; then
-      local branch="${ref#origin/}"
-      git fetch --no-tags --prune origin "${branch}:${ref}" >/dev/null 2>&1 || true
+      local branch="${ref#refs/remotes/origin/}"
+      git fetch --no-tags --prune origin "${branch}:refs/remotes/origin/${branch}" >/dev/null 2>&1 || true
     fi
   fi
 
@@ -67,4 +67,3 @@ git_changed_files_range() {
   # Stable, newline-separated list.
   git diff --name-only "${merge_base}...${head_ref}" | LC_ALL=C sort -u
 }
-

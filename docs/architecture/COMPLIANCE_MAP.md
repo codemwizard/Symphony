@@ -7,6 +7,7 @@
 | ISO 20022 | Reversal-only finality workflow (camt.056) | Integrity | INT-G25 | Instruction finality invariant + reversal source enforcement | instruction_finality_invariant.json, instruction_finality_runtime.json |
 | ISO 20022 | Canonical message model + validation | Integrity | INT-G07 | Phase-0 implementation plan gate | phase0_impl_plan.json |
 | ISO 27001/27002 | Access control, least privilege | Security | SEC-G01, SEC-G02, SEC-G03 | Revoke-first grants, SECURITY DEFINER hardening | core_boundary.json, ddl_lock_risk.json, security_definer_dynamic_sql.json |
+| ISO 27001/27002 | Privilege regression prevention | Security | SEC-G01 | Multiline-safe lint for forbidden `GRANT CREATE ON SCHEMA public` posture | security_privilege_grants.json |
 | ISO 27001/27002 | Secure configuration | Security | SEC-G09 | Infra/workflow config lint | security_secure_config_lint.json |
 | ISO 27001/27002 | Secure SDLC / Change control | Integrity | INT-G01, INT-G02, INT-G03 | Evidence schema + contract gates | evidence_validation.json, task_evidence_contract.json, phase0_contract.json |
 | ISO 27001/27002 | Dependency governance | Security | SEC-G08 | .NET dependency audit | security_dotnet_deps_audit.json |
@@ -26,3 +27,4 @@
 - Control-plane gates (SEC/INT) are the authoritative enforcement points for Phase-0.
 - Evidence artifacts are the proof objects; mapping does not imply production readiness.
 - Where controls are roadmap-only, evidence will be document-based (Phase-0).
+- Security privilege posture remains fail-closed even when SQL grant statements are wrapped across multiple lines.
