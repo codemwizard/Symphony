@@ -10,6 +10,7 @@
 | ISO 27001/27002 | Privilege regression prevention | Security | SEC-G01 | Multiline-safe lint for forbidden `GRANT CREATE ON SCHEMA public` posture | security_privilege_grants.json |
 | ISO 27001/27002 | Secure configuration | Security | SEC-G09 | Infra/workflow config lint | security_secure_config_lint.json |
 | ISO 27001/27002 | Secure SDLC / Change control | Integrity | INT-G01, INT-G02, INT-G03 | Evidence schema + contract gates | evidence_validation.json, task_evidence_contract.json, phase0_contract.json |
+| ISO 27001/27002 | Change evidence determinism | Integrity | INT-G20 | Canonical git diff helper used by gate scripts and CI prep jobs | git_diff_semantics.json, ci_order.json |
 | ISO 27001/27002 | Dependency governance | Security | SEC-G08 | .NET dependency audit | security_dotnet_deps_audit.json |
 | PCI DSS v4.0 | Secure development + vuln mgmt | Security | SEC-G07, SEC-G08, SEC-G10 | Secrets scan + dependency audit + insecure pattern lint | security_secrets_scan.json, security_dotnet_deps_audit.json, security_insecure_patterns.json |
 | PCI DSS v4.0 | Access control and key mgmt | Security | SEC-G05 | OpenBao AppRole smoke test | openbao_smoke.json |

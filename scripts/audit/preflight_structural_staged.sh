@@ -3,6 +3,7 @@ set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 cd "$ROOT"
+source scripts/audit/lib/git_diff.sh
 
 echo "==> Preflight (staged): structural detector + Rule 1 linkage"
 
@@ -13,7 +14,7 @@ EXCEPTIONS_DIR="docs/invariants/exceptions"
 mkdir -p /tmp/invariants_preflight
 
 # Staged diff (pre-commit)
-git diff --cached --no-color --no-ext-diff --unified=0 > /tmp/invariants_preflight/staged.diff
+git_write_unified_diff_staged /tmp/invariants_preflight/staged.diff 0
 
 if [[ ! -s /tmp/invariants_preflight/staged.diff ]]; then
   echo "No staged changes; skipping."
@@ -43,7 +44,7 @@ fi
 echo "⚠️ Structural change detected. Checking Rule 1 requirements…"
 
 # Determine staged changed files
-changed_files="$(git diff --cached --name-only)"
+changed_files="$(git_changed_files_staged)"
 
 manifest_changed=0
 echo "${changed_files}" | grep -qx "${MANIFEST}" && manifest_changed=1 || true
@@ -52,7 +53,9 @@ docs_changed=0
 inv_token_present=0
 if echo "${changed_files}" | grep -q "^${DOCS_DIR}/"; then
   docs_changed=1
-  if git diff --cached -- "${DOCS_DIR}" | grep -Eo 'INV-[0-9]{3}' >/dev/null; then
+  docs_diff_file="/tmp/invariants_preflight/docs.diff"
+  git_write_unified_diff_staged_path "${DOCS_DIR}" "$docs_diff_file" 0
+  if grep -Eo 'INV-[0-9]{3}' "$docs_diff_file" >/dev/null; then
     inv_token_present=1
   fi
 fi

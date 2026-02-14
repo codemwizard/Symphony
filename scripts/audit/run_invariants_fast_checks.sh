@@ -21,6 +21,7 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 cd "$ROOT"
 source "$ROOT/scripts/lib/evidence.sh"
+source "$ROOT/scripts/audit/lib/git_diff.sh"
 EVIDENCE_TS="$(evidence_now_utc)"
 EVIDENCE_GIT_SHA="$(git_sha)"
 EVIDENCE_SCHEMA_FP="$(schema_fingerprint)"
@@ -335,10 +336,10 @@ echo ""
 echo "==> QUICK regeneration drift check"
 if [[ -x "scripts/audit/generate_invariants_quick" ]]; then
   run scripts/audit/generate_invariants_quick
-  run git diff --exit-code docs/invariants/INVARIANTS_QUICK.md
+  run git_assert_clean_path docs/invariants/INVARIANTS_QUICK.md
 elif [[ -f "scripts/audit/generate_invariants_quick.py" ]]; then
   run python3 scripts/audit/generate_invariants_quick.py
-  run git diff --exit-code docs/invariants/INVARIANTS_QUICK.md
+  run git_assert_clean_path docs/invariants/INVARIANTS_QUICK.md
 else
   echo "ERROR: scripts/audit/generate_invariants_quick not found"
   exit 1

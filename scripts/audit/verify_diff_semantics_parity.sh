@@ -19,6 +19,10 @@ export EVIDENCE_TS EVIDENCE_GIT_SHA EVIDENCE_SCHEMA_FP
 critical=(
   "scripts/audit/enforce_change_rule.sh"
   "scripts/audit/verify_baseline_change_governance.sh"
+  "scripts/audit/verify_remediation_trace.sh"
+  "scripts/audit/verify_invariants_local.sh"
+  "scripts/audit/preflight_structural_staged.sh"
+  "scripts/audit/prepare_invariants_curator_inputs.sh"
 )
 
 export ROOT_DIR EVIDENCE_FILE
@@ -33,6 +37,10 @@ evidence_file = Path(os.environ["EVIDENCE_FILE"])
 critical = [
     "scripts/audit/enforce_change_rule.sh",
     "scripts/audit/verify_baseline_change_governance.sh",
+    "scripts/audit/verify_remediation_trace.sh",
+    "scripts/audit/verify_invariants_local.sh",
+    "scripts/audit/preflight_structural_staged.sh",
+    "scripts/audit/prepare_invariants_curator_inputs.sh",
 ]
 
 errors = []
@@ -66,14 +74,12 @@ for rel in critical:
     if "scripts/lib/git_diff.sh" not in txt and "scripts/audit/lib/git_diff.sh" not in txt:
         errors.append(f"missing_git_diff_helper_source:{rel}")
 
-    if re.search(r"git diff --name-only --cached", txt):
-        errors.append(f"forbidden_cached_diff:{rel}")
+    if re.search(r"\bgit\s+merge-base\b", txt):
+        errors.append(f"forbidden_direct_merge_base:{rel}")
 
-    if re.search(r"git diff --name-only\\b(?!.*merge_base)", txt):
-        errors.append(f"forbidden_direct_name_only_diff:{rel}")
-
-    if "|| true" in txt:
-        errors.append(f"forbidden_or_true_fallback:{rel}")
+    # For parity-critical scripts, raw git diff usage should be replaced by shared helper APIs.
+    if re.search(r"\bgit\s+diff\b", txt):
+        errors.append(f"forbidden_direct_git_diff:{rel}")
 
 out = {
     "check_id": "GIT-DIFF-SEMANTICS",

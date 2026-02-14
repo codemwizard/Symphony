@@ -74,7 +74,11 @@ jobs:
             RANGE="${{ github.event.before }}...${{ github.sha }}"
           fi
 
-          git diff --no-color --no-ext-diff --unified=0 "$RANGE" > /tmp/invariants_ai/pr.diff
+          scripts/audit/git_diff_cli.sh range-unified \
+            --base "${RANGE%%...*}" \
+            --head "${RANGE##*...}" \
+            --out /tmp/invariants_ai/pr.diff \
+            --unified 0
           python3 scripts/audit/detect_structural_changes.py --diff-file /tmp/invariants_ai/pr.diff --out /tmp/invariants_ai/detect.json
 
           structural="$(python3 -c 'import json; d=json.load(open("/tmp/invariants_ai/detect.json")); print("true" if d.get("structural_change") else "false")')"
@@ -93,7 +97,9 @@ jobs:
             RANGE="${{ github.event.before }}...${{ github.sha }}"
           fi
           echo "Diff range: $RANGE"
-          git diff --name-only "$RANGE" | sed 's/^/ - /'
+          scripts/audit/git_diff_cli.sh range-names \
+            --base "${RANGE%%...*}" \
+            --head "${RANGE##*...}" | sed 's/^/ - /'
 
       - name: Show structural detection evidence (diagnostic)
         if: github.event_name != 'schedule'
@@ -231,9 +237,11 @@ jobs:
         run: |
           set -euo pipefail
           mkdir -p /tmp/invariants_ai
-          git diff --no-color --no-ext-diff --unified=0 \
-            "${{ github.event.pull_request.base.sha }}...${{ github.event.pull_request.head.sha }}" \
-            > /tmp/invariants_ai/pr.diff
+          scripts/audit/git_diff_cli.sh range-unified \
+            --base "${{ github.event.pull_request.base.sha }}" \
+            --head "${{ github.event.pull_request.head.sha }}" \
+            --out /tmp/invariants_ai/pr.diff \
+            --unified 0
 
       - name: Prepare Codex home (fresh, writable)
         shell: bash
@@ -375,7 +383,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          git diff > /tmp/invariants_ai/codex-invariants.patch || true
+          scripts/audit/git_diff_cli.sh worktree-unified --out /tmp/invariants_ai/codex-invariants.patch || true
           if [[ ! -s /tmp/invariants_ai/codex-invariants.patch ]]; then
             echo "No changes produced by Codex." > /tmp/invariants_ai/codex-invariants.patch
           fi
@@ -825,9 +833,11 @@ jobs:
         run: |
           set -euo pipefail
           mkdir -p /tmp/security_ai
-          git diff --no-color --no-ext-diff --unified=0 \
-            "${{ github.event.pull_request.base.sha }}...${{ github.event.pull_request.head.sha }}" \
-            > /tmp/security_ai/pr.diff
+          scripts/audit/git_diff_cli.sh range-unified \
+            --base "${{ github.event.pull_request.base.sha }}" \
+            --head "${{ github.event.pull_request.head.sha }}" \
+            --out /tmp/security_ai/pr.diff \
+            --unified 0
 
       - name: Prepare Codex home (fresh, writable)
         shell: bash
@@ -915,7 +925,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          git diff > /tmp/security_ai/codex-security.patch || true
+          scripts/audit/git_diff_cli.sh worktree-unified --out /tmp/security_ai/codex-security.patch || true
           if [[ ! -s /tmp/security_ai/codex-security.patch ]]; then
             echo "No changes produced by Codex." > /tmp/security_ai/codex-security.patch
           fi
@@ -984,9 +994,11 @@ jobs:
           set -euo pipefail
           mkdir -p /tmp/compliance_ai
           echo "Standards: $COMPLIANCE_STANDARDS" > /tmp/compliance_ai/standards.txt
-          git diff --no-color --no-ext-diff --unified=0 \
-            "${{ github.event.pull_request.base.sha }}...${{ github.event.pull_request.head.sha }}" \
-            > /tmp/compliance_ai/pr.diff
+          scripts/audit/git_diff_cli.sh range-unified \
+            --base "${{ github.event.pull_request.base.sha }}" \
+            --head "${{ github.event.pull_request.head.sha }}" \
+            --out /tmp/compliance_ai/pr.diff \
+            --unified 0
 
       - name: Prepare Codex home (fresh, writable)
         shell: bash
@@ -1074,7 +1086,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          git diff > /tmp/compliance_ai/codex-compliance.patch || true
+          scripts/audit/git_diff_cli.sh worktree-unified --out /tmp/compliance_ai/codex-compliance.patch || true
           if [[ ! -s /tmp/compliance_ai/codex-compliance.patch ]]; then
             echo "No changes produced by Codex." > /tmp/compliance_ai/codex-compliance.patch
           fi
