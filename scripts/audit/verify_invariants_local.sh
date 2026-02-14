@@ -9,7 +9,7 @@ set -euo pipefail
 # - if structural_change=true, requires change-rule compliance
 # - runs promotion gate + quick generator checks
 
-BASE_REF="${1:-origin/main}"
+BASE_REF="${1:-refs/remotes/origin/main}"
 HEAD_REF="${2:-HEAD}"
 
 mkdir -p /tmp/invariants_ai

@@ -185,6 +185,20 @@ static class IngressValidation
             errors.Add("payload is required");
         }
 
+        if (string.IsNullOrWhiteSpace(request.tenant_id))
+        {
+            errors.Add("tenant_id is required");
+        }
+        else if (!Guid.TryParse(request.tenant_id, out _))
+        {
+            errors.Add("tenant_id must be a valid UUID");
+        }
+
+        if (!string.IsNullOrWhiteSpace(request.correlation_id) && !Guid.TryParse(request.correlation_id, out _))
+        {
+            errors.Add("correlation_id must be a valid UUID when provided");
+        }
+
         return errors;
     }
 
@@ -384,6 +398,16 @@ static class IngressSelfTestRunner
         );
 
         await RunCase(
+            "missing_tenant_fail_closed",
+            CreateRequest("ins-p1-002", tenantIdOverride: ""),
+            forceFailure: false,
+            expectedStatus: StatusCodes.Status400BadRequest,
+            expectedAck: false,
+            expectedErrorCode: "INVALID_REQUEST",
+            expectedLinesDelta: 0
+        );
+
+        await RunCase(
             "forced_durability_failure_fail_closed",
             CreateRequest("ins-p1-003"),
             forceFailure: true,
@@ -432,9 +456,10 @@ static class IngressSelfTestRunner
 
         return fail == 0 ? 0 : 1;
 
-        static IngressRequest CreateRequest(string instructionId)
+        static IngressRequest CreateRequest(string instructionId, string? tenantIdOverride = null)
         {
             var payload = JsonSerializer.Deserialize<JsonElement>("{\"amount\":100,\"currency\":\"ZMW\"}");
+            var tenantId = tenantIdOverride ?? Guid.NewGuid().ToString();
             return new IngressRequest(
                 instruction_id: instructionId,
                 participant_id: "bank-a",
@@ -443,7 +468,7 @@ static class IngressSelfTestRunner
                 payload: payload,
                 payload_hash: null,
                 signature_hash: null,
-                tenant_id: null,
+                tenant_id: tenantId,
                 correlation_id: null,
                 upstream_ref: null,
                 downstream_ref: null,
