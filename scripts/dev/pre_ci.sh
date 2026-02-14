@@ -124,6 +124,11 @@ if [[ -x scripts/services/test_ingress_api_contract.sh ]]; then
   scripts/services/test_ingress_api_contract.sh
 fi
 
+if [[ -x scripts/services/test_executor_worker_runtime.sh ]]; then
+  echo "==> Phase-1 executor worker runtime self-test"
+  scripts/services/test_executor_worker_runtime.sh
+fi
+
 if [[ -f "$ENV_FILE" ]]; then
   set -a
   # shellcheck disable=SC1090

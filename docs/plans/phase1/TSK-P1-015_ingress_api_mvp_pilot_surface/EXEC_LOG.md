@@ -11,16 +11,17 @@ origin_task_id: TSK-P1-015
 - `scripts/services/test_ingress_api_contract.sh`
 - `scripts/audit/run_security_fast_checks.sh`
 - `scripts/audit/run_invariants_fast_checks.sh`
+- `scripts/dev/pre_ci.sh`
 
 ## final_status
-IN_PROGRESS
+COMPLETED
 
 Plan: `docs/plans/phase1/TSK-P1-015_ingress_api_mvp_pilot_surface/PLAN.md`
 
-## Interim Summary
+## Final Summary
 - Scaffolded initial .NET 10 ingress API service at `services/ledger-api/dotnet/src/LedgerApi`.
 - Implemented fail-closed ingress handling with durable-store adapters (file mode for deterministic local tests; `psql` mode for DB-backed runtime path).
 - Added deterministic self-test harness and wrapper script (`scripts/services/test_ingress_api_contract.sh`) generating:
   - `evidence/phase1/ingress_api_contract_tests.json`
   - `evidence/phase1/ingress_ack_attestation_semantics.json`
-- Full `scripts/dev/pre_ci.sh` is currently blocked in this environment due unavailable Docker daemon access.
+- Full `scripts/dev/pre_ci.sh` now passes with ingress contract evidence emitted deterministically.
