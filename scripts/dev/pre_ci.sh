@@ -45,11 +45,21 @@ else
   exit 1
 fi
 
-if [[ -x scripts/audit/preflight_structural_staged.sh ]]; then
-  echo "==> Structural preflight (staged) — change-rule"
-  scripts/audit/preflight_structural_staged.sh
+echo "==> Sync base ref for CI parity (origin/main)"
+if ! git fetch --no-tags --prune origin main:refs/remotes/origin/main >/dev/null 2>&1; then
+  if git rev-parse --verify origin/main >/dev/null 2>&1; then
+    echo "WARN: fetch failed; using existing local origin/main for parity diff"
+  else
+    echo "ERROR: failed to sync origin/main and no local origin/main exists"
+    exit 1
+  fi
+fi
+
+if [[ -x scripts/audit/enforce_change_rule.sh ]]; then
+  echo "==> Structural change-rule gate (CI parity, range diff)"
+  BASE_REF="origin/main" HEAD_REF="HEAD" scripts/audit/enforce_change_rule.sh
 else
-  echo "ERROR: scripts/audit/preflight_structural_staged.sh not found"
+  echo "ERROR: scripts/audit/enforce_change_rule.sh not found"
   exit 1
 fi
 
