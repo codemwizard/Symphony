@@ -711,6 +711,24 @@ jobs:
           merge-multiple: true
           path: evidence/phase0
 
+      - name: Summarize upstream gate status (root cause hint)
+        if: always()
+        shell: bash
+        run: |
+          set -euo pipefail
+          mech="${{ needs.mechanical_invariants.result }}"
+          db="${{ needs.db_verify_invariants.result }}"
+          sec="${{ needs.security_scan.result }}"
+          echo "Upstream results:"
+          echo " - mechanical_invariants: $mech"
+          echo " - db_verify_invariants: $db"
+          echo " - security_scan: $sec"
+          if [[ "$mech" != "success" || "$db" != "success" || "$sec" != "success" ]]; then
+            echo "::warning title=Upstream gate failure detected::One or more upstream jobs failed. Missing Phase-0 evidence below may be downstream of this root cause."
+          else
+            echo "All upstream evidence producer jobs succeeded."
+          fi
+
       - name: Debug & normalize artifact layout (show artifact contents, collect TSK-P0 files)
         run: |
             set -euo pipefail
