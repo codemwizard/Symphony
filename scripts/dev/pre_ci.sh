@@ -18,8 +18,8 @@ FRESH_DB="${FRESH_DB:-1}"   # enforce CI parity by default (ephemeral DB per run
 KEEP_TEMP_DB="${KEEP_TEMP_DB:-0}" # set to 1 to keep temp DB for debugging
 
 # For strict parity with GitHub Actions, do not allow a developer shell to override diff refs.
-# Use an unambiguous fully-qualified remote-tracking ref.
-export BASE_REF="refs/remotes/origin/main"
+# Resolve an unambiguous base ref after fetch (prefer remote-tracking; fallback to local origin/main branch).
+export BASE_REF=""
 export HEAD_REF="HEAD"
 
 require_docker_access() {
@@ -48,17 +48,22 @@ fi
 
 echo "==> Sync base ref for CI parity (refs/remotes/origin/main)"
 if ! git fetch --no-tags --prune origin main:refs/remotes/origin/main >/dev/null 2>&1; then
-  if git rev-parse --verify refs/remotes/origin/main >/dev/null 2>&1; then
-    echo "WARN: fetch failed; using existing local refs/remotes/origin/main for parity diff"
-  else
-    echo "ERROR: failed to sync refs/remotes/origin/main and no local remote-tracking ref exists"
-    exit 1
-  fi
+  echo "WARN: fetch failed; probing local refs for parity diff base"
+fi
+
+if git rev-parse --verify refs/remotes/origin/main >/dev/null 2>&1; then
+  export BASE_REF="refs/remotes/origin/main"
+elif git rev-parse --verify refs/heads/origin/main >/dev/null 2>&1; then
+  export BASE_REF="refs/heads/origin/main"
+  echo "WARN: using local branch refs/heads/origin/main (remote-tracking ref unavailable)"
+else
+  echo "ERROR: no usable origin/main ref found (expected refs/remotes/origin/main or refs/heads/origin/main)"
+  exit 1
 fi
 
 if [[ -x scripts/audit/enforce_change_rule.sh ]]; then
   echo "==> Structural change-rule gate (CI parity, range diff)"
-  BASE_REF="refs/remotes/origin/main" HEAD_REF="HEAD" scripts/audit/enforce_change_rule.sh
+  BASE_REF="$BASE_REF" HEAD_REF="HEAD" scripts/audit/enforce_change_rule.sh
 else
   echo "ERROR: scripts/audit/enforce_change_rule.sh not found"
   exit 1
@@ -117,6 +122,16 @@ fi
 if [[ -x scripts/services/test_ingress_api_contract.sh ]]; then
   echo "==> Phase-1 ingress API contract self-test"
   scripts/services/test_ingress_api_contract.sh
+fi
+
+if [[ -x scripts/services/test_executor_worker_runtime.sh ]]; then
+  echo "==> Phase-1 executor worker runtime self-test"
+  scripts/services/test_executor_worker_runtime.sh
+fi
+
+if [[ -x scripts/services/test_evidence_pack_api_contract.sh ]]; then
+  echo "==> Phase-1 evidence pack API self-test"
+  scripts/services/test_evidence_pack_api_contract.sh
 fi
 
 if [[ -f "$ENV_FILE" ]]; then

@@ -11,11 +11,12 @@ set -euo pipefail
 
 BASE_REF="${1:-refs/remotes/origin/main}"
 HEAD_REF="${2:-HEAD}"
+source scripts/audit/lib/git_diff.sh
 
 mkdir -p /tmp/invariants_ai
 
 git fetch --no-tags --depth=1 origin main >/dev/null 2>&1 || true
-git diff --no-color --no-ext-diff --unified=0 "${BASE_REF}...${HEAD_REF}" > /tmp/invariants_ai/pr.diff
+git_write_unified_diff_range "$BASE_REF" "$HEAD_REF" /tmp/invariants_ai/pr.diff 0
 
 python3 scripts/audit/detect_structural_changes.py --diff-file /tmp/invariants_ai/pr.diff --out /tmp/invariants_ai/detect.json
 structural="$(python3 - <<'PY'
@@ -40,7 +41,7 @@ fi
 
 if [[ -x scripts/audit/generate_invariants_quick ]]; then
   scripts/audit/generate_invariants_quick
-  git diff --exit-code docs/invariants/INVARIANTS_QUICK.md
+  git_assert_clean_path docs/invariants/INVARIANTS_QUICK.md
 fi
 
 echo "✅ verify_invariants_local passed."
