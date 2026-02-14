@@ -15,7 +15,8 @@ but invariants linkage (manifest/docs with INV-###) was not included in the same
 
 ## Reason
 
-[Describe why this exception is needed]
+Auto-generated exception for structural-change linkage preflight.
+Manual review is required to confirm final invariant linkage and closeout timeline.
 
 ## Evidence
 
@@ -35,4 +36,5 @@ Top matches:
 
 ## Mitigation
 
-[Describe any mitigating controls in place]
+- Mechanical gates remain enabled (security + integrity + compliance checks).
+- Exception is timeboxed and must be closed by the follow-up ticket before expiry.
