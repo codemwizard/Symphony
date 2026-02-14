@@ -134,6 +134,31 @@ if [[ -x scripts/services/test_evidence_pack_api_contract.sh ]]; then
   scripts/services/test_evidence_pack_api_contract.sh
 fi
 
+if [[ -x scripts/services/test_exception_case_pack_generator.sh ]]; then
+  echo "==> Phase-1 exception case-pack self-test"
+  scripts/services/test_exception_case_pack_generator.sh
+fi
+
+if [[ -x scripts/services/test_pilot_authz_tenant_boundary.sh ]]; then
+  echo "==> Phase-1 pilot authz tenant-boundary self-test"
+  scripts/services/test_pilot_authz_tenant_boundary.sh
+fi
+
+if [[ -x scripts/audit/verify_pilot_harness_readiness.sh ]]; then
+  echo "==> Phase-1 pilot harness readiness verification"
+  scripts/audit/verify_pilot_harness_readiness.sh
+fi
+
+if [[ -x scripts/audit/verify_product_kpi_readiness.sh ]]; then
+  echo "==> Phase-1 product KPI readiness verification"
+  scripts/audit/verify_product_kpi_readiness.sh
+fi
+
+if [[ -x scripts/security/verify_sandbox_deploy_manifest_posture.sh ]]; then
+  echo "==> Phase-1 sandbox deploy posture verification"
+  scripts/security/verify_sandbox_deploy_manifest_posture.sh
+fi
+
 if [[ -f "$ENV_FILE" ]]; then
   set -a
   # shellcheck disable=SC1090
