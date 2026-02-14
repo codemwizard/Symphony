@@ -18,7 +18,8 @@ FRESH_DB="${FRESH_DB:-1}"   # enforce CI parity by default (ephemeral DB per run
 KEEP_TEMP_DB="${KEEP_TEMP_DB:-0}" # set to 1 to keep temp DB for debugging
 
 # For strict parity with GitHub Actions, do not allow a developer shell to override diff refs.
-export BASE_REF="origin/main"
+# Use an unambiguous fully-qualified remote-tracking ref.
+export BASE_REF="refs/remotes/origin/main"
 export HEAD_REF="HEAD"
 
 require_docker_access() {
@@ -45,11 +46,21 @@ else
   exit 1
 fi
 
-if [[ -x scripts/audit/preflight_structural_staged.sh ]]; then
-  echo "==> Structural preflight (staged) — change-rule"
-  scripts/audit/preflight_structural_staged.sh
+echo "==> Sync base ref for CI parity (refs/remotes/origin/main)"
+if ! git fetch --no-tags --prune origin main:refs/remotes/origin/main >/dev/null 2>&1; then
+  if git rev-parse --verify refs/remotes/origin/main >/dev/null 2>&1; then
+    echo "WARN: fetch failed; using existing local refs/remotes/origin/main for parity diff"
+  else
+    echo "ERROR: failed to sync refs/remotes/origin/main and no local remote-tracking ref exists"
+    exit 1
+  fi
+fi
+
+if [[ -x scripts/audit/enforce_change_rule.sh ]]; then
+  echo "==> Structural change-rule gate (CI parity, range diff)"
+  BASE_REF="refs/remotes/origin/main" HEAD_REF="HEAD" scripts/audit/enforce_change_rule.sh
 else
-  echo "ERROR: scripts/audit/preflight_structural_staged.sh not found"
+  echo "ERROR: scripts/audit/enforce_change_rule.sh not found"
   exit 1
 fi
 

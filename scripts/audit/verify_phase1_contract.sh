@@ -5,6 +5,7 @@ ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 CONTRACT_FILE="${CONTRACT_FILE:-$ROOT_DIR/docs/PHASE1/phase1_contract.yml}"
 CP_FILE="${CP_FILE:-$ROOT_DIR/docs/control_planes/CONTROL_PLANES.yml}"
 SCHEMA_FILE="${SCHEMA_FILE:-$ROOT_DIR/docs/architecture/evidence_schema.json}"
+APPROVAL_SCHEMA_FILE="${APPROVAL_SCHEMA_FILE:-$ROOT_DIR/docs/operations/approval_metadata.schema.json}"
 EVIDENCE_DIR="${EVIDENCE_DIR:-$ROOT_DIR/evidence/phase1}"
 EVIDENCE_FILE="${EVIDENCE_FILE:-$EVIDENCE_DIR/phase1_contract_status.json}"
 RUN_PHASE1_GATES="${RUN_PHASE1_GATES:-0}"
@@ -16,7 +17,7 @@ EVIDENCE_GIT_SHA="$(git_sha)"
 EVIDENCE_SCHEMA_FP="$(schema_fingerprint)"
 export EVIDENCE_TS EVIDENCE_GIT_SHA EVIDENCE_SCHEMA_FP
 
-ROOT_DIR="$ROOT_DIR" CONTRACT_FILE="$CONTRACT_FILE" CP_FILE="$CP_FILE" SCHEMA_FILE="$SCHEMA_FILE" EVIDENCE_FILE="$EVIDENCE_FILE" RUN_PHASE1_GATES="$RUN_PHASE1_GATES" python3 - <<'PY'
+ROOT_DIR="$ROOT_DIR" CONTRACT_FILE="$CONTRACT_FILE" CP_FILE="$CP_FILE" SCHEMA_FILE="$SCHEMA_FILE" APPROVAL_SCHEMA_FILE="$APPROVAL_SCHEMA_FILE" EVIDENCE_FILE="$EVIDENCE_FILE" RUN_PHASE1_GATES="$RUN_PHASE1_GATES" python3 - <<'PY'
 import json
 import os
 from pathlib import Path
@@ -39,6 +40,7 @@ except Exception as e:
 contract_file = Path(os.environ["CONTRACT_FILE"])
 cp_file = Path(os.environ["CP_FILE"])
 schema_file = Path(os.environ["SCHEMA_FILE"])
+approval_schema_file = Path(os.environ["APPROVAL_SCHEMA_FILE"])
 evidence_file = Path(os.environ["EVIDENCE_FILE"])
 root_dir = Path(os.environ["ROOT_DIR"])
 run_phase1 = os.environ.get("RUN_PHASE1_GATES", "0") == "1"
@@ -73,6 +75,12 @@ if not schema_file.exists():
     schema = {}
 else:
     schema = json.loads(schema_file.read_text(encoding="utf-8"))
+
+if not approval_schema_file.exists():
+    errors.append(f"approval_schema_missing:{approval_schema_file}")
+    approval_schema = {}
+else:
+    approval_schema = json.loads(approval_schema_file.read_text(encoding="utf-8"))
 
 gate_map = {}
 for plane in (cp.get("control_planes") or {}).values():
@@ -136,9 +144,19 @@ for row in contract:
             continue
         try:
             payload = json.loads(ev_path.read_text(encoding="utf-8"))
-            jsonschema.validate(instance=payload, schema=schema)
+            schema_used = "default"
+            selected_schema = schema
+            if Path(evidence_path).name == "approval_metadata.json":
+                try:
+                    jsonschema.validate(instance=payload, schema=approval_schema)
+                    schema_used = "approval_metadata"
+                except Exception:
+                    jsonschema.validate(instance=payload, schema=schema)
+                    schema_used = "approval_metadata_fallback_default"
+            else:
+                jsonschema.validate(instance=payload, schema=selected_schema)
             required_checked += 1
-            checked.append({"invariant_id": iid, "status": "PASS", "evidence_path": evidence_path})
+            checked.append({"invariant_id": iid, "status": "PASS", "evidence_path": evidence_path, "schema": schema_used})
         except Exception as e:
             errors.append(f"{iid}:schema_validation_failed:{e}")
             checked.append({"invariant_id": iid, "status": "FAIL", "reason": "schema_validation_failed"})

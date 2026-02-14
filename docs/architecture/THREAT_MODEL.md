@@ -88,6 +88,7 @@ Mitigations:
 Mitigations:
 - Mechanical gates: evidence schema validation + required artifact checks
 - Security lints: DDL lock-risk lint, SECURITY DEFINER dynamic SQL lint
+- Privilege lint hardening for multiline `GRANT CREATE ON SCHEMA public TO ...;` detection
 - Structural change rule: threat/compliance docs updated or timeboxed exception
 
 ### Data Plane (PostgreSQL)

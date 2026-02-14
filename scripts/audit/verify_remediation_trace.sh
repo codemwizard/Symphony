@@ -17,22 +17,22 @@ if [[ -z "${BASE_REF:-}" ]]; then
   if [[ -n "${REMEDIATION_TRACE_BASE_REF:-}" ]]; then
     BASE_REF="${REMEDIATION_TRACE_BASE_REF}"
   elif [[ -n "${GITHUB_BASE_REF:-}" ]]; then
-    BASE_REF="origin/${GITHUB_BASE_REF}"
+    BASE_REF="refs/remotes/origin/${GITHUB_BASE_REF}"
   else
     # symphony:allow_or_true symphony:allow_stderr_suppress
     UPSTREAM="$(git rev-parse --abbrev-ref --symbolic-full-name '@{upstream}' 2>/dev/null || true)"
     if [[ -n "$UPSTREAM" ]]; then
       BASE_REF="$UPSTREAM"
     else
-      BASE_REF="origin/main"
+      BASE_REF="refs/remotes/origin/main"
     fi
   fi
 fi
 
-if [[ "$BASE_REF" == origin/* ]]; then
-    if ! git show-ref --verify --quiet "refs/remotes/${BASE_REF}"; then
+if [[ "$BASE_REF" == refs/remotes/origin/* ]]; then
+    if ! git show-ref --verify --quiet "$BASE_REF"; then
       # symphony:allow_or_true symphony:allow_stderr_suppress
-      git fetch --no-tags --prune origin "${BASE_REF#origin/}:${BASE_REF}" >/dev/null 2>&1 || true
+      git fetch --no-tags --prune origin "${BASE_REF#refs/remotes/origin/}:${BASE_REF}" >/dev/null 2>&1 || true
     fi
 fi
 
@@ -53,7 +53,7 @@ from scripts.audit.remediation_trace_lib import RemediationTracePolicy, read_tex
 
 root = Path(os.environ["ROOT_DIR"])
 evidence_out = Path(os.environ["EVIDENCE_FILE"])
-base_ref = os.environ.get("BASE_REF", "origin/main")
+base_ref = os.environ.get("BASE_REF", "refs/remotes/origin/main")
 head_ref = os.environ.get("HEAD_REF", "HEAD")
 
 policy = RemediationTracePolicy()

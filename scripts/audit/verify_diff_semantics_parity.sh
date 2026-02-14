@@ -37,7 +37,7 @@ critical = [
 
 errors = []
 checked = []
-base_ref = os.environ.get("BASE_REF", "origin/main")
+base_ref = os.environ.get("BASE_REF", "refs/remotes/origin/main")
 head_ref = os.environ.get("HEAD_REF", "HEAD")
 merge_base = ""
 
