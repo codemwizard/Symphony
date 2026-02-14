@@ -272,6 +272,9 @@ fi
 if [[ -x scripts/db/verify_anchor_sync_hooks.sh ]]; then
   scripts/db/verify_anchor_sync_hooks.sh
 fi
+if [[ -x scripts/db/verify_anchor_sync_operational_invariant.sh ]]; then
+  scripts/db/verify_anchor_sync_operational_invariant.sh
+fi
 if [[ -x scripts/db/verify_instruction_finality_invariant.sh ]]; then
   scripts/db/verify_instruction_finality_invariant.sh
 fi
@@ -304,6 +307,9 @@ if [[ -n "${DATABASE_URL:-}" ]]; then
   if [[ -x scripts/db/tests/test_rail_sequence_continuity.sh ]]; then
     scripts/db/tests/test_rail_sequence_continuity.sh
   fi
+  if [[ -x scripts/db/tests/test_anchor_sync_operational.sh ]]; then
+    scripts/db/tests/test_anchor_sync_operational.sh
+  fi
 
   # CI parity: these DB checks run in GitHub Actions db_verify_invariants job.
   if [[ -x scripts/db/n_minus_one_check.sh ]]; then
@@ -327,12 +333,25 @@ else
   exit 1
 fi
 
+if [[ -x scripts/audit/verify_phase1_demo_proof_pack.sh ]]; then
+  echo "==> Phase-1 regulator/tier-1 demo-proof pack verification"
+  scripts/audit/verify_phase1_demo_proof_pack.sh
+fi
+
 if [[ "${RUN_PHASE1_GATES:-0}" == "1" ]]; then
   echo "==> Phase-1 contract evidence status (post-DB parity)"
   if [[ -x scripts/audit/verify_phase1_contract.sh ]]; then
     scripts/audit/verify_phase1_contract.sh
   else
     echo "ERROR: scripts/audit/verify_phase1_contract.sh not found"
+    exit 1
+  fi
+
+  echo "==> Phase-1 closeout verification"
+  if [[ -x scripts/audit/verify_phase1_closeout.sh ]]; then
+    scripts/audit/verify_phase1_closeout.sh
+  else
+    echo "ERROR: scripts/audit/verify_phase1_closeout.sh not found"
     exit 1
   fi
 fi
