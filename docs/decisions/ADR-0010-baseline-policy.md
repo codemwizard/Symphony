@@ -25,3 +25,5 @@ Baseline updates are **governed** and **fail-closed**:
 - 2026-02-13: Baseline regenerated after INV-115 pii decoupling migration (0029).
 - 2026-02-13: Baseline regenerated after follow-up fix migration for pii purge executor (0030).
 - 2026-02-13: Baseline regenerated after INV-116 rail sequence truth-anchor migration (0031).
+- 2026-02-14: Baseline regenerated after INV-113 operational anchor-sync enforcement migration (0032).
+- 2026-02-14: Baseline regenerated after anchor-sync append-only/lease-time fix migration (0033).
