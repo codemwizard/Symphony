@@ -39,6 +39,7 @@ command -v psql >/dev/null 2>&1 || { echo "❌ Error: psql not found in PATH"; e
 [[ -x "$SCRIPT_DIR/verify_role_login_posture.sh" ]] || { echo "❌ Error: missing verify_role_login_posture.sh"; exit 2; }
 [[ -x "$SCRIPT_DIR/verify_boz_observability_role.sh" ]] || { echo "❌ Error: missing verify_boz_observability_role.sh"; exit 2; }
 [[ -x "$SCRIPT_DIR/verify_anchor_sync_hooks.sh" ]] || { echo "❌ Error: missing verify_anchor_sync_hooks.sh"; exit 2; }
+[[ -x "$SCRIPT_DIR/verify_anchor_sync_operational_invariant.sh" ]] || { echo "❌ Error: missing verify_anchor_sync_operational_invariant.sh"; exit 2; }
 [[ -x "$SCRIPT_DIR/verify_instruction_finality_invariant.sh" ]] || { echo "❌ Error: missing verify_instruction_finality_invariant.sh"; exit 2; }
 [[ -x "$SCRIPT_DIR/verify_pii_decoupling_hooks.sh" ]] || { echo "❌ Error: missing verify_pii_decoupling_hooks.sh"; exit 2; }
 [[ -x "$SCRIPT_DIR/verify_rail_sequence_truth_anchor.sh" ]] || { echo "❌ Error: missing verify_rail_sequence_truth_anchor.sh"; exit 2; }
@@ -69,6 +70,9 @@ echo "👤 Verifying BoZ observability role (read-only seat)..."
 
 echo "🔗 Verifying anchor-sync structural hooks..."
 "$SCRIPT_DIR/verify_anchor_sync_hooks.sh"
+
+echo "🔗 Verifying anchor-sync operational invariant..."
+"$SCRIPT_DIR/verify_anchor_sync_operational_invariant.sh"
 
 echo "🔐 Verifying instruction finality invariant..."
 "$SCRIPT_DIR/verify_instruction_finality_invariant.sh"

@@ -13,23 +13,42 @@ EVIDENCE_GIT_SHA="$(git_sha)"
 EVIDENCE_SCHEMA_FP="$(schema_fingerprint)"
 export EVIDENCE_TS EVIDENCE_GIT_SHA EVIDENCE_SCHEMA_FP
 
-# Default range for local usage if not provided. Mirrors enforce_change_rule.sh conventions.
-if [[ -z "${BASE_REF:-}" ]]; then
-  BASE_REF="$(git_resolve_base_ref)"
-fi
-
-if ! git_ensure_ref "$BASE_REF"; then
-  echo "ERROR: base_ref_not_found:$BASE_REF"
-  exit 1
-fi
-
 HEAD_REF="${HEAD_REF:-HEAD}"
-MERGE_BASE="$(git_merge_base "$BASE_REF" "$HEAD_REF")"
 CHANGED_FILES_FILE="$(mktemp)"
 trap 'rm -f "$CHANGED_FILES_FILE"' EXIT
-git_changed_files_range "$BASE_REF" "$HEAD_REF" > "$CHANGED_FILES_FILE"
+PRECOMPUTE_ERRORS=()
+MERGE_BASE=""
 
-ROOT_DIR="$ROOT_DIR" EVIDENCE_FILE="$EVIDENCE_FILE" BASE_REF="$BASE_REF" HEAD_REF="$HEAD_REF" MERGE_BASE="$MERGE_BASE" CHANGED_FILES_FILE="$CHANGED_FILES_FILE" python3 - <<'PY'
+# Default range for local usage if not provided. Mirrors enforce_change_rule.sh conventions.
+if [[ -z "${BASE_REF:-}" ]]; then
+  if RESOLVED_BASE_REF="$(git_resolve_base_ref)"; then
+    BASE_REF="$RESOLVED_BASE_REF"
+  else
+    BASE_REF=""
+  fi
+fi
+
+if [[ -z "${BASE_REF:-}" ]]; then
+  PRECOMPUTE_ERRORS+=("base_ref_not_found:<empty>")
+elif ! git_ensure_ref "$BASE_REF"; then
+  PRECOMPUTE_ERRORS+=("base_ref_not_found:$BASE_REF")
+fi
+
+if [[ ${#PRECOMPUTE_ERRORS[@]} -eq 0 ]]; then
+  if ! MERGE_BASE="$(git_merge_base "$BASE_REF" "$HEAD_REF")"; then
+    PRECOMPUTE_ERRORS+=("merge_base_failed:${BASE_REF}...${HEAD_REF}")
+  fi
+fi
+
+if [[ ${#PRECOMPUTE_ERRORS[@]} -eq 0 ]]; then
+  if ! git_changed_files_range "$BASE_REF" "$HEAD_REF" > "$CHANGED_FILES_FILE"; then
+    PRECOMPUTE_ERRORS+=("git_diff_range_failed:${BASE_REF}...${HEAD_REF}")
+  fi
+fi
+
+PRECOMPUTE_ERROR="${PRECOMPUTE_ERRORS[*]:-}"
+
+ROOT_DIR="$ROOT_DIR" EVIDENCE_FILE="$EVIDENCE_FILE" BASE_REF="$BASE_REF" HEAD_REF="$HEAD_REF" MERGE_BASE="$MERGE_BASE" CHANGED_FILES_FILE="$CHANGED_FILES_FILE" PRECOMPUTE_ERROR="$PRECOMPUTE_ERROR" python3 - <<'PY'
 import json
 import os
 from pathlib import Path
@@ -47,6 +66,26 @@ policy = RemediationTracePolicy()
 check_id = "REMEDIATION-TRACE"
 
 errors: list[str] = []
+
+if os.environ.get("PRECOMPUTE_ERROR"):
+    out = {
+        "check_id": check_id,
+        "timestamp_utc": os.environ.get("EVIDENCE_TS"),
+        "git_sha": os.environ.get("EVIDENCE_GIT_SHA"),
+        "schema_fingerprint": os.environ.get("EVIDENCE_SCHEMA_FP"),
+        "status": "FAIL",
+        "diff_mode": "range",
+        "base_ref": base_ref,
+        "head_ref": head_ref,
+        "merge_base": merge_base,
+        "changed_files": [],
+        "triggered_files": [],
+        "trace_docs": [],
+        "satisfying_docs": [],
+        "errors": [f"git_diff_precompute_failed:{os.environ.get('PRECOMPUTE_ERROR')}"],
+    }
+    evidence_out.write_text(json.dumps(out, indent=2) + "\n")
+    raise SystemExit(1)
 
 try:
     diff_mode = "range"

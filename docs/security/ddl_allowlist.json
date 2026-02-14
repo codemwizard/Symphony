@@ -180,6 +180,15 @@
       "expires_on": "2026-12-31",
       "reviewed_by": "security_guardian",
       "approved_at": "2026-02-13"
+    },
+    {
+      "id": "DDL-ALLOW-0021",
+      "migration": "schema/migrations/0033_anchor_sync_operational_fix_append_only_and_lease_time.sql",
+      "statement_fingerprint": "92fb446a787d20323ace415e068cc4cd7a7c1261883811ccff7b4873cb653ea5",
+      "reason": "Phase-1 anchor-sync operational fix extends state ledger with anchor_type metadata via ALTER TABLE (non-hot table).",
+      "expires_on": "2026-12-31",
+      "reviewed_by": "security_guardian",
+      "approved_at": "2026-02-14"
     }
   ]
 }

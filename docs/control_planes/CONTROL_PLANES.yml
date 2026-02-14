@@ -178,6 +178,18 @@ control_planes:
         script: scripts/audit/verify_phase1_contract.sh
         evidence: evidence/phase1/phase1_contract_status.json
 
+      - gate_id: INT-G29
+        script: scripts/db/verify_anchor_sync_operational_invariant.sh
+        evidence: evidence/phase1/anchor_sync_operational_invariant.json
+
+      - gate_id: INT-G30
+        script: scripts/audit/verify_phase1_demo_proof_pack.sh
+        evidence: evidence/phase1/regulator_demo_pack.json
+
+      - gate_id: INT-G31
+        script: scripts/audit/verify_phase1_closeout.sh
+        evidence: evidence/phase1/phase1_closeout.json
+
   governance:
     owner: COMPLIANCE_MAPPER
     scope:
