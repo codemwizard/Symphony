@@ -3,6 +3,7 @@ set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 SCHEMA_FILE="$ROOT_DIR/docs/architecture/evidence_schema.json"
+APPROVAL_SCHEMA_FILE="$ROOT_DIR/docs/operations/approval_metadata.schema.json"
 EVIDENCE_DIR="$ROOT_DIR/evidence/phase0"
 EVIDENCE_DIR_PHASE1="$ROOT_DIR/evidence/phase1"
 REPORT_FILE="$EVIDENCE_DIR/evidence_validation.json"
@@ -27,13 +28,18 @@ from pathlib import Path
 import jsonschema
 import os
 
-schema = json.loads(Path("$SCHEMA_FILE").read_text())
+default_schema = json.loads(Path("$SCHEMA_FILE").read_text())
+approval_schema_path = Path("$APPROVAL_SCHEMA_FILE")
+approval_schema = None
+if approval_schema_path.exists():
+    approval_schema = json.loads(approval_schema_path.read_text())
 dirs = ["$EVIDENCE_DIR", "$EVIDENCE_DIR_PHASE1"]
 files = []
 for d in dirs:
     if Path(d).exists():
         files.extend(sorted(glob.glob(os.path.join(d, "*.json"))))
 errors = []
+schema_usage = []
 
 if not files:
     errors.append({"file": None, "error": "no evidence files found"})
@@ -41,9 +47,24 @@ else:
     for f in files:
         try:
             evidence = json.loads(Path(f).read_text())
-            jsonschema.validate(instance=evidence, schema=schema)
+            selected_schema = default_schema
+            schema_id = "default"
+            basename = Path(f).name
+            if basename == "approval_metadata.json":
+                if approval_schema is None:
+                    raise RuntimeError("approval_metadata.schema.json missing")
+                try:
+                    jsonschema.validate(instance=evidence, schema=approval_schema)
+                    schema_id = "approval_metadata"
+                except Exception:
+                    jsonschema.validate(instance=evidence, schema=default_schema)
+                    schema_id = "approval_metadata_fallback_default"
+            else:
+                jsonschema.validate(instance=evidence, schema=selected_schema)
+            schema_usage.append({"file": f, "schema": schema_id})
         except Exception as e:
             errors.append({"file": f, "error": str(e)})
+            schema_usage.append({"file": f, "schema": "error"})
 
 status = "PASS" if not errors else "FAIL"
 out = {
@@ -54,6 +75,7 @@ out = {
     "status": status,
     "checked_dirs": dirs,
     "checked_files": files,
+    "schema_usage": schema_usage,
     "errors": errors,
 }
 Path("$REPORT_FILE").write_text(json.dumps(out, indent=2))

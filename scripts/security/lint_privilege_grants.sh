@@ -6,7 +6,21 @@ echo "==> Checking for privilege regressions in migrations"
 bad=0
 while IFS= read -r -d '' file; do
   # Block any CREATE grants on schema public to PUBLIC or symphony_* runtime roles.
-  if grep -Eqi "GRANT\s+CREATE\s+ON\s+SCHEMA\s+public\s+TO\s+(PUBLIC|symphony_)" "$file"; then
+  # Parse statements across newlines and ignore SQL comments.
+  matches="$(
+    perl -0777 -ne '
+      s{/\*.*?\*/}{}gs;
+      s{--[^\n]*}{}g;
+      while (/GRANT\s+CREATE\s+ON\s+SCHEMA\s+public\s+TO\s+([^;]+);/ig) {
+        my $roles = $1;
+        if ($roles =~ /\bPUBLIC\b/i || $roles =~ /\bsymphony_[a-z0-9_]*\b/i) {
+          print $roles, "\n";
+        }
+      }
+    ' "$file"
+  )"
+
+  if [[ -n "$matches" ]]; then
     echo "ERROR: $file appears to grant CREATE on schema public to PUBLIC/runtime role"
     bad=$((bad + 1))
   fi

@@ -7,4 +7,5 @@ cd "$ROOT_DIR"
 PROJECT="services/ledger-api/dotnet/src/LedgerApi/LedgerApi.csproj"
 
 # Self-test mode validates ingress contract + fail-closed semantics without binding a network socket.
-dotnet run --no-build --no-launch-profile --project "$PROJECT" -- --self-test
+dotnet build "$PROJECT" -nologo -v minimal >/dev/null
+dotnet run --no-launch-profile --project "$PROJECT" -- --self-test
