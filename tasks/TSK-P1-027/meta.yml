@@ -1,0 +1,64 @@
+phase: "1"
+task_id: "TSK-P1-027"
+title: "Performance Gap Close: Ingress Hot-Path Index Mechanical Gate"
+owner_role: "DB_FOUNDATION"
+status: "completed"
+
+depends_on:
+  - "TSK-P1-017"
+  - "TSK-P1-010"
+
+touches:
+  - "scripts/db/tests/test_ingress_hotpath_indexes.sh"
+  - "scripts/db/verify_invariants.sh"
+  - "scripts/dev/pre_ci.sh"
+  - "docs/control_planes/CONTROL_PLANES.yml"
+  - "docs/PHASE1/phase1_contract.yml"
+  - "docs/invariants/INVARIANTS_MANIFEST.yml"
+  - "tasks/TSK-P1-027/meta.yml"
+  - "docs/plans/phase1/TSK-P1-027_ingress_hotpath_index_performance_gate/PLAN.md"
+  - "docs/plans/phase1/TSK-P1-027_ingress_hotpath_index_performance_gate/EXEC_LOG.md"
+
+invariants:
+  - "INV-118"
+  - "INV-035"
+  - "INV-066"
+
+work:
+  - "Add dedicated ingress hot-path index verifier for ingress_attestations and required tenant/instruction/correlation query paths."
+  - "Require exact index column ordering for hot-path index assertions to prevent false pass."
+  - "Emit deterministic evidence at `evidence/phase1/ingress_hotpath_indexes.json` on PASS and FAIL paths."
+  - "Wire non-colliding control-plane gate (recommended INT-G33; do not reuse INT-G25..INT-G31)."
+  - "Add required Phase-1 contract row after gate is wired and evidence is deterministic."
+
+acceptance_criteria:
+  - "Verifier fails when any required ingress hot-path index is missing or invalid."
+  - "Evidence lists each required index check and pass/fail result deterministically."
+  - "RUN_PHASE1_GATES=1 path enforces this gate via phase1_contract without missing-evidence failures."
+
+verification:
+  - "scripts/db/tests/test_ingress_hotpath_indexes.sh"
+  - "scripts/dev/pre_ci.sh"
+  - "RUN_PHASE1_GATES=1 scripts/dev/pre_ci.sh"
+  - "scripts/audit/verify_phase1_contract.sh"
+
+evidence:
+  - "evidence/phase1/ingress_hotpath_indexes.json"
+
+failure_modes:
+  - "Ingress hot-path index missing and verifier passes due to loose pattern matching."
+  - "Evidence missing when verifier fails."
+  - "Gate ID collision with existing INT-Gxx entries."
+
+must_read:
+  - "docs/control_planes/CONTROL_PLANES.yml"
+  - "docs/PHASE1/phase1_contract.yml"
+  - "docs/PHASE0/PHASE0_PERFORMANCE_POSTURE.md"
+
+implementation_plan: "docs/plans/phase1/TSK-P1-027_ingress_hotpath_index_performance_gate/PLAN.md"
+implementation_log: "docs/plans/phase1/TSK-P1-027_ingress_hotpath_index_performance_gate/EXEC_LOG.md"
+
+notes: "Implemented dedicated ingress hot-path index gate and wired INT-G33 with Phase-1 contract requirement."
+client: "codex_cli"
+assigned_agent: "db_foundation"
+model: "<UNASSIGNED>"

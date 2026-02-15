@@ -190,6 +190,14 @@ control_planes:
         script: scripts/audit/verify_phase1_closeout.sh
         evidence: evidence/phase1/phase1_closeout.json
 
+      - gate_id: INT-G32
+        script: scripts/db/verify_timeout_posture.sh
+        evidence: evidence/phase0/db_timeout_posture.json
+
+      - gate_id: INT-G33
+        script: scripts/db/tests/test_ingress_hotpath_indexes.sh
+        evidence: evidence/phase1/ingress_hotpath_indexes.json
+
   governance:
     owner: COMPLIANCE_MAPPER
     scope:
