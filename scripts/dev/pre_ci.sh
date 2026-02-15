@@ -134,6 +134,31 @@ if [[ -x scripts/services/test_evidence_pack_api_contract.sh ]]; then
   scripts/services/test_evidence_pack_api_contract.sh
 fi
 
+if [[ -x scripts/services/test_exception_case_pack_generator.sh ]]; then
+  echo "==> Phase-1 exception case-pack self-test"
+  scripts/services/test_exception_case_pack_generator.sh
+fi
+
+if [[ -x scripts/services/test_pilot_authz_tenant_boundary.sh ]]; then
+  echo "==> Phase-1 pilot authz tenant-boundary self-test"
+  scripts/services/test_pilot_authz_tenant_boundary.sh
+fi
+
+if [[ -x scripts/audit/verify_pilot_harness_readiness.sh ]]; then
+  echo "==> Phase-1 pilot harness readiness verification"
+  scripts/audit/verify_pilot_harness_readiness.sh
+fi
+
+if [[ -x scripts/audit/verify_product_kpi_readiness.sh ]]; then
+  echo "==> Phase-1 product KPI readiness verification"
+  scripts/audit/verify_product_kpi_readiness.sh
+fi
+
+if [[ -x scripts/security/verify_sandbox_deploy_manifest_posture.sh ]]; then
+  echo "==> Phase-1 sandbox deploy posture verification"
+  scripts/security/verify_sandbox_deploy_manifest_posture.sh
+fi
+
 if [[ -f "$ENV_FILE" ]]; then
   set -a
   # shellcheck disable=SC1090
@@ -226,6 +251,8 @@ fi
 echo "==> DB verify_invariants.sh"
 if [[ -x scripts/db/verify_invariants.sh ]]; then
   # Control-plane reference (INV-031 / INT-G22): scripts/db/tests/test_outbox_pending_indexes.sh
+  # Control-plane reference (INV-117 / INT-G32): scripts/db/verify_timeout_posture.sh
+  # Control-plane reference (INV-118 / INT-G33): scripts/db/tests/test_ingress_hotpath_indexes.sh
   SKIP_POLICY_SEED=1 scripts/db/verify_invariants.sh
 else
   echo "ERROR: scripts/db/verify_invariants.sh not found"
@@ -246,6 +273,9 @@ if [[ -x scripts/db/verify_boz_observability_role.sh ]]; then
 fi
 if [[ -x scripts/db/verify_anchor_sync_hooks.sh ]]; then
   scripts/db/verify_anchor_sync_hooks.sh
+fi
+if [[ -x scripts/db/verify_anchor_sync_operational_invariant.sh ]]; then
+  scripts/db/verify_anchor_sync_operational_invariant.sh
 fi
 if [[ -x scripts/db/verify_instruction_finality_invariant.sh ]]; then
   scripts/db/verify_instruction_finality_invariant.sh
@@ -279,6 +309,9 @@ if [[ -n "${DATABASE_URL:-}" ]]; then
   if [[ -x scripts/db/tests/test_rail_sequence_continuity.sh ]]; then
     scripts/db/tests/test_rail_sequence_continuity.sh
   fi
+  if [[ -x scripts/db/tests/test_anchor_sync_operational.sh ]]; then
+    scripts/db/tests/test_anchor_sync_operational.sh
+  fi
 
   # CI parity: these DB checks run in GitHub Actions db_verify_invariants job.
   if [[ -x scripts/db/n_minus_one_check.sh ]]; then
@@ -302,12 +335,25 @@ else
   exit 1
 fi
 
+if [[ -x scripts/audit/verify_phase1_demo_proof_pack.sh ]]; then
+  echo "==> Phase-1 regulator/tier-1 demo-proof pack verification"
+  scripts/audit/verify_phase1_demo_proof_pack.sh
+fi
+
 if [[ "${RUN_PHASE1_GATES:-0}" == "1" ]]; then
   echo "==> Phase-1 contract evidence status (post-DB parity)"
   if [[ -x scripts/audit/verify_phase1_contract.sh ]]; then
     scripts/audit/verify_phase1_contract.sh
   else
     echo "ERROR: scripts/audit/verify_phase1_contract.sh not found"
+    exit 1
+  fi
+
+  echo "==> Phase-1 closeout verification"
+  if [[ -x scripts/audit/verify_phase1_closeout.sh ]]; then
+    scripts/audit/verify_phase1_closeout.sh
+  else
+    echo "ERROR: scripts/audit/verify_phase1_closeout.sh not found"
     exit 1
   fi
 fi
