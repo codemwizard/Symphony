@@ -251,6 +251,8 @@ fi
 echo "==> DB verify_invariants.sh"
 if [[ -x scripts/db/verify_invariants.sh ]]; then
   # Control-plane reference (INV-031 / INT-G22): scripts/db/tests/test_outbox_pending_indexes.sh
+  # Control-plane reference (INV-117 / INT-G32): scripts/db/verify_timeout_posture.sh
+  # Control-plane reference (INV-118 / INT-G33): scripts/db/tests/test_ingress_hotpath_indexes.sh
   SKIP_POLICY_SEED=1 scripts/db/verify_invariants.sh
 else
   echo "ERROR: scripts/db/verify_invariants.sh not found"

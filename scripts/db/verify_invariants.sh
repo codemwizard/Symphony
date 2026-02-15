@@ -16,6 +16,18 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
+
+# DB timeout posture defaults for verifier sessions (override via env if needed).
+DB_LOCK_TIMEOUT="${DB_LOCK_TIMEOUT:-2s}"
+DB_STATEMENT_TIMEOUT="${DB_STATEMENT_TIMEOUT:-30s}"
+DB_IDLE_IN_TX_TIMEOUT="${DB_IDLE_IN_TX_TIMEOUT:-60s}"
+timeout_pgopts="-c lock_timeout=${DB_LOCK_TIMEOUT} -c statement_timeout=${DB_STATEMENT_TIMEOUT} -c idle_in_transaction_session_timeout=${DB_IDLE_IN_TX_TIMEOUT}"
+if [[ -n "${PGOPTIONS:-}" ]]; then
+  export PGOPTIONS="${PGOPTIONS} ${timeout_pgopts}"
+else
+  export PGOPTIONS="${timeout_pgopts}"
+fi
+
 source "$REPO_ROOT/scripts/lib/evidence.sh"
 EVIDENCE_TS="$(evidence_now_utc)"
 EVIDENCE_GIT_SHA="$(git_sha)"
@@ -43,6 +55,8 @@ command -v psql >/dev/null 2>&1 || { echo "❌ Error: psql not found in PATH"; e
 [[ -x "$SCRIPT_DIR/verify_instruction_finality_invariant.sh" ]] || { echo "❌ Error: missing verify_instruction_finality_invariant.sh"; exit 2; }
 [[ -x "$SCRIPT_DIR/verify_pii_decoupling_hooks.sh" ]] || { echo "❌ Error: missing verify_pii_decoupling_hooks.sh"; exit 2; }
 [[ -x "$SCRIPT_DIR/verify_rail_sequence_truth_anchor.sh" ]] || { echo "❌ Error: missing verify_rail_sequence_truth_anchor.sh"; exit 2; }
+[[ -x "$SCRIPT_DIR/verify_timeout_posture.sh" ]] || { echo "❌ Error: missing verify_timeout_posture.sh"; exit 2; }
+[[ -x "$SCRIPT_DIR/tests/test_ingress_hotpath_indexes.sh" ]] || { echo "❌ Error: missing test_ingress_hotpath_indexes.sh"; exit 2; }
 [[ -x "$REPO_ROOT/schema/seeds/dev/seed_policy_from_file.sh" ]] || { echo "❌ Error: missing seed_policy_from_file.sh"; exit 2; }
 
 # --- 2. Execution ---
@@ -83,11 +97,17 @@ echo "🧩 Verifying PII decoupling invariant..."
 echo "🚦 Verifying rail sequence truth-anchor invariant..."
 "$SCRIPT_DIR/verify_rail_sequence_truth_anchor.sh"
 
+echo "⏱️ Verifying DB timeout posture..."
+"$SCRIPT_DIR/verify_timeout_posture.sh"
+
 echo "🧾 Verifying table conventions..."
 "$SCRIPT_DIR/verify_table_conventions.sh"
 
 echo "🧭 Verifying outbox pending indexes..."
 "$SCRIPT_DIR/verify_outbox_pending_indexes.sh"
+
+echo "🚪 Verifying ingress hot-path index posture..."
+"$SCRIPT_DIR/tests/test_ingress_hotpath_indexes.sh"
 
 echo "🧭 Verifying outbox MVCC posture..."
 "$SCRIPT_DIR/verify_outbox_mvcc_posture.sh"

@@ -1631,5 +1631,19 @@
     "evidence_scope": "repo",
     "notes": "Add regression verifier to prevent staged/worktree diff semantics in enforcement gates.",
     "gate_ids": []
+  },
+  {
+    "task_id": "TSK-P0-156",
+    "status": "completed",
+    "verification_mode": "both",
+    "evidence_required": true,
+    "evidence_paths": [
+      "evidence/phase0/db_timeout_posture.json"
+    ],
+    "evidence_scope": "repo",
+    "notes": "DB timeout posture gate implemented and wired (lock/statement/idle-in-transaction bounds).",
+    "gate_ids": [
+      "INT-G32"
+    ]
   }
 ]
