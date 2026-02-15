@@ -83,6 +83,24 @@
       "subsystem": "ingress",
       "meaning": "member/tenant mismatch",
       "retryable": false
+    },
+    "P7210": {
+      "class": "B",
+      "subsystem": "anchor_sync",
+      "meaning": "anchor operation input or target not found",
+      "retryable": false
+    },
+    "P7211": {
+      "class": "B",
+      "subsystem": "anchor_sync",
+      "meaning": "anchor operation state invalid for requested transition",
+      "retryable": false
+    },
+    "P7212": {
+      "class": "B",
+      "subsystem": "anchor_sync",
+      "meaning": "anchor operation lease or worker mismatch",
+      "retryable": false
     }
   }
 }

@@ -70,6 +70,14 @@
   evidence_path: "evidence/phase1/dotnet_lint_quality.json"
   notes: "Phase-1 .NET quality lint gate for deterministic lint/build posture."
 
+- invariant_id: "INV-118"
+  status: "implemented"
+  required: true
+  gate_id: "INT-G33"
+  verifier: "scripts/db/tests/test_ingress_hotpath_indexes.sh"
+  evidence_path: "evidence/phase1/ingress_hotpath_indexes.json"
+  notes: "Phase-1 front-door performance guard for ingress query/index posture."
+
 - invariant_id: "INV-039"
   status: "deferred_to_phase2"
   required: false

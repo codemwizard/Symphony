@@ -107,6 +107,9 @@ Mitigations:
 - DDL lock-risk lint and blocking policy enforcement
 - SECURITY DEFINER dynamic SQL lint
 - Instruction finality table with fail-closed trigger semantics (update/delete blocked with SQLSTATE `P7003`)
+- Anchor-sync operations enforced as state machine (`PENDING` -> `ANCHORING` -> `ANCHORED` -> `COMPLETED`) with completion blocked until anchored state and lease-token checks
+- Anchor-sync lease expiry repair + deterministic resume semantics to prevent zombie anchoring workers
+- Phase-1 closeout/demo-pack gates (`INT-G30`, `INT-G31`) to ensure regulator/tier-1 claims map to machine evidence
 
 ## Priority security actions
 1) Implement service identity and mTLS for internal calls.
