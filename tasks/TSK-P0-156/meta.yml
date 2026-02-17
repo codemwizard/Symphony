@@ -1,0 +1,49 @@
+phase: "0"
+task_id: "TSK-P0-156"
+title: "Emergency remediation: remove exposed SSH private key and enforce no-reintroduction"
+owner_role: "SECURITY_GUARDIAN"
+status: "completed"
+
+depends_on:
+  - "TSK-P0-124"
+
+touches:
+  - ".gitignore"
+  - "docs/plans/phase0/TSK-P0-156_ssh_key_exposure_remediation/PLAN.md"
+  - "docs/plans/phase0/TSK-P0-156_ssh_key_exposure_remediation/EXEC_LOG.md"
+  - "tasks/TSK-P0-156/meta.yml"
+
+invariants:
+  - "No credential material committed to repository history or working tree"
+
+work:
+  - "Document and execute emergency response for exposed OpenSSH key material committed in repository history."
+  - "Remove key filenames from working-tree tracking surface and prevent reintroduction via ignore rules."
+  - "Prepare history rewrite procedure and force-push instructions for branch-level cleanup."
+
+acceptance_criteria:
+  - "Leaked key filenames are ignored by git in all local workflows."
+  - "Task plan/log documents revocation + rotation + history rewrite action path."
+  - "No key material is present in current tracked files."
+
+verification:
+  - "git ls-files | rg 'github_push-key|github_push-key.pub'"
+  - "rg -n -S -e 'BEGIN OPENSSH PRIVATE KEY' -e 'BEGIN RSA PRIVATE KEY' -- ."
+
+evidence:
+  - "docs/plans/phase0/TSK-P0-156_ssh_key_exposure_remediation/EXEC_LOG.md"
+
+failure_modes:
+  - "History remains unrewritten and leaked key remains recoverable from git history."
+  - "Rotations are not completed and compromised key remains valid in external systems."
+
+must_read:
+  - "docs/operations/AI_AGENT_OPERATION_MANUAL.md"
+
+implementation_plan: "docs/plans/phase0/TSK-P0-156_ssh_key_exposure_remediation/PLAN.md"
+implementation_log: "docs/plans/phase0/TSK-P0-156_ssh_key_exposure_remediation/EXEC_LOG.md"
+
+notes: "P0 incident remediation task for committed ssh private key exposure."
+client: "codex_cli"
+assigned_agent: "security_guardian"
+model: "gpt-5-codex"

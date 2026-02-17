@@ -1631,5 +1631,15 @@
     "evidence_scope": "repo",
     "notes": "Add regression verifier to prevent staged/worktree diff semantics in enforcement gates.",
     "gate_ids": []
+  },
+  {
+    "task_id": "TSK-P0-156",
+    "status": "completed",
+    "verification_mode": "both",
+    "evidence_required": false,
+    "evidence_paths": [],
+    "evidence_scope": "repo",
+    "notes": "Emergency remediation for committed SSH private key exposure (ignore guards + history cleanup workflow).",
+    "gate_ids": []
   }
 ]

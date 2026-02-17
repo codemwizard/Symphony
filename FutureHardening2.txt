@@ -368,7 +368,7 @@ mk_fixture "$bad_secret_literal" <<'JSON'
   "mcpServers": {
     "github": {
       "url": "https://api.githubcopilot.com/mcp/",
-      "headers": { "Authorization": "Bearer ghp_THIS_IS_A_LITERAL_SECRET" }
+      "headers": { "Authorization": "Token ghp_THIS_IS_A_LITERAL_SECRET" }
     }
   },
   "profiles": { "architect": ["github"] }

@@ -14,6 +14,7 @@ EVIDENCE_SCHEMA_FP="$(schema_fingerprint)"
 status="PASS"
 tmp_hits="$(mktemp)"
 trap 'rm -f "$tmp_hits"' EXIT
+scan_error=""
 
 patterns=(
   "PRIVATE_KEY::-----BEGIN (RSA |EC |OPENSSH )?PRIVATE KEY-----"
@@ -26,90 +27,61 @@ patterns=(
   "VAULT_TOKEN::(?i)vault_token"
 )
 
-scan_roots=(
-  "scripts"
-  "src"
-  "services"
-  "schema"
-  "infra"
-  ".github"
-  "packages"
-  "tests"
-)
-
 rg_scan() {
   local name="$1"
   local regex="$2"
-  local path="$3"
-  rg -n --no-messages -S --pcre2 -e "$regex" -- "$path" \
-    --glob '**/*.sh' \
-    --glob '**/*.sql' \
-    --glob '**/*.cs' \
-    --glob '**/*.fs' \
-    --glob '**/*.vb' \
-    --glob '**/*.json' \
-    --glob '**/*.yml' \
-    --glob '**/*.yaml' \
-    --glob '**/*.toml' \
-    --glob '**/*.env' \
-    --glob '**/*.config' \
-    --glob 'Dockerfile*' \
-    --glob '!**/.git/**' \
-    --glob '!**/evidence/**' \
-    --glob '!**/bin/**' \
-    --glob '!**/obj/**' \
-    --glob '!**/.venv/**' \
-    --glob '!**/node_modules/**' \
-    | awk -F: -v n="$name" '{ if ($1 ~ /scan_secrets\.sh$/) next; print n ":" $1 ":" $2 }' >> "$tmp_hits" || true # symphony:allow_or_true
+  shift 2
+  local rc=0
+  rg -n --no-messages -S --pcre2 -e "$regex" -- "$@" \
+    | awk -F: -v n="$name" '{ if ($1 ~ /scan_secrets\.sh$/) next; print n ":" $1 ":" $2 }' >> "$tmp_hits" || rc=$? # symphony:allow_or_true
+  # rg returns 1 when no matches; this is not an execution failure.
+  if [[ "$rc" -ne 0 && "$rc" -ne 1 ]]; then
+    scan_error="rg_failed:$name:rc=$rc"
+    return 1
+  fi
+  return 0
 }
 
 grep_scan() {
   local name="$1"
   local regex="$2"
-  local path="$3"
+  shift 2
+  local rc=0
   grep -RInE \
-    --exclude-dir .git \
-    --exclude-dir evidence \
-    --exclude-dir bin \
-    --exclude-dir obj \
-    --exclude-dir .venv \
-    --exclude-dir node_modules \
     --exclude 'scan_secrets.sh' \
-    --include '*.sh' \
-    --include '*.sql' \
-    --include '*.cs' \
-    --include '*.fs' \
-    --include '*.vb' \
-    --include '*.json' \
-    --include '*.yml' \
-    --include '*.yaml' \
-    --include '*.toml' \
-    --include '*.env' \
-    --include '*.config' \
-    --include 'Dockerfile*' \
-    "$regex" "$path" \
-    | awk -F: -v n="$name" '{ if ($1 ~ /scan_secrets\.sh$/) next; print n ":" $1 ":" $2 }' >> "$tmp_hits" || true # symphony:allow_or_true
+    "$regex" "$@" \
+    | awk -F: -v n="$name" '{ if ($1 ~ /scan_secrets\.sh$/) next; print n ":" $1 ":" $2 }' >> "$tmp_hits" || rc=$? # symphony:allow_or_true
+  # grep returns 1 when no matches; this is not an execution failure.
+  if [[ "$rc" -ne 0 && "$rc" -ne 1 ]]; then
+    scan_error="grep_failed:$name:rc=$rc"
+    return 1
+  fi
+  return 0
 }
 
-for root in "${scan_roots[@]}"; do
-  [[ -e "$ROOT_DIR/$root" ]] || continue
+mapfile -d '' tracked_files < <(git -C "$ROOT_DIR" ls-files -z)
+if [[ "${#tracked_files[@]}" -eq 0 ]]; then
+  scan_error="git_ls_files_empty_or_failed"
+fi
+
+if [[ -z "$scan_error" ]]; then
   if command -v rg >/dev/null 2>&1; then
     for p in "${patterns[@]}"; do
       name="${p%%::*}"
       regex="${p#*::}"
-      rg_scan "$name" "$regex" "$ROOT_DIR/$root"
+      rg_scan "$name" "$regex" "${tracked_files[@]}" || break
     done
   else
     for p in "${patterns[@]}"; do
       name="${p%%::*}"
       regex="${p#*::}"
-      grep_scan "$name" "$regex" "$ROOT_DIR/$root"
+      grep_scan "$name" "$regex" "${tracked_files[@]}" || break
     done
   fi
-done
+fi
 
 count="$(wc -l < "$tmp_hits" | tr -d ' ')"
-if [[ "$count" != "0" ]]; then
+if [[ "$count" != "0" || -n "$scan_error" ]]; then
   status="FAIL"
 fi
 
@@ -134,10 +106,14 @@ write_json "$EVIDENCE_FILE" \
   "\"schema_fingerprint\": \"${EVIDENCE_SCHEMA_FP}\"" \
   "\"status\": \"${status}\"" \
   "\"hit_count\": ${count}" \
+  "\"scan_error\": \"${scan_error}\"" \
   "\"hits\": ${hits_json}"
 
 if [[ "$status" != "PASS" ]]; then
   echo "Secrets scan failed: ${count} potential hits."
+  if [[ -n "$scan_error" ]]; then
+    echo "Secrets scan execution error: $scan_error"
+  fi
   echo "Evidence: $EVIDENCE_FILE"
   exit 1
 fi

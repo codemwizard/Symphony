@@ -41,3 +41,5 @@ __pycache__/
 .venv/
 .cache/
 keyStore
+github_push-key
+github_push-key.pub

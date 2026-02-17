@@ -187,6 +187,11 @@ def main():
     ensure_canonical_docs()
     role_rows = validate_agent_prompts()
     ctx = approval_requirement_context(ROOT)
+    if ctx.get("error"):
+        fail(
+            "CONFORMANCE_013_DIFF_CONTEXT_INVALID",
+            f"Unable to compute CI-parity diff context: {ctx.get('error')}",
+        )
     mode = ctx["diff_mode"]
     changed_files = set(ctx["changed_files"])
     regulated_paths = list(ctx["regulated_changed_paths"])

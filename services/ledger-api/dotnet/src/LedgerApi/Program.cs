@@ -36,6 +36,12 @@ app.MapGet("/health", () => Results.Ok(new { status = "ok" }));
 
 app.MapPost("/v1/ingress/instructions", async (IngressRequest request, HttpContext httpContext, CancellationToken cancellationToken) =>
 {
+    var authFailure = ApiAuthorization.AuthorizeIngressWrite(httpContext, request);
+    if (authFailure is not null)
+    {
+        return Results.Json(authFailure.Body, statusCode: authFailure.StatusCode);
+    }
+
     var forceFailure = httpContext.Request.Headers.TryGetValue("x-symphony-force-attestation-fail", out var forceHeader)
         && forceHeader.ToString() == "1";
 
@@ -45,6 +51,12 @@ app.MapPost("/v1/ingress/instructions", async (IngressRequest request, HttpConte
 
 app.MapGet("/v1/evidence-packs/{instruction_id}", async (string instruction_id, HttpContext httpContext, CancellationToken cancellationToken) =>
 {
+    var authFailure = ApiAuthorization.AuthorizeEvidenceRead(httpContext);
+    if (authFailure is not null)
+    {
+        return Results.Json(authFailure.Body, statusCode: authFailure.StatusCode);
+    }
+
     var tenantId = httpContext.Request.Headers.TryGetValue("x-tenant-id", out var tenantHeader)
         ? tenantHeader.ToString()
         : string.Empty;
@@ -97,6 +109,118 @@ interface IIngressDurabilityStore
 }
 
 record HandlerResult(int StatusCode, object Body);
+
+static class ApiAuthorization
+{
+    public static HandlerResult? AuthorizeIngressWrite(HttpContext httpContext, IngressRequest request)
+    {
+        var configuredKey = (Environment.GetEnvironmentVariable("INGRESS_API_KEY") ?? string.Empty).Trim();
+        if (string.IsNullOrWhiteSpace(configuredKey))
+        {
+            return new HandlerResult(StatusCodes.Status503ServiceUnavailable, new
+            {
+                ack = false,
+                error_code = "AUTHZ_CONFIG_MISSING",
+                errors = new[] { "INGRESS_API_KEY must be configured" }
+            });
+        }
+
+        var presentedKey = ReadHeader(httpContext, "x-api-key");
+        if (string.IsNullOrWhiteSpace(presentedKey) || !SecureEquals(configuredKey, presentedKey))
+        {
+            return new HandlerResult(StatusCodes.Status401Unauthorized, new
+            {
+                ack = false,
+                error_code = "UNAUTHORIZED",
+                errors = new[] { "x-api-key is required and must be valid" }
+            });
+        }
+
+        var tenantHeader = ReadHeader(httpContext, "x-tenant-id");
+        if (string.IsNullOrWhiteSpace(tenantHeader))
+        {
+            return new HandlerResult(StatusCodes.Status400BadRequest, new
+            {
+                ack = false,
+                error_code = "INVALID_REQUEST",
+                errors = new[] { "x-tenant-id header is required" }
+            });
+        }
+
+        if (!string.Equals(tenantHeader.Trim(), request.tenant_id?.Trim(), StringComparison.Ordinal))
+        {
+            return new HandlerResult(StatusCodes.Status403Forbidden, new
+            {
+                ack = false,
+                error_code = "FORBIDDEN_TENANT_SCOPE",
+                errors = new[] { "x-tenant-id must match request tenant_id" }
+            });
+        }
+
+        var participantHeader = ReadHeader(httpContext, "x-participant-id");
+        if (string.IsNullOrWhiteSpace(participantHeader))
+        {
+            return new HandlerResult(StatusCodes.Status400BadRequest, new
+            {
+                ack = false,
+                error_code = "INVALID_REQUEST",
+                errors = new[] { "x-participant-id header is required" }
+            });
+        }
+
+        if (!string.Equals(participantHeader.Trim(), request.participant_id?.Trim(), StringComparison.Ordinal))
+        {
+            return new HandlerResult(StatusCodes.Status403Forbidden, new
+            {
+                ack = false,
+                error_code = "FORBIDDEN_PARTICIPANT_SCOPE",
+                errors = new[] { "x-participant-id must match request participant_id" }
+            });
+        }
+
+        return null;
+    }
+
+    public static HandlerResult? AuthorizeEvidenceRead(HttpContext httpContext)
+    {
+        var configuredKey = (Environment.GetEnvironmentVariable("INGRESS_API_KEY") ?? string.Empty).Trim();
+        if (string.IsNullOrWhiteSpace(configuredKey))
+        {
+            return new HandlerResult(StatusCodes.Status503ServiceUnavailable, new
+            {
+                error_code = "AUTHZ_CONFIG_MISSING",
+                errors = new[] { "INGRESS_API_KEY must be configured" }
+            });
+        }
+
+        var presentedKey = ReadHeader(httpContext, "x-api-key");
+        if (string.IsNullOrWhiteSpace(presentedKey) || !SecureEquals(configuredKey, presentedKey))
+        {
+            return new HandlerResult(StatusCodes.Status401Unauthorized, new
+            {
+                error_code = "UNAUTHORIZED",
+                errors = new[] { "x-api-key is required and must be valid" }
+            });
+        }
+
+        return null;
+    }
+
+    private static string ReadHeader(HttpContext context, string name)
+        => context.Request.Headers.TryGetValue(name, out var value) ? value.ToString() : string.Empty;
+
+    private static bool SecureEquals(string expected, string actual)
+    {
+        var expectedBytes = Encoding.UTF8.GetBytes(expected);
+        var actualBytes = Encoding.UTF8.GetBytes(actual);
+        if (expectedBytes.Length != actualBytes.Length)
+        {
+            return false;
+        }
+
+        return CryptographicOperations.FixedTimeEquals(expectedBytes, actualBytes);
+    }
+}
 
 static class IngressHandler
 {

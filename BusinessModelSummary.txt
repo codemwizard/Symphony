@@ -10957,7 +10957,7 @@ ChatGPT said:
 I’ll (1) extract what your Ingress Attestation Process actually requires, (2) map it to how this is done in ASP.NET Core/.NET 10, and then (3) call out what you should design at schema + invariants level in Phase 0–2 (what’s missing vs what you’ve already locked in).
 
 1) What your Ingress Attestation Process really says you must do
-From the attached process, your ingress attestation is not “JWT auth”. It’s sender-constrained identity (bearer token is not acceptable on its own):
+From the attached process, your ingress attestation is not “JWT auth”. It’s sender-constrained identity (token-only presentation is not acceptable on its own):
 
 mTLS handshake and certificate validation (chain, EKU, expiry, and revocation status via OCSP/CRL/internal list) 
 JWT-Token-Process
@@ -11005,8 +11005,8 @@ Custom validation callback (chain/EKU/etc.)
 
 A revocation checker (see “revocation not in-memory” below)
 
-B) JWT validation: JwtBearer + hardening
-Use the standard AddAuthentication().AddJwtBearer(...) with:
+B) JWT validation: ASP.NET Core JWT handler + hardening
+Use the standard AddAuthentication().AddJwt... handler configuration with:
 
 strict TokenValidationParameters (issuer/audience/clock skew/alg allowlist)
 
@@ -11016,8 +11016,8 @@ explicit “fail-closed” policy outside dev (you already have the concept of e
 outbox_Rev
 
 
-C) Sender-constrained PoP binding: custom middleware after JwtBearer
-JwtBearer validates the token. PoP binding is an additional check:
+C) Sender-constrained PoP binding: custom middleware after the JWT handler
+The JWT handler validates the token. PoP binding is an additional check:
 
 mTLS-bound token: compute cert thumbprint and compare to cnf.x5t#S256 
 JWT-Token-Process
@@ -12002,7 +12002,7 @@ Owner: DOTNET_CORE
 Goal: enforce bounded lifetime and strict validation.
 Work:
 
-Add JWT bearer auth with:
+Add JWT authentication handler with:
 
 issuer/audience required
 

@@ -96,6 +96,8 @@ for plane in (cp.get("control_planes") or {}).values():
 
 reserved_not_wired = {"INT-G25", "INT-G26", "INT-G27"}
 approval_ctx = approval_requirement_context(root_dir)
+if approval_ctx.get("error"):
+    errors.append(f"approval_requirement_diff_error:{approval_ctx.get('error')}")
 approval_required = bool(approval_ctx["approval_required"])
 
 for row in contract:
