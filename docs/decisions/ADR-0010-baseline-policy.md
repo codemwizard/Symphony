@@ -13,6 +13,9 @@ Baseline updates are **governed** and **fail-closed**:
 2) If `schema/baseline.sql` changes, this ADR **must be updated** with a human-readable note.
 3) Baseline generation should use a deterministic, container-based `pg_dump` when possible.
 
+### Governance Note (2026-02-17)
+This ADR remains the authoritative governance reference for baseline change checks when integrating branch histories.
+
 ## Consequences
 - Baseline updates are explicit, auditable, and tied to migrations.
 - CI/local checks will fail if governance requirements are not met.
