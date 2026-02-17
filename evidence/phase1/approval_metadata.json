@@ -1,0 +1,26 @@
+{
+  "schema_version": "1.0",
+  "generated_at_utc": "2026-02-17T00:00:00Z",
+  "git_commit": "deadbeef",
+  "change_scope": {
+    "regulated_surfaces_touched": true,
+    "paths_changed": [
+      "scripts/audit/verify_phase1_contract.sh",
+      "scripts/audit/verify_agent_conformance.sh",
+      "scripts/dev/pre_ci.sh"
+    ]
+  },
+  "ai": {
+    "ai_prompt_hash": "abc123abc123abc1",
+    "model_id": "gpt-5.2-codex",
+    "client": "codex_cli",
+    "session_id": "local-2026-02-11"
+  },
+  "human_approval": {
+    "approver_id": "phase1-lead",
+    "approval_artifact_ref": "approvals/2026-02-11/PR-0001.md",
+    "change_reason": "Phase-1 control-plane hardening for parity and approval policy enforcement",
+    "approved_at_utc": "2026-02-11T12:30:00Z"
+  },
+  "notes": "Approval metadata retained for regulated-surface updates."
+}
