@@ -1,0 +1,35 @@
+phase: '0'
+task_id: TSK-P0-018
+title: OpenBao audit log evidence requirement
+owner_role: SECURITY_GUARDIAN
+status: completed
+depends_on:
+- TSK-P0-006
+touches:
+- scripts/security/openbao_bootstrap.sh
+- scripts/security/openbao_smoke_test.sh
+- tasks/TSK-P0-018/meta.yml
+invariants:
+- INV-024 (OpenBao AppRole auth + deny policy)
+work:
+- Require audit logging enabled during OpenBao bootstrap.
+- Extend smoke test to verify audit log entry exists and emit evidence.
+acceptance_criteria:
+- CI fails if audit logging is disabled or no audit entry is present.
+verification:
+- scripts/security/openbao_bootstrap.sh
+- scripts/security/openbao_smoke_test.sh
+evidence:
+- ./evidence/phase0/openbao_audit_log.json
+failure_modes:
+- Missing audit log or bypass must fail.
+must_read:
+- docs/invariants/INVARIANTS_MANIFEST.yml
+- scripts/db/verify_invariants.sh
+- scripts/db/ci_invariant_gate.sql
+notes: ''
+client: codex_cli
+assigned_agent: security_guardian
+model: <UNASSIGNED>
+implementation_plan: docs/plans/phase0/TSK-P0-018/PLAN.md
+implementation_log: docs/plans/phase0/TSK-P0-018/EXEC_LOG.md

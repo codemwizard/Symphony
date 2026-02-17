@@ -1,0 +1,52 @@
+phase: "0"
+task_id: "TSK-P0-127"
+title: "Security: ZDPA-oriented PII leakage payload lint (fail-closed)"
+owner_role: "SECURITY_GUARDIAN"
+status: "completed"   # planned | in_progress | completed
+
+depends_on:
+  - "TSK-P0-125"
+
+touches:
+  - "scripts/audit/lint_pii_leakage_payloads.sh"
+  - "scripts/audit/tests/test_lint_pii_leakage_payloads.sh"
+  - "docs/plans/phase0/TSK-P0-127_pii_leakage_payload_lint/PLAN.md"
+  - "docs/plans/phase0/TSK-P0-127_pii_leakage_payload_lint/EXEC_LOG.md"
+  - "tasks/TSK-P0-127/meta.yml"
+
+invariants:
+  - "INV-112"
+
+work:
+  - "Implement a conservative, fail-closed lint that scans regulated surfaces (schema, scripts, app code, infra manifests where applicable) for raw PII patterns in payload/log/evidence contexts."
+  - "At minimum detect Zambia-relevant identifiers (e.g., NRC/MSISDN-like patterns) plus generic bank-account-like patterns, and require explicit redaction markers when test fixtures contain PII."
+  - "Emit Phase-0 evidence JSON with git SHA + schema fingerprint and an explicit list of files scanned."
+  - "Add self-tests that validate: known safe files pass, seeded PII fixture fails unless redaction marker present."
+
+acceptance_criteria:
+  - "Lint fails on obvious PII leaks and emits evidence JSON on both pass and fail."
+  - "Lint is deterministic (same output ordering given same input tree)."
+
+verification:
+  - "bash scripts/audit/tests/test_lint_pii_leakage_payloads.sh"
+
+evidence:
+  - "evidence/phase0/pii_leakage_payloads.json"
+
+failure_modes:
+  - "False negatives: PII present but lint passes."
+  - "False positives block legitimate non-PII numeric IDs without an escape hatch."
+  - "Lint prints findings but does not fail closed."
+
+must_read:
+  - "docs/security/ZDPA_COMPLIANCE_MAP.md"
+  - "docs/security/ZERO_TRUST_POSTURE.md"
+  - "docs/control_planes/CONTROL_PLANES.yml"
+
+implementation_plan: "docs/plans/phase0/TSK-P0-127_pii_leakage_payload_lint/PLAN.md"
+implementation_log: "docs/plans/phase0/TSK-P0-127_pii_leakage_payload_lint/EXEC_LOG.md"
+
+notes: "Wiring into CI/pre-CI ordering is handled by TSK-P0-130 to keep this task within SECURITY_GUARDIAN scope."
+client: "codex_cli"
+assigned_agent: "security_guardian"
+model: "gpt-5-codex"

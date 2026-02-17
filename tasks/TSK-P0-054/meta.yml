@@ -1,0 +1,40 @@
+phase: '0'
+task_id: TSK-P0-054
+title: Compliance manifest verifier + CI wiring
+owner_role: SECURITY_GUARDIAN
+status: completed
+depends_on:
+- TSK-P0-053
+touches:
+- docs/control_planes/CONTROL_PLANES.yml
+- scripts/audit/verify_compliance_manifest.sh
+- scripts/audit/run_invariants_fast_checks.sh
+- .github/workflows/invariants.yml
+- docs/invariants/INVARIANTS_MANIFEST.yml
+- docs/PHASE0/phase0_contract.yml
+- tasks/TSK-P0-054/meta.yml
+invariants:
+- INV-075
+work:
+- Implement compliance manifest verifier (fails closed, emits evidence on pass/fail).
+- Wire into CI (mechanical invariants job).
+- "Register INV\u2011075 + evidence path."
+acceptance_criteria:
+- Verifier fails on missing standards or evidence references.
+- Evidence emitted under evidence/phase0/.
+verification:
+  - scripts/audit/verify_compliance_manifest.sh
+evidence:
+  - evidence/phase0/compliance_manifest_verify.json
+failure_modes:
+- Evidence file missing.
+- Compliance mapping incomplete or malformed.
+must_read:
+- docs/invariants/INVARIANTS_MANIFEST.yml
+- docs/security/SECURITY_MANIFEST.yml
+notes: Verifier proof artifact is compliance_manifest_verify.json.
+client: codex_cli
+assigned_agent: security_guardian
+model: <UNASSIGNED>
+implementation_plan: docs/plans/phase0/TSK-P0-054_compliance_verifier/PLAN.md
+implementation_log: docs/plans/phase0/TSK-P0-054_compliance_verifier/EXEC_LOG.md

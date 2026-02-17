@@ -1,0 +1,34 @@
+phase: "0"
+task_id: "TSK-P0-142"
+title: "Phase-0 performance invariants plan + docs alignment"
+owner_role: "ARCHITECT"
+depends_on: []
+touches:
+  - "docs/plans/phase0/TSK-P0-142_performance_invariants/PLAN.md"
+  - "docs/plans/phase0/TSK-P0-142_performance_invariants/EXEC_LOG.md"
+  - "docs/invariants/INVARIANTS_IMPLEMENTED.md"
+  - "tasks/TSK-P0-142/meta.yml"
+invariants:
+  - "INV-031"
+work:
+  - "Create a Phase-0 performance closeout plan describing why INV-031 is mandatory and how it is enforced."
+  - "Fix documentation compliance: ensure INV-031 is listed in INVARIANTS_IMPLEMENTED.md (doc-truth parity)."
+acceptance_criteria:
+  - "PLAN.md and EXEC_LOG.md exist and reference INV-031."
+  - "INVARIANTS_IMPLEMENTED.md includes INV-031 with a correct verifier + evidence reference."
+verification:
+  - "bash scripts/audit/verify_task_plans_present.sh"
+evidence: []
+failure_modes:
+  - "Missing plan/log files for task."
+  - "INV-031 missing from implemented docs (doc-truth drift)."
+status: "completed"
+notes: ""
+client: "codex_cli"
+assigned_agent: "architect"
+model: "<UNASSIGNED>"
+implementation_plan: "docs/plans/phase0/TSK-P0-142_performance_invariants/PLAN.md"
+implementation_log: "docs/plans/phase0/TSK-P0-142_performance_invariants/EXEC_LOG.md"
+must_read:
+  - "docs/invariants/INVARIANTS_MANIFEST.yml"
+  - "docs/invariants/INVARIANTS_IMPLEMENTED.md"

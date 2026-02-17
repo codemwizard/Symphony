@@ -1,0 +1,32 @@
+# Remediation Execution Log
+
+failure_signature: CI.INV-031.OUTBOX_PENDING_INDEXES.MISSING_ON_FRESH_DB
+origin_task_id: TSK-P0-146
+
+## repro_command
+bash scripts/db/tests/test_outbox_pending_indexes.sh
+
+## error_observed
+- `evidence/phase0/outbox_pending_indexes.json` reported `missing_index` on a fresh CI DB prior to migrations.
+
+## change_applied
+- Removed DB-job execution of `scripts/audit/run_phase0_ordered_checks.sh` before `scripts/db/verify_invariants.sh` in `.github/workflows/invariants.yml`.
+- Kept `INV-031` verification under `scripts/db/verify_invariants.sh` (migrations-first).
+- Kept `scripts/audit/run_phase0_ordered_checks.sh` mechanical-only (no DB assertions).
+- Fixed local pre-push ordering: `scripts/audit/verify_phase0_contract_evidence_status.sh` now runs after DB verification in `scripts/dev/pre_ci.sh` (so required DB evidence exists before the contract evidence gate is evaluated).
+- Enforced fresh DB parity locally: `scripts/dev/pre_ci.sh` now defaults to `FRESH_DB=1` and creates a per-run ephemeral database, runs migrations/tests against it, then drops it on exit.
+- Enforced CI-equivalent diff refs in local pre-push: `scripts/dev/pre_ci.sh` now exports `BASE_REF=origin/main` and `HEAD_REF=HEAD` to prevent developer shell env from overriding governance/remediation diff semantics.
+- Hardened baseline governance ADR detection: `scripts/audit/verify_baseline_change_governance.sh` now uses line-exact matching (`grep -qx`) against the diff list to avoid false negatives that incorrectly fail pushes.
+- Canonicalized the INV-106..INV-116 block to avoid ID/meaning collisions and wired non-colliding gate IDs into `docs/control_planes/CONTROL_PLANES.yml` per `106-103_INV_IMP.txt` (with placeholder SKIPPED emitters for not-yet-implemented gates).
+- Implemented Phase-0 Approach B hardening and performance posture documentation:
+  - `docs/PHASE0/PLANNED_SKIPPED_GATES_POLICY.md`
+  - `scripts/audit/emit_skipped_evidence.sh` + `scripts/audit/verify_skipped_gate_stubs.sh`
+  - `docs/PHASE0/PHASE0_PERFORMANCE_POSTURE.md` (Phase-0 performance as mechanical safety)
+
+## verification_commands_run
+- scripts/dev/pre_ci.sh
+- bash scripts/audit/run_phase0_ordered_checks.sh
+- bash scripts/audit/verify_remediation_trace.sh
+
+## final_status
+PASS

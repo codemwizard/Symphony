@@ -1,0 +1,41 @@
+phase: '0'
+task_id: TSK-P0-043
+title: Implement tenant/member verifier + SQLSTATE map updates
+owner_role: DB_FOUNDATION
+status: completed
+depends_on:
+- TSK-P0-041
+touches:
+- scripts/db/verify_invariants.sh
+- scripts/db/verify_tenant_member_hooks.sh
+- docs/contracts/sqlstate_map.yml
+- docs/plans/phase0/TSK-P0-043_tenant_member_verifier/PLAN.md
+- docs/plans/phase0/TSK-P0-043_tenant_member_verifier/EXEC_LOG.md
+- tasks/TSK-P0-043/meta.yml
+invariants:
+- INV-062..INV-066
+work:
+- Add verifier script for tenant/member hooks (schema + trigger checks) and emit evidence.
+- Wire verifier into db invariants.
+- Add P7201/P7202 to sqlstate_map.yml.
+acceptance_criteria:
+- Verifier emits tenant_member_hooks.json even on failure.
+- DB invariants include tenant/member checks.
+- SQLSTATE map includes P7201/P7202.
+verification:
+- scripts/db/verify_invariants.sh
+evidence:
+- ./evidence/phase0/tenant_member_hooks.json
+failure_modes:
+- Evidence file missing.
+- SQLSTATE map drift.
+must_read:
+- docs/invariants/INVARIANTS_MANIFEST.yml
+- scripts/db/verify_invariants.sh
+- scripts/db/ci_invariant_gate.sql
+notes: ''
+implementation_plan: docs/plans/phase0/TSK-P0-043_tenant_member_verifier/PLAN.md
+implementation_log: docs/plans/phase0/TSK-P0-043_tenant_member_verifier/EXEC_LOG.md
+client: codex_cli
+assigned_agent: db_foundation
+model: <UNASSIGNED>

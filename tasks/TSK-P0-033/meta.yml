@@ -1,0 +1,33 @@
+phase: '0'
+task_id: TSK-P0-033
+title: Document no-tx marker usage
+owner_role: ARCHITECT
+status: completed
+depends_on:
+- TSK-P0-030
+touches:
+- docs/operations/DEV_WORKFLOW.md
+- tasks/TSK-P0-033/meta.yml
+invariants:
+- INV-043 (No-tx migration guidance)
+work:
+- Document -- symphony:no_tx usage with example.
+acceptance_criteria:
+- Guidance present in DEV workflow docs.
+verification:
+- scripts/audit/verify_no_tx_docs.sh
+evidence:
+- ./evidence/phase0/no_tx_docs.json
+failure_modes:
+- Evidence file missing.
+- No documentation present.
+must_read:
+- docs/invariants/INVARIANTS_MANIFEST.yml
+- scripts/db/verify_invariants.sh
+- scripts/db/ci_invariant_gate.sql
+notes: ''
+client: codex_cli
+assigned_agent: architect
+model: <UNASSIGNED>
+implementation_plan: docs/plans/phase0/TSK-P0-033/PLAN.md
+implementation_log: docs/plans/phase0/TSK-P0-033/EXEC_LOG.md

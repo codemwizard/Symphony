@@ -1,0 +1,37 @@
+phase: '0'
+task_id: TSK-P0-025
+title: Add durable revocation tables (certs + tokens)
+owner_role: DB_FOUNDATION
+status: completed
+depends_on: []
+touches:
+- schema/migrations/0012_revocation_tables.sql
+- scripts/db/verify_invariants.sh
+invariants:
+- INV-036 (Revocation tables present + append-only)
+work:
+- Add revoked_client_certs(cert_fingerprint_sha256 PK, revoked_at, reason_code, revoked_by).
+- Add revoked_tokens(token_jti PK, revoked_at, reason_code, revoked_by).
+- Add optional expires_at to both tables for time-bound revocations.
+- Enforce append-only via privileges (REVOKE UPDATE/DELETE); trigger optional.
+- Ensure verifier emits ./evidence/phase0/revocation_tables.json.
+acceptance_criteria:
+- Tables exist and cannot be updated/deleted.
+- Evidence file is written by the verification step.
+verification:
+- scripts/db/verify_invariants.sh
+evidence:
+- ./evidence/phase0/revocation_tables.json
+failure_modes:
+- Mutations allowed or tables missing.
+- Evidence file missing.
+must_read:
+- docs/invariants/INVARIANTS_MANIFEST.yml
+- scripts/db/verify_invariants.sh
+- scripts/db/ci_invariant_gate.sql
+notes: Invariant registration is handled by TSK-P0-009.
+client: codex_cli
+assigned_agent: db_foundation
+model: <UNASSIGNED>
+implementation_plan: docs/plans/phase0/TSK-P0-025/PLAN.md
+implementation_log: docs/plans/phase0/TSK-P0-025/EXEC_LOG.md

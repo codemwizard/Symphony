@@ -1,0 +1,852 @@
+# Invariants manifest (source of truth)
+# - status=implemented means CI/mechanical check exists in repo (lint/gate/script)
+# - status=roadmap means required but verification hook is not yet wired
+
+- id: INV-001
+  aliases: ["I-MIG-02"]
+  status: implemented
+  severity: P0
+  title: "Applied migrations are immutable (checksum ledger)"
+  owners: ["team-db"]
+  sla_days: 7
+  verification: "scripts/db/migrate.sh checksum check; run via scripts/db/verify_invariants.sh"
+
+- id: INV-002
+  aliases: ["I-MIG-03"]
+  status: implemented
+  severity: P0
+  title: "Migration files must not contain top-level BEGIN/COMMIT"
+  owners: ["team-db"]
+  sla_days: 7
+  verification: "scripts/db/lint_migrations.sh; run via scripts/db/verify_invariants.sh"
+
+- id: INV-003
+  aliases: ["I-MIG-04"]
+  status: implemented
+  severity: P0
+  title: "Fix forward only: changes via new migrations, never by editing applied ones"
+  owners: ["team-db"]
+  sla_days: 7
+  verification: "scripts/db/migrate.sh checksum immutability (same as INV-001); run via scripts/db/verify_invariants.sh"
+
+- id: INV-004
+  aliases: ["I-MIG-05"]
+  status: implemented
+  severity: P1
+  title: "Baseline snapshot is derived from migrations and must not drift"
+  owners: ["team-db"]
+  sla_days: 30
+  verification: "scripts/db/check_baseline_drift.sh"
+
+- id: INV-005
+  aliases: ["I-SEC-01"]
+  status: implemented
+  severity: P0
+  title: "Deny-by-default privileges (revoke-first posture)"
+  owners: ["team-platform"]
+  sla_days: 14
+  verification: "schema/migrations/0004_privileges.sql + scripts/db/ci_invariant_gate.sql; run via scripts/db/verify_invariants.sh"
+
+- id: INV-006
+  aliases: ["I-SEC-02"]
+  status: implemented
+  severity: P0
+  title: "No runtime DDL: PUBLIC/runtime roles must not have CREATE on schema public"
+  owners: ["team-platform"]
+  sla_days: 14
+  verification: "scripts/db/ci_invariant_gate.sql (schema CREATE privilege check); run via scripts/db/verify_invariants.sh"
+
+- id: INV-007
+  aliases: ["I-SEC-03"]
+  status: implemented
+  severity: P0
+  title: "Runtime roles are NOLOGIN templates; services assume them via SET ROLE"
+  owners: ["team-platform"]
+  sla_days: 14
+  verification: "scripts/db/verify_role_login_posture.sh; wired via scripts/db/verify_invariants.sh"
+
+- id: INV-008
+  aliases: ["I-SEC-04"]
+  status: implemented
+  severity: P0
+  title: "SECURITY DEFINER functions must pin search_path to pg_catalog, public"
+  owners: ["team-platform"]
+  sla_days: 14
+  verification: "scripts/db/lint_search_path.sh; run via scripts/db/verify_invariants.sh"
+
+- id: INV-009
+  aliases: ["I-SEC-05"]
+  status: roadmap
+  severity: P1
+  title: "SECURITY DEFINER functions must avoid dynamic SQL and user-controlled identifiers"
+  owners: ["team-platform"]
+  sla_days: 30
+  verification: "TODO: add linter or allowlist-based review; no mechanical check found"
+
+- id: INV-010
+  aliases: ["I-SEC-06"]
+  status: implemented
+  severity: P0
+  title: "Runtime roles have no direct DML on core tables; writes happen via DB API functions"
+  owners: ["team-platform"]
+  sla_days: 14
+  verification: "scripts/db/ci_invariant_gate.sql (role privilege posture) + schema/migrations/0004_privileges.sql"
+
+- id: INV-011
+  aliases: ["I-OB-01"]
+  status: implemented
+  severity: P0
+  title: "Outbox enqueue is idempotent on (instruction_id, idempotency_key)"
+  owners: ["team-db"]
+  sla_days: 14
+  verification: "scripts/db/tests/test_idempotency_zombie.sh (behavior) + schema/migrations/0002_outbox_functions.sql (definition)"
+
+- id: INV-012
+  aliases: ["I-OB-02"]
+  status: implemented
+  severity: P0
+  title: "Outbox claim uses FOR UPDATE SKIP LOCKED and only due/unleased or expired rows"
+  owners: ["team-db"]
+  sla_days: 14
+  verification: "scripts/db/tests/test_outbox_claim_semantics.sh (behavior + definitional SKIP LOCKED check)"
+
+- id: INV-013
+  aliases: ["I-OB-03"]
+  status: implemented
+  severity: P0
+  title: "Strict lease fencing: completion requires matching claimed_by + lease_token and non-expired lease"
+  owners: ["team-db"]
+  sla_days: 14
+  verification: "scripts/db/tests/test_outbox_lease_fencing.sh (behavioral SQLSTATE P7002 on lease loss)"
+
+- id: INV-014
+  aliases: ["I-OB-04"]
+  status: implemented
+  severity: P0
+  title: "payment_outbox_attempts is append-only; no UPDATE/DELETE"
+  owners: ["team-db"]
+  sla_days: 14
+  verification: "schema/migrations/0001_init.sql append-only trigger + scripts/db/ci_invariant_gate.sql"
+
+- id: INV-015
+  aliases: ["I-OB-05"]
+  status: implemented
+  severity: P0
+  title: "Outbox retry ceiling is finite"
+  owners: ["team-db"]
+  sla_days: 14
+  verification: "schema/migrations/0002_outbox_functions.sql (GUC retry ceiling) + scripts/db/ci_invariant_gate.sql"
+
+- id: INV-016
+  aliases: ["I-POL-01"]
+  status: implemented
+  severity: P0
+  title: "policy_versions exists and supports boot query shape (is_active=true)"
+  owners: ["team-platform"]
+  sla_days: 14
+  verification: "schema/migrations/0005_policy_versions.sql (status/is_active) + scripts/db/ci_invariant_gate.sql"
+
+- id: INV-017
+  aliases: ["I-POL-02"]
+  status: implemented
+  severity: P0
+  title: "policy_versions.checksum is NOT NULL"
+  owners: ["team-platform"]
+  sla_days: 14
+  verification: "schema/migrations/0005_policy_versions.sql (checksum NOT NULL) + scripts/db/ci_invariant_gate.sql"
+
+- id: INV-018
+  aliases: ["I-POL-03"]
+  status: implemented
+  severity: P0
+  title: "Single ACTIVE policy row enforced by unique predicate index"
+  owners: ["team-platform"]
+  sla_days: 14
+  verification: "schema/migrations/0005_policy_versions.sql (single ACTIVE index) + scripts/db/ci_invariant_gate.sql"
+
+- id: INV-019
+  aliases: ["I-REPO-01"]
+  status: implemented
+  severity: P0
+  title: "Repo structure is enforced (required directories + doc references)"
+  owners: ["team-platform"]
+  sla_days: 14
+  verification: "scripts/audit/verify_repo_structure.sh"
+
+- id: INV-020
+  aliases: ["I-EVID-01"]
+  status: implemented
+  severity: P0
+  title: "Evidence anchoring: git SHA + schema hash"
+  owners: ["team-platform"]
+  sla_days: 14
+  verification: "scripts/audit/generate_evidence.sh"
+
+- id: INV-021
+  aliases: ["I-DB-01"]
+  status: implemented
+  severity: P0
+  title: "N-1 compatibility gate"
+  owners: ["team-db"]
+  sla_days: 14
+  verification: "scripts/db/n_minus_one_check.sh"
+
+- id: INV-022
+  aliases: ["I-DB-LOCK-01"]
+  status: implemented
+  severity: P0
+  title: "DDL lock-risk lint (blocking operations)"
+  owners: ["team-security"]
+  sla_days: 14
+  verification: "scripts/security/lint_ddl_lock_risk.sh"
+
+- id: INV-023
+  aliases: ["I-DB-IDEMP-01"]
+  status: implemented
+  severity: P0
+  title: "Idempotency zombie replay safety"
+  owners: ["team-db"]
+  sla_days: 14
+  verification: "scripts/db/tests/test_idempotency_zombie.sh"
+
+- id: INV-024
+  aliases: ["I-OB-OPENBAO-01"]
+  status: implemented
+  severity: P0
+  title: "OpenBao AppRole auth + deny policy"
+  owners: ["team-security"]
+  sla_days: 14
+  verification: "scripts/security/openbao_smoke_test.sh (after openbao_bootstrap.sh)"
+
+- id: INV-025
+  aliases: ["I-BG-01"]
+  status: implemented
+  severity: P0
+  title: "Blue/Green rollback compatibility"
+  owners: ["team-platform"]
+  sla_days: 14
+  verification: "scripts/audit/verify_routing_fallback.sh"
+
+- id: INV-026
+  aliases: ["I-BG-02"]
+  status: implemented
+  severity: P0
+  title: "Routing fallback invariant"
+  owners: ["team-platform"]
+  sla_days: 14
+  verification: "scripts/audit/validate_routing_fallback.sh"
+
+- id: INV-027
+  aliases: ["I-BATCH-01"]
+  status: implemented
+  severity: P0
+  title: "Batching rules defined and enforced"
+  owners: ["team-platform"]
+  sla_days: 14
+  verification: "scripts/audit/verify_batching_rules.sh"
+
+- id: INV-028
+  aliases: ["I-EVID-02"]
+  status: implemented
+  severity: P0
+  title: "Evidence schema validation"
+  owners: ["team-platform"]
+  sla_days: 14
+  verification: "scripts/audit/validate_evidence_schema.sh"
+
+- id: INV-029
+  aliases: ["I-EVID-03"]
+  status: implemented
+  severity: P0
+  title: "Evidence provenance required"
+  owners: ["team-platform"]
+  sla_days: 14
+  verification: "scripts/audit/generate_evidence.sh + scripts/audit/validate_evidence_schema.sh"
+
+- id: INV-030
+  aliases: ["I-DOCS-01"]
+  status: implemented
+  severity: P1
+  title: "Threat/compliance docs updated on structural change"
+  owners: ["team-platform"]
+  sla_days: 30
+  verification: "scripts/audit/enforce_change_rule.sh"
+
+- id: INV-031
+  aliases: ["I-OB-INDEX-01"]
+  status: implemented
+  severity: P0
+  title: "Outbox claim index required"
+  owners: ["team-db"]
+  sla_days: 14
+  verification: "scripts/db/tests/test_outbox_pending_indexes.sh"
+
+- id: INV-032
+  aliases: ["I-OB-TERM-01"]
+  status: implemented
+  severity: P0
+  title: "One terminal attempt per outbox_id"
+  owners: ["team-db"]
+  sla_days: 14
+  verification: "scripts/db/tests/test_db_functions.sh (terminal uniqueness)"
+
+- id: INV-033
+  aliases: ["I-OB-MVCC-01"]
+  status: implemented
+  severity: P1
+  title: "Outbox MVCC posture enforced"
+  owners: ["team-db"]
+  sla_days: 30
+  verification: "scripts/db/verify_invariants.sh (reloptions check)"
+
+- id: INV-034
+  aliases: ["I-OB-NOTIFY-01"]
+  status: implemented
+  severity: P1
+  title: "Outbox wakeup notification"
+  owners: ["team-db"]
+  sla_days: 30
+  verification: "scripts/db/tests/test_db_functions.sh (NOTIFY emission)"
+
+- id: INV-035
+  aliases: ["I-ING-ATT-01"]
+  status: implemented
+  severity: P1
+  title: "Ingress attestation append-only"
+  owners: ["team-db"]
+  sla_days: 30
+  verification: "scripts/db/verify_invariants.sh (ingress_attestations checks)"
+
+- id: INV-036
+  aliases: ["I-REV-01"]
+  status: implemented
+  severity: P0
+  title: "Revocation tables present + append-only"
+  owners: ["team-security"]
+  sla_days: 14
+  verification: "scripts/db/verify_invariants.sh (revocation tables checks)"
+
+- id: INV-037
+  aliases: ["I-CORE-BOUND-01"]
+  status: implemented
+  severity: P1
+  title: "Core code boundary enforced"
+  owners: ["team-security"]
+  sla_days: 30
+  verification: "scripts/security/lint_core_boundary.sh"
+
+- id: INV-038
+  aliases: ["I-ARCH-ALIGN-01"]
+  status: implemented
+  severity: P1
+  title: "Architecture doc alignment"
+  owners: ["team-platform"]
+  sla_days: 30
+  verification: "rg -n \"node|Node.js\" docs/overview/architecture.md docs/decisions/ADR-0001-repo-structure.md"
+
+- id: INV-039
+  aliases: ["I-DB-FAILCLOSED-01"]
+  status: roadmap
+  severity: P1
+  title: "Fail-closed under DB exhaustion"
+  owners: ["team-platform"]
+  sla_days: 30
+  verification: "TODO: define and wire fail-closed verification"
+
+- id: INV-040
+  aliases: ["I-DB-DDL-02"]
+  status: implemented
+  severity: P0
+  title: "Blocking DDL policy enforced (hot tables)"
+  owners: ["team-security"]
+  sla_days: 14
+  verification: "scripts/security/lint_ddl_lock_risk.sh"
+
+- id: INV-041
+  aliases: ["I-MIG-NOTX-01"]
+  status: implemented
+  severity: P0
+  title: "No-tx migrations supported"
+  owners: ["team-db"]
+  sla_days: 14
+  verification: "scripts/db/tests/test_no_tx_migrations.sh"
+
+- id: INV-042
+  aliases: ["I-MIG-NOTX-02"]
+  status: implemented
+  severity: P0
+  title: "Concurrent index requires no-tx marker"
+  owners: ["team-db"]
+  sla_days: 14
+  verification: "scripts/db/lint_migrations.sh"
+
+- id: INV-043
+  aliases: ["I-MIG-NOTX-03"]
+  status: implemented
+  severity: P1
+  title: "No-tx migration guidance"
+  owners: ["team-platform"]
+  sla_days: 30
+  verification: "rg -n \"symphony:no_tx\" docs/operations/DEV_WORKFLOW.md"
+
+- id: INV-044
+  aliases: ["I-DOCS-DRIFT-01"]
+  status: implemented
+  severity: P0
+  title: "Invariants docs match manifest"
+  owners: ["team-platform"]
+  sla_days: 14
+  verification: "scripts/audit/check_docs_match_manifest.py"
+
+- id: INV-048
+  aliases: ["I-ZECHL-01", "PROXY-VERIFY"]
+  status: roadmap
+  severity: P1
+  title: "Proxy/Alias resolution required before dispatch"
+  owners: ["team-platform"]
+  sla_days: 30
+  verification: "scripts/audit/verify_proxy_resolution_invariant.sh"
+
+- id: INV-060
+  aliases: ["I-P0-CONTRACT-01"]
+  status: implemented
+  severity: P1
+  title: "Phase-0 contract governs evidence gate"
+  owners: ["team-platform"]
+  sla_days: 14
+  verification: "scripts/audit/verify_phase0_contract.sh"
+
+- id: INV-061
+  aliases: ["I-SQLSTATE-REGISTRY-01"]
+  status: implemented
+  severity: P1
+  title: "SQLSTATE registry is complete and drift-free"
+  owners: ["team-platform"]
+  sla_days: 14
+  verification: "scripts/audit/check_sqlstate_map_drift.sh"
+
+- id: INV-062
+  aliases: ["I-TEN-01"]
+  status: implemented
+  severity: P1
+  title: "Tenant hierarchy tables exist (tenants, tenant_clients, tenant_members)"
+  owners: ["team-db"]
+  sla_days: 30
+  verification: "scripts/db/verify_tenant_member_hooks.sh"
+
+- id: INV-063
+  aliases: ["I-TEN-02"]
+  status: implemented
+  severity: P1
+  title: "Ingress attestations require tenant attribution and support client/member linkage"
+  owners: ["team-db"]
+  sla_days: 30
+  verification: "scripts/db/verify_tenant_member_hooks.sh"
+
+- id: INV-064
+  aliases: ["I-TEN-03"]
+  status: implemented
+  severity: P1
+  title: "Member/tenant consistency guard enforced on ingress"
+  owners: ["team-db"]
+  sla_days: 30
+  verification: "scripts/db/verify_tenant_member_hooks.sh"
+
+- id: INV-065
+  aliases: ["I-TEN-04"]
+  status: implemented
+  severity: P1
+  title: "Outbox tables include tenant/member attribution columns (expand-first)"
+  owners: ["team-db"]
+  sla_days: 30
+  verification: "scripts/db/verify_tenant_member_hooks.sh"
+
+- id: INV-066
+  aliases: ["I-TEN-05"]
+  status: implemented
+  severity: P1
+  title: "Ingress attestations are unique per (tenant_id, instruction_id)"
+  owners: ["team-db"]
+  sla_days: 30
+  verification: "scripts/db/verify_tenant_member_hooks.sh"
+
+- id: INV-067
+  aliases: ["I-BASELINE-GOV-01"]
+  status: implemented
+  severity: P1
+  title: "Baseline changes require migration + ADR update"
+  owners: ["team-platform"]
+  sla_days: 30
+  verification: "scripts/audit/verify_baseline_change_governance.sh"
+
+- id: INV-068
+  aliases: ["I-DDL-ALLOWLIST-01"]
+  status: implemented
+  severity: P1
+  title: "DDL allowlist governance enforced (fingerprints + expiry + review)"
+  owners: ["team-security"]
+  sla_days: 30
+  verification: "scripts/security/verify_ddl_allowlist_governance.sh"
+
+- id: INV-069
+  aliases: ["I-P0-PLAN-01"]
+  status: implemented
+  severity: P1
+  title: "Phase-0 implementation plan is current"
+  owners: ["team-platform"]
+  sla_days: 30
+  verification: "scripts/audit/verify_phase0_impl_plan.sh"
+
+- id: INV-070
+  aliases: ["I-BASELINE-REB-01"]
+  status: implemented
+  severity: P1
+  title: "Day-zero rebaseline strategy is documented and enforced"
+  owners: ["team-platform", "team-db"]
+  sla_days: 30
+  verification: "scripts/audit/verify_rebaseline_strategy.sh"
+
+- id: INV-071
+  aliases: ["I-3P-01"]
+  status: implemented
+  severity: P1
+  title: "Three-Pillar control-plane model is documented and enforced"
+  owners: ["team-platform"]
+  sla_days: 30
+  verification: "scripts/audit/verify_three_pillars_doc.sh"
+
+- id: INV-072
+  aliases: ["I-3P-02"]
+  status: implemented
+  severity: P1
+  title: "Control-plane gates are declared and drift-checked"
+  owners: ["team-platform"]
+  sla_days: 30
+  verification: "scripts/audit/verify_control_planes_drift.sh"
+
+- id: INV-073
+  aliases: ["I-SEC-PLANE-01"]
+  status: implemented
+  severity: P1
+  title: "Security plane guardrails are enforced (secrets/deps/config/code)"
+  owners: ["team-security"]
+  sla_days: 30
+  verification: "scripts/audit/run_security_fast_checks.sh"
+
+- id: INV-075
+  aliases: ["I-COMP-VERIFY-01"]
+  status: implemented
+  severity: P1
+  title: "Compliance manifest is complete and gate-mapped"
+  owners: ["team-compliance"]
+  sla_days: 30
+  verification: "scripts/audit/verify_compliance_manifest.sh"
+
+- id: INV-076
+  aliases: ["I-AGENT-SCOPE-01"]
+  status: implemented
+  severity: P1
+  title: "Agent scopes align with control-plane ownership"
+  owners: ["team-platform"]
+  sla_days: 30
+  verification: "scripts/audit/verify_control_planes_drift.sh"
+
+- id: INV-077
+  aliases: ["I-EVIDENCE-SCHEMA-01"]
+  status: implemented
+  severity: P1
+  title: "Evidence schema is canonical and validated"
+  owners: ["team-platform"]
+  sla_days: 30
+  verification: "scripts/audit/validate_evidence_schema.sh"
+
+- id: INV-078
+  aliases: ["I-YAML-01"]
+  status: implemented
+  severity: P1
+  title: "YAML conventions are normalized and linted"
+  owners: ["team-platform"]
+  sla_days: 30
+  verification: "scripts/audit/lint_yaml_conventions.sh"
+
+- id: INV-079
+  aliases: ["I-CI-TOOLCHAIN-01"]
+  status: implemented
+  severity: P1
+  title: "CI toolchain is pinned (PyYAML + ripgrep)"
+  owners: ["team-security"]
+  sla_days: 30
+  verification: "scripts/audit/verify_ci_toolchain.sh"
+
+- id: INV-080
+  aliases: ["I-CONTRACT-STATUS-01"]
+  status: implemented
+  severity: P1
+  title: "Phase-0 contract evidence status semantics enforced"
+  owners: ["team-platform"]
+  sla_days: 30
+  verification: "scripts/audit/verify_phase0_contract_evidence_status.sh"
+
+- id: INV-081
+  aliases: ["I-CI-ORDER-01"]
+  status: implemented
+  severity: P1
+  title: "Pre-CI and CI run the same ordered Phase-0 checks"
+  owners: ["team-platform"]
+  sla_days: 30
+  verification: "scripts/audit/verify_ci_order.sh"
+
+- id: INV-090
+  aliases: ["I-BILL-HOOK-01"]
+  status: implemented
+  severity: P1
+  title: "Billing usage ledger hook exists and is append-only"
+  owners: ["team-db"]
+  sla_days: 30
+  verification: "scripts/db/verify_business_foundation_hooks.sh"
+
+- id: INV-091
+  aliases: ["I-PROOF-HOOK-01"]
+  status: implemented
+  severity: P1
+  title: "External proofs hook exists and is append-only"
+  owners: ["team-db"]
+  sla_days: 30
+  verification: "scripts/db/verify_business_foundation_hooks.sh"
+
+- id: INV-092
+  aliases: ["I-STITCH-HOOK-01"]
+  status: implemented
+  severity: P1
+  title: "Correlation stitching hooks exist on ingress and outbox tables"
+  owners: ["team-db"]
+  sla_days: 30
+  verification: "scripts/db/verify_business_foundation_hooks.sh"
+
+- id: INV-093
+  aliases: ["I-EVID-PACK-01"]
+  status: implemented
+  severity: P1
+  title: "Evidence pack primitives exist and are append-only"
+  owners: ["team-db"]
+  sla_days: 30
+  verification: "scripts/db/verify_business_foundation_hooks.sh"
+
+- id: INV-094
+  aliases: ["I-TEN-BILL-01"]
+  status: implemented
+  severity: P1
+  title: "Tenant billable hierarchy hooks exist (billable root + parent)"
+  owners: ["team-db"]
+  sla_days: 30
+  verification: "scripts/db/verify_business_foundation_hooks.sh"
+
+- id: INV-095
+  aliases: ["I-IPDR-SIG-01"]
+  status: implemented
+  severity: P1
+  title: "Ingress multi-signature hook exists with safe default"
+  owners: ["team-db"]
+  sla_days: 30
+  verification: "scripts/db/verify_business_foundation_hooks.sh"
+
+- id: INV-096
+  aliases: ["I-BIZ-HOOKS-VERIFY-01"]
+  status: implemented
+  severity: P1
+  title: "Business foundation hooks are mechanically verified in DB gate"
+  owners: ["team-db", "team-platform"]
+  sla_days: 30
+  verification: "scripts/db/verify_business_foundation_hooks.sh; wired via scripts/db/verify_invariants.sh"
+
+- id: INV-097
+  aliases: ["I-MIG-PAC-01"]
+  status: implemented
+  severity: P0
+  title: "Phase-0 migration expand/contract policy is enforced (no cleanup marker; no ADD COLUMN NOT NULL)"
+  owners: ["team-db"]
+  sla_days: 30
+  verification: "scripts/db/lint_expand_contract_policy.sh; wired via scripts/db/verify_invariants.sh"
+
+- id: INV-098
+  aliases: ["I-MIG-PKFK-01"]
+  status: implemented
+  severity: P0
+  title: "PK/FK type stability guardrail enforced (ALTER COLUMN TYPE requires waiver)"
+  owners: ["team-db"]
+  sla_days: 30
+  verification: "scripts/db/lint_pk_fk_type_changes.sh; wired via scripts/db/verify_invariants.sh"
+
+- id: INV-099
+  aliases: ["I-TBL-CONV-01"]
+  status: implemented
+  severity: P1
+  title: "Table conventions are verified from pg_catalog (explicit allowlist)"
+  owners: ["team-db"]
+  sla_days: 30
+  verification: "scripts/db/verify_table_conventions.sh; wired via scripts/db/verify_invariants.sh"
+
+- id: INV-100
+  aliases: ["I-EVID-HARNESS-01"]
+  status: implemented
+  severity: P1
+  title: "Evidence harness integrity guardrail enforced (anti-bypass bans)"
+  owners: ["team-platform"]
+  sla_days: 30
+  verification: "scripts/audit/verify_evidence_harness_integrity.sh; wired via scripts/audit/run_invariants_fast_checks.sh"
+
+- id: INV-101
+  aliases: ["I-SAST-SEM-01"]
+  status: implemented
+  severity: P1
+  title: "Semgrep SAST baseline is enforced (pinned in CI; evidence emitted)"
+  owners: ["team-security"]
+  sla_days: 30
+  verification: "scripts/security/run_semgrep_sast.sh; wired via scripts/audit/run_security_fast_checks.sh"
+
+- id: INV-102
+  aliases: ["I-PARTICIPANTS-01"]
+  status: implemented
+  severity: P1
+  title: "Participant registry schema hook exists (participant_id identity)"
+  owners: ["team-db"]
+  sla_days: 30
+  verification: "scripts/db/verify_business_foundation_hooks.sh"
+
+- id: INV-103
+  aliases: ["I-EVID-PACK-SIGN-01"]
+  status: implemented
+  severity: P1
+  title: "Evidence packs include signing/anchoring metadata hooks"
+  owners: ["team-db"]
+  sla_days: 30
+  verification: "scripts/db/verify_business_foundation_hooks.sh"
+
+- id: INV-104
+  aliases: ["I-BIZ-PRIV-01"]
+  status: implemented
+  severity: P0
+  title: "PUBLIC retains no privileges on business tables (explicit REVOKE hygiene)"
+  owners: ["team-db", "team-security"]
+  sla_days: 30
+  verification: "scripts/db/verify_business_foundation_hooks.sh"
+
+- id: INV-105
+  aliases: ["I-REMED-TRACE-01"]
+  status: implemented
+  severity: P1
+  title: "Production-affecting changes require remediation trace (casefile or explicit fix plan/log)"
+  owners: ["team-security", "team-invariants"]
+  sla_days: 30
+  enforcement: "scripts/audit/verify_remediation_trace.sh"
+  verification: "scripts/audit/verify_remediation_trace.sh; wired via scripts/audit/run_invariants_fast_checks.sh"
+
+- id: INV-106
+  aliases: ["I-POL-KEYMGMT-01"]
+  status: implemented
+  severity: P1
+  title: "Key management policy stub present + referenced (governance)"
+  owners: ["team-security", "team-platform"]
+  sla_days: 30
+  enforcement: "scripts/audit/verify_policy_key_management_stub.sh"
+  verification: "scripts/audit/verify_policy_key_management_stub.sh; docs/security/KEY_MANAGEMENT_POLICY.md; referenced in docs/security/SECURITY_MANIFEST.yml"
+
+- id: INV-107
+  aliases: ["I-POL-AUDITLOG-01"]
+  status: implemented
+  severity: P1
+  title: "Audit logging retention/review policy stub present + referenced (governance)"
+  owners: ["team-security", "team-platform"]
+  sla_days: 30
+  enforcement: "scripts/audit/verify_policy_audit_logging_stub.sh"
+  verification: "scripts/audit/verify_policy_audit_logging_stub.sh; docs/security/AUDIT_LOGGING_RETENTION_POLICY.md; referenced in docs/security/SECURITY_MANIFEST.yml"
+
+- id: INV-108
+  aliases: ["I-SDLC-SAST-01"]
+  status: implemented
+  severity: P1
+  title: "Secure SDLC / SAST readiness gate emits evidence (governance)"
+  owners: ["team-security", "team-platform"]
+  sla_days: 30
+  enforcement: "scripts/audit/verify_sdlc_sast_readiness.sh"
+  verification: "scripts/audit/verify_sdlc_sast_readiness.sh; docs/security/SECURE_SDLC_POLICY.md; Semgrep baseline wired via scripts/audit/run_security_fast_checks.sh"
+
+- id: INV-109
+  aliases: ["I-ISO20022-REG-01"]
+  status: implemented
+  severity: P1
+  title: "ISO 20022 contract registry declared + presence validated (Phase-0)"
+  owners: ["team-platform"]
+  sla_days: 30
+  enforcement: "scripts/audit/verify_iso20022_contract_registry.sh"
+  verification: "scripts/audit/verify_iso20022_contract_registry.sh; wired via scripts/audit/run_security_fast_checks.sh"
+
+- id: INV-110
+  aliases: ["I-SOV-VPC-POSTURE-01"]
+  status: implemented
+  severity: P0
+  title: "Deploy-in-customer-VPC posture declared: data residency boundary and off-domain attestation constraints are documented"
+  owners: ["team-platform", "team-compliance"]
+  sla_days: 21
+  enforcement: "scripts/audit/verify_sovereign_vpc_posture_doc.sh"
+  verification: "scripts/audit/verify_sovereign_vpc_posture_doc.sh; docs/security/SOVEREIGN_VPC_POSTURE.md; referenced in docs/security/SECURITY_MANIFEST.yml"
+
+- id: INV-111
+  aliases: ["I-BOZ-SEAT-01"]
+  status: implemented
+  severity: P0
+  title: "BoZ observability role exists + provably read-only (DB structural)"
+  owners: ["team-db", "team-platform"]
+  sla_days: 21
+  enforcement: "scripts/db/verify_boz_observability_role.sh"
+  verification: "scripts/db/verify_boz_observability_role.sh; evidence/phase0/boz_observability_role.json"
+
+- id: INV-112
+  aliases: ["I-ZDPA-PII-LINT-01"]
+  status: implemented
+  severity: P0
+  title: "ZDPA PII leakage prevention lint (fail-closed on regulated payload surfaces)"
+  owners: ["team-security", "team-platform"]
+  sla_days: 21
+  enforcement: "scripts/audit/lint_pii_leakage_payloads.sh"
+  verification: "scripts/audit/lint_pii_leakage_payloads.sh; evidence/phase0/pii_leakage_payloads.json"
+
+- id: INV-113
+  aliases: ["I-ANCHOR-HOOKS-01"]
+  status: implemented
+  severity: P0
+  title: "Hybrid anchor-sync schema hooks present (Phase-0 structural readiness)"
+  owners: ["team-db", "team-platform"]
+  sla_days: 21
+  enforcement: "scripts/db/verify_anchor_sync_hooks.sh"
+  verification: "scripts/db/verify_anchor_sync_hooks.sh; evidence/phase0/anchor_sync_hooks.json"
+
+- id: INV-114
+  aliases: ["INV-BOZ-04"]
+  status: implemented
+  severity: P0
+  title: "Payment finality / instruction irrevocability (reversal-only via ISO 20022 camt.056)"
+  owners: ["team-db", "team-platform"]
+  sla_days: 14
+  enforcement: "scripts/db/verify_instruction_finality_invariant.sh"
+  verification: "scripts/db/verify_instruction_finality_invariant.sh; scripts/db/tests/test_instruction_finality.sh; evidence/phase1/instruction_finality_invariant.json"
+
+- id: INV-115
+  aliases: ["INV-ZDPA-01"]
+  status: implemented
+  severity: P0
+  title: "PII decoupling + right-to-be-forgotten survivability (evidence remains valid after PII purge)"
+  owners: ["team-security", "team-db", "team-platform"]
+  sla_days: 14
+  enforcement: "scripts/db/verify_pii_decoupling_hooks.sh"
+  verification: "scripts/db/verify_pii_decoupling_hooks.sh; scripts/db/tests/test_pii_decoupling.sh; evidence/phase1/pii_decoupling_invariant.json"
+
+- id: INV-116
+  aliases: ["INV-IPDR-02"]
+  status: implemented
+  severity: P0
+  title: "Rail truth-anchor sequence continuity (generic; jurisdiction profiles e.g. ZM-NFS)"
+  owners: ["team-db", "team-platform"]
+  sla_days: 14
+  enforcement: "scripts/db/verify_rail_sequence_truth_anchor.sh"
+  verification: "scripts/db/verify_rail_sequence_truth_anchor.sh; scripts/db/tests/test_rail_sequence_continuity.sh; evidence/phase1/rail_sequence_truth_anchor.json"

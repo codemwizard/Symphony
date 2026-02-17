@@ -1,0 +1,34 @@
+phase: '0'
+task_id: TSK-P0-031
+title: Enforce no-tx marker for concurrent index migrations
+owner_role: DB_FOUNDATION
+status: completed
+depends_on:
+- TSK-P0-030
+touches:
+- scripts/db/lint_migrations.sh
+invariants:
+- INV-042 (Concurrent index requires no-tx marker)
+work:
+- Update migration lint to require marker when CONCURRENTLY appears.
+- Ensure lint emits ./evidence/phase0/no_tx_marker_lint.json.
+acceptance_criteria:
+- CI fails on missing marker.
+- Evidence file is written by the verification step.
+verification:
+- scripts/db/lint_migrations.sh
+evidence:
+- ./evidence/phase0/no_tx_marker_lint.json
+failure_modes:
+- Concurrent index migration without marker passes lint.
+- Evidence file missing.
+must_read:
+- docs/invariants/INVARIANTS_MANIFEST.yml
+- scripts/db/verify_invariants.sh
+- scripts/db/ci_invariant_gate.sql
+notes: ''
+client: codex_cli
+assigned_agent: db_foundation
+model: <UNASSIGNED>
+implementation_plan: docs/plans/phase0/TSK-P0-031/PLAN.md
+implementation_log: docs/plans/phase0/TSK-P0-031/EXEC_LOG.md

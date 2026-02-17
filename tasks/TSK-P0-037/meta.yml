@@ -1,0 +1,45 @@
+phase: '0'
+task_id: TSK-P0-037
+title: Phase-0 evidence contract + gate switch (authoritative)
+owner_role: PLATFORM
+status: completed
+depends_on:
+- TSK-P0-010
+- TSK-P0-034
+touches:
+- docs/PHASE0/PHASE0_CONTRACT.md
+- docs/PHASE0/phase0_contract.yml
+- scripts/ci/check_evidence_required.sh
+- scripts/audit/verify_phase0_contract.sh
+- scripts/audit/run_invariants_fast_checks.sh
+- docs/plans/phase0/TSK-P0-037_phase0_contract_authoritative/PLAN.md
+- docs/plans/phase0/TSK-P0-037_phase0_contract_authoritative/EXEC_LOG.md
+- tasks/TSK-P0-037/meta.yml
+invariants:
+- INV-060 (Phase-0 contract governs evidence gate)
+work:
+- Create phase0_contract.yml as the single source of truth for evidence enforcement.
+- Validate schema, completeness, and duplicate/unknown task IDs.
+- Update evidence gate to honor contract status and normalize CI paths.
+acceptance_criteria:
+- Contract validates and lists every Phase-0 task.
+- Evidence gate enforces only completed tasks with evidence_required=true.
+- Evidence file is written even when validation fails.
+verification:
+  - scripts/audit/verify_phase0_contract.sh
+evidence:
+- ./evidence/phase0/phase0_contract.json
+failure_modes:
+- Evidence file missing.
+- Missing/duplicate task rows in contract.
+- Evidence gate fails on tasks not marked completed.
+must_read:
+- docs/invariants/INVARIANTS_MANIFEST.yml
+- scripts/db/verify_invariants.sh
+- scripts/db/ci_invariant_gate.sql
+notes: ''
+implementation_plan: docs/plans/phase0/TSK-P0-037_phase0_contract_authoritative/PLAN.md
+implementation_log: docs/plans/phase0/TSK-P0-037_phase0_contract_authoritative/EXEC_LOG.md
+client: codex_cli
+assigned_agent: platform
+model: <UNASSIGNED>

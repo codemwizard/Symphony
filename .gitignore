@@ -1,0 +1,42 @@
+# Dependencies
+node_modules/
+
+# Security & Secrets
+certs/
+.env
+.env.*
+!.env.example
+infra/docker/.env
+
+# Development & Tools
+.vscode/
+.idea/
+
+# Audit & Legacy (Optional, typically archived)
+archive/
+evidence/
+
+# Logs & Build
+*.log
+dist/
+build/
+.DS_Store
+bin/
+Bin/
+obj/
+*.tar.*
+.*.zip
+
+
+# Windows download metadata
+*:Zone.Identifier*
+
+# Repomix artifacts
+Good-repomix.xml
+repomix-output.xml
+repomix.xml
+
+__pycache__/
+*.pyc
+.venv/
+.cache/

@@ -1,0 +1,39 @@
+phase: '1'
+task_id: TSK-P1-002
+title: Phase-1 Evidence and Approval Metadata Harness
+owner_role: INVARIANTS_CURATOR
+status: completed
+depends_on:
+- TSK-P1-001
+touches:
+- scripts/audit/verify_remediation_trace.sh
+- scripts/audit/verify_evidence_harness_integrity.sh
+- docs/operations/AI_AGENT_OPERATION_MANUAL.md
+- evidence/phase1/**
+invariants:
+- INV-105
+- INV-077
+work:
+- Require ai_prompt_hash/model_id/approver_id metadata in regulated-surface evidence
+  paths.
+- Ensure remediation trace and approval artifacts are linked deterministically.
+acceptance_criteria:
+- Phase-1 regulated evidence includes approval metadata fields.
+- Remediation verification fails when approval metadata is required but missing.
+verification:
+- scripts/audit/verify_evidence_harness_integrity.sh
+- scripts/audit/verify_remediation_trace.sh
+- scripts/dev/pre_ci.sh
+evidence:
+- evidence/phase1/approval_metadata.json
+failure_modes:
+- Required approval metadata is missing from regulated evidence.
+- Evidence file missing.
+must_read:
+- docs/operations/AI_AGENT_OPERATION_MANUAL.md
+implementation_plan: docs/plans/phase1/TSK-P1-002_phase_1_evidence_and_approval_metadata_harness/PLAN.md
+implementation_log: docs/plans/phase1/TSK-P1-002_phase_1_evidence_and_approval_metadata_harness/EXEC_LOG.md
+notes: Hard prerequisite for regulated-surface implementation tasks.
+client: codex_cli
+assigned_agent: invariants_curator
+model: <UNASSIGNED>

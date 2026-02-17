@@ -1,0 +1,38 @@
+phase: "0"
+task_id: "TSK-P0-090"
+title: "Key management policy stub + mechanical verifier"
+owner_role: "SECURITY_GUARDIAN"
+status: "completed"
+depends_on:
+- "TSK-P0-089"
+touches:
+- "docs/security/KEY_MANAGEMENT_POLICY.md"
+- "docs/security/SECURITY_MANIFEST.yml"
+- "scripts/audit/verify_key_management_policy.sh"
+- "tasks/TSK-P0-090/meta.yml"
+invariants:
+- "NEW: Key management policy exists and is referenced"
+work:
+- "Add Phase-0 key management policy stub (OpenBao now; KMS/HSM later) with ownership, rotation, revocation, incident handling."
+- "Add verifier that fails if the policy is missing or not referenced by SECURITY_MANIFEST."
+- "Emit evidence artifact for policy presence/reference verification."
+acceptance_criteria:
+- "Policy doc exists under docs/security and is referenced by SECURITY_MANIFEST."
+- "Verifier fails closed if doc is missing or unreferenced."
+verification:
+- "scripts/audit/verify_key_management_policy.sh"
+evidence:
+- "evidence/phase0/key_management_policy.json"
+failure_modes:
+- "Policy exists but is not referenced by control manifest."
+- "Verifier does not fail closed when doc is missing."
+- "Evidence file missing."
+must_read:
+- "docs/security/SECURITY_MANIFEST.yml"
+- "docs/audits/TIER1_GAP_AUDIT_2026-02-06.md"
+implementation_plan: "docs/plans/phase0/TSK-P0-090_audit_gap_closeout/PLAN.md"
+implementation_log: "docs/plans/phase0/TSK-P0-090_audit_gap_closeout/EXEC_LOG.md"
+notes: ""
+client: "codex_cli"
+assigned_agent: "security_guardian"
+model: "<UNASSIGNED>"

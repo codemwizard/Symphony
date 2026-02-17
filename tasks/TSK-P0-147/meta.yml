@@ -1,0 +1,77 @@
+phase: "0"
+task_id: "TSK-P0-147"
+title: "Canonicalize INV-106..INV-116 mapping and wire non-colliding control-plane gates"
+owner_role: "INVARIANTS_CURATOR"
+status: "completed"   # planned | in_progress | completed
+
+depends_on:
+  - "TSK-P0-125"
+
+touches:
+  - "docs/invariants/INVARIANTS_MANIFEST.yml"
+  - "docs/invariants/INVARIANTS_ROADMAP.md"
+  - "docs/invariants/INVARIANTS_IMPLEMENTED.md"
+  - "docs/control_planes/CONTROL_PLANES.yml"
+  - "scripts/audit/verify_policy_key_management_stub.sh"
+  - "scripts/audit/verify_policy_audit_logging_stub.sh"
+  - "scripts/audit/verify_sdlc_sast_readiness.sh"
+  - "scripts/audit/verify_sovereign_vpc_posture_doc.sh"
+  - "scripts/audit/lint_pii_leakage_payloads.sh"
+  - "scripts/db/verify_boz_observability_role.sh"
+  - "scripts/db/verify_anchor_sync_hooks.sh"
+  - "docs/security/SOVEREIGN_VPC_POSTURE.md"
+  - "docs/security/SECURITY_MANIFEST.yml"
+  - "docs/plans/phase0/TSK-P0-147_inv106_116_canonicalization/PLAN.md"
+  - "docs/plans/phase0/TSK-P0-147_inv106_116_canonicalization/EXEC_LOG.md"
+  - "tasks/TSK-P0-147/meta.yml"
+
+invariants:
+  - "INV-106"
+  - "INV-107"
+  - "INV-108"
+  - "INV-109"
+  - "INV-110"
+  - "INV-114"
+  - "INV-115"
+  - "INV-116"
+
+work:
+  - "Apply the canonical mapping from 106-103_INV_IMP.txt to the invariants registry and docs."
+  - "Add the requested non-colliding control-plane gate IDs and ensure scripts exist + are wired for drift checks."
+  - "Use SKIPPED placeholder scripts for gates that are not yet implemented by their owning tasks."
+
+acceptance_criteria:
+  - "scripts/audit/verify_control_planes_drift.sh is PASS after gate insertions."
+  - "docs/invariants/INVARIANTS_MANIFEST.yml, INVARIANTS_IMPLEMENTED.md, INVARIANTS_ROADMAP.md are consistent."
+  - "No gate ID collisions introduced."
+
+verification:
+  - "bash scripts/audit/verify_control_planes_drift.sh"
+  - "bash scripts/audit/run_invariants_fast_checks.sh"
+  - "bash scripts/audit/run_security_fast_checks.sh"
+
+evidence:
+  - "evidence/phase0/control_planes_drift.json"
+  - "evidence/phase0/policy_key_management_stub.json"
+  - "evidence/phase0/policy_audit_logging_stub.json"
+  - "evidence/phase0/sdlc_sast_readiness.json"
+  - "evidence/phase0/sovereign_vpc_posture_doc.json"
+
+failure_modes:
+  - "Invariant IDs are repurposed without updating ROADMAP/IMPLEMENTED docs (doc-truth drift)."
+  - "Gate ID collisions or scripts not wired trigger control-plane drift failures."
+  - "Placeholder gates are incorrectly made contract-required, causing missing evidence failures."
+
+must_read:
+  - "106-103_INV_IMP.txt"
+  - "docs/invariants/INVARIANTS_PROCESS.md"
+  - "docs/control_planes/CONTROL_PLANES.yml"
+  - "scripts/audit/verify_control_planes_drift.sh"
+
+implementation_plan: "docs/plans/phase0/TSK-P0-147_inv106_116_canonicalization/PLAN.md"
+implementation_log: "docs/plans/phase0/TSK-P0-147_inv106_116_canonicalization/EXEC_LOG.md"
+
+notes: "This task intentionally does not make new evidence paths Phase-0 contract-required until their owning enforcement tasks emit deterministic PASS/FAIL in CI and local pre-CI."
+client: "codex_cli"
+assigned_agent: "invariants_curator"
+model: "gpt-5-codex"

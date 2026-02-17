@@ -1,0 +1,37 @@
+phase: '0'
+task_id: TSK-P0-005
+title: Idempotency zombie simulation harness
+owner_role: QA_VERIFIER
+status: completed
+depends_on:
+- TSK-P0-003
+touches:
+- scripts/db/tests/test_idempotency_zombie.sh
+- .github/workflows/invariants.yml
+- docs/invariants/INVARIANTS_MANIFEST.yml
+- tasks/TSK-P0-005/meta.yml
+invariants:
+- INV-023 (Idempotency zombie replay safety)
+work:
+- Create DB test harness to simulate duplicate enqueue/ACK loss.
+- Validate no double-enqueue or double-complete.
+- Wire into db_verify_invariants job.
+acceptance_criteria:
+- Test fails if duplicates are possible.
+- Evidence report generated under ./evidence/phase0/idempotency_zombie.json.
+verification:
+- scripts/db/tests/test_idempotency_zombie.sh
+evidence:
+- ./evidence/phase0/idempotency_zombie.json
+failure_modes:
+- Any duplicate insert/complete must fail.
+must_read:
+- docs/invariants/INVARIANTS_MANIFEST.yml
+- scripts/db/verify_invariants.sh
+- scripts/db/ci_invariant_gate.sql
+notes: ''
+client: codex_cli
+assigned_agent: qa_verifier
+model: <UNASSIGNED>
+implementation_plan: docs/plans/phase0/TSK-P0-005/PLAN.md
+implementation_log: docs/plans/phase0/TSK-P0-005/EXEC_LOG.md

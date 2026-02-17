@@ -1,0 +1,34 @@
+phase: '0'
+task_id: TSK-P0-064
+title: Add regression tests for Phase-0 contract checker
+owner_role: INVARIANTS_CURATOR
+status: completed
+depends_on:
+- TSK-P0-063
+touches:
+- scripts/audit/tests/test_phase0_contract_checker.sh
+- tasks/TSK-P0-064/meta.yml
+invariants:
+- INV-080
+work:
+- Add test harness covering YAML parse success/fail, control-plane missing behavior,
+  and PASS/SKIPPED enforcement.
+- Ensure evidence is written in all outcomes.
+acceptance_criteria:
+- Tests pass locally and in CI.
+- Evidence file emitted even on failures.
+verification:
+- scripts/audit/tests/test_phase0_contract_checker.sh
+evidence:
+- evidence/phase0/phase0_contract_evidence_status.json
+failure_modes:
+- Evidence file missing.
+- Missing evidence on parse failure.
+must_read:
+- scripts/audit/verify_phase0_contract_evidence_status.sh
+notes: ''
+client: codex_cli
+assigned_agent: architect
+model: <UNASSIGNED>
+implementation_plan: docs/plans/phase0/TSK-P0-064/PLAN.md
+implementation_log: docs/plans/phase0/TSK-P0-064/EXEC_LOG.md

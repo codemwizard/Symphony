@@ -1,0 +1,48 @@
+# Canonical Task Meta Template (lower_snake_case)
+
+phase: "0"
+task_id: "TSK-P0-123"
+title: "CI parity: install Semgrep in security_scan job"
+owner_role: "SECURITY_GUARDIAN"
+status: "completed"   # planned | in_progress | completed
+
+depends_on:
+  - "TSK-P0-087"
+
+touches:
+  - ".github/workflows/invariants.yml"
+  - "docs/plans/phase0/TSK-P0-123_ci_semgrep_parity/PLAN.md"
+  - "docs/plans/phase0/TSK-P0-123_ci_semgrep_parity/EXEC_LOG.md"
+  - "docs/tasks/PHASE0_TASKS.md"
+  - "docs/plans/phase0/INDEX.md"
+  - "docs/PHASE0/phase0_contract.yml"
+
+invariants:
+  - "SEC-G11"
+
+work:
+  - "Install pinned Semgrep in CI security_scan job so semgrep_sast evidence is PASS, not SKIPPED."
+
+acceptance_criteria:
+  - "phase0-evidence-security artifact contains semgrep_sast.json with PASS and correct version."
+
+verification:
+  - "(CI) security_scan job"
+
+evidence:
+  - "evidence/phase0/semgrep_sast.json"
+
+failure_modes:
+  - "Evidence file missing"
+  - "semgrep_sast remains SKIPPED due to missing semgrep install"
+
+must_read:
+  - ".github/workflows/invariants.yml"
+
+implementation_plan: "docs/plans/phase0/TSK-P0-123_ci_semgrep_parity/PLAN.md"
+implementation_log: "docs/plans/phase0/TSK-P0-123_ci_semgrep_parity/EXEC_LOG.md"
+
+notes: ""
+client: "codex_cli"
+assigned_agent: "security_guardian"
+model: "gpt-5.3-codex"

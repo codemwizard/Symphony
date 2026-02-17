@@ -1,0 +1,40 @@
+phase: '0'
+task_id: TSK-P0-063
+title: Fix Phase-0 contract evidence checker (YAML + fail-closed evidence)
+owner_role: INVARIANTS_CURATOR
+status: completed
+depends_on:
+- TSK-P0-037
+- TSK-P0-040
+- TSK-P0-051
+touches:
+- scripts/audit/verify_phase0_contract_evidence_status.sh
+- tasks/TSK-P0-063/meta.yml
+invariants:
+- INV-080
+work:
+- Export ROOT_DIR and cd before invoking Python.
+- Parse phase0_contract.yml via yaml.safe_load and reject non-list.
+- Always emit evidence on parse failures.
+- Require CONTROL_PLANES only when gate_ids exist; otherwise emit SKIPPED evidence.
+acceptance_criteria:
+- YAML contract parses correctly.
+- Evidence file is written even on failure.
+- Missing CONTROL_PLANES yields SKIPPED unless gate_ids are present.
+verification:
+- scripts/audit/tests/test_phase0_contract_checker.sh
+evidence:
+- evidence/phase0/phase0_contract_evidence_status.json
+failure_modes:
+- Evidence file missing.
+- Contract parse errors do not emit evidence.
+- CONTROL_PLANES missing fails even with no gate_ids.
+must_read:
+- docs/PHASE0/phase0_contract.yml
+- docs/control_planes/CONTROL_PLANES.yml
+notes: ''
+client: codex_cli
+assigned_agent: architect
+model: <UNASSIGNED>
+implementation_plan: docs/plans/phase0/TSK-P0-063/PLAN.md
+implementation_log: docs/plans/phase0/TSK-P0-063/EXEC_LOG.md

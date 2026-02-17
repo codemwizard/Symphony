@@ -1,0 +1,18 @@
+fallback_mode: "failover"
+slo_thresholds:
+  p50_ms: 100
+  p95_ms: 250
+  p99_ms: 500
+  max_error_rate: 0.01
+routing_actions:
+  - on_condition: "primary_unavailable"
+    action: "route_to_secondary"
+  - on_condition: "error_rate_exceeded"
+    action: "circuit_breaker_open"
+evidence:
+  artifact: "./evidence/phase0/routing_fallback.json"
+  fields:
+    - "fallback_mode"
+    - "slo_thresholds"
+    - "routing_actions"
+    - "evidence"

@@ -1,0 +1,185 @@
+{
+  "version": 1,
+  "entries": [
+    {
+      "id": "DDL-ALLOW-0001",
+      "migration": "schema/migrations/0017_ingress_tenant_attribution.sql",
+      "statement_fingerprint": "1aaf332fe2df87f4f425c5d8bbd289dc1aff6799600a2e3b849c8436c3515730",
+      "reason": "Phase-0 tenant attribution (type conversion for tenant_id)",
+      "expires_on": "2026-12-31",
+      "reviewed_by": "security_guardian",
+      "approved_at": "2026-02-05"
+    },
+    {
+      "id": "DDL-ALLOW-0002",
+      "migration": "schema/migrations/0017_ingress_tenant_attribution.sql",
+      "statement_fingerprint": "f64200154c302d45280a7003a3eb7da36509441d71a1fd0fd1190225b112b6a5",
+      "reason": "Phase-0 tenant attribution (tenant_id NOT NULL on ingress)",
+      "expires_on": "2026-12-31",
+      "reviewed_by": "security_guardian",
+      "approved_at": "2026-02-05"
+    },
+    {
+      "id": "DDL-ALLOW-0003",
+      "migration": "schema/migrations/0017_ingress_tenant_attribution.sql",
+      "statement_fingerprint": "b1633786b4b13786accfd36ea99dfbc949f2e2c400e03a9921a48a8ca9adebc8",
+      "reason": "Phase-0 tenant attribution columns on ingress attestations",
+      "expires_on": "2026-12-31",
+      "reviewed_by": "security_guardian",
+      "approved_at": "2026-02-05"
+    },
+    {
+      "id": "DDL-ALLOW-0004",
+      "migration": "schema/migrations/0018_outbox_tenant_attribution.sql",
+      "statement_fingerprint": "35643800773556eef8c5e42dd7727309f163a01224914f55ae609c927c006526",
+      "reason": "Phase-0 expand-first tenant_id on outbox_pending",
+      "expires_on": "2026-12-31",
+      "reviewed_by": "security_guardian",
+      "approved_at": "2026-02-05"
+    },
+    {
+      "id": "DDL-ALLOW-0005",
+      "migration": "schema/migrations/0018_outbox_tenant_attribution.sql",
+      "statement_fingerprint": "917b6186750016583c5a5a4c9c4b8f2a783aef53ba701f901e292a260549278d",
+      "reason": "Phase-0 expand-first tenant/member on outbox_attempts",
+      "expires_on": "2026-12-31",
+      "reviewed_by": "security_guardian",
+      "approved_at": "2026-02-05"
+    },
+    {
+      "id": "DDL-ALLOW-0006",
+      "migration": "schema/migrations/0017_ingress_tenant_attribution.sql",
+      "statement_fingerprint": "adefba95e50c238d1dad178364d1518f9ef33a8d5da263268abed740caa6ca78",
+      "reason": "Line-level lock-risk lint allowlist for ingress ALTER TABLE",
+      "expires_on": "2026-12-31",
+      "reviewed_by": "security_guardian",
+      "approved_at": "2026-02-05"
+    },
+    {
+      "id": "DDL-ALLOW-0007",
+      "migration": "schema/migrations/0018_outbox_tenant_attribution.sql",
+      "statement_fingerprint": "51082d1f8ac574df036d305d6b88fba1e48d27f9c07fb6b7d74896d5c7a696da",
+      "reason": "Line-level lock-risk lint allowlist for outbox_pending ALTER TABLE",
+      "expires_on": "2026-12-31",
+      "reviewed_by": "security_guardian",
+      "approved_at": "2026-02-05"
+    },
+    {
+      "id": "DDL-ALLOW-0008",
+      "migration": "schema/migrations/0018_outbox_tenant_attribution.sql",
+      "statement_fingerprint": "3ae717510d0e2d98601b8e32969bd9f4e26aa4cdc1728a3e61a95d6baa9e8d51",
+      "reason": "Line-level lock-risk lint allowlist for outbox_attempts ALTER TABLE",
+      "expires_on": "2026-12-31",
+      "reviewed_by": "security_guardian",
+      "approved_at": "2026-02-05"
+    },
+    {
+      "id": "DDL-ALLOW-0009",
+      "migration": "schema/migrations/0020_business_foundation_hooks.sql",
+      "statement_fingerprint": "95b0aebe4b955ad4865b3ec970986c23a52798da5a3def8c4835cd3a5b1c9828",
+      "reason": "Phase-0 correlation stitching columns on outbox_pending (expand-first)",
+      "expires_on": "2026-12-31",
+      "reviewed_by": "security_guardian",
+      "approved_at": "2026-02-06"
+    },
+    {
+      "id": "DDL-ALLOW-0010",
+      "migration": "schema/migrations/0020_business_foundation_hooks.sql",
+      "statement_fingerprint": "27ad1e207c441a98e89ba818a2de47433a1e0ae4136fff0ef3523146ba5cd134",
+      "reason": "Phase-0 correlation stitching columns on outbox_attempts (expand-first)",
+      "expires_on": "2026-12-31",
+      "reviewed_by": "security_guardian",
+      "approved_at": "2026-02-06"
+    },
+    {
+      "id": "DDL-ALLOW-0011",
+      "migration": "schema/migrations/0020_business_foundation_hooks.sql",
+      "statement_fingerprint": "712a5e10b077749a927ce98e5f086573c033eecdcb47e71e1eeaefb3fba3009a",
+      "reason": "Phase-0 tenant hierarchy expansion via ALTER TABLE tenants",
+      "expires_on": "2026-12-31",
+      "reviewed_by": "security_guardian",
+      "approved_at": "2026-02-06"
+    },
+    {
+      "id": "DDL-ALLOW-0012",
+      "migration": "schema/migrations/0023_evidence_packs_signing_anchoring_hooks.sql",
+      "statement_fingerprint": "0aaa5f64063823903f2c31fd111b31fc9ed747255a35d7dc2964af3c6b8be887",
+      "reason": "Phase-0 expand-first: add signing/anchoring columns to evidence_packs (ALTER TABLE)",
+      "expires_on": "2026-12-31",
+      "reviewed_by": "security_guardian",
+      "approved_at": "2026-02-07"
+    },
+    {
+      "id": "DDL-ALLOW-0013",
+      "migration": "schema/migrations/0024_business_tables_privilege_hygiene_and_usage_event_conventions.sql",
+      "statement_fingerprint": "40842715172a7b0fd9943995e1c2e21fecc70ccbc603b73e8c8a7032ba384f69",
+      "reason": "Phase-0 expand-first: add convention columns to billing_usage_events (ALTER TABLE)",
+      "expires_on": "2026-12-31",
+      "reviewed_by": "security_guardian",
+      "approved_at": "2026-02-07"
+    },
+    {
+      "id": "DDL-ALLOW-0014",
+      "migration": "schema/migrations/0026_business_foundation_delta_tightening.sql",
+      "statement_fingerprint": "5bdb6a4fdce7811f570aacb24bf2b4155be850308573fb3bd664a40bb40a1d0a",
+      "reason": "Phase-0 expand-first: add billable client stable key + new-row-only constraints/triggers (ALTER TABLE billable_clients) for auditably billable hooks.",
+      "expires_on": "2026-12-31",
+      "reviewed_by": "boz_auditor",
+      "approved_at": "2026-02-09"
+    },
+    {
+      "id": "DDL-ALLOW-0015",
+      "migration": "schema/migrations/0026_business_foundation_delta_tightening.sql",
+      "statement_fingerprint": "93b2bc3b87d78e06faafb4bd287cb12f873da199ea8731a2bd6f5217d408ff7c",
+      "reason": "Phase-0 expand-first: add external_proofs direct billability attribution columns + derived attribution trigger (ALTER TABLE external_proofs).",
+      "expires_on": "2026-12-31",
+      "reviewed_by": "boz_auditor",
+      "approved_at": "2026-02-09"
+    },
+    {
+      "id": "DDL-ALLOW-0016",
+      "migration": "schema/migrations/0026_business_foundation_delta_tightening.sql",
+      "statement_fingerprint": "b6ae0d8f8e73086420ba8c086d14e65b02ce2f888c8c23109d05a3224312cf2a",
+      "reason": "Phase-0 expand-first: new-row-only correlation_id non-null check on payment_outbox_pending (hot table). NOT VALID + idempotent DO block reduces migration risk; allowlisted for Phase-0 tightening.",
+      "expires_on": "2026-12-31",
+      "reviewed_by": "boz_auditor",
+      "approved_at": "2026-02-09"
+    },
+    {
+      "id": "DDL-ALLOW-0017",
+      "migration": "schema/migrations/0026_business_foundation_delta_tightening.sql",
+      "statement_fingerprint": "ab760cc86fcd0c0eee5c09e98c2630ead9325a7f2af30b63d7dcc53c4937a3a2",
+      "reason": "Phase-0 expand-first: new-row-only correlation_id non-null check on payment_outbox_attempts (hot table). NOT VALID + idempotent DO block reduces migration risk; allowlisted for Phase-0 tightening.",
+      "expires_on": "2026-12-31",
+      "reviewed_by": "boz_auditor",
+      "approved_at": "2026-02-09"
+    },
+    {
+      "id": "DDL-ALLOW-0018",
+      "migration": "schema/migrations/0028_instruction_finality_enforcement.sql",
+      "statement_fingerprint": "fd2ecd8c25437dc407fbc87251ffba86e750776e6e407f53ad1216a6abf024c7",
+      "reason": "Phase-1 finality ledger migration uses idempotent ALTER TABLE in DO block to attach self-reference reversal FK.",
+      "expires_on": "2026-12-31",
+      "reviewed_by": "security_guardian",
+      "approved_at": "2026-02-13"
+    },
+    {
+      "id": "DDL-ALLOW-0019",
+      "migration": "schema/migrations/0029_pii_decoupling_and_purge_hooks.sql",
+      "statement_fingerprint": "4e894fd7cf52dc8a9a47f945d495132243f261b4ef91651961eb9be570d055a1",
+      "reason": "Phase-1 pii vault migration uses idempotent ALTER TABLE in DO block to attach purge request FK.",
+      "expires_on": "2026-12-31",
+      "reviewed_by": "security_guardian",
+      "approved_at": "2026-02-13"
+    },
+    {
+      "id": "DDL-ALLOW-0020",
+      "migration": "schema/migrations/0031_rail_sequence_truth_anchor_continuity.sql",
+      "statement_fingerprint": "40d6edb713aed31321ec50ea6c34dc69047dc4905113defa013d2cfe227e75ad",
+      "reason": "Phase-1 rail truth-anchor migration uses idempotent ALTER TABLE in DO block to attach attempt FK.",
+      "expires_on": "2026-12-31",
+      "reviewed_by": "security_guardian",
+      "approved_at": "2026-02-13"
+    }
+  ]
+}

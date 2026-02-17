@@ -1,0 +1,38 @@
+phase: '0'
+task_id: TSK-P0-044
+title: Baseline change governance enforcement
+owner_role: PLATFORM
+status: completed
+depends_on:
+- TSK-P0-013
+touches:
+- scripts/audit/verify_baseline_change_governance.sh
+- docs/decisions/ADR-0010-baseline-policy.md
+- docs/PHASE0/phase0_contract.yml
+- docs/invariants/INVARIANTS_MANIFEST.yml
+- tasks/TSK-P0-044/meta.yml
+invariants:
+- INV-067 (Baseline change governance enforced)
+work:
+- Require migration + ADR update when schema/baseline.sql changes.
+- Emit baseline_governance.json on pass/fail.
+acceptance_criteria:
+- Baseline changes without migration + ADR update fail.
+- Evidence file is written on pass/fail.
+verification:
+- scripts/audit/verify_baseline_change_governance.sh
+evidence:
+- ./evidence/phase0/baseline_governance.json
+failure_modes:
+- Evidence file missing.
+- Baseline changed without migration + ADR update.
+must_read:
+- docs/invariants/INVARIANTS_MANIFEST.yml
+- scripts/db/verify_invariants.sh
+- scripts/db/ci_invariant_gate.sql
+notes: ''
+client: codex_cli
+assigned_agent: platform
+model: <UNASSIGNED>
+implementation_plan: docs/plans/phase0/TSK-P0-044/PLAN.md
+implementation_log: docs/plans/phase0/TSK-P0-044/EXEC_LOG.md

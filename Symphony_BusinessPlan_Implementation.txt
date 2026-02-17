@@ -1,0 +1,1587 @@
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+## Comprehensive Business Plan — Symphony-Zambia
+
+**Evidence-Grade Exception Containment for NFS Transactions (Non-custodial / Non-settling)**
+
+---
+
+### 1) Executive Summary
+
+**Symphony-Zambia** is a non-custodial, non-settling payment orchestration and evidence platform that sits between regulated participants (banks/MMOs/fintechs/aggregators) and national rails (e.g., NFS/ZIPSS/ZECHL-linked ecosystems). Symphony does not hold customer funds. It **attests**, **normalizes**, and **contains exceptions** with **deterministic outcomes** backed by **cryptographically anchored evidence**.
+
+**What we sell:** “Risk certainty” + “Audit certainty” for every instruction and exception.
+**Why it matters:** In high-availability payment systems, the biggest cost is not just downtime—it’s **uncertainty** (zombie transactions, reconciliation breaks, disputes, and audit pain). Symphony is designed to reduce operational loss, regulatory exposure, and dispute resolution time.
+
+**Revenue model:** Multiple complementary channels:
+
+1. **Evidence-as-a-Service (EaaS)** — signed/anchored transaction & exception evidence bundles + retention
+2. **Escrow-as-a-Service (non-custodial)** — policy-triggered release instructions + evidence pack
+3. **Inter-Participant Dispute Resolution (IPDR)** — “immutable referee” packs + sequence stitching
+4. Optional add-ons: compliance reporting packs, monitoring, premium SLA, and integration services
+
+**Phase approach:** Build a regulator-grade foundation first (Phase-0), then enable ingress/orchestration behavior (Phase-1/2) without weakening invariants.
+
+---
+
+### 2) Vision, Mission, and Positioning
+
+**Vision:** Become Zambia’s trusted “exception containment and evidence utility” for digital payments and payment-adjacent workflows.
+**Mission:** Make every payment instruction provable, replay-safe, and dispute-resolvable without custody or settlement risk.
+
+**Positioning statement:**
+
+> “Symphony provides deterministic payment orchestration and evidence-grade exception containment for banks, MMOs, and enterprise platforms—without holding funds—so participants can operate safely under Zambian regulatory expectations.”
+
+---
+
+### 3) Problem & Opportunity
+
+#### Core pain points we address
+
+1. **Zombie transactions & ambiguous finality**
+   Network drops, timeouts after commits, duplicated retries, unclear rail outcomes.
+2. **Reconciliation gaps**
+   Mismatch between participant logs, rail acknowledgments, and internal ledgers.
+3. **Audit & compliance burden**
+   Slow incident reconstruction; weak non-repudiation; evidence scattered across systems.
+4. **Integration drift**
+   Partners change codes/fields; exceptions become unhandled; “unknown” states expand.
+5. **Operational cost**
+   Manual investigations and escalations destroy margins, especially for SME flows.
+
+#### Why Zambia is a strong wedge market
+
+* Growing digital payment reliance + increased scrutiny on operational resilience and reporting.
+* Multiple participant types (banks, MMOs, enterprises, cooperatives/NGOs) with varying maturity—high demand for a “trust layer” that doesn’t require them to rewrite core systems.
+
+---
+
+### 4) Product Scope and Guardrails
+
+**What Symphony is**
+
+* A deterministic middleware layer for instruction intake, attestation, policy enforcement, dispatch orchestration, and evidence creation.
+* A system engineered around **mechanical invariants**, **forward-only migrations**, and **fail-closed** behaviors.
+
+**What Symphony is not**
+
+* Not a custodian.
+* Not a settlement system.
+* Not a wallet.
+* Not a core banking replacement.
+
+This non-custodial framing is central to regulatory viability and reduces licensing/capital complexity.
+
+---
+
+### 5) Target Customers in Zambia
+
+#### Primary: Regulated payment participants
+
+* Commercial banks integrating to national rails and partner networks.
+* MMOs and payment aggregators seeking deterministic exception containment and dispute proof.
+
+#### Secondary: Enterprises and platforms
+
+* Marketplaces, B2B wholesalers, logistics-linked merchants, and high-volume billers that need provable transaction outcomes.
+
+#### NGO/Cooperative channel (your point about Client–Tenant relation)
+
+* NGOs, cooperatives, and multi-entity programs require **tenant isolation**, **client identity**, and **per-program policy/audit reporting**.
+* This becomes a meaningful revenue channel because they value traceability, proof-of-disbursement, and compliance-grade reporting.
+
+**Implication:** Multi-tenant design is not optional long-term. It should be introduced as early as possible in schema and evidence structures (even if some enforcement remains Phase-1/2).
+
+---
+
+### 6) Customer Use Cases and Revenue Lines
+
+#### A) Evidence-as-a-Service
+
+**Buyer:** Bank/MMO/enterprise risk & operations
+**What they get:** Signed, anchored evidence bundles for every instruction state change and exception event, retention and retrieval, audit exports.
+
+**Why they pay:** Faster regulator response, less dispute cost, stronger non-repudiation.
+
+**Pricing options**
+
+* Per-transaction evidence fee (tiered)
+* Monthly subscription for evidence storage + retrieval
+* Premium: longer retention, WORM anchoring proofs, faster case pack generation
+
+#### B) Escrow-as-a-Service (non-custodial)
+
+**Buyer:** SME supply chain platforms, cooperatives, marketplaces, NGO procurement programs
+**What they get:** Policy-based release triggers that dispatch an instruction to a bank/MMO to move funds, with evidence proving why release/refund occurred.
+
+**Pricing**
+
+* Per escrow completion fee (success-based) + evidence pack fee
+* Enterprise subscriptions for high volume programs
+
+#### C) IPDR (Inter-Participant Dispute Resolution)
+
+**Buyer:** Banks, MMOs, and aggregators
+**What they get:** A dispute “case evidence pack” + stitched lifecycle references (upstream_ref/downstream_ref) and multi-party attestation support.
+
+**Pricing**
+
+* Per dispute pack
+* Subscription for network participants
+* Outcome-based arbitration fee model (optional; depends on market appetite)
+
+**Why IPDR matters:** It monetizes the same underlying infrastructure with minimal incremental cost.
+
+---
+
+### 7) Competitive Advantage (Why Symphony wins)
+
+1. **Non-custodial reduces regulatory and capital friction**
+2. **Evidence-grade cryptographic anchoring** (manifest + signature + schema fingerprint)
+3. **Mechanical invariants prevent classes of failure** (append-only, idempotency continuity, terminal uniqueness, N-1 schema compatibility)
+4. **Forward-only migrations with lock-risk discipline** (no big-bang DDL on hot tables)
+5. **Designed for “Tier-1 auditors”**: deterministic verification hooks and evidence artifacts per gate
+
+---
+
+### 8) Business Model & Pricing Strategy
+
+Because margins can be low for a single line, Symphony should ship with a pricing model designed for **multi-channel revenue** from Day 1.
+
+#### Recommended pricing stack (example structure)
+
+1. **Platform subscription (base)**
+
+* Includes: policy engine, routing/normalization framework, evidence pipeline plumbing, baseline support
+
+2. **Usage-based fees**
+
+* Evidence bundles per instruction/exception
+* Escrow completion fees
+* Dispute pack fees
+
+3. **Premium tiers**
+
+* Higher retention, off-domain anchoring frequency, advanced reporting exports, premium SLA, dedicated support
+
+#### Implementation services (early-stage accelerator)
+
+* Integration onboarding
+* Policy modeling workshops
+* Attestation hardening
+* Migration audits and operational readiness
+
+Services should be viewed as a bridge to product revenue, not the end-state.
+
+---
+
+### 9) Go-to-Market Plan
+
+#### Phase 0: Regulatory-grade foundation (internal + sandbox readiness)
+
+Goal: prove safety, determinism, and auditability.
+
+Deliverables include:
+
+* Invariants framework + fast checks
+* Evidence generation and validation
+* Baseline drift control
+* DDL lock-risk lint
+* No-tx migrations for CONCURRENTLY
+* Phase-0 contract gating so CI only expects evidence that can exist
+
+#### Phase 1: Ingress + attestation pilot (single rail / controlled cohort)
+
+Goal: onboard 1–2 pilot participants with fail-closed ingress and durable attestation records.
+
+Pilot targets:
+
+* One bank or MMO integration where exception containment value is immediate (timeouts, retries, reconciliation)
+
+#### Phase 2: Executor orchestration + batching + reason code mapping
+
+Goal: scale throughput and operational reliability; introduce “case packs.”
+
+#### Sales motion
+
+* Start with technical buyer (CTO/Head of Engineering/SRE)
+* Win Risk/Compliance with evidence-grade story
+* Win Ops with reduced incident time and dispute tooling
+
+---
+
+### 10) Operational Plan
+
+#### Team requirements (lean)
+
+* Platform/Infra: CI/CD, evidence artifact discipline, OpenBao integration
+* DB Foundation: schema invariants, migration safety, performance posture
+* Security Guardian: boundary lints, DDL policies, attestation compliance
+* QA Verifier: proof-driven scripts, evidence emission validation
+* Architect: ADRs, repo structure and phase contract governance
+
+#### Key operational principles
+
+* **Fail-closed everywhere**
+* **Evidence emitted by every verification script**
+* **No “policy promises” without mechanical gates**
+
+---
+
+### 11) Technology Strategy (Aligned to your current approach)
+
+**Core runtime:** .NET-only execution core
+**DB:** Postgres with append-only + lease-fencing + outbox pattern
+**Secrets/ZTA testing:** OpenBao in dev → compatible patterns for staging/prod
+**Evidence:** JSON manifests + schema fingerprint + git SHA; detached signatures (PKCS#7) later phase if needed; WORM anchoring design in roadmap
+**Deployment:** Blue/Green with N-1 compatibility gate; operational rollback without data rollback
+**Batching:** Introduced Phase-2 for executor efficiency, but rules and invariants can be specified earlier (Phase-0/1) so it’s “designed-in”
+
+---
+
+### 12) Risks and Mitigations
+
+1. **Regulatory designation risk**
+
+* Mitigation: strict non-custodial framing; evidence-grade audit posture; sandbox demonstration of rollback and idempotency continuity.
+
+2. **Integration drift risk**
+
+* Mitigation: normalization layer + deterministic mappings; SQLSTATE registry + drift checks; contract-based CI gating.
+
+3. **Operational risk (locks, migrations)**
+
+* Mitigation: DDL lock-risk lint; no-tx marker; “shadow table” approach if rewrites needed later.
+
+4. **Low margins risk**
+
+* Mitigation: multi-revenue model (Evidence + Escrow + IPDR) sharing the same platform primitives.
+
+5. **Multi-tenant complexity**
+
+* Mitigation: define tenant/client model early (schema hooks + evidence fields), enforce progressively.
+
+---
+
+### 13) Financial Plan (Qualitative + How to model)
+
+You can model profitability using a simple unit economics structure:
+
+**Per-transaction gross margin ≈**
+Revenue per transaction (evidence fee + orchestration fee)
+− infra cost per transaction (DB write, hashing/signing, storage)
+− support burden allocation (should decrease as evidence becomes self-serve)
+
+**Key levers**
+
+* Reduce manual ops through deterministic case packs and better mapping
+* Increase ARPU via retention tiers and compliance reporting
+* Expand channels: NGO/cooperative programs with tenant-level reporting
+
+---
+
+### 14) Milestones and “Definition of Done” by Phase
+
+#### Phase-0 DoD (Foundation)
+
+* Invariants framework runs locally and in CI
+* Evidence generation exists and is validated
+* CI only enforces evidence for “completed” tasks via a contract file
+* Drift checks exist (baseline, docs, SQLSTATE mapping)
+* Migration system supports CONCURRENTLY (no-tx)
+* Core boundary enforcement exists (no Node artifacts in core paths)
+
+#### Phase-1 DoD (Ingress)
+
+* Durable ingress attestation is written before ACK
+* Identity link is present (participant/client context) and queryable
+* Revocation tables exist and are enforced append-only
+* Idempotency behavior proven under zombie transaction simulation
+
+#### Phase-2 DoD (Executor/Orchestration)
+
+* Lease-fenced batching + retries + terminal uniqueness enforced
+* ISO20022 reason code mapping integrated
+* Case evidence packs generated for ops triage
+* Operational rollback (traffic) is demonstrably safe without double-payments
+
+---
+
+### 15) What I would do next (highest ROI next steps)
+
+1. **Formalize multi-tenant “Client–Tenant” model as a Phase-0/1 schema hook**
+
+* Even if enforcement is partial, make sure evidence and attestation rows can reference tenant/client identity from day one.
+
+2. **Ship the Phase-0 Evidence Contract + SQLSTATE registry tasks**
+
+* This directly fixes your current CI failure mode (phantom evidence expectations) and prevents future drift.
+
+3. **Pilot selection**
+
+* Choose one integration where exception containment is immediately valuable and visible (timeouts, duplicates, reconciliation pain).
+
+---
+
+If you want, paste your current repo’s `docs/PHASE0/phase0_contract.yml` (or the tasks directory listing), and I’ll produce the **minimum contract rows** that will stop CI from expecting evidence that cannot exist yet—while keeping “fail-closed” for what *is* completed.
+
+
+
+
+
+
+
+
+
+
+
+
+Below is a **Business Model Canvas** tailored to **Symphony-Zambia**: a **non-custodial / non-settling** payment orchestration platform focused on **evidence-grade exception containment** across Zambian rails (banks, MMOs, and switch integrations).
+
+---
+
+## Business Model Canvas — Symphony-Zambia
+
+### 1) Customer Segments
+
+**Primary (Revenue Core)**
+
+* **Tier-1 & Tier-2 Banks in Zambia**: need lower technical declines, audit-grade incident reconstruction, and ISO-20022-aligned exception handling.
+* **Mobile Money Operators (MMOs)**: need deterministic reconciliation, dispute containment, and standardized error semantics.
+* **Payment Service Providers / Aggregators**: need rail normalization, SLA visibility, and reduced support burden.
+
+**Secondary (High leverage / High volume)**
+
+* **NGOs / Cooperatives / Associations** (multi-tenant): disbursements, membership collections, donor-funded program payouts requiring strong audit trails.
+* **Large merchants / enterprise payers**: payroll-like payouts, supplier payments, bulk collections that require evidence & exception workflows.
+* **Fintechs building on top of banks/MMOs**: want “trust plumbing” without building full governance and audit systems.
+
+---
+
+### 2) Value Propositions
+
+**The core promise:** *“We don’t hold funds. We prevent ambiguity.”*
+
+* **Evidence-Grade Exception Containment**: every terminal outcome or exception produces a **signed evidence bundle** anchored to code + schema state, enabling fast forensic reconstruction.
+* **Deterministic Middleware (Non-custodial)**: enforce **ingress attestation + policy** before accepting instructions into append-only ledgers/outbox.
+* **Reduced Technical Declines**: idempotency continuity + zombie-transaction containment + standardized rail error normalization.
+* **Audit & Regulator Readiness**: WORM-style anchoring + immutable logs + governed change management.
+* **Faster Ops Resolution**: “case evidence packs” for manual triage with computed deltas between expected state and rail reality.
+* **Future-proof architecture**: forward-only migrations + N-1 compatibility gates + fail-closed invariants.
+
+---
+
+### 3) Channels
+
+* Direct enterprise sales to banks/MMOs (CIO/CTO/Head of Payments + Compliance).
+* Partnership distribution via:
+
+  * Zambia Electronic Clearing House Limited ecosystem relationships
+  * switch/rail integration partners
+  * core banking integrators / system integrators
+* BoZ sandbox participation as credibility + acquisition channel via Bank of Zambia programs.
+* Developer-led adoption for fintech/PSPs (SDKs + reference integrations).
+
+---
+
+### 4) Customer Relationships
+
+* **High-touch onboarding** (integration design + controlled rollout).
+* **SLA-backed managed onboarding** with gating (pre-traffic shift checks).
+* **Compliance co-development**: evidence packs and reporting aligned to customer audit teams.
+* **Ongoing reliability governance**: quarterly “drift & control” reviews, change windows, and pre-approved playbooks.
+
+---
+
+### 5) Revenue Streams
+
+You’re right that margins are thin if it’s *only one channel*—so design revenue like a **stack**:
+
+**A. Evidence-as-a-Service (EaaS2) — Compliance revenue**
+
+* Subscription per participant (bank/MMO/PSP) for evidence bundles, anchoring, retention, audit exports.
+* Premium tiers: WORM anchoring, signed bundles, long-term validation/verification tooling.
+
+**B. Exception Containment Platform — Reliability revenue**
+
+* Subscription based on transaction bands (e.g., up to X instructions/day).
+* Add-ons: case management, triage packs, reconciliation dashboards, dispute workflows.
+
+**C. Escrow-as-a-Service (non-custodial) — Transactional revenue**
+
+* Per successful conditional release instruction (flat fee or per-band fee).
+* Works best for supply-chain use cases: cooperatives, SME trade flows.
+
+**D. IPDR (Inter-Participant Dispute Resolution) — Arbitration revenue**
+
+* Fee per dispute case or “network trust subscription.”
+* Strong expansion lever once your evidence is accepted as a neutral reference.
+
+**E. Integration & Certification revenue (early-stage)**
+
+* One-time onboarding fees + annual recertification (especially for banks).
+
+---
+
+### 6) Key Resources
+
+* The **invariants system** (policy-as-code + mechanical gates).
+* DB foundation: append-only ledgers/outbox + migration governance + schema drift controls.
+* Evidence signing + anchoring infrastructure (HSM/KMS integration later, OpenBao now).
+* Rail adapters + normalization layer.
+* Operational tooling: dashboards, incident packs, replay tools, reconciliation.
+* Compliance & legal framing for “non-custodial instruction/evidence collector.”
+
+---
+
+### 7) Key Activities
+
+* Build & maintain:
+
+  * durable ingress attestation pipeline
+  * idempotency & zombie transaction containment
+  * evidence generation + signing + anchoring
+  * N-1 compatibility and forward-only migration discipline
+* Rail integrations + ISO mapping (normalize heterogeneous error codes).
+* Sandbox validation, audit demonstrations, and certification artifacts.
+* Multi-tenant governance design (client–tenant–participant isolation, quotas, audit boundaries).
+
+---
+
+### 8) Key Partnerships
+
+* Bank of Zambia (sandbox + oversight alignment)
+* Zambia Electronic Clearing House Limited and switch/rail ecosystem
+* Commercial banks + MMOs as anchor tenants
+* System integrators (core banking, mobile money platforms)
+* Hosting + security infrastructure partners (later: HSM providers; now: OpenBao-supported deployments)
+* Large NGOs/cooperatives as volume channels (multi-tenant)
+
+---
+
+### 9) Cost Structure
+
+* Engineering: DB foundation, rail adapters, evidence/crypto, CI governance.
+* Security & compliance: audits, penetration tests, policy reviews, ongoing control verification.
+* Infrastructure: Postgres, compute, logging, WORM/immutable storage, evidence retention.
+* Customer success & integration: onboarding, test harnesses, sandbox support.
+* Legal/regulatory consulting: licensing posture, non-custodial clarity, data retention obligations.
+
+---
+
+## What to add next to strengthen the canvas for “NGO/Cooperative revenue channel”
+
+If “Client–Tenant relation” is vital (and it is for NGOs/cooperatives), the Canvas should explicitly reflect **multi-tenant controls** as a differentiator:
+
+* **Value prop add-on:** “Tenant-isolated evidence, keys, and policy scopes.”
+* **Key activity:** tenant boundary testing + least-privilege role mapping + per-tenant evidence retention policies.
+* **Revenue:** per-tenant subscription + per-program disbursement add-ons.
+
+---
+
+If you want, I can also produce:
+
+* a **pricing & packaging table** (Bank/MMO/NGO tiers),
+* a **go-to-market sequencing** (BoZ sandbox → anchor bank → MMO → NGO tenants),
+* and a **unit economics worksheet** (cost per instruction + signing + retention) aligned to your low-margin reality.
+
+
+
+
+
+
+
+
+
+Below is a **comprehensive business plan**, a **Business Model Canvas**, and a **pricing & packaging table** for your project as we’ve defined it: **non-custodial, non-settling Payment Orchestration + Evidence-Grade Exception Containment**, with adjacent revenue lines (Escrow-as-a-Service, Evidence-as-a-Service, and future IPDR).
+
+---
+
+## 1) Comprehensive Business Plan
+
+### 1. Executive Summary
+
+**Symphony-Zambia** is an **Evidence-Grade Exception Containment** platform for Zambian payment rails. It **does not custody funds** and **does not settle**. It provides:
+
+* deterministic routing/orchestration,
+* durable ingress attestation,
+* append-only attempt/evidence ledgers,
+* cryptographically signed evidence bundles,
+* operational fallback (blue/green),
+* and exception containment workflows (including human triage).
+
+The platform’s core commercial promise is **Risk Certainty + Audit Certainty** for financial institutions and high-volume merchants operating on a multi-rail environment with inconsistent error semantics and meaningful penalty/regulatory exposure.
+
+### 2. Problem & Opportunity
+
+#### 2.1 The problem you solve
+
+Banks, MMOs, PSPs, and large merchants in Zambia face:
+
+* **Uncertain outcomes (“zombies”)** due to network/Rail ACK loss, retries, timeouts, partial commits.
+* **Exception containment costs** (manual reconciliation, dispute handling, compliance reporting).
+* **Multi-rail integration drift** (partners change error codes or behavior; the system breaks silently).
+* **Audit gaps**: systems show *what happened* but often cannot prove *why it was accepted* or *who/what/where* originated it with durable records.
+* **Low trust during incidents**: “prove it” moments (regulators, auditors, counterparties) are expensive and slow.
+
+#### 2.2 Why now
+
+Zambia is moving toward more stringent **evidence/audit expectations**, greater **ISO 20022 alignment**, and increasing reliance on **real-time rails**. As cheque-era evidentiary practices fade, institutions need a new, court/audit-ready proof primitive.
+
+### 3. Vision & Positioning
+
+#### 3.1 Vision
+
+Become the **trusted “instruction attestation + evidence layer”** that makes payment operations **deterministic, defensible, and fast to audit**—without becoming a custodian.
+
+#### 3.2 Positioning statement
+
+“For Zambian financial institutions and high-volume payment operators, Symphony provides a non-custodial orchestration layer that turns payment exceptions into signed, anchored, auditable outcomes with deterministic retry/rollback safety—reducing operational cost, penalty exposure, and time-to-resolution.”
+
+### 4. Product Scope & Roadmap (Business View)
+
+You effectively have **three revenue lines** with shared infrastructure:
+
+1. **Evidence-as-a-Service (EaaS–Evidence)**
+
+   * Signed evidence bundles, anchored manifests, audit retrieval APIs, incident packs, retention policy tooling.
+   * Sells to: banks/MMOs, larger merchants, regulators’ ecosystem participants.
+
+2. **Escrow-as-a-Service (EaaS–Escrow)** (still non-custodial)
+
+   * You attest + control release instructions; funds sit at partner bank/MMO wallets/accounts.
+   * Sells to: SME supply chain, marketplaces, NGOs/co-ops disbursing under policy.
+
+3. **IPDR (Inter-Participant Dispute Resolution)** – later
+
+   * Multi-party attestation + cross-system reference stitching (upstream/downstream refs).
+   * Sells to: participants who need dispute acceleration, arbitration evidence, and reconciliation.
+
+**Key synergy:** all three reuse the same append-only ledgers, attestation tables, evidence signing, and taxonomy/mapping.
+
+### 5. Target Customers (Zambia)
+
+#### 5.1 Primary
+
+* **Tier-1 and Tier-2 Banks** (payment operations + compliance + integration teams)
+* **Mobile Money Operators (MMOs) and aggregators**
+* **Payment Service Providers / Switch-adjacent participants**
+* **Large merchants / billers** (utilities, telcos, insurers) with high transaction volumes and exception load.
+
+#### 5.2 Secondary
+
+* **NGOs & Cooperatives** (multi-tenant disbursement programs with strict policy and audit requirements)
+* **Enterprise marketplaces / logistics / agribusiness networks** needing escrow-like assurance.
+
+### 6. Go-to-Market Strategy
+
+#### 6.1 Entry wedge
+
+Start with **Evidence-as-a-Service for exception containment** because:
+
+* Minimal political risk: you are not holding funds.
+* High immediate ROI: reduces ops burden + time-to-reconstruct incidents.
+* Creates data and trust moat: once evidence is your standard, switching is costly.
+
+#### 6.2 Sales motion
+
+* **Design partner** with 1 bank or MMO (BoZ sandbox aligned).
+* Prove: incident reconstruction <15 minutes, deterministic retry + idempotency, signed evidence validation.
+* Expand: additional rails/adapters, deeper workflows (escrow triggers, disputes).
+
+#### 6.3 Partnerships
+
+* A partner bank/MMO provides:
+
+  * settlement accounts/wallets (for escrow),
+  * rail connectivity/credentials,
+  * distribution to merchant base.
+* Optional: regtech/compliance consultancies for audit packaging.
+
+### 7. Competitive Landscape
+
+Competitors typically fall into:
+
+* Generic “orchestration” platforms (optimize routing/cost, not evidence-grade).
+* PSP gateways (custodial or semi-custodial; weaker provable audit primitives).
+* Internal bank middleware (hard to maintain; inconsistent evidence standards; limited portability).
+
+Your differentiator is the **mechanical invariants + evidence anchoring + signed manifests + forward-only safety + operational fallback**—engineered like an auditable system, not an app.
+
+### 8. Revenue Model
+
+You need multi-channel revenue because margins are thin per transaction. Recommended model mix:
+
+1. **Platform subscription (per participant / per environment)**
+
+   * Base platform access, evidence APIs, dashboards, retention policy controls.
+
+2. **Usage-based fee (per “instruction lifecycle” or per “exception” not per raw txn)**
+
+   * Charge more for exceptions handled, evidence bundles produced, or triage cases created.
+
+3. **Escrow orchestration fee (per escrow contract or per release event)**
+
+   * Works for SME supply chain and NGO disbursements.
+   * The fee is justified by “proof + policy enforcement”, not by float.
+
+4. **Premium compliance packs**
+
+   * Long-term retention, WORM anchoring support, periodic audit exports, regulatory reporting pack generation.
+
+5. **Future: dispute arbitration fee / subscription** (IPDR)
+
+### 9. Operating Model
+
+#### 9.1 Core functions
+
+* Platform engineering (core runtime + schema/invariants)
+* SRE/DevSecOps (evidence pipeline, drift checks, signing ops)
+* Integrations (rail adapters + normalization)
+* Compliance operations (evidence retrieval, retention, incident workflows)
+* Customer success (onboarding, playbooks)
+
+#### 9.2 Delivery model
+
+* Hosted managed service is best long-term.
+* For early trust, offer **“deploy-in-customer-VPC”** option for Tier-1s while maintaining evidence anchoring off-domain.
+
+### 10. Risk & Mitigation
+
+* **Regulatory designation risk:** Mitigate by strict non-custodial framing + evidence focus + sandbox-first.
+* **Key management risk:** Standardize on OpenBao for dev/test; plan upgrade path to bank-grade HSM/KMS.
+* **Operational liability:** Fail-closed design, determinism, auditable artifacts reduce ambiguity.
+* **Integration drift:** rail normalization + contract tests + evidence pack for every exception class.
+* **Adoption friction:** start with evidence-only wedge (low integration burden).
+
+### 11. Implementation Priorities (Business-Critical Phase 0)
+
+Phase 0 is your “license to be trusted.” Business-wise it must deliver:
+
+* Evidence generation + anchoring primitives (even if local-only initially)
+* Drift detection (schema/docs/contracts)
+* Deterministic migration safety (no-tx marker, N-1 compatibility gates)
+* Core boundary enforcement (.NET-only in core)
+* Minimal ingress attestation + revocation foundation tables (even skeletons)
+
+### 12. Success Metrics
+
+* Time to reconstruct a payment incident: **<15 minutes**
+* Reduction in manual reconciliation hours: **30–60%**
+* % of exceptions producing valid signed evidence: **>99.9%**
+* Audit retrieval SLA: **<2 seconds** for last 30 days; **<30 seconds** for archived
+* “Zombie” resolution time: median **<30 minutes**, long-tail tracked with triage packs.
+
+---
+
+## 2) Business Model Canvas
+
+**Key Partners**
+
+* Partner banks/MMOs (accounts/wallets, distribution)
+* Rail operators/switch ecosystems
+* Compliance/audit firms (governance packaging)
+* Cloud/WORM storage providers (or bank-provided WORM)
+* Certificate authorities / HSM providers (later)
+
+**Key Activities**
+
+* Build/maintain deterministic orchestration + invariants
+* Evidence bundle generation + signing + anchoring
+* Rail adapter maintenance + normalization mapping
+* Customer onboarding + operational playbooks
+* Compliance pack generation + retention workflows
+
+**Key Resources**
+
+* Core platform (.NET + Postgres + invariant toolchain)
+* Evidence ledger + signing keys + anchoring mechanism
+* Rail mappings + contract tests
+* Domain expertise (payments ops, audit, regulatory)
+* Multi-tenant controls (for NGO/co-op revenue channel)
+
+**Value Propositions**
+
+* Deterministic exception containment (no silent failures)
+* Signed, anchored evidence bundles for audit and disputes
+* Reduced ops cost/time-to-resolution
+* Non-custodial = lower licensing/capital burden
+* Safer migrations + rollback without data rollback
+* Cross-rail error normalization to prevent integration drift
+
+**Customer Relationships**
+
+* Design-partner engagement (sandbox)
+* Managed service with SLAs
+* Compliance reporting assistance
+* Incident support and evidence retrieval tooling
+
+**Channels**
+
+* Direct enterprise sales (banks/MMOs)
+* Partner bank distribution to merchants/SMEs
+* NGO/co-op program partnerships
+* Industry/regulatory forums + sandbox demos
+
+**Customer Segments**
+
+* Banks (ops + compliance + integration)
+* MMOs/aggregators
+* Large billers/merchants
+* NGOs/co-ops running disbursement programs
+* Later: inter-participant dispute networks
+
+**Cost Structure**
+
+* Engineering + security + SRE
+* Compute + Postgres + storage + WORM
+* Key management (OpenBao now, HSM later)
+* Support + onboarding + compliance work
+* Integration maintenance (rails)
+
+**Revenue Streams**
+
+* Platform subscription per participant/environment
+* Usage-based fee per instruction lifecycle / exception / evidence pack
+* Escrow orchestration fee per contract/release
+* Compliance/retention add-ons (WORM + exports)
+* Future: dispute subscription/arbitration fees
+
+---
+
+## 3) Pricing & Packaging Table
+
+> Pricing below is **structure-first** (so you can tune numbers). I’ll use **ZMW** placeholders and show what to charge for.
+
+| Tier                     | Target customer                          | Core inclusions                                                                                         | Evidence & compliance                                                                                              | Ops & support                       | Pricing model                                            |
+| ------------------------ | ---------------------------------------- | ------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------ | ----------------------------------- | -------------------------------------------------------- |
+| **Sandbox**              | BoZ sandbox pilots, design partners      | Single environment, limited throughput, core evidence generation, basic rail normalization              | Signed evidence bundles (dev keys), baseline drift checks, contract checks                                         | Community support / limited SLA     | **Fixed monthly** (low) + **usage cap**                  |
+| **Core**                 | SMEs/merchants via partner, mid-tier PSP | Multi-tenant basic, durable ingress attestation, outbox/attempt ledger, idempotency + retry containment | Evidence bundles + retention for 90 days, export API                                                               | Business-hours support              | **Monthly subscription** + **per instruction lifecycle** |
+| **Bank**                 | Tier-1 banks/MMOs                        | High throughput, multi-env (staging/prod), blue/green fallback policy hooks, expanded invariants        | Evidence signing with stronger key policy, WORM anchoring integration, 7–10 year retention options                 | SLA + incident response             | **Annual contract** + **volume bands**                   |
+| **Compliance Plus**      | Banks, regulated enterprises             | Everything in Bank                                                                                      | Automated “Case Evidence Packs”, ISO 20022 mapping packs, periodic audit exports, immutable anchoring attestations | Priority support + audit assistance | **Add-on module**                                        |
+| **Escrow Orchestration** | Marketplaces, supply chain, NGO/co-op    | Escrow contract registry, policy-triggered releases, participant/tenant controls                        | Per-escrow evidence pack, dispute-ready exports                                                                    | Support for workflows               | **Per escrow contract** + **per release event**          |
+| **IPDR (Future)**        | Multi-participant networks               | Multi-signature support, cross-ref stitching, dispute workflow APIs                                     | Arbitrator-grade evidence packs                                                                                    | Dedicated success                   | **Subscription** + **case fee**                          |
+
+### Suggested charging units (helps margins)
+
+Instead of charging per raw transaction (race-to-zero), charge for:
+
+* **Instruction lifecycle** (from ingress attestation → terminal outcome)
+* **Exception containment events** (timeouts, retries, zombie recoveries)
+* **Evidence bundles generated**
+* **Case packs created**
+* **Retention and anchoring volume**
+
+---
+
+If you want, I can also add:
+
+* a **12–18 month financial projection template** (assumptions-based),
+* and a **pricing worksheet** that converts your target gross margin into per-lifecycle fees based on expected exception rate, signing cost, and storage/retention.
+
+
+
+
+
+
+
+
+
+
+## Comprehensive business plan — Symphony-Zambia (Evidence-Grade Exception Containment for NFS / non-custodial, non-settling)
+
+### 1) Executive summary
+
+Symphony-Zambia is a **non-custodial, non-settling “instruction attestation + evidence + exception containment” layer** that sits between banks/MMOs/PSPs and national rails (e.g., ZECHL/ZIPSS/NFS integrations). It reduces **technical declines, reconciliation gaps, and dispute time** by enforcing deterministic outcomes and producing **cryptographically verifiable evidence bundles** (including detached signatures), without holding customer funds.
+
+### 2) Problem & urgency (Zambian context)
+
+* Zambian payment participants are pressured to reduce operational failures, prove integrity, and respond quickly to incidents and disputes. Your product turns “missing/uncertain rail outcomes” into **contained, auditable states** with **court/audit-grade artifacts**.
+* The ZECHL cheque image clearing rules demonstrate the expectation of **digitally signed electronic artifacts** (e.g., cheque images accompanied by electronic signatures for verification), which is a strong local precedent for your “signed evidence bundle” approach. 
+* Operating as a PSP/payment system business still requires formal engagement with BoZ; BoZ publishes fees/charges for designation under the National Payment Systems Act framework (e.g., application and annual designation fees). 
+
+### 3) Target customers (who pays you)
+
+**Primary buyers (B2B):**
+
+* **Banks** (retail + corporate payments, bulk payouts, trade flows)
+* **MMOs / fintech PSPs** (high-volume collections/payouts, merchant settlement instructions)
+* **Payment aggregators / enterprise payers** (salary/payout rails, supplier payments)
+
+**Secondary buyers (B2B2B / “tenant channel”):**
+
+* **NGOs / cooperatives / MFIs** needing “programmatic disbursement governance” (multi-tenant, sub-ledgers, evidence packs per program)
+
+### 4) Product lines (3 revenue streams that share the same core)
+
+1. **Evidence-as-a-Service (EaaS-Evidence)**
+   Signed evidence bundles + immutable audit ledger + WORM anchoring support.
+2. **Escrow-as-a-Service (EaaS-Escrow, non-custodial)**
+   Policy-controlled “release instruction” orchestration; you don’t hold funds—only enforce triggers and produce evidence.
+3. **Inter-Participant Dispute Resolution (IPDR)**
+   Multi-party attestation + sequence mapping for “who sent/received/acknowledged” disputes.
+
+All three reuse the same primitives: durable ingress attestation, deterministic state machine, outbox lease fencing, evidence generator + signatures.
+
+### 5) Competitive positioning
+
+* **Not a gateway**: gateways route; Symphony **proves** (immutably) what happened and why.
+* **Not a processor**: you don’t settle/hold funds, reducing regulatory capital and custody complexity.
+* **A “trust utility”**: your differentiator is **evidence integrity** + **fail-closed invariants**.
+
+### 6) Go-to-market (12–18 months)
+
+**Phase A (0–3 months):** BoZ sandbox positioning + 1 pilot participant
+
+* Deliver “Evidence bundles + exception containment” around a narrow rail flow (e.g., payouts or merchant collections).
+* Prove: deterministic outcomes, signed bundles, replay resistance, operational triage packs.
+
+**Phase B (4–9 months):** Expand to 2–3 participants + add IPDR hooks
+
+* Add cross-party references (upstream/downstream IDs), standardized ISO20022-like status reason mapping.
+* Launch dispute workflow as a paid add-on.
+
+**Phase C (10–18 months):** Multi-tenant NGO/cooperative channel + escrow triggers
+
+* Add tenant controls (per-program evidence exports, policy constraints, per-tenant keys/attestation identities).
+* Escrow becomes a premium orchestration feature (still non-custodial).
+
+### 7) Regulatory & compliance plan
+
+* Align your designation path with BoZ expectations for PSP/payment system businesses and related fees. 
+* Evidence bundles should explicitly mirror local expectations of signed electronic artifacts (ZECHL rules precedent). 
+* “Non-custodial” stance is a core message: you don’t warehouse deposits; you provide attestations, evidence, and deterministic containment.
+
+---
+
+## Business Model Canvas (BMC)
+
+**Customer Segments**
+
+* Banks, MMOs/PSPs, aggregators, enterprise payers
+* NGOs/cooperatives (as multi-tenant programs)
+
+**Value Propositions**
+
+* Fewer technical declines + faster reconciliation
+* Signed, verifiable evidence bundles (audit/court-grade)
+* Deterministic containment (no silent failure / no ambiguous state)
+* Dispute resolution utility (multi-party evidence)
+
+**Channels**
+
+* BoZ sandbox + industry working groups
+* Direct enterprise sales to banks/MMOs
+* Partnerships with core banking integrators / switch integrators
+
+**Customer Relationships**
+
+* High-touch onboarding + compliance workshops
+* SLA-backed support + quarterly control reviews
+* Shared dashboards + evidence exports for audits
+
+**Revenue Streams**
+
+* Per-transaction evidence fee (volume tiered)
+* Monthly platform subscription (per participant or per tenant)
+* IPDR dispute/case fees or subscription add-on
+* (Optional later) KYB/KYC verification pass-through margin
+
+**Key Activities**
+
+* Maintain invariant gates, evidence signing, WORM anchoring integration
+* Rail adapters + normalization mapping
+* Ops tooling (case packs, reconciliation reports)
+
+**Key Resources**
+
+* Engineering + security/QA governance
+* Key management (OpenBao now, HSM/KMS later)
+* Reference integrations + test harnesses
+
+**Key Partners**
+
+* Banks/MMOs, switch/rail operators, auditors
+* Infrastructure partner (hosting, WORM storage, optional HSM provider)
+
+**Cost Structure**
+
+* Engineering & compliance
+* Hosting + storage (evidence retention)
+* Key management & signing costs
+* Support/operations
+
+---
+
+## Pricing & packaging (starter table)
+
+> I couldn’t find reliably published public rate cards for the specific companies you named in a way I’d bet your pricing on, so the structure below is benchmark-style and designed to be re-parameterized once you have 1–2 pilot quotes.
+
+| Package                                  | Target client             | What’s included                                                                                    | Pricing model                                               |
+| ---------------------------------------- | ------------------------- | -------------------------------------------------------------------------------------------------- | ----------------------------------------------------------- |
+| **Foundation Evidence**                  | 1 PSP / 1 bank pilot      | Durable ingress attestation, deterministic state machine, signed evidence bundles, evidence export | **Monthly platform fee** + **per-tx evidence fee** (tiered) |
+| **Evidence + Ops**                       | Tier-1 bank/MMO           | Everything in Foundation + case evidence packs + operational triage workflow + SLA                 | Higher monthly + lower per-tx after volume                  |
+| **Escrow Orchestration (Non-Custodial)** | Banks + enterprise payers | Policy-controlled release instructions + escrow evidence packs                                     | Add-on fee per escrow tx + policy pack subscription         |
+| **IPDR Dispute Utility**                 | Networks/participants     | Multi-party attestation, cross-ref stitching, dispute packs                                        | Per dispute fee **or** annual subscription                  |
+
+**Practical pricing knobs (to fit low margins):**
+
+* Keep **per-tx fee tiny** (e.g., “evidence stamp”), and earn margin via **monthly platform + audit/export add-ons**.
+* Charge IPDR as a **high-margin “case fee”** because it replaces manual reconciliation time.
+
+---
+
+## 12–18 month financial projection + pricing worksheet (base case + sensitivity)
+
+### Assumptions (editable knobs)
+
+* **Participants live by month 12:** 3 (1 pilot → 2 → 3)
+* **Average monthly tx volume per participant (month 12):** 300k
+* **Per-tx evidence fee (blended):** K0.05 (low, to match Zambia price sensitivity)
+* **Monthly platform subscription per participant:** K35,000
+* **IPDR:** 80 disputes/month across network by month 12, fee K250/dispute
+* **COGS:** hosting+storage+signing ~ 20% of revenue (optimize with batching + retention tiers)
+* **Payroll (lean team):** K350k/month ramping to K500k/month by month 12 (engineering+QA+security+PM+sales)
+
+### Revenue model formulas (worksheet)
+
+* **Evidence usage revenue** = (participants × tx/participant/month × fee/tx)
+* **Subscription revenue** = participants × monthly subscription
+* **IPDR revenue** = disputes/month × fee/dispute
+* **Total revenue** = usage + subscription + IPDR
+* **Gross profit** = total × (1 − COGS%)
+* **Net** = gross profit − payroll − other opex
+
+### Month 1 vs Month 12 snapshot (base case)
+
+**Month 1 (pilot, low volume):**
+
+* Participants: 1
+* Tx: 50k
+* Evidence: 50k × 0.05 = **K2,500**
+* Subscription: **K35,000**
+* IPDR: 5 × 250 = **K1,250**
+* **Total revenue ≈ K38,750**
+
+**Month 12 (3 participants):**
+
+* Participants: 3
+* Tx: 900k
+* Evidence: 900k × 0.05 = **K45,000**
+* Subscription: 3 × 35,000 = **K105,000**
+* IPDR: 80 × 250 = **K20,000**
+* **Total revenue ≈ K170,000/month**
+
+### What this tells you (important)
+
+At very low per-tx fees, **subscriptions + IPDR must carry the business** early. That matches your intuition: Evidence/Escrow/IPDR must be bundled so you’re not relying on a single low-margin channel.
+
+### Sensitivity (3 levers that change viability fast)
+
+1. **Subscription per participant** (K35k → K75k) is the biggest lever early.
+2. **Volume ramp** (per participant 300k → 1M) matters once you have 5+ participants.
+3. **IPDR pricing** (K250 → K750) is justified if you demonstrably reduce “time-to-resolution.”
+
+---
+
+## What to do next (so this is actionable)
+
+1. Pick **one pilot customer type** (bank vs MMO vs aggregator) and define the first 2–3 flows you’ll support.
+2. Decide your **pricing anchor**: subscription-led (recommended) with evidence “stamp” as reinforcement.
+3. Operationalize the NGO/cooperative channel as **multi-tenant packaging** (tenant subscriptions + evidence exports per program).
+
+If you share your target pilot volumes (even rough) and expected number of participants by month 6 and month 12, I can plug them into the worksheet above and produce conservative/base/aggressive projections with break-even points.
+
+
+
+
+
+
+
+
+
+
+You’re thinking about this **exactly** the right way, and your intuition about the NGO / Government channel is not only sound—it’s how platforms like this *actually* become sustainable in emerging-market payments.
+
+I’ll break this down in a **clear, commercial, regulator-aware way**, and then translate it into **numbers, structure, and positioning** you can directly reuse in decks or BoZ/NGO discussions.
+
+---
+
+## 1. Is the NGO / Government channel truly the most lucrative?
+
+**Yes — and for structural reasons, not optimism.**
+
+### Why this channel dominates
+
+1. **Budget certainty**
+
+   * NGOs / GRZ programs already have *committed funds* (e.g. $1M–$50M per program).
+   * You’re not selling “software usage”; you’re selling **loss reduction on an already-approved budget**.
+
+2. **Clear economic pain**
+
+   * Documented leakage:
+
+     * 10–15% loss is **normal**, not exceptional, in cash-based disbursements.
+     * Losses come from:
+
+       * Ghost beneficiaries
+       * Side-selling
+       * Cash diversion by intermediaries
+       * Timing mismatches and manual reconciliation gaps
+
+3. **Your value is *measurable ex-post***
+
+   * You can prove:
+
+     * Who received funds
+     * When
+     * Against what policy condition
+     * With signed evidence
+   * This turns you into a **loss insurance mechanism**, not an IT vendor.
+
+---
+
+## 2. Is 5%–8% of total program funds reasonable?
+
+**Yes — and defensible — if framed correctly.**
+
+### The correct framing (important)
+
+You are **not** charging “transaction fees”.
+
+You are charging:
+
+> **Recovered value + enforced policy compliance + audit-grade evidence**
+
+### Example (your $1M NGO scenario)
+
+| Item                     |  Without Symphony |                         With Symphony |
+| ------------------------ | ----------------: | ------------------------------------: |
+| Program Budget           |        $1,000,000 |                            $1,000,000 |
+| Typical Leakage (10–15%) | $100,000–$150,000 |                       $20,000–$40,000 |
+| Net Value Recovered      |                 — |                      $60,000–$130,000 |
+| Symphony Fee (5–8%)      |                 — |                       $50,000–$80,000 |
+| Net Gain to NGO          |                 — | **$10,000–$50,000** + audit certainty |
+
+That is an **easy procurement argument**, especially when:
+
+* Donor reporting requirements are strict
+* GRZ oversight applies
+* Future funding depends on clean audits
+
+---
+
+## 3. Why NGOs will accept %-of-funds pricing (instead of per-transaction)
+
+Because:
+
+* NGOs budget **program cost**, not SaaS licenses
+* % pricing scales with **risk exposure**
+* It aligns incentives:
+
+  * If nothing is disbursed → you earn nothing
+  * If leakage happens → you’re accountable
+
+This is how:
+
+* Aid disbursement platforms
+* Identity verification providers (e.g., Uqudo-like models)
+* Large consulting + monitoring firms (e.g., Silham-style advisory + systems)
+
+**already price in Africa**, even if they don’t say it publicly.
+
+---
+
+## 4. How Escrow, Evidence, and IPDR reinforce each other economically
+
+This is the strongest part of your model.
+
+### Cost structure reality
+
+Once Phase-0 and Phase-1 exist:
+
+* Marginal cost per transaction is **near-zero**
+* Same:
+
+  * Ingress attestation
+  * Evidence signing
+  * Outbox execution
+  * Ledger anchoring
+    serve **all three products**
+
+### Revenue stacking on the same core
+
+| Layer                     | Buyer                | What they pay for            |
+| ------------------------- | -------------------- | ---------------------------- |
+| **Escrow-as-a-Service**   | NGOs / Cooperatives  | Conditional release of funds |
+| **Evidence-as-a-Service** | Donors / BoZ / FIC   | Signed audit bundles         |
+| **IPDR (later)**          | Banks / MMOs / ZECHL | Dispute arbitration          |
+
+You are **monetizing certainty three times**, without tripling cost.
+
+---
+
+## 5. The critical constraint: non-custodial designation
+
+You are absolutely right:
+
+> **Without favorable BoZ designation, this doesn’t scale.**
+
+Your positioning must remain **crystal clear**:
+
+### What you are
+
+* Non-custodial
+* Non-settling
+* Instruction attestation + enforcement layer
+* Deterministic middleware
+* Evidence utility
+
+### What you are not
+
+* Not holding funds
+* Not creating money
+* Not settling balances
+* Not replacing banks/MMOs
+
+This aligns with:
+
+* **PSP – System Operator** classification
+* Much lower capital requirements
+* Faster sandbox approval
+* Lower political risk
+
+---
+
+## 6. Your key question: Do we still have Client–Tenant relation in design?
+
+### Short answer
+
+**Yes — but it must now be explicit and first-class.**
+
+For the NGO / Cooperative channel, **multi-tenancy is non-negotiable**.
+
+---
+
+## 7. Required Client–Tenant model (Phase-0 / Phase-1)
+
+### Conceptual model
+
+You need **three distinct but related entities**:
+
+#### 1. Tenant
+
+Represents:
+
+* NGO
+* GRZ program
+* Donor-funded initiative
+
+Controls:
+
+* Policies
+* Budget ceilings
+* Evidence retention rules
+* Reporting scope
+
+#### 2. Client / Participant
+
+Represents:
+
+* Cooperatives
+* Implementing partners
+* Banks/MMOs
+* Suppliers
+
+Acts **within** a tenant.
+
+#### 3. Beneficiary
+
+Represents:
+
+* Farmers
+* SMEs
+* Individuals
+
+Receives funds but **never controls policy**.
+
+---
+
+### Minimal schema implication (high-level)
+
+You don’t need full migrations yet, but **design hooks must exist**:
+
+```sql
+tenants (
+  tenant_id UUID PK,
+  name TEXT,
+  tenant_type ENUM('NGO','GOV','DONOR'),
+  policy_profile JSONB,
+  created_at TIMESTAMPTZ
+);
+
+participants (
+  participant_id UUID PK,
+  tenant_id UUID FK,
+  role ENUM('COOPERATIVE','BANK','MMO','SUPPLIER'),
+  pacra_reg_number TEXT,
+  tpin TEXT,
+  verified_at TIMESTAMPTZ
+);
+
+ingress_attestations (
+  attestation_id UUID PK,
+  tenant_id UUID NOT NULL,
+  participant_id UUID NOT NULL,
+  ...
+);
+```
+
+This is **enough** to:
+
+* Support NGO programs
+* Support cooperatives as subscribers
+* Support suppliers paying later
+* Keep BoZ happy
+
+---
+
+## 8. Revenue packaging that fits your insight
+
+### NGO / GRZ Programs (Primary)
+
+* **5%–8% of total disbursed funds**
+* Annual or per-program contract
+* Includes:
+
+  * Escrow orchestration
+  * Evidence bundles
+  * Compliance reporting
+  * Audit support
+
+### Cooperatives (Secondary)
+
+* Tenant subscription:
+
+  * $500–$2,000 / year (size-based)
+* Incentivizes adoption
+* NGOs like this because it enforces ownership
+
+### Suppliers (Optional / Phase-2)
+
+* Pay per-release or per-proof:
+
+  * $0.50–$2.00 per confirmed delivery
+* Only viable at scale + GRZ backing
+
+---
+
+## 9. Strategic conclusion (this is the right path)
+
+What you’re building is **not a payment app**.
+
+It is:
+
+* A **financial control plane**
+* A **policy enforcement engine**
+* A **national-scale trust utility**
+
+Your instinct to:
+
+* Combine Escrow + Evidence + IPDR
+* Focus on NGO / Government flows
+* Anchor everything in non-custodial design
+
+is exactly how this becomes viable **despite low margins per transaction**.
+
+---
+
+## Next logical steps (if you want)
+
+I can:
+
+1. **Formalize the Client–Tenant invariants** (INV-TENANT-01 etc.)
+2. Produce a **BoZ-friendly licensing positioning memo**
+3. Build a **12–18 month NGO-focused revenue projection**
+4. Draft a **one-page NGO procurement pitch** using the 5–8% framing
+
+Just tell me which one you want to tackle next.
+
+
+
+
+
+
+
+
+
+
+Got it — **“Do 1”** interpreted as **Option 1: the NGO / Government Program revenue model**.
+Below is a **clear, execution-ready articulation** of that model, structured so it can be dropped directly into your business plan, BoZ pitch deck, or donor/GRZ proposal.
+
+---
+
+# Option 1: NGO / Government Disbursement Assurance Program
+
+**(Primary Revenue Engine)**
+
+## 1. What This Product Actually Is (Plain English)
+
+You are **not** selling payments.
+You are **not** holding money.
+You are selling **loss prevention + audit-grade certainty** for public and donor-funded disbursement programs.
+
+In practice, this is a **Disbursement Assurance Layer** that ensures:
+
+* Funds are **used only for their intended purpose**
+* Every instruction is **pre-verified**, **policy-gated**, and **cryptographically evidenced**
+* Misuse, diversion, and “silent leakage” become **mechanically impossible**, not just discouraged
+
+This positions Symphony as **infrastructure**, not a vendor tool.
+
+---
+
+## 2. The Economic Problem You Are Solving (Why 5–8% Is Rational)
+
+### Typical Program Reality (Zambia, SSA broadly)
+
+For agriculture inputs, cash transfers, fertilizer subsidies, or SME grants:
+
+* **10–15% loss** is considered “normal”
+
+  * Management leakage
+  * Ghost beneficiaries
+  * Diversion to non-program goods
+  * Post-disbursement misuse
+* Donors and GRZ **expect this loss**, but cannot prove or prevent it
+* Audits happen **after the money is gone**
+
+### Your Intervention
+
+You convert:
+
+> “We hope funds are used correctly”
+> into
+> “Funds cannot be misused by design.”
+
+If a $1M program loses 12% ($120,000) today, and you:
+
+* Reduce loss to 2–3%
+* Provide audit-grade evidence
+* Eliminate reconciliation disputes
+
+Then **charging 5–8% ($50k–$80k)** is not a cost — it is a **net saving**.
+
+---
+
+## 3. The NGO / GRZ Program Flow (How It Works)
+
+### Step 1: Program Funding (Not Held by You)
+
+* NGO / GRZ allocates funds to a **partner bank or MMO**
+* Funds sit in **program-controlled accounts**
+* You never touch custody → **no deposit-taking risk**
+
+---
+
+### Step 2: Program Rules Become Code (PaC)
+
+Each program defines:
+
+* Eligible beneficiaries (PACRA / NRC / Cooperative ID)
+* Allowed suppliers (registered agro-dealers)
+* Allowed items (fertilizer, seed, inputs)
+* Limits (amount, frequency, geography, season)
+
+These become **Policy-as-Code invariants**:
+
+* Violations are rejected **before instruction**
+* No human override without evidence trail
+
+---
+
+### Step 3: Controlled Disbursement (Instruction, Not Cash)
+
+Instead of giving farmers cash:
+
+* Farmers receive **spend authority**, not money
+* Payments resolve via:
+
+  * ZECHL Proxy ID (mobile number / TPIN)
+  * Approved supplier accounts
+* Your system issues **NFS instructions** only when policy conditions are met
+
+---
+
+### Step 4: Evidence Bundle (Your Core Product)
+
+For every instruction:
+
+* Who requested it
+* Which device/workload issued it
+* Which policy allowed it
+* Which supplier received it
+* When and where it happened
+* Cryptographic signature + schema fingerprint
+
+This becomes:
+
+* Audit input
+* Donor reporting
+* Dispute resolution proof
+* Anti-corruption artifact
+
+---
+
+## 4. Pricing Model (Why This Scales)
+
+### Primary Fee: Program Assurance Fee
+
+* **5–8% of total program allocation**
+* Charged **upfront or per tranche**
+* Example:
+
+  * $1,000,000 program
+  * 6% fee = **$60,000**
+  * Net savings still positive vs leakage
+
+### Why This Is Attractive to NGOs / GRZ
+
+* Predictable cost
+* Lower audit burden
+* Reduced reputational risk
+* Faster program approval cycles
+* Evidence-ready for Parliament, donors, FIC
+
+---
+
+## 5. Secondary Revenue Attached to the Same Program
+
+### 5.1 Cooperative / NGO Tenant Subscription
+
+* Cooperatives onboard as **tenants**
+* Annual or quarterly subscription:
+
+  * $500 – $2,000 per cooperative
+* Covers:
+
+  * Dashboards
+  * Reports
+  * Evidence access
+  * Program configuration
+
+This is **high-margin** because it rides the same core infrastructure.
+
+---
+
+### 5.2 Supplier Participation Fees (Later Phase)
+
+Once GRZ-backed programs reach scale:
+
+* Suppliers pay:
+
+  * Small per-transaction fee, **or**
+  * Monthly participation fee
+* Why they pay:
+
+  * Guaranteed payment
+  * Reduced fraud disputes
+  * Priority inclusion in government programs
+
+---
+
+## 6. Why This Is the Strongest Revenue Channel
+
+### Compared to Escrow Alone
+
+| Dimension              | Escrow             | NGO Program             |
+| ---------------------- | ------------------ | ----------------------- |
+| Deal Size              | Small / fragmented | Large, single contracts |
+| Sales Cycle            | SME-by-SME         | Centralized decision    |
+| Revenue Predictability | Medium             | **High**                |
+| Regulatory Support     | Neutral            | **Strong**              |
+| Political Backing      | Low                | **High (GRZ / Donors)** |
+
+---
+
+## 7. Regulatory Framing (Critical for BoZ)
+
+You must state this **explicitly and repeatedly**:
+
+> “We are a **non-custodial instruction attestation and evidence platform**.”
+
+Key implications:
+
+* You do **not** require a banking license
+* You fit under:
+
+  * PSP / System Operator
+  * Payment orchestration
+  * Audit & compliance infrastructure
+* BoZ risk exposure is **minimal**
+
+This framing is what makes approval possible.
+
+---
+
+## 8. Why This Unlocks the Other Models
+
+Once this is live:
+
+* **Escrow-as-a-Service** becomes a natural extension for SMEs
+* **Evidence-as-a-Service** can be sold independently to banks
+* **IPDR (Dispute Resolution)** becomes viable because you already hold neutral evidence
+
+All three share:
+
+* Same ingress
+* Same ledger
+* Same evidence
+* Same cost base
+
+---
+
+## 9. Bottom Line
+
+Option 1 is not just viable — it is the **anchor business**.
+
+* High-value contracts
+* Strong regulatory alignment
+* Clear ROI for buyers
+* Low marginal cost to you
+* Naturally supports 2–3 additional revenue streams
+
+If you want, next we can:
+
+* Turn this into a **BoZ Sandbox pitch**
+* Draft a **GRZ / donor proposal narrative**
+* Model **unit economics per $1M program**
+* Design the **tenant model for NGOs & cooperatives**
+
+Just say which one you want next.
+
+
+
+
+
+
+

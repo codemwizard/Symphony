@@ -1,0 +1,10 @@
+{
+  "baseline_date": "2026-02-09",
+  "baseline_path": "/home/mwiza/workspaces/Symphony/schema/baselines/2026-02-09/0001_baseline.sql",
+  "baseline_cutoff": "0027_billable_clients_client_key_index_concurrently.sql",
+  "normalized_schema_sha256": "0fc52d38668a75884b8815f8db441306add78b68379d67c50ce0c2ba4c92744f",
+  "pg_dump_version": "pg_dump (PostgreSQL) 18.1 (Debian 18.1-1.pgdg13+2)",
+  "pg_server_version": "18.1 (Debian 18.1-1.pgdg13+2)",
+  "dump_source": "container:symphony-postgres",
+  "generated_at_utc": "2026-02-09T09:28:53.579074+00:00"
+}

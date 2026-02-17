@@ -1,0 +1,40 @@
+phase: "0"
+task_id: "TSK-P0-152"
+title: "Parity: Canonicalize git diff semantics across enforcement gates"
+owner_role: "ARCHITECT"
+status: "completed"   # planned | in_progress | completed
+
+depends_on: []
+
+touches:
+  - "docs/plans/phase0/TSK-P0-152_diff_semantics_canonicalization/PLAN.md"
+  - "docs/plans/phase0/TSK-P0-152_diff_semantics_canonicalization/EXEC_LOG.md"
+  - "tasks/TSK-P0-152/meta.yml"
+
+invariants: []
+
+work:
+  - "Define the canonical 'changed files' semantics (commit-range via merge-base)."
+  - "Split implementation into helper + refactors + regression verifier (no stubs)."
+
+acceptance_criteria:
+  - "Implementation tasks (TSK-P0-153..155) are created and scoped to enforce range-only semantics."
+  - "No parity-critical gate relies on staged/worktree heuristics."
+
+verification: []
+evidence: []
+
+failure_modes:
+  - "CI vs local drift due to inconsistent diff semantics."
+
+must_read:
+  - "docs/operations/PRE_CI_CI_PARITY_PLAN.md"
+  - "scripts/audit/remediation_trace_lib.py"
+
+implementation_plan: "docs/plans/phase0/TSK-P0-152_diff_semantics_canonicalization/PLAN.md"
+implementation_log: "docs/plans/phase0/TSK-P0-152_diff_semantics_canonicalization/EXEC_LOG.md"
+
+notes: "Implemented in TSK-P0-153..155; see corresponding plans/logs."
+client: "codex_cli"
+assigned_agent: "architect"
+model: "gpt-5-codex"

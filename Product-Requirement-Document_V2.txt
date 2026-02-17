@@ -1,0 +1,385 @@
+## PRD v2.0 — Symphony-Zambia: Evidence-Grade Exception Containment for NFS Transactions
+
+**Scope:** Non-custodial / non-settling deterministic middleware for retail payment switching and exception containment
+**Primary market:** Zambia (BoZ Sandbox readiness → Tier-1 bank readiness)
+**Primary standards:** ISO 20022 alignment (status semantics), PCI DSS v4.0 posture (non-storage of SAD), ISO 27001/2 controls (auditability), ZDPA (privacy), ZECHL/BoZ operational expectations
+
+---
+
+### 1) Product vision / purpose
+
+#### The problem
+
+Zambian payment participants (banks, mobile money operators, PSPs) increasingly operate in a real-time environment where the worst failure mode isn’t “decline” — it’s **uncertainty**: requests that appear failed to the client but may have been accepted downstream (“ghost ACK / zombie transaction”), plus inconsistent error semantics across rails and participants.
+
+Legacy cheque-era controls already set a precedent for **cryptographically protected evidence artifacts** and strict operational handling of exceptions (e.g., signed/encrypted electronic files, defined reversal windows, strict data integrity controls). Those expectations don’t disappear when the rail becomes “digital”; auditors will still ask for court-defensible proof of **who did what, when, and under what authorization**.
+
+#### The solution
+
+Build a **deterministic exception containment layer** that:
+
+* **Does not custody funds** and **does not settle** (remains middleware).
+* **Fails closed** at ingress unless a durable attestation record is written.
+* Uses a **policy-as-code + append-only ledger/outbox** to ensure every instruction is traceable from ingress to terminal outcome.
+* Produces **evidence bundles that are anchored and digitally signed**, comparable in non-repudiation intent to existing ZECHL standards for electronic clearing files.
+
+#### Why it matters (industry + Zambia context)
+
+* Reduces systemic risk by converting uncertain outcomes into **investigable, evidence-complete cases**.
+* Enables sandbox and Tier-1 approvals by making failure modes *auditable by design*, not “best effort.”
+* Provides a credible bridge for organizations migrating off cheque-era processes by preserving the **proof-of-transaction** expectations (signature, encryption, retention, reversals).
+
+---
+
+### 2) Target users (Zambian market)
+
+**Primary customers (institutions):**
+
+1. **Commercial Banks** participating in national switching / interbank payment flows and transitioning away from cheque processes.
+2. **Mobile Money Operators (MMOs)** and their bank partners where reversals, investigations, and dispute resolution require strong evidence.
+3. **Payment Service Providers / Aggregators** connecting many merchants to the national switch while needing consistent error and evidence semantics.
+4. **Large corporates & utilities** that require high-integrity proof-of-payment and rapid exception resolution (non-custodial integration).
+
+**Primary roles (personas):**
+
+* **Payments Ops Analyst (Bank/MMO):** needs fast, complete case evidence for investigations and reversals.
+* **Integration Engineer (PSP/Aggregator):** needs deterministic API behavior + consistent status mappings + predictable retries.
+* **Risk/Compliance Officer:** needs immutable audit trails, retention discipline, and verifiable evidence signatures.
+* **SRE/Platform Engineer:** needs fail-closed behavior, routing fallback, drift detection, and predictable deploy safety.
+
+---
+
+### 3) User stories (realistic Zambia-anchored)
+
+#### Story A — “Evidence-grade file discipline, but for real-time payments” (Bank Ops)
+
+> As a bank operations analyst, when a transaction is disputed (“client says it failed”), I need a **non-repudiable evidence pack** proving the client identity attestation, request integrity, timestamps, and the rail outcome, so I can resolve or escalate within regulatory time expectations without guessing.
+
+**Why this is realistic in Zambia:** ZECHL rules historically require electronic clearing artifacts to be encrypted and digitally signed, plus defined exception/reversal handling — auditors will expect similar discipline for modern payment exceptions.
+
+#### Story B — “Reversal within a defined window” (Participant investigations)
+
+> As a participant investigating an erroneous or duplicate posting, I need the platform to produce a **case evidence pack** that includes the original instruction hash, terminal state, and any follow-up corrective action, so a reversal/cancellation request can be processed within a defined operational window.
+
+**Why realistic:** The cheque-image clearing rules define structured exception handling including reversals within a fixed time window.
+
+#### Story C — “Normalize rail error chaos into deterministic outcomes” (PSP Integration)
+
+> As a PSP integration engineer connecting to multiple rails (bank APIs, MMO APIs, switch adapters), I need all proprietary error formats to be mapped into a deterministic taxonomy and ISO-aligned status semantics so my merchants see consistent outcomes and retry logic is safe.
+
+#### Story D — “Fail-closed ingress for fraud containment” (Risk/Compliance)
+
+> As a compliance officer, I need proof that no transaction is acknowledged unless an ingress attestation row exists, and that the evidence bundle is cryptographically tied to the code+schema state, so audit review does not depend on log scraping.
+
+#### Story E — “Sandbox controlled rollout with demonstrable fallback” (SRE)
+
+> As an SRE, I need the system to support **routing fallback** between Blue/Green processing logic without database rollback, while guaranteeing idempotency continuity so a fallback can’t cause double-processing.
+
+---
+
+### 4) User benefits
+
+* **Determinism:** Clear, consistent outcomes; no “maybe succeeded.”
+* **Audit-grade evidence:** Every major state change yields a signed, anchored proof.
+* **Faster investigations:** Case packs reduce mean time to reconstruct incidents.
+* **Safer operations:** Forward-only evolution with compatibility gates and drift controls.
+* **Lower integration risk:** Normalized errors and ISO-aligned statuses reduce “partner drift.”
+
+---
+
+### 5) Features (major + minor)
+
+Below, each feature includes: what it does, how it works (flow), system interactions, UI behavior (if any), and Phase 0–2 placement.
+
+---
+
+## Feature 1 — Durable Ingress Attestation + Fail-Closed ACK (Phase 1 foundation designed in Phase 0)
+
+**What it does**
+Records the **proof of acceptance** at the moment of ingress: identity + integrity checks + minimal metadata needed to prove “why the system accepted this instruction.”
+
+**How it works (flow)**
+
+1. Ingress receives request.
+2. Validate: auth (mTLS/JWT), replay protections, required headers, policy checks.
+3. Compute request hash (and optional detached signature verification result).
+4. Write **append-only `ingress_attestations` row** (no raw payloads, no secrets).
+5. Only after commit succeeds → return **Durable ACK** (202 Accepted or equivalent).
+6. In the same commit or immediately after, enqueue outbox instruction.
+
+**Interacts with**
+
+* Policy-as-code evaluation
+* Outbox enqueue / idempotency ledger
+* Revocation tables (Feature 6) for cert/token checks
+
+**Schema-level design requirements (Phase 0)**
+
+* `ingress_attestations` table (append-only):
+
+  * `attestation_id`, `received_at_utc`, `participant_id`, `client_id_hash`
+  * `instruction_id`, `idempotency_key_hash`
+  * `cert_fingerprint_sha256`, `token_jti_hash` (when present)
+  * `request_body_sha256`, `auth_method`, `decision` (ACCEPT/REJECT), `reject_reason_code`
+* Indexes: `(instruction_id)`, `(received_at_utc)`, optionally `(participant_id, received_at_utc)`
+* Explicit “no raw payload” constraint: store hashes only.
+
+**Acceptance criteria**
+
+* No ACK unless attestation row exists and is committed.
+* Attestation rows cannot be updated/deleted (append-only enforcement).
+* Evidence artifact proves gate execution for this invariant.
+
+---
+
+## Feature 2 — Deterministic Exception Taxonomy + ISO 20022 Status Semantics (Phase 1–2)
+
+**What it does**
+Converts all outcomes (rail responses, internal failures, retries) into a constrained taxonomy and ISO-aligned status semantics for investigations and consistent behavior.
+
+**How it works**
+
+1. Rail adapter returns response (success / hard fail / ambiguous timeout / transient fail).
+2. Map to internal attempt state (e.g., DISPATCHED / FAILED / RETRYABLE / UNKNOWN_TIMEOUT→manual).
+3. Emit ISO-aligned status code for reporting and downstream consumption (e.g., `ACCP/ACSC/RJCT/PDNG` + reason codes).
+4. Persist as append-only attempt ledger entries.
+
+**Interacts with**
+
+* Outbox attempts and pending queue
+* Evidence bundle generation (Feature 4)
+* Case packs (Feature 7)
+
+**Acceptance criteria**
+
+* Every attempt maps to exactly one deterministic bucket + one ISO-aligned code.
+* Reason codes are stable and versioned.
+
+---
+
+## Feature 3 — Forward-Only Evolution + N-1 Compatibility Gate (Phase 0–2)
+
+**What it does**
+Allows additive schema evolution without rollback scripts while preserving operational safety.
+
+**How it works**
+
+* Expand/Contract discipline
+* N-1 compatibility gate: current production code must run against candidate schema before traffic shift
+* “no-tx” marker for Postgres operations that cannot run inside a transaction (e.g., `CREATE INDEX CONCURRENTLY`)
+
+**Interacts with**
+
+* CI evidence pipeline
+* Baseline drift detection
+* Blue/Green fallback (Feature 5)
+
+**Acceptance criteria**
+
+* Schema drift and compatibility checks fail closed.
+* Evidence emitted with code+schema anchoring.
+
+---
+
+## Feature 4 — Evidence Bundles (Anchored + Digitally Signed) (Phase 0–2)
+
+**What it does**
+Produces a **non-repudiable evidence artifact** for any important event: ingress accept/reject, attempt completion, terminalization, manual review escalation, routing fallback trigger, drift detection, etc.
+
+**How it works (Digital Signature Protocol)**
+
+1. Gather evidence payload (strict schema, no PII/secrets; only hashes/ids).
+2. Anchor: include `git_commit_sha` + `schema_fingerprint_sha256`.
+3. Generate a **detached signature** over the canonical JSON (CMS/PKCS#7 or equivalent).
+4. Store `(manifest.json, signature)` in evidence store and optionally DB evidence ledger.
+5. Verification tooling allows auditors to verify signature using published public key.
+
+**Interacts with**
+
+* CI evidence artifacts
+* External anchoring (Feature 8)
+* Ops case packs (Feature 7)
+
+**Acceptance criteria**
+
+* Evidence always includes code+schema anchors.
+* Signature verification fails if evidence is altered.
+* Evidence generation is fail-closed: can’t emit “PASS” if anchors can’t be computed.
+
+---
+
+## Feature 5 — Operational Rollback via Routing Fallback (Blue/Green) (Phase 0–2 scaffolding)
+
+**What it does**
+Allows a **traffic-level rollback** (routing inversion) without database rollback.
+
+**How it works**
+
+1. Monitor SLOs (error rate, latency, rail declines, parse failures).
+2. When threshold breached, flip weights: Green→0, Blue→100.
+3. Emit anchored evidence for the routing flip.
+4. Guarantee idempotency continuity: Blue and Green share idempotency ledger and outbox semantics.
+
+**Acceptance criteria**
+
+* Fallback is deterministic and testable (simulation script + evidence output).
+* Fallback cannot create double-payments for same idempotency key.
+
+---
+
+## Feature 6 — Durable Revocation (certs + tokens) (Phase 0 schema + Phase 1 runtime)
+
+**What it does**
+Durable revocation checks for ingress identity, independent of volatile caches or unreliable OCSP/online dependencies.
+
+**Schema-level design (Phase 0)**
+
+* `revoked_client_certs(cert_fingerprint_sha256 PK, revoked_at, reason_code, revoked_by, expires_at?)`
+* `revoked_tokens(token_jti PK, revoked_at, reason_code, revoked_by, expires_at?)`
+* Indexes implied by PK; append-only enforcement.
+
+**Acceptance criteria**
+
+* Ingest can check revocation in constant time.
+* Revocations are append-only and auditable.
+
+---
+
+## Feature 7 — Human-in-the-Loop Triage + Case Evidence Packs (Phase 2)
+
+**What it does**
+When a transaction hits ambiguous states or exceeds retry ceilings, generate a **case pack** for Ops.
+
+**How it works**
+
+* Case created when: unknown timeout, repeated zombie requeue, terminal failure requiring investigation.
+* Pack includes: ingress attestation hash, attempt history, last rail response hash, reconciliation hints, recommended next action.
+* Pack references evidence bundle IDs and signatures, not raw payloads.
+
+**Acceptance criteria**
+
+* Ops can reconstruct “what happened” without direct DB access.
+* Pack is exportable and signature-verifiable.
+
+---
+
+## Feature 8 — External Evidence Anchoring (WORM / off-domain) (Phase 2, design in Phase 0)
+
+**What it does**
+Prevents “administrator rewrite” risk by anchoring daily/hourly evidence roots outside the primary domain.
+
+**How it works**
+
+* Build Merkle root (or rolling hash chain) of evidence manifests for a period.
+* Write root hash to an off-domain immutable store (WORM bucket, independent ledger, etc.).
+* Verification tool can prove inclusion.
+
+**Acceptance criteria**
+
+* Auditor can verify that evidence history wasn’t rewritten even by privileged DB operators.
+
+---
+
+### 6) Edge cases (by feature)
+
+**Ingress Attestation**
+
+* DB write timeout → reject (fail-closed), no ACK.
+* Duplicate idempotency key → return prior result + evidence reference; do not re-enqueue.
+* Cert revoked mid-flight → reject + evidence.
+
+**Outbox / Attempts**
+
+* “Zombie worker” lease expiry → append `ZOMBIE_REQUEUE`, keep pending row, emit evidence.
+* Unknown timeout to rail → move to manual review path (case pack), block auto-retry.
+
+**Evidence**
+
+* Cannot compute schema hash (DB down) → evidence emission fails closed; gate fails.
+* Key rotation → evidence must carry key id; verification tool must support old keys.
+
+**Routing fallback**
+
+* Flip occurs during peak load → must preserve idempotency continuity and prevent double terminalization.
+
+---
+
+### 7) Acceptance criteria (product-wide)
+
+A release is considered “thriving” when:
+
+* **Durable ingress**: ACKs only after attestation commit.
+* **Append-only integrity**: no mutable audit tables; terminal uniqueness enforced.
+* **Deterministic exception semantics**: every attempt and case has stable mapping and reason code.
+* **Evidence-grade**: every critical gate and state transition emits anchored + signed evidence.
+* **Drift/compat gates**: baseline drift detection and N-1 gate are fail-closed.
+* **Sandbox readiness**: demonstrable fallback produces verifiable evidence and avoids double-processing.
+
+---
+
+### 8) Release criteria (sellable / market-ready)
+
+* Sandbox pilot can demonstrate:
+
+  1. Fail-closed ingress with attestation proof
+  2. Signed evidence bundle verification by a third party
+  3. Routing fallback simulation with evidence emission
+  4. Controlled exception lifecycle (retry ceiling + manual case creation)
+  5. Long-term retention posture defined (including signature verification strategy across key rotation)
+
+---
+
+### 9) Success metrics
+
+* **Incident reconstruction time:** median < 15 minutes using case packs + evidence references.
+* **Evidence completeness:** 100% of terminal outcomes have a signed evidence bundle.
+* **Drift events:** 0 unauthorized schema drift detections in staged/prod environments.
+* **Fallback reliability:** routing flip test passes 100% in pre-traffic CI.
+* **Exception resolution throughput:** reduction in manual investigation time per case.
+
+---
+
+### 10) Phase definitions of done (explicit)
+
+**Phase 0 — Governance & Evidence Foundations (DoD)**
+
+* Evidence generator anchored to git+schema fingerprint.
+* Signed evidence protocol scaffolding agreed + keys managed consistently (OpenBao for dev/staging).
+* Drift detection + compatibility gates defined and locally testable (CI parity guard).
+* Invariants docs and manifest drift checks fail closed.
+
+**Phase 1 — Ingress Foundation (DoD)**
+
+* Ingress attestation table live + append-only.
+* Revocation tables live + checked at ingress.
+* Fail-closed ACK behavior proven with tests + evidence.
+
+**Phase 2 — Exception Containment & Ops Readiness (DoD)**
+
+* Case evidence packs live.
+* Rail normalization layer stable.
+* Routing fallback and manual review flows fully evidenced and verifiable.
+* External anchoring implemented (or formally gated as required before production).
+
+---
+
+## CA/KMS decision status (clear)
+
+You’ve now explicitly chosen **OpenBao** as the cross-environment foundation. The clean, consistent choice that works in **dev + staging + production** is:
+
+* **CA:** OpenBao **PKI engine** (offline root + online intermediate; environment-specific intermediates).
+* **Signing / KMS:** OpenBao **Transit engine** (or PKI key usage), with an upgrade path to HSM-backed keys later without changing evidence format (you’d rotate key storage, not the signature verification contract).
+
+This preserves the “works everywhere” requirement while keeping a Tier-1 upgrade path.
+
+---
+
+## Sources (links placed here, not inline)
+
+* **S1 — ZECHL Cheque Image Clearing Rules (Revised, Approved March 2020):** encryption + digital signing expectations; reversal/exception handling; operational controls. 
+* **S2 — Bank of Zambia circular on cheque phase-out timeline (context for migration pressure and stakeholder expectations):** ([Zechl][1])
+* **S3 — Bank of Zambia: Electronic Money Issuance / related directive circular (regulatory posture for electronic money/payment participants):** 
+* **S4 — Zambia National Payment Systems Act (2007) (legal basis for payment systems governance/integrity expectations):** ([fic.gov.zm][2])
+
+[1]: https://www.zechl.co.zm/wp-content/uploads/2024/12/NFS-e-Money-Rules-Version-1-March-2020.pdf?utm_source=chatgpt.com "NFS-e-Money-Rules-Version-1-March-2020. ..."
+[2]: https://www.fic.gov.zm/component/attachments/download/19 "The National Payment System Bill-2006"

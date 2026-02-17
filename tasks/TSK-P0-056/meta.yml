@@ -1,0 +1,35 @@
+phase: '0'
+task_id: TSK-P0-056
+title: Evidence schema canonicalization
+owner_role: ARCHITECT
+status: completed
+depends_on: []
+touches:
+- docs/architecture/evidence_schema.json
+- scripts/audit/validate_evidence_schema.sh
+- docs/PHASE0/phase0_contract.yml
+- tasks/TSK-P0-056/meta.yml
+invariants:
+- INV-077
+work:
+- "Define required evidence fields and make SKIPPED first\u2011class."
+- Validate all evidence/phase0/*.json and fail on malformed files.
+acceptance_criteria:
+- Evidence schema requires check_id, timestamp_utc, git_sha, status.
+- Validator fails on any malformed evidence JSON.
+verification:
+- scripts/audit/validate_evidence_schema.sh
+evidence:
+- evidence/phase0/evidence_validation.json
+failure_modes:
+- Evidence validation missing or malformed.
+- Evidence file missing.
+must_read:
+- docs/invariants/INVARIANTS_MANIFEST.yml
+- docs/PHASE0/phase0_contract.yml
+notes: ''
+client: codex_cli
+assigned_agent: architect
+model: <UNASSIGNED>
+implementation_plan: docs/plans/phase0/TSK-P0-056/PLAN.md
+implementation_log: docs/plans/phase0/TSK-P0-056/EXEC_LOG.md

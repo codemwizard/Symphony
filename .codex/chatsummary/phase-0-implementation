@@ -1,0 +1,73 @@
+### Chat Summary
+
+#### Objectives
+- Implement the Phase‑0 SQLSTATE plan in‑repo: add contract files, SQLSTATE registry, drift checks, and wire evidence enforcement into CI.
+- Ensure CI evidence gate is reliable and avoids phantom failures while remaining fail‑closed for completed tasks.
+ - Achieve strict local pre‑CI vs CI parity for Phase‑0 gates (fresh DB, identical flag semantics, deterministic evidence).
+
+#### Key Actions & Discussions
+- **Task creation and refinement**:
+  - Drafted four new Phase‑0 tasks (TSK‑P0‑037..040) to implement a Phase‑0 evidence contract, SQLSTATE registry + drift check, manifest registration, and CI wiring.
+  - User requested stricter governance: avoid invariant ID collisions, enforce explicit contract fields, normalize CI artifact paths, ensure evidence is written even on failure, and limit drift scan scope.
+- **Contract‑based evidence enforcement**:
+  - Implemented a Phase‑0 contract (`docs/PHASE0/phase0_contract.yml`) as the source of truth for evidence enforcement.
+  - Updated the evidence gate to enforce only `status=completed` and `evidence_required=true` tasks, and to accept CI artifact path layouts.
+- **SQLSTATE registry and drift checking**:
+  - Added a SQLSTATE registry (`docs/contracts/sqlstate_map.yml`) with required fields and canonical/alias handling.
+  - Implemented `check_sqlstate_map_drift.sh` to scan migrations/scripts/docs for `Pxxxx` codes with explicit exclusions, and emit evidence on failure.
+- **Invariant registration**:
+  - Added new invariants to the manifest (INV‑060: contract governs evidence gate, INV‑061: SQLSTATE registry drift‑free), updated implemented docs, and regenerated QUICK.
+- **CI wiring**:
+  - Wired the new contract and SQLSTATE checks into the fast‑checks job in `invariants.yml`.
+  - Ensured evidence artifacts are uploaded and evidence gate uses merged artifacts.
+- **Exception handling**:
+  - A failed exception template check was resolved by closing the exception with `closed_at` (since required docs were updated).
+- **Validation**:
+  - Fast checks passed after updates.
+  - Contract‑based evidence check passed in CI‑only mode.
+  - Scan confirmed no completed tasks were missing required evidence; only TSK‑P0‑010 uses a glob as expected.
+
+- **Parity enforcement (local vs CI)**:
+  - Enforced `FRESH_DB=1` as default for local parity: pre‑CI creates an ephemeral DB per run and drops it on exit, preserving developer DBs while matching CI freshness expectations.
+  - Reworked ordering so evidence producers run before `verify_phase0_contract_evidence_status.sh`; removed/avoided running the status gate mid‑pipeline where evidence is not yet present.
+  - Resolved the `GOV-G02` remediation trace semantics: when the remediation trace gate evaluates and finds no production-affecting changes, it now emits `PASS` (not `SKIPPED`) so “completed requires pass” gates behave deterministically.
+
+- **CI-only failure remediation (Broken pipe)**:
+  - Fixed a CI-only `SIGPIPE` failure in `scripts/security/lint_ddl_lock_risk.sh` caused by `set -euo pipefail` + `printf | python3` pipeline; replaced with temp-file handoff to remove pipe timing sensitivity.
+  - Recorded remediation casefile under `docs/plans/phase0/REM-2026-02-12_ci-ddl-lock-risk-broken-pipe/`.
+
+- **Canonical diff semantics (range-only)**:
+  - Added `scripts/lib/git_diff.sh` to centralize commit-range diff computation (`merge-base...HEAD`) for parity-critical gates.
+  - Refactored `scripts/audit/enforce_change_rule.sh` and `scripts/audit/verify_baseline_change_governance.sh` to remove staged/worktree union-diff fallbacks and use the shared helper.
+  - Added `scripts/audit/verify_diff_semantics_parity.sh` and wired it into `scripts/audit/run_phase0_ordered_checks.sh` to prevent regressions.
+  - Created and completed tasks `TSK-P0-152..155` with plans/logs under `docs/plans/phase0/`.
+
+#### Decisions Made
+- **Invariant IDs**: Reserve a new range to avoid conflicts (INV‑060, INV‑061).
+- **Contract schema**: Require explicit fields, avoid broad globs, and treat the contract as the enforcement authority for evidence.
+- **Evidence enforcement behavior**: Normalize CI artifact paths and accept nested layouts; write evidence even on failure.
+- **Drift check scope**: Scan only migrations/scripts/docs and exclude generated/noisy files.
+- **Exception closure**: Close exceptions via `closed_at` when docs are updated, rather than extending expiry.
+ - **Diff semantics**: Enforcement gates use commit-range semantics only; staged/worktree diff modes are disallowed for parity-critical enforcement.
+ - **Remediation trace status**: “No production-affecting changes” is `PASS` (gate evaluated, no trace required), not `SKIPPED`.
+ - **CI-only failure class**: Avoid pipelines that can raise `SIGPIPE` under `pipefail`; prefer temp-file handoff for evidence generation.
+
+#### Insights & Reasoning
+- The evidence gate failure pattern was primarily due to mismatched roots or artifact layout assumptions; a contract‑driven gate with path normalization prevents phantom failures.
+- Evidence checks must be deterministic and produce evidence even on failure to avoid masking real issues.
+- SQLSTATE drift checks need scoped scanning to be strict without false positives, ensuring audit‑grade traceability.
+ - Many “missing evidence” failures were ordering issues: evidence-status gates must be last (or cross-job merged) and must not run before producers.
+ - CI-only failures can arise from shell semantics (`pipefail` + early consumer exit). Treat these as parity bugs and log them as environment divergence issues.
+
+#### Next Steps
+- Optionally replace the TSK‑P0‑010 glob with explicit evidence paths if stricter enforcement is desired.
+- Run CI to confirm the contract‑based evidence gate and new SQLSTATE drift checks are green in Actions.
+ - Phase‑1 planning should treat Phase‑0 gates as non-negotiable: Phase‑1 work must not introduce staged/worktree diff fallbacks or evidence stubs.
+
+#### Current State (as of 2026-02-12)
+- Branch: `main`
+- `git status`: clean (no local uncommitted changes).
+- Recent commits:
+  - `6aca6b7` P0: canonicalize git diff semantics (range-only)
+  - `2caa2e7` REM: record CI broken pipe remediation
+  - `efba5d5` Fix for error caused by python not behaving well in CI environment

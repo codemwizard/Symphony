@@ -1,0 +1,37 @@
+phase: '1'
+task_id: TSK-P1-001
+title: Phase-1 Agent System Rollout
+owner_role: SUPERVISOR
+status: completed
+depends_on: []
+touches:
+- AGENTS.md
+- docs/operations/AGENT_ROLE_RECONCILIATION.md
+- docs/operations/AI_AGENT_OPERATION_MANUAL.md
+- .codex/agents/**
+- .cursor/agents/**
+invariants:
+- INV-105
+work:
+- Align agent prompts and role docs to canonical Phase-1 governance references.
+- Ensure stop conditions and approval metadata expectations are consistently documented.
+acceptance_criteria:
+- Canonical references and role mappings are consistent across all agent artifacts.
+- Task emits role-mapping evidence required by Phase-1 contract.
+verification:
+- scripts/audit/verify_agent_conformance.sh
+- scripts/dev/pre_ci.sh
+evidence:
+- evidence/phase1/agent_role_mapping.json
+failure_modes:
+- Agent docs diverge from canonical references.
+- Evidence file missing.
+must_read:
+- docs/operations/AI_AGENT_OPERATION_MANUAL.md
+- docs/operations/AGENT_ROLE_RECONCILIATION.md
+implementation_plan: docs/plans/phase1/TSK-P1-001_phase1_system_rollout/PLAN.md
+implementation_log: docs/plans/phase1/TSK-P1-001_phase1_system_rollout/EXEC_LOG.md
+notes: Required governance baseline for regulated-surface Phase-1 work.
+client: codex_cli
+assigned_agent: supervisor
+model: <UNASSIGNED>

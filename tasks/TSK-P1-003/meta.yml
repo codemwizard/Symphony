@@ -1,0 +1,39 @@
+phase: '1'
+task_id: TSK-P1-003
+title: Agent Conformance Verification Closure
+owner_role: INVARIANTS_CURATOR
+status: completed
+depends_on:
+- TSK-P1-001
+- TSK-P1-002
+touches:
+- scripts/audit/verify_agent_conformance.sh
+- scripts/dev/pre_ci.sh
+- .github/workflows/invariants.yml
+invariants:
+- INV-105
+work:
+- Finalize deterministic conformance checks for agent prompts and regulated-surface
+  metadata requirements.
+- Ensure pre-CI and CI integration is fail-closed.
+acceptance_criteria:
+- Conformance verifier runs in pre-CI and CI.
+- Verifier emits Phase-1 evidence and fails on canonical reference drift.
+verification:
+- scripts/audit/verify_agent_conformance.sh
+- scripts/dev/pre_ci.sh
+evidence:
+- evidence/phase1/agent_conformance_architect.json
+- evidence/phase1/agent_conformance_implementer.json
+- evidence/phase1/agent_conformance_policy_guardian.json
+failure_modes:
+- Conformance verifier does not run in CI/pre-CI paths.
+- Evidence file missing.
+must_read:
+- docs/operations/VERIFY_AGENT_CONFORMANCE_SPEC.md
+implementation_plan: docs/plans/phase1/TSK-P1-003_agent_conformance_verification_closure/PLAN.md
+implementation_log: docs/plans/phase1/TSK-P1-003_agent_conformance_verification_closure/EXEC_LOG.md
+notes: Execution verifier for agent-governance contract.
+client: codex_cli
+assigned_agent: invariants_curator
+model: <UNASSIGNED>

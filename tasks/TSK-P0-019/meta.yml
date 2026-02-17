@@ -1,0 +1,35 @@
+phase: '0'
+task_id: TSK-P0-019
+title: CI artifact upload verification (integration)
+owner_role: PLATFORM
+status: completed
+depends_on:
+- TSK-P0-010
+touches:
+- tasks/TSK-P0-019/meta.yml
+- docs/plans/phase0/TSK-P0-019_ci_artifact_upload_verification/PLAN.md
+- docs/plans/phase0/TSK-P0-019_ci_artifact_upload_verification/EXEC_LOG.md
+- scripts/audit/verify_ci_artifact_upload_phase0_evidence.sh
+invariants:
+- INV-020 (Evidence anchoring)
+work:
+- Run invariants.yml in CI and confirm phase0-evidence artifact exists and contains
+  evidence files.
+acceptance_criteria:
+- CI run produces artifact phase0-evidence with evidence/**.
+verification:
+- scripts/ci/check_evidence_required.sh (CI_ONLY=1, after artifact download)
+evidence:
+- phase0-evidence
+failure_modes:
+- CI run does not upload phase0-evidence.
+must_read:
+- docs/invariants/INVARIANTS_MANIFEST.yml
+- scripts/db/verify_invariants.sh
+- scripts/db/ci_invariant_gate.sql
+notes: ''
+implementation_plan: docs/plans/phase0/TSK-P0-019_ci_artifact_upload_verification/PLAN.md
+implementation_log: docs/plans/phase0/TSK-P0-019_ci_artifact_upload_verification/EXEC_LOG.md
+client: codex_cli
+assigned_agent: worker
+model: <UNASSIGNED>

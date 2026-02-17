@@ -1,0 +1,73 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "symphony://schemas/approval_sidecar.schema.json",
+  "title": "Phase-1 Approval Sidecar",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "approval",
+    "ai",
+    "scope",
+    "verification"
+  ],
+  "properties": {
+    "schema_version": { "type": "string", "const": "1.0" },
+    "approval": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["status", "approver_id", "change_reason"],
+      "properties": {
+        "status": { "type": "string", "enum": ["APPROVED", "PENDING", "REJECTED"] },
+        "approver_id": { "type": "string", "minLength": 1 },
+        "change_reason": { "type": "string", "minLength": 1 },
+        "approved_at_utc": { "type": "string", "format": "date-time" },
+        "role_authority": { "type": "string" }
+      }
+    },
+    "ai": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["ai_used", "ai_prompt_hash", "model_id"],
+      "properties": {
+        "ai_used": { "type": "boolean" },
+        "ai_prompt_hash": { "type": "string", "minLength": 16 },
+        "model_id": { "type": "string", "minLength": 1 },
+        "client": { "type": "string", "enum": ["codex_cli", "cursor_codex", "unknown"] },
+        "session_id": { "type": "string" }
+      }
+    },
+    "scope": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["regulated_surfaces_touched", "paths_changed"],
+      "properties": {
+        "regulated_surfaces_touched": { "type": "boolean" },
+        "paths_changed": {
+          "type": "array",
+          "items": { "type": "string", "minLength": 1 },
+          "minItems": 1
+        },
+        "invariants": {
+          "type": "array",
+          "items": { "type": "string", "minLength": 1 }
+        },
+        "phase_boundary_ok": { "type": "boolean" }
+      }
+    },
+    "verification": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["commands", "pre_ci_passed"],
+      "properties": {
+        "commands": {
+          "type": "array",
+          "items": { "type": "string", "minLength": 1 },
+          "minItems": 1
+        },
+        "pre_ci_passed": { "type": "boolean" },
+        "notes": { "type": "string" }
+      }
+    }
+  }
+}

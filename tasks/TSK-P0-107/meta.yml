@@ -1,0 +1,56 @@
+# Canonical Task Meta Template (lower_snake_case)
+
+phase: "0"
+task_id: "TSK-P0-107"
+title: "Register remediation trace invariant (INV-105) and Phase-0 contract wiring"
+owner_role: "INVARIANTS"
+status: "completed"   # planned | in_progress | completed
+
+depends_on:
+  - "TSK-P0-106"
+
+touches:
+  - "docs/invariants/INVARIANTS_MANIFEST.yml"
+  - "docs/invariants/INVARIANTS_IMPLEMENTED.md"
+  - "docs/invariants/INVARIANTS_QUICK.md"
+  - "docs/tasks/PHASE0_TASKS.md"
+  - "docs/PHASE0/phase0_contract.yml"
+  - "tasks/TSK-P0-105/meta.yml"
+  - "tasks/TSK-P0-106/meta.yml"
+  - "tasks/TSK-P0-107/meta.yml"
+  - "tasks/TSK-P0-108/meta.yml"
+
+invariants:
+  - "INV-105"
+
+work:
+  - "Add INV-105 to manifest and implemented docs."
+  - "Add tasks to Phase-0 task registry and contract."
+  - "Regenerate INVARIANTS_QUICK.md."
+
+acceptance_criteria:
+  - "Fast checks validate invariants docs and contract."
+
+verification:
+  - "scripts/audit/run_invariants_fast_checks.sh"
+
+evidence:
+  - "evidence/phase0/invariants_quick.json"
+  - "evidence/phase0/phase0_contract.json"
+
+failure_modes:
+  - "Evidence file missing"
+  - "Manifest/quick drift"
+  - "Contract schema validation fails"
+
+must_read:
+  - "docs/invariants/INVARIANTS_MANIFEST.yml"
+  - "docs/operations/TASK_CREATION_PROCESS.md"
+
+implementation_plan: "docs/plans/phase0/TSK-P0-105_remediation_trace_gate/PLAN.md"
+implementation_log: "docs/plans/phase0/TSK-P0-105_remediation_trace_gate/EXEC_LOG.md"
+
+notes: ""
+client: "codex_cli"
+assigned_agent: "invariants_curator"
+model: "gpt-5.3-codex"

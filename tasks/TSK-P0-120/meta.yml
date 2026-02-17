@@ -1,0 +1,51 @@
+# Canonical Task Meta Template (lower_snake_case)
+
+phase: "0"
+task_id: "TSK-P0-120"
+title: "Pre-CI parity: enforce remediation trace gate locally"
+owner_role: "ARCHITECT"
+status: "completed"   # planned | in_progress | completed
+
+depends_on:
+  - "TSK-P0-105"
+  - "TSK-P0-119"
+
+touches:
+  - "scripts/dev/pre_ci.sh"
+  - "docs/plans/phase0/TSK-P0-120_pre_ci_remediation_trace_parity/PLAN.md"
+  - "docs/plans/phase0/TSK-P0-120_pre_ci_remediation_trace_parity/EXEC_LOG.md"
+  - "docs/plans/phase0/INDEX.md"
+  - "docs/tasks/PHASE0_TASKS.md"
+
+invariants:
+  - "GOV-G02"
+
+work:
+  - "Wire scripts/audit/verify_remediation_trace.sh into scripts/dev/pre_ci.sh for CI parity."
+  - "Fail closed locally when running in range mode and BASE_REF is missing (avoid local SKIP while CI fails)."
+
+acceptance_criteria:
+  - "scripts/dev/pre_ci.sh runs the remediation trace verifier."
+  - "If BASE_REF is missing in range mode, pre_ci fails with an actionable message."
+
+verification:
+  - "bash scripts/dev/pre_ci.sh"
+
+evidence:
+  - "evidence/phase0/remediation_trace.json"
+
+failure_modes:
+  - "Evidence file missing"
+  - "Local pre_ci skips remediation trace due to missing BASE_REF, allowing CI failure."
+  - "Remediation trace verifier is not invoked in local runner."
+
+must_read:
+  - "docs/operations/REMEDIATION_TRACE_WORKFLOW.md"
+
+implementation_plan: "docs/plans/phase0/TSK-P0-120_pre_ci_remediation_trace_parity/PLAN.md"
+implementation_log: "docs/plans/phase0/TSK-P0-120_pre_ci_remediation_trace_parity/EXEC_LOG.md"
+
+notes: ""
+client: "codex_cli"
+assigned_agent: "architect"
+model: "gpt-5.3-codex"

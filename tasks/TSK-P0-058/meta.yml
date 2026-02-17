@@ -1,0 +1,36 @@
+phase: '0'
+task_id: TSK-P0-058
+title: CI toolchain pinning (PyYAML + ripgrep)
+owner_role: SECURITY_GUARDIAN
+status: completed
+depends_on:
+- TSK-P0-057
+touches:
+- .github/workflows/invariants.yml
+- scripts/audit/ci_toolchain_versions.env
+- scripts/audit/verify_ci_toolchain.sh
+- scripts/audit/run_invariants_fast_checks.sh
+- tasks/TSK-P0-058/meta.yml
+invariants:
+- INV-079
+work:
+- Install pinned PyYAML and ripgrep in CI.
+- Add verifier to assert toolchain versions in CI.
+acceptance_criteria:
+- CI logs show pinned tool versions.
+- Verifier emits evidence on pass/fail.
+verification:
+- scripts/audit/verify_ci_toolchain.sh
+evidence:
+- evidence/phase0/ci_toolchain.json
+failure_modes:
+- Tools missing or version mismatch.
+- Evidence file missing.
+must_read:
+- .github/workflows/invariants.yml
+notes: ''
+client: codex_cli
+assigned_agent: security_guardian
+model: <UNASSIGNED>
+implementation_plan: docs/plans/phase0/TSK-P0-058/PLAN.md
+implementation_log: docs/plans/phase0/TSK-P0-058/EXEC_LOG.md

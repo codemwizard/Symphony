@@ -1,0 +1,10 @@
+{
+  "baseline_date": "2026-02-07",
+  "baseline_path": "/home/mwiza/workspaces/Symphony/schema/baselines/2026-02-07/0001_baseline.sql",
+  "baseline_cutoff": "0024_business_tables_privilege_hygiene_and_usage_event_conventions.sql",
+  "normalized_schema_sha256": "c0c7dc2106f9cd7b8a393e3218123ed354e071fbede70d8e75ac543a4ee870da",
+  "pg_dump_version": "pg_dump (PostgreSQL) 18.1 (Debian 18.1-1.pgdg13+2)",
+  "pg_server_version": "18.1 (Debian 18.1-1.pgdg13+2)",
+  "dump_source": "container:symphony-postgres",
+  "generated_at_utc": "2026-02-07T13:02:32.648192+00:00"
+}

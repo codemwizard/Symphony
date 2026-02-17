@@ -1,0 +1,51 @@
+phase: "0"
+task_id: "TSK-P0-148"
+title: "Approach B policy doc + SKIPPED stub hardening (helper + verifier)"
+owner_role: "INVARIANTS_CURATOR"
+status: "completed"   # planned | in_progress | completed
+
+depends_on:
+  - "TSK-P0-147"
+
+touches:
+  - "docs/PHASE0/PLANNED_SKIPPED_GATES_POLICY.md"
+  - "scripts/audit/emit_skipped_evidence.sh"
+  - "scripts/audit/verify_skipped_gate_stubs.sh"
+  - "scripts/audit/run_invariants_fast_checks.sh"
+  - "docs/plans/phase0/TSK-P0-148_approach_b_policy_and_stub_hardening/PLAN.md"
+  - "docs/plans/phase0/TSK-P0-148_approach_b_policy_and_stub_hardening/EXEC_LOG.md"
+  - "tasks/TSK-P0-148/meta.yml"
+
+invariants: []
+
+work:
+  - "Publish canonical policy doc: Approach B is the repo standard."
+  - "Implement a shared helper to emit deterministic SKIPPED evidence JSON."
+  - "Implement a verifier that enforces stub conventions and fails closed if a stub is malformed or unwired."
+  - "Wire the verifier into fast checks so parity catches violations before CI."
+
+acceptance_criteria:
+  - "Malformed stub scripts (missing marker or missing evidence emission) fail locally and in CI."
+  - "Policy doc is placed under docs/PHASE0 and referenced by the plan."
+
+verification:
+  - "bash scripts/audit/run_invariants_fast_checks.sh"
+  - "scripts/dev/pre_ci.sh"
+
+evidence: []
+
+failure_modes:
+  - "Stubs drift in schema/fields and become non-auditable."
+  - "Stubs are promoted into contract-required evidence without deterministic PASS/FAIL, causing missing evidence failures."
+
+must_read:
+  - "docs/PHASE0/PHASE0_CONTRACT.md"
+  - "docs/control_planes/CONTROL_PLANES.yml"
+
+implementation_plan: "docs/plans/phase0/TSK-P0-148_approach_b_policy_and_stub_hardening/PLAN.md"
+implementation_log: "docs/plans/phase0/TSK-P0-148_approach_b_policy_and_stub_hardening/EXEC_LOG.md"
+
+notes: "Do not make new stub gates contract-required unless contract explicitly allows SKIPPED for that task state."
+client: "codex_cli"
+assigned_agent: "invariants_curator"
+model: "gpt-5-codex"

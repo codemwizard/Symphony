@@ -1,0 +1,33 @@
+phase: '0'
+task_id: TSK-P0-010
+title: CI evidence artifact upload consolidation
+owner_role: PLATFORM
+status: completed
+depends_on:
+- TSK-P0-002..TSK-P0-008
+touches:
+- .github/workflows/invariants.yml
+- tasks/TSK-P0-010/meta.yml
+invariants:
+- INV-020 (Evidence anchoring)
+work:
+- Add CI step to collect ./evidence/** and upload as artifact in each job.
+- Enforce fail-closed if evidence files referenced by tasks are missing.
+acceptance_criteria:
+- CI artifacts include evidence files for each Phase-0 gate.
+verification:
+- CI workflow execution
+evidence:
+- ./evidence/phase0/*.json
+failure_modes:
+- Missing evidence file in CI must fail.
+must_read:
+- docs/invariants/INVARIANTS_MANIFEST.yml
+- scripts/db/verify_invariants.sh
+- scripts/db/ci_invariant_gate.sql
+notes: ''
+client: codex_cli
+assigned_agent: worker
+model: <UNASSIGNED>
+implementation_plan: docs/plans/phase0/TSK-P0-010/PLAN.md
+implementation_log: docs/plans/phase0/TSK-P0-010/EXEC_LOG.md

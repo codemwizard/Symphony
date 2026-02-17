@@ -1,0 +1,38 @@
+phase: '0'
+task_id: TSK-P0-024
+title: Add ingress attestation schema (append-only skeleton)
+owner_role: DB_FOUNDATION
+status: completed
+depends_on: []
+touches:
+- schema/migrations/0011_ingress_attestations.sql
+- scripts/db/verify_invariants.sh
+invariants:
+- INV-035 (Ingress attestation append-only)
+work:
+- Create ingress_attestations table (hashes/identifiers only; no raw payloads).
+- Add indexes on (instruction_id) and (received_at) (and optional (tenant_id, received_at)
+  if multi-tenant).
+- Enforce append-only via privileges (REVOKE UPDATE/DELETE); trigger optional.
+- Ensure verifier emits ./evidence/phase0/ingress_attestation.json.
+acceptance_criteria:
+- Table exists and is append-only.
+- Required indexes exist.
+- Evidence file is written by the verification step.
+verification:
+- scripts/db/verify_invariants.sh
+evidence:
+- ./evidence/phase0/ingress_attestation.json
+failure_modes:
+- Table missing or mutable.
+- Evidence file missing.
+must_read:
+- docs/invariants/INVARIANTS_MANIFEST.yml
+- scripts/db/verify_invariants.sh
+- scripts/db/ci_invariant_gate.sql
+notes: Invariant registration is handled by TSK-P0-009.
+client: codex_cli
+assigned_agent: db_foundation
+model: <UNASSIGNED>
+implementation_plan: docs/plans/phase0/TSK-P0-024/PLAN.md
+implementation_log: docs/plans/phase0/TSK-P0-024/EXEC_LOG.md

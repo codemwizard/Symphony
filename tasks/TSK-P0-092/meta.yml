@@ -1,0 +1,43 @@
+phase: "0"
+task_id: "TSK-P0-092"
+title: "Secure SDLC policy stub + Semgrep SAST baseline (pinned)"
+owner_role: "SECURITY_GUARDIAN"
+status: "completed"
+depends_on:
+- "TSK-P0-087"
+- "TSK-P0-089"
+touches:
+- "docs/security/SECURE_SDLC_POLICY.md"
+- ".github/workflows/invariants.yml"
+- "security/semgrep/rules.yml"
+- "scripts/security/run_semgrep_sast.sh"
+- "scripts/audit/verify_semgrep_sast_evidence.sh"
+- "docs/security/SECURITY_MANIFEST.yml"
+- "tasks/TSK-P0-092/meta.yml"
+invariants:
+- "NEW: Semgrep SAST baseline runs (pinned) and emits evidence (SKIPPED allowed locally if tool missing)"
+work:
+- "Add a Secure SDLC policy stub that defines minimum static gates and evidence expectations in Phase-0."
+- "Introduce a Phase-0 Semgrep baseline (minimal repo-managed ruleset, pinned tool version) and emit evidence with tool version + scanned paths."
+- "Wire SAST baseline into CI/pre-CI gating and map it in SECURITY_MANIFEST."
+acceptance_criteria:
+- "SAST baseline runner is deterministic and runs in both local and CI."
+- "Evidence artifact includes tool version, git_sha, scanned file set, and status."
+verification:
+- "scripts/security/run_semgrep_sast.sh"
+- "scripts/audit/verify_semgrep_sast_evidence.sh"
+evidence:
+- "evidence/phase0/semgrep_sast.json"
+failure_modes:
+- "SAST baseline only runs in CI (local parity broken)."
+- "SAST output is non-deterministic or missing provenance fields."
+- "Evidence file missing."
+must_read:
+- "docs/security/SECURITY_MANIFEST.yml"
+- "docs/audits/TIER1_GAP_AUDIT_2026-02-06.md"
+implementation_plan: "docs/plans/phase0/TSK-P0-090_audit_gap_closeout/PLAN.md"
+implementation_log: "docs/plans/phase0/TSK-P0-090_audit_gap_closeout/EXEC_LOG.md"
+notes: ""
+client: "codex_cli"
+assigned_agent: "security_guardian"
+model: "<UNASSIGNED>"

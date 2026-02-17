@@ -1,0 +1,48 @@
+phase: '1'
+task_id: TSK-P1-007
+title: INV-114 Instruction Finality Enforcement
+owner_role: DB_FOUNDATION
+status: completed
+depends_on:
+- TSK-P1-002
+- TSK-P1-006
+touches:
+- schema/migrations/**
+- scripts/db/verify_instruction_finality_invariant.sh
+- scripts/db/tests/test_instruction_finality.sh
+- scripts/db/verify_invariants.sh
+- docs/contracts/sqlstate_map.yml
+- docs/control_planes/CONTROL_PLANES.yml
+- docs/invariants/**
+invariants:
+- INV-061
+- INV-097
+- INV-114
+work:
+- Add forward-only schema/triggers for finality and reversal-only semantics.
+- Add INT-G25 verifier and runtime tests.
+- Register SQLSTATE P7003 and promote INV-114 when complete.
+acceptance_criteria:
+- Finalized instructions are non-mutable by enforced DB semantics.
+- INT-G25 evidence is deterministic and schema-conformant.
+verification:
+- scripts/db/verify_instruction_finality_invariant.sh
+- scripts/db/tests/test_instruction_finality.sh
+- scripts/audit/check_sqlstate_map_drift.sh
+- scripts/audit/verify_control_planes_drift.sh
+- scripts/audit/verify_phase1_contract.sh
+- scripts/dev/pre_ci.sh
+evidence:
+- evidence/phase1/instruction_finality_invariant.json
+- evidence/phase1/instruction_finality_runtime.json
+failure_modes:
+- Finality trigger/constraint missing or bypassable.
+- Evidence file missing.
+must_read:
+- docs/decisions/ADR-0012-payment-finality-model-deferred.md
+implementation_plan: docs/plans/phase1/TSK-P1-007_inv_114_instruction_finality_enforcement/PLAN.md
+implementation_log: docs/plans/phase1/TSK-P1-007_inv_114_instruction_finality_enforcement/EXEC_LOG.md
+notes: Primary mechanical implementation for INV-114.
+client: codex_cli
+assigned_agent: db_foundation
+model: <UNASSIGNED>

@@ -1,0 +1,40 @@
+phase: '0'
+task_id: TSK-P0-046
+title: Phase-0 implementation plan reflects current scope
+owner_role: ARCHITECT
+status: completed
+depends_on:
+- TSK-P0-041
+touches:
+- docs/Phase_0001-0005/implementation_plan.md
+- scripts/audit/verify_phase0_impl_plan.sh
+- docs/PHASE0/phase0_contract.yml
+- docs/invariants/INVARIANTS_MANIFEST.yml
+- tasks/TSK-P0-046/meta.yml
+invariants:
+- INV-069 (Phase-0 implementation plan is current)
+work:
+- Update Phase_0001-0005 implementation plan to include tenant/member rails and Phase-0
+  gates.
+- Add verifier script to assert required references.
+- Emit evidence on pass/fail.
+acceptance_criteria:
+- "Plan includes migrations 0014\u20130019 and tenant/member rails."
+- Evidence file is written on pass/fail.
+verification:
+- scripts/audit/verify_phase0_impl_plan.sh
+evidence:
+- ./evidence/phase0/phase0_impl_plan.json
+failure_modes:
+- Evidence file missing.
+- Plan missing required references.
+must_read:
+- docs/invariants/INVARIANTS_MANIFEST.yml
+- scripts/db/verify_invariants.sh
+- scripts/db/ci_invariant_gate.sql
+notes: ''
+client: codex_cli
+assigned_agent: architect
+model: <UNASSIGNED>
+implementation_plan: docs/plans/phase0/TSK-P0-046/PLAN.md
+implementation_log: docs/plans/phase0/TSK-P0-046/EXEC_LOG.md

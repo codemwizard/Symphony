@@ -1,0 +1,53 @@
+# Canonical Task Meta Template (lower_snake_case)
+
+phase: "0"
+task_id: "TSK-P0-113"
+title: "Update invariant docs: remove stale TODO and point to real verifiers"
+owner_role: "INVARIANTS_CURATOR"
+status: "completed"   # planned | in_progress | completed
+
+depends_on:
+  - "TSK-P0-110"
+  - "TSK-P0-111"
+  - "TSK-P0-112"
+
+touches:
+  - "docs/invariants/INVARIANTS_MANIFEST.yml"
+  - "docs/invariants/INVARIANTS_IMPLEMENTED.md"
+  - "docs/invariants/INVARIANTS_QUICK.md"
+  - "docs/tasks/PHASE0_TASKS.md"
+
+invariants:
+  - "INV-007"
+  - "INV-011"
+  - "INV-012"
+  - "INV-013"
+
+work:
+  - "Update manifest verification strings to reference actual tests/verifiers."
+  - "Remove stale TODO wording in implemented invariants doc and ensure it matches manifest."
+  - "Regenerate QUICK."
+
+acceptance_criteria:
+  - "`scripts/audit/run_invariants_fast_checks.sh` passes and QUICK is in sync."
+
+verification:
+  - "scripts/audit/run_invariants_fast_checks.sh"
+
+evidence:
+  - "evidence/phase0/invariants_quick.json"
+
+failure_modes:
+  - "Evidence file missing"
+  - "Docs drift (implemented doc does not match manifest)"
+
+must_read:
+  - "docs/operations/TASK_CREATION_PROCESS.md"
+
+implementation_plan: "docs/plans/phase0/TSK-P0-109_invariant_implemented_alignment/PLAN.md"
+implementation_log: "docs/plans/phase0/TSK-P0-109_invariant_implemented_alignment/EXEC_LOG.md"
+
+notes: ""
+client: "codex_cli"
+assigned_agent: "invariants_curator"
+model: "gpt-5.3-codex"

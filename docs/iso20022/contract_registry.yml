@@ -1,0 +1,17 @@
+# ISO 20022 contract registry (Phase-0)
+#
+# This file defines what ISO 20022 "message contracts" are in scope for later adapter
+# contract tests. Phase-0 does not implement adapters; it establishes a versioned registry.
+
+registry_version: 1
+
+in_scope:
+  # Populate in Phase-1 with concrete message families/versions and schema locations.
+  - family: "TBD"
+    version: "TBD"
+    schema_path: "TBD"
+    fixtures_path: "TBD"
+
+out_of_scope:
+  - "Runtime adapter enforcement (Phase-1+)"
+

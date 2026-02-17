@@ -1,0 +1,38 @@
+phase: '0'
+task_id: TSK-P0-080
+title: Add billing usage ledger Phase-0 hook (append-only)
+owner_role: DB_FOUNDATION
+status: completed
+depends_on:
+- TSK-P0-073
+touches:
+- schema/migrations/**
+- scripts/db/**
+- tasks/TSK-P0-080/meta.yml
+invariants:
+- INV-090 (Atomic revenue event hook exists)
+work:
+- Add a forward-only migration creating billing_usage_events with attribution fields and append-only posture.
+- Add constraints/indexes needed for schema-level billable traceability in Phase-0.
+- Keep runtime pricing logic out of scope; schema hook only.
+acceptance_criteria:
+- billing_usage_events exists with required attribution and correlation fields.
+- UPDATE/DELETE protection is enforced (trigger and/or privilege posture).
+verification:
+- scripts/db/verify_invariants.sh
+- scripts/db/tests/test_db_functions.sh
+evidence:
+- evidence/phase0/business_foundation_hooks.json
+failure_modes:
+- Billing usage table missing required columns/constraints.
+- Append-only enforcement missing.
+- Evidence file missing.
+must_read:
+- docs/PHASE0/BUSINESS_INVARIANTS_ADDITION_IMPLEMENTATION.md
+- docs/plans/phase0/TSK-P0-080_business_invariants_addition/PLAN.md
+implementation_plan: docs/plans/phase0/TSK-P0-080_business_invariants_addition/PLAN.md
+implementation_log: docs/plans/phase0/TSK-P0-080_business_invariants_addition/EXEC_LOG.md
+notes: ''
+client: codex_cli
+assigned_agent: db_foundation
+model: <UNASSIGNED>

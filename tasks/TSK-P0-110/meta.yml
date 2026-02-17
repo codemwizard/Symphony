@@ -1,0 +1,49 @@
+# Canonical Task Meta Template (lower_snake_case)
+
+phase: "0"
+task_id: "TSK-P0-110"
+title: "Verify runtime roles are NOLOGIN (rolcanlogin=false) with evidence"
+owner_role: "DB_FOUNDATION"
+status: "completed"   # planned | in_progress | completed
+
+depends_on:
+  - "TSK-P0-109"
+
+touches:
+  - "scripts/db/verify_role_login_posture.sh"
+  - "scripts/db/verify_invariants.sh"
+  - "docs/invariants/INVARIANTS_MANIFEST.yml"
+
+invariants:
+  - "INV-007"
+
+work:
+  - "Add DB verifier that asserts runtime roles are NOLOGIN and emits evidence."
+  - "Wire verifier into verify_invariants so CI and local parity run it."
+
+acceptance_criteria:
+  - "Verifier fails closed if any runtime role has rolcanlogin=true."
+  - "Evidence emitted under evidence/phase0/role_login_posture.json."
+
+verification:
+  - "SKIP_POLICY_SEED=1 scripts/db/verify_invariants.sh"
+
+evidence:
+  - "evidence/phase0/role_login_posture.json"
+
+failure_modes:
+  - "Evidence file missing"
+  - "Runtime role can login (rolcanlogin=true)"
+
+must_read:
+  - "AGENTS.md"
+  - "schema/migrations/0003_roles.sql"
+  - "scripts/db/ci_invariant_gate.sql"
+
+implementation_plan: "docs/plans/phase0/TSK-P0-109_invariant_implemented_alignment/PLAN.md"
+implementation_log: "docs/plans/phase0/TSK-P0-109_invariant_implemented_alignment/EXEC_LOG.md"
+
+notes: ""
+client: "codex_cli"
+assigned_agent: "db_foundation"
+model: "gpt-5.3-codex"

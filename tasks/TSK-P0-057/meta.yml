@@ -1,0 +1,37 @@
+phase: '0'
+task_id: TSK-P0-057
+title: YAML normalization + meta schema enforcement
+owner_role: ARCHITECT
+status: completed
+depends_on:
+- TSK-P0-056
+touches:
+- tasks/**/meta.yml
+- tasks/_template/meta.yml
+- docs/operations/STYLE_GUIDE.md
+- scripts/audit/lint_yaml_conventions.sh
+- tasks/TSK-P0-057/meta.yml
+invariants:
+- INV-078
+work:
+- Convert YAML keys to lower_snake_case across tasks/docs/.github.
+- Enforce canonical meta schema (arrays vs strings).
+- Forbid mixed key variants (Depends On vs depends_on).
+acceptance_criteria:
+- YAML lint passes with no key violations.
+- All task meta conforms to template schema.
+verification:
+- scripts/audit/lint_yaml_conventions.sh
+evidence:
+- evidence/phase0/yaml_conventions_lint.json
+failure_modes:
+- Snake_case violations or schema mismatch.
+- Evidence file missing.
+must_read:
+- docs/operations/STYLE_GUIDE.md
+notes: ''
+client: codex_cli
+assigned_agent: architect
+model: <UNASSIGNED>
+implementation_plan: docs/plans/phase0/TSK-P0-057/PLAN.md
+implementation_log: docs/plans/phase0/TSK-P0-057/EXEC_LOG.md

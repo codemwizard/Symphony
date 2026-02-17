@@ -1,0 +1,36 @@
+phase: '1'
+task_id: TSK-P1-004
+title: Verify Agent Conformance Specification Finalization
+owner_role: SUPERVISOR
+status: completed
+depends_on:
+- TSK-P1-001
+touches:
+- docs/operations/VERIFY_AGENT_CONFORMANCE_SPEC.md
+- docs/operations/approval_metadata.schema.json
+- docs/operations/approval_sidecar.schema.json
+invariants:
+- INV-105
+work:
+- Finalize conformance specification with failure codes, regulated surfaces, and approval
+  artifact requirements.
+- Ensure spec alignment with operation manual authority model.
+acceptance_criteria:
+- Spec is complete and references authoritative operation manual sections.
+- Approval schemas and evidence expectations are explicitly documented.
+verification:
+- scripts/audit/verify_task_plans_present.sh
+- scripts/dev/pre_ci.sh
+evidence:
+- evidence/phase1/verify_agent_conformance_spec.json
+failure_modes:
+- Spec missing required sections.
+- Evidence file missing.
+must_read:
+- docs/operations/AI_AGENT_OPERATION_MANUAL.md
+implementation_plan: docs/plans/phase1/TSK-P1-004_verify_agent_conformance_spec/PLAN.md
+implementation_log: docs/plans/phase1/TSK-P1-004_verify_agent_conformance_spec/EXEC_LOG.md
+notes: Specification-quality gate for conformance tooling.
+client: codex_cli
+assigned_agent: supervisor
+model: <UNASSIGNED>

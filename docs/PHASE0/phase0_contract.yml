@@ -1,0 +1,1635 @@
+[
+  {
+    "task_id": "TSK-P0-001",
+    "status": "completed",
+    "verification_mode": "both",
+    "evidence_required": true,
+    "evidence_paths": [
+      "evidence/phase0/repo_structure.json"
+    ],
+    "evidence_scope": "ci_artifact",
+    "notes": "",
+    "gate_ids": []
+  },
+  {
+    "task_id": "TSK-P0-002",
+    "status": "completed",
+    "verification_mode": "both",
+    "evidence_required": true,
+    "evidence_paths": [
+      "evidence/phase0/evidence.json"
+    ],
+    "evidence_scope": "ci_artifact",
+    "notes": "",
+    "gate_ids": []
+  },
+  {
+    "task_id": "TSK-P0-003",
+    "status": "completed",
+    "verification_mode": "both",
+    "evidence_required": true,
+    "evidence_paths": [
+      "evidence/phase0/n_minus_one.json"
+    ],
+    "evidence_scope": "ci_artifact",
+    "notes": "",
+    "gate_ids": []
+  },
+  {
+    "task_id": "TSK-P0-004",
+    "status": "completed",
+    "verification_mode": "both",
+    "evidence_required": true,
+    "evidence_paths": [
+      "evidence/phase0/ddl_lock_risk.json"
+    ],
+    "evidence_scope": "ci_artifact",
+    "notes": "",
+    "gate_ids": [
+      "SEC-G02"
+    ]
+  },
+  {
+    "task_id": "TSK-P0-005",
+    "status": "completed",
+    "verification_mode": "both",
+    "evidence_required": true,
+    "evidence_paths": [
+      "evidence/phase0/idempotency_zombie.json"
+    ],
+    "evidence_scope": "ci_artifact",
+    "notes": "",
+    "gate_ids": []
+  },
+  {
+    "task_id": "TSK-P0-006",
+    "status": "completed",
+    "verification_mode": "both",
+    "evidence_required": true,
+    "evidence_paths": [
+      "evidence/phase0/openbao_smoke.json"
+    ],
+    "evidence_scope": "ci_artifact",
+    "notes": "",
+    "gate_ids": [
+      "SEC-G05"
+    ]
+  },
+  {
+    "task_id": "TSK-P0-007",
+    "status": "completed",
+    "verification_mode": "both",
+    "evidence_required": true,
+    "evidence_paths": [
+      "evidence/phase0/routing_fallback.json"
+    ],
+    "evidence_scope": "ci_artifact",
+    "notes": "",
+    "gate_ids": [
+      "INT-G12"
+    ]
+  },
+  {
+    "task_id": "TSK-P0-008",
+    "status": "completed",
+    "verification_mode": "both",
+    "evidence_required": true,
+    "evidence_paths": [
+      "evidence/phase0/batching_rules.json"
+    ],
+    "evidence_scope": "ci_artifact",
+    "notes": "",
+    "gate_ids": [
+      "INT-G11"
+    ]
+  },
+  {
+    "task_id": "TSK-P0-009",
+    "status": "completed",
+    "verification_mode": "both",
+    "evidence_required": true,
+    "evidence_paths": [
+      "evidence/phase0/invariants_quick.json"
+    ],
+    "evidence_scope": "ci_artifact",
+    "notes": "",
+    "gate_ids": []
+  },
+  {
+    "task_id": "TSK-P0-010",
+    "status": "completed",
+    "verification_mode": "ci",
+    "evidence_required": true,
+    "evidence_paths": [
+      "evidence/phase0/*.json"
+    ],
+    "evidence_scope": "ci_artifact",
+    "notes": "",
+    "gate_ids": []
+  },
+  {
+    "task_id": "TSK-P0-011",
+    "status": "completed",
+    "verification_mode": "both",
+    "evidence_required": true,
+    "evidence_paths": [
+      "evidence/phase0/evidence_validation.json"
+    ],
+    "evidence_scope": "ci_artifact",
+    "notes": "",
+    "gate_ids": [
+      "INT-G01"
+    ]
+  },
+  {
+    "task_id": "TSK-P0-012",
+    "status": "completed",
+    "verification_mode": "both",
+    "evidence_required": true,
+    "evidence_paths": [
+      "evidence/phase0/evidence.json"
+    ],
+    "evidence_scope": "ci_artifact",
+    "notes": "",
+    "gate_ids": []
+  },
+  {
+    "task_id": "TSK-P0-013",
+    "status": "completed",
+    "verification_mode": "both",
+    "evidence_required": true,
+    "evidence_paths": [
+      "evidence/phase0/baseline_drift.json"
+    ],
+    "evidence_scope": "ci_artifact",
+    "notes": "",
+    "gate_ids": []
+  },
+  {
+    "task_id": "TSK-P0-014",
+    "status": "completed",
+    "verification_mode": "both",
+    "evidence_required": true,
+    "evidence_paths": [
+      "evidence/phase0/security_definer_dynamic_sql.json"
+    ],
+    "evidence_scope": "ci_artifact",
+    "notes": "",
+    "gate_ids": [
+      "SEC-G03"
+    ]
+  },
+  {
+    "task_id": "TSK-P0-015",
+    "status": "completed",
+    "verification_mode": "both",
+    "evidence_required": true,
+    "evidence_paths": [
+      "evidence/phase0/routing_fallback_validation.json"
+    ],
+    "evidence_scope": "ci_artifact",
+    "notes": "",
+    "gate_ids": [
+      "INT-G13"
+    ]
+  },
+  {
+    "task_id": "TSK-P0-016",
+    "status": "completed",
+    "verification_mode": "both",
+    "evidence_required": true,
+    "evidence_paths": [
+      "evidence/phase0/batching_rules.json"
+    ],
+    "evidence_scope": "ci_artifact",
+    "notes": "",
+    "gate_ids": [
+      "INT-G11"
+    ]
+  },
+  {
+    "task_id": "TSK-P0-017",
+    "status": "completed",
+    "verification_mode": "both",
+    "evidence_required": true,
+    "evidence_paths": [
+      "evidence/phase0/structural_doc_linkage.json"
+    ],
+    "evidence_scope": "ci_artifact",
+    "notes": "",
+    "gate_ids": []
+  },
+  {
+    "task_id": "TSK-P0-018",
+    "status": "completed",
+    "verification_mode": "both",
+    "evidence_required": true,
+    "evidence_paths": [
+      "evidence/phase0/openbao_audit_log.json"
+    ],
+    "evidence_scope": "ci_artifact",
+    "notes": "",
+    "gate_ids": []
+  },
+  {
+    "task_id": "TSK-P0-019",
+    "status": "completed",
+    "verification_mode": "ci",
+    "evidence_required": true,
+    "evidence_paths": [
+      "evidence/phase0/ci_artifact_upload_verified.json"
+    ],
+    "evidence_scope": "ci_artifact",
+    "notes": "",
+    "gate_ids": []
+  },
+  {
+    "task_id": "TSK-P0-020",
+    "status": "completed",
+    "verification_mode": "both",
+    "evidence_required": true,
+    "evidence_paths": [
+      "evidence/phase0/outbox_pending_indexes.json"
+    ],
+    "evidence_scope": "ci_artifact",
+    "notes": "",
+    "gate_ids": [
+      "INT-G22"
+    ]
+  },
+  {
+    "task_id": "TSK-P0-021",
+    "status": "completed",
+    "verification_mode": "both",
+    "evidence_required": true,
+    "evidence_paths": [
+      "evidence/phase0/outbox_terminal_uniqueness.json"
+    ],
+    "evidence_scope": "ci_artifact",
+    "notes": "",
+    "gate_ids": []
+  },
+  {
+    "task_id": "TSK-P0-022",
+    "status": "completed",
+    "verification_mode": "both",
+    "evidence_required": true,
+    "evidence_paths": [
+      "evidence/phase0/outbox_mvcc_posture.json"
+    ],
+    "evidence_scope": "ci_artifact",
+    "notes": "",
+    "gate_ids": []
+  },
+  {
+    "task_id": "TSK-P0-023",
+    "status": "completed",
+    "verification_mode": "both",
+    "evidence_required": true,
+    "evidence_paths": [
+      "evidence/phase0/outbox_notify.json"
+    ],
+    "evidence_scope": "ci_artifact",
+    "notes": "",
+    "gate_ids": []
+  },
+  {
+    "task_id": "TSK-P0-024",
+    "status": "completed",
+    "verification_mode": "both",
+    "evidence_required": true,
+    "evidence_paths": [
+      "evidence/phase0/ingress_attestation.json"
+    ],
+    "evidence_scope": "ci_artifact",
+    "notes": "",
+    "gate_ids": []
+  },
+  {
+    "task_id": "TSK-P0-025",
+    "status": "completed",
+    "verification_mode": "both",
+    "evidence_required": true,
+    "evidence_paths": [
+      "evidence/phase0/revocation_tables.json"
+    ],
+    "evidence_scope": "ci_artifact",
+    "notes": "",
+    "gate_ids": []
+  },
+  {
+    "task_id": "TSK-P0-026",
+    "status": "completed",
+    "verification_mode": "both",
+    "evidence_required": true,
+    "evidence_paths": [
+      "evidence/phase0/core_boundary.json"
+    ],
+    "evidence_scope": "ci_artifact",
+    "notes": "",
+    "gate_ids": [
+      "SEC-G01"
+    ]
+  },
+  {
+    "task_id": "TSK-P0-027",
+    "status": "completed",
+    "verification_mode": "both",
+    "evidence_required": true,
+    "evidence_paths": [
+      "evidence/phase0/doc_alignment.json"
+    ],
+    "evidence_scope": "ci_artifact",
+    "notes": "",
+    "gate_ids": [
+      "INT-G09"
+    ]
+  },
+  {
+    "task_id": "TSK-P0-028",
+    "status": "completed",
+    "verification_mode": "both",
+    "evidence_required": true,
+    "evidence_paths": [
+      "evidence/phase0/db_fail_closed_roadmap.json"
+    ],
+    "evidence_scope": "ci_artifact",
+    "notes": "",
+    "gate_ids": [
+      "INT-G18"
+    ]
+  },
+  {
+    "task_id": "TSK-P0-029",
+    "status": "completed",
+    "verification_mode": "both",
+    "evidence_required": true,
+    "evidence_paths": [
+      "evidence/phase0/ddl_blocking_policy.json"
+    ],
+    "evidence_scope": "ci_artifact",
+    "notes": "",
+    "gate_ids": []
+  },
+  {
+    "task_id": "TSK-P0-030",
+    "status": "completed",
+    "verification_mode": "both",
+    "evidence_required": true,
+    "evidence_paths": [
+      "evidence/phase0/no_tx_migrations.json"
+    ],
+    "evidence_scope": "ci_artifact",
+    "notes": "",
+    "gate_ids": []
+  },
+  {
+    "task_id": "TSK-P0-031",
+    "status": "completed",
+    "verification_mode": "both",
+    "evidence_required": true,
+    "evidence_paths": [
+      "evidence/phase0/no_tx_marker_lint.json"
+    ],
+    "evidence_scope": "ci_artifact",
+    "notes": "",
+    "gate_ids": []
+  },
+  {
+    "task_id": "TSK-P0-032",
+    "status": "completed",
+    "verification_mode": "both",
+    "evidence_required": true,
+    "evidence_paths": [
+      "evidence/phase0/outbox_pending_indexes.json"
+    ],
+    "evidence_scope": "ci_artifact",
+    "notes": "",
+    "gate_ids": [
+      "INT-G22"
+    ]
+  },
+  {
+    "task_id": "TSK-P0-033",
+    "status": "completed",
+    "verification_mode": "both",
+    "evidence_required": true,
+    "evidence_paths": [
+      "evidence/phase0/no_tx_docs.json"
+    ],
+    "evidence_scope": "ci_artifact",
+    "notes": "",
+    "gate_ids": [
+      "INT-G10"
+    ]
+  },
+  {
+    "task_id": "TSK-P0-034",
+    "status": "completed",
+    "verification_mode": "both",
+    "evidence_required": true,
+    "evidence_paths": [
+      "evidence/phase0/invariants_docs_match.json"
+    ],
+    "evidence_scope": "ci_artifact",
+    "notes": "",
+    "gate_ids": [
+      "INT-G17"
+    ]
+  },
+  {
+    "task_id": "TSK-P0-035",
+    "status": "completed",
+    "verification_mode": "both",
+    "evidence_required": true,
+    "evidence_paths": [
+      "evidence/phase0/proxy_resolution_invariant.json"
+    ],
+    "evidence_scope": "ci_artifact",
+    "notes": "",
+    "gate_ids": [
+      "INT-G08"
+    ]
+  },
+  {
+    "task_id": "TSK-P0-036",
+    "status": "completed",
+    "verification_mode": "local",
+    "evidence_required": true,
+    "evidence_paths": [
+      "evidence/phase0/local_ci_parity.json"
+    ],
+    "evidence_scope": "repo",
+    "notes": "",
+    "gate_ids": []
+  },
+  {
+    "task_id": "TSK-P0-037",
+    "status": "completed",
+    "verification_mode": "both",
+    "evidence_required": true,
+    "evidence_paths": [
+      "evidence/phase0/phase0_contract.json"
+    ],
+    "evidence_scope": "ci_artifact",
+    "notes": "",
+    "gate_ids": [
+      "INT-G03"
+    ]
+  },
+  {
+    "task_id": "TSK-P0-038",
+    "status": "completed",
+    "verification_mode": "both",
+    "evidence_required": true,
+    "evidence_paths": [
+      "evidence/phase0/sqlstate_map_drift.json"
+    ],
+    "evidence_scope": "ci_artifact",
+    "notes": "",
+    "gate_ids": [
+      "INT-G04"
+    ]
+  },
+  {
+    "task_id": "TSK-P0-039",
+    "status": "completed",
+    "verification_mode": "both",
+    "evidence_required": true,
+    "evidence_paths": [
+      "evidence/phase0/invariants_quick.json"
+    ],
+    "evidence_scope": "ci_artifact",
+    "notes": "",
+    "gate_ids": []
+  },
+  {
+    "task_id": "TSK-P0-040",
+    "status": "completed",
+    "verification_mode": "both",
+    "evidence_required": true,
+    "evidence_paths": [
+      "evidence/phase0/phase0_contract.json",
+      "evidence/phase0/sqlstate_map_drift.json"
+    ],
+    "evidence_scope": "ci_artifact",
+    "notes": "",
+    "gate_ids": [
+      "INT-G03",
+      "INT-G04"
+    ]
+  },
+  {
+    "task_id": "TSK-P0-041",
+    "status": "completed",
+    "verification_mode": "both",
+    "evidence_required": true,
+    "evidence_paths": [
+      "evidence/phase0/tenant_member_hooks.json"
+    ],
+    "evidence_scope": "ci_artifact",
+    "notes": "",
+    "gate_ids": []
+  },
+  {
+    "task_id": "TSK-P0-042",
+    "status": "completed",
+    "verification_mode": "both",
+    "evidence_required": true,
+    "evidence_paths": [
+      "evidence/phase0/invariants_quick.json"
+    ],
+    "evidence_scope": "ci_artifact",
+    "notes": "",
+    "gate_ids": []
+  },
+  {
+    "task_id": "TSK-P0-043",
+    "status": "completed",
+    "verification_mode": "both",
+    "evidence_required": true,
+    "evidence_paths": [
+      "evidence/phase0/tenant_member_hooks.json"
+    ],
+    "evidence_scope": "ci_artifact",
+    "notes": "",
+    "gate_ids": []
+  },
+  {
+    "task_id": "TSK-P0-044",
+    "status": "completed",
+    "verification_mode": "both",
+    "evidence_required": true,
+    "evidence_paths": [
+      "evidence/phase0/baseline_governance.json"
+    ],
+    "evidence_scope": "ci_artifact",
+    "notes": "",
+    "gate_ids": [
+      "INT-G05"
+    ]
+  },
+  {
+    "task_id": "TSK-P0-045",
+    "status": "completed",
+    "verification_mode": "both",
+    "evidence_required": true,
+    "evidence_paths": [
+      "evidence/phase0/ddl_allowlist_governance.json"
+    ],
+    "evidence_scope": "ci_artifact",
+    "notes": "",
+    "gate_ids": [
+      "SEC-G04"
+    ]
+  },
+  {
+    "task_id": "TSK-P0-046",
+    "status": "completed",
+    "verification_mode": "both",
+    "evidence_required": true,
+    "evidence_paths": [
+      "evidence/phase0/phase0_impl_plan.json"
+    ],
+    "evidence_scope": "ci_artifact",
+    "notes": "",
+    "gate_ids": [
+      "INT-G07"
+    ]
+  },
+  {
+    "task_id": "TSK-P0-047",
+    "status": "completed",
+    "verification_mode": "both",
+    "evidence_required": true,
+    "evidence_paths": [
+      "evidence/phase0/rebaseline_decision.json"
+    ],
+    "evidence_scope": "ci_artifact",
+    "notes": "Day-zero rebaseline ADR + decision.",
+    "gate_ids": [
+      "INT-G06"
+    ]
+  },
+  {
+    "task_id": "TSK-P0-048",
+    "status": "completed",
+    "verification_mode": "both",
+    "evidence_required": true,
+    "evidence_paths": [
+      "evidence/phase0/baseline_snapshot.json"
+    ],
+    "evidence_scope": "ci_artifact",
+    "notes": "Baseline snapshot generator + canonicalization.",
+    "gate_ids": []
+  },
+  {
+    "task_id": "TSK-P0-049",
+    "status": "completed",
+    "verification_mode": "both",
+    "evidence_required": true,
+    "evidence_paths": [
+      "evidence/phase0/baseline_strategy.json"
+    ],
+    "evidence_scope": "ci_artifact",
+    "notes": "migrate.sh baseline strategy support.",
+    "gate_ids": []
+  },
+  {
+    "task_id": "TSK-P0-050",
+    "status": "completed",
+    "verification_mode": "both",
+    "evidence_required": true,
+    "evidence_paths": [
+      "evidence/phase0/three_pillars_doc.json"
+    ],
+    "evidence_scope": "ci_artifact",
+    "notes": "",
+    "gate_ids": [
+      "INT-G14"
+    ]
+  },
+  {
+    "task_id": "TSK-P0-051",
+    "status": "completed",
+    "verification_mode": "both",
+    "evidence_required": true,
+    "evidence_paths": [
+      "evidence/phase0/control_planes_drift.json"
+    ],
+    "evidence_scope": "ci_artifact",
+    "notes": "",
+    "gate_ids": [
+      "INT-G15"
+    ]
+  },
+  {
+    "task_id": "TSK-P0-052",
+    "status": "completed",
+    "verification_mode": "both",
+    "evidence_required": true,
+    "evidence_paths": [
+      "evidence/phase0/security_secrets_scan.json",
+      "evidence/phase0/security_dotnet_deps_audit.json",
+      "evidence/phase0/security_secure_config_lint.json",
+      "evidence/phase0/security_insecure_patterns.json"
+    ],
+    "evidence_scope": "ci_artifact",
+    "notes": "",
+    "gate_ids": [
+      "SEC-G07",
+      "SEC-G08",
+      "SEC-G09",
+      "SEC-G10"
+    ]
+  },
+  {
+    "task_id": "TSK-P0-053",
+    "status": "completed",
+    "verification_mode": "both",
+    "evidence_required": false,
+    "evidence_paths": [],
+    "evidence_scope": "repo",
+    "notes": "Docs\u2011only mapping task; verifier is in TSK\u2011P0\u2011054.",
+    "gate_ids": []
+  },
+  {
+    "task_id": "TSK-P0-054",
+    "status": "completed",
+    "verification_mode": "both",
+    "evidence_required": true,
+    "evidence_paths": [
+      "evidence/phase0/compliance_manifest_verify.json"
+    ],
+    "evidence_scope": "ci_artifact",
+    "notes": "Verifier proof artifact is compliance_manifest_verify.json.",
+    "gate_ids": [
+      "GOV-G01"
+    ]
+  },
+  {
+    "task_id": "TSK-P0-055",
+    "status": "completed",
+    "verification_mode": "both",
+    "evidence_required": true,
+    "evidence_paths": [
+      "evidence/phase0/control_planes_drift.json"
+    ],
+    "evidence_scope": "ci_artifact",
+    "notes": "",
+    "gate_ids": [
+      "INT-G15"
+    ]
+  },
+  {
+    "task_id": "TSK-P0-056",
+    "status": "completed",
+    "verification_mode": "both",
+    "evidence_required": true,
+    "evidence_paths": [
+      "evidence/phase0/evidence_validation.json"
+    ],
+    "evidence_scope": "ci_artifact",
+    "notes": "",
+    "gate_ids": [
+      "INT-G01"
+    ]
+  },
+  {
+    "task_id": "TSK-P0-057",
+    "status": "completed",
+    "verification_mode": "both",
+    "evidence_required": true,
+    "evidence_paths": [
+      "evidence/phase0/yaml_conventions_lint.json"
+    ],
+    "evidence_scope": "ci_artifact",
+    "notes": "",
+    "gate_ids": [
+      "INT-G16"
+    ]
+  },
+  {
+    "task_id": "TSK-P0-058",
+    "status": "completed",
+    "verification_mode": "ci",
+    "evidence_required": true,
+    "evidence_paths": [
+      "evidence/phase0/ci_toolchain.json"
+    ],
+    "evidence_scope": "ci_artifact",
+    "notes": "",
+    "gate_ids": [
+      "SEC-G06"
+    ]
+  },
+  {
+    "task_id": "TSK-P0-060",
+    "status": "completed",
+    "verification_mode": "both",
+    "evidence_required": true,
+    "evidence_paths": [
+      "evidence/phase0/phase0_contract_evidence_status.json"
+    ],
+    "evidence_scope": "ci_artifact",
+    "notes": "",
+    "gate_ids": [
+      "INT-G19"
+    ]
+  },
+  {
+    "task_id": "TSK-P0-061",
+    "status": "completed",
+    "verification_mode": "both",
+    "evidence_required": true,
+    "evidence_paths": [
+      "evidence/phase0/ci_order.json"
+    ],
+    "evidence_scope": "ci_artifact",
+    "notes": "",
+    "gate_ids": [
+      "INT-G20"
+    ]
+  },
+  {
+    "task_id": "TSK-P0-062",
+    "status": "completed",
+    "verification_mode": "both",
+    "evidence_required": true,
+    "evidence_paths": [
+      "evidence/phase0/yaml_conventions_lint.json"
+    ],
+    "evidence_scope": "ci_artifact",
+    "notes": "Set to completed after YAML lint and schema checks pass.",
+    "gate_ids": [
+      "INT-G16"
+    ]
+  },
+  {
+    "task_id": "TSK-P0-063",
+    "status": "completed",
+    "verification_mode": "both",
+    "evidence_required": true,
+    "evidence_paths": [
+      "evidence/phase0/phase0_contract_evidence_status.json"
+    ],
+    "evidence_scope": "ci_artifact",
+    "notes": "",
+    "gate_ids": [
+      "INT-G19"
+    ]
+  },
+  {
+    "task_id": "TSK-P0-064",
+    "status": "completed",
+    "verification_mode": "both",
+    "evidence_required": true,
+    "evidence_paths": [
+      "evidence/phase0/phase0_contract_evidence_status.json"
+    ],
+    "evidence_scope": "ci_artifact",
+    "notes": "",
+    "gate_ids": [
+      "INT-G19"
+    ]
+  },
+  {
+    "task_id": "TSK-P0-065",
+    "status": "completed",
+    "verification_mode": "both",
+    "evidence_required": true,
+    "evidence_paths": [
+      "evidence/phase0/phase0_contract.json"
+    ],
+    "evidence_scope": "ci_artifact",
+    "notes": "",
+    "gate_ids": [
+      "INT-G03"
+    ]
+  },
+  {
+    "task_id": "TSK-P0-066",
+    "status": "completed",
+    "verification_mode": "both",
+    "evidence_required": true,
+    "evidence_paths": [
+      "evidence/phase0/phase0_contract.json"
+    ],
+    "evidence_scope": "ci_artifact",
+    "notes": "",
+    "gate_ids": [
+      "INT-G03"
+    ]
+  },
+  {
+    "task_id": "TSK-P0-067",
+    "status": "completed",
+    "verification_mode": "both",
+    "evidence_required": true,
+    "evidence_paths": [
+      "evidence/phase0/ci_order.json"
+    ],
+    "evidence_scope": "ci_artifact",
+    "notes": "Ordering fix for contract evidence status gate; verify after OpenBao run.",
+    "gate_ids": [
+      "INT-G20"
+    ]
+  },
+  {
+    "task_id": "TSK-P0-068",
+    "status": "completed",
+    "verification_mode": "both",
+    "evidence_required": false,
+    "evidence_paths": [],
+    "evidence_scope": "repo",
+    "notes": "Audit report alignment for resolved governance gaps.",
+    "gate_ids": []
+  },
+  {
+    "task_id": "TSK-P0-069",
+    "status": "completed",
+    "verification_mode": "both",
+    "evidence_required": true,
+    "evidence_paths": [
+      "evidence/phase0/phase0_contract_evidence_status.json"
+    ],
+    "evidence_scope": "ci_artifact",
+    "notes": "Regression test for contract parse failure evidence.",
+    "gate_ids": []
+  },
+  {
+    "task_id": "TSK-P0-070",
+    "status": "completed",
+    "verification_mode": "both",
+    "evidence_required": false,
+    "evidence_paths": [],
+    "evidence_scope": "repo",
+    "notes": "Plan/log scaffolding and index.",
+    "gate_ids": []
+  },
+  {
+    "task_id": "TSK-P0-071",
+    "status": "completed",
+    "verification_mode": "both",
+    "evidence_required": false,
+    "evidence_paths": [],
+    "evidence_scope": "repo",
+    "notes": "Task meta schema update for plan/log linkage.",
+    "gate_ids": []
+  },
+  {
+    "task_id": "TSK-P0-072",
+    "status": "completed",
+    "verification_mode": "both",
+    "evidence_required": true,
+    "evidence_paths": [
+      "evidence/phase0/task_plans_present.json"
+    ],
+    "evidence_scope": "ci_artifact",
+    "notes": "Plan/log verifier evidence.",
+    "gate_ids": []
+  },
+  {
+    "task_id": "TSK-P0-073",
+    "status": "completed",
+    "verification_mode": "both",
+    "evidence_required": false,
+    "evidence_paths": [],
+    "evidence_scope": "repo",
+    "notes": "Wire plan/log verifier into pre-CI and CI.",
+    "gate_ids": []
+  },
+  {
+    "task_id": "TSK-P0-080",
+    "status": "completed",
+    "verification_mode": "both",
+    "evidence_required": false,
+    "evidence_paths": [],
+    "evidence_scope": "repo",
+    "notes": "Billing usage ledger hook (append-only) planned.",
+    "gate_ids": []
+  },
+  {
+    "task_id": "TSK-P0-081",
+    "status": "completed",
+    "verification_mode": "both",
+    "evidence_required": false,
+    "evidence_paths": [],
+    "evidence_scope": "repo",
+    "notes": "External proofs hook (append-only) planned.",
+    "gate_ids": []
+  },
+  {
+    "task_id": "TSK-P0-082",
+    "status": "completed",
+    "verification_mode": "both",
+    "evidence_required": false,
+    "evidence_paths": [],
+    "evidence_scope": "repo",
+    "notes": "Correlation stitching hook planned.",
+    "gate_ids": []
+  },
+  {
+    "task_id": "TSK-P0-083",
+    "status": "completed",
+    "verification_mode": "both",
+    "evidence_required": false,
+    "evidence_paths": [],
+    "evidence_scope": "repo",
+    "notes": "Evidence pack primitive hook planned.",
+    "gate_ids": []
+  },
+  {
+    "task_id": "TSK-P0-084",
+    "status": "completed",
+    "verification_mode": "both",
+    "evidence_required": false,
+    "evidence_paths": [],
+    "evidence_scope": "repo",
+    "notes": "Billable hierarchy hook planned.",
+    "gate_ids": []
+  },
+  {
+    "task_id": "TSK-P0-085",
+    "status": "completed",
+    "verification_mode": "both",
+    "evidence_required": false,
+    "evidence_paths": [],
+    "evidence_scope": "repo",
+    "notes": "Multi-signature ingress hook planned.",
+    "gate_ids": []
+  },
+  {
+    "task_id": "TSK-P0-086",
+    "status": "completed",
+    "verification_mode": "both",
+    "evidence_required": false,
+    "evidence_paths": [],
+    "evidence_scope": "repo",
+    "notes": "Business foundation hook verifier and invariant wiring planned.",
+    "gate_ids": []
+  },
+  {
+    "task_id": "TSK-P0-087",
+    "status": "completed",
+    "verification_mode": "both",
+    "evidence_required": true,
+    "evidence_paths": [
+      "evidence/phase0/ci_toolchain.json"
+    ],
+    "evidence_scope": "ci_artifact",
+    "notes": "Local/CI toolchain parity for mechanical gates; repo-managed .venv/.toolchain.",
+    "gate_ids": [
+      "SEC-G06"
+    ]
+  },
+  {
+    "task_id": "TSK-P0-088",
+    "status": "completed",
+    "verification_mode": "both",
+    "evidence_required": false,
+    "evidence_paths": [],
+    "evidence_scope": "repo",
+    "notes": "Tier-1 gap audit report (docs only).",
+    "gate_ids": []
+  },
+  {
+    "task_id": "TSK-P0-089",
+    "status": "completed",
+    "verification_mode": "both",
+    "evidence_required": false,
+    "evidence_paths": [],
+    "evidence_scope": "repo",
+    "notes": "Tier-1 gap audit addendum: ISO 27001/27002, ISO 20022, Zero Trust, and forward-only blue/green migration mechanics (docs only).",
+    "gate_ids": []
+  },
+  {
+    "task_id": "TSK-P0-090",
+    "status": "completed",
+    "verification_mode": "both",
+    "evidence_required": false,
+    "evidence_paths": [],
+    "evidence_scope": "repo",
+    "notes": "Key management policy stub + mechanical verifier planned.",
+    "gate_ids": []
+  },
+  {
+    "task_id": "TSK-P0-091",
+    "status": "completed",
+    "verification_mode": "both",
+    "evidence_required": false,
+    "evidence_paths": [],
+    "evidence_scope": "repo",
+    "notes": "Audit logging retention/review policy stub + mechanical verifier planned.",
+    "gate_ids": []
+  },
+  {
+    "task_id": "TSK-P0-092",
+    "status": "completed",
+    "verification_mode": "both",
+    "evidence_required": false,
+    "evidence_paths": [],
+    "evidence_scope": "repo",
+    "notes": "Secure SDLC policy stub + SAST readiness gate planned.",
+    "gate_ids": []
+  },
+  {
+    "task_id": "TSK-P0-093",
+    "status": "completed",
+    "verification_mode": "both",
+    "evidence_required": false,
+    "evidence_paths": [],
+    "evidence_scope": "repo",
+    "notes": "Expand/contract migration guardrail lint planned (no destructive DDL; nullability safety).",
+    "gate_ids": []
+  },
+  {
+    "task_id": "TSK-P0-094",
+    "status": "completed",
+    "verification_mode": "both",
+    "evidence_required": false,
+    "evidence_paths": [],
+    "evidence_scope": "repo",
+    "notes": "PK/FK type stability lint planned (ADR waiver marker).",
+    "gate_ids": []
+  },
+  {
+    "task_id": "TSK-P0-095",
+    "status": "completed",
+    "verification_mode": "both",
+    "evidence_required": false,
+    "evidence_paths": [],
+    "evidence_scope": "repo",
+    "notes": "Table conventions spec + catalog verifier planned.",
+    "gate_ids": []
+  },
+  {
+    "task_id": "TSK-P0-096",
+    "status": "completed",
+    "verification_mode": "both",
+    "evidence_required": false,
+    "evidence_paths": [],
+    "evidence_scope": "repo",
+    "notes": "Register new closeout invariants in manifest and docs planned.",
+    "gate_ids": []
+  },
+  {
+    "task_id": "TSK-P0-097",
+    "status": "completed",
+    "verification_mode": "both",
+    "evidence_required": false,
+    "evidence_paths": [],
+    "evidence_scope": "repo",
+    "notes": "Wire new closeout verifiers into pre-CI and CI planned.",
+    "gate_ids": []
+  },
+  {
+    "task_id": "TSK-P0-098",
+    "status": "completed",
+    "verification_mode": "both",
+    "evidence_required": false,
+    "evidence_paths": [],
+    "evidence_scope": "repo",
+    "notes": "Reconcile governance status for implemented business foundation hooks planned.",
+    "gate_ids": []
+  },
+  {
+    "task_id": "TSK-P0-099",
+    "status": "completed",
+    "verification_mode": "both",
+    "evidence_required": false,
+    "evidence_paths": [],
+    "evidence_scope": "repo",
+    "notes": "ISO 20022 and Zero Trust closeout docs + mechanical verifiers planned.",
+    "gate_ids": []
+  },
+  {
+    "task_id": "TSK-P0-100",
+    "status": "completed",
+    "verification_mode": "both",
+    "evidence_required": false,
+    "evidence_paths": [],
+    "evidence_scope": "repo",
+    "notes": "Evidence harness integrity (watch-the-watcher) verifier planned.",
+    "gate_ids": []
+  },
+  {
+    "task_id": "TSK-P0-101",
+    "status": "completed",
+    "verification_mode": "both",
+    "evidence_required": false,
+    "evidence_paths": [],
+    "evidence_scope": "repo",
+    "notes": "Participant registry schema hook + verifier planned.",
+    "gate_ids": []
+  },
+  {
+    "task_id": "TSK-P0-102",
+    "status": "completed",
+    "verification_mode": "both",
+    "evidence_required": false,
+    "evidence_paths": [],
+    "evidence_scope": "repo",
+    "notes": "Evidence pack signing/anchoring schema hooks + verifier planned.",
+    "gate_ids": []
+  },
+  {
+    "task_id": "TSK-P0-103",
+    "status": "completed",
+    "verification_mode": "both",
+    "evidence_required": false,
+    "evidence_paths": [],
+    "evidence_scope": "repo",
+    "notes": "Privilege posture closeout for new business tables (REVOKE hygiene) planned.",
+    "gate_ids": []
+  },
+  {
+    "task_id": "TSK-P0-104",
+    "status": "completed",
+    "verification_mode": "both",
+    "evidence_required": false,
+    "evidence_paths": [],
+    "evidence_scope": "repo",
+    "notes": "Closeout checklist matrix doc (docs only).",
+    "gate_ids": []
+  },
+  {
+    "task_id": "TSK-P0-105",
+    "status": "completed",
+    "verification_mode": "both",
+    "evidence_required": true,
+    "evidence_paths": [
+      "evidence/phase0/remediation_workflow_doc.json"
+    ],
+    "evidence_scope": "ci_artifact",
+    "notes": "Normative remediation workflow and plan/log cluster for mechanical traceability.",
+    "gate_ids": []
+  },
+  {
+    "task_id": "TSK-P0-106",
+    "status": "completed",
+    "verification_mode": "both",
+    "evidence_required": true,
+    "evidence_paths": [
+      "evidence/phase0/remediation_trace.json",
+      "evidence/phase0/remediation_workflow_doc.json"
+    ],
+    "evidence_scope": "ci_artifact",
+    "notes": "Verifier enforces remediation trace for production-affecting changes (Option 2, low-noise).",
+    "gate_ids": []
+  },
+  {
+    "task_id": "TSK-P0-107",
+    "status": "completed",
+    "verification_mode": "both",
+    "evidence_required": false,
+    "evidence_paths": [],
+    "evidence_scope": "repo",
+    "notes": "Register INV-105 and contract/task plumbing for remediation trace enforcement.",
+    "gate_ids": []
+  },
+  {
+    "task_id": "TSK-P0-108",
+    "status": "completed",
+    "verification_mode": "both",
+    "evidence_required": false,
+    "evidence_paths": [],
+    "evidence_scope": "repo",
+    "notes": "Tests for remediation trace verifier (fast checks).",
+    "gate_ids": []
+  },
+  {
+    "task_id": "TSK-P0-109",
+    "status": "completed",
+    "verification_mode": "both",
+    "evidence_required": false,
+    "evidence_paths": [],
+    "evidence_scope": "repo",
+    "notes": "Plan-driven reconciliation of implemented invariants vs mechanical verification hooks.",
+    "gate_ids": []
+  },
+  {
+    "task_id": "TSK-P0-110",
+    "status": "completed",
+    "verification_mode": "both",
+    "evidence_required": true,
+    "evidence_paths": [
+      "evidence/phase0/role_login_posture.json"
+    ],
+    "evidence_scope": "ci_artifact",
+    "notes": "DB verifier: runtime roles are NOLOGIN (rolcanlogin=false).",
+    "gate_ids": []
+  },
+  {
+    "task_id": "TSK-P0-111",
+    "status": "completed",
+    "verification_mode": "both",
+    "evidence_required": true,
+    "evidence_paths": [
+      "evidence/phase0/idempotency_zombie.json",
+      "evidence/phase0/outbox_claim_semantics.json",
+      "evidence/phase0/outbox_lease_fencing.json"
+    ],
+    "evidence_scope": "ci_artifact",
+    "notes": "DB tests: outbox idempotency, claim semantics, lease fencing (behavior + definitional checks).",
+    "gate_ids": []
+  },
+  {
+    "task_id": "TSK-P0-112",
+    "status": "completed",
+    "verification_mode": "both",
+    "evidence_required": false,
+    "evidence_paths": [],
+    "evidence_scope": "repo",
+    "notes": "Wire new DB tests into local pre-ci and CI DB job.",
+    "gate_ids": []
+  },
+  {
+    "task_id": "TSK-P0-113",
+    "status": "completed",
+    "verification_mode": "both",
+    "evidence_required": false,
+    "evidence_paths": [],
+    "evidence_scope": "repo",
+    "notes": "Update invariants docs to reference verifiers and remove stale TODO.",
+    "gate_ids": []
+  },
+  {
+    "task_id": "TSK-P0-114",
+    "status": "completed",
+    "verification_mode": "both",
+    "evidence_required": false,
+    "evidence_paths": [],
+    "evidence_scope": "repo",
+    "notes": "Plan + task cluster: declare BOZ/ZDPA/IPDR requirements as roadmap invariants and create ADR stubs.",
+    "gate_ids": []
+  },
+  {
+    "task_id": "TSK-P0-115",
+    "status": "completed",
+    "verification_mode": "both",
+    "evidence_required": false,
+    "evidence_paths": [],
+    "evidence_scope": "repo",
+    "notes": "Register BOZ/ZDPA/IPDR roadmap invariants in manifest + sync roadmap doc.",
+    "gate_ids": []
+  },
+  {
+    "task_id": "TSK-P0-116",
+    "status": "completed",
+    "verification_mode": "both",
+    "evidence_required": false,
+    "evidence_paths": [],
+    "evidence_scope": "repo",
+    "notes": "Authoritative ADR stubs for finality, ZDPA survivability, and NFS truth anchors.",
+    "gate_ids": []
+  },
+  {
+    "task_id": "TSK-P0-117",
+    "status": "completed",
+    "verification_mode": "both",
+    "evidence_required": false,
+    "evidence_paths": [],
+    "evidence_scope": "repo",
+    "notes": "Zambia regulatory documentation stubs (CII brief, ZDPA map, activation preconditions).",
+    "gate_ids": []
+  },
+  {
+    "task_id": "TSK-P0-118",
+    "status": "completed",
+    "verification_mode": "both",
+    "evidence_required": false,
+    "evidence_paths": [],
+    "evidence_scope": "repo",
+    "notes": "Plan + task cluster: wire CI DB checks (N-1 + no-tx migrations test) into local pre_ci for Tier-1 parity.",
+    "gate_ids": []
+  },
+  {
+    "task_id": "TSK-P0-119",
+    "status": "completed",
+    "verification_mode": "both",
+    "evidence_required": false,
+    "evidence_paths": [],
+    "evidence_scope": "repo",
+    "notes": "Implement: run n_minus_one_check and test_no_tx_migrations in scripts/dev/pre_ci.sh.",
+    "gate_ids": []
+  },
+  {
+    "task_id": "TSK-P0-120",
+    "status": "completed",
+    "verification_mode": "both",
+    "evidence_required": false,
+    "evidence_paths": [],
+    "evidence_scope": "repo",
+    "notes": "Pre-CI parity: enforce remediation trace gate locally (wire verify_remediation_trace.sh into scripts/dev/pre_ci.sh and fail-closed when BASE_REF is missing in range mode).",
+    "gate_ids": []
+  },
+  {
+    "task_id": "TSK-P0-121",
+    "status": "completed",
+    "verification_mode": "ci",
+    "evidence_required": true,
+    "evidence_paths": [
+      "evidence/phase0/remediation_trace.json"
+    ],
+    "evidence_scope": "ci_artifact",
+    "notes": "CI parity: ensure workflow chmod does not create filemode-only worktree diffs that break remediation-trace (prefer diff_mode=range).",
+    "gate_ids": [
+      "GOV-G02"
+    ]
+  },
+  {
+    "task_id": "TSK-P0-122",
+    "status": "completed",
+    "verification_mode": "both",
+    "evidence_required": false,
+    "evidence_paths": [],
+    "evidence_scope": "repo",
+    "notes": "Normalize schema_fingerprint semantics (baseline canonical) and preserve migrations_fingerprint in evidence.json.",
+    "gate_ids": []
+  },
+  {
+    "task_id": "TSK-P0-123",
+    "status": "completed",
+    "verification_mode": "ci",
+    "evidence_required": false,
+    "evidence_paths": [],
+    "evidence_scope": "repo",
+    "notes": "Install pinned Semgrep in CI security_scan job so security evidence is parity-correct.",
+    "gate_ids": []
+  },
+  {
+    "task_id": "TSK-P0-124",
+    "status": "completed",
+    "verification_mode": "both",
+    "evidence_required": false,
+    "evidence_paths": [],
+    "evidence_scope": "repo",
+    "notes": "Fail closed on missing Semgrep/toolchain drift in CI (verify_ci_toolchain includes semgrep; semgrep_sast fails in CI if missing).",
+    "gate_ids": []
+  },
+  {
+    "task_id": "TSK-P0-125",
+    "status": "completed",
+    "verification_mode": "both",
+    "evidence_required": false,
+    "evidence_paths": [],
+    "evidence_scope": "repo",
+    "notes": "Sovereign Hybrid Cloud Phase-0 cluster plan + task scaffolding (no implementation).",
+    "gate_ids": []
+  },
+  {
+    "task_id": "TSK-P0-126",
+    "status": "completed",
+    "verification_mode": "both",
+    "evidence_required": false,
+    "evidence_paths": [],
+    "evidence_scope": "repo",
+    "notes": "Plan reconciliation: reuse existing INV-097/INV-098/INV-099; no duplicate implementations.",
+    "gate_ids": []
+  },
+  {
+    "task_id": "TSK-P0-127",
+    "status": "planned",
+    "verification_mode": "both",
+    "evidence_required": false,
+    "evidence_paths": [],
+    "evidence_scope": "repo",
+    "notes": "Planned: ZDPA-oriented PII leakage payload lint (SEC plane).",
+    "gate_ids": []
+  },
+  {
+    "task_id": "TSK-P0-128",
+    "status": "planned",
+    "verification_mode": "both",
+    "evidence_required": false,
+    "evidence_paths": [],
+    "evidence_scope": "repo",
+    "notes": "Planned: BoZ/regulator observability read-only role + verifier (INT plane).",
+    "gate_ids": []
+  },
+  {
+    "task_id": "TSK-P0-129",
+    "status": "planned",
+    "verification_mode": "both",
+    "evidence_required": false,
+    "evidence_paths": [],
+    "evidence_scope": "repo",
+    "notes": "Planned: anchor-sync structural readiness verifier (INT plane).",
+    "gate_ids": []
+  },
+  {
+    "task_id": "TSK-P0-130",
+    "status": "planned",
+    "verification_mode": "both",
+    "evidence_required": false,
+    "evidence_paths": [],
+    "evidence_scope": "repo",
+    "notes": "Planned: wire sovereign gates into control planes, contract, and CI/pre-CI parity runners.",
+    "gate_ids": []
+  },
+  {
+    "task_id": "TSK-P0-140",
+    "status": "completed",
+    "verification_mode": "both",
+    "evidence_required": false,
+    "evidence_paths": [],
+    "evidence_scope": "repo",
+    "notes": "Planned: invariants docs alignment maintenance task.",
+    "gate_ids": []
+  },
+  {
+    "task_id": "TSK-P0-141",
+    "status": "completed",
+    "verification_mode": "both",
+    "evidence_required": false,
+    "evidence_paths": [],
+    "evidence_scope": "repo",
+    "notes": "Planned: Phase-0 performance posture spec (docs).",
+    "gate_ids": []
+  },
+  {
+    "task_id": "TSK-P0-142",
+    "status": "completed",
+    "verification_mode": "both",
+    "evidence_required": false,
+    "evidence_paths": [],
+    "evidence_scope": "repo",
+    "notes": "Performance invariants plan + docs alignment for INV-031.",
+    "gate_ids": []
+  },
+  {
+    "task_id": "TSK-P0-143",
+    "status": "completed",
+    "verification_mode": "both",
+    "evidence_required": false,
+    "evidence_paths": [],
+    "evidence_scope": "repo",
+    "notes": "Pinned INV-031 into control planes as INT-G22 and verified drift wiring.",
+    "gate_ids": []
+  },
+  {
+    "task_id": "TSK-P0-144",
+    "status": "completed",
+    "verification_mode": "both",
+    "evidence_required": false,
+    "evidence_paths": [],
+    "evidence_scope": "repo",
+    "notes": "Normalized INV-031 evidence emission for deterministic PASS/FAIL and single writer.",
+    "gate_ids": []
+  },
+  {
+    "task_id": "TSK-P0-145",
+    "status": "completed",
+    "verification_mode": "both",
+    "evidence_required": false,
+    "evidence_paths": [],
+    "evidence_scope": "repo",
+    "notes": "Bound existing completed tasks to INT-G22 in contract and ensured CI avoids false negatives pre-merge.",
+    "gate_ids": []
+  },
+  {
+    "task_id": "TSK-P0-146",
+    "status": "completed",
+    "verification_mode": "both",
+    "evidence_required": false,
+    "evidence_paths": [],
+    "evidence_scope": "repo",
+    "notes": "Ensured INT-G22 executes under ordered checks in DB-capable contexts (local pre-CI and CI DB job).",
+    "gate_ids": []
+  },
+  {
+    "task_id": "TSK-P0-147",
+    "status": "completed",
+    "verification_mode": "both",
+    "evidence_required": false,
+    "evidence_paths": [],
+    "evidence_scope": "repo",
+    "notes": "Canonicalize INV-106..INV-116 and wire non-colliding control-plane gates (placeholder emitters where enforcement is deferred).",
+    "gate_ids": []
+  },
+  {
+    "task_id": "TSK-P0-148",
+    "status": "completed",
+    "verification_mode": "both",
+    "evidence_required": false,
+    "evidence_paths": [],
+    "evidence_scope": "repo",
+    "notes": "Approach B policy doc + SKIPPED stub hardening (helper + verifier).",
+    "gate_ids": []
+  },
+  {
+    "task_id": "TSK-P0-149",
+    "status": "completed",
+    "verification_mode": "both",
+    "evidence_required": true,
+    "evidence_paths": [
+      "evidence/phase0/business_foundation_hooks.json"
+    ],
+    "evidence_scope": "repo",
+    "notes": "Business hooks delta tightening (new-row enforcement for billability + stitchability) completed; evidence is required.",
+    "gate_ids": []
+  },
+  {
+    "task_id": "TSK-P0-150",
+    "status": "completed",
+    "verification_mode": "both",
+    "evidence_required": true,
+    "evidence_paths": [
+      "evidence/phase0/business_foundation_hooks.json"
+    ],
+    "evidence_scope": "repo",
+    "notes": "Update business foundation verifier to prove delta enforcement completed; evidence is required.",
+    "gate_ids": []
+  },
+  {
+    "task_id": "TSK-P0-151",
+    "status": "completed",
+    "verification_mode": "both",
+    "evidence_required": false,
+    "evidence_paths": [],
+    "evidence_scope": "repo",
+    "notes": "Docs alignment for business hooks delta completed (Phase-0 audit narrative).",
+    "gate_ids": []
+  },
+  {
+    "task_id": "TSK-P0-152",
+    "status": "completed",
+    "verification_mode": "both",
+    "evidence_required": false,
+    "evidence_paths": [],
+    "evidence_scope": "repo",
+    "notes": "Plan: canonicalize git diff semantics (range-only) across parity-critical enforcement gates.",
+    "gate_ids": []
+  },
+  {
+    "task_id": "TSK-P0-153",
+    "status": "completed",
+    "verification_mode": "both",
+    "evidence_required": false,
+    "evidence_paths": [],
+    "evidence_scope": "repo",
+    "notes": "Implement shared git diff helper for range-only enforcement.",
+    "gate_ids": []
+  },
+  {
+    "task_id": "TSK-P0-154",
+    "status": "completed",
+    "verification_mode": "both",
+    "evidence_required": false,
+    "evidence_paths": [],
+    "evidence_scope": "repo",
+    "notes": "Refactor parity-critical diff-based gates to use shared helper (range-only).",
+    "gate_ids": []
+  },
+  {
+    "task_id": "TSK-P0-155",
+    "status": "completed",
+    "verification_mode": "both",
+    "evidence_required": false,
+    "evidence_paths": [],
+    "evidence_scope": "repo",
+    "notes": "Add regression verifier to prevent staged/worktree diff semantics in enforcement gates.",
+    "gate_ids": []
+  }
+]

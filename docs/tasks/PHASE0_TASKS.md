@@ -1,0 +1,2576 @@
+0. Phase-0 Definition of Done (DoD)
+
+- All Phase-0 invariants in `docs/invariants/INVARIANTS_MANIFEST.yml` are either implemented with mechanical checks or explicitly marked roadmap with a blocking gate or task.
+- CI produces evidence artifacts under `./evidence/` for schema hash + git hash anchoring, N-1 gate, DDL lock-risk lint, idempotency zombie simulation, OpenBao auth smoke, and batching/rollback invariants.
+- N-1 compatibility gate and lock-risk DDL lint gate are enforced in CI and fail-closed.
+- Evidence schema and generator are in place; evidence artifacts are uploaded in CI and not committed to git.
+- OpenBao dev parity harness (compose + bootstrap + deny test) exists and is verified by CI.
+- Repo structure and agents structure are enforced by a mechanical checker and referenced by docs.
+- Phase-0 task metadata files exist for all tasks (`tasks/TSK-P0-###/meta.yml`), including assigned role/model and required evidence outputs.
+
+Completion checklist (per task)
+
+- Update `tasks/<TASK_ID>/meta.yml`:
+  - set `status: "completed"`
+  - update `verification:` to the exact commands you ran
+  - ensure `evidence:` matches artifacts produced under `./evidence/`
+  - keep `assigned_agent` and `model` set to the executor
+- (Optional) Add a short completion note in `docs/tasks/PHASE0_TASKS.md` for the task.
+
+1. Repo Findings (Evidence-based)
+
+- Top-level directories: `.github/` (workflow: `.github/workflows/invariants.yml`), `docs/`, `infra/`, `schema/`, `scripts/`, `AGENTS.md`, `AGENT.md`.
+- Invariants source of truth: `docs/invariants/INVARIANTS_MANIFEST.yml`.
+- Invariants gates/scripts: `scripts/audit/run_invariants_fast_checks.sh`, `scripts/audit/enforce_change_rule.sh`, `scripts/db/verify_invariants.sh`, `scripts/db/ci_invariant_gate.sql`.
+- Security fast checks: `scripts/audit/run_security_fast_checks.sh`, `scripts/security/lint_privilege_grants.sh`, `scripts/security/lint_sql_injection.sh`.
+- CI workflow: `.github/workflows/invariants.yml` (mechanical invariants, DB verify, security checks).
+- Phase-0 docs exist: `docs/PHASE0/phase-0-foundation.md`.
+- Architecture docs exist: `docs/architecture/*` including `SDD.md`, `ARCHITECTURE_DIAGRAM.md`, `ROADMAP.md`.
+- No .NET 10 `src/` or `tests/` layout exists at repo root (NOT FOUND).
+- No OpenBao compose or scripts exist (NOT FOUND).
+- No evidence harness (`./evidence/`, schema, generator) exists (NOT FOUND).
+- No N-1 compatibility gate or DDL lock-risk linting gate exists (NOT FOUND).
+- No batching invariant definition or verification hook exists (NOT FOUND).
+
+2. Phase-0 Task List (Ordered)
+
+TASK ID: TSK-P0-001
+Title: Establish repo structure verifier and agents layout
+Owner Role: ARCHITECT
+Depends On: none
+Touches: `scripts/audit/verify_repo_structure.sh`, `.github/workflows/invariants.yml`, `docs/agents/ARCHITECT_PHASE0_PROMPT.md`, `docs/PHASE0/phase-0-foundation.md`, `tasks/TSK-P0-001/meta.yml`
+Invariant(s): NEW INV-019 (Repo structure enforced)
+Work:
+- Define required directories for .NET 10-friendly layout: `src/`, `tests/`, `tools/`, `infra/`, `scripts/`, `docs/`, `docs/agents/`, `docs/architecture/`, `docs/invariants/`, `docs/tasks/`.
+- Create `scripts/audit/verify_repo_structure.sh` that fails if required dirs are missing or if docs were moved without updates.
+- Wire the script into `.github/workflows/invariants.yml` (mechanical_invariants job).
+- Update Phase-0 docs to reference the verifier.
+Acceptance Criteria:
+- CI fails if any required directory is missing.
+- Verifier emits a machine-readable report under `./evidence/`.
+Verification Commands:
+- `scripts/audit/verify_repo_structure.sh`
+Evidence Artifact(s):
+- `./evidence/phase0/repo_structure.json`
+Failure Modes:
+- Evidence file missing.
+- Missing required directory or stale doc reference must fail the job.
+Notes:
+- Include `tasks/TSK-P0-001/meta.yml` with assigned role/model and must-read files.
+
+TASK ID: TSK-P0-002
+Title: Add evidence schema and generator with anchoring
+Owner Role: PLATFORM
+Depends On: TSK-P0-001
+Touches: `docs/architecture/evidence_schema.json`, `scripts/audit/generate_evidence.sh`, `.gitignore`, `.github/workflows/invariants.yml`, `tasks/TSK-P0-002/meta.yml`
+Invariant(s): NEW INV-020 (Evidence anchoring: git + schema hash)
+Work:
+- Define evidence schema (JSON schema) with required fields: `git_sha`, `schema_hash`, `timestamp`, `producer`, `inputs`.
+- Implement `scripts/audit/generate_evidence.sh` to write `./evidence/phase0/evidence.json`, including `git rev-parse HEAD` and deterministic schema hash (from `pg_dump --schema-only` or migration canonical hash).
+- Ensure `./evidence/` is ignored by git and only uploaded as CI artifacts.
+- Add CI step to run generator after DB verify job.
+Acceptance Criteria:
+- Evidence file includes git SHA + schema hash and validates against schema.
+- Evidence is uploaded in CI and not committed.
+Verification Commands:
+- `scripts/audit/generate_evidence.sh`
+Evidence Artifact(s):
+- `./evidence/phase0/evidence.json`
+Failure Modes:
+- Evidence file missing.
+- Missing git SHA or schema hash must fail.
+Notes:
+- Must-read files in meta: `docs/invariants/INVARIANTS_MANIFEST.yml`, `scripts/db/verify_invariants.sh`.
+
+TASK ID: TSK-P0-003
+Title: Implement N-1 compatibility gate
+Owner Role: DB_FOUNDATION
+Depends On: TSK-P0-002
+Touches: `scripts/db/n_minus_one_check.sh`, `.github/workflows/invariants.yml`, `docs/invariants/INVARIANTS_MANIFEST.yml`, `tasks/TSK-P0-003/meta.yml`
+Invariant(s): NEW INV-021 (N-1 compatibility gate)
+Work:
+- Create `scripts/db/n_minus_one_check.sh` to validate current migrations against previous schema contract (N-1) by replaying migrations up to N-1 and verifying compatibility (or explicit compatibility assertions).
+- Wire into CI (db_verify_invariants job) and fail-closed.
+- Add invariant entry with verification command.
+Acceptance Criteria:
+- CI fails if N-1 compatibility check fails.
+- Evidence file written to `./evidence/phase0/n_minus_one.json`.
+Verification Commands:
+- `scripts/db/n_minus_one_check.sh`
+Evidence Artifact(s):
+- `./evidence/phase0/n_minus_one.json`
+Failure Modes:
+- Evidence file missing.
+- Missing baseline or incompatible migration must hard-fail.
+Notes:
+- If baseline is missing, create a bootstrap sub-step that fails until baseline exists.
+
+TASK ID: TSK-P0-004
+Title: Add DDL lock-risk linting gate for migrations
+Owner Role: SECURITY_GUARDIAN
+Depends On: TSK-P0-001
+Touches: `scripts/security/lint_ddl_lock_risk.sh`, `.github/workflows/invariants.yml`, `docs/invariants/INVARIANTS_MANIFEST.yml`, `tasks/TSK-P0-004/meta.yml`
+Invariant(s): NEW INV-022 (DDL lock-risk lint)
+Work:
+- Implement lint script to scan `schema/migrations/**` for high-risk patterns (e.g., `ALTER TABLE` without safe pattern/CONCURRENTLY or long-lock operations).
+- Wire into mechanical_invariants job.
+- Add invariant entry with verification command.
+Acceptance Criteria:
+- CI fails on disallowed DDL patterns.
+- Evidence report generated under `./evidence/phase0/ddl_lock_risk.json`.
+Verification Commands:
+- `scripts/security/lint_ddl_lock_risk.sh`
+Evidence Artifact(s):
+- `./evidence/phase0/ddl_lock_risk.json`
+Failure Modes:
+- Evidence file missing.
+- Any risky DDL must fail.
+
+TASK ID: TSK-P0-005
+Title: Idempotency zombie simulation harness
+Owner Role: QA_VERIFIER
+Depends On: TSK-P0-003
+Touches: `scripts/db/tests/test_idempotency_zombie.sh`, `.github/workflows/invariants.yml`, `docs/invariants/INVARIANTS_MANIFEST.yml`, `tasks/TSK-P0-005/meta.yml`
+Invariant(s): NEW INV-023 (Idempotency zombie replay safety)
+Work:
+- Create a DB test harness that simulates duplicate enqueue/ACK loss using existing outbox functions.
+- Validate no double-enqueue and no double-complete in attempts ledger.
+- Wire into db_verify_invariants job.
+Acceptance Criteria:
+- Test fails if duplicates are possible.
+- Evidence report generated under `./evidence/phase0/idempotency_zombie.json`.
+Verification Commands:
+- `scripts/db/tests/test_idempotency_zombie.sh`
+Evidence Artifact(s):
+- `./evidence/phase0/idempotency_zombie.json`
+Failure Modes:
+- Evidence file missing.
+- Any duplicate insert/complete must fail.
+
+TASK ID: TSK-P0-006
+Title: OpenBao dev parity harness with deny test
+Owner Role: PLATFORM
+Depends On: TSK-P0-001
+Touches: `infra/openbao/docker-compose.yml`, `scripts/security/openbao_bootstrap.sh`, `scripts/security/openbao_smoke_test.sh`, `.github/workflows/invariants.yml`, `docs/invariants/INVARIANTS_MANIFEST.yml`, `tasks/TSK-P0-006/meta.yml`
+Invariant(s): NEW INV-024 (OpenBao AppRole auth + deny policy)
+Work:
+- Add OpenBao docker compose for dev/testing.
+- Bootstrap script to enable secrets engine, AppRole, policies, and audit log.
+- Smoke test that authenticates via AppRole and asserts forbidden read is denied.
+- Wire into CI (dedicated job) and produce evidence.
+Acceptance Criteria:
+- AppRole auth succeeds for allowed path and fails for forbidden path.
+- Evidence report generated under `./evidence/phase0/openbao_smoke.json`.
+Verification Commands:
+- `scripts/security/openbao_bootstrap.sh`
+- `scripts/security/openbao_smoke_test.sh`
+Evidence Artifact(s):
+- `./evidence/phase0/openbao_smoke.json`
+Failure Modes:
+- Evidence file missing.
+- Auth failure or policy bypass must fail.
+
+TASK ID: TSK-P0-007
+Title: Blue/Green rollback invariants and routing fallback gate
+Owner Role: ARCHITECT
+Depends On: TSK-P0-003
+Touches: `docs/invariants/INVARIANTS_MANIFEST.yml`, `scripts/audit/verify_routing_fallback.sh`, `.github/workflows/invariants.yml`, `tasks/TSK-P0-007/meta.yml`
+Invariant(s): NEW INV-025 (Blue/Green rollback compatibility), NEW INV-026 (Routing fallback invariant)
+Work:
+- Define invariants for blue/green rollback and routing fallback in manifest.
+- Implement `scripts/audit/verify_routing_fallback.sh` that fails until explicit fallback rules are defined (fail-closed placeholder).
+- Wire to CI to ensure no silent pass.
+Acceptance Criteria:
+- CI fails until routing fallback rules are defined and verified.
+- Evidence report generated under `./evidence/phase0/routing_fallback.json`.
+Verification Commands:
+- `scripts/audit/verify_routing_fallback.sh`
+Evidence Artifact(s):
+- `./evidence/phase0/routing_fallback.json`
+Failure Modes:
+- Evidence file missing.
+- Missing fallback rules must hard-fail.
+
+TASK ID: TSK-P0-008
+Title: Batching invariant definition and verifier
+Owner Role: ARCHITECT
+Depends On: TSK-P0-001
+Touches: `docs/architecture/batching_rules.yml`, `scripts/audit/verify_batching_rules.sh`, `docs/invariants/INVARIANTS_MANIFEST.yml`, `.github/workflows/invariants.yml`, `tasks/TSK-P0-008/meta.yml`
+Invariant(s): NEW INV-027 (Batching rules defined and enforced)
+Work:
+- Add a canonical batching rules file with size threshold, time threshold, max wait.
+- Implement verifier script that ensures all required fields exist and are non-zero.
+- Wire into CI as a fail-closed gate.
+Acceptance Criteria:
+- CI fails if batching rules are missing or invalid.
+- Evidence report generated under `./evidence/phase0/batching_rules.json`.
+Verification Commands:
+- `scripts/audit/verify_batching_rules.sh`
+Evidence Artifact(s):
+- `./evidence/phase0/batching_rules.json`
+Failure Modes:
+- Evidence file missing.
+- Missing or zero thresholds must fail.
+
+TASK ID: TSK-P0-009
+Title: Update invariants manifest and QUICK generation for new Phase-0 invariants
+Owner Role: INVARIANTS_CURATOR
+Depends On: TSK-P0-002, TSK-P0-003, TSK-P0-004, TSK-P0-005, TSK-P0-006, TSK-P0-007, TSK-P0-008
+Touches: `docs/invariants/INVARIANTS_MANIFEST.yml`, `docs/invariants/INVARIANTS_QUICK.md`, `tasks/TSK-P0-009/meta.yml`
+Invariant(s): INV-019..INV-027
+Work:
+- Add new invariants to manifest with precise verification commands.
+- Regenerate QUICK reference and ensure it matches.
+Acceptance Criteria:
+- `scripts/audit/generate_invariants_quick` produces no diff.
+Verification Commands:
+- `scripts/audit/generate_invariants_quick`
+Evidence Artifact(s):
+- `./evidence/phase0/invariants_quick.json`
+Failure Modes:
+- Evidence file missing.
+- Manifest/QUICK drift must fail.
+
+TASK ID: TSK-P0-010
+Title: CI evidence artifact upload consolidation
+Owner Role: PLATFORM
+Depends On: TSK-P0-002..TSK-P0-008
+Touches: `.github/workflows/invariants.yml`, `tasks/TSK-P0-010/meta.yml`
+Invariant(s): INV-020 (Evidence anchoring)
+Work:
+- Add CI step to collect `./evidence/**` and upload as artifact in each job.
+- Enforce fail-closed if evidence files referenced by tasks are missing.
+- Add local evidence checker to validate required evidence globs from task meta.
+Acceptance Criteria:
+- Local: `scripts/audit/generate_evidence.sh && scripts/ci/check_evidence_required.sh` passes.
+- Local: workflow passes `actionlint`.
+- Local: workflow contains upload step for `phase0-evidence`.
+Verification Commands:
+- actionlint .github/workflows/invariants.yml
+- scripts/audit/generate_evidence.sh && scripts/ci/check_evidence_required.sh
+- rg -n "upload-artifact" .github/workflows/invariants.yml
+- rg -n "phase0-evidence" .github/workflows/invariants.yml
+Evidence Artifact(s):
+- `./evidence/phase0/*.json`
+Failure Modes:
+- Evidence file missing.
+- Missing evidence file in CI must fail.
+
+TASK ID: TSK-P0-019
+Title: CI artifact upload verification (integration)
+Owner Role: PLATFORM
+Depends On: TSK-P0-010
+Touches: `tasks/TSK-P0-019/meta.yml`
+Invariant(s): INV-020 (Evidence anchoring)
+Work:
+- Run invariants.yml in CI and confirm `phase0-evidence` artifact exists and contains evidence files.
+Acceptance Criteria:
+- CI run produces artifact `phase0-evidence` with `evidence/**`.
+Verification Commands:
+- `scripts/ci/check_evidence_required.sh` (CI_ONLY=1, after artifact download)
+Evidence Artifact(s):
+- `phase0-evidence` (CI artifact)
+Failure Modes:
+- Evidence file missing.
+- CI run does not upload phase0-evidence.
+
+TASK ID: TSK-P0-011
+Title: Evidence schema validation gate
+Owner Role: SECURITY_GUARDIAN
+Depends On: TSK-P0-002
+Touches: `scripts/audit/validate_evidence_schema.sh`, `.github/workflows/invariants.yml`, `tasks/TSK-P0-011/meta.yml`
+Invariant(s): NEW INV-028 (Evidence schema validation)
+Work:
+- Add validator script to enforce evidence JSON schema correctness.
+- Wire into mechanical_invariants job; fail-closed on invalid evidence.
+Acceptance Criteria:
+- CI fails if evidence JSON does not validate against schema.
+- Evidence validation report generated under `./evidence/phase0/evidence_validation.json`.
+Verification Commands:
+- `scripts/audit/validate_evidence_schema.sh`
+Evidence Artifact(s):
+- `./evidence/phase0/evidence_validation.json`
+Failure Modes:
+- Evidence file missing.
+- Missing or invalid evidence JSON must fail.
+
+TASK ID: TSK-P0-012
+Title: Enforce evidence provenance fields
+Owner Role: ARCHITECT
+Depends On: TSK-P0-002, TSK-P0-011
+Touches: `docs/architecture/evidence_schema.json`, `scripts/audit/generate_evidence.sh`, `tasks/TSK-P0-012/meta.yml`
+Invariant(s): NEW INV-029 (Evidence provenance required)
+Work:
+- Extend evidence schema to require `git_sha`, `schema_hash`, `ci_run_id`, `producer`, `inputs`.
+- Update evidence generator to emit those fields deterministically.
+Acceptance Criteria:
+- Evidence file includes required provenance fields and passes schema validation.
+Verification Commands:
+- `scripts/audit/generate_evidence.sh`
+- `scripts/audit/validate_evidence_schema.sh`
+Evidence Artifact(s):
+- `./evidence/phase0/evidence.json`
+Failure Modes:
+- Evidence file missing.
+- Missing provenance field must fail.
+
+TASK ID: TSK-P0-013
+Title: Baseline drift gate (schema baseline freshness)
+Owner Role: DB_FOUNDATION
+Depends On: TSK-P0-002
+Touches: `scripts/db/check_baseline_drift.sh`, `scripts/db/verify_invariants.sh`, `tasks/TSK-P0-013/meta.yml`
+Invariant(s): INV-004 (Baseline snapshot must not drift)
+Work:
+- Add baseline drift check script that compares baseline to regenerated schema.
+- Wire into `scripts/db/verify_invariants.sh` so CI runs it by default.
+Acceptance Criteria:
+- CI fails if baseline snapshot does not match regenerated schema.
+Verification Commands:
+- `scripts/db/check_baseline_drift.sh`
+Evidence Artifact(s):
+- `./evidence/phase0/baseline_drift.json`
+Failure Modes:
+- Evidence file missing.
+- Baseline drift or missing baseline must fail.
+
+TASK ID: TSK-P0-014
+Title: SECURITY DEFINER dynamic SQL linter (fail-closed)
+Owner Role: SECURITY_GUARDIAN
+Depends On: TSK-P0-001
+Touches: `scripts/security/lint_security_definer_dynamic_sql.sh`, `.github/workflows/invariants.yml`, `tasks/TSK-P0-014/meta.yml`
+Invariant(s): INV-009 (No dynamic SQL in SECURITY DEFINER)
+Work:
+- Add a linter that fails on dynamic SQL patterns in SECURITY DEFINER functions unless explicitly allowlisted.
+- Wire into mechanical_invariants job; fail-closed on violations.
+Acceptance Criteria:
+- CI fails if a SECURITY DEFINER function uses dynamic SQL without allowlist.
+Verification Commands:
+- `scripts/security/lint_security_definer_dynamic_sql.sh`
+Evidence Artifact(s):
+- `./evidence/phase0/security_definer_dynamic_sql.json`
+Failure Modes:
+- Evidence file missing.
+- Any dynamic SQL violation must fail.
+
+TASK ID: TSK-P0-015
+Title: Routing fallback rules schema + validator (not a paper gate)
+Owner Role: ARCHITECT
+Depends On: TSK-P0-007
+Touches: `docs/architecture/routing_fallback.yml`, `docs/architecture/routing_fallback.schema.json`, `scripts/audit/validate_routing_fallback.sh`, `tasks/TSK-P0-015/meta.yml`
+Invariant(s): INV-026 (Routing fallback invariant)
+Work:
+- Define routing fallback rules file with required fields (SLO thresholds, actions, evidence emission rules).
+- Add JSON schema and validator that fails on missing/invalid fields.
+- Emit evidence artifact proving validation ran.
+Acceptance Criteria:
+- CI fails if routing fallback rules are missing or invalid.
+- Evidence artifact produced from validator run.
+Verification Commands:
+- `scripts/audit/validate_routing_fallback.sh`
+Evidence Artifact(s):
+- `./evidence/phase0/routing_fallback_validation.json`
+Failure Modes:
+- Evidence file missing.
+- Missing file, invalid schema, or missing required fields must fail.
+
+TASK ID: TSK-P0-016
+Title: Batching rules evidence generator
+Owner Role: SECURITY_GUARDIAN
+Depends On: TSK-P0-008
+Touches: `scripts/audit/verify_batching_rules.sh`, `.github/workflows/invariants.yml`, `tasks/TSK-P0-016/meta.yml`
+Invariant(s): INV-027 (Batching rules defined and enforced)
+Work:
+- Extend batching rules verifier to emit evidence JSON with thresholds and hash.
+- Wire to CI as a hard gate.
+Acceptance Criteria:
+- Evidence JSON is generated and contains thresholds + hash.
+Verification Commands:
+- `scripts/audit/verify_batching_rules.sh`
+Evidence Artifact(s):
+- `./evidence/phase0/batching_rules.json`
+Failure Modes:
+- Evidence file missing.
+- Missing evidence or invalid thresholds must fail.
+
+TASK ID: TSK-P0-017
+Title: Structural change linkage for threat/compliance docs
+Owner Role: SECURITY_GUARDIAN
+Depends On: TSK-P0-001
+Touches: `scripts/audit/enforce_change_rule.sh`, `tasks/TSK-P0-017/meta.yml`
+Invariant(s): NEW INV-030 (Threat/compliance docs updated on structural change)
+Work:
+- Extend change-rule gate to require updates to threat model and compliance map on structural changes.
+- Fail-closed when structural_change is true and docs are untouched.
+Acceptance Criteria:
+- CI fails if structural changes occur without updating required docs.
+Verification Commands:
+- `scripts/audit/enforce_change_rule.sh`
+Evidence Artifact(s):
+- `./evidence/phase0/structural_doc_linkage.json`
+Failure Modes:
+- Evidence file missing.
+- Structural change without docs update must fail.
+
+TASK ID: TSK-P0-018
+Title: OpenBao audit log evidence requirement
+Owner Role: SECURITY_GUARDIAN
+Depends On: TSK-P0-006
+Touches: `scripts/security/openbao_bootstrap.sh`, `scripts/security/openbao_smoke_test.sh`, `tasks/TSK-P0-018/meta.yml`
+Invariant(s): INV-024 (OpenBao AppRole auth + deny policy)
+Work:
+- Require audit logging enabled during OpenBao bootstrap.
+- Extend smoke test to verify audit log entry exists and emit evidence.
+Acceptance Criteria:
+- CI fails if audit logging is disabled or no audit entry is present.
+Verification Commands:
+- `scripts/security/openbao_bootstrap.sh`
+- `scripts/security/openbao_smoke_test.sh`
+Evidence Artifact(s):
+- `./evidence/phase0/openbao_audit_log.json`
+Failure Modes:
+- Evidence file missing.
+- Missing audit log or bypass must fail.
+
+3. GAPS (If any)
+
+- GAP-001: .NET 10-friendly directory structure is NOT FOUND -> Bootstrap task TSK-P0-001.
+- GAP-002: Evidence harness is NOT FOUND -> Bootstrap task TSK-P0-002.
+- GAP-003: N-1 compatibility gate is NOT FOUND -> Bootstrap task TSK-P0-003.
+- GAP-004: DDL lock-risk lint is NOT FOUND -> Bootstrap task TSK-P0-004.
+- GAP-005: Idempotency zombie simulation is NOT FOUND -> Bootstrap task TSK-P0-005.
+- GAP-006: OpenBao dev parity harness is NOT FOUND -> Bootstrap task TSK-P0-006.
+- GAP-007: Blue/Green rollback invariant + routing fallback verifier is NOT FOUND -> Bootstrap task TSK-P0-007.
+- GAP-008: Batching invariant definition + verifier is NOT FOUND -> Bootstrap task TSK-P0-008.
+
+4. Non-Goals (Phase-0)
+
+- No Phase-1/Phase-2 runtime services (ingest API, orchestration, ledger core, adapters).
+- No production KMS integration (OpenBao only for dev parity).
+- No full policy rotation/grace implementation (only Phase-0 gates and invariant definitions).
+- No ledger posting schema beyond current DB foundation.
+- No PSP/rail adapters or ISO 20022 gateway implementation.
+
+TASK ID: TSK-P0-020
+Title: Add due-claim indexes for payment_outbox_pending
+Owner Role: DB_FOUNDATION
+Depends On: none
+Touches: `schema/migrations/0007_outbox_pending_indexes.sql`, `scripts/db/verify_invariants.sh`, `docs/invariants/INVARIANTS_MANIFEST.yml`, `tasks/TSK-P0-020/meta.yml`
+Invariant(s): NEW INV-031 (Outbox claim index required)
+Work:
+- Add migration to create due-claim index on `payment_outbox_pending` for `(next_attempt_at, created_at)`.
+- Prefer a partial index matching claim predicate if consistent with query shape.
+- Wire invariant verification in CI gate or DB verify.
+Acceptance Criteria:
+- Index exists with expected definition.
+Verification Commands:
+- `scripts/db/verify_invariants.sh`
+Evidence Artifact(s):
+- `./evidence/phase0/outbox_pending_indexes.json`
+Failure Modes:
+- Evidence file missing.
+- Missing index or wrong definition.
+
+TASK ID: TSK-P0-021
+Title: Enforce terminal uniqueness on outbox attempts (DISPATCHED + FAILED)
+Owner Role: DB_FOUNDATION
+Depends On: none
+Touches: `schema/migrations/0008_outbox_terminal_uniqueness.sql`, `scripts/db/tests/test_db_functions.sh`
+Invariant(s): NEW INV-032 (One terminal attempt per outbox_id)
+Work:
+- Add partial unique index on `payment_outbox_attempts(outbox_id)` where `state IN ('DISPATCHED','FAILED')`.
+- Add DB test to assert SQLSTATE 23505 and constraint/index name on duplicate terminal insert.
+- Ensure test emits `./evidence/phase0/outbox_terminal_uniqueness.json`.
+- Note: terminal set currently `{DISPATCHED, FAILED}`; future terminal states must update the predicate.
+Acceptance Criteria:
+- Duplicate terminal insert fails at DB level.
+- Evidence file is written by the verification step.
+Verification Commands:
+- `scripts/db/tests/test_db_functions.sh`
+Evidence Artifact(s):
+- `./evidence/phase0/outbox_terminal_uniqueness.json`
+Failure Modes:
+- Duplicate terminal attempt succeeds.
+- Evidence file missing.
+Notes:
+- Invariant registration is handled by TSK-P0-009.
+TASK ID: TSK-P0-022
+Title: Enforce MVCC posture for payment_outbox_pending
+Owner Role: DB_FOUNDATION
+Depends On: TSK-P0-020
+Touches: `schema/migrations/0009_pending_fillfactor.sql`, `scripts/db/verify_invariants.sh`
+Invariant(s): NEW INV-033 (Outbox MVCC posture enforced)
+Work:
+- Set `fillfactor=80` (and optional autovacuum reloptions) for `payment_outbox_pending`.
+- Add verification in `scripts/db/verify_invariants.sh` to fail if reloptions missing.
+- Ensure verifier emits `./evidence/phase0/outbox_mvcc_posture.json`.
+Acceptance Criteria:
+- Table reloptions show fillfactor set (and vacuum settings if declared).
+- Evidence file is written by the verification step.
+Verification Commands:
+- `scripts/db/verify_invariants.sh`
+Evidence Artifact(s):
+- `./evidence/phase0/outbox_mvcc_posture.json`
+Failure Modes:
+- Fillfactor/vacuum posture not enforced.
+- Evidence file missing.
+Notes:
+- Documentation updates (if needed) should be handled by ARCHITECT.
+TASK ID: TSK-P0-023
+Title: Add LISTEN/NOTIFY wakeup hook (wakeup-only semantics)
+Owner Role: DB_FOUNDATION
+Depends On: TSK-P0-020
+Touches: `schema/migrations/0010_outbox_notify.sql`, `scripts/db/tests/test_db_functions.sh`
+Invariant(s): NEW INV-034 (Outbox wakeup notification)
+Work:
+- Emit NOTIFY on enqueue as a wakeup only (minimal/empty payload).
+- Emit once per enqueue call (not per inserted row in a batch).
+- Add a basic DB test to confirm NOTIFY emission with a short timeout.
+- Ensure test emits `./evidence/phase0/outbox_notify.json`.
+Acceptance Criteria:
+- Notification channel exists and emits on enqueue.
+- Evidence file is written by the verification step.
+Verification Commands:
+- `scripts/db/tests/test_db_functions.sh`
+Evidence Artifact(s):
+- `./evidence/phase0/outbox_notify.json`
+Failure Modes:
+- Notification not emitted.
+- Evidence file missing.
+Notes:
+- Documentation updates (if needed) should be handled by ARCHITECT.
+TASK ID: TSK-P0-024
+Title: Add ingress attestation schema (append-only skeleton)
+Owner Role: DB_FOUNDATION
+Depends On: none
+Touches: `schema/migrations/0011_ingress_attestations.sql`, `scripts/db/verify_invariants.sh`
+Invariant(s): NEW INV-035 (Ingress attestation append-only)
+Work:
+- Create `ingress_attestations` table (hashes/identifiers only; no raw payloads).
+- Add indexes on `(instruction_id)` and `(received_at)` (and optional `(tenant_id, received_at)` if multi-tenant).
+- Enforce append-only via privileges (REVOKE UPDATE/DELETE); trigger optional.
+- Ensure verifier emits `./evidence/phase0/ingress_attestation.json`.
+Acceptance Criteria:
+- Table exists and is append-only.
+- Required indexes exist.
+- Evidence file is written by the verification step.
+Verification Commands:
+- `scripts/db/verify_invariants.sh`
+Evidence Artifact(s):
+- `./evidence/phase0/ingress_attestation.json`
+Failure Modes:
+- Table missing or mutable.
+- Evidence file missing.
+Notes:
+- Invariant registration is handled by TSK-P0-009.
+TASK ID: TSK-P0-025
+Title: Add durable revocation tables (certs + tokens)
+Owner Role: DB_FOUNDATION
+Depends On: none
+Touches: `schema/migrations/0012_revocation_tables.sql`, `scripts/db/verify_invariants.sh`
+Invariant(s): NEW INV-036 (Revocation tables present + append-only)
+Work:
+- Add `revoked_client_certs(cert_fingerprint_sha256 PK, revoked_at, reason_code, revoked_by)`.
+- Add `revoked_tokens(token_jti PK, revoked_at, reason_code, revoked_by)`.
+- Add optional `expires_at` to both tables for time-bound revocations.
+- Enforce append-only via privileges (REVOKE UPDATE/DELETE); trigger optional.
+- Ensure verifier emits `./evidence/phase0/revocation_tables.json`.
+Acceptance Criteria:
+- Tables exist and cannot be updated/deleted.
+- Evidence file is written by the verification step.
+Verification Commands:
+- `scripts/db/verify_invariants.sh`
+Evidence Artifact(s):
+- `./evidence/phase0/revocation_tables.json`
+Failure Modes:
+- Mutations allowed or tables missing.
+- Evidence file missing.
+Notes:
+- Invariant registration is handled by TSK-P0-009.
+TASK ID: TSK-P0-026
+Title: Core boundary guard (no Node in core paths)
+Owner Role: SECURITY_GUARDIAN
+Depends On: TSK-P0-001
+Touches: `scripts/security/lint_core_boundary.sh`, `.github/workflows/invariants.yml`
+Invariant(s): NEW INV-037 (Core code boundary enforced)
+Work:
+- Lint core paths to forbid `.js/.ts/package.json` only inside core directories.
+- Pass if core dirs are absent (repo structure gate already enforced).
+- Ensure lint emits `./evidence/phase0/core_boundary.json`.
+Acceptance Criteria:
+- CI fails if Node artifacts exist in core paths.
+- Evidence file is written by the verification step.
+Verification Commands:
+- `scripts/security/lint_core_boundary.sh`
+Evidence Artifact(s):
+- `./evidence/phase0/core_boundary.json`
+Failure Modes:
+- Forbidden artifacts present.
+- Evidence file missing.
+Notes:
+- Invariant registration is handled by TSK-P0-009.
+TASK ID: TSK-P0-027
+Title: Phase-0 doc drift cleanup (.NET-only core)
+Owner Role: ARCHITECT
+Depends On: none
+Touches: `docs/overview/architecture.md`, `docs/decisions/ADR-0001-repo-structure.md`, `tasks/TSK-P0-027/meta.yml`
+Invariant(s): NEW INV-038 (Architecture doc alignment)
+Work:
+- Remove Node-as-core references.
+- Clarify .NET-only execution core.
+Acceptance Criteria:
+- Core architecture docs have no Node-as-core references.
+Verification Commands:
+- `scripts/audit/verify_doc_alignment.sh`
+Evidence Artifact(s):
+- `./evidence/phase0/doc_alignment.json`
+Failure Modes:
+- Evidence file missing.
+- Node references remain in core docs.
+
+TASK ID: TSK-P0-028
+Title: Define DB distress invariant (roadmap only)
+Owner Role: INVARIANTS_CURATOR
+Depends On: none
+Touches: `docs/invariants/INVARIANTS_MANIFEST.yml`, `docs/invariants/INVARIANTS_ROADMAP.md`, `tasks/TSK-P0-028/meta.yml`
+Invariant(s): NEW INV-039 (Fail-closed under DB exhaustion — roadmap)
+Work:
+- Define invariant as roadmap with verification notes.
+Acceptance Criteria:
+- Invariant listed as roadmap, not implemented.
+Verification Commands:
+- `scripts/audit/run_invariants_fast_checks.sh`
+Evidence Artifact(s):
+- `./evidence/phase0/db_fail_closed_roadmap.json`
+Failure Modes:
+- Evidence file missing.
+- Marked implemented without tests.
+
+TASK ID: TSK-P0-029
+Title: Expand DDL lock-risk lint for blocking operations
+Owner Role: SECURITY_GUARDIAN
+Depends On: TSK-P0-004, TSK-P0-030
+Touches: `scripts/security/lint_ddl_lock_risk.sh`
+Invariant(s): NEW INV-040 (Blocking DDL policy enforced)
+Work:
+- For hot tables, require `CREATE INDEX CONCURRENTLY` and forbid blocking `ALTER` patterns.
+- Keep this as migration lint (not runtime privilege gate).
+- Ensure lint emits `./evidence/phase0/ddl_blocking_policy.json`.
+Acceptance Criteria:
+- CI fails on blocked patterns in migrations.
+- Evidence file is written by the verification step.
+Verification Commands:
+- `scripts/security/lint_ddl_lock_risk.sh`
+Evidence Artifact(s):
+- `./evidence/phase0/ddl_blocking_policy.json`
+Failure Modes:
+- Unsafe DDL passes lint.
+- Evidence file missing.
+Notes:
+- Invariant registration is handled by TSK-P0-009.
+TASK ID: TSK-P0-030
+Title: Add no-tx migration marker support in migrate.sh
+Owner Role: DB_FOUNDATION
+Depends On: none
+Touches: `scripts/db/migrate.sh`, `scripts/db/tests/test_no_tx_migrations.sh`
+Invariant(s): NEW INV-041 (No-tx migrations supported)
+Work:
+- Implement `-- symphony:no_tx` marker parsing.
+- Run marked migrations outside explicit transaction.
+- Add a DB test to apply a `CONCURRENTLY` migration via migrate.sh.
+- Ensure test emits `./evidence/phase0/no_tx_migrations.json`.
+Acceptance Criteria:
+- Migrations with marker succeed with `CONCURRENTLY`.
+- Evidence file is written by the verification step.
+Verification Commands:
+- `scripts/db/tests/test_no_tx_migrations.sh`
+Evidence Artifact(s):
+- `./evidence/phase0/no_tx_migrations.json`
+Failure Modes:
+- Concurrent index migration fails due to transaction wrapping.
+- Evidence file missing.
+TASK ID: TSK-P0-031
+Title: Enforce no-tx marker for concurrent index migrations
+Owner Role: DB_FOUNDATION
+Depends On: TSK-P0-030
+Touches: `scripts/db/lint_migrations.sh`
+Invariant(s): NEW INV-042 (Concurrent index requires no-tx marker)
+Work:
+- Update migration lint to require marker when `CONCURRENTLY` appears.
+- Ensure lint emits `./evidence/phase0/no_tx_marker_lint.json`.
+Acceptance Criteria:
+- CI fails on missing marker.
+- Evidence file is written by the verification step.
+Verification Commands:
+- `scripts/db/lint_migrations.sh`
+Evidence Artifact(s):
+- `./evidence/phase0/no_tx_marker_lint.json`
+Failure Modes:
+- Concurrent index migration without marker passes lint.
+- Evidence file missing.
+TASK ID: TSK-P0-032
+Title: Update outbox index migration to use no-tx marker
+Owner Role: DB_FOUNDATION
+Depends On: TSK-P0-030, TSK-P0-031
+Touches: `schema/migrations/0007_outbox_pending_indexes.sql`, `scripts/db/tests/test_outbox_pending_indexes.sh`
+Invariant(s): INV-031 (Outbox claim index required)
+Work:
+- Add `-- symphony:no_tx` to concurrent index migration.
+- Ensure `IF NOT EXISTS` is used.
+- Add DB test to verify index exists and emit evidence.
+Acceptance Criteria:
+- Migration runs successfully via migrate.sh.
+- Evidence file is written by the verification step.
+Verification Commands:
+- `scripts/db/tests/test_outbox_pending_indexes.sh`
+Evidence Artifact(s):
+- `./evidence/phase0/outbox_pending_indexes.json`
+Failure Modes:
+- Migration fails due to transaction wrapping.
+- Evidence file missing.
+TASK ID: TSK-P0-033
+Title: Document no-tx marker usage
+Owner Role: ARCHITECT
+Depends On: TSK-P0-030
+Touches: `docs/operations/DEV_WORKFLOW.md`, `tasks/TSK-P0-033/meta.yml`
+Invariant(s): NEW INV-043 (No-tx migration guidance)
+Work:
+- Document `-- symphony:no_tx` usage with example.
+Acceptance Criteria:
+- Guidance present in DEV workflow docs.
+Verification Commands:
+- `scripts/audit/verify_no_tx_docs.sh`
+Evidence Artifact(s):
+- `./evidence/phase0/no_tx_docs.json`
+Failure Modes:
+- Evidence file missing.
+- No documentation present.
+
+TASK ID: TSK-P0-034
+Title: Enforce invariants docs match manifest
+Owner Role: INVARIANTS_CURATOR
+Depends On: TSK-P0-009
+Touches: `scripts/audit/run_invariants_fast_checks.sh`, `docs/invariants/INVARIANTS_MANIFEST.yml`, `docs/invariants/INVARIANTS_IMPLEMENTED.md`, `docs/invariants/INVARIANTS_ROADMAP.md`, `docs/invariants/INVARIANTS_QUICK.md`, `tasks/TSK-P0-034/meta.yml`
+Invariant(s): NEW INV-044 (Docs match manifest)
+Work:
+- Ensure `scripts/audit/check_docs_match_manifest.py` is run in fast checks.
+- Emit evidence `./evidence/phase0/invariants_docs_match.json`.
+Acceptance Criteria:
+- Fast checks fail if docs drift from manifest.
+- Evidence file is written by the verification step.
+Verification Commands:
+- `scripts/audit/run_invariants_fast_checks.sh`
+Evidence Artifact(s):
+- `./evidence/phase0/invariants_docs_match.json`
+Failure Modes:
+- Drift between docs and manifest goes undetected.
+- Evidence file missing.
+TASK ID: TSK-P0-035
+Title: Declare Proxy/Alias Resolution invariant (roadmap) + schema design hooks
+Owner Role: INVARIANTS_CURATOR
+Depends On: TSK-P0-009
+Touches: `docs/invariants/INVARIANTS_MANIFEST.yml`, `docs/decisions/ADR-0008-proxy-resolution-strategy.md`, `docs/architecture/schema/proxy_resolution_schema.md`, `scripts/audit/verify_proxy_resolution_invariant.sh`, `tasks/TSK-P0-035/meta.yml`
+Invariant(s): NEW INV-048 (Proxy/Alias resolution required before dispatch)
+Work:
+- Add invariant as `roadmap`, explicitly defining resolve point, durable record fields (hash-only), fail-closed rule, and outbox/idempotency linkage.
+- ADR documents resolve-before-enqueue vs resolve-before-dispatch decision, failure modes, and evidence requirements.
+- Add schema design doc describing `proxy_resolutions` (append-only) and optional `proxy_resolution_current` (cache), including indexes and prohibited fields.
+- Verification script performs static checks only (manifest entry + ADR + schema doc exist + references correct) and emits evidence.
+Acceptance Criteria:
+- Invariant exists with `status: roadmap` and a concrete verification hook.
+- ADR + schema design doc exist and are referenced.
+- Evidence artifact emitted and passes schema validation/anchoring rules.
+Verification Commands:
+- `scripts/audit/verify_proxy_resolution_invariant.sh`
+Evidence Artifact(s):
+- `./evidence/phase0/proxy_resolution_invariant.json`
+Failure Modes:
+- INV-048 missing or malformed.
+- ADR/schema design doc missing.
+- Evidence file missing.
+
+TASK ID: TSK-P0-036
+Title: Local CI parity runner (wipe + full pipeline)
+Owner Role: PLATFORM
+Depends On: TSK-P0-010, TSK-P0-030, TSK-P0-034
+Touches: `scripts/ci/run_ci_locally.sh`, `docs/operations/LOCAL_CI_PARITY.md`, `docs/operations/DEV_WORKFLOW.md`, `tasks/TSK-P0-036/meta.yml`
+Invariant(s): NEW INV-049 (Local CI parity enforced)
+Work:
+- Add a destructive local CI runner that mirrors GitHub Actions job order.
+- Require `CI_WIPE=1` to proceed; wipe and recreate the dev DB before running.
+- Use the same Postgres major version as CI (18) by running against the docker service.
+- Emit `./evidence/phase0/local_ci_parity.json`.
+Acceptance Criteria:
+- Runner exits non-zero on any failed step.
+- Runner wipes DB only when `CI_WIPE=1` is set.
+- Evidence file is written by the runner.
+Verification Commands:
+- `CI_WIPE=1 DATABASE_URL=postgres://symphony_admin:symphony_pass@127.0.0.1:5432/symphony scripts/ci/run_ci_locally.sh`
+Evidence Artifact(s):
+- `./evidence/phase0/local_ci_parity.json`
+Failure Modes:
+- Evidence file missing.
+- Runner does not wipe DB when required.
+- Local CI steps diverge from CI workflow order.
+
+TASK ID: TSK-P0-037
+Title: Phase‑0 evidence contract + gate switch (authoritative)
+Owner Role: PLATFORM
+Depends On: TSK-P0-010, TSK-P0-034
+Touches: `docs/PHASE0/PHASE0_CONTRACT.md`, `docs/PHASE0/phase0_contract.yml`, `scripts/ci/check_evidence_required.sh`, `scripts/audit/verify_phase0_contract.sh`, `scripts/audit/run_invariants_fast_checks.sh`, `tasks/TSK-P0-037/meta.yml`
+Invariant(s): NEW INV-060 (Phase‑0 contract governs evidence gate)
+Work:
+- Create `docs/PHASE0/phase0_contract.yml` as the single source of truth for evidence enforcement.
+- Require contract fields: `task_id`, `status`, `verification_mode`, `evidence_required`, `evidence_paths`, `evidence_scope`, `notes`.
+- Ensure every `tasks/TSK-P0-*/meta.yml` has a corresponding contract row; fail on unknown/duplicate IDs.
+- Update `scripts/ci/check_evidence_required.sh` to enforce only completed tasks with `evidence_required=true` and normalize evidence paths in CI.
+- Add `scripts/audit/verify_phase0_contract.sh` to validate schema + completeness and emit evidence even on failure.
+Acceptance Criteria:
+- Contract validates and lists every Phase‑0 task.
+- Evidence gate enforces only `status=completed AND evidence_required=true`.
+- Evidence checker passes with `merge-multiple: true` artifact layouts.
+- Evidence file is emitted even when validation fails.
+Verification Commands:
+- `scripts/audit/verify_phase0_contract.sh`
+- `CI_ONLY=1 scripts/ci/check_evidence_required.sh evidence/phase0`
+Evidence Artifact(s):
+- `./evidence/phase0/phase0_contract.json`
+Failure Modes:
+- Evidence file missing.
+- Missing/duplicate task rows in contract.
+- Evidence gate fails on tasks not marked completed.
+- CI evidence layout not normalized (false missing).
+
+TASK ID: TSK-P0-038
+Title: SQLSTATE registry + drift check (scoped, deterministic)
+Owner Role: PLATFORM
+Depends On: TSK-P0-034
+Touches: `docs/contracts/sqlstate_map.yml`, `scripts/audit/check_sqlstate_map_drift.sh`, `scripts/audit/run_invariants_fast_checks.sh`, `tasks/TSK-P0-038/meta.yml`
+Invariant(s): NEW INV-061 (SQLSTATE registry drift‑free)
+Work:
+- Create `docs/contracts/sqlstate_map.yml` with required fields (`class`, `subsystem`, `meaning`, `retryable`) and optional `canonical/aliases`.
+- Implement drift check for `P[0-9]{4}` codes across `schema/migrations/**/*.sql`, `scripts/**/*.sh`, `docs/**/*.md`.
+- Exclude `schema/baseline.sql`, `docs/**/INVARIANTS_QUICK.md`, `.git`, `bin`, `obj`.
+- Emit evidence even on failure.
+Acceptance Criteria:
+- Drift check fails if any `Pxxxx` appears outside the map.
+- Drift check passes when all codes are mapped.
+- Evidence file is written deterministically.
+Verification Commands:
+- `scripts/audit/check_sqlstate_map_drift.sh`
+Evidence Artifact(s):
+- `./evidence/phase0/sqlstate_map_drift.json`
+Failure Modes:
+- Evidence file missing.
+- False positives from generated files.
+- Registry missing required fields.
+
+TASK ID: TSK-P0-039
+Title: Register SQLSTATE + contract invariants in manifest
+Owner Role: INVARIANTS_CURATOR
+Depends On: TSK-P0-037, TSK-P0-038
+Touches: `docs/invariants/INVARIANTS_MANIFEST.yml`, `docs/invariants/INVARIANTS_QUICK.md`, `tasks/TSK-P0-039/meta.yml`
+Invariant(s): INV-060, INV-061
+Work:
+- Add INV‑060 + INV‑061 with verification scripts.
+- Regenerate `INVARIANTS_QUICK.md` to prevent drift.
+Acceptance Criteria:
+- Manifest validates.
+- Quick doc matches manifest after regeneration.
+Verification Commands:
+- `scripts/audit/generate_invariants_quick`
+- `scripts/audit/run_invariants_fast_checks.sh`
+Evidence Artifact(s):
+- `./evidence/phase0/invariants_quick.json`
+Failure Modes:
+- Quick doc drift.
+- Evidence file missing.
+
+TASK ID: TSK-P0-040
+Title: Wire contract + SQLSTATE drift checks into CI
+Owner Role: SECURITY_GUARDIAN
+Depends On: TSK-P0-037, TSK-P0-038
+Touches: `.github/workflows/invariants.yml`, `tasks/TSK-P0-040/meta.yml`
+Invariant(s): INV-060, INV-061
+Work:
+- Ensure contract + SQLSTATE drift checks run in the fast-checks job.
+- Ensure evidence uploads include `evidence/phase0/**`.
+Acceptance Criteria:
+- Checks run before upload step.
+- Evidence artifacts include `phase0_contract.json` and `sqlstate_map_drift.json`.
+Verification Commands:
+- `scripts/audit/run_invariants_fast_checks.sh`
+- `actionlint .github/workflows/invariants.yml`
+Evidence Artifact(s):
+- `./evidence/phase0/phase0_contract.json`
+- `./evidence/phase0/sqlstate_map_drift.json`
+Failure Modes:
+- Evidence file missing.
+- Checks not executed in fast‑checks job.
+- Evidence not uploaded.
+
+TASK ID: TSK-P0-041
+Title: Draft tenant/client/member migrations (Phase‑0 rails)
+Owner Role: DB_FOUNDATION
+Depends On: TSK-P0-021, TSK-P0-024
+Touches: `schema/migrations/0014_tenants.sql`, `schema/migrations/0015_tenant_clients.sql`, `schema/migrations/0016_tenant_members.sql`, `schema/migrations/0017_ingress_tenant_attribution.sql`, `schema/migrations/0018_outbox_tenant_attribution.sql`, `schema/migrations/0019_member_tenant_consistency_guard.sql`, `tasks/TSK-P0-041/meta.yml`
+Invariant(s): INV-062..INV-065 (Tenant rails)
+Work:
+- Add tenants, tenant_clients, and tenant_members tables (append-only posture).
+- Add tenant/client/member attribution columns (tenant required on ingress; nullable on outbox for expand-first).
+- Add member/tenant consistency guard function + trigger (ingress only).
+- Ensure no-tx patterns used for hot table indexes if needed.
+Acceptance Criteria:
+- Migrations are forward-only and pass lint/verify.
+- tenant_id is NOT NULL on ingress_attestations.
+- member/tenant guard function exists and trigger is installed on ingress_attestations.
+Verification Commands:
+- `scripts/db/verify_invariants.sh`
+- `scripts/db/tests/test_db_functions.sh`
+Evidence Artifact(s):
+- `./evidence/phase0/tenant_member_hooks.json`
+Failure Modes:
+- Evidence file missing.
+- Tenant attribution missing on ingress_attestations.
+- Member/tenant guard missing or incorrect.
+
+TASK ID: TSK-P0-042
+Title: Add tenant/member invariants + evidence contract entries
+Owner Role: PLATFORM
+Depends On: TSK-P0-041
+Touches: `docs/invariants/INVARIANTS_MANIFEST.yml`, `docs/invariants/INVARIANTS_QUICK.md`, `docs/PHASE0/phase0_contract.yml`, `tasks/TSK-P0-042/meta.yml`
+Invariant(s): INV-062..INV-066 (Tenant rails + member consistency)
+Work:
+- Add tenant/client/member invariants to the manifest.
+- Add phase0 contract row for tenant/member hooks evidence.
+- Regenerate INVARIANTS_QUICK.md and ensure docs match.
+Acceptance Criteria:
+- Manifest validates and docs match.
+- Contract row exists for tenant/member evidence.
+Verification Commands:
+- `scripts/audit/generate_invariants_quick`
+- `scripts/audit/run_invariants_fast_checks.sh`
+Evidence Artifact(s):
+- `./evidence/phase0/invariants_quick.json`
+Failure Modes:
+- Docs drift from manifest.
+- Evidence file missing.
+
+TASK ID: TSK-P0-043
+Title: Implement tenant/member verifier + SQLSTATE map updates
+Owner Role: DB_FOUNDATION
+Depends On: TSK-P0-041
+Touches: `scripts/db/verify_invariants.sh`, `scripts/db/verify_tenant_member_hooks.sh`, `docs/contracts/sqlstate_map.yml`, `tasks/TSK-P0-043/meta.yml`
+Invariant(s): INV-062..INV-066
+Work:
+- Add verifier script for tenant/member hooks (schema + trigger checks) and emit evidence.
+- Wire verifier into db invariants.
+- Add P7201/P7202 to sqlstate_map.yml.
+Acceptance Criteria:
+- Verifier emits `tenant_member_hooks.json` even on failure.
+- DB invariants include tenant/member checks.
+- SQLSTATE map includes P7201/P7202.
+Verification Commands:
+- `scripts/db/verify_invariants.sh`
+Evidence Artifact(s):
+- `./evidence/phase0/tenant_member_hooks.json`
+Failure Modes:
+- Evidence file missing.
+- SQLSTATE map drift.
+
+TASK ID: TSK-P0-044
+Title: Baseline change governance enforcement
+Owner Role: PLATFORM
+Depends On: TSK-P0-013
+Touches: `scripts/audit/verify_baseline_change_governance.sh`, `docs/decisions/ADR-0010-baseline-policy.md`, `docs/PHASE0/phase0_contract.yml`, `docs/invariants/INVARIANTS_MANIFEST.yml`, `tasks/TSK-P0-044/meta.yml`
+Invariant(s): INV-067 (Baseline change governance enforced)
+Work:
+- Add a fail-closed governance check: if `schema/baseline.sql` changes, require at least one migration change and a baseline-update explanation in ADR-0010.
+- Emit `baseline_governance.json` even on failure.
+Acceptance Criteria:
+- Baseline changes without migration + ADR update fail.
+- Evidence file is written on pass/fail.
+Verification Commands:
+- `scripts/audit/verify_baseline_change_governance.sh`
+Evidence Artifact(s):
+- `./evidence/phase0/baseline_governance.json`
+Failure Modes:
+- Evidence file missing.
+- Baseline changed without migration + ADR update.
+
+TASK ID: TSK-P0-045
+Title: DDL allowlist governance (fingerprints + expiry + review)
+Owner Role: SECURITY_GUARDIAN
+Depends On: TSK-P0-029
+Touches: `docs/security/ddl_allowlist.json`, `scripts/security/verify_ddl_allowlist_governance.sh`, `scripts/security/lint_ddl_lock_risk.sh`, `docs/PHASE0/phase0_contract.yml`, `docs/invariants/INVARIANTS_MANIFEST.yml`, `tasks/TSK-P0-045/meta.yml`
+Invariant(s): INV-068 (DDL allowlist governance enforced)
+Work:
+- Introduce a fingerprinted DDL allowlist file with expiry + reviewer metadata.
+- Validate allowlist structure and expiry; emit evidence even on failure.
+- Allow lint to skip allowlisted fingerprints and record allowlist hits in evidence.
+Acceptance Criteria:
+- Allowlist schema validates; expired entries fail.
+- Evidence file includes allowlist hit counts.
+Verification Commands:
+- `scripts/security/verify_ddl_allowlist_governance.sh`
+Evidence Artifact(s):
+- `./evidence/phase0/ddl_allowlist_governance.json`
+Failure Modes:
+- Evidence file missing.
+- Allowlist entry expired or malformed.
+
+TASK ID: TSK-P0-046
+Title: Phase‑0 implementation plan reflects current scope
+Owner Role: ARCHITECT
+Depends On: TSK-P0-041
+Touches: `docs/Phase_0001-0005/implementation_plan.md`, `scripts/audit/verify_phase0_impl_plan.sh`, `docs/PHASE0/phase0_contract.yml`, `docs/invariants/INVARIANTS_MANIFEST.yml`, `tasks/TSK-P0-046/meta.yml`
+Invariant(s): INV-069 (Phase‑0 implementation plan is current)
+Work:
+- Update the Phase‑0001‑0005 plan to include tenant/client/member rails + new Phase‑0 gates.
+- Add a verifier that asserts the plan references migrations 0014–0019 and tenant/member rails.
+- Emit evidence even on failure.
+Acceptance Criteria:
+- Plan includes tenant/client/member migrations and governance gates.
+- Evidence file is written on pass/fail.
+Verification Commands:
+- `scripts/audit/verify_phase0_impl_plan.sh`
+Evidence Artifact(s):
+- `./evidence/phase0/phase0_impl_plan.json`
+Failure Modes:
+- Evidence file missing.
+- Plan missing required references.
+
+TASK ID: TSK-P0-047
+Title: Document day-zero rebaseline decision (ADR + decision memo)
+Owner Role: ARCHITECT
+Depends On: TSK-P0-044
+Touches: `docs/decisions/ADR-0011-rebaseline-dayzero-schema.md`, `docs/decisions/Rebaseline-Decision.md`, `tasks/TSK-P0-047/meta.yml`
+Invariant(s): INV-070 (Day-zero rebaseline strategy documented)
+Work:
+- Document the day-zero rebaseline strategy and baseline-first migration posture in ADR-0011.
+- Create the Rebaseline Decision memo referencing ADR-0011.
+- Ensure the decision is explicit about scope, risks, and governance.
+Acceptance Criteria:
+- ADR exists and is referenced by the decision memo.
+- Evidence file is written on pass/fail.
+Verification Commands:
+- `scripts/audit/verify_rebaseline_strategy.sh`
+Evidence Artifact(s):
+- `./evidence/phase0/rebaseline_decision.json`
+Failure Modes:
+- Evidence file missing.
+- ADR or decision memo missing.
+
+TASK ID: TSK-P0-048
+Title: Add baseline snapshot generator + canonicalization
+Owner Role: DB_FOUNDATION
+Depends On: TSK-P0-047
+Touches: `scripts/db/generate_baseline_snapshot.sh`, `scripts/db/canonicalize_schema_dump.sh`, `scripts/db/check_baseline_drift.sh`, `schema/baselines/**`, `tasks/TSK-P0-048/meta.yml`
+Invariant(s): INV-070 (Day-zero rebaseline strategy documented)
+Work:
+- Add canonicalization helper for deterministic schema diff.
+- Add baseline snapshot generator to create day-zero baseline and metadata.
+- Keep baseline drift check using canonicalization + provenance fields.
+Acceptance Criteria:
+- Generator script exists and produces baseline + metadata when run.
+- Drift check emits provenance fields in evidence.
+- Evidence file is written on pass/fail.
+Verification Commands:
+- `scripts/audit/verify_rebaseline_strategy.sh`
+- `scripts/db/check_baseline_drift.sh`
+Evidence Artifact(s):
+- `./evidence/phase0/baseline_snapshot.json`
+Failure Modes:
+- Evidence file missing.
+- Baseline snapshot or canonicalizer missing.
+
+TASK ID: TSK-P0-049
+Title: Support baseline strategy in migrate.sh
+Owner Role: DB_FOUNDATION
+Depends On: TSK-P0-048
+Touches: `scripts/db/migrate.sh`, `scripts/audit/verify_rebaseline_strategy.sh`, `tasks/TSK-P0-049/meta.yml`
+Invariant(s): INV-070 (Day-zero rebaseline strategy documented)
+Work:
+- Add baseline strategy flags to migrate.sh (baseline, baseline_then_migrations).
+- Enforce baseline-only on empty schema_migrations unless override is set.
+- Honor baseline cutoff when applying post-baseline migrations.
+Acceptance Criteria:
+- migrate.sh supports baseline strategy without running pre-baseline migrations.
+- Evidence file is written on pass/fail.
+Verification Commands:
+- `scripts/audit/verify_rebaseline_strategy.sh`
+Evidence Artifact(s):
+- `./evidence/phase0/baseline_strategy.json`
+Failure Modes:
+- Evidence file missing.
+- Baseline strategy flags missing in migrate.sh.
+
+TASK ID: TSK-P0-056
+Title: Evidence schema canonicalization
+Owner Role: ARCHITECT
+Depends On: none
+Touches: `docs/architecture/evidence_schema.json`, `scripts/audit/validate_evidence_schema.sh`, `docs/PHASE0/phase0_contract.yml`, `tasks/TSK-P0-056/meta.yml`
+Invariant(s): NEW INV-077 (Evidence schema normalized)
+Work:
+- Require evidence fields: `check_id`, `timestamp_utc`, `git_sha`, `status` (+ optional `schema_fingerprint`).
+- Treat `SKIPPED` as first-class status.
+- Validate all `evidence/phase0/*.json` and fail on malformed evidence.
+Acceptance Criteria:
+- Evidence schema requires the canonical fields.
+- Validator fails on any malformed evidence JSON.
+Verification Commands:
+- `scripts/audit/validate_evidence_schema.sh`
+Evidence Artifact(s):
+- `./evidence/phase0/evidence_validation.json`
+Failure Modes:
+- Evidence file missing.
+- Evidence validation missing or malformed.
+
+TASK ID: TSK-P0-057
+Title: YAML normalization + meta schema enforcement
+Owner Role: ARCHITECT
+Depends On: TSK-P0-056
+Touches: `tasks/**/meta.yml`, `tasks/_template/meta.yml`, `docs/operations/STYLE_GUIDE.md`, `scripts/audit/lint_yaml_conventions.sh`, `tasks/TSK-P0-057/meta.yml`
+Invariant(s): NEW INV-078 (YAML conventions enforced)
+Work:
+- Convert YAML keys to `lower_snake_case` across tasks/docs/.github.
+- Enforce canonical meta schema (arrays vs strings).
+- Forbid mixed key variants (Depends On vs depends_on).
+Acceptance Criteria:
+- YAML lint passes with no key violations.
+- Task metas conform to canonical schema.
+Verification Commands:
+- `scripts/audit/lint_yaml_conventions.sh`
+Evidence Artifact(s):
+- `./evidence/phase0/yaml_conventions_lint.json`
+Failure Modes:
+- Evidence file missing.
+- Snake_case violations or schema mismatch.
+
+TASK ID: TSK-P0-058
+Title: CI toolchain pinning (PyYAML + ripgrep)
+Owner Role: SECURITY_GUARDIAN
+Depends On: TSK-P0-057
+Touches: `.github/workflows/invariants.yml`, `scripts/audit/ci_toolchain_versions.env`, `scripts/audit/verify_ci_toolchain.sh`, `scripts/audit/run_invariants_fast_checks.sh`, `tasks/TSK-P0-058/meta.yml`
+Invariant(s): NEW INV-079 (CI toolchain pinned)
+Work:
+- Install pinned PyYAML and ripgrep in CI.
+- Add verifier to assert toolchain versions.
+Acceptance Criteria:
+- CI logs show pinned tool versions.
+- Verifier emits evidence on pass/fail.
+Verification Commands:
+- `scripts/audit/verify_ci_toolchain.sh`
+Evidence Artifact(s):
+- `./evidence/phase0/ci_toolchain.json`
+Failure Modes:
+- Evidence file missing.
+- Tools missing or version mismatch.
+
+TASK ID: TSK-P0-060
+Title: Contract semantics PASS/SKIPPED (gate-scoped)
+Owner Role: ARCHITECT
+Depends On: TSK-P0-051
+Touches: `docs/PHASE0/phase0_contract.yml`, `scripts/audit/verify_phase0_contract_evidence_status.sh`, `tasks/TSK-P0-060/meta.yml`
+Invariant(s): NEW INV-080 (Contract evidence semantics enforced)
+Work:
+- Update contract rows to reference gate IDs (not evidence paths).
+- Enforce: completed ⇒ PASS; not completed ⇒ SKIPPED or PASS.
+Acceptance Criteria:
+- Contract validator passes with new semantics.
+- Verifier emits evidence on pass/fail.
+Verification Commands:
+- `scripts/audit/verify_phase0_contract_evidence_status.sh`
+Evidence Artifact(s):
+- `./evidence/phase0/phase0_contract_evidence_status.json`
+Failure Modes:
+- Evidence file missing.
+- Contract semantics violated or evidence missing.
+
+TASK ID: TSK-P0-061
+Title: Pre‑CI/CI execution order alignment
+Owner Role: ARCHITECT
+Depends On: TSK-P0-060
+Touches: `scripts/dev/pre_ci.sh`, `.github/workflows/invariants.yml`, `tasks/TSK-P0-061/meta.yml`
+Invariant(s): NEW INV-081 (Execution order enforced)
+Work:
+- Ensure ordered checks: YAML lint → control-plane drift → plane checks → evidence schema validate → contract check.
+- Make pre-CI and CI sequences identical.
+Acceptance Criteria:
+- Pre-CI and CI run the same ordered checks.
+- Evidence emitted for order validation.
+Verification Commands:
+- `scripts/audit/verify_ci_order.sh`
+Evidence Artifact(s):
+- `./evidence/phase0/ci_order.json`
+Failure Modes:
+- Evidence file missing.
+- Order drift between pre-CI and CI.
+
+TASK ID: TSK-P0-062
+Title: Normalize legacy task metas to canonical schema
+Owner Role: ARCHITECT
+Depends On: TSK-P0-057
+Touches: `tasks/TSK-P0-050/meta.yml`, `tasks/TSK-P0-051/meta.yml`, `tasks/TSK-P0-052/meta.yml`, `tasks/TSK-P0-053/meta.yml`, `tasks/TSK-P0-054/meta.yml`, `tasks/TSK-P0-055/meta.yml`, `tasks/TSK-P0-062/meta.yml`
+Invariant(s): NEW INV-082 (Task meta schema consistency)
+Work:
+- Convert legacy task metas to lower_snake_case keys and canonical schema.
+- Remove duplicate fields and keep single source of truth.
+- Ensure evidence paths are gate-scoped.
+Acceptance Criteria:
+- Legacy task metas match canonical schema.
+- YAML conventions lint passes.
+Verification Commands:
+- `scripts/audit/lint_yaml_conventions.sh`
+Evidence Artifact(s):
+- `./evidence/phase0/yaml_conventions_lint.json`
+Failure Modes:
+- Evidence file missing.
+- Snake_case violations or schema mismatch in legacy metas.
+
+TASK ID: TSK-P0-050
+Title: Publish Three‑Pillar control‑plane model + execution guarantee
+Owner Role: ARCHITECT
+Depends On: TSK-P0-037
+Touches: `docs/security/THREE_PILLARS_SECURITY.md`, `scripts/audit/verify_three_pillars_doc.sh`, `docs/invariants/INVARIANTS_MANIFEST.yml`, `docs/PHASE0/phase0_contract.yml`, `tasks/TSK-P0-050/meta.yml`
+Invariant(s): NEW INV-071 (Three‑Pillar control‑plane model documented)
+Work:
+- Document the Three‑Pillar model, current implementation, gaps, and proposed improvements.
+- Add execution guarantee: pre‑CI + CI enforcement (not post‑task only).
+- Add a verifier that asserts required sections exist and emits evidence.
+- Register INV‑071 in the manifest and contract.
+Acceptance Criteria:
+- Document exists with required sections (Current, Weaknesses, Proposed, Execution Guarantee).
+- Verifier emits evidence on pass/fail.
+Verification Commands:
+- `scripts/audit/verify_three_pillars_doc.sh`
+Evidence Artifact(s):
+- `./evidence/phase0/three_pillars_doc.json`
+Failure Modes:
+- Evidence file missing.
+- Document missing required sections.
+
+TASK ID: TSK-P0-051
+Title: Define control planes + drift checker
+Owner Role: ARCHITECT
+Depends On: TSK-P0-050
+Touches: `docs/control_planes/CONTROL_PLANES.yml`, `scripts/audit/verify_control_planes_drift.sh`, `scripts/dev/pre_ci.sh`, `.github/workflows/invariants.yml`, `docs/invariants/INVARIANTS_MANIFEST.yml`, `docs/PHASE0/phase0_contract.yml`, `tasks/TSK-P0-051/meta.yml`
+Invariant(s): NEW INV-072 (Control‑plane drift prevented)
+Work:
+- Create CONTROL_PLANES.yml (Security / Integrity / Governance ownership, scope, required gates).
+- Implement drift verifier (ensures gates exist, evidence paths match wrappers).
+- Wire into pre‑CI and CI (fail‑closed).
+- Register INV‑072 and evidence path in manifest + contract.
+Acceptance Criteria:
+- CONTROL_PLANES.yml exists and is parseable.
+- Drift checker fails on missing gates/evidence mismatch.
+- Evidence emitted on pass/fail.
+Verification Commands:
+- `scripts/audit/verify_control_planes_drift.sh`
+Evidence Artifact(s):
+- `./evidence/phase0/control_planes_drift.json`
+Failure Modes:
+- Evidence file missing.
+- Control‑plane gate mismatch or missing script.
+
+TASK ID: TSK-P0-052
+Title: Expand Security plane guardrails (infra/deps/src)
+Owner Role: SECURITY_GUARDIAN
+Depends On: TSK-P0-051
+Touches: `scripts/security/scan_secrets.sh`, `scripts/security/dotnet_dependency_audit.sh`, `scripts/security/lint_secure_config.sh`, `scripts/security/lint_insecure_patterns.sh`, `scripts/audit/run_security_fast_checks.sh`, `.github/workflows/invariants.yml`, `docs/PHASE0/phase0_contract.yml`, `tasks/TSK-P0-052/meta.yml`
+Invariant(s): NEW INV-073 (Security control‑plane baseline enforced)
+Work:
+- Add secrets scan (fail‑closed, evidence on pass/fail).
+- Add .NET dependency audit (no npm; evidence on pass/fail).
+- Add secure config lint for infra/workflows.
+- Add static insecure‑pattern lint for src/.
+- Wire into fast security checks + CI.
+- Register INV‑073 and evidence paths in contract.
+Acceptance Criteria:
+- All new scripts emit evidence under `./evidence/phase0/`.
+- CI runs the checks and fails on violations.
+Verification Commands:
+- `scripts/audit/run_security_fast_checks.sh`
+Evidence Artifact(s):
+- `./evidence/phase0/security_secrets_scan.json`
+- `./evidence/phase0/security_dotnet_deps_audit.json`
+- `./evidence/phase0/security_secure_config_lint.json`
+- `./evidence/phase0/security_insecure_patterns.json`
+Failure Modes:
+- Evidence file missing.
+- Any guardrail violation must fail the job.
+
+TASK ID: TSK-P0-053
+Title: Expand compliance mapping (PCI/NIST/OWASP/ISO)
+Owner Role: COMPLIANCE_MAPPER
+Depends On: TSK-P0-051
+Touches: `docs/security/SECURITY_MANIFEST.yml`, `docs/architecture/COMPLIANCE_MAP.md`, `tasks/TSK-P0-053/meta.yml`
+Invariant(s): NEW INV-074 (Compliance mapping maintained)
+Work:
+- Add mappings for PCI DSS v4.0, NIST CSF/800‑53, OWASP ASVS, ISO‑20022, ISO‑27001/27002.
+- Reference evidence artifacts and responsible control planes.
+Acceptance Criteria:
+- Mapping covers each required standard with control references.
+- No duplicate/ambiguous control IDs.
+Verification Commands:
+- `scripts/audit/verify_compliance_manifest.sh`
+Evidence Artifact(s):
+- `./evidence/phase0/compliance_manifest.json`
+Failure Modes:
+- Evidence file missing.
+- Missing standard or unmapped control.
+
+TASK ID: TSK-P0-054
+Title: Compliance manifest verifier + CI wiring
+Owner Role: SECURITY_GUARDIAN
+Depends On: TSK-P0-053
+Touches: `scripts/audit/verify_compliance_manifest.sh`, `.github/workflows/invariants.yml`, `docs/invariants/INVARIANTS_MANIFEST.yml`, `docs/PHASE0/phase0_contract.yml`, `tasks/TSK-P0-054/meta.yml`
+Invariant(s): NEW INV-075 (Compliance manifest verified)
+Work:
+- Implement compliance manifest verifier (fails closed, emits evidence on pass/fail).
+- Wire into CI (mechanical invariants job).
+- Register INV‑075 + evidence path.
+Acceptance Criteria:
+- Verifier fails on missing standards or evidence references.
+- Evidence emitted under `./evidence/phase0/`.
+Verification Commands:
+- `scripts/audit/verify_compliance_manifest.sh`
+Evidence Artifact(s):
+- `./evidence/phase0/compliance_manifest.json`
+Failure Modes:
+- Evidence file missing.
+- Compliance mapping incomplete or malformed.
+
+TASK ID: TSK-P0-055
+Title: Align agent scopes with control planes
+Owner Role: ARCHITECT
+Depends On: TSK-P0-051
+Touches: `AGENTS.md`, `.codex/agents/security_guardian.md`, `.codex/agents/invariants_curator.md`, `.codex/agents/compliance_mapper.md`, `tasks/TSK-P0-055/meta.yml`
+Invariant(s): NEW INV-076 (Agent scope aligned to control planes)
+Work:
+- Update agent scopes to match CONTROL_PLANES.yml (infra/**, dependency manifests, src/** for Security).
+- Ensure Compliance agent has read‑only access to evidence outputs in docs.
+Acceptance Criteria:
+- Agent scopes match control‑plane ownership and scope.
+Verification Commands:
+- `scripts/audit/verify_control_planes_drift.sh`
+Evidence Artifact(s):
+- `./evidence/phase0/control_planes_drift.json`
+Failure Modes:
+- Evidence file missing.
+- Agent scope conflicts with control plane definitions.
+
+TASK ID: TSK-P0-063
+Title: Fix Phase-0 contract evidence checker (YAML + fail-closed evidence)
+Owner Role: INVARIANTS_CURATOR
+Depends On: TSK-P0-037, TSK-P0-040, TSK-P0-051
+Touches: `scripts/audit/verify_phase0_contract_evidence_status.sh`, `tasks/TSK-P0-063/meta.yml`
+Invariant(s): INV-080 (Phase-0 contract evidence status semantics enforced)
+Work:
+- Export `ROOT_DIR` and `cd` before invoking Python.
+- Parse `docs/PHASE0/phase0_contract.yml` via `yaml.safe_load` (reject non-list).
+- Always emit evidence on parse failure.
+- Require CONTROL_PLANES only if any `gate_ids` exist; otherwise emit SKIPPED evidence.
+Acceptance Criteria:
+- YAML contract parses correctly (no JSON-only parsing).
+- Evidence file is written even on failure.
+- Missing CONTROL_PLANES yields SKIPPED unless `gate_ids` are present.
+Verification Commands:
+- `CI_ONLY=1 scripts/audit/verify_phase0_contract_evidence_status.sh`
+Evidence Artifact(s):
+- `./evidence/phase0/phase0_contract_evidence_status.json`
+Failure Modes:
+- Evidence file missing.
+- Contract parse errors do not emit evidence.
+- CONTROL_PLANES missing fails even with no `gate_ids`.
+
+TASK ID: TSK-P0-064
+Title: Add regression tests for Phase-0 contract checker
+Owner Role: INVARIANTS_CURATOR
+Depends On: TSK-P0-063
+Touches: `scripts/audit/tests/test_phase0_contract_checker.sh`, `tasks/TSK-P0-064/meta.yml`
+Invariant(s): INV-080 (Phase-0 contract evidence status semantics enforced)
+Work:
+- Add test harness covering YAML parse success/fail, control-plane missing behavior, and PASS/SKIPPED enforcement.
+- Ensure evidence is written in all outcomes.
+Acceptance Criteria:
+- Tests pass locally and in CI.
+- Evidence file is emitted even on failures.
+Verification Commands:
+- `scripts/audit/tests/test_phase0_contract_checker.sh`
+Evidence Artifact(s):
+- `./evidence/phase0/phase0_contract_evidence_status.json`
+Failure Modes:
+- Evidence file missing.
+- Missing evidence on parse failure.
+
+TASK ID: TSK-P0-065
+Title: Fix Phase-0 contract validator to parse YAML
+Owner Role: INVARIANTS_CURATOR
+Depends On: TSK-P0-037
+Touches: `scripts/audit/verify_phase0_contract.sh`, `tasks/TSK-P0-065/meta.yml`
+Invariant(s): INV-077 (Phase-0 contract is valid and complete)
+Work:
+- Parse `docs/PHASE0/phase0_contract.yml` using `yaml.safe_load`.
+- Emit evidence on parse failures (fail-closed with evidence).
+- Preserve existing validation semantics.
+Acceptance Criteria:
+- YAML contracts parse correctly.
+- Evidence is written on parse failure.
+Verification Commands:
+- `scripts/audit/verify_phase0_contract.sh`
+Evidence Artifact(s):
+- `./evidence/phase0/phase0_contract.json`
+Failure Modes:
+- Evidence file missing.
+- YAML parse errors do not emit evidence.
+
+TASK ID: TSK-P0-066
+Title: Add regression tests for Phase-0 contract validator
+Owner Role: INVARIANTS_CURATOR
+Depends On: TSK-P0-065
+Touches: `scripts/audit/tests/test_phase0_contract_validation.sh`, `tasks/TSK-P0-066/meta.yml`
+Invariant(s): INV-077 (Phase-0 contract is valid and complete)
+Work:
+- Add test harness for valid YAML (PASS), invalid YAML (FAIL), non-list YAML (FAIL).
+- Ensure evidence is written in all cases.
+Acceptance Criteria:
+- Tests pass locally and in CI.
+- Evidence file emitted even on failures.
+Verification Commands:
+- `scripts/audit/tests/test_phase0_contract_validation.sh`
+Evidence Artifact(s):
+- `./evidence/phase0/phase0_contract.json`
+Failure Modes:
+- Evidence file missing.
+- Missing evidence on parse failure.
+
+TASK ID: TSK-P0-067
+Title: Reorder contract evidence status gate to run last
+Owner Role: ARCHITECT
+Depends On: TSK-P0-061
+Touches: `scripts/audit/run_phase0_ordered_checks.sh`, `scripts/ci/run_ci_locally.sh`, `tasks/TSK-P0-067/meta.yml`
+Invariant(s): INV-081 (Pre-CI/CI order alignment)
+Work:
+- Skip contract evidence status inside `run_invariants_fast_checks.sh` (exported env).
+- Run OpenBao smoke before evidence status in ordered checks.
+- Run `verify_phase0_contract_evidence_status.sh` as the final gate.
+- Ensure local CI parity run executes evidence producers required by the contract:
+  - `scripts/audit/enforce_change_rule.sh` → `structural_doc_linkage.json`
+  - `scripts/db/tests/test_idempotency_zombie.sh` → `idempotency_zombie.json`
+  - `scripts/db/tests/test_no_tx_migrations.sh` → `no_tx_migrations.json`
+Acceptance Criteria:
+- Evidence status check does not run before OpenBao evidence exists.
+- Local parity run mirrors CI order.
+- Evidence files for idempotency, no‑tx, and structural linkage exist before the evidence gate.
+Verification Commands:
+- `scripts/audit/verify_ci_order.sh`
+Evidence Artifact(s):
+- `./evidence/phase0/ci_order.json`
+Failure Modes:
+- Evidence status gate runs before evidence producers.
+- Evidence file missing.
+
+TASK ID: TSK-P0-068
+Title: Update Phase‑0 audit report with governance remediation status
+Owner Role: ARCHITECT
+Depends On: TSK-P0-044, TSK-P0-045, TSK-P0-047, TSK-P0-061
+Touches: `docs/PHASE0_AUDIT_REPORT.md`, `tasks/TSK-P0-068/meta.yml`
+Invariant(s): N/A (governance report alignment)
+Work:
+- Add a dated “Status Update” section that lists resolved governance gaps and remaining gaps.
+- Update Executive Summary to reflect resolved baseline governance, audit logging plan, DDL allowlist governance, and local/CI parity.
+- Ensure references point to the current Phase‑0 artifacts (audit logging plan, baseline governance gate, allowlist governance, parity workflow).
+Acceptance Criteria:
+- Audit report no longer lists resolved items as open gaps.
+- Remaining gaps (if any) are explicitly called out as Phase‑1/2 roadmap.
+Verification Commands:
+- `rg -n "Status Update" docs/PHASE0_AUDIT_REPORT.md`
+Failure Modes:
+- Report still lists resolved governance items as open gaps.
+
+TASK ID: TSK-P0-069
+Title: Extend contract evidence status tests for YAML parse failures
+Owner Role: SECURITY_GUARDIAN
+Depends On: TSK-P0-063, TSK-P0-064
+Touches: `scripts/audit/tests/test_phase0_contract_checker.sh`, `tasks/TSK-P0-069/meta.yml`
+Invariant(s): INV-080 (Phase‑0 contract evidence status semantics enforced)
+Work:
+- Add a regression case that triggers a YAML parse error and asserts evidence is still written.
+- Ensure the failure path reports `contract_parse_failed` and exits non‑zero.
+Acceptance Criteria:
+- New parse‑error test fails closed and writes evidence.
+- Existing tests continue to pass.
+Verification Commands:
+- `scripts/audit/tests/test_phase0_contract_checker.sh`
+Evidence Artifact(s):
+- `./evidence/phase0/phase0_contract_evidence_status.json`
+Failure Modes:
+- Evidence file missing.
+- YAML parse errors do not emit evidence.
+
+TASK ID: TSK-P0-070
+Title: Plan/log scaffolding
+Owner Role: ARCHITECT
+Depends On: none
+Touches: `docs/plans/phase0/_template/PLAN.md`, `docs/plans/phase0/_template/EXEC_LOG.md`, `docs/plans/phase0/INDEX.md`, `docs/plans/phase0/TSK-P0-050_three_pillars/PLAN.md`, `docs/plans/phase0/TSK-P0-050_three_pillars/EXEC_LOG.md`, `docs/plans/phase0/TSK-P0-051_control_planes/PLAN.md`, `docs/plans/phase0/TSK-P0-051_control_planes/EXEC_LOG.md`, `docs/plans/phase0/TSK-P0-052_security_plane_expansion/PLAN.md`, `docs/plans/phase0/TSK-P0-052_security_plane_expansion/EXEC_LOG.md`, `docs/plans/phase0/TSK-P0-053_compliance_mapping/PLAN.md`, `docs/plans/phase0/TSK-P0-053_compliance_mapping/EXEC_LOG.md`, `docs/plans/phase0/TSK-P0-054_compliance_verifier/PLAN.md`, `docs/plans/phase0/TSK-P0-054_compliance_verifier/EXEC_LOG.md`, `docs/plans/phase0/TSK-P0-055_agent_scopes_alignment/PLAN.md`, `docs/plans/phase0/TSK-P0-055_agent_scopes_alignment/EXEC_LOG.md`, `docs/plans/phase0/TSK-P0-070_plan_log_scaffolding/PLAN.md`, `docs/plans/phase0/TSK-P0-070_plan_log_scaffolding/EXEC_LOG.md`, `docs/plans/phase0/TSK-P0-071_task_meta_schema_update/PLAN.md`, `docs/plans/phase0/TSK-P0-071_task_meta_schema_update/EXEC_LOG.md`, `docs/plans/phase0/TSK-P0-072_plan_log_verifier/PLAN.md`, `docs/plans/phase0/TSK-P0-072_plan_log_verifier/EXEC_LOG.md`, `docs/plans/phase0/TSK-P0-073_ci_pre_ci_wiring/PLAN.md`, `docs/plans/phase0/TSK-P0-073_ci_pre_ci_wiring/EXEC_LOG.md`
+Invariant(s): N/A (plan/log scaffolding)
+Work:
+- Create PLAN/EXEC_LOG templates under `docs/plans/phase0/_template`.
+- Scaffold plan/log folders for active three‑pillar cluster tasks.
+- Add `docs/plans/phase0/INDEX.md` for discovery.
+Acceptance Criteria:
+- Templates exist and are reusable.
+- Plan/log folders exist for active clusters.
+- INDEX lists clusters and status.
+Verification Commands:
+- `rg -n "Phase-0 Plans Index" docs/plans/phase0/INDEX.md`
+Failure Modes:
+- Plan/log templates missing.
+- Plan/log scaffolds missing for active clusters.
+
+TASK ID: TSK-P0-071
+Title: Task meta schema update for plan/log linkage
+Owner Role: ARCHITECT
+Depends On: TSK-P0-070
+Touches: `tasks/_template/meta.yml`, `docs/tasks/TASK_META_SCHEMA.md`, `docs/operations/STYLE_GUIDE.md`, `scripts/audit/lint_yaml_conventions.sh`, `tasks/TSK-P0-*/meta.yml`, `docs/plans/phase0/TSK-P0-068_audit_report_update/PLAN.md`, `docs/plans/phase0/TSK-P0-068_audit_report_update/EXEC_LOG.md`, `docs/plans/phase0/TSK-P0-069_contract_parse_test/PLAN.md`, `docs/plans/phase0/TSK-P0-069_contract_parse_test/EXEC_LOG.md`
+Invariant(s): N/A (task meta plan/log linkage)
+Work:
+- Add `implementation_plan` and `implementation_log` to the task meta template.
+- Update task meta schema and style guide with plan/log requirements.
+- Allow YAML lint to recognize new keys and enforce them for in_progress/completed tasks.
+- Backfill implementation_plan/log for active tasks and scaffold missing plan/log files.
+Acceptance Criteria:
+- Task meta template includes implementation_plan/log fields.
+- YAML lint accepts new keys and enforces them for in_progress/completed tasks.
+- Active tasks have plan/log paths populated.
+Verification Commands:
+- `scripts/audit/lint_yaml_conventions.sh`
+Evidence Artifact(s):
+- `./evidence/phase0/yaml_conventions_lint.json`
+Failure Modes:
+- Evidence file missing.
+- Missing implementation_plan/log for in_progress/completed tasks.
+
+TASK ID: TSK-P0-072
+Title: Plan/log verifier (fail-closed)
+Owner Role: ARCHITECT
+Depends On: TSK-P0-071
+Touches: `scripts/audit/verify_task_plans_present.sh`, `tasks/TSK-P0-072/meta.yml`
+Invariant(s): N/A (plan/log verification)
+Work:
+- Implement verifier enforcing plan/log presence for in_progress/completed tasks.
+- Require EXEC_LOG to reference PLAN and both files to mention task_id.
+- Require completed tasks to include a Final summary.
+- Emit evidence at `evidence/phase0/task_plans_present.json`.
+Acceptance Criteria:
+- Verifier fails when required plan/log files are missing.
+- Verifier emits evidence even on failure.
+Verification Commands:
+- `scripts/audit/verify_task_plans_present.sh`
+Evidence Artifact(s):
+- `./evidence/phase0/task_plans_present.json`
+Failure Modes:
+- Evidence file missing.
+- Plan/log requirements not enforced.
+
+TASK ID: TSK-P0-073
+Title: Wire plan/log verifier into pre-CI and CI
+Owner Role: ARCHITECT
+Depends On: TSK-P0-072
+Touches: `scripts/dev/pre_ci.sh`, `.github/workflows/invariants.yml`, `tasks/TSK-P0-073/meta.yml`
+Invariant(s): N/A (plan/log enforcement wiring)
+Work:
+- Add `verify_task_plans_present.sh` to pre-CI before heavier gates.
+- Add `verify_task_plans_present.sh` to CI mechanical job.
+Acceptance Criteria:
+- Verifier runs in pre-CI and CI before evidence aggregation.
+Verification Commands:
+- `scripts/audit/verify_task_plans_present.sh`
+Evidence Artifact(s):
+- `./evidence/phase0/task_plans_present.json`
+Failure Modes:
+- Evidence file missing.
+- Verifier not invoked in CI or pre-CI.
+
+TASK ID: TSK-P0-080
+Title: Add billing usage ledger Phase-0 hook (append-only)
+Owner Role: DB_FOUNDATION
+Depends On: TSK-P0-073
+Touches: `schema/migrations/**`, `scripts/db/**`, `tasks/TSK-P0-080/meta.yml`
+Invariant(s): NEW INV-090 (Atomic revenue event hook exists)
+Work:
+- Add a forward-only migration creating `billing_usage_events` with attribution fields and append-only posture.
+- Add constraints/indexes needed for schema-level billable traceability in Phase-0.
+- Keep runtime pricing logic out of scope; schema hook only.
+Acceptance Criteria:
+- `billing_usage_events` exists with required attribution and correlation fields.
+- UPDATE/DELETE protection is enforced (trigger and/or privilege posture).
+Verification Commands:
+- `scripts/db/verify_invariants.sh`
+- `scripts/db/tests/test_db_functions.sh`
+Evidence Artifact(s):
+- `./evidence/phase0/business_foundation_hooks.json`
+Failure Modes:
+- Billing usage table missing required columns/constraints.
+- Append-only enforcement missing.
+- Evidence file missing.
+
+TASK ID: TSK-P0-081
+Title: Add external proofs Phase-0 hook (append-only)
+Owner Role: DB_FOUNDATION
+Depends On: TSK-P0-073
+Touches: `schema/migrations/**`, `scripts/db/**`, `tasks/TSK-P0-081/meta.yml`
+Invariant(s): NEW INV-091 (Third-party proof hook exists)
+Work:
+- Add a forward-only migration creating `external_proofs` bound to ingress attestation identifiers.
+- Store provider refs and request/response hashes without introducing runtime resolver behavior.
+- Enforce append-only semantics.
+Acceptance Criteria:
+- `external_proofs` exists with attestation linkage and hash metadata.
+- UPDATE/DELETE mutation is blocked.
+Verification Commands:
+- `scripts/db/verify_invariants.sh`
+- `scripts/db/tests/test_db_functions.sh`
+Evidence Artifact(s):
+- `./evidence/phase0/business_foundation_hooks.json`
+Failure Modes:
+- External proofs table missing.
+- Proof mutation is possible via UPDATE/DELETE.
+- Evidence file missing.
+
+TASK ID: TSK-P0-082
+Title: Add correlation stitching hooks to ingress/outbox tables
+Owner Role: DB_FOUNDATION
+Depends On: TSK-P0-073
+Touches: `schema/migrations/**`, `scripts/db/**`, `tasks/TSK-P0-082/meta.yml`
+Invariant(s): NEW INV-092 (Correlation stitching hooks exist)
+Work:
+- Add `correlation_id` and cross-rail reference hook columns to ingress/outbox tables via forward-only migration.
+- Add indexes required for stitchability lookups.
+- Preserve existing outbox/idempotency invariants and no-tx migration rules where applicable.
+Acceptance Criteria:
+- Stitching columns exist on required tables.
+- Required indexes exist.
+Verification Commands:
+- `scripts/db/verify_invariants.sh`
+- `scripts/db/tests/test_db_functions.sh`
+- `scripts/db/tests/test_no_tx_migrations.sh`
+Evidence Artifact(s):
+- `./evidence/phase0/business_foundation_hooks.json`
+Failure Modes:
+- One or more stitching columns are missing.
+- Required index missing.
+- Evidence file missing.
+
+TASK ID: TSK-P0-083
+Title: Add evidence pack primitives (pack + items)
+Owner Role: DB_FOUNDATION
+Depends On: TSK-P0-073
+Touches: `schema/migrations/**`, `scripts/db/**`, `tasks/TSK-P0-083/meta.yml`
+Invariant(s): NEW INV-093 (Evidence pack primitive exists)
+Work:
+- Add forward-only migration for `evidence_packs` and `evidence_pack_items` schema hooks.
+- Include root-hash hook fields and append-only behavior.
+- Keep signing/anchoring runtime behavior out of scope.
+Acceptance Criteria:
+- Evidence pack tables exist with required linkage/hash fields.
+- Pack item mutations are append-only.
+Verification Commands:
+- `scripts/db/verify_invariants.sh`
+- `scripts/db/tests/test_db_functions.sh`
+Evidence Artifact(s):
+- `./evidence/phase0/business_foundation_hooks.json`
+Failure Modes:
+- Pack primitive tables missing.
+- Mutable pack item behavior allowed.
+- Evidence file missing.
+
+TASK ID: TSK-P0-084
+Title: Add billable client hierarchy hooks for tenants
+Owner Role: DB_FOUNDATION
+Depends On: TSK-P0-073
+Touches: `schema/migrations/**`, `scripts/db/**`, `tasks/TSK-P0-084/meta.yml`
+Invariant(s): NEW INV-094 (Tenant billable hierarchy hook exists)
+Work:
+- Add `billable_clients` and tenant linkage hooks (`billable_client_id`, `parent_tenant_id`) via forward-only migration.
+- Use expand-first posture for constraints when backfill may be needed.
+- Add required FKs/indexes for auditably billable hierarchy.
+Acceptance Criteria:
+- Billable root and tenant hierarchy hooks exist and are queryable.
+- FK/index posture is present per migration plan.
+Verification Commands:
+- `scripts/db/verify_invariants.sh`
+- `scripts/db/tests/test_db_functions.sh`
+Evidence Artifact(s):
+- `./evidence/phase0/business_foundation_hooks.json`
+Failure Modes:
+- Billable hierarchy columns/FKs missing.
+- Expand-first governance not followed.
+- Evidence file missing.
+
+TASK ID: TSK-P0-085
+Title: Add multi-signature ingress schema hook
+Owner Role: DB_FOUNDATION
+Depends On: TSK-P0-073
+Touches: `schema/migrations/**`, `scripts/db/**`, `tasks/TSK-P0-085/meta.yml`
+Invariant(s): NEW INV-095 (Multi-signature ingress hook exists)
+Work:
+- Add `signatures JSONB NOT NULL DEFAULT '[]'::jsonb` to `ingress_attestations` in a forward-only migration.
+- Preserve legacy single-signature compatibility fields for Phase-0.
+- Keep deep signature validation behavior out of scope.
+Acceptance Criteria:
+- Multi-signature column exists with correct type/default/not-null posture.
+- Existing ingress invariants remain intact.
+Verification Commands:
+- `scripts/db/verify_invariants.sh`
+- `scripts/db/tests/test_db_functions.sh`
+Evidence Artifact(s):
+- `./evidence/phase0/business_foundation_hooks.json`
+Failure Modes:
+- `signatures` column missing or wrong default.
+- Regression in existing ingress invariants.
+- Evidence file missing.
+
+TASK ID: TSK-P0-086
+Title: Add business foundation hooks verifier and invariant wiring
+Owner Role: INVARIANTS_CURATOR
+Depends On: TSK-P0-080, TSK-P0-081, TSK-P0-082, TSK-P0-083, TSK-P0-084, TSK-P0-085
+Touches: `scripts/db/verify_business_foundation_hooks.sh`, `scripts/db/verify_invariants.sh`, `docs/invariants/INVARIANTS_MANIFEST.yml`, `docs/invariants/INVARIANTS_IMPLEMENTED.md`, `docs/tasks/PHASE0_TASKS.md`, `tasks/TSK-P0-086/meta.yml`
+Invariant(s): NEW INV-096 (Business foundation hooks are mechanically verified)
+Work:
+- Implement schema-introspection verifier for all business foundation hooks.
+- Emit deterministic evidence JSON with checked tables/columns/constraints/indexes/triggers.
+- Wire verifier into DB invariant flow and update invariants docs only with real verification pointers.
+Acceptance Criteria:
+- Verifier fails closed when a required hook is missing.
+- Verifier writes evidence on both pass and failure paths.
+- Manifest/docs reflect verification hooks without paper promotion.
+Verification Commands:
+- `scripts/audit/run_invariants_fast_checks.sh`
+- `scripts/db/verify_invariants.sh`
+Evidence Artifact(s):
+- `./evidence/phase0/business_foundation_hooks.json`
+Failure Modes:
+- Hooks pass without actual schema checks.
+- Verifier not wired into DB invariant flow.
+- Evidence file missing.
+
+TASK ID: TSK-P0-087
+Title: Local/CI toolchain parity (pinned)
+Owner Role: SECURITY_GUARDIAN
+Depends On: TSK-P0-073
+Touches: `scripts/audit/ci_toolchain_versions.env`, `scripts/audit/bootstrap_local_ci_toolchain.sh`, `scripts/audit/verify_ci_toolchain.sh`, `scripts/audit/run_invariants_fast_checks.sh`, `scripts/dev/pre_ci.sh`, `docs/tasks/PHASE0_TASKS.md`, `tasks/TSK-P0-087/meta.yml`
+Invariant(s): INV-079 (CI toolchain is pinned)
+Work:
+- Update pinned rg version to match installed rg and CI install.
+- Add repo-local toolchain bootstrap script (pinned python deps in `./.venv`, pinned `rg` in `./.toolchain/bin`).
+- Update toolchain verifier and fast checks to prefer repo-local toolchain by default.
+- Wire bootstrap into `scripts/dev/pre_ci.sh` to enforce local parity.
+Acceptance Criteria:
+- `scripts/audit/verify_ci_toolchain.sh` passes locally.
+- `scripts/audit/run_invariants_fast_checks.sh` passes locally without manual PATH exports.
+- Evidence is emitted for toolchain verification.
+Verification Commands:
+- `scripts/audit/bootstrap_local_ci_toolchain.sh`
+- `scripts/audit/verify_ci_toolchain.sh`
+- `scripts/audit/run_invariants_fast_checks.sh`
+Evidence Artifact(s):
+- `./evidence/phase0/ci_toolchain.json`
+Failure Modes:
+- Toolchain mismatch between local and CI.
+- Fast checks rely on global site-packages.
+- Evidence file missing.
+
+TASK ID: TSK-P0-088
+Title: Tier-1 gap audit vs business goals (Phase-0)
+Owner Role: ARCHITECT
+Depends On: none
+Touches: `docs/audits/TIER1_GAP_AUDIT_2026-02-06.md`, `docs/tasks/PHASE0_TASKS.md`, `tasks/TSK-P0-088/meta.yml`
+Invariant(s): N/A (audit report)
+Work:
+- Produce an audit report mapping business goals to Phase-0 mechanical enforcement.
+- Identify Tier-1 blocking gaps and Phase-0-safe fixes.
+Acceptance Criteria:
+- Report is evidence-minded and references concrete scripts/docs/paths.
+- Report distinguishes Phase-0 hooks from Phase-1/2 runtime enforcement.
+Verification Commands:
+- `scripts/audit/run_invariants_fast_checks.sh`
+Failure Modes:
+- Report over-claims implemented controls.
+
+TASK ID: TSK-P0-089
+Title: Tier-1 gap audit addendum (ISO 27001/27002, ISO 20022, Zero Trust, migrations)
+Owner Role: ARCHITECT
+Depends On: TSK-P0-088
+Touches: `docs/audits/TIER1_GAP_AUDIT_ADDENDUM_2026-02-07.md`, `docs/tasks/PHASE0_TASKS.md`, `tasks/TSK-P0-089/meta.yml`
+Invariant(s): N/A (audit report addendum)
+Work:
+- Extend the Tier-1 gap audit with ISO/IEC 27001:2022 and ISO/IEC 27002:2022 mapping (Phase-0 posture and gaps).
+- Extend the Tier-1 gap audit with ISO 20022 expectations and Phase-0-safe hooks.
+- Assess Zero Trust Architecture posture and identify Phase-0 mechanical gaps.
+- Document the exact forward-only, blue/green migration process used by this repo, including preparatory invariants required for safe rollback-by-routing.
+Acceptance Criteria:
+- Addendum references concrete scripts/docs/paths and does not over-claim compliance.
+- Addendum distinguishes Phase-0 hooks from Phase-1/2 runtime enforcement.
+Verification Commands:
+- `scripts/audit/run_invariants_fast_checks.sh`
+Failure Modes:
+- Addendum misstates migration mechanics or implies certification/compliance.
+
+TASK ID: TSK-P0-090
+Title: Key management policy stub + mechanical verifier
+Owner Role: SECURITY_GUARDIAN
+Depends On: TSK-P0-089
+Touches: `docs/security/KEY_MANAGEMENT_POLICY.md`, `docs/security/SECURITY_MANIFEST.yml`, `scripts/audit/verify_key_management_policy.sh`, `tasks/TSK-P0-090/meta.yml`
+Invariant(s): NEW (Key management policy exists + referenced)
+Work:
+- Add Phase-0 key management policy stub (OpenBao now; KMS/HSM later) with lifecycle controls and ownership.
+- Add verifier that fails if the policy is missing or not referenced by SECURITY_MANIFEST.
+- Emit evidence artifact for policy presence/reference verification.
+Acceptance Criteria:
+- Policy doc exists and is referenced by SECURITY_MANIFEST.
+- Verifier fails closed if doc is missing or unreferenced.
+Verification Commands:
+- `scripts/audit/verify_key_management_policy.sh`
+Evidence Artifact(s):
+- `evidence/phase0/key_management_policy.json`
+Failure Modes:
+- Policy exists but is not referenced by control manifest.
+- Verifier does not fail closed when doc is missing.
+- Evidence file missing.
+
+TASK ID: TSK-P0-091
+Title: Audit logging retention and review policy stub + verifier
+Owner Role: SECURITY_GUARDIAN
+Depends On: TSK-P0-089
+Touches: `docs/security/AUDIT_LOGGING_RETENTION_POLICY.md`, `docs/security/AUDIT_LOGGING_PLAN.md`, `docs/security/SECURITY_MANIFEST.yml`, `scripts/audit/verify_audit_logging_retention_policy.sh`, `tasks/TSK-P0-091/meta.yml`
+Invariant(s): NEW (Audit logging retention/review policy exists + referenced)
+Work:
+- Add Phase-0 audit logging retention/review policy stub (retention targets, review cadence, time sync expectations, access controls).
+- Add verifier that fails if the policy is missing or not referenced by SECURITY_MANIFEST.
+- Emit evidence artifact for policy presence/reference verification.
+Acceptance Criteria:
+- Retention policy doc exists and is referenced by SECURITY_MANIFEST.
+- Verifier fails closed if doc is missing or unreferenced.
+Verification Commands:
+- `scripts/audit/verify_audit_logging_retention_policy.sh`
+Evidence Artifact(s):
+- `evidence/phase0/audit_logging_retention_policy.json`
+Failure Modes:
+- Logging plan exists but retention/review requirements are not explicitly declared.
+- Verifier passes without an explicit retention declaration.
+- Evidence file missing.
+
+TASK ID: TSK-P0-092
+Title: Secure SDLC policy stub + Semgrep SAST baseline (pinned)
+Owner Role: SECURITY_GUARDIAN
+Depends On: TSK-P0-087, TSK-P0-089
+Touches: `docs/security/SECURE_SDLC_POLICY.md`, `.github/workflows/invariants.yml`, `security/semgrep/rules.yml`, `scripts/security/run_semgrep_sast.sh`, `scripts/audit/verify_semgrep_sast_evidence.sh`, `docs/security/SECURITY_MANIFEST.yml`, `tasks/TSK-P0-092/meta.yml`
+Invariant(s): NEW (SAST baseline emits evidence; parity preserved)
+Work:
+- Add Secure SDLC policy stub defining minimum static gates and evidence expectations in Phase-0.
+- Introduce Phase-0 Semgrep baseline (minimal repo-managed ruleset, pinned tool version) and emit evidence with tool version + scanned paths.
+- Wire SAST baseline into CI/pre-CI gating and map it in SECURITY_MANIFEST.
+Acceptance Criteria:
+- SAST runner is deterministic and runs in both local and CI.
+- Evidence includes tool version, git_sha, scanned file set, and status.
+Verification Commands:
+- `scripts/security/run_semgrep_sast.sh`
+- `scripts/audit/verify_semgrep_sast_evidence.sh`
+Evidence Artifact(s):
+- `evidence/phase0/semgrep_sast.json`
+Failure Modes:
+- SAST baseline only runs in CI (local parity broken).
+- Output is non-deterministic or missing provenance.
+- Evidence file missing.
+
+TASK ID: TSK-P0-093
+Title: Expand/contract migration guardrail lint (no destructive DDL, nullability safety)
+Owner Role: DB_FOUNDATION
+Depends On: TSK-P0-073, TSK-P0-089
+Touches: `scripts/db/lint_expand_contract_policy.sh`, `scripts/db/verify_invariants.sh`, `scripts/dev/pre_ci.sh`, `docs/invariants/INVARIANTS_MANIFEST.yml`, `tasks/TSK-P0-093/meta.yml`
+Invariant(s): NEW (Expand/Transition forbids destructive DDL; nullability/default safety)
+Work:
+- Add migration policy linter blocking destructive/contract operations during Expand/Transition by default.
+- Enforce nullability safety rules to preserve N-1 rollback-by-routing viability.
+- Fail closed if a contract cleanup marker appears in a migration (Phase-0 forbidden).
+Acceptance Criteria:
+- Lint fails on any destructive DDL (DROP/TRUNCATE/contract ops) in Phase-0.
+- Lint fails on any ADD COLUMN ... NOT NULL in Phase-0.
+- Lint fails if a contract cleanup marker appears in a migration.
+Verification Commands:
+- `scripts/db/lint_expand_contract_policy.sh`
+Evidence Artifact(s):
+- `evidence/phase0/migration_expand_contract_policy.json`
+Failure Modes:
+- Lint is too permissive (allows destructive DDL or NOT NULL adds).
+- Evidence file missing.
+
+TASK ID: TSK-P0-094
+Title: PK/FK type stability lint for migrations
+Owner Role: DB_FOUNDATION
+Depends On: TSK-P0-093
+Touches: `scripts/db/lint_pk_fk_type_changes.sh`, `scripts/db/verify_invariants.sh`, `scripts/dev/pre_ci.sh`, `docs/invariants/INVARIANTS_MANIFEST.yml`, `tasks/TSK-P0-094/meta.yml`
+Invariant(s): NEW (PK/FK type stability)
+Work:
+- Add migration linter forbidding ALTER COLUMN TYPE on primary key/foreign key columns without explicit ADR waiver marker.
+- Emit evidence artifact describing scanned files and violations.
+Acceptance Criteria:
+- Lint fails closed when key type changes are detected without an ADR waiver marker.
+Verification Commands:
+- `scripts/db/lint_pk_fk_type_changes.sh`
+Evidence Artifact(s):
+- `evidence/phase0/pk_fk_type_stability.json`
+Failure Modes:
+- Key type changes slip through and break blue/green rollback-by-routing.
+- Evidence file missing.
+
+TASK ID: TSK-P0-095
+Title: Table conventions spec + catalog verifier (idempotency + lineage)
+Owner Role: DB_FOUNDATION
+Depends On: TSK-P0-093
+Touches: `schema/table_conventions.yml`, `scripts/db/verify_table_conventions.sh`, `scripts/db/verify_invariants.sh`, `docs/invariants/INVARIANTS_MANIFEST.yml`, `tasks/TSK-P0-095/meta.yml`
+Invariant(s): NEW (Table conventions enforced via catalog checks)
+Work:
+- Define table conventions spec with an explicit allowlist of ledger/transactional tables.
+- Add verifier that checks migrated schema (information_schema/pg_catalog) against the spec.
+- Emit evidence artifact with violations per table.
+Acceptance Criteria:
+- Conventions are enforced mechanically against the actual schema, not only via regex.
+Verification Commands:
+- `scripts/db/verify_table_conventions.sh`
+Evidence Artifact(s):
+- `evidence/phase0/table_conventions.json`
+Failure Modes:
+- Conventions exist only as docs or verifier does not reflect actual migrated schema.
+- Evidence file missing.
+
+TASK ID: TSK-P0-100
+Title: Evidence harness integrity verifier (watch-the-watcher)
+Owner Role: INVARIANTS_CURATOR
+Depends On: TSK-P0-090, TSK-P0-091, TSK-P0-092, TSK-P0-093, TSK-P0-094, TSK-P0-095
+Touches: `scripts/audit/verify_evidence_harness_integrity.sh`, `scripts/audit/run_invariants_fast_checks.sh`, `docs/invariants/INVARIANTS_MANIFEST.yml`, `tasks/TSK-P0-100/meta.yml`
+Invariant(s): NEW (Evidence harness integrity enforced)
+Work:
+- Add a verifier that checks evidence-producing gate scripts for high-signal anti-bypass properties.
+- Enforce structural requirements and minimal pattern bans (set +e, unannotated || true, unannotated 2>/dev/null).
+- Emit evidence artifact with the targets scanned and any violations.
+Acceptance Criteria:
+- Verifier fails closed on violations and produces actionable evidence.
+- Verifier is high-signal and avoids noisy shell linting.
+Verification Commands:
+- `scripts/audit/verify_evidence_harness_integrity.sh`
+Evidence Artifact(s):
+- `evidence/phase0/evidence_harness_integrity.json`
+Failure Modes:
+- Verifier is too permissive and can be bypassed.
+- Verifier becomes noisy and developers start ignoring it.
+- Evidence file missing.
+
+TASK ID: TSK-P0-101
+Title: Participant registry schema hook + verifier
+Owner Role: DB_FOUNDATION
+Depends On: TSK-P0-086, TSK-P0-089
+Touches: `schema/migrations/**`, `scripts/db/verify_invariants.sh`, `scripts/db/verify_business_foundation_hooks.sh`, `docs/invariants/INVARIANTS_MANIFEST.yml`, `tasks/TSK-P0-101/meta.yml`
+Invariant(s): NEW (Participant registry exists + is enforced)
+Work:
+- Add participants registry table suitable for IPDR stitching and legal/rail identity anchors.
+- Define mutation posture consistent with Tier-1 traceability.
+- Extend verifier(s) to assert table existence, critical columns, indexes, and privilege posture.
+Acceptance Criteria:
+- Forward-only migration adds the registry hook.
+- Verifier emits evidence and fails closed if missing.
+Verification Commands:
+- `scripts/db/verify_invariants.sh`
+Evidence Artifact(s):
+- `evidence/phase0/business_foundation_hooks.json`
+Failure Modes:
+- Participants referenced but no authoritative registry exists.
+- Verifier does not fail closed on missing columns/indexes.
+- Evidence file missing.
+
+TASK ID: TSK-P0-102
+Title: Evidence pack signing and anchoring schema hooks + verifier
+Owner Role: DB_FOUNDATION
+Depends On: TSK-P0-086, TSK-P0-089
+Touches: `schema/migrations/**`, `scripts/db/verify_business_foundation_hooks.sh`, `docs/invariants/INVARIANTS_MANIFEST.yml`, `tasks/TSK-P0-102/meta.yml`
+Invariant(s): NEW (Evidence packs have canonical signing/anchoring fields)
+Work:
+- Extend evidence pack schema with canonical detached signature metadata fields.
+- Extend evidence pack schema with anchoring metadata fields (anchor method + external reference).
+- Ensure append-only posture remains enforced for evidence pack tables.
+- Extend verifier to assert columns exist and remain append-only.
+Acceptance Criteria:
+- Forward-only migration(s) add the hooks without weakening append-only.
+- Verifier emits evidence and fails closed if missing.
+Verification Commands:
+- `scripts/db/verify_business_foundation_hooks.sh`
+Evidence Artifact(s):
+- `evidence/phase0/business_foundation_hooks.json`
+Failure Modes:
+- Evidence packs exist but lack canonical signing/anchoring hooks.
+- Append-only posture is weakened.
+- Evidence file missing.
+
+TASK ID: TSK-P0-103
+Title: Privilege posture closeout for business tables (REVOKE hygiene)
+Owner Role: DB_FOUNDATION
+Depends On: TSK-P0-086, TSK-P0-089
+Touches: `schema/migrations/**`, `scripts/db/verify_invariants.sh`, `docs/invariants/INVARIANTS_MANIFEST.yml`, `tasks/TSK-P0-103/meta.yml`
+Invariant(s): NEW (Revoke-first posture explicitly applied to new business tables)
+Work:
+- Add forward-only migration(s) to explicitly REVOKE ALL ON new business tables FROM PUBLIC.
+- Add/extend verifier coverage so privilege posture on the new tables is mechanically asserted.
+Acceptance Criteria:
+- PUBLIC has no implicit privileges on new business tables.
+- Verifier fails closed on privilege drift.
+Verification Commands:
+- `scripts/db/verify_invariants.sh`
+Failure Modes:
+- New tables rely on implicit privilege defaults.
+- Privilege drift is not detected mechanically.
+- Evidence file missing.
+
+TASK ID: TSK-P0-104
+Title: Closeout checklist matrix doc (Checklist -> Gate/Invariant/Task)
+Owner Role: INVARIANTS_CURATOR
+Depends On: TSK-P0-090, TSK-P0-091, TSK-P0-092, TSK-P0-093, TSK-P0-094, TSK-P0-095, TSK-P0-096, TSK-P0-097, TSK-P0-098, TSK-P0-099, TSK-P0-100, TSK-P0-101, TSK-P0-102, TSK-P0-103
+Touches: `docs/PHASE0/CLOSEOUT_CHECKLIST_MATRIX.md`, `docs/tasks/PHASE0_TASKS.md`, `tasks/TSK-P0-104/meta.yml`
+Invariant(s): N/A (docs)
+Work:
+- Create a dedicated matrix mapping closeout checklist items to mechanical enforcement (gates/invariants/scripts) and evidence artifacts.
+- Include the planned closeout task IDs where checklist items are not yet mechanically enforced.
+Acceptance Criteria:
+- Matrix is evidence-minded and does not over-claim enforcement.
+- Matrix includes gate IDs from CONTROL_PLANES where applicable.
+Verification Commands:
+- `scripts/audit/run_invariants_fast_checks.sh`
+Failure Modes:
+- Matrix over-claims enforcement without a referenced script/gate/evidence.
+
+TASK ID: TSK-P0-096
+Title: Register new closeout invariants and update invariant docs
+Owner Role: INVARIANTS_CURATOR
+Depends On: TSK-P0-093, TSK-P0-094, TSK-P0-095
+Touches: `docs/invariants/INVARIANTS_MANIFEST.yml`, `docs/invariants/INVARIANTS_IMPLEMENTED.md`, `docs/invariants/INVARIANTS_QUICK.md`, `scripts/audit/generate_invariants_quick.py`, `tasks/TSK-P0-096/meta.yml`
+Invariant(s): N/A (meta)
+Work:
+- Add invariant entries for the new migration guardrails and table conventions verifier.
+- Update implemented/quick invariant docs and ensure regeneration is stable.
+Acceptance Criteria:
+- New invariants appear in manifest and quick/implemented docs are consistent.
+Verification Commands:
+- `scripts/audit/run_invariants_fast_checks.sh`
+Failure Modes:
+- Invariants are implemented but not declared (audit/control mapping drift).
+
+TASK ID: TSK-P0-097
+Title: Wire closeout verifiers into pre-CI and CI (parity)
+Owner Role: SECURITY_GUARDIAN
+Depends On: TSK-P0-090, TSK-P0-091, TSK-P0-092, TSK-P0-093, TSK-P0-094, TSK-P0-095
+Touches: `scripts/dev/pre_ci.sh`, `.github/workflows/invariants.yml`, `scripts/audit/run_invariants_fast_checks.sh`, `scripts/audit/run_security_fast_checks.sh`, `tasks/TSK-P0-097/meta.yml`
+Invariant(s): N/A (wiring)
+Work:
+- Ensure new verifiers execute in both local pre-CI and CI workflows.
+- Preserve local/CI parity guarantees and evidence artifacts.
+Acceptance Criteria:
+- `scripts/dev/pre_ci.sh` locally executes the same gates as CI for this scope.
+Verification Commands:
+- `scripts/dev/pre_ci.sh`
+- `scripts/audit/run_invariants_fast_checks.sh`
+- `scripts/audit/run_security_fast_checks.sh`
+Failure Modes:
+- Checks only run in CI or only locally (parity drift).
+
+TASK ID: TSK-P0-098
+Title: Reconcile Phase-0 governance status for implemented business foundation hooks
+Owner Role: INVARIANTS_CURATOR
+Depends On: TSK-P0-086
+Touches: `docs/PHASE0/phase0_contract.yml`, `docs/tasks/PHASE0_TASKS.md`, `tasks/TSK-P0-080/meta.yml`, `tasks/TSK-P0-081/meta.yml`, `tasks/TSK-P0-082/meta.yml`, `tasks/TSK-P0-083/meta.yml`, `tasks/TSK-P0-084/meta.yml`, `tasks/TSK-P0-085/meta.yml`, `tasks/TSK-P0-086/meta.yml`, `tasks/TSK-P0-098/meta.yml`
+Invariant(s): N/A (governance reconciliation)
+Work:
+- Mark already-implemented business foundation hook tasks as completed in task meta and Phase-0 contract.
+- Ensure evidence paths reference the verifier artifact (`business_foundation_hooks.json`).
+Acceptance Criteria:
+- Phase-0 contract and task metas reflect implemented state and point to real evidence artifacts.
+Verification Commands:
+- `scripts/audit/verify_phase0_contract.sh`
+- `scripts/audit/verify_phase0_contract_evidence_status.sh`
+Failure Modes:
+- Implemented hooks remain marked planned (audit traceability failure).
+
+TASK ID: TSK-P0-099
+Title: ISO 20022 and Zero Trust closeout hooks (Phase-0 safe)
+Owner Role: SECURITY_GUARDIAN
+Depends On: TSK-P0-089
+Touches: `docs/security/ISO20022_READINESS.md`, `docs/iso20022/contract_registry.yml`, `docs/security/ZERO_TRUST_POSTURE.md`, `docs/security/SECURITY_MANIFEST.yml`, `scripts/audit/verify_iso20022_readiness_docs.sh`, `scripts/audit/verify_iso20022_contract_registry.sh`, `scripts/audit/verify_zero_trust_posture_docs.sh`, `tasks/TSK-P0-099/meta.yml`
+Invariant(s): NEW (ISO 20022 readiness docs and Zero Trust posture docs exist + referenced)
+Work:
+- Define Phase-0 ISO 20022 readiness posture and planned adapter contract tests.
+- Define Phase-0 Zero Trust posture with explicit Phase-1/2 follow-ups.
+- Add verifiers that fail closed if posture docs are missing or unreferenced by SECURITY_MANIFEST.
+- Add a verifier that fails closed if the ISO 20022 contract registry is missing/unparseable and emits presence evidence.
+Acceptance Criteria:
+- Docs exist, are referenced, and verifiers emit evidence.
+Verification Commands:
+- `scripts/audit/verify_iso20022_readiness_docs.sh`
+- `scripts/audit/verify_iso20022_contract_registry.sh`
+- `scripts/audit/verify_zero_trust_posture_docs.sh`
+Evidence Artifact(s):
+- `evidence/phase0/iso20022_readiness.json`
+- `evidence/phase0/iso20022_contract_registry.json`
+- `evidence/phase0/zero_trust_posture.json`
+Failure Modes:
+- Docs exist but are not referenced, or verifiers do not fail closed.
+- Evidence file missing.
+
+---
+
+TASK ID: TSK-P0-105
+Title: Remediation trace gate (Option 2) cluster plan + normative workflow
+Owner Role: ARCHITECT
+Depends On: (none)
+Touches: `docs/operations/REMEDIATION_TRACE_WORKFLOW.md`, `docs/operations/DEV_WORKFLOW.md`, `docs/operations/TASK_CREATION_PROCESS.md`, `docs/plans/phase0/TSK-P0-105_remediation_trace_gate/PLAN.md`, `docs/plans/phase0/TSK-P0-105_remediation_trace_gate/EXEC_LOG.md`, `docs/plans/phase0/INDEX.md`, `.codex/agents/supervisor.md`, `.codex/agents/architect.md`, `tasks/TSK-P0-105/meta.yml`
+Invariant(s): INV-105 (Remediation trace required for production-affecting fixes)
+Work:
+- Define remediation casefile workflow (REM casefile PLAN + EXEC_LOG) and required fields.
+- Define the noise-controlled trigger surfaces (Option 2) for when remediation trace is required.
+- Update developer workflow and task creation process docs to reference the remediation workflow.
+- Reinforce agent prompts to treat remediation workflow as mandatory when fixing failures.
+Acceptance Criteria:
+- `docs/operations/REMEDIATION_TRACE_WORKFLOW.md` exists and is referenced by `docs/operations/DEV_WORKFLOW.md` and `docs/operations/TASK_CREATION_PROCESS.md`.
+- Cluster plan/log exist and reference all task IDs.
+Verification Commands:
+- `scripts/audit/run_invariants_fast_checks.sh`
+Evidence Artifact(s):
+- `./evidence/phase0/remediation_workflow_doc.json`
+Failure Modes:
+- Evidence file missing.
+- Workflow doc missing required tokens/fields.
+- Plan/log missing task ID linkage.
+
+---
+
+TASK ID: TSK-P0-106
+Title: Remediation trace verifier + wiring (Option 2, low noise)
+Owner Role: SECURITY_GUARDIAN
+Depends On: TSK-P0-105
+Touches: `scripts/audit/verify_remediation_trace.sh`, `scripts/audit/verify_remediation_workflow_doc.sh`, `scripts/audit/run_invariants_fast_checks.sh`, `tasks/TSK-P0-106/meta.yml`
+Invariant(s): INV-105
+Work:
+- Implement `scripts/audit/verify_remediation_trace.sh`:
+- Determine diff from staged changes if present, otherwise use `BASE_REF...HEAD_REF` (defaults: `origin/main...HEAD`).
+- If diff touches production-affecting surfaces, require remediation trace docs in diff:
+- `docs/plans/**/REM-*/PLAN.md` or `EXEC_LOG.md`, OR
+- `docs/plans/**/TSK-*/PLAN.md` or `EXEC_LOG.md` that contain required remediation markers.
+- Validate minimum remediation markers exist in whichever plan/log is present.
+- Emit evidence `evidence/phase0/remediation_trace.json` with PASS/FAIL/SKIPPED and diagnostics.
+- Implement `scripts/audit/verify_remediation_workflow_doc.sh` and emit `evidence/phase0/remediation_workflow_doc.json`.
+- Wire both into `scripts/audit/run_invariants_fast_checks.sh` so pre-push and CI enforce it.
+Acceptance Criteria:
+- Production-affecting changes without remediation trace fail fast checks.
+- Non-enforcement narrative docs do not trigger the requirement.
+Verification Commands:
+- `scripts/audit/run_invariants_fast_checks.sh`
+- `scripts/dev/pre_ci.sh`
+Evidence Artifact(s):
+- `./evidence/phase0/remediation_trace.json`
+- `./evidence/phase0/remediation_workflow_doc.json`
+Failure Modes:
+- Evidence file missing.
+- Triggered diff but missing remediation docs in diff.
+- Remediation doc present but missing required markers.
+
+---
+
+TASK ID: TSK-P0-107
+Title: Register remediation trace invariant (INV-105) and Phase-0 contract wiring
+Owner Role: INVARIANTS_CURATOR
+Depends On: TSK-P0-106
+Touches: `docs/invariants/INVARIANTS_MANIFEST.yml`, `docs/invariants/INVARIANTS_IMPLEMENTED.md`, `docs/invariants/INVARIANTS_QUICK.md`, `docs/tasks/PHASE0_TASKS.md`, `docs/PHASE0/phase0_contract.yml`, `tasks/TSK-P0-107/meta.yml`
+Invariant(s): INV-105
+Work:
+- Add `INV-105` to manifest with enforced_by/verified_by pointing to remediation verifiers.
+- Update implemented invariants doc.
+- Regenerate QUICK and ensure it matches generator output.
+- Add contract row(s) for the remediation tasks with evidence paths.
+Acceptance Criteria:
+- `scripts/audit/run_invariants_fast_checks.sh` passes and QUICK is in sync.
+Verification Commands:
+- `scripts/audit/run_invariants_fast_checks.sh`
+- `bash scripts/audit/verify_phase0_contract.sh`
+Evidence Artifact(s):
+- `./evidence/phase0/invariants_quick.json`
+- `./evidence/phase0/phase0_contract.json`
+Failure Modes:
+- Evidence file missing.
+- Manifest drift or QUICK mismatch.
+- Contract validation fails.
+
+---
+
+TASK ID: TSK-P0-108
+Title: Tests for remediation trace verifier
+Owner Role: QA_VERIFIER
+Depends On: TSK-P0-106
+Touches: `scripts/audit/tests/test_verify_remediation_trace.py`, `scripts/audit/remediation_trace_lib.py`, `tasks/TSK-P0-108/meta.yml`
+Invariant(s): INV-105
+Work:
+- Add deterministic tests for remediation-trace policy behavior:
+- trigger surface classification
+- docs/security low-noise behavior
+- remediation doc path matching
+- required marker checks
+Acceptance Criteria:
+- `pytest -q scripts/audit/tests` passes.
+Verification Commands:
+- `python3 -m pytest -q scripts/audit/tests`
+Failure Modes:
+- Tests depend on non-deterministic external state.
+
+---
+
+TASK ID: TSK-P0-109
+Title: Align implemented invariants with mechanical verification (plan + task cluster)
+Owner Role: ARCHITECT
+Depends On: (none)
+Touches: `docs/plans/phase0/TSK-P0-109_invariant_implemented_alignment/PLAN.md`, `docs/plans/phase0/TSK-P0-109_invariant_implemented_alignment/EXEC_LOG.md`, `docs/plans/phase0/INDEX.md`, `tasks/TSK-P0-109/meta.yml`
+Invariant(s): INV-007, INV-011, INV-012, INV-013
+Work:
+- Create plan and task cluster to reconcile invariants marked implemented but lacking up-to-date mechanical verification references.
+Acceptance Criteria:
+- Plan/log exist and enumerate tasks.
+Verification Commands:
+- `scripts/audit/run_invariants_fast_checks.sh`
+Evidence Artifact(s):
+- `./evidence/phase0/task_plans_present.json`
+Failure Modes:
+- Evidence file missing.
+- Plan/log missing task IDs.
+
+---
+
+TASK ID: TSK-P0-110
+Title: Verify runtime roles are NOLOGIN (rolcanlogin=false) with evidence
+Owner Role: DB_FOUNDATION
+Depends On: TSK-P0-109
+Touches: `scripts/db/verify_role_login_posture.sh`, `scripts/db/verify_invariants.sh`, `docs/invariants/INVARIANTS_MANIFEST.yml`, `tasks/TSK-P0-110/meta.yml`
+Invariant(s): INV-007
+Work:
+- Add a DB verifier that queries `pg_roles` and asserts runtime roles have `rolcanlogin=false`.
+- Emit evidence and wire into `scripts/db/verify_invariants.sh` so CI and local pre-ci run it.
+Acceptance Criteria:
+- Fails closed if any runtime role has login enabled.
+- Evidence emitted at `evidence/phase0/role_login_posture.json`.
+Verification Commands:
+- `SKIP_POLICY_SEED=1 scripts/db/verify_invariants.sh`
+Evidence Artifact(s):
+- `./evidence/phase0/role_login_posture.json`
+Failure Modes:
+- Evidence file missing.
+- Runtime role can login.
+
+---
+
+TASK ID: TSK-P0-111
+Title: Outbox claim and lease-fencing semantics tests (evidence-producing)
+Owner Role: QA_VERIFIER
+Depends On: TSK-P0-109
+Touches: `scripts/db/tests/test_outbox_claim_semantics.sh`, `scripts/db/tests/test_outbox_lease_fencing.sh`, `tasks/TSK-P0-111/meta.yml`
+Invariant(s): INV-011, INV-012, INV-013
+Work:
+- Add deterministic tests for:
+- enqueue idempotency (reuse existing zombie test evidence)
+- claim semantics: due time and lease gating + SKIP LOCKED presence
+- lease fencing: completion fails on mismatched token/worker and expired lease
+- Emit evidence artifacts for each new test.
+Acceptance Criteria:
+- Tests pass deterministically and emit evidence under `evidence/phase0/`.
+Verification Commands:
+- `scripts/db/tests/test_idempotency_zombie.sh`
+- `scripts/db/tests/test_outbox_claim_semantics.sh`
+- `scripts/db/tests/test_outbox_lease_fencing.sh`
+Evidence Artifact(s):
+- `./evidence/phase0/idempotency_zombie.json`
+- `./evidence/phase0/outbox_claim_semantics.json`
+- `./evidence/phase0/outbox_lease_fencing.json`
+Failure Modes:
+- Evidence file missing.
+- Claim/lease fencing regressions go undetected.
+
+---
+
+TASK ID: TSK-P0-112
+Title: Wire outbox semantics tests into local pre-ci and CI DB job
+Owner Role: SECURITY_GUARDIAN
+Depends On: TSK-P0-110, TSK-P0-111
+Touches: `scripts/dev/pre_ci.sh`, `.github/workflows/invariants.yml`, `tasks/TSK-P0-112/meta.yml`
+Invariant(s): INV-011, INV-012, INV-013
+Work:
+- Update `scripts/dev/pre_ci.sh` to run idempotency and outbox semantics tests.
+- Update CI DB job to run the new tests and upload evidence.
+Acceptance Criteria:
+- Local pre-ci and CI run the same failure modes for these invariants.
+Verification Commands:
+- `scripts/dev/pre_ci.sh`
+Evidence Artifact(s): N/A (producer scripts emit evidence)
+Failure Modes:
+- Evidence file missing.
+- Pre-ci passes but CI fails (parity drift).
+
+---
+
+TASK ID: TSK-P0-113
+Title: Update invariant docs: remove stale TODO and point to real verifiers
+Owner Role: INVARIANTS_CURATOR
+Depends On: TSK-P0-110, TSK-P0-111, TSK-P0-112
+Touches: `docs/invariants/INVARIANTS_MANIFEST.yml`, `docs/invariants/INVARIANTS_IMPLEMENTED.md`, `docs/invariants/INVARIANTS_QUICK.md`, `docs/tasks/PHASE0_TASKS.md`, `tasks/TSK-P0-113/meta.yml`
+Invariant(s): INV-007, INV-011, INV-012, INV-013
+Work:
+- Update manifest verification strings to reference actual verifiers/tests.
+- Remove stale TODO wording from implemented invariants doc.
+- Regenerate QUICK.
+Acceptance Criteria:
+- `scripts/audit/run_invariants_fast_checks.sh` passes and QUICK is in sync.
+Verification Commands:
+- `scripts/audit/run_invariants_fast_checks.sh`
+Evidence Artifact(s):
+- `./evidence/phase0/invariants_quick.json`
+Failure Modes:
+- Evidence file missing.
+- Doc drift or stale TODO persists.
+
+---
+
+TASK ID: TSK-P0-114
+Title: Zambia regulatory invariants: Phase-0 roadmap declarations + ADR stubs (plan + task cluster)
+Owner Role: ARCHITECT
+Depends On: (none)
+Touches: `docs/plans/phase0/TSK-P0-114_zambia_regulatory_invariants_roadmap/PLAN.md`, `docs/plans/phase0/TSK-P0-114_zambia_regulatory_invariants_roadmap/EXEC_LOG.md`, `docs/plans/phase0/INDEX.md`, `tasks/TSK-P0-114/meta.yml`
+Invariant(s): INV-BOZ-04, INV-ZDPA-01, INV-IPDR-02
+Work:
+- Create a Phase-0 plan and task cluster to register BOZ/ZDPA/IPDR requirements as roadmap invariants and produce authoritative ADR stubs.
+Acceptance Criteria:
+- Plan/log exist and enumerate all tasks in the cluster.
+Verification Commands:
+- `scripts/audit/run_invariants_fast_checks.sh`
+Evidence Artifact(s): N/A
+Failure Modes:
+- Evidence file missing.
+- Plan/log missing task IDs.
+
+---
+
+TASK ID: TSK-P0-115
+Title: Register BOZ/ZDPA/IPDR roadmap invariants in manifest + keep roadmap doc in sync
+Owner Role: INVARIANTS_CURATOR
+Depends On: TSK-P0-114
+Touches: `docs/invariants/INVARIANTS_MANIFEST.yml`, `docs/invariants/INVARIANTS_ROADMAP.md`, `docs/tasks/PHASE0_TASKS.md`, `tasks/TSK-P0-115/meta.yml`
+Invariant(s): INV-BOZ-04, INV-ZDPA-01, INV-IPDR-02
+Work:
+- Add numeric INV-### entries with status `roadmap` and directive IDs as aliases.
+- Update `docs/invariants/INVARIANTS_ROADMAP.md` so coverage gates stay satisfied.
+Acceptance Criteria:
+- `scripts/audit/validate_invariants_manifest.py` passes.
+- `scripts/audit/check_docs_match_manifest.py` passes (coverage ON).
+Verification Commands:
+- `scripts/audit/run_invariants_fast_checks.sh`
+Evidence Artifact(s): N/A
+Failure Modes:
+- Evidence file missing.
+- Manifest invalid or alias collisions.
+- Roadmap doc drift breaks coverage.
+
+---
+
+TASK ID: TSK-P0-116
+Title: Authoritative ADR stubs for BOZ finality, ZDPA survivability, and IPDR truth anchors
+Owner Role: ARCHITECT
+Depends On: TSK-P0-115
+Touches: `docs/decisions/ADR-0012-payment-finality-model-deferred.md`, `docs/decisions/ADR-0013-zdpa-pii-decoupling-strategy.md`, `docs/decisions/ADR-0014-nfs-sequence-continuity-ipdr.md`, `docs/tasks/PHASE0_TASKS.md`, `tasks/TSK-P0-116/meta.yml`
+Invariant(s): INV-BOZ-04, INV-ZDPA-01, INV-IPDR-02
+Work:
+- Create ADRs that define intended semantics and activation prerequisites for Phase-1/2 enforcement, without changing Phase-0 schema.
+Acceptance Criteria:
+- ADRs clearly state Phase-0 boundary and list the future mechanical checks needed for roadmap -> implemented promotion.
+Verification Commands:
+- `scripts/audit/run_invariants_fast_checks.sh`
+Evidence Artifact(s): N/A
+Failure Modes:
+- Evidence file missing.
+- ADR is placed in a legacy folder or makes compliance claims beyond scope.
+
+---
+
+TASK ID: TSK-P0-117
+Title: Zambia regulatory documentation stubs (CII brief, ZDPA map, activation preconditions)
+Owner Role: COMPLIANCE_MAPPER
+Depends On: TSK-P0-116
+Touches: `docs/PHASE0/ZAMBIA_CII_DESIGNATION_BRIEF.md`, `docs/security/ZDPA_COMPLIANCE_MAP.md`, `docs/PHASE0/REGULATORY_ACTIVATION_PRECONDITIONS.md`, `docs/tasks/PHASE0_TASKS.md`, `tasks/TSK-P0-117/meta.yml`
+Invariant(s): INV-BOZ-04, INV-ZDPA-01, INV-IPDR-02
+Work:
+- Produce Phase-0 documentation that provides auditor/regulator line-of-sight without claiming certification:
+- CII designation brief (BoZ/ZICTA framing).
+- ZDPA compliance map (sections-to-controls placeholder).
+- Activation preconditions (what triggers Phase-1 enforcement work).
+Acceptance Criteria:
+- Docs exist in canonical locations and clearly distinguish Phase-0 vs Phase-1/2 enforcement.
+Verification Commands:
+- `scripts/audit/run_invariants_fast_checks.sh`
+Evidence Artifact(s): N/A
+Failure Modes:
+- Evidence file missing.
+- Docs over-claim compliance or include raw PII examples.
+
+---
+
+TASK ID: TSK-P0-118
+Title: Pre-CI parity: plan + tasks for wiring CI DB checks into local runner
+Owner Role: ARCHITECT
+Depends On: (none)
+Touches: `docs/plans/phase0/TSK-P0-118_pre_ci_db_parity/PLAN.md`, `docs/plans/phase0/TSK-P0-118_pre_ci_db_parity/EXEC_LOG.md`, `docs/plans/phase0/INDEX.md`, `docs/PHASE0/phase0_contract.yml`, `tasks/TSK-P0-118/meta.yml`
+Invariant(s): INV-021, INV-041
+Work:
+- Create a Phase-0 plan and tasks to wire CI DB checks into `scripts/dev/pre_ci.sh` for Tier-1 parity.
+Acceptance Criteria:
+- Plan/log exist and enumerate all tasks in the cluster.
+Verification Commands:
+- `scripts/audit/run_invariants_fast_checks.sh`
+Evidence Artifact(s):
+- `./evidence/phase0/task_plans_present.json`
+Failure Modes:
+- Evidence file missing.
+- Plan/log missing task IDs.
+
+---
+
+TASK ID: TSK-P0-119
+Title: Pre-CI parity: run N-1 check and no-tx migrations test locally
+Owner Role: DB_FOUNDATION
+Depends On: TSK-P0-118
+Touches: `scripts/dev/pre_ci.sh`, `docs/tasks/PHASE0_TASKS.md`, `docs/PHASE0/phase0_contract.yml`, `tasks/TSK-P0-119/meta.yml`
+Invariant(s): INV-021, INV-041
+Work:
+- Update `scripts/dev/pre_ci.sh` to run:
+- `scripts/db/n_minus_one_check.sh`
+- `scripts/db/tests/test_no_tx_migrations.sh`
+Acceptance Criteria:
+- `scripts/dev/pre_ci.sh` runs both checks and stays green.
+Verification Commands:
+- `scripts/dev/pre_ci.sh`
+Evidence Artifact(s):
+- `./evidence/phase0/n_minus_one.json`
+- `./evidence/phase0/no_tx_migrations.json`
+Failure Modes:
+- Evidence file missing.
+- Local pre-ci passes but CI fails due to missing N-1/no-tx checks.
+
+---
+
+TASK ID: TSK-P0-120
+Title: Pre-CI parity: enforce remediation trace gate locally
+Owner Role: ARCHITECT
+Depends On: TSK-P0-105, TSK-P0-119
+Touches: `scripts/dev/pre_ci.sh`, `docs/plans/phase0/TSK-P0-120_pre_ci_remediation_trace_parity/PLAN.md`, `docs/plans/phase0/TSK-P0-120_pre_ci_remediation_trace_parity/EXEC_LOG.md`, `docs/plans/phase0/INDEX.md`, `docs/tasks/PHASE0_TASKS.md`, `tasks/TSK-P0-120/meta.yml`
+Invariant(s): GOV-G02
+Work:
+- Wire `scripts/audit/verify_remediation_trace.sh` into `scripts/dev/pre_ci.sh` for CI parity.
+- Fail closed locally when running in range mode but `BASE_REF` is missing (avoid local SKIP while CI fails).
+Acceptance Criteria:
+- `scripts/dev/pre_ci.sh` invokes the remediation trace verifier.
+- In a clean index/worktree run, if `BASE_REF` is missing, `pre_ci.sh` exits non-zero with an actionable message.
+Verification Commands:
+- `bash scripts/dev/pre_ci.sh`
+Evidence Artifact(s):
+- `evidence/phase0/remediation_trace.json`
+Failure Modes:
+- Evidence file missing.
+- Local pre_ci skips remediation trace due to missing `BASE_REF`, allowing CI failure.
+- Remediation trace verifier is not invoked in local runner.
+
+---
+
+TASK ID: TSK-P0-121
+Title: CI parity: eliminate chmod-induced filemode diffs that break remediation-trace
+Owner Role: SECURITY_GUARDIAN
+Depends On: TSK-P0-105
+Touches: `scripts/audit/verify_remediation_trace.sh`, `scripts/audit/verify_remediation_workflow_doc.sh`, `docs/plans/phase0/TSK-P0-121_ci_filemode_parity/PLAN.md`, `docs/plans/phase0/TSK-P0-121_ci_filemode_parity/EXEC_LOG.md`, `docs/plans/phase0/INDEX.md`, `docs/tasks/PHASE0_TASKS.md`, `tasks/TSK-P0-121/meta.yml`
+Invariant(s): GOV-G02, INT-CI-PARITY
+Work:
+- Commit executable bits (100755) for scripts that CI chmods, so CI remains clean and remediation-trace uses range diff.
+Acceptance Criteria:
+- CI no longer shows remediation-trace failures caused by chmod/filemode-only worktree diffs.
+Verification Commands:
+- `bash scripts/audit/verify_remediation_trace.sh`
+Evidence Artifact(s):
+- `evidence/phase0/remediation_trace.json`
+Failure Modes:
+- Evidence file missing.
+- CI still runs remediation-trace in worktree mode due to filemode diffs.
+
+---
+
+TASK ID: TSK-P0-122
+Title: Normalize evidence schema_fingerprint semantics (baseline canonical)
+Owner Role: INVARIANTS_CURATOR
+Depends On: TSK-P0-002, TSK-P0-011
+Touches: `scripts/audit/generate_evidence.sh`, `docs/plans/phase0/TSK-P0-122_evidence_fingerprint_semantics/PLAN.md`, `docs/plans/phase0/TSK-P0-122_evidence_fingerprint_semantics/EXEC_LOG.md`, `docs/tasks/PHASE0_TASKS.md`, `docs/plans/phase0/INDEX.md`, `docs/PHASE0/phase0_contract.yml`, `tasks/TSK-P0-122/meta.yml`
+Invariant(s): INV-020, INV-029
+Work:
+- Standardize `schema_fingerprint` in `evidence/phase0/evidence.json` to the baseline hash and preserve the migrations hash separately as `migrations_fingerprint`.
+Acceptance Criteria:
+- CI `phase0-evidence` artifact shows a single `schema_fingerprint` across Phase-0 evidence JSONs.
+- `phase0/evidence.json` includes `migrations_fingerprint`.
+Verification Commands:
+- `bash scripts/audit/generate_evidence.sh`
+- `bash scripts/audit/validate_evidence_schema.sh`
+Evidence Artifact(s):
+- `evidence/phase0/evidence.json`
+- `evidence/phase0/evidence_validation.json`
+Failure Modes:
+- Evidence file missing.
+- `schema_fingerprint` semantics remain mixed across evidence producers.
+
+---
+
+TASK ID: TSK-P0-123
+Title: CI parity: install Semgrep in security_scan job
+Owner Role: SECURITY_GUARDIAN
+Depends On: TSK-P0-087
+Touches: `.github/workflows/invariants.yml`, `docs/plans/phase0/TSK-P0-123_ci_semgrep_parity/PLAN.md`, `docs/plans/phase0/TSK-P0-123_ci_semgrep_parity/EXEC_LOG.md`, `docs/tasks/PHASE0_TASKS.md`, `docs/plans/phase0/INDEX.md`, `docs/PHASE0/phase0_contract.yml`, `tasks/TSK-P0-123/meta.yml`
+Invariant(s): SEC-G11
+Work:
+- Install pinned Semgrep in the CI `security_scan` job so `semgrep_sast.json` is `PASS`, not `SKIPPED`.
+Acceptance Criteria:
+- `phase0-evidence-security` contains `semgrep_sast.json` with `status: PASS` and pinned version.
+Verification Commands:
+- `bash scripts/security/run_semgrep_sast.sh`
+Evidence Artifact(s):
+- `evidence/phase0/semgrep_sast.json`
+Failure Modes:
+- Evidence file missing.
+- `semgrep_sast.json` remains `SKIPPED` due to missing toolchain install.
+
+---
+
+TASK ID: TSK-P0-124
+Title: CI guardrail: fail closed on missing Semgrep/toolchain drift
+Owner Role: SECURITY_GUARDIAN
+Depends On: TSK-P0-123
+Touches: `scripts/audit/verify_ci_toolchain.sh`, `scripts/security/run_semgrep_sast.sh`, `.github/workflows/invariants.yml`, `docs/plans/phase0/TSK-P0-124_ci_security_toolchain_failclosed/PLAN.md`, `docs/plans/phase0/TSK-P0-124_ci_security_toolchain_failclosed/EXEC_LOG.md`, `docs/tasks/PHASE0_TASKS.md`, `docs/plans/phase0/INDEX.md`, `docs/PHASE0/phase0_contract.yml`, `tasks/TSK-P0-124/meta.yml`
+Invariant(s): SEC-G06, SEC-G11
+Work:
+- Extend CI toolchain verification to check Semgrep presence/version.
+- Fail Semgrep SAST in CI if Semgrep is missing (no silent `SKIPPED`).
+Acceptance Criteria:
+- `security_scan` job fails if Semgrep is missing.
+- `phase0-evidence-security` includes `ci_toolchain.json` as `PASS`.
+Verification Commands:
+- `bash scripts/audit/verify_ci_toolchain.sh`
+- `bash scripts/security/run_semgrep_sast.sh`
+Evidence Artifact(s):
+- `evidence/phase0/ci_toolchain.json`
+- `evidence/phase0/semgrep_sast.json`
+Failure Modes:
+- Evidence file missing.
+- Semgrep still `SKIPPED` in CI due to missing toolchain install.

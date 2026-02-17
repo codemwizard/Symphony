@@ -1,0 +1,39 @@
+phase: '0'
+task_id: TSK-P0-082
+title: Add correlation stitching hooks to ingress/outbox tables
+owner_role: DB_FOUNDATION
+status: completed
+depends_on:
+- TSK-P0-073
+touches:
+- schema/migrations/**
+- scripts/db/**
+- tasks/TSK-P0-082/meta.yml
+invariants:
+- INV-092 (Correlation stitching hooks exist)
+work:
+- Add correlation_id and cross-rail reference hook columns to ingress/outbox tables via forward-only migration.
+- Add indexes required for stitchability lookups.
+- Preserve existing outbox/idempotency invariants and no-tx migration rules where applicable.
+acceptance_criteria:
+- Stitching columns exist on required tables.
+- Required indexes exist.
+verification:
+- scripts/db/verify_invariants.sh
+- scripts/db/tests/test_db_functions.sh
+- scripts/db/tests/test_no_tx_migrations.sh
+evidence:
+- evidence/phase0/business_foundation_hooks.json
+failure_modes:
+- One or more stitching columns are missing.
+- Required index missing.
+- Evidence file missing.
+must_read:
+- docs/PHASE0/BUSINESS_INVARIANTS_ADDITION_IMPLEMENTATION.md
+- docs/plans/phase0/TSK-P0-080_business_invariants_addition/PLAN.md
+implementation_plan: docs/plans/phase0/TSK-P0-080_business_invariants_addition/PLAN.md
+implementation_log: docs/plans/phase0/TSK-P0-080_business_invariants_addition/EXEC_LOG.md
+notes: ''
+client: codex_cli
+assigned_agent: db_foundation
+model: <UNASSIGNED>

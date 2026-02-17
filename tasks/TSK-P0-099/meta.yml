@@ -1,0 +1,46 @@
+phase: "0"
+task_id: "TSK-P0-099"
+title: "ISO 20022 and Zero Trust closeout hooks (Phase-0 safe)"
+owner_role: "SECURITY_GUARDIAN"
+status: "completed"
+depends_on:
+- "TSK-P0-089"
+touches:
+- "docs/security/ISO20022_READINESS.md"
+- "docs/iso20022/contract_registry.yml"
+- "docs/security/ZERO_TRUST_POSTURE.md"
+- "docs/security/SECURITY_MANIFEST.yml"
+- "scripts/audit/verify_iso20022_readiness_docs.sh"
+- "scripts/audit/verify_iso20022_contract_registry.sh"
+- "scripts/audit/verify_zero_trust_posture_docs.sh"
+- "tasks/TSK-P0-099/meta.yml"
+invariants:
+- "NEW: ISO 20022 readiness and Zero Trust posture docs exist and are referenced by SECURITY_MANIFEST"
+work:
+- "Define Phase-0 ISO 20022 readiness posture: message contract registry location, validation expectations, and planned adapter contract tests."
+- "Define Phase-0 Zero Trust posture: identity model, policy decision/enforcement points, and telemetry minimums, with explicit Phase-1/2 follow-ups."
+- "Add verifiers that fail closed if required posture docs are missing or unreferenced by SECURITY_MANIFEST."
+- "Add a verifier that fails closed if the ISO 20022 contract registry is missing (or unparseable) and emits presence evidence."
+acceptance_criteria:
+- "Docs exist under docs/security, are referenced by SECURITY_MANIFEST, and verifiers emit evidence."
+- "Docs clearly separate Phase-0 hooks from Phase-1/2 runtime enforcement."
+verification:
+- "scripts/audit/verify_iso20022_readiness_docs.sh"
+- "scripts/audit/verify_iso20022_contract_registry.sh"
+- "scripts/audit/verify_zero_trust_posture_docs.sh"
+evidence:
+- "evidence/phase0/iso20022_readiness.json"
+- "evidence/phase0/iso20022_contract_registry.json"
+- "evidence/phase0/zero_trust_posture.json"
+failure_modes:
+- "Docs exist but are not referenced, or verifiers do not fail closed."
+- "Evidence file missing."
+must_read:
+- "docs/security/SECURITY_MANIFEST.yml"
+- "docs/audits/TIER1_GAP_AUDIT_ADDENDUM_2026-02-07.md"
+implementation_plan: "docs/plans/phase0/TSK-P0-090_audit_gap_closeout/PLAN.md"
+implementation_log: "docs/plans/phase0/TSK-P0-090_audit_gap_closeout/EXEC_LOG.md"
+notes: ""
+client: "codex_cli"
+assigned_agent: "security_guardian"
+model: "<UNASSIGNED>"

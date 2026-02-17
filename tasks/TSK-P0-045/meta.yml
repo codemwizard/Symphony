@@ -1,0 +1,40 @@
+phase: '0'
+task_id: TSK-P0-045
+title: DDL allowlist governance (fingerprints + expiry + review)
+owner_role: SECURITY_GUARDIAN
+status: completed
+depends_on:
+- TSK-P0-029
+touches:
+- docs/security/ddl_allowlist.json
+- scripts/security/verify_ddl_allowlist_governance.sh
+- scripts/security/lint_ddl_lock_risk.sh
+- docs/PHASE0/phase0_contract.yml
+- docs/invariants/INVARIANTS_MANIFEST.yml
+- tasks/TSK-P0-045/meta.yml
+invariants:
+- INV-068 (DDL allowlist governance enforced)
+work:
+- Add fingerprinted allowlist schema with expiry + reviewer metadata.
+- Validate allowlist structure and expiry; emit evidence on pass/fail.
+- Wire lint to respect allowlisted fingerprints and record hits.
+acceptance_criteria:
+- Allowlist schema validates; expired entries fail.
+- Evidence file includes allowlist hit counts.
+verification:
+- scripts/security/verify_ddl_allowlist_governance.sh
+evidence:
+- ./evidence/phase0/ddl_allowlist_governance.json
+failure_modes:
+- Evidence file missing.
+- Allowlist entry expired or malformed.
+must_read:
+- docs/invariants/INVARIANTS_MANIFEST.yml
+- scripts/db/verify_invariants.sh
+- scripts/db/ci_invariant_gate.sql
+notes: ''
+client: codex_cli
+assigned_agent: security_guardian
+model: <UNASSIGNED>
+implementation_plan: docs/plans/phase0/TSK-P0-045/PLAN.md
+implementation_log: docs/plans/phase0/TSK-P0-045/EXEC_LOG.md

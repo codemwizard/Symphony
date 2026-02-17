@@ -1,0 +1,40 @@
+phase: '0'
+task_id: TSK-P0-009
+title: Update invariants manifest and QUICK generation for new Phase-0 invariants
+owner_role: INVARIANTS_CURATOR
+status: completed
+depends_on:
+- TSK-P0-002
+- TSK-P0-003
+- TSK-P0-004
+- TSK-P0-005
+- TSK-P0-006
+- TSK-P0-007
+- TSK-P0-008
+touches:
+- docs/invariants/INVARIANTS_MANIFEST.yml
+- docs/invariants/INVARIANTS_QUICK.md
+- tasks/TSK-P0-009/meta.yml
+invariants:
+- INV-019..INV-027
+work:
+- Add new invariants to manifest with verification commands.
+- Regenerate QUICK and ensure no drift.
+acceptance_criteria:
+- scripts/audit/generate_invariants_quick produces no diff.
+verification:
+- scripts/audit/generate_invariants_quick
+evidence:
+- ./evidence/phase0/invariants_quick.json
+failure_modes:
+- Manifest/QUICK drift must fail.
+must_read:
+- docs/invariants/INVARIANTS_MANIFEST.yml
+- scripts/db/verify_invariants.sh
+- scripts/db/ci_invariant_gate.sql
+notes: ''
+client: codex_cli
+assigned_agent: invariants_curator
+model: <UNASSIGNED>
+implementation_plan: docs/plans/phase0/TSK-P0-009/PLAN.md
+implementation_log: docs/plans/phase0/TSK-P0-009/EXEC_LOG.md

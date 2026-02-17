@@ -1,0 +1,1163 @@
+name: Invariants (Mechanical + Codex + DB Verify)
+
+on:
+  pull_request:
+    branches: ["main"]
+  push:
+    branches: ["main"]
+  schedule:
+    - cron: "0 8 * * *"
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+
+jobs:
+  mechanical_invariants:
+    name: Phase I — Mechanical gates
+    runs-on: ubuntu-latest
+    outputs:
+      structural_change: ${{ steps.detect.outputs.structural_change }}
+      confidence_hint: ${{ steps.detect.outputs.confidence_hint }}
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "10.0.x"
+
+      - name: Install CI toolchain (pinned)
+        shell: bash
+        run: |
+          set -euo pipefail
+          source scripts/audit/ci_toolchain_versions.env
+          python3 -m pip install --upgrade pip
+          python3 -m pip install "pyyaml==${PYYAML_VERSION}" "jsonschema==${JSONSCHEMA_VERSION}" "semgrep==${SEMGREP_VERSION}" pytest
+
+          curl -sSL -o /tmp/rg.tgz \
+            "https://github.com/BurntSushi/ripgrep/releases/download/${RIPGREP_VERSION}/ripgrep-${RIPGREP_VERSION}-x86_64-unknown-linux-musl.tar.gz"
+          tar -xzf /tmp/rg.tgz -C /tmp
+          sudo install -m 0755 "/tmp/ripgrep-${RIPGREP_VERSION}-x86_64-unknown-linux-musl/rg" /usr/local/bin/rg
+
+          rg --version
+
+      - name: Load Phase-0 parity env
+        shell: bash
+        run: |
+          set -euo pipefail
+          source scripts/audit/env/phase0_flags.sh
+          chmod +x scripts/audit/env/phase0_flags.sh
+
+      - name: Unit tests for detectors
+        if: github.event_name != 'schedule'
+        run: |
+          pytest -q scripts/audit/tests/test_detect_structural_sql_changes.py
+
+      - name: Compute diff + detect structural change
+        id: detect
+        if: github.event_name != 'schedule'
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/invariants_ai
+
+          if [[ "${{ github.event_name }}" == "pull_request" ]]; then
+            RANGE="${{ github.event.pull_request.base.sha }}...${{ github.event.pull_request.head.sha }}"
+          else
+            RANGE="${{ github.event.before }}...${{ github.sha }}"
+          fi
+
+          scripts/audit/git_diff_cli.sh range-unified \
+            --base "${RANGE%%...*}" \
+            --head "${RANGE##*...}" \
+            --out /tmp/invariants_ai/pr.diff \
+            --unified 0
+          python3 scripts/audit/detect_structural_changes.py --diff-file /tmp/invariants_ai/pr.diff --out /tmp/invariants_ai/detect.json
+
+          structural="$(python3 -c 'import json; d=json.load(open("/tmp/invariants_ai/detect.json")); print("true" if d.get("structural_change") else "false")')"
+          hint="$(python3 -c 'import json; d=json.load(open("/tmp/invariants_ai/detect.json")); print(d.get("confidence_hint", 0.0))')"
+          echo "structural_change=$structural" >> "$GITHUB_OUTPUT"
+          echo "confidence_hint=$hint" >> "$GITHUB_OUTPUT"
+
+      - name: Show changed files (diagnostic)
+        if: github.event_name != 'schedule'
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [[ "${{ github.event_name }}" == "pull_request" ]]; then
+            RANGE="${{ github.event.pull_request.base.sha }}...${{ github.event.pull_request.head.sha }}"
+          else
+            RANGE="${{ github.event.before }}...${{ github.sha }}"
+          fi
+          echo "Diff range: $RANGE"
+          scripts/audit/git_diff_cli.sh range-names \
+            --base "${RANGE%%...*}" \
+            --head "${RANGE##*...}" | sed 's/^/ - /'
+
+      - name: Show structural detection evidence (diagnostic)
+        if: github.event_name != 'schedule'
+        shell: bash
+        run: |
+          set -euo pipefail
+          echo "detect.json:"
+          cat /tmp/invariants_ai/detect.json
+          echo ""
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+
+          d = json.loads(Path("/tmp/invariants_ai/detect.json").read_text())
+          matches = d.get("matches", [])
+          types = d.get("reason_types")
+          primary = d.get("primary_reason")
+          files = d.get("matched_files")
+
+          if not types:
+              types = sorted({m.get("type") for m in matches if m.get("type")})
+          if not primary:
+              primary = "security" if "security" in types else ("ddl" if "ddl" in types else (types[0] if types else "other"))
+          if not files:
+              files = sorted({m.get("file") for m in matches if m.get("file")})
+
+          print(f"structural_change={d.get('structural_change')} confidence_hint={d.get('confidence_hint')}")
+          print(f"primary_reason={primary}")
+          print(f"reason_types={','.join(types) if types else 'none'}")
+          print("")
+          print("Matched files (top):")
+          for f in files[:30]:
+              print(f" - {f}")
+          print("")
+          print("Top matches:")
+          for m in matches[:30]:
+              print(f"- {m.get('type')} {m.get('file')} {m.get('sign')}: {m.get('line')}")
+
+          print("")
+          print("GitHub annotations (top 10):")
+          for m in matches[:10]:
+              f = m.get("file", "")
+              line = (m.get("line", "") or "").strip()
+              t = m.get("type", "structural")
+              if f:
+                  print(f"::warning file={f}::Structural match [{t}]: {line}")
+          PY
+
+      - name: Enforce Rule 1 (docs/manifest or exception)
+        if: github.event_name != 'schedule'
+        shell: bash
+        run: |
+          set -euo pipefail
+          chmod +x scripts/audit/*.sh || true
+          BASE_REF="refs/remotes/origin/main" HEAD_REF="HEAD" scripts/audit/enforce_change_rule.sh
+
+      - name: Promotion gate
+        if: github.event_name != 'schedule'
+        run: |
+          chmod +x scripts/audit/enforce_invariant_promotion.sh
+          scripts/audit/enforce_invariant_promotion.sh
+
+      - name: Validate exception templates
+        if: github.event_name != 'schedule'
+        run: |
+          chmod +x scripts/audit/verify_exception_template.sh
+          scripts/audit/verify_exception_template.sh
+
+      - name: Verify task plan/log presence
+        if: github.event_name != 'schedule'
+        run: |
+          chmod +x scripts/audit/verify_task_plans_present.sh
+          scripts/audit/verify_task_plans_present.sh
+
+      - name: Verify agent conformance
+        if: github.event_name != 'schedule'
+        run: |
+          chmod +x scripts/audit/verify_agent_conformance.sh
+          chmod +x scripts/audit/verify_agent_conformance_spec.sh
+          scripts/audit/verify_agent_conformance.sh
+          scripts/audit/verify_agent_conformance_spec.sh
+
+      - name: Phase-0 ordered checks
+        if: github.event_name != 'schedule'
+        run: |
+          chmod +x scripts/audit/*.sh
+          chmod +x scripts/security/*.sh
+          scripts/audit/run_phase0_ordered_checks.sh
+
+      - name: Upload detector artifacts
+        if: github.event_name != 'schedule' && always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: invariants-detector
+          path: |
+            /tmp/invariants_ai/pr.diff
+            /tmp/invariants_ai/detect.json
+
+      - name: Upload Phase-0 evidence artifact
+        if: github.event_name != 'schedule' && always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: phase0-evidence
+          path: |
+            evidence/**
+
+  codex_invariants_review:
+    name: Phase II — Codex authoring (docs/manifest only)
+    runs-on: ubuntu-latest
+    needs: [mechanical_invariants]
+    if: >
+      github.event_name == 'pull_request' &&
+      always() &&
+      needs.mechanical_invariants.outputs.structural_change == 'true' &&
+      github.event.pull_request.head.repo.full_name == github.repository
+    permissions:
+      contents: read
+      pull-requests: write
+
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          ref: refs/pull/${{ github.event.pull_request.number }}/merge
+          fetch-depth: 0
+
+      - name: Pre-fetch base and head refs
+        shell: bash
+        run: |
+          git fetch --no-tags origin \
+            ${{ github.event.pull_request.base.ref }} \
+            +refs/pull/${{ github.event.pull_request.number }}/head
+
+      - name: Prepare diff for Codex
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/invariants_ai
+          scripts/audit/git_diff_cli.sh range-unified \
+            --base "${{ github.event.pull_request.base.sha }}" \
+            --head "${{ github.event.pull_request.head.sha }}" \
+            --out /tmp/invariants_ai/pr.diff \
+            --unified 0
+
+      - name: Prepare Codex home (fresh, writable)
+        shell: bash
+        env:
+          CODEX_HOME: ${{ runner.temp }}/codex-home
+        run: |
+          set -euo pipefail
+          rm -rf "$CODEX_HOME"
+          mkdir -p "$CODEX_HOME"
+          chmod 700 "$CODEX_HOME"
+          echo "CODEX_HOME=$CODEX_HOME"
+
+      - name: Require OPENAI_API_KEY (fail fast)
+        shell: bash
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+        run: |
+          set -euo pipefail
+          if [[ -z "${OPENAI_API_KEY:-}" ]]; then
+            echo "::error title=Missing secret::OPENAI_API_KEY is not set or is not available to this workflow event."
+            echo "If this is a PR from a fork, GitHub will not provide repo secrets to pull_request workflows."
+            exit 1
+          fi
+
+      - name: OpenAI API preflight (detect invalid key vs quota)
+        shell: bash
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/invariants_ai
+          code="$(curl -sS -o /tmp/invariants_ai/openai_preflight.json -w "%{http_code}" \
+            https://api.openai.com/v1/models \
+            -H "Authorization: Bearer $OPENAI_API_KEY")" || true
+          echo "OpenAI /v1/models HTTP $code"
+          if [[ "$code" == "200" ]]; then
+            exit 0
+          fi
+          if [[ "$code" == "401" ]]; then
+            echo "::error title=OpenAI auth failed::OPENAI_API_KEY is invalid (401)."
+            cat /tmp/invariants_ai/openai_preflight.json || true
+            exit 1
+          fi
+          if [[ "$code" == "402" || "$code" == "429" ]]; then
+            echo "::error title=OpenAI quota/billing::OpenAI returned HTTP $code (quota/billing/rate-limit)."
+            cat /tmp/invariants_ai/openai_preflight.json || true
+            exit 1
+          fi
+          echo "::error title=OpenAI preflight failed::Unexpected HTTP $code from OpenAI."
+          cat /tmp/invariants_ai/openai_preflight.json || true
+          exit 1
+
+      - name: Run Codex
+        uses: openai/codex-action@v1
+        id: codex
+        continue-on-error: true
+        env:
+          CODEX_HOME: ${{ runner.temp }}/codex-home
+        with:
+          openai-api-key: ${{ secrets.OPENAI_API_KEY }}
+          model: gpt-5.2-codex
+          effort: medium
+          sandbox: workspace-write
+          safety-strategy: drop-sudo
+          prompt-file: .github/codex/prompts/invariants_review.md
+          output-file: /tmp/invariants_ai/codex_final_message.md
+          codex-args: '["--full-auto"]'
+
+      - name: Ensure Codex outputs exist (non-blocking, explainable)
+        if: always()
+        shell: bash
+        env:
+          CODEX_OUTCOME: ${{ steps.codex.outcome }}
+          CODEX_HOME: ${{ runner.temp }}/codex-home
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/invariants_ai
+          required=(
+            /tmp/invariants_ai/codex_final_message.md
+            /tmp/invariants_ai/ai_confidence.json
+            /tmp/invariants_ai/codex_summary.md
+          )
+
+          echo "==> Codex step outcome: ${CODEX_OUTCOME:-unknown}"
+          echo "==> Codex output directory listing:"
+          ls -la /tmp/invariants_ai || true
+          echo ""
+          echo "==> Codex home listing:"
+          ls -la "$CODEX_HOME" || true
+          echo ""
+
+          missing=0
+          for f in "${required[@]}"; do
+            if [[ ! -s "$f" ]]; then
+              echo "::warning title=Codex output missing::Missing or empty: $f (non-blocking)"
+              missing=1
+            fi
+          done
+
+          if [[ "$missing" -eq 1 ]]; then
+            if [[ ! -s /tmp/invariants_ai/codex_final_message.md ]]; then
+              printf '%s\n' \
+                "(Codex did not produce a final message. This is non-blocking. See workflow logs for the underlying Codex error such as quota/401/network.)" \
+                > /tmp/invariants_ai/codex_final_message.md
+            fi
+
+            if [[ ! -s /tmp/invariants_ai/ai_confidence.json ]]; then
+              printf '%s\n' \
+                '{' \
+                '  "classification": "unclear",' \
+                '  "confidence": 0.0,' \
+                '  "invariants": [],' \
+                "  \"rationale\": \"Codex did not produce required outputs. Step outcome: ${CODEX_OUTCOME:-unknown}. Check logs for quota/401/network errors.\"," \
+                '  "recommended_action": "human_decide"' \
+                '}' \
+                > /tmp/invariants_ai/ai_confidence.json
+            fi
+
+            if [[ ! -s /tmp/invariants_ai/codex_summary.md ]]; then
+              printf '%s\n' \
+                '## Codex invariants review (non-blocking)' \
+                '- **Status:** FAILED (non-blocking)' \
+                "- **Step outcome:** ${CODEX_OUTCOME:-unknown}" \
+                '- **Reason:** Codex did not produce one or more required outputs.' \
+                '- **Action:** Check workflow logs for the Codex failure cause (quota/401/network). Fix billing/secret/network and rerun.' \
+                > /tmp/invariants_ai/codex_summary.md
+            fi
+          fi
+
+          # Validate JSON is parseable (prevents “file exists but junk”).
+          python3 - <<'PY'
+          import json
+          json.load(open("/tmp/invariants_ai/ai_confidence.json"))
+          print("ai_confidence.json: OK")
+          PY
+
+      - name: Capture Codex patch + upload artifacts
+        if: always()
+        shell: bash
+        run: |
+          set -euo pipefail
+          scripts/audit/git_diff_cli.sh worktree-unified --out /tmp/invariants_ai/codex-invariants.patch || true
+          if [[ ! -s /tmp/invariants_ai/codex-invariants.patch ]]; then
+            echo "No changes produced by Codex." > /tmp/invariants_ai/codex-invariants.patch
+          fi
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: codex-invariants-review
+          path: |
+            /tmp/invariants_ai/pr.diff
+            /tmp/invariants_ai/codex_final_message.md
+            /tmp/invariants_ai/ai_confidence.json
+            /tmp/invariants_ai/codex_summary.md
+            /tmp/invariants_ai/codex-invariants.patch
+
+      - name: Comment on PR
+        if: always()
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ github.token }}
+          script: |
+            const fs = require('fs');
+            const readOr = (p, fb) => { try { return fs.readFileSync(p,'utf8'); } catch { return fb; } };
+
+            const confText = readOr('/tmp/invariants_ai/ai_confidence.json', '{"classification":"unclear","confidence":0,"invariants":[],"rationale":"missing ai_confidence.json","recommended_action":"human_decide"}');
+            const conf = JSON.parse(confText);
+            const summary = readOr('/tmp/invariants_ai/codex_summary.md', '(missing codex_summary.md)');
+
+            const body = [
+              "## Codex invariants review",
+              "",
+              `**Classification:** ${conf.classification}`,
+              `**Confidence:** ${conf.confidence}`,
+              `**Invariants:** ${(conf.invariants && conf.invariants.length) ? conf.invariants.join(", ") : "(none)"}`,
+              "",
+              "**Rationale:**",
+              conf.rationale || "(none)",
+              "",
+              "**Recommended action:**",
+              conf.recommended_action || "human_decide",
+              "",
+              "_Artifact: `codex-invariants-review` (patch + summary + confidence)._",
+              "",
+              "---",
+              "",
+              summary.slice(0, 6000)
+            ].join("\n");
+
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.payload.pull_request.number,
+              body
+            });
+
+  db_verify_invariants:
+    name: DB verify_invariants.sh (Postgres service)
+    runs-on: ubuntu-latest
+    needs: [mechanical_invariants]
+    if: always() && github.event_name != 'schedule'
+    services:
+      postgres:
+        image: postgres:18
+        env:
+          POSTGRES_USER: symphony
+          POSTGRES_PASSWORD: symphony
+          POSTGRES_DB: symphony
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U symphony -d symphony"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 30
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "10.0.x"
+
+      - name: Install CI toolchain (pinned)
+        shell: bash
+        run: |
+          set -euo pipefail
+          source scripts/audit/ci_toolchain_versions.env
+          python3 -m pip install --upgrade pip
+          python3 -m pip install "pyyaml==${PYYAML_VERSION}" "jsonschema==${JSONSCHEMA_VERSION}" "semgrep==${SEMGREP_VERSION}" pytest
+
+          curl -sSL -o /tmp/rg.tgz \
+            "https://github.com/BurntSushi/ripgrep/releases/download/${RIPGREP_VERSION}/ripgrep-${RIPGREP_VERSION}-x86_64-unknown-linux-musl.tar.gz"
+          tar -xzf /tmp/rg.tgz -C /tmp
+          sudo install -m 0755 "/tmp/ripgrep-${RIPGREP_VERSION}-x86_64-unknown-linux-musl/rg" /usr/local/bin/rg
+
+          rg --version
+
+      - name: Install psql client
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ca-certificates wget lsb-release
+          echo "deb https://apt.postgresql.org/pub/repos/apt $(lsb_release -cs)-pgdg main" | sudo tee /etc/apt/sources.list.d/pgdg.list
+          wget -qO- https://www.postgresql.org/media/keys/ACCC4CF8.asc | sudo tee /etc/apt/trusted.gpg.d/postgresql.asc >/dev/null
+          sudo apt-get update
+          sudo apt-get install -y postgresql-client-18
+          pg_dump --version
+
+      - name: Wait for Postgres
+        env:
+          PGPASSWORD: symphony
+        run: |
+          set -euo pipefail
+          for i in {1..60}; do
+            if pg_isready -h localhost -p 5432 -U symphony -d symphony; then
+              exit 0
+            fi
+            sleep 2
+          done
+          exit 1
+
+      - name: Run DB verify entrypoint
+        env:
+          DATABASE_URL: postgres://symphony:symphony@localhost:5432/symphony
+          SKIP_POLICY_SEED: "1"
+        run: |
+          set -euo pipefail
+          # Control-plane reference (INV-031 / INT-G22): scripts/db/tests/test_outbox_pending_indexes.sh
+          chmod +x scripts/db/verify_invariants.sh
+          scripts/db/verify_invariants.sh
+
+      - name: Run N-1 compatibility gate
+        env:
+          DATABASE_URL: postgres://symphony:symphony@localhost:5432/symphony
+        run: |
+          set -euo pipefail
+          chmod +x scripts/db/n_minus_one_check.sh
+          scripts/db/n_minus_one_check.sh
+
+      - name: Run DB function tests
+        env:
+          DATABASE_URL: postgres://symphony:symphony@localhost:5432/symphony
+        run: |
+          set -euo pipefail
+          chmod +x scripts/db/tests/test_db_functions.sh
+          scripts/db/tests/test_db_functions.sh
+
+      - name: Run idempotency zombie test
+        env:
+          DATABASE_URL: postgres://symphony:symphony@localhost:5432/symphony
+        run: |
+          set -euo pipefail
+          chmod +x scripts/db/tests/test_idempotency_zombie.sh
+          scripts/db/tests/test_idempotency_zombie.sh
+
+      - name: Run outbox claim semantics test
+        env:
+          DATABASE_URL: postgres://symphony:symphony@localhost:5432/symphony
+        run: |
+          set -euo pipefail
+          chmod +x scripts/db/tests/test_outbox_claim_semantics.sh
+          scripts/db/tests/test_outbox_claim_semantics.sh
+
+      - name: Run outbox lease fencing test
+        env:
+          DATABASE_URL: postgres://symphony:symphony@localhost:5432/symphony
+        run: |
+          set -euo pipefail
+          chmod +x scripts/db/tests/test_outbox_lease_fencing.sh
+          scripts/db/tests/test_outbox_lease_fencing.sh
+
+      - name: Run instruction finality runtime test
+        env:
+          DATABASE_URL: postgres://symphony:symphony@localhost:5432/symphony
+        run: |
+          set -euo pipefail
+          chmod +x scripts/db/tests/test_instruction_finality.sh
+          scripts/db/tests/test_instruction_finality.sh
+
+      - name: Run PII decoupling runtime test
+        env:
+          DATABASE_URL: postgres://symphony:symphony@localhost:5432/symphony
+        run: |
+          set -euo pipefail
+          chmod +x scripts/db/tests/test_pii_decoupling.sh
+          scripts/db/tests/test_pii_decoupling.sh
+
+      - name: Run rail sequence continuity runtime test
+        env:
+          DATABASE_URL: postgres://symphony:symphony@localhost:5432/symphony
+        run: |
+          set -euo pipefail
+          chmod +x scripts/db/tests/test_rail_sequence_continuity.sh
+          scripts/db/tests/test_rail_sequence_continuity.sh
+
+      - name: Run no-tx migrations test
+        env:
+          DATABASE_URL: postgres://symphony:symphony@localhost:5432/symphony
+        run: |
+          set -euo pipefail
+          chmod +x scripts/db/tests/test_no_tx_migrations.sh
+          scripts/db/tests/test_no_tx_migrations.sh
+
+      - name: Upload Phase-0 DB evidence artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: phase0-evidence-db
+          path: |
+            evidence/**
+
+  security_scan:
+    name: Phase I.5 — Security fast checks (mechanical)
+    runs-on: ubuntu-latest
+    needs: [mechanical_invariants]
+    if: always() && github.event_name != 'schedule'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "10.0.x"
+
+      - name: Install ripgrep (pinned)
+        shell: bash
+        run: |
+          set -euo pipefail
+          source scripts/audit/ci_toolchain_versions.env
+          curl -sSL -o /tmp/rg.tgz \
+            "https://github.com/BurntSushi/ripgrep/releases/download/${RIPGREP_VERSION}/ripgrep-${RIPGREP_VERSION}-x86_64-unknown-linux-musl.tar.gz"
+          tar -xzf /tmp/rg.tgz -C /tmp
+          sudo install -m 0755 "/tmp/ripgrep-${RIPGREP_VERSION}-x86_64-unknown-linux-musl/rg" /usr/local/bin/rg
+          rg --version
+
+      - name: Install CI python toolchain (pinned, incl Semgrep)
+        shell: bash
+        run: |
+          set -euo pipefail
+          source scripts/audit/ci_toolchain_versions.env
+          python3 -m pip install --upgrade pip
+          python3 -m pip install "pyyaml==${PYYAML_VERSION}" "jsonschema==${JSONSCHEMA_VERSION}" "semgrep==${SEMGREP_VERSION}" pytest
+          semgrep --version
+
+      - name: Verify CI toolchain (pinned)
+        shell: bash
+        run: |
+          set -euo pipefail
+          chmod +x scripts/audit/verify_ci_toolchain.sh
+          scripts/audit/verify_ci_toolchain.sh
+
+      - name: Run security fast checks (if present)
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [[ -x scripts/audit/run_security_fast_checks.sh ]]; then
+            scripts/audit/run_security_fast_checks.sh
+          else
+            echo "scripts/audit/run_security_fast_checks.sh not found/executable; skipping (Phase 1 repo may not include it yet)."
+          fi
+
+      - name: Run DDL lock-risk lint
+        shell: bash
+        run: |
+          set -euo pipefail
+          chmod +x scripts/security/lint_ddl_lock_risk.sh
+          scripts/security/lint_ddl_lock_risk.sh
+
+      - name: Run SECURITY DEFINER dynamic SQL lint
+        shell: bash
+        run: |
+          set -euo pipefail
+          chmod +x scripts/security/lint_security_definer_dynamic_sql.sh
+          scripts/security/lint_security_definer_dynamic_sql.sh
+
+      - name: Run OpenBao bootstrap + smoke test
+        shell: bash
+        run: |
+          set -euo pipefail
+          chmod +x scripts/security/openbao_bootstrap.sh scripts/security/openbao_smoke_test.sh
+          scripts/security/openbao_bootstrap.sh
+          scripts/security/openbao_smoke_test.sh
+
+      - name: Upload Phase-0 security evidence artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: phase0-evidence-security
+          path: |
+            evidence/**
+
+  phase0_evidence_gate:
+    name: Phase 0 — Evidence gate (cross-job)
+    runs-on: ubuntu-latest
+    needs: [mechanical_invariants, db_verify_invariants, security_scan]
+    if: always() && github.event_name != 'schedule'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install CI toolchain (pinned)
+        shell: bash
+        run: |
+          set -euo pipefail
+          source scripts/audit/ci_toolchain_versions.env
+          python3 -m pip install --upgrade pip
+          python3 -m pip install "pyyaml==${PYYAML_VERSION}" "jsonschema==${JSONSCHEMA_VERSION}"
+
+          curl -sSL -o /tmp/rg.tgz \
+            "https://github.com/BurntSushi/ripgrep/releases/download/${RIPGREP_VERSION}/ripgrep-${RIPGREP_VERSION}-x86_64-unknown-linux-musl.tar.gz"
+          tar -xzf /tmp/rg.tgz -C /tmp
+          sudo install -m 0755 "/tmp/ripgrep-${RIPGREP_VERSION}-x86_64-unknown-linux-musl/rg" /usr/local/bin/rg
+          rg --version
+
+      - name: Download evidence artifacts
+        uses: actions/download-artifact@v4
+        with:
+          pattern: phase0-evidence*
+          merge-multiple: true
+          path: evidence/phase0
+
+      - name: Summarize upstream gate status (root cause hint)
+        if: always()
+        shell: bash
+        run: |
+          set -euo pipefail
+          mech="${{ needs.mechanical_invariants.result }}"
+          db="${{ needs.db_verify_invariants.result }}"
+          sec="${{ needs.security_scan.result }}"
+          echo "Upstream results:"
+          echo " - mechanical_invariants: $mech"
+          echo " - db_verify_invariants: $db"
+          echo " - security_scan: $sec"
+          if [[ "$mech" != "success" || "$db" != "success" || "$sec" != "success" ]]; then
+            echo "::warning title=Upstream gate failure detected::One or more upstream jobs failed. Missing Phase-0 evidence below may be downstream of this root cause."
+          else
+            echo "All upstream evidence producer jobs succeeded."
+          fi
+
+      - name: Debug & normalize artifact layout (show artifact contents, collect TSK-P0 files)
+        run: |
+            set -euo pipefail
+        
+            echo "WORKSPACE: $(pwd)"
+            echo ""
+            echo "Top-level listing:"
+            ls -la || true
+            echo ""
+        
+            echo "Show all artifact-related directories (maxdepth 3):"
+            find . -maxdepth 3 -type d -name '*evidence*' -print -exec ls -la {} \; || true
+            echo ""
+        
+            echo "Recursively list anything under evidence* (up to 6 levels):"
+              shopt -s nullglob
+              for d in evidence*; do
+                echo "---- $d ----"
+                ls -la "$d" || true
+                echo ""
+              done
+              shopt -u nullglob
+        
+            echo "Find any TSK-P0 files (anywhere):"
+            mapfile -t found < <(find . -type f -iname 'TSK-P0-*' -print)
+            if [[ ${#found[@]} -eq 0 ]]; then
+              echo "No TSK-P0-* files found."
+            else
+              echo "Found ${#found[@]} file(s):"
+              for f in "${found[@]}"; do
+                echo " - $f"
+              done
+        
+              mkdir -p evidence/phase0
+              echo ""
+              echo "Moving TSK-P0 files into evidence/phase0 (skipping duplicates):"
+              for f in "${found[@]}"; do
+                b="$(basename "$f")"
+                # Avoid moving if source is already the desired destination
+                if [[ "$f" == "./evidence/phase0/"* || "$f" == "evidence/phase0/"* ]]; then
+                  echo " - $f is already under evidence/phase0; skipping"
+                  continue
+                fi
+                if [[ -e "evidence/phase0/$b" ]]; then
+                  echo " - evidence/phase0/$b exists -> skipping move of $f"
+                else
+                  echo " - mv '$f' -> evidence/phase0/$b"
+                  mv -v "$f" "evidence/phase0/$b" || true
+                fi
+              done
+        
+              echo ""
+              echo "Final evidence/phase0 contents:"
+              ls -la evidence/phase0 || true
+            fi
+
+      - name: Verify Phase-0 contract evidence status (merged artifacts)
+        run: |
+          chmod +x scripts/audit/verify_phase0_contract_evidence_status.sh
+          CI_ONLY=1 EVIDENCE_ROOT="evidence/phase0" scripts/audit/verify_phase0_contract_evidence_status.sh
+          
+      - name: Require Phase-0 evidence (fail-closed)
+        run: |
+          chmod +x scripts/ci/check_evidence_required.sh
+          CI_ONLY=1 scripts/ci/check_evidence_required.sh evidence/phase0
+
+  ai_security_review:
+    name: Phase II.5 — Codex security review (advisory)
+    runs-on: ubuntu-latest
+    needs: [mechanical_invariants]
+    if: >
+      github.event_name == 'pull_request' &&
+      always() &&
+      needs.mechanical_invariants.outputs.structural_change == 'true' &&
+      github.event.pull_request.head.repo.full_name == github.repository
+    permissions:
+      contents: read
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          ref: refs/pull/${{ github.event.pull_request.number }}/merge
+          fetch-depth: 0
+
+      - name: Pre-fetch base and head refs
+        shell: bash
+        run: |
+          git fetch --no-tags origin \
+            ${{ github.event.pull_request.base.ref }} \
+            +refs/pull/${{ github.event.pull_request.number }}/head
+
+      - name: Prepare diff for Codex
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/security_ai
+          scripts/audit/git_diff_cli.sh range-unified \
+            --base "${{ github.event.pull_request.base.sha }}" \
+            --head "${{ github.event.pull_request.head.sha }}" \
+            --out /tmp/security_ai/pr.diff \
+            --unified 0
+
+      - name: Prepare Codex home (fresh, writable)
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm -rf "${{ runner.temp }}/codex-home"
+          mkdir -p "${{ runner.temp }}/codex-home"
+
+      - name: Run Codex (security)
+        uses: openai/codex-action@v1
+        id: codex
+        continue-on-error: true
+        env:
+          CODEX_HOME: ${{ runner.temp }}/codex-home
+        with:
+          openai-api-key: ${{ secrets.OPENAI_API_KEY }}
+          model: gpt-5.2-codex
+          effort: medium
+          sandbox: workspace-write
+          safety-strategy: drop-sudo
+          prompt-file: .github/codex/prompts/security_review.md
+          output-file: /tmp/security_ai/codex_final_message.md
+          codex-args: '["--full-auto"]'
+
+      - name: Ensure Codex outputs exist (security, non-blocking)
+        if: always()
+        shell: bash
+        env:
+          CODEX_OUTCOME: ${{ steps.codex.outcome }}
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/security_ai
+          required=(
+            /tmp/security_ai/codex_final_message.md
+            /tmp/security_ai/ai_confidence.json
+            /tmp/security_ai/codex_summary.md
+          )
+
+          missing=0
+          for f in "${required[@]}"; do
+            if [[ ! -s "$f" ]]; then
+              echo "::warning title=Codex output missing::Missing or empty: $f (non-blocking)"
+              missing=1
+            fi
+          done
+
+          if [[ "$missing" -eq 1 ]]; then
+            if [[ ! -s /tmp/security_ai/codex_final_message.md ]]; then
+              printf '%s\n' \
+                "(Codex did not produce a final message. This is non-blocking. See workflow logs for the underlying Codex error such as quota/401/network.)" \
+                > /tmp/security_ai/codex_final_message.md
+            fi
+
+            if [[ ! -s /tmp/security_ai/ai_confidence.json ]]; then
+              printf '%s\n' \
+                '{' \
+                '  "classification": "unclear",' \
+                '  "confidence": 0.0,' \
+                '  "invariants": [],' \
+                "  \"rationale\": \"Codex did not produce required outputs. Step outcome: ${CODEX_OUTCOME:-unknown}. Check logs for quota/401/network errors.\"," \
+                '  "recommended_action": "human_decide"' \
+                '}' \
+                > /tmp/security_ai/ai_confidence.json
+            fi
+
+            if [[ ! -s /tmp/security_ai/codex_summary.md ]]; then
+              printf '%s\n' \
+                '## Codex security review (non-blocking)' \
+                '- **Status:** FAILED (non-blocking)' \
+                "- **Step outcome:** ${CODEX_OUTCOME:-unknown}" \
+                '- **Reason:** Codex did not produce one or more required outputs.' \
+                '- **Action:** Check workflow logs for the Codex failure cause (quota/401/network). Fix billing/secret/network and rerun.' \
+                > /tmp/security_ai/codex_summary.md
+            fi
+          fi
+
+          python3 - <<'PY'
+          import json
+          json.load(open("/tmp/security_ai/ai_confidence.json"))
+          print("ai_confidence.json: OK")
+          PY
+
+      - name: Capture Codex patch + upload artifacts
+        if: always()
+        shell: bash
+        run: |
+          set -euo pipefail
+          scripts/audit/git_diff_cli.sh worktree-unified --out /tmp/security_ai/codex-security.patch || true
+          if [[ ! -s /tmp/security_ai/codex-security.patch ]]; then
+            echo "No changes produced by Codex." > /tmp/security_ai/codex-security.patch
+          fi
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: codex-security-review
+          path: |
+            /tmp/security_ai/pr.diff
+            /tmp/security_ai/codex_final_message.md
+            /tmp/security_ai/ai_confidence.json
+            /tmp/security_ai/codex_summary.md
+            /tmp/security_ai/codex-security.patch
+
+      - name: Comment on PR (security)
+        if: always()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const path = '/tmp/security_ai/codex_summary.md';
+            let body = '### Codex Security Review\n';
+            if (fs.existsSync(path)) {
+              body += fs.readFileSync(path, 'utf8');
+            } else {
+              body += '_No codex_summary.md produced._';
+            }
+            github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              body
+            });
+
+  ai_compliance_review:
+    name: Phase II.6 — Codex compliance review (advisory)
+    runs-on: ubuntu-latest
+    needs: [mechanical_invariants]
+    if: >
+      github.event_name == 'pull_request' &&
+      always() &&
+      needs.mechanical_invariants.outputs.structural_change == 'true' &&
+      github.event.pull_request.head.repo.full_name == github.repository
+    permissions:
+      contents: read
+      pull-requests: write
+    env:
+      COMPLIANCE_STANDARDS: "ISO 20022; NIST 800-207 (Zero Trust)"
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          ref: refs/pull/${{ github.event.pull_request.number }}/merge
+          fetch-depth: 0
+
+      - name: Pre-fetch base and head refs
+        shell: bash
+        run: |
+          git fetch --no-tags origin \
+            ${{ github.event.pull_request.base.ref }} \
+            +refs/pull/${{ github.event.pull_request.number }}/head
+
+      - name: Prepare diff for Codex
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/compliance_ai
+          echo "Standards: $COMPLIANCE_STANDARDS" > /tmp/compliance_ai/standards.txt
+          scripts/audit/git_diff_cli.sh range-unified \
+            --base "${{ github.event.pull_request.base.sha }}" \
+            --head "${{ github.event.pull_request.head.sha }}" \
+            --out /tmp/compliance_ai/pr.diff \
+            --unified 0
+
+      - name: Prepare Codex home (fresh, writable)
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm -rf "${{ runner.temp }}/codex-home"
+          mkdir -p "${{ runner.temp }}/codex-home"
+
+      - name: Run Codex (compliance)
+        uses: openai/codex-action@v1
+        id: codex
+        continue-on-error: true
+        env:
+          CODEX_HOME: ${{ runner.temp }}/codex-home
+        with:
+          openai-api-key: ${{ secrets.OPENAI_API_KEY }}
+          model: gpt-5.2-codex
+          effort: medium
+          sandbox: workspace-write
+          safety-strategy: drop-sudo
+          prompt-file: .github/codex/prompts/compliance_review.md
+          output-file: /tmp/compliance_ai/codex_final_message.md
+          codex-args: '["--full-auto"]'
+
+      - name: Ensure Codex outputs exist (compliance, non-blocking)
+        if: always()
+        shell: bash
+        env:
+          CODEX_OUTCOME: ${{ steps.codex.outcome }}
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/compliance_ai
+          required=(
+            /tmp/compliance_ai/codex_final_message.md
+            /tmp/compliance_ai/ai_confidence.json
+            /tmp/compliance_ai/codex_summary.md
+          )
+
+          missing=0
+          for f in "${required[@]}"; do
+            if [[ ! -s "$f" ]]; then
+              echo "::warning title=Codex output missing::Missing or empty: $f (non-blocking)"
+              missing=1
+            fi
+          done
+
+          if [[ "$missing" -eq 1 ]]; then
+            if [[ ! -s /tmp/compliance_ai/codex_final_message.md ]]; then
+              printf '%s\n' \
+                "(Codex did not produce a final message. This is non-blocking. See workflow logs for the underlying Codex error such as quota/401/network.)" \
+                > /tmp/compliance_ai/codex_final_message.md
+            fi
+
+            if [[ ! -s /tmp/compliance_ai/ai_confidence.json ]]; then
+              printf '%s\n' \
+                '{' \
+                '  "classification": "unclear",' \
+                '  "confidence": 0.0,' \
+                '  "invariants": [],' \
+                "  \"rationale\": \"Codex did not produce required outputs. Step outcome: ${CODEX_OUTCOME:-unknown}. Check logs for quota/401/network errors.\"," \
+                '  "recommended_action": "human_decide"' \
+                '}' \
+                > /tmp/compliance_ai/ai_confidence.json
+            fi
+
+            if [[ ! -s /tmp/compliance_ai/codex_summary.md ]]; then
+              printf '%s\n' \
+                '## Codex compliance review (non-blocking)' \
+                '- **Status:** FAILED (non-blocking)' \
+                "- **Step outcome:** ${CODEX_OUTCOME:-unknown}" \
+                '- **Reason:** Codex did not produce one or more required outputs.' \
+                '- **Action:** Check workflow logs for the Codex failure cause (quota/401/network). Fix billing/secret/network and rerun.' \
+                > /tmp/compliance_ai/codex_summary.md
+            fi
+          fi
+
+          python3 - <<'PY'
+          import json
+          json.load(open("/tmp/compliance_ai/ai_confidence.json"))
+          print("ai_confidence.json: OK")
+          PY
+
+      - name: Capture Codex patch + upload artifacts
+        if: always()
+        shell: bash
+        run: |
+          set -euo pipefail
+          scripts/audit/git_diff_cli.sh worktree-unified --out /tmp/compliance_ai/codex-compliance.patch || true
+          if [[ ! -s /tmp/compliance_ai/codex-compliance.patch ]]; then
+            echo "No changes produced by Codex." > /tmp/compliance_ai/codex-compliance.patch
+          fi
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: codex-compliance-review
+          path: |
+            /tmp/compliance_ai/standards.txt
+            /tmp/compliance_ai/pr.diff
+            /tmp/compliance_ai/codex_final_message.md
+            /tmp/compliance_ai/ai_confidence.json
+            /tmp/compliance_ai/codex_summary.md
+            /tmp/compliance_ai/codex-compliance.patch
+
+      - name: Comment on PR (compliance)
+        if: always()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const stdPath = '/tmp/compliance_ai/standards.txt';
+            const sumPath = '/tmp/compliance_ai/codex_summary.md';
+            let body = '### Codex Compliance Review\n';
+            if (fs.existsSync(stdPath)) {
+              body += '\n**Scope:** ' + fs.readFileSync(stdPath, 'utf8').trim() + '\n\n';
+            }
+            if (fs.existsSync(sumPath)) {
+              body += fs.readFileSync(sumPath, 'utf8');
+            } else {
+              body += '_No codex_summary.md produced._';
+            }
+            github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              body
+            });
+
+  research_scout:
+    name: Phase V — Research scout (scheduled, non-blocking)
+    runs-on: ubuntu-latest
+    if: github.event_name == 'schedule'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Run research scout (if present)
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [[ -x scripts/audit/research_scout.sh ]]; then
+            scripts/audit/research_scout.sh
+          else
+            echo "scripts/audit/research_scout.sh not found/executable; skipping."
+          fi
+
+  exception_audit:
+    name: Scheduled — exception audit
+    runs-on: ubuntu-latest
+    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+      - name: Validate exception templates + record summary
+        run: |
+          set -euo pipefail
+          chmod +x scripts/audit/verify_exception_template.sh
+          scripts/audit/verify_exception_template.sh
+          chmod +x scripts/audit/record_invariants_exception.sh
+          scripts/audit/record_invariants_exception.sh

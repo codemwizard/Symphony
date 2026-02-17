@@ -1,0 +1,45 @@
+phase: '1'
+task_id: TSK-P1-005
+title: Truth-Sync Promotion for INV-111 INV-112 INV-113
+owner_role: INVARIANTS_CURATOR
+status: completed
+depends_on: []
+touches:
+- docs/invariants/INVARIANTS_MANIFEST.yml
+- docs/invariants/INVARIANTS_IMPLEMENTED.md
+- docs/invariants/INVARIANTS_ROADMAP.md
+- docs/invariants/INVARIANTS_QUICK.md
+invariants:
+- INV-044
+- INV-111
+- INV-112
+- INV-113
+work:
+- Promote INV-111/112/113 from roadmap to implemented only after mechanical pre-checks
+  pass.
+- Keep existing Phase-0 gate IDs and evidence paths unchanged.
+acceptance_criteria:
+- Manifest and docs are aligned for INV-111/112/113.
+- No movement of evidence paths from evidence/phase0/** to evidence/phase1/**.
+verification:
+- scripts/db/verify_boz_observability_role.sh
+- scripts/audit/lint_pii_leakage_payloads.sh
+- scripts/db/verify_anchor_sync_hooks.sh
+- python3 scripts/audit/check_docs_match_manifest.py
+- scripts/dev/pre_ci.sh
+evidence:
+- evidence/phase0/boz_observability_role.json
+- evidence/phase0/pii_leakage_payloads.json
+- evidence/phase0/anchor_sync_hooks.json
+failure_modes:
+- Manifest promoted without mechanical verification proof.
+- Evidence file missing.
+must_read:
+- docs/invariants/INVARIANTS_MANIFEST.yml
+- docs/control_planes/CONTROL_PLANES.yml
+implementation_plan: docs/plans/phase1/TSK-P1-005_truth_sync_promotion_for_inv_111_inv_112_inv_113/PLAN.md
+implementation_log: docs/plans/phase1/TSK-P1-005_truth_sync_promotion_for_inv_111_inv_112_inv_113/EXEC_LOG.md
+notes: Docs/manifest truth-sync only; no net-new implementation for these invariants.
+client: codex_cli
+assigned_agent: invariants_curator
+model: <UNASSIGNED>

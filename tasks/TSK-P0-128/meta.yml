@@ -1,0 +1,55 @@
+phase: "0"
+task_id: "TSK-P0-128"
+title: "DB: BoZ/regulator observability seat (read-only role) + mechanical verifier"
+owner_role: "DB_FOUNDATION"
+status: "completed"   # planned | in_progress | completed
+
+depends_on:
+  - "TSK-P0-125"
+
+touches:
+  - "schema/migrations/0025_boz_observability_role.sql"
+  - "scripts/db/verify_boz_observability_role.sh"
+  - "scripts/db/verify_invariants.sh"
+  - "docs/plans/phase0/TSK-P0-128_boz_observability_role/PLAN.md"
+  - "docs/plans/phase0/TSK-P0-128_boz_observability_role/EXEC_LOG.md"
+  - "tasks/TSK-P0-128/meta.yml"
+
+invariants:
+  - "INV-111"
+
+work:
+  - "Create a forward-only migration to define a regulator read-only role (default: `boz_auditor`) with SELECT-only access to the minimum necessary surfaces."
+  - "Enforce revoke-first posture: explicitly REVOKE and ensure no CREATE on schemas and no DML/DDL privileges are possible."
+  - "Add mechanical verifier that connects to DB catalog and proves the role is read-only (no INSERT/UPDATE/DELETE/TRUNCATE/CREATE/USAGE on forbidden surfaces)."
+  - "Emit Phase-0 evidence JSON with git SHA + schema fingerprint and explicit privilege checks performed."
+  - "Wire verifier into DB invariant runner (`scripts/db/verify_invariants.sh`) so it is exercised in DB test jobs."
+
+acceptance_criteria:
+  - "Verifier fails if the regulator role has any write privileges or schema CREATE."
+  - "Evidence artifact is emitted and contains the evaluated privilege matrix (at least as booleans)."
+
+verification:
+  - "source infra/docker/.env && export DATABASE_URL=\"postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@localhost:5432/${POSTGRES_DB}\" && scripts/db/migrate.sh"
+  - "source infra/docker/.env && export DATABASE_URL=\"postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@localhost:5432/${POSTGRES_DB}\" && scripts/db/verify_boz_observability_role.sh"
+
+evidence:
+  - "evidence/phase0/boz_observability_role.json"
+
+failure_modes:
+  - "Role exists but has implicit privileges via default privileges."
+  - "Role can write via membership in runtime roles."
+  - "Verifier checks wrong database objects and gives false assurance."
+
+must_read:
+  - "schema/migrations/0003_roles.sql"
+  - "schema/migrations/0004_privileges.sql"
+  - "docs/security/AUDIT_LOGGING_PLAN.md"
+
+implementation_plan: "docs/plans/phase0/TSK-P0-128_boz_observability_role/PLAN.md"
+implementation_log: "docs/plans/phase0/TSK-P0-128_boz_observability_role/EXEC_LOG.md"
+
+notes: "Control-plane gate wiring is handled by TSK-P0-130 (ARCHITECT). This task keeps DB-only changes within DB_FOUNDATION scope."
+client: "codex_cli"
+assigned_agent: "db_foundation"
+model: "gpt-5-codex"

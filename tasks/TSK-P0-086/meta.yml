@@ -1,0 +1,47 @@
+phase: '0'
+task_id: TSK-P0-086
+title: Add business foundation hooks verifier and invariant wiring
+owner_role: INVARIANTS_CURATOR
+status: completed
+depends_on:
+- TSK-P0-080
+- TSK-P0-081
+- TSK-P0-082
+- TSK-P0-083
+- TSK-P0-084
+- TSK-P0-085
+touches:
+- scripts/db/verify_business_foundation_hooks.sh
+- scripts/db/verify_invariants.sh
+- docs/invariants/INVARIANTS_MANIFEST.yml
+- docs/invariants/INVARIANTS_IMPLEMENTED.md
+- docs/tasks/PHASE0_TASKS.md
+- tasks/TSK-P0-086/meta.yml
+invariants:
+- INV-096 (Business foundation hooks are mechanically verified)
+work:
+- Implement schema-introspection verifier for all business foundation hooks.
+- Emit deterministic evidence JSON with checked tables/columns/constraints/indexes/triggers.
+- Wire verifier into DB invariant flow and update invariants docs only with real verification pointers.
+acceptance_criteria:
+- Verifier fails closed when a required hook is missing.
+- Verifier writes evidence on both pass and failure paths.
+- Manifest/docs reflect verification hooks without paper promotion.
+verification:
+- scripts/audit/run_invariants_fast_checks.sh
+- scripts/db/verify_invariants.sh
+evidence:
+- evidence/phase0/business_foundation_hooks.json
+failure_modes:
+- Hooks pass without actual schema checks.
+- Verifier not wired into DB invariant flow.
+- Evidence file missing.
+must_read:
+- docs/PHASE0/BUSINESS_INVARIANTS_ADDITION_IMPLEMENTATION.md
+- docs/plans/phase0/TSK-P0-080_business_invariants_addition/PLAN.md
+implementation_plan: docs/plans/phase0/TSK-P0-080_business_invariants_addition/PLAN.md
+implementation_log: docs/plans/phase0/TSK-P0-080_business_invariants_addition/EXEC_LOG.md
+notes: ''
+client: codex_cli
+assigned_agent: invariants_curator
+model: <UNASSIGNED>

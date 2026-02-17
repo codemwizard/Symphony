@@ -1,0 +1,37 @@
+phase: '0'
+task_id: TSK-P0-055
+title: Align agent scopes with control planes
+owner_role: ARCHITECT
+status: completed
+depends_on:
+- TSK-P0-051
+touches:
+- AGENTS.md
+- .codex/agents/security_guardian.md
+- .codex/agents/invariants_curator.md
+- .codex/agents/compliance_mapper.md
+- tasks/TSK-P0-055/meta.yml
+invariants:
+- INV-076
+work:
+- Update agent scopes to match CONTROL_PLANES.yml (infra/**, dependency manifests,
+  src/** for Security).
+- "Ensure Compliance agent has read\u2011only access to evidence outputs in docs."
+acceptance_criteria:
+- "Agent scopes match control\u2011plane ownership and scope."
+verification:
+  - scripts/audit/verify_control_planes_drift.sh
+evidence:
+  - evidence/phase0/control_planes_drift.json
+failure_modes:
+- Agent scope conflicts with control plane definitions.
+- Evidence file missing.
+must_read:
+- docs/invariants/INVARIANTS_MANIFEST.yml
+- docs/control_planes/CONTROL_PLANES.yml
+notes: ''
+client: codex_cli
+assigned_agent: architect
+model: <UNASSIGNED>
+implementation_plan: docs/plans/phase0/TSK-P0-055_agent_scopes_alignment/PLAN.md
+implementation_log: docs/plans/phase0/TSK-P0-055_agent_scopes_alignment/EXEC_LOG.md

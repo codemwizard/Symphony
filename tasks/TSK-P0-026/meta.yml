@@ -1,0 +1,36 @@
+phase: '0'
+task_id: TSK-P0-026
+title: Core boundary guard (no Node in core paths)
+owner_role: SECURITY_GUARDIAN
+status: completed
+depends_on:
+- TSK-P0-001
+touches:
+- scripts/security/lint_core_boundary.sh
+- .github/workflows/invariants.yml
+invariants:
+- INV-037 (Core code boundary enforced)
+work:
+- Lint core paths to forbid .js/.ts/package.json only inside core directories.
+- Pass if core dirs are absent (repo structure gate already enforced).
+- Ensure lint emits ./evidence/phase0/core_boundary.json.
+acceptance_criteria:
+- CI fails if Node artifacts exist in core paths.
+- Evidence file is written by the verification step.
+verification:
+- scripts/security/lint_core_boundary.sh
+evidence:
+- ./evidence/phase0/core_boundary.json
+failure_modes:
+- Forbidden artifacts present.
+- Evidence file missing.
+must_read:
+- docs/invariants/INVARIANTS_MANIFEST.yml
+- scripts/db/verify_invariants.sh
+- scripts/db/ci_invariant_gate.sql
+notes: Invariant registration is handled by TSK-P0-009.
+client: codex_cli
+assigned_agent: security_guardian
+model: <UNASSIGNED>
+implementation_plan: docs/plans/phase0/TSK-P0-026/PLAN.md
+implementation_log: docs/plans/phase0/TSK-P0-026/EXEC_LOG.md

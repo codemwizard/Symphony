@@ -1,0 +1,49 @@
+phase: '0'
+task_id: TSK-P0-052
+title: Expand Security plane guardrails (infra/deps/src)
+owner_role: SECURITY_GUARDIAN
+status: completed
+depends_on:
+- TSK-P0-051
+touches:
+- docs/control_planes/CONTROL_PLANES.yml
+- scripts/security/scan_secrets.sh
+- scripts/security/dotnet_dependency_audit.sh
+- scripts/security/lint_secure_config.sh
+- scripts/security/lint_insecure_patterns.sh
+- scripts/audit/run_security_fast_checks.sh
+- .github/workflows/invariants.yml
+- docs/PHASE0/phase0_contract.yml
+- tasks/TSK-P0-052/meta.yml
+invariants:
+- INV-073
+work:
+- "Add secrets scan (fail\u2011closed, evidence on pass/fail)."
+- Add .NET dependency audit (no npm; evidence on pass/fail).
+- Add secure config lint for infra/workflows.
+- "Add static insecure\u2011pattern lint for src/."
+- Wire into fast security checks + CI.
+- "Register INV\u2011073 and evidence paths in contract."
+acceptance_criteria:
+- All new scripts emit evidence under evidence/phase0/.
+- CI runs the checks and fails on violations.
+verification:
+  - scripts/audit/run_security_fast_checks.sh
+evidence:
+  - evidence/phase0/security_secrets_scan.json
+  - evidence/phase0/security_dotnet_deps_audit.json
+  - evidence/phase0/security_secure_config_lint.json
+  - evidence/phase0/security_insecure_patterns.json
+failure_modes:
+- Evidence file missing.
+- Any guardrail violation must fail the job.
+must_read:
+- docs/invariants/INVARIANTS_MANIFEST.yml
+- scripts/db/verify_invariants.sh
+- scripts/db/ci_invariant_gate.sql
+notes: ''
+client: codex_cli
+assigned_agent: security_guardian
+model: <UNASSIGNED>
+implementation_plan: docs/plans/phase0/TSK-P0-052_security_plane_expansion/PLAN.md
+implementation_log: docs/plans/phase0/TSK-P0-052_security_plane_expansion/EXEC_LOG.md

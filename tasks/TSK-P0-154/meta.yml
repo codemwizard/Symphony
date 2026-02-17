@@ -1,0 +1,42 @@
+phase: "0"
+task_id: "TSK-P0-154"
+title: "Parity: Refactor diff-based gates to use shared helper"
+owner_role: "INVARIANTS_CURATOR"
+status: "completed"   # planned | in_progress | completed
+
+depends_on:
+  - "TSK-P0-153"
+
+touches:
+  - "scripts/audit/enforce_change_rule.sh"
+  - "scripts/audit/verify_baseline_change_governance.sh"
+  - "docs/plans/phase0/TSK-P0-154_refactor_diff_based_gates/PLAN.md"
+  - "docs/plans/phase0/TSK-P0-154_refactor_diff_based_gates/EXEC_LOG.md"
+  - "tasks/TSK-P0-154/meta.yml"
+
+invariants: []
+
+work:
+  - "Replace ad-hoc diff enumeration with calls to scripts/lib/git_diff.sh (range mode)."
+  - "Remove implicit staged/worktree fallbacks in parity-critical enforcement paths."
+
+acceptance_criteria:
+  - "CI and local pre-ci compute the same changed-file list for these gates."
+  - "No remaining union-diff patterns in parity-critical gates."
+
+verification:
+  - "bash scripts/audit/run_phase0_ordered_checks.sh"
+
+evidence: []
+must_read: []
+
+failure_modes:
+  - "Gate behavior differs between CI and local due to diff semantics."
+
+implementation_plan: "docs/plans/phase0/TSK-P0-154_refactor_diff_based_gates/PLAN.md"
+implementation_log: "docs/plans/phase0/TSK-P0-154_refactor_diff_based_gates/EXEC_LOG.md"
+
+notes: ""
+client: "codex_cli"
+assigned_agent: "invariants_curator"
+model: "gpt-5-codex"

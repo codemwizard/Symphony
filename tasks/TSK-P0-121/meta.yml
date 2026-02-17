@@ -1,0 +1,51 @@
+# Canonical Task Meta Template (lower_snake_case)
+
+phase: "0"
+task_id: "TSK-P0-121"
+title: "CI parity: eliminate chmod-induced filemode diffs that break remediation-trace"
+owner_role: "SECURITY_GUARDIAN"
+status: "completed"   # planned | in_progress | completed
+
+depends_on:
+  - "TSK-P0-105"
+
+touches:
+  - "scripts/audit/verify_remediation_trace.sh"
+  - "scripts/audit/verify_remediation_workflow_doc.sh"
+  - "docs/plans/phase0/TSK-P0-121_ci_filemode_parity/PLAN.md"
+  - "docs/plans/phase0/TSK-P0-121_ci_filemode_parity/EXEC_LOG.md"
+  - "docs/plans/phase0/INDEX.md"
+  - "docs/tasks/PHASE0_TASKS.md"
+  - "docs/PHASE0/phase0_contract.yml"
+
+invariants:
+  - "GOV-G02"
+  - "INT-CI-PARITY"
+
+work:
+  - "Commit executable bits (100755) for scripts that CI chmods, so CI remains clean and remediation-trace uses range diff."
+
+acceptance_criteria:
+  - "CI no longer shows remediation-trace failures caused by chmod/filemode-only worktree diffs."
+
+verification:
+  - "bash scripts/audit/verify_remediation_trace.sh"
+
+evidence:
+  - "evidence/phase0/remediation_trace.json"
+
+failure_modes:
+  - "Evidence file missing"
+  - "CI still runs remediation-trace in worktree mode due to filemode diffs."
+
+must_read:
+  - ".github/workflows/invariants.yml"
+  - "docs/operations/REMEDIATION_TRACE_WORKFLOW.md"
+
+implementation_plan: "docs/plans/phase0/TSK-P0-121_ci_filemode_parity/PLAN.md"
+implementation_log: "docs/plans/phase0/TSK-P0-121_ci_filemode_parity/EXEC_LOG.md"
+
+notes: ""
+client: "codex_cli"
+assigned_agent: "security_guardian"
+model: "gpt-5.3-codex"

@@ -1,0 +1,36 @@
+phase: '0'
+task_id: TSK-P0-012
+title: Enforce evidence provenance fields
+owner_role: ARCHITECT
+status: completed
+depends_on:
+- TSK-P0-002
+- TSK-P0-011
+touches:
+- docs/architecture/evidence_schema.json
+- scripts/audit/generate_evidence.sh
+- tasks/TSK-P0-012/meta.yml
+invariants:
+- INV-029 (Evidence provenance required)
+work:
+- Extend evidence schema to require git_sha, schema_hash, ci_run_id, producer, inputs.
+- Update evidence generator to emit required fields deterministically.
+acceptance_criteria:
+- Evidence file includes required provenance fields and passes schema validation.
+verification:
+- scripts/audit/generate_evidence.sh
+- scripts/audit/validate_evidence_schema.sh
+evidence:
+- ./evidence/phase0/evidence.json
+failure_modes:
+- Missing provenance field must fail.
+must_read:
+- docs/invariants/INVARIANTS_MANIFEST.yml
+- scripts/db/verify_invariants.sh
+- scripts/db/ci_invariant_gate.sql
+notes: ''
+client: codex_cli
+assigned_agent: architect
+model: <UNASSIGNED>
+implementation_plan: docs/plans/phase0/TSK-P0-012/PLAN.md
+implementation_log: docs/plans/phase0/TSK-P0-012/EXEC_LOG.md

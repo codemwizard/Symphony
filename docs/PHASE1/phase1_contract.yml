@@ -1,0 +1,103 @@
+- invariant_id: "INV-111"
+  status: "phase0_prerequisite"
+  required: true
+  gate_id: "INT-G23"
+  verifier: "scripts/db/verify_boz_observability_role.sh"
+  evidence_path: "evidence/phase0/boz_observability_role.json"
+  notes: "Truth-sync promotion uses existing Phase-0 gate/evidence path."
+
+- invariant_id: "INV-112"
+  status: "phase0_prerequisite"
+  required: true
+  gate_id: "SEC-G17"
+  verifier: "scripts/audit/lint_pii_leakage_payloads.sh"
+  evidence_path: "evidence/phase0/pii_leakage_payloads.json"
+  notes: "Truth-sync promotion uses existing Phase-0 gate/evidence path."
+
+- invariant_id: "INV-113"
+  status: "phase0_prerequisite"
+  required: true
+  gate_id: "INT-G24"
+  verifier: "scripts/db/verify_anchor_sync_hooks.sh"
+  evidence_path: "evidence/phase0/anchor_sync_hooks.json"
+  notes: "Structural hooks exist in Phase-0; operational hardening is Phase-1."
+
+- invariant_id: "INV-114"
+  status: "implemented"
+  required: true
+  gate_id: "INT-G25"
+  verifier: "scripts/db/verify_instruction_finality_invariant.sh"
+  evidence_path: "evidence/phase1/instruction_finality_invariant.json"
+  notes: "Phase-1 runtime invariant enforced with DB trigger semantics and runtime tests."
+
+- invariant_id: "INV-115"
+  status: "implemented"
+  required: true
+  gate_id: "INT-G26"
+  verifier: "scripts/db/verify_pii_decoupling_hooks.sh"
+  evidence_path: "evidence/phase1/pii_decoupling_invariant.json"
+  notes: "Phase-1 runtime invariant enforced with vault/purge hooks and deterministic runtime tests."
+
+- invariant_id: "INV-116"
+  status: "implemented"
+  required: true
+  gate_id: "INT-G27"
+  verifier: "scripts/db/verify_rail_sequence_truth_anchor.sh"
+  evidence_path: "evidence/phase1/rail_sequence_truth_anchor.json"
+  notes: "Phase-1 runtime invariant enforced through dispatch truth-anchor trigger and sequence scope uniqueness."
+
+- invariant_id: "INV-105"
+  status: "implemented"
+  required: true
+  gate_id: "INT-G28"
+  verifier: "scripts/audit/verify_agent_conformance.sh"
+  evidence_path: "evidence/phase1/agent_conformance_architect.json"
+  notes: "Phase-1 agent governance conformance evidence is required for Architect role."
+
+- invariant_id: "INV-105"
+  status: "implemented"
+  required: true
+  gate_id: "INT-G28"
+  verifier: "scripts/audit/verify_agent_conformance.sh"
+  evidence_path: "evidence/phase1/agent_conformance_implementer.json"
+  notes: "Phase-1 agent governance conformance evidence is required for Implementer role."
+
+- invariant_id: "INV-105"
+  status: "implemented"
+  required: true
+  gate_id: "INT-G28"
+  verifier: "scripts/audit/verify_agent_conformance.sh"
+  evidence_path: "evidence/phase1/agent_conformance_policy_guardian.json"
+  notes: "Phase-1 agent governance conformance evidence is required for Requirements and Policy Integrity role."
+
+- invariant_id: "INV-077"
+  status: "implemented"
+  required: true
+  gate_id: "INT-G28"
+  verifier: "scripts/audit/verify_evidence_harness_integrity.sh"
+  evidence_path: "evidence/phase1/approval_metadata.json"
+  notes: "Approval metadata evidence is required for regulated-surface governance."
+
+- invariant_id: "INV-081"
+  status: "implemented"
+  required: true
+  gate_id: "SEC-G18"
+  verifier: "scripts/security/lint_dotnet_quality.sh"
+  evidence_path: "evidence/phase1/dotnet_lint_quality.json"
+  notes: "Phase-1 .NET quality lint gate for deterministic lint/build posture."
+
+- invariant_id: "INV-039"
+  status: "deferred_to_phase2"
+  required: false
+  gate_id: ""
+  verifier: ""
+  evidence_path: ""
+  notes: "Explicitly deferred in Phase-1 closeout contract."
+
+- invariant_id: "INV-048"
+  status: "deferred_to_phase2"
+  required: false
+  gate_id: ""
+  verifier: ""
+  evidence_path: ""
+  notes: "Explicitly deferred in Phase-1 closeout contract."

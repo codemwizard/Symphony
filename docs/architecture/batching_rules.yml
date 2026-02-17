@@ -1,0 +1,16 @@
+batching:
+  max_batch_size: 100
+  max_wait_ms: 2000
+  flush_interval_ms: 500
+  max_in_flight: 10
+  backpressure:
+    enabled: true
+    strategy: "reject_new"
+evidence:
+  artifact: "./evidence/phase0/batching_rules.json"
+  fields:
+    - "batching.max_batch_size"
+    - "batching.max_wait_ms"
+    - "batching.flush_interval_ms"
+    - "batching.max_in_flight"
+    - "batching.backpressure"

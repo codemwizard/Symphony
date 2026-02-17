@@ -1,0 +1,197 @@
+control_planes:
+  # Plane semantics (Tier-1 drift prevention):
+  # - SEC-* gates: prevent leakage and enforce security guardrails (data exposure, unsafe patterns, toolchain fail-closed posture).
+  # - INT-* gates: prove DB state, schema posture, and mechanical correctness (catalog verifiers, schema hooks, invariants posture).
+  # - GOV-* gates: prove governance/assurance posture and cross-plane mappings (e.g., compliance manifests, remediation trace discipline).
+  security:
+    owner: SECURITY_GUARDIAN
+    scope:
+      - scripts/security/**
+      - scripts/audit/**
+      - docs/security/**
+      - .github/workflows/**
+      - infra/**
+      - src/**
+      - packages/**
+      - Dockerfile
+    required_gates:
+      - gate_id: SEC-G01
+        script: scripts/security/lint_core_boundary.sh
+        evidence: evidence/phase0/core_boundary.json
+      - gate_id: SEC-G02
+        script: scripts/security/lint_ddl_lock_risk.sh
+        evidence: evidence/phase0/ddl_lock_risk.json
+      - gate_id: SEC-G03
+        script: scripts/security/lint_security_definer_dynamic_sql.sh
+        evidence: evidence/phase0/security_definer_dynamic_sql.json
+      - gate_id: SEC-G04
+        script: scripts/security/verify_ddl_allowlist_governance.sh
+        evidence: evidence/phase0/ddl_allowlist_governance.json
+      - gate_id: SEC-G05
+        script: scripts/security/openbao_smoke_test.sh
+        evidence: evidence/phase0/openbao_smoke.json
+      - gate_id: SEC-G06
+        script: scripts/audit/verify_ci_toolchain.sh
+        evidence: evidence/phase0/ci_toolchain.json
+      - gate_id: SEC-G07
+        script: scripts/security/scan_secrets.sh
+        evidence: evidence/phase0/security_secrets_scan.json
+      - gate_id: SEC-G08
+        script: scripts/security/dotnet_dependency_audit.sh
+        evidence: evidence/phase0/security_dotnet_deps_audit.json
+      - gate_id: SEC-G09
+        script: scripts/security/lint_secure_config.sh
+        evidence: evidence/phase0/security_secure_config_lint.json
+      - gate_id: SEC-G10
+        script: scripts/security/lint_insecure_patterns.sh
+        evidence: evidence/phase0/security_insecure_patterns.json
+      - gate_id: SEC-G11
+        script: scripts/security/run_semgrep_sast.sh
+        evidence: evidence/phase0/semgrep_sast.json
+      - gate_id: SEC-G12
+        script: scripts/audit/verify_key_management_policy.sh
+        evidence: evidence/phase0/key_management_policy.json
+      - gate_id: SEC-G13
+        script: scripts/audit/verify_audit_logging_retention_policy.sh
+        evidence: evidence/phase0/audit_logging_retention_policy.json
+      - gate_id: SEC-G14
+        script: scripts/audit/verify_iso20022_readiness_docs.sh
+        evidence: evidence/phase0/iso20022_readiness.json
+      - gate_id: SEC-G15
+        script: scripts/audit/verify_iso20022_contract_registry.sh
+        evidence: evidence/phase0/iso20022_contract_registry.json
+      - gate_id: SEC-G16
+        script: scripts/audit/verify_zero_trust_posture_docs.sh
+        evidence: evidence/phase0/zero_trust_posture.json
+
+      - gate_id: SEC-G17
+        script: scripts/audit/lint_pii_leakage_payloads.sh
+        evidence: evidence/phase0/pii_leakage_payloads.json
+      - gate_id: SEC-G18
+        script: scripts/security/lint_dotnet_quality.sh
+        evidence: evidence/phase1/dotnet_lint_quality.json
+
+  integrity:
+    owner: INVARIANTS_CURATOR
+    scope:
+      - scripts/audit/**
+      - scripts/db/**
+      - schema/**
+      - docs/invariants/**
+      - docs/PHASE0/**
+      - docs/tasks/**
+    required_gates:
+      - gate_id: INT-G01
+        script: scripts/audit/validate_evidence_schema.sh
+        evidence: evidence/phase0/evidence_validation.json
+      - gate_id: INT-G02
+        script: scripts/audit/verify_task_evidence_contract.sh
+        evidence: evidence/phase0/task_evidence_contract.json
+      - gate_id: INT-G03
+        script: scripts/audit/verify_phase0_contract.sh
+        evidence: evidence/phase0/phase0_contract.json
+      - gate_id: INT-G04
+        script: scripts/audit/check_sqlstate_map_drift.sh
+        evidence: evidence/phase0/sqlstate_map_drift.json
+      - gate_id: INT-G05
+        script: scripts/audit/verify_baseline_change_governance.sh
+        evidence: evidence/phase0/baseline_governance.json
+      - gate_id: INT-G06
+        script: scripts/audit/verify_rebaseline_strategy.sh
+        evidence: evidence/phase0/rebaseline_decision.json
+      - gate_id: INT-G07
+        script: scripts/audit/verify_phase0_impl_plan.sh
+        evidence: evidence/phase0/phase0_impl_plan.json
+      - gate_id: INT-G08
+        script: scripts/audit/verify_proxy_resolution_invariant.sh
+        evidence: evidence/phase0/proxy_resolution_invariant.json
+      - gate_id: INT-G09
+        script: scripts/audit/verify_doc_alignment.sh
+        evidence: evidence/phase0/doc_alignment.json
+      - gate_id: INT-G10
+        script: scripts/audit/verify_no_tx_docs.sh
+        evidence: evidence/phase0/no_tx_docs.json
+      - gate_id: INT-G11
+        script: scripts/audit/verify_batching_rules.sh
+        evidence: evidence/phase0/batching_rules.json
+      - gate_id: INT-G12
+        script: scripts/audit/verify_routing_fallback.sh
+        evidence: evidence/phase0/routing_fallback.json
+      - gate_id: INT-G13
+        script: scripts/audit/validate_routing_fallback.sh
+        evidence: evidence/phase0/routing_fallback_validation.json
+      - gate_id: INT-G14
+        script: scripts/audit/verify_three_pillars_doc.sh
+        evidence: evidence/phase0/three_pillars_doc.json
+      - gate_id: INT-G15
+        script: scripts/audit/verify_control_planes_drift.sh
+        evidence: evidence/phase0/control_planes_drift.json
+      - gate_id: INT-G16
+        script: scripts/audit/lint_yaml_conventions.sh
+        evidence: evidence/phase0/yaml_conventions_lint.json
+      - gate_id: INT-G17
+        script: scripts/audit/run_invariants_fast_checks.sh
+        evidence: evidence/phase0/invariants_docs_match.json
+      - gate_id: INT-G18
+        script: scripts/audit/run_invariants_fast_checks.sh
+        evidence: evidence/phase0/db_fail_closed_roadmap.json
+      - gate_id: INT-G19
+        script: scripts/audit/verify_phase0_contract_evidence_status.sh
+        evidence: evidence/phase0/phase0_contract_evidence_status.json
+      - gate_id: INT-G20
+        script: scripts/audit/verify_ci_order.sh
+        evidence: evidence/phase0/ci_order.json
+      - gate_id: INT-G21
+        script: scripts/audit/verify_evidence_harness_integrity.sh
+        evidence: evidence/phase0/evidence_harness_integrity.json
+      - gate_id: "INT-G22"
+        # Canonical Phase-0 performance hot-path posture gate (INV-031).
+        invariant_id: "INV-031"
+        title: "Outbox pending indexes present (performance hot-path posture)"
+        verifier: "scripts/db/tests/test_outbox_pending_indexes.sh"
+        evidence_path: "evidence/phase0/outbox_pending_indexes.json"
+        mode: "both"
+        script: scripts/db/tests/test_outbox_pending_indexes.sh
+        evidence: evidence/phase0/outbox_pending_indexes.json
+
+      - gate_id: INT-G23
+        script: scripts/db/verify_boz_observability_role.sh
+        evidence: evidence/phase0/boz_observability_role.json
+
+      - gate_id: INT-G24
+        script: scripts/db/verify_anchor_sync_hooks.sh
+        evidence: evidence/phase0/anchor_sync_hooks.json
+
+      - gate_id: INT-G25
+        script: scripts/db/verify_instruction_finality_invariant.sh
+        evidence: evidence/phase1/instruction_finality_invariant.json
+
+      - gate_id: INT-G26
+        script: scripts/db/verify_pii_decoupling_hooks.sh
+        evidence: evidence/phase1/pii_decoupling_invariant.json
+
+      - gate_id: INT-G27
+        script: scripts/db/verify_rail_sequence_truth_anchor.sh
+        evidence: evidence/phase1/rail_sequence_truth_anchor.json
+
+      - gate_id: INT-G28
+        script: scripts/audit/verify_phase1_contract.sh
+        evidence: evidence/phase1/phase1_contract_status.json
+
+  governance:
+    owner: COMPLIANCE_MAPPER
+    scope:
+      - docs/security/**
+      - docs/architecture/**
+      - evidence/**
+    required_gates:
+      - gate_id: GOV-G01
+        script: scripts/audit/verify_compliance_manifest.sh
+        evidence: evidence/phase0/compliance_manifest_verify.json
+      - gate_id: GOV-G02
+        script: scripts/audit/verify_remediation_trace.sh
+        evidence: evidence/phase0/remediation_trace.json
+
+      - gate_id: GOV-G03
+        script: scripts/audit/verify_sovereign_vpc_posture_doc.sh
+        evidence: evidence/phase0/sovereign_vpc_posture_doc.json

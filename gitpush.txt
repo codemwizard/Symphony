@@ -1,0 +1,301 @@
+(.venv) mwiza@DESKTOP-VV0116A:~/workspaces/Symphony$ git push
+==> Pre-CI local checks
+==> Structural preflight (staged) — change-rule
+==> Preflight (staged): structural detector + Rule 1 linkage
+No staged changes; skipping.
+🧹 Cleaning evidence directory: /home/mwiza/workspaces/Symphony/evidence/phase0
+✅ Evidence directory cleaned.
+[+] Running 1/1
+ ✔ Container symphony-postgres  Running                                                                0.0s
+==> Waiting for postgres container to be healthy
+==> Phase-0 ordered checks (canonical order)
+
+-> scripts/audit/lint_yaml_conventions.sh
+YAML conventions lint passed.
+YAML conventions lint passed. Evidence: /home/mwiza/workspaces/Symphony/evidence/phase0/yaml_conventions_lint.json
+
+-> scripts/audit/verify_control_planes_drift.sh
+Control planes drift check passed. Evidence: /home/mwiza/workspaces/Symphony/evidence/phase0/control_planes_drift.json
+
+-> scripts/audit/verify_repo_structure.sh
+Repo structure verification OK. Evidence: /home/mwiza/workspaces/Symphony/evidence/phase0/repo_structure.json
+
+-> scripts/audit/generate_evidence.sh
+Evidence written: /home/mwiza/workspaces/Symphony/evidence/phase0/evidence.json
+
+-> scripts/audit/enforce_change_rule.sh
+✅ Change rule OK: no structural changes detected.
+
+-> scripts/audit/verify_batching_rules.sh
+OK
+Batching rules validation passed. Evidence: /home/mwiza/workspaces/Symphony/evidence/phase0/batching_rules.json
+
+-> scripts/audit/verify_routing_fallback.sh
+OK
+Routing fallback validation passed. Evidence: /home/mwiza/workspaces/Symphony/evidence/phase0/routing_fallback.json
+
+-> scripts/audit/validate_routing_fallback.sh
+OK
+Routing fallback validation passed. Evidence: /home/mwiza/workspaces/Symphony/evidence/phase0/routing_fallback.json
+
+-> scripts/audit/run_security_fast_checks.sh
+==> Fast security checks (cheap, deterministic)
+
+==> Shell syntax checks (scripts/security/*.sh)
+
+-> bash -n scripts/security/dotnet_dependency_audit.sh
+
+-> bash -n scripts/security/lint_core_boundary.sh
+
+-> bash -n scripts/security/lint_ddl_lock_risk.sh
+
+-> bash -n scripts/security/lint_insecure_patterns.sh
+
+-> bash -n scripts/security/lint_privilege_grants.sh
+
+-> bash -n scripts/security/lint_secure_config.sh
+
+-> bash -n scripts/security/lint_security_definer_dynamic_sql.sh
+
+-> bash -n scripts/security/lint_sql_injection.sh
+
+-> bash -n scripts/security/openbao_bootstrap.sh
+
+-> bash -n scripts/security/openbao_smoke_test.sh
+
+-> bash -n scripts/security/scan_secrets.sh
+
+-> bash -n scripts/security/verify_ddl_allowlist_governance.sh
+
+==> Required security scripts present
+
+==> Run security lints
+
+-> scripts/security/lint_sql_injection.sh
+==> Checking SECURITY DEFINER function hardening (search_path) in migrations
+✅ SECURITY DEFINER hardening looks OK
+
+-> scripts/security/lint_privilege_grants.sh
+==> Checking for privilege regressions in migrations
+✅ No obvious CREATE-grants regression detected
+
+-> scripts/security/lint_core_boundary.sh
+Core boundary lint passed. Evidence: /home/mwiza/workspaces/Symphony/evidence/phase0/core_boundary.json
+
+-> scripts/security/scan_secrets.sh
+Secrets scan passed. Evidence: /home/mwiza/workspaces/Symphony/evidence/phase0/security_secrets_scan.json
+
+-> scripts/security/dotnet_dependency_audit.sh
+Dependency audit passed. Evidence: /home/mwiza/workspaces/Symphony/evidence/phase0/security_dotnet_deps_audit.json
+
+-> scripts/security/lint_secure_config.sh
+Secure config lint passed. Evidence: /home/mwiza/workspaces/Symphony/evidence/phase0/security_secure_config_lint.json
+
+-> scripts/security/lint_insecure_patterns.sh
+Insecure pattern lint passed. Evidence: /home/mwiza/workspaces/Symphony/evidence/phase0/security_insecure_patterns.json
+
+-> scripts/security/lint_ddl_lock_risk.sh
+pass
+Lock-risk lint passed. Evidence: /home/mwiza/workspaces/Symphony/evidence/phase0/ddl_lock_risk.json and /home/mwiza/workspaces/Symphony/evidence/phase0/ddl_blocking_policy.json
+
+-> scripts/security/lint_security_definer_dynamic_sql.sh
+SECURITY DEFINER dynamic SQL lint passed. Evidence: /home/mwiza/workspaces/Symphony/evidence/phase0/security_definer_dynamic_sql.json
+
+-> scripts/security/verify_ddl_allowlist_governance.sh
+DDL allowlist governance OK. Evidence: /home/mwiza/workspaces/Symphony/evidence/phase0/ddl_allowlist_governance.json
+
+✅ Fast security checks passed
+
+-> scripts/security/openbao_bootstrap.sh
+[+] Running 1/1
+ ✔ Container symphony-openbao  Running                                                                 0.0s
+Error enabling: Error making API request.
+
+URL: POST http://127.0.0.1:8200/v1/sys/mounts/kv
+Code: 400. Errors:
+
+* path is already in use at kv/
+Error enabling approle auth: Error making API request.
+
+URL: POST http://127.0.0.1:8200/v1/sys/auth/approle
+Code: 400. Errors:
+
+* path is already in use at approle/
+Successfully copied 2.05kB to symphony-openbao:/tmp/policy.hcl
+Success! Uploaded policy: symphony-read
+Success! Data written to: auth/approle/role/symphony-app
+==== Secret Path ====
+kv/data/allowed/test
+
+======= Metadata =======
+Key                Value
+---                -----
+created_time       2026-02-06T16:01:11.946895554Z
+custom_metadata    <nil>
+deletion_time      n/a
+destroyed          false
+version            5
+===== Secret Path =====
+kv/data/forbidden/test
+
+======= Metadata =======
+Key                Value
+---                -----
+created_time       2026-02-06T16:01:12.232047627Z
+custom_metadata    <nil>
+deletion_time      n/a
+destroyed          false
+version            5
+OpenBao bootstrap complete. role_id and secret_id saved to /tmp/symphony_openbao.
+
+-> scripts/security/openbao_smoke_test.sh
+OpenBao smoke test passed. Evidence: /home/mwiza/workspaces/Symphony/evidence/phase0/openbao_smoke.json
+
+-> scripts/audit/run_invariants_fast_checks.sh
+==> Fast invariants checks (no DB)
+
+==> Shell syntax checks
+
+-> bash -n scripts/audit/enforce_change_rule.sh
+
+-> bash -n scripts/audit/enforce_invariant_promotion.sh
+
+-> bash -n scripts/audit/new_invariant.sh
+
+-> bash -n scripts/audit/record_invariants_exception.sh
+
+-> bash -n scripts/audit/verify_exception_template.sh
+
+-> bash -n scripts/audit/verify_invariants_local.sh
+
+==> Python syntax checks
+
+-> python3 -m py_compile scripts/audit/detect_structural_changes.py
+
+-> python3 -m py_compile scripts/audit/detect_structural_sql_changes.py
+
+-> python3 -m py_compile scripts/audit/auto_create_exception_from_detect.py
+
+-> python3 -m py_compile scripts/audit/generate_invariants_quick.py
+
+-> python3 -m py_compile scripts/audit/validate_invariants_manifest.py
+
+-> python3 -m py_compile scripts/audit/check_docs_match_manifest.py
+
+==> Detector unit tests
+
+-> python3 -m unittest -q scripts.audit.tests.test_detect_structural_changes
+----------------------------------------------------------------------
+Ran 4 tests in 0.190s
+
+OK
+
+==> Manifest validation
+
+-> python3 scripts/audit/validate_invariants_manifest.py
+OK: Manifest valid (66 entries).
+
+==> Docs ↔ Manifest consistency
+
+-> python3 scripts/audit/check_docs_match_manifest.py
+OK: Docs match manifest (coverage ON).
+
+==> Doc alignment (core language)
+
+-> scripts/audit/verify_doc_alignment.sh
+Doc alignment verification OK. Evidence: /home/mwiza/workspaces/Symphony/evidence/phase0/doc_alignment.json
+
+==> Three-Pillar model doc verification
+
+-> scripts/audit/verify_three_pillars_doc.sh
+Three‑Pillar doc verification OK. Evidence: /home/mwiza/workspaces/Symphony/evidence/phase0/three_pillars_doc.json
+
+==> Control-plane drift verification
+
+-> scripts/audit/verify_control_planes_drift.sh
+Control planes drift check passed. Evidence: /home/mwiza/workspaces/Symphony/evidence/phase0/control_planes_drift.json
+
+==> CI toolchain verification
+   (skipping CI toolchain check; SYMPHONY_SKIP_TOOLCHAIN_CHECK=1)
+
+==> YAML conventions lint
+
+-> scripts/audit/lint_yaml_conventions.sh
+YAML conventions lint passed.
+YAML conventions lint passed. Evidence: /home/mwiza/workspaces/Symphony/evidence/phase0/yaml_conventions_lint.json
+
+==> No-tx docs verification
+
+-> scripts/audit/verify_no_tx_docs.sh
+No-tx docs verification OK. Evidence: /home/mwiza/workspaces/Symphony/evidence/phase0/no_tx_docs.json
+
+==> Task evidence contract (definitions)
+
+-> scripts/audit/verify_task_evidence_contract.sh
+Task evidence contract OK
+
+==> Phase-0 contract validation
+
+-> bash scripts/audit/verify_phase0_contract.sh
+Phase-0 contract validation passed.
+
+==> Phase-0 contract evidence status
+   (skipping contract evidence status; SYMPHONY_SKIP_CONTRACT_EVIDENCE_STATUS=1)
+
+==> Compliance manifest verification
+
+-> bash scripts/audit/verify_compliance_manifest.sh
+Compliance manifest verification OK. Evidence: /home/mwiza/workspaces/Symphony/evidence/phase0/compliance_manifest_verify.json
+
+==> SQLSTATE map drift check
+
+-> bash scripts/audit/check_sqlstate_map_drift.sh
+SQLSTATE map drift check passed.
+
+==> Baseline change governance
+
+-> bash scripts/audit/verify_baseline_change_governance.sh
+Baseline governance check passed. Evidence: /home/mwiza/workspaces/Symphony/evidence/phase0/baseline_governance.json
+
+==> Rebaseline strategy (day-zero baseline)
+
+-> bash scripts/audit/verify_rebaseline_strategy.sh
+Rebaseline strategy verification passed.
+
+==> Phase-0 implementation plan check
+
+-> bash scripts/audit/verify_phase0_impl_plan.sh
+Phase-0 implementation plan check passed. Evidence: /home/mwiza/workspaces/Symphony/evidence/phase0/phase0_impl_plan.json
+
+==> Proxy resolution invariant (roadmap declaration)
+
+-> bash scripts/audit/verify_proxy_resolution_invariant.sh
+Proxy resolution invariant verification OK. Evidence: /home/mwiza/workspaces/Symphony/evidence/phase0/proxy_resolution_invariant.json
+
+==> QUICK regeneration drift check
+
+-> scripts/audit/generate_invariants_quick
+
+-> git diff --exit-code docs/invariants/INVARIANTS_QUICK.md
+
+==> Exception template validation (optional)
+
+-> scripts/audit/verify_exception_template.sh
+✅ Exception template validation passed.
+
+==> Emit roadmap evidence (fail-closed under DB exhaustion)
+
+✅ Fast invariants checks PASSED.
+
+-> scripts/audit/validate_evidence_schema.sh
+PASS
+Evidence schema validation passed. Evidence: /home/mwiza/workspaces/Symphony/evidence/phase0/evidence_validation.json
+
+-> bash scripts/audit/verify_phase0_contract.sh
+Phase-0 contract validation passed.
+
+-> bash scripts/audit/verify_phase0_contract_evidence_status.sh
+❌ Phase-0 contract evidence status check failed
+ - TSK-P0-061:missing_evidence:INT-G20:evidence/phase0/ci_order.json
+ - TSK-P0-067:missing_evidence:INT-G20:evidence/phase0/ci_order.json
+error: failed to push some refs to 'https://github.com/codemwizard/Symphony.git'

@@ -1,0 +1,108 @@
+version: 1
+
+# Table conventions are enforced only for explicitly registered tables (AuditAnswers Option A).
+# This avoids "guesswork enforcement" and keeps the verifier auditor-legible.
+#
+# Notes:
+# - Phase-0 is expand-first. Conventions may require follow-up migrations to bring legacy tables into spec.
+# - Types are expressed using Postgres names; the verifier maps common aliases (e.g., timestamptz).
+
+tables:
+  public.payment_outbox_pending:
+    class: ledger_txn
+    required_columns:
+      - name: instruction_id
+        type: text
+        not_null: true
+      - name: participant_id
+        type: text
+        not_null: true
+      - name: idempotency_key
+        type: text
+        not_null: true
+      - name: created_at
+        type: timestamptz
+        not_null: true
+    required_uniques:
+      - columns: [instruction_id, idempotency_key]
+
+  public.payment_outbox_attempts:
+    class: ledger_txn
+    required_columns:
+      - name: instruction_id
+        type: text
+        not_null: true
+      - name: participant_id
+        type: text
+        not_null: true
+      - name: idempotency_key
+        type: text
+        not_null: true
+      - name: created_at
+        type: timestamptz
+        not_null: true
+    required_indexes:
+      - columns: [instruction_id, idempotency_key]
+        unique: false
+
+  public.ingress_attestations:
+    class: ledger_txn
+    required_columns:
+      - name: instruction_id
+        type: text
+        not_null: true
+      - name: received_at
+        type: timestamptz
+        not_null: true
+
+  public.revoked_client_certs:
+    class: ledger_txn
+    required_columns:
+      - name: revoked_at
+        type: timestamptz
+        not_null: true
+
+  public.revoked_tokens:
+    class: ledger_txn
+    required_columns:
+      - name: revoked_at
+        type: timestamptz
+        not_null: true
+
+  public.billing_usage_events:
+    class: ledger_txn
+    required_columns:
+      - name: occurred_at
+        type: timestamptz
+        not_null: true
+      # Phase-0 convention: all ledger tables should also have an ingestion-time stamp.
+      - name: created_at
+        type: timestamptz
+        not_null: false
+    required_indexes:
+      - columns: [correlation_id]
+        unique: false
+
+  public.external_proofs:
+    class: ledger_txn
+    required_columns:
+      - name: created_at
+        type: timestamptz
+        not_null: true
+    required_indexes:
+      - columns: [attestation_id]
+        unique: false
+
+  public.evidence_packs:
+    class: ledger_txn
+    required_columns:
+      - name: created_at
+        type: timestamptz
+        not_null: true
+
+  public.evidence_pack_items:
+    class: ledger_txn
+    required_columns:
+      - name: created_at
+        type: timestamptz
+        not_null: true

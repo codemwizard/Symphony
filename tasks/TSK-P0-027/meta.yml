@@ -1,0 +1,34 @@
+phase: '0'
+task_id: TSK-P0-027
+title: Phase-0 doc drift cleanup (.NET-only core)
+owner_role: ARCHITECT
+status: completed
+depends_on: []
+touches:
+- docs/overview/architecture.md
+- docs/decisions/ADR-0001-repo-structure.md
+- tasks/TSK-P0-027/meta.yml
+invariants:
+- INV-038 (Architecture doc alignment)
+work:
+- Remove Node-as-core references.
+- Clarify .NET-only execution core.
+acceptance_criteria:
+- Core architecture docs have no Node-as-core references.
+verification:
+- scripts/audit/verify_doc_alignment.sh
+evidence:
+- ./evidence/phase0/doc_alignment.json
+failure_modes:
+- Evidence file missing.
+- Node references remain in core docs.
+must_read:
+- docs/invariants/INVARIANTS_MANIFEST.yml
+- scripts/db/verify_invariants.sh
+- scripts/db/ci_invariant_gate.sql
+notes: ''
+client: codex_cli
+assigned_agent: architect
+model: <UNASSIGNED>
+implementation_plan: docs/plans/phase0/TSK-P0-027/PLAN.md
+implementation_log: docs/plans/phase0/TSK-P0-027/EXEC_LOG.md

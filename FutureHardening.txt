@@ -1,0 +1,724 @@
+I’m going to do this in two passes:
+
+1. **What the “agent readiness” article is really warning about (in your context)**
+2. **A hard critique of TSK-P1-027…032 vs the *actual current repo state* in `repomix-output.xml`, then a revised implementation plan + revised task specs**
+
+---
+
+## 1) The article’s warning, translated into Symphony reality
+
+The article’s core point is: most orgs try to “add agents” on top of shaky foundations (messy data, unclear workflows, no trust, no exec path). In **Symphony**, you’re building something unusually aligned with what “agent-ready” *actually* requires:
+
+* **Trust layer exists mechanically** (invariants → verifiers → gates → evidence). That’s the opposite of “dashboard noise”.
+* You’re already oriented toward **execution with deterministic control** (outbox + retries + audit/evidence), not “insights”.
+* Your biggest risk is *not* “agent capability.” Your risk is **adding agent plumbing that weakens the deterministic enforcement funnel**, or building an “agent program” that becomes governance theater while the **pilot machine** (ingress → orchestration → evidence pack) lags.
+
+So: you’re closer than most orgs **technically**, but only if “agents” are treated as **strictly constrained tooling around your enforcement system**, not a parallel workflow.
+
+---
+
+## 2) Repo-truth critique of each task (TSK-P1-027…032)
+
+### TSK-P1-027 — Range-only Diff Parity Hardening
+
+**What’s good**
+
+* The mission is correct: parity-critical gates must not depend on staged/worktree behavior.
+* You already have a parity verifier: `scripts/audit/verify_diff_semantics_parity.sh` emits `evidence/phase1/git_diff_semantics.json`.
+
+**What’s broken / incomplete (repo-truth)**
+
+* The current verifier **does not actually enforce “no staged/worktree”**. It mostly checks that parity-critical scripts don’t contain raw `git diff` or `git merge-base`, and that they source a helper.
+* The helper **explicitly contains staged/worktree functions** (`git_changed_files_staged`, `git_write_unified_diff_worktree`, etc.). That’s not “range-only hardening”; that’s “range-only exists, but staged/worktree is still one function call away.”
+* Your parity-critical list *includes* `scripts/audit/preflight_structural_staged.sh`. The name alone signals staged semantics are still in the “critical” orbit.
+
+**Bottom line**
+TSK-P1-027 is correctly scoped, but the repo currently implements only a **partial surrogate check** (“use the helper”) rather than the actual invariant (“staged/worktree is impossible in parity-critical flows”).
+
+---
+
+### TSK-P1-028 / 029 / 030 — MCP role bootstraps (Architect / Implementer / Policy Guardian)
+
+**What’s good**
+
+* You already have a **real conformance verifier**: `scripts/audit/verify_agent_conformance.sh`.
+* Evidence is already split per-role:
+
+  * `evidence/phase1/agent_conformance_architect.json`
+  * `evidence/phase1/agent_conformance_implementer.json`
+  * `evidence/phase1/agent_conformance_policy_guardian.json`
+  * plus a mapping file `evidence/phase1/agent_role_mapping.json`
+* The verifier is wired around the actual policy docs under `docs/operations/*` (not just a plan doc).
+
+**What’s weak / risky**
+
+* Right now this looks **doc-driven** (markdown as “spec”). That’s fine for humans, but agents fail in the gaps between prose and enforcement.
+* If your goal is “policy-constrained agents,” you need **machine-validated output schemas** (JSON schema), not just “outputs must include X”.
+* There’s no clear “fail-closed integration boundary” that prevents an MCP configuration from silently expanding capability (ex: enabling fetch/web access when you meant repo-only).
+
+**Bottom line**
+These tasks are directionally correct and partially implemented, but they need to “graduate” from prose conformance into **hard schema + hard wiring**.
+
+---
+
+### TSK-P1-031 — Pinned MCP Configuration Baseline (mcp.json)
+
+**Repo-truth: `mcp.json` already exists.**
+So the task being “planned” is already stale.
+
+**What’s wrong with the current `mcp.json`**
+
+* It contains an **absolute path** (`/home/mwiza/workspace/Symphony`) for the filesystem/git servers. That’s not portable, not reproducible, and will break in CI/other dev machines.
+* It uses `npx -y @modelcontextprotocol/...` which means **unpinned versions** (supply-chain drift). That’s the opposite of deterministic posture.
+* It includes `fetch` and `time` servers. Those may be fine, but they’re also a **capability expansion** path (fetch = exfil/internet access risk) that must be explicitly justified + constrained.
+
+**Bottom line**
+TSK-P1-031 should become: “make MCP config deterministic, portable, least-privilege, pinned, and enforceable by a gate.”
+
+---
+
+### TSK-P1-032 — MCP Connectivity and Policy Validation Gate
+
+**Repo-truth**
+
+* The plan/meta exist, but I do **not** see an implemented gate script in the snapshot that actually performs deterministic connectivity checks and emits the promised runtime evidence artifact.
+
+**Bottom line**
+This is the missing piece: without it, `mcp.json` is just a config file and your “agent governance” is mostly aspirational.
+
+---
+
+## 3) Gap analysis vs Phase-1 implementation requirements
+
+Phase-1 (per your Phase-1 direction) is supposed to deliver a pilot-ready operational machine: **ingress determinism, orchestration determinism, immutable evidence, escrow logic, regulator artifacts.**
+Your TSK-P1-027…032 cluster is **governance/tooling**, not product surface.
+
+That’s not “bad,” but it becomes a trap if you over-invest here while the pilot machine lags. The article’s “95% of PoCs fail” point lands like this for you:
+
+* If your first “agentic” milestone is MCP bootstraps, you’ll produce a lot of governance motion…
+* …without moving the **actual throughput** of: ingest → dispatch → prove → resolve.
+
+So the “agent readiness” conclusion for Symphony is:
+
+✅ You’re unusually well-positioned technically **because** you already build trust via deterministic evidence.
+❌ You’re at risk if MCP work becomes an “initiative” rather than a **bounded toolchain layer** that accelerates the real Phase-1 deliverables.
+
+---
+
+# Revised full implementation plan (with concrete changes)
+
+## Workstream A — Make “range-only parity” mechanically true (TSK-P1-027)
+
+1. **Split diff helpers into two files**
+
+   * `scripts/lib/git_diff_range_only.sh`
+     Contains only:
+
+     * `git_resolve_base_ref`, `git_merge_base`, `git_changed_files_range`, `git_write_unified_diff_range`
+     * **No staged/worktree functions at all**
+   * `scripts/lib/git_diff_dev.sh` *(optional)*
+     Can contain staged/worktree helpers, but must never be sourced by parity-critical scripts.
+
+2. **Rename / refactor parity-critical staged scripts**
+
+   * Replace `preflight_structural_staged.sh` with a range-only equivalent (or make it explicitly non-parity-critical and remove from critical list).
+   * Ensure parity-critical scripts source `git_diff_range_only.sh` only.
+
+3. **Upgrade `verify_diff_semantics_parity.sh`**
+   It must fail if any parity-critical script:
+
+   * sources `git_diff_dev.sh` (or legacy helper)
+   * calls `git_changed_files_staged`, `git_write_unified_diff_staged`, or any `--cached` / worktree functions
+   * contains “staged/worktree fallback” wording (yes, grep the intent too — you’re trying to prevent regressions)
+
+4. **Prove pre-CI and CI equivalence**
+
+   * Ensure `scripts/dev/pre_ci.sh` always resolves `BASE_REF` deterministically and never uses staged/worktree for gate decisions.
+   * Evidence should include:
+
+     * base_ref/head_ref/merge_base
+     * list of changed files used for gating
+     * hash of changed-files list (so “equivalent” is provable)
+
+---
+
+## Workstream B — Make agent governance enforceable, not prose (TSK-P1-028/029/030)
+
+1. **Define JSON schemas for role outputs**
+
+   * `docs/operations/agent_output_architect.schema.json`
+   * `docs/operations/agent_output_implementer.schema.json`
+   * `docs/operations/agent_output_policy_guardian.schema.json`
+2. Update `verify_agent_conformance.sh` to validate:
+
+   * docs present + required sections present (keep this)
+   * **and** example outputs (or templates) validate against schemas
+3. Add a “capability boundary” policy that is machine-checkable:
+
+   * what servers are allowed
+   * what roots/scopes are allowed
+   * what network access is allowed (ideally none by default)
+
+---
+
+## Workstream C — Make MCP config deterministic + enforce it (TSK-P1-031/032)
+
+1. Fix `mcp.json`
+
+   * Replace absolute repo root with something portable (repo-relative or env-injected root).
+   * Pin package versions (no floating `npx -y` without version pin).
+   * Remove `fetch` unless explicitly justified; or restrict it via allowlist policy that you can validate.
+2. Implement `scripts/audit/verify_mcp_policy.sh`
+
+   * Valid JSON
+   * Approved server allowlist only
+   * Roots are repo-scoped, not user-home scoped
+   * No network-capable servers unless explicitly approved
+   * Emit `evidence/phase1/mcp_policy.json`
+3. Implement `scripts/audit/verify_mcp_connectivity.sh`
+
+   * Start each configured MCP server in a deterministic “handshake only” mode (or minimal request)
+   * Record:
+
+     * server name
+     * resolved command + version
+     * PASS/FAIL + error
+   * Emit `evidence/phase1/orchestration_runtime.json`
+4. Wire both scripts into the Phase-1 gate funnel when `RUN_PHASE1_GATES=1`.
+
+---
+
+# Revised task specs (updated Tasks, reflecting repo-truth + fixes)
+
+## 1) Revised TSK-P1-027 — Range-only Diff Parity Hardening
+
+* **Status:** in_progress (repo already contains verifier + helper; needs hardening)
+* **Changes from your original assessment:**
+
+  * Stop treating “use helper” as equivalent to “range-only enforced”.
+  * Make staged/worktree impossible in parity-critical flows by construction.
+
+**Scope/work**
+
+* Create `scripts/lib/git_diff_range_only.sh` and migrate parity-critical scripts to it.
+* Move staged/worktree helpers into `scripts/lib/git_diff_dev.sh` (or delete if unnecessary).
+* Refactor/replace `preflight_structural_staged.sh` so parity-critical flow is range-only.
+* Upgrade `verify_diff_semantics_parity.sh` to detect:
+
+  * sourcing forbidden helper
+  * calling staged/worktree helper functions
+  * `--cached` and worktree diff usage
+* Add evidence fields to prove gating decisions were based on range-only changed-file lists.
+
+**Acceptance**
+
+* No parity-critical scripts can access staged/worktree helpers (by file separation + verifier).
+* `verify_diff_semantics_parity` fails if staged/worktree helper usage appears anywhere in parity-critical scripts.
+* pre-CI and CI changed-file sets are identical for parity-critical gates (provable via evidence hash).
+
+**Evidence**
+
+* `evidence/phase1/git_diff_semantics.json` (extended with: forbidden_calls_found, helper_files_sourced, changed_files_hash)
+
+---
+
+## 2) Revised TSK-P1-028 — MCP Architect Agent Bootstrap (Policy-Constrained)
+
+* **Change:** lock this to **machine-validated output schema**, not prose.
+
+**Scope/work**
+
+* Add architect output JSON schema.
+* Update docs to include a canonical example output that validates.
+* Extend `verify_agent_conformance.sh` to validate the example against schema.
+
+**Acceptance**
+
+* Architect role remains advisory-only.
+* Architect output schema validation is enforced in CI (fail-closed).
+
+**Evidence**
+
+* `evidence/phase1/agent_conformance_architect.json`
+
+---
+
+## 3) Revised TSK-P1-029 — MCP Implementer Agent Bootstrap (Policy-Constrained)
+
+**Scope/work**
+
+* Add implementer output JSON schema.
+* Define explicit “stop conditions” as structured fields (not prose).
+* Enforce schema validation in `verify_agent_conformance.sh`.
+
+**Acceptance**
+
+* Implementer outputs are mechanically schema-valid.
+* Implementer policy includes explicit forbidden ops and stop conditions as enumerated values.
+
+**Evidence**
+
+* `evidence/phase1/agent_conformance_implementer.json`
+* `evidence/phase1/approval_metadata.json` (only if approvals are part of the enforced workflow; otherwise don’t pretend)
+
+---
+
+## 4) Revised TSK-P1-030 — Requirements & Policy Integrity Agent (Third Role)
+
+**Scope/work**
+
+* Add policy guardian output JSON schema including:
+
+  * wording-risk flags
+  * loophole checklist results
+  * constraint→invariant→gate→verifier→evidence bindings
+
+**Acceptance**
+
+* Guardian outputs are schema-valid and include loophole risk markers.
+* Still advisory-only (no execution authority).
+
+**Evidence**
+
+* `evidence/phase1/agent_conformance_policy_guardian.json`
+
+---
+
+## 5) Revised TSK-P1-031 — Pinned MCP Configuration Baseline (mcp.json)
+
+* **Change:** treat portability + pinning as non-negotiable, because otherwise MCP becomes supply-chain drift.
+
+**Scope/work**
+
+* Make repo root portable (no `/home/...` paths).
+* Pin MCP server package versions.
+* Define an allowlist policy document (or embed allowlist in verifier).
+* Add `scripts/audit/verify_mcp_policy.sh` and wire it into Phase-1 gates.
+
+**Acceptance**
+
+* `mcp.json` is portable, deterministic, pinned.
+* Policy verifier fails on:
+
+  * unpinned packages
+  * absolute roots
+  * unapproved servers
+  * network-capable servers without explicit approval
+
+**Evidence**
+
+* `evidence/phase1/mcp_policy.json`
+
+---
+
+## 6) Revised TSK-P1-032 — MCP Connectivity and Policy Validation Gate
+
+* **Change:** this must produce real runtime evidence, or it’s theater.
+
+**Scope/work**
+
+* Implement `scripts/audit/verify_mcp_connectivity.sh`:
+
+  * deterministic handshake check per configured server
+  * version capture
+  * PASS/FAIL + remediation tags
+* Run `verify_mcp_policy.sh` first, then connectivity.
+* Wire into `RUN_PHASE1_GATES=1` funnel.
+
+**Acceptance**
+
+* Connectivity checks executed + logged deterministically.
+* Blocked servers get remediation owner + reason code.
+* Evidence emitted reliably in both pre-CI and CI.
+
+**Evidence**
+
+* `evidence/phase1/orchestration_runtime.json`
+
+---
+
+## The ruthless mentor takeaway
+
+Your intent is solid. But right now the biggest technical flaw is **TSK-P1-027 claiming “range-only” while the helper still exposes staged/worktree and the verifier doesn’t detect usage.** That’s exactly the kind of “looks compliant, isn’t” hole that will bite you later.
+
+Second: MCP work is only valuable if it remains a **thin, constrained acceleration layer** over your deterministic enforcement system. If MCP becomes a parallel initiative, you will recreate the article’s failure mode: lots of motion, no execution.
+
+If you want, I can also write the exact acceptance-test style checks you should add to `verify_diff_semantics_parity.sh` (regex patterns + callsite rules) so it’s extremely hard for staged/worktree semantics to sneak back in.
+
+
+Yep. Below is a **drop-in acceptance test suite** for the “range-only diff parity hardening” work (TSK-P1-027), plus the **verifier assertions** that should fail CI if staged/worktree semantics creep back in.
+
+This is designed to prove the real invariant:
+
+> **Parity-critical gates must derive their changed-file set strictly from `merge-base(default_branch, HEAD)..HEAD` and must be immune to staged/worktree state.**
+
+---
+
+# 1) Add a dedicated acceptance test runner
+
+Create:
+
+`scripts/audit/test_diff_semantics_parity.sh`
+
+```bash
+#!/usr/bin/env bash
+set -euo pipefail
+
+# Acceptance test suite for TSK-P1-027:
+# proves parity-critical "changed files" decisions are range-only and do NOT depend on staged/worktree.
+
+ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
+LIB_RANGE="${ROOT_DIR}/scripts/lib/git_diff_range_only.sh"
+
+if [[ ! -f "$LIB_RANGE" ]]; then
+  echo "ERROR: missing $LIB_RANGE (range-only diff lib must exist)." >&2
+  exit 1
+fi
+
+# shellcheck source=/dev/null
+source "$LIB_RANGE"
+
+tmpdir="$(mktemp -d)"
+cleanup() { rm -rf "$tmpdir"; }
+trap cleanup EXIT
+
+die() { echo "FAIL: $*" >&2; exit 1; }
+
+assert_eq() {
+  local a="$1" b="$2" msg="${3:-}"
+  [[ "$a" == "$b" ]] || die "assert_eq failed: $msg
+  expected: [$b]
+  got:      [$a]"
+}
+
+assert_contains() {
+  local hay="$1" needle="$2" msg="${3:-}"
+  grep -Fq -- "$needle" <<<"$hay" || die "assert_contains failed: $msg (missing [$needle])"
+}
+
+assert_not_contains() {
+  local hay="$1" needle="$2" msg="${3:-}"
+  grep -Fq -- "$needle" <<<"$hay" && die "assert_not_contains failed: $msg (found [$needle])"
+}
+
+# --- helpers to build a deterministic git fixture repo ---
+init_repo() {
+  local repo="$1"
+  mkdir -p "$repo"
+  (cd "$repo" && git init -q)
+  (cd "$repo" && git config user.email "ci@example.com")
+  (cd "$repo" && git config user.name "CI")
+  (cd "$repo" && mkdir -p scripts)
+}
+
+commit_file() {
+  local repo="$1" path="$2" content="$3" msg="$4"
+  (cd "$repo" && mkdir -p "$(dirname "$path")")
+  (cd "$repo" && printf "%s" "$content" > "$path")
+  (cd "$repo" && git add "$path")
+  (cd "$repo" && git commit -q -m "$msg")
+}
+
+commit_rm() {
+  local repo="$1" path="$2" msg="$3"
+  (cd "$repo" && git rm -q "$path")
+  (cd "$repo" && git commit -q -m "$msg")
+}
+
+commit_rename() {
+  local repo="$1" from="$2" to="$3" msg="$4"
+  (cd "$repo" && mkdir -p "$(dirname "$to")")
+  (cd "$repo" && git mv -q "$from" "$to")
+  (cd "$repo" && git commit -q -m "$msg")
+}
+
+stage_only_change() {
+  local repo="$1" path="$2" content="$3"
+  (cd "$repo" && printf "%s" "$content" > "$path")
+  (cd "$repo" && git add "$path")
+}
+
+worktree_only_change() {
+  local repo="$1" path="$2" content="$3"
+  (cd "$repo" && printf "%s" "$content" > "$path")
+}
+
+# Produce changed files from canonical range-only diff.
+# This must be the ONLY thing gates use in parity-critical flows.
+changed_files_range_only() {
+  local repo="$1" base_ref="$2"
+  (cd "$repo" && git_changed_files_range_only "$base_ref" "HEAD")
+}
+
+# Resolve a stable base ref for fixtures: use branch name.
+# In real repo you'd use origin/<default_branch> and merge-base.
+fixture_base_ref() {
+  local repo="$1"
+  (cd "$repo" && echo "main")
+}
+
+run_case() {
+  local name="$1"
+  shift
+  echo "== CASE: $name"
+  "$@"
+  echo "OK: $name"
+  echo
+}
+
+# -----------------------
+# TEST CASES
+# -----------------------
+
+case_01_clean_range_detects_committed_changes() {
+  local repo="${tmpdir}/r1"
+  init_repo "$repo"
+
+  # main: initial
+  (cd "$repo" && git checkout -q -b main)
+  commit_file "$repo" "a.txt" "one" "init"
+
+  # feature commit
+  commit_file "$repo" "b.txt" "two" "add b"
+
+  local base_ref
+  base_ref="$(fixture_base_ref "$repo")"
+
+  local changed
+  changed="$(changed_files_range_only "$repo" "$base_ref")"
+
+  assert_contains "$changed" "b.txt" "range-only must include committed file"
+  assert_not_contains "$changed" "a.txt" "should not include unchanged file"
+}
+
+case_02_stage_only_must_not_affect_changed_files() {
+  local repo="${tmpdir}/r2"
+  init_repo "$repo"
+  (cd "$repo" && git checkout -q -b main)
+  commit_file "$repo" "a.txt" "one" "init"
+  commit_file "$repo" "b.txt" "two" "add b"
+
+  local base_ref
+  base_ref="$(fixture_base_ref "$repo")"
+
+  # baseline changed set
+  local baseline
+  baseline="$(changed_files_range_only "$repo" "$base_ref")"
+
+  # staged-only change to c.txt (not committed)
+  stage_only_change "$repo" "c.txt" "staged"
+
+  local after
+  after="$(changed_files_range_only "$repo" "$base_ref")"
+
+  assert_eq "$after" "$baseline" "staged-only must not alter range-only changed set"
+}
+
+case_03_worktree_only_must_not_affect_changed_files() {
+  local repo="${tmpdir}/r3"
+  init_repo "$repo"
+  (cd "$repo" && git checkout -q -b main)
+  commit_file "$repo" "a.txt" "one" "init"
+  commit_file "$repo" "b.txt" "two" "add b"
+
+  local base_ref
+  base_ref="$(fixture_base_ref "$repo")"
+
+  local baseline
+  baseline="$(changed_files_range_only "$repo" "$base_ref")"
+
+  # worktree-only change to d.txt (not staged/committed)
+  worktree_only_change "$repo" "d.txt" "dirty"
+
+  local after
+  after="$(changed_files_range_only "$repo" "$base_ref")"
+
+  assert_eq "$after" "$baseline" "worktree-only must not alter range-only changed set"
+}
+
+case_04_rename_is_reported_correctly() {
+  local repo="${tmpdir}/r4"
+  init_repo "$repo"
+  (cd "$repo" && git checkout -q -b main)
+  commit_file "$repo" "old.txt" "one" "init"
+  commit_rename "$repo" "old.txt" "new.txt" "rename"
+
+  local base_ref
+  base_ref="$(fixture_base_ref "$repo")"
+
+  local changed
+  changed="$(changed_files_range_only "$repo" "$base_ref")"
+
+  # Depending on your chosen `git diff --name-only` flags, rename may show new.txt only or both.
+  # Pick one policy and enforce it. Recommended: include new path (new.txt) at minimum.
+  assert_contains "$changed" "new.txt" "rename must include new path"
+}
+
+case_05_delete_is_reported() {
+  local repo="${tmpdir}/r5"
+  init_repo "$repo"
+  (cd "$repo" && git checkout -q -b main)
+  commit_file "$repo" "gone.txt" "x" "init"
+  commit_rm "$repo" "gone.txt" "delete"
+
+  local base_ref
+  base_ref="$(fixture_base_ref "$repo")"
+
+  local changed
+  changed="$(changed_files_range_only "$repo" "$base_ref")"
+
+  assert_contains "$changed" "gone.txt" "delete must appear in changed set"
+}
+
+case_06_dirty_index_and_worktree_still_ignored() {
+  local repo="${tmpdir}/r6"
+  init_repo "$repo"
+  (cd "$repo" && git checkout -q -b main)
+  commit_file "$repo" "a.txt" "one" "init"
+  commit_file "$repo" "b.txt" "two" "add b"
+
+  local base_ref
+  base_ref="$(fixture_base_ref "$repo")"
+  local baseline
+  baseline="$(changed_files_range_only "$repo" "$base_ref")"
+
+  # Both staged and worktree changes
+  stage_only_change "$repo" "s.txt" "staged"
+  worktree_only_change "$repo" "w.txt" "dirty"
+
+  local after
+  after="$(changed_files_range_only "$repo" "$base_ref")"
+
+  assert_eq "$after" "$baseline" "staged+worktree noise must not alter range-only changed set"
+}
+
+main() {
+  # Sanity: ensure lib doesn't accidentally expose staged/worktree helpers.
+  # This is a hard “construction” rule—range-only lib must not include those symbols.
+  if grep -Eq 'git_(changed_files|write_unified_diff)_(staged|worktree)\b' "$LIB_RANGE"; then
+    die "Range-only lib contains staged/worktree helpers. Split helpers into dev-only lib."
+  fi
+
+  run_case "01 committed changes detected" case_01_clean_range_detects_committed_changes
+  run_case "02 staged-only ignored" case_02_stage_only_must_not_affect_changed_files
+  run_case "03 worktree-only ignored" case_03_worktree_only_must_not_affect_changed_files
+  run_case "04 rename handled" case_04_rename_is_reported_correctly
+  run_case "05 delete handled" case_05_delete_is_reported
+  run_case "06 dirty index+worktree ignored" case_06_dirty_index_and_worktree_still_ignored
+
+  echo "ALL DIFF PARITY ACCEPTANCE TESTS PASSED"
+}
+
+main "$@"
+```
+
+### What this gives you
+
+* It creates isolated fixture repos and proves **committed-only** diffs are used.
+* It proves **staged/worktree noise cannot influence** the changed-file list.
+* It enforces a construction rule: the range-only library **must not** include staged/worktree helper functions.
+
+---
+
+# 2) Add the minimal range-only library API (if not already done)
+
+Your test suite expects `scripts/lib/git_diff_range_only.sh` to expose:
+
+* `git_changed_files_range_only <base_ref> <head_ref>`
+
+Here’s a minimal version (adjust naming to match your conventions):
+
+`scripts/lib/git_diff_range_only.sh`
+
+```bash
+#!/usr/bin/env bash
+set -euo pipefail
+
+# Range-only diff helpers for parity-critical workflows.
+# HARD RULE: no staged/worktree semantics in this file.
+
+git_default_branch_ref() {
+  # Prefer explicit env override; fall back to main.
+  echo "${DEFAULT_BRANCH_REF:-main}"
+}
+
+git_merge_base() {
+  local base_ref="$1" head_ref="$2"
+  git merge-base "$base_ref" "$head_ref"
+}
+
+git_changed_files_range_only() {
+  local base_ref="$1" head_ref="$2"
+  local mb
+  mb="$(git_merge_base "$base_ref" "$head_ref")"
+  # Use committed-history only. No --staged/--cached. No worktree reads.
+  git diff --name-only --diff-filter=ACMRTD "$mb..$head_ref" | LC_ALL=C sort -u
+}
+
+git_write_unified_diff_range_only() {
+  local base_ref="$1" head_ref="$2" out="$3"
+  local mb
+  mb="$(git_merge_base "$base_ref" "$head_ref")"
+  git diff --no-color "$mb..$head_ref" > "$out"
+}
+```
+
+---
+
+# 3) Upgrade the parity verifier to enforce *semantic bans* (not just “use helper”)
+
+In `scripts/audit/verify_diff_semantics_parity.sh`, add a **hard banned pattern check** over parity-critical scripts.
+
+Minimum set of “banned in parity-critical scripts” patterns:
+
+* `--staged` / `--cached`
+* `git status`
+* `git diff` (unless it’s inside the range-only library; better: allow only sourcing the lib)
+* `git ls-files -m`
+* `git diff-files`
+* any function names you quarantine into `git_diff_dev.sh`
+
+Example snippet to add:
+
+```bash
+banned_regex='(--staged|--cached|\bgit status\b|\bgit ls-files -m\b|\bgit diff-files\b|\bgit_changed_files_(staged|worktree)\b|\bgit_write_unified_diff_(staged|worktree)\b)'
+
+# For each parity-critical script file:
+if grep -REn "$banned_regex" "${PARITY_CRITICAL_FILES[@]}"; then
+  echo "ERROR: banned staged/worktree diff semantics found in parity-critical scripts"
+  exit 1
+fi
+```
+
+Then ensure the verifier **runs the acceptance suite**:
+
+```bash
+bash scripts/audit/test_diff_semantics_parity.sh
+```
+
+That single line turns your acceptance tests into a hard gate.
+
+---
+
+# 4) Wire into pre-CI (so parity is enforced locally)
+
+Inside your `scripts/dev/pre_ci.sh` (or the Phase-1 gate wrapper), ensure you call:
+
+```bash
+bash scripts/audit/test_diff_semantics_parity.sh
+bash scripts/audit/verify_diff_semantics_parity.sh
+```
+
+If you already have a fast checks chain, put the acceptance test suite in the parity-critical part (not optional).
+
+---
+
+# 5) Optional but highly recommended: “golden changed-file hash”
+
+To make evidence stronger (and make future disputes easy), write the changed file list and hash it into `evidence/phase1/git_diff_semantics.json`.
+
+Even if you don’t implement the JSON emission immediately, your acceptance tests already guarantee correctness.
+
+---
+
+If you want, I can also add the **rename policy** to be strictly “new-path only” (or “both old+new”) and update the acceptance test to match whichever you choose. Right now it enforces the minimum safe condition: **new path must appear**.

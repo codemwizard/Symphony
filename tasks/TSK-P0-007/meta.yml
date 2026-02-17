@@ -1,0 +1,38 @@
+phase: '0'
+task_id: TSK-P0-007
+title: Blue/Green rollback invariants and routing fallback gate
+owner_role: ARCHITECT
+status: completed
+depends_on:
+- TSK-P0-003
+touches:
+- docs/invariants/INVARIANTS_MANIFEST.yml
+- scripts/audit/verify_routing_fallback.sh
+- .github/workflows/invariants.yml
+- tasks/TSK-P0-007/meta.yml
+invariants:
+- INV-025 (Blue/Green rollback compatibility)
+- INV-026 (Routing fallback invariant)
+work:
+- Define invariants for blue/green rollback and routing fallback in manifest.
+- Implement verify_routing_fallback.sh as fail-closed placeholder until rules defined.
+- Wire to CI to ensure no silent pass.
+acceptance_criteria:
+- CI fails until routing fallback rules are defined and verified.
+- Evidence report generated under ./evidence/phase0/routing_fallback.json.
+verification:
+- scripts/audit/verify_routing_fallback.sh
+evidence:
+- ./evidence/phase0/routing_fallback.json
+failure_modes:
+- Missing fallback rules must hard-fail.
+must_read:
+- docs/invariants/INVARIANTS_MANIFEST.yml
+- scripts/db/verify_invariants.sh
+- scripts/db/ci_invariant_gate.sql
+notes: ''
+client: codex_cli
+assigned_agent: architect
+model: <UNASSIGNED>
+implementation_plan: docs/plans/phase0/TSK-P0-007/PLAN.md
+implementation_log: docs/plans/phase0/TSK-P0-007/EXEC_LOG.md

@@ -1,0 +1,49 @@
+# Canonical Task Meta Template (lower_snake_case)
+
+phase: "0"
+task_id: "TSK-P0-117"
+title: "Zambia regulatory documentation stubs (CII brief, ZDPA map, activation preconditions)"
+owner_role: "COMPLIANCE_MAPPER"
+status: "completed"   # planned | in_progress | completed
+
+depends_on:
+  - "TSK-P0-116"
+
+touches:
+  - "docs/PHASE0/ZAMBIA_CII_DESIGNATION_BRIEF.md"
+  - "docs/security/ZDPA_COMPLIANCE_MAP.md"
+  - "docs/PHASE0/REGULATORY_ACTIVATION_PRECONDITIONS.md"
+  - "docs/tasks/PHASE0_TASKS.md"
+  - "tasks/TSK-P0-117/meta.yml"
+
+invariants:
+  - "INV-BOZ-04"
+  - "INV-ZDPA-01"
+  - "INV-IPDR-02"
+
+work:
+  - "Produce Phase-0 documentation that provides auditor/regulator line-of-sight without claiming certification."
+
+acceptance_criteria:
+  - "Docs exist in canonical locations and clearly distinguish Phase-0 vs Phase-1/2 enforcement."
+  - "Docs do not contain raw PII examples; use hashes/tokens only."
+
+verification:
+  - "scripts/audit/run_invariants_fast_checks.sh"
+
+evidence: []
+
+failure_modes:
+  - "Docs over-claim compliance or omit Phase-0 boundary."
+
+must_read:
+  - "docs/operations/DOCUMENT_PLACEMENT.md"
+  - "docs/audits/TIER1_GAP_AUDIT_ADDENDUM_2026-02-07.md"
+
+implementation_plan: "docs/plans/phase0/TSK-P0-114_zambia_regulatory_invariants_roadmap/PLAN.md"
+implementation_log: "docs/plans/phase0/TSK-P0-114_zambia_regulatory_invariants_roadmap/EXEC_LOG.md"
+
+notes: ""
+client: "codex_cli"
+assigned_agent: "compliance_mapper"
+model: "gpt-5.3-codex"

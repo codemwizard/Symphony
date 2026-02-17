@@ -1,0 +1,49 @@
+# Canonical Task Meta Template (lower_snake_case)
+
+phase: "0"
+task_id: "TSK-P0-109"
+title: "Align implemented invariants with mechanical verification (plan + task cluster)"
+owner_role: "ARCHITECT"
+status: "completed"   # planned | in_progress | completed
+
+depends_on: []
+
+touches:
+  - "docs/plans/phase0/TSK-P0-109_invariant_implemented_alignment/PLAN.md"
+  - "docs/plans/phase0/TSK-P0-109_invariant_implemented_alignment/EXEC_LOG.md"
+  - "docs/plans/phase0/INDEX.md"
+
+invariants:
+  - "INV-007"
+  - "INV-011"
+  - "INV-012"
+  - "INV-013"
+
+work:
+  - "Create a Phase-0 plan and tasks to align implemented invariants with actual mechanical proof."
+
+acceptance_criteria:
+  - "Plan and EXEC_LOG exist and list all task IDs."
+
+verification:
+  - "scripts/audit/run_invariants_fast_checks.sh"
+
+evidence:
+  - "evidence/phase0/task_plans_present.json"
+
+failure_modes:
+  - "Evidence file missing"
+  - "Plan/log missing Task IDs"
+
+must_read:
+  - "docs/invariants/INVARIANTS_MANIFEST.yml"
+  - "docs/invariants/INVARIANTS_IMPLEMENTED.md"
+  - "docs/operations/TASK_CREATION_PROCESS.md"
+
+implementation_plan: "docs/plans/phase0/TSK-P0-109_invariant_implemented_alignment/PLAN.md"
+implementation_log: "docs/plans/phase0/TSK-P0-109_invariant_implemented_alignment/EXEC_LOG.md"
+
+notes: ""
+client: "codex_cli"
+assigned_agent: "architect"
+model: "gpt-5.3-codex"

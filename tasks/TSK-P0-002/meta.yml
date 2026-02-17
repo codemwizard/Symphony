@@ -1,0 +1,39 @@
+phase: '0'
+task_id: TSK-P0-002
+title: Add evidence schema and generator with anchoring
+owner_role: PLATFORM
+status: completed
+depends_on:
+- TSK-P0-001
+touches:
+- docs/architecture/evidence_schema.json
+- scripts/audit/generate_evidence.sh
+- .gitignore
+- .github/workflows/invariants.yml
+- tasks/TSK-P0-002/meta.yml
+invariants:
+- 'INV-020 (Evidence anchoring: git + schema hash)'
+work:
+- Define evidence schema with required fields.
+- Implement evidence generator anchored to git SHA and schema hash.
+- Ensure evidence is ignored by git and uploaded in CI.
+- Add CI step to run generator.
+acceptance_criteria:
+- Evidence file includes git SHA + schema hash and validates against schema.
+- Evidence is uploaded in CI and not committed.
+verification:
+- scripts/audit/generate_evidence.sh
+evidence:
+- ./evidence/phase0/evidence.json
+failure_modes:
+- Missing git SHA or schema hash must fail.
+must_read:
+- docs/invariants/INVARIANTS_MANIFEST.yml
+- scripts/db/verify_invariants.sh
+- scripts/db/ci_invariant_gate.sql
+notes: ''
+client: codex_cli
+assigned_agent: worker
+model: <UNASSIGNED>
+implementation_plan: docs/plans/phase0/TSK-P0-002/PLAN.md
+implementation_log: docs/plans/phase0/TSK-P0-002/EXEC_LOG.md

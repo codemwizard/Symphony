@@ -1,0 +1,53 @@
+phase: "0"
+task_id: "TSK-P0-140"
+title: "Performance cluster: invariants docs alignment (manifest implemented vs implemented.md)"
+owner_role: "INVARIANTS_CURATOR"
+status: "completed"   # planned | in_progress | completed
+
+depends_on:
+  - "TSK-P0-125"
+
+touches:
+  - "docs/invariants/INVARIANTS_MANIFEST.yml"
+  - "docs/invariants/INVARIANTS_IMPLEMENTED.md"
+  - "scripts/audit/check_docs_match_manifest.py"
+  - "scripts/audit/run_invariants_fast_checks.sh"
+  - "docs/plans/phase0/TSK-P0-140_invariants_docs_alignment/PLAN.md"
+  - "docs/plans/phase0/TSK-P0-140_invariants_docs_alignment/EXEC_LOG.md"
+  - "tasks/TSK-P0-140/meta.yml"
+
+invariants:
+  - "INV-044"   # invariants docs match manifest
+
+work:
+  - "Verify that all invariants marked status=implemented in INVARIANTS_MANIFEST.yml are present in INVARIANTS_IMPLEMENTED.md with concrete enforcement links."
+  - "If any are missing, either (a) add them to INVARIANTS_IMPLEMENTED.md with correct links, or (b) downgrade manifest status to roadmap and add a verification hook (per repo contract)."
+  - "Extend the existing doc-match checker if it does not catch missing implemented rows deterministically."
+
+acceptance_criteria:
+  - "No implemented invariant in the manifest is missing from INVARIANTS_IMPLEMENTED.md."
+  - "The check is mechanical and fails closed if a mismatch is introduced."
+
+verification:
+  - "python3 scripts/audit/check_docs_match_manifest.py"
+  - "bash scripts/audit/run_invariants_fast_checks.sh"
+
+evidence:
+  - "evidence/phase0/invariants_docs_match.json"
+
+failure_modes:
+  - "Implemented invariants drift from implemented.md without a gate failing."
+  - "Checker is non-deterministic or misses missing rows."
+
+must_read:
+  - "docs/invariants/INVARIANTS_MANIFEST.yml"
+  - "docs/invariants/INVARIANTS_IMPLEMENTED.md"
+  - "docs/PHASE0/PHASE0_CONTRACT.md"
+
+implementation_plan: "docs/plans/phase0/TSK-P0-140_invariants_docs_alignment/PLAN.md"
+implementation_log: "docs/plans/phase0/TSK-P0-140_invariants_docs_alignment/EXEC_LOG.md"
+
+notes: "INV-031 is already present in INVARIANTS_IMPLEMENTED.md in current repo state; this task makes that mechanically enforced for future drift."
+client: "codex_cli"
+assigned_agent: "invariants_curator"
+model: "gpt-5-codex"

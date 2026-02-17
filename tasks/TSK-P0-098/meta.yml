@@ -1,0 +1,42 @@
+phase: "0"
+task_id: "TSK-P0-098"
+title: "Reconcile Phase-0 governance status for implemented business foundation hooks"
+owner_role: "INVARIANTS_CURATOR"
+status: "completed"
+depends_on:
+- "TSK-P0-086"
+touches:
+- "docs/PHASE0/phase0_contract.yml"
+- "docs/tasks/PHASE0_TASKS.md"
+- "tasks/TSK-P0-080/meta.yml"
+- "tasks/TSK-P0-081/meta.yml"
+- "tasks/TSK-P0-082/meta.yml"
+- "tasks/TSK-P0-083/meta.yml"
+- "tasks/TSK-P0-084/meta.yml"
+- "tasks/TSK-P0-085/meta.yml"
+- "tasks/TSK-P0-086/meta.yml"
+- "tasks/TSK-P0-098/meta.yml"
+invariants:
+- "Meta: governance records match enforcement + evidence for business hooks"
+work:
+- "Mark already-implemented business foundation hook tasks as completed in task meta and Phase-0 contract."
+- "Ensure evidence paths reference the verifier artifact (business_foundation_hooks.json)."
+- "Update task notes and acceptance criteria to avoid over-claiming beyond mechanical enforcement."
+acceptance_criteria:
+- "Phase-0 contract and task metas reflect the implemented state (completed) and point to real evidence artifacts."
+- "Phase-0 contract evidence status check passes."
+verification:
+- "scripts/audit/verify_phase0_contract.sh"
+- "scripts/audit/verify_phase0_contract_evidence_status.sh"
+evidence: []
+failure_modes:
+- "Implemented hooks remain marked planned (audit traceability failure)."
+must_read:
+- "docs/PHASE0/BUSINESS_INVARIANTS_ADDITION_IMPLEMENTATION.md"
+implementation_plan: "docs/plans/phase0/TSK-P0-090_audit_gap_closeout/PLAN.md"
+implementation_log: "docs/plans/phase0/TSK-P0-090_audit_gap_closeout/EXEC_LOG.md"
+notes: ""
+client: "codex_cli"
+assigned_agent: "invariants_curator"
+model: "<UNASSIGNED>"
+
