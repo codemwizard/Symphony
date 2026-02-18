@@ -1,0 +1,608 @@
+
+
+You’re right to call me out. I was wrong earlier: **the repomix DOES include**:
+
+* `scripts/audit/verify_mcp_policy.sh`
+* `scripts/audit/verify_mcp_connectivity.sh`
+* wiring in `scripts/dev/pre_ci.sh` under `RUN_PHASE1_GATES=1`
+* Phase-1 contract entries requiring `evidence/phase1/mcp_policy.json` and `evidence/phase1/orchestration_runtime.json`
+* a hardened `mcp.json` (portable `"."` roots, pinned `@modelcontextprotocol/*@YYYY.MM.DD` versions, profiles, fetch removed)
+
+Now, here are the **loopholes**—the real “PASS but not safe / not true” gaps—based on the actual code in that repomix.
+
+---
+
+## 1) “Connectivity” gate can PASS without proving anything runs
+
+### What your verifier actually checks
+
+`verify_mcp_connectivity.sh` **does not start any MCP server** and does not perform a handshake. For `command` servers it only does:
+
+* `shutil.which(cmd)` (i.e., “is `npx` installed?”)
+* `args_count`
+
+So if `npx` exists, filesystem/git/time/memory all PASS even if:
+
+* the package download fails
+* the package is missing
+* the server crashes on startup
+* MCP protocol is incompatible
+
+### Why this is a loophole
+
+It lets you claim “MCP runtime readiness” while only proving **command resolution**, not **server operability**.
+
+### Amendment required
+
+Either:
+
+* rename the check and evidence to **MCP-RESOLUTION** / `mode=resolution_only`, **OR**
+* make default mode prove **runnable local handshake** (even against a deterministic stub if you won’t run Node).
+
+If you keep it as a required Phase-1 contract evidence item, it must not be “fake PASS.”
+
+---
+
+## 2) Remote servers PASS by default even if unreachable
+
+For URL servers (your `github` server), in default mode it sets:
+
+* `mode = "remote_skipped"`
+* status stays PASS as long as `url.startswith("https://")`
+
+So `github` can be:
+
+* down
+* blocked
+* misconfigured
+  …and your “connectivity” gate still passes.
+
+### Why this is a loophole
+
+This creates a compliance illusion: “runtime evidence exists and is PASS” while the only remote check is “string looks like https.”
+
+### Amendment required
+
+Make evidence explicit:
+
+* `mode: remote_skipped` must **not** be counted as connectivity PASS; at minimum mark it `status: SKIPPED` and keep overall gate PASS only if **policy PASS** and all **local servers handshake PASS**.
+
+---
+
+## 3) Policy verifier allows “github” server URL to be any https domain
+
+In `verify_mcp_policy.sh`, for `github` you only validate:
+
+* url starts with `https://`
+* Authorization header includes `${input:...}` placeholder
+
+You **do not** enforce the domain/host.
+
+### Exploit
+
+A malicious config could set:
+
+* `"url": "https://evil.example.com/mcp"`
+
+…and still PASS policy.
+
+### Amendment required
+
+Hard allowlist the host(s), e.g.:
+
+* `api.githubcopilot.com` (if that’s what you intend)
+* and/or exact approved endpoints only
+
+If it’s not on the list: **FAIL**.
+
+---
+
+## 4) Profiles are not validated at all
+
+`mcp.json` contains `"profiles"` (architect/implementer/policy_guardian). Your policy verifier never checks:
+
+* that profiles exist
+* that every profile server exists
+* that profiles don’t include forbidden servers
+* that advisory roles don’t include network-capable servers
+
+### Why this is a loophole
+
+Even with server allowlisting, someone can quietly expand capability by putting `github` into implementer (or reintroducing `fetch`) and nothing will fail.
+
+### Amendment required
+
+Add profile checks:
+
+* every profile entry must reference an existing server
+* enforce **per-role capability rules**:
+
+  * Architect: repo-only (filesystem/git) unless explicitly justified
+  * Implementer: repo-only (filesystem/git/time) but **no network**
+  * Policy guardian: repo-only
+* if a role includes a remote server: FAIL unless an explicit allow flag + justification is present
+
+---
+
+## 5) “Pinned versions” are only validated for the MCP package arg, not the rest of the command line
+
+You correctly enforce that the first `@modelcontextprotocol/...` arg matches a pinned pattern.
+
+But you don’t enforce:
+
+* `npx` flags policy (e.g., someone could add extra args that change resolution behavior)
+* that there is exactly one MCP package arg
+* that args are normalized/locked (ordering changes shouldn’t slip past as “equivalent”)
+
+This is medium severity—less “exploit,” more “drift and surprise.”
+
+### Amendment required
+
+Add strictness:
+
+* exactly one MCP package arg
+* reject additional `@scope/pkg` args
+* consider canonicalizing args and emitting `command_digest` so evidence diff catches changes
+
+---
+
+## 6) Path traversal check is too naive (`"..“ in arg`)
+
+You fail any arg containing `..` anywhere. That will catch traversal, but it also:
+
+* can false-positive on legit strings containing `..`
+* does not normalize paths before checking (e.g., `a/./../b` is caught, but your approach is blunt)
+
+More importantly: you do not enforce that filesystem/git servers are rooted to **exactly** repo root.
+Right now, any relative root like `"scripts"` or `"."` passes.
+
+### Why this is a loophole
+
+This is a “least privilege” failure. If the goal is repo-root only, encode that.
+
+### Amendment required
+
+Enforce:
+
+* for filesystem/git servers, final root arg must be `"."` (or an explicit allowlisted subdir)
+* record roots in evidence
+
+---
+
+## 7) `ALLOW_MCP_FETCH` exists even though fetch server is removed
+
+Your `verify_mcp_policy.sh` includes `ALLOW_MCP_FETCH` gating for `fetch`. That’s fine, but it’s also a latent “switch” that can be abused later.
+
+### Amendment required
+
+If fetch is truly out-of-scope Phase-1:
+
+* remove `fetch` from `allowlisted_servers` entirely
+* or force “requires explicit invariant + approval metadata” (not just an env var)
+
+---
+
+## 8) Evidence files are not schema-validated (easy to rot)
+
+You emit JSON with useful fields, but I don’t see a separate verifier enforcing a strict schema for:
+
+* `evidence/phase1/mcp_policy.json`
+* `evidence/phase1/orchestration_runtime.json`
+
+### Why this is a loophole
+
+Evidence becomes “whatever the script prints.” People add fields, remove fields, rename fields—contract becomes mush.
+
+### Amendment required
+
+Add schema validation (even lightweight) as part of the same verifier, or a separate `verify_*_evidence_schema.sh` and make it required.
+
+---
+
+# The two biggest fixes (if you do nothing else)
+
+1. **Stop calling resolution-only checks “connectivity.”** Either implement a deterministic local handshake/stub or downgrade the claim and evidence status (SKIPPED/RESOLUTION_ONLY).
+2. **Enforce host allowlists + role profile restrictions.** Without those, MCP becomes a stealth network/exfil channel.
+
+---
+
+If you want, I’ll write the exact acceptance tests to close these loopholes (fixture `mcp.json` samples that must FAIL, plus PASS fixtures), in the same style as the diff parity suite—pure bash/python, deterministic, CI-safe.
+
+
+
+
+Below are **exact, CI-safe fixture tests** you can drop into the repo to close the loopholes we identified for:
+
+* **MCP policy** (`verify_mcp_policy.sh`)
+* **MCP connectivity/runtime evidence** (`verify_mcp_connectivity.sh`)
+
+These tests are **designed to FAIL** until you implement the fixes (host allowlist, profile validation, “SKIPPED vs PASS” semantics, etc.). That’s the point: they prevent “looks compliant” from shipping.
+
+---
+
+# 1) MCP policy fixture tests (must-fail / must-pass)
+
+Create this file:
+
+## `scripts/audit/test_mcp_policy_fixtures.sh`
+
+```bash
+#!/usr/bin/env bash
+set -euo pipefail
+
+ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
+POLICY="${ROOT}/scripts/audit/verify_mcp_policy.sh"
+MCP_JSON="${ROOT}/mcp.json"
+
+die() { echo "FAIL: $*" >&2; exit 1; }
+ok() { echo "OK: $*"; }
+
+if [[ ! -x "$POLICY" && ! -f "$POLICY" ]]; then
+  die "missing $POLICY"
+fi
+if [[ ! -f "$MCP_JSON" ]]; then
+  die "missing $MCP_JSON"
+fi
+
+tmpdir="$(mktemp -d)"
+trap 'rm -rf "$tmpdir"' EXIT
+
+backup="${tmpdir}/mcp.json.backup"
+cp "$MCP_JSON" "$backup"
+
+restore() {
+  cp "$backup" "$MCP_JSON"
+}
+trap restore EXIT
+
+run_expect_fail() {
+  local name="$1" fixture="$2"
+  cp "$fixture" "$MCP_JSON"
+  set +e
+  bash "$POLICY"
+  local rc=$?
+  set -e
+  if [[ $rc -eq 0 ]]; then
+    die "$name: expected FAIL but got PASS"
+  fi
+  ok "$name (failed as expected)"
+}
+
+run_expect_pass() {
+  local name="$1" fixture="$2"
+  cp "$fixture" "$MCP_JSON"
+  bash "$POLICY" >/dev/null
+  ok "$name (passed as expected)"
+}
+
+# -----------------------
+# FIXTURE GENERATORS
+# -----------------------
+mk_fixture() {
+  local path="$1"
+  cat > "$path"
+}
+
+# NOTE: These fixtures intentionally cover the loopholes:
+# - unpinned versions
+# - absolute path roots
+# - traversal roots
+# - unapproved remote host
+# - profiles not validated / role gets remote server
+# - literal secret leakage
+# - extra package args / drift
+# - good config should pass
+
+# Good minimal (repo-scoped) – should PASS
+good_minimal="${tmpdir}/good_minimal.json"
+mk_fixture "$good_minimal" <<'JSON'
+{
+  "mcpServers": {
+    "filesystem": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-filesystem@2025.8.12", "."]
+    },
+    "git": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-git@2025.8.12", "."]
+    },
+    "time": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-time@2025.8.12"]
+    }
+  },
+  "profiles": {
+    "architect": ["filesystem", "git", "time"],
+    "implementer": ["filesystem", "git", "time"],
+    "policy_guardian": ["filesystem", "git", "time"]
+  }
+}
+JSON
+
+# BAD: unpinned MCP package – must FAIL
+bad_unpinned="${tmpdir}/bad_unpinned.json"
+mk_fixture "$bad_unpinned" <<'JSON'
+{
+  "mcpServers": {
+    "filesystem": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-filesystem", "."]
+    }
+  },
+  "profiles": { "architect": ["filesystem"] }
+}
+JSON
+
+# BAD: absolute root – must FAIL
+bad_absolute_root="${tmpdir}/bad_absolute_root.json"
+mk_fixture "$bad_absolute_root" <<'JSON'
+{
+  "mcpServers": {
+    "filesystem": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-filesystem@2025.8.12", "/home/user/repo"]
+    }
+  },
+  "profiles": { "architect": ["filesystem"] }
+}
+JSON
+
+# BAD: traversal root – must FAIL
+bad_traversal="${tmpdir}/bad_traversal.json"
+mk_fixture "$bad_traversal" <<'JSON'
+{
+  "mcpServers": {
+    "filesystem": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-filesystem@2025.8.12", "../.."]
+    }
+  },
+  "profiles": { "architect": ["filesystem"] }
+}
+JSON
+
+# BAD: secret literal leakage – must FAIL
+bad_secret_literal="${tmpdir}/bad_secret_literal.json"
+mk_fixture "$bad_secret_literal" <<'JSON'
+{
+  "mcpServers": {
+    "github": {
+      "url": "https://api.githubcopilot.com/mcp/",
+      "headers": { "Authorization": "Token ghp_THIS_IS_A_LITERAL_SECRET" }
+    }
+  },
+  "profiles": { "architect": ["github"] }
+}
+JSON
+
+# BAD: unapproved host – must FAIL (this is one of the biggest loopholes)
+# Your policy verifier MUST enforce host allowlist, not just https://
+bad_unapproved_host="${tmpdir}/bad_unapproved_host.json"
+mk_fixture "$bad_unapproved_host" <<'JSON'
+{
+  "mcpServers": {
+    "github": {
+      "url": "https://evil.example.com/mcp",
+      "headers": { "Authorization": "Bearer ${input:github_token}" }
+    }
+  },
+  "profiles": { "architect": ["github"] }
+}
+JSON
+
+# BAD: profile capability expansion – must FAIL
+# Architect/Implementer/PolicyGuardian must not include remote server unless explicitly allowed
+bad_profile_remote="${tmpdir}/bad_profile_remote.json"
+mk_fixture "$bad_profile_remote" <<'JSON'
+{
+  "mcpServers": {
+    "filesystem": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-filesystem@2025.8.12", "."]
+    },
+    "github": {
+      "url": "https://api.githubcopilot.com/mcp/",
+      "headers": { "Authorization": "Bearer ${input:github_token}" }
+    }
+  },
+  "profiles": {
+    "architect": ["filesystem", "github"],
+    "implementer": ["filesystem", "github"],
+    "policy_guardian": ["filesystem", "github"]
+  }
+}
+JSON
+
+# BAD: extra MCP package arg / drift – must FAIL
+# Policy should enforce exactly one @modelcontextprotocol/server-* package per server invocation
+bad_extra_pkg="${tmpdir}/bad_extra_pkg.json"
+mk_fixture "$bad_extra_pkg" <<'JSON'
+{
+  "mcpServers": {
+    "filesystem": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-filesystem@2025.8.12",
+        "@modelcontextprotocol/server-time@2025.8.12",
+        "."
+      ]
+    }
+  },
+  "profiles": { "architect": ["filesystem"] }
+}
+JSON
+
+# BAD: missing profiles / missing referenced server – must FAIL
+bad_profiles_missing="${tmpdir}/bad_profiles_missing.json"
+mk_fixture "$bad_profiles_missing" <<'JSON'
+{
+  "mcpServers": {
+    "filesystem": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-filesystem@2025.8.12", "."]
+    }
+  }
+}
+JSON
+
+bad_profiles_ref_missing="${tmpdir}/bad_profiles_ref_missing.json"
+mk_fixture "$bad_profiles_ref_missing" <<'JSON'
+{
+  "mcpServers": {
+    "filesystem": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-filesystem@2025.8.12", "."]
+    }
+  },
+  "profiles": { "architect": ["filesystem", "does_not_exist"] }
+}
+JSON
+
+# -----------------------
+# RUN
+# -----------------------
+echo "== MCP POLICY FIXTURE TESTS =="
+
+run_expect_pass "good_minimal" "$good_minimal"
+
+run_expect_fail "bad_unpinned" "$bad_unpinned"
+run_expect_fail "bad_absolute_root" "$bad_absolute_root"
+run_expect_fail "bad_traversal" "$bad_traversal"
+run_expect_fail "bad_secret_literal" "$bad_secret_literal"
+
+# These two will likely PASS today unless you already fixed the loopholes:
+run_expect_fail "bad_unapproved_host" "$bad_unapproved_host"
+run_expect_fail "bad_profile_remote" "$bad_profile_remote"
+
+run_expect_fail "bad_extra_pkg" "$bad_extra_pkg"
+run_expect_fail "bad_profiles_missing" "$bad_profiles_missing"
+run_expect_fail "bad_profiles_ref_missing" "$bad_profiles_ref_missing"
+
+echo "ALL MCP POLICY FIXTURE TESTS PASSED"
+```
+
+### What this enforces (non-negotiable)
+
+* **Exact pinning** required
+* **No absolute roots**
+* **No traversal roots**
+* **No literal secrets**
+* **Host allowlist** for remote servers (this closes your “[https://evil.example.com”](https://evil.example.com”) hole)
+* **Profiles must exist and be validated**, and cannot grant remote/network capabilities to roles by stealth
+* **No multi-package drift** in command args
+
+---
+
+# 2) MCP connectivity/runtime evidence tests (closes “fake PASS”)
+
+You already have a connectivity verifier, but your loophole was:
+
+> it can PASS without actually proving anything runs, and remote servers are “PASS” even when skipped.
+
+This test forces you to implement sane semantics in the emitted evidence.
+
+Create:
+
+## `scripts/audit/test_mcp_connectivity_evidence_semantics.sh`
+
+```bash
+#!/usr/bin/env bash
+set -euo pipefail
+
+ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
+CONNECT="${ROOT}/scripts/audit/verify_mcp_connectivity.sh"
+EVID="${ROOT}/evidence/phase1/orchestration_runtime.json"
+
+die() { echo "FAIL: $*" >&2; exit 1; }
+ok() { echo "OK: $*"; }
+
+if [[ ! -f "$CONNECT" ]]; then
+  die "missing $CONNECT"
+fi
+
+# Run in deterministic default mode (no remote)
+unset MCP_CONNECTIVITY_REMOTE || true
+
+bash "$CONNECT" >/dev/null
+
+if [[ ! -f "$EVID" ]]; then
+  die "missing evidence file: $EVID"
+fi
+
+# Hard semantic requirements:
+# 1) Evidence must declare mode explicitly.
+mode="$(jq -r '.mode // empty' "$EVID")"
+if [[ -z "$mode" ]]; then
+  die "evidence missing .mode"
+fi
+ok "mode=$mode"
+
+# 2) Any remote server must be marked SKIPPED (not PASS) when remote checks are disabled.
+# This assumes your evidence has servers array with type and status; adjust field names once you standardize.
+# Required: status enum includes SKIPPED.
+remote_count="$(jq '[.servers[]? | select((.type // "")=="url" or (.server_kind // "")=="url" or (.is_remote // false)==true)] | length' "$EVID")"
+if [[ "$remote_count" != "0" ]]; then
+  # All remote entries must be SKIPPED when MCP_CONNECTIVITY_REMOTE is not set
+  bad="$(jq -r '.servers[]? | select((.type // "")=="url" or (.server_kind // "")=="url" or (.is_remote // false)==true) | select((.status // .result // "") != "SKIPPED") | @json' "$EVID")"
+  if [[ -n "$bad" ]]; then
+    die "remote servers must be SKIPPED when remote checks disabled. Found non-SKIPPED: $bad"
+  fi
+  ok "remote servers are SKIPPED in default mode"
+fi
+
+# 3) Local command servers must not report CONNECTIVITY_PASS unless at least invocation_ok is true.
+# This blocks “npx exists therefore connectivity pass” nonsense.
+bad_local="$(jq -r '.servers[]? 
+  | select((.type // "")=="command" or (.server_kind // "")=="command" or (.is_remote // false)==false)
+  | select((.status // .result // "")=="PASS")
+  | select((.invocation_ok // false)==false and (.handshake_ok // false)==false)
+  | @json' "$EVID")"
+
+if [[ -n "$bad_local" ]]; then
+  die "local PASS requires invocation_ok or handshake_ok. Found: $bad_local"
+fi
+ok "local PASS semantics look sane (invocation_ok/handshake_ok gating)"
+
+echo "ALL MCP CONNECTIVITY EVIDENCE SEMANTICS TESTS PASSED"
+```
+
+### What this forces you to do
+
+* Emit a `mode`
+* Mark remote checks as **SKIPPED** when not performed
+* Prevent “PASS” unless you at least have `invocation_ok` or `handshake_ok` semantics
+
+If your current evidence schema doesn’t have these fields, good — that’s exactly why this test exists. It forces you to harden the evidence into something that can’t lie.
+
+---
+
+# 3) Wire these tests into Phase-1 gates (fail-closed)
+
+In `scripts/dev/pre_ci.sh` (under `RUN_PHASE1_GATES=1`), add:
+
+```bash
+bash scripts/audit/test_mcp_policy_fixtures.sh
+bash scripts/audit/test_mcp_connectivity_evidence_semantics.sh
+```
+
+And keep your existing:
+
+```bash
+bash scripts/audit/verify_mcp_policy.sh
+bash scripts/audit/verify_mcp_connectivity.sh
+```
+
+Fixture tests prevent regressions; verifiers enforce current state.
+
+---
+
+# 4) If you want this bulletproof: add one more fixture for “fetch reintroduction”
+
+Add a fixture that reintroduces `server-fetch` and ensure it FAILS unless an explicit allow flag is present **and recorded in evidence** (not just env).
+
+If you want, I’ll give you that fixture too — but the two scripts above already close the biggest bypasses.
+
+---
+
+If you paste your current `orchestration_runtime.json` structure (one sample), I’ll tailor the jq selectors to match your exact field names so the semantics test is truly drop-in with no edits.

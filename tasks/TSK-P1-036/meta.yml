@@ -1,0 +1,48 @@
+phase: "1"
+task_id: "TSK-P1-036"
+title: "Restore fail-closed authorization on evidence-pack read route"
+owner_role: "SECURITY_GUARDIAN"
+status: "completed"
+
+depends_on:
+  - "TSK-P1-035"
+
+touches:
+  - "services/ledger-api/dotnet/src/LedgerApi/Program.cs"
+  - "docs/plans/phase1/TSK-P1-036_evidence_read_authz_restore/PLAN.md"
+  - "docs/plans/phase1/TSK-P1-036_evidence_read_authz_restore/EXEC_LOG.md"
+  - "tasks/TSK-P1-036/meta.yml"
+
+invariants:
+  - "Evidence-pack reads must require authenticated caller before tenant-scoped retrieval"
+
+work:
+  - "Add pre-handler authz gate on `/v1/evidence-packs/{instruction_id}`."
+  - "Require configured API key and reject unauthenticated callers before data lookup."
+  - "Preserve tenant-scoped lookup behavior and fail-closed semantics."
+
+acceptance_criteria:
+  - "Route returns 503 when auth config missing."
+  - "Route returns 401 on missing/invalid api key."
+  - "Tenant-bound lookup remains enforced and cross-tenant reads stay fail-closed."
+
+verification:
+  - "scripts/dev/pre_ci.sh"
+
+evidence:
+  - "evidence/phase1/evidence_pack_api_access_control.json"
+
+failure_modes:
+  - "Caller can read evidence packs without authentication."
+  - "Cross-tenant information disclosure through weak access checks."
+
+must_read:
+  - "docs/operations/AI_AGENT_OPERATION_MANUAL.md"
+
+implementation_plan: "docs/plans/phase1/TSK-P1-036_evidence_read_authz_restore/PLAN.md"
+implementation_log: "docs/plans/phase1/TSK-P1-036_evidence_read_authz_restore/EXEC_LOG.md"
+
+notes: "Direct fix for evidence pack read authz regression."
+client: "codex_cli"
+assigned_agent: "security_guardian"
+model: "gpt-5-codex"

@@ -2,7 +2,7 @@ phase: '1'
 task_id: TSK-P1-020
 title: Product KPI Evidence Gate
 owner_role: INVARIANTS_CURATOR
-status: completed
+status: planned
 depends_on:
 - TSK-P1-019
 touches:

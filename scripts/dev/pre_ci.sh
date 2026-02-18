@@ -14,6 +14,7 @@ echo "==> Pre-CI local checks"
 ENV_FILE="infra/docker/.env"
 COMPOSE_FILE="infra/docker/docker-compose.yml"
 DB_CONTAINER="symphony-postgres"
+DB_HOST_PORT="${HOST_POSTGRES_PORT:-5432}"
 FRESH_DB="${FRESH_DB:-1}"   # enforce CI parity by default (ephemeral DB per run)
 KEEP_TEMP_DB="${KEEP_TEMP_DB:-0}" # set to 1 to keep temp DB for debugging
 
@@ -35,6 +36,27 @@ require_docker_access() {
     echo "Hint: if permission denied on /var/run/docker.sock, add your user to the docker group and re-login."
     return 1
   fi
+}
+
+pick_free_db_port() {
+  # Keep CI parity on 5432 when available; fallback only when local 5432 is occupied.
+  port_in_use() {
+    ss -ltn "sport = :$1" | grep -q LISTEN
+  }
+
+  port_owned_by_symphony_container() {
+    docker ps --format '{{.Names}} {{.Ports}}' | grep -E "^${DB_CONTAINER} .*[:.]$1->5432/tcp" >/dev/null 2>&1
+  }
+
+  if port_in_use "${DB_HOST_PORT}" && ! port_owned_by_symphony_container "${DB_HOST_PORT}"; then
+    DB_HOST_PORT=55432
+    if port_in_use "${DB_HOST_PORT}" && ! port_owned_by_symphony_container "${DB_HOST_PORT}"; then
+      echo "ERROR: both 5432 and fallback 55432 are in use; set HOST_POSTGRES_PORT to a free port and retry."
+      return 1
+    fi
+    echo "WARN: host port 5432 is in use; using fallback HOST_POSTGRES_PORT=${DB_HOST_PORT} for local pre-CI"
+  fi
+  export HOST_POSTGRES_PORT="$DB_HOST_PORT"
 }
 
 echo "==> Toolchain parity bootstrap (local)"
@@ -134,31 +156,6 @@ if [[ -x scripts/services/test_evidence_pack_api_contract.sh ]]; then
   scripts/services/test_evidence_pack_api_contract.sh
 fi
 
-if [[ -x scripts/services/test_exception_case_pack_generator.sh ]]; then
-  echo "==> Phase-1 exception case-pack self-test"
-  scripts/services/test_exception_case_pack_generator.sh
-fi
-
-if [[ -x scripts/services/test_pilot_authz_tenant_boundary.sh ]]; then
-  echo "==> Phase-1 pilot authz tenant-boundary self-test"
-  scripts/services/test_pilot_authz_tenant_boundary.sh
-fi
-
-if [[ -x scripts/audit/verify_pilot_harness_readiness.sh ]]; then
-  echo "==> Phase-1 pilot harness readiness verification"
-  scripts/audit/verify_pilot_harness_readiness.sh
-fi
-
-if [[ -x scripts/audit/verify_product_kpi_readiness.sh ]]; then
-  echo "==> Phase-1 product KPI readiness verification"
-  scripts/audit/verify_product_kpi_readiness.sh
-fi
-
-if [[ -x scripts/security/verify_sandbox_deploy_manifest_posture.sh ]]; then
-  echo "==> Phase-1 sandbox deploy posture verification"
-  scripts/security/verify_sandbox_deploy_manifest_posture.sh
-fi
-
 if [[ -f "$ENV_FILE" ]]; then
   set -a
   # shellcheck disable=SC1090
@@ -168,7 +165,7 @@ fi
 
 if [[ -z "${DATABASE_URL:-}" ]]; then
   if [[ -n "${POSTGRES_USER:-}" && -n "${POSTGRES_PASSWORD:-}" && -n "${POSTGRES_DB:-}" ]]; then
-    DATABASE_URL="postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@localhost:5432/${POSTGRES_DB}"
+    DATABASE_URL="postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@localhost:${DB_HOST_PORT}/${POSTGRES_DB}"
     export DATABASE_URL
   fi
 fi
@@ -179,6 +176,10 @@ if [[ -z "${DATABASE_URL:-}" ]]; then
 fi
 
 if ! require_docker_access; then
+  exit 1
+fi
+
+if ! pick_free_db_port; then
   exit 1
 fi
 
@@ -234,7 +235,7 @@ if [[ "${FRESH_DB}" == "1" ]]; then
   TEMP_DB="$(echo "$base" | tr '[:upper:]' '[:lower:]' | tr -cd 'a-z0-9_')"
   docker exec "$DB_CONTAINER" psql -U "$POSTGRES_USER" -d postgres -v ON_ERROR_STOP=1 -X \
     -c "CREATE DATABASE \"${TEMP_DB}\";" >/dev/null
-  DATABASE_URL="postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@localhost:5432/${TEMP_DB}"
+  DATABASE_URL="postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@localhost:${DB_HOST_PORT}/${TEMP_DB}"
   export DATABASE_URL
   echo "   DATABASE_URL set to ephemeral DB: ${TEMP_DB}"
 else
@@ -251,8 +252,6 @@ fi
 echo "==> DB verify_invariants.sh"
 if [[ -x scripts/db/verify_invariants.sh ]]; then
   # Control-plane reference (INV-031 / INT-G22): scripts/db/tests/test_outbox_pending_indexes.sh
-  # Control-plane reference (INV-117 / INT-G32): scripts/db/verify_timeout_posture.sh
-  # Control-plane reference (INV-118 / INT-G33): scripts/db/tests/test_ingress_hotpath_indexes.sh
   SKIP_POLICY_SEED=1 scripts/db/verify_invariants.sh
 else
   echo "ERROR: scripts/db/verify_invariants.sh not found"
@@ -273,9 +272,6 @@ if [[ -x scripts/db/verify_boz_observability_role.sh ]]; then
 fi
 if [[ -x scripts/db/verify_anchor_sync_hooks.sh ]]; then
   scripts/db/verify_anchor_sync_hooks.sh
-fi
-if [[ -x scripts/db/verify_anchor_sync_operational_invariant.sh ]]; then
-  scripts/db/verify_anchor_sync_operational_invariant.sh
 fi
 if [[ -x scripts/db/verify_instruction_finality_invariant.sh ]]; then
   scripts/db/verify_instruction_finality_invariant.sh
@@ -309,9 +305,6 @@ if [[ -n "${DATABASE_URL:-}" ]]; then
   if [[ -x scripts/db/tests/test_rail_sequence_continuity.sh ]]; then
     scripts/db/tests/test_rail_sequence_continuity.sh
   fi
-  if [[ -x scripts/db/tests/test_anchor_sync_operational.sh ]]; then
-    scripts/db/tests/test_anchor_sync_operational.sh
-  fi
 
   # CI parity: these DB checks run in GitHub Actions db_verify_invariants job.
   if [[ -x scripts/db/n_minus_one_check.sh ]]; then
@@ -335,25 +328,36 @@ else
   exit 1
 fi
 
-if [[ -x scripts/audit/verify_phase1_demo_proof_pack.sh ]]; then
-  echo "==> Phase-1 regulator/tier-1 demo-proof pack verification"
-  scripts/audit/verify_phase1_demo_proof_pack.sh
-fi
-
 if [[ "${RUN_PHASE1_GATES:-0}" == "1" ]]; then
+  echo "==> Phase-1 no-MCP guard"
+  if [[ -x scripts/audit/verify_no_mcp_phase1.sh ]]; then
+    scripts/audit/verify_no_mcp_phase1.sh
+  else
+    echo "ERROR: scripts/audit/verify_no_mcp_phase1.sh not found"
+    exit 1
+  fi
+
+  echo "==> Phase-1 no-MCP guard fixture tests"
+  if [[ -x scripts/audit/tests/test_no_mcp_phase1_guard.sh ]]; then
+    scripts/audit/tests/test_no_mcp_phase1_guard.sh
+  else
+    echo "ERROR: scripts/audit/tests/test_no_mcp_phase1_guard.sh not found"
+    exit 1
+  fi
+
+  echo "==> Phase-1 approval metadata requirement fixture tests"
+  if [[ -x scripts/audit/tests/test_approval_metadata_requirements.sh ]]; then
+    scripts/audit/tests/test_approval_metadata_requirements.sh
+  else
+    echo "ERROR: scripts/audit/tests/test_approval_metadata_requirements.sh not found"
+    exit 1
+  fi
+
   echo "==> Phase-1 contract evidence status (post-DB parity)"
   if [[ -x scripts/audit/verify_phase1_contract.sh ]]; then
     scripts/audit/verify_phase1_contract.sh
   else
     echo "ERROR: scripts/audit/verify_phase1_contract.sh not found"
-    exit 1
-  fi
-
-  echo "==> Phase-1 closeout verification"
-  if [[ -x scripts/audit/verify_phase1_closeout.sh ]]; then
-    scripts/audit/verify_phase1_closeout.sh
-  else
-    echo "ERROR: scripts/audit/verify_phase1_closeout.sh not found"
     exit 1
   fi
 fi

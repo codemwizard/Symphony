@@ -23,7 +23,9 @@ verification:
 - scripts/audit/verify_agent_conformance.sh
 - scripts/dev/pre_ci.sh
 evidence:
-- evidence/phase1/agent_conformance.json
+- evidence/phase1/agent_conformance_architect.json
+- evidence/phase1/agent_conformance_implementer.json
+- evidence/phase1/agent_conformance_policy_guardian.json
 failure_modes:
 - Conformance verifier does not run in CI/pre-CI paths.
 - Evidence file missing.

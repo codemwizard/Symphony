@@ -14,7 +14,7 @@ export EVIDENCE_TS EVIDENCE_GIT_SHA EVIDENCE_SCHEMA_FP
 
 BASE_REF="${BASE_REF:-refs/remotes/origin/main}"
 HEAD_REF="${HEAD_REF:-HEAD}"
-source "$ROOT_DIR/scripts/audit/lib/git_diff.sh"
+source "$ROOT_DIR/scripts/audit/lib/git_diff_range_only.sh"
 BASE_REF="${BASE_REF:-$(git_resolve_base_ref)}"
 
 if ! git_ensure_ref "$BASE_REF"; then
@@ -42,15 +42,15 @@ migration_changed=false
 adr_changed=false
 
 # Use line-exact matching to avoid edge cases with large diff lists and newline handling.
-if printf '%s\n' "$changed_files" | grep -qx "schema/baseline.sql"; then
+if grep -qx "schema/baseline.sql" <<<"$changed_files"; then
   baseline_changed=true
 fi
 
-if printf '%s\n' "$changed_files" | grep -qE "^schema/migrations/.*\\.sql$"; then
+if grep -qE "^schema/migrations/.*\\.sql$" <<<"$changed_files"; then
   migration_changed=true
 fi
 
-if printf '%s\n' "$changed_files" | grep -qx "docs/decisions/ADR-0010-baseline-policy.md"; then
+if grep -qx "docs/decisions/ADR-0010-baseline-policy.md" <<<"$changed_files"; then
   adr_changed=true
 fi
 

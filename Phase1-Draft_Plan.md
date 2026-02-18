@@ -62,7 +62,7 @@
 - Deliverables:
   - Deterministic `scripts/audit/verify_agent_conformance.sh`.
   - Wired into pre-CI and CI paths.
-  - Evidence: `evidence/phase1/agent_conformance.json` (schema-conformant).
+  - Evidence: `evidence/phase1/agent_conformance_architect.json`, `evidence/phase1/agent_conformance_implementer.json`, `evidence/phase1/agent_conformance_policy_guardian.json` (schema-conformant).
   - Enforcement path: required by Phase-1 contract and validated through INT-G28.
 - Verification:
   - `scripts/audit/verify_agent_conformance.sh`

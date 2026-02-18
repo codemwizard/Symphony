@@ -1,0 +1,49 @@
+phase: "1"
+task_id: "TSK-P1-035"
+title: "Restore fail-closed authorization on ingress write route"
+owner_role: "SECURITY_GUARDIAN"
+status: "completed"
+
+depends_on:
+  - "TSK-P1-001"
+
+touches:
+  - "services/ledger-api/dotnet/src/LedgerApi/Program.cs"
+  - "docs/plans/phase1/TSK-P1-035_ingress_write_authz_restore/PLAN.md"
+  - "docs/plans/phase1/TSK-P1-035_ingress_write_authz_restore/EXEC_LOG.md"
+  - "tasks/TSK-P1-035/meta.yml"
+
+invariants:
+  - "Ingress write path must reject unauthenticated and out-of-scope callers before persistence"
+
+work:
+  - "Add pre-handler authz gate on `/v1/ingress/instructions`."
+  - "Require configured API key and enforce tenant/participant header-to-body scope match."
+  - "Fail closed when auth configuration is missing."
+
+acceptance_criteria:
+  - "Route returns 503 when auth config missing."
+  - "Route returns 401 on missing/invalid api key."
+  - "Route returns 403 on tenant or participant scope mismatch."
+  - "Handler is invoked only after authz gate passes."
+
+verification:
+  - "scripts/dev/pre_ci.sh"
+
+evidence:
+  - "evidence/phase1/ingress_api_contract_tests.json"
+
+failure_modes:
+  - "Unauthenticated caller can persist instructions."
+  - "Caller can submit instructions for arbitrary tenant or participant."
+
+must_read:
+  - "docs/operations/AI_AGENT_OPERATION_MANUAL.md"
+
+implementation_plan: "docs/plans/phase1/TSK-P1-035_ingress_write_authz_restore/PLAN.md"
+implementation_log: "docs/plans/phase1/TSK-P1-035_ingress_write_authz_restore/EXEC_LOG.md"
+
+notes: "Direct fix for ingress write authz regression."
+client: "codex_cli"
+assigned_agent: "security_guardian"
+model: "gpt-5-codex"

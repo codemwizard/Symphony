@@ -1,0 +1,49 @@
+phase: '1'
+task_id: TSK-P1-033
+title: Phase-1 No-MCP Reintroduction Guard
+owner_role: INVARIANTS_CURATOR
+status: planned
+depends_on:
+- TSK-P1-027
+touches:
+- scripts/audit/verify_no_mcp_phase1.sh
+- scripts/audit/tests/test_no_mcp_phase1_guard.sh
+- scripts/audit/tests/fixtures/no_mcp/**
+- scripts/dev/pre_ci.sh
+- tasks/TSK-P1-033/meta.yml
+- docs/plans/phase1/TSK-P1-033_no_mcp_reintroduction_guard/PLAN.md
+- docs/plans/phase1/TSK-P1-033_no_mcp_reintroduction_guard/EXEC_LOG.md
+invariants:
+- INV-105
+work:
+- Add a deterministic Phase-1 guard that fails when MCP artifacts are reintroduced into Phase-1 scope.
+- Block reintroduction references for `mcp.json`, `verify_mcp_policy.sh`, `verify_mcp_connectivity.sh`, `@modelcontextprotocol/`, `"mcpServers"`, `MCP_` flags in Phase-1 scripts, and MCP evidence paths in Phase-1 contract/pre-CI.
+- Implement explicit allowlists for Phase-2 planning/backlog locations so deferred MCP planning remains valid while Phase-1 stays clean.
+- Add deterministic fixture tests proving banned patterns fail and allowlisted Phase-2 references pass.
+- Wire the guard under RUN_PHASE1_GATES=1 in pre_ci to prevent silent scope creep.
+acceptance_criteria:
+- Guard fails closed when banned MCP paths or references are detected in Phase-1 scripts/contracts/tasks.
+- Guard scans scripts, contracts, CI wiring, and docs surfaces used by Phase-1 execution.
+- Guard does not fail on allowlisted Phase-2 planning/task paths.
+- Guard emits minimal deterministic evidence (`check_id`, `timestamp_utc`, `git_sha`, `forbidden_hits_count`, `hits[]`).
+- Fixture test suite proves both fail and pass behavior deterministically.
+- pre_ci with RUN_PHASE1_GATES=1 invokes the guard before phase1 contract verification.
+verification:
+- bash scripts/audit/verify_no_mcp_phase1.sh
+- bash scripts/audit/tests/test_no_mcp_phase1_guard.sh
+- RUN_PHASE1_GATES=1 bash scripts/dev/pre_ci.sh
+evidence:
+- evidence/phase1/no_mcp_phase1_guard.json
+failure_modes:
+- MCP artifacts are reintroduced in Phase-1 without gate failure.
+- Guard excludes critical file areas and leaves bypass paths.
+- Guard lacks allowlists and creates false positives that drive bypass behavior.
+must_read:
+- docs/operations/AGENTIC_SDLC_PHASE1_POLICY.md
+- docs/PHASE1/phase1_contract.yml
+implementation_plan: docs/plans/phase1/TSK-P1-033_no_mcp_reintroduction_guard/PLAN.md
+implementation_log: docs/plans/phase1/TSK-P1-033_no_mcp_reintroduction_guard/EXEC_LOG.md
+notes: Implements mechanical enforcement for Option A cleanup so MCP cannot creep back into Phase-1.
+client: codex_cli
+assigned_agent: invariants_curator
+model: <UNASSIGNED>

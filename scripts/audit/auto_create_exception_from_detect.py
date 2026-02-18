@@ -5,10 +5,10 @@ from datetime import date, timedelta
 from pathlib import Path
 
 TEMPLATE = """---
-exception_id: {exception_id}
+exception_id: EXC-000
 inv_scope: {inv_scope}
 expiry: {expiry}
-follow_up_ticket: {follow_up_ticket}
+follow_up_ticket: PLACEHOLDER-000
 reason: {reason}
 author: system
 created_at: {created_at}
@@ -21,8 +21,7 @@ but invariants linkage (manifest/docs with INV-###) was not included in the same
 
 ## Reason
 
-Auto-generated exception for structural-change linkage preflight.
-Manual review is required to confirm final invariant linkage and closeout timeline.
+[Describe why this exception is needed]
 
 ## Evidence
 
@@ -30,8 +29,7 @@ Manual review is required to confirm final invariant linkage and closeout timeli
 
 ## Mitigation
 
-- Mechanical gates remain enabled (security + integrity + compliance checks).
-- Exception is timeboxed and must be closed by the follow-up ticket before expiry.
+[Describe any mitigating controls in place]
 """
 
 
@@ -63,27 +61,6 @@ def main() -> None:
         out_path = out_dir / f"exception_change-rule_{primary}_{created_at}_{i}.md"
         i += 1
 
-    # Generate deterministic, non-placeholder identifiers.
-    prefix = f"EXC-{created_at}-"
-    seq = 1
-    for p in out_dir.glob("*.md"):
-        try:
-            text = p.read_text(encoding="utf-8")
-        except Exception:
-            continue
-        for line in text.splitlines():
-            if not line.startswith("exception_id:"):
-                continue
-            candidate = line.split(":", 1)[1].strip()
-            if candidate.startswith(prefix):
-                try:
-                    n = int(candidate.rsplit("-", 1)[1])
-                    seq = max(seq, n + 1)
-                except Exception:
-                    pass
-    exception_id = f"{prefix}{seq:02d}"
-    follow_up_ticket = f"FOLLOWUP-AUTO-CHANGE-RULE-{created_at.replace('-', '')}-{seq:02d}"
-
     lines = [
         f"structural_change: {d.get('structural_change')}",
         f"confidence_hint: {d.get('confidence_hint')}",
@@ -105,10 +82,8 @@ def main() -> None:
     reason = "Auto-generated: structural change detected; invariants linkage missing in commit."
 
     content = TEMPLATE.format(
-        exception_id=exception_id,
         inv_scope=args.inv_scope,
         expiry=expiry,
-        follow_up_ticket=follow_up_ticket,
         created_at=created_at,
         reason=reason,
         title=title,

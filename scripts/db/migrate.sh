@@ -38,17 +38,6 @@ if [[ "$STRATEGY" != "migrations" ]]; then
   fi
 fi
 
-# DB timeout posture defaults for migration safety (override via env if needed).
-DB_LOCK_TIMEOUT="${DB_LOCK_TIMEOUT:-2s}"
-DB_STATEMENT_TIMEOUT="${DB_STATEMENT_TIMEOUT:-30s}"
-DB_IDLE_IN_TX_TIMEOUT="${DB_IDLE_IN_TX_TIMEOUT:-60s}"
-timeout_pgopts="-c lock_timeout=${DB_LOCK_TIMEOUT} -c statement_timeout=${DB_STATEMENT_TIMEOUT} -c idle_in_transaction_session_timeout=${DB_IDLE_IN_TX_TIMEOUT}"
-if [[ -n "${PGOPTIONS:-}" ]]; then
-  export PGOPTIONS="${PGOPTIONS} ${timeout_pgopts}"
-else
-  export PGOPTIONS="${timeout_pgopts}"
-fi
-
 psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -X <<'SQL'
 CREATE TABLE IF NOT EXISTS public.schema_migrations (
   version TEXT PRIMARY KEY,

@@ -60,6 +60,26 @@ make_schema() {
 JSON
 }
 
+make_approval_schema() {
+  local path="$1"
+  cat > "$path" <<'JSON'
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "required": ["schema_version", "generated_at_utc", "git_commit", "change_scope", "ai", "human_approval"],
+  "properties": {
+    "schema_version": { "type": "string" },
+    "generated_at_utc": { "type": "string" },
+    "git_commit": { "type": "string" },
+    "change_scope": { "type": "object" },
+    "ai": { "type": "object" },
+    "human_approval": { "type": "object" }
+  },
+  "additionalProperties": true
+}
+JSON
+}
+
 make_cp() {
   local path="$1"
   cat > "$path" <<'YAML'
@@ -116,10 +136,12 @@ run_case() {
   local cp_path="$case_dir/CONTROL_PLANES.yml"
   local schema_path="$case_dir/evidence_schema.json"
   local evidence_out="$case_dir/evidence/phase1/phase1_contract_status.json"
+  local approval_schema_path="$case_dir/approval_metadata.schema.json"
 
   printf "%b" "$contract_content" > "$contract_path"
   make_cp "$cp_path"
   make_schema "$schema_path"
+  make_approval_schema "$approval_schema_path"
   make_min_phase0_evidence "$case_dir/evidence/phase0/pii_leakage_payloads.json"
   if [[ "$include_phase1_evidence" == "yes" ]]; then
     make_min_phase1_evidence "$case_dir/evidence/phase1/phase1_contract_status_seed.json"
@@ -130,6 +152,7 @@ run_case() {
   CONTRACT_FILE="$contract_path" \
   CP_FILE="$cp_path" \
   SCHEMA_FILE="$schema_path" \
+  APPROVAL_SCHEMA_FILE="$approval_schema_path" \
   EVIDENCE_DIR="$case_dir/evidence/phase1" \
   EVIDENCE_FILE="$evidence_out" \
   RUN_PHASE1_GATES="$run_phase1" \

@@ -13,6 +13,9 @@ Baseline updates are **governed** and **fail-closed**:
 2) If `schema/baseline.sql` changes, this ADR **must be updated** with a human-readable note.
 3) Baseline generation should use a deterministic, container-based `pg_dump` when possible.
 
+### Governance Note (2026-02-17)
+This ADR remains the authoritative governance reference for baseline change checks when integrating branch histories.
+
 ## Consequences
 - Baseline updates are explicit, auditable, and tied to migrations.
 - CI/local checks will fail if governance requirements are not met.
@@ -25,5 +28,3 @@ Baseline updates are **governed** and **fail-closed**:
 - 2026-02-13: Baseline regenerated after INV-115 pii decoupling migration (0029).
 - 2026-02-13: Baseline regenerated after follow-up fix migration for pii purge executor (0030).
 - 2026-02-13: Baseline regenerated after INV-116 rail sequence truth-anchor migration (0031).
-- 2026-02-14: Baseline regenerated after INV-113 operational anchor-sync enforcement migration (0032).
-- 2026-02-14: Baseline regenerated after anchor-sync append-only/lease-time fix migration (0033).

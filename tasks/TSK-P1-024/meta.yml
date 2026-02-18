@@ -2,7 +2,7 @@ phase: "1"
 task_id: "TSK-P1-024"
 title: "INV-113 Operational Anchor-Sync Enforcement"
 owner_role: "DB_FOUNDATION"
-status: "completed"
+status: "planned"
 
 depends_on:
   - "TSK-P1-006"

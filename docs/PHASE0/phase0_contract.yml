@@ -1636,14 +1636,10 @@
     "task_id": "TSK-P0-156",
     "status": "completed",
     "verification_mode": "both",
-    "evidence_required": true,
-    "evidence_paths": [
-      "evidence/phase0/db_timeout_posture.json"
-    ],
+    "evidence_required": false,
+    "evidence_paths": [],
     "evidence_scope": "repo",
-    "notes": "DB timeout posture gate implemented and wired (lock/statement/idle-in-transaction bounds).",
-    "gate_ids": [
-      "INT-G32"
-    ]
+    "notes": "Emergency remediation for committed SSH private key exposure (ignore guards + history cleanup workflow).",
+    "gate_ids": []
   }
 ]

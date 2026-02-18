@@ -2,7 +2,7 @@ phase: '1'
 task_id: TSK-P1-019
 title: Pilot Integration Contract and Sandbox Harness
 owner_role: SUPERVISOR
-status: completed
+status: planned
 depends_on:
 - TSK-P1-015
 - TSK-P1-016

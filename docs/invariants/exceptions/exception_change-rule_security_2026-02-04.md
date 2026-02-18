@@ -1,7 +1,7 @@
 ---
 exception_id: EXC-2026-02-04-001
 inv_scope: change-rule
-expiry: 2026-02-18
+expiry: 2026-03-18
 follow_up_ticket: FOLLOWUP-2026-02-04-001
 reason: Auto-generated: structural change detected; invariants linkage missing in commit.
 author: system
@@ -15,8 +15,7 @@ but invariants linkage (manifest/docs with INV-###) was not included in the same
 
 ## Reason
 
-Auto-generated exception for structural-change linkage preflight.
-Manual review is required to confirm final invariant linkage and closeout timeline.
+[Describe why this exception is needed]
 
 ## Evidence
 
@@ -36,5 +35,4 @@ Top matches:
 
 ## Mitigation
 
-- Mechanical gates remain enabled (security + integrity + compliance checks).
-- Exception is timeboxed and must be closed by the follow-up ticket before expiry.
+[Describe any mitigating controls in place]

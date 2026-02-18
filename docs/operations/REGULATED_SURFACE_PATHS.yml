@@ -1,0 +1,11 @@
+version: "1.0"
+rules:
+  description: "Paths that require approval metadata when changed in commit range."
+  patterns:
+    - "schema/migrations/**"
+    - "scripts/security/**"
+    - "scripts/audit/**"
+    - "docs/PHASE1/**"
+    - "docs/control_planes/**"
+    - "docs/operations/approval_metadata.schema.json"
+    - "docs/architecture/evidence_schema.json"

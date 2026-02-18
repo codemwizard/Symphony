@@ -50,7 +50,10 @@
 - `CONFORMANCE_012_PII_LEAK_DETECTED`
 
 ## Output Contract
-- Evidence output: `evidence/phase1/agent_conformance.json`
+- Evidence outputs (role-scoped, no shared legacy file):
+  - `evidence/phase1/agent_conformance_architect.json`
+  - `evidence/phase1/agent_conformance_implementer.json`
+  - `evidence/phase1/agent_conformance_policy_guardian.json`
 - Minimum required fields:
   - `schema_version`
   - `status`

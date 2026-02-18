@@ -18,7 +18,7 @@ It must run in:
 - CI (ordered checks)
 
 It must emit deterministic evidence under:
-- `evidence/phase1/agent_conformance.json`
+- `evidence/phase1/agent_conformance_architect.json`
 
 ---
 
@@ -180,9 +180,9 @@ Failure code: `CONFORMANCE_006_APPROVAL_METADATA_INVALID`
 
 ---
 
-### CHECK 7 — Evidence emission: agent_conformance.json must be produced
+### CHECK 7 — Evidence emission: agent_conformance_architect.json must be produced
 On success OR failure, the script must write:
-- `evidence/phase1/agent_conformance.json`
+- `evidence/phase1/agent_conformance_architect.json`
 
 It must include:
 - `status`: PASS/FAIL
@@ -335,7 +335,7 @@ If yes, it requires an approval metadata artifact exists and contains required f
 
 Whether it passes or fails, it writes:
 
-* `evidence/phase1/agent_conformance.json`
+* `evidence/phase1/agent_conformance_architect.json`
 
 **Why:** even governance checks must be evidence-producing in Symphony.
 
@@ -1138,7 +1138,7 @@ This verifier must run in:
 - **CI ordered checks** (Phase-0 ordering parity preserved)
 
 It must emit evidence at:
-- `evidence/phase1/agent_conformance.json`
+- `evidence/phase1/agent_conformance_architect.json`
 
 ---
 
@@ -1347,7 +1347,7 @@ Fail if any mismatch.
 The verifier must scan the following for obvious raw PII leakage patterns:
 - `evidence/phase1/approval_metadata.json`
 - approval sidecar JSON
-- `evidence/phase1/agent_conformance.json` (before writing, or validate no leak post-write)
+- `evidence/phase1/agent_conformance_architect.json` (before writing, or validate no leak post-write)
 
 Minimum heuristic rules (configurable, but must exist):
 - Reject any string value containing `@` (email-like)
@@ -1406,11 +1406,11 @@ Failure code: `CONFORMANCE_013_EVIDENCE_WRITE_FAILED`
 
 The verifier must always write:
 
-- `evidence/phase1/agent_conformance.json`
+- `evidence/phase1/agent_conformance_architect.json`
 
 on both PASS and FAIL (best-effort; but failure to write is itself a failure).
 
-### 10.1 Required fields in agent_conformance.json
+### 10.1 Required fields in agent_conformance_architect.json
 
 - `schema_version` (string, e.g. `"1.0"`)
 - `status` (`"PASS"` or `"FAIL"`)
@@ -1521,5 +1521,5 @@ Any change to this spec must be:
 - reviewed by human approver
 - logged as a regulated surface change
 - accompanied by approval metadata + approval artifacts
-- produce new evidence under `evidence/phase1/agent_conformance.json`
+- produce new evidence under `evidence/phase1/agent_conformance_architect.json`
 ```

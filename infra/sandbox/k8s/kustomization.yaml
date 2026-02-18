@@ -1,8 +1,0 @@
-apiVersion: kustomize.config.k8s.io/v1beta1
-kind: Kustomization
-namespace: symphony-pilot
-resources:
-  - namespace.yaml
-  - ledger-api-deployment.yaml
-  - executor-worker-deployment.yaml
-  - secrets-bootstrap.yaml

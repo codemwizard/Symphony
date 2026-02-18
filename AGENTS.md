@@ -65,7 +65,9 @@ Role: Supervisor
 - `scripts/dev/pre_ci.sh`
 
 ## Evidence Outputs
-- `evidence/phase1/agent_conformance.json`
+- `evidence/phase1/agent_conformance_architect.json`
+- `evidence/phase1/agent_conformance_implementer.json`
+- `evidence/phase1/agent_conformance_policy_guardian.json`
 
 ## Canonical References
 - `docs/operations/AI_AGENT_OPERATION_MANUAL.md`

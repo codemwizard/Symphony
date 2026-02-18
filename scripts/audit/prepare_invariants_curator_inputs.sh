@@ -3,7 +3,7 @@ set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 cd "$ROOT"
-source scripts/audit/lib/git_diff.sh
+source scripts/audit/lib/git_diff_dev.sh
 
 OUT_DIR="/tmp/invariants_ai"
 mkdir -p "$OUT_DIR"

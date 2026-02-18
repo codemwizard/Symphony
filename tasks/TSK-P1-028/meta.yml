@@ -1,0 +1,33 @@
+phase: '1'
+task_id: TSK-P1-028
+title: MCP Architect Agent Bootstrap (Policy-Constrained)
+owner_role: ARCHITECT
+status: deferred
+depends_on: []
+deferred_to_phase: '2'
+phase1_enforced: 'false'
+touches:
+- docs/plans/phase1/TSK-P1-028_mcp_architect_agent_bootstrap/PLAN.md
+- docs/plans/phase1/TSK-P1-028_mcp_architect_agent_bootstrap/EXEC_LOG.md
+- tasks/TSK-P1-028/meta.yml
+invariants:
+- INV-105
+work:
+- Deferred to Phase-2 per Option A cleanup.
+- MCP Architect Agent rollout is out of Phase-1 scope.
+acceptance_criteria:
+- Task is excluded from Phase-1 enforcement and contract requirements.
+- Any future implementation occurs under a Phase-2 task/contract set and does not re-enter Phase-1 gates.
+verification: []
+evidence: []
+failure_modes:
+- MCP agent role requirements remain in Phase-1 contract or pre-CI wiring.
+must_read:
+- docs/operations/AGENTIC_SDLC_PHASE1_POLICY.md
+- docs/operations/AI_AGENT_OPERATION_MANUAL.md
+implementation_plan: docs/plans/phase1/TSK-P1-028_mcp_architect_agent_bootstrap/PLAN.md
+implementation_log: docs/plans/phase1/TSK-P1-028_mcp_architect_agent_bootstrap/EXEC_LOG.md
+notes: Option A cleanup decision. Archived in Phase-1; reissue as TSK-P2-* before implementation.
+client: codex_cli
+assigned_agent: architect
+model: <UNASSIGNED>

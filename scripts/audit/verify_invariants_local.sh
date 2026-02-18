@@ -11,7 +11,7 @@ set -euo pipefail
 
 BASE_REF="${1:-refs/remotes/origin/main}"
 HEAD_REF="${2:-HEAD}"
-source scripts/audit/lib/git_diff.sh
+source scripts/audit/lib/git_diff_range_only.sh
 
 mkdir -p /tmp/invariants_ai
 

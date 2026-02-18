@@ -1,62 +1,49 @@
 phase: "0"
 task_id: "TSK-P0-156"
-title: "Performance Gap Close: DB Timeout Posture Mechanical Gate"
-owner_role: "INVARIANTS_CURATOR"
+title: "Emergency remediation: remove exposed SSH private key and enforce no-reintroduction"
+owner_role: "SECURITY_GUARDIAN"
 status: "completed"
 
 depends_on:
-  - "TSK-P0-155"
+  - "TSK-P0-124"
 
 touches:
-  - "scripts/db/verify_timeout_posture.sh"
-  - "scripts/audit/run_phase0_ordered_checks.sh"
-  - "scripts/dev/pre_ci.sh"
-  - "docs/control_planes/CONTROL_PLANES.yml"
-  - "docs/PHASE0/phase0_contract.yml"
-  - "docs/invariants/INVARIANTS_MANIFEST.yml"
+  - ".gitignore"
+  - "docs/plans/phase0/TSK-P0-156_ssh_key_exposure_remediation/PLAN.md"
+  - "docs/plans/phase0/TSK-P0-156_ssh_key_exposure_remediation/EXEC_LOG.md"
   - "tasks/TSK-P0-156/meta.yml"
-  - "docs/plans/phase0/TSK-P0-156_db_timeout_posture_gate/PLAN.md"
-  - "docs/plans/phase0/TSK-P0-156_db_timeout_posture_gate/EXEC_LOG.md"
 
 invariants:
-  - "INV-117"
-  - "INV-030"
+  - "No credential material committed to repository history or working tree"
 
 work:
-  - "Add fail-closed verifier `scripts/db/verify_timeout_posture.sh` for lock_timeout, statement_timeout, and idle_in_transaction_session_timeout."
-  - "Emit deterministic evidence at `evidence/phase0/db_timeout_posture.json` on PASS and FAIL paths."
-  - "Wire verifier into Phase-0 ordered checks and local pre-CI parity path."
-  - "Register non-colliding control-plane gate (recommended INT-G32; do not reuse INT-G25..INT-G31)."
-  - "Add contract row only after verifier is wired and emitting evidence deterministically."
+  - "Document and execute emergency response for exposed OpenSSH key material committed in repository history."
+  - "Remove key filenames from working-tree tracking surface and prevent reintroduction via ignore rules."
+  - "Prepare history rewrite procedure and force-push instructions for branch-level cleanup."
 
 acceptance_criteria:
-  - "Verifier fails when required timeout settings are unset or exceed configured bounds."
-  - "Verifier emits evidence JSON with observed values and canonical status on every run."
-  - "Pre-CI and CI parity paths execute the gate in deterministic order."
+  - "Leaked key filenames are ignored by git in all local workflows."
+  - "Task plan/log documents revocation + rotation + history rewrite action path."
+  - "No key material is present in current tracked files."
 
 verification:
-  - "scripts/db/verify_timeout_posture.sh"
-  - "scripts/audit/run_phase0_ordered_checks.sh"
-  - "scripts/dev/pre_ci.sh"
-  - "scripts/audit/verify_phase0_contract_evidence_status.sh"
+  - "git ls-files | rg 'github_push-key|github_push-key.pub'"
+  - "rg -n -S -e 'BEGIN OPENSSH PRIVATE KEY' -e 'BEGIN RSA PRIVATE KEY' -- ."
 
 evidence:
-  - "evidence/phase0/db_timeout_posture.json"
+  - "docs/plans/phase0/TSK-P0-156_ssh_key_exposure_remediation/EXEC_LOG.md"
 
 failure_modes:
-  - "DB timeout posture missing and verifier silently passes."
-  - "Evidence file missing on FAIL path."
-  - "Gate ID collision with existing INT-Gxx entries."
+  - "History remains unrewritten and leaked key remains recoverable from git history."
+  - "Rotations are not completed and compromised key remains valid in external systems."
 
 must_read:
-  - "docs/control_planes/CONTROL_PLANES.yml"
-  - "docs/PHASE0/phase0_contract.yml"
-  - "docs/PHASE0/PHASE0_PERFORMANCE_POSTURE.md"
+  - "docs/operations/AI_AGENT_OPERATION_MANUAL.md"
 
-implementation_plan: "docs/plans/phase0/TSK-P0-156_db_timeout_posture_gate/PLAN.md"
-implementation_log: "docs/plans/phase0/TSK-P0-156_db_timeout_posture_gate/EXEC_LOG.md"
+implementation_plan: "docs/plans/phase0/TSK-P0-156_ssh_key_exposure_remediation/PLAN.md"
+implementation_log: "docs/plans/phase0/TSK-P0-156_ssh_key_exposure_remediation/EXEC_LOG.md"
 
-notes: "Implemented DB timeout mechanical gate and wired INT-G32 with deterministic evidence emission."
+notes: "P0 incident remediation task for committed ssh private key exposure."
 client: "codex_cli"
-assigned_agent: "invariants_curator"
-model: "<UNASSIGNED>"
+assigned_agent: "security_guardian"
+model: "gpt-5-codex"

@@ -22,8 +22,10 @@ dist/
 build/
 .DS_Store
 bin/
+Bin/
 obj/
-*.zip
+*.tar.*
+.*.zip
 
 
 # Windows download metadata
@@ -38,3 +40,6 @@ __pycache__/
 *.pyc
 .venv/
 .cache/
+keyStore
+github_push-key
+github_push-key.pub

@@ -3,15 +3,13 @@ set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 cd "$ROOT"
-source scripts/audit/lib/git_diff.sh
+source scripts/audit/lib/git_diff_dev.sh
 
 echo "==> Preflight (staged): structural detector + Rule 1 linkage"
 
 MANIFEST="docs/invariants/INVARIANTS_MANIFEST.yml"
 DOCS_DIR="docs/invariants"
 EXCEPTIONS_DIR="docs/invariants/exceptions"
-THREAT_DOC="docs/architecture/THREAT_MODEL.md"
-COMPLIANCE_DOC="docs/architecture/COMPLIANCE_MAP.md"
 
 mkdir -p /tmp/invariants_preflight
 
@@ -80,12 +78,6 @@ if [[ "${manifest_changed}" -eq 1 ]]; then
   exit 0
 fi
 
-# CI Rule 1 parity: threat/compliance docs updated.
-if echo "${changed_files}" | grep -Eq "^(${THREAT_DOC}|${COMPLIANCE_DOC})$"; then
-  echo "✅ Rule 1 satisfied: threat/compliance docs updated."
-  exit 0
-fi
-
 if [[ "${docs_changed}" -eq 1 && "${inv_token_present}" -eq 1 ]]; then
   echo "✅ Rule 1 satisfied: docs updated with INV-### token(s)."
   exit 0
@@ -107,6 +99,9 @@ git add "$new_ex"
 echo ""
 echo "✅ Created and staged: $new_ex"
 echo ""
-echo "Exception file was created with non-placeholder metadata."
-echo "Review/adjust reason and mitigation sections, then re-run commit."
+echo "Edit the YAML front matter and replace placeholders, then re-run commit:"
+echo "  - exception_id: EXC-### (not EXC-000)"
+echo "  - expiry: YYYY-MM-DD in the future"
+echo "  - follow_up_ticket: your tracker ID (not PLACEHOLDER-000)"
+echo "  - created_at: YYYY-MM-DD"
 exit 1

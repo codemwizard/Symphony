@@ -93,8 +93,9 @@ Phase-0 performance evidence is structural:
 
 Current Phase-0 performance evidence:
 - `evidence/phase0/outbox_pending_indexes.json` (INV-031)
-- `evidence/phase0/db_timeout_posture.json` (INV-117)
 
 Planned evidence artifacts (future tasks):
+- `evidence/phase0/db_timeout_posture.json`
 - `evidence/phase0/index_posture.json`
 - `evidence/phase0/migration_performance_risks.json`
+

@@ -2,7 +2,7 @@ phase: "1"
 task_id: "TSK-P1-025"
 title: "Regulator and Tier-1 Demo-Proof Pack"
 owner_role: "SUPERVISOR"
-status: "completed"
+status: "planned"
 
 depends_on:
   - "TSK-P1-017"

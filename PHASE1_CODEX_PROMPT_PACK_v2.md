@@ -208,7 +208,7 @@ TSK-P1-003: Close verify_agent_conformance.sh.
   NOTE: scripts/audit/verify_agent_conformance.sh partially exists. Read it first.
   Close remaining gaps per TSK-P1-004 spec (if available) and ensure:
   - Script runs deterministically
-  - Emits evidence/phase1/agent_conformance.json (schema-conformant)
+  - Emits evidence/phase1/agent_conformance_architect.json, evidence/phase1/agent_conformance_implementer.json, and evidence/phase1/agent_conformance_policy_guardian.json (schema-conformant)
   - Wire into scripts/dev/pre_ci.sh
   - Wire into .github/workflows/invariants.yml
   CONTROL_PLANES: no new gate required for this (it is a governance-plane verifier;

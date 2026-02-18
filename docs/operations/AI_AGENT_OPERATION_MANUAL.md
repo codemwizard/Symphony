@@ -65,7 +65,7 @@ Human approvals are recorded as evidence artifacts (JSON with approver, timestam
 - `scripts/audit/verify_task_plans_present.sh` ensures each task has a plan/log linking to its mission.
 - `scripts/audit/verify_remediation_trace.sh` enforces remediation traces when production files change.
 - `scripts/audit/verify_evidence_harness_integrity.sh` blocks scripts that try to bypass gates.
--- `scripts/audit/verify_agent_conformance.sh` validates canonical references, stop conditions, regulated-surface approval metadata, and emits `evidence/phase1/agent_conformance.json` per the `docs/operations/VERIFY_AGENT_CONFORMANCE_SPEC.md`. It also depends on `docs/operations/approval_metadata.schema.json` and `docs/operations/approval_sidecar.schema.json` to validate approval artifacts.
+-- `scripts/audit/verify_agent_conformance.sh` validates canonical references, stop conditions, regulated-surface approval metadata, and emits role-scoped conformance evidence (`evidence/phase1/agent_conformance_architect.json`, `evidence/phase1/agent_conformance_implementer.json`, `evidence/phase1/agent_conformance_policy_guardian.json`) per the `docs/operations/VERIFY_AGENT_CONFORMANCE_SPEC.md`. It also depends on `docs/operations/approval_metadata.schema.json` and `docs/operations/approval_sidecar.schema.json` to validate approval artifacts.
 
 Agents must never work without these scripts passing locally and in CI. Changes to the specification must follow the same approval + evidence discipline as any regulated surface change.
 

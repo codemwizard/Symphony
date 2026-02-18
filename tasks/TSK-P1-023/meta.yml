@@ -2,7 +2,7 @@ phase: '1'
 task_id: TSK-P1-023
 title: Sandbox Deployability Baseline and Redundancy Proof
 owner_role: SECURITY_GUARDIAN
-status: completed
+status: planned
 depends_on:
 - TSK-P1-016
 - TSK-P1-019

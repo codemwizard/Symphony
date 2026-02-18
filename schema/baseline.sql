@@ -2,7 +2,7 @@
 -- PostgreSQL database dump
 --
 
-\restrict oXHWxVEGbks9SMvlmrmFtHkCgaSAEbSf2ocx9eteL1o1bMNZhrRzop8LxVmaPLK
+\restrict Thqu4QFTiSn4oo0CYjk84rFEi3NCOE5QMkCBcm5O6ddFOL2ofrWfyDhBjAo98H3
 
 -- Dumped from database version 18.1 (Debian 18.1-1.pgdg13+2)
 -- Dumped by pg_dump version 18.1 (Debian 18.1-1.pgdg13+2)
@@ -122,48 +122,6 @@ $$;
 
 
 --
--- Name: claim_anchor_sync_operation(text, integer); Type: FUNCTION; Schema: public; Owner: -
---
-
-CREATE FUNCTION public.claim_anchor_sync_operation(p_worker_id text, p_lease_seconds integer DEFAULT 30) RETURNS TABLE(operation_id uuid, pack_id uuid, lease_token uuid, state text, attempt_count integer)
-    LANGUAGE plpgsql
-    AS $$
-DECLARE
-  v_worker TEXT := NULLIF(BTRIM(p_worker_id), '');
-BEGIN
-  IF v_worker IS NULL THEN
-    RAISE EXCEPTION 'worker_id is required' USING ERRCODE = 'P7210';
-  END IF;
-
-  IF p_lease_seconds IS NULL OR p_lease_seconds <= 0 THEN
-    RAISE EXCEPTION 'lease seconds must be > 0' USING ERRCODE = 'P7210';
-  END IF;
-
-  RETURN QUERY
-  WITH candidate AS (
-    SELECT o.operation_id
-    FROM public.anchor_sync_operations o
-    WHERE o.state IN ('PENDING', 'ANCHORED')
-      AND (o.lease_expires_at IS NULL OR o.lease_expires_at <= clock_timestamp())
-    ORDER BY o.updated_at, o.created_at
-    LIMIT 1
-    FOR UPDATE SKIP LOCKED
-  )
-  UPDATE public.anchor_sync_operations o
-  SET state = CASE WHEN o.state = 'ANCHORED' THEN 'ANCHORED' ELSE 'ANCHORING' END,
-      claimed_by = v_worker,
-      lease_token = public.uuid_v7_or_random(),
-      lease_expires_at = clock_timestamp() + make_interval(secs => p_lease_seconds),
-      attempt_count = o.attempt_count + 1,
-      last_error = NULL
-  FROM candidate c
-  WHERE o.operation_id = c.operation_id
-  RETURNING o.operation_id, o.pack_id, o.lease_token, o.state, o.attempt_count;
-END;
-$$;
-
-
---
 -- Name: claim_outbox_batch(integer, text, integer); Type: FUNCTION; Schema: public; Owner: -
 --
 
@@ -202,46 +160,6 @@ WITH due AS (
  )
  SELECT * FROM leased;
  $$;
-
-
---
--- Name: complete_anchor_sync_operation(uuid, uuid, text); Type: FUNCTION; Schema: public; Owner: -
---
-
-CREATE FUNCTION public.complete_anchor_sync_operation(p_operation_id uuid, p_lease_token uuid, p_worker_id text) RETURNS void
-    LANGUAGE plpgsql
-    AS $$
-DECLARE
-  v_op public.anchor_sync_operations%ROWTYPE;
-BEGIN
-  SELECT * INTO v_op
-  FROM public.anchor_sync_operations
-  WHERE operation_id = p_operation_id
-  FOR UPDATE;
-
-  IF NOT FOUND THEN
-    RAISE EXCEPTION 'anchor operation not found' USING ERRCODE = 'P7210';
-  END IF;
-
-  IF v_op.claimed_by IS DISTINCT FROM p_worker_id THEN
-    RAISE EXCEPTION 'anchor operation worker mismatch' USING ERRCODE = 'P7212';
-  END IF;
-
-  IF v_op.lease_token IS DISTINCT FROM p_lease_token OR v_op.lease_expires_at IS NULL OR v_op.lease_expires_at <= clock_timestamp() THEN
-    RAISE EXCEPTION 'anchor operation lease invalid' USING ERRCODE = 'P7212';
-  END IF;
-
-  IF v_op.state <> 'ANCHORED' OR NULLIF(BTRIM(v_op.anchor_ref), '') IS NULL THEN
-    RAISE EXCEPTION 'anchor completion requires anchored state' USING ERRCODE = 'P7211';
-  END IF;
-
-  UPDATE public.anchor_sync_operations
-  SET state = 'COMPLETED',
-      lease_token = NULL,
-      lease_expires_at = NULL
-  WHERE operation_id = v_op.operation_id;
-END;
-$$;
 
 
 --
@@ -568,36 +486,6 @@ $$;
 
 
 --
--- Name: ensure_anchor_sync_operation(uuid, text); Type: FUNCTION; Schema: public; Owner: -
---
-
-CREATE FUNCTION public.ensure_anchor_sync_operation(p_pack_id uuid, p_anchor_provider text DEFAULT 'GENERIC'::text) RETURNS uuid
-    LANGUAGE plpgsql
-    AS $$
-DECLARE
-  v_operation_id UUID;
-BEGIN
-  IF p_pack_id IS NULL THEN
-    RAISE EXCEPTION 'pack_id is required' USING ERRCODE = 'P7210';
-  END IF;
-
-  INSERT INTO public.anchor_sync_operations(pack_id, anchor_provider)
-  VALUES (p_pack_id, COALESCE(NULLIF(BTRIM(p_anchor_provider), ''), 'GENERIC'))
-  ON CONFLICT (pack_id) DO NOTHING
-  RETURNING operation_id INTO v_operation_id;
-
-  IF v_operation_id IS NULL THEN
-    SELECT operation_id INTO v_operation_id
-    FROM public.anchor_sync_operations
-    WHERE pack_id = p_pack_id;
-  END IF;
-
-  RETURN v_operation_id;
-END;
-$$;
-
-
---
 -- Name: execute_pii_purge(uuid, text); Type: FUNCTION; Schema: public; Owner: -
 --
 
@@ -662,50 +550,6 @@ $$;
 
 
 --
--- Name: mark_anchor_sync_anchored(uuid, uuid, text, text, text); Type: FUNCTION; Schema: public; Owner: -
---
-
-CREATE FUNCTION public.mark_anchor_sync_anchored(p_operation_id uuid, p_lease_token uuid, p_worker_id text, p_anchor_ref text, p_anchor_type text DEFAULT 'HYBRID_SYNC'::text) RETURNS void
-    LANGUAGE plpgsql
-    AS $$
-DECLARE
-  v_op public.anchor_sync_operations%ROWTYPE;
-BEGIN
-  SELECT * INTO v_op
-  FROM public.anchor_sync_operations
-  WHERE operation_id = p_operation_id
-  FOR UPDATE;
-
-  IF NOT FOUND THEN
-    RAISE EXCEPTION 'anchor operation not found' USING ERRCODE = 'P7210';
-  END IF;
-
-  IF v_op.claimed_by IS DISTINCT FROM p_worker_id THEN
-    RAISE EXCEPTION 'anchor operation worker mismatch' USING ERRCODE = 'P7212';
-  END IF;
-
-  IF v_op.lease_token IS DISTINCT FROM p_lease_token OR v_op.lease_expires_at IS NULL OR v_op.lease_expires_at <= clock_timestamp() THEN
-    RAISE EXCEPTION 'anchor operation lease invalid' USING ERRCODE = 'P7212';
-  END IF;
-
-  IF v_op.state NOT IN ('ANCHORING', 'ANCHORED') THEN
-    RAISE EXCEPTION 'anchor operation cannot be anchored from state %', v_op.state USING ERRCODE = 'P7211';
-  END IF;
-
-  IF NULLIF(BTRIM(p_anchor_ref), '') IS NULL THEN
-    RAISE EXCEPTION 'anchor reference is required' USING ERRCODE = 'P7211';
-  END IF;
-
-  UPDATE public.anchor_sync_operations
-  SET state = 'ANCHORED',
-      anchor_ref = p_anchor_ref,
-      anchor_type = COALESCE(NULLIF(BTRIM(p_anchor_type), ''), 'HYBRID_SYNC')
-  WHERE operation_id = v_op.operation_id;
-END;
-$$;
-
-
---
 -- Name: outbox_retry_ceiling(); Type: FUNCTION; Schema: public; Owner: -
 --
 
@@ -716,32 +560,6 @@ CREATE FUNCTION public.outbox_retry_ceiling() RETURNS integer
     NULLIF(current_setting('symphony.outbox_retry_ceiling', true), '')::int,
     20
   );
-$$;
-
-
---
--- Name: repair_expired_anchor_sync_leases(text); Type: FUNCTION; Schema: public; Owner: -
---
-
-CREATE FUNCTION public.repair_expired_anchor_sync_leases(p_worker_id text DEFAULT 'anchor_repair'::text) RETURNS integer
-    LANGUAGE plpgsql
-    AS $$
-DECLARE
-  v_count INTEGER := 0;
-BEGIN
-  UPDATE public.anchor_sync_operations
-  SET state = CASE WHEN state = 'ANCHORED' THEN 'ANCHORED' ELSE 'PENDING' END,
-      claimed_by = NULL,
-      lease_token = NULL,
-      lease_expires_at = NULL,
-      last_error = COALESCE(last_error, 'LEASE_EXPIRED_REPAIRED')
-  WHERE state IN ('ANCHORING', 'ANCHORED')
-    AND lease_expires_at IS NOT NULL
-    AND lease_expires_at <= clock_timestamp();
-
-  GET DIAGNOSTICS v_count = ROW_COUNT;
-  RETURN v_count;
-END;
 $$;
 
 
@@ -913,20 +731,6 @@ $$;
 
 
 --
--- Name: touch_anchor_sync_updated_at(); Type: FUNCTION; Schema: public; Owner: -
---
-
-CREATE FUNCTION public.touch_anchor_sync_updated_at() RETURNS trigger
-    LANGUAGE plpgsql
-    AS $$
-BEGIN
-  NEW.updated_at := NOW();
-  RETURN NEW;
-END;
-$$;
-
-
---
 -- Name: uuid_strategy(); Type: FUNCTION; Schema: public; Owner: -
 --
 
@@ -954,30 +758,6 @@ CREATE FUNCTION public.uuid_v7_or_random() RETURNS uuid
 SET default_tablespace = '';
 
 SET default_table_access_method = heap;
-
---
--- Name: anchor_sync_operations; Type: TABLE; Schema: public; Owner: -
---
-
-CREATE TABLE public.anchor_sync_operations (
-    operation_id uuid DEFAULT public.uuid_v7_or_random() NOT NULL,
-    pack_id uuid NOT NULL,
-    state text DEFAULT 'PENDING'::text NOT NULL,
-    anchor_provider text DEFAULT 'GENERIC'::text NOT NULL,
-    anchor_ref text,
-    claimed_by text,
-    lease_token uuid,
-    lease_expires_at timestamp with time zone,
-    attempt_count integer DEFAULT 0 NOT NULL,
-    last_error text,
-    created_at timestamp with time zone DEFAULT now() NOT NULL,
-    updated_at timestamp with time zone DEFAULT now() NOT NULL,
-    anchor_type text,
-    CONSTRAINT anchor_sync_operations_attempt_count_check CHECK ((attempt_count >= 0)),
-    CONSTRAINT anchor_sync_operations_state_check CHECK ((state = ANY (ARRAY['PENDING'::text, 'ANCHORING'::text, 'ANCHORED'::text, 'COMPLETED'::text, 'FAILED'::text]))),
-    CONSTRAINT ck_anchor_sync_completed_requires_anchor_ref CHECK (((state <> 'COMPLETED'::text) OR (anchor_ref IS NOT NULL)))
-);
-
 
 --
 -- Name: billable_clients; Type: TABLE; Schema: public; Owner: -
@@ -1387,22 +1167,6 @@ CREATE TABLE public.tenants (
 
 
 --
--- Name: anchor_sync_operations anchor_sync_operations_pack_id_key; Type: CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.anchor_sync_operations
-    ADD CONSTRAINT anchor_sync_operations_pack_id_key UNIQUE (pack_id);
-
-
---
--- Name: anchor_sync_operations anchor_sync_operations_pkey; Type: CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.anchor_sync_operations
-    ADD CONSTRAINT anchor_sync_operations_pkey PRIMARY KEY (operation_id);
-
-
---
 -- Name: billable_clients billable_clients_client_key_required_new_rows_chk; Type: CHECK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -1728,13 +1492,6 @@ ALTER TABLE ONLY public.rail_dispatch_truth_anchor
 
 ALTER TABLE ONLY public.rail_dispatch_truth_anchor
     ADD CONSTRAINT ux_rail_truth_anchor_sequence_scope UNIQUE (rail_sequence_ref, rail_participant_id, rail_profile);
-
-
---
--- Name: idx_anchor_sync_operations_state_due; Type: INDEX; Schema: public; Owner: -
---
-
-CREATE INDEX idx_anchor_sync_operations_state_due ON public.anchor_sync_operations USING btree (state, lease_expires_at, updated_at);
 
 
 --
@@ -2123,21 +1880,6 @@ CREATE TRIGGER trg_set_external_proofs_attribution BEFORE INSERT ON public.exter
 
 
 --
--- Name: anchor_sync_operations trg_touch_anchor_sync_updated_at; Type: TRIGGER; Schema: public; Owner: -
---
-
-CREATE TRIGGER trg_touch_anchor_sync_updated_at BEFORE UPDATE ON public.anchor_sync_operations FOR EACH ROW EXECUTE FUNCTION public.touch_anchor_sync_updated_at();
-
-
---
--- Name: anchor_sync_operations anchor_sync_operations_pack_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.anchor_sync_operations
-    ADD CONSTRAINT anchor_sync_operations_pack_id_fkey FOREIGN KEY (pack_id) REFERENCES public.evidence_packs(pack_id);
-
-
---
 -- Name: billing_usage_events billing_usage_events_billable_client_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -2325,5 +2067,5 @@ ALTER TABLE ONLY public.tenants
 -- PostgreSQL database dump complete
 --
 
-\unrestrict oXHWxVEGbks9SMvlmrmFtHkCgaSAEbSf2ocx9eteL1o1bMNZhrRzop8LxVmaPLK
+\unrestrict Thqu4QFTiSn4oo0CYjk84rFEi3NCOE5QMkCBcm5O6ddFOL2ofrWfyDhBjAo98H3
 

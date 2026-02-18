@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
+SCRIPT_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
+ROOT_DIR="${ROOT_DIR:-$SCRIPT_ROOT}"
 CONTRACT_FILE="${CONTRACT_FILE:-$ROOT_DIR/docs/PHASE1/phase1_contract.yml}"
 CP_FILE="${CP_FILE:-$ROOT_DIR/docs/control_planes/CONTROL_PLANES.yml}"
 SCHEMA_FILE="${SCHEMA_FILE:-$ROOT_DIR/docs/architecture/evidence_schema.json}"
@@ -11,16 +12,17 @@ EVIDENCE_FILE="${EVIDENCE_FILE:-$EVIDENCE_DIR/phase1_contract_status.json}"
 RUN_PHASE1_GATES="${RUN_PHASE1_GATES:-0}"
 
 mkdir -p "$EVIDENCE_DIR"
-source "$ROOT_DIR/scripts/lib/evidence.sh"
+source "$SCRIPT_ROOT/scripts/lib/evidence.sh"
 EVIDENCE_TS="$(evidence_now_utc)"
 EVIDENCE_GIT_SHA="$(git_sha)"
 EVIDENCE_SCHEMA_FP="$(schema_fingerprint)"
 export EVIDENCE_TS EVIDENCE_GIT_SHA EVIDENCE_SCHEMA_FP
 
-ROOT_DIR="$ROOT_DIR" CONTRACT_FILE="$CONTRACT_FILE" CP_FILE="$CP_FILE" SCHEMA_FILE="$SCHEMA_FILE" APPROVAL_SCHEMA_FILE="$APPROVAL_SCHEMA_FILE" EVIDENCE_FILE="$EVIDENCE_FILE" RUN_PHASE1_GATES="$RUN_PHASE1_GATES" python3 - <<'PY'
+ROOT_DIR="$ROOT_DIR" SCRIPT_ROOT="$SCRIPT_ROOT" CONTRACT_FILE="$CONTRACT_FILE" CP_FILE="$CP_FILE" SCHEMA_FILE="$SCHEMA_FILE" APPROVAL_SCHEMA_FILE="$APPROVAL_SCHEMA_FILE" EVIDENCE_FILE="$EVIDENCE_FILE" RUN_PHASE1_GATES="$RUN_PHASE1_GATES" python3 - <<'PY'
 import json
 import os
 from pathlib import Path
+import sys
 
 try:
     import yaml  # type: ignore
@@ -43,6 +45,9 @@ schema_file = Path(os.environ["SCHEMA_FILE"])
 approval_schema_file = Path(os.environ["APPROVAL_SCHEMA_FILE"])
 evidence_file = Path(os.environ["EVIDENCE_FILE"])
 root_dir = Path(os.environ["ROOT_DIR"])
+script_root = Path(os.environ["SCRIPT_ROOT"])
+sys.path.insert(0, str(script_root))
+from scripts.audit.lib.approval_requirement import approval_requirement_context
 run_phase1 = os.environ.get("RUN_PHASE1_GATES", "0") == "1"
 
 errors = []
@@ -90,6 +95,10 @@ for plane in (cp.get("control_planes") or {}).values():
             gate_map[gid] = gate
 
 reserved_not_wired = {"INT-G25", "INT-G26", "INT-G27"}
+approval_ctx = approval_requirement_context(root_dir)
+if approval_ctx.get("error"):
+    errors.append(f"approval_requirement_diff_error:{approval_ctx.get('error')}")
+approval_required = bool(approval_ctx["approval_required"])
 
 for row in contract:
     if not isinstance(row, dict):
@@ -137,6 +146,8 @@ for row in contract:
 
     # Fail-closed required rows only when phase1 gates enabled.
     should_enforce = required and run_phase1
+    if Path(evidence_path).name == "approval_metadata.json" and not approval_required:
+        should_enforce = False
     if should_enforce:
         if not ev_path.exists():
             errors.append(f"{iid}:missing_evidence:{evidence_path}")
@@ -161,7 +172,10 @@ for row in contract:
             errors.append(f"{iid}:schema_validation_failed:{e}")
             checked.append({"invariant_id": iid, "status": "FAIL", "reason": "schema_validation_failed"})
     else:
-        checked.append({"invariant_id": iid, "status": "SKIPPED", "reason": "not_required_or_phase1_disabled"})
+        reason = "not_required_or_phase1_disabled"
+        if Path(evidence_path).name == "approval_metadata.json" and run_phase1 and not approval_required:
+            reason = "approval_not_required_for_diff"
+        checked.append({"invariant_id": iid, "status": "SKIPPED", "reason": reason})
 
 overall = "PASS" if not errors else "FAIL"
 out = {
@@ -173,6 +187,16 @@ out = {
     "run_phase1_gates": run_phase1,
     "required_rows": required_rows,
     "required_rows_checked": required_checked,
+    "approval_requirement": {
+        "required": approval_required,
+        "rules_file": approval_ctx["rules_file"],
+        "regulated_patterns": approval_ctx["regulated_patterns"],
+        "regulated_changed_paths": approval_ctx["regulated_changed_paths"],
+        "diff_mode": approval_ctx["diff_mode"],
+        "base_ref": approval_ctx["base_ref"],
+        "head_ref": approval_ctx["head_ref"],
+        "merge_base": approval_ctx["merge_base"],
+    },
     "checked": checked,
     "errors": errors,
 }

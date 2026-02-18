@@ -28,7 +28,7 @@ must_read:
 - scripts/audit/verify_ci_order.sh
 implementation_plan: docs/plans/phase1/TSK-P1-021_canonical_git_diff_library/PLAN.md
 implementation_log: docs/plans/phase1/TSK-P1-021_canonical_git_diff_library/EXEC_LOG.md
-notes: Prevents recurring local/CI diff semantics drift bugs.
+notes: Prevents recurring local/CI diff semantics drift bugs. Follow-on hardening for strict range-only parity-critical semantics is tracked in TSK-P1-027.
 client: codex_cli
 assigned_agent: invariants_curator
 model: <UNASSIGNED>

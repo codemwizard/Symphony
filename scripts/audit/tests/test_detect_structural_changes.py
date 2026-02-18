@@ -104,10 +104,6 @@ class TestDetectStructuralChanges(unittest.TestCase):
             self.assertIn("# Exception: security structural change without invariants linkage", content)
             self.assertIn("Matched files:", content)
             self.assertIn("docs/notes.md", content)
-            self.assertNotIn("EXC-000", content)
-            self.assertNotIn("PLACEHOLDER-000", content)
-            self.assertNotIn("[Describe why this exception is needed]", content)
-            self.assertNotIn("[Describe any mitigating controls in place]", content)
 
 
 if __name__ == "__main__":

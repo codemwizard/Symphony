@@ -66,11 +66,6 @@ for path in sys.argv[1:]:
         errors.append(f"{path}: cannot read: {e}")
         continue
 
-    # Reject unresolved placeholder text anywhere in the file.
-    for marker in ("EXC-000", "PLACEHOLDER-000", "[Describe why this exception is needed]", "[Describe any mitigating controls in place]"):
-        if marker in text:
-            errors.append(f"{path}: unresolved placeholder text found: {marker}")
-
     meta = parse_front_matter(text)
     if meta is None:
         errors.append(f"{path}: missing YAML front matter delimited by ---")

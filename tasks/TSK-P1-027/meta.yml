@@ -1,64 +1,63 @@
-phase: "1"
-task_id: "TSK-P1-027"
-title: "Performance Gap Close: Ingress Hot-Path Index Mechanical Gate"
-owner_role: "DB_FOUNDATION"
-status: "completed"
-
+phase: '1'
+task_id: TSK-P1-027
+title: Range-only Diff Parity Hardening (follow-on to TSK-P1-021)
+owner_role: INVARIANTS_CURATOR
+status: planned
 depends_on:
-  - "TSK-P1-017"
-  - "TSK-P1-010"
-
+- TSK-P1-021
 touches:
-  - "scripts/db/tests/test_ingress_hotpath_indexes.sh"
-  - "scripts/db/verify_invariants.sh"
-  - "scripts/dev/pre_ci.sh"
-  - "docs/control_planes/CONTROL_PLANES.yml"
-  - "docs/PHASE1/phase1_contract.yml"
-  - "docs/invariants/INVARIANTS_MANIFEST.yml"
-  - "tasks/TSK-P1-027/meta.yml"
-  - "docs/plans/phase1/TSK-P1-027_ingress_hotpath_index_performance_gate/PLAN.md"
-  - "docs/plans/phase1/TSK-P1-027_ingress_hotpath_index_performance_gate/EXEC_LOG.md"
-
+- scripts/lib/git_diff_range_only.sh
+- scripts/lib/git_diff_dev.sh
+- scripts/audit/lib/parity_critical_scripts.sh
+- scripts/audit/prepare_invariants_curator_inputs.sh
+- scripts/audit/verify_diff_semantics_parity.sh
+- scripts/audit/test_diff_semantics_parity.sh
+- scripts/audit/tests/**
+- docs/operations/AGENTIC_SDLC_PHASE1_POLICY.md
+- docs/plans/phase1/TSK-P1-027_range_only_diff_parity_hardening/PLAN.md
+- docs/plans/phase1/TSK-P1-027_range_only_diff_parity_hardening/EXEC_LOG.md
+- tasks/TSK-P1-027/meta.yml
 invariants:
-  - "INV-118"
-  - "INV-035"
-  - "INV-066"
-
+- INV-105
+- INV-081
 work:
-  - "Add dedicated ingress hot-path index verifier for ingress_attestations and required tenant/instruction/correlation query paths."
-  - "Require exact index column ordering for hot-path index assertions to prevent false pass."
-  - "Emit deterministic evidence at `evidence/phase1/ingress_hotpath_indexes.json` on PASS and FAIL paths."
-  - "Wire non-colliding control-plane gate (recommended INT-G33; do not reuse INT-G25..INT-G31)."
-  - "Add required Phase-1 contract row after gate is wired and evidence is deterministic."
-
+- Introduce dedicated range-only helper contract for parity-critical scripts.
+- Move staged/worktree helper functions to a non-parity helper surface.
+- Define one canonical parity-critical script list and require all parity verifiers/tests to consume it.
+- Explicitly classify staged preflight helpers as non parity-critical surfaces.
+- Enforce that parity-critical scripts source only range-only helper surfaces.
+- Enforce banned-command policy for parity-critical scripts (`git diff --cached`, `git status`, `git ls-files -m`, and raw worktree/staged helper calls).
+- Add semantic parity acceptance tests for staged/worktree immunity and changed-file equivalence.
+- Align verifier critical-list semantics with range-only policy.
 acceptance_criteria:
-  - "Verifier fails when any required ingress hot-path index is missing or invalid."
-  - "Evidence lists each required index check and pass/fail result deterministically."
-  - "RUN_PHASE1_GATES=1 path enforces this gate via phase1_contract without missing-evidence failures."
-
+- Parity-critical scripts cannot call staged/worktree helper APIs.
+- Staged preflight scripts are excluded from parity-critical script lists.
+- A single canonical parity-critical list is used by verifier and parity test harnesses.
+- Parity verifier enforces source boundary: parity-critical scripts may source range-only helper(s) and may not source dev/staged helper surfaces.
+- verify_diff_semantics_parity fails on forbidden helper sourcing and staged/worktree helper calls.
+- verify_diff_semantics_parity fails on banned direct git command patterns in parity-critical scripts.
+- test_diff_semantics_parity proves staged/worktree changes do not affect parity-critical changed-file decisions.
+- pre_ci and CI produce equivalent changed-file decisions for parity-critical gates with evidence hash parity.
 verification:
-  - "scripts/db/tests/test_ingress_hotpath_indexes.sh"
-  - "scripts/dev/pre_ci.sh"
-  - "RUN_PHASE1_GATES=1 scripts/dev/pre_ci.sh"
-  - "scripts/audit/verify_phase1_contract.sh"
-
+- bash scripts/audit/test_diff_semantics_parity.sh
+- bash scripts/audit/verify_diff_semantics_parity.sh
+- bash scripts/audit/verify_remediation_trace.sh
+- RUN_PHASE1_GATES=1 bash scripts/dev/pre_ci.sh
 evidence:
-  - "evidence/phase1/ingress_hotpath_indexes.json"
-
+- evidence/phase1/git_diff_semantics.json
 failure_modes:
-  - "Ingress hot-path index missing and verifier passes due to loose pattern matching."
-  - "Evidence missing when verifier fails."
-  - "Gate ID collision with existing INT-Gxx entries."
-
+- Range-only policy declared but staged/worktree helpers remain reachable from parity-critical scripts.
+- Verifier checks helper sourcing only and misses semantic staged/worktree regression.
+- Parity-critical list still includes staged-preflight scripts after range-only policy hardening.
+- Parity-critical lists drift between verifier/test scripts and create split-brain enforcement.
+- Diff-mode drift returns between local and CI.
 must_read:
-  - "docs/control_planes/CONTROL_PLANES.yml"
-  - "docs/PHASE1/phase1_contract.yml"
-  - "docs/PHASE0/PHASE0_PERFORMANCE_POSTURE.md"
-
-implementation_plan: "docs/plans/phase1/TSK-P1-027_ingress_hotpath_index_performance_gate/PLAN.md"
-implementation_log: "docs/plans/phase1/TSK-P1-027_ingress_hotpath_index_performance_gate/EXEC_LOG.md"
-
-notes: "Implemented dedicated ingress hot-path index gate and wired INT-G33 with Phase-1 contract requirement."
-client: "codex_cli"
-assigned_agent: "db_foundation"
-model: "<UNASSIGNED>"
+- docs/plans/phase0/TSK-P0-152_diff_semantics_canonicalization/PLAN.md
+- docs/plans/phase0/TSK-P0-154_refactor_diff_based_gates/PLAN.md
+- docs/plans/phase0/TSK-P0-155_diff_semantics_regression_verifier/PLAN.md
+implementation_plan: docs/plans/phase1/TSK-P1-027_range_only_diff_parity_hardening/PLAN.md
+implementation_log: docs/plans/phase1/TSK-P1-027_range_only_diff_parity_hardening/EXEC_LOG.md
+notes: Hardens canonical parity intent from P0-152/154/155 by making staged/worktree access impossible in parity-critical script paths.
+client: codex_cli
+assigned_agent: invariants_curator
+model: <UNASSIGNED>
