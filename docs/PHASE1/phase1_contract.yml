@@ -22,6 +22,14 @@
   evidence_path: "evidence/phase0/anchor_sync_hooks.json"
   notes: "Structural hooks exist in Phase-0; operational hardening is Phase-1."
 
+- invariant_id: "INV-113"
+  status: "implemented"
+  required: true
+  gate_id: "INT-G29"
+  verifier: "scripts/db/verify_anchor_sync_operational_invariant.sh"
+  evidence_path: "evidence/phase1/anchor_sync_operational_invariant.json"
+  notes: "Operational anchor-sync invariants enforced in Phase-1."
+
 - invariant_id: "INV-114"
   status: "implemented"
   required: true

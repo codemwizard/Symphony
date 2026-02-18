@@ -305,6 +305,7 @@ fi
 echo "==> DB verify_invariants.sh"
 if [[ -x scripts/db/verify_invariants.sh ]]; then
   # Control-plane reference (INV-031 / INT-G22): scripts/db/tests/test_outbox_pending_indexes.sh
+  # Control-plane reference (INV-113 / INT-G29): scripts/db/verify_anchor_sync_operational_invariant.sh
   # Control-plane reference (INV-117 / INT-G32): scripts/db/verify_timeout_posture.sh
   # Control-plane reference (INV-118 / INT-G33): scripts/db/tests/test_ingress_hotpath_indexes.sh
   SKIP_POLICY_SEED=1 scripts/db/verify_invariants.sh
@@ -327,6 +328,9 @@ if [[ -x scripts/db/verify_boz_observability_role.sh ]]; then
 fi
 if [[ -x scripts/db/verify_anchor_sync_hooks.sh ]]; then
   scripts/db/verify_anchor_sync_hooks.sh
+fi
+if [[ -x scripts/db/verify_anchor_sync_operational_invariant.sh ]]; then
+  scripts/db/verify_anchor_sync_operational_invariant.sh
 fi
 if [[ -x scripts/db/verify_timeout_posture.sh ]]; then
   scripts/db/verify_timeout_posture.sh
@@ -362,6 +366,9 @@ if [[ -n "${DATABASE_URL:-}" ]]; then
   fi
   if [[ -x scripts/db/tests/test_rail_sequence_continuity.sh ]]; then
     scripts/db/tests/test_rail_sequence_continuity.sh
+  fi
+  if [[ -x scripts/db/tests/test_anchor_sync_operational.sh ]]; then
+    scripts/db/tests/test_anchor_sync_operational.sh
   fi
   if [[ -x scripts/db/tests/test_ingress_hotpath_indexes.sh ]]; then
     scripts/db/tests/test_ingress_hotpath_indexes.sh

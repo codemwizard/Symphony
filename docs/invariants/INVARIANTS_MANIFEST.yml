@@ -818,8 +818,8 @@
   title: "Hybrid anchor-sync schema hooks present (Phase-0 structural readiness)"
   owners: ["team-db", "team-platform"]
   sla_days: 21
-  enforcement: "scripts/db/verify_anchor_sync_hooks.sh"
-  verification: "scripts/db/verify_anchor_sync_hooks.sh; evidence/phase0/anchor_sync_hooks.json"
+  enforcement: "scripts/db/verify_anchor_sync_hooks.sh; scripts/db/verify_anchor_sync_operational_invariant.sh"
+  verification: "scripts/db/verify_anchor_sync_hooks.sh; scripts/db/verify_anchor_sync_operational_invariant.sh; scripts/db/tests/test_anchor_sync_operational.sh; evidence/phase0/anchor_sync_hooks.json; evidence/phase1/anchor_sync_operational_invariant.json; evidence/phase1/anchor_sync_resume_semantics.json"
 
 - id: INV-114
   aliases: ["INV-BOZ-04"]
