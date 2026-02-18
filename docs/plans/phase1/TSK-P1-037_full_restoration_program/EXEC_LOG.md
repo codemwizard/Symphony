@@ -41,3 +41,16 @@ Plan: `docs/plans/phase1/TSK-P1-037_full_restoration_program/PLAN.md`
 
 - PR-4 verification rerun:
   - `bash scripts/dev/pre_ci.sh` -> PASS
+
+- PR-5 batch restored pilot self-test harness orchestration:
+  - `scripts/services/test_exception_case_pack_generator.sh`
+  - `scripts/services/test_pilot_authz_tenant_boundary.sh`
+  - `scripts/dev/run_phase1_pilot_harness.sh`
+  - `scripts/dev/pre_ci.sh` (phase-1 self-test wiring)
+  - `services/ledger-api/dotnet/src/LedgerApi/Program.cs` (`--self-test-case-pack`, `--self-test-authz`)
+
+- PR-5 verification rerun:
+  - `bash scripts/services/test_exception_case_pack_generator.sh` -> PASS
+  - `bash scripts/services/test_pilot_authz_tenant_boundary.sh` -> PASS
+  - `bash scripts/dev/run_phase1_pilot_harness.sh` -> PASS
+  - `bash scripts/dev/pre_ci.sh` -> PASS

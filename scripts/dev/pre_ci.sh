@@ -204,6 +204,16 @@ if [[ -x scripts/services/test_evidence_pack_api_contract.sh ]]; then
   scripts/services/test_evidence_pack_api_contract.sh
 fi
 
+if [[ -x scripts/services/test_exception_case_pack_generator.sh ]]; then
+  echo "==> Phase-1 exception case-pack self-test"
+  scripts/services/test_exception_case_pack_generator.sh
+fi
+
+if [[ -x scripts/services/test_pilot_authz_tenant_boundary.sh ]]; then
+  echo "==> Phase-1 pilot authz tenant-boundary self-test"
+  scripts/services/test_pilot_authz_tenant_boundary.sh
+fi
+
 if [[ -f "$ENV_FILE" ]]; then
   set -a
   # shellcheck disable=SC1090
