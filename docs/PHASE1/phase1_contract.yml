@@ -71,6 +71,14 @@
   notes: "Restored ingress hot-path index posture verification gate."
 
 - invariant_id: "INV-105"
+  status: "phase0_prerequisite"
+  required: true
+  gate_id: "INT-G28"
+  verifier: "scripts/audit/verify_remediation_trace.sh"
+  evidence_path: "evidence/phase0/remediation_trace.json"
+  notes: "INV-105 (I-REMED-TRACE-01): production-affecting changes require remediation trace evidence."
+
+- invariant_id: "INV-119"
   status: "implemented"
   required: true
   gate_id: "INT-G28"
@@ -78,7 +86,7 @@
   evidence_path: "evidence/phase1/agent_conformance_architect.json"
   notes: "Phase-1 agent governance conformance evidence is required for Architect role."
 
-- invariant_id: "INV-105"
+- invariant_id: "INV-119"
   status: "implemented"
   required: true
   gate_id: "INT-G28"
@@ -86,7 +94,7 @@
   evidence_path: "evidence/phase1/agent_conformance_implementer.json"
   notes: "Phase-1 agent governance conformance evidence is required for Implementer role."
 
-- invariant_id: "INV-105"
+- invariant_id: "INV-119"
   status: "implemented"
   required: true
   gate_id: "INT-G28"

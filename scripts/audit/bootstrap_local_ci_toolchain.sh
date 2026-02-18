@@ -12,6 +12,8 @@ source "$ROOT_DIR/scripts/audit/ci_toolchain_versions.env"
 VENV_DIR="${SYMPHONY_VENV_DIR:-$ROOT_DIR/.venv}"
 TOOLCHAIN_DIR="${SYMPHONY_TOOLCHAIN_DIR:-$ROOT_DIR/.toolchain}"
 BIN_DIR="$TOOLCHAIN_DIR/bin"
+OFFLINE_MODE="${SYMPHONY_OFFLINE:-0}"
+VENDORED_RG_PATH="${SYMPHONY_VENDORED_RG_PATH:-}"
 
 mkdir -p "$BIN_DIR"
 
@@ -43,6 +45,19 @@ if [[ -x "$BIN_DIR/rg" ]]; then
   have="$("$BIN_DIR/rg" --version | head -n1 | awk '{print $2}')"
   if [[ "$have" == "$RIPGREP_VERSION" ]]; then
     need_rg=0
+  fi
+fi
+
+if [[ "$need_rg" == "1" ]]; then
+  if [[ "$OFFLINE_MODE" == "1" ]]; then
+    if [[ -n "$VENDORED_RG_PATH" && -x "$VENDORED_RG_PATH" ]]; then
+      install -m 0755 "$VENDORED_RG_PATH" "$BIN_DIR/rg"
+      need_rg=0
+    else
+      echo "ERROR: offline mode enabled (SYMPHONY_OFFLINE=1) and pinned rg ${RIPGREP_VERSION} is not available." >&2
+      echo "Action: provide SYMPHONY_VENDORED_RG_PATH to an executable rg binary, or pre-install ${BIN_DIR}/rg at version ${RIPGREP_VERSION}." >&2
+      exit 1
+    fi
   fi
 fi
 

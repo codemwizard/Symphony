@@ -1,0 +1,43 @@
+version: "1.0"
+registry:
+  scripts/db/verify_boz_observability_role.sh:
+    emits:
+      - evidence/phase0/boz_observability_role.json
+  scripts/audit/lint_pii_leakage_payloads.sh:
+    emits:
+      - evidence/phase0/pii_leakage_payloads.json
+  scripts/db/verify_anchor_sync_hooks.sh:
+    emits:
+      - evidence/phase0/anchor_sync_hooks.json
+  scripts/db/verify_anchor_sync_operational_invariant.sh:
+    emits:
+      - evidence/phase1/anchor_sync_operational_invariant.json
+  scripts/db/verify_instruction_finality_invariant.sh:
+    emits:
+      - evidence/phase1/instruction_finality_invariant.json
+  scripts/db/verify_pii_decoupling_hooks.sh:
+    emits:
+      - evidence/phase1/pii_decoupling_invariant.json
+  scripts/db/verify_rail_sequence_truth_anchor.sh:
+    emits:
+      - evidence/phase1/rail_sequence_truth_anchor.json
+  scripts/db/verify_timeout_posture.sh:
+    emits:
+      - evidence/phase0/db_timeout_posture.json
+  scripts/db/tests/test_ingress_hotpath_indexes.sh:
+    emits:
+      - evidence/phase1/ingress_hotpath_indexes.json
+  scripts/audit/verify_remediation_trace.sh:
+    emits:
+      - evidence/phase0/remediation_trace.json
+  scripts/audit/verify_agent_conformance.sh:
+    emits:
+      - evidence/phase1/agent_conformance_architect.json
+      - evidence/phase1/agent_conformance_implementer.json
+      - evidence/phase1/agent_conformance_policy_guardian.json
+  scripts/audit/verify_evidence_harness_integrity.sh:
+    emits:
+      - evidence/phase1/approval_metadata.json
+  scripts/security/lint_dotnet_quality.sh:
+    emits:
+      - evidence/phase1/dotnet_lint_quality.json

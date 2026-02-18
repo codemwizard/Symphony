@@ -76,9 +76,10 @@ run_case() {
   local name="$1"
   local change_path="$2"
   local approval_mode="$3" # none|invalid|valid
-  local expected_exit="$4"
-  local expected_status="$5"
-  local expected_error="$6"
+  local contract_mode="$4" # range|zip_audit
+  local expected_exit="$5"
+  local expected_status="$6"
+  local expected_error="$7"
 
   local case_dir="$tmp_dir/$name"
   mkdir -p "$case_dir"
@@ -119,7 +120,7 @@ JSON
 
   local evidence_out="$case_dir/evidence/phase1/phase1_contract_status.json"
   set +e
-  ROOT_DIR="$case_dir" RUN_PHASE1_GATES=1 EVIDENCE_FILE="$evidence_out" bash "$SCRIPT" >/tmp/approval_req_case.log 2>&1
+  ROOT_DIR="$case_dir" RUN_PHASE1_GATES=1 PHASE1_CONTRACT_MODE="$contract_mode" EVIDENCE_FILE="$evidence_out" bash "$SCRIPT" >/tmp/approval_req_case.log 2>&1
   rc=$?
   set -e
 
@@ -139,9 +140,10 @@ JSON
   fi
 }
 
-run_case "non_regulated_no_approval" "docs/readme.md" "none" 0 "PASS" ""
-run_case "regulated_missing_approval" "scripts/audit/example.sh" "none" 1 "FAIL" "missing_evidence"
-run_case "regulated_invalid_approval" "scripts/audit/example.sh" "invalid" 1 "FAIL" "schema_validation_failed"
-run_case "regulated_valid_approval" "scripts/audit/example.sh" "valid" 0 "PASS" ""
+run_case "non_regulated_no_approval" "docs/readme.md" "none" "range" 0 "PASS" ""
+run_case "regulated_missing_approval" "scripts/audit/example.sh" "none" "range" 1 "FAIL" "missing_evidence"
+run_case "regulated_invalid_approval" "scripts/audit/example.sh" "invalid" "range" 1 "FAIL" "schema_validation_failed"
+run_case "regulated_valid_approval" "scripts/audit/example.sh" "valid" "range" 0 "PASS" ""
+run_case "zip_mode_regulated_no_approval" "scripts/audit/example.sh" "none" "zip_audit" 0 "PASS" ""
 
 echo "Approval metadata requirement tests passed."

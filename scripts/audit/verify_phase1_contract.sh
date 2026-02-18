@@ -10,6 +10,7 @@ APPROVAL_SCHEMA_FILE="${APPROVAL_SCHEMA_FILE:-$ROOT_DIR/docs/operations/approval
 EVIDENCE_DIR="${EVIDENCE_DIR:-$ROOT_DIR/evidence/phase1}"
 EVIDENCE_FILE="${EVIDENCE_FILE:-$EVIDENCE_DIR/phase1_contract_status.json}"
 RUN_PHASE1_GATES="${RUN_PHASE1_GATES:-0}"
+PHASE1_CONTRACT_MODE="${PHASE1_CONTRACT_MODE:-range}"
 
 mkdir -p "$EVIDENCE_DIR"
 source "$SCRIPT_ROOT/scripts/lib/evidence.sh"
@@ -18,7 +19,7 @@ EVIDENCE_GIT_SHA="$(git_sha)"
 EVIDENCE_SCHEMA_FP="$(schema_fingerprint)"
 export EVIDENCE_TS EVIDENCE_GIT_SHA EVIDENCE_SCHEMA_FP
 
-ROOT_DIR="$ROOT_DIR" SCRIPT_ROOT="$SCRIPT_ROOT" CONTRACT_FILE="$CONTRACT_FILE" CP_FILE="$CP_FILE" SCHEMA_FILE="$SCHEMA_FILE" APPROVAL_SCHEMA_FILE="$APPROVAL_SCHEMA_FILE" EVIDENCE_FILE="$EVIDENCE_FILE" RUN_PHASE1_GATES="$RUN_PHASE1_GATES" python3 - <<'PY'
+ROOT_DIR="$ROOT_DIR" SCRIPT_ROOT="$SCRIPT_ROOT" CONTRACT_FILE="$CONTRACT_FILE" CP_FILE="$CP_FILE" SCHEMA_FILE="$SCHEMA_FILE" APPROVAL_SCHEMA_FILE="$APPROVAL_SCHEMA_FILE" EVIDENCE_FILE="$EVIDENCE_FILE" RUN_PHASE1_GATES="$RUN_PHASE1_GATES" PHASE1_CONTRACT_MODE="$PHASE1_CONTRACT_MODE" python3 - <<'PY'
 import json
 import os
 from pathlib import Path
@@ -49,6 +50,19 @@ script_root = Path(os.environ["SCRIPT_ROOT"])
 sys.path.insert(0, str(script_root))
 from scripts.audit.lib.approval_requirement import approval_requirement_context
 run_phase1 = os.environ.get("RUN_PHASE1_GATES", "0") == "1"
+mode = os.environ.get("PHASE1_CONTRACT_MODE", "range").strip().lower()
+
+if mode not in {"range", "zip_audit"}:
+    out = {
+        "check_id": "PHASE1-CONTRACT-STATUS",
+        "timestamp_utc": os.environ.get("EVIDENCE_TS"),
+        "git_sha": os.environ.get("EVIDENCE_GIT_SHA"),
+        "schema_fingerprint": os.environ.get("EVIDENCE_SCHEMA_FP"),
+        "status": "FAIL",
+        "errors": [f"invalid_contract_mode:{mode}"],
+    }
+    Path(os.environ["EVIDENCE_FILE"]).write_text(json.dumps(out, indent=2) + "\n")
+    raise SystemExit(1)
 
 errors = []
 checked = []
@@ -96,9 +110,9 @@ for plane in (cp.get("control_planes") or {}).values():
 
 reserved_not_wired = {"INT-G25", "INT-G26", "INT-G27"}
 approval_ctx = approval_requirement_context(root_dir)
-if approval_ctx.get("error"):
+if mode == "range" and approval_ctx.get("error"):
     errors.append(f"approval_requirement_diff_error:{approval_ctx.get('error')}")
-approval_required = bool(approval_ctx["approval_required"])
+approval_required = bool(approval_ctx["approval_required"]) if mode == "range" else False
 
 for row in contract:
     if not isinstance(row, dict):
@@ -184,6 +198,7 @@ out = {
     "git_sha": os.environ.get("EVIDENCE_GIT_SHA"),
     "schema_fingerprint": os.environ.get("EVIDENCE_SCHEMA_FP"),
     "status": overall,
+    "mode": mode,
     "run_phase1_gates": run_phase1,
     "required_rows": required_rows,
     "required_rows_checked": required_checked,
@@ -197,6 +212,7 @@ out = {
         "head_ref": approval_ctx["head_ref"],
         "merge_base": approval_ctx["merge_base"],
     },
+    "approval_requirement_mode": "diff_range" if mode == "range" else "zip_audit_structural",
     "checked": checked,
     "errors": errors,
 }

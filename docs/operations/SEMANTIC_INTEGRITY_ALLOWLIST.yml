@@ -1,0 +1,6 @@
+version: "1.0"
+allow:
+  - invariant_id: "INV-113"
+    allowed_verifiers:
+      - "scripts/db/verify_anchor_sync_operational_invariant.sh"
+    justification: "INV-113 intentionally has both structural (phase0 prereq) and operational (phase1) verifier rows in current contract model."

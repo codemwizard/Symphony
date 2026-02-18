@@ -1,0 +1,59 @@
+phase: "1"
+task_id: "TSK-P1-050"
+title: "Add deterministic offline mode to local CI toolchain bootstrap"
+owner_role: "SECURITY_GUARDIAN"
+status: "planned"
+
+depends_on:
+  - "TSK-P1-049"
+
+touches:
+  - "scripts/audit/bootstrap_local_ci_toolchain.sh"
+  - "scripts/audit/verify_ci_toolchain.sh"
+  - "docs/operations/LOCAL_CI_PARITY.md"
+  - "tasks/TSK-P1-050/meta.yml"
+
+invariants:
+  - "INV-081"
+
+mechanics:
+  gate_ids:
+    - "SEC-G18"
+  verifiers:
+    - "SYMPHONY_OFFLINE=1 bash scripts/audit/bootstrap_local_ci_toolchain.sh"
+    - "bash scripts/audit/verify_ci_toolchain.sh"
+  evidence_paths:
+    - "evidence/phase0/ci_toolchain.json"
+
+work:
+  - "Implement SYMPHONY_OFFLINE=1 behavior in bootstrap script."
+  - "Prevent network fetch attempts when offline mode is enabled."
+  - "Emit deterministic guidance when pinned rg missing in offline mode."
+  - "Document airgapped/local parity runbook."
+
+acceptance_criteria:
+  - "Offline mode never attempts curl downloads."
+  - "Failure messages are explicit and actionable if pinned toolchain unavailable."
+  - "verify_ci_toolchain continues to represent pin conformance."
+
+verification:
+  - "SYMPHONY_OFFLINE=1 bash scripts/audit/bootstrap_local_ci_toolchain.sh"
+  - "bash scripts/audit/verify_ci_toolchain.sh"
+
+evidence:
+  - "evidence/phase0/ci_toolchain.json"
+
+failure_modes:
+  - "Opaque curl/network failures in offline environments."
+  - "Undocumented bootstrap behavior divergence from CI pins."
+
+must_read:
+  - "docs/operations/LOCAL_CI_PARITY.md"
+
+implementation_plan: "docs/plans/phase1/TSK-P1-046_invariant_semantic_integrity_and_zip_parity/PLAN.md"
+implementation_log: "docs/plans/phase1/TSK-P1-046_invariant_semantic_integrity_and_zip_parity/EXEC_LOG.md"
+
+notes: "Deterministic operator ergonomics without weakening fail-closed posture."
+client: "codex_cli"
+assigned_agent: "security_guardian"
+model: "gpt-5-codex"

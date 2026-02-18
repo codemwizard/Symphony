@@ -1,0 +1,65 @@
+phase: "1"
+task_id: "TSK-P1-047"
+title: "Introduce INV-119 for agent conformance and re-home Phase-1 evidence bindings"
+owner_role: "INVARIANTS_CURATOR"
+status: "planned"
+
+depends_on:
+  - "TSK-P1-046"
+
+touches:
+  - "docs/invariants/INVARIANTS_MANIFEST.yml"
+  - "docs/PHASE1/phase1_contract.yml"
+  - "docs/invariants/INVARIANTS_IMPLEMENTED.md"
+  - "docs/invariants/INVARIANTS_QUICK.md"
+  - "tasks/TSK-P1-047/meta.yml"
+
+invariants:
+  - "INV-119"
+
+mechanics:
+  gate_ids:
+    - "INT-G28"
+  verifiers:
+    - "bash scripts/audit/verify_agent_conformance.sh"
+    - "RUN_PHASE1_GATES=1 bash scripts/audit/verify_phase1_contract.sh"
+  evidence_paths:
+    - "evidence/phase1/agent_conformance_architect.json"
+    - "evidence/phase1/agent_conformance_implementer.json"
+    - "evidence/phase1/agent_conformance_policy_guardian.json"
+
+work:
+  - "Add INV-119 manifest entry with canonical enforcement scripts/audit/verify_agent_conformance.sh."
+  - "Move all agent conformance evidence contract rows from INV-105 to INV-119."
+  - "Update implemented/quick invariant docs for INV-119 visibility and traceability."
+
+acceptance_criteria:
+  - "INV-119 exists in manifest and is status implemented."
+  - "All three agent conformance evidence rows in phase1_contract.yml use INV-119."
+  - "No stale references to INV-105 for agent conformance remain."
+
+verification:
+  - "bash scripts/audit/verify_agent_conformance.sh"
+  - "RUN_PHASE1_GATES=1 bash scripts/audit/verify_phase1_contract.sh"
+
+evidence:
+  - "evidence/phase1/agent_conformance_architect.json"
+  - "evidence/phase1/agent_conformance_implementer.json"
+  - "evidence/phase1/agent_conformance_policy_guardian.json"
+  - "evidence/phase1/phase1_contract_status.json"
+
+failure_modes:
+  - "Agent conformance remains semantically ambiguous in contract/mapping."
+  - "New invariant introduced but not wired to actual evidence outputs."
+
+must_read:
+  - "docs/operations/VERIFY_AGENT_CONFORMANCE_SPEC.md"
+  - "docs/operations/AI_AGENT_OPERATION_MANUAL.md"
+
+implementation_plan: "docs/plans/phase1/TSK-P1-046_invariant_semantic_integrity_and_zip_parity/PLAN.md"
+implementation_log: "docs/plans/phase1/TSK-P1-046_invariant_semantic_integrity_and_zip_parity/EXEC_LOG.md"
+
+notes: "Keeps agent conformance in Phase-1 as regulated-surface governance control, independent of MCP runtime."
+client: "codex_cli"
+assigned_agent: "invariants_curator"
+model: "gpt-5-codex"

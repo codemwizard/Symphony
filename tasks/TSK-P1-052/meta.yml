@@ -1,0 +1,62 @@
+phase: "1"
+task_id: "TSK-P1-052"
+title: "Publish semantic repair closeout and regression-proof evidence report"
+owner_role: "SUPERVISOR"
+status: "planned"
+
+depends_on:
+  - "TSK-P1-051"
+
+touches:
+  - "docs/audits/SYMPH2_PHASE1_ASSESSMENT_VALIDATION_2026-02-18.md"
+  - "docs/audits/PHASE1_AGENT_CONFORMANCE_SEMANTIC_REPAIR_CLOSEOUT_2026-02-18.md"
+  - "docs/plans/phase1/TSK-P1-046_invariant_semantic_integrity_and_zip_parity/EXEC_LOG.md"
+  - "tasks/TSK-P1-052/meta.yml"
+
+invariants:
+  - "INV-105"
+  - "INV-119"
+  - "INV-077"
+
+mechanics:
+  gate_ids:
+    - "INT-G28"
+  verifiers:
+    - "RUN_PHASE1_GATES=1 bash scripts/dev/pre_ci.sh"
+  evidence_paths:
+    - "evidence/phase1/phase1_contract_status.json"
+    - "evidence/phase1/invariant_semantic_integrity.json"
+    - "evidence/phase1/phase1_closeout.json"
+
+work:
+  - "Publish before/after matrix proving semantic mismatch class is closed."
+  - "Document parser gate coverage and fixture outcomes."
+  - "Record residual risk and operator guidance for zip/offline modes."
+
+acceptance_criteria:
+  - "Closeout report explicitly demonstrates INV-105 and INV-119 semantic correctness."
+  - "All required final evidence files are PASS."
+  - "Execution log final summary updated with completion status."
+
+verification:
+  - "RUN_PHASE1_GATES=1 bash scripts/dev/pre_ci.sh"
+
+evidence:
+  - "evidence/phase1/phase1_contract_status.json"
+  - "evidence/phase1/invariant_semantic_integrity.json"
+  - "evidence/phase1/phase1_closeout.json"
+
+failure_modes:
+  - "Fixes implemented but not proven in final machine-readable closeout."
+  - "Future reviewers cannot trace semantic repair rationale and outcomes."
+
+must_read:
+  - "docs/audits/SYMPH2_PHASE1_ASSESSMENT_VALIDATION_2026-02-18.md"
+
+implementation_plan: "docs/plans/phase1/TSK-P1-046_invariant_semantic_integrity_and_zip_parity/PLAN.md"
+implementation_log: "docs/plans/phase1/TSK-P1-046_invariant_semantic_integrity_and_zip_parity/EXEC_LOG.md"
+
+notes: "Program closeout task with explicit anti-regression evidence narrative."
+client: "codex_cli"
+assigned_agent: "supervisor"
+model: "gpt-5-codex"
