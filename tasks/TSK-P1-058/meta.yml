@@ -1,0 +1,60 @@
+phase: "1"
+task_id: "TSK-P1-058"
+title: "Optimize outbox attempt-number derivation under lock (conditional)"
+owner_role: "DB_FOUNDATION_AGENT"
+status: "planned"
+
+depends_on:
+  - "TSK-P1-057"
+
+touches:
+  - "schema/migrations/"
+  - "scripts/db/tests/"
+  - "tasks/TSK-P1-058/meta.yml"
+
+invariants:
+  - "INV-117"
+  - "INV-118"
+
+mechanics:
+  gate_ids:
+    - "INT-G32"
+    - "INT-G33"
+  verifiers:
+    - "bash scripts/db/verify_invariants.sh"
+    - "bash scripts/db/tests/test_db_functions.sh"
+    - "RUN_PHASE1_GATES=1 bash scripts/dev/pre_ci.sh"
+  evidence_paths:
+    - "evidence/phase1/outbox_retry_semantics.json"
+
+work:
+  - "Evaluate telemetry to confirm retry-heavy pressure justifies optimization."
+  - "Implement lock-safe monotonic counter strategy replacing MAX(attempt_no) read path."
+  - "Preserve append-only attempts and uniqueness safety backstop."
+
+acceptance_criteria:
+  - "Optimization only proceeds if telemetry-trigger condition is met and recorded."
+  - "All outbox/lease/zombie semantics tests remain PASS."
+  - "Retry semantics evidence confirms no behavioral regression."
+
+verification:
+  - "bash scripts/db/verify_invariants.sh"
+  - "RUN_PHASE1_GATES=1 bash scripts/dev/pre_ci.sh"
+
+evidence:
+  - "evidence/phase1/outbox_retry_semantics.json"
+
+failure_modes:
+  - "Attempt sequencing regresses under concurrency."
+  - "Optimization lands without telemetry justification."
+
+must_read:
+  - "docs/operations/AI_AGENT_OPERATION_MANUAL.md"
+
+implementation_plan: "docs/plans/phase1/TSK-P1-053_perf_architecture_remediation/PLAN.md"
+implementation_log: "docs/plans/phase1/TSK-P1-053_perf_architecture_remediation/EXEC_LOG.md"
+
+notes: "Conditional optimization stage; execute only when load evidence indicates need."
+client: "codex_cli"
+assigned_agent: "db_foundation_agent"
+model: "gpt-5-codex"

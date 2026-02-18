@@ -1,0 +1,67 @@
+phase: "1"
+task_id: "TSK-P1-054"
+title: "Replace subprocess DB calls with pooled Npgsql path for ingress/evidence"
+owner_role: "DB_FOUNDATION_AGENT"
+status: "planned"
+
+depends_on:
+  - "TSK-P1-053"
+
+touches:
+  - "services/ledger-api/dotnet/src/LedgerApi/Program.cs"
+  - "services/executor-worker/dotnet/src/ExecutorWorker/Program.cs"
+  - "scripts/dev/pre_ci.sh"
+  - "tasks/TSK-P1-054/meta.yml"
+
+invariants:
+  - "INV-077"
+  - "INV-113"
+  - "INV-117"
+  - "INV-118"
+
+mechanics:
+  gate_ids:
+    - "INT-G29"
+    - "INT-G32"
+    - "INT-G33"
+  verifiers:
+    - "RUN_PHASE1_GATES=1 bash scripts/dev/pre_ci.sh"
+    - "bash scripts/db/verify_invariants.sh"
+    - "bash scripts/db/tests/test_db_functions.sh"
+  evidence_paths:
+    - "evidence/phase1/phase1_contract_status.json"
+    - "evidence/phase1/phase1_closeout.json"
+
+work:
+  - "Implement NpgsqlDataSource-based durability and evidence query path with prepared statements."
+  - "Preserve fail-closed semantics and no-ACK-before-durable-write behavior."
+  - "Retain db_psql fallback only where explicitly allowed for local diagnostics."
+
+acceptance_criteria:
+  - "Hot path no longer requires Process.Start for pilot DB mode operations."
+  - "Ingress persistence and evidence retrieval parity tests pass."
+  - "Existing Phase-1 evidence and contract checks remain PASS."
+
+verification:
+  - "RUN_PHASE1_GATES=1 bash scripts/dev/pre_ci.sh"
+  - "bash scripts/db/verify_invariants.sh"
+
+evidence:
+  - "evidence/phase1/phase1_contract_status.json"
+  - "evidence/phase1/phase1_closeout.json"
+
+failure_modes:
+  - "Throughput gains achieved by weakening deterministic durability semantics."
+  - "DB driver migration introduces tenant boundary regressions."
+
+must_read:
+  - "docs/operations/AI_AGENT_OPERATION_MANUAL.md"
+  - "docs/operations/PERFORMANCE-REVIEW_2026-02-18.md"
+
+implementation_plan: "docs/plans/phase1/TSK-P1-053_perf_architecture_remediation/PLAN.md"
+implementation_log: "docs/plans/phase1/TSK-P1-053_perf_architecture_remediation/EXEC_LOG.md"
+
+notes: "Primary Phase-1 performance bottleneck removal."
+client: "codex_cli"
+assigned_agent: "db_foundation_agent"
+model: "gpt-5-codex"

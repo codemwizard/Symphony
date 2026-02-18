@@ -2,6 +2,7 @@ using System.Diagnostics;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
+using Npgsql;
 
 var builder = WebApplication.CreateBuilder(args);
 var app = builder.Build();
@@ -33,14 +34,21 @@ if (args.Contains("--self-test-authz", StringComparer.OrdinalIgnoreCase))
 }
 
 var storageMode = (Environment.GetEnvironmentVariable("INGRESS_STORAGE_MODE") ?? "file").Trim().ToLowerInvariant();
+StorageModePolicy.ValidateOrThrow(storageMode);
+var dataSource = StorageModePolicy.IsDatabaseMode(storageMode)
+    ? DbDataSourceFactory.Create(logger)
+    : null;
+
 IIngressDurabilityStore store = storageMode switch
 {
-    "db_psql" => new PsqlIngressDurabilityStore(logger),
+    "db" or "db_psql" or "db_npgsql" => new NpgsqlIngressDurabilityStore(logger, dataSource!),
+    "file" => new FileIngressDurabilityStore(logger),
     _ => new FileIngressDurabilityStore(logger)
 };
 IEvidencePackStore evidenceStore = storageMode switch
 {
-    "db_psql" => new PsqlEvidencePackStore(logger),
+    "db" or "db_psql" or "db_npgsql" => new NpgsqlEvidencePackStore(logger, dataSource!),
+    "file" => new FileEvidencePackStore(logger),
     _ => new FileEvidencePackStore(logger)
 };
 
@@ -263,8 +271,9 @@ static class IngressHandler
             });
         }
 
+        var payloadJson = request.payload.GetRawText();
         var payloadHash = string.IsNullOrWhiteSpace(request.payload_hash)
-            ? IngressValidation.Sha256Hex(request.payload.GetRawText())
+            ? IngressValidation.Sha256Hex(payloadJson)
             : request.payload_hash.Trim();
 
         var persistInput = new PersistInput(
@@ -272,7 +281,7 @@ static class IngressHandler
             participant_id: request.participant_id.Trim(),
             idempotency_key: request.idempotency_key.Trim(),
             rail_type: request.rail_type.Trim(),
-            payload_json: request.payload.GetRawText(),
+            payload_json: payloadJson,
             payload_hash: payloadHash,
             signature_hash: string.IsNullOrWhiteSpace(request.signature_hash) ? null : request.signature_hash.Trim(),
             tenant_id: string.IsNullOrWhiteSpace(request.tenant_id) ? null : request.tenant_id.Trim(),
@@ -409,18 +418,15 @@ sealed class FileIngressDurabilityStore(ILogger logger, string? path = null) : I
     }
 }
 
-sealed class PsqlIngressDurabilityStore(ILogger logger) : IIngressDurabilityStore
+sealed class NpgsqlIngressDurabilityStore(ILogger logger, NpgsqlDataSource dataSource) : IIngressDurabilityStore
 {
-    private readonly string? _databaseUrl = Environment.GetEnvironmentVariable("DATABASE_URL");
-
     public async Task<PersistResult> PersistAsync(PersistInput input, CancellationToken cancellationToken)
     {
-        if (string.IsNullOrWhiteSpace(_databaseUrl))
+        try
         {
-            return PersistResult.Fail("DATABASE_URL is required for db_psql mode");
-        }
-
-        var sql = $@"
+            await using var conn = await dataSource.OpenConnectionAsync(cancellationToken);
+            await using var cmd = conn.CreateCommand();
+            cmd.CommandText = @"
 WITH inserted AS (
   INSERT INTO public.ingress_attestations (
     instruction_id,
@@ -432,92 +438,61 @@ WITH inserted AS (
     downstream_ref,
     nfs_sequence_ref
   ) VALUES (
-    {SqlEscaping.Literal(input.instruction_id)},
-    {SqlEscaping.Literal(input.tenant_id)},
-    {SqlEscaping.Literal(input.payload_hash)},
-    {SqlEscaping.Literal(input.signature_hash)},
-    {SqlEscaping.Literal(input.correlation_id)}::uuid,
-    {SqlEscaping.Literal(input.upstream_ref)},
-    {SqlEscaping.Literal(input.downstream_ref)},
-    {SqlEscaping.Literal(input.nfs_sequence_ref)}
+    @instruction_id,
+    @tenant_id,
+    @payload_hash,
+    @signature_hash,
+    @correlation_id,
+    @upstream_ref,
+    @downstream_ref,
+    @nfs_sequence_ref
   )
   RETURNING attestation_id::text
 ), enqueued AS (
   SELECT outbox_id::text
   FROM public.enqueue_payment_outbox(
-    {SqlEscaping.Literal(input.instruction_id)},
-    {SqlEscaping.Literal(input.participant_id)},
-    {SqlEscaping.Literal(input.idempotency_key)},
-    {SqlEscaping.Literal(input.rail_type)},
-    {SqlEscaping.Literal(input.payload_json)}::jsonb
+    @instruction_id,
+    @participant_id,
+    @idempotency_key,
+    @rail_type,
+    @payload_json::jsonb
   )
 )
 SELECT (SELECT attestation_id FROM inserted), (SELECT outbox_id FROM enqueued LIMIT 1);
 ";
+            cmd.Parameters.AddWithValue("instruction_id", input.instruction_id);
+            cmd.Parameters.AddWithValue("tenant_id", DbValueParsers.ParseRequiredUuid(input.tenant_id, "tenant_id"));
+            cmd.Parameters.AddWithValue("payload_hash", input.payload_hash);
+            cmd.Parameters.AddWithValue("signature_hash", (object?)input.signature_hash ?? DBNull.Value);
+            cmd.Parameters.AddWithValue("correlation_id", DbValueParsers.ParseOptionalUuid(input.correlation_id));
+            cmd.Parameters.AddWithValue("upstream_ref", (object?)input.upstream_ref ?? DBNull.Value);
+            cmd.Parameters.AddWithValue("downstream_ref", (object?)input.downstream_ref ?? DBNull.Value);
+            cmd.Parameters.AddWithValue("nfs_sequence_ref", (object?)input.nfs_sequence_ref ?? DBNull.Value);
+            cmd.Parameters.AddWithValue("participant_id", input.participant_id);
+            cmd.Parameters.AddWithValue("idempotency_key", input.idempotency_key);
+            cmd.Parameters.AddWithValue("rail_type", input.rail_type);
+            cmd.Parameters.AddWithValue("payload_json", input.payload_json);
 
-        var psi = new ProcessStartInfo
-        {
-            FileName = "psql",
-            RedirectStandardInput = true,
-            RedirectStandardOutput = true,
-            RedirectStandardError = true,
-            UseShellExecute = false
-        };
-        psi.ArgumentList.Add(_databaseUrl);
-        psi.ArgumentList.Add("-v");
-        psi.ArgumentList.Add("ON_ERROR_STOP=1");
-        psi.ArgumentList.Add("-X");
-        psi.ArgumentList.Add("-t");
-        psi.ArgumentList.Add("-A");
+            await using var reader = await cmd.ExecuteReaderAsync(cancellationToken);
+            if (!await reader.ReadAsync(cancellationToken))
+            {
+                return PersistResult.Fail("db returned no attestation/outbox output");
+            }
 
-        using var process = Process.Start(psi);
-        if (process is null)
-        {
-            return PersistResult.Fail("Unable to start psql process");
+            var attestationId = reader.IsDBNull(0) ? string.Empty : reader.GetString(0);
+            var outboxId = reader.IsDBNull(1) ? string.Empty : reader.GetString(1);
+            if (string.IsNullOrWhiteSpace(attestationId) || string.IsNullOrWhiteSpace(outboxId))
+            {
+                return PersistResult.Fail("db returned malformed attestation/outbox output");
+            }
+
+            return PersistResult.Ok(attestationId, outboxId);
         }
-
-        await process.StandardInput.WriteLineAsync(sql);
-        await process.StandardInput.FlushAsync(cancellationToken);
-        process.StandardInput.Close();
-
-        var stdout = await process.StandardOutput.ReadToEndAsync(cancellationToken);
-        var stderr = await process.StandardError.ReadToEndAsync(cancellationToken);
-        await process.WaitForExitAsync(cancellationToken);
-
-        if (process.ExitCode != 0)
+        catch (Exception ex)
         {
-            logger.LogError("psql persistence failed: {Error}", stderr);
-            return PersistResult.Fail($"psql_failed:{stderr.Trim()}");
+            logger.LogError(ex, "Npgsql ingress persistence failed.");
+            return PersistResult.Fail($"db_failed:{ex.Message}");
         }
-
-        var lines = stdout
-            .Split('\n', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
-            .ToList();
-        if (lines.Count == 0)
-        {
-            return PersistResult.Fail("psql returned no output");
-        }
-
-        var parts = lines[^1].Split('|', StringSplitOptions.TrimEntries);
-        if (parts.Length < 2 || string.IsNullOrWhiteSpace(parts[0]) || string.IsNullOrWhiteSpace(parts[1]))
-        {
-            return PersistResult.Fail("psql returned malformed attestation/outbox output");
-        }
-
-        return PersistResult.Ok(parts[0], parts[1]);
-    }
-}
-
-static class SqlEscaping
-{
-    public static string Literal(string? value)
-    {
-        if (value is null)
-        {
-            return "NULL";
-        }
-
-        return $"'{value.Replace("'", "''")}'";
     }
 }
 
@@ -673,18 +648,11 @@ sealed class FileEvidencePackStore(ILogger logger, string? path = null) : IEvide
     }
 }
 
-sealed class PsqlEvidencePackStore(ILogger logger) : IEvidencePackStore
+sealed class NpgsqlEvidencePackStore(ILogger logger, NpgsqlDataSource dataSource) : IEvidencePackStore
 {
-    private readonly string? _databaseUrl = Environment.GetEnvironmentVariable("DATABASE_URL");
-
     public async Task<EvidenceLookupResult> FindAsync(string instructionId, string tenantId, CancellationToken cancellationToken)
     {
-        if (string.IsNullOrWhiteSpace(_databaseUrl))
-        {
-            return EvidenceLookupResult.Miss();
-        }
-
-        var sql = $@"
+        const string sql = @"
 SELECT
   ia.attestation_id::text,
   ia.payload_hash,
@@ -701,85 +669,151 @@ SELECT
     LIMIT 1
   ) AS outbox_id
 FROM public.ingress_attestations ia
-WHERE ia.instruction_id = {SqlEscaping.Literal(instructionId)}
-  AND ia.tenant_id::text = {SqlEscaping.Literal(tenantId)}
+WHERE ia.instruction_id = @instruction_id
+  AND ia.tenant_id = @tenant_id
 LIMIT 1;
 ";
 
-        var psi = new ProcessStartInfo
+        try
         {
-            FileName = "psql",
-            RedirectStandardInput = true,
-            RedirectStandardOutput = true,
-            RedirectStandardError = true,
-            UseShellExecute = false
-        };
-        psi.ArgumentList.Add(_databaseUrl);
-        psi.ArgumentList.Add("-v");
-        psi.ArgumentList.Add("ON_ERROR_STOP=1");
-        psi.ArgumentList.Add("-X");
-        psi.ArgumentList.Add("-t");
-        psi.ArgumentList.Add("-A");
+            await using var conn = await dataSource.OpenConnectionAsync(cancellationToken);
+            await using var cmd = conn.CreateCommand();
+            cmd.CommandText = sql;
+            cmd.Parameters.AddWithValue("instruction_id", instructionId);
+            cmd.Parameters.AddWithValue("tenant_id", DbValueParsers.ParseRequiredUuid(tenantId, "tenant_id"));
 
-        using var process = Process.Start(psi);
-        if (process is null)
-        {
-            return EvidenceLookupResult.Miss();
-        }
-
-        await process.StandardInput.WriteLineAsync(sql);
-        await process.StandardInput.FlushAsync(cancellationToken);
-        process.StandardInput.Close();
-
-        var stdout = await process.StandardOutput.ReadToEndAsync(cancellationToken);
-        var stderr = await process.StandardError.ReadToEndAsync(cancellationToken);
-        await process.WaitForExitAsync(cancellationToken);
-
-        if (process.ExitCode != 0)
-        {
-            logger.LogError("psql evidence pack query failed: {Error}", stderr);
-            return EvidenceLookupResult.Miss();
-        }
-
-        var row = stdout
-            .Split('\n', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
-            .LastOrDefault();
-        if (string.IsNullOrWhiteSpace(row))
-        {
-            return EvidenceLookupResult.Miss();
-        }
-
-        var parts = row.Split('|');
-        if (parts.Length < 9)
-        {
-            return EvidenceLookupResult.Miss();
-        }
-
-        var writtenAt = string.IsNullOrWhiteSpace(parts[7]) ? DateTime.UtcNow.ToString("O") : parts[7];
-        var outboxId = string.IsNullOrWhiteSpace(parts[8]) ? "UNKNOWN" : parts[8];
-        var pack = new EvidencePack(
-            api_version: "v1",
-            schema_version: "phase1-evidence-pack-v1",
-            instruction_id: instructionId,
-            tenant_id: tenantId,
-            attestation_id: parts[0],
-            outbox_id: outboxId,
-            payload_hash: parts[1],
-            signature_hash: string.IsNullOrWhiteSpace(parts[2]) ? null : parts[2],
-            correlation_id: string.IsNullOrWhiteSpace(parts[3]) ? null : parts[3],
-            upstream_ref: string.IsNullOrWhiteSpace(parts[4]) ? null : parts[4],
-            downstream_ref: string.IsNullOrWhiteSpace(parts[5]) ? null : parts[5],
-            nfs_sequence_ref: string.IsNullOrWhiteSpace(parts[6]) ? null : parts[6],
-            written_at_utc: writtenAt,
-            timeline: new object[]
+            await using var reader = await cmd.ExecuteReaderAsync(cancellationToken);
+            if (!await reader.ReadAsync(cancellationToken))
             {
-                new { event_name = "ATTESTED", at_utc = writtenAt, actor = "ingress_api" },
-                new { event_name = "OUTBOX_ENQUEUED", at_utc = writtenAt, actor = "ingress_api" }
+                return EvidenceLookupResult.Miss();
             }
-        );
 
-        return EvidenceLookupResult.Hit(pack);
+            var attestationId = reader.IsDBNull(0) ? string.Empty : reader.GetString(0);
+            var payloadHash = reader.IsDBNull(1) ? string.Empty : reader.GetString(1);
+            var signatureHash = reader.IsDBNull(2) ? null : DbValueParsers.EmptyToNull(reader.GetString(2));
+            var correlationId = reader.IsDBNull(3) ? null : DbValueParsers.EmptyToNull(reader.GetString(3));
+            var upstreamRef = reader.IsDBNull(4) ? null : DbValueParsers.EmptyToNull(reader.GetString(4));
+            var downstreamRef = reader.IsDBNull(5) ? null : DbValueParsers.EmptyToNull(reader.GetString(5));
+            var nfsRef = reader.IsDBNull(6) ? null : DbValueParsers.EmptyToNull(reader.GetString(6));
+            var writtenAt = reader.IsDBNull(7) ? DateTime.UtcNow.ToString("O") : reader.GetString(7);
+            var outboxId = reader.IsDBNull(8) ? "UNKNOWN" : DbValueParsers.EmptyToUnknown(reader.GetString(8));
+
+            if (string.IsNullOrWhiteSpace(attestationId) || string.IsNullOrWhiteSpace(payloadHash))
+            {
+                return EvidenceLookupResult.Miss();
+            }
+
+            var pack = new EvidencePack(
+                api_version: "v1",
+                schema_version: "phase1-evidence-pack-v1",
+                instruction_id: instructionId,
+                tenant_id: tenantId,
+                attestation_id: attestationId,
+                outbox_id: outboxId,
+                payload_hash: payloadHash,
+                signature_hash: signatureHash,
+                correlation_id: correlationId,
+                upstream_ref: upstreamRef,
+                downstream_ref: downstreamRef,
+                nfs_sequence_ref: nfsRef,
+                written_at_utc: writtenAt,
+                timeline: new object[]
+                {
+                    new { event_name = "ATTESTED", at_utc = writtenAt, actor = "ingress_api" },
+                    new { event_name = "OUTBOX_ENQUEUED", at_utc = writtenAt, actor = "ingress_api" }
+                }
+            );
+
+            return EvidenceLookupResult.Hit(pack);
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Npgsql evidence pack query failed.");
+            return EvidenceLookupResult.Miss();
+        }
     }
+}
+
+static class StorageModePolicy
+{
+    private static readonly HashSet<string> AllowedModes = new(StringComparer.OrdinalIgnoreCase)
+    {
+        "file",
+        "db",
+        "db_psql",
+        "db_npgsql"
+    };
+
+    public static bool IsDatabaseMode(string storageMode) =>
+        string.Equals(storageMode, "db", StringComparison.OrdinalIgnoreCase) ||
+        string.Equals(storageMode, "db_psql", StringComparison.OrdinalIgnoreCase) ||
+        string.Equals(storageMode, "db_npgsql", StringComparison.OrdinalIgnoreCase);
+
+    public static void ValidateOrThrow(string storageMode)
+    {
+        if (!AllowedModes.Contains(storageMode))
+        {
+            throw new InvalidOperationException($"Unsupported INGRESS_STORAGE_MODE '{storageMode}'. Allowed: file, db, db_psql, db_npgsql.");
+        }
+
+        if (!string.Equals(storageMode, "file", StringComparison.OrdinalIgnoreCase))
+        {
+            return;
+        }
+
+        var environment = (Environment.GetEnvironmentVariable("ENVIRONMENT") ?? "local").Trim().ToLowerInvariant();
+        if (environment is "staging" or "pilot" or "prod")
+        {
+            throw new InvalidOperationException($"INGRESS_STORAGE_MODE=file is blocked in ENVIRONMENT={environment}.");
+        }
+    }
+}
+
+static class DbDataSourceFactory
+{
+    public static NpgsqlDataSource Create(ILogger logger)
+    {
+        var databaseUrl = Environment.GetEnvironmentVariable("DATABASE_URL");
+        if (string.IsNullOrWhiteSpace(databaseUrl))
+        {
+            throw new InvalidOperationException("DATABASE_URL is required for db/db_psql/db_npgsql storage modes.");
+        }
+
+        logger.LogInformation("Initializing pooled PostgreSQL datasource for ingress/evidence path.");
+        var builder = new NpgsqlDataSourceBuilder(databaseUrl);
+        return builder.Build();
+    }
+}
+
+static class DbValueParsers
+{
+    public static Guid ParseRequiredUuid(string? raw, string fieldName)
+    {
+        if (string.IsNullOrWhiteSpace(raw) || !Guid.TryParse(raw, out var parsed))
+        {
+            throw new InvalidOperationException($"{fieldName} must be a valid UUID.");
+        }
+
+        return parsed;
+    }
+
+    public static object ParseOptionalUuid(string? raw)
+    {
+        if (string.IsNullOrWhiteSpace(raw))
+        {
+            return DBNull.Value;
+        }
+
+        if (Guid.TryParse(raw, out var parsed))
+        {
+            return parsed;
+        }
+
+        throw new InvalidOperationException("correlation_id must be a valid UUID when provided.");
+    }
+
+    public static string? EmptyToNull(string value) => string.IsNullOrWhiteSpace(value) ? null : value;
+    public static string EmptyToUnknown(string value) => string.IsNullOrWhiteSpace(value) ? "UNKNOWN" : value;
 }
 
 record SelfTestCase(string Name, string Status, string Detail);

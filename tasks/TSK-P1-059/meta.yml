@@ -1,0 +1,64 @@
+phase: "1"
+task_id: "TSK-P1-059"
+title: "Decompose central gate scripts into composable modules without interface drift"
+owner_role: "INVARIANTS_CURATOR"
+status: "planned"
+
+depends_on:
+  - "TSK-P1-058"
+
+touches:
+  - "scripts/dev/pre_ci.sh"
+  - "scripts/db/verify_invariants.sh"
+  - "scripts/audit/run_invariants_fast_checks.sh"
+  - "scripts/audit/"
+  - "tasks/TSK-P1-059/meta.yml"
+
+invariants:
+  - "INV-077"
+  - "INV-105"
+  - "INV-119"
+
+mechanics:
+  gate_ids:
+    - "INT-G28"
+  verifiers:
+    - "RUN_PHASE1_GATES=1 bash scripts/dev/pre_ci.sh"
+    - "bash scripts/audit/run_invariants_fast_checks.sh"
+  evidence_paths:
+    - "evidence/phase1/phase1_contract_status.json"
+    - "evidence/phase1/phase1_closeout.json"
+
+work:
+  - "Split large scripts into module scripts/functions while preserving top-level entrypoints."
+  - "Keep evidence output paths and verifier ordering stable."
+  - "Document module ownership boundaries to reduce maintenance bottlenecks."
+
+acceptance_criteria:
+  - "Top-level commands and evidence contracts remain backward-compatible."
+  - "No gate ordering regressions are introduced."
+  - "Refactor reduces script complexity without changing outcomes."
+
+verification:
+  - "RUN_PHASE1_GATES=1 bash scripts/dev/pre_ci.sh"
+  - "bash scripts/audit/run_invariants_fast_checks.sh"
+
+evidence:
+  - "evidence/phase1/phase1_contract_status.json"
+  - "evidence/phase1/phase1_closeout.json"
+
+failure_modes:
+  - "Refactor changes gate behavior silently."
+  - "Ownership remains unclear and complexity persists."
+
+must_read:
+  - "docs/operations/AI_AGENT_OPERATION_MANUAL.md"
+  - "docs/operations/Architecture_assessment.md"
+
+implementation_plan: "docs/plans/phase1/TSK-P1-053_perf_architecture_remediation/PLAN.md"
+implementation_log: "docs/plans/phase1/TSK-P1-053_perf_architecture_remediation/EXEC_LOG.md"
+
+notes: "Maintainability hardening stage with strict parity constraints."
+client: "codex_cli"
+assigned_agent: "invariants_curator"
+model: "gpt-5-codex"

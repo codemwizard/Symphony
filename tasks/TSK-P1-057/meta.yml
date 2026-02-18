@@ -1,0 +1,59 @@
+phase: "1"
+task_id: "TSK-P1-057"
+title: "Add deterministic perf smoke profiling and regression evidence"
+owner_role: "SUPERVISOR"
+status: "planned"
+
+depends_on:
+  - "TSK-P1-056"
+
+touches:
+  - "scripts/audit/"
+  - "scripts/dev/pre_ci.sh"
+  - "docs/operations/LOCAL_CI_PARITY.md"
+  - "tasks/TSK-P1-057/meta.yml"
+
+invariants:
+  - "INV-077"
+  - "INV-119"
+
+mechanics:
+  gate_ids:
+    - "INT-G28"
+  verifiers:
+    - "RUN_PHASE1_GATES=1 bash scripts/dev/pre_ci.sh"
+  evidence_paths:
+    - "evidence/phase1/perf_smoke_profile.json"
+    - "evidence/phase1/perf_db_driver_bench.json"
+
+work:
+  - "Create deterministic perf-smoke runner for ingress/evidence paths."
+  - "Emit machine-readable latency and throughput profile evidence."
+  - "Define stabilization policy: informational first, enforce after baseline confidence."
+
+acceptance_criteria:
+  - "Perf smoke runner is deterministic and non-flaky in CI/local parity context."
+  - "Evidence includes git sha, profile params, and p50/p95/p99 metrics."
+  - "Regression threshold policy is documented and reviewable."
+
+verification:
+  - "RUN_PHASE1_GATES=1 bash scripts/dev/pre_ci.sh"
+
+evidence:
+  - "evidence/phase1/perf_smoke_profile.json"
+  - "evidence/phase1/perf_db_driver_bench.json"
+
+failure_modes:
+  - "Performance regresses with no automated detection."
+  - "Perf gate is too noisy and gets bypassed."
+
+must_read:
+  - "docs/operations/AI_AGENT_OPERATION_MANUAL.md"
+
+implementation_plan: "docs/plans/phase1/TSK-P1-053_perf_architecture_remediation/PLAN.md"
+implementation_log: "docs/plans/phase1/TSK-P1-053_perf_architecture_remediation/EXEC_LOG.md"
+
+notes: "Regression prevention layer for performance-sensitive pilot path."
+client: "codex_cli"
+assigned_agent: "supervisor"
+model: "gpt-5-codex"

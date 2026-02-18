@@ -1,0 +1,67 @@
+phase: "1"
+task_id: "TSK-P1-053"
+title: "Ratify performance/architecture audit alignment and allocate remediation chain"
+owner_role: "SUPERVISOR"
+status: "planned"
+
+depends_on: []
+
+touches:
+  - "docs/operations/PERF_ARCH_AUDIT_ALIGNMENT_AND_EXECUTION_2026-02-18.md"
+  - "docs/plans/phase1/TSK-P1-053_perf_architecture_remediation/PLAN.md"
+  - "docs/plans/phase1/TSK-P1-053_perf_architecture_remediation/EXEC_LOG.md"
+  - "tasks/TSK-P1-053/meta.yml"
+
+invariants:
+  - "INV-077"
+  - "INV-105"
+  - "INV-119"
+
+mechanics:
+  gate_ids:
+    - "INT-G28"
+  verifiers:
+    - "bash scripts/audit/verify_agent_conformance.sh"
+    - "RUN_PHASE1_GATES=1 bash scripts/dev/pre_ci.sh"
+  evidence_paths:
+    - "evidence/phase1/agent_conformance_architect.json"
+    - "evidence/phase1/agent_conformance_implementer.json"
+    - "evidence/phase1/agent_conformance_policy_guardian.json"
+    - "evidence/phase1/phase1_contract_status.json"
+
+work:
+  - "Record exact agreement/disagreement with both audits and code anchors."
+  - "Define ordered execution stages and risk controls for Phase-1 and Phase-2 scopes."
+  - "Allocate follow-on task chain with dependencies and acceptance criteria."
+
+acceptance_criteria:
+  - "Audit alignment document exists with direct code references and explicit scope boundaries."
+  - "Program plan and execution log paths are created and linked."
+  - "Task chain for implementation is defined from TSK-P1-054 to TSK-P1-060."
+
+verification:
+  - "bash scripts/audit/verify_agent_conformance.sh"
+  - "RUN_PHASE1_GATES=1 bash scripts/dev/pre_ci.sh"
+
+evidence:
+  - "evidence/phase1/agent_conformance_architect.json"
+  - "evidence/phase1/agent_conformance_implementer.json"
+  - "evidence/phase1/agent_conformance_policy_guardian.json"
+  - "evidence/phase1/phase1_contract_status.json"
+
+failure_modes:
+  - "Unscoped implementation mixes performance and architecture refactors and increases regression risk."
+  - "No canonical audit position causes repeated decision churn."
+
+must_read:
+  - "docs/operations/AI_AGENT_OPERATION_MANUAL.md"
+  - "docs/operations/Architecture_assessment.md"
+  - "docs/operations/PERFORMANCE-REVIEW_2026-02-18.md"
+
+implementation_plan: "docs/plans/phase1/TSK-P1-053_perf_architecture_remediation/PLAN.md"
+implementation_log: "docs/plans/phase1/TSK-P1-053_perf_architecture_remediation/EXEC_LOG.md"
+
+notes: "Program bootstrap and decision ratification task."
+client: "codex_cli"
+assigned_agent: "supervisor"
+model: "gpt-5-codex"

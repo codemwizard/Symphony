@@ -1,0 +1,55 @@
+phase: "1"
+task_id: "TSK-P1-056"
+title: "Single-materialize ingress payload JSON on hot path"
+owner_role: "DB_FOUNDATION_AGENT"
+status: "planned"
+
+depends_on:
+  - "TSK-P1-055"
+
+touches:
+  - "services/ledger-api/dotnet/src/LedgerApi/Program.cs"
+  - "tasks/TSK-P1-056/meta.yml"
+
+invariants:
+  - "INV-077"
+  - "INV-117"
+
+mechanics:
+  gate_ids:
+    - "INT-G32"
+  verifiers:
+    - "RUN_PHASE1_GATES=1 bash scripts/dev/pre_ci.sh"
+  evidence_paths:
+    - "evidence/phase1/perf_db_driver_bench.json"
+
+work:
+  - "Compute payload JSON text once and reuse for hashing and persistence."
+  - "Confirm hash and persistence parity across idempotent requests."
+  - "Capture allocation/latency delta in perf evidence."
+
+acceptance_criteria:
+  - "No duplicate GetRawText materialization on ingress path."
+  - "Functional parity for payload hash and durable payload content."
+  - "Perf evidence updated with measurable before/after data."
+
+verification:
+  - "RUN_PHASE1_GATES=1 bash scripts/dev/pre_ci.sh"
+
+evidence:
+  - "evidence/phase1/perf_db_driver_bench.json"
+
+failure_modes:
+  - "Micro-optimization changes request hashing behavior."
+  - "Optimization introduced without measurable evidence."
+
+must_read:
+  - "docs/operations/AI_AGENT_OPERATION_MANUAL.md"
+
+implementation_plan: "docs/plans/phase1/TSK-P1-053_perf_architecture_remediation/PLAN.md"
+implementation_log: "docs/plans/phase1/TSK-P1-053_perf_architecture_remediation/EXEC_LOG.md"
+
+notes: "Low-risk hot-path CPU/memory optimization with parity safeguards."
+client: "codex_cli"
+assigned_agent: "db_foundation_agent"
+model: "gpt-5-codex"
