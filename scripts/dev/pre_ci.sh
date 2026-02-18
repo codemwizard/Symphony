@@ -73,14 +73,24 @@ if ! git fetch --no-tags --prune origin main:refs/remotes/origin/main >/dev/null
   echo "WARN: fetch failed; probing local refs for parity diff base"
 fi
 
-if git rev-parse --verify refs/remotes/origin/main >/dev/null 2>&1; then
-  export BASE_REF="refs/remotes/origin/main"
-elif git rev-parse --verify refs/heads/origin/main >/dev/null 2>&1; then
-  export BASE_REF="refs/heads/origin/main"
-  echo "WARN: using local branch refs/heads/origin/main (remote-tracking ref unavailable)"
-else
-  echo "ERROR: no usable origin/main ref found (expected refs/remotes/origin/main or refs/heads/origin/main)"
+BASE_REF_CANDIDATES=(
+  "refs/remotes/origin/main"
+  "origin/main"
+  "refs/heads/origin/main"
+  "FETCH_HEAD"
+)
+for candidate in "${BASE_REF_CANDIDATES[@]}"; do
+  if git rev-parse --verify "${candidate}^{commit}" >/dev/null 2>&1; then
+    export BASE_REF="$candidate"
+    break
+  fi
+done
+if [[ -z "$BASE_REF" ]]; then
+  echo "ERROR: no usable origin/main ref found (tried refs/remotes/origin/main, origin/main, refs/heads/origin/main, FETCH_HEAD)"
   exit 1
+fi
+if [[ "$BASE_REF" != "refs/remotes/origin/main" ]]; then
+  echo "WARN: using fallback BASE_REF=${BASE_REF} (remote-tracking ref unavailable)"
 fi
 
 if [[ -x scripts/audit/enforce_change_rule.sh ]]; then
@@ -252,6 +262,8 @@ fi
 echo "==> DB verify_invariants.sh"
 if [[ -x scripts/db/verify_invariants.sh ]]; then
   # Control-plane reference (INV-031 / INT-G22): scripts/db/tests/test_outbox_pending_indexes.sh
+  # Control-plane reference (INV-117 / INT-G32): scripts/db/verify_timeout_posture.sh
+  # Control-plane reference (INV-118 / INT-G33): scripts/db/tests/test_ingress_hotpath_indexes.sh
   SKIP_POLICY_SEED=1 scripts/db/verify_invariants.sh
 else
   echo "ERROR: scripts/db/verify_invariants.sh not found"
@@ -272,6 +284,9 @@ if [[ -x scripts/db/verify_boz_observability_role.sh ]]; then
 fi
 if [[ -x scripts/db/verify_anchor_sync_hooks.sh ]]; then
   scripts/db/verify_anchor_sync_hooks.sh
+fi
+if [[ -x scripts/db/verify_timeout_posture.sh ]]; then
+  scripts/db/verify_timeout_posture.sh
 fi
 if [[ -x scripts/db/verify_instruction_finality_invariant.sh ]]; then
   scripts/db/verify_instruction_finality_invariant.sh
@@ -304,6 +319,9 @@ if [[ -n "${DATABASE_URL:-}" ]]; then
   fi
   if [[ -x scripts/db/tests/test_rail_sequence_continuity.sh ]]; then
     scripts/db/tests/test_rail_sequence_continuity.sh
+  fi
+  if [[ -x scripts/db/tests/test_ingress_hotpath_indexes.sh ]]; then
+    scripts/db/tests/test_ingress_hotpath_indexes.sh
   fi
 
   # CI parity: these DB checks run in GitHub Actions db_verify_invariants job.

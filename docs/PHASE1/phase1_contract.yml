@@ -46,6 +46,22 @@
   evidence_path: "evidence/phase1/rail_sequence_truth_anchor.json"
   notes: "Phase-1 runtime invariant enforced through dispatch truth-anchor trigger and sequence scope uniqueness."
 
+- invariant_id: "INV-117"
+  status: "phase0_prerequisite"
+  required: true
+  gate_id: "INT-G32"
+  verifier: "scripts/db/verify_timeout_posture.sh"
+  evidence_path: "evidence/phase0/db_timeout_posture.json"
+  notes: "Restored timeout posture hardening gate for bounded fail-closed DB behavior."
+
+- invariant_id: "INV-118"
+  status: "implemented"
+  required: true
+  gate_id: "INT-G33"
+  verifier: "scripts/db/tests/test_ingress_hotpath_indexes.sh"
+  evidence_path: "evidence/phase1/ingress_hotpath_indexes.json"
+  notes: "Restored ingress hot-path index posture verification gate."
+
 - invariant_id: "INV-105"
   status: "implemented"
   required: true
