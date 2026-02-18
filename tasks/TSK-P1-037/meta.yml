@@ -1,0 +1,63 @@
+phase: "1"
+task_id: "TSK-P1-037"
+title: "Launch full restoration program governance and staged PR scaffolding"
+owner_role: "SUPERVISOR"
+status: "planned"
+
+depends_on: []
+
+touches:
+  - "docs/plans/phase1/TSK-P1-037_full_restoration_program/PLAN.md"
+  - "docs/PHASE1/phase1_contract.yml"
+  - "docs/control_planes/CONTROL_PLANES.yml"
+  - "docs/invariants/INVARIANTS_MANIFEST.yml"
+  - "tasks/TSK-P1-037/meta.yml"
+
+invariants:
+  - "INV-105"
+  - "INV-077"
+
+mechanics:
+  gate_ids:
+    - "INT-G28"
+  verifiers:
+    - "bash scripts/audit/verify_phase1_contract.sh"
+    - "bash scripts/audit/verify_remediation_trace.sh"
+  evidence_paths:
+    - "evidence/phase1/phase1_contract_status.json"
+    - "evidence/phase0/remediation_trace.json"
+
+work:
+  - "Create the staged PR plan and restoration task chain."
+  - "Ensure approval metadata and regulated-surface governance preconditions are explicit."
+  - "Prepare contract/control-plane scaffolding for restoration sequence without dangling refs."
+
+acceptance_criteria:
+  - "Staged PR plan exists and maps all deleted capability families to restoration stages."
+  - "Task chain TSK-P1-037..TSK-P1-045 is defined with dependencies."
+  - "No governance stop-condition is violated by planning artifacts."
+
+verification:
+  - "bash scripts/audit/verify_remediation_trace.sh"
+  - "RUN_PHASE1_GATES=1 bash scripts/dev/pre_ci.sh"
+
+evidence:
+  - "evidence/phase1/phase1_contract_status.json"
+  - "evidence/phase0/remediation_trace.json"
+
+failure_modes:
+  - "Restoration proceeds without approval/contract sequencing."
+  - "Later PRs introduce dangling gate references."
+
+must_read:
+  - "docs/operations/AI_AGENT_OPERATION_MANUAL.md"
+  - "docs/operations/AI_AGENT_WORKFLOW_AND_ROLE_PLAN_v2.md"
+  - "docs/operations/AGENT_ROLE_RECONCILIATION.md"
+
+implementation_plan: "docs/plans/phase1/TSK-P1-037_full_restoration_program/PLAN.md"
+implementation_log: "docs/plans/phase1/TSK-P1-037_full_restoration_program/EXEC_LOG.md"
+
+notes: "Planning-only anchor task for full restoration."
+client: "codex_cli"
+assigned_agent: "supervisor"
+model: "gpt-5-codex"

@@ -1,0 +1,80 @@
+phase: "1"
+task_id: "TSK-P1-043"
+title: "Restore pilot readiness verifiers, KPI gate, demo pack, and closeout"
+owner_role: "INVARIANTS_CURATOR"
+status: "planned"
+
+depends_on:
+  - "TSK-P1-042"
+
+touches:
+  - "scripts/audit/verify_pilot_harness_readiness.sh"
+  - "scripts/audit/verify_product_kpi_readiness.sh"
+  - "scripts/audit/verify_phase1_demo_proof_pack.sh"
+  - "scripts/audit/verify_phase1_closeout.sh"
+  - "docs/operations/PHASE1_PILOT_INTEGRATION_CONTRACT.md"
+  - "docs/operations/PHASE1_PILOT_ONBOARDING_CHECKLIST.md"
+  - "docs/operations/PHASE1_PRODUCT_KPI_DEFINITIONS.md"
+  - "docs/security/PHASE1_PILOT_AUTHZ_MODEL.md"
+  - "scripts/dev/pre_ci.sh"
+  - "tasks/TSK-P1-043/meta.yml"
+
+invariants:
+  - "INV-105"
+  - "INV-077"
+
+mechanics:
+  gate_ids:
+    - "INT-G30"
+    - "INT-G31"
+  verifiers:
+    - "bash scripts/audit/verify_pilot_harness_readiness.sh"
+    - "bash scripts/audit/verify_product_kpi_readiness.sh"
+    - "bash scripts/audit/verify_phase1_demo_proof_pack.sh"
+    - "bash scripts/audit/verify_phase1_closeout.sh"
+    - "RUN_PHASE1_GATES=1 bash scripts/dev/pre_ci.sh"
+  evidence_paths:
+    - "evidence/phase1/pilot_onboarding_readiness.json"
+    - "evidence/phase1/product_kpi_readiness_report.json"
+    - "evidence/phase1/regulator_demo_pack.json"
+    - "evidence/phase1/tier1_pilot_demo_pack.json"
+    - "evidence/phase1/phase1_closeout.json"
+
+work:
+  - "Restore deleted audit/readiness scripts."
+  - "Restore deleted pilot contract/onboarding/KPI/authz docs."
+  - "Re-enable Phase-1 closeout and demo-proof evidence generation."
+
+acceptance_criteria:
+  - "Pilot readiness, KPI, demo-pack, and closeout verifiers execute and pass."
+  - "All required source evidence paths exist and are contract-aligned."
+  - "RUN_PHASE1_GATES=1 path in pre_ci is stable."
+
+verification:
+  - "bash scripts/audit/verify_pilot_harness_readiness.sh"
+  - "bash scripts/audit/verify_product_kpi_readiness.sh"
+  - "bash scripts/audit/verify_phase1_demo_proof_pack.sh"
+  - "bash scripts/audit/verify_phase1_closeout.sh"
+  - "RUN_PHASE1_GATES=1 bash scripts/dev/pre_ci.sh"
+
+evidence:
+  - "evidence/phase1/pilot_onboarding_readiness.json"
+  - "evidence/phase1/product_kpi_readiness_report.json"
+  - "evidence/phase1/regulator_demo_pack.json"
+  - "evidence/phase1/tier1_pilot_demo_pack.json"
+  - "evidence/phase1/phase1_closeout.json"
+
+failure_modes:
+  - "Pilot readiness appears green without deterministic evidence chain."
+  - "Closeout passes without required evidence coverage."
+
+must_read:
+  - "docs/operations/AI_AGENT_OPERATION_MANUAL.md"
+
+implementation_plan: "docs/plans/phase1/TSK-P1-037_full_restoration_program/PLAN.md"
+implementation_log: "docs/plans/phase1/TSK-P1-037_full_restoration_program/EXEC_LOG.md"
+
+notes: "Restores deleted phase1 readiness and closeout governance path."
+client: "codex_cli"
+assigned_agent: "invariants_curator"
+model: "gpt-5-codex"

@@ -1,0 +1,64 @@
+phase: "1"
+task_id: "TSK-P1-041"
+title: "Restore anchor-sync operational invariant verifier and runtime tests"
+owner_role: "DB_FOUNDATION"
+status: "planned"
+
+depends_on:
+  - "TSK-P1-040"
+
+touches:
+  - "scripts/db/verify_anchor_sync_operational_invariant.sh"
+  - "scripts/db/tests/test_anchor_sync_operational.sh"
+  - "docs/control_planes/CONTROL_PLANES.yml"
+  - "scripts/dev/pre_ci.sh"
+  - "tasks/TSK-P1-041/meta.yml"
+
+invariants:
+  - "INV-113"
+  - "INV-116"
+
+mechanics:
+  gate_ids:
+    - "INT-G29"
+  verifiers:
+    - "bash scripts/db/verify_anchor_sync_operational_invariant.sh"
+    - "bash scripts/db/tests/test_anchor_sync_operational.sh"
+    - "RUN_PHASE1_GATES=1 bash scripts/dev/pre_ci.sh"
+  evidence_paths:
+    - "evidence/phase1/anchor_sync_operational_invariant.json"
+    - "evidence/phase1/anchor_sync_resume_semantics.json"
+
+work:
+  - "Restore operational invariant script and runtime test."
+  - "Rewire INT-G29 control-plane and evidence paths."
+  - "Ensure pre_ci includes these checks in Phase-1 gate path."
+
+acceptance_criteria:
+  - "Anchor operational invariant evidence is produced and PASS."
+  - "Runtime tests verify completion gate and resume semantics."
+  - "No dangling references in control-plane or pre_ci."
+
+verification:
+  - "bash scripts/db/verify_anchor_sync_operational_invariant.sh"
+  - "bash scripts/db/tests/test_anchor_sync_operational.sh"
+  - "RUN_PHASE1_GATES=1 bash scripts/dev/pre_ci.sh"
+
+evidence:
+  - "evidence/phase1/anchor_sync_operational_invariant.json"
+  - "evidence/phase1/anchor_sync_resume_semantics.json"
+
+failure_modes:
+  - "Anchor-sync operational drift undetected."
+  - "Operational semantics pass structurally but fail at runtime."
+
+must_read:
+  - "docs/operations/AI_AGENT_OPERATION_MANUAL.md"
+
+implementation_plan: "docs/plans/phase1/TSK-P1-037_full_restoration_program/PLAN.md"
+implementation_log: "docs/plans/phase1/TSK-P1-037_full_restoration_program/EXEC_LOG.md"
+
+notes: "Restores deleted operational test layer."
+client: "codex_cli"
+assigned_agent: "db_foundation"
+model: "gpt-5-codex"

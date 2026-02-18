@@ -1,0 +1,77 @@
+phase: "1"
+task_id: "TSK-P1-045"
+title: "Finalize full restoration with contract/control-plane/invariant reconciliation"
+owner_role: "SUPERVISOR"
+status: "planned"
+
+depends_on:
+  - "TSK-P1-044"
+
+touches:
+  - "docs/PHASE1/phase1_contract.yml"
+  - "docs/control_planes/CONTROL_PLANES.yml"
+  - "docs/invariants/INVARIANTS_MANIFEST.yml"
+  - ".github/workflows/invariants.yml"
+  - "scripts/dev/pre_ci.sh"
+  - "tasks/TSK-P1-045/meta.yml"
+  - "docs/audits/MAIN_PULL_DELETION_IMPACT_AUDIT_2026-02-18.md"
+
+invariants:
+  - "INV-105"
+  - "INV-077"
+  - "INV-113"
+  - "INV-116"
+  - "INV-117"
+  - "INV-118"
+
+mechanics:
+  gate_ids:
+    - "INT-G28"
+    - "INT-G29"
+    - "INT-G30"
+    - "INT-G31"
+    - "INT-G32"
+    - "INT-G33"
+    - "INT-G35"
+    - "INT-G37"
+  verifiers:
+    - "bash scripts/audit/verify_phase1_contract.sh"
+    - "RUN_PHASE1_GATES=1 bash scripts/dev/pre_ci.sh"
+  evidence_paths:
+    - "evidence/phase1/phase1_contract_status.json"
+    - "evidence/phase0/phase0_contract_evidence_status.json"
+
+work:
+  - "Reconcile all restored gates, invariants, and evidence paths."
+  - "Run full end-to-end verification including phase1 gates."
+  - "Publish closeout summary of restored scope and residual risk."
+
+acceptance_criteria:
+  - "No dangling verifier/evidence references in contracts or control plane."
+  - "Full pre_ci passes with restoration scope enabled."
+  - "Restoration audit marks deleted capability families as restored."
+
+verification:
+  - "bash scripts/audit/verify_phase1_contract.sh"
+  - "RUN_PHASE1_GATES=1 bash scripts/dev/pre_ci.sh"
+
+evidence:
+  - "evidence/phase0/phase0_contract_evidence_status.json"
+  - "evidence/phase1/phase1_contract_status.json"
+
+failure_modes:
+  - "Restored code exists but is not contract-wired."
+  - "Control-plane still reflects de-scoped state."
+
+must_read:
+  - "docs/operations/AI_AGENT_OPERATION_MANUAL.md"
+  - "docs/operations/AI_AGENT_WORKFLOW_AND_ROLE_PLAN_v2.md"
+  - "docs/operations/AGENT_ROLE_RECONCILIATION.md"
+
+implementation_plan: "docs/plans/phase1/TSK-P1-037_full_restoration_program/PLAN.md"
+implementation_log: "docs/plans/phase1/TSK-P1-037_full_restoration_program/EXEC_LOG.md"
+
+notes: "Final reconciliation and release-readiness signoff task."
+client: "codex_cli"
+assigned_agent: "supervisor"
+model: "gpt-5-codex"

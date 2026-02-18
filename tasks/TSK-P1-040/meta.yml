@@ -1,0 +1,64 @@
+phase: "1"
+task_id: "TSK-P1-040"
+title: "Restore anchor-sync operational model using forward-safe migrations"
+owner_role: "DB_FOUNDATION"
+status: "planned"
+
+depends_on:
+  - "TSK-P1-039"
+
+touches:
+  - "schema/migrations/**"
+  - "schema/baselines/**"
+  - "scripts/db/migrate.sh"
+  - "tasks/TSK-P1-040/meta.yml"
+
+invariants:
+  - "INV-113"
+  - "INV-116"
+
+mechanics:
+  gate_ids:
+    - "INT-G29"
+  verifiers:
+    - "bash scripts/db/migrate.sh"
+    - "bash scripts/db/verify_invariants.sh"
+    - "RUN_PHASE1_GATES=1 bash scripts/dev/pre_ci.sh"
+  evidence_paths:
+    - "evidence/phase0/n_minus_one.json"
+
+work:
+  - "Implement new migration IDs restoring behavior from deleted 0032/0033."
+  - "Restore anchor operation state machine, claim/repair, and completion gating."
+  - "Add explicit compatibility/idempotency guards for environments that may already contain 0032/0033-era schema objects."
+  - "Restore deterministic baseline artifacts through baseline governance flow."
+  - "Preserve revoke-first and SECURITY DEFINER hardening rules."
+
+acceptance_criteria:
+  - "Fresh DB apply succeeds."
+  - "N-1 compatibility remains green and double-apply hazards are addressed."
+  - "No runtime DDL policy violations are introduced."
+
+verification:
+  - "bash scripts/db/migrate.sh"
+  - "bash scripts/db/verify_invariants.sh"
+  - "bash scripts/db/tests/test_db_functions.sh"
+  - "RUN_PHASE1_GATES=1 bash scripts/dev/pre_ci.sh"
+
+evidence:
+  - "evidence/phase0/n_minus_one.json"
+
+failure_modes:
+  - "Migration chain conflicts or non-forward-safe changes."
+  - "Lease/anchor transitions become non-deterministic."
+
+must_read:
+  - "docs/operations/AI_AGENT_OPERATION_MANUAL.md"
+
+implementation_plan: "docs/plans/phase1/TSK-P1-037_full_restoration_program/PLAN.md"
+implementation_log: "docs/plans/phase1/TSK-P1-037_full_restoration_program/EXEC_LOG.md"
+
+notes: "Do not rewrite deleted migration IDs; restore behavior with new forward migrations."
+client: "codex_cli"
+assigned_agent: "db_foundation"
+model: "gpt-5-codex"
