@@ -1,0 +1,58 @@
+phase: "1"
+task_id: "TSK-P1-060"
+title: "Define boundary conformance and domain-schema migration followthrough program"
+owner_role: "SUPERVISOR"
+status: "planned"
+
+depends_on:
+  - "TSK-P1-059"
+
+touches:
+  - "docs/architecture/adrs/ADR-0001-service-boundaries-dotnet.md"
+  - "docs/architecture/ROADMAP.md"
+  - "docs/plans/phase1/TSK-P1-053_perf_architecture_remediation/PLAN.md"
+  - "tasks/TSK-P1-060/meta.yml"
+
+invariants:
+  - "INV-077"
+  - "INV-119"
+
+mechanics:
+  gate_ids:
+    - "INT-G28"
+  verifiers:
+    - "RUN_PHASE1_GATES=1 bash scripts/dev/pre_ci.sh"
+  evidence_paths:
+    - "evidence/phase1/phase1_closeout.json"
+
+work:
+  - "Define explicit boundary conformance checks aligned to ADR-0001."
+  - "Prepare forward-only domain schema migration charter and sequencing constraints."
+  - "Identify any new invariant/gate allocations required before execution."
+
+acceptance_criteria:
+  - "Boundary conformance scope is concrete, testable, and tool-backed."
+  - "Domain schema migration is staged and separated from Phase-1 hot-path remediations."
+  - "No new controls are marked implemented before verifier/evidence/contract wiring exists."
+
+verification:
+  - "RUN_PHASE1_GATES=1 bash scripts/dev/pre_ci.sh"
+
+evidence:
+  - "evidence/phase1/phase1_closeout.json"
+
+failure_modes:
+  - "Architecture work proceeds without enforceable boundary checks."
+  - "Schema migration begins without forward-only safety program."
+
+must_read:
+  - "docs/operations/AI_AGENT_OPERATION_MANUAL.md"
+  - "docs/architecture/adrs/ADR-0001-service-boundaries-dotnet.md"
+
+implementation_plan: "docs/plans/phase1/TSK-P1-053_perf_architecture_remediation/PLAN.md"
+implementation_log: "docs/plans/phase1/TSK-P1-053_perf_architecture_remediation/EXEC_LOG.md"
+
+notes: "Transitions validated Phase-1 remediations into governed Phase-2 architecture program."
+client: "codex_cli"
+assigned_agent: "supervisor"
+model: "gpt-5-codex"

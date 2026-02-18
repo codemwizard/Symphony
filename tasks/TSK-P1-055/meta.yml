@@ -1,0 +1,56 @@
+phase: "1"
+task_id: "TSK-P1-055"
+title: "Enforce file evidence store mode policy for pilot environments"
+owner_role: "SECURITY_GUARDIAN"
+status: "planned"
+
+depends_on:
+  - "TSK-P1-054"
+
+touches:
+  - "services/ledger-api/dotnet/src/LedgerApi/Program.cs"
+  - "docs/operations/LOCAL_CI_PARITY.md"
+  - "tasks/TSK-P1-055/meta.yml"
+
+invariants:
+  - "INV-077"
+  - "INV-119"
+
+mechanics:
+  gate_ids:
+    - "INT-G28"
+  verifiers:
+    - "RUN_PHASE1_GATES=1 bash scripts/dev/pre_ci.sh"
+  evidence_paths:
+    - "evidence/phase1/evidence_store_mode_policy.json"
+
+work:
+  - "Add startup/runtime guard that rejects file evidence mode in non-dev environments."
+  - "Document approved mode matrix (dev/local vs shared/staging/prod)."
+  - "Emit deterministic policy evidence artifact."
+
+acceptance_criteria:
+  - "Pilot environment configuration fails closed if file mode is selected."
+  - "Dev/local file mode remains available where explicitly allowed."
+  - "Mode-policy evidence artifact is generated and validated."
+
+verification:
+  - "RUN_PHASE1_GATES=1 bash scripts/dev/pre_ci.sh"
+
+evidence:
+  - "evidence/phase1/evidence_store_mode_policy.json"
+
+failure_modes:
+  - "Linear scan evidence store accidentally enabled in pilot deployment."
+  - "Policy enforcement exists but is undocumented or unverifiable."
+
+must_read:
+  - "docs/operations/AI_AGENT_OPERATION_MANUAL.md"
+
+implementation_plan: "docs/plans/phase1/TSK-P1-053_perf_architecture_remediation/PLAN.md"
+implementation_log: "docs/plans/phase1/TSK-P1-053_perf_architecture_remediation/EXEC_LOG.md"
+
+notes: "Converts performance recommendation into enforceable deployment policy."
+client: "codex_cli"
+assigned_agent: "security_guardian"
+model: "gpt-5-codex"
