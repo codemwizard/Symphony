@@ -92,6 +92,7 @@ Mitigations:
 - Privilege lint hardening for multiline `GRANT CREATE ON SCHEMA public TO ...;` detection
 - Canonical diff helper (`scripts/lib/git_diff.sh`) for range/staged/worktree semantics
 - Structural change rule: threat/compliance docs updated or timeboxed exception
+- Local pre-push uses a CI-user migration parity probe to catch role/bootstrap divergence before remote CI
 
 ### Data Plane (PostgreSQL)
 - Tampering: direct DML or DDL

@@ -59,6 +59,44 @@ pick_free_db_port() {
   export HOST_POSTGRES_PORT="$DB_HOST_PORT"
 }
 
+run_ci_db_parity_migration_probe() {
+  local ci_user ci_password ci_probe_db role_pw_sql probe_db
+  ci_user="${CI_PARITY_DB_USER:-symphony}"
+  ci_password="${CI_PARITY_DB_PASSWORD:-symphony}"
+
+  if [[ "${SKIP_CI_DB_PARITY_PROBE:-0}" == "1" ]]; then
+    echo "==> CI DB parity migration probe skipped (SKIP_CI_DB_PARITY_PROBE=1)"
+    return 0
+  fi
+
+  if [[ ! "$ci_user" =~ ^[a-zA-Z_][a-zA-Z0-9_]*$ ]]; then
+    echo "ERROR: CI_PARITY_DB_USER must be a simple SQL identifier, got '$ci_user'"
+    return 1
+  fi
+
+  if [[ "$ci_user" != "${POSTGRES_USER:-}" ]]; then
+    echo "WARN: local POSTGRES_USER='${POSTGRES_USER:-}' differs from CI DB user '${ci_user}'"
+  fi
+
+  role_pw_sql="${ci_password//\'/\'\'}"
+
+  echo "==> CI DB parity migration probe (fresh DB as role '${ci_user}')"
+  docker exec "$DB_CONTAINER" psql -U "$POSTGRES_USER" -d postgres -v ON_ERROR_STOP=1 -X \
+    -c "DO \$\$ BEGIN IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = '${ci_user}') THEN CREATE ROLE ${ci_user} LOGIN SUPERUSER CREATEDB CREATEROLE PASSWORD '${role_pw_sql}'; ELSE ALTER ROLE ${ci_user} LOGIN SUPERUSER CREATEDB CREATEROLE PASSWORD '${role_pw_sql}'; END IF; END \$\$;" >/dev/null
+
+  ci_probe_db="symphony_ci_parity_probe_$(date -u +%Y%m%d%H%M%S)_$RANDOM"
+  probe_db="$(echo "$ci_probe_db" | tr '[:upper:]' '[:lower:]' | tr -cd 'a-z0-9_')"
+  docker exec "$DB_CONTAINER" psql -U "$POSTGRES_USER" -d postgres -v ON_ERROR_STOP=1 -X \
+    -c "CREATE DATABASE \"${probe_db}\" OWNER ${ci_user};" >/dev/null
+
+  DATABASE_URL="postgres://${ci_user}:${ci_password}@localhost:${DB_HOST_PORT}/${probe_db}" scripts/db/migrate.sh >/dev/null
+
+  docker exec "$DB_CONTAINER" psql -U "$POSTGRES_USER" -d postgres -v ON_ERROR_STOP=1 -X \
+    -c "SELECT pg_terminate_backend(pid) FROM pg_stat_activity WHERE datname = '${probe_db}' AND pid <> pg_backend_pid();" >/dev/null 2>&1 || true
+  docker exec "$DB_CONTAINER" psql -U "$POSTGRES_USER" -d postgres -v ON_ERROR_STOP=1 -X \
+    -c "DROP DATABASE IF EXISTS \"${probe_db}\";" >/dev/null 2>&1 || true
+}
+
 echo "==> Toolchain parity bootstrap (local)"
 if [[ -x scripts/audit/bootstrap_local_ci_toolchain.sh ]]; then
   scripts/audit/bootstrap_local_ci_toolchain.sh
@@ -210,6 +248,11 @@ done
 
 if ! docker exec "$DB_CONTAINER" pg_isready -U "$POSTGRES_USER" -d "$POSTGRES_DB" >/dev/null 2>&1; then
   echo "ERROR: postgres container not ready"
+  exit 1
+fi
+
+if ! run_ci_db_parity_migration_probe; then
+  echo "ERROR: CI DB parity migration probe failed"
   exit 1
 fi
 
