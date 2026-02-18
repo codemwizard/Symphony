@@ -1,9 +1,9 @@
 ---
-exception_id: EXC-000
+exception_id: EXC-20260218-ANCHOR-PR3
 inv_scope: change-rule
 expiry: 2026-03-04
-follow_up_ticket: PLACEHOLDER-000
-reason: Auto-generated: structural change detected; invariants linkage missing in commit.
+follow_up_ticket: TSK-P1-040
+reason: Auto-generated preflight exception accepted for PR-3 structural migration restore and baseline refresh.
 author: system
 created_at: 2026-02-18
 ---
@@ -15,7 +15,8 @@ but invariants linkage (manifest/docs with INV-###) was not included in the same
 
 ## Reason
 
-[Describe why this exception is needed]
+This commit restores previously deleted anchor-sync operational migrations as forward-only files and refreshes deterministic baseline artifacts.
+Preflight Rule-1 evaluates structural linkage strictly on same-commit manifest delta, while this batch intentionally restores operational behavior under existing invariant IDs pending dedicated PR-4 verifier wiring.
 
 ## Evidence
 
@@ -57,4 +58,9 @@ Top matches:
 
 ## Mitigation
 
-[Describe any mitigating controls in place]
+- Threat/compliance documents were updated in this batch:
+  - `docs/architecture/THREAT_MODEL.md`
+  - `docs/architecture/COMPLIANCE_MAP.md`
+- SQLSTATE registry was updated for anchor-sync codes (`P7210`, `P7211`, `P7212`) in `docs/contracts/sqlstate_map.yml`.
+- Baseline artifacts were regenerated via `scripts/db/generate_baseline_snapshot.sh` and drift was validated with `scripts/db/check_baseline_drift.sh`.
+- Full `scripts/dev/pre_ci.sh` passed after these updates.
