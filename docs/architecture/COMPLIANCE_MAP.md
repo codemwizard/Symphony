@@ -5,6 +5,7 @@
 |---|---|---|---|---|---|
 | ISO 20022 | Message integrity + attestation hooks | Integrity | INT-G08, INT-G11, INT-G12 | Ingress attestation + routing/batching docs | proxy_resolution_invariant.json, routing_fallback.json, batching_rules.json |
 | ISO 20022 | Reversal-only finality workflow (camt.056) | Integrity | INT-G25 | Instruction finality invariant + reversal source enforcement | instruction_finality_invariant.json, instruction_finality_runtime.json |
+| ISO 20022 | Ingress instruction traceability and deterministic lookup posture | Integrity | INT-G33 | Ingress hot-path index verifier for tenant/instruction/correlation query paths | ingress_hotpath_indexes.json |
 | ISO 20022 | Canonical message model + validation | Integrity | INT-G07 | Phase-0 implementation plan gate | phase0_impl_plan.json |
 | ISO 27001/27002 | Access control, least privilege | Security | SEC-G01, SEC-G02, SEC-G03 | Revoke-first grants, SECURITY DEFINER hardening | core_boundary.json, ddl_lock_risk.json, security_definer_dynamic_sql.json |
 | ISO 27001/27002 | Privilege regression prevention | Security | SEC-G01 | Multiline-safe lint for forbidden `GRANT CREATE ON SCHEMA public` posture | security_privilege_grants.json |
@@ -15,6 +16,7 @@
 | PCI DSS v4.0 | Secure development + vuln mgmt | Security | SEC-G07, SEC-G08, SEC-G10 | Secrets scan + dependency audit + insecure pattern lint | security_secrets_scan.json, security_dotnet_deps_audit.json, security_insecure_patterns.json |
 | PCI DSS v4.0 | Access control and key mgmt | Security | SEC-G05 | OpenBao AppRole smoke test | openbao_smoke.json |
 | PCI DSS v4.0 | Change control / DDL governance | Security | SEC-G02, SEC-G04 | DDL lock-risk lint + allowlist governance | ddl_lock_risk.json, ddl_allowlist_governance.json |
+| NIST CSF / NIST 800-53 | Availability / resource protection (DB timeouts) | Integrity | INT-G32 | DB timeout posture verifier for lock/statement/idle-in-tx bounds | db_timeout_posture.json |
 | NIST CSF / NIST 800-53 | Configuration management | Security | SEC-G09 | Secure config lint | security_secure_config_lint.json |
 | NIST CSF / NIST 800-53 | Access control + least privilege | Security | SEC-G01, SEC-G03 | Core boundary + SECURITY DEFINER lint | core_boundary.json, security_definer_dynamic_sql.json |
 | NIST CSF / NIST 800-53 | Integrity & auditability | Integrity | INT-G01, INT-G05, INT-G06 | Evidence schema + baseline governance | evidence_validation.json, baseline_governance.json, rebaseline_decision.json |

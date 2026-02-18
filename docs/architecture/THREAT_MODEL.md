@@ -98,6 +98,7 @@ Mitigations:
 - Tampering: post-settlement mutation of finalized payment outcome
 - Repudiation: missing evidence on writes
 - DoS: lock contention
+- DoS: unbounded statement/lock/idle transaction execution
 - EoP: role privilege escalation
 
 Mitigations:
@@ -107,6 +108,8 @@ Mitigations:
 - DDL lock-risk lint and blocking policy enforcement
 - SECURITY DEFINER dynamic SQL lint
 - Instruction finality table with fail-closed trigger semantics (update/delete blocked with SQLSTATE `P7003`)
+- Timeout posture verifier enforces bounded `lock_timeout`, `statement_timeout`, and `idle_in_transaction_session_timeout` (INT-G32 / INV-117)
+- Ingress hot-path index verifier enforces tenant/instruction/correlation query path index posture (INT-G33 / INV-118)
 
 ## Priority security actions
 1) Implement service identity and mTLS for internal calls.
