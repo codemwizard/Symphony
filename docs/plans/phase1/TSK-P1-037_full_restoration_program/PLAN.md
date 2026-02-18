@@ -4,7 +4,8 @@
 - plan_id: `TSK-P1-037_full_restoration_program`
 - scope: Full functional restoration of deleted Phase-0/Phase-1 capabilities identified in `docs/audits/MAIN_PULL_DELETION_IMPACT_AUDIT_2026-02-18.md`
 - target_outcome: Restore all previously deleted functionality (behavioral parity), with safe forward-only DB migration handling
-- status: `proposed`
+- status: `completed`
+- completed_on: `2026-02-18`
 
 ## Objective
 Restore the full deleted pilot/hardening scope so that:
@@ -12,6 +13,11 @@ Restore the full deleted pilot/hardening scope so that:
 2. Contract/control-plane/invariant mappings are restored and consistent.
 3. Pilot harness, sandbox deployability posture, and product-readiness evidence flows are restored.
 4. Phase-0 and Phase-1 gates remain fail-closed and pre-CI/CI parity is preserved.
+
+## Completion summary
+- PR-1 through PR-8 restoration stages are implemented and verified.
+- Restored gates/invariants include timeout posture (`INV-117`/`INT-G32`), ingress hot-path indexes (`INV-118`/`INT-G33`), anchor operational invariant (`INT-G29`), pilot readiness/closeout verifiers, and sandbox manifest posture.
+- Verification baseline: `RUN_PHASE1_GATES=1 bash scripts/dev/pre_ci.sh` and `bash scripts/audit/verify_phase1_contract.sh` pass.
 
 ## Hard Constraints
 - No direct push to `main`; use staged PRs.

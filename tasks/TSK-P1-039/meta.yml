@@ -2,7 +2,7 @@ phase: "1"
 task_id: "TSK-P1-039"
 title: "Restore ingress hot-path index invariant and verification gate"
 owner_role: "DB_FOUNDATION"
-status: "planned"
+status: "completed"
 
 depends_on:
   - "TSK-P1-038"
