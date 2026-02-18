@@ -178,6 +178,10 @@ control_planes:
         script: scripts/audit/verify_phase1_contract.sh
         evidence: evidence/phase1/phase1_contract_status.json
 
+      - gate_id: INT-G29
+        script: scripts/db/verify_anchor_sync_operational_invariant.sh
+        evidence: evidence/phase1/anchor_sync_operational_invariant.json
+
       - gate_id: INT-G32
         script: scripts/db/verify_timeout_posture.sh
         evidence: evidence/phase0/db_timeout_posture.json
