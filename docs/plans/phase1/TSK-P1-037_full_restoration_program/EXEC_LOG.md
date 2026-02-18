@@ -54,3 +54,22 @@ Plan: `docs/plans/phase1/TSK-P1-037_full_restoration_program/PLAN.md`
   - `bash scripts/services/test_pilot_authz_tenant_boundary.sh` -> PASS
   - `bash scripts/dev/run_phase1_pilot_harness.sh` -> PASS
   - `bash scripts/dev/pre_ci.sh` -> PASS
+
+- PR-6 batch restored pilot readiness/closeout verification and docs:
+  - `scripts/audit/verify_pilot_harness_readiness.sh`
+  - `scripts/audit/verify_product_kpi_readiness.sh`
+  - `scripts/audit/verify_phase1_demo_proof_pack.sh`
+  - `scripts/audit/verify_phase1_closeout.sh`
+  - `docs/operations/PHASE1_PILOT_INTEGRATION_CONTRACT.md`
+  - `docs/operations/PHASE1_PILOT_ONBOARDING_CHECKLIST.md`
+  - `docs/operations/PHASE1_PRODUCT_KPI_DEFINITIONS.md`
+  - `docs/security/PHASE1_PILOT_AUTHZ_MODEL.md`
+  - `scripts/dev/pre_ci.sh` (readiness/demo/closeout wiring)
+
+- PR-6 verification rerun:
+  - `bash scripts/dev/run_phase1_pilot_harness.sh` -> PASS
+  - `bash scripts/audit/verify_pilot_harness_readiness.sh` -> PASS
+  - `bash scripts/audit/verify_product_kpi_readiness.sh` -> PASS
+  - `bash scripts/audit/verify_phase1_demo_proof_pack.sh` -> PASS
+  - `bash scripts/dev/pre_ci.sh` -> PASS
+  - `RUN_PHASE1_GATES=1 bash scripts/dev/pre_ci.sh` -> PASS

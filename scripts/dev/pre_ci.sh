@@ -214,6 +214,16 @@ if [[ -x scripts/services/test_pilot_authz_tenant_boundary.sh ]]; then
   scripts/services/test_pilot_authz_tenant_boundary.sh
 fi
 
+if [[ -x scripts/audit/verify_pilot_harness_readiness.sh ]]; then
+  echo "==> Phase-1 pilot harness readiness verification"
+  scripts/audit/verify_pilot_harness_readiness.sh
+fi
+
+if [[ -x scripts/audit/verify_product_kpi_readiness.sh ]]; then
+  echo "==> Phase-1 product KPI readiness verification"
+  scripts/audit/verify_product_kpi_readiness.sh
+fi
+
 if [[ -f "$ENV_FILE" ]]; then
   set -a
   # shellcheck disable=SC1090
@@ -406,6 +416,11 @@ else
   exit 1
 fi
 
+if [[ -x scripts/audit/verify_phase1_demo_proof_pack.sh ]]; then
+  echo "==> Phase-1 regulator/tier-1 demo-proof pack verification"
+  scripts/audit/verify_phase1_demo_proof_pack.sh
+fi
+
 if [[ "${RUN_PHASE1_GATES:-0}" == "1" ]]; then
   echo "==> Phase-1 no-MCP guard"
   if [[ -x scripts/audit/verify_no_mcp_phase1.sh ]]; then
@@ -436,6 +451,14 @@ if [[ "${RUN_PHASE1_GATES:-0}" == "1" ]]; then
     scripts/audit/verify_phase1_contract.sh
   else
     echo "ERROR: scripts/audit/verify_phase1_contract.sh not found"
+    exit 1
+  fi
+
+  echo "==> Phase-1 closeout verification"
+  if [[ -x scripts/audit/verify_phase1_closeout.sh ]]; then
+    scripts/audit/verify_phase1_closeout.sh
+  else
+    echo "ERROR: scripts/audit/verify_phase1_closeout.sh not found"
     exit 1
   fi
 fi
