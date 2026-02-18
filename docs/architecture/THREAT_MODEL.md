@@ -100,6 +100,7 @@ Mitigations:
 - Repudiation: missing evidence on writes
 - DoS: lock contention
 - DoS: unbounded statement/lock/idle transaction execution
+- Integrity drift: anchor-sync completion without valid lease/token or missing anchor reference
 - EoP: role privilege escalation
 
 Mitigations:
@@ -111,6 +112,7 @@ Mitigations:
 - Instruction finality table with fail-closed trigger semantics (update/delete blocked with SQLSTATE `P7003`)
 - Timeout posture verifier enforces bounded `lock_timeout`, `statement_timeout`, and `idle_in_transaction_session_timeout` (INT-G32 / INV-117)
 - Ingress hot-path index verifier enforces tenant/instruction/correlation query path index posture (INT-G33 / INV-118)
+- Anchor-sync operational state machine enforces lease-token worker fencing, anchored-before-complete gating, and deterministic expired-lease repair in DB functions.
 
 ## Priority security actions
 1) Implement service identity and mTLS for internal calls.

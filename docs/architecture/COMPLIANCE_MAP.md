@@ -6,6 +6,7 @@
 | ISO 20022 | Message integrity + attestation hooks | Integrity | INT-G08, INT-G11, INT-G12 | Ingress attestation + routing/batching docs | proxy_resolution_invariant.json, routing_fallback.json, batching_rules.json |
 | ISO 20022 | Reversal-only finality workflow (camt.056) | Integrity | INT-G25 | Instruction finality invariant + reversal source enforcement | instruction_finality_invariant.json, instruction_finality_runtime.json |
 | ISO 20022 | Ingress instruction traceability and deterministic lookup posture | Integrity | INT-G33 | Ingress hot-path index verifier for tenant/instruction/correlation query paths | ingress_hotpath_indexes.json |
+| ISO 20022 | Anchor synchronization completion integrity | Integrity | INT-G29 | DB operational state machine enforces lease fencing and anchored-before-complete semantics for evidence pack anchor sync | anchor_sync_operational_invariant.json, anchor_sync_resume_semantics.json |
 | ISO 20022 | Canonical message model + validation | Integrity | INT-G07 | Phase-0 implementation plan gate | phase0_impl_plan.json |
 | ISO 27001/27002 | Access control, least privilege | Security | SEC-G01, SEC-G02, SEC-G03 | Revoke-first grants, SECURITY DEFINER hardening | core_boundary.json, ddl_lock_risk.json, security_definer_dynamic_sql.json |
 | ISO 27001/27002 | Privilege regression prevention | Security | SEC-G01 | Multiline-safe lint for forbidden `GRANT CREATE ON SCHEMA public` posture | security_privilege_grants.json |
