@@ -6,6 +6,10 @@
 - status: `proposed_for_review`
 - program_type: `phase1_required_with_phase2_followthrough`
 - canonical_reference: `docs/operations/AI_AGENT_OPERATION_MANUAL.md`
+- failure_signature: `pre_push remediation trace gate required markers missing for TSK-P1-053 plan/log pair`
+- repro_command: `git push origin feature/phase1-semantic-integrity-prA`
+- origin_task_id: `TSK-P1-053`
+- origin_gate_id: `INT-G28`
 
 ## Decision Summary
 This program accepts the performance audit as immediately actionable and accepts the architecture audit as directionally correct with staged execution.
@@ -137,6 +141,8 @@ Deferred Phase-2 objective:
 - `bash scripts/db/tests/test_db_functions.sh`
 - `bash scripts/audit/run_invariants_fast_checks.sh`
 - `bash scripts/audit/verify_phase1_contract.sh`
+- verification_commands_run:
+  - `RUN_PHASE1_GATES=1 bash scripts/dev/pre_ci.sh`
 
 ## Evidence Targets (Program)
 - Existing:
@@ -159,3 +165,6 @@ Deferred Phase-2 objective:
   - Control: deterministic profile + informational rollout + threshold hardening.
 - Risk: architecture refactor dilutes gate clarity.
   - Control: keep top-level script interfaces and evidence contracts unchanged while refactoring internals.
+
+## Final Status
+- final_status: `in_progress`

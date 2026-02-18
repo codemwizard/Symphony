@@ -54,3 +54,12 @@ Status: Stage-1 complete, Stage-2 policy guard complete (evidence emitter pendin
     - `evidence/phase1/perf_db_driver_bench.json`
     - `evidence/phase1/perf_driver_batching_telemetry.json`
 - Wired both scripts into `RUN_PHASE1_GATES=1` path in `scripts/dev/pre_ci.sh`.
+
+## Remediation Trace Markers
+- failure_signature: `pre_push remediation trace gate required markers missing for TSK-P1-053 plan/log pair`
+- repro_command: `git push origin feature/phase1-semantic-integrity-prA`
+- verification_commands_run:
+  - `RUN_PHASE1_GATES=1 bash scripts/dev/pre_ci.sh` -> PASS
+- final_status: `in_progress`
+- origin_task_id: `TSK-P1-053`
+- origin_gate_id: `INT-G28`
