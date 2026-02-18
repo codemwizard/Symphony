@@ -40,21 +40,34 @@ DUMP_CMD=(pg_dump "$DATABASE_URL" --schema-only --no-owner --no-privileges --no-
 DUMP_SOURCE="host"
 PG_DUMP_VERSION="$(pg_dump --version 2>/dev/null || true)"
 PG_SERVER_VERSION="$(psql "$DATABASE_URL" -t -A -X -c "SHOW server_version;" 2>/dev/null || true)"
-DB_URL_HOST="$(python3 - <<'PY' "$DATABASE_URL"
-import sys
-from urllib.parse import urlparse
-u = urlparse(sys.argv[1])
-print((u.hostname or "").strip().lower())
-PY
-)"
 
 if command -v docker >/dev/null 2>&1; then
   pg_container="$(docker ps --format '{{.Names}}' | grep -E 'postgres' | head -n 1 || true)"
-  if [[ -n "$pg_container" && "$DB_URL_HOST" != "localhost" && "$DB_URL_HOST" != "127.0.0.1" && "$DB_URL_HOST" != "::1" ]]; then
-    DUMP_CMD=(docker exec "$pg_container" pg_dump "$DATABASE_URL" --schema-only --no-owner --no-privileges --no-comments --schema=public)
+  if [[ -n "$pg_container" ]]; then
+    DB_URL_IN_CONTAINER="$(python3 - <<'PY' "$DATABASE_URL"
+import sys
+from urllib.parse import urlparse, urlunparse
+u = urlparse(sys.argv[1])
+host = (u.hostname or "").strip().lower()
+if host in {"localhost", "127.0.0.1", "::1"}:
+    # Inside the postgres container, connect to local postmaster port.
+    host_out = "localhost"
+    port_out = 5432
+    userinfo = ""
+    if u.username:
+        userinfo = u.username
+        if u.password is not None:
+            userinfo += f":{u.password}"
+        userinfo += "@"
+    netloc = f"{userinfo}{host_out}:{port_out}"
+    u = u._replace(netloc=netloc)
+print(urlunparse(u))
+PY
+)"
+    DUMP_CMD=(docker exec "$pg_container" pg_dump "$DB_URL_IN_CONTAINER" --schema-only --no-owner --no-privileges --no-comments --schema=public)
     DUMP_SOURCE="container:$pg_container"
     PG_DUMP_VERSION="$(docker exec "$pg_container" pg_dump --version 2>/dev/null || true)"
-    PG_SERVER_VERSION="$(docker exec "$pg_container" psql "$DATABASE_URL" -t -A -X -c "SHOW server_version;" 2>/dev/null || true)"
+    PG_SERVER_VERSION="$(docker exec "$pg_container" psql "$DB_URL_IN_CONTAINER" -t -A -X -c "SHOW server_version;" 2>/dev/null || true)"
   fi
 fi
 
