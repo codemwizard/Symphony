@@ -59,6 +59,7 @@ Deferred Phase-2 objective:
 ### Stage 4 (Phase-1 Required): Perf Regression Guard
 - Add deterministic microbenchmark/perf-smoke script.
 - Emit machine-readable perf evidence (latency + DB duration + throughput summary).
+- Add .NET 10 Metrics/OpenTelemetry proof that batching occurs at driver runtime (not only in config docs).
 - Wire as non-flaky gate policy (informational first, required after baseline stabilization).
 
 ### Stage 5 (Phase-1 Conditional): Attempt Counter Optimization
@@ -99,7 +100,7 @@ Deferred Phase-2 objective:
 - invariants: `INV-077`
 - gates: `INT-G28`
 - verifiers: new deterministic perf-smoke verifier + `scripts/audit/verify_phase1_contract.sh`
-- evidence: `evidence/phase1/perf_smoke_profile.json`
+- evidence: `evidence/phase1/perf_smoke_profile.json`, `evidence/phase1/perf_driver_batching_telemetry.json`
 - promotion rule:
   - informational until baseline exists and stability threshold is met
   - required only after `N=5` consecutive stable runs with coefficient-of-variation <= `0.15` on p95 latency under fixed profile
@@ -148,6 +149,7 @@ Deferred Phase-2 objective:
   - `evidence/phase1/perf_db_driver_bench.json`
   - `evidence/phase1/evidence_store_mode_policy.json`
   - `evidence/phase1/perf_smoke_profile.json`
+  - `evidence/phase1/perf_driver_batching_telemetry.json`
   - `evidence/phase1/outbox_retry_semantics.json` (conditional stage)
 
 ## Risks and Controls

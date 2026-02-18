@@ -1,6 +1,6 @@
 phase: "1"
 task_id: "TSK-P1-057"
-title: "Add deterministic perf smoke profiling and regression evidence"
+title: "Add deterministic perf smoke and driver-level batching telemetry evidence"
 owner_role: "SUPERVISOR"
 status: "planned"
 
@@ -11,6 +11,8 @@ touches:
   - "scripts/audit/"
   - "scripts/dev/pre_ci.sh"
   - "docs/operations/LOCAL_CI_PARITY.md"
+  - "services/executor-worker/dotnet/src/ExecutorWorker/ExecutorWorker.csproj"
+  - "services/ledger-api/dotnet/src/LedgerApi/LedgerApi.csproj"
   - "tasks/TSK-P1-057/meta.yml"
 
 invariants:
@@ -25,16 +27,19 @@ mechanics:
   evidence_paths:
     - "evidence/phase1/perf_smoke_profile.json"
     - "evidence/phase1/perf_db_driver_bench.json"
+    - "evidence/phase1/perf_driver_batching_telemetry.json"
 
 work:
   - "Create deterministic perf-smoke runner for ingress/evidence paths."
   - "Emit machine-readable latency and throughput profile evidence."
   - "Define stabilization policy: informational first, enforce after baseline confidence."
+  - "Add .NET 10 Metrics/OpenTelemetry instrumentation proving batching at driver-runtime level (not config-only declaration)."
 
 acceptance_criteria:
   - "Perf smoke runner is deterministic and non-flaky in CI/local parity context."
   - "Evidence includes git sha, profile params, and p50/p95/p99 metrics."
   - "Regression threshold policy is documented and reviewable."
+  - "Driver-level batching telemetry evidence includes batch size/count from runtime metrics and fixed test profile context."
 
 verification:
   - "RUN_PHASE1_GATES=1 bash scripts/dev/pre_ci.sh"
@@ -42,10 +47,12 @@ verification:
 evidence:
   - "evidence/phase1/perf_smoke_profile.json"
   - "evidence/phase1/perf_db_driver_bench.json"
+  - "evidence/phase1/perf_driver_batching_telemetry.json"
 
 failure_modes:
   - "Performance regresses with no automated detection."
   - "Perf gate is too noisy and gets bypassed."
+  - "Batching is declared in config but not proven at runtime driver level."
 
 must_read:
   - "docs/operations/AI_AGENT_OPERATION_MANUAL.md"
@@ -53,7 +60,7 @@ must_read:
 implementation_plan: "docs/plans/phase1/TSK-P1-053_perf_architecture_remediation/PLAN.md"
 implementation_log: "docs/plans/phase1/TSK-P1-053_perf_architecture_remediation/EXEC_LOG.md"
 
-notes: "Regression prevention layer for performance-sensitive pilot path."
+notes: "Regression prevention layer with explicit runtime batching proof."
 client: "codex_cli"
 assigned_agent: "supervisor"
 model: "gpt-5-codex"
