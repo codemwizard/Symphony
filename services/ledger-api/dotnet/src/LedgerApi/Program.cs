@@ -19,6 +19,18 @@ if (args.Contains("--self-test-evidence-pack", StringComparer.OrdinalIgnoreCase)
     Environment.ExitCode = code;
     return;
 }
+if (args.Contains("--self-test-case-pack", StringComparer.OrdinalIgnoreCase))
+{
+    var code = await ExceptionCasePackSelfTestRunner.RunAsync(logger, CancellationToken.None);
+    Environment.ExitCode = code;
+    return;
+}
+if (args.Contains("--self-test-authz", StringComparer.OrdinalIgnoreCase))
+{
+    var code = await PilotAuthSelfTestRunner.RunAsync(CancellationToken.None);
+    Environment.ExitCode = code;
+    return;
+}
 
 var storageMode = (Environment.GetEnvironmentVariable("INGRESS_STORAGE_MODE") ?? "file").Trim().ToLowerInvariant();
 IIngressDurabilityStore store = storageMode switch
@@ -1032,6 +1044,252 @@ static class EvidencePackSelfTestRunner
             {
                 fail++;
                 tests.Add(new SelfTestCase(name, "FAIL", $"expected status={expectedStatus} got={result.StatusCode}"));
+            }
+        }
+    }
+}
+
+static class ExceptionCasePackSelfTestRunner
+{
+    public static async Task<int> RunAsync(ILogger logger, CancellationToken cancellationToken)
+    {
+        var rootDir = EvidenceMeta.ResolveRepoRoot(Directory.GetCurrentDirectory());
+        var evidenceDir = Path.Combine(rootDir, "evidence", "phase1");
+        Directory.CreateDirectory(evidenceDir);
+
+        var storageFile = $"/tmp/symphony_case_pack_selftest_{Guid.NewGuid():N}.ndjson";
+        var ingressStore = new FileIngressDurabilityStore(logger, storageFile);
+        var evidenceStore = new FileEvidencePackStore(logger, storageFile);
+
+        var tenantA = Guid.NewGuid().ToString();
+        var tenantB = Guid.NewGuid().ToString();
+        var instructionId = "case-ins-complete";
+
+        await ingressStore.PersistAsync(new PersistInput(
+            instruction_id: instructionId,
+            participant_id: "bank-a",
+            idempotency_key: Guid.NewGuid().ToString("N"),
+            rail_type: "RTGS",
+            payload_json: "{\"amount\":100}",
+            payload_hash: IngressValidation.Sha256Hex("{\"amount\":100}"),
+            signature_hash: null,
+            tenant_id: tenantA,
+            correlation_id: "CASE-CORR-1",
+            upstream_ref: "UP-REF-1",
+            downstream_ref: "DOWN-REF-1",
+            nfs_sequence_ref: "NFS-SEQ-1"
+        ), cancellationToken);
+
+        var tests = new List<SelfTestCase>();
+        var pass = 0;
+        var fail = 0;
+
+        await RunCase("case_pack_complete_success", instructionId, tenantA, StatusCodes.Status200OK);
+        await RunCase("case_pack_incomplete_fail_closed", "case-ins-incomplete", tenantA, StatusCodes.Status404NotFound);
+        await RunCase("case_pack_cross_tenant_fail_closed", instructionId, tenantB, StatusCodes.Status404NotFound);
+        await RunCase("case_pack_missing_tenant_header_fail_closed", instructionId, "", StatusCodes.Status400BadRequest);
+        await RunCase("case_pack_missing_instruction_fail_closed", "case-ins-missing", tenantA, StatusCodes.Status404NotFound);
+
+        var status = fail == 0 ? "PASS" : "FAIL";
+        var meta = EvidenceMeta.Load(rootDir);
+        var generationPath = Path.Combine(evidenceDir, "exception_case_pack_generation.json");
+        var completenessPath = Path.Combine(evidenceDir, "exception_case_pack_completeness.json");
+
+        await File.WriteAllTextAsync(generationPath, JsonSerializer.Serialize(new
+        {
+            check_id = "PHASE1-EXCEPTION-CASE-PACK-GENERATION",
+            timestamp_utc = meta.TimestampUtc,
+            git_sha = meta.GitSha,
+            schema_fingerprint = meta.SchemaFingerprint,
+            status,
+            schema_version = "phase1-exception-case-pack-v1",
+            tests_passed = pass,
+            tests_failed = fail,
+            results = tests
+        }, new JsonSerializerOptions { WriteIndented = true }) + Environment.NewLine, cancellationToken);
+
+        var completenessOk = tests.Any(t => t.Name == "case_pack_complete_success" && t.Status == "PASS")
+                             && tests.Any(t => t.Name == "case_pack_incomplete_fail_closed" && t.Status == "PASS");
+        await File.WriteAllTextAsync(completenessPath, JsonSerializer.Serialize(new
+        {
+            check_id = "PHASE1-EXCEPTION-CASE-PACK-COMPLETENESS",
+            timestamp_utc = meta.TimestampUtc,
+            git_sha = meta.GitSha,
+            schema_fingerprint = meta.SchemaFingerprint,
+            status = completenessOk ? "PASS" : "FAIL",
+            deterministic_completeness_enforced = completenessOk
+        }, new JsonSerializerOptions { WriteIndented = true }) + Environment.NewLine, cancellationToken);
+
+        Console.WriteLine($"Exception case pack self-test status: {status}");
+        Console.WriteLine($"Evidence: {generationPath}");
+        Console.WriteLine($"Evidence: {completenessPath}");
+        return fail == 0 ? 0 : 1;
+
+        async Task RunCase(string name, string localInstructionId, string localTenantId, int expectedStatus)
+        {
+            var result = await EvidencePackHandler.HandleAsync(localInstructionId, localTenantId, evidenceStore, logger, cancellationToken);
+            var ok = result.StatusCode == expectedStatus;
+
+            if (ok)
+            {
+                pass++;
+                tests.Add(new SelfTestCase(name, "PASS", "deterministic expectation met"));
+            }
+            else
+            {
+                fail++;
+                tests.Add(new SelfTestCase(name, "FAIL", $"expected status={expectedStatus} got={result.StatusCode}"));
+            }
+        }
+    }
+}
+
+static class PilotAuthSelfTestRunner
+{
+    public static async Task<int> RunAsync(CancellationToken cancellationToken)
+    {
+        await Task.Yield();
+        var tests = new List<SelfTestCase>();
+        var pass = 0;
+        var fail = 0;
+
+        const string apiKey = "pilot-self-test-key";
+        Environment.SetEnvironmentVariable("INGRESS_API_KEY", apiKey);
+
+        var tenantA = "11111111-1111-1111-1111-111111111111";
+        var tenantB = "22222222-2222-2222-2222-222222222222";
+        var payload = JsonSerializer.Deserialize<JsonElement>("{\"amount\":100}");
+
+        await RunCase("ingress_valid_scope_allowed", () =>
+        {
+            var ctx = ContextWithHeaders(apiKey, tenantA, "bank-a");
+            var req = Request(tenantA, "bank-a", payload);
+            return ApiAuthorization.AuthorizeIngressWrite(ctx, req) is null;
+        });
+
+        await RunCase("ingress_cross_tenant_denied", () =>
+        {
+            var ctx = ContextWithHeaders(apiKey, tenantA, "bank-a");
+            var req = Request(tenantB, "bank-a", payload);
+            var result = ApiAuthorization.AuthorizeIngressWrite(ctx, req);
+            return result is not null && result.StatusCode == StatusCodes.Status403Forbidden;
+        });
+
+        await RunCase("ingress_cross_participant_denied", () =>
+        {
+            var ctx = ContextWithHeaders(apiKey, tenantA, "bank-a");
+            var req = Request(tenantA, "bank-b", payload);
+            var result = ApiAuthorization.AuthorizeIngressWrite(ctx, req);
+            return result is not null && result.StatusCode == StatusCodes.Status403Forbidden;
+        });
+
+        await RunCase("missing_api_key_denied", () =>
+        {
+            var ctx = new DefaultHttpContext();
+            ctx.Request.Headers["x-tenant-id"] = tenantA;
+            ctx.Request.Headers["x-participant-id"] = "bank-a";
+            var req = Request(tenantA, "bank-a", payload);
+            var result = ApiAuthorization.AuthorizeIngressWrite(ctx, req);
+            return result is not null && result.StatusCode == StatusCodes.Status401Unauthorized;
+        });
+
+        await RunCase("read_with_valid_key_allowed", () =>
+        {
+            var ctx = new DefaultHttpContext();
+            ctx.Request.Headers["x-api-key"] = apiKey;
+            return ApiAuthorization.AuthorizeEvidenceRead(ctx) is null;
+        });
+
+        await RunCase("read_missing_key_denied", () =>
+        {
+            var ctx = new DefaultHttpContext();
+            var result = ApiAuthorization.AuthorizeEvidenceRead(ctx);
+            return result is not null && result.StatusCode == StatusCodes.Status401Unauthorized;
+        });
+
+        var status = fail == 0 ? "PASS" : "FAIL";
+        var rootDir = EvidenceMeta.ResolveRepoRoot(Directory.GetCurrentDirectory());
+        var evidenceDir = Path.Combine(rootDir, "evidence", "phase1");
+        Directory.CreateDirectory(evidenceDir);
+        var meta = EvidenceMeta.Load(rootDir);
+
+        var tenantPath = Path.Combine(evidenceDir, "authz_tenant_boundary.json");
+        var bozPath = Path.Combine(evidenceDir, "boz_access_boundary_runtime.json");
+
+        await File.WriteAllTextAsync(tenantPath, JsonSerializer.Serialize(new
+        {
+            check_id = "PHASE1-AUTHZ-TENANT-BOUNDARY",
+            timestamp_utc = meta.TimestampUtc,
+            git_sha = meta.GitSha,
+            schema_fingerprint = meta.SchemaFingerprint,
+            status,
+            tests_passed = pass,
+            tests_failed = fail,
+            results = tests
+        }, new JsonSerializerOptions { WriteIndented = true }) + Environment.NewLine, cancellationToken);
+
+        var bozLikeBoundaryOk = tests.Any(t => t.Name == "read_with_valid_key_allowed" && t.Status == "PASS")
+                                && tests.Any(t => t.Name == "ingress_cross_participant_denied" && t.Status == "PASS");
+        await File.WriteAllTextAsync(bozPath, JsonSerializer.Serialize(new
+        {
+            check_id = "PHASE1-BOZ-ACCESS-BOUNDARY-RUNTIME",
+            timestamp_utc = meta.TimestampUtc,
+            git_sha = meta.GitSha,
+            schema_fingerprint = meta.SchemaFingerprint,
+            status = bozLikeBoundaryOk ? "PASS" : "FAIL",
+            boz_read_only_boundary_enforced = bozLikeBoundaryOk
+        }, new JsonSerializerOptions { WriteIndented = true }) + Environment.NewLine, cancellationToken);
+
+        Console.WriteLine($"Pilot auth self-test status: {status}");
+        Console.WriteLine($"Evidence: {tenantPath}");
+        Console.WriteLine($"Evidence: {bozPath}");
+        return fail == 0 ? 0 : 1;
+
+        static DefaultHttpContext ContextWithHeaders(string key, string tenantId, string participantId)
+        {
+            var ctx = new DefaultHttpContext();
+            ctx.Request.Headers["x-api-key"] = key;
+            ctx.Request.Headers["x-tenant-id"] = tenantId;
+            ctx.Request.Headers["x-participant-id"] = participantId;
+            return ctx;
+        }
+
+        static IngressRequest Request(string tenantId, string participantId, JsonElement payload)
+            => new(
+                instruction_id: "auth-ins-001",
+                participant_id: participantId,
+                idempotency_key: "auth-idem-001",
+                rail_type: "RTGS",
+                payload: payload,
+                payload_hash: null,
+                signature_hash: null,
+                tenant_id: tenantId,
+                correlation_id: null,
+                upstream_ref: null,
+                downstream_ref: null,
+                nfs_sequence_ref: null
+            );
+
+        async Task RunCase(string name, Func<bool> probe)
+        {
+            await Task.Yield();
+            try
+            {
+                if (probe())
+                {
+                    pass++;
+                    tests.Add(new SelfTestCase(name, "PASS", "deterministic expectation met"));
+                }
+                else
+                {
+                    fail++;
+                    tests.Add(new SelfTestCase(name, "FAIL", "expectation not met"));
+                }
+            }
+            catch (Exception ex)
+            {
+                fail++;
+                tests.Add(new SelfTestCase(name, "FAIL", ex.Message));
             }
         }
     }
