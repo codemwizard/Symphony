@@ -1,0 +1,61 @@
+phase: "1"
+task_id: "TSK-P1-049"
+title: "Harden verify_phase1_contract for explicit zip/no-git execution mode"
+owner_role: "SUPERVISOR"
+status: "planned"
+
+depends_on:
+  - "TSK-P1-048"
+
+touches:
+  - "scripts/audit/verify_phase1_contract.sh"
+  - "scripts/audit/lib/approval_requirement.py"
+  - "scripts/audit/tests/test_approval_metadata_requirements.sh"
+  - "docs/operations/LOCAL_CI_PARITY.md"
+  - "tasks/TSK-P1-049/meta.yml"
+
+invariants:
+  - "INV-119"
+  - "INV-077"
+
+mechanics:
+  gate_ids:
+    - "INT-G28"
+  verifiers:
+    - "RUN_PHASE1_GATES=1 bash scripts/audit/verify_phase1_contract.sh"
+  evidence_paths:
+    - "evidence/phase1/phase1_contract_status.json"
+
+work:
+  - "Add PHASE1_CONTRACT_MODE=range|zip_audit explicit behavior."
+  - "Ensure zip_audit mode does deterministic structure checks and records mode in evidence."
+  - "Fail clearly when range mode lacks resolvable git diff context."
+  - "Add/extend tests for mode semantics and approval requirement behavior."
+
+acceptance_criteria:
+  - "phase1_contract_status evidence includes explicit mode semantics."
+  - "zip_audit mode does not silently infer approval_required from missing refs."
+  - "range mode failure is deterministic and actionable when base refs are unavailable."
+
+verification:
+  - "PHASE1_CONTRACT_MODE=zip_audit RUN_PHASE1_GATES=1 bash scripts/audit/verify_phase1_contract.sh"
+  - "RUN_PHASE1_GATES=1 bash scripts/audit/verify_phase1_contract.sh"
+
+evidence:
+  - "evidence/phase1/phase1_contract_status.json"
+
+failure_modes:
+  - "Zip/no-git snapshots produce ambiguous failures."
+  - "Approval requirement semantics drift under missing-ref environments."
+
+must_read:
+  - "scripts/audit/lib/approval_requirement.py"
+  - "docs/operations/REGULATED_SURFACE_PATHS.yml"
+
+implementation_plan: "docs/plans/phase1/TSK-P1-046_invariant_semantic_integrity_and_zip_parity/PLAN.md"
+implementation_log: "docs/plans/phase1/TSK-P1-046_invariant_semantic_integrity_and_zip_parity/EXEC_LOG.md"
+
+notes: "Explicit modeing prevents false interpretation in artifact-only audits."
+client: "codex_cli"
+assigned_agent: "supervisor"
+model: "gpt-5-codex"

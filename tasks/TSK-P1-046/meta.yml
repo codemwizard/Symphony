@@ -1,0 +1,58 @@
+phase: "1"
+task_id: "TSK-P1-046"
+title: "Restore INV-105 semantic correctness in Phase-1 contract"
+owner_role: "INVARIANTS_CURATOR"
+status: "planned"
+
+depends_on: []
+
+touches:
+  - "docs/PHASE1/phase1_contract.yml"
+  - "tasks/TSK-P1-046/meta.yml"
+
+invariants:
+  - "INV-105"
+
+mechanics:
+  gate_ids:
+    - "INT-G28"
+  verifiers:
+    - "bash scripts/audit/verify_remediation_trace.sh"
+    - "RUN_PHASE1_GATES=1 bash scripts/audit/verify_phase1_contract.sh"
+  evidence_paths:
+    - "evidence/phase0/remediation_trace.json"
+    - "evidence/phase1/phase1_contract_status.json"
+
+work:
+  - "Remove INV-105 rows that currently point to verify_agent_conformance.sh evidence."
+  - "Create a single INV-105 row bound to remediation trace semantics only."
+  - "Ensure notes and gate references preserve INV-105 alias I-REMED-TRACE-01 meaning."
+
+acceptance_criteria:
+  - "INV-105 in phase1_contract.yml maps to scripts/audit/verify_remediation_trace.sh only."
+  - "INV-105 evidence path is evidence/phase0/remediation_trace.json."
+  - "No INV-105 row references agent_conformance_*.json."
+
+verification:
+  - "bash scripts/audit/verify_remediation_trace.sh"
+  - "RUN_PHASE1_GATES=1 bash scripts/audit/verify_phase1_contract.sh"
+
+evidence:
+  - "evidence/phase0/remediation_trace.json"
+  - "evidence/phase1/phase1_contract_status.json"
+
+failure_modes:
+  - "INV-105 semantic overload remains (remediation trace vs agent conformance collision)."
+  - "Phase-1 contract passes mechanically while invariant semantics are wrong."
+
+must_read:
+  - "docs/invariants/INVARIANTS_MANIFEST.yml"
+  - "docs/PHASE1/phase1_contract.yml"
+
+implementation_plan: "docs/plans/phase1/TSK-P1-046_invariant_semantic_integrity_and_zip_parity/PLAN.md"
+implementation_log: "docs/plans/phase1/TSK-P1-046_invariant_semantic_integrity_and_zip_parity/EXEC_LOG.md"
+
+notes: "Semantic correction only; no behavior change to remediation verifier itself."
+client: "codex_cli"
+assigned_agent: "invariants_curator"
+model: "gpt-5-codex"

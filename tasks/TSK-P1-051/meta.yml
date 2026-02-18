@@ -1,0 +1,62 @@
+phase: "1"
+task_id: "TSK-P1-051"
+title: "Reconcile control-plane and Phase-1 contract after semantic hardening"
+owner_role: "SUPERVISOR"
+status: "planned"
+
+depends_on:
+  - "TSK-P1-050"
+
+touches:
+  - "docs/control_planes/CONTROL_PLANES.yml"
+  - "docs/PHASE1/phase1_contract.yml"
+  - "tasks/TSK-P1-051/meta.yml"
+
+invariants:
+  - "INV-105"
+  - "INV-119"
+  - "INV-077"
+
+mechanics:
+  gate_ids:
+    - "INT-G28"
+  verifiers:
+    - "bash scripts/audit/verify_control_planes_drift.sh"
+    - "RUN_PHASE1_GATES=1 bash scripts/audit/verify_phase1_contract.sh"
+  evidence_paths:
+    - "evidence/phase0/control_planes_drift.json"
+    - "evidence/phase1/phase1_contract_status.json"
+
+work:
+  - "Confirm gate declarations remain coherent after invariant remapping."
+  - "Ensure no dangling gate/verifier/evidence references remain."
+  - "Confirm governance gate topology remains deterministic and fail-closed."
+
+acceptance_criteria:
+  - "Control-plane drift verifier passes."
+  - "Phase-1 contract verifier passes with RUN_PHASE1_GATES=1."
+  - "No stale INV-105/agent conformance linkage exists in control artifacts."
+
+verification:
+  - "bash scripts/audit/verify_control_planes_drift.sh"
+  - "RUN_PHASE1_GATES=1 bash scripts/audit/verify_phase1_contract.sh"
+
+evidence:
+  - "evidence/phase0/control_planes_drift.json"
+  - "evidence/phase1/phase1_contract_status.json"
+
+failure_modes:
+  - "Control-plane and contract drift after semantic refactor."
+  - "Gate topology appears healthy but references obsolete invariant semantics."
+
+must_read:
+  - "docs/control_planes/CONTROL_PLANES.yml"
+  - "docs/PHASE1/phase1_contract.yml"
+
+implementation_plan: "docs/plans/phase1/TSK-P1-046_invariant_semantic_integrity_and_zip_parity/PLAN.md"
+implementation_log: "docs/plans/phase1/TSK-P1-046_invariant_semantic_integrity_and_zip_parity/EXEC_LOG.md"
+
+notes: "Final governance topology reconciliation before closeout reporting."
+client: "codex_cli"
+assigned_agent: "supervisor"
+model: "gpt-5-codex"

@@ -870,3 +870,18 @@
   sla_days: 14
   enforcement: "scripts/db/tests/test_ingress_hotpath_indexes.sh"
   verification: "scripts/db/tests/test_ingress_hotpath_indexes.sh; evidence/phase1/ingress_hotpath_indexes.json"
+
+- id: INV-119
+  aliases: ["I-AGENT-CONF-01"]
+  status: implemented
+  severity: P1
+  title: "Agent-governed regulated-surface change control requires conformance + approval trace integrity"
+  owners: ["team-security", "team-invariants"]
+  sla_days: 30
+  enforcement: "scripts/audit/verify_agent_conformance.sh"
+  verification: "scripts/audit/verify_agent_conformance.sh; wired via scripts/dev/pre_ci.sh (pre-gates) and Phase-1 governance gate (INT-G28)"
+  notes: >
+    Phase-1 governance invariant for agent-mediated change control. Enforces: (1) role declaration + canonical reference requirements
+    and mandatory stop/escalation conditions for governed change workflows; (2) conditional approval metadata enforcement when regulated
+    surfaces are changed; (3) approval markdown + sidecar cross-link integrity (presence, shape, value consistency, hash match); and
+    fail-closed PII leakage checks in approval metadata. Independent of MCP runtime enablement.

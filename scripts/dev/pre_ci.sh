@@ -451,6 +451,22 @@ if [[ "${RUN_PHASE1_GATES:-0}" == "1" ]]; then
     exit 1
   fi
 
+  echo "==> Phase-1 invariant semantic integrity verification"
+  if [[ -x scripts/audit/verify_invariant_semantic_integrity.sh ]]; then
+    scripts/audit/verify_invariant_semantic_integrity.sh
+  else
+    echo "ERROR: scripts/audit/verify_invariant_semantic_integrity.sh not found"
+    exit 1
+  fi
+
+  echo "==> Phase-1 invariant semantic integrity fixture tests"
+  if [[ -x scripts/audit/tests/test_invariant_semantic_integrity.sh ]]; then
+    scripts/audit/tests/test_invariant_semantic_integrity.sh
+  else
+    echo "ERROR: scripts/audit/tests/test_invariant_semantic_integrity.sh not found"
+    exit 1
+  fi
+
   echo "==> Phase-1 contract evidence status (post-DB parity)"
   if [[ -x scripts/audit/verify_phase1_contract.sh ]]; then
     scripts/audit/verify_phase1_contract.sh

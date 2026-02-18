@@ -1,0 +1,65 @@
+phase: "1"
+task_id: "TSK-P1-048"
+title: "Add invariant-contract semantic integrity verifier and fail-closed fixtures"
+owner_role: "INVARIANTS_CURATOR"
+status: "planned"
+
+depends_on:
+  - "TSK-P1-047"
+
+touches:
+  - "scripts/audit/verify_invariant_semantic_integrity.sh"
+  - "docs/operations/VERIFIER_EVIDENCE_REGISTRY.yml"
+  - "scripts/audit/tests/test_invariant_semantic_integrity.sh"
+  - "scripts/audit/tests/fixtures/semantic_integrity/**"
+  - "scripts/dev/pre_ci.sh"
+  - "tasks/TSK-P1-048/meta.yml"
+
+invariants:
+  - "INV-105"
+  - "INV-119"
+
+mechanics:
+  gate_ids:
+    - "INT-G28"
+  verifiers:
+    - "bash scripts/audit/verify_invariant_semantic_integrity.sh"
+    - "RUN_PHASE1_GATES=1 bash scripts/dev/pre_ci.sh"
+  evidence_paths:
+    - "evidence/phase1/invariant_semantic_integrity.json"
+
+work:
+  - "Implement SEM-I01 verifier for manifest-contract semantic coherence."
+  - "Enforce invariant existence, verifier match, evidence-output match, id/alias uniqueness."
+  - "Add fixture tests for mismatch, wrong evidence mapping, and happy path."
+  - "Wire verifier into pre_ci under RUN_PHASE1_GATES=1 before verify_phase1_contract.sh."
+
+acceptance_criteria:
+  - "INV-105->verify_agent_conformance mismatch fixture fails with deterministic violation code."
+  - "Wrong evidence mapping fixture fails deterministically."
+  - "Happy-path fixture passes and emits PASS evidence."
+
+verification:
+  - "bash scripts/audit/tests/test_invariant_semantic_integrity.sh"
+  - "bash scripts/audit/verify_invariant_semantic_integrity.sh"
+  - "RUN_PHASE1_GATES=1 bash scripts/dev/pre_ci.sh"
+
+evidence:
+  - "evidence/phase1/invariant_semantic_integrity.json"
+
+failure_modes:
+  - "Future invariant semantic collisions pass unnoticed."
+  - "Contract and manifest diverge without deterministic gate failure."
+
+must_read:
+  - "docs/invariants/INVARIANTS_MANIFEST.yml"
+  - "docs/PHASE1/phase1_contract.yml"
+  - "docs/control_planes/CONTROL_PLANES.yml"
+
+implementation_plan: "docs/plans/phase1/TSK-P1-046_invariant_semantic_integrity_and_zip_parity/PLAN.md"
+implementation_log: "docs/plans/phase1/TSK-P1-046_invariant_semantic_integrity_and_zip_parity/EXEC_LOG.md"
+
+notes: "Primary anti-regression control for ID-semantic integrity."
+client: "codex_cli"
+assigned_agent: "invariants_curator"
+model: "gpt-5-codex"

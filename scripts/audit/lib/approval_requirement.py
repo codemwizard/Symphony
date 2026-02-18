@@ -102,6 +102,21 @@ def load_regulated_patterns(root: Path) -> list[str]:
 
 
 def approval_requirement_context(root: Path) -> dict[str, Any]:
+    contract_mode = os.environ.get("PHASE1_CONTRACT_MODE", "").strip().lower()
+    if contract_mode == "zip_audit":
+        return {
+            "base_ref": "",
+            "head_ref": "HEAD",
+            "merge_base": "",
+            "diff_mode": "zip_audit",
+            "changed_files": [],
+            "regulated_patterns": load_regulated_patterns(root),
+            "regulated_changed_paths": [],
+            "approval_required": False,
+            "rules_file": "docs/operations/REGULATED_SURFACE_PATHS.yml",
+            "error": "",
+        }
+
     base_ref = ""
     head_ref = "HEAD"
     diff_mode = "range"

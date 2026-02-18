@@ -9,6 +9,39 @@ This document defines the **local CI parity** workflow. It is intentionally dest
 - `DATABASE_URL` points to the local DB.
 - You must set `CI_WIPE=1`.
 
+## Phase-1 Contract Modes
+
+`scripts/audit/verify_phase1_contract.sh` supports explicit modes:
+
+- `PHASE1_CONTRACT_MODE=range` (default): uses CI-parity git diff semantics.
+- `PHASE1_CONTRACT_MODE=zip_audit`: structure-only mode for artifact/snapshot audits without reliable git refs.
+
+Example:
+
+```bash
+PHASE1_CONTRACT_MODE=zip_audit RUN_PHASE1_GATES=1 bash scripts/audit/verify_phase1_contract.sh
+```
+
+`zip_audit` mode is explicit and recorded in `evidence/phase1/phase1_contract_status.json`.
+
+## Offline Toolchain Bootstrap
+
+`scripts/audit/bootstrap_local_ci_toolchain.sh` supports deterministic offline behavior:
+
+- `SYMPHONY_OFFLINE=1`: disallow network fetches.
+- `SYMPHONY_VENDORED_RG_PATH=/path/to/rg`: optional pinned rg binary source when offline.
+
+Examples:
+
+```bash
+SYMPHONY_OFFLINE=1 bash scripts/audit/bootstrap_local_ci_toolchain.sh
+```
+
+```bash
+SYMPHONY_OFFLINE=1 SYMPHONY_VENDORED_RG_PATH=/opt/symphony/rg \
+  bash scripts/audit/bootstrap_local_ci_toolchain.sh
+```
+
 ## Run
 
 ```bash
