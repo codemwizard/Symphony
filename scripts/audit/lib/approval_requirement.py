@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import os
+import shlex
 import subprocess
 from pathlib import Path
 from typing import Any
@@ -12,14 +13,36 @@ def _run(root: Path, cmd: list[str]) -> str:
     return subprocess.check_output(cmd, cwd=root, text=True).strip()
 
 
+def _run_lines(root: Path, cmd: list[str]) -> list[str]:
+    proc = subprocess.run(cmd, cwd=root, text=True, capture_output=True)
+    if proc.returncode != 0:
+        return []
+    return [line.strip() for line in (proc.stdout or "").splitlines() if line.strip()]
+
+
+def _fallback_changed_files(root: Path) -> list[str]:
+    changed: set[str] = set()
+    # Fixture/minimal repos often have staged-only changes and no origin/main.
+    for cmd in (
+        ["git", "diff", "--name-only", "--cached"],
+        ["git", "diff", "--name-only"],
+        ["git", "diff", "--name-only", "HEAD~1..HEAD"],
+    ):
+        for path in _run_lines(root, cmd):
+            changed.add(path)
+    return sorted(changed)
+
+
 def _run_diff_helper(root: Path) -> tuple[str, str, list[str]]:
-    helper = root / "scripts/lib/git_diff_range_only.sh"
+    script_repo_root = Path(__file__).resolve().parents[3]
+    helper = script_repo_root / "scripts/lib/git_diff_range_only.sh"
     if not helper.exists():
         raise RuntimeError(f"diff_helper_missing:{helper}")
     env = os.environ.copy()
     env.setdefault("HEAD_REF", "HEAD")
+    helper_q = shlex.quote(str(helper))
     script = (
-        'source "scripts/lib/git_diff_range_only.sh"\n'
+        f"source {helper_q}\n"
         'base_ref="$(git_resolve_base_ref)"\n'
         'if ! git_ensure_ref "$base_ref"; then\n'
         '  if [[ "$base_ref" == "refs/remotes/origin/main" ]] && git rev-parse --verify refs/heads/origin/main >/dev/null 2>&1; then\n'
@@ -88,7 +111,11 @@ def approval_requirement_context(root: Path) -> dict[str, Any]:
     try:
         base_ref, merge_base, changed_files = _run_diff_helper(root)
     except Exception as exc:
-        error = str(exc)
+        changed_files = _fallback_changed_files(root)
+        if changed_files:
+            diff_mode = "fallback"
+        else:
+            error = str(exc)
 
     patterns = load_regulated_patterns(root)
     regulated_hits = []

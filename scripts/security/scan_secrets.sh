@@ -4,6 +4,7 @@ set -euo pipefail
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 EVIDENCE_DIR="$ROOT_DIR/evidence/phase0"
 EVIDENCE_FILE="$EVIDENCE_DIR/security_secrets_scan.json"
+ORIG_PWD="$(pwd)"
 
 mkdir -p "$EVIDENCE_DIR"
 source "$ROOT_DIR/scripts/lib/evidence.sh"
@@ -13,7 +14,7 @@ EVIDENCE_SCHEMA_FP="$(schema_fingerprint)"
 
 status="PASS"
 tmp_hits="$(mktemp)"
-trap 'rm -f "$tmp_hits"' EXIT
+trap 'rm -f "$tmp_hits"; cd "$ORIG_PWD"' EXIT
 scan_error=""
 
 patterns=(
@@ -65,6 +66,7 @@ if [[ "${#tracked_files[@]}" -eq 0 ]]; then
 fi
 
 if [[ -z "$scan_error" ]]; then
+  cd "$ROOT_DIR"
   if command -v rg >/dev/null 2>&1; then
     for p in "${patterns[@]}"; do
       name="${p%%::*}"
