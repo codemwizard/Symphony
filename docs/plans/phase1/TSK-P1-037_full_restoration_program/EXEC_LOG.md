@@ -28,3 +28,16 @@ Plan: `docs/plans/phase1/TSK-P1-037_full_restoration_program/PLAN.md`
   - `schema/baselines/2026-02-18/*`
 - SQLSTATE map was updated with anchor-sync error codes:
   - `P7210`, `P7211`, `P7212`
+
+- PR-4 batch restored anchor operational verifier/runtime wiring:
+  - `scripts/db/verify_anchor_sync_operational_invariant.sh`
+  - `scripts/db/tests/test_anchor_sync_operational.sh`
+  - `docs/control_planes/CONTROL_PLANES.yml` (`INT-G29`)
+  - `docs/PHASE1/phase1_contract.yml` (`INV-113` operational row)
+  - `docs/invariants/INVARIANTS_MANIFEST.yml`
+  - `docs/invariants/INVARIANTS_IMPLEMENTED.md`
+  - `docs/invariants/INVARIANTS_QUICK.md`
+  - `scripts/dev/pre_ci.sh`
+
+- PR-4 verification rerun:
+  - `bash scripts/dev/pre_ci.sh` -> PASS
