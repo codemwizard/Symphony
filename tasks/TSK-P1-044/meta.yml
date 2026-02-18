@@ -1,0 +1,64 @@
+phase: "1"
+task_id: "TSK-P1-044"
+title: "Restore sandbox deployment baseline manifests and posture verifier"
+owner_role: "SECURITY_GUARDIAN"
+status: "planned"
+
+depends_on:
+  - "TSK-P1-043"
+
+touches:
+  - "infra/sandbox/k8s/kustomization.yaml"
+  - "infra/sandbox/k8s/namespace.yaml"
+  - "infra/sandbox/k8s/ledger-api-deployment.yaml"
+  - "infra/sandbox/k8s/executor-worker-deployment.yaml"
+  - "infra/sandbox/k8s/secrets-bootstrap.yaml"
+  - "scripts/security/verify_sandbox_deploy_manifest_posture.sh"
+  - "docs/security/PHASE1_SANDBOX_DEPLOY_BASELINE.md"
+  - "scripts/dev/pre_ci.sh"
+  - "tasks/TSK-P1-044/meta.yml"
+
+invariants:
+  - "INV-105"
+  - "INV-077"
+
+mechanics:
+  gate_ids:
+    - "INT-G37"
+  verifiers:
+    - "bash scripts/security/verify_sandbox_deploy_manifest_posture.sh"
+    - "RUN_PHASE1_GATES=1 bash scripts/dev/pre_ci.sh"
+  evidence_paths:
+    - "evidence/phase1/sandbox_deploy_manifest_posture.json"
+
+work:
+  - "Restore deleted sandbox manifests."
+  - "Restore deploy posture verifier and wire to gate flow."
+  - "Validate no inline secret regressions in manifests."
+
+acceptance_criteria:
+  - "Sandbox posture verifier passes."
+  - "Manifest security/redundancy controls are mechanically checked."
+  - "Evidence path is emitted and contract-aligned."
+
+verification:
+  - "bash scripts/security/verify_sandbox_deploy_manifest_posture.sh"
+  - "RUN_PHASE1_GATES=1 bash scripts/dev/pre_ci.sh"
+
+evidence:
+  - "evidence/phase1/sandbox_deploy_manifest_posture.json"
+
+failure_modes:
+  - "Pilot deployment posture drifts without checks."
+  - "Inline secrets introduced into manifests."
+
+must_read:
+  - "docs/operations/AI_AGENT_OPERATION_MANUAL.md"
+
+implementation_plan: "docs/plans/phase1/TSK-P1-037_full_restoration_program/PLAN.md"
+implementation_log: "docs/plans/phase1/TSK-P1-037_full_restoration_program/EXEC_LOG.md"
+
+notes: "Restores deleted Phase-1 sandbox deployability baseline."
+client: "codex_cli"
+assigned_agent: "security_guardian"
+model: "gpt-5-codex"

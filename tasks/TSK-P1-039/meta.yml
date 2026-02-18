@@ -1,0 +1,60 @@
+phase: "1"
+task_id: "TSK-P1-039"
+title: "Restore ingress hot-path index invariant and verification gate"
+owner_role: "DB_FOUNDATION"
+status: "planned"
+
+depends_on:
+  - "TSK-P1-038"
+
+touches:
+  - "scripts/db/tests/test_ingress_hotpath_indexes.sh"
+  - "docs/invariants/INVARIANTS_MANIFEST.yml"
+  - "docs/PHASE1/phase1_contract.yml"
+  - "docs/control_planes/CONTROL_PLANES.yml"
+  - "scripts/dev/pre_ci.sh"
+  - "tasks/TSK-P1-039/meta.yml"
+
+invariants:
+  - "INV-118"
+
+mechanics:
+  gate_ids:
+    - "INT-G33"
+  verifiers:
+    - "bash scripts/db/tests/test_ingress_hotpath_indexes.sh"
+    - "RUN_PHASE1_GATES=1 bash scripts/dev/pre_ci.sh"
+  evidence_paths:
+    - "evidence/phase1/ingress_hotpath_indexes.json"
+
+work:
+  - "Restore ingress hot-path index test script."
+  - "Reinstate INV-118 and INT-G33 references."
+  - "Wire invocation and evidence path into contract/gates."
+
+acceptance_criteria:
+  - "Ingress index test runs and emits deterministic evidence."
+  - "Gate fails closed on missing/mismatched indexes."
+  - "All references are present and consistent."
+
+verification:
+  - "bash scripts/db/tests/test_ingress_hotpath_indexes.sh"
+  - "RUN_PHASE1_GATES=1 bash scripts/dev/pre_ci.sh"
+
+evidence:
+  - "evidence/phase1/ingress_hotpath_indexes.json"
+
+failure_modes:
+  - "Ingress index posture drifts without detection."
+  - "Contract references evidence that is not produced."
+
+must_read:
+  - "docs/operations/AI_AGENT_OPERATION_MANUAL.md"
+
+implementation_plan: "docs/plans/phase1/TSK-P1-037_full_restoration_program/PLAN.md"
+implementation_log: "docs/plans/phase1/TSK-P1-037_full_restoration_program/EXEC_LOG.md"
+
+notes: "Completes restoration of deleted performance hardening gate."
+client: "codex_cli"
+assigned_agent: "db_foundation"
+model: "gpt-5-codex"

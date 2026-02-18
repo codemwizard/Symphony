@@ -1,0 +1,6 @@
+  backup/feature-work                                            a29e99f Add custom git hooks and configure hooksPath
+  feature/ubuntuserverinitialpush                                9768deb [origin/feature/ubuntuserverinitialpush] Check to see why workflow is not running
+  integration/feature-ubuntuserverinitialpush-with-main-20260217 7345e46 [origin/integration/feature-ubuntuserverinitialpush-with-main-20260217] Harden secret scan cwd handling and diff-helper resolution
+* main                                                           6ffb241 [remotes/origin/main: gone] Merge pull request #33 from codemwizard/integration/feature-ubuntuserverinitialpush-with-main-20260217
+  master                                                         e559a1e Initial clean commit - no large files
+  origin/main                                                    8d690b4 Merge pull request #30 from codemwizard/rewrite/dotnet10-core

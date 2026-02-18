@@ -1,0 +1,68 @@
+phase: "1"
+task_id: "TSK-P1-042"
+title: "Restore pilot service self-tests and harness orchestration"
+owner_role: "SECURITY_GUARDIAN"
+status: "planned"
+
+depends_on:
+  - "TSK-P1-041"
+
+touches:
+  - "scripts/services/test_exception_case_pack_generator.sh"
+  - "scripts/services/test_pilot_authz_tenant_boundary.sh"
+  - "scripts/dev/run_phase1_pilot_harness.sh"
+  - "scripts/dev/pre_ci.sh"
+  - "tasks/TSK-P1-042/meta.yml"
+
+invariants:
+  - "INV-105"
+  - "INV-077"
+
+mechanics:
+  gate_ids:
+    - "INT-G35"
+  verifiers:
+    - "bash scripts/services/test_pilot_authz_tenant_boundary.sh"
+    - "bash scripts/services/test_exception_case_pack_generator.sh"
+    - "bash scripts/dev/run_phase1_pilot_harness.sh"
+    - "RUN_PHASE1_GATES=1 bash scripts/dev/pre_ci.sh"
+  evidence_paths:
+    - "evidence/phase1/authz_tenant_boundary.json"
+    - "evidence/phase1/exception_case_pack_generation.json"
+    - "evidence/phase1/pilot_harness_replay.json"
+
+work:
+  - "Restore deleted service-level pilot self-tests."
+  - "Restore phase1 pilot harness command."
+  - "Integrate harness/self-tests into validated gate flow."
+
+acceptance_criteria:
+  - "Pilot authz self-test passes."
+  - "Exception case-pack generation self-test passes."
+  - "Harness command executes end-to-end without missing script errors."
+
+verification:
+  - "bash scripts/services/test_pilot_authz_tenant_boundary.sh"
+  - "bash scripts/services/test_exception_case_pack_generator.sh"
+  - "bash scripts/dev/run_phase1_pilot_harness.sh"
+  - "RUN_PHASE1_GATES=1 bash scripts/dev/pre_ci.sh"
+
+evidence:
+  - "evidence/phase1/authz_tenant_boundary.json"
+  - "evidence/phase1/exception_case_pack_generation.json"
+  - "evidence/phase1/pilot_harness_replay.json"
+
+failure_modes:
+  - "Pilot harness replay path is no longer executable."
+  - "Tenant boundary checks regress without detection."
+
+must_read:
+  - "docs/operations/AI_AGENT_OPERATION_MANUAL.md"
+
+implementation_plan: "docs/plans/phase1/TSK-P1-037_full_restoration_program/PLAN.md"
+implementation_log: "docs/plans/phase1/TSK-P1-037_full_restoration_program/EXEC_LOG.md"
+
+notes: "Reinstates deleted pilot runtime harness path."
+client: "codex_cli"
+assigned_agent: "security_guardian"
+model: "gpt-5-codex"

@@ -1,0 +1,14 @@
+# Post-hygiene local branches
+  feature/full-restoration-program 6ffb241 Merge pull request #33 from codemwizard/integration/feature-ubuntuserverinitialpush-with-main-20260217
+* main                             6ffb241 [origin/main: gone] Merge pull request #33 from codemwizard/integration/feature-ubuntuserverinitialpush-with-main-20260217
+
+# Archive tags created
+archive/branch-backup_feature-work-2026-02-18
+archive/branch-feature_ubuntuserverinitialpush-2026-02-18
+archive/branch-integration_feature-ubuntuserverinitialpush-with-main-20260217-2026-02-18
+archive/branch-main-2026-02-18
+archive/branch-master-2026-02-18
+archive/branch-origin_main-2026-02-18
+
+# Recovery bundle
+-rw-rw-r-- 1 mwiza mwiza 17107868 Feb 18 07:24 /tmp/symphony-branch-archives/symphony_all_refs_2026-02-18.bundle
