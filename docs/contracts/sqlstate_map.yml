@@ -83,6 +83,24 @@
       "subsystem": "ingress",
       "meaning": "member/tenant mismatch",
       "retryable": false
+    },
+    "P7210": {
+      "class": "B",
+      "subsystem": "anchor_sync",
+      "meaning": "anchor sync request is missing required operation identity or worker identity",
+      "retryable": false
+    },
+    "P7211": {
+      "class": "B",
+      "subsystem": "anchor_sync",
+      "meaning": "anchor sync operation attempted from an invalid lifecycle state",
+      "retryable": false
+    },
+    "P7212": {
+      "class": "B",
+      "subsystem": "anchor_sync",
+      "meaning": "anchor sync lease token or lease worker mismatch",
+      "retryable": false
     }
   }
 }
