@@ -475,6 +475,44 @@ client: "codex_cli"
 assigned_agent: "supervisor"
 model: "gpt-5-codex"
 
+## Restoration completion update (2026-02-18)
+
+This audit originally captured de-scope regressions on `main`. The restoration program (`TSK-P1-037` through `TSK-P1-045`) has now been executed in staged PR batches and re-established the deleted capability families.
+
+### Restored capability families
+- DB timeout posture gate restored: `scripts/db/verify_timeout_posture.sh` with evidence `evidence/phase0/db_timeout_posture.json` (`INV-117` / `INT-G32`).
+- Ingress hot-path index gate restored: `scripts/db/tests/test_ingress_hotpath_indexes.sh` with evidence `evidence/phase1/ingress_hotpath_indexes.json` (`INV-118` / `INT-G33`).
+- Anchor operational model restored with forward-safe migrations and operational runtime verification:
+  - `schema/migrations/0033_anchor_sync_operational_enforcement.sql`
+  - `schema/migrations/0034_anchor_sync_operational_fix_append_only_and_lease_time.sql`
+  - `scripts/db/verify_anchor_sync_operational_invariant.sh`
+  - `scripts/db/tests/test_anchor_sync_operational.sh`
+- Pilot harness and service self-tests restored:
+  - `scripts/dev/run_phase1_pilot_harness.sh`
+  - `scripts/services/test_exception_case_pack_generator.sh`
+  - `scripts/services/test_pilot_authz_tenant_boundary.sh`
+- Pilot readiness and closeout verifiers restored:
+  - `scripts/audit/verify_pilot_harness_readiness.sh`
+  - `scripts/audit/verify_product_kpi_readiness.sh`
+  - `scripts/audit/verify_phase1_demo_proof_pack.sh`
+  - `scripts/audit/verify_phase1_closeout.sh`
+- Sandbox deployability baseline and posture verifier restored:
+  - `infra/sandbox/k8s/*.yaml`
+  - `scripts/security/verify_sandbox_deploy_manifest_posture.sh`
+  - `docs/security/PHASE1_SANDBOX_DEPLOY_BASELINE.md`
+
+### Contract and gate reconciliation status
+- `docs/PHASE1/phase1_contract.yml` is aligned with restored invariant evidence paths.
+- `docs/control_planes/CONTROL_PLANES.yml` declares restored gates (`INT-G29`, `INT-G32`, `INT-G33`) with valid verifier/evidence pairs.
+- `docs/invariants/INVARIANTS_MANIFEST.yml` includes restored implemented entries for `INV-117` and `INV-118`.
+- No dangling verifier/evidence references remain in the reconciled Phase-1 path.
+
+### Closeout verification
+- `RUN_PHASE1_GATES=1 bash scripts/audit/verify_phase1_contract.sh` passes.
+- `RUN_PHASE1_GATES=1 bash scripts/dev/pre_ci.sh` passes.
+
+Conclusion update: the previously documented deletion regressions are now addressed by restoration implementation; residual risk returns to normal operational drift risk managed by the restored mechanical gates.
+
 
 
 phase: "1"
@@ -920,5 +958,4 @@ notes: "Final reconciliation and release-readiness signoff task."
 client: "codex_cli"
 assigned_agent: "supervisor"
 model: "gpt-5-codex"
-
 

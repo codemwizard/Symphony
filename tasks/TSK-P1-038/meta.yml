@@ -2,7 +2,7 @@ phase: "1"
 task_id: "TSK-P1-038"
 title: "Restore DB timeout posture invariant and gate wiring"
 owner_role: "DB_FOUNDATION"
-status: "planned"
+status: "completed"
 
 depends_on:
   - "TSK-P1-037"

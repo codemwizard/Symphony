@@ -14,9 +14,20 @@ origin_task_id: TSK-P1-037
 - `bash scripts/db/check_baseline_drift.sh`
 
 ## final_status
-OPEN
+CLOSED
 
 Plan: `docs/plans/phase1/TSK-P1-037_full_restoration_program/PLAN.md`
+
+## Task chain coverage
+- `TSK-P1-037`
+- `TSK-P1-038`
+- `TSK-P1-039`
+- `TSK-P1-040`
+- `TSK-P1-041`
+- `TSK-P1-042`
+- `TSK-P1-043`
+- `TSK-P1-044`
+- `TSK-P1-045`
 
 ## execution_notes
 - PR-3 batch implemented forward-only anchor operational migration restoration via:
@@ -88,3 +99,20 @@ Plan: `docs/plans/phase1/TSK-P1-037_full_restoration_program/PLAN.md`
   - `bash scripts/security/verify_sandbox_deploy_manifest_posture.sh` -> PASS
   - `bash scripts/audit/verify_agent_conformance.sh` -> PASS
   - `bash scripts/dev/pre_ci.sh` -> PASS
+
+- PR-8 batch finalized reconciliation and closeout:
+  - task statuses updated to completed:
+    - `tasks/TSK-P1-037/meta.yml` ... `tasks/TSK-P1-045/meta.yml`
+  - restoration plan status moved to completed:
+    - `docs/plans/phase1/TSK-P1-037_full_restoration_program/PLAN.md`
+  - deletion-impact audit updated with restoration completion mapping:
+    - `docs/audits/MAIN_PULL_DELETION_IMPACT_AUDIT_2026-02-18.md`
+
+- PR-8 verification rerun:
+  - `RUN_PHASE1_GATES=1 bash scripts/audit/verify_phase1_contract.sh` -> PASS
+  - `RUN_PHASE1_GATES=1 bash scripts/dev/pre_ci.sh` -> PASS
+
+## Final summary
+- Full restoration program (`TSK-P1-037` through `TSK-P1-045`) is complete.
+- Contract/control-plane/invariant reconciliation is complete with restored gate wiring.
+- End-to-end verification is green for Phase-1 enabled pre-CI.

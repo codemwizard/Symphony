@@ -2,7 +2,7 @@ phase: "1"
 task_id: "TSK-P1-037"
 title: "Launch full restoration program governance and staged PR scaffolding"
 owner_role: "SUPERVISOR"
-status: "planned"
+status: "completed"
 
 depends_on: []
 
