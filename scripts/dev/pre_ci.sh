@@ -224,6 +224,11 @@ if [[ -x scripts/audit/verify_product_kpi_readiness.sh ]]; then
   scripts/audit/verify_product_kpi_readiness.sh
 fi
 
+if [[ -x scripts/security/verify_sandbox_deploy_manifest_posture.sh ]]; then
+  echo "==> Phase-1 sandbox deploy posture verification"
+  scripts/security/verify_sandbox_deploy_manifest_posture.sh
+fi
+
 if [[ -f "$ENV_FILE" ]]; then
   set -a
   # shellcheck disable=SC1090
