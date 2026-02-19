@@ -2,7 +2,7 @@ phase: "1"
 task_id: "TSK-P1-054"
 title: "Replace subprocess DB calls with pooled Npgsql path for ingress/evidence"
 owner_role: "DB_FOUNDATION_AGENT"
-status: "planned"
+status: "completed"
 
 depends_on:
   - "TSK-P1-053"

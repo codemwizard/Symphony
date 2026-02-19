@@ -2,7 +2,7 @@ phase: "1"
 task_id: "TSK-P1-057"
 title: "Add deterministic perf smoke and driver-level batching telemetry evidence"
 owner_role: "SUPERVISOR"
-status: "planned"
+status: "completed"
 
 depends_on:
   - "TSK-P1-056"

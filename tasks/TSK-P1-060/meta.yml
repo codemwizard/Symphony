@@ -2,7 +2,7 @@ phase: "1"
 task_id: "TSK-P1-060"
 title: "Define boundary conformance and domain-schema migration followthrough program"
 owner_role: "SUPERVISOR"
-status: "planned"
+status: "blocked"
 
 depends_on:
   - "TSK-P1-059"
@@ -52,7 +52,7 @@ must_read:
 implementation_plan: "docs/plans/phase1/TSK-P1-053_perf_architecture_remediation/PLAN.md"
 implementation_log: "docs/plans/phase1/TSK-P1-053_perf_architecture_remediation/EXEC_LOG.md"
 
-notes: "Transitions validated Phase-1 remediations into governed Phase-2 architecture program."
+notes: "Deferred. If executed later, keep doc-only and non-binding; no Phase-2 invariant/gate wiring into Phase-1 chain."
 client: "codex_cli"
 assigned_agent: "supervisor"
 model: "gpt-5-codex"
