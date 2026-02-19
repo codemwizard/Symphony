@@ -436,10 +436,10 @@ if [[ "${RUN_PHASE1_GATES:-0}" == "1" ]]; then
   fi
 
   echo "==> Phase-1 perf smoke profile"
-  if [[ -x scripts/audit/run_perf_smoke_profile.sh ]]; then
-    scripts/audit/run_perf_smoke_profile.sh
+  if [[ -x scripts/audit/run_perf_smoke.sh ]]; then
+    scripts/audit/run_perf_smoke.sh
   else
-    echo "ERROR: scripts/audit/run_perf_smoke_profile.sh not found"
+    echo "ERROR: scripts/audit/run_perf_smoke.sh not found"
     exit 1
   fi
 

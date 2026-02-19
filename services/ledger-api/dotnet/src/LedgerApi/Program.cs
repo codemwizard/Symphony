@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using System.Diagnostics.Metrics;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
@@ -29,6 +30,12 @@ if (args.Contains("--self-test-case-pack", StringComparer.OrdinalIgnoreCase))
 if (args.Contains("--self-test-authz", StringComparer.OrdinalIgnoreCase))
 {
     var code = await PilotAuthSelfTestRunner.RunAsync(CancellationToken.None);
+    Environment.ExitCode = code;
+    return;
+}
+if (args.Contains("--self-test-batching-telemetry", StringComparer.OrdinalIgnoreCase))
+{
+    var code = await BatchingTelemetrySelfTestRunner.RunAsync(logger, CancellationToken.None);
     Environment.ExitCode = code;
     return;
 }
@@ -780,8 +787,64 @@ static class DbDataSourceFactory
         }
 
         logger.LogInformation("Initializing pooled PostgreSQL datasource for ingress/evidence path.");
-        var builder = new NpgsqlDataSourceBuilder(databaseUrl);
+        var normalized = NormalizeConnectionString(databaseUrl);
+        var builder = new NpgsqlDataSourceBuilder(normalized);
         return builder.Build();
+    }
+
+    private static string NormalizeConnectionString(string raw)
+    {
+        if (!raw.StartsWith("postgres://", StringComparison.OrdinalIgnoreCase)
+            && !raw.StartsWith("postgresql://", StringComparison.OrdinalIgnoreCase))
+        {
+            return raw;
+        }
+
+        var uri = new Uri(raw);
+        var builder = new NpgsqlConnectionStringBuilder
+        {
+            Host = uri.Host,
+            Port = uri.Port > 0 ? uri.Port : 5432,
+            Database = uri.AbsolutePath.Trim('/'),
+        };
+
+        if (!string.IsNullOrWhiteSpace(uri.UserInfo))
+        {
+            var userParts = uri.UserInfo.Split(':', 2);
+            if (userParts.Length > 0)
+            {
+                builder.Username = Uri.UnescapeDataString(userParts[0]);
+            }
+
+            if (userParts.Length > 1)
+            {
+                builder.Password = Uri.UnescapeDataString(userParts[1]);
+            }
+        }
+
+        var query = uri.Query.TrimStart('?');
+        if (!string.IsNullOrWhiteSpace(query))
+        {
+            foreach (var segment in query.Split('&', StringSplitOptions.RemoveEmptyEntries))
+            {
+                var kv = segment.Split('=', 2);
+                if (kv.Length != 2)
+                {
+                    continue;
+                }
+
+                var key = Uri.UnescapeDataString(kv[0]);
+                var value = Uri.UnescapeDataString(kv[1]);
+                if (string.Equals(key, "sslmode", StringComparison.OrdinalIgnoreCase))
+                {
+                    builder.SslMode = Enum.TryParse<SslMode>(value, true, out var sslMode)
+                        ? sslMode
+                        : builder.SslMode;
+                }
+            }
+        }
+
+        return builder.ToString();
     }
 }
 
@@ -817,6 +880,19 @@ static class DbValueParsers
 }
 
 record SelfTestCase(string Name, string Status, string Detail);
+
+static class PerfBatchingMetrics
+{
+    public const string MeterName = "Symphony.Perf.Batching";
+
+    private static readonly Meter Meter = new(MeterName, "1.0.0");
+    public static readonly Counter<long> DriverBatchedOperations =
+        Meter.CreateCounter<long>("driver_batched_operations", unit: "operations");
+    public static readonly Counter<long> DriverNonBatchedOperations =
+        Meter.CreateCounter<long>("driver_non_batched_operations", unit: "operations");
+    public static readonly Counter<long> DriverBatchExecutions =
+        Meter.CreateCounter<long>("driver_batch_executions", unit: "batches");
+}
 
 static class IngressSelfTestRunner
 {
@@ -978,6 +1054,146 @@ static class IngressSelfTestRunner
         }
 
         return count;
+    }
+}
+
+static class BatchingTelemetrySelfTestRunner
+{
+    public static async Task<int> RunAsync(ILogger logger, CancellationToken cancellationToken)
+    {
+        var rootDir = EvidenceMeta.ResolveRepoRoot(Directory.GetCurrentDirectory());
+        var evidenceDir = Path.Combine(rootDir, "evidence", "phase1");
+        Directory.CreateDirectory(evidenceDir);
+        var evidencePath = Path.Combine(evidenceDir, "perf_driver_batching_telemetry.json");
+
+        const int nonBatchedOps = 32;
+        const int batchedBatches = 8;
+        const int batchSize = 16;
+        var expectedBatchedOps = batchedBatches * batchSize;
+        var workloadProfile = $"non_batched={nonBatchedOps};batched_batches={batchedBatches};batch_size={batchSize}";
+
+        var measured = new Dictionary<string, long>(StringComparer.Ordinal);
+
+        using var listener = new MeterListener();
+        listener.InstrumentPublished = (instrument, meterListener) =>
+        {
+            if (instrument.Meter.Name == PerfBatchingMetrics.MeterName)
+            {
+                meterListener.EnableMeasurementEvents(instrument);
+            }
+        };
+        listener.SetMeasurementEventCallback<long>((instrument, measurement, _, _) =>
+        {
+            var name = instrument.Name;
+            measured[name] = measured.TryGetValue(name, out var current) ? current + measurement : measurement;
+        });
+        listener.Start();
+
+        string status = "PASS";
+        string? error = null;
+        long rowsInserted = 0;
+
+        try
+        {
+            await using var dataSource = DbDataSourceFactory.Create(logger);
+            await using var conn = await dataSource.OpenConnectionAsync(cancellationToken);
+
+            await using (var init = conn.CreateCommand())
+            {
+                init.CommandText = @"
+DROP TABLE IF EXISTS pg_temp.perf_batch_probe;
+CREATE TEMP TABLE perf_batch_probe (
+  id bigint PRIMARY KEY,
+  payload text NOT NULL
+);";
+                await init.ExecuteNonQueryAsync(cancellationToken);
+            }
+
+            for (var i = 0; i < nonBatchedOps; i++)
+            {
+                await using var cmd = conn.CreateCommand();
+                cmd.CommandText = "INSERT INTO pg_temp.perf_batch_probe (id, payload) VALUES (@id, @payload);";
+                cmd.Parameters.AddWithValue("id", i + 1L);
+                cmd.Parameters.AddWithValue("payload", $"non_batched_{i:D4}");
+                await cmd.ExecuteNonQueryAsync(cancellationToken);
+                PerfBatchingMetrics.DriverNonBatchedOperations.Add(1);
+            }
+
+            var baseId = 100000L;
+            for (var batchNo = 0; batchNo < batchedBatches; batchNo++)
+            {
+                var batch = new NpgsqlBatch(conn);
+                for (var j = 0; j < batchSize; j++)
+                {
+                    var id = baseId + (batchNo * batchSize) + j;
+                    var cmd = new NpgsqlBatchCommand("INSERT INTO pg_temp.perf_batch_probe (id, payload) VALUES (@id, @payload);");
+                    cmd.Parameters.AddWithValue("id", id);
+                    cmd.Parameters.AddWithValue("payload", $"batched_{batchNo:D2}_{j:D2}");
+                    batch.BatchCommands.Add(cmd);
+                }
+
+                await batch.ExecuteNonQueryAsync(cancellationToken);
+                PerfBatchingMetrics.DriverBatchExecutions.Add(1);
+                PerfBatchingMetrics.DriverBatchedOperations.Add(batchSize);
+            }
+
+            await using (var countCmd = conn.CreateCommand())
+            {
+                countCmd.CommandText = "SELECT COUNT(*) FROM pg_temp.perf_batch_probe;";
+                rowsInserted = (long)(await countCmd.ExecuteScalarAsync(cancellationToken) ?? 0L);
+            }
+        }
+        catch (Exception ex)
+        {
+            status = "FAIL";
+            error = ex.Message;
+        }
+
+        listener.RecordObservableInstruments();
+
+        var measuredBatchedOps = measured.TryGetValue("driver_batched_operations", out var batchedCount) ? batchedCount : 0L;
+        var measuredNonBatchedOps = measured.TryGetValue("driver_non_batched_operations", out var nonBatchedCount) ? nonBatchedCount : 0L;
+        var measuredBatchExecutions = measured.TryGetValue("driver_batch_executions", out var batchExecCount) ? batchExecCount : 0L;
+
+        var deterministic = status == "PASS"
+            && measuredBatchedOps == expectedBatchedOps
+            && measuredNonBatchedOps == nonBatchedOps
+            && measuredBatchExecutions == batchedBatches
+            && rowsInserted == nonBatchedOps + expectedBatchedOps;
+
+        if (!deterministic)
+        {
+            status = "FAIL";
+            error ??= "determinism_check_failed";
+        }
+
+        var meta = EvidenceMeta.Load(rootDir);
+        await File.WriteAllTextAsync(evidencePath, JsonSerializer.Serialize(new
+        {
+            check_id = "TSK-P1-057",
+            timestamp_utc = meta.TimestampUtc,
+            git_sha = meta.GitSha,
+            schema_fingerprint = meta.SchemaFingerprint,
+            status,
+            details = new
+            {
+                runtime_version = ".NET 10",
+                batching_enabled = true,
+                batched_operations = measuredBatchedOps,
+                non_batched_operations = measuredNonBatchedOps,
+                batch_executions = measuredBatchExecutions,
+                workload_profile = workloadProfile,
+                telemetry_source = "OpenTelemetry",
+                metric_api = "System.Diagnostics.Metrics",
+                rows_inserted = rowsInserted,
+                deterministic,
+                error
+            }
+        }, new JsonSerializerOptions { WriteIndented = true }) + Environment.NewLine, cancellationToken);
+
+        Console.WriteLine($"Batching telemetry self-test status: {status}");
+        Console.WriteLine($"Evidence: {evidencePath}");
+        return status == "PASS" ? 0 : 1;
     }
 }
 

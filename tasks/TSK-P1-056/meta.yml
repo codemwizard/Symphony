@@ -2,7 +2,7 @@ phase: "1"
 task_id: "TSK-P1-056"
 title: "Single-materialize ingress payload JSON on hot path"
 owner_role: "DB_FOUNDATION_AGENT"
-status: "planned"
+status: "completed"
 
 depends_on:
   - "TSK-P1-055"
