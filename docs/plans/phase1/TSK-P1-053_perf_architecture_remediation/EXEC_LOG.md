@@ -41,3 +41,25 @@ Status: Planning complete; implementation pending approval.
   - `RUN_PHASE1_GATES=1 bash scripts/dev/pre_ci.sh` -> PASS
 
 Status: Stage-1 complete, Stage-2 policy guard complete (evidence emitter pending), Stage-3 complete.
+
+## 2026-02-18 (stage follow-through)
+- Removed AOT tagging from TSK-P1-057 and parent plan per explicit request.
+- Implemented Stage-2 evidence verifier:
+  - `scripts/audit/verify_evidence_store_mode_policy.sh`
+  - emits `evidence/phase1/evidence_store_mode_policy.json`
+- Implemented Stage-4 perf smoke scaffolding:
+  - `scripts/audit/run_perf_smoke_profile.sh`
+  - emits:
+    - `evidence/phase1/perf_smoke_profile.json`
+    - `evidence/phase1/perf_db_driver_bench.json`
+    - `evidence/phase1/perf_driver_batching_telemetry.json`
+- Wired both scripts into `RUN_PHASE1_GATES=1` path in `scripts/dev/pre_ci.sh`.
+
+## Remediation Trace Markers
+- failure_signature: `pre_push remediation trace gate required markers missing for TSK-P1-053 plan/log pair`
+- repro_command: `git push origin feature/phase1-semantic-integrity-prA`
+- verification_commands_run:
+  - `RUN_PHASE1_GATES=1 bash scripts/dev/pre_ci.sh` -> PASS
+- final_status: `in_progress`
+- origin_task_id: `TSK-P1-053`
+- origin_gate_id: `INT-G28`

@@ -427,6 +427,22 @@ if [[ -x scripts/audit/verify_phase1_demo_proof_pack.sh ]]; then
 fi
 
 if [[ "${RUN_PHASE1_GATES:-0}" == "1" ]]; then
+  echo "==> Phase-1 evidence store mode policy verification"
+  if [[ -x scripts/audit/verify_evidence_store_mode_policy.sh ]]; then
+    scripts/audit/verify_evidence_store_mode_policy.sh
+  else
+    echo "ERROR: scripts/audit/verify_evidence_store_mode_policy.sh not found"
+    exit 1
+  fi
+
+  echo "==> Phase-1 perf smoke profile"
+  if [[ -x scripts/audit/run_perf_smoke_profile.sh ]]; then
+    scripts/audit/run_perf_smoke_profile.sh
+  else
+    echo "ERROR: scripts/audit/run_perf_smoke_profile.sh not found"
+    exit 1
+  fi
+
   echo "==> Phase-1 no-MCP guard"
   if [[ -x scripts/audit/verify_no_mcp_phase1.sh ]]; then
     scripts/audit/verify_no_mcp_phase1.sh

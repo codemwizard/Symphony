@@ -65,19 +65,34 @@ if [[ "${#tracked_files[@]}" -eq 0 ]]; then
   scan_error="git_ls_files_empty_or_failed"
 fi
 
+existing_tracked_files=()
+missing_tracked_files=0
+if [[ -z "$scan_error" ]]; then
+  for path in "${tracked_files[@]}"; do
+    if [[ -e "$ROOT_DIR/$path" ]]; then
+      existing_tracked_files+=("$path")
+    else
+      missing_tracked_files=$((missing_tracked_files + 1))
+    fi
+  done
+  if [[ "${#existing_tracked_files[@]}" -eq 0 ]]; then
+    scan_error="no_existing_tracked_files"
+  fi
+fi
+
 if [[ -z "$scan_error" ]]; then
   cd "$ROOT_DIR"
   if command -v rg >/dev/null 2>&1; then
     for p in "${patterns[@]}"; do
       name="${p%%::*}"
       regex="${p#*::}"
-      rg_scan "$name" "$regex" "${tracked_files[@]}" || break
+      rg_scan "$name" "$regex" "${existing_tracked_files[@]}" || break
     done
   else
     for p in "${patterns[@]}"; do
       name="${p%%::*}"
       regex="${p#*::}"
-      grep_scan "$name" "$regex" "${tracked_files[@]}" || break
+      grep_scan "$name" "$regex" "${existing_tracked_files[@]}" || break
     done
   fi
 fi
@@ -108,6 +123,9 @@ write_json "$EVIDENCE_FILE" \
   "\"schema_fingerprint\": \"${EVIDENCE_SCHEMA_FP}\"" \
   "\"status\": \"${status}\"" \
   "\"hit_count\": ${count}" \
+  "\"tracked_file_count\": ${#tracked_files[@]}" \
+  "\"existing_tracked_file_count\": ${#existing_tracked_files[@]}" \
+  "\"missing_tracked_file_count\": ${missing_tracked_files}" \
   "\"scan_error\": \"${scan_error}\"" \
   "\"hits\": ${hits_json}"
 

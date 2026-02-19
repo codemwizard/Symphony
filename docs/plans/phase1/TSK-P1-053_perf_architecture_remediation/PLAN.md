@@ -6,6 +6,10 @@
 - status: `proposed_for_review`
 - program_type: `phase1_required_with_phase2_followthrough`
 - canonical_reference: `docs/operations/AI_AGENT_OPERATION_MANUAL.md`
+- failure_signature: `pre_push remediation trace gate required markers missing for TSK-P1-053 plan/log pair`
+- repro_command: `git push origin feature/phase1-semantic-integrity-prA`
+- origin_task_id: `TSK-P1-053`
+- origin_gate_id: `INT-G28`
 
 ## Decision Summary
 This program accepts the performance audit as immediately actionable and accepts the architecture audit as directionally correct with staged execution.
@@ -59,6 +63,7 @@ Deferred Phase-2 objective:
 ### Stage 4 (Phase-1 Required): Perf Regression Guard
 - Add deterministic microbenchmark/perf-smoke script.
 - Emit machine-readable perf evidence (latency + DB duration + throughput summary).
+- Add .NET 10 Metrics/OpenTelemetry proof that batching occurs at driver runtime (not only in config docs).
 - Wire as non-flaky gate policy (informational first, required after baseline stabilization).
 
 ### Stage 5 (Phase-1 Conditional): Attempt Counter Optimization
@@ -99,7 +104,7 @@ Deferred Phase-2 objective:
 - invariants: `INV-077`
 - gates: `INT-G28`
 - verifiers: new deterministic perf-smoke verifier + `scripts/audit/verify_phase1_contract.sh`
-- evidence: `evidence/phase1/perf_smoke_profile.json`
+- evidence: `evidence/phase1/perf_smoke_profile.json`, `evidence/phase1/perf_driver_batching_telemetry.json`
 - promotion rule:
   - informational until baseline exists and stability threshold is met
   - required only after `N=5` consecutive stable runs with coefficient-of-variation <= `0.15` on p95 latency under fixed profile
@@ -136,6 +141,8 @@ Deferred Phase-2 objective:
 - `bash scripts/db/tests/test_db_functions.sh`
 - `bash scripts/audit/run_invariants_fast_checks.sh`
 - `bash scripts/audit/verify_phase1_contract.sh`
+- verification_commands_run:
+  - `RUN_PHASE1_GATES=1 bash scripts/dev/pre_ci.sh`
 
 ## Evidence Targets (Program)
 - Existing:
@@ -148,6 +155,7 @@ Deferred Phase-2 objective:
   - `evidence/phase1/perf_db_driver_bench.json`
   - `evidence/phase1/evidence_store_mode_policy.json`
   - `evidence/phase1/perf_smoke_profile.json`
+  - `evidence/phase1/perf_driver_batching_telemetry.json`
   - `evidence/phase1/outbox_retry_semantics.json` (conditional stage)
 
 ## Risks and Controls
@@ -157,3 +165,6 @@ Deferred Phase-2 objective:
   - Control: deterministic profile + informational rollout + threshold hardening.
 - Risk: architecture refactor dilutes gate clarity.
   - Control: keep top-level script interfaces and evidence contracts unchanged while refactoring internals.
+
+## Final Status
+- final_status: `in_progress`
