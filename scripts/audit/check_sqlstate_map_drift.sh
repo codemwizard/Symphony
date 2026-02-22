@@ -78,12 +78,12 @@ if not isinstance(codes, dict):
     errors.append("map_codes_not_object")
     codes = {}
 
-declared_pattern = data.get("code_pattern", r"^P\d{4}$") if isinstance(data, dict) else r"^P\d{4}$"
-try:
-    code_pattern = re.compile(declared_pattern)
-except re.error:
-    errors.append("invalid_code_pattern")
-    code_pattern = re.compile(r"^P\d{4}$")
+# Fail-closed: the map file must not define its own acceptance regex.
+fixed_pattern = r"^P\d{4}$"
+declared_pattern = data.get("code_pattern") if isinstance(data, dict) else None
+if declared_pattern != fixed_pattern:
+    add_invalid("__top_level__", f"code_pattern_must_equal:{fixed_pattern}")
+code_pattern = re.compile(fixed_pattern)
 
 allowed_class = {"A", "B", "C"}
 
