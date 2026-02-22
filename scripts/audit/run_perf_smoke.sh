@@ -170,21 +170,25 @@ enforcement = {
   "baseline_p95_ms": None,
   "current_p95_ms": current_p95,
   "allowed_p95_ms": None,
-  "mode": "informational",
+  "mode": "enforced",
   "regression_detected": False,
   "regression_enforced": False
 }
 
-if baseline_path.exists():
+if not baseline_path.exists():
+  smoke["status"] = "FAIL"
+  smoke["error"] = "baseline_file_missing"
+else:
   cfg = json.loads(baseline_path.read_text())
   enforcement["baseline_locked"] = bool(cfg.get("baseline_locked", False))
   enforcement["regression_threshold_pct"] = float(cfg.get("regression_threshold_pct", 0.15))
   if cfg.get("p95_ms") is not None:
     enforcement["baseline_p95_ms"] = float(cfg.get("p95_ms"))
 
-if enforcement["baseline_locked"]:
-  enforcement["mode"] = "enforced"
-  if enforcement["baseline_p95_ms"] is None:
+  if not enforcement["baseline_locked"]:
+    smoke["status"] = "FAIL"
+    smoke["error"] = "baseline_not_locked"
+  elif enforcement["baseline_p95_ms"] is None or enforcement["baseline_p95_ms"] <= 0:
     smoke["status"] = "FAIL"
     smoke["error"] = "baseline_locked_but_missing_baseline_p95"
   else:
@@ -192,7 +196,7 @@ if enforcement["baseline_locked"]:
     enforcement["allowed_p95_ms"] = allowed
     regression = current_p95 > allowed
     enforcement["regression_detected"] = regression
-    enforcement["regression_enforced"] = regression
+    enforcement["regression_enforced"] = True
     if regression:
       smoke["status"] = "FAIL"
       smoke["error"] = f"perf_regression_detected:p95_ms={current_p95:.2f}>allowed={allowed:.2f}"

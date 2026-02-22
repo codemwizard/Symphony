@@ -67,6 +67,8 @@ for block in blocks:
 
 if "## TSK-CLEAN-001 — " not in prompt_text:
     issues.append("prompt_pack:missing_section:TSK-CLEAN-001")
+if "## TSK-CLEAN-002 — " not in prompt_text:
+    issues.append("prompt_pack:missing_section:TSK-CLEAN-002")
 
 out = {
     "check_id": "TASK-EVIDENCE-CONTRACT",

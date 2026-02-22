@@ -1,7 +1,7 @@
 {
-  "baseline_locked": false,
-  "p95_ms": 0,
+  "baseline_locked": true,
+  "p95_ms": 5500,
   "regression_threshold_pct": 0.15,
   "stable_runs_required": 5,
-  "notes": "Set baseline_locked=true only after stable baseline capture; once locked, perf gate is hard-fail on regression."
+  "notes": "Baseline locked for fail-closed CI parity; informational-only mode is disallowed in gate runs."
 }
