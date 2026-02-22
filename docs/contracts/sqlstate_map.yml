@@ -1,5 +1,20 @@
 {
-  "version": 1,
+  "schema_version": "1.0.0",
+  "registry_id": "SQLSTATE-MAP",
+  "owner": "team-invariants",
+  "code_pattern": "^P\\d{4}$",
+  "entry_required_fields": [
+    "class",
+    "subsystem",
+    "meaning",
+    "retryable"
+  ],
+  "source_scan_scope": [
+    "schema/",
+    "scripts/",
+    "services/",
+    "docs/contracts/"
+  ],
   "ranges": {
     "P71xx": "outbox_invariants",
     "P72xx": "ingress_invariants",
@@ -34,6 +49,20 @@
       "meaning": "invalid terminal/finality state transition",
       "retryable": false
     },
+    "P7004": {
+      "canonical": "P7104",
+      "class": "B",
+      "subsystem": "pii",
+      "meaning": "invalid purge operation or direct vault mutation",
+      "retryable": false
+    },
+    "P7005": {
+      "canonical": "P7105",
+      "class": "B",
+      "subsystem": "rail_anchor",
+      "meaning": "missing or invalid rail sequence truth anchor on dispatch",
+      "retryable": false
+    },
     "P7102": {
       "class": "B",
       "subsystem": "outbox",
@@ -46,24 +75,10 @@
       "meaning": "invalid terminal/finality state transition",
       "retryable": false
     },
-    "P7004": {
-      "canonical": "P7104",
-      "class": "B",
-      "subsystem": "pii",
-      "meaning": "invalid purge operation or direct vault mutation",
-      "retryable": false
-    },
     "P7104": {
       "class": "B",
       "subsystem": "pii",
       "meaning": "invalid purge operation or direct vault mutation",
-      "retryable": false
-    },
-    "P7005": {
-      "canonical": "P7105",
-      "class": "B",
-      "subsystem": "rail_anchor",
-      "meaning": "missing or invalid rail sequence truth anchor on dispatch",
       "retryable": false
     },
     "P7105": {
@@ -101,6 +116,13 @@
       "subsystem": "anchor_sync",
       "meaning": "anchor sync lease token or lease worker mismatch",
       "retryable": false
+    },
+    "P7301": {
+      "class": "B",
+      "subsystem": "policy",
+      "meaning": "program-to-entity link invalid",
+      "retryable": false,
+      "notes": "Registered to satisfy contractual SQLSTATE scan scope for ERROR_MAPPING_SPEC examples."
     }
   }
 }
