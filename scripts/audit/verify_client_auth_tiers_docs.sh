@@ -52,13 +52,15 @@ contains_literal() {
 
 canonical_tier_order_ok() {
   local f="$1"
-  # Require exact mappings somewhere in the doc.
-  contains_literal "$f" "Tier 1" \
-    && contains_literal "$f" "mTLS" \
-    && contains_literal "$f" "Tier 2" \
-    && contains_literal "$f" "signed JWT" \
-    && contains_literal "$f" "Tier 3" \
-    && contains_literal "$f" "API key + trusted headers"
+  # Accept canonical label forms used in security docs:
+  # - Tier-1/2/3 (or Tier 1/2/3)
+  # - API Key + Trusted Headers (case-insensitive)
+  grep -Eqi 'Tier[-[:space:]]*1' "$f" \
+    && grep -Eqi 'mTLS' "$f" \
+    && grep -Eqi 'Tier[-[:space:]]*2' "$f" \
+    && grep -Eqi 'signed[[:space:]]+JWT' "$f" \
+    && grep -Eqi 'Tier[-[:space:]]*3' "$f" \
+    && grep -Eqi 'API[[:space:]]+Key[[:space:]]*\+[[:space:]]*Trusted[[:space:]]+Headers' "$f"
 }
 
 matrix_has_required_columns() {
@@ -114,13 +116,13 @@ tiers_order_correct=false
 matrix_columns_ok=false
 invalid_tier_ordering_detected=false
 
-if [[ -f "$DOC_TIERS" ]]; then
+  if [[ -f "$DOC_TIERS" ]]; then
   tiers_doc_exists=true
   if canonical_tier_order_ok "$DOC_TIERS"; then
     tiers_order_correct=true
   else
     PASS=false
-    ERRORS+=("TIER_ORDER_INVALID:${DOC_TIERS} (expected Tier1=mTLS, Tier2=signed JWT, Tier3=API key + trusted headers)")
+    ERRORS+=("TIER_ORDER_INVALID:${DOC_TIERS} (expected Tier-1=mTLS, Tier-2=signed JWT, Tier-3=API Key + Trusted Headers)")
   fi
 
   if invalid_tier_tokens_present "$DOC_TIERS"; then
