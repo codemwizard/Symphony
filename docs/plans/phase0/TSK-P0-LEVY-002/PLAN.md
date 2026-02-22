@@ -17,4 +17,4 @@ origin_task_id: TSK-P0-LEVY-002
 - `RUN_PHASE1_GATES=1 scripts/dev/pre_ci.sh`
 
 ## final_status
-- in_progress
+- completed

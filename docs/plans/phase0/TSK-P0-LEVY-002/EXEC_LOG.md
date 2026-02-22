@@ -18,7 +18,7 @@ Plan: docs/plans/phase0/TSK-P0-LEVY-002/PLAN.md
 - `RUN_PHASE1_GATES=1 scripts/dev/pre_ci.sh`
 
 ## final_status
-- in_progress
+- completed
 
 ## Final summary
-- Implementation complete pending final verifier and pre_ci pass.
+- Implementation completed. `verify_levy_applicable_hook.sh` and full `RUN_PHASE1_GATES=1 scripts/dev/pre_ci.sh` both passed, with evidence emitted at `evidence/phase0/TSK-P0-LEVY-002.json`.

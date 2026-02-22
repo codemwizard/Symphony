@@ -2,7 +2,7 @@ phase: "0"
 task_id: "TSK-P0-LEVY-002"
 title: "levy_applicable column on ingress_attestations (expand-first hook)"
 owner_role: "DB_FOUNDATION"
-status: "in_progress"
+status: "completed"
 
 depends_on:
   - "TSK-P0-LEVY-001"
