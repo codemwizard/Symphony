@@ -2,7 +2,7 @@
 -- PostgreSQL database dump
 --
 
-\restrict hyXafLJWhbWdB9wVtLqLUx0tnOYU6UoUr940ObBia5pIJ7JkdufT2m1iphcDyLW
+\restrict Foj3zbETtsbqE4YX6x45a7QVSxOVdCaZ1LaeKKbMBV9r4Nlq7VPFuYLzTW8dCEM
 
 -- Dumped from database version 18.2 (Debian 18.2-1.pgdg13+1)
 -- Dumped by pg_dump version 18.2 (Debian 18.2-1.pgdg13+1)
@@ -1178,6 +1178,27 @@ CREATE TABLE public.levy_rates (
 
 
 --
+-- Name: levy_remittance_periods; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.levy_remittance_periods (
+    id uuid DEFAULT gen_random_uuid() NOT NULL,
+    period_code character(7) NOT NULL,
+    jurisdiction_code character(2) NOT NULL,
+    period_start date NOT NULL,
+    period_end date NOT NULL,
+    filing_deadline date,
+    period_status text,
+    filed_at timestamp with time zone,
+    zra_reference text,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    CONSTRAINT levy_remittance_periods_check CHECK ((period_end >= period_start)),
+    CONSTRAINT levy_remittance_periods_check1 CHECK (((filing_deadline IS NULL) OR (filing_deadline >= period_end))),
+    CONSTRAINT levy_remittance_periods_period_code_check CHECK ((period_code ~ '^\\d{4}-\\d{2}$'::text))
+);
+
+
+--
 -- Name: participant_outbox_sequences; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -1557,11 +1578,27 @@ ALTER TABLE ONLY public.levy_calculation_records
 
 
 --
+-- Name: levy_remittance_periods levy_periods_unique_period_jurisdiction; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.levy_remittance_periods
+    ADD CONSTRAINT levy_periods_unique_period_jurisdiction UNIQUE (period_code, jurisdiction_code);
+
+
+--
 -- Name: levy_rates levy_rates_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.levy_rates
     ADD CONSTRAINT levy_rates_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: levy_remittance_periods levy_remittance_periods_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.levy_remittance_periods
+    ADD CONSTRAINT levy_remittance_periods_pkey PRIMARY KEY (id);
 
 
 --
@@ -2029,6 +2066,20 @@ CREATE INDEX levy_calc_status_idx ON public.levy_calculation_records USING btree
 
 
 --
+-- Name: levy_periods_jurisdiction_idx; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX levy_periods_jurisdiction_idx ON public.levy_remittance_periods USING btree (jurisdiction_code, period_start DESC);
+
+
+--
+-- Name: levy_periods_status_idx; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX levy_periods_status_idx ON public.levy_remittance_periods USING btree (period_status) WHERE (period_status IS NOT NULL);
+
+
+--
 -- Name: levy_rates_jurisdiction_date_idx; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -2443,5 +2494,5 @@ ALTER TABLE ONLY public.tenants
 -- PostgreSQL database dump complete
 --
 
-\unrestrict hyXafLJWhbWdB9wVtLqLUx0tnOYU6UoUr940ObBia5pIJ7JkdufT2m1iphcDyLW
+\unrestrict Foj3zbETtsbqE4YX6x45a7QVSxOVdCaZ1LaeKKbMBV9r4Nlq7VPFuYLzTW8dCEM
 

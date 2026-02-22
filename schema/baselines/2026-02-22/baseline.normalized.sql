@@ -186,7 +186,9 @@
     ADD CONSTRAINT levy_calculation_records_instruction_id_fkey FOREIGN KEY (instruction_id) REFERENCES public.ingress_attestations(attestation_id) ON DELETE RESTRICT;
     ADD CONSTRAINT levy_calculation_records_levy_rate_id_fkey FOREIGN KEY (levy_rate_id) REFERENCES public.levy_rates(id) ON DELETE RESTRICT;
     ADD CONSTRAINT levy_calculation_records_pkey PRIMARY KEY (id);
+    ADD CONSTRAINT levy_periods_unique_period_jurisdiction UNIQUE (period_code, jurisdiction_code);
     ADD CONSTRAINT levy_rates_pkey PRIMARY KEY (id);
+    ADD CONSTRAINT levy_remittance_periods_pkey PRIMARY KEY (id);
     ADD CONSTRAINT participant_outbox_sequences_pkey PRIMARY KEY (participant_id);
     ADD CONSTRAINT participants_pkey PRIMARY KEY (participant_id);
     ADD CONSTRAINT payment_outbox_attempts_correlation_required_new_rows_chk CHECK ((correlation_id IS NOT NULL)) NOT VALID;
@@ -290,6 +292,9 @@
     CONSTRAINT levy_rates_cap_currency_required CHECK (((cap_amount_minor IS NULL) OR (cap_currency_code IS NOT NULL))),
     CONSTRAINT levy_rates_check CHECK (((effective_to IS NULL) OR (effective_to >= effective_from))),
     CONSTRAINT levy_rates_rate_bps_check CHECK (((rate_bps >= 0) AND (rate_bps <= 10000)))
+    CONSTRAINT levy_remittance_periods_check CHECK ((period_end >= period_start)),
+    CONSTRAINT levy_remittance_periods_check1 CHECK (((filing_deadline IS NULL) OR (filing_deadline >= period_end))),
+    CONSTRAINT levy_remittance_periods_period_code_check CHECK ((period_code ~ '^\\d{4}-\\d{2}$'::text))
     CONSTRAINT participant_outbox_sequences_next_sequence_id_check CHECK ((next_sequence_id >= 1))
     CONSTRAINT participants_participant_kind_check CHECK ((participant_kind = ANY (ARRAY['BANK'::text, 'MMO'::text, 'NGO'::text, 'GOV_PROGRAM'::text, 'COOP_FEDERATION'::text, 'ENTERPRISE'::text, 'INTERNAL'::text]))),
     CONSTRAINT participants_status_check CHECK ((status = ANY (ARRAY['ACTIVE'::text, 'SUSPENDED'::text, 'CLOSED'::text])))
@@ -515,6 +520,7 @@
     created_at timestamp with time zone DEFAULT now() NOT NULL,
     created_at timestamp with time zone DEFAULT now() NOT NULL,
     created_at timestamp with time zone DEFAULT now() NOT NULL,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
     created_at timestamp with time zone DEFAULT now(),
     created_by text DEFAULT CURRENT_USER NOT NULL,
     currency_code character(3),
@@ -536,10 +542,13 @@
     expires_at timestamp with time zone,
     expires_at timestamp with time zone,
     expires_at timestamp with time zone,
+    filed_at timestamp with time zone,
+    filing_deadline date,
     final_state text NOT NULL,
     finality_id uuid DEFAULT public.uuid_v7_or_random() NOT NULL,
     finalized_at timestamp with time zone DEFAULT now() NOT NULL,
     grace_expires_at timestamp with time zone,
+    id uuid DEFAULT gen_random_uuid() NOT NULL,
     id uuid DEFAULT gen_random_uuid() NOT NULL,
     id uuid DEFAULT gen_random_uuid() NOT NULL,
     idempotency_key text NOT NULL,
@@ -558,6 +567,7 @@
     item_id uuid DEFAULT public.uuid_v7_or_random() NOT NULL,
     jsonb_build_object('executor', p_executor)
     jsonb_build_object('subject_token', p_subject_token)
+    jurisdiction_code character(2) NOT NULL,
     jurisdiction_code character(2) NOT NULL,
     jurisdiction_code character(2),
     last_error text,
@@ -617,6 +627,10 @@
     payload jsonb NOT NULL,
     payload jsonb NOT NULL,
     payload_hash text NOT NULL,
+    period_code character(7) NOT NULL,
+    period_end date NOT NULL,
+    period_start date NOT NULL,
+    period_status text,
     proof_id uuid DEFAULT public.uuid_v7_or_random() NOT NULL,
     protected_payload jsonb,
     provider text NOT NULL,
@@ -724,6 +738,7 @@
     version text NOT NULL,
     version text NOT NULL,
     worker_id text,
+    zra_reference text,
    FROM due
    RETURNING
    SET
@@ -982,6 +997,7 @@ $$;
 );
 );
 );
+);
 ALTER TABLE ONLY public.anchor_sync_operations
 ALTER TABLE ONLY public.anchor_sync_operations
 ALTER TABLE ONLY public.anchor_sync_operations
@@ -1012,6 +1028,8 @@ ALTER TABLE ONLY public.levy_calculation_records
 ALTER TABLE ONLY public.levy_calculation_records
 ALTER TABLE ONLY public.levy_calculation_records
 ALTER TABLE ONLY public.levy_rates
+ALTER TABLE ONLY public.levy_remittance_periods
+ALTER TABLE ONLY public.levy_remittance_periods
 ALTER TABLE ONLY public.participant_outbox_sequences
 ALTER TABLE ONLY public.participants
 ALTER TABLE ONLY public.payment_outbox_attempts
@@ -1128,6 +1146,8 @@ CREATE INDEX idx_tenants_parent_tenant_id ON public.tenants USING btree (parent_
 CREATE INDEX idx_tenants_status ON public.tenants USING btree (status);
 CREATE INDEX levy_calc_reporting_period_idx ON public.levy_calculation_records USING btree (reporting_period, jurisdiction_code) WHERE (reporting_period IS NOT NULL);
 CREATE INDEX levy_calc_status_idx ON public.levy_calculation_records USING btree (levy_status) WHERE (levy_status IS NOT NULL);
+CREATE INDEX levy_periods_jurisdiction_idx ON public.levy_remittance_periods USING btree (jurisdiction_code, period_start DESC);
+CREATE INDEX levy_periods_status_idx ON public.levy_remittance_periods USING btree (period_status) WHERE (period_status IS NOT NULL);
 CREATE INDEX levy_rates_jurisdiction_date_idx ON public.levy_rates USING btree (jurisdiction_code, effective_from DESC);
 CREATE SCHEMA public;
 CREATE TABLE public.anchor_sync_operations (
@@ -1140,6 +1160,7 @@ CREATE TABLE public.ingress_attestations (
 CREATE TABLE public.instruction_settlement_finality (
 CREATE TABLE public.levy_calculation_records (
 CREATE TABLE public.levy_rates (
+CREATE TABLE public.levy_remittance_periods (
 CREATE TABLE public.participant_outbox_sequences (
 CREATE TABLE public.participants (
 CREATE TABLE public.payment_outbox_attempts (

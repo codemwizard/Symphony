@@ -379,6 +379,14 @@ else
   exit 1
 fi
 
+echo "==> Phase-0 levy remittance periods structural hook verification (TSK-P0-LEVY-004)"
+if [[ -x scripts/db/verify_levy_remittance_periods_hook.sh ]]; then
+  scripts/db/verify_levy_remittance_periods_hook.sh
+else
+  echo "ERROR: scripts/db/verify_levy_remittance_periods_hook.sh not found"
+  exit 1
+fi
+
 echo "==> Phase-0 contract evidence status (merged local evidence)"
 if [[ -x scripts/audit/verify_phase0_contract_evidence_status.sh ]]; then
   CI_ONLY=1 EVIDENCE_ROOT="evidence/phase0" scripts/audit/verify_phase0_contract_evidence_status.sh
