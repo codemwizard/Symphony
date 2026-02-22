@@ -21,3 +21,6 @@ evidence:
 
 must_read:
   - "docs/operations/AI_AGENT_OPERATION_MANUAL.md"
+
+implementation_plan: "docs/plans/phase1/TSK-P1-059/PLAN.md"
+implementation_log: "docs/plans/phase1/TSK-P1-059/EXEC_LOG.md"
