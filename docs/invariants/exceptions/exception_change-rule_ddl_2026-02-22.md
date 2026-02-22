@@ -1,8 +1,8 @@
 ---
-exception_id: EXC-000
+exception_id: EXC-901
 inv_scope: change-rule
 expiry: 2026-03-08
-follow_up_ticket: PLACEHOLDER-000
+follow_up_ticket: TSK-P0-LEVY-001
 reason: Auto-generated: structural change detected; invariants linkage missing in commit.
 author: system
 created_at: 2026-02-22
@@ -15,7 +15,8 @@ but invariants linkage (manifest/docs with INV-###) was not included in the same
 
 ## Reason
 
-[Describe why this exception is needed]
+Forward-only schema hook migration for `TSK-P0-LEVY-001` adds `public.levy_rates` and
+baseline snapshots, but does not add a new invariant id in this same commit.
 
 ## Evidence
 
@@ -56,4 +57,6 @@ Top matches:
 
 ## Mitigation
 
-[Describe any mitigating controls in place]
+- Migration is forward-only and checksum-validated by `scripts/db/migrate.sh`.
+- Structural verifier `scripts/db/verify_levy_rates_hook.sh` is wired into `scripts/dev/pre_ci.sh`.
+- Full `RUN_PHASE1_GATES=1 scripts/dev/pre_ci.sh` passed before push.
