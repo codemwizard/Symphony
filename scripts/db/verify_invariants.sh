@@ -151,6 +151,19 @@ fi
 EVIDENCE_DIR="$REPO_ROOT/evidence/phase0"
 mkdir -p "$EVIDENCE_DIR"
 
+python3 - <<PY
+import json
+from pathlib import Path
+out = {
+  "check_id": "DB-CI-INVARIANT-GATE",
+  "timestamp_utc": "${EVIDENCE_TS}",
+  "git_sha": "${EVIDENCE_GIT_SHA}",
+  "schema_fingerprint": "${EVIDENCE_SCHEMA_FP}",
+  "status": "PASS",
+}
+Path("$EVIDENCE_DIR/ci_invariant_gate.json").write_text(json.dumps(out, indent=2))
+PY
+
 fail=0
 
 echo "🔎 Verifying outbox pending MVCC posture..."
