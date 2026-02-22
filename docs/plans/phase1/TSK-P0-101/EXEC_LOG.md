@@ -12,6 +12,7 @@ Plan: docs/plans/phase1/TSK-P0-101/PLAN.md
 - Added `scripts/audit/verify_tsk_p0_101.sh`.
 - Reconciled `tasks/TSK-P0-101/meta.yml` with DAG/prompt dependencies.
 - Generated `evidence/phase0/tsk_p0_101__ordered_checks_runner_gating.json` (PASS).
+- Hardened verifier to require an executable invocation line in `scripts/dev/pre_ci.sh` (not substring presence).
 
 ## Final Summary
 TSK-P0-101 completed with deterministic verification of ordered check runner presence and pre-ci wiring.
