@@ -445,6 +445,14 @@ else
   exit 1
 fi
 
+echo "==> Phase-0 required evidence parity gate (CI-equivalent)"
+if [[ -x scripts/ci/check_evidence_required.sh ]]; then
+  CI_ONLY=1 scripts/ci/check_evidence_required.sh evidence/phase0
+else
+  echo "ERROR: scripts/ci/check_evidence_required.sh not found"
+  exit 1
+fi
+
 if [[ -x scripts/audit/verify_phase1_demo_proof_pack.sh ]]; then
   echo "==> Phase-1 regulator/tier-1 demo-proof pack verification"
   scripts/audit/verify_phase1_demo_proof_pack.sh
