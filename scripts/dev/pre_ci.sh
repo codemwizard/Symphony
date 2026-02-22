@@ -355,6 +355,14 @@ else
   exit 1
 fi
 
+echo "==> Phase-0 levy rates structural hook verification (TSK-P0-LEVY-001)"
+if [[ -x scripts/db/verify_levy_rates_hook.sh ]]; then
+  scripts/db/verify_levy_rates_hook.sh
+else
+  echo "ERROR: scripts/db/verify_levy_rates_hook.sh not found"
+  exit 1
+fi
+
 echo "==> Phase-0 contract evidence status (merged local evidence)"
 if [[ -x scripts/audit/verify_phase0_contract_evidence_status.sh ]]; then
   CI_ONLY=1 EVIDENCE_ROOT="evidence/phase0" scripts/audit/verify_phase0_contract_evidence_status.sh
@@ -434,6 +442,14 @@ if [[ -x scripts/audit/verify_phase0_contract_evidence_status.sh ]]; then
   scripts/audit/verify_phase0_contract_evidence_status.sh
 else
   echo "ERROR: scripts/audit/verify_phase0_contract_evidence_status.sh not found"
+  exit 1
+fi
+
+echo "==> Phase-0 required evidence parity gate (CI-equivalent)"
+if [[ -x scripts/ci/check_evidence_required.sh ]]; then
+  CI_ONLY=1 scripts/ci/check_evidence_required.sh evidence/phase0
+else
+  echo "ERROR: scripts/ci/check_evidence_required.sh not found"
   exit 1
 fi
 

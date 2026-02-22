@@ -2,7 +2,7 @@
 -- PostgreSQL database dump
 --
 
-\restrict XIhlT5HqSV1tGPvL9lIZwKH3TqsaFGvKasusSbEUS3gNTAEg1heOm3TRmREJNbf
+\restrict s2oi1jARl52lWiaTxR1IMm0aN7OsG3tZqR5LFkENJtQkzL8MAio3Io6rv4TnUM5
 
 -- Dumped from database version 18.2 (Debian 18.2-1.pgdg13+1)
 -- Dumped by pg_dump version 18.2 (Debian 18.2-1.pgdg13+1)
@@ -1128,6 +1128,28 @@ CREATE TABLE public.instruction_settlement_finality (
 
 
 --
+-- Name: levy_rates; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.levy_rates (
+    id uuid DEFAULT gen_random_uuid() NOT NULL,
+    jurisdiction_code character(2) NOT NULL,
+    statutory_reference text,
+    rate_bps integer NOT NULL,
+    cap_amount_minor bigint,
+    cap_currency_code character(3),
+    effective_from date NOT NULL,
+    effective_to date,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    created_by text DEFAULT CURRENT_USER NOT NULL,
+    CONSTRAINT levy_rates_cap_amount_minor_check CHECK (((cap_amount_minor IS NULL) OR (cap_amount_minor > 0))),
+    CONSTRAINT levy_rates_cap_currency_required CHECK (((cap_amount_minor IS NULL) OR (cap_currency_code IS NOT NULL))),
+    CONSTRAINT levy_rates_check CHECK (((effective_to IS NULL) OR (effective_to >= effective_from))),
+    CONSTRAINT levy_rates_rate_bps_check CHECK (((rate_bps >= 0) AND (rate_bps <= 10000)))
+);
+
+
+--
 -- Name: participant_outbox_sequences; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -1488,6 +1510,14 @@ ALTER TABLE ONLY public.ingress_attestations
 
 ALTER TABLE ONLY public.instruction_settlement_finality
     ADD CONSTRAINT instruction_settlement_finality_pkey PRIMARY KEY (finality_id);
+
+
+--
+-- Name: levy_rates levy_rates_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.levy_rates
+    ADD CONSTRAINT levy_rates_pkey PRIMARY KEY (id);
 
 
 --
@@ -1941,6 +1971,20 @@ CREATE INDEX idx_tenants_status ON public.tenants USING btree (status);
 
 
 --
+-- Name: levy_rates_jurisdiction_date_idx; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX levy_rates_jurisdiction_date_idx ON public.levy_rates USING btree (jurisdiction_code, effective_from DESC);
+
+
+--
+-- Name: levy_rates_one_active_per_jurisdiction; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE UNIQUE INDEX levy_rates_one_active_per_jurisdiction ON public.levy_rates USING btree (jurisdiction_code) WHERE (effective_to IS NULL);
+
+
+--
 -- Name: ux_billable_clients_client_key; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -2325,5 +2369,5 @@ ALTER TABLE ONLY public.tenants
 -- PostgreSQL database dump complete
 --
 
-\unrestrict XIhlT5HqSV1tGPvL9lIZwKH3TqsaFGvKasusSbEUS3gNTAEg1heOm3TRmREJNbf
+\unrestrict s2oi1jARl52lWiaTxR1IMm0aN7OsG3tZqR5LFkENJtQkzL8MAio3Io6rv4TnUM5
 
