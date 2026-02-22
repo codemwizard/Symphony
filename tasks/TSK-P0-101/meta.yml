@@ -3,21 +3,33 @@ task_id: "TSK-P0-101"
 title: "Ordered checks runner + phase gating"
 owner_role: "SUPERVISOR"
 status: "completed"
-
 depends_on:
   - "checkpoint/CS-0"
-
 touches:
   - "tasks/TSK-P0-101/meta.yml"
   - "scripts/audit/verify_tsk_p0_101.sh"
   - "scripts/dev/pre_ci.sh"
-
+invariants:
+  - "INV-077"
+work:
+  - "Verify ordered checks runner remains present and wired in pre-ci."
+  - "Emit deterministic task evidence for ordered checks/gating posture."
+acceptance_criteria:
+  - "Evidence artifact exists and validates for TSK-P0-101."
+  - "Pre-ci keeps invoking run_phase0_ordered_checks.sh."
 verification:
   - "bash scripts/audit/verify_tsk_p0_101.sh --evidence evidence/phase0/tsk_p0_101__ordered_checks_runner_gating.json"
   - "RUN_PHASE1_GATES=1 scripts/dev/pre_ci.sh"
-
 evidence:
   - "evidence/phase0/tsk_p0_101__ordered_checks_runner_gating.json"
-
+failure_modes:
+  - "Ordered checks runner invocation removed from pre-ci."
+  - "Evidence artifact missing or malformed."
 must_read:
   - "docs/operations/AI_AGENT_OPERATION_MANUAL.md"
+notes: ""
+client: "codex_cli"
+assigned_agent: "supervisor"
+model: "gpt-5-codex"
+implementation_plan: "docs/plans/phase1/TSK-P0-101/PLAN.md"
+implementation_log: "docs/plans/phase1/TSK-P0-101/EXEC_LOG.md"
