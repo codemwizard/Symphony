@@ -87,7 +87,8 @@ SELECT EXISTS (
   FROM pg_constraint
   WHERE conrelid='public.levy_rates'::regclass
     AND contype='c'
-    AND pg_get_constraintdef(oid) LIKE '%cap_amount_minor IS NULL OR cap_amount_minor > 0%'
+    AND regexp_replace(pg_get_constraintdef(oid), '\s+', ' ', 'g')
+        ~* 'cap_amount_minor.*IS NULL.*cap_amount_minor.*> *0'
 );
 ")"
   effective_window_check_ok="$(query_bool "
@@ -96,7 +97,8 @@ SELECT EXISTS (
   FROM pg_constraint
   WHERE conrelid='public.levy_rates'::regclass
     AND contype='c'
-    AND pg_get_constraintdef(oid) LIKE '%effective_to IS NULL OR effective_to >= effective_from%'
+    AND regexp_replace(pg_get_constraintdef(oid), '\s+', ' ', 'g')
+        ~* 'effective_to.*IS NULL.*effective_to.*>=.*effective_from'
 );
 ")"
   cap_currency_check_ok="$(query_bool "
