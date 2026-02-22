@@ -31,22 +31,32 @@ mkdir -p "$(dirname "$ROOT_DIR/$EVIDENCE_PATH")"
 status="PASS"
 errors=()
 
-# Guard against behavior regressions: key gate invocations must remain present in pre_ci.
-for needle in \
-  "scripts/audit/verify_task_plans_present.sh" \
-  "scripts/audit/verify_tsk_clean_001.sh" \
-  "scripts/audit/verify_tsk_clean_002.sh" \
-  "scripts/audit/verify_phase0_parity.sh" \
-  "scripts/audit/verify_phase1_closeout.sh"; do
-  if ! grep -Fq "$needle" "$ROOT_DIR/scripts/dev/pre_ci.sh"; then
+# Guard against behavior regressions: require executable invocation lines, not just mentions.
+require_invocation_line() {
+  local regex="$1"
+  local tag="$2"
+  if ! grep -Eq "$regex" "$ROOT_DIR/scripts/dev/pre_ci.sh"; then
     status="FAIL"
-    errors+=("missing_pre_ci_gate_call:$needle")
+    errors+=("missing_pre_ci_gate_invocation:$tag")
   fi
-done
+}
 
+require_invocation_line '^ *scripts/audit/verify_task_plans_present\.sh *$' 'verify_task_plans_present'
+require_invocation_line '^ *scripts/audit/verify_tsk_clean_001\.sh +--evidence +evidence/phase0/tsk_clean_001__task_metadata_truth_pass\.json *$' 'verify_tsk_clean_001'
+require_invocation_line '^ *scripts/audit/verify_tsk_clean_002\.sh +--evidence +evidence/phase0/tsk_clean_002__kill_informational_only_perf_posture_everywhere\.json *$' 'verify_tsk_clean_002'
+require_invocation_line '^ *scripts/audit/verify_phase0_parity\.sh *$' 'verify_phase0_parity'
+require_invocation_line '^ *scripts/audit/verify_phase1_closeout\.sh *$' 'verify_phase1_closeout'
+
+audit_lib_present=true
 if [[ ! -d "$ROOT_DIR/scripts/audit/lib" ]]; then
+  audit_lib_present=false
   status="FAIL"
   errors+=("missing_modular_library_dir:scripts/audit/lib")
+fi
+
+audit_lib_value=False
+if [[ "$audit_lib_present" == "true" ]]; then
+  audit_lib_value=True
 fi
 
 if [[ ${#errors[@]} -gt 0 ]]; then
@@ -74,7 +84,7 @@ out={
   "pass": $pass_value,
   "details":{
     "pre_ci_guardrails_checked": 5,
-    "audit_lib_present": True,
+    "audit_lib_present": $audit_lib_value,
     "errors": json.loads('''$errors_json''')
   }
 }
