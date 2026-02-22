@@ -24,13 +24,17 @@ mkdir -p "$(dirname "$ROOT_DIR/$EVIDENCE_PATH")"
 
 status="PASS"
 errors=()
+pre_ci_wired=false
 
 if [[ ! -x "$ROOT_DIR/scripts/audit/run_phase0_ordered_checks.sh" ]]; then
   status="FAIL"
   errors+=("missing_runner:scripts/audit/run_phase0_ordered_checks.sh")
 fi
 
-if ! grep -Fq 'scripts/audit/run_phase0_ordered_checks.sh' "$ROOT_DIR/scripts/dev/pre_ci.sh"; then
+# Require an actual executable invocation line, not a mere path mention.
+if grep -Eq '^ *scripts/audit/run_phase0_ordered_checks\.sh *$' "$ROOT_DIR/scripts/dev/pre_ci.sh"; then
+  pre_ci_wired=true
+else
   status="FAIL"
   errors+=("pre_ci_missing_ordered_checks_invocation")
 fi
@@ -44,6 +48,11 @@ fi
 pass_value=False
 if [[ "$status" == "PASS" ]]; then
   pass_value=True
+fi
+
+pre_ci_wired_value=False
+if [[ "$pre_ci_wired" == "true" ]]; then
+  pre_ci_wired_value=True
 fi
 
 python3 - <<PY
@@ -60,7 +69,7 @@ out={
   "pass": $pass_value,
   "details":{
     "ordered_checks_runner": "scripts/audit/run_phase0_ordered_checks.sh",
-    "pre_ci_wired": $pass_value,
+    "pre_ci_wired": $pre_ci_wired_value,
     "errors": json.loads('''$errors_json''')
   }
 }
