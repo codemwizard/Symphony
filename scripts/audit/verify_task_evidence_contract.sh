@@ -3,6 +3,7 @@ set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 TASKS_DOC="$ROOT_DIR/docs/tasks/PHASE0_TASKS.md"
+PROMPT_PACK="$ROOT_DIR/docs/tasks/phase1_prompts.md"
 EVIDENCE_DIR="$ROOT_DIR/evidence/phase0"
 EVIDENCE_FILE="$EVIDENCE_DIR/task_evidence_contract.json"
 
@@ -18,13 +19,20 @@ if [[ ! -f "$TASKS_DOC" ]]; then
   exit 1
 fi
 
-TASKS_DOC="$TASKS_DOC" EVIDENCE_FILE="$EVIDENCE_FILE" python3 - <<'PY'
+if [[ ! -f "$PROMPT_PACK" ]]; then
+  echo "Missing prompt pack: $PROMPT_PACK" >&2
+  exit 1
+fi
+
+TASKS_DOC="$TASKS_DOC" PROMPT_PACK="$PROMPT_PACK" EVIDENCE_FILE="$EVIDENCE_FILE" python3 - <<'PY'
 import json
 import os
 from pathlib import Path
 
 tasks_doc = Path(os.environ.get("TASKS_DOC", "/home/mwiza/workspaces/Symphony/docs/tasks/PHASE0_TASKS.md"))
 text = tasks_doc.read_text(encoding="utf-8", errors="ignore")
+prompt_pack = Path(os.environ.get("PROMPT_PACK", "/home/mwiza/workspaces/Symphony/docs/tasks/phase1_prompts.md"))
+prompt_text = prompt_pack.read_text(encoding="utf-8", errors="ignore")
 
 blocks = text.split("TASK ID: ")[1:]
 issues = []
@@ -56,6 +64,9 @@ for block in blocks:
                 issues.append(f"{task_id}: Verification Commands do not reference a script")
         else:
             issues.append(f"{task_id}: missing Verification Commands section")
+
+if "## TSK-CLEAN-001 — " not in prompt_text:
+    issues.append("prompt_pack:missing_section:TSK-CLEAN-001")
 
 out = {
     "check_id": "TASK-EVIDENCE-CONTRACT",
