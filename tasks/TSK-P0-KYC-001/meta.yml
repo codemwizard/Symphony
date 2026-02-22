@@ -1,0 +1,58 @@
+phase: "0"
+task_id: "TSK-P0-KYC-001"
+title: "kyc_provider_registry table (trusted external provider registry)"
+owner_role: "DB_FOUNDATION"
+status: "completed"
+
+depends_on:
+  - "TSK-P0-LEVY-004"
+
+touches:
+  - "schema/migrations/0039_kyc_provider_registry_hook.sql"
+  - "scripts/db/verify_kyc_provider_registry_hook.sh"
+  - "scripts/dev/pre_ci.sh"
+  - "docs/PHASE0/phase0_contract.yml"
+  - "tasks/TSK-P0-KYC-001/meta.yml"
+  - "docs/plans/phase0/TSK-P0-KYC-001/PLAN.md"
+  - "docs/plans/phase0/TSK-P0-KYC-001/EXEC_LOG.md"
+
+invariants:
+  - "INV-031"
+
+work:
+  - "Add forward-only migration for public.kyc_provider_registry Phase-0 structural hook."
+  - "Add fail-closed verifier and deterministic evidence emission."
+  - "Wire verifier into pre_ci and Phase-0 contract tracking."
+
+acceptance_criteria:
+  - "kyc_provider_registry exists as an empty Phase-0 structural table with provider trust schema contract."
+  - "signing_algorithm remains unconstrained TEXT in Phase-0."
+  - "Verifier emits evidence/phase0/TSK-P0-KYC-001.json and fails closed on mismatch."
+  - "No runtime app code references kyc_provider_registry before Phase-2."
+  - "Migration checksum for 0039_kyc_provider_registry_hook.sql is validated."
+
+verification:
+  - "bash scripts/db/verify_kyc_provider_registry_hook.sh"
+  - "RUN_PHASE1_GATES=1 scripts/dev/pre_ci.sh"
+
+evidence:
+  - "evidence/phase0/TSK-P0-KYC-001.json"
+
+failure_modes:
+  - "table contract mismatch (columns/constraints/indexes/comments)."
+  - "runtime code references kyc_provider_registry."
+  - "rows inserted into kyc_provider_registry in Phase-0."
+  - "signing_algorithm constrained in Phase-0."
+  - "evidence artifact missing."
+
+must_read:
+  - "AGENTS.md"
+  - "docs/operations/AI_AGENT_OPERATION_MANUAL.md"
+
+implementation_plan: "docs/plans/phase0/TSK-P0-KYC-001/PLAN.md"
+implementation_log: "docs/plans/phase0/TSK-P0-KYC-001/EXEC_LOG.md"
+
+notes: ""
+client: "codex_cli"
+assigned_agent: "db_foundation"
+model: "gpt-5-codex"
