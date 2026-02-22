@@ -113,7 +113,7 @@ Mitigations:
 - Timeout posture verifier enforces bounded `lock_timeout`, `statement_timeout`, and `idle_in_transaction_session_timeout` (INT-G32 / INV-117)
 - Ingress hot-path index verifier enforces tenant/instruction/correlation query path index posture (INT-G33 / INV-118)
 - Anchor-sync operational state machine enforces lease-token worker fencing, anchored-before-complete gating, and deterministic expired-lease repair in DB functions.
-- Levy registry Phase-0 structural hook (`levy_rates`) is schema-only and guarded by a dedicated verifier to prevent premature runtime coupling before Phase-2.
+- Phase-0 levy schema hooks are storage-only (`levy_rates`, `ingress_attestations.levy_applicable`) with explicit runtime-read/write prohibition until Phase-2 and verifier enforcement to prevent scope creep.
 
 ## Priority security actions
 1) Implement service identity and mTLS for internal calls.

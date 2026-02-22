@@ -29,4 +29,4 @@ This ADR remains the authoritative governance reference for baseline change chec
 - 2026-02-13: Baseline regenerated after follow-up fix migration for pii purge executor (0030).
 - 2026-02-13: Baseline regenerated after INV-116 rail sequence truth-anchor migration (0031).
 - 2026-02-18: Baseline regenerated after timeout posture + anchor-sync operational restoration migrations (0032, 0033, 0034).
-- 2026-02-22: Baseline regenerated after levy registry structural hook migration (0035).
+- 2026-02-22: Baseline regenerated after Phase-0 levy structural hook migrations (0035, 0036).

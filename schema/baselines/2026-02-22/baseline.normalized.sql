@@ -551,6 +551,7 @@
     lease_token uuid,
     legal_name text NOT NULL,
     legal_name text NOT NULL,
+    levy_applicable boolean
     member_id uuid DEFAULT gen_random_uuid() NOT NULL,
     member_id uuid,
     member_id uuid,
@@ -564,7 +565,7 @@
     msisdn_hash bytea,
     next_attempt_at timestamp with time zone DEFAULT now() NOT NULL,
     next_sequence_id bigint NOT NULL,
-    nfs_sequence_ref text
+    nfs_sequence_ref text,
     nfs_sequence_ref text,
     nfs_sequence_ref text,
     occurred_at timestamp with time zone DEFAULT now() NOT NULL,

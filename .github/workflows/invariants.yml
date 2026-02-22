@@ -527,6 +527,14 @@ jobs:
           chmod +x scripts/db/verify_levy_rates_hook.sh
           scripts/db/verify_levy_rates_hook.sh
 
+      - name: Run Phase-0 levy applicability expand-first hook verifier
+        env:
+          DATABASE_URL: postgres://symphony:symphony@localhost:5432/symphony
+        run: |
+          set -euo pipefail
+          chmod +x scripts/db/verify_levy_applicable_hook.sh
+          scripts/db/verify_levy_applicable_hook.sh
+
       - name: Run N-1 compatibility gate
         env:
           DATABASE_URL: postgres://symphony:symphony@localhost:5432/symphony
