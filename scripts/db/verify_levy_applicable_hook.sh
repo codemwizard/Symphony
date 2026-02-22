@@ -77,13 +77,12 @@ SELECT EXISTS (
 SELECT NOT EXISTS (
   SELECT 1
   FROM pg_index i
+  JOIN pg_class idx ON idx.oid = i.indexrelid
   JOIN pg_class t ON t.oid = i.indrelid
   JOIN pg_namespace n ON n.oid = t.relnamespace
-  JOIN pg_attribute a ON a.attrelid = t.oid AND a.attnum = i.indkey[0]
   WHERE n.nspname='public'
     AND t.relname='ingress_attestations'
-    AND i.indnatts > 0
-    AND a.attname='levy_applicable'
+    AND pg_get_indexdef(idx.oid) ~* '\mlevy_applicable\M'
 );
 ")"
     [[ "$no_premature_index" == "true" ]] || add_failure "premature_index_found_on_levy_applicable"
