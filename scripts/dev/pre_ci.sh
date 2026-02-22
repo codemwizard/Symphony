@@ -164,6 +164,14 @@ else
   exit 1
 fi
 
+echo "==> Phase-0 perf posture truth gate (TSK-CLEAN-002)"
+if [[ -x scripts/audit/verify_tsk_clean_002.sh ]]; then
+  scripts/audit/verify_tsk_clean_002.sh --evidence evidence/phase0/tsk_clean_002__kill_informational_only_perf_posture_everywhere.json
+else
+  echo "ERROR: scripts/audit/verify_tsk_clean_002.sh not found"
+  exit 1
+fi
+
 echo "==> Phase-0 parity verification (static)"
 if [[ -x scripts/audit/verify_phase0_parity.sh ]]; then
   scripts/audit/verify_phase0_parity.sh
