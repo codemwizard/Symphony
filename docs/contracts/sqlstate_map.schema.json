@@ -1,0 +1,130 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://symphony.local/contracts/sqlstate_map.schema.json",
+  "title": "SQLSTATE Map Registry",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "registry_id",
+    "owner",
+    "code_pattern",
+    "entry_required_fields",
+    "source_scan_scope",
+    "ranges",
+    "codes"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {
+      "type": "string",
+      "pattern": "^\\d+\\.\\d+\\.\\d+$"
+    },
+    "registry_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "owner": {
+      "type": "string",
+      "minLength": 1
+    },
+    "code_pattern": {
+      "type": "string",
+      "const": "^P\\d{4}$"
+    },
+    "entry_required_fields": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "enum": [
+          "class",
+          "subsystem",
+          "meaning",
+          "retryable"
+        ]
+      },
+      "minItems": 4,
+      "uniqueItems": true
+    },
+    "source_scan_scope": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "enum": [
+          "schema/",
+          "scripts/",
+          "services/",
+          "docs/contracts/"
+        ]
+      },
+      "minItems": 1,
+      "uniqueItems": true
+    },
+    "ranges": {
+      "type": "object",
+      "minProperties": 1,
+      "additionalProperties": {
+        "type": "string",
+        "minLength": 1
+      },
+      "propertyNames": {
+        "pattern": "^P\\d{2}xx$"
+      }
+    },
+    "codes": {
+      "type": "object",
+      "minProperties": 1,
+      "propertyNames": {
+        "pattern": "^P\\d{4}$"
+      },
+      "additionalProperties": {
+        "$ref": "#/$defs/codeEntry"
+      }
+    }
+  },
+  "$defs": {
+    "codeEntry": {
+      "type": "object",
+      "required": [
+        "class",
+        "subsystem",
+        "meaning",
+        "retryable"
+      ],
+      "additionalProperties": true,
+      "properties": {
+        "canonical": {
+          "type": "string",
+          "pattern": "^P\\d{4}$"
+        },
+        "class": {
+          "type": "string",
+          "enum": [
+            "A",
+            "B",
+            "C"
+          ]
+        },
+        "subsystem": {
+          "type": "string",
+          "minLength": 1
+        },
+        "meaning": {
+          "type": "string",
+          "minLength": 1
+        },
+        "retryable": {
+          "type": "boolean"
+        },
+        "introduced_by": {
+          "type": "string"
+        },
+        "deprecated": {
+          "type": "boolean"
+        },
+        "notes": {
+          "type": "string"
+        }
+      }
+    }
+  }
+}

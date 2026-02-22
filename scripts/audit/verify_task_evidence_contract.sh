@@ -3,6 +3,7 @@ set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 TASKS_DOC="$ROOT_DIR/docs/tasks/PHASE0_TASKS.md"
+PROMPT_PACK="$ROOT_DIR/docs/tasks/phase1_prompts.md"
 EVIDENCE_DIR="$ROOT_DIR/evidence/phase0"
 EVIDENCE_FILE="$EVIDENCE_DIR/task_evidence_contract.json"
 
@@ -13,18 +14,36 @@ EVIDENCE_GIT_SHA="$(git_sha)"
 EVIDENCE_SCHEMA_FP="$(schema_fingerprint)"
 export EVIDENCE_TS EVIDENCE_GIT_SHA EVIDENCE_SCHEMA_FP
 
-if [[ ! -f "$TASKS_DOC" ]]; then
-  echo "Missing tasks doc: $TASKS_DOC" >&2
+if ! git -C "$ROOT_DIR" ls-files --error-unmatch docs/tasks/PHASE0_TASKS.md >/dev/null 2>&1; then
+  echo "Missing tracked tasks doc in git index/HEAD: $TASKS_DOC" >&2
   exit 1
 fi
 
-TASKS_DOC="$TASKS_DOC" EVIDENCE_FILE="$EVIDENCE_FILE" python3 - <<'PY'
+if ! git -C "$ROOT_DIR" ls-files --error-unmatch docs/tasks/phase1_prompts.md >/dev/null 2>&1; then
+  echo "Missing tracked prompt pack in git index/HEAD: $PROMPT_PACK" >&2
+  exit 1
+fi
+
+TASKS_DOC="$TASKS_DOC" PROMPT_PACK="$PROMPT_PACK" EVIDENCE_FILE="$EVIDENCE_FILE" ROOT_DIR="$ROOT_DIR" python3 - <<'PY'
 import json
 import os
+import subprocess
 from pathlib import Path
 
-tasks_doc = Path(os.environ.get("TASKS_DOC", "/home/mwiza/workspaces/Symphony/docs/tasks/PHASE0_TASKS.md"))
-text = tasks_doc.read_text(encoding="utf-8", errors="ignore")
+root = Path(os.environ["ROOT_DIR"])
+tasks_rel = "docs/tasks/PHASE0_TASKS.md"
+prompt_rel = "docs/tasks/phase1_prompts.md"
+
+def read_head_text(rel: str) -> str:
+    return subprocess.check_output(
+        ["git", "-C", str(root), "show", f"HEAD:{rel}"],
+        text=True,
+        encoding="utf-8",
+        errors="ignore",
+    )
+
+text = read_head_text(tasks_rel)
+prompt_text = read_head_text(prompt_rel)
 
 blocks = text.split("TASK ID: ")[1:]
 issues = []
@@ -56,6 +75,9 @@ for block in blocks:
                 issues.append(f"{task_id}: Verification Commands do not reference a script")
         else:
             issues.append(f"{task_id}: missing Verification Commands section")
+
+if "## TSK-CLEAN-001 — " not in prompt_text:
+    issues.append("prompt_pack:missing_section:TSK-CLEAN-001")
 
 out = {
     "check_id": "TASK-EVIDENCE-CONTRACT",
