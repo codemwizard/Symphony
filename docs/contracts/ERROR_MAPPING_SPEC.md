@@ -119,4 +119,65 @@ Add a CI check that:
 - Increment mapping version when meanings change.
 - Preserve legacy mappings with explicit deprecation timelines.
 - Require an ADR for breaking changes to external error contracts.
+## SQLSTATE Registry (`docs/contracts/sqlstate_map.yml`)
+This repository also maintains a **SQLSTATE-focused registry** for database-trigger and invariant codes.
 
+### File format policy
+`docs/contracts/sqlstate_map.yml` is stored as **JSON-compatible YAML** (valid JSON text in a `.yml` file) so it can be parsed deterministically by shell+Python checks without optional YAML parser dependencies.
+
+### Mandatory top-level fields (deterministic + auditable)
+The registry MUST include these top-level fields:
+- `schema_version` (semver for the registry schema)
+- `registry_id` (stable registry identifier)
+- `owner` (team or function accountable for changes)
+- `code_pattern` (currently `^P\\d{4}$`)
+- `entry_required_fields` (must list `class`, `subsystem`, `meaning`, `retryable`)
+- `source_scan_scope` (contractual scan roots only)
+- `ranges` (coarse range taxonomy)
+- `codes` (the actual code registry)
+
+### Mandatory per-code entry fields
+Every code under `codes` MUST include:
+- `class` (`A` | `B` | `C`)
+- `subsystem` (stable subsystem name)
+- `meaning` (single canonical meaning)
+- `retryable` (`true` | `false`)
+
+Optional:
+- `canonical` (alias/remap to canonical code)
+- `introduced_by`, `deprecated`, `notes`
+
+### Drift detection process (`scripts/audit/check_sqlstate_map_drift.sh`)
+The drift check does three things:
+1. Parse `docs/contracts/sqlstate_map.yml`
+2. Validate structure (and validate against `docs/contracts/sqlstate_map.schema.json` when `jsonschema` is installed)
+3. Scan **only contractual source roots** for `P####` occurrences:
+   - `schema/`
+   - `scripts/`
+   - `services/`
+   - `docs/contracts/`
+
+This intentionally excludes prompt packs, backups, and draft docs so CI only enforces codes that affect runtime/contract behavior.
+
+### How SQLSTATE errors are created and mapped
+1. A database function/trigger or service invariant raises/returns a code (e.g. `P7301`).
+2. The code must be registered in `sqlstate_map.yml` with stable semantics.
+3. API/domain error translation layers read the registry (or generated artifacts from it) to map:
+   - internal code → class / retryability / external response policy
+4. CI drift checks fail if a code appears in the scoped sources but is not registered.
+
+### CI hook recommendation
+Add these steps to CI (before broad integration tests):
+1. `python3 -m jsonschema -i docs/contracts/sqlstate_map.yml docs/contracts/sqlstate_map.schema.json` (optional but recommended if dependency installed)
+2. `scripts/audit/check_sqlstate_map_drift.sh`
+
+The drift script already emits evidence to:
+- `evidence/phase0/sqlstate_map_drift.json`
+
+### Change workflow (safe + deterministic)
+When introducing a new `P####` code:
+1. Add/modify runtime source (SQL trigger/function/service logic)
+2. Register the code in `docs/contracts/sqlstate_map.yml`
+3. If schema structure changes, update `docs/contracts/sqlstate_map.schema.json`
+4. Run `scripts/audit/check_sqlstate_map_drift.sh`
+5. Commit code + registry + evidence together
