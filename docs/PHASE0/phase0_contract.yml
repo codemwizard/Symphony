@@ -1641,5 +1641,17 @@
     "evidence_scope": "repo",
     "notes": "Emergency remediation for committed SSH private key exposure (ignore guards + history cleanup workflow).",
     "gate_ids": []
+  },
+  {
+    "task_id": "TSK-P0-LEVY-001",
+    "status": "completed",
+    "verification_mode": "both",
+    "evidence_required": true,
+    "evidence_paths": [
+      "evidence/phase0/TSK-P0-LEVY-001.json"
+    ],
+    "evidence_scope": "repo",
+    "notes": "Phase-0 structural hook: levy_rates statutory registry with fail-closed verifier and checksum/runtime-reference controls.",
+    "gate_ids": []
   }
 ]

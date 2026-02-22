@@ -1,0 +1,56 @@
+phase: "0"
+task_id: "TSK-P0-LEVY-001"
+title: "levy_rates table (versioned statutory rate registry)"
+owner_role: "DB_FOUNDATION"
+status: "completed"
+
+depends_on:
+  - "TSK-P0-105"
+
+touches:
+  - "schema/migrations/0035_levy_rates_hook.sql"
+  - "scripts/db/verify_levy_rates_hook.sh"
+  - "scripts/dev/pre_ci.sh"
+  - "docs/PHASE0/phase0_contract.yml"
+  - "tasks/TSK-P0-LEVY-001/meta.yml"
+  - "docs/plans/phase0/TSK-P0-LEVY-001/PLAN.md"
+  - "docs/plans/phase0/TSK-P0-LEVY-001/EXEC_LOG.md"
+
+invariants:
+  - "INV-031"
+
+work:
+  - "Add levy_rates structural schema hook via forward-only migration."
+  - "Add fail-closed verifier and deterministic evidence emission."
+  - "Wire gate into pre_ci and Phase-0 contract tracking."
+
+acceptance_criteria:
+  - "levy_rates schema hook exists with required constraints/indexes/comments."
+  - "Verifier emits evidence/phase0/TSK-P0-LEVY-001.json and fails closed on mismatch."
+  - "No runtime app code references levy_rates before Phase-2."
+  - "Migration checksum is validated against public.schema_migrations."
+
+verification:
+  - "bash scripts/db/verify_levy_rates_hook.sh"
+  - "RUN_PHASE1_GATES=1 scripts/dev/pre_ci.sh"
+
+evidence:
+  - "evidence/phase0/TSK-P0-LEVY-001.json"
+
+failure_modes:
+  - "levy_rates table missing or schema does not match contract."
+  - "runtime code references levy_rates."
+  - "migration checksum mismatch for 0035_levy_rates_hook.sql."
+  - "evidence artifact missing."
+
+must_read:
+  - "AGENTS.md"
+  - "docs/operations/AI_AGENT_OPERATION_MANUAL.md"
+
+implementation_plan: "docs/plans/phase0/TSK-P0-LEVY-001/PLAN.md"
+implementation_log: "docs/plans/phase0/TSK-P0-LEVY-001/EXEC_LOG.md"
+
+notes: ""
+client: "codex_cli"
+assigned_agent: "db_foundation"
+model: "gpt-5-codex"
