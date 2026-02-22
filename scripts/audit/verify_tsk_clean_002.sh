@@ -22,11 +22,22 @@ if [[ -z "$EVIDENCE_PATH" ]]; then
   exit 2
 fi
 
+resolve_evidence_path() {
+  local p="$1"
+  if [[ "$p" = /* ]]; then
+    printf '%s\n' "$p"
+  else
+    printf '%s\n' "$ROOT_DIR/$p"
+  fi
+}
+
+EVIDENCE_OUT="$(resolve_evidence_path "$EVIDENCE_PATH")"
+
 source "$ROOT_DIR/scripts/lib/evidence.sh"
 EVIDENCE_TS="$(evidence_now_utc)"
 EVIDENCE_GIT_SHA="$(git_sha)"
 EVIDENCE_SCHEMA_FP="$(schema_fingerprint)"
-mkdir -p "$(dirname "$ROOT_DIR/$EVIDENCE_PATH")"
+mkdir -p "$(dirname "$EVIDENCE_OUT")"
 
 status="PASS"
 errors=()
@@ -102,7 +113,7 @@ fi
 python3 - <<PY
 import json
 from pathlib import Path
-p=Path(r"$ROOT_DIR/$EVIDENCE_PATH")
+p=Path(r"$EVIDENCE_OUT")
 out={
   "check_id":"TSK-CLEAN-002",
   "task_id":"TSK-CLEAN-002",
