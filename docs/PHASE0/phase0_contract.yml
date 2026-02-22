@@ -1653,5 +1653,17 @@
     "evidence_scope": "repo",
     "notes": "Phase-0 structural hook: levy_rates statutory registry with fail-closed verifier and checksum/runtime-reference controls.",
     "gate_ids": []
+  },
+  {
+    "task_id": "TSK-P0-LEVY-002",
+    "status": "completed",
+    "verification_mode": "both",
+    "evidence_required": true,
+    "evidence_paths": [
+      "evidence/phase0/TSK-P0-LEVY-002.json"
+    ],
+    "evidence_scope": "repo",
+    "notes": "Phase-0 expand-first hook: ingress_attestations.levy_applicable nullable column with fail-closed verifier.",
+    "gate_ids": []
   }
 ]

@@ -1,0 +1,56 @@
+phase: "0"
+task_id: "TSK-P0-LEVY-002"
+title: "levy_applicable column on ingress_attestations (expand-first hook)"
+owner_role: "DB_FOUNDATION"
+status: "in_progress"
+
+depends_on:
+  - "TSK-P0-LEVY-001"
+
+touches:
+  - "schema/migrations/0036_ingress_attestations_levy_applicable_hook.sql"
+  - "scripts/db/verify_levy_applicable_hook.sh"
+  - "scripts/dev/pre_ci.sh"
+  - "docs/PHASE0/phase0_contract.yml"
+  - "tasks/TSK-P0-LEVY-002/meta.yml"
+  - "docs/plans/phase0/TSK-P0-LEVY-002/PLAN.md"
+  - "docs/plans/phase0/TSK-P0-LEVY-002/EXEC_LOG.md"
+
+invariants:
+  - "INV-031"
+
+work:
+  - "Add ingress_attestations.levy_applicable as nullable expand-first schema hook."
+  - "Add fail-closed verifier and deterministic evidence emission."
+  - "Wire gate into pre_ci and Phase-0 contract tracking."
+
+acceptance_criteria:
+  - "levy_applicable column exists as nullable boolean with NULL/default-null semantics."
+  - "Verifier emits evidence/phase0/TSK-P0-LEVY-002.json and fails closed on mismatch."
+  - "No runtime app code references levy_applicable before Phase-2."
+  - "No index on levy_applicable as leading column in ingress_attestations."
+
+verification:
+  - "bash scripts/db/verify_levy_applicable_hook.sh"
+  - "RUN_PHASE1_GATES=1 scripts/dev/pre_ci.sh"
+
+evidence:
+  - "evidence/phase0/TSK-P0-LEVY-002.json"
+
+failure_modes:
+  - "ingress_attestations missing or levy_applicable schema contract mismatch."
+  - "runtime code references levy_applicable."
+  - "premature index on levy_applicable."
+  - "evidence artifact missing."
+
+must_read:
+  - "AGENTS.md"
+  - "docs/operations/AI_AGENT_OPERATION_MANUAL.md"
+
+implementation_plan: "docs/plans/phase0/TSK-P0-LEVY-002/PLAN.md"
+implementation_log: "docs/plans/phase0/TSK-P0-LEVY-002/EXEC_LOG.md"
+
+notes: ""
+client: "codex_cli"
+assigned_agent: "db_foundation"
+model: "gpt-5-codex"

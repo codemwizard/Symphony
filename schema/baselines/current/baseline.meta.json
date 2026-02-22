@@ -1,10 +1,10 @@
 {
   "baseline_date": "2026-02-22",
   "baseline_path": "/home/mwiza/workspace/Symphony/schema/baselines/2026-02-22/0001_baseline.sql",
-  "baseline_cutoff": "0035_levy_rates_hook.sql",
-  "normalized_schema_sha256": "ebdb550e362d3754d6dd2cd236aafd20adeabdb56b15a558723413b34b08d8e6",
+  "baseline_cutoff": "0036_ingress_attestations_levy_applicable_hook.sql",
+  "normalized_schema_sha256": "8f43f6e7393cb1e2586b8ca817475ad6cb1e10bc92c029b72d67cb1eff6699ca",
   "pg_dump_version": "pg_dump (PostgreSQL) 18.2 (Debian 18.2-1.pgdg13+1)",
   "pg_server_version": "18.2 (Debian 18.2-1.pgdg13+1)",
   "dump_source": "container:symphony-postgres",
-  "generated_at_utc": "2026-02-22T10:03:17.951862+00:00"
+  "generated_at_utc": "2026-02-22T10:16:33.952284+00:00"
 }

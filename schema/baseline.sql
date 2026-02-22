@@ -2,7 +2,7 @@
 -- PostgreSQL database dump
 --
 
-\restrict s2oi1jARl52lWiaTxR1IMm0aN7OsG3tZqR5LFkENJtQkzL8MAio3Io6rv4TnUM5
+\restrict Q336cHwMM2sY7OeQM20wlXPQALhERraBzNPZUqebFFQQe6buT6XXb85RzyDWgPX
 
 -- Dumped from database version 18.2 (Debian 18.2-1.pgdg13+1)
 -- Dumped by pg_dump version 18.2 (Debian 18.2-1.pgdg13+1)
@@ -1100,7 +1100,8 @@ CREATE TABLE public.ingress_attestations (
     signatures jsonb DEFAULT '[]'::jsonb NOT NULL,
     upstream_ref text,
     downstream_ref text,
-    nfs_sequence_ref text
+    nfs_sequence_ref text,
+    levy_applicable boolean
 );
 
 
@@ -2369,5 +2370,5 @@ ALTER TABLE ONLY public.tenants
 -- PostgreSQL database dump complete
 --
 
-\unrestrict s2oi1jARl52lWiaTxR1IMm0aN7OsG3tZqR5LFkENJtQkzL8MAio3Io6rv4TnUM5
+\unrestrict Q336cHwMM2sY7OeQM20wlXPQALhERraBzNPZUqebFFQQe6buT6XXb85RzyDWgPX
 
