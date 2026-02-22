@@ -59,4 +59,4 @@ Top matches:
 
 - Migration is forward-only and checksum-validated by `scripts/db/migrate.sh`.
 - Structural verifier `scripts/db/verify_levy_rates_hook.sh` is wired into `scripts/dev/pre_ci.sh`.
-- Full `RUN_PHASE1_GATES=1 scripts/dev/pre_ci.sh` passed before commit.
+- Full `RUN_PHASE1_GATES=1 scripts/dev/pre_ci.sh` passed before push.

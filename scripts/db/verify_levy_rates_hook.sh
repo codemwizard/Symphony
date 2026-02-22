@@ -62,6 +62,15 @@ SELECT
     add_failure "column_spec_mismatch"
   fi
 
+  primary_key_ok="$(query_bool "
+SELECT EXISTS (
+  SELECT 1
+  FROM pg_constraint
+  WHERE conrelid='public.levy_rates'::regclass
+    AND contype='p'
+    AND conname='levy_rates_pkey'
+);
+")"
   rate_check_ok="$(query_bool "
 SELECT EXISTS (
   SELECT 1
@@ -72,6 +81,26 @@ SELECT EXISTS (
     AND pg_get_constraintdef(oid) LIKE '%rate_bps <= 10000%'
 );
 ")"
+  cap_amount_check_ok="$(query_bool "
+SELECT EXISTS (
+  SELECT 1
+  FROM pg_constraint
+  WHERE conrelid='public.levy_rates'::regclass
+    AND contype='c'
+    AND regexp_replace(pg_get_constraintdef(oid), '\s+', ' ', 'g')
+        ~* 'cap_amount_minor.*IS NULL.*cap_amount_minor.*> *0'
+);
+")"
+  effective_window_check_ok="$(query_bool "
+SELECT EXISTS (
+  SELECT 1
+  FROM pg_constraint
+  WHERE conrelid='public.levy_rates'::regclass
+    AND contype='c'
+    AND regexp_replace(pg_get_constraintdef(oid), '\s+', ' ', 'g')
+        ~* 'effective_to.*IS NULL.*effective_to.*>=.*effective_from'
+);
+")"
   cap_currency_check_ok="$(query_bool "
 SELECT EXISTS (
   SELECT 1
@@ -80,10 +109,17 @@ SELECT EXISTS (
     AND conname='levy_rates_cap_currency_required'
 );
 ")"
-  if [[ "$rate_check_ok" == "true" && "$cap_currency_check_ok" == "true" ]]; then
+  if [[ "$primary_key_ok" == "true" \
+    && "$rate_check_ok" == "true" \
+    && "$cap_amount_check_ok" == "true" \
+    && "$effective_window_check_ok" == "true" \
+    && "$cap_currency_check_ok" == "true" ]]; then
     constraints_verified="true"
   else
+    [[ "$primary_key_ok" == "true" ]] || add_failure "missing_primary_key:levy_rates_pkey"
     [[ "$rate_check_ok" == "true" ]] || add_failure "missing_rate_bps_range_check"
+    [[ "$cap_amount_check_ok" == "true" ]] || add_failure "missing_cap_amount_minor_positive_check"
+    [[ "$effective_window_check_ok" == "true" ]] || add_failure "missing_effective_window_check"
     [[ "$cap_currency_check_ok" == "true" ]] || add_failure "missing_constraint:levy_rates_cap_currency_required"
   fi
 
@@ -132,7 +168,7 @@ while IFS= read -r path; do
   [[ -z "$path" ]] && continue
   runtime_reference_paths+=("$path")
 done < <(
-  rg -n --glob '!scripts/**' --glob '!schema/**' --glob '*.cs' --glob '*.ts' --glob '*.js' "\blevy_rates\b" "$ROOT_DIR" \
+  rg -n -i --glob '!scripts/**' --glob '!schema/**' --glob '*.cs' --glob '*.ts' --glob '*.js' "\blevy_rates\b" "$ROOT_DIR" \
     | cut -d: -f1 | sort -u
 )
 
