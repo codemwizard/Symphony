@@ -3,6 +3,7 @@ set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 MAP_PATH="$ROOT_DIR/docs/contracts/sqlstate_map.yml"
+SCHEMA_PATH="$ROOT_DIR/docs/contracts/sqlstate_map.schema.json"
 EVIDENCE_DIR="$ROOT_DIR/evidence/phase0"
 EVIDENCE_OUT="$EVIDENCE_DIR/sqlstate_map_drift.json"
 
@@ -13,120 +14,150 @@ EVIDENCE_GIT_SHA="$(git_sha)"
 EVIDENCE_SCHEMA_FP="$(schema_fingerprint)"
 export EVIDENCE_TS EVIDENCE_GIT_SHA EVIDENCE_SCHEMA_FP
 
-ROOT_DIR="$ROOT_DIR" MAP_PATH="$MAP_PATH" EVIDENCE_OUT="$EVIDENCE_OUT" python3 - <<'PY'
+ROOT_DIR="$ROOT_DIR" MAP_PATH="$MAP_PATH" SCHEMA_PATH="$SCHEMA_PATH" EVIDENCE_OUT="$EVIDENCE_OUT" python3 - <<'PY'
 import json
 import os
 import re
-import subprocess
 from pathlib import Path
 
 root = Path(os.environ["ROOT_DIR"])
 map_path = Path(os.environ["MAP_PATH"])
+schema_path = Path(os.environ["SCHEMA_PATH"])
 evidence_out = Path(os.environ["EVIDENCE_OUT"])
 
 errors = []
-
 details = {
     "missing_codes": [],
     "invalid_entries": [],
     "scanned_files": 0,
     "found_codes": [],
     "unused_codes": [],
+    "scan_scope": [],
+    "schema_validation": {"status": "SKIP", "errors": []},
 }
 
-# git_sha provided by environment
+def add_invalid(code, error):
+    details["invalid_entries"].append({"code": code, "error": error})
 
-# Load map (JSON-compatible YAML)
+def load_json_compatible_yaml(path: Path):
+    return json.loads(path.read_text(encoding="utf-8"))
+
+# Load map (JSON-compatible YAML policy)
 if not map_path.exists():
     errors.append(f"map_not_found: {map_path}")
     data = {}
 else:
     try:
-        data = json.loads(map_path.read_text(encoding="utf-8"))
+        data = load_json_compatible_yaml(map_path)
     except Exception as e:
         errors.append(f"map_parse_error: {e}")
         data = {}
+
+# Optional schema validation using JSON Schema if dependency exists
+if schema_path.exists() and isinstance(data, dict):
+    try:
+        import jsonschema  # type: ignore
+        schema = json.loads(schema_path.read_text(encoding="utf-8"))
+        jsonschema.Draft202012Validator(schema).validate(data)
+        details["schema_validation"]["status"] = "PASS"
+    except ModuleNotFoundError:
+        details["schema_validation"]["status"] = "SKIP"
+        details["schema_validation"]["errors"].append("jsonschema_not_installed")
+    except Exception as e:
+        details["schema_validation"]["status"] = "FAIL"
+        details["schema_validation"]["errors"].append(str(e))
+        errors.append("sqlstate_map_schema_invalid")
+
+required_top = ["schema_version","registry_id","owner","code_pattern","entry_required_fields","source_scan_scope","ranges","codes"]
+for k in required_top:
+    if not isinstance(data, dict) or k not in data:
+        add_invalid("__top_level__", f"missing_top_level_field:{k}")
 
 codes = data.get("codes") if isinstance(data, dict) else None
 if not isinstance(codes, dict):
     errors.append("map_codes_not_object")
     codes = {}
 
-code_pattern = re.compile(r"^P\d{4}$")
-allowed_class = {"A","B","C"}
+declared_pattern = data.get("code_pattern", r"^P\d{4}$") if isinstance(data, dict) else r"^P\d{4}$"
+try:
+    code_pattern = re.compile(declared_pattern)
+except re.error:
+    errors.append("invalid_code_pattern")
+    code_pattern = re.compile(r"^P\d{4}$")
+
+allowed_class = {"A", "B", "C"}
 
 for code, entry in codes.items():
-    if not code_pattern.match(code):
-        details["invalid_entries"].append({"code": code, "error": "invalid_code_format"})
+    if not isinstance(code, str) or not code_pattern.match(code):
+        add_invalid(str(code), "invalid_code_format")
         continue
     if not isinstance(entry, dict):
-        details["invalid_entries"].append({"code": code, "error": "entry_not_object"})
+        add_invalid(code, "entry_not_object")
         continue
     cls = entry.get("class")
     subsystem = entry.get("subsystem")
     meaning = entry.get("meaning")
     retryable = entry.get("retryable")
     if cls not in allowed_class:
-        details["invalid_entries"].append({"code": code, "error": "invalid_class"})
+        add_invalid(code, "invalid_class")
     if not isinstance(subsystem, str) or not subsystem:
-        details["invalid_entries"].append({"code": code, "error": "missing_subsystem"})
+        add_invalid(code, "missing_subsystem")
     if not isinstance(meaning, str) or not meaning:
-        details["invalid_entries"].append({"code": code, "error": "missing_meaning"})
+        add_invalid(code, "missing_meaning")
     if not isinstance(retryable, bool):
-        details["invalid_entries"].append({"code": code, "error": "missing_retryable"})
+        add_invalid(code, "missing_retryable")
     canonical = entry.get("canonical")
-    if canonical:
+    if canonical is not None:
         if not isinstance(canonical, str) or not code_pattern.match(canonical):
-            details["invalid_entries"].append({"code": code, "error": "invalid_canonical"})
+            add_invalid(code, "invalid_canonical")
         elif canonical not in codes:
-            details["invalid_entries"].append({"code": code, "error": "canonical_not_in_map"})
+            add_invalid(code, "canonical_not_in_map")
 
-# Scan for codes
-include_dirs = [
-    root / "schema" / "migrations",
+# Scan scope restricted to contractual/product code sources only
+allowed_roots = [
+    root / "schema",
     root / "scripts",
-    root / "docs",
+    root / "services",
+    root / "docs" / "contracts",
 ]
-
+exclude_names = {".git", "bin", "obj", "node_modules", "vendor", "__pycache__"}
 exclude_paths = {
     root / "schema" / "baseline.sql",
 }
+allowed_suffixes = {
+    ".sql", ".psql", ".sh", ".bash", ".py", ".js", ".ts", ".tsx", ".go", ".rs", ".java", ".kt",
+    ".cs", ".yml", ".yaml", ".json", ".md"
+}
 
 found = set()
-
-for base in include_dirs:
+for base in allowed_roots:
     if not base.exists():
         continue
+    details["scan_scope"].append(str(base.relative_to(root)))
     for path in base.rglob("*"):
         if path.is_dir():
-            if path.name in {".git", "bin", "obj"}:
-                continue
+            continue
+        if any(part in exclude_names for part in path.parts):
             continue
         if path in exclude_paths:
             continue
-        if path.name == "INVARIANTS_QUICK.md":
+        if path.suffix and path.suffix.lower() not in allowed_suffixes:
             continue
-        # Only scan text-like files
         try:
             text = path.read_text(encoding="utf-8")
         except Exception:
             continue
         details["scanned_files"] += 1
-        for m in re.findall(r"P\d{4}", text):
+        for m in re.findall(r"\bP\d{4}\b", text):
             found.add(m)
 
-missing = sorted(found - set(codes.keys()))
-if missing:
-    details["missing_codes"].extend(missing)
-
-# Unused codes (optional visibility)
-unused = sorted(set(codes.keys()) - found)
-if unused:
-    details["unused_codes"].extend(unused)
-
 details["found_codes"] = sorted(found)
+missing = sorted(found - set(codes.keys()))
+unused = sorted(set(codes.keys()) - found)
+details["missing_codes"] = missing
+details["unused_codes"] = unused
 
-if details["missing_codes"] or details["invalid_entries"] or errors:
+if details["missing_codes"] or details["invalid_entries"]:
     errors.append("sqlstate_map_drift")
 
 result = {
@@ -138,7 +169,7 @@ result = {
     "details": details,
 }
 
-evidence_out.write_text(json.dumps(result, indent=2))
+evidence_out.write_text(json.dumps(result, indent=2) + "\n", encoding="utf-8")
 
 if errors:
     for err in errors:
