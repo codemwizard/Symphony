@@ -1665,5 +1665,17 @@
     "evidence_scope": "repo",
     "notes": "Phase-0 expand-first hook: ingress_attestations.levy_applicable nullable column with fail-closed verifier.",
     "gate_ids": []
+  },
+  {
+    "task_id": "TSK-P0-LEVY-003",
+    "status": "completed",
+    "verification_mode": "both",
+    "evidence_required": true,
+    "evidence_paths": [
+      "evidence/phase0/TSK-P0-LEVY-003.json"
+    ],
+    "evidence_scope": "repo",
+    "notes": "Phase-0 structural hook: levy_calculation_records schema anchor with fail-closed verifier and zero-runtime-reference enforcement.",
+    "gate_ids": []
   }
 ]

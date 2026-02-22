@@ -2,7 +2,7 @@
 -- PostgreSQL database dump
 --
 
-\restrict Q336cHwMM2sY7OeQM20wlXPQALhERraBzNPZUqebFFQQe6buT6XXb85RzyDWgPX
+\restrict hyXafLJWhbWdB9wVtLqLUx0tnOYU6UoUr940ObBia5pIJ7JkdufT2m1iphcDyLW
 
 -- Dumped from database version 18.2 (Debian 18.2-1.pgdg13+1)
 -- Dumped by pg_dump version 18.2 (Debian 18.2-1.pgdg13+1)
@@ -1129,6 +1129,33 @@ CREATE TABLE public.instruction_settlement_finality (
 
 
 --
+-- Name: levy_calculation_records; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.levy_calculation_records (
+    id uuid DEFAULT gen_random_uuid() NOT NULL,
+    instruction_id uuid NOT NULL,
+    levy_rate_id uuid,
+    jurisdiction_code character(2),
+    taxable_amount_minor bigint,
+    levy_amount_pre_cap bigint,
+    cap_applied_minor bigint,
+    levy_amount_final bigint,
+    currency_code character(3),
+    reporting_period character(7),
+    levy_status text,
+    calculated_at timestamp with time zone,
+    calculated_by_version text,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    CONSTRAINT levy_calculation_records_cap_applied_minor_check CHECK (((cap_applied_minor IS NULL) OR (cap_applied_minor >= 0))),
+    CONSTRAINT levy_calculation_records_levy_amount_final_check CHECK (((levy_amount_final IS NULL) OR (levy_amount_final >= 0))),
+    CONSTRAINT levy_calculation_records_levy_amount_pre_cap_check CHECK (((levy_amount_pre_cap IS NULL) OR (levy_amount_pre_cap >= 0))),
+    CONSTRAINT levy_calculation_records_reporting_period_check CHECK (((reporting_period IS NULL) OR (reporting_period ~ '^\\d{4}-\\d{2}$'::text))),
+    CONSTRAINT levy_calculation_records_taxable_amount_minor_check CHECK (((taxable_amount_minor IS NULL) OR (taxable_amount_minor >= 0)))
+);
+
+
+--
 -- Name: levy_rates; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -1511,6 +1538,22 @@ ALTER TABLE ONLY public.ingress_attestations
 
 ALTER TABLE ONLY public.instruction_settlement_finality
     ADD CONSTRAINT instruction_settlement_finality_pkey PRIMARY KEY (finality_id);
+
+
+--
+-- Name: levy_calculation_records levy_calculation_one_per_instruction; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.levy_calculation_records
+    ADD CONSTRAINT levy_calculation_one_per_instruction UNIQUE (instruction_id);
+
+
+--
+-- Name: levy_calculation_records levy_calculation_records_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.levy_calculation_records
+    ADD CONSTRAINT levy_calculation_records_pkey PRIMARY KEY (id);
 
 
 --
@@ -1972,6 +2015,20 @@ CREATE INDEX idx_tenants_status ON public.tenants USING btree (status);
 
 
 --
+-- Name: levy_calc_reporting_period_idx; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX levy_calc_reporting_period_idx ON public.levy_calculation_records USING btree (reporting_period, jurisdiction_code) WHERE (reporting_period IS NOT NULL);
+
+
+--
+-- Name: levy_calc_status_idx; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX levy_calc_status_idx ON public.levy_calculation_records USING btree (levy_status) WHERE (levy_status IS NOT NULL);
+
+
+--
 -- Name: levy_rates_jurisdiction_date_idx; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -2287,6 +2344,22 @@ ALTER TABLE ONLY public.instruction_settlement_finality
 
 
 --
+-- Name: levy_calculation_records levy_calculation_records_instruction_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.levy_calculation_records
+    ADD CONSTRAINT levy_calculation_records_instruction_id_fkey FOREIGN KEY (instruction_id) REFERENCES public.ingress_attestations(attestation_id) ON DELETE RESTRICT;
+
+
+--
+-- Name: levy_calculation_records levy_calculation_records_levy_rate_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.levy_calculation_records
+    ADD CONSTRAINT levy_calculation_records_levy_rate_id_fkey FOREIGN KEY (levy_rate_id) REFERENCES public.levy_rates(id) ON DELETE RESTRICT;
+
+
+--
 -- Name: payment_outbox_attempts payment_outbox_attempts_member_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -2370,5 +2443,5 @@ ALTER TABLE ONLY public.tenants
 -- PostgreSQL database dump complete
 --
 
-\unrestrict Q336cHwMM2sY7OeQM20wlXPQALhERraBzNPZUqebFFQQe6buT6XXb85RzyDWgPX
+\unrestrict hyXafLJWhbWdB9wVtLqLUx0tnOYU6UoUr940ObBia5pIJ7JkdufT2m1iphcDyLW
 

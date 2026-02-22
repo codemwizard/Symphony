@@ -1,0 +1,58 @@
+phase: "0"
+task_id: "TSK-P0-LEVY-003"
+title: "levy_calculation_records table (Phase-2 write target stub)"
+owner_role: "DB_FOUNDATION"
+status: "completed"
+
+depends_on:
+  - "TSK-P0-LEVY-002"
+
+touches:
+  - "schema/migrations/0037_levy_calculation_records_hook.sql"
+  - "scripts/db/verify_levy_calculation_records_hook.sh"
+  - "scripts/dev/pre_ci.sh"
+  - "docs/PHASE0/phase0_contract.yml"
+  - "tasks/TSK-P0-LEVY-003/meta.yml"
+  - "docs/plans/phase0/TSK-P0-LEVY-003/PLAN.md"
+  - "docs/plans/phase0/TSK-P0-LEVY-003/EXEC_LOG.md"
+
+invariants:
+  - "INV-031"
+
+work:
+  - "Add forward-only migration for public.levy_calculation_records Phase-0 structural hook."
+  - "Add fail-closed verifier and deterministic evidence emission."
+  - "Wire verifier into pre_ci and Phase-0 contract tracking."
+
+acceptance_criteria:
+  - "levy_calculation_records exists as an empty Phase-0 structural table with FK/constraint contract."
+  - "levy_status is plain TEXT with no CHECK enforcement in Phase-0."
+  - "Verifier emits evidence/phase0/TSK-P0-LEVY-003.json and fails closed on mismatch."
+  - "No runtime app code references levy_calculation_records before Phase-2."
+  - "No triggers/functions reference levy_calculation_records in Phase-0."
+
+verification:
+  - "bash scripts/db/verify_levy_calculation_records_hook.sh"
+  - "RUN_PHASE1_GATES=1 scripts/dev/pre_ci.sh"
+
+evidence:
+  - "evidence/phase0/TSK-P0-LEVY-003.json"
+
+failure_modes:
+  - "ingress_attestations or levy_rates prerequisites missing."
+  - "table contract mismatch (PK/FK/UNIQUE/check/index/comment)."
+  - "runtime code references levy_calculation_records."
+  - "trigger/function references levy_calculation_records."
+  - "evidence artifact missing."
+
+must_read:
+  - "AGENTS.md"
+  - "docs/operations/AI_AGENT_OPERATION_MANUAL.md"
+
+implementation_plan: "docs/plans/phase0/TSK-P0-LEVY-003/PLAN.md"
+implementation_log: "docs/plans/phase0/TSK-P0-LEVY-003/EXEC_LOG.md"
+
+notes: ""
+client: "codex_cli"
+assigned_agent: "db_foundation"
+model: "gpt-5-codex"
