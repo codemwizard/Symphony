@@ -35,6 +35,7 @@ obj/
 Good-repomix.xml
 repomix-output.xml
 repomix.xml
+Staged_PR_Restoration-Plan-Review.md
 
 __pycache__/
 *.pyc
