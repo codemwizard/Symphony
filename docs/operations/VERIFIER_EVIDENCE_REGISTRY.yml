@@ -44,3 +44,6 @@ registry:
   scripts/audit/verify_p1_057_final_perf_promotion.sh:
     emits:
       - evidence/phase1/p1_057_final_perf_promotion.json
+  scripts/audit/verify_perf_001_engine_metrics_capture.sh:
+    emits:
+      - evidence/phase1/perf_001_engine_metrics_capture.json
