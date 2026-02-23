@@ -1,0 +1,60 @@
+phase: "0"
+task_id: "TSK-P0-KYC-003"
+title: "kyc_hold column on payment_outbox_pending (instruction-level KYC gate hook)"
+owner_role: "DB_FOUNDATION"
+status: "completed"
+
+depends_on:
+  - "TSK-P0-KYC-002"
+
+touches:
+  - "schema/migrations/0043_payment_outbox_pending_kyc_hold_hook.sql"
+  - "scripts/db/verify_kyc_hold_hook.sh"
+  - "scripts/dev/pre_ci.sh"
+  - "docs/PHASE0/phase0_contract.yml"
+  - "docs/tasks/phase1_prompts.md"
+  - "tasks/TSK-P0-KYC-003/meta.yml"
+  - "docs/plans/phase0/TSK-P0-KYC-003/PLAN.md"
+  - "docs/plans/phase0/TSK-P0-KYC-003/EXEC_LOG.md"
+
+invariants:
+  - "INV-031"
+
+work:
+  - "Add forward-only migration for payment_outbox_pending.kyc_hold as Phase-0 expand-first hook."
+  - "Add fail-closed verifier and deterministic evidence emission."
+  - "Wire verifier into pre_ci and Phase-0 contract tracking."
+  - "Patch task prompt normalized block to repo-native paths."
+
+acceptance_criteria:
+  - "payment_outbox_pending.kyc_hold exists as nullable boolean with NULL-only default posture."
+  - "Column comment includes Phase-0 structural hook wording."
+  - "Verifier fails if runtime code references kyc_hold before Phase-2."
+  - "Verifier fails if premature index on kyc_hold exists."
+  - "Verifier emits evidence/phase0/TSK-P0-KYC-003.json."
+
+verification:
+  - "bash scripts/db/verify_kyc_hold_hook.sh"
+  - "RUN_PHASE1_GATES=1 scripts/dev/pre_ci.sh"
+
+evidence:
+  - "evidence/phase0/TSK-P0-KYC-003.json"
+
+failure_modes:
+  - "payment_outbox_pending table missing."
+  - "column missing/type/nullability/default mismatch."
+  - "runtime references to kyc_hold in app code."
+  - "premature index on kyc_hold detected."
+  - "migration checksum missing/mismatch."
+
+must_read:
+  - "AGENTS.md"
+  - "docs/operations/AI_AGENT_OPERATION_MANUAL.md"
+
+implementation_plan: "docs/plans/phase0/TSK-P0-KYC-003/PLAN.md"
+implementation_log: "docs/plans/phase0/TSK-P0-KYC-003/EXEC_LOG.md"
+
+notes: ""
+client: "codex_cli"
+assigned_agent: "db_foundation"
+model: "gpt-5-codex"

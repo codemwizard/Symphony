@@ -2,7 +2,7 @@
 -- PostgreSQL database dump
 --
 
-\restrict 5AgoPp52dJwmTwvEgqAUjGfNBqKKBBQD02v1O9JsBqEdCoHsDNEeRHxRL80COKl
+\restrict QyD7trU8DU7z3hh4mDYrvk4wOSRvZRcHxIGpusKEezMHWii5f6Byjgxub7lpq9q
 
 -- Dumped from database version 18.2 (Debian 18.2-1.pgdg13+1)
 -- Dumped by pg_dump version 18.2 (Debian 18.2-1.pgdg13+1)
@@ -1332,6 +1332,7 @@ CREATE TABLE public.payment_outbox_pending (
     upstream_ref text,
     downstream_ref text,
     nfs_sequence_ref text,
+    kyc_hold boolean,
     CONSTRAINT ck_pending_payload_is_object CHECK ((jsonb_typeof(payload) = 'object'::text)),
     CONSTRAINT payment_outbox_pending_attempt_count_check CHECK ((attempt_count >= 0))
 )
@@ -2618,5 +2619,5 @@ ALTER TABLE ONLY public.tenants
 -- PostgreSQL database dump complete
 --
 
-\unrestrict 5AgoPp52dJwmTwvEgqAUjGfNBqKKBBQD02v1O9JsBqEdCoHsDNEeRHxRL80COKl
+\unrestrict QyD7trU8DU7z3hh4mDYrvk4wOSRvZRcHxIGpusKEezMHWii5f6Byjgxub7lpq9q
 

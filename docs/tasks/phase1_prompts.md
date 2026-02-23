@@ -1905,17 +1905,20 @@ title: kyc_hold column on payment_outbox_pending (instruction-level KYC gate hoo
 depends_on:
   - TSK-P0-KYC-002
 files_to_change:
-  - db/migrations/*payment_outbox_pending*kyc_hold*.sql
-  - db/schema.sql
-  - scripts/verify/verify_payment_outbox_pending_kyc_hold_column.sh
-verifier_command: bash scripts/verify/verify_payment_outbox_pending_kyc_hold_column.sh
-evidence_path: evidence/phase0/payment_outbox_pending_kyc_hold_column_verification.json
+  - schema/migrations/*payment_outbox_pending*kyc_hold*_hook.sql
+  - scripts/db/verify_kyc_hold_hook.sh
+  - docs/PHASE0/phase0_contract.yml
+  - tasks/TSK-P0-KYC-003/meta.yml
+  - evidence/phase0/TSK-P0-KYC-003.json
+verifier_command: bash scripts/db/verify_kyc_hold_hook.sh
+evidence_path: evidence/phase0/TSK-P0-KYC-003.json
 acceptance_assertions:
   - payment_outbox_pending contains kyc_hold column with expand-first compatible defaults/backfill posture
   - Verifier proves existing writes remain valid while KYC gate hook is present
+  - Evidence exists exactly at evidence/phase0/TSK-P0-KYC-003.json and is schema-valid
 failure_modes:
   - Column added with destructive migration or incompatible nullability/default behavior
-  - Evidence does not capture column metadata from actual schema
+  - Verifier checks file presence only and does not validate live schema/index/runtime-reference constraints
 ```
 
 ## TSK-P0-KYC-004 — kyc_retention_policy_declaration (governance document anchor)
