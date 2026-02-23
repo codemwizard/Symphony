@@ -71,10 +71,23 @@ SELECT EXISTS (
   JOIN pg_namespace n ON n.oid=t.relnamespace
   JOIN pg_class rt ON rt.oid=c.confrelid
   JOIN pg_namespace rn ON rn.oid=rt.relnamespace
+  JOIN LATERAL (
+    SELECT array_agg(a.attname::text ORDER BY ck.ord) AS cols
+    FROM unnest(c.conkey) WITH ORDINALITY AS ck(attnum, ord)
+    JOIN pg_attribute a ON a.attrelid=t.oid AND a.attnum=ck.attnum
+  ) src ON TRUE
+  JOIN LATERAL (
+    SELECT array_agg(a.attname::text ORDER BY fk.ord) AS cols
+    FROM unnest(c.confkey) WITH ORDINALITY AS fk(attnum, ord)
+    JOIN pg_attribute a ON a.attrelid=rt.oid AND a.attnum=fk.attnum
+  ) refcols ON TRUE
   WHERE n.nspname='public' AND t.relname='levy_calculation_records'
     AND c.contype='f'
     AND c.conname='levy_calculation_records_instruction_id_fkey'
     AND rn.nspname='public' AND rt.relname='ingress_attestations'
+    AND src.cols = ARRAY['instruction_id']::text[]
+    AND refcols.cols = ARRAY['attestation_id']::text[]
+    AND c.confdeltype = 'r'
 );
 ")"
   [[ "$fk_ingress_verified" == "true" ]] || add_failure "fk_ingress_missing_or_invalid"
@@ -87,10 +100,23 @@ SELECT EXISTS (
   JOIN pg_namespace n ON n.oid=t.relnamespace
   JOIN pg_class rt ON rt.oid=c.confrelid
   JOIN pg_namespace rn ON rn.oid=rt.relnamespace
+  JOIN LATERAL (
+    SELECT array_agg(a.attname::text ORDER BY ck.ord) AS cols
+    FROM unnest(c.conkey) WITH ORDINALITY AS ck(attnum, ord)
+    JOIN pg_attribute a ON a.attrelid=t.oid AND a.attnum=ck.attnum
+  ) src ON TRUE
+  JOIN LATERAL (
+    SELECT array_agg(a.attname::text ORDER BY fk.ord) AS cols
+    FROM unnest(c.confkey) WITH ORDINALITY AS fk(attnum, ord)
+    JOIN pg_attribute a ON a.attrelid=rt.oid AND a.attnum=fk.attnum
+  ) refcols ON TRUE
   WHERE n.nspname='public' AND t.relname='levy_calculation_records'
     AND c.contype='f'
     AND c.conname='levy_calculation_records_levy_rate_id_fkey'
     AND rn.nspname='public' AND rt.relname='levy_rates'
+    AND src.cols = ARRAY['levy_rate_id']::text[]
+    AND refcols.cols = ARRAY['id']::text[]
+    AND c.confdeltype = 'r'
 );
 ")"
   [[ "$fk_levy_rate_verified" == "true" ]] || add_failure "fk_levy_rate_missing_or_invalid"
@@ -199,8 +225,9 @@ WHERE n.nspname='public' AND t.relname='levy_calculation_records' AND NOT tg.tgi
 SELECT COUNT(*)=0
 FROM pg_proc p
 JOIN pg_namespace n ON n.oid=p.pronamespace
-WHERE n.nspname='public'
-  AND p.prokind='f'
+WHERE n.nspname NOT IN ('pg_catalog','information_schema')
+  AND n.nspname NOT LIKE 'pg_toast%'
+  AND p.prokind IN ('f','p')
   AND pg_get_functiondef(p.oid) ILIKE '%levy_calculation_records%';
 ")"
   if [[ "$no_triggers" == "true" && "$no_functions" == "true" ]]; then
