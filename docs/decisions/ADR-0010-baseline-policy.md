@@ -36,3 +36,4 @@ This ADR remains the authoritative governance reference for baseline change chec
 - 2026-02-23: Baseline regenerated after KYC structural hook migrations for verification records and outbox hold seam (0042, 0043).
 - 2026-02-23: Baseline regenerated after KYC retention policy governance declaration hook migration (0044).
 - 2026-02-23: Baseline regenerated after escrow state machine + atomic reservation semantics migration (0045).
+- 2026-02-23: Baseline regenerated after escrow ceiling enforcement + cross-tenant protections migration (0046).
