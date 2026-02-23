@@ -101,6 +101,7 @@ Mitigations:
 - DoS: lock contention
 - DoS: unbounded statement/lock/idle transaction execution
 - Integrity drift: anchor-sync completion without valid lease/token or missing anchor reference
+- Integrity drift: premature runtime coupling to Phase-0 levy calculation storage hook before policy/runtime activation phase
 - EoP: role privilege escalation
 
 Mitigations:
@@ -114,6 +115,7 @@ Mitigations:
 - Ingress hot-path index verifier enforces tenant/instruction/correlation query path index posture (INT-G33 / INV-118)
 - Anchor-sync operational state machine enforces lease-token worker fencing, anchored-before-complete gating, and deterministic expired-lease repair in DB functions.
 - Phase-0 levy schema hooks are storage-only (`levy_rates`, `ingress_attestations.levy_applicable`) with explicit runtime-read/write prohibition until Phase-2 and verifier enforcement to prevent scope creep.
+- Phase-0 levy calculation records hook (`levy_calculation_records`) is storage-only and verifier-guarded against runtime references/index drift until Phase-2 activation.
 
 ## Priority security actions
 1) Implement service identity and mTLS for internal calls.
