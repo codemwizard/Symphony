@@ -961,3 +961,16 @@
   notes: >
     Ensures PERF-005 timing compliance consumes a seam output with measurement_truth=simulated_finality_stub,
     finality_source=simulated_stub, and live_rail_wiring_status=pending_phase2.
+
+- id: INV-126
+  aliases: ["I-PERF-CLOSEOUT-TRANSLATION-01"]
+  status: implemented
+  severity: P1
+  title: "Closeout KPI evidence includes settlement window compliance and PERF-005 linkage"
+  owners: ["team-platform", "team-invariants"]
+  sla_days: 30
+  enforcement: "scripts/perf/verify_perf_006.sh"
+  verification: "scripts/perf/verify_perf_006.sh --evidence evidence/phase1/perf_006__operational_risk_framework_translation_layer.json; evidence/phase1/perf_006__operational_risk_framework_translation_layer.json"
+  notes: >
+    Enforces Phase-1 closeout translation layer by requiring KPI evidence to carry
+    settlement_window_compliance_pct and a canonical reference to PERF-005 evidence artifact path/id.

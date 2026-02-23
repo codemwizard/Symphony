@@ -595,6 +595,14 @@ if [[ "${RUN_PHASE1_GATES:-0}" == "1" ]]; then
     exit 1
   fi
 
+  echo "==> Phase-1 operational risk framework + translation layer (PERF-006)"
+  if [[ -x scripts/perf/verify_perf_006.sh ]]; then
+    scripts/perf/verify_perf_006.sh --evidence evidence/phase1/perf_006__operational_risk_framework_translation_layer.json
+  else
+    echo "ERROR: scripts/perf/verify_perf_006.sh not found"
+    exit 1
+  fi
+
   echo "==> Phase-1 no-MCP guard"
   if [[ -x scripts/audit/verify_no_mcp_phase1.sh ]]; then
     scripts/audit/verify_no_mcp_phase1.sh

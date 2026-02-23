@@ -166,6 +166,14 @@
   evidence_path: "evidence/phase1/perf_005a_finality_seam_stub.json"
   notes: "PERF-005A requires a simulated finality seam stub with explicit pending Phase-2 live wiring posture."
 
+- invariant_id: "INV-126"
+  status: "implemented"
+  required: true
+  gate_id: "INT-G28"
+  verifier: "scripts/perf/verify_perf_006.sh"
+  evidence_path: "evidence/phase1/perf_006__operational_risk_framework_translation_layer.json"
+  notes: "PERF-006 extends closeout to require KPI settlement window compliance pct and PERF-005 evidence linkage."
+
 - invariant_id: "INV-039"
   status: "deferred_to_phase2"
   required: false

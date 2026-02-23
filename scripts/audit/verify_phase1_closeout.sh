@@ -85,6 +85,23 @@ for n, p in required_phase0.items():
 for n, p in required_phase1.items():
     validate_pass(n, p)
 
+# PERF-006 closeout extension: KPI evidence must include settlement window compliance and PERF-005 linkage.
+kpi_path = required_phase1["product_kpi_readiness"]
+if kpi_path.exists():
+    try:
+        kpi_payload = json.loads(kpi_path.read_text(encoding="utf-8"))
+        kpis = kpi_payload.get("kpis") or {}
+        settlement = kpis.get("settlement_window_compliance_pct")
+        if not isinstance(settlement, (int, float)):
+            failures.append("kpi_missing_settlement_window_compliance_pct")
+        ref = kpi_payload.get("perf_005_reference") or {}
+        if ref.get("task_id") != "PERF-005":
+            failures.append("kpi_missing_perf005_task_reference")
+        if ref.get("evidence_path") != "evidence/phase1/perf_005__regulatory_timing_compliance_gate.json":
+            failures.append("kpi_missing_perf005_evidence_path_reference")
+    except Exception:
+        failures.append("kpi_evidence_invalid_json_for_perf006")
+
 if not phase1_contract_file.exists():
     failures.append(f"missing_phase1_contract_status:{phase1_contract_file}")
 else:
