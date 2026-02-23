@@ -28,6 +28,9 @@ if [[ -z "${DATABASE_URL:-}" ]] && [[ -n "${POSTGRES_USER:-}" && -n "${POSTGRES_
   export DATABASE_URL
 fi
 
+LEDGER_API_PROJECT="services/ledger-api/dotnet/src/LedgerApi/LedgerApi.csproj"
+dotnet build "$LEDGER_API_PROJECT" >/tmp/symphony_perf_build.log 2>&1
+
 run_and_time() {
   local label="$1"
   shift
@@ -41,9 +44,9 @@ run_and_time() {
 }
 
 rows=()
-rows+=("$(run_and_time ingress_selftest dotnet run --project services/ledger-api/dotnet/src/LedgerApi/LedgerApi.csproj -- --self-test)")
-rows+=("$(run_and_time evidence_pack_selftest dotnet run --project services/ledger-api/dotnet/src/LedgerApi/LedgerApi.csproj -- --self-test-evidence-pack)")
-rows+=("$(run_and_time case_pack_selftest dotnet run --project services/ledger-api/dotnet/src/LedgerApi/LedgerApi.csproj -- --self-test-case-pack)")
+rows+=("$(run_and_time ingress_selftest dotnet run --no-build --project "$LEDGER_API_PROJECT" -- --self-test)")
+rows+=("$(run_and_time evidence_pack_selftest dotnet run --no-build --project "$LEDGER_API_PROJECT" -- --self-test-evidence-pack)")
+rows+=("$(run_and_time case_pack_selftest dotnet run --no-build --project "$LEDGER_API_PROJECT" -- --self-test-case-pack)")
 
 status="PASS"
 total_ms=0
@@ -113,7 +116,7 @@ Path(r"$BENCH_FILE").write_text(json.dumps({
 PY
 
 # Real driver-level batching telemetry from runtime metrics.
-if ! dotnet run --project services/ledger-api/dotnet/src/LedgerApi/LedgerApi.csproj -- --self-test-batching-telemetry >/tmp/symphony_perf_batching.log 2>&1; then
+if ! dotnet run --no-build --project "$LEDGER_API_PROJECT" -- --self-test-batching-telemetry >/tmp/symphony_perf_batching.log 2>&1; then
   echo "Batching telemetry self-test failed" >&2
   cat /tmp/symphony_perf_batching.log >&2 || true
   status="FAIL"
