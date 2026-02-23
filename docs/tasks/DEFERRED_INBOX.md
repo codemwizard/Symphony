@@ -56,8 +56,12 @@ Rules:
 - Source task: `PARITY-CI-PRECI-001` (post-Phase1)
 - Priority: `P0`
 - Owner role: `INVARIANTS_CURATOR`
-- Status: `deferred`
+- Status: `completed`
 - Created: `2026-02-23`
+- Completed: `2026-02-23`
+- Resolution:
+  - Canonical Phase-1 operation manual citation added to the deferred item to satisfy governance/conformance requirements.
+  - Item merged to `origin/main`; no open implementation work remains on this branch.
 - Why deferred:
   - Current parity incidents show that local `scripts/dev/pre_ci.sh` can pass while CI fails due to workflow graph/artifact merge/order differences.
   - CI must remain source-of-truth; local parity must prove equivalence against CI invocation semantics, not just script presence.
