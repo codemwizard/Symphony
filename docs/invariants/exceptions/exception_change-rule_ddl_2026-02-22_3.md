@@ -28,7 +28,7 @@ primary_reason: ddl
 reason_types: ddl, migration_file_added_or_deleted
 
 Matched files:
-- schema/migrations/0039_kyc_provider_registry_hook.sql
+- schema/migrations/0040_kyc_provider_registry_hook.sql
 
 Top matches:
 - ddl | schema/baseline.sql | +: CREATE TABLE public.kyc_provider_registry (

@@ -76,7 +76,7 @@ SELECT EXISTS (
   WHERE n.nspname='public' AND t.relname='levy_remittance_periods' AND c.contype='c'
     AND pg_get_constraintdef(c.oid) ILIKE '%period_code%'
     AND pg_get_constraintdef(c.oid) LIKE '%~%'
-    AND replace(pg_get_constraintdef(c.oid), '\\', '') LIKE '%d{4}-d{2}%'
+    AND replace(pg_get_constraintdef(c.oid), ' ', '') LIKE '%[0-9]{4}-[0-9]{2}%'
 );
 ")"
   [[ "$period_code_check_verified" == "true" ]] || add_failure "period_code_check_missing_or_invalid"

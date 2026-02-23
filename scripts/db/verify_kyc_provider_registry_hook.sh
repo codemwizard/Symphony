@@ -158,7 +158,7 @@ if [[ ${#runtime_reference_paths[@]} -gt 0 ]]; then
   add_failure "runtime_references_found"
 fi
 
-migration_version="0039_kyc_provider_registry_hook.sql"
+migration_version="0040_kyc_provider_registry_hook.sql"
 migration_file="$ROOT_DIR/schema/migrations/$migration_version"
 if [[ ! -f "$migration_file" ]]; then
   add_failure "migration_file_missing:$migration_version"
