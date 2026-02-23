@@ -2,7 +2,7 @@
 -- PostgreSQL database dump
 --
 
-\restrict QDYKR3a9AJaOvvbbAEDbzDvQ47tHyK29AsQ3afDNox3Arl4vwzDzCEY3p4zSKmD
+\restrict RzATVGDaR2EmFfdbzdL17owXXeceJf73Ooh6udqHEAUWxJ1mXtquPuxxwEPCodC
 
 -- Dumped from database version 18.2 (Debian 18.2-1.pgdg13+1)
 -- Dumped by pg_dump version 18.2 (Debian 18.2-1.pgdg13+1)
@@ -1129,6 +1129,28 @@ CREATE TABLE public.instruction_settlement_finality (
 
 
 --
+-- Name: kyc_provider_registry; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.kyc_provider_registry (
+    id uuid DEFAULT gen_random_uuid() NOT NULL,
+    provider_code text NOT NULL,
+    provider_name text NOT NULL,
+    jurisdiction_code character(2) NOT NULL,
+    public_key_pem text,
+    signing_algorithm text,
+    boz_licence_reference text,
+    is_active boolean,
+    active_from date,
+    active_to date,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    created_by text DEFAULT CURRENT_USER NOT NULL,
+    updated_at timestamp with time zone,
+    CONSTRAINT kyc_provider_registry_check CHECK (((active_to IS NULL) OR (active_from IS NULL) OR (active_to >= active_from)))
+);
+
+
+--
 -- Name: levy_calculation_records; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -1559,6 +1581,22 @@ ALTER TABLE ONLY public.ingress_attestations
 
 ALTER TABLE ONLY public.instruction_settlement_finality
     ADD CONSTRAINT instruction_settlement_finality_pkey PRIMARY KEY (finality_id);
+
+
+--
+-- Name: kyc_provider_registry kyc_provider_registry_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.kyc_provider_registry
+    ADD CONSTRAINT kyc_provider_registry_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: kyc_provider_registry kyc_provider_unique_code; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.kyc_provider_registry
+    ADD CONSTRAINT kyc_provider_unique_code UNIQUE (provider_code);
 
 
 --
@@ -2052,6 +2090,20 @@ CREATE INDEX idx_tenants_status ON public.tenants USING btree (status);
 
 
 --
+-- Name: kyc_provider_active_idx; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE UNIQUE INDEX kyc_provider_active_idx ON public.kyc_provider_registry USING btree (jurisdiction_code, provider_code) WHERE ((active_to IS NULL) AND (is_active IS NOT FALSE));
+
+
+--
+-- Name: kyc_provider_jurisdiction_idx; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX kyc_provider_jurisdiction_idx ON public.kyc_provider_registry USING btree (jurisdiction_code, active_from DESC);
+
+
+--
 -- Name: levy_calc_reporting_period_idx; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -2494,5 +2546,5 @@ ALTER TABLE ONLY public.tenants
 -- PostgreSQL database dump complete
 --
 
-\unrestrict QDYKR3a9AJaOvvbbAEDbzDvQ47tHyK29AsQ3afDNox3Arl4vwzDzCEY3p4zSKmD
+\unrestrict RzATVGDaR2EmFfdbzdL17owXXeceJf73Ooh6udqHEAUWxJ1mXtquPuxxwEPCodC
 

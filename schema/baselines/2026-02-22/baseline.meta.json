@@ -1,10 +1,10 @@
 {
   "baseline_date": "2026-02-22",
   "baseline_path": "/home/mwiza/workspace/Symphony/schema/baselines/2026-02-22/0001_baseline.sql",
-  "baseline_cutoff": "0038_levy_remittance_periods_hook.sql",
-  "normalized_schema_sha256": "67d03a9d4f463cae96e1f270bc59b9f723bdbf62f12f7a7555a1d726cc20e1cc",
+  "baseline_cutoff": "0040_kyc_provider_registry_hook.sql",
+  "normalized_schema_sha256": "aaa3fc9b1c44b81f54b5f0addc64aeb637c69408597bf736401fd6af97d032c4",
   "pg_dump_version": "pg_dump (PostgreSQL) 18.2 (Debian 18.2-1.pgdg13+1)",
   "pg_server_version": "18.2 (Debian 18.2-1.pgdg13+1)",
   "dump_source": "container:symphony-postgres",
-  "generated_at_utc": "2026-02-22T14:41:40.504605+00:00"
+  "generated_at_utc": "2026-02-22T14:59:20.774922+00:00"
 }

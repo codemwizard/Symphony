@@ -1,0 +1,21 @@
+{
+  "task_id": "TSK-P0-KYC-001",
+  "check_id": "TSK-P0-KYC-001",
+  "timestamp_utc": "2026-02-23T08:56:32Z",
+  "git_sha": "4a5597af624e50f64fdb8ead5240e1eadc8919b5",
+  "schema_fingerprint": "884997f8c65c1146c17b148daec9f6a53b30100991f165278da0b51adb438d5f",
+  "status": "PASS",
+  "pass": true,
+  "table_exists": true,
+  "column_count_verified": true,
+  "constraints_verified": true,
+  "indexes_verified": true,
+  "table_is_empty": true,
+  "no_runtime_references": true,
+  "migration_checksum_valid": true,
+  "measurement_truth": "phase0_structural_hook_only",
+  "details": {
+    "runtime_reference_paths": [],
+    "failures": []
+  }
+}

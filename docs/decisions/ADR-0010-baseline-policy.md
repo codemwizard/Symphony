@@ -32,3 +32,4 @@ This ADR remains the authoritative governance reference for baseline change chec
 - 2026-02-22: Baseline regenerated after Phase-0 levy structural hook migrations (0035, 0036).
 - 2026-02-22: Baseline regenerated after levy calculation records structural hook migration (0037).
 - 2026-02-22: Baseline regenerated after levy remittance periods structural hook migration (0038).
+- 2026-02-22: Baseline regenerated after KYC provider registry structural hook migration (0039).

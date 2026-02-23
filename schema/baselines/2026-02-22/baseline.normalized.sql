@@ -182,6 +182,9 @@
     ADD CONSTRAINT ingress_attestations_pkey PRIMARY KEY (attestation_id);
     ADD CONSTRAINT instruction_settlement_finality_pkey PRIMARY KEY (finality_id);
     ADD CONSTRAINT instruction_settlement_finality_reversal_fk FOREIGN KEY (reversal_of_instruction_id) REFERENCES public.instruction_settlement_finality(instruction_id) DEFERRABLE;
+    ADD CONSTRAINT kyc_provider_registry_pkey PRIMARY KEY (id);
+    ADD CONSTRAINT kyc_provider_unique_active_per_jurisdiction UNIQUE (jurisdiction_code, provider_code);
+    ADD CONSTRAINT kyc_provider_unique_code UNIQUE (provider_code);
     ADD CONSTRAINT levy_calculation_one_per_instruction UNIQUE (instruction_id);
     ADD CONSTRAINT levy_calculation_records_instruction_id_fkey FOREIGN KEY (instruction_id) REFERENCES public.ingress_attestations(attestation_id) ON DELETE RESTRICT;
     ADD CONSTRAINT levy_calculation_records_levy_rate_id_fkey FOREIGN KEY (levy_rate_id) REFERENCES public.levy_rates(id) ON DELETE RESTRICT;
@@ -283,6 +286,7 @@
     CONSTRAINT instruction_settlement_finality_rail_message_type_check CHECK ((rail_message_type = ANY (ARRAY['pacs.008'::text, 'camt.056'::text]))),
     CONSTRAINT instruction_settlement_finality_self_reversal_chk CHECK (((reversal_of_instruction_id IS NULL) OR (reversal_of_instruction_id <> instruction_id))),
     CONSTRAINT instruction_settlement_finality_shape_chk CHECK ((((final_state = 'SETTLED'::text) AND (reversal_of_instruction_id IS NULL) AND (rail_message_type = 'pacs.008'::text)) OR ((final_state = 'REVERSED'::text) AND (reversal_of_instruction_id IS NOT NULL) AND (rail_message_type = 'camt.056'::text))))
+    CONSTRAINT kyc_provider_registry_check CHECK (((active_to IS NULL) OR (active_from IS NULL) OR (active_to >= active_from)))
     CONSTRAINT levy_calculation_records_cap_applied_minor_check CHECK (((cap_applied_minor IS NULL) OR (cap_applied_minor >= 0))),
     CONSTRAINT levy_calculation_records_levy_amount_final_check CHECK (((levy_amount_final IS NULL) OR (levy_amount_final >= 0))),
     CONSTRAINT levy_calculation_records_levy_amount_pre_cap_check CHECK (((levy_amount_pre_cap IS NULL) OR (levy_amount_pre_cap >= 0))),
@@ -453,6 +457,8 @@
     WHERE p.outbox_id = p_outbox_id AND p.claimed_by = p_worker_id
     WHERE pack_id = p_pack_id;
     activated_at timestamp with time zone DEFAULT now() NOT NULL,
+    active_from date,
+    active_to date,
     allocated BIGINT;
     allocated_sequence := bump_participant_outbox_seq(p_participant_id);
     allocated_sequence BIGINT;
@@ -479,6 +485,7 @@
     billable_client_id uuid NOT NULL,
     billable_client_id uuid,
     billable_client_id uuid,
+    boz_licence_reference text,
     calculated_at timestamp with time zone,
     calculated_by_version text,
     cap_amount_minor bigint,
@@ -521,7 +528,9 @@
     created_at timestamp with time zone DEFAULT now() NOT NULL,
     created_at timestamp with time zone DEFAULT now() NOT NULL,
     created_at timestamp with time zone DEFAULT now() NOT NULL,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
     created_at timestamp with time zone DEFAULT now(),
+    created_by text DEFAULT CURRENT_USER NOT NULL,
     created_by text DEFAULT CURRENT_USER NOT NULL,
     currency_code character(3),
     display_name text NOT NULL,
@@ -551,6 +560,7 @@
     id uuid DEFAULT gen_random_uuid() NOT NULL,
     id uuid DEFAULT gen_random_uuid() NOT NULL,
     id uuid DEFAULT gen_random_uuid() NOT NULL,
+    id uuid DEFAULT gen_random_uuid() NOT NULL,
     idempotency_key text NOT NULL,
     idempotency_key text NOT NULL,
     idempotency_key text,
@@ -563,10 +573,12 @@
     instruction_id uuid NOT NULL,
     instruction_id,
     is_active boolean GENERATED ALWAYS AS ((status = 'ACTIVE'::public.policy_version_status)) STORED,
+    is_active boolean,
     is_final boolean DEFAULT true NOT NULL,
     item_id uuid DEFAULT public.uuid_v7_or_random() NOT NULL,
     jsonb_build_object('executor', p_executor)
     jsonb_build_object('subject_token', p_subject_token)
+    jurisdiction_code character(2) NOT NULL,
     jurisdiction_code character(2) NOT NULL,
     jurisdiction_code character(2) NOT NULL,
     jurisdiction_code character(2),
@@ -634,7 +646,10 @@
     proof_id uuid DEFAULT public.uuid_v7_or_random() NOT NULL,
     protected_payload jsonb,
     provider text NOT NULL,
+    provider_code text NOT NULL,
+    provider_name text NOT NULL,
     provider_ref text,
+    public_key_pem text,
     purge_event_id uuid DEFAULT public.uuid_v7_or_random() NOT NULL,
     purge_request_id uuid DEFAULT public.uuid_v7_or_random() NOT NULL,
     purge_request_id uuid NOT NULL,
@@ -684,6 +699,7 @@
     signatures jsonb DEFAULT '[]'::jsonb NOT NULL,
     signed_at timestamp with time zone,
     signer_participant_id text,
+    signing_algorithm text,
     state
     state public.outbox_attempt_state NOT NULL,
     state public.outbox_attempt_state NOT NULL,
@@ -718,6 +734,7 @@
     tpin_hash bytea,
     units text NOT NULL,
     updated_at timestamp with time zone DEFAULT now() NOT NULL,
+    updated_at timestamp with time zone,
     upstream_ref text,
     upstream_ref text,
     upstream_ref text,
@@ -998,6 +1015,7 @@ $$;
 );
 );
 );
+);
 ALTER TABLE ONLY public.anchor_sync_operations
 ALTER TABLE ONLY public.anchor_sync_operations
 ALTER TABLE ONLY public.anchor_sync_operations
@@ -1023,6 +1041,9 @@ ALTER TABLE ONLY public.ingress_attestations
 ALTER TABLE ONLY public.instruction_settlement_finality
 ALTER TABLE ONLY public.instruction_settlement_finality
 ALTER TABLE ONLY public.instruction_settlement_finality
+ALTER TABLE ONLY public.kyc_provider_registry
+ALTER TABLE ONLY public.kyc_provider_registry
+ALTER TABLE ONLY public.kyc_provider_registry
 ALTER TABLE ONLY public.levy_calculation_records
 ALTER TABLE ONLY public.levy_calculation_records
 ALTER TABLE ONLY public.levy_calculation_records
@@ -1144,6 +1165,7 @@ CREATE INDEX idx_tenant_members_tenant ON public.tenant_members USING btree (ten
 CREATE INDEX idx_tenants_billable_client_id ON public.tenants USING btree (billable_client_id);
 CREATE INDEX idx_tenants_parent_tenant_id ON public.tenants USING btree (parent_tenant_id);
 CREATE INDEX idx_tenants_status ON public.tenants USING btree (status);
+CREATE INDEX kyc_provider_jurisdiction_idx ON public.kyc_provider_registry USING btree (jurisdiction_code, active_from DESC);
 CREATE INDEX levy_calc_reporting_period_idx ON public.levy_calculation_records USING btree (reporting_period, jurisdiction_code) WHERE (reporting_period IS NOT NULL);
 CREATE INDEX levy_calc_status_idx ON public.levy_calculation_records USING btree (levy_status) WHERE (levy_status IS NOT NULL);
 CREATE INDEX levy_periods_jurisdiction_idx ON public.levy_remittance_periods USING btree (jurisdiction_code, period_start DESC);
@@ -1158,6 +1180,7 @@ CREATE TABLE public.evidence_packs (
 CREATE TABLE public.external_proofs (
 CREATE TABLE public.ingress_attestations (
 CREATE TABLE public.instruction_settlement_finality (
+CREATE TABLE public.kyc_provider_registry (
 CREATE TABLE public.levy_calculation_records (
 CREATE TABLE public.levy_rates (
 CREATE TABLE public.levy_remittance_periods (
@@ -1199,6 +1222,7 @@ CREATE TRIGGER trg_set_external_proofs_attribution BEFORE INSERT ON public.exter
 CREATE TRIGGER trg_touch_anchor_sync_updated_at BEFORE UPDATE ON public.anchor_sync_operations FOR EACH ROW EXECUTE FUNCTION public.touch_anchor_sync_updated_at();
 CREATE TYPE public.outbox_attempt_state AS ENUM (
 CREATE TYPE public.policy_version_status AS ENUM (
+CREATE UNIQUE INDEX kyc_provider_active_idx ON public.kyc_provider_registry USING btree (jurisdiction_code, provider_code) WHERE ((active_to IS NULL) AND (is_active IS NOT FALSE));
 CREATE UNIQUE INDEX levy_rates_one_active_per_jurisdiction ON public.levy_rates USING btree (jurisdiction_code) WHERE (effective_to IS NULL);
 CREATE UNIQUE INDEX ux_billable_clients_client_key ON public.billable_clients USING btree (client_key) WHERE (client_key IS NOT NULL);
 CREATE UNIQUE INDEX ux_billing_usage_events_idempotency ON public.billing_usage_events USING btree (billable_client_id, idempotency_key) WHERE (idempotency_key IS NOT NULL);
