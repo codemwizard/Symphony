@@ -51,3 +51,39 @@ Rules:
   - `tasks/TSK-P0-103/meta.yml`
   - `scripts/db/verify_invariants.sh`
   - `evidence/phase0/ci_invariant_gate.json`
+
+### INBOX-2026-02-23-003 — CI-first parity audit for `pre_ci` vs GitHub workflow execution graph
+- Source task: `PARITY-CI-PRECI-001` (post-Phase1)
+- Priority: `P0`
+- Owner role: `INVARIANTS_CURATOR`
+- Status: `deferred`
+- Created: `2026-02-23`
+- Why deferred:
+  - Current parity incidents show that local `scripts/dev/pre_ci.sh` can pass while CI fails due to workflow graph/artifact merge/order differences.
+  - CI must remain source-of-truth; local parity must prove equivalence against CI invocation semantics, not just script presence.
+- Unblock trigger:
+  - Start only after current Phase-1 execution/closeout is complete and branch stabilization is confirmed.
+- Required done criteria:
+  - Build a deterministic line-by-line trace matrix mapping:
+    - every command invocation in `scripts/dev/pre_ci.sh`
+    - to the exact GitHub Actions step(s) in `.github/workflows/invariants.yml`
+    - including command string, env vars, working dir, inputs/outputs, and execution order.
+  - For each gate/evidence producer, classify:
+    1. exact parity,
+    2. compatible but different topology (artifact merge, job split),
+    3. mismatch/regression risk.
+  - Add an executable CI-parity verifier that fails closed when:
+    - invocation order diverges for parity-critical checks,
+    - CI-only artifact merge behavior has no local parity simulation,
+    - a check runs in one environment but not the other.
+  - Ensure local parity mode can replay CI merged-artifact verification path from empty evidence state.
+  - Re-run and record PASS:
+    - `RUN_PHASE1_GATES=1 scripts/dev/pre_ci.sh`
+    - CI `invariants.yml` jobs producing + consuming evidence status.
+  - Emit deterministic parity evidence artifact(s) and contract wire-up for the parity gate.
+- Links:
+  - `scripts/dev/pre_ci.sh`
+  - `.github/workflows/invariants.yml`
+  - `scripts/ci/check_evidence_required.sh`
+  - `scripts/audit/verify_phase0_contract_evidence_status.sh`
+  - `scripts/ci/verify_phase0_contract_evidence_status_parity.sh`
