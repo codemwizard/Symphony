@@ -1713,5 +1713,17 @@
     "evidence_scope": "repo",
     "notes": "Phase-0 structural hook: kyc_verification_records hash anchor with fail-closed verifier and no-runtime-reference enforcement.",
     "gate_ids": []
+  },
+  {
+    "task_id": "TSK-P0-KYC-003",
+    "status": "completed",
+    "verification_mode": "both",
+    "evidence_required": true,
+    "evidence_paths": [
+      "evidence/phase0/TSK-P0-KYC-003.json"
+    ],
+    "evidence_scope": "repo",
+    "notes": "Phase-0 expand-first hook: payment_outbox_pending.kyc_hold nullable column with fail-closed verifier and no-runtime-reference enforcement.",
+    "gate_ids": []
   }
 ]

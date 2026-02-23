@@ -592,6 +592,7 @@
     jurisdiction_code character(2) NOT NULL,
     jurisdiction_code character(2),
     jurisdiction_code character(2),
+    kyc_hold boolean,
     last_error text,
     latency_ms integer,
     lease_expires_at timestamp with time zone,
