@@ -427,6 +427,14 @@ else
   exit 1
 fi
 
+echo "==> Phase-0 BoZ observability role proof (TSK-P0-210)"
+if [[ -x scripts/audit/verify_tsk_p0_210.sh ]]; then
+  scripts/audit/verify_tsk_p0_210.sh --evidence evidence/phase0/tsk_p0_210__boz_observability_role_proof_include_set.json
+else
+  echo "ERROR: scripts/audit/verify_tsk_p0_210.sh not found"
+  exit 1
+fi
+
 echo "==> Phase-0 contract evidence status (merged local evidence)"
 if [[ -x scripts/ci/verify_phase0_contract_evidence_status_parity.sh ]]; then
   scripts/ci/verify_phase0_contract_evidence_status_parity.sh

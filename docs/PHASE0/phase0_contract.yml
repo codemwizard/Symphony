@@ -1751,5 +1751,19 @@
     "gate_ids": [
       "INT-G15"
     ]
+  },
+  {
+    "task_id": "TSK-P0-210",
+    "status": "completed",
+    "verification_mode": "both",
+    "evidence_required": true,
+    "evidence_paths": [
+      "evidence/phase0/tsk_p0_210__boz_observability_role_proof_include_set.json"
+    ],
+    "evidence_scope": "repo",
+    "notes": "Phase-0 BoZ observability role proof with explicit SET ROLE denial posture verification.",
+    "gate_ids": [
+      "INT-G23"
+    ]
   }
 ]

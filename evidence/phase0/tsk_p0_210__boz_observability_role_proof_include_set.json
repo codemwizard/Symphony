@@ -1,0 +1,17 @@
+{
+  "check_id": "TSK-P0-210",
+  "task_id": "TSK-P0-210",
+  "timestamp_utc": "2026-02-23T14:26:53Z",
+  "git_sha": "26088962fd652267f804f9f0480a6db2967f03dc",
+  "schema_fingerprint": "472c540b81dcab3cb43980291595dd562a4f5ad2e7b2e98f6d832f740c0a1218",
+  "status": "PASS",
+  "pass": true,
+  "details": {
+    "role_exists": true,
+    "role_nologin": true,
+    "boz_membership_grants": 0,
+    "set_role_denial_posture": true,
+    "boz_evidence_path": "evidence/phase0/boz_observability_role.json",
+    "errors": []
+  }
+}
