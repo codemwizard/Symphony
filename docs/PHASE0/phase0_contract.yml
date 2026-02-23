@@ -1737,5 +1737,19 @@
     "evidence_scope": "repo",
     "notes": "Phase-0 governance declaration hook: immutable single-row KYC retention policy registry with statutory Zambia FIC Act seed verification.",
     "gate_ids": []
+  },
+  {
+    "task_id": "TSK-P0-208",
+    "status": "completed",
+    "verification_mode": "both",
+    "evidence_required": true,
+    "evidence_paths": [
+      "evidence/phase0/tsk_p0_208__gate_invariant_linkage_audit.json"
+    ],
+    "evidence_scope": "repo",
+    "notes": "Phase-0 gate↔invariant linkage audit ensuring contract gate IDs resolve and invariant references are non-orphaned.",
+    "gate_ids": [
+      "INT-G15"
+    ]
   }
 ]

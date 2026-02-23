@@ -419,6 +419,14 @@ else
   exit 1
 fi
 
+echo "==> Phase-0 gate↔invariant linkage audit (TSK-P0-208)"
+if [[ -x scripts/audit/verify_tsk_p0_208.sh ]]; then
+  scripts/audit/verify_tsk_p0_208.sh --evidence evidence/phase0/tsk_p0_208__gate_invariant_linkage_audit.json
+else
+  echo "ERROR: scripts/audit/verify_tsk_p0_208.sh not found"
+  exit 1
+fi
+
 echo "==> Phase-0 contract evidence status (merged local evidence)"
 if [[ -x scripts/ci/verify_phase0_contract_evidence_status_parity.sh ]]; then
   scripts/ci/verify_phase0_contract_evidence_status_parity.sh
