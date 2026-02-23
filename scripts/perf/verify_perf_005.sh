@@ -28,10 +28,15 @@ if [[ ! -f "$PROFILE_EVIDENCE" ]]; then
   echo "missing_perf_smoke_profile:$PROFILE_EVIDENCE" >&2
   exit 1
 fi
+if [[ ! -x "$ROOT_DIR/scripts/perf/finality_seam_stub.sh" ]]; then
+  echo "missing_finality_seam_stub:$ROOT_DIR/scripts/perf/finality_seam_stub.sh" >&2
+  exit 1
+fi
 
 ROOT_DIR="$ROOT_DIR" PROFILE_EVIDENCE="$PROFILE_EVIDENCE" EVIDENCE_PATH="$EVIDENCE_PATH" EVIDENCE_TS="$EVIDENCE_TS" EVIDENCE_GIT_SHA="$EVIDENCE_GIT_SHA" EVIDENCE_SCHEMA_FP="$EVIDENCE_SCHEMA_FP" python3 - <<'PY'
 import json
 import os
+import subprocess
 from pathlib import Path
 
 root = Path(os.environ["ROOT_DIR"])
@@ -50,15 +55,24 @@ rail_policies = {
     "ZM-MMO": {"settlement_window_ms": 6000, "source": "simulated"},
 }
 
-rail_measurements = {
-    "ZM-NFS": int(p95),
-    "ZM-MMO": int(p95 + 500),
-}
+def seam_measurement(rail: str, base_latency_ms: int):
+    proc = subprocess.run(
+        [
+            str(root / "scripts/perf/finality_seam_stub.sh"),
+            "--rail", rail,
+            "--base-latency-ms", str(base_latency_ms),
+        ],
+        capture_output=True,
+        text=True,
+        check=True,
+    )
+    return json.loads(proc.stdout.strip())
 
 results = []
 compliant = 0
 for rail, policy in rail_policies.items():
-    observed_ms = rail_measurements[rail]
+    seam = seam_measurement(rail, int(p95))
+    observed_ms = int(seam["observed_finality_ms"])
     within = observed_ms <= int(policy["settlement_window_ms"])
     compliant += int(within)
     results.append({
@@ -66,8 +80,9 @@ for rail, policy in rail_policies.items():
         "settlement_window_ms": int(policy["settlement_window_ms"]),
         "observed_finality_ms": observed_ms,
         "compliant": within,
-        "measurement_truth": "simulated_from_perf_smoke_profile",
-        "finality_source": "simulated",
+        "measurement_truth": seam.get("measurement_truth"),
+        "finality_source": seam.get("finality_source"),
+        "live_rail_wiring_status": seam.get("live_rail_wiring_status"),
     })
 
 compliance_pct = round((compliant / len(results)) * 100.0, 2)
@@ -84,7 +99,7 @@ out = {
     "details": {
       "policy_version": 1,
       "workload_profile": profile.get("profile", {}).get("runner", "unknown"),
-      "measurement_truth": "simulated_finality_inputs",
+      "measurement_truth": "simulated_finality_stub",
       "source_evidence": "evidence/phase1/perf_smoke_profile.json",
       "rails": results,
       "compliance_pct": compliance_pct,

@@ -56,3 +56,6 @@ registry:
   scripts/perf/verify_perf_005.sh:
     emits:
       - evidence/phase1/perf_005__regulatory_timing_compliance_gate.json
+  scripts/audit/verify_perf_005a_finality_seam_stub.sh:
+    emits:
+      - evidence/phase1/perf_005a_finality_seam_stub.json

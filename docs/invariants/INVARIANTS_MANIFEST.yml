@@ -948,3 +948,16 @@
   notes: >
     Computes settlement-window compliance percentage from deterministic Phase-1 perf smoke inputs and
     fails closed when rails exceed policy windows.
+
+- id: INV-125
+  aliases: ["I-PERF-FINALITY-SEAM-STUB-01"]
+  status: implemented
+  severity: P1
+  title: "Finality seam stub is wired for compliance computation without claiming live rail finality"
+  owners: ["team-platform", "team-invariants"]
+  sla_days: 30
+  enforcement: "scripts/audit/verify_perf_005a_finality_seam_stub.sh"
+  verification: "scripts/audit/verify_perf_005a_finality_seam_stub.sh; evidence/phase1/perf_005a_finality_seam_stub.json"
+  notes: >
+    Ensures PERF-005 timing compliance consumes a seam output with measurement_truth=simulated_finality_stub,
+    finality_source=simulated_stub, and live_rail_wiring_status=pending_phase2.
