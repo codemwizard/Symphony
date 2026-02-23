@@ -2,7 +2,7 @@
 -- PostgreSQL database dump
 --
 
-\restrict Foj3zbETtsbqE4YX6x45a7QVSxOVdCaZ1LaeKKbMBV9r4Nlq7VPFuYLzTW8dCEM
+\restrict QDYKR3a9AJaOvvbbAEDbzDvQ47tHyK29AsQ3afDNox3Arl4vwzDzCEY3p4zSKmD
 
 -- Dumped from database version 18.2 (Debian 18.2-1.pgdg13+1)
 -- Dumped by pg_dump version 18.2 (Debian 18.2-1.pgdg13+1)
@@ -1150,7 +1150,7 @@ CREATE TABLE public.levy_calculation_records (
     CONSTRAINT levy_calculation_records_cap_applied_minor_check CHECK (((cap_applied_minor IS NULL) OR (cap_applied_minor >= 0))),
     CONSTRAINT levy_calculation_records_levy_amount_final_check CHECK (((levy_amount_final IS NULL) OR (levy_amount_final >= 0))),
     CONSTRAINT levy_calculation_records_levy_amount_pre_cap_check CHECK (((levy_amount_pre_cap IS NULL) OR (levy_amount_pre_cap >= 0))),
-    CONSTRAINT levy_calculation_records_reporting_period_check CHECK (((reporting_period IS NULL) OR (reporting_period ~ '^\\d{4}-\\d{2}$'::text))),
+    CONSTRAINT levy_calculation_records_reporting_period_check CHECK (((reporting_period IS NULL) OR (reporting_period ~ '^[0-9]{4}-[0-9]{2}$'::text))),
     CONSTRAINT levy_calculation_records_taxable_amount_minor_check CHECK (((taxable_amount_minor IS NULL) OR (taxable_amount_minor >= 0)))
 );
 
@@ -1194,7 +1194,7 @@ CREATE TABLE public.levy_remittance_periods (
     created_at timestamp with time zone DEFAULT now() NOT NULL,
     CONSTRAINT levy_remittance_periods_check CHECK ((period_end >= period_start)),
     CONSTRAINT levy_remittance_periods_check1 CHECK (((filing_deadline IS NULL) OR (filing_deadline >= period_end))),
-    CONSTRAINT levy_remittance_periods_period_code_check CHECK ((period_code ~ '^\\d{4}-\\d{2}$'::text))
+    CONSTRAINT levy_remittance_periods_period_code_check CHECK ((period_code ~ '^[0-9]{4}-[0-9]{2}$'::text))
 );
 
 
@@ -2494,5 +2494,5 @@ ALTER TABLE ONLY public.tenants
 -- PostgreSQL database dump complete
 --
 
-\unrestrict Foj3zbETtsbqE4YX6x45a7QVSxOVdCaZ1LaeKKbMBV9r4Nlq7VPFuYLzTW8dCEM
+\unrestrict QDYKR3a9AJaOvvbbAEDbzDvQ47tHyK29AsQ3afDNox3Arl4vwzDzCEY3p4zSKmD
 
