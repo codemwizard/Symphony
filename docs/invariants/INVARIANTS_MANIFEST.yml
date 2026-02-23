@@ -898,3 +898,15 @@
   notes: >
     Requires locked-baseline perf enforcement and runtime telemetry-backed batching/AOT proof before Stage-2
     perf governance tasks may advance.
+
+- id: INV-121
+  aliases: ["I-PERF-ENGINE-METRICS-01"]
+  status: implemented
+  severity: P1
+  title: "Engine metrics capture is non-invasive and contract-required for perf governance"
+  owners: ["team-platform", "team-invariants"]
+  sla_days: 30
+  enforcement: "scripts/audit/verify_perf_001_engine_metrics_capture.sh"
+  verification: "scripts/audit/verify_perf_001_engine_metrics_capture.sh; evidence/phase1/perf_001_engine_metrics_capture.json"
+  notes: >
+    Captures CPU/db-query metrics from perf-smoke execution without enabling trace/debug runtime logging.

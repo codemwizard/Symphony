@@ -2341,6 +2341,8 @@ never by injecting logging into the request path. Captured metrics are written i
 
 Required engine metrics (minimum): `cpu_user_ms`, `cpu_sys_ms`, `gc_collections` (if
 applicable), `db_query_count`, `db_query_p95_ms`.
+Contract mapping for this task is anchored under `INV-121` with required evidence
+`evidence/phase1/perf_001_engine_metrics_capture.json`.
 
 The updated evidence artifact must be backwards-compatible: all fields from schema_version
 "1.0" must remain present and valid.
