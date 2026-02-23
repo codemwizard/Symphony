@@ -14,7 +14,6 @@ infra/docker/.env
 
 # Audit & Legacy (Optional, typically archived)
 archive/
-evidence/
 
 # Logs & Build
 *.log

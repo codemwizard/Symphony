@@ -396,10 +396,10 @@ else
 fi
 
 echo "==> Phase-0 contract evidence status (merged local evidence)"
-if [[ -x scripts/audit/verify_phase0_contract_evidence_status.sh ]]; then
-  CI_ONLY=1 EVIDENCE_ROOT="evidence/phase0" scripts/audit/verify_phase0_contract_evidence_status.sh
+if [[ -x scripts/ci/verify_phase0_contract_evidence_status_parity.sh ]]; then
+  scripts/ci/verify_phase0_contract_evidence_status_parity.sh
 else
-  echo "ERROR: scripts/audit/verify_phase0_contract_evidence_status.sh not found"
+  echo "ERROR: scripts/ci/verify_phase0_contract_evidence_status_parity.sh not found"
   exit 1
 fi
 
@@ -470,10 +470,10 @@ if [[ -n "${DATABASE_URL:-}" ]]; then
 fi
 
 echo "==> Phase-0 contract evidence status (post-DB parity)"
-if [[ -x scripts/audit/verify_phase0_contract_evidence_status.sh ]]; then
-  scripts/audit/verify_phase0_contract_evidence_status.sh
+if [[ -x scripts/ci/verify_phase0_contract_evidence_status_parity.sh ]]; then
+  scripts/ci/verify_phase0_contract_evidence_status_parity.sh
 else
-  echo "ERROR: scripts/audit/verify_phase0_contract_evidence_status.sh not found"
+  echo "ERROR: scripts/ci/verify_phase0_contract_evidence_status_parity.sh not found"
   exit 1
 fi
 
