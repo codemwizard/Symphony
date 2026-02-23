@@ -50,3 +50,6 @@ registry:
   scripts/audit/verify_perf_002_regression_detection_warmup.sh:
     emits:
       - evidence/phase1/perf_002_regression_detection_warmup.json
+  scripts/audit/verify_perf_003_rebaseline_sha_lock.sh:
+    emits:
+      - evidence/phase1/perf_003_rebaseline_sha_lock.json

@@ -923,3 +923,15 @@
   notes: >
     Enforces mandatory warmup before perf measurements and baseline-declared PASS/SOFT/HARD classification
     without hardcoding thresholds in the verifier path.
+
+- id: INV-123
+  aliases: ["I-PERF-REBASELINE-SHA-LOCK-01"]
+  status: implemented
+  severity: P1
+  title: "Perf baseline promotion requires SHA-locked approval"
+  owners: ["team-platform", "team-invariants"]
+  sla_days: 30
+  enforcement: "scripts/audit/verify_perf_003_rebaseline_sha_lock.sh"
+  verification: "scripts/audit/verify_perf_003_rebaseline_sha_lock.sh; evidence/phase1/perf_003_rebaseline_sha_lock.json"
+  notes: >
+    Enforces governed rebaseline flow with candidate baseline SHA validation against approval metadata.

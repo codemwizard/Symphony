@@ -142,6 +142,14 @@
   evidence_path: "evidence/phase1/perf_002_regression_detection_warmup.json"
   notes: "PERF-002 requires mandatory warmup and baseline-driven regression classification evidence."
 
+- invariant_id: "INV-123"
+  status: "implemented"
+  required: true
+  gate_id: "INT-G28"
+  verifier: "scripts/audit/verify_perf_003_rebaseline_sha_lock.sh"
+  evidence_path: "evidence/phase1/perf_003_rebaseline_sha_lock.json"
+  notes: "PERF-003 requires SHA-locked rebaseline approvals before baseline promotion."
+
 - invariant_id: "INV-039"
   status: "deferred_to_phase2"
   required: false

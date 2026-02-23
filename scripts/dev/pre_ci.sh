@@ -571,6 +571,14 @@ if [[ "${RUN_PHASE1_GATES:-0}" == "1" ]]; then
     exit 1
   fi
 
+  echo "==> Phase-1 rebaseline SHA-lock verification (PERF-003)"
+  if [[ -x scripts/audit/verify_perf_003_rebaseline_sha_lock.sh ]]; then
+    scripts/audit/verify_perf_003_rebaseline_sha_lock.sh
+  else
+    echo "ERROR: scripts/audit/verify_perf_003_rebaseline_sha_lock.sh not found"
+    exit 1
+  fi
+
   echo "==> Phase-1 no-MCP guard"
   if [[ -x scripts/audit/verify_no_mcp_phase1.sh ]]; then
     scripts/audit/verify_no_mcp_phase1.sh
