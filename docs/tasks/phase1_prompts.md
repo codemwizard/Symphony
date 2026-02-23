@@ -12,6 +12,206 @@
 >
 > If a task prompt section was missing in the source pack, this file inserts a stub section and marks it clearly.
 
+## checkpoint/CS-0 — Checkpoint CS-0 (clean slate complete)
+
+### Goal
+Checkpoint node: confirm the clean-slate stage is mechanically complete before Phase-0 closeout tasks run.
+
+#### Execution Metadata Patch Block (orchestrator source)
+
+```yaml
+task_id: checkpoint/CS-0
+depends_on:
+- TSK-P1-059
+verifier_command: bash scripts/audit/verify_checkpoint.sh --checkpoint checkpoint/CS-0 --evidence evidence/phase1/checkpoint__CS-0.json
+evidence_path: evidence/phase1/checkpoint__CS-0.json
+files_to_change:
+- docs/tasks/phase1_prompts.md
+- scripts/audit/verify_checkpoint.sh
+acceptance_assertions:
+- All dependencies listed in docs/tasks/phase1_dag.yml for checkpoint/CS-0 have PASS evidence (per prompt-pack evidence_path mapping).
+- Evidence file exists at evidence/phase1/checkpoint__CS-0.json and validate_evidence.py passes for task_id checkpoint/CS-0.
+failure_modes:
+- Missing dependency evidence or dependency evidence not PASS => BLOCKED.
+- Missing prompt execution metadata mapping for a dependency (task_id/evidence_path not found) => FAIL_CLOSED.
+- Evidence file missing / invalid JSON / task_id mismatch / pass != true => FAIL.
+```
+
+## checkpoint/P0-DONE — Checkpoint P0-DONE (Phase-0 closeout complete)
+
+### Goal
+Checkpoint node: confirm Phase-0 closeout gate chain has completed before Phase-1 tasks begin.
+
+#### Execution Metadata Patch Block (orchestrator source)
+
+```yaml
+task_id: checkpoint/P0-DONE
+depends_on:
+- TSK-P0-210
+verifier_command: bash scripts/audit/verify_checkpoint.sh --checkpoint checkpoint/P0-DONE --evidence evidence/phase1/checkpoint__P0-DONE.json
+evidence_path: evidence/phase1/checkpoint__P0-DONE.json
+files_to_change:
+- docs/tasks/phase1_prompts.md
+- scripts/audit/verify_checkpoint.sh
+acceptance_assertions:
+- All dependencies listed in docs/tasks/phase1_dag.yml for checkpoint/P0-DONE have PASS evidence (per prompt-pack evidence_path mapping).
+- Evidence file exists at evidence/phase1/checkpoint__P0-DONE.json and validate_evidence.py passes for task_id checkpoint/P0-DONE.
+failure_modes:
+- Missing dependency evidence or dependency evidence not PASS => BLOCKED.
+- Missing prompt execution metadata mapping for a dependency (task_id/evidence_path not found) => FAIL_CLOSED.
+- Evidence file missing / invalid JSON / task_id mismatch / pass != true => FAIL.
+```
+
+## checkpoint/PERF-ENG — Checkpoint PERF-ENG (perf engineering complete)
+
+### Goal
+Checkpoint node: confirm perf engineering stage completion before regulatory perf checks run.
+
+#### Execution Metadata Patch Block (orchestrator source)
+
+```yaml
+task_id: checkpoint/PERF-ENG
+depends_on:
+- PERF-003
+verifier_command: bash scripts/audit/verify_checkpoint.sh --checkpoint checkpoint/PERF-ENG --evidence evidence/phase1/checkpoint__PERF-ENG.json
+evidence_path: evidence/phase1/checkpoint__PERF-ENG.json
+files_to_change:
+- docs/tasks/phase1_prompts.md
+- scripts/audit/verify_checkpoint.sh
+acceptance_assertions:
+- All dependencies listed in docs/tasks/phase1_dag.yml for checkpoint/PERF-ENG have PASS evidence (per prompt-pack evidence_path mapping).
+- Evidence file exists at evidence/phase1/checkpoint__PERF-ENG.json and validate_evidence.py passes for task_id checkpoint/PERF-ENG.
+failure_modes:
+- Missing dependency evidence or dependency evidence not PASS => BLOCKED.
+- Missing prompt execution metadata mapping for a dependency (task_id/evidence_path not found) => FAIL_CLOSED.
+- Evidence file missing / invalid JSON / task_id mismatch / pass != true => FAIL.
+```
+
+## checkpoint/PERF-REG — Checkpoint PERF-REG (perf regulatory complete)
+
+### Goal
+Checkpoint node: confirm perf regulatory stage completion before escrow tasks run.
+
+#### Execution Metadata Patch Block (orchestrator source)
+
+```yaml
+task_id: checkpoint/PERF-REG
+depends_on:
+- PERF-006
+verifier_command: bash scripts/audit/verify_checkpoint.sh --checkpoint checkpoint/PERF-REG --evidence evidence/phase1/checkpoint__PERF-REG.json
+evidence_path: evidence/phase1/checkpoint__PERF-REG.json
+files_to_change:
+- docs/tasks/phase1_prompts.md
+- scripts/audit/verify_checkpoint.sh
+acceptance_assertions:
+- All dependencies listed in docs/tasks/phase1_dag.yml for checkpoint/PERF-REG have PASS evidence (per prompt-pack evidence_path mapping).
+- Evidence file exists at evidence/phase1/checkpoint__PERF-REG.json and validate_evidence.py passes for task_id checkpoint/PERF-REG.
+failure_modes:
+- Missing dependency evidence or dependency evidence not PASS => BLOCKED.
+- Missing prompt execution metadata mapping for a dependency (task_id/evidence_path not found) => FAIL_CLOSED.
+- Evidence file missing / invalid JSON / task_id mismatch / pass != true => FAIL.
+```
+
+## checkpoint/ESC — Checkpoint ESC (escrow stage complete)
+
+### Goal
+Checkpoint node: confirm escrow stage completion before hierarchy tasks run.
+
+#### Execution Metadata Patch Block (orchestrator source)
+
+```yaml
+task_id: checkpoint/ESC
+depends_on:
+- TSK-P1-ESC-002
+verifier_command: bash scripts/audit/verify_checkpoint.sh --checkpoint checkpoint/ESC --evidence evidence/phase1/checkpoint__ESC.json
+evidence_path: evidence/phase1/checkpoint__ESC.json
+files_to_change:
+- docs/tasks/phase1_prompts.md
+- scripts/audit/verify_checkpoint.sh
+acceptance_assertions:
+- All dependencies listed in docs/tasks/phase1_dag.yml for checkpoint/ESC have PASS evidence (per prompt-pack evidence_path mapping).
+- Evidence file exists at evidence/phase1/checkpoint__ESC.json and validate_evidence.py passes for task_id checkpoint/ESC.
+failure_modes:
+- Missing dependency evidence or dependency evidence not PASS => BLOCKED.
+- Missing prompt execution metadata mapping for a dependency (task_id/evidence_path not found) => FAIL_CLOSED.
+- Evidence file missing / invalid JSON / task_id mismatch / pass != true => FAIL.
+```
+
+## checkpoint/HIER — Checkpoint HIER (hierarchy stage complete)
+
+### Goal
+Checkpoint node: confirm hierarchy stage completion before infrastructure/base-ops tasks run.
+
+#### Execution Metadata Patch Block (orchestrator source)
+
+```yaml
+task_id: checkpoint/HIER
+depends_on:
+- TSK-P1-HIER-011
+verifier_command: bash scripts/audit/verify_checkpoint.sh --checkpoint checkpoint/HIER --evidence evidence/phase1/checkpoint__HIER.json
+evidence_path: evidence/phase1/checkpoint__HIER.json
+files_to_change:
+- docs/tasks/phase1_prompts.md
+- scripts/audit/verify_checkpoint.sh
+acceptance_assertions:
+- All dependencies listed in docs/tasks/phase1_dag.yml for checkpoint/HIER have PASS evidence (per prompt-pack evidence_path mapping).
+- Evidence file exists at evidence/phase1/checkpoint__HIER.json and validate_evidence.py passes for task_id checkpoint/HIER.
+failure_modes:
+- Missing dependency evidence or dependency evidence not PASS => BLOCKED.
+- Missing prompt execution metadata mapping for a dependency (task_id/evidence_path not found) => FAIL_CLOSED.
+- Evidence file missing / invalid JSON / task_id mismatch / pass != true => FAIL.
+```
+
+## checkpoint/BASE-OPS — Checkpoint BASE-OPS (base operations stage complete)
+
+### Goal
+Checkpoint node: confirm base operations stage completion before Phase-1 closeout tasks run.
+
+#### Execution Metadata Patch Block (orchestrator source)
+
+```yaml
+task_id: checkpoint/BASE-OPS
+depends_on:
+- TSK-P1-REG-003
+verifier_command: bash scripts/audit/verify_checkpoint.sh --checkpoint checkpoint/BASE-OPS --evidence evidence/phase1/checkpoint__BASE-OPS.json
+evidence_path: evidence/phase1/checkpoint__BASE-OPS.json
+files_to_change:
+- docs/tasks/phase1_prompts.md
+- scripts/audit/verify_checkpoint.sh
+acceptance_assertions:
+- All dependencies listed in docs/tasks/phase1_dag.yml for checkpoint/BASE-OPS have PASS evidence (per prompt-pack evidence_path mapping).
+- Evidence file exists at evidence/phase1/checkpoint__BASE-OPS.json and validate_evidence.py passes for task_id checkpoint/BASE-OPS.
+failure_modes:
+- Missing dependency evidence or dependency evidence not PASS => BLOCKED.
+- Missing prompt execution metadata mapping for a dependency (task_id/evidence_path not found) => FAIL_CLOSED.
+- Evidence file missing / invalid JSON / task_id mismatch / pass != true => FAIL.
+```
+
+## checkpoint/PHASE-1-CLOSEOUT — Checkpoint PHASE-1-CLOSEOUT (Phase-1 closeout complete)
+
+### Goal
+Checkpoint node: confirm Phase-1 closeout stage completion before Phase-2 followthrough tasks can execute.
+
+#### Execution Metadata Patch Block (orchestrator source)
+
+```yaml
+task_id: checkpoint/PHASE-1-CLOSEOUT
+depends_on:
+- TSK-P1-205
+verifier_command: bash scripts/audit/verify_checkpoint.sh --checkpoint checkpoint/PHASE-1-CLOSEOUT --evidence evidence/phase1/checkpoint__PHASE-1-CLOSEOUT.json
+evidence_path: evidence/phase1/checkpoint__PHASE-1-CLOSEOUT.json
+files_to_change:
+- docs/tasks/phase1_prompts.md
+- scripts/audit/verify_checkpoint.sh
+acceptance_assertions:
+- All dependencies listed in docs/tasks/phase1_dag.yml for checkpoint/PHASE-1-CLOSEOUT have PASS evidence (per prompt-pack evidence_path mapping).
+- Evidence file exists at evidence/phase1/checkpoint__PHASE-1-CLOSEOUT.json and validate_evidence.py passes for task_id checkpoint/PHASE-1-CLOSEOUT.
+failure_modes:
+- Missing dependency evidence or dependency evidence not PASS => BLOCKED.
+- Missing prompt execution metadata mapping for a dependency (task_id/evidence_path not found) => FAIL_CLOSED.
+- Evidence file missing / invalid JSON / task_id mismatch / pass != true => FAIL.
+```
+
 ## TSK-CLEAN-001 — Task metadata truth pass
 
 ### Goal
