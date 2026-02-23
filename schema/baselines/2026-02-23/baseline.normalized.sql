@@ -184,6 +184,8 @@
     ADD CONSTRAINT instruction_settlement_finality_reversal_fk FOREIGN KEY (reversal_of_instruction_id) REFERENCES public.instruction_settlement_finality(instruction_id) DEFERRABLE;
     ADD CONSTRAINT kyc_provider_registry_pkey PRIMARY KEY (id);
     ADD CONSTRAINT kyc_provider_unique_code UNIQUE (provider_code);
+    ADD CONSTRAINT kyc_retention_policy_pkey PRIMARY KEY (id);
+    ADD CONSTRAINT kyc_retention_unique_active_class UNIQUE (jurisdiction_code, retention_class);
     ADD CONSTRAINT kyc_verification_records_member_id_fkey FOREIGN KEY (member_id) REFERENCES public.tenant_members(member_id) ON DELETE RESTRICT;
     ADD CONSTRAINT kyc_verification_records_pkey PRIMARY KEY (id);
     ADD CONSTRAINT kyc_verification_records_provider_id_fkey FOREIGN KEY (provider_id) REFERENCES public.kyc_provider_registry(id) ON DELETE RESTRICT;
@@ -289,6 +291,7 @@
     CONSTRAINT instruction_settlement_finality_self_reversal_chk CHECK (((reversal_of_instruction_id IS NULL) OR (reversal_of_instruction_id <> instruction_id))),
     CONSTRAINT instruction_settlement_finality_shape_chk CHECK ((((final_state = 'SETTLED'::text) AND (reversal_of_instruction_id IS NULL) AND (rail_message_type = 'pacs.008'::text)) OR ((final_state = 'REVERSED'::text) AND (reversal_of_instruction_id IS NOT NULL) AND (rail_message_type = 'camt.056'::text))))
     CONSTRAINT kyc_provider_registry_check CHECK (((active_to IS NULL) OR (active_from IS NULL) OR (active_to >= active_from)))
+    CONSTRAINT kyc_retention_policy_retention_years_check CHECK ((retention_years > 0))
     CONSTRAINT kyc_verification_records_retention_class_check CHECK ((retention_class = 'FIC_AML_CUSTOMER_ID'::text))
     CONSTRAINT levy_calculation_records_cap_applied_minor_check CHECK (((cap_applied_minor IS NULL) OR (cap_applied_minor >= 0))),
     CONSTRAINT levy_calculation_records_levy_amount_final_check CHECK (((levy_amount_final IS NULL) OR (levy_amount_final >= 0))),
@@ -396,6 +399,8 @@
     NEW.tenant_id := derived_tenant_id;
     NULLIF(current_setting('symphony.outbox_retry_ceiling', true), '')::int,
     ON CONFLICT (participant_id)
+    ON DELETE TO public.kyc_retention_policy DO INSTEAD NOTHING;
+    ON UPDATE TO public.kyc_retention_policy DO INSTEAD NOTHING;
     ORDER BY a.claimed_at DESC
     ORDER BY o.updated_at, o.created_at
     PERFORM pg_advisory_xact_lock(
@@ -534,11 +539,14 @@
     created_at timestamp with time zone DEFAULT now() NOT NULL,
     created_at timestamp with time zone DEFAULT now() NOT NULL,
     created_at timestamp with time zone DEFAULT now() NOT NULL,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
     created_at timestamp with time zone DEFAULT now(),
     created_by text DEFAULT CURRENT_USER NOT NULL,
     created_by text DEFAULT CURRENT_USER NOT NULL,
     created_by text DEFAULT CURRENT_USER NOT NULL,
+    created_by text DEFAULT CURRENT_USER NOT NULL,
     currency_code character(3),
+    description text NOT NULL,
     display_name text NOT NULL,
     document_type text,
     downstream_ref text,
@@ -570,6 +578,7 @@
     id uuid DEFAULT gen_random_uuid() NOT NULL,
     id uuid DEFAULT gen_random_uuid() NOT NULL,
     id uuid DEFAULT gen_random_uuid() NOT NULL,
+    id uuid DEFAULT gen_random_uuid() NOT NULL,
     idempotency_key text NOT NULL,
     idempotency_key text NOT NULL,
     idempotency_key text,
@@ -581,12 +590,14 @@
     instruction_id text NOT NULL,
     instruction_id uuid NOT NULL,
     instruction_id,
+    is_active boolean DEFAULT true NOT NULL,
     is_active boolean GENERATED ALWAYS AS ((status = 'ACTIVE'::public.policy_version_status)) STORED,
     is_active boolean,
     is_final boolean DEFAULT true NOT NULL,
     item_id uuid DEFAULT public.uuid_v7_or_random() NOT NULL,
     jsonb_build_object('executor', p_executor)
     jsonb_build_object('subject_token', p_subject_token)
+    jurisdiction_code character(2) NOT NULL,
     jurisdiction_code character(2) NOT NULL,
     jurisdiction_code character(2) NOT NULL,
     jurisdiction_code character(2) NOT NULL,
@@ -701,6 +712,8 @@
     requested_by,
     response_hash text NOT NULL,
     retention_class text DEFAULT 'FIC_AML_CUSTOMER_ID'::text NOT NULL,
+    retention_class text NOT NULL,
+    retention_years integer NOT NULL,
     reversal_of_instruction_id text,
     revoked_at timestamp with time zone DEFAULT now() NOT NULL,
     revoked_at timestamp with time zone DEFAULT now() NOT NULL,
@@ -729,6 +742,7 @@
     status text DEFAULT 'ACTIVE'::text NOT NULL,
     status text DEFAULT 'ACTIVE'::text NOT NULL,
     status text DEFAULT 'ACTIVE'::text NOT NULL,
+    statutory_reference text NOT NULL,
     statutory_reference text,
     subject_client_id uuid,
     subject_member_id uuid
@@ -1039,6 +1053,7 @@ $$;
 );
 );
 );
+);
 ALTER TABLE ONLY public.anchor_sync_operations
 ALTER TABLE ONLY public.anchor_sync_operations
 ALTER TABLE ONLY public.anchor_sync_operations
@@ -1066,6 +1081,8 @@ ALTER TABLE ONLY public.instruction_settlement_finality
 ALTER TABLE ONLY public.instruction_settlement_finality
 ALTER TABLE ONLY public.kyc_provider_registry
 ALTER TABLE ONLY public.kyc_provider_registry
+ALTER TABLE ONLY public.kyc_retention_policy
+ALTER TABLE ONLY public.kyc_retention_policy
 ALTER TABLE ONLY public.kyc_verification_records
 ALTER TABLE ONLY public.kyc_verification_records
 ALTER TABLE ONLY public.kyc_verification_records
@@ -1199,6 +1216,8 @@ CREATE INDEX levy_calc_status_idx ON public.levy_calculation_records USING btree
 CREATE INDEX levy_periods_jurisdiction_idx ON public.levy_remittance_periods USING btree (jurisdiction_code, period_start DESC);
 CREATE INDEX levy_periods_status_idx ON public.levy_remittance_periods USING btree (period_status) WHERE (period_status IS NOT NULL);
 CREATE INDEX levy_rates_jurisdiction_date_idx ON public.levy_rates USING btree (jurisdiction_code, effective_from DESC);
+CREATE RULE kyc_retention_policy_no_delete AS
+CREATE RULE kyc_retention_policy_no_update AS
 CREATE SCHEMA public;
 CREATE TABLE public.anchor_sync_operations (
 CREATE TABLE public.billable_clients (
@@ -1209,6 +1228,7 @@ CREATE TABLE public.external_proofs (
 CREATE TABLE public.ingress_attestations (
 CREATE TABLE public.instruction_settlement_finality (
 CREATE TABLE public.kyc_provider_registry (
+CREATE TABLE public.kyc_retention_policy (
 CREATE TABLE public.kyc_verification_records (
 CREATE TABLE public.levy_calculation_records (
 CREATE TABLE public.levy_rates (

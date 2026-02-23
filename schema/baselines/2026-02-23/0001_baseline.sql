@@ -2,7 +2,7 @@
 -- PostgreSQL database dump
 --
 
-\restrict QyD7trU8DU7z3hh4mDYrvk4wOSRvZRcHxIGpusKEezMHWii5f6Byjgxub7lpq9q
+\restrict pYxVMMacMPqUcma2ApO6pkadSDXQ0e9ZWTDFkVgrexczzpAJkKHG4Cg8lBs0b4B
 
 -- Dumped from database version 18.2 (Debian 18.2-1.pgdg13+1)
 -- Dumped by pg_dump version 18.2 (Debian 18.2-1.pgdg13+1)
@@ -1151,6 +1151,24 @@ CREATE TABLE public.kyc_provider_registry (
 
 
 --
+-- Name: kyc_retention_policy; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.kyc_retention_policy (
+    id uuid DEFAULT gen_random_uuid() NOT NULL,
+    jurisdiction_code character(2) NOT NULL,
+    retention_class text NOT NULL,
+    statutory_reference text NOT NULL,
+    retention_years integer NOT NULL,
+    description text NOT NULL,
+    is_active boolean DEFAULT true NOT NULL,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    created_by text DEFAULT CURRENT_USER NOT NULL,
+    CONSTRAINT kyc_retention_policy_retention_years_check CHECK ((retention_years > 0))
+);
+
+
+--
 -- Name: kyc_verification_records; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -1625,6 +1643,22 @@ ALTER TABLE ONLY public.kyc_provider_registry
 
 ALTER TABLE ONLY public.kyc_provider_registry
     ADD CONSTRAINT kyc_provider_unique_code UNIQUE (provider_code);
+
+
+--
+-- Name: kyc_retention_policy kyc_retention_policy_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.kyc_retention_policy
+    ADD CONSTRAINT kyc_retention_policy_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: kyc_retention_policy kyc_retention_unique_active_class; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.kyc_retention_policy
+    ADD CONSTRAINT kyc_retention_unique_active_class UNIQUE (jurisdiction_code, retention_class);
 
 
 --
@@ -2245,6 +2279,22 @@ CREATE UNIQUE INDEX ux_policy_versions_single_active ON public.policy_versions U
 
 
 --
+-- Name: kyc_retention_policy kyc_retention_policy_no_delete; Type: RULE; Schema: public; Owner: -
+--
+
+CREATE RULE kyc_retention_policy_no_delete AS
+    ON DELETE TO public.kyc_retention_policy DO INSTEAD NOTHING;
+
+
+--
+-- Name: kyc_retention_policy kyc_retention_policy_no_update; Type: RULE; Schema: public; Owner: -
+--
+
+CREATE RULE kyc_retention_policy_no_update AS
+    ON UPDATE TO public.kyc_retention_policy DO INSTEAD NOTHING;
+
+
+--
 -- Name: payment_outbox_attempts trg_anchor_dispatched_outbox_attempt; Type: TRIGGER; Schema: public; Owner: -
 --
 
@@ -2619,5 +2669,5 @@ ALTER TABLE ONLY public.tenants
 -- PostgreSQL database dump complete
 --
 
-\unrestrict QyD7trU8DU7z3hh4mDYrvk4wOSRvZRcHxIGpusKEezMHWii5f6Byjgxub7lpq9q
+\unrestrict pYxVMMacMPqUcma2ApO6pkadSDXQ0e9ZWTDFkVgrexczzpAJkKHG4Cg8lBs0b4B
 

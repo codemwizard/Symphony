@@ -1725,5 +1725,17 @@
     "evidence_scope": "repo",
     "notes": "Phase-0 expand-first hook: payment_outbox_pending.kyc_hold nullable column with fail-closed verifier and no-runtime-reference enforcement.",
     "gate_ids": []
+  },
+  {
+    "task_id": "TSK-P0-KYC-004",
+    "status": "completed",
+    "verification_mode": "both",
+    "evidence_required": true,
+    "evidence_paths": [
+      "evidence/phase0/TSK-P0-KYC-004.json"
+    ],
+    "evidence_scope": "repo",
+    "notes": "Phase-0 governance declaration hook: immutable single-row KYC retention policy registry with statutory Zambia FIC Act seed verification.",
+    "gate_ids": []
   }
 ]

@@ -411,6 +411,14 @@ else
   exit 1
 fi
 
+echo "==> Phase-0 KYC retention policy hook verification (TSK-P0-KYC-004)"
+if [[ -x scripts/db/verify_kyc_retention_policy_hook.sh ]]; then
+  scripts/db/verify_kyc_retention_policy_hook.sh
+else
+  echo "ERROR: scripts/db/verify_kyc_retention_policy_hook.sh not found"
+  exit 1
+fi
+
 echo "==> Phase-0 contract evidence status (merged local evidence)"
 if [[ -x scripts/ci/verify_phase0_contract_evidence_status_parity.sh ]]; then
   scripts/ci/verify_phase0_contract_evidence_status_parity.sh

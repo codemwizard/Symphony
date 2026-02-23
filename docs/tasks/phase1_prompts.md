@@ -2123,16 +2123,20 @@ title: kyc_retention_policy_declaration (governance document anchor)
 depends_on:
   - TSK-P0-KYC-003
 files_to_change:
-  - docs/governance/kyc_retention_policy_declaration.md
-  - scripts/verify/verify_kyc_retention_policy_declaration.sh
-verifier_command: bash scripts/verify/verify_kyc_retention_policy_declaration.sh
-evidence_path: evidence/phase0/kyc_retention_policy_declaration_verification.json
+  - schema/migrations/*kyc_retention_policy*_hook.sql
+  - scripts/db/verify_kyc_retention_policy_hook.sh
+  - docs/PHASE0/phase0_contract.yml
+  - tasks/TSK-P0-KYC-004/meta.yml
+  - evidence/phase0/TSK-P0-KYC-004.json
+verifier_command: bash scripts/db/verify_kyc_retention_policy_hook.sh
+evidence_path: evidence/phase0/TSK-P0-KYC-004.json
 acceptance_assertions:
-  - KYC retention policy declaration document exists at canonical governance path and includes declared retention/handling owner and review cadence
-  - Verifier checks required policy anchors/sections rather than only file presence
+  - kyc_retention_policy governance declaration table exists with append-only rules and statutory seed row
+  - Verifier checks schema + seeded row + immutability posture, not file presence only
+  - Evidence exists exactly at evidence/phase0/TSK-P0-KYC-004.json and is schema-valid
 failure_modes:
-  - Placeholder policy text left in place without declared retention policy specifics
-  - Evidence is produced without validating canonical document path/content markers
+  - append-only rules missing or statutory seed row invalid
+  - verifier does not validate live schema/row constraints and runtime-reference boundary
 ```
 
 ## TSK-P0-208 — Gate↔Invariant linkage audit

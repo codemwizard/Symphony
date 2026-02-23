@@ -1,0 +1,59 @@
+phase: "0"
+task_id: "TSK-P0-KYC-004"
+title: "kyc_retention_policy_declaration (governance document anchor)"
+owner_role: "DB_FOUNDATION"
+status: "completed"
+
+depends_on:
+  - "TSK-P0-KYC-003"
+
+touches:
+  - "schema/migrations/0044_kyc_retention_policy_hook.sql"
+  - "scripts/db/verify_kyc_retention_policy_hook.sh"
+  - "scripts/dev/pre_ci.sh"
+  - "docs/PHASE0/phase0_contract.yml"
+  - "docs/tasks/phase1_prompts.md"
+  - "tasks/TSK-P0-KYC-004/meta.yml"
+  - "docs/plans/phase0/TSK-P0-KYC-004/PLAN.md"
+  - "docs/plans/phase0/TSK-P0-KYC-004/EXEC_LOG.md"
+
+invariants:
+  - "INV-031"
+
+work:
+  - "Add forward-only migration for immutable KYC retention policy governance declaration table."
+  - "Seed single statutory Zambia FIC Act row (retention_years=10)."
+  - "Add fail-closed verifier and deterministic evidence emission."
+  - "Wire verifier into pre_ci and Phase-0 contract tracking."
+  - "Patch task prompt normalized block to repo-native paths."
+
+acceptance_criteria:
+  - "kyc_retention_policy table exists with append-only rules and required constraints."
+  - "Exactly one row exists and matches ZM/FIC_AML_CUSTOMER_ID/retention_years=10 statutory posture."
+  - "Verifier fails if runtime code references kyc_retention_policy outside scripts/."
+  - "Verifier emits evidence/phase0/TSK-P0-KYC-004.json."
+
+verification:
+  - "bash scripts/db/verify_kyc_retention_policy_hook.sh"
+  - "RUN_PHASE1_GATES=1 scripts/dev/pre_ci.sh"
+
+evidence:
+  - "evidence/phase0/TSK-P0-KYC-004.json"
+
+failure_modes:
+  - "append-only rules missing or unique/check constraints absent."
+  - "seed row missing, wrong class, or wrong retention_years value."
+  - "runtime references to kyc_retention_policy in app code."
+  - "migration checksum missing/mismatch."
+
+must_read:
+  - "AGENTS.md"
+  - "docs/operations/AI_AGENT_OPERATION_MANUAL.md"
+
+implementation_plan: "docs/plans/phase0/TSK-P0-KYC-004/PLAN.md"
+implementation_log: "docs/plans/phase0/TSK-P0-KYC-004/EXEC_LOG.md"
+
+notes: ""
+client: "codex_cli"
+assigned_agent: "db_foundation"
+model: "gpt-5-codex"
