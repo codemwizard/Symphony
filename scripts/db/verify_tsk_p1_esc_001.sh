@@ -153,7 +153,20 @@ LIMIT 1;
 
 tenant_id="$(psql "$DATABASE_URL" -q -t -A -v ON_ERROR_STOP=1 -X -c "SELECT tenant_id::text FROM public.tenants ORDER BY created_at LIMIT 1;" | tr -d '[:space:]')"
 if [[ -z "$tenant_id" ]]; then
-  add_failure "prereq_missing:public.tenants seed row required"
+  tenant_id="$(psql "$DATABASE_URL" -q -t -A -v ON_ERROR_STOP=1 -X -c "
+WITH bc AS (
+  INSERT INTO public.billable_clients(legal_name, client_type, status, client_key)
+  VALUES ('TSK-P1-ESC-001 billable root', 'ENTERPRISE', 'ACTIVE', 'tsk-p1-esc-001')
+  RETURNING billable_client_id
+)
+INSERT INTO public.tenants(tenant_key, tenant_name, tenant_type, status, billable_client_id)
+SELECT 'tsk_p1_esc_001_tenant', 'TSK-P1-ESC-001 tenant', 'COMMERCIAL', 'ACTIVE', billable_client_id
+FROM bc
+RETURNING tenant_id::text;
+" | tr -d '[:space:]')"
+fi
+if [[ -z "$tenant_id" ]]; then
+  add_failure "prereq_missing:public.tenants unavailable"
 fi
 
 legal_transitions_verified="false"
@@ -303,4 +316,3 @@ PY
 fi
 
 echo "escrow state model verification OK. Evidence: $EVIDENCE_FILE"
-

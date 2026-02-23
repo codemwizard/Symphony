@@ -1,10 +1,10 @@
 {
   "baseline_date": "2026-02-23",
   "baseline_path": "/home/mwiza/workspace/Symphony/schema/baselines/2026-02-23/0001_baseline.sql",
-  "baseline_cutoff": "0044_kyc_retention_policy_hook.sql",
-  "normalized_schema_sha256": "6e8372f8c246795e572c4262b3c79cc9f8b7ce5ac2d5ac00e48e7de459fe78fc",
+  "baseline_cutoff": "0045_escrow_state_machine_atomic_reservation.sql",
+  "normalized_schema_sha256": "15ce67c7a89064d1b404a37b16a0b782d782967552fbfb07f26bf93937d96df0",
   "pg_dump_version": "pg_dump (PostgreSQL) 18.2 (Debian 18.2-1.pgdg13+1)",
   "pg_server_version": "18.2 (Debian 18.2-1.pgdg13+1)",
   "dump_source": "container:symphony-postgres",
-  "generated_at_utc": "2026-02-23T12:50:59.977203+00:00"
+  "generated_at_utc": "2026-02-23T18:38:06.261767+00:00"
 }
