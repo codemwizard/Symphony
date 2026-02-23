@@ -19,13 +19,20 @@ shopt -s nullglob
 artifact_dirs=(phase0-evidence* phase0-evidence-db)
 shopt -u nullglob
 
-has_ci_artifacts=0
+declare -a artifact_phase0_dirs=()
 for d in "${artifact_dirs[@]}"; do
   if [[ -d "$d/phase0" ]]; then
-    has_ci_artifacts=1
-    break
+    artifact_phase0_dirs+=("$d/phase0")
+  fi
+  if [[ -d "$d/evidence/phase0" ]]; then
+    artifact_phase0_dirs+=("$d/evidence/phase0")
   fi
 done
+
+has_ci_artifacts=0
+if [[ "${#artifact_phase0_dirs[@]}" -gt 0 ]]; then
+  has_ci_artifacts=1
+fi
 
 if [[ "$has_ci_artifacts" -eq 0 ]]; then
   # Local/dev mode: evidence already produced under evidence/phase0.
@@ -83,11 +90,10 @@ PY
   seen["$base"]=1
 }
 
-for d in "${artifact_dirs[@]}"; do
-  [[ -d "$d/phase0" ]] || continue
+for d in "${artifact_phase0_dirs[@]}"; do
   while IFS= read -r -d '' f; do
     merge_file "$f"
-  done < <(find "$d/phase0" -type f -name '*.json' -print0)
+  done < <(find "$d" -type f -name '*.json' -print0)
 done
 
 CI_ONLY=1 EVIDENCE_ROOT="$MERGED_ROOT" "$VERIFY_SCRIPT"
