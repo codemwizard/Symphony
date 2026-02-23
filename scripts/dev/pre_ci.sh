@@ -611,6 +611,14 @@ if [[ "${RUN_PHASE1_GATES:-0}" == "1" ]]; then
     exit 1
   fi
 
+  echo "==> Phase-1 escrow ceiling enforcement + tenant isolation (TSK-P1-ESC-002)"
+  if [[ -x scripts/db/verify_tsk_p1_esc_002.sh ]]; then
+    scripts/db/verify_tsk_p1_esc_002.sh --evidence evidence/phase1/tsk_p1_esc_002__escrow_invariants_cross_tenant_protections.json
+  else
+    echo "ERROR: scripts/db/verify_tsk_p1_esc_002.sh not found"
+    exit 1
+  fi
+
   echo "==> Phase-1 no-MCP guard"
   if [[ -x scripts/audit/verify_no_mcp_phase1.sh ]]; then
     scripts/audit/verify_no_mcp_phase1.sh

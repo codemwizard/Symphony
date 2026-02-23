@@ -236,6 +236,7 @@ Mitigations:
 - Phase-0 KYC provider registry hook (`kyc_provider_registry`) is storage-only with explicit runtime-read/write prohibition until Phase-2 activation and verifier enforcement to prevent scope creep.
 - Perf promotion is fail-closed under `INV-120`: baseline lock + regression enforcement + runtime batching/AOT proof are required before perf-stage progression.
 - Escrow state transitions are enforced in DB (`transition_escrow_state`) with stable SQLSTATE rejection for illegal/terminal transitions and append-only escrow event trail (`INV-127`).
+- Escrow reservations are ceiling-enforced under concurrency via `authorize_escrow_reservation()` locking `escrow_envelopes` `FOR UPDATE` and failing closed on oversubscription (`INV-128`).
 
 ## Priority security actions
 1) Implement service identity and mTLS for internal calls.

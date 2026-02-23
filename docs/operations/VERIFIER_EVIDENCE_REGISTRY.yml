@@ -65,3 +65,6 @@ registry:
   scripts/db/verify_tsk_p1_esc_001.sh:
     emits:
       - evidence/phase1/tsk_p1_esc_001__escrow_state_machine_atomic_reservation_semantics.json
+  scripts/db/verify_tsk_p1_esc_002.sh:
+    emits:
+      - evidence/phase1/tsk_p1_esc_002__escrow_invariants_cross_tenant_protections.json
