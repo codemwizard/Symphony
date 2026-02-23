@@ -184,6 +184,9 @@
     ADD CONSTRAINT instruction_settlement_finality_reversal_fk FOREIGN KEY (reversal_of_instruction_id) REFERENCES public.instruction_settlement_finality(instruction_id) DEFERRABLE;
     ADD CONSTRAINT kyc_provider_registry_pkey PRIMARY KEY (id);
     ADD CONSTRAINT kyc_provider_unique_code UNIQUE (provider_code);
+    ADD CONSTRAINT kyc_verification_records_member_id_fkey FOREIGN KEY (member_id) REFERENCES public.tenant_members(member_id) ON DELETE RESTRICT;
+    ADD CONSTRAINT kyc_verification_records_pkey PRIMARY KEY (id);
+    ADD CONSTRAINT kyc_verification_records_provider_id_fkey FOREIGN KEY (provider_id) REFERENCES public.kyc_provider_registry(id) ON DELETE RESTRICT;
     ADD CONSTRAINT levy_calculation_one_per_instruction UNIQUE (instruction_id);
     ADD CONSTRAINT levy_calculation_records_instruction_id_fkey FOREIGN KEY (instruction_id) REFERENCES public.ingress_attestations(attestation_id) ON DELETE RESTRICT;
     ADD CONSTRAINT levy_calculation_records_levy_rate_id_fkey FOREIGN KEY (levy_rate_id) REFERENCES public.levy_rates(id) ON DELETE RESTRICT;
@@ -286,6 +289,7 @@
     CONSTRAINT instruction_settlement_finality_self_reversal_chk CHECK (((reversal_of_instruction_id IS NULL) OR (reversal_of_instruction_id <> instruction_id))),
     CONSTRAINT instruction_settlement_finality_shape_chk CHECK ((((final_state = 'SETTLED'::text) AND (reversal_of_instruction_id IS NULL) AND (rail_message_type = 'pacs.008'::text)) OR ((final_state = 'REVERSED'::text) AND (reversal_of_instruction_id IS NOT NULL) AND (rail_message_type = 'camt.056'::text))))
     CONSTRAINT kyc_provider_registry_check CHECK (((active_to IS NULL) OR (active_from IS NULL) OR (active_to >= active_from)))
+    CONSTRAINT kyc_verification_records_retention_class_check CHECK ((retention_class = 'FIC_AML_CUSTOMER_ID'::text))
     CONSTRAINT levy_calculation_records_cap_applied_minor_check CHECK (((cap_applied_minor IS NULL) OR (cap_applied_minor >= 0))),
     CONSTRAINT levy_calculation_records_levy_amount_final_check CHECK (((levy_amount_final IS NULL) OR (levy_amount_final >= 0))),
     CONSTRAINT levy_calculation_records_levy_amount_pre_cap_check CHECK (((levy_amount_pre_cap IS NULL) OR (levy_amount_pre_cap >= 0))),
@@ -468,6 +472,7 @@
     anchor_type text,
     anchor_type text,
     anchored_at timestamp with time zone DEFAULT now() NOT NULL,
+    anchored_at timestamp with time zone DEFAULT now() NOT NULL,
     anchored_at timestamp with time zone,
     applied_at timestamp with time zone DEFAULT now() NOT NULL
     artifact_hash text NOT NULL,
@@ -528,11 +533,14 @@
     created_at timestamp with time zone DEFAULT now() NOT NULL,
     created_at timestamp with time zone DEFAULT now() NOT NULL,
     created_at timestamp with time zone DEFAULT now() NOT NULL,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
     created_at timestamp with time zone DEFAULT now(),
+    created_by text DEFAULT CURRENT_USER NOT NULL,
     created_by text DEFAULT CURRENT_USER NOT NULL,
     created_by text DEFAULT CURRENT_USER NOT NULL,
     currency_code character(3),
     display_name text NOT NULL,
+    document_type text,
     downstream_ref text,
     downstream_ref text,
     downstream_ref text,
@@ -556,6 +564,8 @@
     finality_id uuid DEFAULT public.uuid_v7_or_random() NOT NULL,
     finalized_at timestamp with time zone DEFAULT now() NOT NULL,
     grace_expires_at timestamp with time zone,
+    hash_algorithm text,
+    id uuid DEFAULT gen_random_uuid() NOT NULL,
     id uuid DEFAULT gen_random_uuid() NOT NULL,
     id uuid DEFAULT gen_random_uuid() NOT NULL,
     id uuid DEFAULT gen_random_uuid() NOT NULL,
@@ -581,6 +591,7 @@
     jurisdiction_code character(2) NOT NULL,
     jurisdiction_code character(2) NOT NULL,
     jurisdiction_code character(2),
+    jurisdiction_code character(2),
     last_error text,
     latency_ms integer,
     lease_expires_at timestamp with time zone,
@@ -595,6 +606,7 @@
     levy_rate_id uuid,
     levy_status text,
     member_id uuid DEFAULT gen_random_uuid() NOT NULL,
+    member_id uuid NOT NULL,
     member_id uuid,
     member_id uuid,
     member_ref text NOT NULL,
@@ -617,6 +629,7 @@
     outbox_id uuid NOT NULL,
     outbox_id uuid NOT NULL,
     outbox_id,
+    outcome text,
     p_purge_request_id,
     p_request_reason
     p_requested_by,
@@ -646,8 +659,13 @@
     protected_payload jsonb,
     provider text NOT NULL,
     provider_code text NOT NULL,
+    provider_code text,
+    provider_id uuid,
+    provider_key_version text,
     provider_name text NOT NULL,
     provider_ref text,
+    provider_reference text,
+    provider_signature text,
     public_key_pem text,
     purge_event_id uuid DEFAULT public.uuid_v7_or_random() NOT NULL,
     purge_request_id uuid DEFAULT public.uuid_v7_or_random() NOT NULL,
@@ -681,6 +699,7 @@
     requested_by text NOT NULL,
     requested_by,
     response_hash text NOT NULL,
+    retention_class text DEFAULT 'FIC_AML_CUSTOMER_ID'::text NOT NULL,
     reversal_of_instruction_id text,
     revoked_at timestamp with time zone DEFAULT now() NOT NULL,
     revoked_at timestamp with time zone DEFAULT now() NOT NULL,
@@ -750,7 +769,10 @@
     v_rows,
     v_sequence_ref,
     vault_id uuid DEFAULT public.uuid_v7_or_random() NOT NULL,
+    verification_hash text,
+    verification_method text,
     verified_at timestamp with time zone,
+    verified_at_provider timestamp with time zone,
     version text NOT NULL,
     version text NOT NULL,
     worker_id text,
@@ -1015,6 +1037,7 @@ $$;
 );
 );
 );
+);
 ALTER TABLE ONLY public.anchor_sync_operations
 ALTER TABLE ONLY public.anchor_sync_operations
 ALTER TABLE ONLY public.anchor_sync_operations
@@ -1042,6 +1065,9 @@ ALTER TABLE ONLY public.instruction_settlement_finality
 ALTER TABLE ONLY public.instruction_settlement_finality
 ALTER TABLE ONLY public.kyc_provider_registry
 ALTER TABLE ONLY public.kyc_provider_registry
+ALTER TABLE ONLY public.kyc_verification_records
+ALTER TABLE ONLY public.kyc_verification_records
+ALTER TABLE ONLY public.kyc_verification_records
 ALTER TABLE ONLY public.levy_calculation_records
 ALTER TABLE ONLY public.levy_calculation_records
 ALTER TABLE ONLY public.levy_calculation_records
@@ -1164,6 +1190,9 @@ CREATE INDEX idx_tenants_billable_client_id ON public.tenants USING btree (billa
 CREATE INDEX idx_tenants_parent_tenant_id ON public.tenants USING btree (parent_tenant_id);
 CREATE INDEX idx_tenants_status ON public.tenants USING btree (status);
 CREATE INDEX kyc_provider_jurisdiction_idx ON public.kyc_provider_registry USING btree (jurisdiction_code, active_from DESC);
+CREATE INDEX kyc_verification_jurisdiction_outcome_idx ON public.kyc_verification_records USING btree (jurisdiction_code, outcome) WHERE (outcome IS NOT NULL);
+CREATE INDEX kyc_verification_member_idx ON public.kyc_verification_records USING btree (member_id, anchored_at DESC);
+CREATE INDEX kyc_verification_provider_idx ON public.kyc_verification_records USING btree (provider_id) WHERE (provider_id IS NOT NULL);
 CREATE INDEX levy_calc_reporting_period_idx ON public.levy_calculation_records USING btree (reporting_period, jurisdiction_code) WHERE (reporting_period IS NOT NULL);
 CREATE INDEX levy_calc_status_idx ON public.levy_calculation_records USING btree (levy_status) WHERE (levy_status IS NOT NULL);
 CREATE INDEX levy_periods_jurisdiction_idx ON public.levy_remittance_periods USING btree (jurisdiction_code, period_start DESC);
@@ -1179,6 +1208,7 @@ CREATE TABLE public.external_proofs (
 CREATE TABLE public.ingress_attestations (
 CREATE TABLE public.instruction_settlement_finality (
 CREATE TABLE public.kyc_provider_registry (
+CREATE TABLE public.kyc_verification_records (
 CREATE TABLE public.levy_calculation_records (
 CREATE TABLE public.levy_rates (
 CREATE TABLE public.levy_remittance_periods (

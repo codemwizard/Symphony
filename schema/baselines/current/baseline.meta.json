@@ -1,10 +1,10 @@
 {
   "baseline_date": "2026-02-23",
   "baseline_path": "/home/mwiza/workspace/Symphony/schema/baselines/2026-02-23/0001_baseline.sql",
-  "baseline_cutoff": "0041_kyc_provider_registry_drop_conflicting_uniqueness.sql",
-  "normalized_schema_sha256": "e2350f57cffc61f5ade581d1e9a5626f7fc0f0d7f3f0d3c59b80fa20323eaa80",
+  "baseline_cutoff": "0042_kyc_verification_records_hook.sql",
+  "normalized_schema_sha256": "28baefaeb27d66224e43d28ec5903d1435fae6a462a680c4d067f1d6fc400a8a",
   "pg_dump_version": "pg_dump (PostgreSQL) 18.2 (Debian 18.2-1.pgdg13+1)",
   "pg_server_version": "18.2 (Debian 18.2-1.pgdg13+1)",
   "dump_source": "container:symphony-postgres",
-  "generated_at_utc": "2026-02-23T08:46:54.150037+00:00"
+  "generated_at_utc": "2026-02-23T12:17:32.735588+00:00"
 }
