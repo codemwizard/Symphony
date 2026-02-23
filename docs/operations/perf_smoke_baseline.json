@@ -1,6 +1,8 @@
 {
   "baseline_locked": true,
   "p95_ms": 5500,
+  "soft_regression_threshold_pct": 0.1,
+  "hard_regression_threshold_pct": 0.15,
   "regression_threshold_pct": 0.15,
   "stable_runs_required": 5,
   "notes": "Baseline locked for fail-closed CI parity; informational-only mode is disallowed in gate runs."

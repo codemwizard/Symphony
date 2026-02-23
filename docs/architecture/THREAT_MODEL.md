@@ -235,6 +235,7 @@ Mitigations:
 ) for both `levy_calculation_records.reporting_period` and `levy_remittance_periods.period_code` to avoid backslash-escape drift in SQL regex semantics.
 - Phase-0 KYC provider registry hook (`kyc_provider_registry`) is storage-only with explicit runtime-read/write prohibition until Phase-2 activation and verifier enforcement to prevent scope creep.
 - Perf promotion is fail-closed under `INV-120`: baseline lock + regression enforcement + runtime batching/AOT proof are required before perf-stage progression.
+- Escrow state transitions are enforced in DB (`transition_escrow_state`) with stable SQLSTATE rejection for illegal/terminal transitions and append-only escrow event trail (`INV-127`).
 
 ## Priority security actions
 1) Implement service identity and mTLS for internal calls.

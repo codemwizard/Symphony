@@ -910,3 +910,81 @@
   verification: "scripts/audit/verify_perf_001_engine_metrics_capture.sh; evidence/phase1/perf_001_engine_metrics_capture.json"
   notes: >
     Captures CPU/db-query metrics from perf-smoke execution without enabling trace/debug runtime logging.
+
+- id: INV-122
+  aliases: ["I-PERF-REGRESSION-WARMUP-01"]
+  status: implemented
+  severity: P1
+  title: "Perf regression classification and mandatory warmup are baseline-driven and enforced"
+  owners: ["team-platform", "team-invariants"]
+  sla_days: 30
+  enforcement: "scripts/audit/verify_perf_002_regression_detection_warmup.sh"
+  verification: "scripts/audit/verify_perf_002_regression_detection_warmup.sh; evidence/phase1/perf_002_regression_detection_warmup.json"
+  notes: >
+    Enforces mandatory warmup before perf measurements and baseline-declared PASS/SOFT/HARD classification
+    without hardcoding thresholds in the verifier path.
+
+- id: INV-123
+  aliases: ["I-PERF-REBASELINE-SHA-LOCK-01"]
+  status: implemented
+  severity: P1
+  title: "Perf baseline promotion requires SHA-locked approval"
+  owners: ["team-platform", "team-invariants"]
+  sla_days: 30
+  enforcement: "scripts/audit/verify_perf_003_rebaseline_sha_lock.sh"
+  verification: "scripts/audit/verify_perf_003_rebaseline_sha_lock.sh; evidence/phase1/perf_003_rebaseline_sha_lock.json"
+  notes: >
+    Enforces governed rebaseline flow with candidate baseline SHA validation against approval metadata.
+
+- id: INV-124
+  aliases: ["I-PERF-REG-TIMING-01"]
+  status: implemented
+  severity: P1
+  title: "Regulatory timing compliance gate is deterministic and evidence-backed per rail policy"
+  owners: ["team-platform", "team-invariants"]
+  sla_days: 30
+  enforcement: "scripts/perf/verify_perf_005.sh"
+  verification: "scripts/perf/verify_perf_005.sh --evidence evidence/phase1/perf_005__regulatory_timing_compliance_gate.json; evidence/phase1/perf_005__regulatory_timing_compliance_gate.json"
+  notes: >
+    Computes settlement-window compliance percentage from deterministic Phase-1 perf smoke inputs and
+    fails closed when rails exceed policy windows.
+
+- id: INV-125
+  aliases: ["I-PERF-FINALITY-SEAM-STUB-01"]
+  status: implemented
+  severity: P1
+  title: "Finality seam stub is wired for compliance computation without claiming live rail finality"
+  owners: ["team-platform", "team-invariants"]
+  sla_days: 30
+  enforcement: "scripts/audit/verify_perf_005a_finality_seam_stub.sh"
+  verification: "scripts/audit/verify_perf_005a_finality_seam_stub.sh; evidence/phase1/perf_005a_finality_seam_stub.json"
+  notes: >
+    Ensures PERF-005 timing compliance consumes a seam output with measurement_truth=simulated_finality_stub,
+    finality_source=simulated_stub, and live_rail_wiring_status=pending_phase2.
+
+- id: INV-126
+  aliases: ["I-PERF-CLOSEOUT-TRANSLATION-01"]
+  status: implemented
+  severity: P1
+  title: "Closeout KPI evidence includes settlement window compliance and PERF-005 linkage"
+  owners: ["team-platform", "team-invariants"]
+  sla_days: 30
+  enforcement: "scripts/perf/verify_perf_006.sh"
+  verification: "scripts/perf/verify_perf_006.sh --evidence evidence/phase1/perf_006__operational_risk_framework_translation_layer.json; evidence/phase1/perf_006__operational_risk_framework_translation_layer.json"
+  notes: >
+    Enforces Phase-1 closeout translation layer by requiring KPI evidence to carry
+    settlement_window_compliance_pct and a canonical reference to PERF-005 evidence artifact path/id.
+
+- id: INV-127
+  aliases: ["I-ESCROW-STATE-ATOMIC-01"]
+  status: implemented
+  severity: P1
+  title: "Escrow state machine is enforced with atomic transitions and expiry semantics"
+  owners: ["team-db", "team-platform"]
+  sla_days: 30
+  enforcement: "scripts/db/verify_tsk_p1_esc_001.sh"
+  verification: "scripts/db/verify_tsk_p1_esc_001.sh --evidence evidence/phase1/tsk_p1_esc_001__escrow_state_machine_atomic_reservation_semantics.json; evidence/phase1/tsk_p1_esc_001__escrow_state_machine_atomic_reservation_semantics.json"
+  notes: >
+    Enforces explicit escrow states, legal transitions, terminal state protections,
+    and non-custodial release semantics (append-only event + state transition) with
+    expiry reachability from CREATED and AUTHORIZED.

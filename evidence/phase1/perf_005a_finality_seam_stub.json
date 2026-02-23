@@ -1,0 +1,16 @@
+{
+  "check_id": "PERF-005A",
+  "task_id": "PERF-005A",
+  "timestamp_utc": "2026-02-23T17:24:39Z",
+  "git_sha": "5e88756b721c485f7b17bd3884a88995af11f84c",
+  "schema_fingerprint": "472c540b81dcab3cb43980291595dd562a4f5ad2e7b2e98f6d832f740c0a1218",
+  "status": "PASS",
+  "pass": true,
+  "details": {
+    "source_evidence": "evidence/phase1/perf_005__regulatory_timing_compliance_gate.json",
+    "finality_source": "simulated_stub",
+    "live_rail_wiring_status": "pending_phase2",
+    "rails_checked": 2,
+    "errors": []
+  }
+}

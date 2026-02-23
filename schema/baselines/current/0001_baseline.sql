@@ -2,7 +2,7 @@
 -- PostgreSQL database dump
 --
 
-\restrict pYxVMMacMPqUcma2ApO6pkadSDXQ0e9ZWTDFkVgrexczzpAJkKHG4Cg8lBs0b4B
+\restrict kUQfCpVosKrRL1II2xnB5CmwaHHDApQyUFgKmGrSxXhBd0aZeUzepgufU5OGwsh
 
 -- Dumped from database version 18.2 (Debian 18.2-1.pgdg13+1)
 -- Dumped by pg_dump version 18.2 (Debian 18.2-1.pgdg13+1)
@@ -662,6 +662,42 @@ $$;
 
 
 --
+-- Name: expire_escrows(timestamp with time zone, text); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.expire_escrows(p_now timestamp with time zone DEFAULT now(), p_actor_id text DEFAULT 'escrow_expiry_worker'::text) RETURNS integer
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO 'pg_catalog', 'public'
+    AS $$
+DECLARE
+  v_escrow_id UUID;
+  v_count INTEGER := 0;
+BEGIN
+  FOR v_escrow_id IN
+    SELECT e.escrow_id
+    FROM public.escrow_accounts e
+    WHERE
+      (e.state = 'CREATED' AND e.authorization_expires_at IS NOT NULL AND e.authorization_expires_at <= p_now)
+      OR (e.state = 'AUTHORIZED' AND e.authorization_expires_at IS NOT NULL AND e.authorization_expires_at <= p_now)
+      OR (e.state = 'RELEASE_REQUESTED' AND e.release_due_at IS NOT NULL AND e.release_due_at <= p_now)
+  LOOP
+    PERFORM public.transition_escrow_state(
+      p_escrow_id => v_escrow_id,
+      p_to_state => 'EXPIRED',
+      p_actor_id => p_actor_id,
+      p_reason => 'window_elapsed',
+      p_metadata => jsonb_build_object('expired_at', p_now),
+      p_now => p_now
+    );
+    v_count := v_count + 1;
+  END LOOP;
+
+  RETURN v_count;
+END;
+$$;
+
+
+--
 -- Name: mark_anchor_sync_anchored(uuid, uuid, text, text, text); Type: FUNCTION; Schema: public; Owner: -
 --
 
@@ -716,6 +752,33 @@ CREATE FUNCTION public.outbox_retry_ceiling() RETURNS integer
     NULLIF(current_setting('symphony.outbox_retry_ceiling', true), '')::int,
     20
   );
+$$;
+
+
+--
+-- Name: release_escrow(uuid, text, text, jsonb); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.release_escrow(p_escrow_id uuid, p_actor_id text DEFAULT 'system'::text, p_reason text DEFAULT NULL::text, p_metadata jsonb DEFAULT '{}'::jsonb) RETURNS uuid
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO 'pg_catalog', 'public'
+    AS $$
+DECLARE
+  v_event_id UUID;
+BEGIN
+  SELECT t.event_id
+  INTO v_event_id
+  FROM public.transition_escrow_state(
+    p_escrow_id => p_escrow_id,
+    p_to_state => 'RELEASED',
+    p_actor_id => p_actor_id,
+    p_reason => p_reason,
+    p_metadata => COALESCE(p_metadata, '{}'::jsonb),
+    p_now => NOW()
+  ) AS t;
+
+  RETURN v_event_id;
+END;
 $$;
 
 
@@ -927,6 +990,93 @@ $$;
 
 
 --
+-- Name: touch_escrow_updated_at(); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.touch_escrow_updated_at() RETURNS trigger
+    LANGUAGE plpgsql
+    AS $$
+BEGIN
+  NEW.updated_at := NOW();
+  RETURN NEW;
+END;
+$$;
+
+
+--
+-- Name: transition_escrow_state(uuid, text, text, text, jsonb, timestamp with time zone); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.transition_escrow_state(p_escrow_id uuid, p_to_state text, p_actor_id text DEFAULT 'system'::text, p_reason text DEFAULT NULL::text, p_metadata jsonb DEFAULT '{}'::jsonb, p_now timestamp with time zone DEFAULT now()) RETURNS TABLE(escrow_id uuid, previous_state text, new_state text, event_id uuid)
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO 'pg_catalog', 'public'
+    AS $$
+DECLARE
+  v_row public.escrow_accounts%ROWTYPE;
+  v_to_state TEXT := UPPER(BTRIM(COALESCE(p_to_state, '')));
+  v_actor TEXT := COALESCE(NULLIF(BTRIM(p_actor_id), ''), 'system');
+  v_event_id UUID;
+  v_legal BOOLEAN := FALSE;
+BEGIN
+  SELECT *
+  INTO v_row
+  FROM public.escrow_accounts
+  WHERE escrow_accounts.escrow_id = p_escrow_id
+  FOR UPDATE;
+
+  IF NOT FOUND THEN
+    RAISE EXCEPTION 'escrow not found'
+      USING ERRCODE = 'P7302';
+  END IF;
+
+  IF v_to_state NOT IN ('CREATED', 'AUTHORIZED', 'RELEASE_REQUESTED', 'RELEASED', 'CANCELED', 'EXPIRED') THEN
+    RAISE EXCEPTION 'invalid target escrow state %', v_to_state
+      USING ERRCODE = 'P7303';
+  END IF;
+
+  IF v_row.state IN ('RELEASED', 'CANCELED', 'EXPIRED') THEN
+    RAISE EXCEPTION 'escrow terminal state transition forbidden: % -> %', v_row.state, v_to_state
+      USING ERRCODE = 'P7303';
+  END IF;
+
+  v_legal := (
+    (v_row.state = 'CREATED' AND v_to_state IN ('AUTHORIZED', 'CANCELED', 'EXPIRED'))
+    OR (v_row.state = 'AUTHORIZED' AND v_to_state IN ('RELEASE_REQUESTED', 'CANCELED', 'EXPIRED'))
+    OR (v_row.state = 'RELEASE_REQUESTED' AND v_to_state IN ('RELEASED', 'CANCELED', 'EXPIRED'))
+  );
+
+  IF NOT v_legal THEN
+    RAISE EXCEPTION 'illegal escrow transition: % -> %', v_row.state, v_to_state
+      USING ERRCODE = 'P7303';
+  END IF;
+
+  UPDATE public.escrow_accounts
+  SET state = v_to_state,
+      updated_at = p_now,
+      released_at = CASE WHEN v_to_state = 'RELEASED' THEN COALESCE(released_at, p_now) ELSE released_at END,
+      canceled_at = CASE WHEN v_to_state = 'CANCELED' THEN COALESCE(canceled_at, p_now) ELSE canceled_at END,
+      expired_at = CASE WHEN v_to_state = 'EXPIRED' THEN COALESCE(expired_at, p_now) ELSE expired_at END
+  WHERE escrow_accounts.escrow_id = p_escrow_id;
+
+  INSERT INTO public.escrow_events(escrow_id, tenant_id, event_type, actor_id, reason, metadata, created_at)
+  VALUES (
+    v_row.escrow_id,
+    v_row.tenant_id,
+    v_to_state,
+    v_actor,
+    p_reason,
+    COALESCE(p_metadata, '{}'::jsonb),
+    p_now
+  )
+  RETURNING escrow_events.event_id INTO v_event_id;
+
+  RETURN QUERY
+  SELECT v_row.escrow_id, v_row.state, v_to_state, v_event_id;
+END;
+$$;
+
+
+--
 -- Name: uuid_strategy(); Type: FUNCTION; Schema: public; Owner: -
 --
 
@@ -1020,6 +1170,47 @@ CREATE TABLE public.billing_usage_events (
     CONSTRAINT billing_usage_events_quantity_check CHECK ((quantity > 0)),
     CONSTRAINT billing_usage_events_subject_zero_or_one_chk CHECK (((((subject_member_id IS NOT NULL))::integer + ((subject_client_id IS NOT NULL))::integer) <= 1)),
     CONSTRAINT billing_usage_events_units_check CHECK ((units = ANY (ARRAY['count'::text, 'bytes'::text, 'seconds'::text, 'events'::text])))
+);
+
+
+--
+-- Name: escrow_accounts; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.escrow_accounts (
+    escrow_id uuid DEFAULT public.uuid_v7_or_random() NOT NULL,
+    tenant_id uuid NOT NULL,
+    program_id uuid,
+    entity_id text,
+    state text DEFAULT 'CREATED'::text NOT NULL,
+    authorized_amount_minor bigint NOT NULL,
+    currency_code character(3) NOT NULL,
+    authorization_expires_at timestamp with time zone,
+    release_due_at timestamp with time zone,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    updated_at timestamp with time zone DEFAULT now() NOT NULL,
+    released_at timestamp with time zone,
+    canceled_at timestamp with time zone,
+    expired_at timestamp with time zone,
+    CONSTRAINT escrow_accounts_authorized_amount_minor_check CHECK ((authorized_amount_minor >= 0)),
+    CONSTRAINT escrow_accounts_state_check CHECK ((state = ANY (ARRAY['CREATED'::text, 'AUTHORIZED'::text, 'RELEASE_REQUESTED'::text, 'RELEASED'::text, 'CANCELED'::text, 'EXPIRED'::text])))
+);
+
+
+--
+-- Name: escrow_events; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.escrow_events (
+    event_id uuid DEFAULT public.uuid_v7_or_random() NOT NULL,
+    escrow_id uuid NOT NULL,
+    tenant_id uuid NOT NULL,
+    event_type text NOT NULL,
+    actor_id text DEFAULT CURRENT_USER NOT NULL,
+    reason text,
+    metadata jsonb DEFAULT '{}'::jsonb NOT NULL,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    CONSTRAINT escrow_events_event_type_check CHECK ((event_type = ANY (ARRAY['CREATED'::text, 'AUTHORIZED'::text, 'RELEASE_REQUESTED'::text, 'RELEASED'::text, 'CANCELED'::text, 'EXPIRED'::text])))
 );
 
 
@@ -1566,6 +1757,22 @@ ALTER TABLE ONLY public.billing_usage_events
 
 
 --
+-- Name: escrow_accounts escrow_accounts_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.escrow_accounts
+    ADD CONSTRAINT escrow_accounts_pkey PRIMARY KEY (escrow_id);
+
+
+--
+-- Name: escrow_events escrow_events_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.escrow_events
+    ADD CONSTRAINT escrow_events_pkey PRIMARY KEY (event_id);
+
+
+--
 -- Name: evidence_pack_items evidence_pack_items_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -1978,6 +2185,27 @@ CREATE INDEX idx_billing_usage_events_correlation_id ON public.billing_usage_eve
 
 
 --
+-- Name: idx_escrow_accounts_program; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_escrow_accounts_program ON public.escrow_accounts USING btree (program_id) WHERE (program_id IS NOT NULL);
+
+
+--
+-- Name: idx_escrow_accounts_tenant_state; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_escrow_accounts_tenant_state ON public.escrow_accounts USING btree (tenant_id, state, authorization_expires_at, release_due_at);
+
+
+--
+-- Name: idx_escrow_events_escrow_created; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_escrow_events_escrow_created ON public.escrow_events USING btree (escrow_id, created_at);
+
+
+--
 -- Name: idx_evidence_packs_anchor_ref; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -2309,6 +2537,13 @@ CREATE TRIGGER trg_deny_billing_usage_events_mutation BEFORE DELETE OR UPDATE ON
 
 
 --
+-- Name: escrow_events trg_deny_escrow_events_mutation; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER trg_deny_escrow_events_mutation BEFORE DELETE OR UPDATE ON public.escrow_events FOR EACH ROW EXECUTE FUNCTION public.deny_append_only_mutation();
+
+
+--
 -- Name: evidence_pack_items trg_deny_evidence_pack_items_mutation; Type: TRIGGER; Schema: public; Owner: -
 --
 
@@ -2442,6 +2677,13 @@ CREATE TRIGGER trg_touch_anchor_sync_updated_at BEFORE UPDATE ON public.anchor_s
 
 
 --
+-- Name: escrow_accounts trg_touch_escrow_updated_at; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER trg_touch_escrow_updated_at BEFORE UPDATE ON public.escrow_accounts FOR EACH ROW EXECUTE FUNCTION public.touch_escrow_updated_at();
+
+
+--
 -- Name: anchor_sync_operations anchor_sync_operations_pack_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -2487,6 +2729,30 @@ ALTER TABLE ONLY public.billing_usage_events
 
 ALTER TABLE ONLY public.billing_usage_events
     ADD CONSTRAINT billing_usage_events_tenant_id_fkey FOREIGN KEY (tenant_id) REFERENCES public.tenants(tenant_id);
+
+
+--
+-- Name: escrow_accounts escrow_accounts_tenant_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.escrow_accounts
+    ADD CONSTRAINT escrow_accounts_tenant_id_fkey FOREIGN KEY (tenant_id) REFERENCES public.tenants(tenant_id) ON DELETE RESTRICT;
+
+
+--
+-- Name: escrow_events escrow_events_escrow_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.escrow_events
+    ADD CONSTRAINT escrow_events_escrow_id_fkey FOREIGN KEY (escrow_id) REFERENCES public.escrow_accounts(escrow_id) ON DELETE RESTRICT;
+
+
+--
+-- Name: escrow_events escrow_events_tenant_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.escrow_events
+    ADD CONSTRAINT escrow_events_tenant_id_fkey FOREIGN KEY (tenant_id) REFERENCES public.tenants(tenant_id) ON DELETE RESTRICT;
 
 
 --
@@ -2669,5 +2935,5 @@ ALTER TABLE ONLY public.tenants
 -- PostgreSQL database dump complete
 --
 
-\unrestrict pYxVMMacMPqUcma2ApO6pkadSDXQ0e9ZWTDFkVgrexczzpAJkKHG4Cg8lBs0b4B
+\unrestrict kUQfCpVosKrRL1II2xnB5CmwaHHDApQyUFgKmGrSxXhBd0aZeUzepgufU5OGwsh
 

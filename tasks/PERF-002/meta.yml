@@ -1,0 +1,53 @@
+phase: "1"
+task_id: "PERF-002"
+title: "Smart regression detection + mandatory warmup"
+owner_role: "SUPERVISOR"
+status: "completed"
+
+depends_on:
+  - "PERF-001"
+
+touches:
+  - "scripts/audit/run_perf_smoke.sh"
+  - "scripts/audit/verify_perf_002_regression_detection_warmup.sh"
+  - "scripts/dev/pre_ci.sh"
+  - "docs/PHASE1/phase1_contract.yml"
+  - "docs/operations/perf_smoke_baseline.json"
+  - "docs/operations/VERIFIER_EVIDENCE_REGISTRY.yml"
+  - "docs/invariants/INVARIANTS_MANIFEST.yml"
+  - "docs/invariants/INVARIANTS_IMPLEMENTED.md"
+  - "docs/invariants/INVARIANTS_QUICK.md"
+  - "tasks/PERF-002/meta.yml"
+
+invariants:
+  - "INV-122"
+
+mechanics:
+  gate_ids:
+    - "INT-G28"
+  verifiers:
+    - "bash scripts/audit/verify_perf_002_regression_detection_warmup.sh"
+    - "python3 scripts/audit/validate_evidence.py --task PERF-002 --evidence evidence/phase1/perf_002_regression_detection_warmup.json"
+    - "RUN_PHASE1_GATES=1 bash scripts/dev/pre_ci.sh"
+  evidence_paths:
+    - "evidence/phase1/perf_002_regression_detection_warmup.json"
+
+acceptance_criteria:
+  - "Warmup is mandatory and fail-closed before perf measurements."
+  - "Regression classification uses baseline-declared thresholds (PASS/SOFT/HARD)."
+  - "PERF-002 evidence is emitted and validated."
+  - "Phase-1 contract includes required PERF-002 evidence."
+
+verification:
+  - "bash scripts/audit/verify_perf_002_regression_detection_warmup.sh"
+  - "python3 scripts/audit/validate_evidence.py --task PERF-002 --evidence evidence/phase1/perf_002_regression_detection_warmup.json"
+  - "RUN_PHASE1_GATES=1 bash scripts/dev/pre_ci.sh"
+
+evidence:
+  - "evidence/phase1/perf_002_regression_detection_warmup.json"
+
+must_read:
+  - "docs/operations/AI_AGENT_OPERATION_MANUAL.md"
+
+implementation_plan: "docs/plans/phase1/PERF-002/PLAN.md"
+implementation_log: "docs/plans/phase1/PERF-002/EXEC_LOG.md"

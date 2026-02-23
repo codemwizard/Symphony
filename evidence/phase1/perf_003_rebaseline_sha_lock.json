@@ -1,0 +1,22 @@
+{
+  "check_id": "PERF-003",
+  "task_id": "PERF-003",
+  "timestamp_utc": "2026-02-23T16:57:24Z",
+  "git_sha": "d62f16a7998dab7bee76799cc6d500e9261d13d7",
+  "schema_fingerprint": "472c540b81dcab3cb43980291595dd562a4f5ad2e7b2e98f6d832f740c0a1218",
+  "status": "PASS",
+  "pass": true,
+  "details": {
+    "baseline_file": "docs/operations/perf_smoke_baseline.json",
+    "candidate_file_generated": true,
+    "candidate_baseline_sha256": "d1ff6b764da5e980f51056b6b83d96593c445208341e76254f17aeb31e21f355",
+    "approval_good_verified": true,
+    "approval_bad_exit_code": 1,
+    "sha_lock_enforced": true,
+    "workflow_docs": [
+      "docs/perf/REBASELINE.md",
+      "docs/perf/perf_baseline_approval.yml"
+    ]
+  },
+  "errors": []
+}

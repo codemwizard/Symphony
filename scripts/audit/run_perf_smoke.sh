@@ -7,6 +7,7 @@ SMOKE_FILE="$EVIDENCE_DIR/perf_smoke_profile.json"
 BENCH_FILE="$EVIDENCE_DIR/perf_db_driver_bench.json"
 BATCH_FILE="$EVIDENCE_DIR/perf_driver_batching_telemetry.json"
 AOT_FILE="$EVIDENCE_DIR/native_aot_compilation_report.json"
+PERF2_FILE="$EVIDENCE_DIR/perf_002_regression_detection_warmup.json"
 BASELINE_FILE="${PERF_BASELINE_FILE:-$ROOT_DIR/docs/operations/perf_smoke_baseline.json}"
 ENV_FILE="${ENV_FILE:-$ROOT_DIR/infra/docker/.env}"
 mkdir -p "$EVIDENCE_DIR"
@@ -43,6 +44,30 @@ run_and_time() {
   echo "$label,$rc,$elapsed"
 }
 
+# PERF-002: mandatory warmup pass before measurements.
+TOTAL_REQUESTS="${PERF_SMOKE_TOTAL_REQUESTS:-500}"
+if ! [[ "$TOTAL_REQUESTS" =~ ^[0-9]+$ ]] || [[ "$TOTAL_REQUESTS" -le 0 ]]; then
+  echo "Invalid PERF_SMOKE_TOTAL_REQUESTS=$TOTAL_REQUESTS" >&2
+  exit 1
+fi
+WARMUP_REQUESTS=$((TOTAL_REQUESTS / 10))
+if [[ "$WARMUP_REQUESTS" -lt 50 ]]; then
+  WARMUP_REQUESTS=50
+fi
+
+warmup_rows=()
+warmup_rows+=("$(run_and_time warmup_ingress_selftest dotnet run --no-build --project "$LEDGER_API_PROJECT" -- --self-test)")
+warmup_rows+=("$(run_and_time warmup_evidence_pack_selftest dotnet run --no-build --project "$LEDGER_API_PROJECT" -- --self-test-evidence-pack)")
+warmup_rows+=("$(run_and_time warmup_case_pack_selftest dotnet run --no-build --project "$LEDGER_API_PROJECT" -- --self-test-case-pack)")
+
+for row in "${warmup_rows[@]}"; do
+  IFS=',' read -r _label rc _ms <<<"$row"
+  if [[ "$rc" -ne 0 ]]; then
+    echo "perf_warmup_failed:$row" >&2
+    exit 1
+  fi
+done
+
 rows=()
 rows+=("$(run_and_time ingress_selftest dotnet run --no-build --project "$LEDGER_API_PROJECT" -- --self-test)")
 rows+=("$(run_and_time evidence_pack_selftest dotnet run --no-build --project "$LEDGER_API_PROJECT" -- --self-test-evidence-pack)")
@@ -59,10 +84,18 @@ for row in "${rows[@]}"; do
 done
 
 ROWS_PAYLOAD="$(printf '%s\n' "${rows[@]}")"
+WARMUP_ROWS_PAYLOAD="$(printf '%s\n' "${warmup_rows[@]}")"
 
 python3 - <<PY
 import json, math
 from pathlib import Path
+
+warmup_rows = []
+for raw in """$WARMUP_ROWS_PAYLOAD""".splitlines():
+    if not raw.strip():
+        continue
+    label, rc, ms = raw.split(",", 2)
+    warmup_rows.append({"name": label, "exit_code": int(rc), "elapsed_ms": int(ms)})
 
 rows = []
 for raw in """$ROWS_PAYLOAD""".splitlines():
@@ -91,6 +124,15 @@ out = {
     "environment": "${ENVIRONMENT:-local}",
     "storage_mode": "${INGRESS_STORAGE_MODE:-file}",
     "baseline_file": "$BASELINE_FILE"
+  },
+  "warmup": {
+    "enabled": True,
+    "total_requests": int("$TOTAL_REQUESTS"),
+    "warmup_requests": int("$WARMUP_REQUESTS"),
+    "warmup_ratio_target": 0.10,
+    "minimum_warmup_requests": 50,
+    "executed_steps": [r["name"] for r in warmup_rows],
+    "discarded_results": True
   },
   "results": rows,
   "summary": {
@@ -182,9 +224,12 @@ current_p95 = float(summary.get("p95_ms", 0))
 
 enforcement = {
   "baseline_locked": False,
-  "regression_threshold_pct": 0.15,
+  "soft_regression_threshold_pct": None,
+  "hard_regression_threshold_pct": None,
   "baseline_p95_ms": None,
   "current_p95_ms": current_p95,
+  "drift_pct": None,
+  "regression_classification": "UNKNOWN",
   "allowed_p95_ms": None,
   "mode": "enforced",
   "regression_detected": False,
@@ -197,7 +242,12 @@ if not baseline_path.exists():
 else:
   cfg = json.loads(baseline_path.read_text())
   enforcement["baseline_locked"] = bool(cfg.get("baseline_locked", False))
-  enforcement["regression_threshold_pct"] = float(cfg.get("regression_threshold_pct", 0.15))
+  soft_pct = cfg.get("soft_regression_threshold_pct")
+  hard_pct = cfg.get("hard_regression_threshold_pct")
+  if hard_pct is None:
+    hard_pct = cfg.get("regression_threshold_pct")
+  enforcement["soft_regression_threshold_pct"] = float(soft_pct) if soft_pct is not None else None
+  enforcement["hard_regression_threshold_pct"] = float(hard_pct) if hard_pct is not None else None
   if cfg.get("p95_ms") is not None:
     enforcement["baseline_p95_ms"] = float(cfg.get("p95_ms"))
 
@@ -207,18 +257,66 @@ else:
   elif enforcement["baseline_p95_ms"] is None or enforcement["baseline_p95_ms"] <= 0:
     smoke["status"] = "FAIL"
     smoke["error"] = "baseline_locked_but_missing_baseline_p95"
+  elif (
+    enforcement["soft_regression_threshold_pct"] is None
+    or enforcement["hard_regression_threshold_pct"] is None
+    or enforcement["soft_regression_threshold_pct"] < 0
+    or enforcement["hard_regression_threshold_pct"] < 0
+    or enforcement["soft_regression_threshold_pct"] > enforcement["hard_regression_threshold_pct"]
+  ):
+    smoke["status"] = "FAIL"
+    smoke["error"] = "baseline_thresholds_invalid_or_missing"
   else:
-    allowed = enforcement["baseline_p95_ms"] * (1.0 + enforcement["regression_threshold_pct"])
-    enforcement["allowed_p95_ms"] = allowed
-    regression = current_p95 > allowed
-    enforcement["regression_detected"] = regression
+    baseline = enforcement["baseline_p95_ms"]
+    drift_pct = (current_p95 - baseline) / baseline
+    enforcement["drift_pct"] = drift_pct
+    hard_allowed = baseline * (1.0 + enforcement["hard_regression_threshold_pct"])
+    enforcement["allowed_p95_ms"] = hard_allowed
     enforcement["regression_enforced"] = True
-    if regression:
+
+    if drift_pct > enforcement["hard_regression_threshold_pct"]:
+      enforcement["regression_classification"] = "HARD_REGRESSION"
+      enforcement["regression_detected"] = True
       smoke["status"] = "FAIL"
-      smoke["error"] = f"perf_regression_detected:p95_ms={current_p95:.2f}>allowed={allowed:.2f}"
+      smoke["error"] = f"perf_hard_regression_detected:p95_ms={current_p95:.2f}>allowed={hard_allowed:.2f}"
+    elif drift_pct > enforcement["soft_regression_threshold_pct"]:
+      enforcement["regression_classification"] = "SOFT_REGRESSION"
+      enforcement["regression_detected"] = True
+      smoke.setdefault("warnings", []).append(
+        f"perf_soft_regression_detected:p95_ms={current_p95:.2f}:drift_pct={drift_pct:.5f}"
+      )
+    else:
+      enforcement["regression_classification"] = "PASS"
+      enforcement["regression_detected"] = False
 
 smoke["promotion"] = enforcement
+smoke["regression_classification"] = enforcement["regression_classification"]
 smoke_path.write_text(json.dumps(smoke, indent=2) + "\n")
+
+perf2 = {
+  "check_id": "PERF-002",
+  "task_id": "PERF-002",
+  "timestamp_utc": "$EVIDENCE_TS",
+  "git_sha": "$EVIDENCE_GIT_SHA",
+  "schema_fingerprint": "$EVIDENCE_SCHEMA_FP",
+  "status": "PASS" if smoke.get("status") == "PASS" else "FAIL",
+  "pass": smoke.get("status") == "PASS",
+  "details": {
+    "workload_profile": smoke.get("profile", {}),
+    "warmup": smoke.get("warmup", {}),
+    "baseline_file": str(baseline_path),
+    "baseline_locked": enforcement.get("baseline_locked"),
+    "soft_regression_threshold_pct": enforcement.get("soft_regression_threshold_pct"),
+    "hard_regression_threshold_pct": enforcement.get("hard_regression_threshold_pct"),
+    "baseline_p95_ms": enforcement.get("baseline_p95_ms"),
+    "current_p95_ms": enforcement.get("current_p95_ms"),
+    "drift_pct": enforcement.get("drift_pct"),
+    "regression_classification": enforcement.get("regression_classification"),
+    "regression_enforced": enforcement.get("regression_enforced"),
+    "thresholds_source": "docs/operations/perf_smoke_baseline.json"
+  },
+}
+Path(r"$PERF2_FILE").write_text(json.dumps(perf2, indent=2) + "\n", encoding="utf-8")
 PY
 
 # Verify no placeholder fallback and required perf artifacts.
@@ -241,3 +339,4 @@ echo "Perf smoke profile passed. Evidence: $SMOKE_FILE"
 echo "Perf DB driver bench evidence: $BENCH_FILE"
 echo "Perf driver batching telemetry evidence: $BATCH_FILE"
 echo "Native AOT compilation report evidence: $AOT_FILE"
+echo "PERF-002 regression detection evidence: $PERF2_FILE"

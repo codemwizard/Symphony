@@ -563,6 +563,54 @@ if [[ "${RUN_PHASE1_GATES:-0}" == "1" ]]; then
     exit 1
   fi
 
+  echo "==> Phase-1 smart regression + warmup verification (PERF-002)"
+  if [[ -x scripts/audit/verify_perf_002_regression_detection_warmup.sh ]]; then
+    scripts/audit/verify_perf_002_regression_detection_warmup.sh
+  else
+    echo "ERROR: scripts/audit/verify_perf_002_regression_detection_warmup.sh not found"
+    exit 1
+  fi
+
+  echo "==> Phase-1 rebaseline SHA-lock verification (PERF-003)"
+  if [[ -x scripts/audit/verify_perf_003_rebaseline_sha_lock.sh ]]; then
+    scripts/audit/verify_perf_003_rebaseline_sha_lock.sh
+  else
+    echo "ERROR: scripts/audit/verify_perf_003_rebaseline_sha_lock.sh not found"
+    exit 1
+  fi
+
+  echo "==> Phase-1 regulatory timing compliance gate (PERF-005)"
+  if [[ -x scripts/perf/verify_perf_005.sh ]]; then
+    scripts/perf/verify_perf_005.sh --evidence evidence/phase1/perf_005__regulatory_timing_compliance_gate.json
+  else
+    echo "ERROR: scripts/perf/verify_perf_005.sh not found"
+    exit 1
+  fi
+
+  echo "==> Phase-1 finality seam stub verification (PERF-005A)"
+  if [[ -x scripts/audit/verify_perf_005a_finality_seam_stub.sh ]]; then
+    scripts/audit/verify_perf_005a_finality_seam_stub.sh
+  else
+    echo "ERROR: scripts/audit/verify_perf_005a_finality_seam_stub.sh not found"
+    exit 1
+  fi
+
+  echo "==> Phase-1 operational risk framework + translation layer (PERF-006)"
+  if [[ -x scripts/perf/verify_perf_006.sh ]]; then
+    scripts/perf/verify_perf_006.sh --evidence evidence/phase1/perf_006__operational_risk_framework_translation_layer.json
+  else
+    echo "ERROR: scripts/perf/verify_perf_006.sh not found"
+    exit 1
+  fi
+
+  echo "==> Phase-1 escrow state machine + atomic reservation semantics (TSK-P1-ESC-001)"
+  if [[ -x scripts/db/verify_tsk_p1_esc_001.sh ]]; then
+    scripts/db/verify_tsk_p1_esc_001.sh --evidence evidence/phase1/tsk_p1_esc_001__escrow_state_machine_atomic_reservation_semantics.json
+  else
+    echo "ERROR: scripts/db/verify_tsk_p1_esc_001.sh not found"
+    exit 1
+  fi
+
   echo "==> Phase-1 no-MCP guard"
   if [[ -x scripts/audit/verify_no_mcp_phase1.sh ]]; then
     scripts/audit/verify_no_mcp_phase1.sh

@@ -5,13 +5,14 @@ ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 EVIDENCE_DIR="$ROOT_DIR/evidence/phase1"
 REPORT_FILE="$EVIDENCE_DIR/product_kpi_readiness_report.json"
 MAX_AGE_MINUTES="${KPI_MAX_AGE_MINUTES:-180}"
+REQUIRE_PERF005="${KPI_REQUIRE_PERF005:-0}"
 
 mkdir -p "$EVIDENCE_DIR"
 source "$ROOT_DIR/scripts/lib/evidence.sh"
 EVIDENCE_TS="$(evidence_now_utc)"
 EVIDENCE_GIT_SHA="$(git_sha)"
 EVIDENCE_SCHEMA_FP="$(schema_fingerprint)"
-export ROOT_DIR REPORT_FILE MAX_AGE_MINUTES EVIDENCE_TS EVIDENCE_GIT_SHA EVIDENCE_SCHEMA_FP
+export ROOT_DIR REPORT_FILE MAX_AGE_MINUTES REQUIRE_PERF005 EVIDENCE_TS EVIDENCE_GIT_SHA EVIDENCE_SCHEMA_FP
 
 python3 <<'PY'
 import json
@@ -32,6 +33,8 @@ required_sources = {
     "pilot_harness": root / "evidence/phase1/pilot_harness_replay.json",
     "pilot_onboarding": root / "evidence/phase1/pilot_onboarding_readiness.json",
 }
+perf_005_path = root / "evidence/phase1/perf_005__regulatory_timing_compliance_gate.json"
+require_perf005 = os.environ.get("REQUIRE_PERF005", "0") == "1"
 
 failures = []
 loaded = {}
@@ -111,12 +114,27 @@ if "executor_runtime" in loaded:
         pass_count = sum(1 for r in targeted if (r.get("status") or r.get("Status")) == "PASS")
         retry_fail_closed_pct = round((pass_count / len(targeted)) * 100.0, 2)
 
+settlement_window_compliance_pct = None
+if perf_005_path.exists():
+    try:
+        perf5 = json.loads(perf_005_path.read_text(encoding="utf-8"))
+        if str(perf5.get("status", "")).upper() != "PASS":
+            failures.append(f"source_not_pass:perf_005:{perf5.get('status')}")
+        settlement_window_compliance_pct = (perf5.get("details") or {}).get("compliance_pct")
+        if not isinstance(settlement_window_compliance_pct, (int, float)):
+            failures.append("invalid_perf005_compliance_pct")
+    except Exception:
+        failures.append("invalid_json:perf_005")
+elif require_perf005:
+    failures.append(f"missing_source:perf_005:{perf_005_path}")
+
 kpis = {
     "ack_determinism_pct": ack_determinism_pct,
     "duplicate_suppression_effectiveness_pct": duplicate_suppression_pct,
     "evidence_casepack_generation_coverage_pct": evidence_casepack_coverage_pct,
     "investigation_readiness_pct": investigation_readiness_pct,
     "retry_fail_closed_enforcement_pct": retry_fail_closed_pct,
+    "settlement_window_compliance_pct": settlement_window_compliance_pct if isinstance(settlement_window_compliance_pct, (int, float)) else 0.0,
 }
 
 thresholds = {
@@ -125,6 +143,7 @@ thresholds = {
     "evidence_casepack_generation_coverage_pct": 100.0,
     "investigation_readiness_pct": 100.0,
     "retry_fail_closed_enforcement_pct": 100.0,
+    "settlement_window_compliance_pct": 100.0 if require_perf005 else 0.0,
 }
 
 kpi_failures = [
@@ -144,6 +163,10 @@ report = {
     "status": status,
     "max_source_age_minutes": max_age_minutes,
     "source_evidence": {k: str(v.relative_to(root)) for k, v in required_sources.items()},
+    "perf_005_reference": {
+        "task_id": "PERF-005",
+        "evidence_path": "evidence/phase1/perf_005__regulatory_timing_compliance_gate.json",
+    },
     "kpis": kpis,
     "thresholds": thresholds,
     "ready_for_product_review": status == "PASS",

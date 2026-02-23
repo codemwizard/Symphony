@@ -47,3 +47,21 @@ registry:
   scripts/audit/verify_perf_001_engine_metrics_capture.sh:
     emits:
       - evidence/phase1/perf_001_engine_metrics_capture.json
+  scripts/audit/verify_perf_002_regression_detection_warmup.sh:
+    emits:
+      - evidence/phase1/perf_002_regression_detection_warmup.json
+  scripts/audit/verify_perf_003_rebaseline_sha_lock.sh:
+    emits:
+      - evidence/phase1/perf_003_rebaseline_sha_lock.json
+  scripts/perf/verify_perf_005.sh:
+    emits:
+      - evidence/phase1/perf_005__regulatory_timing_compliance_gate.json
+  scripts/audit/verify_perf_005a_finality_seam_stub.sh:
+    emits:
+      - evidence/phase1/perf_005a_finality_seam_stub.json
+  scripts/perf/verify_perf_006.sh:
+    emits:
+      - evidence/phase1/perf_006__operational_risk_framework_translation_layer.json
+  scripts/db/verify_tsk_p1_esc_001.sh:
+    emits:
+      - evidence/phase1/tsk_p1_esc_001__escrow_state_machine_atomic_reservation_semantics.json

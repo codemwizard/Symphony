@@ -1,0 +1,16 @@
+{
+  "check_id": "PERF-006",
+  "task_id": "PERF-006",
+  "timestamp_utc": "2026-02-23T18:17:53Z",
+  "git_sha": "724a4bff1f08ad813820c4f84f4fdd738c82eb00",
+  "schema_fingerprint": "472c540b81dcab3cb43980291595dd562a4f5ad2e7b2e98f6d832f740c0a1218",
+  "status": "PASS",
+  "pass": true,
+  "details": {
+    "kpi_evidence": "evidence/phase1/product_kpi_readiness_report.json",
+    "perf_005_evidence": "evidence/phase1/perf_005__regulatory_timing_compliance_gate.json",
+    "closeout_script": "scripts/audit/verify_phase1_closeout.sh",
+    "translation_layer_verified": true,
+    "errors": []
+  }
+}
