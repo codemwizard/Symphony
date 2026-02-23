@@ -135,6 +135,12 @@
       "subsystem": "escrow",
       "meaning": "illegal or terminal escrow state transition attempted",
       "retryable": false
+    },
+    "P7304": {
+      "class": "B",
+      "subsystem": "escrow",
+      "meaning": "escrow reservation rejected (invalid amount or ceiling exceeded)",
+      "retryable": false
     }
   }
 }

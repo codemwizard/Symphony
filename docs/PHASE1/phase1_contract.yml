@@ -182,6 +182,14 @@
   evidence_path: "evidence/phase1/tsk_p1_esc_001__escrow_state_machine_atomic_reservation_semantics.json"
   notes: "TSK-P1-ESC-001 requires escrow state machine transitions, expiry semantics, and non-custodial release events."
 
+- invariant_id: "INV-128"
+  status: "implemented"
+  required: true
+  gate_id: "INT-G28"
+  verifier: "scripts/db/verify_tsk_p1_esc_002.sh"
+  evidence_path: "evidence/phase1/tsk_p1_esc_002__escrow_invariants_cross_tenant_protections.json"
+  notes: "TSK-P1-ESC-002 requires ceiling-enforced, tenant-isolated escrow reservations under concurrency with program budget envelope binding."
+
 - invariant_id: "INV-039"
   status: "deferred_to_phase2"
   required: false

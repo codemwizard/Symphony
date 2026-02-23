@@ -988,3 +988,17 @@
     Enforces explicit escrow states, legal transitions, terminal state protections,
     and non-custodial release semantics (append-only event + state transition) with
     expiry reachability from CREATED and AUTHORIZED.
+
+- id: INV-128
+  aliases: ["I-ESCROW-CEILING-CROSS-TENANT-01"]
+  status: implemented
+  severity: P1
+  title: "Escrow reservations are ceiling-enforced and tenant-isolated under concurrency"
+  owners: ["team-db", "team-platform"]
+  sla_days: 30
+  enforcement: "scripts/db/verify_tsk_p1_esc_002.sh"
+  verification: "scripts/db/verify_tsk_p1_esc_002.sh --evidence evidence/phase1/tsk_p1_esc_002__escrow_invariants_cross_tenant_protections.json; evidence/phase1/tsk_p1_esc_002__escrow_invariants_cross_tenant_protections.json"
+  notes: >
+    Enforces that program budget envelopes are modeled explicitly (programs.program_escrow_id),
+    that authorize_escrow_reservation() locks the envelope balance row FOR UPDATE, and that
+    50 concurrent reservations cannot oversubscribe an envelope ceiling.

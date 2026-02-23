@@ -2,7 +2,7 @@
 -- PostgreSQL database dump
 --
 
-\restrict kUQfCpVosKrRL1II2xnB5CmwaHHDApQyUFgKmGrSxXhBd0aZeUzepgufU5OGwsh
+\restrict 1ce4BZ1TidwyVXcilbXXJgTUA1mnEcJtteShVjTaOO7yUSKsDU7w7QlH3R4wGbE
 
 -- Dumped from database version 18.2 (Debian 18.2-1.pgdg13+1)
 -- Dumped by pg_dump version 18.2 (Debian 18.2-1.pgdg13+1)
@@ -94,6 +94,76 @@ BEGIN
   );
 
   RETURN NEW;
+END;
+$$;
+
+
+--
+-- Name: authorize_escrow_reservation(uuid, bigint, text, text, jsonb); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.authorize_escrow_reservation(p_program_escrow_id uuid, p_amount_minor bigint, p_actor_id text DEFAULT 'system'::text, p_reason text DEFAULT NULL::text, p_metadata jsonb DEFAULT '{}'::jsonb) RETURNS uuid
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO 'pg_catalog', 'public'
+    AS $$
+DECLARE
+  v_env public.escrow_envelopes%ROWTYPE;
+  v_amount BIGINT := COALESCE(p_amount_minor, 0);
+  v_actor TEXT := COALESCE(NULLIF(BTRIM(p_actor_id), ''), 'system');
+  v_reservation_escrow_id UUID;
+BEGIN
+  IF v_amount <= 0 THEN
+    RAISE EXCEPTION 'invalid reservation amount %', v_amount
+      USING ERRCODE = 'P7304';
+  END IF;
+
+  -- Critical lock: deterministic prevention of oversubscription.
+  SELECT *
+  INTO v_env
+  FROM public.escrow_envelopes
+  WHERE escrow_envelopes.escrow_id = p_program_escrow_id
+  FOR UPDATE;
+
+  IF NOT FOUND THEN
+    RAISE EXCEPTION 'escrow envelope not found'
+      USING ERRCODE = 'P7302';
+  END IF;
+
+  IF v_env.reserved_amount_minor + v_amount > v_env.ceiling_amount_minor THEN
+    RAISE EXCEPTION 'escrow ceiling exceeded'
+      USING ERRCODE = 'P7304';
+  END IF;
+
+  UPDATE public.escrow_envelopes
+  SET reserved_amount_minor = reserved_amount_minor + v_amount,
+      updated_at = NOW()
+  WHERE escrow_envelopes.escrow_id = v_env.escrow_id;
+
+  INSERT INTO public.escrow_accounts(
+    tenant_id, program_id, entity_id, state, authorized_amount_minor, currency_code, authorization_expires_at, release_due_at
+  ) VALUES (
+    v_env.tenant_id, NULL, NULL, 'CREATED', v_amount, v_env.currency_code, NOW() + interval '30 minutes', NOW() + interval '60 minutes'
+  )
+  RETURNING escrow_accounts.escrow_id INTO v_reservation_escrow_id;
+
+  -- Record state as AUTHORIZED and write append-only event.
+  PERFORM 1
+  FROM public.transition_escrow_state(
+    p_escrow_id => v_reservation_escrow_id,
+    p_to_state => 'AUTHORIZED',
+    p_actor_id => v_actor,
+    p_reason => COALESCE(p_reason, 'reservation_authorized'),
+    p_metadata => COALESCE(p_metadata, '{}'::jsonb),
+    p_now => NOW()
+  );
+
+  INSERT INTO public.escrow_reservations(
+    tenant_id, program_escrow_id, reservation_escrow_id, amount_minor, actor_id, reason, metadata, created_at
+  ) VALUES (
+    v_env.tenant_id, v_env.escrow_id, v_reservation_escrow_id, v_amount, v_actor, p_reason, COALESCE(p_metadata, '{}'::jsonb), NOW()
+  );
+
+  RETURN v_reservation_escrow_id;
 END;
 $$;
 
@@ -990,10 +1060,38 @@ $$;
 
 
 --
+-- Name: touch_escrow_envelopes_updated_at(); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.touch_escrow_envelopes_updated_at() RETURNS trigger
+    LANGUAGE plpgsql
+    AS $$
+BEGIN
+  NEW.updated_at := NOW();
+  RETURN NEW;
+END;
+$$;
+
+
+--
 -- Name: touch_escrow_updated_at(); Type: FUNCTION; Schema: public; Owner: -
 --
 
 CREATE FUNCTION public.touch_escrow_updated_at() RETURNS trigger
+    LANGUAGE plpgsql
+    AS $$
+BEGIN
+  NEW.updated_at := NOW();
+  RETURN NEW;
+END;
+$$;
+
+
+--
+-- Name: touch_programs_updated_at(); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.touch_programs_updated_at() RETURNS trigger
     LANGUAGE plpgsql
     AS $$
 BEGIN
@@ -1198,6 +1296,23 @@ CREATE TABLE public.escrow_accounts (
 
 
 --
+-- Name: escrow_envelopes; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.escrow_envelopes (
+    escrow_id uuid NOT NULL,
+    tenant_id uuid NOT NULL,
+    currency_code character(3) NOT NULL,
+    ceiling_amount_minor bigint NOT NULL,
+    reserved_amount_minor bigint DEFAULT 0 NOT NULL,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    updated_at timestamp with time zone DEFAULT now() NOT NULL,
+    CONSTRAINT escrow_envelopes_ceiling_amount_minor_check CHECK ((ceiling_amount_minor >= 0)),
+    CONSTRAINT escrow_envelopes_reserved_amount_minor_check CHECK ((reserved_amount_minor >= 0))
+);
+
+
+--
 -- Name: escrow_events; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -1211,6 +1326,24 @@ CREATE TABLE public.escrow_events (
     metadata jsonb DEFAULT '{}'::jsonb NOT NULL,
     created_at timestamp with time zone DEFAULT now() NOT NULL,
     CONSTRAINT escrow_events_event_type_check CHECK ((event_type = ANY (ARRAY['CREATED'::text, 'AUTHORIZED'::text, 'RELEASE_REQUESTED'::text, 'RELEASED'::text, 'CANCELED'::text, 'EXPIRED'::text])))
+);
+
+
+--
+-- Name: escrow_reservations; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.escrow_reservations (
+    reservation_id uuid DEFAULT public.uuid_v7_or_random() NOT NULL,
+    tenant_id uuid NOT NULL,
+    program_escrow_id uuid NOT NULL,
+    reservation_escrow_id uuid NOT NULL,
+    amount_minor bigint NOT NULL,
+    actor_id text DEFAULT CURRENT_USER NOT NULL,
+    reason text,
+    metadata jsonb DEFAULT '{}'::jsonb NOT NULL,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    CONSTRAINT escrow_reservations_amount_minor_check CHECK ((amount_minor > 0))
 );
 
 
@@ -1612,6 +1745,23 @@ CREATE TABLE public.policy_versions (
 
 
 --
+-- Name: programs; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.programs (
+    program_id uuid DEFAULT public.uuid_v7_or_random() NOT NULL,
+    tenant_id uuid NOT NULL,
+    program_key text NOT NULL,
+    program_name text NOT NULL,
+    status text DEFAULT 'ACTIVE'::text NOT NULL,
+    program_escrow_id uuid NOT NULL,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    updated_at timestamp with time zone DEFAULT now() NOT NULL,
+    CONSTRAINT programs_status_check CHECK ((status = ANY (ARRAY['ACTIVE'::text, 'SUSPENDED'::text, 'CLOSED'::text])))
+);
+
+
+--
 -- Name: rail_dispatch_truth_anchor; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -1765,11 +1915,35 @@ ALTER TABLE ONLY public.escrow_accounts
 
 
 --
+-- Name: escrow_envelopes escrow_envelopes_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.escrow_envelopes
+    ADD CONSTRAINT escrow_envelopes_pkey PRIMARY KEY (escrow_id);
+
+
+--
 -- Name: escrow_events escrow_events_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.escrow_events
     ADD CONSTRAINT escrow_events_pkey PRIMARY KEY (event_id);
+
+
+--
+-- Name: escrow_reservations escrow_reservations_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.escrow_reservations
+    ADD CONSTRAINT escrow_reservations_pkey PRIMARY KEY (reservation_id);
+
+
+--
+-- Name: escrow_reservations escrow_reservations_program_escrow_id_reservation_escrow_id_key; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.escrow_reservations
+    ADD CONSTRAINT escrow_reservations_program_escrow_id_reservation_escrow_id_key UNIQUE (program_escrow_id, reservation_escrow_id);
 
 
 --
@@ -1997,6 +2171,30 @@ ALTER TABLE ONLY public.policy_versions
 
 
 --
+-- Name: programs programs_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.programs
+    ADD CONSTRAINT programs_pkey PRIMARY KEY (program_id);
+
+
+--
+-- Name: programs programs_tenant_id_program_escrow_id_key; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.programs
+    ADD CONSTRAINT programs_tenant_id_program_escrow_id_key UNIQUE (tenant_id, program_escrow_id);
+
+
+--
+-- Name: programs programs_tenant_id_program_key_key; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.programs
+    ADD CONSTRAINT programs_tenant_id_program_key_key UNIQUE (tenant_id, program_key);
+
+
+--
 -- Name: rail_dispatch_truth_anchor rail_dispatch_truth_anchor_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -2199,10 +2397,24 @@ CREATE INDEX idx_escrow_accounts_tenant_state ON public.escrow_accounts USING bt
 
 
 --
+-- Name: idx_escrow_envelopes_tenant; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_escrow_envelopes_tenant ON public.escrow_envelopes USING btree (tenant_id);
+
+
+--
 -- Name: idx_escrow_events_escrow_created; Type: INDEX; Schema: public; Owner: -
 --
 
 CREATE INDEX idx_escrow_events_escrow_created ON public.escrow_events USING btree (escrow_id, created_at);
+
+
+--
+-- Name: idx_escrow_reservations_tenant_program; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_escrow_reservations_tenant_program ON public.escrow_reservations USING btree (tenant_id, program_escrow_id, created_at);
 
 
 --
@@ -2336,6 +2548,13 @@ CREATE INDEX idx_pii_purge_requests_subject_requested ON public.pii_purge_reques
 --
 
 CREATE INDEX idx_policy_versions_is_active ON public.policy_versions USING btree (is_active) WHERE (is_active = true);
+
+
+--
+-- Name: idx_programs_tenant_status; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_programs_tenant_status ON public.programs USING btree (tenant_id, status);
 
 
 --
@@ -2677,10 +2896,24 @@ CREATE TRIGGER trg_touch_anchor_sync_updated_at BEFORE UPDATE ON public.anchor_s
 
 
 --
+-- Name: escrow_envelopes trg_touch_escrow_envelopes_updated_at; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER trg_touch_escrow_envelopes_updated_at BEFORE UPDATE ON public.escrow_envelopes FOR EACH ROW EXECUTE FUNCTION public.touch_escrow_envelopes_updated_at();
+
+
+--
 -- Name: escrow_accounts trg_touch_escrow_updated_at; Type: TRIGGER; Schema: public; Owner: -
 --
 
 CREATE TRIGGER trg_touch_escrow_updated_at BEFORE UPDATE ON public.escrow_accounts FOR EACH ROW EXECUTE FUNCTION public.touch_escrow_updated_at();
+
+
+--
+-- Name: programs trg_touch_programs_updated_at; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER trg_touch_programs_updated_at BEFORE UPDATE ON public.programs FOR EACH ROW EXECUTE FUNCTION public.touch_programs_updated_at();
 
 
 --
@@ -2740,6 +2973,22 @@ ALTER TABLE ONLY public.escrow_accounts
 
 
 --
+-- Name: escrow_envelopes escrow_envelopes_escrow_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.escrow_envelopes
+    ADD CONSTRAINT escrow_envelopes_escrow_id_fkey FOREIGN KEY (escrow_id) REFERENCES public.escrow_accounts(escrow_id) ON DELETE RESTRICT;
+
+
+--
+-- Name: escrow_envelopes escrow_envelopes_tenant_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.escrow_envelopes
+    ADD CONSTRAINT escrow_envelopes_tenant_id_fkey FOREIGN KEY (tenant_id) REFERENCES public.tenants(tenant_id) ON DELETE RESTRICT;
+
+
+--
 -- Name: escrow_events escrow_events_escrow_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -2753,6 +3002,30 @@ ALTER TABLE ONLY public.escrow_events
 
 ALTER TABLE ONLY public.escrow_events
     ADD CONSTRAINT escrow_events_tenant_id_fkey FOREIGN KEY (tenant_id) REFERENCES public.tenants(tenant_id) ON DELETE RESTRICT;
+
+
+--
+-- Name: escrow_reservations escrow_reservations_program_escrow_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.escrow_reservations
+    ADD CONSTRAINT escrow_reservations_program_escrow_id_fkey FOREIGN KEY (program_escrow_id) REFERENCES public.escrow_accounts(escrow_id) ON DELETE RESTRICT;
+
+
+--
+-- Name: escrow_reservations escrow_reservations_reservation_escrow_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.escrow_reservations
+    ADD CONSTRAINT escrow_reservations_reservation_escrow_id_fkey FOREIGN KEY (reservation_escrow_id) REFERENCES public.escrow_accounts(escrow_id) ON DELETE RESTRICT;
+
+
+--
+-- Name: escrow_reservations escrow_reservations_tenant_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.escrow_reservations
+    ADD CONSTRAINT escrow_reservations_tenant_id_fkey FOREIGN KEY (tenant_id) REFERENCES public.tenants(tenant_id) ON DELETE RESTRICT;
 
 
 --
@@ -2892,6 +3165,22 @@ ALTER TABLE ONLY public.pii_vault_records
 
 
 --
+-- Name: programs programs_program_escrow_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.programs
+    ADD CONSTRAINT programs_program_escrow_id_fkey FOREIGN KEY (program_escrow_id) REFERENCES public.escrow_accounts(escrow_id) ON DELETE RESTRICT;
+
+
+--
+-- Name: programs programs_tenant_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.programs
+    ADD CONSTRAINT programs_tenant_id_fkey FOREIGN KEY (tenant_id) REFERENCES public.tenants(tenant_id) ON DELETE RESTRICT;
+
+
+--
 -- Name: rail_dispatch_truth_anchor rail_truth_anchor_attempt_fk; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -2935,5 +3224,5 @@ ALTER TABLE ONLY public.tenants
 -- PostgreSQL database dump complete
 --
 
-\unrestrict kUQfCpVosKrRL1II2xnB5CmwaHHDApQyUFgKmGrSxXhBd0aZeUzepgufU5OGwsh
+\unrestrict 1ce4BZ1TidwyVXcilbXXJgTUA1mnEcJtteShVjTaOO7yUSKsDU7w7QlH3R4wGbE
 

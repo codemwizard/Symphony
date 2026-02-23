@@ -1,0 +1,52 @@
+phase: "1"
+task_id: "TSK-P1-ESC-002"
+title: "Escrow invariants + cross-tenant protections"
+owner_role: "DB Foundation Agent"
+status: "completed"
+
+depends_on:
+  - "TSK-P1-ESC-001"
+
+touches:
+  - "schema/migrations/0046_escrow_ceiling_enforcement_cross_tenant.sql"
+  - "scripts/db/verify_tsk_p1_esc_002.sh"
+  - "scripts/dev/pre_ci.sh"
+  - "docs/PHASE1/phase1_contract.yml"
+  - "docs/invariants/INVARIANTS_MANIFEST.yml"
+  - "docs/invariants/INVARIANTS_IMPLEMENTED.md"
+  - "docs/invariants/INVARIANTS_QUICK.md"
+  - "docs/operations/VERIFIER_EVIDENCE_REGISTRY.yml"
+  - "docs/contracts/sqlstate_map.yml"
+  - "tasks/TSK-P1-ESC-002/meta.yml"
+
+invariants:
+  - "INV-128"
+
+mechanics:
+  gate_ids:
+    - "INT-G28"
+  verifiers:
+    - "bash scripts/db/verify_tsk_p1_esc_002.sh --evidence evidence/phase1/tsk_p1_esc_002__escrow_invariants_cross_tenant_protections.json"
+    - "python3 scripts/audit/validate_evidence.py --task TSK-P1-ESC-002 --evidence evidence/phase1/tsk_p1_esc_002__escrow_invariants_cross_tenant_protections.json"
+    - "RUN_PHASE1_GATES=1 bash scripts/dev/pre_ci.sh"
+  evidence_paths:
+    - "evidence/phase1/tsk_p1_esc_002__escrow_invariants_cross_tenant_protections.json"
+
+acceptance_criteria:
+  - "programs table includes program_escrow_id with ON DELETE RESTRICT FK to escrow_accounts."
+  - "authorize_escrow_reservation() locks escrow_envelopes row FOR UPDATE and rejects oversubscription."
+  - "50 concurrent reservation attempts cannot exceed the configured envelope ceiling."
+
+verification:
+  - "bash scripts/db/verify_tsk_p1_esc_002.sh --evidence evidence/phase1/tsk_p1_esc_002__escrow_invariants_cross_tenant_protections.json"
+  - "python3 scripts/audit/validate_evidence.py --task TSK-P1-ESC-002 --evidence evidence/phase1/tsk_p1_esc_002__escrow_invariants_cross_tenant_protections.json"
+  - "RUN_PHASE1_GATES=1 bash scripts/dev/pre_ci.sh"
+
+evidence:
+  - "evidence/phase1/tsk_p1_esc_002__escrow_invariants_cross_tenant_protections.json"
+
+must_read:
+  - "docs/operations/AI_AGENT_OPERATION_MANUAL.md"
+
+implementation_plan: "docs/plans/phase1/TSK-P1-ESC-002/PLAN.md"
+implementation_log: "docs/plans/phase1/TSK-P1-ESC-002/EXEC_LOG.md"

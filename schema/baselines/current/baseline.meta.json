@@ -1,10 +1,10 @@
 {
   "baseline_date": "2026-02-23",
   "baseline_path": "/home/mwiza/workspace/Symphony/schema/baselines/2026-02-23/0001_baseline.sql",
-  "baseline_cutoff": "0045_escrow_state_machine_atomic_reservation.sql",
-  "normalized_schema_sha256": "15ce67c7a89064d1b404a37b16a0b782d782967552fbfb07f26bf93937d96df0",
+  "baseline_cutoff": "0046_escrow_ceiling_enforcement_cross_tenant.sql",
+  "normalized_schema_sha256": "a8dab9bef6c5c4f9e0853854017f2d71f3c9dce783a6f2c580eb01bb381129bb",
   "pg_dump_version": "pg_dump (PostgreSQL) 18.2 (Debian 18.2-1.pgdg13+1)",
   "pg_server_version": "18.2 (Debian 18.2-1.pgdg13+1)",
   "dump_source": "container:symphony-postgres",
-  "generated_at_utc": "2026-02-23T18:38:06.261767+00:00"
+  "generated_at_utc": "2026-02-23T22:07:53.491969+00:00"
 }
