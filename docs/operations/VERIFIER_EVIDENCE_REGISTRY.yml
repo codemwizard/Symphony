@@ -53,3 +53,6 @@ registry:
   scripts/audit/verify_perf_003_rebaseline_sha_lock.sh:
     emits:
       - evidence/phase1/perf_003_rebaseline_sha_lock.json
+  scripts/perf/verify_perf_005.sh:
+    emits:
+      - evidence/phase1/perf_005__regulatory_timing_compliance_gate.json

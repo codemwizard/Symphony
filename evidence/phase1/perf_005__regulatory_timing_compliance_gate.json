@@ -1,0 +1,36 @@
+{
+  "check_id": "PERF-005",
+  "task_id": "PERF-005",
+  "timestamp_utc": "2026-02-23T17:11:23Z",
+  "git_sha": "19d6483d7de667bcc617b3ed9cc61513ee088a99",
+  "schema_fingerprint": "472c540b81dcab3cb43980291595dd562a4f5ad2e7b2e98f6d832f740c0a1218",
+  "status": "PASS",
+  "pass": true,
+  "details": {
+    "policy_version": 1,
+    "workload_profile": "dotnet-selftest-profile",
+    "measurement_truth": "simulated_finality_inputs",
+    "source_evidence": "evidence/phase1/perf_smoke_profile.json",
+    "rails": [
+      {
+        "rail": "ZM-NFS",
+        "settlement_window_ms": 2500,
+        "observed_finality_ms": 1703,
+        "compliant": true,
+        "measurement_truth": "simulated_from_perf_smoke_profile",
+        "finality_source": "simulated"
+      },
+      {
+        "rail": "ZM-MMO",
+        "settlement_window_ms": 6000,
+        "observed_finality_ms": 2203,
+        "compliant": true,
+        "measurement_truth": "simulated_from_perf_smoke_profile",
+        "finality_source": "simulated"
+      }
+    ],
+    "compliance_pct": 100.0,
+    "compliant_rails": 2,
+    "total_rails": 2
+  }
+}

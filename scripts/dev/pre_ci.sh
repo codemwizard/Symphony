@@ -579,6 +579,14 @@ if [[ "${RUN_PHASE1_GATES:-0}" == "1" ]]; then
     exit 1
   fi
 
+  echo "==> Phase-1 regulatory timing compliance gate (PERF-005)"
+  if [[ -x scripts/perf/verify_perf_005.sh ]]; then
+    scripts/perf/verify_perf_005.sh --evidence evidence/phase1/perf_005__regulatory_timing_compliance_gate.json
+  else
+    echo "ERROR: scripts/perf/verify_perf_005.sh not found"
+    exit 1
+  fi
+
   echo "==> Phase-1 no-MCP guard"
   if [[ -x scripts/audit/verify_no_mcp_phase1.sh ]]; then
     scripts/audit/verify_no_mcp_phase1.sh

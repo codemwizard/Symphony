@@ -1,0 +1,49 @@
+phase: "1"
+task_id: "PERF-005"
+title: "Regulatory timing compliance gate"
+owner_role: "SUPERVISOR"
+status: "completed"
+
+depends_on:
+  - "checkpoint/PERF-ENG"
+
+touches:
+  - "scripts/perf/verify_perf_005.sh"
+  - "scripts/dev/pre_ci.sh"
+  - "docs/PHASE1/phase1_contract.yml"
+  - "docs/operations/VERIFIER_EVIDENCE_REGISTRY.yml"
+  - "docs/invariants/INVARIANTS_MANIFEST.yml"
+  - "docs/invariants/INVARIANTS_IMPLEMENTED.md"
+  - "docs/invariants/INVARIANTS_QUICK.md"
+  - "tasks/PERF-005/meta.yml"
+
+invariants:
+  - "INV-124"
+
+mechanics:
+  gate_ids:
+    - "INT-G28"
+  verifiers:
+    - "bash scripts/perf/verify_perf_005.sh --evidence evidence/phase1/perf_005__regulatory_timing_compliance_gate.json"
+    - "RUN_PHASE1_GATES=1 bash scripts/dev/pre_ci.sh"
+  evidence_paths:
+    - "evidence/phase1/perf_005__regulatory_timing_compliance_gate.json"
+
+acceptance_criteria:
+  - "Settlement window compliance policy is defined per rail profile."
+  - "Compliance percent is computed deterministically from Phase-1 perf smoke evidence."
+  - "Evidence states simulated measurement truth and passes schema validation."
+
+verification:
+  - "bash scripts/perf/verify_perf_005.sh --evidence evidence/phase1/perf_005__regulatory_timing_compliance_gate.json"
+  - "python3 scripts/audit/validate_evidence.py --task PERF-005 --evidence evidence/phase1/perf_005__regulatory_timing_compliance_gate.json"
+  - "RUN_PHASE1_GATES=1 bash scripts/dev/pre_ci.sh"
+
+evidence:
+  - "evidence/phase1/perf_005__regulatory_timing_compliance_gate.json"
+
+must_read:
+  - "docs/operations/AI_AGENT_OPERATION_MANUAL.md"
+
+implementation_plan: "docs/plans/phase1/PERF-005/PLAN.md"
+implementation_log: "docs/plans/phase1/PERF-005/EXEC_LOG.md"

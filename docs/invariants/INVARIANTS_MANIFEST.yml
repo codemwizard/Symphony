@@ -935,3 +935,16 @@
   verification: "scripts/audit/verify_perf_003_rebaseline_sha_lock.sh; evidence/phase1/perf_003_rebaseline_sha_lock.json"
   notes: >
     Enforces governed rebaseline flow with candidate baseline SHA validation against approval metadata.
+
+- id: INV-124
+  aliases: ["I-PERF-REG-TIMING-01"]
+  status: implemented
+  severity: P1
+  title: "Regulatory timing compliance gate is deterministic and evidence-backed per rail policy"
+  owners: ["team-platform", "team-invariants"]
+  sla_days: 30
+  enforcement: "scripts/perf/verify_perf_005.sh"
+  verification: "scripts/perf/verify_perf_005.sh --evidence evidence/phase1/perf_005__regulatory_timing_compliance_gate.json; evidence/phase1/perf_005__regulatory_timing_compliance_gate.json"
+  notes: >
+    Computes settlement-window compliance percentage from deterministic Phase-1 perf smoke inputs and
+    fails closed when rails exceed policy windows.
