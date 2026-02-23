@@ -1,0 +1,53 @@
+phase: "1"
+task_id: "TSK-P1-ESC-001"
+title: "Escrow state machine + atomic reservation semantics"
+owner_role: "DB Foundation Agent"
+status: "completed"
+
+depends_on:
+  - "checkpoint/PERF-REG"
+
+touches:
+  - "schema/migrations/0045_escrow_state_machine_atomic_reservation.sql"
+  - "scripts/db/verify_tsk_p1_esc_001.sh"
+  - "scripts/dev/pre_ci.sh"
+  - "docs/PHASE1/phase1_contract.yml"
+  - "docs/invariants/INVARIANTS_MANIFEST.yml"
+  - "docs/invariants/INVARIANTS_IMPLEMENTED.md"
+  - "docs/invariants/INVARIANTS_QUICK.md"
+  - "docs/operations/VERIFIER_EVIDENCE_REGISTRY.yml"
+  - "docs/contracts/sqlstate_map.yml"
+  - "tasks/TSK-P1-ESC-001/meta.yml"
+
+invariants:
+  - "INV-127"
+
+mechanics:
+  gate_ids:
+    - "INT-G28"
+  verifiers:
+    - "bash scripts/db/verify_tsk_p1_esc_001.sh --evidence evidence/phase1/tsk_p1_esc_001__escrow_state_machine_atomic_reservation_semantics.json"
+    - "python3 scripts/audit/validate_evidence.py --task TSK-P1-ESC-001 --evidence evidence/phase1/tsk_p1_esc_001__escrow_state_machine_atomic_reservation_semantics.json"
+    - "RUN_PHASE1_GATES=1 bash scripts/dev/pre_ci.sh"
+  evidence_paths:
+    - "evidence/phase1/tsk_p1_esc_001__escrow_state_machine_atomic_reservation_semantics.json"
+
+acceptance_criteria:
+  - "Escrow state model includes CREATED, AUTHORIZED, RELEASE_REQUESTED, RELEASED, CANCELED, EXPIRED."
+  - "transition_escrow_state() enforces legal transitions and rejects illegal transitions with stable SQLSTATEs."
+  - "expire_escrows() transitions eligible CREATED and AUTHORIZED rows to EXPIRED."
+  - "release_escrow() writes append-only RELEASED event and marks escrow state RELEASED."
+
+verification:
+  - "bash scripts/db/verify_tsk_p1_esc_001.sh --evidence evidence/phase1/tsk_p1_esc_001__escrow_state_machine_atomic_reservation_semantics.json"
+  - "python3 scripts/audit/validate_evidence.py --task TSK-P1-ESC-001 --evidence evidence/phase1/tsk_p1_esc_001__escrow_state_machine_atomic_reservation_semantics.json"
+  - "RUN_PHASE1_GATES=1 bash scripts/dev/pre_ci.sh"
+
+evidence:
+  - "evidence/phase1/tsk_p1_esc_001__escrow_state_machine_atomic_reservation_semantics.json"
+
+must_read:
+  - "docs/operations/AI_AGENT_OPERATION_MANUAL.md"
+
+implementation_plan: "docs/plans/phase1/TSK-P1-ESC-001/PLAN.md"
+implementation_log: "docs/plans/phase1/TSK-P1-ESC-001/EXEC_LOG.md"

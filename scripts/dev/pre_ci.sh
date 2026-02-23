@@ -603,6 +603,14 @@ if [[ "${RUN_PHASE1_GATES:-0}" == "1" ]]; then
     exit 1
   fi
 
+  echo "==> Phase-1 escrow state machine + atomic reservation semantics (TSK-P1-ESC-001)"
+  if [[ -x scripts/db/verify_tsk_p1_esc_001.sh ]]; then
+    scripts/db/verify_tsk_p1_esc_001.sh --evidence evidence/phase1/tsk_p1_esc_001__escrow_state_machine_atomic_reservation_semantics.json
+  else
+    echo "ERROR: scripts/db/verify_tsk_p1_esc_001.sh not found"
+    exit 1
+  fi
+
   echo "==> Phase-1 no-MCP guard"
   if [[ -x scripts/audit/verify_no_mcp_phase1.sh ]]; then
     scripts/audit/verify_no_mcp_phase1.sh

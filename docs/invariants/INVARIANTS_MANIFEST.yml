@@ -974,3 +974,17 @@
   notes: >
     Enforces Phase-1 closeout translation layer by requiring KPI evidence to carry
     settlement_window_compliance_pct and a canonical reference to PERF-005 evidence artifact path/id.
+
+- id: INV-127
+  aliases: ["I-ESCROW-STATE-ATOMIC-01"]
+  status: implemented
+  severity: P1
+  title: "Escrow state machine is enforced with atomic transitions and expiry semantics"
+  owners: ["team-db", "team-platform"]
+  sla_days: 30
+  enforcement: "scripts/db/verify_tsk_p1_esc_001.sh"
+  verification: "scripts/db/verify_tsk_p1_esc_001.sh --evidence evidence/phase1/tsk_p1_esc_001__escrow_state_machine_atomic_reservation_semantics.json; evidence/phase1/tsk_p1_esc_001__escrow_state_machine_atomic_reservation_semantics.json"
+  notes: >
+    Enforces explicit escrow states, legal transitions, terminal state protections,
+    and non-custodial release semantics (append-only event + state transition) with
+    expiry reachability from CREATED and AUTHORIZED.

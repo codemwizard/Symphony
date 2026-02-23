@@ -62,3 +62,6 @@ registry:
   scripts/perf/verify_perf_006.sh:
     emits:
       - evidence/phase1/perf_006__operational_risk_framework_translation_layer.json
+  scripts/db/verify_tsk_p1_esc_001.sh:
+    emits:
+      - evidence/phase1/tsk_p1_esc_001__escrow_state_machine_atomic_reservation_semantics.json

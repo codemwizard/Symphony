@@ -123,6 +123,18 @@
       "meaning": "program-to-entity link invalid",
       "retryable": false,
       "notes": "Registered to satisfy contractual SQLSTATE scan scope for ERROR_MAPPING_SPEC examples."
+    },
+    "P7302": {
+      "class": "B",
+      "subsystem": "escrow",
+      "meaning": "escrow record not found for requested transition",
+      "retryable": false
+    },
+    "P7303": {
+      "class": "B",
+      "subsystem": "escrow",
+      "meaning": "illegal or terminal escrow state transition attempted",
+      "retryable": false
     }
   }
 }
