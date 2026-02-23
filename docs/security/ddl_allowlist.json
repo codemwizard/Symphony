@@ -180,6 +180,24 @@
       "expires_on": "2026-12-31",
       "reviewed_by": "security_guardian",
       "approved_at": "2026-02-13"
+    },
+    {
+      "id": "DDL-ALLOW-0021",
+      "migration": "schema/migrations/0039_levy_period_regex_hardening.sql",
+      "statement_fingerprint": "3ff75f44da8e2bb40942f8156fee9655e222c5a63f4f1d9815caead3d9fa1a01",
+      "reason": "Phase-0 levy regex hardening: replace ambiguous period pattern check with canonical [0-9] class on levy_calculation_records.",
+      "expires_on": "2026-12-31",
+      "reviewed_by": "security_guardian",
+      "approved_at": "2026-02-23"
+    },
+    {
+      "id": "DDL-ALLOW-0022",
+      "migration": "schema/migrations/0039_levy_period_regex_hardening.sql",
+      "statement_fingerprint": "632cc3f6a0cdfc8405ce46c06bae32a47a437889f31afa57c1ff06ff77e51240",
+      "reason": "Phase-0 levy regex hardening: replace ambiguous period pattern check with canonical [0-9] class on levy_remittance_periods.",
+      "expires_on": "2026-12-31",
+      "reviewed_by": "security_guardian",
+      "approved_at": "2026-02-23"
     }
   ]
 }

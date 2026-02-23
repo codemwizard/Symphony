@@ -116,6 +116,7 @@ Mitigations:
 - Anchor-sync operational state machine enforces lease-token worker fencing, anchored-before-complete gating, and deterministic expired-lease repair in DB functions.
 - Phase-0 levy schema hooks are storage-only (`levy_rates`, `ingress_attestations.levy_applicable`) with explicit runtime-read/write prohibition until Phase-2 and verifier enforcement to prevent scope creep.
 - Phase-0 levy calculation records hook (`levy_calculation_records`) is storage-only and verifier-guarded against runtime references/index drift until Phase-2 activation.
+- Phase-0 levy period format checks are hardened to canonical regex (`^[0-9]{4}-[0-9]{2}$`) for both `levy_calculation_records.reporting_period` and `levy_remittance_periods.period_code` to avoid backslash-escape drift in SQL regex semantics.
 
 ## Priority security actions
 1) Implement service identity and mTLS for internal calls.

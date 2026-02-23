@@ -1677,5 +1677,17 @@
     "evidence_scope": "repo",
     "notes": "Phase-0 structural hook: levy_calculation_records schema anchor with fail-closed verifier and zero-runtime-reference enforcement.",
     "gate_ids": []
+  },
+  {
+    "task_id": "TSK-P0-LEVY-004",
+    "status": "completed",
+    "verification_mode": "both",
+    "evidence_required": true,
+    "evidence_paths": [
+      "evidence/phase0/TSK-P0-LEVY-004.json"
+    ],
+    "evidence_scope": "repo",
+    "notes": "Phase-0 structural hook: levy_remittance_periods reporting-cycle anchor with fail-closed verifier and no-automation constraints.",
+    "gate_ids": []
   }
 ]

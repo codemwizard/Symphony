@@ -171,7 +171,7 @@ SELECT EXISTS (
   WHERE n.nspname='public' AND t.relname='levy_calculation_records' AND c.contype='c'
     AND pg_get_constraintdef(c.oid) ILIKE '%reporting_period%'
     AND pg_get_constraintdef(c.oid) LIKE '%~%'
-    AND replace(pg_get_constraintdef(c.oid), '\\', '') LIKE '%d{4}-d{2}%'
+    AND replace(pg_get_constraintdef(c.oid), ' ', '') LIKE '%[0-9]{4}-[0-9]{2}%'
 );
 ")"
   [[ "$reporting_period_check_verified" == "true" ]] || add_failure "reporting_period_check_missing"
