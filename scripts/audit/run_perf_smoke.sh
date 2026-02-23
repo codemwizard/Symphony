@@ -8,12 +8,25 @@ BENCH_FILE="$EVIDENCE_DIR/perf_db_driver_bench.json"
 BATCH_FILE="$EVIDENCE_DIR/perf_driver_batching_telemetry.json"
 AOT_FILE="$EVIDENCE_DIR/native_aot_compilation_report.json"
 BASELINE_FILE="${PERF_BASELINE_FILE:-$ROOT_DIR/docs/operations/perf_smoke_baseline.json}"
+ENV_FILE="${ENV_FILE:-$ROOT_DIR/infra/docker/.env}"
 mkdir -p "$EVIDENCE_DIR"
 source "$ROOT_DIR/scripts/lib/evidence.sh"
 
 EVIDENCE_TS="$(evidence_now_utc)"
 EVIDENCE_GIT_SHA="$(git_sha)"
 EVIDENCE_SCHEMA_FP="$(schema_fingerprint)"
+
+if [[ -f "$ENV_FILE" ]]; then
+  set -a
+  # shellcheck disable=SC1090
+  . "$ENV_FILE"
+  set +a
+fi
+
+if [[ -z "${DATABASE_URL:-}" ]] && [[ -n "${POSTGRES_USER:-}" && -n "${POSTGRES_PASSWORD:-}" && -n "${POSTGRES_DB:-}" ]]; then
+  DATABASE_URL="postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@localhost:${HOST_POSTGRES_PORT:-5432}/${POSTGRES_DB}"
+  export DATABASE_URL
+fi
 
 run_and_time() {
   local label="$1"
