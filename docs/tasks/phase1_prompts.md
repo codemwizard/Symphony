@@ -191,7 +191,8 @@ failure_modes:
 task_id: TSK-P0-101
 title: Ordered checks runner + phase gating
 owner_signoff: CTO
-depends_on: []
+depends_on:
+- checkpoint/CS-0
 evidence:
   - evidence/phase0/ordered_checks_manifest.json
 
@@ -336,7 +337,8 @@ failure_modes:
 task_id: TSK-P0-103
 title: Single payload materialization
 owner_signoff: CTO
-depends_on: [TSK-P0-101]
+depends_on:
+- TSK-P0-102
 evidence:
   - evidence/phase0/evidence_schema_validation.json
 
@@ -411,7 +413,8 @@ failure_modes:
 task_id: TSK-P0-104
 title: perf smoke scaffold only, forward-compatible with PERF-001/002
 owner_signoff: CTO
-depends_on: [TSK-P0-103]
+depends_on:
+- TSK-P0-103
 evidence:
   - evidence/phase1/perf_smoke_baseline.json
 
@@ -530,7 +533,8 @@ failure_modes:
 task_id: TSK-P0-105
 title: INV-077 approval metadata evidence (make it real, not placeholder)
 owner_signoff: CTO
-depends_on: [TSK-P0-101]
+depends_on:
+- TSK-P0-104
 evidence:
   - evidence/phase0/migration_governance.json
 
@@ -561,7 +565,7 @@ Deliverables
 ```yaml
 task_id: TSK-P0-105
 depends_on:
-- TSK-P0-103
+- TSK-P0-104
 verifier_command: bash -lc 'set -euo pipefail; test -f docs/PHASE0/phase0_contract.yml
   || { echo MISSING_CONTRACT:docs/PHASE0/phase0_contract.yml; exit 1; }; test -x scripts/audit/verify_tsk_p0_105.sh
   || { echo MISSING_VERIFIER:scripts/audit/verify_tsk_p0_105.sh; exit 1; }; scripts/audit/verify_tsk_p0_105.sh
@@ -757,7 +761,7 @@ Phase-0 hard boundaries for this task:
 task_id: TSK-P0-LEVY-001
 title: levy_rates table (versioned statutory rate registry
 depends_on:
-  - TSK-P0-105
+- TSK-P0-105
 files_to_change:
   - db/migrations/*levy_rates*.sql
   - db/schema.sql
@@ -882,7 +886,7 @@ Phase-0 hard boundaries:
 task_id: TSK-P0-LEVY-002
 title: TSK-P0-LEVY-002 — levy_applicable column on ingress_attestations (expand-first hook)
 depends_on:
-  - TSK-P0-LEVY-001
+- TSK-P0-LEVY-001
 files_to_change:
   - db/migrations/*ingress_attestations*levy_applicable*.sql
   - db/schema.sql
@@ -1082,7 +1086,7 @@ Phase-0 hard boundaries:
 task_id: TSK-P0-LEVY-003
 title: levy_calculation_records table (Phase-2 write target stub)
 depends_on:
-  - TSK-P0-LEVY-002
+- TSK-P0-LEVY-002
 files_to_change:
   - db/migrations/*levy_calculation_records*.sql
   - db/schema.sql
@@ -1280,7 +1284,7 @@ Phase-0 hard boundaries:
 task_id: TSK-P0-LEVY-004
 title: levy_remittance_periods table (ZRA reporting cycle anchor)
 depends_on:
-  - TSK-P0-LEVY-003
+- TSK-P0-LEVY-003
 files_to_change:
   - db/migrations/*levy_remittance_periods*.sql
   - db/schema.sql
@@ -1498,7 +1502,7 @@ Phase-0 hard boundaries for this task:
 task_id: TSK-P0-KYC-001
 title: kyc_provider_registry table (trusted external provider registry)
 depends_on:
-  - TSK-P0-LEVY-004
+- TSK-P0-LEVY-004
 files_to_change:
   - db/migrations/*kyc_provider_registry*.sql
   - db/schema.sql
@@ -1770,7 +1774,7 @@ Phase-0 hard boundaries:
 task_id: TSK-P0-KYC-002
 title: kyc_verification_records table (hash anchor for external verifications)
 depends_on:
-  - TSK-P0-KYC-001
+- TSK-P0-KYC-001
 files_to_change:
   - schema/migrations/*kyc_verification_records*_hook.sql
   - scripts/db/verify_kyc_verification_records_hook.sh
@@ -1903,7 +1907,7 @@ Phase-0 hard boundaries:
 task_id: TSK-P0-KYC-003
 title: kyc_hold column on payment_outbox_pending (instruction-level KYC gate hook)
 depends_on:
-  - TSK-P0-KYC-002
+- TSK-P0-KYC-002
 files_to_change:
   - schema/migrations/*payment_outbox_pending*kyc_hold*_hook.sql
   - scripts/db/verify_kyc_hold_hook.sh
@@ -2121,7 +2125,7 @@ Phase-0 boundaries and rationale for the seeding exception:
 task_id: TSK-P0-KYC-004
 title: kyc_retention_policy_declaration (governance document anchor)
 depends_on:
-  - TSK-P0-KYC-003
+- TSK-P0-KYC-003
 files_to_change:
   - schema/migrations/*kyc_retention_policy*_hook.sql
   - scripts/db/verify_kyc_retention_policy_hook.sh
@@ -2161,7 +2165,7 @@ invariants, any orphaned gate references, and a final pass/fail.
 ```yaml
 task_id: TSK-P0-208
 depends_on:
-- TSK-P0-105
+- TSK-P0-KYC-004
 verifier_command: bash -lc 'set -euo pipefail; test -f docs/PHASE0/phase0_contract.yml
   || { echo MISSING_CONTRACT:docs/PHASE0/phase0_contract.yml; exit 1; }; test -x scripts/audit/verify_tsk_p0_208.sh
   || { echo MISSING_VERIFIER:scripts/audit/verify_tsk_p0_208.sh; exit 1; }; scripts/audit/verify_tsk_p0_208.sh
@@ -2205,7 +2209,8 @@ failure_modes:
 task_id: TSK-P0-210
 title: BoZ observability role proof (include SET ROLE denial)
 owner_signoff: CTO
-depends_on: [TSK-P0-208]
+depends_on:
+- TSK-P0-208
 evidence:
   - evidence/phase0/phase_boundaries_drift.json
 
@@ -2491,7 +2496,8 @@ failure_modes:
 task_id: PERF-005
 title: Regulatory timing compliance gate
 owner_signoff: CTO
-depends_on: [TSK-P1-RAIL-BANK-001, TSK-P1-RAIL-MMO-001]
+depends_on:
+- checkpoint/PERF-ENG
 evidence:
   - evidence/phase1/settlement_window_compliance.json
 
@@ -2611,7 +2617,8 @@ failure_modes:
 task_id: PERF-006
 title: Operational Risk Framework + Translation Layer
 owner_signoff: CTO
-depends_on: [TSK-P1-202]
+depends_on:
+- PERF-005A
 evidence:
   - evidence/phase1/perf_006_closeout_extension.json
 
@@ -2634,8 +2641,7 @@ Evidence
 ```yaml
 task_id: PERF-006
 depends_on:
-- PERF-005
-- TSK-P1-202
+- PERF-005A
 verifier_command: bash -lc 'set -euo pipefail; test -f docs/PHASE1/phase1_contract.yml
   || { echo MISSING_CONTRACT:docs/PHASE1/phase1_contract.yml; exit 1; }; test -x scripts/perf/verify_perf_006.sh
   || { echo MISSING_VERIFIER:scripts/perf/verify_perf_006.sh; exit 1; }; scripts/perf/verify_perf_006.sh
@@ -2678,7 +2684,8 @@ failure_modes:
 task_id: TSK-P1-ESC-001
 title: Escrow state machine + atomic reservation semantics
 owner_signoff: CTO
-depends_on: [TSK-P1-HIER-001]
+depends_on:
+- checkpoint/PERF-REG
 evidence:
   - evidence/phase1/esc_001_state_model.json
 
@@ -2778,7 +2785,8 @@ failure_modes:
 task_id: TSK-P1-ESC-002
 title: Escrow invariants + cross-tenant protections
 owner_signoff: CTO
-depends_on: [TSK-P1-ESC-001, TSK-P1-HIER-001]
+depends_on:
+- TSK-P1-ESC-001
 evidence:
   - evidence/phase1/esc_002_ceiling_enforcement.json
 
@@ -2851,7 +2859,8 @@ failure_modes:
 task_id: TSK-P1-HIER-001
 title: Participants + exception governance
 owner_signoff: CTO
-depends_on: [TSK-P0-101, TSK-P0-105]
+depends_on:
+- checkpoint/ESC
 evidence:
   - evidence/phase1/hier_001_schema.json
 
@@ -2929,7 +2938,8 @@ failure_modes:
 task_id: TSK-P1-HIER-002
 title: Programs + program_escrow_id bridge
 owner_signoff: CTO
-depends_on: [TSK-P1-HIER-001]
+depends_on:
+- TSK-P1-HIER-001
 evidence:
   - evidence/phase1/hier_002_person_member.json
 
@@ -3010,7 +3020,8 @@ failure_modes:
 task_id: TSK-P1-HIER-003
 title: Distribution entities + tenant denorm + ceilings
 owner_signoff: CTO
-depends_on: [TSK-P1-HIER-002]
+depends_on:
+- TSK-P1-HIER-002
 evidence:
   - evidence/phase1/hier_003_member_devices.json
 
@@ -3084,7 +3095,8 @@ failure_modes:
 task_id: TSK-P1-HIER-004
 title: Person model explicit + enrollment model
 owner_signoff: CTO
-depends_on: [TSK-P1-HIER-003]
+depends_on:
+- TSK-P1-HIER-003
 evidence:
   - evidence/phase1/hier_004_device_events.json
 
@@ -3154,7 +3166,8 @@ failure_modes:
 task_id: TSK-P1-HIER-005
 title: Member devices with tenant-safe reverse lookup indexes
 owner_signoff: CTO
-depends_on: [TSK-P1-HIER-004]
+depends_on:
+- TSK-P1-HIER-004
 evidence:
   - evidence/phase1/hier_005_invariant_function.json
 
@@ -3230,7 +3243,8 @@ task_id: TSK-P1-HIER-006
 title: Append-only member_device_events anchored to ingress FK
 owner_signoff: CTO
 requires_compliance_input: true
-depends_on: [TSK-P1-HIER-001]
+depends_on:
+- TSK-P1-HIER-005
 evidence:
   - evidence/phase1/hier_006_supervisor_access.json
 
@@ -3305,7 +3319,8 @@ failure_modes:
 task_id: TSK-P1-HIER-007
 title: Risk formula registry (Tier-1 deterministic default)
 owner_signoff: CTO
-depends_on: [TSK-P1-HIER-002]
+depends_on:
+- TSK-P1-HIER-006
 evidence:
   - evidence/phase1/hier_007_program_migration.json
 
@@ -3752,7 +3767,8 @@ failure_modes:
 task_id: TSK-P1-INF-004
 title: Service-to-service mTLS (mesh)
 owner_signoff: CTO
-depends_on: [TSK-P0-101]
+depends_on:
+- TSK-P1-INF-005
 evidence:
   - evidence/phase1/inf_004_service_mtls.json
 
@@ -3781,7 +3797,7 @@ Evidence
 ```yaml
 task_id: TSK-P1-INF-004
 depends_on:
-- TSK-P1-INF-002
+- TSK-P1-INF-005
 verifier_command: bash -lc 'set -euo pipefail; test -f docs/PHASE1/phase1_contract.yml
   || { echo MISSING_CONTRACT:docs/PHASE1/phase1_contract.yml; exit 1; }; test -x scripts/infra/verify_tsk_p1_inf_004.sh
   || { echo MISSING_VERIFIER:scripts/infra/verify_tsk_p1_inf_004.sh; exit 1; }; scripts/infra/verify_tsk_p1_inf_004.sh
@@ -3848,7 +3864,6 @@ Evidence must include: `manifests_valid`, `migration_job_completed`, `ledger_api
 task_id: TSK-P1-INF-003
 depends_on:
 - TSK-P1-INF-004
-- TSK-P1-INF-002
 verifier_command: bash -lc 'set -euo pipefail; test -f docs/PHASE1/phase1_contract.yml
   || { echo MISSING_CONTRACT:docs/PHASE1/phase1_contract.yml; exit 1; }; test -x scripts/infra/verify_tsk_p1_inf_003.sh
   || { echo MISSING_VERIFIER:scripts/infra/verify_tsk_p1_inf_003.sh; exit 1; }; scripts/infra/verify_tsk_p1_inf_003.sh
@@ -3891,7 +3906,8 @@ failure_modes:
 task_id: TSK-P1-INF-006
 title: Evidence signing key management in OpenBao + rotation + verifier
 owner_signoff: CTO
-depends_on: [TSK-P1-INF-004]
+depends_on:
+- TSK-P1-INF-003
 evidence:
   - evidence/phase1/inf_006_evidence_signing.json
 
@@ -3919,7 +3935,7 @@ Evidence
 ```yaml
 task_id: TSK-P1-INF-006
 depends_on:
-- TSK-P1-INF-005
+- TSK-P1-INF-003
 verifier_command: bash -lc 'set -euo pipefail; test -f docs/PHASE1/phase1_contract.yml
   || { echo MISSING_CONTRACT:docs/PHASE1/phase1_contract.yml; exit 1; }; test -x scripts/infra/verify_tsk_p1_inf_006.sh
   || { echo MISSING_VERIFIER:scripts/infra/verify_tsk_p1_inf_006.sh; exit 1; }; scripts/infra/verify_tsk_p1_inf_006.sh
@@ -3987,7 +4003,7 @@ Required deliverables:
 ```yaml
 task_id: TSK-P1-TEN-001
 depends_on:
-- TSK-P1-INF-002
+- TSK-P1-INF-006
 verifier_command: bash scripts/audit/verify_ten_001_ingress_tenant_context.sh && python3 scripts/audit/validate_evidence.py --task TSK-P1-TEN-001 --evidence evidence/phase1/ten_001_ingress_tenant_context.json
 evidence_path: evidence/phase1/ten_001_ingress_tenant_context.json
 files_to_change:
@@ -4140,7 +4156,7 @@ implement, and prove it with deterministic contract tests. Required deliverables
 ```yaml
 task_id: TSK-P1-ADP-001
 depends_on:
-- TSK-P1-TEN-001
+- TSK-P1-TEN-003
 verifier_command: bash scripts/audit/verify_adp_001_adapter_contract_tests.sh && python3 scripts/audit/validate_evidence.py --task TSK-P1-ADP-001 --evidence evidence/phase1/adp_001_adapter_contract_tests.json
 evidence_path: evidence/phase1/adp_001_adapter_contract_tests.json
 files_to_change:
@@ -4295,7 +4311,7 @@ deployed cluster (in-cluster health check or CronJob). Required deliverables:
 ```yaml
 task_id: TSK-P1-LED-001
 depends_on:
-- TSK-P1-INF-003
+- TSK-P1-ADP-003
 verifier_command: bash scripts/audit/verify_led_001_invariants_ci_cluster.sh && python3 scripts/audit/validate_evidence.py --task TSK-P1-LED-001 --evidence evidence/phase1/led_001_invariants_ci_cluster.json
 evidence_path: evidence/phase1/led_001_invariants_ci_cluster.json
 files_to_change:
@@ -4475,8 +4491,7 @@ Implement the three-layer WORM archive pipeline for records classified as `FIC_A
 ```yaml
 task_id: TSK-P1-LED-002
 depends_on:
-- TSK-P1-INF-001
-- TSK-P1-INF-006
+- TSK-P1-LED-004
 verifier_command: bash scripts/audit/verify_led_002_retention_archive_restore.sh && python3 scripts/audit/validate_evidence.py --task TSK-P1-LED-002 --evidence evidence/phase1/led_002_retention_archive_restore.json
 evidence_path: evidence/phase1/led_002_retention_archive_restore.json
 files_to_change:
@@ -4505,8 +4520,7 @@ failure_modes:
 task_id: TSK-P1-LED-002
 title: 10-year retention archive + restore pipeline (implementation)
 depends_on:
-  - TSK-P1-INF-001
-  - TSK-P1-INF-006
+- TSK-P1-LED-004
 files_to_change:
   - scripts/retention/archive_ledger_10y.sh
   - scripts/retention/restore_ledger_archive.sh
@@ -4530,7 +4544,8 @@ task_id: TSK-P1-REG-001
 title: BoZ observability role + read-only views
 owner_signoff: CTO
 requires_compliance_input: true
-depends_on: [TSK-P0-104, TSK-P0-103]
+depends_on:
+- TSK-P1-LED-002
 evidence:
   - evidence/phase1/boz_visibility_posture.json
 
@@ -4559,8 +4574,7 @@ Evidence
 ```yaml
 task_id: TSK-P1-REG-001
 depends_on:
-- TSK-P0-210
-- TSK-P1-INF-001
+- TSK-P1-LED-002
 verifier_command: bash -lc 'set -euo pipefail; test -f docs/PHASE1/phase1_contract.yml
   || { echo MISSING_CONTRACT:docs/PHASE1/phase1_contract.yml; exit 1; }; test -x scripts/audit/verify_tsk_p1_reg_001.sh
   || { echo MISSING_VERIFIER:scripts/audit/verify_tsk_p1_reg_001.sh; exit 1; }; scripts/audit/verify_tsk_p1_reg_001.sh
@@ -4631,7 +4645,6 @@ Evidence must include: `report_generated`, `signature_verified`, `determinism_co
 task_id: TSK-P1-REG-002
 depends_on:
 - TSK-P1-REG-001
-- TSK-P1-INF-006
 verifier_command: bash scripts/audit/verify_reg_002_daily_report_signed_output.sh && python3 scripts/audit/validate_evidence.py --task TSK-P1-REG-002 --evidence evidence/phase1/reg_002_daily_report_signed_output.json
 evidence_path: evidence/phase1/reg_002_daily_report_signed_output.json
 files_to_change:
@@ -4714,7 +4727,8 @@ failure_modes:
 task_id: TSK-P1-202
 title: Phase-1 closeout verifier scaffold (fail if contract missing)
 owner_signoff: CTO
-depends_on: [TSK-P0-101, TSK-P0-103]
+depends_on:
+- checkpoint/BASE-OPS
 evidence:
   - evidence/phase1/phase1_closeout.json
 
@@ -4787,7 +4801,8 @@ failure_modes:
 task_id: PERF-004
 title: Perf contracts + closeout checks (extends verify_phase1_closeout.sh)
 owner_signoff: CTO
-depends_on: [TSK-P1-202]
+depends_on:
+- TSK-P1-202
 evidence:
   - evidence/phase1/perf_004_closeout_extension.json
 
@@ -4809,7 +4824,6 @@ Evidence
 ```yaml
 task_id: PERF-004
 depends_on:
-- PERF-003
 - TSK-P1-202
 verifier_command: bash -lc 'set -euo pipefail; test -f docs/PHASE1/phase1_contract.yml
   || { echo MISSING_CONTRACT:docs/PHASE1/phase1_contract.yml; exit 1; }; test -x scripts/perf/verify_perf_004.sh
@@ -4853,7 +4867,8 @@ failure_modes:
 task_id: TSK-P1-203
 title: Sandbox deploy manifests restore + posture verifier (include migration job/init)
 owner_signoff: CTO
-depends_on: [TSK-P0-105]
+depends_on:
+- PERF-004
 evidence:
   - evidence/phase1/k8s_manifests_validation.json
 
@@ -4880,8 +4895,7 @@ Evidence
 ```yaml
 task_id: TSK-P1-203
 depends_on:
-- TSK-P1-INF-003
-- TSK-P1-202
+- PERF-004
 verifier_command: bash -lc 'set -euo pipefail; test -f docs/PHASE1/phase1_contract.yml
   || { echo MISSING_CONTRACT:docs/PHASE1/phase1_contract.yml; exit 1; }; test -x scripts/audit/verify_tsk_p1_203.sh
   || { echo MISSING_VERIFIER:scripts/audit/verify_tsk_p1_203.sh; exit 1; }; scripts/audit/verify_tsk_p1_203.sh
@@ -4924,7 +4938,8 @@ failure_modes:
 task_id: TSK-P1-204
 title: Exception case pack generator (script/tool, not a new service)
 owner_signoff: CTO
-depends_on: [TSK-P0-103]
+depends_on:
+- TSK-P1-203
 evidence:
   - evidence/phase1/exception_case_pack_sample.json
 
@@ -4950,9 +4965,7 @@ Evidence
 ```yaml
 task_id: TSK-P1-204
 depends_on:
-- PERF-006
-- TSK-P1-REG-002
-- TSK-P1-LED-001
+- TSK-P1-203
 verifier_command: bash -lc 'set -euo pipefail; test -f docs/PHASE1/phase1_contract.yml
   || { echo MISSING_CONTRACT:docs/PHASE1/phase1_contract.yml; exit 1; }; test -x scripts/audit/verify_tsk_p1_204.sh
   || { echo MISSING_VERIFIER:scripts/audit/verify_tsk_p1_204.sh; exit 1; }; scripts/audit/verify_tsk_p1_204.sh
@@ -4995,7 +5008,8 @@ failure_modes:
 task_id: TSK-P1-205
 title: KPI evidence artifact (include settlement_window_compliance_pct)
 owner_signoff: CTO
-depends_on: [TSK-P0-103]
+depends_on:
+- TSK-P1-204
 evidence:
   - evidence/phase1/kpis.json
 
@@ -5028,9 +5042,7 @@ Evidence
 ```yaml
 task_id: TSK-P1-205
 depends_on:
-- PERF-005
-- TSK-P1-REG-002
-- TSK-P1-202
+- TSK-P1-204
 verifier_command: bash -lc 'set -euo pipefail; test -f docs/PHASE1/phase1_contract.yml
   || { echo MISSING_CONTRACT:docs/PHASE1/phase1_contract.yml; exit 1; }; test -x scripts/audit/verify_tsk_p1_205.sh
   || { echo MISSING_VERIFIER:scripts/audit/verify_tsk_p1_205.sh; exit 1; }; scripts/audit/verify_tsk_p1_205.sh

@@ -1,497 +1,438 @@
-# docs/tasks/phase1_dag.yml
-# Symphony — Phase-1 definitive execution DAG (canonical)
-#
-# Notes:
-# - This DAG encodes the *minimum* dependencies required to avoid known collisions.
-# - Stages are expressed via `stage` labels plus explicit checkpoint nodes.
-# - Orchestrators should treat `checkpoint/*` nodes as no-op gates that only validate
-#   all dependencies completed successfully (i.e., they are "milestone" aggregators).
-
 dag_version: 1
 project: symphony
-scope: "clean-slate -> phase-1 closeout"
+scope: clean-slate -> phase-1 closeout
 defaults:
-  runner: "orchestrator"
+  runner: orchestrator
   fail_fast: true
-
 nodes:
-
-  # ────────────────────────────────────────────────────────────
-  # Stage 0 — Clean Slate (repo hygiene + perf gate truth)
-  # ────────────────────────────────────────────────────────────
-
-  - id: TSK-CLEAN-001
-    stage: "0-clean-slate"
-    title: "Task metadata truth pass"
-    depends_on: []
-    kind: task
-
-  - id: TSK-CLEAN-002
-    stage: "0-clean-slate"
-    title: "Kill informational-only perf posture everywhere"
-    depends_on: [TSK-CLEAN-001]
-    kind: task
-
-  - id: TSK-P1-059
-    stage: "0-clean-slate"
-    title: "Gate script modularization (no behavior changes)"
-    depends_on: [TSK-CLEAN-002]
-    kind: task
-
-  - id: checkpoint/CS-0
-    stage: "0-clean-slate"
-    title: "Checkpoint CS-0 — clean slate complete"
-    kind: checkpoint
-    depends_on: [TSK-P1-059]
-
-  # ────────────────────────────────────────────────────────────
-  # Stage 1 — Phase-0 Closeout (foundation must be bulletproof)
-  # ────────────────────────────────────────────────────────────
-
-  - id: TSK-P0-101
-    stage: "1-phase0-closeout"
-    title: "Ordered checks runner + phase gating"
-    depends_on: [checkpoint/CS-0]
-    kind: task
-
-  - id: TSK-P0-102
-    stage: "1-phase0-closeout"
-    title: "Enforce file evidence dev-only (fail-closed)"
-    depends_on: [TSK-P0-101]
-    kind: task
-
-  - id: TSK-P0-103
-    stage: "1-phase0-closeout"
-    title: "Single payload materialization"
-    depends_on: [TSK-P0-102]
-    kind: task
-
-  - id: TSK-P0-104
-    stage: "1-phase0-closeout"
-    title: "perf smoke scaffold only, forward-compatible with PERF-001/002"
-    depends_on: [TSK-P0-103]
-    kind: task
-
-  - id: TSK-P0-105
-    stage: "1-phase0-closeout"
-    title: "INV-077 approval metadata evidence (make it real, not placeholder)"
-    depends_on: [TSK-P0-104]
-    kind: task
-
-  - id: TSK-P0-LEVY-001
-    stage: "1-phase0-closeout"
-    title: "levy_rates table (versioned statutory rate registry"
-    depends_on: [TSK-P0-105]
-    kind: task
-
-  - id: TSK-P0-LEVY-002
-    stage: "1-phase0-closeout"
-    title: "TSK-P0-LEVY-002 — levy_applicable column on ingress_attestations (expand-first hook)"
-    depends_on: [TSK-P0-LEVY-001]
-    kind: task
-
-  - id: TSK-P0-LEVY-003
-    stage: "1-phase0-closeout"
-    title: "levy_calculation_records table (Phase-2 write target stub)"
-    depends_on: [TSK-P0-LEVY-002]
-    kind: task
-
-  - id: TSK-P0-LEVY-004
-    stage: "1-phase0-closeout"
-    title: "levy_remittance_periods table (ZRA reporting cycle anchor)"
-    depends_on: [TSK-P0-LEVY-003]
-    kind: task
-   
-  - id: TSK-P0-KYC-001
-    stage: "1-phase0-closeout"
-    title: "kyc_provider_registry table (trusted external provider registry)"
-    depends_on: [TSK-P0-LEVY-004]
-    kind: task
-
-  - id: TSK-P0-KYC-002
-    stage: "1-phase0-closeout"
-    title: "kyc_verification_records table (hash anchor for external verifications)"
-    depends_on: [TSK-P0-KYC-001]
-    kind: task
-
-  - id: TSK-P0-KYC-003
-    stage: "1-phase0-closeout"
-    title: " kyc_hold column on payment_outbox_pending (instruction-level KYC gate hook)"
-    depends_on: [TSK-P0-KYC-002]
-    kind: task
-
-  - id: TSK-P0-KYC-004
-    stage: "1-phase0-closeout"
-    title: "kyc_retention_policy_declaration (governance document anchor)"
-    depends_on: [TSK-P0-KYC-003]
-    kind: task
-
-  - id: TSK-P0-208
-    stage: "1-phase0-closeout"
-    title: "Gate↔Invariant linkage audit"
-    depends_on: [TSK-P0-KYC-004]
-    kind: task
-
-  - id: TSK-P0-210
-    stage: "1-phase0-closeout"
-    title: "BoZ observability role proof (include SET ROLE denial)"
-    depends_on: [TSK-P0-208]
-    kind: task
-
-  - id: checkpoint/P0-DONE
-    stage: "1-phase0-closeout"
-    title: "Checkpoint P0-DONE — Phase-0 closeout complete"
-    kind: checkpoint
-    depends_on:
-      - TSK-P0-210
-
-  # ────────────────────────────────────────────────────────────
-  # Stage 2 — Perf Governance (engineering)
-  # ────────────────────────────────────────────────────────────
-
-  - id: TSK-P1-057-FINAL
-    stage: "2-perf-governance"
-    title: "Replace placeholder runtime batching proof + enforce perf promotion"
-    depends_on: [checkpoint/P0-DONE]
-    kind: task
-
-  - id: PERF-001
-    stage: "2-perf-governance"
-    title: "Non-invasive engine metrics capture (no trace/debug logging)"
-    depends_on: [TSK-P1-057-FINAL]
-    kind: task
-
-  - id: PERF-002
-    stage: "2-perf-governance"
-    title: "Smart regression detection + mandatory warmup"
-    depends_on: [PERF-001]
-    kind: task
-
-  - id: PERF-003
-    stage: "2-perf-governance"
-    title: "Rebaseline workflow with SHA-locked approvals"
-    depends_on: [PERF-002]
-    kind: task
-
-  # PERF-004 intentionally NOT here yet: it must extend closeout verifier scaffold (TSK-P1-202).
-  - id: checkpoint/PERF-ENG
-    stage: "2-perf-governance"
-    title: "Checkpoint PERF-ENG — engineering perf governance credible"
-    kind: checkpoint
-    depends_on:
-      - PERF-003
-      - TSK-P1-057-FINAL
-
-  # ────────────────────────────────────────────────────────────
-  # Stage 3 — Perf Compliance (regulatory)
-  # ────────────────────────────────────────────────────────────
-
-  - id: PERF-005
-    stage: "3-perf-compliance"
-    title: "Regulatory timing compliance gate"
-    depends_on: [checkpoint/PERF-ENG]
-    kind: task
-
-  - id: PERF-005A
-    stage: "3-perf-compliance"
-    title: "Rail-confirmed finality seam stub"
-    depends_on: [PERF-005]
-    kind: task
-
-  - id: PERF-006
-    stage: "3-perf-compliance"
-    title: "Operational Risk Framework + Translation Layer"
-    # Collision rule: PERF-006 must not modify verify_phase1_closeout.sh until scaffold exists.
-    depends_on: [PERF-005, TSK-P1-202]
-    kind: task
-
-  - id: checkpoint/PERF-REG
-    stage: "3-perf-compliance"
-    title: "Checkpoint PERF-REG — regulator-legible perf output exists"
-    kind: checkpoint
-    depends_on: [PERF-005A, PERF-006]
-
-  # ────────────────────────────────────────────────────────────
-  # Stage 4 — Escrow (budget enforcement credibility)
-  # ────────────────────────────────────────────────────────────
-
-  - id: TSK-P1-ESC-001
-    stage: "4-escrow"
-    title: "Escrow state machine + atomic reservation semantics"
-    depends_on: [checkpoint/PERF-REG]
-    kind: task
-
-  - id: TSK-P1-ESC-002
-    stage: "4-escrow"
-    title: "Escrow invariants + cross-tenant protections"
-    depends_on: [TSK-P1-ESC-001]
-    kind: task
-
-  - id: checkpoint/ESC
-    stage: "4-escrow"
-    title: "Checkpoint ESC — escrow is mechanically credible"
-    kind: checkpoint
-    depends_on: [TSK-P1-ESC-002]
-
-  # ────────────────────────────────────────────────────────────
-  # Stage 5 — Tenancy Hierarchy Pack (HIER-001..011)
-  # ────────────────────────────────────────────────────────────
-
-  - id: TSK-P1-HIER-001
-    stage: "5-hierarchy"
-    title: "Participants + exception governance"
-    depends_on: [checkpoint/ESC]
-    kind: task
-
-  - id: TSK-P1-HIER-002
-    stage: "5-hierarchy"
-    title: "Programs + program_escrow_id bridge"
-    depends_on: [TSK-P1-HIER-001]
-    kind: task
-
-  - id: TSK-P1-HIER-003
-    stage: "5-hierarchy"
-    title: "Distribution entities + tenant denorm + ceilings"
-    depends_on: [TSK-P1-HIER-002]
-    kind: task
-
-  - id: TSK-P1-HIER-004
-    stage: "5-hierarchy"
-    title: "Person model explicit + enrollment model"
-    depends_on: [TSK-P1-HIER-003]
-    kind: task
-
-  - id: TSK-P1-HIER-005
-    stage: "5-hierarchy"
-    title: "Member devices with tenant-safe reverse lookup indexes"
-    depends_on: [TSK-P1-HIER-004]
-    kind: task
-
-  - id: TSK-P1-HIER-006
-    stage: "5-hierarchy"
-    title: "Append-only member_device_events anchored to ingress FK"
-    depends_on: [TSK-P1-HIER-005]
-    kind: task
-
-  - id: TSK-P1-HIER-007
-    stage: "5-hierarchy"
-    title: "Risk formula registry (Tier-1 deterministic default)"
-    depends_on: [TSK-P1-HIER-006]
-    kind: task
-
-  - id: TSK-P1-HIER-008
-    stage: "5-hierarchy"
-    title: "SIM swap alerts derived + formula traceability"
-    depends_on: [TSK-P1-HIER-007]
-    kind: task
-
-  - id: TSK-P1-HIER-009
-    stage: "5-hierarchy"
-    title: "verify_instruction_hierarchy() + SQLSTATE test suite"
-    depends_on: [TSK-P1-HIER-008]
-    kind: task
-
-  - id: TSK-P1-HIER-010
-    stage: "5-hierarchy"
-    title: "program_migration_events + migration function"
-    depends_on: [TSK-P1-HIER-009]
-    kind: task
-
-  - id: TSK-P1-HIER-011
-    stage: "5-hierarchy"
-    title: "Supervisor access mechanisms (READ_ONLY push, AUDIT token API, APPROVAL_REQUIRED hold queue)"
-    depends_on: [TSK-P1-HIER-010]
-    kind: task
-
-  - id: checkpoint/HIER
-    stage: "5-hierarchy"
-    title: "Checkpoint HIER — chain enforced at DB layer with deterministic SQLSTATEs and evidence"
-    kind: checkpoint
-    depends_on: [TSK-P1-HIER-011]
-
-  # ────────────────────────────────────────────────────────────
-  # Stage 6 — Base Platform Buildout (INF / TEN / ADP / LED / REG)
-  # ────────────────────────────────────────────────────────────
-
-  # 6A — BASE-INF
-  - id: TSK-P1-INF-002
-    stage: "6-base-ops/inf"
-    title: "Containerize services + build pipeline"
-    depends_on: [checkpoint/HIER]
-    kind: task
-
-  - id: TSK-P1-INF-001
-    stage: "6-base-ops/inf"
-    title: "Postgres HA + backups + PITR (operator)"
-    depends_on: [TSK-P1-INF-002]
-    kind: task
-
-  - id: TSK-P1-INF-005
-    stage: "6-base-ops/inf"
-    title: "OpenBao + External Secrets + rotation proof"
-    depends_on: [TSK-P1-INF-001]
-    kind: task
-
-  - id: TSK-P1-INF-004
-    stage: "6-base-ops/inf"
-    title: "Service-to-service mTLS (mesh)"
-    # Explicit boundary: mesh identity ≠ evidence signing identity.
-    depends_on: [TSK-P1-INF-002]
-    kind: task
-
-  - id: TSK-P1-INF-003
-    stage: "6-base-ops/inf"
-    title: "K8s manifests + migration job + health proof"
-    depends_on: [TSK-P1-INF-004, TSK-P1-INF-002]
-    kind: task
-
-  - id: TSK-P1-INF-006
-    stage: "6-base-ops/inf"
-    title: "Evidence signing key management in OpenBao + rotation + verifier"
-    # Explicit boundary: app-level signing keys live in OpenBao; unrelated to mesh cert rotation.
-    depends_on: [TSK-P1-INF-005]
-    kind: task
-
-  # 6B — BASE-TEN
-  - id: TSK-P1-TEN-001
-    stage: "6-base-ops/ten"
-    title: "Tenant context required on ingress"
-    depends_on: [TSK-P1-INF-002]
-    kind: task
-
-  - id: TSK-P1-TEN-002
-    stage: "6-base-ops/ten"
-    title: "RLS isolation + leakage tests"
-    depends_on: [TSK-P1-TEN-001]
-    kind: task
-
-  - id: TSK-P1-TEN-003
-    stage: "6-base-ops/ten"
-    title: "Tenant onboarding API (admin)"
-    depends_on: [TSK-P1-TEN-002]
-    kind: task
-
-  # 6C — BASE-ADP
-  - id: TSK-P1-ADP-001
-    stage: "6-base-ops/adp"
-    title: "Adapter interface + deterministic contract tests"
-    depends_on: [TSK-P1-TEN-001]
-    kind: task
-
-  - id: TSK-P1-ADP-002
-    stage: "6-base-ops/adp"
-    title: "Simulated rail adapter"
-    depends_on: [TSK-P1-ADP-001]
-    kind: task
-
-  - id: TSK-P1-ADP-003
-    stage: "6-base-ops/adp"
-    title: "Worker routes by rail_type deterministically"
-    depends_on: [TSK-P1-ADP-002]
-    kind: task
-
-  # 6D — BASE-LED
-  - id: TSK-P1-LED-001
-    stage: "6-base-ops/led"
-    title: "Invariant verification in CI and in-cluster"
-    depends_on: [TSK-P1-INF-003]
-    kind: task
-
-  - id: TSK-P1-LED-003
-    stage: "6-base-ops/led"
-    title: "Canonical message model enforcement"
-    depends_on: [TSK-P1-LED-001]
-    kind: task
-
-  - id: TSK-P1-LED-004
-    stage: "6-base-ops/led"
-    title: "KYC hash bridge endpoint"
-    depends_on: [TSK-P1-LED-003]
-    kind: task
-
-  - id: TSK-P1-LED-002
-    stage: "6-base-ops/led"
-    title: "10-year retention archive + restore pipeline (implementation)"
-    depends_on: [TSK-P1-INF-001, TSK-P1-INF-006]
-    kind: task
-
-  # 6E — BASE-REG
-  - id: TSK-P1-REG-001
-    stage: "6-base-ops/reg"
-    title: "BoZ observability role + read-only views"
-    depends_on: [TSK-P0-210, TSK-P1-INF-001]
-    kind: task
-
-  - id: TSK-P1-REG-002
-    stage: "6-base-ops/reg"
-    title: "Daily report endpoint + signed deterministic output"
-    depends_on: [TSK-P1-REG-001, TSK-P1-INF-006]
-    kind: task
-
-  - id: TSK-P1-REG-003
-    stage: "6-base-ops/reg"
-    title: "Incident workflow + 48-hour report export"
-    depends_on: [TSK-P1-REG-002]
-    kind: task
-
-  - id: checkpoint/BASE-OPS
-    stage: "6-base-ops"
-    title: "Checkpoint BASE-OPS — deployable, tenant-isolated, signed evidence, deterministic regulatory reports"
-    kind: checkpoint
-    depends_on:
-      - TSK-P1-INF-006
-      - TSK-P1-TEN-003
-      - TSK-P1-ADP-003
-      - TSK-P1-LED-002
-      - TSK-P1-REG-003
-
-  # ────────────────────────────────────────────────────────────
-  # Stage 7 — Phase-1 Closeout (scaffold first, then extensions)
-  # ────────────────────────────────────────────────────────────
-
-  - id: TSK-P1-202
-    stage: "7-phase1-closeout"
-    title: "Phase-1 closeout verifier scaffold (fail if contract missing)"
-    depends_on: [checkpoint/BASE-OPS]
-    kind: task
-
-  # Collision ordering rule: closeout scaffold must exist before PERF-004 extends it.
-  - id: PERF-004
-    stage: "7-phase1-closeout"
-    title: "Perf contracts + closeout checks (extends verify_phase1_closeout.sh)"
-    depends_on: [PERF-003, TSK-P1-202]
-    kind: task
-
-  - id: TSK-P1-203
-    stage: "7-phase1-closeout"
-    title: "Sandbox deploy manifests restore + posture verifier (include migration job/init)"
-    depends_on: [TSK-P1-INF-003, TSK-P1-202]
-    kind: task
-
-  - id: TSK-P1-204
-    stage: "7-phase1-closeout"
-    title: "Exception case pack generator (script/tool, not a new service)"
-    depends_on: [PERF-006, TSK-P1-REG-002, TSK-P1-LED-001]
-    kind: task
-
-  - id: TSK-P1-205
-    stage: "7-phase1-closeout"
-    title: "KPI evidence artifact (include settlement_window_compliance_pct)"
-    depends_on: [PERF-005, TSK-P1-REG-002, TSK-P1-202]
-    kind: task
-
-  - id: checkpoint/PHASE-1-CLOSEOUT
-    stage: "7-phase1-closeout"
-    title: "Checkpoint PHASE-1 CLOSEOUT — verify_phase1_closeout.sh passes; all required evidence present & valid"
-    kind: checkpoint
-    depends_on:
-      - TSK-P1-203
-      - TSK-P1-204
-      - TSK-P1-205
-      - PERF-004
-
-  - id: TSK-P1-060
-    stage: "7-phase1-closeout"
-    title: "Phase-2 followthrough program definition (only after Phase-1 mechanically closed)"
-    depends_on: [checkpoint/PHASE-1-CLOSEOUT]
-    kind: task
+- id: TSK-CLEAN-001
+  stage: 0-clean-slate
+  title: Task metadata truth pass
+  depends_on: []
+  kind: task
+- id: TSK-CLEAN-002
+  stage: 0-clean-slate
+  title: Kill informational-only perf posture everywhere
+  depends_on:
+  - TSK-CLEAN-001
+  kind: task
+- id: TSK-P1-059
+  stage: 0-clean-slate
+  title: Gate script modularization (no behavior changes)
+  depends_on:
+  - TSK-CLEAN-002
+  kind: task
+- id: checkpoint/CS-0
+  stage: 0-clean-slate
+  title: "Checkpoint CS-0 \u2014 clean slate complete"
+  kind: checkpoint
+  depends_on:
+  - TSK-P1-059
+- id: TSK-P0-101
+  stage: 1-phase0-closeout
+  title: Ordered checks runner + phase gating
+  depends_on:
+  - checkpoint/CS-0
+  kind: task
+- id: TSK-P0-102
+  stage: 1-phase0-closeout
+  title: Enforce file evidence dev-only (fail-closed)
+  depends_on:
+  - TSK-P0-101
+  kind: task
+- id: TSK-P0-103
+  stage: 1-phase0-closeout
+  title: Single payload materialization
+  depends_on:
+  - TSK-P0-102
+  kind: task
+- id: TSK-P0-104
+  stage: 1-phase0-closeout
+  title: perf smoke scaffold only, forward-compatible with PERF-001/002
+  depends_on:
+  - TSK-P0-103
+  kind: task
+- id: TSK-P0-105
+  stage: 1-phase0-closeout
+  title: INV-077 approval metadata evidence (make it real, not placeholder)
+  depends_on:
+  - TSK-P0-104
+  kind: task
+- id: TSK-P0-LEVY-001
+  stage: 1-phase0-closeout
+  title: levy_rates table (versioned statutory rate registry
+  depends_on:
+  - TSK-P0-105
+  kind: task
+- id: TSK-P0-LEVY-002
+  stage: 1-phase0-closeout
+  title: "TSK-P0-LEVY-002 \u2014 levy_applicable column on ingress_attestations (expand-first\
+    \ hook)"
+  depends_on:
+  - TSK-P0-LEVY-001
+  kind: task
+- id: TSK-P0-LEVY-003
+  stage: 1-phase0-closeout
+  title: levy_calculation_records table (Phase-2 write target stub)
+  depends_on:
+  - TSK-P0-LEVY-002
+  kind: task
+- id: TSK-P0-LEVY-004
+  stage: 1-phase0-closeout
+  title: levy_remittance_periods table (ZRA reporting cycle anchor)
+  depends_on:
+  - TSK-P0-LEVY-003
+  kind: task
+- id: TSK-P0-KYC-001
+  stage: 1-phase0-closeout
+  title: kyc_provider_registry table (trusted external provider registry)
+  depends_on:
+  - TSK-P0-LEVY-004
+  kind: task
+- id: TSK-P0-KYC-002
+  stage: 1-phase0-closeout
+  title: kyc_verification_records table (hash anchor for external verifications)
+  depends_on:
+  - TSK-P0-KYC-001
+  kind: task
+- id: TSK-P0-KYC-003
+  stage: 1-phase0-closeout
+  title: ' kyc_hold column on payment_outbox_pending (instruction-level KYC gate hook)'
+  depends_on:
+  - TSK-P0-KYC-002
+  kind: task
+- id: TSK-P0-KYC-004
+  stage: 1-phase0-closeout
+  title: kyc_retention_policy_declaration (governance document anchor)
+  depends_on:
+  - TSK-P0-KYC-003
+  kind: task
+- id: TSK-P0-208
+  stage: 1-phase0-closeout
+  title: "Gate\u2194Invariant linkage audit"
+  depends_on:
+  - TSK-P0-KYC-004
+  kind: task
+- id: TSK-P0-210
+  stage: 1-phase0-closeout
+  title: BoZ observability role proof (include SET ROLE denial)
+  depends_on:
+  - TSK-P0-208
+  kind: task
+- id: checkpoint/P0-DONE
+  stage: 1-phase0-closeout
+  title: "Checkpoint P0-DONE \u2014 Phase-0 closeout complete"
+  kind: checkpoint
+  depends_on:
+  - TSK-P0-210
+- id: TSK-P1-057-FINAL
+  stage: 2-perf-governance
+  title: Replace placeholder runtime batching proof + enforce perf promotion
+  depends_on:
+  - checkpoint/P0-DONE
+  kind: task
+- id: PERF-001
+  stage: 2-perf-governance
+  title: Non-invasive engine metrics capture (no trace/debug logging)
+  depends_on:
+  - TSK-P1-057-FINAL
+  kind: task
+- id: PERF-002
+  stage: 2-perf-governance
+  title: Smart regression detection + mandatory warmup
+  depends_on:
+  - PERF-001
+  kind: task
+- id: PERF-003
+  stage: 2-perf-governance
+  title: Rebaseline workflow with SHA-locked approvals
+  depends_on:
+  - PERF-002
+  kind: task
+- id: checkpoint/PERF-ENG
+  stage: 2-perf-governance
+  title: "Checkpoint PERF-ENG \u2014 engineering perf governance credible"
+  kind: checkpoint
+  depends_on:
+  - PERF-003
+- id: PERF-005
+  stage: 3-perf-compliance
+  title: Regulatory timing compliance gate
+  depends_on:
+  - checkpoint/PERF-ENG
+  kind: task
+- id: PERF-005A
+  stage: 3-perf-compliance
+  title: Rail-confirmed finality seam stub
+  depends_on:
+  - PERF-005
+  kind: task
+- id: PERF-006
+  stage: 3-perf-compliance
+  title: Operational Risk Framework + Translation Layer
+  depends_on:
+  - PERF-005A
+  kind: task
+- id: checkpoint/PERF-REG
+  stage: 3-perf-compliance
+  title: "Checkpoint PERF-REG \u2014 regulator-legible perf output exists"
+  kind: checkpoint
+  depends_on:
+  - PERF-006
+- id: TSK-P1-ESC-001
+  stage: 4-escrow
+  title: Escrow state machine + atomic reservation semantics
+  depends_on:
+  - checkpoint/PERF-REG
+  kind: task
+- id: TSK-P1-ESC-002
+  stage: 4-escrow
+  title: Escrow invariants + cross-tenant protections
+  depends_on:
+  - TSK-P1-ESC-001
+  kind: task
+- id: checkpoint/ESC
+  stage: 4-escrow
+  title: "Checkpoint ESC \u2014 escrow is mechanically credible"
+  kind: checkpoint
+  depends_on:
+  - TSK-P1-ESC-002
+- id: TSK-P1-HIER-001
+  stage: 5-hierarchy
+  title: Participants + exception governance
+  depends_on:
+  - checkpoint/ESC
+  kind: task
+- id: TSK-P1-HIER-002
+  stage: 5-hierarchy
+  title: Programs + program_escrow_id bridge
+  depends_on:
+  - TSK-P1-HIER-001
+  kind: task
+- id: TSK-P1-HIER-003
+  stage: 5-hierarchy
+  title: Distribution entities + tenant denorm + ceilings
+  depends_on:
+  - TSK-P1-HIER-002
+  kind: task
+- id: TSK-P1-HIER-004
+  stage: 5-hierarchy
+  title: Person model explicit + enrollment model
+  depends_on:
+  - TSK-P1-HIER-003
+  kind: task
+- id: TSK-P1-HIER-005
+  stage: 5-hierarchy
+  title: Member devices with tenant-safe reverse lookup indexes
+  depends_on:
+  - TSK-P1-HIER-004
+  kind: task
+- id: TSK-P1-HIER-006
+  stage: 5-hierarchy
+  title: Append-only member_device_events anchored to ingress FK
+  depends_on:
+  - TSK-P1-HIER-005
+  kind: task
+- id: TSK-P1-HIER-007
+  stage: 5-hierarchy
+  title: Risk formula registry (Tier-1 deterministic default)
+  depends_on:
+  - TSK-P1-HIER-006
+  kind: task
+- id: TSK-P1-HIER-008
+  stage: 5-hierarchy
+  title: SIM swap alerts derived + formula traceability
+  depends_on:
+  - TSK-P1-HIER-007
+  kind: task
+- id: TSK-P1-HIER-009
+  stage: 5-hierarchy
+  title: verify_instruction_hierarchy() + SQLSTATE test suite
+  depends_on:
+  - TSK-P1-HIER-008
+  kind: task
+- id: TSK-P1-HIER-010
+  stage: 5-hierarchy
+  title: program_migration_events + migration function
+  depends_on:
+  - TSK-P1-HIER-009
+  kind: task
+- id: TSK-P1-HIER-011
+  stage: 5-hierarchy
+  title: Supervisor access mechanisms (READ_ONLY push, AUDIT token API, APPROVAL_REQUIRED
+    hold queue)
+  depends_on:
+  - TSK-P1-HIER-010
+  kind: task
+- id: checkpoint/HIER
+  stage: 5-hierarchy
+  title: "Checkpoint HIER \u2014 chain enforced at DB layer with deterministic SQLSTATEs\
+    \ and evidence"
+  kind: checkpoint
+  depends_on:
+  - TSK-P1-HIER-011
+- id: TSK-P1-INF-002
+  stage: 6-base-ops/inf
+  title: Containerize services + build pipeline
+  depends_on:
+  - checkpoint/HIER
+  kind: task
+- id: TSK-P1-INF-001
+  stage: 6-base-ops/inf
+  title: Postgres HA + backups + PITR (operator)
+  depends_on:
+  - TSK-P1-INF-002
+  kind: task
+- id: TSK-P1-INF-005
+  stage: 6-base-ops/inf
+  title: OpenBao + External Secrets + rotation proof
+  depends_on:
+  - TSK-P1-INF-001
+  kind: task
+- id: TSK-P1-INF-004
+  stage: 6-base-ops/inf
+  title: Service-to-service mTLS (mesh)
+  depends_on:
+  - TSK-P1-INF-005
+  kind: task
+- id: TSK-P1-INF-003
+  stage: 6-base-ops/inf
+  title: K8s manifests + migration job + health proof
+  depends_on:
+  - TSK-P1-INF-004
+  kind: task
+- id: TSK-P1-INF-006
+  stage: 6-base-ops/inf
+  title: Evidence signing key management in OpenBao + rotation + verifier
+  depends_on:
+  - TSK-P1-INF-003
+  kind: task
+- id: TSK-P1-TEN-001
+  stage: 6-base-ops/ten
+  title: Tenant context required on ingress
+  depends_on:
+  - TSK-P1-INF-006
+  kind: task
+- id: TSK-P1-TEN-002
+  stage: 6-base-ops/ten
+  title: RLS isolation + leakage tests
+  depends_on:
+  - TSK-P1-TEN-001
+  kind: task
+- id: TSK-P1-TEN-003
+  stage: 6-base-ops/ten
+  title: Tenant onboarding API (admin)
+  depends_on:
+  - TSK-P1-TEN-002
+  kind: task
+- id: TSK-P1-ADP-001
+  stage: 6-base-ops/adp
+  title: Adapter interface + deterministic contract tests
+  depends_on:
+  - TSK-P1-TEN-003
+  kind: task
+- id: TSK-P1-ADP-002
+  stage: 6-base-ops/adp
+  title: Simulated rail adapter
+  depends_on:
+  - TSK-P1-ADP-001
+  kind: task
+- id: TSK-P1-ADP-003
+  stage: 6-base-ops/adp
+  title: Worker routes by rail_type deterministically
+  depends_on:
+  - TSK-P1-ADP-002
+  kind: task
+- id: TSK-P1-LED-001
+  stage: 6-base-ops/led
+  title: Invariant verification in CI and in-cluster
+  depends_on:
+  - TSK-P1-ADP-003
+  kind: task
+- id: TSK-P1-LED-003
+  stage: 6-base-ops/led
+  title: Canonical message model enforcement
+  depends_on:
+  - TSK-P1-LED-001
+  kind: task
+- id: TSK-P1-LED-004
+  stage: 6-base-ops/led
+  title: KYC hash bridge endpoint
+  depends_on:
+  - TSK-P1-LED-003
+  kind: task
+- id: TSK-P1-LED-002
+  stage: 6-base-ops/led
+  title: 10-year retention archive + restore pipeline (implementation)
+  depends_on:
+  - TSK-P1-LED-004
+  kind: task
+- id: TSK-P1-REG-001
+  stage: 6-base-ops/reg
+  title: BoZ observability role + read-only views
+  depends_on:
+  - TSK-P1-LED-002
+  kind: task
+- id: TSK-P1-REG-002
+  stage: 6-base-ops/reg
+  title: Daily report endpoint + signed deterministic output
+  depends_on:
+  - TSK-P1-REG-001
+  kind: task
+- id: TSK-P1-REG-003
+  stage: 6-base-ops/reg
+  title: Incident workflow + 48-hour report export
+  depends_on:
+  - TSK-P1-REG-002
+  kind: task
+- id: checkpoint/BASE-OPS
+  stage: 6-base-ops
+  title: "Checkpoint BASE-OPS \u2014 deployable, tenant-isolated, signed evidence,\
+    \ deterministic regulatory reports"
+  kind: checkpoint
+  depends_on:
+  - TSK-P1-REG-003
+- id: TSK-P1-202
+  stage: 7-phase1-closeout
+  title: Phase-1 closeout verifier scaffold (fail if contract missing)
+  depends_on:
+  - checkpoint/BASE-OPS
+  kind: task
+- id: PERF-004
+  stage: 7-phase1-closeout
+  title: Perf contracts + closeout checks (extends verify_phase1_closeout.sh)
+  depends_on:
+  - TSK-P1-202
+  kind: task
+- id: TSK-P1-203
+  stage: 7-phase1-closeout
+  title: Sandbox deploy manifests restore + posture verifier (include migration job/init)
+  depends_on:
+  - PERF-004
+  kind: task
+- id: TSK-P1-204
+  stage: 7-phase1-closeout
+  title: Exception case pack generator (script/tool, not a new service)
+  depends_on:
+  - TSK-P1-203
+  kind: task
+- id: TSK-P1-205
+  stage: 7-phase1-closeout
+  title: KPI evidence artifact (include settlement_window_compliance_pct)
+  depends_on:
+  - TSK-P1-204
+  kind: task
+- id: checkpoint/PHASE-1-CLOSEOUT
+  stage: 7-phase1-closeout
+  title: "Checkpoint PHASE-1 CLOSEOUT \u2014 verify_phase1_closeout.sh passes; all\
+    \ required evidence present & valid"
+  kind: checkpoint
+  depends_on:
+  - TSK-P1-205
+- id: TSK-P1-060
+  stage: 7-phase1-closeout
+  title: Phase-2 followthrough program definition (only after Phase-1 mechanically
+    closed)
+  depends_on:
+  - checkpoint/PHASE-1-CLOSEOUT
+  kind: task
