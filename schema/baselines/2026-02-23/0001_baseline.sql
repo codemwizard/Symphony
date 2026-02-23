@@ -2,7 +2,7 @@
 -- PostgreSQL database dump
 --
 
-\restrict RzATVGDaR2EmFfdbzdL17owXXeceJf73Ooh6udqHEAUWxJ1mXtquPuxxwEPCodC
+\restrict 5AgoPp52dJwmTwvEgqAUjGfNBqKKBBQD02v1O9JsBqEdCoHsDNEeRHxRL80COKl
 
 -- Dumped from database version 18.2 (Debian 18.2-1.pgdg13+1)
 -- Dumped by pg_dump version 18.2 (Debian 18.2-1.pgdg13+1)
@@ -1151,6 +1151,33 @@ CREATE TABLE public.kyc_provider_registry (
 
 
 --
+-- Name: kyc_verification_records; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.kyc_verification_records (
+    id uuid DEFAULT gen_random_uuid() NOT NULL,
+    member_id uuid NOT NULL,
+    provider_id uuid,
+    provider_code text,
+    outcome text,
+    verification_method text,
+    verification_hash text,
+    hash_algorithm text,
+    provider_signature text,
+    provider_key_version text,
+    provider_reference text,
+    jurisdiction_code character(2),
+    document_type text,
+    verified_at_provider timestamp with time zone,
+    anchored_at timestamp with time zone DEFAULT now() NOT NULL,
+    retention_class text DEFAULT 'FIC_AML_CUSTOMER_ID'::text NOT NULL,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    created_by text DEFAULT CURRENT_USER NOT NULL,
+    CONSTRAINT kyc_verification_records_retention_class_check CHECK ((retention_class = 'FIC_AML_CUSTOMER_ID'::text))
+);
+
+
+--
 -- Name: levy_calculation_records; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -1597,6 +1624,14 @@ ALTER TABLE ONLY public.kyc_provider_registry
 
 ALTER TABLE ONLY public.kyc_provider_registry
     ADD CONSTRAINT kyc_provider_unique_code UNIQUE (provider_code);
+
+
+--
+-- Name: kyc_verification_records kyc_verification_records_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.kyc_verification_records
+    ADD CONSTRAINT kyc_verification_records_pkey PRIMARY KEY (id);
 
 
 --
@@ -2104,6 +2139,27 @@ CREATE INDEX kyc_provider_jurisdiction_idx ON public.kyc_provider_registry USING
 
 
 --
+-- Name: kyc_verification_jurisdiction_outcome_idx; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX kyc_verification_jurisdiction_outcome_idx ON public.kyc_verification_records USING btree (jurisdiction_code, outcome) WHERE (outcome IS NOT NULL);
+
+
+--
+-- Name: kyc_verification_member_idx; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX kyc_verification_member_idx ON public.kyc_verification_records USING btree (member_id, anchored_at DESC);
+
+
+--
+-- Name: kyc_verification_provider_idx; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX kyc_verification_provider_idx ON public.kyc_verification_records USING btree (provider_id) WHERE (provider_id IS NOT NULL);
+
+
+--
 -- Name: levy_calc_reporting_period_idx; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -2447,6 +2503,22 @@ ALTER TABLE ONLY public.instruction_settlement_finality
 
 
 --
+-- Name: kyc_verification_records kyc_verification_records_member_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.kyc_verification_records
+    ADD CONSTRAINT kyc_verification_records_member_id_fkey FOREIGN KEY (member_id) REFERENCES public.tenant_members(member_id) ON DELETE RESTRICT;
+
+
+--
+-- Name: kyc_verification_records kyc_verification_records_provider_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.kyc_verification_records
+    ADD CONSTRAINT kyc_verification_records_provider_id_fkey FOREIGN KEY (provider_id) REFERENCES public.kyc_provider_registry(id) ON DELETE RESTRICT;
+
+
+--
 -- Name: levy_calculation_records levy_calculation_records_instruction_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -2546,5 +2618,5 @@ ALTER TABLE ONLY public.tenants
 -- PostgreSQL database dump complete
 --
 
-\unrestrict RzATVGDaR2EmFfdbzdL17owXXeceJf73Ooh6udqHEAUWxJ1mXtquPuxxwEPCodC
+\unrestrict 5AgoPp52dJwmTwvEgqAUjGfNBqKKBBQD02v1O9JsBqEdCoHsDNEeRHxRL80COKl
 

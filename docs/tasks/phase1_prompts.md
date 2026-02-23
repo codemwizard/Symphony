@@ -1547,8 +1547,8 @@ failure_modes:
 **Inputs / discovery (must do first)**
 - Confirm `kyc_provider_registry` exists (FK dependency — TSK-P0-KYC-001 must
   be complete).
-- Confirm `members` table exists (FK dependency — it is a Phase-0 primitive).
-  If absent, stop: `PREREQ MISSING: members table not found`.
+- Confirm `tenant_members` table exists (FK dependency — it is a Phase-0 primitive).
+  If absent, stop: `PREREQ MISSING: tenant_members table not found`.
 - Grep for any existing `kyc_verification_records` reference.
 - Locate task metadata. Confirm migration sequence number.
 
@@ -1566,7 +1566,7 @@ CREATE TABLE kyc_verification_records (
     -- FK to the Symphony member whose identity was verified.
     -- NOT NULL: a KYC record without a member is meaningless.
     member_id               UUID        NOT NULL
-                                REFERENCES members(id)
+                                REFERENCES public.tenant_members(member_id)
                                 ON DELETE RESTRICT,
 
     -- FK to the provider who performed the verification.
@@ -1701,7 +1701,7 @@ Verifier confirms ALL of the following:
 
 1. Table `kyc_verification_records` exists.
 2. Primary key on `id` (uuid).
-3. `member_id` is NOT NULL with FK to `members(id) ON DELETE RESTRICT`.
+3. `member_id` is NOT NULL with FK to `tenant_members(member_id) ON DELETE RESTRICT`.
 4. `provider_id` is nullable with FK to `kyc_provider_registry(id) ON DELETE RESTRICT`.
 5. `retention_class` is NOT NULL with DEFAULT 'FIC_AML_CUSTOMER_ID' and a CHECK
    constraint that enforces only this value. This is intentionally strict in Phase-0.
@@ -1732,7 +1732,7 @@ Verifier confirms ALL of the following:
   `measurement_truth` (value: `"phase0_structural_hook_only"`).
 
 **Failure modes (must be explicit)**
-- `members` table not found → exit 1 with `PREREQ MISSING: members table not found`.
+- `tenant_members` table not found → exit 1 with `PREREQ MISSING: tenant_members table not found`.
 - `kyc_provider_registry` not found (TSK-P0-KYC-001 not complete) → exit 1 with
   `PREREQ MISSING: TSK-P0-KYC-001 must complete before TSK-P0-KYC-002`.
 - `retention_class` column missing, nullable, or CHECK constraint absent → exit 1.
@@ -1772,17 +1772,20 @@ title: kyc_verification_records table (hash anchor for external verifications)
 depends_on:
   - TSK-P0-KYC-001
 files_to_change:
-  - db/migrations/*kyc_verification_records*.sql
-  - db/schema.sql
-  - scripts/verify/verify_kyc_verification_records_table.sh
-verifier_command: bash scripts/verify/verify_kyc_verification_records_table.sh
-evidence_path: evidence/phase0/kyc_verification_records_table_verification.json
+  - schema/migrations/*kyc_verification_records*_hook.sql
+  - scripts/db/verify_kyc_verification_records_hook.sh
+  - docs/PHASE0/phase0_contract.yml
+  - tasks/TSK-P0-KYC-002/meta.yml
+  - evidence/phase0/TSK-P0-KYC-002.json
+verifier_command: bash scripts/db/verify_kyc_verification_records_hook.sh
+evidence_path: evidence/phase0/TSK-P0-KYC-002.json
 acceptance_assertions:
   - kyc_verification_records table exists with external verification reference fields and hash anchor materialization columns
-  - Verifier proves foreign-key/lookup linkage expected by provider registry integration
+  - Verifier proves foreign-key linkage to public.tenant_members(member_id) and provider registry integration
+  - Evidence exists exactly at evidence/phase0/TSK-P0-KYC-002.json and is schema-valid
 failure_modes:
   - Hash anchor or provider linkage columns missing or nullable contrary to task requirements
-  - Verifier only checks file existence and not table schema
+  - Verifier checks file presence only and does not validate live table schema
 ```
 
 ## TSK-P0-KYC-003 — kyc_hold column on payment_outbox_pending (instruction-level KYC gate hook)
