@@ -2290,6 +2290,8 @@ This task replaces it with a real proof:
 
 The "perf promotion" enforcement is implemented by making this task's evidence a required
 dependency in `phase1_contract.yml` under the perf governance stage.
+Contract mapping for this task is anchored under `INV-120` with required evidence
+`evidence/phase1/p1_057_final_perf_promotion.json`.
 
 ### Scope
 - In-scope: replacing the placeholder verifier and evidence in the existing TSK-P1-057 path;

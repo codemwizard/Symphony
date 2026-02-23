@@ -419,6 +419,22 @@ else
   exit 1
 fi
 
+echo "==> Phase-0 gate↔invariant linkage audit (TSK-P0-208)"
+if [[ -x scripts/audit/verify_tsk_p0_208.sh ]]; then
+  scripts/audit/verify_tsk_p0_208.sh --evidence evidence/phase0/tsk_p0_208__gate_invariant_linkage_audit.json
+else
+  echo "ERROR: scripts/audit/verify_tsk_p0_208.sh not found"
+  exit 1
+fi
+
+echo "==> Phase-0 BoZ observability role proof (TSK-P0-210)"
+if [[ -x scripts/audit/verify_tsk_p0_210.sh ]]; then
+  scripts/audit/verify_tsk_p0_210.sh --evidence evidence/phase0/tsk_p0_210__boz_observability_role_proof_include_set.json
+else
+  echo "ERROR: scripts/audit/verify_tsk_p0_210.sh not found"
+  exit 1
+fi
+
 echo "==> Phase-0 contract evidence status (merged local evidence)"
 if [[ -x scripts/ci/verify_phase0_contract_evidence_status_parity.sh ]]; then
   scripts/ci/verify_phase0_contract_evidence_status_parity.sh
@@ -528,6 +544,14 @@ if [[ "${RUN_PHASE1_GATES:-0}" == "1" ]]; then
     scripts/audit/run_perf_smoke.sh
   else
     echo "ERROR: scripts/audit/run_perf_smoke.sh not found"
+    exit 1
+  fi
+
+  echo "==> Phase-1 perf promotion verification (TSK-P1-057-FINAL)"
+  if [[ -x scripts/audit/verify_p1_057_final_perf_promotion.sh ]]; then
+    scripts/audit/verify_p1_057_final_perf_promotion.sh
+  else
+    echo "ERROR: scripts/audit/verify_p1_057_final_perf_promotion.sh not found"
     exit 1
   fi
 

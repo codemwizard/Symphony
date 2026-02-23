@@ -885,3 +885,16 @@
     and mandatory stop/escalation conditions for governed change workflows; (2) conditional approval metadata enforcement when regulated
     surfaces are changed; (3) approval markdown + sidecar cross-link integrity (presence, shape, value consistency, hash match); and
     fail-closed PII leakage checks in approval metadata. Independent of MCP runtime enablement.
+
+- id: INV-120
+  aliases: ["I-PERF-PROMO-01"]
+  status: implemented
+  severity: P1
+  title: "Perf promotion is fail-closed and evidence-backed before perf-stage execution"
+  owners: ["team-platform", "team-invariants"]
+  sla_days: 30
+  enforcement: "scripts/audit/verify_p1_057_final_perf_promotion.sh"
+  verification: "scripts/audit/verify_p1_057_final_perf_promotion.sh; evidence/phase1/p1_057_final_perf_promotion.json"
+  notes: >
+    Requires locked-baseline perf enforcement and runtime telemetry-backed batching/AOT proof before Stage-2
+    perf governance tasks may advance.

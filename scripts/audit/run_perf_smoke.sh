@@ -8,12 +8,28 @@ BENCH_FILE="$EVIDENCE_DIR/perf_db_driver_bench.json"
 BATCH_FILE="$EVIDENCE_DIR/perf_driver_batching_telemetry.json"
 AOT_FILE="$EVIDENCE_DIR/native_aot_compilation_report.json"
 BASELINE_FILE="${PERF_BASELINE_FILE:-$ROOT_DIR/docs/operations/perf_smoke_baseline.json}"
+ENV_FILE="${ENV_FILE:-$ROOT_DIR/infra/docker/.env}"
 mkdir -p "$EVIDENCE_DIR"
 source "$ROOT_DIR/scripts/lib/evidence.sh"
 
 EVIDENCE_TS="$(evidence_now_utc)"
 EVIDENCE_GIT_SHA="$(git_sha)"
 EVIDENCE_SCHEMA_FP="$(schema_fingerprint)"
+
+if [[ -f "$ENV_FILE" ]]; then
+  set -a
+  # shellcheck disable=SC1090
+  . "$ENV_FILE"
+  set +a
+fi
+
+if [[ -z "${DATABASE_URL:-}" ]] && [[ -n "${POSTGRES_USER:-}" && -n "${POSTGRES_PASSWORD:-}" && -n "${POSTGRES_DB:-}" ]]; then
+  DATABASE_URL="postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@localhost:${HOST_POSTGRES_PORT:-5432}/${POSTGRES_DB}"
+  export DATABASE_URL
+fi
+
+LEDGER_API_PROJECT="services/ledger-api/dotnet/src/LedgerApi/LedgerApi.csproj"
+dotnet build "$LEDGER_API_PROJECT" >/tmp/symphony_perf_build.log 2>&1
 
 run_and_time() {
   local label="$1"
@@ -28,9 +44,9 @@ run_and_time() {
 }
 
 rows=()
-rows+=("$(run_and_time ingress_selftest dotnet run --project services/ledger-api/dotnet/src/LedgerApi/LedgerApi.csproj -- --self-test)")
-rows+=("$(run_and_time evidence_pack_selftest dotnet run --project services/ledger-api/dotnet/src/LedgerApi/LedgerApi.csproj -- --self-test-evidence-pack)")
-rows+=("$(run_and_time case_pack_selftest dotnet run --project services/ledger-api/dotnet/src/LedgerApi/LedgerApi.csproj -- --self-test-case-pack)")
+rows+=("$(run_and_time ingress_selftest dotnet run --no-build --project "$LEDGER_API_PROJECT" -- --self-test)")
+rows+=("$(run_and_time evidence_pack_selftest dotnet run --no-build --project "$LEDGER_API_PROJECT" -- --self-test-evidence-pack)")
+rows+=("$(run_and_time case_pack_selftest dotnet run --no-build --project "$LEDGER_API_PROJECT" -- --self-test-case-pack)")
 
 status="PASS"
 total_ms=0
@@ -100,7 +116,7 @@ Path(r"$BENCH_FILE").write_text(json.dumps({
 PY
 
 # Real driver-level batching telemetry from runtime metrics.
-if ! dotnet run --project services/ledger-api/dotnet/src/LedgerApi/LedgerApi.csproj -- --self-test-batching-telemetry >/tmp/symphony_perf_batching.log 2>&1; then
+if ! dotnet run --no-build --project "$LEDGER_API_PROJECT" -- --self-test-batching-telemetry >/tmp/symphony_perf_batching.log 2>&1; then
   echo "Batching telemetry self-test failed" >&2
   cat /tmp/symphony_perf_batching.log >&2 || true
   status="FAIL"

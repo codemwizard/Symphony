@@ -1,0 +1,60 @@
+phase: "1"
+task_id: "TSK-P1-057-FINAL"
+title: "Replace placeholder runtime batching proof + enforce perf promotion"
+owner_role: "SUPERVISOR"
+status: "completed"
+
+depends_on:
+  - "checkpoint/P0-DONE"
+
+touches:
+  - "scripts/audit/verify_p1_057_final_perf_promotion.sh"
+  - "scripts/audit/validate_evidence.py"
+  - "scripts/dev/pre_ci.sh"
+  - "docs/PHASE1/phase1_contract.yml"
+  - "docs/operations/VERIFIER_EVIDENCE_REGISTRY.yml"
+  - "docs/invariants/INVARIANTS_MANIFEST.yml"
+  - "docs/invariants/INVARIANTS_IMPLEMENTED.md"
+  - "tasks/TSK-P1-057-FINAL/meta.yml"
+
+invariants:
+  - "INV-120"
+
+mechanics:
+  gate_ids:
+    - "INT-G28"
+  verifiers:
+    - "bash scripts/audit/verify_p1_057_final_perf_promotion.sh"
+    - "python3 scripts/audit/validate_evidence.py --task TSK-P1-057-FINAL --evidence evidence/phase1/p1_057_final_perf_promotion.json"
+    - "RUN_PHASE1_GATES=1 bash scripts/dev/pre_ci.sh"
+  evidence_paths:
+    - "evidence/phase1/p1_057_final_perf_promotion.json"
+
+work:
+  - "Replace placeholder runtime batching proof with deterministic verifier backed by real perf evidence."
+  - "Enforce fail-closed perf promotion by requiring locked baseline + regression enforcement."
+  - "Wire perf promotion evidence into Phase-1 contract."
+
+acceptance_criteria:
+  - "Verifier script exists and fails closed when perf promotion invariants are missing."
+  - "Evidence file exists and validates with task_id TSK-P1-057-FINAL and pass=true."
+  - "Phase-1 contract requires p1_057_final_perf_promotion evidence under a declared invariant."
+
+verification:
+  - "bash scripts/audit/verify_p1_057_final_perf_promotion.sh"
+  - "python3 scripts/audit/validate_evidence.py --task TSK-P1-057-FINAL --evidence evidence/phase1/p1_057_final_perf_promotion.json"
+  - "RUN_PHASE1_GATES=1 bash scripts/dev/pre_ci.sh"
+
+evidence:
+  - "evidence/phase1/p1_057_final_perf_promotion.json"
+
+failure_modes:
+  - "Placeholder-only telemetry with no real runtime proof."
+  - "Baseline unlocked or regression enforcement disabled."
+  - "Evidence missing or task_id mismatch."
+
+must_read:
+  - "docs/operations/AI_AGENT_OPERATION_MANUAL.md"
+
+implementation_plan: "docs/plans/phase1/TSK-P1-057-FINAL/PLAN.md"
+implementation_log: "docs/plans/phase1/TSK-P1-057-FINAL/EXEC_LOG.md"

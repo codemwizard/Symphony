@@ -41,3 +41,6 @@ registry:
   scripts/security/lint_dotnet_quality.sh:
     emits:
       - evidence/phase1/dotnet_lint_quality.json
+  scripts/audit/verify_p1_057_final_perf_promotion.sh:
+    emits:
+      - evidence/phase1/p1_057_final_perf_promotion.json
