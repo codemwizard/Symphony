@@ -207,6 +207,15 @@
       "expires_on": "2026-12-31",
       "reviewed_by": "security_guardian",
       "approved_at": "2026-02-23"
+    },
+    {
+      "id": "DDL-ALLOW-0024",
+      "migration": "schema/migrations/0043_payment_outbox_pending_kyc_hold_hook.sql",
+      "statement_fingerprint": "449b668f21f42c201495411cfa47ce9c4fb50c83ad0d1daaf5344a9e9e1f28e5",
+      "reason": "Phase-0 KYC expand-first hook: nullable kyc_hold column on outbox hot table for Phase-2 routing gate activation.",
+      "expires_on": "2026-12-31",
+      "reviewed_by": "security_guardian",
+      "approved_at": "2026-02-23"
     }
   ]
 }
