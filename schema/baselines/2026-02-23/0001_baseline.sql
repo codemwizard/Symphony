@@ -2,7 +2,7 @@
 -- PostgreSQL database dump
 --
 
-\restrict a5BSctGRxu21hUrkjr0iPbROJM753pdwE1xDnU3En7bF6SvPjdrKi53SKoZ9JRq
+\restrict RzATVGDaR2EmFfdbzdL17owXXeceJf73Ooh6udqHEAUWxJ1mXtquPuxxwEPCodC
 
 -- Dumped from database version 18.2 (Debian 18.2-1.pgdg13+1)
 -- Dumped by pg_dump version 18.2 (Debian 18.2-1.pgdg13+1)
@@ -1592,14 +1592,6 @@ ALTER TABLE ONLY public.kyc_provider_registry
 
 
 --
--- Name: kyc_provider_registry kyc_provider_unique_active_per_jurisdiction; Type: CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.kyc_provider_registry
-    ADD CONSTRAINT kyc_provider_unique_active_per_jurisdiction UNIQUE (jurisdiction_code, provider_code);
-
-
---
 -- Name: kyc_provider_registry kyc_provider_unique_code; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -2554,5 +2546,5 @@ ALTER TABLE ONLY public.tenants
 -- PostgreSQL database dump complete
 --
 
-\unrestrict a5BSctGRxu21hUrkjr0iPbROJM753pdwE1xDnU3En7bF6SvPjdrKi53SKoZ9JRq
+\unrestrict RzATVGDaR2EmFfdbzdL17owXXeceJf73Ooh6udqHEAUWxJ1mXtquPuxxwEPCodC
 

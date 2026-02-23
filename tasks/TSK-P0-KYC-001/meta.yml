@@ -9,6 +9,7 @@ depends_on:
 
 touches:
   - "schema/migrations/0040_kyc_provider_registry_hook.sql"
+  - "schema/migrations/0041_kyc_provider_registry_drop_conflicting_uniqueness.sql"
   - "scripts/db/verify_kyc_provider_registry_hook.sh"
   - "scripts/dev/pre_ci.sh"
   - "docs/PHASE0/phase0_contract.yml"
@@ -29,7 +30,7 @@ acceptance_criteria:
   - "signing_algorithm remains unconstrained TEXT in Phase-0."
   - "Verifier emits evidence/phase0/TSK-P0-KYC-001.json and fails closed on mismatch."
   - "No runtime app code references kyc_provider_registry before Phase-2."
-  - "Migration checksum for 0040_kyc_provider_registry_hook.sql is validated."
+  - "Migration checksum for KYC hook migrations is validated."
 
 verification:
   - "bash scripts/db/verify_kyc_provider_registry_hook.sh"

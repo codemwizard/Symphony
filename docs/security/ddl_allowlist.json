@@ -198,6 +198,15 @@
       "expires_on": "2026-12-31",
       "reviewed_by": "security_guardian",
       "approved_at": "2026-02-23"
+    },
+    {
+      "id": "DDL-ALLOW-0023",
+      "migration": "schema/migrations/0041_kyc_provider_registry_drop_conflicting_uniqueness.sql",
+      "statement_fingerprint": "052070826bdd3b24a02e7815c964a4e8f1cb0db511172991cdff7cf4e329986b",
+      "reason": "Phase-0 KYC follow-up: drop conflicting full uniqueness to preserve provider version-window history while retaining partial active uniqueness.",
+      "expires_on": "2026-12-31",
+      "reviewed_by": "security_guardian",
+      "approved_at": "2026-02-23"
     }
   ]
 }

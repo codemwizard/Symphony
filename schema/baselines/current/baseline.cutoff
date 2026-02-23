@@ -1,1 +1,1 @@
-0040_kyc_provider_registry_hook.sql
+0041_kyc_provider_registry_drop_conflicting_uniqueness.sql

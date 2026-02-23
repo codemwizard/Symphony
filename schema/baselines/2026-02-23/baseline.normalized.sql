@@ -183,7 +183,6 @@
     ADD CONSTRAINT instruction_settlement_finality_pkey PRIMARY KEY (finality_id);
     ADD CONSTRAINT instruction_settlement_finality_reversal_fk FOREIGN KEY (reversal_of_instruction_id) REFERENCES public.instruction_settlement_finality(instruction_id) DEFERRABLE;
     ADD CONSTRAINT kyc_provider_registry_pkey PRIMARY KEY (id);
-    ADD CONSTRAINT kyc_provider_unique_active_per_jurisdiction UNIQUE (jurisdiction_code, provider_code);
     ADD CONSTRAINT kyc_provider_unique_code UNIQUE (provider_code);
     ADD CONSTRAINT levy_calculation_one_per_instruction UNIQUE (instruction_id);
     ADD CONSTRAINT levy_calculation_records_instruction_id_fkey FOREIGN KEY (instruction_id) REFERENCES public.ingress_attestations(attestation_id) ON DELETE RESTRICT;
@@ -1041,7 +1040,6 @@ ALTER TABLE ONLY public.ingress_attestations
 ALTER TABLE ONLY public.instruction_settlement_finality
 ALTER TABLE ONLY public.instruction_settlement_finality
 ALTER TABLE ONLY public.instruction_settlement_finality
-ALTER TABLE ONLY public.kyc_provider_registry
 ALTER TABLE ONLY public.kyc_provider_registry
 ALTER TABLE ONLY public.kyc_provider_registry
 ALTER TABLE ONLY public.levy_calculation_records

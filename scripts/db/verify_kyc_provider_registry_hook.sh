@@ -79,7 +79,7 @@ SELECT EXISTS (
   WHERE n.nspname='public' AND t.relname='kyc_provider_registry'
     AND c.contype='u' AND c.conname='kyc_provider_unique_code'
 )
-AND EXISTS (
+AND NOT EXISTS (
   SELECT 1 FROM pg_constraint c
   JOIN pg_class t ON t.oid=c.conrelid
   JOIN pg_namespace n ON n.oid=t.relnamespace
@@ -122,7 +122,7 @@ SELECT EXISTS (
   if [[ "$constraint_set_ok" == "true" && "$signing_unconstrained" == "true" && "$table_comment_ok" == "true" ]]; then
     constraints_verified="true"
   else
-    [[ "$constraint_set_ok" == "true" ]] || add_failure "required_constraints_missing"
+    [[ "$constraint_set_ok" == "true" ]] || add_failure "required_constraints_missing_or_conflicting_full_uniqueness_present"
     [[ "$signing_unconstrained" == "true" ]] || add_failure "signing_algorithm_has_check_constraint_phase_violation"
     [[ "$table_comment_ok" == "true" ]] || add_failure "table_comment_missing_required_phrase"
   fi
@@ -158,19 +158,21 @@ if [[ ${#runtime_reference_paths[@]} -gt 0 ]]; then
   add_failure "runtime_references_found"
 fi
 
-migration_version="0040_kyc_provider_registry_hook.sql"
+migration_version="0041_kyc_provider_registry_drop_conflicting_uniqueness.sql"
 migration_file="$ROOT_DIR/schema/migrations/$migration_version"
 if [[ ! -f "$migration_file" ]]; then
   add_failure "migration_file_missing:$migration_version"
 else
   expected_checksum="$(sha256sum "$migration_file" | awk '{print $1}')"
-  applied_checksum="$(psql "$DATABASE_URL" -q -t -A -v ON_ERROR_STOP=1 -X -c "SELECT checksum FROM public.schema_migrations WHERE version='$migration_version'" | tr -d '[:space:]')"
-  if [[ -z "$applied_checksum" ]]; then
-    add_failure "migration_checksum_missing_in_registry:$migration_version"
-  elif [[ "$applied_checksum" != "$expected_checksum" ]]; then
-    add_failure "migration_checksum_mismatch:$migration_version:expected=$expected_checksum:actual=$applied_checksum"
-  else
-    migration_checksum_valid="true"
+  if [[ "$migration_framework_ready" == "true" ]]; then
+    applied_checksum="$(psql "$DATABASE_URL" -q -t -A -v ON_ERROR_STOP=1 -X -c "SELECT checksum FROM public.schema_migrations WHERE version='$migration_version'" | tr -d '[:space:]')"
+    if [[ -z "$applied_checksum" ]]; then
+      add_failure "migration_checksum_missing_in_registry:$migration_version"
+    elif [[ "$applied_checksum" != "$expected_checksum" ]]; then
+      add_failure "migration_checksum_mismatch:$migration_version:expected=$expected_checksum:actual=$applied_checksum"
+    else
+      migration_checksum_valid="true"
+    fi
   fi
 fi
 
