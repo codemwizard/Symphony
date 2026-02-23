@@ -910,3 +910,16 @@
   verification: "scripts/audit/verify_perf_001_engine_metrics_capture.sh; evidence/phase1/perf_001_engine_metrics_capture.json"
   notes: >
     Captures CPU/db-query metrics from perf-smoke execution without enabling trace/debug runtime logging.
+
+- id: INV-122
+  aliases: ["I-PERF-REGRESSION-WARMUP-01"]
+  status: implemented
+  severity: P1
+  title: "Perf regression classification and mandatory warmup are baseline-driven and enforced"
+  owners: ["team-platform", "team-invariants"]
+  sla_days: 30
+  enforcement: "scripts/audit/verify_perf_002_regression_detection_warmup.sh"
+  verification: "scripts/audit/verify_perf_002_regression_detection_warmup.sh; evidence/phase1/perf_002_regression_detection_warmup.json"
+  notes: >
+    Enforces mandatory warmup before perf measurements and baseline-declared PASS/SOFT/HARD classification
+    without hardcoding thresholds in the verifier path.
