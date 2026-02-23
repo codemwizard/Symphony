@@ -1,1 +1,1 @@
-0043_payment_outbox_pending_kyc_hold_hook.sql
+0044_kyc_retention_policy_hook.sql

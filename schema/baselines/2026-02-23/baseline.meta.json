@@ -1,10 +1,10 @@
 {
   "baseline_date": "2026-02-23",
   "baseline_path": "/home/mwiza/workspace/Symphony/schema/baselines/2026-02-23/0001_baseline.sql",
-  "baseline_cutoff": "0043_payment_outbox_pending_kyc_hold_hook.sql",
-  "normalized_schema_sha256": "539e83d1efbd43042df65e0643e928ee407648f93c1fb7aed573249e41fa1d27",
+  "baseline_cutoff": "0044_kyc_retention_policy_hook.sql",
+  "normalized_schema_sha256": "6e8372f8c246795e572c4262b3c79cc9f8b7ce5ac2d5ac00e48e7de459fe78fc",
   "pg_dump_version": "pg_dump (PostgreSQL) 18.2 (Debian 18.2-1.pgdg13+1)",
   "pg_server_version": "18.2 (Debian 18.2-1.pgdg13+1)",
   "dump_source": "container:symphony-postgres",
-  "generated_at_utc": "2026-02-23T12:31:01.022581+00:00"
+  "generated_at_utc": "2026-02-23T12:50:59.977203+00:00"
 }
