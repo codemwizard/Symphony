@@ -12,12 +12,23 @@ touches:
   - "scripts/lib/evidence.sh"
   - "scripts/audit/validate_evidence_json.sh"
   - "scripts/audit/verify_tsk_p0_102.sh"
+invariants:
+  - "INV-077"
+work:
+  - "Enforce dev-only file evidence writes with fail-closed behavior outside development."
+  - "Keep evidence validation deterministic for task-level verifier outputs."
+acceptance_criteria:
+  - "TSK-P0-102 verifier passes and writes schema-valid evidence."
+  - "Evidence write guard fails closed when environment disallows file evidence."
 
 verification:
   - "bash scripts/audit/verify_tsk_p0_102.sh --evidence evidence/phase0/tsk_p0_102__enforce_file_evidence_dev_only_fail.json"
 
 evidence:
   - "evidence/phase0/tsk_p0_102__enforce_file_evidence_dev_only_fail.json"
+failure_modes:
+  - "Evidence writes are allowed in non-development environments."
+  - "Verifier output omits required evidence fields or fails schema validation."
 
 must_read:
   - "docs/operations/AI_AGENT_OPERATION_MANUAL.md"
