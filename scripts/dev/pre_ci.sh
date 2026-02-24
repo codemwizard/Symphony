@@ -108,28 +108,14 @@ fi
 
 echo "==> Sync base ref for CI parity (refs/remotes/origin/main)"
 if ! git fetch --no-tags --prune origin main:refs/remotes/origin/main >/dev/null 2>&1; then
-  echo "WARN: fetch failed; probing local refs for parity diff base"
-fi
-
-BASE_REF_CANDIDATES=(
-  "refs/remotes/origin/main"
-  "origin/main"
-  "refs/heads/origin/main"
-  "FETCH_HEAD"
-)
-for candidate in "${BASE_REF_CANDIDATES[@]}"; do
-  if git rev-parse --verify "${candidate}^{commit}" >/dev/null 2>&1; then
-    export BASE_REF="$candidate"
-    break
-  fi
-done
-if [[ -z "$BASE_REF" ]]; then
-  echo "ERROR: no usable origin/main ref found (tried refs/remotes/origin/main, origin/main, refs/heads/origin/main, FETCH_HEAD)"
+  echo "ERROR: failed to fetch refs/remotes/origin/main; cannot run parity diff gates"
   exit 1
 fi
-if [[ "$BASE_REF" != "refs/remotes/origin/main" ]]; then
-  echo "WARN: using fallback BASE_REF=${BASE_REF} (remote-tracking ref unavailable)"
+if ! git rev-parse --verify "refs/remotes/origin/main^{commit}" >/dev/null 2>&1; then
+  echo "ERROR: refs/remotes/origin/main not found after fetch"
+  exit 1
 fi
+export BASE_REF="refs/remotes/origin/main"
 
 if [[ -x scripts/audit/enforce_change_rule.sh ]]; then
   echo "==> Structural change-rule gate (CI parity, range diff)"

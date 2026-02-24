@@ -45,3 +45,4 @@
 - Security privilege posture remains fail-closed even when SQL grant statements are wrapped across multiple lines.
 - 2026-02-24: `TSK-P1-HIER-002` adds Phase-1 hierarchy bridge checks (`programs.program_escrow_id` and `person_roles.member_id` FK posture) as regulated-surface integrity hardening validated through verifier evidence.
 - 2026-02-24: `TSK-P1-HIER-005` adds deterministic hierarchy-linkage verification semantics (`verify_instruction_hierarchy`) with SQLSTATE-backed fail-closed evidence.
+- 2026-02-24: `TSK-P1-HIER-007` adds deterministic risk formula registry + program default tier posture (append-only `risk_formula_registry`, `programs.default_risk_tier`, and read-only `vw_program_tier_effective`) with verifier-backed integrity evidence.
