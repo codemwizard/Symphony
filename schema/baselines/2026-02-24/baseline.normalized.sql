@@ -232,6 +232,9 @@
     ADD CONSTRAINT levy_periods_unique_period_jurisdiction UNIQUE (period_code, jurisdiction_code);
     ADD CONSTRAINT levy_rates_pkey PRIMARY KEY (id);
     ADD CONSTRAINT levy_remittance_periods_pkey PRIMARY KEY (id);
+    ADD CONSTRAINT member_device_events_ingress_fk FOREIGN KEY (tenant_id, instruction_id) REFERENCES public.ingress_attestations(tenant_id, instruction_id) ON DELETE RESTRICT;
+    ADD CONSTRAINT member_device_events_member_id_fkey FOREIGN KEY (member_id) REFERENCES public.members(member_id) ON DELETE RESTRICT;
+    ADD CONSTRAINT member_device_events_pkey PRIMARY KEY (event_id);
     ADD CONSTRAINT member_devices_member_id_fkey FOREIGN KEY (member_id) REFERENCES public.members(member_id) ON DELETE RESTRICT;
     ADD CONSTRAINT member_devices_pkey PRIMARY KEY (member_id, device_id_hash);
     ADD CONSTRAINT member_devices_tenant_id_fkey FOREIGN KEY (tenant_id) REFERENCES public.tenants(tenant_id) ON DELETE RESTRICT;
@@ -329,6 +332,7 @@
     AS $$
     AS $$
     AS $$
+    AS $$
     BEGIN
     COALESCE(p_metadata, '{}'::jsonb),
     CONSTRAINT anchor_sync_operations_attempt_count_check CHECK ((attempt_count >= 0)),
@@ -374,6 +378,8 @@
     CONSTRAINT levy_remittance_periods_check CHECK ((period_end >= period_start)),
     CONSTRAINT levy_remittance_periods_check1 CHECK (((filing_deadline IS NULL) OR (filing_deadline >= period_end))),
     CONSTRAINT levy_remittance_periods_period_code_check CHECK ((period_code ~ '^[0-9]{4}-[0-9]{2}$'::text))
+    CONSTRAINT member_device_events_device_id_event_type_chk CHECK (((device_id IS NULL) = (event_type = ANY (ARRAY['UNREGISTERED_DEVICE'::text, 'REVOKED_DEVICE_ATTEMPT'::text])))),
+    CONSTRAINT member_device_events_event_type_check CHECK ((event_type = ANY (ARRAY['ENROLLED_DEVICE'::text, 'UNREGISTERED_DEVICE'::text, 'REVOKED_DEVICE_ATTEMPT'::text])))
     CONSTRAINT member_devices_status_check CHECK ((status = ANY (ARRAY['ACTIVE'::text, 'INACTIVE'::text, 'REVOKED'::text])))
     CONSTRAINT members_ceiling_amount_minor_check CHECK ((ceiling_amount_minor >= 0)),
     CONSTRAINT members_kyc_status_check CHECK ((kyc_status = ANY (ARRAY['PENDING'::text, 'VERIFIED'::text, 'REJECTED'::text]))),
@@ -433,6 +439,7 @@
     INTO existing_attempt
     INTO existing_pending
     INTO v_instruction_id, v_participant_id, v_sequence_id, v_idempotency_key, v_rail_type, v_payload
+    LANGUAGE plpgsql
     LANGUAGE plpgsql
     LANGUAGE plpgsql
     LANGUAGE plpgsql
@@ -556,6 +563,7 @@
     SET search_path TO 'pg_catalog', 'public'
     SET search_path TO 'pg_catalog', 'public'
     SET search_path TO 'pg_catalog', 'public'
+    USING ERRCODE = 'P0001';
     USING ERRCODE = 'P7004';
     VALUES (p_participant_id, 2)
     WHEN to_regprocedure('public.uuidv7()') IS NOT NULL THEN 'uuidv7'
@@ -657,6 +665,7 @@
     created_at timestamp with time zone DEFAULT now() NOT NULL,
     created_at timestamp with time zone DEFAULT now() NOT NULL,
     created_at timestamp with time zone DEFAULT now() NOT NULL,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
     created_at timestamp with time zone DEFAULT now(),
     created_by text DEFAULT CURRENT_USER NOT NULL,
     created_by text DEFAULT CURRENT_USER NOT NULL,
@@ -666,7 +675,9 @@
     currency_code character(3) NOT NULL,
     currency_code character(3),
     description text NOT NULL,
+    device_id text,
     device_id_hash text NOT NULL,
+    device_id_hash text,
     display_name text NOT NULL,
     document_type text,
     downstream_ref text,
@@ -684,6 +695,8 @@
     escrow_id uuid NOT NULL,
     event_id uuid DEFAULT public.uuid_v7_or_random() NOT NULL,
     event_id uuid DEFAULT public.uuid_v7_or_random() NOT NULL,
+    event_id uuid DEFAULT public.uuid_v7_or_random() NOT NULL,
+    event_type text NOT NULL,
     event_type text NOT NULL,
     event_type text NOT NULL,
     event_type text NOT NULL,
@@ -703,6 +716,7 @@
     grace_expires_at timestamp with time zone,
     hash_algorithm text,
     iccid_hash text,
+    iccid_hash text,
     id uuid DEFAULT gen_random_uuid() NOT NULL,
     id uuid DEFAULT gen_random_uuid() NOT NULL,
     id uuid DEFAULT gen_random_uuid() NOT NULL,
@@ -713,6 +727,7 @@
     idempotency_key text NOT NULL,
     idempotency_key text,
     identity_hash text NOT NULL,
+    instruction_id text NOT NULL,
     instruction_id text NOT NULL,
     instruction_id text NOT NULL,
     instruction_id text NOT NULL,
@@ -752,6 +767,7 @@
     member_id uuid DEFAULT public.uuid_v7_or_random() NOT NULL,
     member_id uuid NOT NULL,
     member_id uuid NOT NULL,
+    member_id uuid NOT NULL,
     member_id uuid,
     member_id uuid,
     member_ref text NOT NULL,
@@ -771,6 +787,7 @@
     nfs_sequence_ref text,
     nfs_sequence_ref text,
     nfs_sequence_ref text,
+    observed_at timestamp with time zone NOT NULL,
     occurred_at timestamp with time zone DEFAULT now() NOT NULL,
     occurred_at timestamp with time zone DEFAULT now() NOT NULL,
     operation_id uuid DEFAULT public.uuid_v7_or_random() NOT NULL,
@@ -924,6 +941,7 @@
     subject_token,
     taxable_amount_minor bigint,
     tenant_id uuid DEFAULT gen_random_uuid() NOT NULL,
+    tenant_id uuid NOT NULL,
     tenant_id uuid NOT NULL,
     tenant_id uuid NOT NULL,
     tenant_id uuid NOT NULL,
@@ -1163,6 +1181,7 @@
   ORDER BY p.next_attempt_at ASC, p.created_at ASC
   PERFORM 1
   PERFORM set_config('symphony.allow_pii_purge', 'on', true);
+  RAISE EXCEPTION 'member_device_events is append-only'
   RAISE EXCEPTION 'pii_vault_records is non-deletable'
   RETURN NEW;
   RETURN NEW;
@@ -1306,7 +1325,9 @@ $$;
 $$;
 $$;
 $$;
+$$;
 )
+);
 );
 );
 );
@@ -1397,6 +1418,9 @@ ALTER TABLE ONLY public.levy_calculation_records
 ALTER TABLE ONLY public.levy_rates
 ALTER TABLE ONLY public.levy_remittance_periods
 ALTER TABLE ONLY public.levy_remittance_periods
+ALTER TABLE ONLY public.member_device_events
+ALTER TABLE ONLY public.member_device_events
+ALTER TABLE ONLY public.member_device_events
 ALTER TABLE ONLY public.member_devices
 ALTER TABLE ONLY public.member_devices
 ALTER TABLE ONLY public.member_devices
@@ -1480,6 +1504,7 @@ BEGIN
 BEGIN
 BEGIN
 BEGIN
+BEGIN
 CREATE FUNCTION public.anchor_dispatched_outbox_attempt() RETURNS trigger
 CREATE FUNCTION public.authorize_escrow_reservation(p_program_escrow_id uuid, p_amount_minor bigint, p_actor_id text DEFAULT 'system'::text, p_reason text DEFAULT NULL::text, p_metadata jsonb DEFAULT '{}'::jsonb) RETURNS uuid
 CREATE FUNCTION public.bump_participant_outbox_seq(p_participant_id text) RETURNS bigint
@@ -1490,6 +1515,7 @@ CREATE FUNCTION public.complete_outbox_attempt(p_outbox_id uuid, p_lease_token u
 CREATE FUNCTION public.deny_append_only_mutation() RETURNS trigger
 CREATE FUNCTION public.deny_final_instruction_mutation() RETURNS trigger
 CREATE FUNCTION public.deny_ingress_attestations_mutation() RETURNS trigger
+CREATE FUNCTION public.deny_member_device_events_mutation() RETURNS trigger
 CREATE FUNCTION public.deny_outbox_attempts_mutation() RETURNS trigger
 CREATE FUNCTION public.deny_pii_vault_mutation() RETURNS trigger
 CREATE FUNCTION public.deny_revocation_mutation() RETURNS trigger
@@ -1536,6 +1562,8 @@ CREATE INDEX idx_ingress_attestations_received_at ON public.ingress_attestations
 CREATE INDEX idx_ingress_attestations_tenant_correlation ON public.ingress_attestations USING btree (tenant_id, correlation_id) WHERE (correlation_id IS NOT NULL);
 CREATE INDEX idx_ingress_attestations_tenant_received ON public.ingress_attestations USING btree (tenant_id, received_at) WHERE (tenant_id IS NOT NULL);
 CREATE INDEX idx_instruction_settlement_finality_participant_finalized ON public.instruction_settlement_finality USING btree (participant_id, finalized_at DESC);
+CREATE INDEX idx_member_device_events_instruction ON public.member_device_events USING btree (instruction_id);
+CREATE INDEX idx_member_device_events_tenant_member_observed ON public.member_device_events USING btree (tenant_id, member_id, observed_at DESC);
 CREATE INDEX idx_member_devices_active_device ON public.member_devices USING btree (tenant_id, device_id_hash) WHERE (status = 'ACTIVE'::text);
 CREATE INDEX idx_member_devices_active_iccid ON public.member_devices USING btree (tenant_id, iccid_hash) WHERE ((iccid_hash IS NOT NULL) AND (status = 'ACTIVE'::text));
 CREATE INDEX idx_member_devices_tenant_member ON public.member_devices USING btree (tenant_id, member_id);
@@ -1589,6 +1617,7 @@ CREATE TABLE public.kyc_verification_records (
 CREATE TABLE public.levy_calculation_records (
 CREATE TABLE public.levy_rates (
 CREATE TABLE public.levy_remittance_periods (
+CREATE TABLE public.member_device_events (
 CREATE TABLE public.member_devices (
 CREATE TABLE public.members (
 CREATE TABLE public.participant_outbox_sequences (
@@ -1616,6 +1645,7 @@ CREATE TRIGGER trg_deny_evidence_packs_mutation BEFORE DELETE OR UPDATE ON publi
 CREATE TRIGGER trg_deny_external_proofs_mutation BEFORE DELETE OR UPDATE ON public.external_proofs FOR EACH ROW EXECUTE FUNCTION public.deny_append_only_mutation();
 CREATE TRIGGER trg_deny_final_instruction_mutation BEFORE DELETE OR UPDATE ON public.instruction_settlement_finality FOR EACH ROW EXECUTE FUNCTION public.deny_final_instruction_mutation();
 CREATE TRIGGER trg_deny_ingress_attestations_mutation BEFORE DELETE OR UPDATE ON public.ingress_attestations FOR EACH ROW EXECUTE FUNCTION public.deny_ingress_attestations_mutation();
+CREATE TRIGGER trg_deny_member_device_events_mutation BEFORE DELETE OR UPDATE ON public.member_device_events FOR EACH ROW EXECUTE FUNCTION public.deny_member_device_events_mutation();
 CREATE TRIGGER trg_deny_outbox_attempts_mutation BEFORE DELETE OR UPDATE ON public.payment_outbox_attempts FOR EACH ROW EXECUTE FUNCTION public.deny_outbox_attempts_mutation();
 CREATE TRIGGER trg_deny_pii_purge_events_mutation BEFORE DELETE OR UPDATE ON public.pii_purge_events FOR EACH ROW EXECUTE FUNCTION public.deny_append_only_mutation();
 CREATE TRIGGER trg_deny_pii_purge_requests_mutation BEFORE DELETE OR UPDATE ON public.pii_purge_requests FOR EACH ROW EXECUTE FUNCTION public.deny_append_only_mutation();
@@ -1661,6 +1691,7 @@ DECLARE
 DECLARE
 DECLARE
 DECLARE
+END;
 END;
 END;
 END;

@@ -2,7 +2,7 @@
 -- PostgreSQL database dump
 --
 
-\restrict ygmEGNPwAzZX5ffBfLHcQy62bHxL6blBaDhQaLVekq83Z2hGz1ngCtI9ndD0UKi
+\restrict B3I1z7fcPYSvZWWPgSdRsQpkbLEHcxrDg6CoK8hCbIqsHFdwe02dXC9qp8V9IF3
 
 -- Dumped from database version 18.2 (Debian 18.2-1.pgdg13+1)
 -- Dumped by pg_dump version 18.2 (Debian 18.2-1.pgdg13+1)
@@ -421,6 +421,20 @@ CREATE FUNCTION public.deny_ingress_attestations_mutation() RETURNS trigger
     RAISE EXCEPTION 'ingress_attestations is append-only'
       USING ERRCODE = 'P0001';
   END;
+$$;
+
+
+--
+-- Name: deny_member_device_events_mutation(); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.deny_member_device_events_mutation() RETURNS trigger
+    LANGUAGE plpgsql
+    AS $$
+BEGIN
+  RAISE EXCEPTION 'member_device_events is append-only'
+    USING ERRCODE = 'P0001';
+END;
 $$;
 
 
@@ -1618,6 +1632,26 @@ CREATE TABLE public.levy_remittance_periods (
 
 
 --
+-- Name: member_device_events; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.member_device_events (
+    event_id uuid DEFAULT public.uuid_v7_or_random() NOT NULL,
+    tenant_id uuid NOT NULL,
+    member_id uuid NOT NULL,
+    instruction_id text NOT NULL,
+    device_id text,
+    device_id_hash text,
+    iccid_hash text,
+    event_type text NOT NULL,
+    observed_at timestamp with time zone NOT NULL,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    CONSTRAINT member_device_events_device_id_event_type_chk CHECK (((device_id IS NULL) = (event_type = ANY (ARRAY['UNREGISTERED_DEVICE'::text, 'REVOKED_DEVICE_ATTEMPT'::text])))),
+    CONSTRAINT member_device_events_event_type_check CHECK ((event_type = ANY (ARRAY['ENROLLED_DEVICE'::text, 'UNREGISTERED_DEVICE'::text, 'REVOKED_DEVICE_ATTEMPT'::text])))
+);
+
+
+--
 -- Name: member_devices; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -2172,6 +2206,14 @@ ALTER TABLE ONLY public.levy_remittance_periods
 
 
 --
+-- Name: member_device_events member_device_events_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.member_device_events
+    ADD CONSTRAINT member_device_events_pkey PRIMARY KEY (event_id);
+
+
+--
 -- Name: member_devices member_devices_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -2616,6 +2658,20 @@ CREATE INDEX idx_instruction_settlement_finality_participant_finalized ON public
 
 
 --
+-- Name: idx_member_device_events_instruction; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_member_device_events_instruction ON public.member_device_events USING btree (instruction_id);
+
+
+--
+-- Name: idx_member_device_events_tenant_member_observed; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_member_device_events_tenant_member_observed ON public.member_device_events USING btree (tenant_id, member_id, observed_at DESC);
+
+
+--
 -- Name: idx_member_devices_active_device; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -2975,6 +3031,13 @@ CREATE TRIGGER trg_deny_ingress_attestations_mutation BEFORE DELETE OR UPDATE ON
 
 
 --
+-- Name: member_device_events trg_deny_member_device_events_mutation; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER trg_deny_member_device_events_mutation BEFORE DELETE OR UPDATE ON public.member_device_events FOR EACH ROW EXECUTE FUNCTION public.deny_member_device_events_mutation();
+
+
+--
 -- Name: payment_outbox_attempts trg_deny_outbox_attempts_mutation; Type: TRIGGER; Schema: public; Owner: -
 --
 
@@ -3316,6 +3379,22 @@ ALTER TABLE ONLY public.levy_calculation_records
 
 
 --
+-- Name: member_device_events member_device_events_ingress_fk; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.member_device_events
+    ADD CONSTRAINT member_device_events_ingress_fk FOREIGN KEY (tenant_id, instruction_id) REFERENCES public.ingress_attestations(tenant_id, instruction_id) ON DELETE RESTRICT;
+
+
+--
+-- Name: member_device_events member_device_events_member_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.member_device_events
+    ADD CONSTRAINT member_device_events_member_id_fkey FOREIGN KEY (member_id) REFERENCES public.members(member_id) ON DELETE RESTRICT;
+
+
+--
 -- Name: member_devices member_devices_member_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -3471,5 +3550,5 @@ ALTER TABLE ONLY public.tenants
 -- PostgreSQL database dump complete
 --
 
-\unrestrict ygmEGNPwAzZX5ffBfLHcQy62bHxL6blBaDhQaLVekq83Z2hGz1ngCtI9ndD0UKi
+\unrestrict B3I1z7fcPYSvZWWPgSdRsQpkbLEHcxrDg6CoK8hCbIqsHFdwe02dXC9qp8V9IF3
 

@@ -39,3 +39,4 @@ This ADR remains the authoritative governance reference for baseline change chec
 - 2026-02-23: Baseline regenerated after escrow ceiling enforcement + cross-tenant protections migration (0046).
 - 2026-02-24: Baseline regenerated after hierarchy bridge migration for `programs.program_escrow_id` + `person_roles.member_id` (0047).
 - 2026-02-24: Baseline regenerated after member-device distribution + tenant-denorm index posture migration (0048).
+- 2026-02-24: Baseline regenerated after member-device event append-only ingress-anchored migration (0049).
