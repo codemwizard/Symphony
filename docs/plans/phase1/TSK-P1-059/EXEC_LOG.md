@@ -26,4 +26,8 @@ Plan: PLAN.md
 
 ## Final summary
 - TSK-P1-059 task metadata and plan/log linkage are present and preflight-compatible.
+
+## remediation_note_2026_02_24
+- Root cause: pre-CI allowed non-canonical diff-base fallback, which could diverge from CI parity semantics.
+- Resolution: canonical base-ref now fail-closed to `refs/remotes/origin/main`; parity verifier enforces this rule.
 - Diff semantics parity is now single-source and fail-closed on `refs/remotes/origin/main`.

@@ -27,3 +27,7 @@ origin_task_id: TSK-P1-059
 
 ## final_status
 - completed
+
+## remediation_note_2026_02_24
+- Removed optional `FETCH_HEAD` base-ref fallback from pre-CI parity path.
+- Enforced fail-closed canonical base-ref resolution to `refs/remotes/origin/main`.
