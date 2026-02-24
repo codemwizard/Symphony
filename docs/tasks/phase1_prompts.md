@@ -3068,19 +3068,19 @@ Goal
 - Implement the canonical DAG task intent for TSK-P1-HIER-001: Participants + exception governance.
 
 Scope
-- Create DB tables: participants, programs, program_supervisors, distribution_entities.
-- Denormalize tenant_id into each table for index-level isolation.
-- Enforce status enums, uniqueness constraints, and date-range constraints.
+- Build the participant-facing tables (`participants`, `program_supervisors`, `distribution_entities`) while reusing the existing `public.programs` table from the escrow work.
+- Ensure each row references `tenant_members` for tenant attribution and denormalize `tenant_id` only where needed for tenant isolation.
+- Enforce status enums, tenant-scoped uniqueness constraints, and date-range constraints.
 
 Requirements
-1) Migrations create tables with UUID v7 default, strict CHECK constraints.
-2) Indexes must be tenant-scoped (leading tenant_id where applicable).
-3) Add SECURITY DEFINER functions for controlled inserts/updates where policy requires approvals (CTO sign-off is final; compliance input required for supervisor scope design).
-4) Provide verifier script scripts/db/verify_hier_001.sh that checks:
-   - tables exist, columns/types correct, indexes exist, constraints exist.
+1) Migrations create these tables with UUID v7 defaults, strict CHECK constraints, tenant-leading indexes, and references into `programs`.
+2) All foreign keys referencing members must point at `public.tenant_members`.
+3) Provide SECURITY DEFINER helpers for the approval gates described in the narrative (CTO + compliance supervision).
+4) `scripts/db/verify_tsk_p1_hier_001.sh` must assert:
+   - the new tables exist, column/index/constraint definitions match the prompt, and references to `tenant_members`/`programs` include tenant_id matches.
 
 Evidence
-- evidence/phase1/hier_001_schema.json including schema_fingerprint, index_list, constraint_list.
+- evidence/phase1/hier_001_schema.json capturing schema fingerprint, indexes, constraints, and tenant member/program references.
 
 Non-goals
 - No runtime API endpoints in this task.
@@ -3098,10 +3098,9 @@ verifier_command: bash -lc 'set -euo pipefail; test -f docs/PHASE1/phase1_contra
   || { echo MISSING_CONTRACT:docs/PHASE1/phase1_contract.yml; exit 1; }; test -x scripts/db/verify_tsk_p1_hier_001.sh
   || { echo MISSING_VERIFIER:scripts/db/verify_tsk_p1_hier_001.sh; exit 1; }; scripts/db/verify_tsk_p1_hier_001.sh
   --evidence evidence/phase1/tsk_p1_hier_001__participants_exception_governance.json;
-  python3 -c "import json,pathlib; p=pathlib.Path(\"evidence/phase1/tsk_p1_hier_001__participants_exception_governance.json\");
-  assert p.exists(), f\"MISSING_EVIDENCE:{p}\"; d=json.loads(p.read_text()); assert
-  d.get(\"task_id\") == \"TSK-P1-HIER-001\", d.get(\"task_id\"); assert isinstance(d.get(\"status\"),
-  str) and d[\"status\"] in {\"PASS\",\"DONE\",\"OK\"}, d.get(\"status\")"'
+  python3 -c "import json,pathlib; p=pathlib.Path("evidence/phase1/tsk_p1_hier_001__participants_exception_governance.json");
+  assert p.exists(), f"MISSING_EVIDENCE:{p}"; d=json.loads(p.read_text()); assert
+  d.get("task_id") == "TSK-P1-HIER-001", d.get("task_id"); assert d.get("status") in {"PASS","DONE","OK"}"'
 evidence_path: evidence/phase1/tsk_p1_hier_001__participants_exception_governance.json
 files_to_change:
 - tasks/TSK-P1-HIER-001/meta.yml
@@ -3113,23 +3112,18 @@ files_to_change:
 - evidence/**
 - scripts/db/verify_tsk_p1_hier_001.sh
 acceptance_assertions:
-- Evidence file exists at evidence/phase1/tsk_p1_hier_001__participants_exception_governance.json
-  and is valid JSON.
-- Evidence JSON contains task_id == 'TSK-P1-HIER-001' and pass == true.
-- tasks/TSK-P1-HIER-001/meta.yml exists and records terminal success state for the
-  task.
-- All DAG dependencies are complete before execution starts.
-- Task-specific verifier(s) described in the task narrative (if any) run green before
-  closeout.
+- Evidence file exists at evidence/phase1/tsk_p1_hier_001__participants_exception_governance.json and is valid JSON.
+- Evidence JSON contains task_id == 'TSK-P1-HIER-001' and documents tenant_members/programs reuse.
+- tasks/TSK-P1-HIER-001/meta.yml exists and records terminal success.
+- Dependencies (checkpoint/ESC) show PASS evidence before this task runs.
+- Task-specific verifier(s) run green before closeout.
 failure_modes:
-- Missing prompt section or missing execution metadata patch block => STOP.
+- Missing prompt section or execution metadata block => STOP.
 - Missing phase contract file => FAIL_CLOSED.
-- Evidence file missing / invalid JSON / task_id mismatch / pass != true => FAIL.
+- Evidence file missing/invalid/task_id mismatch/pass != true => FAIL.
 - Dependency incomplete => BLOCKED.
-- Undeclared file modifications outside files_to_change without explicit justification
-  => FAIL_REVIEW.
+- Undeclared file modifications outside files_to_change => FAIL_REVIEW.
 ```
-
 
 ## TSK-P1-HIER-002 — Programs + program_escrow_id bridge
 
