@@ -1,0 +1,17 @@
+{
+  "details": {
+    "checkpoint": "checkpoint/CS-0",
+    "dependencies": [
+      "TSK-P1-059"
+    ],
+    "dependency_evidence": {
+      "TSK-P1-059": "evidence/phase1/tsk_p1_059__gate_script_modularization_no_behavior_changes.json"
+    }
+  },
+  "errors": [],
+  "git_sha": "66d0cd0169f765e4480dc48d1cb65c62f4fc1662",
+  "pass": true,
+  "status": "PASS",
+  "task_id": "checkpoint/CS-0",
+  "timestamp_utc": "2026-02-24T19:41:07Z"
+}
