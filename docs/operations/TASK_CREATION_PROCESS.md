@@ -10,6 +10,15 @@ If the change touches production-affecting surfaces (schema/scripts/workflows/ru
 
 See: `docs/operations/REMEDIATION_TRACE_WORKFLOW.md`.
 
+DRD policy (severity-based incident documentation) is canonical at:
+- `.agent/policies/debug-remediation-policy.md`
+
+If a task or debugging effort meets DRD thresholds:
+- `L1`: create DRD Lite.
+- `L2/L3`: create DRD Full.
+
+Do not require DRD for `L0` trivial fixes.
+
 ## 1) Requirements analysis
 
 1. **Read invariants first**

@@ -6,6 +6,7 @@ Rules:
 - Items here are not considered complete work.
 - Each entry must include owner, unblock trigger, and done criteria.
 - Moving an item out of this inbox requires creating or linking an executable task section in `docs/tasks/phase1_prompts.md` (or its phase-equivalent prompt pack).
+- For deferred incidents classified `L2/L3`, include a DRD Full link (canonical policy: `.agent/policies/debug-remediation-policy.md`).
 
 ## Entries
 

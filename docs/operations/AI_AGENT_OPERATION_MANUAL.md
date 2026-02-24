@@ -54,6 +54,16 @@ Violations stop the agent; escalate to a human supervisor.
 4. Finalize by updating the plan with root cause, final solution, and approvals (if required). Curate long-term learnings into `docs/operations/troubleshooting/**`.
 5. The Evidence & Audit agent must validate that approvals are recorded before evidence artifacts are accepted.
 
+### DRD Policy Integration
+
+- Canonical DRD policy: `.agent/policies/debug-remediation-policy.md`.
+- DRD applies to implementation blockers and remediation (not only post-implementation incidents).
+- Severity model is mandatory:
+  - `L0` trivial: no DRD record required.
+  - `L1` blocker: DRD Lite required.
+  - `L2/L3` non-converging or systemic: DRD Full required.
+- Two-strike rule is mandatory for non-convergence: after two full reruns without convergence (or blocker changes), stop blind reruns and switch to first-fail artifact triage with DRD Full.
+
 ## Agent Roles (Mapping to v2)
 
 Use `docs/operations/AGENT_ROLE_RECONCILIATION.md` to map current agents to Phase-1 roles.  
