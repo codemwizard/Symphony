@@ -237,6 +237,7 @@ Mitigations:
 - Perf promotion is fail-closed under `INV-120`: baseline lock + regression enforcement + runtime batching/AOT proof are required before perf-stage progression.
 - Escrow state transitions are enforced in DB (`transition_escrow_state`) with stable SQLSTATE rejection for illegal/terminal transitions and append-only escrow event trail (`INV-127`).
 - Escrow reservations are ceiling-enforced under concurrency via `authorize_escrow_reservation()` locking `escrow_envelopes` `FOR UPDATE` and failing closed on oversubscription (`INV-128`).
+- Phase-1 member-device distribution mapping is enforced via `member_devices` tenant/member denormalization constraints and active-path index posture with deterministic verifier evidence (`TSK-P1-HIER-003`).
 
 ## Priority security actions
 1) Implement service identity and mTLS for internal calls.

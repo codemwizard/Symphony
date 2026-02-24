@@ -3231,7 +3231,7 @@ Requirements
    - (tenant_id, member_id)
    - (tenant_id, device_id_hash) WHERE status='ACTIVE'
    - (tenant_id, iccid_hash) WHERE iccid_hash IS NOT NULL AND status='ACTIVE'
-3) Verifier scripts/db/verify_hier_003.sh.
+3) Verifier scripts/db/verify_tsk_p1_hier_003.sh.
 
 Evidence
 - evidence/phase1/hier_003_member_devices.json: schema + indexes + example query plans (optional).

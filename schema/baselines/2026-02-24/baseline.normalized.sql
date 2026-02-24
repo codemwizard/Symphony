@@ -232,6 +232,9 @@
     ADD CONSTRAINT levy_periods_unique_period_jurisdiction UNIQUE (period_code, jurisdiction_code);
     ADD CONSTRAINT levy_rates_pkey PRIMARY KEY (id);
     ADD CONSTRAINT levy_remittance_periods_pkey PRIMARY KEY (id);
+    ADD CONSTRAINT member_devices_member_id_fkey FOREIGN KEY (member_id) REFERENCES public.members(member_id) ON DELETE RESTRICT;
+    ADD CONSTRAINT member_devices_pkey PRIMARY KEY (member_id, device_id_hash);
+    ADD CONSTRAINT member_devices_tenant_id_fkey FOREIGN KEY (tenant_id) REFERENCES public.tenants(tenant_id) ON DELETE RESTRICT;
     ADD CONSTRAINT members_entity_id_fkey FOREIGN KEY (entity_id) REFERENCES public.programs(program_id) ON DELETE RESTRICT;
     ADD CONSTRAINT members_person_id_fkey FOREIGN KEY (person_id) REFERENCES public.persons(person_id) ON DELETE RESTRICT;
     ADD CONSTRAINT members_pkey PRIMARY KEY (member_id);
@@ -371,6 +374,7 @@
     CONSTRAINT levy_remittance_periods_check CHECK ((period_end >= period_start)),
     CONSTRAINT levy_remittance_periods_check1 CHECK (((filing_deadline IS NULL) OR (filing_deadline >= period_end))),
     CONSTRAINT levy_remittance_periods_period_code_check CHECK ((period_code ~ '^[0-9]{4}-[0-9]{2}$'::text))
+    CONSTRAINT member_devices_status_check CHECK ((status = ANY (ARRAY['ACTIVE'::text, 'INACTIVE'::text, 'REVOKED'::text])))
     CONSTRAINT members_ceiling_amount_minor_check CHECK ((ceiling_amount_minor >= 0)),
     CONSTRAINT members_kyc_status_check CHECK ((kyc_status = ANY (ARRAY['PENDING'::text, 'VERIFIED'::text, 'REJECTED'::text]))),
     CONSTRAINT members_status_check CHECK ((status = ANY (ARRAY['ACTIVE'::text, 'SUSPENDED'::text, 'ARCHIVED'::text])))
@@ -652,6 +656,7 @@
     created_at timestamp with time zone DEFAULT now() NOT NULL,
     created_at timestamp with time zone DEFAULT now() NOT NULL,
     created_at timestamp with time zone DEFAULT now() NOT NULL,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
     created_at timestamp with time zone DEFAULT now(),
     created_by text DEFAULT CURRENT_USER NOT NULL,
     created_by text DEFAULT CURRENT_USER NOT NULL,
@@ -661,6 +666,7 @@
     currency_code character(3) NOT NULL,
     currency_code character(3),
     description text NOT NULL,
+    device_id_hash text NOT NULL,
     display_name text NOT NULL,
     document_type text,
     downstream_ref text,
@@ -696,6 +702,7 @@
     finalized_at timestamp with time zone DEFAULT now() NOT NULL,
     grace_expires_at timestamp with time zone,
     hash_algorithm text,
+    iccid_hash text,
     id uuid DEFAULT gen_random_uuid() NOT NULL,
     id uuid DEFAULT gen_random_uuid() NOT NULL,
     id uuid DEFAULT gen_random_uuid() NOT NULL,
@@ -743,6 +750,7 @@
     levy_status text,
     member_id uuid DEFAULT gen_random_uuid() NOT NULL,
     member_id uuid DEFAULT public.uuid_v7_or_random() NOT NULL,
+    member_id uuid NOT NULL,
     member_id uuid NOT NULL,
     member_id uuid,
     member_id uuid,
@@ -905,6 +913,7 @@
     status text DEFAULT 'ACTIVE'::text NOT NULL,
     status text DEFAULT 'ACTIVE'::text NOT NULL,
     status text DEFAULT 'ACTIVE'::text NOT NULL,
+    status text DEFAULT 'ACTIVE'::text NOT NULL,
     statutory_reference text NOT NULL,
     statutory_reference text,
     subject_client_id uuid,
@@ -915,6 +924,7 @@
     subject_token,
     taxable_amount_minor bigint,
     tenant_id uuid DEFAULT gen_random_uuid() NOT NULL,
+    tenant_id uuid NOT NULL,
     tenant_id uuid NOT NULL,
     tenant_id uuid NOT NULL,
     tenant_id uuid NOT NULL,
@@ -1334,6 +1344,7 @@ $$;
 );
 );
 );
+);
 ALTER TABLE ONLY public.anchor_sync_operations
 ALTER TABLE ONLY public.anchor_sync_operations
 ALTER TABLE ONLY public.anchor_sync_operations
@@ -1386,6 +1397,9 @@ ALTER TABLE ONLY public.levy_calculation_records
 ALTER TABLE ONLY public.levy_rates
 ALTER TABLE ONLY public.levy_remittance_periods
 ALTER TABLE ONLY public.levy_remittance_periods
+ALTER TABLE ONLY public.member_devices
+ALTER TABLE ONLY public.member_devices
+ALTER TABLE ONLY public.member_devices
 ALTER TABLE ONLY public.members
 ALTER TABLE ONLY public.members
 ALTER TABLE ONLY public.members
@@ -1522,6 +1536,9 @@ CREATE INDEX idx_ingress_attestations_received_at ON public.ingress_attestations
 CREATE INDEX idx_ingress_attestations_tenant_correlation ON public.ingress_attestations USING btree (tenant_id, correlation_id) WHERE (correlation_id IS NOT NULL);
 CREATE INDEX idx_ingress_attestations_tenant_received ON public.ingress_attestations USING btree (tenant_id, received_at) WHERE (tenant_id IS NOT NULL);
 CREATE INDEX idx_instruction_settlement_finality_participant_finalized ON public.instruction_settlement_finality USING btree (participant_id, finalized_at DESC);
+CREATE INDEX idx_member_devices_active_device ON public.member_devices USING btree (tenant_id, device_id_hash) WHERE (status = 'ACTIVE'::text);
+CREATE INDEX idx_member_devices_active_iccid ON public.member_devices USING btree (tenant_id, iccid_hash) WHERE ((iccid_hash IS NOT NULL) AND (status = 'ACTIVE'::text));
+CREATE INDEX idx_member_devices_tenant_member ON public.member_devices USING btree (tenant_id, member_id);
 CREATE INDEX idx_members_entity_active ON public.members USING btree (tenant_id, entity_id, status) WHERE (status = 'ACTIVE'::text);
 CREATE INDEX idx_members_entity_member_ref_active ON public.members USING btree (tenant_id, entity_id, member_ref_hash) WHERE (status = 'ACTIVE'::text);
 CREATE INDEX idx_members_tenant_member ON public.members USING btree (tenant_id, member_id);
@@ -1572,6 +1589,7 @@ CREATE TABLE public.kyc_verification_records (
 CREATE TABLE public.levy_calculation_records (
 CREATE TABLE public.levy_rates (
 CREATE TABLE public.levy_remittance_periods (
+CREATE TABLE public.member_devices (
 CREATE TABLE public.members (
 CREATE TABLE public.participant_outbox_sequences (
 CREATE TABLE public.participants (

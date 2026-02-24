@@ -2,7 +2,7 @@
 -- PostgreSQL database dump
 --
 
-\restrict u3JxfBwhgfMewFMdKYssy2lnq77zaf8GyMZqs0nazy8DtaJWsvYBAcILCz6gZbd
+\restrict ygmEGNPwAzZX5ffBfLHcQy62bHxL6blBaDhQaLVekq83Z2hGz1ngCtI9ndD0UKi
 
 -- Dumped from database version 18.2 (Debian 18.2-1.pgdg13+1)
 -- Dumped by pg_dump version 18.2 (Debian 18.2-1.pgdg13+1)
@@ -1618,6 +1618,21 @@ CREATE TABLE public.levy_remittance_periods (
 
 
 --
+-- Name: member_devices; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.member_devices (
+    tenant_id uuid NOT NULL,
+    member_id uuid NOT NULL,
+    device_id_hash text NOT NULL,
+    iccid_hash text,
+    status text DEFAULT 'ACTIVE'::text NOT NULL,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    CONSTRAINT member_devices_status_check CHECK ((status = ANY (ARRAY['ACTIVE'::text, 'INACTIVE'::text, 'REVOKED'::text])))
+);
+
+
+--
 -- Name: members; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -2157,6 +2172,14 @@ ALTER TABLE ONLY public.levy_remittance_periods
 
 
 --
+-- Name: member_devices member_devices_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.member_devices
+    ADD CONSTRAINT member_devices_pkey PRIMARY KEY (member_id, device_id_hash);
+
+
+--
 -- Name: members members_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -2590,6 +2613,27 @@ CREATE INDEX idx_ingress_attestations_tenant_received ON public.ingress_attestat
 --
 
 CREATE INDEX idx_instruction_settlement_finality_participant_finalized ON public.instruction_settlement_finality USING btree (participant_id, finalized_at DESC);
+
+
+--
+-- Name: idx_member_devices_active_device; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_member_devices_active_device ON public.member_devices USING btree (tenant_id, device_id_hash) WHERE (status = 'ACTIVE'::text);
+
+
+--
+-- Name: idx_member_devices_active_iccid; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_member_devices_active_iccid ON public.member_devices USING btree (tenant_id, iccid_hash) WHERE ((iccid_hash IS NOT NULL) AND (status = 'ACTIVE'::text));
+
+
+--
+-- Name: idx_member_devices_tenant_member; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_member_devices_tenant_member ON public.member_devices USING btree (tenant_id, member_id);
 
 
 --
@@ -3272,6 +3316,22 @@ ALTER TABLE ONLY public.levy_calculation_records
 
 
 --
+-- Name: member_devices member_devices_member_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.member_devices
+    ADD CONSTRAINT member_devices_member_id_fkey FOREIGN KEY (member_id) REFERENCES public.members(member_id) ON DELETE RESTRICT;
+
+
+--
+-- Name: member_devices member_devices_tenant_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.member_devices
+    ADD CONSTRAINT member_devices_tenant_id_fkey FOREIGN KEY (tenant_id) REFERENCES public.tenants(tenant_id) ON DELETE RESTRICT;
+
+
+--
 -- Name: members members_entity_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -3411,5 +3471,5 @@ ALTER TABLE ONLY public.tenants
 -- PostgreSQL database dump complete
 --
 
-\unrestrict u3JxfBwhgfMewFMdKYssy2lnq77zaf8GyMZqs0nazy8DtaJWsvYBAcILCz6gZbd
+\unrestrict ygmEGNPwAzZX5ffBfLHcQy62bHxL6blBaDhQaLVekq83Z2hGz1ngCtI9ndD0UKi
 

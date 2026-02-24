@@ -1,0 +1,67 @@
+phase: "1"
+task_id: "TSK-P1-HIER-003"
+title: "Distribution entities + tenant denorm + ceilings"
+owner_role: "SUPERVISOR"
+status: "completed"
+
+depends_on:
+  - "TSK-P1-HIER-002"
+
+touches:
+  - "docs/tasks/phase1_prompts.md"
+  - "docs/plans/phase1/TSK-P1-HIER-003/PLAN.md"
+  - "docs/plans/phase1/TSK-P1-HIER-003/EXEC_LOG.md"
+  - "schema/migrations/0048_hier_003_member_devices_distribution_ceiling.sql"
+  - "scripts/db/verify_tsk_p1_hier_003.sh"
+  - "tasks/TSK-P1-HIER-003/meta.yml"
+  - "evidence/phase1/tsk_p1_hier_003__distribution_entities_tenant_denorm_ceilings.json"
+
+invariants:
+  - "INV-077"
+  - "INV-119"
+
+mechanics:
+  gate_ids:
+    - "INT-G28"
+  verifiers:
+    - "bash scripts/db/verify_tsk_p1_hier_003.sh --evidence evidence/phase1/tsk_p1_hier_003__distribution_entities_tenant_denorm_ceilings.json"
+    - "RUN_PHASE1_GATES=1 scripts/dev/pre_ci.sh"
+  evidence_paths:
+    - "evidence/phase1/tsk_p1_hier_003__distribution_entities_tenant_denorm_ceilings.json"
+
+work:
+  - "Add member_devices table with tenant_id/member_id anchoring and device hash uniqueness."
+  - "Implement active lookup indexes for device and iccid paths under tenant scope."
+  - "Implement deterministic verifier evidence for schema/index assertions and optional query plan capture."
+
+acceptance_criteria:
+  - "Evidence exists at evidence/phase1/tsk_p1_hier_003__distribution_entities_tenant_denorm_ceilings.json and is valid JSON."
+  - "Evidence JSON contains task_id == 'TSK-P1-HIER-003', status in {PASS,DONE,OK}, and pass == true."
+  - "tasks/TSK-P1-HIER-003/meta.yml records terminal completion once verifiers pass."
+  - "TSK-P1-HIER-002 dependency is complete before execution."
+  - "Task verifier and RUN_PHASE1_GATES=1 scripts/dev/pre_ci.sh pass before closeout."
+
+verification:
+  - "bash scripts/db/verify_tsk_p1_hier_003.sh --evidence evidence/phase1/tsk_p1_hier_003__distribution_entities_tenant_denorm_ceilings.json"
+  - "RUN_PHASE1_GATES=1 scripts/dev/pre_ci.sh"
+
+evidence:
+  - "evidence/phase1/tsk_p1_hier_003__distribution_entities_tenant_denorm_ceilings.json"
+
+failure_modes:
+  - "Missing docs/tasks/phase1_prompts.md section or execution metadata block."
+  - "Evidence file missing/invalid/task_id mismatch/status not PASS."
+  - "Phase contract docs missing => FAIL_CLOSED."
+  - "Dependency TSK-P1-HIER-002 incomplete => BLOCKED."
+  - "Undeclared file modifications outside files_to_change => FAIL_REVIEW."
+
+must_read:
+  - "docs/operations/AI_AGENT_OPERATION_MANUAL.md"
+
+implementation_plan: "docs/plans/phase1/TSK-P1-HIER-003/PLAN.md"
+implementation_log: "docs/plans/phase1/TSK-P1-HIER-003/EXEC_LOG.md"
+
+notes: "Implements tenant-denormalized member device mapping with deterministic active-path indexes and verifier evidence."
+client: "codex_cli"
+assigned_agent: "supervisor"
+model: "gpt-5-codex"

@@ -1,0 +1,81 @@
+{
+  "check_id": "TSK-P1-HIER-003",
+  "task_id": "TSK-P1-HIER-003",
+  "status": "PASS",
+  "pass": true,
+  "git_sha": "66d0cd0169f765e4480dc48d1cb65c62f4fc1662",
+  "schema_fingerprint": "",
+  "timestamp_utc": "2026-02-24T11:16:57Z",
+  "errors": 0,
+  "checks": [
+    {
+      "check_id": "member_devices_table_exists",
+      "status": "PASS",
+      "detail": "member_devices table exists"
+    },
+    {
+      "check_id": "member_devices_col_tenant_id",
+      "status": "PASS",
+      "detail": "member_devices.tenant_id exists"
+    },
+    {
+      "check_id": "member_devices_col_member_id",
+      "status": "PASS",
+      "detail": "member_devices.member_id exists"
+    },
+    {
+      "check_id": "member_devices_col_device_id_hash",
+      "status": "PASS",
+      "detail": "member_devices.device_id_hash exists"
+    },
+    {
+      "check_id": "member_devices_col_iccid_hash",
+      "status": "PASS",
+      "detail": "member_devices.iccid_hash exists"
+    },
+    {
+      "check_id": "member_devices_col_status",
+      "status": "PASS",
+      "detail": "member_devices.status exists"
+    },
+    {
+      "check_id": "member_devices_col_created_at",
+      "status": "PASS",
+      "detail": "member_devices.created_at exists"
+    },
+    {
+      "check_id": "status_check_exists",
+      "status": "PASS",
+      "detail": "status check enum-style restriction exists"
+    },
+    {
+      "check_id": "unique_member_device",
+      "status": "PASS",
+      "detail": "UNIQUE(member_id, device_id_hash) exists"
+    },
+    {
+      "check_id": "member_fk_exists",
+      "status": "PASS",
+      "detail": "member_devices.member_id FK to members(member_id)"
+    },
+    {
+      "check_id": "idx_tenant_member",
+      "status": "PASS",
+      "detail": "index (tenant_id, member_id) exists"
+    },
+    {
+      "check_id": "idx_active_device",
+      "status": "PASS",
+      "detail": "partial index (tenant_id,device_id_hash) where status=ACTIVE exists"
+    },
+    {
+      "check_id": "idx_active_iccid",
+      "status": "PASS",
+      "detail": "partial index (tenant_id,iccid_hash) where iccid_hash is not null and status=ACTIVE exists"
+    }
+  ],
+  "query_plan_examples": {
+    "by_member": "[  {    \"Plan\": {      \"Node Type\": \"Limit\",      \"Parallel Aware\": false,      \"Async Capable\": false,      \"Startup Cost\": 0.15,      \"Total Cost\": 8.17,      \"Plan Rows\": 1,      \"Plan Width\": 16,      \"Disabled\": false,      \"Plans\": [        {          \"Node Type\": \"Index Only Scan\",          \"Parent Relationship\": \"Outer\",          \"Parallel Aware\": false,          \"Async Capable\": false,          \"Scan Direction\": \"Forward\",          \"Index Name\": \"idx_member_devices_tenant_member\",          \"Relation Name\": \"member_devices\",          \"Alias\": \"member_devices\",          \"Startup Cost\": 0.15,          \"Total Cost\": 8.17,          \"Plan Rows\": 1,          \"Plan Width\": 16,          \"Disabled\": false,          \"Index Cond\": \"((tenant_id = '00000000-0000-0000-0000-000000000000'::uuid) AND (member_id = '00000000-0000-0000-0000-000000000000'::uuid))\"        }      ]    }  }]",
+    "active_by_device": "[  {    \"Plan\": {      \"Node Type\": \"Limit\",      \"Parallel Aware\": false,      \"Async Capable\": false,      \"Startup Cost\": 0.12,      \"Total Cost\": 8.14,      \"Plan Rows\": 1,      \"Plan Width\": 16,      \"Disabled\": false,      \"Plans\": [        {          \"Node Type\": \"Index Scan\",          \"Parent Relationship\": \"Outer\",          \"Parallel Aware\": false,          \"Async Capable\": false,          \"Scan Direction\": \"Forward\",          \"Index Name\": \"idx_member_devices_active_device\",          \"Relation Name\": \"member_devices\",          \"Alias\": \"member_devices\",          \"Startup Cost\": 0.12,          \"Total Cost\": 8.14,          \"Plan Rows\": 1,          \"Plan Width\": 16,          \"Disabled\": false,          \"Index Cond\": \"((tenant_id = '00000000-0000-0000-0000-000000000000'::uuid) AND (device_id_hash = 'dev'::text))\"        }      ]    }  }]"
+  }
+}
