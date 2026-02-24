@@ -107,7 +107,7 @@ else
 fi
 
 echo "==> Sync base ref for CI parity (refs/remotes/origin/main)"
-if ! git fetch --no-tags --prune origin main:refs/remotes/origin/main >/dev/null 2>&1; then
+if ! git fetch --no-tags --prune origin main >/dev/null 2>&1; then
   echo "ERROR: failed to fetch refs/remotes/origin/main; cannot run parity diff gates"
   exit 1
 fi
