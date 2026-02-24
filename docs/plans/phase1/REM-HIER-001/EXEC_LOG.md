@@ -19,3 +19,15 @@ Plan: docs/plans/phase1/REM-HIER-001/PLAN.md
 
 ## final_status
 - completed
+
+## Final summary
+- TSK-P1-HIER-001 now reuses the deployed programs/tenant_members tables while capturing the governance intent.
+- The remediation plan documents the metadata block, verifier proof, and tenant-aware assertions required before closing the task.
+- RUN_PHASE1_GATES=1 scripts/dev/pre_ci.sh passed so the new prompt materializes the expected evidence file and gate wiring.
+- Confirmed the prompt changes still align with AGENTS.md non-negotiables (AI_AGENT_OPERATION_MANUAL.md) after the additional verification run.
+- Confirmed the prompt changes still align with AGENTS.md non-negotiables (AI_AGENT_OPERATION_MANUAL.md) after the additional verification run.
+
+## Final summary
+- TSK-P1-HIER-001 now reuses the deployed programs/tenant_members tables while capturing the governance intent.
+- The remediation plan documents the metadata block, verifier proof, and tenant-aware assertions required before closing the task.
+- RUN_PHASE1_GATES=1 scripts/dev/pre_ci.sh passed so the new prompt materializes the expected evidence file and gate wiring.
