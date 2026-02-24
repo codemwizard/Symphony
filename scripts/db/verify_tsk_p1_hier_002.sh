@@ -107,11 +107,20 @@ fi
 
 python3 - <<PY
 import json, pathlib, datetime, os
+import subprocess
 records = [json.loads(line) for line in pathlib.Path("$check_log").read_text().splitlines() if line.strip()]
+git_sha = os.environ.get("GIT_SHA")
+if not git_sha:
+  try:
+    git_sha = subprocess.check_output(["git", "rev-parse", "HEAD"], text=True).strip()
+  except Exception:
+    git_sha = "UNKNOWN"
 result = {
+  "check_id": "$TASK_ID",
   "task_id": "$TASK_ID",
   "status": "$status",
-  "git_sha": os.environ.get("GIT_SHA", "UNKNOWN"),
+  "git_sha": git_sha,
+  "schema_fingerprint": os.environ.get("EVIDENCE_SCHEMA_FP", ""),
   "timestamp_utc": datetime.datetime.utcnow().replace(microsecond=0).isoformat() + "Z",
   "errors": $errors,
   "checks": records

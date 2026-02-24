@@ -1,8 +1,10 @@
 {
+  "check_id": "TSK-P1-HIER-002",
   "task_id": "TSK-P1-HIER-002",
   "status": "PASS",
-  "git_sha": "UNKNOWN",
-  "timestamp_utc": "2026-02-24T08:23:22Z",
+  "git_sha": "2d393906cb86c09b19a13d3975056ae7a0b740ed",
+  "schema_fingerprint": "",
+  "timestamp_utc": "2026-02-24T08:36:58Z",
   "errors": 0,
   "checks": [
     {
