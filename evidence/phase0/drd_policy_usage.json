@@ -1,0 +1,13 @@
+{
+  "check_id": "DRD-POLICY-USAGE",
+  "timestamp_utc": "2026-02-24T10:18:48Z",
+  "git_sha": "b4f4f42d9de1570c7698c50a9b9c24454a2acdce",
+  "status": "PASS",
+  "details": {
+    "mode": "advisory",
+    "policy_present": true,
+    "pr_template_present": true,
+    "notes": [],
+    "no_hard_fail": true
+  }
+}

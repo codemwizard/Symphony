@@ -4,6 +4,12 @@ This repo treats remediation as a **mechanical process**. If a change touches pr
 
 This workflow is enforced by a verifier gate (see `scripts/audit/verify_remediation_trace.sh`) and is intended to apply to **any fix** (CI-only failures, local failures, correctness bugs, policy/gate drift, documentation that changes enforcement semantics).
 
+DRD (Debug and Remediation Documentation) augments this workflow and must not be treated as a separate parallel process.
+- Canonical policy: `.agent/policies/debug-remediation-policy.md`
+- Templates:
+  - `docs/remediation/templates/drd-lite-template.md`
+  - `docs/remediation/templates/drd-full-template.md`
+
 ## Definitions
 
 ### Remediation casefile
@@ -78,6 +84,12 @@ Update the remediation `PLAN.md` with:
 - list of derived tasks and their completion state
 
 Optionally extract stable “next time” learnings into `docs/operations/troubleshooting/**` as curated guidance. The remediation casefile remains the authoritative audit trace.
+
+## DRD Escalation (Lite -> Full)
+
+- Use DRD Lite for local blockers (`L1`) that interrupt execution.
+- Use DRD Full for non-converging or multi-gate incidents (`L2/L3`).
+- Two-strike non-convergence rule: after 2 failed full reruns (or if first blocker changes), switch to DRD Full and first-fail triage.
 
 ## Allowed alternatives (noise reduction)
 
