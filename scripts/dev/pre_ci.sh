@@ -123,6 +123,14 @@ done
 
 BASE_REF="refs/remotes/origin/main"
 if ! git rev-parse --verify "${BASE_REF}^{commit}" >/dev/null 2>&1; then
+  # Some git hook contexts can complete fetch without materializing the remote-tracking ref.
+  # Hydrate the canonical ref directly from origin/main without introducing alternate diff bases.
+  remote_main_sha="$(git ls-remote --heads origin main 2>/dev/null | awk 'NR==1 {print $1}')"
+  if [[ "$remote_main_sha" =~ ^[0-9a-f]{40}$ ]]; then
+    git update-ref "${BASE_REF}" "$remote_main_sha" >/dev/null 2>&1 || true
+  fi
+fi
+if ! git rev-parse --verify "${BASE_REF}^{commit}" >/dev/null 2>&1; then
   echo "ERROR: missing required parity base ref: ${BASE_REF}"
   if [[ "$fetch_ok" != "1" ]]; then
     echo "ERROR: unable to fetch canonical base ref from origin/main"
