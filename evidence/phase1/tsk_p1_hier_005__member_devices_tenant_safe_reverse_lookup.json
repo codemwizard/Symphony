@@ -1,0 +1,84 @@
+{
+  "check_id": "TSK-P1-HIER-005",
+  "task_id": "TSK-P1-HIER-005",
+  "status": "PASS",
+  "pass": true,
+  "git_sha": "473eb874a9894390a46a398f09a8f203cdda3b61",
+  "timestamp_utc": "2026-02-24T12:18:58Z",
+  "details": {
+    "sqlstates_exercised": [
+      "P7299",
+      "P7300",
+      "P7301",
+      "P7305",
+      "P7306"
+    ],
+    "link_tests": {
+      "tenant_participant_link_invalid": "PASS",
+      "participant_program_link_invalid": "PASS",
+      "program_entity_link_invalid": "PASS",
+      "entity_member_link_invalid": "PASS",
+      "member_device_link_invalid": "PASS",
+      "happy_path": "PASS"
+    },
+    "function_definition_fingerprint": "68e6253af47f7aeb0768371395eeb15d",
+    "reserved_sqlstates": [
+      "P7302",
+      "P7303",
+      "P7304",
+      "P7307"
+    ]
+  },
+  "checks": [
+    {
+      "check_id": "function_exists",
+      "status": "PASS",
+      "detail": "verify_instruction_hierarchy exists in public schema"
+    },
+    {
+      "check_id": "function_signature",
+      "status": "PASS",
+      "detail": "verify_instruction_hierarchy has required signature"
+    },
+    {
+      "check_id": "function_security_definer",
+      "status": "PASS",
+      "detail": "verify_instruction_hierarchy is SECURITY DEFINER"
+    },
+    {
+      "check_id": "function_search_path_hardening",
+      "status": "PASS",
+      "detail": "verify_instruction_hierarchy uses SET search_path = pg_catalog, public"
+    },
+    {
+      "check_id": "tenant_participant_link_invalid",
+      "status": "PASS",
+      "detail": "expected_sqlstate=P7299;actual=P7299"
+    },
+    {
+      "check_id": "participant_program_link_invalid",
+      "status": "PASS",
+      "detail": "expected_sqlstate=P7300;actual=P7300"
+    },
+    {
+      "check_id": "program_entity_link_invalid",
+      "status": "PASS",
+      "detail": "expected_sqlstate=P7301;actual=P7301"
+    },
+    {
+      "check_id": "entity_member_link_invalid",
+      "status": "PASS",
+      "detail": "expected_sqlstate=P7305;actual=P7305"
+    },
+    {
+      "check_id": "member_device_link_invalid",
+      "status": "PASS",
+      "detail": "expected_sqlstate=P7306;actual=P7306"
+    },
+    {
+      "check_id": "happy_path",
+      "status": "PASS",
+      "detail": "function returns true for valid hierarchy"
+    }
+  ]
+}

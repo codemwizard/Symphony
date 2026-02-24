@@ -1,0 +1,75 @@
+{
+  "check_id": "TSK-P1-HIER-007",
+  "task_id": "TSK-P1-HIER-007",
+  "status": "PASS",
+  "pass": true,
+  "git_sha": "1a6c06f28b5423b8dabcc1cbc5a54208622a1bc1",
+  "timestamp_utc": "2026-02-24T13:15:08Z",
+  "details": {
+    "default_formula_key": "TIER1_DETERMINISTIC_DEFAULT",
+    "deterministic_migration_function": "public.migrate_person_to_program",
+    "beneficiary_query": "public.tenant_program_year_unique_beneficiaries"
+  },
+  "checks": [
+    {
+      "check_id": "risk_formula_versions_exists",
+      "status": "PASS",
+      "detail": "risk_formula_versions table exists"
+    },
+    {
+      "check_id": "risk_formula_default_seed",
+      "status": "PASS",
+      "detail": "default deterministic Tier-1 formula exists and active"
+    },
+    {
+      "check_id": "program_migration_events_exists",
+      "status": "PASS",
+      "detail": "program_migration_events table exists"
+    },
+    {
+      "check_id": "program_migration_events_required_columns",
+      "status": "PASS",
+      "detail": "program_migration_events has required columns"
+    },
+    {
+      "check_id": "migration_function_hardened",
+      "status": "PASS",
+      "detail": "migrate_person_to_program is SECURITY DEFINER with hardened search_path"
+    },
+    {
+      "check_id": "unique_beneficiaries_view_exists",
+      "status": "PASS",
+      "detail": "tenant_program_year_unique_beneficiaries view exists"
+    },
+    {
+      "check_id": "migrate_function_returns_uuid",
+      "status": "PASS",
+      "detail": "migrate_person_to_program returns target member UUID"
+    },
+    {
+      "check_id": "migrated_member_created",
+      "status": "PASS",
+      "detail": "target member row created on to_program preserving person linkage"
+    },
+    {
+      "check_id": "migration_event_written",
+      "status": "PASS",
+      "detail": "program_migration_events row written with formula version"
+    },
+    {
+      "check_id": "migration_deterministic_idempotent_return",
+      "status": "PASS",
+      "detail": "repeat migration call returns same target member_id"
+    },
+    {
+      "check_id": "migration_event_not_duplicated",
+      "status": "PASS",
+      "detail": "deterministic migration event uniqueness preserved"
+    },
+    {
+      "check_id": "unique_beneficiaries_query_operational",
+      "status": "PASS",
+      "detail": "unique beneficiaries query produces tenant-year aggregate"
+    }
+  ]
+}
