@@ -1,10 +1,10 @@
 {
   "baseline_date": "2026-02-24",
   "baseline_path": "/home/mwiza/workspace/Symphony/schema/baselines/2026-02-24/0001_baseline.sql",
-  "baseline_cutoff": "0051_hier_006_supervisor_access_modes.sql",
-  "normalized_schema_sha256": "f7fd7d2e062866a829d9dd4e81bfdbbf6fc85f415cf22be2e3432ee2343fc502",
+  "baseline_cutoff": "0052_hier_007_risk_formula_registry_program_migration.sql",
+  "normalized_schema_sha256": "816cb1683035f247ccab583a2db384db6c4f14b504e76d71bf679c54e354c738",
   "pg_dump_version": "pg_dump (PostgreSQL) 18.2 (Debian 18.2-1.pgdg13+1)",
   "pg_server_version": "18.2 (Debian 18.2-1.pgdg13+1)",
   "dump_source": "container:symphony-postgres",
-  "generated_at_utc": "2026-02-24T12:37:27.634017+00:00"
+  "generated_at_utc": "2026-02-24T13:07:32.354365+00:00"
 }

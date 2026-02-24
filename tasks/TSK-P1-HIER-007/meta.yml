@@ -1,0 +1,68 @@
+phase: "1"
+task_id: "TSK-P1-HIER-007"
+title: "Risk formula registry (Tier-1 deterministic default)"
+owner_role: "SUPERVISOR"
+status: "completed"
+
+depends_on:
+  - "TSK-P1-HIER-006"
+
+touches:
+  - "docs/plans/phase1/TSK-P1-HIER-007/PLAN.md"
+  - "docs/plans/phase1/TSK-P1-HIER-007/EXEC_LOG.md"
+  - "schema/migrations/0052_hier_007_risk_formula_registry_program_migration.sql"
+  - "scripts/db/verify_tsk_p1_hier_007.sh"
+  - "tasks/TSK-P1-HIER-007/meta.yml"
+  - "evidence/phase1/tsk_p1_hier_007__risk_formula_registry_tier_deterministic_default.json"
+
+invariants:
+  - "INV-077"
+  - "INV-119"
+
+mechanics:
+  gate_ids:
+    - "INT-G28"
+  verifiers:
+    - "bash scripts/db/verify_tsk_p1_hier_007.sh --evidence evidence/phase1/tsk_p1_hier_007__risk_formula_registry_tier_deterministic_default.json"
+    - "RUN_PHASE1_GATES=1 scripts/dev/pre_ci.sh"
+  evidence_paths:
+    - "evidence/phase1/tsk_p1_hier_007__risk_formula_registry_tier_deterministic_default.json"
+
+work:
+  - "Create risk_formula_versions with deterministic Tier-1 default row."
+  - "Create program_migration_events and deterministic migrate_person_to_program() with person linkage preservation."
+  - "Provide verifier-backed unique beneficiaries across program years query output."
+
+acceptance_criteria:
+  - "Evidence exists at evidence/phase1/tsk_p1_hier_007__risk_formula_registry_tier_deterministic_default.json and is valid JSON."
+  - "Evidence JSON contains task_id == 'TSK-P1-HIER-007', status in {PASS,DONE,OK}, and pass == true."
+  - "tasks/TSK-P1-HIER-007/meta.yml records terminal completion once verifiers pass."
+  - "TSK-P1-HIER-006 dependency is complete before execution."
+  - "Task verifier and RUN_PHASE1_GATES=1 scripts/dev/pre_ci.sh pass before closeout."
+
+verification:
+  - "bash scripts/db/verify_tsk_p1_hier_007.sh --evidence evidence/phase1/tsk_p1_hier_007__risk_formula_registry_tier_deterministic_default.json"
+  - "RUN_PHASE1_GATES=1 scripts/dev/pre_ci.sh"
+
+evidence:
+  - "evidence/phase1/tsk_p1_hier_007__risk_formula_registry_tier_deterministic_default.json"
+
+failure_modes:
+  - "Missing docs/tasks/phase1_prompts.md section or execution metadata block."
+  - "Evidence file missing/invalid/task_id mismatch/status not PASS."
+  - "Phase contract docs missing => FAIL_CLOSED."
+  - "Dependency TSK-P1-HIER-006 incomplete => BLOCKED."
+  - "Undeclared file modifications outside files_to_change => FAIL_REVIEW."
+
+must_read:
+  - "docs/operations/AI_AGENT_OPERATION_MANUAL.md"
+  - "docs/operations/AI_AGENT_WORKFLOW_AND_ROLE_PLAN_v2.md"
+  - "docs/operations/AGENT_ROLE_RECONCILIATION.md"
+
+implementation_plan: "docs/plans/phase1/TSK-P1-HIER-007/PLAN.md"
+implementation_log: "docs/plans/phase1/TSK-P1-HIER-007/EXEC_LOG.md"
+
+notes: "Prompt title implies risk formula registry while required semantics include program migration events and deterministic person-to-program migration behavior."
+client: "codex_cli"
+assigned_agent: "supervisor"
+model: "gpt-5-codex"
