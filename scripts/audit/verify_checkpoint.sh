@@ -147,6 +147,7 @@ for dep in deps:
         errors.append(f"dependency_evidence_invalid_or_not_pass:{dep}:{dep_evidence}:exit={e.returncode}")
 
 payload = {
+    "check_id": "CHECKPOINT-VERIFY",
     "task_id": checkpoint,
     "timestamp_utc": now_utc(),
     "git_sha": git_sha(),
@@ -168,4 +169,3 @@ print(f"checkpoint_ok:{checkpoint}:{evidence_out}")
 PY
 
 python3 "$ROOT_DIR/scripts/audit/validate_evidence.py" --task "$checkpoint" --evidence "$ROOT_DIR/$evidence"
-
