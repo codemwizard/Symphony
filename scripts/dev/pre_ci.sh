@@ -115,6 +115,13 @@ if ! git fetch --no-tags --prune origin main:refs/remotes/origin/main >/dev/null
   exit 1
 fi
 if ! git rev-parse --verify "${BASE_REF}^{commit}" >/dev/null 2>&1; then
+  # Some hook contexts may fetch successfully but not materialize the remote-tracking ref.
+  remote_main_sha="$(git ls-remote --heads origin main 2>/dev/null | awk 'NR==1 {print $1}')"
+  if [[ "$remote_main_sha" =~ ^[0-9a-f]{40}$ ]]; then
+    git update-ref "${BASE_REF}" "$remote_main_sha" >/dev/null 2>&1 || true
+  fi
+fi
+if ! git rev-parse --verify "${BASE_REF}^{commit}" >/dev/null 2>&1; then
   echo "ERROR: refs/remotes/origin/main not found after fetch"
   exit 1
 fi
