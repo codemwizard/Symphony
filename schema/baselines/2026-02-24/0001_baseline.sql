@@ -2,7 +2,7 @@
 -- PostgreSQL database dump
 --
 
-\restrict u3JxfBwhgfMewFMdKYssy2lnq77zaf8GyMZqs0nazy8DtaJWsvYBAcILCz6gZbd
+\restrict SQ6yqDoTRZaRJ1cwqLIiqVdSfgxJDP1g6IJaaRILEBuSHUO0oZsv8swcMLU2BPY
 
 -- Dumped from database version 18.2 (Debian 18.2-1.pgdg13+1)
 -- Dumped by pg_dump version 18.2 (Debian 18.2-1.pgdg13+1)
@@ -380,6 +380,36 @@ $$;
 
 
 --
+-- Name: decide_supervisor_approval(text, text, text, text); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.decide_supervisor_approval(p_instruction_id text, p_decision text, p_actor text, p_reason text DEFAULT NULL::text) RETURNS void
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO 'pg_catalog', 'public'
+    AS $$
+DECLARE
+  v_decision TEXT := UPPER(BTRIM(COALESCE(p_decision, '')));
+BEGIN
+  IF v_decision NOT IN ('APPROVED', 'REJECTED') THEN
+    RAISE EXCEPTION 'invalid decision %', p_decision;
+  END IF;
+
+  UPDATE public.supervisor_approval_queue
+  SET status = v_decision,
+      decided_at = NOW(),
+      decided_by = COALESCE(NULLIF(BTRIM(p_actor), ''), 'system'),
+      decision_reason = p_reason
+  WHERE instruction_id = p_instruction_id
+    AND status = 'PENDING_SUPERVISOR_APPROVAL';
+
+  IF NOT FOUND THEN
+    RAISE EXCEPTION 'instruction % is not pending supervisor approval', p_instruction_id;
+  END IF;
+END;
+$$;
+
+
+--
 -- Name: deny_append_only_mutation(); Type: FUNCTION; Schema: public; Owner: -
 --
 
@@ -421,6 +451,20 @@ CREATE FUNCTION public.deny_ingress_attestations_mutation() RETURNS trigger
     RAISE EXCEPTION 'ingress_attestations is append-only'
       USING ERRCODE = 'P0001';
   END;
+$$;
+
+
+--
+-- Name: deny_member_device_events_mutation(); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.deny_member_device_events_mutation() RETURNS trigger
+    LANGUAGE plpgsql
+    AS $$
+BEGIN
+  RAISE EXCEPTION 'member_device_events is append-only'
+    USING ERRCODE = 'P0001';
+END;
 $$;
 
 
@@ -768,6 +812,31 @@ $$;
 
 
 --
+-- Name: expire_supervisor_approvals(timestamp with time zone); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.expire_supervisor_approvals(p_now timestamp with time zone DEFAULT now()) RETURNS integer
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO 'pg_catalog', 'public'
+    AS $$
+DECLARE
+  v_count INTEGER := 0;
+BEGIN
+  UPDATE public.supervisor_approval_queue
+  SET status = 'TIMED_OUT',
+      decided_at = p_now,
+      decided_by = 'system_timeout',
+      decision_reason = COALESCE(decision_reason, 'timeout')
+  WHERE status = 'PENDING_SUPERVISOR_APPROVAL'
+    AND timeout_at <= p_now;
+
+  GET DIAGNOSTICS v_count = ROW_COUNT;
+  RETURN v_count;
+END;
+$$;
+
+
+--
 -- Name: mark_anchor_sync_anchored(uuid, uuid, text, text, text); Type: FUNCTION; Schema: public; Owner: -
 --
 
@@ -1046,6 +1115,38 @@ $$;
 
 
 --
+-- Name: submit_for_supervisor_approval(text, uuid, integer); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.submit_for_supervisor_approval(p_instruction_id text, p_program_id uuid, p_timeout_minutes integer DEFAULT 30) RETURNS void
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO 'pg_catalog', 'public'
+    AS $$
+DECLARE
+  v_timeout INTEGER := COALESCE(p_timeout_minutes, 30);
+BEGIN
+  IF v_timeout <= 0 THEN
+    RAISE EXCEPTION 'approval timeout must be positive';
+  END IF;
+
+  INSERT INTO public.supervisor_approval_queue(
+    instruction_id, program_id, status, held_at, timeout_at, decided_at, decided_by, decision_reason
+  ) VALUES (
+    p_instruction_id, p_program_id, 'PENDING_SUPERVISOR_APPROVAL', NOW(), NOW() + make_interval(mins => v_timeout), NULL, NULL, NULL
+  )
+  ON CONFLICT (instruction_id) DO UPDATE
+    SET program_id = EXCLUDED.program_id,
+        status = 'PENDING_SUPERVISOR_APPROVAL',
+        held_at = NOW(),
+        timeout_at = NOW() + make_interval(mins => v_timeout),
+        decided_at = NULL,
+        decided_by = NULL,
+        decision_reason = NULL;
+END;
+$$;
+
+
+--
 -- Name: touch_anchor_sync_updated_at(); Type: FUNCTION; Schema: public; Owner: -
 --
 
@@ -1225,6 +1326,74 @@ CREATE FUNCTION public.uuid_v7_or_random() RETURNS uuid
     AS $$
           SELECT gen_random_uuid();
         $$;
+
+
+--
+-- Name: verify_instruction_hierarchy(text, uuid, text, uuid, uuid, uuid, text); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.verify_instruction_hierarchy(p_instruction_id text, p_tenant_id uuid, p_participant_id text, p_program_id uuid, p_entity_id uuid, p_member_id uuid, p_device_id text) RETURNS boolean
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO 'pg_catalog', 'public'
+    AS $$
+BEGIN
+  -- 1) tenant -> participant linkage (instruction-scoped)
+  IF NOT EXISTS (
+    SELECT 1
+    FROM public.ingress_attestations ia
+    WHERE ia.instruction_id = p_instruction_id
+      AND ia.tenant_id = p_tenant_id
+      AND ia.participant_id = p_participant_id
+  ) THEN
+    RAISE EXCEPTION 'tenant-to-participant linkage invalid for instruction'
+      USING ERRCODE = 'P7299';
+  END IF;
+
+  -- 2) participant -> program linkage (tenant-safe program ownership check)
+  IF NOT EXISTS (
+    SELECT 1
+    FROM public.programs pr
+    WHERE pr.program_id = p_program_id
+      AND pr.tenant_id = p_tenant_id
+  ) THEN
+    RAISE EXCEPTION 'participant-to-program linkage invalid'
+      USING ERRCODE = 'P7300';
+  END IF;
+
+  -- 3) entity -> program linkage
+  IF p_entity_id IS DISTINCT FROM p_program_id THEN
+    RAISE EXCEPTION 'program-to-entity linkage invalid'
+      USING ERRCODE = 'P7301';
+  END IF;
+
+  -- 4) member -> entity linkage
+  IF NOT EXISTS (
+    SELECT 1
+    FROM public.members m
+    WHERE m.member_id = p_member_id
+      AND m.tenant_id = p_tenant_id
+      AND m.entity_id = p_entity_id
+  ) THEN
+    RAISE EXCEPTION 'entity-to-member linkage invalid'
+      USING ERRCODE = 'P7305';
+  END IF;
+
+  -- 5) device -> member linkage (active-path device check)
+  IF NOT EXISTS (
+    SELECT 1
+    FROM public.member_devices md
+    WHERE md.tenant_id = p_tenant_id
+      AND md.member_id = p_member_id
+      AND md.device_id_hash = p_device_id
+      AND md.status = 'ACTIVE'
+  ) THEN
+    RAISE EXCEPTION 'member-to-device linkage invalid'
+      USING ERRCODE = 'P7306';
+  END IF;
+
+  RETURN TRUE;
+END;
+$$;
 
 
 SET default_tablespace = '';
@@ -1618,6 +1787,41 @@ CREATE TABLE public.levy_remittance_periods (
 
 
 --
+-- Name: member_device_events; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.member_device_events (
+    event_id uuid DEFAULT public.uuid_v7_or_random() NOT NULL,
+    tenant_id uuid NOT NULL,
+    member_id uuid NOT NULL,
+    instruction_id text NOT NULL,
+    device_id text,
+    device_id_hash text,
+    iccid_hash text,
+    event_type text NOT NULL,
+    observed_at timestamp with time zone NOT NULL,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    CONSTRAINT member_device_events_device_id_event_type_chk CHECK (((device_id IS NULL) = (event_type = ANY (ARRAY['UNREGISTERED_DEVICE'::text, 'REVOKED_DEVICE_ATTEMPT'::text])))),
+    CONSTRAINT member_device_events_event_type_check CHECK ((event_type = ANY (ARRAY['ENROLLED_DEVICE'::text, 'UNREGISTERED_DEVICE'::text, 'REVOKED_DEVICE_ATTEMPT'::text])))
+);
+
+
+--
+-- Name: member_devices; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.member_devices (
+    tenant_id uuid NOT NULL,
+    member_id uuid NOT NULL,
+    device_id_hash text NOT NULL,
+    iccid_hash text,
+    status text DEFAULT 'ACTIVE'::text NOT NULL,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    CONSTRAINT member_devices_status_check CHECK ((status = ANY (ARRAY['ACTIVE'::text, 'INACTIVE'::text, 'REVOKED'::text])))
+);
+
+
+--
 -- Name: members; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -1880,6 +2084,74 @@ CREATE TABLE public.schema_migrations (
     version text NOT NULL,
     checksum text NOT NULL,
     applied_at timestamp with time zone DEFAULT now() NOT NULL
+);
+
+
+--
+-- Name: supervisor_access_policies; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.supervisor_access_policies (
+    scope text NOT NULL,
+    description text NOT NULL,
+    api_access boolean NOT NULL,
+    db_access boolean NOT NULL,
+    report_delivery boolean NOT NULL,
+    read_window_minutes integer,
+    hold_timeout_minutes integer,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    CONSTRAINT supervisor_access_policies_hold_timeout_minutes_check CHECK (((hold_timeout_minutes IS NULL) OR (hold_timeout_minutes > 0))),
+    CONSTRAINT supervisor_access_policies_read_window_minutes_check CHECK (((read_window_minutes IS NULL) OR (read_window_minutes > 0))),
+    CONSTRAINT supervisor_access_policies_scope_check CHECK ((scope = ANY (ARRAY['READ_ONLY'::text, 'AUDIT'::text, 'APPROVAL_REQUIRED'::text])))
+);
+
+
+--
+-- Name: supervisor_approval_queue; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.supervisor_approval_queue (
+    instruction_id text NOT NULL,
+    program_id uuid NOT NULL,
+    status text NOT NULL,
+    held_at timestamp with time zone DEFAULT now() NOT NULL,
+    timeout_at timestamp with time zone NOT NULL,
+    decided_at timestamp with time zone,
+    decided_by text,
+    decision_reason text,
+    CONSTRAINT supervisor_approval_queue_status_check CHECK ((status = ANY (ARRAY['PENDING_SUPERVISOR_APPROVAL'::text, 'APPROVED'::text, 'REJECTED'::text, 'TIMED_OUT'::text])))
+);
+
+
+--
+-- Name: supervisor_audit_member_device_events; Type: VIEW; Schema: public; Owner: -
+--
+
+CREATE VIEW public.supervisor_audit_member_device_events AS
+ SELECT m.entity_id AS program_id,
+    e.tenant_id,
+    e.member_id,
+    e.instruction_id,
+    e.event_type,
+    e.observed_at
+   FROM (public.member_device_events e
+     JOIN public.members m ON ((m.member_id = e.member_id)));
+
+
+--
+-- Name: supervisor_audit_tokens; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.supervisor_audit_tokens (
+    token_id uuid DEFAULT public.uuid_v7_or_random() NOT NULL,
+    program_id uuid NOT NULL,
+    scope text DEFAULT 'AUDIT'::text NOT NULL,
+    token_hash text NOT NULL,
+    issued_by text NOT NULL,
+    issued_at timestamp with time zone DEFAULT now() NOT NULL,
+    expires_at timestamp with time zone NOT NULL,
+    revoked_at timestamp with time zone,
+    CONSTRAINT supervisor_audit_tokens_scope_check CHECK ((scope = 'AUDIT'::text))
 );
 
 
@@ -2157,6 +2429,22 @@ ALTER TABLE ONLY public.levy_remittance_periods
 
 
 --
+-- Name: member_device_events member_device_events_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.member_device_events
+    ADD CONSTRAINT member_device_events_pkey PRIMARY KEY (event_id);
+
+
+--
+-- Name: member_devices member_devices_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.member_devices
+    ADD CONSTRAINT member_devices_pkey PRIMARY KEY (member_id, device_id_hash);
+
+
+--
 -- Name: members members_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -2322,6 +2610,38 @@ ALTER TABLE ONLY public.revoked_tokens
 
 ALTER TABLE ONLY public.schema_migrations
     ADD CONSTRAINT schema_migrations_pkey PRIMARY KEY (version);
+
+
+--
+-- Name: supervisor_access_policies supervisor_access_policies_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.supervisor_access_policies
+    ADD CONSTRAINT supervisor_access_policies_pkey PRIMARY KEY (scope);
+
+
+--
+-- Name: supervisor_approval_queue supervisor_approval_queue_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.supervisor_approval_queue
+    ADD CONSTRAINT supervisor_approval_queue_pkey PRIMARY KEY (instruction_id);
+
+
+--
+-- Name: supervisor_audit_tokens supervisor_audit_tokens_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.supervisor_audit_tokens
+    ADD CONSTRAINT supervisor_audit_tokens_pkey PRIMARY KEY (token_id);
+
+
+--
+-- Name: supervisor_audit_tokens supervisor_audit_tokens_token_hash_key; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.supervisor_audit_tokens
+    ADD CONSTRAINT supervisor_audit_tokens_token_hash_key UNIQUE (token_hash);
 
 
 --
@@ -2593,6 +2913,41 @@ CREATE INDEX idx_instruction_settlement_finality_participant_finalized ON public
 
 
 --
+-- Name: idx_member_device_events_instruction; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_member_device_events_instruction ON public.member_device_events USING btree (instruction_id);
+
+
+--
+-- Name: idx_member_device_events_tenant_member_observed; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_member_device_events_tenant_member_observed ON public.member_device_events USING btree (tenant_id, member_id, observed_at DESC);
+
+
+--
+-- Name: idx_member_devices_active_device; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_member_devices_active_device ON public.member_devices USING btree (tenant_id, device_id_hash) WHERE (status = 'ACTIVE'::text);
+
+
+--
+-- Name: idx_member_devices_active_iccid; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_member_devices_active_iccid ON public.member_devices USING btree (tenant_id, iccid_hash) WHERE ((iccid_hash IS NOT NULL) AND (status = 'ACTIVE'::text));
+
+
+--
+-- Name: idx_member_devices_tenant_member; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_member_devices_tenant_member ON public.member_devices USING btree (tenant_id, member_id);
+
+
+--
 -- Name: idx_members_entity_active; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -2695,6 +3050,20 @@ CREATE INDEX idx_programs_tenant_status ON public.programs USING btree (tenant_i
 --
 
 CREATE INDEX idx_rail_truth_anchor_participant_anchored ON public.rail_dispatch_truth_anchor USING btree (rail_participant_id, anchored_at DESC);
+
+
+--
+-- Name: idx_supervisor_approval_queue_status_timeout; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_supervisor_approval_queue_status_timeout ON public.supervisor_approval_queue USING btree (status, timeout_at);
+
+
+--
+-- Name: idx_supervisor_audit_tokens_program_expires; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_supervisor_audit_tokens_program_expires ON public.supervisor_audit_tokens USING btree (program_id, expires_at DESC);
 
 
 --
@@ -2928,6 +3297,13 @@ CREATE TRIGGER trg_deny_final_instruction_mutation BEFORE DELETE OR UPDATE ON pu
 --
 
 CREATE TRIGGER trg_deny_ingress_attestations_mutation BEFORE DELETE OR UPDATE ON public.ingress_attestations FOR EACH ROW EXECUTE FUNCTION public.deny_ingress_attestations_mutation();
+
+
+--
+-- Name: member_device_events trg_deny_member_device_events_mutation; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER trg_deny_member_device_events_mutation BEFORE DELETE OR UPDATE ON public.member_device_events FOR EACH ROW EXECUTE FUNCTION public.deny_member_device_events_mutation();
 
 
 --
@@ -3272,6 +3648,38 @@ ALTER TABLE ONLY public.levy_calculation_records
 
 
 --
+-- Name: member_device_events member_device_events_ingress_fk; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.member_device_events
+    ADD CONSTRAINT member_device_events_ingress_fk FOREIGN KEY (tenant_id, instruction_id) REFERENCES public.ingress_attestations(tenant_id, instruction_id) ON DELETE RESTRICT;
+
+
+--
+-- Name: member_device_events member_device_events_member_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.member_device_events
+    ADD CONSTRAINT member_device_events_member_id_fkey FOREIGN KEY (member_id) REFERENCES public.members(member_id) ON DELETE RESTRICT;
+
+
+--
+-- Name: member_devices member_devices_member_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.member_devices
+    ADD CONSTRAINT member_devices_member_id_fkey FOREIGN KEY (member_id) REFERENCES public.members(member_id) ON DELETE RESTRICT;
+
+
+--
+-- Name: member_devices member_devices_tenant_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.member_devices
+    ADD CONSTRAINT member_devices_tenant_id_fkey FOREIGN KEY (tenant_id) REFERENCES public.tenants(tenant_id) ON DELETE RESTRICT;
+
+
+--
 -- Name: members members_entity_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -3376,6 +3784,22 @@ ALTER TABLE ONLY public.rail_dispatch_truth_anchor
 
 
 --
+-- Name: supervisor_approval_queue supervisor_approval_queue_program_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.supervisor_approval_queue
+    ADD CONSTRAINT supervisor_approval_queue_program_id_fkey FOREIGN KEY (program_id) REFERENCES public.programs(program_id) ON DELETE RESTRICT;
+
+
+--
+-- Name: supervisor_audit_tokens supervisor_audit_tokens_program_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.supervisor_audit_tokens
+    ADD CONSTRAINT supervisor_audit_tokens_program_id_fkey FOREIGN KEY (program_id) REFERENCES public.programs(program_id) ON DELETE RESTRICT;
+
+
+--
 -- Name: tenant_clients tenant_clients_tenant_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -3411,5 +3835,5 @@ ALTER TABLE ONLY public.tenants
 -- PostgreSQL database dump complete
 --
 
-\unrestrict u3JxfBwhgfMewFMdKYssy2lnq77zaf8GyMZqs0nazy8DtaJWsvYBAcILCz6gZbd
+\unrestrict SQ6yqDoTRZaRJ1cwqLIiqVdSfgxJDP1g6IJaaRILEBuSHUO0oZsv8swcMLU2BPY
 

@@ -1,0 +1,113 @@
+{
+  "check_id": "TSK-P1-HIER-006",
+  "task_id": "TSK-P1-HIER-006",
+  "status": "PASS",
+  "pass": true,
+  "git_sha": "bf72f15e8f70fc2d59ffb2b7327bbf6f9e813fd3",
+  "timestamp_utc": "2026-02-24T12:44:58Z",
+  "details": {
+    "implemented_scopes": [
+      "READ_ONLY",
+      "AUDIT",
+      "APPROVAL_REQUIRED"
+    ],
+    "evidence_contract_path": "evidence/phase1/tsk_p1_hier_006__append_only_member_device_events_anchored.json"
+  },
+  "checks": [
+    {
+      "check_id": "policy_table_exists",
+      "status": "PASS",
+      "detail": "supervisor_access_policies table exists"
+    },
+    {
+      "check_id": "policy_scope_rows",
+      "status": "PASS",
+      "detail": "all three supervisor scopes are present"
+    },
+    {
+      "check_id": "read_only_semantics",
+      "status": "PASS",
+      "detail": "READ_ONLY denies API and DB access but enables report delivery"
+    },
+    {
+      "check_id": "audit_semantics",
+      "status": "PASS",
+      "detail": "AUDIT enables API-only bounded read window"
+    },
+    {
+      "check_id": "approval_required_semantics",
+      "status": "PASS",
+      "detail": "APPROVAL_REQUIRED has non-null hold timeout"
+    },
+    {
+      "check_id": "audit_tokens_table",
+      "status": "PASS",
+      "detail": "supervisor_audit_tokens table exists"
+    },
+    {
+      "check_id": "audit_tokens_program_expires_index",
+      "status": "PASS",
+      "detail": "program+expires index exists"
+    },
+    {
+      "check_id": "audit_view_exists",
+      "status": "PASS",
+      "detail": "supervisor audit view exists"
+    },
+    {
+      "check_id": "submit_function_hardened",
+      "status": "PASS",
+      "detail": "submit_for_supervisor_approval is SECURITY DEFINER with hardened search_path"
+    },
+    {
+      "check_id": "decide_function_hardened",
+      "status": "PASS",
+      "detail": "decide_supervisor_approval is SECURITY DEFINER with hardened search_path"
+    },
+    {
+      "check_id": "expire_function_hardened",
+      "status": "PASS",
+      "detail": "expire_supervisor_approvals is SECURITY DEFINER with hardened search_path"
+    },
+    {
+      "check_id": "policies_revoke_public",
+      "status": "PASS",
+      "detail": "PUBLIC has no privileges on supervisor_access_policies"
+    },
+    {
+      "check_id": "tokens_revoke_public",
+      "status": "PASS",
+      "detail": "PUBLIC has no privileges on supervisor_audit_tokens"
+    },
+    {
+      "check_id": "queue_revoke_public",
+      "status": "PASS",
+      "detail": "PUBLIC has no privileges on supervisor_approval_queue"
+    },
+    {
+      "check_id": "approval_pending_inserted",
+      "status": "PASS",
+      "detail": "submit_for_supervisor_approval creates pending queue row"
+    },
+    {
+      "check_id": "approval_decision_applied",
+      "status": "PASS",
+      "detail": "decide_supervisor_approval moves row to APPROVED"
+    },
+    {
+      "check_id": "approval_timeout_transition",
+      "status": "PASS",
+      "detail": "expire_supervisor_approvals marks pending rows as TIMED_OUT"
+    },
+    {
+      "check_id": "approval_timeout_marked",
+      "status": "PASS",
+      "detail": "timeout row is marked TIMED_OUT"
+    },
+    {
+      "check_id": "approval_invalid_decision_rejected",
+      "status": "PASS",
+      "detail": "invalid decision is rejected"
+    }
+  ]
+}

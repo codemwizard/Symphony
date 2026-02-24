@@ -1,0 +1,68 @@
+phase: "1"
+task_id: "TSK-P1-HIER-006"
+title: "Append-only member_device_events anchored to ingress FK"
+owner_role: "SUPERVISOR"
+status: "completed"
+
+depends_on:
+  - "TSK-P1-HIER-005"
+
+touches:
+  - "docs/plans/phase1/TSK-P1-HIER-006/PLAN.md"
+  - "docs/plans/phase1/TSK-P1-HIER-006/EXEC_LOG.md"
+  - "schema/migrations/0051_hier_006_supervisor_access_modes.sql"
+  - "scripts/db/verify_tsk_p1_hier_006.sh"
+  - "tasks/TSK-P1-HIER-006/meta.yml"
+  - "evidence/phase1/tsk_p1_hier_006__append_only_member_device_events_anchored.json"
+
+invariants:
+  - "INV-077"
+  - "INV-119"
+
+mechanics:
+  gate_ids:
+    - "INT-G28"
+  verifiers:
+    - "bash scripts/db/verify_tsk_p1_hier_006.sh --evidence evidence/phase1/tsk_p1_hier_006__append_only_member_device_events_anchored.json"
+    - "RUN_PHASE1_GATES=1 scripts/dev/pre_ci.sh"
+  evidence_paths:
+    - "evidence/phase1/tsk_p1_hier_006__append_only_member_device_events_anchored.json"
+
+work:
+  - "Implement supervisor access-mode structures for READ_ONLY, AUDIT, and APPROVAL_REQUIRED semantics."
+  - "Provide SECURITY DEFINER hardened approval-queue functions and revoke-first grants posture."
+  - "Emit verifier-backed evidence at the canonical DAG evidence path."
+
+acceptance_criteria:
+  - "Evidence exists at evidence/phase1/tsk_p1_hier_006__append_only_member_device_events_anchored.json and is valid JSON."
+  - "Evidence JSON contains task_id == 'TSK-P1-HIER-006', status in {PASS,DONE,OK}, and pass == true."
+  - "tasks/TSK-P1-HIER-006/meta.yml records terminal completion once verifiers pass."
+  - "TSK-P1-HIER-005 dependency is complete before execution."
+  - "Task verifier and RUN_PHASE1_GATES=1 scripts/dev/pre_ci.sh pass before closeout."
+
+verification:
+  - "bash scripts/db/verify_tsk_p1_hier_006.sh --evidence evidence/phase1/tsk_p1_hier_006__append_only_member_device_events_anchored.json"
+  - "RUN_PHASE1_GATES=1 scripts/dev/pre_ci.sh"
+
+evidence:
+  - "evidence/phase1/tsk_p1_hier_006__append_only_member_device_events_anchored.json"
+
+failure_modes:
+  - "Missing docs/tasks/phase1_prompts.md section or execution metadata block."
+  - "Evidence file missing/invalid/task_id mismatch/status not PASS."
+  - "Phase contract docs missing => FAIL_CLOSED."
+  - "Dependency TSK-P1-HIER-005 incomplete => BLOCKED."
+  - "Undeclared file modifications outside files_to_change => FAIL_REVIEW."
+
+must_read:
+  - "docs/operations/AI_AGENT_OPERATION_MANUAL.md"
+  - "docs/operations/AI_AGENT_WORKFLOW_AND_ROLE_PLAN_v2.md"
+  - "docs/operations/AGENT_ROLE_RECONCILIATION.md"
+
+implementation_plan: "docs/plans/phase1/TSK-P1-HIER-006/PLAN.md"
+implementation_log: "docs/plans/phase1/TSK-P1-HIER-006/EXEC_LOG.md"
+
+notes: "DAG title and semantics text diverge for HIER-006; implementation follows in-repo prompt semantics while preserving canonical verifier/evidence contract paths."
+client: "codex_cli"
+assigned_agent: "supervisor"
+model: "gpt-5-codex"

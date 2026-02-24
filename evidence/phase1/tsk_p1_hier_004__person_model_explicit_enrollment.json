@@ -1,0 +1,77 @@
+{
+  "check_id": "TSK-P1-HIER-004",
+  "task_id": "TSK-P1-HIER-004",
+  "status": "PASS",
+  "pass": true,
+  "git_sha": "0e30dbc5780fe9436d30591171a582468d2cf0e9",
+  "schema_fingerprint": "",
+  "timestamp_utc": "2026-02-24T11:49:11Z",
+  "errors": 0,
+  "checks": [
+    {
+      "check_id": "events_table_exists",
+      "status": "PASS",
+      "detail": "member_device_events table exists"
+    },
+    {
+      "check_id": "events_col_tenant_id",
+      "status": "PASS",
+      "detail": "member_device_events.tenant_id exists"
+    },
+    {
+      "check_id": "events_col_member_id",
+      "status": "PASS",
+      "detail": "member_device_events.member_id exists"
+    },
+    {
+      "check_id": "events_col_instruction_id",
+      "status": "PASS",
+      "detail": "member_device_events.instruction_id exists"
+    },
+    {
+      "check_id": "events_col_device_id_hash",
+      "status": "PASS",
+      "detail": "member_device_events.device_id_hash exists"
+    },
+    {
+      "check_id": "events_col_iccid_hash",
+      "status": "PASS",
+      "detail": "member_device_events.iccid_hash exists"
+    },
+    {
+      "check_id": "events_col_event_type",
+      "status": "PASS",
+      "detail": "member_device_events.event_type exists"
+    },
+    {
+      "check_id": "events_col_observed_at",
+      "status": "PASS",
+      "detail": "member_device_events.observed_at exists"
+    },
+    {
+      "check_id": "events_col_device_id",
+      "status": "PASS",
+      "detail": "member_device_events.device_id exists"
+    },
+    {
+      "check_id": "instruction_id_type_text",
+      "status": "PASS",
+      "detail": "member_device_events.instruction_id is TEXT"
+    },
+    {
+      "check_id": "ingress_fk_exists",
+      "status": "PASS",
+      "detail": "FK anchors to ingress_attestations with instruction_id"
+    },
+    {
+      "check_id": "device_id_check_exists",
+      "status": "PASS",
+      "detail": "CHECK exists for device_id NULL iff unregistered/revoked event types"
+    },
+    {
+      "check_id": "append_only_trigger_exists",
+      "status": "PASS",
+      "detail": "append-only trigger exists on member_device_events"
+    }
+  ]
+}
