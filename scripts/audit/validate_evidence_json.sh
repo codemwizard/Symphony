@@ -73,6 +73,10 @@ invalid_files = []
 
 for f in files:
     rel = str(f)
+    if f.name == "approval_metadata.json":
+        # Approval metadata has its own schema/contract verifier and is not a gate-evidence payload.
+        count_valid += 1
+        continue
     try:
         payload = json.loads(f.read_text(encoding="utf-8"))
     except Exception as exc:
@@ -129,4 +133,3 @@ print(status)
 if status != "PASS":
     raise SystemExit(1)
 PY
-
