@@ -22,3 +22,6 @@ Plan: docs/plans/phase1/TSK-P1-HIER-006/PLAN.md
 
 ## final_status
 completed
+
+## Final summary
+- TSK-P1-HIER-006 completed with supervisor-access structures, task verifier evidence at `evidence/phase1/tsk_p1_hier_006__append_only_member_device_events_anchored.json`, and passing `RUN_PHASE1_GATES=1 scripts/dev/pre_ci.sh`.
