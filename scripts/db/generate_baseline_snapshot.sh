@@ -20,7 +20,7 @@ DUMP_SOURCE="host"
 PG_DUMP_VERSION="unknown"
 PG_SERVER_VERSION="unknown"
 
-if command -v docker >/dev/null 2>&1; then
+if [[ -z "${SKIP_BASELINE_DOCKER:-}" ]] && command -v docker >/dev/null 2>&1; then
   pg_container="$(docker ps --format '{{.Names}}' | grep -E 'postgres' | head -n 1 || true)"
   if [[ -n "$pg_container" ]]; then
     DB_URL_IN_CONTAINER="$(python3 - <<'PY' "$DATABASE_URL"

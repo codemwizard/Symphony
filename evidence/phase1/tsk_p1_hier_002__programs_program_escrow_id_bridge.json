@@ -1,0 +1,159 @@
+{
+  "task_id": "TSK-P1-HIER-002",
+  "status": "PASS",
+  "git_sha": "UNKNOWN",
+  "timestamp_utc": "2026-02-24T08:23:22Z",
+  "errors": 0,
+  "checks": [
+    {
+      "check_id": "persons_table_exists",
+      "status": "PASS",
+      "detail": "persons table exists"
+    },
+    {
+      "check_id": "members_table_exists",
+      "status": "PASS",
+      "detail": "members table exists"
+    },
+    {
+      "check_id": "person_column_tenant_id",
+      "status": "PASS",
+      "detail": "persons.tenant_id present"
+    },
+    {
+      "check_id": "person_column_person_id",
+      "status": "PASS",
+      "detail": "persons.person_id present"
+    },
+    {
+      "check_id": "person_column_person_ref_hash",
+      "status": "PASS",
+      "detail": "persons.person_ref_hash present"
+    },
+    {
+      "check_id": "person_column_status",
+      "status": "PASS",
+      "detail": "persons.status present"
+    },
+    {
+      "check_id": "person_column_created_at",
+      "status": "PASS",
+      "detail": "persons.created_at present"
+    },
+    {
+      "check_id": "person_column_updated_at",
+      "status": "PASS",
+      "detail": "persons.updated_at present"
+    },
+    {
+      "check_id": "member_column_tenant_id",
+      "status": "PASS",
+      "detail": "members.tenant_id present"
+    },
+    {
+      "check_id": "member_column_member_id",
+      "status": "PASS",
+      "detail": "members.member_id present"
+    },
+    {
+      "check_id": "member_column_tenant_member_id",
+      "status": "PASS",
+      "detail": "members.tenant_member_id present"
+    },
+    {
+      "check_id": "member_column_person_id",
+      "status": "PASS",
+      "detail": "members.person_id present"
+    },
+    {
+      "check_id": "member_column_entity_id",
+      "status": "PASS",
+      "detail": "members.entity_id present"
+    },
+    {
+      "check_id": "member_column_member_ref_hash",
+      "status": "PASS",
+      "detail": "members.member_ref_hash present"
+    },
+    {
+      "check_id": "member_column_kyc_status",
+      "status": "PASS",
+      "detail": "members.kyc_status present"
+    },
+    {
+      "check_id": "member_column_enrolled_at",
+      "status": "PASS",
+      "detail": "members.enrolled_at present"
+    },
+    {
+      "check_id": "member_column_status",
+      "status": "PASS",
+      "detail": "members.status present"
+    },
+    {
+      "check_id": "member_column_ceiling_amount_minor",
+      "status": "PASS",
+      "detail": "members.ceiling_amount_minor present"
+    },
+    {
+      "check_id": "member_column_ceiling_currency",
+      "status": "PASS",
+      "detail": "members.ceiling_currency present"
+    },
+    {
+      "check_id": "member_column_metadata",
+      "status": "PASS",
+      "detail": "members.metadata present"
+    },
+    {
+      "check_id": "person_status_check",
+      "status": "PASS",
+      "detail": "persons.status CHECK constraint"
+    },
+    {
+      "check_id": "member_status_check",
+      "status": "PASS",
+      "detail": "members.status CHECK constraint"
+    },
+    {
+      "check_id": "member_kyc_status_check",
+      "status": "PASS",
+      "detail": "members.kyc_status CHECK constraint"
+    },
+    {
+      "check_id": "person_unique_idx",
+      "status": "PASS",
+      "detail": "persons unique tenant+person index"
+    },
+    {
+      "check_id": "member_unique_idx",
+      "status": "PASS",
+      "detail": "members unique tenant/member_ref index"
+    },
+    {
+      "check_id": "member_entity_index",
+      "status": "PASS",
+      "detail": "members entity/status active index"
+    },
+    {
+      "check_id": "member_entity_ref_index",
+      "status": "PASS",
+      "detail": "members entity/member_ref active index"
+    },
+    {
+      "check_id": "members_person_fk",
+      "status": "PASS",
+      "detail": "members.person_id FK to persons"
+    },
+    {
+      "check_id": "members_tenant_member_fk",
+      "status": "PASS",
+      "detail": "members.tenant_member_id FK"
+    },
+    {
+      "check_id": "members_program_fk",
+      "status": "PASS",
+      "detail": "members.entity_id FK to programs"
+    }
+  ]
+}

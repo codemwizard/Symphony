@@ -2,7 +2,7 @@
 -- PostgreSQL database dump
 --
 
-\restrict 1ce4BZ1TidwyVXcilbXXJgTUA1mnEcJtteShVjTaOO7yUSKsDU7w7QlH3R4wGbE
+\restrict F8gl1D2dcOwVCWlkdSnYoR7eCkoWWgy8sVUVgiLdaaqCGwVRNeGLMHCgZufWnZu
 
 -- Dumped from database version 18.2 (Debian 18.2-1.pgdg13+1)
 -- Dumped by pg_dump version 18.2 (Debian 18.2-1.pgdg13+1)
@@ -1088,6 +1088,34 @@ $$;
 
 
 --
+-- Name: touch_members_updated_at(); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.touch_members_updated_at() RETURNS trigger
+    LANGUAGE plpgsql
+    AS $$
+BEGIN
+  NEW.metadata := COALESCE(NEW.metadata, '{}'::jsonb);
+  RETURN NEW;
+END;
+$$;
+
+
+--
+-- Name: touch_persons_updated_at(); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.touch_persons_updated_at() RETURNS trigger
+    LANGUAGE plpgsql
+    AS $$
+BEGIN
+  NEW.updated_at := NOW();
+  RETURN NEW;
+END;
+$$;
+
+
+--
 -- Name: touch_programs_updated_at(); Type: FUNCTION; Schema: public; Owner: -
 --
 
@@ -1590,6 +1618,29 @@ CREATE TABLE public.levy_remittance_periods (
 
 
 --
+-- Name: members; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.members (
+    tenant_id uuid NOT NULL,
+    member_id uuid DEFAULT public.uuid_v7_or_random() NOT NULL,
+    tenant_member_id uuid NOT NULL,
+    person_id uuid NOT NULL,
+    entity_id uuid NOT NULL,
+    member_ref_hash text NOT NULL,
+    kyc_status text DEFAULT 'PENDING'::text NOT NULL,
+    enrolled_at timestamp with time zone DEFAULT now() NOT NULL,
+    status text DEFAULT 'ACTIVE'::text NOT NULL,
+    ceiling_amount_minor bigint DEFAULT 0 NOT NULL,
+    ceiling_currency character(3) DEFAULT 'USD'::bpchar NOT NULL,
+    metadata jsonb DEFAULT '{}'::jsonb NOT NULL,
+    CONSTRAINT members_ceiling_amount_minor_check CHECK ((ceiling_amount_minor >= 0)),
+    CONSTRAINT members_kyc_status_check CHECK ((kyc_status = ANY (ARRAY['PENDING'::text, 'VERIFIED'::text, 'REJECTED'::text]))),
+    CONSTRAINT members_status_check CHECK ((status = ANY (ARRAY['ACTIVE'::text, 'SUSPENDED'::text, 'ARCHIVED'::text])))
+);
+
+
+--
 -- Name: participant_outbox_sequences; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -1679,6 +1730,21 @@ CREATE TABLE public.payment_outbox_pending (
     CONSTRAINT payment_outbox_pending_attempt_count_check CHECK ((attempt_count >= 0))
 )
 WITH (fillfactor='80');
+
+
+--
+-- Name: persons; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.persons (
+    tenant_id uuid NOT NULL,
+    person_id uuid DEFAULT public.uuid_v7_or_random() NOT NULL,
+    person_ref_hash text NOT NULL,
+    status text DEFAULT 'ACTIVE'::text NOT NULL,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    updated_at timestamp with time zone DEFAULT now() NOT NULL,
+    CONSTRAINT persons_status_check CHECK ((status = ANY (ARRAY['ACTIVE'::text, 'INACTIVE'::text, 'SUSPENDED'::text])))
+);
 
 
 --
@@ -2091,6 +2157,30 @@ ALTER TABLE ONLY public.levy_remittance_periods
 
 
 --
+-- Name: members members_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.members
+    ADD CONSTRAINT members_pkey PRIMARY KEY (member_id);
+
+
+--
+-- Name: members members_tenant_id_member_ref_hash_key; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.members
+    ADD CONSTRAINT members_tenant_id_member_ref_hash_key UNIQUE (tenant_id, member_ref_hash);
+
+
+--
+-- Name: members members_tenant_id_person_id_entity_id_key; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.members
+    ADD CONSTRAINT members_tenant_id_person_id_entity_id_key UNIQUE (tenant_id, person_id, entity_id);
+
+
+--
 -- Name: participant_outbox_sequences participant_outbox_sequences_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -2136,6 +2226,14 @@ ALTER TABLE public.payment_outbox_pending
 
 ALTER TABLE ONLY public.payment_outbox_pending
     ADD CONSTRAINT payment_outbox_pending_pkey PRIMARY KEY (outbox_id);
+
+
+--
+-- Name: persons persons_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.persons
+    ADD CONSTRAINT persons_pkey PRIMARY KEY (person_id);
 
 
 --
@@ -2495,6 +2593,34 @@ CREATE INDEX idx_instruction_settlement_finality_participant_finalized ON public
 
 
 --
+-- Name: idx_members_entity_active; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_members_entity_active ON public.members USING btree (tenant_id, entity_id, status) WHERE (status = 'ACTIVE'::text);
+
+
+--
+-- Name: idx_members_entity_member_ref_active; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_members_entity_member_ref_active ON public.members USING btree (tenant_id, entity_id, member_ref_hash) WHERE (status = 'ACTIVE'::text);
+
+
+--
+-- Name: idx_members_tenant_member; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_members_tenant_member ON public.members USING btree (tenant_id, member_id);
+
+
+--
+-- Name: idx_members_tenant_member_ref; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_members_tenant_member_ref ON public.members USING btree (tenant_id, member_ref_hash);
+
+
+--
 -- Name: idx_payment_outbox_attempts_correlation_id; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -2534,6 +2660,13 @@ CREATE INDEX idx_payment_outbox_pending_tenant_correlation ON public.payment_out
 --
 
 CREATE INDEX idx_payment_outbox_pending_tenant_due ON public.payment_outbox_pending USING btree (tenant_id, next_attempt_at) WHERE (tenant_id IS NOT NULL);
+
+
+--
+-- Name: idx_persons_tenant_ref; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE UNIQUE INDEX idx_persons_tenant_ref ON public.persons USING btree (tenant_id, person_ref_hash);
 
 
 --
@@ -2910,6 +3043,20 @@ CREATE TRIGGER trg_touch_escrow_updated_at BEFORE UPDATE ON public.escrow_accoun
 
 
 --
+-- Name: members trg_touch_members_updated_at; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER trg_touch_members_updated_at BEFORE INSERT OR UPDATE ON public.members FOR EACH ROW EXECUTE FUNCTION public.touch_members_updated_at();
+
+
+--
+-- Name: persons trg_touch_persons_updated_at; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER trg_touch_persons_updated_at BEFORE UPDATE ON public.persons FOR EACH ROW EXECUTE FUNCTION public.touch_persons_updated_at();
+
+
+--
 -- Name: programs trg_touch_programs_updated_at; Type: TRIGGER; Schema: public; Owner: -
 --
 
@@ -3125,6 +3272,38 @@ ALTER TABLE ONLY public.levy_calculation_records
 
 
 --
+-- Name: members members_entity_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.members
+    ADD CONSTRAINT members_entity_id_fkey FOREIGN KEY (entity_id) REFERENCES public.programs(program_id) ON DELETE RESTRICT;
+
+
+--
+-- Name: members members_person_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.members
+    ADD CONSTRAINT members_person_id_fkey FOREIGN KEY (person_id) REFERENCES public.persons(person_id) ON DELETE RESTRICT;
+
+
+--
+-- Name: members members_tenant_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.members
+    ADD CONSTRAINT members_tenant_id_fkey FOREIGN KEY (tenant_id) REFERENCES public.tenants(tenant_id) ON DELETE RESTRICT;
+
+
+--
+-- Name: members members_tenant_member_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.members
+    ADD CONSTRAINT members_tenant_member_id_fkey FOREIGN KEY (tenant_member_id) REFERENCES public.tenant_members(member_id) ON DELETE RESTRICT;
+
+
+--
 -- Name: payment_outbox_attempts payment_outbox_attempts_member_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -3146,6 +3325,14 @@ ALTER TABLE ONLY public.payment_outbox_attempts
 
 ALTER TABLE ONLY public.payment_outbox_pending
     ADD CONSTRAINT payment_outbox_pending_tenant_id_fkey FOREIGN KEY (tenant_id) REFERENCES public.tenants(tenant_id);
+
+
+--
+-- Name: persons persons_tenant_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.persons
+    ADD CONSTRAINT persons_tenant_id_fkey FOREIGN KEY (tenant_id) REFERENCES public.tenants(tenant_id) ON DELETE RESTRICT;
 
 
 --
@@ -3224,5 +3411,5 @@ ALTER TABLE ONLY public.tenants
 -- PostgreSQL database dump complete
 --
 
-\unrestrict 1ce4BZ1TidwyVXcilbXXJgTUA1mnEcJtteShVjTaOO7yUSKsDU7w7QlH3R4wGbE
+\unrestrict F8gl1D2dcOwVCWlkdSnYoR7eCkoWWgy8sVUVgiLdaaqCGwVRNeGLMHCgZufWnZu
 
