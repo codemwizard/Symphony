@@ -40,3 +40,4 @@
 - Evidence artifacts are the proof objects; mapping does not imply production readiness.
 - Where controls are roadmap-only, evidence will be document-based (Phase-0).
 - Security privilege posture remains fail-closed even when SQL grant statements are wrapped across multiple lines.
+- 2026-02-24: `TSK-P1-HIER-002` adds Phase-1 hierarchy bridge checks (`programs.program_escrow_id` and `person_roles.member_id` FK posture) as regulated-surface integrity hardening validated through verifier evidence.

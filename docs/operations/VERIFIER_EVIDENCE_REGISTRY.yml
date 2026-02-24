@@ -68,3 +68,6 @@ registry:
   scripts/db/verify_tsk_p1_esc_002.sh:
     emits:
       - evidence/phase1/tsk_p1_esc_002__escrow_invariants_cross_tenant_protections.json
+  scripts/db/verify_tsk_p1_hier_002.sh:
+    emits:
+      - evidence/phase1/tsk_p1_hier_002__programs_program_escrow_id_bridge.json

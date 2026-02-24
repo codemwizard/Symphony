@@ -1,0 +1,69 @@
+phase: "1"
+task_id: "TSK-P1-HIER-002"
+title: "Programs + program_escrow_id bridge"
+owner_role: "SUPERVISOR"
+status: "completed"
+
+depends_on:
+  - "TSK-P1-HIER-001"
+
+touches:
+  - "docs/tasks/phase1_prompts.md"
+  - "docs/plans/phase1/TSK-P1-HIER-002/PLAN.md"
+  - "docs/plans/phase1/TSK-P1-HIER-002/EXEC_LOG.md"
+  - "schema/migrations/0047_hier_002_programs_person_member_bridge.sql"
+  - "scripts/db/verify_tsk_p1_hier_002.sh"
+  - "docs/PHASE1/phase1_contract.yml"
+  - "tasks/TSK-P1-HIER-002/meta.yml"
+  - "evidence/phase1/tsk_p1_hier_002__programs_program_escrow_id_bridge.json"
+
+invariants:
+  - "INV-077"
+  - "INV-119"
+
+mechanics:
+  gate_ids:
+    - "INT-G28"
+  verifiers:
+    - "bash scripts/db/verify_tsk_p1_hier_002.sh --evidence evidence/phase1/tsk_p1_hier_002__programs_program_escrow_id_bridge.json"
+    - "RUN_PHASE1_GATES=1 scripts/dev/pre_ci.sh"
+  evidence_paths:
+    - "evidence/phase1/tsk_p1_hier_002__programs_program_escrow_id_bridge.json"
+
+work:
+  - "Add persons + members bridging tables that reuse programs and tenant_members and capture program escrow ID references."
+  - "Document the schema/constraint requirements in docs/tasks/phase1_prompts.md and the new plan/log entries."
+  - "Implement scripts/db/verify_tsk_p1_hier_002.sh to assert schema/index correctness and emit governance evidence."
+  - "Confirm the Phase-1 gate chain (`RUN_PHASE1_GATES=1 scripts/dev/pre_ci.sh`) accepts the new evidence."
+
+acceptance_criteria:
+  - "Evidence exists at evidence/phase1/tsk_p1_hier_002__programs_program_escrow_id_bridge.json and is valid JSON."
+  - "Evidence JSON contains task_id == 'TSK-P1-HIER-002', status in {PASS,DONE,OK}, and documents tenant-mapped constraint verifications."
+  - "tasks/TSK-P1-HIER-002/meta.yml records terminal completion once the gate passes."
+  - "TSK-P1-HIER-001 dependency has PASS evidence before execution."
+  - "Task-specific verifier plus RUN_PHASE1_GATES=1 scripts/dev/pre_ci.sh run without failure."
+
+verification:
+  - "bash scripts/db/verify_tsk_p1_hier_002.sh --evidence evidence/phase1/tsk_p1_hier_002__programs_program_escrow_id_bridge.json"
+  - "RUN_PHASE1_GATES=1 scripts/dev/pre_ci.sh"
+
+evidence:
+  - "evidence/phase1/tsk_p1_hier_002__programs_program_escrow_id_bridge.json"
+
+failure_modes:
+  - "Missing docs/tasks/phase1_prompts.md section or execution metadata block."
+  - "Evidence file missing/invalid/task_id mismatch/status not PASS."
+  - "Phase contract docs missing => FAIL_CLOSED."
+  - "Dependency TSK-P1-HIER-001 incomplete => BLOCKED."
+  - "Undeclared file modifications outside files_to_change => FAIL_REVIEW."
+
+must_read:
+  - "docs/operations/AI_AGENT_OPERATION_MANUAL.md"
+
+implementation_plan: "docs/plans/phase1/TSK-P1-HIER-002/PLAN.md"
+implementation_log: "docs/plans/phase1/TSK-P1-HIER-002/EXEC_LOG.md"
+
+notes: "This governance work stitches the program registry to the tenant member/person model, ensuring escrow IDs can be traced to enrollments."
+client: "codex_cli"
+assigned_agent: "supervisor"
+model: "gpt-5-codex"
