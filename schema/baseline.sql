@@ -2,7 +2,7 @@
 -- PostgreSQL database dump
 --
 
-\restrict lxPpmBm0KudOnUX8navbWWRO866S82nSg1oGj6NX7b4kX6wz6ElBnZWDSiQL7PH
+\restrict SQ6yqDoTRZaRJ1cwqLIiqVdSfgxJDP1g6IJaaRILEBuSHUO0oZsv8swcMLU2BPY
 
 -- Dumped from database version 18.2 (Debian 18.2-1.pgdg13+1)
 -- Dumped by pg_dump version 18.2 (Debian 18.2-1.pgdg13+1)
@@ -376,6 +376,36 @@ CREATE FUNCTION public.complete_outbox_attempt(p_outbox_id uuid, p_lease_token u
   
     RETURN QUERY SELECT v_next_attempt_no, v_effective_state;
   END;
+$$;
+
+
+--
+-- Name: decide_supervisor_approval(text, text, text, text); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.decide_supervisor_approval(p_instruction_id text, p_decision text, p_actor text, p_reason text DEFAULT NULL::text) RETURNS void
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO 'pg_catalog', 'public'
+    AS $$
+DECLARE
+  v_decision TEXT := UPPER(BTRIM(COALESCE(p_decision, '')));
+BEGIN
+  IF v_decision NOT IN ('APPROVED', 'REJECTED') THEN
+    RAISE EXCEPTION 'invalid decision %', p_decision;
+  END IF;
+
+  UPDATE public.supervisor_approval_queue
+  SET status = v_decision,
+      decided_at = NOW(),
+      decided_by = COALESCE(NULLIF(BTRIM(p_actor), ''), 'system'),
+      decision_reason = p_reason
+  WHERE instruction_id = p_instruction_id
+    AND status = 'PENDING_SUPERVISOR_APPROVAL';
+
+  IF NOT FOUND THEN
+    RAISE EXCEPTION 'instruction % is not pending supervisor approval', p_instruction_id;
+  END IF;
+END;
 $$;
 
 
@@ -782,6 +812,31 @@ $$;
 
 
 --
+-- Name: expire_supervisor_approvals(timestamp with time zone); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.expire_supervisor_approvals(p_now timestamp with time zone DEFAULT now()) RETURNS integer
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO 'pg_catalog', 'public'
+    AS $$
+DECLARE
+  v_count INTEGER := 0;
+BEGIN
+  UPDATE public.supervisor_approval_queue
+  SET status = 'TIMED_OUT',
+      decided_at = p_now,
+      decided_by = 'system_timeout',
+      decision_reason = COALESCE(decision_reason, 'timeout')
+  WHERE status = 'PENDING_SUPERVISOR_APPROVAL'
+    AND timeout_at <= p_now;
+
+  GET DIAGNOSTICS v_count = ROW_COUNT;
+  RETURN v_count;
+END;
+$$;
+
+
+--
 -- Name: mark_anchor_sync_anchored(uuid, uuid, text, text, text); Type: FUNCTION; Schema: public; Owner: -
 --
 
@@ -1055,6 +1110,38 @@ BEGIN
   END IF;
 
   RETURN NEW;
+END;
+$$;
+
+
+--
+-- Name: submit_for_supervisor_approval(text, uuid, integer); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.submit_for_supervisor_approval(p_instruction_id text, p_program_id uuid, p_timeout_minutes integer DEFAULT 30) RETURNS void
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO 'pg_catalog', 'public'
+    AS $$
+DECLARE
+  v_timeout INTEGER := COALESCE(p_timeout_minutes, 30);
+BEGIN
+  IF v_timeout <= 0 THEN
+    RAISE EXCEPTION 'approval timeout must be positive';
+  END IF;
+
+  INSERT INTO public.supervisor_approval_queue(
+    instruction_id, program_id, status, held_at, timeout_at, decided_at, decided_by, decision_reason
+  ) VALUES (
+    p_instruction_id, p_program_id, 'PENDING_SUPERVISOR_APPROVAL', NOW(), NOW() + make_interval(mins => v_timeout), NULL, NULL, NULL
+  )
+  ON CONFLICT (instruction_id) DO UPDATE
+    SET program_id = EXCLUDED.program_id,
+        status = 'PENDING_SUPERVISOR_APPROVAL',
+        held_at = NOW(),
+        timeout_at = NOW() + make_interval(mins => v_timeout),
+        decided_at = NULL,
+        decided_by = NULL,
+        decision_reason = NULL;
 END;
 $$;
 
@@ -2001,6 +2088,74 @@ CREATE TABLE public.schema_migrations (
 
 
 --
+-- Name: supervisor_access_policies; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.supervisor_access_policies (
+    scope text NOT NULL,
+    description text NOT NULL,
+    api_access boolean NOT NULL,
+    db_access boolean NOT NULL,
+    report_delivery boolean NOT NULL,
+    read_window_minutes integer,
+    hold_timeout_minutes integer,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    CONSTRAINT supervisor_access_policies_hold_timeout_minutes_check CHECK (((hold_timeout_minutes IS NULL) OR (hold_timeout_minutes > 0))),
+    CONSTRAINT supervisor_access_policies_read_window_minutes_check CHECK (((read_window_minutes IS NULL) OR (read_window_minutes > 0))),
+    CONSTRAINT supervisor_access_policies_scope_check CHECK ((scope = ANY (ARRAY['READ_ONLY'::text, 'AUDIT'::text, 'APPROVAL_REQUIRED'::text])))
+);
+
+
+--
+-- Name: supervisor_approval_queue; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.supervisor_approval_queue (
+    instruction_id text NOT NULL,
+    program_id uuid NOT NULL,
+    status text NOT NULL,
+    held_at timestamp with time zone DEFAULT now() NOT NULL,
+    timeout_at timestamp with time zone NOT NULL,
+    decided_at timestamp with time zone,
+    decided_by text,
+    decision_reason text,
+    CONSTRAINT supervisor_approval_queue_status_check CHECK ((status = ANY (ARRAY['PENDING_SUPERVISOR_APPROVAL'::text, 'APPROVED'::text, 'REJECTED'::text, 'TIMED_OUT'::text])))
+);
+
+
+--
+-- Name: supervisor_audit_member_device_events; Type: VIEW; Schema: public; Owner: -
+--
+
+CREATE VIEW public.supervisor_audit_member_device_events AS
+ SELECT m.entity_id AS program_id,
+    e.tenant_id,
+    e.member_id,
+    e.instruction_id,
+    e.event_type,
+    e.observed_at
+   FROM (public.member_device_events e
+     JOIN public.members m ON ((m.member_id = e.member_id)));
+
+
+--
+-- Name: supervisor_audit_tokens; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.supervisor_audit_tokens (
+    token_id uuid DEFAULT public.uuid_v7_or_random() NOT NULL,
+    program_id uuid NOT NULL,
+    scope text DEFAULT 'AUDIT'::text NOT NULL,
+    token_hash text NOT NULL,
+    issued_by text NOT NULL,
+    issued_at timestamp with time zone DEFAULT now() NOT NULL,
+    expires_at timestamp with time zone NOT NULL,
+    revoked_at timestamp with time zone,
+    CONSTRAINT supervisor_audit_tokens_scope_check CHECK ((scope = 'AUDIT'::text))
+);
+
+
+--
 -- Name: tenant_clients; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -2458,6 +2613,38 @@ ALTER TABLE ONLY public.schema_migrations
 
 
 --
+-- Name: supervisor_access_policies supervisor_access_policies_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.supervisor_access_policies
+    ADD CONSTRAINT supervisor_access_policies_pkey PRIMARY KEY (scope);
+
+
+--
+-- Name: supervisor_approval_queue supervisor_approval_queue_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.supervisor_approval_queue
+    ADD CONSTRAINT supervisor_approval_queue_pkey PRIMARY KEY (instruction_id);
+
+
+--
+-- Name: supervisor_audit_tokens supervisor_audit_tokens_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.supervisor_audit_tokens
+    ADD CONSTRAINT supervisor_audit_tokens_pkey PRIMARY KEY (token_id);
+
+
+--
+-- Name: supervisor_audit_tokens supervisor_audit_tokens_token_hash_key; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.supervisor_audit_tokens
+    ADD CONSTRAINT supervisor_audit_tokens_token_hash_key UNIQUE (token_hash);
+
+
+--
 -- Name: tenant_clients tenant_clients_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -2863,6 +3050,20 @@ CREATE INDEX idx_programs_tenant_status ON public.programs USING btree (tenant_i
 --
 
 CREATE INDEX idx_rail_truth_anchor_participant_anchored ON public.rail_dispatch_truth_anchor USING btree (rail_participant_id, anchored_at DESC);
+
+
+--
+-- Name: idx_supervisor_approval_queue_status_timeout; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_supervisor_approval_queue_status_timeout ON public.supervisor_approval_queue USING btree (status, timeout_at);
+
+
+--
+-- Name: idx_supervisor_audit_tokens_program_expires; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_supervisor_audit_tokens_program_expires ON public.supervisor_audit_tokens USING btree (program_id, expires_at DESC);
 
 
 --
@@ -3583,6 +3784,22 @@ ALTER TABLE ONLY public.rail_dispatch_truth_anchor
 
 
 --
+-- Name: supervisor_approval_queue supervisor_approval_queue_program_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.supervisor_approval_queue
+    ADD CONSTRAINT supervisor_approval_queue_program_id_fkey FOREIGN KEY (program_id) REFERENCES public.programs(program_id) ON DELETE RESTRICT;
+
+
+--
+-- Name: supervisor_audit_tokens supervisor_audit_tokens_program_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.supervisor_audit_tokens
+    ADD CONSTRAINT supervisor_audit_tokens_program_id_fkey FOREIGN KEY (program_id) REFERENCES public.programs(program_id) ON DELETE RESTRICT;
+
+
+--
 -- Name: tenant_clients tenant_clients_tenant_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -3618,5 +3835,5 @@ ALTER TABLE ONLY public.tenants
 -- PostgreSQL database dump complete
 --
 
-\unrestrict lxPpmBm0KudOnUX8navbWWRO866S82nSg1oGj6NX7b4kX6wz6ElBnZWDSiQL7PH
+\unrestrict SQ6yqDoTRZaRJ1cwqLIiqVdSfgxJDP1g6IJaaRILEBuSHUO0oZsv8swcMLU2BPY
 
