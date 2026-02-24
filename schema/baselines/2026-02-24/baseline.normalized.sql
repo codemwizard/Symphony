@@ -19,6 +19,10 @@
          purge_request_id = p_purge_request_id
          purged_at = NOW(),
         $$;
+        'migrated_at', NOW(),
+        'migrated_by', v_actor,
+        'migrated_from_program_id', p_from_program_id,
+        'migration_reason', v_reason
         ) VALUES (
         ) VALUES (
         );
@@ -60,6 +64,7 @@
       (e.state = 'CREATED' AND e.authorization_expires_at IS NOT NULL AND e.authorization_expires_at <= p_now)
       )
       )
+      )
       AND (o.lease_expires_at IS NULL OR o.lease_expires_at <= clock_timestamp())
       AND a.idempotency_key = p_idempotency_key
       AND ia.participant_id = p_participant_id
@@ -71,8 +76,12 @@
       AND md.status = 'ACTIVE'
       AND p.idempotency_key = p_idempotency_key
       AND p.lease_token = p_lease_token AND p.lease_expires_at > NOW()
+      AND p.tenant_id = p_tenant_id
+      AND p.tenant_id = p_tenant_id
+      AND pe.tenant_id = p_tenant_id
       AND pr.tenant_id = p_tenant_id
       CASE WHEN v_effective_state IN ('DISPATCHED', 'FAILED') THEN NOW() ELSE NULL END,
+      COALESCE(v_source_member.metadata, '{}'::jsonb) || jsonb_build_object(
       DELETE FROM payment_outbox_pending WHERE outbox_id = p_outbox_id;
       ELSE
       END IF;
@@ -81,6 +90,8 @@
       IF v_next_attempt_no >= v_retry_ceiling THEN
       INSERT INTO payment_outbox_pending (
       INTO existing_pending;
+      NOW(),
+      NOW(),
       OR (e.state = 'AUTHORIZED' AND e.authorization_expires_at IS NOT NULL AND e.authorization_expires_at <= p_now)
       OR (e.state = 'RELEASE_REQUESTED' AND e.release_due_at IS NOT NULL AND e.release_due_at <= p_now)
       ORDER BY p.lease_expires_at ASC, p.created_at ASC LIMIT p_batch_size FOR UPDATE SKIP LOCKED
@@ -117,6 +128,8 @@
       USING ERRCODE = 'P7202';
       USING ERRCODE = 'P7299';
       USING ERRCODE = 'P7300';
+      USING ERRCODE = 'P7300';
+      USING ERRCODE = 'P7301';
       USING ERRCODE = 'P7301';
       USING ERRCODE = 'P7302';
       USING ERRCODE = 'P7302';
@@ -125,8 +138,12 @@
       USING ERRCODE = 'P7303';
       USING ERRCODE = 'P7304';
       USING ERRCODE = 'P7304';
+      USING ERRCODE = 'P7304';
+      USING ERRCODE = 'P7305';
       USING ERRCODE = 'P7305';
       USING ERRCODE = 'P7306';
+      USING ERRCODE = 'P7306';
+      USING ERRCODE = 'P7307';
       VALUES (
       WHEN unique_violation THEN
       WHERE outbox_id = p_outbox_id;
@@ -137,6 +154,8 @@
       attempt_no := v_next_attempt_no;
       attempt_no, state, claimed_at, completed_at, rail_reference, rail_code,
       canceled_at = CASE WHEN v_to_state = 'CANCELED' THEN COALESCE(canceled_at, p_now) ELSE canceled_at END,
+      ceiling_amount_minor,
+      ceiling_currency,
       claimed_by = NULL,
       claimed_by = v_worker,
       decided_at = NOW(),
@@ -145,9 +164,14 @@
       decided_by = COALESCE(NULLIF(BTRIM(p_actor), ''), 'system'),
       decision_reason = COALESCE(decision_reason, 'timeout')
       decision_reason = p_reason
+      enrolled_at,
+      entity_id,
       error_code, error_message, latency_ms, worker_id
       expired_at = CASE WHEN v_to_state = 'EXPIRED' THEN COALESCE(expired_at, p_now) ELSE expired_at END
+      formula_version_id
+      from_program_id,
       hashtextextended(p_instruction_id || chr(31) || p_idempotency_key, 1)
+      kyc_status,
       last_error = COALESCE(last_error, 'LEASE_EXPIRED_REPAIRED')
       last_error = NULL
       lease_expires_at = NULL
@@ -156,21 +180,53 @@
       lease_token = NULL,
       lease_token = NULL,
       lease_token = public.uuid_v7_or_random(),
+      md5(v_source_member.member_ref_hash || ':migrated:' || p_to_program_id::text),
+      member_id,
+      member_ref_hash,
+      metadata
+      migrated_at,
+      migrated_by,
+      migrated_member_id,
       outbox_id := v_record.outbox_id;
       outbox_id, instruction_id, participant_id, sequence_id, idempotency_key, rail_type, payload,
       p_actor_id => p_actor_id,
       p_escrow_id => v_escrow_id,
+      p_from_program_id,
       p_metadata => jsonb_build_object('expired_at', p_now),
       p_now => p_now
       p_outbox_id, v_instruction_id, v_participant_id, v_sequence_id, v_idempotency_key, v_rail_type, v_payload,
+      p_person_id,
       p_rail_reference, p_rail_code, p_error_code, p_error_message, p_latency_ms, p_worker_id
       p_reason => 'window_elapsed',
+      p_tenant_id,
+      p_to_program_id,
+      p_to_program_id,
       p_to_state => 'EXPIRED',
+      person_id,
+      person_id,
+      public.uuid_v7_or_random(),
+      reason,
       released_at = CASE WHEN v_to_state = 'RELEASED' THEN COALESCE(released_at, p_now) ELSE released_at END,
+      status,
+      tenant_id,
+      tenant_id,
+      tenant_member_id,
+      to_program_id,
       updated_at = NOW()
       updated_at = p_now,
+      v_actor,
       v_effective_state := 'FAILED';
+      v_formula_version_id
       v_next_attempt_no, v_effective_state, NOW(),
+      v_reason,
+      v_source_member.ceiling_amount_minor,
+      v_source_member.ceiling_currency,
+      v_source_member.kyc_status,
+      v_source_member.person_id,
+      v_source_member.status,
+      v_source_member.tenant_id,
+      v_source_member.tenant_member_id,
+      v_target_member_id,
      AND purged_at IS NULL;
      JOIN public.members m ON ((m.member_id = e.member_id)));
      SET protected_payload = NULL,
@@ -197,7 +253,12 @@
     'RETIRED'
     'RETRYABLE',
     'ZOMBIE_REQUEUE'
+    (EXTRACT(year FROM enrolled_at))::integer AS program_year,
     (v_row.state = 'CREATED' AND v_to_state IN ('AUTHORIZED', 'CANCELED', 'EXPIRED'))
+    )
+    )
+    ) VALUES (
+    ) VALUES (
     ) VALUES (
     );
     );
@@ -288,6 +349,13 @@
     ADD CONSTRAINT pii_vault_records_pkey PRIMARY KEY (vault_id);
     ADD CONSTRAINT pii_vault_records_purge_request_fk FOREIGN KEY (purge_request_id) REFERENCES public.pii_purge_requests(purge_request_id) DEFERRABLE;
     ADD CONSTRAINT policy_versions_pkey PRIMARY KEY (version);
+    ADD CONSTRAINT program_migration_events_formula_version_id_fkey FOREIGN KEY (formula_version_id) REFERENCES public.risk_formula_versions(formula_version_id) ON DELETE RESTRICT;
+    ADD CONSTRAINT program_migration_events_from_program_id_fkey FOREIGN KEY (from_program_id) REFERENCES public.programs(program_id) ON DELETE RESTRICT;
+    ADD CONSTRAINT program_migration_events_migrated_member_id_fkey FOREIGN KEY (migrated_member_id) REFERENCES public.members(member_id) ON DELETE RESTRICT;
+    ADD CONSTRAINT program_migration_events_person_id_fkey FOREIGN KEY (person_id) REFERENCES public.persons(person_id) ON DELETE RESTRICT;
+    ADD CONSTRAINT program_migration_events_pkey PRIMARY KEY (migration_event_id);
+    ADD CONSTRAINT program_migration_events_tenant_id_fkey FOREIGN KEY (tenant_id) REFERENCES public.tenants(tenant_id) ON DELETE RESTRICT;
+    ADD CONSTRAINT program_migration_events_to_program_id_fkey FOREIGN KEY (to_program_id) REFERENCES public.programs(program_id) ON DELETE RESTRICT;
     ADD CONSTRAINT programs_pkey PRIMARY KEY (program_id);
     ADD CONSTRAINT programs_program_escrow_id_fkey FOREIGN KEY (program_escrow_id) REFERENCES public.escrow_accounts(escrow_id) ON DELETE RESTRICT;
     ADD CONSTRAINT programs_tenant_id_fkey FOREIGN KEY (tenant_id) REFERENCES public.tenants(tenant_id) ON DELETE RESTRICT;
@@ -297,6 +365,8 @@
     ADD CONSTRAINT rail_truth_anchor_attempt_fk FOREIGN KEY (attempt_id) REFERENCES public.payment_outbox_attempts(attempt_id) DEFERRABLE;
     ADD CONSTRAINT revoked_client_certs_pkey PRIMARY KEY (cert_fingerprint_sha256);
     ADD CONSTRAINT revoked_tokens_pkey PRIMARY KEY (token_jti);
+    ADD CONSTRAINT risk_formula_versions_formula_key_key UNIQUE (formula_key);
+    ADD CONSTRAINT risk_formula_versions_pkey PRIMARY KEY (formula_version_id);
     ADD CONSTRAINT schema_migrations_pkey PRIMARY KEY (version);
     ADD CONSTRAINT supervisor_access_policies_pkey PRIMARY KEY (scope);
     ADD CONSTRAINT supervisor_approval_queue_pkey PRIMARY KEY (instruction_id);
@@ -328,8 +398,14 @@
     AND e.event_type = 'PURGED'
     AND lease_expires_at <= clock_timestamp();
     AND lease_expires_at IS NOT NULL
+    AND m.entity_id = p_from_program_id
+    AND m.entity_id = p_to_program_id
+    AND m.person_id = p_person_id
+    AND m.person_id = p_person_id
+    AND rf.is_active = TRUE
     AND status = 'PENDING_SUPERVISOR_APPROVAL';
     AND timeout_at <= p_now;
+    AS $$
     AS $$
     AS $$
     AS $$
@@ -432,8 +508,10 @@
     CONSTRAINT pii_purge_events_event_type_check CHECK ((event_type = ANY (ARRAY['REQUESTED'::text, 'PURGED'::text]))),
     CONSTRAINT pii_purge_events_rows_affected_check CHECK ((rows_affected >= 0))
     CONSTRAINT pii_vault_records_purge_shape_chk CHECK ((((purged_at IS NULL) AND (protected_payload IS NOT NULL) AND (purge_request_id IS NULL)) OR ((purged_at IS NOT NULL) AND (protected_payload IS NULL) AND (purge_request_id IS NOT NULL))))
+    CONSTRAINT program_migration_events_from_to_chk CHECK ((from_program_id <> to_program_id))
     CONSTRAINT programs_status_check CHECK ((status = ANY (ARRAY['ACTIVE'::text, 'SUSPENDED'::text, 'CLOSED'::text])))
     CONSTRAINT rail_truth_anchor_state_chk CHECK ((state = 'DISPATCHED'::public.outbox_attempt_state))
+    CONSTRAINT risk_formula_versions_tier_check CHECK ((tier = ANY (ARRAY['TIER1'::text, 'TIER2'::text, 'TIER3'::text])))
     CONSTRAINT supervisor_access_policies_hold_timeout_minutes_check CHECK (((hold_timeout_minutes IS NULL) OR (hold_timeout_minutes > 0))),
     CONSTRAINT supervisor_access_policies_read_window_minutes_check CHECK (((read_window_minutes IS NULL) OR (read_window_minutes > 0))),
     CONSTRAINT supervisor_access_policies_scope_check CHECK ((scope = ANY (ARRAY['READ_ONLY'::text, 'AUDIT'::text, 'APPROVAL_REQUIRED'::text])))
@@ -470,6 +548,9 @@
     FROM public.ingress_attestations ia
     FROM public.member_devices md
     FROM public.members m
+    FROM public.persons pe
+    FROM public.programs p
+    FROM public.programs p
     FROM public.programs pr
     FROM public.tenants t
     IF FOUND THEN
@@ -481,6 +562,8 @@
     IF v_effective_state IN ('DISPATCHED', 'FAILED') THEN
     INSERT INTO participant_outbox_sequences(participant_id, next_sequence_id)
     INSERT INTO payment_outbox_attempts (
+    INSERT INTO public.members(
+    INSERT INTO public.program_migration_events(
     INTO derived_billable_client_id
     INTO derived_tenant_id
     INTO existing_attempt
@@ -523,6 +606,7 @@
     LANGUAGE plpgsql SECURITY DEFINER
     LANGUAGE plpgsql SECURITY DEFINER
     LANGUAGE plpgsql SECURITY DEFINER
+    LANGUAGE plpgsql SECURITY DEFINER
     LANGUAGE sql
     LANGUAGE sql SECURITY DEFINER
     LANGUAGE sql STABLE
@@ -542,6 +626,7 @@
     NEW.tenant_id := derived_tenant_id;
     NULLIF(current_setting('symphony.outbox_retry_ceiling', true), '')::int,
     ON CONFLICT (participant_id)
+    ON CONFLICT (tenant_id, person_id, from_program_id, to_program_id) DO NOTHING;
     ON DELETE TO public.kyc_retention_policy DO INSTEAD NOTHING;
     ON UPDATE TO public.kyc_retention_policy DO INSTEAD NOTHING;
     OR (v_row.state = 'AUTHORIZED' AND v_to_state IN ('RELEASE_REQUESTED', 'CANCELED', 'EXPIRED'))
@@ -552,6 +637,7 @@
     PERFORM pg_notify('symphony_outbox', '');
     PERFORM public.transition_escrow_state(
     RAISE EXCEPTION '% is append-only', TG_TABLE_NAME
+    RAISE EXCEPTION 'active formula key % not found', p_formula_key
     RAISE EXCEPTION 'anchor completion requires anchored state' USING ERRCODE = 'P7211';
     RAISE EXCEPTION 'anchor operation cannot be anchored from state %', v_op.state USING ERRCODE = 'P7211';
     RAISE EXCEPTION 'anchor operation lease invalid' USING ERRCODE = 'P7212';
@@ -573,6 +659,8 @@
     RAISE EXCEPTION 'external_proofs requires tenant attribution via ingress_attestations'
     RAISE EXCEPTION 'external_proofs tenant_id does not match derived tenant_id'
     RAISE EXCEPTION 'final instruction cannot be mutated'
+    RAISE EXCEPTION 'from_program_id % is not in tenant %', p_from_program_id, p_tenant_id
+    RAISE EXCEPTION 'from_program_id and to_program_id must differ'
     RAISE EXCEPTION 'illegal escrow transition: % -> %', v_row.state, v_to_state
     RAISE EXCEPTION 'ingress_attestations is append-only'
     RAISE EXCEPTION 'instruction % is not pending supervisor approval', p_instruction_id;
@@ -587,14 +675,17 @@
     RAISE EXCEPTION 'pack_id is required' USING ERRCODE = 'P7210';
     RAISE EXCEPTION 'participant-to-program linkage invalid'
     RAISE EXCEPTION 'payment_outbox_attempts is append-only'
+    RAISE EXCEPTION 'person_id % is not in tenant %', p_person_id, p_tenant_id
     RAISE EXCEPTION 'pii_vault_records updates require purge executor'
     RAISE EXCEPTION 'program-to-entity linkage invalid'
     RAISE EXCEPTION 'purge request not found: %', p_purge_request_id
     RAISE EXCEPTION 'reversal requires existing instruction %', NEW.reversal_of_instruction_id
     RAISE EXCEPTION 'reversal source instruction must be final and SETTLED: %', NEW.reversal_of_instruction_id
     RAISE EXCEPTION 'revocation tables are append-only'
+    RAISE EXCEPTION 'source member not found for tenant %, person %, program %', p_tenant_id, p_person_id, p_from_program_id
     RAISE EXCEPTION 'tenant-to-participant linkage invalid for instruction'
     RAISE EXCEPTION 'tenant_id required when member_id is set'
+    RAISE EXCEPTION 'to_program_id % is not in tenant %', p_to_program_id, p_tenant_id
     RAISE EXCEPTION 'worker_id is required' USING ERRCODE = 'P7210';
     RETURN NEW;
     RETURN NEW;
@@ -606,6 +697,10 @@
     RETURN;
     RETURN;
     RETURNING (participant_outbox_sequences.next_sequence_id - 1) INTO allocated;
+    RETURNING member_id INTO v_target_member_id;
+    SELECT 1
+    SELECT 1
+    SELECT 1
     SELECT 1
     SELECT 1
     SELECT 1
@@ -631,6 +726,7 @@
     SET search_path TO 'pg_catalog', 'public'
     SET search_path TO 'pg_catalog', 'public'
     SET search_path TO 'pg_catalog', 'public'
+    SET search_path TO 'pg_catalog', 'public'
     USING ERRCODE = 'P0001';
     USING ERRCODE = 'P7004';
     VALUES (p_participant_id, 2)
@@ -643,7 +739,10 @@
     WHERE o.state IN ('PENDING', 'ANCHORED')
     WHERE p.instruction_id = p_instruction_id
     WHERE p.outbox_id = p_outbox_id AND p.claimed_by = p_worker_id
+    WHERE p.program_id = p_from_program_id
+    WHERE p.program_id = p_to_program_id
     WHERE pack_id = p_pack_id;
+    WHERE pe.person_id = p_person_id
     WHERE pr.program_id = p_program_id
     activated_at timestamp with time zone DEFAULT now() NOT NULL,
     active_from date,
@@ -711,6 +810,8 @@
     correlation_id uuid,
     correlation_id uuid,
     correlation_id uuid,
+    count(DISTINCT person_id) AS unique_beneficiaries
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
     created_at timestamp with time zone DEFAULT now() NOT NULL,
     created_at timestamp with time zone DEFAULT now() NOT NULL,
     created_at timestamp with time zone DEFAULT now() NOT NULL,
@@ -798,6 +899,12 @@
     final_state text NOT NULL,
     finality_id uuid DEFAULT public.uuid_v7_or_random() NOT NULL,
     finalized_at timestamp with time zone DEFAULT now() NOT NULL,
+    formula_key text NOT NULL,
+    formula_name text NOT NULL,
+    formula_spec jsonb DEFAULT '{}'::jsonb NOT NULL,
+    formula_version_id uuid DEFAULT public.uuid_v7_or_random() NOT NULL,
+    formula_version_id uuid NOT NULL,
+    from_program_id uuid NOT NULL,
     grace_expires_at timestamp with time zone,
     hash_algorithm text,
     held_at timestamp with time zone DEFAULT now() NOT NULL,
@@ -824,6 +931,7 @@
     instruction_id uuid NOT NULL,
     instruction_id,
     instruction_id, program_id, status, held_at, timeout_at, decided_at, decided_by, decision_reason
+    is_active boolean DEFAULT true NOT NULL,
     is_active boolean DEFAULT true NOT NULL,
     is_active boolean GENERATED ALWAYS AS ((status = 'ACTIVE'::public.policy_version_status)) STORED,
     is_active boolean,
@@ -872,6 +980,10 @@
     metadata jsonb,
     metadata jsonb,
     metadata jsonb,
+    migrated_at timestamp with time zone DEFAULT now() NOT NULL,
+    migrated_by text NOT NULL,
+    migrated_member_id uuid NOT NULL,
+    migration_event_id uuid DEFAULT public.uuid_v7_or_random() NOT NULL,
     msisdn_hash bytea,
     next_attempt_at timestamp with time zone DEFAULT now() NOT NULL,
     next_sequence_id bigint NOT NULL,
@@ -929,6 +1041,7 @@
     period_status text,
     person_id uuid DEFAULT public.uuid_v7_or_random() NOT NULL,
     person_id uuid NOT NULL,
+    person_id uuid NOT NULL,
     person_ref_hash text NOT NULL,
     program_escrow_id uuid NOT NULL,
     program_escrow_id uuid NOT NULL,
@@ -971,6 +1084,7 @@
     rail_type text NOT NULL,
     rate_bps integer NOT NULL,
     read_window_minutes integer,
+    reason text NOT NULL,
     reason text,
     reason text,
     reason_code text,
@@ -1053,6 +1167,7 @@
     tenant_id uuid NOT NULL,
     tenant_id uuid NOT NULL,
     tenant_id uuid NOT NULL,
+    tenant_id uuid NOT NULL,
     tenant_id uuid,
     tenant_id uuid,
     tenant_id uuid,
@@ -1063,7 +1178,9 @@
     tenant_member_id uuid NOT NULL,
     tenant_name text NOT NULL,
     tenant_type text NOT NULL,
+    tier text NOT NULL,
     timeout_at timestamp with time zone NOT NULL,
+    to_program_id uuid NOT NULL,
     token_hash text NOT NULL,
     token_id uuid DEFAULT public.uuid_v7_or_random() NOT NULL,
     token_jti text NOT NULL,
@@ -1109,6 +1226,7 @@
     zra_reference text,
    FROM (public.member_device_events e
    FROM due
+   FROM public.members m
    RETURNING
    SET
    UPDATE payment_outbox_pending p
@@ -1123,6 +1241,9 @@
   )
   )
   ) AS t;
+  ) THEN
+  ) THEN
+  ) THEN
   ) THEN
   ) THEN
   ) THEN
@@ -1202,6 +1323,13 @@
   END IF;
   END IF;
   END IF;
+  END IF;
+  END IF;
+  END IF;
+  END IF;
+  END IF;
+  END IF;
+  END IF;
   END LOOP;
   END;
   END;
@@ -1225,14 +1353,18 @@
   FROM public.escrow_accounts
   FROM public.escrow_envelopes
   FROM public.instruction_settlement_finality
+  FROM public.members m
+  FROM public.members m
   FROM public.pii_purge_events e
   FROM public.pii_purge_requests r
+  FROM public.risk_formula_versions rf
   FROM public.tenant_members
   FROM public.transition_escrow_state(
   FROM public.transition_escrow_state(
   GET DIAGNOSTICS v_count = ROW_COUNT;
   GET DIAGNOSTICS v_count = ROW_COUNT;
   GET DIAGNOSTICS v_rows = ROW_COUNT;
+  GROUP BY tenant_id, (EXTRACT(year FROM enrolled_at));
   IF FOUND THEN
   IF NEW.billable_client_id IS NULL THEN
   IF NEW.correlation_id IS NULL THEN
@@ -1246,6 +1378,10 @@
   IF NOT EXISTS (
   IF NOT EXISTS (
   IF NOT EXISTS (
+  IF NOT EXISTS (
+  IF NOT EXISTS (
+  IF NOT EXISTS (
+  IF NOT FOUND THEN
   IF NOT FOUND THEN
   IF NOT FOUND THEN
   IF NOT FOUND THEN
@@ -1262,11 +1398,13 @@
   IF m_tenant <> NEW.tenant_id THEN
   IF m_tenant IS NULL THEN
   IF p_entity_id IS DISTINCT FROM p_program_id THEN
+  IF p_from_program_id = p_to_program_id THEN
   IF p_lease_seconds IS NULL OR p_lease_seconds <= 0 THEN
   IF p_pack_id IS NULL THEN
   IF v_amount <= 0 THEN
   IF v_decision NOT IN ('APPROVED', 'REJECTED') THEN
   IF v_env.reserved_amount_minor + v_amount > v_env.ceiling_amount_minor THEN
+  IF v_formula_version_id IS NULL THEN
   IF v_op.claimed_by IS DISTINCT FROM p_worker_id THEN
   IF v_op.claimed_by IS DISTINCT FROM p_worker_id THEN
   IF v_op.lease_token IS DISTINCT FROM p_lease_token OR v_op.lease_expires_at IS NULL OR v_op.lease_expires_at <= clock_timestamp() THEN
@@ -1277,6 +1415,7 @@
   IF v_row.state IN ('RELEASED', 'CANCELED', 'EXPIRED') THEN
   IF v_sequence_ref IS NULL THEN
   IF v_source_state <> 'SETTLED' OR v_source_final IS DISTINCT FROM TRUE THEN
+  IF v_target_member_id IS NULL THEN
   IF v_timeout <= 0 THEN
   IF v_to_state NOT IN ('CREATED', 'AUTHORIZED', 'RELEASE_REQUESTED', 'RELEASED', 'CANCELED', 'EXPIRED') THEN
   IF v_worker IS NULL THEN
@@ -1291,10 +1430,16 @@
   INSERT INTO public.supervisor_approval_queue(
   INTO v_env
   INTO v_event_id
+  INTO v_formula_version_id
   INTO v_prior
   INTO v_row
+  INTO v_source_member
   INTO v_source_state, v_source_final
   INTO v_subject_token
+  INTO v_target_member_id
+  LIMIT 1;
+  LIMIT 1;
+  LIMIT 1;
   LIMIT 1;
   LIMIT p_batch_size
   LOOP
@@ -1307,7 +1452,9 @@
   ON CONFLICT (instruction_id) DO UPDATE
   ON CONFLICT (pack_id) DO NOTHING
   ON CONFLICT ON CONSTRAINT ux_pii_purge_events_request_event
+  ORDER BY m.enrolled_at DESC
   ORDER BY p.next_attempt_at ASC, p.created_at ASC
+  ORDER BY rf.created_at DESC
   PERFORM 1
   PERFORM set_config('symphony.allow_pii_purge', 'on', true);
   RAISE EXCEPTION 'member_device_events is append-only'
@@ -1335,6 +1482,7 @@
   RETURN v_operation_id;
   RETURN v_request_id;
   RETURN v_reservation_escrow_id;
+  RETURN v_target_member_id;
   RETURNING escrow_accounts.escrow_id INTO v_reservation_escrow_id;
   RETURNING escrow_events.event_id INTO v_event_id;
   RETURNING o.operation_id, o.pack_id, o.lease_token, o.state, o.attempt_count;
@@ -1349,8 +1497,11 @@
   SELECT e.rows_affected
   SELECT final_state, is_final
   SELECT ia.tenant_id
+  SELECT m.*
+  SELECT m.member_id
   SELECT p.outbox_id
   SELECT r.subject_token
+  SELECT rf.formula_version_id
   SELECT t.billable_client_id
   SELECT t.event_id
   SELECT tenant_id INTO m_tenant
@@ -1381,6 +1532,8 @@
   WHERE escrow_envelopes.escrow_id = v_env.escrow_id;
   WHERE instruction_id = NEW.reversal_of_instruction_id;
   WHERE instruction_id = p_instruction_id
+  WHERE m.tenant_id = p_tenant_id
+  WHERE m.tenant_id = p_tenant_id
   WHERE member_id = NEW.member_id;
   WHERE o.operation_id = c.operation_id
   WHERE operation_id = p_operation_id
@@ -1389,6 +1542,7 @@
   WHERE operation_id = v_op.operation_id;
   WHERE p.next_attempt_at <= NOW()
   WHERE r.purge_request_id = p_purge_request_id;
+  WHERE rf.formula_key = COALESCE(NULLIF(BTRIM(p_formula_key), ''), 'TIER1_DETERMINISTIC_DEFAULT')
   WHERE state IN ('ANCHORING', 'ANCHORED')
   WHERE status = 'PENDING_SUPERVISOR_APPROVAL'
   WITH candidate AS (
@@ -1397,6 +1551,7 @@
   m_tenant uuid;
   v_actor TEXT := COALESCE(NULLIF(BTRIM(p_actor_id), ''), 'system');
   v_actor TEXT := COALESCE(NULLIF(BTRIM(p_actor_id), ''), 'system');
+  v_actor TEXT := COALESCE(NULLIF(BTRIM(p_migrated_by), ''), current_user);
   v_amount BIGINT := COALESCE(p_amount_minor, 0);
   v_count INTEGER := 0;
   v_count INTEGER := 0;
@@ -1406,6 +1561,7 @@
   v_escrow_id UUID;
   v_event_id UUID;
   v_event_id UUID;
+  v_formula_version_id UUID;
   v_legal := (
   v_legal BOOLEAN := FALSE;
   v_op public.anchor_sync_operations%ROWTYPE;
@@ -1414,6 +1570,7 @@
   v_prior INTEGER := 0;
   v_profile := COALESCE(NULLIF(BTRIM(NEW.rail_type), ''), 'GENERIC');
   v_profile TEXT;
+  v_reason TEXT := COALESCE(NULLIF(BTRIM(p_reason), ''), 'program_migration');
   v_request_id UUID;
   v_reservation_escrow_id UUID;
   v_row public.escrow_accounts%ROWTYPE;
@@ -1421,8 +1578,10 @@
   v_sequence_ref := NULLIF(BTRIM(NEW.rail_reference), '');
   v_sequence_ref TEXT;
   v_source_final BOOLEAN;
+  v_source_member public.members%ROWTYPE;
   v_source_state TEXT;
   v_subject_token TEXT;
+  v_target_member_id UUID;
   v_timeout INTEGER := COALESCE(p_timeout_minutes, 30);
   v_to_state TEXT := UPPER(BTRIM(COALESCE(p_to_state, '')));
   v_worker TEXT := NULLIF(BTRIM(p_worker_id), '');
@@ -1431,6 +1590,7 @@
  ),
  SELECT * FROM leased;
  SELECT m.entity_id AS program_id,
+ SELECT tenant_id,
  leased AS (
 $$;
 $$;
@@ -1471,7 +1631,10 @@ $$;
 $$;
 $$;
 $$;
+$$;
 )
+);
+);
 );
 );
 );
@@ -1599,6 +1762,13 @@ ALTER TABLE ONLY public.pii_vault_records
 ALTER TABLE ONLY public.pii_vault_records
 ALTER TABLE ONLY public.pii_vault_records
 ALTER TABLE ONLY public.policy_versions
+ALTER TABLE ONLY public.program_migration_events
+ALTER TABLE ONLY public.program_migration_events
+ALTER TABLE ONLY public.program_migration_events
+ALTER TABLE ONLY public.program_migration_events
+ALTER TABLE ONLY public.program_migration_events
+ALTER TABLE ONLY public.program_migration_events
+ALTER TABLE ONLY public.program_migration_events
 ALTER TABLE ONLY public.programs
 ALTER TABLE ONLY public.programs
 ALTER TABLE ONLY public.programs
@@ -1610,6 +1780,8 @@ ALTER TABLE ONLY public.rail_dispatch_truth_anchor
 ALTER TABLE ONLY public.rail_dispatch_truth_anchor
 ALTER TABLE ONLY public.revoked_client_certs
 ALTER TABLE ONLY public.revoked_tokens
+ALTER TABLE ONLY public.risk_formula_versions
+ALTER TABLE ONLY public.risk_formula_versions
 ALTER TABLE ONLY public.schema_migrations
 ALTER TABLE ONLY public.supervisor_access_policies
 ALTER TABLE ONLY public.supervisor_approval_queue
@@ -1663,6 +1835,7 @@ BEGIN
 BEGIN
 BEGIN
 BEGIN
+BEGIN
 CREATE FUNCTION public.anchor_dispatched_outbox_attempt() RETURNS trigger
 CREATE FUNCTION public.authorize_escrow_reservation(p_program_escrow_id uuid, p_amount_minor bigint, p_actor_id text DEFAULT 'system'::text, p_reason text DEFAULT NULL::text, p_metadata jsonb DEFAULT '{}'::jsonb) RETURNS uuid
 CREATE FUNCTION public.bump_participant_outbox_seq(p_participant_id text) RETURNS bigint
@@ -1686,6 +1859,7 @@ CREATE FUNCTION public.execute_pii_purge(p_purge_request_id uuid, p_executor tex
 CREATE FUNCTION public.expire_escrows(p_now timestamp with time zone DEFAULT now(), p_actor_id text DEFAULT 'escrow_expiry_worker'::text) RETURNS integer
 CREATE FUNCTION public.expire_supervisor_approvals(p_now timestamp with time zone DEFAULT now()) RETURNS integer
 CREATE FUNCTION public.mark_anchor_sync_anchored(p_operation_id uuid, p_lease_token uuid, p_worker_id text, p_anchor_ref text, p_anchor_type text DEFAULT 'HYBRID_SYNC'::text) RETURNS void
+CREATE FUNCTION public.migrate_person_to_program(p_tenant_id uuid, p_person_id uuid, p_from_program_id uuid, p_to_program_id uuid, p_migrated_by text DEFAULT CURRENT_USER, p_reason text DEFAULT 'program_migration'::text, p_formula_key text DEFAULT 'TIER1_DETERMINISTIC_DEFAULT'::text) RETURNS uuid
 CREATE FUNCTION public.outbox_retry_ceiling() RETURNS integer
 CREATE FUNCTION public.release_escrow(p_escrow_id uuid, p_actor_id text DEFAULT 'system'::text, p_reason text DEFAULT NULL::text, p_metadata jsonb DEFAULT '{}'::jsonb) RETURNS uuid
 CREATE FUNCTION public.repair_expired_anchor_sync_leases(p_worker_id text DEFAULT 'anchor_repair'::text) RETURNS integer
@@ -1741,6 +1915,8 @@ CREATE INDEX idx_payment_outbox_pending_tenant_correlation ON public.payment_out
 CREATE INDEX idx_payment_outbox_pending_tenant_due ON public.payment_outbox_pending USING btree (tenant_id, next_attempt_at) WHERE (tenant_id IS NOT NULL);
 CREATE INDEX idx_pii_purge_requests_subject_requested ON public.pii_purge_requests USING btree (subject_token, requested_at DESC);
 CREATE INDEX idx_policy_versions_is_active ON public.policy_versions USING btree (is_active) WHERE (is_active = true);
+CREATE INDEX idx_program_migration_events_tenant_person ON public.program_migration_events USING btree (tenant_id, person_id, migrated_at DESC);
+CREATE INDEX idx_program_migration_events_tenant_time ON public.program_migration_events USING btree (tenant_id, migrated_at DESC);
 CREATE INDEX idx_programs_tenant_status ON public.programs USING btree (tenant_id, status);
 CREATE INDEX idx_rail_truth_anchor_participant_anchored ON public.rail_dispatch_truth_anchor USING btree (rail_participant_id, anchored_at DESC);
 CREATE INDEX idx_supervisor_approval_queue_status_timeout ON public.supervisor_approval_queue USING btree (status, timeout_at);
@@ -1793,10 +1969,12 @@ CREATE TABLE public.pii_purge_events (
 CREATE TABLE public.pii_purge_requests (
 CREATE TABLE public.pii_vault_records (
 CREATE TABLE public.policy_versions (
+CREATE TABLE public.program_migration_events (
 CREATE TABLE public.programs (
 CREATE TABLE public.rail_dispatch_truth_anchor (
 CREATE TABLE public.revoked_client_certs (
 CREATE TABLE public.revoked_tokens (
+CREATE TABLE public.risk_formula_versions (
 CREATE TABLE public.schema_migrations (
 CREATE TABLE public.supervisor_access_policies (
 CREATE TABLE public.supervisor_approval_queue (
@@ -1843,7 +2021,9 @@ CREATE UNIQUE INDEX ux_ingress_attestations_tenant_instruction ON public.ingress
 CREATE UNIQUE INDEX ux_instruction_settlement_finality_one_reversal_per_original ON public.instruction_settlement_finality USING btree (reversal_of_instruction_id) WHERE (reversal_of_instruction_id IS NOT NULL);
 CREATE UNIQUE INDEX ux_outbox_attempts_one_terminal_per_outbox ON public.payment_outbox_attempts USING btree (outbox_id) WHERE (state = ANY (ARRAY['DISPATCHED'::public.outbox_attempt_state, 'FAILED'::public.outbox_attempt_state]));
 CREATE UNIQUE INDEX ux_policy_versions_single_active ON public.policy_versions USING btree ((1)) WHERE (status = 'ACTIVE'::public.policy_version_status);
+CREATE UNIQUE INDEX ux_program_migration_events_deterministic ON public.program_migration_events USING btree (tenant_id, person_id, from_program_id, to_program_id);
 CREATE VIEW public.supervisor_audit_member_device_events AS
+CREATE VIEW public.tenant_program_year_unique_beneficiaries AS
 DECLARE
 DECLARE
 DECLARE
@@ -1862,6 +2042,8 @@ DECLARE
 DECLARE
 DECLARE
 DECLARE
+DECLARE
+END;
 END;
 END;
 END;

@@ -2,7 +2,7 @@
 -- PostgreSQL database dump
 --
 
-\restrict SQ6yqDoTRZaRJ1cwqLIiqVdSfgxJDP1g6IJaaRILEBuSHUO0oZsv8swcMLU2BPY
+\restrict eUHgmRMhey4Cdaf0b3x5k9o6X4uz8ujmWqT4I6Feb8URY1DMA2PfwcF6sp4vg6B
 
 -- Dumped from database version 18.2 (Debian 18.2-1.pgdg13+1)
 -- Dumped by pg_dump version 18.2 (Debian 18.2-1.pgdg13+1)
@@ -876,6 +876,155 @@ BEGIN
       anchor_ref = p_anchor_ref,
       anchor_type = COALESCE(NULLIF(BTRIM(p_anchor_type), ''), 'HYBRID_SYNC')
   WHERE operation_id = v_op.operation_id;
+END;
+$$;
+
+
+--
+-- Name: migrate_person_to_program(uuid, uuid, uuid, uuid, text, text, text); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.migrate_person_to_program(p_tenant_id uuid, p_person_id uuid, p_from_program_id uuid, p_to_program_id uuid, p_migrated_by text DEFAULT CURRENT_USER, p_reason text DEFAULT 'program_migration'::text, p_formula_key text DEFAULT 'TIER1_DETERMINISTIC_DEFAULT'::text) RETURNS uuid
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO 'pg_catalog', 'public'
+    AS $$
+DECLARE
+  v_source_member public.members%ROWTYPE;
+  v_target_member_id UUID;
+  v_formula_version_id UUID;
+  v_actor TEXT := COALESCE(NULLIF(BTRIM(p_migrated_by), ''), current_user);
+  v_reason TEXT := COALESCE(NULLIF(BTRIM(p_reason), ''), 'program_migration');
+BEGIN
+  IF p_from_program_id = p_to_program_id THEN
+    RAISE EXCEPTION 'from_program_id and to_program_id must differ'
+      USING ERRCODE = 'P7304';
+  END IF;
+
+  IF NOT EXISTS (
+    SELECT 1
+    FROM public.programs p
+    WHERE p.program_id = p_from_program_id
+      AND p.tenant_id = p_tenant_id
+  ) THEN
+    RAISE EXCEPTION 'from_program_id % is not in tenant %', p_from_program_id, p_tenant_id
+      USING ERRCODE = 'P7300';
+  END IF;
+
+  IF NOT EXISTS (
+    SELECT 1
+    FROM public.programs p
+    WHERE p.program_id = p_to_program_id
+      AND p.tenant_id = p_tenant_id
+  ) THEN
+    RAISE EXCEPTION 'to_program_id % is not in tenant %', p_to_program_id, p_tenant_id
+      USING ERRCODE = 'P7301';
+  END IF;
+
+  IF NOT EXISTS (
+    SELECT 1
+    FROM public.persons pe
+    WHERE pe.person_id = p_person_id
+      AND pe.tenant_id = p_tenant_id
+  ) THEN
+    RAISE EXCEPTION 'person_id % is not in tenant %', p_person_id, p_tenant_id
+      USING ERRCODE = 'P7305';
+  END IF;
+
+  SELECT rf.formula_version_id
+  INTO v_formula_version_id
+  FROM public.risk_formula_versions rf
+  WHERE rf.formula_key = COALESCE(NULLIF(BTRIM(p_formula_key), ''), 'TIER1_DETERMINISTIC_DEFAULT')
+    AND rf.is_active = TRUE
+  ORDER BY rf.created_at DESC
+  LIMIT 1;
+
+  IF v_formula_version_id IS NULL THEN
+    RAISE EXCEPTION 'active formula key % not found', p_formula_key
+      USING ERRCODE = 'P7307';
+  END IF;
+
+  SELECT m.*
+  INTO v_source_member
+  FROM public.members m
+  WHERE m.tenant_id = p_tenant_id
+    AND m.person_id = p_person_id
+    AND m.entity_id = p_from_program_id
+  ORDER BY m.enrolled_at DESC
+  LIMIT 1;
+
+  IF NOT FOUND THEN
+    RAISE EXCEPTION 'source member not found for tenant %, person %, program %', p_tenant_id, p_person_id, p_from_program_id
+      USING ERRCODE = 'P7306';
+  END IF;
+
+  SELECT m.member_id
+  INTO v_target_member_id
+  FROM public.members m
+  WHERE m.tenant_id = p_tenant_id
+    AND m.person_id = p_person_id
+    AND m.entity_id = p_to_program_id
+  LIMIT 1;
+
+  IF v_target_member_id IS NULL THEN
+    INSERT INTO public.members(
+      tenant_id,
+      member_id,
+      tenant_member_id,
+      person_id,
+      entity_id,
+      member_ref_hash,
+      kyc_status,
+      enrolled_at,
+      status,
+      ceiling_amount_minor,
+      ceiling_currency,
+      metadata
+    ) VALUES (
+      v_source_member.tenant_id,
+      public.uuid_v7_or_random(),
+      v_source_member.tenant_member_id,
+      v_source_member.person_id,
+      p_to_program_id,
+      md5(v_source_member.member_ref_hash || ':migrated:' || p_to_program_id::text),
+      v_source_member.kyc_status,
+      NOW(),
+      v_source_member.status,
+      v_source_member.ceiling_amount_minor,
+      v_source_member.ceiling_currency,
+      COALESCE(v_source_member.metadata, '{}'::jsonb) || jsonb_build_object(
+        'migrated_from_program_id', p_from_program_id,
+        'migrated_at', NOW(),
+        'migrated_by', v_actor,
+        'migration_reason', v_reason
+      )
+    )
+    RETURNING member_id INTO v_target_member_id;
+
+    INSERT INTO public.program_migration_events(
+      tenant_id,
+      person_id,
+      from_program_id,
+      to_program_id,
+      migrated_member_id,
+      migrated_at,
+      migrated_by,
+      reason,
+      formula_version_id
+    ) VALUES (
+      p_tenant_id,
+      p_person_id,
+      p_from_program_id,
+      p_to_program_id,
+      v_target_member_id,
+      NOW(),
+      v_actor,
+      v_reason,
+      v_formula_version_id
+    )
+    ON CONFLICT (tenant_id, person_id, from_program_id, to_program_id) DO NOTHING;
+  END IF;
+
+  RETURN v_target_member_id;
 END;
 $$;
 
@@ -2015,6 +2164,25 @@ CREATE TABLE public.policy_versions (
 
 
 --
+-- Name: program_migration_events; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.program_migration_events (
+    migration_event_id uuid DEFAULT public.uuid_v7_or_random() NOT NULL,
+    tenant_id uuid NOT NULL,
+    person_id uuid NOT NULL,
+    from_program_id uuid NOT NULL,
+    to_program_id uuid NOT NULL,
+    migrated_member_id uuid NOT NULL,
+    migrated_at timestamp with time zone DEFAULT now() NOT NULL,
+    migrated_by text NOT NULL,
+    reason text NOT NULL,
+    formula_version_id uuid NOT NULL,
+    CONSTRAINT program_migration_events_from_to_chk CHECK ((from_program_id <> to_program_id))
+);
+
+
+--
 -- Name: programs; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -2073,6 +2241,22 @@ CREATE TABLE public.revoked_tokens (
     expires_at timestamp with time zone,
     reason_code text,
     revoked_by text
+);
+
+
+--
+-- Name: risk_formula_versions; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.risk_formula_versions (
+    formula_version_id uuid DEFAULT public.uuid_v7_or_random() NOT NULL,
+    formula_key text NOT NULL,
+    formula_name text NOT NULL,
+    tier text NOT NULL,
+    is_active boolean DEFAULT true NOT NULL,
+    formula_spec jsonb DEFAULT '{}'::jsonb NOT NULL,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    CONSTRAINT risk_formula_versions_tier_check CHECK ((tier = ANY (ARRAY['TIER1'::text, 'TIER2'::text, 'TIER3'::text])))
 );
 
 
@@ -2184,6 +2368,18 @@ CREATE TABLE public.tenant_members (
     created_at timestamp with time zone DEFAULT now() NOT NULL,
     CONSTRAINT tenant_members_status_check CHECK ((status = ANY (ARRAY['ACTIVE'::text, 'SUSPENDED'::text, 'EXITED'::text])))
 );
+
+
+--
+-- Name: tenant_program_year_unique_beneficiaries; Type: VIEW; Schema: public; Owner: -
+--
+
+CREATE VIEW public.tenant_program_year_unique_beneficiaries AS
+ SELECT tenant_id,
+    (EXTRACT(year FROM enrolled_at))::integer AS program_year,
+    count(DISTINCT person_id) AS unique_beneficiaries
+   FROM public.members m
+  GROUP BY tenant_id, (EXTRACT(year FROM enrolled_at));
 
 
 --
@@ -2557,6 +2753,14 @@ ALTER TABLE ONLY public.policy_versions
 
 
 --
+-- Name: program_migration_events program_migration_events_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.program_migration_events
+    ADD CONSTRAINT program_migration_events_pkey PRIMARY KEY (migration_event_id);
+
+
+--
 -- Name: programs programs_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -2602,6 +2806,22 @@ ALTER TABLE ONLY public.revoked_client_certs
 
 ALTER TABLE ONLY public.revoked_tokens
     ADD CONSTRAINT revoked_tokens_pkey PRIMARY KEY (token_jti);
+
+
+--
+-- Name: risk_formula_versions risk_formula_versions_formula_key_key; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.risk_formula_versions
+    ADD CONSTRAINT risk_formula_versions_formula_key_key UNIQUE (formula_key);
+
+
+--
+-- Name: risk_formula_versions risk_formula_versions_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.risk_formula_versions
+    ADD CONSTRAINT risk_formula_versions_pkey PRIMARY KEY (formula_version_id);
 
 
 --
@@ -3039,6 +3259,20 @@ CREATE INDEX idx_policy_versions_is_active ON public.policy_versions USING btree
 
 
 --
+-- Name: idx_program_migration_events_tenant_person; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_program_migration_events_tenant_person ON public.program_migration_events USING btree (tenant_id, person_id, migrated_at DESC);
+
+
+--
+-- Name: idx_program_migration_events_tenant_time; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_program_migration_events_tenant_time ON public.program_migration_events USING btree (tenant_id, migrated_at DESC);
+
+
+--
 -- Name: idx_programs_tenant_status; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -3225,6 +3459,13 @@ CREATE UNIQUE INDEX ux_outbox_attempts_one_terminal_per_outbox ON public.payment
 --
 
 CREATE UNIQUE INDEX ux_policy_versions_single_active ON public.policy_versions USING btree ((1)) WHERE (status = 'ACTIVE'::public.policy_version_status);
+
+
+--
+-- Name: ux_program_migration_events_deterministic; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE UNIQUE INDEX ux_program_migration_events_deterministic ON public.program_migration_events USING btree (tenant_id, person_id, from_program_id, to_program_id);
 
 
 --
@@ -3760,6 +4001,54 @@ ALTER TABLE ONLY public.pii_vault_records
 
 
 --
+-- Name: program_migration_events program_migration_events_formula_version_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.program_migration_events
+    ADD CONSTRAINT program_migration_events_formula_version_id_fkey FOREIGN KEY (formula_version_id) REFERENCES public.risk_formula_versions(formula_version_id) ON DELETE RESTRICT;
+
+
+--
+-- Name: program_migration_events program_migration_events_from_program_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.program_migration_events
+    ADD CONSTRAINT program_migration_events_from_program_id_fkey FOREIGN KEY (from_program_id) REFERENCES public.programs(program_id) ON DELETE RESTRICT;
+
+
+--
+-- Name: program_migration_events program_migration_events_migrated_member_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.program_migration_events
+    ADD CONSTRAINT program_migration_events_migrated_member_id_fkey FOREIGN KEY (migrated_member_id) REFERENCES public.members(member_id) ON DELETE RESTRICT;
+
+
+--
+-- Name: program_migration_events program_migration_events_person_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.program_migration_events
+    ADD CONSTRAINT program_migration_events_person_id_fkey FOREIGN KEY (person_id) REFERENCES public.persons(person_id) ON DELETE RESTRICT;
+
+
+--
+-- Name: program_migration_events program_migration_events_tenant_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.program_migration_events
+    ADD CONSTRAINT program_migration_events_tenant_id_fkey FOREIGN KEY (tenant_id) REFERENCES public.tenants(tenant_id) ON DELETE RESTRICT;
+
+
+--
+-- Name: program_migration_events program_migration_events_to_program_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.program_migration_events
+    ADD CONSTRAINT program_migration_events_to_program_id_fkey FOREIGN KEY (to_program_id) REFERENCES public.programs(program_id) ON DELETE RESTRICT;
+
+
+--
 -- Name: programs programs_program_escrow_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -3835,5 +4124,5 @@ ALTER TABLE ONLY public.tenants
 -- PostgreSQL database dump complete
 --
 
-\unrestrict SQ6yqDoTRZaRJ1cwqLIiqVdSfgxJDP1g6IJaaRILEBuSHUO0oZsv8swcMLU2BPY
+\unrestrict eUHgmRMhey4Cdaf0b3x5k9o6X4uz8ujmWqT4I6Feb8URY1DMA2PfwcF6sp4vg6B
 
