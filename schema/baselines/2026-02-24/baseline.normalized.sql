@@ -56,8 +56,16 @@
       )
       AND (o.lease_expires_at IS NULL OR o.lease_expires_at <= clock_timestamp())
       AND a.idempotency_key = p_idempotency_key
+      AND ia.participant_id = p_participant_id
+      AND ia.tenant_id = p_tenant_id
+      AND m.entity_id = p_entity_id
+      AND m.tenant_id = p_tenant_id
+      AND md.device_id_hash = p_device_id
+      AND md.member_id = p_member_id
+      AND md.status = 'ACTIVE'
       AND p.idempotency_key = p_idempotency_key
       AND p.lease_token = p_lease_token AND p.lease_expires_at > NOW()
+      AND pr.tenant_id = p_tenant_id
       CASE WHEN v_effective_state IN ('DISPATCHED', 'FAILED') THEN NOW() ELSE NULL END,
       DELETE FROM payment_outbox_pending WHERE outbox_id = p_outbox_id;
       ELSE
@@ -101,6 +109,9 @@
       USING ERRCODE = 'P7005';
       USING ERRCODE = 'P7201';
       USING ERRCODE = 'P7202';
+      USING ERRCODE = 'P7299';
+      USING ERRCODE = 'P7300';
+      USING ERRCODE = 'P7301';
       USING ERRCODE = 'P7302';
       USING ERRCODE = 'P7302';
       USING ERRCODE = 'P7303';
@@ -108,6 +119,8 @@
       USING ERRCODE = 'P7303';
       USING ERRCODE = 'P7304';
       USING ERRCODE = 'P7304';
+      USING ERRCODE = 'P7305';
+      USING ERRCODE = 'P7306';
       VALUES (
       WHEN unique_violation THEN
       WHERE outbox_id = p_outbox_id;
@@ -333,6 +346,7 @@
     AS $$
     AS $$
     AS $$
+    AS $$
     BEGIN
     COALESCE(p_metadata, '{}'::jsonb),
     CONSTRAINT anchor_sync_operations_attempt_count_check CHECK ((attempt_count >= 0)),
@@ -424,6 +438,10 @@
     FROM public.anchor_sync_operations o
     FROM public.escrow_accounts e
     FROM public.ingress_attestations ia
+    FROM public.ingress_attestations ia
+    FROM public.member_devices md
+    FROM public.members m
+    FROM public.programs pr
     FROM public.tenants t
     IF FOUND THEN
     IF FOUND THEN
@@ -472,6 +490,7 @@
     LANGUAGE plpgsql SECURITY DEFINER
     LANGUAGE plpgsql SECURITY DEFINER
     LANGUAGE plpgsql SECURITY DEFINER
+    LANGUAGE plpgsql SECURITY DEFINER
     LANGUAGE sql
     LANGUAGE sql SECURITY DEFINER
     LANGUAGE sql STABLE
@@ -511,6 +530,7 @@
     RAISE EXCEPTION 'anchor operation worker mismatch' USING ERRCODE = 'P7212';
     RAISE EXCEPTION 'anchor reference is required' USING ERRCODE = 'P7211';
     RAISE EXCEPTION 'dispatch requires rail sequence reference'
+    RAISE EXCEPTION 'entity-to-member linkage invalid'
     RAISE EXCEPTION 'escrow ceiling exceeded'
     RAISE EXCEPTION 'escrow envelope not found'
     RAISE EXCEPTION 'escrow not found'
@@ -526,15 +546,19 @@
     RAISE EXCEPTION 'invalid reservation amount %', v_amount
     RAISE EXCEPTION 'invalid target escrow state %', v_to_state
     RAISE EXCEPTION 'lease seconds must be > 0' USING ERRCODE = 'P7210';
+    RAISE EXCEPTION 'member-to-device linkage invalid'
     RAISE EXCEPTION 'member/tenant mismatch'
     RAISE EXCEPTION 'member_id not found'
     RAISE EXCEPTION 'pack_id is required' USING ERRCODE = 'P7210';
+    RAISE EXCEPTION 'participant-to-program linkage invalid'
     RAISE EXCEPTION 'payment_outbox_attempts is append-only'
     RAISE EXCEPTION 'pii_vault_records updates require purge executor'
+    RAISE EXCEPTION 'program-to-entity linkage invalid'
     RAISE EXCEPTION 'purge request not found: %', p_purge_request_id
     RAISE EXCEPTION 'reversal requires existing instruction %', NEW.reversal_of_instruction_id
     RAISE EXCEPTION 'reversal source instruction must be final and SETTLED: %', NEW.reversal_of_instruction_id
     RAISE EXCEPTION 'revocation tables are append-only'
+    RAISE EXCEPTION 'tenant-to-participant linkage invalid for instruction'
     RAISE EXCEPTION 'tenant_id required when member_id is set'
     RAISE EXCEPTION 'worker_id is required' USING ERRCODE = 'P7210';
     RETURN NEW;
@@ -547,6 +571,10 @@
     RETURN;
     RETURN;
     RETURNING (participant_outbox_sequences.next_sequence_id - 1) INTO allocated;
+    SELECT 1
+    SELECT 1
+    SELECT 1
+    SELECT 1
     SELECT COALESCE(MAX(a.attempt_no), 0) + 1 INTO v_next_attempt_no
     SELECT a.outbox_id, a.sequence_id, a.created_at, a.state
     SELECT e.escrow_id
@@ -563,16 +591,21 @@
     SET search_path TO 'pg_catalog', 'public'
     SET search_path TO 'pg_catalog', 'public'
     SET search_path TO 'pg_catalog', 'public'
+    SET search_path TO 'pg_catalog', 'public'
     USING ERRCODE = 'P0001';
     USING ERRCODE = 'P7004';
     VALUES (p_participant_id, 2)
     WHEN to_regprocedure('public.uuidv7()') IS NOT NULL THEN 'uuidv7'
     WHERE
     WHERE a.instruction_id = p_instruction_id
+    WHERE ia.instruction_id = p_instruction_id
+    WHERE m.member_id = p_member_id
+    WHERE md.tenant_id = p_tenant_id
     WHERE o.state IN ('PENDING', 'ANCHORED')
     WHERE p.instruction_id = p_instruction_id
     WHERE p.outbox_id = p_outbox_id AND p.claimed_by = p_worker_id
     WHERE pack_id = p_pack_id;
+    WHERE pr.program_id = p_program_id
     activated_at timestamp with time zone DEFAULT now() NOT NULL,
     active_from date,
     active_to date,
@@ -1018,6 +1051,10 @@
   )
   )
   ) AS t;
+  ) THEN
+  ) THEN
+  ) THEN
+  ) THEN
   ) VALUES (
   ) VALUES (
   ) VALUES (
@@ -1045,6 +1082,11 @@
   DO NOTHING;
   ELSIF NEW.billable_client_id <> derived_billable_client_id THEN
   ELSIF NEW.tenant_id <> derived_tenant_id THEN
+  END IF;
+  END IF;
+  END IF;
+  END IF;
+  END IF;
   END IF;
   END IF;
   END IF;
@@ -1123,6 +1165,10 @@
   IF NEW.state <> 'DISPATCHED' THEN
   IF NEW.tenant_id IS NULL THEN
   IF NEW.tenant_id IS NULL THEN
+  IF NOT EXISTS (
+  IF NOT EXISTS (
+  IF NOT EXISTS (
+  IF NOT EXISTS (
   IF NOT FOUND THEN
   IF NOT FOUND THEN
   IF NOT FOUND THEN
@@ -1137,6 +1183,7 @@
   IF derived_tenant_id IS NULL THEN
   IF m_tenant <> NEW.tenant_id THEN
   IF m_tenant IS NULL THEN
+  IF p_entity_id IS DISTINCT FROM p_program_id THEN
   IF p_lease_seconds IS NULL OR p_lease_seconds <= 0 THEN
   IF p_pack_id IS NULL THEN
   IF v_amount <= 0 THEN
@@ -1198,6 +1245,7 @@
   RETURN QUERY
   RETURN QUERY
   RETURN QUERY SELECT p_purge_request_id, v_rows, FALSE;
+  RETURN TRUE;
   RETURN v_count;
   RETURN v_count;
   RETURN v_event_id;
@@ -1291,6 +1339,7 @@
  ),
  SELECT * FROM leased;
  leased AS (
+$$;
 $$;
 $$;
 $$;
@@ -1505,6 +1554,7 @@ BEGIN
 BEGIN
 BEGIN
 BEGIN
+BEGIN
 CREATE FUNCTION public.anchor_dispatched_outbox_attempt() RETURNS trigger
 CREATE FUNCTION public.authorize_escrow_reservation(p_program_escrow_id uuid, p_amount_minor bigint, p_actor_id text DEFAULT 'system'::text, p_reason text DEFAULT NULL::text, p_metadata jsonb DEFAULT '{}'::jsonb) RETURNS uuid
 CREATE FUNCTION public.bump_participant_outbox_seq(p_participant_id text) RETURNS bigint
@@ -1542,6 +1592,7 @@ CREATE FUNCTION public.touch_programs_updated_at() RETURNS trigger
 CREATE FUNCTION public.transition_escrow_state(p_escrow_id uuid, p_to_state text, p_actor_id text DEFAULT 'system'::text, p_reason text DEFAULT NULL::text, p_metadata jsonb DEFAULT '{}'::jsonb, p_now timestamp with time zone DEFAULT now()) RETURNS TABLE(escrow_id uuid, previous_state text, new_state text, event_id uuid)
 CREATE FUNCTION public.uuid_strategy() RETURNS text
 CREATE FUNCTION public.uuid_v7_or_random() RETURNS uuid
+CREATE FUNCTION public.verify_instruction_hierarchy(p_instruction_id text, p_tenant_id uuid, p_participant_id text, p_program_id uuid, p_entity_id uuid, p_member_id uuid, p_device_id text) RETURNS boolean
 CREATE INDEX idx_anchor_sync_operations_state_due ON public.anchor_sync_operations USING btree (state, lease_expires_at, updated_at);
 CREATE INDEX idx_attempts_instruction_idempotency ON public.payment_outbox_attempts USING btree (instruction_id, idempotency_key);
 CREATE INDEX idx_attempts_outbox_id ON public.payment_outbox_attempts USING btree (outbox_id);
@@ -1691,6 +1742,7 @@ DECLARE
 DECLARE
 DECLARE
 DECLARE
+END;
 END;
 END;
 END;

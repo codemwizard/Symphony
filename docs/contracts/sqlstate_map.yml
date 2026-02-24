@@ -117,6 +117,18 @@
       "meaning": "anchor sync lease token or lease worker mismatch",
       "retryable": false
     },
+    "P7299": {
+      "class": "B",
+      "subsystem": "policy",
+      "meaning": "tenant-to-participant link invalid for instruction hierarchy verification",
+      "retryable": false
+    },
+    "P7300": {
+      "class": "B",
+      "subsystem": "policy",
+      "meaning": "participant-to-program link invalid for instruction hierarchy verification",
+      "retryable": false
+    },
     "P7301": {
       "class": "B",
       "subsystem": "policy",
@@ -140,6 +152,24 @@
       "class": "B",
       "subsystem": "escrow",
       "meaning": "escrow reservation rejected (invalid amount or ceiling exceeded)",
+      "retryable": false
+    },
+    "P7305": {
+      "class": "B",
+      "subsystem": "policy",
+      "meaning": "entity-to-member link invalid for instruction hierarchy verification",
+      "retryable": false
+    },
+    "P7306": {
+      "class": "B",
+      "subsystem": "policy",
+      "meaning": "member-to-device link invalid for instruction hierarchy verification",
+      "retryable": false
+    },
+    "P7307": {
+      "class": "B",
+      "subsystem": "policy",
+      "meaning": "reserved for instruction hierarchy verification extensions",
       "retryable": false
     }
   }

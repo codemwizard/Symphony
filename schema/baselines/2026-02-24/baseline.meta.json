@@ -1,10 +1,10 @@
 {
   "baseline_date": "2026-02-24",
   "baseline_path": "/home/mwiza/workspace/Symphony/schema/baselines/2026-02-24/0001_baseline.sql",
-  "baseline_cutoff": "0049_hier_004_member_device_events_append_only.sql",
-  "normalized_schema_sha256": "cc9ccbcb278c9ac78729cf9773a9cfcb478fb7f91ec37eec6802718471514998",
+  "baseline_cutoff": "0050_hier_005_instruction_hierarchy_verifier.sql",
+  "normalized_schema_sha256": "68fe8b5e66d3eb8b910baf37d334a0baa413b88b2e11585f9c7835f00e0387d1",
   "pg_dump_version": "pg_dump (PostgreSQL) 18.2 (Debian 18.2-1.pgdg13+1)",
   "pg_server_version": "18.2 (Debian 18.2-1.pgdg13+1)",
   "dump_source": "container:symphony-postgres",
-  "generated_at_utc": "2026-02-24T11:31:17.247745+00:00"
+  "generated_at_utc": "2026-02-24T12:07:45.764140+00:00"
 }

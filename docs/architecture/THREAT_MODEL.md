@@ -239,6 +239,7 @@ Mitigations:
 - Escrow reservations are ceiling-enforced under concurrency via `authorize_escrow_reservation()` locking `escrow_envelopes` `FOR UPDATE` and failing closed on oversubscription (`INV-128`).
 - Phase-1 member-device distribution mapping is enforced via `member_devices` tenant/member denormalization constraints and active-path index posture with deterministic verifier evidence (`TSK-P1-HIER-003`).
 - Phase-1 member-device event stream is append-only via trigger-enforced mutation denial and ingress-anchored instruction linkage with deterministic verifier evidence (`TSK-P1-HIER-004`).
+- Phase-1 hierarchy verification uses `verify_instruction_hierarchy()` deterministic SQLSTATE gating to fail-closed on tenant/participant/program/entity/member/device link violations (`TSK-P1-HIER-005`, INV-077, INV-119).
 
 ## Priority security actions
 1) Implement service identity and mTLS for internal calls.
