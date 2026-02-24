@@ -107,13 +107,26 @@ else
 fi
 
 echo "==> Sync base ref for CI parity (refs/remotes/origin/main)"
-if ! git fetch --no-tags --prune origin main:refs/remotes/origin/main >/dev/null 2>&1; then
-  echo "WARN: fetch failed; probing local refs for parity diff base"
-fi
+fetch_ok=0
+for attempt in 1 2; do
+  if git fetch --no-tags --prune origin main:refs/remotes/origin/main >/dev/null 2>&1; then
+    fetch_ok=1
+    break
+  fi
+  # Secondary canonical fetch path; still targets origin/main only.
+  if git fetch --no-tags --prune origin main >/dev/null 2>&1; then
+    fetch_ok=1
+    break
+  fi
+  sleep 1
+done
 
 BASE_REF="refs/remotes/origin/main"
 if ! git rev-parse --verify "${BASE_REF}^{commit}" >/dev/null 2>&1; then
   echo "ERROR: missing required parity base ref: ${BASE_REF}"
+  if [[ "$fetch_ok" != "1" ]]; then
+    echo "ERROR: unable to fetch canonical base ref from origin/main"
+  fi
   echo "ERROR: run 'git fetch --no-tags --prune origin main:refs/remotes/origin/main' and retry"
   exit 1
 fi
