@@ -1,40 +1,43 @@
-phase: "0"
+phase: "1"
 task_id: "TSK-P0-102"
-title: "Evidence pack signing and anchoring schema hooks + verifier"
-owner_role: "DB_FOUNDATION"
+title: "Enforce file evidence dev-only (fail-closed)"
+owner_role: "SUPERVISOR"
 status: "completed"
+
 depends_on:
-- "TSK-P0-086"
-- "TSK-P0-089"
+  - "TSK-P0-101"
+
 touches:
-- "schema/migrations/**"
-- "scripts/db/verify_business_foundation_hooks.sh"
-- "docs/invariants/INVARIANTS_MANIFEST.yml"
-- "tasks/TSK-P0-102/meta.yml"
+  - "tasks/TSK-P0-102/meta.yml"
+  - "scripts/lib/evidence.sh"
+  - "scripts/audit/validate_evidence_json.sh"
+  - "scripts/audit/verify_tsk_p0_102.sh"
+
 invariants:
-- "NEW: Evidence packs have canonical signing/anchoring fields (Phase-0 hook)"
+  - "INV-077"
 work:
-- "Extend evidence pack schema with canonical detached signature metadata fields."
-- "Extend evidence pack schema with anchoring metadata fields (anchor method + external reference)."
-- "Ensure append-only posture remains enforced for evidence pack tables."
-- "Extend verifier to assert columns exist and remain append-only."
+  - "Enforce fail-closed evidence write policy by environment in shared helper."
+  - "Allow evidence writes only in development/ci and deny other environments."
 acceptance_criteria:
-- "New columns exist via forward-only migration(s)."
-- "Verifier emits evidence listing expected columns and fails closed if missing."
+  - "Verifier proves development/ci writes pass and production write is denied."
+  - "Evidence artifact exists and validates for TSK-P0-102."
 verification:
-- "scripts/db/verify_business_foundation_hooks.sh"
+  - "bash scripts/audit/verify_tsk_p0_102.sh --evidence evidence/phase0/tsk_p0_102__enforce_file_evidence_dev_only_fail.json"
+
 evidence:
-- "evidence/phase0/business_foundation_hooks.json"
+  - "evidence/phase0/tsk_p0_102__enforce_file_evidence_dev_only_fail.json"
+
 failure_modes:
-- "Evidence packs exist but lack canonical signing/anchoring hooks."
-- "Append-only posture is weakened by schema changes."
-- "Evidence file missing."
+  - "Evidence writes are allowed in non-development environments."
+  - "Fail-closed denial message is not emitted for forbidden environments."
+
 must_read:
-- "docs/audits/TIER1_GAP_AUDIT_2026-02-06.md"
-implementation_plan: "docs/plans/phase0/TSK-P0-090_audit_gap_closeout/PLAN.md"
-implementation_log: "docs/plans/phase0/TSK-P0-090_audit_gap_closeout/EXEC_LOG.md"
+  - "docs/operations/AI_AGENT_OPERATION_MANUAL.md"
+
 notes: ""
 client: "codex_cli"
-assigned_agent: "db_foundation"
-model: "<UNASSIGNED>"
+assigned_agent: "supervisor"
+model: "gpt-5-codex"
 
+implementation_plan: "docs/plans/phase1/TSK-P0-102/PLAN.md"
+implementation_log: "docs/plans/phase1/TSK-P0-102/EXEC_LOG.md"

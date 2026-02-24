@@ -48,6 +48,7 @@ PY
 
 write_json() {
   local path="$1"; shift
+  ensure_evidence_write_allowed "$path"
   local dir
   dir="$(dirname "$path")"
   mkdir -p "$dir"
@@ -62,4 +63,28 @@ write_json() {
     echo
     echo "}"
   } > "$path"
+}
+
+ensure_evidence_write_allowed() {
+  local path="$1"
+  local env_name="${SYMPHONY_ENV:-}"
+
+  if [[ -z "$env_name" && "${CI:-}" == "true" ]]; then
+    env_name="ci"
+  fi
+  if [[ -z "$env_name" && "${GITHUB_ACTIONS:-}" == "true" ]]; then
+    env_name="ci"
+  fi
+  if [[ -z "$env_name" ]]; then
+    env_name="unknown"
+  fi
+
+  case "$path" in
+    evidence/*|*/evidence/*)
+      if [[ "$env_name" != "development" && "$env_name" != "ci" ]]; then
+        echo "EVIDENCE_WRITE_FORBIDDEN_IN_ENV:${env_name}" >&2
+        return 1
+      fi
+      ;;
+  esac
 }
