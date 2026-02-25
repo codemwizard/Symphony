@@ -110,6 +110,9 @@ registry:
   scripts/audit/verify_ten_003_tenant_onboarding_admin.sh:
     emits:
       - evidence/phase1/ten_003_tenant_onboarding_admin.json
+  scripts/audit/verify_adp_001_adapter_contract_tests.sh:
+    emits:
+      - evidence/phase1/adp_001_adapter_contract_tests.json
   scripts/audit/verify_drd_policy_usage.sh:
     emits:
       - evidence/phase0/drd_policy_usage.json
