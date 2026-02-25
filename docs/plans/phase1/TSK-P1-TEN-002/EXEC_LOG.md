@@ -1,5 +1,6 @@
 # TSK-P1-TEN-002 EXEC_LOG
 
+failure_signature: P1.TSK.TEN.002.RLS_LEAKAGE_GUARD
 origin_task_id: TSK-P1-TEN-002
 Plan: docs/plans/phase1/TSK-P1-TEN-002/PLAN.md
 

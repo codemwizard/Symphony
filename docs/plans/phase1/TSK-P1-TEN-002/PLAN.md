@@ -1,6 +1,7 @@
 # TSK-P1-TEN-002 PLAN
 
 Task: TSK-P1-TEN-002
+failure_signature: P1.TSK.TEN.002.RLS_LEAKAGE_GUARD
 
 ## Scope
 - Enforce restrictive tenant RLS policies on every public table with a `tenant_id` column.
