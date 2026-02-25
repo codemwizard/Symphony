@@ -674,6 +674,14 @@ if [[ "${RUN_PHASE1_GATES:-0}" == "1" ]]; then
     exit 1
   fi
 
+  echo "==> Phase-1 k8s manifests + migration health proof verification (TSK-P1-INF-003)"
+  if [[ -x scripts/infra/verify_tsk_p1_inf_003.sh ]]; then
+    scripts/infra/verify_tsk_p1_inf_003.sh --evidence evidence/phase1/tsk_p1_inf_003__k8s_manifests_migration_job_health_proof.json
+  else
+    echo "ERROR: scripts/infra/verify_tsk_p1_inf_003.sh not found"
+    exit 1
+  fi
+
   echo "==> Phase-1 no-MCP guard"
   if [[ -x scripts/audit/verify_no_mcp_phase1.sh ]]; then
     scripts/audit/verify_no_mcp_phase1.sh
