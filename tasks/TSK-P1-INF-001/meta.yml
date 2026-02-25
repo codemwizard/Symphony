@@ -1,0 +1,42 @@
+phase: "1"
+task_id: "TSK-P1-INF-001"
+title: "Postgres HA + backups + PITR (operator)"
+owner_role: "SUPERVISOR"
+status: "completed"
+
+depends_on:
+  - "TSK-P1-INF-002"
+
+touches:
+  - "tasks/TSK-P1-INF-001/meta.yml"
+  - "docs/plans/phase1/TSK-P1-INF-001/PLAN.md"
+  - "docs/plans/phase1/TSK-P1-INF-001/EXEC_LOG.md"
+  - "infra/sandbox/postgres-ha/cnpg_cluster.yaml"
+  - "infra/sandbox/postgres-ha/backup_schedule.yaml"
+  - "infra/sandbox/postgres-ha/pitr_test.sh"
+  - "scripts/audit/verify_inf_001_postgres_ha_pitr.sh"
+  - "scripts/infra/verify_tsk_p1_inf_001.sh"
+  - "docs/PHASE1/phase1_contract.yml"
+  - "docs/operations/VERIFIER_EVIDENCE_REGISTRY.yml"
+  - "docs/operations/SEMANTIC_INTEGRITY_ALLOWLIST.yml"
+  - "scripts/dev/pre_ci.sh"
+  - "evidence/phase1/tsk_p1_inf_001__postgres_ha_backups_pitr_operator.json"
+
+invariants:
+  - "INV-119"
+
+mechanics:
+  gate_ids:
+    - "INT-G28"
+  verifiers:
+    - "bash -lc 'set -euo pipefail; test -f docs/PHASE1/phase1_contract.yml || { echo MISSING_CONTRACT:docs/PHASE1/phase1_contract.yml; exit 1; }; test -x scripts/infra/verify_tsk_p1_inf_001.sh || { echo MISSING_VERIFIER:scripts/infra/verify_tsk_p1_inf_001.sh; exit 1; }; scripts/infra/verify_tsk_p1_inf_001.sh --evidence evidence/phase1/tsk_p1_inf_001__postgres_ha_backups_pitr_operator.json; python3 -c \"import json,pathlib; p=pathlib.Path(\\\"evidence/phase1/tsk_p1_inf_001__postgres_ha_backups_pitr_operator.json\\\"); assert p.exists(), f\\\"MISSING_EVIDENCE:{p}\\\"; d=json.loads(p.read_text()); assert d.get(\\\"task_id\\\") == \\\"TSK-P1-INF-001\\\", d.get(\\\"task_id\\\"); assert isinstance(d.get(\\\"status\\\"), str) and d[\\\"status\\\"] in {\\\"PASS\\\",\\\"DONE\\\",\\\"OK\\\"}, d.get(\\\"status\\\")\"'"
+  evidence_paths:
+    - "evidence/phase1/tsk_p1_inf_001__postgres_ha_backups_pitr_operator.json"
+
+implementation_plan: "docs/plans/phase1/TSK-P1-INF-001/PLAN.md"
+implementation_log: "docs/plans/phase1/TSK-P1-INF-001/EXEC_LOG.md"
+
+must_read:
+  - "docs/operations/AI_AGENT_OPERATION_MANUAL.md"
+  - "docs/operations/AI_AGENT_WORKFLOW_AND_ROLE_PLAN_v2.md"
+  - "docs/operations/AGENT_ROLE_RECONCILIATION.md"

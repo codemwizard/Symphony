@@ -86,6 +86,9 @@ registry:
   scripts/audit/verify_inf_002_container_build_pipeline.sh:
     emits:
       - evidence/phase1/inf_002_container_build_pipeline.json
+  scripts/infra/verify_tsk_p1_inf_001.sh:
+    emits:
+      - evidence/phase1/tsk_p1_inf_001__postgres_ha_backups_pitr_operator.json
   scripts/audit/verify_drd_policy_usage.sh:
     emits:
       - evidence/phase0/drd_policy_usage.json

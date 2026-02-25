@@ -1,0 +1,30 @@
+apiVersion: postgresql.cnpg.io/v1
+kind: Cluster
+metadata:
+  name: symphony-postgres-ha
+  namespace: symphony
+spec:
+  instances: 2
+  primaryUpdateStrategy: unsupervised
+  storage:
+    size: 10Gi
+  monitoring:
+    enablePodMonitor: true
+  backup:
+    barmanObjectStore:
+      destinationPath: s3://symphony-pg-backups
+      endpointURL: https://minio.minio.svc.cluster.local:9000
+      s3Credentials:
+        accessKeyId:
+          name: postgres-backup-creds
+          key: accessKey
+        secretAccessKey:
+          name: postgres-backup-creds
+          key: secretKey
+    retentionPolicy: 7d
+  bootstrap:
+    initdb:
+      database: symphony
+      owner: symphony_admin
+      postInitSQL:
+        - "CREATE EXTENSION IF NOT EXISTS pgcrypto;"

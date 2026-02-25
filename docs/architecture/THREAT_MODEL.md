@@ -244,6 +244,7 @@ Mitigations:
 - Phase-1 program migration contract suite (`TSK-P1-HIER-010`) enforces additive person-to-program migration semantics with deterministic duplicate-call SQLSTATE handling and append-only migration-event evidence.
 - Phase-1 supervisor access mechanisms suite (`TSK-P1-HIER-011`) enforces signed aggregate READ_ONLY report delivery, time-bounded/revocable AUDIT token access to anonymized records, and APPROVAL_REQUIRED self-approval denial via hardened approval functions and endpoint verifiers.
 - Phase-1 INF-002 container pipeline enforces digest-pinned base images, non-root runtime users, and deterministic rebuild digest checks for `ledger-api`, `executor-worker`, and `db-migration-job` images before progression.
+- Phase-1 INF-001 sandbox Postgres HA posture requires operator-style multi-instance cluster declaration, scheduled backups, and PITR recovery proof metadata before infrastructure-stage progression.
 - Phase-1 risk formula registry + program migration introduces append-only `risk_formula_registry`, deterministic `programs.default_risk_tier` enforcement, and read-only projection posture (`vw_program_tier_effective`) with verifier-backed evidence (`TSK-P1-HIER-007`).
 - Phase-1 SIM-swap alert derivation (`TSK-P1-HIER-008`) is implemented as hardened `SECURITY DEFINER` DB function (`derive_sim_swap_alert`) writing append-only `sim_swap_alerts` rows with one-alert-per-source-event idempotency and non-null `formula_version_id` traceability (`INV-129`).
 
