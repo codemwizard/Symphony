@@ -1,0 +1,7 @@
+{
+  "task_id": "TSK-P1-INF-006",
+  "artifact_path": "evidence/phase1/hier_009_instruction_hierarchy_sqlstates.json",
+  "key_id": "phase1-signing-online",
+  "signature_alg": "HMAC-SHA256",
+  "signature": "6668783ffa5b62f371708a7b1411d61cd750e9dcd21ced4e1767fc54c8add315"
+}

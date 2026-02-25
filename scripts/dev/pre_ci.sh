@@ -682,6 +682,14 @@ if [[ "${RUN_PHASE1_GATES:-0}" == "1" ]]; then
     exit 1
   fi
 
+  echo "==> Phase-1 evidence signing key management verification (TSK-P1-INF-006)"
+  if [[ -x scripts/infra/verify_tsk_p1_inf_006.sh ]]; then
+    scripts/infra/verify_tsk_p1_inf_006.sh --evidence evidence/phase1/tsk_p1_inf_006__evidence_signing_key_management_openbao_rotation.json
+  else
+    echo "ERROR: scripts/infra/verify_tsk_p1_inf_006.sh not found"
+    exit 1
+  fi
+
   echo "==> Phase-1 no-MCP guard"
   if [[ -x scripts/audit/verify_no_mcp_phase1.sh ]]; then
     scripts/audit/verify_no_mcp_phase1.sh

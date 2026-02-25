@@ -98,6 +98,9 @@ registry:
   scripts/infra/verify_tsk_p1_inf_003.sh:
     emits:
       - evidence/phase1/tsk_p1_inf_003__k8s_manifests_migration_job_health_proof.json
+  scripts/infra/verify_tsk_p1_inf_006.sh:
+    emits:
+      - evidence/phase1/tsk_p1_inf_006__evidence_signing_key_management_openbao_rotation.json
   scripts/audit/verify_drd_policy_usage.sh:
     emits:
       - evidence/phase0/drd_policy_usage.json

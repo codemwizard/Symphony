@@ -1,0 +1,36 @@
+{
+  "check_id": "TSK-P1-INF-006",
+  "task_id": "TSK-P1-INF-006",
+  "status": "PASS",
+  "pass": true,
+  "timestamp_utc": "2026-02-25T14:06:04Z",
+  "git_sha": "3e657e8effde65c3e8558aee211bcc9156b7b6b8",
+  "details": {
+    "root_key_id": "root-breakglass-offline",
+    "key_id": "phase1-signing-online",
+    "signature_alg": "HMAC-SHA256",
+    "verification_passed": true,
+    "sample_files_checked": [
+      "evidence/phase1/hier_009_instruction_hierarchy_sqlstates.json",
+      "evidence/phase1/inf_005_openbao_external_secrets.json"
+    ],
+    "rotation_proof_passed": true,
+    "old_signature_prefix": "6668783ffa5b62f3",
+    "new_signature_prefix": "c90f6e59480d21d7",
+    "openbao_fail_closed": true
+  },
+  "signatures": [
+    {
+      "file": "evidence/phase1/hier_009_instruction_hierarchy_sqlstates.json",
+      "signature": "6668783ffa5b62f371708a7b1411d61cd750e9dcd21ced4e1767fc54c8add315",
+      "verified": true,
+      "sidecar": "evidence/phase1/signatures/hier_009_instruction_hierarchy_sqlstates.json.sig.json"
+    },
+    {
+      "file": "evidence/phase1/inf_005_openbao_external_secrets.json",
+      "signature": "2444fe7a629a88e87732fa5d568d0cf928f8dce54486c8671816d099846a4547",
+      "verified": true,
+      "sidecar": "evidence/phase1/signatures/inf_005_openbao_external_secrets.json.sig.json"
+    }
+  ]
+}
