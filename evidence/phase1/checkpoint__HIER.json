@@ -1,0 +1,18 @@
+{
+  "check_id": "CHECKPOINT-VERIFY",
+  "details": {
+    "checkpoint": "checkpoint/HIER",
+    "dependencies": [
+      "TSK-P1-HIER-011"
+    ],
+    "dependency_evidence": {
+      "TSK-P1-HIER-011": "evidence/phase1/hier_011_supervisor_access_mechanisms.json"
+    }
+  },
+  "errors": [],
+  "git_sha": "8e0cca0eceda2d775a3bda0b72e41479345b4d99",
+  "pass": true,
+  "status": "PASS",
+  "task_id": "checkpoint/HIER",
+  "timestamp_utc": "2026-02-25T10:19:17Z"
+}
