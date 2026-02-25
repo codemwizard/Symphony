@@ -173,9 +173,9 @@ import json
 arr=json.loads('''$rls_tables_json''')
 arr.append({
   "table": "$t",
-  "rls_enabled": "$rls_enabled" == "t",
-  "rls_forced": "$rls_forced" == "t",
-  "restrictive_policy_tenant_bound": "$has_restrictive" == "t"
+  "rls_enabled": "$rls_enabled" == "true",
+  "rls_forced": "$rls_forced" == "true",
+  "restrictive_policy_tenant_bound": "$has_restrictive" == "true"
 })
 print(json.dumps(arr))
 PY
@@ -214,7 +214,7 @@ RESET ROLE;
   leakage_tables_json="$(python3 - <<PY
 import json
 arr=json.loads('''$leakage_tables_json''')
-arr.append({"table":"$t","seeded":True,"blocked":"$blocked"=="t","policy":"rls_tenant_isolation_$t"})
+arr.append({"table":"$t","seeded":True,"blocked":"$blocked"=="true","policy":"rls_tenant_isolation_$t"})
 print(json.dumps(arr))
 PY
 )"
@@ -235,6 +235,7 @@ python3 - <<PY
 import json
 from pathlib import Path
 out = {
+  "check_id": "TEN-002-RLS-LEAKAGE",
   "task_id": "$TASK_ID",
   "status": "$status",
   "pass": True if "$pass" == "true" else False,
