@@ -43,3 +43,4 @@ This ADR remains the authoritative governance reference for baseline change chec
 - 2026-02-24: Baseline regenerated after hierarchy verification function migration (`verify_instruction_hierarchy`) with deterministic SQLSTATE linkage checks (0050).
 - 2026-02-24: Baseline regenerated after supervisor access mode control-plane hardening migration (0051).
 - 2026-02-24: Baseline regenerated after risk formula registry + program deterministic tier-default migration (0052).
+- 2026-02-25: Baseline regenerated after SIM-swap alert derivation and traceability migrations (`sim_swap_alerts`, event-type expansion, derive function ordering fix) (0053, 0054, 0055).
