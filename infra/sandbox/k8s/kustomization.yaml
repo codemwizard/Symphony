@@ -6,3 +6,4 @@ resources:
   - ledger-api-deployment.yaml
   - executor-worker-deployment.yaml
   - secrets-bootstrap.yaml
+  - mesh/istio_mtls_strict.yaml

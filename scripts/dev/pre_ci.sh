@@ -666,6 +666,14 @@ if [[ "${RUN_PHASE1_GATES:-0}" == "1" ]]; then
     exit 1
   fi
 
+  echo "==> Phase-1 service-to-service mTLS mesh verification (TSK-P1-INF-004)"
+  if [[ -x scripts/infra/verify_tsk_p1_inf_004.sh ]]; then
+    scripts/infra/verify_tsk_p1_inf_004.sh --evidence evidence/phase1/tsk_p1_inf_004__service_mtls_mesh.json
+  else
+    echo "ERROR: scripts/infra/verify_tsk_p1_inf_004.sh not found"
+    exit 1
+  fi
+
   echo "==> Phase-1 no-MCP guard"
   if [[ -x scripts/audit/verify_no_mcp_phase1.sh ]]; then
     scripts/audit/verify_no_mcp_phase1.sh
