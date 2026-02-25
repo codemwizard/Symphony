@@ -1,0 +1,24 @@
+name: phase1-inf-002-container-build
+
+on:
+  pull_request:
+    paths:
+      - 'services/**'
+      - 'infra/**'
+      - 'scripts/audit/verify_inf_002_container_build_pipeline.sh'
+      - 'docs/PHASE1/phase1_contract.yml'
+      - '.github/workflows/phase1_inf_002_container_build.yml'
+  workflow_dispatch:
+
+jobs:
+  verify-inf-002:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Verify INF-002 container build pipeline
+        run: bash scripts/audit/verify_inf_002_container_build_pipeline.sh
+
+      - name: Validate INF-002 evidence schema
+        run: python3 scripts/audit/validate_evidence.py --task TSK-P1-INF-002 --evidence evidence/phase1/inf_002_container_build_pipeline.json

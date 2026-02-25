@@ -9,4 +9,5 @@ allow:
       - "scripts/db/verify_hier_009_instruction_hierarchy_sqlstates.sh"
       - "scripts/db/verify_hier_010_program_migration.sh"
       - "scripts/audit/verify_hier_011_supervisor_access_mechanisms.sh"
-    justification: "TSK-P1-HIER-009/010/011 add deterministic hierarchy and supervisor-access evidence verifiers under the same regulated-surface governance invariant."
+      - "scripts/audit/verify_inf_002_container_build_pipeline.sh"
+    justification: "TSK-P1-HIER-009/010/011 and TSK-P1-INF-002 add deterministic hierarchy/supervisor/container-build evidence verifiers under the same regulated-surface governance invariant."

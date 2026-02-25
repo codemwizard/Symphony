@@ -83,6 +83,9 @@ registry:
   scripts/audit/verify_hier_011_supervisor_access_mechanisms.sh:
     emits:
       - evidence/phase1/hier_011_supervisor_access_mechanisms.json
+  scripts/audit/verify_inf_002_container_build_pipeline.sh:
+    emits:
+      - evidence/phase1/inf_002_container_build_pipeline.json
   scripts/audit/verify_drd_policy_usage.sh:
     emits:
       - evidence/phase0/drd_policy_usage.json
