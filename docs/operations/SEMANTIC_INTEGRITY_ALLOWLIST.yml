@@ -16,4 +16,6 @@ allow:
       - "scripts/infra/verify_tsk_p1_inf_003.sh"
       - "scripts/infra/verify_tsk_p1_inf_006.sh"
       - "scripts/audit/verify_ten_001_ingress_tenant_context.sh"
+      - "scripts/audit/verify_ten_002_rls_leakage.sh"
+      - "scripts/audit/verify_ten_003_tenant_onboarding_admin.sh"
     justification: "TSK-P1-HIER-009/010/011 and TSK-P1-INF/TEN task verifiers add deterministic hierarchy, supervisor, infrastructure, and tenant-boundary evidence checks under the same regulated-surface governance invariant."
