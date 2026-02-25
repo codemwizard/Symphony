@@ -45,3 +45,4 @@ This ADR remains the authoritative governance reference for baseline change chec
 - 2026-02-24: Baseline regenerated after risk formula registry + program deterministic tier-default migration (0052).
 - 2026-02-25: Baseline regenerated after SIM-swap alert derivation and traceability migrations (`sim_swap_alerts`, event-type expansion, derive function ordering fix) (0053, 0054, 0055).
 - 2026-02-25: Baseline regenerated after hierarchy SQLSTATE alignment migration for `verify_instruction_hierarchy()` deterministic mapping conformance (0056).
+- 2026-02-25: Baseline regenerated after program migration contract alignment migration for `program_migration_events` and `migrate_person_to_program()` HIER-010 signature semantics (0057).

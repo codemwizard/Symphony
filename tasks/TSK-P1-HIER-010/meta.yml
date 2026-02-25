@@ -1,0 +1,73 @@
+phase: "1"
+task_id: "TSK-P1-HIER-010"
+title: "program_migration_events + migration function"
+owner_role: "SUPERVISOR"
+status: "completed"
+
+depends_on:
+  - "TSK-P1-HIER-009"
+
+touches:
+  - "docs/plans/phase1/TSK-P1-HIER-010/PLAN.md"
+  - "docs/plans/phase1/TSK-P1-HIER-010/EXEC_LOG.md"
+  - "tasks/TSK-P1-HIER-010/meta.yml"
+  - "schema/migrations/0057_hier_010_program_migration_contract_alignment.sql"
+  - "scripts/db/verify_hier_010_program_migration.sh"
+  - "scripts/db/n_minus_one_check.sh"
+  - "scripts/dev/pre_ci.sh"
+  - "docs/PHASE1/phase1_contract.yml"
+  - "docs/operations/VERIFIER_EVIDENCE_REGISTRY.yml"
+  - "docs/operations/SEMANTIC_INTEGRITY_ALLOWLIST.yml"
+  - "evidence/phase1/hier_010_program_migration.json"
+
+invariants:
+  - "INV-077"
+  - "INV-119"
+
+mechanics:
+  gate_ids:
+    - "INT-G28"
+  verifiers:
+    - "bash scripts/db/verify_hier_010_program_migration.sh && python3 scripts/audit/validate_evidence.py --task TSK-P1-HIER-010 --evidence evidence/phase1/hier_010_program_migration.json"
+    - "RUN_PHASE1_GATES=1 scripts/dev/pre_ci.sh"
+  evidence_paths:
+    - "evidence/phase1/hier_010_program_migration.json"
+
+work:
+  - "Align program_migration_events with HIER-010 required columns and additive migration semantics."
+  - "Implement HIER-010 signature for migrate_person_to_program with stable duplicate-call SQLSTATE behavior."
+  - "Emit verifier-backed evidence proving table/function behavior and duplicate-call fail-closed posture."
+
+acceptance_criteria:
+  - "Verifier script exists at scripts/db/verify_hier_010_program_migration.sh and exits 0."
+  - "Evidence exists at evidence/phase1/hier_010_program_migration.json and validates for task TSK-P1-HIER-010."
+  - "Migration remains additive: original member row preserved after migration."
+  - "Duplicate call raises stable SQLSTATE and does not create a second migration row."
+
+verification:
+  - "bash scripts/db/verify_hier_010_program_migration.sh"
+  - "python3 scripts/audit/validate_evidence.py --task TSK-P1-HIER-010 --evidence evidence/phase1/hier_010_program_migration.json"
+  - "RUN_PHASE1_GATES=1 scripts/dev/pre_ci.sh"
+
+evidence:
+  - "evidence/phase1/hier_010_program_migration.json"
+
+failure_modes:
+  - "Missing prompt section or execution metadata patch block => STOP."
+  - "Missing phase contract file => FAIL_CLOSED."
+  - "Evidence missing/invalid/task_id mismatch/pass != true => FAIL."
+  - "Dependency TSK-P1-HIER-009 incomplete => BLOCKED."
+  - "Undeclared file modifications outside files_to_change => FAIL_REVIEW."
+
+must_read:
+  - "docs/operations/AI_AGENT_OPERATION_MANUAL.md"
+  - "docs/operations/AI_AGENT_WORKFLOW_AND_ROLE_PLAN_v2.md"
+  - "docs/operations/AGENT_ROLE_RECONCILIATION.md"
+
+implementation_plan: "docs/plans/phase1/TSK-P1-HIER-010/PLAN.md"
+implementation_log: "docs/plans/phase1/TSK-P1-HIER-010/EXEC_LOG.md"
+
+notes: "HIER-010 formalizes program migration contract semantics even though base objects originated in HIER-007."
+client: "codex_cli"
+assigned_agent: "supervisor"
+model: "gpt-5-codex"

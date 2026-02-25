@@ -7,4 +7,5 @@ allow:
   - invariant_id: "INV-119"
     allowed_verifiers:
       - "scripts/db/verify_hier_009_instruction_hierarchy_sqlstates.sh"
-    justification: "TSK-P1-HIER-009 adds deterministic SQLSTATE mapping evidence as an additional regulated-surface verifier under existing agent-governed change-control invariant."
+      - "scripts/db/verify_hier_010_program_migration.sh"
+    justification: "TSK-P1-HIER-009 and TSK-P1-HIER-010 add deterministic SQLSTATE and program-migration evidence verifiers under the same regulated-surface governance invariant."

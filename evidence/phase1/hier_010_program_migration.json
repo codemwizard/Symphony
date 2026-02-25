@@ -1,0 +1,65 @@
+{
+  "check_id": "TSK-P1-HIER-010",
+  "task_id": "TSK-P1-HIER-010",
+  "status": "PASS",
+  "pass": true,
+  "git_sha": "2514269923c51732191210bec091fc6c7e92fa42",
+  "timestamp_utc": "2026-02-25T09:39:19Z",
+  "details": {
+    "migration_function": "public.migrate_person_to_program",
+    "duplicate_sqlstate": "23505",
+    "event_table": "public.program_migration_events"
+  },
+  "checks": [
+    {
+      "check_id": "program_migration_events_exists",
+      "status": "PASS",
+      "detail": "program_migration_events table exists"
+    },
+    {
+      "check_id": "program_migration_events_required_columns",
+      "status": "PASS",
+      "detail": "program_migration_events has required columns for HIER-010 contract"
+    },
+    {
+      "check_id": "program_migration_reason_nullable",
+      "status": "PASS",
+      "detail": "program_migration_events.reason is nullable"
+    },
+    {
+      "check_id": "migration_function_exists_hier010_signature",
+      "status": "PASS",
+      "detail": "migrate_person_to_program has HIER-010 signature"
+    },
+    {
+      "check_id": "migration_function_hardened",
+      "status": "PASS",
+      "detail": "migrate_person_to_program is SECURITY DEFINER with hardened search_path"
+    },
+    {
+      "check_id": "migrate_function_returns_uuid",
+      "status": "PASS",
+      "detail": "migrate_person_to_program returns target member UUID"
+    },
+    {
+      "check_id": "migrated_member_created",
+      "status": "PASS",
+      "detail": "target member row created with same person_id and requested new entity_id"
+    },
+    {
+      "check_id": "original_member_preserved",
+      "status": "PASS",
+      "detail": "original member row is preserved (additive migration)"
+    },
+    {
+      "check_id": "migration_event_written",
+      "status": "PASS",
+      "detail": "program_migration_events row written with new_member_id and created_at"
+    },
+    {
+      "check_id": "duplicate_call_stable_sqlstate",
+      "status": "PASS",
+      "detail": "duplicate call raises expected SQLSTATE 23505"
+    }
+  ]
+}
