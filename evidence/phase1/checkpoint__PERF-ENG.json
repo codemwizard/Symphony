@@ -1,0 +1,18 @@
+{
+  "check_id": "CHECKPOINT-VERIFY",
+  "details": {
+    "checkpoint": "checkpoint/PERF-ENG",
+    "dependencies": [
+      "PERF-003"
+    ],
+    "dependency_evidence": {
+      "PERF-003": "evidence/phase1/perf_003_rebaseline_sha_lock.json"
+    }
+  },
+  "errors": [],
+  "git_sha": "1223242914af1f4fca8a01f5b673aa0fecf577f0",
+  "pass": true,
+  "status": "PASS",
+  "task_id": "checkpoint/PERF-ENG",
+  "timestamp_utc": "2026-02-25T01:06:50Z"
+}
