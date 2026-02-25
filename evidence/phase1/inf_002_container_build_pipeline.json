@@ -1,0 +1,53 @@
+{
+  "check_id": "TSK-P1-INF-002",
+  "task_id": "TSK-P1-INF-002",
+  "status": "PASS",
+  "pass": true,
+  "timestamp_utc": "2026-02-25T10:32:10Z",
+  "git_sha": "898c31b6527bf0a8e78c6dc97ff99786f2564750",
+  "details": {
+    "build_order": [
+      "ledger-api",
+      "executor-worker",
+      "db-migration-job"
+    ],
+    "determinism_policy": "same source -> same image digest",
+    "pinned_base_required": true,
+    "non_root_required": true
+  },
+  "images": [
+    {
+      "service": "ledger-api",
+      "dockerfile": "services/ledger-api/Dockerfile",
+      "image": "symphony/phase1-ledger-api:inf002",
+      "image_digest": "sha256:a8f05a84b7fcb1738b746065c8cb5096463b0afc71c2353c3f2783e1968000d8",
+      "base_image": "mcr.microsoft.com/dotnet/aspnet@sha256:88c86e5469c2b69969e07343193fd3dbe4ff6936d95b994dbfa27348299af111",
+      "base_image_digest": "sha256:88c86e5469c2b69969e07343193fd3dbe4ff6936d95b994dbfa27348299af111",
+      "digest_pinned": true,
+      "non_root": true,
+      "deterministic": true
+    },
+    {
+      "service": "executor-worker",
+      "dockerfile": "services/executor-worker/Dockerfile",
+      "image": "symphony/phase1-executor-worker:inf002",
+      "image_digest": "sha256:39807e0a10ba769cac57767ca6679aafd1272dbc1eba58c7598a0e426992f792",
+      "base_image": "mcr.microsoft.com/dotnet/aspnet@sha256:88c86e5469c2b69969e07343193fd3dbe4ff6936d95b994dbfa27348299af111",
+      "base_image_digest": "sha256:88c86e5469c2b69969e07343193fd3dbe4ff6936d95b994dbfa27348299af111",
+      "digest_pinned": true,
+      "non_root": true,
+      "deterministic": true
+    },
+    {
+      "service": "db-migration-job",
+      "dockerfile": "infra/db-migration-job/Dockerfile",
+      "image": "symphony/phase1-db-migration-job:inf002",
+      "image_digest": "sha256:a5c76e48122239ce19ec245ac270b46d993d083de9b2c43f341d9d323a437c59",
+      "base_image": "postgres@sha256:97ff59a4e30e08d1c11bdcd9455e7832368c0572b576c9092cde2df4ae5552a3",
+      "base_image_digest": "sha256:97ff59a4e30e08d1c11bdcd9455e7832368c0572b576c9092cde2df4ae5552a3",
+      "digest_pinned": true,
+      "non_root": true,
+      "deterministic": true
+    }
+  ]
+}
