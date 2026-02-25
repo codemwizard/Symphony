@@ -107,6 +107,9 @@ registry:
   scripts/audit/verify_ten_002_rls_leakage.sh:
     emits:
       - evidence/phase1/ten_002_rls_leakage.json
+  scripts/audit/verify_ten_003_tenant_onboarding_admin.sh:
+    emits:
+      - evidence/phase1/ten_003_tenant_onboarding_admin.json
   scripts/audit/verify_drd_policy_usage.sh:
     emits:
       - evidence/phase0/drd_policy_usage.json

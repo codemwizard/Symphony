@@ -45,6 +45,12 @@ if (args.Contains("--self-test-tenant-context", StringComparer.OrdinalIgnoreCase
     Environment.ExitCode = code;
     return;
 }
+if (args.Contains("--self-test-tenant-onboarding-admin", StringComparer.OrdinalIgnoreCase))
+{
+    var code = await TenantOnboardingAdminSelfTestRunner.RunAsync(logger, CancellationToken.None);
+    Environment.ExitCode = code;
+    return;
+}
 
 var storageMode = (Environment.GetEnvironmentVariable("INGRESS_STORAGE_MODE") ?? "file").Trim().ToLowerInvariant();
 StorageModePolicy.ValidateOrThrow(storageMode);
@@ -63,6 +69,12 @@ IEvidencePackStore evidenceStore = storageMode switch
     "db" or "db_psql" or "db_npgsql" => new NpgsqlEvidencePackStore(logger, dataSource!),
     "file" => new FileEvidencePackStore(logger),
     _ => new FileEvidencePackStore(logger)
+};
+ITenantOnboardingStore tenantOnboardingStore = storageMode switch
+{
+    "db" or "db_psql" or "db_npgsql" => new NpgsqlTenantOnboardingStore(logger, dataSource!),
+    "file" => new FileTenantOnboardingStore(logger),
+    _ => new FileTenantOnboardingStore(logger)
 };
 
 app.MapGet("/health", () => Results.Ok(new { status = "ok" }));
@@ -98,6 +110,51 @@ app.MapGet("/v1/evidence-packs/{instruction_id}", async (string instruction_id, 
     return Results.Json(result.Body, statusCode: result.StatusCode);
 });
 
+app.MapPost("/v1/admin/tenants", async (TenantOnboardingRequest request, HttpContext httpContext, CancellationToken cancellationToken) =>
+{
+    var authFailure = ApiAuthorization.AuthorizeAdminTenantOnboarding(httpContext);
+    if (authFailure is not null)
+    {
+        return Results.Json(authFailure.Body, statusCode: authFailure.StatusCode);
+    }
+
+    var validationErrors = TenantOnboardingValidation.Validate(request);
+    if (validationErrors.Count > 0)
+    {
+        return Results.Json(new
+        {
+            error_code = "INVALID_REQUEST",
+            errors = validationErrors
+        }, statusCode: StatusCodes.Status400BadRequest);
+    }
+
+    var tenantId = Guid.Parse(request.tenant_id.Trim());
+    var idempotencyKey = $"tenant_onboarding:{tenantId.ToString("N").ToLowerInvariant()}";
+    var input = new TenantOnboardingInput(
+        TenantId: tenantId,
+        DisplayName: request.display_name.Trim(),
+        JurisdictionCode: request.jurisdiction_code.Trim().ToUpperInvariant(),
+        Plan: request.plan.Trim(),
+        IdempotencyKey: idempotencyKey
+    );
+
+    var onboarding = await tenantOnboardingStore.OnboardAsync(input, cancellationToken);
+    if (!onboarding.Success || onboarding.CreatedAt is null || string.IsNullOrWhiteSpace(onboarding.TenantId))
+    {
+        return Results.Json(new
+        {
+            error_code = "TENANT_ONBOARDING_FAILED",
+            errors = new[] { onboarding.Error ?? "tenant onboarding store failed" }
+        }, statusCode: StatusCodes.Status503ServiceUnavailable);
+    }
+
+    return Results.Json(new
+    {
+        tenant_id = onboarding.TenantId,
+        created_at = onboarding.CreatedAt.Value.ToString("O")
+    }, statusCode: StatusCodes.Status200OK);
+});
+
 await app.RunAsync();
 
 record IngressRequest(
@@ -113,6 +170,13 @@ record IngressRequest(
     string? upstream_ref,
     string? downstream_ref,
     string? nfs_sequence_ref
+);
+
+record TenantOnboardingRequest(
+    string tenant_id,
+    string display_name,
+    string jurisdiction_code,
+    string plan
 );
 
 record PersistInput(
@@ -139,6 +203,34 @@ record PersistResult(bool Success, string? AttestationId, string? OutboxId, stri
 interface IIngressDurabilityStore
 {
     Task<PersistResult> PersistAsync(PersistInput input, CancellationToken cancellationToken);
+}
+
+record TenantOnboardingInput(
+    Guid TenantId,
+    string DisplayName,
+    string JurisdictionCode,
+    string Plan,
+    string IdempotencyKey
+);
+
+record TenantOnboardingResult(
+    bool Success,
+    string? TenantId,
+    DateTimeOffset? CreatedAt,
+    string? OutboxId,
+    bool CreatedNew,
+    string? Error)
+{
+    public static TenantOnboardingResult Ok(string tenantId, DateTimeOffset createdAt, string? outboxId, bool createdNew)
+        => new(true, tenantId, createdAt, outboxId, createdNew, null);
+
+    public static TenantOnboardingResult Fail(string error)
+        => new(false, null, null, null, false, error);
+}
+
+interface ITenantOnboardingStore
+{
+    Task<TenantOnboardingResult> OnboardAsync(TenantOnboardingInput input, CancellationToken cancellationToken);
 }
 
 record HandlerResult(int StatusCode, object Body);
@@ -267,6 +359,30 @@ static class ApiAuthorization
         }
 
         return null;
+    }
+
+    public static HandlerResult? AuthorizeAdminTenantOnboarding(HttpContext httpContext)
+    {
+        var adminClaim = ReadHeader(httpContext, "x-admin-claim");
+        if (adminClaim == "1" || adminClaim.Equals("true", StringComparison.OrdinalIgnoreCase))
+        {
+            return null;
+        }
+
+        var configuredAdminKey = (Environment.GetEnvironmentVariable("ADMIN_API_KEY") ?? string.Empty).Trim();
+        var presentedAdminKey = ReadHeader(httpContext, "x-admin-api-key");
+        if (!string.IsNullOrWhiteSpace(configuredAdminKey)
+            && !string.IsNullOrWhiteSpace(presentedAdminKey)
+            && SecureEquals(configuredAdminKey, presentedAdminKey))
+        {
+            return null;
+        }
+
+        return new HandlerResult(StatusCodes.Status403Forbidden, new
+        {
+            error_code = "FORBIDDEN_ADMIN_REQUIRED",
+            errors = new[] { "admin credentials are required (x-admin-api-key or admin claim)" }
+        });
     }
 
     private static string ReadHeader(HttpContext context, string name)
@@ -418,6 +534,44 @@ static class IngressValidation
     }
 }
 
+static class TenantOnboardingValidation
+{
+    public static List<string> Validate(TenantOnboardingRequest request)
+    {
+        var errors = new List<string>();
+
+        if (string.IsNullOrWhiteSpace(request.tenant_id))
+        {
+            errors.Add("tenant_id is required");
+        }
+        else if (!Guid.TryParse(request.tenant_id, out _))
+        {
+            errors.Add("tenant_id must be a valid UUID");
+        }
+
+        if (string.IsNullOrWhiteSpace(request.display_name))
+        {
+            errors.Add("display_name is required");
+        }
+
+        if (string.IsNullOrWhiteSpace(request.jurisdiction_code))
+        {
+            errors.Add("jurisdiction_code is required");
+        }
+        else if (request.jurisdiction_code.Trim().Length != 2)
+        {
+            errors.Add("jurisdiction_code must be an ISO-3166 alpha-2 code");
+        }
+
+        if (string.IsNullOrWhiteSpace(request.plan))
+        {
+            errors.Add("plan is required");
+        }
+
+        return errors;
+    }
+}
+
 sealed class FileIngressDurabilityStore(ILogger logger, string? path = null) : IIngressDurabilityStore
 {
     private readonly string _path = path
@@ -535,6 +689,233 @@ SELECT (SELECT attestation_id FROM inserted), (SELECT outbox_id FROM enqueued LI
         {
             logger.LogError(ex, "Npgsql ingress persistence failed.");
             return PersistResult.Fail($"db_failed:{ex.Message}");
+        }
+    }
+}
+
+sealed class FileTenantOnboardingStore(ILogger logger, string? path = null) : ITenantOnboardingStore
+{
+    private readonly string _path = path
+        ?? Environment.GetEnvironmentVariable("TENANT_ONBOARDING_FILE")
+        ?? "/tmp/symphony_tenant_onboarding.ndjson";
+
+    public async Task<TenantOnboardingResult> OnboardAsync(TenantOnboardingInput input, CancellationToken cancellationToken)
+    {
+        try
+        {
+            Directory.CreateDirectory(Path.GetDirectoryName(_path) ?? "/tmp");
+            if (!File.Exists(_path))
+            {
+                await File.WriteAllTextAsync(_path, string.Empty, cancellationToken);
+            }
+
+            var lines = await File.ReadAllLinesAsync(_path, cancellationToken);
+            foreach (var line in lines.Where(l => !string.IsNullOrWhiteSpace(l)))
+            {
+                using var existing = JsonDocument.Parse(line);
+                var root = existing.RootElement;
+                var existingTenantId = root.TryGetProperty("tenant_id", out var tenantIdProp) ? tenantIdProp.GetString() : null;
+                if (!string.Equals(existingTenantId, input.TenantId.ToString(), StringComparison.OrdinalIgnoreCase))
+                {
+                    continue;
+                }
+
+                var createdAtRaw = root.TryGetProperty("created_at", out var createdAtProp)
+                    ? createdAtProp.GetString()
+                    : null;
+                if (!DateTimeOffset.TryParse(createdAtRaw, out var createdAt))
+                {
+                    createdAt = DateTimeOffset.UtcNow;
+                }
+
+                var outboxId = root.TryGetProperty("outbox_id", out var outboxProp)
+                    ? outboxProp.GetString()
+                    : null;
+                return TenantOnboardingResult.Ok(input.TenantId.ToString(), createdAt, outboxId, createdNew: false);
+            }
+
+            var now = DateTimeOffset.UtcNow;
+            var outboxIdCreated = Guid.NewGuid().ToString();
+            var linePayload = JsonSerializer.Serialize(new
+            {
+                tenant_id = input.TenantId.ToString(),
+                display_name = input.DisplayName,
+                jurisdiction_code = input.JurisdictionCode,
+                plan = input.Plan,
+                idempotency_key = input.IdempotencyKey,
+                rls_session_seed = $"app.current_tenant_id={input.TenantId}",
+                outbox_id = outboxIdCreated,
+                outbox_event = "TENANT_CREATED",
+                created_at = now.ToString("O"),
+                written_at_utc = now.ToString("O")
+            });
+            await File.AppendAllTextAsync(_path, linePayload + Environment.NewLine, cancellationToken);
+
+            return TenantOnboardingResult.Ok(input.TenantId.ToString(), now, outboxIdCreated, createdNew: true);
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Failed tenant onboarding file persistence.");
+            return TenantOnboardingResult.Fail(ex.Message);
+        }
+    }
+}
+
+sealed class NpgsqlTenantOnboardingStore(ILogger logger, NpgsqlDataSource dataSource) : ITenantOnboardingStore
+{
+    public async Task<TenantOnboardingResult> OnboardAsync(TenantOnboardingInput input, CancellationToken cancellationToken)
+    {
+        try
+        {
+            await using var conn = await dataSource.OpenConnectionAsync(cancellationToken);
+            await using var tx = await conn.BeginTransactionAsync(cancellationToken);
+
+            var tenantKey = $"ten-{input.TenantId.ToString("N")[..12]}";
+            var billableClientKey = $"tenant-{input.TenantId.ToString("N").ToLowerInvariant()}";
+
+            await using var onboard = conn.CreateCommand();
+            onboard.Transaction = tx;
+            onboard.CommandText = @"
+WITH tenant_scope AS (
+  SELECT set_config('app.current_tenant_id', @tenant_id::text, true)
+),
+billable_upsert AS (
+  INSERT INTO public.billable_clients (
+    billable_client_id,
+    legal_name,
+    client_type,
+    status,
+    client_key
+  )
+  VALUES (
+    public.uuid_v7_or_random(),
+    @display_name,
+    'ENTERPRISE',
+    'ACTIVE',
+    @billable_client_key
+  )
+  ON CONFLICT (client_key)
+  DO UPDATE SET legal_name = EXCLUDED.legal_name
+  RETURNING billable_client_id
+),
+existing AS (
+  SELECT t.tenant_id, t.created_at
+  FROM public.tenants t
+  WHERE t.tenant_id = @tenant_id
+),
+inserted AS (
+  INSERT INTO public.tenants(
+    tenant_id,
+    tenant_key,
+    tenant_name,
+    tenant_type,
+    status,
+    billable_client_id
+  )
+  SELECT
+    @tenant_id,
+    @tenant_key,
+    @display_name,
+    'COMMERCIAL',
+    'ACTIVE',
+    (SELECT billable_client_id FROM billable_upsert LIMIT 1)
+  WHERE NOT EXISTS (SELECT 1 FROM existing)
+  ON CONFLICT (tenant_id) DO NOTHING
+  RETURNING tenant_id, created_at
+)
+SELECT
+  COALESCE((SELECT tenant_id::text FROM inserted LIMIT 1), (SELECT tenant_id::text FROM existing LIMIT 1)),
+  COALESCE((SELECT created_at FROM inserted LIMIT 1), (SELECT created_at FROM existing LIMIT 1)),
+  EXISTS(SELECT 1 FROM inserted) AS created_new;
+";
+            onboard.Parameters.AddWithValue("tenant_id", input.TenantId);
+            onboard.Parameters.AddWithValue("display_name", input.DisplayName);
+            onboard.Parameters.AddWithValue("tenant_key", tenantKey);
+            onboard.Parameters.AddWithValue("billable_client_key", billableClientKey);
+
+            string tenantId;
+            DateTimeOffset createdAt;
+            bool createdNew;
+            await using (var reader = await onboard.ExecuteReaderAsync(cancellationToken))
+            {
+                if (!await reader.ReadAsync(cancellationToken))
+                {
+                    return TenantOnboardingResult.Fail("db returned no tenant onboarding result");
+                }
+
+                tenantId = reader.IsDBNull(0) ? string.Empty : reader.GetString(0);
+                if (reader.IsDBNull(1))
+                {
+                    return TenantOnboardingResult.Fail("db returned missing created_at");
+                }
+
+                createdAt = reader.GetFieldValue<DateTimeOffset>(1);
+                createdNew = !reader.IsDBNull(2) && reader.GetBoolean(2);
+            }
+
+            if (string.IsNullOrWhiteSpace(tenantId))
+            {
+                return TenantOnboardingResult.Fail("db returned missing tenant_id");
+            }
+
+            string? outboxId = null;
+            var participantId = "tenant_admin";
+            if (createdNew)
+            {
+                var eventInstructionId = $"tenant-onboarding:{input.TenantId:N}";
+                var payloadJson = JsonSerializer.Serialize(new
+                {
+                    event_type = "TENANT_CREATED",
+                    tenant_id = tenantId,
+                    display_name = input.DisplayName,
+                    jurisdiction_code = input.JurisdictionCode,
+                    plan = input.Plan,
+                    rls_session_seed = $"app.current_tenant_id={tenantId}"
+                });
+
+                await using var enqueue = conn.CreateCommand();
+                enqueue.Transaction = tx;
+                enqueue.CommandText = @"
+SELECT outbox_id::text
+FROM public.enqueue_payment_outbox(
+  @instruction_id,
+  @participant_id,
+  @idempotency_key,
+  'TENANT_CREATED',
+  @payload_json::jsonb
+)
+LIMIT 1;";
+                enqueue.Parameters.AddWithValue("instruction_id", eventInstructionId);
+                enqueue.Parameters.AddWithValue("participant_id", participantId);
+                enqueue.Parameters.AddWithValue("idempotency_key", input.IdempotencyKey);
+                enqueue.Parameters.AddWithValue("payload_json", payloadJson);
+                var outboxIdObj = await enqueue.ExecuteScalarAsync(cancellationToken);
+                outboxId = outboxIdObj?.ToString();
+            }
+            else
+            {
+                await using var lookup = conn.CreateCommand();
+                lookup.Transaction = tx;
+                lookup.CommandText = @"
+SELECT outbox_id::text
+FROM public.payment_outbox_pending
+WHERE participant_id = @participant_id
+  AND idempotency_key = @idempotency_key
+ORDER BY created_at DESC
+LIMIT 1;";
+                lookup.Parameters.AddWithValue("participant_id", participantId);
+                lookup.Parameters.AddWithValue("idempotency_key", input.IdempotencyKey);
+                var outboxIdObj = await lookup.ExecuteScalarAsync(cancellationToken);
+                outboxId = outboxIdObj?.ToString();
+            }
+
+            await tx.CommitAsync(cancellationToken);
+            return TenantOnboardingResult.Ok(tenantId, createdAt, outboxId, createdNew);
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Npgsql tenant onboarding persistence failed.");
+            return TenantOnboardingResult.Fail($"db_failed:{ex.Message}");
         }
     }
 }
@@ -1567,6 +1948,92 @@ static class ExceptionCasePackSelfTestRunner
                 tests.Add(new SelfTestCase(name, "FAIL", $"expected status={expectedStatus} got={result.StatusCode}"));
             }
         }
+    }
+}
+
+static class TenantOnboardingAdminSelfTestRunner
+{
+    public static async Task<int> RunAsync(ILogger logger, CancellationToken cancellationToken)
+    {
+        var rootDir = EvidenceMeta.ResolveRepoRoot(Directory.GetCurrentDirectory());
+        var evidenceDir = Path.Combine(rootDir, "evidence", "phase1");
+        Directory.CreateDirectory(evidenceDir);
+        var evidencePath = Path.Combine(evidenceDir, "ten_003_tenant_onboarding_admin.json");
+
+        var storageFile = $"/tmp/symphony_tenant_onboarding_selftest_{Guid.NewGuid():N}.ndjson";
+        var store = new FileTenantOnboardingStore(logger, storageFile);
+        var tenantId = Guid.NewGuid().ToString();
+
+        Environment.SetEnvironmentVariable("ADMIN_API_KEY", "ten-003-admin-key");
+
+        var tenantCreated = false;
+        var outboxEventEmitted = false;
+        var idempotencyConfirmed = false;
+        var nonAdminRejected = false;
+
+        // Non-admin request must fail closed.
+        {
+            var nonAdminCtx = new DefaultHttpContext();
+            var authz = ApiAuthorization.AuthorizeAdminTenantOnboarding(nonAdminCtx);
+            nonAdminRejected = authz is not null && authz.StatusCode == StatusCodes.Status403Forbidden;
+        }
+
+        var request = new TenantOnboardingRequest(
+            tenant_id: tenantId,
+            display_name: "TEN-003 SelfTest Tenant",
+            jurisdiction_code: "ZM",
+            plan: "pilot"
+        );
+        var input = new TenantOnboardingInput(
+            TenantId: Guid.Parse(request.tenant_id),
+            DisplayName: request.display_name,
+            JurisdictionCode: request.jurisdiction_code,
+            Plan: request.plan,
+            IdempotencyKey: $"tenant_onboarding:{Guid.Parse(request.tenant_id).ToString("N").ToLowerInvariant()}"
+        );
+
+        var first = await store.OnboardAsync(input, cancellationToken);
+        tenantCreated = first.Success && string.Equals(first.TenantId, tenantId, StringComparison.OrdinalIgnoreCase);
+        outboxEventEmitted = first.Success && first.CreatedNew && !string.IsNullOrWhiteSpace(first.OutboxId);
+
+        var second = await store.OnboardAsync(input, cancellationToken);
+        idempotencyConfirmed = second.Success
+            && !second.CreatedNew
+            && string.Equals(first.TenantId, second.TenantId, StringComparison.OrdinalIgnoreCase)
+            && first.CreatedAt == second.CreatedAt;
+
+        var status = tenantCreated && outboxEventEmitted && idempotencyConfirmed && nonAdminRejected
+            ? "PASS"
+            : "FAIL";
+        var meta = EvidenceMeta.Load(rootDir);
+
+        await File.WriteAllTextAsync(evidencePath, JsonSerializer.Serialize(new
+        {
+            check_id = "TEN-003-TENANT-ONBOARDING-ADMIN",
+            task_id = "TSK-P1-TEN-003",
+            timestamp_utc = meta.TimestampUtc,
+            git_sha = meta.GitSha,
+            schema_fingerprint = meta.SchemaFingerprint,
+            status,
+            pass = status == "PASS",
+            tenant_created = tenantCreated,
+            outbox_event_emitted = outboxEventEmitted,
+            idempotency_confirmed = idempotencyConfirmed,
+            non_admin_rejected = nonAdminRejected,
+            details = new
+            {
+                endpoint = "POST /v1/admin/tenants",
+                idempotency_key = input.IdempotencyKey,
+                tenant_created = tenantCreated,
+                outbox_event_emitted = outboxEventEmitted,
+                idempotency_confirmed = idempotencyConfirmed,
+                non_admin_rejected = nonAdminRejected
+            }
+        }, new JsonSerializerOptions { WriteIndented = true }) + Environment.NewLine, cancellationToken);
+
+        Console.WriteLine($"Tenant onboarding admin self-test status: {status}");
+        Console.WriteLine($"Evidence: {evidencePath}");
+        return status == "PASS" ? 0 : 1;
     }
 }
 

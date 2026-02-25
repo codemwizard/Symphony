@@ -1,0 +1,21 @@
+{
+  "check_id": "TEN-003-TENANT-ONBOARDING-ADMIN",
+  "task_id": "TSK-P1-TEN-003",
+  "timestamp_utc": "2026-02-25T23:03:32Z",
+  "git_sha": "0b80adce24adb8e808969646435562582a3e2ff3",
+  "schema_fingerprint": "0b80adc",
+  "status": "PASS",
+  "pass": true,
+  "tenant_created": true,
+  "outbox_event_emitted": true,
+  "idempotency_confirmed": true,
+  "non_admin_rejected": true,
+  "details": {
+    "endpoint": "POST /v1/admin/tenants",
+    "idempotency_key": "tenant_onboarding:5be869cae09c4242929b677370864685",
+    "tenant_created": true,
+    "outbox_event_emitted": true,
+    "idempotency_confirmed": true,
+    "non_admin_rejected": true
+  }
+}
