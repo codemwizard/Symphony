@@ -1,0 +1,64 @@
+apiVersion: external-secrets.io/v1beta1
+kind: ClusterSecretStore
+metadata:
+  name: symphony-openbao
+spec:
+  provider:
+    vault:
+      server: https://openbao.symphony.svc.cluster.local:8200
+      path: kv
+      version: v2
+      caProvider:
+        type: Secret
+        namespace: symphony
+        name: openbao-ca
+        key: ca.crt
+      auth:
+        kubernetes:
+          mountPath: kubernetes
+          role: symphony-eso
+          serviceAccountRef:
+            name: external-secrets
+            namespace: external-secrets
+---
+apiVersion: external-secrets.io/v1beta1
+kind: ExternalSecret
+metadata:
+  name: symphony-app-secrets
+  namespace: symphony
+spec:
+  refreshInterval: 15s
+  secretStoreRef:
+    kind: ClusterSecretStore
+    name: symphony-openbao
+  target:
+    name: symphony-app-secrets
+    creationPolicy: Owner
+  data:
+    - secretKey: db_password
+      remoteRef:
+        key: app/prod/db
+        property: password
+    - secretKey: api_token
+      remoteRef:
+        key: app/prod/api
+        property: token
+---
+apiVersion: external-secrets.io/v1beta1
+kind: ExternalSecret
+metadata:
+  name: symphony-signing-secrets
+  namespace: symphony
+spec:
+  refreshInterval: 30s
+  secretStoreRef:
+    kind: ClusterSecretStore
+    name: symphony-openbao
+  target:
+    name: symphony-signing-secrets
+    creationPolicy: Owner
+  data:
+    - secretKey: signing_key
+      remoteRef:
+        key: app/prod/signing
+        property: key

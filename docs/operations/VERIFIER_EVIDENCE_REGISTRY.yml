@@ -89,6 +89,9 @@ registry:
   scripts/infra/verify_tsk_p1_inf_001.sh:
     emits:
       - evidence/phase1/tsk_p1_inf_001__postgres_ha_backups_pitr_operator.json
+  scripts/audit/verify_inf_005_openbao_external_secrets.sh:
+    emits:
+      - evidence/phase1/inf_005_openbao_external_secrets.json
   scripts/audit/verify_drd_policy_usage.sh:
     emits:
       - evidence/phase0/drd_policy_usage.json

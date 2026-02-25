@@ -658,6 +658,14 @@ if [[ "${RUN_PHASE1_GATES:-0}" == "1" ]]; then
     exit 1
   fi
 
+  echo "==> Phase-1 OpenBao + External Secrets verification (TSK-P1-INF-005)"
+  if [[ -x scripts/audit/verify_inf_005_openbao_external_secrets.sh ]]; then
+    scripts/audit/verify_inf_005_openbao_external_secrets.sh --evidence evidence/phase1/inf_005_openbao_external_secrets.json
+  else
+    echo "ERROR: scripts/audit/verify_inf_005_openbao_external_secrets.sh not found"
+    exit 1
+  fi
+
   echo "==> Phase-1 no-MCP guard"
   if [[ -x scripts/audit/verify_no_mcp_phase1.sh ]]; then
     scripts/audit/verify_no_mcp_phase1.sh
