@@ -1,0 +1,11 @@
+apiVersion: postgresql.cnpg.io/v1
+kind: ScheduledBackup
+metadata:
+  name: symphony-postgres-backup
+  namespace: symphony
+spec:
+  schedule: "0 */6 * * *"
+  backupOwnerReference: self
+  immediate: true
+  cluster:
+    name: symphony-postgres-ha
