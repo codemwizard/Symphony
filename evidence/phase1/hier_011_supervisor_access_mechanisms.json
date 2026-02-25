@@ -1,0 +1,77 @@
+{
+  "check_id": "TSK-P1-HIER-011",
+  "task_id": "TSK-P1-HIER-011",
+  "status": "PASS",
+  "pass": true,
+  "git_sha": "f1c9b7b685c5495897324f5e2250774d07779578",
+  "timestamp_utc": "2026-02-25T10:16:49Z",
+  "details": {
+    "mechanisms": [
+      "READ_ONLY",
+      "AUDIT",
+      "APPROVAL_REQUIRED"
+    ],
+    "api_endpoints": [
+      "POST /v1/admin/supervisor/audit-token",
+      "DELETE /v1/admin/supervisor/audit-token/{token_id}",
+      "POST /v1/admin/supervisor/approve/{instruction_id}"
+    ]
+  },
+  "checks": [
+    {
+      "check_id": "approval_queue_columns",
+      "status": "PASS",
+      "detail": "approval queue has held/approved/submitted columns"
+    },
+    {
+      "check_id": "submit_function_single_arg",
+      "status": "PASS",
+      "detail": "single-arg submit_for_supervisor_approval exists"
+    },
+    {
+      "check_id": "decide_function_guarded",
+      "status": "PASS",
+      "detail": "decide_supervisor_approval is SECURITY DEFINER with hardened search_path"
+    },
+    {
+      "check_id": "read_only_report_signature_valid",
+      "status": "PASS",
+      "detail": "READ_ONLY report signature verifies"
+    },
+    {
+      "check_id": "read_only_report_no_raw_pii",
+      "status": "PASS",
+      "detail": "READ_ONLY report contains aggregate-only payload"
+    },
+    {
+      "check_id": "audit_token_created",
+      "status": "PASS",
+      "detail": "AUDIT token API issues scoped token"
+    },
+    {
+      "check_id": "audit_token_expires",
+      "status": "PASS",
+      "detail": "AUDIT token expires automatically"
+    },
+    {
+      "check_id": "audit_records_anonymized",
+      "status": "PASS",
+      "detail": "AUDIT token returns anonymized raw records"
+    },
+    {
+      "check_id": "audit_token_revocable",
+      "status": "PASS",
+      "detail": "AUDIT token is revocable via DELETE endpoint"
+    },
+    {
+      "check_id": "approval_cannot_self_approve",
+      "status": "PASS",
+      "detail": "APPROVAL_REQUIRED blocks self-approval"
+    },
+    {
+      "check_id": "approval_endpoint_approves",
+      "status": "PASS",
+      "detail": "APPROVAL_REQUIRED endpoint approves pending instruction"
+    }
+  ]
+}

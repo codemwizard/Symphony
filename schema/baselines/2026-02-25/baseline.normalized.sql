@@ -27,6 +27,8 @@
         ) VALUES (
         );
         );
+        AND COALESCE(submitted_by, '') = v_actor
+        AND status = 'PENDING_SUPERVISOR_APPROVAL'
         DELETE FROM payment_outbox_pending WHERE outbox_id = v_record.outbox_id;
         DETAIL = 'Lease missing/expired or token mismatch; refusing to complete';
         END IF;
@@ -38,15 +40,23 @@
         LIMIT 1;
         SELECT p.outbox_id, p.sequence_id, p.created_at
         UPDATE payment_outbox_pending SET
+        USING ERRCODE = '42501';
         WHERE p.instruction_id = p_instruction_id
         WHERE payment_outbox_pending.outbox_id = v_record.outbox_id;
         allocated_sequence,
+        approved_at = NULL;
+        approved_by = NULL,
         attempt_count = GREATEST(attempt_count, v_next_attempt_no),
         claimed_by = NULL, lease_token = NULL, lease_expires_at = NULL
         decided_at = NULL,
+        decided_at = NULL,
         decided_by = NULL,
+        decided_by = NULL,
+        decision_reason = NULL,
         decision_reason = NULL;
         held_at = NOW(),
+        held_at = NOW(),
+        held_reason = EXCLUDED.held_reason,
         idempotency_key,
         instruction_id,
         next_attempt_at = NOW() + make_interval(secs => GREATEST(1, COALESCE(p_retry_delay_seconds, 1))),
@@ -60,6 +70,9 @@
         rail_type,
         sequence_id,
         status = 'PENDING_SUPERVISOR_APPROVAL',
+        status = 'PENDING_SUPERVISOR_APPROVAL',
+        submitted_by = EXCLUDED.submitted_by,
+        timeout_at = EXCLUDED.timeout_at,
         timeout_at = NOW() + make_interval(mins => v_timeout),
       'migrated_at', NOW(),
       'migrated_from_program_id', p_from_program_id,
@@ -96,6 +109,7 @@
       END IF;
       FROM payment_outbox_attempts a WHERE a.outbox_id = v_record.outbox_id;
       FROM payment_outbox_pending p
+      FROM public.supervisor_approval_queue
       IF v_next_attempt_no >= v_retry_ceiling THEN
       INSERT INTO payment_outbox_pending (
       INTO existing_pending;
@@ -106,6 +120,7 @@
       ORDER BY p.lease_expires_at ASC, p.created_at ASC LIMIT p_batch_size FOR UPDATE SKIP LOCKED
       RAISE EXCEPTION 'Invalid completion state %', p_state USING ERRCODE = 'P7003';
       RAISE EXCEPTION 'LEASE_LOST' USING ERRCODE = 'P7002',
+      RAISE EXCEPTION 'self approval is not permitted for instruction %', p_instruction_id
       RETURN NEW;
       RETURN NEXT;
       RETURN QUERY SELECT existing_attempt.outbox_id, existing_attempt.sequence_id, existing_attempt.created_at, existing_attempt.state::TEXT;
@@ -113,6 +128,7 @@
       RETURN;
       RETURN;
       RETURNING payment_outbox_pending.outbox_id, payment_outbox_pending.sequence_id, payment_outbox_pending.created_at
+      SELECT 1
       SELECT COALESCE(MAX(a.attempt_no), 0) + 1 INTO v_next_attempt_no
       SELECT p.outbox_id, p.instruction_id, p.participant_id, p.sequence_id,
       SET next_sequence_id = participant_outbox_sequences.next_sequence_id + 1
@@ -164,10 +180,13 @@
       USING ERRCODE = 'P7401';
       VALUES (
       WHEN unique_violation THEN
+      WHERE instruction_id = p_instruction_id
       WHERE outbox_id = p_outbox_id;
       WHERE p.claimed_by IS NOT NULL AND p.lease_token IS NOT NULL AND p.lease_expires_at <= NOW()
       anchor_ref = p_anchor_ref,
       anchor_type = COALESCE(NULLIF(BTRIM(p_anchor_type), ''), 'HYBRID_SYNC')
+      approved_at = CASE WHEN v_decision = 'APPROVED' THEN NOW() ELSE approved_at END,
+      approved_by = CASE WHEN v_decision = 'APPROVED' THEN v_actor ELSE approved_by END,
       attempt_count = o.attempt_count + 1,
       attempt_no := v_next_attempt_no;
       attempt_no, state, claimed_at, completed_at, rail_reference, rail_code,
@@ -179,7 +198,7 @@
       decided_at = NOW(),
       decided_at = p_now,
       decided_by = 'system_timeout',
-      decided_by = COALESCE(NULLIF(BTRIM(p_actor), ''), 'system'),
+      decided_by = v_actor,
       decision_reason = COALESCE(decision_reason, 'timeout')
       decision_reason = p_reason
       enrolled_at,
@@ -267,6 +286,7 @@
     'DISPATCHING',
     'FAILED',
     'GRACE',
+    'PENDING_SUPERVISOR_APPROVAL',
     'PURGED',
     'REQUESTED',
     'RETIRED'
@@ -278,6 +298,7 @@
     )
     )
     )
+    ) THEN
     ) VALUES (
     ) VALUES (
     ) VALUES (
@@ -423,6 +444,7 @@
     ADD CONSTRAINT ux_rail_truth_anchor_attempt_id UNIQUE (attempt_id);
     ADD CONSTRAINT ux_rail_truth_anchor_sequence_scope UNIQUE (rail_sequence_ref, rail_participant_id, rail_profile);
     AND (p.lease_expires_at IS NULL OR p.lease_expires_at <= NOW())
+    AND COALESCE(submitted_by, '') <> v_actor;
     AND e.event_type = 'PURGED'
     AND lease_expires_at <= clock_timestamp();
     AND lease_expires_at IS NOT NULL
@@ -439,8 +461,10 @@
     AND rf.is_active = TRUE
     AND rf.is_active = TRUE
     AND rf.is_active = TRUE
-    AND status = 'PENDING_SUPERVISOR_APPROVAL';
+    AND status = 'PENDING_SUPERVISOR_APPROVAL'
     AND timeout_at <= p_now;
+    AS $$
+    AS $$
     AS $$
     AS $$
     AS $$
@@ -574,6 +598,7 @@
     END IF;
     END IF;
     END IF;
+    END IF;
     END LOOP;
     END;
     EXCEPTION
@@ -600,6 +625,7 @@
     FROM public.programs pr
     FROM public.sim_swap_alerts s
     FROM public.tenants t
+    IF EXISTS (
     IF FOUND THEN
     IF FOUND THEN
     IF NOT FOUND THEN
@@ -658,6 +684,8 @@
     LANGUAGE plpgsql SECURITY DEFINER
     LANGUAGE plpgsql SECURITY DEFINER
     LANGUAGE plpgsql SECURITY DEFINER
+    LANGUAGE plpgsql SECURITY DEFINER
+    LANGUAGE plpgsql SECURITY DEFINER
     LANGUAGE sql
     LANGUAGE sql SECURITY DEFINER
     LANGUAGE sql STABLE
@@ -676,8 +704,15 @@
     NEW.state
     NEW.tenant_id := derived_tenant_id;
     NOW()
+    NOW() + make_interval(mins => v_timeout),
     NOW(),
     NOW(),
+    NOW(),
+    NULL
+    NULL,
+    NULL,
+    NULL,
+    NULL,
     NULLIF(current_setting('symphony.outbox_retry_ceiling', true), '')::int,
     ON CONFLICT (participant_id)
     ON CONFLICT (tenant_id, person_id, from_program_id, to_program_id) DO NOTHING;
@@ -703,6 +738,7 @@
     RAISE EXCEPTION 'anchor operation worker mismatch' USING ERRCODE = 'P7212';
     RAISE EXCEPTION 'anchor operation worker mismatch' USING ERRCODE = 'P7212';
     RAISE EXCEPTION 'anchor reference is required' USING ERRCODE = 'P7211';
+    RAISE EXCEPTION 'approval timeout must be positive';
     RAISE EXCEPTION 'approval timeout must be positive';
     RAISE EXCEPTION 'dispatch requires rail sequence reference'
     RAISE EXCEPTION 'duplicate migration call for tenant %, person %, from %, to %',
@@ -733,6 +769,7 @@
     RAISE EXCEPTION 'member_device_event % not found', p_event_id
     RAISE EXCEPTION 'member_id not found'
     RAISE EXCEPTION 'new_entity_id must equal to_program_id'
+    RAISE EXCEPTION 'no program available for supervisor approval submission';
     RAISE EXCEPTION 'pack_id is required' USING ERRCODE = 'P7210';
     RAISE EXCEPTION 'participant-to-program linkage invalid'
     RAISE EXCEPTION 'payment_outbox_attempts is append-only'
@@ -782,6 +819,9 @@
     SELECT p.outbox_id, p.sequence_id, p.created_at
     SELECT s.alert_id
     SET program_id = EXCLUDED.program_id,
+    SET program_id = EXCLUDED.program_id,
+    SET search_path TO 'pg_catalog', 'public'
+    SET search_path TO 'pg_catalog', 'public'
     SET search_path TO 'pg_catalog', 'public'
     SET search_path TO 'pg_catalog', 'public'
     SET search_path TO 'pg_catalog', 'public'
@@ -843,6 +883,8 @@
     anchored_at timestamp with time zone,
     api_access boolean NOT NULL,
     applied_at timestamp with time zone DEFAULT now() NOT NULL
+    approved_at timestamp with time zone,
+    approved_by text,
     artifact_hash text NOT NULL,
     artifact_path text,
     attempt_count integer DEFAULT 0 NOT NULL,
@@ -936,6 +978,7 @@
     current_user,
     db_access boolean NOT NULL,
     decided_at timestamp with time zone,
+    decided_at, decided_by, decision_reason, approved_by, approved_at
     decided_by text,
     decision_reason text,
     derived_at
@@ -1001,6 +1044,7 @@
     grace_expires_at timestamp with time zone,
     hash_algorithm text,
     held_at timestamp with time zone DEFAULT now() NOT NULL,
+    held_reason text,
     hold_timeout_minutes integer,
     iccid_hash text,
     iccid_hash text,
@@ -1023,6 +1067,7 @@
     instruction_id text NOT NULL,
     instruction_id uuid NOT NULL,
     instruction_id,
+    instruction_id, program_id, status, held_at, held_reason, timeout_at, submitted_by,
     instruction_id, program_id, status, held_at, timeout_at, decided_at, decided_by, decision_reason
     is_active boolean DEFAULT true NOT NULL,
     is_active boolean DEFAULT true NOT NULL,
@@ -1111,6 +1156,8 @@
     p_escrow_id => p_escrow_id,
     p_escrow_id => v_reservation_escrow_id,
     p_from_program_id,
+    p_held_reason,
+    p_instruction_id,
     p_instruction_id, p_program_id, 'PENDING_SUPERVISOR_APPROVAL', NOW(), NOW() + make_interval(mins => v_timeout), NULL, NULL, NULL
     p_metadata => COALESCE(p_metadata, '{}'::jsonb),
     p_metadata => COALESCE(p_metadata, '{}'::jsonb),
@@ -1119,6 +1166,7 @@
     p_now => NOW()
     p_now => NOW()
     p_person_id,
+    p_program_id,
     p_purge_request_id,
     p_reason => COALESCE(p_reason, 'reservation_authorized'),
     p_reason => p_reason,
@@ -1274,6 +1322,7 @@
     subject_token text NOT NULL,
     subject_token text NOT NULL,
     subject_token,
+    submitted_by text,
     taxable_amount_minor bigint,
     tenant_id uuid DEFAULT gen_random_uuid() NOT NULL,
     tenant_id uuid NOT NULL,
@@ -1358,6 +1407,7 @@
     v_source_member.status,
     v_source_member.tenant_id,
     v_source_member.tenant_member_id,
+    v_submitted_by,
     v_to_state,
     vault_id uuid DEFAULT public.uuid_v7_or_random() NOT NULL,
     verification_hash text,
@@ -1387,6 +1437,7 @@
   )
   )
   )
+  )
   ) AS t;
   ) THEN
   ) THEN
@@ -1398,6 +1449,7 @@
   ) THEN
   ) THEN
   ) THEN
+  ) VALUES (
   ) VALUES (
   ) VALUES (
   ) VALUES (
@@ -1495,6 +1547,8 @@
   END IF;
   END IF;
   END IF;
+  END IF;
+  END IF;
   END LOOP;
   END;
   END;
@@ -1525,6 +1579,7 @@
   FROM public.members m
   FROM public.pii_purge_events e
   FROM public.pii_purge_requests r
+  FROM public.programs
   FROM public.risk_formula_versions rf
   FROM public.risk_formula_versions rf
   FROM public.risk_formula_versions rf
@@ -1594,10 +1649,12 @@
   IF v_op.state NOT IN ('ANCHORING', 'ANCHORED') THEN
   IF v_operation_id IS NULL THEN
   IF v_prior_iccid_hash IS NULL THEN
+  IF v_program_id IS NULL THEN
   IF v_row.state IN ('RELEASED', 'CANCELED', 'EXPIRED') THEN
   IF v_sequence_ref IS NULL THEN
   IF v_source_state <> 'SETTLED' OR v_source_final IS DISTINCT FROM TRUE THEN
   IF v_target_member_id IS NULL THEN
+  IF v_timeout <= 0 THEN
   IF v_timeout <= 0 THEN
   IF v_to_state NOT IN ('CREATED', 'AUTHORIZED', 'RELEASE_REQUESTED', 'RELEASED', 'CANCELED', 'EXPIRED') THEN
   IF v_worker IS NULL THEN
@@ -1613,6 +1670,7 @@
   INSERT INTO public.rail_dispatch_truth_anchor(
   INSERT INTO public.sim_swap_alerts(
   INSERT INTO public.supervisor_approval_queue(
+  INSERT INTO public.supervisor_approval_queue(
   INTO v_env
   INTO v_event
   INTO v_event_id
@@ -1621,12 +1679,14 @@
   INTO v_formula_version_id
   INTO v_prior
   INTO v_prior_iccid_hash
+  INTO v_program_id
   INTO v_row
   INTO v_source_member
   INTO v_source_member
   INTO v_source_state, v_source_final
   INTO v_subject_token
   INTO v_target_member_id
+  LIMIT 1;
   LIMIT 1;
   LIMIT 1;
   LIMIT 1;
@@ -1644,9 +1704,11 @@
   NEW.updated_at := NOW();
   NEW.updated_at := NOW();
   ON CONFLICT (instruction_id) DO UPDATE
+  ON CONFLICT (instruction_id) DO UPDATE
   ON CONFLICT (pack_id) DO NOTHING
   ON CONFLICT (source_event_id) DO NOTHING
   ON CONFLICT ON CONSTRAINT ux_pii_purge_events_request_event
+  ORDER BY created_at ASC
   ORDER BY m.enrolled_at DESC
   ORDER BY m.enrolled_at DESC
   ORDER BY md.created_at DESC, md.device_id_hash DESC
@@ -1655,6 +1717,7 @@
   ORDER BY rf.created_at DESC
   ORDER BY rf.created_at DESC
   PERFORM 1
+  PERFORM public.submit_for_supervisor_approval(p_instruction_id, v_program_id, 30, NULL, 'system');
   PERFORM set_config('symphony.allow_pii_purge', 'on', true);
   RAISE EXCEPTION 'member_device_events is append-only'
   RAISE EXCEPTION 'pii_vault_records is non-deletable'
@@ -1707,6 +1770,7 @@
   SELECT m.member_id
   SELECT md.iccid_hash
   SELECT p.outbox_id
+  SELECT program_id
   SELECT r.subject_token
   SELECT rf.formula_version_id
   SELECT rf.formula_version_id
@@ -1764,6 +1828,7 @@
   derived_billable_client_id UUID;
   derived_tenant_id UUID;
   m_tenant uuid;
+  v_actor TEXT := COALESCE(NULLIF(BTRIM(COALESCE(p_actor, '')), ''), 'system');
   v_actor TEXT := COALESCE(NULLIF(BTRIM(p_actor_id), ''), 'system');
   v_actor TEXT := COALESCE(NULLIF(BTRIM(p_actor_id), ''), 'system');
   v_actor TEXT := COALESCE(NULLIF(BTRIM(p_migrated_by), ''), current_user);
@@ -1791,6 +1856,7 @@
   v_prior_iccid_hash TEXT;
   v_profile := COALESCE(NULLIF(BTRIM(NEW.rail_type), ''), 'GENERIC');
   v_profile TEXT;
+  v_program_id UUID;
   v_reason TEXT := COALESCE(NULLIF(BTRIM(p_reason), ''), 'program_migration');
   v_reason TEXT := NULLIF(BTRIM(COALESCE(p_reason, '')), '');
   v_request_id UUID;
@@ -1804,7 +1870,9 @@
   v_source_member public.members%ROWTYPE;
   v_source_state TEXT;
   v_subject_token TEXT;
+  v_submitted_by TEXT := COALESCE(NULLIF(BTRIM(COALESCE(p_submitted_by, '')), ''), 'system');
   v_target_member_id UUID;
+  v_timeout INTEGER := COALESCE(p_timeout_minutes, 30);
   v_timeout INTEGER := COALESCE(p_timeout_minutes, 30);
   v_to_state TEXT := UPPER(BTRIM(COALESCE(p_to_state, '')));
   v_worker TEXT := NULLIF(BTRIM(p_worker_id), '');
@@ -1815,6 +1883,8 @@
  SELECT m.entity_id AS program_id,
  SELECT tenant_id,
  leased AS (
+$$;
+$$;
 $$;
 $$;
 $$;
@@ -2073,6 +2143,8 @@ BEGIN
 BEGIN
 BEGIN
 BEGIN
+BEGIN
+BEGIN
 CREATE FUNCTION public.anchor_dispatched_outbox_attempt() RETURNS trigger
 CREATE FUNCTION public.authorize_escrow_reservation(p_program_escrow_id uuid, p_amount_minor bigint, p_actor_id text DEFAULT 'system'::text, p_reason text DEFAULT NULL::text, p_metadata jsonb DEFAULT '{}'::jsonb) RETURNS uuid
 CREATE FUNCTION public.bump_participant_outbox_seq(p_participant_id text) RETURNS bigint
@@ -2107,7 +2179,9 @@ CREATE FUNCTION public.repair_expired_leases(p_batch_size integer, p_worker_id t
 CREATE FUNCTION public.request_pii_purge(p_subject_token text, p_requested_by text, p_request_reason text) RETURNS uuid
 CREATE FUNCTION public.set_correlation_id_if_null() RETURNS trigger
 CREATE FUNCTION public.set_external_proofs_attribution() RETURNS trigger
+CREATE FUNCTION public.submit_for_supervisor_approval(p_instruction_id text) RETURNS void
 CREATE FUNCTION public.submit_for_supervisor_approval(p_instruction_id text, p_program_id uuid, p_timeout_minutes integer DEFAULT 30) RETURNS void
+CREATE FUNCTION public.submit_for_supervisor_approval(p_instruction_id text, p_program_id uuid, p_timeout_minutes integer DEFAULT 30, p_held_reason text DEFAULT NULL::text, p_submitted_by text DEFAULT NULL::text) RETURNS void
 CREATE FUNCTION public.touch_anchor_sync_updated_at() RETURNS trigger
 CREATE FUNCTION public.touch_escrow_envelopes_updated_at() RETURNS trigger
 CREATE FUNCTION public.touch_escrow_updated_at() RETURNS trigger
@@ -2288,6 +2362,10 @@ DECLARE
 DECLARE
 DECLARE
 DECLARE
+DECLARE
+DECLARE
+END;
+END;
 END;
 END;
 END;

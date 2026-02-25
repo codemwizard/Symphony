@@ -8,4 +8,5 @@ allow:
     allowed_verifiers:
       - "scripts/db/verify_hier_009_instruction_hierarchy_sqlstates.sh"
       - "scripts/db/verify_hier_010_program_migration.sh"
-    justification: "TSK-P1-HIER-009 and TSK-P1-HIER-010 add deterministic SQLSTATE and program-migration evidence verifiers under the same regulated-surface governance invariant."
+      - "scripts/audit/verify_hier_011_supervisor_access_mechanisms.sh"
+    justification: "TSK-P1-HIER-009/010/011 add deterministic hierarchy and supervisor-access evidence verifiers under the same regulated-surface governance invariant."

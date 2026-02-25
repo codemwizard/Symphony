@@ -80,6 +80,9 @@ registry:
   scripts/db/verify_hier_010_program_migration.sh:
     emits:
       - evidence/phase1/hier_010_program_migration.json
+  scripts/audit/verify_hier_011_supervisor_access_mechanisms.sh:
+    emits:
+      - evidence/phase1/hier_011_supervisor_access_mechanisms.json
   scripts/audit/verify_drd_policy_usage.sh:
     emits:
       - evidence/phase0/drd_policy_usage.json
