@@ -1,0 +1,419 @@
+I’ll inspect the repomix snapshot to enumerate what Phase-0 already enforces (DB, invariants, CI gates, evidence), then flag concrete gaps/weaknesses and Phase-0-friendly additions that strengthen later features without scope creep.
+
+
+Here’s what I can say **based on the repomix snapshot you uploaded** (important caveat: the snapshot *lists* some files in the directory tree that are **not actually present in the captured file contents**, so I can’t review those missing scripts/workflows directly).
+
+## What you already have in Phase 0 that’s genuinely strong
+
+### 1) DB-as-source-of-truth foundation is real (not “hand-wavy”)
+
+* Forward-only migrations with a **migration ledger** (`schema_migrations`) + checksum immutability controls.
+* A hard **deny-by-default posture** in grants (`0004_privileges.sql`) + “no runtime DDL” enforced.
+* `SECURITY DEFINER` functions with pinned `search_path` + linting to prevent unsafe search_path usage.
+
+### 2) Option 2A outbox core is correctly shaped
+
+* `payment_outbox_pending` as the hot queue with:
+
+  * leases (`claimed_by`, `lease_token`, `lease_expires_at`)
+  * due scheduling (`next_attempt_at`)
+  * idempotency uniqueness (`(instruction_id, idempotency_key)`)
+* `payment_outbox_attempts` as the append-only history ledger.
+* Claiming uses `FOR UPDATE SKIP LOCKED` correctly.
+* Completion is fenced on `(worker_id + lease_token + unexpired lease)` and writes an append-only attempt row.
+
+### 3) CI gate script is doing “real enforcement”
+
+Your `scripts/db/ci_invariant_gate.sql` is not superficial: it checks:
+
+* required relations exist
+* boot-query compatibility (`policy_versions.is_active`)
+* PUBLIC privilege absence (both via info_schema and ACL inspection)
+* “no schema CREATE” for PUBLIC and runtime roles
+* existence of append-only trigger function + trigger for attempts
+
+That’s the correct “mechanical invariants” posture.
+
+---
+
+## Phase 0 weaknesses / gaps that matter (and are worth fixing now)
+
+### A) **Missing performance indexes on `payment_outbox_pending` (high-impact)**
+
+Your claim query is:
+
+```sql
+WHERE next_attempt_at <= NOW()
+  AND (lease_expires_at IS NULL OR lease_expires_at <= NOW())
+ORDER BY next_attempt_at, created_at
+LIMIT ...
+FOR UPDATE SKIP LOCKED
+```
+
+But in `0001_init.sql` I only see indexes on **attempts**, not on **pending**.
+
+**Why it matters:** even at Zambia-scale TPS, a hot queue table can bloat quickly and a sequential scan on every worker poll is exactly how Postgres “DB-as-queue” systems start choking.
+
+**Phase 0 fix (recommended):**
+Add a migration that introduces a due-claim index, typically one of:
+
+* `(next_attempt_at, created_at)` (simple)
+* or a **partial index** that targets “claimable” rows (better)
+
+Example:
+
+```sql
+CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_pending_due_claim
+ON payment_outbox_pending (next_attempt_at, created_at)
+WHERE lease_expires_at IS NULL OR lease_expires_at <= NOW();
+```
+
+Also consider indexing `lease_expires_at` alone if you run repair queries frequently.
+
+---
+
+### B) **Terminal uniqueness is not enforced at the DB level (defense-in-depth gap)**
+
+Right now, correctness is mostly ensured because:
+
+* completion locks the pending row and then deletes it on terminal state
+* runtime roles don’t have direct DML
+
+That’s *good*, but **Tier-1 posture wants a second line of defense** so even privileged misuse or a future bug can’t produce two successful terminalizations.
+
+**Phase 0 fix (recommended):**
+Add a **partial unique index** on terminal success (at minimum `DISPATCHED`):
+
+```sql
+CREATE UNIQUE INDEX CONCURRENTLY IF NOT EXISTS ux_attempts_one_dispatched_per_outbox
+ON payment_outbox_attempts(outbox_id)
+WHERE state = 'DISPATCHED';
+```
+
+If you later add manual-review states, you can decide what counts as “terminal” and lock accordingly.
+
+---
+
+### C) Pending table churn → MVCC bloat risk (needs explicit posture)
+
+`payment_outbox_pending` is a **high-churn UPDATE-heavy** table (leases, retries). That’s normal—but Phase 0 should explicitly harden for it.
+
+**Phase 0 improvements (small but meaningful):**
+
+* Set `fillfactor` (helps reduce page splits):
+
+  ```sql
+  ALTER TABLE payment_outbox_pending SET (fillfactor = 80);
+  ```
+* Add a documented vacuum strategy (even if just a doc + recommended settings for dev/staging).
+* Decide early whether you’re keeping **hot/archive split** (you currently are: pending=hot, attempts=archive). Good—keep it explicit.
+
+---
+
+### D) “No DB as queue” is not enforceable yet (it’s only a philosophy)
+
+Right now, you *are* using Postgres as the queue (which is fine at your scale), but you haven’t built the mitigations that make it “safe enough”:
+
+* indexes (covered above)
+* **wake-up strategy** (avoid tight polling)
+* explicit “wake-up latency” expectations
+
+**Phase 0 / Phase 1.5-friendly improvement:**
+Add `LISTEN/NOTIFY` as a *wakeup* (not as the delivery mechanism).
+That means: enqueue emits a notify; workers still claim via `SKIP LOCKED`. This reduces polling load drastically.
+
+---
+
+### E) Your repo snapshot shows doc drift that will cause agent drift
+
+Example: `docs/overview/architecture.md` still references future Node packages/services.
+
+If you’re enforcing “.NET 10 only”, this is not cosmetic—**this is how agents hallucinate the wrong implementation**.
+
+**Phase 0 fix:** update docs/overview + ADRs to match the actual direction.
+
+---
+
+### F) Several Phase-0 planned scripts appear missing (real gap)
+
+Earlier you showed tasks failing because scripts like:
+
+* `scripts/security/openbao_bootstrap.sh`
+* `scripts/security/openbao_smoke_test.sh`
+* `scripts/security/lint_ddl_lock_risk.sh`
+* `scripts/audit/verify_batching_rules.sh`
+* `scripts/audit/verify_routing_fallback.sh`
+  weren’t found.
+
+In the repomix contents I can see some audit/security scripts, but not those ones. If they truly don’t exist yet, **they’re not “nice-to-have” if tasks refer to them**—the task system must either:
+
+* create them, or
+* not reference them until they exist.
+
+This is a process weakness, not a DB weakness, but it’s a Phase 0 execution risk.
+
+---
+
+## Phase-0 additions that strengthen later phases without scope creep
+
+### 1) Add “ingress attestation evidence stubs” at schema level (minimal, future-proof)
+
+Even if you don’t implement full ingress yet, **create the immutable audit record shape now** so later services don’t invent it inconsistently.
+
+A Phase-0-friendly version is a table like `ingress_attestations` with:
+
+* `instruction_id`, `tenant_id/participant_id`
+* `received_at`, `request_hash`
+* `client_cert_fingerprint` (or `kid`)
+* `signature_alg`, `signature`
+* `decision` (accepted/rejected) + reason code
+
+Make it append-only like attempts.
+
+This directly supports BoZ audit posture later.
+
+### 2) Partition strategy for archive tables (plan + optional early enablement)
+
+`payment_outbox_attempts` will grow forever. Even at “low TPS”, it’s forever.
+You don’t need to implement partitioning now, but Phase 0 should:
+
+* declare retention/archival policy
+* define the partition key you will use (usually time or `completed_at`)
+* ensure queries don’t assume a single heap forever
+
+### 3) “Blocking DDL” policy for migrations
+
+You already lint `BEGIN/COMMIT` and `search_path`. Add migration linting for:
+
+* `CREATE INDEX` must be `CONCURRENTLY` on hot tables
+* forbid `ALTER TABLE ... SET NOT NULL` on large/hot tables unless in controlled expand/contract pattern
+* forbid table rewrites without a shadow-copy strategy
+
+That protects you from the most common Postgres production outage class.
+
+---
+
+## Bottom-line grade for Phase 0 (as implemented in the snapshot)
+
+**Foundation strength:** A- (serious invariants posture, good DB API design)
+**Biggest Phase-0 risk:** queue performance + drift between “task definitions” and “scripts that exist”
+**Most important Phase-0 upgrades:**
+
+1. index `payment_outbox_pending` for due-claim
+2. add terminal uniqueness partial index
+3. add MVCC/bloat posture (fillfactor + vacuum plan)
+4. eliminate doc drift that points agents back to Node
+5. ensure every Phase-0 task’s “verification script” actually exists (or stop referencing it)
+
+If you want, I can turn the above into a **Phase-0 punchlist** (each item: files touched + invariant ID + definition of done) that your worker agents can implement without guessing.
+
+
+
+
+
+
+
+
+
+
+Based on an analysis of your Phase 0 implementation (`repomix-output.xml`) and the technical documentation provided, you have established one of the most robust "Security by Design" foundations I have seen for a payment engine. Your use of **Mechanical Invariants** and **Locked DB Roles** effectively eliminates the most common "Day 0" vulnerabilities (e.g., privilege escalation, accidental DDL, and direct table mutation).
+
+However, for a Tier-1 banking platform, there are three specific "structural gaps" and two "future-proofing" implementations that should be addressed before you exit Phase 0 and begin Phase 1.
+
+### **1. Major Weakness: The "Ingress-to-Core" Blind Spot**
+
+While your **Outbox** and **Policy** invariants are strong, your current Phase 0 schema lacks the "starting point" for the chain of trust.
+
+* **The Issue:** You have implemented `INV-010` (Append-only attempts), but there is no table to record the **Ingress Attestation** that authorized that attempt.
+* **The Risk:** An auditor can see *what* the system did (Outbox), but they cannot query the database to prove *why* the system accepted the request (the JWT/mTLS proof).
+* **Recommendation:** Add a `0007_ingress_attestation_schema.sql` now. Even if it's just a skeleton, it ensures that your Phase 1 .NET code has a "Durable Record" to write to on its first day.
+
+### **2. Omission: "No-Node-in-Core" Mechanical Enforcement**
+
+Your `Secure_Coding_Policy.md` explicitly forbids non-.NET code in the core execution path.
+
+* **The Issue:** I found no CI gate (like a `lint_runtime_boundaries.sh`) that actually scans `src/Symphony.Core` to fail a build if it detects `.js`, `.ts`, or `package.json` files.
+* **Recommendation:** Implement a "Boundary Guard" task. This script should verify that only allowed file extensions exist in the C# project folders to prevent "Shadow Code" from creeping in.
+
+### **3. Implementation Gap: Failure Physics Verification**
+
+Your roadmap mentions "Load Shedding" and "Fail-Closed" behavior, but your Phase 0 invariants don't test the **Database Connection Pool Invariant**.
+
+* **The Issue:** If the DB connection pool is exhausted, does the system fail-closed (reject with 503) or hang? Tier-1 compliance requires a deterministic answer.
+* **Recommendation:** Add a **Failure-Mode Invariant** (`INV-028`). This should be a script that simulates a DB lockout and verifies that the `generate_evidence.sh` tool correctly records a "FAIL-CLOSED" state rather than a silent timeout.
+
+### **Strengthening for Later Phases (Future-Proofing)**
+
+To ensure your system scales to **Phase 2 (Executor Core)** and beyond, I recommend adding these two items to your Phase 0 checklist:
+
+1. **Persistent Revocation Table (`revoked_client_certs`)**:
+* As we discussed regarding "Revocation not in-memory," your Phase 0 schema should include this table. This allows your .NET 10 mTLS middleware to perform a sub-millisecond check against a durable source of truth rather than relying on external OCSP checks that might be down.
+
+
+2. **Schema Fingerprint in Evidence**:
+* Update `generate_evidence.sh` to include a `schema_sha256`. Use a tool like `pg_dump --schema-only` to hash the entire structure. This provides a "Root of Trust" for auditors—they can prove that the evidence collected was generated against the *exact* locked schema they approved.
+
+
+
+### **Summary of Analysis**
+
+| Component | Status | Action |
+| --- | --- | --- |
+| **DB Role Lock** | ✅ Strong | Revoke `PUBLIC` on all new tables automatically. |
+| **Outbox Safety** | ✅ Strong | `INV-010` ensures attempts cannot be "airbrushed." |
+| **Ingress Proof** | ❌ Missing | **Critical:** Add `ingress_attestations` table. |
+| **Runtime Boundary** | ⚠️ Policy Only | Add CI gate to block Node.js in core paths. |
+
+**I recommend you add one final task to Phase 0: `TSK-P0-020 | INGRESS_FOUNDATION` to seed the attestation and revocation tables.** Do you want me to draft the SQL for that migration?
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+This review is **mostly valid** and points in the right direction for “Tier-1 or bust.” A few items need tightening/clarification so you don’t accidentally add Phase-1 runtime concerns into Phase-0 in a way that becomes busywork or false assurance.
+
+(Quick note: some earlier files you uploaded in this chat environment have expired, so I can’t re-open everything you previously shared here. The comments below are based on what you pasted plus the Phase-0 posture we’ve been working toward.)
+
+---
+
+## What’s solid and worth adopting as-is
+
+### 1) “Ingress-to-Core blind spot” — **valid**
+
+If Phase-0 is establishing a **chain of trust**, then “outbox attempts exist” without a durable, queryable “why we accepted this instruction” record is a real audit gap.
+
+**What I’d change:** don’t call it “JWT/mTLS proof table” loosely. Make it a **durable attestation record** that stores hashes and identifiers (not sensitive payloads). That keeps PCI/PII risk down.
+
+✅ **Phase-0 appropriate:** adding a schema skeleton migration is correct.
+
+### 2) “Schema fingerprint in evidence” — **valid**
+
+Anchoring evidence to:
+
+* `git_sha`
+* `schema_sha256` (from deterministic schema dump)
+  is a Tier-1 friendly improvement and aligns perfectly with your “evidence is not logs” discipline.
+
+✅ **Phase-0 appropriate:** yes. This is governance and tooling, not runtime.
+
+### 3) Persistent revocation table — **valid direction, but needs precision**
+
+“Not in-memory” revocation is a valid requirement. A durable revocation store is useful, especially for:
+
+* client cert fingerprints you want to block immediately,
+* API key/JWT key IDs you want to invalidate.
+
+But the reviewer’s phrasing (“sub-millisecond check rather than OCSP”) can be misleading: **you still need a real PKI revocation story** (CRL/OCSP) for certificates unless you control issuance tightly.
+
+✅ **Phase-0 appropriate:** create durable tables + invariants around them.
+⚠️ **But:** treat it as an *overlay deny list* (local override), not “we don’t need PKI revocation.”
+
+---
+
+## What needs correction or reframing
+
+### 4) “No-Node-in-Core mechanical enforcement” — **mostly valid, but don’t overfit**
+
+A boundary guard is good if you’re truly committing to “.NET-only core.” However:
+
+* If your repo currently still contains tooling in Node (or you still plan Node periphery), a blanket “ban package.json anywhere” will cause unnecessary pain.
+* What you actually want is: **ban Node/TS in designated core folders** (executor/ledger/orchestration), not in the entire repo.
+
+✅ Keep the idea.
+🔧 Reframe as: **path-scoped boundary enforcement**.
+
+Example policy:
+
+* `src/Symphony.Core/**` and `src/Symphony.Executor/**` → allow only `.cs`, `.csproj`, `.sln`, `.json`, `.md`, etc.
+* `tools/**` or `scripts/**` can be exempt if needed.
+
+### 5) “Failure Physics verification (DB pool invariant)” — good goal, but Phase-0 may be too early
+
+This one is conceptually correct: Tier-1 systems must behave deterministically under DB distress.
+
+But in Phase-0 you likely don’t have the actual ingress API/middleware yet, so you can’t truthfully test “return 503 vs hang” at runtime.
+
+✅ What you *can* do in Phase-0:
+
+* Define the invariant now (so it can’t be forgotten).
+* Build the scaffolding to test it later (harness shape, evidence format).
+* Add a **Phase-0 gate that prevents claiming “implemented”** until runtime exists.
+
+🔧 So: keep “INV-028” but mark it `status: roadmap` unless you actually have a running .NET ingress service to test.
+
+---
+
+## Small technical inaccuracies / nitpicks you should correct
+
+* It says “you implemented INV-010 append-only attempts” — in your earlier manifest numbering, the outbox/append-only invariants were in the INV-011..INV-015 range. The **concept** is right, but the reference number is likely wrong. Fixing this matters because agents will drift if IDs mismatch.
+* “Revoke PUBLIC on all new tables automatically” is best done via:
+
+  * `ALTER DEFAULT PRIVILEGES REVOKE ... FROM PUBLIC;` (per role/schema), plus
+  * CI gate checks like you already have.
+
+---
+
+## What I would add to Phase-0 based on this review
+
+### A) Add **Ingress Attestation schema skeleton** now
+
+Migration `0007_ingress_attestation_schema.sql` (name is fine). Include:
+
+* `ingress_requests` (or `ingress_attestations`) as append-only
+* store:
+
+  * `request_id` / `instruction_id`
+  * `tenant_id` / `participant_id`
+  * `received_at`
+  * `payload_hash` (sha256)
+  * `auth_method` enum (mTLS/JWS/JWT/APIKEY/etc)
+  * `client_cert_fingerprint` (nullable)
+  * `key_id` / `jwt_iss` / `jti` (nullable)
+  * `decision` (accepted/rejected)
+  * `reason_code`
+
+And **do not** store raw payloads or secrets.
+
+### B) Add **durable revocation tables**
+
+Two tables are usually enough:
+
+* `revoked_client_certs(fingerprint, revoked_at, reason, revoked_by)`
+* `revoked_tokens(jti or key_id, revoked_at, reason, revoked_by)`
+
+Later, Phase-1 ingress middleware checks these.
+
+### C) Add **core-boundary guard** as a mechanical gate
+
+A script that checks only your “core paths” for forbidden artifacts.
+
+### D) Keep “DB distress behavior” as a defined invariant but don’t claim it’s implemented
+
+Add it as a Phase-1 implementation task if runtime isn’t present yet.
+
+---
+
+## Verdict on the pasted review
+
+* **Correct & important:** ingress attestation durable record, evidence anchoring with schema hash, durable revocation (with caveats), boundary enforcement (if scoped).
+* **Needs adjustment:** the “DB pool fail-closed test” should not be represented as Phase-0 “implemented” unless you actually have runtime to test; it belongs as defined-now / implemented-later.
+
+---
+
+If you want the fastest next step: I can draft the **Phase-0 task card** for `TSK-P0-020 | INGRESS_FOUNDATION` (schema + invariants + CI checks) with Definitions of Done, without writing full runtime code.

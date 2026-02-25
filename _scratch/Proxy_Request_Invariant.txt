@@ -1,0 +1,242 @@
+Yes — you *probably* need the Proxy-ID resolution flow **eventually**, but you don’t need to fully implement the external integration in Phase 0 unless your Phase 0 deliverable explicitly includes a “Proxy/Alias payment pilot”. What you *do* need in Phase 0–2 is to make sure the **data model + invariants** don’t paint you into a corner, and that the “chain of trust” is auditable from day one.
+
+Below is the practical way to treat it in your current Symphony-style foundation (Postgres 18+, policy-as-code, append-only evidence, outbox with SKIP LOCKED, batching as an invariant).
+
+---
+
+## Do we need Proxy ID resolution?
+
+### You need it if any of these are true
+
+1. **Your product promises “alias-based” beneficiary addressing** (mobile number, TPIN, etc.) instead of account numbers.
+2. **Your regulator / partner requires traceability of the beneficiary identity** before dispatch (“ghost beneficiary” avoidance).
+3. **Your customers will send you instructions where beneficiary identity is not self-contained** (i.e., requires a registry lookup).
+
+### You don’t need it *yet* if
+
+* Phase 0–2 is strictly “evidence-grade exception containment for NFS transactions” and you’re not actually dispatching or validating against a real registry yet.
+
+But even then, you still want the *schema hooks* and *invariant placeholders* early, because retrofitting identity provenance into an append-only audit story is painful and error-prone.
+
+---
+
+## What to add, and when (Phase 0 → Phase 2)
+
+### Phase 0 (Foundation): **Declare + scaffold**
+
+**Goal:** Make Proxy ID support “architecturally inevitable” without requiring external dependencies.
+
+What to do now:
+
+* **Add schema fields/tables that can record Proxy resolution evidence** (even if the resolver is not implemented).
+* Add an invariant in **roadmap** status that states the rule clearly (“proxy must be resolved before enqueue/dispatch”), but mark it not implemented until you have a mock registry and a real resolver.
+
+This avoids two failure classes later:
+
+* “We can’t prove who the beneficiary was at ingress.”
+* “We resolved proxy in memory but didn’t store proof; audit trail is broken.”
+
+### Phase 1 (Ingress): **Implement the resolver boundary + durable proof**
+
+**Goal:** Ingress can accept alias identifiers, resolve them via a controlled mechanism, and store durable proof.
+
+What becomes implemented:
+
+* A *resolver component* (mock in dev/sandbox, real in staging/prod) that:
+
+  * returns a canonical beneficiary identity
+  * returns the “proof metadata” (version, source, reference id)
+* An append-only record that ties:
+
+  * the incoming instruction
+  * the client identity / attestation
+  * the proxy identifier
+  * the resolution outcome
+
+### Phase 2 (Orchestration/Executor): **Enforce “no dispatch without resolution”**
+
+**Goal:** The outbox/executor path refuses to dispatch unless proxy identity has a durable, verified resolution record.
+
+This is where you flip the invariant from “roadmap” to “implemented”:
+
+* CI/mechanical checks confirm the schema + constraints exist
+* Integration tests confirm you cannot enqueue/dispatch without resolution
+* Evidence artifacts prove the failure mode is fail-closed
+
+---
+
+## Where the invariant belongs
+
+### The key rule you’re trying to enforce
+
+There are two different “moments” you can enforce Proxy resolution:
+
+1. **Before enqueue** (strongest)
+
+* You do not create an outbox item until the beneficiary alias is resolved.
+* This reduces downstream ambiguity, but requires the resolver to be available for ingestion.
+
+2. **Before dispatch** (more tolerant)
+
+* You accept and durably record the instruction *first*, but you refuse to dispatch until resolution is complete.
+* This can be friendlier when the registry is intermittent, but creates a new internal state (“awaiting resolution”).
+
+Given your architecture goals (durable ACK, strict auditability, “no ghost ACK”), the cleanest compromise is:
+
+* **Durably record ingress always** (attestation + instruction accepted into your system-of-record),
+* **but do not enqueue to the dispatch outbox until resolution is successful**.
+
+That keeps your ACK semantics honest: *“We accepted the request into our evidence-grade ledger”* without pretending dispatch is possible yet.
+
+---
+
+## Concrete “best guess” for your system (repo-aligned)
+
+### What “durable record per payment” means (in your context)
+
+A “durable record per payment” is **one immutable, queryable row** (or small set of rows) that exists *even if everything else fails* and that can answer:
+
+* Who sent it? (client identity, certificate fingerprint, token jti hash)
+* What was requested? (payload hash / canonical fields)
+* When did we accept responsibility? (committed timestamp)
+* What did we do next? (outbox linkage, attempts ledger)
+* Why did we accept it? (policy version hash, attestation proof)
+
+You already do this pattern for outbox attempts (append-only). Proxy resolution should follow the same philosophy: *store the proof, not just the result.*
+
+---
+
+## Proposed Proxy resolution invariant (how to write it)
+
+### Add as **roadmap** in Phase 0
+
+**INV-0xx (Roadmap)** — *Proxy/Alias identity must be resolved before dispatch*
+
+* **title:** Proxy/Alias identity resolution is mandatory for alias-addressed instructions
+* **definition:** For any instruction where beneficiary is expressed as an alias (mobile number / TPIN / proxy id), the system must produce a durable resolution record tying the alias → canonical beneficiary identity before an outbox item can be dispatched.
+* **verification (roadmap):** Placeholder harness + schema presence checks. Implemented when resolver exists.
+* **evidence:** A JSON artifact proving the invariant is declared and gated (roadmap), and later proving it is enforced (implemented).
+
+### Flip to **implemented** in Phase 1–2
+
+Once you have:
+
+* resolver stub/mock
+* schema for resolution records
+* tests that prove dispatch is blocked without resolution
+* evidence emission
+
+---
+
+## Schema: what you should design from the start (Phase 0)
+
+Even before you connect to any external registry, design tables so you can support:
+
+* fast lookup (hot path)
+* append-only audit
+* revocation linkage
+* future re-resolution / change events without “updating history”
+
+### Minimum durable records to support later phases
+
+1. **ingress_attestations** (you already planned)
+   Add fields that make audits real:
+
+* `instruction_id`
+* `participant_id` (or equivalent tenant/client identifier)
+* `client_id_hash` (stable external client identifier hashed)
+* `cert_fingerprint_sha256` (mTLS)
+* `token_jti_hash` (JWT/JTI or API token id)
+* `request_hash_sha256` (payload hash)
+* `policy_version_id` + `policy_checksum`
+* timestamps
+
+2. **proxy_resolutions** (new, append-only)
+   Append-only rows, not “current state” updates:
+
+* `instruction_id`
+* `proxy_type` (mobile/tpin/etc.)
+* `proxy_value_hash` (never store raw if it’s sensitive)
+* `resolved_beneficiary_ref` (canonical identity reference)
+* `resolver_source` (mock/sandbox/prod)
+* `resolver_version`
+* `resolution_status` (RESOLVED / NOT_FOUND / TEMP_UNAVAILABLE)
+* `observed_at`
+
+3. Optional: **proxy_resolution_current** (hot/current)
+   If you want fast “is resolved?” checks without scanning append-only history, keep a tiny “current” table that is safe to update, but treat it as *derived*, not authoritative:
+
+* updated only by DB API functions
+* purely a cache/index layer
+* can be rebuilt from append-only `proxy_resolutions`
+
+This matches your Hot/Archive split mindset: append-only history for audit, small hot table for speed.
+
+---
+
+## Failure behavior: what happens if the Proxy registry is down?
+
+This is where payment systems get dangerous, so you need a policy decision:
+
+### Safe default (recommended)
+
+* If proxy resolution is required for that instruction type:
+
+  * **Durably record the ingress** (attestation + instruction)
+  * return an ACK meaning “accepted for processing”
+  * but mark the instruction **not dispatchable** until resolution occurs
+  * the resolver itself runs as a controlled worker (outbox-style), with retries/backoff
+
+This avoids:
+
+* “ghost beneficiary” dispatch
+* lying ACK semantics
+* losing customer requests during registry downtime
+
+### Alternative (stricter)
+
+* Fail closed at ingress (503/4xx) when registry is unavailable
+  This is simpler, but may increase declines and harm partner KPIs.
+
+Either can be valid — what matters is you encode it into policy-as-code and evidence.
+
+---
+
+## How batching intersects with Proxy resolution (so you don’t miss it)
+
+You asked earlier: batching must be an invariant, not an optimization. Proxy resolution affects batching in two ways:
+
+1. **Ingress batching:**
+   You can accept many alias-based requests, write attestations fast, and then batch-resolve proxies asynchronously.
+
+2. **Dispatch batching:**
+   Executor claims a batch of outbox items, but it must only claim items that are “dispatchable”:
+
+* proxy resolution exists (or not required)
+* policy version is active
+* lease rules are satisfied
+
+So batching becomes a first-class invariant at **dispatch** time:
+
+* “claim only dispatchable rows”
+* “flush by size OR by time”
+* “workers wake up via LISTEN/NOTIFY but still poll”
+
+---
+
+## When to add the invariant (final answer)
+
+* **Add the Proxy resolution invariant now** (Phase 0) as **roadmap**, because it shapes schema and prevents drift.
+* **Implement it mechanically** in **Phase 1–2**, when:
+
+  * ingress runtime exists
+  * resolver boundary exists (even as a mock)
+  * dispatch path exists and can be blocked
+
+If you want a clean naming alignment with your current manifest style, treat it as:
+
+* **Phase 0:** “Declared + schema hooks exist”
+* **Phase 1:** “Resolver writes durable proof”
+* **Phase 2:** “Outbox dispatch is gated by proof”
+
+That gives you an evidence-grade story that’s believable to auditors and realistic for engineering execution.

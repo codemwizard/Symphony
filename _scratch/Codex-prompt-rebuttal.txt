@@ -1,0 +1,206 @@
+Here’s my assessment of **PHASE1_CODEX_PROMPT_PACK_v2.md** against the *latest attached codebase state* (manifest + control planes + scripts/docs zips).
+
+## What’s accurate and strong (keep it)
+
+### 1) It correctly treats **INV-111/112/113 as “truth-sync candidates”**
+
+In your current repo wiring:
+
+* **INV-112 (PII lint)** already has a **Security gate**: `SEC-G17` → `scripts/audit/lint_pii_leakage_payloads.sh` → `evidence/phase0/pii_leakage_payloads.json`.
+* **INV-111 (BoZ seat)** already has an **Integrity gate**: `INT-G23` → `scripts/db/verify_boz_observability_role.sh` → `evidence/phase0/boz_observability_role.json`.
+* **INV-113 (anchor hooks)** already has an **Integrity gate**: `INT-G24` → `scripts/db/verify_anchor_sync_hooks.sh` → `evidence/phase0/anchor_sync_hooks.json`.
+
+But in the manifest these are still marked **roadmap**. So the pack’s “Truth-Sync” concept is valid: your repo is already enforcing parts of Phase-1 scope *mechanically*, and the manifest/docs need to stop lying about it.
+
+✅ This is exactly the kind of prompt that prevents agents from re-implementing work that already exists.
+
+---
+
+### 2) It correctly avoids the “Phase-1 ordered runner stub”
+
+Your current stance is: **Phase-1 should not introduce a parallel ordered runner** (no `run_phase1_ordered_checks.sh` clone). The pack explicitly repeats:
+
+> “Do not introduce a Phase-1 ordered runner.”
+
+✅ That’s consistent with your Phase-0 governance approach: one canonical ordering / entrypoint, expanded carefully.
+
+---
+
+### 3) It uses the right *style* of constraints for Tier-1 work
+
+The prompts enforce the right discipline:
+
+* no new IDs invented
+* no weakening Phase-0 control planes
+* every feature requires: **verifier + deterministic evidence + control-plane wiring**
+* evidence must be written to the **exact** path the gate expects
+* end with `scripts/dev/pre_ci.sh`
+
+✅ This is the right contract to keep Codex agents from creating “feature-looking” PRs that aren’t auditable.
+
+---
+
+### 4) It correctly “reserves” new Integrity gates for Phase-1 runtime invariants
+
+Your current `CONTROL_PLANES.yml` integrity gates run up to `INT-G24`.
+
+So reserving:
+
+* `INT-G25` (INV-114)
+* `INT-G26` (INV-115)
+* `INT-G27` (INV-116)
+* `INT-G28` (Phase-1 contract gate)
+
+✅ is non-colliding and consistent, *as long as the pack clearly frames them as “to be added”*.
+
+---
+
+## The main accuracy problems (these must be corrected)
+
+### A) The pack must be explicit about what is *already Phase-0 enforced* vs *new Phase-1 work*
+
+Right now, the pack’s structure can be read as:
+
+* “INV-111/112/113 are Phase-1 promotions”
+* then later “Phase-1 contract + evidence/phase1 paths”
+
+But in your actual repo, **INV-111/112/113 are already wired to Phase-0 evidence paths** and already sit in Phase-0 gates.
+
+That implies a required clarification rule:
+
+**Rule:**
+
+* If an invariant is already wired into `CONTROL_PLANES.yml` with evidence under `evidence/phase0/**`, Phase-1 MUST NOT move it to `evidence/phase1/**` unless you intentionally migrate the gate definitions + drift checks + docs.
+
+✅ The pack’s Truth-Sync step should promote INV-111/112/113 to `implemented` **without moving evidence paths**.
+
+If the pack says or implies “Phase-1 evidence should be under evidence/phase1 for INV-111/112/113”, that would be incorrect for your repo.
+
+---
+
+### B) “Zero-lock enforcement” wording can be misleading
+
+In your repo, “zero-lock” isn’t literally possible; what you enforce today is:
+
+* lock-risk linting (`SEC-G02`)
+* migration policies (no-tx marker, expand/contract discipline)
+* lock timeout posture via migration tooling (depending on your scripts)
+
+So prompts should say:
+
+* **“lock-risk constrained and lock-time bounded”** (and reference the specific mechanisms you already enforce)
+
+Instead of “zero-lock” (which auditors/engineers can interpret as “no locks taken ever”, which isn’t realistic).
+
+---
+
+### C) Phase-1 contract verifier references must match reality
+
+The pack mentions a Phase-1 contract gate (INT-G28) and a verifier (often named something like `verify_phase1_contract.sh`).
+
+Right now:
+
+* You **do have** `phase0_contract.yml` and its verifier wiring in Phase-0.
+* You **do not yet** (based on the provided set) have a Phase-1 contract file and its verifier.
+
+So the pack must explicitly declare:
+
+* `docs/PHASE1/phase1_contract.yml` is **to be created**
+* `scripts/audit/verify_phase1_contract.sh` is **to be created**
+* `CONTROL_PLANES.yml` must be extended with `INT-G28` referencing that new verifier/evidence path
+
+This is fine—but it must be stated as *new work*, not implied as existing.
+
+---
+
+## High-value points from the draft (valid to place into the Prompt Pack)
+
+These are worth keeping/adding because they align perfectly with your repo’s invariant model:
+
+### 1) “Truth-Sync” as the first mandatory Codex step
+
+This is essential. It prevents:
+
+* duplicate implementations
+* ID collisions
+* inventing new evidence paths that drift from control planes
+
+**Keep**: “read only manifest + control planes + scripts + evidence; output mismatches only; stop.”
+
+### 2) “Audit-True PR” as a distinct, minimal PR
+
+This is also correct and should be separate from feature work:
+
+* Promote INV-111/112/113 to `implemented`
+* Update verification strings to point to the scripts that actually exist
+* Update `INVARIANTS_IMPLEMENTED.md` / quick docs if your repo requires it
+
+**Keep**: “Do NOT change gate IDs. Do NOT move evidence paths.”
+
+### 3) Add “reserved gate ID” rule (make it explicit)
+
+To prevent collisions and accidental reuse, the prompt pack should include a hard rule like:
+
+* New Integrity gates start at **INT-G25** (since Phase-0 uses up to INT-G24)
+* New Security gates start after **SEC-G17**
+* New Governance gates start after **GOV-G03**
+* Never reuse an existing gate ID for a different invariant
+
+This is a small addition but prevents a huge class of drift bugs.
+
+### 4) “Promotion criteria” in contract should pin to deterministic signals
+
+This is valid and very useful: promotion criteria should explicitly reference:
+
+* expected evidence filenames
+* required SQLSTATEs / denial semantics (where applicable)
+* success conditions
+
+This makes Codex outputs far more consistent and reviewable.
+
+---
+
+## Where the pack still needs tightening (so Codex can execute with less ambiguity)
+
+### 1) For each Phase-1 invariant, list the **canonical “touch set”**
+
+Codex works best when it has pinned “files that must be updated”. For INV-114/115/116, the pack should enforce:
+
+* schema/migrations: new forward-only migrations
+* scripts/db or scripts/audit: verifiers
+* evidence/phase1: deterministic evidence outputs
+* CONTROL_PLANES.yml: new required gates (INT-G25/26/27 + INT-G28)
+* docs/invariants: manifest status flip only after verifiers+gates exist
+* docs/PHASE1: contract + narrative
+
+The v2 pack mostly does this conceptually; it should enforce it as a checklist per invariant.
+
+### 2) Explicitly define whether INV-114/115/116 are DB-only in Phase-1 or include runtime services
+
+Your Phase-0 system is heavily DB/verifier driven. The prompt pack should clarify:
+
+* Are INV-114/115/116 Phase-1 “DB-mechanical + CI test only”?
+* Or do they also require .NET runtime state machine/workers?
+
+If you want Codex to create correct plans/tasks, you should pin which layer is mandatory in Phase-1 closeout.
+
+---
+
+## Bottom line verdict
+
+**PHASE1_CODEX_PROMPT_PACK_v2.md is directionally correct and mostly consistent with the current repo**, especially around:
+
+* Truth-Sync first
+* not inventing IDs
+* deterministic evidence
+* control-plane wiring as the enforcement boundary
+* no Phase-1 ordered runner stub
+
+**The main fixes required are clarity and precision:**
+
+1. **INV-111/112/113 are already enforced via Phase-0 gates and Phase-0 evidence paths** → Truth-Sync should promote status to implemented without moving evidence.
+2. Replace “zero-lock” wording with your repo’s real posture: lock-risk lint + lock-time bounded migrations + expand/contract discipline.
+3. Any Phase-1 contract verifier/gate references must be stated as “to be created,” and pinned to exact new gate IDs (INT-G28 etc.).
+4. Add a hard “gate ID allocation rule” to prevent collisions.
+
+If you want, paste the contents of **PHASE1_CODEX_PROMPT_PACK_v2.md** (or upload the raw text again if it’s large), and I’ll mark **line-by-line** what text to change so the pack is mechanically unambiguous for Codex.

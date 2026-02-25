@@ -1,0 +1,311 @@
+
+
+
+
+
+
+
+
+
+## Migration strategy (SDD section)
+
+### Goals
+
+* **Zero data loss, forward-only**: schema changes must never require restoring/rewinding data.
+* **Operational rollback only**: we can route traffic from Green → Blue instantly without touching the DB.
+* **Regulator/auditor-grade repeatability**: every migration is provably safe via automated gates + immutable evidence.
+
+### Core rules
+
+1. **No down migrations**
+
+   * Only additive/expand-first changes are allowed in Phase-0/1/2.
+   * “Contract” (dropping columns/tables, tightening constraints) is deferred until a verified shadow period.
+
+2. **Expand/Contract with N-1 write compatibility**
+
+   * **Expand**: add new columns/tables/indexes in a way that **old code (Blue)** can still insert/update without breaking.
+   * **Contract**: only after production verification window + evidence + explicit approval.
+   * **Mandatory Gate**: Blue test suite runs against Green schema (“N-1 Compatibility Gate”). If Blue breaks, migration is blocked.
+
+3. **No blocking DDL on hot paths**
+
+   * Hot tables (e.g., `payment_outbox_pending`, `payment_outbox_attempts`) must never be locked by blocking DDL.
+   * Required patterns:
+
+     * `CREATE INDEX CONCURRENTLY` for hot tables.
+     * Avoid table rewrites (`SET NOT NULL`, `ALTER TYPE`, defaults that rewrite large tables).
+     * If rewrite is unavoidable: **shadow table strategy** (copy → dual-write → swap) with explicit plan.
+
+4. **No-tx migration support**
+
+   * Migrations containing **`-- symphony:no_tx`** must execute **outside** a transaction block (required for `CONCURRENTLY`).
+   * Post-migration must check for invalid/unready indexes (`indisvalid/indisready`).
+
+5. **Evidence-first, fail-closed**
+
+   * Every gate/migration produces evidence artifacts (JSON) containing:
+
+     * `git_sha`, `timestamp_utc`, `result`, and relevant fingerprints (schema hash, allowlist hits, etc.).
+   * CI must **fail** if required evidence is missing **for tasks marked “completed + evidence_required=true”** (governed by the Phase-0 Contract).
+
+### Blue/Green execution workflow
+
+1. **Pre-traffic (Green preparation)**
+
+   * Apply migrations to Green DB (or shared DB if you are using shared schema + dual service versions).
+   * Run Phase-0 gates:
+
+     * N-1 compatibility test (Blue against Green schema)
+     * DDL lock-risk lint
+     * drift checks (schema baseline, invariants docs)
+     * evidence generation + signature/anchoring steps (when enabled)
+
+2. **Traffic shift**
+
+   * Route a small percentage to Green.
+   * Monitor SLO invariants (parse error rate, DB latency, lock contention, idempotency anomalies).
+
+3. **Fallback protocol (INV-019)**
+
+   * If invariant breach, **route back to Blue instantly**.
+   * Safety relies on:
+
+     * shared idempotency ledger
+     * append-only outbox
+     * N-1 compatibility being proven before shift
+
+4. **Post-traffic**
+
+   * After stability window, mark “Green is LKG” and advance.
+
+---
+
+## Review of your tenant/member delta plan (Option B) — what I would change/tighten
+
+Your deltas are directionally correct and **Phase-0-safe** (no runtime insert paths into `ingress_attestations` yet). The big win is: you’re designing **tenant + member attribution as a durable, auditable axis** without forcing member attribution everywhere on Day-0.
+
+### What looks solid
+
+* **Member becomes a first-class entity** (`tenant_members.member_id UUID`) and is referenced as nullable: ✅ correct.
+* **Tenant is a real FK UUID**, not free-text: ✅ correct.
+* **Enforce “if member_id present → tenant_id must exist + match”** via trigger and dedicated SQLSTATEs: ✅ correct.
+* **Keep P0001 for append-only mutation denial** and use P72xx for tenant/member invariants: ✅ correct.
+
+### Two critical tweaks I recommend (still “Option B”, still minimal)
+
+1. **Make `tenant_id` mandatory on `ingress_attestations`, but don’t prematurely hard-require it across *all* ledgers**
+
+   * For Phase-0, it’s fine to require `tenant_id` on `ingress_attestations` because it’s the “ingress chain-of-trust anchor”.
+   * For other tables (`payment_outbox*`), you may want an expand-first path:
+
+     * add `tenant_id` nullable → backfill later → enforce not null in Phase-1/2 when runtime writes exist.
+   * This avoids forcing a risky global refactor before the runtime exists.
+
+2. **Add a “client identity” strategy you can actually execute in Phase-1**
+
+   * Replacing `client_id_hash` with `client_id UUID FK` is good **only if** Phase-1 ingress can reliably resolve client identity to that UUID.
+   * I’d keep both **for now**:
+
+     * `client_id UUID NULL` (authoritative relational link when available)
+     * `client_id_hash TEXT NULL` (supports non-relational clients or early integrations)
+   * Then Phase-1 can progressively move to `client_id` without losing linkage.
+
+### Trigger placement guidance
+
+* Put the tenant/member consistency trigger **only where the relationship is meaningful and stable**:
+
+  * ✅ `ingress_attestations` (always)
+  * ⚠️ `payment_outbox_attempts` only if you actually carry member/client references there; otherwise it becomes noise.
+
+### Index guidance
+
+Your proposed indexes are good, but keep them lean in Phase-0:
+
+* ✅ `(tenant_id, received_at)`
+* ✅ `(instruction_id)` (or `(tenant_id, instruction_id)` if instruction IDs are only unique per tenant)
+* ✅ optional composite indexes only if you have a known query shape in Phase-1 (e.g., “member history”, “client history”)
+
+---
+
+## The exact place you still might be “wrapping everything in a transaction”
+
+If you still see `BEGIN ... COMMIT` emitted around **0013** after adding the `-- symphony:no_tx` marker, the remaining culprit is almost always one of these:
+
+1. **Marker detection not matching the file**
+
+* The marker must appear within the range your `head -n 50` checks and must match the regex exactly.
+* Common failure: whitespace, different comment prefix, marker not near top, or a BOM/CRLF.
+
+2. **`psql` is invoked with a heredoc that begins `BEGIN; \i :file ... COMMIT;` in the “else” path**
+
+* That part is correct for normal migrations.
+* The fix is ensuring **0013** is routed into the `no_tx` branch and executed via `psql -f "$file"`.
+
+If you paste your current `is_no_tx_migration()` and the first ~20 lines of `0013_outbox_pending_indexes_concurrently.sql`, I can point to the exact mismatch immediately.
+
+---
+
+## About the “evidence missing” failures in CI
+
+Those failures are not about migrations anymore—they mean your evidence gate is still enforcing evidence for tasks that are not yet completed/implemented.
+
+The right Phase-0 posture is:
+
+* **Phase-0 Contract governs evidence enforcement**
+* Only tasks marked **completed + evidence_required=true** are enforced
+* Everything else must not be required yet (or CI will always fail)
+
+So the fix is in:
+
+* `scripts/ci/check_evidence_required.sh` (must read contract + enforce conditionally)
+* the contract file itself (statuses must reflect reality)
+
+---
+
+## Quick note about your attachments
+
+Some earlier uploaded files expired on my side. If you want me to verify *specific current repo state* (like the latest `migrate.sh`, `check_evidence_required.sh`, or the contract file), re-upload those exact files and I’ll review them precisely.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+### 1) Why making `tenant_id` **NOT NULL now** actually avoids a later refactor
+
+“Refactor later” risk isn’t about *adding* the constraint — it’s about what accumulates **before** you add it.
+
+If `tenant_id` is nullable in Phase-0/Phase-1, you almost inevitably end up with at least one of these patterns:
+
+* **Writers that don’t know tenant yet** (they insert NULL and “intend to backfill later”).
+* **Mixed semantics** (“NULL means ‘unknown’” vs “NULL means ‘single-tenant legacy’”).
+* **Evidence and attestations without tenant context**, which are extremely hard to repair because you can’t safely infer tenant after the fact.
+* **Future enforcement becomes a data migration problem**, not a simple schema change:
+
+  * You must backfill existing rows
+  * Decide a default tenant for NULL rows (dangerous)
+  * Or reject historical rows (breaks audit continuity)
+  * Update indexes, verification scripts, and evidence expectations
+
+By contrast, making `tenant_id NOT NULL` **from the first moment any real data begins to exist** means:
+
+* Every future Phase-1 ingress write path must supply tenant context **before ACK** (fail-closed posture).
+* You never have to “interpret” what NULL meant historically.
+* Your indexes and evidence can always include tenant dimension deterministically.
+* You avoid a later “breaking migration” that would otherwise require downtime/backfill/reconciliation.
+
+So “NOT NULL later” is *not* equivalent to “NOT NULL now” once any data exists. Doing it now is cheap because you currently have **no writers inserting into `ingress_attestations`**, and you’re establishing the rule before any drift can occur.
+
+If you truly want “member-aware but optional,” the **right optionality** is `member_id` nullable — not `tenant_id`. Tenant is the hard boundary; member is attribution inside that boundary.
+
+---
+
+### 2) Acknowledged — I will not look into missing evidence
+
+Understood. Ignoring evidence-gate issues completely.
+
+---
+
+### 3) “There is no `is_no_tx_migration()`” — where the transaction wrapping is happening **exactly**, and what to change
+
+In your current `migrate.sh` (the file you attached), the only place that **explicitly wraps** a migration in a transaction is this block:
+
+```bash
+psql "$DATABASE_URL" ... <<'SQL'
+BEGIN;
+\i :file
+INSERT INTO public.schema_migrations(version, checksum) VALUES (:'version', :'checksum');
+COMMIT;
+SQL
+```
+
+That block is inside the `else` branch here:
+
+```bash
+if [[ "$no_tx" -eq 1 ]]; then
+  # runs -f "$file" (NO explicit BEGIN/COMMIT)
+else
+  # <-- THIS BRANCH wraps everything in BEGIN/COMMIT
+fi
+```
+
+So if you ever see:
+
+* `BEGIN`
+* then `psql: ... CREATE INDEX CONCURRENTLY cannot run inside a transaction block`
+
+…it means **that migration went through the `else` branch**, i.e. `no_tx` evaluated to `0`.
+
+#### Why you’re worried is valid
+
+Right now your script *does* “no-tx detection,” but it’s inline logic, not a named function. That makes it harder to reason about and easier to regress.
+
+#### The clean fix (what you’re asking for): add `is_no_tx_migration()` and use it
+
+Add this near the top (after variables are set, before the loop):
+
+```bash
+is_no_tx_migration() {
+  local f="$1"
+
+  # Marker must appear near the top to be unambiguous (strip UTF-8 BOM if present)
+  if head -n 50 "$f" | sed '1s/^\xEF\xBB\xBF//' | grep -Eq '^[[:space:]]*--[[:space:]]*symphony:no_tx([[:space:]]*)$'; then
+    return 0
+  fi
+
+  # Any CONCURRENTLY statement requires no-tx
+  if grep -qiE 'CREATE[[:space:]]+INDEX[[:space:]]+CONCURRENTLY' "$f"; then
+    return 0
+  fi
+
+  return 1
+}
+```
+
+Then replace your current `no_tx=0 ... if head/grep ...` block with:
+
+```bash
+no_tx=0
+if is_no_tx_migration "$file"; then
+  no_tx=1
+fi
+```
+
+That gives you a single authoritative rule, and it becomes obvious why something ran inside a transaction.
+
+#### One more hardening that prevents silent regressions
+
+Right before the transactional `else` branch executes, keep this guard (you already have it conceptually):
+
+```bash
+if grep -qiE 'CREATE[[:space:]]+INDEX[[:space:]]+CONCURRENTLY' "$file" && [[ "$no_tx" -ne 1 ]]; then
+  echo "❌ CONCURRENTLY detected but no-tx not set for $version" >&2
+  exit 1
+fi
+```
+
+This makes it impossible for a CONCURRENTLY migration to “accidentally” land in the transaction-wrapped path.
+
+---
+
+### Quick diagnostic for you (no CI spelunking, just deterministic confirmation)
+
+When you run migrations locally or in CI logs, ensure you see a line like:
+
+* `MIGRATE: 0013_... no_tx=1 ...`
+
+If you don’t see that for the concurrently migration, then the decision logic didn’t fire (marker missing / file mismatch / older script executing).
+
+---
+
+If you want, paste the **first ~20 lines** of `schema/migrations/0013_outbox_pending_indexes_concurrently.sql` and I’ll tell you whether your marker placement is unambiguous for the `head -n 50` detection rule (BOM and whitespace issues are the usual culprit).
