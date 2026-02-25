@@ -18,6 +18,8 @@ core_dirs=(
 )
 
 matches=()
+MATCHES_FILE="$(mktemp)"
+trap 'rm -f "$MATCHES_FILE"' EXIT
 
 for d in "${core_dirs[@]}"; do
   if [[ -d "$d" ]]; then
@@ -27,11 +29,18 @@ for d in "${core_dirs[@]}"; do
   fi
 done
 
-printf '%s\n' "${matches[@]}" | python3 - <<PY
+if [[ ${#matches[@]} -gt 0 ]]; then
+  printf '%s\n' "${matches[@]}" > "$MATCHES_FILE"
+fi
+
+MATCHES_FILE="$MATCHES_FILE" python3 - <<PY
 import json
-import sys
+import os
 from pathlib import Path
-lines = [l.strip() for l in sys.stdin.read().splitlines() if l.strip()]
+matches_file = Path(os.environ["MATCHES_FILE"])
+lines = []
+if matches_file.exists():
+    lines = [l.strip() for l in matches_file.read_text(encoding="utf-8").splitlines() if l.strip()]
 out = {
     "check_id": "SEC-CORE-BOUNDARY",
     "timestamp_utc": "${EVIDENCE_TS}",

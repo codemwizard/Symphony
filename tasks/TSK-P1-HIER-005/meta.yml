@@ -1,0 +1,67 @@
+phase: "1"
+task_id: "TSK-P1-HIER-005"
+title: "Member devices with tenant-safe reverse lookup indexes"
+owner_role: "SUPERVISOR"
+status: "completed"
+
+depends_on:
+  - "TSK-P1-HIER-004"
+
+touches:
+  - "docs/plans/phase1/TSK-P1-HIER-005/PLAN.md"
+  - "docs/plans/phase1/TSK-P1-HIER-005/EXEC_LOG.md"
+  - "schema/migrations/0050_hier_005_instruction_hierarchy_verifier.sql"
+  - "scripts/db/verify_tsk_p1_hier_005.sh"
+  - "docs/contracts/sqlstate_map.yml"
+  - "tasks/TSK-P1-HIER-005/meta.yml"
+  - "evidence/phase1/tsk_p1_hier_005__member_devices_tenant_safe_reverse_lookup.json"
+
+invariants:
+  - "INV-077"
+  - "INV-119"
+
+mechanics:
+  gate_ids:
+    - "INT-G28"
+  verifiers:
+    - "bash scripts/db/verify_tsk_p1_hier_005.sh --evidence evidence/phase1/tsk_p1_hier_005__member_devices_tenant_safe_reverse_lookup.json"
+    - "RUN_PHASE1_GATES=1 scripts/dev/pre_ci.sh"
+  evidence_paths:
+    - "evidence/phase1/tsk_p1_hier_005__member_devices_tenant_safe_reverse_lookup.json"
+
+work:
+  - "Implement verify_instruction_hierarchy() with tenant-safe linkage checks and deterministic SQLSTATE outcomes."
+  - "Provide verifier coverage for tenant->participant, participant->program, program->entity, member->entity, and member->device failure modes."
+  - "Emit evidence including exercised SQLSTATEs and function definition fingerprint."
+
+acceptance_criteria:
+  - "Evidence exists at evidence/phase1/tsk_p1_hier_005__member_devices_tenant_safe_reverse_lookup.json and is valid JSON."
+  - "Evidence JSON contains task_id == 'TSK-P1-HIER-005', status in {PASS,DONE,OK}, and pass == true."
+  - "tasks/TSK-P1-HIER-005/meta.yml records terminal completion once verifiers pass."
+  - "TSK-P1-HIER-004 dependency is complete before execution."
+  - "Task verifier and RUN_PHASE1_GATES=1 scripts/dev/pre_ci.sh pass before closeout."
+
+verification:
+  - "bash scripts/db/verify_tsk_p1_hier_005.sh --evidence evidence/phase1/tsk_p1_hier_005__member_devices_tenant_safe_reverse_lookup.json"
+  - "RUN_PHASE1_GATES=1 scripts/dev/pre_ci.sh"
+
+evidence:
+  - "evidence/phase1/tsk_p1_hier_005__member_devices_tenant_safe_reverse_lookup.json"
+
+failure_modes:
+  - "Missing docs/tasks/phase1_prompts.md section or execution metadata block."
+  - "Evidence file missing/invalid/task_id mismatch/status not PASS."
+  - "Phase contract docs missing => FAIL_CLOSED."
+  - "Dependency TSK-P1-HIER-004 incomplete => BLOCKED."
+  - "Undeclared file modifications outside files_to_change => FAIL_REVIEW."
+
+must_read:
+  - "docs/operations/AI_AGENT_OPERATION_MANUAL.md"
+
+implementation_plan: "docs/plans/phase1/TSK-P1-HIER-005/PLAN.md"
+implementation_log: "docs/plans/phase1/TSK-P1-HIER-005/EXEC_LOG.md"
+
+notes: "Implements deterministic hierarchy verification function and SQLSTATE evidence for tenant-safe reverse lookup posture."
+client: "codex_cli"
+assigned_agent: "supervisor"
+model: "gpt-5-codex"

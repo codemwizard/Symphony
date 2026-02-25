@@ -14,6 +14,9 @@ export SYMPHONY_ENV="${SYMPHONY_ENV:-development}"
 
 echo "==> Pre-CI local checks"
 
+# Local pre-CI runs should be treated as development for evidence write policy.
+export SYMPHONY_ENV="${SYMPHONY_ENV:-development}"
+
 ENV_FILE="infra/docker/.env"
 COMPOSE_FILE="infra/docker/docker-compose.yml"
 DB_CONTAINER="symphony-postgres"
@@ -125,6 +128,7 @@ if ! git rev-parse --verify "${BASE_REF}^{commit}" >/dev/null 2>&1; then
   echo "ERROR: refs/remotes/origin/main not found after fetch"
   exit 1
 fi
+export BASE_REF="refs/remotes/origin/main"
 
 if [[ -x scripts/audit/enforce_change_rule.sh ]]; then
   echo "==> Structural change-rule gate (CI parity, range diff)"
