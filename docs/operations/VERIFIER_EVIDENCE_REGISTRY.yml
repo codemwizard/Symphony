@@ -74,6 +74,9 @@ registry:
   scripts/db/verify_hier_008_sim_swap_alerts.sh:
     emits:
       - evidence/phase1/hier_008_sim_swap_alerts.json
+  scripts/db/verify_hier_009_instruction_hierarchy_sqlstates.sh:
+    emits:
+      - evidence/phase1/hier_009_instruction_hierarchy_sqlstates.json
   scripts/audit/verify_drd_policy_usage.sh:
     emits:
       - evidence/phase0/drd_policy_usage.json

@@ -2,7 +2,7 @@
 -- PostgreSQL database dump
 --
 
-\restrict CW5a78enhy8T7Pmwxqo11oQbggwkUWkaI0jzVoQ6WyT0OPnal6ewTlD7tgwGH7U
+\restrict KeSzXLQHQlwj5zpBdmNbH3u9lDniZz2igEJciotJVgCjlsIYMsfWt7FHwi4tyjE
 
 -- Dumped from database version 18.2 (Debian 18.2-1.pgdg13+1)
 -- Dumped by pg_dump version 18.2 (Debian 18.2-1.pgdg13+1)
@@ -1629,7 +1629,7 @@ BEGIN
       AND m.entity_id = p_entity_id
   ) THEN
     RAISE EXCEPTION 'entity-to-member linkage invalid'
-      USING ERRCODE = 'P7305';
+      USING ERRCODE = 'P7302';
   END IF;
 
   -- 5) device -> member linkage (active-path device check)
@@ -1642,7 +1642,7 @@ BEGIN
       AND md.status = 'ACTIVE'
   ) THEN
     RAISE EXCEPTION 'member-to-device linkage invalid'
-      USING ERRCODE = 'P7306';
+      USING ERRCODE = 'P7303';
   END IF;
 
   RETURN TRUE;
@@ -4311,5 +4311,5 @@ ALTER TABLE ONLY public.tenants
 -- PostgreSQL database dump complete
 --
 
-\unrestrict CW5a78enhy8T7Pmwxqo11oQbggwkUWkaI0jzVoQ6WyT0OPnal6ewTlD7tgwGH7U
+\unrestrict KeSzXLQHQlwj5zpBdmNbH3u9lDniZz2igEJciotJVgCjlsIYMsfWt7FHwi4tyjE
 
