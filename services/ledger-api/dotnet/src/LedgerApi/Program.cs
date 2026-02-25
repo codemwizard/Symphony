@@ -39,6 +39,12 @@ if (args.Contains("--self-test-batching-telemetry", StringComparer.OrdinalIgnore
     Environment.ExitCode = code;
     return;
 }
+if (args.Contains("--self-test-tenant-context", StringComparer.OrdinalIgnoreCase))
+{
+    var code = await TenantContextSelfTestRunner.RunAsync(CancellationToken.None);
+    Environment.ExitCode = code;
+    return;
+}
 
 var storageMode = (Environment.GetEnvironmentVariable("INGRESS_STORAGE_MODE") ?? "file").Trim().ToLowerInvariant();
 StorageModePolicy.ValidateOrThrow(storageMode);
@@ -166,10 +172,10 @@ static class ApiAuthorization
         var tenantHeader = ReadHeader(httpContext, "x-tenant-id");
         if (string.IsNullOrWhiteSpace(tenantHeader))
         {
-            return new HandlerResult(StatusCodes.Status400BadRequest, new
+            return new HandlerResult(StatusCodes.Status403Forbidden, new
             {
                 ack = false,
-                error_code = "INVALID_REQUEST",
+                error_code = "FORBIDDEN_TENANT_CONTEXT_REQUIRED",
                 errors = new[] { "x-tenant-id header is required" }
             });
         }
@@ -183,6 +189,19 @@ static class ApiAuthorization
                 errors = new[] { "x-tenant-id must match request tenant_id" }
             });
         }
+
+        if (!IsKnownTenant(tenantHeader.Trim()))
+        {
+            return new HandlerResult(StatusCodes.Status403Forbidden, new
+            {
+                ack = false,
+                error_code = "FORBIDDEN_UNKNOWN_TENANT",
+                errors = new[] { "x-tenant-id is not recognized by tenant registry" }
+            });
+        }
+
+        // Propagate resolved tenant into request context for downstream policy/data access checks.
+        httpContext.Items["tenant_id"] = tenantHeader.Trim();
 
         var participantHeader = ReadHeader(httpContext, "x-participant-id");
         if (string.IsNullOrWhiteSpace(participantHeader))
@@ -206,6 +225,23 @@ static class ApiAuthorization
         }
 
         return null;
+    }
+
+    private static bool IsKnownTenant(string tenantId)
+    {
+        var raw = (Environment.GetEnvironmentVariable("SYMPHONY_KNOWN_TENANTS") ?? string.Empty).Trim();
+        if (string.IsNullOrWhiteSpace(raw))
+        {
+            // No registry configured -> leave allowlist enforcement off in generic local runs.
+            return true;
+        }
+
+        var known = raw
+            .Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+            .Where(x => !string.IsNullOrWhiteSpace(x))
+            .ToHashSet(StringComparer.OrdinalIgnoreCase);
+
+        return known.Contains(tenantId.Trim());
     }
 
     public static HandlerResult? AuthorizeEvidenceRead(HttpContext httpContext)
@@ -1194,6 +1230,146 @@ CREATE TEMP TABLE perf_batch_probe (
         Console.WriteLine($"Batching telemetry self-test status: {status}");
         Console.WriteLine($"Evidence: {evidencePath}");
         return status == "PASS" ? 0 : 1;
+    }
+}
+
+static class TenantContextSelfTestRunner
+{
+    public static async Task<int> RunAsync(CancellationToken cancellationToken)
+    {
+        const string apiKey = "tenant-context-self-test-key";
+        var validTenant = "11111111-1111-1111-1111-111111111111";
+        var unknownTenant = "22222222-2222-2222-2222-222222222222";
+
+        Environment.SetEnvironmentVariable("INGRESS_API_KEY", apiKey);
+        Environment.SetEnvironmentVariable("SYMPHONY_KNOWN_TENANTS", validTenant);
+
+        var payload = JsonSerializer.Deserialize<JsonElement>("{\"amount\":100,\"currency\":\"ZMW\"}");
+        var results = new List<SelfTestCase>();
+        var pass = 0;
+        var fail = 0;
+
+        RunCase(
+            "missing_tenant_context_rejected",
+            ContextWithoutTenant(apiKey, "bank-a"),
+            Request(validTenant, "bank-a", payload),
+            expectedStatus: StatusCodes.Status403Forbidden,
+            expectedErrorCode: "FORBIDDEN_TENANT_CONTEXT_REQUIRED"
+        );
+
+        RunCase(
+            "unknown_tenant_context_rejected",
+            ContextWithTenant(apiKey, unknownTenant, "bank-a"),
+            Request(unknownTenant, "bank-a", payload),
+            expectedStatus: StatusCodes.Status403Forbidden,
+            expectedErrorCode: "FORBIDDEN_UNKNOWN_TENANT"
+        );
+
+        RunCase(
+            "valid_tenant_context_allowed",
+            ContextWithTenant(apiKey, validTenant, "bank-a"),
+            Request(validTenant, "bank-a", payload),
+            expectedStatus: StatusCodes.Status200OK,
+            expectedErrorCode: null
+        );
+
+        var status = fail == 0 ? "PASS" : "FAIL";
+        var rootDir = EvidenceMeta.ResolveRepoRoot(Directory.GetCurrentDirectory());
+        var evidenceDir = Path.Combine(rootDir, "evidence", "phase1");
+        Directory.CreateDirectory(evidenceDir);
+        var evidenceMeta = EvidenceMeta.Load(rootDir);
+        var path = Path.Combine(evidenceDir, "ten_001_ingress_tenant_context.json");
+
+        await File.WriteAllTextAsync(path, JsonSerializer.Serialize(new
+        {
+            check_id = "TSK-P1-TEN-001",
+            task_id = "TSK-P1-TEN-001",
+            timestamp_utc = evidenceMeta.TimestampUtc,
+            git_sha = evidenceMeta.GitSha,
+            schema_fingerprint = evidenceMeta.SchemaFingerprint,
+            status,
+            pass = fail == 0,
+            details = new
+            {
+                tenant_context_source = "x-tenant-id header (authoritative)",
+                missing_tenant_rejected = results.Any(r => r.Name == "missing_tenant_context_rejected" && r.Status == "PASS"),
+                unknown_tenant_rejected = results.Any(r => r.Name == "unknown_tenant_context_rejected" && r.Status == "PASS"),
+                valid_tenant_accepted = results.Any(r => r.Name == "valid_tenant_context_allowed" && r.Status == "PASS")
+            },
+            negative_tests = results.Where(r => r.Name.Contains("rejected", StringComparison.Ordinal)).ToArray(),
+            results
+        }, new JsonSerializerOptions { WriteIndented = true }) + Environment.NewLine, cancellationToken);
+
+        Console.WriteLine($"Tenant context self-test status: {status}");
+        Console.WriteLine($"Evidence: {path}");
+        return fail == 0 ? 0 : 1;
+
+        void RunCase(string name, DefaultHttpContext ctx, IngressRequest req, int expectedStatus, string? expectedErrorCode)
+        {
+            var result = ApiAuthorization.AuthorizeIngressWrite(ctx, req);
+            var actualStatus = result?.StatusCode ?? StatusCodes.Status200OK;
+            string? actualErrorCode = null;
+            if (result is not null)
+            {
+                using var doc = JsonDocument.Parse(JsonSerializer.Serialize(result.Body));
+                if (doc.RootElement.TryGetProperty("error_code", out var e))
+                {
+                    actualErrorCode = e.GetString();
+                }
+            }
+
+            var tenantItem = ctx.Items.TryGetValue("tenant_id", out var v) ? Convert.ToString(v) : null;
+            var expectedTenantItem = expectedStatus == StatusCodes.Status200OK ? req.tenant_id : null;
+            var ok = actualStatus == expectedStatus
+                     && actualErrorCode == expectedErrorCode
+                     && string.Equals(tenantItem, expectedTenantItem, StringComparison.Ordinal);
+
+            if (ok)
+            {
+                pass++;
+                results.Add(new SelfTestCase(name, "PASS", "deterministic expectation met"));
+            }
+            else
+            {
+                fail++;
+                results.Add(new SelfTestCase(
+                    name,
+                    "FAIL",
+                    $"expected status={expectedStatus} error={expectedErrorCode} tenant_item={expectedTenantItem}; got status={actualStatus} error={actualErrorCode} tenant_item={tenantItem}"
+                ));
+            }
+        }
+
+        static DefaultHttpContext ContextWithoutTenant(string key, string participantId)
+        {
+            var ctx = new DefaultHttpContext();
+            ctx.Request.Headers["x-api-key"] = key;
+            ctx.Request.Headers["x-participant-id"] = participantId;
+            return ctx;
+        }
+
+        static DefaultHttpContext ContextWithTenant(string key, string tenantId, string participantId)
+        {
+            var ctx = ContextWithoutTenant(key, participantId);
+            ctx.Request.Headers["x-tenant-id"] = tenantId;
+            return ctx;
+        }
+
+        static IngressRequest Request(string tenantId, string participantId, JsonElement payload) =>
+            new(
+                instruction_id: $"ten001-{Guid.NewGuid():N}",
+                participant_id: participantId,
+                idempotency_key: Guid.NewGuid().ToString("N"),
+                rail_type: "RTGS",
+                payload: payload,
+                payload_hash: null,
+                signature_hash: null,
+                tenant_id: tenantId,
+                correlation_id: null,
+                upstream_ref: null,
+                downstream_ref: null,
+                nfs_sequence_ref: null
+            );
     }
 }
 
