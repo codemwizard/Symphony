@@ -3,6 +3,10 @@
 Task: TSK-P1-HIER-008
 origin_task_id: TSK-P1-HIER-008
 Plan: docs/plans/phase1/TSK-P1-HIER-008/PLAN.md
+failure_signature: PHASE1.TSK.P1.HIER.008.SIM_SWAP_ALERT_TRACEABILITY
+
+## repro_command
+- `RUN_PHASE1_GATES=1 scripts/dev/pre_ci.sh`
 
 ## timeline
 - Reviewed HIER-008 prompt section and execution metadata patch block.
@@ -11,6 +15,12 @@ Plan: docs/plans/phase1/TSK-P1-HIER-008/PLAN.md
 - Added task metadata and phase contract invariant linkage.
 
 ## commands
+- `scripts/audit/verify_agent_conformance.sh`
+- `bash scripts/db/verify_hier_008_sim_swap_alerts.sh`
+- `python3 scripts/audit/validate_evidence.py --task TSK-P1-HIER-008 --evidence evidence/phase1/hier_008_sim_swap_alerts.json`
+- `RUN_PHASE1_GATES=1 scripts/dev/pre_ci.sh`
+
+## verification_commands_run
 - `scripts/audit/verify_agent_conformance.sh`
 - `bash scripts/db/verify_hier_008_sim_swap_alerts.sh`
 - `python3 scripts/audit/validate_evidence.py --task TSK-P1-HIER-008 --evidence evidence/phase1/hier_008_sim_swap_alerts.json`
