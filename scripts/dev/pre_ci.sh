@@ -634,6 +634,14 @@ if [[ "${RUN_PHASE1_GATES:-0}" == "1" ]]; then
     exit 1
   fi
 
+  echo "==> Phase-1 supervisor access mechanisms verification (TSK-P1-HIER-011)"
+  if [[ -x scripts/audit/verify_hier_011_supervisor_access_mechanisms.sh ]]; then
+    scripts/audit/verify_hier_011_supervisor_access_mechanisms.sh --evidence evidence/phase1/hier_011_supervisor_access_mechanisms.json
+  else
+    echo "ERROR: scripts/audit/verify_hier_011_supervisor_access_mechanisms.sh not found"
+    exit 1
+  fi
+
   echo "==> Phase-1 no-MCP guard"
   if [[ -x scripts/audit/verify_no_mcp_phase1.sh ]]; then
     scripts/audit/verify_no_mcp_phase1.sh

@@ -2,7 +2,7 @@
 -- PostgreSQL database dump
 --
 
-\restrict XWpWeCYEr7dgbVgG08qlSBot4B4oo5Rj4zgM1z5rn3wBB3BCnaUTcbSf9RxF6AP
+\restrict osZTaQeenovyXNH6HRsJYBgjeiZ5t7X1GBYQrDtMBUeDHRePMUZCfvHTzKZPlCc
 
 -- Dumped from database version 18.2 (Debian 18.2-1.pgdg13+1)
 -- Dumped by pg_dump version 18.2 (Debian 18.2-1.pgdg13+1)
@@ -389,6 +389,7 @@ CREATE FUNCTION public.decide_supervisor_approval(p_instruction_id text, p_decis
     AS $$
 DECLARE
   v_decision TEXT := UPPER(BTRIM(COALESCE(p_decision, '')));
+  v_actor TEXT := COALESCE(NULLIF(BTRIM(COALESCE(p_actor, '')), ''), 'system');
 BEGIN
   IF v_decision NOT IN ('APPROVED', 'REJECTED') THEN
     RAISE EXCEPTION 'invalid decision %', p_decision;
@@ -396,13 +397,27 @@ BEGIN
 
   UPDATE public.supervisor_approval_queue
   SET status = v_decision,
+      approved_at = CASE WHEN v_decision = 'APPROVED' THEN NOW() ELSE approved_at END,
+      approved_by = CASE WHEN v_decision = 'APPROVED' THEN v_actor ELSE approved_by END,
       decided_at = NOW(),
-      decided_by = COALESCE(NULLIF(BTRIM(p_actor), ''), 'system'),
+      decided_by = v_actor,
       decision_reason = p_reason
   WHERE instruction_id = p_instruction_id
-    AND status = 'PENDING_SUPERVISOR_APPROVAL';
+    AND status = 'PENDING_SUPERVISOR_APPROVAL'
+    AND COALESCE(submitted_by, '') <> v_actor;
 
   IF NOT FOUND THEN
+    IF EXISTS (
+      SELECT 1
+      FROM public.supervisor_approval_queue
+      WHERE instruction_id = p_instruction_id
+        AND status = 'PENDING_SUPERVISOR_APPROVAL'
+        AND COALESCE(submitted_by, '') = v_actor
+    ) THEN
+      RAISE EXCEPTION 'self approval is not permitted for instruction %', p_instruction_id
+        USING ERRCODE = '42501';
+    END IF;
+
     RAISE EXCEPTION 'instruction % is not pending supervisor approval', p_instruction_id;
   END IF;
 END;
@@ -1518,6 +1533,32 @@ $$;
 
 
 --
+-- Name: submit_for_supervisor_approval(text); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.submit_for_supervisor_approval(p_instruction_id text) RETURNS void
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO 'pg_catalog', 'public'
+    AS $$
+DECLARE
+  v_program_id UUID;
+BEGIN
+  SELECT program_id
+  INTO v_program_id
+  FROM public.programs
+  ORDER BY created_at ASC
+  LIMIT 1;
+
+  IF v_program_id IS NULL THEN
+    RAISE EXCEPTION 'no program available for supervisor approval submission';
+  END IF;
+
+  PERFORM public.submit_for_supervisor_approval(p_instruction_id, v_program_id, 30, NULL, 'system');
+END;
+$$;
+
+
+--
 -- Name: submit_for_supervisor_approval(text, uuid, integer); Type: FUNCTION; Schema: public; Owner: -
 --
 
@@ -1545,6 +1586,55 @@ BEGIN
         decided_at = NULL,
         decided_by = NULL,
         decision_reason = NULL;
+END;
+$$;
+
+
+--
+-- Name: submit_for_supervisor_approval(text, uuid, integer, text, text); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.submit_for_supervisor_approval(p_instruction_id text, p_program_id uuid, p_timeout_minutes integer DEFAULT 30, p_held_reason text DEFAULT NULL::text, p_submitted_by text DEFAULT NULL::text) RETURNS void
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO 'pg_catalog', 'public'
+    AS $$
+DECLARE
+  v_timeout INTEGER := COALESCE(p_timeout_minutes, 30);
+  v_submitted_by TEXT := COALESCE(NULLIF(BTRIM(COALESCE(p_submitted_by, '')), ''), 'system');
+BEGIN
+  IF v_timeout <= 0 THEN
+    RAISE EXCEPTION 'approval timeout must be positive';
+  END IF;
+
+  INSERT INTO public.supervisor_approval_queue(
+    instruction_id, program_id, status, held_at, held_reason, timeout_at, submitted_by,
+    decided_at, decided_by, decision_reason, approved_by, approved_at
+  ) VALUES (
+    p_instruction_id,
+    p_program_id,
+    'PENDING_SUPERVISOR_APPROVAL',
+    NOW(),
+    p_held_reason,
+    NOW() + make_interval(mins => v_timeout),
+    v_submitted_by,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL
+  )
+  ON CONFLICT (instruction_id) DO UPDATE
+    SET program_id = EXCLUDED.program_id,
+        status = 'PENDING_SUPERVISOR_APPROVAL',
+        held_at = NOW(),
+        held_reason = EXCLUDED.held_reason,
+        timeout_at = EXCLUDED.timeout_at,
+        submitted_by = EXCLUDED.submitted_by,
+        decided_at = NULL,
+        decided_by = NULL,
+        decision_reason = NULL,
+        approved_by = NULL,
+        approved_at = NULL;
 END;
 $$;
 
@@ -2579,6 +2669,10 @@ CREATE TABLE public.supervisor_approval_queue (
     decided_at timestamp with time zone,
     decided_by text,
     decision_reason text,
+    held_reason text,
+    submitted_by text,
+    approved_by text,
+    approved_at timestamp with time zone,
     CONSTRAINT supervisor_approval_queue_status_check CHECK ((status = ANY (ARRAY['PENDING_SUPERVISOR_APPROVAL'::text, 'APPROVED'::text, 'REJECTED'::text, 'TIMED_OUT'::text])))
 );
 
@@ -4470,5 +4564,5 @@ ALTER TABLE ONLY public.tenants
 -- PostgreSQL database dump complete
 --
 
-\unrestrict XWpWeCYEr7dgbVgG08qlSBot4B4oo5Rj4zgM1z5rn3wBB3BCnaUTcbSf9RxF6AP
+\unrestrict osZTaQeenovyXNH6HRsJYBgjeiZ5t7X1GBYQrDtMBUeDHRePMUZCfvHTzKZPlCc
 

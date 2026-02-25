@@ -234,6 +234,15 @@
       "expires_on": "2026-12-31",
       "reviewed_by": "security_guardian",
       "approved_at": "2026-02-25"
+    },
+    {
+      "id": "DDL-ALLOW-0027",
+      "migration": "schema/migrations/0058_hier_011_supervisor_access_mechanisms.sql",
+      "statement_fingerprint": "72b5a808d5316d87f58837cbb2ae3e9c474e4f37f9b7525014677decb7ce7701",
+      "reason": "Phase-1 HIER-011 extends supervisor approval queue with hold/approval metadata and self-approval guard support on a non-hot control-plane table.",
+      "expires_on": "2026-12-31",
+      "reviewed_by": "security_guardian",
+      "approved_at": "2026-02-25"
     }
   ]
 }
