@@ -1,0 +1,44 @@
+{
+  "check_id": "TSK-P1-TEN-001",
+  "task_id": "TSK-P1-TEN-001",
+  "timestamp_utc": "2026-02-25T14:12:27Z",
+  "git_sha": "b074d01e67bdb43bd0c58739b1ee220fad8703de",
+  "schema_fingerprint": "b074d01",
+  "status": "PASS",
+  "pass": true,
+  "details": {
+    "tenant_context_source": "x-tenant-id header (authoritative)",
+    "missing_tenant_rejected": true,
+    "unknown_tenant_rejected": true,
+    "valid_tenant_accepted": true
+  },
+  "negative_tests": [
+    {
+      "Name": "missing_tenant_context_rejected",
+      "Status": "PASS",
+      "Detail": "deterministic expectation met"
+    },
+    {
+      "Name": "unknown_tenant_context_rejected",
+      "Status": "PASS",
+      "Detail": "deterministic expectation met"
+    }
+  ],
+  "results": [
+    {
+      "Name": "missing_tenant_context_rejected",
+      "Status": "PASS",
+      "Detail": "deterministic expectation met"
+    },
+    {
+      "Name": "unknown_tenant_context_rejected",
+      "Status": "PASS",
+      "Detail": "deterministic expectation met"
+    },
+    {
+      "Name": "valid_tenant_context_allowed",
+      "Status": "PASS",
+      "Detail": "deterministic expectation met"
+    }
+  ]
+}

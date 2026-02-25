@@ -690,6 +690,14 @@ if [[ "${RUN_PHASE1_GATES:-0}" == "1" ]]; then
     exit 1
   fi
 
+  echo "==> Phase-1 ingress tenant context verification (TSK-P1-TEN-001)"
+  if [[ -x scripts/audit/verify_ten_001_ingress_tenant_context.sh ]]; then
+    scripts/audit/verify_ten_001_ingress_tenant_context.sh --evidence evidence/phase1/ten_001_ingress_tenant_context.json
+  else
+    echo "ERROR: scripts/audit/verify_ten_001_ingress_tenant_context.sh not found"
+    exit 1
+  fi
+
   echo "==> Phase-1 no-MCP guard"
   if [[ -x scripts/audit/verify_no_mcp_phase1.sh ]]; then
     scripts/audit/verify_no_mcp_phase1.sh
