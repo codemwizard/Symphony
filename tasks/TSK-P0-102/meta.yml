@@ -17,16 +17,10 @@ invariants:
 work:
   - "Enforce dev-only file evidence writes with fail-closed behavior outside development."
   - "Keep evidence validation deterministic for task-level verifier outputs."
+  - "Allow evidence writes only in development/ci and deny other environments."
 acceptance_criteria:
   - "TSK-P0-102 verifier passes and writes schema-valid evidence."
   - "Evidence write guard fails closed when environment disallows file evidence."
-
-invariants:
-  - "INV-077"
-work:
-  - "Enforce fail-closed evidence write policy by environment in shared helper."
-  - "Allow evidence writes only in development/ci and deny other environments."
-acceptance_criteria:
   - "Verifier proves development/ci writes pass and production write is denied."
   - "Evidence artifact exists and validates for TSK-P0-102."
 verification:
@@ -37,9 +31,6 @@ evidence:
 failure_modes:
   - "Evidence writes are allowed in non-development environments."
   - "Verifier output omits required evidence fields or fails schema validation."
-
-failure_modes:
-  - "Evidence writes are allowed in non-development environments."
   - "Fail-closed denial message is not emitted for forbidden environments."
 
 must_read:
