@@ -13,6 +13,12 @@ if (args.Contains("--self-test-adapter-contract", StringComparer.OrdinalIgnoreCa
     Environment.ExitCode = code;
     return;
 }
+if (args.Contains("--self-test-simulated-rail-adapter", StringComparer.OrdinalIgnoreCase))
+{
+    var code = await SimulatedRailAdapterSelfTest.RunAsync(CancellationToken.None);
+    Environment.ExitCode = code;
+    return;
+}
 
 Console.WriteLine("ExecutorWorker MVP: use --self-test for deterministic task verification.");
 
@@ -161,6 +167,169 @@ sealed class DeterministicSimulatedAdapter : IRailAdapter
             too_late: false,
             error_code: string.Empty
         ));
+    }
+}
+
+record SimRailConfig(string Scenario, int DelayMs, string LogPath)
+{
+    public static SimRailConfig Load()
+    {
+        var scenario = (Environment.GetEnvironmentVariable("SIM_RAIL_SCENARIO") ?? "SIMULATE_SUCCESS").Trim().ToUpperInvariant();
+        var delayMs = 50;
+        if (int.TryParse(Environment.GetEnvironmentVariable("SIM_RAIL_DELAY_MS"), out var parsedDelay) && parsedDelay >= 0)
+        {
+            delayMs = parsedDelay;
+        }
+
+        var logPath = (Environment.GetEnvironmentVariable("SIM_RAIL_LOG_PATH") ?? "sim_rail_log.jsonl").Trim();
+        var configPath = (Environment.GetEnvironmentVariable("SIM_RAIL_CONFIG_JSON") ?? string.Empty).Trim();
+        if (!string.IsNullOrWhiteSpace(configPath) && File.Exists(configPath))
+        {
+            using var doc = JsonDocument.Parse(File.ReadAllText(configPath));
+            var root = doc.RootElement;
+            if (root.TryGetProperty("scenario", out var scenarioProp) && scenarioProp.ValueKind == JsonValueKind.String)
+            {
+                scenario = (scenarioProp.GetString() ?? scenario).Trim().ToUpperInvariant();
+            }
+            if (root.TryGetProperty("delay_ms", out var delayProp) && delayProp.ValueKind == JsonValueKind.Number && delayProp.TryGetInt32(out var fileDelay) && fileDelay >= 0)
+            {
+                delayMs = fileDelay;
+            }
+            if (root.TryGetProperty("log_path", out var logPathProp) && logPathProp.ValueKind == JsonValueKind.String)
+            {
+                var candidate = (logPathProp.GetString() ?? string.Empty).Trim();
+                if (!string.IsNullOrWhiteSpace(candidate))
+                {
+                    logPath = candidate;
+                }
+            }
+        }
+
+        return new SimRailConfig(scenario, delayMs, logPath);
+    }
+}
+
+sealed class SimulatedRailAdapter : IRailAdapter
+{
+    private readonly SimRailConfig _config;
+    private readonly Dictionary<string, string> _stateByRailRef = new(StringComparer.Ordinal);
+    private readonly Dictionary<string, int> _submitAttemptsByInstruction = new(StringComparer.Ordinal);
+
+    public SimulatedRailAdapter(SimRailConfig config)
+    {
+        _config = config;
+        var directory = Path.GetDirectoryName(_config.LogPath);
+        if (!string.IsNullOrWhiteSpace(directory))
+        {
+            Directory.CreateDirectory(directory);
+        }
+    }
+
+    public async Task<SubmitResult> Submit(RailInstruction instruction, CancellationToken cancellationToken)
+    {
+        await SimulateDelay(cancellationToken);
+        var attempt = _submitAttemptsByInstruction.TryGetValue(instruction.instruction_id, out var current)
+            ? current + 1
+            : 1;
+        _submitAttemptsByInstruction[instruction.instruction_id] = attempt;
+
+        SubmitResult result;
+        var railRef = $"sim-{instruction.instruction_id}";
+        switch (_config.Scenario)
+        {
+            case "SIMULATE_TRANSIENT_FAILURE":
+                if (attempt == 1)
+                {
+                    result = new SubmitResult(ok: false, rail_ref: string.Empty, retryable: true, error_code: "TRANSIENT_RAIL_ERROR");
+                }
+                else
+                {
+                    _stateByRailRef[railRef] = "SETTLED";
+                    result = new SubmitResult(ok: true, rail_ref: railRef, retryable: false, error_code: string.Empty);
+                }
+                break;
+            case "SIMULATE_PERMANENT_FAILURE":
+                result = new SubmitResult(ok: false, rail_ref: string.Empty, retryable: false, error_code: "PERMANENT_RAIL_ERROR");
+                break;
+            case "SIMULATE_CANCEL_SUCCESS":
+                _stateByRailRef[railRef] = "PENDING";
+                result = new SubmitResult(ok: true, rail_ref: railRef, retryable: false, error_code: string.Empty);
+                break;
+            case "SIMULATE_CANCEL_TOO_LATE":
+                _stateByRailRef[railRef] = "SETTLED";
+                result = new SubmitResult(ok: true, rail_ref: railRef, retryable: false, error_code: string.Empty);
+                break;
+            case "SIMULATE_SUCCESS":
+            default:
+                _stateByRailRef[railRef] = "SETTLED";
+                result = new SubmitResult(ok: true, rail_ref: railRef, retryable: false, error_code: string.Empty);
+                break;
+        }
+
+        await AppendLogAsync("submit", instruction.instruction_id, result, cancellationToken);
+        return result;
+    }
+
+    public async Task<StatusResult> QueryStatus(string railRef, CancellationToken cancellationToken)
+    {
+        await SimulateDelay(cancellationToken);
+        StatusResult result;
+        if (!_stateByRailRef.TryGetValue(railRef, out var state))
+        {
+            result = new StatusResult(ok: false, state: "UNKNOWN", final: false, error_code: "RAIL_REF_NOT_FOUND");
+        }
+        else
+        {
+            if (_config.Scenario == "SIMULATE_SUCCESS" && state == "PENDING")
+            {
+                _stateByRailRef[railRef] = "SETTLED";
+                state = "SETTLED";
+            }
+
+            var isFinal = state is "SETTLED" or "FAILED" or "CANCELLED";
+            result = new StatusResult(ok: true, state: state, final: isFinal, error_code: string.Empty);
+        }
+
+        await AppendLogAsync("query_status", railRef, result, cancellationToken);
+        return result;
+    }
+
+    public async Task<CancelResult> Cancel(string railRef, CancellationToken cancellationToken)
+    {
+        await SimulateDelay(cancellationToken);
+        CancelResult result;
+        if (!_stateByRailRef.TryGetValue(railRef, out var state))
+        {
+            result = new CancelResult(ok: false, state: "UNKNOWN", too_late: false, error_code: "RAIL_REF_NOT_FOUND");
+        }
+        else if (_config.Scenario == "SIMULATE_CANCEL_TOO_LATE" || state == "SETTLED")
+        {
+            result = new CancelResult(ok: false, state: "SETTLED", too_late: true, error_code: "CANCEL_TOO_LATE");
+        }
+        else
+        {
+            _stateByRailRef[railRef] = "CANCELLED";
+            result = new CancelResult(ok: true, state: "CANCELLED", too_late: false, error_code: string.Empty);
+        }
+
+        await AppendLogAsync("cancel", railRef, result, cancellationToken);
+        return result;
+    }
+
+    private Task SimulateDelay(CancellationToken cancellationToken)
+        => _config.DelayMs > 0 ? Task.Delay(_config.DelayMs, cancellationToken) : Task.CompletedTask;
+
+    private async Task AppendLogAsync(string method, string key, object result, CancellationToken cancellationToken)
+    {
+        var line = JsonSerializer.Serialize(new
+        {
+            timestamp_utc = DateTime.UtcNow.ToString("yyyy-MM-ddTHH:mm:ssZ"),
+            scenario = _config.Scenario,
+            method,
+            key,
+            result
+        });
+        await File.AppendAllTextAsync(_config.LogPath, line + Environment.NewLine, cancellationToken);
     }
 }
 
@@ -573,6 +742,123 @@ static class AdapterContractSelfTest
                 checks.Add(new SelfTestCase(name, "FAIL", "expectation not met"));
             }
         }
+    }
+}
+
+static class SimulatedRailAdapterSelfTest
+{
+    public static async Task<int> RunAsync(CancellationToken cancellationToken)
+    {
+        var rootDir = EvidenceMeta.ResolveRepoRoot(Directory.GetCurrentDirectory());
+        var evidenceDir = Path.Combine(rootDir, "evidence", "phase1");
+        Directory.CreateDirectory(evidenceDir);
+        var evidencePath = Path.Combine(evidenceDir, "adp_002_simulated_rail_adapter.json");
+        var tmpDir = Path.Combine(Path.GetTempPath(), $"sim-rail-{Guid.NewGuid():N}");
+        Directory.CreateDirectory(tmpDir);
+
+        var checks = new List<SelfTestCase>();
+        var pass = 0;
+        var fail = 0;
+        var scenarios = new[]
+        {
+            "SIMULATE_SUCCESS",
+            "SIMULATE_TRANSIENT_FAILURE",
+            "SIMULATE_PERMANENT_FAILURE",
+            "SIMULATE_CANCEL_SUCCESS",
+            "SIMULATE_CANCEL_TOO_LATE"
+        };
+
+        foreach (var scenario in scenarios)
+        {
+            var logPath = Path.Combine(tmpDir, $"{scenario.ToLowerInvariant()}.jsonl");
+            var adapter = new SimulatedRailAdapter(new SimRailConfig(scenario, DelayMs: 0, LogPath: logPath));
+            var instruction = new RailInstruction(
+                instruction_id: $"adp002-{scenario.ToLowerInvariant()}",
+                rail_type: "SIM",
+                idempotency_key: $"idem-{scenario.ToLowerInvariant()}",
+                payload_json: "{\"amount\":100}"
+            );
+
+            try
+            {
+                var submit1 = await adapter.Submit(instruction, cancellationToken);
+                var ok = scenario switch
+                {
+                    "SIMULATE_SUCCESS" => submit1.ok,
+                    "SIMULATE_TRANSIENT_FAILURE" => !submit1.ok && submit1.retryable,
+                    "SIMULATE_PERMANENT_FAILURE" => !submit1.ok && !submit1.retryable,
+                    "SIMULATE_CANCEL_SUCCESS" => submit1.ok,
+                    "SIMULATE_CANCEL_TOO_LATE" => submit1.ok,
+                    _ => false
+                };
+
+                if (scenario == "SIMULATE_TRANSIENT_FAILURE")
+                {
+                    var submit2 = await adapter.Submit(instruction, cancellationToken);
+                    ok = ok && submit2.ok;
+                }
+
+                if (submit1.ok)
+                {
+                    var query = await adapter.QueryStatus(submit1.rail_ref, cancellationToken);
+                    ok = ok && query.ok;
+                    if (scenario == "SIMULATE_CANCEL_SUCCESS")
+                    {
+                        var cancel = await adapter.Cancel(submit1.rail_ref, cancellationToken);
+                        var queryAfterCancel = await adapter.QueryStatus(submit1.rail_ref, cancellationToken);
+                        ok = ok && cancel.ok && queryAfterCancel.state == "CANCELLED";
+                    }
+                    else if (scenario == "SIMULATE_CANCEL_TOO_LATE")
+                    {
+                        var cancel = await adapter.Cancel(submit1.rail_ref, cancellationToken);
+                        ok = ok && !cancel.ok && cancel.too_late;
+                    }
+                }
+
+                var logExists = File.Exists(logPath) && File.ReadAllLines(logPath).Length > 0;
+                ok = ok && logExists;
+
+                if (ok)
+                {
+                    pass++;
+                    checks.Add(new SelfTestCase($"scenario_{scenario.ToLowerInvariant()}", "PASS", "deterministic expectation met"));
+                }
+                else
+                {
+                    fail++;
+                    checks.Add(new SelfTestCase($"scenario_{scenario.ToLowerInvariant()}", "FAIL", "expectation not met"));
+                }
+            }
+            catch (Exception ex)
+            {
+                fail++;
+                checks.Add(new SelfTestCase($"scenario_{scenario.ToLowerInvariant()}", "FAIL", ex.Message));
+            }
+        }
+
+        var status = fail == 0 ? "PASS" : "FAIL";
+        var meta = EvidenceMeta.Load(rootDir);
+        await File.WriteAllTextAsync(evidencePath, JsonSerializer.Serialize(new
+        {
+            check_id = "ADP-002-SIMULATED-RAIL-ADAPTER",
+            task_id = "TSK-P1-ADP-002",
+            timestamp_utc = meta.TimestampUtc,
+            git_sha = meta.GitSha,
+            schema_fingerprint = meta.SchemaFingerprint,
+            status,
+            pass = status == "PASS",
+            details = new
+            {
+                scenarios_tested = scenarios,
+                latency_configurable = true,
+                append_only_log = "sim_rail_log.jsonl",
+                checks
+            }
+        }, new JsonSerializerOptions { WriteIndented = true }) + Environment.NewLine, cancellationToken);
+
+        Console.WriteLine($"Simulated rail adapter self-test status: {status}");
+        Console.WriteLine($"Evidence: {evidencePath}");
+        return fail == 0 ? 0 : 1;
     }
 }
 

@@ -1,0 +1,47 @@
+{
+  "check_id": "ADP-002-SIMULATED-RAIL-ADAPTER",
+  "task_id": "TSK-P1-ADP-002",
+  "timestamp_utc": "2026-02-25T23:10:51Z",
+  "git_sha": "4fbca5b46270c4e60c6051a3dcac209a2e32a739",
+  "schema_fingerprint": "4fbca5b",
+  "status": "PASS",
+  "pass": true,
+  "details": {
+    "scenarios_tested": [
+      "SIMULATE_SUCCESS",
+      "SIMULATE_TRANSIENT_FAILURE",
+      "SIMULATE_PERMANENT_FAILURE",
+      "SIMULATE_CANCEL_SUCCESS",
+      "SIMULATE_CANCEL_TOO_LATE"
+    ],
+    "latency_configurable": true,
+    "append_only_log": "sim_rail_log.jsonl",
+    "checks": [
+      {
+        "name": "scenario_simulate_success",
+        "status": "PASS",
+        "detail": "deterministic expectation met"
+      },
+      {
+        "name": "scenario_simulate_transient_failure",
+        "status": "PASS",
+        "detail": "deterministic expectation met"
+      },
+      {
+        "name": "scenario_simulate_permanent_failure",
+        "status": "PASS",
+        "detail": "deterministic expectation met"
+      },
+      {
+        "name": "scenario_simulate_cancel_success",
+        "status": "PASS",
+        "detail": "deterministic expectation met"
+      },
+      {
+        "name": "scenario_simulate_cancel_too_late",
+        "status": "PASS",
+        "detail": "deterministic expectation met"
+      }
+    ]
+  }
+}
