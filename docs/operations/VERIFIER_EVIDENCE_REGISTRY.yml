@@ -104,6 +104,9 @@ registry:
   scripts/audit/verify_ten_001_ingress_tenant_context.sh:
     emits:
       - evidence/phase1/ten_001_ingress_tenant_context.json
+  scripts/audit/verify_ten_002_rls_leakage.sh:
+    emits:
+      - evidence/phase1/ten_002_rls_leakage.json
   scripts/audit/verify_drd_policy_usage.sh:
     emits:
       - evidence/phase0/drd_policy_usage.json

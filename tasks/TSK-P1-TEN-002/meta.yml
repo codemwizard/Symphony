@@ -1,0 +1,38 @@
+phase: "1"
+task_id: "TSK-P1-TEN-002"
+title: "RLS isolation + leakage tests"
+owner_role: "SUPERVISOR"
+status: "completed"
+
+depends_on:
+  - "TSK-P1-TEN-001"
+
+touches:
+  - "tasks/TSK-P1-TEN-002/meta.yml"
+  - "docs/plans/phase1/TSK-P1-TEN-002/PLAN.md"
+  - "docs/plans/phase1/TSK-P1-TEN-002/EXEC_LOG.md"
+  - "schema/migrations/0059_ten_002_rls_tenant_isolation.sql"
+  - "scripts/audit/verify_ten_002_rls_leakage.sh"
+  - "docs/PHASE1/phase1_contract.yml"
+  - "docs/operations/VERIFIER_EVIDENCE_REGISTRY.yml"
+  - "docs/operations/SEMANTIC_INTEGRITY_ALLOWLIST.yml"
+  - "evidence/phase1/ten_002_rls_leakage.json"
+
+invariants:
+  - "INV-119"
+
+mechanics:
+  gate_ids:
+    - "INT-G28"
+  verifiers:
+    - "bash scripts/audit/verify_ten_002_rls_leakage.sh && python3 scripts/audit/validate_evidence.py --task TSK-P1-TEN-002 --evidence evidence/phase1/ten_002_rls_leakage.json"
+  evidence_paths:
+    - "evidence/phase1/ten_002_rls_leakage.json"
+
+implementation_plan: "docs/plans/phase1/TSK-P1-TEN-002/PLAN.md"
+implementation_log: "docs/plans/phase1/TSK-P1-TEN-002/EXEC_LOG.md"
+
+must_read:
+  - "docs/operations/AI_AGENT_OPERATION_MANUAL.md"
+  - "docs/operations/AI_AGENT_WORKFLOW_AND_ROLE_PLAN_v2.md"
+  - "docs/operations/AGENT_ROLE_RECONCILIATION.md"

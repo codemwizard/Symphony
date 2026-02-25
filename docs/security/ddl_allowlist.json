@@ -243,6 +243,24 @@
       "expires_on": "2026-12-31",
       "reviewed_by": "security_guardian",
       "approved_at": "2026-02-25"
+    },
+    {
+      "id": "DDL-ALLOW-0028",
+      "migration": "schema/migrations/0059_ten_002_rls_tenant_isolation.sql",
+      "statement_fingerprint": "3ed7053638665ccb42b0688d3d9a4df865b6a10322c79ecf84ca5072fd2f7715",
+      "reason": "Phase-1 TEN-002 uses dynamic ALTER TABLE to enable RLS across every tenant-scoped table discovered from catalog metadata.",
+      "expires_on": "2026-12-31",
+      "reviewed_by": "security_guardian",
+      "approved_at": "2026-02-25"
+    },
+    {
+      "id": "DDL-ALLOW-0029",
+      "migration": "schema/migrations/0059_ten_002_rls_tenant_isolation.sql",
+      "statement_fingerprint": "6ff80bceb08476d625c6b1c16f8db2a3900c0bb5409ebbc5d236c66517730d61",
+      "reason": "Phase-1 TEN-002 uses dynamic ALTER TABLE to force RLS across every tenant-scoped table discovered from catalog metadata.",
+      "expires_on": "2026-12-31",
+      "reviewed_by": "security_guardian",
+      "approved_at": "2026-02-25"
     }
   ]
 }

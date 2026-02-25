@@ -4,3 +4,7 @@
 0004_privileges.sql:47:      EXECUTE 'REVOKE ALL ON TABLE public.policy_versions FROM symphony_ingest, symphony_executor, symphony_readonly, symphony_auditor, symphony_control, test_user';
 0004_privileges.sql:55:      EXECUTE 'REVOKE ALL ON TABLE public.schema_migrations FROM PUBLIC';
 0004_privileges.sql:105:      EXECUTE 'GRANT SELECT ON TABLE public.policy_versions TO symphony_executor, symphony_control, symphony_readonly, symphony_auditor, test_user';
+0059_ten_002_rls_tenant_isolation.sql:42:    policy_name := format('rls_tenant_isolation_%s', rec.relname);
+0059_ten_002_rls_tenant_isolation.sql:50:      EXECUTE format(
+0059_ten_002_rls_tenant_isolation.sql:59:    EXECUTE format('ALTER TABLE public.%I ENABLE ROW LEVEL SECURITY', rec.relname);
+0059_ten_002_rls_tenant_isolation.sql:60:    EXECUTE format('ALTER TABLE public.%I FORCE ROW LEVEL SECURITY', rec.relname);
