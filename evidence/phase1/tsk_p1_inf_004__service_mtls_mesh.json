@@ -1,0 +1,37 @@
+{
+  "check_id": "TSK-P1-INF-004",
+  "task_id": "TSK-P1-INF-004",
+  "status": "PASS",
+  "pass": true,
+  "timestamp_utc": "2026-02-25T13:58:31Z",
+  "git_sha": "bc308f6c9a53f7dc50a60f29232e649f1ae7795c",
+  "details": {
+    "mechanism": "Istio",
+    "enforcement_mode": "STRICT",
+    "resources_present": true,
+    "negative_test_result": "PASS",
+    "mesh_signing_identity_boundary": "mesh workload identity is not reused for evidence signing keys"
+  },
+  "checks": [
+    {
+      "check_id": "peer_authentication_strict",
+      "status": "PASS",
+      "detail": "PeerAuthentication mtls.mode must be STRICT"
+    },
+    {
+      "check_id": "destination_rule_executor-worker.symphony-pilot.svc.cluster.local",
+      "status": "PASS",
+      "detail": "host=executor-worker.symphony-pilot.svc.cluster.local;mode=ISTIO_MUTUAL"
+    },
+    {
+      "check_id": "destination_rule_ledger-api.symphony-pilot.svc.cluster.local",
+      "status": "PASS",
+      "detail": "host=ledger-api.symphony-pilot.svc.cluster.local;mode=ISTIO_MUTUAL"
+    },
+    {
+      "check_id": "plaintext_traffic_rejected",
+      "status": "PASS",
+      "detail": "strict peer auth + ISTIO_MUTUAL destination rules prevent plaintext service traffic"
+    }
+  ]
+}

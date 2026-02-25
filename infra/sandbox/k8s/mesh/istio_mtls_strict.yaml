@@ -1,0 +1,30 @@
+apiVersion: security.istio.io/v1beta1
+kind: PeerAuthentication
+metadata:
+  name: symphony-strict-mtls
+  namespace: symphony-pilot
+spec:
+  mtls:
+    mode: STRICT
+---
+apiVersion: networking.istio.io/v1beta1
+kind: DestinationRule
+metadata:
+  name: ledger-api-istio-mtls
+  namespace: symphony-pilot
+spec:
+  host: ledger-api.symphony-pilot.svc.cluster.local
+  trafficPolicy:
+    tls:
+      mode: ISTIO_MUTUAL
+---
+apiVersion: networking.istio.io/v1beta1
+kind: DestinationRule
+metadata:
+  name: executor-worker-istio-mtls
+  namespace: symphony-pilot
+spec:
+  host: executor-worker.symphony-pilot.svc.cluster.local
+  trafficPolicy:
+    tls:
+      mode: ISTIO_MUTUAL

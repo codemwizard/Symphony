@@ -12,4 +12,5 @@ allow:
       - "scripts/audit/verify_inf_002_container_build_pipeline.sh"
       - "scripts/infra/verify_tsk_p1_inf_001.sh"
       - "scripts/audit/verify_inf_005_openbao_external_secrets.sh"
-    justification: "TSK-P1-HIER-009/010/011 and TSK-P1-INF-002/INF-001/INF-005 add deterministic hierarchy, supervisor, and infrastructure evidence verifiers under the same regulated-surface governance invariant."
+      - "scripts/infra/verify_tsk_p1_inf_004.sh"
+    justification: "TSK-P1-HIER-009/010/011 and TSK-P1-INF-002/INF-001/INF-005/INF-004 add deterministic hierarchy, supervisor, and infrastructure evidence verifiers under the same regulated-surface governance invariant."
