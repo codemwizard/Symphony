@@ -241,6 +241,7 @@ Mitigations:
 - Phase-1 member-device event stream is append-only via trigger-enforced mutation denial and ingress-anchored instruction linkage with deterministic verifier evidence (`TSK-P1-HIER-004`).
 - Phase-1 hierarchy verification uses `verify_instruction_hierarchy()` deterministic SQLSTATE gating to fail-closed on tenant/participant/program/entity/member/device link violations (`TSK-P1-HIER-005`, INV-077, INV-119).
 - Phase-1 risk formula registry + program migration introduces append-only `risk_formula_registry`, deterministic `programs.default_risk_tier` enforcement, and read-only projection posture (`vw_program_tier_effective`) with verifier-backed evidence (`TSK-P1-HIER-007`).
+- Phase-1 SIM-swap alert derivation (`TSK-P1-HIER-008`) is implemented as hardened `SECURITY DEFINER` DB function (`derive_sim_swap_alert`) writing append-only `sim_swap_alerts` rows with one-alert-per-source-event idempotency and non-null `formula_version_id` traceability (`INV-129`).
 
 ## Priority security actions
 1) Implement service identity and mTLS for internal calls.
