@@ -216,6 +216,15 @@
       "expires_on": "2026-12-31",
       "reviewed_by": "security_guardian",
       "approved_at": "2026-02-23"
+    },
+    {
+      "id": "DDL-ALLOW-0025",
+      "migration": "schema/migrations/0054_hier_008_member_device_events_sim_swap_type.sql",
+      "statement_fingerprint": "bb703afca25a2a4e3b9024de8f9846482a963f42023b7c0991033f3cb92fc3de",
+      "reason": "Phase-1 HIER-008 expands member_device_events check constraints to admit SIM_SWAP_DETECTED; ALTER TABLE applies to non-hot hierarchy table.",
+      "expires_on": "2026-12-31",
+      "reviewed_by": "security_guardian",
+      "approved_at": "2026-02-25"
     }
   ]
 }

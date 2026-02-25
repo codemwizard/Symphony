@@ -2,7 +2,7 @@
 -- PostgreSQL database dump
 --
 
-\restrict eUHgmRMhey4Cdaf0b3x5k9o6X4uz8ujmWqT4I6Feb8URY1DMA2PfwcF6sp4vg6B
+\restrict CW5a78enhy8T7Pmwxqo11oQbggwkUWkaI0jzVoQ6WyT0OPnal6ewTlD7tgwGH7U
 
 -- Dumped from database version 18.2 (Debian 18.2-1.pgdg13+1)
 -- Dumped by pg_dump version 18.2 (Debian 18.2-1.pgdg13+1)
@@ -515,6 +515,111 @@ CREATE FUNCTION public.deny_revocation_mutation() RETURNS trigger
     RAISE EXCEPTION 'revocation tables are append-only'
       USING ERRCODE = 'P0001';
   END;
+$$;
+
+
+--
+-- Name: deny_sim_swap_alerts_mutation(); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.deny_sim_swap_alerts_mutation() RETURNS trigger
+    LANGUAGE plpgsql
+    AS $$
+BEGIN
+  RAISE EXCEPTION 'sim_swap_alerts is append-only'
+    USING ERRCODE = 'P0001';
+END;
+$$;
+
+
+--
+-- Name: derive_sim_swap_alert(uuid); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.derive_sim_swap_alert(p_event_id uuid) RETURNS uuid
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO 'pg_catalog', 'public'
+    AS $$
+DECLARE
+  v_event public.member_device_events%ROWTYPE;
+  v_prior_iccid_hash TEXT;
+  v_formula_version_id UUID;
+  v_alert_id UUID;
+BEGIN
+  SELECT e.*
+  INTO v_event
+  FROM public.member_device_events e
+  WHERE e.event_id = p_event_id;
+
+  IF NOT FOUND THEN
+    RAISE EXCEPTION 'member_device_event % not found', p_event_id
+      USING ERRCODE = 'P7400';
+  END IF;
+
+  IF v_event.event_type <> 'SIM_SWAP_DETECTED' OR v_event.iccid_hash IS NULL THEN
+    RETURN NULL;
+  END IF;
+
+  SELECT md.iccid_hash
+  INTO v_prior_iccid_hash
+  FROM public.member_devices md
+  WHERE md.tenant_id = v_event.tenant_id
+    AND md.member_id = v_event.member_id
+    AND md.status = 'ACTIVE'
+    AND md.iccid_hash IS NOT NULL
+    AND md.iccid_hash <> v_event.iccid_hash
+  ORDER BY md.created_at DESC, md.device_id_hash DESC
+  LIMIT 1;
+
+  IF v_prior_iccid_hash IS NULL THEN
+    RETURN NULL;
+  END IF;
+
+  SELECT rf.formula_version_id
+  INTO v_formula_version_id
+  FROM public.risk_formula_versions rf
+  WHERE rf.formula_key = 'TIER1_DETERMINISTIC_DEFAULT'
+    AND rf.is_active = TRUE
+  ORDER BY rf.created_at DESC
+  LIMIT 1;
+
+  IF v_formula_version_id IS NULL THEN
+    RAISE EXCEPTION 'active formula key % not found', 'TIER1_DETERMINISTIC_DEFAULT'
+      USING ERRCODE = 'P7401';
+  END IF;
+
+  INSERT INTO public.sim_swap_alerts(
+    tenant_id,
+    member_id,
+    source_event_id,
+    prior_iccid_hash,
+    new_iccid_hash,
+    formula_version_id,
+    alert_type,
+    derived_at
+  )
+  VALUES (
+    v_event.tenant_id,
+    v_event.member_id,
+    v_event.event_id,
+    v_prior_iccid_hash,
+    v_event.iccid_hash,
+    v_formula_version_id,
+    'SIM_SWAP_DETECTED',
+    COALESCE(v_event.observed_at, NOW())
+  )
+  ON CONFLICT (source_event_id) DO NOTHING
+  RETURNING alert_id INTO v_alert_id;
+
+  IF v_alert_id IS NULL THEN
+    SELECT s.alert_id
+    INTO v_alert_id
+    FROM public.sim_swap_alerts s
+    WHERE s.source_event_id = v_event.event_id;
+  END IF;
+
+  RETURN v_alert_id;
+END;
 $$;
 
 
@@ -1951,7 +2056,7 @@ CREATE TABLE public.member_device_events (
     observed_at timestamp with time zone NOT NULL,
     created_at timestamp with time zone DEFAULT now() NOT NULL,
     CONSTRAINT member_device_events_device_id_event_type_chk CHECK (((device_id IS NULL) = (event_type = ANY (ARRAY['UNREGISTERED_DEVICE'::text, 'REVOKED_DEVICE_ATTEMPT'::text])))),
-    CONSTRAINT member_device_events_event_type_check CHECK ((event_type = ANY (ARRAY['ENROLLED_DEVICE'::text, 'UNREGISTERED_DEVICE'::text, 'REVOKED_DEVICE_ATTEMPT'::text])))
+    CONSTRAINT member_device_events_event_type_check CHECK ((event_type = ANY (ARRAY['ENROLLED_DEVICE'::text, 'UNREGISTERED_DEVICE'::text, 'REVOKED_DEVICE_ATTEMPT'::text, 'SIM_SWAP_DETECTED'::text])))
 );
 
 
@@ -2268,6 +2373,26 @@ CREATE TABLE public.schema_migrations (
     version text NOT NULL,
     checksum text NOT NULL,
     applied_at timestamp with time zone DEFAULT now() NOT NULL
+);
+
+
+--
+-- Name: sim_swap_alerts; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.sim_swap_alerts (
+    alert_id uuid DEFAULT public.uuid_v7_or_random() NOT NULL,
+    tenant_id uuid NOT NULL,
+    member_id uuid NOT NULL,
+    source_event_id uuid NOT NULL,
+    prior_iccid_hash text NOT NULL,
+    new_iccid_hash text NOT NULL,
+    formula_version_id uuid NOT NULL,
+    alert_type text DEFAULT 'SIM_SWAP_DETECTED'::text NOT NULL,
+    derived_at timestamp with time zone DEFAULT now() NOT NULL,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    CONSTRAINT sim_swap_alerts_alert_type_check CHECK ((alert_type = 'SIM_SWAP_DETECTED'::text)),
+    CONSTRAINT sim_swap_alerts_iccid_diff_chk CHECK ((prior_iccid_hash <> new_iccid_hash))
 );
 
 
@@ -2833,6 +2958,22 @@ ALTER TABLE ONLY public.schema_migrations
 
 
 --
+-- Name: sim_swap_alerts sim_swap_alerts_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.sim_swap_alerts
+    ADD CONSTRAINT sim_swap_alerts_pkey PRIMARY KEY (alert_id);
+
+
+--
+-- Name: sim_swap_alerts sim_swap_alerts_source_event_id_key; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.sim_swap_alerts
+    ADD CONSTRAINT sim_swap_alerts_source_event_id_key UNIQUE (source_event_id);
+
+
+--
 -- Name: supervisor_access_policies supervisor_access_policies_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -3287,6 +3428,13 @@ CREATE INDEX idx_rail_truth_anchor_participant_anchored ON public.rail_dispatch_
 
 
 --
+-- Name: idx_sim_swap_alerts_tenant_member_derived; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_sim_swap_alerts_tenant_member_derived ON public.sim_swap_alerts USING btree (tenant_id, member_id, derived_at DESC);
+
+
+--
 -- Name: idx_supervisor_approval_queue_status_timeout; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -3594,6 +3742,13 @@ CREATE TRIGGER trg_deny_revoked_client_certs_mutation BEFORE DELETE OR UPDATE ON
 --
 
 CREATE TRIGGER trg_deny_revoked_tokens_mutation BEFORE DELETE OR UPDATE ON public.revoked_tokens FOR EACH ROW EXECUTE FUNCTION public.deny_revocation_mutation();
+
+
+--
+-- Name: sim_swap_alerts trg_deny_sim_swap_alerts_mutation; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER trg_deny_sim_swap_alerts_mutation BEFORE DELETE OR UPDATE ON public.sim_swap_alerts FOR EACH ROW EXECUTE FUNCTION public.deny_sim_swap_alerts_mutation();
 
 
 --
@@ -4073,6 +4228,38 @@ ALTER TABLE ONLY public.rail_dispatch_truth_anchor
 
 
 --
+-- Name: sim_swap_alerts sim_swap_alerts_formula_version_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.sim_swap_alerts
+    ADD CONSTRAINT sim_swap_alerts_formula_version_id_fkey FOREIGN KEY (formula_version_id) REFERENCES public.risk_formula_versions(formula_version_id) ON DELETE RESTRICT;
+
+
+--
+-- Name: sim_swap_alerts sim_swap_alerts_member_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.sim_swap_alerts
+    ADD CONSTRAINT sim_swap_alerts_member_id_fkey FOREIGN KEY (member_id) REFERENCES public.members(member_id) ON DELETE RESTRICT;
+
+
+--
+-- Name: sim_swap_alerts sim_swap_alerts_source_event_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.sim_swap_alerts
+    ADD CONSTRAINT sim_swap_alerts_source_event_id_fkey FOREIGN KEY (source_event_id) REFERENCES public.member_device_events(event_id) ON DELETE RESTRICT;
+
+
+--
+-- Name: sim_swap_alerts sim_swap_alerts_tenant_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.sim_swap_alerts
+    ADD CONSTRAINT sim_swap_alerts_tenant_id_fkey FOREIGN KEY (tenant_id) REFERENCES public.tenants(tenant_id) ON DELETE RESTRICT;
+
+
+--
 -- Name: supervisor_approval_queue supervisor_approval_queue_program_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -4124,5 +4311,5 @@ ALTER TABLE ONLY public.tenants
 -- PostgreSQL database dump complete
 --
 
-\unrestrict eUHgmRMhey4Cdaf0b3x5k9o6X4uz8ujmWqT4I6Feb8URY1DMA2PfwcF6sp4vg6B
+\unrestrict CW5a78enhy8T7Pmwxqo11oQbggwkUWkaI0jzVoQ6WyT0OPnal6ewTlD7tgwGH7U
 
