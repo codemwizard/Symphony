@@ -1,39 +1,40 @@
-phase: "0"
+phase: "1"
 task_id: "TSK-P0-103"
-title: "Privilege posture closeout for business tables (REVOKE hygiene)"
-owner_role: "DB_FOUNDATION"
+title: "Single payload materialization"
+owner_role: "SUPERVISOR"
 status: "completed"
+
 depends_on:
-- "TSK-P0-086"
-- "TSK-P0-089"
+  - "TSK-P0-102"
+
 touches:
-- "schema/migrations/**"
-- "scripts/db/verify_invariants.sh"
-- "docs/invariants/INVARIANTS_MANIFEST.yml"
-- "tasks/TSK-P0-103/meta.yml"
+  - "tasks/TSK-P0-103/meta.yml"
+  - "scripts/audit/validate_evidence_json.sh"
+  - "scripts/audit/run_phase0_ordered_checks.sh"
+  - "scripts/audit/verify_tsk_p0_103.sh"
 invariants:
-- "NEW: Revoke-first posture explicitly applied to new business tables"
+  - "INV-077"
 work:
-- "Add forward-only migration(s) to explicitly REVOKE ALL ON new business tables FROM PUBLIC (and ensure runtime roles do not gain direct DML)."
-- "Add/extend verifier coverage so privilege posture on the new tables is mechanically asserted."
+  - "Ensure task evidence generation follows single payload materialization semantics."
+  - "Preserve deterministic verifier output and schema validation for TSK-P0-103."
 acceptance_criteria:
-- "PUBLIC has no implicit privileges on new business tables."
-- "Verifier emits evidence (directly or via existing DB gate evidence) and fails closed on privilege drift."
+  - "TSK-P0-103 verifier passes and emits schema-valid single payload evidence."
+  - "Ordered checks continue to validate TSK-P0-103 without payload divergence."
+
 verification:
-- "scripts/db/verify_invariants.sh"
+  - "bash scripts/audit/verify_tsk_p0_103.sh --evidence evidence/phase0/tsk_p0_103__single_payload_materialization.json"
+
 evidence:
-- "evidence/phase0/ci_invariant_gate.json"
+  - "evidence/phase0/tsk_p0_103__single_payload_materialization.json"
 failure_modes:
-- "New tables rely on implicit privilege defaults."
-- "Privilege drift is not detected mechanically."
-- "Evidence file missing."
+  - "Verifier emits multiple/ambiguous payload shapes for the same task evidence."
+  - "Evidence artifact is missing or fails schema validation during ordered checks."
+
 must_read:
-- "docs/audits/TIER1_GAP_AUDIT_2026-02-06.md"
-- "schema/migrations/0004_privileges.sql"
-implementation_plan: "docs/plans/phase0/TSK-P0-090_audit_gap_closeout/PLAN.md"
-implementation_log: "docs/plans/phase0/TSK-P0-090_audit_gap_closeout/EXEC_LOG.md"
+  - "docs/operations/AI_AGENT_OPERATION_MANUAL.md"
 notes: ""
 client: "codex_cli"
-assigned_agent: "db_foundation"
-model: "<UNASSIGNED>"
-
+assigned_agent: "supervisor"
+model: "gpt-5-codex"
+implementation_plan: "docs/plans/phase1/TSK-P0-103/PLAN.md"
+implementation_log: "docs/plans/phase1/TSK-P0-103/EXEC_LOG.md"

@@ -40,6 +40,7 @@ fi
 run env SYMPHONY_SKIP_CONTRACT_EVIDENCE_STATUS=1 scripts/audit/run_invariants_fast_checks.sh
 
 run scripts/audit/validate_evidence_schema.sh
+run scripts/audit/validate_evidence_json.sh
 run bash scripts/audit/verify_phase0_contract.sh
 
 if [[ "${RUN_PHASE1_GATES:-0}" == "1" ]]; then

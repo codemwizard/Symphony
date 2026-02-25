@@ -9,6 +9,9 @@ if [[ -f scripts/audit/env/phase0_flags.sh ]]; then
   source scripts/audit/env/phase0_flags.sh
 fi
 
+# Local pre-CI must default to development so evidence writes are not blocked by unknown env.
+export SYMPHONY_ENV="${SYMPHONY_ENV:-development}"
+
 echo "==> Pre-CI local checks"
 
 # Local pre-CI runs should be treated as development for evidence write policy.
@@ -22,8 +25,8 @@ FRESH_DB="${FRESH_DB:-1}"   # enforce CI parity by default (ephemeral DB per run
 KEEP_TEMP_DB="${KEEP_TEMP_DB:-0}" # set to 1 to keep temp DB for debugging
 
 # For strict parity with GitHub Actions, do not allow a developer shell to override diff refs.
-# Resolve an unambiguous base ref after fetch (prefer remote-tracking; fallback to local origin/main branch).
-export BASE_REF=""
+# Use only the canonical remote-tracking base ref.
+export BASE_REF="refs/remotes/origin/main"
 export HEAD_REF="HEAD"
 
 require_docker_access() {
@@ -110,11 +113,18 @@ else
 fi
 
 echo "==> Sync base ref for CI parity (refs/remotes/origin/main)"
-if ! git fetch --no-tags --prune origin main >/dev/null 2>&1; then
+if ! git fetch --no-tags --prune origin main:refs/remotes/origin/main >/dev/null 2>&1; then
   echo "ERROR: failed to fetch refs/remotes/origin/main; cannot run parity diff gates"
   exit 1
 fi
-if ! git rev-parse --verify "refs/remotes/origin/main^{commit}" >/dev/null 2>&1; then
+if ! git rev-parse --verify "${BASE_REF}^{commit}" >/dev/null 2>&1; then
+  # Some hook contexts may fetch successfully but not materialize the remote-tracking ref.
+  remote_main_sha="$(git ls-remote --heads origin main 2>/dev/null | awk 'NR==1 {print $1}')"
+  if [[ "$remote_main_sha" =~ ^[0-9a-f]{40}$ ]]; then
+    git update-ref "${BASE_REF}" "$remote_main_sha" >/dev/null 2>&1 || true
+  fi
+fi
+if ! git rev-parse --verify "${BASE_REF}^{commit}" >/dev/null 2>&1; then
   echo "ERROR: refs/remotes/origin/main not found after fetch"
   exit 1
 fi
