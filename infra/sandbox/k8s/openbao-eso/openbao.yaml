@@ -1,0 +1,88 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: openbao-config
+  namespace: symphony
+data:
+  openbao.hcl: |
+    listener "tcp" {
+      address       = "0.0.0.0:8200"
+      tls_cert_file = "/tls/tls.crt"
+      tls_key_file  = "/tls/tls.key"
+    }
+
+    storage "file" {
+      path = "/openbao/data"
+    }
+
+    ui = true
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: openbao
+  namespace: symphony
+spec:
+  serviceName: openbao
+  replicas: 1
+  selector:
+    matchLabels:
+      app: openbao
+  template:
+    metadata:
+      labels:
+        app: openbao
+    spec:
+      containers:
+        - name: openbao
+          image: openbao/openbao:2.2.0
+          args:
+            - "server"
+            - "-config=/etc/openbao/openbao.hcl"
+          ports:
+            - containerPort: 8200
+              name: https
+          livenessProbe:
+            httpGet:
+              scheme: HTTPS
+              path: /v1/sys/health
+              port: 8200
+            initialDelaySeconds: 10
+            periodSeconds: 10
+          readinessProbe:
+            httpGet:
+              scheme: HTTPS
+              path: /v1/sys/health?standbyok=true
+              port: 8200
+            initialDelaySeconds: 10
+            periodSeconds: 10
+          volumeMounts:
+            - name: config
+              mountPath: /etc/openbao
+            - name: tls
+              mountPath: /tls
+              readOnly: true
+            - name: data
+              mountPath: /openbao/data
+      volumes:
+        - name: config
+          configMap:
+            name: openbao-config
+        - name: tls
+          secret:
+            secretName: openbao-tls
+        - name: data
+          emptyDir: {}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: openbao
+  namespace: symphony
+spec:
+  selector:
+    app: openbao
+  ports:
+    - name: https
+      port: 8200
+      targetPort: 8200

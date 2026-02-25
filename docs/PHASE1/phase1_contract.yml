@@ -238,6 +238,14 @@
   evidence_path: "evidence/phase1/tsk_p1_inf_001__postgres_ha_backups_pitr_operator.json"
   notes: "TSK-P1-INF-001 requires operator-style HA cluster posture, scheduled backup declaration, and PITR proof metadata with restored schema version evidence."
 
+- invariant_id: "INV-119"
+  status: "implemented"
+  required: true
+  gate_id: "INT-G28"
+  verifier: "scripts/audit/verify_inf_005_openbao_external_secrets.sh"
+  evidence_path: "evidence/phase1/inf_005_openbao_external_secrets.json"
+  notes: "TSK-P1-INF-005 requires OpenBao sandbox posture, External Secrets store wiring, and deterministic rotation-proof evidence."
+
 - invariant_id: "INV-039"
   status: "deferred_to_phase2"
   required: false
