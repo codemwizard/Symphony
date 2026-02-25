@@ -14,6 +14,13 @@ spec:
         app: ledger-api
     spec:
       serviceAccountName: symphony-api
+      initContainers:
+        - name: wait-for-db-migration-job
+          image: bitnami/kubectl:1.29
+          command:
+            - /bin/sh
+            - -lc
+            - kubectl wait --for=condition=complete --timeout=600s job/db-migration-job -n symphony-pilot
       affinity:
         podAntiAffinity:
           preferredDuringSchedulingIgnoredDuringExecution:
@@ -35,6 +42,18 @@ spec:
           image: ghcr.io/symphony/ledger-api:pilot
           ports:
             - containerPort: 8080
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: 8080
+            initialDelaySeconds: 10
+            periodSeconds: 10
+          readinessProbe:
+            httpGet:
+              path: /readyz
+              port: 8080
+            initialDelaySeconds: 5
+            periodSeconds: 5
           securityContext:
             runAsNonRoot: true
             allowPrivilegeEscalation: false

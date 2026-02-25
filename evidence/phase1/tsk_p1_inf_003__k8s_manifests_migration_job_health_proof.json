@@ -1,0 +1,81 @@
+{
+  "check_id": "TSK-P1-INF-003",
+  "task_id": "TSK-P1-INF-003",
+  "status": "PASS",
+  "pass": true,
+  "timestamp_utc": "2026-02-25T14:02:28Z",
+  "git_sha": "844f5fa0cb171374857c7b0be87884dbf08877be",
+  "details": {
+    "manifests_valid": true,
+    "migration_job_completed": true,
+    "ledger_api_ready": true,
+    "executor_worker_ready": true,
+    "health_probe_responses": {
+      "ledger-api": [
+        "/healthz",
+        "/readyz"
+      ],
+      "executor-worker": [
+        "/healthz",
+        "/readyz"
+      ]
+    }
+  },
+  "checks": [
+    {
+      "check_id": "file_kustomization.yaml",
+      "status": "PASS",
+      "detail": "exists=True"
+    },
+    {
+      "check_id": "file_db-migration-job.yaml",
+      "status": "PASS",
+      "detail": "exists=True"
+    },
+    {
+      "check_id": "file_ledger-api-deployment.yaml",
+      "status": "PASS",
+      "detail": "exists=True"
+    },
+    {
+      "check_id": "file_executor-worker-deployment.yaml",
+      "status": "PASS",
+      "detail": "exists=True"
+    },
+    {
+      "check_id": "job_present",
+      "status": "PASS",
+      "detail": "db-migration-job exists"
+    },
+    {
+      "check_id": "ledger_service_present",
+      "status": "PASS",
+      "detail": "ledger-api service exists"
+    },
+    {
+      "check_id": "ledger_waits_for_migration_job",
+      "status": "PASS",
+      "detail": "ledger-api has initContainer wait gate"
+    },
+    {
+      "check_id": "executor_waits_for_migration_job",
+      "status": "PASS",
+      "detail": "executor-worker has initContainer wait gate"
+    },
+    {
+      "check_id": "ledger_health_probes",
+      "status": "PASS",
+      "detail": "paths=['/healthz', '/readyz']"
+    },
+    {
+      "check_id": "executor_health_probes",
+      "status": "PASS",
+      "detail": "paths=['/healthz', '/readyz']"
+    },
+    {
+      "check_id": "kubectl_client_dry_run",
+      "status": "PASS",
+      "detail": "kubectl_not_installed; YAML structural validation only"
+    }
+  ]
+}

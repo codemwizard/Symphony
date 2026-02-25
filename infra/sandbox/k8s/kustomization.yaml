@@ -3,6 +3,7 @@ kind: Kustomization
 namespace: symphony-pilot
 resources:
   - namespace.yaml
+  - db-migration-job.yaml
   - ledger-api-deployment.yaml
   - executor-worker-deployment.yaml
   - secrets-bootstrap.yaml

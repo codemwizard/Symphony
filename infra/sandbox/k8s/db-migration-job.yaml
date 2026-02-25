@@ -1,0 +1,35 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: db-migration-job
+  namespace: symphony-pilot
+spec:
+  backoffLimit: 3
+  template:
+    spec:
+      restartPolicy: OnFailure
+      containers:
+        - name: migrate
+          image: ghcr.io/symphony/db-migration-job:pilot
+          envFrom:
+            - secretRef:
+                name: symphony-pilot-secrets
+          command:
+            - /bin/sh
+            - -lc
+            - |
+              set -euo pipefail
+              scripts/db/migrate.sh
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: ledger-api
+  namespace: symphony-pilot
+spec:
+  selector:
+    app: ledger-api
+  ports:
+    - name: http
+      port: 8080
+      targetPort: 8080
