@@ -167,6 +167,7 @@ curr = load_tsv(os.environ["CURR_TSV"])
 missing_tables = [t for t in sorted(prev.keys()) if t not in curr]
 missing_columns = []
 type_mismatches = []
+nullable_relaxations = []
 
 for table, cols in prev.items():
     if table not in curr:
@@ -177,6 +178,18 @@ for table, cols in prev.items():
             continue
         cur_spec = curr[table][col]
         if spec != cur_spec:
+            # N-1 compatibility allows relaxing NOT NULL -> NULL because older code
+            # can still write/read valid non-null values without contract breakage.
+            prev_non_null = spec.get("is_nullable") == "NO"
+            curr_nullable = cur_spec.get("is_nullable") == "YES"
+            same_except_nullability = {
+                k: v for k, v in spec.items() if k != "is_nullable"
+            } == {
+                k: v for k, v in cur_spec.items() if k != "is_nullable"
+            }
+            if prev_non_null and curr_nullable and same_except_nullability:
+                nullable_relaxations.append(f"{table}.{col}")
+                continue
             type_mismatches.append({
                 "column": f"{table}.{col}",
                 "prev": spec,
@@ -196,6 +209,7 @@ out = {
     "missing_tables": missing_tables,
     "missing_columns": missing_columns,
     "type_mismatches": type_mismatches,
+    "nullable_relaxations": nullable_relaxations,
     "prev_table_count": len(prev),
     "curr_table_count": len(curr),
 }

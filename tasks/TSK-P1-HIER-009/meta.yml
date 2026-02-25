@@ -1,0 +1,69 @@
+phase: "1"
+task_id: "TSK-P1-HIER-009"
+title: "verify_instruction_hierarchy() + SQLSTATE test suite"
+owner_role: "SUPERVISOR"
+status: "completed"
+
+depends_on:
+  - "TSK-P1-HIER-008"
+
+touches:
+  - "docs/plans/phase1/TSK-P1-HIER-009/PLAN.md"
+  - "docs/plans/phase1/TSK-P1-HIER-009/EXEC_LOG.md"
+  - "tasks/TSK-P1-HIER-009/meta.yml"
+  - "schema/migrations/0056_hier_009_instruction_hierarchy_sqlstate_alignment.sql"
+  - "scripts/db/verify_hier_009_instruction_hierarchy_sqlstates.sh"
+  - "docs/PHASE1/phase1_contract.yml"
+  - "evidence/phase1/hier_009_instruction_hierarchy_sqlstates.json"
+
+invariants:
+  - "INV-077"
+  - "INV-119"
+
+mechanics:
+  gate_ids:
+    - "INT-G28"
+  verifiers:
+    - "bash scripts/db/verify_hier_009_instruction_hierarchy_sqlstates.sh && python3 scripts/audit/validate_evidence.py --task TSK-P1-HIER-009 --evidence evidence/phase1/hier_009_instruction_hierarchy_sqlstates.json"
+    - "RUN_PHASE1_GATES=1 scripts/dev/pre_ci.sh"
+  evidence_paths:
+    - "evidence/phase1/hier_009_instruction_hierarchy_sqlstates.json"
+
+work:
+  - "Align verify_instruction_hierarchy() SQLSTATE mapping to the canonical P7299-P7303 contract."
+  - "Add exhaustive SQLSTATE verifier coverage for each declared hierarchy link failure."
+  - "Emit evidence with sqlstate_mapping_verified entries and reserved gap documentation."
+
+acceptance_criteria:
+  - "Verifier script exists at scripts/db/verify_hier_009_instruction_hierarchy_sqlstates.sh and exits 0."
+  - "Evidence exists at evidence/phase1/hier_009_instruction_hierarchy_sqlstates.json and validates for task TSK-P1-HIER-009."
+  - "Evidence includes sqlstate_mapping_verified with expected/actual mapping for every declared link."
+  - "TSK-P1-HIER-008 dependency is complete before execution."
+
+verification:
+  - "bash scripts/db/verify_hier_009_instruction_hierarchy_sqlstates.sh"
+  - "python3 scripts/audit/validate_evidence.py --task TSK-P1-HIER-009 --evidence evidence/phase1/hier_009_instruction_hierarchy_sqlstates.json"
+  - "RUN_PHASE1_GATES=1 scripts/dev/pre_ci.sh"
+
+evidence:
+  - "evidence/phase1/hier_009_instruction_hierarchy_sqlstates.json"
+
+failure_modes:
+  - "Missing prompt section or execution metadata patch block => STOP."
+  - "Missing phase contract file => FAIL_CLOSED."
+  - "Evidence missing/invalid/task_id mismatch/pass != true => FAIL."
+  - "Dependency TSK-P1-HIER-008 incomplete => BLOCKED."
+  - "Undeclared file modifications outside files_to_change => FAIL_REVIEW."
+
+must_read:
+  - "docs/operations/AI_AGENT_OPERATION_MANUAL.md"
+  - "docs/operations/AI_AGENT_WORKFLOW_AND_ROLE_PLAN_v2.md"
+  - "docs/operations/AGENT_ROLE_RECONCILIATION.md"
+
+implementation_plan: "docs/plans/phase1/TSK-P1-HIER-009/PLAN.md"
+implementation_log: "docs/plans/phase1/TSK-P1-HIER-009/EXEC_LOG.md"
+
+notes: "Implements canonical SQLSTATE mapping suite for verify_instruction_hierarchy() with reserved gap documentation."
+client: "codex_cli"
+assigned_agent: "supervisor"
+model: "gpt-5-codex"

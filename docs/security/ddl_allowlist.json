@@ -225,6 +225,15 @@
       "expires_on": "2026-12-31",
       "reviewed_by": "security_guardian",
       "approved_at": "2026-02-25"
+    },
+    {
+      "id": "DDL-ALLOW-0026",
+      "migration": "schema/migrations/0057_hier_010_program_migration_contract_alignment.sql",
+      "statement_fingerprint": "8b44ad002678d7a4eb417058d25cf7c56893fee5cdf22d0b984d5077f1cd2ed1",
+      "reason": "Phase-1 HIER-010 requires contract-alignment ALTER TABLE operations on non-hot program_migration_events to add new_member_id/created_at and nullable reason semantics.",
+      "expires_on": "2026-12-31",
+      "reviewed_by": "security_guardian",
+      "approved_at": "2026-02-25"
     }
   ]
 }

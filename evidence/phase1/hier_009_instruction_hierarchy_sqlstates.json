@@ -1,0 +1,133 @@
+{
+  "check_id": "TSK-P1-HIER-009",
+  "task_id": "TSK-P1-HIER-009",
+  "status": "PASS",
+  "pass": true,
+  "git_sha": "7c4b6cf01b8220659a5a19c49afbc65f247f176a",
+  "timestamp_utc": "2026-02-25T07:54:12Z",
+  "sqlstate_mapping_verified": [
+    {
+      "link": "tenant_to_participant_invalid",
+      "expected": "P7299",
+      "actual": "P7299",
+      "pass": true
+    },
+    {
+      "link": "participant_to_program_invalid",
+      "expected": "P7300",
+      "actual": "P7300",
+      "pass": true
+    },
+    {
+      "link": "program_to_entity_invalid",
+      "expected": "P7301",
+      "actual": "P7301",
+      "pass": true
+    },
+    {
+      "link": "entity_to_member_invalid",
+      "expected": "P7302",
+      "actual": "P7302",
+      "pass": true
+    },
+    {
+      "link": "member_to_device_invalid",
+      "expected": "P7303",
+      "actual": "P7303",
+      "pass": true
+    }
+  ],
+  "details": {
+    "function_name": "public.verify_instruction_hierarchy",
+    "reserved_sqlstates": [
+      "P7304",
+      "P7305",
+      "P7306",
+      "P7307"
+    ],
+    "sqlstate_mapping_verified": [
+      {
+        "link": "tenant_to_participant_invalid",
+        "expected": "P7299",
+        "actual": "P7299",
+        "pass": true
+      },
+      {
+        "link": "participant_to_program_invalid",
+        "expected": "P7300",
+        "actual": "P7300",
+        "pass": true
+      },
+      {
+        "link": "program_to_entity_invalid",
+        "expected": "P7301",
+        "actual": "P7301",
+        "pass": true
+      },
+      {
+        "link": "entity_to_member_invalid",
+        "expected": "P7302",
+        "actual": "P7302",
+        "pass": true
+      },
+      {
+        "link": "member_to_device_invalid",
+        "expected": "P7303",
+        "actual": "P7303",
+        "pass": true
+      }
+    ]
+  },
+  "checks": [
+    {
+      "check_id": "function_exists",
+      "status": "PASS",
+      "detail": "verify_instruction_hierarchy exists in public schema"
+    },
+    {
+      "check_id": "function_signature",
+      "status": "PASS",
+      "detail": "verify_instruction_hierarchy has required signature"
+    },
+    {
+      "check_id": "function_security_definer",
+      "status": "PASS",
+      "detail": "verify_instruction_hierarchy is SECURITY DEFINER"
+    },
+    {
+      "check_id": "function_search_path_hardening",
+      "status": "PASS",
+      "detail": "verify_instruction_hierarchy uses SET search_path = pg_catalog, public"
+    },
+    {
+      "check_id": "tenant_participant_link_invalid",
+      "status": "PASS",
+      "detail": "link=tenant_to_participant_invalid;expected=P7299;actual=P7299"
+    },
+    {
+      "check_id": "participant_program_link_invalid",
+      "status": "PASS",
+      "detail": "link=participant_to_program_invalid;expected=P7300;actual=P7300"
+    },
+    {
+      "check_id": "program_entity_link_invalid",
+      "status": "PASS",
+      "detail": "link=program_to_entity_invalid;expected=P7301;actual=P7301"
+    },
+    {
+      "check_id": "entity_member_link_invalid",
+      "status": "PASS",
+      "detail": "link=entity_to_member_invalid;expected=P7302;actual=P7302"
+    },
+    {
+      "check_id": "member_device_link_invalid",
+      "status": "PASS",
+      "detail": "link=member_to_device_invalid;expected=P7303;actual=P7303"
+    },
+    {
+      "check_id": "happy_path",
+      "status": "PASS",
+      "detail": "function returns true for valid hierarchy"
+    }
+  ]
+}
