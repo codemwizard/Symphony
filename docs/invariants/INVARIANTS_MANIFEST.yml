@@ -1002,3 +1002,17 @@
     Enforces that program budget envelopes are modeled explicitly (programs.program_escrow_id),
     that authorize_escrow_reservation() locks the envelope balance row FOR UPDATE, and that
     50 concurrent reservations cannot oversubscribe an envelope ceiling.
+
+- id: INV-129
+  aliases: ["I-HIER-SIM-SWAP-TRACE-01"]
+  status: implemented
+  severity: P1
+  title: "SIM-swap alerts are derived deterministically with formula-version traceability"
+  owners: ["team-db", "team-platform"]
+  sla_days: 30
+  enforcement: "scripts/db/verify_hier_008_sim_swap_alerts.sh"
+  verification: "scripts/db/verify_hier_008_sim_swap_alerts.sh; evidence/phase1/hier_008_sim_swap_alerts.json"
+  notes: >
+    Enforces append-only sim_swap_alerts rows derived from member_device_events via
+    hardened derive_sim_swap_alert(), with one alert per source_event_id and non-null
+    formula_version_id linkage for traceable risk formula provenance.

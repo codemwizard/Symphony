@@ -171,6 +171,18 @@
       "subsystem": "policy",
       "meaning": "reserved for instruction hierarchy verification extensions",
       "retryable": false
+    },
+    "P7400": {
+      "class": "B",
+      "subsystem": "policy",
+      "meaning": "SIM-swap alert derivation source event not found",
+      "retryable": false
+    },
+    "P7401": {
+      "class": "B",
+      "subsystem": "policy",
+      "meaning": "SIM-swap alert derivation formula version not found",
+      "retryable": false
     }
   }
 }

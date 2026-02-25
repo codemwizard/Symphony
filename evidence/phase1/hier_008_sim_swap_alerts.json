@@ -1,0 +1,56 @@
+{
+  "check_id": "TSK-P1-HIER-008",
+  "task_id": "TSK-P1-HIER-008",
+  "status": "PASS",
+  "pass": true,
+  "git_sha": "99316098023e088bf9a4cb6d774f989739086583",
+  "timestamp_utc": "2026-02-25T03:50:55Z",
+  "details": {
+    "derivation_function": "public.derive_sim_swap_alert",
+    "source_table": "public.member_device_events",
+    "target_table": "public.sim_swap_alerts",
+    "formula_key": "TIER1_DETERMINISTIC_DEFAULT"
+  },
+  "checks": [
+    {
+      "check_id": "sim_swap_alerts_table_exists",
+      "status": "PASS",
+      "detail": "sim_swap_alerts table exists"
+    },
+    {
+      "check_id": "derive_fn_hardened",
+      "status": "PASS",
+      "detail": "derive_sim_swap_alert is SECURITY DEFINER with hardened search_path"
+    },
+    {
+      "check_id": "sim_swap_alerts_append_only_trigger",
+      "status": "PASS",
+      "detail": "append-only trigger exists on sim_swap_alerts"
+    },
+    {
+      "check_id": "sim_swap_alerts_formula_fk",
+      "status": "PASS",
+      "detail": "sim_swap_alerts has non-null formula_version_id FK"
+    },
+    {
+      "check_id": "derive_returns_uuid",
+      "status": "PASS",
+      "detail": "derive_sim_swap_alert returned alert UUID"
+    },
+    {
+      "check_id": "derived_alert_row_exists",
+      "status": "PASS",
+      "detail": "derived sim swap alert row references source event and formula version"
+    },
+    {
+      "check_id": "derive_idempotent",
+      "status": "PASS",
+      "detail": "re-derivation returns the same alert_id"
+    },
+    {
+      "check_id": "single_alert_per_source_event",
+      "status": "PASS",
+      "detail": "exactly one alert row exists per source event"
+    }
+  ]
+}

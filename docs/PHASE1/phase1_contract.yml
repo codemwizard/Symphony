@@ -190,6 +190,14 @@
   evidence_path: "evidence/phase1/tsk_p1_esc_002__escrow_invariants_cross_tenant_protections.json"
   notes: "TSK-P1-ESC-002 requires ceiling-enforced, tenant-isolated escrow reservations under concurrency with program budget envelope binding."
 
+- invariant_id: "INV-129"
+  status: "implemented"
+  required: true
+  gate_id: "INT-G28"
+  verifier: "scripts/db/verify_hier_008_sim_swap_alerts.sh"
+  evidence_path: "evidence/phase1/hier_008_sim_swap_alerts.json"
+  notes: "TSK-P1-HIER-008 requires deterministic SIM-swap alert derivation with source-event traceability and non-null formula version linkage."
+
 - invariant_id: "INV-039"
   status: "deferred_to_phase2"
   required: false
