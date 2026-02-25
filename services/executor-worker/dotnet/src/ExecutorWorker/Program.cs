@@ -7,6 +7,12 @@ if (args.Contains("--self-test", StringComparer.OrdinalIgnoreCase))
     Environment.ExitCode = code;
     return;
 }
+if (args.Contains("--self-test-adapter-contract", StringComparer.OrdinalIgnoreCase))
+{
+    var code = await AdapterContractSelfTest.RunAsync(CancellationToken.None);
+    Environment.ExitCode = code;
+    return;
+}
 
 Console.WriteLine("ExecutorWorker MVP: use --self-test for deterministic task verification.");
 
@@ -33,6 +39,129 @@ record CompletionResult(bool ok, string? error)
 {
     public static CompletionResult Ok() => new(true, null);
     public static CompletionResult Fail(string error) => new(false, error);
+}
+
+record RailInstruction(
+    string instruction_id,
+    string rail_type,
+    string idempotency_key,
+    string payload_json
+);
+
+record SubmitResult(
+    bool ok,
+    string rail_ref,
+    bool retryable,
+    string error_code
+);
+
+record StatusResult(
+    bool ok,
+    string state,
+    bool final,
+    string error_code
+);
+
+record CancelResult(
+    bool ok,
+    string state,
+    bool too_late,
+    string error_code
+);
+
+interface IRailAdapter
+{
+    Task<SubmitResult> Submit(RailInstruction instruction, CancellationToken cancellationToken);
+    Task<StatusResult> QueryStatus(string railRef, CancellationToken cancellationToken);
+    Task<CancelResult> Cancel(string railRef, CancellationToken cancellationToken);
+}
+
+sealed class DeterministicSimulatedAdapter : IRailAdapter
+{
+    private readonly Dictionary<string, string> _statusByRailRef = new(StringComparer.Ordinal);
+
+    public Task<SubmitResult> Submit(RailInstruction instruction, CancellationToken cancellationToken)
+    {
+        _ = cancellationToken;
+        if (instruction.instruction_id.Contains("submit_fail", StringComparison.Ordinal))
+        {
+            return Task.FromResult(new SubmitResult(
+                ok: false,
+                rail_ref: string.Empty,
+                retryable: false,
+                error_code: "SUBMIT_REJECTED"
+            ));
+        }
+
+        var railRef = $"sim-{instruction.instruction_id}";
+        var status = instruction.instruction_id.Contains("query_fail", StringComparison.Ordinal)
+            ? "FAILED"
+            : instruction.instruction_id.Contains("cancelled", StringComparison.Ordinal)
+                ? "CANCELLED"
+                : "SETTLED";
+        _statusByRailRef[railRef] = status;
+
+        return Task.FromResult(new SubmitResult(
+            ok: true,
+            rail_ref: railRef,
+            retryable: false,
+            error_code: string.Empty
+        ));
+    }
+
+    public Task<StatusResult> QueryStatus(string railRef, CancellationToken cancellationToken)
+    {
+        _ = cancellationToken;
+        if (!_statusByRailRef.TryGetValue(railRef, out var status))
+        {
+            return Task.FromResult(new StatusResult(
+                ok: false,
+                state: "UNKNOWN",
+                final: false,
+                error_code: "RAIL_REF_NOT_FOUND"
+            ));
+        }
+
+        var isFinal = status is "SETTLED" or "FAILED" or "CANCELLED";
+        return Task.FromResult(new StatusResult(
+            ok: true,
+            state: status,
+            final: isFinal,
+            error_code: string.Empty
+        ));
+    }
+
+    public Task<CancelResult> Cancel(string railRef, CancellationToken cancellationToken)
+    {
+        _ = cancellationToken;
+        if (!_statusByRailRef.TryGetValue(railRef, out var status))
+        {
+            return Task.FromResult(new CancelResult(
+                ok: false,
+                state: "UNKNOWN",
+                too_late: false,
+                error_code: "RAIL_REF_NOT_FOUND"
+            ));
+        }
+
+        if (status == "SETTLED")
+        {
+            return Task.FromResult(new CancelResult(
+                ok: false,
+                state: "SETTLED",
+                too_late: true,
+                error_code: "CANCEL_TOO_LATE"
+            ));
+        }
+
+        _statusByRailRef[railRef] = "CANCELLED";
+        return Task.FromResult(new CancelResult(
+            ok: true,
+            state: "CANCELLED",
+            too_late: false,
+            error_code: string.Empty
+        ));
+    }
 }
 
 record WorkerCycleResult(
@@ -347,6 +476,101 @@ static class ExecutorWorkerSelfTest
             {
                 fail++;
                 tests.Add(new SelfTestCase(name, "FAIL", ex.Message));
+            }
+        }
+    }
+}
+
+static class AdapterContractSelfTest
+{
+    public static async Task<int> RunAsync(CancellationToken cancellationToken)
+    {
+        var adapter = new DeterministicSimulatedAdapter();
+        var checks = new List<SelfTestCase>();
+        var pass = 0;
+        var fail = 0;
+
+        var submitSuccess = await adapter.Submit(new RailInstruction(
+            instruction_id: "submit_success_001",
+            rail_type: "SIM",
+            idempotency_key: "idem-submit-success",
+            payload_json: "{\"amount\":100}"
+        ), cancellationToken);
+        Track("submit_success_path", submitSuccess.ok && !string.IsNullOrWhiteSpace(submitSuccess.rail_ref));
+
+        var submitFailure = await adapter.Submit(new RailInstruction(
+            instruction_id: "submit_fail_001",
+            rail_type: "SIM",
+            idempotency_key: "idem-submit-fail",
+            payload_json: "{\"amount\":100}"
+        ), cancellationToken);
+        Track("submit_failure_path", !submitFailure.ok && submitFailure.error_code == "SUBMIT_REJECTED");
+
+        var querySuccess = await adapter.QueryStatus(submitSuccess.rail_ref, cancellationToken);
+        Track("query_status_success_path", querySuccess.ok && querySuccess.state == "SETTLED" && querySuccess.final);
+
+        var submitForQueryFail = await adapter.Submit(new RailInstruction(
+            instruction_id: "query_fail_001",
+            rail_type: "SIM",
+            idempotency_key: "idem-query-fail",
+            payload_json: "{\"amount\":100}"
+        ), cancellationToken);
+        var queryFailure = await adapter.QueryStatus(submitForQueryFail.rail_ref, cancellationToken);
+        Track("query_status_failure_path", queryFailure.ok && queryFailure.state == "FAILED" && queryFailure.final);
+
+        var submitForCancel = await adapter.Submit(new RailInstruction(
+            instruction_id: "cancelled_001",
+            rail_type: "SIM",
+            idempotency_key: "idem-cancel-success",
+            payload_json: "{\"amount\":100}"
+        ), cancellationToken);
+        var cancelSuccess = await adapter.Cancel(submitForCancel.rail_ref, cancellationToken);
+        Track("cancel_success_path", cancelSuccess.ok && cancelSuccess.state == "CANCELLED");
+
+        var cancelFailure = await adapter.Cancel(submitSuccess.rail_ref, cancellationToken);
+        Track("cancel_failure_path", !cancelFailure.ok && cancelFailure.too_late && cancelFailure.error_code == "CANCEL_TOO_LATE");
+
+        var status = fail == 0 ? "PASS" : "FAIL";
+        var rootDir = EvidenceMeta.ResolveRepoRoot(Directory.GetCurrentDirectory());
+        var evidenceDir = Path.Combine(rootDir, "evidence", "phase1");
+        Directory.CreateDirectory(evidenceDir);
+        var evidencePath = Path.Combine(evidenceDir, "adp_001_adapter_contract_tests.json");
+        var meta = EvidenceMeta.Load(rootDir);
+
+        await File.WriteAllTextAsync(evidencePath, JsonSerializer.Serialize(new
+        {
+            check_id = "ADP-001-ADAPTER-CONTRACT-TESTS",
+            task_id = "TSK-P1-ADP-001",
+            timestamp_utc = meta.TimestampUtc,
+            git_sha = meta.GitSha,
+            schema_fingerprint = meta.SchemaFingerprint,
+            status,
+            pass = status == "PASS",
+            details = new
+            {
+                adapter_interface = "IRailAdapter",
+                methods = new[] { "submit", "query_status", "cancel" },
+                tests_passed = pass,
+                tests_failed = fail,
+                contract_tests = checks
+            }
+        }, new JsonSerializerOptions { WriteIndented = true }) + Environment.NewLine, cancellationToken);
+
+        Console.WriteLine($"Adapter contract self-test status: {status}");
+        Console.WriteLine($"Evidence: {evidencePath}");
+        return fail == 0 ? 0 : 1;
+
+        void Track(string name, bool ok)
+        {
+            if (ok)
+            {
+                pass++;
+                checks.Add(new SelfTestCase(name, "PASS", "deterministic expectation met"));
+            }
+            else
+            {
+                fail++;
+                checks.Add(new SelfTestCase(name, "FAIL", "expectation not met"));
             }
         }
     }

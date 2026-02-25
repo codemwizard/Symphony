@@ -1,0 +1,51 @@
+{
+  "check_id": "ADP-001-ADAPTER-CONTRACT-TESTS",
+  "task_id": "TSK-P1-ADP-001",
+  "timestamp_utc": "2026-02-25T23:07:05Z",
+  "git_sha": "76ea698b1a93ced4376ea326aab1c261239e91a2",
+  "schema_fingerprint": "76ea698",
+  "status": "PASS",
+  "pass": true,
+  "details": {
+    "adapter_interface": "IRailAdapter",
+    "methods": [
+      "submit",
+      "query_status",
+      "cancel"
+    ],
+    "tests_passed": 6,
+    "tests_failed": 0,
+    "contract_tests": [
+      {
+        "name": "submit_success_path",
+        "status": "PASS",
+        "detail": "deterministic expectation met"
+      },
+      {
+        "name": "submit_failure_path",
+        "status": "PASS",
+        "detail": "deterministic expectation met"
+      },
+      {
+        "name": "query_status_success_path",
+        "status": "PASS",
+        "detail": "deterministic expectation met"
+      },
+      {
+        "name": "query_status_failure_path",
+        "status": "PASS",
+        "detail": "deterministic expectation met"
+      },
+      {
+        "name": "cancel_success_path",
+        "status": "PASS",
+        "detail": "deterministic expectation met"
+      },
+      {
+        "name": "cancel_failure_path",
+        "status": "PASS",
+        "detail": "deterministic expectation met"
+      }
+    ]
+  }
+}
