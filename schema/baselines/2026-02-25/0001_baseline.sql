@@ -2,7 +2,7 @@
 -- PostgreSQL database dump
 --
 
-\restrict 89Z8Md02ypcX2AKVEh54ExnWGMM4jhfVITGzpCifo84YUKQznVQFPQrUbsXuypi
+\restrict L6zL1zWc9APqRdeYq5xmf6al3GAQpHTZGszoJxxmT2O5U2kqLtkgyHMlH5EqK1u
 
 -- Dumped from database version 18.2 (Debian 18.2-1.pgdg13+1)
 -- Dumped by pg_dump version 18.2 (Debian 18.2-1.pgdg13+1)
@@ -2130,6 +2130,19 @@ ALTER TABLE ONLY public.external_proofs FORCE ROW LEVEL SECURITY;
 
 
 --
+-- Name: incident_events; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.incident_events (
+    incident_event_id uuid NOT NULL,
+    incident_id uuid NOT NULL,
+    event_type text NOT NULL,
+    event_payload jsonb NOT NULL,
+    created_at timestamp with time zone DEFAULT now() NOT NULL
+);
+
+
+--
 -- Name: ingress_attestations; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -2619,6 +2632,26 @@ CREATE TABLE public.rail_dispatch_truth_anchor (
 
 
 --
+-- Name: regulatory_incidents; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.regulatory_incidents (
+    incident_id uuid NOT NULL,
+    tenant_id uuid NOT NULL,
+    incident_type text NOT NULL,
+    detected_at timestamp with time zone NOT NULL,
+    description text NOT NULL,
+    severity text NOT NULL,
+    status text NOT NULL,
+    reported_to_boz_at timestamp with time zone,
+    boz_reference text,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    CONSTRAINT regulatory_incidents_severity_check CHECK ((severity = ANY (ARRAY['LOW'::text, 'MEDIUM'::text, 'HIGH'::text, 'CRITICAL'::text]))),
+    CONSTRAINT regulatory_incidents_status_check CHECK ((status = ANY (ARRAY['OPEN'::text, 'UNDER_INVESTIGATION'::text, 'REPORTED'::text, 'CLOSED'::text])))
+);
+
+
+--
 -- Name: revoked_client_certs; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -2953,6 +2986,14 @@ ALTER TABLE public.external_proofs
 
 
 --
+-- Name: incident_events incident_events_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.incident_events
+    ADD CONSTRAINT incident_events_pkey PRIMARY KEY (incident_event_id);
+
+
+--
 -- Name: ingress_attestations ingress_attestations_correlation_required_new_rows_chk; Type: CHECK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -3222,6 +3263,14 @@ ALTER TABLE ONLY public.programs
 
 ALTER TABLE ONLY public.rail_dispatch_truth_anchor
     ADD CONSTRAINT rail_dispatch_truth_anchor_pkey PRIMARY KEY (anchor_id);
+
+
+--
+-- Name: regulatory_incidents regulatory_incidents_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.regulatory_incidents
+    ADD CONSTRAINT regulatory_incidents_pkey PRIMARY KEY (incident_id);
 
 
 --
@@ -3798,6 +3847,20 @@ CREATE INDEX idx_tenants_status ON public.tenants USING btree (status);
 
 
 --
+-- Name: ix_incident_events_incident_created; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX ix_incident_events_incident_created ON public.incident_events USING btree (incident_id, created_at);
+
+
+--
+-- Name: ix_regulatory_incidents_tenant_detected; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX ix_regulatory_incidents_tenant_detected ON public.regulatory_incidents USING btree (tenant_id, detected_at DESC);
+
+
+--
 -- Name: kyc_provider_active_idx; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -4295,6 +4358,14 @@ ALTER TABLE ONLY public.external_proofs
 
 
 --
+-- Name: incident_events incident_events_incident_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.incident_events
+    ADD CONSTRAINT incident_events_incident_id_fkey FOREIGN KEY (incident_id) REFERENCES public.regulatory_incidents(incident_id) ON DELETE CASCADE;
+
+
+--
 -- Name: ingress_attestations ingress_attestations_client_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -4540,6 +4611,14 @@ ALTER TABLE ONLY public.programs
 
 ALTER TABLE ONLY public.rail_dispatch_truth_anchor
     ADD CONSTRAINT rail_truth_anchor_attempt_fk FOREIGN KEY (attempt_id) REFERENCES public.payment_outbox_attempts(attempt_id) DEFERRABLE;
+
+
+--
+-- Name: regulatory_incidents regulatory_incidents_tenant_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.regulatory_incidents
+    ADD CONSTRAINT regulatory_incidents_tenant_id_fkey FOREIGN KEY (tenant_id) REFERENCES public.tenants(tenant_id) ON DELETE RESTRICT;
 
 
 --
@@ -4873,5 +4952,5 @@ ALTER TABLE public.tenants ENABLE ROW LEVEL SECURITY;
 -- PostgreSQL database dump complete
 --
 
-\unrestrict 89Z8Md02ypcX2AKVEh54ExnWGMM4jhfVITGzpCifo84YUKQznVQFPQrUbsXuypi
+\unrestrict L6zL1zWc9APqRdeYq5xmf6al3GAQpHTZGszoJxxmT2O5U2kqLtkgyHMlH5EqK1u
 

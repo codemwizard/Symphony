@@ -722,6 +722,14 @@ if [[ "${RUN_PHASE1_GATES:-0}" == "1" ]]; then
     exit 1
   fi
 
+  echo "==> Phase-1 incident workflow + 48-hour export verification (TSK-P1-REG-003)"
+  if [[ -x scripts/audit/verify_reg_003_incident_48h_export.sh ]]; then
+    scripts/audit/verify_reg_003_incident_48h_export.sh --evidence evidence/phase1/reg_003_incident_48h_export.json
+  else
+    echo "ERROR: scripts/audit/verify_reg_003_incident_48h_export.sh not found"
+    exit 1
+  fi
+
   echo "==> Phase-1 no-MCP guard"
   if [[ -x scripts/audit/verify_no_mcp_phase1.sh ]]; then
     scripts/audit/verify_no_mcp_phase1.sh

@@ -137,6 +137,9 @@ registry:
   scripts/audit/verify_reg_002_daily_report_signed_output.sh:
     emits:
       - evidence/phase1/reg_002_daily_report_signed_output.json
+  scripts/audit/verify_reg_003_incident_48h_export.sh:
+    emits:
+      - evidence/phase1/reg_003_incident_48h_export.json
   scripts/audit/verify_drd_policy_usage.sh:
     emits:
       - evidence/phase0/drd_policy_usage.json

@@ -48,3 +48,4 @@ This ADR remains the authoritative governance reference for baseline change chec
 - 2026-02-25: Baseline regenerated after program migration contract alignment migration for `program_migration_events` and `migrate_person_to_program()` HIER-010 signature semantics (0057).
 - 2026-02-25: Baseline regenerated after supervisor-access mechanism migration adding approval queue hold/approval metadata, single-arg supervisor submission path, and self-approval denial semantics in `decide_supervisor_approval()` (0058).
 - 2026-02-25: Baseline regenerated after tenant isolation migration applying restrictive + forced RLS posture across tenant-scoped tables with cross-tenant leakage verification coverage (0059).
+- 2026-02-26: Baseline regenerated after regulatory incident workflow migration introducing `regulatory_incidents` and append-only `incident_events` for 48-hour BoZ incident report export posture (0060).

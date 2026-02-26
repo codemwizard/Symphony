@@ -1,0 +1,18 @@
+{
+  "check_id": "REG-003-INCIDENT-48H-EXPORT",
+  "task_id": "TSK-P1-REG-003",
+  "timestamp_utc": "2026-02-26T05:38:25Z",
+  "git_sha": "b5185193514b665746221a93a2989a8ea85942c3",
+  "status": "PASS",
+  "pass": true,
+  "incident_registered": true,
+  "status_updated_under_investigation": true,
+  "report_generated": true,
+  "signature_verified": true,
+  "open_status_report_blocked": true,
+  "details": {
+    "incident_id": "089057f5-11d5-4e10-9f9f-fb5562ba6520",
+    "blocked_error_code": "INCIDENT_NOT_REPORTABLE",
+    "key_id": "phase1-reg-003-key"
+  }
+}

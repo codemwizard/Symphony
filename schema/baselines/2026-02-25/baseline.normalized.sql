@@ -341,6 +341,8 @@
     ADD CONSTRAINT external_proofs_subject_member_fk FOREIGN KEY (subject_member_id) REFERENCES public.tenant_members(member_id) NOT VALID;
     ADD CONSTRAINT external_proofs_tenant_fk FOREIGN KEY (tenant_id) REFERENCES public.tenants(tenant_id) NOT VALID;
     ADD CONSTRAINT external_proofs_tenant_required_new_rows_chk CHECK ((tenant_id IS NOT NULL)) NOT VALID;
+    ADD CONSTRAINT incident_events_incident_id_fkey FOREIGN KEY (incident_id) REFERENCES public.regulatory_incidents(incident_id) ON DELETE CASCADE;
+    ADD CONSTRAINT incident_events_pkey PRIMARY KEY (incident_event_id);
     ADD CONSTRAINT ingress_attestations_client_id_fkey FOREIGN KEY (client_id) REFERENCES public.tenant_clients(client_id);
     ADD CONSTRAINT ingress_attestations_correlation_required_new_rows_chk CHECK ((correlation_id IS NOT NULL)) NOT VALID;
     ADD CONSTRAINT ingress_attestations_member_id_fkey FOREIGN KEY (member_id) REFERENCES public.tenant_members(member_id);
@@ -406,6 +408,8 @@
     ADD CONSTRAINT programs_tenant_id_program_key_key UNIQUE (tenant_id, program_key);
     ADD CONSTRAINT rail_dispatch_truth_anchor_pkey PRIMARY KEY (anchor_id);
     ADD CONSTRAINT rail_truth_anchor_attempt_fk FOREIGN KEY (attempt_id) REFERENCES public.payment_outbox_attempts(attempt_id) DEFERRABLE;
+    ADD CONSTRAINT regulatory_incidents_pkey PRIMARY KEY (incident_id);
+    ADD CONSTRAINT regulatory_incidents_tenant_id_fkey FOREIGN KEY (tenant_id) REFERENCES public.tenants(tenant_id) ON DELETE RESTRICT;
     ADD CONSTRAINT revoked_client_certs_pkey PRIMARY KEY (cert_fingerprint_sha256);
     ADD CONSTRAINT revoked_tokens_pkey PRIMARY KEY (token_jti);
     ADD CONSTRAINT risk_formula_versions_formula_key_key UNIQUE (formula_key);
@@ -577,6 +581,8 @@
     CONSTRAINT program_migration_events_from_to_chk CHECK ((from_program_id <> to_program_id))
     CONSTRAINT programs_status_check CHECK ((status = ANY (ARRAY['ACTIVE'::text, 'SUSPENDED'::text, 'CLOSED'::text])))
     CONSTRAINT rail_truth_anchor_state_chk CHECK ((state = 'DISPATCHED'::public.outbox_attempt_state))
+    CONSTRAINT regulatory_incidents_severity_check CHECK ((severity = ANY (ARRAY['LOW'::text, 'MEDIUM'::text, 'HIGH'::text, 'CRITICAL'::text]))),
+    CONSTRAINT regulatory_incidents_status_check CHECK ((status = ANY (ARRAY['OPEN'::text, 'UNDER_INVESTIGATION'::text, 'REPORTED'::text, 'CLOSED'::text])))
     CONSTRAINT risk_formula_versions_tier_check CHECK ((tier = ANY (ARRAY['TIER1'::text, 'TIER2'::text, 'TIER3'::text])))
     CONSTRAINT sim_swap_alerts_alert_type_check CHECK ((alert_type = 'SIM_SWAP_DETECTED'::text)),
     CONSTRAINT sim_swap_alerts_iccid_diff_chk CHECK ((prior_iccid_hash <> new_iccid_hash))
@@ -907,6 +913,7 @@
     billable_client_id uuid,
     billable_client_id uuid,
     boz_licence_reference text,
+    boz_reference text,
     calculated_at timestamp with time zone,
     calculated_by_version text,
     canceled_at timestamp with time zone,
@@ -940,6 +947,8 @@
     correlation_id uuid,
     count(DISTINCT person_id) AS unique_beneficiaries
     created_at
+    created_at timestamp with time zone DEFAULT now() NOT NULL
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
     created_at timestamp with time zone DEFAULT now() NOT NULL,
     created_at timestamp with time zone DEFAULT now() NOT NULL,
     created_at timestamp with time zone DEFAULT now() NOT NULL,
@@ -990,6 +999,8 @@
     derived_at timestamp with time zone DEFAULT now() NOT NULL,
     description text NOT NULL,
     description text NOT NULL,
+    description text NOT NULL,
+    detected_at timestamp with time zone NOT NULL,
     device_id text,
     device_id_hash text NOT NULL,
     device_id_hash text,
@@ -1018,6 +1029,8 @@
     event_id uuid DEFAULT public.uuid_v7_or_random() NOT NULL,
     event_id uuid DEFAULT public.uuid_v7_or_random() NOT NULL,
     event_id uuid DEFAULT public.uuid_v7_or_random() NOT NULL,
+    event_payload jsonb NOT NULL,
+    event_type text NOT NULL,
     event_type text NOT NULL,
     event_type text NOT NULL,
     event_type text NOT NULL,
@@ -1063,6 +1076,10 @@
     idempotency_key text NOT NULL,
     idempotency_key text,
     identity_hash text NOT NULL,
+    incident_event_id uuid NOT NULL,
+    incident_id uuid NOT NULL,
+    incident_id uuid NOT NULL,
+    incident_type text NOT NULL,
     instruction_id text NOT NULL,
     instruction_id text NOT NULL,
     instruction_id text NOT NULL,
@@ -1265,6 +1282,7 @@
     release_due_at timestamp with time zone,
     released_at timestamp with time zone,
     report_delivery boolean NOT NULL,
+    reported_to_boz_at timestamp with time zone,
     reporting_period character(7),
     request_hash text NOT NULL,
     request_reason
@@ -1293,6 +1311,7 @@
     scope text NOT NULL,
     sequence_id bigint NOT NULL,
     sequence_id bigint NOT NULL,
+    severity text NOT NULL,
     signature text,
     signature_alg text,
     signature_hash text,
@@ -1318,6 +1337,7 @@
     status text DEFAULT 'ACTIVE'::text NOT NULL,
     status text DEFAULT 'ACTIVE'::text NOT NULL,
     status text NOT NULL,
+    status text NOT NULL,
     status,
     statutory_reference text NOT NULL,
     statutory_reference text,
@@ -1330,6 +1350,7 @@
     submitted_by text,
     taxable_amount_minor bigint,
     tenant_id uuid DEFAULT gen_random_uuid() NOT NULL,
+    tenant_id uuid NOT NULL,
     tenant_id uuid NOT NULL,
     tenant_id uuid NOT NULL,
     tenant_id uuid NOT NULL,
@@ -1987,6 +2008,8 @@ $$;
 );
 );
 );
+);
+);
 ALTER TABLE ONLY public.anchor_sync_operations
 ALTER TABLE ONLY public.anchor_sync_operations
 ALTER TABLE ONLY public.anchor_sync_operations
@@ -2025,6 +2048,8 @@ ALTER TABLE ONLY public.external_proofs
 ALTER TABLE ONLY public.external_proofs
 ALTER TABLE ONLY public.external_proofs
 ALTER TABLE ONLY public.external_proofs FORCE ROW LEVEL SECURITY;
+ALTER TABLE ONLY public.incident_events
+ALTER TABLE ONLY public.incident_events
 ALTER TABLE ONLY public.ingress_attestations
 ALTER TABLE ONLY public.ingress_attestations
 ALTER TABLE ONLY public.ingress_attestations
@@ -2104,6 +2129,8 @@ ALTER TABLE ONLY public.rail_dispatch_truth_anchor
 ALTER TABLE ONLY public.rail_dispatch_truth_anchor
 ALTER TABLE ONLY public.rail_dispatch_truth_anchor
 ALTER TABLE ONLY public.rail_dispatch_truth_anchor
+ALTER TABLE ONLY public.regulatory_incidents
+ALTER TABLE ONLY public.regulatory_incidents
 ALTER TABLE ONLY public.revoked_client_certs
 ALTER TABLE ONLY public.revoked_tokens
 ALTER TABLE ONLY public.risk_formula_versions
@@ -2295,6 +2322,8 @@ CREATE INDEX idx_tenant_members_tenant ON public.tenant_members USING btree (ten
 CREATE INDEX idx_tenants_billable_client_id ON public.tenants USING btree (billable_client_id);
 CREATE INDEX idx_tenants_parent_tenant_id ON public.tenants USING btree (parent_tenant_id);
 CREATE INDEX idx_tenants_status ON public.tenants USING btree (status);
+CREATE INDEX ix_incident_events_incident_created ON public.incident_events USING btree (incident_id, created_at);
+CREATE INDEX ix_regulatory_incidents_tenant_detected ON public.regulatory_incidents USING btree (tenant_id, detected_at DESC);
 CREATE INDEX kyc_provider_jurisdiction_idx ON public.kyc_provider_registry USING btree (jurisdiction_code, active_from DESC);
 CREATE INDEX kyc_verification_jurisdiction_outcome_idx ON public.kyc_verification_records USING btree (jurisdiction_code, outcome) WHERE (outcome IS NOT NULL);
 CREATE INDEX kyc_verification_member_idx ON public.kyc_verification_records USING btree (member_id, anchored_at DESC);
@@ -2336,6 +2365,7 @@ CREATE TABLE public.escrow_reservations (
 CREATE TABLE public.evidence_pack_items (
 CREATE TABLE public.evidence_packs (
 CREATE TABLE public.external_proofs (
+CREATE TABLE public.incident_events (
 CREATE TABLE public.ingress_attestations (
 CREATE TABLE public.instruction_settlement_finality (
 CREATE TABLE public.kyc_provider_registry (
@@ -2359,6 +2389,7 @@ CREATE TABLE public.policy_versions (
 CREATE TABLE public.program_migration_events (
 CREATE TABLE public.programs (
 CREATE TABLE public.rail_dispatch_truth_anchor (
+CREATE TABLE public.regulatory_incidents (
 CREATE TABLE public.revoked_client_certs (
 CREATE TABLE public.revoked_tokens (
 CREATE TABLE public.risk_formula_versions (
