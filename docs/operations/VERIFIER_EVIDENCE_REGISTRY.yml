@@ -116,6 +116,9 @@ registry:
   scripts/audit/verify_adp_002_simulated_rail_adapter.sh:
     emits:
       - evidence/phase1/adp_002_simulated_rail_adapter.json
+  scripts/audit/verify_adp_003_deterministic_rail_routing.sh:
+    emits:
+      - evidence/phase1/adp_003_deterministic_rail_routing.json
   scripts/audit/verify_drd_policy_usage.sh:
     emits:
       - evidence/phase0/drd_policy_usage.json
