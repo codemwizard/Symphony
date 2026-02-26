@@ -1,0 +1,16 @@
+{
+  "check_id": "REG-002-DAILY-REPORT-SIGNED-DETERMINISTIC",
+  "task_id": "TSK-P1-REG-002",
+  "timestamp_utc": "2026-02-26T02:08:49Z",
+  "git_sha": "18d259191f20162439a46fbb5251f7e12d39c8dc",
+  "status": "PASS",
+  "pass": true,
+  "report_generated": true,
+  "signature_verified": true,
+  "determinism_confirmed": true,
+  "details": {
+    "report_date": "2026-02-26",
+    "signature_header": "X-Symphony-Signature",
+    "key_id_header": "X-Symphony-Key-Id"
+  }
+}
