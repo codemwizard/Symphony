@@ -1,0 +1,39 @@
+phase: "1"
+task_id: "TSK-P1-LED-003"
+title: "Canonical message model enforcement"
+owner_role: "SUPERVISOR"
+status: "completed"
+
+depends_on:
+  - "TSK-P1-LED-001"
+
+touches:
+  - "tasks/TSK-P1-LED-003/meta.yml"
+  - "docs/plans/phase1/TSK-P1-LED-003/PLAN.md"
+  - "docs/plans/phase1/TSK-P1-LED-003/EXEC_LOG.md"
+  - "schema/messages/canonical_instruction_v1.json"
+  - "services/ledger-api/dotnet/src/LedgerApi/Program.cs"
+  - "scripts/audit/verify_led_003_canonical_message_model.sh"
+  - "docs/PHASE1/phase1_contract.yml"
+  - "docs/operations/VERIFIER_EVIDENCE_REGISTRY.yml"
+  - "docs/operations/SEMANTIC_INTEGRITY_ALLOWLIST.yml"
+  - "evidence/phase1/led_003_canonical_message_model.json"
+
+invariants:
+  - "INV-119"
+
+mechanics:
+  gate_ids:
+    - "INT-G28"
+  verifiers:
+    - "bash scripts/audit/verify_led_003_canonical_message_model.sh && python3 scripts/audit/validate_evidence.py --task TSK-P1-LED-003 --evidence evidence/phase1/led_003_canonical_message_model.json"
+  evidence_paths:
+    - "evidence/phase1/led_003_canonical_message_model.json"
+
+implementation_plan: "docs/plans/phase1/TSK-P1-LED-003/PLAN.md"
+implementation_log: "docs/plans/phase1/TSK-P1-LED-003/EXEC_LOG.md"
+
+must_read:
+  - "docs/operations/AI_AGENT_OPERATION_MANUAL.md"
+  - "docs/operations/AI_AGENT_WORKFLOW_AND_ROLE_PLAN_v2.md"
+  - "docs/operations/AGENT_ROLE_RECONCILIATION.md"

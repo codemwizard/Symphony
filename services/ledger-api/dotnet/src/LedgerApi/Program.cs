@@ -3,6 +3,7 @@ using System.Diagnostics.Metrics;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
+using System.Text.RegularExpressions;
 using Npgsql;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -48,6 +49,12 @@ if (args.Contains("--self-test-tenant-context", StringComparer.OrdinalIgnoreCase
 if (args.Contains("--self-test-tenant-onboarding-admin", StringComparer.OrdinalIgnoreCase))
 {
     var code = await TenantOnboardingAdminSelfTestRunner.RunAsync(logger, CancellationToken.None);
+    Environment.ExitCode = code;
+    return;
+}
+if (args.Contains("--self-test-canonical-message-model", StringComparer.OrdinalIgnoreCase))
+{
+    var code = await CanonicalMessageModelSelfTestRunner.RunAsync(logger, CancellationToken.None);
     Environment.ExitCode = code;
     return;
 }
@@ -410,6 +417,16 @@ static class IngressHandler
         bool forceFailure,
         CancellationToken cancellationToken)
     {
+        var schemaViolations = IngressValidation.ValidateCanonicalInstructionPayload(request.payload);
+        if (schemaViolations.Count > 0)
+        {
+            return new HandlerResult(StatusCodes.Status400BadRequest, new
+            {
+                error = "SCHEMA_VALIDATION_FAILED",
+                violations = schemaViolations
+            });
+        }
+
         var validationErrors = IngressValidation.Validate(request);
         if (validationErrors.Count > 0)
         {
@@ -475,6 +492,8 @@ static class IngressHandler
 
 static class IngressValidation
 {
+    private static readonly Regex CurrencyRegex = new("^[A-Z]{3}$", RegexOptions.Compiled);
+
     public static bool IsForcedFailureEnabled()
     {
         var value = Environment.GetEnvironmentVariable("INGRESS_FORCE_ATTESTATION_FAIL") ?? "0";
@@ -531,6 +550,71 @@ static class IngressValidation
     {
         var bytes = SHA256.HashData(Encoding.UTF8.GetBytes(input));
         return Convert.ToHexString(bytes).ToLowerInvariant();
+    }
+
+    public static List<object> ValidateCanonicalInstructionPayload(JsonElement payload)
+    {
+        var violations = new List<object>();
+
+        if (payload.ValueKind != JsonValueKind.Object)
+        {
+            violations.Add(new { field = "payload", message = "payload must be a JSON object" });
+            return violations;
+        }
+
+        void RequireString(string field, Func<string, bool>? extraPredicate = null, string? extraMessage = null)
+        {
+            if (!payload.TryGetProperty(field, out var value))
+            {
+                violations.Add(new { field, message = $"{field} is required" });
+                return;
+            }
+            if (value.ValueKind != JsonValueKind.String)
+            {
+                violations.Add(new { field, message = $"{field} must be a string" });
+                return;
+            }
+
+            var text = value.GetString() ?? string.Empty;
+            if (string.IsNullOrWhiteSpace(text))
+            {
+                violations.Add(new { field, message = $"{field} must not be empty" });
+                return;
+            }
+
+            if (extraPredicate is not null && !extraPredicate(text))
+            {
+                violations.Add(new { field, message = extraMessage ?? $"{field} is invalid" });
+            }
+        }
+
+        RequireString("instruction_id", s => Guid.TryParse(s, out _), "instruction_id must be a valid UUID");
+        RequireString("tenant_id", s => Guid.TryParse(s, out _), "tenant_id must be a valid UUID");
+        RequireString("rail_type");
+
+        if (!payload.TryGetProperty("amount_minor", out var amount))
+        {
+            violations.Add(new { field = "amount_minor", message = "amount_minor is required" });
+        }
+        else if (amount.ValueKind != JsonValueKind.Number || !amount.TryGetInt64(out var amountMinor))
+        {
+            violations.Add(new { field = "amount_minor", message = "amount_minor must be an integer" });
+        }
+        else if (amountMinor <= 0)
+        {
+            violations.Add(new { field = "amount_minor", message = "amount_minor must be greater than 0" });
+        }
+
+        RequireString("currency_code", s => CurrencyRegex.IsMatch(s), "currency_code must be ISO 4217 uppercase alpha-3");
+        RequireString("beneficiary_ref_hash");
+        RequireString("idempotency_key");
+        RequireString(
+            "submitted_at_utc",
+            s => DateTimeOffset.TryParse(s, out _),
+            "submitted_at_utc must be an ISO 8601 timestamp"
+        );
+
+        return violations;
     }
 }
 
@@ -2184,6 +2268,164 @@ static class PilotAuthSelfTestRunner
                 fail++;
                 tests.Add(new SelfTestCase(name, "FAIL", ex.Message));
             }
+        }
+    }
+}
+
+static class CanonicalMessageModelSelfTestRunner
+{
+    public static async Task<int> RunAsync(ILogger logger, CancellationToken cancellationToken)
+    {
+        var storageFile = $"/tmp/symphony_led003_{Guid.NewGuid():N}.ndjson";
+        var store = new FileIngressDurabilityStore(logger, storageFile);
+        var tests = new List<SelfTestCase>();
+
+        var validTenant = "11111111-1111-1111-1111-111111111111";
+        var validInstruction = "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa";
+
+        var validPayload = JsonSerializer.Deserialize<JsonElement>(
+            $$"""
+            {
+              "instruction_id": "{{validInstruction}}",
+              "tenant_id": "{{validTenant}}",
+              "rail_type": "RTGS",
+              "amount_minor": 1050,
+              "currency_code": "ZMW",
+              "beneficiary_ref_hash": "hash-abc-001",
+              "idempotency_key": "led003-idem-1",
+              "submitted_at_utc": "2026-02-26T01:00:00Z"
+            }
+            """
+        );
+
+        var missingFieldPayload = JsonSerializer.Deserialize<JsonElement>(
+            $$"""
+            {
+              "instruction_id": "{{validInstruction}}",
+              "tenant_id": "{{validTenant}}",
+              "rail_type": "RTGS",
+              "currency_code": "ZMW",
+              "beneficiary_ref_hash": "hash-abc-001",
+              "idempotency_key": "led003-idem-2",
+              "submitted_at_utc": "2026-02-26T01:01:00Z"
+            }
+            """
+        );
+
+        var wrongTypePayload = JsonSerializer.Deserialize<JsonElement>(
+            $$"""
+            {
+              "instruction_id": "{{validInstruction}}",
+              "tenant_id": "{{validTenant}}",
+              "rail_type": "RTGS",
+              "amount_minor": "1050",
+              "currency_code": "ZMW",
+              "beneficiary_ref_hash": "hash-abc-001",
+              "idempotency_key": "led003-idem-3",
+              "submitted_at_utc": "2026-02-26T01:02:00Z"
+            }
+            """
+        );
+
+        var validResult = await IngressHandler.HandleAsync(
+            BuildRequest(validInstruction, validTenant, "idem-valid", validPayload),
+            store,
+            logger,
+            forceFailure: false,
+            cancellationToken
+        );
+        tests.Add(ToCase("valid_payload_accepted", validResult.StatusCode == StatusCodes.Status202Accepted, validResult.Body));
+
+        var missingResult = await IngressHandler.HandleAsync(
+            BuildRequest(Guid.NewGuid().ToString(), validTenant, "idem-missing", missingFieldPayload),
+            store,
+            logger,
+            forceFailure: false,
+            cancellationToken
+        );
+        tests.Add(ToCase("missing_required_field_rejected", IsSchemaFailure(missingResult), missingResult.Body));
+
+        var wrongTypeResult = await IngressHandler.HandleAsync(
+            BuildRequest(Guid.NewGuid().ToString(), validTenant, "idem-wrong-type", wrongTypePayload),
+            store,
+            logger,
+            forceFailure: false,
+            cancellationToken
+        );
+        tests.Add(ToCase("wrong_type_rejected", IsSchemaFailure(wrongTypeResult), wrongTypeResult.Body));
+
+        var status = tests.All(t => t.Status == "PASS") ? "PASS" : "FAIL";
+
+        var rootDir = EvidenceMeta.ResolveRepoRoot(Directory.GetCurrentDirectory());
+        var evidenceDir = Path.Combine(rootDir, "evidence", "phase1");
+        Directory.CreateDirectory(evidenceDir);
+        var evidencePath = Path.Combine(evidenceDir, "led_003_canonical_message_model.json");
+        var schemaPath = Path.Combine(rootDir, "schema", "messages", "canonical_instruction_v1.json");
+        var schemaExists = File.Exists(schemaPath);
+
+        var meta = EvidenceMeta.Load(rootDir);
+        await File.WriteAllTextAsync(evidencePath, JsonSerializer.Serialize(new
+        {
+            check_id = "LED-003-CANONICAL-MESSAGE-MODEL",
+            task_id = "TSK-P1-LED-003",
+            timestamp_utc = meta.TimestampUtc,
+            git_sha = meta.GitSha,
+            schema_fingerprint = meta.SchemaFingerprint,
+            status,
+            pass = status == "PASS",
+            details = new
+            {
+                schema_path = "schema/messages/canonical_instruction_v1.json",
+                schema_exists = schemaExists,
+                tests
+            }
+        }, new JsonSerializerOptions { WriteIndented = true }) + Environment.NewLine, cancellationToken);
+
+        Console.WriteLine($"Canonical message model self-test status: {status}");
+        Console.WriteLine($"Evidence: {evidencePath}");
+        return status == "PASS" ? 0 : 1;
+
+        static IngressRequest BuildRequest(string instructionId, string tenantId, string idempotencyKey, JsonElement payload)
+            => new(
+                instruction_id: instructionId,
+                participant_id: "bank-led003",
+                idempotency_key: idempotencyKey,
+                rail_type: "RTGS",
+                payload: payload,
+                payload_hash: null,
+                signature_hash: null,
+                tenant_id: tenantId,
+                correlation_id: null,
+                upstream_ref: null,
+                downstream_ref: null,
+                nfs_sequence_ref: null
+            );
+
+        static SelfTestCase ToCase(string name, bool ok, object body)
+            => new(name, ok ? "PASS" : "FAIL", JsonSerializer.Serialize(body));
+
+        static bool IsSchemaFailure(HandlerResult result)
+        {
+            if (result.StatusCode != StatusCodes.Status400BadRequest)
+            {
+                return false;
+            }
+
+            var json = JsonSerializer.Serialize(result.Body);
+            using var doc = JsonDocument.Parse(json);
+            if (!doc.RootElement.TryGetProperty("error", out var err))
+            {
+                return false;
+            }
+
+            if (!string.Equals(err.GetString(), "SCHEMA_VALIDATION_FAILED", StringComparison.Ordinal))
+            {
+                return false;
+            }
+
+            return doc.RootElement.TryGetProperty("violations", out var violations)
+                   && violations.ValueKind == JsonValueKind.Array
+                   && violations.GetArrayLength() > 0;
         }
     }
 }

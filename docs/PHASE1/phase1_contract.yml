@@ -326,6 +326,14 @@
   evidence_path: "evidence/phase1/led_001_invariants_ci_cluster.json"
   notes: "TSK-P1-LED-001 requires invariant verification wiring evidence for CI and in-cluster CronJob execution posture."
 
+- invariant_id: "INV-119"
+  status: "implemented"
+  required: true
+  gate_id: "INT-G28"
+  verifier: "scripts/audit/verify_led_003_canonical_message_model.sh"
+  evidence_path: "evidence/phase1/led_003_canonical_message_model.json"
+  notes: "TSK-P1-LED-003 requires canonical ingress message schema enforcement with fail-closed validation evidence."
+
 - invariant_id: "INV-039"
   status: "deferred_to_phase2"
   required: false
