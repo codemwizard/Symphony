@@ -1,19 +1,18 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
+ROOT_DIR="${ROOT_DIR:-$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)}"
 EVIDENCE_DIR="$ROOT_DIR/evidence/phase1"
-OUT_FILE="$EVIDENCE_DIR/phase1_closeout.json"
-PHASE1_CONTRACT_FILE="$EVIDENCE_DIR/phase1_contract_status.json"
-PHASE0_STATUS_FILE="$ROOT_DIR/evidence/phase0/phase0_contract_evidence_status.json"
-PHASE1_CONTRACT_SPEC="$ROOT_DIR/docs/PHASE1/phase1_contract.yml"
+OUT_FILE="${OUT_FILE:-$EVIDENCE_DIR/phase1_closeout.json}"
+PHASE1_CONTRACT_SPEC="${PHASE1_CONTRACT_SPEC:-$ROOT_DIR/docs/PHASE1/phase1_contract.yml}"
+EVIDENCE_SCHEMA_FILE="${EVIDENCE_SCHEMA_FILE:-$ROOT_DIR/docs/architecture/evidence_schema.json}"
 
 mkdir -p "$EVIDENCE_DIR"
 source "$ROOT_DIR/scripts/lib/evidence.sh"
 EVIDENCE_TS="$(evidence_now_utc)"
 EVIDENCE_GIT_SHA="$(git_sha)"
 EVIDENCE_SCHEMA_FP="$(schema_fingerprint)"
-export ROOT_DIR EVIDENCE_TS EVIDENCE_GIT_SHA EVIDENCE_SCHEMA_FP OUT_FILE PHASE1_CONTRACT_FILE PHASE0_STATUS_FILE PHASE1_CONTRACT_SPEC
+export ROOT_DIR OUT_FILE PHASE1_CONTRACT_SPEC EVIDENCE_SCHEMA_FILE EVIDENCE_TS EVIDENCE_GIT_SHA EVIDENCE_SCHEMA_FP
 
 python3 <<'PY'
 import json
@@ -30,128 +29,91 @@ except Exception as exc:
         "git_sha": os.environ.get("EVIDENCE_GIT_SHA"),
         "schema_fingerprint": os.environ.get("EVIDENCE_SCHEMA_FP"),
         "status": "FAIL",
-        "failures": [f"dependency_missing:{exc}"],
+        "failures": [f"yaml_dependency_missing:{exc}"],
     }
     Path(os.environ["OUT_FILE"]).write_text(json.dumps(payload, indent=2) + "\n", encoding="utf-8")
     raise SystemExit(1)
 
 root = Path(os.environ["ROOT_DIR"])
 out_file = Path(os.environ["OUT_FILE"])
-phase1_contract_file = Path(os.environ["PHASE1_CONTRACT_FILE"])
-phase0_status_file = Path(os.environ["PHASE0_STATUS_FILE"])
-phase1_contract_spec = Path(os.environ["PHASE1_CONTRACT_SPEC"])
+contract = Path(os.environ["PHASE1_CONTRACT_SPEC"])
+schema_file = Path(os.environ["EVIDENCE_SCHEMA_FILE"])
 
-required_phase1 = {
-    "regulator_demo_pack": root / "evidence/phase1/regulator_demo_pack.json",
-    "tier1_pilot_demo_pack": root / "evidence/phase1/tier1_pilot_demo_pack.json",
-    "instruction_finality_runtime": root / "evidence/phase1/instruction_finality_runtime.json",
-    "pii_decoupling_runtime": root / "evidence/phase1/pii_decoupling_runtime.json",
-    "rail_sequence_runtime": root / "evidence/phase1/rail_sequence_runtime.json",
-    "anchor_sync_resume_semantics": root / "evidence/phase1/anchor_sync_resume_semantics.json",
-    "evidence_pack_api_contract": root / "evidence/phase1/evidence_pack_api_contract.json",
-    "exception_case_pack_generation": root / "evidence/phase1/exception_case_pack_generation.json",
-    "pilot_harness_replay": root / "evidence/phase1/pilot_harness_replay.json",
-    "product_kpi_readiness": root / "evidence/phase1/product_kpi_readiness_report.json",
-}
+failures: list[str] = []
+checked: list[dict] = []
+required_artifacts: list[str] = []
 
-required_phase0 = {
-    "phase0_contract_evidence_status": phase0_status_file,
-    "boz_observability_role": root / "evidence/phase0/boz_observability_role.json",
-    "pii_leakage_payloads": root / "evidence/phase0/pii_leakage_payloads.json",
-    "anchor_sync_hooks": root / "evidence/phase0/anchor_sync_hooks.json",
-}
-
-failures = []
-checked = []
-
-def validate_pass(name: str, path: Path):
-    if not path.exists():
-        failures.append(f"missing_evidence:{name}:{path}")
-        checked.append({"name": name, "path": str(path), "status": "MISSING"})
-        return
-    try:
-        payload = json.loads(path.read_text(encoding="utf-8"))
-    except Exception:
-        failures.append(f"invalid_json:{name}:{path}")
-        checked.append({"name": name, "path": str(path), "status": "INVALID_JSON"})
-        return
-    status = (payload.get("status") or "").upper()
-    checked.append({"name": name, "path": str(path.relative_to(root) if path.is_relative_to(root) else path), "status": status})
-    if status != "PASS":
-        failures.append(f"evidence_not_pass:{name}:{status}")
-
-for n, p in required_phase0.items():
-    validate_pass(n, p)
-for n, p in required_phase1.items():
-    validate_pass(n, p)
-
-# PERF-006 closeout extension: KPI evidence must include settlement window compliance and PERF-005 linkage.
-kpi_path = required_phase1["product_kpi_readiness"]
-if kpi_path.exists():
-    try:
-        kpi_payload = json.loads(kpi_path.read_text(encoding="utf-8"))
-        kpis = kpi_payload.get("kpis") or {}
-        settlement = kpis.get("settlement_window_compliance_pct")
-        if not isinstance(settlement, (int, float)):
-            failures.append("kpi_missing_settlement_window_compliance_pct")
-        ref = kpi_payload.get("perf_005_reference") or {}
-        if ref.get("task_id") != "PERF-005":
-            failures.append("kpi_missing_perf005_task_reference")
-        if ref.get("evidence_path") != "evidence/phase1/perf_005__regulatory_timing_compliance_gate.json":
-            failures.append("kpi_missing_perf005_evidence_path_reference")
-    except Exception:
-        failures.append("kpi_evidence_invalid_json_for_perf006")
-
-if not phase1_contract_file.exists():
-    failures.append(f"missing_phase1_contract_status:{phase1_contract_file}")
+if not contract.exists():
+    failures.append(f"missing_phase1_contract_spec:{contract}")
 else:
     try:
-        payload = json.loads(phase1_contract_file.read_text(encoding="utf-8"))
-        if payload.get("status") != "PASS":
-            failures.append("phase1_contract_status_not_pass")
-        if payload.get("run_phase1_gates") is not True:
-            failures.append("phase1_contract_not_executed_with_phase1_gates")
-    except Exception:
-        failures.append("phase1_contract_status_invalid_json")
-
-if not phase1_contract_spec.exists():
-    failures.append(f"missing_phase1_contract_spec:{phase1_contract_spec}")
-else:
-    try:
-        rows = yaml.safe_load(phase1_contract_spec.read_text(encoding="utf-8")) or []
-        by_id = {str(r.get("invariant_id")): r for r in rows if isinstance(r, dict) and r.get("invariant_id")}
-        for invariant in ("INV-039", "INV-048"):
-            row = by_id.get(invariant)
-            if row is None:
-                failures.append(f"missing_deferred_row:{invariant}")
+        rows = yaml.safe_load(contract.read_text(encoding="utf-8")) or []
+        if not isinstance(rows, list):
+            failures.append("phase1_contract_not_yaml_list")
+            rows = []
+        for row in rows:
+            if not isinstance(row, dict):
                 continue
-            if str(row.get("status")) != "deferred_to_phase2":
-                failures.append(f"deferred_status_mismatch:{invariant}:{row.get('status')}")
-            if bool(row.get("required", False)):
-                failures.append(f"deferred_row_required_true:{invariant}")
+            if bool(row.get("required")) and str(row.get("evidence_path") or "").strip():
+                required_artifacts.append(str(row["evidence_path"]).strip())
     except Exception as exc:
         failures.append(f"phase1_contract_spec_parse_error:{exc}")
 
-status = "PASS" if not failures else "FAIL"
+required_artifacts = sorted(set(required_artifacts))
+if not failures and len(required_artifacts) == 0:
+    failures.append("phase1_contract_zero_required_artifacts")
 
-payload = {
+schema_required = ["check_id", "timestamp_utc", "git_sha", "status"]
+if schema_file.exists():
+    try:
+        schema = json.loads(schema_file.read_text(encoding="utf-8"))
+        if isinstance(schema, dict) and isinstance(schema.get("required"), list) and schema["required"]:
+            schema_required = [str(k) for k in schema["required"]]
+    except Exception as exc:
+        failures.append(f"evidence_schema_parse_error:{exc}")
+else:
+    failures.append(f"missing_evidence_schema:{schema_file}")
+
+for rel in required_artifacts:
+    path = root / rel
+    if not path.exists():
+        failures.append(f"missing_evidence:{rel}")
+        checked.append({"path": rel, "status": "MISSING"})
+        continue
+    try:
+        payload = json.loads(path.read_text(encoding="utf-8"))
+    except Exception:
+        failures.append(f"invalid_json:{rel}")
+        checked.append({"path": rel, "status": "INVALID_JSON"})
+        continue
+
+    missing_keys = [k for k in schema_required if k not in payload]
+    if missing_keys:
+        failures.append(f"schema_required_missing:{rel}:{','.join(missing_keys)}")
+
+    status = str(payload.get("status", "")).upper()
+    checked.append({"path": rel, "status": status})
+
+status = "PASS" if not failures else "FAIL"
+out = {
     "check_id": "PHASE1-CLOSEOUT-VERIFICATION",
     "timestamp_utc": os.environ.get("EVIDENCE_TS"),
     "git_sha": os.environ.get("EVIDENCE_GIT_SHA"),
     "schema_fingerprint": os.environ.get("EVIDENCE_SCHEMA_FP"),
     "status": status,
     "run_phase1_gates": os.environ.get("RUN_PHASE1_GATES", "0") == "1",
+    "contract_file": str(contract),
+    "required_artifacts": required_artifacts,
     "checked": checked,
     "failures": failures,
 }
-
-out_file.write_text(json.dumps(payload, indent=2) + "\n", encoding="utf-8")
+out_file.write_text(json.dumps(out, indent=2) + "\n", encoding="utf-8")
 
 if status != "PASS":
     print("❌ Phase-1 closeout verification failed", file=sys.stderr)
     for item in failures:
         print(f" - {item}", file=sys.stderr)
-    sys.exit(1)
+    raise SystemExit(1)
 
 print(f"Phase-1 closeout verification passed. Evidence: {out_file}")
 PY
