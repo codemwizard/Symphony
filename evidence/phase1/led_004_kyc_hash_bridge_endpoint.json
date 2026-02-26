@@ -1,0 +1,31 @@
+{
+  "check_id": "LED-004-KYC-HASH-BRIDGE-ENDPOINT",
+  "task_id": "TSK-P1-LED-004",
+  "timestamp_utc": "2026-02-26T01:57:00Z",
+  "git_sha": "a0d32a08dd8142f46307078f17cb57ae9496bef5",
+  "schema_fingerprint": "a0d32a0",
+  "status": "PASS",
+  "pass": true,
+  "details": {
+    "endpoint": "POST /v1/kyc/hash",
+    "retention_class": "FIC_AML_CUSTOMER_ID",
+    "retention_class_confirmed": true,
+    "tests": [
+      {
+        "Name": "valid_hash_accepted",
+        "Status": "PASS",
+        "Detail": "{\u0022kyc_record_id\u0022:\u0022d27b31ad-b3b8-4be9-a102-092ae0c2d085\u0022,\u0022anchored_at\u0022:\u00222026-02-26T01:57:00.5259981\\u002B00:00\u0022,\u0022outcome\u0022:\u0022VERIFIED\u0022,\u0022retention_class\u0022:\u0022FIC_AML_CUSTOMER_ID\u0022}"
+      },
+      {
+        "Name": "unknown_provider_rejected",
+        "Status": "PASS",
+        "Detail": "{\u0022error_code\u0022:\u0022PROVIDER_NOT_FOUND\u0022}"
+      },
+      {
+        "Name": "pii_field_rejected",
+        "Status": "PASS",
+        "Detail": "rejected:full_name"
+      }
+    ]
+  }
+}
