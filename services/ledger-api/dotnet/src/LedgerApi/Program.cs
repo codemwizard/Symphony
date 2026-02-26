@@ -1969,10 +1969,13 @@ static class IngressSelfTestRunner
         static IngressRequest CreateRequest(string instructionId, string? tenantIdOverride = null)
         {
             var tenantId = tenantIdOverride ?? Guid.NewGuid().ToString();
+            var canonicalInstructionId = string.IsNullOrWhiteSpace(instructionId)
+                ? instructionId
+                : (Guid.TryParse(instructionId, out _) ? instructionId : Guid.NewGuid().ToString());
             var payload = JsonSerializer.Deserialize<JsonElement>(
                 $$"""
                 {
-                  "instruction_id": "{{instructionId}}",
+                  "instruction_id": "{{canonicalInstructionId}}",
                   "tenant_id": "{{tenantId}}",
                   "rail_type": "RTGS",
                   "amount_minor": 100,
@@ -1984,7 +1987,7 @@ static class IngressSelfTestRunner
                 """
             );
             return new IngressRequest(
-                instruction_id: instructionId,
+                instruction_id: canonicalInstructionId,
                 participant_id: "bank-a",
                 idempotency_key: Guid.NewGuid().ToString("N"),
                 rail_type: "RTGS",
