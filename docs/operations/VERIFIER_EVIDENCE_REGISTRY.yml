@@ -134,6 +134,9 @@ registry:
   scripts/audit/verify_tsk_p1_reg_001.sh:
     emits:
       - evidence/phase1/tsk_p1_reg_001__boz_observability_role_read_only_views.json
+  scripts/audit/verify_reg_002_daily_report_signed_output.sh:
+    emits:
+      - evidence/phase1/reg_002_daily_report_signed_output.json
   scripts/audit/verify_drd_policy_usage.sh:
     emits:
       - evidence/phase0/drd_policy_usage.json
