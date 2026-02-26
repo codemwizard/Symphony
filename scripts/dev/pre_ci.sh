@@ -722,6 +722,30 @@ if [[ "${RUN_PHASE1_GATES:-0}" == "1" ]]; then
     exit 1
   fi
 
+  echo "==> Phase-1 incident workflow + 48-hour export verification (TSK-P1-REG-003)"
+  if [[ -x scripts/audit/verify_reg_003_incident_48h_export.sh ]]; then
+    scripts/audit/verify_reg_003_incident_48h_export.sh --evidence evidence/phase1/reg_003_incident_48h_export.json
+  else
+    echo "ERROR: scripts/audit/verify_reg_003_incident_48h_export.sh not found"
+    exit 1
+  fi
+
+  echo "==> Phase-1 closeout verifier scaffold verification (TSK-P1-202)"
+  if [[ -x scripts/audit/verify_tsk_p1_202.sh ]]; then
+    scripts/audit/verify_tsk_p1_202.sh --evidence evidence/phase1/tsk_p1_202__closeout_verifier_scaffold_fail_if_contract.json
+  else
+    echo "ERROR: scripts/audit/verify_tsk_p1_202.sh not found"
+    exit 1
+  fi
+
+  echo "==> Phase-1 perf closeout extension verification (PERF-004)"
+  if [[ -x scripts/perf/verify_perf_004.sh ]]; then
+    scripts/perf/verify_perf_004.sh --evidence evidence/phase1/perf_004__perf_contracts_closeout_checks_extends_verify.json
+  else
+    echo "ERROR: scripts/perf/verify_perf_004.sh not found"
+    exit 1
+  fi
+
   echo "==> Phase-1 no-MCP guard"
   if [[ -x scripts/audit/verify_no_mcp_phase1.sh ]]; then
     scripts/audit/verify_no_mcp_phase1.sh

@@ -70,6 +70,12 @@ if (args.Contains("--self-test-reg-daily-report", StringComparer.OrdinalIgnoreCa
     Environment.ExitCode = code;
     return;
 }
+if (args.Contains("--self-test-reg-incident-48h-report", StringComparer.OrdinalIgnoreCase))
+{
+    var code = await RegulatoryIncident48hSelfTestRunner.RunAsync(logger, CancellationToken.None);
+    Environment.ExitCode = code;
+    return;
+}
 
 var storageMode = (Environment.GetEnvironmentVariable("INGRESS_STORAGE_MODE") ?? "file").Trim().ToLowerInvariant();
 StorageModePolicy.ValidateOrThrow(storageMode);
@@ -100,6 +106,12 @@ IKycHashBridgeStore kycHashBridgeStore = storageMode switch
     "db" or "db_psql" or "db_npgsql" => new NpgsqlKycHashBridgeStore(logger, dataSource!),
     "file" => new FileKycHashBridgeStore(logger),
     _ => new FileKycHashBridgeStore(logger)
+};
+IRegulatoryIncidentStore regulatoryIncidentStore = storageMode switch
+{
+    "db" or "db_psql" or "db_npgsql" => new NpgsqlRegulatoryIncidentStore(logger, dataSource!),
+    "file" => new FileRegulatoryIncidentStore(logger),
+    _ => new FileRegulatoryIncidentStore(logger)
 };
 
 app.MapGet("/health", () => Results.Ok(new { status = "ok" }));
@@ -238,6 +250,66 @@ app.MapGet("/v1/regulatory/reports/daily", async (string date, HttpContext httpC
     return Results.Json(generated.Report!, statusCode: StatusCodes.Status200OK);
 });
 
+app.MapPost("/v1/admin/incidents", async (RegulatoryIncidentCreateRequest request, HttpContext httpContext, CancellationToken cancellationToken) =>
+{
+    var authFailure = ApiAuthorization.AuthorizeAdminTenantOnboarding(httpContext);
+    if (authFailure is not null)
+    {
+        return Results.Json(authFailure.Body, statusCode: authFailure.StatusCode);
+    }
+
+    var validationErrors = RegulatoryIncidentValidation.ValidateCreateRequest(request);
+    if (validationErrors.Count > 0)
+    {
+        return Results.Json(new
+        {
+            error_code = "INVALID_REQUEST",
+            errors = validationErrors
+        }, statusCode: StatusCodes.Status400BadRequest);
+    }
+
+    var created = await regulatoryIncidentStore.CreateIncidentAsync(request, cancellationToken);
+    if (!created.Success || string.IsNullOrWhiteSpace(created.IncidentId))
+    {
+        return Results.Json(new
+        {
+            error_code = "INCIDENT_CREATE_FAILED",
+            errors = new[] { created.Error ?? "unknown" }
+        }, statusCode: StatusCodes.Status503ServiceUnavailable);
+    }
+
+    return Results.Json(new
+    {
+        incident_id = created.IncidentId,
+        tenant_id = created.TenantId,
+        status = created.Status,
+        created_at = created.CreatedAt
+    }, statusCode: StatusCodes.Status200OK);
+});
+
+app.MapGet("/v1/regulatory/incidents/{incident_id}/report", async (string incident_id, HttpContext httpContext, CancellationToken cancellationToken) =>
+{
+    var authFailure = ApiAuthorization.AuthorizeEvidenceRead(httpContext);
+    if (authFailure is not null)
+    {
+        return Results.Json(authFailure.Body, statusCode: authFailure.StatusCode);
+    }
+
+    var result = await RegulatoryIncidentReportHandler.GenerateIncidentReportAsync(incident_id, regulatoryIncidentStore, cancellationToken);
+    if (!result.Success)
+    {
+        return Results.Json(new
+        {
+            error_code = result.ErrorCode ?? "INCIDENT_REPORT_FAILED",
+            errors = new[] { result.Error ?? "unknown" }
+        }, statusCode: result.StatusCode);
+    }
+
+    httpContext.Response.Headers["X-Symphony-Signature"] = result.Signature;
+    httpContext.Response.Headers["X-Symphony-Key-Id"] = result.KeyId;
+    return Results.Json(result.Report!, statusCode: StatusCodes.Status200OK);
+});
+
 await app.RunAsync();
 
 record IngressRequest(
@@ -272,6 +344,14 @@ record KycHashBridgeRequest(
     string provider_signature,
     string provider_reference,
     string verified_at_provider
+);
+
+record RegulatoryIncidentCreateRequest(
+    string tenant_id,
+    string incident_type,
+    string detected_at,
+    string description,
+    string severity
 );
 
 record PersistInput(
@@ -892,6 +972,196 @@ static class KycHashBridgeHandler
     }
 }
 
+record RegulatoryIncidentRecord(
+    string IncidentId,
+    string TenantId,
+    string IncidentType,
+    string DetectedAt,
+    string Description,
+    string Severity,
+    string Status,
+    string? ReportedToBozAt,
+    string? BozReference,
+    string CreatedAt
+);
+
+record RegulatoryIncidentEventRecord(
+    string IncidentId,
+    string EventType,
+    string EventPayload,
+    string CreatedAt
+);
+
+record RegulatoryIncidentCreateResult(
+    bool Success,
+    string? IncidentId,
+    string? TenantId,
+    string? Status,
+    string? CreatedAt,
+    string? Error)
+{
+    public static RegulatoryIncidentCreateResult Ok(string incidentId, string tenantId, string status, string createdAt)
+        => new(true, incidentId, tenantId, status, createdAt, null);
+
+    public static RegulatoryIncidentCreateResult Fail(string error)
+        => new(false, null, null, null, null, error);
+}
+
+record RegulatoryIncidentUpdateResult(bool Success, string? Error)
+{
+    public static RegulatoryIncidentUpdateResult Ok() => new(true, null);
+    public static RegulatoryIncidentUpdateResult Fail(string error) => new(false, error);
+}
+
+record RegulatoryIncidentReportLookup(
+    bool Found,
+    RegulatoryIncidentRecord? Incident,
+    IReadOnlyList<RegulatoryIncidentEventRecord> Timeline,
+    string? Error);
+
+interface IRegulatoryIncidentStore
+{
+    Task<RegulatoryIncidentCreateResult> CreateIncidentAsync(RegulatoryIncidentCreateRequest request, CancellationToken cancellationToken);
+    Task<RegulatoryIncidentUpdateResult> UpdateStatusAsync(string incidentId, string status, CancellationToken cancellationToken);
+    Task<RegulatoryIncidentReportLookup> GetIncidentReportDataAsync(string incidentId, CancellationToken cancellationToken);
+}
+
+static class RegulatoryIncidentValidation
+{
+    private static readonly HashSet<string> AllowedSeverity = new(StringComparer.OrdinalIgnoreCase)
+    {
+        "LOW", "MEDIUM", "HIGH", "CRITICAL"
+    };
+
+    private static readonly HashSet<string> AllowedStatus = new(StringComparer.OrdinalIgnoreCase)
+    {
+        "OPEN", "UNDER_INVESTIGATION", "REPORTED", "CLOSED"
+    };
+
+    public static List<string> ValidateCreateRequest(RegulatoryIncidentCreateRequest request)
+    {
+        var errors = new List<string>();
+        if (!Guid.TryParse(request.tenant_id, out _))
+        {
+            errors.Add("tenant_id must be a valid UUID");
+        }
+        if (!DateTimeOffset.TryParse(request.detected_at, out _))
+        {
+            errors.Add("detected_at must be ISO 8601");
+        }
+        if (string.IsNullOrWhiteSpace(request.incident_type))
+        {
+            errors.Add("incident_type is required");
+        }
+        if (string.IsNullOrWhiteSpace(request.description))
+        {
+            errors.Add("description is required");
+        }
+        if (!AllowedSeverity.Contains(request.severity ?? string.Empty))
+        {
+            errors.Add("severity must be one of LOW|MEDIUM|HIGH|CRITICAL");
+        }
+        return errors;
+    }
+
+    public static bool IsAllowedStatus(string status) => AllowedStatus.Contains(status);
+}
+
+record RegulatoryIncidentReportResult(
+    bool Success,
+    int StatusCode,
+    object? Report,
+    string Signature,
+    string KeyId,
+    string? ErrorCode,
+    string? Error);
+
+static class RegulatoryIncidentReportHandler
+{
+    public static async Task<RegulatoryIncidentReportResult> GenerateIncidentReportAsync(
+        string incidentId,
+        IRegulatoryIncidentStore store,
+        CancellationToken cancellationToken)
+    {
+        if (!Guid.TryParse(incidentId, out _))
+        {
+            return new RegulatoryIncidentReportResult(false, StatusCodes.Status400BadRequest, null, string.Empty, string.Empty, "INVALID_INCIDENT_ID", "incident_id must be UUID");
+        }
+
+        var lookup = await store.GetIncidentReportDataAsync(incidentId, cancellationToken);
+        if (!lookup.Found || lookup.Incident is null)
+        {
+            return new RegulatoryIncidentReportResult(false, StatusCodes.Status404NotFound, null, string.Empty, string.Empty, "INCIDENT_NOT_FOUND", lookup.Error ?? "incident not found");
+        }
+
+        var incident = lookup.Incident;
+        if (string.Equals(incident.Status, "OPEN", StringComparison.OrdinalIgnoreCase))
+        {
+            return new RegulatoryIncidentReportResult(false, StatusCodes.Status409Conflict, null, string.Empty, string.Empty, "INCIDENT_NOT_REPORTABLE", "incident must be UNDER_INVESTIGATION or beyond");
+        }
+
+        var timeline = lookup.Timeline
+            .OrderBy(e => e.CreatedAt, StringComparer.Ordinal)
+            .Select(e => new
+            {
+                event_type = e.EventType,
+                event_payload = e.EventPayload,
+                created_at = e.CreatedAt
+            })
+            .ToArray();
+
+        var reportWithoutTimestamp = new
+        {
+            incident_id = incident.IncidentId,
+            tenant_id = incident.TenantId,
+            incident_type = incident.IncidentType,
+            detected_at = incident.DetectedAt,
+            description = incident.Description,
+            severity = incident.Severity,
+            status = incident.Status,
+            reported_to_boz_at = incident.ReportedToBozAt,
+            boz_reference = incident.BozReference,
+            created_at = incident.CreatedAt,
+            timeline
+        };
+
+        var reportJson = JsonSerializer.Serialize(reportWithoutTimestamp);
+        var keyMaterial = Environment.GetEnvironmentVariable("EVIDENCE_SIGNING_KEY") ?? "phase1-reg-003-dev-signing-key";
+        var keyId = Environment.GetEnvironmentVariable("EVIDENCE_SIGNING_KEY_ID") ?? "phase1-dev-key-1";
+        var signature = RegulatoryReportHandler.VerifySignature(reportJson, RegulatoryReportComputeHmac(reportJson, keyMaterial), keyMaterial)
+            ? RegulatoryReportComputeHmac(reportJson, keyMaterial)
+            : string.Empty;
+
+        var report = new
+        {
+            incident_id = incident.IncidentId,
+            tenant_id = incident.TenantId,
+            incident_type = incident.IncidentType,
+            detected_at = incident.DetectedAt,
+            description = incident.Description,
+            severity = incident.Severity,
+            status = incident.Status,
+            reported_to_boz_at = incident.ReportedToBozAt,
+            boz_reference = incident.BozReference,
+            created_at = incident.CreatedAt,
+            timeline,
+            produced_at_utc = DateTimeOffset.UtcNow.ToString("O")
+        };
+
+        return new RegulatoryIncidentReportResult(true, StatusCodes.Status200OK, report, signature, keyId, null, null);
+    }
+
+    public static bool VerifySignature(string canonicalJson, string signatureHex, string keyMaterial)
+        => RegulatoryReportHandler.VerifySignature(canonicalJson, signatureHex, keyMaterial);
+
+    private static string RegulatoryReportComputeHmac(string payload, string keyMaterial)
+    {
+        using var hmac = new HMACSHA256(Encoding.UTF8.GetBytes(keyMaterial));
+        var sig = hmac.ComputeHash(Encoding.UTF8.GetBytes(payload));
+        return Convert.ToHexString(sig).ToLowerInvariant();
+    }
+}
+
 record RegulatoryReportResult(bool Success, object? Report, string Signature, string KeyId, bool Deterministic, string? Error)
 {
     public static RegulatoryReportResult Fail(string error)
@@ -1481,6 +1751,350 @@ RETURNING id::text, anchored_at::text, outcome, retention_class;";
         {
             logger.LogError(ex, "Npgsql KYC hash bridge persistence failed.");
             return KycHashPersistResult.Fail($"db_failed:{ex.Message}");
+        }
+    }
+}
+
+sealed class FileRegulatoryIncidentStore(ILogger logger, string? path = null) : IRegulatoryIncidentStore
+{
+    private readonly string _path = path
+        ?? Environment.GetEnvironmentVariable("REGULATORY_INCIDENTS_FILE")
+        ?? "/tmp/symphony_regulatory_incidents.ndjson";
+
+    public async Task<RegulatoryIncidentCreateResult> CreateIncidentAsync(RegulatoryIncidentCreateRequest request, CancellationToken cancellationToken)
+    {
+        try
+        {
+            Directory.CreateDirectory(Path.GetDirectoryName(_path) ?? "/tmp");
+            var incidentId = Guid.NewGuid().ToString();
+            var now = DateTimeOffset.UtcNow.ToString("O");
+            var row = JsonSerializer.Serialize(new
+            {
+                row_type = "incident",
+                incident_id = incidentId,
+                tenant_id = request.tenant_id,
+                incident_type = request.incident_type.Trim(),
+                detected_at = request.detected_at,
+                description = request.description.Trim(),
+                severity = request.severity.Trim().ToUpperInvariant(),
+                status = "OPEN",
+                reported_to_boz_at = (string?)null,
+                boz_reference = (string?)null,
+                created_at = now
+            });
+            var eventRow = JsonSerializer.Serialize(new
+            {
+                row_type = "event",
+                incident_id = incidentId,
+                event_type = "INCIDENT_CREATED",
+                event_payload = "{\"status\":\"OPEN\"}",
+                created_at = now
+            });
+            await File.AppendAllTextAsync(_path, row + Environment.NewLine, cancellationToken);
+            await File.AppendAllTextAsync(_path, eventRow + Environment.NewLine, cancellationToken);
+            return RegulatoryIncidentCreateResult.Ok(incidentId, request.tenant_id, "OPEN", now);
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Regulatory incident file create failed.");
+            return RegulatoryIncidentCreateResult.Fail(ex.Message);
+        }
+    }
+
+    public async Task<RegulatoryIncidentUpdateResult> UpdateStatusAsync(string incidentId, string status, CancellationToken cancellationToken)
+    {
+        try
+        {
+            if (!RegulatoryIncidentValidation.IsAllowedStatus(status))
+            {
+                return RegulatoryIncidentUpdateResult.Fail("invalid status");
+            }
+
+            var lines = File.Exists(_path)
+                ? await File.ReadAllLinesAsync(_path, cancellationToken)
+                : Array.Empty<string>();
+
+            var current = lines
+                .Where(l => !string.IsNullOrWhiteSpace(l))
+                .Select(l => JsonDocument.Parse(l).RootElement.Clone())
+                .Where(e => e.TryGetProperty("row_type", out var rowType) && rowType.GetString() == "incident")
+                .Where(e => e.TryGetProperty("incident_id", out var idProp) && string.Equals(idProp.GetString(), incidentId, StringComparison.Ordinal))
+                .OrderByDescending(e => e.TryGetProperty("created_at", out var c) ? c.GetString() : string.Empty, StringComparer.Ordinal)
+                .FirstOrDefault();
+
+            if (current.ValueKind == JsonValueKind.Undefined)
+            {
+                return RegulatoryIncidentUpdateResult.Fail("incident not found");
+            }
+
+            var now = DateTimeOffset.UtcNow.ToString("O");
+            var rewritten = JsonSerializer.Serialize(new
+            {
+                row_type = "incident",
+                incident_id = incidentId,
+                tenant_id = current.GetProperty("tenant_id").GetString(),
+                incident_type = current.GetProperty("incident_type").GetString(),
+                detected_at = current.GetProperty("detected_at").GetString(),
+                description = current.GetProperty("description").GetString(),
+                severity = current.GetProperty("severity").GetString(),
+                status = status.Trim().ToUpperInvariant(),
+                reported_to_boz_at = current.TryGetProperty("reported_to_boz_at", out var rtb) ? rtb.GetString() : null,
+                boz_reference = current.TryGetProperty("boz_reference", out var brz) ? brz.GetString() : null,
+                created_at = current.GetProperty("created_at").GetString()
+            });
+
+            var eventRow = JsonSerializer.Serialize(new
+            {
+                row_type = "event",
+                incident_id = incidentId,
+                event_type = "STATUS_UPDATED",
+                event_payload = JsonSerializer.Serialize(new { status = status.Trim().ToUpperInvariant() }),
+                created_at = now
+            });
+
+            await File.AppendAllTextAsync(_path, rewritten + Environment.NewLine, cancellationToken);
+            await File.AppendAllTextAsync(_path, eventRow + Environment.NewLine, cancellationToken);
+            return RegulatoryIncidentUpdateResult.Ok();
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Regulatory incident file status update failed.");
+            return RegulatoryIncidentUpdateResult.Fail(ex.Message);
+        }
+    }
+
+    public async Task<RegulatoryIncidentReportLookup> GetIncidentReportDataAsync(string incidentId, CancellationToken cancellationToken)
+    {
+        try
+        {
+            if (!File.Exists(_path))
+            {
+                return new RegulatoryIncidentReportLookup(false, null, Array.Empty<RegulatoryIncidentEventRecord>(), "incident store not found");
+            }
+
+            var lines = await File.ReadAllLinesAsync(_path, cancellationToken);
+            RegulatoryIncidentRecord? incident = null;
+            var timeline = new List<RegulatoryIncidentEventRecord>();
+
+            foreach (var line in lines.Where(l => !string.IsNullOrWhiteSpace(l)))
+            {
+                using var doc = JsonDocument.Parse(line);
+                var root = doc.RootElement;
+                if (!root.TryGetProperty("incident_id", out var idProp) || !string.Equals(idProp.GetString(), incidentId, StringComparison.Ordinal))
+                {
+                    continue;
+                }
+
+                var rowType = root.TryGetProperty("row_type", out var rt) ? rt.GetString() : null;
+                if (string.Equals(rowType, "incident", StringComparison.Ordinal))
+                {
+                    incident = new RegulatoryIncidentRecord(
+                        IncidentId: incidentId,
+                        TenantId: root.GetProperty("tenant_id").GetString() ?? string.Empty,
+                        IncidentType: root.GetProperty("incident_type").GetString() ?? string.Empty,
+                        DetectedAt: root.GetProperty("detected_at").GetString() ?? string.Empty,
+                        Description: root.GetProperty("description").GetString() ?? string.Empty,
+                        Severity: root.GetProperty("severity").GetString() ?? string.Empty,
+                        Status: root.GetProperty("status").GetString() ?? string.Empty,
+                        ReportedToBozAt: root.TryGetProperty("reported_to_boz_at", out var rtb) ? rtb.GetString() : null,
+                        BozReference: root.TryGetProperty("boz_reference", out var brz) ? brz.GetString() : null,
+                        CreatedAt: root.GetProperty("created_at").GetString() ?? string.Empty
+                    );
+                }
+                else if (string.Equals(rowType, "event", StringComparison.Ordinal))
+                {
+                    timeline.Add(new RegulatoryIncidentEventRecord(
+                        IncidentId: incidentId,
+                        EventType: root.GetProperty("event_type").GetString() ?? string.Empty,
+                        EventPayload: root.GetProperty("event_payload").GetString() ?? "{}",
+                        CreatedAt: root.GetProperty("created_at").GetString() ?? string.Empty
+                    ));
+                }
+            }
+
+            if (incident is null)
+            {
+                return new RegulatoryIncidentReportLookup(false, null, timeline, "incident not found");
+            }
+
+            return new RegulatoryIncidentReportLookup(true, incident, timeline, null);
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Regulatory incident file read failed.");
+            return new RegulatoryIncidentReportLookup(false, null, Array.Empty<RegulatoryIncidentEventRecord>(), ex.Message);
+        }
+    }
+}
+
+sealed class NpgsqlRegulatoryIncidentStore(ILogger logger, NpgsqlDataSource dataSource) : IRegulatoryIncidentStore
+{
+    public async Task<RegulatoryIncidentCreateResult> CreateIncidentAsync(RegulatoryIncidentCreateRequest request, CancellationToken cancellationToken)
+    {
+        try
+        {
+            await using var conn = await dataSource.OpenConnectionAsync(cancellationToken);
+            await using var tx = await conn.BeginTransactionAsync(cancellationToken);
+            var now = DateTimeOffset.UtcNow;
+            var incidentId = Guid.NewGuid();
+
+            await using var insertIncident = conn.CreateCommand();
+            insertIncident.Transaction = tx;
+            insertIncident.CommandText = @"
+INSERT INTO public.regulatory_incidents (
+  incident_id, tenant_id, incident_type, detected_at, description, severity, status, created_at
+) VALUES (
+  @incident_id, @tenant_id, @incident_type, @detected_at, @description, @severity, 'OPEN', @created_at
+);";
+            insertIncident.Parameters.AddWithValue("incident_id", incidentId);
+            insertIncident.Parameters.AddWithValue("tenant_id", Guid.Parse(request.tenant_id));
+            insertIncident.Parameters.AddWithValue("incident_type", request.incident_type.Trim());
+            insertIncident.Parameters.AddWithValue("detected_at", DateTimeOffset.Parse(request.detected_at));
+            insertIncident.Parameters.AddWithValue("description", request.description.Trim());
+            insertIncident.Parameters.AddWithValue("severity", request.severity.Trim().ToUpperInvariant());
+            insertIncident.Parameters.AddWithValue("created_at", now);
+            await insertIncident.ExecuteNonQueryAsync(cancellationToken);
+
+            await using var insertEvent = conn.CreateCommand();
+            insertEvent.Transaction = tx;
+            insertEvent.CommandText = @"
+INSERT INTO public.incident_events (
+  incident_event_id, incident_id, event_type, event_payload, created_at
+) VALUES (
+  public.uuid_v7_or_random(), @incident_id, 'INCIDENT_CREATED', @event_payload::jsonb, @created_at
+);";
+            insertEvent.Parameters.AddWithValue("incident_id", incidentId);
+            insertEvent.Parameters.AddWithValue("event_payload", JsonSerializer.Serialize(new { status = "OPEN" }));
+            insertEvent.Parameters.AddWithValue("created_at", now);
+            await insertEvent.ExecuteNonQueryAsync(cancellationToken);
+
+            await tx.CommitAsync(cancellationToken);
+            return RegulatoryIncidentCreateResult.Ok(incidentId.ToString(), request.tenant_id, "OPEN", now.ToString("O"));
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Regulatory incident db create failed.");
+            return RegulatoryIncidentCreateResult.Fail(ex.Message);
+        }
+    }
+
+    public async Task<RegulatoryIncidentUpdateResult> UpdateStatusAsync(string incidentId, string status, CancellationToken cancellationToken)
+    {
+        try
+        {
+            if (!RegulatoryIncidentValidation.IsAllowedStatus(status))
+            {
+                return RegulatoryIncidentUpdateResult.Fail("invalid status");
+            }
+
+            await using var conn = await dataSource.OpenConnectionAsync(cancellationToken);
+            await using var tx = await conn.BeginTransactionAsync(cancellationToken);
+            var now = DateTimeOffset.UtcNow;
+
+            await using var update = conn.CreateCommand();
+            update.Transaction = tx;
+            update.CommandText = @"
+UPDATE public.regulatory_incidents
+SET status = @status
+WHERE incident_id = @incident_id;";
+            update.Parameters.AddWithValue("status", status.Trim().ToUpperInvariant());
+            update.Parameters.AddWithValue("incident_id", Guid.Parse(incidentId));
+            var affected = await update.ExecuteNonQueryAsync(cancellationToken);
+            if (affected == 0)
+            {
+                await tx.RollbackAsync(cancellationToken);
+                return RegulatoryIncidentUpdateResult.Fail("incident not found");
+            }
+
+            await using var insertEvent = conn.CreateCommand();
+            insertEvent.Transaction = tx;
+            insertEvent.CommandText = @"
+INSERT INTO public.incident_events (
+  incident_event_id, incident_id, event_type, event_payload, created_at
+) VALUES (
+  public.uuid_v7_or_random(), @incident_id, 'STATUS_UPDATED', @event_payload::jsonb, @created_at
+);";
+            insertEvent.Parameters.AddWithValue("incident_id", Guid.Parse(incidentId));
+            insertEvent.Parameters.AddWithValue("event_payload", JsonSerializer.Serialize(new { status = status.Trim().ToUpperInvariant() }));
+            insertEvent.Parameters.AddWithValue("created_at", now);
+            await insertEvent.ExecuteNonQueryAsync(cancellationToken);
+
+            await tx.CommitAsync(cancellationToken);
+            return RegulatoryIncidentUpdateResult.Ok();
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Regulatory incident db update failed.");
+            return RegulatoryIncidentUpdateResult.Fail(ex.Message);
+        }
+    }
+
+    public async Task<RegulatoryIncidentReportLookup> GetIncidentReportDataAsync(string incidentId, CancellationToken cancellationToken)
+    {
+        try
+        {
+            await using var conn = await dataSource.OpenConnectionAsync(cancellationToken);
+            await using var incidentCmd = conn.CreateCommand();
+            incidentCmd.CommandText = @"
+SELECT incident_id::text, tenant_id::text, incident_type, detected_at, description, severity, status,
+       reported_to_boz_at, boz_reference, created_at
+FROM public.regulatory_incidents
+WHERE incident_id = @incident_id;";
+            incidentCmd.Parameters.AddWithValue("incident_id", Guid.Parse(incidentId));
+
+            RegulatoryIncidentRecord? incident = null;
+            await using (var reader = await incidentCmd.ExecuteReaderAsync(cancellationToken))
+            {
+                if (await reader.ReadAsync(cancellationToken))
+                {
+                    incident = new RegulatoryIncidentRecord(
+                        IncidentId: reader.GetString(0),
+                        TenantId: reader.GetString(1),
+                        IncidentType: reader.GetString(2),
+                        DetectedAt: reader.GetFieldValue<DateTimeOffset>(3).ToString("O"),
+                        Description: reader.GetString(4),
+                        Severity: reader.GetString(5),
+                        Status: reader.GetString(6),
+                        ReportedToBozAt: reader.IsDBNull(7) ? null : reader.GetFieldValue<DateTimeOffset>(7).ToString("O"),
+                        BozReference: reader.IsDBNull(8) ? null : reader.GetString(8),
+                        CreatedAt: reader.GetFieldValue<DateTimeOffset>(9).ToString("O")
+                    );
+                }
+            }
+
+            if (incident is null)
+            {
+                return new RegulatoryIncidentReportLookup(false, null, Array.Empty<RegulatoryIncidentEventRecord>(), "incident not found");
+            }
+
+            await using var eventsCmd = conn.CreateCommand();
+            eventsCmd.CommandText = @"
+SELECT incident_id::text, event_type, event_payload::text, created_at
+FROM public.incident_events
+WHERE incident_id = @incident_id
+ORDER BY created_at ASC;";
+            eventsCmd.Parameters.AddWithValue("incident_id", Guid.Parse(incidentId));
+
+            var timeline = new List<RegulatoryIncidentEventRecord>();
+            await using (var reader = await eventsCmd.ExecuteReaderAsync(cancellationToken))
+            {
+                while (await reader.ReadAsync(cancellationToken))
+                {
+                    timeline.Add(new RegulatoryIncidentEventRecord(
+                        IncidentId: reader.GetString(0),
+                        EventType: reader.GetString(1),
+                        EventPayload: reader.GetString(2),
+                        CreatedAt: reader.GetFieldValue<DateTimeOffset>(3).ToString("O")
+                    ));
+                }
+            }
+
+            return new RegulatoryIncidentReportLookup(true, incident, timeline, null);
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Regulatory incident db read failed.");
+            return new RegulatoryIncidentReportLookup(false, null, Array.Empty<RegulatoryIncidentEventRecord>(), ex.Message);
         }
     }
 }
@@ -3165,6 +3779,124 @@ static class RegulatoryDailyReportSelfTestRunner
         }, new JsonSerializerOptions { WriteIndented = true }) + Environment.NewLine, cancellationToken);
 
         Console.WriteLine($"Reg daily report self-test status: {status}");
+        Console.WriteLine($"Evidence: {evidencePath}");
+        return status == "PASS" ? 0 : 1;
+    }
+}
+
+static class RegulatoryIncident48hSelfTestRunner
+{
+    public static async Task<int> RunAsync(ILogger logger, CancellationToken cancellationToken)
+    {
+        var incidentFile = $"/tmp/symphony_reg003_{Guid.NewGuid():N}.ndjson";
+        Environment.SetEnvironmentVariable("REGULATORY_INCIDENTS_FILE", incidentFile);
+        Environment.SetEnvironmentVariable("EVIDENCE_SIGNING_KEY", "phase1-reg-003-self-test-key");
+        Environment.SetEnvironmentVariable("EVIDENCE_SIGNING_KEY_ID", "phase1-reg-003-key");
+
+        var store = new FileRegulatoryIncidentStore(logger, incidentFile);
+        var tenantId = "11111111-1111-1111-1111-111111111111";
+        var created = await store.CreateIncidentAsync(new RegulatoryIncidentCreateRequest(
+            tenant_id: tenantId,
+            incident_type: "RAIL_CONFLICT",
+            detected_at: DateTimeOffset.UtcNow.ToString("O"),
+            description: "simulated contradiction from rail callback stream",
+            severity: "HIGH"
+        ), cancellationToken);
+
+        if (!created.Success || string.IsNullOrWhiteSpace(created.IncidentId))
+        {
+            return 1;
+        }
+
+        var blocked = await RegulatoryIncidentReportHandler.GenerateIncidentReportAsync(created.IncidentId, store, cancellationToken);
+        var blockedOpenState = !blocked.Success && string.Equals(blocked.ErrorCode, "INCIDENT_NOT_REPORTABLE", StringComparison.Ordinal);
+
+        var update = await store.UpdateStatusAsync(created.IncidentId, "UNDER_INVESTIGATION", cancellationToken);
+        if (!update.Success)
+        {
+            return 1;
+        }
+
+        var reportResult = await RegulatoryIncidentReportHandler.GenerateIncidentReportAsync(created.IncidentId, store, cancellationToken);
+        if (!reportResult.Success || reportResult.Report is null)
+        {
+            return 1;
+        }
+
+        static string CanonicalizeWithoutProducedAt(object report)
+        {
+            using var doc = JsonDocument.Parse(JsonSerializer.Serialize(report));
+            using var stream = new MemoryStream();
+            using (var writer = new Utf8JsonWriter(stream))
+            {
+                writer.WriteStartObject();
+                foreach (var p in doc.RootElement.EnumerateObject())
+                {
+                    if (p.NameEquals("produced_at_utc"))
+                    {
+                        continue;
+                    }
+                    p.WriteTo(writer);
+                }
+                writer.WriteEndObject();
+            }
+            return Encoding.UTF8.GetString(stream.ToArray());
+        }
+
+        var canonical = CanonicalizeWithoutProducedAt(reportResult.Report);
+        var signatureVerified = RegulatoryIncidentReportHandler.VerifySignature(
+            canonical,
+            reportResult.Signature,
+            Environment.GetEnvironmentVariable("EVIDENCE_SIGNING_KEY") ?? string.Empty
+        );
+
+        using var reportDoc = JsonDocument.Parse(JsonSerializer.Serialize(reportResult.Report));
+        var root = reportDoc.RootElement;
+        var hasRequiredFields =
+            root.TryGetProperty("incident_id", out _) &&
+            root.TryGetProperty("tenant_id", out _) &&
+            root.TryGetProperty("incident_type", out _) &&
+            root.TryGetProperty("detected_at", out _) &&
+            root.TryGetProperty("description", out _) &&
+            root.TryGetProperty("severity", out _) &&
+            root.TryGetProperty("status", out _) &&
+            root.TryGetProperty("reported_to_boz_at", out _) &&
+            root.TryGetProperty("boz_reference", out _) &&
+            root.TryGetProperty("created_at", out _) &&
+            root.TryGetProperty("timeline", out var timelineProp) &&
+            timelineProp.ValueKind == JsonValueKind.Array &&
+            timelineProp.GetArrayLength() >= 2;
+
+        var status = blockedOpenState && signatureVerified && hasRequiredFields ? "PASS" : "FAIL";
+
+        var rootDir = EvidenceMeta.ResolveRepoRoot(Directory.GetCurrentDirectory());
+        var evidenceDir = Path.Combine(rootDir, "evidence", "phase1");
+        Directory.CreateDirectory(evidenceDir);
+        var evidencePath = Path.Combine(evidenceDir, "reg_003_incident_48h_export.json");
+        var meta = EvidenceMeta.Load(rootDir);
+
+        await File.WriteAllTextAsync(evidencePath, JsonSerializer.Serialize(new
+        {
+            check_id = "REG-003-INCIDENT-48H-EXPORT",
+            task_id = "TSK-P1-REG-003",
+            timestamp_utc = meta.TimestampUtc,
+            git_sha = meta.GitSha,
+            status,
+            pass = status == "PASS",
+            incident_registered = created.Success,
+            status_updated_under_investigation = update.Success,
+            report_generated = reportResult.Success,
+            signature_verified = signatureVerified,
+            open_status_report_blocked = blockedOpenState,
+            details = new
+            {
+                incident_id = created.IncidentId,
+                blocked_error_code = blocked.ErrorCode,
+                key_id = reportResult.KeyId
+            }
+        }, new JsonSerializerOptions { WriteIndented = true }) + Environment.NewLine, cancellationToken);
+
+        Console.WriteLine($"Reg incident 48h self-test status: {status}");
         Console.WriteLine($"Evidence: {evidencePath}");
         return status == "PASS" ? 0 : 1;
     }

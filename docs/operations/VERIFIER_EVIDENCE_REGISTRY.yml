@@ -137,6 +137,15 @@ registry:
   scripts/audit/verify_reg_002_daily_report_signed_output.sh:
     emits:
       - evidence/phase1/reg_002_daily_report_signed_output.json
+  scripts/audit/verify_reg_003_incident_48h_export.sh:
+    emits:
+      - evidence/phase1/reg_003_incident_48h_export.json
+  scripts/audit/verify_tsk_p1_202.sh:
+    emits:
+      - evidence/phase1/tsk_p1_202__closeout_verifier_scaffold_fail_if_contract.json
+  scripts/perf/verify_perf_004.sh:
+    emits:
+      - evidence/phase1/perf_004__perf_contracts_closeout_checks_extends_verify.json
   scripts/audit/verify_drd_policy_usage.sh:
     emits:
       - evidence/phase0/drd_policy_usage.json

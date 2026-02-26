@@ -1,0 +1,13 @@
+{
+  "check_id": "TSK-P1-202-CLOSEOUT-VERIFIER-SCAFFOLD",
+  "task_id": "TSK-P1-202",
+  "status": "PASS",
+  "pass": true,
+  "happy_path_passed": true,
+  "missing_contract_fail_closed": true,
+  "zero_required_fail_closed": true,
+  "missing_artifact_fail_closed": true,
+  "timestamp_utc": "2026-02-26T06:36:20Z",
+  "git_sha": "7bb89fb3685897bec1bb2f5620b81069651d9a0d",
+  "schema_fingerprint": "8066e70aafdc28540785da569dfbda5ebb13a2710d7f31e1b395cf2b3323bb15"
+}
