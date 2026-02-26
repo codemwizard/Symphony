@@ -1,0 +1,39 @@
+{
+  "check_id": "ADP-003-DETERMINISTIC-RAIL-ROUTING",
+  "task_id": "TSK-P1-ADP-003",
+  "timestamp_utc": "2026-02-26T00:50:46Z",
+  "git_sha": "cb5991dd0c81d4b70774e25a16ccff3ff887f845",
+  "schema_fingerprint": "cb5991d",
+  "status": "PASS",
+  "pass": true,
+  "details": {
+    "routing_table": {
+      "SIM": "SimulatedRailAdapter",
+      "SIM_DETERMINISTIC": "DeterministicSimulatedAdapter"
+    },
+    "tested_rail_types": [
+      "SIM",
+      "SIM_DETERMINISTIC"
+    ],
+    "deterministic_routing_confirmed": true,
+    "unknown_type_exception_confirmed": true,
+    "unknown_type_error_code": "P7201",
+    "checks": [
+      {
+        "name": "route_sim_deterministic",
+        "status": "PASS",
+        "detail": "deterministic expectation met"
+      },
+      {
+        "name": "route_sim_deterministic_deterministic",
+        "status": "PASS",
+        "detail": "deterministic expectation met"
+      },
+      {
+        "name": "unknown_rail_type_fail_closed",
+        "status": "PASS",
+        "detail": "unknown_rail_type:UNKNOWN_RAIL_TYPE"
+      }
+    ]
+  }
+}

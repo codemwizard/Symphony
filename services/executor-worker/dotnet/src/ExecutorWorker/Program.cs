@@ -19,6 +19,12 @@ if (args.Contains("--self-test-simulated-rail-adapter", StringComparer.OrdinalIg
     Environment.ExitCode = code;
     return;
 }
+if (args.Contains("--self-test-deterministic-rail-routing", StringComparer.OrdinalIgnoreCase))
+{
+    var code = await DeterministicRailRoutingSelfTest.RunAsync(CancellationToken.None);
+    Environment.ExitCode = code;
+    return;
+}
 
 Console.WriteLine("ExecutorWorker MVP: use --self-test for deterministic task verification.");
 
@@ -862,6 +868,155 @@ static class SimulatedRailAdapterSelfTest
     }
 }
 
+sealed class RailRoutingException : Exception
+{
+    public RailRoutingException(string errorCode, string message) : base(message)
+    {
+        ErrorCode = errorCode;
+    }
+
+    public string ErrorCode { get; }
+}
+
+record RailAdapterRegistration(string AdapterType, Func<IRailAdapter> Factory);
+
+static class RailAdapterRegistry
+{
+    private static readonly IReadOnlyDictionary<string, RailAdapterRegistration> Registry =
+        new Dictionary<string, RailAdapterRegistration>(StringComparer.OrdinalIgnoreCase)
+        {
+            ["SIM"] = new RailAdapterRegistration(
+                AdapterType: nameof(SimulatedRailAdapter),
+                Factory: () => new SimulatedRailAdapter(new SimRailConfig(
+                    Scenario: "SIMULATE_SUCCESS",
+                    DelayMs: 0,
+                    LogPath: Path.Combine(Path.GetTempPath(), $"adp_003_sim_{Guid.NewGuid():N}.jsonl")
+                ))
+            ),
+            ["SIM_DETERMINISTIC"] = new RailAdapterRegistration(
+                AdapterType: nameof(DeterministicSimulatedAdapter),
+                Factory: () => new DeterministicSimulatedAdapter()
+            )
+        };
+
+    public static IRailAdapter Resolve(string railType)
+    {
+        if (!Registry.TryGetValue(railType, out var registration))
+        {
+            throw new RailRoutingException(
+                errorCode: "P7201",
+                message: $"unknown_rail_type:{railType}"
+            );
+        }
+
+        return registration.Factory();
+    }
+
+    public static IReadOnlyDictionary<string, string> DescribeRoutingTable()
+        => Registry.ToDictionary(
+            kvp => kvp.Key,
+            kvp => kvp.Value.AdapterType,
+            StringComparer.OrdinalIgnoreCase
+        );
+}
+
+static class DeterministicRailRoutingSelfTest
+{
+    public static async Task<int> RunAsync(CancellationToken cancellationToken)
+    {
+        var checks = new List<SelfTestCase>();
+        var pass = 0;
+        var fail = 0;
+        var testedRailTypes = new[] { "SIM", "SIM_DETERMINISTIC" };
+        var routingTable = RailAdapterRegistry.DescribeRoutingTable();
+        var deterministicRoutingConfirmed = true;
+        var unknownTypeExceptionConfirmed = false;
+        var unknownTypeErrorCode = "P7201";
+
+        foreach (var railType in testedRailTypes)
+        {
+            try
+            {
+                var first = RailAdapterRegistry.Resolve(railType);
+                var second = RailAdapterRegistry.Resolve(railType);
+                var expectedType = routingTable[railType];
+                var sameType = string.Equals(first.GetType().Name, second.GetType().Name, StringComparison.Ordinal);
+                var expectedMatched = string.Equals(first.GetType().Name, expectedType, StringComparison.Ordinal);
+                var ok = sameType && expectedMatched;
+                deterministicRoutingConfirmed = deterministicRoutingConfirmed && ok;
+                Track($"route_{railType.ToLowerInvariant()}_deterministic", ok);
+            }
+            catch (Exception ex)
+            {
+                deterministicRoutingConfirmed = false;
+                Track($"route_{railType.ToLowerInvariant()}_deterministic", false, ex.Message);
+            }
+        }
+
+        try
+        {
+            _ = RailAdapterRegistry.Resolve("UNKNOWN_RAIL_TYPE");
+            unknownTypeExceptionConfirmed = false;
+            Track("unknown_rail_type_fail_closed", false, "expected_exception_not_thrown");
+        }
+        catch (RailRoutingException ex)
+        {
+            unknownTypeExceptionConfirmed = ex.ErrorCode == unknownTypeErrorCode;
+            Track("unknown_rail_type_fail_closed", unknownTypeExceptionConfirmed, ex.Message);
+        }
+        catch (Exception ex)
+        {
+            unknownTypeExceptionConfirmed = false;
+            Track("unknown_rail_type_fail_closed", false, ex.Message);
+        }
+
+        var status = fail == 0 && deterministicRoutingConfirmed && unknownTypeExceptionConfirmed ? "PASS" : "FAIL";
+        var rootDir = EvidenceMeta.ResolveRepoRoot(Directory.GetCurrentDirectory());
+        var evidenceDir = Path.Combine(rootDir, "evidence", "phase1");
+        Directory.CreateDirectory(evidenceDir);
+        var evidencePath = Path.Combine(evidenceDir, "adp_003_deterministic_rail_routing.json");
+        var meta = EvidenceMeta.Load(rootDir);
+
+        await File.WriteAllTextAsync(evidencePath, JsonSerializer.Serialize(new
+        {
+            check_id = "ADP-003-DETERMINISTIC-RAIL-ROUTING",
+            task_id = "TSK-P1-ADP-003",
+            timestamp_utc = meta.TimestampUtc,
+            git_sha = meta.GitSha,
+            schema_fingerprint = meta.SchemaFingerprint,
+            status,
+            pass = status == "PASS",
+            details = new
+            {
+                routing_table = routingTable,
+                tested_rail_types = testedRailTypes,
+                deterministic_routing_confirmed = deterministicRoutingConfirmed,
+                unknown_type_exception_confirmed = unknownTypeExceptionConfirmed,
+                unknown_type_error_code = unknownTypeErrorCode,
+                checks
+            }
+        }, new JsonSerializerOptions { WriteIndented = true }) + Environment.NewLine, cancellationToken);
+
+        Console.WriteLine($"Deterministic rail routing self-test status: {status}");
+        Console.WriteLine($"Evidence: {evidencePath}");
+        return status == "PASS" ? 0 : 1;
+
+        void Track(string name, bool ok, string detail = "deterministic expectation met")
+        {
+            if (ok)
+            {
+                pass++;
+                checks.Add(new SelfTestCase(name, "PASS", detail));
+            }
+            else
+            {
+                fail++;
+                checks.Add(new SelfTestCase(name, "FAIL", detail));
+            }
+        }
+    }
+}
+
 record EvidenceMeta(string TimestampUtc, string GitSha, string SchemaFingerprint)
 {
     public static string ResolveRepoRoot(string startDir)
@@ -869,7 +1024,8 @@ record EvidenceMeta(string TimestampUtc, string GitSha, string SchemaFingerprint
         var dir = new DirectoryInfo(startDir);
         while (dir is not null)
         {
-            if (Directory.Exists(Path.Combine(dir.FullName, ".git")))
+            var gitPath = Path.Combine(dir.FullName, ".git");
+            if (Directory.Exists(gitPath) || File.Exists(gitPath))
             {
                 return dir.FullName;
             }

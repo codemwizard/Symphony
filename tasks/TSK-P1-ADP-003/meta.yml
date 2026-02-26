@@ -1,0 +1,38 @@
+phase: "1"
+task_id: "TSK-P1-ADP-003"
+title: "Worker routes by rail_type deterministically"
+owner_role: "SUPERVISOR"
+status: "completed"
+
+depends_on:
+  - "TSK-P1-ADP-002"
+
+touches:
+  - "tasks/TSK-P1-ADP-003/meta.yml"
+  - "docs/plans/phase1/TSK-P1-ADP-003/PLAN.md"
+  - "docs/plans/phase1/TSK-P1-ADP-003/EXEC_LOG.md"
+  - "services/executor-worker/dotnet/src/ExecutorWorker/Program.cs"
+  - "scripts/audit/verify_adp_003_deterministic_rail_routing.sh"
+  - "docs/PHASE1/phase1_contract.yml"
+  - "docs/operations/VERIFIER_EVIDENCE_REGISTRY.yml"
+  - "docs/operations/SEMANTIC_INTEGRITY_ALLOWLIST.yml"
+  - "evidence/phase1/adp_003_deterministic_rail_routing.json"
+
+invariants:
+  - "INV-119"
+
+mechanics:
+  gate_ids:
+    - "INT-G28"
+  verifiers:
+    - "bash scripts/audit/verify_adp_003_deterministic_rail_routing.sh && python3 scripts/audit/validate_evidence.py --task TSK-P1-ADP-003 --evidence evidence/phase1/adp_003_deterministic_rail_routing.json"
+  evidence_paths:
+    - "evidence/phase1/adp_003_deterministic_rail_routing.json"
+
+implementation_plan: "docs/plans/phase1/TSK-P1-ADP-003/PLAN.md"
+implementation_log: "docs/plans/phase1/TSK-P1-ADP-003/EXEC_LOG.md"
+
+must_read:
+  - "docs/operations/AI_AGENT_OPERATION_MANUAL.md"
+  - "docs/operations/AI_AGENT_WORKFLOW_AND_ROLE_PLAN_v2.md"
+  - "docs/operations/AGENT_ROLE_RECONCILIATION.md"
