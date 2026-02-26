@@ -714,6 +714,14 @@ if [[ "${RUN_PHASE1_GATES:-0}" == "1" ]]; then
     exit 1
   fi
 
+  echo "==> Phase-1 simulated rail adapter verification (TSK-P1-ADP-002)"
+  if [[ -x scripts/audit/verify_adp_002_simulated_rail_adapter.sh ]]; then
+    scripts/audit/verify_adp_002_simulated_rail_adapter.sh --evidence evidence/phase1/adp_002_simulated_rail_adapter.json
+  else
+    echo "ERROR: scripts/audit/verify_adp_002_simulated_rail_adapter.sh not found"
+    exit 1
+  fi
+
   echo "==> Phase-1 no-MCP guard"
   if [[ -x scripts/audit/verify_no_mcp_phase1.sh ]]; then
     scripts/audit/verify_no_mcp_phase1.sh
