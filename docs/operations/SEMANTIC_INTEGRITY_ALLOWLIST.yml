@@ -29,4 +29,5 @@ allow:
       - "scripts/audit/verify_reg_002_daily_report_signed_output.sh"
       - "scripts/audit/verify_reg_003_incident_48h_export.sh"
       - "scripts/audit/verify_tsk_p1_202.sh"
-    justification: "TSK-P1-HIER-009/010/011 and TSK-P1-INF/TEN/ADP/LED/REG/closeout task verifiers add deterministic hierarchy, supervisor, infrastructure, tenant-boundary, adapter, ingress canonical-message, KYC-hash bridge, retention-archive, BoZ read-only observability, deterministic signed report evidence, incident 48-hour export controls, and contract-driven closeout fail-closed validation under the same regulated-surface governance invariant."
+      - "scripts/perf/verify_perf_004.sh"
+    justification: "TSK-P1-HIER-009/010/011 and TSK-P1-INF/TEN/ADP/LED/REG/closeout/perf task verifiers add deterministic hierarchy, supervisor, infrastructure, tenant-boundary, adapter, ingress canonical-message, KYC-hash bridge, retention-archive, BoZ read-only observability, deterministic signed report evidence, incident 48-hour export controls, contract-driven closeout fail-closed validation, and perf closeout contract extension checks under the same regulated-surface governance invariant."
