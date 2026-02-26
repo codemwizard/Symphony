@@ -131,6 +131,9 @@ registry:
   scripts/audit/verify_led_002_retention_archive_restore.sh:
     emits:
       - evidence/phase1/led_002_retention_archive_restore.json
+  scripts/audit/verify_tsk_p1_reg_001.sh:
+    emits:
+      - evidence/phase1/tsk_p1_reg_001__boz_observability_role_read_only_views.json
   scripts/audit/verify_drd_policy_usage.sh:
     emits:
       - evidence/phase0/drd_policy_usage.json
