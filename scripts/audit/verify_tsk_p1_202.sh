@@ -3,6 +3,7 @@ set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 REPO_SCHEMA="$ROOT_DIR/docs/architecture/evidence_schema.json"
+source "$ROOT_DIR/scripts/lib/evidence.sh"
 TASK_ID="TSK-P1-202"
 EVIDENCE_PATH="evidence/phase1/tsk_p1_202__closeout_verifier_scaffold_fail_if_contract.json"
 
@@ -83,10 +84,13 @@ if [[ "$happy" == "true" && "$missing_contract_fail" == "true" && "$zero_require
 fi
 
 mkdir -p "$(dirname "$ROOT_DIR/$EVIDENCE_PATH")"
-python3 - <<'PY' "$ROOT_DIR/$EVIDENCE_PATH" "$TASK_ID" "$status" "$happy" "$missing_contract_fail" "$zero_required_fail" "$missing_artifact_fail"
+TIMESTAMP="$(evidence_now_utc)"
+GIT_SHA="$(git_sha)"
+SCHEMA_FP="$(schema_fingerprint)"
+python3 - <<'PY' "$ROOT_DIR/$EVIDENCE_PATH" "$TIMESTAMP" "$GIT_SHA" "$SCHEMA_FP" "$TASK_ID" "$status" "$happy" "$missing_contract_fail" "$zero_required_fail" "$missing_artifact_fail"
 import json, sys
 from pathlib import Path
-p, task_id, status, happy, missing_contract_fail, zero_required_fail, missing_artifact_fail = sys.argv[1:]
+p, timestamp, git_sha, schema_fp, task_id, status, happy, missing_contract_fail, zero_required_fail, missing_artifact_fail = sys.argv[1:]
 payload = {
   "check_id": "TSK-P1-202-CLOSEOUT-VERIFIER-SCAFFOLD",
   "task_id": task_id,
@@ -96,6 +100,9 @@ payload = {
   "missing_contract_fail_closed": missing_contract_fail == "true",
   "zero_required_fail_closed": zero_required_fail == "true",
   "missing_artifact_fail_closed": missing_artifact_fail == "true",
+  "timestamp_utc": timestamp,
+  "git_sha": git_sha,
+  "schema_fingerprint": schema_fp,
 }
 Path(p).write_text(json.dumps(payload, indent=2) + "\n", encoding="utf-8")
 PY

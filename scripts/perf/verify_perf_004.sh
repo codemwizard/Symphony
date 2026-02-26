@@ -2,6 +2,7 @@
 set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
+source "$ROOT_DIR/scripts/lib/evidence.sh"
 EVIDENCE_PATH="evidence/phase1/perf_004__perf_contracts_closeout_checks_extends_verify.json"
 
 while [[ $# -gt 0 ]]; do
@@ -44,10 +45,16 @@ if [[ ! -x "$ROOT_DIR/scripts/audit/verify_phase1_closeout.sh" ]]; then
 fi
 
 mkdir -p "$(dirname "$ROOT_DIR/$EVIDENCE_PATH")"
-python3 - <<'PY' "$ROOT_DIR/$EVIDENCE_PATH" "${PERF_PATHS[@]}"
+TIMESTAMP="$(evidence_now_utc)"
+GIT_SHA="$(git_sha)"
+SCHEMA_FP="$(schema_fingerprint)"
+python3 - <<'PY' "$ROOT_DIR/$EVIDENCE_PATH" "$TIMESTAMP" "$GIT_SHA" "$SCHEMA_FP" "${PERF_PATHS[@]}"
 import json,sys
 out=sys.argv[1]
-paths=sys.argv[2:]
+timestamp=sys.argv[2]
+git_sha=sys.argv[3]
+schema_fp=sys.argv[4]
+paths=sys.argv[5:]
 payload={
   "check_id":"PERF-004-CLOSEOUT-EXTENSION",
   "task_id":"PERF-004",
@@ -55,6 +62,9 @@ payload={
   "pass":True,
   "perf_evidence_paths_enforced":paths,
   "closeout_script":"scripts/audit/verify_phase1_closeout.sh",
+  "timestamp_utc":timestamp,
+  "git_sha":git_sha,
+  "schema_fingerprint":schema_fp,
 }
 with open(out,'w',encoding='utf-8') as f:
   json.dump(payload,f,indent=2)
