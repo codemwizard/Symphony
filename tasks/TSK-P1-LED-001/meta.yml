@@ -1,0 +1,38 @@
+phase: "1"
+task_id: "TSK-P1-LED-001"
+title: "Invariant verification in CI and in-cluster"
+owner_role: "SUPERVISOR"
+status: "completed"
+
+depends_on:
+  - "TSK-P1-ADP-003"
+
+touches:
+  - "tasks/TSK-P1-LED-001/meta.yml"
+  - "docs/plans/phase1/TSK-P1-LED-001/PLAN.md"
+  - "docs/plans/phase1/TSK-P1-LED-001/EXEC_LOG.md"
+  - "scripts/audit/verify_led_001_invariants_ci_cluster.sh"
+  - "infra/k8s/cronjobs/verify-invariants-cronjob.yaml"
+  - "docs/PHASE1/phase1_contract.yml"
+  - "docs/operations/VERIFIER_EVIDENCE_REGISTRY.yml"
+  - "docs/operations/SEMANTIC_INTEGRITY_ALLOWLIST.yml"
+  - "evidence/phase1/led_001_invariants_ci_cluster.json"
+
+invariants:
+  - "INV-119"
+
+mechanics:
+  gate_ids:
+    - "INT-G28"
+  verifiers:
+    - "bash scripts/audit/verify_led_001_invariants_ci_cluster.sh && python3 scripts/audit/validate_evidence.py --task TSK-P1-LED-001 --evidence evidence/phase1/led_001_invariants_ci_cluster.json"
+  evidence_paths:
+    - "evidence/phase1/led_001_invariants_ci_cluster.json"
+
+implementation_plan: "docs/plans/phase1/TSK-P1-LED-001/PLAN.md"
+implementation_log: "docs/plans/phase1/TSK-P1-LED-001/EXEC_LOG.md"
+
+must_read:
+  - "docs/operations/AI_AGENT_OPERATION_MANUAL.md"
+  - "docs/operations/AI_AGENT_WORKFLOW_AND_ROLE_PLAN_v2.md"
+  - "docs/operations/AGENT_ROLE_RECONCILIATION.md"

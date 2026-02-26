@@ -21,4 +21,5 @@ allow:
       - "scripts/audit/verify_adp_001_adapter_contract_tests.sh"
       - "scripts/audit/verify_adp_002_simulated_rail_adapter.sh"
       - "scripts/audit/verify_adp_003_deterministic_rail_routing.sh"
+      - "scripts/audit/verify_led_001_invariants_ci_cluster.sh"
     justification: "TSK-P1-HIER-009/010/011 and TSK-P1-INF/TEN task verifiers add deterministic hierarchy, supervisor, infrastructure, and tenant-boundary evidence checks under the same regulated-surface governance invariant."
