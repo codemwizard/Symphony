@@ -58,6 +58,12 @@ if (args.Contains("--self-test-canonical-message-model", StringComparer.OrdinalI
     Environment.ExitCode = code;
     return;
 }
+if (args.Contains("--self-test-kyc-hash-bridge", StringComparer.OrdinalIgnoreCase))
+{
+    var code = await KycHashBridgeSelfTestRunner.RunAsync(logger, CancellationToken.None);
+    Environment.ExitCode = code;
+    return;
+}
 
 var storageMode = (Environment.GetEnvironmentVariable("INGRESS_STORAGE_MODE") ?? "file").Trim().ToLowerInvariant();
 StorageModePolicy.ValidateOrThrow(storageMode);
@@ -82,6 +88,12 @@ ITenantOnboardingStore tenantOnboardingStore = storageMode switch
     "db" or "db_psql" or "db_npgsql" => new NpgsqlTenantOnboardingStore(logger, dataSource!),
     "file" => new FileTenantOnboardingStore(logger),
     _ => new FileTenantOnboardingStore(logger)
+};
+IKycHashBridgeStore kycHashBridgeStore = storageMode switch
+{
+    "db" or "db_psql" or "db_npgsql" => new NpgsqlKycHashBridgeStore(logger, dataSource!),
+    "file" => new FileKycHashBridgeStore(logger),
+    _ => new FileKycHashBridgeStore(logger)
 };
 
 app.MapGet("/health", () => Results.Ok(new { status = "ok" }));
@@ -162,6 +174,37 @@ app.MapPost("/v1/admin/tenants", async (TenantOnboardingRequest request, HttpCon
     }, statusCode: StatusCodes.Status200OK);
 });
 
+app.MapPost("/v1/kyc/hash", async (JsonElement requestBody, HttpContext httpContext, CancellationToken cancellationToken) =>
+{
+    var authFailure = ApiAuthorization.AuthorizeEvidenceRead(httpContext);
+    if (authFailure is not null)
+    {
+        return Results.Json(authFailure.Body, statusCode: authFailure.StatusCode);
+    }
+
+    if (KycHashBridgeValidation.TryRejectPiiFields(requestBody, out var piiField))
+    {
+        return Results.Json(new
+        {
+            error_code = "PII_FIELD_REJECTED",
+            field = piiField
+        }, statusCode: StatusCodes.Status400BadRequest);
+    }
+
+    var parse = KycHashBridgeValidation.Parse(requestBody);
+    if (parse.Request is null)
+    {
+        return Results.Json(new
+        {
+            error_code = "INVALID_REQUEST",
+            errors = parse.Errors
+        }, statusCode: StatusCodes.Status400BadRequest);
+    }
+
+    var result = await KycHashBridgeHandler.HandleAsync(parse.Request, kycHashBridgeStore, logger, cancellationToken);
+    return Results.Json(result.Body, statusCode: result.StatusCode);
+});
+
 await app.RunAsync();
 
 record IngressRequest(
@@ -184,6 +227,18 @@ record TenantOnboardingRequest(
     string display_name,
     string jurisdiction_code,
     string plan
+);
+
+record KycHashBridgeRequest(
+    string member_id,
+    string provider_code,
+    string outcome,
+    string verification_method,
+    string verification_hash,
+    string hash_algorithm,
+    string provider_signature,
+    string provider_reference,
+    string verified_at_provider
 );
 
 record PersistInput(
@@ -656,6 +711,154 @@ static class TenantOnboardingValidation
     }
 }
 
+record KycHashPersistResult(bool Success, bool ProviderFound, string? KycRecordId, string? AnchoredAtUtc, string? Outcome, string RetentionClass, string? Error)
+{
+    public static KycHashPersistResult Ok(string kycRecordId, string anchoredAtUtc, string outcome, string retentionClass)
+        => new(true, true, kycRecordId, anchoredAtUtc, outcome, retentionClass, null);
+
+    public static KycHashPersistResult ProviderNotFound()
+        => new(false, false, null, null, null, "FIC_AML_CUSTOMER_ID", "provider_not_found");
+
+    public static KycHashPersistResult Fail(string error)
+        => new(false, true, null, null, null, "FIC_AML_CUSTOMER_ID", error);
+}
+
+interface IKycHashBridgeStore
+{
+    Task<KycHashPersistResult> PersistAsync(KycHashBridgeRequest request, CancellationToken cancellationToken);
+}
+
+static class KycHashBridgeValidation
+{
+    private static readonly HashSet<string> PiiFields = new(StringComparer.OrdinalIgnoreCase)
+    {
+        "nrc_number",
+        "full_name",
+        "date_of_birth",
+        "photo_url"
+    };
+
+    public static bool TryRejectPiiFields(JsonElement payload, out string field)
+    {
+        field = string.Empty;
+        if (payload.ValueKind != JsonValueKind.Object)
+        {
+            return false;
+        }
+
+        foreach (var property in payload.EnumerateObject())
+        {
+            if (PiiFields.Contains(property.Name))
+            {
+                field = property.Name;
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    public static (KycHashBridgeRequest? Request, List<string> Errors) Parse(JsonElement payload)
+    {
+        var errors = new List<string>();
+        if (payload.ValueKind != JsonValueKind.Object)
+        {
+            errors.Add("request body must be an object");
+            return (null, errors);
+        }
+
+        string ReadRequired(string field)
+        {
+            if (!payload.TryGetProperty(field, out var prop) || prop.ValueKind != JsonValueKind.String)
+            {
+                errors.Add($"{field} is required");
+                return string.Empty;
+            }
+
+            var value = prop.GetString() ?? string.Empty;
+            if (string.IsNullOrWhiteSpace(value))
+            {
+                errors.Add($"{field} is required");
+                return string.Empty;
+            }
+
+            return value.Trim();
+        }
+
+        var memberId = ReadRequired("member_id");
+        var providerCode = ReadRequired("provider_code");
+        var outcome = ReadRequired("outcome");
+        var verificationMethod = ReadRequired("verification_method");
+        var verificationHash = ReadRequired("verification_hash");
+        var hashAlgorithm = ReadRequired("hash_algorithm");
+        var providerSignature = ReadRequired("provider_signature");
+        var providerReference = ReadRequired("provider_reference");
+        var verifiedAtProvider = ReadRequired("verified_at_provider");
+
+        if (!string.IsNullOrWhiteSpace(memberId) && !Guid.TryParse(memberId, out _))
+        {
+            errors.Add("member_id must be a valid UUID");
+        }
+        if (!string.IsNullOrWhiteSpace(verifiedAtProvider) && !DateTimeOffset.TryParse(verifiedAtProvider, out _))
+        {
+            errors.Add("verified_at_provider must be an ISO 8601 timestamp");
+        }
+
+        if (errors.Count > 0)
+        {
+            return (null, errors);
+        }
+
+        return (new KycHashBridgeRequest(
+            member_id: memberId,
+            provider_code: providerCode,
+            outcome: outcome,
+            verification_method: verificationMethod,
+            verification_hash: verificationHash,
+            hash_algorithm: hashAlgorithm,
+            provider_signature: providerSignature,
+            provider_reference: providerReference,
+            verified_at_provider: verifiedAtProvider
+        ), errors);
+    }
+}
+
+static class KycHashBridgeHandler
+{
+    public static async Task<HandlerResult> HandleAsync(
+        KycHashBridgeRequest request,
+        IKycHashBridgeStore store,
+        ILogger logger,
+        CancellationToken cancellationToken)
+    {
+        var persist = await store.PersistAsync(request, cancellationToken);
+        if (!persist.ProviderFound)
+        {
+            return new HandlerResult(StatusCodes.Status404NotFound, new
+            {
+                error_code = "PROVIDER_NOT_FOUND"
+            });
+        }
+
+        if (!persist.Success || string.IsNullOrWhiteSpace(persist.KycRecordId) || string.IsNullOrWhiteSpace(persist.AnchoredAtUtc))
+        {
+            logger.LogError("KYC hash bridge persistence failed: {Error}", persist.Error);
+            return new HandlerResult(StatusCodes.Status503ServiceUnavailable, new
+            {
+                error_code = "KYC_HASH_BRIDGE_FAILED"
+            });
+        }
+
+        return new HandlerResult(StatusCodes.Status200OK, new
+        {
+            kyc_record_id = persist.KycRecordId,
+            anchored_at = persist.AnchoredAtUtc,
+            outcome = persist.Outcome,
+            retention_class = persist.RetentionClass
+        });
+    }
+}
+
 sealed class FileIngressDurabilityStore(ILogger logger, string? path = null) : IIngressDurabilityStore
 {
     private readonly string _path = path
@@ -1000,6 +1203,148 @@ LIMIT 1;";
         {
             logger.LogError(ex, "Npgsql tenant onboarding persistence failed.");
             return TenantOnboardingResult.Fail($"db_failed:{ex.Message}");
+        }
+    }
+}
+
+sealed class FileKycHashBridgeStore(ILogger logger, string? path = null) : IKycHashBridgeStore
+{
+    private readonly string _path = path
+        ?? Environment.GetEnvironmentVariable("KYC_HASH_BRIDGE_FILE")
+        ?? "/tmp/symphony_kyc_hash_bridge.ndjson";
+
+    public async Task<KycHashPersistResult> PersistAsync(KycHashBridgeRequest request, CancellationToken cancellationToken)
+    {
+        var configuredProviders = (Environment.GetEnvironmentVariable("KYC_PROVIDER_CODES") ?? "PROV-001")
+            .Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+            .Where(x => !string.IsNullOrWhiteSpace(x))
+            .ToHashSet(StringComparer.OrdinalIgnoreCase);
+
+        if (!configuredProviders.Contains(request.provider_code.Trim()))
+        {
+            return KycHashPersistResult.ProviderNotFound();
+        }
+
+        try
+        {
+            Directory.CreateDirectory(Path.GetDirectoryName(_path) ?? "/tmp");
+            var now = DateTimeOffset.UtcNow;
+            var kycRecordId = Guid.NewGuid().ToString();
+            var payload = JsonSerializer.Serialize(new
+            {
+                kyc_record_id = kycRecordId,
+                member_id = request.member_id,
+                provider_code = request.provider_code,
+                outcome = request.outcome,
+                verification_method = request.verification_method,
+                verification_hash = request.verification_hash,
+                hash_algorithm = request.hash_algorithm,
+                provider_signature = request.provider_signature,
+                provider_reference = request.provider_reference,
+                verified_at_provider = request.verified_at_provider,
+                anchored_at = now.ToString("O"),
+                retention_class = "FIC_AML_CUSTOMER_ID"
+            });
+            await File.AppendAllTextAsync(_path, payload + Environment.NewLine, cancellationToken);
+            return KycHashPersistResult.Ok(kycRecordId, now.ToString("O"), request.outcome, "FIC_AML_CUSTOMER_ID");
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Failed KYC hash bridge file persistence.");
+            return KycHashPersistResult.Fail(ex.Message);
+        }
+    }
+}
+
+sealed class NpgsqlKycHashBridgeStore(ILogger logger, NpgsqlDataSource dataSource) : IKycHashBridgeStore
+{
+    public async Task<KycHashPersistResult> PersistAsync(KycHashBridgeRequest request, CancellationToken cancellationToken)
+    {
+        try
+        {
+            await using var conn = await dataSource.OpenConnectionAsync(cancellationToken);
+            await using var tx = await conn.BeginTransactionAsync(cancellationToken);
+
+            await using var provider = conn.CreateCommand();
+            provider.Transaction = tx;
+            provider.CommandText = @"
+SELECT id
+FROM public.kyc_provider_registry
+WHERE provider_code = @provider_code
+  AND COALESCE(is_active, TRUE) = TRUE
+ORDER BY created_at DESC
+LIMIT 1;";
+            provider.Parameters.AddWithValue("provider_code", request.provider_code.Trim());
+            var providerObj = await provider.ExecuteScalarAsync(cancellationToken);
+            if (providerObj is null)
+            {
+                await tx.RollbackAsync(cancellationToken);
+                return KycHashPersistResult.ProviderNotFound();
+            }
+            var providerId = (Guid)providerObj;
+
+            await using var insert = conn.CreateCommand();
+            insert.Transaction = tx;
+            insert.CommandText = @"
+INSERT INTO public.kyc_verification_records (
+  member_id,
+  provider_id,
+  provider_code,
+  outcome,
+  verification_method,
+  verification_hash,
+  hash_algorithm,
+  provider_signature,
+  provider_reference,
+  verified_at_provider,
+  jurisdiction_code,
+  retention_class
+)
+VALUES (
+  @member_id,
+  @provider_id,
+  @provider_code,
+  @outcome,
+  @verification_method,
+  @verification_hash,
+  @hash_algorithm,
+  @provider_signature,
+  @provider_reference,
+  @verified_at_provider,
+  'ZM',
+  'FIC_AML_CUSTOMER_ID'
+)
+RETURNING id::text, anchored_at::text, outcome, retention_class;";
+            insert.Parameters.AddWithValue("member_id", Guid.Parse(request.member_id));
+            insert.Parameters.AddWithValue("provider_id", providerId);
+            insert.Parameters.AddWithValue("provider_code", request.provider_code.Trim());
+            insert.Parameters.AddWithValue("outcome", request.outcome.Trim());
+            insert.Parameters.AddWithValue("verification_method", request.verification_method.Trim());
+            insert.Parameters.AddWithValue("verification_hash", request.verification_hash.Trim());
+            insert.Parameters.AddWithValue("hash_algorithm", request.hash_algorithm.Trim());
+            insert.Parameters.AddWithValue("provider_signature", request.provider_signature.Trim());
+            insert.Parameters.AddWithValue("provider_reference", request.provider_reference.Trim());
+            insert.Parameters.AddWithValue("verified_at_provider", DateTimeOffset.Parse(request.verified_at_provider));
+
+            await using var reader = await insert.ExecuteReaderAsync(cancellationToken);
+            if (!await reader.ReadAsync(cancellationToken))
+            {
+                await tx.RollbackAsync(cancellationToken);
+                return KycHashPersistResult.Fail("db returned no inserted KYC row");
+            }
+
+            var id = reader.GetString(0);
+            var anchoredAt = reader.GetString(1);
+            var outcome = reader.GetString(2);
+            var retentionClass = reader.GetString(3);
+
+            await tx.CommitAsync(cancellationToken);
+            return KycHashPersistResult.Ok(id, anchoredAt, outcome, retentionClass);
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Npgsql KYC hash bridge persistence failed.");
+            return KycHashPersistResult.Fail($"db_failed:{ex.Message}");
         }
     }
 }
@@ -2443,6 +2788,153 @@ static class CanonicalMessageModelSelfTestRunner
                    && violations.ValueKind == JsonValueKind.Array
                    && violations.GetArrayLength() > 0;
         }
+    }
+}
+
+static class KycHashBridgeSelfTestRunner
+{
+    public static async Task<int> RunAsync(ILogger logger, CancellationToken cancellationToken)
+    {
+        var filePath = $"/tmp/symphony_led004_{Guid.NewGuid():N}.ndjson";
+        Environment.SetEnvironmentVariable("KYC_HASH_BRIDGE_FILE", filePath);
+        Environment.SetEnvironmentVariable("KYC_PROVIDER_CODES", "PROV-001");
+
+        var store = new FileKycHashBridgeStore(logger, filePath);
+        var tests = new List<SelfTestCase>();
+
+        var validPayload = JsonSerializer.Deserialize<JsonElement>(
+            """
+            {
+              "member_id": "11111111-1111-1111-1111-111111111111",
+              "provider_code": "PROV-001",
+              "outcome": "VERIFIED",
+              "verification_method": "NRC_HASH",
+              "verification_hash": "sha256:abc123",
+              "hash_algorithm": "SHA-256",
+              "provider_signature": "sig:xyz",
+              "provider_reference": "REF-001",
+              "verified_at_provider": "2026-02-26T01:10:00Z"
+            }
+            """
+        );
+
+        var piiPayload = JsonSerializer.Deserialize<JsonElement>(
+            """
+            {
+              "member_id": "11111111-1111-1111-1111-111111111111",
+              "provider_code": "PROV-001",
+              "outcome": "VERIFIED",
+              "verification_method": "NRC_HASH",
+              "verification_hash": "sha256:abc123",
+              "hash_algorithm": "SHA-256",
+              "provider_signature": "sig:xyz",
+              "provider_reference": "REF-002",
+              "verified_at_provider": "2026-02-26T01:10:00Z",
+              "full_name": "should-not-pass"
+            }
+            """
+        );
+
+        var validParse = KycHashBridgeValidation.Parse(validPayload);
+        if (validParse.Request is null)
+        {
+            tests.Add(new SelfTestCase("valid_hash_accepted", "FAIL", "valid parse failed"));
+        }
+        else
+        {
+            var validResult = await KycHashBridgeHandler.HandleAsync(validParse.Request, store, logger, cancellationToken);
+            tests.Add(new SelfTestCase(
+                "valid_hash_accepted",
+                validResult.StatusCode == StatusCodes.Status200OK ? "PASS" : "FAIL",
+                JsonSerializer.Serialize(validResult.Body)
+            ));
+        }
+
+        var unknownProviderPayload = JsonSerializer.Deserialize<JsonElement>(
+            """
+            {
+              "member_id": "11111111-1111-1111-1111-111111111111",
+              "provider_code": "UNKNOWN",
+              "outcome": "VERIFIED",
+              "verification_method": "NRC_HASH",
+              "verification_hash": "sha256:abc123",
+              "hash_algorithm": "SHA-256",
+              "provider_signature": "sig:xyz",
+              "provider_reference": "REF-003",
+              "verified_at_provider": "2026-02-26T01:10:00Z"
+            }
+            """
+        );
+        var unknownParse = KycHashBridgeValidation.Parse(unknownProviderPayload);
+        if (unknownParse.Request is null)
+        {
+            tests.Add(new SelfTestCase("unknown_provider_rejected", "FAIL", "unknown parse failed"));
+        }
+        else
+        {
+            var unknownResult = await KycHashBridgeHandler.HandleAsync(unknownParse.Request, store, logger, cancellationToken);
+            tests.Add(new SelfTestCase(
+                "unknown_provider_rejected",
+                unknownResult.StatusCode == StatusCodes.Status404NotFound ? "PASS" : "FAIL",
+                JsonSerializer.Serialize(unknownResult.Body)
+            ));
+        }
+
+        var piiRejected = KycHashBridgeValidation.TryRejectPiiFields(piiPayload, out var piiField);
+        tests.Add(new SelfTestCase(
+            "pii_field_rejected",
+            piiRejected && piiField == "full_name" ? "PASS" : "FAIL",
+            piiRejected ? $"rejected:{piiField}" : "not_rejected"
+        ));
+
+        var retentionClassConfirmed = false;
+        if (File.Exists(filePath))
+        {
+            foreach (var line in await File.ReadAllLinesAsync(filePath, cancellationToken))
+            {
+                if (string.IsNullOrWhiteSpace(line))
+                {
+                    continue;
+                }
+                using var doc = JsonDocument.Parse(line);
+                if (doc.RootElement.TryGetProperty("retention_class", out var rc)
+                    && string.Equals(rc.GetString(), "FIC_AML_CUSTOMER_ID", StringComparison.Ordinal))
+                {
+                    retentionClassConfirmed = true;
+                    break;
+                }
+            }
+        }
+
+        var status = tests.All(t => t.Status == "PASS") && retentionClassConfirmed ? "PASS" : "FAIL";
+
+        var rootDir = EvidenceMeta.ResolveRepoRoot(Directory.GetCurrentDirectory());
+        var evidenceDir = Path.Combine(rootDir, "evidence", "phase1");
+        Directory.CreateDirectory(evidenceDir);
+        var evidencePath = Path.Combine(evidenceDir, "led_004_kyc_hash_bridge_endpoint.json");
+        var meta = EvidenceMeta.Load(rootDir);
+
+        await File.WriteAllTextAsync(evidencePath, JsonSerializer.Serialize(new
+        {
+            check_id = "LED-004-KYC-HASH-BRIDGE-ENDPOINT",
+            task_id = "TSK-P1-LED-004",
+            timestamp_utc = meta.TimestampUtc,
+            git_sha = meta.GitSha,
+            schema_fingerprint = meta.SchemaFingerprint,
+            status,
+            pass = status == "PASS",
+            details = new
+            {
+                endpoint = "POST /v1/kyc/hash",
+                retention_class = "FIC_AML_CUSTOMER_ID",
+                retention_class_confirmed = retentionClassConfirmed,
+                tests
+            }
+        }, new JsonSerializerOptions { WriteIndented = true }) + Environment.NewLine, cancellationToken);
+
+        Console.WriteLine($"KYC hash bridge self-test status: {status}");
+        Console.WriteLine($"Evidence: {evidencePath}");
+        return status == "PASS" ? 0 : 1;
     }
 }
 

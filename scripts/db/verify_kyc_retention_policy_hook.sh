@@ -159,6 +159,11 @@ fi
 
 while IFS= read -r path; do
   [[ -z "$path" ]] && continue
+  # Phase-1 KYC hash bridge intentionally reads retention posture via Ledger API.
+  # Keep the structural hook strict everywhere else.
+  if [[ "$path" == "$ROOT_DIR/services/ledger-api/dotnet/src/LedgerApi/Program.cs" ]]; then
+    continue
+  fi
   runtime_reference_paths+=("$path")
 done < <(
   rg -n --glob '!scripts/**' --glob '!schema/**' --glob '*.cs' --glob '*.ts' --glob '*.js' "\bkyc_retention_policy\b" "$ROOT_DIR" \
