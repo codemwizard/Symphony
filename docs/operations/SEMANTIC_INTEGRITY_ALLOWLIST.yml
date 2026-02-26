@@ -24,4 +24,5 @@ allow:
       - "scripts/audit/verify_led_001_invariants_ci_cluster.sh"
       - "scripts/audit/verify_led_003_canonical_message_model.sh"
       - "scripts/audit/verify_led_004_kyc_hash_bridge_endpoint.sh"
-    justification: "TSK-P1-HIER-009/010/011 and TSK-P1-INF/TEN/ADP/LED task verifiers add deterministic hierarchy, supervisor, infrastructure, tenant-boundary, adapter, ingress canonical-message, and KYC-hash bridge evidence checks under the same regulated-surface governance invariant."
+      - "scripts/audit/verify_led_002_retention_archive_restore.sh"
+    justification: "TSK-P1-HIER-009/010/011 and TSK-P1-INF/TEN/ADP/LED task verifiers add deterministic hierarchy, supervisor, infrastructure, tenant-boundary, adapter, ingress canonical-message, KYC-hash bridge, and retention-archive evidence checks under the same regulated-surface governance invariant."

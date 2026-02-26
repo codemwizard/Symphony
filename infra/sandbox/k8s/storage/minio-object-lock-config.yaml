@@ -1,0 +1,10 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: minio-object-lock-config
+  namespace: symphony-sandbox
+data:
+  object_lock_enabled: "true"
+  retention_class_fic_aml_customer_id_years: "10"
+  retention_class_bfsa_financial_years: "7"
+  overwrite_denied_during_retention: "true"
