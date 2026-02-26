@@ -119,6 +119,9 @@ registry:
   scripts/audit/verify_adp_003_deterministic_rail_routing.sh:
     emits:
       - evidence/phase1/adp_003_deterministic_rail_routing.json
+  scripts/audit/verify_led_001_invariants_ci_cluster.sh:
+    emits:
+      - evidence/phase1/led_001_invariants_ci_cluster.json
   scripts/audit/verify_drd_policy_usage.sh:
     emits:
       - evidence/phase0/drd_policy_usage.json
