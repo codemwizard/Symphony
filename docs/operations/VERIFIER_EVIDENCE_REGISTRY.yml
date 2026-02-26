@@ -128,6 +128,9 @@ registry:
   scripts/audit/verify_led_004_kyc_hash_bridge_endpoint.sh:
     emits:
       - evidence/phase1/led_004_kyc_hash_bridge_endpoint.json
+  scripts/audit/verify_led_002_retention_archive_restore.sh:
+    emits:
+      - evidence/phase1/led_002_retention_archive_restore.json
   scripts/audit/verify_drd_policy_usage.sh:
     emits:
       - evidence/phase0/drd_policy_usage.json

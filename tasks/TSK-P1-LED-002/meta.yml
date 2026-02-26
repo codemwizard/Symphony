@@ -1,0 +1,40 @@
+phase: "1"
+task_id: "TSK-P1-LED-002"
+title: "10-year retention archive + restore pipeline (implementation)"
+owner_role: "SUPERVISOR"
+status: "completed"
+
+depends_on:
+  - "TSK-P1-LED-004"
+
+touches:
+  - "tasks/TSK-P1-LED-002/meta.yml"
+  - "docs/plans/phase1/TSK-P1-LED-002/PLAN.md"
+  - "docs/plans/phase1/TSK-P1-LED-002/EXEC_LOG.md"
+  - "scripts/backup/archive_retention_records.sh"
+  - "scripts/backup/restore_retention_archive.sh"
+  - "scripts/audit/verify_led_002_retention_archive_restore.sh"
+  - "infra/sandbox/k8s/storage/minio-object-lock-config.yaml"
+  - "docs/PHASE1/phase1_contract.yml"
+  - "docs/operations/VERIFIER_EVIDENCE_REGISTRY.yml"
+  - "docs/operations/SEMANTIC_INTEGRITY_ALLOWLIST.yml"
+  - "evidence/phase1/led_002_retention_archive_restore.json"
+
+invariants:
+  - "INV-119"
+
+mechanics:
+  gate_ids:
+    - "INT-G28"
+  verifiers:
+    - "bash scripts/audit/verify_led_002_retention_archive_restore.sh && python3 scripts/audit/validate_evidence.py --task TSK-P1-LED-002 --evidence evidence/phase1/led_002_retention_archive_restore.json"
+  evidence_paths:
+    - "evidence/phase1/led_002_retention_archive_restore.json"
+
+implementation_plan: "docs/plans/phase1/TSK-P1-LED-002/PLAN.md"
+implementation_log: "docs/plans/phase1/TSK-P1-LED-002/EXEC_LOG.md"
+
+must_read:
+  - "docs/operations/AI_AGENT_OPERATION_MANUAL.md"
+  - "docs/operations/AI_AGENT_WORKFLOW_AND_ROLE_PLAN_v2.md"
+  - "docs/operations/AGENT_ROLE_RECONCILIATION.md"
