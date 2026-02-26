@@ -417,16 +417,6 @@ static class IngressHandler
         bool forceFailure,
         CancellationToken cancellationToken)
     {
-        var schemaViolations = IngressValidation.ValidateCanonicalInstructionPayload(request.payload);
-        if (schemaViolations.Count > 0)
-        {
-            return new HandlerResult(StatusCodes.Status400BadRequest, new
-            {
-                error = "SCHEMA_VALIDATION_FAILED",
-                violations = schemaViolations
-            });
-        }
-
         var validationErrors = IngressValidation.Validate(request);
         if (validationErrors.Count > 0)
         {
@@ -435,6 +425,16 @@ static class IngressHandler
                 ack = false,
                 error_code = "INVALID_REQUEST",
                 errors = validationErrors
+            });
+        }
+
+        var schemaViolations = IngressValidation.ValidateCanonicalInstructionPayload(request.payload);
+        if (schemaViolations.Count > 0)
+        {
+            return new HandlerResult(StatusCodes.Status400BadRequest, new
+            {
+                error = "SCHEMA_VALIDATION_FAILED",
+                violations = schemaViolations
             });
         }
 
@@ -1487,10 +1487,26 @@ static class IngressSelfTestRunner
 
         static IngressRequest CreateRequest(string instructionId, string? tenantIdOverride = null)
         {
-            var payload = JsonSerializer.Deserialize<JsonElement>("{\"amount\":100,\"currency\":\"ZMW\"}");
             var tenantId = tenantIdOverride ?? Guid.NewGuid().ToString();
+            var canonicalInstructionId = string.IsNullOrWhiteSpace(instructionId)
+                ? instructionId
+                : (Guid.TryParse(instructionId, out _) ? instructionId : Guid.NewGuid().ToString());
+            var payload = JsonSerializer.Deserialize<JsonElement>(
+                $$"""
+                {
+                  "instruction_id": "{{canonicalInstructionId}}",
+                  "tenant_id": "{{tenantId}}",
+                  "rail_type": "RTGS",
+                  "amount_minor": 100,
+                  "currency_code": "ZMW",
+                  "beneficiary_ref_hash": "hash-self-test",
+                  "idempotency_key": "idem-self-test",
+                  "submitted_at_utc": "2026-02-26T00:00:00Z"
+                }
+                """
+            );
             return new IngressRequest(
-                instruction_id: instructionId,
+                instruction_id: canonicalInstructionId,
                 participant_id: "bank-a",
                 idempotency_key: Guid.NewGuid().ToString("N"),
                 rail_type: "RTGS",
