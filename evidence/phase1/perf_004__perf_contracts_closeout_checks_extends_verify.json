@@ -12,5 +12,8 @@
     "evidence/phase1/perf_005a_finality_seam_stub.json",
     "evidence/phase1/perf_006__operational_risk_framework_translation_layer.json"
   ],
-  "closeout_script": "scripts/audit/verify_phase1_closeout.sh"
+  "closeout_script": "scripts/audit/verify_phase1_closeout.sh",
+  "timestamp_utc": "2026-02-26T06:18:30Z",
+  "git_sha": "cd854031f9d5918427da1de498f916a395437d42",
+  "schema_fingerprint": "8066e70aafdc28540785da569dfbda5ebb13a2710d7f31e1b395cf2b3323bb15"
 }
