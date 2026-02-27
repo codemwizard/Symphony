@@ -1,0 +1,37 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: verify-invariants
+  namespace: symphony
+  labels:
+    app.kubernetes.io/name: verify-invariants
+    app.kubernetes.io/part-of: symphony
+spec:
+  schedule: "*/15 * * * *"
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 2
+  failedJobsHistoryLimit: 3
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          restartPolicy: OnFailure
+          containers:
+            - name: verify-invariants
+              image: ghcr.io/codemwizard/symphony:latest
+              imagePullPolicy: IfNotPresent
+              command: ["/bin/bash", "-lc"]
+              args:
+                - |
+                  set -euo pipefail
+                  scripts/db/verify_invariants.sh
+                  mkdir -p evidence/phase1
+                  date -u +"%Y-%m-%dT%H:%M:%SZ" > evidence/phase1/led_001_incluster_last_success.txt
+              env:
+                - name: DATABASE_URL
+                  valueFrom:
+                    secretKeyRef:
+                      name: symphony-db
+                      key: database_url
+                - name: SKIP_POLICY_SEED
+                  value: "1"

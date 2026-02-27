@@ -1,0 +1,20 @@
+{
+  "check_id": "LED-002-RETENTION-ARCHIVE-RESTORE",
+  "task_id": "TSK-P1-LED-002",
+  "timestamp_utc": "2026-02-26T01:59:24Z",
+  "git_sha": "adb972a894edfd0fa5a6e133fee3badcc0ac7a81",
+  "status": "PASS",
+  "pass": true,
+  "archive_run_id": "arch_20260226T015924Z_28579",
+  "records_archived": 2,
+  "worm_enforcement_confirmed": true,
+  "restore_drill_passed": true,
+  "signature_verified": true,
+  "details": {
+    "retention_classes": [
+      "FIC_AML_CUSTOMER_ID",
+      "BFSA_FINANCIAL"
+    ],
+    "storage_mode": "sandbox_minio_object_lock_declared"
+  }
+}

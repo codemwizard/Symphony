@@ -341,6 +341,8 @@
     ADD CONSTRAINT external_proofs_subject_member_fk FOREIGN KEY (subject_member_id) REFERENCES public.tenant_members(member_id) NOT VALID;
     ADD CONSTRAINT external_proofs_tenant_fk FOREIGN KEY (tenant_id) REFERENCES public.tenants(tenant_id) NOT VALID;
     ADD CONSTRAINT external_proofs_tenant_required_new_rows_chk CHECK ((tenant_id IS NOT NULL)) NOT VALID;
+    ADD CONSTRAINT incident_events_incident_id_fkey FOREIGN KEY (incident_id) REFERENCES public.regulatory_incidents(incident_id) ON DELETE CASCADE;
+    ADD CONSTRAINT incident_events_pkey PRIMARY KEY (incident_event_id);
     ADD CONSTRAINT ingress_attestations_client_id_fkey FOREIGN KEY (client_id) REFERENCES public.tenant_clients(client_id);
     ADD CONSTRAINT ingress_attestations_correlation_required_new_rows_chk CHECK ((correlation_id IS NOT NULL)) NOT VALID;
     ADD CONSTRAINT ingress_attestations_member_id_fkey FOREIGN KEY (member_id) REFERENCES public.tenant_members(member_id);
@@ -406,6 +408,8 @@
     ADD CONSTRAINT programs_tenant_id_program_key_key UNIQUE (tenant_id, program_key);
     ADD CONSTRAINT rail_dispatch_truth_anchor_pkey PRIMARY KEY (anchor_id);
     ADD CONSTRAINT rail_truth_anchor_attempt_fk FOREIGN KEY (attempt_id) REFERENCES public.payment_outbox_attempts(attempt_id) DEFERRABLE;
+    ADD CONSTRAINT regulatory_incidents_pkey PRIMARY KEY (incident_id);
+    ADD CONSTRAINT regulatory_incidents_tenant_id_fkey FOREIGN KEY (tenant_id) REFERENCES public.tenants(tenant_id) ON DELETE RESTRICT;
     ADD CONSTRAINT revoked_client_certs_pkey PRIMARY KEY (cert_fingerprint_sha256);
     ADD CONSTRAINT revoked_tokens_pkey PRIMARY KEY (token_jti);
     ADD CONSTRAINT risk_formula_versions_formula_key_key UNIQUE (formula_key);
@@ -463,6 +467,7 @@
     AND rf.is_active = TRUE
     AND status = 'PENDING_SUPERVISOR_APPROVAL'
     AND timeout_at <= p_now;
+    AS $$
     AS $$
     AS $$
     AS $$
@@ -576,6 +581,8 @@
     CONSTRAINT program_migration_events_from_to_chk CHECK ((from_program_id <> to_program_id))
     CONSTRAINT programs_status_check CHECK ((status = ANY (ARRAY['ACTIVE'::text, 'SUSPENDED'::text, 'CLOSED'::text])))
     CONSTRAINT rail_truth_anchor_state_chk CHECK ((state = 'DISPATCHED'::public.outbox_attempt_state))
+    CONSTRAINT regulatory_incidents_severity_check CHECK ((severity = ANY (ARRAY['LOW'::text, 'MEDIUM'::text, 'HIGH'::text, 'CRITICAL'::text]))),
+    CONSTRAINT regulatory_incidents_status_check CHECK ((status = ANY (ARRAY['OPEN'::text, 'UNDER_INVESTIGATION'::text, 'REPORTED'::text, 'CLOSED'::text])))
     CONSTRAINT risk_formula_versions_tier_check CHECK ((tier = ANY (ARRAY['TIER1'::text, 'TIER2'::text, 'TIER3'::text])))
     CONSTRAINT sim_swap_alerts_alert_type_check CHECK ((alert_type = 'SIM_SWAP_DETECTED'::text)),
     CONSTRAINT sim_swap_alerts_iccid_diff_chk CHECK ((prior_iccid_hash <> new_iccid_hash))
@@ -686,6 +693,7 @@
     LANGUAGE plpgsql SECURITY DEFINER
     LANGUAGE plpgsql SECURITY DEFINER
     LANGUAGE plpgsql SECURITY DEFINER
+    LANGUAGE plpgsql STABLE
     LANGUAGE sql
     LANGUAGE sql SECURITY DEFINER
     LANGUAGE sql STABLE
@@ -792,10 +800,13 @@
     RETURN NEW;
     RETURN NULL;
     RETURN NULL;
+    RETURN NULL;
+    RETURN NULL;
     RETURN QUERY SELECT existing_pending.outbox_id, existing_pending.sequence_id, existing_pending.created_at, 'PENDING';
     RETURN QUERY SELECT p_purge_request_id, v_prior, TRUE;
     RETURN QUERY SELECT v_next_attempt_no, v_effective_state;
     RETURN allocated;
+    RETURN v::uuid;
     RETURN;
     RETURN;
     RETURNING (participant_outbox_sequences.next_sequence_id - 1) INTO allocated;
@@ -902,6 +913,7 @@
     billable_client_id uuid,
     billable_client_id uuid,
     boz_licence_reference text,
+    boz_reference text,
     calculated_at timestamp with time zone,
     calculated_by_version text,
     canceled_at timestamp with time zone,
@@ -935,6 +947,8 @@
     correlation_id uuid,
     count(DISTINCT person_id) AS unique_beneficiaries
     created_at
+    created_at timestamp with time zone DEFAULT now() NOT NULL
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
     created_at timestamp with time zone DEFAULT now() NOT NULL,
     created_at timestamp with time zone DEFAULT now() NOT NULL,
     created_at timestamp with time zone DEFAULT now() NOT NULL,
@@ -985,6 +999,8 @@
     derived_at timestamp with time zone DEFAULT now() NOT NULL,
     description text NOT NULL,
     description text NOT NULL,
+    description text NOT NULL,
+    detected_at timestamp with time zone NOT NULL,
     device_id text,
     device_id_hash text NOT NULL,
     device_id_hash text,
@@ -1013,6 +1029,8 @@
     event_id uuid DEFAULT public.uuid_v7_or_random() NOT NULL,
     event_id uuid DEFAULT public.uuid_v7_or_random() NOT NULL,
     event_id uuid DEFAULT public.uuid_v7_or_random() NOT NULL,
+    event_payload jsonb NOT NULL,
+    event_type text NOT NULL,
     event_type text NOT NULL,
     event_type text NOT NULL,
     event_type text NOT NULL,
@@ -1058,6 +1076,10 @@
     idempotency_key text NOT NULL,
     idempotency_key text,
     identity_hash text NOT NULL,
+    incident_event_id uuid NOT NULL,
+    incident_id uuid NOT NULL,
+    incident_id uuid NOT NULL,
+    incident_type text NOT NULL,
     instruction_id text NOT NULL,
     instruction_id text NOT NULL,
     instruction_id text NOT NULL,
@@ -1260,6 +1282,7 @@
     release_due_at timestamp with time zone,
     released_at timestamp with time zone,
     report_delivery boolean NOT NULL,
+    reported_to_boz_at timestamp with time zone,
     reporting_period character(7),
     request_hash text NOT NULL,
     request_reason
@@ -1288,6 +1311,7 @@
     scope text NOT NULL,
     sequence_id bigint NOT NULL,
     sequence_id bigint NOT NULL,
+    severity text NOT NULL,
     signature text,
     signature_alg text,
     signature_hash text,
@@ -1313,6 +1337,7 @@
     status text DEFAULT 'ACTIVE'::text NOT NULL,
     status text DEFAULT 'ACTIVE'::text NOT NULL,
     status text NOT NULL,
+    status text NOT NULL,
     status,
     statutory_reference text NOT NULL,
     statutory_reference text,
@@ -1325,6 +1350,7 @@
     submitted_by text,
     taxable_amount_minor bigint,
     tenant_id uuid DEFAULT gen_random_uuid() NOT NULL,
+    tenant_id uuid NOT NULL,
     tenant_id uuid NOT NULL,
     tenant_id uuid NOT NULL,
     tenant_id uuid NOT NULL,
@@ -1474,6 +1500,7 @@
   BEGIN
   BEGIN
   BEGIN
+  BEGIN
   DECLARE
   DECLARE
   DECLARE
@@ -1481,6 +1508,7 @@
   DO NOTHING;
   ELSIF NEW.billable_client_id <> derived_billable_client_id THEN
   ELSIF NEW.tenant_id <> derived_tenant_id THEN
+  END IF;
   END IF;
   END IF;
   END IF;
@@ -1559,6 +1587,8 @@
   END;
   END;
   END;
+  END;
+  EXCEPTION WHEN invalid_text_representation THEN
   FOR UPDATE SKIP LOCKED
   FOR UPDATE;
   FOR UPDATE;
@@ -1633,6 +1663,7 @@
   IF p_lease_seconds IS NULL OR p_lease_seconds <= 0 THEN
   IF p_new_entity_id IS DISTINCT FROM p_to_program_id THEN
   IF p_pack_id IS NULL THEN
+  IF v IS NULL OR btrim(v) = '' THEN
   IF v_alert_id IS NULL THEN
   IF v_amount <= 0 THEN
   IF v_decision NOT IN ('APPROVED', 'REJECTED') THEN
@@ -1828,6 +1859,8 @@
   derived_billable_client_id UUID;
   derived_tenant_id UUID;
   m_tenant uuid;
+  v := current_setting('app.current_tenant_id', true);
+  v text;
   v_actor TEXT := COALESCE(NULLIF(BTRIM(COALESCE(p_actor, '')), ''), 'system');
   v_actor TEXT := COALESCE(NULLIF(BTRIM(p_actor_id), ''), 'system');
   v_actor TEXT := COALESCE(NULLIF(BTRIM(p_actor_id), ''), 'system');
@@ -1928,7 +1961,10 @@ $$;
 $$;
 $$;
 $$;
+$$;
 )
+);
+);
 );
 );
 );
@@ -1984,19 +2020,24 @@ ALTER TABLE ONLY public.billing_usage_events
 ALTER TABLE ONLY public.billing_usage_events
 ALTER TABLE ONLY public.billing_usage_events
 ALTER TABLE ONLY public.billing_usage_events
+ALTER TABLE ONLY public.billing_usage_events FORCE ROW LEVEL SECURITY;
 ALTER TABLE ONLY public.escrow_accounts
 ALTER TABLE ONLY public.escrow_accounts
+ALTER TABLE ONLY public.escrow_accounts FORCE ROW LEVEL SECURITY;
 ALTER TABLE ONLY public.escrow_envelopes
 ALTER TABLE ONLY public.escrow_envelopes
 ALTER TABLE ONLY public.escrow_envelopes
+ALTER TABLE ONLY public.escrow_envelopes FORCE ROW LEVEL SECURITY;
 ALTER TABLE ONLY public.escrow_events
 ALTER TABLE ONLY public.escrow_events
 ALTER TABLE ONLY public.escrow_events
+ALTER TABLE ONLY public.escrow_events FORCE ROW LEVEL SECURITY;
 ALTER TABLE ONLY public.escrow_reservations
 ALTER TABLE ONLY public.escrow_reservations
 ALTER TABLE ONLY public.escrow_reservations
 ALTER TABLE ONLY public.escrow_reservations
 ALTER TABLE ONLY public.escrow_reservations
+ALTER TABLE ONLY public.escrow_reservations FORCE ROW LEVEL SECURITY;
 ALTER TABLE ONLY public.evidence_pack_items
 ALTER TABLE ONLY public.evidence_pack_items
 ALTER TABLE ONLY public.evidence_pack_items
@@ -2006,9 +2047,13 @@ ALTER TABLE ONLY public.external_proofs
 ALTER TABLE ONLY public.external_proofs
 ALTER TABLE ONLY public.external_proofs
 ALTER TABLE ONLY public.external_proofs
+ALTER TABLE ONLY public.external_proofs FORCE ROW LEVEL SECURITY;
+ALTER TABLE ONLY public.incident_events
+ALTER TABLE ONLY public.incident_events
 ALTER TABLE ONLY public.ingress_attestations
 ALTER TABLE ONLY public.ingress_attestations
 ALTER TABLE ONLY public.ingress_attestations
+ALTER TABLE ONLY public.ingress_attestations FORCE ROW LEVEL SECURITY;
 ALTER TABLE ONLY public.instruction_settlement_finality
 ALTER TABLE ONLY public.instruction_settlement_finality
 ALTER TABLE ONLY public.instruction_settlement_finality
@@ -2029,9 +2074,11 @@ ALTER TABLE ONLY public.levy_remittance_periods
 ALTER TABLE ONLY public.member_device_events
 ALTER TABLE ONLY public.member_device_events
 ALTER TABLE ONLY public.member_device_events
+ALTER TABLE ONLY public.member_device_events FORCE ROW LEVEL SECURITY;
 ALTER TABLE ONLY public.member_devices
 ALTER TABLE ONLY public.member_devices
 ALTER TABLE ONLY public.member_devices
+ALTER TABLE ONLY public.member_devices FORCE ROW LEVEL SECURITY;
 ALTER TABLE ONLY public.members
 ALTER TABLE ONLY public.members
 ALTER TABLE ONLY public.members
@@ -2039,18 +2086,22 @@ ALTER TABLE ONLY public.members
 ALTER TABLE ONLY public.members
 ALTER TABLE ONLY public.members
 ALTER TABLE ONLY public.members
+ALTER TABLE ONLY public.members FORCE ROW LEVEL SECURITY;
 ALTER TABLE ONLY public.participant_outbox_sequences
 ALTER TABLE ONLY public.participants
 ALTER TABLE ONLY public.payment_outbox_attempts
 ALTER TABLE ONLY public.payment_outbox_attempts
 ALTER TABLE ONLY public.payment_outbox_attempts
 ALTER TABLE ONLY public.payment_outbox_attempts
+ALTER TABLE ONLY public.payment_outbox_attempts FORCE ROW LEVEL SECURITY;
 ALTER TABLE ONLY public.payment_outbox_pending
 ALTER TABLE ONLY public.payment_outbox_pending
 ALTER TABLE ONLY public.payment_outbox_pending
 ALTER TABLE ONLY public.payment_outbox_pending
+ALTER TABLE ONLY public.payment_outbox_pending FORCE ROW LEVEL SECURITY;
 ALTER TABLE ONLY public.persons
 ALTER TABLE ONLY public.persons
+ALTER TABLE ONLY public.persons FORCE ROW LEVEL SECURITY;
 ALTER TABLE ONLY public.pii_purge_events
 ALTER TABLE ONLY public.pii_purge_events
 ALTER TABLE ONLY public.pii_purge_events
@@ -2067,15 +2118,19 @@ ALTER TABLE ONLY public.program_migration_events
 ALTER TABLE ONLY public.program_migration_events
 ALTER TABLE ONLY public.program_migration_events
 ALTER TABLE ONLY public.program_migration_events
+ALTER TABLE ONLY public.program_migration_events FORCE ROW LEVEL SECURITY;
 ALTER TABLE ONLY public.programs
 ALTER TABLE ONLY public.programs
 ALTER TABLE ONLY public.programs
 ALTER TABLE ONLY public.programs
 ALTER TABLE ONLY public.programs
+ALTER TABLE ONLY public.programs FORCE ROW LEVEL SECURITY;
 ALTER TABLE ONLY public.rail_dispatch_truth_anchor
 ALTER TABLE ONLY public.rail_dispatch_truth_anchor
 ALTER TABLE ONLY public.rail_dispatch_truth_anchor
 ALTER TABLE ONLY public.rail_dispatch_truth_anchor
+ALTER TABLE ONLY public.regulatory_incidents
+ALTER TABLE ONLY public.regulatory_incidents
 ALTER TABLE ONLY public.revoked_client_certs
 ALTER TABLE ONLY public.revoked_tokens
 ALTER TABLE ONLY public.risk_formula_versions
@@ -2087,6 +2142,7 @@ ALTER TABLE ONLY public.sim_swap_alerts
 ALTER TABLE ONLY public.sim_swap_alerts
 ALTER TABLE ONLY public.sim_swap_alerts
 ALTER TABLE ONLY public.sim_swap_alerts
+ALTER TABLE ONLY public.sim_swap_alerts FORCE ROW LEVEL SECURITY;
 ALTER TABLE ONLY public.supervisor_access_policies
 ALTER TABLE ONLY public.supervisor_approval_queue
 ALTER TABLE ONLY public.supervisor_approval_queue
@@ -2096,20 +2152,43 @@ ALTER TABLE ONLY public.supervisor_audit_tokens
 ALTER TABLE ONLY public.tenant_clients
 ALTER TABLE ONLY public.tenant_clients
 ALTER TABLE ONLY public.tenant_clients
+ALTER TABLE ONLY public.tenant_clients FORCE ROW LEVEL SECURITY;
 ALTER TABLE ONLY public.tenant_members
 ALTER TABLE ONLY public.tenant_members
 ALTER TABLE ONLY public.tenant_members
+ALTER TABLE ONLY public.tenant_members FORCE ROW LEVEL SECURITY;
 ALTER TABLE ONLY public.tenants
 ALTER TABLE ONLY public.tenants
 ALTER TABLE ONLY public.tenants
 ALTER TABLE ONLY public.tenants
+ALTER TABLE ONLY public.tenants FORCE ROW LEVEL SECURITY;
 ALTER TABLE public.billable_clients
+ALTER TABLE public.billing_usage_events ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.escrow_accounts ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.escrow_envelopes ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.escrow_events ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.escrow_reservations ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.external_proofs
 ALTER TABLE public.external_proofs
+ALTER TABLE public.external_proofs ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.ingress_attestations
+ALTER TABLE public.ingress_attestations ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.member_device_events ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.member_devices ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.members ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.payment_outbox_attempts
+ALTER TABLE public.payment_outbox_attempts ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.payment_outbox_pending
+ALTER TABLE public.payment_outbox_pending ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.persons ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.program_migration_events ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.programs ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.sim_swap_alerts ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.tenant_clients ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.tenant_members ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.tenants
+ALTER TABLE public.tenants ENABLE ROW LEVEL SECURITY;
+BEGIN
 BEGIN
 BEGIN
 BEGIN
@@ -2152,6 +2231,7 @@ CREATE FUNCTION public.claim_anchor_sync_operation(p_worker_id text, p_lease_sec
 CREATE FUNCTION public.claim_outbox_batch(p_batch_size integer, p_worker_id text, p_lease_seconds integer) RETURNS TABLE(outbox_id uuid, instruction_id text, participant_id text, sequence_id bigint, idempotency_key text, rail_type text, payload jsonb, attempt_count integer, lease_token uuid, lease_expires_at timestamp with time zone)
 CREATE FUNCTION public.complete_anchor_sync_operation(p_operation_id uuid, p_lease_token uuid, p_worker_id text) RETURNS void
 CREATE FUNCTION public.complete_outbox_attempt(p_outbox_id uuid, p_lease_token uuid, p_worker_id text, p_state public.outbox_attempt_state, p_rail_reference text DEFAULT NULL::text, p_rail_code text DEFAULT NULL::text, p_error_code text DEFAULT NULL::text, p_error_message text DEFAULT NULL::text, p_latency_ms integer DEFAULT NULL::integer, p_retry_delay_seconds integer DEFAULT 1) RETURNS TABLE(attempt_no integer, state public.outbox_attempt_state)
+CREATE FUNCTION public.current_tenant_id_or_null() RETURNS uuid
 CREATE FUNCTION public.decide_supervisor_approval(p_instruction_id text, p_decision text, p_actor text, p_reason text DEFAULT NULL::text) RETURNS void
 CREATE FUNCTION public.deny_append_only_mutation() RETURNS trigger
 CREATE FUNCTION public.deny_final_instruction_mutation() RETURNS trigger
@@ -2242,6 +2322,8 @@ CREATE INDEX idx_tenant_members_tenant ON public.tenant_members USING btree (ten
 CREATE INDEX idx_tenants_billable_client_id ON public.tenants USING btree (billable_client_id);
 CREATE INDEX idx_tenants_parent_tenant_id ON public.tenants USING btree (parent_tenant_id);
 CREATE INDEX idx_tenants_status ON public.tenants USING btree (status);
+CREATE INDEX ix_incident_events_incident_created ON public.incident_events USING btree (incident_id, created_at);
+CREATE INDEX ix_regulatory_incidents_tenant_detected ON public.regulatory_incidents USING btree (tenant_id, detected_at DESC);
 CREATE INDEX kyc_provider_jurisdiction_idx ON public.kyc_provider_registry USING btree (jurisdiction_code, active_from DESC);
 CREATE INDEX kyc_verification_jurisdiction_outcome_idx ON public.kyc_verification_records USING btree (jurisdiction_code, outcome) WHERE (outcome IS NOT NULL);
 CREATE INDEX kyc_verification_member_idx ON public.kyc_verification_records USING btree (member_id, anchored_at DESC);
@@ -2251,6 +2333,25 @@ CREATE INDEX levy_calc_status_idx ON public.levy_calculation_records USING btree
 CREATE INDEX levy_periods_jurisdiction_idx ON public.levy_remittance_periods USING btree (jurisdiction_code, period_start DESC);
 CREATE INDEX levy_periods_status_idx ON public.levy_remittance_periods USING btree (period_status) WHERE (period_status IS NOT NULL);
 CREATE INDEX levy_rates_jurisdiction_date_idx ON public.levy_rates USING btree (jurisdiction_code, effective_from DESC);
+CREATE POLICY rls_tenant_isolation_billing_usage_events ON public.billing_usage_events AS RESTRICTIVE USING ((tenant_id = public.current_tenant_id_or_null())) WITH CHECK ((tenant_id = public.current_tenant_id_or_null()));
+CREATE POLICY rls_tenant_isolation_escrow_accounts ON public.escrow_accounts AS RESTRICTIVE USING ((tenant_id = public.current_tenant_id_or_null())) WITH CHECK ((tenant_id = public.current_tenant_id_or_null()));
+CREATE POLICY rls_tenant_isolation_escrow_envelopes ON public.escrow_envelopes AS RESTRICTIVE USING ((tenant_id = public.current_tenant_id_or_null())) WITH CHECK ((tenant_id = public.current_tenant_id_or_null()));
+CREATE POLICY rls_tenant_isolation_escrow_events ON public.escrow_events AS RESTRICTIVE USING ((tenant_id = public.current_tenant_id_or_null())) WITH CHECK ((tenant_id = public.current_tenant_id_or_null()));
+CREATE POLICY rls_tenant_isolation_escrow_reservations ON public.escrow_reservations AS RESTRICTIVE USING ((tenant_id = public.current_tenant_id_or_null())) WITH CHECK ((tenant_id = public.current_tenant_id_or_null()));
+CREATE POLICY rls_tenant_isolation_external_proofs ON public.external_proofs AS RESTRICTIVE USING ((tenant_id = public.current_tenant_id_or_null())) WITH CHECK ((tenant_id = public.current_tenant_id_or_null()));
+CREATE POLICY rls_tenant_isolation_ingress_attestations ON public.ingress_attestations AS RESTRICTIVE USING ((tenant_id = public.current_tenant_id_or_null())) WITH CHECK ((tenant_id = public.current_tenant_id_or_null()));
+CREATE POLICY rls_tenant_isolation_member_device_events ON public.member_device_events AS RESTRICTIVE USING ((tenant_id = public.current_tenant_id_or_null())) WITH CHECK ((tenant_id = public.current_tenant_id_or_null()));
+CREATE POLICY rls_tenant_isolation_member_devices ON public.member_devices AS RESTRICTIVE USING ((tenant_id = public.current_tenant_id_or_null())) WITH CHECK ((tenant_id = public.current_tenant_id_or_null()));
+CREATE POLICY rls_tenant_isolation_members ON public.members AS RESTRICTIVE USING ((tenant_id = public.current_tenant_id_or_null())) WITH CHECK ((tenant_id = public.current_tenant_id_or_null()));
+CREATE POLICY rls_tenant_isolation_payment_outbox_attempts ON public.payment_outbox_attempts AS RESTRICTIVE USING ((tenant_id = public.current_tenant_id_or_null())) WITH CHECK ((tenant_id = public.current_tenant_id_or_null()));
+CREATE POLICY rls_tenant_isolation_payment_outbox_pending ON public.payment_outbox_pending AS RESTRICTIVE USING ((tenant_id = public.current_tenant_id_or_null())) WITH CHECK ((tenant_id = public.current_tenant_id_or_null()));
+CREATE POLICY rls_tenant_isolation_persons ON public.persons AS RESTRICTIVE USING ((tenant_id = public.current_tenant_id_or_null())) WITH CHECK ((tenant_id = public.current_tenant_id_or_null()));
+CREATE POLICY rls_tenant_isolation_program_migration_events ON public.program_migration_events AS RESTRICTIVE USING ((tenant_id = public.current_tenant_id_or_null())) WITH CHECK ((tenant_id = public.current_tenant_id_or_null()));
+CREATE POLICY rls_tenant_isolation_programs ON public.programs AS RESTRICTIVE USING ((tenant_id = public.current_tenant_id_or_null())) WITH CHECK ((tenant_id = public.current_tenant_id_or_null()));
+CREATE POLICY rls_tenant_isolation_sim_swap_alerts ON public.sim_swap_alerts AS RESTRICTIVE USING ((tenant_id = public.current_tenant_id_or_null())) WITH CHECK ((tenant_id = public.current_tenant_id_or_null()));
+CREATE POLICY rls_tenant_isolation_tenant_clients ON public.tenant_clients AS RESTRICTIVE USING ((tenant_id = public.current_tenant_id_or_null())) WITH CHECK ((tenant_id = public.current_tenant_id_or_null()));
+CREATE POLICY rls_tenant_isolation_tenant_members ON public.tenant_members AS RESTRICTIVE USING ((tenant_id = public.current_tenant_id_or_null())) WITH CHECK ((tenant_id = public.current_tenant_id_or_null()));
+CREATE POLICY rls_tenant_isolation_tenants ON public.tenants AS RESTRICTIVE USING ((tenant_id = public.current_tenant_id_or_null())) WITH CHECK ((tenant_id = public.current_tenant_id_or_null()));
 CREATE RULE kyc_retention_policy_no_delete AS
 CREATE RULE kyc_retention_policy_no_update AS
 CREATE SCHEMA public;
@@ -2264,6 +2365,7 @@ CREATE TABLE public.escrow_reservations (
 CREATE TABLE public.evidence_pack_items (
 CREATE TABLE public.evidence_packs (
 CREATE TABLE public.external_proofs (
+CREATE TABLE public.incident_events (
 CREATE TABLE public.ingress_attestations (
 CREATE TABLE public.instruction_settlement_finality (
 CREATE TABLE public.kyc_provider_registry (
@@ -2287,6 +2389,7 @@ CREATE TABLE public.policy_versions (
 CREATE TABLE public.program_migration_events (
 CREATE TABLE public.programs (
 CREATE TABLE public.rail_dispatch_truth_anchor (
+CREATE TABLE public.regulatory_incidents (
 CREATE TABLE public.revoked_client_certs (
 CREATE TABLE public.revoked_tokens (
 CREATE TABLE public.risk_formula_versions (
@@ -2364,6 +2467,8 @@ DECLARE
 DECLARE
 DECLARE
 DECLARE
+DECLARE
+END;
 END;
 END;
 END;

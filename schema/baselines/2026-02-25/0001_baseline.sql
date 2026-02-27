@@ -2,7 +2,7 @@
 -- PostgreSQL database dump
 --
 
-\restrict osZTaQeenovyXNH6HRsJYBgjeiZ5t7X1GBYQrDtMBUeDHRePMUZCfvHTzKZPlCc
+\restrict L6zL1zWc9APqRdeYq5xmf6al3GAQpHTZGszoJxxmT2O5U2kqLtkgyHMlH5EqK1u
 
 -- Dumped from database version 18.2 (Debian 18.2-1.pgdg13+1)
 -- Dumped by pg_dump version 18.2 (Debian 18.2-1.pgdg13+1)
@@ -376,6 +376,30 @@ CREATE FUNCTION public.complete_outbox_attempt(p_outbox_id uuid, p_lease_token u
   
     RETURN QUERY SELECT v_next_attempt_no, v_effective_state;
   END;
+$$;
+
+
+--
+-- Name: current_tenant_id_or_null(); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.current_tenant_id_or_null() RETURNS uuid
+    LANGUAGE plpgsql STABLE
+    AS $$
+DECLARE
+  v text;
+BEGIN
+  v := current_setting('app.current_tenant_id', true);
+  IF v IS NULL OR btrim(v) = '' THEN
+    RETURN NULL;
+  END IF;
+
+  BEGIN
+    RETURN v::uuid;
+  EXCEPTION WHEN invalid_text_representation THEN
+    RETURN NULL;
+  END;
+END;
 $$;
 
 
@@ -1960,6 +1984,8 @@ CREATE TABLE public.billing_usage_events (
     CONSTRAINT billing_usage_events_units_check CHECK ((units = ANY (ARRAY['count'::text, 'bytes'::text, 'seconds'::text, 'events'::text])))
 );
 
+ALTER TABLE ONLY public.billing_usage_events FORCE ROW LEVEL SECURITY;
+
 
 --
 -- Name: escrow_accounts; Type: TABLE; Schema: public; Owner: -
@@ -1984,6 +2010,8 @@ CREATE TABLE public.escrow_accounts (
     CONSTRAINT escrow_accounts_state_check CHECK ((state = ANY (ARRAY['CREATED'::text, 'AUTHORIZED'::text, 'RELEASE_REQUESTED'::text, 'RELEASED'::text, 'CANCELED'::text, 'EXPIRED'::text])))
 );
 
+ALTER TABLE ONLY public.escrow_accounts FORCE ROW LEVEL SECURITY;
+
 
 --
 -- Name: escrow_envelopes; Type: TABLE; Schema: public; Owner: -
@@ -2000,6 +2028,8 @@ CREATE TABLE public.escrow_envelopes (
     CONSTRAINT escrow_envelopes_ceiling_amount_minor_check CHECK ((ceiling_amount_minor >= 0)),
     CONSTRAINT escrow_envelopes_reserved_amount_minor_check CHECK ((reserved_amount_minor >= 0))
 );
+
+ALTER TABLE ONLY public.escrow_envelopes FORCE ROW LEVEL SECURITY;
 
 
 --
@@ -2018,6 +2048,8 @@ CREATE TABLE public.escrow_events (
     CONSTRAINT escrow_events_event_type_check CHECK ((event_type = ANY (ARRAY['CREATED'::text, 'AUTHORIZED'::text, 'RELEASE_REQUESTED'::text, 'RELEASED'::text, 'CANCELED'::text, 'EXPIRED'::text])))
 );
 
+ALTER TABLE ONLY public.escrow_events FORCE ROW LEVEL SECURITY;
+
 
 --
 -- Name: escrow_reservations; Type: TABLE; Schema: public; Owner: -
@@ -2035,6 +2067,8 @@ CREATE TABLE public.escrow_reservations (
     created_at timestamp with time zone DEFAULT now() NOT NULL,
     CONSTRAINT escrow_reservations_amount_minor_check CHECK ((amount_minor > 0))
 );
+
+ALTER TABLE ONLY public.escrow_reservations FORCE ROW LEVEL SECURITY;
 
 
 --
@@ -2092,6 +2126,21 @@ CREATE TABLE public.external_proofs (
     subject_member_id uuid
 );
 
+ALTER TABLE ONLY public.external_proofs FORCE ROW LEVEL SECURITY;
+
+
+--
+-- Name: incident_events; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.incident_events (
+    incident_event_id uuid NOT NULL,
+    incident_id uuid NOT NULL,
+    event_type text NOT NULL,
+    event_payload jsonb NOT NULL,
+    created_at timestamp with time zone DEFAULT now() NOT NULL
+);
+
 
 --
 -- Name: ingress_attestations; Type: TABLE; Schema: public; Owner: -
@@ -2117,6 +2166,8 @@ CREATE TABLE public.ingress_attestations (
     nfs_sequence_ref text,
     levy_applicable boolean
 );
+
+ALTER TABLE ONLY public.ingress_attestations FORCE ROW LEVEL SECURITY;
 
 
 --
@@ -2298,6 +2349,8 @@ CREATE TABLE public.member_device_events (
     CONSTRAINT member_device_events_event_type_check CHECK ((event_type = ANY (ARRAY['ENROLLED_DEVICE'::text, 'UNREGISTERED_DEVICE'::text, 'REVOKED_DEVICE_ATTEMPT'::text, 'SIM_SWAP_DETECTED'::text])))
 );
 
+ALTER TABLE ONLY public.member_device_events FORCE ROW LEVEL SECURITY;
+
 
 --
 -- Name: member_devices; Type: TABLE; Schema: public; Owner: -
@@ -2312,6 +2365,8 @@ CREATE TABLE public.member_devices (
     created_at timestamp with time zone DEFAULT now() NOT NULL,
     CONSTRAINT member_devices_status_check CHECK ((status = ANY (ARRAY['ACTIVE'::text, 'INACTIVE'::text, 'REVOKED'::text])))
 );
+
+ALTER TABLE ONLY public.member_devices FORCE ROW LEVEL SECURITY;
 
 
 --
@@ -2335,6 +2390,8 @@ CREATE TABLE public.members (
     CONSTRAINT members_kyc_status_check CHECK ((kyc_status = ANY (ARRAY['PENDING'::text, 'VERIFIED'::text, 'REJECTED'::text]))),
     CONSTRAINT members_status_check CHECK ((status = ANY (ARRAY['ACTIVE'::text, 'SUSPENDED'::text, 'ARCHIVED'::text])))
 );
+
+ALTER TABLE ONLY public.members FORCE ROW LEVEL SECURITY;
 
 
 --
@@ -2398,6 +2455,8 @@ CREATE TABLE public.payment_outbox_attempts (
     CONSTRAINT payment_outbox_attempts_latency_ms_check CHECK (((latency_ms IS NULL) OR (latency_ms >= 0)))
 );
 
+ALTER TABLE ONLY public.payment_outbox_attempts FORCE ROW LEVEL SECURITY;
+
 
 --
 -- Name: payment_outbox_pending; Type: TABLE; Schema: public; Owner: -
@@ -2428,6 +2487,8 @@ CREATE TABLE public.payment_outbox_pending (
 )
 WITH (fillfactor='80');
 
+ALTER TABLE ONLY public.payment_outbox_pending FORCE ROW LEVEL SECURITY;
+
 
 --
 -- Name: persons; Type: TABLE; Schema: public; Owner: -
@@ -2442,6 +2503,8 @@ CREATE TABLE public.persons (
     updated_at timestamp with time zone DEFAULT now() NOT NULL,
     CONSTRAINT persons_status_check CHECK ((status = ANY (ARRAY['ACTIVE'::text, 'INACTIVE'::text, 'SUSPENDED'::text])))
 );
+
+ALTER TABLE ONLY public.persons FORCE ROW LEVEL SECURITY;
 
 
 --
@@ -2527,6 +2590,8 @@ CREATE TABLE public.program_migration_events (
     CONSTRAINT program_migration_events_from_to_chk CHECK ((from_program_id <> to_program_id))
 );
 
+ALTER TABLE ONLY public.program_migration_events FORCE ROW LEVEL SECURITY;
+
 
 --
 -- Name: programs; Type: TABLE; Schema: public; Owner: -
@@ -2543,6 +2608,8 @@ CREATE TABLE public.programs (
     updated_at timestamp with time zone DEFAULT now() NOT NULL,
     CONSTRAINT programs_status_check CHECK ((status = ANY (ARRAY['ACTIVE'::text, 'SUSPENDED'::text, 'CLOSED'::text])))
 );
+
+ALTER TABLE ONLY public.programs FORCE ROW LEVEL SECURITY;
 
 
 --
@@ -2561,6 +2628,26 @@ CREATE TABLE public.rail_dispatch_truth_anchor (
     state public.outbox_attempt_state NOT NULL,
     anchored_at timestamp with time zone DEFAULT now() NOT NULL,
     CONSTRAINT rail_truth_anchor_state_chk CHECK ((state = 'DISPATCHED'::public.outbox_attempt_state))
+);
+
+
+--
+-- Name: regulatory_incidents; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.regulatory_incidents (
+    incident_id uuid NOT NULL,
+    tenant_id uuid NOT NULL,
+    incident_type text NOT NULL,
+    detected_at timestamp with time zone NOT NULL,
+    description text NOT NULL,
+    severity text NOT NULL,
+    status text NOT NULL,
+    reported_to_boz_at timestamp with time zone,
+    boz_reference text,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    CONSTRAINT regulatory_incidents_severity_check CHECK ((severity = ANY (ARRAY['LOW'::text, 'MEDIUM'::text, 'HIGH'::text, 'CRITICAL'::text]))),
+    CONSTRAINT regulatory_incidents_status_check CHECK ((status = ANY (ARRAY['OPEN'::text, 'UNDER_INVESTIGATION'::text, 'REPORTED'::text, 'CLOSED'::text])))
 );
 
 
@@ -2635,6 +2722,8 @@ CREATE TABLE public.sim_swap_alerts (
     CONSTRAINT sim_swap_alerts_alert_type_check CHECK ((alert_type = 'SIM_SWAP_DETECTED'::text)),
     CONSTRAINT sim_swap_alerts_iccid_diff_chk CHECK ((prior_iccid_hash <> new_iccid_hash))
 );
+
+ALTER TABLE ONLY public.sim_swap_alerts FORCE ROW LEVEL SECURITY;
 
 
 --
@@ -2723,6 +2812,8 @@ CREATE TABLE public.tenant_clients (
     CONSTRAINT tenant_clients_status_check CHECK ((status = ANY (ARRAY['ACTIVE'::text, 'SUSPENDED'::text, 'REVOKED'::text])))
 );
 
+ALTER TABLE ONLY public.tenant_clients FORCE ROW LEVEL SECURITY;
+
 
 --
 -- Name: tenant_members; Type: TABLE; Schema: public; Owner: -
@@ -2738,6 +2829,8 @@ CREATE TABLE public.tenant_members (
     created_at timestamp with time zone DEFAULT now() NOT NULL,
     CONSTRAINT tenant_members_status_check CHECK ((status = ANY (ARRAY['ACTIVE'::text, 'SUSPENDED'::text, 'EXITED'::text])))
 );
+
+ALTER TABLE ONLY public.tenant_members FORCE ROW LEVEL SECURITY;
 
 
 --
@@ -2768,6 +2861,8 @@ CREATE TABLE public.tenants (
     CONSTRAINT tenants_status_check CHECK ((status = ANY (ARRAY['ACTIVE'::text, 'SUSPENDED'::text, 'CLOSED'::text]))),
     CONSTRAINT tenants_tenant_type_check CHECK ((tenant_type = ANY (ARRAY['NGO'::text, 'COOPERATIVE'::text, 'GOVERNMENT'::text, 'COMMERCIAL'::text])))
 );
+
+ALTER TABLE ONLY public.tenants FORCE ROW LEVEL SECURITY;
 
 
 --
@@ -2888,6 +2983,14 @@ ALTER TABLE ONLY public.external_proofs
 
 ALTER TABLE public.external_proofs
     ADD CONSTRAINT external_proofs_tenant_required_new_rows_chk CHECK ((tenant_id IS NOT NULL)) NOT VALID;
+
+
+--
+-- Name: incident_events incident_events_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.incident_events
+    ADD CONSTRAINT incident_events_pkey PRIMARY KEY (incident_event_id);
 
 
 --
@@ -3160,6 +3263,14 @@ ALTER TABLE ONLY public.programs
 
 ALTER TABLE ONLY public.rail_dispatch_truth_anchor
     ADD CONSTRAINT rail_dispatch_truth_anchor_pkey PRIMARY KEY (anchor_id);
+
+
+--
+-- Name: regulatory_incidents regulatory_incidents_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.regulatory_incidents
+    ADD CONSTRAINT regulatory_incidents_pkey PRIMARY KEY (incident_id);
 
 
 --
@@ -3736,6 +3847,20 @@ CREATE INDEX idx_tenants_status ON public.tenants USING btree (status);
 
 
 --
+-- Name: ix_incident_events_incident_created; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX ix_incident_events_incident_created ON public.incident_events USING btree (incident_id, created_at);
+
+
+--
+-- Name: ix_regulatory_incidents_tenant_detected; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX ix_regulatory_incidents_tenant_detected ON public.regulatory_incidents USING btree (tenant_id, detected_at DESC);
+
+
+--
 -- Name: kyc_provider_active_idx; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -4233,6 +4358,14 @@ ALTER TABLE ONLY public.external_proofs
 
 
 --
+-- Name: incident_events incident_events_incident_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.incident_events
+    ADD CONSTRAINT incident_events_incident_id_fkey FOREIGN KEY (incident_id) REFERENCES public.regulatory_incidents(incident_id) ON DELETE CASCADE;
+
+
+--
 -- Name: ingress_attestations ingress_attestations_client_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -4481,6 +4614,14 @@ ALTER TABLE ONLY public.rail_dispatch_truth_anchor
 
 
 --
+-- Name: regulatory_incidents regulatory_incidents_tenant_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.regulatory_incidents
+    ADD CONSTRAINT regulatory_incidents_tenant_id_fkey FOREIGN KEY (tenant_id) REFERENCES public.tenants(tenant_id) ON DELETE RESTRICT;
+
+
+--
 -- Name: sim_swap_alerts sim_swap_alerts_formula_version_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -4561,8 +4702,255 @@ ALTER TABLE ONLY public.tenants
 
 
 --
+-- Name: billing_usage_events; Type: ROW SECURITY; Schema: public; Owner: -
+--
+
+ALTER TABLE public.billing_usage_events ENABLE ROW LEVEL SECURITY;
+
+--
+-- Name: escrow_accounts; Type: ROW SECURITY; Schema: public; Owner: -
+--
+
+ALTER TABLE public.escrow_accounts ENABLE ROW LEVEL SECURITY;
+
+--
+-- Name: escrow_envelopes; Type: ROW SECURITY; Schema: public; Owner: -
+--
+
+ALTER TABLE public.escrow_envelopes ENABLE ROW LEVEL SECURITY;
+
+--
+-- Name: escrow_events; Type: ROW SECURITY; Schema: public; Owner: -
+--
+
+ALTER TABLE public.escrow_events ENABLE ROW LEVEL SECURITY;
+
+--
+-- Name: escrow_reservations; Type: ROW SECURITY; Schema: public; Owner: -
+--
+
+ALTER TABLE public.escrow_reservations ENABLE ROW LEVEL SECURITY;
+
+--
+-- Name: external_proofs; Type: ROW SECURITY; Schema: public; Owner: -
+--
+
+ALTER TABLE public.external_proofs ENABLE ROW LEVEL SECURITY;
+
+--
+-- Name: ingress_attestations; Type: ROW SECURITY; Schema: public; Owner: -
+--
+
+ALTER TABLE public.ingress_attestations ENABLE ROW LEVEL SECURITY;
+
+--
+-- Name: member_device_events; Type: ROW SECURITY; Schema: public; Owner: -
+--
+
+ALTER TABLE public.member_device_events ENABLE ROW LEVEL SECURITY;
+
+--
+-- Name: member_devices; Type: ROW SECURITY; Schema: public; Owner: -
+--
+
+ALTER TABLE public.member_devices ENABLE ROW LEVEL SECURITY;
+
+--
+-- Name: members; Type: ROW SECURITY; Schema: public; Owner: -
+--
+
+ALTER TABLE public.members ENABLE ROW LEVEL SECURITY;
+
+--
+-- Name: payment_outbox_attempts; Type: ROW SECURITY; Schema: public; Owner: -
+--
+
+ALTER TABLE public.payment_outbox_attempts ENABLE ROW LEVEL SECURITY;
+
+--
+-- Name: payment_outbox_pending; Type: ROW SECURITY; Schema: public; Owner: -
+--
+
+ALTER TABLE public.payment_outbox_pending ENABLE ROW LEVEL SECURITY;
+
+--
+-- Name: persons; Type: ROW SECURITY; Schema: public; Owner: -
+--
+
+ALTER TABLE public.persons ENABLE ROW LEVEL SECURITY;
+
+--
+-- Name: program_migration_events; Type: ROW SECURITY; Schema: public; Owner: -
+--
+
+ALTER TABLE public.program_migration_events ENABLE ROW LEVEL SECURITY;
+
+--
+-- Name: programs; Type: ROW SECURITY; Schema: public; Owner: -
+--
+
+ALTER TABLE public.programs ENABLE ROW LEVEL SECURITY;
+
+--
+-- Name: billing_usage_events rls_tenant_isolation_billing_usage_events; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY rls_tenant_isolation_billing_usage_events ON public.billing_usage_events AS RESTRICTIVE USING ((tenant_id = public.current_tenant_id_or_null())) WITH CHECK ((tenant_id = public.current_tenant_id_or_null()));
+
+
+--
+-- Name: escrow_accounts rls_tenant_isolation_escrow_accounts; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY rls_tenant_isolation_escrow_accounts ON public.escrow_accounts AS RESTRICTIVE USING ((tenant_id = public.current_tenant_id_or_null())) WITH CHECK ((tenant_id = public.current_tenant_id_or_null()));
+
+
+--
+-- Name: escrow_envelopes rls_tenant_isolation_escrow_envelopes; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY rls_tenant_isolation_escrow_envelopes ON public.escrow_envelopes AS RESTRICTIVE USING ((tenant_id = public.current_tenant_id_or_null())) WITH CHECK ((tenant_id = public.current_tenant_id_or_null()));
+
+
+--
+-- Name: escrow_events rls_tenant_isolation_escrow_events; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY rls_tenant_isolation_escrow_events ON public.escrow_events AS RESTRICTIVE USING ((tenant_id = public.current_tenant_id_or_null())) WITH CHECK ((tenant_id = public.current_tenant_id_or_null()));
+
+
+--
+-- Name: escrow_reservations rls_tenant_isolation_escrow_reservations; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY rls_tenant_isolation_escrow_reservations ON public.escrow_reservations AS RESTRICTIVE USING ((tenant_id = public.current_tenant_id_or_null())) WITH CHECK ((tenant_id = public.current_tenant_id_or_null()));
+
+
+--
+-- Name: external_proofs rls_tenant_isolation_external_proofs; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY rls_tenant_isolation_external_proofs ON public.external_proofs AS RESTRICTIVE USING ((tenant_id = public.current_tenant_id_or_null())) WITH CHECK ((tenant_id = public.current_tenant_id_or_null()));
+
+
+--
+-- Name: ingress_attestations rls_tenant_isolation_ingress_attestations; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY rls_tenant_isolation_ingress_attestations ON public.ingress_attestations AS RESTRICTIVE USING ((tenant_id = public.current_tenant_id_or_null())) WITH CHECK ((tenant_id = public.current_tenant_id_or_null()));
+
+
+--
+-- Name: member_device_events rls_tenant_isolation_member_device_events; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY rls_tenant_isolation_member_device_events ON public.member_device_events AS RESTRICTIVE USING ((tenant_id = public.current_tenant_id_or_null())) WITH CHECK ((tenant_id = public.current_tenant_id_or_null()));
+
+
+--
+-- Name: member_devices rls_tenant_isolation_member_devices; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY rls_tenant_isolation_member_devices ON public.member_devices AS RESTRICTIVE USING ((tenant_id = public.current_tenant_id_or_null())) WITH CHECK ((tenant_id = public.current_tenant_id_or_null()));
+
+
+--
+-- Name: members rls_tenant_isolation_members; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY rls_tenant_isolation_members ON public.members AS RESTRICTIVE USING ((tenant_id = public.current_tenant_id_or_null())) WITH CHECK ((tenant_id = public.current_tenant_id_or_null()));
+
+
+--
+-- Name: payment_outbox_attempts rls_tenant_isolation_payment_outbox_attempts; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY rls_tenant_isolation_payment_outbox_attempts ON public.payment_outbox_attempts AS RESTRICTIVE USING ((tenant_id = public.current_tenant_id_or_null())) WITH CHECK ((tenant_id = public.current_tenant_id_or_null()));
+
+
+--
+-- Name: payment_outbox_pending rls_tenant_isolation_payment_outbox_pending; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY rls_tenant_isolation_payment_outbox_pending ON public.payment_outbox_pending AS RESTRICTIVE USING ((tenant_id = public.current_tenant_id_or_null())) WITH CHECK ((tenant_id = public.current_tenant_id_or_null()));
+
+
+--
+-- Name: persons rls_tenant_isolation_persons; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY rls_tenant_isolation_persons ON public.persons AS RESTRICTIVE USING ((tenant_id = public.current_tenant_id_or_null())) WITH CHECK ((tenant_id = public.current_tenant_id_or_null()));
+
+
+--
+-- Name: program_migration_events rls_tenant_isolation_program_migration_events; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY rls_tenant_isolation_program_migration_events ON public.program_migration_events AS RESTRICTIVE USING ((tenant_id = public.current_tenant_id_or_null())) WITH CHECK ((tenant_id = public.current_tenant_id_or_null()));
+
+
+--
+-- Name: programs rls_tenant_isolation_programs; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY rls_tenant_isolation_programs ON public.programs AS RESTRICTIVE USING ((tenant_id = public.current_tenant_id_or_null())) WITH CHECK ((tenant_id = public.current_tenant_id_or_null()));
+
+
+--
+-- Name: sim_swap_alerts rls_tenant_isolation_sim_swap_alerts; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY rls_tenant_isolation_sim_swap_alerts ON public.sim_swap_alerts AS RESTRICTIVE USING ((tenant_id = public.current_tenant_id_or_null())) WITH CHECK ((tenant_id = public.current_tenant_id_or_null()));
+
+
+--
+-- Name: tenant_clients rls_tenant_isolation_tenant_clients; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY rls_tenant_isolation_tenant_clients ON public.tenant_clients AS RESTRICTIVE USING ((tenant_id = public.current_tenant_id_or_null())) WITH CHECK ((tenant_id = public.current_tenant_id_or_null()));
+
+
+--
+-- Name: tenant_members rls_tenant_isolation_tenant_members; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY rls_tenant_isolation_tenant_members ON public.tenant_members AS RESTRICTIVE USING ((tenant_id = public.current_tenant_id_or_null())) WITH CHECK ((tenant_id = public.current_tenant_id_or_null()));
+
+
+--
+-- Name: tenants rls_tenant_isolation_tenants; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY rls_tenant_isolation_tenants ON public.tenants AS RESTRICTIVE USING ((tenant_id = public.current_tenant_id_or_null())) WITH CHECK ((tenant_id = public.current_tenant_id_or_null()));
+
+
+--
+-- Name: sim_swap_alerts; Type: ROW SECURITY; Schema: public; Owner: -
+--
+
+ALTER TABLE public.sim_swap_alerts ENABLE ROW LEVEL SECURITY;
+
+--
+-- Name: tenant_clients; Type: ROW SECURITY; Schema: public; Owner: -
+--
+
+ALTER TABLE public.tenant_clients ENABLE ROW LEVEL SECURITY;
+
+--
+-- Name: tenant_members; Type: ROW SECURITY; Schema: public; Owner: -
+--
+
+ALTER TABLE public.tenant_members ENABLE ROW LEVEL SECURITY;
+
+--
+-- Name: tenants; Type: ROW SECURITY; Schema: public; Owner: -
+--
+
+ALTER TABLE public.tenants ENABLE ROW LEVEL SECURITY;
+
+--
 -- PostgreSQL database dump complete
 --
 
-\unrestrict osZTaQeenovyXNH6HRsJYBgjeiZ5t7X1GBYQrDtMBUeDHRePMUZCfvHTzKZPlCc
+\unrestrict L6zL1zWc9APqRdeYq5xmf6al3GAQpHTZGszoJxxmT2O5U2kqLtkgyHMlH5EqK1u
 

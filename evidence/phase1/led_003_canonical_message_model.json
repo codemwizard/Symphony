@@ -1,0 +1,30 @@
+{
+  "check_id": "LED-003-CANONICAL-MESSAGE-MODEL",
+  "task_id": "TSK-P1-LED-003",
+  "timestamp_utc": "2026-02-26T01:52:51Z",
+  "git_sha": "945fd982aad39e9b201afa1c22fb32728eec296f",
+  "schema_fingerprint": "945fd98",
+  "status": "PASS",
+  "pass": true,
+  "details": {
+    "schema_path": "schema/messages/canonical_instruction_v1.json",
+    "schema_exists": true,
+    "tests": [
+      {
+        "Name": "valid_payload_accepted",
+        "Status": "PASS",
+        "Detail": "{\u0022ack\u0022:true,\u0022instruction_id\u0022:\u0022aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa\u0022,\u0022attestation_id\u0022:\u0022bbbda0d3-0cc7-4518-aa33-53e65f3dcf90\u0022,\u0022outbox_id\u0022:\u002233cc73fe-7073-4b41-9ee7-ae49183cb143\u0022,\u0022outbox_state\u0022:\u0022PENDING\u0022,\u0022payload_hash\u0022:\u0022144f5dda75f6758a335496113a96693b2e346fe8e3223a63de7c71429b6abdb0\u0022}"
+      },
+      {
+        "Name": "missing_required_field_rejected",
+        "Status": "PASS",
+        "Detail": "{\u0022error\u0022:\u0022SCHEMA_VALIDATION_FAILED\u0022,\u0022violations\u0022:[{\u0022field\u0022:\u0022amount_minor\u0022,\u0022message\u0022:\u0022amount_minor is required\u0022}]}"
+      },
+      {
+        "Name": "wrong_type_rejected",
+        "Status": "PASS",
+        "Detail": "{\u0022error\u0022:\u0022SCHEMA_VALIDATION_FAILED\u0022,\u0022violations\u0022:[{\u0022field\u0022:\u0022amount_minor\u0022,\u0022message\u0022:\u0022amount_minor must be an integer\u0022}]}"
+      }
+    ]
+  }
+}

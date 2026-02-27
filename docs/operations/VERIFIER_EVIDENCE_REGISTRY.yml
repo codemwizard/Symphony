@@ -104,6 +104,48 @@ registry:
   scripts/audit/verify_ten_001_ingress_tenant_context.sh:
     emits:
       - evidence/phase1/ten_001_ingress_tenant_context.json
+  scripts/audit/verify_ten_002_rls_leakage.sh:
+    emits:
+      - evidence/phase1/ten_002_rls_leakage.json
+  scripts/audit/verify_ten_003_tenant_onboarding_admin.sh:
+    emits:
+      - evidence/phase1/ten_003_tenant_onboarding_admin.json
+  scripts/audit/verify_adp_001_adapter_contract_tests.sh:
+    emits:
+      - evidence/phase1/adp_001_adapter_contract_tests.json
+  scripts/audit/verify_adp_002_simulated_rail_adapter.sh:
+    emits:
+      - evidence/phase1/adp_002_simulated_rail_adapter.json
+  scripts/audit/verify_adp_003_deterministic_rail_routing.sh:
+    emits:
+      - evidence/phase1/adp_003_deterministic_rail_routing.json
+  scripts/audit/verify_led_001_invariants_ci_cluster.sh:
+    emits:
+      - evidence/phase1/led_001_invariants_ci_cluster.json
+  scripts/audit/verify_led_003_canonical_message_model.sh:
+    emits:
+      - evidence/phase1/led_003_canonical_message_model.json
+  scripts/audit/verify_led_004_kyc_hash_bridge_endpoint.sh:
+    emits:
+      - evidence/phase1/led_004_kyc_hash_bridge_endpoint.json
+  scripts/audit/verify_led_002_retention_archive_restore.sh:
+    emits:
+      - evidence/phase1/led_002_retention_archive_restore.json
+  scripts/audit/verify_tsk_p1_reg_001.sh:
+    emits:
+      - evidence/phase1/tsk_p1_reg_001__boz_observability_role_read_only_views.json
+  scripts/audit/verify_reg_002_daily_report_signed_output.sh:
+    emits:
+      - evidence/phase1/reg_002_daily_report_signed_output.json
+  scripts/audit/verify_reg_003_incident_48h_export.sh:
+    emits:
+      - evidence/phase1/reg_003_incident_48h_export.json
+  scripts/audit/verify_tsk_p1_202.sh:
+    emits:
+      - evidence/phase1/tsk_p1_202__closeout_verifier_scaffold_fail_if_contract.json
+  scripts/perf/verify_perf_004.sh:
+    emits:
+      - evidence/phase1/perf_004__perf_contracts_closeout_checks_extends_verify.json
   scripts/audit/verify_drd_policy_usage.sh:
     emits:
       - evidence/phase0/drd_policy_usage.json

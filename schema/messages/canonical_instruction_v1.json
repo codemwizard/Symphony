@@ -1,0 +1,52 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://symphony.local/schema/messages/canonical_instruction_v1.json",
+  "$schema_version": "v1",
+  "title": "Canonical Instruction v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "instruction_id",
+    "tenant_id",
+    "rail_type",
+    "amount_minor",
+    "currency_code",
+    "beneficiary_ref_hash",
+    "idempotency_key",
+    "submitted_at_utc"
+  ],
+  "properties": {
+    "instruction_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "tenant_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "rail_type": {
+      "type": "string",
+      "minLength": 1
+    },
+    "amount_minor": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "currency_code": {
+      "type": "string",
+      "pattern": "^[A-Z]{3}$"
+    },
+    "beneficiary_ref_hash": {
+      "type": "string",
+      "minLength": 1
+    },
+    "idempotency_key": {
+      "type": "string",
+      "minLength": 1
+    },
+    "submitted_at_utc": {
+      "type": "string",
+      "format": "date-time"
+    }
+  }
+}

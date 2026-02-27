@@ -1,0 +1,16 @@
+{
+  "check_id": "REG-001-BOZ-OBSERVABILITY-READONLY",
+  "task_id": "TSK-P1-REG-001",
+  "timestamp_utc": "2026-02-26T02:01:37Z",
+  "git_sha": "ef29c96ab106c2e2b58fd5cd649843df0ba13fe1",
+  "status": "PASS",
+  "pass": true,
+  "details": {
+    "role_declared": true,
+    "read_only_markers": true,
+    "reconstruction_queries_present": true,
+    "runtime_dml_denied": "not_run",
+    "runtime_reconstruction_ok": "not_run",
+    "reconstruction_queries_file": "scripts/audit/sql/boz_reconstruction_queries.sql"
+  }
+}

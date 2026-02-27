@@ -1,0 +1,281 @@
+{
+  "check_id": "TEN-002-RLS-LEAKAGE",
+  "task_id": "TSK-P1-TEN-002",
+  "status": "PASS",
+  "pass": true,
+  "timestamp_utc": "2026-02-25T22:06:26Z",
+  "git_sha": "0b3964e48a6dd7303b08145039e2ee690e621689",
+  "schema_fingerprint": "6772e3bfe1040858a7809079d89082cebe35f5b61dece987360be86909660924",
+  "tenant_table_count": 19,
+  "rls_tables": [
+    {
+      "table": "billing_usage_events",
+      "rls_enabled": true,
+      "rls_forced": true,
+      "restrictive_policy_tenant_bound": true
+    },
+    {
+      "table": "escrow_accounts",
+      "rls_enabled": true,
+      "rls_forced": true,
+      "restrictive_policy_tenant_bound": true
+    },
+    {
+      "table": "escrow_envelopes",
+      "rls_enabled": true,
+      "rls_forced": true,
+      "restrictive_policy_tenant_bound": true
+    },
+    {
+      "table": "escrow_events",
+      "rls_enabled": true,
+      "rls_forced": true,
+      "restrictive_policy_tenant_bound": true
+    },
+    {
+      "table": "escrow_reservations",
+      "rls_enabled": true,
+      "rls_forced": true,
+      "restrictive_policy_tenant_bound": true
+    },
+    {
+      "table": "external_proofs",
+      "rls_enabled": true,
+      "rls_forced": true,
+      "restrictive_policy_tenant_bound": true
+    },
+    {
+      "table": "ingress_attestations",
+      "rls_enabled": true,
+      "rls_forced": true,
+      "restrictive_policy_tenant_bound": true
+    },
+    {
+      "table": "member_device_events",
+      "rls_enabled": true,
+      "rls_forced": true,
+      "restrictive_policy_tenant_bound": true
+    },
+    {
+      "table": "member_devices",
+      "rls_enabled": true,
+      "rls_forced": true,
+      "restrictive_policy_tenant_bound": true
+    },
+    {
+      "table": "members",
+      "rls_enabled": true,
+      "rls_forced": true,
+      "restrictive_policy_tenant_bound": true
+    },
+    {
+      "table": "payment_outbox_attempts",
+      "rls_enabled": true,
+      "rls_forced": true,
+      "restrictive_policy_tenant_bound": true
+    },
+    {
+      "table": "payment_outbox_pending",
+      "rls_enabled": true,
+      "rls_forced": true,
+      "restrictive_policy_tenant_bound": true
+    },
+    {
+      "table": "persons",
+      "rls_enabled": true,
+      "rls_forced": true,
+      "restrictive_policy_tenant_bound": true
+    },
+    {
+      "table": "program_migration_events",
+      "rls_enabled": true,
+      "rls_forced": true,
+      "restrictive_policy_tenant_bound": true
+    },
+    {
+      "table": "programs",
+      "rls_enabled": true,
+      "rls_forced": true,
+      "restrictive_policy_tenant_bound": true
+    },
+    {
+      "table": "sim_swap_alerts",
+      "rls_enabled": true,
+      "rls_forced": true,
+      "restrictive_policy_tenant_bound": true
+    },
+    {
+      "table": "tenant_clients",
+      "rls_enabled": true,
+      "rls_forced": true,
+      "restrictive_policy_tenant_bound": true
+    },
+    {
+      "table": "tenant_members",
+      "rls_enabled": true,
+      "rls_forced": true,
+      "restrictive_policy_tenant_bound": true
+    },
+    {
+      "table": "tenants",
+      "rls_enabled": true,
+      "rls_forced": true,
+      "restrictive_policy_tenant_bound": true
+    }
+  ],
+  "leakage_tests": [
+    {
+      "table": "billing_usage_events",
+      "seeded": false,
+      "blocked": true,
+      "policy": "rls_tenant_isolation_billing_usage_events"
+    },
+    {
+      "table": "escrow_accounts",
+      "seeded": false,
+      "blocked": true,
+      "policy": "rls_tenant_isolation_escrow_accounts"
+    },
+    {
+      "table": "escrow_envelopes",
+      "seeded": false,
+      "blocked": true,
+      "policy": "rls_tenant_isolation_escrow_envelopes"
+    },
+    {
+      "table": "escrow_events",
+      "seeded": false,
+      "blocked": true,
+      "policy": "rls_tenant_isolation_escrow_events"
+    },
+    {
+      "table": "escrow_reservations",
+      "seeded": true,
+      "blocked": true,
+      "policy": "rls_tenant_isolation_escrow_reservations"
+    },
+    {
+      "table": "external_proofs",
+      "seeded": false,
+      "blocked": true,
+      "policy": "rls_tenant_isolation_external_proofs"
+    },
+    {
+      "table": "ingress_attestations",
+      "seeded": false,
+      "blocked": true,
+      "policy": "rls_tenant_isolation_ingress_attestations"
+    },
+    {
+      "table": "member_device_events",
+      "seeded": false,
+      "blocked": true,
+      "policy": "rls_tenant_isolation_member_device_events"
+    },
+    {
+      "table": "member_devices",
+      "seeded": true,
+      "blocked": true,
+      "policy": "rls_tenant_isolation_member_devices"
+    },
+    {
+      "table": "members",
+      "seeded": true,
+      "blocked": true,
+      "policy": "rls_tenant_isolation_members"
+    },
+    {
+      "table": "payment_outbox_attempts",
+      "seeded": false,
+      "blocked": true,
+      "policy": "rls_tenant_isolation_payment_outbox_attempts"
+    },
+    {
+      "table": "payment_outbox_pending",
+      "seeded": false,
+      "blocked": true,
+      "policy": "rls_tenant_isolation_payment_outbox_pending"
+    },
+    {
+      "table": "persons",
+      "seeded": true,
+      "blocked": true,
+      "policy": "rls_tenant_isolation_persons"
+    },
+    {
+      "table": "program_migration_events",
+      "seeded": true,
+      "blocked": true,
+      "policy": "rls_tenant_isolation_program_migration_events"
+    },
+    {
+      "table": "programs",
+      "seeded": true,
+      "blocked": true,
+      "policy": "rls_tenant_isolation_programs"
+    },
+    {
+      "table": "sim_swap_alerts",
+      "seeded": true,
+      "blocked": true,
+      "policy": "rls_tenant_isolation_sim_swap_alerts"
+    },
+    {
+      "table": "tenant_clients",
+      "seeded": true,
+      "blocked": true,
+      "policy": "rls_tenant_isolation_tenant_clients"
+    },
+    {
+      "table": "tenant_members",
+      "seeded": true,
+      "blocked": true,
+      "policy": "rls_tenant_isolation_tenant_members"
+    },
+    {
+      "table": "tenants",
+      "seeded": true,
+      "blocked": true,
+      "policy": "rls_tenant_isolation_tenants"
+    }
+  ],
+  "exemptions": [
+    {
+      "table": "billing_usage_events",
+      "reason": "no_seeded_row_available_for_leakage_probe"
+    },
+    {
+      "table": "escrow_accounts",
+      "reason": "no_seeded_row_available_for_leakage_probe"
+    },
+    {
+      "table": "escrow_envelopes",
+      "reason": "no_seeded_row_available_for_leakage_probe"
+    },
+    {
+      "table": "escrow_events",
+      "reason": "no_seeded_row_available_for_leakage_probe"
+    },
+    {
+      "table": "external_proofs",
+      "reason": "no_seeded_row_available_for_leakage_probe"
+    },
+    {
+      "table": "ingress_attestations",
+      "reason": "no_seeded_row_available_for_leakage_probe"
+    },
+    {
+      "table": "member_device_events",
+      "reason": "no_seeded_row_available_for_leakage_probe"
+    },
+    {
+      "table": "payment_outbox_attempts",
+      "reason": "no_seeded_row_available_for_leakage_probe"
+    },
+    {
+      "table": "payment_outbox_pending",
+      "reason": "no_seeded_row_available_for_leakage_probe"
+    }
+  ],
+  "failures": []
+}
