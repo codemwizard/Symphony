@@ -1,0 +1,13 @@
+{
+  "task_id": "R-000",
+  "check_id": "R-000-BIND-LOCALHOST",
+  "timestamp_utc": "2026-03-03T02:52:28Z",
+  "git_sha": "654d0a7b79a314b25acffbc16b752cb13bb9d7ad",
+  "schema_fingerprint": "8066e70aafdc28540785da569dfbda5ebb13a2710d7f31e1b395cf2b3323bb15",
+  "status": "PASS",
+  "bind_address": "localhost",
+  "external_reachability": false,
+  "admin_bypass_present": false,
+  "admin_auth_required": true,
+  "errors": []
+}

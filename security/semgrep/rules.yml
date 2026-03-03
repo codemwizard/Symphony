@@ -23,3 +23,24 @@ rules:
     pattern: |
       new Random(...)
 
+  - id: symphony-admin-claim-bypass
+    languages: [csharp]
+    message: >
+      Admin authentication bypass via x-admin-claim header detected.
+      Admin endpoints must require ADMIN_API_KEY; header-based claim trust is forbidden.
+    severity: ERROR
+    pattern-either:
+      - pattern: |
+          ReadHeader($CTX, "x-admin-claim")
+      - pattern: |
+          $CTX.Request.Headers.TryGetValue("x-admin-claim", ...)
+
+  - id: symphony-secret-fallback-literal
+    languages: [csharp]
+    message: >
+      Hardcoded secret fallback via ?? operator detected.
+      Use ?? throw or fail-closed patterns instead of literal fallbacks.
+    severity: ERROR
+    pattern: |
+      Environment.GetEnvironmentVariable("EVIDENCE_SIGNING_KEY") ?? "..."
+

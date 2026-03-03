@@ -1,0 +1,604 @@
+# docs/contracts/SECURITY_REMEDIATION_DOD.yml
+# ──────────────────────────────────────────────────────────────────
+# Final, commit-ready DOD aligned with:
+#   - evidence_schemas/*.schema.json  (21 files at repo root)
+#   - Existing CI jobs in .github/workflows/invariants.yml
+#   - Script path convention: lints → scripts/security/, verifiers → scripts/audit/
+# ──────────────────────────────────────────────────────────────────
+manifest_version: "1.0"
+evidence_root: "evidence/security_remediation"
+schema_root: "evidence_schemas"
+
+# Map ONLY to jobs that exist today in invariants.yml.
+ci_jobs:
+  - security_scan            # line 634
+  - mechanical_invariants    # line 16
+  - db_verify_invariants     # line 442
+  - phase0_evidence_gate     # line 719
+
+global_requirements:
+  fail_closed: true
+  required_evidence_fields: [task_id, git_sha, timestamp_utc, status, checks]
+  required_check_fields: [id, description, status, details]
+  minimum_negative_tests_per_task: 1
+
+conventions:
+  lint_root: "scripts/security"
+  verifier_root: "scripts/audit"
+
+tasks:
+
+  # ============================================================
+  # Phase 0.1 — Containment
+  # ============================================================
+
+  - task_id: R-000
+    phase: "0.1"
+    title: "Contain supervisor_api + admin bypass"
+    intent: "Immediately remove remote exploitability and unauthenticated admin access."
+    changes_required:
+      - "VERIFY supervisor_api bind is 127.0.0.1; add regression gate to prevent change."
+      - "Remove x-admin-claim header bypass everywhere."
+      - "Require ADMIN_API_KEY for admin endpoints."
+      - "Fail closed if ADMIN_API_KEY missing (service refuses admin ops or fails startup; choose one and document)."
+    dod:
+      acceptance_checks:
+        - id: R-000-A1
+          description: "Regression gate: supervisor_api bind is localhost-only in non-dev"
+          status: REQUIRED
+          ci_gate:
+            job: mechanical_invariants
+            command: "bash scripts/audit/verify_supervisor_bind_localhost.sh --deny-0.0.0.0"
+        - id: R-000-A2
+          description: "Admin bypass removed (no trust in x-admin-claim header)"
+          status: REQUIRED
+          ci_gate:
+            job: security_scan
+            command: "semgrep --config security/semgrep --severity ERROR --error"
+        - id: R-000-A3
+          description: "ADMIN_API_KEY enforced (self-test / integration gate)"
+          status: REQUIRED
+          ci_gate:
+            job: db_verify_invariants
+            command: "bash scripts/audit/test_admin_endpoints_require_key.sh"
+      negative_tests:
+        - id: R-000-N1
+          description: "Admin endpoint rejects requests without ADMIN_API_KEY"
+          required: true
+        - id: R-000-N2
+          description: "Admin endpoint rejects requests with incorrect ADMIN_API_KEY"
+          required: true
+      positive_tests:
+        - id: R-000-P1
+          description: "Admin endpoint succeeds with correct ADMIN_API_KEY"
+          required: true
+      evidence:
+        path: "evidence/security_remediation/r_000_containment.json"
+        schema: "evidence_schemas/r_000_containment.schema.json"
+        must_include: [bind_address, external_reachability, admin_bypass_present, admin_auth_required]
+
+  # ============================================================
+  # Phase 0.2 — Emergency Code Fixes
+  # ============================================================
+
+  - task_id: R-001
+    phase: "0.2"
+    title: "Fail hard on missing signing keys"
+    intent: "Eliminate hardcoded fallback signing keys and fail closed when signing config is missing."
+    changes_required:
+      - "Replace any null-coalesce fallback (?? \"...dev-signing-key\") with hard failure."
+      - "Remove any literal signing key material from repo."
+      - "Decide behavior: fail startup OR fail signing ops deterministically; document."
+    dod:
+      acceptance_checks:
+        - id: R-001-A1
+          description: "No literal dev signing keys remain in repo"
+          status: REQUIRED
+          ci_gate:
+            job: security_scan
+            command: "bash scripts/security/scan_secrets.sh --deny-pattern 'dev-signing-key|phase1-reg-.*-dev-signing-key'"
+        - id: R-001-A1b
+          description: "Structural gate: Semgrep rejects secret env var ?? 'literal' fallback patterns"
+          status: REQUIRED
+          ci_gate:
+            job: security_scan
+            command: "semgrep --config security/semgrep --error"
+        - id: R-001-A2
+          description: "Missing signing key fails closed (self-test gate)"
+          status: REQUIRED
+          ci_gate:
+            job: db_verify_invariants
+            command: "bash scripts/audit/test_missing_signing_key_fails_closed.sh"
+      negative_tests:
+        - id: R-001-N1
+          description: "Unset signing key causes deterministic failure (startup or operation)"
+          required: true
+      evidence:
+        path: "evidence/security_remediation/r_001_signing_keys.json"
+        schema: "evidence_schemas/r_001_signing_keys.schema.json"
+        must_include: [hardcoded_fallbacks_found, fails_closed_without_key, signing_key_present_at_startup, signing_endpoint_returns_503_when_key_missing]
+
+  - task_id: R-002
+    phase: "0.2"
+    title: "Tenant allowlist deny-all default"
+    intent: "If known tenants are not configured, deny all requests requiring tenant context."
+    changes_required:
+      - "Unconfigured SYMPHONY_KNOWN_TENANTS => reject all tenant-scoped requests."
+      - "Configured allowlist => only listed tenants accepted."
+    dod:
+      acceptance_checks:
+        - id: R-002-A1
+          description: "Deny-all when allowlist missing/empty"
+          status: REQUIRED
+          ci_gate:
+            job: db_verify_invariants
+            command: "bash scripts/audit/test_tenant_allowlist_deny_all.sh"
+        - id: R-002-A2
+          description: "Reject unknown tenants when allowlist configured"
+          status: REQUIRED
+          ci_gate:
+            job: db_verify_invariants
+            command: "bash scripts/audit/test_tenant_allowlist_unknown_reject.sh"
+      negative_tests:
+        - id: R-002-N1
+          description: "Any tenant request denied when allowlist unset"
+          required: true
+      positive_tests:
+        - id: R-002-P1
+          description: "Known tenant accepted when allowlist set"
+          required: true
+      evidence:
+        path: "evidence/security_remediation/r_002_tenant_allowlist.json"
+        schema: "evidence_schemas/r_002_tenant_allowlist.schema.json"
+        must_include: [deny_all_when_unconfigured, unknown_tenant_rejected, known_tenant_accepted, returns_503_on_unconfigured_allowlist]
+
+  # ============================================================
+  # Phase 0.5 — Enforcement Repair
+  # ============================================================
+
+  - task_id: R-018
+    phase: "0.5"
+    title: "Policy scope + enforcement mapping reform"
+    intent: "Make policies language-agnostic and create a CI-validated enforcement map."
+    changes_required:
+      - "Update all policy docs to scope 'all backend languages'."
+      - "Create SECURITY_ENFORCEMENT_MAP.yml with schema validation."
+      - "Map parameterized query enforcement to CI (not PR-only)."
+    dod:
+      acceptance_checks:
+        - id: R-018-A1
+          description: "Policy docs explicitly include C# and Python"
+          status: REQUIRED
+          ci_gate:
+            job: mechanical_invariants
+            command: "bash scripts/audit/verify_policy_scope_all_languages.sh"
+        - id: R-018-A2
+          description: "SECURITY_ENFORCEMENT_MAP.yml validates against schema"
+          status: REQUIRED
+          ci_gate:
+            job: mechanical_invariants
+            command: "bash scripts/audit/validate_security_enforcement_map.sh"
+        - id: R-018-A3
+          description: "Parameterized queries control is CI-enforced in map"
+          status: REQUIRED
+          ci_gate:
+            job: mechanical_invariants
+            command: "bash scripts/audit/verify_enforcement_map_parameterization_ci.sh"
+      evidence:
+        path: "evidence/security_remediation/r_018_policy_enforcement_map.json"
+        schema: "evidence_schemas/r_018_policy_enforcement_map.schema.json"
+        must_include: [policy_scope_languages, parameterization_ci_enforced]
+
+  - task_id: R-019
+    phase: "0.5"
+    title: "Lint scope expansion + real SQL injection lint"
+    intent: "Fix misleading lint naming and implement actual application-layer SQLi detection for C# and Python."
+    changes_required:
+      - "Rename scripts/security/lint_sql_injection.sh => scripts/security/lint_security_definer_search_path.sh and update references."
+      - "Create scripts/security/lint_app_sql_injection.sh scanning *.py and *.cs."
+      - "Add *.py to scripts/security/lint_insecure_patterns.sh globs."
+      - "Seed fixtures: bad fails, good passes."
+    dod:
+      acceptance_checks:
+        - id: R-019-A1
+          description: "Misnamed lint renamed and references updated"
+          status: REQUIRED
+          ci_gate:
+            job: mechanical_invariants
+            command: "bash scripts/audit/verify_lint_renames_applied.sh"
+        - id: R-019-A2
+          description: "lint_app_sql_injection.sh runs in security_scan"
+          status: REQUIRED
+          ci_gate:
+            job: security_scan
+            command: "bash scripts/security/lint_app_sql_injection.sh"
+        - id: R-019-A3
+          description: "Fixture suite enforces bad fails, good passes"
+          status: REQUIRED
+          ci_gate:
+            job: security_scan
+            command: "bash scripts/security/run_lint_fixtures.sh --suite app_sql_injection"
+      evidence:
+        path: "evidence/security_remediation/r_019_lint_coverage.json"
+        schema: "evidence_schemas/r_019_lint_coverage.schema.json"
+        must_include: [files_scanned_py, files_scanned_cs, matches_found, fixtures_passed]
+
+  - task_id: R-020
+    phase: "0.5"
+    title: "Semgrep expansion (Python + C#)"
+    intent: "Add Semgrep rules that directly match shipped findings; enforce via semgrep --test."
+    changes_required:
+      - "Add 6 Semgrep rules (Python + C#)."
+      - "Each rule has pass + fail tests."
+      - "semgrep --test runs in CI."
+    dod:
+      acceptance_checks:
+        - id: R-020-A1
+          description: "semgrep --test passes"
+          status: REQUIRED
+          ci_gate:
+            job: security_scan
+            command: "semgrep --config security/semgrep --test"
+        - id: R-020-A2
+          description: "Rules cover Python and C#"
+          status: REQUIRED
+          ci_gate:
+            job: mechanical_invariants
+            command: "bash scripts/audit/verify_semgrep_languages.sh --require py --require cs"
+      evidence:
+        path: "evidence/security_remediation/r_020_semgrep_rules.json"
+        schema: "evidence_schemas/r_020_semgrep_rules.schema.json"
+        must_include: [rule_count, languages, tests_passed]
+
+  - task_id: R-021
+    phase: "0.5"
+    title: "CI gate — parameterization is CI-enforced"
+    intent: "Make parameterization enforcement fail-closed in CI, with audited suppression."
+    changes_required:
+      - "Run lint_app_sql_injection + semgrep in security_scan."
+      - "Fail closed on match."
+      - "Define suppression mechanism with justification + expiry + audit."
+    dod:
+      acceptance_checks:
+        - id: R-021-A1
+          description: "security_scan runs lint_app_sql_injection and semgrep"
+          status: REQUIRED
+          ci_gate:
+            job: security_scan
+            command: "bash scripts/audit/verify_ci_security_scan_includes.sh --require scripts/security/lint_app_sql_injection.sh --require semgrep"
+        - id: R-021-A2
+          description: "security_scan is fail-closed (no warn-only)"
+          status: REQUIRED
+          ci_gate:
+            job: security_scan
+            command: "bash scripts/audit/verify_security_scan_fail_closed.sh"
+        - id: R-021-A3
+          description: "Suppressions require justification+expiry and are audited in CI"
+          status: REQUIRED
+          ci_gate:
+            job: security_scan
+            command: "bash scripts/security/audit_lint_suppressions.sh"
+      evidence:
+        path: "evidence/security_remediation/r_021_ci_sql_guard.json"
+        schema: "evidence_schemas/r_021_ci_sql_guard.schema.json"
+        must_include: [lint_enabled, semgrep_enabled, fail_closed_confirmed, suppression_audit_enabled]
+
+  - task_id: R-022
+    phase: "0.5"
+    title: "Security tooling coverage contract"
+    intent: "Fail CI if languages exist without scanners; fail if declared tools missing."
+    changes_required:
+      - "SECURITY_SCAN_SCOPE.yml declares languages, tools, paths, exclusions."
+      - "verify_scan_scope.sh validates coverage and tool existence."
+    dod:
+      acceptance_checks:
+        - id: R-022-A1
+          description: "SECURITY_SCAN_SCOPE.yml validates against schema"
+          status: REQUIRED
+          ci_gate:
+            job: mechanical_invariants
+            command: "bash scripts/audit/validate_scan_scope_contract.sh"
+        - id: R-022-A2
+          description: "verify_scan_scope.sh enforces 'python present => scanned'"
+          status: REQUIRED
+          ci_gate:
+            job: mechanical_invariants
+            command: "bash scripts/audit/verify_scan_scope.sh"
+      evidence:
+        path: "evidence/security_remediation/r_022_scan_scope.json"
+        schema: "evidence_schemas/r_022_scan_scope.schema.json"
+        must_include: [detected_languages, enabled_tools, missing_coverage]
+
+  # ============================================================
+  # Phase 1 — Code Fixes
+  # ============================================================
+
+  - task_id: R-003
+    phase: "1"
+    title: "Rewrite supervisor_api with psycopg parameterized queries"
+    intent: "Eliminate SQL injection via parameterization and remove insecure http.server defaults if needed."
+    changes_required:
+      - "Zero f-string/.format()/concat SQL in supervisor_api."
+      - "All DB calls use psycopg parameterization."
+      - "No subprocess psql with interpolated SQL."
+    dod:
+      acceptance_checks:
+        - id: R-003-A1
+          description: "Lint + Semgrep pass (Python SQL rules enabled)"
+          status: REQUIRED
+          ci_gate:
+            job: security_scan
+            command: "bash scripts/security/lint_app_sql_injection.sh && semgrep --config security/semgrep --error"
+        - id: R-003-A2
+          description: "SQLi vector tests pass (no semantic alteration)"
+          status: REQUIRED
+          ci_gate:
+            job: db_verify_invariants
+            command: "bash scripts/audit/test_supervisor_sql_injection_vectors.sh"
+        - id: R-003-A3
+          description: "Access logging does not emit Authorization header (log redaction)"
+          status: REQUIRED
+          ci_gate:
+            job: db_verify_invariants
+            command: "bash scripts/audit/test_log_redaction_authorization.sh"
+      evidence:
+        path: "evidence/security_remediation/r_003_supervisor_param_queries.json"
+        schema: "evidence_schemas/r_003_supervisor_param_queries.schema.json"
+        must_include: [dynamic_sql_patterns_found, sqli_test_vectors_passed, log_redaction_confirmed]
+
+  - task_id: R-004
+    phase: "1"
+    title: "Move audit token to Authorization: Bearer header"
+    intent: "Prevent querystring leakage; accept Bearer only."
+    changes_required:
+      - "?token= no longer accepted."
+      - "Authorization: Bearer required."
+    dod:
+      acceptance_checks:
+        - id: R-004-A1
+          description: "Querystring token rejected"
+          status: REQUIRED
+          ci_gate:
+            job: db_verify_invariants
+            command: "bash scripts/audit/test_token_querystring_rejected.sh"
+        - id: R-004-A2
+          description: "Authorization Bearer accepted"
+          status: REQUIRED
+          ci_gate:
+            job: db_verify_invariants
+            command: "bash scripts/audit/test_authorization_bearer_accepted.sh"
+      evidence:
+        path: "evidence/security_remediation/r_004_token_transport.json"
+        schema: "evidence_schemas/r_004_token_transport.schema.json"
+        must_include: [querystring_token_rejected, bearer_token_accepted]
+
+  # ============================================================
+  # Phase 2 — High Severity
+  # ============================================================
+
+  - task_id: R-005
+    phase: "2"
+    title: "Fix SecureEquals length leak (hash-then-compare)"
+    intent: "Prevent timing side-channel via length-based early returns."
+    changes_required:
+      - "Normalize inputs to fixed-length (hash) and compare constant-time."
+    dod:
+      acceptance_checks:
+        - id: R-005-A1
+          description: "Semgrep timing compare rule passes"
+          status: REQUIRED
+          ci_gate:
+            job: security_scan
+            command: "semgrep --config security/semgrep --error"
+        - id: R-005-A2
+          description: "Self-test covers secure compare behavior"
+          status: REQUIRED
+          ci_gate:
+            job: db_verify_invariants
+            command: "bash scripts/audit/test_secure_equals_no_length_leak.sh"
+      evidence:
+        path: "evidence/security_remediation/r_005_secure_equals.json"
+        schema: "evidence_schemas/r_005_secure_equals.schema.json"
+        must_include: [tests_passed]
+
+  - task_id: R-006
+    phase: "2"
+    title: "Add rate limiting middleware + request size limits"
+    intent: "Reduce brute force and DoS risk."
+    changes_required:
+      - "Rate limiting enabled for sensitive endpoints."
+      - "Body size limits enforced."
+    dod:
+      acceptance_checks:
+        - id: R-006-A1
+          description: "429 on burst"
+          status: REQUIRED
+          ci_gate:
+            job: db_verify_invariants
+            command: "bash scripts/audit/test_rate_limit_429.sh"
+        - id: R-006-A2
+          description: "413 (or deterministic reject) on oversized body"
+          status: REQUIRED
+          ci_gate:
+            job: db_verify_invariants
+            command: "bash scripts/audit/test_body_limit_413.sh"
+      evidence:
+        path: "evidence/security_remediation/r_006_rate_limits.json"
+        schema: "evidence_schemas/r_006_rate_limits.schema.json"
+        must_include: [rate_limit_enabled, body_limit_bytes, tests_passed]
+
+  # ============================================================
+  # Phase 3 — Infrastructure Hardening
+  # ============================================================
+
+  - task_id: R-007
+    phase: "3"
+    title: "Pin OpenBao image + prod config + enable mlock"
+    intent: "Eliminate dev-mode secret mgmt and pin images."
+    changes_required:
+      - "OpenBao not dev in non-dev."
+      - "No dev root tokens outside examples."
+      - "Image pinned by digest."
+      - "mlock enabled where supported."
+    dod:
+      acceptance_checks:
+        - id: R-007-A1
+          description: "Verify OpenBao not dev"
+          status: REQUIRED
+          ci_gate:
+            job: mechanical_invariants
+            command: "bash scripts/audit/verify_openbao_not_dev.sh"
+        - id: R-007-A2
+          description: "Images pinned by digest"
+          status: REQUIRED
+          ci_gate:
+            job: mechanical_invariants
+            command: "bash scripts/audit/verify_container_images_pinned.sh --service openbao"
+      evidence:
+        path: "evidence/security_remediation/r_007_openbao_hardening.json"
+        schema: "evidence_schemas/r_007_openbao_hardening.schema.json"
+        must_include: [image_pinned_digest, mlock_enabled]
+
+  - task_id: R-008
+    phase: "3"
+    title: "Pin Postgres CI image to digest"
+    intent: "Prevent supply chain drift in CI."
+    dod:
+      acceptance_checks:
+        - id: R-008-A1
+          description: "CI images pinned"
+          status: REQUIRED
+          ci_gate:
+            job: mechanical_invariants
+            command: "bash scripts/audit/verify_ci_images_pinned_to_digest.sh --image postgres"
+      evidence:
+        path: "evidence/security_remediation/r_008_ci_image_pins.json"
+        schema: "evidence_schemas/r_008_ci_image_pins.schema.json"
+        must_include: [postgres_image_ref]
+
+  - task_id: R-009
+    phase: "3"
+    title: "Restrict AllowedHosts"
+    intent: "Avoid host header attacks in non-dev."
+    dod:
+      acceptance_checks:
+        - id: R-009-A1
+          description: "AllowedHosts not wildcard outside dev"
+          status: REQUIRED
+          ci_gate:
+            job: mechanical_invariants
+            command: "bash scripts/audit/verify_allowed_hosts_not_wildcard.sh"
+      evidence:
+        path: "evidence/security_remediation/r_009_allowed_hosts.json"
+        schema: "evidence_schemas/r_009_allowed_hosts.schema.json"
+        must_include: [allowed_hosts_value]
+
+  - task_id: R-010
+    phase: "3"
+    title: "TLS deployment docs"
+    intent: "Document TLS termination, rotation, minimums, and log redaction."
+    dod:
+      acceptance_checks:
+        - id: R-010-A1
+          description: "TLS doc sections present"
+          status: REQUIRED
+          ci_gate:
+            job: mechanical_invariants
+            command: "bash scripts/audit/verify_tls_docs_sections.sh"
+      evidence:
+        path: "evidence/security_remediation/r_010_tls_docs.json"
+        schema: "evidence_schemas/r_010_tls_docs.schema.json"
+        must_include: [sections_present]
+
+  # ============================================================
+  # Phase 4 — Cleanup & Hygiene
+  # ============================================================
+
+  - task_id: R-011
+    phase: "4"
+    title: "Remove bfg.jar"
+    intent: "Remove risky artifact and prevent re-add."
+    dod:
+      acceptance_checks:
+        - id: R-011-A1
+          description: "bfg.jar denied"
+          status: REQUIRED
+          ci_gate:
+            job: mechanical_invariants
+            command: "bash scripts/audit/denylist_repo_artifacts.sh --deny bfg.jar"
+      evidence:
+        path: "evidence/security_remediation/r_011_repo_hygiene.json"
+        schema: "evidence_schemas/r_011_repo_hygiene.schema.json"
+        must_include: [denylist_enforced]
+
+  - task_id: R-012
+    phase: "4"
+    title: "Gate dev-only test headers"
+    intent: "Dev headers cannot be used outside dev."
+    dod:
+      acceptance_checks:
+        - id: R-012-A1
+          description: "Dev-only headers rejected in non-dev"
+          status: REQUIRED
+          ci_gate:
+            job: db_verify_invariants
+            command: "bash scripts/audit/test_dev_headers_rejected_non_dev.sh"
+      evidence:
+        path: "evidence/security_remediation/r_012_dev_header_gate.json"
+        schema: "evidence_schemas/r_012_dev_header_gate.schema.json"
+        must_include: [dev_headers_gated]
+
+  - task_id: R-013
+    phase: "4"
+    title: "Audit git history for key material"
+    intent: "Detect/remediate leaked secrets in git history."
+    dod:
+      acceptance_checks:
+        - id: R-013-A1
+          description: "History scan report exists"
+          status: REQUIRED
+          ci_gate:
+            job: phase0_evidence_gate
+            command: "bash scripts/audit/verify_history_secret_scan_report_present.sh"
+      evidence:
+        path: "evidence/security_remediation/r_013_git_secret_audit.json"
+        schema: "evidence_schemas/r_013_git_secret_audit.schema.json"
+        must_include: [history_scanned, findings_count, rotations_performed]
+
+  # ============================================================
+  # Phase 5 — Code Quality
+  # ============================================================
+
+  - task_id: R-014
+    phase: "5"
+    title: "Decompose Program.cs monolith"
+    intent: "Refactor without changing behavior; keep existing self-test harness as gate."
+    dod:
+      acceptance_checks:
+        - id: R-014-A1
+          description: "Existing self-test gates pass (no xUnit dependency)"
+          status: REQUIRED
+          ci_gate:
+            job: db_verify_invariants
+            command: "bash scripts/audit/run_dotnet_self_tests.sh"
+      evidence:
+        path: "evidence/security_remediation/r_014_refactor.json"
+        schema: "evidence_schemas/r_014_refactor.schema.json"
+        must_include: [refactor_completed, self_tests_passed]
+
+  - task_id: R-015
+    phase: "5"
+    title: "Create xUnit test project"
+    intent: "Introduce durable automated unit tests and run them in CI."
+    dod:
+      acceptance_checks:
+        - id: R-015-A1
+          description: "xUnit project runs in CI"
+          status: REQUIRED
+          ci_gate:
+            job: db_verify_invariants
+            command: "dotnet test"
+      evidence:
+        path: "evidence/security_remediation/r_015_tests_bootstrap.json"
+        schema: "evidence_schemas/r_015_tests_bootstrap.schema.json"
+        must_include: [test_project_exists, tests_passed]

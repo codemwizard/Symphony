@@ -1,0 +1,91 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "checks": {
+      "items": {
+        "additionalProperties": false,
+        "properties": {
+          "description": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "details": {},
+          "id": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "status": {
+            "enum": [
+              "PASS",
+              "FAIL"
+            ],
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "description",
+          "status",
+          "details"
+        ],
+        "type": "object"
+      },
+      "minItems": 1,
+      "type": "array"
+    },
+    "deny_all_when_unconfigured": {
+      "type": [
+        "string",
+        "number",
+        "integer",
+        "boolean",
+        "object",
+        "array",
+        "null"
+      ]
+    },
+    "git_sha": {
+      "minLength": 7,
+      "type": "string"
+    },
+    "known_tenant_accepted": {
+      "type": "boolean"
+    },
+    "returns_503_on_unconfigured_allowlist": {
+      "type": "boolean"
+    },
+    "status": {
+      "enum": [
+        "PASS",
+        "FAIL"
+      ],
+      "type": "string"
+    },
+    "task_id": {
+      "const": "R-002",
+      "minLength": 1,
+      "type": "string"
+    },
+    "timestamp_utc": {
+      "format": "date-time",
+      "type": "string"
+    },
+    "unknown_tenant_rejected": {
+      "type": "boolean"
+    }
+  },
+  "required": [
+    "task_id",
+    "git_sha",
+    "timestamp_utc",
+    "status",
+    "checks",
+    "deny_all_when_unconfigured",
+    "unknown_tenant_rejected",
+    "known_tenant_accepted",
+    "returns_503_on_unconfigured_allowlist"
+  ],
+  "title": "R-002 Tenant Allowlist Evidence",
+  "type": "object"
+}
