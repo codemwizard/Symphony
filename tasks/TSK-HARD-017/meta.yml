@@ -1,0 +1,39 @@
+phase: '1'
+task_id: TSK-HARD-017
+title: Schema drift anomaly circuit breaker
+owner_role: SUPERVISOR
+status: planned
+depends_on:
+- TSK-HARD-016
+- TSK-OPS-A1-STABILITY-GATE
+touches:
+- docs/programs/symphony-hardening/HARDENING_TASK_PACKS.md
+- malformed rate monitor (rolling window per adapter/rail, fed from quarantine
+- tasks/TSK-HARD-017/EXEC_LOG.md
+- tasks/TSK-HARD-017/PLAN.md
+invariants:
+- INV-HARDENING-CANONICAL-SOURCE
+work:
+- Implement a per-adapter, per-rail circuit breaker that monitors the rolling
+- Implement exactly per canonical task block in HARDENING_TASK_PACKS.md.
+acceptance_criteria:
+- malformed rate computed per adapter_id and rail_id on a rolling window;
+verification:
+- bash scripts/audit/verify_tsk_hard_017.sh
+evidence:
+- evidence/phase1/hardening/tsk_hard_017.json
+- evidence/schemas/hardening/tsk_hard_017.schema.json
+failure_modes:
+- adapter auto-recovers without operator action => FAIL_CLOSED
+- dispatch proceeds while adapter is SUSPENDED => FAIL_CLOSED
+- suspension produces no evidence artifact => FAIL
+- threshold hardcoded rather than policy-resolved => FAIL_CLOSED
+must_read:
+- docs/operations/AI_AGENT_OPERATION_MANUAL.md
+- docs/programs/symphony-hardening/HARDENING_TASK_PACKS.md
+implementation_plan: tasks/TSK-HARD-017/PLAN.md
+implementation_log: tasks/TSK-HARD-017/EXEC_LOG.md
+notes: Generated from canonical hardening task pack source; do not edit semantics here.
+client: codex_cli
+assigned_agent: supervisor
+model: gpt-5-codex

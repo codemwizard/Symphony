@@ -1,0 +1,42 @@
+phase: '1'
+task_id: TSK-HARD-093
+title: Reporting continuity and activation controls
+owner_role: SUPERVISOR
+status: planned
+depends_on:
+- TSK-HARD-092
+touches:
+- docs/programs/symphony-hardening/HARDENING_TASK_PACKS.md
+- evidence/phase1/hardening/tsk_hard_093.json
+- policy bundle activation control for each report type
+- report sequence gap detection and alerting
+- signed report output enforcement in reporting pipeline
+- tasks/TSK-HARD-093/EXEC_LOG.md
+- tasks/TSK-HARD-093/PLAN.md
+invariants:
+- INV-HARDENING-CANONICAL-SOURCE
+work:
+- Ensure all hardening-related regulatory report outputs are signed,
+- Implement exactly per canonical task block in HARDENING_TASK_PACKS.md.
+acceptance_criteria:
+- every hardening-related regulatory report output is signed per TSK-HARD-052
+verification:
+- bash scripts/audit/verify_tsk_hard_093.sh
+evidence:
+- evidence/phase1/hardening/tsk_hard_093.json
+- evidence/schemas/hardening/tsk_hard_093.schema.json
+failure_modes:
+- report output unsigned => FAIL
+- report gap produces silent skip => FAIL_CLOSED
+- report activation not controlled by signed policy bundle => FAIL
+- gap alert evidence artifact not produced => FAIL
+- negative-path test absent => FAIL
+must_read:
+- docs/operations/AI_AGENT_OPERATION_MANUAL.md
+- docs/programs/symphony-hardening/HARDENING_TASK_PACKS.md
+implementation_plan: tasks/TSK-HARD-093/PLAN.md
+implementation_log: tasks/TSK-HARD-093/EXEC_LOG.md
+notes: Generated from canonical hardening task pack source; do not edit semantics here.
+client: codex_cli
+assigned_agent: supervisor
+model: gpt-5-codex

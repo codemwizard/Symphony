@@ -108,3 +108,8 @@ Add a verifier that cross‑checks evidence artifacts vs mapping requirements.
 
 ## Summary
 The Three‑Pillar model converts “agent helpers” into **control planes** with explicit responsibility boundaries. It makes enforcement mechanical, evidence‑backed, and consistent with Tier‑1 compliance expectations — without expanding Phase‑0 into runtime integration.
+
+## Language Scope
+This policy applies to all backend implementation languages in Symphony, including:
+- C# (.NET)
+- Python

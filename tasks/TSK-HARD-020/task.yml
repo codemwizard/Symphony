@@ -1,0 +1,12 @@
+id: TSK-HARD-020
+title: "Adjustment instruction schema and lifecycle"
+status: todo
+phase: "Hardening"
+wave: "2"
+depends_on:
+  - TSK-OPS-WAVE1-EXIT-GATE
+verifier_command: "bash scripts/audit/verify_tsk_hard_020.sh"
+evidence_path: "evidence/phase1/hardening/tsk_hard_020.json"
+schema_path: "evidence/schemas/hardening/tsk_hard_020.schema.json"
+source_of_truth: "docs/programs/symphony-hardening/HARDENING_TASK_PACKS.md"
+canonical_reference: "docs/operations/AI_AGENT_OPERATION_MANUAL.md"

@@ -1,0 +1,12 @@
+id: TSK-HARD-031
+title: "Dispatch reference allocation and registry"
+status: todo
+phase: "Hardening"
+wave: "3"
+depends_on:
+  - TSK-HARD-030
+verifier_command: "bash scripts/audit/verify_tsk_hard_031.sh"
+evidence_path: "evidence/phase1/hardening/tsk_hard_031.json"
+schema_path: "evidence/schemas/hardening/tsk_hard_031.schema.json"
+source_of_truth: "docs/programs/symphony-hardening/HARDENING_TASK_PACKS.md"
+canonical_reference: "docs/operations/AI_AGENT_OPERATION_MANUAL.md"

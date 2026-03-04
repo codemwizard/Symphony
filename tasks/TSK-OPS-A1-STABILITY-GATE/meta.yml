@@ -1,0 +1,40 @@
+phase: '1'
+task_id: TSK-OPS-A1-STABILITY-GATE
+title: Program A1 Stability Gate
+owner_role: SUPERVISOR
+status: planned
+depends_on: []
+touches:
+- docs/programs/symphony-hardening/HARDENING_TASK_PACKS.md
+- evidence/phase1/program_a1_stability_gate.json
+- evidence/phase1/sandbox_deploy_dry_run.json
+- evidence/schemas/hardening/sandbox_deploy_dry_run.schema.json
+- scripts/audit/verify_program_a1_stability_gate.sh
+- tasks/TSK-OPS-A1-STABILITY-GATE/EXEC_LOG.md
+- tasks/TSK-OPS-A1-STABILITY-GATE/PLAN.md
+invariants:
+- INV-HARDENING-CANONICAL-SOURCE
+work:
+- 'Enforce program-level A1 stability: k8s manifests valid, sandbox deploy'
+- Implement exactly per canonical task block in HARDENING_TASK_PACKS.md.
+acceptance_criteria:
+- evidence/phase1/k8s_manifests_validation.json exists and pass=true
+- evidence/phase1/sandbox_deploy_dry_run.json exists and contains all required
+verification:
+- bash scripts/audit/verify_program_a1_stability_gate.sh
+evidence:
+- evidence/phase1/program_a1_stability_gate.json
+- evidence/schemas/hardening/sandbox_deploy_dry_run.schema.json
+failure_modes:
+- k8s_manifests_validation.json missing or pass=false => FAIL_CLOSED
+- sandbox_deploy_dry_run.json missing required fields => FAIL
+- schema not registered => FAIL
+must_read:
+- docs/operations/AI_AGENT_OPERATION_MANUAL.md
+- docs/programs/symphony-hardening/HARDENING_TASK_PACKS.md
+implementation_plan: tasks/TSK-OPS-A1-STABILITY-GATE/PLAN.md
+implementation_log: tasks/TSK-OPS-A1-STABILITY-GATE/EXEC_LOG.md
+notes: Generated from canonical hardening task pack source; do not edit semantics here.
+client: codex_cli
+assigned_agent: supervisor
+model: gpt-5-codex

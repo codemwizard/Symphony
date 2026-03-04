@@ -1,0 +1,49 @@
+phase: "0.1"
+task_id: "R-000"
+title: "Contain supervisor_api + admin bypass"
+owner_role: "SECURITY_GUARDIAN"
+status: "completed"
+
+depends_on: []
+
+touches:
+  - "services/ledger-api/dotnet/src/LedgerApi/Program.cs"
+  - "scripts/audit/verify_supervisor_bind_localhost.sh"
+  - "scripts/security/lint_insecure_patterns.sh"
+
+invariants:
+  - "SEC-001"
+  - "SEC-002"
+
+work:
+  - "Add regression gate scripts/audit/verify_supervisor_bind_localhost.sh"
+  - "Remove x-admin-claim header bypass"
+  - "Require ADMIN_API_KEY"
+
+acceptance_criteria:
+  - "verify_supervisor_bind_localhost.sh passes"
+  - "Semgrep rejects x-admin-claim header"
+  - "test_admin_endpoints_require_key.sh passes"
+
+verification:
+  - "bash scripts/audit/verify_supervisor_bind_localhost.sh"
+  - "semgrep --config security/semgrep --severity ERROR --error"
+  - "bash scripts/audit/test_admin_endpoints_require_key.sh"
+
+evidence:
+  - "evidence/security_remediation/r_000_containment.json"
+
+failure_modes:
+  - "Bind drops from 127.0.0.1"
+  - "Admin endpoint bypassable without key"
+
+must_read:
+  - "docs/contracts/SECURITY_REMEDIATION_DOD.yml"
+
+implementation_plan: "docs/plans/remediation/r_000/PLAN.md"
+implementation_log: "docs/plans/remediation/r_000/EXEC_LOG.md"
+
+notes: "Registry for Phase 0.1 containment"
+client: "gemini_agent"
+assigned_agent: "security_guardian"
+model: "Gemini 3.1 Pro"

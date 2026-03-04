@@ -1,0 +1,19 @@
+id: R-008
+phase: '3'
+title: Pin Postgres CI image to digest
+status: planned
+dependencies: []
+description: Prevent supply chain drift in CI.
+affected_services:
+- security_remediation
+affected_files: []
+acceptance_criteria:
+- id: R-008-A1
+  description: CI images pinned
+verification_command: bash scripts/audit/verify_ci_images_pinned_to_digest.sh --image
+  postgres
+evidence:
+  path: evidence/security_remediation/r_008_ci_image_pins.json
+implementation_plan_path: docs/plans/remediation/r_008/PLAN.md
+source_of_truth: docs/contracts/SECURITY_REMEDIATION_DOD.yml
+canonical_reference: docs/operations/AI_AGENT_OPERATION_MANUAL.md

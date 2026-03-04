@@ -1,0 +1,49 @@
+phase: '1'
+task_id: TSK-OPS-WAVE1-EXIT-GATE
+title: Wave-1 Exit Gate
+owner_role: SUPERVISOR
+status: planned
+depends_on: []
+touches:
+- docs/programs/symphony-hardening/HARDENING_TASK_PACKS.md
+- evidence/phase1/program_wave1_exit_gate.json
+- evidence/phase1/wave1_exit/circuit_breaker_suspension.json
+- evidence/phase1/wave1_exit/conflicting_truth_containment.json
+- evidence/phase1/wave1_exit/effect_seal_mismatch_fail_closed.json
+- evidence/phase1/wave1_exit/finality_conflict_enum_confirmed.json
+- evidence/phase1/wave1_exit/inquiry_exhausted_no_autofinalize.json
+- evidence/phase1/wave1_exit/malformed_response_capture.json
+- evidence/phase1/wave1_exit/offline_safe_mode_block.json
+- scripts/audit/verify_program_wave1_exit_gate.sh
+- tasks/TSK-OPS-WAVE1-EXIT-GATE/EXEC_LOG.md
+- tasks/TSK-OPS-WAVE1-EXIT-GATE/PLAN.md
+invariants:
+- INV-HARDENING-CANONICAL-SOURCE
+work:
+- Deterministic Wave-1 pass/fail gate. All seven negative-path evidence
+- Implement exactly per canonical task block in HARDENING_TASK_PACKS.md.
+acceptance_criteria:
+- all 7 artifact paths listed in required_deliverables exist
+- each artifact validates against its corresponding schema in schema_set
+- each artifact contains pass=true
+- 'gate script is deterministic: identical inputs produce identical exit code'
+- '[MICRO-FIX-5] verify_program_wave1_exit_gate.sh must validate each of the 7'
+verification:
+- bash scripts/audit/verify_program_wave1_exit_gate.sh
+evidence:
+- evidence/phase1/program_wave1_exit_gate.json
+- evidence/schemas/hardening/wave1_exit/wave1_exit_gate.schema.json
+failure_modes:
+- any of the 7 artifacts missing => FAIL_CLOSED
+- any artifact fails schema validation => FAIL_CLOSED
+- any artifact contains pass=false => FAIL_CLOSED
+- gate script exits zero when any artifact is missing => FAIL_CLOSED
+must_read:
+- docs/operations/AI_AGENT_OPERATION_MANUAL.md
+- docs/programs/symphony-hardening/HARDENING_TASK_PACKS.md
+implementation_plan: tasks/TSK-OPS-WAVE1-EXIT-GATE/PLAN.md
+implementation_log: tasks/TSK-OPS-WAVE1-EXIT-GATE/EXEC_LOG.md
+notes: Generated from canonical hardening task pack source; do not edit semantics here.
+client: codex_cli
+assigned_agent: supervisor
+model: gpt-5-codex

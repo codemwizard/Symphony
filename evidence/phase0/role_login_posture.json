@@ -1,0 +1,9 @@
+{
+  "check_id": "DB-ROLE-LOGIN-POSTURE",
+  "timestamp_utc": "2026-03-04T03:17:20Z",
+  "git_sha": "0cca4e691cfcb5a1729ab79e08cf21858f5e9b58",
+  "schema_fingerprint": "8066e70aafdc28540785da569dfbda5ebb13a2710d7f31e1b395cf2b3323bb15",
+  "status": "PASS",
+  "roles_checked": 5,
+  "bad_roles": []
+}

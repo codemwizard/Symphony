@@ -1,0 +1,38 @@
+phase: '1'
+task_id: TSK-HARD-092
+title: Operator safety UX controls
+owner_role: SUPERVISOR
+status: planned
+depends_on:
+- TSK-HARD-091
+touches:
+- docs/programs/symphony-hardening/HARDENING_TASK_PACKS.md
+- operator safety controls document at
+- tasks/TSK-HARD-092/EXEC_LOG.md
+- tasks/TSK-HARD-092/PLAN.md
+invariants:
+- INV-HARDENING-CANONICAL-SOURCE
+work:
+- Implement operator-facing safety controls for all hardening-related
+- Implement exactly per canonical task block in HARDENING_TASK_PACKS.md.
+acceptance_criteria:
+- OPERATOR_SAFETY_CONTROLS.md exists and lists all controlled operator actions
+verification:
+- bash scripts/audit/verify_tsk_hard_092.sh
+evidence:
+- evidence/phase1/hardening/tsk_hard_092.json
+- evidence/schemas/hardening/tsk_hard_092.schema.json
+failure_modes:
+- any high-risk action permits execution without secondary approval => FAIL_CLOSED
+- secondary approval from same-role operator accepted => FAIL_CLOSED
+- any controlled action produces no evidence artifact => FAIL
+- negative-path tests absent => FAIL
+must_read:
+- docs/operations/AI_AGENT_OPERATION_MANUAL.md
+- docs/programs/symphony-hardening/HARDENING_TASK_PACKS.md
+implementation_plan: tasks/TSK-HARD-092/PLAN.md
+implementation_log: tasks/TSK-HARD-092/EXEC_LOG.md
+notes: Generated from canonical hardening task pack source; do not edit semantics here.
+client: codex_cli
+assigned_agent: supervisor
+model: gpt-5-codex

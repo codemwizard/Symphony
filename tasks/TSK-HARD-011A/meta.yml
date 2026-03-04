@@ -1,0 +1,39 @@
+phase: '1'
+task_id: TSK-HARD-011A
+title: Policy snapshot and decision evidence baseline
+owner_role: SUPERVISOR
+status: planned
+depends_on:
+- TSK-HARD-011
+touches:
+- decision event log wiring (policy_version_id recorded per decision)
+- docs/programs/symphony-hardening/HARDENING_TASK_PACKS.md
+- evidence/phase1/hardening/tsk_hard_011a.json
+- policy snapshot capture at decision time (not resolved at query time)
+- tasks/TSK-HARD-011A/EXEC_LOG.md
+- tasks/TSK-HARD-011A/PLAN.md
+invariants:
+- INV-HARDENING-CANONICAL-SOURCE
+work:
+- Ensure that every automated decision records a snapshot of the policy version
+- Implement exactly per canonical task block in HARDENING_TASK_PACKS.md.
+acceptance_criteria:
+- every automated inquiry/dispatch decision record contains policy_version_id
+verification:
+- bash scripts/audit/verify_tsk_hard_011a.sh
+evidence:
+- evidence/phase1/hardening/tsk_hard_011a.json
+- evidence/schemas/hardening/tsk_hard_011a.schema.json
+failure_modes:
+- policy_version_id resolved at query time rather than decision time => FAIL_CLOSED
+- decision record not schema-valid against inquiry_event schema => FAIL
+- deactivating policy version mutates historical decision records => FAIL_CLOSED
+must_read:
+- docs/operations/AI_AGENT_OPERATION_MANUAL.md
+- docs/programs/symphony-hardening/HARDENING_TASK_PACKS.md
+implementation_plan: tasks/TSK-HARD-011A/PLAN.md
+implementation_log: tasks/TSK-HARD-011A/EXEC_LOG.md
+notes: Generated from canonical hardening task pack source; do not edit semantics here.
+client: codex_cli
+assigned_agent: supervisor
+model: gpt-5-codex

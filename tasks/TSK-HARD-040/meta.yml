@@ -1,0 +1,42 @@
+phase: '1'
+task_id: TSK-HARD-040
+title: Privacy-preserving audit tokenization
+owner_role: SUPERVISOR
+status: planned
+depends_on:
+- TSK-HARD-098
+touches:
+- audit query interface returning tokenized references
+- docs/programs/symphony-hardening/HARDENING_TASK_PACKS.md
+- evidence/phase1/hardening/tsk_hard_040.json
+- tasks/TSK-HARD-040/EXEC_LOG.md
+- tasks/TSK-HARD-040/PLAN.md
+- tokenization scheme implementation
+- vault decoupling completion (no raw PII in evidence or audit tables)
+invariants:
+- INV-HARDENING-CANONICAL-SOURCE
+work:
+- Complete PII vault decoupling. Implement the tokenization scheme that
+- Implement exactly per canonical task block in HARDENING_TASK_PACKS.md.
+acceptance_criteria:
+- 'PII vault decoupling complete: verifier scans all evidence artifact schemas'
+verification:
+- bash scripts/audit/verify_tsk_hard_040.sh
+evidence:
+- evidence/phase1/hardening/tsk_hard_040.json
+- evidence/schemas/hardening/tsk_hard_040.schema.json
+failure_modes:
+- raw PII present in any evidence artifact or audit table => FAIL_CLOSED
+- token not stable within audit period => FAIL
+- audit query returns raw PII in response => FAIL_CLOSED
+- tokenization reversible without vault access => FAIL_CLOSED
+- negative-path tests absent => FAIL
+must_read:
+- docs/operations/AI_AGENT_OPERATION_MANUAL.md
+- docs/programs/symphony-hardening/HARDENING_TASK_PACKS.md
+implementation_plan: tasks/TSK-HARD-040/PLAN.md
+implementation_log: tasks/TSK-HARD-040/EXEC_LOG.md
+notes: Generated from canonical hardening task pack source; do not edit semantics here.
+client: codex_cli
+assigned_agent: supervisor
+model: gpt-5-codex

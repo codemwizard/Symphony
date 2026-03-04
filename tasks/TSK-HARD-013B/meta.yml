@@ -1,0 +1,41 @@
+phase: '1'
+task_id: TSK-HARD-013B
+title: Orphan and replay containment
+owner_role: SUPERVISOR
+status: planned
+depends_on:
+- TSK-HARD-101
+- TSK-HARD-014
+- TSK-OPS-A1-STABILITY-GATE
+touches:
+- docs/programs/symphony-hardening/HARDENING_TASK_PACKS.md
+- 'orphan classification logic: LATE_CALLBACK (delegated to TSK-HARD-014),'
+- tasks/TSK-HARD-013B/EXEC_LOG.md
+- tasks/TSK-HARD-013B/PLAN.md
+invariants:
+- INV-HARDENING-CANONICAL-SOURCE
+work:
+- Classify and contain orphan events (events whose parent instruction cannot
+- Implement exactly per canonical task block in HARDENING_TASK_PACKS.md.
+acceptance_criteria:
+- 'orphan events classified into exactly: LATE_CALLBACK (routed to TSK-HARD-014'
+verification:
+- bash scripts/audit/verify_tsk_hard_013b.sh
+evidence:
+- evidence/phase1/hardening/tsk_hard_013b.json
+- evidence/schemas/hardening/tsk_hard_013b.schema.json
+failure_modes:
+- replay attempt applied to instruction state => FAIL_CLOSED
+- replay detection absent (no idempotency key or fingerprint check) => FAIL_CLOSED
+- any classification type absent from implementation => FAIL
+- containment evidence artifact not schema-valid => FAIL
+- negative-path test absent => FAIL
+must_read:
+- docs/operations/AI_AGENT_OPERATION_MANUAL.md
+- docs/programs/symphony-hardening/HARDENING_TASK_PACKS.md
+implementation_plan: tasks/TSK-HARD-013B/PLAN.md
+implementation_log: tasks/TSK-HARD-013B/EXEC_LOG.md
+notes: Generated from canonical hardening task pack source; do not edit semantics here.
+client: codex_cli
+assigned_agent: supervisor
+model: gpt-5-codex

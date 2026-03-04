@@ -1,9 +1,9 @@
 {
   "check_id": "TSK-P0-208",
   "task_id": "TSK-P0-208",
-  "timestamp_utc": "2026-02-23T14:18:35Z",
-  "git_sha": "86b0f70754a3711d0d8a3ca9751b98169eb8a78a",
-  "schema_fingerprint": "472c540b81dcab3cb43980291595dd562a4f5ad2e7b2e98f6d832f740c0a1218",
+  "timestamp_utc": "2026-03-04T03:17:52Z",
+  "git_sha": "0cca4e691cfcb5a1729ab79e08cf21858f5e9b58",
+  "schema_fingerprint": "8066e70aafdc28540785da569dfbda5ebb13a2710d7f31e1b395cf2b3323bb15",
   "status": "PASS",
   "pass": true,
   "details": {
@@ -45,6 +45,7 @@
       "INT-G19",
       "INT-G20",
       "INT-G22",
+      "INT-G23",
       "SEC-G01",
       "SEC-G02",
       "SEC-G03",
@@ -79,6 +80,7 @@
       "scripts/audit/verify_routing_fallback.sh",
       "scripts/audit/verify_three_pillars_doc.sh",
       "scripts/db/tests/test_outbox_pending_indexes.sh",
+      "scripts/db/verify_boz_observability_role.sh",
       "scripts/security/dotnet_dependency_audit.sh",
       "scripts/security/lint_core_boundary.sh",
       "scripts/security/lint_ddl_lock_risk.sh",

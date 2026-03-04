@@ -1,9 +1,9 @@
 {
   "task_id": "TSK-P0-KYC-001",
   "check_id": "TSK-P0-KYC-001",
-  "timestamp_utc": "2026-02-23T08:56:32Z",
-  "git_sha": "4a5597af624e50f64fdb8ead5240e1eadc8919b5",
-  "schema_fingerprint": "884997f8c65c1146c17b148daec9f6a53b30100991f165278da0b51adb438d5f",
+  "timestamp_utc": "2026-03-04T03:17:47Z",
+  "git_sha": "0cca4e691cfcb5a1729ab79e08cf21858f5e9b58",
+  "schema_fingerprint": "8066e70aafdc28540785da569dfbda5ebb13a2710d7f31e1b395cf2b3323bb15",
   "status": "PASS",
   "pass": true,
   "table_exists": true,

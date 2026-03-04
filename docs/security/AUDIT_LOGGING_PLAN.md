@@ -137,3 +137,8 @@ Evidence requirement is enforced by the Phase‑0 contract.
 - Add collector configuration for chosen backend.
 - Add retention and immutability policy (WORM or object‑store) for production audit.
 - Add alerting rules for audit gaps.
+
+## Language Scope
+This policy applies to all backend implementation languages in Symphony, including:
+- C# (.NET)
+- Python

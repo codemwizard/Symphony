@@ -39,3 +39,8 @@ It does not claim:
 - Exact ZDPA section mapping: to be filled by compliance counsel and implementation evidence in Phase-1/2.
 - Whether hashing/tokenization should be performed in DB, application, or a security service.
 
+
+## Language Scope
+This policy applies to all backend implementation languages in Symphony, including:
+- C# (.NET)
+- Python

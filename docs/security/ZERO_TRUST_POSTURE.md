@@ -30,3 +30,8 @@ Phase-0 establishes schema hooks for correlation stitching and evidence grouping
 - Explicit PDP/PEP decomposition and policy decision workflow.
 - Centralized telemetry and continuous verification.
 
+
+## Language Scope
+This policy applies to all backend implementation languages in Symphony, including:
+- C# (.NET)
+- Python

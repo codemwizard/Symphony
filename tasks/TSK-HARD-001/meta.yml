@@ -1,0 +1,40 @@
+phase: '1'
+task_id: TSK-HARD-001
+title: Trust invariants documentation freeze
+owner_role: SUPERVISOR
+status: planned
+depends_on:
+- TSK-HARD-000
+touches:
+- docs/programs/symphony-hardening/HARDENING_TASK_PACKS.md
+- docs/programs/symphony-hardening/TRUST_INVARIANTS.md
+- evidence/phase1/hardening/tsk_hard_001.json
+- tasks/TSK-HARD-001/EXEC_LOG.md
+- tasks/TSK-HARD-001/PLAN.md
+invariants:
+- INV-HARDENING-CANONICAL-SOURCE
+work:
+- Produce TRUST_INVARIANTS.md — the human-readable, institutionally legible
+- Implement exactly per canonical task block in HARDENING_TASK_PACKS.md.
+acceptance_criteria:
+- TRUST_INVARIANTS.md exists and contains exactly 12 invariant entries
+- 'each invariant entry contains all of: invariant_id, plain_language_statement,'
+verification:
+- bash scripts/audit/verify_tsk_hard_001.sh
+evidence:
+- evidence/phase1/hardening/tsk_hard_001.json
+- evidence/schemas/hardening/tsk_hard_001.schema.json
+failure_modes:
+- TRUST_INVARIANTS.md missing => FAIL_CLOSED
+- fewer than 12 invariants documented => FAIL
+- any invariant entry missing a required field => FAIL
+- verifier relies on visual inspection only (no programmatic parse) => FAIL_REVIEW
+must_read:
+- docs/operations/AI_AGENT_OPERATION_MANUAL.md
+- docs/programs/symphony-hardening/HARDENING_TASK_PACKS.md
+implementation_plan: tasks/TSK-HARD-001/PLAN.md
+implementation_log: tasks/TSK-HARD-001/EXEC_LOG.md
+notes: Generated from canonical hardening task pack source; do not edit semantics here.
+client: codex_cli
+assigned_agent: supervisor
+model: gpt-5-codex

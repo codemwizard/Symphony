@@ -1,0 +1,38 @@
+phase: '1'
+task_id: TSK-HARD-030
+title: Lineage reference strategy DSL
+owner_role: SUPERVISOR
+status: planned
+depends_on:
+- TSK-OPS-WAVE2-EXIT-GATE
+touches:
+- docs/programs/symphony-hardening/HARDENING_TASK_PACKS.md
+- reference strategy DSL schema at
+- tasks/TSK-HARD-030/EXEC_LOG.md
+- tasks/TSK-HARD-030/PLAN.md
+invariants:
+- INV-HARDENING-CANONICAL-SOURCE
+work:
+- Define the reference strategy DSL that governs how adjustment dispatch
+- Implement exactly per canonical task block in HARDENING_TASK_PACKS.md.
+acceptance_criteria:
+- 'DSL schema defines and validates all four supported strategy types:'
+verification:
+- bash scripts/audit/verify_tsk_hard_030.sh
+evidence:
+- evidence/phase1/hardening/tsk_hard_030.json
+- evidence/schemas/hardening/tsk_hard_030.schema.json
+failure_modes:
+- any of the four strategy types absent from DSL schema => FAIL
+- strategy selection hardcoded in adapter code => FAIL_CLOSED
+- docs mirror used as enforcement surface => FAIL_REVIEW
+- in-place edit of active DSL version permitted => FAIL_CLOSED
+must_read:
+- docs/operations/AI_AGENT_OPERATION_MANUAL.md
+- docs/programs/symphony-hardening/HARDENING_TASK_PACKS.md
+implementation_plan: tasks/TSK-HARD-030/PLAN.md
+implementation_log: tasks/TSK-HARD-030/EXEC_LOG.md
+notes: Generated from canonical hardening task pack source; do not edit semantics here.
+client: codex_cli
+assigned_agent: supervisor
+model: gpt-5-codex

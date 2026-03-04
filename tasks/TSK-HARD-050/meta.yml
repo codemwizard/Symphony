@@ -1,0 +1,40 @@
+phase: '1'
+task_id: TSK-HARD-050
+title: Key class separation model
+owner_role: SUPERVISOR
+status: planned
+depends_on:
+- TSK-OPS-WAVE3-EXIT-GATE
+touches:
+- authorization matrix schema at
+- docs/programs/symphony-hardening/HARDENING_TASK_PACKS.md
+- key class taxonomy document at docs/architecture/KEY_CLASS_TAXONOMY.md
+- tasks/TSK-HARD-050/EXEC_LOG.md
+- tasks/TSK-HARD-050/PLAN.md
+invariants:
+- INV-HARDENING-CANONICAL-SOURCE
+work:
+- Formally define the key class taxonomy and authorization matrix for all
+- Implement exactly per canonical task block in HARDENING_TASK_PACKS.md.
+acceptance_criteria:
+- 'key class taxonomy defines exactly four classes: EASK (evidence artifact'
+verification:
+- bash scripts/audit/verify_tsk_hard_050.sh
+evidence:
+- evidence/phase1/hardening/tsk_hard_050.json
+- evidence/schemas/hardening/tsk_hard_050.schema.json
+failure_modes:
+- key classes undocumented or fewer than four defined => FAIL
+- authorization matrix not enforced at runtime => FAIL_CLOSED
+- cross-class signing permitted silently => FAIL_CLOSED
+- cross-class rejection produces no evidence artifact => FAIL
+- negative-path tests absent => FAIL
+must_read:
+- docs/operations/AI_AGENT_OPERATION_MANUAL.md
+- docs/programs/symphony-hardening/HARDENING_TASK_PACKS.md
+implementation_plan: tasks/TSK-HARD-050/PLAN.md
+implementation_log: tasks/TSK-HARD-050/EXEC_LOG.md
+notes: Generated from canonical hardening task pack source; do not edit semantics here.
+client: codex_cli
+assigned_agent: supervisor
+model: gpt-5-codex

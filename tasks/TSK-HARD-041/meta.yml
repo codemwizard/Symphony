@@ -1,0 +1,43 @@
+phase: '1'
+task_id: TSK-HARD-041
+title: Erasure workflow and key shredding controls
+owner_role: SUPERVISOR
+status: planned
+depends_on:
+- TSK-HARD-040
+touches:
+- docs/programs/symphony-hardening/HARDENING_TASK_PACKS.md
+- erasure evidence artifact
+- erasure request workflow with cryptographic shredding
+- evidence/phase1/hardening/tsk_hard_041.json
+- per-user per-period salt management in vault
+- purge_marker implementation in evidence artifacts
+- tasks/TSK-HARD-041/EXEC_LOG.md
+- tasks/TSK-HARD-041/PLAN.md
+invariants:
+- INV-HARDENING-CANONICAL-SOURCE
+work:
+- Implement per-user, per-period salt management and cryptographic
+- Implement exactly per canonical task block in HARDENING_TASK_PACKS.md.
+acceptance_criteria:
+- per-user, per-period salt exists in vault; salt rotation supported within
+verification:
+- bash scripts/audit/verify_tsk_hard_041.sh
+evidence:
+- evidence/phase1/hardening/tsk_hard_041.json
+- evidence/schemas/hardening/tsk_hard_041.schema.json
+failure_modes:
+- erasure deletes evidence artifacts => FAIL_CLOSED
+- token resolvable after salt shredding => FAIL_CLOSED
+- purge_marker absent from any evidence artifact after erasure => FAIL
+- erasure evidence artifact not independently queryable => FAIL
+- negative-path test absent => FAIL
+must_read:
+- docs/operations/AI_AGENT_OPERATION_MANUAL.md
+- docs/programs/symphony-hardening/HARDENING_TASK_PACKS.md
+implementation_plan: tasks/TSK-HARD-041/PLAN.md
+implementation_log: tasks/TSK-HARD-041/EXEC_LOG.md
+notes: Generated from canonical hardening task pack source; do not edit semantics here.
+client: codex_cli
+assigned_agent: supervisor
+model: gpt-5-codex

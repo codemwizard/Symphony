@@ -1,0 +1,20 @@
+{
+  "check_id": "EVIDENCE-JSON-VALIDATION",
+  "task_id": "TSK-P0-103",
+  "timestamp_utc": "2026-03-04T03:17:00Z",
+  "git_sha": "0cca4e691cfcb5a1729ab79e08cf21858f5e9b58",
+  "status": "PASS",
+  "pass": true,
+  "count_valid": 126,
+  "count_invalid": 0,
+  "invalid_files": [],
+  "schema_version": "1.0",
+  "inputs": {
+    "phase0_dir": "/home/mwiza/workspace/Symphony/evidence/phase0",
+    "phase1_dir": "/home/mwiza/workspace/Symphony/evidence/phase1",
+    "strict": false
+  },
+  "outputs": {
+    "report_path": "/home/mwiza/workspace/Symphony/evidence/phase0/evidence_schema_validation.json"
+  }
+}

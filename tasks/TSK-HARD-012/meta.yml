@@ -1,0 +1,40 @@
+phase: '1'
+task_id: TSK-HARD-012
+title: Rail inquiry engine — SCHEDULED, SENT, ACKNOWLEDGED, EXHAUSTED state machine
+owner_role: SUPERVISOR
+status: planned
+depends_on:
+- TSK-HARD-011A
+- TSK-OPS-A1-STABILITY-GATE
+touches:
+- docs/programs/symphony-hardening/HARDENING_TASK_PACKS.md
+- 'inquiry state machine implementation with DB-enforced state enum:'
+- tasks/TSK-HARD-012/EXEC_LOG.md
+- tasks/TSK-HARD-012/PLAN.md
+invariants:
+- INV-HARDENING-CANONICAL-SOURCE
+work:
+- Implement the rail inquiry engine with an explicit, DB-enforced state machine
+- Implement exactly per canonical task block in HARDENING_TASK_PACKS.md.
+acceptance_criteria:
+- 'inquiry state enum exists in DB with values: SCHEDULED, SENT, ACKNOWLEDGED,'
+verification:
+- bash scripts/audit/verify_tsk_hard_012.sh
+evidence:
+- evidence/phase1/hardening/tsk_hard_012.json
+- evidence/schemas/hardening/tsk_hard_012.schema.json
+failure_modes:
+- auto-finalization permitted from EXHAUSTED state => FAIL_CLOSED
+- auto-finalization intercept produces no evidence artifact => FAIL
+- max_attempts hardcoded rather than policy-resolved => FAIL_CLOSED
+- illegal state transition silently permitted => FAIL_CLOSED
+- negative-path test absent => FAIL
+must_read:
+- docs/operations/AI_AGENT_OPERATION_MANUAL.md
+- docs/programs/symphony-hardening/HARDENING_TASK_PACKS.md
+implementation_plan: tasks/TSK-HARD-012/PLAN.md
+implementation_log: tasks/TSK-HARD-012/EXEC_LOG.md
+notes: Generated from canonical hardening task pack source; do not edit semantics here.
+client: codex_cli
+assigned_agent: supervisor
+model: gpt-5-codex

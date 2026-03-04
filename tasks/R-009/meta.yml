@@ -1,0 +1,18 @@
+id: R-009
+phase: '3'
+title: Restrict AllowedHosts
+status: planned
+dependencies: []
+description: Avoid host header attacks in non-dev.
+affected_services:
+- security_remediation
+affected_files: []
+acceptance_criteria:
+- id: R-009-A1
+  description: AllowedHosts not wildcard outside dev
+verification_command: bash scripts/audit/verify_allowed_hosts_not_wildcard.sh
+evidence:
+  path: evidence/security_remediation/r_009_allowed_hosts.json
+implementation_plan_path: docs/plans/remediation/r_009/PLAN.md
+source_of_truth: docs/contracts/SECURITY_REMEDIATION_DOD.yml
+canonical_reference: docs/operations/AI_AGENT_OPERATION_MANUAL.md

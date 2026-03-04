@@ -275,3 +275,7 @@ Evidence may be emitted by:
 - **Security review:** [NAME / ROLE]
 - **Compliance review input:** [NAME / ROLE]
 - **Version effective date:** [YYYY-MM-DD]
+## Language Scope
+This policy applies to all backend implementation languages in Symphony, including:
+- C# (.NET)
+- Python

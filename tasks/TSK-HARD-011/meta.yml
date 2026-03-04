@@ -1,0 +1,38 @@
+phase: '1'
+task_id: TSK-HARD-011
+title: Metadata-driven per-rail inquiry policy
+owner_role: SUPERVISOR
+status: planned
+depends_on:
+- TSK-HARD-010
+touches:
+- docs/programs/symphony-hardening/HARDENING_TASK_PACKS.md
+- per-rail policy config schema at
+- runtime policy loader implementation
+- tasks/TSK-HARD-011/EXEC_LOG.md
+- tasks/TSK-HARD-011/PLAN.md
+invariants:
+- INV-HARDENING-CANONICAL-SOURCE
+work:
+- Implement the runtime policy loader that resolves per-rail inquiry behavior
+- Implement exactly per canonical task block in HARDENING_TASK_PACKS.md.
+acceptance_criteria:
+- grep for hardcoded timeout/retry/cadence constants in adapter and inquiry code
+verification:
+- bash scripts/audit/verify_tsk_hard_011.sh
+evidence:
+- evidence/phase1/hardening/tsk_hard_011.json
+- evidence/schemas/hardening/tsk_hard_011.schema.json
+failure_modes:
+- any hardcoded constant found by grep => FAIL_CLOSED
+- policy_version_id absent from inquiry evidence => FAIL
+- in-place edit of active policy version permitted => FAIL_CLOSED
+must_read:
+- docs/operations/AI_AGENT_OPERATION_MANUAL.md
+- docs/programs/symphony-hardening/HARDENING_TASK_PACKS.md
+implementation_plan: tasks/TSK-HARD-011/PLAN.md
+implementation_log: tasks/TSK-HARD-011/EXEC_LOG.md
+notes: Generated from canonical hardening task pack source; do not edit semantics here.
+client: codex_cli
+assigned_agent: supervisor
+model: gpt-5-codex

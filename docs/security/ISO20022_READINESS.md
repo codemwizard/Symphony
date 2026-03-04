@@ -27,3 +27,8 @@ Phase-0 establishes the contract for later adapter tests:
 - canonical normalization rules per rail/participant
 - non-repudiation signature strategy for evidence packs (key management + signing policies)
 
+
+## Language Scope
+This policy applies to all backend implementation languages in Symphony, including:
+- C# (.NET)
+- Python

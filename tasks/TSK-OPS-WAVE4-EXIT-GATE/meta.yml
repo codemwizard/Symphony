@@ -1,0 +1,46 @@
+phase: '1'
+task_id: TSK-OPS-WAVE4-EXIT-GATE
+title: Wave-4 Exit Gate
+owner_role: SUPERVISOR
+status: planned
+depends_on: []
+touches:
+- docs/programs/symphony-hardening/HARDENING_TASK_PACKS.md
+- evidence/phase1/program_wave4_exit_gate.json
+- evidence/phase1/wave4_exit/dependency_not_ready_resign_sweep.json
+- evidence/phase1/wave4_exit/historical_verification_archive_only.json
+- evidence/phase1/wave4_exit/hsm_bypass_blocked.json
+- evidence/phase1/wave4_exit/key_class_unauthorized_rejected.json
+- evidence/phase1/wave4_exit/unsigned_policy_bundle_rejected.json
+- scripts/audit/verify_program_wave4_exit_gate.sh
+- tasks/TSK-OPS-WAVE4-EXIT-GATE/EXEC_LOG.md
+- tasks/TSK-OPS-WAVE4-EXIT-GATE/PLAN.md
+invariants:
+- INV-HARDENING-CANONICAL-SOURCE
+work:
+- Deterministic Wave-4 pass/fail gate. All five negative-path evidence
+- Implement exactly per canonical task block in HARDENING_TASK_PACKS.md.
+acceptance_criteria:
+- all 5 artifact paths listed in required_deliverables exist
+- gate script validates each artifact against its schema before emitting pass
+- each artifact contains pass=true
+- 'specific field requirements per artifact:'
+verification:
+- bash scripts/audit/verify_program_wave4_exit_gate.sh
+evidence:
+- evidence/phase1/program_wave4_exit_gate.json
+- evidence/schemas/hardening/wave4_exit/wave4_exit_gate.schema.json
+failure_modes:
+- any artifact missing => FAIL_CLOSED
+- any artifact fails schema validation => FAIL_CLOSED
+- dependency_not_ready_resign_sweep artifact absent or incomplete => FAIL_CLOSED
+- manual override => FAIL_CLOSED (not permitted)
+must_read:
+- docs/operations/AI_AGENT_OPERATION_MANUAL.md
+- docs/programs/symphony-hardening/HARDENING_TASK_PACKS.md
+implementation_plan: tasks/TSK-OPS-WAVE4-EXIT-GATE/PLAN.md
+implementation_log: tasks/TSK-OPS-WAVE4-EXIT-GATE/EXEC_LOG.md
+notes: Generated from canonical hardening task pack source; do not edit semantics here.
+client: codex_cli
+assigned_agent: supervisor
+model: gpt-5-codex

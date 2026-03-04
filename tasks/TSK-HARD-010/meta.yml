@@ -1,0 +1,41 @@
+phase: '1'
+task_id: TSK-HARD-010
+title: Rail uncertainty model and inquiry policy framework
+owner_role: SUPERVISOR
+status: planned
+depends_on:
+- TSK-HARD-002
+touches:
+- docs/programs/symphony-hardening/HARDENING_TASK_PACKS.md
+- docs/programs/symphony-hardening/INQUIRY_POLICY_FRAMEWORK.md
+- docs/programs/symphony-hardening/RAIL_SCENARIO_MATRIX.md
+- evidence/phase1/hardening/tsk_hard_010.json
+- tasks/TSK-HARD-010/EXEC_LOG.md
+- tasks/TSK-HARD-010/PLAN.md
+invariants:
+- INV-HARDENING-CANONICAL-SOURCE
+work:
+- Define the complete model for how the system behaves when a rail returns
+- Implement exactly per canonical task block in HARDENING_TASK_PACKS.md.
+acceptance_criteria:
+- INQUIRY_POLICY_FRAMEWORK.md exists and defines the following fields for each
+verification:
+- bash scripts/audit/verify_tsk_hard_010.sh
+evidence:
+- evidence/phase1/hardening/tsk_hard_010.json
+- evidence/schemas/hardening/tsk_hard_010.schema.json
+failure_modes:
+- INQUIRY_POLICY_FRAMEWORK.md missing => FAIL_CLOSED
+- RAIL_SCENARIO_MATRIX.md missing => FAIL_CLOSED
+- fewer than 6 scenario types defined => FAIL
+- any scenario row missing implementing_task_id => FAIL
+- implementing_task_id references non-existent task => FAIL
+must_read:
+- docs/operations/AI_AGENT_OPERATION_MANUAL.md
+- docs/programs/symphony-hardening/HARDENING_TASK_PACKS.md
+implementation_plan: tasks/TSK-HARD-010/PLAN.md
+implementation_log: tasks/TSK-HARD-010/EXEC_LOG.md
+notes: Generated from canonical hardening task pack source; do not edit semantics here.
+client: codex_cli
+assigned_agent: supervisor
+model: gpt-5-codex

@@ -18,3 +18,8 @@ This baseline defines the minimum deploy artifacts for customer VPC pilot readin
 ## Verification
 - `scripts/security/verify_sandbox_deploy_manifest_posture.sh`
 - Evidence: `evidence/phase1/sandbox_deploy_manifest_posture.json`
+
+## Language Scope
+This policy applies to all backend implementation languages in Symphony, including:
+- C# (.NET)
+- Python

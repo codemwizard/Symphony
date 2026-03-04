@@ -1,0 +1,42 @@
+phase: '1'
+task_id: TSK-HARD-094
+title: Offline Safe Mode execution gate
+owner_role: SUPERVISOR
+status: planned
+depends_on:
+- TSK-HARD-017
+- TSK-OPS-A1-STABILITY-GATE
+touches:
+- docs/programs/symphony-hardening/HARDENING_TASK_PACKS.md
+- offline/degraded mode detection and dispatch block
+- recovery re-sign linkage (offline evidence re-signed and linked to gap markers
+- tasks/TSK-HARD-094/EXEC_LOG.md
+- tasks/TSK-HARD-094/PLAN.md
+- unsigned evidence chain gap markers during offline period
+invariants:
+- INV-HARDENING-CANONICAL-SOURCE
+work:
+- Implement a fail-closed execution gate that blocks instruction dispatch
+- Implement exactly per canonical task block in HARDENING_TASK_PACKS.md.
+acceptance_criteria:
+- instruction dispatch is blocked while system detects offline/degraded signing
+verification:
+- bash scripts/audit/verify_tsk_hard_094.sh
+evidence:
+- evidence/phase1/hardening/tsk_hard_094.json
+- evidence/schemas/hardening/tsk_hard_094.schema.json
+failure_modes:
+- dispatch permitted in offline mode => FAIL_CLOSED
+- gap markers not inserted during offline period => FAIL
+- re-sign linkage absent on recovery => FAIL
+- re-signed artifact does not preserve original timestamp => FAIL
+- negative-path test absent => FAIL
+must_read:
+- docs/operations/AI_AGENT_OPERATION_MANUAL.md
+- docs/programs/symphony-hardening/HARDENING_TASK_PACKS.md
+implementation_plan: tasks/TSK-HARD-094/PLAN.md
+implementation_log: tasks/TSK-HARD-094/EXEC_LOG.md
+notes: Generated from canonical hardening task pack source; do not edit semantics here.
+client: codex_cli
+assigned_agent: supervisor
+model: gpt-5-codex
