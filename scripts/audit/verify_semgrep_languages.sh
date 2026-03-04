@@ -5,8 +5,32 @@
 set -euo pipefail
 
 SEMGREP_RULES="security/semgrep/rules.yml"
-REQUIRE_PY="${1:-true}"
-REQUIRE_CS="${1:-true}"
+REQUIRE_PY=false
+REQUIRE_CS=false
+
+while [[ $# -gt 0 ]]; do
+    case "$1" in
+        --require)
+            case "${2:-}" in
+                py)
+                    REQUIRE_PY=true
+                    ;;
+                cs)
+                    REQUIRE_CS=true
+                    ;;
+                *)
+                    echo "❌ Unknown --require target: ${2:-}"
+                    exit 1
+                    ;;
+            esac
+            shift 2
+            ;;
+        *)
+            echo "❌ Unknown argument: $1"
+            exit 1
+            ;;
+    esac
+done
 
 echo "=== Verifying Semgrep Language Coverage ==="
 
@@ -35,7 +59,10 @@ fi
 
 # List C# rules
 echo "C# rules:"
-grep -A 1 "languages: \[csharp\]" "$SEMGREP_RULES" | grep "id:" | sed 's/.*id: /  - /'
+awk '
+  /^ *- id:/ { id=$3 }
+  /languages: \[csharp\]/ { if (id!="") print "  - " id; id="" }
+' "$SEMGREP_RULES" || true
 
 # Check for Python rules
 echo ""
@@ -50,7 +77,10 @@ fi
 
 # List Python rules
 echo "Python rules:"
-grep -A 1 "languages: \[python\]" "$SEMGREP_RULES" | grep "id:" | sed 's/.*id: /  - /'
+awk '
+  /^ *- id:/ { id=$3 }
+  /languages: \[python\]/ { if (id!="") print "  - " id; id="" }
+' "$SEMGREP_RULES" || true
 
 # Check for specific rule categories
 echo ""
@@ -92,9 +122,11 @@ trap "rm -rf $TEMP_DIR" EXIT
 # Create test files with known patterns
 cat > "$TEMP_DIR/test_cs.cs" << 'EOF'
 using System;
+using System.Data.SqlClient;
 public class TestSql {
     public void BadMethod(string input) {
-        string sql = "SELECT * FROM users WHERE id = " + input;
+        var cmd = new SqlCommand();
+        cmd.CommandText = "SELECT * FROM users WHERE id = " + input;
     }
 }
 EOF
