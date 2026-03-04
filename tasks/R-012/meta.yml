@@ -1,7 +1,7 @@
 id: R-012
 phase: '4'
 title: Gate dev-only test headers
-status: planned
+status: completed
 dependencies: []
 description: Dev headers cannot be used outside dev.
 affected_services:

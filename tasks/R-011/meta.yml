@@ -1,7 +1,7 @@
 id: R-011
 phase: '4'
 title: Remove bfg.jar
-status: planned
+status: completed
 dependencies: []
 description: Remove risky artifact and prevent re-add.
 affected_services:

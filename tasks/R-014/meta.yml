@@ -1,7 +1,7 @@
 id: R-014
 phase: '5'
 title: Decompose Program.cs monolith
-status: planned
+status: completed
 dependencies: []
 description: Refactor without changing behavior; keep existing self-test harness as
   gate.

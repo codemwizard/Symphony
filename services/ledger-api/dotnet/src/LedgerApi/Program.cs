@@ -5,10 +5,20 @@ using System.Text;
 using System.Text.Json;
 using System.Text.RegularExpressions;
 using System.Threading.RateLimiting;
+using Microsoft.AspNetCore.Http.Features;
+using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.RateLimiting;
 using Npgsql;
 
 var builder = WebApplication.CreateBuilder(args);
+builder.Services.Configure<ForwardedHeadersOptions>(options =>
+{
+    options.ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto;
+    // Ingress/proxy topologies vary; prefer explicit forwarded chain over collapsing every caller to proxy IP.
+    options.KnownIPNetworks.Clear();
+    options.KnownProxies.Clear();
+    options.ForwardLimit = 1;
+});
 builder.Services.AddRateLimiter(options =>
 {
     var permitLimit = int.TryParse(Environment.GetEnvironmentVariable("SYMPHONY_RATE_LIMIT_PERMITS"), out var parsedPermit)
@@ -20,7 +30,7 @@ builder.Services.AddRateLimiter(options =>
     options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
     options.GlobalLimiter = PartitionedRateLimiter.Create<HttpContext, string>(context =>
         RateLimitPartition.GetFixedWindowLimiter(
-            partitionKey: context.Connection.RemoteIpAddress?.ToString() ?? "unknown",
+            partitionKey: RequestSecurityGuards.BuildRateLimitPartitionKey(context),
             factory: _ => new FixedWindowRateLimiterOptions
             {
                 PermitLimit = Math.Max(1, permitLimit),
@@ -34,9 +44,16 @@ var logger = app.Logger;
 var maxBodyBytes = long.TryParse(Environment.GetEnvironmentVariable("SYMPHONY_MAX_BODY_BYTES"), out var parsedMaxBodyBytes)
     ? parsedMaxBodyBytes
     : 1_048_576;
+app.UseForwardedHeaders();
 app.Use(async (httpContext, next) =>
 {
-    if (httpContext.Request.ContentLength is long contentLength && contentLength > maxBodyBytes)
+    var maxRequestBodySizeFeature = httpContext.Features.Get<IHttpMaxRequestBodySizeFeature>();
+    if (maxRequestBodySizeFeature is { IsReadOnly: false })
+    {
+        maxRequestBodySizeFeature.MaxRequestBodySize = maxBodyBytes;
+    }
+
+    if (await RequestSecurityGuards.IsBodyTooLargeAsync(httpContext.Request, maxBodyBytes, httpContext.RequestAborted))
     {
         httpContext.Response.StatusCode = StatusCodes.Status413PayloadTooLarge;
         await httpContext.Response.WriteAsJsonAsync(new
@@ -181,7 +198,18 @@ app.MapPost("/v1/ingress/instructions", async (IngressRequest request, HttpConte
         return Results.Json(authFailure.Body, statusCode: authFailure.StatusCode);
     }
 
-    var forceFailure = httpContext.Request.Headers.TryGetValue("x-symphony-force-attestation-fail", out var forceHeader)
+    if (RequestSecurityGuards.DevOnlyHeadersPresent(httpContext.Request)
+        && !RequestSecurityGuards.IsDevOrCi(Environment.GetEnvironmentVariable("SYMPHONY_ENV")))
+    {
+        return Results.Json(new
+        {
+            ack = false,
+            error_code = "FORBIDDEN_DEV_HEADER",
+            errors = new[] { "dev-only headers are not allowed outside development/ci" }
+        }, statusCode: StatusCodes.Status403Forbidden);
+    }
+
+    var forceFailure = httpContext.Request.Headers.TryGetValue(RequestSecurityGuards.ForceAttestationFailHeader, out var forceHeader)
         && forceHeader.ToString() == "1";
 
     var result = await IngressHandler.HandleAsync(request, store, logger, forceFailure, cancellationToken);
