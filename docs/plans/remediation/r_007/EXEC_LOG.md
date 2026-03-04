@@ -1,17 +1,12 @@
 # R-007 EXEC_LOG
 
-Task: R-007
-Source of truth: docs/contracts/SECURITY_REMEDIATION_DOD.yml
-Canonical reference: docs/operations/AI_AGENT_OPERATION_MANUAL.md
-
-## repro_command
-- pending
-
 ## actions_taken
-- pending
+- Added hardened OpenBao production compose and config artifacts.
+- Enforced non-dev mode posture and digest pin checks.
 
 ## verification_commands_run
-- pending
+- bash scripts/audit/verify_openbao_not_dev.sh
+- bash scripts/audit/verify_container_images_pinned.sh --service openbao
 
 ## final_status
-- planned
+- completed

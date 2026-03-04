@@ -4,11 +4,45 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
 using System.Text.RegularExpressions;
+using System.Threading.RateLimiting;
+using Microsoft.AspNetCore.RateLimiting;
 using Npgsql;
 
 var builder = WebApplication.CreateBuilder(args);
+builder.Services.AddRateLimiter(options =>
+{
+    var permitLimit = ParseIntEnv("SYMPHONY_RATE_LIMIT_PERMITS", 60);
+    var windowSeconds = ParseIntEnv("SYMPHONY_RATE_LIMIT_WINDOW_SECONDS", 60);
+    options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+    options.GlobalLimiter = PartitionedRateLimiter.Create<HttpContext, string>(context =>
+        RateLimitPartition.GetFixedWindowLimiter(
+            partitionKey: context.Connection.RemoteIpAddress?.ToString() ?? "unknown",
+            factory: _ => new FixedWindowRateLimiterOptions
+            {
+                PermitLimit = Math.Max(1, permitLimit),
+                Window = TimeSpan.FromSeconds(Math.Max(1, windowSeconds)),
+                QueueLimit = 0
+            }));
+});
 var app = builder.Build();
 var logger = app.Logger;
+
+var maxBodyBytes = ParseLongEnv("SYMPHONY_MAX_BODY_BYTES", 1_048_576);
+app.Use(async (httpContext, next) =>
+{
+    if (httpContext.Request.ContentLength is long contentLength && contentLength > maxBodyBytes)
+    {
+        httpContext.Response.StatusCode = StatusCodes.Status413PayloadTooLarge;
+        await httpContext.Response.WriteAsJsonAsync(new
+        {
+            error_code = "PAYLOAD_TOO_LARGE",
+            errors = new[] { $"request body exceeds {maxBodyBytes} bytes" }
+        });
+        return;
+    }
+    await next();
+});
+app.UseRateLimiter();
 
 if (args.Contains("--self-test", StringComparer.OrdinalIgnoreCase))
 {
@@ -421,6 +455,16 @@ static class ApiAuthorization
 {
     public static HandlerResult? AuthorizeIngressWrite(HttpContext httpContext, IngressRequest request)
     {
+        if (httpContext.Request.Query.ContainsKey("token"))
+        {
+            return new HandlerResult(StatusCodes.Status401Unauthorized, new
+            {
+                ack = false,
+                error_code = "UNAUTHORIZED_TOKEN_TRANSPORT",
+                errors = new[] { "querystring token transport is not allowed; use Authorization: Bearer or x-api-key" }
+            });
+        }
+
         var configuredKey = (Environment.GetEnvironmentVariable("INGRESS_API_KEY") ?? string.Empty).Trim();
         if (string.IsNullOrWhiteSpace(configuredKey))
         {
@@ -433,6 +477,10 @@ static class ApiAuthorization
         }
 
         var presentedKey = ReadHeader(httpContext, "x-api-key");
+        if (string.IsNullOrWhiteSpace(presentedKey))
+        {
+            presentedKey = ReadBearerToken(httpContext);
+        }
         if (string.IsNullOrWhiteSpace(presentedKey) || !SecureEquals(configuredKey, presentedKey))
         {
             return new HandlerResult(StatusCodes.Status401Unauthorized, new
@@ -537,6 +585,15 @@ static class ApiAuthorization
 
     public static HandlerResult? AuthorizeEvidenceRead(HttpContext httpContext)
     {
+        if (httpContext.Request.Query.ContainsKey("token"))
+        {
+            return new HandlerResult(StatusCodes.Status401Unauthorized, new
+            {
+                error_code = "UNAUTHORIZED_TOKEN_TRANSPORT",
+                errors = new[] { "querystring token transport is not allowed; use Authorization: Bearer or x-api-key" }
+            });
+        }
+
         var configuredKey = (Environment.GetEnvironmentVariable("INGRESS_API_KEY") ?? string.Empty).Trim();
         if (string.IsNullOrWhiteSpace(configuredKey))
         {
@@ -548,6 +605,10 @@ static class ApiAuthorization
         }
 
         var presentedKey = ReadHeader(httpContext, "x-api-key");
+        if (string.IsNullOrWhiteSpace(presentedKey))
+        {
+            presentedKey = ReadBearerToken(httpContext);
+        }
         if (string.IsNullOrWhiteSpace(presentedKey) || !SecureEquals(configuredKey, presentedKey))
         {
             return new HandlerResult(StatusCodes.Status401Unauthorized, new
@@ -588,17 +649,34 @@ static class ApiAuthorization
     private static string ReadHeader(HttpContext context, string name)
         => context.Request.Headers.TryGetValue(name, out var value) ? value.ToString() : string.Empty;
 
+    private static string ReadBearerToken(HttpContext context)
+    {
+        var authorization = ReadHeader(context, "Authorization");
+        if (authorization.StartsWith("Bearer ", StringComparison.OrdinalIgnoreCase))
+        {
+            return authorization["Bearer ".Length..].Trim();
+        }
+        return string.Empty;
+    }
+
     private static bool SecureEquals(string expected, string actual)
     {
-        var expectedBytes = Encoding.UTF8.GetBytes(expected);
-        var actualBytes = Encoding.UTF8.GetBytes(actual);
-        if (expectedBytes.Length != actualBytes.Length)
-        {
-            return false;
-        }
-
+        var expectedBytes = SHA256.HashData(Encoding.UTF8.GetBytes(expected ?? string.Empty));
+        var actualBytes = SHA256.HashData(Encoding.UTF8.GetBytes(actual ?? string.Empty));
         return CryptographicOperations.FixedTimeEquals(expectedBytes, actualBytes);
     }
+}
+
+static int ParseIntEnv(string name, int fallback)
+{
+    var raw = Environment.GetEnvironmentVariable(name);
+    return int.TryParse(raw, out var value) ? value : fallback;
+}
+
+static long ParseLongEnv(string name, long fallback)
+{
+    var raw = Environment.GetEnvironmentVariable(name);
+    return long.TryParse(raw, out var value) ? value : fallback;
 }
 
 static class IngressHandler

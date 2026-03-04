@@ -1,7 +1,7 @@
 id: R-006
 phase: '2'
 title: Add rate limiting middleware + request size limits
-status: planned
+status: completed
 dependencies: []
 description: Reduce brute force and DoS risk.
 affected_services:

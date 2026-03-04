@@ -1,0 +1,15 @@
+services:
+  openbao:
+    image: openbao/openbao@sha256:d16f4c511e9f4f2ce7f3c0f5f6b8bdf2b0f9a0bb3f8a8b6f6c924f4e5a3dd8aa
+    container_name: symphony-openbao
+    command: "server -config=/openbao/config/openbao.prod.hcl"
+    environment:
+      BAO_ADDR: https://127.0.0.1:8200
+    cap_add:
+      - IPC_LOCK
+    volumes:
+      - openbao_data:/openbao
+      - ./openbao.prod.hcl:/openbao/config/openbao.prod.hcl:ro
+
+volumes:
+  openbao_data:

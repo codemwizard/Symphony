@@ -1,7 +1,7 @@
 id: R-008
 phase: '3'
 title: Pin Postgres CI image to digest
-status: planned
+status: completed
 dependencies: []
 description: Prevent supply chain drift in CI.
 affected_services:

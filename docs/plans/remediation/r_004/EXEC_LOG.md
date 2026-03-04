@@ -1,17 +1,12 @@
 # R-004 EXEC_LOG
 
-Task: R-004
-Source of truth: docs/contracts/SECURITY_REMEDIATION_DOD.yml
-Canonical reference: docs/operations/AI_AGENT_OPERATION_MANUAL.md
-
-## repro_command
-- pending
-
 ## actions_taken
-- pending
+- Rejected querystring `token` transport in API auth paths.
+- Added bearer-token extraction and acceptance in auth checks.
 
 ## verification_commands_run
-- pending
+- bash scripts/audit/test_token_querystring_rejected.sh
+- bash scripts/audit/test_authorization_bearer_accepted.sh
 
 ## final_status
-- planned
+- completed
