@@ -1,0 +1,29 @@
+id: "R-018"
+phase: "0.5"
+title: "Policy scope + enforcement mapping reform"
+status: "planned"
+dependencies: ["R-002"]
+description: "Make policies language-agnostic and create a CI-validated enforcement map."
+affected_services: ["security-governance", "audit"]
+affected_files:
+  - "docs/security/**"
+  - "docs/contracts/SECURITY_ENFORCEMENT_MAP.yml"
+  - "scripts/audit/verify_policy_scope_all_languages.sh"
+  - "scripts/audit/validate_security_enforcement_map.sh"
+  - "scripts/audit/verify_enforcement_map_parameterization_ci.sh"
+
+acceptance_criteria:
+  - id: R-018-A1
+    description: "Policy docs explicitly include C# and Python."
+  - id: R-018-A2
+    description: "SECURITY_ENFORCEMENT_MAP.yml validates against schema."
+  - id: R-018-A3
+    description: "Parameterized-query enforcement is CI-mapped."
+
+verification_command: |
+  bash scripts/audit/verify_policy_scope_all_languages.sh
+  bash scripts/audit/validate_security_enforcement_map.sh
+  bash scripts/audit/verify_enforcement_map_parameterization_ci.sh
+evidence:
+  path: "evidence/security_remediation/r_018_policy_enforcement_map.json"
+implementation_plan_path: "docs/plans/remediation/r_018/PLAN.md"

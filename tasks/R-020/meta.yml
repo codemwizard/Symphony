@@ -1,0 +1,24 @@
+id: "R-020"
+phase: "0.5"
+title: "Semgrep expansion (Python + C#)"
+status: "planned"
+dependencies: ["R-019"]
+description: "Add Semgrep rules that directly match shipped findings and enforce via semgrep --test."
+affected_services: ["security", "ci"]
+affected_files:
+  - "security/semgrep/**"
+  - ".github/workflows/**"
+  - "scripts/audit/verify_semgrep_languages.sh"
+
+acceptance_criteria:
+  - id: R-020-A1
+    description: "semgrep --test passes."
+  - id: R-020-A2
+    description: "Rules cover Python and C#."
+
+verification_command: |
+  semgrep --config security/semgrep --test
+  bash scripts/audit/verify_semgrep_languages.sh --require py --require cs
+evidence:
+  path: "evidence/security_remediation/r_020_semgrep_rules.json"
+implementation_plan_path: "docs/plans/remediation/r_020/PLAN.md"
