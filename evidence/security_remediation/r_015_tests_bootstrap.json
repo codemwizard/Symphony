@@ -1,0 +1,19 @@
+{
+  "task_id": "R-015",
+  "git_sha": "db61259031510b5e67551e7da5bdb62f9a1f2742",
+  "timestamp_utc": "2026-03-04T09:28:07Z",
+  "status": "PASS",
+  "checks": [
+    {
+      "id": "R-015-A1",
+      "description": "xUnit test project exists and dotnet test passes",
+      "status": "PASS",
+      "details": {
+        "test_project": "services/ledger-api/dotnet/tests/LedgerApi.Tests/LedgerApi.Tests.csproj",
+        "dotnet_test_log": "/tmp/r015_dotnet_test.log"
+      }
+    }
+  ],
+  "test_project_exists": true,
+  "tests_passed": true
+}

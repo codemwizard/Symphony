@@ -1,0 +1,9 @@
+{
+  "task_id": "R-014",
+  "git_sha": "db61259031510b5e67551e7da5bdb62f9a1f2742",
+  "timestamp_utc": "2026-03-04T09:27:51Z",
+  "status": "PASS",
+  "checks": [{"id":"selftest-self-test","description":"dotnet self-test --self-test","status":"PASS","details":{"mode":"--self-test"}},{"id":"selftest-self-test-evidence-pack","description":"dotnet self-test --self-test-evidence-pack","status":"PASS","details":{"mode":"--self-test-evidence-pack"}},{"id":"selftest-self-test-case-pack","description":"dotnet self-test --self-test-case-pack","status":"PASS","details":{"mode":"--self-test-case-pack"}},{"id":"selftest-self-test-authz","description":"dotnet self-test --self-test-authz","status":"PASS","details":{"mode":"--self-test-authz"}},{"id":"selftest-self-test-reg-daily-report","description":"dotnet self-test --self-test-reg-daily-report","status":"PASS","details":{"mode":"--self-test-reg-daily-report"}},{"id":"selftest-self-test-reg-incident-48h-report","description":"dotnet self-test --self-test-reg-incident-48h-report","status":"PASS","details":{"mode":"--self-test-reg-incident-48h-report"}}],
+  "refactor_completed": true,
+  "self_tests_passed": true
+}

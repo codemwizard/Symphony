@@ -1,7 +1,7 @@
 id: R-013
 phase: '4'
 title: Audit git history for key material
-status: planned
+status: completed
 dependencies: []
 description: Detect/remediate leaked secrets in git history.
 affected_services:

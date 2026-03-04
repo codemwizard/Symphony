@@ -707,6 +707,12 @@ jobs:
           chmod +x scripts/security/lint_app_sql_injection.sh
           scripts/security/lint_app_sql_injection.sh
 
+      - name: Run LedgerApi xUnit tests
+        shell: bash
+        run: |
+          set -euo pipefail
+          dotnet test services/ledger-api/dotnet/tests/LedgerApi.Tests/LedgerApi.Tests.csproj --configuration Release --nologo
+
       - name: Run Semgrep SAST (C# + Python)
         shell: bash
         run: |
