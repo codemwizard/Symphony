@@ -1,0 +1,80 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "checks": {
+      "items": {
+        "additionalProperties": false,
+        "properties": {
+          "description": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "details": {},
+          "id": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "status": {
+            "enum": [
+              "PASS",
+              "FAIL"
+            ],
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "description",
+          "status",
+          "details"
+        ],
+        "type": "object"
+      },
+      "minItems": 1,
+      "type": "array"
+    },
+    "dynamic_sql_patterns_found": {
+      "minimum": 0,
+      "type": "integer"
+    },
+    "git_sha": {
+      "minLength": 7,
+      "type": "string"
+    },
+    "log_redaction_confirmed": {
+      "type": "boolean"
+    },
+    "sqli_test_vectors_passed": {
+      "type": "boolean"
+    },
+    "status": {
+      "enum": [
+        "PASS",
+        "FAIL"
+      ],
+      "type": "string"
+    },
+    "task_id": {
+      "const": "R-003",
+      "minLength": 1,
+      "type": "string"
+    },
+    "timestamp_utc": {
+      "format": "date-time",
+      "type": "string"
+    }
+  },
+  "required": [
+    "task_id",
+    "git_sha",
+    "timestamp_utc",
+    "status",
+    "checks",
+    "dynamic_sql_patterns_found",
+    "sqli_test_vectors_passed",
+    "log_redaction_confirmed"
+  ],
+  "title": "R-003 Supervisor Parameterized Queries Evidence",
+  "type": "object"
+}

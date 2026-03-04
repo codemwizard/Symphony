@@ -6,6 +6,7 @@ follow_up_ticket: TSK-P1-040
 reason: Auto-generated preflight exception accepted for PR-3 structural migration restore and baseline refresh.
 author: system
 created_at: 2026-02-18
+closed_at: 2026-03-04
 ---
 
 # Exception: ddl structural change without invariants linkage

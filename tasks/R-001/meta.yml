@@ -1,0 +1,34 @@
+id: "R-001"
+phase: "0.2"
+title: "Fail hard on missing signing keys"
+status: "completed"
+description: "Remove fallback logic `?? \"dev-signing-key\"` and enforce strict signature capabilities. Ensures reporting does not emit unsigned data gracefully."
+dependencies: ["R-000"]
+affected_services: ["ledger-api"]
+affected_files:
+  - "services/ledger-api/dotnet/src/LedgerApi/Program.cs"
+
+# Core invariants to be guaranteed
+invariants:
+  - id: R001-INV-1
+    description: "Startup `/health` correctly flags `signing_key_present: false` when key is absent."
+    enforcement_type: "dynamic"
+  - id: R001-INV-2
+    description: "Regulatory endpoints return 503 HTTP status exactly when signing capability is missing."
+    enforcement_type: "dynamic"
+  - id: R001-INV-3
+    description: "No literal `dev-signing-key` usage in Codebase."
+    enforcement_type: "static"
+
+acceptance_criteria:
+  - id: R001-AC-1
+    description: "Grepping for `dev-signing-key` or `phase1-reg-.*-dev-signing-key` yields zero hits."
+  - id: R001-AC-2
+    description: "Semgrep scan ensures `?? \"literal\"` fallbacks for EVIDENCE_SIGNING_KEY are eradicated structurally."
+  - id: R001-AC-3
+    description: "Unconfigured application starts up gracefully but endpoints fail-closed deterministically with 503."
+
+verification_command: "SYMPHONY_ENV=development bash scripts/audit/test_missing_signing_key_fails_closed.sh"
+evidence:  
+  path: "evidence/security_remediation/r_001_signing_keys.json"
+implementation_plan_path: "docs/plans/remediation/r_001/PLAN.md"

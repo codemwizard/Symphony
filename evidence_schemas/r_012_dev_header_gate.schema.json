@@ -1,0 +1,79 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "checks": {
+      "items": {
+        "additionalProperties": false,
+        "properties": {
+          "description": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "details": {},
+          "id": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "status": {
+            "enum": [
+              "PASS",
+              "FAIL"
+            ],
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "description",
+          "status",
+          "details"
+        ],
+        "type": "object"
+      },
+      "minItems": 1,
+      "type": "array"
+    },
+    "dev_headers_gated": {
+      "type": [
+        "string",
+        "number",
+        "integer",
+        "boolean",
+        "object",
+        "array",
+        "null"
+      ]
+    },
+    "git_sha": {
+      "minLength": 7,
+      "type": "string"
+    },
+    "status": {
+      "enum": [
+        "PASS",
+        "FAIL"
+      ],
+      "type": "string"
+    },
+    "task_id": {
+      "const": "R-012",
+      "minLength": 1,
+      "type": "string"
+    },
+    "timestamp_utc": {
+      "format": "date-time",
+      "type": "string"
+    }
+  },
+  "required": [
+    "task_id",
+    "git_sha",
+    "timestamp_utc",
+    "status",
+    "checks",
+    "dev_headers_gated"
+  ],
+  "title": "R-012 Dev Header Gate Evidence",
+  "type": "object"
+}

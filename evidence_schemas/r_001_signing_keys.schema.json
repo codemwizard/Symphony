@@ -1,0 +1,92 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "checks": {
+      "items": {
+        "additionalProperties": false,
+        "properties": {
+          "description": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "details": {},
+          "id": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "status": {
+            "enum": [
+              "PASS",
+              "FAIL"
+            ],
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "description",
+          "status",
+          "details"
+        ],
+        "type": "object"
+      },
+      "minItems": 1,
+      "type": "array"
+    },
+    "fails_closed_without_key": {
+      "type": [
+        "string",
+        "number",
+        "integer",
+        "boolean",
+        "object",
+        "array",
+        "null"
+      ]
+    },
+    "git_sha": {
+      "minLength": 7,
+      "type": "string"
+    },
+    "hardcoded_fallbacks_found": {
+      "minimum": 0,
+      "type": "integer"
+    },
+    "signing_capable_at_startup": {
+      "type": "boolean"
+    },
+    "signing_endpoint_returns_503_when_key_missing": {
+      "type": "boolean"
+    },
+    "status": {
+      "enum": [
+        "PASS",
+        "FAIL"
+      ],
+      "type": "string"
+    },
+    "task_id": {
+      "const": "R-001",
+      "minLength": 1,
+      "type": "string"
+    },
+    "timestamp_utc": {
+      "format": "date-time",
+      "type": "string"
+    }
+  },
+  "required": [
+    "task_id",
+    "git_sha",
+    "timestamp_utc",
+    "status",
+    "checks",
+    "hardcoded_fallbacks_found",
+    "fails_closed_without_key",
+    "signing_capable_at_startup",
+    "signing_endpoint_returns_503_when_key_missing"
+  ],
+  "title": "R-001 Signing Keys Evidence",
+  "type": "object"
+}
