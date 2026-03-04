@@ -6,25 +6,29 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 FIXTURES_DIR="$SCRIPT_DIR/fixtures"
-SUITE="${1:-}"
+SUITE=""
 
 echo "==> Running Lint Fixtures"
+
+while [[ $# -gt 0 ]]; do
+    case "$1" in
+        --suite)
+            SUITE="${2:-}"
+            shift 2
+            ;;
+        *)
+            echo "❌ Unknown argument: $1"
+            echo "Usage: $0 --suite <suite_name>"
+            exit 1
+            ;;
+    esac
+done
 
 if [[ -z "$SUITE" ]]; then
     echo "Usage: $0 --suite <suite_name>"
     echo "Available suites: app_sql_injection"
     exit 1
 fi
-
-case "$SUITE" in
-    "app_sql_injection")
-        run_app_sql_injection_fixtures
-        ;;
-    *)
-        echo "❌ Unknown suite: $SUITE"
-        exit 1
-        ;;
-esac
 
 run_app_sql_injection_fixtures() {
     echo "=== Running App SQL Injection Fixtures ==="
@@ -33,10 +37,14 @@ run_app_sql_injection_fixtures() {
     TEMP_FIXTURES=$(mktemp -d)
     trap "rm -rf $TEMP_FIXTURES" EXIT
     
+    BAD_DIR="$TEMP_FIXTURES/bad"
+    GOOD_DIR="$TEMP_FIXTURES/good"
+    mkdir -p "$BAD_DIR" "$GOOD_DIR"
+
     # Create bad fixtures (should fail)
     echo "Creating bad fixtures (should fail)..."
     
-    cat > "$TEMP_FIXTURES/bad_cs.cs" << 'EOF'
+    cat > "$BAD_DIR/bad_cs.cs" << 'EOF'
 using System;
 public class BadSql {
     public void VulnerableMethod(string userInput) {
@@ -50,7 +58,7 @@ public class BadSql {
 }
 EOF
 
-    cat > "$TEMP_FIXTURES/bad_py.py" << 'EOF'
+    cat > "$BAD_DIR/bad_py.py" << 'EOF'
 import psycopg2
 
 def vulnerable_query(user_input):
@@ -66,7 +74,7 @@ EOF
     # Create good fixtures (should pass)
     echo "Creating good fixtures (should pass)..."
     
-    cat > "$TEMP_FIXTURES/good_cs.cs" << 'EOF'
+    cat > "$GOOD_DIR/good_cs.cs" << 'EOF'
 using System;
 using System.Data.SqlClient;
 public class GoodSql {
@@ -82,7 +90,7 @@ public class GoodSql {
 }
 EOF
 
-    cat > "$TEMP_FIXTURES/good_py.py" << 'EOF'
+    cat > "$GOOD_DIR/good_py.py" << 'EOF'
 import psycopg2
 
 def safe_query(user_input):
@@ -98,20 +106,16 @@ EOF
     # Test bad fixtures (should fail)
     echo ""
     echo "=== Testing Bad Fixtures (Should Fail) ==="
-    
-    echo "Testing bad_cs.cs..."
-    if bash "$SCRIPT_DIR/lint_app_sql_injection.sh" 2>/dev/null | grep -q "❌"; then
-        echo "✅ Bad C# fixture correctly detected SQLi patterns"
-    else
-        echo "❌ Bad C# fixture NOT detected (should have failed)"
+    if bash "$SCRIPT_DIR/lint_app_sql_injection.sh" "$BAD_DIR" >/tmp/r019_bad.out 2>&1; then
+        echo "❌ Bad fixtures passed unexpectedly"
+        cat /tmp/r019_bad.out
         return 1
     fi
-    
-    echo "Testing bad_py.py..."
-    if bash "$SCRIPT_DIR/lint_app_sql_injection.sh" 2>/dev/null | grep -q "❌"; then
-        echo "✅ Bad Python fixture correctly detected SQLi patterns"
+    if grep -q "❌" /tmp/r019_bad.out; then
+        echo "✅ Bad fixtures correctly detected SQLi patterns"
     else
-        echo "❌ Bad Python fixture NOT detected (should have failed)"
+        echo "❌ Bad fixtures failed without SQLi detections"
+        cat /tmp/r019_bad.out
         return 1
     fi
 
@@ -119,16 +123,11 @@ EOF
     echo ""
     echo "=== Testing Good Fixtures (Should Pass) ==="
     
-    # Copy good fixtures to temp location for testing
-    cp "$TEMP_FIXTURES/good_cs.cs" "$TEMP_FIXTURES/test_good.cs"
-    cp "$TEMP_FIXTURES/good_py.py" "$TEMP_FIXTURES/test_good.py"
-    
-    # Temporarily move to fixture dir and test
-    (cd "$TEMP_FIXTURES" && bash "$SCRIPT_DIR/lint_app_sql_injection.sh" >/dev/null 2>&1)
-    if [[ $? -eq 0 ]]; then
+    if bash "$SCRIPT_DIR/lint_app_sql_injection.sh" "$GOOD_DIR" >/tmp/r019_good.out 2>&1; then
         echo "✅ Good fixtures correctly passed (no false positives)"
     else
         echo "❌ Good fixtures failed (false positive)"
+        cat /tmp/r019_good.out
         return 1
     fi
 
@@ -137,3 +136,13 @@ EOF
     echo "✅ Bad fixtures correctly detected vulnerabilities"
     echo "✅ Good fixtures correctly passed (no false positives)"
 }
+
+case "$SUITE" in
+    "app_sql_injection")
+        run_app_sql_injection_fixtures
+        ;;
+    *)
+        echo "❌ Unknown suite: $SUITE"
+        exit 1
+        ;;
+esac

@@ -59,57 +59,55 @@ fi
 
 echo "✅ C# and Python language definitions found"
 
-# Validate enforcement mappings have required fields
 echo "Validating enforcement mappings..."
-policy_ids=$(grep "^  - policy_id:" "$ENFORCEMENT_MAP" | wc -l)
+if ! python3 - <<'PY'
+import sys
+import yaml
+from pathlib import Path
 
-if [[ "$policy_ids" -gt 0 ]]; then
-    echo "✅ Found $policy_ids enforcement mappings"
-    
-    # Check that each mapping has required fields
-    required_fields=("title" "enforcement_type" "languages" "tools" "ci_gate")
-    for field in "${required_fields[@]}"; do
-        field_count=$(grep -A 5 "^  - policy_id:" "$ENFORCEMENT_MAP" | grep -c "^    $field:" || true)
-        if [[ "$field_count" -lt "$policy_ids" ]]; then
-            echo "❌ Some enforcement mappings missing field: $field"
-            exit 1
-        fi
-    done
-    echo "✅ All enforcement mappings have required fields"
-else
-    echo "❌ No enforcement mappings found"
+path = Path("docs/contracts/SECURITY_ENFORCEMENT_MAP.yml")
+data = yaml.safe_load(path.read_text())
+
+mappings = data.get("enforcement_mappings", [])
+if not mappings:
+    print("❌ No enforcement mappings found")
+    sys.exit(1)
+print(f"✅ Found {len(mappings)} enforcement mappings")
+
+required_fields = ["policy_id", "title", "enforcement_type", "languages", "tools", "ci_gate"]
+for idx, mapping in enumerate(mappings, start=1):
+    missing = [f for f in required_fields if f not in mapping]
+    if missing:
+        print(f"❌ enforcement_mappings[{idx}] missing field(s): {', '.join(missing)}")
+        sys.exit(1)
+    if not mapping.get("tools"):
+        print(f"❌ enforcement_mappings[{idx}] has empty tools list")
+        sys.exit(1)
+
+ci_gates = data.get("ci_gates", [])
+security_scan = next((g for g in ci_gates if g.get("name") == "security_scan"), None)
+if not security_scan:
+    print("❌ security_scan CI gate not found")
+    sys.exit(1)
+if security_scan.get("fail_closed") is not True:
+    print("❌ security_scan fail_closed is not true")
+    sys.exit(1)
+print("✅ CI gate configuration valid")
+
+param_req = data.get("parameterization_requirements", {})
+if "database_access" not in param_req:
+    print("❌ database_access parameterization requirements missing")
+    sys.exit(1)
+frameworks = param_req.get("frameworks", {})
+if "cs" not in frameworks or "py" not in frameworks:
+    print("❌ parameterization frameworks must include cs and py")
+    sys.exit(1)
+print("✅ Parameterization requirements valid")
+print("✅ Enforcement mappings have required fields")
+PY
+then
     exit 1
 fi
-
-echo "✅ Enforcement mappings have required fields"
-
-# Validate CI gate configuration
-echo "Validating CI gate configuration..."
-if ! grep -q "security_scan:" "$ENFORCEMENT_MAP"; then
-    echo "❌ security_scan CI gate not found"
-    exit 1
-fi
-
-if ! grep -q "fail_closed: true" "$ENFORCEMENT_MAP"; then
-    echo "❌ CI gate fail_closed not set to true"
-    exit 1
-fi
-
-echo "✅ CI gate configuration valid"
-
-# Validate parameterization requirements
-echo "Validating parameterization requirements..."
-if ! grep -q "database_access:" "$ENFORCEMENT_MAP"; then
-    echo "❌ database_access parameterization requirements missing"
-    exit 1
-fi
-
-if ! grep -q "frameworks:" "$ENFORCEMENT_MAP"; then
-    echo "❌ frameworks parameterization requirements missing"
-    exit 1
-fi
-
-echo "✅ Parameterization requirements valid"
 
 echo ""
 echo "✅ SECURITY_ENFORCEMENT_MAP.yml validation passed"

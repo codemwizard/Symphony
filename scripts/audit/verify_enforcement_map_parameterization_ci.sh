@@ -40,19 +40,49 @@ echo "✅ security_scan job found in CI workflow"
 
 # Check 4: security_scan runs required tools
 echo "Checking security_scan runs required tools..."
-security_scan_section=$(sed -n '/security_scan:/,/^[[:space:]]*[a-zA-Z]/p' "$CI_WORKFLOW")
+if ! python3 - <<'PY'
+import re
+from pathlib import Path
+import sys
 
-required_tools=("lint_app_sql_injection" "lint_security_definer_search_path" "scan_secrets")
-for tool in "${required_tools[@]}"; do
-    if ! echo "$security_scan_section" | grep -q "$tool"; then
-        echo "❌ Required tool not in security_scan: $tool"
-        exit 1
-    fi
-    echo "✅ $tool found in security_scan"
-done
+workflow = Path(".github/workflows/invariants.yml").read_text()
+match = re.search(r"(?ms)^  security_scan:\n(.*?)(?=^  [a-zA-Z0-9_]+:\n|\Z)", workflow)
+if not match:
+    print("❌ Unable to extract security_scan section")
+    sys.exit(1)
+section = match.group(0)
+
+required_tools = [
+    "lint_app_sql_injection.sh",
+    "lint_security_definer_search_path.sh",
+]
+for tool in required_tools:
+    if tool not in section:
+        print(f"❌ Required tool not in security_scan: {tool}")
+        sys.exit(1)
+    print(f"✅ {tool} found in security_scan")
+
+# secrets scanning can be directly invoked or included via fast checks
+if "scan_secrets.sh" in section or "run_security_fast_checks.sh" in section:
+    print("✅ secrets scanning found in security_scan")
+else:
+    print("❌ Required secrets scanning not in security_scan")
+    sys.exit(1)
+PY
+then
+    exit 1
+fi
 
 # Check 5: security_scan is fail-closed
 echo "Checking security_scan fail-closed behavior..."
+security_scan_section="$(python3 - <<'PY'
+import re
+from pathlib import Path
+workflow = Path('.github/workflows/invariants.yml').read_text()
+m = re.search(r'(?ms)^  security_scan:\n(.*?)(?=^  [a-zA-Z0-9_]+:\n|\Z)', workflow)
+print(m.group(0) if m else '')
+PY
+)"
 if echo "$security_scan_section" | grep -q "continue-on-error: true"; then
     echo "❌ security_scan has continue-on-error: true (should be fail-closed)"
     exit 1

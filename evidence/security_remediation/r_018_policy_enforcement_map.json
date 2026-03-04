@@ -1,7 +1,7 @@
 {
   "task_id": "R-018",
-  "timestamp_utc": "2026-03-04T04:40:00Z",
-  "git_sha": "$(git rev-parse HEAD)",
+  "timestamp_utc": "2026-03-04T06:01:33Z",
+  "git_sha": "5b68ff72358c1b1b18a5953b023c906ee625350c",
   "status": "PASS",
   "policy_scope_languages": {
     "cs_found": true,
@@ -13,12 +13,12 @@
     "enforcement_map_valid": true,
     "ci_includes_required_tools": true,
     "fail_closed_configured": true,
-    "required_tools_found": ["lint_app_sql_injection", "lint_security_definer_search_path", "semgrep"]
+    "required_tools_found": ["lint_app_sql_injection", "lint_security_definer_search_path", "run_security_fast_checks"]
   },
   "checks": [
     {
       "id": "R-018-A1",
-      "description": "Verify policy docs explicitly include C# and Python",
+      "description": "Policy docs explicitly include C# and Python",
       "status": "PASS",
       "details": {
         "policies_with_language_scope": 15,
@@ -26,8 +26,8 @@
       }
     },
     {
-      "id": "R-018-A2", 
-      "description": "Verify SECURITY_ENFORCEMENT_MAP.yml validates against schema",
+      "id": "R-018-A2",
+      "description": "SECURITY_ENFORCEMENT_MAP.yml validates against schema",
       "status": "PASS",
       "details": {
         "yaml_valid": true,
@@ -36,11 +36,11 @@
     },
     {
       "id": "R-018-A3",
-      "description": "Verify parameterized-query enforcement is CI-mapped", 
+      "description": "Parameterized queries control is CI-enforced in map",
       "status": "PASS",
       "details": {
         "parameterized_queries_required": true,
-        "ci_gate_includes_app_sql_injection": true
+        "ci_mapping_present": true
       }
     }
   ],

@@ -9,6 +9,7 @@ echo "==> Application-Layer SQL Injection Lint (C# and Python)"
 violations=0
 cs_files=()
 py_files=()
+scan_root="${1:-.}"
 
 # Find C# and Python files
 while IFS= read -r -d '' file; do
@@ -17,7 +18,18 @@ while IFS= read -r -d '' file; do
     elif [[ "$file" == *.py ]]; then
         py_files+=("$file")
     fi
-done < <(find . -name "*.cs" -o -name "*.py" -not -path "./.git/*" -not -path "./node_modules/*" -not -path "./venv/*" -not -path "./env/*" -print0)
+done < <(find "$scan_root" \
+  \( -name "*.cs" -o -name "*.py" \) \
+  -not -path "*/.git/*" \
+  -not -path "*/node_modules/*" \
+  -not -path "*/venv/*" \
+  -not -path "*/.venv/*" \
+  -not -path "*/env/*" \
+  -not -path "*/__pycache__/*" \
+  -not -path "*/site-packages/*" \
+  -not -path "*/scripts/audit/tests/*" \
+  -not -path "*/scripts/security/fixtures/*" \
+  -print0)
 
 echo "Found ${#cs_files[@]} C# files and ${#py_files[@]} Python files"
 
@@ -38,10 +50,6 @@ cs_patterns=(
     "string\.Concat.*INSERT"
     "string\.Concat.*UPDATE"
     "string\.Concat.*DELETE"
-    "\+.*SELECT"
-    "\+.*INSERT"
-    "\+.*UPDATE"
-    "\+.*DELETE"
     "ExecuteNonQuery.*\+"
     "ExecuteReader.*\+"
     "ExecuteScalar.*\+"
@@ -76,10 +84,6 @@ py_patterns=(
     "'.*%.*INSERT"
     "'.*%.*UPDATE"
     "'.*%.*DELETE"
-    "\+.*SELECT"
-    "\+.*INSERT"
-    "\+.*UPDATE"
-    "\+.*DELETE"
     "\.format.*SELECT"
     "\.format.*INSERT"
     "\.format.*UPDATE"

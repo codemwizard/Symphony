@@ -1,7 +1,7 @@
 id: "R-018"
 phase: "0.5"
 title: "Policy scope + enforcement mapping reform"
-status: "planned"
+status: "completed"
 dependencies: ["R-002"]
 description: "Make policies language-agnostic and create a CI-validated enforcement map."
 affected_services: ["security-governance", "audit"]

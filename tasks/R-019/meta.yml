@@ -1,7 +1,7 @@
 id: "R-019"
 phase: "0.5"
 title: "Lint scope expansion + real SQL injection lint"
-status: "planned"
+status: "completed"
 dependencies: ["R-018"]
 description: "Fix misleading lint naming and implement actual application-layer SQLi detection for C# and Python."
 affected_services: ["security", "audit"]
