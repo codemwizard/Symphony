@@ -1,0 +1,5287 @@
+{
+  "conflict_override_justification": null,
+  "errors": [],
+  "files": [
+    {
+      "changed": true,
+      "conflicts": [],
+      "legacy_keys": [],
+      "mappings": [],
+      "normalizations": [
+        "phase_normalized_to_string",
+        "status_normalized"
+      ],
+      "path": "tasks/PERF-001/meta.yml",
+      "schema_after": "1",
+      "schema_before": "0"
+    },
+    {
+      "changed": true,
+      "conflicts": [],
+      "legacy_keys": [],
+      "mappings": [],
+      "normalizations": [
+        "phase_normalized_to_string",
+        "status_normalized"
+      ],
+      "path": "tasks/PERF-002/meta.yml",
+      "schema_after": "1",
+      "schema_before": "0"
+    },
+    {
+      "changed": true,
+      "conflicts": [],
+      "legacy_keys": [],
+      "mappings": [],
+      "normalizations": [
+        "phase_normalized_to_string",
+        "status_normalized"
+      ],
+      "path": "tasks/PERF-003/meta.yml",
+      "schema_after": "1",
+      "schema_before": "0"
+    },
+    {
+      "changed": true,
+      "conflicts": [],
+      "legacy_keys": [],
+      "mappings": [],
+      "normalizations": [
+        "evidence_normalized_to_list",
+        "phase_normalized_to_string",
+        "status_normalized",
+        "verification_normalized_to_list"
+      ],
+      "path": "tasks/PERF-004/meta.yml",
+      "schema_after": "1",
+      "schema_before": "0"
+    },
+    {
+      "changed": true,
+      "conflicts": [],
+      "legacy_keys": [],
+      "mappings": [],
+      "normalizations": [
+        "phase_normalized_to_string",
+        "status_normalized"
+      ],
+      "path": "tasks/PERF-005/meta.yml",
+      "schema_after": "1",
+      "schema_before": "0"
+    },
+    {
+      "changed": true,
+      "conflicts": [],
+      "legacy_keys": [],
+      "mappings": [],
+      "normalizations": [
+        "phase_normalized_to_string",
+        "status_normalized"
+      ],
+      "path": "tasks/PERF-005A/meta.yml",
+      "schema_after": "1",
+      "schema_before": "0"
+    },
+    {
+      "changed": true,
+      "conflicts": [],
+      "legacy_keys": [],
+      "mappings": [],
+      "normalizations": [
+        "phase_normalized_to_string",
+        "status_normalized"
+      ],
+      "path": "tasks/PERF-006/meta.yml",
+      "schema_after": "1",
+      "schema_before": "0"
+    },
+    {
+      "changed": true,
+      "conflicts": [],
+      "legacy_keys": [],
+      "mappings": [],
+      "normalizations": [
+        "phase_normalized_to_string",
+        "status_normalized"
+      ],
+      "path": "tasks/R-000/meta.yml",
+      "schema_after": "1",
+      "schema_before": "0"
+    },
+    {
+      "changed": true,
+      "conflicts": [],
+      "legacy_keys": [
+        "affected_files",
+        "dependencies",
+        "id",
+        "implementation_plan_path",
+        "verification_command"
+      ],
+      "mappings": [
+        {
+          "action": "mapped",
+          "new_key": "touches",
+          "old_key": "affected_files"
+        },
+        {
+          "action": "mapped",
+          "new_key": "depends_on",
+          "old_key": "dependencies"
+        },
+        {
+          "action": "mapped",
+          "new_key": "task_id",
+          "old_key": "id"
+        },
+        {
+          "action": "mapped",
+          "new_key": "implementation_plan",
+          "old_key": "implementation_plan_path"
+        },
+        {
+          "action": "mapped",
+          "new_key": "verification",
+          "old_key": "verification_command"
+        }
+      ],
+      "normalizations": [
+        "evidence_normalized_to_list",
+        "phase_normalized_to_string",
+        "status_normalized",
+        "verification_normalized_to_list"
+      ],
+      "path": "tasks/R-001/meta.yml",
+      "schema_after": "1",
+      "schema_before": "0"
+    },
+    {
+      "changed": true,
+      "conflicts": [],
+      "legacy_keys": [
+        "affected_files",
+        "dependencies",
+        "id",
+        "implementation_plan_path",
+        "verification_command"
+      ],
+      "mappings": [
+        {
+          "action": "mapped",
+          "new_key": "touches",
+          "old_key": "affected_files"
+        },
+        {
+          "action": "mapped",
+          "new_key": "depends_on",
+          "old_key": "dependencies"
+        },
+        {
+          "action": "mapped",
+          "new_key": "task_id",
+          "old_key": "id"
+        },
+        {
+          "action": "mapped",
+          "new_key": "implementation_plan",
+          "old_key": "implementation_plan_path"
+        },
+        {
+          "action": "mapped",
+          "new_key": "verification",
+          "old_key": "verification_command"
+        }
+      ],
+      "normalizations": [
+        "evidence_normalized_to_list",
+        "phase_normalized_to_string",
+        "status_normalized",
+        "verification_normalized_to_list"
+      ],
+      "path": "tasks/R-002/meta.yml",
+      "schema_after": "1",
+      "schema_before": "0"
+    },
+    {
+      "changed": true,
+      "conflicts": [],
+      "legacy_keys": [
+        "affected_files",
+        "dependencies",
+        "id",
+        "implementation_plan_path",
+        "verification_command"
+      ],
+      "mappings": [
+        {
+          "action": "mapped",
+          "new_key": "touches",
+          "old_key": "affected_files"
+        },
+        {
+          "action": "mapped",
+          "new_key": "depends_on",
+          "old_key": "dependencies"
+        },
+        {
+          "action": "mapped",
+          "new_key": "task_id",
+          "old_key": "id"
+        },
+        {
+          "action": "mapped",
+          "new_key": "implementation_plan",
+          "old_key": "implementation_plan_path"
+        },
+        {
+          "action": "mapped",
+          "new_key": "verification",
+          "old_key": "verification_command"
+        }
+      ],
+      "normalizations": [
+        "evidence_normalized_to_list",
+        "phase_normalized_to_string",
+        "status_normalized",
+        "verification_normalized_to_list"
+      ],
+      "path": "tasks/R-003/meta.yml",
+      "schema_after": "1",
+      "schema_before": "0"
+    },
+    {
+      "changed": true,
+      "conflicts": [],
+      "legacy_keys": [
+        "affected_files",
+        "dependencies",
+        "id",
+        "implementation_plan_path",
+        "verification_command"
+      ],
+      "mappings": [
+        {
+          "action": "mapped",
+          "new_key": "touches",
+          "old_key": "affected_files"
+        },
+        {
+          "action": "mapped",
+          "new_key": "depends_on",
+          "old_key": "dependencies"
+        },
+        {
+          "action": "mapped",
+          "new_key": "task_id",
+          "old_key": "id"
+        },
+        {
+          "action": "mapped",
+          "new_key": "implementation_plan",
+          "old_key": "implementation_plan_path"
+        },
+        {
+          "action": "mapped",
+          "new_key": "verification",
+          "old_key": "verification_command"
+        }
+      ],
+      "normalizations": [
+        "evidence_normalized_to_list",
+        "phase_normalized_to_string",
+        "status_normalized",
+        "verification_normalized_to_list"
+      ],
+      "path": "tasks/R-004/meta.yml",
+      "schema_after": "1",
+      "schema_before": "0"
+    },
+    {
+      "changed": true,
+      "conflicts": [],
+      "legacy_keys": [
+        "affected_files",
+        "dependencies",
+        "id",
+        "implementation_plan_path",
+        "verification_command"
+      ],
+      "mappings": [
+        {
+          "action": "mapped",
+          "new_key": "touches",
+          "old_key": "affected_files"
+        },
+        {
+          "action": "mapped",
+          "new_key": "depends_on",
+          "old_key": "dependencies"
+        },
+        {
+          "action": "mapped",
+          "new_key": "task_id",
+          "old_key": "id"
+        },
+        {
+          "action": "mapped",
+          "new_key": "implementation_plan",
+          "old_key": "implementation_plan_path"
+        },
+        {
+          "action": "mapped",
+          "new_key": "verification",
+          "old_key": "verification_command"
+        }
+      ],
+      "normalizations": [
+        "evidence_normalized_to_list",
+        "phase_normalized_to_string",
+        "status_normalized",
+        "verification_normalized_to_list"
+      ],
+      "path": "tasks/R-005/meta.yml",
+      "schema_after": "1",
+      "schema_before": "0"
+    },
+    {
+      "changed": true,
+      "conflicts": [],
+      "legacy_keys": [
+        "affected_files",
+        "dependencies",
+        "id",
+        "implementation_plan_path",
+        "verification_command"
+      ],
+      "mappings": [
+        {
+          "action": "mapped",
+          "new_key": "touches",
+          "old_key": "affected_files"
+        },
+        {
+          "action": "mapped",
+          "new_key": "depends_on",
+          "old_key": "dependencies"
+        },
+        {
+          "action": "mapped",
+          "new_key": "task_id",
+          "old_key": "id"
+        },
+        {
+          "action": "mapped",
+          "new_key": "implementation_plan",
+          "old_key": "implementation_plan_path"
+        },
+        {
+          "action": "mapped",
+          "new_key": "verification",
+          "old_key": "verification_command"
+        }
+      ],
+      "normalizations": [
+        "evidence_normalized_to_list",
+        "phase_normalized_to_string",
+        "status_normalized",
+        "verification_normalized_to_list"
+      ],
+      "path": "tasks/R-006/meta.yml",
+      "schema_after": "1",
+      "schema_before": "0"
+    },
+    {
+      "changed": true,
+      "conflicts": [],
+      "legacy_keys": [
+        "affected_files",
+        "dependencies",
+        "id",
+        "implementation_plan_path",
+        "verification_command"
+      ],
+      "mappings": [
+        {
+          "action": "mapped",
+          "new_key": "touches",
+          "old_key": "affected_files"
+        },
+        {
+          "action": "mapped",
+          "new_key": "depends_on",
+          "old_key": "dependencies"
+        },
+        {
+          "action": "mapped",
+          "new_key": "task_id",
+          "old_key": "id"
+        },
+        {
+          "action": "mapped",
+          "new_key": "implementation_plan",
+          "old_key": "implementation_plan_path"
+        },
+        {
+          "action": "mapped",
+          "new_key": "verification",
+          "old_key": "verification_command"
+        }
+      ],
+      "normalizations": [
+        "evidence_normalized_to_list",
+        "phase_normalized_to_string",
+        "status_normalized",
+        "verification_normalized_to_list"
+      ],
+      "path": "tasks/R-007/meta.yml",
+      "schema_after": "1",
+      "schema_before": "0"
+    },
+    {
+      "changed": true,
+      "conflicts": [],
+      "legacy_keys": [
+        "affected_files",
+        "dependencies",
+        "id",
+        "implementation_plan_path",
+        "verification_command"
+      ],
+      "mappings": [
+        {
+          "action": "mapped",
+          "new_key": "touches",
+          "old_key": "affected_files"
+        },
+        {
+          "action": "mapped",
+          "new_key": "depends_on",
+          "old_key": "dependencies"
+        },
+        {
+          "action": "mapped",
+          "new_key": "task_id",
+          "old_key": "id"
+        },
+        {
+          "action": "mapped",
+          "new_key": "implementation_plan",
+          "old_key": "implementation_plan_path"
+        },
+        {
+          "action": "mapped",
+          "new_key": "verification",
+          "old_key": "verification_command"
+        }
+      ],
+      "normalizations": [
+        "evidence_normalized_to_list",
+        "phase_normalized_to_string",
+        "status_normalized",
+        "verification_normalized_to_list"
+      ],
+      "path": "tasks/R-008/meta.yml",
+      "schema_after": "1",
+      "schema_before": "0"
+    },
+    {
+      "changed": true,
+      "conflicts": [],
+      "legacy_keys": [
+        "affected_files",
+        "dependencies",
+        "id",
+        "implementation_plan_path",
+        "verification_command"
+      ],
+      "mappings": [
+        {
+          "action": "mapped",
+          "new_key": "touches",
+          "old_key": "affected_files"
+        },
+        {
+          "action": "mapped",
+          "new_key": "depends_on",
+          "old_key": "dependencies"
+        },
+        {
+          "action": "mapped",
+          "new_key": "task_id",
+          "old_key": "id"
+        },
+        {
+          "action": "mapped",
+          "new_key": "implementation_plan",
+          "old_key": "implementation_plan_path"
+        },
+        {
+          "action": "mapped",
+          "new_key": "verification",
+          "old_key": "verification_command"
+        }
+      ],
+      "normalizations": [
+        "evidence_normalized_to_list",
+        "phase_normalized_to_string",
+        "status_normalized",
+        "verification_normalized_to_list"
+      ],
+      "path": "tasks/R-009/meta.yml",
+      "schema_after": "1",
+      "schema_before": "0"
+    },
+    {
+      "changed": true,
+      "conflicts": [],
+      "legacy_keys": [
+        "affected_files",
+        "dependencies",
+        "id",
+        "implementation_plan_path",
+        "verification_command"
+      ],
+      "mappings": [
+        {
+          "action": "mapped",
+          "new_key": "touches",
+          "old_key": "affected_files"
+        },
+        {
+          "action": "mapped",
+          "new_key": "depends_on",
+          "old_key": "dependencies"
+        },
+        {
+          "action": "mapped",
+          "new_key": "task_id",
+          "old_key": "id"
+        },
+        {
+          "action": "mapped",
+          "new_key": "implementation_plan",
+          "old_key": "implementation_plan_path"
+        },
+        {
+          "action": "mapped",
+          "new_key": "verification",
+          "old_key": "verification_command"
+        }
+      ],
+      "normalizations": [
+        "evidence_normalized_to_list",
+        "phase_normalized_to_string",
+        "status_normalized",
+        "verification_normalized_to_list"
+      ],
+      "path": "tasks/R-010/meta.yml",
+      "schema_after": "1",
+      "schema_before": "0"
+    },
+    {
+      "changed": true,
+      "conflicts": [],
+      "legacy_keys": [
+        "affected_files",
+        "dependencies",
+        "id",
+        "implementation_plan_path",
+        "verification_command"
+      ],
+      "mappings": [
+        {
+          "action": "mapped",
+          "new_key": "touches",
+          "old_key": "affected_files"
+        },
+        {
+          "action": "mapped",
+          "new_key": "depends_on",
+          "old_key": "dependencies"
+        },
+        {
+          "action": "mapped",
+          "new_key": "task_id",
+          "old_key": "id"
+        },
+        {
+          "action": "mapped",
+          "new_key": "implementation_plan",
+          "old_key": "implementation_plan_path"
+        },
+        {
+          "action": "mapped",
+          "new_key": "verification",
+          "old_key": "verification_command"
+        }
+      ],
+      "normalizations": [
+        "evidence_normalized_to_list",
+        "phase_normalized_to_string",
+        "status_normalized",
+        "verification_normalized_to_list"
+      ],
+      "path": "tasks/R-011/meta.yml",
+      "schema_after": "1",
+      "schema_before": "0"
+    },
+    {
+      "changed": true,
+      "conflicts": [],
+      "legacy_keys": [
+        "affected_files",
+        "dependencies",
+        "id",
+        "implementation_plan_path",
+        "verification_command"
+      ],
+      "mappings": [
+        {
+          "action": "mapped",
+          "new_key": "touches",
+          "old_key": "affected_files"
+        },
+        {
+          "action": "mapped",
+          "new_key": "depends_on",
+          "old_key": "dependencies"
+        },
+        {
+          "action": "mapped",
+          "new_key": "task_id",
+          "old_key": "id"
+        },
+        {
+          "action": "mapped",
+          "new_key": "implementation_plan",
+          "old_key": "implementation_plan_path"
+        },
+        {
+          "action": "mapped",
+          "new_key": "verification",
+          "old_key": "verification_command"
+        }
+      ],
+      "normalizations": [
+        "evidence_normalized_to_list",
+        "phase_normalized_to_string",
+        "status_normalized",
+        "verification_normalized_to_list"
+      ],
+      "path": "tasks/R-012/meta.yml",
+      "schema_after": "1",
+      "schema_before": "0"
+    },
+    {
+      "changed": true,
+      "conflicts": [],
+      "legacy_keys": [
+        "affected_files",
+        "dependencies",
+        "id",
+        "implementation_plan_path",
+        "verification_command"
+      ],
+      "mappings": [
+        {
+          "action": "mapped",
+          "new_key": "touches",
+          "old_key": "affected_files"
+        },
+        {
+          "action": "mapped",
+          "new_key": "depends_on",
+          "old_key": "dependencies"
+        },
+        {
+          "action": "mapped",
+          "new_key": "task_id",
+          "old_key": "id"
+        },
+        {
+          "action": "mapped",
+          "new_key": "implementation_plan",
+          "old_key": "implementation_plan_path"
+        },
+        {
+          "action": "mapped",
+          "new_key": "verification",
+          "old_key": "verification_command"
+        }
+      ],
+      "normalizations": [
+        "evidence_normalized_to_list",
+        "phase_normalized_to_string",
+        "status_normalized",
+        "verification_normalized_to_list"
+      ],
+      "path": "tasks/R-013/meta.yml",
+      "schema_after": "1",
+      "schema_before": "0"
+    },
+    {
+      "changed": true,
+      "conflicts": [],
+      "legacy_keys": [
+        "affected_files",
+        "dependencies",
+        "id",
+        "implementation_plan_path",
+        "verification_command"
+      ],
+      "mappings": [
+        {
+          "action": "mapped",
+          "new_key": "touches",
+          "old_key": "affected_files"
+        },
+        {
+          "action": "mapped",
+          "new_key": "depends_on",
+          "old_key": "dependencies"
+        },
+        {
+          "action": "mapped",
+          "new_key": "task_id",
+          "old_key": "id"
+        },
+        {
+          "action": "mapped",
+          "new_key": "implementation_plan",
+          "old_key": "implementation_plan_path"
+        },
+        {
+          "action": "mapped",
+          "new_key": "verification",
+          "old_key": "verification_command"
+        }
+      ],
+      "normalizations": [
+        "evidence_normalized_to_list",
+        "phase_normalized_to_string",
+        "status_normalized",
+        "verification_normalized_to_list"
+      ],
+      "path": "tasks/R-014/meta.yml",
+      "schema_after": "1",
+      "schema_before": "0"
+    },
+    {
+      "changed": true,
+      "conflicts": [],
+      "legacy_keys": [
+        "affected_files",
+        "dependencies",
+        "id",
+        "implementation_plan_path",
+        "verification_command"
+      ],
+      "mappings": [
+        {
+          "action": "mapped",
+          "new_key": "touches",
+          "old_key": "affected_files"
+        },
+        {
+          "action": "mapped",
+          "new_key": "depends_on",
+          "old_key": "dependencies"
+        },
+        {
+          "action": "mapped",
+          "new_key": "task_id",
+          "old_key": "id"
+        },
+        {
+          "action": "mapped",
+          "new_key": "implementation_plan",
+          "old_key": "implementation_plan_path"
+        },
+        {
+          "action": "mapped",
+          "new_key": "verification",
+          "old_key": "verification_command"
+        }
+      ],
+      "normalizations": [
+        "evidence_normalized_to_list",
+        "phase_normalized_to_string",
+        "status_normalized",
+        "verification_normalized_to_list"
+      ],
+      "path": "tasks/R-015/meta.yml",
+      "schema_after": "1",
+      "schema_before": "0"
+    },
+    {
+      "changed": true,
+      "conflicts": [],
+      "legacy_keys": [
+        "affected_files",
+        "dependencies",
+        "id",
+        "implementation_plan_path",
+        "verification_command"
+      ],
+      "mappings": [
+        {
+          "action": "mapped",
+          "new_key": "touches",
+          "old_key": "affected_files"
+        },
+        {
+          "action": "mapped",
+          "new_key": "depends_on",
+          "old_key": "dependencies"
+        },
+        {
+          "action": "mapped",
+          "new_key": "task_id",
+          "old_key": "id"
+        },
+        {
+          "action": "mapped",
+          "new_key": "implementation_plan",
+          "old_key": "implementation_plan_path"
+        },
+        {
+          "action": "mapped",
+          "new_key": "verification",
+          "old_key": "verification_command"
+        }
+      ],
+      "normalizations": [
+        "evidence_normalized_to_list",
+        "phase_normalized_to_string",
+        "status_normalized",
+        "verification_normalized_to_list"
+      ],
+      "path": "tasks/R-018/meta.yml",
+      "schema_after": "1",
+      "schema_before": "0"
+    },
+    {
+      "changed": true,
+      "conflicts": [],
+      "legacy_keys": [
+        "affected_files",
+        "dependencies",
+        "id",
+        "implementation_plan_path",
+        "verification_command"
+      ],
+      "mappings": [
+        {
+          "action": "mapped",
+          "new_key": "touches",
+          "old_key": "affected_files"
+        },
+        {
+          "action": "mapped",
+          "new_key": "depends_on",
+          "old_key": "dependencies"
+        },
+        {
+          "action": "mapped",
+          "new_key": "task_id",
+          "old_key": "id"
+        },
+        {
+          "action": "mapped",
+          "new_key": "implementation_plan",
+          "old_key": "implementation_plan_path"
+        },
+        {
+          "action": "mapped",
+          "new_key": "verification",
+          "old_key": "verification_command"
+        }
+      ],
+      "normalizations": [
+        "evidence_normalized_to_list",
+        "phase_normalized_to_string",
+        "status_normalized",
+        "verification_normalized_to_list"
+      ],
+      "path": "tasks/R-019/meta.yml",
+      "schema_after": "1",
+      "schema_before": "0"
+    },
+    {
+      "changed": true,
+      "conflicts": [],
+      "legacy_keys": [
+        "affected_files",
+        "dependencies",
+        "id",
+        "implementation_plan_path",
+        "verification_command"
+      ],
+      "mappings": [
+        {
+          "action": "mapped",
+          "new_key": "touches",
+          "old_key": "affected_files"
+        },
+        {
+          "action": "mapped",
+          "new_key": "depends_on",
+          "old_key": "dependencies"
+        },
+        {
+          "action": "mapped",
+          "new_key": "task_id",
+          "old_key": "id"
+        },
+        {
+          "action": "mapped",
+          "new_key": "implementation_plan",
+          "old_key": "implementation_plan_path"
+        },
+        {
+          "action": "mapped",
+          "new_key": "verification",
+          "old_key": "verification_command"
+        }
+      ],
+      "normalizations": [
+        "evidence_normalized_to_list",
+        "phase_normalized_to_string",
+        "status_normalized",
+        "verification_normalized_to_list"
+      ],
+      "path": "tasks/R-020/meta.yml",
+      "schema_after": "1",
+      "schema_before": "0"
+    },
+    {
+      "changed": true,
+      "conflicts": [],
+      "legacy_keys": [
+        "affected_files",
+        "dependencies",
+        "id",
+        "implementation_plan_path",
+        "verification_command"
+      ],
+      "mappings": [
+        {
+          "action": "mapped",
+          "new_key": "touches",
+          "old_key": "affected_files"
+        },
+        {
+          "action": "mapped",
+          "new_key": "depends_on",
+          "old_key": "dependencies"
+        },
+        {
+          "action": "mapped",
+          "new_key": "task_id",
+          "old_key": "id"
+        },
+        {
+          "action": "mapped",
+          "new_key": "implementation_plan",
+          "old_key": "implementation_plan_path"
+        },
+        {
+          "action": "mapped",
+          "new_key": "verification",
+          "old_key": "verification_command"
+        }
+      ],
+      "normalizations": [
+        "evidence_normalized_to_list",
+        "phase_normalized_to_string",
+        "status_normalized",
+        "verification_normalized_to_list"
+      ],
+      "path": "tasks/R-021/meta.yml",
+      "schema_after": "1",
+      "schema_before": "0"
+    },
+    {
+      "changed": true,
+      "conflicts": [],
+      "legacy_keys": [
+        "affected_files",
+        "dependencies",
+        "id",
+        "implementation_plan_path",
+        "verification_command"
+      ],
+      "mappings": [
+        {
+          "action": "mapped",
+          "new_key": "touches",
+          "old_key": "affected_files"
+        },
+        {
+          "action": "mapped",
+          "new_key": "depends_on",
+          "old_key": "dependencies"
+        },
+        {
+          "action": "mapped",
+          "new_key": "task_id",
+          "old_key": "id"
+        },
+        {
+          "action": "mapped",
+          "new_key": "implementation_plan",
+          "old_key": "implementation_plan_path"
+        },
+        {
+          "action": "mapped",
+          "new_key": "verification",
+          "old_key": "verification_command"
+        }
+      ],
+      "normalizations": [
+        "evidence_normalized_to_list",
+        "phase_normalized_to_string",
+        "status_normalized",
+        "verification_normalized_to_list"
+      ],
+      "path": "tasks/R-022/meta.yml",
+      "schema_after": "1",
+      "schema_before": "0"
+    },
+    {
+      "changed": true,
+      "conflicts": [],
+      "legacy_keys": [],
+      "mappings": [],
+      "normalizations": [
+        "phase_normalized_to_string",
+        "status_normalized"
+      ],
+      "path": "tasks/R-023/meta.yml",
+      "schema_after": "1",
+      "schema_before": "0"
+    },
+    {
+      "changed": false,
+      "conflicts": [],
+      "legacy_keys": [],
+      "mappings": [],
+      "normalizations": [
+        "phase_normalized_to_string",
+        "status_normalized"
+      ],
+      "path": "tasks/R-024/meta.yml",
+      "schema_after": "1",
+      "schema_before": "1"
+    },
+    {
+      "changed": true,
+      "conflicts": [],
+      "legacy_keys": [],
+      "mappings": [],
+      "normalizations": [
+        "phase_normalized_to_string",
+        "status_normalized"
+      ],
+      "path": "tasks/R-025/meta.yml",
+      "schema_after": "1",
+      "schema_before": "0"
+    },
+    {
+      "changed": true,
+      "conflicts": [],
+      "legacy_keys": [],
+      "mappings": [],
+      "normalizations": [
+        "phase_normalized_to_string",
+        "status_normalized"
+      ],
+      "path": "tasks/R-026/meta.yml",
+      "schema_after": "1",
+      "schema_before": "0"
+    },
+    {
+      "changed": true,
+      "conflicts": [],
+      "legacy_keys": [],
+      "mappings": [],
+      "normalizations": [
+        "phase_normalized_to_string",
+        "status_normalized"
+      ],
+      "path": "tasks/R-027/meta.yml",
+      "schema_after": "1",
+      "schema_before": "0"
+    },
+    {
+      "changed": true,
+      "conflicts": [],
+      "legacy_keys": [],
+      "mappings": [],
+      "normalizations": [
+        "phase_normalized_to_string",
+        "status_normalized"
+      ],
+      "path": "tasks/TSK-CLEAN-001/meta.yml",
+      "schema_after": "1",
+      "schema_before": "0"
+    },
+    {
+      "changed": true,
+      "conflicts": [],
+      "legacy_keys": [],
+      "mappings": [],
+      "normalizations": [
+        "phase_normalized_to_string",
+        "status_normalized"
+      ],
+      "path": "tasks/TSK-CLEAN-002/meta.yml",
+      "schema_after": "1",
+      "schema_before": "0"
+    },
+    {
+      "changed": true,
+      "conflicts": [],
+      "legacy_keys": [],
+      "mappings": [],
+      "normalizations": [
+        "phase_normalized_to_string",
+        "status_normalized"
+      ],
+      "path": "tasks/TSK-HARD-000/meta.yml",
+      "schema_after": "1",
+      "schema_before": "0"
+    },
+    {
+      "changed": true,
+      "conflicts": [],
+      "legacy_keys": [],
+      "mappings": [],
+      "normalizations": [
+        "phase_normalized_to_string",
+        "status_normalized"
+      ],
+      "path": "tasks/TSK-HARD-001/meta.yml",
+      "schema_after": "1",
+      "schema_before": "0"
+    },
+    {
+      "changed": true,
+      "conflicts": [],
+      "legacy_keys": [],
+      "mappings": [],
+      "normalizations": [
+        "phase_normalized_to_string",
+        "status_normalized"
+      ],
+      "path": "tasks/TSK-HARD-002/meta.yml",
+      "schema_after": "1",
+      "schema_before": "0"
+    },
+    {
+      "changed": true,
+      "conflicts": [],
+      "legacy_keys": [],
+      "mappings": [],
+      "normalizations": [
+        "phase_normalized_to_string",
+        "status_normalized"
+      ],
+      "path": "tasks/TSK-HARD-010/meta.yml",
+      "schema_after": "1",
+      "schema_before": "0"
+    },
+    {
+      "changed": true,
+      "conflicts": [],
+      "legacy_keys": [],
+      "mappings": [],
+      "normalizations": [
+        "phase_normalized_to_string",
+        "status_normalized"
+      ],
+      "path": "tasks/TSK-HARD-011/meta.yml",
+      "schema_after": "1",
+      "schema_before": "0"
+    },
+    {
+      "changed": true,
+      "conflicts": [],
+      "legacy_keys": [],
+      "mappings": [],
+      "normalizations": [
+        "phase_normalized_to_string",
+        "status_normalized"
+      ],
+      "path": "tasks/TSK-HARD-011A/meta.yml",
+      "schema_after": "1",
+      "schema_before": "0"
+    },
+    {
+      "changed": true,
+      "conflicts": [],
+      "legacy_keys": [],
+      "mappings": [],
+      "normalizations": [
+        "phase_normalized_to_string",
+        "status_normalized"
+      ],
+      "path": "tasks/TSK-HARD-011B/meta.yml",
+      "schema_after": "1",
+      "schema_before": "0"
+    },
+    {
+      "changed": true,
+      "conflicts": [],
+      "legacy_keys": [],
+      "mappings": [],
+      "normalizations": [
+        "phase_normalized_to_string",
+        "status_normalized"
+      ],
+      "path": "tasks/TSK-HARD-012/meta.yml",
+      "schema_after": "1",
+      "schema_before": "0"
+    },
+    {
+      "changed": true,
+      "conflicts": [],
+      "legacy_keys": [],
+      "mappings": [],
+      "normalizations": [
+        "phase_normalized_to_string",
+        "status_normalized"
+      ],
+      "path": "tasks/TSK-HARD-013/meta.yml",
+      "schema_after": "1",
+      "schema_before": "0"
+    },
+    {
+      "changed": true,
+      "conflicts": [],
+      "legacy_keys": [],
+      "mappings": [],
+      "normalizations": [
+        "phase_normalized_to_string",
+        "status_normalized"
+      ],
+      "path": "tasks/TSK-HARD-013B/meta.yml",
+      "schema_after": "1",
+      "schema_before": "0"
+    },
+    {
+      "changed": true,
+      "conflicts": [],
+      "legacy_keys": [],
+      "mappings": [],
+      "normalizations": [
+        "phase_normalized_to_string",
+        "status_normalized"
+      ],
+      "path": "tasks/TSK-HARD-014/meta.yml",
+      "schema_after": "1",
+      "schema_before": "0"
+    },
+    {
+      "changed": true,
+      "conflicts": [],
+      "legacy_keys": [],
+      "mappings": [],
+      "normalizations": [
+        "phase_normalized_to_string",
+        "status_normalized"
+      ],
+      "path": "tasks/TSK-HARD-015/meta.yml",
+      "schema_after": "1",
+      "schema_before": "0"
+    },
+    {
+      "changed": true,
+      "conflicts": [],
+      "legacy_keys": [],
+      "mappings": [],
+      "normalizations": [
+        "phase_normalized_to_string",
+        "status_normalized"
+      ],
+      "path": "tasks/TSK-HARD-016/meta.yml",
+      "schema_after": "1",
+      "schema_before": "0"
+    },
+    {
+      "changed": true,
+      "conflicts": [],
+      "legacy_keys": [],
+      "mappings": [],
+      "normalizations": [
+        "phase_normalized_to_string",
+        "status_normalized"
+      ],
+      "path": "tasks/TSK-HARD-017/meta.yml",
+      "schema_after": "1",
+      "schema_before": "0"
+    },
+    {
+      "changed": true,
+      "conflicts": [],
+      "legacy_keys": [],
+      "mappings": [],
+      "normalizations": [
+        "phase_normalized_to_string",
+        "status_normalized"
+      ],
+      "path": "tasks/TSK-HARD-020/meta.yml",
+      "schema_after": "1",
+      "schema_before": "0"
+    },
+    {
+      "changed": true,
+      "conflicts": [],
+      "legacy_keys": [],
+      "mappings": [],
+      "normalizations": [
+        "phase_normalized_to_string",
+        "status_normalized"
+      ],
+      "path": "tasks/TSK-HARD-021/meta.yml",
+      "schema_after": "1",
+      "schema_before": "0"
+    },
+    {
+      "changed": true,
+      "conflicts": [],
+      "legacy_keys": [],
+      "mappings": [],
+      "normalizations": [
+        "phase_normalized_to_string",
+        "status_normalized"
+      ],
+      "path": "tasks/TSK-HARD-022/meta.yml",
+      "schema_after": "1",
+      "schema_before": "0"
+    },
+    {
+      "changed": true,
+      "conflicts": [],
+      "legacy_keys": [],
+      "mappings": [],
+      "normalizations": [
+        "phase_normalized_to_string",
+        "status_normalized"
+      ],
+      "path": "tasks/TSK-HARD-023/meta.yml",
+      "schema_after": "1",
+      "schema_before": "0"
+    },
+    {
+      "changed": true,
+      "conflicts": [],
+      "legacy_keys": [],
+      "mappings": [],
+      "normalizations": [
+        "phase_normalized_to_string",
+        "status_normalized"
+      ],
+      "path": "tasks/TSK-HARD-024/meta.yml",
+      "schema_after": "1",
+      "schema_before": "0"
+    },
+    {
+      "changed": true,
+      "conflicts": [],
+      "legacy_keys": [],
+      "mappings": [],
+      "normalizations": [
+        "phase_normalized_to_string",
+        "status_normalized"
+      ],
+      "path": "tasks/TSK-HARD-025/meta.yml",
+      "schema_after": "1",
+      "schema_before": "0"
+    },
+    {
+      "changed": true,
+      "conflicts": [],
+      "legacy_keys": [],
+      "mappings": [],
+      "normalizations": [
+        "phase_normalized_to_string",
+        "status_normalized"
+      ],
+      "path": "tasks/TSK-HARD-026/meta.yml",
+      "schema_after": "1",
+      "schema_before": "0"
+    },
+    {
+      "changed": true,
+      "conflicts": [],
+      "legacy_keys": [],
+      "mappings": [],
+      "normalizations": [
+        "phase_normalized_to_string",
+        "status_normalized"
+      ],
+      "path": "tasks/TSK-HARD-030/meta.yml",
+      "schema_after": "1",
+      "schema_before": "0"
+    },
+    {
+      "changed": true,
+      "conflicts": [],
+      "legacy_keys": [],
+      "mappings": [],
+      "normalizations": [
+        "phase_normalized_to_string",
+        "status_normalized"
+      ],
+      "path": "tasks/TSK-HARD-031/meta.yml",
+      "schema_after": "1",
+      "schema_before": "0"
+    },
+    {
+      "changed": true,
+      "conflicts": [],
+      "legacy_keys": [],
+      "mappings": [],
+      "normalizations": [
+        "phase_normalized_to_string",
+        "status_normalized"
+      ],
+      "path": "tasks/TSK-HARD-032/meta.yml",
+      "schema_after": "1",
+      "schema_before": "0"
+    },
+    {
+      "changed": true,
+      "conflicts": [],
+      "legacy_keys": [],
+      "mappings": [],
+      "normalizations": [
+        "phase_normalized_to_string",
+        "status_normalized"
+      ],
+      "path": "tasks/TSK-HARD-033/meta.yml",
+      "schema_after": "1",
+      "schema_before": "0"
+    },
+    {
+      "changed": true,
+      "conflicts": [],
+      "legacy_keys": [],
+      "mappings": [],
+      "normalizations": [
+        "phase_normalized_to_string",
+        "status_normalized"
+      ],
+      "path": "tasks/TSK-HARD-040/meta.yml",
+      "schema_after": "1",
+      "schema_before": "0"
+    },
+    {
+      "changed": true,
+      "conflicts": [],
+      "legacy_keys": [],
+      "mappings": [],
+      "normalizations": [
+        "phase_normalized_to_string",
+        "status_normalized"
+      ],
+      "path": "tasks/TSK-HARD-041/meta.yml",
+      "schema_after": "1",
+      "schema_before": "0"
+    },
+    {
+      "changed": true,
+      "conflicts": [],
+      "legacy_keys": [],
+      "mappings": [],
+      "normalizations": [
+        "phase_normalized_to_string",
+        "status_normalized"
+      ],
+      "path": "tasks/TSK-HARD-042/meta.yml",
+      "schema_after": "1",
+      "schema_before": "0"
+    },
+    {
+      "changed": true,
+      "conflicts": [],
+      "legacy_keys": [],
+      "mappings": [],
+      "normalizations": [
+        "phase_normalized_to_string",
+        "status_normalized"
+      ],
+      "path": "tasks/TSK-HARD-050/meta.yml",
+      "schema_after": "1",
+      "schema_before": "0"
+    },
+    {
+      "changed": true,
+      "conflicts": [],
+      "legacy_keys": [],
+      "mappings": [],
+      "normalizations": [
+        "phase_normalized_to_string",
+        "status_normalized"
+      ],
+      "path": "tasks/TSK-HARD-051/meta.yml",
+      "schema_after": "1",
+      "schema_before": "0"
+    },
+    {
+      "changed": true,
+      "conflicts": [],
+      "legacy_keys": [],
+      "mappings": [],
+      "normalizations": [
+        "phase_normalized_to_string",
+        "status_normalized"
+      ],
+      "path": "tasks/TSK-HARD-052/meta.yml",
+      "schema_after": "1",
+      "schema_before": "0"
+    },
+    {
+      "changed": true,
+      "conflicts": [],
+      "legacy_keys": [],
+      "mappings": [],
+      "normalizations": [
+        "phase_normalized_to_string",
+        "status_normalized"
+      ],
+      "path": "tasks/TSK-HARD-053/meta.yml",
+      "schema_after": "1",
+      "schema_before": "0"
+    },
+    {
+      "changed": true,
+      "conflicts": [],
+      "legacy_keys": [],
+      "mappings": [],
+      "normalizations": [
+        "phase_normalized_to_string",
+        "status_normalized"
+      ],
+      "path": "tasks/TSK-HARD-054/meta.yml",
+      "schema_after": "1",
+      "schema_before": "0"
+    },
+    {
+      "changed": true,
+      "conflicts": [],
+      "legacy_keys": [],
+      "mappings": [],
+      "normalizations": [
+        "phase_normalized_to_string",
+        "status_normalized"
+      ],
+      "path": "tasks/TSK-HARD-060/meta.yml",
+      "schema_after": "1",
+      "schema_before": "0"
+    },
+    {
+      "changed": true,
+      "conflicts": [],
+      "legacy_keys": [],
+      "mappings": [],
+      "normalizations": [
+        "phase_normalized_to_string",
+        "status_normalized"
+      ],
+      "path": "tasks/TSK-HARD-061/meta.yml",
+      "schema_after": "1",
+      "schema_before": "0"
+    },
+    {
+      "changed": true,
+      "conflicts": [],
+      "legacy_keys": [],
+      "mappings": [],
+      "normalizations": [
+        "phase_normalized_to_string",
+        "status_normalized"
+      ],
+      "path": "tasks/TSK-HARD-062/meta.yml",
+      "schema_after": "1",
+      "schema_before": "0"
+    },
+    {
+      "changed": true,
+      "conflicts": [],
+      "legacy_keys": [],
+      "mappings": [],
+      "normalizations": [
+        "phase_normalized_to_string",
+        "status_normalized"
+      ],
+      "path": "tasks/TSK-HARD-070/meta.yml",
+      "schema_after": "1",
+      "schema_before": "0"
+    },
+    {
+      "changed": true,
+      "conflicts": [],
+      "legacy_keys": [],
+      "mappings": [],
+      "normalizations": [
+        "phase_normalized_to_string",
+        "status_normalized"
+      ],
+      "path": "tasks/TSK-HARD-071/meta.yml",
+      "schema_after": "1",
+      "schema_before": "0"
+    },
+    {
+      "changed": true,
+      "conflicts": [],
+      "legacy_keys": [],
+      "mappings": [],
+      "normalizations": [
+        "phase_normalized_to_string",
+        "status_normalized"
+      ],
+      "path": "tasks/TSK-HARD-072/meta.yml",
+      "schema_after": "1",
+      "schema_before": "0"
+    },
+    {
+      "changed": true,
+      "conflicts": [],
+      "legacy_keys": [],
+      "mappings": [],
+      "normalizations": [
+        "phase_normalized_to_string",
+        "status_normalized"
+      ],
+      "path": "tasks/TSK-HARD-073/meta.yml",
+      "schema_after": "1",
+      "schema_before": "0"
+    },
+    {
+      "changed": true,
+      "conflicts": [],
+      "legacy_keys": [],
+      "mappings": [],
+      "normalizations": [
+        "phase_normalized_to_string",
+        "status_normalized"
+      ],
+      "path": "tasks/TSK-HARD-074/meta.yml",
+      "schema_after": "1",
+      "schema_before": "0"
+    },
+    {
+      "changed": true,
+      "conflicts": [],
+      "legacy_keys": [],
+      "mappings": [],
+      "normalizations": [
+        "phase_normalized_to_string",
+        "status_normalized"
+      ],
+      "path": "tasks/TSK-HARD-080/meta.yml",
+      "schema_after": "1",
+      "schema_before": "0"
+    },
+    {
+      "changed": true,
+      "conflicts": [],
+      "legacy_keys": [],
+      "mappings": [],
+      "normalizations": [
+        "phase_normalized_to_string",
+        "status_normalized"
+      ],
+      "path": "tasks/TSK-HARD-081/meta.yml",
+      "schema_after": "1",
+      "schema_before": "0"
+    },
+    {
+      "changed": true,
+      "conflicts": [],
+      "legacy_keys": [],
+      "mappings": [],
+      "normalizations": [
+        "phase_normalized_to_string",
+        "status_normalized"
+      ],
+      "path": "tasks/TSK-HARD-082/meta.yml",
+      "schema_after": "1",
+      "schema_before": "0"
+    },
+    {
+      "changed": true,
+      "conflicts": [],
+      "legacy_keys": [],
+      "mappings": [],
+      "normalizations": [
+        "phase_normalized_to_string",
+        "status_normalized"
+      ],
+      "path": "tasks/TSK-HARD-090/meta.yml",
+      "schema_after": "1",
+      "schema_before": "0"
+    },
+    {
+      "changed": true,
+      "conflicts": [],
+      "legacy_keys": [],
+      "mappings": [],
+      "normalizations": [
+        "phase_normalized_to_string",
+        "status_normalized"
+      ],
+      "path": "tasks/TSK-HARD-091/meta.yml",
+      "schema_after": "1",
+      "schema_before": "0"
+    },
+    {
+      "changed": true,
+      "conflicts": [],
+      "legacy_keys": [],
+      "mappings": [],
+      "normalizations": [
+        "phase_normalized_to_string",
+        "status_normalized"
+      ],
+      "path": "tasks/TSK-HARD-092/meta.yml",
+      "schema_after": "1",
+      "schema_before": "0"
+    },
+    {
+      "changed": true,
+      "conflicts": [],
+      "legacy_keys": [],
+      "mappings": [],
+      "normalizations": [
+        "phase_normalized_to_string",
+        "status_normalized"
+      ],
+      "path": "tasks/TSK-HARD-093/meta.yml",
+      "schema_after": "1",
+      "schema_before": "0"
+    },
+    {
+      "changed": true,
+      "conflicts": [],
+      "legacy_keys": [],
+      "mappings": [],
+      "normalizations": [
+        "phase_normalized_to_string",
+        "status_normalized"
+      ],
+      "path": "tasks/TSK-HARD-094/meta.yml",
+      "schema_after": "1",
+      "schema_before": "0"
+    },
+    {
+      "changed": true,
+      "conflicts": [],
+      "legacy_keys": [],
+      "mappings": [],
+      "normalizations": [
+        "phase_normalized_to_string",
+        "status_normalized"
+      ],
+      "path": "tasks/TSK-HARD-095/meta.yml",
+      "schema_after": "1",
+      "schema_before": "0"
+    },
+    {
+      "changed": true,
+      "conflicts": [],
+      "legacy_keys": [],
+      "mappings": [],
+      "normalizations": [
+        "phase_normalized_to_string",
+        "status_normalized"
+      ],
+      "path": "tasks/TSK-HARD-096/meta.yml",
+      "schema_after": "1",
+      "schema_before": "0"
+    },
+    {
+      "changed": true,
+      "conflicts": [],
+      "legacy_keys": [],
+      "mappings": [],
+      "normalizations": [
+        "phase_normalized_to_string",
+        "status_normalized"
+      ],
+      "path": "tasks/TSK-HARD-097/meta.yml",
+      "schema_after": "1",
+      "schema_before": "0"
+    },
+    {
+      "changed": true,
+      "conflicts": [],
+      "legacy_keys": [],
+      "mappings": [],
+      "normalizations": [
+        "phase_normalized_to_string",
+        "status_normalized"
+      ],
+      "path": "tasks/TSK-HARD-098/meta.yml",
+      "schema_after": "1",
+      "schema_before": "0"
+    },
+    {
+      "changed": true,
+      "conflicts": [],
+      "legacy_keys": [],
+      "mappings": [],
+      "normalizations": [
+        "phase_normalized_to_string",
+        "status_normalized"
+      ],
+      "path": "tasks/TSK-HARD-099/meta.yml",
+      "schema_after": "1",
+      "schema_before": "0"
+    },
+    {
+      "changed": true,
+      "conflicts": [],
+      "legacy_keys": [],
+      "mappings": [],
+      "normalizations": [
+        "phase_normalized_to_string",
+        "status_normalized"
+      ],
+      "path": "tasks/TSK-HARD-100/meta.yml",
+      "schema_after": "1",
+      "schema_before": "0"
+    },
+    {
+      "changed": true,
+      "conflicts": [],
+      "legacy_keys": [],
+      "mappings": [],
+      "normalizations": [
+        "phase_normalized_to_string",
+        "status_normalized"
+      ],
+      "path": "tasks/TSK-HARD-101/meta.yml",
+      "schema_after": "1",
+      "schema_before": "0"
+    },
+    {
+      "changed": true,
+      "conflicts": [],
+      "legacy_keys": [],
+      "mappings": [],
+      "normalizations": [
+        "phase_normalized_to_string",
+        "status_normalized"
+      ],
+      "path": "tasks/TSK-HARD-102/meta.yml",
+      "schema_after": "1",
+      "schema_before": "0"
+    },
+    {
+      "changed": true,
+      "conflicts": [],
+      "legacy_keys": [],
+      "mappings": [],
+      "normalizations": [
+        "phase_normalized_to_string",
+        "status_normalized"
+      ],
+      "path": "tasks/TSK-OPS-A1-STABILITY-GATE/meta.yml",
+      "schema_after": "1",
+      "schema_before": "0"
+    },
+    {
+      "changed": true,
+      "conflicts": [],
+      "legacy_keys": [],
+      "mappings": [],
+      "normalizations": [
+        "phase_normalized_to_string",
+        "status_normalized"
+      ],
+      "path": "tasks/TSK-OPS-DRD-001/meta.yml",
+      "schema_after": "1",
+      "schema_before": "0"
+    },
+    {
+      "changed": true,
+      "conflicts": [],
+      "legacy_keys": [],
+      "mappings": [],
+      "normalizations": [
+        "phase_normalized_to_string",
+        "status_normalized"
+      ],
+      "path": "tasks/TSK-OPS-DRD-002/meta.yml",
+      "schema_after": "1",
+      "schema_before": "0"
+    },
+    {
+      "changed": true,
+      "conflicts": [],
+      "legacy_keys": [],
+      "mappings": [],
+      "normalizations": [
+        "phase_normalized_to_string",
+        "status_normalized"
+      ],
+      "path": "tasks/TSK-OPS-DRD-003/meta.yml",
+      "schema_after": "1",
+      "schema_before": "0"
+    },
+    {
+      "changed": true,
+      "conflicts": [],
+      "legacy_keys": [],
+      "mappings": [],
+      "normalizations": [
+        "phase_normalized_to_string",
+        "status_normalized"
+      ],
+      "path": "tasks/TSK-OPS-DRD-004/meta.yml",
+      "schema_after": "1",
+      "schema_before": "0"
+    },
+    {
+      "changed": true,
+      "conflicts": [],
+      "legacy_keys": [],
+      "mappings": [],
+      "normalizations": [
+        "phase_normalized_to_string",
+        "status_normalized"
+      ],
+      "path": "tasks/TSK-OPS-DRD-005/meta.yml",
+      "schema_after": "1",
+      "schema_before": "0"
+    },
+    {
+      "changed": true,
+      "conflicts": [],
+      "legacy_keys": [],
+      "mappings": [],
+      "normalizations": [
+        "phase_normalized_to_string",
+        "status_normalized"
+      ],
+      "path": "tasks/TSK-OPS-DRD-006/meta.yml",
+      "schema_after": "1",
+      "schema_before": "0"
+    },
+    {
+      "changed": true,
+      "conflicts": [],
+      "legacy_keys": [],
+      "mappings": [],
+      "normalizations": [
+        "phase_normalized_to_string",
+        "status_normalized"
+      ],
+      "path": "tasks/TSK-OPS-WAVE1-EXIT-GATE/meta.yml",
+      "schema_after": "1",
+      "schema_before": "0"
+    },
+    {
+      "changed": true,
+      "conflicts": [],
+      "legacy_keys": [],
+      "mappings": [],
+      "normalizations": [
+        "phase_normalized_to_string",
+        "status_normalized"
+      ],
+      "path": "tasks/TSK-OPS-WAVE2-EXIT-GATE/meta.yml",
+      "schema_after": "1",
+      "schema_before": "0"
+    },
+    {
+      "changed": true,
+      "conflicts": [],
+      "legacy_keys": [],
+      "mappings": [],
+      "normalizations": [
+        "phase_normalized_to_string",
+        "status_normalized"
+      ],
+      "path": "tasks/TSK-OPS-WAVE3-EXIT-GATE/meta.yml",
+      "schema_after": "1",
+      "schema_before": "0"
+    },
+    {
+      "changed": true,
+      "conflicts": [],
+      "legacy_keys": [],
+      "mappings": [],
+      "normalizations": [
+        "phase_normalized_to_string",
+        "status_normalized"
+      ],
+      "path": "tasks/TSK-OPS-WAVE4-EXIT-GATE/meta.yml",
+      "schema_after": "1",
+      "schema_before": "0"
+    },
+    {
+      "changed": true,
+      "conflicts": [],
+      "legacy_keys": [],
+      "mappings": [],
+      "normalizations": [
+        "phase_normalized_to_string",
+        "status_normalized"
+      ],
+      "path": "tasks/TSK-OPS-WAVE5-EXIT-GATE/meta.yml",
+      "schema_after": "1",
+      "schema_before": "0"
+    },
+    {
+      "changed": true,
+      "conflicts": [],
+      "legacy_keys": [],
+      "mappings": [],
+      "normalizations": [
+        "phase_normalized_to_string",
+        "status_normalized"
+      ],
+      "path": "tasks/TSK-OPS-WAVE6-EXIT-GATE/meta.yml",
+      "schema_after": "1",
+      "schema_before": "0"
+    },
+    {
+      "changed": true,
+      "conflicts": [],
+      "legacy_keys": [],
+      "mappings": [],
+      "normalizations": [
+        "phase_normalized_to_string",
+        "status_normalized"
+      ],
+      "path": "tasks/TSK-P0-001/meta.yml",
+      "schema_after": "1",
+      "schema_before": "0"
+    },
+    {
+      "changed": true,
+      "conflicts": [],
+      "legacy_keys": [],
+      "mappings": [],
+      "normalizations": [
+        "phase_normalized_to_string",
+        "status_normalized"
+      ],
+      "path": "tasks/TSK-P0-002/meta.yml",
+      "schema_after": "1",
+      "schema_before": "0"
+    },
+    {
+      "changed": true,
+      "conflicts": [],
+      "legacy_keys": [],
+      "mappings": [],
+      "normalizations": [
+        "phase_normalized_to_string",
+        "status_normalized"
+      ],
+      "path": "tasks/TSK-P0-003/meta.yml",
+      "schema_after": "1",
+      "schema_before": "0"
+    },
+    {
+      "changed": true,
+      "conflicts": [],
+      "legacy_keys": [],
+      "mappings": [],
+      "normalizations": [
+        "phase_normalized_to_string",
+        "status_normalized"
+      ],
+      "path": "tasks/TSK-P0-004/meta.yml",
+      "schema_after": "1",
+      "schema_before": "0"
+    },
+    {
+      "changed": true,
+      "conflicts": [],
+      "legacy_keys": [],
+      "mappings": [],
+      "normalizations": [
+        "phase_normalized_to_string",
+        "status_normalized"
+      ],
+      "path": "tasks/TSK-P0-005/meta.yml",
+      "schema_after": "1",
+      "schema_before": "0"
+    },
+    {
+      "changed": true,
+      "conflicts": [],
+      "legacy_keys": [],
+      "mappings": [],
+      "normalizations": [
+        "phase_normalized_to_string",
+        "status_normalized"
+      ],
+      "path": "tasks/TSK-P0-006/meta.yml",
+      "schema_after": "1",
+      "schema_before": "0"
+    },
+    {
+      "changed": true,
+      "conflicts": [],
+      "legacy_keys": [],
+      "mappings": [],
+      "normalizations": [
+        "phase_normalized_to_string",
+        "status_normalized"
+      ],
+      "path": "tasks/TSK-P0-007/meta.yml",
+      "schema_after": "1",
+      "schema_before": "0"
+    },
+    {
+      "changed": true,
+      "conflicts": [],
+      "legacy_keys": [],
+      "mappings": [],
+      "normalizations": [
+        "phase_normalized_to_string",
+        "status_normalized"
+      ],
+      "path": "tasks/TSK-P0-008/meta.yml",
+      "schema_after": "1",
+      "schema_before": "0"
+    },
+    {
+      "changed": true,
+      "conflicts": [],
+      "legacy_keys": [],
+      "mappings": [],
+      "normalizations": [
+        "phase_normalized_to_string",
+        "status_normalized"
+      ],
+      "path": "tasks/TSK-P0-009/meta.yml",
+      "schema_after": "1",
+      "schema_before": "0"
+    },
+    {
+      "changed": true,
+      "conflicts": [],
+      "legacy_keys": [],
+      "mappings": [],
+      "normalizations": [
+        "phase_normalized_to_string",
+        "status_normalized"
+      ],
+      "path": "tasks/TSK-P0-010/meta.yml",
+      "schema_after": "1",
+      "schema_before": "0"
+    },
+    {
+      "changed": true,
+      "conflicts": [],
+      "legacy_keys": [],
+      "mappings": [],
+      "normalizations": [
+        "phase_normalized_to_string",
+        "status_normalized"
+      ],
+      "path": "tasks/TSK-P0-011/meta.yml",
+      "schema_after": "1",
+      "schema_before": "0"
+    },
+    {
+      "changed": true,
+      "conflicts": [],
+      "legacy_keys": [],
+      "mappings": [],
+      "normalizations": [
+        "phase_normalized_to_string",
+        "status_normalized"
+      ],
+      "path": "tasks/TSK-P0-012/meta.yml",
+      "schema_after": "1",
+      "schema_before": "0"
+    },
+    {
+      "changed": true,
+      "conflicts": [],
+      "legacy_keys": [],
+      "mappings": [],
+      "normalizations": [
+        "phase_normalized_to_string",
+        "status_normalized"
+      ],
+      "path": "tasks/TSK-P0-013/meta.yml",
+      "schema_after": "1",
+      "schema_before": "0"
+    },
+    {
+      "changed": true,
+      "conflicts": [],
+      "legacy_keys": [],
+      "mappings": [],
+      "normalizations": [
+        "phase_normalized_to_string",
+        "status_normalized"
+      ],
+      "path": "tasks/TSK-P0-014/meta.yml",
+      "schema_after": "1",
+      "schema_before": "0"
+    },
+    {
+      "changed": true,
+      "conflicts": [],
+      "legacy_keys": [],
+      "mappings": [],
+      "normalizations": [
+        "phase_normalized_to_string",
+        "status_normalized"
+      ],
+      "path": "tasks/TSK-P0-015/meta.yml",
+      "schema_after": "1",
+      "schema_before": "0"
+    },
+    {
+      "changed": true,
+      "conflicts": [],
+      "legacy_keys": [],
+      "mappings": [],
+      "normalizations": [
+        "phase_normalized_to_string",
+        "status_normalized"
+      ],
+      "path": "tasks/TSK-P0-016/meta.yml",
+      "schema_after": "1",
+      "schema_before": "0"
+    },
+    {
+      "changed": true,
+      "conflicts": [],
+      "legacy_keys": [],
+      "mappings": [],
+      "normalizations": [
+        "phase_normalized_to_string",
+        "status_normalized"
+      ],
+      "path": "tasks/TSK-P0-017/meta.yml",
+      "schema_after": "1",
+      "schema_before": "0"
+    },
+    {
+      "changed": true,
+      "conflicts": [],
+      "legacy_keys": [],
+      "mappings": [],
+      "normalizations": [
+        "phase_normalized_to_string",
+        "status_normalized"
+      ],
+      "path": "tasks/TSK-P0-018/meta.yml",
+      "schema_after": "1",
+      "schema_before": "0"
+    },
+    {
+      "changed": true,
+      "conflicts": [],
+      "legacy_keys": [],
+      "mappings": [],
+      "normalizations": [
+        "phase_normalized_to_string",
+        "status_normalized"
+      ],
+      "path": "tasks/TSK-P0-019/meta.yml",
+      "schema_after": "1",
+      "schema_before": "0"
+    },
+    {
+      "changed": true,
+      "conflicts": [],
+      "legacy_keys": [],
+      "mappings": [],
+      "normalizations": [
+        "phase_normalized_to_string",
+        "status_normalized"
+      ],
+      "path": "tasks/TSK-P0-020/meta.yml",
+      "schema_after": "1",
+      "schema_before": "0"
+    },
+    {
+      "changed": true,
+      "conflicts": [],
+      "legacy_keys": [],
+      "mappings": [],
+      "normalizations": [
+        "phase_normalized_to_string",
+        "status_normalized"
+      ],
+      "path": "tasks/TSK-P0-021/meta.yml",
+      "schema_after": "1",
+      "schema_before": "0"
+    },
+    {
+      "changed": true,
+      "conflicts": [],
+      "legacy_keys": [],
+      "mappings": [],
+      "normalizations": [
+        "phase_normalized_to_string",
+        "status_normalized"
+      ],
+      "path": "tasks/TSK-P0-022/meta.yml",
+      "schema_after": "1",
+      "schema_before": "0"
+    },
+    {
+      "changed": true,
+      "conflicts": [],
+      "legacy_keys": [],
+      "mappings": [],
+      "normalizations": [
+        "phase_normalized_to_string",
+        "status_normalized"
+      ],
+      "path": "tasks/TSK-P0-023/meta.yml",
+      "schema_after": "1",
+      "schema_before": "0"
+    },
+    {
+      "changed": true,
+      "conflicts": [],
+      "legacy_keys": [],
+      "mappings": [],
+      "normalizations": [
+        "phase_normalized_to_string",
+        "status_normalized"
+      ],
+      "path": "tasks/TSK-P0-024/meta.yml",
+      "schema_after": "1",
+      "schema_before": "0"
+    },
+    {
+      "changed": true,
+      "conflicts": [],
+      "legacy_keys": [],
+      "mappings": [],
+      "normalizations": [
+        "phase_normalized_to_string",
+        "status_normalized"
+      ],
+      "path": "tasks/TSK-P0-025/meta.yml",
+      "schema_after": "1",
+      "schema_before": "0"
+    },
+    {
+      "changed": true,
+      "conflicts": [],
+      "legacy_keys": [],
+      "mappings": [],
+      "normalizations": [
+        "phase_normalized_to_string",
+        "status_normalized"
+      ],
+      "path": "tasks/TSK-P0-026/meta.yml",
+      "schema_after": "1",
+      "schema_before": "0"
+    },
+    {
+      "changed": true,
+      "conflicts": [],
+      "legacy_keys": [],
+      "mappings": [],
+      "normalizations": [
+        "phase_normalized_to_string",
+        "status_normalized"
+      ],
+      "path": "tasks/TSK-P0-027/meta.yml",
+      "schema_after": "1",
+      "schema_before": "0"
+    },
+    {
+      "changed": true,
+      "conflicts": [],
+      "legacy_keys": [],
+      "mappings": [],
+      "normalizations": [
+        "phase_normalized_to_string",
+        "status_normalized"
+      ],
+      "path": "tasks/TSK-P0-028/meta.yml",
+      "schema_after": "1",
+      "schema_before": "0"
+    },
+    {
+      "changed": true,
+      "conflicts": [],
+      "legacy_keys": [],
+      "mappings": [],
+      "normalizations": [
+        "phase_normalized_to_string",
+        "status_normalized"
+      ],
+      "path": "tasks/TSK-P0-029/meta.yml",
+      "schema_after": "1",
+      "schema_before": "0"
+    },
+    {
+      "changed": true,
+      "conflicts": [],
+      "legacy_keys": [],
+      "mappings": [],
+      "normalizations": [
+        "phase_normalized_to_string",
+        "status_normalized"
+      ],
+      "path": "tasks/TSK-P0-030/meta.yml",
+      "schema_after": "1",
+      "schema_before": "0"
+    },
+    {
+      "changed": true,
+      "conflicts": [],
+      "legacy_keys": [],
+      "mappings": [],
+      "normalizations": [
+        "phase_normalized_to_string",
+        "status_normalized"
+      ],
+      "path": "tasks/TSK-P0-031/meta.yml",
+      "schema_after": "1",
+      "schema_before": "0"
+    },
+    {
+      "changed": true,
+      "conflicts": [],
+      "legacy_keys": [],
+      "mappings": [],
+      "normalizations": [
+        "phase_normalized_to_string",
+        "status_normalized"
+      ],
+      "path": "tasks/TSK-P0-032/meta.yml",
+      "schema_after": "1",
+      "schema_before": "0"
+    },
+    {
+      "changed": true,
+      "conflicts": [],
+      "legacy_keys": [],
+      "mappings": [],
+      "normalizations": [
+        "phase_normalized_to_string",
+        "status_normalized"
+      ],
+      "path": "tasks/TSK-P0-033/meta.yml",
+      "schema_after": "1",
+      "schema_before": "0"
+    },
+    {
+      "changed": true,
+      "conflicts": [],
+      "legacy_keys": [],
+      "mappings": [],
+      "normalizations": [
+        "phase_normalized_to_string",
+        "status_normalized"
+      ],
+      "path": "tasks/TSK-P0-034/meta.yml",
+      "schema_after": "1",
+      "schema_before": "0"
+    },
+    {
+      "changed": true,
+      "conflicts": [],
+      "legacy_keys": [],
+      "mappings": [],
+      "normalizations": [
+        "phase_normalized_to_string",
+        "status_normalized"
+      ],
+      "path": "tasks/TSK-P0-035/meta.yml",
+      "schema_after": "1",
+      "schema_before": "0"
+    },
+    {
+      "changed": true,
+      "conflicts": [],
+      "legacy_keys": [],
+      "mappings": [],
+      "normalizations": [
+        "phase_normalized_to_string",
+        "status_normalized"
+      ],
+      "path": "tasks/TSK-P0-036/meta.yml",
+      "schema_after": "1",
+      "schema_before": "0"
+    },
+    {
+      "changed": true,
+      "conflicts": [],
+      "legacy_keys": [],
+      "mappings": [],
+      "normalizations": [
+        "phase_normalized_to_string",
+        "status_normalized"
+      ],
+      "path": "tasks/TSK-P0-037/meta.yml",
+      "schema_after": "1",
+      "schema_before": "0"
+    },
+    {
+      "changed": true,
+      "conflicts": [],
+      "legacy_keys": [],
+      "mappings": [],
+      "normalizations": [
+        "phase_normalized_to_string",
+        "status_normalized"
+      ],
+      "path": "tasks/TSK-P0-038/meta.yml",
+      "schema_after": "1",
+      "schema_before": "0"
+    },
+    {
+      "changed": true,
+      "conflicts": [],
+      "legacy_keys": [],
+      "mappings": [],
+      "normalizations": [
+        "phase_normalized_to_string",
+        "status_normalized"
+      ],
+      "path": "tasks/TSK-P0-039/meta.yml",
+      "schema_after": "1",
+      "schema_before": "0"
+    },
+    {
+      "changed": true,
+      "conflicts": [],
+      "legacy_keys": [],
+      "mappings": [],
+      "normalizations": [
+        "phase_normalized_to_string",
+        "status_normalized"
+      ],
+      "path": "tasks/TSK-P0-040/meta.yml",
+      "schema_after": "1",
+      "schema_before": "0"
+    },
+    {
+      "changed": true,
+      "conflicts": [],
+      "legacy_keys": [],
+      "mappings": [],
+      "normalizations": [
+        "phase_normalized_to_string",
+        "status_normalized"
+      ],
+      "path": "tasks/TSK-P0-041/meta.yml",
+      "schema_after": "1",
+      "schema_before": "0"
+    },
+    {
+      "changed": true,
+      "conflicts": [],
+      "legacy_keys": [],
+      "mappings": [],
+      "normalizations": [
+        "phase_normalized_to_string",
+        "status_normalized"
+      ],
+      "path": "tasks/TSK-P0-042/meta.yml",
+      "schema_after": "1",
+      "schema_before": "0"
+    },
+    {
+      "changed": true,
+      "conflicts": [],
+      "legacy_keys": [],
+      "mappings": [],
+      "normalizations": [
+        "phase_normalized_to_string",
+        "status_normalized"
+      ],
+      "path": "tasks/TSK-P0-043/meta.yml",
+      "schema_after": "1",
+      "schema_before": "0"
+    },
+    {
+      "changed": true,
+      "conflicts": [],
+      "legacy_keys": [],
+      "mappings": [],
+      "normalizations": [
+        "phase_normalized_to_string",
+        "status_normalized"
+      ],
+      "path": "tasks/TSK-P0-044/meta.yml",
+      "schema_after": "1",
+      "schema_before": "0"
+    },
+    {
+      "changed": true,
+      "conflicts": [],
+      "legacy_keys": [],
+      "mappings": [],
+      "normalizations": [
+        "phase_normalized_to_string",
+        "status_normalized"
+      ],
+      "path": "tasks/TSK-P0-045/meta.yml",
+      "schema_after": "1",
+      "schema_before": "0"
+    },
+    {
+      "changed": true,
+      "conflicts": [],
+      "legacy_keys": [],
+      "mappings": [],
+      "normalizations": [
+        "phase_normalized_to_string",
+        "status_normalized"
+      ],
+      "path": "tasks/TSK-P0-046/meta.yml",
+      "schema_after": "1",
+      "schema_before": "0"
+    },
+    {
+      "changed": true,
+      "conflicts": [],
+      "legacy_keys": [],
+      "mappings": [],
+      "normalizations": [
+        "phase_normalized_to_string",
+        "status_normalized"
+      ],
+      "path": "tasks/TSK-P0-047/meta.yml",
+      "schema_after": "1",
+      "schema_before": "0"
+    },
+    {
+      "changed": true,
+      "conflicts": [],
+      "legacy_keys": [],
+      "mappings": [],
+      "normalizations": [
+        "phase_normalized_to_string",
+        "status_normalized"
+      ],
+      "path": "tasks/TSK-P0-048/meta.yml",
+      "schema_after": "1",
+      "schema_before": "0"
+    },
+    {
+      "changed": true,
+      "conflicts": [],
+      "legacy_keys": [],
+      "mappings": [],
+      "normalizations": [
+        "phase_normalized_to_string",
+        "status_normalized"
+      ],
+      "path": "tasks/TSK-P0-049/meta.yml",
+      "schema_after": "1",
+      "schema_before": "0"
+    },
+    {
+      "changed": true,
+      "conflicts": [],
+      "legacy_keys": [],
+      "mappings": [],
+      "normalizations": [
+        "phase_normalized_to_string",
+        "status_normalized"
+      ],
+      "path": "tasks/TSK-P0-050/meta.yml",
+      "schema_after": "1",
+      "schema_before": "0"
+    },
+    {
+      "changed": true,
+      "conflicts": [],
+      "legacy_keys": [],
+      "mappings": [],
+      "normalizations": [
+        "phase_normalized_to_string",
+        "status_normalized"
+      ],
+      "path": "tasks/TSK-P0-051/meta.yml",
+      "schema_after": "1",
+      "schema_before": "0"
+    },
+    {
+      "changed": true,
+      "conflicts": [],
+      "legacy_keys": [],
+      "mappings": [],
+      "normalizations": [
+        "phase_normalized_to_string",
+        "status_normalized"
+      ],
+      "path": "tasks/TSK-P0-052/meta.yml",
+      "schema_after": "1",
+      "schema_before": "0"
+    },
+    {
+      "changed": true,
+      "conflicts": [],
+      "legacy_keys": [],
+      "mappings": [],
+      "normalizations": [
+        "phase_normalized_to_string",
+        "status_normalized"
+      ],
+      "path": "tasks/TSK-P0-053/meta.yml",
+      "schema_after": "1",
+      "schema_before": "0"
+    },
+    {
+      "changed": true,
+      "conflicts": [],
+      "legacy_keys": [],
+      "mappings": [],
+      "normalizations": [
+        "phase_normalized_to_string",
+        "status_normalized"
+      ],
+      "path": "tasks/TSK-P0-054/meta.yml",
+      "schema_after": "1",
+      "schema_before": "0"
+    },
+    {
+      "changed": true,
+      "conflicts": [],
+      "legacy_keys": [],
+      "mappings": [],
+      "normalizations": [
+        "phase_normalized_to_string",
+        "status_normalized"
+      ],
+      "path": "tasks/TSK-P0-055/meta.yml",
+      "schema_after": "1",
+      "schema_before": "0"
+    },
+    {
+      "changed": true,
+      "conflicts": [],
+      "legacy_keys": [],
+      "mappings": [],
+      "normalizations": [
+        "phase_normalized_to_string",
+        "status_normalized"
+      ],
+      "path": "tasks/TSK-P0-056/meta.yml",
+      "schema_after": "1",
+      "schema_before": "0"
+    },
+    {
+      "changed": true,
+      "conflicts": [],
+      "legacy_keys": [],
+      "mappings": [],
+      "normalizations": [
+        "phase_normalized_to_string",
+        "status_normalized"
+      ],
+      "path": "tasks/TSK-P0-057/meta.yml",
+      "schema_after": "1",
+      "schema_before": "0"
+    },
+    {
+      "changed": true,
+      "conflicts": [],
+      "legacy_keys": [],
+      "mappings": [],
+      "normalizations": [
+        "phase_normalized_to_string",
+        "status_normalized"
+      ],
+      "path": "tasks/TSK-P0-058/meta.yml",
+      "schema_after": "1",
+      "schema_before": "0"
+    },
+    {
+      "changed": true,
+      "conflicts": [],
+      "legacy_keys": [],
+      "mappings": [],
+      "normalizations": [
+        "phase_normalized_to_string",
+        "status_normalized"
+      ],
+      "path": "tasks/TSK-P0-060/meta.yml",
+      "schema_after": "1",
+      "schema_before": "0"
+    },
+    {
+      "changed": true,
+      "conflicts": [],
+      "legacy_keys": [],
+      "mappings": [],
+      "normalizations": [
+        "phase_normalized_to_string",
+        "status_normalized"
+      ],
+      "path": "tasks/TSK-P0-061/meta.yml",
+      "schema_after": "1",
+      "schema_before": "0"
+    },
+    {
+      "changed": true,
+      "conflicts": [],
+      "legacy_keys": [],
+      "mappings": [],
+      "normalizations": [
+        "phase_normalized_to_string",
+        "status_normalized"
+      ],
+      "path": "tasks/TSK-P0-062/meta.yml",
+      "schema_after": "1",
+      "schema_before": "0"
+    },
+    {
+      "changed": true,
+      "conflicts": [],
+      "legacy_keys": [],
+      "mappings": [],
+      "normalizations": [
+        "phase_normalized_to_string",
+        "status_normalized"
+      ],
+      "path": "tasks/TSK-P0-063/meta.yml",
+      "schema_after": "1",
+      "schema_before": "0"
+    },
+    {
+      "changed": true,
+      "conflicts": [],
+      "legacy_keys": [],
+      "mappings": [],
+      "normalizations": [
+        "phase_normalized_to_string",
+        "status_normalized"
+      ],
+      "path": "tasks/TSK-P0-064/meta.yml",
+      "schema_after": "1",
+      "schema_before": "0"
+    },
+    {
+      "changed": true,
+      "conflicts": [],
+      "legacy_keys": [],
+      "mappings": [],
+      "normalizations": [
+        "phase_normalized_to_string",
+        "status_normalized"
+      ],
+      "path": "tasks/TSK-P0-065/meta.yml",
+      "schema_after": "1",
+      "schema_before": "0"
+    },
+    {
+      "changed": true,
+      "conflicts": [],
+      "legacy_keys": [],
+      "mappings": [],
+      "normalizations": [
+        "phase_normalized_to_string",
+        "status_normalized"
+      ],
+      "path": "tasks/TSK-P0-066/meta.yml",
+      "schema_after": "1",
+      "schema_before": "0"
+    },
+    {
+      "changed": true,
+      "conflicts": [],
+      "legacy_keys": [],
+      "mappings": [],
+      "normalizations": [
+        "phase_normalized_to_string",
+        "status_normalized"
+      ],
+      "path": "tasks/TSK-P0-067/meta.yml",
+      "schema_after": "1",
+      "schema_before": "0"
+    },
+    {
+      "changed": true,
+      "conflicts": [],
+      "legacy_keys": [],
+      "mappings": [],
+      "normalizations": [
+        "phase_normalized_to_string",
+        "status_normalized"
+      ],
+      "path": "tasks/TSK-P0-068/meta.yml",
+      "schema_after": "1",
+      "schema_before": "0"
+    },
+    {
+      "changed": true,
+      "conflicts": [],
+      "legacy_keys": [],
+      "mappings": [],
+      "normalizations": [
+        "phase_normalized_to_string",
+        "status_normalized"
+      ],
+      "path": "tasks/TSK-P0-069/meta.yml",
+      "schema_after": "1",
+      "schema_before": "0"
+    },
+    {
+      "changed": true,
+      "conflicts": [],
+      "legacy_keys": [],
+      "mappings": [],
+      "normalizations": [
+        "phase_normalized_to_string",
+        "status_normalized"
+      ],
+      "path": "tasks/TSK-P0-070/meta.yml",
+      "schema_after": "1",
+      "schema_before": "0"
+    },
+    {
+      "changed": true,
+      "conflicts": [],
+      "legacy_keys": [],
+      "mappings": [],
+      "normalizations": [
+        "phase_normalized_to_string",
+        "status_normalized"
+      ],
+      "path": "tasks/TSK-P0-071/meta.yml",
+      "schema_after": "1",
+      "schema_before": "0"
+    },
+    {
+      "changed": true,
+      "conflicts": [],
+      "legacy_keys": [],
+      "mappings": [],
+      "normalizations": [
+        "phase_normalized_to_string",
+        "status_normalized"
+      ],
+      "path": "tasks/TSK-P0-072/meta.yml",
+      "schema_after": "1",
+      "schema_before": "0"
+    },
+    {
+      "changed": true,
+      "conflicts": [],
+      "legacy_keys": [],
+      "mappings": [],
+      "normalizations": [
+        "phase_normalized_to_string",
+        "status_normalized"
+      ],
+      "path": "tasks/TSK-P0-073/meta.yml",
+      "schema_after": "1",
+      "schema_before": "0"
+    },
+    {
+      "changed": true,
+      "conflicts": [],
+      "legacy_keys": [],
+      "mappings": [],
+      "normalizations": [
+        "phase_normalized_to_string",
+        "status_normalized"
+      ],
+      "path": "tasks/TSK-P0-080/meta.yml",
+      "schema_after": "1",
+      "schema_before": "0"
+    },
+    {
+      "changed": true,
+      "conflicts": [],
+      "legacy_keys": [],
+      "mappings": [],
+      "normalizations": [
+        "phase_normalized_to_string",
+        "status_normalized"
+      ],
+      "path": "tasks/TSK-P0-081/meta.yml",
+      "schema_after": "1",
+      "schema_before": "0"
+    },
+    {
+      "changed": true,
+      "conflicts": [],
+      "legacy_keys": [],
+      "mappings": [],
+      "normalizations": [
+        "phase_normalized_to_string",
+        "status_normalized"
+      ],
+      "path": "tasks/TSK-P0-082/meta.yml",
+      "schema_after": "1",
+      "schema_before": "0"
+    },
+    {
+      "changed": true,
+      "conflicts": [],
+      "legacy_keys": [],
+      "mappings": [],
+      "normalizations": [
+        "phase_normalized_to_string",
+        "status_normalized"
+      ],
+      "path": "tasks/TSK-P0-083/meta.yml",
+      "schema_after": "1",
+      "schema_before": "0"
+    },
+    {
+      "changed": true,
+      "conflicts": [],
+      "legacy_keys": [],
+      "mappings": [],
+      "normalizations": [
+        "phase_normalized_to_string",
+        "status_normalized"
+      ],
+      "path": "tasks/TSK-P0-084/meta.yml",
+      "schema_after": "1",
+      "schema_before": "0"
+    },
+    {
+      "changed": true,
+      "conflicts": [],
+      "legacy_keys": [],
+      "mappings": [],
+      "normalizations": [
+        "phase_normalized_to_string",
+        "status_normalized"
+      ],
+      "path": "tasks/TSK-P0-085/meta.yml",
+      "schema_after": "1",
+      "schema_before": "0"
+    },
+    {
+      "changed": true,
+      "conflicts": [],
+      "legacy_keys": [],
+      "mappings": [],
+      "normalizations": [
+        "phase_normalized_to_string",
+        "status_normalized"
+      ],
+      "path": "tasks/TSK-P0-086/meta.yml",
+      "schema_after": "1",
+      "schema_before": "0"
+    },
+    {
+      "changed": true,
+      "conflicts": [],
+      "legacy_keys": [],
+      "mappings": [],
+      "normalizations": [
+        "phase_normalized_to_string",
+        "status_normalized"
+      ],
+      "path": "tasks/TSK-P0-087/meta.yml",
+      "schema_after": "1",
+      "schema_before": "0"
+    },
+    {
+      "changed": true,
+      "conflicts": [],
+      "legacy_keys": [],
+      "mappings": [],
+      "normalizations": [
+        "phase_normalized_to_string",
+        "status_normalized"
+      ],
+      "path": "tasks/TSK-P0-088/meta.yml",
+      "schema_after": "1",
+      "schema_before": "0"
+    },
+    {
+      "changed": true,
+      "conflicts": [],
+      "legacy_keys": [],
+      "mappings": [],
+      "normalizations": [
+        "phase_normalized_to_string",
+        "status_normalized"
+      ],
+      "path": "tasks/TSK-P0-089/meta.yml",
+      "schema_after": "1",
+      "schema_before": "0"
+    },
+    {
+      "changed": true,
+      "conflicts": [],
+      "legacy_keys": [],
+      "mappings": [],
+      "normalizations": [
+        "phase_normalized_to_string",
+        "status_normalized"
+      ],
+      "path": "tasks/TSK-P0-090/meta.yml",
+      "schema_after": "1",
+      "schema_before": "0"
+    },
+    {
+      "changed": true,
+      "conflicts": [],
+      "legacy_keys": [],
+      "mappings": [],
+      "normalizations": [
+        "phase_normalized_to_string",
+        "status_normalized"
+      ],
+      "path": "tasks/TSK-P0-091/meta.yml",
+      "schema_after": "1",
+      "schema_before": "0"
+    },
+    {
+      "changed": true,
+      "conflicts": [],
+      "legacy_keys": [],
+      "mappings": [],
+      "normalizations": [
+        "phase_normalized_to_string",
+        "status_normalized"
+      ],
+      "path": "tasks/TSK-P0-092/meta.yml",
+      "schema_after": "1",
+      "schema_before": "0"
+    },
+    {
+      "changed": true,
+      "conflicts": [],
+      "legacy_keys": [],
+      "mappings": [],
+      "normalizations": [
+        "phase_normalized_to_string",
+        "status_normalized"
+      ],
+      "path": "tasks/TSK-P0-093/meta.yml",
+      "schema_after": "1",
+      "schema_before": "0"
+    },
+    {
+      "changed": true,
+      "conflicts": [],
+      "legacy_keys": [],
+      "mappings": [],
+      "normalizations": [
+        "phase_normalized_to_string",
+        "status_normalized"
+      ],
+      "path": "tasks/TSK-P0-094/meta.yml",
+      "schema_after": "1",
+      "schema_before": "0"
+    },
+    {
+      "changed": true,
+      "conflicts": [],
+      "legacy_keys": [],
+      "mappings": [],
+      "normalizations": [
+        "phase_normalized_to_string",
+        "status_normalized"
+      ],
+      "path": "tasks/TSK-P0-095/meta.yml",
+      "schema_after": "1",
+      "schema_before": "0"
+    },
+    {
+      "changed": true,
+      "conflicts": [],
+      "legacy_keys": [],
+      "mappings": [],
+      "normalizations": [
+        "phase_normalized_to_string",
+        "status_normalized"
+      ],
+      "path": "tasks/TSK-P0-096/meta.yml",
+      "schema_after": "1",
+      "schema_before": "0"
+    },
+    {
+      "changed": true,
+      "conflicts": [],
+      "legacy_keys": [],
+      "mappings": [],
+      "normalizations": [
+        "phase_normalized_to_string",
+        "status_normalized"
+      ],
+      "path": "tasks/TSK-P0-097/meta.yml",
+      "schema_after": "1",
+      "schema_before": "0"
+    },
+    {
+      "changed": true,
+      "conflicts": [],
+      "legacy_keys": [],
+      "mappings": [],
+      "normalizations": [
+        "phase_normalized_to_string",
+        "status_normalized"
+      ],
+      "path": "tasks/TSK-P0-098/meta.yml",
+      "schema_after": "1",
+      "schema_before": "0"
+    },
+    {
+      "changed": true,
+      "conflicts": [],
+      "legacy_keys": [],
+      "mappings": [],
+      "normalizations": [
+        "phase_normalized_to_string",
+        "status_normalized"
+      ],
+      "path": "tasks/TSK-P0-099/meta.yml",
+      "schema_after": "1",
+      "schema_before": "0"
+    },
+    {
+      "changed": true,
+      "conflicts": [],
+      "legacy_keys": [],
+      "mappings": [],
+      "normalizations": [
+        "phase_normalized_to_string",
+        "status_normalized"
+      ],
+      "path": "tasks/TSK-P0-100/meta.yml",
+      "schema_after": "1",
+      "schema_before": "0"
+    },
+    {
+      "changed": true,
+      "conflicts": [],
+      "legacy_keys": [],
+      "mappings": [],
+      "normalizations": [
+        "phase_normalized_to_string",
+        "status_normalized"
+      ],
+      "path": "tasks/TSK-P0-101/meta.yml",
+      "schema_after": "1",
+      "schema_before": "0"
+    },
+    {
+      "changed": true,
+      "conflicts": [],
+      "legacy_keys": [],
+      "mappings": [],
+      "normalizations": [
+        "phase_normalized_to_string",
+        "status_normalized"
+      ],
+      "path": "tasks/TSK-P0-102/meta.yml",
+      "schema_after": "1",
+      "schema_before": "0"
+    },
+    {
+      "changed": true,
+      "conflicts": [],
+      "legacy_keys": [],
+      "mappings": [],
+      "normalizations": [
+        "phase_normalized_to_string",
+        "status_normalized"
+      ],
+      "path": "tasks/TSK-P0-103/meta.yml",
+      "schema_after": "1",
+      "schema_before": "0"
+    },
+    {
+      "changed": true,
+      "conflicts": [],
+      "legacy_keys": [],
+      "mappings": [],
+      "normalizations": [
+        "phase_normalized_to_string",
+        "status_normalized"
+      ],
+      "path": "tasks/TSK-P0-104/meta.yml",
+      "schema_after": "1",
+      "schema_before": "0"
+    },
+    {
+      "changed": true,
+      "conflicts": [],
+      "legacy_keys": [],
+      "mappings": [],
+      "normalizations": [
+        "phase_normalized_to_string",
+        "status_normalized"
+      ],
+      "path": "tasks/TSK-P0-105/meta.yml",
+      "schema_after": "1",
+      "schema_before": "0"
+    },
+    {
+      "changed": true,
+      "conflicts": [],
+      "legacy_keys": [],
+      "mappings": [],
+      "normalizations": [
+        "phase_normalized_to_string",
+        "status_normalized"
+      ],
+      "path": "tasks/TSK-P0-106/meta.yml",
+      "schema_after": "1",
+      "schema_before": "0"
+    },
+    {
+      "changed": true,
+      "conflicts": [],
+      "legacy_keys": [],
+      "mappings": [],
+      "normalizations": [
+        "phase_normalized_to_string",
+        "status_normalized"
+      ],
+      "path": "tasks/TSK-P0-107/meta.yml",
+      "schema_after": "1",
+      "schema_before": "0"
+    },
+    {
+      "changed": true,
+      "conflicts": [],
+      "legacy_keys": [],
+      "mappings": [],
+      "normalizations": [
+        "phase_normalized_to_string",
+        "status_normalized"
+      ],
+      "path": "tasks/TSK-P0-108/meta.yml",
+      "schema_after": "1",
+      "schema_before": "0"
+    },
+    {
+      "changed": true,
+      "conflicts": [],
+      "legacy_keys": [],
+      "mappings": [],
+      "normalizations": [
+        "phase_normalized_to_string",
+        "status_normalized"
+      ],
+      "path": "tasks/TSK-P0-109/meta.yml",
+      "schema_after": "1",
+      "schema_before": "0"
+    },
+    {
+      "changed": true,
+      "conflicts": [],
+      "legacy_keys": [],
+      "mappings": [],
+      "normalizations": [
+        "phase_normalized_to_string",
+        "status_normalized"
+      ],
+      "path": "tasks/TSK-P0-110/meta.yml",
+      "schema_after": "1",
+      "schema_before": "0"
+    },
+    {
+      "changed": true,
+      "conflicts": [],
+      "legacy_keys": [],
+      "mappings": [],
+      "normalizations": [
+        "phase_normalized_to_string",
+        "status_normalized"
+      ],
+      "path": "tasks/TSK-P0-111/meta.yml",
+      "schema_after": "1",
+      "schema_before": "0"
+    },
+    {
+      "changed": true,
+      "conflicts": [],
+      "legacy_keys": [],
+      "mappings": [],
+      "normalizations": [
+        "phase_normalized_to_string",
+        "status_normalized"
+      ],
+      "path": "tasks/TSK-P0-112/meta.yml",
+      "schema_after": "1",
+      "schema_before": "0"
+    },
+    {
+      "changed": true,
+      "conflicts": [],
+      "legacy_keys": [],
+      "mappings": [],
+      "normalizations": [
+        "phase_normalized_to_string",
+        "status_normalized"
+      ],
+      "path": "tasks/TSK-P0-113/meta.yml",
+      "schema_after": "1",
+      "schema_before": "0"
+    },
+    {
+      "changed": true,
+      "conflicts": [],
+      "legacy_keys": [],
+      "mappings": [],
+      "normalizations": [
+        "phase_normalized_to_string",
+        "status_normalized"
+      ],
+      "path": "tasks/TSK-P0-114/meta.yml",
+      "schema_after": "1",
+      "schema_before": "0"
+    },
+    {
+      "changed": true,
+      "conflicts": [],
+      "legacy_keys": [],
+      "mappings": [],
+      "normalizations": [
+        "phase_normalized_to_string",
+        "status_normalized"
+      ],
+      "path": "tasks/TSK-P0-115/meta.yml",
+      "schema_after": "1",
+      "schema_before": "0"
+    },
+    {
+      "changed": true,
+      "conflicts": [],
+      "legacy_keys": [],
+      "mappings": [],
+      "normalizations": [
+        "phase_normalized_to_string",
+        "status_normalized"
+      ],
+      "path": "tasks/TSK-P0-116/meta.yml",
+      "schema_after": "1",
+      "schema_before": "0"
+    },
+    {
+      "changed": true,
+      "conflicts": [],
+      "legacy_keys": [],
+      "mappings": [],
+      "normalizations": [
+        "phase_normalized_to_string",
+        "status_normalized"
+      ],
+      "path": "tasks/TSK-P0-117/meta.yml",
+      "schema_after": "1",
+      "schema_before": "0"
+    },
+    {
+      "changed": true,
+      "conflicts": [],
+      "legacy_keys": [],
+      "mappings": [],
+      "normalizations": [
+        "phase_normalized_to_string",
+        "status_normalized"
+      ],
+      "path": "tasks/TSK-P0-118/meta.yml",
+      "schema_after": "1",
+      "schema_before": "0"
+    },
+    {
+      "changed": true,
+      "conflicts": [],
+      "legacy_keys": [],
+      "mappings": [],
+      "normalizations": [
+        "phase_normalized_to_string",
+        "status_normalized"
+      ],
+      "path": "tasks/TSK-P0-119/meta.yml",
+      "schema_after": "1",
+      "schema_before": "0"
+    },
+    {
+      "changed": true,
+      "conflicts": [],
+      "legacy_keys": [],
+      "mappings": [],
+      "normalizations": [
+        "phase_normalized_to_string",
+        "status_normalized"
+      ],
+      "path": "tasks/TSK-P0-120/meta.yml",
+      "schema_after": "1",
+      "schema_before": "0"
+    },
+    {
+      "changed": true,
+      "conflicts": [],
+      "legacy_keys": [],
+      "mappings": [],
+      "normalizations": [
+        "phase_normalized_to_string",
+        "status_normalized"
+      ],
+      "path": "tasks/TSK-P0-121/meta.yml",
+      "schema_after": "1",
+      "schema_before": "0"
+    },
+    {
+      "changed": true,
+      "conflicts": [],
+      "legacy_keys": [],
+      "mappings": [],
+      "normalizations": [
+        "phase_normalized_to_string",
+        "status_normalized"
+      ],
+      "path": "tasks/TSK-P0-122/meta.yml",
+      "schema_after": "1",
+      "schema_before": "0"
+    },
+    {
+      "changed": true,
+      "conflicts": [],
+      "legacy_keys": [],
+      "mappings": [],
+      "normalizations": [
+        "phase_normalized_to_string",
+        "status_normalized"
+      ],
+      "path": "tasks/TSK-P0-123/meta.yml",
+      "schema_after": "1",
+      "schema_before": "0"
+    },
+    {
+      "changed": true,
+      "conflicts": [],
+      "legacy_keys": [],
+      "mappings": [],
+      "normalizations": [
+        "phase_normalized_to_string",
+        "status_normalized"
+      ],
+      "path": "tasks/TSK-P0-124/meta.yml",
+      "schema_after": "1",
+      "schema_before": "0"
+    },
+    {
+      "changed": true,
+      "conflicts": [],
+      "legacy_keys": [],
+      "mappings": [],
+      "normalizations": [
+        "phase_normalized_to_string",
+        "status_normalized"
+      ],
+      "path": "tasks/TSK-P0-125/meta.yml",
+      "schema_after": "1",
+      "schema_before": "0"
+    },
+    {
+      "changed": true,
+      "conflicts": [],
+      "legacy_keys": [],
+      "mappings": [],
+      "normalizations": [
+        "phase_normalized_to_string",
+        "status_normalized"
+      ],
+      "path": "tasks/TSK-P0-126/meta.yml",
+      "schema_after": "1",
+      "schema_before": "0"
+    },
+    {
+      "changed": true,
+      "conflicts": [],
+      "legacy_keys": [],
+      "mappings": [],
+      "normalizations": [
+        "phase_normalized_to_string",
+        "status_normalized"
+      ],
+      "path": "tasks/TSK-P0-127/meta.yml",
+      "schema_after": "1",
+      "schema_before": "0"
+    },
+    {
+      "changed": true,
+      "conflicts": [],
+      "legacy_keys": [],
+      "mappings": [],
+      "normalizations": [
+        "phase_normalized_to_string",
+        "status_normalized"
+      ],
+      "path": "tasks/TSK-P0-128/meta.yml",
+      "schema_after": "1",
+      "schema_before": "0"
+    },
+    {
+      "changed": true,
+      "conflicts": [],
+      "legacy_keys": [],
+      "mappings": [],
+      "normalizations": [
+        "phase_normalized_to_string",
+        "status_normalized"
+      ],
+      "path": "tasks/TSK-P0-129/meta.yml",
+      "schema_after": "1",
+      "schema_before": "0"
+    },
+    {
+      "changed": true,
+      "conflicts": [],
+      "legacy_keys": [],
+      "mappings": [],
+      "normalizations": [
+        "phase_normalized_to_string",
+        "status_normalized"
+      ],
+      "path": "tasks/TSK-P0-130/meta.yml",
+      "schema_after": "1",
+      "schema_before": "0"
+    },
+    {
+      "changed": true,
+      "conflicts": [],
+      "legacy_keys": [],
+      "mappings": [],
+      "normalizations": [
+        "phase_normalized_to_string",
+        "status_normalized"
+      ],
+      "path": "tasks/TSK-P0-140/meta.yml",
+      "schema_after": "1",
+      "schema_before": "0"
+    },
+    {
+      "changed": true,
+      "conflicts": [],
+      "legacy_keys": [],
+      "mappings": [],
+      "normalizations": [
+        "phase_normalized_to_string",
+        "status_normalized"
+      ],
+      "path": "tasks/TSK-P0-141/meta.yml",
+      "schema_after": "1",
+      "schema_before": "0"
+    },
+    {
+      "changed": true,
+      "conflicts": [],
+      "legacy_keys": [],
+      "mappings": [],
+      "normalizations": [
+        "phase_normalized_to_string",
+        "status_normalized"
+      ],
+      "path": "tasks/TSK-P0-142/meta.yml",
+      "schema_after": "1",
+      "schema_before": "0"
+    },
+    {
+      "changed": true,
+      "conflicts": [],
+      "legacy_keys": [],
+      "mappings": [],
+      "normalizations": [
+        "phase_normalized_to_string",
+        "status_normalized"
+      ],
+      "path": "tasks/TSK-P0-143/meta.yml",
+      "schema_after": "1",
+      "schema_before": "0"
+    },
+    {
+      "changed": true,
+      "conflicts": [],
+      "legacy_keys": [],
+      "mappings": [],
+      "normalizations": [
+        "phase_normalized_to_string",
+        "status_normalized"
+      ],
+      "path": "tasks/TSK-P0-144/meta.yml",
+      "schema_after": "1",
+      "schema_before": "0"
+    },
+    {
+      "changed": true,
+      "conflicts": [],
+      "legacy_keys": [],
+      "mappings": [],
+      "normalizations": [
+        "phase_normalized_to_string",
+        "status_normalized"
+      ],
+      "path": "tasks/TSK-P0-145/meta.yml",
+      "schema_after": "1",
+      "schema_before": "0"
+    },
+    {
+      "changed": true,
+      "conflicts": [],
+      "legacy_keys": [],
+      "mappings": [],
+      "normalizations": [
+        "phase_normalized_to_string",
+        "status_normalized"
+      ],
+      "path": "tasks/TSK-P0-146/meta.yml",
+      "schema_after": "1",
+      "schema_before": "0"
+    },
+    {
+      "changed": true,
+      "conflicts": [],
+      "legacy_keys": [],
+      "mappings": [],
+      "normalizations": [
+        "phase_normalized_to_string",
+        "status_normalized"
+      ],
+      "path": "tasks/TSK-P0-147/meta.yml",
+      "schema_after": "1",
+      "schema_before": "0"
+    },
+    {
+      "changed": true,
+      "conflicts": [],
+      "legacy_keys": [],
+      "mappings": [],
+      "normalizations": [
+        "phase_normalized_to_string",
+        "status_normalized"
+      ],
+      "path": "tasks/TSK-P0-148/meta.yml",
+      "schema_after": "1",
+      "schema_before": "0"
+    },
+    {
+      "changed": true,
+      "conflicts": [],
+      "legacy_keys": [],
+      "mappings": [],
+      "normalizations": [
+        "phase_normalized_to_string",
+        "status_normalized"
+      ],
+      "path": "tasks/TSK-P0-149/meta.yml",
+      "schema_after": "1",
+      "schema_before": "0"
+    },
+    {
+      "changed": true,
+      "conflicts": [],
+      "legacy_keys": [],
+      "mappings": [],
+      "normalizations": [
+        "phase_normalized_to_string",
+        "status_normalized"
+      ],
+      "path": "tasks/TSK-P0-150/meta.yml",
+      "schema_after": "1",
+      "schema_before": "0"
+    },
+    {
+      "changed": true,
+      "conflicts": [],
+      "legacy_keys": [],
+      "mappings": [],
+      "normalizations": [
+        "phase_normalized_to_string",
+        "status_normalized"
+      ],
+      "path": "tasks/TSK-P0-151/meta.yml",
+      "schema_after": "1",
+      "schema_before": "0"
+    },
+    {
+      "changed": true,
+      "conflicts": [],
+      "legacy_keys": [],
+      "mappings": [],
+      "normalizations": [
+        "phase_normalized_to_string",
+        "status_normalized"
+      ],
+      "path": "tasks/TSK-P0-152/meta.yml",
+      "schema_after": "1",
+      "schema_before": "0"
+    },
+    {
+      "changed": true,
+      "conflicts": [],
+      "legacy_keys": [],
+      "mappings": [],
+      "normalizations": [
+        "phase_normalized_to_string",
+        "status_normalized"
+      ],
+      "path": "tasks/TSK-P0-153/meta.yml",
+      "schema_after": "1",
+      "schema_before": "0"
+    },
+    {
+      "changed": true,
+      "conflicts": [],
+      "legacy_keys": [],
+      "mappings": [],
+      "normalizations": [
+        "phase_normalized_to_string",
+        "status_normalized"
+      ],
+      "path": "tasks/TSK-P0-154/meta.yml",
+      "schema_after": "1",
+      "schema_before": "0"
+    },
+    {
+      "changed": true,
+      "conflicts": [],
+      "legacy_keys": [],
+      "mappings": [],
+      "normalizations": [
+        "phase_normalized_to_string",
+        "status_normalized"
+      ],
+      "path": "tasks/TSK-P0-155/meta.yml",
+      "schema_after": "1",
+      "schema_before": "0"
+    },
+    {
+      "changed": true,
+      "conflicts": [],
+      "legacy_keys": [],
+      "mappings": [],
+      "normalizations": [
+        "phase_normalized_to_string",
+        "status_normalized"
+      ],
+      "path": "tasks/TSK-P0-156/meta.yml",
+      "schema_after": "1",
+      "schema_before": "0"
+    },
+    {
+      "changed": true,
+      "conflicts": [],
+      "legacy_keys": [],
+      "mappings": [],
+      "normalizations": [
+        "phase_normalized_to_string",
+        "status_normalized"
+      ],
+      "path": "tasks/TSK-P0-208/meta.yml",
+      "schema_after": "1",
+      "schema_before": "0"
+    },
+    {
+      "changed": true,
+      "conflicts": [],
+      "legacy_keys": [],
+      "mappings": [],
+      "normalizations": [
+        "phase_normalized_to_string",
+        "status_normalized"
+      ],
+      "path": "tasks/TSK-P0-210/meta.yml",
+      "schema_after": "1",
+      "schema_before": "0"
+    },
+    {
+      "changed": true,
+      "conflicts": [],
+      "legacy_keys": [],
+      "mappings": [],
+      "normalizations": [
+        "phase_normalized_to_string",
+        "status_normalized"
+      ],
+      "path": "tasks/TSK-P0-KYC-001/meta.yml",
+      "schema_after": "1",
+      "schema_before": "0"
+    },
+    {
+      "changed": true,
+      "conflicts": [],
+      "legacy_keys": [],
+      "mappings": [],
+      "normalizations": [
+        "phase_normalized_to_string",
+        "status_normalized"
+      ],
+      "path": "tasks/TSK-P0-KYC-002/meta.yml",
+      "schema_after": "1",
+      "schema_before": "0"
+    },
+    {
+      "changed": true,
+      "conflicts": [],
+      "legacy_keys": [],
+      "mappings": [],
+      "normalizations": [
+        "phase_normalized_to_string",
+        "status_normalized"
+      ],
+      "path": "tasks/TSK-P0-KYC-003/meta.yml",
+      "schema_after": "1",
+      "schema_before": "0"
+    },
+    {
+      "changed": true,
+      "conflicts": [],
+      "legacy_keys": [],
+      "mappings": [],
+      "normalizations": [
+        "phase_normalized_to_string",
+        "status_normalized"
+      ],
+      "path": "tasks/TSK-P0-KYC-004/meta.yml",
+      "schema_after": "1",
+      "schema_before": "0"
+    },
+    {
+      "changed": true,
+      "conflicts": [],
+      "legacy_keys": [],
+      "mappings": [],
+      "normalizations": [
+        "phase_normalized_to_string",
+        "status_normalized"
+      ],
+      "path": "tasks/TSK-P0-LEVY-001/meta.yml",
+      "schema_after": "1",
+      "schema_before": "0"
+    },
+    {
+      "changed": true,
+      "conflicts": [],
+      "legacy_keys": [],
+      "mappings": [],
+      "normalizations": [
+        "phase_normalized_to_string",
+        "status_normalized"
+      ],
+      "path": "tasks/TSK-P0-LEVY-002/meta.yml",
+      "schema_after": "1",
+      "schema_before": "0"
+    },
+    {
+      "changed": true,
+      "conflicts": [],
+      "legacy_keys": [],
+      "mappings": [],
+      "normalizations": [
+        "phase_normalized_to_string",
+        "status_normalized"
+      ],
+      "path": "tasks/TSK-P0-LEVY-003/meta.yml",
+      "schema_after": "1",
+      "schema_before": "0"
+    },
+    {
+      "changed": true,
+      "conflicts": [],
+      "legacy_keys": [],
+      "mappings": [],
+      "normalizations": [
+        "phase_normalized_to_string",
+        "status_normalized"
+      ],
+      "path": "tasks/TSK-P0-LEVY-004/meta.yml",
+      "schema_after": "1",
+      "schema_before": "0"
+    },
+    {
+      "changed": true,
+      "conflicts": [],
+      "legacy_keys": [],
+      "mappings": [],
+      "normalizations": [
+        "phase_normalized_to_string",
+        "status_normalized"
+      ],
+      "path": "tasks/TSK-P1-001/meta.yml",
+      "schema_after": "1",
+      "schema_before": "0"
+    },
+    {
+      "changed": true,
+      "conflicts": [],
+      "legacy_keys": [],
+      "mappings": [],
+      "normalizations": [
+        "phase_normalized_to_string",
+        "status_normalized"
+      ],
+      "path": "tasks/TSK-P1-002/meta.yml",
+      "schema_after": "1",
+      "schema_before": "0"
+    },
+    {
+      "changed": true,
+      "conflicts": [],
+      "legacy_keys": [],
+      "mappings": [],
+      "normalizations": [
+        "phase_normalized_to_string",
+        "status_normalized"
+      ],
+      "path": "tasks/TSK-P1-003/meta.yml",
+      "schema_after": "1",
+      "schema_before": "0"
+    },
+    {
+      "changed": true,
+      "conflicts": [],
+      "legacy_keys": [],
+      "mappings": [],
+      "normalizations": [
+        "phase_normalized_to_string",
+        "status_normalized"
+      ],
+      "path": "tasks/TSK-P1-004/meta.yml",
+      "schema_after": "1",
+      "schema_before": "0"
+    },
+    {
+      "changed": true,
+      "conflicts": [],
+      "legacy_keys": [],
+      "mappings": [],
+      "normalizations": [
+        "phase_normalized_to_string",
+        "status_normalized"
+      ],
+      "path": "tasks/TSK-P1-005/meta.yml",
+      "schema_after": "1",
+      "schema_before": "0"
+    },
+    {
+      "changed": true,
+      "conflicts": [],
+      "legacy_keys": [],
+      "mappings": [],
+      "normalizations": [
+        "phase_normalized_to_string",
+        "status_normalized"
+      ],
+      "path": "tasks/TSK-P1-006/meta.yml",
+      "schema_after": "1",
+      "schema_before": "0"
+    },
+    {
+      "changed": true,
+      "conflicts": [],
+      "legacy_keys": [],
+      "mappings": [],
+      "normalizations": [
+        "phase_normalized_to_string",
+        "status_normalized"
+      ],
+      "path": "tasks/TSK-P1-007/meta.yml",
+      "schema_after": "1",
+      "schema_before": "0"
+    },
+    {
+      "changed": true,
+      "conflicts": [],
+      "legacy_keys": [],
+      "mappings": [],
+      "normalizations": [
+        "phase_normalized_to_string",
+        "status_normalized"
+      ],
+      "path": "tasks/TSK-P1-008/meta.yml",
+      "schema_after": "1",
+      "schema_before": "0"
+    },
+    {
+      "changed": true,
+      "conflicts": [],
+      "legacy_keys": [],
+      "mappings": [],
+      "normalizations": [
+        "phase_normalized_to_string",
+        "status_normalized"
+      ],
+      "path": "tasks/TSK-P1-009/meta.yml",
+      "schema_after": "1",
+      "schema_before": "0"
+    },
+    {
+      "changed": true,
+      "conflicts": [],
+      "legacy_keys": [],
+      "mappings": [],
+      "normalizations": [
+        "phase_normalized_to_string",
+        "status_normalized"
+      ],
+      "path": "tasks/TSK-P1-010/meta.yml",
+      "schema_after": "1",
+      "schema_before": "0"
+    },
+    {
+      "changed": true,
+      "conflicts": [],
+      "legacy_keys": [],
+      "mappings": [],
+      "normalizations": [
+        "phase_normalized_to_string",
+        "status_normalized"
+      ],
+      "path": "tasks/TSK-P1-011/meta.yml",
+      "schema_after": "1",
+      "schema_before": "0"
+    },
+    {
+      "changed": true,
+      "conflicts": [],
+      "legacy_keys": [],
+      "mappings": [],
+      "normalizations": [
+        "phase_normalized_to_string",
+        "status_normalized"
+      ],
+      "path": "tasks/TSK-P1-012/meta.yml",
+      "schema_after": "1",
+      "schema_before": "0"
+    },
+    {
+      "changed": true,
+      "conflicts": [],
+      "legacy_keys": [],
+      "mappings": [],
+      "normalizations": [
+        "phase_normalized_to_string",
+        "status_normalized"
+      ],
+      "path": "tasks/TSK-P1-013/meta.yml",
+      "schema_after": "1",
+      "schema_before": "0"
+    },
+    {
+      "changed": true,
+      "conflicts": [],
+      "legacy_keys": [],
+      "mappings": [],
+      "normalizations": [
+        "phase_normalized_to_string",
+        "status_normalized"
+      ],
+      "path": "tasks/TSK-P1-014/meta.yml",
+      "schema_after": "1",
+      "schema_before": "0"
+    },
+    {
+      "changed": true,
+      "conflicts": [],
+      "legacy_keys": [],
+      "mappings": [],
+      "normalizations": [
+        "phase_normalized_to_string",
+        "status_normalized"
+      ],
+      "path": "tasks/TSK-P1-015/meta.yml",
+      "schema_after": "1",
+      "schema_before": "0"
+    },
+    {
+      "changed": true,
+      "conflicts": [],
+      "legacy_keys": [],
+      "mappings": [],
+      "normalizations": [
+        "phase_normalized_to_string",
+        "status_normalized"
+      ],
+      "path": "tasks/TSK-P1-016/meta.yml",
+      "schema_after": "1",
+      "schema_before": "0"
+    },
+    {
+      "changed": true,
+      "conflicts": [],
+      "legacy_keys": [],
+      "mappings": [],
+      "normalizations": [
+        "phase_normalized_to_string",
+        "status_normalized"
+      ],
+      "path": "tasks/TSK-P1-017/meta.yml",
+      "schema_after": "1",
+      "schema_before": "0"
+    },
+    {
+      "changed": true,
+      "conflicts": [],
+      "legacy_keys": [],
+      "mappings": [],
+      "normalizations": [
+        "phase_normalized_to_string",
+        "status_normalized"
+      ],
+      "path": "tasks/TSK-P1-018/meta.yml",
+      "schema_after": "1",
+      "schema_before": "0"
+    },
+    {
+      "changed": true,
+      "conflicts": [],
+      "legacy_keys": [],
+      "mappings": [],
+      "normalizations": [
+        "phase_normalized_to_string",
+        "status_normalized"
+      ],
+      "path": "tasks/TSK-P1-019/meta.yml",
+      "schema_after": "1",
+      "schema_before": "0"
+    },
+    {
+      "changed": true,
+      "conflicts": [],
+      "legacy_keys": [],
+      "mappings": [],
+      "normalizations": [
+        "phase_normalized_to_string",
+        "status_normalized"
+      ],
+      "path": "tasks/TSK-P1-020/meta.yml",
+      "schema_after": "1",
+      "schema_before": "0"
+    },
+    {
+      "changed": true,
+      "conflicts": [],
+      "legacy_keys": [],
+      "mappings": [],
+      "normalizations": [
+        "phase_normalized_to_string",
+        "status_normalized"
+      ],
+      "path": "tasks/TSK-P1-021/meta.yml",
+      "schema_after": "1",
+      "schema_before": "0"
+    },
+    {
+      "changed": true,
+      "conflicts": [],
+      "legacy_keys": [],
+      "mappings": [],
+      "normalizations": [
+        "phase_normalized_to_string",
+        "status_normalized"
+      ],
+      "path": "tasks/TSK-P1-022/meta.yml",
+      "schema_after": "1",
+      "schema_before": "0"
+    },
+    {
+      "changed": true,
+      "conflicts": [],
+      "legacy_keys": [],
+      "mappings": [],
+      "normalizations": [
+        "phase_normalized_to_string",
+        "status_normalized"
+      ],
+      "path": "tasks/TSK-P1-023/meta.yml",
+      "schema_after": "1",
+      "schema_before": "0"
+    },
+    {
+      "changed": true,
+      "conflicts": [],
+      "legacy_keys": [],
+      "mappings": [],
+      "normalizations": [
+        "phase_normalized_to_string",
+        "status_normalized"
+      ],
+      "path": "tasks/TSK-P1-024/meta.yml",
+      "schema_after": "1",
+      "schema_before": "0"
+    },
+    {
+      "changed": true,
+      "conflicts": [],
+      "legacy_keys": [],
+      "mappings": [],
+      "normalizations": [
+        "phase_normalized_to_string",
+        "status_normalized"
+      ],
+      "path": "tasks/TSK-P1-025/meta.yml",
+      "schema_after": "1",
+      "schema_before": "0"
+    },
+    {
+      "changed": true,
+      "conflicts": [],
+      "legacy_keys": [],
+      "mappings": [],
+      "normalizations": [
+        "phase_normalized_to_string",
+        "status_normalized"
+      ],
+      "path": "tasks/TSK-P1-026/meta.yml",
+      "schema_after": "1",
+      "schema_before": "0"
+    },
+    {
+      "changed": true,
+      "conflicts": [],
+      "legacy_keys": [],
+      "mappings": [],
+      "normalizations": [
+        "phase_normalized_to_string",
+        "status_normalized"
+      ],
+      "path": "tasks/TSK-P1-027/meta.yml",
+      "schema_after": "1",
+      "schema_before": "0"
+    },
+    {
+      "changed": true,
+      "conflicts": [],
+      "legacy_keys": [],
+      "mappings": [],
+      "normalizations": [
+        "phase_normalized_to_string",
+        "status_normalized"
+      ],
+      "path": "tasks/TSK-P1-028/meta.yml",
+      "schema_after": "1",
+      "schema_before": "0"
+    },
+    {
+      "changed": true,
+      "conflicts": [],
+      "legacy_keys": [],
+      "mappings": [],
+      "normalizations": [
+        "phase_normalized_to_string",
+        "status_normalized"
+      ],
+      "path": "tasks/TSK-P1-029/meta.yml",
+      "schema_after": "1",
+      "schema_before": "0"
+    },
+    {
+      "changed": true,
+      "conflicts": [],
+      "legacy_keys": [],
+      "mappings": [],
+      "normalizations": [
+        "phase_normalized_to_string",
+        "status_normalized"
+      ],
+      "path": "tasks/TSK-P1-030/meta.yml",
+      "schema_after": "1",
+      "schema_before": "0"
+    },
+    {
+      "changed": true,
+      "conflicts": [],
+      "legacy_keys": [],
+      "mappings": [],
+      "normalizations": [
+        "phase_normalized_to_string",
+        "status_normalized"
+      ],
+      "path": "tasks/TSK-P1-031/meta.yml",
+      "schema_after": "1",
+      "schema_before": "0"
+    },
+    {
+      "changed": true,
+      "conflicts": [],
+      "legacy_keys": [],
+      "mappings": [],
+      "normalizations": [
+        "phase_normalized_to_string",
+        "status_normalized"
+      ],
+      "path": "tasks/TSK-P1-032/meta.yml",
+      "schema_after": "1",
+      "schema_before": "0"
+    },
+    {
+      "changed": true,
+      "conflicts": [],
+      "legacy_keys": [],
+      "mappings": [],
+      "normalizations": [
+        "phase_normalized_to_string",
+        "status_normalized"
+      ],
+      "path": "tasks/TSK-P1-033/meta.yml",
+      "schema_after": "1",
+      "schema_before": "0"
+    },
+    {
+      "changed": true,
+      "conflicts": [],
+      "legacy_keys": [],
+      "mappings": [],
+      "normalizations": [
+        "phase_normalized_to_string",
+        "status_normalized"
+      ],
+      "path": "tasks/TSK-P1-034/meta.yml",
+      "schema_after": "1",
+      "schema_before": "0"
+    },
+    {
+      "changed": true,
+      "conflicts": [],
+      "legacy_keys": [],
+      "mappings": [],
+      "normalizations": [
+        "phase_normalized_to_string",
+        "status_normalized"
+      ],
+      "path": "tasks/TSK-P1-035/meta.yml",
+      "schema_after": "1",
+      "schema_before": "0"
+    },
+    {
+      "changed": true,
+      "conflicts": [],
+      "legacy_keys": [],
+      "mappings": [],
+      "normalizations": [
+        "phase_normalized_to_string",
+        "status_normalized"
+      ],
+      "path": "tasks/TSK-P1-036/meta.yml",
+      "schema_after": "1",
+      "schema_before": "0"
+    },
+    {
+      "changed": true,
+      "conflicts": [],
+      "legacy_keys": [],
+      "mappings": [],
+      "normalizations": [
+        "phase_normalized_to_string",
+        "status_normalized"
+      ],
+      "path": "tasks/TSK-P1-037/meta.yml",
+      "schema_after": "1",
+      "schema_before": "0"
+    },
+    {
+      "changed": true,
+      "conflicts": [],
+      "legacy_keys": [],
+      "mappings": [],
+      "normalizations": [
+        "phase_normalized_to_string",
+        "status_normalized"
+      ],
+      "path": "tasks/TSK-P1-038/meta.yml",
+      "schema_after": "1",
+      "schema_before": "0"
+    },
+    {
+      "changed": true,
+      "conflicts": [],
+      "legacy_keys": [],
+      "mappings": [],
+      "normalizations": [
+        "phase_normalized_to_string",
+        "status_normalized"
+      ],
+      "path": "tasks/TSK-P1-039/meta.yml",
+      "schema_after": "1",
+      "schema_before": "0"
+    },
+    {
+      "changed": true,
+      "conflicts": [],
+      "legacy_keys": [],
+      "mappings": [],
+      "normalizations": [
+        "phase_normalized_to_string",
+        "status_normalized"
+      ],
+      "path": "tasks/TSK-P1-040/meta.yml",
+      "schema_after": "1",
+      "schema_before": "0"
+    },
+    {
+      "changed": true,
+      "conflicts": [],
+      "legacy_keys": [],
+      "mappings": [],
+      "normalizations": [
+        "phase_normalized_to_string",
+        "status_normalized"
+      ],
+      "path": "tasks/TSK-P1-041/meta.yml",
+      "schema_after": "1",
+      "schema_before": "0"
+    },
+    {
+      "changed": true,
+      "conflicts": [],
+      "legacy_keys": [],
+      "mappings": [],
+      "normalizations": [
+        "phase_normalized_to_string",
+        "status_normalized"
+      ],
+      "path": "tasks/TSK-P1-042/meta.yml",
+      "schema_after": "1",
+      "schema_before": "0"
+    },
+    {
+      "changed": true,
+      "conflicts": [],
+      "legacy_keys": [],
+      "mappings": [],
+      "normalizations": [
+        "phase_normalized_to_string",
+        "status_normalized"
+      ],
+      "path": "tasks/TSK-P1-043/meta.yml",
+      "schema_after": "1",
+      "schema_before": "0"
+    },
+    {
+      "changed": true,
+      "conflicts": [],
+      "legacy_keys": [],
+      "mappings": [],
+      "normalizations": [
+        "phase_normalized_to_string",
+        "status_normalized"
+      ],
+      "path": "tasks/TSK-P1-044/meta.yml",
+      "schema_after": "1",
+      "schema_before": "0"
+    },
+    {
+      "changed": true,
+      "conflicts": [],
+      "legacy_keys": [],
+      "mappings": [],
+      "normalizations": [
+        "phase_normalized_to_string",
+        "status_normalized"
+      ],
+      "path": "tasks/TSK-P1-045/meta.yml",
+      "schema_after": "1",
+      "schema_before": "0"
+    },
+    {
+      "changed": true,
+      "conflicts": [],
+      "legacy_keys": [],
+      "mappings": [],
+      "normalizations": [
+        "phase_normalized_to_string",
+        "status_normalized"
+      ],
+      "path": "tasks/TSK-P1-046/meta.yml",
+      "schema_after": "1",
+      "schema_before": "0"
+    },
+    {
+      "changed": true,
+      "conflicts": [],
+      "legacy_keys": [],
+      "mappings": [],
+      "normalizations": [
+        "phase_normalized_to_string",
+        "status_normalized"
+      ],
+      "path": "tasks/TSK-P1-047/meta.yml",
+      "schema_after": "1",
+      "schema_before": "0"
+    },
+    {
+      "changed": true,
+      "conflicts": [],
+      "legacy_keys": [],
+      "mappings": [],
+      "normalizations": [
+        "phase_normalized_to_string",
+        "status_normalized"
+      ],
+      "path": "tasks/TSK-P1-048/meta.yml",
+      "schema_after": "1",
+      "schema_before": "0"
+    },
+    {
+      "changed": true,
+      "conflicts": [],
+      "legacy_keys": [],
+      "mappings": [],
+      "normalizations": [
+        "phase_normalized_to_string",
+        "status_normalized"
+      ],
+      "path": "tasks/TSK-P1-049/meta.yml",
+      "schema_after": "1",
+      "schema_before": "0"
+    },
+    {
+      "changed": true,
+      "conflicts": [],
+      "legacy_keys": [],
+      "mappings": [],
+      "normalizations": [
+        "phase_normalized_to_string",
+        "status_normalized"
+      ],
+      "path": "tasks/TSK-P1-050/meta.yml",
+      "schema_after": "1",
+      "schema_before": "0"
+    },
+    {
+      "changed": true,
+      "conflicts": [],
+      "legacy_keys": [],
+      "mappings": [],
+      "normalizations": [
+        "phase_normalized_to_string",
+        "status_normalized"
+      ],
+      "path": "tasks/TSK-P1-051/meta.yml",
+      "schema_after": "1",
+      "schema_before": "0"
+    },
+    {
+      "changed": true,
+      "conflicts": [],
+      "legacy_keys": [],
+      "mappings": [],
+      "normalizations": [
+        "phase_normalized_to_string",
+        "status_normalized"
+      ],
+      "path": "tasks/TSK-P1-052/meta.yml",
+      "schema_after": "1",
+      "schema_before": "0"
+    },
+    {
+      "changed": true,
+      "conflicts": [],
+      "legacy_keys": [],
+      "mappings": [],
+      "normalizations": [
+        "phase_normalized_to_string",
+        "status_normalized"
+      ],
+      "path": "tasks/TSK-P1-053/meta.yml",
+      "schema_after": "1",
+      "schema_before": "0"
+    },
+    {
+      "changed": true,
+      "conflicts": [],
+      "legacy_keys": [],
+      "mappings": [],
+      "normalizations": [
+        "phase_normalized_to_string",
+        "status_normalized"
+      ],
+      "path": "tasks/TSK-P1-054/meta.yml",
+      "schema_after": "1",
+      "schema_before": "0"
+    },
+    {
+      "changed": true,
+      "conflicts": [],
+      "legacy_keys": [],
+      "mappings": [],
+      "normalizations": [
+        "phase_normalized_to_string",
+        "status_normalized"
+      ],
+      "path": "tasks/TSK-P1-055/meta.yml",
+      "schema_after": "1",
+      "schema_before": "0"
+    },
+    {
+      "changed": true,
+      "conflicts": [],
+      "legacy_keys": [],
+      "mappings": [],
+      "normalizations": [
+        "phase_normalized_to_string",
+        "status_normalized"
+      ],
+      "path": "tasks/TSK-P1-056/meta.yml",
+      "schema_after": "1",
+      "schema_before": "0"
+    },
+    {
+      "changed": true,
+      "conflicts": [],
+      "legacy_keys": [],
+      "mappings": [],
+      "normalizations": [
+        "phase_normalized_to_string",
+        "status_normalized"
+      ],
+      "path": "tasks/TSK-P1-057-FINAL/meta.yml",
+      "schema_after": "1",
+      "schema_before": "0"
+    },
+    {
+      "changed": true,
+      "conflicts": [],
+      "legacy_keys": [],
+      "mappings": [],
+      "normalizations": [
+        "phase_normalized_to_string",
+        "status_normalized"
+      ],
+      "path": "tasks/TSK-P1-057/meta.yml",
+      "schema_after": "1",
+      "schema_before": "0"
+    },
+    {
+      "changed": true,
+      "conflicts": [],
+      "legacy_keys": [],
+      "mappings": [],
+      "normalizations": [
+        "phase_normalized_to_string",
+        "status_normalized"
+      ],
+      "path": "tasks/TSK-P1-058/meta.yml",
+      "schema_after": "1",
+      "schema_before": "0"
+    },
+    {
+      "changed": true,
+      "conflicts": [],
+      "legacy_keys": [],
+      "mappings": [],
+      "normalizations": [
+        "phase_normalized_to_string",
+        "status_normalized"
+      ],
+      "path": "tasks/TSK-P1-059/meta.yml",
+      "schema_after": "1",
+      "schema_before": "0"
+    },
+    {
+      "changed": true,
+      "conflicts": [],
+      "legacy_keys": [],
+      "mappings": [],
+      "normalizations": [
+        "phase_normalized_to_string",
+        "status_normalized"
+      ],
+      "path": "tasks/TSK-P1-060/meta.yml",
+      "schema_after": "1",
+      "schema_before": "0"
+    },
+    {
+      "changed": true,
+      "conflicts": [],
+      "legacy_keys": [],
+      "mappings": [],
+      "normalizations": [
+        "evidence_normalized_to_list",
+        "phase_normalized_to_string",
+        "status_normalized",
+        "verification_normalized_to_list"
+      ],
+      "path": "tasks/TSK-P1-202/meta.yml",
+      "schema_after": "1",
+      "schema_before": "0"
+    },
+    {
+      "changed": true,
+      "conflicts": [],
+      "legacy_keys": [],
+      "mappings": [],
+      "normalizations": [
+        "evidence_normalized_to_list",
+        "phase_normalized_to_string",
+        "status_normalized",
+        "verification_normalized_to_list"
+      ],
+      "path": "tasks/TSK-P1-ADP-001/meta.yml",
+      "schema_after": "1",
+      "schema_before": "0"
+    },
+    {
+      "changed": true,
+      "conflicts": [],
+      "legacy_keys": [],
+      "mappings": [],
+      "normalizations": [
+        "evidence_normalized_to_list",
+        "phase_normalized_to_string",
+        "status_normalized",
+        "verification_normalized_to_list"
+      ],
+      "path": "tasks/TSK-P1-ADP-002/meta.yml",
+      "schema_after": "1",
+      "schema_before": "0"
+    },
+    {
+      "changed": true,
+      "conflicts": [],
+      "legacy_keys": [],
+      "mappings": [],
+      "normalizations": [
+        "evidence_normalized_to_list",
+        "phase_normalized_to_string",
+        "status_normalized",
+        "verification_normalized_to_list"
+      ],
+      "path": "tasks/TSK-P1-ADP-003/meta.yml",
+      "schema_after": "1",
+      "schema_before": "0"
+    },
+    {
+      "changed": true,
+      "conflicts": [],
+      "legacy_keys": [],
+      "mappings": [],
+      "normalizations": [
+        "phase_normalized_to_string",
+        "status_normalized"
+      ],
+      "path": "tasks/TSK-P1-ESC-001/meta.yml",
+      "schema_after": "1",
+      "schema_before": "0"
+    },
+    {
+      "changed": true,
+      "conflicts": [],
+      "legacy_keys": [],
+      "mappings": [],
+      "normalizations": [
+        "phase_normalized_to_string",
+        "status_normalized"
+      ],
+      "path": "tasks/TSK-P1-ESC-002/meta.yml",
+      "schema_after": "1",
+      "schema_before": "0"
+    },
+    {
+      "changed": true,
+      "conflicts": [],
+      "legacy_keys": [],
+      "mappings": [],
+      "normalizations": [
+        "phase_normalized_to_string",
+        "status_normalized"
+      ],
+      "path": "tasks/TSK-P1-HIER-001/meta.yml",
+      "schema_after": "1",
+      "schema_before": "0"
+    },
+    {
+      "changed": true,
+      "conflicts": [],
+      "legacy_keys": [],
+      "mappings": [],
+      "normalizations": [
+        "phase_normalized_to_string",
+        "status_normalized"
+      ],
+      "path": "tasks/TSK-P1-HIER-002/meta.yml",
+      "schema_after": "1",
+      "schema_before": "0"
+    },
+    {
+      "changed": true,
+      "conflicts": [],
+      "legacy_keys": [],
+      "mappings": [],
+      "normalizations": [
+        "phase_normalized_to_string",
+        "status_normalized"
+      ],
+      "path": "tasks/TSK-P1-HIER-003/meta.yml",
+      "schema_after": "1",
+      "schema_before": "0"
+    },
+    {
+      "changed": true,
+      "conflicts": [],
+      "legacy_keys": [],
+      "mappings": [],
+      "normalizations": [
+        "phase_normalized_to_string",
+        "status_normalized"
+      ],
+      "path": "tasks/TSK-P1-HIER-004/meta.yml",
+      "schema_after": "1",
+      "schema_before": "0"
+    },
+    {
+      "changed": true,
+      "conflicts": [],
+      "legacy_keys": [],
+      "mappings": [],
+      "normalizations": [
+        "phase_normalized_to_string",
+        "status_normalized"
+      ],
+      "path": "tasks/TSK-P1-HIER-005/meta.yml",
+      "schema_after": "1",
+      "schema_before": "0"
+    },
+    {
+      "changed": true,
+      "conflicts": [],
+      "legacy_keys": [],
+      "mappings": [],
+      "normalizations": [
+        "phase_normalized_to_string",
+        "status_normalized"
+      ],
+      "path": "tasks/TSK-P1-HIER-006/meta.yml",
+      "schema_after": "1",
+      "schema_before": "0"
+    },
+    {
+      "changed": true,
+      "conflicts": [],
+      "legacy_keys": [],
+      "mappings": [],
+      "normalizations": [
+        "phase_normalized_to_string",
+        "status_normalized"
+      ],
+      "path": "tasks/TSK-P1-HIER-007/meta.yml",
+      "schema_after": "1",
+      "schema_before": "0"
+    },
+    {
+      "changed": true,
+      "conflicts": [],
+      "legacy_keys": [],
+      "mappings": [],
+      "normalizations": [
+        "phase_normalized_to_string",
+        "status_normalized"
+      ],
+      "path": "tasks/TSK-P1-HIER-008/meta.yml",
+      "schema_after": "1",
+      "schema_before": "0"
+    },
+    {
+      "changed": true,
+      "conflicts": [],
+      "legacy_keys": [],
+      "mappings": [],
+      "normalizations": [
+        "phase_normalized_to_string",
+        "status_normalized"
+      ],
+      "path": "tasks/TSK-P1-HIER-009/meta.yml",
+      "schema_after": "1",
+      "schema_before": "0"
+    },
+    {
+      "changed": true,
+      "conflicts": [],
+      "legacy_keys": [],
+      "mappings": [],
+      "normalizations": [
+        "phase_normalized_to_string",
+        "status_normalized"
+      ],
+      "path": "tasks/TSK-P1-HIER-010/meta.yml",
+      "schema_after": "1",
+      "schema_before": "0"
+    },
+    {
+      "changed": true,
+      "conflicts": [],
+      "legacy_keys": [],
+      "mappings": [],
+      "normalizations": [
+        "evidence_normalized_to_list",
+        "phase_normalized_to_string",
+        "status_normalized",
+        "verification_normalized_to_list"
+      ],
+      "path": "tasks/TSK-P1-HIER-011/meta.yml",
+      "schema_after": "1",
+      "schema_before": "0"
+    },
+    {
+      "changed": true,
+      "conflicts": [],
+      "legacy_keys": [],
+      "mappings": [],
+      "normalizations": [
+        "evidence_normalized_to_list",
+        "phase_normalized_to_string",
+        "status_normalized",
+        "verification_normalized_to_list"
+      ],
+      "path": "tasks/TSK-P1-INF-001/meta.yml",
+      "schema_after": "1",
+      "schema_before": "0"
+    },
+    {
+      "changed": true,
+      "conflicts": [],
+      "legacy_keys": [],
+      "mappings": [],
+      "normalizations": [
+        "evidence_normalized_to_list",
+        "phase_normalized_to_string",
+        "status_normalized",
+        "verification_normalized_to_list"
+      ],
+      "path": "tasks/TSK-P1-INF-002/meta.yml",
+      "schema_after": "1",
+      "schema_before": "0"
+    },
+    {
+      "changed": true,
+      "conflicts": [],
+      "legacy_keys": [],
+      "mappings": [],
+      "normalizations": [
+        "evidence_normalized_to_list",
+        "phase_normalized_to_string",
+        "status_normalized",
+        "verification_normalized_to_list"
+      ],
+      "path": "tasks/TSK-P1-INF-003/meta.yml",
+      "schema_after": "1",
+      "schema_before": "0"
+    },
+    {
+      "changed": true,
+      "conflicts": [],
+      "legacy_keys": [],
+      "mappings": [],
+      "normalizations": [
+        "evidence_normalized_to_list",
+        "phase_normalized_to_string",
+        "status_normalized",
+        "verification_normalized_to_list"
+      ],
+      "path": "tasks/TSK-P1-INF-004/meta.yml",
+      "schema_after": "1",
+      "schema_before": "0"
+    },
+    {
+      "changed": true,
+      "conflicts": [],
+      "legacy_keys": [],
+      "mappings": [],
+      "normalizations": [
+        "evidence_normalized_to_list",
+        "phase_normalized_to_string",
+        "status_normalized",
+        "verification_normalized_to_list"
+      ],
+      "path": "tasks/TSK-P1-INF-005/meta.yml",
+      "schema_after": "1",
+      "schema_before": "0"
+    },
+    {
+      "changed": true,
+      "conflicts": [],
+      "legacy_keys": [],
+      "mappings": [],
+      "normalizations": [
+        "evidence_normalized_to_list",
+        "phase_normalized_to_string",
+        "status_normalized",
+        "verification_normalized_to_list"
+      ],
+      "path": "tasks/TSK-P1-INF-006/meta.yml",
+      "schema_after": "1",
+      "schema_before": "0"
+    },
+    {
+      "changed": true,
+      "conflicts": [],
+      "legacy_keys": [],
+      "mappings": [],
+      "normalizations": [
+        "evidence_normalized_to_list",
+        "phase_normalized_to_string",
+        "status_normalized",
+        "verification_normalized_to_list"
+      ],
+      "path": "tasks/TSK-P1-LED-001/meta.yml",
+      "schema_after": "1",
+      "schema_before": "0"
+    },
+    {
+      "changed": true,
+      "conflicts": [],
+      "legacy_keys": [],
+      "mappings": [],
+      "normalizations": [
+        "evidence_normalized_to_list",
+        "phase_normalized_to_string",
+        "status_normalized",
+        "verification_normalized_to_list"
+      ],
+      "path": "tasks/TSK-P1-LED-002/meta.yml",
+      "schema_after": "1",
+      "schema_before": "0"
+    },
+    {
+      "changed": true,
+      "conflicts": [],
+      "legacy_keys": [],
+      "mappings": [],
+      "normalizations": [
+        "evidence_normalized_to_list",
+        "phase_normalized_to_string",
+        "status_normalized",
+        "verification_normalized_to_list"
+      ],
+      "path": "tasks/TSK-P1-LED-003/meta.yml",
+      "schema_after": "1",
+      "schema_before": "0"
+    },
+    {
+      "changed": true,
+      "conflicts": [],
+      "legacy_keys": [],
+      "mappings": [],
+      "normalizations": [
+        "evidence_normalized_to_list",
+        "phase_normalized_to_string",
+        "status_normalized",
+        "verification_normalized_to_list"
+      ],
+      "path": "tasks/TSK-P1-LED-004/meta.yml",
+      "schema_after": "1",
+      "schema_before": "0"
+    },
+    {
+      "changed": true,
+      "conflicts": [],
+      "legacy_keys": [],
+      "mappings": [],
+      "normalizations": [
+        "evidence_normalized_to_list",
+        "phase_normalized_to_string",
+        "status_normalized",
+        "verification_normalized_to_list"
+      ],
+      "path": "tasks/TSK-P1-REG-001/meta.yml",
+      "schema_after": "1",
+      "schema_before": "0"
+    },
+    {
+      "changed": true,
+      "conflicts": [],
+      "legacy_keys": [],
+      "mappings": [],
+      "normalizations": [
+        "evidence_normalized_to_list",
+        "phase_normalized_to_string",
+        "status_normalized",
+        "verification_normalized_to_list"
+      ],
+      "path": "tasks/TSK-P1-REG-002/meta.yml",
+      "schema_after": "1",
+      "schema_before": "0"
+    },
+    {
+      "changed": true,
+      "conflicts": [],
+      "legacy_keys": [],
+      "mappings": [],
+      "normalizations": [
+        "evidence_normalized_to_list",
+        "phase_normalized_to_string",
+        "status_normalized",
+        "verification_normalized_to_list"
+      ],
+      "path": "tasks/TSK-P1-REG-003/meta.yml",
+      "schema_after": "1",
+      "schema_before": "0"
+    },
+    {
+      "changed": true,
+      "conflicts": [],
+      "legacy_keys": [],
+      "mappings": [],
+      "normalizations": [
+        "evidence_normalized_to_list",
+        "phase_normalized_to_string",
+        "status_normalized",
+        "verification_normalized_to_list"
+      ],
+      "path": "tasks/TSK-P1-TEN-001/meta.yml",
+      "schema_after": "1",
+      "schema_before": "0"
+    },
+    {
+      "changed": true,
+      "conflicts": [],
+      "legacy_keys": [],
+      "mappings": [],
+      "normalizations": [
+        "evidence_normalized_to_list",
+        "phase_normalized_to_string",
+        "status_normalized",
+        "verification_normalized_to_list"
+      ],
+      "path": "tasks/TSK-P1-TEN-002/meta.yml",
+      "schema_after": "1",
+      "schema_before": "0"
+    },
+    {
+      "changed": true,
+      "conflicts": [],
+      "legacy_keys": [],
+      "mappings": [],
+      "normalizations": [
+        "evidence_normalized_to_list",
+        "phase_normalized_to_string",
+        "status_normalized",
+        "verification_normalized_to_list"
+      ],
+      "path": "tasks/TSK-P1-TEN-003/meta.yml",
+      "schema_after": "1",
+      "schema_before": "0"
+    }
+  ],
+  "git_sha": "707c65a",
+  "in_place": false,
+  "input_root": "/home/mwiza/workspace/Symphony",
+  "inputs_hash": "0fb2a40d45932555d21dc1d856587171c210d90490813ef995329779f25ddb32",
+  "mode": "dry-run",
+  "output_dir": null,
+  "run_id": "R-024-DRYRUN-EVIDENCE",
+  "status": "PASS",
+  "summary": {
+    "conflicts_count": 0,
+    "errors_count": 0,
+    "files_changed": 348,
+    "files_scanned": 349,
+    "files_unchanged": 1,
+    "v0_count": 348,
+    "v1_count": 1
+  },
+  "task_id": "R-024",
+  "timestamp_utc": "1970-01-01T00:00:00Z",
+  "tool_version": "1.0.0"
+}

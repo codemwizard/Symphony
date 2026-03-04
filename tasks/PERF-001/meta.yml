@@ -1,48 +1,37 @@
-phase: "1"
-task_id: "PERF-001"
-title: "Non-invasive engine metrics capture (no trace/debug logging)"
-owner_role: "SUPERVISOR"
-status: "completed"
-
+schema_version: 1
+phase: '1'
+task_id: PERF-001
+title: Non-invasive engine metrics capture (no trace/debug logging)
+owner_role: SUPERVISOR
+status: completed
 depends_on:
-  - "TSK-P1-057-FINAL"
-
+- TSK-P1-057-FINAL
 touches:
-  - "scripts/perf/capture_engine_metrics.sh"
-  - "scripts/audit/verify_perf_001_engine_metrics_capture.sh"
-  - "scripts/dev/pre_ci.sh"
-  - "docs/PHASE1/phase1_contract.yml"
-  - "docs/operations/VERIFIER_EVIDENCE_REGISTRY.yml"
-  - "tasks/PERF-001/meta.yml"
-
+- scripts/perf/capture_engine_metrics.sh
+- scripts/audit/verify_perf_001_engine_metrics_capture.sh
+- scripts/dev/pre_ci.sh
+- docs/PHASE1/phase1_contract.yml
+- docs/operations/VERIFIER_EVIDENCE_REGISTRY.yml
+- tasks/PERF-001/meta.yml
 invariants:
-  - "INV-121"
-
-mechanics:
-  gate_ids:
-    - "INT-G28"
-  verifiers:
-    - "bash scripts/audit/verify_perf_001_engine_metrics_capture.sh"
-    - "python3 scripts/audit/validate_evidence.py --task PERF-001 --evidence evidence/phase1/perf_001_engine_metrics_capture.json"
-    - "RUN_PHASE1_GATES=1 bash scripts/dev/pre_ci.sh"
-  evidence_paths:
-    - "evidence/phase1/perf_001_engine_metrics_capture.json"
-
+- INV-121
+work: []
 acceptance_criteria:
-  - "Engine metrics are captured non-invasively and written to PERF-001 evidence."
-  - "Trace/debug logging is not required or enabled for the capture path."
-  - "Phase-1 contract includes required PERF-001 evidence."
-
+- Engine metrics are captured non-invasively and written to PERF-001 evidence.
+- Trace/debug logging is not required or enabled for the capture path.
+- Phase-1 contract includes required PERF-001 evidence.
 verification:
-  - "bash scripts/audit/verify_perf_001_engine_metrics_capture.sh"
-  - "python3 scripts/audit/validate_evidence.py --task PERF-001 --evidence evidence/phase1/perf_001_engine_metrics_capture.json"
-  - "RUN_PHASE1_GATES=1 bash scripts/dev/pre_ci.sh"
-
+- bash scripts/audit/verify_perf_001_engine_metrics_capture.sh
+- python3 scripts/audit/validate_evidence.py --task PERF-001 --evidence evidence/phase1/perf_001_engine_metrics_capture.json
+- RUN_PHASE1_GATES=1 bash scripts/dev/pre_ci.sh
 evidence:
-  - "evidence/phase1/perf_001_engine_metrics_capture.json"
-
+- evidence/phase1/perf_001_engine_metrics_capture.json
+failure_modes: []
 must_read:
-  - "docs/operations/AI_AGENT_OPERATION_MANUAL.md"
-
-implementation_plan: "docs/plans/phase1/PERF-001/PLAN.md"
-implementation_log: "docs/plans/phase1/PERF-001/EXEC_LOG.md"
+- docs/operations/AI_AGENT_OPERATION_MANUAL.md
+implementation_plan: docs/plans/phase1/PERF-001/PLAN.md
+implementation_log: docs/plans/phase1/PERF-001/EXEC_LOG.md
+notes: ''
+client: codex_cli
+assigned_agent: supervisor
+model: <UNASSIGNED>

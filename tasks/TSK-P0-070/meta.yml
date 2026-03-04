@@ -1,6 +1,7 @@
+schema_version: 1
 phase: '0'
 task_id: TSK-P0-070
-title: "Plan/log scaffolding"
+title: Plan/log scaffolding
 owner_role: ARCHITECT
 status: completed
 depends_on: []
@@ -30,13 +31,14 @@ touches:
 - docs/plans/phase0/TSK-P0-073_ci_pre_ci_wiring/EXEC_LOG.md
 invariants: []
 work:
-- "Create PLAN/EXEC_LOG templates under docs/plans/phase0/_template."
-- "Scaffold initial plan/log folders for the three‑pillar cluster and related Phase‑0 tasks."
-- "Add a Phase‑0 plans index for discovery."
+- Create PLAN/EXEC_LOG templates under docs/plans/phase0/_template.
+- "Scaffold initial plan/log folders for the three\u2011pillar cluster and related\
+  \ Phase\u20110 tasks."
+- "Add a Phase\u20110 plans index for discovery."
 acceptance_criteria:
-- "Templates exist and are reusable."
-- "Plan/log folders exist for active clusters."
-- "INDEX.md lists the clusters and status."
+- Templates exist and are reusable.
+- Plan/log folders exist for active clusters.
+- INDEX.md lists the clusters and status.
 verification:
 - rg -n "Phase-0 Plans Index" docs/plans/phase0/INDEX.md
 evidence: []
@@ -45,9 +47,9 @@ failure_modes:
 - Plan/log scaffolds missing for active clusters.
 must_read:
 - docs/operations/STYLE_GUIDE.md
+implementation_plan: docs/plans/phase0/TSK-P0-070_plan_log_scaffolding/PLAN.md
+implementation_log: docs/plans/phase0/TSK-P0-070_plan_log_scaffolding/EXEC_LOG.md
 notes: ''
 client: codex_cli
 assigned_agent: architect
 model: <UNASSIGNED>
-implementation_plan: docs/plans/phase0/TSK-P0-070_plan_log_scaffolding/PLAN.md
-implementation_log: docs/plans/phase0/TSK-P0-070_plan_log_scaffolding/EXEC_LOG.md

@@ -1,3 +1,4 @@
+schema_version: 1
 phase: '0'
 task_id: TSK-P0-081
 title: Add external proofs Phase-0 hook (append-only)
@@ -12,8 +13,10 @@ touches:
 invariants:
 - INV-091 (Third-party proof hook exists)
 work:
-- Add a forward-only migration creating external_proofs bound to ingress attestation identifiers.
-- Store provider refs and request/response hashes without introducing runtime resolver behavior.
+- Add a forward-only migration creating external_proofs bound to ingress attestation
+  identifiers.
+- Store provider refs and request/response hashes without introducing runtime resolver
+  behavior.
 - Enforce append-only semantics.
 acceptance_criteria:
 - external_proofs exists with attestation linkage and hash metadata.

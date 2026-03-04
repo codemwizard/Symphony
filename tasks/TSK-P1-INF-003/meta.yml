@@ -1,43 +1,40 @@
-phase: "1"
-task_id: "TSK-P1-INF-003"
-title: "K8s manifests + migration job + health proof"
-owner_role: "SUPERVISOR"
-status: "completed"
-
+schema_version: 1
+phase: '1'
+task_id: TSK-P1-INF-003
+title: K8s manifests + migration job + health proof
+owner_role: SUPERVISOR
+status: completed
 depends_on:
-  - "TSK-P1-INF-004"
-
+- TSK-P1-INF-004
 touches:
-  - "tasks/TSK-P1-INF-003/meta.yml"
-  - "docs/plans/phase1/TSK-P1-INF-003/PLAN.md"
-  - "docs/plans/phase1/TSK-P1-INF-003/EXEC_LOG.md"
-  - "infra/sandbox/k8s/kustomization.yaml"
-  - "infra/sandbox/k8s/db-migration-job.yaml"
-  - "infra/sandbox/k8s/ledger-api-deployment.yaml"
-  - "infra/sandbox/k8s/executor-worker-deployment.yaml"
-  - "scripts/audit/verify_inf_003_k8s_manifests_migration_health.sh"
-  - "scripts/infra/verify_tsk_p1_inf_003.sh"
-  - "docs/PHASE1/phase1_contract.yml"
-  - "docs/operations/VERIFIER_EVIDENCE_REGISTRY.yml"
-  - "docs/operations/SEMANTIC_INTEGRITY_ALLOWLIST.yml"
-  - "scripts/dev/pre_ci.sh"
-  - "evidence/phase1/tsk_p1_inf_003__k8s_manifests_migration_job_health_proof.json"
-
+- tasks/TSK-P1-INF-003/meta.yml
+- docs/plans/phase1/TSK-P1-INF-003/PLAN.md
+- docs/plans/phase1/TSK-P1-INF-003/EXEC_LOG.md
+- infra/sandbox/k8s/kustomization.yaml
+- infra/sandbox/k8s/db-migration-job.yaml
+- infra/sandbox/k8s/ledger-api-deployment.yaml
+- infra/sandbox/k8s/executor-worker-deployment.yaml
+- scripts/audit/verify_inf_003_k8s_manifests_migration_health.sh
+- scripts/infra/verify_tsk_p1_inf_003.sh
+- docs/PHASE1/phase1_contract.yml
+- docs/operations/VERIFIER_EVIDENCE_REGISTRY.yml
+- docs/operations/SEMANTIC_INTEGRITY_ALLOWLIST.yml
+- scripts/dev/pre_ci.sh
+- evidence/phase1/tsk_p1_inf_003__k8s_manifests_migration_job_health_proof.json
 invariants:
-  - "INV-119"
-
-mechanics:
-  gate_ids:
-    - "INT-G28"
-  verifiers:
-    - "bash -lc 'set -euo pipefail; test -f docs/PHASE1/phase1_contract.yml || { echo MISSING_CONTRACT:docs/PHASE1/phase1_contract.yml; exit 1; }; test -x scripts/infra/verify_tsk_p1_inf_003.sh || { echo MISSING_VERIFIER:scripts/infra/verify_tsk_p1_inf_003.sh; exit 1; }; scripts/infra/verify_tsk_p1_inf_003.sh --evidence evidence/phase1/tsk_p1_inf_003__k8s_manifests_migration_job_health_proof.json; python3 -c \"import json,pathlib; p=pathlib.Path(\\\"evidence/phase1/tsk_p1_inf_003__k8s_manifests_migration_job_health_proof.json\\\"); assert p.exists(), f\\\"MISSING_EVIDENCE:{p}\\\"; d=json.loads(p.read_text()); assert d.get(\\\"task_id\\\") == \\\"TSK-P1-INF-003\\\", d.get(\\\"task_id\\\"); assert isinstance(d.get(\\\"status\\\"), str) and d[\\\"status\\\"] in {\\\"PASS\\\",\\\"DONE\\\",\\\"OK\\\"}, d.get(\\\"status\\\")\"'"
-  evidence_paths:
-    - "evidence/phase1/tsk_p1_inf_003__k8s_manifests_migration_job_health_proof.json"
-
-implementation_plan: "docs/plans/phase1/TSK-P1-INF-003/PLAN.md"
-implementation_log: "docs/plans/phase1/TSK-P1-INF-003/EXEC_LOG.md"
-
+- INV-119
+work: []
+acceptance_criteria: []
+verification: []
+evidence: []
+failure_modes: []
 must_read:
-  - "docs/operations/AI_AGENT_OPERATION_MANUAL.md"
-  - "docs/operations/AI_AGENT_WORKFLOW_AND_ROLE_PLAN_v2.md"
-  - "docs/operations/AGENT_ROLE_RECONCILIATION.md"
+- docs/operations/AI_AGENT_OPERATION_MANUAL.md
+- docs/operations/AI_AGENT_WORKFLOW_AND_ROLE_PLAN_v2.md
+- docs/operations/AGENT_ROLE_RECONCILIATION.md
+implementation_plan: docs/plans/phase1/TSK-P1-INF-003/PLAN.md
+implementation_log: docs/plans/phase1/TSK-P1-INF-003/EXEC_LOG.md
+notes: ''
+client: codex_cli
+assigned_agent: supervisor
+model: <UNASSIGNED>

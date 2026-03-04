@@ -1,0 +1,123 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "R-024 Task Meta Migration Dry Run Report",
+  "type": "object",
+  "required": [
+    "task_id",
+    "status",
+    "tool_version",
+    "mode",
+    "git_sha",
+    "run_id",
+    "timestamp_utc",
+    "input_root",
+    "inputs_hash",
+    "summary",
+    "files",
+    "errors"
+  ],
+  "properties": {
+    "task_id": {"type": "string", "const": "R-024"},
+    "status": {"type": "string", "enum": ["PASS", "FAIL"]},
+    "tool_version": {"type": "string"},
+    "mode": {"type": "string", "enum": ["dry-run", "apply"]},
+    "git_sha": {"type": "string"},
+    "run_id": {"type": "string"},
+    "timestamp_utc": {"type": "string"},
+    "input_root": {"type": "string"},
+    "output_dir": {"type": ["string", "null"]},
+    "in_place": {"type": "boolean"},
+    "inputs_hash": {"type": "string"},
+    "conflict_override_justification": {"type": ["string", "null"]},
+    "summary": {
+      "type": "object",
+      "required": [
+        "files_scanned",
+        "files_changed",
+        "files_unchanged",
+        "v0_count",
+        "v1_count",
+        "conflicts_count",
+        "errors_count"
+      ],
+      "properties": {
+        "files_scanned": {"type": "integer", "minimum": 0},
+        "files_changed": {"type": "integer", "minimum": 0},
+        "files_unchanged": {"type": "integer", "minimum": 0},
+        "v0_count": {"type": "integer", "minimum": 0},
+        "v1_count": {"type": "integer", "minimum": 0},
+        "conflicts_count": {"type": "integer", "minimum": 0},
+        "errors_count": {"type": "integer", "minimum": 0}
+      },
+      "additionalProperties": false
+    },
+    "files": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "path",
+          "schema_before",
+          "schema_after",
+          "changed",
+          "legacy_keys",
+          "mappings",
+          "normalizations",
+          "conflicts"
+        ],
+        "properties": {
+          "path": {"type": "string"},
+          "schema_before": {"type": "string"},
+          "schema_after": {"type": "string"},
+          "changed": {"type": "boolean"},
+          "legacy_keys": {"type": "array", "items": {"type": "string"}},
+          "mappings": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": ["old_key", "new_key", "action"],
+              "properties": {
+                "old_key": {"type": "string"},
+                "new_key": {"type": "string"},
+                "action": {"type": "string"}
+              },
+              "additionalProperties": false
+            }
+          },
+          "normalizations": {"type": "array", "items": {"type": "string"}},
+          "conflicts": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": ["field", "legacy_key", "legacy_value", "canonical_value", "selected", "justification"],
+              "properties": {
+                "field": {"type": "string"},
+                "legacy_key": {"type": "string"},
+                "legacy_value": {},
+                "canonical_value": {},
+                "selected": {"type": "string"},
+                "justification": {"type": ["string", "null"]}
+              },
+              "additionalProperties": false
+            }
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "errors": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["path", "error"],
+        "properties": {
+          "path": {"type": "string"},
+          "error": {"type": "string"},
+          "conflicts": {"type": "array"}
+        },
+        "additionalProperties": true
+      }
+    }
+  },
+  "additionalProperties": false
+}

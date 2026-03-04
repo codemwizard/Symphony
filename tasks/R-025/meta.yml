@@ -1,0 +1,42 @@
+schema_version: 1
+phase: '0.5'
+task_id: R-025
+title: Apply task-meta migration repository-wide to canonical v1 schema
+owner_role: SUPERVISOR
+status: completed
+depends_on:
+- R-024
+touches:
+- tasks/*/meta.yml
+- scripts/audit/migrate_task_meta_to_v1.py
+- evidence/security_remediation/r_025_task_meta_migration_apply.json
+invariants:
+- SECURITY_REMEDIATION_META_CONTRACT
+work:
+- Run migration tool in apply mode over all task meta files.
+- Normalize required canonical fields and key names across repository.
+- Generate post-apply conformance report and evidence.
+acceptance_criteria:
+- All task meta files parse and satisfy canonical schema requirements.
+- Legacy key names are eliminated from migrated files.
+- Evidence artifact is produced and schema-valid.
+verification:
+- python3 scripts/audit/migrate_task_meta_to_v1.py --apply --report evidence/security_remediation/r_025_task_meta_migration_apply.json
+- bash scripts/audit/verify_task_meta_schema.sh --mode strict
+evidence:
+- evidence/security_remediation/r_025_task_meta_migration_apply.json
+failure_modes:
+- Evidence file missing
+- Any task meta remains non-canonical
+- Migration introduces parse errors
+must_read:
+- tasks/_template/meta.yml
+- docs/operations/TASK_CREATION_PROCESS.md
+- docs/operations/AI_AGENT_OPERATION_MANUAL.md
+implementation_plan: docs/plans/remediation/r-025/PLAN.md
+implementation_log: docs/plans/remediation/r-025/EXEC_LOG.md
+notes: Applied canonical migration repository-wide and reached strict zero-nonconforming
+  state.
+client: codex_cli
+assigned_agent: supervisor
+model: gpt-5

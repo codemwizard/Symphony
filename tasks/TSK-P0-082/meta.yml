@@ -1,3 +1,4 @@
+schema_version: 1
 phase: '0'
 task_id: TSK-P0-082
 title: Add correlation stitching hooks to ingress/outbox tables
@@ -12,9 +13,11 @@ touches:
 invariants:
 - INV-092 (Correlation stitching hooks exist)
 work:
-- Add correlation_id and cross-rail reference hook columns to ingress/outbox tables via forward-only migration.
+- Add correlation_id and cross-rail reference hook columns to ingress/outbox tables
+  via forward-only migration.
 - Add indexes required for stitchability lookups.
-- Preserve existing outbox/idempotency invariants and no-tx migration rules where applicable.
+- Preserve existing outbox/idempotency invariants and no-tx migration rules where
+  applicable.
 acceptance_criteria:
 - Stitching columns exist on required tables.
 - Required indexes exist.

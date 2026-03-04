@@ -1,38 +1,35 @@
-phase: "1"
-task_id: "TSK-P1-ADP-001"
-title: "Adapter interface + deterministic contract tests"
-owner_role: "SUPERVISOR"
-status: "completed"
-
+schema_version: 1
+phase: '1'
+task_id: TSK-P1-ADP-001
+title: Adapter interface + deterministic contract tests
+owner_role: SUPERVISOR
+status: completed
 depends_on:
-  - "TSK-P1-TEN-003"
-
+- TSK-P1-TEN-003
 touches:
-  - "tasks/TSK-P1-ADP-001/meta.yml"
-  - "docs/plans/phase1/TSK-P1-ADP-001/PLAN.md"
-  - "docs/plans/phase1/TSK-P1-ADP-001/EXEC_LOG.md"
-  - "services/executor-worker/dotnet/src/ExecutorWorker/Program.cs"
-  - "scripts/audit/verify_adp_001_adapter_contract_tests.sh"
-  - "docs/PHASE1/phase1_contract.yml"
-  - "docs/operations/VERIFIER_EVIDENCE_REGISTRY.yml"
-  - "docs/operations/SEMANTIC_INTEGRITY_ALLOWLIST.yml"
-  - "evidence/phase1/adp_001_adapter_contract_tests.json"
-
+- tasks/TSK-P1-ADP-001/meta.yml
+- docs/plans/phase1/TSK-P1-ADP-001/PLAN.md
+- docs/plans/phase1/TSK-P1-ADP-001/EXEC_LOG.md
+- services/executor-worker/dotnet/src/ExecutorWorker/Program.cs
+- scripts/audit/verify_adp_001_adapter_contract_tests.sh
+- docs/PHASE1/phase1_contract.yml
+- docs/operations/VERIFIER_EVIDENCE_REGISTRY.yml
+- docs/operations/SEMANTIC_INTEGRITY_ALLOWLIST.yml
+- evidence/phase1/adp_001_adapter_contract_tests.json
 invariants:
-  - "INV-119"
-
-mechanics:
-  gate_ids:
-    - "INT-G28"
-  verifiers:
-    - "bash scripts/audit/verify_adp_001_adapter_contract_tests.sh && python3 scripts/audit/validate_evidence.py --task TSK-P1-ADP-001 --evidence evidence/phase1/adp_001_adapter_contract_tests.json"
-  evidence_paths:
-    - "evidence/phase1/adp_001_adapter_contract_tests.json"
-
-implementation_plan: "docs/plans/phase1/TSK-P1-ADP-001/PLAN.md"
-implementation_log: "docs/plans/phase1/TSK-P1-ADP-001/EXEC_LOG.md"
-
+- INV-119
+work: []
+acceptance_criteria: []
+verification: []
+evidence: []
+failure_modes: []
 must_read:
-  - "docs/operations/AI_AGENT_OPERATION_MANUAL.md"
-  - "docs/operations/AI_AGENT_WORKFLOW_AND_ROLE_PLAN_v2.md"
-  - "docs/operations/AGENT_ROLE_RECONCILIATION.md"
+- docs/operations/AI_AGENT_OPERATION_MANUAL.md
+- docs/operations/AI_AGENT_WORKFLOW_AND_ROLE_PLAN_v2.md
+- docs/operations/AGENT_ROLE_RECONCILIATION.md
+implementation_plan: docs/plans/phase1/TSK-P1-ADP-001/PLAN.md
+implementation_log: docs/plans/phase1/TSK-P1-ADP-001/EXEC_LOG.md
+notes: ''
+client: codex_cli
+assigned_agent: supervisor
+model: <UNASSIGNED>

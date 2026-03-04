@@ -1,11 +1,10 @@
+schema_version: 1
 phase: '1'
 task_id: TSK-P1-030
 title: MCP Requirements & Policy Integrity Agent (Third Role)
 owner_role: COMPLIANCE_MAPPER
 status: deferred
 depends_on: []
-deferred_to_phase: '2'
-phase1_enforced: 'false'
 touches:
 - docs/plans/phase1/TSK-P1-030_mcp_requirements_policy_guardian/PLAN.md
 - docs/plans/phase1/TSK-P1-030_mcp_requirements_policy_guardian/EXEC_LOG.md
@@ -18,7 +17,8 @@ work:
 - MCP Requirements and Policy Integrity Agent rollout is out of Phase-1 scope.
 acceptance_criteria:
 - Task is excluded from Phase-1 enforcement and contract requirements.
-- Any future implementation occurs under a Phase-2 task/contract set and does not re-enter Phase-1 gates.
+- Any future implementation occurs under a Phase-2 task/contract set and does not
+  re-enter Phase-1 gates.
 verification: []
 evidence: []
 failure_modes:
@@ -29,7 +29,8 @@ must_read:
 - docs/PHASE1/phase1_contract.yml
 implementation_plan: docs/plans/phase1/TSK-P1-030_mcp_requirements_policy_guardian/PLAN.md
 implementation_log: docs/plans/phase1/TSK-P1-030_mcp_requirements_policy_guardian/EXEC_LOG.md
-notes: Option A cleanup decision. Archived in Phase-1; reissue as TSK-P2-* before implementation.
+notes: Option A cleanup decision. Archived in Phase-1; reissue as TSK-P2-* before
+  implementation.
 client: codex_cli
 assigned_agent: compliance_mapper
 model: <UNASSIGNED>

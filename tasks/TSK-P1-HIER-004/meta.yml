@@ -1,66 +1,51 @@
-phase: "1"
-task_id: "TSK-P1-HIER-004"
-title: "Person model explicit + enrollment model"
-owner_role: "SUPERVISOR"
-status: "completed"
-
+schema_version: 1
+phase: '1'
+task_id: TSK-P1-HIER-004
+title: Person model explicit + enrollment model
+owner_role: SUPERVISOR
+status: completed
 depends_on:
-  - "TSK-P1-HIER-003"
-
+- TSK-P1-HIER-003
 touches:
-  - "docs/plans/phase1/TSK-P1-HIER-004/PLAN.md"
-  - "docs/plans/phase1/TSK-P1-HIER-004/EXEC_LOG.md"
-  - "schema/migrations/0049_hier_004_member_device_events_append_only.sql"
-  - "scripts/db/verify_tsk_p1_hier_004.sh"
-  - "tasks/TSK-P1-HIER-004/meta.yml"
-  - "evidence/phase1/tsk_p1_hier_004__person_model_explicit_enrollment.json"
-
+- docs/plans/phase1/TSK-P1-HIER-004/PLAN.md
+- docs/plans/phase1/TSK-P1-HIER-004/EXEC_LOG.md
+- schema/migrations/0049_hier_004_member_device_events_append_only.sql
+- scripts/db/verify_tsk_p1_hier_004.sh
+- tasks/TSK-P1-HIER-004/meta.yml
+- evidence/phase1/tsk_p1_hier_004__person_model_explicit_enrollment.json
 invariants:
-  - "INV-077"
-  - "INV-119"
-
-mechanics:
-  gate_ids:
-    - "INT-G28"
-  verifiers:
-    - "bash scripts/db/verify_tsk_p1_hier_004.sh --evidence evidence/phase1/tsk_p1_hier_004__person_model_explicit_enrollment.json"
-    - "RUN_PHASE1_GATES=1 scripts/dev/pre_ci.sh"
-  evidence_paths:
-    - "evidence/phase1/tsk_p1_hier_004__person_model_explicit_enrollment.json"
-
+- INV-077
+- INV-119
 work:
-  - "Add append-only member_device_events anchored to ingress attestations and member enrollment context."
-  - "Enforce nullable device_id event semantics and deterministic event type posture."
-  - "Implement verifier evidence for FK/check/append-only protections."
-
+- Add append-only member_device_events anchored to ingress attestations and member
+  enrollment context.
+- Enforce nullable device_id event semantics and deterministic event type posture.
+- Implement verifier evidence for FK/check/append-only protections.
 acceptance_criteria:
-  - "Evidence exists at evidence/phase1/tsk_p1_hier_004__person_model_explicit_enrollment.json and is valid JSON."
-  - "Evidence JSON contains task_id == 'TSK-P1-HIER-004', status in {PASS,DONE,OK}, and pass == true."
-  - "tasks/TSK-P1-HIER-004/meta.yml records terminal completion once verifiers pass."
-  - "TSK-P1-HIER-003 dependency is complete before execution."
-  - "Task verifier and RUN_PHASE1_GATES=1 scripts/dev/pre_ci.sh pass before closeout."
-
+- Evidence exists at evidence/phase1/tsk_p1_hier_004__person_model_explicit_enrollment.json
+  and is valid JSON.
+- Evidence JSON contains task_id == 'TSK-P1-HIER-004', status in {PASS,DONE,OK}, and
+  pass == true.
+- tasks/TSK-P1-HIER-004/meta.yml records terminal completion once verifiers pass.
+- TSK-P1-HIER-003 dependency is complete before execution.
+- Task verifier and RUN_PHASE1_GATES=1 scripts/dev/pre_ci.sh pass before closeout.
 verification:
-  - "bash scripts/db/verify_tsk_p1_hier_004.sh --evidence evidence/phase1/tsk_p1_hier_004__person_model_explicit_enrollment.json"
-  - "RUN_PHASE1_GATES=1 scripts/dev/pre_ci.sh"
-
+- bash scripts/db/verify_tsk_p1_hier_004.sh --evidence evidence/phase1/tsk_p1_hier_004__person_model_explicit_enrollment.json
+- RUN_PHASE1_GATES=1 scripts/dev/pre_ci.sh
 evidence:
-  - "evidence/phase1/tsk_p1_hier_004__person_model_explicit_enrollment.json"
-
+- evidence/phase1/tsk_p1_hier_004__person_model_explicit_enrollment.json
 failure_modes:
-  - "Missing docs/tasks/phase1_prompts.md section or execution metadata block."
-  - "Evidence file missing/invalid/task_id mismatch/status not PASS."
-  - "Phase contract docs missing => FAIL_CLOSED."
-  - "Dependency TSK-P1-HIER-003 incomplete => BLOCKED."
-  - "Undeclared file modifications outside files_to_change => FAIL_REVIEW."
-
+- Missing docs/tasks/phase1_prompts.md section or execution metadata block.
+- Evidence file missing/invalid/task_id mismatch/status not PASS.
+- Phase contract docs missing => FAIL_CLOSED.
+- Dependency TSK-P1-HIER-003 incomplete => BLOCKED.
+- Undeclared file modifications outside files_to_change => FAIL_REVIEW.
 must_read:
-  - "docs/operations/AI_AGENT_OPERATION_MANUAL.md"
-
-implementation_plan: "docs/plans/phase1/TSK-P1-HIER-004/PLAN.md"
-implementation_log: "docs/plans/phase1/TSK-P1-HIER-004/EXEC_LOG.md"
-
-notes: "Implements append-only member device event enrollment posture with ingress-anchored FK semantics and deterministic verifier evidence."
-client: "codex_cli"
-assigned_agent: "supervisor"
-model: "gpt-5-codex"
+- docs/operations/AI_AGENT_OPERATION_MANUAL.md
+implementation_plan: docs/plans/phase1/TSK-P1-HIER-004/PLAN.md
+implementation_log: docs/plans/phase1/TSK-P1-HIER-004/EXEC_LOG.md
+notes: Implements append-only member device event enrollment posture with ingress-anchored
+  FK semantics and deterministic verifier evidence.
+client: codex_cli
+assigned_agent: supervisor
+model: gpt-5-codex

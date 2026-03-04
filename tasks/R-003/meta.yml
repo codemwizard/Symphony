@@ -1,16 +1,16 @@
-id: R-003
+schema_version: 1
 phase: '1'
+task_id: R-003
 title: Rewrite supervisor_api with psycopg parameterized queries
+owner_role: SUPERVISOR
 status: completed
-dependencies: []
-description: Eliminate SQL injection via parameterization and remove insecure http.server
-  defaults if needed.
-affected_services:
-- security_remediation
-affected_files:
+depends_on: []
+touches:
 - Zero f-string/.format()/concat SQL in supervisor_api.
 - All DB calls use psycopg parameterization.
 - No subprocess psql with interpolated SQL.
+invariants: []
+work: []
 acceptance_criteria:
 - id: R-003-A1
   description: Lint + Semgrep pass (Python SQL rules enabled)
@@ -18,14 +18,19 @@ acceptance_criteria:
   description: SQLi vector tests pass (no semantic alteration)
 - id: R-003-A3
   description: Access logging does not emit Authorization header (log redaction)
-verification_command: 'bash scripts/security/lint_app_sql_injection.sh && semgrep
-  --config security/semgrep --error
-
-  bash scripts/audit/test_supervisor_sql_injection_vectors.sh
-
-  bash scripts/audit/test_log_redaction_authorization.sh'
+verification:
+- bash scripts/security/lint_app_sql_injection.sh && semgrep --config security/semgrep
+  --error
+- bash scripts/audit/test_supervisor_sql_injection_vectors.sh
+- bash scripts/audit/test_log_redaction_authorization.sh
 evidence:
-  path: evidence/security_remediation/r_003_supervisor_param_queries.json
-implementation_plan_path: docs/plans/remediation/r_003/PLAN.md
-source_of_truth: docs/contracts/SECURITY_REMEDIATION_DOD.yml
-canonical_reference: docs/operations/AI_AGENT_OPERATION_MANUAL.md
+- evidence/security_remediation/r_003_supervisor_param_queries.json
+failure_modes: []
+must_read: []
+implementation_plan: docs/plans/remediation/r_003/PLAN.md
+implementation_log: ''
+notes: Eliminate SQL injection via parameterization and remove insecure http.server
+  defaults if needed.
+client: codex_cli
+assigned_agent: supervisor
+model: <UNASSIGNED>

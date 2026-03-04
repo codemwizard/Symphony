@@ -1,3 +1,4 @@
+schema_version: 1
 phase: '0'
 task_id: TSK-P0-084
 title: Add billable client hierarchy hooks for tenants
@@ -12,7 +13,8 @@ touches:
 invariants:
 - INV-094 (Tenant billable hierarchy hook exists)
 work:
-- Add billable_clients and tenant linkage hooks (billable_client_id, parent_tenant_id) via forward-only migration.
+- Add billable_clients and tenant linkage hooks (billable_client_id, parent_tenant_id)
+  via forward-only migration.
 - Use expand-first posture for constraints when backfill may be needed.
 - Add required FKs/indexes for auditably billable hierarchy.
 acceptance_criteria:

@@ -1,0 +1,16 @@
+{
+  "allow_legacy": false,
+  "check_id": "TASK-META-SCHEMA",
+  "deny_legacy": true,
+  "errors": [],
+  "mode": "strict",
+  "nonconforming": [],
+  "status": "PASS",
+  "summary": {
+    "error_count": 0,
+    "files_scanned": 349,
+    "nonconforming_count": 0,
+    "v0_count": 0,
+    "v1_count": 349
+  }
+}

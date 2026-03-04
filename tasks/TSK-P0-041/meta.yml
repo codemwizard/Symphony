@@ -1,3 +1,4 @@
+schema_version: 1
 phase: '0'
 task_id: TSK-P0-041
 title: Draft tenant/client/member migrations (Phase-0 rails)
@@ -40,9 +41,9 @@ must_read:
 - docs/invariants/INVARIANTS_MANIFEST.yml
 - scripts/db/verify_invariants.sh
 - scripts/db/tests/test_db_functions.sh
-notes: ''
 implementation_plan: docs/plans/phase0/TSK-P0-041_tenant_member_migrations/PLAN.md
 implementation_log: docs/plans/phase0/TSK-P0-041_tenant_member_migrations/EXEC_LOG.md
+notes: ''
 client: codex_cli
 assigned_agent: db_foundation
 model: <UNASSIGNED>

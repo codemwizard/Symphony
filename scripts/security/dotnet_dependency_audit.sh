@@ -45,7 +45,12 @@ if [[ -n "$target" ]]; then
     status="FAIL"
   fi
 else
-  mapfile -t projects < <(find "$ROOT_DIR" -name '*.csproj' -o -name '*.fsproj' | LC_ALL=C sort)
+  # Runtime dependency posture gate: audit production projects only.
+  # Test projects are excluded to avoid non-shipping package noise/flakes.
+  mapfile -t projects < <(
+    find "$ROOT_DIR" \( -path '*/src/*.csproj' -o -path '*/src/*.fsproj' \) \
+      -not -path '*/tests/*' | LC_ALL=C sort
+  )
   if [[ "${#projects[@]}" -eq 0 ]]; then
     status="PASS"
     note="no_dotnet_projects_found"

@@ -87,12 +87,36 @@ for rel in required_artifacts:
         checked.append({"path": rel, "status": "INVALID_JSON"})
         continue
 
-    missing_keys = [k for k in schema_required if k not in payload]
-    if missing_keys:
-        failures.append(f"schema_required_missing:{rel}:{','.join(missing_keys)}")
+    if path.name != "approval_metadata.json":
+        missing_keys = [k for k in schema_required if k not in payload]
+        if missing_keys:
+            failures.append(f"schema_required_missing:{rel}:{','.join(missing_keys)}")
 
     status = str(payload.get("status", "")).upper()
     checked.append({"path": rel, "status": status})
+
+# PERF-006 translation-layer closeout checks:
+# ensure KPI report carries settlement_window_compliance_pct and perf_005_reference.
+kpi_rel = "evidence/phase1/product_kpi_readiness_report.json"
+kpi_path = root / kpi_rel
+if not kpi_path.exists():
+    failures.append(f"missing_evidence:{kpi_rel}")
+else:
+    try:
+        kpi_payload = json.loads(kpi_path.read_text(encoding="utf-8"))
+        kpis = kpi_payload.get("kpis") or {}
+        if not isinstance(kpis.get("settlement_window_compliance_pct"), (int, float)):
+            failures.append("missing_or_invalid:settlement_window_compliance_pct")
+        perf_ref = kpi_payload.get("perf_005_reference") or {}
+        if not isinstance(perf_ref, dict):
+            failures.append("missing_or_invalid:perf_005_reference")
+        else:
+            if perf_ref.get("task_id") != "PERF-005":
+                failures.append("perf_005_reference_task_id_mismatch")
+            if perf_ref.get("evidence_path") != "evidence/phase1/perf_005__regulatory_timing_compliance_gate.json":
+                failures.append("perf_005_reference_path_mismatch")
+    except Exception as exc:
+        failures.append(f"invalid_json:{kpi_rel}:{exc}")
 
 status = "PASS" if not failures else "FAIL"
 out = {

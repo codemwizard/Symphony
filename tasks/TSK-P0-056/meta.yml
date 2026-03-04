@@ -1,3 +1,4 @@
+schema_version: 1
 phase: '0'
 task_id: TSK-P0-056
 title: Evidence schema canonicalization
@@ -27,9 +28,9 @@ failure_modes:
 must_read:
 - docs/invariants/INVARIANTS_MANIFEST.yml
 - docs/PHASE0/phase0_contract.yml
+implementation_plan: docs/plans/phase0/TSK-P0-056/PLAN.md
+implementation_log: docs/plans/phase0/TSK-P0-056/EXEC_LOG.md
 notes: ''
 client: codex_cli
 assigned_agent: architect
 model: <UNASSIGNED>
-implementation_plan: docs/plans/phase0/TSK-P0-056/PLAN.md
-implementation_log: docs/plans/phase0/TSK-P0-056/EXEC_LOG.md

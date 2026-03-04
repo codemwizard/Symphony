@@ -1,3 +1,4 @@
+schema_version: 1
 phase: '1'
 task_id: TSK-HARD-024
 title: Terminal immutability enforcement (P7101) on adjustment tables
@@ -36,7 +37,8 @@ must_read:
 - docs/programs/symphony-hardening/HARDENING_TASK_PACKS.md
 implementation_plan: tasks/TSK-HARD-024/PLAN.md
 implementation_log: tasks/TSK-HARD-024/EXEC_LOG.md
-notes: Generated from canonical hardening task pack source; do not edit semantics here.
+notes: Generated from canonical hardening task pack source; do not edit semantics
+  here.
 client: codex_cli
 assigned_agent: supervisor
 model: gpt-5-codex

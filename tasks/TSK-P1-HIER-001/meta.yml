@@ -1,66 +1,55 @@
-phase: "1"
-task_id: "TSK-P1-HIER-001"
-title: "Participants + exception governance"
-owner_role: "SUPERVISOR"
-status: "completed"
-
+schema_version: 1
+phase: '1'
+task_id: TSK-P1-HIER-001
+title: Participants + exception governance
+owner_role: SUPERVISOR
+status: completed
 depends_on:
-  - "checkpoint/ESC"
-
+- checkpoint/ESC
 touches:
-  - "docs/tasks/phase1_prompts.md"
-  - "docs/plans/phase1/REM-HIER-001/PLAN.md"
-  - "docs/plans/phase1/REM-HIER-001/EXEC_LOG.md"
-  - "scripts/db/verify_tsk_p1_hier_001.sh"
-  - "docs/PHASE1/phase1_contract.yml"
-  - "tasks/TSK-P1-HIER-001/meta.yml"
-  - "evidence/phase1/tsk_p1_hier_001__participants_exception_governance.json"
-
+- docs/tasks/phase1_prompts.md
+- docs/plans/phase1/REM-HIER-001/PLAN.md
+- docs/plans/phase1/REM-HIER-001/EXEC_LOG.md
+- scripts/db/verify_tsk_p1_hier_001.sh
+- docs/PHASE1/phase1_contract.yml
+- tasks/TSK-P1-HIER-001/meta.yml
+- evidence/phase1/tsk_p1_hier_001__participants_exception_governance.json
 invariants:
-  - "INV-077"
-  - "INV-119"
-
-mechanics:
-  gate_ids:
-    - "INT-G28"
-  verifiers:
-    - "RUN_PHASE1_GATES=1 bash scripts/dev/pre_ci.sh"
-  evidence_paths:
-    - "evidence/phase1/tsk_p1_hier_001__participants_exception_governance.json"
-
+- INV-077
+- INV-119
 work:
-  - "Reworked the TSK-P1-HIER-001 prompt to reuse existing tenancy tables and capture the governance intent."
-  - "Documented verifier requirements, evidence path, tenant-member constraints, and contract wiring in docs/tasks/phase1_prompts.md."
-  - "Recorded the outcome via docs/plans/phase1/REM-HIER-001/EXEC_LOG.md and the deterministic remediation plan."
-  - "Executed RUN_PHASE1_GATES=1 scripts/dev/pre_ci.sh to confirm audit parity and evidence generation."
-
+- Reworked the TSK-P1-HIER-001 prompt to reuse existing tenancy tables and capture
+  the governance intent.
+- Documented verifier requirements, evidence path, tenant-member constraints, and
+  contract wiring in docs/tasks/phase1_prompts.md.
+- Recorded the outcome via docs/plans/phase1/REM-HIER-001/EXEC_LOG.md and the deterministic
+  remediation plan.
+- Executed RUN_PHASE1_GATES=1 scripts/dev/pre_ci.sh to confirm audit parity and evidence
+  generation.
 acceptance_criteria:
-  - "Evidence exists at evidence/phase1/tsk_p1_hier_001__participants_exception_governance.json and is valid JSON."
-  - "Evidence JSON contains task_id == 'TSK-P1-HIER-001', status in {PASS,DONE,OK}, and references to tenant_members/programs."
-  - "tasks/TSK-P1-HIER-001/meta.yml exists with status=completed."
-  - "Checkpoint/ESC dependency has PASS evidence before this change."
-  - "Phase-1 verifier chain (`scripts/dev/pre_ci.sh`) passes before closeout."
-
+- Evidence exists at evidence/phase1/tsk_p1_hier_001__participants_exception_governance.json
+  and is valid JSON.
+- Evidence JSON contains task_id == 'TSK-P1-HIER-001', status in {PASS,DONE,OK}, and
+  references to tenant_members/programs.
+- tasks/TSK-P1-HIER-001/meta.yml exists with status=completed.
+- Checkpoint/ESC dependency has PASS evidence before this change.
+- Phase-1 verifier chain (`scripts/dev/pre_ci.sh`) passes before closeout.
 verification:
-  - "RUN_PHASE1_GATES=1 bash scripts/dev/pre_ci.sh"
-  - "bash scripts/audit/verify_remediation_trace.sh"
-
+- RUN_PHASE1_GATES=1 bash scripts/dev/pre_ci.sh
+- bash scripts/audit/verify_remediation_trace.sh
 evidence:
-  - "evidence/phase1/tsk_p1_hier_001__participants_exception_governance.json"
-
+- evidence/phase1/tsk_p1_hier_001__participants_exception_governance.json
 failure_modes:
-  - "Missing docs/tasks/phase1_prompts.md section or execution metadata block."
-  - "Evidence file missing/invalid/task_id mismatch/status not PASS."
-  - "Phase contract docs missing => FAIL_CLOSED."
-  - "Dependency checkpoint/ESC incomplete => BLOCKED."
-
+- Missing docs/tasks/phase1_prompts.md section or execution metadata block.
+- Evidence file missing/invalid/task_id mismatch/status not PASS.
+- Phase contract docs missing => FAIL_CLOSED.
+- Dependency checkpoint/ESC incomplete => BLOCKED.
 must_read:
-  - "docs/operations/AI_AGENT_OPERATION_MANUAL.md"
-
-implementation_plan: "docs/plans/phase1/REM-HIER-001/PLAN.md"
-implementation_log: "docs/plans/phase1/REM-HIER-001/EXEC_LOG.md"
-
-notes: "Final prompt hardening ensured the tenant hierarchy uses shared tables and tenant_members without duplicating structures."
-client: "codex_cli"
-assigned_agent: "supervisor"
-model: "gpt-5-codex"
+- docs/operations/AI_AGENT_OPERATION_MANUAL.md
+implementation_plan: docs/plans/phase1/REM-HIER-001/PLAN.md
+implementation_log: docs/plans/phase1/REM-HIER-001/EXEC_LOG.md
+notes: Final prompt hardening ensured the tenant hierarchy uses shared tables and
+  tenant_members without duplicating structures.
+client: codex_cli
+assigned_agent: supervisor
+model: gpt-5-codex

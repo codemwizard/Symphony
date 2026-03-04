@@ -1,3 +1,4 @@
+schema_version: 1
 phase: '1'
 task_id: TSK-P1-034
 title: INV-077 Deterministic Approval Metadata Evidence Hardening
@@ -21,18 +22,25 @@ invariants:
 - INV-077
 - INV-105
 work:
-- Define deterministic regulated-surface path policy for when approval metadata is required versus explicitly not required.
-- Store regulated-surface patterns in one shared policy file consumed by all approval-requirement verifiers.
-- Ensure verify_agent_conformance and verify_phase1_contract enforce the same requirement logic and diff semantics.
+- Define deterministic regulated-surface path policy for when approval metadata is
+  required versus explicitly not required.
+- Store regulated-surface patterns in one shared policy file consumed by all approval-requirement
+  verifiers.
+- Ensure verify_agent_conformance and verify_phase1_contract enforce the same requirement
+  logic and diff semantics.
 - Emit schema-valid approval metadata evidence with deterministic PASS/FAIL semantics.
 - Fail closed on regulated-surface changes when required approval metadata is missing.
-- Add negative/positive fixture tests for requirement triggers and malformed approval evidence handling.
+- Add negative/positive fixture tests for requirement triggers and malformed approval
+  evidence handling.
 acceptance_criteria:
 - Contract and conformance verifiers agree on approval metadata requirement conditions.
-- Regulated-surface requirement policy is centralized in a shared rules file (no duplicated path logic).
-- approval_metadata evidence exists and validates when required, and includes explicit no-approval rationale when not required.
+- Regulated-surface requirement policy is centralized in a shared rules file (no duplicated
+  path logic).
+- approval_metadata evidence exists and validates when required, and includes explicit
+  no-approval rationale when not required.
 - No weakening of INV-077 contract posture to bypass missing evidence failures.
-- Fixture tests prove: regulated change without approval fails, malformed approval fails, non-regulated change passes per declared policy.
+- Fixture tests prove: regulated change without approval fails, malformed approval
+    fails, non-regulated change passes per declared policy.
 verification:
 - bash scripts/audit/verify_agent_conformance.sh
 - RUN_PHASE1_GATES=1 bash scripts/audit/verify_phase1_contract.sh
@@ -41,16 +49,19 @@ verification:
 evidence:
 - evidence/phase1/approval_metadata.json
 failure_modes:
-- Contract weakened to remove approval evidence requirement without equivalent deterministic rule.
+- Contract weakened to remove approval evidence requirement without equivalent deterministic
+  rule.
 - Verifiers disagree on requirement triggers and produce contradictory results.
 - approval metadata artifact is non-deterministic or schema-invalid.
-- Regulated-surface path logic diverges between verifiers and creates split-brain PASS/FAIL results.
+- Regulated-surface path logic diverges between verifiers and creates split-brain
+  PASS/FAIL results.
 must_read:
 - docs/operations/VERIFY_AGENT_CONFORMANCE_SPEC.md
 - docs/PHASE1/phase1_contract.yml
 implementation_plan: docs/plans/phase1/TSK-P1-034_inv077_approval_metadata_hardening/PLAN.md
 implementation_log: docs/plans/phase1/TSK-P1-034_inv077_approval_metadata_hardening/EXEC_LOG.md
-notes: Treats current INV-077 failure as control-plane work to fix evidence production, not to weaken Phase-1 contract.
+notes: Treats current INV-077 failure as control-plane work to fix evidence production,
+  not to weaken Phase-1 contract.
 client: codex_cli
 assigned_agent: compliance_mapper
 model: <UNASSIGNED>

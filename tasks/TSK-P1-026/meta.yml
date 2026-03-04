@@ -1,3 +1,4 @@
+schema_version: 1
 phase: '1'
 task_id: TSK-P1-026
 title: .NET 10 Lint and Quality Gate

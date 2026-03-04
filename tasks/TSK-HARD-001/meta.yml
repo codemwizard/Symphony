@@ -1,3 +1,4 @@
+schema_version: 1
 phase: '1'
 task_id: TSK-HARD-001
 title: Trust invariants documentation freeze
@@ -14,7 +15,7 @@ touches:
 invariants:
 - INV-HARDENING-CANONICAL-SOURCE
 work:
-- Produce TRUST_INVARIANTS.md — the human-readable, institutionally legible
+- "Produce TRUST_INVARIANTS.md \u2014 the human-readable, institutionally legible"
 - Implement exactly per canonical task block in HARDENING_TASK_PACKS.md.
 acceptance_criteria:
 - TRUST_INVARIANTS.md exists and contains exactly 12 invariant entries
@@ -34,7 +35,8 @@ must_read:
 - docs/programs/symphony-hardening/HARDENING_TASK_PACKS.md
 implementation_plan: tasks/TSK-HARD-001/PLAN.md
 implementation_log: tasks/TSK-HARD-001/EXEC_LOG.md
-notes: Generated from canonical hardening task pack source; do not edit semantics here.
+notes: Generated from canonical hardening task pack source; do not edit semantics
+  here.
 client: codex_cli
 assigned_agent: supervisor
 model: gpt-5-codex

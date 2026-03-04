@@ -1,3 +1,4 @@
+schema_version: 1
 phase: '0'
 task_id: TSK-P0-035
 title: Declare Proxy/Alias Resolution invariant (roadmap) + schema design hooks
@@ -37,9 +38,9 @@ must_read:
 - docs/invariants/INVARIANTS_MANIFEST.yml
 - scripts/db/verify_invariants.sh
 - scripts/db/ci_invariant_gate.sql
+implementation_plan: docs/plans/phase0/TSK-P0-035/PLAN.md
+implementation_log: docs/plans/phase0/TSK-P0-035/EXEC_LOG.md
 notes: ''
 client: codex_cli
 assigned_agent: invariants_curator
 model: <UNASSIGNED>
-implementation_plan: docs/plans/phase0/TSK-P0-035/PLAN.md
-implementation_log: docs/plans/phase0/TSK-P0-035/EXEC_LOG.md

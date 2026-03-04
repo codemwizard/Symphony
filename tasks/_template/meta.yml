@@ -1,5 +1,6 @@
 # Canonical Task Meta Template (lower_snake_case)
 
+schema_version: 1
 phase: "0"
 task_id: "TSK-P0-XXX"
 title: "Short imperative title"

@@ -1,3 +1,4 @@
+schema_version: 1
 phase: '0'
 task_id: TSK-P0-085
 title: Add multi-signature ingress schema hook
@@ -12,7 +13,8 @@ touches:
 invariants:
 - INV-095 (Multi-signature ingress hook exists)
 work:
-- Add signatures JSONB NOT NULL DEFAULT []::jsonb to ingress_attestations in a forward-only migration.
+- Add signatures JSONB NOT NULL DEFAULT []::jsonb to ingress_attestations in a forward-only
+  migration.
 - Preserve legacy single-signature compatibility fields for Phase-0.
 - Keep deep signature validation behavior out of scope.
 acceptance_criteria:

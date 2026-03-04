@@ -1,40 +1,37 @@
-phase: "1"
-task_id: "TSK-P1-REG-003"
-title: "Incident workflow + 48-hour report export"
-owner_role: "SUPERVISOR"
-status: "completed"
-
+schema_version: 1
+phase: '1'
+task_id: TSK-P1-REG-003
+title: Incident workflow + 48-hour report export
+owner_role: SUPERVISOR
+status: completed
 depends_on:
-  - "TSK-P1-REG-002"
-
+- TSK-P1-REG-002
 touches:
-  - "tasks/TSK-P1-REG-003/meta.yml"
-  - "docs/plans/phase1/TSK-P1-REG-003/PLAN.md"
-  - "docs/plans/phase1/TSK-P1-REG-003/EXEC_LOG.md"
-  - "schema/migrations/0060_reg_003_incident_workflow_48h_export.sql"
-  - "services/ledger-api/dotnet/src/LedgerApi/Program.cs"
-  - "scripts/audit/verify_reg_003_incident_48h_export.sh"
-  - "docs/PHASE1/phase1_contract.yml"
-  - "docs/operations/VERIFIER_EVIDENCE_REGISTRY.yml"
-  - "docs/operations/SEMANTIC_INTEGRITY_ALLOWLIST.yml"
-  - "docs/architecture/THREAT_MODEL.md"
-  - "evidence/phase1/reg_003_incident_48h_export.json"
-
+- tasks/TSK-P1-REG-003/meta.yml
+- docs/plans/phase1/TSK-P1-REG-003/PLAN.md
+- docs/plans/phase1/TSK-P1-REG-003/EXEC_LOG.md
+- schema/migrations/0060_reg_003_incident_workflow_48h_export.sql
+- services/ledger-api/dotnet/src/LedgerApi/Program.cs
+- scripts/audit/verify_reg_003_incident_48h_export.sh
+- docs/PHASE1/phase1_contract.yml
+- docs/operations/VERIFIER_EVIDENCE_REGISTRY.yml
+- docs/operations/SEMANTIC_INTEGRITY_ALLOWLIST.yml
+- docs/architecture/THREAT_MODEL.md
+- evidence/phase1/reg_003_incident_48h_export.json
 invariants:
-  - "INV-119"
-
-mechanics:
-  gate_ids:
-    - "INT-G28"
-  verifiers:
-    - "bash scripts/audit/verify_reg_003_incident_48h_export.sh && python3 scripts/audit/validate_evidence.py --task TSK-P1-REG-003 --evidence evidence/phase1/reg_003_incident_48h_export.json"
-  evidence_paths:
-    - "evidence/phase1/reg_003_incident_48h_export.json"
-
-implementation_plan: "docs/plans/phase1/TSK-P1-REG-003/PLAN.md"
-implementation_log: "docs/plans/phase1/TSK-P1-REG-003/EXEC_LOG.md"
-
+- INV-119
+work: []
+acceptance_criteria: []
+verification: []
+evidence: []
+failure_modes: []
 must_read:
-  - "docs/operations/AI_AGENT_OPERATION_MANUAL.md"
-  - "docs/operations/AI_AGENT_WORKFLOW_AND_ROLE_PLAN_v2.md"
-  - "docs/operations/AGENT_ROLE_RECONCILIATION.md"
+- docs/operations/AI_AGENT_OPERATION_MANUAL.md
+- docs/operations/AI_AGENT_WORKFLOW_AND_ROLE_PLAN_v2.md
+- docs/operations/AGENT_ROLE_RECONCILIATION.md
+implementation_plan: docs/plans/phase1/TSK-P1-REG-003/PLAN.md
+implementation_log: docs/plans/phase1/TSK-P1-REG-003/EXEC_LOG.md
+notes: ''
+client: codex_cli
+assigned_agent: supervisor
+model: <UNASSIGNED>

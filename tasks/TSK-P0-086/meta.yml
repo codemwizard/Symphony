@@ -1,3 +1,4 @@
+schema_version: 1
 phase: '0'
 task_id: TSK-P0-086
 title: Add business foundation hooks verifier and invariant wiring
@@ -22,7 +23,8 @@ invariants:
 work:
 - Implement schema-introspection verifier for all business foundation hooks.
 - Emit deterministic evidence JSON with checked tables/columns/constraints/indexes/triggers.
-- Wire verifier into DB invariant flow and update invariants docs only with real verification pointers.
+- Wire verifier into DB invariant flow and update invariants docs only with real verification
+  pointers.
 acceptance_criteria:
 - Verifier fails closed when a required hook is missing.
 - Verifier writes evidence on both pass and failure paths.

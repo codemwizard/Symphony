@@ -1,24 +1,30 @@
-id: R-004
+schema_version: 1
 phase: '1'
+task_id: R-004
 title: Move audit token to Authorization header (bearer-scheme)
+owner_role: SUPERVISOR
 status: completed
-dependencies: []
-description: Prevent querystring leakage; accept only the bearer-scheme.
-affected_services:
-- security_remediation
-affected_files:
+depends_on: []
+touches:
 - ?token= no longer accepted.
 - Authorization header with bearer-scheme required.
+invariants: []
+work: []
 acceptance_criteria:
 - id: R-004-A1
   description: Querystring token rejected
 - id: R-004-A2
   description: Authorization with bearer-scheme accepted
-verification_command: 'bash scripts/audit/test_token_querystring_rejected.sh
-
-  bash scripts/audit/test_authorization_bearer_accepted.sh'
+verification:
+- bash scripts/audit/test_token_querystring_rejected.sh
+- bash scripts/audit/test_authorization_bearer_accepted.sh
 evidence:
-  path: evidence/security_remediation/r_004_token_transport.json
-implementation_plan_path: docs/plans/remediation/r_004/PLAN.md
-source_of_truth: docs/contracts/SECURITY_REMEDIATION_DOD.yml
-canonical_reference: docs/operations/AI_AGENT_OPERATION_MANUAL.md
+- evidence/security_remediation/r_004_token_transport.json
+failure_modes: []
+must_read: []
+implementation_plan: docs/plans/remediation/r_004/PLAN.md
+implementation_log: ''
+notes: Prevent querystring leakage; accept only the bearer-scheme.
+client: codex_cli
+assigned_agent: supervisor
+model: <UNASSIGNED>
