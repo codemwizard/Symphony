@@ -1,0 +1,41 @@
+schema_version: 1
+phase: '0.5'
+task_id: R-027
+title: Closeout canonical task-meta migration and guard against regression
+owner_role: SUPERVISOR
+status: completed
+depends_on:
+- R-026
+touches:
+- docs/contracts/SECURITY_REMEDIATION_DOD.yml
+- scripts/audit/verify_task_meta_schema.sh
+- evidence/security_remediation/r_027_task_meta_closeout.json
+invariants:
+- SECURITY_REMEDIATION_META_CONTRACT
+work:
+- Add explicit closeout checks preventing legacy key reintroduction.
+- Record migration summary and residual risks.
+- Emit closeout evidence artifact.
+acceptance_criteria:
+- Regression gate fails if legacy keys appear in any task meta.
+- Closeout record captures scope and counts of migrated files.
+- Evidence artifact is produced and schema-valid.
+verification:
+- bash scripts/audit/verify_task_meta_schema.sh --mode strict --deny-legacy --out
+  evidence/security_remediation/r_027_task_meta_closeout.json
+evidence:
+- evidence/security_remediation/r_027_task_meta_closeout.json
+failure_modes:
+- Evidence file missing
+- Legacy task meta keys reappear
+- Closeout missing migration coverage summary
+must_read:
+- tasks/_template/meta.yml
+- docs/operations/TASK_CREATION_PROCESS.md
+- docs/operations/AI_AGENT_OPERATION_MANUAL.md
+implementation_plan: docs/plans/remediation/r-027/PLAN.md
+implementation_log: docs/plans/remediation/r-027/EXEC_LOG.md
+notes: Closeout deny-legacy verification passed after R-026 completion.
+client: codex_cli
+assigned_agent: supervisor
+model: gpt-5

@@ -155,6 +155,14 @@ else
   exit 1
 fi
 
+echo "==> Governance preflight: strict task meta schema"
+if [[ -x scripts/audit/verify_task_meta_schema.sh ]]; then
+  scripts/audit/verify_task_meta_schema.sh --mode strict --json --out evidence/security_remediation/r_026_run_task_strict_enforcement.json
+else
+  echo "ERROR: scripts/audit/verify_task_meta_schema.sh not found"
+  exit 1
+fi
+
 echo "==> Phase-0 task metadata truth gate (TSK-CLEAN-001)"
 if [[ -x scripts/audit/verify_tsk_clean_001.sh ]]; then
   scripts/audit/verify_tsk_clean_001.sh --evidence evidence/phase0/tsk_clean_001__task_metadata_truth_pass.json

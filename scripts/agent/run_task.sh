@@ -58,6 +58,7 @@ if not isinstance(meta, dict):
     raise SystemExit("ERROR: meta.yml must be a mapping/object")
 
 required = [
+    "schema_version",
     "task_id",
     "title",
     "owner_role",
@@ -71,10 +72,8 @@ missing = [k for k in required if k not in meta or meta[k] in (None, "", [])]
 if missing:
     raise SystemExit(f"ERROR: meta.yml missing required fields: {missing}")
 
-# schema_version is optional for backward-compat with legacy meta (no schema_version declared).
-# Absent or empty => treat as "0" (legacy shape). Explicit "1" => new shape.
-schema_version = str(meta.get("schema_version") or "0").strip()
-supported = {"0", "1"}
+schema_version = str(meta.get("schema_version")).strip()
+supported = {"1"}
 if schema_version not in supported:
     raise SystemExit(f"ERROR: Unsupported schema_version '{schema_version}'. Supported: {sorted(supported)}")
 

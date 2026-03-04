@@ -38,7 +38,7 @@ EVIDENCE_FILE = Path(os.environ.get("EVIDENCE_FILE", ROOT / "evidence/phase0/yam
 snake_re = re.compile(r"^[a-z][a-z0-9_]*$")
 
 canonical_keys = {
-    "phase","task_id","title","owner_role","status",
+    "schema_version","phase","task_id","title","owner_role","status",
     "depends_on","touches","invariants","work","acceptance_criteria",
     "verification","evidence","failure_modes","must_read","notes",
     "client","assigned_agent","model","implementation_plan","implementation_log"
@@ -55,7 +55,7 @@ scalar_fields = {
 }
 
 required_keys = {
-    "phase","task_id","title","owner_role","status",
+    "schema_version","phase","task_id","title","owner_role","status",
     "depends_on","touches","invariants","work","acceptance_criteria",
     "verification","evidence","failure_modes","must_read","notes",
     "client","assigned_agent","model"
@@ -129,6 +129,13 @@ for meta in sorted(ROOT.glob("tasks/TSK-P0-*/meta.yml")):
             errors.append(f"{meta}: missing required key: {req}")
 
     status = str(data.get("status", "")).lower()
+    schema_version = data.get("schema_version")
+    if not (isinstance(schema_version, int) or isinstance(schema_version, str)):
+        errors.append(f"{meta}: schema_version must be int or string")
+    else:
+        if str(schema_version).strip() != "1":
+            errors.append(f"{meta}: schema_version must be 1")
+
     if status in ("in_progress", "completed"):
         for req in ("implementation_plan", "implementation_log"):
             if req not in data:
