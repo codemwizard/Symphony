@@ -1,0 +1,37 @@
+phase: '1'
+task_id: TSK-HARD-052
+title: Signature metadata completeness standard
+owner_role: SUPERVISOR
+status: planned
+depends_on:
+- TSK-HARD-051
+touches:
+- docs/programs/symphony-hardening/HARDENING_TASK_PACKS.md
+- signature metadata standard document at
+- tasks/TSK-HARD-052/EXEC_LOG.md
+- tasks/TSK-HARD-052/PLAN.md
+invariants:
+- INV-HARDENING-CANONICAL-SOURCE
+work:
+- Establish and enforce the signature metadata standard for all evidence
+- Implement exactly per canonical task block in HARDENING_TASK_PACKS.md.
+acceptance_criteria:
+- 'every signed evidence artifact contains all required fields: key_id,'
+verification:
+- bash scripts/audit/verify_tsk_hard_052.sh
+evidence:
+- evidence/phase1/hardening/tsk_hard_052.json
+- evidence/schemas/hardening/tsk_hard_052.schema.json
+failure_modes:
+- missing required metadata field silently accepted => FAIL_CLOSED
+- canonicalization_version absent from any signed artifact => FAIL_CLOSED
+- assurance_tier absent (added retroactively once TSK-HARD-096 is complete;
+must_read:
+- docs/operations/AI_AGENT_OPERATION_MANUAL.md
+- docs/programs/symphony-hardening/HARDENING_TASK_PACKS.md
+implementation_plan: tasks/TSK-HARD-052/PLAN.md
+implementation_log: tasks/TSK-HARD-052/EXEC_LOG.md
+notes: Generated from canonical hardening task pack source; do not edit semantics here.
+client: codex_cli
+assigned_agent: supervisor
+model: gpt-5-codex

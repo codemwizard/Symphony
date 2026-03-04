@@ -1,0 +1,43 @@
+phase: '1'
+task_id: TSK-HARD-033
+title: Reference registry linkage enforcement
+owner_role: SUPERVISOR
+status: planned
+depends_on:
+- TSK-HARD-032
+touches:
+- adjusted reference acceptance logic
+- docs/programs/symphony-hardening/HARDENING_TASK_PACKS.md
+- duplicate rejection evidence artifact
+- evidence/phase1/hardening/tsk_hard_033.json
+- pre-dispatch registry linkage check
+- rejection evidence for unregistered references
+- tasks/TSK-HARD-033/EXEC_LOG.md
+- tasks/TSK-HARD-033/PLAN.md
+invariants:
+- INV-HARDENING-CANONICAL-SOURCE
+work:
+- Enforce that every outbound dispatch references a registered entry in the
+- Implement exactly per canonical task block in HARDENING_TASK_PACKS.md.
+acceptance_criteria:
+- pre-dispatch check confirms reference exists in registry before any outbound
+verification:
+- bash scripts/audit/verify_tsk_hard_033.sh
+evidence:
+- evidence/phase1/hardening/tsk_hard_033.json
+- evidence/schemas/hardening/tsk_hard_033.schema.json
+failure_modes:
+- unregistered reference dispatched to wire => FAIL_CLOSED
+- unregistered reference rejection produces no evidence => FAIL
+- rail-rejected duplicate produces no evidence artifact => FAIL
+- adjusted reference rejected when valid registry entry exists => FAIL
+- negative-path tests absent => FAIL
+must_read:
+- docs/operations/AI_AGENT_OPERATION_MANUAL.md
+- docs/programs/symphony-hardening/HARDENING_TASK_PACKS.md
+implementation_plan: tasks/TSK-HARD-033/PLAN.md
+implementation_log: tasks/TSK-HARD-033/EXEC_LOG.md
+notes: Generated from canonical hardening task pack source; do not edit semantics here.
+client: codex_cli
+assigned_agent: supervisor
+model: gpt-5-codex

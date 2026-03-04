@@ -1,0 +1,43 @@
+phase: '1'
+task_id: TSK-HARD-042
+title: Privacy-preserving audit query continuity
+owner_role: SUPERVISOR
+status: planned
+depends_on:
+- TSK-HARD-041
+touches:
+- docs/programs/symphony-hardening/HARDENING_TASK_PACKS.md
+- evidence chain continuity documentation
+- evidence/phase1/hardening/tsk_hard_042.json
+- post-erasure query test
+- purge evidence linkage (queryable by purge_evidence_ref)
+- structured PURGED placeholder response for erased subjects
+- tasks/TSK-HARD-042/EXEC_LOG.md
+- tasks/TSK-HARD-042/PLAN.md
+invariants:
+- INV-HARDENING-CANONICAL-SOURCE
+work:
+- Confirm that audit query responses remain coherent, structured, and
+- Implement exactly per canonical task block in HARDENING_TASK_PACKS.md.
+acceptance_criteria:
+- 'audit query for an erased subject token returns a structured placeholder:'
+verification:
+- bash scripts/audit/verify_tsk_hard_042.sh
+evidence:
+- evidence/phase1/hardening/tsk_hard_042.json
+- evidence/schemas/hardening/tsk_hard_042.schema.json
+failure_modes:
+- erased subject query returns 404 or unstructured error => FAIL
+- PURGED and NOT_FOUND responses are indistinguishable => FAIL
+- structured placeholder absent or non-schema-valid => FAIL
+- purge evidence linkage not queryable => FAIL_CLOSED
+- negative-path tests absent => FAIL
+must_read:
+- docs/operations/AI_AGENT_OPERATION_MANUAL.md
+- docs/programs/symphony-hardening/HARDENING_TASK_PACKS.md
+implementation_plan: tasks/TSK-HARD-042/PLAN.md
+implementation_log: tasks/TSK-HARD-042/EXEC_LOG.md
+notes: Generated from canonical hardening task pack source; do not edit semantics here.
+client: codex_cli
+assigned_agent: supervisor
+model: gpt-5-codex

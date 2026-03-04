@@ -250,3 +250,7 @@ The following are prohibited in code/docs:
 - **Final technical sign-off authority:** CTO
 
 This document becomes effective only when the CTO signs off the current revision.
+## Language Scope
+This policy applies to all backend implementation languages in Symphony, including:
+- C# (.NET)
+- Python

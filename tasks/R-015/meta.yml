@@ -1,0 +1,18 @@
+id: R-015
+phase: '5'
+title: Create xUnit test project
+status: completed
+dependencies: []
+description: Introduce durable automated unit tests and run them in CI.
+affected_services:
+- security_remediation
+affected_files: []
+acceptance_criteria:
+- id: R-015-A1
+  description: xUnit project runs in CI
+verification_command: dotnet test
+evidence:
+  path: evidence/security_remediation/r_015_tests_bootstrap.json
+implementation_plan_path: docs/plans/remediation/r_015/PLAN.md
+source_of_truth: docs/contracts/SECURITY_REMEDIATION_DOD.yml
+canonical_reference: docs/operations/AI_AGENT_OPERATION_MANUAL.md

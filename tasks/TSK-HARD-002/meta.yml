@@ -1,0 +1,49 @@
+phase: '1'
+task_id: TSK-HARD-002
+title: Evidence event class schema registration
+owner_role: SUPERVISOR
+status: planned
+depends_on:
+- TSK-HARD-001
+touches:
+- docs/architecture/EVIDENCE_EVENT_CLASSES.md  [informational mirror — not gating]
+- docs/programs/symphony-hardening/HARDENING_TASK_PACKS.md
+- evidence/phase1/hardening/tsk_hard_002.json
+- evidence/schemas/hardening/event_classes/adjustment_approval_event.schema.json
+- evidence/schemas/hardening/event_classes/canonicalization_archive_event.schema.json
+- evidence/schemas/hardening/event_classes/dr_ceremony_event.schema.json
+- evidence/schemas/hardening/event_classes/finality_conflict_record.schema.json
+- evidence/schemas/hardening/event_classes/inquiry_event.schema.json
+- evidence/schemas/hardening/event_classes/malformed_quarantine_event.schema.json
+- evidence/schemas/hardening/event_classes/orphaned_attestation_event.schema.json
+- evidence/schemas/hardening/event_classes/pka_snapshot_event.schema.json
+- evidence/schemas/hardening/event_classes/policy_activation_event.schema.json
+- evidence/schemas/hardening/event_classes/verification_continuity_event.schema.json
+- tasks/TSK-HARD-002/EXEC_LOG.md
+- tasks/TSK-HARD-002/PLAN.md
+invariants:
+- INV-HARDENING-CANONICAL-SOURCE
+work:
+- Register all hardening event class schemas into the schema set that
+- Implement exactly per canonical task block in HARDENING_TASK_PACKS.md.
+acceptance_criteria:
+- all 10 event class schema files listed above exist under
+verification:
+- bash scripts/audit/verify_tsk_hard_002.sh
+evidence:
+- evidence/phase1/hardening/tsk_hard_002.json
+- evidence/schemas/hardening/tsk_hard_002.schema.json
+failure_modes:
+- any of the 10 schema files missing => FAIL_CLOSED
+- validate_evidence_schema.sh does not load schemas automatically => FAIL
+- schema permits additionalProperties at top level => FAIL
+- docs mirror referenced as a gate input in any script => FAIL_REVIEW
+must_read:
+- docs/operations/AI_AGENT_OPERATION_MANUAL.md
+- docs/programs/symphony-hardening/HARDENING_TASK_PACKS.md
+implementation_plan: tasks/TSK-HARD-002/PLAN.md
+implementation_log: tasks/TSK-HARD-002/EXEC_LOG.md
+notes: Generated from canonical hardening task pack source; do not edit semantics here.
+client: codex_cli
+assigned_agent: supervisor
+model: gpt-5-codex

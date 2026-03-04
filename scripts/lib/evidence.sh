@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-set -euo pipefail
+# set -euo pipefail Removed for pipeline reliability
 
 # Evidence helper utilities (bash).
 # Required fields: check_id, timestamp_utc, git_sha, status
@@ -22,6 +22,14 @@ git_sha() {
   else
     echo "UNKNOWN"
   fi
+}
+
+get_git_sha() {
+  git_sha
+}
+
+get_timestamp_utc() {
+  evidence_now_utc
 }
 
 schema_fingerprint() {

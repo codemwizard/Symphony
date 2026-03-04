@@ -1,0 +1,12 @@
+id: TSK-HARD-102
+title: "Wave-5 regulator continuity gate"
+status: todo
+phase: "Hardening"
+wave: "5"
+depends_on:
+  - TSK-HARD-099
+verifier_command: "bash scripts/audit/verify_tsk_hard_102.sh"
+evidence_path: "evidence/phase1/hardening/tsk_hard_102.json"
+schema_path: "evidence/schemas/hardening/tsk_hard_102.schema.json"
+source_of_truth: "docs/programs/symphony-hardening/HARDENING_TASK_PACKS.md"
+canonical_reference: "docs/operations/AI_AGENT_OPERATION_MANUAL.md"

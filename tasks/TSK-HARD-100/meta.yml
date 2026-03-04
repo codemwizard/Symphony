@@ -1,0 +1,41 @@
+phase: '1'
+task_id: TSK-HARD-100
+title: Anti-abuse controls and retraction safety
+owner_role: SUPERVISOR
+status: planned
+depends_on:
+- TSK-HARD-042
+touches:
+- anti-abuse control taxonomy document at
+- docs/programs/symphony-hardening/HARDENING_TASK_PACKS.md
+- tasks/TSK-HARD-100/EXEC_LOG.md
+- tasks/TSK-HARD-100/PLAN.md
+invariants:
+- INV-HARDENING-CANONICAL-SOURCE
+work:
+- Implement rate limiting on all high-risk operator and automated actions.
+- Implement exactly per canonical task block in HARDENING_TASK_PACKS.md.
+acceptance_criteria:
+- EXEC_LOG.md confirms scope of controlled action types before implementation
+verification:
+- bash scripts/audit/verify_tsk_hard_100.sh
+evidence:
+- evidence/phase1/hardening/tsk_hard_100.json
+- evidence/schemas/hardening/tsk_hard_100.schema.json
+failure_modes:
+- rate limiting absent from any controlled action type => FAIL_CLOSED
+- rate limit hardcoded => FAIL_CLOSED [METADATA GOVERNANCE violation]
+- retraction requires no secondary approval => FAIL_CLOSED
+- retraction evidence artifact mutable => FAIL_CLOSED
+- rate limit breach produces no evidence artifact => FAIL
+- scope not confirmed in EXEC_LOG.md before implementation => FAIL_REVIEW
+- negative-path tests absent => FAIL
+must_read:
+- docs/operations/AI_AGENT_OPERATION_MANUAL.md
+- docs/programs/symphony-hardening/HARDENING_TASK_PACKS.md
+implementation_plan: tasks/TSK-HARD-100/PLAN.md
+implementation_log: tasks/TSK-HARD-100/EXEC_LOG.md
+notes: Generated from canonical hardening task pack source; do not edit semantics here.
+client: codex_cli
+assigned_agent: supervisor
+model: gpt-5-codex

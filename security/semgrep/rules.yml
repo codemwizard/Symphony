@@ -10,11 +10,100 @@ rules:
           - pattern: |
               $CMD.CommandText += $X;
 
+  - id: symphony-dotnet-string-format-sql
+    languages: [csharp]
+    message: "Potential SQL injection: SQL query built via string.Format. Use parameters."
+    severity: ERROR
+    patterns:
+      - pattern-either:
+          - pattern: |
+              string.Format("SELECT $...", $INPUT)
+          - pattern: |
+              string.Format("INSERT $...", $INPUT)
+          - pattern: |
+              string.Format("UPDATE $...", $INPUT)
+          - pattern: |
+              string.Format("DELETE $...", $INPUT)
+
+  - id: symphony-dotnet-interpolation-sql
+    languages: [csharp]
+    message: "Potential SQL injection: SQL query built via string interpolation. Use parameters."
+    severity: ERROR
+    patterns:
+      - pattern-either:
+          - pattern: |
+              $"SELECT $...{$INPUT}"
+          - pattern: |
+              $"INSERT $...{$INPUT}"
+          - pattern: |
+              $"UPDATE $...{$INPUT}"
+          - pattern: |
+              $"DELETE $...{$INPUT}"
+
+  - id: symphony-python-sql-concat
+    languages: [python]
+    message: "Potential SQL injection: SQL query built via string concatenation. Use parameters."
+    severity: ERROR
+    pattern-either:
+      - pattern-regex: '(?i)\\b\\w+\\s*=\\s*["\\''][^"\\'']*(select|insert|update|delete)[^"\\'']*["\\'']\\s*\\+'
+      - pattern-regex: '(?i)\\b\\w+\\s*=\\s*\\w+\\s*\\+\\s*["\\''][^"\\'']*(select|insert|update|delete)[^"\\'']*["\\'']'
+
+  - id: symphony-python-f-string-sql
+    languages: [python]
+    message: "Potential SQL injection: SQL query built via f-string. Use parameters."
+    severity: ERROR
+    patterns:
+      - pattern-either:
+          - pattern: |
+              f"SELECT $...{$INPUT}"
+          - pattern: |
+              f"INSERT $...{$INPUT}"
+          - pattern: |
+              f"UPDATE $...{$INPUT}"
+          - pattern: |
+              f"DELETE $...{$INPUT}"
+
+  - id: symphony-python-percent-format-sql
+    languages: [python]
+    message: "Potential SQL injection: SQL query built via % formatting. Use parameters."
+    severity: ERROR
+    patterns:
+      - pattern-either:
+          - pattern: |
+              "SELECT $...%" % $INPUT
+          - pattern: |
+              "INSERT $...%" % $INPUT
+          - pattern: |
+              "UPDATE $...%" % $INPUT
+          - pattern: |
+              "DELETE $...%" % $INPUT
+
+  - id: symphony-python-string-format-sql
+    languages: [python]
+    message: "Potential SQL injection: SQL query built via str.format(). Use parameters."
+    severity: ERROR
+    patterns:
+      - pattern-either:
+          - pattern: |
+              "SELECT $...".format($INPUT)
+          - pattern: |
+              "INSERT $...".format($INPUT)
+          - pattern: |
+              "UPDATE $...".format($INPUT)
+          - pattern: |
+              "DELETE $...".format($INPUT)
+
   - id: symphony-dotnet-hardcoded-secret
     languages: [csharp]
     message: "Possible hardcoded secret/token. Use OpenBao/KMS or secure config provider."
     severity: ERROR
     pattern-regex: '(?i)(api[_-]?key|secret|token|password)\\s*=\\s*\".{8,}\"'
+
+  - id: symphony-python-hardcoded-secret
+    languages: [python]
+    message: "Possible hardcoded secret/token. Use OpenBao/KMS or secure config provider."
+    severity: ERROR
+    pattern-regex: '(?i)(api[_-]?key|secret|token|password)\\s*=\\s*[\"''].{8,}[\"'']'
 
   - id: symphony-dotnet-insecure-rng
     languages: [csharp]
@@ -23,3 +112,33 @@ rules:
     pattern: |
       new Random(...)
 
+  - id: symphony-python-insecure-rng
+    languages: [python]
+    message: "Insecure RNG detected. Use secrets.randbits() or os.urandom() for security-sensitive values."
+    severity: ERROR
+    patterns:
+      - pattern-either:
+          - pattern: |
+              random.random(...)
+          - pattern: |
+              random.randint(...)
+
+  - id: symphony-admin-claim-bypass
+    languages: [csharp]
+    message: >
+      Admin authentication bypass via x-admin-claim header detected.
+      Admin endpoints must require ADMIN_API_KEY; header-based claim trust is forbidden.
+    severity: ERROR
+    pattern-either:
+      - pattern: |
+          ReadHeader($CTX, "x-admin-claim")
+      - pattern: |
+          $CTX.Request.Headers.TryGetValue("x-admin-claim", ...)
+
+  - id: symphony-secret-fallback-literal
+    languages: [csharp]
+    message: >
+      Hardcoded secret fallback via ?? operator detected.
+      Use ?? throw or fail-closed patterns instead of literal fallbacks.
+    severity: ERROR
+    pattern-regex: 'Environment\\.GetEnvironmentVariable\\(\"EVIDENCE_SIGNING_KEY\"\\)\\s*\\?\\?\\s*\"[^\"]+\"'

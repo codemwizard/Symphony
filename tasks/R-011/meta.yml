@@ -1,0 +1,18 @@
+id: R-011
+phase: '4'
+title: Remove bfg.jar
+status: completed
+dependencies: []
+description: Remove risky artifact and prevent re-add.
+affected_services:
+- security_remediation
+affected_files: []
+acceptance_criteria:
+- id: R-011-A1
+  description: bfg.jar denied
+verification_command: bash scripts/audit/denylist_repo_artifacts.sh --deny bfg.jar
+evidence:
+  path: evidence/security_remediation/r_011_repo_hygiene.json
+implementation_plan_path: docs/plans/remediation/r_011/PLAN.md
+source_of_truth: docs/contracts/SECURITY_REMEDIATION_DOD.yml
+canonical_reference: docs/operations/AI_AGENT_OPERATION_MANUAL.md

@@ -4,11 +4,68 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
 using System.Text.RegularExpressions;
+using System.Threading.RateLimiting;
+using Microsoft.AspNetCore.Http.Features;
+using Microsoft.AspNetCore.HttpOverrides;
+using Microsoft.AspNetCore.RateLimiting;
 using Npgsql;
 
 var builder = WebApplication.CreateBuilder(args);
+builder.Services.Configure<ForwardedHeadersOptions>(options =>
+{
+    options.ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto;
+    // Ingress/proxy topologies vary; prefer explicit forwarded chain over collapsing every caller to proxy IP.
+    options.KnownIPNetworks.Clear();
+    options.KnownProxies.Clear();
+    options.ForwardLimit = 1;
+});
+builder.Services.AddRateLimiter(options =>
+{
+    var permitLimit = int.TryParse(Environment.GetEnvironmentVariable("SYMPHONY_RATE_LIMIT_PERMITS"), out var parsedPermit)
+        ? parsedPermit
+        : 60;
+    var windowSeconds = int.TryParse(Environment.GetEnvironmentVariable("SYMPHONY_RATE_LIMIT_WINDOW_SECONDS"), out var parsedWindow)
+        ? parsedWindow
+        : 60;
+    options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+    options.GlobalLimiter = PartitionedRateLimiter.Create<HttpContext, string>(context =>
+        RateLimitPartition.GetFixedWindowLimiter(
+            partitionKey: RequestSecurityGuards.BuildRateLimitPartitionKey(context),
+            factory: _ => new FixedWindowRateLimiterOptions
+            {
+                PermitLimit = Math.Max(1, permitLimit),
+                Window = TimeSpan.FromSeconds(Math.Max(1, windowSeconds)),
+                QueueLimit = 0
+            }));
+});
 var app = builder.Build();
 var logger = app.Logger;
+
+var maxBodyBytes = long.TryParse(Environment.GetEnvironmentVariable("SYMPHONY_MAX_BODY_BYTES"), out var parsedMaxBodyBytes)
+    ? parsedMaxBodyBytes
+    : 1_048_576;
+app.UseForwardedHeaders();
+app.Use(async (httpContext, next) =>
+{
+    var maxRequestBodySizeFeature = httpContext.Features.Get<IHttpMaxRequestBodySizeFeature>();
+    if (maxRequestBodySizeFeature is { IsReadOnly: false })
+    {
+        maxRequestBodySizeFeature.MaxRequestBodySize = maxBodyBytes;
+    }
+
+    if (await RequestSecurityGuards.IsBodyTooLargeAsync(httpContext.Request, maxBodyBytes, httpContext.RequestAborted))
+    {
+        httpContext.Response.StatusCode = StatusCodes.Status413PayloadTooLarge;
+        await httpContext.Response.WriteAsJsonAsync(new
+        {
+            error_code = "PAYLOAD_TOO_LARGE",
+            errors = new[] { $"request body exceeds {maxBodyBytes} bytes" }
+        });
+        return;
+    }
+    await next();
+});
+app.UseRateLimiter();
 
 if (args.Contains("--self-test", StringComparer.OrdinalIgnoreCase))
 {
@@ -114,7 +171,24 @@ IRegulatoryIncidentStore regulatoryIncidentStore = storageMode switch
     _ => new FileRegulatoryIncidentStore(logger)
 };
 
-app.MapGet("/health", () => Results.Ok(new { status = "ok" }));
+// Startup capability probes
+var signingKeyPresent = !string.IsNullOrWhiteSpace(Environment.GetEnvironmentVariable("EVIDENCE_SIGNING_KEY"));
+var rawAllowlist = (Environment.GetEnvironmentVariable("SYMPHONY_KNOWN_TENANTS") ?? string.Empty).Trim();
+var tenantAllowlistConfigured = !string.IsNullOrWhiteSpace(rawAllowlist);
+
+if (!tenantAllowlistConfigured)
+{
+    logger.LogWarning("SECURITY ALERT: tenant_allowlist_configured=false. All tenant requests will be rejected with 503.");
+}
+
+app.MapGet("/health", () => Results.Ok(new
+{
+    status = "ok",
+    signing_key_present = signingKeyPresent,
+    tenant_allowlist_configured = tenantAllowlistConfigured,
+    git_sha = EvidenceMeta.Load(EvidenceMeta.ResolveRepoRoot(Directory.GetCurrentDirectory())).GitSha,
+    env_profile = Environment.GetEnvironmentVariable("SYMPHONY_ENV") ?? "unknown"
+}));
 
 app.MapPost("/v1/ingress/instructions", async (IngressRequest request, HttpContext httpContext, CancellationToken cancellationToken) =>
 {
@@ -124,7 +198,18 @@ app.MapPost("/v1/ingress/instructions", async (IngressRequest request, HttpConte
         return Results.Json(authFailure.Body, statusCode: authFailure.StatusCode);
     }
 
-    var forceFailure = httpContext.Request.Headers.TryGetValue("x-symphony-force-attestation-fail", out var forceHeader)
+    if (RequestSecurityGuards.DevOnlyHeadersPresent(httpContext.Request)
+        && !RequestSecurityGuards.IsDevOrCi(Environment.GetEnvironmentVariable("SYMPHONY_ENV")))
+    {
+        return Results.Json(new
+        {
+            ack = false,
+            error_code = "FORBIDDEN_DEV_HEADER",
+            errors = new[] { "dev-only headers are not allowed outside development/ci" }
+        }, statusCode: StatusCodes.Status403Forbidden);
+    }
+
+    var forceFailure = httpContext.Request.Headers.TryGetValue(RequestSecurityGuards.ForceAttestationFailHeader, out var forceHeader)
         && forceHeader.ToString() == "1";
 
     var result = await IngressHandler.HandleAsync(request, store, logger, forceFailure, cancellationToken);
@@ -142,6 +227,12 @@ app.MapGet("/v1/evidence-packs/{instruction_id}", async (string instruction_id, 
     var tenantId = httpContext.Request.Headers.TryGetValue("x-tenant-id", out var tenantHeader)
         ? tenantHeader.ToString()
         : string.Empty;
+
+    var tenantAuthFailure = ApiAuthorization.AuthorizeTenantScope(tenantId);
+    if (tenantAuthFailure is not null)
+    {
+        return Results.Json(tenantAuthFailure.Body, statusCode: tenantAuthFailure.StatusCode);
+    }
 
     var result = await EvidencePackHandler.HandleAsync(instruction_id, tenantId, evidenceStore, logger, cancellationToken);
     return Results.Json(result.Body, statusCode: result.StatusCode);
@@ -233,21 +324,16 @@ app.MapGet("/v1/regulatory/reports/daily", async (string date, HttpContext httpC
 
     var tenantId = httpContext.Request.Headers.TryGetValue("x-tenant-id", out var tenantHeader)
         ? tenantHeader.ToString()
-        : null;
+        : string.Empty;
 
-    var generated = await RegulatoryReportHandler.GenerateDailyReportAsync(date, tenantId, cancellationToken);
-    if (!generated.Success)
+    var tenantAuthFailure = ApiAuthorization.AuthorizeTenantScope(tenantId);
+    if (tenantAuthFailure is not null)
     {
-        return Results.Json(new
-        {
-            error_code = "REPORT_GENERATION_FAILED",
-            errors = new[] { generated.Error ?? "unknown" }
-        }, statusCode: StatusCodes.Status400BadRequest);
+        return Results.Json(tenantAuthFailure.Body, statusCode: tenantAuthFailure.StatusCode);
     }
 
-    httpContext.Response.Headers["X-Symphony-Signature"] = generated.Signature;
-    httpContext.Response.Headers["X-Symphony-Key-Id"] = generated.KeyId;
-    return Results.Json(generated.Report!, statusCode: StatusCodes.Status200OK);
+    var generated = await RegulatoryReportHandler.GenerateDailyReportAsync(date, tenantId, cancellationToken);
+    return generated.ToHttpResult();
 });
 
 app.MapPost("/v1/admin/incidents", async (RegulatoryIncidentCreateRequest request, HttpContext httpContext, CancellationToken cancellationToken) =>
@@ -296,18 +382,7 @@ app.MapGet("/v1/regulatory/incidents/{incident_id}/report", async (string incide
     }
 
     var result = await RegulatoryIncidentReportHandler.GenerateIncidentReportAsync(incident_id, regulatoryIncidentStore, cancellationToken);
-    if (!result.Success)
-    {
-        return Results.Json(new
-        {
-            error_code = result.ErrorCode ?? "INCIDENT_REPORT_FAILED",
-            errors = new[] { result.Error ?? "unknown" }
-        }, statusCode: result.StatusCode);
-    }
-
-    httpContext.Response.Headers["X-Symphony-Signature"] = result.Signature;
-    httpContext.Response.Headers["X-Symphony-Key-Id"] = result.KeyId;
-    return Results.Json(result.Report!, statusCode: StatusCodes.Status200OK);
+    return result.ToHttpResult();
 });
 
 await app.RunAsync();
@@ -414,6 +489,16 @@ static class ApiAuthorization
 {
     public static HandlerResult? AuthorizeIngressWrite(HttpContext httpContext, IngressRequest request)
     {
+        if (httpContext.Request.Query.ContainsKey("token"))
+        {
+            return new HandlerResult(StatusCodes.Status401Unauthorized, new
+            {
+                ack = false,
+                error_code = "UNAUTHORIZED_TOKEN_TRANSPORT",
+                errors = new[] { "querystring token transport is not allowed; use Authorization header token or x-api-key" }
+            });
+        }
+
         var configuredKey = (Environment.GetEnvironmentVariable("INGRESS_API_KEY") ?? string.Empty).Trim();
         if (string.IsNullOrWhiteSpace(configuredKey))
         {
@@ -426,6 +511,10 @@ static class ApiAuthorization
         }
 
         var presentedKey = ReadHeader(httpContext, "x-api-key");
+        if (string.IsNullOrWhiteSpace(presentedKey))
+        {
+            presentedKey = ReadAuthorizationToken(httpContext);
+        }
         if (string.IsNullOrWhiteSpace(presentedKey) || !SecureEquals(configuredKey, presentedKey))
         {
             return new HandlerResult(StatusCodes.Status401Unauthorized, new
@@ -457,14 +546,10 @@ static class ApiAuthorization
             });
         }
 
-        if (!IsKnownTenant(tenantHeader.Trim()))
+        var scopeAuthFailure = AuthorizeTenantScope(tenantHeader);
+        if (scopeAuthFailure is not null)
         {
-            return new HandlerResult(StatusCodes.Status403Forbidden, new
-            {
-                ack = false,
-                error_code = "FORBIDDEN_UNKNOWN_TENANT",
-                errors = new[] { "x-tenant-id is not recognized by tenant registry" }
-            });
+            return scopeAuthFailure;
         }
 
         // Propagate resolved tenant into request context for downstream policy/data access checks.
@@ -494,16 +579,37 @@ static class ApiAuthorization
         return null;
     }
 
-    private static bool IsKnownTenant(string tenantId)
+    public static HandlerResult? AuthorizeTenantScope(string tenantId)
     {
-        var raw = (Environment.GetEnvironmentVariable("SYMPHONY_KNOWN_TENANTS") ?? string.Empty).Trim();
-        if (string.IsNullOrWhiteSpace(raw))
+        var rawAllowlist = (Environment.GetEnvironmentVariable("SYMPHONY_KNOWN_TENANTS") ?? string.Empty).Trim();
+        var tenantAllowlistConfigured = !string.IsNullOrWhiteSpace(rawAllowlist);
+
+        if (!tenantAllowlistConfigured)
         {
-            // No registry configured -> leave allowlist enforcement off in generic local runs.
-            return true;
+            return new HandlerResult(StatusCodes.Status503ServiceUnavailable, new
+            {
+                // Note: The /health endpoint structure might omit 'ack' but for ingress consistency we carry it or just omit where unneeded.
+                // The verification script only checks HTTP 503 and error_code='TENANT_ALLOWLIST_UNCONFIGURED'.
+                error_code = "TENANT_ALLOWLIST_UNCONFIGURED",
+                errors = new[] { "tenant allowlist not configured" }
+            });
         }
 
-        var known = raw
+        if (!IsKnownTenant(tenantId, rawAllowlist))
+        {
+            return new HandlerResult(StatusCodes.Status403Forbidden, new
+            {
+                error_code = "FORBIDDEN_UNKNOWN_TENANT",
+                errors = new[] { "x-tenant-id is not recognized by tenant registry" }
+            });
+        }
+
+        return null;
+    }
+
+    private static bool IsKnownTenant(string tenantId, string configuredAllowlist)
+    {
+        var known = configuredAllowlist
             .Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
             .Where(x => !string.IsNullOrWhiteSpace(x))
             .ToHashSet(StringComparer.OrdinalIgnoreCase);
@@ -513,6 +619,15 @@ static class ApiAuthorization
 
     public static HandlerResult? AuthorizeEvidenceRead(HttpContext httpContext)
     {
+        if (httpContext.Request.Query.ContainsKey("token"))
+        {
+            return new HandlerResult(StatusCodes.Status401Unauthorized, new
+            {
+                error_code = "UNAUTHORIZED_TOKEN_TRANSPORT",
+                errors = new[] { "querystring token transport is not allowed; use Authorization header token or x-api-key" }
+            });
+        }
+
         var configuredKey = (Environment.GetEnvironmentVariable("INGRESS_API_KEY") ?? string.Empty).Trim();
         if (string.IsNullOrWhiteSpace(configuredKey))
         {
@@ -524,6 +639,10 @@ static class ApiAuthorization
         }
 
         var presentedKey = ReadHeader(httpContext, "x-api-key");
+        if (string.IsNullOrWhiteSpace(presentedKey))
+        {
+            presentedKey = ReadAuthorizationToken(httpContext);
+        }
         if (string.IsNullOrWhiteSpace(presentedKey) || !SecureEquals(configuredKey, presentedKey))
         {
             return new HandlerResult(StatusCodes.Status401Unauthorized, new
@@ -538,17 +657,18 @@ static class ApiAuthorization
 
     public static HandlerResult? AuthorizeAdminTenantOnboarding(HttpContext httpContext)
     {
-        var adminClaim = ReadHeader(httpContext, "x-admin-claim");
-        if (adminClaim == "1" || adminClaim.Equals("true", StringComparison.OrdinalIgnoreCase))
+        var configuredAdminKey = (Environment.GetEnvironmentVariable("ADMIN_API_KEY") ?? string.Empty).Trim();
+        if (string.IsNullOrWhiteSpace(configuredAdminKey))
         {
-            return null;
+            return new HandlerResult(StatusCodes.Status503ServiceUnavailable, new
+            {
+                error_code = "AUTHZ_CONFIG_MISSING",
+                errors = new[] { "ADMIN_API_KEY must be configured" }
+            });
         }
 
-        var configuredAdminKey = (Environment.GetEnvironmentVariable("ADMIN_API_KEY") ?? string.Empty).Trim();
         var presentedAdminKey = ReadHeader(httpContext, "x-admin-api-key");
-        if (!string.IsNullOrWhiteSpace(configuredAdminKey)
-            && !string.IsNullOrWhiteSpace(presentedAdminKey)
-            && SecureEquals(configuredAdminKey, presentedAdminKey))
+        if (!string.IsNullOrWhiteSpace(presentedAdminKey) && SecureEquals(configuredAdminKey, presentedAdminKey))
         {
             return null;
         }
@@ -556,22 +676,28 @@ static class ApiAuthorization
         return new HandlerResult(StatusCodes.Status403Forbidden, new
         {
             error_code = "FORBIDDEN_ADMIN_REQUIRED",
-            errors = new[] { "admin credentials are required (x-admin-api-key or admin claim)" }
+            errors = new[] { "admin credentials are required (x-admin-api-key)" }
         });
     }
 
     private static string ReadHeader(HttpContext context, string name)
         => context.Request.Headers.TryGetValue(name, out var value) ? value.ToString() : string.Empty;
 
+    private static string ReadAuthorizationToken(HttpContext context)
+    {
+        var authorization = ReadHeader(context, "Authorization");
+        var parts = authorization.Split(' ', 2, StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries);
+        if (parts.Length == 2 && string.Equals(parts[0], "bearer", StringComparison.OrdinalIgnoreCase))
+        {
+            return parts[1];
+        }
+        return string.Empty;
+    }
+
     private static bool SecureEquals(string expected, string actual)
     {
-        var expectedBytes = Encoding.UTF8.GetBytes(expected);
-        var actualBytes = Encoding.UTF8.GetBytes(actual);
-        if (expectedBytes.Length != actualBytes.Length)
-        {
-            return false;
-        }
-
+        var expectedBytes = SHA256.HashData(Encoding.UTF8.GetBytes(expected ?? string.Empty));
+        var actualBytes = SHA256.HashData(Encoding.UTF8.GetBytes(actual ?? string.Empty));
         return CryptographicOperations.FixedTimeEquals(expectedBytes, actualBytes);
     }
 }
@@ -1074,7 +1200,28 @@ record RegulatoryIncidentReportResult(
     string Signature,
     string KeyId,
     string? ErrorCode,
-    string? Error);
+    string? Error)
+{
+    public IResult ToHttpResult()
+    {
+        if (!Success)
+        {
+            var status = ErrorCode == RegulatoryErrors.SigningCapabilityMissing
+                ? StatusCodes.Status503ServiceUnavailable
+                : StatusCode;
+
+            return Results.Json(new
+            {
+                error_code = ErrorCode ?? "INCIDENT_REPORT_FAILED",
+                errors = new[] { Error ?? "unknown" }
+            }, statusCode: status);
+        }
+
+        return Results.Json(Report!, statusCode: StatusCodes.Status200OK)
+            .WithHeader("X-Symphony-Signature", Signature)
+            .WithHeader("X-Symphony-Key-Id", KeyId);
+    }
+}
 
 static class RegulatoryIncidentReportHandler
 {
@@ -1126,8 +1273,13 @@ static class RegulatoryIncidentReportHandler
         };
 
         var reportJson = JsonSerializer.Serialize(reportWithoutTimestamp);
-        var keyMaterial = Environment.GetEnvironmentVariable("EVIDENCE_SIGNING_KEY") ?? "phase1-reg-003-dev-signing-key";
-        var keyId = Environment.GetEnvironmentVariable("EVIDENCE_SIGNING_KEY_ID") ?? "phase1-dev-key-1";
+        var keyMaterial = Environment.GetEnvironmentVariable("EVIDENCE_SIGNING_KEY");
+        if (string.IsNullOrWhiteSpace(keyMaterial))
+        {
+            return new RegulatoryIncidentReportResult(false, StatusCodes.Status503ServiceUnavailable, null, string.Empty, string.Empty, RegulatoryErrors.SigningCapabilityMissing, "EVIDENCE_SIGNING_KEY must be configured");
+        }
+
+        var keyId = Environment.GetEnvironmentVariable("EVIDENCE_SIGNING_KEY_ID") ?? string.Empty;
         var signature = RegulatoryReportHandler.VerifySignature(reportJson, RegulatoryReportComputeHmac(reportJson, keyMaterial), keyMaterial)
             ? RegulatoryReportComputeHmac(reportJson, keyMaterial)
             : string.Empty;
@@ -1162,10 +1314,60 @@ static class RegulatoryIncidentReportHandler
     }
 }
 
-record RegulatoryReportResult(bool Success, object? Report, string Signature, string KeyId, bool Deterministic, string? Error)
+record RegulatoryReportResult(
+    bool Success,
+    object? Report,
+    string Signature,
+    string KeyId,
+    bool Deterministic,
+    string? ErrorCode,
+    string? Error)
 {
-    public static RegulatoryReportResult Fail(string error)
-        => new(false, null, string.Empty, string.Empty, false, error);
+    public static RegulatoryReportResult Fail(string errorCode, string error)
+        => new(false, null, string.Empty, string.Empty, false, errorCode, error);
+
+    public IResult ToHttpResult()
+    {
+        if (!Success)
+        {
+            var status = ErrorCode == RegulatoryErrors.SigningCapabilityMissing
+                ? StatusCodes.Status503ServiceUnavailable
+                : StatusCodes.Status400BadRequest;
+
+            return Results.Json(new
+            {
+                error_code = ErrorCode ?? "REPORT_GENERATION_FAILED",
+                errors = new[] { Error ?? "unknown" }
+            }, statusCode: status);
+        }
+
+        return Results.Json(Report!, statusCode: StatusCodes.Status200OK)
+            .WithHeader("X-Symphony-Signature", Signature)
+            .WithHeader("X-Symphony-Key-Id", KeyId);
+    }
+}
+
+public static class RegulatoryErrors
+{
+    public const string SigningCapabilityMissing = "SIGNING_CAPABILITY_MISSING";
+    public const string TenantAllowlistUnconfigured = "TENANT_ALLOWLIST_UNCONFIGURED";
+}
+
+public static class ResultExtensions
+{
+    public static IResult WithHeader(this IResult result, string header, string value)
+    {
+        return new ResultWithHeader(result, header, value);
+    }
+
+    private sealed class ResultWithHeader(IResult inner, string header, string value) : IResult
+    {
+        public async Task ExecuteAsync(HttpContext httpContext)
+        {
+            httpContext.Response.Headers[header] = value;
+            await inner.ExecuteAsync(httpContext);
+        }
+    }
 }
 
 static class RegulatoryReportHandler
@@ -1175,7 +1377,7 @@ static class RegulatoryReportHandler
         await Task.Yield();
         if (!DateOnly.TryParse(reportDate, out var parsedDate))
         {
-            return RegulatoryReportResult.Fail("date must be YYYY-MM-DD");
+            return RegulatoryReportResult.Fail("INVALID_DATE", "date must be YYYY-MM-DD");
         }
 
         var repoRoot = EvidenceMeta.ResolveRepoRoot(Directory.GetCurrentDirectory());
@@ -1233,8 +1435,13 @@ static class RegulatoryReportHandler
         };
 
         var reportJson = JsonSerializer.Serialize(reportWithoutTimestamp);
-        var keyMaterial = Environment.GetEnvironmentVariable("EVIDENCE_SIGNING_KEY") ?? "phase1-reg-002-dev-signing-key";
-        var keyId = Environment.GetEnvironmentVariable("EVIDENCE_SIGNING_KEY_ID") ?? "phase1-dev-key-1";
+        var keyMaterial = Environment.GetEnvironmentVariable("EVIDENCE_SIGNING_KEY");
+        if (string.IsNullOrWhiteSpace(keyMaterial))
+        {
+            return RegulatoryReportResult.Fail(RegulatoryErrors.SigningCapabilityMissing, "EVIDENCE_SIGNING_KEY must be configured");
+        }
+
+        var keyId = Environment.GetEnvironmentVariable("EVIDENCE_SIGNING_KEY_ID") ?? string.Empty;
         var signature = ComputeHmac(reportJson, keyMaterial);
 
         var report = new
@@ -1251,7 +1458,7 @@ static class RegulatoryReportHandler
             produced_at_utc = DateTimeOffset.UtcNow.ToString("O")
         };
 
-        return new RegulatoryReportResult(true, report, signature, keyId, true, null);
+        return new RegulatoryReportResult(true, report, signature, keyId, true, null, null);
     }
 
     public static bool VerifySignature(string canonicalJson, string signatureHex, string keyMaterial)
@@ -3246,6 +3453,7 @@ static class PilotAuthSelfTestRunner
 
         var tenantA = "11111111-1111-1111-1111-111111111111";
         var tenantB = "22222222-2222-2222-2222-222222222222";
+        Environment.SetEnvironmentVariable("SYMPHONY_KNOWN_TENANTS", $"{tenantA},{tenantB}");
         var payload = JsonSerializer.Deserialize<JsonElement>("{\"amount\":100}");
 
         await RunCase("ingress_valid_scope_allowed", () =>

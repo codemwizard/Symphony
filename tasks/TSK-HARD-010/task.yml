@@ -1,0 +1,12 @@
+id: TSK-HARD-010
+title: "Rail uncertainty model and inquiry policy framework"
+status: todo
+phase: "Hardening"
+wave: "1"
+depends_on:
+  - TSK-HARD-002
+verifier_command: "bash scripts/audit/verify_tsk_hard_010.sh"
+evidence_path: "evidence/phase1/hardening/tsk_hard_010.json"
+schema_path: "evidence/schemas/hardening/tsk_hard_010.schema.json"
+source_of_truth: "docs/programs/symphony-hardening/HARDENING_TASK_PACKS.md"
+canonical_reference: "docs/operations/AI_AGENT_OPERATION_MANUAL.md"

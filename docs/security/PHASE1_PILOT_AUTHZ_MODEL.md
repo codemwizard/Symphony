@@ -22,3 +22,8 @@ Default local catalog (used when env variable is unset):
 ## Deterministic Evidence
 - `evidence/phase1/authz_tenant_boundary.json`
 - `evidence/phase1/boz_access_boundary_runtime.json`
+
+## Language Scope
+This policy applies to all backend implementation languages in Symphony, including:
+- C# (.NET)
+- Python

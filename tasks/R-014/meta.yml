@@ -1,0 +1,19 @@
+id: R-014
+phase: '5'
+title: Decompose Program.cs monolith
+status: completed
+dependencies: []
+description: Refactor without changing behavior; keep existing self-test harness as
+  gate.
+affected_services:
+- security_remediation
+affected_files: []
+acceptance_criteria:
+- id: R-014-A1
+  description: Existing self-test gates pass (no xUnit dependency)
+verification_command: bash scripts/audit/run_dotnet_self_tests.sh
+evidence:
+  path: evidence/security_remediation/r_014_refactor.json
+implementation_plan_path: docs/plans/remediation/r_014/PLAN.md
+source_of_truth: docs/contracts/SECURITY_REMEDIATION_DOD.yml
+canonical_reference: docs/operations/AI_AGENT_OPERATION_MANUAL.md

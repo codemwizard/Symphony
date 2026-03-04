@@ -1,0 +1,43 @@
+phase: '1'
+task_id: TSK-HARD-060
+title: Canonicalization version registry
+owner_role: SUPERVISOR
+status: planned
+depends_on:
+- TSK-OPS-WAVE4-EXIT-GATE
+touches:
+- activation and deprecation metadata
+- canonicalization version registry store (append-only, independently queryable)
+- docs/programs/symphony-hardening/HARDENING_TASK_PACKS.md
+- evidence/phase1/hardening/tsk_hard_060.json
+- executable test vectors per version
+- one frozen entry per active canonicalization version
+- tasks/TSK-HARD-060/EXEC_LOG.md
+- tasks/TSK-HARD-060/PLAN.md
+invariants:
+- INV-HARDENING-CANONICAL-SOURCE
+work:
+- Implement the frozen canonicalization spec registry. Each version entry
+- Implement exactly per canonical task block in HARDENING_TASK_PACKS.md.
+acceptance_criteria:
+- registry exists and is independently queryable without operational runtime
+verification:
+- bash scripts/audit/verify_tsk_hard_060.sh
+evidence:
+- evidence/phase1/hardening/tsk_hard_060.json
+- evidence/schemas/hardening/tsk_hard_060.schema.json
+failure_modes:
+- spec document mutable after activation => FAIL_CLOSED
+- test vectors not executable => FAIL
+- registry entries deletable => FAIL_CLOSED
+- registry requires operational runtime to query => FAIL
+- negative-path tests absent => FAIL
+must_read:
+- docs/operations/AI_AGENT_OPERATION_MANUAL.md
+- docs/programs/symphony-hardening/HARDENING_TASK_PACKS.md
+implementation_plan: tasks/TSK-HARD-060/PLAN.md
+implementation_log: tasks/TSK-HARD-060/EXEC_LOG.md
+notes: Generated from canonical hardening task pack source; do not edit semantics here.
+client: codex_cli
+assigned_agent: supervisor
+model: gpt-5-codex

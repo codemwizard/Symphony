@@ -10,6 +10,13 @@ Define minimum expectations for audit logging integrity, retention, review caden
 - CI gate and evidence artifacts (Phase-0 evidence JSON under `evidence/phase0/` in CI artifacts).
 - Database migration application record (schema migrations ledger) and schema fingerprint evidence outputs.
 
+## Language Scope
+This policy applies to all languages and components in Symphony:
+- **C# (.NET)**: Application logs, ASP.NET Core request logging, Entity Framework audit events
+- **Python**: Application logs, psycopg2/asyncpg connection logging, SQLAlchemy audit events  
+- **Infrastructure**: OpenBao logs, CI/CD pipeline logs, database logs
+- **All components**: Must emit structured logs with timestamps and correlation IDs
+
 ## Integrity and Access
 - Audit logs must be append-only or WORM-anchored where feasible.
 - Access to audit logs is restricted to security/compliance operations.

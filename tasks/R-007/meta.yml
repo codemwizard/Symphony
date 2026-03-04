@@ -1,0 +1,26 @@
+id: R-007
+phase: '3'
+title: Pin OpenBao image + prod config + enable mlock
+status: completed
+dependencies: []
+description: Eliminate dev-mode secret mgmt and pin images.
+affected_services:
+- security_remediation
+affected_files:
+- OpenBao not dev in non-dev.
+- No dev root tokens outside examples.
+- Image pinned by digest.
+- mlock enabled where supported.
+acceptance_criteria:
+- id: R-007-A1
+  description: Verify OpenBao not dev
+- id: R-007-A2
+  description: Images pinned by digest
+verification_command: 'bash scripts/audit/verify_openbao_not_dev.sh
+
+  bash scripts/audit/verify_container_images_pinned.sh --service openbao'
+evidence:
+  path: evidence/security_remediation/r_007_openbao_hardening.json
+implementation_plan_path: docs/plans/remediation/r_007/PLAN.md
+source_of_truth: docs/contracts/SECURITY_REMEDIATION_DOD.yml
+canonical_reference: docs/operations/AI_AGENT_OPERATION_MANUAL.md

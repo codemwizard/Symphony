@@ -1,0 +1,49 @@
+phase: '1'
+task_id: TSK-HARD-000
+title: Hardening program charter and invariant baseline
+owner_role: SUPERVISOR
+status: planned
+depends_on: []
+touches:
+- docs/programs/symphony-hardening/CHARTER.md
+- docs/programs/symphony-hardening/DECISION_LOG.md
+- docs/programs/symphony-hardening/HARDENING_TASK_PACKS.md
+- docs/programs/symphony-hardening/MASTER_PLAN.md
+- docs/programs/symphony-hardening/SCOPE.md
+- docs/programs/symphony-hardening/TRACEABILITY_MATRIX.md
+- docs/programs/symphony-hardening/WAVE_PLAN.md
+- evidence/phase1/hardening/tsk_hard_000.json
+- tasks/TSK-HARD-000/EXEC_LOG.md
+- tasks/TSK-HARD-000/PLAN.md
+invariants:
+- INV-HARDENING-CANONICAL-SOURCE
+work:
+- Establish the hardening charter, program governance documents, and baseline
+- Implement exactly per canonical task block in HARDENING_TASK_PACKS.md.
+acceptance_criteria:
+- CHARTER.md exists, is non-empty, and names the program owner and approval authority
+- SCOPE.md exists and defines in-scope and explicitly out-of-scope items
+- DECISION_LOG.md exists with at least one entry (program inception decision)
+- MASTER_PLAN.md exists and references all six waves by name
+- WAVE_PLAN.md exists and lists all Wave-1 task IDs in canonical order
+- TRACEABILITY_MATRIX.md exists with one row per hardening task ID; each row has
+verification:
+- bash scripts/audit/verify_tsk_hard_000.sh
+evidence:
+- evidence/phase1/hardening/tsk_hard_000.json
+- evidence/schemas/hardening/tsk_hard_000.schema.json
+failure_modes:
+- any governance document missing => FAIL_CLOSED
+- TRACEABILITY_MATRIX.md absent => FAIL_CLOSED
+- invariant map references fewer than 12 invariants => FAIL
+- EXEC_LOG.md missing Canonical-Reference => FAIL
+- '[MICRO-FIX-1] WAVE_PLAN.md Wave-1 task ID list does not match canonical order'
+must_read:
+- docs/operations/AI_AGENT_OPERATION_MANUAL.md
+- docs/programs/symphony-hardening/HARDENING_TASK_PACKS.md
+implementation_plan: tasks/TSK-HARD-000/PLAN.md
+implementation_log: tasks/TSK-HARD-000/EXEC_LOG.md
+notes: Generated from canonical hardening task pack source; do not edit semantics here.
+client: codex_cli
+assigned_agent: supervisor
+model: gpt-5-codex

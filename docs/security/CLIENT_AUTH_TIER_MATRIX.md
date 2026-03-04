@@ -156,3 +156,7 @@ This matrix demonstrates that Symphony:
 - and maintains a governed upgrade path toward stronger identity assurance.
 
 This is evidence of intentional trust-boundary design, not ad hoc market compromise.
+## Language Scope
+This policy applies to all backend implementation languages in Symphony, including:
+- C# (.NET)
+- Python

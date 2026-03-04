@@ -1,0 +1,24 @@
+id: R-006
+phase: '2'
+title: Add rate limiting middleware + request size limits
+status: completed
+dependencies: []
+description: Reduce brute force and DoS risk.
+affected_services:
+- security_remediation
+affected_files:
+- Rate limiting enabled for sensitive endpoints.
+- Body size limits enforced.
+acceptance_criteria:
+- id: R-006-A1
+  description: 429 on burst
+- id: R-006-A2
+  description: 413 (or deterministic reject) on oversized body
+verification_command: 'bash scripts/audit/test_rate_limit_429.sh
+
+  bash scripts/audit/test_body_limit_413.sh'
+evidence:
+  path: evidence/security_remediation/r_006_rate_limits.json
+implementation_plan_path: docs/plans/remediation/r_006/PLAN.md
+source_of_truth: docs/contracts/SECURITY_REMEDIATION_DOD.yml
+canonical_reference: docs/operations/AI_AGENT_OPERATION_MANUAL.md

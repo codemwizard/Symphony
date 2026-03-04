@@ -1,0 +1,37 @@
+phase: '1'
+task_id: TSK-HARD-101
+title: Zambia MMO reality controls
+owner_role: SUPERVISOR
+status: planned
+depends_on:
+- TSK-HARD-094
+- TSK-OPS-A1-STABILITY-GATE
+touches:
+- MMO reality control rule set (metadata-driven, not per-MMO-name hardcoding)
+- docs/programs/symphony-hardening/HARDENING_TASK_PACKS.md
+- 'scenario coverage: ASYNC_CONTRADICTION, DELAYED_SETTLEMENT, DUAL_DEBIT_RISK,'
+- tasks/TSK-HARD-101/EXEC_LOG.md
+- tasks/TSK-HARD-101/PLAN.md
+invariants:
+- INV-HARDENING-CANONICAL-SOURCE
+work:
+- Encode the operational control set for Zambia MMO rail-specific failure
+- Implement exactly per canonical task block in HARDENING_TASK_PACKS.md.
+acceptance_criteria:
+- 'MMO reality control rule set defines at minimum: ASYNC_CONTRADICTION,'
+verification:
+- bash scripts/audit/verify_tsk_hard_101.sh
+evidence:
+- evidence/phase1/hardening/tsk_hard_101.json
+- evidence/schemas/hardening/tsk_hard_101.schema.json
+failure_modes:
+- rule matching uses hardcoded MMO name string => FAIL_CLOSED
+must_read:
+- docs/operations/AI_AGENT_OPERATION_MANUAL.md
+- docs/programs/symphony-hardening/HARDENING_TASK_PACKS.md
+implementation_plan: tasks/TSK-HARD-101/PLAN.md
+implementation_log: tasks/TSK-HARD-101/EXEC_LOG.md
+notes: Generated from canonical hardening task pack source; do not edit semantics here.
+client: codex_cli
+assigned_agent: supervisor
+model: gpt-5-codex

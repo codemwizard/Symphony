@@ -1,0 +1,43 @@
+phase: '1'
+task_id: TSK-HARD-021
+title: Approval stage model and quorum baseline
+owner_role: SUPERVISOR
+status: planned
+depends_on:
+- TSK-HARD-020
+touches:
+- approval stage table schema and migration
+- docs/programs/symphony-hardening/HARDENING_TASK_PACKS.md
+- evidence/phase1/hardening/tsk_hard_021.json
+- policy store entry for default quorum policy (N departments, threshold T)
+- quorum evaluation logic with role heterogeneity enforcement
+- quorum policy schema at evidence/schemas/hardening/adjustment_quorum_policy.schema.json
+- tasks/TSK-HARD-021/EXEC_LOG.md
+- tasks/TSK-HARD-021/PLAN.md
+invariants:
+- INV-HARDENING-CANONICAL-SOURCE
+work:
+- Implement the approval stage model that governs how an adjustment transitions
+- Implement exactly per canonical task block in HARDENING_TASK_PACKS.md.
+acceptance_criteria:
+- 'approval stage table exists with fields: stage_id, adjustment_id,'
+verification:
+- bash scripts/audit/verify_tsk_hard_021.sh
+evidence:
+- evidence/phase1/hardening/tsk_hard_021.json
+- evidence/schemas/hardening/tsk_hard_021.schema.json
+failure_modes:
+- quorum hardcoded per adjustment type => FAIL_CLOSED
+- same-department duplicate approvals satisfy quorum => FAIL_CLOSED
+- role heterogeneity not enforced at evaluation time => FAIL_CLOSED
+- policy_version_id absent from approval stage record => FAIL
+- in-place edit of active quorum policy permitted => FAIL_CLOSED
+must_read:
+- docs/operations/AI_AGENT_OPERATION_MANUAL.md
+- docs/programs/symphony-hardening/HARDENING_TASK_PACKS.md
+implementation_plan: tasks/TSK-HARD-021/PLAN.md
+implementation_log: tasks/TSK-HARD-021/EXEC_LOG.md
+notes: Generated from canonical hardening task pack source; do not edit semantics here.
+client: codex_cli
+assigned_agent: supervisor
+model: gpt-5-codex

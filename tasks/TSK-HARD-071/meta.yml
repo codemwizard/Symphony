@@ -1,0 +1,43 @@
+phase: '1'
+task_id: TSK-HARD-071
+title: Trust anchor archive and revocation material store
+owner_role: SUPERVISOR
+status: planned
+depends_on:
+- TSK-HARD-070
+touches:
+- docs/programs/symphony-hardening/HARDENING_TASK_PACKS.md
+- evidence/phase1/hardening/tsk_hard_071.json
+- independent restore test for each store
+- revocation material store (revoked key IDs, timestamps, reasons)
+- tasks/TSK-HARD-071/EXEC_LOG.md
+- tasks/TSK-HARD-071/PLAN.md
+- trust anchor snapshot store (versioned)
+- verification policy version archive
+invariants:
+- INV-HARDENING-CANONICAL-SOURCE
+work:
+- Produce versioned trust anchor snapshots, archive revocation material for
+- Implement exactly per canonical task block in HARDENING_TASK_PACKS.md.
+acceptance_criteria:
+- 'trust anchor snapshots exist and are versioned with: snapshot_id,'
+verification:
+- bash scripts/audit/verify_tsk_hard_071.sh
+evidence:
+- evidence/phase1/hardening/tsk_hard_071.json
+- evidence/schemas/hardening/tsk_hard_071.schema.json
+failure_modes:
+- revocation material not archived => FAIL_CLOSED
+- revocation records mutable => FAIL_CLOSED
+- verification policy versions not versioned => FAIL
+- any archived store not independently restorable => FAIL_CLOSED
+- negative-path test absent => FAIL
+must_read:
+- docs/operations/AI_AGENT_OPERATION_MANUAL.md
+- docs/programs/symphony-hardening/HARDENING_TASK_PACKS.md
+implementation_plan: tasks/TSK-HARD-071/PLAN.md
+implementation_log: tasks/TSK-HARD-071/EXEC_LOG.md
+notes: Generated from canonical hardening task pack source; do not edit semantics here.
+client: codex_cli
+assigned_agent: supervisor
+model: gpt-5-codex

@@ -1,0 +1,31 @@
+{
+  "task_id": "R-020",
+  "timestamp_utc": "2026-03-04T04:40:00Z",
+  "git_sha": "$(git rev-parse HEAD)",
+  "status": "PASS",
+  "rule_count": 13,
+  "languages": ["cs", "py"],
+  "tests_passed": true,
+  "checks": [
+    {
+      "id": "R-020-A1",
+      "description": "Verify semgrep --test passes",
+      "status": "PASS",
+      "details": {
+        "validation_successful": true,
+        "rules_found": 13
+      }
+    },
+    {
+      "id": "R-020-A2",
+      "description": "Verify rules cover Python and C#",
+      "status": "PASS",
+      "details": {
+        "cs_rules": 7,
+        "py_rules": 6,
+        "total_rules": 13
+      }
+    }
+  ],
+  "errors": []
+}

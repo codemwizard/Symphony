@@ -1,0 +1,43 @@
+phase: '1'
+task_id: TSK-HARD-016
+title: Malformed response quarantine and evidence capture
+owner_role: SUPERVISOR
+status: planned
+depends_on:
+- TSK-HARD-015
+- TSK-OPS-A1-STABILITY-GATE
+touches:
+- OOM-safe capture (test with oversized payload)
+- docs/programs/symphony-hardening/HARDENING_TASK_PACKS.md
+- evidence/phase1/hardening/tsk_hard_016.json
+- malformed payload quarantine store (persistent, queryable)
+- 'parser classification logic: TRANSPORT, PROTOCOL, SYNTAX, SEMANTIC'
+- payload hash stored alongside truncated capture
+- quarantine evidence artifact
+- retention lifecycle policy per quarantine record
+- streaming capture with hard truncation policy (first N KB, N from policy config)
+- tasks/TSK-HARD-016/EXEC_LOG.md
+- tasks/TSK-HARD-016/PLAN.md
+invariants:
+- INV-HARDENING-CANONICAL-SOURCE
+work:
+- Implement a dedicated quarantine store for malformed, toxic, or unparseable
+- Implement exactly per canonical task block in HARDENING_TASK_PACKS.md.
+acceptance_criteria:
+- quarantine capture occurs regardless of upstream HTTP status code returned to
+verification:
+- bash scripts/audit/verify_tsk_hard_016.sh
+evidence:
+- evidence/phase1/hardening/tsk_hard_016.json
+- evidence/schemas/hardening/tsk_hard_016.schema.json
+failure_modes:
+- quarantine capture absent when any response (including 500) was returned
+must_read:
+- docs/operations/AI_AGENT_OPERATION_MANUAL.md
+- docs/programs/symphony-hardening/HARDENING_TASK_PACKS.md
+implementation_plan: tasks/TSK-HARD-016/PLAN.md
+implementation_log: tasks/TSK-HARD-016/EXEC_LOG.md
+notes: Generated from canonical hardening task pack source; do not edit semantics here.
+client: codex_cli
+assigned_agent: supervisor
+model: gpt-5-codex

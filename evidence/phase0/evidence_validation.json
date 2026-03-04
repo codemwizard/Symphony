@@ -1,0 +1,641 @@
+{
+  "check_id": "EVIDENCE-SCHEMA-VALIDATION",
+  "timestamp_utc": "2026-03-04T03:17:00Z",
+  "git_sha": "0cca4e691cfcb5a1729ab79e08cf21858f5e9b58",
+  "schema_fingerprint": "8066e70aafdc28540785da569dfbda5ebb13a2710d7f31e1b395cf2b3323bb15",
+  "status": "PASS",
+  "checked_dirs": [
+    "/home/mwiza/workspace/Symphony/evidence/phase0",
+    "/home/mwiza/workspace/Symphony/evidence/phase1"
+  ],
+  "checked_files": [
+    "/home/mwiza/workspace/Symphony/evidence/phase0/TSK-P0-KYC-001.json",
+    "/home/mwiza/workspace/Symphony/evidence/phase0/TSK-P0-KYC-002.json",
+    "/home/mwiza/workspace/Symphony/evidence/phase0/TSK-P0-KYC-003.json",
+    "/home/mwiza/workspace/Symphony/evidence/phase0/TSK-P0-KYC-004.json",
+    "/home/mwiza/workspace/Symphony/evidence/phase0/audit_logging_retention_policy.json",
+    "/home/mwiza/workspace/Symphony/evidence/phase0/baseline_governance.json",
+    "/home/mwiza/workspace/Symphony/evidence/phase0/baseline_snapshot.json",
+    "/home/mwiza/workspace/Symphony/evidence/phase0/baseline_strategy.json",
+    "/home/mwiza/workspace/Symphony/evidence/phase0/batching_rules.json",
+    "/home/mwiza/workspace/Symphony/evidence/phase0/ci_toolchain.json",
+    "/home/mwiza/workspace/Symphony/evidence/phase0/compliance_manifest_verify.json",
+    "/home/mwiza/workspace/Symphony/evidence/phase0/control_planes_drift.json",
+    "/home/mwiza/workspace/Symphony/evidence/phase0/core_boundary.json",
+    "/home/mwiza/workspace/Symphony/evidence/phase0/db_fail_closed_roadmap.json",
+    "/home/mwiza/workspace/Symphony/evidence/phase0/ddl_allowlist_governance.json",
+    "/home/mwiza/workspace/Symphony/evidence/phase0/ddl_blocking_policy.json",
+    "/home/mwiza/workspace/Symphony/evidence/phase0/ddl_lock_risk.json",
+    "/home/mwiza/workspace/Symphony/evidence/phase0/doc_alignment.json",
+    "/home/mwiza/workspace/Symphony/evidence/phase0/drd_policy_usage.json",
+    "/home/mwiza/workspace/Symphony/evidence/phase0/evidence.json",
+    "/home/mwiza/workspace/Symphony/evidence/phase0/evidence_harness_integrity.json",
+    "/home/mwiza/workspace/Symphony/evidence/phase0/invariants_docs_match.json",
+    "/home/mwiza/workspace/Symphony/evidence/phase0/invariants_quick.json",
+    "/home/mwiza/workspace/Symphony/evidence/phase0/iso20022_contract_registry.json",
+    "/home/mwiza/workspace/Symphony/evidence/phase0/iso20022_readiness.json",
+    "/home/mwiza/workspace/Symphony/evidence/phase0/key_management_policy.json",
+    "/home/mwiza/workspace/Symphony/evidence/phase0/no_tx_docs.json",
+    "/home/mwiza/workspace/Symphony/evidence/phase0/openbao_audit_log.json",
+    "/home/mwiza/workspace/Symphony/evidence/phase0/openbao_smoke.json",
+    "/home/mwiza/workspace/Symphony/evidence/phase0/phase0_contract.json",
+    "/home/mwiza/workspace/Symphony/evidence/phase0/phase0_impl_plan.json",
+    "/home/mwiza/workspace/Symphony/evidence/phase0/pii_leakage_payloads.json",
+    "/home/mwiza/workspace/Symphony/evidence/phase0/proxy_resolution_invariant.json",
+    "/home/mwiza/workspace/Symphony/evidence/phase0/rebaseline_decision.json",
+    "/home/mwiza/workspace/Symphony/evidence/phase0/remediation_trace.json",
+    "/home/mwiza/workspace/Symphony/evidence/phase0/remediation_workflow_doc.json",
+    "/home/mwiza/workspace/Symphony/evidence/phase0/repo_structure.json",
+    "/home/mwiza/workspace/Symphony/evidence/phase0/routing_fallback.json",
+    "/home/mwiza/workspace/Symphony/evidence/phase0/routing_fallback_validation.json",
+    "/home/mwiza/workspace/Symphony/evidence/phase0/security_definer_dynamic_sql.json",
+    "/home/mwiza/workspace/Symphony/evidence/phase0/security_dotnet_deps_audit.json",
+    "/home/mwiza/workspace/Symphony/evidence/phase0/security_insecure_patterns.json",
+    "/home/mwiza/workspace/Symphony/evidence/phase0/security_secrets_scan.json",
+    "/home/mwiza/workspace/Symphony/evidence/phase0/security_secure_config_lint.json",
+    "/home/mwiza/workspace/Symphony/evidence/phase0/semgrep_sast.json",
+    "/home/mwiza/workspace/Symphony/evidence/phase0/skipped_gate_stubs.json",
+    "/home/mwiza/workspace/Symphony/evidence/phase0/sovereign_vpc_posture_doc.json",
+    "/home/mwiza/workspace/Symphony/evidence/phase0/sqlstate_map_drift.json",
+    "/home/mwiza/workspace/Symphony/evidence/phase0/structural_doc_linkage.json",
+    "/home/mwiza/workspace/Symphony/evidence/phase0/task_evidence_contract.json",
+    "/home/mwiza/workspace/Symphony/evidence/phase0/task_plans_present.json",
+    "/home/mwiza/workspace/Symphony/evidence/phase0/three_pillars_doc.json",
+    "/home/mwiza/workspace/Symphony/evidence/phase0/tsk_clean_001__task_metadata_truth_pass.json",
+    "/home/mwiza/workspace/Symphony/evidence/phase0/tsk_clean_002__kill_informational_only_perf_posture_everywhere.json",
+    "/home/mwiza/workspace/Symphony/evidence/phase0/tsk_p0_101__ordered_checks_runner_gating.json",
+    "/home/mwiza/workspace/Symphony/evidence/phase0/tsk_p0_102__enforce_file_evidence_dev_only_fail.json",
+    "/home/mwiza/workspace/Symphony/evidence/phase0/tsk_p0_103__single_payload_materialization.json",
+    "/home/mwiza/workspace/Symphony/evidence/phase0/tsk_p0_208__gate_invariant_linkage_audit.json",
+    "/home/mwiza/workspace/Symphony/evidence/phase0/tsk_p0_210__boz_observability_role_proof_include_set.json",
+    "/home/mwiza/workspace/Symphony/evidence/phase0/yaml_conventions_lint.json",
+    "/home/mwiza/workspace/Symphony/evidence/phase0/zero_trust_posture.json",
+    "/home/mwiza/workspace/Symphony/evidence/phase1/adp_001_adapter_contract_tests.json",
+    "/home/mwiza/workspace/Symphony/evidence/phase1/adp_002_simulated_rail_adapter.json",
+    "/home/mwiza/workspace/Symphony/evidence/phase1/adp_003_deterministic_rail_routing.json",
+    "/home/mwiza/workspace/Symphony/evidence/phase1/agent_conformance_architect.json",
+    "/home/mwiza/workspace/Symphony/evidence/phase1/agent_conformance_implementer.json",
+    "/home/mwiza/workspace/Symphony/evidence/phase1/agent_conformance_policy_guardian.json",
+    "/home/mwiza/workspace/Symphony/evidence/phase1/agent_role_mapping.json",
+    "/home/mwiza/workspace/Symphony/evidence/phase1/approval_metadata.json",
+    "/home/mwiza/workspace/Symphony/evidence/phase1/authz_tenant_boundary.json",
+    "/home/mwiza/workspace/Symphony/evidence/phase1/boz_access_boundary_runtime.json",
+    "/home/mwiza/workspace/Symphony/evidence/phase1/checkpoint__CS-0.json",
+    "/home/mwiza/workspace/Symphony/evidence/phase1/checkpoint__ESC.json",
+    "/home/mwiza/workspace/Symphony/evidence/phase1/checkpoint__HIER.json",
+    "/home/mwiza/workspace/Symphony/evidence/phase1/checkpoint__P0-DONE.json",
+    "/home/mwiza/workspace/Symphony/evidence/phase1/checkpoint__PERF-ENG.json",
+    "/home/mwiza/workspace/Symphony/evidence/phase1/checkpoint__PERF-REG.json",
+    "/home/mwiza/workspace/Symphony/evidence/phase1/dotnet_lint_quality.json",
+    "/home/mwiza/workspace/Symphony/evidence/phase1/evidence_pack_api_access_control.json",
+    "/home/mwiza/workspace/Symphony/evidence/phase1/evidence_pack_api_contract.json",
+    "/home/mwiza/workspace/Symphony/evidence/phase1/exception_case_pack_completeness.json",
+    "/home/mwiza/workspace/Symphony/evidence/phase1/exception_case_pack_generation.json",
+    "/home/mwiza/workspace/Symphony/evidence/phase1/executor_worker_fail_closed_paths.json",
+    "/home/mwiza/workspace/Symphony/evidence/phase1/executor_worker_runtime.json",
+    "/home/mwiza/workspace/Symphony/evidence/phase1/git_diff_semantics.json",
+    "/home/mwiza/workspace/Symphony/evidence/phase1/hier_008_sim_swap_alerts.json",
+    "/home/mwiza/workspace/Symphony/evidence/phase1/hier_009_instruction_hierarchy_sqlstates.json",
+    "/home/mwiza/workspace/Symphony/evidence/phase1/hier_010_program_migration.json",
+    "/home/mwiza/workspace/Symphony/evidence/phase1/hier_011_supervisor_access_mechanisms.json",
+    "/home/mwiza/workspace/Symphony/evidence/phase1/inf_002_container_build_pipeline.json",
+    "/home/mwiza/workspace/Symphony/evidence/phase1/inf_005_openbao_external_secrets.json",
+    "/home/mwiza/workspace/Symphony/evidence/phase1/ingress_ack_attestation_semantics.json",
+    "/home/mwiza/workspace/Symphony/evidence/phase1/ingress_api_contract_tests.json",
+    "/home/mwiza/workspace/Symphony/evidence/phase1/led_001_invariants_ci_cluster.json",
+    "/home/mwiza/workspace/Symphony/evidence/phase1/led_002_retention_archive_restore.json",
+    "/home/mwiza/workspace/Symphony/evidence/phase1/led_003_canonical_message_model.json",
+    "/home/mwiza/workspace/Symphony/evidence/phase1/led_004_kyc_hash_bridge_endpoint.json",
+    "/home/mwiza/workspace/Symphony/evidence/phase1/perf_003_rebaseline_sha_lock.json",
+    "/home/mwiza/workspace/Symphony/evidence/phase1/perf_004__perf_contracts_closeout_checks_extends_verify.json",
+    "/home/mwiza/workspace/Symphony/evidence/phase1/perf_005__regulatory_timing_compliance_gate.json",
+    "/home/mwiza/workspace/Symphony/evidence/phase1/perf_005a_finality_seam_stub.json",
+    "/home/mwiza/workspace/Symphony/evidence/phase1/perf_006__operational_risk_framework_translation_layer.json",
+    "/home/mwiza/workspace/Symphony/evidence/phase1/pilot_harness_replay.json",
+    "/home/mwiza/workspace/Symphony/evidence/phase1/pilot_onboarding_readiness.json",
+    "/home/mwiza/workspace/Symphony/evidence/phase1/product_kpi_readiness_report.json",
+    "/home/mwiza/workspace/Symphony/evidence/phase1/reg_002_daily_report_signed_output.json",
+    "/home/mwiza/workspace/Symphony/evidence/phase1/reg_003_incident_48h_export.json",
+    "/home/mwiza/workspace/Symphony/evidence/phase1/sandbox_deploy_manifest_posture.json",
+    "/home/mwiza/workspace/Symphony/evidence/phase1/ten_001_ingress_tenant_context.json",
+    "/home/mwiza/workspace/Symphony/evidence/phase1/ten_002_rls_leakage.json",
+    "/home/mwiza/workspace/Symphony/evidence/phase1/ten_003_tenant_onboarding_admin.json",
+    "/home/mwiza/workspace/Symphony/evidence/phase1/tsk_p1_202__closeout_verifier_scaffold_fail_if_contract.json",
+    "/home/mwiza/workspace/Symphony/evidence/phase1/tsk_p1_esc_002__escrow_invariants_cross_tenant_protections.json",
+    "/home/mwiza/workspace/Symphony/evidence/phase1/tsk_p1_hier_002__programs_program_escrow_id_bridge.json",
+    "/home/mwiza/workspace/Symphony/evidence/phase1/tsk_p1_hier_003__distribution_entities_tenant_denorm_ceilings.json",
+    "/home/mwiza/workspace/Symphony/evidence/phase1/tsk_p1_hier_004__person_model_explicit_enrollment.json",
+    "/home/mwiza/workspace/Symphony/evidence/phase1/tsk_p1_hier_005__member_devices_tenant_safe_reverse_lookup.json",
+    "/home/mwiza/workspace/Symphony/evidence/phase1/tsk_p1_hier_006__append_only_member_device_events_anchored.json",
+    "/home/mwiza/workspace/Symphony/evidence/phase1/tsk_p1_hier_007__risk_formula_registry_tier_deterministic_default.json",
+    "/home/mwiza/workspace/Symphony/evidence/phase1/tsk_p1_inf_001__postgres_ha_backups_pitr_operator.json",
+    "/home/mwiza/workspace/Symphony/evidence/phase1/tsk_p1_inf_003__k8s_manifests_migration_job_health_proof.json",
+    "/home/mwiza/workspace/Symphony/evidence/phase1/tsk_p1_inf_004__service_mtls_mesh.json",
+    "/home/mwiza/workspace/Symphony/evidence/phase1/tsk_p1_inf_006__evidence_signing_key_management_openbao_rotation.json",
+    "/home/mwiza/workspace/Symphony/evidence/phase1/tsk_p1_reg_001__boz_observability_role_read_only_views.json",
+    "/home/mwiza/workspace/Symphony/evidence/phase1/verify_agent_conformance_spec.json"
+  ],
+  "schema_usage": [
+    {
+      "file": "/home/mwiza/workspace/Symphony/evidence/phase0/TSK-P0-KYC-001.json",
+      "schema": "default"
+    },
+    {
+      "file": "/home/mwiza/workspace/Symphony/evidence/phase0/TSK-P0-KYC-002.json",
+      "schema": "default"
+    },
+    {
+      "file": "/home/mwiza/workspace/Symphony/evidence/phase0/TSK-P0-KYC-003.json",
+      "schema": "default"
+    },
+    {
+      "file": "/home/mwiza/workspace/Symphony/evidence/phase0/TSK-P0-KYC-004.json",
+      "schema": "default"
+    },
+    {
+      "file": "/home/mwiza/workspace/Symphony/evidence/phase0/audit_logging_retention_policy.json",
+      "schema": "default"
+    },
+    {
+      "file": "/home/mwiza/workspace/Symphony/evidence/phase0/baseline_governance.json",
+      "schema": "default"
+    },
+    {
+      "file": "/home/mwiza/workspace/Symphony/evidence/phase0/baseline_snapshot.json",
+      "schema": "default"
+    },
+    {
+      "file": "/home/mwiza/workspace/Symphony/evidence/phase0/baseline_strategy.json",
+      "schema": "default"
+    },
+    {
+      "file": "/home/mwiza/workspace/Symphony/evidence/phase0/batching_rules.json",
+      "schema": "default"
+    },
+    {
+      "file": "/home/mwiza/workspace/Symphony/evidence/phase0/ci_toolchain.json",
+      "schema": "default"
+    },
+    {
+      "file": "/home/mwiza/workspace/Symphony/evidence/phase0/compliance_manifest_verify.json",
+      "schema": "default"
+    },
+    {
+      "file": "/home/mwiza/workspace/Symphony/evidence/phase0/control_planes_drift.json",
+      "schema": "default"
+    },
+    {
+      "file": "/home/mwiza/workspace/Symphony/evidence/phase0/core_boundary.json",
+      "schema": "default"
+    },
+    {
+      "file": "/home/mwiza/workspace/Symphony/evidence/phase0/db_fail_closed_roadmap.json",
+      "schema": "default"
+    },
+    {
+      "file": "/home/mwiza/workspace/Symphony/evidence/phase0/ddl_allowlist_governance.json",
+      "schema": "default"
+    },
+    {
+      "file": "/home/mwiza/workspace/Symphony/evidence/phase0/ddl_blocking_policy.json",
+      "schema": "default"
+    },
+    {
+      "file": "/home/mwiza/workspace/Symphony/evidence/phase0/ddl_lock_risk.json",
+      "schema": "default"
+    },
+    {
+      "file": "/home/mwiza/workspace/Symphony/evidence/phase0/doc_alignment.json",
+      "schema": "default"
+    },
+    {
+      "file": "/home/mwiza/workspace/Symphony/evidence/phase0/drd_policy_usage.json",
+      "schema": "default"
+    },
+    {
+      "file": "/home/mwiza/workspace/Symphony/evidence/phase0/evidence.json",
+      "schema": "default"
+    },
+    {
+      "file": "/home/mwiza/workspace/Symphony/evidence/phase0/evidence_harness_integrity.json",
+      "schema": "default"
+    },
+    {
+      "file": "/home/mwiza/workspace/Symphony/evidence/phase0/invariants_docs_match.json",
+      "schema": "default"
+    },
+    {
+      "file": "/home/mwiza/workspace/Symphony/evidence/phase0/invariants_quick.json",
+      "schema": "default"
+    },
+    {
+      "file": "/home/mwiza/workspace/Symphony/evidence/phase0/iso20022_contract_registry.json",
+      "schema": "default"
+    },
+    {
+      "file": "/home/mwiza/workspace/Symphony/evidence/phase0/iso20022_readiness.json",
+      "schema": "default"
+    },
+    {
+      "file": "/home/mwiza/workspace/Symphony/evidence/phase0/key_management_policy.json",
+      "schema": "default"
+    },
+    {
+      "file": "/home/mwiza/workspace/Symphony/evidence/phase0/no_tx_docs.json",
+      "schema": "default"
+    },
+    {
+      "file": "/home/mwiza/workspace/Symphony/evidence/phase0/openbao_audit_log.json",
+      "schema": "default"
+    },
+    {
+      "file": "/home/mwiza/workspace/Symphony/evidence/phase0/openbao_smoke.json",
+      "schema": "default"
+    },
+    {
+      "file": "/home/mwiza/workspace/Symphony/evidence/phase0/phase0_contract.json",
+      "schema": "default"
+    },
+    {
+      "file": "/home/mwiza/workspace/Symphony/evidence/phase0/phase0_impl_plan.json",
+      "schema": "default"
+    },
+    {
+      "file": "/home/mwiza/workspace/Symphony/evidence/phase0/pii_leakage_payloads.json",
+      "schema": "default"
+    },
+    {
+      "file": "/home/mwiza/workspace/Symphony/evidence/phase0/proxy_resolution_invariant.json",
+      "schema": "default"
+    },
+    {
+      "file": "/home/mwiza/workspace/Symphony/evidence/phase0/rebaseline_decision.json",
+      "schema": "default"
+    },
+    {
+      "file": "/home/mwiza/workspace/Symphony/evidence/phase0/remediation_trace.json",
+      "schema": "default"
+    },
+    {
+      "file": "/home/mwiza/workspace/Symphony/evidence/phase0/remediation_workflow_doc.json",
+      "schema": "default"
+    },
+    {
+      "file": "/home/mwiza/workspace/Symphony/evidence/phase0/repo_structure.json",
+      "schema": "default"
+    },
+    {
+      "file": "/home/mwiza/workspace/Symphony/evidence/phase0/routing_fallback.json",
+      "schema": "default"
+    },
+    {
+      "file": "/home/mwiza/workspace/Symphony/evidence/phase0/routing_fallback_validation.json",
+      "schema": "default"
+    },
+    {
+      "file": "/home/mwiza/workspace/Symphony/evidence/phase0/security_definer_dynamic_sql.json",
+      "schema": "default"
+    },
+    {
+      "file": "/home/mwiza/workspace/Symphony/evidence/phase0/security_dotnet_deps_audit.json",
+      "schema": "default"
+    },
+    {
+      "file": "/home/mwiza/workspace/Symphony/evidence/phase0/security_insecure_patterns.json",
+      "schema": "default"
+    },
+    {
+      "file": "/home/mwiza/workspace/Symphony/evidence/phase0/security_secrets_scan.json",
+      "schema": "default"
+    },
+    {
+      "file": "/home/mwiza/workspace/Symphony/evidence/phase0/security_secure_config_lint.json",
+      "schema": "default"
+    },
+    {
+      "file": "/home/mwiza/workspace/Symphony/evidence/phase0/semgrep_sast.json",
+      "schema": "default"
+    },
+    {
+      "file": "/home/mwiza/workspace/Symphony/evidence/phase0/skipped_gate_stubs.json",
+      "schema": "default"
+    },
+    {
+      "file": "/home/mwiza/workspace/Symphony/evidence/phase0/sovereign_vpc_posture_doc.json",
+      "schema": "default"
+    },
+    {
+      "file": "/home/mwiza/workspace/Symphony/evidence/phase0/sqlstate_map_drift.json",
+      "schema": "default"
+    },
+    {
+      "file": "/home/mwiza/workspace/Symphony/evidence/phase0/structural_doc_linkage.json",
+      "schema": "default"
+    },
+    {
+      "file": "/home/mwiza/workspace/Symphony/evidence/phase0/task_evidence_contract.json",
+      "schema": "default"
+    },
+    {
+      "file": "/home/mwiza/workspace/Symphony/evidence/phase0/task_plans_present.json",
+      "schema": "default"
+    },
+    {
+      "file": "/home/mwiza/workspace/Symphony/evidence/phase0/three_pillars_doc.json",
+      "schema": "default"
+    },
+    {
+      "file": "/home/mwiza/workspace/Symphony/evidence/phase0/tsk_clean_001__task_metadata_truth_pass.json",
+      "schema": "default"
+    },
+    {
+      "file": "/home/mwiza/workspace/Symphony/evidence/phase0/tsk_clean_002__kill_informational_only_perf_posture_everywhere.json",
+      "schema": "default"
+    },
+    {
+      "file": "/home/mwiza/workspace/Symphony/evidence/phase0/tsk_p0_101__ordered_checks_runner_gating.json",
+      "schema": "default"
+    },
+    {
+      "file": "/home/mwiza/workspace/Symphony/evidence/phase0/tsk_p0_102__enforce_file_evidence_dev_only_fail.json",
+      "schema": "default"
+    },
+    {
+      "file": "/home/mwiza/workspace/Symphony/evidence/phase0/tsk_p0_103__single_payload_materialization.json",
+      "schema": "default"
+    },
+    {
+      "file": "/home/mwiza/workspace/Symphony/evidence/phase0/tsk_p0_208__gate_invariant_linkage_audit.json",
+      "schema": "default"
+    },
+    {
+      "file": "/home/mwiza/workspace/Symphony/evidence/phase0/tsk_p0_210__boz_observability_role_proof_include_set.json",
+      "schema": "default"
+    },
+    {
+      "file": "/home/mwiza/workspace/Symphony/evidence/phase0/yaml_conventions_lint.json",
+      "schema": "default"
+    },
+    {
+      "file": "/home/mwiza/workspace/Symphony/evidence/phase0/zero_trust_posture.json",
+      "schema": "default"
+    },
+    {
+      "file": "/home/mwiza/workspace/Symphony/evidence/phase1/adp_001_adapter_contract_tests.json",
+      "schema": "default"
+    },
+    {
+      "file": "/home/mwiza/workspace/Symphony/evidence/phase1/adp_002_simulated_rail_adapter.json",
+      "schema": "default"
+    },
+    {
+      "file": "/home/mwiza/workspace/Symphony/evidence/phase1/adp_003_deterministic_rail_routing.json",
+      "schema": "default"
+    },
+    {
+      "file": "/home/mwiza/workspace/Symphony/evidence/phase1/agent_conformance_architect.json",
+      "schema": "default"
+    },
+    {
+      "file": "/home/mwiza/workspace/Symphony/evidence/phase1/agent_conformance_implementer.json",
+      "schema": "default"
+    },
+    {
+      "file": "/home/mwiza/workspace/Symphony/evidence/phase1/agent_conformance_policy_guardian.json",
+      "schema": "default"
+    },
+    {
+      "file": "/home/mwiza/workspace/Symphony/evidence/phase1/agent_role_mapping.json",
+      "schema": "default"
+    },
+    {
+      "file": "/home/mwiza/workspace/Symphony/evidence/phase1/approval_metadata.json",
+      "schema": "approval_metadata"
+    },
+    {
+      "file": "/home/mwiza/workspace/Symphony/evidence/phase1/authz_tenant_boundary.json",
+      "schema": "default"
+    },
+    {
+      "file": "/home/mwiza/workspace/Symphony/evidence/phase1/boz_access_boundary_runtime.json",
+      "schema": "default"
+    },
+    {
+      "file": "/home/mwiza/workspace/Symphony/evidence/phase1/checkpoint__CS-0.json",
+      "schema": "default"
+    },
+    {
+      "file": "/home/mwiza/workspace/Symphony/evidence/phase1/checkpoint__ESC.json",
+      "schema": "default"
+    },
+    {
+      "file": "/home/mwiza/workspace/Symphony/evidence/phase1/checkpoint__HIER.json",
+      "schema": "default"
+    },
+    {
+      "file": "/home/mwiza/workspace/Symphony/evidence/phase1/checkpoint__P0-DONE.json",
+      "schema": "default"
+    },
+    {
+      "file": "/home/mwiza/workspace/Symphony/evidence/phase1/checkpoint__PERF-ENG.json",
+      "schema": "default"
+    },
+    {
+      "file": "/home/mwiza/workspace/Symphony/evidence/phase1/checkpoint__PERF-REG.json",
+      "schema": "default"
+    },
+    {
+      "file": "/home/mwiza/workspace/Symphony/evidence/phase1/dotnet_lint_quality.json",
+      "schema": "default"
+    },
+    {
+      "file": "/home/mwiza/workspace/Symphony/evidence/phase1/evidence_pack_api_access_control.json",
+      "schema": "default"
+    },
+    {
+      "file": "/home/mwiza/workspace/Symphony/evidence/phase1/evidence_pack_api_contract.json",
+      "schema": "default"
+    },
+    {
+      "file": "/home/mwiza/workspace/Symphony/evidence/phase1/exception_case_pack_completeness.json",
+      "schema": "default"
+    },
+    {
+      "file": "/home/mwiza/workspace/Symphony/evidence/phase1/exception_case_pack_generation.json",
+      "schema": "default"
+    },
+    {
+      "file": "/home/mwiza/workspace/Symphony/evidence/phase1/executor_worker_fail_closed_paths.json",
+      "schema": "default"
+    },
+    {
+      "file": "/home/mwiza/workspace/Symphony/evidence/phase1/executor_worker_runtime.json",
+      "schema": "default"
+    },
+    {
+      "file": "/home/mwiza/workspace/Symphony/evidence/phase1/git_diff_semantics.json",
+      "schema": "default"
+    },
+    {
+      "file": "/home/mwiza/workspace/Symphony/evidence/phase1/hier_008_sim_swap_alerts.json",
+      "schema": "default"
+    },
+    {
+      "file": "/home/mwiza/workspace/Symphony/evidence/phase1/hier_009_instruction_hierarchy_sqlstates.json",
+      "schema": "default"
+    },
+    {
+      "file": "/home/mwiza/workspace/Symphony/evidence/phase1/hier_010_program_migration.json",
+      "schema": "default"
+    },
+    {
+      "file": "/home/mwiza/workspace/Symphony/evidence/phase1/hier_011_supervisor_access_mechanisms.json",
+      "schema": "default"
+    },
+    {
+      "file": "/home/mwiza/workspace/Symphony/evidence/phase1/inf_002_container_build_pipeline.json",
+      "schema": "default"
+    },
+    {
+      "file": "/home/mwiza/workspace/Symphony/evidence/phase1/inf_005_openbao_external_secrets.json",
+      "schema": "default"
+    },
+    {
+      "file": "/home/mwiza/workspace/Symphony/evidence/phase1/ingress_ack_attestation_semantics.json",
+      "schema": "default"
+    },
+    {
+      "file": "/home/mwiza/workspace/Symphony/evidence/phase1/ingress_api_contract_tests.json",
+      "schema": "default"
+    },
+    {
+      "file": "/home/mwiza/workspace/Symphony/evidence/phase1/led_001_invariants_ci_cluster.json",
+      "schema": "default"
+    },
+    {
+      "file": "/home/mwiza/workspace/Symphony/evidence/phase1/led_002_retention_archive_restore.json",
+      "schema": "default"
+    },
+    {
+      "file": "/home/mwiza/workspace/Symphony/evidence/phase1/led_003_canonical_message_model.json",
+      "schema": "default"
+    },
+    {
+      "file": "/home/mwiza/workspace/Symphony/evidence/phase1/led_004_kyc_hash_bridge_endpoint.json",
+      "schema": "default"
+    },
+    {
+      "file": "/home/mwiza/workspace/Symphony/evidence/phase1/perf_003_rebaseline_sha_lock.json",
+      "schema": "default"
+    },
+    {
+      "file": "/home/mwiza/workspace/Symphony/evidence/phase1/perf_004__perf_contracts_closeout_checks_extends_verify.json",
+      "schema": "default"
+    },
+    {
+      "file": "/home/mwiza/workspace/Symphony/evidence/phase1/perf_005__regulatory_timing_compliance_gate.json",
+      "schema": "default"
+    },
+    {
+      "file": "/home/mwiza/workspace/Symphony/evidence/phase1/perf_005a_finality_seam_stub.json",
+      "schema": "default"
+    },
+    {
+      "file": "/home/mwiza/workspace/Symphony/evidence/phase1/perf_006__operational_risk_framework_translation_layer.json",
+      "schema": "default"
+    },
+    {
+      "file": "/home/mwiza/workspace/Symphony/evidence/phase1/pilot_harness_replay.json",
+      "schema": "default"
+    },
+    {
+      "file": "/home/mwiza/workspace/Symphony/evidence/phase1/pilot_onboarding_readiness.json",
+      "schema": "default"
+    },
+    {
+      "file": "/home/mwiza/workspace/Symphony/evidence/phase1/product_kpi_readiness_report.json",
+      "schema": "default"
+    },
+    {
+      "file": "/home/mwiza/workspace/Symphony/evidence/phase1/reg_002_daily_report_signed_output.json",
+      "schema": "default"
+    },
+    {
+      "file": "/home/mwiza/workspace/Symphony/evidence/phase1/reg_003_incident_48h_export.json",
+      "schema": "default"
+    },
+    {
+      "file": "/home/mwiza/workspace/Symphony/evidence/phase1/sandbox_deploy_manifest_posture.json",
+      "schema": "default"
+    },
+    {
+      "file": "/home/mwiza/workspace/Symphony/evidence/phase1/ten_001_ingress_tenant_context.json",
+      "schema": "default"
+    },
+    {
+      "file": "/home/mwiza/workspace/Symphony/evidence/phase1/ten_002_rls_leakage.json",
+      "schema": "default"
+    },
+    {
+      "file": "/home/mwiza/workspace/Symphony/evidence/phase1/ten_003_tenant_onboarding_admin.json",
+      "schema": "default"
+    },
+    {
+      "file": "/home/mwiza/workspace/Symphony/evidence/phase1/tsk_p1_202__closeout_verifier_scaffold_fail_if_contract.json",
+      "schema": "default"
+    },
+    {
+      "file": "/home/mwiza/workspace/Symphony/evidence/phase1/tsk_p1_esc_002__escrow_invariants_cross_tenant_protections.json",
+      "schema": "default"
+    },
+    {
+      "file": "/home/mwiza/workspace/Symphony/evidence/phase1/tsk_p1_hier_002__programs_program_escrow_id_bridge.json",
+      "schema": "default"
+    },
+    {
+      "file": "/home/mwiza/workspace/Symphony/evidence/phase1/tsk_p1_hier_003__distribution_entities_tenant_denorm_ceilings.json",
+      "schema": "default"
+    },
+    {
+      "file": "/home/mwiza/workspace/Symphony/evidence/phase1/tsk_p1_hier_004__person_model_explicit_enrollment.json",
+      "schema": "default"
+    },
+    {
+      "file": "/home/mwiza/workspace/Symphony/evidence/phase1/tsk_p1_hier_005__member_devices_tenant_safe_reverse_lookup.json",
+      "schema": "default"
+    },
+    {
+      "file": "/home/mwiza/workspace/Symphony/evidence/phase1/tsk_p1_hier_006__append_only_member_device_events_anchored.json",
+      "schema": "default"
+    },
+    {
+      "file": "/home/mwiza/workspace/Symphony/evidence/phase1/tsk_p1_hier_007__risk_formula_registry_tier_deterministic_default.json",
+      "schema": "default"
+    },
+    {
+      "file": "/home/mwiza/workspace/Symphony/evidence/phase1/tsk_p1_inf_001__postgres_ha_backups_pitr_operator.json",
+      "schema": "default"
+    },
+    {
+      "file": "/home/mwiza/workspace/Symphony/evidence/phase1/tsk_p1_inf_003__k8s_manifests_migration_job_health_proof.json",
+      "schema": "default"
+    },
+    {
+      "file": "/home/mwiza/workspace/Symphony/evidence/phase1/tsk_p1_inf_004__service_mtls_mesh.json",
+      "schema": "default"
+    },
+    {
+      "file": "/home/mwiza/workspace/Symphony/evidence/phase1/tsk_p1_inf_006__evidence_signing_key_management_openbao_rotation.json",
+      "schema": "default"
+    },
+    {
+      "file": "/home/mwiza/workspace/Symphony/evidence/phase1/tsk_p1_reg_001__boz_observability_role_read_only_views.json",
+      "schema": "default"
+    },
+    {
+      "file": "/home/mwiza/workspace/Symphony/evidence/phase1/verify_agent_conformance_spec.json",
+      "schema": "default"
+    }
+  ],
+  "errors": []
+}

@@ -297,3 +297,7 @@ If a task prompt omits these, it is underspecified.
 ## 11. Revision History
 
 - v1.0.0 — Initial canonical identity-boundary standard
+## Language Scope
+This policy applies to all backend implementation languages in Symphony, including:
+- C# (.NET)
+- Python

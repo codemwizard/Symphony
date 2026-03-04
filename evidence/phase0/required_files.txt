@@ -1,0 +1,7 @@
+docs/agents/ARCHITECT_PHASE0_PROMPT.md
+docs/PHASE0/phase-0-foundation.md
+docs/invariants/INVARIANTS_MANIFEST.yml
+docs/invariants/INVARIANTS_IMPLEMENTED.md
+docs/invariants/INVARIANTS_ROADMAP.md
+docs/invariants/INVARIANTS_QUICK.md
+.github/workflows/invariants.yml

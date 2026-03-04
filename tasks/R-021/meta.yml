@@ -1,0 +1,28 @@
+id: "R-021"
+phase: "0.5"
+title: "CI gate — parameterization is CI-enforced"
+status: "planned"
+dependencies: ["R-020"]
+description: "Make parameterization enforcement fail-closed in CI, with audited suppression."
+affected_services: ["security", "ci"]
+affected_files:
+  - ".github/workflows/**"
+  - "scripts/audit/verify_ci_security_scan_includes.sh"
+  - "scripts/audit/verify_security_scan_fail_closed.sh"
+  - "scripts/security/audit_lint_suppressions.sh"
+
+acceptance_criteria:
+  - id: R-021-A1
+    description: "security_scan runs lint_app_sql_injection and semgrep."
+  - id: R-021-A2
+    description: "security_scan is fail-closed."
+  - id: R-021-A3
+    description: "Suppressions require justification+expiry and are audited in CI."
+
+verification_command: |
+  bash scripts/audit/verify_ci_security_scan_includes.sh --require scripts/security/lint_app_sql_injection.sh --require semgrep
+  bash scripts/audit/verify_security_scan_fail_closed.sh
+  bash scripts/security/audit_lint_suppressions.sh
+evidence:
+  path: "evidence/security_remediation/r_021_ci_sql_guard.json"
+implementation_plan_path: "docs/plans/remediation/r_021/PLAN.md"

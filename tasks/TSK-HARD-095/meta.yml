@@ -1,0 +1,39 @@
+phase: '1'
+task_id: TSK-HARD-095
+title: BoZ submission audit trail primitives
+owner_role: SUPERVISOR
+status: planned
+depends_on:
+- TSK-HARD-093
+touches:
+- BoZ submission evidence schema at
+- docs/programs/symphony-hardening/HARDENING_TASK_PACKS.md
+- tasks/TSK-HARD-095/EXEC_LOG.md
+- tasks/TSK-HARD-095/PLAN.md
+invariants:
+- INV-HARDENING-CANONICAL-SOURCE
+work:
+- Implement the audit trail primitives for all BoZ regulatory submissions.
+- Implement exactly per canonical task block in HARDENING_TASK_PACKS.md.
+acceptance_criteria:
+- every BoZ regulatory submission produces an evidence artifact schema-valid
+verification:
+- bash scripts/audit/verify_tsk_hard_095.sh
+evidence:
+- evidence/phase1/hardening/tsk_hard_095.json
+- evidence/schemas/hardening/tsk_hard_095.schema.json
+failure_modes:
+- submission produces no evidence artifact => FAIL_CLOSED
+- submission evidence store not append-only => FAIL_CLOSED
+- access log absent or not append-only => FAIL_CLOSED
+- access log unsigned => FAIL
+- negative-path test absent => FAIL
+must_read:
+- docs/operations/AI_AGENT_OPERATION_MANUAL.md
+- docs/programs/symphony-hardening/HARDENING_TASK_PACKS.md
+implementation_plan: tasks/TSK-HARD-095/PLAN.md
+implementation_log: tasks/TSK-HARD-095/EXEC_LOG.md
+notes: Generated from canonical hardening task pack source; do not edit semantics here.
+client: codex_cli
+assigned_agent: supervisor
+model: gpt-5-codex

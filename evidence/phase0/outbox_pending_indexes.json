@@ -1,0 +1,18 @@
+{
+  "check_id": "DB-OUTBOX-PENDING-INDEXES",
+  "checked_objects": [
+    "public.payment_outbox_pending",
+    "public.idx_payment_outbox_pending_due_claim"
+  ],
+  "errors": [],
+  "expected_columns": "next_attempt_at,lease_expires_at,created_at",
+  "expected_index": "idx_payment_outbox_pending_due_claim",
+  "git_sha": "0cca4e691cfcb5a1729ab79e08cf21858f5e9b58",
+  "index_columns": "next_attempt_at,lease_expires_at,created_at",
+  "index_definition": "CREATE INDEX idx_payment_outbox_pending_due_claim ON public.payment_outbox_pending USING btree (next_attempt_at, lease_expires_at, created_at)",
+  "index_name": "idx_payment_outbox_pending_due_claim",
+  "ok": true,
+  "schema_fingerprint": "8066e70aafdc28540785da569dfbda5ebb13a2710d7f31e1b395cf2b3323bb15",
+  "status": "PASS",
+  "timestamp_utc": "2026-03-04T03:17:30Z"
+}

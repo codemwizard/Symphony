@@ -1,0 +1,42 @@
+phase: '1'
+task_id: TSK-HARD-024
+title: Terminal immutability enforcement (P7101) on adjustment tables
+owner_role: SUPERVISOR
+status: planned
+depends_on:
+- TSK-HARD-026
+touches:
+- P7101 trigger deployed on adjustment instruction table
+- docs/programs/symphony-hardening/HARDENING_TASK_PACKS.md
+- evidence/phase1/hardening/tsk_hard_024.json
+- negative-path test for each terminal state
+- tasks/TSK-HARD-024/EXEC_LOG.md
+- tasks/TSK-HARD-024/PLAN.md
+- 'terminal states covered: executed, denied, blocked_legal_hold'
+invariants:
+- INV-HARDENING-CANONICAL-SOURCE
+work:
+- Deploy the P7101 terminal immutability trigger on the adjustment
+- Implement exactly per canonical task block in HARDENING_TASK_PACKS.md.
+acceptance_criteria:
+- P7101 trigger exists on adjustment instruction table; verifier confirms
+verification:
+- bash scripts/audit/verify_tsk_hard_024.sh
+evidence:
+- evidence/phase1/hardening/tsk_hard_024.json
+- evidence/schemas/hardening/tsk_hard_024.schema.json
+failure_modes:
+- P7101 trigger absent from adjustment table => FAIL_CLOSED
+- direct UPDATE on any terminal state row permitted => FAIL_CLOSED
+- trigger covers fewer than three terminal states => FAIL
+- legitimate state transitions blocked by trigger => FAIL
+- negative-path test absent for any terminal state => FAIL
+must_read:
+- docs/operations/AI_AGENT_OPERATION_MANUAL.md
+- docs/programs/symphony-hardening/HARDENING_TASK_PACKS.md
+implementation_plan: tasks/TSK-HARD-024/PLAN.md
+implementation_log: tasks/TSK-HARD-024/EXEC_LOG.md
+notes: Generated from canonical hardening task pack source; do not edit semantics here.
+client: codex_cli
+assigned_agent: supervisor
+model: gpt-5-codex

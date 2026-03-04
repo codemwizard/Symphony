@@ -1,0 +1,45 @@
+phase: '1'
+task_id: TSK-HARD-053
+title: Key rotation drill evidence
+owner_role: SUPERVISOR
+status: planned
+depends_on:
+- TSK-HARD-052
+touches:
+- docs/operations/KEY_ROTATION_SOP.md
+- docs/programs/symphony-hardening/HARDENING_TASK_PACKS.md
+- emergency rotation drill evidence artifact
+- evidence/phase1/hardening/tsk_hard_053.json
+- post-rotation historical verification evidence
+- scheduled rotation drill evidence artifact
+- tasks/TSK-HARD-053/EXEC_LOG.md
+- tasks/TSK-HARD-053/PLAN.md
+invariants:
+- INV-HARDENING-CANONICAL-SOURCE
+work:
+- Implement and evidence the key rotation SOP for both scheduled and
+- Implement exactly per canonical task block in HARDENING_TASK_PACKS.md.
+acceptance_criteria:
+- 'KEY_ROTATION_SOP.md exists and covers: scheduled rotation flow with'
+verification:
+- bash scripts/audit/verify_tsk_hard_053.sh
+evidence:
+- evidence/phase1/hardening/tsk_hard_053.json
+- evidence/schemas/hardening/tsk_hard_053.schema.json
+failure_modes:
+- KEY_ROTATION_SOP.md absent => FAIL
+- emergency rotation not drilled => FAIL
+- new key activated before old key deactivated in emergency scenario => FAIL_CLOSED
+- historical verification broken after rotation => FAIL_CLOSED
+- post-rotation verification uses operational key store => FAIL_CLOSED
+- rotation evidence not meta-signed => FAIL
+- negative-path test absent => FAIL
+must_read:
+- docs/operations/AI_AGENT_OPERATION_MANUAL.md
+- docs/programs/symphony-hardening/HARDENING_TASK_PACKS.md
+implementation_plan: tasks/TSK-HARD-053/PLAN.md
+implementation_log: tasks/TSK-HARD-053/EXEC_LOG.md
+notes: Generated from canonical hardening task pack source; do not edit semantics here.
+client: codex_cli
+assigned_agent: supervisor
+model: gpt-5-codex

@@ -1,0 +1,274 @@
+{
+  "check_id": "PHASE0-CONTRACT-EVIDENCE-STATUS",
+  "timestamp_utc": "2026-03-04T03:19:11Z",
+  "git_sha": "0cca4e691cfcb5a1729ab79e08cf21858f5e9b58",
+  "schema_fingerprint": "8066e70aafdc28540785da569dfbda5ebb13a2710d7f31e1b395cf2b3323bb15",
+  "status": "PASS",
+  "errors": [],
+  "checked": [
+    {
+      "task_id": "TSK-P0-004",
+      "gate_id": "SEC-G02",
+      "evidence": "evidence/phase0/ddl_lock_risk.json",
+      "status": "PASS"
+    },
+    {
+      "task_id": "TSK-P0-006",
+      "gate_id": "SEC-G05",
+      "evidence": "evidence/phase0/openbao_smoke.json",
+      "status": "PASS"
+    },
+    {
+      "task_id": "TSK-P0-007",
+      "gate_id": "INT-G12",
+      "evidence": "evidence/phase0/routing_fallback.json",
+      "status": "PASS"
+    },
+    {
+      "task_id": "TSK-P0-008",
+      "gate_id": "INT-G11",
+      "evidence": "evidence/phase0/batching_rules.json",
+      "status": "PASS"
+    },
+    {
+      "task_id": "TSK-P0-011",
+      "gate_id": "INT-G01",
+      "evidence": "evidence/phase0/evidence_validation.json",
+      "status": "PASS"
+    },
+    {
+      "task_id": "TSK-P0-014",
+      "gate_id": "SEC-G03",
+      "evidence": "evidence/phase0/security_definer_dynamic_sql.json",
+      "status": "PASS"
+    },
+    {
+      "task_id": "TSK-P0-015",
+      "gate_id": "INT-G13",
+      "evidence": "evidence/phase0/routing_fallback_validation.json",
+      "status": "PASS"
+    },
+    {
+      "task_id": "TSK-P0-016",
+      "gate_id": "INT-G11",
+      "evidence": "evidence/phase0/batching_rules.json",
+      "status": "PASS"
+    },
+    {
+      "task_id": "TSK-P0-020",
+      "gate_id": "INT-G22",
+      "evidence": "evidence/phase0/outbox_pending_indexes.json",
+      "status": "PASS"
+    },
+    {
+      "task_id": "TSK-P0-026",
+      "gate_id": "SEC-G01",
+      "evidence": "evidence/phase0/core_boundary.json",
+      "status": "PASS"
+    },
+    {
+      "task_id": "TSK-P0-027",
+      "gate_id": "INT-G09",
+      "evidence": "evidence/phase0/doc_alignment.json",
+      "status": "PASS"
+    },
+    {
+      "task_id": "TSK-P0-028",
+      "gate_id": "INT-G18",
+      "evidence": "evidence/phase0/db_fail_closed_roadmap.json",
+      "status": "PASS"
+    },
+    {
+      "task_id": "TSK-P0-032",
+      "gate_id": "INT-G22",
+      "evidence": "evidence/phase0/outbox_pending_indexes.json",
+      "status": "PASS"
+    },
+    {
+      "task_id": "TSK-P0-033",
+      "gate_id": "INT-G10",
+      "evidence": "evidence/phase0/no_tx_docs.json",
+      "status": "PASS"
+    },
+    {
+      "task_id": "TSK-P0-034",
+      "gate_id": "INT-G17",
+      "evidence": "evidence/phase0/invariants_docs_match.json",
+      "status": "PASS"
+    },
+    {
+      "task_id": "TSK-P0-035",
+      "gate_id": "INT-G08",
+      "evidence": "evidence/phase0/proxy_resolution_invariant.json",
+      "status": "PASS"
+    },
+    {
+      "task_id": "TSK-P0-037",
+      "gate_id": "INT-G03",
+      "evidence": "evidence/phase0/phase0_contract.json",
+      "status": "PASS"
+    },
+    {
+      "task_id": "TSK-P0-038",
+      "gate_id": "INT-G04",
+      "evidence": "evidence/phase0/sqlstate_map_drift.json",
+      "status": "PASS"
+    },
+    {
+      "task_id": "TSK-P0-040",
+      "gate_id": "INT-G03",
+      "evidence": "evidence/phase0/phase0_contract.json",
+      "status": "PASS"
+    },
+    {
+      "task_id": "TSK-P0-040",
+      "gate_id": "INT-G04",
+      "evidence": "evidence/phase0/sqlstate_map_drift.json",
+      "status": "PASS"
+    },
+    {
+      "task_id": "TSK-P0-044",
+      "gate_id": "INT-G05",
+      "evidence": "evidence/phase0/baseline_governance.json",
+      "status": "PASS"
+    },
+    {
+      "task_id": "TSK-P0-045",
+      "gate_id": "SEC-G04",
+      "evidence": "evidence/phase0/ddl_allowlist_governance.json",
+      "status": "PASS"
+    },
+    {
+      "task_id": "TSK-P0-046",
+      "gate_id": "INT-G07",
+      "evidence": "evidence/phase0/phase0_impl_plan.json",
+      "status": "PASS"
+    },
+    {
+      "task_id": "TSK-P0-047",
+      "gate_id": "INT-G06",
+      "evidence": "evidence/phase0/rebaseline_decision.json",
+      "status": "PASS"
+    },
+    {
+      "task_id": "TSK-P0-050",
+      "gate_id": "INT-G14",
+      "evidence": "evidence/phase0/three_pillars_doc.json",
+      "status": "PASS"
+    },
+    {
+      "task_id": "TSK-P0-051",
+      "gate_id": "INT-G15",
+      "evidence": "evidence/phase0/control_planes_drift.json",
+      "status": "PASS"
+    },
+    {
+      "task_id": "TSK-P0-052",
+      "gate_id": "SEC-G07",
+      "evidence": "evidence/phase0/security_secrets_scan.json",
+      "status": "PASS"
+    },
+    {
+      "task_id": "TSK-P0-052",
+      "gate_id": "SEC-G08",
+      "evidence": "evidence/phase0/security_dotnet_deps_audit.json",
+      "status": "PASS"
+    },
+    {
+      "task_id": "TSK-P0-052",
+      "gate_id": "SEC-G09",
+      "evidence": "evidence/phase0/security_secure_config_lint.json",
+      "status": "PASS"
+    },
+    {
+      "task_id": "TSK-P0-052",
+      "gate_id": "SEC-G10",
+      "evidence": "evidence/phase0/security_insecure_patterns.json",
+      "status": "PASS"
+    },
+    {
+      "task_id": "TSK-P0-054",
+      "gate_id": "GOV-G01",
+      "evidence": "evidence/phase0/compliance_manifest_verify.json",
+      "status": "PASS"
+    },
+    {
+      "task_id": "TSK-P0-055",
+      "gate_id": "INT-G15",
+      "evidence": "evidence/phase0/control_planes_drift.json",
+      "status": "PASS"
+    },
+    {
+      "task_id": "TSK-P0-056",
+      "gate_id": "INT-G01",
+      "evidence": "evidence/phase0/evidence_validation.json",
+      "status": "PASS"
+    },
+    {
+      "task_id": "TSK-P0-057",
+      "gate_id": "INT-G16",
+      "evidence": "evidence/phase0/yaml_conventions_lint.json",
+      "status": "PASS"
+    },
+    {
+      "task_id": "TSK-P0-058",
+      "gate_id": "SEC-G06",
+      "evidence": "evidence/phase0/ci_toolchain.json",
+      "status": "PASS"
+    },
+    {
+      "task_id": "TSK-P0-061",
+      "gate_id": "INT-G20",
+      "evidence": "evidence/phase0/ci_order.json",
+      "status": "PASS"
+    },
+    {
+      "task_id": "TSK-P0-062",
+      "gate_id": "INT-G16",
+      "evidence": "evidence/phase0/yaml_conventions_lint.json",
+      "status": "PASS"
+    },
+    {
+      "task_id": "TSK-P0-065",
+      "gate_id": "INT-G03",
+      "evidence": "evidence/phase0/phase0_contract.json",
+      "status": "PASS"
+    },
+    {
+      "task_id": "TSK-P0-066",
+      "gate_id": "INT-G03",
+      "evidence": "evidence/phase0/phase0_contract.json",
+      "status": "PASS"
+    },
+    {
+      "task_id": "TSK-P0-067",
+      "gate_id": "INT-G20",
+      "evidence": "evidence/phase0/ci_order.json",
+      "status": "PASS"
+    },
+    {
+      "task_id": "TSK-P0-087",
+      "gate_id": "SEC-G06",
+      "evidence": "evidence/phase0/ci_toolchain.json",
+      "status": "PASS"
+    },
+    {
+      "task_id": "TSK-P0-121",
+      "gate_id": "GOV-G02",
+      "evidence": "evidence/phase0/remediation_trace.json",
+      "status": "PASS"
+    },
+    {
+      "task_id": "TSK-P0-208",
+      "gate_id": "INT-G15",
+      "evidence": "evidence/phase0/control_planes_drift.json",
+      "status": "PASS"
+    },
+    {
+      "task_id": "TSK-P0-210",
+      "gate_id": "INT-G23",
+      "evidence": "evidence/phase0/boz_observability_role.json",
+      "status": "PASS"
+    }
+  ]
+}

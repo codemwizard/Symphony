@@ -1,0 +1,31 @@
+{
+  "check_id": "PHASE1-EXECUTOR-WORKER-RUNTIME",
+  "timestamp_utc": "2026-03-04T03:14:38Z",
+  "git_sha": "0cca4e691cfcb5a1729ab79e08cf21858f5e9b58",
+  "schema_fingerprint": "0cca4e6",
+  "status": "PASS",
+  "tests_passed": 4,
+  "tests_failed": 0,
+  "results": [
+    {
+      "name": "success_dispatch_writes_attempt_once",
+      "status": "PASS",
+      "detail": "deterministic expectation met"
+    },
+    {
+      "name": "retry_then_success_is_append_only",
+      "status": "PASS",
+      "detail": "deterministic expectation met"
+    },
+    {
+      "name": "fail_closed_on_completion_error",
+      "status": "PASS",
+      "detail": "deterministic expectation met"
+    },
+    {
+      "name": "lease_fencing_fail_closed",
+      "status": "PASS",
+      "detail": "deterministic expectation met"
+    }
+  ]
+}

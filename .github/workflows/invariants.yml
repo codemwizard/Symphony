@@ -446,7 +446,7 @@ jobs:
     if: always() && github.event_name != 'schedule'
     services:
       postgres:
-        image: postgres:18
+        image: postgres:18@sha256:69e8582b781cb44fa4557b98ed586fe68361e320d9b12f9707494335634f4f3d
         env:
           POSTGRES_USER: symphony
           POSTGRES_PASSWORD: symphony
@@ -697,8 +697,31 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          chmod +x scripts/security/lint_security_definer_dynamic_sql.sh
-          scripts/security/lint_security_definer_dynamic_sql.sh
+          chmod +x scripts/security/lint_security_definer_search_path.sh
+          scripts/security/lint_security_definer_search_path.sh
+
+      - name: Run application SQL injection lint
+        shell: bash
+        run: |
+          set -euo pipefail
+          chmod +x scripts/security/lint_app_sql_injection.sh
+          scripts/security/lint_app_sql_injection.sh
+
+      - name: Run LedgerApi xUnit tests
+        shell: bash
+        run: |
+          set -euo pipefail
+          dotnet test services/ledger-api/dotnet/tests/LedgerApi.Tests/LedgerApi.Tests.csproj --configuration Release --nologo
+
+      - name: Run Semgrep SAST (C# + Python)
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [[ -f security/semgrep/rules.yml ]]; then
+            semgrep --config=security/semgrep/rules.yml --quiet --error
+          else
+            echo "security/semgrep/rules.yml not found; skipping Semgrep scan"
+          fi
 
       - name: Run OpenBao bootstrap + smoke test
         shell: bash

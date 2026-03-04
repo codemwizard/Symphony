@@ -1016,3 +1016,39 @@
     Enforces append-only sim_swap_alerts rows derived from member_device_events via
     hardened derive_sim_swap_alert(), with one alert per source_event_id and non-null
     formula_version_id linkage for traceable risk formula provenance.
+
+- id: INV-130
+  aliases: ["SEC-001", "I-SEC-07"]
+  status: roadmap
+  severity: P0
+  title: "Admin bind localhost (supervisor_api)"
+  owners: ["team-security"]
+  sla_days: 14
+  verification: "scripts/audit/verify_supervisor_bind_localhost.sh"
+
+- id: INV-131
+  aliases: ["SEC-002", "I-SEC-08"]
+  status: roadmap
+  severity: P0
+  title: "Admin auth required (supervisor_api)"
+  owners: ["team-security"]
+  sla_days: 14
+  verification: "scripts/audit/test_admin_endpoints_require_key.sh"
+
+- id: INV-132
+  aliases: ["SEC-003", "I-SEC-09"]
+  status: roadmap
+  severity: P0
+  title: "Fail-closed on missing secrets (signing keys)"
+  owners: ["team-security"]
+  sla_days: 14
+  verification: "scripts/security/scan_secrets.sh"
+
+- id: INV-133
+  aliases: ["SEC-004", "I-SEC-10"]
+  status: roadmap
+  severity: P0
+  title: "Tenant allowlist default-deny"
+  owners: ["team-security"]
+  sla_days: 14
+  verification: "scripts/audit/test_tenant_allowlist_deny_all.sh"

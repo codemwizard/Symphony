@@ -10,6 +10,13 @@ Define minimum secure development and delivery controls that must be enforced me
 - Local and CI runs must be aligned (parity). Where parity is intentionally asymmetric, it must be explicit and evidence-backed.
 - Exceptions must be explicit, timeboxed, and recorded with evidence.
 
+## Language Scope
+This policy applies to all development languages in Symphony:
+- **C# (.NET)**: .NET dependency audit, secure configuration, SAST via Semgrep
+- **Python**: Dependency audit (pip), secure configuration, SAST via Semgrep  
+- **Infrastructure**: Terraform/CloudFormation security scanning, workflow validation
+- **All languages**: Must pass SAST baseline and security gates
+
 ## Required Phase-0 Gates (Minimum)
 - Secrets scanning.
 - Dependency vulnerability audit (.NET).

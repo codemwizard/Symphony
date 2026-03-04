@@ -1,0 +1,29 @@
+id: "R-019"
+phase: "0.5"
+title: "Lint scope expansion + real SQL injection lint"
+status: "completed"
+dependencies: ["R-018"]
+description: "Fix misleading lint naming and implement actual application-layer SQLi detection for C# and Python."
+affected_services: ["security", "audit"]
+affected_files:
+  - "scripts/security/lint_sql_injection.sh"
+  - "scripts/security/lint_security_definer_search_path.sh"
+  - "scripts/security/lint_app_sql_injection.sh"
+  - "scripts/security/lint_insecure_patterns.sh"
+  - "scripts/security/run_lint_fixtures.sh"
+
+acceptance_criteria:
+  - id: R-019-A1
+    description: "Misnamed lint renamed and references updated."
+  - id: R-019-A2
+    description: "lint_app_sql_injection.sh runs in security_scan."
+  - id: R-019-A3
+    description: "Fixture suite enforces bad fails, good passes."
+
+verification_command: |
+  bash scripts/audit/verify_lint_renames_applied.sh
+  bash scripts/security/lint_app_sql_injection.sh
+  bash scripts/security/run_lint_fixtures.sh --suite app_sql_injection
+evidence:
+  path: "evidence/security_remediation/r_019_lint_coverage.json"
+implementation_plan_path: "docs/plans/remediation/r_019/PLAN.md"

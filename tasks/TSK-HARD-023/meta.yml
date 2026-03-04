@@ -1,0 +1,41 @@
+phase: '1'
+task_id: TSK-HARD-023
+title: Recipient inheritance enforcement
+owner_role: SUPERVISOR
+status: planned
+depends_on:
+- TSK-HARD-022
+touches:
+- docs/programs/symphony-hardening/HARDENING_TASK_PACKS.md
+- evidence/phase1/hardening/tsk_hard_023.json
+- issue_adjustment() interface with recipient parameter removed
+- recipient resolution logic (from parent instruction at execution time)
+- redirect exploit negative-path test
+- tasks/TSK-HARD-023/EXEC_LOG.md
+- tasks/TSK-HARD-023/PLAN.md
+invariants:
+- INV-HARDENING-CANONICAL-SOURCE
+work:
+- Enforce that the recipient of an adjustment is inherited exclusively from
+- Implement exactly per canonical task block in HARDENING_TASK_PACKS.md.
+acceptance_criteria:
+- issue_adjustment() function/API signature does not contain a recipient,
+verification:
+- bash scripts/audit/verify_tsk_hard_023.sh
+evidence:
+- evidence/phase1/hardening/tsk_hard_023.json
+- evidence/schemas/hardening/tsk_hard_023.schema.json
+failure_modes:
+- recipient accepted as an input parameter => FAIL_CLOSED
+- redirect exploit not blocked (mismatched recipient applied) => FAIL_CLOSED
+- recipient resolved from caller input rather than parent instruction => FAIL_CLOSED
+- negative-path tests absent => FAIL
+must_read:
+- docs/operations/AI_AGENT_OPERATION_MANUAL.md
+- docs/programs/symphony-hardening/HARDENING_TASK_PACKS.md
+implementation_plan: tasks/TSK-HARD-023/PLAN.md
+implementation_log: tasks/TSK-HARD-023/EXEC_LOG.md
+notes: Generated from canonical hardening task pack source; do not edit semantics here.
+client: codex_cli
+assigned_agent: supervisor
+model: gpt-5-codex

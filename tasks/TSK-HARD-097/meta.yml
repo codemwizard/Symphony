@@ -1,0 +1,41 @@
+phase: '1'
+task_id: TSK-HARD-097
+title: Recovery continuity proof — end-to-end DR path
+owner_role: SUPERVISOR
+status: planned
+depends_on:
+- TSK-HARD-074
+touches:
+- continuity evidence artifact
+- docs/programs/symphony-hardening/HARDENING_TASK_PACKS.md
+- end-to-end recovery continuity test script
+- evidence/phase1/hardening/tsk_hard_097.json
+- tasks/TSK-HARD-097/EXEC_LOG.md
+- tasks/TSK-HARD-097/PLAN.md
+invariants:
+- INV-HARDENING-CANONICAL-SOURCE
+work:
+- Produce evidence that the full recovery path from DR bundle retrieval
+- Implement exactly per canonical task block in HARDENING_TASK_PACKS.md.
+acceptance_criteria:
+- 'end-to-end test performs these steps in order: (1) retrieve DR bundle via'
+verification:
+- bash scripts/audit/verify_tsk_hard_097.sh
+evidence:
+- evidence/phase1/hardening/tsk_hard_097.json
+- evidence/schemas/hardening/tsk_hard_097.schema.json
+failure_modes:
+- any step accesses operational runtime => FAIL_CLOSED
+- fewer than three distinct artifact types verified => FAIL
+- any step not individually evidenced => FAIL
+- continuity evidence artifact not schema-valid => FAIL
+- test passes without performing quorum ceremony => FAIL_CLOSED
+must_read:
+- docs/operations/AI_AGENT_OPERATION_MANUAL.md
+- docs/programs/symphony-hardening/HARDENING_TASK_PACKS.md
+implementation_plan: tasks/TSK-HARD-097/PLAN.md
+implementation_log: tasks/TSK-HARD-097/EXEC_LOG.md
+notes: Generated from canonical hardening task pack source; do not edit semantics here.
+client: codex_cli
+assigned_agent: supervisor
+model: gpt-5-codex

@@ -1,0 +1,23 @@
+id: R-005
+phase: '2'
+title: Fix SecureEquals length leak (hash-then-compare)
+status: completed
+dependencies: []
+description: Prevent timing side-channel via length-based early returns.
+affected_services:
+- security_remediation
+affected_files:
+- Normalize inputs to fixed-length (hash) and compare constant-time.
+acceptance_criteria:
+- id: R-005-A1
+  description: Semgrep timing compare rule passes
+- id: R-005-A2
+  description: Self-test covers secure compare behavior
+verification_command: 'semgrep --config security/semgrep --error
+
+  bash scripts/audit/test_secure_equals_no_length_leak.sh'
+evidence:
+  path: evidence/security_remediation/r_005_secure_equals.json
+implementation_plan_path: docs/plans/remediation/r_005/PLAN.md
+source_of_truth: docs/contracts/SECURITY_REMEDIATION_DOD.yml
+canonical_reference: docs/operations/AI_AGENT_OPERATION_MANUAL.md

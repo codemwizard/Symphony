@@ -1,0 +1,21 @@
+id: TSK-OPS-WAVE1-EXIT-GATE
+title: "Wave-1 Exit Gate"
+status: todo
+phase: "Hardening"
+wave: "1"
+depends_on:
+  - TSK-OPS-A1-STABILITY-GATE
+  - TSK-HARD-012
+  - TSK-HARD-013
+  - TSK-HARD-014
+  - TSK-HARD-015
+  - TSK-HARD-016
+  - TSK-HARD-017
+  - TSK-HARD-094
+  - TSK-HARD-101
+  - TSK-HARD-013B
+verifier_command: "bash scripts/audit/verify_program_wave1_exit_gate.sh"
+evidence_path: "evidence/phase1/program_wave1_exit_gate.json"
+schema_path: "evidence/schemas/hardening/wave1_exit/wave1_exit_gate.schema.json"
+source_of_truth: "docs/programs/symphony-hardening/HARDENING_TASK_PACKS.md"
+canonical_reference: "docs/operations/AI_AGENT_OPERATION_MANUAL.md"

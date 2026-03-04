@@ -1,0 +1,30 @@
+{
+  "check_id": "DB-TENANT-MEMBER-HOOKS",
+  "timestamp_utc": "2026-03-04T03:17:32Z",
+  "git_sha": "0cca4e691cfcb5a1729ab79e08cf21858f5e9b58",
+  "schema_fingerprint": "8066e70aafdc28540785da569dfbda5ebb13a2710d7f31e1b395cf2b3323bb15",
+  "status": "PASS",
+  "details": {
+    "checks": [
+      "tenants_table=t",
+      "tenant_clients_table=t",
+      "tenant_members_table=t",
+      "ingress_tenant_id_col=t",
+      "ingress_tenant_id_uuid=t",
+      "ingress_tenant_id_not_null=t",
+      "ingress_client_id_col=t",
+      "ingress_client_id_hash_col=t",
+      "ingress_member_id_col=t",
+      "ingress_participant_id_col=t",
+      "ingress_cert_fingerprint_col=t",
+      "ingress_token_jti_hash_col=t",
+      "ingress_tenant_instruction_unique=t",
+      "member_tenant_match_fn=t",
+      "member_tenant_match_trigger=t",
+      "outbox_pending_tenant_id_col=t",
+      "outbox_attempts_tenant_id_col=t",
+      "outbox_attempts_member_id_col=t"
+    ],
+    "failures": []
+  }
+}

@@ -1,0 +1,41 @@
+{
+  "check_id": "PHASE1-AUTHZ-TENANT-BOUNDARY",
+  "timestamp_utc": "2026-03-04T03:15:05Z",
+  "git_sha": "0cca4e691cfcb5a1729ab79e08cf21858f5e9b58",
+  "schema_fingerprint": "0cca4e6",
+  "status": "PASS",
+  "tests_passed": 6,
+  "tests_failed": 0,
+  "results": [
+    {
+      "Name": "ingress_valid_scope_allowed",
+      "Status": "PASS",
+      "Detail": "deterministic expectation met"
+    },
+    {
+      "Name": "ingress_cross_tenant_denied",
+      "Status": "PASS",
+      "Detail": "deterministic expectation met"
+    },
+    {
+      "Name": "ingress_cross_participant_denied",
+      "Status": "PASS",
+      "Detail": "deterministic expectation met"
+    },
+    {
+      "Name": "missing_api_key_denied",
+      "Status": "PASS",
+      "Detail": "deterministic expectation met"
+    },
+    {
+      "Name": "read_with_valid_key_allowed",
+      "Status": "PASS",
+      "Detail": "deterministic expectation met"
+    },
+    {
+      "Name": "read_missing_key_denied",
+      "Status": "PASS",
+      "Detail": "deterministic expectation met"
+    }
+  ]
+}

@@ -1,0 +1,42 @@
+phase: '1'
+task_id: TSK-HARD-081
+title: Rail Command Center v1
+owner_role: SUPERVISOR
+status: planned
+depends_on:
+- TSK-HARD-080
+touches:
+- alert evidence artifact per threshold breach
+- command center UI or API with all six dashboards
+- configurable alert thresholds per dashboard
+- docs/programs/symphony-hardening/HARDENING_TASK_PACKS.md
+- evidence/phase1/hardening/tsk_hard_081.json
+- tasks/TSK-HARD-081/EXEC_LOG.md
+- tasks/TSK-HARD-081/PLAN.md
+invariants:
+- INV-HARDENING-CANONICAL-SOURCE
+work:
+- Implement the Rail Command Center v1 operational dashboard with exactly
+- Implement exactly per canonical task block in HARDENING_TASK_PACKS.md.
+acceptance_criteria:
+- all six dashboards present and individually verifiable; no dashboard may
+verification:
+- bash scripts/audit/verify_tsk_hard_081.sh
+evidence:
+- evidence/phase1/hardening/tsk_hard_081.json
+- evidence/schemas/hardening/tsk_hard_081.schema.json
+failure_modes:
+- any of the six dashboards absent => FAIL
+- any dashboard threshold not configurable => FAIL
+- threshold breach produces no alert evidence artifact => FAIL
+- alert evidence artifact not schema-valid => FAIL
+- threshold loaded from hardcoded constant => FAIL_CLOSED
+must_read:
+- docs/operations/AI_AGENT_OPERATION_MANUAL.md
+- docs/programs/symphony-hardening/HARDENING_TASK_PACKS.md
+implementation_plan: tasks/TSK-HARD-081/PLAN.md
+implementation_log: tasks/TSK-HARD-081/EXEC_LOG.md
+notes: Generated from canonical hardening task pack source; do not edit semantics here.
+client: codex_cli
+assigned_agent: supervisor
+model: gpt-5-codex

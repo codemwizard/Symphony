@@ -1,0 +1,13 @@
+id: TSK-HARD-016
+title: "Malformed response quarantine and evidence capture"
+status: todo
+phase: "Hardening"
+wave: "1"
+depends_on:
+  - TSK-HARD-015
+  - TSK-OPS-A1-STABILITY-GATE
+verifier_command: "bash scripts/audit/verify_tsk_hard_016.sh"
+evidence_path: "evidence/phase1/hardening/tsk_hard_016.json"
+schema_path: "evidence/schemas/hardening/tsk_hard_016.schema.json"
+source_of_truth: "docs/programs/symphony-hardening/HARDENING_TASK_PACKS.md"
+canonical_reference: "docs/operations/AI_AGENT_OPERATION_MANUAL.md"

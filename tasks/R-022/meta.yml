@@ -1,0 +1,24 @@
+id: "R-022"
+phase: "0.5"
+title: "Security tooling coverage contract"
+status: "planned"
+dependencies: ["R-021"]
+description: "Fail CI if languages exist without scanners, and fail if declared tools are missing."
+affected_services: ["security", "ci"]
+affected_files:
+  - "docs/contracts/SECURITY_SCAN_SCOPE.yml"
+  - "scripts/audit/validate_scan_scope_contract.sh"
+  - "scripts/audit/verify_scan_scope.sh"
+
+acceptance_criteria:
+  - id: R-022-A1
+    description: "SECURITY_SCAN_SCOPE.yml validates against schema."
+  - id: R-022-A2
+    description: "verify_scan_scope.sh enforces python-present => scanned."
+
+verification_command: |
+  bash scripts/audit/validate_scan_scope_contract.sh
+  bash scripts/audit/verify_scan_scope.sh
+evidence:
+  path: "evidence/security_remediation/r_022_scan_scope.json"
+implementation_plan_path: "docs/plans/remediation/r_022/PLAN.md"

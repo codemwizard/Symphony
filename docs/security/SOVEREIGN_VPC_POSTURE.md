@@ -20,3 +20,8 @@ Phase-0 is documentation and mechanical presence only. Runtime enforcement and a
 * Phase-0 supports "deploy in customer VPC" as a target posture by providing mechanical governance and schema readiness proofs.
 * Phase-1+ adds runtime adapters and attestation channels; Phase-0 does not include production traffic or external rail integration.
 
+
+## Language Scope
+This policy applies to all backend implementation languages in Symphony, including:
+- C# (.NET)
+- Python

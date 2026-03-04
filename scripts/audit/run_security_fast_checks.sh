@@ -29,7 +29,7 @@ done
 echo ""
 echo "==> Required security scripts present"
 REQ=(
-  "scripts/security/lint_sql_injection.sh"
+  "scripts/security/lint_security_definer_search_path.sh"
   "scripts/security/lint_privilege_grants.sh"
   "scripts/security/lint_core_boundary.sh"
   "scripts/security/scan_secrets.sh"
@@ -47,7 +47,7 @@ done
 
 echo ""
 echo "==> Run security lints"
-run scripts/security/lint_sql_injection.sh
+run scripts/security/lint_security_definer_search_path.sh
 run scripts/security/lint_privilege_grants.sh
 run scripts/security/lint_core_boundary.sh
 run scripts/security/scan_secrets.sh

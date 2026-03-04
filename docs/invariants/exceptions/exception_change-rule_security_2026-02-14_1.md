@@ -6,6 +6,7 @@ follow_up_ticket: FOLLOWUP-P1-SEC-GRANT-LINT-NO-SEMICOLON
 reason: Security lint hardened to fail closed for forbidden CREATE grants without semicolons.
 author: codex
 created_at: 2026-02-14
+closed_at: 2026-03-04
 ---
 
 # Exception: security structural change without invariants linkage

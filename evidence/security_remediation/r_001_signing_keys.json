@@ -1,0 +1,11 @@
+{
+  "task_id": "R-001",
+  "git_sha": "45e7a2c3de3ff4199628e94995e6c72dc39418f7",
+  "timestamp_utc": "2026-03-04T02:54:29Z",
+  "status": "PASS",
+  "checks": [{"id":"verify-literal-keys-removed","description":"Verify 'dev-signing-key' literals are removed","status":"PASS","details":{}},{"id":"verify-structural-fallbacks-removed","description":"Verify ?? coalesce fallbacks are structurally removed","status":"PASS","details":{}},{"id":"verify-startup-posture-false","description":"Verify health endpoint advertises signing_key_present=false","status":"PASS","details":{"raw_response":"{\"status\":\"ok\",\"signing_key_present\":false,\"tenant_allowlist_configured\":true,\"git_sha\":\"45e7a2c3de3ff4199628e94995e6c72dc39418f7\",\"env_profile\":\"unknown\"}\n"}},{"id":"verify-endpoint-503","description":"Verify regulatory endpoint returns 503 exactly","status":"PASS","details":{"http_code":503,"error_code":"SIGNING_CAPABILITY_MISSING"}}],
+  "hardcoded_fallbacks_found": 0,
+  "fails_closed_without_key": true,
+  "signing_capable_at_startup": false,
+  "signing_endpoint_returns_503_when_key_missing": true
+}

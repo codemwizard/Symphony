@@ -1,0 +1,18 @@
+id: R-013
+phase: '4'
+title: Audit git history for key material
+status: completed
+dependencies: []
+description: Detect/remediate leaked secrets in git history.
+affected_services:
+- security_remediation
+affected_files: []
+acceptance_criteria:
+- id: R-013-A1
+  description: History scan report exists
+verification_command: bash scripts/audit/verify_history_secret_scan_report_present.sh
+evidence:
+  path: evidence/security_remediation/r_013_git_secret_audit.json
+implementation_plan_path: docs/plans/remediation/r_013/PLAN.md
+source_of_truth: docs/contracts/SECURITY_REMEDIATION_DOD.yml
+canonical_reference: docs/operations/AI_AGENT_OPERATION_MANUAL.md
