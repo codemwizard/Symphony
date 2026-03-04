@@ -42,10 +42,10 @@ cs_found=false
 py_found=false
 
 while IFS= read -r line; do
-    if [[ "$line" =~ ^[[:space:]]*- id:[[:space:]]*\"cs\" ]]; then
+    if echo "$line" | grep -Eq '^[[:space:]]*-[[:space:]]*id:[[:space:]]*"cs"'; then
         cs_found=true
     fi
-    if [[ "$line" =~ ^[[:space:]]*- id:[[:space:]]*\"py\" ]]; then
+    if echo "$line" | grep -Eq '^[[:space:]]*-[[:space:]]*id:[[:space:]]*"py"'; then
         py_found=true
     fi
 done < "$CONTRACT_FILE"
