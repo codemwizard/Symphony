@@ -7,7 +7,7 @@ origin_task_id: R-003,R-004,R-005,R-006,R-007,R-008,R-009,R-010
 - `RUN_PHASE1_GATES=1 scripts/dev/pre_ci.sh`
 
 ## actions_taken
-- Implemented API authorization hardening (query token rejection, bearer acceptance).
+- Implemented API authorization hardening (query token rejection, authorization-header token acceptance).
 - Implemented hash-then-compare SecureEquals.
 - Implemented global rate-limiting and request body-size guard.
 - Added OpenBao production hardening artifacts and CI image digest pinning for Postgres.

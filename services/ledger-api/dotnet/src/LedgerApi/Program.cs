@@ -467,7 +467,7 @@ static class ApiAuthorization
             {
                 ack = false,
                 error_code = "UNAUTHORIZED_TOKEN_TRANSPORT",
-                errors = new[] { "querystring token transport is not allowed; use Authorization: Bearer or x-api-key" }
+                errors = new[] { "querystring token transport is not allowed; use Authorization header token or x-api-key" }
             });
         }
 
@@ -485,7 +485,7 @@ static class ApiAuthorization
         var presentedKey = ReadHeader(httpContext, "x-api-key");
         if (string.IsNullOrWhiteSpace(presentedKey))
         {
-            presentedKey = ReadBearerToken(httpContext);
+            presentedKey = ReadAuthorizationToken(httpContext);
         }
         if (string.IsNullOrWhiteSpace(presentedKey) || !SecureEquals(configuredKey, presentedKey))
         {
@@ -596,7 +596,7 @@ static class ApiAuthorization
             return new HandlerResult(StatusCodes.Status401Unauthorized, new
             {
                 error_code = "UNAUTHORIZED_TOKEN_TRANSPORT",
-                errors = new[] { "querystring token transport is not allowed; use Authorization: Bearer or x-api-key" }
+                errors = new[] { "querystring token transport is not allowed; use Authorization header token or x-api-key" }
             });
         }
 
@@ -613,7 +613,7 @@ static class ApiAuthorization
         var presentedKey = ReadHeader(httpContext, "x-api-key");
         if (string.IsNullOrWhiteSpace(presentedKey))
         {
-            presentedKey = ReadBearerToken(httpContext);
+            presentedKey = ReadAuthorizationToken(httpContext);
         }
         if (string.IsNullOrWhiteSpace(presentedKey) || !SecureEquals(configuredKey, presentedKey))
         {
@@ -655,12 +655,13 @@ static class ApiAuthorization
     private static string ReadHeader(HttpContext context, string name)
         => context.Request.Headers.TryGetValue(name, out var value) ? value.ToString() : string.Empty;
 
-    private static string ReadBearerToken(HttpContext context)
+    private static string ReadAuthorizationToken(HttpContext context)
     {
         var authorization = ReadHeader(context, "Authorization");
-        if (authorization.StartsWith("Bearer ", StringComparison.OrdinalIgnoreCase))
+        var parts = authorization.Split(' ', 2, StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries);
+        if (parts.Length == 2 && string.Equals(parts[0], "bearer", StringComparison.OrdinalIgnoreCase))
         {
-            return authorization["Bearer ".Length..].Trim();
+            return parts[1];
         }
         return string.Empty;
     }
