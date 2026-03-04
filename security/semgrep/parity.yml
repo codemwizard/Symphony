@@ -1,0 +1,22 @@
+version: 1
+
+# Coverage classes are the unit of parity (not raw rule counts).
+# Rule IDs must match the rule identifiers in security/semgrep/rules.yml.
+#
+# Fixture layout contract (required by verify_semgrep_parity.sh):
+#   security/semgrep/tests/<class>/<lang>/
+# where <lang> is one of: python, csharp
+#
+# NOTE: Only include classes that have real rules today. Add more classes only
+# after corresponding rule IDs exist in rules.yml and fixtures exist.
+classes:
+  sqli:
+    csharp_rule_ids:
+      - symphony-dotnet-sql-commandtext-concat
+      - symphony-dotnet-string-format-sql
+      - symphony-dotnet-interpolation-sql
+    python_rule_ids:
+      - symphony-python-sql-concat
+      - symphony-python-f-string-sql
+      - symphony-python-percent-format-sql
+      - symphony-python-string-format-sql
