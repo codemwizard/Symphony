@@ -1,24 +1,48 @@
-id: R-016
-phase: '5'
-title: Extract runtime self-tests from Program.cs
-status: planned
-dependencies:
-- R-014
-- R-015
-description: Move embedded runtime self-tests out of Program.cs into a dedicated test host/tool so production startup path cannot execute test code.
-affected_services:
-- security_remediation
-affected_files:
-- services/ledger-api/dotnet/src/LedgerApi/Program.cs
-- services/ledger-api/dotnet/**
-- scripts/audit/**
-- .github/workflows/**
+schema_version: "1"
+phase: "0.5"
+task_id: "R-016"
+title: "Extract runtime self-tests from Program.cs"
+owner_role: "SECURITY_GUARDIAN"
+status: "planned"
+
+depends_on:
+  - "R-014"
+  - "R-015"
+
+touches:
+  - "services/ledger-api/dotnet/src/LedgerApi/Program.cs"
+  - "services/ledger-api/dotnet/**"
+  - "scripts/audit/**"
+  - ".github/workflows/**"
+
+invariants: []
+
+work:
+  - "Move embedded runtime self-tests out of Program.cs into a dedicated runner."
+  - "Ensure production startup path does not execute test code."
+  - "Keep dedicated verification command for extracted runtime self-tests."
+
 acceptance_criteria:
-- id: R-016-A1
-  description: Runtime self-tests are not dispatched from Program.cs and are executed via dedicated test host/runner
-verification_command: bash scripts/audit/verify_runtime_self_tests_extracted.sh
+  - "Runtime self-tests are not dispatched from Program.cs."
+  - "Runtime self-tests execute via a dedicated test host/runner."
+
+verification:
+  - "bash scripts/audit/verify_runtime_self_tests_extracted.sh"
+
 evidence:
-  path: evidence/security_remediation/r_016_runtime_selftests_extracted.json
-implementation_plan_path: docs/plans/remediation/r_016/PLAN.md
-source_of_truth: docs/contracts/SECURITY_REMEDIATION_DOD.yml
-canonical_reference: docs/operations/AI_AGENT_OPERATION_MANUAL.md
+  - "evidence/security_remediation/r_016_runtime_selftests_extracted.json"
+
+failure_modes:
+  - "Runtime self-tests remain callable from Program.cs startup path."
+  - "No dedicated runner path exists for runtime self-tests."
+
+must_read:
+  - "docs/contracts/SECURITY_REMEDIATION_DOD.yml"
+  - "docs/operations/AI_AGENT_OPERATION_MANUAL.md"
+
+notes: "Extract runtime self-tests from production startup path."
+client: "gemini_agent"
+assigned_agent: "security_guardian"
+model: "Gemini 3.1 Pro"
+implementation_plan: "docs/plans/remediation/r_016/PLAN.md"
+implementation_log: "docs/plans/remediation/r_016/EXEC_LOG.md"
