@@ -1,41 +1,39 @@
 {
   "task_id": "R-021",
-  "timestamp_utc": "2026-03-04T04:40:00Z",
-  "git_sha": "$(git rev-parse HEAD)",
+  "git_sha": "d1841acccfa86da0659b43ee5c05fae527acf4b3",
+  "timestamp_utc": "2026-03-04T20:18:47Z",
   "status": "PASS",
-  "lint_enabled": true,
-  "semgrep_enabled": true,
-  "fail_closed_confirmed": true,
-  "suppression_audit_enabled": true,
   "checks": [
     {
       "id": "R-021-A1",
-      "description": "Verify security_scan runs lint_app_sql_injection and semgrep",
+      "description": "security_scan runs lint_app_sql_injection and semgrep",
       "status": "PASS",
       "details": {
-        "lint_app_sql_injection_included": true,
-        "semgrep_included": true
+        "lint_app_sql_injection": true,
+        "semgrep": true
       }
     },
     {
       "id": "R-021-A2",
-      "description": "Verify security_scan is fail-closed",
+      "description": "security_scan is fail-closed",
       "status": "PASS",
       "details": {
-        "no_continue_on_error": true,
-        "failure_handling_present": true
+        "continue_on_error": false,
+        "pipefail_present": true
       }
     },
     {
       "id": "R-021-A3",
-      "description": "Verify suppressions require justification+expiry and are audited",
+      "description": "Suppressions require justification+expiry and are audited in CI",
       "status": "PASS",
       "details": {
-        "audit_script_exists": true,
-        "justification_required": true,
-        "expiry_tracking": true
+        "suppression_audit_script": true,
+        "scan_scope": "git_tracked"
       }
     }
   ],
-  "errors": []
+  "lint_enabled": true,
+  "semgrep_enabled": true,
+  "fail_closed_confirmed": true,
+  "suppression_audit_enabled": true
 }
