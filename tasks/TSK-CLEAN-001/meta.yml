@@ -1,23 +1,29 @@
-phase: "0"
-task_id: "TSK-CLEAN-001"
-title: "Task metadata truth pass"
-owner_role: "SUPERVISOR"
-status: "completed"
-
+schema_version: 1
+phase: '0'
+task_id: TSK-CLEAN-001
+title: Task metadata truth pass
+owner_role: SUPERVISOR
+status: completed
 depends_on: []
-
 touches:
-  - "tasks/TSK-CLEAN-001/meta.yml"
-  - "scripts/audit/verify_tsk_clean_001.sh"
-  - "scripts/audit/verify_task_evidence_contract.sh"
-  - "scripts/dev/pre_ci.sh"
-
+- tasks/TSK-CLEAN-001/meta.yml
+- scripts/audit/verify_tsk_clean_001.sh
+- scripts/audit/verify_task_evidence_contract.sh
+- scripts/dev/pre_ci.sh
+invariants: []
+work: []
+acceptance_criteria: []
 verification:
-  - "bash scripts/audit/verify_tsk_clean_001.sh --evidence evidence/phase0/tsk_clean_001__task_metadata_truth_pass.json"
-  - "RUN_PHASE1_GATES=1 scripts/dev/pre_ci.sh"
-
+- bash scripts/audit/verify_tsk_clean_001.sh --evidence evidence/phase0/tsk_clean_001__task_metadata_truth_pass.json
+- RUN_PHASE1_GATES=1 scripts/dev/pre_ci.sh
 evidence:
-  - "evidence/phase0/tsk_clean_001__task_metadata_truth_pass.json"
-
+- evidence/phase0/tsk_clean_001__task_metadata_truth_pass.json
+failure_modes: []
 must_read:
-  - "docs/operations/AI_AGENT_OPERATION_MANUAL.md"
+- docs/operations/AI_AGENT_OPERATION_MANUAL.md
+implementation_plan: ''
+implementation_log: ''
+notes: ''
+client: codex_cli
+assigned_agent: supervisor
+model: <UNASSIGNED>

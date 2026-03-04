@@ -1,3 +1,4 @@
+schema_version: 1
 phase: '1'
 task_id: TSK-OPS-WAVE4-EXIT-GATE
 title: Wave-4 Exit Gate
@@ -40,7 +41,8 @@ must_read:
 - docs/programs/symphony-hardening/HARDENING_TASK_PACKS.md
 implementation_plan: tasks/TSK-OPS-WAVE4-EXIT-GATE/PLAN.md
 implementation_log: tasks/TSK-OPS-WAVE4-EXIT-GATE/EXEC_LOG.md
-notes: Generated from canonical hardening task pack source; do not edit semantics here.
+notes: Generated from canonical hardening task pack source; do not edit semantics
+  here.
 client: codex_cli
 assigned_agent: supervisor
 model: gpt-5-codex

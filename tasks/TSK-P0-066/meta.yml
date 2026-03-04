@@ -1,3 +1,4 @@
+schema_version: 1
 phase: '0'
 task_id: TSK-P0-066
 title: Add regression tests for Phase-0 contract validator
@@ -25,9 +26,9 @@ failure_modes:
 - Missing evidence on parse failure.
 must_read:
 - scripts/audit/verify_phase0_contract.sh
+implementation_plan: docs/plans/phase0/TSK-P0-066/PLAN.md
+implementation_log: docs/plans/phase0/TSK-P0-066/EXEC_LOG.md
 notes: ''
 client: codex_cli
 assigned_agent: architect
 model: <UNASSIGNED>
-implementation_plan: docs/plans/phase0/TSK-P0-066/PLAN.md
-implementation_log: docs/plans/phase0/TSK-P0-066/EXEC_LOG.md

@@ -1,3 +1,4 @@
+schema_version: 1
 phase: '1'
 task_id: TSK-HARD-032
 title: Length-aware canonicalization and alias collision detection
@@ -39,7 +40,8 @@ must_read:
 - docs/programs/symphony-hardening/HARDENING_TASK_PACKS.md
 implementation_plan: tasks/TSK-HARD-032/PLAN.md
 implementation_log: tasks/TSK-HARD-032/EXEC_LOG.md
-notes: Generated from canonical hardening task pack source; do not edit semantics here.
+notes: Generated from canonical hardening task pack source; do not edit semantics
+  here.
 client: codex_cli
 assigned_agent: supervisor
 model: gpt-5-codex

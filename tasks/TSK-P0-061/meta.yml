@@ -1,3 +1,4 @@
+schema_version: 1
 phase: '0'
 task_id: TSK-P0-061
 title: "Pre\u2011CI/CI execution order alignment"
@@ -29,9 +30,9 @@ failure_modes:
 must_read:
 - scripts/dev/pre_ci.sh
 - .github/workflows/invariants.yml
+implementation_plan: docs/plans/phase0/TSK-P0-061/PLAN.md
+implementation_log: docs/plans/phase0/TSK-P0-061/EXEC_LOG.md
 notes: ''
 client: codex_cli
 assigned_agent: architect
 model: <UNASSIGNED>
-implementation_plan: docs/plans/phase0/TSK-P0-061/PLAN.md
-implementation_log: docs/plans/phase0/TSK-P0-061/EXEC_LOG.md

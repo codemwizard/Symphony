@@ -1,61 +1,53 @@
-phase: "0"
-task_id: "TSK-P0-KYC-002"
-title: "kyc_verification_records table (hash anchor for external verifications)"
-owner_role: "DB_FOUNDATION"
-status: "completed"
-
+schema_version: 1
+phase: '0'
+task_id: TSK-P0-KYC-002
+title: kyc_verification_records table (hash anchor for external verifications)
+owner_role: DB_FOUNDATION
+status: completed
 depends_on:
-  - "TSK-P0-KYC-001"
-
+- TSK-P0-KYC-001
 touches:
-  - "schema/migrations/0042_kyc_verification_records_hook.sql"
-  - "scripts/db/verify_kyc_verification_records_hook.sh"
-  - "scripts/dev/pre_ci.sh"
-  - "docs/PHASE0/phase0_contract.yml"
-  - "docs/tasks/phase1_prompts.md"
-  - "tasks/TSK-P0-KYC-002/meta.yml"
-  - "docs/plans/phase0/TSK-P0-KYC-002/PLAN.md"
-  - "docs/plans/phase0/TSK-P0-KYC-002/EXEC_LOG.md"
-
+- schema/migrations/0042_kyc_verification_records_hook.sql
+- scripts/db/verify_kyc_verification_records_hook.sh
+- scripts/dev/pre_ci.sh
+- docs/PHASE0/phase0_contract.yml
+- docs/tasks/phase1_prompts.md
+- tasks/TSK-P0-KYC-002/meta.yml
+- docs/plans/phase0/TSK-P0-KYC-002/PLAN.md
+- docs/plans/phase0/TSK-P0-KYC-002/EXEC_LOG.md
 invariants:
-  - "INV-031"
-
+- INV-031
 work:
-  - "Add forward-only migration for public.kyc_verification_records Phase-0 structural hook."
-  - "Add fail-closed verifier and deterministic evidence emission."
-  - "Wire verifier into pre_ci and Phase-0 contract tracking."
-  - "Patch task prompt to use canonical member FK target public.tenant_members(member_id)."
-
+- Add forward-only migration for public.kyc_verification_records Phase-0 structural
+  hook.
+- Add fail-closed verifier and deterministic evidence emission.
+- Wire verifier into pre_ci and Phase-0 contract tracking.
+- Patch task prompt to use canonical member FK target public.tenant_members(member_id).
 acceptance_criteria:
-  - "kyc_verification_records exists as an empty Phase-0 structural table with required columns and constraints."
-  - "member_id FK references public.tenant_members(member_id) with ON DELETE RESTRICT."
-  - "retention_class is enforced as FIC_AML_CUSTOMER_ID in schema."
-  - "Verifier emits evidence/phase0/TSK-P0-KYC-002.json and fails closed on mismatch."
-  - "No runtime app code references kyc_verification_records before Phase-2."
-  - "No trigger/function writes to kyc_verification_records in Phase-0."
-
+- kyc_verification_records exists as an empty Phase-0 structural table with required
+  columns and constraints.
+- member_id FK references public.tenant_members(member_id) with ON DELETE RESTRICT.
+- retention_class is enforced as FIC_AML_CUSTOMER_ID in schema.
+- Verifier emits evidence/phase0/TSK-P0-KYC-002.json and fails closed on mismatch.
+- No runtime app code references kyc_verification_records before Phase-2.
+- No trigger/function writes to kyc_verification_records in Phase-0.
 verification:
-  - "bash scripts/db/verify_kyc_verification_records_hook.sh"
-  - "RUN_PHASE1_GATES=1 scripts/dev/pre_ci.sh"
-
+- bash scripts/db/verify_kyc_verification_records_hook.sh
+- RUN_PHASE1_GATES=1 scripts/dev/pre_ci.sh
 evidence:
-  - "evidence/phase0/TSK-P0-KYC-002.json"
-
+- evidence/phase0/TSK-P0-KYC-002.json
 failure_modes:
-  - "table contract mismatch (PK/FKs/constraints/indexes/comments)."
-  - "runtime code references kyc_verification_records."
-  - "trigger/function references or writes to kyc_verification_records."
-  - "PII-like columns introduced into kyc_verification_records."
-  - "evidence artifact missing."
-
+- table contract mismatch (PK/FKs/constraints/indexes/comments).
+- runtime code references kyc_verification_records.
+- trigger/function references or writes to kyc_verification_records.
+- PII-like columns introduced into kyc_verification_records.
+- evidence artifact missing.
 must_read:
-  - "AGENTS.md"
-  - "docs/operations/AI_AGENT_OPERATION_MANUAL.md"
-
-implementation_plan: "docs/plans/phase0/TSK-P0-KYC-002/PLAN.md"
-implementation_log: "docs/plans/phase0/TSK-P0-KYC-002/EXEC_LOG.md"
-
-notes: ""
-client: "codex_cli"
-assigned_agent: "db_foundation"
-model: "gpt-5-codex"
+- AGENTS.md
+- docs/operations/AI_AGENT_OPERATION_MANUAL.md
+implementation_plan: docs/plans/phase0/TSK-P0-KYC-002/PLAN.md
+implementation_log: docs/plans/phase0/TSK-P0-KYC-002/EXEC_LOG.md
+notes: ''
+client: codex_cli
+assigned_agent: db_foundation
+model: gpt-5-codex

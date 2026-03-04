@@ -1,3 +1,4 @@
+schema_version: 1
 phase: '1'
 task_id: TSK-HARD-011B
 title: Signed policy bundle activation
@@ -10,7 +11,7 @@ touches:
 - docs/programs/symphony-hardening/HARDENING_TASK_PACKS.md
 - evidence/phase1/hardening/tsk_hard_011b.json
 - high-risk policy re-verification on every execution
-- 'policy bundle lifecycle: draft → approved → active state machine'
+- "policy bundle lifecycle: draft \u2192 approved \u2192 active state machine"
 - runtime re-verification at decision time
 - signature verification at activation time
 - tasks/TSK-HARD-011B/EXEC_LOG.md
@@ -18,10 +19,10 @@ touches:
 invariants:
 - INV-HARDENING-CANONICAL-SOURCE
 work:
-- 'Enforce that policy bundles follow a signed lifecycle: draft → approved →'
+- "Enforce that policy bundles follow a signed lifecycle: draft \u2192 approved \u2192"
 - Implement exactly per canonical task block in HARDENING_TASK_PACKS.md.
 acceptance_criteria:
-- 'policy bundle state enum: draft, approved, active — no other values'
+- "policy bundle state enum: draft, approved, active \u2014 no other values"
 - transition from approved to active blocked if bundle signature is invalid
 verification:
 - bash scripts/audit/verify_tsk_hard_011b.sh
@@ -39,7 +40,8 @@ must_read:
 - docs/programs/symphony-hardening/HARDENING_TASK_PACKS.md
 implementation_plan: tasks/TSK-HARD-011B/PLAN.md
 implementation_log: tasks/TSK-HARD-011B/EXEC_LOG.md
-notes: Generated from canonical hardening task pack source; do not edit semantics here.
+notes: Generated from canonical hardening task pack source; do not edit semantics
+  here.
 client: codex_cli
 assigned_agent: supervisor
 model: gpt-5-codex

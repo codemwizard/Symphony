@@ -1,3 +1,4 @@
+schema_version: 1
 phase: '0'
 task_id: TSK-P0-050
 title: "Publish Three\u2011Pillar control\u2011plane model + execution guarantee"
@@ -24,9 +25,9 @@ acceptance_criteria:
   Guarantee).
 - Verifier emits evidence on pass/fail.
 verification:
-  - scripts/audit/verify_three_pillars_doc.sh
+- scripts/audit/verify_three_pillars_doc.sh
 evidence:
-  - evidence/phase0/three_pillars_doc.json
+- evidence/phase0/three_pillars_doc.json
 failure_modes:
 - Evidence file missing.
 - Document missing required sections.
@@ -34,9 +35,9 @@ must_read:
 - docs/invariants/INVARIANTS_MANIFEST.yml
 - scripts/db/verify_invariants.sh
 - scripts/db/ci_invariant_gate.sql
+implementation_plan: docs/plans/phase0/TSK-P0-050_three_pillars/PLAN.md
+implementation_log: docs/plans/phase0/TSK-P0-050_three_pillars/EXEC_LOG.md
 notes: ''
 client: codex_cli
 assigned_agent: architect
 model: <UNASSIGNED>
-implementation_plan: docs/plans/phase0/TSK-P0-050_three_pillars/PLAN.md
-implementation_log: docs/plans/phase0/TSK-P0-050_three_pillars/EXEC_LOG.md

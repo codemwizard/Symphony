@@ -1,26 +1,29 @@
-phase: "1"
-task_id: "TSK-P1-059"
-title: "Gate script modularization (no behavior changes)"
-owner_role: "INVARIANTS_CURATOR"
-status: "completed"
-
+schema_version: 1
+phase: '1'
+task_id: TSK-P1-059
+title: Gate script modularization (no behavior changes)
+owner_role: INVARIANTS_CURATOR
+status: completed
 depends_on:
-  - "TSK-CLEAN-002"
-
+- TSK-CLEAN-002
 touches:
-  - "tasks/TSK-P1-059/meta.yml"
-  - "scripts/audit/verify_tsk_p1_059.sh"
-  - "scripts/dev/pre_ci.sh"
-
+- tasks/TSK-P1-059/meta.yml
+- scripts/audit/verify_tsk_p1_059.sh
+- scripts/dev/pre_ci.sh
+invariants: []
+work: []
+acceptance_criteria: []
 verification:
-  - "bash scripts/audit/verify_tsk_p1_059.sh --evidence evidence/phase1/tsk_p1_059__gate_script_modularization_no_behavior_changes.json"
-  - "RUN_PHASE1_GATES=1 scripts/dev/pre_ci.sh"
-
+- bash scripts/audit/verify_tsk_p1_059.sh --evidence evidence/phase1/tsk_p1_059__gate_script_modularization_no_behavior_changes.json
+- RUN_PHASE1_GATES=1 scripts/dev/pre_ci.sh
 evidence:
-  - "evidence/phase1/tsk_p1_059__gate_script_modularization_no_behavior_changes.json"
-
+- evidence/phase1/tsk_p1_059__gate_script_modularization_no_behavior_changes.json
+failure_modes: []
 must_read:
-  - "docs/operations/AI_AGENT_OPERATION_MANUAL.md"
-
-implementation_plan: "docs/plans/phase1/TSK-P1-059/PLAN.md"
-implementation_log: "docs/plans/phase1/TSK-P1-059/EXEC_LOG.md"
+- docs/operations/AI_AGENT_OPERATION_MANUAL.md
+implementation_plan: docs/plans/phase1/TSK-P1-059/PLAN.md
+implementation_log: docs/plans/phase1/TSK-P1-059/EXEC_LOG.md
+notes: ''
+client: codex_cli
+assigned_agent: supervisor
+model: <UNASSIGNED>

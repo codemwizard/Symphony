@@ -1,56 +1,46 @@
-phase: "0"
-task_id: "TSK-P0-210"
-title: "BoZ observability role proof (include SET ROLE denial)"
-owner_role: "INVARIANTS_CURATOR"
-status: "completed"
-
+schema_version: 1
+phase: '0'
+task_id: TSK-P0-210
+title: BoZ observability role proof (include SET ROLE denial)
+owner_role: INVARIANTS_CURATOR
+status: completed
 depends_on:
-  - "TSK-P0-208"
-
+- TSK-P0-208
 touches:
-  - "scripts/audit/verify_tsk_p0_210.sh"
-  - "scripts/dev/pre_ci.sh"
-  - "docs/PHASE0/phase0_contract.yml"
-  - "tasks/TSK-P0-210/meta.yml"
-  - "docs/plans/phase0/TSK-P0-210/PLAN.md"
-  - "docs/plans/phase0/TSK-P0-210/EXEC_LOG.md"
-
+- scripts/audit/verify_tsk_p0_210.sh
+- scripts/dev/pre_ci.sh
+- docs/PHASE0/phase0_contract.yml
+- tasks/TSK-P0-210/meta.yml
+- docs/plans/phase0/TSK-P0-210/PLAN.md
+- docs/plans/phase0/TSK-P0-210/EXEC_LOG.md
 invariants:
-  - "INV-111"
-
+- INV-111
 work:
-  - "Add fail-closed verifier for BoZ observability role proof with SET ROLE denial posture."
-  - "Refresh canonical BoZ verifier evidence and compose TSK-P0-210 task evidence."
-  - "Wire verifier into pre_ci after TSK-P0-208."
-  - "Register evidence in Phase-0 contract."
-
+- Add fail-closed verifier for BoZ observability role proof with SET ROLE denial posture.
+- Refresh canonical BoZ verifier evidence and compose TSK-P0-210 task evidence.
+- Wire verifier into pre_ci after TSK-P0-208.
+- Register evidence in Phase-0 contract.
 acceptance_criteria:
-  - "Verifier emits evidence/phase0/tsk_p0_210__boz_observability_role_proof_include_set.json."
-  - "boz_auditor role remains NOLOGIN and has no membership grants enabling SET ROLE."
-  - "pre_ci executes TSK-P0-210 verifier in canonical ordered checks."
-  - "Phase-0 contract tracks the new evidence path."
-
+- Verifier emits evidence/phase0/tsk_p0_210__boz_observability_role_proof_include_set.json.
+- boz_auditor role remains NOLOGIN and has no membership grants enabling SET ROLE.
+- pre_ci executes TSK-P0-210 verifier in canonical ordered checks.
+- Phase-0 contract tracks the new evidence path.
 verification:
-  - "bash scripts/audit/verify_tsk_p0_210.sh --evidence evidence/phase0/tsk_p0_210__boz_observability_role_proof_include_set.json"
-  - "RUN_PHASE1_GATES=1 scripts/dev/pre_ci.sh"
-
+- bash scripts/audit/verify_tsk_p0_210.sh --evidence evidence/phase0/tsk_p0_210__boz_observability_role_proof_include_set.json
+- RUN_PHASE1_GATES=1 scripts/dev/pre_ci.sh
 evidence:
-  - "evidence/phase0/tsk_p0_210__boz_observability_role_proof_include_set.json"
-
+- evidence/phase0/tsk_p0_210__boz_observability_role_proof_include_set.json
 failure_modes:
-  - "boz_auditor role missing."
-  - "boz_auditor role can login or has role memberships enabling SET ROLE."
-  - "canonical boz role evidence missing or failing."
-  - "evidence file missing."
-
+- boz_auditor role missing.
+- boz_auditor role can login or has role memberships enabling SET ROLE.
+- canonical boz role evidence missing or failing.
+- evidence file missing.
 must_read:
-  - "AGENTS.md"
-  - "docs/operations/AI_AGENT_OPERATION_MANUAL.md"
-
-implementation_plan: "docs/plans/phase0/TSK-P0-210/PLAN.md"
-implementation_log: "docs/plans/phase0/TSK-P0-210/EXEC_LOG.md"
-
-notes: ""
-client: "codex_cli"
-assigned_agent: "invariants_curator"
-model: "gpt-5-codex"
+- AGENTS.md
+- docs/operations/AI_AGENT_OPERATION_MANUAL.md
+implementation_plan: docs/plans/phase0/TSK-P0-210/PLAN.md
+implementation_log: docs/plans/phase0/TSK-P0-210/EXEC_LOG.md
+notes: ''
+client: codex_cli
+assigned_agent: invariants_curator
+model: gpt-5-codex

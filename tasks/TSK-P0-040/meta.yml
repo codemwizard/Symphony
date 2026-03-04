@@ -1,3 +1,4 @@
+schema_version: 1
 phase: '0'
 task_id: TSK-P0-040
 title: Wire contract + SQLSTATE drift checks into CI
@@ -21,7 +22,7 @@ acceptance_criteria:
 - Checks run before upload step.
 - Evidence artifacts include phase0_contract.json and sqlstate_map_drift.json.
 verification:
-  - actionlint .github/workflows/invariants.yml
+- actionlint .github/workflows/invariants.yml
 evidence:
 - ./evidence/phase0/phase0_contract.json
 - ./evidence/phase0/sqlstate_map_drift.json
@@ -33,9 +34,9 @@ must_read:
 - docs/invariants/INVARIANTS_MANIFEST.yml
 - scripts/db/verify_invariants.sh
 - scripts/db/ci_invariant_gate.sql
-notes: ''
 implementation_plan: docs/plans/phase0/TSK-P0-040_ci_wiring_contract_sqlstate/PLAN.md
 implementation_log: docs/plans/phase0/TSK-P0-040_ci_wiring_contract_sqlstate/EXEC_LOG.md
+notes: ''
 client: codex_cli
 assigned_agent: security_guardian
 model: <UNASSIGNED>

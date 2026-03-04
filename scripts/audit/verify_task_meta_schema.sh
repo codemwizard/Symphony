@@ -10,6 +10,8 @@ DENY_LEGACY=0
 JSON_OUT=0
 OUT_PATH=""
 SCAN_ROOT="tasks"
+SCOPE="all"
+CHANGED_FILE_LIST=""
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
@@ -37,6 +39,10 @@ while [[ $# -gt 0 ]]; do
       SCAN_ROOT="${2:-tasks}"
       shift 2
       ;;
+    --scope)
+      SCOPE="${2:-all}"
+      shift 2
+      ;;
     *)
       echo "ERROR: unknown arg: $1" >&2
       exit 2
@@ -48,8 +54,25 @@ if [[ "$MODE" != "inventory" && "$MODE" != "strict" ]]; then
   echo "ERROR: --mode must be inventory|strict" >&2
   exit 2
 fi
+if [[ "$SCOPE" != "all" && "$SCOPE" != "changed" ]]; then
+  echo "ERROR: --scope must be all|changed" >&2
+  exit 2
+fi
 
-SCAN_ROOT="$SCAN_ROOT" MODE="$MODE" ALLOW_LEGACY="$ALLOW_LEGACY" DENY_LEGACY="$DENY_LEGACY" JSON_OUT="$JSON_OUT" OUT_PATH="$OUT_PATH" python3 - <<'PY'
+if [[ "$SCOPE" == "changed" ]]; then
+  source "$ROOT/scripts/audit/lib/git_diff_range_only.sh"
+  BASE_REF="${BASE_REF:-$(git_resolve_base_ref)}"
+  HEAD_REF="${HEAD_REF:-HEAD}"
+  if ! git_ensure_ref "$BASE_REF"; then
+    echo "ERROR: base_ref_not_found:$BASE_REF" >&2
+    exit 1
+  fi
+  CHANGED_FILE_LIST="$(mktemp)"
+  git_changed_files_range "$BASE_REF" "$HEAD_REF" > "$CHANGED_FILE_LIST"
+  trap 'rm -f "$CHANGED_FILE_LIST"' EXIT
+fi
+
+SCAN_ROOT="$SCAN_ROOT" MODE="$MODE" ALLOW_LEGACY="$ALLOW_LEGACY" DENY_LEGACY="$DENY_LEGACY" JSON_OUT="$JSON_OUT" OUT_PATH="$OUT_PATH" SCOPE="$SCOPE" CHANGED_FILE_LIST="$CHANGED_FILE_LIST" python3 - <<'PY'
 import json
 import os
 from pathlib import Path
@@ -61,6 +84,8 @@ allow_legacy = os.environ["ALLOW_LEGACY"] == "1"
 deny_legacy = os.environ["DENY_LEGACY"] == "1"
 json_out = os.environ["JSON_OUT"] == "1"
 out_path = os.environ.get("OUT_PATH", "")
+scope = os.environ.get("SCOPE", "all")
+changed_file_list = os.environ.get("CHANGED_FILE_LIST", "")
 
 required = [
     "schema_version",
@@ -105,14 +130,30 @@ legacy_keys = {
 if not scan_root.exists():
     raise SystemExit(f"ERROR: scan root missing: {scan_root}")
 
-files = sorted(
-    [
-        p
-        for p in scan_root.rglob("meta.yml")
-        if "/_template/" not in p.as_posix() and p.parent.name != "_template"
-    ],
-    key=lambda p: p.as_posix(),
-)
+if scope == "changed":
+    changed_paths = []
+    if changed_file_list:
+        changed_paths = [ln.strip() for ln in Path(changed_file_list).read_text(encoding="utf-8", errors="ignore").splitlines() if ln.strip()]
+    files = sorted(
+        [
+            Path(p)
+            for p in changed_paths
+            if p.startswith(f"{scan_root.as_posix().rstrip('/')}/")
+            and p.endswith("/meta.yml")
+            and "/_template/" not in p
+            and Path(p).parent.name != "_template"
+        ],
+        key=lambda p: p.as_posix(),
+    )
+else:
+    files = sorted(
+        [
+            p
+            for p in scan_root.rglob("meta.yml")
+            if "/_template/" not in p.as_posix() and p.parent.name != "_template"
+        ],
+        key=lambda p: p.as_posix(),
+    )
 
 errors = []
 nonconforming = []
@@ -153,6 +194,7 @@ for p in files:
 report = {
     "check_id": "TASK-META-SCHEMA",
     "mode": mode,
+    "scope": scope,
     "allow_legacy": allow_legacy,
     "deny_legacy": deny_legacy,
     "status": "PASS",

@@ -1,41 +1,38 @@
-phase: "1"
-task_id: "TSK-P1-INF-005"
-title: "OpenBao + External Secrets + rotation proof"
-owner_role: "SUPERVISOR"
-status: "completed"
-
+schema_version: 1
+phase: '1'
+task_id: TSK-P1-INF-005
+title: OpenBao + External Secrets + rotation proof
+owner_role: SUPERVISOR
+status: completed
 depends_on:
-  - "TSK-P1-INF-001"
-
+- TSK-P1-INF-001
 touches:
-  - "tasks/TSK-P1-INF-005/meta.yml"
-  - "docs/plans/phase1/TSK-P1-INF-005/PLAN.md"
-  - "docs/plans/phase1/TSK-P1-INF-005/EXEC_LOG.md"
-  - "infra/sandbox/k8s/openbao-eso/kustomization.yaml"
-  - "infra/sandbox/k8s/openbao-eso/openbao.yaml"
-  - "infra/sandbox/k8s/openbao-eso/eso.yaml"
-  - "scripts/audit/verify_inf_005_openbao_external_secrets.sh"
-  - "docs/PHASE1/phase1_contract.yml"
-  - "docs/operations/VERIFIER_EVIDENCE_REGISTRY.yml"
-  - "docs/operations/SEMANTIC_INTEGRITY_ALLOWLIST.yml"
-  - "scripts/dev/pre_ci.sh"
-  - "evidence/phase1/inf_005_openbao_external_secrets.json"
-
+- tasks/TSK-P1-INF-005/meta.yml
+- docs/plans/phase1/TSK-P1-INF-005/PLAN.md
+- docs/plans/phase1/TSK-P1-INF-005/EXEC_LOG.md
+- infra/sandbox/k8s/openbao-eso/kustomization.yaml
+- infra/sandbox/k8s/openbao-eso/openbao.yaml
+- infra/sandbox/k8s/openbao-eso/eso.yaml
+- scripts/audit/verify_inf_005_openbao_external_secrets.sh
+- docs/PHASE1/phase1_contract.yml
+- docs/operations/VERIFIER_EVIDENCE_REGISTRY.yml
+- docs/operations/SEMANTIC_INTEGRITY_ALLOWLIST.yml
+- scripts/dev/pre_ci.sh
+- evidence/phase1/inf_005_openbao_external_secrets.json
 invariants:
-  - "INV-119"
-
-mechanics:
-  gate_ids:
-    - "INT-G28"
-  verifiers:
-    - "bash scripts/audit/verify_inf_005_openbao_external_secrets.sh && python3 scripts/audit/validate_evidence.py --task TSK-P1-INF-005 --evidence evidence/phase1/inf_005_openbao_external_secrets.json"
-  evidence_paths:
-    - "evidence/phase1/inf_005_openbao_external_secrets.json"
-
-implementation_plan: "docs/plans/phase1/TSK-P1-INF-005/PLAN.md"
-implementation_log: "docs/plans/phase1/TSK-P1-INF-005/EXEC_LOG.md"
-
+- INV-119
+work: []
+acceptance_criteria: []
+verification: []
+evidence: []
+failure_modes: []
 must_read:
-  - "docs/operations/AI_AGENT_OPERATION_MANUAL.md"
-  - "docs/operations/AI_AGENT_WORKFLOW_AND_ROLE_PLAN_v2.md"
-  - "docs/operations/AGENT_ROLE_RECONCILIATION.md"
+- docs/operations/AI_AGENT_OPERATION_MANUAL.md
+- docs/operations/AI_AGENT_WORKFLOW_AND_ROLE_PLAN_v2.md
+- docs/operations/AGENT_ROLE_RECONCILIATION.md
+implementation_plan: docs/plans/phase1/TSK-P1-INF-005/PLAN.md
+implementation_log: docs/plans/phase1/TSK-P1-INF-005/EXEC_LOG.md
+notes: ''
+client: codex_cli
+assigned_agent: supervisor
+model: <UNASSIGNED>

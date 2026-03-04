@@ -1,42 +1,38 @@
-phase: "1"
-task_id: "TSK-P1-HIER-011"
-title: "Supervisor access mechanisms"
-owner_role: "SUPERVISOR"
-status: "completed"
-
+schema_version: 1
+phase: '1'
+task_id: TSK-P1-HIER-011
+title: Supervisor access mechanisms
+owner_role: SUPERVISOR
+status: completed
 depends_on:
-  - "TSK-P1-HIER-010"
-
+- TSK-P1-HIER-010
 touches:
-  - "tasks/TSK-P1-HIER-011/meta.yml"
-  - "docs/plans/phase1/TSK-P1-HIER-011/PLAN.md"
-  - "docs/plans/phase1/TSK-P1-HIER-011/EXEC_LOG.md"
-  - "schema/migrations/0058_hier_011_supervisor_access_mechanisms.sql"
-  - "services/supervisor_api/server.py"
-  - "scripts/reporting/deliver_supervisor_report.sh"
-  - "scripts/audit/verify_hier_011_supervisor_access_mechanisms.sh"
-  - "docs/PHASE1/phase1_contract.yml"
-  - "docs/operations/VERIFIER_EVIDENCE_REGISTRY.yml"
-  - "docs/operations/SEMANTIC_INTEGRITY_ALLOWLIST.yml"
-  - "scripts/dev/pre_ci.sh"
-  - "evidence/phase1/hier_011_supervisor_access_mechanisms.json"
-
+- tasks/TSK-P1-HIER-011/meta.yml
+- docs/plans/phase1/TSK-P1-HIER-011/PLAN.md
+- docs/plans/phase1/TSK-P1-HIER-011/EXEC_LOG.md
+- schema/migrations/0058_hier_011_supervisor_access_mechanisms.sql
+- services/supervisor_api/server.py
+- scripts/reporting/deliver_supervisor_report.sh
+- scripts/audit/verify_hier_011_supervisor_access_mechanisms.sh
+- docs/PHASE1/phase1_contract.yml
+- docs/operations/VERIFIER_EVIDENCE_REGISTRY.yml
+- docs/operations/SEMANTIC_INTEGRITY_ALLOWLIST.yml
+- scripts/dev/pre_ci.sh
+- evidence/phase1/hier_011_supervisor_access_mechanisms.json
 invariants:
-  - "INV-119"
-
-mechanics:
-  gate_ids:
-    - "INT-G28"
-  verifiers:
-    - "bash scripts/audit/verify_hier_011_supervisor_access_mechanisms.sh && python3 scripts/audit/validate_evidence.py --task TSK-P1-HIER-011 --evidence evidence/phase1/hier_011_supervisor_access_mechanisms.json"
-    - "RUN_PHASE1_GATES=1 scripts/dev/pre_ci.sh"
-  evidence_paths:
-    - "evidence/phase1/hier_011_supervisor_access_mechanisms.json"
-
-implementation_plan: "docs/plans/phase1/TSK-P1-HIER-011/PLAN.md"
-implementation_log: "docs/plans/phase1/TSK-P1-HIER-011/EXEC_LOG.md"
-
+- INV-119
+work: []
+acceptance_criteria: []
+verification: []
+evidence: []
+failure_modes: []
 must_read:
-  - "docs/operations/AI_AGENT_OPERATION_MANUAL.md"
-  - "docs/operations/AI_AGENT_WORKFLOW_AND_ROLE_PLAN_v2.md"
-  - "docs/operations/AGENT_ROLE_RECONCILIATION.md"
+- docs/operations/AI_AGENT_OPERATION_MANUAL.md
+- docs/operations/AI_AGENT_WORKFLOW_AND_ROLE_PLAN_v2.md
+- docs/operations/AGENT_ROLE_RECONCILIATION.md
+implementation_plan: docs/plans/phase1/TSK-P1-HIER-011/PLAN.md
+implementation_log: docs/plans/phase1/TSK-P1-HIER-011/EXEC_LOG.md
+notes: ''
+client: codex_cli
+assigned_agent: supervisor
+model: <UNASSIGNED>

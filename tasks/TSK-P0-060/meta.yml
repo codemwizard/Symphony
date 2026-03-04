@@ -1,3 +1,4 @@
+schema_version: 1
 phase: '0'
 task_id: TSK-P0-060
 title: "Contract semantics PASS/SKIPPED (gate\u2011scoped)"
@@ -26,9 +27,9 @@ failure_modes:
 - Evidence file missing.
 must_read:
 - docs/PHASE0/phase0_contract.yml
+implementation_plan: docs/plans/phase0/TSK-P0-060/PLAN.md
+implementation_log: docs/plans/phase0/TSK-P0-060/EXEC_LOG.md
 notes: ''
 client: codex_cli
 assigned_agent: architect
 model: <UNASSIGNED>
-implementation_plan: docs/plans/phase0/TSK-P0-060/PLAN.md
-implementation_log: docs/plans/phase0/TSK-P0-060/EXEC_LOG.md

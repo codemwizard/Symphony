@@ -1,3 +1,4 @@
+schema_version: 1
 phase: '1'
 task_id: TSK-P1-016
 title: Executor Worker MVP Deterministic Dispatch

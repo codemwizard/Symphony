@@ -1,3 +1,4 @@
+schema_version: 1
 phase: '1'
 task_id: TSK-HARD-002
 title: Evidence event class schema registration
@@ -6,7 +7,7 @@ status: planned
 depends_on:
 - TSK-HARD-001
 touches:
-- docs/architecture/EVIDENCE_EVENT_CLASSES.md  [informational mirror — not gating]
+- "docs/architecture/EVIDENCE_EVENT_CLASSES.md  [informational mirror \u2014 not gating]"
 - docs/programs/symphony-hardening/HARDENING_TASK_PACKS.md
 - evidence/phase1/hardening/tsk_hard_002.json
 - evidence/schemas/hardening/event_classes/adjustment_approval_event.schema.json
@@ -43,7 +44,8 @@ must_read:
 - docs/programs/symphony-hardening/HARDENING_TASK_PACKS.md
 implementation_plan: tasks/TSK-HARD-002/PLAN.md
 implementation_log: tasks/TSK-HARD-002/EXEC_LOG.md
-notes: Generated from canonical hardening task pack source; do not edit semantics here.
+notes: Generated from canonical hardening task pack source; do not edit semantics
+  here.
 client: codex_cli
 assigned_agent: supervisor
 model: gpt-5-codex

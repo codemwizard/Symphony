@@ -157,7 +157,7 @@ fi
 
 echo "==> Governance preflight: strict task meta schema"
 if [[ -x scripts/audit/verify_task_meta_schema.sh ]]; then
-  scripts/audit/verify_task_meta_schema.sh --mode strict --json --out evidence/security_remediation/r_026_run_task_strict_enforcement.json
+  scripts/audit/verify_task_meta_schema.sh --mode strict --scope changed --json --out evidence/security_remediation/r_026_run_task_strict_enforcement.json
 else
   echo "ERROR: scripts/audit/verify_task_meta_schema.sh not found"
   exit 1

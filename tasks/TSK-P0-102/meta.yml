@@ -1,43 +1,40 @@
-phase: "1"
-task_id: "TSK-P0-102"
-title: "Enforce file evidence dev-only (fail-closed)"
-owner_role: "SUPERVISOR"
-status: "completed"
-
+schema_version: 1
+phase: '1'
+task_id: TSK-P0-102
+title: Enforce file evidence dev-only (fail-closed)
+owner_role: SUPERVISOR
+status: completed
 depends_on:
-  - "TSK-P0-101"
-
+- TSK-P0-101
 touches:
-  - "tasks/TSK-P0-102/meta.yml"
-  - "scripts/lib/evidence.sh"
-  - "scripts/audit/validate_evidence_json.sh"
-  - "scripts/audit/verify_tsk_p0_102.sh"
+- tasks/TSK-P0-102/meta.yml
+- scripts/lib/evidence.sh
+- scripts/audit/validate_evidence_json.sh
+- scripts/audit/verify_tsk_p0_102.sh
 invariants:
-  - "INV-077"
+- INV-077
 work:
-  - "Enforce dev-only file evidence writes with fail-closed behavior outside development."
-  - "Keep evidence validation deterministic for task-level verifier outputs."
-  - "Allow evidence writes only in development/ci and deny other environments."
+- Enforce dev-only file evidence writes with fail-closed behavior outside development.
+- Keep evidence validation deterministic for task-level verifier outputs.
+- Allow evidence writes only in development/ci and deny other environments.
 acceptance_criteria:
-  - "TSK-P0-102 verifier passes and writes schema-valid evidence."
-  - "Evidence write guard fails closed when environment disallows file evidence."
-  - "Verifier proves development/ci writes pass and production write is denied."
-  - "Evidence artifact exists and validates for TSK-P0-102."
+- TSK-P0-102 verifier passes and writes schema-valid evidence.
+- Evidence write guard fails closed when environment disallows file evidence.
+- Verifier proves development/ci writes pass and production write is denied.
+- Evidence artifact exists and validates for TSK-P0-102.
 verification:
-  - "bash scripts/audit/verify_tsk_p0_102.sh --evidence evidence/phase0/tsk_p0_102__enforce_file_evidence_dev_only_fail.json"
-
+- bash scripts/audit/verify_tsk_p0_102.sh --evidence evidence/phase0/tsk_p0_102__enforce_file_evidence_dev_only_fail.json
 evidence:
-  - "evidence/phase0/tsk_p0_102__enforce_file_evidence_dev_only_fail.json"
+- evidence/phase0/tsk_p0_102__enforce_file_evidence_dev_only_fail.json
 failure_modes:
-  - "Evidence writes are allowed in non-development environments."
-  - "Verifier output omits required evidence fields or fails schema validation."
-  - "Fail-closed denial message is not emitted for forbidden environments."
-
+- Evidence writes are allowed in non-development environments.
+- Verifier output omits required evidence fields or fails schema validation.
+- Fail-closed denial message is not emitted for forbidden environments.
 must_read:
-  - "docs/operations/AI_AGENT_OPERATION_MANUAL.md"
-notes: ""
-client: "codex_cli"
-assigned_agent: "supervisor"
-model: "gpt-5-codex"
-implementation_plan: "docs/plans/phase1/TSK-P0-102/PLAN.md"
-implementation_log: "docs/plans/phase1/TSK-P0-102/EXEC_LOG.md"
+- docs/operations/AI_AGENT_OPERATION_MANUAL.md
+implementation_plan: docs/plans/phase1/TSK-P0-102/PLAN.md
+implementation_log: docs/plans/phase1/TSK-P0-102/EXEC_LOG.md
+notes: ''
+client: codex_cli
+assigned_agent: supervisor
+model: gpt-5-codex

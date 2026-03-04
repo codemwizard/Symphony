@@ -1,3 +1,4 @@
+schema_version: 1
 phase: '1'
 task_id: TSK-P1-010
 title: Phase-1 Closeout Verification
@@ -34,11 +35,13 @@ invariants:
 work:
 - Run Phase-1 closeout gate set and emit final closeout evidence.
 - Confirm deferred invariants remain explicitly deferred.
-- Verify regulator/tier-1 demo-proof scenarios are backed by deterministic machine evidence artifacts.
+- Verify regulator/tier-1 demo-proof scenarios are backed by deterministic machine
+  evidence artifacts.
 acceptance_criteria:
 - All Phase-1 required rows pass under RUN_PHASE1_GATES=1.
 - Phase-0 path remains green with RUN_PHASE1_GATES=0.
-- BoZ seat/read-only denial, finality denial, purge-survivability, evidence-pack retrieval, and case-pack generation scenarios are proven by evidence artifacts.
+- BoZ seat/read-only denial, finality denial, purge-survivability, evidence-pack retrieval,
+  and case-pack generation scenarios are proven by evidence artifacts.
 verification:
 - scripts/audit/verify_control_planes_drift.sh
 - scripts/audit/validate_evidence_schema.sh
