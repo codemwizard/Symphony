@@ -41,6 +41,4 @@ rules:
       Hardcoded secret fallback via ?? operator detected.
       Use ?? throw or fail-closed patterns instead of literal fallbacks.
     severity: ERROR
-    pattern: |
-      Environment.GetEnvironmentVariable("EVIDENCE_SIGNING_KEY") ?? "..."
-
+    pattern-regex: 'Environment\\.GetEnvironmentVariable\\(\"EVIDENCE_SIGNING_KEY\"\\)\\s*\\?\\?\\s*\"[^\"]+\"'

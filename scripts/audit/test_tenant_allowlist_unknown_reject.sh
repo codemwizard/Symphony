@@ -102,10 +102,10 @@ else
     checks+=("{\"id\":\"verify-endpoint-403\",\"description\":\"Verify tenant-scoped endpoint returns 403 when tenant unknown\",\"status\":\"FAIL\",\"details\":{\"http_code\":\"$http_code\",\"error_code\":\"$error_code\",\"body\":\"$resp_body\"}}")
 fi
 
-# 3. Send known tenant expecting 200 (or 404 for missing resource, but not 403/503)
+# 3. Send known tenant expecting explicit allow outcomes (200 or 404)
 http_code_known=$(curl -s -w "%{http_code}" -o /dev/null -X GET -H "x-api-key: test-ingress-key-123" -H "x-tenant-id: known-tenant-bar" "http://127.0.0.1:$APP_PORT/v1/evidence-packs/test-123")
 
-if [[ "$http_code_known" != "403" && "$http_code_known" != "503" ]]; then
+if [[ "$http_code_known" == "200" || "$http_code_known" == "404" ]]; then
     known_tenant_accepted=true
     checks+=("{\"id\":\"verify-endpoint-known-allowed\",\"description\":\"Verify tenant-scoped endpoint allows known tenant\",\"status\":\"PASS\",\"details\":{\"http_code\":$http_code_known}}")
 else

@@ -76,6 +76,7 @@ unset EVIDENCE_SIGNING_KEY
 unset EVIDENCE_SIGNING_KEY_ID
 
 export INGRESS_API_KEY="test-ingress-key-123"
+export SYMPHONY_KNOWN_TENANTS="known-tenant-r001"
 start_app
 trap stop_app EXIT
 
@@ -93,7 +94,7 @@ else
 fi
 
 # 2. Probe the physical endpoint mapping to 503
-http_code=$(curl -s -w "%{http_code}" -o /tmp/r001_resp.json -X GET -H "x-api-key: test-ingress-key-123" "http://127.0.0.1:$APP_PORT/v1/regulatory/reports/daily?date=2026-03-01")
+http_code=$(curl -s -w "%{http_code}" -o /tmp/r001_resp.json -X GET -H "x-api-key: test-ingress-key-123" -H "x-tenant-id: known-tenant-r001" "http://127.0.0.1:$APP_PORT/v1/regulatory/reports/daily?date=2026-03-01")
 resp_body=$(cat /tmp/r001_resp.json)
 error_code=$(echo "$resp_body" | jq -r '.error_code')
 

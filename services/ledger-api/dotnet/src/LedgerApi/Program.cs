@@ -256,7 +256,13 @@ app.MapGet("/v1/regulatory/reports/daily", async (string date, HttpContext httpC
 
     var tenantId = httpContext.Request.Headers.TryGetValue("x-tenant-id", out var tenantHeader)
         ? tenantHeader.ToString()
-        : null;
+        : string.Empty;
+
+    var tenantAuthFailure = ApiAuthorization.AuthorizeTenantScope(tenantId);
+    if (tenantAuthFailure is not null)
+    {
+        return Results.Json(tenantAuthFailure.Body, statusCode: tenantAuthFailure.StatusCode);
+    }
 
     var generated = await RegulatoryReportHandler.GenerateDailyReportAsync(date, tenantId, cancellationToken);
     return generated.ToHttpResult();
