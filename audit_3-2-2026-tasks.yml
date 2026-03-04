@@ -404,11 +404,11 @@ tasks:
 
   - task_id: R-004
     phase: "1"
-    title: "Move audit token to Authorization: Bearer header"
+    title: "Move audit token to Authorization header (bearer-scheme)"
     intent: "Prevent token leakage via query string and logs."
     changes_required:
       - "Stop accepting ?token= for authentication."
-      - "Accept Authorization: Bearer <token>."
+      - "Accept Authorization header using the bearer-scheme."
       - "Ensure logs redact Authorization header."
     dod:
       acceptance_checks:
@@ -419,7 +419,7 @@ tasks:
             job: integration_test
             command: "bash scripts/audit/test_token_querystring_rejected.sh"
         - id: R-004-A2
-          description: "Authorization Bearer accepted and works"
+          description: "Authorization using bearer-scheme is accepted and works"
           status: REQUIRED
           ci_gate:
             job: integration_test

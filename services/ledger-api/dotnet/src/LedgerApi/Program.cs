@@ -124,8 +124,8 @@ if (!tenantAllowlistConfigured)
     logger.LogWarning("SECURITY ALERT: tenant_allowlist_configured=false. All tenant requests will be rejected with 503.");
 }
 
-app.MapGet("/health", () => Results.Ok(new 
-{ 
+app.MapGet("/health", () => Results.Ok(new
+{
     status = "ok",
     signing_key_present = signingKeyPresent,
     tenant_allowlist_configured = tenantAllowlistConfigured,
@@ -495,7 +495,7 @@ static class ApiAuthorization
     {
         var rawAllowlist = (Environment.GetEnvironmentVariable("SYMPHONY_KNOWN_TENANTS") ?? string.Empty).Trim();
         var tenantAllowlistConfigured = !string.IsNullOrWhiteSpace(rawAllowlist);
-        
+
         if (!tenantAllowlistConfigured)
         {
             return new HandlerResult(StatusCodes.Status503ServiceUnavailable, new
@@ -1208,11 +1208,11 @@ static class RegulatoryIncidentReportHandler
 }
 
 record RegulatoryReportResult(
-    bool Success, 
-    object? Report, 
-    string Signature, 
-    string KeyId, 
-    bool Deterministic, 
+    bool Success,
+    object? Report,
+    string Signature,
+    string KeyId,
+    bool Deterministic,
     string? ErrorCode,
     string? Error)
 {
@@ -3346,6 +3346,7 @@ static class PilotAuthSelfTestRunner
 
         var tenantA = "11111111-1111-1111-1111-111111111111";
         var tenantB = "22222222-2222-2222-2222-222222222222";
+        Environment.SetEnvironmentVariable("SYMPHONY_KNOWN_TENANTS", $"{tenantA},{tenantB}");
         var payload = JsonSerializer.Deserialize<JsonElement>("{\"amount\":100}");
 
         await RunCase("ingress_valid_scope_allowed", () =>

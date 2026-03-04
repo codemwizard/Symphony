@@ -348,11 +348,11 @@ tasks:
 
   - task_id: R-004
     phase: "1"
-    title: "Move audit token to Authorization: Bearer header"
-    intent: "Prevent querystring leakage; accept Bearer only."
+    title: "Move audit token to Authorization header (bearer-scheme)"
+    intent: "Prevent querystring leakage; accept only the bearer-scheme."
     changes_required:
       - "?token= no longer accepted."
-      - "Authorization: Bearer required."
+      - "Authorization header with bearer-scheme required."
     dod:
       acceptance_checks:
         - id: R-004-A1
@@ -362,7 +362,7 @@ tasks:
             job: db_verify_invariants
             command: "bash scripts/audit/test_token_querystring_rejected.sh"
         - id: R-004-A2
-          description: "Authorization Bearer accepted"
+          description: "Authorization with bearer-scheme accepted"
           status: REQUIRED
           ci_gate:
             job: db_verify_invariants
