@@ -11,8 +11,12 @@ using Npgsql;
 var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddRateLimiter(options =>
 {
-    var permitLimit = ParseIntEnv("SYMPHONY_RATE_LIMIT_PERMITS", 60);
-    var windowSeconds = ParseIntEnv("SYMPHONY_RATE_LIMIT_WINDOW_SECONDS", 60);
+    var permitLimit = int.TryParse(Environment.GetEnvironmentVariable("SYMPHONY_RATE_LIMIT_PERMITS"), out var parsedPermit)
+        ? parsedPermit
+        : 60;
+    var windowSeconds = int.TryParse(Environment.GetEnvironmentVariable("SYMPHONY_RATE_LIMIT_WINDOW_SECONDS"), out var parsedWindow)
+        ? parsedWindow
+        : 60;
     options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
     options.GlobalLimiter = PartitionedRateLimiter.Create<HttpContext, string>(context =>
         RateLimitPartition.GetFixedWindowLimiter(
@@ -27,7 +31,9 @@ builder.Services.AddRateLimiter(options =>
 var app = builder.Build();
 var logger = app.Logger;
 
-var maxBodyBytes = ParseLongEnv("SYMPHONY_MAX_BODY_BYTES", 1_048_576);
+var maxBodyBytes = long.TryParse(Environment.GetEnvironmentVariable("SYMPHONY_MAX_BODY_BYTES"), out var parsedMaxBodyBytes)
+    ? parsedMaxBodyBytes
+    : 1_048_576;
 app.Use(async (httpContext, next) =>
 {
     if (httpContext.Request.ContentLength is long contentLength && contentLength > maxBodyBytes)
@@ -665,18 +671,6 @@ static class ApiAuthorization
         var actualBytes = SHA256.HashData(Encoding.UTF8.GetBytes(actual ?? string.Empty));
         return CryptographicOperations.FixedTimeEquals(expectedBytes, actualBytes);
     }
-}
-
-static int ParseIntEnv(string name, int fallback)
-{
-    var raw = Environment.GetEnvironmentVariable(name);
-    return int.TryParse(raw, out var value) ? value : fallback;
-}
-
-static long ParseLongEnv(string name, long fallback)
-{
-    var raw = Environment.GetEnvironmentVariable(name);
-    return long.TryParse(raw, out var value) ? value : fallback;
 }
 
 static class IngressHandler
