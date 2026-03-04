@@ -1,0 +1,40 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "R-016 Runtime Self-Tests Extraction Evidence",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "task_id",
+    "git_sha",
+    "timestamp_utc",
+    "status",
+    "checks",
+    "program_cs_selftest_dispatch_removed",
+    "dedicated_test_host_present",
+    "ci_runner_updated"
+  ],
+  "properties": {
+    "task_id": { "type": "string", "const": "R-016" },
+    "git_sha": { "type": "string", "minLength": 7 },
+    "timestamp_utc": { "type": "string", "format": "date-time" },
+    "status": { "type": "string", "enum": ["PASS", "FAIL"] },
+    "checks": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "description", "status", "details"],
+        "properties": {
+          "id": { "type": "string", "minLength": 1 },
+          "description": { "type": "string", "minLength": 1 },
+          "status": { "type": "string", "enum": ["PASS", "FAIL"] },
+          "details": {}
+        }
+      }
+    },
+    "program_cs_selftest_dispatch_removed": { "type": "boolean" },
+    "dedicated_test_host_present": { "type": "boolean" },
+    "ci_runner_updated": { "type": "boolean" }
+  }
+}

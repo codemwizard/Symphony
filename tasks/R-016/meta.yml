@@ -1,0 +1,24 @@
+id: R-016
+phase: '5'
+title: Extract runtime self-tests from Program.cs
+status: planned
+dependencies:
+- R-014
+- R-015
+description: Move embedded runtime self-tests out of Program.cs into a dedicated test host/tool so production startup path cannot execute test code.
+affected_services:
+- security_remediation
+affected_files:
+- services/ledger-api/dotnet/src/LedgerApi/Program.cs
+- services/ledger-api/dotnet/**
+- scripts/audit/**
+- .github/workflows/**
+acceptance_criteria:
+- id: R-016-A1
+  description: Runtime self-tests are not dispatched from Program.cs and are executed via dedicated test host/runner
+verification_command: bash scripts/audit/verify_runtime_self_tests_extracted.sh
+evidence:
+  path: evidence/security_remediation/r_016_runtime_selftests_extracted.json
+implementation_plan_path: docs/plans/remediation/r_016/PLAN.md
+source_of_truth: docs/contracts/SECURITY_REMEDIATION_DOD.yml
+canonical_reference: docs/operations/AI_AGENT_OPERATION_MANUAL.md
