@@ -1,0 +1,18 @@
+id: R-012
+phase: '4'
+title: Gate dev-only test headers
+status: planned
+dependencies: []
+description: Dev headers cannot be used outside dev.
+affected_services:
+- security_remediation
+affected_files: []
+acceptance_criteria:
+- id: R-012-A1
+  description: Dev-only headers rejected in non-dev
+verification_command: bash scripts/audit/test_dev_headers_rejected_non_dev.sh
+evidence:
+  path: evidence/security_remediation/r_012_dev_header_gate.json
+implementation_plan_path: docs/plans/remediation/r_012/PLAN.md
+source_of_truth: docs/contracts/SECURITY_REMEDIATION_DOD.yml
+canonical_reference: docs/operations/AI_AGENT_OPERATION_MANUAL.md

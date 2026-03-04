@@ -1,0 +1,24 @@
+id: R-004
+phase: '1'
+title: Move audit token to Authorization header (bearer-scheme)
+status: planned
+dependencies: []
+description: Prevent querystring leakage; accept only the bearer-scheme.
+affected_services:
+- security_remediation
+affected_files:
+- ?token= no longer accepted.
+- Authorization header with bearer-scheme required.
+acceptance_criteria:
+- id: R-004-A1
+  description: Querystring token rejected
+- id: R-004-A2
+  description: Authorization with bearer-scheme accepted
+verification_command: 'bash scripts/audit/test_token_querystring_rejected.sh
+
+  bash scripts/audit/test_authorization_bearer_accepted.sh'
+evidence:
+  path: evidence/security_remediation/r_004_token_transport.json
+implementation_plan_path: docs/plans/remediation/r_004/PLAN.md
+source_of_truth: docs/contracts/SECURITY_REMEDIATION_DOD.yml
+canonical_reference: docs/operations/AI_AGENT_OPERATION_MANUAL.md

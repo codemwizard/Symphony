@@ -1,0 +1,18 @@
+id: R-010
+phase: '3'
+title: TLS deployment docs
+status: planned
+dependencies: []
+description: Document TLS termination, rotation, minimums, and log redaction.
+affected_services:
+- security_remediation
+affected_files: []
+acceptance_criteria:
+- id: R-010-A1
+  description: TLS doc sections present
+verification_command: bash scripts/audit/verify_tls_docs_sections.sh
+evidence:
+  path: evidence/security_remediation/r_010_tls_docs.json
+implementation_plan_path: docs/plans/remediation/r_010/PLAN.md
+source_of_truth: docs/contracts/SECURITY_REMEDIATION_DOD.yml
+canonical_reference: docs/operations/AI_AGENT_OPERATION_MANUAL.md
