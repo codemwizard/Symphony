@@ -1,7 +1,7 @@
 id: R-010
 phase: '3'
 title: TLS deployment docs
-status: planned
+status: completed
 dependencies: []
 description: Document TLS termination, rotation, minimums, and log redaction.
 affected_services:

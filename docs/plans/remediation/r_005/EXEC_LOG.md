@@ -1,17 +1,11 @@
 # R-005 EXEC_LOG
 
-Task: R-005
-Source of truth: docs/contracts/SECURITY_REMEDIATION_DOD.yml
-Canonical reference: docs/operations/AI_AGENT_OPERATION_MANUAL.md
-
-## repro_command
-- pending
-
 ## actions_taken
-- pending
+- Reworked SecureEquals to hash-then-compare with fixed-time compare.
 
 ## verification_commands_run
-- pending
+- semgrep --config security/semgrep --error
+- bash scripts/audit/test_secure_equals_no_length_leak.sh
 
 ## final_status
-- planned
+- completed

@@ -1,7 +1,7 @@
 id: R-003
 phase: '1'
 title: Rewrite supervisor_api with psycopg parameterized queries
-status: planned
+status: completed
 dependencies: []
 description: Eliminate SQL injection via parameterization and remove insecure http.server
   defaults if needed.

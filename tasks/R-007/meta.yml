@@ -1,7 +1,7 @@
 id: R-007
 phase: '3'
 title: Pin OpenBao image + prod config + enable mlock
-status: planned
+status: completed
 dependencies: []
 description: Eliminate dev-mode secret mgmt and pin images.
 affected_services:

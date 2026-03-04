@@ -1,17 +1,11 @@
 # R-008 EXEC_LOG
 
-Task: R-008
-Source of truth: docs/contracts/SECURITY_REMEDIATION_DOD.yml
-Canonical reference: docs/operations/AI_AGENT_OPERATION_MANUAL.md
-
-## repro_command
-- pending
-
 ## actions_taken
-- pending
+- Pinned Postgres CI service image to digest in workflow.
+- Added verifier for digest-pinning checks.
 
 ## verification_commands_run
-- pending
+- bash scripts/audit/verify_ci_images_pinned_to_digest.sh --image postgres
 
 ## final_status
-- planned
+- completed

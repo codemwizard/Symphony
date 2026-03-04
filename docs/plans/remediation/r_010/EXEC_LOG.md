@@ -1,17 +1,10 @@
 # R-010 EXEC_LOG
 
-Task: R-010
-Source of truth: docs/contracts/SECURITY_REMEDIATION_DOD.yml
-Canonical reference: docs/operations/AI_AGENT_OPERATION_MANUAL.md
-
-## repro_command
-- pending
-
 ## actions_taken
-- pending
+- Added TLS deployment guidance covering termination, rotation, minimums, and log redaction.
 
 ## verification_commands_run
-- pending
+- bash scripts/audit/verify_tls_docs_sections.sh
 
 ## final_status
-- planned
+- completed

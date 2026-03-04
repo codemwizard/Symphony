@@ -1,17 +1,11 @@
 # R-009 EXEC_LOG
 
-Task: R-009
-Source of truth: docs/contracts/SECURITY_REMEDIATION_DOD.yml
-Canonical reference: docs/operations/AI_AGENT_OPERATION_MANUAL.md
-
-## repro_command
-- pending
-
 ## actions_taken
-- pending
+- Replaced wildcard AllowedHosts in non-dev appsettings baseline.
+- Added verifier for non-wildcard host policy.
 
 ## verification_commands_run
-- pending
+- bash scripts/audit/verify_allowed_hosts_not_wildcard.sh
 
 ## final_status
-- planned
+- completed

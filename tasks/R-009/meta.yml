@@ -1,7 +1,7 @@
 id: R-009
 phase: '3'
 title: Restrict AllowedHosts
-status: planned
+status: completed
 dependencies: []
 description: Avoid host header attacks in non-dev.
 affected_services:

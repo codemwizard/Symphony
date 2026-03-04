@@ -1,7 +1,7 @@
 id: R-005
 phase: '2'
 title: Fix SecureEquals length leak (hash-then-compare)
-status: planned
+status: completed
 dependencies: []
 description: Prevent timing side-channel via length-based early returns.
 affected_services:
