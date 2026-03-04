@@ -1,6 +1,7 @@
+schema_version: 1
 phase: '1'
 task_id: TSK-HARD-014
-title: Late callback reconciliation — orphaned attestation landing zone
+title: "Late callback reconciliation \u2014 orphaned attestation landing zone"
 owner_role: SUPERVISOR
 status: planned
 depends_on:
@@ -9,7 +10,7 @@ depends_on:
 touches:
 - docs/programs/symphony-hardening/HARDENING_TASK_PACKS.md
 - late callback routing logic (detects terminal/EXHAUSTED parent state and
-- orphaned attestation landing zone (persistent, queryable store — not a log)
+- "orphaned attestation landing zone (persistent, queryable store \u2014 not a log)"
 - tasks/TSK-HARD-014/EXEC_LOG.md
 - tasks/TSK-HARD-014/PLAN.md
 invariants:
@@ -35,7 +36,8 @@ must_read:
 - docs/programs/symphony-hardening/HARDENING_TASK_PACKS.md
 implementation_plan: tasks/TSK-HARD-014/PLAN.md
 implementation_log: tasks/TSK-HARD-014/EXEC_LOG.md
-notes: Generated from canonical hardening task pack source; do not edit semantics here.
+notes: Generated from canonical hardening task pack source; do not edit semantics
+  here.
 client: codex_cli
 assigned_agent: supervisor
 model: gpt-5-codex

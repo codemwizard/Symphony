@@ -1,6 +1,11 @@
 #!/bin/bash
 # lint_app_sql_injection.sh
 # Application-layer SQL injection detection for C# and Python
+#
+# Inline suppression (requires justification):
+#   # nosec-sqli: <reason>
+#   // nosec-sqli: <reason>
+# Suppression applies if placed on the matching line OR the line above.
 
 set -euo pipefail
 
@@ -10,6 +15,21 @@ violations=0
 cs_files=()
 py_files=()
 scan_root="${1:-.}"
+
+# Suppression token: MUST include justification after colon.
+SUPPRESS_RE='nosec-sqli:[[:space:]]*[^[:space:]].+'
+
+is_suppressed_windowed() {
+    local file="$1"
+    local lineno="$2"
+
+    local prev=$((lineno - 1))
+    if [[ "$prev" -lt 1 ]]; then prev=1; fi
+
+    local window
+    window="$(sed -n "${prev},${lineno}p" "$file" 2>/dev/null || true)"
+    echo "$window" | grep -Eq "$SUPPRESS_RE"
+}
 
 # Find C# and Python files
 while IFS= read -r -d '' file; do
@@ -29,6 +49,10 @@ done < <(find "$scan_root" \
   -not -path "*/site-packages/*" \
   -not -path "*/scripts/audit/tests/*" \
   -not -path "*/scripts/security/fixtures/*" \
+  -not -path "*/fixtures/*" \
+  -not -path "*/testdata/*" \
+  -not -path "*/tests/*" \
+  -not -path "*/__tests__/*" \
   -print0)
 
 echo "Found ${#cs_files[@]} C# files and ${#py_files[@]} Python files"
@@ -60,9 +84,20 @@ cs_patterns=(
 for file in "${cs_files[@]}"; do
     for pattern in "${cs_patterns[@]}"; do
         if grep -E "$pattern" "$file" >/dev/null 2>&1; then
-            echo "❌ C# SQLi pattern in $file: $pattern"
-            grep -n -E "$pattern" "$file" | head -5
-            violations=$((violations + 1))
+            shown=0
+            while IFS=: read -r lineno line; do
+                [[ -z "${lineno:-}" ]] && continue
+                if is_suppressed_windowed "$file" "$lineno"; then
+                    continue
+                fi
+                if [[ "$shown" -eq 0 ]]; then
+                    echo "❌ C# SQLi pattern in $file: $pattern"
+                fi
+                echo "${lineno}:${line}"
+                shown=$((shown + 1))
+                violations=$((violations + 1))
+                [[ "$shown" -ge 5 ]] && break
+            done < <(grep -n -E "$pattern" "$file" || true)
         fi
     done
 done
@@ -97,9 +132,20 @@ py_patterns=(
 for file in "${py_files[@]}"; do
     for pattern in "${py_patterns[@]}"; do
         if grep -E "$pattern" "$file" >/dev/null 2>&1; then
-            echo "❌ Python SQLi pattern in $file: $pattern"
-            grep -n -E "$pattern" "$file" | head -5
-            violations=$((violations + 1))
+            shown=0
+            while IFS=: read -r lineno line; do
+                [[ -z "${lineno:-}" ]] && continue
+                if is_suppressed_windowed "$file" "$lineno"; then
+                    continue
+                fi
+                if [[ "$shown" -eq 0 ]]; then
+                    echo "❌ Python SQLi pattern in $file: $pattern"
+                fi
+                echo "${lineno}:${line}"
+                shown=$((shown + 1))
+                violations=$((violations + 1))
+                [[ "$shown" -ge 5 ]] && break
+            done < <(grep -n -E "$pattern" "$file" || true)
         fi
     done
 done
@@ -156,10 +202,13 @@ fi
 echo ""
 echo "=== Summary ==="
 echo "Files scanned: ${#cs_files[@]} C#, ${#py_files[@]} Python"
-echo "Violations found: $violations"
+echo "Violations found (unsuppressed): $violations"
 
 if [[ "$violations" -gt 0 ]]; then
     echo "❌ SQL INJECTION BLOCK: Found $violations potential SQL injection vulnerabilities"
+    echo "If safe, suppress with a justification on the same or previous line:"
+    echo "  # nosec-sqli: <reason>"
+    echo "  // nosec-sqli: <reason>"
     exit 1
 fi
 

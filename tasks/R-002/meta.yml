@@ -1,35 +1,40 @@
-id: "R-002"
-phase: "0.2"
-title: "Tenant allowlist deny-all default"
-status: "completed"
-description: "Ensure that if `SYMPHONY_KNOWN_TENANTS` is unconfigured, all tenant-scoped requests are rejected (503) instead of accepted. Adds safe dev bootstrapping."
-dependencies: ["R-000"]
-affected_services: ["ledger-api"]
-affected_files:
-  - "services/ledger-api/dotnet/src/LedgerApi/Program.cs"
-  - "scripts/dev/export_known_tenants.sh"
-
-# Core invariants to be guaranteed
+schema_version: 1
+phase: '0.2'
+task_id: R-002
+title: Tenant allowlist deny-all default
+owner_role: SUPERVISOR
+status: completed
+depends_on:
+- R-000
+touches:
+- services/ledger-api/dotnet/src/LedgerApi/Program.cs
+- scripts/dev/export_known_tenants.sh
 invariants:
-  - id: R002-INV-1
-    description: "Startup `/health` reports `tenant_allowlist_configured: false` with warning level logging when absent."
-    enforcement_type: "dynamic"
-  - id: R002-INV-2
-    description: "Unconfigured allowlist safely returns 503 to ALL tenant-scoped API requests."
-    enforcement_type: "dynamic"
-  - id: R002-INV-3
-    description: "Configured allowlist successfully blocks unknown tenants with 403 Forbidden."
-    enforcement_type: "dynamic"
-
+- '{''id'': ''R002-INV-1'', ''description'': ''Startup `/health` reports `tenant_allowlist_configured:
+  false` with warning level logging when absent.'', ''enforcement_type'': ''dynamic''}'
+- '{''id'': ''R002-INV-2'', ''description'': ''Unconfigured allowlist safely returns
+  503 to ALL tenant-scoped API requests.'', ''enforcement_type'': ''dynamic''}'
+- '{''id'': ''R002-INV-3'', ''description'': ''Configured allowlist successfully blocks
+  unknown tenants with 403 Forbidden.'', ''enforcement_type'': ''dynamic''}'
+work: []
 acceptance_criteria:
-  - id: R002-AC-1
-    description: "Booting app with unset `SYMPHONY_KNOWN_TENANTS` actively triggers 503 upon an endpoint hit."
-  - id: R002-AC-2
-    description: "Dev environment provides a non-code mechanism (bash bootstrap) to load placeholders safely."
-
-verification_command: |
-  SYMPHONY_ENV=development bash scripts/audit/test_tenant_allowlist_deny_all.sh
-  SYMPHONY_ENV=development bash scripts/audit/test_tenant_allowlist_unknown_reject.sh
-evidence:  
-  path: "evidence/security_remediation/r_002_tenant_allowlist.json"
-implementation_plan_path: "docs/plans/remediation/r_002/PLAN.md"
+- id: R002-AC-1
+  description: Booting app with unset `SYMPHONY_KNOWN_TENANTS` actively triggers 503
+    upon an endpoint hit.
+- id: R002-AC-2
+  description: Dev environment provides a non-code mechanism (bash bootstrap) to load
+    placeholders safely.
+verification:
+- SYMPHONY_ENV=development bash scripts/audit/test_tenant_allowlist_deny_all.sh
+- SYMPHONY_ENV=development bash scripts/audit/test_tenant_allowlist_unknown_reject.sh
+evidence:
+- evidence/security_remediation/r_002_tenant_allowlist.json
+failure_modes: []
+must_read: []
+implementation_plan: docs/plans/remediation/r_002/PLAN.md
+implementation_log: ''
+notes: Ensure that if `SYMPHONY_KNOWN_TENANTS` is unconfigured, all tenant-scoped
+  requests are rejected (503) instead of accepted. Adds safe dev bootstrapping.
+client: codex_cli
+assigned_agent: supervisor
+model: <UNASSIGNED>

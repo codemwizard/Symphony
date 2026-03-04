@@ -1,0 +1,4 @@
+
+› The report is well written but is lacking in some compliance standards like ISO-27001:2022 and ISO-27002
+  and ISO-20022. The system is implementing Zero Trust Architecture so you need to assess it on that, too.
+  You were also supposed to talk about the exact migration process.

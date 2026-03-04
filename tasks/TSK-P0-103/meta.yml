@@ -1,40 +1,36 @@
-phase: "1"
-task_id: "TSK-P0-103"
-title: "Single payload materialization"
-owner_role: "SUPERVISOR"
-status: "completed"
-
+schema_version: 1
+phase: '1'
+task_id: TSK-P0-103
+title: Single payload materialization
+owner_role: SUPERVISOR
+status: completed
 depends_on:
-  - "TSK-P0-102"
-
+- TSK-P0-102
 touches:
-  - "tasks/TSK-P0-103/meta.yml"
-  - "scripts/audit/validate_evidence_json.sh"
-  - "scripts/audit/run_phase0_ordered_checks.sh"
-  - "scripts/audit/verify_tsk_p0_103.sh"
+- tasks/TSK-P0-103/meta.yml
+- scripts/audit/validate_evidence_json.sh
+- scripts/audit/run_phase0_ordered_checks.sh
+- scripts/audit/verify_tsk_p0_103.sh
 invariants:
-  - "INV-077"
+- INV-077
 work:
-  - "Ensure task evidence generation follows single payload materialization semantics."
-  - "Preserve deterministic verifier output and schema validation for TSK-P0-103."
+- Ensure task evidence generation follows single payload materialization semantics.
+- Preserve deterministic verifier output and schema validation for TSK-P0-103.
 acceptance_criteria:
-  - "TSK-P0-103 verifier passes and emits schema-valid single payload evidence."
-  - "Ordered checks continue to validate TSK-P0-103 without payload divergence."
-
+- TSK-P0-103 verifier passes and emits schema-valid single payload evidence.
+- Ordered checks continue to validate TSK-P0-103 without payload divergence.
 verification:
-  - "bash scripts/audit/verify_tsk_p0_103.sh --evidence evidence/phase0/tsk_p0_103__single_payload_materialization.json"
-
+- bash scripts/audit/verify_tsk_p0_103.sh --evidence evidence/phase0/tsk_p0_103__single_payload_materialization.json
 evidence:
-  - "evidence/phase0/tsk_p0_103__single_payload_materialization.json"
+- evidence/phase0/tsk_p0_103__single_payload_materialization.json
 failure_modes:
-  - "Verifier emits multiple/ambiguous payload shapes for the same task evidence."
-  - "Evidence artifact is missing or fails schema validation during ordered checks."
-
+- Verifier emits multiple/ambiguous payload shapes for the same task evidence.
+- Evidence artifact is missing or fails schema validation during ordered checks.
 must_read:
-  - "docs/operations/AI_AGENT_OPERATION_MANUAL.md"
-notes: ""
-client: "codex_cli"
-assigned_agent: "supervisor"
-model: "gpt-5-codex"
-implementation_plan: "docs/plans/phase1/TSK-P0-103/PLAN.md"
-implementation_log: "docs/plans/phase1/TSK-P0-103/EXEC_LOG.md"
+- docs/operations/AI_AGENT_OPERATION_MANUAL.md
+implementation_plan: docs/plans/phase1/TSK-P0-103/PLAN.md
+implementation_log: docs/plans/phase1/TSK-P0-103/EXEC_LOG.md
+notes: ''
+client: codex_cli
+assigned_agent: supervisor
+model: gpt-5-codex

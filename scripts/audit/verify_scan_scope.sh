@@ -6,9 +6,9 @@ set -euo pipefail
 
 echo "=== Verifying Scan Scope Coverage ==="
 
-# Count language files in repository
-cs_files=$(find . -name "*.cs" -not -path "./.git/*" -not -path "./node_modules/*" | wc -l)
-py_files=$(find . -name "*.py" -not -path "./.git/*" -not -path "./venv/*" -not -path "./env/*" | wc -l)
+# Count language files in repository (git-tracked only for deterministic parity)
+cs_files=$(git ls-files '*.cs' | wc -l)
+py_files=$(git ls-files '*.py' | wc -l)
 
 echo "Language files found:"
 echo "  C# files: $cs_files"
@@ -16,7 +16,28 @@ echo "  Python files: $py_files"
 
 # Check CI configuration for required scanners
 CI_WORKFLOW=".github/workflows/invariants.yml"
-security_scan_section=$(sed -n '/security_scan:/,/^[[:space:]]*[a-zA-Z]/p' "$CI_WORKFLOW" | sed '$d')
+if [[ ! -f "$CI_WORKFLOW" ]]; then
+    echo "❌ CI workflow file not found: $CI_WORKFLOW"
+    exit 1
+fi
+
+security_scan_run_text="$(
+CI_WORKFLOW="$CI_WORKFLOW" python3 - <<'PY'
+import os
+from pathlib import Path
+import yaml
+
+wf = Path(os.environ["CI_WORKFLOW"])
+doc = yaml.safe_load(wf.read_text(encoding="utf-8")) or {}
+jobs = doc.get("jobs") or {}
+sec = jobs.get("security_scan")
+if not isinstance(sec, dict):
+    print("")
+    raise SystemExit(0)
+steps = sec.get("steps") or []
+print("\n".join((s.get("run") or "") for s in steps if isinstance(s, dict)))
+PY
+)"
 
 echo ""
 echo "=== Checking CI Scanner Coverage ==="
@@ -24,14 +45,14 @@ echo "=== Checking CI Scanner Coverage ==="
 if [[ "$cs_files" -gt 0 ]]; then
     echo "C# files present, checking for C# scanners..."
     
-    if echo "$security_scan_section" | grep -q "semgrep"; then
+    if echo "$security_scan_run_text" | grep -q "semgrep"; then
         echo "✅ Semgrep found (covers C#)"
     else
         echo "❌ Semgrep not found in security_scan (required for C#)"
         exit 1
     fi
     
-    if echo "$security_scan_section" | grep -q "lint_app_sql_injection"; then
+    if echo "$security_scan_run_text" | grep -q "lint_app_sql_injection"; then
         echo "✅ Application SQL injection lint found (covers C#)"
     else
         echo "❌ Application SQL injection lint not found (required for C#)"
@@ -44,14 +65,14 @@ fi
 if [[ "$py_files" -gt 0 ]]; then
     echo "Python files present, checking for Python scanners..."
     
-    if echo "$security_scan_section" | grep -q "semgrep"; then
+    if echo "$security_scan_run_text" | grep -q "semgrep"; then
         echo "✅ Semgrep found (covers Python)"
     else
         echo "❌ Semgrep not found in security_scan (required for Python)"
         exit 1
     fi
     
-    if echo "$security_scan_section" | grep -q "lint_app_sql_injection"; then
+    if echo "$security_scan_run_text" | grep -q "lint_app_sql_injection"; then
         echo "✅ Application SQL injection lint found (covers Python)"
     else
         echo "❌ Application SQL injection lint not found (required for Python)"

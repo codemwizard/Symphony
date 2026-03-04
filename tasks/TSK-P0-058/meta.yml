@@ -1,3 +1,4 @@
+schema_version: 1
 phase: '0'
 task_id: TSK-P0-058
 title: CI toolchain pinning (PyYAML + ripgrep)
@@ -28,9 +29,9 @@ failure_modes:
 - Evidence file missing.
 must_read:
 - .github/workflows/invariants.yml
+implementation_plan: docs/plans/phase0/TSK-P0-058/PLAN.md
+implementation_log: docs/plans/phase0/TSK-P0-058/EXEC_LOG.md
 notes: ''
 client: codex_cli
 assigned_agent: security_guardian
 model: <UNASSIGNED>
-implementation_plan: docs/plans/phase0/TSK-P0-058/PLAN.md
-implementation_log: docs/plans/phase0/TSK-P0-058/EXEC_LOG.md

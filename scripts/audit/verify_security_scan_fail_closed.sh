@@ -1,85 +1,51 @@
 #!/bin/bash
-# verify_security_scan_fail_closed.sh
-# Verify that security_scan is configured to fail closed
-
 set -euo pipefail
 
 CI_WORKFLOW=".github/workflows/invariants.yml"
 
-echo "=== Verifying Security Scan Fail-Closed Configuration ==="
-
 if [[ ! -f "$CI_WORKFLOW" ]]; then
-    echo "❌ CI workflow file not found: $CI_WORKFLOW"
-    exit 1
+  echo "❌ CI workflow file not found: $CI_WORKFLOW" >&2
+  exit 1
 fi
 
-# Extract security_scan job section
-security_scan_section=$(sed -n '/security_scan:/,/^[[:space:]]*[a-zA-Z]/p' "$CI_WORKFLOW" | sed '$d')
+CI_WORKFLOW="$CI_WORKFLOW" python3 - <<'PY'
+import os
+from pathlib import Path
 
-if [[ -z "$security_scan_section" ]]; then
-    echo "❌ security_scan job not found in CI workflow"
-    exit 1
-fi
+import yaml
 
-echo "✅ security_scan job found"
+wf = Path(os.environ["CI_WORKFLOW"])
+doc = yaml.safe_load(wf.read_text(encoding="utf-8")) or {}
+jobs = doc.get("jobs") or {}
+security_scan = jobs.get("security_scan")
+if not isinstance(security_scan, dict):
+    print("❌ security_scan job not found")
+    raise SystemExit(1)
 
-# Check for continue-on-error (should NOT be present)
-echo ""
-echo "=== Checking Continue-On-Error ==="
+steps = security_scan.get("steps") or []
+run_text = "\n".join((s.get("run") or "") for s in steps if isinstance(s, dict))
 
-if echo "$security_scan_section" | grep -q "continue-on-error: true"; then
-    echo "❌ security_scan has continue-on-error: true (violates fail-closed)"
-    exit 1
-else
-    echo "✅ No continue-on-error: true found (good for fail-closed)"
-fi
+print("✅ security_scan job found")
+print("\n=== Checking Continue-On-Error ===")
+if str(security_scan.get("continue-on-error", "")).lower() == "true":
+    print("❌ security_scan has continue-on-error: true")
+    raise SystemExit(1)
+print("✅ continue-on-error is not enabled")
 
-# Check for explicit error handling
-echo ""
-echo "=== Checking Error Handling ==="
+print("\n=== Checking Shell Fail-Closed ===")
+if "set -euo pipefail" in run_text:
+    print("✅ set -euo pipefail found in security_scan steps")
+else:
+    print("❌ set -euo pipefail missing from security_scan steps")
+    raise SystemExit(1)
 
-if echo "$security_scan_section" | grep -q "set -euo pipefail"; then
-    echo "✅ Uses 'set -euo pipefail' (proper error handling)"
-else
-    echo "⚠️  May not use proper error handling"
-fi
+print("\n=== Checking Semgrep Blocking Mode ===")
+if "--error" in run_text or "semgrep --config=security/semgrep/rules.yml --quiet --error" in run_text:
+    print("✅ semgrep blocking mode present")
+else:
+    print("❌ semgrep blocking mode not detected")
+    raise SystemExit(1)
 
-# Check if tools are run with --error or --quiet flags
-echo ""
-echo "=== Checking Tool Error Flags ==="
-
-error_flags_found=false
-
-if echo "$security_scan_section" | grep -q "semgrep.*--error"; then
-    echo "✅ Semgrep uses --error flag"
-    error_flags_found=true
-fi
-
-if echo "$security_scan_section" | grep -q "set -euo pipefail"; then
-    echo "✅ Scripts use 'set -euo pipefail'"
-    error_flags_found=true
-fi
-
-if [[ "$error_flags_found" == false ]]; then
-    echo "⚠️  No explicit error flags found"
-else
-    echo "✅ Error handling flags present"
-fi
-
-# Check for if conditions that might skip security
-echo ""
-echo "=== Checking for Conditional Skips ==="
-
-if echo "$security_scan_section" | grep -q "if.*\[\[.*!.*\]\]"; then
-    echo "⚠️  Found conditional that might skip security scan"
-else
-    echo "✅ No conditional skips found"
-fi
-
-echo ""
-echo "=== Summary ==="
-echo "✅ security_scan fail-closed configuration verified"
-echo "✅ No continue-on-error: true found"
-echo "✅ Proper error handling configured"
-echo "✅ Error flags present"
-echo "✅ No conditional skips detected"
+print("\n=== Summary ===")
+print("✅ security_scan fail-closed verification passed")
+PY

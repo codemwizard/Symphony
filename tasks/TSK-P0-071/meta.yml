@@ -1,6 +1,7 @@
+schema_version: 1
 phase: '0'
 task_id: TSK-P0-071
-title: "Task meta schema update for plan/log linkage"
+title: Task meta schema update for plan/log linkage
 owner_role: ARCHITECT
 status: completed
 depends_on:
@@ -17,14 +18,16 @@ touches:
 - docs/plans/phase0/TSK-P0-069_contract_parse_test/EXEC_LOG.md
 invariants: []
 work:
-- "Add implementation_plan and implementation_log to the task meta template."
-- "Update task meta schema and style guide with plan/log requirements."
-- "Allow YAML lint to recognize new keys and enforce them for in_progress/completed tasks."
-- "Backfill implementation_plan/log for active tasks and scaffold missing plan/log files."
+- Add implementation_plan and implementation_log to the task meta template.
+- Update task meta schema and style guide with plan/log requirements.
+- Allow YAML lint to recognize new keys and enforce them for in_progress/completed
+  tasks.
+- Backfill implementation_plan/log for active tasks and scaffold missing plan/log
+  files.
 acceptance_criteria:
-- "Task meta template includes implementation_plan/log fields."
-- "YAML lint accepts new keys and enforces them for in_progress/completed tasks."
-- "Active tasks have plan/log paths populated."
+- Task meta template includes implementation_plan/log fields.
+- YAML lint accepts new keys and enforces them for in_progress/completed tasks.
+- Active tasks have plan/log paths populated.
 verification:
 - scripts/audit/lint_yaml_conventions.sh
 evidence:
@@ -35,9 +38,9 @@ failure_modes:
 must_read:
 - docs/tasks/TASK_META_SCHEMA.md
 - docs/operations/STYLE_GUIDE.md
+implementation_plan: docs/plans/phase0/TSK-P0-071_task_meta_schema_update/PLAN.md
+implementation_log: docs/plans/phase0/TSK-P0-071_task_meta_schema_update/EXEC_LOG.md
 notes: ''
 client: codex_cli
 assigned_agent: architect
 model: <UNASSIGNED>
-implementation_plan: docs/plans/phase0/TSK-P0-071_task_meta_schema_update/PLAN.md
-implementation_log: docs/plans/phase0/TSK-P0-071_task_meta_schema_update/EXEC_LOG.md

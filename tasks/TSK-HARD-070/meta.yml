@@ -1,6 +1,7 @@
+schema_version: 1
 phase: '1'
 task_id: TSK-HARD-070
-title: Trust-anchor archival controls — Public Key Archive
+title: "Trust-anchor archival controls \u2014 Public Key Archive"
 owner_role: SUPERVISOR
 status: planned
 depends_on:
@@ -33,7 +34,8 @@ must_read:
 - docs/programs/symphony-hardening/HARDENING_TASK_PACKS.md
 implementation_plan: tasks/TSK-HARD-070/PLAN.md
 implementation_log: tasks/TSK-HARD-070/EXEC_LOG.md
-notes: Generated from canonical hardening task pack source; do not edit semantics here.
+notes: Generated from canonical hardening task pack source; do not edit semantics
+  here.
 client: codex_cli
 assigned_agent: supervisor
 model: gpt-5-codex

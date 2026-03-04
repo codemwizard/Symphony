@@ -1,55 +1,44 @@
-phase: "1"
-task_id: "PERF-003"
-title: "Rebaseline workflow with SHA-locked approvals"
-owner_role: "SUPERVISOR"
-status: "completed"
-
+schema_version: 1
+phase: '1'
+task_id: PERF-003
+title: Rebaseline workflow with SHA-locked approvals
+owner_role: SUPERVISOR
+status: completed
 depends_on:
-  - "PERF-002"
-
+- PERF-002
 touches:
-  - "scripts/perf/rebaseline.sh"
-  - "scripts/perf/verify_rebaseline_approval.sh"
-  - "scripts/audit/verify_perf_003_rebaseline_sha_lock.sh"
-  - "scripts/dev/pre_ci.sh"
-  - "docs/perf/REBASELINE.md"
-  - "docs/perf/perf_baseline_approval.yml"
-  - "docs/PHASE1/phase1_contract.yml"
-  - "docs/operations/VERIFIER_EVIDENCE_REGISTRY.yml"
-  - "docs/invariants/INVARIANTS_MANIFEST.yml"
-  - "docs/invariants/INVARIANTS_IMPLEMENTED.md"
-  - "docs/invariants/INVARIANTS_QUICK.md"
-  - "tasks/PERF-003/meta.yml"
-
+- scripts/perf/rebaseline.sh
+- scripts/perf/verify_rebaseline_approval.sh
+- scripts/audit/verify_perf_003_rebaseline_sha_lock.sh
+- scripts/dev/pre_ci.sh
+- docs/perf/REBASELINE.md
+- docs/perf/perf_baseline_approval.yml
+- docs/PHASE1/phase1_contract.yml
+- docs/operations/VERIFIER_EVIDENCE_REGISTRY.yml
+- docs/invariants/INVARIANTS_MANIFEST.yml
+- docs/invariants/INVARIANTS_IMPLEMENTED.md
+- docs/invariants/INVARIANTS_QUICK.md
+- tasks/PERF-003/meta.yml
 invariants:
-  - "INV-123"
-
-mechanics:
-  gate_ids:
-    - "INT-G28"
-  verifiers:
-    - "bash scripts/audit/verify_perf_003_rebaseline_sha_lock.sh"
-    - "python3 scripts/audit/validate_evidence.py --task PERF-003 --evidence evidence/phase1/perf_003_rebaseline_sha_lock.json"
-    - "RUN_PHASE1_GATES=1 bash scripts/dev/pre_ci.sh"
-  evidence_paths:
-    - "evidence/phase1/perf_003_rebaseline_sha_lock.json"
-
+- INV-123
+work: []
 acceptance_criteria:
-  - "Rebaseline workflow emits candidate baseline and requires SHA-locked approval metadata."
-  - "Verifier proves mismatch SHA is fail-closed."
-  - "PERF-003 evidence is emitted and validated."
-  - "Phase-1 contract includes required PERF-003 evidence."
-
+- Rebaseline workflow emits candidate baseline and requires SHA-locked approval metadata.
+- Verifier proves mismatch SHA is fail-closed.
+- PERF-003 evidence is emitted and validated.
+- Phase-1 contract includes required PERF-003 evidence.
 verification:
-  - "bash scripts/audit/verify_perf_003_rebaseline_sha_lock.sh"
-  - "python3 scripts/audit/validate_evidence.py --task PERF-003 --evidence evidence/phase1/perf_003_rebaseline_sha_lock.json"
-  - "RUN_PHASE1_GATES=1 bash scripts/dev/pre_ci.sh"
-
+- bash scripts/audit/verify_perf_003_rebaseline_sha_lock.sh
+- python3 scripts/audit/validate_evidence.py --task PERF-003 --evidence evidence/phase1/perf_003_rebaseline_sha_lock.json
+- RUN_PHASE1_GATES=1 bash scripts/dev/pre_ci.sh
 evidence:
-  - "evidence/phase1/perf_003_rebaseline_sha_lock.json"
-
+- evidence/phase1/perf_003_rebaseline_sha_lock.json
+failure_modes: []
 must_read:
-  - "docs/operations/AI_AGENT_OPERATION_MANUAL.md"
-
-implementation_plan: "docs/plans/phase1/PERF-003/PLAN.md"
-implementation_log: "docs/plans/phase1/PERF-003/EXEC_LOG.md"
+- docs/operations/AI_AGENT_OPERATION_MANUAL.md
+implementation_plan: docs/plans/phase1/PERF-003/PLAN.md
+implementation_log: docs/plans/phase1/PERF-003/EXEC_LOG.md
+notes: ''
+client: codex_cli
+assigned_agent: supervisor
+model: <UNASSIGNED>

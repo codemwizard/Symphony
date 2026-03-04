@@ -1,44 +1,36 @@
-phase: "1"
-task_id: "TSK-OPS-DRD-006"
-title: "DRD enforcement promotion criteria"
-owner_role: "SUPERVISOR"
-status: "completed"
-
+schema_version: 1
+phase: '1'
+task_id: TSK-OPS-DRD-006
+title: DRD enforcement promotion criteria
+owner_role: SUPERVISOR
+status: completed
 depends_on: []
-
 touches:
-  - ".agent/policies/debug-remediation-policy.md"
-  - "docs/process/debug-remediation-policy.md"
-
+- .agent/policies/debug-remediation-policy.md
+- docs/process/debug-remediation-policy.md
 invariants: []
-
 work:
-  - "Implement approved DRD rollout scope without touching Phase-1 closeout-critical gates."
-  - "Keep rollout advisory-first and declarative."
-
+- Implement approved DRD rollout scope without touching Phase-1 closeout-critical
+  gates.
+- Keep rollout advisory-first and declarative.
 acceptance_criteria:
-  - "Required files exist and match approved rollout constraints."
-  - "No hard-fail CI behavior introduced by DRD rollout."
-
+- Required files exist and match approved rollout constraints.
+- No hard-fail CI behavior introduced by DRD rollout.
 verification:
-  - "rg -n \"Enforcement Rollout|adoption|false-positive|threshold\" .agent/policies/debug-remediation-policy.md docs/process/debug-remediation-policy.md"
-
+- rg -n "Enforcement Rollout|adoption|false-positive|threshold" .agent/policies/debug-remediation-policy.md
+  docs/process/debug-remediation-policy.md
 evidence:
-  - "evidence/phase0/drd_policy_usage.json"
-
+- evidence/phase0/drd_policy_usage.json
 failure_modes:
-  - "Canonical-vs-mirror policy drift."
-  - "Missing severity declaration in PR workflow."
-  - "Advisory verifier introduces hard fail behavior."
-
+- Canonical-vs-mirror policy drift.
+- Missing severity declaration in PR workflow.
+- Advisory verifier introduces hard fail behavior.
 must_read:
-  - "docs/operations/AI_AGENT_OPERATION_MANUAL.md"
-  - ".agent/policies/debug-remediation-policy.md"
-
-implementation_plan: "docs/plans/phase1/TSK-OPS-DRD-006/PLAN.md"
-implementation_log: "docs/plans/phase1/TSK-OPS-DRD-006/EXEC_LOG.md"
-
-notes: "DRD rollout task."
-client: "codex_cli"
-assigned_agent: "supervisor"
-model: "gpt-5-codex"
+- docs/operations/AI_AGENT_OPERATION_MANUAL.md
+- .agent/policies/debug-remediation-policy.md
+implementation_plan: docs/plans/phase1/TSK-OPS-DRD-006/PLAN.md
+implementation_log: docs/plans/phase1/TSK-OPS-DRD-006/EXEC_LOG.md
+notes: DRD rollout task.
+client: codex_cli
+assigned_agent: supervisor
+model: gpt-5-codex

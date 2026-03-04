@@ -1,3 +1,4 @@
+schema_version: 1
 phase: '0'
 task_id: TSK-P0-052
 title: Expand Security plane guardrails (infra/deps/src)
@@ -28,12 +29,12 @@ acceptance_criteria:
 - All new scripts emit evidence under evidence/phase0/.
 - CI runs the checks and fails on violations.
 verification:
-  - scripts/audit/run_security_fast_checks.sh
+- scripts/audit/run_security_fast_checks.sh
 evidence:
-  - evidence/phase0/security_secrets_scan.json
-  - evidence/phase0/security_dotnet_deps_audit.json
-  - evidence/phase0/security_secure_config_lint.json
-  - evidence/phase0/security_insecure_patterns.json
+- evidence/phase0/security_secrets_scan.json
+- evidence/phase0/security_dotnet_deps_audit.json
+- evidence/phase0/security_secure_config_lint.json
+- evidence/phase0/security_insecure_patterns.json
 failure_modes:
 - Evidence file missing.
 - Any guardrail violation must fail the job.
@@ -41,9 +42,9 @@ must_read:
 - docs/invariants/INVARIANTS_MANIFEST.yml
 - scripts/db/verify_invariants.sh
 - scripts/db/ci_invariant_gate.sql
+implementation_plan: docs/plans/phase0/TSK-P0-052_security_plane_expansion/PLAN.md
+implementation_log: docs/plans/phase0/TSK-P0-052_security_plane_expansion/EXEC_LOG.md
 notes: ''
 client: codex_cli
 assigned_agent: security_guardian
 model: <UNASSIGNED>
-implementation_plan: docs/plans/phase0/TSK-P0-052_security_plane_expansion/PLAN.md
-implementation_log: docs/plans/phase0/TSK-P0-052_security_plane_expansion/EXEC_LOG.md

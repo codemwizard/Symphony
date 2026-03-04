@@ -1,0 +1,213 @@
+
+They *can* all be Phase-0 **implementations**, but only **once the scripts/migrations actually exist and are wired into pre-CI + CI**. Until then they’re just **Phase-0 intentions** (plan + task meta), not enforced controls.
+
+Here’s the clean mental model that matches your repo’s SKIPPED semantics and “Approach A”.
+
+---
+
+## 1) Are these all Phase-0 implementations?
+
+### Phase-0 “implementation” means:
+
+* a verifier/lint script exists **now**
+* it runs in **local pre-CI** and **CI**
+* it emits evidence JSON **every run**
+* the contract requires that evidence **only when appropriate**
+
+If the scripts are “scheduled to be created later,” then they are **not yet Phase-0 implementations**. They are **Phase-0 planned work**.
+
+So: yes, they are *Phase-0 scoped*, but they’re not “implemented” until the scripts land + wiring lands.
+
+---
+
+## 2) Are the scripts scheduled to be created at implementation time?
+
+Yes — that’s exactly what your task strategy says.
+
+* The task meta can declare the invariant and intended evidence path,
+* but the actual enforcement only exists once:
+
+  1. the script exists,
+  2. the gate exists in `CONTROL_PLANES.yml`,
+  3. the ordered runner calls it,
+  4. CI runs that same ordered runner.
+
+That’s why **Approach A** exists: don’t put new evidence requirements in the contract until you can actually emit them deterministically.
+
+---
+
+## 3) “Only PLANNED invariants need SKIPPED stubs” — correct, but with one nuance
+
+Your enforcement is **contract-driven**, not “manifest-driven”.
+
+### What actually triggers “missing evidence” failures:
+
+`verify_phase0_contract_evidence_status.sh` (and friends) only complain when:
+
+* a task is **required by contract** (or treated as required by status rules), AND
+* its evidence file(s) are **missing**, OR have wrong status for that task state.
+
+So:
+
+### ✅ If an invariant is merely listed in the manifest as roadmap/planned
+
+…and **not required by the contract yet**, then **no SKIPPED stub is necessary**.
+
+### ✅ If a task is in the contract but not implemented yet
+
+Then you must choose:
+
+* **Approach A:** don’t add it to the contract yet (no stub needed)
+* **Approach B:** add it early, but provide a stub verifier that emits `SKIPPED` deterministically (otherwise CI fails)
+
+That’s the real rule: **SKIPPED stubs are needed only for things that your contract expects evidence for, but aren’t enforceable yet.**
+
+---
+
+## 4) With Approach A, when does enforcement take place?
+
+**Enforcement starts the moment you land the implementation PR that includes:**
+
+1. the script(s) + migrations (if any),
+2. the gate registration in `CONTROL_PLANES.yml`,
+3. wiring into `run_phase0_ordered_checks.sh` (and thus pre-CI & CI),
+4. **only then** add the evidence path(s) into `docs/PHASE0/phase0_contract.yml`.
+
+So Approach A is “**late-binding contract**”:
+
+* you build the gate first,
+* you prove it emits evidence on every run,
+* then you make it “contract-required”.
+
+This avoids the exact failure mode you pasted (missing evidence for tasks that aren’t actually producing artifacts).
+
+---
+
+## 5) Practical timeline for a new Phase-0 gate under Approach A
+
+**PR 1 (implementation + wiring, but NOT contract-required yet)**
+
+* Add scripts/migration
+* Add gate entry in CONTROL_PLANES
+* Add call in ordered runner + pre_ci + CI
+* Gate emits evidence, but contract does not require it yet → no “missing evidence” failures
+
+**PR 2 (turn it into a contract requirement)**
+
+* Add/flip the task status + evidence path requirement in `phase0_contract.yml`
+* Now contract enforcement requires PASS/SKIPPED correctly
+
+Most teams just do this in **one PR** by doing all four steps together once the script works.
+
+---
+
+## 6) Where people get burned (your current failure)
+
+You got:
+
+* remediation trace gate failing (“No TSK-P0 files found”)
+* and contract evidence status failing (many “missing_evidence:*”)
+
+Those are classic “contract ahead of implementation” symptoms:
+
+* contract expects evidence for tasks whose evidence isn’t being produced in CI.
+
+Approach A prevents that by making contract updates the *last* step, not the first.
+
+---
+
+## Bottom line rules (copy/paste-able)
+
+* **Manifest/roadmap invariants do not require SKIPPED stubs** by themselves.
+* **Contract-required evidence always requires deterministic emission**:
+
+  * `PASS` for completed/enforced
+  * `SKIPPED` only when the contract says it’s allowed to be skipped for that task state
+  * never “missing”
+* **Approach A**: don’t add a new evidence path to `phase0_contract.yml` until the gate is live in pre-CI & CI.
+* **Approach B**: if you add to contract early, you *must* ship a stub that always emits `SKIPPED` until implementation.
+
+If you paste (or re-upload) your current `phase0_contract.yml` section for the new tasks and the relevant portion of `run_phase0_ordered_checks.sh`, I can tell you exactly whether you’re currently in A or accidentally in B (and exactly what to change to get back to A without breaking SKIPPED semantics).
+
+
+
+
+
+
+
+
+
+
+
+
+
+### Which approach are you in right now: A or B?
+
+You are **in Approach B (declare early + require SKIPPED evidence)**.
+
+Reason: your **Phase-0 contract already includes PLANNED tasks with evidence_paths**, and your CI failure is complaining that those evidence files are missing (e.g. `TSK-P0-037` is `planned` but still flagged as `missing_evidence`). That only happens when your enforcement expects **every contract entry to produce an evidence JSON every run**, where planned items must emit **`status: "SKIPPED"`** (not “missing”).
+
+Also, `run_phase0_ordered_checks.sh` runs the contract evidence status gate at the end, so anything in the contract must be produced in the run (PASS/FAIL/SKIPPED), otherwise you get exactly the “missing_evidence” failures you’re seeing.
+
+---
+
+### Are these all Phase-0 implementations? When do scripts get created?
+
+They *can be* Phase-0 implementations, but **the scripts aren’t “scheduled” automatically**—they must exist **before** you add their evidence paths to the contract **or** you must have **stub emitters** that output SKIPPED evidence until the real implementation lands.
+
+Right now you have the “declare early” behavior (Approach B), **but you’re missing the SKIPPED stubs** for a bunch of contract items (and/or the gates are wired but not emitting the expected file).
+
+---
+
+### Clarify the rule: “Only PLANNED need SKIPPED stubs” — true?
+
+**Mostly true, but incomplete:**
+
+* **PLANNED** tasks in the contract **must emit `SKIPPED` evidence** every run (Approach B).
+* **COMPLETED** tasks must emit **PASS/FAIL evidence** every run (PASS expected, FAIL allowed if the system regresses).
+* **IN_PROGRESS** tasks (depending on how your checker is written) usually must emit evidence too; commonly **PASS/FAIL** (or SKIPPED only if explicitly allowed by contract semantics).
+
+Your current error list includes **COMPLETED tasks missing evidence** (e.g., `TSK-P0-011`, `TSK-P0-028`, etc.), which is a separate correctness problem: those gates must be run and must write the evidence file.
+
+---
+
+### If you go with Approach A, when does enforcement take place?
+
+In **Approach A (declare only when ready)**:
+
+* Enforcement begins **only when you wire the gate into the ordered checks AND add the evidence_path into `phase0_contract.yml`**.
+* Until then, the repo has **no mechanical requirement** to produce that evidence (so CI won’t fail for “missing evidence”).
+* You also lose early “audit-visible” tracking of planned controls.
+
+So Approach A is **simpler to keep CI green**, but it delays audit visibility and makes it easier to “forget” controls until late.
+
+---
+
+### Which option is better for Symphony?
+
+Given your stated goal (“Tier-1 / regulator pre-audit ready” + “evidence-grade / fail-closed”):
+
+✅ **Approach B is the better option** — **but only if you finish it properly**:
+
+1. For every **PLANNED** item present in `phase0_contract.yml`, ensure an ordered-check step runs that **emits a SKIPPED evidence file** (with reason + gate_id/task_id).
+2. For every **COMPLETED** item, ensure the actual verifier runs and always emits PASS/FAIL evidence (never missing).
+3. Keep a single source of truth: contract → ordered checks → evidence files.
+
+If you **don’t** want to invest in the stub infrastructure right now, then temporarily switch to **Approach A** by:
+
+* removing PLANNED items (or their evidence requirements) from the contract **until the scripts exist**, **or**
+* relaxing the checker so PLANNED items don’t require evidence.
+
+But the clean long-term posture for Symphony is **Approach B + universal SKIPPED emitters**, because it prevents “silent drift” and makes the control backlog auditor-visible.
+
+---
+
+### Practical recommendation (what I’d do next)
+
+* **Stay on Approach B** (you’re already there), and fix it by:
+
+  1. Add a small helper like `scripts/audit/emit_skipped_evidence.sh` (or equivalent pattern you already use).
+  2. In `run_phase0_ordered_checks.sh`, for each **planned-but-not-implemented** gate, call the stub emitter to write the expected evidence path with `status: "SKIPPED"`.
+  3. For the **completed-but-missing** evidence items in your error list, wire/run the real scripts (or fix the evidence path mismatch).
+
+If you paste your `verify_phase0_contract_evidence_status.sh` logic (or confirm its rules for planned/in_progress), I can tell you exactly whether it expects SKIPPED for **planned only** or also allows SKIPPED for **in_progress**—but even without that, the CI output you shared already proves you’re operating in **Approach B** today.

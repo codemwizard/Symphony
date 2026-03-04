@@ -1,3 +1,4 @@
+schema_version: 1
 phase: '0'
 task_id: TSK-P0-029
 title: Expand DDL lock-risk lint for blocking operations
@@ -28,9 +29,9 @@ must_read:
 - docs/invariants/INVARIANTS_MANIFEST.yml
 - scripts/db/verify_invariants.sh
 - scripts/db/ci_invariant_gate.sql
+implementation_plan: docs/plans/phase0/TSK-P0-029/PLAN.md
+implementation_log: docs/plans/phase0/TSK-P0-029/EXEC_LOG.md
 notes: Invariant registration is handled by TSK-P0-009.
 client: codex_cli
 assigned_agent: security_guardian
 model: <UNASSIGNED>
-implementation_plan: docs/plans/phase0/TSK-P0-029/PLAN.md
-implementation_log: docs/plans/phase0/TSK-P0-029/EXEC_LOG.md

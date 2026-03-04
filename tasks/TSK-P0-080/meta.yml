@@ -1,3 +1,4 @@
+schema_version: 1
 phase: '0'
 task_id: TSK-P0-080
 title: Add billing usage ledger Phase-0 hook (append-only)
@@ -12,7 +13,8 @@ touches:
 invariants:
 - INV-090 (Atomic revenue event hook exists)
 work:
-- Add a forward-only migration creating billing_usage_events with attribution fields and append-only posture.
+- Add a forward-only migration creating billing_usage_events with attribution fields
+  and append-only posture.
 - Add constraints/indexes needed for schema-level billable traceability in Phase-0.
 - Keep runtime pricing logic out of scope; schema hook only.
 acceptance_criteria:

@@ -1,0 +1,393 @@
+
+
+
+
+
+
+
+
+
+Here are the **minimal, Phase-0–appropriate deltas** to `schema/migrations/0011_ingress_attestations.sql` to support:
+
+* **Tenant isolation hooks** (NGO / Cooperative / program tenant)
+* **Client/workload identity provenance** (mTLS “device ID” / sender-constraint)
+* Optional **member-level attribution** (co-op member / beneficiary) without forcing Phase-1 runtime work yet
+
+---
+
+## 1) Minimal schema deltas (keep the table, add only the missing “chain of trust” fields)
+
+### A) Add identity + tenant fields (and make tenant explicit)
+
+**Change** `tenant_id` to **required** (Phase-0: you want the ledger to be tenant-addressable from Day 1).
+
+**Add**:
+
+* `participant_id` (who is the institution/integrator)
+* `client_id_hash` (which client/app/integration key)
+* `cert_fingerprint_sha256` (mTLS “device/workload identity”)
+* `token_jti_hash` (JWT replay protection linkage)
+* `member_ref` (optional last-mile: co-op member / beneficiary reference)
+
+### B) Add one unique constraint to prevent “double-accept” per tenant/instruction
+
+If you accept the principle “durable ingress record before ACK”, then **a tenant should not have two different ingress rows for the same instruction_id**.
+
+---
+
+## 2) Drop-in patch (diff style)
+
+```diff
+--- a/schema/migrations/0011_ingress_attestations.sql
++++ b/schema/migrations/0011_ingress_attestations.sql
+@@
+ CREATE TABLE IF NOT EXISTS public.ingress_attestations (
+   attestation_id UUID PRIMARY KEY DEFAULT public.uuid_v7_or_random(),
+   instruction_id TEXT NOT NULL,
+-  tenant_id TEXT,
++  tenant_id TEXT NOT NULL,
++  participant_id UUID,
++  client_id_hash TEXT,
++  cert_fingerprint_sha256 TEXT,
++  token_jti_hash TEXT,
++  member_ref TEXT,
+   payload_hash TEXT NOT NULL,
+   signature_hash TEXT,
+   received_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+ );
+ 
++-- Prevent double-acceptance of the same instruction within a tenant
++CREATE UNIQUE INDEX IF NOT EXISTS ux_ingress_attestations_tenant_instruction
++  ON public.ingress_attestations(tenant_id, instruction_id);
++
+ CREATE INDEX IF NOT EXISTS idx_ingress_attestations_instruction
+   ON public.ingress_attestations(instruction_id);
+ 
+ CREATE INDEX IF NOT EXISTS idx_ingress_attestations_received_at
+   ON public.ingress_attestations(received_at);
+ 
+ CREATE INDEX IF NOT EXISTS idx_ingress_attestations_tenant_received
+   ON public.ingress_attestations(tenant_id, received_at)
+-  WHERE tenant_id IS NOT NULL;
++  ;
++
++-- Common audit / ZTA lookups
++CREATE INDEX IF NOT EXISTS idx_ingress_attestations_cert_fpr
++  ON public.ingress_attestations(cert_fingerprint_sha256)
++  WHERE cert_fingerprint_sha256 IS NOT NULL;
++
++CREATE INDEX IF NOT EXISTS idx_ingress_attestations_participant_received
++  ON public.ingress_attestations(participant_id, received_at)
++  WHERE participant_id IS NOT NULL;
+ 
+ CREATE OR REPLACE FUNCTION deny_ingress_attestations_mutation()
+ RETURNS TRIGGER
+ LANGUAGE plpgsql
+ AS $$
+   BEGIN
+     RAISE EXCEPTION 'ingress_attestations is append-only'
+-      USING ERRCODE = 'P0001';
++      USING ERRCODE = 'P7201';
+   END;
+ $$;
+```
+
+---
+
+## 3) Why this is the “minimal” set for Phase-0
+
+* **Tenant-aware from Day 1:** `tenant_id NOT NULL` ensures every durable ingress record is attributable to an NGO program / cooperative / institution tenant.
+* **ZTA device/workload identity:** `cert_fingerprint_sha256` is the practical “device ID” for B2B mTLS integrations (and matches your durable revocation direction).
+* **Replay linkage:** `token_jti_hash` gives you a durable hook for sender-constrained tokens without storing raw JWTs.
+* **Member-level granularity without overcommitting:** `member_ref` is a Phase-0 hook that lets you attach a payment instruction to a cooperative member **without** forcing a full member directory schema yet.
+
+---
+
+## 4) One important note (so you don’t accidentally block yourselves)
+
+If you have any existing Phase-0 scripts inserting into `ingress_attestations` **without tenant_id**, this change will break them. The correct Phase-0 posture is: **no ACK without tenant_id anyway**, so that’s a good break—just make sure the generator/test path supplies tenant_id.
+
+If you want, paste your current `0011_ingress_attestations.sql` usage site(s) (or tell me where it’s written from) and I’ll tell you the exact places that must supply `tenant_id` and the minimum placeholder values for Phase-0.
+
+
+
+
+
+
+
+
+
+
+“Minimal” here is **not** “we’re holding back because it would break a bunch of existing write paths.” You already confirmed there are **no runtime inserts yet**, so adding `tenant_id NOT NULL` won’t break Phase-0 execution.
+
+In this context, **minimal** means:
+
+* **Smallest schema change-set that enforces the Phase-0 guarantee** (“no ACK without tenant context” once Phase-1 ingress exists),
+* **With the lowest irreversible commitment** to a full multi-tenant product model before you’ve implemented ingest/executor code,
+* **While preserving forward-only safety** (avoid speculative columns/constraints that you might later regret and have to “contract” out).
+
+So it’s “minimal surface area / minimal coupling,” not “trivial.”
+
+### Why “minimal” is still the right posture even with no current writers
+
+Even though nothing inserts into `ingress_attestations` today, schema choices **become contracts** the moment Phase-1 starts. If you bake in *too much* (member granularity, NGO program constructs, multiple subject types, etc.) before you’ve built the ingest flow, you can accidentally lock yourself into:
+
+* the wrong identifier shapes (UUID vs natural keys vs hashed IDs),
+* the wrong uniqueness semantics (idempotency at tenant scope vs global),
+* the wrong performance posture (indexes you don’t need yet / heavy FK churn),
+* a schema that is “theoretically complete” but hard to implement cleanly in .NET once you actually wire the middleware.
+
+### What “minimal changes” should include (and why)
+
+For Phase-0, the “minimal” tenant-aware delta usually means:
+
+1. **`tenant_id` (NOT NULL)**
+   This is the real guardrail. It ensures every attestation is attributable to a tenant from day one of Phase-1.
+
+2. **Optional `client_id` vs `member_id` decision kept *soft***
+   If you already know you need “cooperative member attribution” later, you *can* include it now, but minimally:
+
+   * Add **`subject_type` + `subject_ref`** (or `member_id` nullable) rather than fully normalizing a deep member graph in Phase-0.
+   * Then Phase-1/2 can introduce richer tables without a breaking redesign.
+
+3. **Indexes that match how you’ll query in audits**
+
+   * `(tenant_id, received_at)`
+   * `(tenant_id, instruction_id)` (or whatever your canonical instruction key is)
+
+That gives you the enforcement and auditability you need without prematurely over-modeling the whole NGO/cooperative domain.
+
+### So: minimal ≠ “we can’t do more”
+
+You absolutely *can* define member-level granularity now. The reason to still call it “minimal” is: Phase-0’s job is to **force the invariant boundary**, not to finish the full tenancy product model.
+
+If your explicit requirement is: **“the cooperative must attach a transaction to a member explicitly”**, then yes—**that becomes a Phase-0 invariant requirement**, because it changes the meaning of “acceptable ingress.” In that case, “minimal” would expand to include a **required member attribution field** (or required subject linkage) on the attestation/outbox envelope.
+
+If you want, I can give you two concrete “minimal delta” options for `ingress_attestations`:
+
+* **Option A (strict tenant now, member later)**: `tenant_id NOT NULL`, `client_id_hash` optional, no member constraint.
+* **Option B (strict tenant + member attribution now)**: `tenant_id NOT NULL` + `member_ref` (or `subject_type/ref`) required for cooperative tenants only (enforced later via policy or a CHECK once you’ve modeled tenant types).
+
+Tell me which direction you’re taking (A or B), and I’ll express it as exact deltas to the migration plus the matching invariant wording so CI can enforce it.
+
+
+
+
+
+
+
+
+
+
+Option B = **make `tenant_id` a first-class, NOT NULL column in `ingress_attestations` now**, and add **optional subject linkage** so Phase-1 can record “this attestation belongs to cooperative member X” without redesigning the table later.
+
+I can draft the exact patch, but I need you to **re-upload the current `schema/migrations/0011_ingress_attestations.sql`** (the copy you uploaded earlier has expired on my side), otherwise I can’t guarantee line numbers / existing trigger & index names match your repo.
+
+In the meantime, here is the **Option B delta** you should apply to `0011_ingress_attestations.sql` (this is written to be safe even if nothing currently inserts into the table).
+
+---
+
+## Option B: Minimal changes to `ingress_attestations` (tenant required + member-aware hook)
+
+### 1) Add tenant + subject fields
+
+Add these columns to `public.ingress_attestations`:
+
+* `tenant_id uuid NOT NULL`
+* `subject_kind text NOT NULL DEFAULT 'participant'`
+* `subject_id text NULL`
+
+Rationale:
+
+* `tenant_id` enforces NGO/Cooperative program isolation from day one (even before runtime exists).
+* `subject_kind/subject_id` gives you the **granularity to attach an attestation to a cooperative member** (or any end-user identifier) without forcing you to define the full membership schema in Phase-0.
+
+Suggested constraint:
+
+* `subject_kind IN ('participant','member','system')`
+* Optional: if `subject_kind='member'` then `subject_id IS NOT NULL`
+
+### 2) Add indexes aligned to Phase-1 query patterns
+
+Add indexes that you’ll inevitably need:
+
+* `(tenant_id, received_at DESC)` for timeline/audit queries
+* `(tenant_id, instruction_id)` if you link attestations to instruction IDs
+* Optional: `(tenant_id, subject_kind, subject_id)` for member lookups
+
+### 3) Keep append-only posture unchanged
+
+Do **not** weaken your append-only trigger. Option B only extends the shape; it doesn’t change mutation rules.
+
+### 4) Avoid FK dependencies in Phase-0 (unless tenant tables already exist)
+
+Unless you already have `tenants`/`clients` tables implemented in Phase-0, **do not add foreign keys yet**. You can add those in the tenant isolation migration set (once those tables exist). For now, the NOT NULL `tenant_id` is the enforcement hook.
+
+---
+
+## Drop-in SQL snippet (you’ll place this inside the migration)
+
+(Exact placement depends on your file layout; once you re-upload I’ll mark the precise insertion points.)
+
+```sql
+-- Option B: tenant + subject linkage (Phase-0 hook for NGO/Coop isolation)
+ALTER TABLE public.ingress_attestations
+  ADD COLUMN IF NOT EXISTS tenant_id uuid;
+
+ALTER TABLE public.ingress_attestations
+  ALTER COLUMN tenant_id SET NOT NULL;
+
+ALTER TABLE public.ingress_attestations
+  ADD COLUMN IF NOT EXISTS subject_kind text NOT NULL DEFAULT 'participant',
+  ADD COLUMN IF NOT EXISTS subject_id text;
+
+-- constrain subject_kind to known values (keeps it machine-auditable)
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1
+    FROM pg_constraint
+    WHERE conname = 'ck_ingress_attestations_subject_kind'
+  ) THEN
+    ALTER TABLE public.ingress_attestations
+      ADD CONSTRAINT ck_ingress_attestations_subject_kind
+      CHECK (subject_kind IN ('participant','member','system'));
+  END IF;
+END $$;
+
+-- If you want the “member implies id” rule now (recommended)
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1
+    FROM pg_constraint
+    WHERE conname = 'ck_ingress_attestations_member_subject_id'
+  ) THEN
+    ALTER TABLE public.ingress_attestations
+      ADD CONSTRAINT ck_ingress_attestations_member_subject_id
+      CHECK (subject_kind <> 'member' OR subject_id IS NOT NULL);
+  END IF;
+END $$;
+
+-- indexes (safe for Phase-1, harmless in Phase-0)
+CREATE INDEX IF NOT EXISTS idx_ingress_attestations_tenant_received_at
+  ON public.ingress_attestations (tenant_id, received_at DESC);
+
+CREATE INDEX IF NOT EXISTS idx_ingress_attestations_tenant_instruction
+  ON public.ingress_attestations (tenant_id, instruction_id);
+
+CREATE INDEX IF NOT EXISTS idx_ingress_attestations_tenant_subject
+  ON public.ingress_attestations (tenant_id, subject_kind, subject_id);
+```
+
+> If you prefer `subject_id` to be strongly typed, you can switch it to `uuid` later once the member table exists; keeping it `text` now avoids forcing Phase-0 schema dependencies while still enabling “explicit member attachment”.
+
+---
+
+## What this gives you for the “member-aware last mile”
+
+Yes—this **does** let you define the granularity you want:
+
+* Cooperative (tenant) can **explicitly attach** an attestation to a member by writing:
+
+  * `tenant_id = <coop tenant uuid>`
+  * `subject_kind = 'member'`
+  * `subject_id = <member external ref or UUID string>`
+
+That’s enough for Phase-0/Phase-1 to be “user aware” *without* committing you to a full membership model prematurely.
+
+---
+
+### Next step
+
+Please **re-upload** `schema/migrations/0011_ingress_attestations.sql` from your repo, and I’ll:
+
+* point to the **exact lines** to modify,
+* ensure the constraint/index names don’t clash with what’s already there,
+* and (if you want) give the corresponding tiny update needed in `scripts/db/verify_invariants.sh` so the invariant check enforces `tenant_id NOT NULL` and the new indexes.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Below are the **exact minimal deltas (Option B)** to make `ingress_attestations` “tenant-aware” *now* (Phase-0), without introducing any new runtime dependencies (since nothing inserts into this table yet).
+
+## Option B — Minimal but Phase-0-correct tenant isolation hooks
+
+### What changes (high signal)
+
+1. **Make `tenant_id` NOT NULL** (no ACK in Phase-1 without tenant context).
+2. Add **`client_id`** (NGO / Cooperative / Program) and **`subject_id`** (member / beneficiary) as the minimum granularity to support the “client → tenant → end user” model.
+3. Require **`client_cert_fingerprint_sha256`** as the workload/device identity anchor (ZTA + evidentiary provenance).
+4. Remove the `WHERE tenant_id IS NOT NULL` partial index (because tenant_id is now always present).
+5. Add a practical query index for Phase-1 ingestion lookup patterns.
+
+---
+
+## Patch (unified diff) — `schema/migrations/0011_ingress_attestations.sql`
+
+```diff
+--- a/schema/migrations/0011_ingress_attestations.sql
++++ b/schema/migrations/0011_ingress_attestations.sql
+@@
+ CREATE TABLE IF NOT EXISTS public.ingress_attestations (
+   attestation_id UUID PRIMARY KEY DEFAULT public.uuid_v7_or_random(),
+   instruction_id TEXT NOT NULL,
+-  tenant_id TEXT,
++  tenant_id TEXT NOT NULL,
++  -- client_id: the org/program/cooperative tenant boundary (NGO contract, coop subscription, etc.)
++  client_id TEXT NOT NULL,
++  -- subject_id: the lowest-level beneficiary/member identifier (optional in Phase-0, required by Phase-1 policy if mandated)
++  subject_id TEXT,
++  -- workload/device anchor for ZTA provenance (mTLS thumbprint / cert fingerprint)
++  client_cert_fingerprint_sha256 TEXT NOT NULL,
+   payload_hash TEXT NOT NULL,
+   signature_hash TEXT,
+   received_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+ );
+@@
+ CREATE INDEX IF NOT EXISTS idx_ingress_attestations_instruction
+   ON public.ingress_attestations(instruction_id);
+ 
+ CREATE INDEX IF NOT EXISTS idx_ingress_attestations_received_at
+   ON public.ingress_attestations(received_at);
+ 
+ CREATE INDEX IF NOT EXISTS idx_ingress_attestations_tenant_received
+-  ON public.ingress_attestations(tenant_id, received_at)
+-  WHERE tenant_id IS NOT NULL;
++  ON public.ingress_attestations(tenant_id, received_at);
++
++CREATE INDEX IF NOT EXISTS idx_ingress_attestations_client_received
++  ON public.ingress_attestations(client_id, received_at);
++
++CREATE INDEX IF NOT EXISTS idx_ingress_attestations_tenant_instruction
++  ON public.ingress_attestations(tenant_id, instruction_id);
+```
+
+---
+
+## One important follow-on (or CI will fail later)
+
+Your `scripts/db/verify_invariants.sh` currently checks the presence of the tenant index **with the partial predicate**. Once you apply the above, it must be adjusted to accept:
+
+* `tenant_id` is **NOT NULL**
+* index `idx_ingress_attestations_tenant_received` exists **without** a `WHERE` clause
+* (optionally) verify the two new indexes exist:
+
+  * `idx_ingress_attestations_client_received`
+  * `idx_ingress_attestations_tenant_instruction`
+
+If you paste `verify_invariants.sh`, I’ll point to the exact lines to update so Phase-0 gating matches this migration.

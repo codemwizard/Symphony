@@ -1,52 +1,42 @@
-phase: "1"
-task_id: "PERF-006"
-title: "Operational Risk Framework + Translation Layer"
-owner_role: "SUPERVISOR"
-status: "completed"
-
+schema_version: 1
+phase: '1'
+task_id: PERF-006
+title: Operational Risk Framework + Translation Layer
+owner_role: SUPERVISOR
+status: completed
 depends_on:
-  - "PERF-005A"
-
+- PERF-005A
 touches:
-  - "scripts/perf/verify_perf_006.sh"
-  - "scripts/audit/verify_product_kpi_readiness.sh"
-  - "scripts/audit/verify_phase1_closeout.sh"
-  - "scripts/dev/pre_ci.sh"
-  - "docs/PHASE1/phase1_contract.yml"
-  - "docs/operations/VERIFIER_EVIDENCE_REGISTRY.yml"
-  - "docs/invariants/INVARIANTS_MANIFEST.yml"
-  - "docs/invariants/INVARIANTS_IMPLEMENTED.md"
-  - "docs/invariants/INVARIANTS_QUICK.md"
-  - "tasks/PERF-006/meta.yml"
-
+- scripts/perf/verify_perf_006.sh
+- scripts/audit/verify_product_kpi_readiness.sh
+- scripts/audit/verify_phase1_closeout.sh
+- scripts/dev/pre_ci.sh
+- docs/PHASE1/phase1_contract.yml
+- docs/operations/VERIFIER_EVIDENCE_REGISTRY.yml
+- docs/invariants/INVARIANTS_MANIFEST.yml
+- docs/invariants/INVARIANTS_IMPLEMENTED.md
+- docs/invariants/INVARIANTS_QUICK.md
+- tasks/PERF-006/meta.yml
 invariants:
-  - "INV-126"
-
-mechanics:
-  gate_ids:
-    - "INT-G28"
-  verifiers:
-    - "bash scripts/perf/verify_perf_006.sh --evidence evidence/phase1/perf_006__operational_risk_framework_translation_layer.json"
-    - "python3 scripts/audit/validate_evidence.py --task PERF-006 --evidence evidence/phase1/perf_006__operational_risk_framework_translation_layer.json"
-    - "RUN_PHASE1_GATES=1 bash scripts/dev/pre_ci.sh"
-  evidence_paths:
-    - "evidence/phase1/perf_006__operational_risk_framework_translation_layer.json"
-
+- INV-126
+work: []
 acceptance_criteria:
-  - "Phase-1 closeout verifier enforces KPI settlement_window_compliance_pct presence."
-  - "Phase-1 closeout verifier enforces KPI reference to PERF-005 evidence path/task ID."
-  - "PERF-006 evidence is emitted and validated."
-
+- Phase-1 closeout verifier enforces KPI settlement_window_compliance_pct presence.
+- Phase-1 closeout verifier enforces KPI reference to PERF-005 evidence path/task
+  ID.
+- PERF-006 evidence is emitted and validated.
 verification:
-  - "bash scripts/perf/verify_perf_006.sh --evidence evidence/phase1/perf_006__operational_risk_framework_translation_layer.json"
-  - "python3 scripts/audit/validate_evidence.py --task PERF-006 --evidence evidence/phase1/perf_006__operational_risk_framework_translation_layer.json"
-  - "RUN_PHASE1_GATES=1 bash scripts/dev/pre_ci.sh"
-
+- bash scripts/perf/verify_perf_006.sh --evidence evidence/phase1/perf_006__operational_risk_framework_translation_layer.json
+- python3 scripts/audit/validate_evidence.py --task PERF-006 --evidence evidence/phase1/perf_006__operational_risk_framework_translation_layer.json
+- RUN_PHASE1_GATES=1 bash scripts/dev/pre_ci.sh
 evidence:
-  - "evidence/phase1/perf_006__operational_risk_framework_translation_layer.json"
-
+- evidence/phase1/perf_006__operational_risk_framework_translation_layer.json
+failure_modes: []
 must_read:
-  - "docs/operations/AI_AGENT_OPERATION_MANUAL.md"
-
-implementation_plan: "docs/plans/phase1/PERF-006/PLAN.md"
-implementation_log: "docs/plans/phase1/PERF-006/EXEC_LOG.md"
+- docs/operations/AI_AGENT_OPERATION_MANUAL.md
+implementation_plan: docs/plans/phase1/PERF-006/PLAN.md
+implementation_log: docs/plans/phase1/PERF-006/EXEC_LOG.md
+notes: ''
+client: codex_cli
+assigned_agent: supervisor
+model: <UNASSIGNED>

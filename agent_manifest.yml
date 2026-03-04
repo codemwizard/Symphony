@@ -1,0 +1,43 @@
+# agent_manifest.yml
+# Machine-readable contract for ANY IDE-connected agent.
+version: 1
+project: Symphony
+
+canonical_docs:
+  - docs/operations/AI_AGENT_OPERATION_MANUAL.md
+  - AGENTS.md
+
+mandatory_boot_sequence:
+  - scripts/audit/verify_agent_conformance.sh
+  - scripts/dev/pre_ci.sh
+
+task_protocol:
+  task_root: tasks
+  meta_filename: meta.yml
+  supported_schema_versions: [1]
+
+  required_meta_fields:
+    - schema_version
+    - task_id
+    - title
+    - owner_role
+    - phase
+    - verification
+    - evidence
+    - implementation_plan
+    - implementation_log
+
+stop_conditions:
+  fail_closed: true
+  conditions:
+    - conformance_gate_failed
+    - pre_ci_failed
+    - missing_required_files
+    - verification_failed
+    - evidence_missing
+    - evidence_stale
+    - phase0_contract_gate_failed
+
+evidence_rules:
+  policy: "Evidence must be produced by declared scripts/commands, not hand-authored."
+  default_phase0_contract_gate: scripts/ci/check_evidence_required.sh

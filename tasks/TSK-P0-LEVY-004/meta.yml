@@ -1,59 +1,51 @@
-phase: "0"
-task_id: "TSK-P0-LEVY-004"
-title: "levy_remittance_periods table (ZRA reporting cycle anchor)"
-owner_role: "DB_FOUNDATION"
-status: "completed"
-
+schema_version: 1
+phase: '0'
+task_id: TSK-P0-LEVY-004
+title: levy_remittance_periods table (ZRA reporting cycle anchor)
+owner_role: DB_FOUNDATION
+status: completed
 depends_on:
-  - "TSK-P0-LEVY-003"
-
+- TSK-P0-LEVY-003
 touches:
-  - "schema/migrations/0038_levy_remittance_periods_hook.sql"
-  - "scripts/db/verify_levy_remittance_periods_hook.sh"
-  - "scripts/dev/pre_ci.sh"
-  - "docs/PHASE0/phase0_contract.yml"
-  - "tasks/TSK-P0-LEVY-004/meta.yml"
-  - "docs/plans/phase0/TSK-P0-LEVY-004/PLAN.md"
-  - "docs/plans/phase0/TSK-P0-LEVY-004/EXEC_LOG.md"
-
+- schema/migrations/0038_levy_remittance_periods_hook.sql
+- scripts/db/verify_levy_remittance_periods_hook.sh
+- scripts/dev/pre_ci.sh
+- docs/PHASE0/phase0_contract.yml
+- tasks/TSK-P0-LEVY-004/meta.yml
+- docs/plans/phase0/TSK-P0-LEVY-004/PLAN.md
+- docs/plans/phase0/TSK-P0-LEVY-004/EXEC_LOG.md
 invariants:
-  - "INV-031"
-
+- INV-031
 work:
-  - "Add forward-only migration for public.levy_remittance_periods Phase-0 structural hook."
-  - "Add fail-closed verifier and deterministic evidence emission."
-  - "Wire verifier into pre_ci and Phase-0 contract tracking."
-
+- Add forward-only migration for public.levy_remittance_periods Phase-0 structural
+  hook.
+- Add fail-closed verifier and deterministic evidence emission.
+- Wire verifier into pre_ci and Phase-0 contract tracking.
 acceptance_criteria:
-  - "levy_remittance_periods exists as an empty Phase-0 structural table with period/constraint contract."
-  - "period_status is plain TEXT with no CHECK enforcement in Phase-0."
-  - "Verifier emits evidence/phase0/TSK-P0-LEVY-004.json and fails closed on mismatch."
-  - "No runtime app code references levy_remittance_periods before Phase-2."
-  - "No trigger/function creates remittance periods in Phase-0."
-  - "No FK from levy_calculation_records to levy_remittance_periods in Phase-0."
-
+- levy_remittance_periods exists as an empty Phase-0 structural table with period/constraint
+  contract.
+- period_status is plain TEXT with no CHECK enforcement in Phase-0.
+- Verifier emits evidence/phase0/TSK-P0-LEVY-004.json and fails closed on mismatch.
+- No runtime app code references levy_remittance_periods before Phase-2.
+- No trigger/function creates remittance periods in Phase-0.
+- No FK from levy_calculation_records to levy_remittance_periods in Phase-0.
 verification:
-  - "bash scripts/db/verify_levy_remittance_periods_hook.sh"
-  - "RUN_PHASE1_GATES=1 scripts/dev/pre_ci.sh"
-
+- bash scripts/db/verify_levy_remittance_periods_hook.sh
+- RUN_PHASE1_GATES=1 scripts/dev/pre_ci.sh
 evidence:
-  - "evidence/phase0/TSK-P0-LEVY-004.json"
-
+- evidence/phase0/TSK-P0-LEVY-004.json
 failure_modes:
-  - "table contract mismatch (PK/UNIQUE/check/index/comment)."
-  - "runtime code references levy_remittance_periods."
-  - "trigger/function references levy_remittance_periods."
-  - "premature FK from levy_calculation_records to levy_remittance_periods."
-  - "evidence artifact missing."
-
+- table contract mismatch (PK/UNIQUE/check/index/comment).
+- runtime code references levy_remittance_periods.
+- trigger/function references levy_remittance_periods.
+- premature FK from levy_calculation_records to levy_remittance_periods.
+- evidence artifact missing.
 must_read:
-  - "AGENTS.md"
-  - "docs/operations/AI_AGENT_OPERATION_MANUAL.md"
-
-implementation_plan: "docs/plans/phase0/TSK-P0-LEVY-004/PLAN.md"
-implementation_log: "docs/plans/phase0/TSK-P0-LEVY-004/EXEC_LOG.md"
-
-notes: ""
-client: "codex_cli"
-assigned_agent: "db_foundation"
-model: "gpt-5-codex"
+- AGENTS.md
+- docs/operations/AI_AGENT_OPERATION_MANUAL.md
+implementation_plan: docs/plans/phase0/TSK-P0-LEVY-004/PLAN.md
+implementation_log: docs/plans/phase0/TSK-P0-LEVY-004/EXEC_LOG.md
+notes: ''
+client: codex_cli
+assigned_agent: db_foundation
+model: gpt-5-codex

@@ -1,3 +1,4 @@
+schema_version: 1
 phase: '0'
 task_id: TSK-P0-063
 title: Fix Phase-0 contract evidence checker (YAML + fail-closed evidence)
@@ -32,9 +33,9 @@ failure_modes:
 must_read:
 - docs/PHASE0/phase0_contract.yml
 - docs/control_planes/CONTROL_PLANES.yml
+implementation_plan: docs/plans/phase0/TSK-P0-063/PLAN.md
+implementation_log: docs/plans/phase0/TSK-P0-063/EXEC_LOG.md
 notes: ''
 client: codex_cli
 assigned_agent: architect
 model: <UNASSIGNED>
-implementation_plan: docs/plans/phase0/TSK-P0-063/PLAN.md
-implementation_log: docs/plans/phase0/TSK-P0-063/EXEC_LOG.md

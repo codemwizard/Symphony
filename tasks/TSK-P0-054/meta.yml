@@ -1,3 +1,4 @@
+schema_version: 1
 phase: '0'
 task_id: TSK-P0-054
 title: Compliance manifest verifier + CI wiring
@@ -23,18 +24,18 @@ acceptance_criteria:
 - Verifier fails on missing standards or evidence references.
 - Evidence emitted under evidence/phase0/.
 verification:
-  - scripts/audit/verify_compliance_manifest.sh
+- scripts/audit/verify_compliance_manifest.sh
 evidence:
-  - evidence/phase0/compliance_manifest_verify.json
+- evidence/phase0/compliance_manifest_verify.json
 failure_modes:
 - Evidence file missing.
 - Compliance mapping incomplete or malformed.
 must_read:
 - docs/invariants/INVARIANTS_MANIFEST.yml
 - docs/security/SECURITY_MANIFEST.yml
+implementation_plan: docs/plans/phase0/TSK-P0-054_compliance_verifier/PLAN.md
+implementation_log: docs/plans/phase0/TSK-P0-054_compliance_verifier/EXEC_LOG.md
 notes: Verifier proof artifact is compliance_manifest_verify.json.
 client: codex_cli
 assigned_agent: security_guardian
 model: <UNASSIGNED>
-implementation_plan: docs/plans/phase0/TSK-P0-054_compliance_verifier/PLAN.md
-implementation_log: docs/plans/phase0/TSK-P0-054_compliance_verifier/EXEC_LOG.md

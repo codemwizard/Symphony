@@ -309,6 +309,113 @@ tasks:
         schema: "evidence_schemas/r_022_scan_scope.schema.json"
         must_include: [detected_languages, enabled_tools, missing_coverage]
 
+  - task_id: R-023
+    phase: "0.5"
+    title: "Freeze canonical task-meta schema + baseline inventory"
+    intent: "Establish deterministic baseline of legacy/canonical task meta state."
+    changes_required:
+      - "Add strict task-meta schema verifier supporting inventory output."
+      - "Emit baseline inventory evidence."
+    dod:
+      acceptance_checks:
+        - id: R-023-A1
+          description: "Inventory report is machine-readable and deterministic."
+          status: REQUIRED
+          ci_gate:
+            job: mechanical_invariants
+            command: "bash scripts/audit/verify_task_meta_schema.sh --mode inventory --allow-legacy --json --out evidence/security_remediation/r_023_task_meta_inventory.json"
+      evidence:
+        path: "evidence/security_remediation/r_023_task_meta_inventory.json"
+        schema: "docs/architecture/evidence_schema.json"
+        must_include: [check_id, status, summary, nonconforming]
+
+  - task_id: R-024
+    phase: "0.5"
+    title: "Build deterministic task-meta migration tool"
+    intent: "Create migration tool with deterministic dry-run/apply report contracts."
+    changes_required:
+      - "Implement migrate_task_meta_to_v1.py with deterministic reporting."
+      - "Support --input-root, --output-dir mirror mode, and conflict audit reporting."
+      - "Validate dry-run evidence against committed schema."
+    dod:
+      acceptance_checks:
+        - id: R-024-A1
+          description: "Dry-run determinism check passes with fixed run-id."
+          status: REQUIRED
+          ci_gate:
+            job: mechanical_invariants
+            command: "python3 scripts/audit/migrate_task_meta_to_v1.py --dry-run --run-id R-024-DET --input-root tasks --report /tmp/r_024_dry_run_a.json && python3 scripts/audit/migrate_task_meta_to_v1.py --dry-run --run-id R-024-DET --input-root tasks --report /tmp/r_024_dry_run_b.json && cmp -s /tmp/r_024_dry_run_a.json /tmp/r_024_dry_run_b.json"
+        - id: R-024-A2
+          description: "Dry-run report validates against schema."
+          status: REQUIRED
+          ci_gate:
+            job: mechanical_invariants
+            command: "python3 - <<'PY'\nimport json, jsonschema\nobj=json.load(open('evidence/security_remediation/r_024_task_meta_migration_dry_run.json'))\nsch=json.load(open('evidence_schemas/r_024_task_meta_migration_dry_run.schema.json'))\njsonschema.validate(instance=obj, schema=sch)\nPY"
+      evidence:
+        path: "evidence/security_remediation/r_024_task_meta_migration_dry_run.json"
+        schema: "evidence_schemas/r_024_task_meta_migration_dry_run.schema.json"
+        must_include: [tool_version, run_id, inputs_hash, summary, files]
+
+  - task_id: R-025
+    phase: "0.5"
+    title: "Apply canonical task-meta migration repository-wide"
+    intent: "Convert all task packs to schema_version 1 canonical contract."
+    changes_required:
+      - "Run migration apply mode in-place."
+      - "Verify strict conformance (no legacy keys)."
+    dod:
+      acceptance_checks:
+        - id: R-025-A1
+          description: "Strict schema verifier reports zero nonconforming task meta files."
+          status: REQUIRED
+          ci_gate:
+            job: mechanical_invariants
+            command: "bash scripts/audit/verify_task_meta_schema.sh --mode strict --json --out /tmp/r_025_strict.json"
+      evidence:
+        path: "evidence/security_remediation/r_025_task_meta_migration_apply.json"
+        schema: "docs/architecture/evidence_schema.json"
+        must_include: [status, summary, files]
+
+  - task_id: R-026
+    phase: "0.5"
+    title: "Enforce strict canonical schema in run_task + pre_ci"
+    intent: "Require schema_version 1 task-meta contract in execution and local gates."
+    changes_required:
+      - "run_task requires schema_version and canonical keys."
+      - "pre_ci executes strict task-meta schema gate."
+    dod:
+      acceptance_checks:
+        - id: R-026-A1
+          description: "Strict task-meta evidence generated from verifier."
+          status: REQUIRED
+          ci_gate:
+            job: mechanical_invariants
+            command: "bash scripts/audit/verify_task_meta_schema.sh --mode strict --json --out evidence/security_remediation/r_026_run_task_strict_enforcement.json"
+      evidence:
+        path: "evidence/security_remediation/r_026_run_task_strict_enforcement.json"
+        schema: "docs/architecture/evidence_schema.json"
+        must_include: [status, summary]
+
+  - task_id: R-027
+    phase: "0.5"
+    title: "Closeout canonical task-meta migration and deny legacy regression"
+    intent: "Finalize migration and enforce deny-legacy closeout proof."
+    changes_required:
+      - "Deny-legacy strict verification must pass."
+      - "Closeout evidence emitted."
+    dod:
+      acceptance_checks:
+        - id: R-027-A1
+          description: "Deny-legacy verification passes."
+          status: REQUIRED
+          ci_gate:
+            job: mechanical_invariants
+            command: "bash scripts/audit/verify_task_meta_schema.sh --mode strict --deny-legacy --json --out evidence/security_remediation/r_027_task_meta_closeout.json"
+      evidence:
+        path: "evidence/security_remediation/r_027_task_meta_closeout.json"
+        schema: "docs/architecture/evidence_schema.json"
+        must_include: [status, summary]
+
   # ============================================================
   # Phase 1 — Code Fixes
   # ============================================================

@@ -1,3 +1,4 @@
+schema_version: 1
 phase: '0'
 task_id: TSK-P0-010
 title: CI evidence artifact upload consolidation
@@ -25,9 +26,9 @@ must_read:
 - docs/invariants/INVARIANTS_MANIFEST.yml
 - scripts/db/verify_invariants.sh
 - scripts/db/ci_invariant_gate.sql
+implementation_plan: docs/plans/phase0/TSK-P0-010/PLAN.md
+implementation_log: docs/plans/phase0/TSK-P0-010/EXEC_LOG.md
 notes: ''
 client: codex_cli
 assigned_agent: worker
 model: <UNASSIGNED>
-implementation_plan: docs/plans/phase0/TSK-P0-010/PLAN.md
-implementation_log: docs/plans/phase0/TSK-P0-010/EXEC_LOG.md

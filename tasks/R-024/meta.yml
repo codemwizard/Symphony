@@ -1,0 +1,116 @@
+schema_version: 1
+phase: '0.5'
+task_id: R-024
+title: Build deterministic task-meta migration tool with dry-run evidence
+owner_role: SUPERVISOR
+status: completed
+depends_on:
+- R-023
+touches:
+- scripts/audit/migrate_task_meta_to_v1.py
+- scripts/audit/verify_task_meta_schema.sh
+- evidence_schemas/r_024_task_meta_migration_dry_run.schema.json
+- evidence/security_remediation/r_024_task_meta_migration_dry_run.json
+invariants:
+- SECURITY_REMEDIATION_META_CONTRACT
+work:
+- Implement migration tool that rewrites legacy keys into canonical template keys.
+- Add dry-run mode producing structured change report without mutating files.
+- Support --input-root to define migration scan base (default repository root), and
+  include input_root in report metadata.
+- 'Define explicit key mappings and conflict behavior: canonical keys win unless conflicting
+  values are detected, which must fail closed unless --allow-conflicts-with-justification
+  is provided.'
+- 'Define deterministic behavior: stable file ordering, stable field ordering, stable
+  report ordering, and stable formatting normalization.'
+- Define inputs_hash as sha256(sorted paths + file bytes only), excluding mtimes,
+  permissions, inode, and filesystem metadata.
+- 'Design apply mode for safety: idempotent re-run, dirty-worktree refusal unless
+  --force, backup/patch output support, and output-dir execution for this phase (no
+  in-place mutation).'
+- Define --output-dir behavior as a complete migrated mirror tree of discovered task
+  packs, not a sparse patch set.
+- Emit per-file mapping/normalization decisions and conflict audit sections in report
+  JSON.
+- Verify deterministic output over repeated dry-runs.
+acceptance_criteria:
+- 'Task meta includes schema_version: 1.'
+- Dry-run reports exact file/key transformations.
+- 'Dry-run report includes deterministic metadata: tool_version, git_sha, run_id,
+  inputs_hash.'
+- Dry-run determinism is tested using a fixed run_id.
+- inputs_hash is computed from sorted file paths + raw file bytes only (no mtimes/permissions/inode).
+- 'Explicit key mapping coverage includes: id->task_id, verification_command->verification(list),
+  implementation_plan_path->implementation_plan, implementation_log_path->implementation_log,
+  evidence_path(s)->evidence(list), owner/role/assignee_role->owner_role.'
+- 'Conflict rule is enforced: if canonical and legacy keys both exist with different
+  values, tool fails closed unless --allow-conflicts-with-justification is provided.'
+- No-file-change mode is deterministic across repeated runs.
+- 'Apply mode is idempotent: second apply produces zero changes.'
+- 'Apply mode safety controls exist: dirty repo refusal by default plus backup or
+  patch artifact output.'
+- Apply mode in this phase is exercised via --output-dir only; in-place mutation requires
+  an explicit separate flag.
+- --input-root is supported (default repo root) and is included in report metadata.
+- --output-dir writes a complete migrated mirror tree of discovered task packs (deterministic),
+  not a sparse patch set.
+- Dry-run report includes per-file mapping decisions (old_key->new_key) and normalization
+  actions.
+- When conflicts occur, report includes conflicts_count, conflicting values, selected
+  value, and recorded conflict-override justification.
+- Inventory verifier contract reports task file count, v0/v1 counts, exact non-conforming
+  paths, machine-readable JSON output, and exits non-zero when non-conforming files
+  exist unless --allow-legacy is set.
+- 'Evidence JSON is validated against committed schema: evidence_schemas/r_024_task_meta_migration_dry_run.schema.json.'
+- Evidence artifact is produced and schema-valid.
+verification:
+- python3 scripts/audit/migrate_task_meta_to_v1.py --dry-run --run-id R-024-DRYRUN-EVIDENCE
+  --report evidence/security_remediation/r_024_task_meta_migration_dry_run.json
+- python3 scripts/audit/migrate_task_meta_to_v1.py --dry-run --run-id R-024-DET --input-root
+  tasks --report /tmp/r_024_dry_run_a.json
+- python3 scripts/audit/migrate_task_meta_to_v1.py --dry-run --run-id R-024-DET --input-root
+  tasks --report /tmp/r_024_dry_run_b.json
+- cmp -s /tmp/r_024_dry_run_a.json /tmp/r_024_dry_run_b.json
+- python3 scripts/audit/migrate_task_meta_to_v1.py --apply --run-id R-024-APPLY-1
+  --input-root tasks --report /tmp/r_024_apply_first.json --output-dir /tmp/r_024_apply_out_first
+- python3 scripts/audit/migrate_task_meta_to_v1.py --apply --run-id R-024-APPLY-2
+  --input-root /tmp/r_024_apply_out_first --report /tmp/r_024_apply_second.json --output-dir
+  /tmp/r_024_apply_out_second
+- diff -ru /tmp/r_024_apply_out_first /tmp/r_024_apply_out_second >/dev/null
+- bash scripts/audit/verify_task_meta_schema.sh --mode inventory --json --out /tmp/r_024_inventory.json
+- 'python3 - <<''PY''
+
+  import json, sys
+
+  p=''evidence/security_remediation/r_024_task_meta_migration_dry_run.json''
+
+  s=''evidence_schemas/r_024_task_meta_migration_dry_run.schema.json''
+
+  import jsonschema
+
+  obj=json.load(open(p))
+
+  sch=json.load(open(s))
+
+  jsonschema.validate(instance=obj, schema=sch)
+
+  print(''ok'')
+
+  PY'
+evidence:
+- evidence/security_remediation/r_024_task_meta_migration_dry_run.json
+failure_modes:
+- Evidence file missing
+- Dry-run report is non-deterministic
+- Key mapping loses required semantics
+must_read:
+- tasks/_template/meta.yml
+- docs/operations/TASK_CREATION_PROCESS.md
+- docs/operations/AI_AGENT_OPERATION_MANUAL.md
+implementation_plan: docs/plans/remediation/r-024/PLAN.md
+implementation_log: docs/plans/remediation/r-024/EXEC_LOG.md
+notes: Completed deterministic migration-tool implementation and dry-run evidence
+  contract.
+client: codex_cli
+assigned_agent: supervisor
+model: gpt-5

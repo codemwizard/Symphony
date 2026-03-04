@@ -1,0 +1,638 @@
+
+
+Below is a **Phase-0–safe, regulator-credible tenant model** specifically designed for **NGOs, Government Programs, and Cooperatives** operating on top of your **non-custodial, evidence-grade orchestration platform**.
+
+This is written so it can be handed directly to:
+
+* backend engineers (schema + enforcement),
+* QA (what must be unbreakable),
+* and regulators (why this is *not* custody and *not* commingling).
+
+---
+
+# Tenant Model for NGOs & Cooperatives
+
+**Symphony-Zambia | Phase-0 Foundation Design**
+
+## 1. Design Principles (Non-Negotiable)
+
+This tenant model is built around four hard constraints:
+
+1. **Non-custodial by construction**
+
+   * Tenants never “hold” money inside Symphony.
+   * All funds remain at partner banks / MMOs / NFS rails.
+
+2. **No commingling, even logically**
+
+   * Each tenant is a **policy boundary**, not just a billing label.
+   * Evidence, instructions, and attestations are partitioned by tenant.
+
+3. **Evidence > Control**
+
+   * Tenants do not “execute” payments.
+   * Tenants define **rules**, and Symphony enforces + proves them.
+
+4. **BoZ-legible**
+
+   * A BoZ examiner must be able to answer:
+
+     > “Which NGO program caused *this* instruction, under *which* policy, and *who* approved it?”
+
+---
+
+## 2. The Three-Layer Tenant Hierarchy
+
+This is the critical insight for NGOs & Government programs:
+
+> **Tenant ≠ Client ≠ Participant**
+
+They are different layers with different powers.
+
+### Layer 1 — **Tenant** (Policy & Commercial Boundary)
+
+Represents:
+
+* An NGO program (e.g. “FISP 2026 Input Support”)
+* A GRZ ministry program
+* A donor-funded disbursement scheme
+* A cooperative federation
+
+**What a Tenant can do**
+
+* Define escrow / disbursement rules
+* Define allowed participants
+* Define evidence requirements
+* Be billed (percentage of program funds, subscription, etc.)
+
+**What a Tenant cannot do**
+
+* Hold funds
+* Bypass invariants
+* Execute payments directly
+
+---
+
+### Layer 2 — **Client** (Operational Actor)
+
+Represents:
+
+* A cooperative
+* A district office
+* An NGO implementation partner
+* A ministry department
+
+Clients operate *inside* a tenant.
+
+**Examples**
+
+* Tenant: `GRZ_FISP_2026`
+* Client: `Mkushi_Coop_07`
+* Client: `Eastern_Province_Distributor`
+
+Clients:
+
+* submit instructions,
+* upload delivery evidence,
+* trigger policy transitions.
+
+But they are **not sovereign**.
+
+---
+
+### Layer 3 — **Participant** (External Rail Identity)
+
+Represents:
+
+* Bank
+* MMO
+* ZECHL / NFS participant
+* Supplier receiving funds
+
+Participants live **outside** the tenant model but are **referenced by it**.
+
+---
+
+## 3. Core Tables (Phase-0 Schema)
+
+### 3.1 `tenants` — the commercial + policy root
+
+```sql
+CREATE TABLE tenants (
+  tenant_id UUID PRIMARY KEY,
+  tenant_type TEXT CHECK (tenant_type IN ('NGO', 'GOV_PROGRAM', 'COOPERATIVE', 'DONOR')),
+  legal_name TEXT NOT NULL,
+  regulator_ref TEXT,               -- BoZ / MoF / donor ref
+  billing_model TEXT CHECK (
+    billing_model IN ('PERCENT_OF_FUNDS', 'SUBSCRIPTION', 'HYBRID')
+  ),
+  billing_rate_bps INT,              -- e.g. 500 = 5.00%
+  status TEXT CHECK (status IN ('ACTIVE','SUSPENDED','CLOSED')),
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+```
+
+**Invariant**
+
+* A tenant is immutable once ACTIVE except for status.
+
+---
+
+### 3.2 `clients` — cooperatives, districts, implementers
+
+```sql
+CREATE TABLE clients (
+  client_id UUID PRIMARY KEY,
+  tenant_id UUID NOT NULL REFERENCES tenants(tenant_id),
+  client_type TEXT CHECK (
+    client_type IN ('COOPERATIVE','DISTRICT','IMPLEMENTER','SUPPLIER')
+  ),
+  legal_name TEXT NOT NULL,
+  pacra_reg_number TEXT,
+  tpin TEXT,
+  status TEXT CHECK (status IN ('ACTIVE','SUSPENDED')),
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+```
+
+**Invariant**
+
+* A client cannot exist without a tenant.
+* A client cannot reference instructions outside its tenant.
+
+---
+
+### 3.3 `tenant_policies` — why this is not custody
+
+```sql
+CREATE TABLE tenant_policies (
+  policy_id UUID PRIMARY KEY,
+  tenant_id UUID NOT NULL REFERENCES tenants(tenant_id),
+  policy_type TEXT CHECK (
+    policy_type IN ('ESCROW_RELEASE','DISBURSEMENT','REVERSAL','HOLD')
+  ),
+  policy_hash BYTEA NOT NULL,
+  version INT NOT NULL,
+  active BOOLEAN NOT NULL DEFAULT true,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+```
+
+**Key point**
+
+* Policies are **data**, not code.
+* Execution is always Symphony-controlled.
+
+---
+
+## 4. Evidence & Instruction Binding
+
+Every instruction and evidence artifact **must bind all three layers**:
+
+```text
+tenant_id
+client_id
+participant_id
+policy_id
+```
+
+This guarantees:
+
+* No NGO can deny responsibility
+* No cooperative can escape policy
+* No bank can dispute provenance
+
+---
+
+## 5. NGO / Government Disbursement Flow (Concrete Example)
+
+### Scenario: GRZ-Backed Input Subsidy
+
+**Actors**
+
+* Tenant: `GRZ_FISP_2026`
+* Client: `Mkushi_Coop_07`
+* Supplier: `ZamSeed_Ltd`
+* Bank: Zanaco
+* Rail: ZECHL NFS
+
+**Flow**
+
+1. GRZ funds sit in **Zanaco program account**
+2. Mkushi Coop uploads delivery confirmation
+3. Symphony:
+
+   * verifies tenant policy
+   * validates TPINs
+   * checks supplier eligibility
+4. Symphony emits:
+
+   * signed ingress attestation
+   * escrow release instruction
+5. NFS executes SIP
+6. Evidence bundle is generated and archived
+
+**Critical**
+
+* Symphony never touches funds
+* GRZ pays **5–8% of program value** for loss prevention + proof
+
+---
+
+## 6. Billing Without Custody
+
+### NGO / Government Model (Most Lucrative)
+
+| Metric             | Example           |
+| ------------------ | ----------------- |
+| Program Size       | $1,000,000        |
+| Historical Leakage | 10–15%            |
+| Symphony Fee       | 5–8%              |
+| Fee Paid           | $50,000 – $80,000 |
+| Net Savings        | Positive          |
+
+**Why BoZ accepts this**
+
+* You are paid for **instruction certainty**, not money handling.
+* Equivalent to audit + controls, but real-time.
+
+---
+
+### Cooperative Subscription (Secondary Channel)
+
+| Tier        | Monthly |
+| ----------- | ------- |
+| Small Coop  | $50     |
+| Medium Coop | $150    |
+| Large Coop  | $300    |
+
+Includes:
+
+* access
+* evidence packs
+* compliance reports
+
+---
+
+## 7. Required Phase-0 Invariants (Tenant Safety)
+
+Add these to your manifest as **roadmap or planned**:
+
+### INV-TEN-01 — Tenant Isolation
+
+> No instruction may reference a client or policy outside its tenant.
+
+### INV-TEN-02 — Policy-Bound Execution
+
+> Every instruction must reference an active tenant policy.
+
+### INV-TEN-03 — Evidence Partitioning
+
+> Evidence artifacts must be queryable by tenant_id and immutable.
+
+### INV-TEN-04 — Billing Non-Interference
+
+> Billing calculations must not influence instruction execution paths.
+
+---
+
+## 8. Why This Unlocks NGO & GRZ Revenue
+
+From a regulator’s perspective:
+
+> “This is not a fintech holding funds.
+> This is a **National Control & Evidence Utility**.”
+
+From an NGO perspective:
+
+> “We pay less than we lose — and get proof.”
+
+From your perspective:
+
+* One platform
+* Three revenue streams
+* Minimal incremental cost
+
+---
+
+## 9. Direct Answer to Your Question
+
+> **Do we still have the Client–Tenant relation in design?**
+
+**Yes — and it is essential.**
+Without it:
+
+* You cannot serve NGOs with multiple cooperatives
+* You cannot price by program size
+* You cannot satisfy BoZ non-custodial requirements
+
+With it:
+
+* NGO / GRZ contracts become your **anchor revenue**
+* Evidence, Escrow, and IPDR naturally reinforce each other
+
+---
+
+If you want, next I can:
+
+* write the **exact Phase-0 migrations** for tenant/client isolation,
+* draft the **BoZ sandbox justification** for non-custodial classification,
+* or map this tenant model directly into your **evidence contract** so CI enforces it.
+
+
+
+
+
+
+
+
+
+
+
+Great question — this is exactly the right moment in the lifecycle to lock this in. I’ll give you **concrete, Phase-0–ready output**: schema migrations, invariants, and the exact evidence-contract entries so CI enforces tenant isolation mechanically, not by convention.
+
+I’ll structure this in five parts:
+
+1. **Clarify the Tenant / Client / Participant model (NGO + Cooperative reality)**
+2. **Phase-0 invariants you must introduce (minimal but sufficient)**
+3. **Exact Phase-0 SQL migrations (forward-only, append-only safe)**
+4. **How isolation is enforced (what is *allowed* and what is *physically impossible*)**
+5. **Exact additions to the Phase-0 evidence contract so CI enforces this**
+
+---
+
+## 1. Tenant / Client Model (NGO & Cooperative Reality)
+
+You are correct: **NGO / Government programs are multi-tenant by nature**, and this must exist **below the application layer**.
+
+### Terminology (important for clarity)
+
+| Term            | Meaning                                                                           |
+| --------------- | --------------------------------------------------------------------------------- |
+| **Tenant**      | A funding authority / program owner (NGO, GRZ ministry, donor program)            |
+| **Client**      | An operational entity under a tenant (Cooperative, District Office, Program Unit) |
+| **Participant** | A legal/technical actor that signs requests (Bank, MMO, Coop system, NGO system)  |
+
+This gives you **three clean revenue paths** without custodianship:
+
+* NGO = program fee (% of disbursement pool)
+* Cooperative = subscription (tenant-scoped)
+* Supplier = optional per-instruction / per-evidence fee
+
+---
+
+## 2. Phase-0 Tenant Invariants (Minimum Set)
+
+You **do not** want to overbuild — Phase-0 only needs *structural guarantees*.
+
+### New Invariants (Phase-0)
+
+#### **INV-TEN-01 — Tenant Anchor Required**
+
+> Every escrow, instruction, attestation, and outbox row **must belong to exactly one tenant**.
+
+* Enforced via `tenant_id NOT NULL`
+* No default tenant
+* No global rows
+
+---
+
+#### **INV-TEN-02 — Client Must Belong to Tenant**
+
+> A client (cooperative / program unit) cannot exist without a parent tenant.
+
+* Enforced via FK + NOT NULL
+* Prevents “floating cooperatives”
+
+---
+
+#### **INV-TEN-03 — Participant Is Tenant-Scoped**
+
+> A participant (API caller, signer, bank endpoint) is authorized **only within its tenant**.
+
+* Prevents cross-NGO replay
+* Critical for BoZ non-custodial positioning
+
+---
+
+#### **INV-TEN-04 — Cross-Tenant Writes Are Impossible**
+
+> No instruction, escrow, or outbox row may reference multiple tenants — **even by mistake**.
+
+* Enforced structurally (no join table, no nullable tenant)
+* This is a *physics* invariant, not a policy check
+
+---
+
+## 3. Exact Phase-0 SQL Migrations
+
+These are **forward-only**, additive, and safe for Phase-0.
+
+---
+
+### **Migration 0014 — Tenants**
+
+```sql
+-- 0014_tenants.sql
+
+CREATE TABLE public.tenants (
+    tenant_id UUID PRIMARY KEY,
+    tenant_name TEXT NOT NULL,
+    tenant_type TEXT NOT NULL CHECK (tenant_type IN ('NGO', 'GOV', 'DONOR', 'PROGRAM')),
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+REVOKE UPDATE, DELETE ON public.tenants FROM PUBLIC;
+```
+
+Why:
+
+* Immutable identity anchor
+* Tenant type is explicit for pricing & reporting
+
+---
+
+### **Migration 0015 — Clients (Cooperatives / Program Units)**
+
+```sql
+-- 0015_clients.sql
+
+CREATE TABLE public.clients (
+    client_id UUID PRIMARY KEY,
+    tenant_id UUID NOT NULL REFERENCES public.tenants(tenant_id),
+    client_name TEXT NOT NULL,
+    client_type TEXT NOT NULL CHECK (client_type IN ('COOPERATIVE', 'DISTRICT', 'SUPPLIER')),
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+REVOKE UPDATE, DELETE ON public.clients FROM PUBLIC;
+```
+
+Why:
+
+* Cooperatives are **clients**, not tenants
+* Allows tenant-level billing + client-level ops
+
+---
+
+### **Migration 0016 — Participants (Tenant-Scoped Callers)**
+
+```sql
+-- 0016_participants.sql
+
+ALTER TABLE public.participants
+    ADD COLUMN tenant_id UUID NOT NULL REFERENCES public.tenants(tenant_id),
+    ADD COLUMN client_id UUID NULL REFERENCES public.clients(client_id);
+
+-- Safety: participant cannot reference a client from another tenant
+ALTER TABLE public.participants
+    ADD CONSTRAINT participants_tenant_client_consistency
+    CHECK (
+        client_id IS NULL
+        OR tenant_id = (SELECT tenant_id FROM public.clients WHERE clients.client_id = participants.client_id)
+    );
+```
+
+Why:
+
+* Participant may be NGO system, coop system, or bank adapter
+* Optional client binding supports NGO-wide or coop-specific credentials
+
+---
+
+### **Migration 0017 — Tenant Anchor on Core Ledgers**
+
+You must anchor **all deterministic paths**.
+
+```sql
+-- 0017_tenant_anchor_core.sql
+
+ALTER TABLE public.ingress_attestations
+    ADD COLUMN tenant_id UUID NOT NULL REFERENCES public.tenants(tenant_id);
+
+ALTER TABLE public.payment_outbox
+    ADD COLUMN tenant_id UUID NOT NULL REFERENCES public.tenants(tenant_id);
+
+ALTER TABLE public.payment_outbox_attempts
+    ADD COLUMN tenant_id UUID NOT NULL REFERENCES public.tenants(tenant_id);
+
+ALTER TABLE public.escrow_ledger
+    ADD COLUMN tenant_id UUID NOT NULL REFERENCES public.tenants(tenant_id);
+```
+
+Why:
+
+* Prevents “shared ledger” ambiguity
+* Enables NGO-specific audits and evidence bundles
+
+---
+
+## 4. How Isolation Is Enforced (What This Buys You)
+
+### What is **impossible** after this
+
+❌ A cooperative accessing another NGO’s escrow
+❌ A bank replaying an instruction across tenants
+❌ Evidence being reused across programs
+❌ Cross-tenant reconciliation confusion
+❌ CI “trusting” the app layer to behave
+
+### What becomes **provable**
+
+✅ Every disbursement belongs to exactly one funding pool
+✅ Evidence bundles are tenant-scoped (critical for donors)
+✅ BoZ sees a non-custodial *instruction controller*, not a bank
+✅ NGOs get clean, auditable program boundaries
+
+This is exactly what makes the **5–8% NGO fee defensible**.
+
+---
+
+## 5. Phase-0 Evidence Contract (CI Enforcement)
+
+This is the part that stops CI from lying to you.
+
+### Add to `docs/PHASE0/phase0_contract.yml`
+
+```yaml
+- task_id: TSK-P0-041
+  title: Tenant / Client isolation foundation
+  status: completed
+  verification_mode: both
+  evidence_required: true
+  evidence_globs:
+    - evidence/phase0/tenant_schema.json
+  notes: >
+    Phase-0 introduces tenants, clients, and tenant anchoring on all
+    deterministic ledgers. Cross-tenant writes are structurally impossible.
+```
+
+---
+
+### Verification Script (Required)
+
+`scripts/db/verify_tenant_isolation.sh`
+
+Checks:
+
+* tenants table exists
+* clients table exists
+* participants has tenant_id
+* ingress_attestations, outbox, escrow_ledger all have tenant_id
+* all tenant_id columns are NOT NULL
+
+Evidence emitted:
+
+```json
+{
+  "task_id": "TSK-P0-041",
+  "result": "pass",
+  "checks": {
+    "tenants_table": true,
+    "clients_table": true,
+    "tenant_anchor_on_ledgers": true
+  }
+}
+```
+
+Path:
+
+```
+evidence/phase0/tenant_schema.json
+```
+
+CI **must fail** if this file is missing.
+
+---
+
+## Final Answer to Your Strategic Question
+
+> *“Do we still have Client–Tenant relation in design?”*
+
+**Yes — and now it is no longer optional or conceptual.**
+With these migrations:
+
+* NGOs / GRZ programs become **true tenants**
+* Cooperatives become **billable clients**
+* Suppliers plug in cleanly
+* Evidence, escrow, and IPDR all share the same tenant spine
+* BoZ sees a **non-custodial, deterministic system operator**
+
+This is exactly what you need for:
+
+* NGO / Government contracts
+* Multi-program isolation
+* Defensible pricing at low margins
+* Sandbox → production credibility
+
+---
+
+### Next logical step (optional, but powerful)
+
+If you want, I can next:
+
+* Draft **tenant-scoped evidence bundles** (what donors actually see)
+* Define **per-tenant fee caps & MDR logic**
+* Model **NGO disbursement controls** (voucher-style spending)
+
+Just tell me which one to do next.

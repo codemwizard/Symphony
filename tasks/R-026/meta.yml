@@ -1,0 +1,43 @@
+schema_version: 1
+phase: '0.5'
+task_id: R-026
+title: Enforce strict canonical schema in run_task and pre-CI
+owner_role: SUPERVISOR
+status: completed
+depends_on:
+- R-025
+touches:
+- scripts/agent/run_task.sh
+- scripts/dev/pre_ci.sh
+- scripts/audit/verify_task_meta_schema.sh
+- evidence/security_remediation/r_026_run_task_strict_enforcement.json
+invariants:
+- SECURITY_REMEDIATION_META_CONTRACT
+work:
+- Remove legacy key alias handling from run_task and require canonical fields only.
+- Wire strict task meta schema verification into pre-CI fail-closed path.
+- Emit enforcement evidence from strict validation run.
+acceptance_criteria:
+- run_task fails on non-canonical meta files with deterministic errors.
+- pre_ci includes strict task-meta schema gate.
+- Evidence artifact is produced and schema-valid.
+verification:
+- bash scripts/audit/verify_task_meta_schema.sh --mode strict --out evidence/security_remediation/r_026_run_task_strict_enforcement.json
+- RUN_PHASE1_GATES=1 scripts/dev/pre_ci.sh
+evidence:
+- evidence/security_remediation/r_026_run_task_strict_enforcement.json
+failure_modes:
+- Evidence file missing
+- run_task accepts legacy shape
+- pre_ci does not enforce strict meta validation
+must_read:
+- tasks/_template/meta.yml
+- docs/operations/TASK_CREATION_PROCESS.md
+- docs/operations/AI_AGENT_OPERATION_MANUAL.md
+implementation_plan: docs/plans/remediation/r-026/PLAN.md
+implementation_log: docs/plans/remediation/r-026/EXEC_LOG.md
+notes: Strict canonical schema enforcement implemented; full RUN_PHASE1_GATES=1 pre_ci
+  passed.
+client: codex_cli
+assigned_agent: supervisor
+model: gpt-5

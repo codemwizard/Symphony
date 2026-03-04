@@ -1,3 +1,4 @@
+schema_version: 1
 phase: '0'
 task_id: TSK-P0-013
 title: Baseline drift gate (schema baseline freshness)
@@ -26,9 +27,9 @@ must_read:
 - docs/invariants/INVARIANTS_MANIFEST.yml
 - scripts/db/verify_invariants.sh
 - scripts/db/ci_invariant_gate.sql
+implementation_plan: docs/plans/phase0/TSK-P0-013/PLAN.md
+implementation_log: docs/plans/phase0/TSK-P0-013/EXEC_LOG.md
 notes: ''
 client: codex_cli
 assigned_agent: db_foundation
 model: <UNASSIGNED>
-implementation_plan: docs/plans/phase0/TSK-P0-013/PLAN.md
-implementation_log: docs/plans/phase0/TSK-P0-013/EXEC_LOG.md

@@ -1,24 +1,30 @@
-id: R-006
+schema_version: 1
 phase: '2'
+task_id: R-006
 title: Add rate limiting middleware + request size limits
+owner_role: SUPERVISOR
 status: completed
-dependencies: []
-description: Reduce brute force and DoS risk.
-affected_services:
-- security_remediation
-affected_files:
+depends_on: []
+touches:
 - Rate limiting enabled for sensitive endpoints.
 - Body size limits enforced.
+invariants: []
+work: []
 acceptance_criteria:
 - id: R-006-A1
   description: 429 on burst
 - id: R-006-A2
   description: 413 (or deterministic reject) on oversized body
-verification_command: 'bash scripts/audit/test_rate_limit_429.sh
-
-  bash scripts/audit/test_body_limit_413.sh'
+verification:
+- bash scripts/audit/test_rate_limit_429.sh
+- bash scripts/audit/test_body_limit_413.sh
 evidence:
-  path: evidence/security_remediation/r_006_rate_limits.json
-implementation_plan_path: docs/plans/remediation/r_006/PLAN.md
-source_of_truth: docs/contracts/SECURITY_REMEDIATION_DOD.yml
-canonical_reference: docs/operations/AI_AGENT_OPERATION_MANUAL.md
+- evidence/security_remediation/r_006_rate_limits.json
+failure_modes: []
+must_read: []
+implementation_plan: docs/plans/remediation/r_006/PLAN.md
+implementation_log: ''
+notes: Reduce brute force and DoS risk.
+client: codex_cli
+assigned_agent: supervisor
+model: <UNASSIGNED>

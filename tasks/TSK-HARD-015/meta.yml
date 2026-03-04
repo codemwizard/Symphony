@@ -1,6 +1,7 @@
+schema_version: 1
 phase: '1'
 task_id: TSK-HARD-015
-title: Conflicting truth containment — FINALITY_CONFLICT state machine
+title: "Conflicting truth containment \u2014 FINALITY_CONFLICT state machine"
 owner_role: SUPERVISOR
 status: planned
 depends_on:
@@ -10,7 +11,7 @@ touches:
 - FINALITY_CONFLICT evidence artifact (structured conflict pack)
 - FINALITY_CONFLICT state added to instruction state enum in DB
 - 'conflict containment: release hold while in FINALITY_CONFLICT'
-- conflict detection logic (contradictory signals → FINALITY_CONFLICT transition)
+- "conflict detection logic (contradictory signals \u2192 FINALITY_CONFLICT transition)"
 - docs/programs/symphony-hardening/HARDENING_TASK_PACKS.md
 - evidence/phase1/hardening/tsk_hard_015.json
 - tasks/TSK-HARD-015/EXEC_LOG.md
@@ -21,7 +22,7 @@ work:
 - Implement deterministic detection and containment of contradictory finality
 - Implement exactly per canonical task block in HARDENING_TASK_PACKS.md.
 acceptance_criteria:
-- FINALITY_CONFLICT is a value in the instruction state enum in the DB — its
+- "FINALITY_CONFLICT is a value in the instruction state enum in the DB \u2014 its"
 verification:
 - bash scripts/audit/verify_tsk_hard_015.sh
 evidence:
@@ -35,7 +36,8 @@ must_read:
 - docs/programs/symphony-hardening/HARDENING_TASK_PACKS.md
 implementation_plan: tasks/TSK-HARD-015/PLAN.md
 implementation_log: tasks/TSK-HARD-015/EXEC_LOG.md
-notes: Generated from canonical hardening task pack source; do not edit semantics here.
+notes: Generated from canonical hardening task pack source; do not edit semantics
+  here.
 client: codex_cli
 assigned_agent: supervisor
 model: gpt-5-codex

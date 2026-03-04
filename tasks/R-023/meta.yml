@@ -1,0 +1,41 @@
+schema_version: 1
+phase: '0.5'
+task_id: R-023
+title: Freeze canonical task meta schema and baseline repo variance
+owner_role: SUPERVISOR
+status: completed
+depends_on:
+- R-022
+touches:
+- tasks/_template/meta.yml
+- docs/operations/TASK_CREATION_PROCESS.md
+- scripts/audit/verify_task_meta_schema.sh
+- evidence/security_remediation/r_023_task_meta_inventory.json
+invariants:
+- SECURITY_REMEDIATION_META_CONTRACT
+work:
+- Define canonical required fields and acceptable value domains for task meta.
+- Implement inventory report over tasks/*/meta.yml showing legacy-vs-canonical keys.
+- Emit deterministic baseline evidence for migration planning.
+acceptance_criteria:
+- Canonical schema rules are explicit and machine-checkable.
+- Inventory report enumerates all non-canonical task meta files.
+- Evidence artifact is produced and schema-valid.
+verification:
+- bash scripts/audit/verify_task_meta_schema.sh --mode inventory --out evidence/security_remediation/r_023_task_meta_inventory.json
+evidence:
+- evidence/security_remediation/r_023_task_meta_inventory.json
+failure_modes:
+- Evidence file missing
+- Inventory misses legacy keys
+- Canonical rules are ambiguous
+must_read:
+- tasks/_template/meta.yml
+- docs/operations/TASK_CREATION_PROCESS.md
+- docs/operations/AI_AGENT_OPERATION_MANUAL.md
+implementation_plan: docs/plans/remediation/r-023/PLAN.md
+implementation_log: docs/plans/remediation/r-023/EXEC_LOG.md
+notes: Completed inventory baseline and emitted evidence.
+client: codex_cli
+assigned_agent: supervisor
+model: gpt-5
