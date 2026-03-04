@@ -22,11 +22,12 @@ fi
   echo "Generated: $(get_timestamp_utc)"
   echo "Git SHA: $(get_git_sha)"
   echo "Findings: $findings_count"
-  echo
-  if [[ -n "$scan_output" ]]; then
-    echo "$scan_output"
-  else
+  echo "Report mode: sanitized-summary-only"
+  if [[ "$findings_count" -eq 0 ]]; then
     echo "No high-signal secret patterns detected in scanned history slices."
+  else
+    echo "Potential historical secret-like patterns detected."
+    echo "Raw match lines intentionally omitted to avoid re-materializing secret-like content in-repo."
   fi
 } > "$REPORT_FILE"
 
