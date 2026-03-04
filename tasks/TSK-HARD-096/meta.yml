@@ -1,0 +1,44 @@
+phase: '1'
+task_id: TSK-HARD-096
+title: Assurance tier disclosure evidence
+owner_role: SUPERVISOR
+status: planned
+depends_on:
+- TSK-HARD-011B
+touches:
+- assurance tier taxonomy document at docs/architecture/ASSURANCE_TIER_TAXONOMY.md
+- assurance_tier field enforced in signing service output
+- docs/programs/symphony-hardening/HARDENING_TASK_PACKS.md
+- evidence/phase1/hardening/tsk_hard_096.json
+- retroactive tier assignment for re-signed artifacts from prior waves
+- tasks/TSK-HARD-096/EXEC_LOG.md
+- tasks/TSK-HARD-096/PLAN.md
+- tier value validation in evidence schema
+invariants:
+- INV-HARDENING-CANONICAL-SOURCE
+work:
+- Establish the assurance tier taxonomy and enforce that every signed evidence
+- Implement exactly per canonical task block in HARDENING_TASK_PACKS.md.
+acceptance_criteria:
+- 'assurance tier taxonomy defines at minimum three tiers: HSM_BACKED,'
+verification:
+- bash scripts/audit/verify_tsk_hard_096.sh
+evidence:
+- evidence/phase1/hardening/tsk_hard_096.json
+- evidence/schemas/hardening/tsk_hard_096.schema.json
+failure_modes:
+- assurance_tier absent from any signed artifact produced after this task => FAIL
+- tier self-reported by caller rather than set by signing service => FAIL_CLOSED
+- taxonomy not documented => FAIL
+- retroactive sweep not completed for prior-wave artifacts => FAIL
+- PENDING_TIER_ASSIGNMENT stubs remaining after this task closes => FAIL
+- negative-path test absent => FAIL
+must_read:
+- docs/operations/AI_AGENT_OPERATION_MANUAL.md
+- docs/programs/symphony-hardening/HARDENING_TASK_PACKS.md
+implementation_plan: tasks/TSK-HARD-096/PLAN.md
+implementation_log: tasks/TSK-HARD-096/EXEC_LOG.md
+notes: Generated from canonical hardening task pack source; do not edit semantics here.
+client: codex_cli
+assigned_agent: supervisor
+model: gpt-5-codex

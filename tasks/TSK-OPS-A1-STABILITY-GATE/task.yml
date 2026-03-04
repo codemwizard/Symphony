@@ -1,0 +1,11 @@
+id: TSK-OPS-A1-STABILITY-GATE
+title: "Program A1 Stability Gate"
+status: todo
+phase: "Hardening"
+wave: "1"
+depends_on: []
+verifier_command: "bash scripts/audit/verify_program_a1_stability_gate.sh"
+evidence_path: "evidence/phase1/program_a1_stability_gate.json"
+schema_path: "evidence/schemas/hardening/sandbox_deploy_dry_run.schema.json"
+source_of_truth: "docs/programs/symphony-hardening/HARDENING_TASK_PACKS.md"
+canonical_reference: "docs/operations/AI_AGENT_OPERATION_MANUAL.md"

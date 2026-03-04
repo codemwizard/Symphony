@@ -1,0 +1,7 @@
+# Dev environment placeholder tenants
+# Used by scripts/dev/export_known_tenants.sh
+# DO NOT add production tenants here.
+
+dev-tenant-alpha
+dev-tenant-beta
+test-tenant-1

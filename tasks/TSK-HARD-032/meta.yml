@@ -1,0 +1,45 @@
+phase: '1'
+task_id: TSK-HARD-032
+title: Length-aware canonicalization and alias collision detection
+owner_role: SUPERVISOR
+status: planned
+depends_on:
+- TSK-HARD-031
+touches:
+- adapter-level outbound field validation
+- collision evidence artifact on truncation collision
+- docs/programs/symphony-hardening/HARDENING_TASK_PACKS.md
+- evidence/phase1/hardening/tsk_hard_032.json
+- per-rail max length config (loaded from policy metadata)
+- pre-dispatch canonicalization to per-rail max length
+- tasks/TSK-HARD-032/EXEC_LOG.md
+- tasks/TSK-HARD-032/PLAN.md
+- truncation collision detection
+invariants:
+- INV-HARDENING-CANONICAL-SOURCE
+work:
+- Implement length-aware pre-dispatch canonicalization of outbound
+- Implement exactly per canonical task block in HARDENING_TASK_PACKS.md.
+acceptance_criteria:
+- per-rail max reference field length is loaded from policy metadata (not
+verification:
+- bash scripts/audit/verify_tsk_hard_032.sh
+evidence:
+- evidence/phase1/hardening/tsk_hard_032.json
+- evidence/schemas/hardening/tsk_hard_032.schema.json
+failure_modes:
+- reference dispatched without length canonicalization => FAIL
+- reference exceeding rail max length dispatched to wire => FAIL_CLOSED
+- truncation collision not detected => FAIL_CLOSED
+- truncation collision produces no evidence artifact => FAIL
+- per-rail max length hardcoded => FAIL_CLOSED [METADATA GOVERNANCE violation]
+- negative-path tests absent => FAIL
+must_read:
+- docs/operations/AI_AGENT_OPERATION_MANUAL.md
+- docs/programs/symphony-hardening/HARDENING_TASK_PACKS.md
+implementation_plan: tasks/TSK-HARD-032/PLAN.md
+implementation_log: tasks/TSK-HARD-032/EXEC_LOG.md
+notes: Generated from canonical hardening task pack source; do not edit semantics here.
+client: codex_cli
+assigned_agent: supervisor
+model: gpt-5-codex

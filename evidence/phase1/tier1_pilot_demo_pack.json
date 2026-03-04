@@ -1,0 +1,58 @@
+{
+  "check_id": "PHASE1-TIER1-PILOT-DEMO-PACK",
+  "schema_version": "phase1-demo-pack-v1",
+  "timestamp_utc": "2026-03-04T03:19:12Z",
+  "git_sha": "0cca4e691cfcb5a1729ab79e08cf21858f5e9b58",
+  "schema_fingerprint": "8066e70aafdc28540785da569dfbda5ebb13a2710d7f31e1b395cf2b3323bb15",
+  "status": "PASS",
+  "source_evidence": {
+    "boz_role_read_only": "evidence/phase0/boz_observability_role.json",
+    "pii_leakage_lint": "evidence/phase0/pii_leakage_payloads.json",
+    "anchor_structural_hooks": "evidence/phase0/anchor_sync_hooks.json",
+    "anchor_operational": "evidence/phase1/anchor_sync_operational_invariant.json",
+    "anchor_resume": "evidence/phase1/anchor_sync_resume_semantics.json",
+    "instruction_finality": "evidence/phase1/instruction_finality_runtime.json",
+    "pii_purge_survivability": "evidence/phase1/pii_decoupling_runtime.json",
+    "rail_sequence_continuity": "evidence/phase1/rail_sequence_runtime.json",
+    "ingress_contract": "evidence/phase1/ingress_api_contract_tests.json",
+    "executor_runtime": "evidence/phase1/executor_worker_runtime.json",
+    "evidence_pack_api": "evidence/phase1/evidence_pack_api_contract.json",
+    "exception_case_pack": "evidence/phase1/exception_case_pack_generation.json",
+    "pilot_harness": "evidence/phase1/pilot_harness_replay.json",
+    "kpi_readiness": "evidence/phase1/product_kpi_readiness_report.json",
+    "authz_boundary": "evidence/phase1/authz_tenant_boundary.json",
+    "boz_runtime_boundary": "evidence/phase1/boz_access_boundary_runtime.json"
+  },
+  "failures": [],
+  "audience": "Tier-1 FI Pilot",
+  "claims": [
+    {
+      "claim": "Ingress API only acknowledges after durable attestation",
+      "source": "evidence/phase1/ingress_api_contract_tests.json"
+    },
+    {
+      "claim": "Executor worker dispatch path is deterministic and fail-closed",
+      "source": "evidence/phase1/executor_worker_runtime.json"
+    },
+    {
+      "claim": "Evidence Pack API retrieves same-tenant packs deterministically",
+      "source": "evidence/phase1/evidence_pack_api_contract.json"
+    },
+    {
+      "claim": "Exception case-pack generation is deterministic and complete",
+      "source": "evidence/phase1/exception_case_pack_generation.json"
+    },
+    {
+      "claim": "Pilot harness replay is deterministic",
+      "source": "evidence/phase1/pilot_harness_replay.json"
+    },
+    {
+      "claim": "Tenant/participant authorization boundaries are enforced",
+      "source": "evidence/phase1/authz_tenant_boundary.json"
+    },
+    {
+      "claim": "Product KPI evidence gate meets thresholds",
+      "source": "evidence/phase1/product_kpi_readiness_report.json"
+    }
+  ]
+}

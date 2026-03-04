@@ -1,0 +1,62 @@
+{
+  "check_id": "PHASE1-REGULATOR-DEMO-PACK",
+  "schema_version": "phase1-demo-pack-v1",
+  "timestamp_utc": "2026-03-04T03:19:12Z",
+  "git_sha": "0cca4e691cfcb5a1729ab79e08cf21858f5e9b58",
+  "schema_fingerprint": "8066e70aafdc28540785da569dfbda5ebb13a2710d7f31e1b395cf2b3323bb15",
+  "status": "PASS",
+  "source_evidence": {
+    "boz_role_read_only": "evidence/phase0/boz_observability_role.json",
+    "pii_leakage_lint": "evidence/phase0/pii_leakage_payloads.json",
+    "anchor_structural_hooks": "evidence/phase0/anchor_sync_hooks.json",
+    "anchor_operational": "evidence/phase1/anchor_sync_operational_invariant.json",
+    "anchor_resume": "evidence/phase1/anchor_sync_resume_semantics.json",
+    "instruction_finality": "evidence/phase1/instruction_finality_runtime.json",
+    "pii_purge_survivability": "evidence/phase1/pii_decoupling_runtime.json",
+    "rail_sequence_continuity": "evidence/phase1/rail_sequence_runtime.json",
+    "ingress_contract": "evidence/phase1/ingress_api_contract_tests.json",
+    "executor_runtime": "evidence/phase1/executor_worker_runtime.json",
+    "evidence_pack_api": "evidence/phase1/evidence_pack_api_contract.json",
+    "exception_case_pack": "evidence/phase1/exception_case_pack_generation.json",
+    "pilot_harness": "evidence/phase1/pilot_harness_replay.json",
+    "kpi_readiness": "evidence/phase1/product_kpi_readiness_report.json",
+    "authz_boundary": "evidence/phase1/authz_tenant_boundary.json",
+    "boz_runtime_boundary": "evidence/phase1/boz_access_boundary_runtime.json"
+  },
+  "failures": [],
+  "audience": "Bank of Zambia",
+  "claims": [
+    {
+      "claim": "BoZ regulator seat is read-only with write denial",
+      "source": "evidence/phase0/boz_observability_role.json"
+    },
+    {
+      "claim": "BoZ runtime access boundary is enforced",
+      "source": "evidence/phase1/boz_access_boundary_runtime.json"
+    },
+    {
+      "claim": "Payment finality mutation denial is deterministic",
+      "source": "evidence/phase1/instruction_finality_runtime.json"
+    },
+    {
+      "claim": "PII purge survivability preserves evidence validity",
+      "source": "evidence/phase1/pii_decoupling_runtime.json"
+    },
+    {
+      "claim": "Rail sequence continuity is enforced on successful dispatch",
+      "source": "evidence/phase1/rail_sequence_runtime.json"
+    },
+    {
+      "claim": "Anchor-sync operational completion and resume semantics are enforced",
+      "source": "evidence/phase1/anchor_sync_operational_invariant.json"
+    },
+    {
+      "claim": "Anchor resume-after-expiry is deterministic",
+      "source": "evidence/phase1/anchor_sync_resume_semantics.json"
+    },
+    {
+      "claim": "ZDPA PII leakage lint remains fail-closed",
+      "source": "evidence/phase0/pii_leakage_payloads.json"
+    }
+  ]
+}

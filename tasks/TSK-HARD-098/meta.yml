@@ -1,0 +1,40 @@
+phase: '1'
+task_id: TSK-HARD-098
+title: Penalty defense pack generation
+owner_role: SUPERVISOR
+status: planned
+depends_on:
+- TSK-HARD-095
+touches:
+- defense pack generator script at scripts/tools/generate_penalty_defense_pack.sh
+- docs/programs/symphony-hardening/HARDENING_TASK_PACKS.md
+- tasks/TSK-HARD-098/EXEC_LOG.md
+- tasks/TSK-HARD-098/PLAN.md
+invariants:
+- INV-HARDENING-CANONICAL-SOURCE
+work:
+- Implement the penalty defense pack generator for regulatory dispute
+- Implement exactly per canonical task block in HARDENING_TASK_PACKS.md.
+acceptance_criteria:
+- 'generator accepts as input: instruction_id OR adjustment_id OR submission_id'
+verification:
+- bash scripts/audit/verify_tsk_hard_098.sh
+evidence:
+- evidence/phase1/hardening/tsk_hard_098.json
+- evidence/schemas/hardening/tsk_hard_098.schema.json
+failure_modes:
+- pack contains raw PII => FAIL_CLOSED
+- pack not signed => FAIL_CLOSED
+- generator produces partial pack on incomplete evidence => FAIL_CLOSED
+- pack fails schema validation => FAIL
+- generator exits zero on unknown entity_id => FAIL
+- negative-path tests absent => FAIL
+must_read:
+- docs/operations/AI_AGENT_OPERATION_MANUAL.md
+- docs/programs/symphony-hardening/HARDENING_TASK_PACKS.md
+implementation_plan: tasks/TSK-HARD-098/PLAN.md
+implementation_log: tasks/TSK-HARD-098/EXEC_LOG.md
+notes: Generated from canonical hardening task pack source; do not edit semantics here.
+client: codex_cli
+assigned_agent: supervisor
+model: gpt-5-codex

@@ -14,6 +14,13 @@ This policy covers:
 - key generation, storage, access, rotation, and revocation
 - incident response expectations for key compromise
 
+## Language Scope
+This policy applies to all languages used in Symphony:
+- **C# (.NET)**: Service configurations, ASP.NET Core integration
+- **Python**: Service configurations, psycopg2/asyncpg integration
+- **Infrastructure**: OpenBao configuration, CI/CD pipelines
+- **Future languages**: Must follow the same principles when added
+
 ## Principles
 - Keys are never stored in source control.
 - Environments are segregated. No key material is shared across environments.

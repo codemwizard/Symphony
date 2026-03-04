@@ -1,0 +1,122 @@
+# DOD Task Template
+#
+# Usage: Copy this template for each new task DOD.
+# Reference: docs/process/EVIDENCE_DRIVEN_TASK_PROCESS.md
+#
+# Conventions:
+#   - Lint scripts live in scripts/security/
+#   - Contract verifiers live in scripts/audit/
+#   - Evidence artifacts are deterministic JSON
+#   - Suppressions: # symphony:allow:<rule_id> reason=<justification> expires=<YYYY-MM-DD>
+#
+# Before committing, run the 8-point review checklist (see process doc).
+
+manifest_version: "1.0"
+evidence_root: "evidence/<program_name>"
+schema_root: "evidence_schemas"
+
+# List CI jobs this DOD references. Mark which exist and which need creation.
+ci_jobs:
+  existing:
+    - security_scan
+    - mechanical_invariants
+    # Add other existing jobs as needed
+  new_required: []
+    # - my_new_job  # Uncomment if task needs a new CI job; create prerequisite task
+
+global_requirements:
+  fail_closed: true
+  required_evidence_fields:
+    - task_id
+    - git_sha
+    - timestamp_utc
+    - status
+    - checks
+  required_check_fields:
+    - id
+    - description
+    - status
+    - details
+  minimum_negative_tests_per_task: 1
+  suppression_policy:
+    format: "# symphony:allow:<rule_id> reason=<justification> expires=<YYYY-MM-DD>"
+    max_expiry_days: 90
+    ci_audit_command: "bash scripts/security/audit_lint_suppressions.sh"
+  script_path_convention:
+    security_lints: "scripts/security/"
+    contract_verifiers: "scripts/audit/"
+
+tasks:
+
+  # ── Example Task ──────────────────────────────────────────────
+
+  - task_id: EXAMPLE-001
+    phase: "1"
+    title: "Example: Add input validation to /api/widget"
+    depends_on: []                    # List task_ids this depends on
+    intent: "Prevent injection and malformed data from reaching business logic."
+    changes_required:
+      - "Add Zod/schema validation to /api/widget POST handler."
+      - "Return 400 with structured error on invalid input."
+      - "Add negative test proving injection payload is rejected."
+    dod:
+      acceptance_checks:
+
+        # ── Acceptance Check: CI-enforced gate ──
+        - id: EXAMPLE-001-A1
+          description: "Input validation schema exists and is applied"
+          status: REQUIRED           # REQUIRED or ADVISORY
+          ci_gate:
+            job: service_tests       # Must be in ci_jobs.existing or ci_jobs.new_required
+            command: "dotnet test"   # Exact command CI will run
+
+        # ── Add more acceptance checks as needed ──
+        # - id: EXAMPLE-001-A2
+        #   description: "..."
+        #   status: REQUIRED
+        #   ci_gate:
+        #     job: security_scan
+        #     command: "bash scripts/security/lint_insecure_patterns.sh"
+
+      negative_tests:
+        # ── At least 1 required ──
+        - id: EXAMPLE-001-N1
+          description: "Injection payload in widget name → 400 error"
+          required: true
+
+        # - id: EXAMPLE-001-N2
+        #   description: "Oversized payload → 413 error"
+        #   required: true
+
+      positive_tests:
+        # ── Optional but recommended ──
+        - id: EXAMPLE-001-P1
+          description: "Valid widget creation succeeds with 201"
+          required: true
+
+      evidence:
+        path: "evidence/<program_name>/example_001_input_validation.json"
+        schema: "evidence_schemas/example_001_input_validation.schema.json"
+        must_include:
+          - "validation_schema_applied"
+          - "injection_payload_rejected"
+          - "valid_request_accepted"
+
+  # ── Copy the block above for each additional task ─────────────
+  # Replace:
+  #   - task_id, title, intent
+  #   - changes_required (exhaustive list)
+  #   - acceptance_checks (CI-enforced gates)
+  #   - negative_tests (prove exploit/failure blocked)
+  #   - positive_tests (prove correct behavior)
+  #   - evidence path, schema, must_include fields
+  #
+  # Then run the 8-point review checklist:
+  #   1. Script paths match convention?
+  #   2. CI jobs exist?
+  #   3. Current state accurate?
+  #   4. Dependencies acyclic?
+  #   5. String matches not over-broad?
+  #   6. Suppression mechanism specified?
+  #   7. Cross-task dependencies noted?
+  #   8. Evidence fields observable?

@@ -1,0 +1,114 @@
+# Security Scan Scope Contract
+# Defines languages, tools, and coverage requirements for security scanning
+
+manifest_version: "1.0"
+last_updated: "2026-03-04"
+
+# Languages in scope for security scanning
+languages:
+  - id: "cs"
+    name: "C#"
+    file_extensions: [".cs"]
+    frameworks: ["ASP.NET Core", "Entity Framework Core", "Dapper"]
+    scanners_required: ["semgrep", "lint_app_sql_injection"]
+    minimum_rules: 3
+    
+  - id: "py"
+    name: "Python"
+    file_extensions: [".py"]
+    frameworks: ["psycopg2", "asyncpg", "SQLAlchemy", "Flask", "Django"]
+    scanners_required: ["semgrep", "lint_app_sql_injection"]
+    minimum_rules: 3
+
+# Security tools and their coverage
+security_tools:
+  - name: "semgrep"
+    type: "sast"
+    languages_supported: ["cs", "py"]
+    config_file: "security/semgrep/rules.yml"
+    minimum_rules_per_language: 3
+    rule_categories: ["sql_injection", "hardcoded_secrets", "insecure_rng", "admin_bypass"]
+    
+  - name: "lint_app_sql_injection"
+    type: "lint"
+    languages_supported: ["cs", "py"]
+    script: "scripts/security/lint_app_sql_injection.sh"
+    patterns_covered: ["string_concatenation", "string_format", "interpolation", "percent_formatting"]
+    
+  - name: "lint_security_definer_search_path"
+    type: "lint"
+    languages_supported: ["sql"]
+    script: "scripts/security/lint_security_definer_search_path.sh"
+    patterns_covered: ["security_definer", "search_path"]
+    
+  - name: "scan_secrets"
+    type: "scanner"
+    languages_supported: ["cs", "py", "yaml", "json", "md"]
+    script: "scripts/security/scan_secrets.sh"
+    patterns_covered: ["api_keys", "passwords", "tokens", "certificates"]
+
+# Coverage requirements
+coverage_requirements:
+  # If a language is present in the codebase, it must be scanned
+  language_presence_rules:
+    - rule: "python-present => scanned"
+      description: "If .py files exist, Python scanners must run"
+      check_script: "scripts/audit/verify_scan_scope.sh"
+      
+    - rule: "csharp-present => scanned"
+      description: "If .cs files exist, C# scanners must run"
+      check_script: "scripts/audit/verify_scan_scope.sh"
+  
+  # If a tool is declared, it must be available and functional
+  tool_availability_rules:
+    - rule: "declared-tool => exists"
+      description: "All declared tools must have executable scripts"
+      check_script: "scripts/audit/validate_scan_scope_contract.sh"
+      
+    - rule: "tool-script => executable"
+      description: "All tool scripts must be executable"
+      check_script: "scripts/audit/validate_scan_scope_contract.sh"
+
+# Validation rules
+validation:
+  required_fields:
+    - "languages"
+    - "security_tools"
+    - "coverage_requirements"
+    
+  language_validation:
+    required_fields: ["id", "name", "file_extensions", "scanners_required"]
+    id_format: "^[a-z]{2,3}$"
+    
+  tool_validation:
+    required_fields: ["name", "type", "languages_supported", "script"]
+    script_must_exist: true
+    
+  coverage_validation:
+    required_fields: ["language_presence_rules", "tool_availability_rules"]
+    rules_must_be_testable: true
+
+# Failure modes
+failure_modes:
+  - mode: "language_without_scanner"
+    description: "Language files exist but no scanner configured"
+    severity: "FAIL"
+    
+  - mode: "scanner_missing"
+    description: "Declared scanner tool not available"
+    severity: "FAIL"
+    
+  - mode: "insufficient_rules"
+    description: "Scanner has fewer rules than minimum required"
+    severity: "FAIL"
+    
+  - mode: "script_not_executable"
+    description: "Tool script exists but not executable"
+    severity: "FAIL"
+
+# Compliance mapping
+compliance_standards:
+  - "OWASP ASVS V4"
+  - "PCI DSS v4.0 Req 6.2"
+  - "NIST 800-53"
+  - "ISO 27001/27002"

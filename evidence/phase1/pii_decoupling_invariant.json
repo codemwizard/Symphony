@@ -1,0 +1,28 @@
+{
+  "schema_version": "1.0",
+  "check_id": "DB-PII-DECOUPLING-HOOKS",
+  "gate_id": "INT-G26",
+  "invariant_id": "INV-115",
+  "timestamp_utc": "2026-03-04T03:18:03Z",
+  "git_sha": "0cca4e691cfcb5a1729ab79e08cf21858f5e9b58",
+  "schema_fingerprint": "8066e70aafdc28540785da569dfbda5ebb13a2710d7f31e1b395cf2b3323bb15",
+  "status": "PASS",
+  "details": {
+    "checks": [
+      "table_pii_vault_records=t",
+      "table_pii_purge_requests=t",
+      "table_pii_purge_events=t",
+      "constraint_pii_vault_purge_shape=t",
+      "constraint_pii_vault_purge_request_fk=t",
+      "trigger_deny_pii_vault_mutation=t",
+      "trigger_deny_pii_purge_requests_mutation=t",
+      "trigger_deny_pii_purge_events_mutation=t",
+      "function_request_pii_purge=t",
+      "function_execute_pii_purge=t",
+      "public_no_privs_pii_vault_records=t",
+      "public_no_privs_pii_purge_requests=t",
+      "public_no_privs_pii_purge_events=t"
+    ],
+    "failures": []
+  }
+}

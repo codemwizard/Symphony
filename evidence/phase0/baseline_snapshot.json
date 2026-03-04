@@ -1,0 +1,23 @@
+{
+  "timestamp_utc": "2026-03-04T03:16:59Z",
+  "git_sha": "0cca4e691cfcb5a1729ab79e08cf21858f5e9b58",
+  "schema_fingerprint": "8066e70aafdc28540785da569dfbda5ebb13a2710d7f31e1b395cf2b3323bb15",
+  "status": "PASS",
+  "details": {
+    "missing": [],
+    "checks": {
+      "adr": true,
+      "decision": true,
+      "baseline": true,
+      "cutoff": true,
+      "canonicalizer": true,
+      "snapshot_generator": true,
+      "migrate_script": true,
+      "decision_refs_adr": true,
+      "cutoff_nonempty": true,
+      "migrate_strategy_flag": true,
+      "migrate_baseline_path": true
+    }
+  },
+  "check_id": "BASELINE-SNAPSHOT"
+}

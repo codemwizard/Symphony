@@ -1,0 +1,12 @@
+id: TSK-HARD-080
+title: "Signing scale path — batch/Merkle and HSM throughput"
+status: todo
+phase: "Hardening"
+wave: "6"
+depends_on:
+  - TSK-OPS-WAVE5-EXIT-GATE
+verifier_command: "bash scripts/audit/verify_tsk_hard_080.sh"
+evidence_path: "evidence/phase1/hardening/tsk_hard_080.json"
+schema_path: "evidence/schemas/hardening/tsk_hard_080.schema.json"
+source_of_truth: "docs/programs/symphony-hardening/HARDENING_TASK_PACKS.md"
+canonical_reference: "docs/operations/AI_AGENT_OPERATION_MANUAL.md"

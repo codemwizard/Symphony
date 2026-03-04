@@ -1,0 +1,24 @@
+id: TSK-OPS-WAVE6-EXIT-GATE
+title: "Wave-6 Exit Gate — Hardening Program Complete"
+status: todo
+phase: "Hardening"
+wave: "6"
+depends_on:
+  - TSK-HARD-080
+  - TSK-HARD-081
+  - TSK-HARD-082
+  - TSK-HARD-090
+  - TSK-HARD-091
+  - TSK-HARD-092
+  - TSK-HARD-093
+  - TSK-HARD-095
+  - TSK-HARD-040
+  - TSK-HARD-041
+  - TSK-HARD-042
+  - TSK-HARD-098
+  - TSK-HARD-100
+verifier_command: "bash scripts/audit/verify_program_wave6_exit_gate.sh"
+evidence_path: "evidence/phase1/program_wave6_exit_gate.json"
+schema_path: "evidence/schemas/hardening/wave6_exit/wave6_exit_gate.schema.json"
+source_of_truth: "docs/programs/symphony-hardening/HARDENING_TASK_PACKS.md"
+canonical_reference: "docs/operations/AI_AGENT_OPERATION_MANUAL.md"

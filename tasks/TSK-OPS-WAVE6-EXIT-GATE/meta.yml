@@ -1,0 +1,49 @@
+phase: '1'
+task_id: TSK-OPS-WAVE6-EXIT-GATE
+title: Wave-6 Exit Gate — Hardening Program Complete
+owner_role: SUPERVISOR
+status: planned
+depends_on: []
+touches:
+- docs/programs/symphony-hardening/HARDENING_TASK_PACKS.md
+- evidence/phase1/program_wave6_exit_gate.json
+- evidence/phase1/wave6_exit/boz_scenario_all_six_pass.json
+- evidence/phase1/wave6_exit/erased_subject_purge_placeholder.json
+- evidence/phase1/wave6_exit/hsm_outage_fail_closed.json
+- evidence/phase1/wave6_exit/pii_absent_from_evidence_tables.json
+- evidence/phase1/wave6_exit/rate_limit_breach_blocked.json
+- evidence/phase1/wave6_exit/retraction_secondary_approval_enforced.json
+- scripts/audit/verify_program_wave6_exit_gate.sh
+- tasks/TSK-OPS-WAVE6-EXIT-GATE/EXEC_LOG.md
+- tasks/TSK-OPS-WAVE6-EXIT-GATE/PLAN.md
+invariants:
+- INV-HARDENING-CANONICAL-SOURCE
+work:
+- Deterministic hardening program completion gate. All six negative-path
+- Implement exactly per canonical task block in HARDENING_TASK_PACKS.md.
+acceptance_criteria:
+- all 6 artifact paths listed in required_deliverables exist
+- gate script validates each artifact against its schema before emitting pass
+- each artifact contains pass=true
+- gate script exits non-zero if any artifact is missing, fails schema
+verification:
+- bash scripts/audit/verify_program_wave6_exit_gate.sh
+evidence:
+- evidence/phase1/program_wave6_exit_gate.json
+- evidence/schemas/hardening/wave6_exit/wave6_exit_gate.schema.json
+failure_modes:
+- any artifact missing => FAIL_CLOSED
+- any artifact fails schema validation => FAIL_CLOSED
+- any artifact contains pass=false => FAIL_CLOSED
+- tsk_hard_102.json absent or pass=false => FAIL_CLOSED
+- any prior wave exit gate artifact absent or pass=false => FAIL_CLOSED
+- 'gate emits hardening_program_complete: true before all wave exit gates'
+must_read:
+- docs/operations/AI_AGENT_OPERATION_MANUAL.md
+- docs/programs/symphony-hardening/HARDENING_TASK_PACKS.md
+implementation_plan: tasks/TSK-OPS-WAVE6-EXIT-GATE/PLAN.md
+implementation_log: tasks/TSK-OPS-WAVE6-EXIT-GATE/EXEC_LOG.md
+notes: Generated from canonical hardening task pack source; do not edit semantics here.
+client: codex_cli
+assigned_agent: supervisor
+model: gpt-5-codex

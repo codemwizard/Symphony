@@ -1,0 +1,45 @@
+phase: '1'
+task_id: TSK-HARD-080
+title: Signing scale path — batch/Merkle and HSM throughput
+owner_role: SUPERVISOR
+status: planned
+depends_on:
+- TSK-OPS-WAVE5-EXIT-GATE
+touches:
+- HSM throughput load test with evidence artifact
+- HSM/KMS outage fail-closed tests with evidence artifacts
+- Merkle batch signing engine implementation
+- artifact class taxonomy document at docs/architecture/ARTIFACT_CLASS_TAXONOMY.md
+- docs/programs/symphony-hardening/HARDENING_TASK_PACKS.md
+- evidence/phase1/hardening/tsk_hard_080.json
+- tasks/TSK-HARD-080/EXEC_LOG.md
+- tasks/TSK-HARD-080/PLAN.md
+invariants:
+- INV-HARDENING-CANONICAL-SOURCE
+work:
+- Implement the Merkle batch signing engine for high-volume evidence artifact
+- Implement exactly per canonical task block in HARDENING_TASK_PACKS.md.
+acceptance_criteria:
+- 'artifact class taxonomy defines at minimum two classes: INDIVIDUAL_SIGNED,'
+verification:
+- bash scripts/audit/verify_tsk_hard_080.sh
+evidence:
+- evidence/phase1/hardening/tsk_hard_080.json
+- evidence/schemas/hardening/tsk_hard_080.schema.json
+failure_modes:
+- Merkle batch produces incorrect proof for any leaf => FAIL_CLOSED
+- leaf verification using proof produces false pass => FAIL_CLOSED
+- HSM outage causes fallback to software signing => FAIL_CLOSED
+- KMS region outage causes fallback => FAIL_CLOSED
+- throughput test not performed => FAIL
+- degradation test shows dropped or corrupted requests under load => FAIL_CLOSED
+- negative-path test absent => FAIL
+must_read:
+- docs/operations/AI_AGENT_OPERATION_MANUAL.md
+- docs/programs/symphony-hardening/HARDENING_TASK_PACKS.md
+implementation_plan: tasks/TSK-HARD-080/PLAN.md
+implementation_log: tasks/TSK-HARD-080/EXEC_LOG.md
+notes: Generated from canonical hardening task pack source; do not edit semantics here.
+client: codex_cli
+assigned_agent: supervisor
+model: gpt-5-codex

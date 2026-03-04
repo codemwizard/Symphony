@@ -697,8 +697,25 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          chmod +x scripts/security/lint_security_definer_dynamic_sql.sh
-          scripts/security/lint_security_definer_dynamic_sql.sh
+          chmod +x scripts/security/lint_security_definer_search_path.sh
+          scripts/security/lint_security_definer_search_path.sh
+
+      - name: Run application SQL injection lint
+        shell: bash
+        run: |
+          set -euo pipefail
+          chmod +x scripts/security/lint_app_sql_injection.sh
+          scripts/security/lint_app_sql_injection.sh
+
+      - name: Run Semgrep SAST (C# + Python)
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [[ -f security/semgrep/rules.yml ]]; then
+            semgrep --config=security/semgrep/rules.yml --quiet --error
+          else
+            echo "security/semgrep/rules.yml not found; skipping Semgrep scan"
+          fi
 
       - name: Run OpenBao bootstrap + smoke test
         shell: bash

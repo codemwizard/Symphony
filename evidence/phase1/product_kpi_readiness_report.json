@@ -1,0 +1,38 @@
+{
+  "check_id": "PHASE1-PRODUCT-KPI-READINESS",
+  "timestamp_utc": "2026-03-04T03:15:05Z",
+  "git_sha": "0cca4e691cfcb5a1729ab79e08cf21858f5e9b58",
+  "schema_fingerprint": "8066e70aafdc28540785da569dfbda5ebb13a2710d7f31e1b395cf2b3323bb15",
+  "status": "PASS",
+  "max_source_age_minutes": 180,
+  "source_evidence": {
+    "ingress_contract": "evidence/phase1/ingress_api_contract_tests.json",
+    "executor_runtime": "evidence/phase1/executor_worker_runtime.json",
+    "evidence_pack_contract": "evidence/phase1/evidence_pack_api_contract.json",
+    "exception_case_pack": "evidence/phase1/exception_case_pack_generation.json",
+    "pilot_harness": "evidence/phase1/pilot_harness_replay.json",
+    "pilot_onboarding": "evidence/phase1/pilot_onboarding_readiness.json"
+  },
+  "perf_005_reference": {
+    "task_id": "PERF-005",
+    "evidence_path": "evidence/phase1/perf_005__regulatory_timing_compliance_gate.json"
+  },
+  "kpis": {
+    "ack_determinism_pct": 100.0,
+    "duplicate_suppression_effectiveness_pct": 100.0,
+    "evidence_casepack_generation_coverage_pct": 100.0,
+    "investigation_readiness_pct": 100.0,
+    "retry_fail_closed_enforcement_pct": 100.0,
+    "settlement_window_compliance_pct": 100.0
+  },
+  "thresholds": {
+    "ack_determinism_pct": 100.0,
+    "duplicate_suppression_effectiveness_pct": 100.0,
+    "evidence_casepack_generation_coverage_pct": 100.0,
+    "investigation_readiness_pct": 100.0,
+    "retry_fail_closed_enforcement_pct": 100.0,
+    "settlement_window_compliance_pct": 0.0
+  },
+  "ready_for_product_review": true,
+  "failures": []
+}

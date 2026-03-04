@@ -1,0 +1,45 @@
+phase: '1'
+task_id: TSK-HARD-025
+title: Cooling-off and legal hold transitions
+owner_role: SUPERVISOR
+status: planned
+depends_on:
+- TSK-HARD-023
+touches:
+- cooling-off period loaded from policy metadata (not hardcoded)
+- cooling_off state transition in adjustment lifecycle
+- docs/programs/symphony-hardening/HARDENING_TASK_PACKS.md
+- evidence/phase1/hardening/tsk_hard_025.json
+- five freeze flag types implemented and individually testable
+- global freeze flag check at execution gate
+- legal hold evidence artifact
+- tasks/TSK-HARD-025/EXEC_LOG.md
+- tasks/TSK-HARD-025/PLAN.md
+invariants:
+- INV-HARDENING-CANONICAL-SOURCE
+work:
+- Implement the cooling_off sealed state and all global freeze flags that
+- Implement exactly per canonical task block in HARDENING_TASK_PACKS.md.
+acceptance_criteria:
+- cooling_off state present in adjustment state enum (extends TSK-HARD-020
+verification:
+- bash scripts/audit/verify_tsk_hard_025.sh
+evidence:
+- evidence/phase1/hardening/tsk_hard_025.json
+- evidence/schemas/hardening/tsk_hard_025.schema.json
+failure_modes:
+- execution permitted during cooling_off => FAIL_CLOSED
+- any freeze flag check absent from execution gate => FAIL_CLOSED
+- any of the five freeze flag types not implemented => FAIL
+- cooling-off period hardcoded => FAIL_CLOSED [METADATA GOVERNANCE violation]
+- legal hold produces no evidence artifact => FAIL
+- negative-path tests absent => FAIL
+must_read:
+- docs/operations/AI_AGENT_OPERATION_MANUAL.md
+- docs/programs/symphony-hardening/HARDENING_TASK_PACKS.md
+implementation_plan: tasks/TSK-HARD-025/PLAN.md
+implementation_log: tasks/TSK-HARD-025/EXEC_LOG.md
+notes: Generated from canonical hardening task pack source; do not edit semantics here.
+client: codex_cli
+assigned_agent: supervisor
+model: gpt-5-codex

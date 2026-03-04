@@ -1,0 +1,12 @@
+id: TSK-HARD-095
+title: "BoZ submission audit trail primitives"
+status: todo
+phase: "Hardening"
+wave: "6"
+depends_on:
+  - TSK-HARD-093
+verifier_command: "bash scripts/audit/verify_tsk_hard_095.sh"
+evidence_path: "evidence/phase1/hardening/tsk_hard_095.json"
+schema_path: "evidence/schemas/hardening/tsk_hard_095.schema.json"
+source_of_truth: "docs/programs/symphony-hardening/HARDENING_TASK_PACKS.md"
+canonical_reference: "docs/operations/AI_AGENT_OPERATION_MANUAL.md"

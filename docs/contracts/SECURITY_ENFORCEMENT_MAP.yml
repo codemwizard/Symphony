@@ -1,0 +1,140 @@
+# Security Enforcement Mapping Contract
+# Maps security policies to language-agnostic enforcement mechanisms
+# Validated by CI via validate_security_enforcement_map.sh
+
+manifest_version: "1.0"
+last_updated: "2026-03-04"
+
+# Language scope covered by security policies
+languages:
+  - id: "cs"
+    name: "C#"
+    file_extensions: [".cs"]
+    frameworks: ["ASP.NET Core", "Entity Framework Core"]
+  - id: "py"
+    name: "Python"
+    file_extensions: [".py"]
+    frameworks: ["psycopg2", "asyncpg", "SQLAlchemy"]
+
+# Security enforcement mappings
+enforcement_mappings:
+  # SQL Injection Prevention
+  - policy_id: "SEC-DB-001"
+    title: "SECURITY DEFINER functions must set safe search_path"
+    enforcement_type: "static_analysis"
+    languages: ["cs", "py"]
+    tools:
+      - name: "lint_security_definer_search_path"
+        script: "scripts/security/lint_security_definer_search_path.sh"
+        patterns:
+          - "SECURITY DEFINER"
+          - "search_path"
+    ci_gate: "security_scan"
+    parameterized_queries_required: true
+
+  # Privilege Enforcement
+  - policy_id: "SEC-DB-002"
+    title: "Runtime roles must not regain CREATE on schema public"
+    enforcement_type: "static_analysis"
+    languages: ["cs", "py"]
+    tools:
+      - name: "lint_privilege_grants"
+        script: "scripts/security/lint_privilege_grants.sh"
+        patterns:
+          - "GRANT CREATE"
+          - "TO PUBLIC"
+    ci_gate: "security_scan"
+
+  # Application Layer SQL Injection
+  - policy_id: "SEC-APP-001"
+    title: "Application layer must use parameterized queries"
+    enforcement_type: "static_analysis"
+    languages: ["cs", "py"]
+    tools:
+      - name: "lint_app_sql_injection"
+        script: "scripts/security/lint_app_sql_injection.sh"
+        patterns:
+          - "string.Format"
+          - "string interpolation"
+          - "f-string"
+          - "% formatting"
+          - "EXEC"
+          - "EXECUTE"
+    ci_gate: "security_scan"
+    parameterized_queries_required: true
+
+  # Secrets Management
+  - policy_id: "SEC-SEC-001"
+    title: "No hardcoded secrets in code"
+    enforcement_type: "static_analysis"
+    languages: ["cs", "py"]
+    tools:
+      - name: "scan_secrets"
+        script: "scripts/security/scan_secrets.sh"
+        patterns:
+          - "password"
+          - "secret"
+          - "key"
+          - "token"
+    ci_gate: "security_scan"
+
+  # Insecure Patterns
+  - policy_id: "SEC-CODE-001"
+    title: "Insecure code patterns prohibited"
+    enforcement_type: "static_analysis"
+    languages: ["cs", "py"]
+    tools:
+      - name: "lint_insecure_patterns"
+        script: "scripts/security/lint_insecure_patterns.sh"
+        patterns:
+          - "hardcoded passwords"
+          - "weak encryption"
+          - "unsafe deserialization"
+    ci_gate: "security_scan"
+
+# CI Gate Configuration
+ci_gates:
+  - name: "security_scan"
+    description: "Runs all security linting and scanning tools"
+    fail_closed: true
+    required_tools:
+      - "lint_security_definer_search_path"
+      - "lint_privilege_grants"
+      - "lint_app_sql_injection"
+      - "scan_secrets"
+      - "lint_insecure_patterns"
+
+# Parameterization Requirements
+parameterization_requirements:
+  database_access:
+    - "All SQL queries must use parameterized statements"
+    - "No string concatenation for SQL queries"
+    - "ORM frameworks configured for parameterization"
+  
+  frameworks:
+    cs:
+      - "Dapper: use Query<T> with parameters"
+      - "EF Core: use FromSqlRaw with parameters"
+      - "ADO.NET: use SqlCommand with Parameters"
+    py:
+      - "psycopg2: use %s placeholders with params"
+      - "asyncpg: use $n placeholders with params"
+      - "SQLAlchemy: use text() with bind params"
+
+# Validation Schema
+validation:
+  required_fields:
+    - "policy_id"
+    - "title"
+    - "enforcement_type"
+    - "languages"
+    - "tools"
+    - "ci_gate"
+  
+  tool_validation:
+    required_fields:
+      - "name"
+      - "script"
+      - "patterns"
+    script_must_exist: true
+    patterns_must_be_non_empty: true

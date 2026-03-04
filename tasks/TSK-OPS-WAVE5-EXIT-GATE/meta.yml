@@ -1,0 +1,46 @@
+phase: '1'
+task_id: TSK-OPS-WAVE5-EXIT-GATE
+title: Wave-5 Exit Gate
+owner_role: SUPERVISOR
+status: planned
+depends_on: []
+touches:
+- docs/programs/symphony-hardening/HARDENING_TASK_PACKS.md
+- evidence/phase1/program_wave5_exit_gate.json
+- evidence/phase1/wave5_exit/bundle_access_quorum_rejected.json
+- evidence/phase1/wave5_exit/dr_recovery_end_to_end_pass.json
+- evidence/phase1/wave5_exit/pka_entry_update_blocked.json
+- evidence/phase1/wave5_exit/regulator_write_denied.json
+- evidence/phase1/wave5_exit/unverifiable_missing_canonicalizer.json
+- scripts/audit/verify_program_wave5_exit_gate.sh
+- tasks/TSK-OPS-WAVE5-EXIT-GATE/EXEC_LOG.md
+- tasks/TSK-OPS-WAVE5-EXIT-GATE/PLAN.md
+invariants:
+- INV-HARDENING-CANONICAL-SOURCE
+work:
+- Deterministic Wave-5 pass/fail gate. All five negative-path evidence
+- Implement exactly per canonical task block in HARDENING_TASK_PACKS.md.
+acceptance_criteria:
+- all 5 artifact paths listed in required_deliverables exist
+- gate script validates each artifact against its schema before emitting pass
+- each artifact contains pass=true
+- 'specific field requirements per artifact:'
+verification:
+- bash scripts/audit/verify_program_wave5_exit_gate.sh
+evidence:
+- evidence/phase1/program_wave5_exit_gate.json
+- evidence/schemas/hardening/wave5_exit/wave5_exit_gate.schema.json
+failure_modes:
+- any artifact missing => FAIL_CLOSED
+- any artifact fails schema validation => FAIL_CLOSED
+- 'dr_recovery evidence shows operational_runtime_used: true => FAIL_CLOSED'
+- manual override => FAIL_CLOSED (not permitted)
+must_read:
+- docs/operations/AI_AGENT_OPERATION_MANUAL.md
+- docs/programs/symphony-hardening/HARDENING_TASK_PACKS.md
+implementation_plan: tasks/TSK-OPS-WAVE5-EXIT-GATE/PLAN.md
+implementation_log: tasks/TSK-OPS-WAVE5-EXIT-GATE/EXEC_LOG.md
+notes: Generated from canonical hardening task pack source; do not edit semantics here.
+client: codex_cli
+assigned_agent: supervisor
+model: gpt-5-codex

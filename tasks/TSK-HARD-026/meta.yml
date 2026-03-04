@@ -1,0 +1,43 @@
+phase: '1'
+task_id: TSK-HARD-026
+title: Approval attribution and role attestation
+owner_role: SUPERVISOR
+status: planned
+depends_on:
+- TSK-HARD-025
+touches:
+- attestation schema extension to approval record
+- docs/programs/symphony-hardening/HARDENING_TASK_PACKS.md
+- evidence/phase1/hardening/tsk_hard_026.json
+- role and department capture at signing time (snapshot, not live lookup)
+- signature or signature reference per attestation
+- signing-time capture test
+- tasks/TSK-HARD-026/EXEC_LOG.md
+- tasks/TSK-HARD-026/PLAN.md
+invariants:
+- INV-HARDENING-CANONICAL-SOURCE
+work:
+- Record cryptographic role-attestation at the moment of each approval
+- Implement exactly per canonical task block in HARDENING_TASK_PACKS.md.
+acceptance_criteria:
+- 'each approval record contains: approver_id, role_at_time_of_signing,'
+verification:
+- bash scripts/audit/verify_tsk_hard_026.sh
+evidence:
+- evidence/phase1/hardening/tsk_hard_026.json
+- evidence/schemas/hardening/tsk_hard_026.schema.json
+failure_modes:
+- role resolved at query time rather than signing time => FAIL_CLOSED
+- role-change-after-approval mutates historical attestation record => FAIL_CLOSED
+- attestation not linked to specific approval stage_id => FAIL
+- signature_ref absent and unsigned_reason not populated => FAIL
+- negative-path test absent => FAIL
+must_read:
+- docs/operations/AI_AGENT_OPERATION_MANUAL.md
+- docs/programs/symphony-hardening/HARDENING_TASK_PACKS.md
+implementation_plan: tasks/TSK-HARD-026/PLAN.md
+implementation_log: tasks/TSK-HARD-026/EXEC_LOG.md
+notes: Generated from canonical hardening task pack source; do not edit semantics here.
+client: codex_cli
+assigned_agent: supervisor
+model: gpt-5-codex

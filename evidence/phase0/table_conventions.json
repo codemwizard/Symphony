@@ -1,0 +1,125 @@
+{
+  "check_id": "DB-TABLE-CONVENTIONS",
+  "timestamp_utc": "2026-03-04T03:17:28Z",
+  "git_sha": "0cca4e691cfcb5a1729ab79e08cf21858f5e9b58",
+  "schema_fingerprint": "8066e70aafdc28540785da569dfbda5ebb13a2710d7f31e1b395cf2b3323bb15",
+  "status": "PASS",
+  "spec_file": "/home/mwiza/workspace/Symphony/schema/table_conventions.yml",
+  "tables_checked": [
+    "public.billing_usage_events",
+    "public.evidence_pack_items",
+    "public.evidence_packs",
+    "public.external_proofs",
+    "public.ingress_attestations",
+    "public.payment_outbox_attempts",
+    "public.payment_outbox_pending",
+    "public.revoked_client_certs",
+    "public.revoked_tokens"
+  ],
+  "checked_columns": [
+    {
+      "table": "public.payment_outbox_pending",
+      "column": "instruction_id",
+      "data_type": "text",
+      "is_nullable": "NO"
+    },
+    {
+      "table": "public.payment_outbox_pending",
+      "column": "participant_id",
+      "data_type": "text",
+      "is_nullable": "NO"
+    },
+    {
+      "table": "public.payment_outbox_pending",
+      "column": "idempotency_key",
+      "data_type": "text",
+      "is_nullable": "NO"
+    },
+    {
+      "table": "public.payment_outbox_pending",
+      "column": "created_at",
+      "data_type": "timestamp with time zone",
+      "is_nullable": "NO"
+    },
+    {
+      "table": "public.payment_outbox_attempts",
+      "column": "instruction_id",
+      "data_type": "text",
+      "is_nullable": "NO"
+    },
+    {
+      "table": "public.payment_outbox_attempts",
+      "column": "participant_id",
+      "data_type": "text",
+      "is_nullable": "NO"
+    },
+    {
+      "table": "public.payment_outbox_attempts",
+      "column": "idempotency_key",
+      "data_type": "text",
+      "is_nullable": "NO"
+    },
+    {
+      "table": "public.payment_outbox_attempts",
+      "column": "created_at",
+      "data_type": "timestamp with time zone",
+      "is_nullable": "NO"
+    },
+    {
+      "table": "public.ingress_attestations",
+      "column": "instruction_id",
+      "data_type": "text",
+      "is_nullable": "NO"
+    },
+    {
+      "table": "public.ingress_attestations",
+      "column": "received_at",
+      "data_type": "timestamp with time zone",
+      "is_nullable": "NO"
+    },
+    {
+      "table": "public.revoked_client_certs",
+      "column": "revoked_at",
+      "data_type": "timestamp with time zone",
+      "is_nullable": "NO"
+    },
+    {
+      "table": "public.revoked_tokens",
+      "column": "revoked_at",
+      "data_type": "timestamp with time zone",
+      "is_nullable": "NO"
+    },
+    {
+      "table": "public.billing_usage_events",
+      "column": "occurred_at",
+      "data_type": "timestamp with time zone",
+      "is_nullable": "NO"
+    },
+    {
+      "table": "public.billing_usage_events",
+      "column": "created_at",
+      "data_type": "timestamp with time zone",
+      "is_nullable": "YES"
+    },
+    {
+      "table": "public.external_proofs",
+      "column": "created_at",
+      "data_type": "timestamp with time zone",
+      "is_nullable": "NO"
+    },
+    {
+      "table": "public.evidence_packs",
+      "column": "created_at",
+      "data_type": "timestamp with time zone",
+      "is_nullable": "NO"
+    },
+    {
+      "table": "public.evidence_pack_items",
+      "column": "created_at",
+      "data_type": "timestamp with time zone",
+      "is_nullable": "NO"
+    }
+  ],
+  "missing": [],
+  "mismatched": []
+}

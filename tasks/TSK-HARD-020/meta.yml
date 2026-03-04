@@ -1,0 +1,43 @@
+phase: '1'
+task_id: TSK-HARD-020
+title: Adjustment instruction schema and lifecycle
+owner_role: SUPERVISOR
+status: planned
+depends_on:
+- TSK-OPS-WAVE1-EXIT-GATE
+touches:
+- adjustment instruction table schema and DB migration (expand/contract compliant)
+- append-only enforcement (no UPDATE/DELETE on parent instruction from adjustment path)
+- docs/programs/symphony-hardening/HARDENING_TASK_PACKS.md
+- evidence/phase1/hardening/tsk_hard_020.json
+- parent_instruction_id FK constraint
+- state enum with all required values
+- tasks/TSK-HARD-020/EXEC_LOG.md
+- tasks/TSK-HARD-020/PLAN.md
+invariants:
+- INV-HARDENING-CANONICAL-SOURCE
+work:
+- Define and migrate the adjustment instruction table with its full lifecycle
+- Implement exactly per canonical task block in HARDENING_TASK_PACKS.md.
+acceptance_criteria:
+- 'adjustment instruction table exists with state enum containing exactly:'
+verification:
+- bash scripts/audit/verify_tsk_hard_020.sh
+evidence:
+- evidence/phase1/hardening/tsk_hard_020.json
+- evidence/schemas/hardening/tsk_hard_020.schema.json
+failure_modes:
+- parent instruction mutated via adjustment code path => FAIL_CLOSED
+- state enum missing any required value => FAIL
+- migration not reversible => FAIL
+- migration acquires DDL lock => FAIL
+- negative-path test absent => FAIL
+must_read:
+- docs/operations/AI_AGENT_OPERATION_MANUAL.md
+- docs/programs/symphony-hardening/HARDENING_TASK_PACKS.md
+implementation_plan: tasks/TSK-HARD-020/PLAN.md
+implementation_log: tasks/TSK-HARD-020/EXEC_LOG.md
+notes: Generated from canonical hardening task pack source; do not edit semantics here.
+client: codex_cli
+assigned_agent: supervisor
+model: gpt-5-codex

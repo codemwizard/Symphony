@@ -1,0 +1,14 @@
+id: TSK-HARD-013B
+title: "Orphan and replay containment"
+status: todo
+phase: "Hardening"
+wave: "1"
+depends_on:
+  - TSK-HARD-101
+  - TSK-HARD-014
+  - TSK-OPS-A1-STABILITY-GATE
+verifier_command: "bash scripts/audit/verify_tsk_hard_013b.sh"
+evidence_path: "evidence/phase1/hardening/tsk_hard_013b.json"
+schema_path: "evidence/schemas/hardening/tsk_hard_013b.schema.json"
+source_of_truth: "docs/programs/symphony-hardening/HARDENING_TASK_PACKS.md"
+canonical_reference: "docs/operations/AI_AGENT_OPERATION_MANUAL.md"

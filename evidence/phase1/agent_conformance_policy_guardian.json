@@ -1,0 +1,88 @@
+{
+  "timestamp_utc": "2026-03-04T03:14:22Z",
+  "git_sha": "0cca4e691cfcb5a1729ab79e08cf21858f5e9b58",
+  "schema_fingerprint": "8066e70aafdc28540785da569dfbda5ebb13a2710d7f31e1b395cf2b3323bb15",
+  "schema_version": "1.0",
+  "status": "PASS",
+  "checked_at_utc": "2026-03-04T03:14:22.954245+00:00",
+  "git_commit": "0cca4e691cfcb5a1729ab79e08cf21858f5e9b58",
+  "mode": "range",
+  "canonical_docs": [
+    {
+      "path": "/home/mwiza/workspace/Symphony/docs/operations/AI_AGENT_WORKFLOW_AND_ROLE_PLAN_v2.md",
+      "exists": true,
+      "sha256": "b7f52cb859c3780915db31946ec3b4b4b49f53d62693c0db8d84b6ba7fc6f5a1"
+    },
+    {
+      "path": "/home/mwiza/workspace/Symphony/docs/operations/AGENT_ROLE_RECONCILIATION.md",
+      "exists": true,
+      "sha256": "6334490f2c397cd67888ed140abf2c1a2a2c919b08bc2f33666773e58ff65c0d"
+    },
+    {
+      "path": "/home/mwiza/workspace/Symphony/docs/operations/AI_AGENT_OPERATION_MANUAL.md",
+      "exists": true,
+      "sha256": "676ae189b23a06b9f5375e917a7b494fa7e24e5244ab164ec8816d93345d093f"
+    }
+  ],
+  "agent_files_checked": {
+    "count": 11,
+    "files": [
+      "/home/mwiza/workspace/Symphony/AGENTS.md",
+      ".codex/agents/architect.md",
+      ".codex/agents/compliance_mapper.md",
+      ".codex/agents/db_foundation.md",
+      ".codex/agents/integration_contracts.md",
+      ".codex/agents/invariants_curator.md",
+      ".codex/agents/qa_verifier.md",
+      ".codex/agents/security_guardian.md",
+      ".codex/agents/supervisor.md",
+      ".codex/agents/worker.md",
+      ".cursor/agents/invariants_curator.md"
+    ]
+  },
+  "required_headers": {
+    "prompts": [
+      "Role",
+      "Scope",
+      "Non-Negotiables",
+      "Stop Conditions",
+      "Verification Commands",
+      "Evidence Outputs",
+      "Canonical References"
+    ],
+    "approval": [
+      "1. Summary of Change",
+      "2. Scope of Impact",
+      "3. Invariants & Phase Discipline",
+      "4. AI Involvement Disclosure",
+      "5. Verification & Evidence",
+      "6. Risk Assessment",
+      "7. Approval",
+      "8. Cross-References (Machine-Readable)"
+    ]
+  },
+  "regulated_surface_changes_detected": false,
+  "regulated_surface_changed_paths": [],
+  "regulated_surface_rule_source": "docs/operations/REGULATED_SURFACE_PATHS.yml",
+  "regulated_surface_patterns": [
+    "schema/migrations/**",
+    "scripts/security/**",
+    "scripts/audit/**",
+    "docs/PHASE1/**",
+    "docs/control_planes/**",
+    "docs/operations/approval_metadata.schema.json",
+    "docs/architecture/evidence_schema.json"
+  ],
+  "diff_context": {
+    "mode": "range",
+    "base_ref": "refs/remotes/origin/main",
+    "head_ref": "HEAD",
+    "merge_base": "0cca4e691cfcb5a1729ab79e08cf21858f5e9b58"
+  },
+  "approval_required": false,
+  "approval_metadata_present": true,
+  "approval_metadata_ref": "/home/mwiza/workspace/Symphony/evidence/phase1/approval_metadata.json",
+  "failures": [],
+  "check_id": "AGENT-CONFORMANCE-POLICY-GUARDIAN",
+  "subject_role": "Requirements & Policy Integrity Agent"
+}

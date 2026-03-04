@@ -1,0 +1,12 @@
+id: TSK-HARD-032
+title: "Length-aware canonicalization and alias collision detection"
+status: todo
+phase: "Hardening"
+wave: "3"
+depends_on:
+  - TSK-HARD-031
+verifier_command: "bash scripts/audit/verify_tsk_hard_032.sh"
+evidence_path: "evidence/phase1/hardening/tsk_hard_032.json"
+schema_path: "evidence/schemas/hardening/tsk_hard_032.schema.json"
+source_of_truth: "docs/programs/symphony-hardening/HARDENING_TASK_PACKS.md"
+canonical_reference: "docs/operations/AI_AGENT_OPERATION_MANUAL.md"

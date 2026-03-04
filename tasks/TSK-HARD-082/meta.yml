@@ -1,0 +1,42 @@
+phase: '1'
+task_id: TSK-HARD-082
+title: BoZ/Auditor demonstration pack — six scripted scenarios
+owner_role: SUPERVISOR
+status: planned
+depends_on:
+- TSK-HARD-081
+touches:
+- docs/programs/symphony-hardening/BOZ_DEMO_PACK.md
+- docs/programs/symphony-hardening/HARDENING_TASK_PACKS.md
+- evidence/phase1/hardening/tsk_hard_082.json
+- reproducible signed evidence artifact per scenario
+- six scenario scripts at scripts/demo/scenario_{01..06}.sh or equivalent
+- tasks/TSK-HARD-082/EXEC_LOG.md
+- tasks/TSK-HARD-082/PLAN.md
+invariants:
+- INV-HARDENING-CANONICAL-SOURCE
+work:
+- Implement the BoZ/Auditor demonstration pack with exactly six scripted,
+- Implement exactly per canonical task block in HARDENING_TASK_PACKS.md.
+acceptance_criteria:
+- 'BOZ_DEMO_PACK.md exists and describes all six scenarios with: scenario_id,'
+verification:
+- bash scripts/audit/verify_tsk_hard_082.sh
+evidence:
+- evidence/phase1/hardening/tsk_hard_082.json
+- evidence/schemas/hardening/tsk_hard_082.schema.json
+failure_modes:
+- fewer than six scenarios implemented => FAIL
+- any scenario script exits zero when expected evidence not produced => FAIL_CLOSED
+- any scenario evidence artifact not schema-valid => FAIL_CLOSED
+- any scenario not deterministic given same seed inputs => FAIL
+- BOZ_DEMO_PACK.md absent => FAIL
+must_read:
+- docs/operations/AI_AGENT_OPERATION_MANUAL.md
+- docs/programs/symphony-hardening/HARDENING_TASK_PACKS.md
+implementation_plan: tasks/TSK-HARD-082/PLAN.md
+implementation_log: tasks/TSK-HARD-082/EXEC_LOG.md
+notes: Generated from canonical hardening task pack source; do not edit semantics here.
+client: codex_cli
+assigned_agent: supervisor
+model: gpt-5-codex
