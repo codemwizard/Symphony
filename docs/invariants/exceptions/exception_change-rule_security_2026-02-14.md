@@ -6,6 +6,7 @@ follow_up_ticket: FOLLOWUP-P1-SEC-GRANT-LINT
 reason: Security lint was hardened to detect multiline CREATE grants; invariants docs linkage will be committed in follow-up.
 author: codex
 created_at: 2026-02-14
+closed_at: 2026-03-04
 ---
 
 # Exception: security structural change without invariants linkage

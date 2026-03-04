@@ -6,6 +6,7 @@ follow_up_ticket: TSK-P1-038
 reason: Auto-generated preflight exception accepted because Rule-1 linkage is evaluated on commit range; this commit contains the migration+pre_ci parity fix and explicit threat/compliance updates.
 author: system
 created_at: 2026-02-18
+closed_at: 2026-03-04
 ---
 
 # Exception: security structural change without invariants linkage
