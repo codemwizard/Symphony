@@ -19,25 +19,26 @@ suppression_patterns=(
 suppressions_found=0
 files_with_suppressions=()
 
-# Search for suppressions in C# and Python files
-while IFS= read -r -d '' file; do
+# Search suppressions only in git-tracked C# and Python sources.
+while IFS= read -r file; do
     file_suppressions=0
     
-    if [[ "$file" == *.cs ]] || [[ "$file" == *.py ]]; then
-        for pattern in "${suppression_patterns[@]}"; do
-            if grep -n "$pattern" "$file" >/dev/null 2>&1; then
-                echo "🔍 Suppression found in $file: $pattern"
-                grep -n "$pattern" "$file" | head -3
-                file_suppressions=$((file_suppressions + 1))
-                suppressions_found=$((suppressions_found + 1))
-            fi
-        done
-        
-        if [[ "$file_suppressions" -gt 0 ]]; then
-            files_with_suppressions+=("$file")
+    [[ "$file" == *.cs || "$file" == *.py ]] || continue
+    [[ "$file" == .venv/* || "$file" == venv/* || "$file" == env/* || "$file" == node_modules/* ]] && continue
+
+    for pattern in "${suppression_patterns[@]}"; do
+        if grep -n "$pattern" "$file" >/dev/null 2>&1; then
+            echo "🔍 Suppression found in $file: $pattern"
+            grep -n "$pattern" "$file" | head -3
+            file_suppressions=$((file_suppressions + 1))
+            suppressions_found=$((suppressions_found + 1))
         fi
+    done
+    
+    if [[ "$file_suppressions" -gt 0 ]]; then
+        files_with_suppressions+=("$file")
     fi
-done < <(find . -name "*.cs" -o -name "*.py" -not -path "./.git/*" -not -path "./node_modules/*" -not -path "./venv/*" -not -path "./env/*" -print0)
+done < <(git ls-files '*.cs' '*.py')
 
 echo ""
 echo "=== Suppression Summary ==="

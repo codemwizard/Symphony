@@ -3,7 +3,7 @@ phase: '0.5'
 task_id: R-022
 title: Security tooling coverage contract
 owner_role: SUPERVISOR
-status: planned
+status: completed
 depends_on:
 - R-021
 touches:
@@ -25,7 +25,7 @@ evidence:
 failure_modes: []
 must_read: []
 implementation_plan: docs/plans/remediation/r_022/PLAN.md
-implementation_log: ''
+implementation_log: docs/plans/remediation/r_022/EXEC_LOG.md
 notes: Fail CI if languages exist without scanners, and fail if declared tools are
   missing.
 client: codex_cli

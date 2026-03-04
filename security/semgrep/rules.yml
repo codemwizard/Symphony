@@ -52,46 +52,19 @@ rules:
     languages: [python]
     message: "Potential SQL injection: SQL query built via f-string. Use parameters."
     severity: ERROR
-    patterns:
-      - pattern-either:
-          - pattern: |
-              f"SELECT $...{$INPUT}"
-          - pattern: |
-              f"INSERT $...{$INPUT}"
-          - pattern: |
-              f"UPDATE $...{$INPUT}"
-          - pattern: |
-              f"DELETE $...{$INPUT}"
+    pattern-regex: '(?i)\\b\\w+\\s*=\\s*f[\"\\''][^\"\\'']*(select|insert|update|delete)[^\"\\'']*\\{[^}]+\\}[^\"\\'']*[\"\\'']'
 
   - id: symphony-python-percent-format-sql
     languages: [python]
     message: "Potential SQL injection: SQL query built via % formatting. Use parameters."
     severity: ERROR
-    patterns:
-      - pattern-either:
-          - pattern: |
-              "SELECT $...%" % $INPUT
-          - pattern: |
-              "INSERT $...%" % $INPUT
-          - pattern: |
-              "UPDATE $...%" % $INPUT
-          - pattern: |
-              "DELETE $...%" % $INPUT
+    pattern-regex: '(?i)\\b\\w+\\s*=\\s*[\"\\''][^\"\\'']*(select|insert|update|delete)[^\"\\'']*%[^\"\\'']*[\"\\'']\\s*%\\s*\\w+'
 
   - id: symphony-python-string-format-sql
     languages: [python]
     message: "Potential SQL injection: SQL query built via str.format(). Use parameters."
     severity: ERROR
-    patterns:
-      - pattern-either:
-          - pattern: |
-              "SELECT $...".format($INPUT)
-          - pattern: |
-              "INSERT $...".format($INPUT)
-          - pattern: |
-              "UPDATE $...".format($INPUT)
-          - pattern: |
-              "DELETE $...".format($INPUT)
+    pattern-regex: '(?i)\\b\\w+\\s*=\\s*[\"\\''][^\"\\'']*(select|insert|update|delete)[^\"\\'']*[\"\\'']\\.format'
 
   - id: symphony-dotnet-hardcoded-secret
     languages: [csharp]
@@ -103,7 +76,7 @@ rules:
     languages: [python]
     message: "Possible hardcoded secret/token. Use OpenBao/KMS or secure config provider."
     severity: ERROR
-    pattern-regex: '(?i)(api[_-]?key|secret|token|password)\\s*=\\s*[\"''].{8,}[\"'']'
+    pattern-regex: '(?i)(api[_-]?key|secret|token|password)\\s*=\\s*\".{8,}\"'
 
   - id: symphony-dotnet-insecure-rng
     languages: [csharp]

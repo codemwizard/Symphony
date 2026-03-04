@@ -1,31 +1,38 @@
 {
   "task_id": "R-022",
-  "timestamp_utc": "2026-03-04T04:40:00Z",
-  "git_sha": "$(git rev-parse HEAD)",
+  "git_sha": "d1841acccfa86da0659b43ee5c05fae527acf4b3",
+  "timestamp_utc": "2026-03-04T20:18:47Z",
   "status": "PASS",
-  "python_present": false,
-  "csharp_present": false,
-  "scan_scope_contract_valid": true,
   "checks": [
     {
       "id": "R-022-A1",
-      "description": "Verify SECURITY_SCAN_SCOPE.yml validates against schema",
+      "description": "SECURITY_SCAN_SCOPE.yml validates against schema",
       "status": "PASS",
       "details": {
-        "yaml_valid": true,
-        "required_sections_present": true
+        "schema_valid": true
       }
     },
     {
       "id": "R-022-A2",
-      "description": "Verify verify_scan_scope.sh enforces python-present => scanned",
+      "description": "verify_scan_scope.sh enforces python-present => scanned",
       "status": "PASS",
       "details": {
-        "script_exists": true,
-        "language_detection_works": true,
-        "scanner_mapping_works": true
+        "python_files": 14,
+        "csharp_files": 4,
+        "semgrep_present": true,
+        "lint_app_sql_injection_present": true
       }
     }
   ],
-  "errors": []
+  "detected_languages": {
+    "python": 14,
+    "csharp": 4
+  },
+  "enabled_tools": [
+    "semgrep",
+    "lint_app_sql_injection",
+    "scan_secrets",
+    "lint_security_definer_search_path"
+  ],
+  "missing_coverage": []
 }
