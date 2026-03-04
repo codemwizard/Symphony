@@ -1,0 +1,297 @@
+
+
+
+
+Yes — right now you have an **ID/meaning collision** between:
+
+* what you *want* `INV-106..108` to mean (**policy stubs + SDLC/SAST readiness**), and
+* what your current `INVARIANTS_MANIFEST.yml` actually uses `INV-106..108` for (**instruction finality / PII decoupling / rail sequence truth-anchor**).
+
+To **preserve your current desired meanings for `INV-106..108`** *without breaking anything* (and without tripping SKIPPED enforcement), the clean fix is:
+
+1. **Keep `INV-106..108` reserved for governance** (policy + SDLC readiness),
+2. **Move the “old” `INV-106..108` (finality/PII/rail sequence) to new IDs above the current max**, and
+3. **Assign new, non-colliding CONTROL_PLANES gate IDs starting after the current maxima** in your `CONTROL_PLANES.yml` (SEC-G10, INT-G20, GOV-G01).
+
+Below is an **exact, non-colliding numeric assignment + gate IDs** that does that.
+
+---
+
+## A) Canonical invariant ID assignment (non-colliding)
+
+### Preserve these meanings as the canonical `INV-106..108` (governance)
+
+* **INV-106** — Key management policy stub present + referenced
+
+  * verifier: `scripts/audit/verify_policy_key_management_stub.sh`
+  * evidence: `evidence/phase0/policy_key_management_stub.json`
+
+* **INV-107** — Audit logging retention/review policy stub present + referenced
+
+  * verifier: `scripts/audit/verify_policy_audit_logging_stub.sh`
+  * evidence: `evidence/phase0/policy_audit_logging_stub.json`
+
+* **INV-108** — Secure SDLC / SAST readiness gate emits evidence
+
+  * verifier: `scripts/audit/verify_sdlc_sast_readiness.sh`
+  * evidence: `evidence/phase0/sdlc_sast_readiness.json`
+
+### Add the missing “governance + sovereign hooks” as the next contiguous IDs
+
+* **INV-109** — ISO20022 contract registry declared + presence validated (Phase-0 doc/presence only)
+
+  * verifier: `scripts/audit/verify_iso20022_contract_registry.sh`
+  * evidence: `evidence/phase0/iso20022_contract_registry_presence.json`
+
+* **INV-110** — Sovereign VPC posture doc present + referenced (Phase-0 narrative anchor)
+
+  * verifier: `scripts/audit/verify_sovereign_vpc_posture_doc.sh`
+  * evidence: `evidence/phase0/sovereign_vpc_posture_doc.json`
+
+* **INV-111** — BoZ observability role exists + provably read-only (DB structural)
+
+  * verifier: `scripts/db/verify_boz_observability_role.sh`
+  * evidence: `evidence/phase0/boz_observability_role.json`
+
+* **INV-112** — ZDPA PII leakage prevention lint (fail-closed on regulated payload surfaces)
+
+  * verifier: `scripts/audit/lint_pii_leakage_payloads.sh`
+  * evidence: `evidence/phase0/pii_leakage_payloads.json`
+
+* **INV-113** — Hybrid anchor-sync schema hooks present (Phase-0 structural readiness)
+
+  * verifier: `scripts/db/verify_anchor_sync_hooks.sh`
+  * evidence: `evidence/phase0/anchor_sync_hooks.json`
+
+### Keep the prior “finality / pii decoupling / rail truth anchor” without losing them
+
+Your current manifest uses:
+
+* `INV-106` = instruction finality
+* `INV-107` = PII decoupling hooks
+* `INV-108` = rail sequence truth anchor
+
+Those must be **renumbered** to avoid the collision. Since your current max is **108**, the clean, stable move is:
+
+* **INV-114** — Instruction finality (was `INV-106`)
+* **INV-115** — PII decoupling hooks (was `INV-107`)
+* **INV-116** — Rail sequence truth anchor (was `INV-108`)
+
+(And keep their existing scripts/evidence paths as-is, just under new IDs.)
+
+---
+
+## B) Canonical CONTROL_PLANES gate IDs (non-colliding)
+
+From your uploaded `CONTROL_PLANES.yml`, the current maxima are:
+
+* **SEC-G10**
+* **INT-G20**
+* **GOV-G01**
+
+So allocate new gates as:
+
+### Governance plane (policy stubs)
+
+* **GOV-G02** → INV-106 key management policy presence
+* **GOV-G03** → INV-107 audit logging policy presence
+
+### Security plane (SDLC/SAST + PII leakage lint)
+
+* **SEC-G11** → INV-108 SDLC/SAST readiness
+* **SEC-G12** → INV-112 PII leakage payload lint
+
+### Integrity plane (ISO registry + BoZ role + anchor-sync hooks)
+
+* **INT-G21** → INV-109 ISO20022 contract registry presence
+* **INT-G22** → INV-111 BoZ observability role read-only verifier
+* **INT-G23** → INV-113 anchor-sync hooks verifier
+
+### Roadmap structural invariants (kept but not required in Phase-0 contract yet)
+
+* **INT-G24** → INV-114 instruction finality (schema hook check)
+* **INT-G25** → INV-115 PII decoupling hooks (schema hook check)
+* **INT-G26** → INV-116 rail truth-anchor sequence hooks (schema hook check)
+
+---
+
+## C) Ordering that won’t trip SKIPPED enforcement
+
+To **avoid SKIPPED/missing-evidence traps**, the rule is:
+
+* **Do NOT add any of the above evidence paths to `docs/PHASE0/phase0_contract.yml` until** the corresponding gate is:
+
+  1. implemented,
+  2. wired into the ordered runner (pre-CI + CI), and
+  3. guaranteed to emit PASS/FAIL JSON every run.
+
+So the safe ordering is:
+
+1. **GOV-G02, GOV-G03** (doc/presence verifiers are fast + deterministic)
+2. **SEC-G11, SEC-G12**
+3. **INT-G21, INT-G22, INT-G23**
+4. **INT-G24..INT-G26** only when you intentionally want them enforced (otherwise keep them “roadmap” and *out of contract*).
+
+This preserves your **current `INV-106..108` meanings**, adds the missing hooks, keeps your older “finality/PII/rail” invariants alive under new IDs, and **does not force any evidence path into the contract early** (so no SKIPPED enforcement failures).
+
+If you want, I can also produce the **exact diff blocks** for:
+
+* `docs/invariants/INVARIANTS_MANIFEST.yml` renumbering (106–108 → 114–116 and adding 106–113 new meanings), and
+* `docs/control_planes/CONTROL_PLANES.yml` gate insertions (GOV-G02/03, SEC-G11/12, INT-G21..23).
+
+
+
+
+
+
+
+
+
+
+
+
+Here’s a **clean, non-colliding assignment** that **keeps your current meanings for INV-106/107/108** (Key Mgmt Policy / Audit Logging Policy / SDLC+SAST Readiness), and then **adds the missing “governance + sovereign hooks”** as new invariants **without breaking SKIPPED enforcement**.
+
+## 1) Non-colliding invariant IDs (preserve current 106–108 meanings)
+
+Your current repo invariant IDs (from the attached `INVARIANTS_MANIFEST.yml`) top out below 106, and `CONTROL_PLANES.yml` tops out at `SEC-G16`, `INT-G22`, `GOV-G02`, so these are safe:
+
+### Canonical assignments
+
+| Invariant   | Meaning (preserved / added)                                         | Plane      | Gate ID (non-colliding) | Verifier                                              | Evidence path                                              |
+| ----------- | ------------------------------------------------------------------- | ---------- | ----------------------- | ----------------------------------------------------- | ---------------------------------------------------------- |
+| **INV-106** | **Key management policy stub present + referenced**                 | Governance | **GOV-G03**             | `scripts/audit/verify_policy_key_management_stub.sh`  | `evidence/phase0/policy_key_management_stub.json`          |
+| **INV-107** | **Audit logging retention/review policy stub present + referenced** | Governance | **GOV-G04**             | `scripts/audit/verify_policy_audit_logging_stub.sh`   | `evidence/phase0/policy_audit_logging_stub.json`           |
+| **INV-108** | **Secure SDLC / SAST readiness evidence emitted**                   | Security   | **SEC-G17**             | `scripts/audit/verify_sdlc_sast_readiness.sh`         | `evidence/phase0/sdlc_sast_readiness.json`                 |
+| **INV-109** | ISO20022 contract registry declared + presence validated            | Governance | **GOV-G05**             | `scripts/audit/verify_iso20022_contract_registry.sh`  | `evidence/phase0/iso20022_contract_registry_presence.json` |
+| **INV-110** | Deploy-in-customer-VPC sovereign posture doc present + referenced   | Governance | **GOV-G06**             | `scripts/audit/verify_sovereign_vpc_posture_doc.sh`   | `evidence/phase0/sovereign_vpc_posture_doc.json`           |
+| **INV-111** | Instruction finality hooks present (schema-level)                   | Integrity  | **INT-G23**             | `scripts/db/verify_instruction_finality_invariant.sh` | `evidence/phase0/instruction_finality_invariant.json`      |
+| **INV-112** | PII decoupling hooks exist (ZDPA survivability structure)           | Integrity  | **INT-G24**             | `scripts/db/verify_pii_decoupling_hooks.sh`           | `evidence/phase0/pii_decoupling_hooks.json`                |
+| **INV-113** | Rail truth-anchor sequence fields present (profile-ready)           | Integrity  | **INT-G25**             | `scripts/db/verify_rail_sequence_truth_anchor.sh`     | `evidence/phase0/rail_sequence_truth_anchor.json`          |
+
+### Why this resolves your “lost intent” complaint
+
+* Your earlier “INV-110” in the **reference list** was **sovereign VPC posture documentation** — not “performance”. That intent is restored here as **INV-110 + GOV-G06**.
+* Performance invariants (like INV-31) **should remain their own line** and **not be conflated** with the sovereign governance block.
+
+---
+
+## 2) CONTROL_PLANES gate IDs that won’t collide
+
+From your attached `CONTROL_PLANES.yml`, current highest IDs are:
+
+* `SEC-G16`
+* `INT-G22`
+* `GOV-G02`
+
+So the safe next IDs are exactly:
+
+* **Security:** `SEC-G17`
+* **Integrity:** `INT-G23`, `INT-G24`, `INT-G25`
+* **Governance:** `GOV-G03`, `GOV-G04`, `GOV-G05`, `GOV-G06`
+
+No collisions, and they preserve the plane separation.
+
+---
+
+## 3) SKIPPED semantics: how to avoid tripping enforcement
+
+To avoid **“missing_evidence”** failures from `verify_phase0_contract_evidence_status.sh`, use this rule:
+
+### Rule (Phase-0 safe)
+
+* **You may add these invariants + gates to the manifest/control planes immediately** (as “roadmap” / “planned”).
+* **Do NOT add their evidence paths into `docs/PHASE0/phase0_contract.yml` as “required” until the scripts exist and are wired to run in CI/pre-CI.**
+
+If you *must* list them in `phase0_contract.yml` early (not recommended), then you **must also ship stub verifiers** that always emit **`status: "SKIPPED"`** so the contract checker never sees “missing evidence”.
+
+That’s the only way to keep SKIPPED enforcement from firing.
+
+---
+
+## 4) Ordering guidance (so you don’t break parity)
+
+When you wire these into `run_phase0_ordered_checks.sh`, keep this ordering discipline:
+
+1. **Governance doc/policy presence gates** (GOV-G03..GOV-G06)
+2. **Security readiness gate** (SEC-G17)
+3. **Integrity DB/schema verifiers** (INT-G23..INT-G25)
+
+This matches the “paper → guardrails → schema hooks” escalation and is easiest to defend in a bank pre-audit.
+
+---
+
+If you paste your current `CONTROL_PLANES.yml` *required_gates* blocks for each plane, I can give you the **exact YAML snippets** to insert (with the new gate entries placed correctly), but the **IDs above are the corrected non-colliding canonical set** that preserves your current 106–108 meanings and restores the missing governance + sovereign hooks.
+
+
+
+
+
+
+
+
+
+
+
+
+
+Below are **exact, non-colliding YAML insert blocks** for your current `CONTROL_PLANES.yml` (as attached). They:
+
+* **Preserve existing SEC-G11 / SEC-G12 / SEC-G13** meaning (Semgrep + key mgmt policy + audit logging policy).
+* Add the **missing Sovereign / BoZ / ZDPA hooks** using **next available IDs**:
+
+  * `SEC-G17` (next after `SEC-G16`)
+  * `INT-G23` / `INT-G24` (next after `INT-G22`, which is already used by `INV-031`)
+  * `GOV-G03` (next after `GOV-G02`)
+* **Do not collide** with anything currently in your file.
+
+---
+
+## 1) SECURITY plane — add `SEC-G17` (ZDPA PII leakage lint)
+
+**Insert point:** append this entry **immediately after `SEC-G16`** in `control_planes.security.required_gates`.
+
+```yaml
+          - gate_id: "SEC-G17"
+            script: "scripts/audit/lint_pii_leakage_payloads.sh"
+            evidence: "evidence/phase0/pii_leakage_payloads.json"
+```
+
+---
+
+## 2) INTEGRITY plane — add `INT-G23` + `INT-G24` (BoZ role + anchor-sync hooks)
+
+**Insert point:** append these entries **immediately after `INT-G22`** in `control_planes.integrity.required_gates`.
+
+```yaml
+          - gate_id: "INT-G23"
+            script: "scripts/db/verify_boz_observability_role.sh"
+            evidence: "evidence/phase0/boz_observability_role.json"
+
+          - gate_id: "INT-G24"
+            script: "scripts/db/verify_anchor_sync_hooks.sh"
+            evidence: "evidence/phase0/anchor_sync_hooks.json"
+```
+
+---
+
+## 3) GOVERNANCE plane — add `GOV-G03` (Sovereign VPC posture doc presence)
+
+**Insert point:** append this entry **immediately after `GOV-G02`** in `control_planes.governance.required_gates`.
+
+```yaml
+          - gate_id: "GOV-G03"
+            script: "scripts/audit/verify_sovereign_vpc_posture_doc.sh"
+            evidence: "evidence/phase0/sovereign_vpc_posture_doc.json"
+```
+
+---
+
+### Important note on “won’t trip SKIPPED enforcement”
+
+These snippets are safe **ID-wise** and **ordering-wise**, but they will only avoid SKIPPED / missing-evidence failures if **either**:
+
+* the referenced scripts exist and always emit the evidence JSON (PASS/FAIL), **or**
+* you land **stub scripts** that emit **SKIPPED** evidence until implementation is complete.
+
+If you tell me whether you want **Approach A (don’t add gates until scripts exist)** or **Approach B (add gates now with SKIPPED stubs)**, I’ll give you the exact stubs in your repo’s evidence schema format.

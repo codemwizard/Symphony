@@ -1,0 +1,413 @@
+PROBLEM:
+When we create an implementation plan for a task or group of tasks, I want the implementation plan saved. Then any and all subsequent jobs/work done to accomplish the scope of the task to be saved as a file referencing the implementation file. This new document will point to the tasks in the implementation file, the errors that were encountered when implementing the file and the explicit solutions that were used to solve the problems. This document will be saved in a folder that helps with trouble shooting.
+Look at the repomix and suggest the best file structure and process for this to be achieved most efficiently. Explain my problem more clearly and apply any industry wide conventions if this is something that is addressed industry wide.
+
+
+
+
+
+Yep — I can see what you’re trying to solve, and it *is* a known industry problem with established conventions.
+
+Also note: **some earlier uploaded files in this chat have expired**, but your **repomix snapshot is present** and enough to recommend a structure/process.
+
+---
+
+## Your problem (clearer framing)
+
+Right now, implementation planning and execution tend to get mixed across:
+
+* task meta,
+* ad-hoc notes,
+* scripts/CI errors,
+* and “tribal knowledge”.
+
+That creates two recurring failures:
+
+1. **Plans aren’t durable artifacts** → people can’t tell what “the intended approach” was.
+2. **Fixes aren’t captured as a traceable record** → the same CI failures and edge cases repeat.
+
+What you want is an **engineering change record**:
+
+* a **Plan** document (what we intended, with tasks + gates),
+* plus an **Execution Log** (what happened when we implemented, errors + exact fixes),
+* stored in a **discoverable troubleshooting location**,
+* and mechanically linked back to the task(s).
+
+Industry-wide, this is very similar to:
+
+* **RFCs / Design Docs** (the plan)
+* **Implementation Notes / Change Logs**
+* **Runbooks / Troubleshooting Guides**
+* and sometimes **Postmortems** (if incidents happen)
+
+What you’re building is essentially a **lightweight RFC + Runbook pattern**, scoped per Phase-0 task cluster.
+
+---
+
+---
+
+## The “save the plan + save the work log” system
+
+### Best structure (based on your repo + existing conventions)
+
+From repomix, you already have:
+
+* `docs/operations/troubleshooting/…`
+* `docs/Phase_0001-0005/implementation_plan.md` (and resolved variants)
+* `docs/implementation_plan_task.md`
+* `IMPLEMENTATION.md`
+
+So you’re *already close*. The missing piece is making this **per-task-cluster, deterministic, and linked.**
+
+### Recommended file structure
+
+Add:
+
+```
+docs/
+  plans/
+    phase0/
+      TSK-P0-050_three_pillars/
+        PLAN.md
+        EXEC_LOG.md
+      TSK-P0-051_control_planes/
+        PLAN.md
+        EXEC_LOG.md
+      ...
+  operations/
+    troubleshooting/
+      phase0/
+        TSK-P0-051_control_planes.md   (optional: curated “final troubleshooting” page)
+```
+
+Why this is efficient:
+
+* `docs/plans/.../PLAN.md` is the authoritative “RFC-lite”
+* `docs/plans/.../EXEC_LOG.md` is the implementation journal (errors + fixes)
+* `docs/operations/troubleshooting/...` remains the **curated** long-term troubleshooting space (not raw logs)
+
+### Process (native-first, minimal bureaucracy)
+
+For any task cluster:
+
+1. **Write PLAN.md first**
+
+   * Include: scope, gates, scripts touched, expected failure modes, verification commands
+2. **During implementation, write EXEC_LOG.md**
+
+   * Every significant error gets a log entry:
+
+     * error
+     * context (command, file, line)
+     * fix applied (exact patch / command)
+     * outcome
+3. **When complete**
+
+   * summarize “lessons learned” at bottom of EXEC_LOG.md
+   * optionally extract stable items into `docs/operations/troubleshooting/...`
+
+### Make it mechanical (so it *always* happens)
+
+Add to task meta schema two fields:
+
+```yaml
+implementation_plan: "docs/plans/phase0/TSK-P0-051_control_planes/PLAN.md"
+implementation_log:  "docs/plans/phase0/TSK-P0-051_control_planes/EXEC_LOG.md"
+```
+
+Then add a gate:
+
+* `scripts/audit/verify_task_plans_present.sh`
+
+  * for every `tasks/**/meta.yml` with status `in_progress|completed`, require those files exist
+  * enforce that EXEC_LOG.md references PLAN.md (simple check: contains plan path)
+
+This is exactly the kind of “mechanical governance” your Phase-0 philosophy is built for.
+
+---
+
+## “Cleaner long-term” industry convention that fits you
+
+This is the closest industry match:
+
+* **RFC/ADR** pattern:
+
+  * PLAN.md is your RFC-lite
+  * ADRs remain for irreversible architectural decisions
+* **Runbook/Troubleshooting** pattern:
+
+  * EXEC_LOG.md is the raw engineering log
+  * curated troubleshooting docs are extracted from logs
+
+So: **PLAN + EXEC_LOG + optional curated RUNBOOK** is a well-known and auditor-friendly convention.
+
+---
+
+## If you want, I can generate the actual scaffolding files
+
+I can produce actual repo files (like I did with the patch bundle) for:
+
+* `docs/plans/phase0/.../PLAN.md` + `EXEC_LOG.md` templates
+* the new `implementation_plan` / `implementation_log` fields added to `tasks/_template/meta.yml`
+* `scripts/audit/verify_task_plans_present.sh` (evidence-producing)
+
+Say the word and I’ll generate them as another patch bundle.
+
+
+
+
+
+Here you go — I generated the **actual scaffolding files** as a zip patch bundle.
+
+[Download symphony_scaffolding_patch_bundle.zip](sandbox:/mnt/data/symphony_scaffolding_patch_bundle.zip)
+
+## What this patch bundle adds
+
+### Templates (authoritative starting point)
+
+* `docs/plans/phase0/_template/PLAN.md`
+* `docs/plans/phase0/_template/EXEC_LOG.md`
+
+### Scaffolds for your new cluster (TSK-P0-050 → 055)
+
+Each includes a stub `PLAN.md` and `EXEC_LOG.md` that points back to the templates:
+
+* `docs/plans/phase0/TSK-P0-050_three_pillars/PLAN.md`
+* `docs/plans/phase0/TSK-P0-050_three_pillars/EXEC_LOG.md`
+* `docs/plans/phase0/TSK-P0-051_control_planes/PLAN.md`
+* `docs/plans/phase0/TSK-P0-051_control_planes/EXEC_LOG.md`
+* `docs/plans/phase0/TSK-P0-052_security_plane_expansion/PLAN.md`
+* `docs/plans/phase0/TSK-P0-052_security_plane_expansion/EXEC_LOG.md`
+* `docs/plans/phase0/TSK-P0-053_compliance_mapping/PLAN.md`
+* `docs/plans/phase0/TSK-P0-053_compliance_mapping/EXEC_LOG.md`
+* `docs/plans/phase0/TSK-P0-054_compliance_verifier/PLAN.md`
+* `docs/plans/phase0/TSK-P0-054_compliance_verifier/EXEC_LOG.md`
+* `docs/plans/phase0/TSK-P0-055_agent_scopes_alignment/PLAN.md`
+* `docs/plans/phase0/TSK-P0-055_agent_scopes_alignment/EXEC_LOG.md`
+
+### Canonical task meta template updated
+
+* `tasks/_template/meta.yml` now includes:
+
+  * `implementation_plan`
+  * `implementation_log`
+
+### Mechanical verifier (fail-closed, evidence producing)
+
+* `scripts/audit/verify_task_plans_present.sh`
+
+  * Enforces:
+
+    * if task status is `in_progress` or `completed`, both plan/log fields must exist
+    * if plan/log paths are set, files must exist
+    * warns if EXEC_LOG doesn’t reference PLAN.md
+  * Emits evidence:
+
+    * `evidence/phase0/task_plans_present.json`
+
+### Normative convention doc
+
+* `docs/operations/STYLE_GUIDE.md` updated to include the plan/log requirement.
+
+## Apply steps
+
+1. Unzip at repo root (preserve paths).
+2. Make the script executable:
+
+```bash
+chmod +x scripts/audit/verify_task_plans_present.sh
+```
+
+3. Wire into pre-CI and CI (recommended):
+
+* add to `scripts/dev/pre_ci.sh` near the top:
+
+```bash
+scripts/audit/verify_task_plans_present.sh
+```
+
+* and add the same step in `.github/workflows/invariants.yml`
+
+If you paste your current `scripts/dev/pre_ci.sh` and `.github/workflows/invariants.yml`, I can give you an exact patch snippet that inserts it in the right order without breaking existing sequencing.
+
+
+
+
+
+Below are **exact unified-diff patch snippets** for the two attachments you provided:
+
+* `/mnt/data/pre_ci.sh`
+* `/mnt/data/invariants.yml`
+
+These snippets wire in the new scaffolding/verifiers **without changing your existing DB bring-up flow**.
+
+---
+
+## Patch 1 — `scripts/dev/pre_ci.sh`
+
+**What this does**
+
+* Runs **YAML conventions lint** + **task plan/log presence verifier** early (static, no DB).
+* Runs **contract evidence status semantics** at the end (after checks generate evidence).
+
+```diff
+diff --git a/scripts/dev/pre_ci.sh b/scripts/dev/pre_ci.sh
+index 0000000..0000000 100755
+--- a/scripts/dev/pre_ci.sh
++++ b/scripts/dev/pre_ci.sh
+@@ -1,6 +1,7 @@
+ #!/usr/bin/env bash
+ set -euo pipefail
+ 
+ ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
+ cd "$ROOT"
+ 
+ echo "==> Pre-CI local checks"
+@@ -24,6 +25,32 @@ if [[ "$CLEAN_EVIDENCE" == "1" ]]; then
+   fi
+ fi
+ 
++echo "==> Governance preflight: YAML conventions"
++if [[ -x scripts/audit/lint_yaml_conventions.sh ]]; then
++  scripts/audit/lint_yaml_conventions.sh
++else
++  echo "ERROR: scripts/audit/lint_yaml_conventions.sh not found"
++  exit 1
++fi
++
++echo "==> Governance preflight: task plan/log presence"
++if [[ -x scripts/audit/verify_task_plans_present.sh ]]; then
++  scripts/audit/verify_task_plans_present.sh
++else
++  echo "ERROR: scripts/audit/verify_task_plans_present.sh not found"
++  exit 1
++fi
++
+ if [[ -f "$ENV_FILE" ]]; then
+   set -a
+   # shellcheck disable=SC1090
+   . "$ENV_FILE"
+   set +a
+ fi
+@@ -88,6 +115,18 @@ if [[ -n "${DATABASE_URL:-}" ]]; then
+   fi
+ fi
+ 
++echo "==> Governance: Phase-0 contract evidence status semantics"
++if [[ -x scripts/audit/verify_phase0_contract_evidence_status.sh ]]; then
++  scripts/audit/verify_phase0_contract_evidence_status.sh
++else
++  echo "WARN: scripts/audit/verify_phase0_contract_evidence_status.sh not found; skipping"
++fi
++
+ echo "✅ Pre-CI local checks PASSED."
+```
+
+> Note: This keeps your existing “security fast checks are optional” behavior unchanged.
+
+---
+
+## Patch 2 — `.github/workflows/invariants.yml`
+
+**What this does**
+
+* In `mechanical_invariants` job:
+
+  * ensures `pyyaml` is installed (native-first)
+  * runs YAML lint + task plan/log verifier
+* In `phase0_evidence_gate` job:
+
+  * installs `pyyaml`
+  * runs contract PASS/SKIPPED semantics verifier **after** evidence artifacts are downloaded/normalized
+
+```diff
+diff --git a/.github/workflows/invariants.yml b/.github/workflows/invariants.yml
+index 0000000..0000000 100644
+--- a/.github/workflows/invariants.yml
++++ b/.github/workflows/invariants.yml
+@@ -25,6 +25,17 @@ jobs:
+       - uses: actions/setup-python@v5
+         with:
+           python-version: "3.11"
+ 
++      - name: Install Python deps (native)
++        shell: bash
++        run: |
++          set -euo pipefail
++          python3 -m pip install --upgrade pip
++          python3 -m pip install pyyaml jsonschema
++
+       - name: Unit tests for detectors
+         if: github.event_name != 'schedule'
+         run: |
+@@ -118,6 +129,26 @@ jobs:
+           PY
+ 
++      - name: Governance preflight — YAML conventions
++        shell: bash
++        run: |
++          set -euo pipefail
++          chmod +x scripts/audit/lint_yaml_conventions.sh
++          scripts/audit/lint_yaml_conventions.sh
++
++      - name: Governance preflight — task plan/log presence
++        shell: bash
++        run: |
++          set -euo pipefail
++          chmod +x scripts/audit/verify_task_plans_present.sh
++          scripts/audit/verify_task_plans_present.sh
++
+   phase0_evidence_gate:
+     name: Phase 0 — Evidence gate (cross-job)
+     runs-on: ubuntu-latest
+@@ -175,6 +206,17 @@ jobs:
+           merge-multiple: true
+           path: evidence/phase0
+ 
++      - uses: actions/setup-python@v5
++        with:
++          python-version: "3.11"
++
++      - name: Install Python deps (native)
++        shell: bash
++        run: |
++          set -euo pipefail
++          python3 -m pip install --upgrade pip
++          python3 -m pip install pyyaml jsonschema
++
+       - name: Debug & normalize artifact layout (show artifact contents, collect TSK-P0 files)
+         run: |
+             set -euo pipefail
+@@ -246,6 +288,14 @@ jobs:
+               ls -la evidence/phase0 || true
+             fi
++
++      - name: Verify Phase-0 contract evidence status semantics
++        shell: bash
++        run: |
++          set -euo pipefail
++          chmod +x scripts/audit/verify_phase0_contract_evidence_status.sh
++          scripts/audit/verify_phase0_contract_evidence_status.sh
+           
+       - name: Require Phase-0 evidence (fail-closed)
+         run: |
+           chmod +x scripts/ci/check_evidence_required.sh
+           CI_ONLY=1 scripts/ci/check_evidence_required.sh evidence/phase0
+```
+
+### Why these insert locations are correct
+
+* **YAML lint + task plan/log verifier** belong early in `mechanical_invariants` because they validate repo governance before deeper gates.
+* **Contract evidence status verifier** belongs in `phase0_evidence_gate` after artifact merge, because that job has the consolidated evidence set.
+
+---
+
+## One small follow-up you should do immediately
+
+Make sure these scripts exist and are executable in-repo:
+
+* `scripts/audit/lint_yaml_conventions.sh`
+* `scripts/audit/verify_task_plans_present.sh`
+* `scripts/audit/verify_phase0_contract_evidence_status.sh`
+
+

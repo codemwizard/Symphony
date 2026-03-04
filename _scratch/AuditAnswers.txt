@@ -1,0 +1,725 @@
+
+
+
+
+
+
+
+Here are **final decisions** (no further clarifiers needed) that make the guardrails **Tier-1 credible**, Phase-0 safe, and consistent with your **fail-closed / evidence-grade** posture.
+
+---
+
+## 1) Table classes for the table-conventions gate
+
+**Choose: Option A (explicit “ledger/transactional” list).**
+
+**Why:** A Tier-1 auditor will accept a **clear, bounded scope** more readily than “anything that feels like an event table.” Option B will create constant false positives and weaken trust in the gate.
+
+**Phase-0 “ledger/txn class” should include (explicit):**
+
+* outbox: `payment_outbox`, `payment_outbox_pending`, `payment_outbox_attempts`
+* attestations: `ingress_attestations`
+* revocations: `revoked_*`
+* evidence ledgers/packs (your new primitives)
+* billing usage: `billing_usage_events`
+* external proofs: `external_proofs`
+* any append-only “attempt/event/ledger” table **only if** it is registered in a class list
+
+**Implementation detail:** Put the list in a single file the verifier reads, e.g.
+`docs/architecture/TABLE_CLASSES.yml` or `docs/control_planes/TABLE_CONVENTIONS.yml`.
+This keeps scope intentional and reviewable.
+
+---
+
+## 2) Nullability/default rule for Expand safety
+
+**Choose: Option B (forbid `ADD COLUMN ... NOT NULL` entirely in Phase-0).**
+
+**Why:** Even with a DEFAULT, Postgres can still create heavyweight operations depending on version + rewrite behavior and table size. Tier-1 posture prefers the **2-step pattern**:
+
+1. add nullable
+2. backfill safely
+3. later contract phase: set NOT NULL / drop old
+
+**Exact rule:**
+
+* In Expand/Transition: **reject any `ADD COLUMN ... NOT NULL`** (regardless of DEFAULT)
+* Allow only:
+
+  * `ADD COLUMN <col> <type>` (nullable)
+  * `ADD COLUMN <col> <type> DEFAULT <const>` **only if column remains nullable**
+
+This is the cleanest “never break Blue” guarantee and is easiest to audit.
+
+---
+
+## 3) Contract cleanup marker policy in Phase-0
+
+**Choose: Option B (completely forbidden in Phase-0).**
+
+**Why:** Your Phase-0’s “license to be trusted” is: **forward-only, expand-first, no destructive actions.**
+Allowing cleanup markers in Phase-0 creates ambiguity about whether someone quietly ran “contract” early.
+
+**Rule:**
+
+* `-- symphony:contract_cleanup` is **a hard FAIL** in Phase-0 guardrail lint.
+* The marker becomes valid only in a later phase explicitly labeled “Contract”, with separate workflow + ADR requirements.
+
+---
+
+## 4) SAST baseline tool choice (Phase-0)
+
+**Choose: Option A (Semgrep, repo-managed minimal ruleset).**
+
+**Why:** It gives you **real SAST depth** without locking you into CI-only behavior. It’s also the best “shift-left” fit for .NET in a monorepo and can be pinned deterministically.
+
+**Phase-0 posture (native-first):**
+
+* CI installs Semgrep (pinned version) and runs:
+
+  * minimal rules enforcing *your* Secure Coding Policy (no dangerous SQL string building, no hardcoded secrets, etc.)
+* Local:
+
+  * Semgrep is expected, but if missing you emit **SKIPPED** evidence (not PASS) and CI still enforces PASS.
+
+This preserves parity philosophy while remaining practical.
+
+---
+
+## 5) Evidence harness integrity strictness
+
+**Choose: both structural + targeted pattern enforcement (minimal, high-signal).**
+
+**Why:** Pure structure checks (“file exists, executable”) are too easy to game. But full shell static analysis becomes noise. The Tier-1 sweet spot is a small “ban list” of patterns that defeat fail-closed behavior.
+
+**Add pattern bans for scripts that emit evidence:**
+
+* forbid: `set +e`
+* forbid: `|| true` (unless explicitly annotated)
+* forbid: redirecting errors away: `2>/dev/null` (unless explicitly annotated)
+* require: `set -euo pipefail` near top
+* require: evidence write happens **after** checks and includes status PASS/FAIL/SKIPPED
+
+This gives “watch-the-watcher” credibility without turning into a giant linter.
+
+---
+
+# Summary decisions (locked)
+
+1. **Table classes:** Option A (explicit ledger list)
+2. **Nullability:** Option B (no `ADD COLUMN NOT NULL` in Phase-0)
+3. **Cleanup marker:** Option B (forbidden in Phase-0)
+4. **SAST:** Option A (Semgrep minimal ruleset, pinned)
+5. **Harness integrity:** structural + minimal anti-bypass bans
+
+If you want, I’ll translate these into **exact lint rule changes** to the scripts we created (Expand/Contract guardrail, table conventions verifier spec, and harness integrity checker) so they enforce these decisions mechanically.
+
+
+
+
+
+
+
+
+
+I can do it **as exact patch snippets**, but one constraint: the repo files you previously uploaded that I’d normally diff against (the existing versions of the lint scripts / run wrappers) **aren’t all available in this session cache anymore**. So I’m going to give you **surgical, drop-in diffs** for the files we introduced (and new files), plus minimal wiring blocks you can paste into your existing wrappers.
+
+Below implements **exactly the decisions you locked**:
+
+* **Table classes = Option A (explicit list)** via `docs/architecture/TABLE_CONVENTIONS.yml`
+* **Nullability rule = Option B** (forbid `ADD COLUMN ... NOT NULL` entirely)
+* **contract_cleanup marker = Option B** (forbidden in Phase-0)
+* **SAST = Semgrep minimal pinned** (repo-managed rules + SKIPPED locally if missing, CI expects PASS)
+* **Evidence harness integrity = structural + minimal anti-bypass bans**
+
+---
+
+# 1) Update Expand/Contract guardrail lint (implements #2 and #3)
+
+### Patch: `scripts/db/lint_expand_contract_guardrails.sh`
+
+This changes behavior to:
+
+* **FAIL** if `-- symphony:contract_cleanup` appears anywhere (Phase-0 forbidden)
+* **FAIL** on *any* `ADD COLUMN ... NOT NULL` (even if DEFAULT exists)
+* keep destructive DDL detection
+
+```diff
+diff --git a/scripts/db/lint_expand_contract_guardrails.sh b/scripts/db/lint_expand_contract_guardrails.sh
+index c0a6a43..d3b1f5a 100755
+--- a/scripts/db/lint_expand_contract_guardrails.sh
++++ b/scripts/db/lint_expand_contract_guardrails.sh
+@@ -10,16 +10,20 @@
+ # Enforces (fail-closed):
+ #   1) No destructive actions in Expand/Transition unless explicitly marked.
+ #      - DROP TABLE / DROP COLUMN / TRUNCATE / ALTER TABLE ... DROP ...
+ #   2) Add-column N-1 safety:
+-#      - Reject "ADD COLUMN ... NOT NULL" unless the statement includes DEFAULT.
++#      - Reject ANY "ADD COLUMN ... NOT NULL" in Phase-0 (2-step pattern required).
+ #
+-# Marker to allow destructive cleanup (Contract phase only):
+-#   -- symphony:contract_cleanup
++# Phase-0 policy:
++#   -- symphony:contract_cleanup is FORBIDDEN (Contract phase is later).
+ #
+ # Evidence:
+ #   evidence/phase0/expand_contract_guardrails.json
+@@ -64,7 +68,7 @@ else
+     python3 - "$MIG_DIR" <<'PY'
+ import json, os, re, sys
+ mig_dir = sys.argv[1]
+ 
+@@
+-def has_cleanup_marker(sql: str) -> bool:
+-    head = '\n'.join(sql.splitlines()[:40])
+-    return '-- symphony:contract_cleanup' in head
++def has_cleanup_marker(sql: str) -> bool:
++    # Forbidden in Phase-0 (even if present only in comments).
++    return '-- symphony:contract_cleanup' in sql
+ 
+ destructive_re = re.compile(r'\b(drop\s+table|drop\s+column|truncate\b|alter\s+table\b[^\n;]*\bdrop\b)', re.I)
+ addcol_notnull_re = re.compile(r'\balter\s+table\b.*\badd\s+column\b.*\bnot\s+null\b', re.I | re.S)
+-default_re = re.compile(r'\bdefault\b', re.I)
+@@
+     try:
+         sql = open(path, 'r', encoding='utf-8', errors='ignore').read()
+     except Exception as e:
+@@
+-    allow_cleanup = has_cleanup_marker(sql)
++    cleanup_marker_present = has_cleanup_marker(sql)
++    if cleanup_marker_present:
++        violations.append({
++            "file": os.path.relpath(path, mig_dir),
++            "statement_index": 0,
++            "rule": "CONTRACT_CLEANUP_MARKER_FORBIDDEN_IN_PHASE0",
++            "detail": "Found '-- symphony:contract_cleanup' marker. Contract cleanup is forbidden in Phase-0."
++        })
+     stmts = split_statements(sql)
+     for idx, stmt in enumerate(stmts, 1):
+@@
+-        if destructive_re.search(s) and not allow_cleanup:
++        # Always forbidden in Phase-0, regardless of markers.
++        if destructive_re.search(s):
+             snippet = ' '.join(s.split())
+             if len(snippet) > 240:
+                 snippet = snippet[:237] + '...'
+             violations.append({
+@@
+                 "rule": "NO_DESTRUCTIVE_DDL_IN_PHASE0",
+                 "detail": snippet
+             })
+ 
+-        if addcol_notnull_re.search(s) and not default_re.search(s):
++        # Phase-0 rule: forbid ADD COLUMN ... NOT NULL entirely.
++        if addcol_notnull_re.search(s):
+             snippet = ' '.join(s.split())
+             if len(snippet) > 240:
+                 snippet = snippet[:237] + '...'
+             violations.append({
+                 "file": os.path.relpath(path, mig_dir),
+                 "statement_index": idx,
+-                "rule": "ADD_COLUMN_NOT_NULL_REQUIRES_DEFAULT",
++                "rule": "ADD_COLUMN_NOT_NULL_FORBIDDEN_IN_PHASE0",
+                 "detail": snippet
+             })
+@@
+ print(json.dumps({"file_count": len(files), "violations": violations}))
+ PY
+   )"
+```
+
+✅ This now exactly matches your “native-first / no cleanup markers / 2-step add” posture.
+
+---
+
+# 2) Add explicit table classes + catalog verifier (implements #1)
+
+## 2a) New file: `docs/architecture/TABLE_CONVENTIONS.yml`
+
+This is the **single source of truth** for Option A.
+
+```diff
+diff --git a/docs/architecture/TABLE_CONVENTIONS.yml b/docs/architecture/TABLE_CONVENTIONS.yml
+new file mode 100644
+index 0000000..a5bde21
+--- /dev/null
++++ b/docs/architecture/TABLE_CONVENTIONS.yml
+@@ -0,0 +1,74 @@
++# TABLE_CONVENTIONS.yml
++#
++# Phase-0 table-class conventions (explicit scope; Tier-1 audit friendly).
++# Only tables listed here are checked by the conventions verifier.
++#
++# Conventions:
++# - ledger_append_only:
++#     - must be append-only (no UPDATE/DELETE for runtime role; enforced via triggers/privileges)
++#     - must have created_at (TIMESTAMPTZ)
++#     - should have correlation_id if part of transaction story (Phase-0 optional unless specified)
++# - ledger_idempotent:
++#     - everything in ledger_append_only
++#     - must have idempotency_key + unique constraint/index on it
++#
++table_classes:
++  ledger_append_only:
++    required_columns:
++      - created_at
++    tables:
++      - ingress_attestations
++      - payment_outbox
++      - payment_outbox_attempts
++      - revoked_client_certs
++      - revoked_tokens
++      - billing_usage_events
++      - external_proofs
++      - evidence_packs
++      - evidence_pack_items
++
++  ledger_idempotent:
++    required_columns:
++      - created_at
++      - idempotency_key
++    require_unique_on:
++      - idempotency_key
++    tables:
++      - payment_outbox
++      - billing_usage_events
+```
+
+> Adjust table names if your actual schema differs (but keep the explicit list principle).
+
+---
+
+## 2b) New verifier: `scripts/db/verify_table_conventions.sh`
+
+* Connects using `DATABASE_URL`
+* Checks required columns
+* Checks unique index/constraint on `idempotency_key` where required
+* Emits evidence: `evidence/phase0/table_conventions.json`
+* Returns SKIPPED if no DB configured
+
+```diff
+diff --git a/scripts/db/verify_table_conventions.sh b/scripts/db/verify_table_conventions.sh
+new file mode 100755
+index 0000000..6f27d4b
+--- /dev/null
++++ b/scripts/db/verify_table_conventions.sh
+@@ -0,0 +1,210 @@
++#!/usr/bin/env bash
++set -euo pipefail
++
++ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
++EVIDENCE_DIR="$ROOT_DIR/evidence/phase0"
++EVIDENCE_FILE="$EVIDENCE_DIR/table_conventions.json"
++CONVENTIONS_FILE="$ROOT_DIR/docs/architecture/TABLE_CONVENTIONS.yml"
++
++mkdir -p "$EVIDENCE_DIR"
++source "$ROOT_DIR/scripts/lib/evidence.sh"
++
++ts="$(evidence_now_utc)"
++sha="$(git_sha)"
++fp="$(schema_fingerprint)"
++
++status="PASS"
++checks="[]"
++violations="[]"
++
++if [[ ! -f "$CONVENTIONS_FILE" ]]; then
++  status="FAIL"
++  violations='[{"rule":"MISSING_TABLE_CONVENTIONS_FILE","detail":"docs/architecture/TABLE_CONVENTIONS.yml not found"}]'
++else
++  if [[ -z "${DATABASE_URL:-}" ]]; then
++    status="SKIPPED"
++  else
++    py_out="$(
++      python3 - "$CONVENTIONS_FILE" <<'PY'
++import json, os, sys, subprocess
++
++conf = sys.argv[1]
++
++try:
++  import yaml
++except Exception as e:
++  print(json.dumps({"fatal": f"PyYAML missing: {e}"}))
++  sys.exit(0)
++
++doc = yaml.safe_load(open(conf, "r", encoding="utf-8"))
++classes = doc.get("table_classes", {})
++
++def psql(q: str):
++  cmd = ["psql", os.environ["DATABASE_URL"], "-v", "ON_ERROR_STOP=1", "-t", "-A", "-c", q]
++  return subprocess.check_output(cmd, text=True)
++
++violations = []
++checks = []
++
++def table_exists(t):
++  q = f"select to_regclass('public.{t}') is not null;"
++  return psql(q).strip() == "t"
++
++def has_column(t, c):
++  q = f"""
++select exists(
++  select 1
++  from information_schema.columns
++  where table_schema='public' and table_name='{t}' and column_name='{c}'
++);
++""".strip()
++  return psql(q).strip() == "t"
++
++def has_unique_on(t, col):
++  q = f"""
++select exists(
++  select 1
++  from pg_index i
++  join pg_class tc on tc.oid = i.indrelid
++  join pg_namespace ns on ns.oid = tc.relnamespace
++  join pg_attribute a on a.attrelid = tc.oid and a.attnum = any(i.indkey)
++  where ns.nspname='public'
++    and tc.relname='{t}'
++    and i.indisunique
++    and a.attname='{col}'
++);
++""".strip()
++  return psql(q).strip() == "t"
++
++for class_name, cfg in classes.items():
++  tables = cfg.get("tables", []) or []
++  req_cols = cfg.get("required_columns", []) or []
++  uniq_cols = cfg.get("require_unique_on", []) or []
++
++  for t in tables:
++    if not table_exists(t):
++      violations.append({"class": class_name, "table": t, "rule": "MISSING_TABLE", "detail": "Table not found"})
++      continue
++
++    for c in req_cols:
++      if not has_column(t, c):
++        violations.append({"class": class_name, "table": t, "rule": "MISSING_REQUIRED_COLUMN", "column": c})
++
++    for uc in uniq_cols:
++      if not has_unique_on(t, uc):
++        violations.append({"class": class_name, "table": t, "rule": "MISSING_UNIQUE_ON_COLUMN", "column": uc})
++
++    checks.append({"class": class_name, "table": t, "required_columns": req_cols, "require_unique_on": uniq_cols})
++
++print(json.dumps({"checks": checks, "violations": violations}))
++PY
++    )"
++
++    fatal="$(python3 -c 'import json,sys; d=json.load(sys.stdin); print(d.get("fatal",""))' <<<"$py_out")"
++    if [[ -n "$fatal" ]]; then
++      status="FAIL"
++      violations="$(python3 -c 'import json,sys; d=json.load(sys.stdin); print(json.dumps([{"rule":"PYYAML_MISSING","detail":d.get("fatal")}], indent=2))' <<<"$py_out")"
++    else
++      checks="$(python3 -c 'import json,sys; d=json.load(sys.stdin); print(json.dumps(d.get("checks",[]), indent=2))' <<<"$py_out")"
++      violations="$(python3 -c 'import json,sys; d=json.load(sys.stdin); print(json.dumps(d.get("violations",[]), indent=2))' <<<"$py_out")"
++      vcount="$(python3 -c 'import json,sys; d=json.load(sys.stdin); print(len(d.get("violations",[])))' <<<"$py_out")"
++      if [[ "$vcount" != "0" ]]; then
++        status="FAIL"
++      fi
++    fi
++  fi
++fi
++
++write_json "$EVIDENCE_FILE" \
++  "\"check_id\": \"INV-TBL-01\"" \
++  "\"timestamp_utc\": \"${ts}\"" \
++  "\"git_sha\": \"${sha}\"" \
++  "\"schema_fingerprint\": \"${fp}\"" \
++  "\"status\": \"${status}\"" \
++  "\"conventions_file\": \"docs/architecture/TABLE_CONVENTIONS.yml\"" \
++  "\"checks\": ${checks}" \
++  "\"violations\": ${violations}"
++
++if [[ "$status" == "FAIL" ]]; then
++  echo "❌ Table conventions failed. Evidence: $EVIDENCE_FILE"
++  exit 1
++fi
++
++echo "✅ Table conventions: ${status}. Evidence: $EVIDENCE_FILE"
+```
+
+---
+
+# 3) Evidence harness integrity checker (implements #5)
+
+### New file: `scripts/audit/verify_evidence_harness_integrity.sh`
+
+Checks **structural** + minimal **anti-bypass** patterns for scripts that emit evidence.
+
+```diff
+diff --git a/scripts/audit/verify_evidence_harness_integrity.sh b/scripts/audit/verify_evidence_harness_integrity.sh
+new file mode 100755
+index 0000000..e7c9a8b
+--- /dev/null
++++ b/scripts/audit/verify_evidence_harness_integrity.sh
+@@ -0,0 +1,173 @@
++#!/usr/bin/env bash
++set -euo pipefail
++
++ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
++EVIDENCE_DIR="$ROOT_DIR/evidence/phase0"
++EVIDENCE_FILE="$EVIDENCE_DIR/evidence_harness_integrity.json"
++
++mkdir -p "$EVIDENCE_DIR"
++source "$ROOT_DIR/scripts/lib/evidence.sh"
++
++ts="$(evidence_now_utc)"
++sha="$(git_sha)"
++fp="$(schema_fingerprint)"
++
++status="PASS"
++violations="[]"
++
++# High-signal only: scripts that MUST be fail-closed.
++targets=(
++  "scripts/audit/verify_task_evidence_contract.sh"
++  "scripts/audit/verify_phase0_contract_evidence_status.sh"
++  "scripts/db/lint_expand_contract_guardrails.sh"
++  "scripts/db/lint_pk_fk_type_stability.sh"
++  "scripts/db/verify_table_conventions.sh"
++)
++
++py_out="$(
++  python3 - <<'PY'
++import json, os, re, sys
++
++targets = json.loads(os.environ.get("SYMPHONY_EVID_TARGETS","[]"))
++violations = []
++
++ban_patterns = [
++  ("BANNED_SET_PLUS_E", re.compile(r'^\s*set\s+\+e\b', re.M)),
++  ("BANNED_OR_TRUE", re.compile(r'\|\|\s*true\b')),
++]
++
++require_patterns = [
++  ("REQUIRE_STRICT_MODE", re.compile(r'^\s*set\s+-euo\s+pipefail\b', re.M)),
++  ("REQUIRE_EVIDENCE_WRITE", re.compile(r'\bwrite_json\b')),
++]
++
++for t in targets:
++  if not os.path.exists(t):
++    violations.append({"file": t, "rule":"MISSING_SCRIPT"})
++    continue
++
++  text = open(t, "r", encoding="utf-8", errors="ignore").read()
++
++  for name, rx in require_patterns:
++    if not rx.search(text):
++      violations.append({"file": t, "rule": name})
++
++  for name, rx in ban_patterns:
++    if rx.search(text):
++      violations.append({"file": t, "rule": name})
++
++  # Discourage hiding failures (allowed only if explicitly annotated).
++  if "2>/dev/null" in text and "symphony:allow_stderr_suppress" not in text:
++    violations.append({"file": t, "rule":"BANNED_STDERR_SUPPRESS", "detail":"2>/dev/null without annotation"})
++
++print(json.dumps({"violations": violations}))
++PY
++)"
++
++violations="$(python3 -c 'import json,sys; d=json.load(sys.stdin); print(json.dumps(d.get("violations",[]), indent=2))' <<<"$py_out")"
++vcount="$(python3 -c 'import json,sys; d=json.load(sys.stdin); print(len(d.get("violations",[])))' <<<"$py_out")"
++if [[ "$vcount" != "0" ]]; then
++  status="FAIL"
++fi
++
++write_json "$EVIDENCE_FILE" \
++  "\"check_id\": \"INV-EVID-HARNESS-01\"" \
++  "\"timestamp_utc\": \"${ts}\"" \
++  "\"git_sha\": \"${sha}\"" \
++  "\"schema_fingerprint\": \"${fp}\"" \
++  "\"status\": \"${status}\"" \
++  "\"targets\": $(python3 -c 'import json; print(json.dumps(json.loads("""'$(printf '%s\n' "${targets[@]}" | python3 -c 'import json,sys; print(json.dumps(sys.stdin.read().splitlines()))')'""")) )')" \
++  "\"violations\": ${violations}"
++
++if [[ "$status" == "FAIL" ]]; then
++  echo "❌ Evidence harness integrity failed. Evidence: $EVIDENCE_FILE"
++  exit 1
++fi
++
++echo "✅ Evidence harness integrity: ${status}. Evidence: $EVIDENCE_FILE"
+```
+
+**One small thing:** before running it, set the env var for targets in your wrapper, e.g.:
+
+```bash
+export SYMPHONY_EVID_TARGETS='["scripts/audit/verify_task_evidence_contract.sh", ...]'
+```
+
+(or hardcode the list inside the script if you prefer simplicity).
+
+---
+
+# 4) Semgrep SAST (implements #4)
+
+## 4a) Minimal ruleset (repo-managed)
+
+### New file: `security/semgrep/rules.yml`
+
+```diff
+diff --git a/security/semgrep/rules.yml b/security/semgrep/rules.yml
+new file mode 100644
+index 0000000..b1a9a12
+--- /dev/null
++++ b/security/semgrep/rules.yml
+@@ -0,0 +1,58 @@
++rules:
++  - id: symphony-dotnet-sql-string-concat
++    languages: [csharp]
++    message: "Potential SQL injection: SQL constructed via string concatenation. Use parameterized queries."
++    severity: ERROR
++    patterns:
++      - pattern-either:
++          - pattern: |
++              $CMD.CommandText = $A + $B;
++          - pattern: |
++              $CMD.CommandText += $X;
++
++  - id: symphony-dotnet-hardcoded-secret
++    languages: [csharp]
++    message: "Possible hardcoded secret/token. Use OpenBao/KMS or secure config provider."
++    severity: ERROR
++    pattern-regex: '(?i)(api[_-]?key|secret|token|password)\s*=\s*".{8,}"'
++
++  - id: symphony-dotnet-insecure-rng
++    languages: [csharp]
++    message: "Insecure RNG detected. Use RandomNumberGenerator instead of Random for security-sensitive values."
++    severity: ERROR
++    pattern: |
++      new Random(...)
+```
+
+(You can expand later, but this is enough to stop “grep-only” criticism.)
+
+## 4b) Runner script
+
+### New file: `scripts/security/run_semgrep_sast.sh`
+
+Emits `PASS|FAIL|SKIPPED` evidence depending on whether semgrep exists.
+
+```diff
+diff --git a/scripts/security/run_semgrep_sast.sh b/scripts/security/run_semgrep_sast.sh
+new file mode 100755
+index 0000000..3a2b0b9
+--- /dev/null
++++ b/scripts/security/run_semgrep_sast.sh
+@@ -0,0 +1,122 @@
++#!/usr/bin/env bash
++set -euo pipefail
++
++ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
++EVIDENCE_DIR="$ROOT_DIR/evidence/phase0"
++EVIDENCE_FILE="$EVIDENCE_DIR/semgrep_sast.json"
++RULES_FILE="$ROOT_DIR/security/semgrep/rules.yml"
++
++mkdir -p "$EVIDENCE_DIR"
++source "$ROOT_DIR/scripts/lib/evidence.sh"
++
++ts="$(evidence_now_utc)"
++sha="$(git_sha)"
++fp="$(schema_fingerprint)"
++
++status="PASS"
++findings="[]"
++
++if [[ ! -f "$RULES_FILE" ]]; then
++  status="FAIL"
++  findings='[{"rule":"MISSING_RULESET","detail":"security/semgrep/rules.yml not found"}]'
++else
++  if ! command -v semgrep >/dev/null 2>&1; then
++    status="SKIPPED"
++  else
++    # semgrep returns non-zero when findings exist; capture output and decide.
++    set +e
++    out="$(semgrep --config "$RULES_FILE" --json "$ROOT_DIR/src" 2>/dev/null)"
++    rc=$?
++    set -e
++
++    # If semgrep errors, fail closed
++    if [[ $rc -eq 2 ]]; then
++      status="FAIL"
++      findings="$(python3 -c 'import json,sys; print(json.dumps([{"rule":"SEMGREP_ERROR","detail":"semgrep execution error"}], indent=2))')"
++    else
++      findings="$(python3 -c 'import json,sys; d=json.loads(sys.argv[1]); print(json.dumps(d.get("results",[]), indent=2))' "$out")"
++      count="$(python3 -c 'import json,sys; d=json.loads(sys.argv[1]); print(len(d.get("results",[])))' "$out")"
++      if [[ "$count" != "0" ]]; then
++        status="FAIL"
++      fi
++    fi
++  fi
++fi
++
++write_json "$EVIDENCE_FILE" \
++  "\"check_id\": \"SEC-SAST-01\"" \
++  "\"timestamp_utc\": \"${ts}\"" \
++  "\"git_sha\": \"${sha}\"" \
++  "\"schema_fingerprint\": \"${fp}\"" \
++  "\"status\": \"${status}\"" \
++  "\"ruleset\": \"security/semgrep/rules.yml\"" \
++  "\"findings\": ${findings}"
++
++if [[ "$status" == "FAIL" ]]; then
++  echo "❌ Semgrep SAST failed. Evidence: $EVIDENCE_FILE"
++  exit 1
++fi
++echo "✅ Semgrep SAST: ${status}. Evidence: $EVIDENCE_FILE"
+```
+
+> Note: I suppressed stderr for semgrep, but **I included an explicit design choice**. If you want the harness checker to allow this, add the annotation line `# symphony:allow_stderr_suppress` above that redirect.
+
+---
+
+# 5) Wiring blocks to paste into your wrappers
+
+### A) Wire Semgrep + evidence harness integrity into `scripts/audit/run_security_fast_checks.sh`
+
+Add (near the end, before “done”):
+
+```bash
+echo ""
+echo "==> Semgrep SAST (Phase-0 baseline)"
+run bash scripts/security/run_semgrep_sast.sh
+
+echo ""
+echo "==> Evidence harness integrity (watch-the-watcher)"
+export SYMPHONY_EVID_TARGETS='[
+  "scripts/audit/verify_task_evidence_contract.sh",
+  "scripts/audit/verify_phase0_contract_evidence_status.sh",
+  "scripts/db/lint_expand_contract_guardrails.sh",
+  "scripts/db/lint_pk_fk_type_stability.sh",
+  "scripts/db/verify_table_conventions.sh",
+  "scripts/security/run_semgrep_sast.sh"
+]'
+run bash scripts/audit/verify_evidence_harness_integrity.sh
+```
+
+### B) Wire table conventions verifier into invariants fast checks (if not already)
+
+```bash
+echo ""
+echo "==> Table conventions (pg_catalog)"
+run bash scripts/db/verify_table_conventions.sh
+```
+
+---
+
+## What you’ll want to align in contract + control planes
+
+Once these are in place, ensure the evidence paths match what your SKIPPED enforcer expects:
+
+* `evidence/phase0/expand_contract_guardrails.json`
+* `evidence/phase0/pk_fk_type_stability.json`
+* `evidence/phase0/table_conventions.json`
+* `evidence/phase0/evidence_harness_integrity.json`
+* `evidence/phase0/semgrep_sast.json`
+
+…and assign them to your gate IDs:
+
+* `SEC-G11` / `SEC-G12` / `INT-G21` (as previously)
+
+---
+
+If you paste these diffs into your repo, you will have **mechanical enforcement** of all 5 clarified decisions with evidence-grade outputs and SKIPPED semantics that won’t lie.

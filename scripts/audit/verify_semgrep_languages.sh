@@ -1,6 +1,10 @@
 #!/bin/bash
 # verify_semgrep_languages.sh
 # Verify Semgrep rules cover Python and C# and tests pass
+#
+# Updated:
+# - Removed jq dependency (uses python3 to parse JSON)
+# - Keeps existing semantics and flags
 
 set -euo pipefail
 
@@ -46,7 +50,6 @@ if ! semgrep --config="$SEMGREP_RULES" --validate 2>/dev/null; then
 fi
 echo "✅ Semgrep rules syntax valid"
 
-# Check for C# rules
 echo ""
 echo "=== C# Rules Coverage ==="
 cs_rules=$(grep -c "languages: \[csharp\]" "$SEMGREP_RULES" || true)
@@ -57,14 +60,12 @@ if [[ "$REQUIRE_CS" == "true" && "$cs_rules" -eq 0 ]]; then
     exit 1
 fi
 
-# List C# rules
 echo "C# rules:"
 awk '
   /^ *- id:/ { id=$3 }
   /languages: \[csharp\]/ { if (id!="") print "  - " id; id="" }
 ' "$SEMGREP_RULES" || true
 
-# Check for Python rules
 echo ""
 echo "=== Python Rules Coverage ==="
 py_rules=$(grep -c "languages: \[python\]" "$SEMGREP_RULES" || true)
@@ -75,14 +76,12 @@ if [[ "$REQUIRE_PY" == "true" && "$py_rules" -eq 0 ]]; then
     exit 1
 fi
 
-# List Python rules
 echo "Python rules:"
 awk '
   /^ *- id:/ { id=$3 }
   /languages: \[python\]/ { if (id!="") print "  - " id; id="" }
 ' "$SEMGREP_RULES" || true
 
-# Check for specific rule categories
 echo ""
 echo "=== Rule Categories ==="
 
@@ -98,7 +97,6 @@ echo "Insecure RNG rules: $insecure_rng_rules"
 admin_bypass_rules=$(grep -c "admin.*bypass\|bypass.*admin" "$SEMGREP_RULES" || true)
 echo "Admin bypass rules: $admin_bypass_rules"
 
-# Verify minimum rule counts
 min_cs_rules=3
 min_py_rules=3
 
@@ -115,11 +113,9 @@ fi
 echo ""
 echo "=== Semgrep Test Results ==="
 
-# Create temporary test files
 TEMP_DIR=$(mktemp -d)
 trap "rm -rf $TEMP_DIR" EXIT
 
-# Create test files with known patterns
 cat > "$TEMP_DIR/test_cs.cs" << 'EOF'
 using System;
 using System.Data.SqlClient;
@@ -137,13 +133,20 @@ def test_function(user_input):
     return sql
 EOF
 
-# Test Semgrep against test files
+json_len() {
+  python3 - <<'PY'
+import json, sys
+data = json.load(sys.stdin)
+print(len(data.get("results", [])))
+PY
+}
+
 echo "Testing C# patterns..."
-cs_findings=$(semgrep --config="$SEMGREP_RULES" --quiet --json "$TEMP_DIR/test_cs.cs" | jq '.results | length' 2>/dev/null || echo "0")
+cs_findings=$(semgrep --config="$SEMGREP_RULES" --json --metrics off "$TEMP_DIR/test_cs.cs" 2>/dev/null | json_len || echo "0")
 echo "C# test findings: $cs_findings"
 
 echo "Testing Python patterns..."
-py_findings=$(semgrep --config="$SEMGREP_RULES" --quiet --json "$TEMP_DIR/test_py.py" | jq '.results | length' 2>/dev/null || echo "0")
+py_findings=$(semgrep --config="$SEMGREP_RULES" --json --metrics off "$TEMP_DIR/test_py.py" 2>/dev/null | json_len || echo "0")
 echo "Python test findings: $py_findings"
 
 if [[ "$cs_findings" -eq 0 ]]; then
