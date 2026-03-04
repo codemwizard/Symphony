@@ -44,12 +44,9 @@ rules:
     languages: [python]
     message: "Potential SQL injection: SQL query built via string concatenation. Use parameters."
     severity: ERROR
-    patterns:
-      - pattern-either:
-          - pattern: |
-              $SQL = $A + $B
-          - pattern: |
-              $SQL += $X
+    pattern-either:
+      - pattern-regex: '(?i)\\b\\w+\\s*=\\s*["\\''][^"\\'']*(select|insert|update|delete)[^"\\'']*["\\'']\\s*\\+'
+      - pattern-regex: '(?i)\\b\\w+\\s*=\\s*\\w+\\s*\\+\\s*["\\''][^"\\'']*(select|insert|update|delete)[^"\\'']*["\\'']'
 
   - id: symphony-python-f-string-sql
     languages: [python]
