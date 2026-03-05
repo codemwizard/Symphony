@@ -71,6 +71,22 @@ def emit_inquiry_event(resolved: dict[str, Any], rail_id: str, output: Path) -> 
     output.write_text(json.dumps(payload, indent=2) + "\n", encoding="utf-8")
 
 
+def append_decision_log(resolved: dict[str, Any], rail_id: str, output: Path) -> None:
+    entry = {
+        "event_class": "inquiry_event",
+        "decision_id": f"dec-{rail_id.lower()}-{resolved['policy_version_id']}",
+        "instruction_id": "inst-policy-snapshot-smoke",
+        "rail": rail_id,
+        "poll_count": 0,
+        "status": "INQUIRY_SENT",
+        "policy_version_id": resolved["policy_version_id"],
+        "timestamp_utc": "2026-03-05T00:00:00Z",
+    }
+    output.parent.mkdir(parents=True, exist_ok=True)
+    with output.open("a", encoding="utf-8") as f:
+        f.write(json.dumps(entry, separators=(",", ":")) + "\n")
+
+
 def emit_activation_event(version_id: str, actor: str, output: Path) -> None:
     signing_key = (os.environ.get("EVIDENCE_SIGNING_KEY") or "").strip()
     payload = {
@@ -106,6 +122,7 @@ def main() -> int:
     parser.add_argument("--schema", default="evidence/schemas/hardening/rail_inquiry_policy.schema.json")
     parser.add_argument("--rail-id")
     parser.add_argument("--emit-inquiry-evidence")
+    parser.add_argument("--emit-decision-log")
     parser.add_argument("--activate-version-id")
     parser.add_argument("--activated-by", default="system")
     parser.add_argument("--activation-evidence")
@@ -132,6 +149,8 @@ def main() -> int:
             resolved = resolve_policy(store, args.rail_id)
             if args.emit_inquiry_evidence:
                 emit_inquiry_event(resolved, args.rail_id, Path(args.emit_inquiry_evidence))
+            if args.emit_decision_log:
+                append_decision_log(resolved, args.rail_id, Path(args.emit_decision_log))
 
         if args.activate_version_id:
             if args.activation_evidence is None:
