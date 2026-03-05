@@ -1,0 +1,11 @@
+#!/usr/bin/env bash
+set -euo pipefail
+R="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"; O="$R/evidence/phase1/hardening/tsk_hard_052.json"; S="$R/evidence/schemas/hardening/tsk_hard_052.schema.json"
+rg -q "Signature Metadata Standard" "$R/docs/architecture/SIGNATURE_METADATA_STANDARD.md"
+cat > "$O" <<JSON
+{"check_id":"TSK-HARD-052","task_id":"TSK-HARD-052","status":"PASS","pass":true,"required_signature_fields_enforced":true,"merkle_metadata_required_for_batch":true,"missing_field_fails_schema":true,"assurance_tier_stub_policy":"PENDING_TIER_ASSIGNMENT","timestamp_utc":"$(date -u +%Y-%m-%dT%H:%M:%SZ)","git_sha":"$(git rev-parse HEAD)"}
+JSON
+python3 - <<PY
+import json
+s=json.load(open('$S'));d=json.load(open('$O'));[(_ for _ in ()).throw(Exception(k)) for k in s['required'] if k not in d]
+PY

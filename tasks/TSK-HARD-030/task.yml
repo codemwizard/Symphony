@@ -1,12 +1,12 @@
 id: TSK-HARD-030
-title: "Lineage reference strategy DSL"
-status: todo
-phase: "Hardening"
-wave: "3"
+title: Lineage reference strategy DSL
+status: done
+phase: Hardening
+wave: '3'
 depends_on:
   - TSK-OPS-WAVE2-EXIT-GATE
-verifier_command: "bash scripts/audit/verify_tsk_hard_030.sh"
-evidence_path: "evidence/phase1/hardening/tsk_hard_030.json"
-schema_path: "evidence/schemas/hardening/tsk_hard_030.schema.json"
-source_of_truth: "docs/programs/symphony-hardening/HARDENING_TASK_PACKS.md"
-canonical_reference: "docs/operations/AI_AGENT_OPERATION_MANUAL.md"
+verifier_command: bash scripts/audit/verify_tsk_hard_030.sh
+evidence_path: evidence/phase1/hardening/tsk_hard_030.json
+schema_path: evidence/schemas/hardening/tsk_hard_030.schema.json
+source_of_truth: docs/programs/symphony-hardening/HARDENING_TASK_PACKS.md
+canonical_reference: docs/operations/AI_AGENT_OPERATION_MANUAL.md

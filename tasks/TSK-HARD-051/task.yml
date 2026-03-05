@@ -1,12 +1,12 @@
 id: TSK-HARD-051
-title: "HSM/KMS signing path enforcement"
-status: todo
-phase: "Hardening"
-wave: "4"
+title: HSM/KMS signing path enforcement
+status: done
+phase: Hardening
+wave: '4'
 depends_on:
   - TSK-HARD-050
-verifier_command: "bash scripts/audit/verify_tsk_hard_051.sh"
-evidence_path: "evidence/phase1/hardening/tsk_hard_051.json"
-schema_path: "evidence/schemas/hardening/tsk_hard_051.schema.json"
-source_of_truth: "docs/programs/symphony-hardening/HARDENING_TASK_PACKS.md"
-canonical_reference: "docs/operations/AI_AGENT_OPERATION_MANUAL.md"
+verifier_command: bash scripts/audit/verify_tsk_hard_051.sh
+evidence_path: evidence/phase1/hardening/tsk_hard_051.json
+schema_path: evidence/schemas/hardening/tsk_hard_051.schema.json
+source_of_truth: docs/programs/symphony-hardening/HARDENING_TASK_PACKS.md
+canonical_reference: docs/operations/AI_AGENT_OPERATION_MANUAL.md

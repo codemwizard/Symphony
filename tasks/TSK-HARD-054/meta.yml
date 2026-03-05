@@ -3,39 +3,39 @@ phase: '1'
 task_id: TSK-HARD-054
 title: Historical verification continuity (archive-only)
 owner_role: SUPERVISOR
-status: planned
+status: completed
 depends_on:
-- TSK-HARD-053
+  - TSK-HARD-053
 touches:
-- archive-only verification environment setup (operational store excluded)
-- docs/programs/symphony-hardening/HARDENING_TASK_PACKS.md
-- evidence/phase1/hardening/tsk_hard_054.json
-- historical verification test across all key versions in rotation history
-- named error modes for missing material
-- tasks/TSK-HARD-054/EXEC_LOG.md
-- tasks/TSK-HARD-054/PLAN.md
+  - archive-only verification environment setup (operational store excluded)
+  - docs/programs/symphony-hardening/HARDENING_TASK_PACKS.md
+  - evidence/phase1/hardening/tsk_hard_054.json
+  - historical verification test across all key versions in rotation history
+  - named error modes for missing material
+  - tasks/TSK-HARD-054/EXEC_LOG.md
+  - tasks/TSK-HARD-054/PLAN.md
 invariants:
-- INV-HARDENING-CANONICAL-SOURCE
+  - INV-HARDENING-CANONICAL-SOURCE
 work:
-- Confirm that artifacts signed under each historical key version remain
-- Implement exactly per canonical task block in HARDENING_TASK_PACKS.md.
+  - Confirm that artifacts signed under each historical key version remain
+  - Implement exactly per canonical task block in HARDENING_TASK_PACKS.md.
 acceptance_criteria:
-- test environment configured with operational key store explicitly excluded;
+  - test environment configured with operational key store explicitly excluded;
 verification:
-- bash scripts/audit/verify_tsk_hard_054.sh
+  - bash scripts/audit/verify_tsk_hard_054.sh
 evidence:
-- evidence/phase1/hardening/tsk_hard_054.json
-- evidence/schemas/hardening/tsk_hard_054.schema.json
+  - evidence/phase1/hardening/tsk_hard_054.json
+  - evidence/schemas/hardening/tsk_hard_054.schema.json
 failure_modes:
-- verification falls back to operational key store => FAIL_CLOSED
-- missing key version produces silent pass => FAIL_CLOSED
-- missing canonicalization version produces silent pass => FAIL_CLOSED
-- UNVERIFIABLE error treated as passing in any test => FAIL_CLOSED
-- historical key versions not all covered by test => FAIL
-- negative-path test absent => FAIL
+  - verification falls back to operational key store => FAIL_CLOSED
+  - missing key version produces silent pass => FAIL_CLOSED
+  - missing canonicalization version produces silent pass => FAIL_CLOSED
+  - UNVERIFIABLE error treated as passing in any test => FAIL_CLOSED
+  - historical key versions not all covered by test => FAIL
+  - negative-path test absent => FAIL
 must_read:
-- docs/operations/AI_AGENT_OPERATION_MANUAL.md
-- docs/programs/symphony-hardening/HARDENING_TASK_PACKS.md
+  - docs/operations/AI_AGENT_OPERATION_MANUAL.md
+  - docs/programs/symphony-hardening/HARDENING_TASK_PACKS.md
 implementation_plan: tasks/TSK-HARD-054/PLAN.md
 implementation_log: tasks/TSK-HARD-054/EXEC_LOG.md
 notes: Generated from canonical hardening task pack source; do not edit semantics

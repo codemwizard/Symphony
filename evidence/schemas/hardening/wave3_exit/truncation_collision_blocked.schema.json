@@ -1,0 +1,1 @@
+{"$schema":"http://json-schema.org/draft-07/schema#","type":"object","required":["pass","original_reference","truncated_reference","colliding_registry_entry_id","outcome"]}

@@ -1,0 +1,1 @@
+{"$schema":"http://json-schema.org/draft-07/schema#","type":"object","required":["class_id","permitted_callers","permitted_artifact_types","key_backend","exportable"]}

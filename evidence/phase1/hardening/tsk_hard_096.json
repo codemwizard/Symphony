@@ -1,0 +1,1 @@
+{"check_id":"TSK-HARD-096","task_id":"TSK-HARD-096","status":"PASS","pass":true,"assurance_tiers":["HSM_BACKED","SOFTWARE_BACKED","DEPENDENCY_NOT_READY"],"signing_service_sets_tier":true,"retroactive_tier_sweep_completed":true,"pending_tier_assignment_cleared":true,"timestamp_utc":"2026-03-05T12:25:38Z","git_sha":"17ef11d84d4f47b71a0a5e0ece62d25861bb18e3"}

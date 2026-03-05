@@ -1,0 +1,1 @@
+{"$schema":"http://json-schema.org/draft-07/schema#","type":"object","required":["pass","key_versions_tested","operational_store_excluded","all_outcomes"]}

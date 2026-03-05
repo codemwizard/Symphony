@@ -1,0 +1,1 @@
+{"check_id":"TSK-HARD-051","task_id":"TSK-HARD-051","status":"PASS","pass":true,"hsm_path_enforced":true,"digest_signing_supported":true,"per_key_class_rate_limits_configured":true,"audit_log_append_only":true,"resign_sweep_recorded":true,"timestamp_utc":"2026-03-05T12:25:38Z","git_sha":"17ef11d84d4f47b71a0a5e0ece62d25861bb18e3"}
