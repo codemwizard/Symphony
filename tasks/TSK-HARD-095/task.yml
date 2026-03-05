@@ -1,6 +1,6 @@
 id: TSK-HARD-095
 title: "BoZ submission audit trail primitives"
-status: todo
+status: done
 phase: "Hardening"
 wave: "6"
 depends_on:

@@ -3,7 +3,7 @@ phase: '1'
 task_id: TSK-HARD-042
 title: Privacy-preserving audit query continuity
 owner_role: SUPERVISOR
-status: planned
+status: completed
 depends_on:
 - TSK-HARD-041
 touches:

@@ -1,6 +1,6 @@
 id: TSK-HARD-042
 title: "Privacy-preserving audit query continuity"
-status: todo
+status: done
 phase: "Hardening"
 wave: "6"
 depends_on:

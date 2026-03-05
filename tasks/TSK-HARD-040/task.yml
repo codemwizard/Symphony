@@ -1,6 +1,6 @@
 id: TSK-HARD-040
 title: "Privacy-preserving audit tokenization"
-status: todo
+status: done
 phase: "Hardening"
 wave: "6"
 depends_on:

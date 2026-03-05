@@ -3,7 +3,7 @@ phase: '1'
 task_id: TSK-HARD-093
 title: Reporting continuity and activation controls
 owner_role: SUPERVISOR
-status: planned
+status: completed
 depends_on:
 - TSK-HARD-092
 touches:

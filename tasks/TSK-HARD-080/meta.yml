@@ -3,7 +3,7 @@ phase: '1'
 task_id: TSK-HARD-080
 title: "Signing scale path \u2014 batch/Merkle and HSM throughput"
 owner_role: SUPERVISOR
-status: planned
+status: completed
 depends_on:
 - TSK-OPS-WAVE5-EXIT-GATE
 touches:

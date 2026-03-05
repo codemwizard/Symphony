@@ -3,7 +3,7 @@ phase: '1'
 task_id: TSK-HARD-082
 title: "BoZ/Auditor demonstration pack \u2014 six scripted scenarios"
 owner_role: SUPERVISOR
-status: planned
+status: completed
 depends_on:
 - TSK-HARD-081
 touches:
