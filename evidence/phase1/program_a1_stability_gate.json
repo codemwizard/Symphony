@@ -1,0 +1,12 @@
+{
+  "check_id": "TSK-OPS-A1-STABILITY-GATE",
+  "timestamp_utc": "2026-03-05T04:53:52.037305Z",
+  "git_sha": "5c29c23ab33e54a1f44b09f58b6a09557125d71c",
+  "task_id": "TSK-OPS-A1-STABILITY-GATE",
+  "status": "PASS",
+  "pass": true,
+  "k8s_manifests_validation_present": true,
+  "sandbox_deploy_dry_run_present": true,
+  "required_manifest_files_present": true,
+  "errors": []
+}

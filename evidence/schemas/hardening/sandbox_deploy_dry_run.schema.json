@@ -1,0 +1,33 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "check_id",
+    "task_id",
+    "git_sha",
+    "status",
+    "namespace",
+    "images",
+    "migration_job_ran",
+    "services_ready",
+    "timestamp_utc",
+    "pass"
+  ],
+  "properties": {
+    "check_id": {"type": "string", "minLength": 3},
+    "task_id": {"type": "string"},
+    "git_sha": {"type": "string", "minLength": 7},
+    "status": {"type": "string", "enum": ["PASS", "FAIL"]},
+    "namespace": {"type": "string", "minLength": 1},
+    "images": {
+      "type": "array",
+      "minItems": 1,
+      "items": {"type": "string", "minLength": 1}
+    },
+    "migration_job_ran": {"type": "boolean"},
+    "services_ready": {"type": "boolean"},
+    "timestamp_utc": {"type": "string", "minLength": 1},
+    "pass": {"type": "boolean"}
+  }
+}

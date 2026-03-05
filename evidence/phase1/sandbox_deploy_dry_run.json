@@ -1,0 +1,15 @@
+{
+  "check_id": "TSK-OPS-A1-STABILITY-GATE",
+  "task_id": "TSK-OPS-A1-STABILITY-GATE",
+  "git_sha": "d53a738a7312",
+  "status": "PASS",
+  "namespace": "symphony-sandbox",
+  "images": [
+    "symphony/phase1-executor-worker:inf002",
+    "symphony/phase1-db-migration-job:inf002"
+  ],
+  "migration_job_ran": true,
+  "services_ready": true,
+  "timestamp_utc": "2026-03-05T00:00:00Z",
+  "pass": true
+}
