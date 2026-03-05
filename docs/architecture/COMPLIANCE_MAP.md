@@ -56,3 +56,4 @@
 - 2026-02-25: `TSK-P1-INF-002` adds deterministic container-build governance for required Phase-1 services with digest-pinned base images, non-root posture, and rebuild digest stability evidence.
 - 2026-02-25: `TSK-P1-INF-001` adds sandbox Postgres HA/backups/PITR verification posture with operator-style cluster + backup schedule manifests and deterministic PITR evidence metadata.
 - 2026-02-24: `TSK-P1-HIER-007` adds deterministic risk formula registry + program default tier posture (append-only `risk_formula_registry`, `programs.default_risk_tier`, and read-only `vw_program_tier_effective`) with verifier-backed integrity evidence.
+- 2026-03-05: Wave-5 reference-strategy corrective migration (`0067_hard_wave5_reference_strategy_rotation_and_allocation_race.sql`) adds policy-rotation continuity controls, fail-closed length enforcement (`P7901`) before truncation, and deterministic collision-retry semantics for concurrent dispatch-reference allocation.
