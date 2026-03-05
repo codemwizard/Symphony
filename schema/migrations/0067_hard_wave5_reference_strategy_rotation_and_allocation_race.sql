@@ -1,5 +1,3 @@
-BEGIN;
-
 -- Allow policy rotation by permitting ACTIVE -> INACTIVE transitions,
 -- while still blocking mutation of rows that remain ACTIVE.
 CREATE OR REPLACE FUNCTION public.block_active_reference_policy_updates()
@@ -137,7 +135,3 @@ BEGIN
   END LOOP;
 END;
 $$;
-
-INSERT INTO public.schema_migrations(version) VALUES ('0067_hard_wave5_reference_strategy_rotation_and_allocation_race.sql');
-
-COMMIT;
