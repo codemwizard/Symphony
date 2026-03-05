@@ -232,6 +232,78 @@
       "meaning": "adjustment execution blocked by active freeze/legal-hold flag",
       "retryable": false
     },
+    "P7801": {
+      "class": "B",
+      "subsystem": "hardening",
+      "meaning": "dispatch reference allocation retry exhausted after collision retries",
+      "retryable": false
+    },
+    "P7802": {
+      "class": "B",
+      "subsystem": "hardening",
+      "meaning": "no matching active reference strategy policy for the rail",
+      "retryable": false
+    },
+    "P7803": {
+      "class": "B",
+      "subsystem": "hardening",
+      "meaning": "attempted in-place update of active reference strategy policy",
+      "retryable": false
+    },
+    "P7901": {
+      "class": "B",
+      "subsystem": "hardening",
+      "meaning": "reference exceeds per-rail canonicalized maximum length",
+      "retryable": false
+    },
+    "P8001": {
+      "class": "B",
+      "subsystem": "hardening",
+      "meaning": "dispatch reference not registered in pre-dispatch registry",
+      "retryable": false
+    },
+    "P8101": {
+      "class": "B",
+      "subsystem": "hardening",
+      "meaning": "caller is not authorized to use requested key class for signing",
+      "retryable": false
+    },
+    "P8102": {
+      "class": "B",
+      "subsystem": "hardening",
+      "meaning": "attempted signing path bypassed HSM/KMS enforcement",
+      "retryable": false
+    },
+    "P8201": {
+      "class": "B",
+      "subsystem": "hardening",
+      "meaning": "policy bundle activation rejected because signature is missing or invalid",
+      "retryable": false
+    },
+    "P8202": {
+      "class": "B",
+      "subsystem": "hardening",
+      "meaning": "runtime policy bundle signature verification failed",
+      "retryable": false
+    },
+    "P8301": {
+      "class": "B",
+      "subsystem": "hardening",
+      "meaning": "historical verification failed because canonicalization version is missing",
+      "retryable": false
+    },
+    "P8302": {
+      "class": "B",
+      "subsystem": "hardening",
+      "meaning": "merkle batch leaf was not found for requested batch/index",
+      "retryable": false
+    },
+    "P8303": {
+      "class": "B",
+      "subsystem": "hardening",
+      "meaning": "merkle leaf hash mismatch during proof verification",
+      "retryable": false
+    },
     "P8401": {
       "class": "B",
       "subsystem": "hardening",
