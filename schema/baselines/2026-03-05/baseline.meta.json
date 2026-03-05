@@ -1,10 +1,10 @@
 {
   "baseline_date": "2026-03-05",
   "baseline_path": "/home/mwiza/workspace/Symphony/schema/baselines/2026-03-05/0001_baseline.sql",
-  "baseline_cutoff": "0065_hard_wave4_signing_controls_and_assurance.sql",
-  "normalized_schema_sha256": "99b7e254949898ddd2ec0dd61fdb8125995596a1be1380a100f730ebbfba466a",
+  "baseline_cutoff": "0068_wave2_finality_and_seal_hardening_fixes.sql",
+  "normalized_schema_sha256": "c47bc1d82bd0a2c7e659a165cf8f2e037a5419f59c27cf2562b6f3136df5902c",
   "pg_dump_version": "pg_dump (PostgreSQL) 18.2 (Debian 18.2-1.pgdg13+1)",
   "pg_server_version": "18.2 (Debian 18.2-1.pgdg13+1)",
   "dump_source": "container:symphony-postgres",
-  "generated_at_utc": "2026-03-05T12:09:40.519863+00:00"
+  "generated_at_utc": "2026-03-05T13:43:06.385521+00:00"
 }

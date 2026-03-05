@@ -2,7 +2,7 @@
 -- PostgreSQL database dump
 --
 
-\restrict cEvlAQYBBGT75XpgV6F9sd1vRFUati5twgOF7EurbRWA4crygH0W5sjR6EkuY2O
+\restrict yeSaOUkMZa0mMEkW9PmMp9taBDANVJh6QWuleSOmdaFOsicuhwhDJTcP3XxcYRr
 
 -- Dumped from database version 18.2 (Debian 18.2-1.pgdg13+1)
 -- Dumped by pg_dump version 18.2 (Debian 18.2-1.pgdg13+1)
@@ -380,7 +380,8 @@ BEGIN
         containment_action = EXCLUDED.containment_action;
 
   IF v_state = 'FINALITY_CONFLICT' THEN
-    RAISE EXCEPTION 'finality_conflict_hold_release' USING ERRCODE = 'P7402';
+    -- Keep transaction durable for conflict evidence; callers must branch on return state.
+    RETURN v_state;
   END IF;
 
   RETURN v_state;
@@ -2420,16 +2421,35 @@ CREATE FUNCTION public.store_effect_seal(p_instruction_id text, p_payload jsonb,
     AS $$
 DECLARE
   v_hash text;
+  v_existing_hash text;
+  v_existing_version text;
 BEGIN
   v_hash := public.compute_effect_seal_hash(p_instruction_id, p_payload, p_canonicalization_version);
+
   INSERT INTO public.instruction_effect_seals(instruction_id, effect_seal_hash, canonicalization_version, policy_version_id)
   VALUES (p_instruction_id, v_hash, p_canonicalization_version, p_policy_version_id)
-  ON CONFLICT (instruction_id) DO UPDATE
-    SET effect_seal_hash = EXCLUDED.effect_seal_hash,
-        canonicalization_version = EXCLUDED.canonicalization_version,
-        policy_version_id = EXCLUDED.policy_version_id,
-        sealed_at = now();
-  RETURN v_hash;
+  ON CONFLICT (instruction_id) DO NOTHING;
+
+  IF FOUND THEN
+    RETURN v_hash;
+  END IF;
+
+  SELECT effect_seal_hash, canonicalization_version
+    INTO v_existing_hash, v_existing_version
+  FROM public.instruction_effect_seals
+  WHERE instruction_id = p_instruction_id;
+
+  IF v_existing_hash IS NULL THEN
+    RAISE EXCEPTION 'missing_effect_seal' USING ERRCODE = 'P7102';
+  END IF;
+
+  IF v_existing_hash <> v_hash OR v_existing_version <> p_canonicalization_version THEN
+    INSERT INTO public.effect_seal_mismatch_events(instruction_id, stored_seal_hash, computed_dispatch_hash)
+    VALUES (p_instruction_id, v_existing_hash, v_hash);
+    RAISE EXCEPTION 'effect_seal_immutable_violation' USING ERRCODE = 'P7102';
+  END IF;
+
+  RETURN v_existing_hash;
 END;
 $$;
 
@@ -6644,5 +6664,5 @@ ALTER TABLE public.tenants ENABLE ROW LEVEL SECURITY;
 -- PostgreSQL database dump complete
 --
 
-\unrestrict cEvlAQYBBGT75XpgV6F9sd1vRFUati5twgOF7EurbRWA4crygH0W5sjR6EkuY2O
+\unrestrict yeSaOUkMZa0mMEkW9PmMp9taBDANVJh6QWuleSOmdaFOsicuhwhDJTcP3XxcYRr
 

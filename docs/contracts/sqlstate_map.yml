@@ -285,6 +285,48 @@
       "subsystem": "hardening",
       "meaning": "runtime policy bundle signature verification failed",
       "retryable": false
+    },
+    "P8301": {
+      "class": "B",
+      "subsystem": "hardening",
+      "meaning": "historical verification failed because canonicalization version is missing",
+      "retryable": false
+    },
+    "P8302": {
+      "class": "B",
+      "subsystem": "hardening",
+      "meaning": "merkle batch leaf was not found for requested batch/index",
+      "retryable": false
+    },
+    "P8303": {
+      "class": "B",
+      "subsystem": "hardening",
+      "meaning": "merkle leaf hash mismatch during proof verification",
+      "retryable": false
+    },
+    "P8401": {
+      "class": "B",
+      "subsystem": "hardening",
+      "meaning": "HSM outage fail-closed enforcement triggered",
+      "retryable": false
+    },
+    "P8402": {
+      "class": "B",
+      "subsystem": "hardening",
+      "meaning": "rate-limit breach blocked by mandatory guardrail",
+      "retryable": false
+    },
+    "P8403": {
+      "class": "B",
+      "subsystem": "hardening",
+      "meaning": "secondary approval required for regulatory retraction",
+      "retryable": false
+    },
+    "P8404": {
+      "class": "B",
+      "subsystem": "hardening",
+      "meaning": "raw PII detected in penalty defense pack generation path",
+      "retryable": false
     }
   }
 }
