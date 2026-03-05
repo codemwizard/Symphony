@@ -1,6 +1,6 @@
 id: TSK-HARD-014
 title: "Late callback reconciliation — orphaned attestation landing zone"
-status: todo
+status: done
 phase: "Hardening"
 wave: "1"
 depends_on:

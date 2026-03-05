@@ -1,6 +1,6 @@
 id: TSK-HARD-013B
 title: "Orphan and replay containment"
-status: todo
+status: done
 phase: "Hardening"
 wave: "1"
 depends_on:

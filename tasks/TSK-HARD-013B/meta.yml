@@ -3,7 +3,7 @@ phase: '1'
 task_id: TSK-HARD-013B
 title: Orphan and replay containment
 owner_role: SUPERVISOR
-status: planned
+status: completed
 depends_on:
 - TSK-HARD-101
 - TSK-HARD-014

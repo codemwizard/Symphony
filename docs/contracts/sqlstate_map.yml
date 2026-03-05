@@ -183,6 +183,30 @@
       "subsystem": "policy",
       "meaning": "SIM-swap alert derivation formula version not found",
       "retryable": false
+    },
+    "P7402": {
+      "class": "B",
+      "subsystem": "hardening",
+      "meaning": "contradictory finality signals placed instruction into FINALITY_CONFLICT hold",
+      "retryable": false
+    },
+    "P7501": {
+      "class": "B",
+      "subsystem": "hardening",
+      "meaning": "offline safe mode active; dispatch blocked",
+      "retryable": false
+    },
+    "P7502": {
+      "class": "B",
+      "subsystem": "hardening",
+      "meaning": "unsupported Zambia MMO scenario type",
+      "retryable": false
+    },
+    "P7503": {
+      "class": "B",
+      "subsystem": "hardening",
+      "meaning": "orphan or replay event rejected by containment policy",
+      "retryable": false
     }
   }
 }

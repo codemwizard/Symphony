@@ -1,0 +1,1 @@
+{"check_id":"TSK-HARD-013B","task_id":"TSK-HARD-013B","status":"PASS","pass":true,"classifications":["LATE_CALLBACK","DUPLICATE_DISPATCH","UNKNOWN_REFERENCE","REPLAY_ATTEMPT"],"replay_rejected":true,"unknown_reference_rejected":true,"instruction_state_unchanged":true,"timestamp_utc":"2026-03-05T05:50:49Z"}

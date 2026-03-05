@@ -1,0 +1,1 @@
+{ "type":"object","required":["pass","block_start","reason","evidence_gap_marker_ids"],"properties":{"pass":{"const":true},"block_start":{"type":"string"},"reason":{"type":"string"},"evidence_gap_marker_ids":{"type":"array","minItems":1}},"additionalProperties":true }

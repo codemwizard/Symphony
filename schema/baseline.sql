@@ -2,7 +2,7 @@
 -- PostgreSQL database dump
 --
 
-\restrict wKDIyeE9ooMGO8pBpPkbsXb9Dk2KsnpKGMdN2f1afeN4pVuBdBICla1Kq3uf0g3
+\restrict QwJxzfSOD0iTrcxoyQcifqlYgYH8jDSGCFCkJhbyNiiYh2Jkso5WQgbDDc5LGPX
 
 -- Dumped from database version 18.2 (Debian 18.2-1.pgdg13+1)
 -- Dumped by pg_dump version 18.2 (Debian 18.2-1.pgdg13+1)
@@ -27,6 +27,28 @@ CREATE SCHEMA public;
 
 
 --
+-- Name: finality_resolution_state_enum; Type: TYPE; Schema: public; Owner: -
+--
+
+CREATE TYPE public.finality_resolution_state_enum AS ENUM (
+    'ACTIVE',
+    'FINALITY_CONFLICT',
+    'RESOLVED_MANUAL'
+);
+
+
+--
+-- Name: finality_signal_status_enum; Type: TYPE; Schema: public; Owner: -
+--
+
+CREATE TYPE public.finality_signal_status_enum AS ENUM (
+    'SUCCESS',
+    'FAILED',
+    'PENDING'
+);
+
+
+--
 -- Name: inquiry_state_enum; Type: TYPE; Schema: public; Owner: -
 --
 
@@ -35,6 +57,18 @@ CREATE TYPE public.inquiry_state_enum AS ENUM (
     'SENT',
     'ACKNOWLEDGED',
     'EXHAUSTED'
+);
+
+
+--
+-- Name: orphan_classification_enum; Type: TYPE; Schema: public; Owner: -
+--
+
+CREATE TYPE public.orphan_classification_enum AS ENUM (
+    'LATE_CALLBACK',
+    'DUPLICATE_DISPATCH',
+    'UNKNOWN_REFERENCE',
+    'REPLAY_ATTEMPT'
 );
 
 
@@ -59,6 +93,18 @@ CREATE TYPE public.policy_version_status AS ENUM (
     'ACTIVE',
     'GRACE',
     'RETIRED'
+);
+
+
+--
+-- Name: quarantine_classification_enum; Type: TYPE; Schema: public; Owner: -
+--
+
+CREATE TYPE public.quarantine_classification_enum AS ENUM (
+    'TRANSPORT',
+    'PROTOCOL',
+    'SYNTAX',
+    'SEMANTIC'
 );
 
 
@@ -145,6 +191,49 @@ $$;
 
 
 --
+-- Name: apply_finality_signals(text, text, public.finality_signal_status_enum, text, public.finality_signal_status_enum); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.apply_finality_signals(p_instruction_id text, p_rail_a_id text, p_rail_a_status public.finality_signal_status_enum, p_rail_b_id text, p_rail_b_status public.finality_signal_status_enum) RETURNS public.finality_resolution_state_enum
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO 'pg_catalog', 'public'
+    AS $$
+DECLARE
+  v_state public.finality_resolution_state_enum := 'ACTIVE';
+BEGIN
+  IF p_rail_a_status IN ('SUCCESS','FAILED')
+     AND p_rail_b_status IN ('SUCCESS','FAILED')
+     AND p_rail_a_status <> p_rail_b_status THEN
+    v_state := 'FINALITY_CONFLICT';
+  END IF;
+
+  INSERT INTO public.instruction_finality_conflicts(
+    instruction_id, finality_state, rail_a_id, rail_a_response, rail_b_id, rail_b_response,
+    contradiction_timestamp, containment_action
+  ) VALUES (
+    p_instruction_id, v_state, p_rail_a_id, p_rail_a_status, p_rail_b_id, p_rail_b_status,
+    CASE WHEN v_state='FINALITY_CONFLICT' THEN now() ELSE NULL END,
+    CASE WHEN v_state='FINALITY_CONFLICT' THEN 'HOLD_RELEASE' ELSE NULL END
+  )
+  ON CONFLICT (instruction_id) DO UPDATE
+    SET finality_state = EXCLUDED.finality_state,
+        rail_a_id = EXCLUDED.rail_a_id,
+        rail_a_response = EXCLUDED.rail_a_response,
+        rail_b_id = EXCLUDED.rail_b_id,
+        rail_b_response = EXCLUDED.rail_b_response,
+        contradiction_timestamp = EXCLUDED.contradiction_timestamp,
+        containment_action = EXCLUDED.containment_action;
+
+  IF v_state = 'FINALITY_CONFLICT' THEN
+    RAISE EXCEPTION 'finality_conflict_hold_release' USING ERRCODE = 'P7402';
+  END IF;
+
+  RETURN v_state;
+END;
+$$;
+
+
+--
 -- Name: apply_inquiry_attempt(text, text, integer); Type: FUNCTION; Schema: public; Owner: -
 --
 
@@ -193,6 +282,24 @@ BEGIN
       max_attempts = p_max_attempts
   WHERE instruction_id = p_instruction_id;
   RETURN 'SENT';
+END;
+$$;
+
+
+--
+-- Name: assert_offline_safe_mode_dispatch_allowed(text, text, boolean); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.assert_offline_safe_mode_dispatch_allowed(p_reason text, p_policy_version_id text, p_is_offline boolean) RETURNS void
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO 'pg_catalog', 'public'
+    AS $$
+BEGIN
+  IF p_is_offline THEN
+    INSERT INTO public.offline_safe_mode_windows(reason, policy_version_id, gap_marker_id)
+    VALUES (p_reason, p_policy_version_id, md5(p_reason || '|' || now()::text));
+    RAISE EXCEPTION 'OFFLINE_SAFE_MODE_ACTIVE' USING ERRCODE = 'P7501';
+  END IF;
 END;
 $$;
 
@@ -374,6 +481,54 @@ WITH due AS (
 
 
 --
+-- Name: classify_orphan_or_replay(text, text, boolean, boolean, boolean, boolean); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.classify_orphan_or_replay(p_instruction_id text, p_event_fingerprint text, p_is_late_callback boolean, p_is_duplicate_dispatch boolean, p_has_unknown_reference boolean, p_is_replay boolean) RETURNS public.orphan_classification_enum
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO 'pg_catalog', 'public'
+    AS $$
+DECLARE
+  v_class public.orphan_classification_enum;
+BEGIN
+  IF p_is_late_callback THEN
+    v_class := 'LATE_CALLBACK';
+  ELSIF p_is_duplicate_dispatch THEN
+    v_class := 'DUPLICATE_DISPATCH';
+  ELSIF p_has_unknown_reference THEN
+    v_class := 'UNKNOWN_REFERENCE';
+  ELSIF p_is_replay THEN
+    v_class := 'REPLAY_ATTEMPT';
+  ELSE
+    v_class := 'UNKNOWN_REFERENCE';
+  END IF;
+
+  INSERT INTO public.orphaned_attestation_landing_zone(
+    instruction_id,
+    callback_payload_hash,
+    callback_payload_truncated,
+    instruction_state_at_arrival,
+    classification,
+    event_fingerprint
+  ) VALUES (
+    p_instruction_id,
+    md5(coalesce(p_event_fingerprint,'')),
+    left(coalesce(p_event_fingerprint,''), 1024),
+    'ORPHAN_ROUTING',
+    v_class,
+    p_event_fingerprint
+  );
+
+  IF v_class IN ('DUPLICATE_DISPATCH', 'UNKNOWN_REFERENCE', 'REPLAY_ATTEMPT') THEN
+    RAISE EXCEPTION 'orphan_replay_containment_reject' USING ERRCODE = 'P7503';
+  END IF;
+
+  RETURN v_class;
+END;
+$$;
+
+
+--
 -- Name: complete_anchor_sync_operation(uuid, uuid, text); Type: FUNCTION; Schema: public; Owner: -
 --
 
@@ -475,6 +630,23 @@ CREATE FUNCTION public.complete_outbox_attempt(p_outbox_id uuid, p_lease_token u
   
     RETURN QUERY SELECT v_next_attempt_no, v_effective_state;
   END;
+$$;
+
+
+--
+-- Name: compute_effect_seal_hash(text, jsonb, text); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.compute_effect_seal_hash(p_instruction_id text, p_payload jsonb, p_canonicalization_version text) RETURNS text
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO 'pg_catalog', 'public'
+    AS $$
+DECLARE
+  v_input text;
+BEGIN
+  v_input := coalesce(p_instruction_id, '') || '|' || coalesce(p_canonicalization_version, '') || '|' || coalesce(p_payload::text, '{}');
+  RETURN md5(v_input);
+END;
 $$;
 
 
@@ -950,6 +1122,46 @@ BEGIN
   END IF;
 
   RETURN v_operation_id;
+END;
+$$;
+
+
+--
+-- Name: evaluate_circuit_breaker(text, text, numeric, numeric, integer, text); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.evaluate_circuit_breaker(p_adapter_id text, p_rail_id text, p_trigger_threshold numeric, p_observed_rate numeric, p_window_seconds integer, p_policy_version_id text) RETURNS text
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO 'pg_catalog', 'public'
+    AS $$
+DECLARE
+  v_state text := 'ACTIVE';
+BEGIN
+  IF p_observed_rate >= p_trigger_threshold THEN
+    v_state := 'SUSPENDED';
+  END IF;
+
+  INSERT INTO public.adapter_circuit_breakers(
+    adapter_id, rail_id, state, trigger_threshold, observed_rate,
+    rolling_window_seconds, policy_version_id, suspended_at
+  ) VALUES (
+    p_adapter_id, p_rail_id, v_state, p_trigger_threshold, p_observed_rate,
+    p_window_seconds, p_policy_version_id,
+    CASE WHEN v_state='SUSPENDED' THEN now() ELSE NULL END
+  )
+  ON CONFLICT (adapter_id, rail_id) DO UPDATE
+    SET state = EXCLUDED.state,
+        trigger_threshold = EXCLUDED.trigger_threshold,
+        observed_rate = EXCLUDED.observed_rate,
+        rolling_window_seconds = EXCLUDED.rolling_window_seconds,
+        policy_version_id = EXCLUDED.policy_version_id,
+        suspended_at = CASE WHEN EXCLUDED.state='SUSPENDED' THEN now() ELSE public.adapter_circuit_breakers.suspended_at END;
+
+  IF v_state = 'SUSPENDED' THEN
+    RAISE EXCEPTION 'ADAPTER_SUSPENDED_CIRCUIT_BREAKER' USING ERRCODE = 'P7401';
+  END IF;
+
+  RETURN v_state;
 END;
 $$;
 
@@ -1458,6 +1670,99 @@ $$;
 
 
 --
+-- Name: quarantine_malformed_response(text, text, public.quarantine_classification_enum, text, integer, text); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.quarantine_malformed_response(p_adapter_id text, p_rail_id text, p_classification public.quarantine_classification_enum, p_payload text, p_truncate_kb integer, p_policy_version_id text) RETURNS uuid
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO 'pg_catalog', 'public'
+    AS $$
+DECLARE
+  v_id uuid;
+  v_limit integer;
+  v_capture text;
+BEGIN
+  v_limit := greatest(1, p_truncate_kb) * 1024;
+  v_capture := left(coalesce(p_payload, ''), v_limit);
+
+  INSERT INTO public.malformed_quarantine_store(
+    adapter_id, rail_id, classification, truncation_applied, payload_hash,
+    payload_capture, retention_policy_version_id
+  ) VALUES (
+    p_adapter_id,
+    p_rail_id,
+    p_classification,
+    length(coalesce(p_payload,'')) > v_limit,
+    md5(coalesce(p_payload,'')),
+    v_capture,
+    p_policy_version_id
+  ) RETURNING quarantine_id INTO v_id;
+
+  RETURN v_id;
+END;
+$$;
+
+
+--
+-- Name: record_late_callback(text, jsonb, text, text); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.record_late_callback(p_instruction_id text, p_payload jsonb, p_state_at_arrival text, p_fingerprint text) RETURNS uuid
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO 'pg_catalog', 'public'
+    AS $$
+DECLARE
+  v_id uuid;
+BEGIN
+  INSERT INTO public.orphaned_attestation_landing_zone(
+    instruction_id,
+    callback_payload_hash,
+    callback_payload_truncated,
+    instruction_state_at_arrival,
+    classification,
+    event_fingerprint
+  ) VALUES (
+    p_instruction_id,
+    md5(coalesce(p_payload::text, '{}')),
+    left(coalesce(p_payload::text, '{}'), 4096),
+    p_state_at_arrival,
+    'LATE_CALLBACK',
+    p_fingerprint
+  ) RETURNING orphan_id INTO v_id;
+  RETURN v_id;
+END;
+$$;
+
+
+--
+-- Name: record_mmo_reality_control(text, text, text, text, text, text); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.record_mmo_reality_control(p_instruction_id text, p_scenario_type text, p_fallback_posture text, p_policy_version_id text, p_behavior_profile text, p_evidence_artifact_type text) RETURNS uuid
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO 'pg_catalog', 'public'
+    AS $$
+DECLARE
+  v_id uuid;
+BEGIN
+  IF p_scenario_type NOT IN ('ASYNC_CONTRADICTION', 'DELAYED_SETTLEMENT', 'DUAL_DEBIT_RISK', 'SILENT_REJECTION') THEN
+    RAISE EXCEPTION 'unsupported_mmo_scenario' USING ERRCODE = 'P7502';
+  END IF;
+
+  INSERT INTO public.mmo_reality_control_events(
+    instruction_id, scenario_type, fallback_posture, policy_version_id,
+    behavior_profile, evidence_artifact_type
+  ) VALUES (
+    p_instruction_id, p_scenario_type, p_fallback_posture, p_policy_version_id,
+    p_behavior_profile, p_evidence_artifact_type
+  ) RETURNING event_id INTO v_id;
+
+  RETURN v_id;
+END;
+$$;
+
+
+--
 -- Name: release_escrow(uuid, text, text, jsonb); Type: FUNCTION; Schema: public; Owner: -
 --
 
@@ -1673,6 +1978,30 @@ BEGIN
   END IF;
 
   RETURN NEW;
+END;
+$$;
+
+
+--
+-- Name: store_effect_seal(text, jsonb, text, text); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.store_effect_seal(p_instruction_id text, p_payload jsonb, p_canonicalization_version text, p_policy_version_id text) RETURNS text
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO 'pg_catalog', 'public'
+    AS $$
+DECLARE
+  v_hash text;
+BEGIN
+  v_hash := public.compute_effect_seal_hash(p_instruction_id, p_payload, p_canonicalization_version);
+  INSERT INTO public.instruction_effect_seals(instruction_id, effect_seal_hash, canonicalization_version, policy_version_id)
+  VALUES (p_instruction_id, v_hash, p_canonicalization_version, p_policy_version_id)
+  ON CONFLICT (instruction_id) DO UPDATE
+    SET effect_seal_hash = EXCLUDED.effect_seal_hash,
+        canonicalization_version = EXCLUDED.canonicalization_version,
+        policy_version_id = EXCLUDED.policy_version_id,
+        sealed_at = now();
+  RETURN v_hash;
 END;
 $$;
 
@@ -1981,6 +2310,39 @@ CREATE FUNCTION public.uuid_v7_or_random() RETURNS uuid
 
 
 --
+-- Name: verify_dispatch_effect_seal(text, jsonb); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.verify_dispatch_effect_seal(p_instruction_id text, p_outbound_payload jsonb) RETURNS void
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO 'pg_catalog', 'public'
+    AS $$
+DECLARE
+  v_stored_hash text;
+  v_canonical_version text;
+  v_computed_hash text;
+BEGIN
+  SELECT effect_seal_hash, canonicalization_version
+  INTO v_stored_hash, v_canonical_version
+  FROM public.instruction_effect_seals
+  WHERE instruction_id = p_instruction_id;
+
+  IF v_stored_hash IS NULL THEN
+    RAISE EXCEPTION 'missing_effect_seal' USING ERRCODE = 'P7102';
+  END IF;
+
+  v_computed_hash := public.compute_effect_seal_hash(p_instruction_id, p_outbound_payload, v_canonical_version);
+
+  IF v_computed_hash <> v_stored_hash THEN
+    INSERT INTO public.effect_seal_mismatch_events(instruction_id, stored_seal_hash, computed_dispatch_hash)
+    VALUES (p_instruction_id, v_stored_hash, v_computed_hash);
+    RAISE EXCEPTION 'effect_seal_mismatch' USING ERRCODE = 'P7102';
+  END IF;
+END;
+$$;
+
+
+--
 -- Name: verify_instruction_hierarchy(text, uuid, text, uuid, uuid, uuid, text); Type: FUNCTION; Schema: public; Owner: -
 --
 
@@ -2053,6 +2415,25 @@ SET default_tablespace = '';
 SET default_table_access_method = heap;
 
 --
+-- Name: adapter_circuit_breakers; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.adapter_circuit_breakers (
+    adapter_id text NOT NULL,
+    rail_id text NOT NULL,
+    state text DEFAULT 'ACTIVE'::text NOT NULL,
+    trigger_threshold numeric(8,6) NOT NULL,
+    observed_rate numeric(8,6) DEFAULT 0 NOT NULL,
+    rolling_window_seconds integer NOT NULL,
+    policy_version_id text NOT NULL,
+    suspended_at timestamp with time zone,
+    resumed_at timestamp with time zone,
+    operator_id text,
+    justification_text text
+);
+
+
+--
 -- Name: anchor_sync_operations; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -2120,6 +2501,21 @@ CREATE TABLE public.billing_usage_events (
 );
 
 ALTER TABLE ONLY public.billing_usage_events FORCE ROW LEVEL SECURITY;
+
+
+--
+-- Name: effect_seal_mismatch_events; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.effect_seal_mismatch_events (
+    event_id uuid DEFAULT gen_random_uuid() NOT NULL,
+    instruction_id text NOT NULL,
+    stored_seal_hash text NOT NULL,
+    computed_dispatch_hash text NOT NULL,
+    mismatch_detected boolean DEFAULT true NOT NULL,
+    dispatch_blocked boolean DEFAULT true NOT NULL,
+    event_timestamp timestamp with time zone DEFAULT now() NOT NULL
+);
 
 
 --
@@ -2321,6 +2717,37 @@ CREATE TABLE public.inquiry_state_machine (
 
 
 --
+-- Name: instruction_effect_seals; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.instruction_effect_seals (
+    instruction_id text NOT NULL,
+    effect_seal_hash text NOT NULL,
+    canonicalization_version text NOT NULL,
+    policy_version_id text NOT NULL,
+    sealed_at timestamp with time zone DEFAULT now() NOT NULL
+);
+
+
+--
+-- Name: instruction_finality_conflicts; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.instruction_finality_conflicts (
+    instruction_id text NOT NULL,
+    finality_state public.finality_resolution_state_enum DEFAULT 'ACTIVE'::public.finality_resolution_state_enum NOT NULL,
+    rail_a_id text,
+    rail_a_response public.finality_signal_status_enum,
+    rail_b_id text,
+    rail_b_response public.finality_signal_status_enum,
+    contradiction_timestamp timestamp with time zone,
+    containment_action text,
+    operator_resolution_id text,
+    resolved_at timestamp with time zone
+);
+
+
+--
 -- Name: instruction_settlement_finality; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -2481,6 +2908,23 @@ CREATE TABLE public.levy_remittance_periods (
 
 
 --
+-- Name: malformed_quarantine_store; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.malformed_quarantine_store (
+    quarantine_id uuid DEFAULT gen_random_uuid() NOT NULL,
+    adapter_id text NOT NULL,
+    rail_id text NOT NULL,
+    classification public.quarantine_classification_enum NOT NULL,
+    truncation_applied boolean NOT NULL,
+    payload_hash text NOT NULL,
+    payload_capture text NOT NULL,
+    retention_policy_version_id text NOT NULL,
+    capture_timestamp timestamp with time zone DEFAULT now() NOT NULL
+);
+
+
+--
 -- Name: member_device_events; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -2542,6 +2986,53 @@ CREATE TABLE public.members (
 );
 
 ALTER TABLE ONLY public.members FORCE ROW LEVEL SECURITY;
+
+
+--
+-- Name: mmo_reality_control_events; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.mmo_reality_control_events (
+    event_id uuid DEFAULT gen_random_uuid() NOT NULL,
+    instruction_id text NOT NULL,
+    scenario_type text NOT NULL,
+    fallback_posture text NOT NULL,
+    policy_version_id text NOT NULL,
+    behavior_profile text NOT NULL,
+    evidence_artifact_type text NOT NULL,
+    created_at timestamp with time zone DEFAULT now() NOT NULL
+);
+
+
+--
+-- Name: offline_safe_mode_windows; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.offline_safe_mode_windows (
+    window_id uuid DEFAULT gen_random_uuid() NOT NULL,
+    block_start timestamp with time zone DEFAULT now() NOT NULL,
+    block_end timestamp with time zone,
+    reason text NOT NULL,
+    policy_version_id text NOT NULL,
+    gap_marker_id text NOT NULL,
+    re_sign_linked boolean DEFAULT false NOT NULL
+);
+
+
+--
+-- Name: orphaned_attestation_landing_zone; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.orphaned_attestation_landing_zone (
+    orphan_id uuid DEFAULT gen_random_uuid() NOT NULL,
+    instruction_id text NOT NULL,
+    callback_payload_hash text CONSTRAINT orphaned_attestation_landing_zon_callback_payload_hash_not_null NOT NULL,
+    callback_payload_truncated text CONSTRAINT orphaned_attestation_landin_callback_payload_truncated_not_null NOT NULL,
+    arrival_timestamp timestamp with time zone DEFAULT now() NOT NULL,
+    instruction_state_at_arrival text CONSTRAINT orphaned_attestation_landin_instruction_state_at_arriv_not_null NOT NULL,
+    classification public.orphan_classification_enum NOT NULL,
+    event_fingerprint text NOT NULL
+);
 
 
 --
@@ -3016,6 +3507,14 @@ ALTER TABLE ONLY public.tenants FORCE ROW LEVEL SECURITY;
 
 
 --
+-- Name: adapter_circuit_breakers adapter_circuit_breakers_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.adapter_circuit_breakers
+    ADD CONSTRAINT adapter_circuit_breakers_pkey PRIMARY KEY (adapter_id, rail_id);
+
+
+--
 -- Name: anchor_sync_operations anchor_sync_operations_pack_id_key; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -3053,6 +3552,14 @@ ALTER TABLE ONLY public.billable_clients
 
 ALTER TABLE ONLY public.billing_usage_events
     ADD CONSTRAINT billing_usage_events_pkey PRIMARY KEY (event_id);
+
+
+--
+-- Name: effect_seal_mismatch_events effect_seal_mismatch_events_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.effect_seal_mismatch_events
+    ADD CONSTRAINT effect_seal_mismatch_events_pkey PRIMARY KEY (event_id);
 
 
 --
@@ -3168,6 +3675,22 @@ ALTER TABLE ONLY public.inquiry_state_machine
 
 
 --
+-- Name: instruction_effect_seals instruction_effect_seals_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.instruction_effect_seals
+    ADD CONSTRAINT instruction_effect_seals_pkey PRIMARY KEY (instruction_id);
+
+
+--
+-- Name: instruction_finality_conflicts instruction_finality_conflicts_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.instruction_finality_conflicts
+    ADD CONSTRAINT instruction_finality_conflicts_pkey PRIMARY KEY (instruction_id);
+
+
+--
 -- Name: instruction_settlement_finality instruction_settlement_finality_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -3256,6 +3779,14 @@ ALTER TABLE ONLY public.levy_remittance_periods
 
 
 --
+-- Name: malformed_quarantine_store malformed_quarantine_store_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.malformed_quarantine_store
+    ADD CONSTRAINT malformed_quarantine_store_pkey PRIMARY KEY (quarantine_id);
+
+
+--
 -- Name: member_device_events member_device_events_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -3293,6 +3824,30 @@ ALTER TABLE ONLY public.members
 
 ALTER TABLE ONLY public.members
     ADD CONSTRAINT members_tenant_id_person_id_entity_id_key UNIQUE (tenant_id, person_id, entity_id);
+
+
+--
+-- Name: mmo_reality_control_events mmo_reality_control_events_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.mmo_reality_control_events
+    ADD CONSTRAINT mmo_reality_control_events_pkey PRIMARY KEY (event_id);
+
+
+--
+-- Name: offline_safe_mode_windows offline_safe_mode_windows_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.offline_safe_mode_windows
+    ADD CONSTRAINT offline_safe_mode_windows_pkey PRIMARY KEY (window_id);
+
+
+--
+-- Name: orphaned_attestation_landing_zone orphaned_attestation_landing_zone_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.orphaned_attestation_landing_zone
+    ADD CONSTRAINT orphaned_attestation_landing_zone_pkey PRIMARY KEY (orphan_id);
 
 
 --
@@ -3788,6 +4343,13 @@ CREATE INDEX idx_instruction_settlement_finality_participant_finalized ON public
 
 
 --
+-- Name: idx_malformed_quarantine_adapter_rail_time; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_malformed_quarantine_adapter_rail_time ON public.malformed_quarantine_store USING btree (adapter_id, rail_id, capture_timestamp DESC);
+
+
+--
 -- Name: idx_member_device_events_instruction; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -3848,6 +4410,13 @@ CREATE INDEX idx_members_tenant_member ON public.members USING btree (tenant_id,
 --
 
 CREATE INDEX idx_members_tenant_member_ref ON public.members USING btree (tenant_id, member_ref_hash);
+
+
+--
+-- Name: idx_orphan_lz_instruction_arrival; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_orphan_lz_instruction_arrival ON public.orphaned_attestation_landing_zone USING btree (instruction_id, arrival_timestamp DESC);
 
 
 --
@@ -5117,5 +5686,5 @@ ALTER TABLE public.tenants ENABLE ROW LEVEL SECURITY;
 -- PostgreSQL database dump complete
 --
 
-\unrestrict wKDIyeE9ooMGO8pBpPkbsXb9Dk2KsnpKGMdN2f1afeN4pVuBdBICla1Kq3uf0g3
+\unrestrict QwJxzfSOD0iTrcxoyQcifqlYgYH8jDSGCFCkJhbyNiiYh2Jkso5WQgbDDc5LGPX
 

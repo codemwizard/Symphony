@@ -1,6 +1,6 @@
 id: TSK-HARD-015
 title: "Conflicting truth containment — FINALITY_CONFLICT state machine"
-status: todo
+status: done
 phase: "Hardening"
 wave: "1"
 depends_on:
