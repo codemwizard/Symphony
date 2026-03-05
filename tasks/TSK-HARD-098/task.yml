@@ -1,6 +1,6 @@
 id: TSK-HARD-098
 title: "Penalty defense pack generation"
-status: todo
+status: done
 phase: "Hardening"
 wave: "6"
 depends_on:

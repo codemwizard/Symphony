@@ -3,7 +3,7 @@ phase: '1'
 task_id: TSK-OPS-WAVE6-EXIT-GATE
 title: "Wave-6 Exit Gate \u2014 Hardening Program Complete"
 owner_role: SUPERVISOR
-status: planned
+status: completed
 depends_on: []
 touches:
 - docs/programs/symphony-hardening/HARDENING_TASK_PACKS.md

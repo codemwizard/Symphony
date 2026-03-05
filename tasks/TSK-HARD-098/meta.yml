@@ -3,7 +3,7 @@ phase: '1'
 task_id: TSK-HARD-098
 title: Penalty defense pack generation
 owner_role: SUPERVISOR
-status: planned
+status: completed
 depends_on:
 - TSK-HARD-095
 touches:
