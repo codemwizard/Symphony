@@ -59,6 +59,7 @@
         approved_at = NULL;
         approved_by = NULL,
         attempt_count = GREATEST(attempt_count, v_next_attempt_no),
+        canonicalization_version = EXCLUDED.canonicalization_version,
         canonicalized_reference, strategy_used, policy_version_id, collision_retry_count
         claimed_by = NULL, lease_token = NULL, lease_expires_at = NULL
         containment_action = EXCLUDED.containment_action;
@@ -96,6 +97,7 @@
         participant_id,
         payload
         policy_version_id = EXCLUDED.policy_version_id,
+        policy_version_id = EXCLUDED.policy_version_id,
         policy_version_id = p_policy_version_id,
         rail_a_id = EXCLUDED.rail_a_id,
         rail_a_response = EXCLUDED.rail_a_response,
@@ -103,6 +105,7 @@
         rail_b_response = EXCLUDED.rail_b_response,
         rail_type,
         rolling_window_seconds = EXCLUDED.rolling_window_seconds,
+        sealed_at = now();
         sequence_id,
         status = 'PENDING_SUPERVISOR_APPROVAL',
         status = 'PENDING_SUPERVISOR_APPROVAL',
@@ -917,7 +920,6 @@
     INSERT INTO payment_outbox_attempts (
     INSERT INTO public.dispatch_reference_collision_events(
     INSERT INTO public.effect_seal_mismatch_events(instruction_id, stored_seal_hash, computed_dispatch_hash)
-    INSERT INTO public.effect_seal_mismatch_events(instruction_id, stored_seal_hash, computed_dispatch_hash)
     INSERT INTO public.members(
     INSERT INTO public.offline_safe_mode_windows(reason, policy_version_id, gap_marker_id)
     INSERT INTO public.program_migration_events(
@@ -926,7 +928,6 @@
     INTO existing_attempt
     INTO existing_pending
     INTO v_alert_id
-    INTO v_existing_hash, v_existing_version
     INTO v_instruction_id, v_participant_id, v_sequence_id, v_idempotency_key, v_rail_type, v_payload
     LANGUAGE plpgsql
     LANGUAGE plpgsql
@@ -1069,7 +1070,6 @@
     RAISE EXCEPTION 'approval timeout must be positive';
     RAISE EXCEPTION 'dispatch requires rail sequence reference'
     RAISE EXCEPTION 'duplicate migration call for tenant %, person %, from %, to %',
-    RAISE EXCEPTION 'effect_seal_immutable_violation' USING ERRCODE = 'P7102';
     RAISE EXCEPTION 'effect_seal_mismatch' USING ERRCODE = 'P7102';
     RAISE EXCEPTION 'entity-to-member linkage invalid'
     RAISE EXCEPTION 'escrow ceiling exceeded'
@@ -1081,6 +1081,7 @@
     RAISE EXCEPTION 'external_proofs requires tenant attribution via ingress_attestations'
     RAISE EXCEPTION 'external_proofs tenant_id does not match derived tenant_id'
     RAISE EXCEPTION 'final instruction cannot be mutated'
+    RAISE EXCEPTION 'finality_conflict_hold_release' USING ERRCODE = 'P7402';
     RAISE EXCEPTION 'from_program_id % is not in tenant %', p_from_program_id, p_tenant_id
     RAISE EXCEPTION 'from_program_id % is not in tenant %', p_from_program_id, p_tenant_id
     RAISE EXCEPTION 'from_program_id and to_program_id must differ'
@@ -1101,7 +1102,6 @@
     RAISE EXCEPTION 'member/tenant mismatch'
     RAISE EXCEPTION 'member_device_event % not found', p_event_id
     RAISE EXCEPTION 'member_id not found'
-    RAISE EXCEPTION 'missing_effect_seal' USING ERRCODE = 'P7102';
     RAISE EXCEPTION 'missing_effect_seal' USING ERRCODE = 'P7102';
     RAISE EXCEPTION 'new_entity_id must equal to_program_id'
     RAISE EXCEPTION 'no program available for supervisor approval submission';
@@ -1153,8 +1153,6 @@
     RETURN QUERY SELECT v_next_attempt_no, v_effective_state;
     RETURN allocated;
     RETURN v::uuid;
-    RETURN v_hash;
-    RETURN v_state;
     RETURN;
     RETURN;
     RETURNING (participant_outbox_sequences.next_sequence_id - 1) INTO allocated;
@@ -1180,6 +1178,7 @@
     SELECT p.outbox_id, p.sequence_id, p.created_at
     SELECT s.alert_id
     SET attempts = v_attempts,
+    SET effect_seal_hash = EXCLUDED.effect_seal_hash,
     SET finality_state = EXCLUDED.finality_state,
     SET program_id = EXCLUDED.program_id,
     SET program_id = EXCLUDED.program_id,
@@ -1239,7 +1238,6 @@
     USING ERRCODE = 'P0001';
     USING ERRCODE = 'P0001';
     USING ERRCODE = 'P7004';
-    VALUES (p_instruction_id, v_existing_hash, v_hash);
     VALUES (p_instruction_id, v_stored_hash, v_computed_hash);
     VALUES (p_participant_id, 2)
     VALUES (p_reason, p_policy_version_id, md5(p_reason || '|' || now()::text));
@@ -2398,9 +2396,6 @@
   END IF;
   END IF;
   END IF;
-  END IF;
-  END IF;
-  END IF;
   END LOOP;
   END LOOP;
   END;
@@ -2434,7 +2429,6 @@
   FROM public.inquiry_state_machine
   FROM public.inquiry_state_machine
   FROM public.instruction_effect_seals
-  FROM public.instruction_effect_seals
   FROM public.instruction_settlement_finality
   FROM public.member_device_events e
   FROM public.member_devices md
@@ -2460,7 +2454,6 @@
   IF COALESCE(v_allowed, false) IS NOT true THEN
   IF COALESCE(v_ok,false) IS NOT true THEN
   IF EXISTS (
-  IF FOUND THEN
   IF FOUND THEN
   IF NEW.billable_client_id IS NULL THEN
   IF NEW.correlation_id IS NULL THEN
@@ -2533,8 +2526,6 @@
   IF v_decision NOT IN ('APPROVED', 'REJECTED') THEN
   IF v_env.reserved_amount_minor + v_amount > v_env.ceiling_amount_minor THEN
   IF v_event.event_type <> 'SIM_SWAP_DETECTED' OR v_event.iccid_hash IS NULL THEN
-  IF v_existing_hash <> v_hash OR v_existing_version <> p_canonicalization_version THEN
-  IF v_existing_hash IS NULL THEN
   IF v_formula_version_id IS NULL THEN
   IF v_formula_version_id IS NULL THEN
   IF v_formula_version_id IS NULL THEN
@@ -2631,7 +2622,7 @@
   NEW.updated_at := now();
   ON CONFLICT (adapter_id, rail_id) DO UPDATE
   ON CONFLICT (instruction_id) DO NOTHING;
-  ON CONFLICT (instruction_id) DO NOTHING;
+  ON CONFLICT (instruction_id) DO UPDATE
   ON CONFLICT (instruction_id) DO UPDATE
   ON CONFLICT (instruction_id) DO UPDATE
   ON CONFLICT (instruction_id) DO UPDATE
@@ -2687,7 +2678,7 @@
   RETURN v_count;
   RETURN v_event_id;
   RETURN v_event_id;
-  RETURN v_existing_hash;
+  RETURN v_hash;
   RETURN v_id;
   RETURN v_id;
   RETURN v_id;
@@ -2721,7 +2712,6 @@
   SELECT coalesce(sum(a.adjustment_value),0)
   SELECT e.*
   SELECT e.rows_affected
-  SELECT effect_seal_hash, canonicalization_version
   SELECT effect_seal_hash, canonicalization_version
   SELECT final_state, is_final
   SELECT ia.tenant_id
@@ -2792,7 +2782,6 @@
   WHERE instruction_id = p_instruction_id;
   WHERE instruction_id = p_instruction_id;
   WHERE instruction_id = p_instruction_id;
-  WHERE instruction_id = p_instruction_id;
   WHERE m.tenant_id = p_tenant_id
   WHERE m.tenant_id = p_tenant_id
   WHERE m.tenant_id = p_tenant_id
@@ -2848,8 +2837,6 @@
   v_event_id UUID;
   v_event_id UUID;
   v_event_id uuid;
-  v_existing_hash text;
-  v_existing_version text;
   v_exists boolean;
   v_formula_version_id UUID;
   v_formula_version_id UUID;
