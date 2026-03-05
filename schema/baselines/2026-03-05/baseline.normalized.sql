@@ -438,9 +438,11 @@
     ADD CONSTRAINT adjustment_freeze_flags_pkey PRIMARY KEY (flag_id);
     ADD CONSTRAINT adjustment_instructions_pkey PRIMARY KEY (adjustment_id);
     ADD CONSTRAINT adjustment_parent_fk FOREIGN KEY (parent_instruction_id) REFERENCES public.inquiry_state_machine(instruction_id);
+    ADD CONSTRAINT anchor_backfill_jobs_pkey PRIMARY KEY (job_id);
     ADD CONSTRAINT anchor_sync_operations_pack_id_fkey FOREIGN KEY (pack_id) REFERENCES public.evidence_packs(pack_id);
     ADD CONSTRAINT anchor_sync_operations_pack_id_key UNIQUE (pack_id);
     ADD CONSTRAINT anchor_sync_operations_pkey PRIMARY KEY (operation_id);
+    ADD CONSTRAINT archive_verification_runs_pkey PRIMARY KEY (run_id);
     ADD CONSTRAINT billable_clients_client_key_required_new_rows_chk CHECK (((client_key IS NOT NULL) AND (length(btrim(client_key)) > 0))) NOT VALID;
     ADD CONSTRAINT billable_clients_pkey PRIMARY KEY (billable_client_id);
     ADD CONSTRAINT billing_usage_events_billable_client_id_fkey FOREIGN KEY (billable_client_id) REFERENCES public.billable_clients(billable_client_id);
@@ -449,6 +451,10 @@
     ADD CONSTRAINT billing_usage_events_subject_client_id_fkey FOREIGN KEY (subject_client_id) REFERENCES public.tenant_clients(client_id);
     ADD CONSTRAINT billing_usage_events_subject_member_id_fkey FOREIGN KEY (subject_member_id) REFERENCES public.tenant_members(member_id);
     ADD CONSTRAINT billing_usage_events_tenant_id_fkey FOREIGN KEY (tenant_id) REFERENCES public.tenants(tenant_id);
+    ADD CONSTRAINT canonicalization_archive_snap_canonicalization_version_snap_key UNIQUE (canonicalization_version, snapshot_sha256);
+    ADD CONSTRAINT canonicalization_archive_snapshot_canonicalization_version_fkey FOREIGN KEY (canonicalization_version) REFERENCES public.canonicalization_registry(canonicalization_version) ON DELETE RESTRICT;
+    ADD CONSTRAINT canonicalization_archive_snapshots_pkey PRIMARY KEY (snapshot_id);
+    ADD CONSTRAINT canonicalization_registry_pkey PRIMARY KEY (canonicalization_version);
     ADD CONSTRAINT dispatch_reference_collision_events_adjustment_id_fkey FOREIGN KEY (adjustment_id) REFERENCES public.adjustment_instructions(adjustment_id) ON DELETE RESTRICT;
     ADD CONSTRAINT dispatch_reference_collision_events_pkey PRIMARY KEY (collision_event_id);
     ADD CONSTRAINT dispatch_reference_registry_adjustment_id_fkey FOREIGN KEY (adjustment_id) REFERENCES public.adjustment_instructions(adjustment_id) ON DELETE RESTRICT;
@@ -556,6 +562,11 @@
     ADD CONSTRAINT programs_tenant_id_fkey FOREIGN KEY (tenant_id) REFERENCES public.tenants(tenant_id) ON DELETE RESTRICT;
     ADD CONSTRAINT programs_tenant_id_program_escrow_id_key UNIQUE (tenant_id, program_escrow_id);
     ADD CONSTRAINT programs_tenant_id_program_key_key UNIQUE (tenant_id, program_key);
+    ADD CONSTRAINT proof_pack_batch_leaves_batch_id_fkey FOREIGN KEY (batch_id) REFERENCES public.proof_pack_batches(batch_id) ON DELETE CASCADE;
+    ADD CONSTRAINT proof_pack_batch_leaves_batch_id_leaf_index_key UNIQUE (batch_id, leaf_index);
+    ADD CONSTRAINT proof_pack_batch_leaves_pkey PRIMARY KEY (leaf_id);
+    ADD CONSTRAINT proof_pack_batches_canonicalization_version_fkey FOREIGN KEY (canonicalization_version) REFERENCES public.canonicalization_registry(canonicalization_version) ON DELETE RESTRICT;
+    ADD CONSTRAINT proof_pack_batches_pkey PRIMARY KEY (batch_id);
     ADD CONSTRAINT rail_dispatch_truth_anchor_pkey PRIMARY KEY (anchor_id);
     ADD CONSTRAINT rail_truth_anchor_attempt_fk FOREIGN KEY (attempt_id) REFERENCES public.payment_outbox_attempts(attempt_id) DEFERRABLE;
     ADD CONSTRAINT reference_strategy_policy_versions_pkey PRIMARY KEY (policy_version_id);
@@ -701,6 +712,8 @@
     AS $$
     AS $$
     AS $$
+    AS $$
+    AS $$
     BEGIN
     CASE WHEN v_state='FINALITY_CONFLICT' THEN 'HOLD_RELEASE' ELSE NULL END
     CASE WHEN v_state='FINALITY_CONFLICT' THEN now() ELSE NULL END,
@@ -708,8 +721,11 @@
     COALESCE(p_metadata, '{}'::jsonb),
     COALESCE(v_event.observed_at, NOW())
     COALESCE(v_source_member.metadata, '{}'::jsonb) || jsonb_build_object(
+    CONSTRAINT anchor_backfill_jobs_status_check CHECK ((status = ANY (ARRAY['STARTED'::text, 'COMPLETED'::text, 'FAILED'::text])))
     CONSTRAINT anchor_sync_operations_attempt_count_check CHECK ((attempt_count >= 0)),
     CONSTRAINT anchor_sync_operations_state_check CHECK ((state = ANY (ARRAY['PENDING'::text, 'ANCHORING'::text, 'ANCHORED'::text, 'COMPLETED'::text, 'FAILED'::text]))),
+    CONSTRAINT archive_verification_runs_outcome_check CHECK ((outcome = ANY (ARRAY['PASS'::text, 'FAIL'::text]))),
+    CONSTRAINT archive_verification_runs_years_covered_check CHECK ((years_covered >= 1))
     CONSTRAINT billable_clients_client_type_check CHECK ((client_type = ANY (ARRAY['BANK'::text, 'MMO'::text, 'NGO'::text, 'GOV_PROGRAM'::text, 'COOP_FEDERATION'::text, 'ENTERPRISE'::text]))),
     CONSTRAINT billable_clients_status_check CHECK ((status = ANY (ARRAY['ACTIVE'::text, 'SUSPENDED'::text, 'CLOSED'::text])))
     CONSTRAINT billing_usage_events_event_type_check CHECK ((event_type = ANY (ARRAY['EVIDENCE_BUNDLE'::text, 'CASE_PACK'::text, 'EXCEPTION_TRIAGE'::text, 'RETENTION_ANCHOR'::text, 'ESCROW_RELEASE'::text, 'DISPUTE_PACK'::text]))),
@@ -775,6 +791,8 @@
     CONSTRAINT pii_vault_records_purge_shape_chk CHECK ((((purged_at IS NULL) AND (protected_payload IS NOT NULL) AND (purge_request_id IS NULL)) OR ((purged_at IS NOT NULL) AND (protected_payload IS NULL) AND (purge_request_id IS NOT NULL))))
     CONSTRAINT program_migration_events_from_to_chk CHECK ((from_program_id <> to_program_id))
     CONSTRAINT programs_status_check CHECK ((status = ANY (ARRAY['ACTIVE'::text, 'SUSPENDED'::text, 'CLOSED'::text])))
+    CONSTRAINT proof_pack_batch_leaves_leaf_index_check CHECK ((leaf_index >= 0))
+    CONSTRAINT proof_pack_batches_leaf_count_check CHECK ((leaf_count > 0))
     CONSTRAINT rail_truth_anchor_state_chk CHECK ((state = 'DISPATCHED'::public.outbox_attempt_state))
     CONSTRAINT reference_strategy_policy_versions_version_status_check CHECK ((version_status = ANY (ARRAY['ACTIVE'::text, 'INACTIVE'::text])))
     CONSTRAINT regulatory_incidents_severity_check CHECK ((severity = ANY (ARRAY['LOW'::text, 'MEDIUM'::text, 'HIGH'::text, 'CRITICAL'::text]))),
@@ -890,6 +908,8 @@
     LANGUAGE plpgsql
     LANGUAGE plpgsql
     LANGUAGE plpgsql
+    LANGUAGE plpgsql SECURITY DEFINER
+    LANGUAGE plpgsql SECURITY DEFINER
     LANGUAGE plpgsql SECURITY DEFINER
     LANGUAGE plpgsql SECURITY DEFINER
     LANGUAGE plpgsql SECURITY DEFINER
@@ -1061,6 +1081,9 @@
     RAISE EXCEPTION USING ERRCODE='P8102', MESSAGE='HSM_BYPASS_BLOCKED';
     RAISE EXCEPTION USING ERRCODE='P8201', MESSAGE='POLICY_BUNDLE_UNSIGNED';
     RAISE EXCEPTION USING ERRCODE='P8202', MESSAGE='POLICY_BUNDLE_VERIFICATION_FAILED';
+    RAISE EXCEPTION USING ERRCODE='P8301', MESSAGE='UNVERIFIABLE_MISSING_CANONICALIZER';
+    RAISE EXCEPTION USING ERRCODE='P8302', MESSAGE='MERKLE_LEAF_NOT_FOUND';
+    RAISE EXCEPTION USING ERRCODE='P8303', MESSAGE='MERKLE_LEAF_HASH_MISMATCH';
     RETURN 'EXHAUSTED';
     RETURN NEW;
     RETURN NEW;
@@ -1148,6 +1171,8 @@
     SET search_path TO 'pg_catalog', 'public'
     SET search_path TO 'pg_catalog', 'public'
     SET search_path TO 'pg_catalog', 'public'
+    SET search_path TO 'pg_catalog', 'public'
+    SET search_path TO 'pg_catalog', 'public'
     SET state = EXCLUDED.state,
     UPDATE public.inquiry_state_machine
     USING ERRCODE = 'P0001';
@@ -1176,6 +1201,7 @@
     WHERE pr.program_id = p_program_id
     WHERE r.rail_id = p_rail_id
     WHERE s.source_event_id = v_event.event_id;
+    activated_at timestamp with time zone DEFAULT now() NOT NULL,
     activated_at timestamp with time zone DEFAULT now() NOT NULL,
     activated_at timestamp with time zone DEFAULT now() NOT NULL,
     activation_timestamp timestamp with time zone,
@@ -1223,8 +1249,10 @@
     approved_by text,
     approver_id text NOT NULL,
     archival_confirmed boolean DEFAULT false NOT NULL,
+    archive_only boolean DEFAULT true NOT NULL,
     arrival_timestamp timestamp with time zone DEFAULT now() NOT NULL,
     artifact_hash text NOT NULL,
+    artifact_id text NOT NULL,
     artifact_path text,
     artifact_type text NOT NULL,
     artifacts_resigned_count integer NOT NULL,
@@ -1247,6 +1275,8 @@
     authority_reference text NOT NULL,
     authorization_expires_at timestamp with time zone,
     authorized_amount_minor bigint NOT NULL,
+    batch_id uuid DEFAULT gen_random_uuid() NOT NULL,
+    batch_id uuid NOT NULL,
     behavior_profile text NOT NULL,
     behavior_profile, evidence_artifact_type
     billable_client_id uuid DEFAULT public.uuid_v7_or_random() NOT NULL,
@@ -1269,9 +1299,13 @@
     caller_id text NOT NULL,
     caller_id, key_id, key_class, artifact_type, digest_hash,
     canceled_at timestamp with time zone,
+    canonicalization_version text CONSTRAINT canonicalization_archive_snap_canonicalization_version_not_null NOT NULL,
+    canonicalization_version text NOT NULL,
+    canonicalization_version text NOT NULL,
     canonicalization_version text NOT NULL,
     canonicalization_version text,
     canonicalization_version, signing_service_id, trust_chain_ref,
+    canonicalization_versions_covered text[] CONSTRAINT archive_verification_runs_canonicalization_versions_co_not_null NOT NULL,
     canonicalized_reference text NOT NULL,
     cap_amount_minor bigint,
     cap_applied_minor bigint,
@@ -1304,6 +1338,7 @@
     collision_event_id uuid DEFAULT gen_random_uuid() NOT NULL,
     collision_retry_count integer DEFAULT 0 NOT NULL,
     completed_at timestamp with time zone,
+    completed_at timestamp with time zone,
     computed_dispatch_hash text NOT NULL,
     containment_action text,
     contradiction_timestamp timestamp with time zone,
@@ -1321,6 +1356,10 @@
     created_at timestamp with time zone DEFAULT now() NOT NULL
     created_at timestamp with time zone DEFAULT now() NOT NULL
     created_at timestamp with time zone DEFAULT now() NOT NULL
+    created_at timestamp with time zone DEFAULT now() NOT NULL
+    created_at timestamp with time zone DEFAULT now() NOT NULL
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
     created_at timestamp with time zone DEFAULT now() NOT NULL,
     created_at timestamp with time zone DEFAULT now() NOT NULL,
     created_at timestamp with time zone DEFAULT now() NOT NULL,
@@ -1376,6 +1415,7 @@
     decided_by text,
     decision_reason text,
     department_at_time_of_signing text NOT NULL,
+    deprecated_at timestamp with time zone,
     derived_at
     derived_at timestamp with time zone DEFAULT now() NOT NULL,
     description text NOT NULL,
@@ -1481,6 +1521,7 @@
     idempotency_key text NOT NULL,
     idempotency_key text,
     identity_hash text NOT NULL,
+    immutable boolean DEFAULT true NOT NULL,
     incident_event_id uuid NOT NULL,
     incident_id uuid NOT NULL,
     incident_id uuid NOT NULL,
@@ -1520,6 +1561,7 @@
     issued_at timestamp with time zone DEFAULT now() NOT NULL,
     issued_by text NOT NULL,
     item_id uuid DEFAULT public.uuid_v7_or_random() NOT NULL,
+    job_id uuid DEFAULT gen_random_uuid() NOT NULL,
     jsonb_build_object('executor', p_executor)
     jsonb_build_object('subject_token', p_subject_token)
     jurisdiction_code character(2) NOT NULL,
@@ -1536,11 +1578,16 @@
     key_id text NOT NULL,
     key_used text NOT NULL,
     key_version text NOT NULL,
+    key_versions_covered text[] NOT NULL,
     kyc_hold boolean,
     kyc_status text DEFAULT 'PENDING'::text NOT NULL,
     kyc_status,
     last_error text,
     latency_ms integer,
+    leaf_count integer NOT NULL,
+    leaf_hash text NOT NULL,
+    leaf_id uuid DEFAULT gen_random_uuid() NOT NULL,
+    leaf_index integer NOT NULL,
     lease_expires_at timestamp with time zone,
     lease_expires_at timestamp with time zone,
     lease_token uuid,
@@ -1574,6 +1621,8 @@
     member_ref text NOT NULL,
     member_ref_hash text NOT NULL,
     member_ref_hash,
+    merkle_proof jsonb NOT NULL,
+    merkle_root text NOT NULL,
     meta_signing_key_class public.key_class_enum NOT NULL,
     metadata
     metadata
@@ -1622,6 +1671,7 @@
     outbox_id uuid NOT NULL,
     outbox_id,
     outcome text NOT NULL
+    outcome text NOT NULL,
     outcome text NOT NULL,
     outcome text NOT NULL,
     outcome text NOT NULL,
@@ -1739,6 +1789,7 @@
     provider_signature text,
     public.uuid_v7_or_random(),
     public_key_pem text,
+    published_at timestamp with time zone DEFAULT now() NOT NULL,
     purge_event_id uuid DEFAULT public.uuid_v7_or_random() NOT NULL,
     purge_request_id uuid DEFAULT public.uuid_v7_or_random() NOT NULL,
     purge_request_id uuid NOT NULL,
@@ -1782,11 +1833,13 @@
     received_at timestamp with time zone DEFAULT now() NOT NULL,
     recipient_ref text NOT NULL,
     recipient_ref, policy_version_id, justification
+    records_replayed integer DEFAULT 0 NOT NULL,
     reference_attempted text CONSTRAINT dispatch_reference_collision_event_reference_attempted_not_null NOT NULL,
     registry_id uuid DEFAULT gen_random_uuid() NOT NULL,
     regulator_ref text,
     release_due_at timestamp with time zone,
     released_at timestamp with time zone,
+    replay_day date NOT NULL,
     report_delivery boolean NOT NULL,
     reported_to_boz_at timestamp with time zone,
     reporting_period character(7),
@@ -1821,6 +1874,8 @@
     rows_affected integer DEFAULT 0 NOT NULL,
     rows_affected,
     rows_affected,
+    run_id uuid DEFAULT gen_random_uuid() NOT NULL,
+    run_scope text NOT NULL,
     s->>'collision_action',
     s->>'rail_id',
     scenario_type text NOT NULL,
@@ -1845,8 +1900,13 @@
     signing_algorithm text,
     signing_path text NOT NULL,
     signing_service_id text NOT NULL,
+    snapshot_id uuid DEFAULT gen_random_uuid() NOT NULL,
+    snapshot_path text NOT NULL,
+    snapshot_sha256 text NOT NULL,
     source_event_id uuid NOT NULL,
     source_event_id,
+    source_stream text NOT NULL,
+    spec_json jsonb NOT NULL,
     stage_id uuid DEFAULT gen_random_uuid() NOT NULL,
     stage_id uuid NOT NULL,
     stage_status text NOT NULL,
@@ -1869,6 +1929,7 @@
     status text DEFAULT 'ACTIVE'::text NOT NULL,
     status text NOT NULL,
     status text NOT NULL,
+    status text NOT NULL,
     status,
     statutory_reference text NOT NULL,
     statutory_reference text,
@@ -1885,6 +1946,7 @@
     suspended_at timestamp with time zone,
     sweep_completed_timestamp timestamp with time zone NOT NULL,
     sweep_id uuid DEFAULT gen_random_uuid() NOT NULL,
+    target_stream text NOT NULL,
     taxable_amount_minor bigint,
     tenant_id uuid DEFAULT gen_random_uuid() NOT NULL,
     tenant_id uuid NOT NULL,
@@ -1916,6 +1978,7 @@
     tenant_member_id,
     tenant_name text NOT NULL,
     tenant_type text NOT NULL,
+    test_vectors jsonb NOT NULL,
     tier text NOT NULL,
     timeout_at timestamp with time zone NOT NULL,
     to_program_id uuid NOT NULL,
@@ -2005,6 +2068,7 @@
     version_status text DEFAULT 'ACTIVE'::text NOT NULL,
     window_id uuid DEFAULT gen_random_uuid() NOT NULL,
     worker_id text,
+    years_covered integer NOT NULL,
     zra_reference text,
    FROM (public.member_device_events e
    FROM due
@@ -2189,6 +2253,9 @@
   END IF;
   END IF;
   END IF;
+  END IF;
+  END IF;
+  END IF;
   END LOOP;
   END LOOP;
   END;
@@ -2231,6 +2298,7 @@
   FROM public.pii_purge_events e
   FROM public.pii_purge_requests r
   FROM public.programs
+  FROM public.proof_pack_batch_leaves
   FROM public.reference_strategy_policy_versions
   FROM public.risk_formula_versions rf
   FROM public.risk_formula_versions rf
@@ -2264,6 +2332,7 @@
   IF NOT EXISTS (
   IF NOT EXISTS (
   IF NOT EXISTS (
+  IF NOT EXISTS (SELECT 1 FROM public.canonicalization_registry WHERE canonicalization_version = p_version) THEN
   IF NOT FOUND THEN
   IF NOT FOUND THEN
   IF NOT FOUND THEN
@@ -2315,6 +2384,8 @@
   IF v_formula_version_id IS NULL THEN
   IF v_formula_version_id IS NULL THEN
   IF v_formula_version_id IS NULL THEN
+  IF v_hash <> p_expected_leaf_hash THEN
+  IF v_hash IS NULL THEN
   IF v_op.claimed_by IS DISTINCT FROM p_worker_id THEN
   IF v_op.claimed_by IS DISTINCT FROM p_worker_id THEN
   IF v_op.lease_token IS DISTINCT FROM p_lease_token OR v_op.lease_expires_at IS NULL OR v_op.lease_expires_at <= clock_timestamp() THEN
@@ -2454,6 +2525,7 @@
   RETURN QUERY SELECT p_purge_request_id, v_rows, FALSE;
   RETURN TRUE;
   RETURN md5(v_input);
+  RETURN true;
   RETURN v_alert_id;
   RETURN v_class;
   RETURN v_count;
@@ -2501,6 +2573,7 @@
   SELECT inquiry_state INTO v_state
   SELECT inquiry_state INTO v_state
   SELECT inquiry_state, attempts, max_attempts INTO v_state, v_attempts, v_max
+  SELECT leaf_hash INTO v_hash
   SELECT m.*
   SELECT m.*
   SELECT m.member_id
@@ -2548,6 +2621,7 @@
   VALUES (p_instruction_id, v_hash, p_canonicalization_version, p_policy_version_id)
   VALUES (p_pack_id, COALESCE(NULLIF(BTRIM(p_anchor_provider), ''), 'GENERIC'))
   WHERE a.parent_instruction_id=v_parent AND e.outcome='executed';
+  WHERE batch_id = p_batch_id AND leaf_index = p_leaf_index;
   WHERE caller_id = p_caller_id
   WHERE e.event_id = p_event_id;
   WHERE e.purge_request_id = p_purge_request_id
@@ -2624,6 +2698,7 @@
   v_formula_version_id UUID;
   v_hash := public.compute_effect_seal_hash(p_instruction_id, p_payload, p_canonicalization_version);
   v_hash text;
+  v_hash text;
   v_id uuid;
   v_id uuid;
   v_id uuid;
@@ -2685,6 +2760,8 @@
  SELECT m.entity_id AS program_id,
  SELECT tenant_id,
  leased AS (
+$$;
+$$;
 $$;
 $$;
 $$;
@@ -2839,6 +2916,12 @@ $$;
 );
 );
 );
+);
+);
+);
+);
+);
+);
 ALTER TABLE ONLY public.adapter_circuit_breakers
 ALTER TABLE ONLY public.adjustment_approval_stages
 ALTER TABLE ONLY public.adjustment_approval_stages
@@ -2852,9 +2935,11 @@ ALTER TABLE ONLY public.adjustment_freeze_flags
 ALTER TABLE ONLY public.adjustment_freeze_flags
 ALTER TABLE ONLY public.adjustment_instructions
 ALTER TABLE ONLY public.adjustment_instructions
+ALTER TABLE ONLY public.anchor_backfill_jobs
 ALTER TABLE ONLY public.anchor_sync_operations
 ALTER TABLE ONLY public.anchor_sync_operations
 ALTER TABLE ONLY public.anchor_sync_operations
+ALTER TABLE ONLY public.archive_verification_runs
 ALTER TABLE ONLY public.billable_clients
 ALTER TABLE ONLY public.billing_usage_events
 ALTER TABLE ONLY public.billing_usage_events
@@ -2863,6 +2948,10 @@ ALTER TABLE ONLY public.billing_usage_events
 ALTER TABLE ONLY public.billing_usage_events
 ALTER TABLE ONLY public.billing_usage_events
 ALTER TABLE ONLY public.billing_usage_events FORCE ROW LEVEL SECURITY;
+ALTER TABLE ONLY public.canonicalization_archive_snapshots
+ALTER TABLE ONLY public.canonicalization_archive_snapshots
+ALTER TABLE ONLY public.canonicalization_archive_snapshots
+ALTER TABLE ONLY public.canonicalization_registry
 ALTER TABLE ONLY public.dispatch_reference_collision_events
 ALTER TABLE ONLY public.dispatch_reference_collision_events
 ALTER TABLE ONLY public.dispatch_reference_registry
@@ -2986,6 +3075,11 @@ ALTER TABLE ONLY public.programs
 ALTER TABLE ONLY public.programs
 ALTER TABLE ONLY public.programs
 ALTER TABLE ONLY public.programs FORCE ROW LEVEL SECURITY;
+ALTER TABLE ONLY public.proof_pack_batch_leaves
+ALTER TABLE ONLY public.proof_pack_batch_leaves
+ALTER TABLE ONLY public.proof_pack_batch_leaves
+ALTER TABLE ONLY public.proof_pack_batches
+ALTER TABLE ONLY public.proof_pack_batches
 ALTER TABLE ONLY public.rail_dispatch_truth_anchor
 ALTER TABLE ONLY public.rail_dispatch_truth_anchor
 ALTER TABLE ONLY public.rail_dispatch_truth_anchor
@@ -3118,6 +3212,8 @@ BEGIN
 BEGIN
 BEGIN
 BEGIN
+BEGIN
+BEGIN
 CREATE FUNCTION public.acknowledge_inquiry_response(p_instruction_id text, p_policy_version_id text) RETURNS public.inquiry_state_enum
 CREATE FUNCTION public.activate_policy_bundle(p_policy_bundle_id uuid) RETURNS void
 CREATE FUNCTION public.allocate_dispatch_reference(p_instruction_id uuid, p_adjustment_id uuid, p_parent_reference text, p_rail_id text) RETURNS TABLE(registry_id uuid, allocated_reference text, canonicalized_reference text, strategy_used public.reference_strategy_type_enum, policy_version_id text, collision_retry_count integer)
@@ -3125,6 +3221,7 @@ CREATE FUNCTION public.anchor_dispatched_outbox_attempt() RETURNS trigger
 CREATE FUNCTION public.apply_finality_signals(p_instruction_id text, p_rail_a_id text, p_rail_a_status public.finality_signal_status_enum, p_rail_b_id text, p_rail_b_status public.finality_signal_status_enum) RETURNS public.finality_resolution_state_enum
 CREATE FUNCTION public.apply_inquiry_attempt(p_instruction_id text, p_policy_version_id text, p_max_attempts integer) RETURNS public.inquiry_state_enum
 CREATE FUNCTION public.assert_adjustment_execution_allowed(p_adjustment_id uuid, p_current_state public.adjustment_state_enum, p_freeze_flag_type text DEFAULT NULL::text) RETURNS void
+CREATE FUNCTION public.assert_canonicalization_version_exists(p_version text) RETURNS void
 CREATE FUNCTION public.assert_key_class_authorized(p_caller_id text, p_key_class public.key_class_enum) RETURNS void
 CREATE FUNCTION public.assert_offline_safe_mode_dispatch_allowed(p_reason text, p_policy_version_id text, p_is_offline boolean) RETURNS void
 CREATE FUNCTION public.assert_reference_registered(p_rail_id text, p_reference text, p_instruction_id uuid, p_adjustment_id uuid DEFAULT NULL::uuid) RETURNS void
@@ -3193,6 +3290,7 @@ CREATE FUNCTION public.uuid_strategy() RETURNS text
 CREATE FUNCTION public.uuid_v7_or_random() RETURNS uuid
 CREATE FUNCTION public.verify_dispatch_effect_seal(p_instruction_id text, p_outbound_payload jsonb) RETURNS void
 CREATE FUNCTION public.verify_instruction_hierarchy(p_instruction_id text, p_tenant_id uuid, p_participant_id text, p_program_id uuid, p_entity_id uuid, p_member_id uuid, p_device_id text) RETURNS boolean
+CREATE FUNCTION public.verify_merkle_leaf(p_batch_id uuid, p_leaf_index integer, p_expected_leaf_hash text) RETURNS boolean
 CREATE FUNCTION public.verify_policy_bundle_runtime(p_policy_bundle_id uuid) RETURNS void
 CREATE INDEX idx_anchor_sync_operations_state_due ON public.anchor_sync_operations USING btree (state, lease_expires_at, updated_at);
 CREATE INDEX idx_attempts_instruction_idempotency ON public.payment_outbox_attempts USING btree (instruction_id, idempotency_key);
@@ -3288,9 +3386,13 @@ CREATE TABLE public.adjustment_approvals (
 CREATE TABLE public.adjustment_execution_attempts (
 CREATE TABLE public.adjustment_freeze_flags (
 CREATE TABLE public.adjustment_instructions (
+CREATE TABLE public.anchor_backfill_jobs (
 CREATE TABLE public.anchor_sync_operations (
+CREATE TABLE public.archive_verification_runs (
 CREATE TABLE public.billable_clients (
 CREATE TABLE public.billing_usage_events (
+CREATE TABLE public.canonicalization_archive_snapshots (
+CREATE TABLE public.canonicalization_registry (
 CREATE TABLE public.dispatch_reference_collision_events (
 CREATE TABLE public.dispatch_reference_registry (
 CREATE TABLE public.effect_seal_mismatch_events (
@@ -3334,6 +3436,8 @@ CREATE TABLE public.policy_bundles (
 CREATE TABLE public.policy_versions (
 CREATE TABLE public.program_migration_events (
 CREATE TABLE public.programs (
+CREATE TABLE public.proof_pack_batch_leaves (
+CREATE TABLE public.proof_pack_batches (
 CREATE TABLE public.rail_dispatch_truth_anchor (
 CREATE TABLE public.reference_strategy_policy_versions (
 CREATE TABLE public.regulatory_incidents (
@@ -3452,6 +3556,9 @@ DECLARE
 DECLARE
 DECLARE
 DECLARE
+DECLARE
+END;
+END;
 END;
 END;
 END;

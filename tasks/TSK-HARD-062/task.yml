@@ -1,12 +1,12 @@
 id: TSK-HARD-062
-title: "Archive integrity continuity — signed canonicalization snapshots"
-status: todo
-phase: "Hardening"
-wave: "5"
+title: Archive integrity continuity — signed canonicalization snapshots
+status: done
+phase: Hardening
+wave: '5'
 depends_on:
   - TSK-HARD-061
-verifier_command: "bash scripts/audit/verify_tsk_hard_062.sh"
-evidence_path: "evidence/phase1/hardening/tsk_hard_062.json"
-schema_path: "evidence/schemas/hardening/tsk_hard_062.schema.json"
-source_of_truth: "docs/programs/symphony-hardening/HARDENING_TASK_PACKS.md"
-canonical_reference: "docs/operations/AI_AGENT_OPERATION_MANUAL.md"
+verifier_command: bash scripts/audit/verify_tsk_hard_062.sh
+evidence_path: evidence/phase1/hardening/tsk_hard_062.json
+schema_path: evidence/schemas/hardening/tsk_hard_062.schema.json
+source_of_truth: docs/programs/symphony-hardening/HARDENING_TASK_PACKS.md
+canonical_reference: docs/operations/AI_AGENT_OPERATION_MANUAL.md

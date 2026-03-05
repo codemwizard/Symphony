@@ -1,8 +1,8 @@
 id: TSK-OPS-WAVE5-EXIT-GATE
-title: "Wave-5 Exit Gate"
-status: todo
-phase: "Hardening"
-wave: "5"
+title: Wave-5 Exit Gate
+status: done
+phase: Hardening
+wave: '5'
 depends_on:
   - TSK-HARD-060
   - TSK-HARD-061
@@ -15,8 +15,8 @@ depends_on:
   - TSK-HARD-097
   - TSK-HARD-099
   - TSK-HARD-102
-verifier_command: "bash scripts/audit/verify_program_wave5_exit_gate.sh"
-evidence_path: "evidence/phase1/program_wave5_exit_gate.json"
-schema_path: "evidence/schemas/hardening/wave5_exit/wave5_exit_gate.schema.json"
-source_of_truth: "docs/programs/symphony-hardening/HARDENING_TASK_PACKS.md"
-canonical_reference: "docs/operations/AI_AGENT_OPERATION_MANUAL.md"
+verifier_command: bash scripts/audit/verify_program_wave5_exit_gate.sh
+evidence_path: evidence/phase1/program_wave5_exit_gate.json
+schema_path: evidence/schemas/hardening/wave5_exit/wave5_exit_gate.schema.json
+source_of_truth: docs/programs/symphony-hardening/HARDENING_TASK_PACKS.md
+canonical_reference: docs/operations/AI_AGENT_OPERATION_MANUAL.md

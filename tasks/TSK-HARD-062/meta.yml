@@ -1,40 +1,40 @@
 schema_version: 1
 phase: '1'
 task_id: TSK-HARD-062
-title: "Archive integrity continuity \u2014 signed canonicalization snapshots"
+title: Archive integrity continuity — signed canonicalization snapshots
 owner_role: SUPERVISOR
-status: planned
+status: completed
 depends_on:
-- TSK-HARD-061
+  - TSK-HARD-061
 touches:
-- canonicalization archive snapshot generator
-- docs/programs/symphony-hardening/HARDENING_TASK_PACKS.md
-- evidence/phase1/hardening/tsk_hard_062.json
-- offsite replication linkage record
-- signed snapshot manifest (PCSK-signed)
-- tasks/TSK-HARD-062/EXEC_LOG.md
-- tasks/TSK-HARD-062/PLAN.md
+  - canonicalization archive snapshot generator
+  - docs/programs/symphony-hardening/HARDENING_TASK_PACKS.md
+  - evidence/phase1/hardening/tsk_hard_062.json
+  - offsite replication linkage record
+  - signed snapshot manifest (PCSK-signed)
+  - tasks/TSK-HARD-062/EXEC_LOG.md
+  - tasks/TSK-HARD-062/PLAN.md
 invariants:
-- INV-HARDENING-CANONICAL-SOURCE
+  - INV-HARDENING-CANONICAL-SOURCE
 work:
-- Produce canonicalization archive snapshots that are cryptographically
-- Implement exactly per canonical task block in HARDENING_TASK_PACKS.md.
+  - Produce canonicalization archive snapshots that are cryptographically
+  - Implement exactly per canonical task block in HARDENING_TASK_PACKS.md.
 acceptance_criteria:
-- 'archive snapshot packages: all active and deprecated canonicalization'
+  - 'archive snapshot packages: all active and deprecated canonicalization'
 verification:
-- bash scripts/audit/verify_tsk_hard_062.sh
+  - bash scripts/audit/verify_tsk_hard_062.sh
 evidence:
-- evidence/phase1/hardening/tsk_hard_062.json
-- evidence/schemas/hardening/tsk_hard_062.schema.json
+  - evidence/phase1/hardening/tsk_hard_062.json
+  - evidence/schemas/hardening/tsk_hard_062.schema.json
 failure_modes:
-- snapshot manifest unsigned => FAIL_CLOSED
-- snapshot signed with wrong key class (not PCSK) => FAIL
-- offsite replication not confirmed => FAIL
-- snapshot missing any active canonicalization version => FAIL
-- negative-path test absent => FAIL
+  - snapshot manifest unsigned => FAIL_CLOSED
+  - snapshot signed with wrong key class (not PCSK) => FAIL
+  - offsite replication not confirmed => FAIL
+  - snapshot missing any active canonicalization version => FAIL
+  - negative-path test absent => FAIL
 must_read:
-- docs/operations/AI_AGENT_OPERATION_MANUAL.md
-- docs/programs/symphony-hardening/HARDENING_TASK_PACKS.md
+  - docs/operations/AI_AGENT_OPERATION_MANUAL.md
+  - docs/programs/symphony-hardening/HARDENING_TASK_PACKS.md
 implementation_plan: tasks/TSK-HARD-062/PLAN.md
 implementation_log: tasks/TSK-HARD-062/EXEC_LOG.md
 notes: Generated from canonical hardening task pack source; do not edit semantics

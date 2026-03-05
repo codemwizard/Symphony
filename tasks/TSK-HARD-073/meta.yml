@@ -3,36 +3,36 @@ phase: '1'
 task_id: TSK-HARD-073
 title: Multi-party recovery ceremony controls
 owner_role: SUPERVISOR
-status: planned
+status: completed
 depends_on:
-- TSK-HARD-072
+  - TSK-HARD-072
 touches:
-- ceremony evidence artifact schema
-- docs/operations/DR_RECOVERY_CEREMONY.md
-- docs/programs/symphony-hardening/HARDENING_TASK_PACKS.md
-- drill ceremony performed and drill evidence artifact
-- evidence/phase1/hardening/tsk_hard_073.json
-- quorum access policy (minimum threshold defined and enforced)
-- tasks/TSK-HARD-073/EXEC_LOG.md
-- tasks/TSK-HARD-073/PLAN.md
+  - ceremony evidence artifact schema
+  - docs/operations/DR_RECOVERY_CEREMONY.md
+  - docs/programs/symphony-hardening/HARDENING_TASK_PACKS.md
+  - drill ceremony performed and drill evidence artifact
+  - evidence/phase1/hardening/tsk_hard_073.json
+  - quorum access policy (minimum threshold defined and enforced)
+  - tasks/TSK-HARD-073/EXEC_LOG.md
+  - tasks/TSK-HARD-073/PLAN.md
 invariants:
-- INV-HARDENING-CANONICAL-SOURCE
+  - INV-HARDENING-CANONICAL-SOURCE
 work:
-- Implement the quorum access policy and ceremony procedure for DR bundle
-- Implement exactly per canonical task block in HARDENING_TASK_PACKS.md.
+  - Implement the quorum access policy and ceremony procedure for DR bundle
+  - Implement exactly per canonical task block in HARDENING_TASK_PACKS.md.
 acceptance_criteria:
-- 'quorum access policy defines: minimum participant count (e.g. 2-of-3 or'
+  - 'quorum access policy defines: minimum participant count (e.g. 2-of-3 or'
 verification:
-- bash scripts/audit/verify_tsk_hard_073.sh
+  - bash scripts/audit/verify_tsk_hard_073.sh
 evidence:
-- evidence/phase1/hardening/tsk_hard_073.json
-- evidence/schemas/hardening/tsk_hard_073.schema.json
+  - evidence/phase1/hardening/tsk_hard_073.json
+  - evidence/schemas/hardening/tsk_hard_073.schema.json
 failure_modes:
-- bundle accessed without quorum => FAIL_CLOSED
-- role heterogeneity not enforced (same authority category satisfies multiple
+  - bundle accessed without quorum => FAIL_CLOSED
+  - role heterogeneity not enforced (same authority category satisfies multiple
 must_read:
-- docs/operations/AI_AGENT_OPERATION_MANUAL.md
-- docs/programs/symphony-hardening/HARDENING_TASK_PACKS.md
+  - docs/operations/AI_AGENT_OPERATION_MANUAL.md
+  - docs/programs/symphony-hardening/HARDENING_TASK_PACKS.md
 implementation_plan: tasks/TSK-HARD-073/PLAN.md
 implementation_log: tasks/TSK-HARD-073/EXEC_LOG.md
 notes: Generated from canonical hardening task pack source; do not edit semantics

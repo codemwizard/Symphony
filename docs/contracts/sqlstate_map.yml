@@ -285,6 +285,24 @@
       "subsystem": "hardening",
       "meaning": "runtime policy bundle signature verification failed",
       "retryable": false
+    },
+    "P8301": {
+      "class": "B",
+      "subsystem": "hardening",
+      "meaning": "historical verification failed because canonicalization version is missing",
+      "retryable": false
+    },
+    "P8302": {
+      "class": "B",
+      "subsystem": "hardening",
+      "meaning": "merkle batch leaf was not found for requested batch/index",
+      "retryable": false
+    },
+    "P8303": {
+      "class": "B",
+      "subsystem": "hardening",
+      "meaning": "merkle leaf hash mismatch during proof verification",
+      "retryable": false
     }
   }
 }

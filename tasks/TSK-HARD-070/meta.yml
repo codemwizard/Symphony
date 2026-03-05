@@ -1,37 +1,37 @@
 schema_version: 1
 phase: '1'
 task_id: TSK-HARD-070
-title: "Trust-anchor archival controls \u2014 Public Key Archive"
+title: Trust-anchor archival controls — Public Key Archive
 owner_role: SUPERVISOR
-status: planned
+status: completed
 depends_on:
-- TSK-HARD-062
+  - TSK-HARD-062
 touches:
-- PKA snapshot mechanism
-- PKA store (separate from operational DB)
-- append-only enforcement on PKA entries
-- docs/programs/symphony-hardening/HARDENING_TASK_PACKS.md
-- evidence/phase1/hardening/tsk_hard_070.json
-- independent restore test
-- tasks/TSK-HARD-070/EXEC_LOG.md
-- tasks/TSK-HARD-070/PLAN.md
+  - PKA snapshot mechanism
+  - PKA store (separate from operational DB)
+  - append-only enforcement on PKA entries
+  - docs/programs/symphony-hardening/HARDENING_TASK_PACKS.md
+  - evidence/phase1/hardening/tsk_hard_070.json
+  - independent restore test
+  - tasks/TSK-HARD-070/EXEC_LOG.md
+  - tasks/TSK-HARD-070/PLAN.md
 invariants:
-- INV-HARDENING-CANONICAL-SOURCE
+  - INV-HARDENING-CANONICAL-SOURCE
 work:
-- Implement the Public Key Archive (PKA) as an append-only store that is
-- Implement exactly per canonical task block in HARDENING_TASK_PACKS.md.
+  - Implement the Public Key Archive (PKA) as an append-only store that is
+  - Implement exactly per canonical task block in HARDENING_TASK_PACKS.md.
 acceptance_criteria:
-- PKA is a persistent store that is separate from the operational database;
+  - PKA is a persistent store that is separate from the operational database;
 verification:
-- bash scripts/audit/verify_tsk_hard_070.sh
+  - bash scripts/audit/verify_tsk_hard_070.sh
 evidence:
-- evidence/phase1/hardening/tsk_hard_070.json
-- evidence/schemas/hardening/tsk_hard_070.schema.json
+  - evidence/phase1/hardening/tsk_hard_070.json
+  - evidence/schemas/hardening/tsk_hard_070.schema.json
 failure_modes:
-- PKA shares storage with operational DB and cannot be independently restored
+  - PKA shares storage with operational DB and cannot be independently restored
 must_read:
-- docs/operations/AI_AGENT_OPERATION_MANUAL.md
-- docs/programs/symphony-hardening/HARDENING_TASK_PACKS.md
+  - docs/operations/AI_AGENT_OPERATION_MANUAL.md
+  - docs/programs/symphony-hardening/HARDENING_TASK_PACKS.md
 implementation_plan: tasks/TSK-HARD-070/PLAN.md
 implementation_log: tasks/TSK-HARD-070/EXEC_LOG.md
 notes: Generated from canonical hardening task pack source; do not edit semantics

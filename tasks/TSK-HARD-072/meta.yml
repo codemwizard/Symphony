@@ -1,39 +1,39 @@
 schema_version: 1
 phase: '1'
 task_id: TSK-HARD-072
-title: "Offline verification package \u2014 DR recovery bundle"
+title: Offline verification package — DR recovery bundle
 owner_role: SUPERVISOR
-status: planned
+status: completed
 depends_on:
-- TSK-HARD-071
+  - TSK-HARD-071
 touches:
-- DR recovery bundle generator script
-- docs/programs/symphony-hardening/HARDENING_TASK_PACKS.md
-- encrypted bundle (PKA export + canonicalization archive + trust anchor
-- tasks/TSK-HARD-072/EXEC_LOG.md
-- tasks/TSK-HARD-072/PLAN.md
+  - DR recovery bundle generator script
+  - docs/programs/symphony-hardening/HARDENING_TASK_PACKS.md
+  - encrypted bundle (PKA export + canonicalization archive + trust anchor
+  - tasks/TSK-HARD-072/EXEC_LOG.md
+  - tasks/TSK-HARD-072/PLAN.md
 invariants:
-- INV-HARDENING-CANONICAL-SOURCE
+  - INV-HARDENING-CANONICAL-SOURCE
 work:
-- Generate the encrypted offline DR recovery bundle containing all materials
-- Implement exactly per canonical task block in HARDENING_TASK_PACKS.md.
+  - Generate the encrypted offline DR recovery bundle containing all materials
+  - Implement exactly per canonical task block in HARDENING_TASK_PACKS.md.
 acceptance_criteria:
-- 'DR recovery bundle contains exactly: PKA export, canonicalization archive'
+  - 'DR recovery bundle contains exactly: PKA export, canonicalization archive'
 verification:
-- bash scripts/audit/verify_tsk_hard_072.sh
+  - bash scripts/audit/verify_tsk_hard_072.sh
 evidence:
-- evidence/phase1/hardening/tsk_hard_072.json
-- evidence/schemas/hardening/tsk_hard_072.schema.json
+  - evidence/phase1/hardening/tsk_hard_072.json
+  - evidence/schemas/hardening/tsk_hard_072.schema.json
 failure_modes:
-- bundle missing any required component => FAIL_CLOSED
-- bundle not encrypted at rest => FAIL_CLOSED
-- encryption key accessible without quorum ceremony => FAIL_CLOSED
-- chain-of-custody manifest unsigned => FAIL_CLOSED
-- isolated verification test fails or uses operational runtime => FAIL_CLOSED
-- negative-path test absent => FAIL
+  - bundle missing any required component => FAIL_CLOSED
+  - bundle not encrypted at rest => FAIL_CLOSED
+  - encryption key accessible without quorum ceremony => FAIL_CLOSED
+  - chain-of-custody manifest unsigned => FAIL_CLOSED
+  - isolated verification test fails or uses operational runtime => FAIL_CLOSED
+  - negative-path test absent => FAIL
 must_read:
-- docs/operations/AI_AGENT_OPERATION_MANUAL.md
-- docs/programs/symphony-hardening/HARDENING_TASK_PACKS.md
+  - docs/operations/AI_AGENT_OPERATION_MANUAL.md
+  - docs/programs/symphony-hardening/HARDENING_TASK_PACKS.md
 implementation_plan: tasks/TSK-HARD-072/PLAN.md
 implementation_log: tasks/TSK-HARD-072/EXEC_LOG.md
 notes: Generated from canonical hardening task pack source; do not edit semantics
