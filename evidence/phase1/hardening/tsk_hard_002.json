@@ -1,0 +1,10 @@
+{
+  "check_id": "TSK-HARD-002",
+  "task_id": "TSK-HARD-002",
+  "status": "PASS",
+  "pass": true,
+  "event_class_schema_count": 10,
+  "valid_samples_passed": 10,
+  "invalid_samples_rejected": 10,
+  "docs_mirror_gating_reference_found": false
+}

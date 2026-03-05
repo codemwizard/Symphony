@@ -2,11 +2,12 @@
 set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
-SCHEMA_FILE="$ROOT_DIR/docs/architecture/evidence_schema.json"
-APPROVAL_SCHEMA_FILE="$ROOT_DIR/docs/operations/approval_metadata.schema.json"
-EVIDENCE_DIR="$ROOT_DIR/evidence/phase0"
-EVIDENCE_DIR_PHASE1="$ROOT_DIR/evidence/phase1"
-REPORT_FILE="$EVIDENCE_DIR/evidence_validation.json"
+SCHEMA_FILE="${SCHEMA_FILE:-$ROOT_DIR/docs/architecture/evidence_schema.json}"
+APPROVAL_SCHEMA_FILE="${APPROVAL_SCHEMA_FILE:-$ROOT_DIR/docs/operations/approval_metadata.schema.json}"
+EVENT_CLASS_SCHEMAS_DIR="${EVENT_CLASS_SCHEMAS_DIR:-$ROOT_DIR/evidence/schemas/hardening/event_classes}"
+EVIDENCE_DIR="${EVIDENCE_DIR:-$ROOT_DIR/evidence/phase0}"
+EVIDENCE_DIR_PHASE1="${EVIDENCE_DIR_PHASE1:-$ROOT_DIR/evidence/phase1}"
+REPORT_FILE="${REPORT_FILE:-$EVIDENCE_DIR/evidence_validation.json}"
 
 mkdir -p "$EVIDENCE_DIR"
 
@@ -30,9 +31,16 @@ import os
 
 default_schema = json.loads(Path("$SCHEMA_FILE").read_text())
 approval_schema_path = Path("$APPROVAL_SCHEMA_FILE")
+event_classes_dir = Path("$EVENT_CLASS_SCHEMAS_DIR")
 approval_schema = None
+event_class_schemas = {}
 if approval_schema_path.exists():
     approval_schema = json.loads(approval_schema_path.read_text())
+if event_classes_dir.exists():
+    for schema_path in sorted(event_classes_dir.glob("*.schema.json")):
+        schema = json.loads(schema_path.read_text())
+        class_name = schema_path.name.replace(".schema.json", "")
+        event_class_schemas[class_name] = schema
 dirs = ["$EVIDENCE_DIR", "$EVIDENCE_DIR_PHASE1"]
 files = []
 for d in dirs:
@@ -59,6 +67,14 @@ else:
                 except Exception:
                     jsonschema.validate(instance=evidence, schema=default_schema)
                     schema_id = "approval_metadata_fallback_default"
+            elif isinstance(evidence, dict) and isinstance(evidence.get("event_class"), str):
+                event_class = evidence.get("event_class")
+                if event_class in event_class_schemas:
+                    selected_schema = event_class_schemas[event_class]
+                    jsonschema.validate(instance=evidence, schema=selected_schema)
+                    schema_id = f"event_class:{event_class}"
+                else:
+                    jsonschema.validate(instance=evidence, schema=selected_schema)
             else:
                 jsonschema.validate(instance=evidence, schema=selected_schema)
             schema_usage.append({"file": f, "schema": schema_id})
