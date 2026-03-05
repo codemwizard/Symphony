@@ -2,7 +2,7 @@
 -- PostgreSQL database dump
 --
 
-\restrict aeUE31DjlRtcvea9CHUcRQpx4dOLAvAxltiAJJOgsW726cU04ZRP20QrwCpn1xi
+\restrict 9vnRf0a5cEcvDXOLy9dwN1dWTzc7egYHcaMeJpLrnASGFwQYYPgWXMKIIPdGqsO
 
 -- Dumped from database version 18.2 (Debian 18.2-1.pgdg13+1)
 -- Dumped by pg_dump version 18.2 (Debian 18.2-1.pgdg13+1)
@@ -76,6 +76,18 @@ CREATE TYPE public.inquiry_state_enum AS ENUM (
 
 
 --
+-- Name: key_class_enum; Type: TYPE; Schema: public; Owner: -
+--
+
+CREATE TYPE public.key_class_enum AS ENUM (
+    'EASK',
+    'PCSK',
+    'AAK',
+    'TRANSPORT_IDENTITY'
+);
+
+
+--
 -- Name: orphan_classification_enum; Type: TYPE; Schema: public; Owner: -
 --
 
@@ -101,6 +113,17 @@ CREATE TYPE public.outbox_attempt_state AS ENUM (
 
 
 --
+-- Name: policy_bundle_state_enum; Type: TYPE; Schema: public; Owner: -
+--
+
+CREATE TYPE public.policy_bundle_state_enum AS ENUM (
+    'draft',
+    'approved',
+    'active'
+);
+
+
+--
 -- Name: policy_version_status; Type: TYPE; Schema: public; Owner: -
 --
 
@@ -120,6 +143,18 @@ CREATE TYPE public.quarantine_classification_enum AS ENUM (
     'PROTOCOL',
     'SYNTAX',
     'SEMANTIC'
+);
+
+
+--
+-- Name: reference_strategy_type_enum; Type: TYPE; Schema: public; Owner: -
+--
+
+CREATE TYPE public.reference_strategy_type_enum AS ENUM (
+    'SUFFIX',
+    'DETERMINISTIC_ALIAS',
+    'RE_ENCODED_HASH_TOKEN',
+    'RAIL_NATIVE_ALT_FIELD'
 );
 
 
@@ -153,6 +188,111 @@ BEGIN
   WHERE instruction_id = p_instruction_id;
 
   RETURN 'ACKNOWLEDGED';
+END;
+$$;
+
+
+--
+-- Name: activate_policy_bundle(uuid); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.activate_policy_bundle(p_policy_bundle_id uuid) RETURNS void
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO 'pg_catalog', 'public'
+    AS $$
+BEGIN
+  UPDATE public.policy_bundles
+  SET state='active', activation_timestamp=now(), verification_outcome='PASS', assurance_tier=COALESCE(assurance_tier,'HSM_BACKED')
+  WHERE policy_bundle_id = p_policy_bundle_id
+    AND state = 'approved'
+    AND signature_valid = true;
+
+  IF NOT FOUND THEN
+    RAISE EXCEPTION USING ERRCODE='P8201', MESSAGE='POLICY_BUNDLE_UNSIGNED';
+  END IF;
+END;
+$$;
+
+
+--
+-- Name: allocate_dispatch_reference(uuid, uuid, text, text); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.allocate_dispatch_reference(p_instruction_id uuid, p_adjustment_id uuid, p_parent_reference text, p_rail_id text) RETURNS TABLE(registry_id uuid, allocated_reference text, canonicalized_reference text, strategy_used public.reference_strategy_type_enum, policy_version_id text, collision_retry_count integer)
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO 'pg_catalog', 'public'
+    AS $$
+DECLARE
+  v_strategy record;
+  v_attempt integer := 0;
+  v_candidate text;
+  v_canon text;
+  v_collision boolean;
+BEGIN
+  SELECT * INTO v_strategy FROM public.resolve_reference_strategy(p_rail_id);
+
+  LOOP
+    IF v_strategy.strategy_type = 'SUFFIX' THEN
+      v_candidate := p_parent_reference || '-' || lpad(v_attempt::text, 2, '0');
+    ELSIF v_strategy.strategy_type = 'DETERMINISTIC_ALIAS' THEN
+      v_candidate := substr(md5(p_parent_reference || ':' || coalesce(p_adjustment_id::text,'none') || ':' || v_attempt::text), 1, greatest(8, v_strategy.max_length));
+    ELSIF v_strategy.strategy_type = 'RE_ENCODED_HASH_TOKEN' THEN
+      v_candidate := substr(md5('reh:' || p_parent_reference || ':' || p_rail_id || ':' || v_attempt::text), 1, greatest(8, v_strategy.max_length));
+    ELSE
+      v_candidate := p_parent_reference;
+    END IF;
+
+    v_canon := public.canonicalize_reference_for_rail(v_candidate, p_rail_id);
+
+    SELECT EXISTS(
+      SELECT 1 FROM public.dispatch_reference_registry r
+      WHERE r.rail_id = p_rail_id
+        AND (r.allocated_reference = v_candidate OR r.canonicalized_reference = v_canon)
+    ) INTO v_collision;
+
+    IF NOT v_collision THEN
+      INSERT INTO public.dispatch_reference_registry(
+        instruction_id, adjustment_id, rail_id, allocated_reference,
+        canonicalized_reference, strategy_used, policy_version_id, collision_retry_count
+      ) VALUES (
+        p_instruction_id, p_adjustment_id, p_rail_id, v_candidate,
+        v_canon, v_strategy.strategy_type, v_strategy.policy_version_id, v_attempt
+      )
+      RETURNING
+        dispatch_reference_registry.registry_id,
+        dispatch_reference_registry.allocated_reference,
+        dispatch_reference_registry.canonicalized_reference,
+        dispatch_reference_registry.strategy_used,
+        dispatch_reference_registry.policy_version_id,
+        dispatch_reference_registry.collision_retry_count
+      INTO registry_id, allocated_reference, canonicalized_reference, strategy_used, policy_version_id, collision_retry_count;
+
+      IF v_attempt > 0 THEN
+        INSERT INTO public.dispatch_reference_collision_events(
+          instruction_id, adjustment_id, rail_id, reference_attempted,
+          strategy_used, collision_count, outcome, policy_version_id
+        ) VALUES (
+          p_instruction_id, p_adjustment_id, p_rail_id, v_candidate,
+          v_strategy.strategy_type, v_attempt, 'RESOLVED', v_strategy.policy_version_id
+        );
+      END IF;
+
+      RETURN NEXT;
+      RETURN;
+    END IF;
+
+    v_attempt := v_attempt + 1;
+    IF v_attempt > v_strategy.nonce_retry_limit THEN
+      INSERT INTO public.dispatch_reference_collision_events(
+        instruction_id, adjustment_id, rail_id, reference_attempted,
+        strategy_used, collision_count, outcome, policy_version_id
+      ) VALUES (
+        p_instruction_id, p_adjustment_id, p_rail_id, p_parent_reference,
+        v_strategy.strategy_type, v_attempt, 'EXHAUSTED', v_strategy.policy_version_id
+      );
+      RAISE EXCEPTION USING ERRCODE='P7801', MESSAGE='REFERENCE_ALLOCATION_RETRY_EXHAUSTED';
+    END IF;
+  END LOOP;
 END;
 $$;
 
@@ -240,7 +380,8 @@ BEGIN
         containment_action = EXCLUDED.containment_action;
 
   IF v_state = 'FINALITY_CONFLICT' THEN
-    RAISE EXCEPTION 'finality_conflict_hold_release' USING ERRCODE = 'P7402';
+    -- Keep transaction durable for conflict evidence; callers must branch on return state.
+    RETURN v_state;
   END IF;
 
   RETURN v_state;
@@ -321,6 +462,62 @@ $$;
 
 
 --
+-- Name: assert_canonicalization_version_exists(text); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.assert_canonicalization_version_exists(p_version text) RETURNS void
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO 'pg_catalog', 'public'
+    AS $$
+BEGIN
+  IF NOT EXISTS (SELECT 1 FROM public.canonicalization_registry WHERE canonicalization_version = p_version) THEN
+    RAISE EXCEPTION USING ERRCODE='P8301', MESSAGE='UNVERIFIABLE_MISSING_CANONICALIZER';
+  END IF;
+END;
+$$;
+
+
+--
+-- Name: assert_hsm_fail_closed(boolean); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.assert_hsm_fail_closed(p_should_block boolean) RETURNS void
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO 'pg_catalog', 'public'
+    AS $$
+BEGIN
+  IF p_should_block THEN
+    RAISE EXCEPTION USING ERRCODE='P8401', MESSAGE='HSM_FAIL_CLOSED_ENFORCED';
+  END IF;
+END;
+$$;
+
+
+--
+-- Name: assert_key_class_authorized(text, public.key_class_enum); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.assert_key_class_authorized(p_caller_id text, p_key_class public.key_class_enum) RETURNS void
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO 'pg_catalog', 'public'
+    AS $$
+DECLARE
+  v_allowed boolean;
+BEGIN
+  SELECT true INTO v_allowed
+  FROM public.signing_authorization_matrix
+  WHERE caller_id = p_caller_id
+    AND key_class = p_key_class
+  LIMIT 1;
+
+  IF COALESCE(v_allowed, false) IS NOT true THEN
+    RAISE EXCEPTION USING ERRCODE='P8101', MESSAGE='KEY_CLASS_UNAUTHORIZED';
+  END IF;
+END;
+$$;
+
+
+--
 -- Name: assert_offline_safe_mode_dispatch_allowed(text, text, boolean); Type: FUNCTION; Schema: public; Owner: -
 --
 
@@ -333,6 +530,88 @@ BEGIN
     INSERT INTO public.offline_safe_mode_windows(reason, policy_version_id, gap_marker_id)
     VALUES (p_reason, p_policy_version_id, md5(p_reason || '|' || now()::text));
     RAISE EXCEPTION 'OFFLINE_SAFE_MODE_ACTIVE' USING ERRCODE = 'P7501';
+  END IF;
+END;
+$$;
+
+
+--
+-- Name: assert_pii_absent_from_penalty_pack(boolean); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.assert_pii_absent_from_penalty_pack(p_contains_raw_pii boolean) RETURNS void
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO 'pg_catalog', 'public'
+    AS $$
+BEGIN
+  IF p_contains_raw_pii THEN
+    RAISE EXCEPTION USING ERRCODE='P8404', MESSAGE='PII_PRESENT_IN_PENALTY_DEFENSE_PACK';
+  END IF;
+END;
+$$;
+
+
+--
+-- Name: assert_rate_limit_blocked(boolean); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.assert_rate_limit_blocked(p_blocked boolean) RETURNS void
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO 'pg_catalog', 'public'
+    AS $$
+BEGIN
+  IF p_blocked THEN
+    RAISE EXCEPTION USING ERRCODE='P8402', MESSAGE='RATE_LIMIT_BREACH_BLOCKED';
+  END IF;
+END;
+$$;
+
+
+--
+-- Name: assert_reference_registered(text, text, uuid, uuid); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.assert_reference_registered(p_rail_id text, p_reference text, p_instruction_id uuid, p_adjustment_id uuid DEFAULT NULL::uuid) RETURNS void
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO 'pg_catalog', 'public'
+    AS $$
+DECLARE
+  v_exists boolean;
+BEGIN
+  SELECT EXISTS (
+    SELECT 1
+    FROM public.dispatch_reference_registry r
+    WHERE r.rail_id = p_rail_id
+      AND (r.allocated_reference = p_reference OR r.canonicalized_reference = p_reference)
+      AND r.instruction_id = p_instruction_id
+      AND (p_adjustment_id IS NULL OR r.adjustment_id = p_adjustment_id)
+  ) INTO v_exists;
+
+  IF NOT v_exists THEN
+    INSERT INTO public.dispatch_reference_collision_events(
+      instruction_id, adjustment_id, rail_id, reference_attempted,
+      strategy_used, collision_count, outcome, policy_version_id
+    ) VALUES (
+      p_instruction_id, p_adjustment_id, p_rail_id, p_reference,
+      'SUFFIX', 1, 'UNREGISTERED_BLOCKED', NULL
+    );
+    RAISE EXCEPTION USING ERRCODE='P8001', MESSAGE='REFERENCE_NOT_REGISTERED';
+  END IF;
+END;
+$$;
+
+
+--
+-- Name: assert_secondary_retraction_approval(boolean); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.assert_secondary_retraction_approval(p_ok boolean) RETURNS void
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO 'pg_catalog', 'public'
+    AS $$
+BEGIN
+  IF NOT p_ok THEN
+    RAISE EXCEPTION USING ERRCODE='P8403', MESSAGE='RETRACTION_SECONDARY_APPROVAL_REQUIRED';
   END IF;
 END;
 $$;
@@ -409,6 +688,25 @@ $$;
 
 
 --
+-- Name: block_active_reference_policy_updates(); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.block_active_reference_policy_updates() RETURNS trigger
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO 'pg_catalog', 'public'
+    AS $$
+BEGIN
+  IF OLD.version_status = 'ACTIVE' THEN
+    RAISE EXCEPTION USING
+      ERRCODE = 'P7803',
+      MESSAGE = 'ACTIVE_REFERENCE_POLICY_IMMUTABLE';
+  END IF;
+  RETURN NEW;
+END;
+$$;
+
+
+--
 -- Name: bump_participant_outbox_seq(text); Type: FUNCTION; Schema: public; Owner: -
 --
 
@@ -428,6 +726,28 @@ CREATE FUNCTION public.bump_participant_outbox_seq(p_participant_id text) RETURN
   
     RETURN allocated;
   END;
+$$;
+
+
+--
+-- Name: canonicalize_reference_for_rail(text, text); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.canonicalize_reference_for_rail(p_allocated_reference text, p_rail_id text) RETURNS text
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO 'pg_catalog', 'public'
+    AS $$
+DECLARE
+  v_strategy record;
+  v_truncated text;
+BEGIN
+  SELECT * INTO v_strategy FROM public.resolve_reference_strategy(p_rail_id);
+  v_truncated := left(p_allocated_reference, v_strategy.max_length);
+  IF length(v_truncated) > v_strategy.max_length THEN
+    RAISE EXCEPTION USING ERRCODE='P7901', MESSAGE='REFERENCE_LENGTH_EXCEEDED';
+  END IF;
+  RETURN v_truncated;
+END;
 $$;
 
 
@@ -2033,6 +2353,47 @@ $$;
 
 
 --
+-- Name: resolve_reference_strategy(text); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.resolve_reference_strategy(p_rail_id text) RETURNS TABLE(strategy_type public.reference_strategy_type_enum, rail_id text, max_length integer, nonce_retry_limit integer, collision_action text, policy_version_id text)
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO 'pg_catalog', 'public'
+    AS $$
+DECLARE
+  v_policy record;
+BEGIN
+  SELECT policy_version_id, policy_json INTO v_policy
+  FROM public.reference_strategy_policy_versions
+  WHERE version_status = 'ACTIVE'
+  ORDER BY activated_at DESC
+  LIMIT 1;
+
+  IF v_policy.policy_version_id IS NULL THEN
+    RAISE EXCEPTION USING ERRCODE='P7802', MESSAGE='REFERENCE_STRATEGY_POLICY_NOT_FOUND';
+  END IF;
+
+  RETURN QUERY
+  SELECT
+    (s->>'strategy_type')::public.reference_strategy_type_enum,
+    s->>'rail_id',
+    (s->>'max_length')::integer,
+    (s->>'nonce_retry_limit')::integer,
+    s->>'collision_action',
+    v_policy.policy_version_id
+  FROM jsonb_array_elements(v_policy.policy_json->'strategies') AS s
+  WHERE s->>'rail_id' IN (p_rail_id, '*')
+  ORDER BY CASE WHEN s->>'rail_id' = p_rail_id THEN 0 ELSE 1 END
+  LIMIT 1;
+
+  IF NOT FOUND THEN
+    RAISE EXCEPTION USING ERRCODE='P7802', MESSAGE='REFERENCE_STRATEGY_POLICY_NOT_FOUND';
+  END IF;
+END;
+$$;
+
+
+--
 -- Name: set_correlation_id_if_null(); Type: FUNCTION; Schema: public; Owner: -
 --
 
@@ -2099,6 +2460,38 @@ $$;
 
 
 --
+-- Name: sign_digest_hsm_enforced(text, text, public.key_class_enum, text, text, text, text); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.sign_digest_hsm_enforced(p_caller_id text, p_key_id text, p_key_class public.key_class_enum, p_artifact_type text, p_digest_hash text, p_signing_path text DEFAULT 'HSM'::text, p_assurance_tier text DEFAULT 'HSM_BACKED'::text) RETURNS uuid
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO 'pg_catalog', 'public'
+    AS $$
+DECLARE
+  v_event_id uuid;
+BEGIN
+  PERFORM public.assert_key_class_authorized(p_caller_id, p_key_class);
+
+  IF p_signing_path = 'SOFTWARE_BYPASS' THEN
+    RAISE EXCEPTION USING ERRCODE='P8102', MESSAGE='HSM_BYPASS_BLOCKED';
+  END IF;
+
+  INSERT INTO public.signing_audit_log(
+    caller_id, key_id, key_class, artifact_type, digest_hash,
+    canonicalization_version, signing_service_id, trust_chain_ref,
+    assurance_tier, signing_path, outcome
+  ) VALUES (
+    p_caller_id, p_key_id, p_key_class, p_artifact_type, p_digest_hash,
+    'v1', 'signing-service-v1', 'trust-chain-main',
+    p_assurance_tier, p_signing_path, 'PASS'
+  ) RETURNING sign_event_id INTO v_event_id;
+
+  RETURN v_event_id;
+END;
+$$;
+
+
+--
 -- Name: store_effect_seal(text, jsonb, text, text); Type: FUNCTION; Schema: public; Owner: -
 --
 
@@ -2108,16 +2501,35 @@ CREATE FUNCTION public.store_effect_seal(p_instruction_id text, p_payload jsonb,
     AS $$
 DECLARE
   v_hash text;
+  v_existing_hash text;
+  v_existing_version text;
 BEGIN
   v_hash := public.compute_effect_seal_hash(p_instruction_id, p_payload, p_canonicalization_version);
+
   INSERT INTO public.instruction_effect_seals(instruction_id, effect_seal_hash, canonicalization_version, policy_version_id)
   VALUES (p_instruction_id, v_hash, p_canonicalization_version, p_policy_version_id)
-  ON CONFLICT (instruction_id) DO UPDATE
-    SET effect_seal_hash = EXCLUDED.effect_seal_hash,
-        canonicalization_version = EXCLUDED.canonicalization_version,
-        policy_version_id = EXCLUDED.policy_version_id,
-        sealed_at = now();
-  RETURN v_hash;
+  ON CONFLICT (instruction_id) DO NOTHING;
+
+  IF FOUND THEN
+    RETURN v_hash;
+  END IF;
+
+  SELECT effect_seal_hash, canonicalization_version
+    INTO v_existing_hash, v_existing_version
+  FROM public.instruction_effect_seals
+  WHERE instruction_id = p_instruction_id;
+
+  IF v_existing_hash IS NULL THEN
+    RAISE EXCEPTION 'missing_effect_seal' USING ERRCODE = 'P7102';
+  END IF;
+
+  IF v_existing_hash <> v_hash OR v_existing_version <> p_canonicalization_version THEN
+    INSERT INTO public.effect_seal_mismatch_events(instruction_id, stored_seal_hash, computed_dispatch_hash)
+    VALUES (p_instruction_id, v_existing_hash, v_hash);
+    RAISE EXCEPTION 'effect_seal_immutable_violation' USING ERRCODE = 'P7102';
+  END IF;
+
+  RETURN v_existing_hash;
 END;
 $$;
 
@@ -2526,6 +2938,53 @@ END;
 $$;
 
 
+--
+-- Name: verify_merkle_leaf(uuid, integer, text); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.verify_merkle_leaf(p_batch_id uuid, p_leaf_index integer, p_expected_leaf_hash text) RETURNS boolean
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO 'pg_catalog', 'public'
+    AS $$
+DECLARE
+  v_hash text;
+BEGIN
+  SELECT leaf_hash INTO v_hash
+  FROM public.proof_pack_batch_leaves
+  WHERE batch_id = p_batch_id AND leaf_index = p_leaf_index;
+
+  IF v_hash IS NULL THEN
+    RAISE EXCEPTION USING ERRCODE='P8302', MESSAGE='MERKLE_LEAF_NOT_FOUND';
+  END IF;
+
+  IF v_hash <> p_expected_leaf_hash THEN
+    RAISE EXCEPTION USING ERRCODE='P8303', MESSAGE='MERKLE_LEAF_HASH_MISMATCH';
+  END IF;
+
+  RETURN true;
+END;
+$$;
+
+
+--
+-- Name: verify_policy_bundle_runtime(uuid); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.verify_policy_bundle_runtime(p_policy_bundle_id uuid) RETURNS void
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO 'pg_catalog', 'public'
+    AS $$
+DECLARE
+  v_ok boolean;
+BEGIN
+  SELECT signature_valid INTO v_ok FROM public.policy_bundles WHERE policy_bundle_id = p_policy_bundle_id;
+  IF COALESCE(v_ok,false) IS NOT true THEN
+    RAISE EXCEPTION USING ERRCODE='P8202', MESSAGE='POLICY_BUNDLE_VERIFICATION_FAILED';
+  END IF;
+END;
+$$;
+
+
 SET default_tablespace = '';
 
 SET default_table_access_method = heap;
@@ -2628,6 +3087,23 @@ CREATE TABLE public.adjustment_instructions (
 
 
 --
+-- Name: anchor_backfill_jobs; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.anchor_backfill_jobs (
+    job_id uuid DEFAULT gen_random_uuid() NOT NULL,
+    replay_day date NOT NULL,
+    status text NOT NULL,
+    source_stream text NOT NULL,
+    target_stream text NOT NULL,
+    records_replayed integer DEFAULT 0 NOT NULL,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    completed_at timestamp with time zone,
+    CONSTRAINT anchor_backfill_jobs_status_check CHECK ((status = ANY (ARRAY['STARTED'::text, 'COMPLETED'::text, 'FAILED'::text])))
+);
+
+
+--
 -- Name: anchor_sync_operations; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -2648,6 +3124,66 @@ CREATE TABLE public.anchor_sync_operations (
     CONSTRAINT anchor_sync_operations_attempt_count_check CHECK ((attempt_count >= 0)),
     CONSTRAINT anchor_sync_operations_state_check CHECK ((state = ANY (ARRAY['PENDING'::text, 'ANCHORING'::text, 'ANCHORED'::text, 'COMPLETED'::text, 'FAILED'::text]))),
     CONSTRAINT ck_anchor_sync_completed_requires_anchor_ref CHECK (((state <> 'COMPLETED'::text) OR (anchor_ref IS NOT NULL)))
+);
+
+
+--
+-- Name: archive_verification_runs; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.archive_verification_runs (
+    run_id uuid DEFAULT gen_random_uuid() NOT NULL,
+    run_scope text NOT NULL,
+    years_covered integer NOT NULL,
+    archive_only boolean DEFAULT true NOT NULL,
+    key_versions_covered text[] NOT NULL,
+    canonicalization_versions_covered text[] CONSTRAINT archive_verification_runs_canonicalization_versions_co_not_null NOT NULL,
+    outcome text NOT NULL,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    CONSTRAINT archive_verification_runs_outcome_check CHECK ((outcome = ANY (ARRAY['PASS'::text, 'FAIL'::text]))),
+    CONSTRAINT archive_verification_runs_years_covered_check CHECK ((years_covered >= 1))
+);
+
+
+--
+-- Name: artifact_signing_batch_items; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.artifact_signing_batch_items (
+    item_id uuid DEFAULT gen_random_uuid() NOT NULL,
+    batch_id uuid NOT NULL,
+    artifact_id text NOT NULL,
+    leaf_index integer NOT NULL,
+    leaf_hash text NOT NULL,
+    CONSTRAINT artifact_signing_batch_items_leaf_index_check CHECK ((leaf_index >= 0))
+);
+
+
+--
+-- Name: artifact_signing_batches; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.artifact_signing_batches (
+    batch_id uuid DEFAULT gen_random_uuid() NOT NULL,
+    artifact_class text NOT NULL,
+    merkle_root text NOT NULL,
+    total_artifacts integer NOT NULL,
+    hsm_key_ref text NOT NULL,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    CONSTRAINT artifact_signing_batches_total_artifacts_check CHECK ((total_artifacts > 0))
+);
+
+
+--
+-- Name: audit_tamper_evident_chains; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.audit_tamper_evident_chains (
+    chain_id uuid DEFAULT gen_random_uuid() NOT NULL,
+    domain text NOT NULL,
+    current_hash text NOT NULL,
+    previous_hash text,
+    generated_at timestamp with time zone DEFAULT now() NOT NULL
 );
 
 
@@ -2695,6 +3231,88 @@ CREATE TABLE public.billing_usage_events (
 );
 
 ALTER TABLE ONLY public.billing_usage_events FORCE ROW LEVEL SECURITY;
+
+
+--
+-- Name: boz_operational_scenario_runs; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.boz_operational_scenario_runs (
+    run_id uuid DEFAULT gen_random_uuid() NOT NULL,
+    scenario_name text NOT NULL,
+    outcome text NOT NULL,
+    evidence_ref text NOT NULL,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    CONSTRAINT boz_operational_scenario_runs_outcome_check CHECK ((outcome = ANY (ARRAY['PASS'::text, 'FAIL'::text])))
+);
+
+
+--
+-- Name: canonicalization_archive_snapshots; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.canonicalization_archive_snapshots (
+    snapshot_id uuid DEFAULT gen_random_uuid() NOT NULL,
+    canonicalization_version text CONSTRAINT canonicalization_archive_snap_canonicalization_version_not_null NOT NULL,
+    snapshot_path text NOT NULL,
+    snapshot_sha256 text NOT NULL,
+    created_at timestamp with time zone DEFAULT now() NOT NULL
+);
+
+
+--
+-- Name: canonicalization_registry; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.canonicalization_registry (
+    canonicalization_version text NOT NULL,
+    spec_json jsonb NOT NULL,
+    test_vectors jsonb NOT NULL,
+    activated_at timestamp with time zone DEFAULT now() NOT NULL,
+    deprecated_at timestamp with time zone,
+    immutable boolean DEFAULT true NOT NULL,
+    created_at timestamp with time zone DEFAULT now() NOT NULL
+);
+
+
+--
+-- Name: dispatch_reference_collision_events; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.dispatch_reference_collision_events (
+    collision_event_id uuid DEFAULT gen_random_uuid() NOT NULL,
+    instruction_id uuid NOT NULL,
+    adjustment_id uuid,
+    rail_id text NOT NULL,
+    reference_attempted text CONSTRAINT dispatch_reference_collision_event_reference_attempted_not_null NOT NULL,
+    strategy_used public.reference_strategy_type_enum NOT NULL,
+    collision_count integer NOT NULL,
+    outcome text NOT NULL,
+    policy_version_id text,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    CONSTRAINT dispatch_reference_collision_events_collision_count_check CHECK ((collision_count >= 1)),
+    CONSTRAINT dispatch_reference_collision_events_outcome_check CHECK ((outcome = ANY (ARRAY['RESOLVED'::text, 'EXHAUSTED'::text, 'TRUNCATION_COLLISION_BLOCKED'::text, 'UNREGISTERED_BLOCKED'::text, 'REJECTED'::text])))
+);
+
+
+--
+-- Name: dispatch_reference_registry; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.dispatch_reference_registry (
+    registry_id uuid DEFAULT gen_random_uuid() NOT NULL,
+    instruction_id uuid NOT NULL,
+    adjustment_id uuid,
+    rail_id text NOT NULL,
+    allocated_reference text NOT NULL,
+    canonicalized_reference text NOT NULL,
+    strategy_used public.reference_strategy_type_enum NOT NULL,
+    policy_version_id text NOT NULL,
+    collision_retry_count integer DEFAULT 0 NOT NULL,
+    allocation_timestamp timestamp with time zone DEFAULT now() NOT NULL,
+    dispatch_attempted_at timestamp with time zone,
+    CONSTRAINT dispatch_reference_registry_collision_retry_count_check CHECK ((collision_retry_count >= 0))
+);
 
 
 --
@@ -2855,6 +3473,50 @@ ALTER TABLE ONLY public.external_proofs FORCE ROW LEVEL SECURITY;
 
 
 --
+-- Name: global_rate_limit_policies; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.global_rate_limit_policies (
+    policy_id uuid DEFAULT gen_random_uuid() NOT NULL,
+    partition_strategy text NOT NULL,
+    max_requests integer NOT NULL,
+    interval_seconds integer NOT NULL,
+    activated_at timestamp with time zone DEFAULT now() NOT NULL,
+    CONSTRAINT global_rate_limit_policies_interval_seconds_check CHECK ((interval_seconds > 0)),
+    CONSTRAINT global_rate_limit_policies_max_requests_check CHECK ((max_requests > 0))
+);
+
+
+--
+-- Name: historical_verification_runs; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.historical_verification_runs (
+    verification_run_id uuid DEFAULT gen_random_uuid() NOT NULL,
+    key_version text NOT NULL,
+    verified_artifact_id text NOT NULL,
+    key_used text NOT NULL,
+    operational_store_excluded boolean DEFAULT true CONSTRAINT historical_verification_run_operational_store_excluded_not_null NOT NULL,
+    outcome text NOT NULL,
+    error_code text,
+    created_at timestamp with time zone DEFAULT now() NOT NULL
+);
+
+
+--
+-- Name: hsm_fail_closed_events; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.hsm_fail_closed_events (
+    event_id uuid DEFAULT gen_random_uuid() NOT NULL,
+    outage_source text NOT NULL,
+    blocked_action text NOT NULL,
+    error_code text NOT NULL,
+    observed_at timestamp with time zone DEFAULT now() NOT NULL
+);
+
+
+--
 -- Name: incident_events; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -2961,6 +3623,27 @@ CREATE TABLE public.instruction_settlement_finality (
     CONSTRAINT instruction_settlement_finality_rail_message_type_check CHECK ((rail_message_type = ANY (ARRAY['pacs.008'::text, 'camt.056'::text]))),
     CONSTRAINT instruction_settlement_finality_self_reversal_chk CHECK (((reversal_of_instruction_id IS NULL) OR (reversal_of_instruction_id <> instruction_id))),
     CONSTRAINT instruction_settlement_finality_shape_chk CHECK ((((final_state = 'SETTLED'::text) AND (reversal_of_instruction_id IS NULL) AND (rail_message_type = 'pacs.008'::text)) OR ((final_state = 'REVERSED'::text) AND (reversal_of_instruction_id IS NOT NULL) AND (rail_message_type = 'camt.056'::text))))
+);
+
+
+--
+-- Name: key_rotation_drills; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.key_rotation_drills (
+    drill_id uuid DEFAULT gen_random_uuid() NOT NULL,
+    rotation_type text NOT NULL,
+    old_key_id text NOT NULL,
+    new_key_id text NOT NULL,
+    trigger_reason text,
+    old_key_deactivation_timestamp timestamp with time zone,
+    new_key_activation_timestamp timestamp with time zone,
+    archival_confirmed boolean DEFAULT false NOT NULL,
+    drill_outcome text NOT NULL,
+    meta_signing_key_class public.key_class_enum NOT NULL,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    CONSTRAINT key_rotation_drills_drill_outcome_check CHECK ((drill_outcome = ANY (ARRAY['PASS'::text, 'FAIL'::text]))),
+    CONSTRAINT key_rotation_drills_rotation_type_check CHECK ((rotation_type = ANY (ARRAY['SCHEDULED'::text, 'EMERGENCY'::text])))
 );
 
 
@@ -3326,6 +4009,19 @@ ALTER TABLE ONLY public.payment_outbox_pending FORCE ROW LEVEL SECURITY;
 
 
 --
+-- Name: penalty_defense_packs; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.penalty_defense_packs (
+    pack_id uuid DEFAULT gen_random_uuid() NOT NULL,
+    report_id text NOT NULL,
+    contains_raw_pii boolean DEFAULT false NOT NULL,
+    submission_attempt_ref uuid,
+    generated_at timestamp with time zone DEFAULT now() NOT NULL
+);
+
+
+--
 -- Name: persons; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -3340,6 +4036,34 @@ CREATE TABLE public.persons (
 );
 
 ALTER TABLE ONLY public.persons FORCE ROW LEVEL SECURITY;
+
+
+--
+-- Name: pii_erased_subject_placeholders; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.pii_erased_subject_placeholders (
+    placeholder_id uuid DEFAULT gen_random_uuid() NOT NULL,
+    subject_ref text NOT NULL,
+    placeholder_ref text NOT NULL,
+    purge_effective_at timestamp with time zone NOT NULL,
+    created_at timestamp with time zone DEFAULT now() NOT NULL
+);
+
+
+--
+-- Name: pii_erasure_journal; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.pii_erasure_journal (
+    erasure_id uuid DEFAULT gen_random_uuid() NOT NULL,
+    subject_ref text NOT NULL,
+    request_source text NOT NULL,
+    approved_at timestamp with time zone,
+    completed_at timestamp with time zone,
+    status text NOT NULL,
+    CONSTRAINT pii_erasure_journal_status_check CHECK ((status = ANY (ARRAY['REQUESTED'::text, 'APPROVED'::text, 'COMPLETED'::text, 'FAILED'::text])))
+);
 
 
 --
@@ -3372,6 +4096,19 @@ CREATE TABLE public.pii_purge_requests (
 
 
 --
+-- Name: pii_tokenization_registry; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.pii_tokenization_registry (
+    token_id uuid DEFAULT gen_random_uuid() NOT NULL,
+    subject_ref text NOT NULL,
+    token_value text NOT NULL,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    retired_at timestamp with time zone
+);
+
+
+--
 -- Name: pii_vault_records; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -3384,6 +4121,25 @@ CREATE TABLE public.pii_vault_records (
     purged_at timestamp with time zone,
     purge_request_id uuid,
     CONSTRAINT pii_vault_records_purge_shape_chk CHECK ((((purged_at IS NULL) AND (protected_payload IS NOT NULL) AND (purge_request_id IS NULL)) OR ((purged_at IS NOT NULL) AND (protected_payload IS NULL) AND (purge_request_id IS NOT NULL))))
+);
+
+
+--
+-- Name: policy_bundles; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.policy_bundles (
+    policy_bundle_id uuid DEFAULT gen_random_uuid() NOT NULL,
+    policy_id text NOT NULL,
+    policy_version text NOT NULL,
+    state public.policy_bundle_state_enum DEFAULT 'draft'::public.policy_bundle_state_enum NOT NULL,
+    high_risk boolean DEFAULT false NOT NULL,
+    signer_key_id text,
+    signature_valid boolean DEFAULT false NOT NULL,
+    activation_timestamp timestamp with time zone,
+    verification_outcome text,
+    assurance_tier text,
+    created_at timestamp with time zone DEFAULT now() NOT NULL
 );
 
 
@@ -3448,6 +4204,35 @@ ALTER TABLE ONLY public.programs FORCE ROW LEVEL SECURITY;
 
 
 --
+-- Name: proof_pack_batch_leaves; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.proof_pack_batch_leaves (
+    leaf_id uuid DEFAULT gen_random_uuid() NOT NULL,
+    batch_id uuid NOT NULL,
+    artifact_id text NOT NULL,
+    leaf_index integer NOT NULL,
+    leaf_hash text NOT NULL,
+    merkle_proof jsonb NOT NULL,
+    CONSTRAINT proof_pack_batch_leaves_leaf_index_check CHECK ((leaf_index >= 0))
+);
+
+
+--
+-- Name: proof_pack_batches; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.proof_pack_batches (
+    batch_id uuid DEFAULT gen_random_uuid() NOT NULL,
+    merkle_root text NOT NULL,
+    leaf_count integer NOT NULL,
+    canonicalization_version text NOT NULL,
+    published_at timestamp with time zone DEFAULT now() NOT NULL,
+    CONSTRAINT proof_pack_batches_leaf_count_check CHECK ((leaf_count > 0))
+);
+
+
+--
 -- Name: rail_dispatch_truth_anchor; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -3463,6 +4248,38 @@ CREATE TABLE public.rail_dispatch_truth_anchor (
     state public.outbox_attempt_state NOT NULL,
     anchored_at timestamp with time zone DEFAULT now() NOT NULL,
     CONSTRAINT rail_truth_anchor_state_chk CHECK ((state = 'DISPATCHED'::public.outbox_attempt_state))
+);
+
+
+--
+-- Name: redaction_audit_events; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.redaction_audit_events (
+    event_id uuid DEFAULT gen_random_uuid() NOT NULL,
+    report_id text NOT NULL,
+    actor_id text NOT NULL,
+    action text NOT NULL,
+    redaction_scope text NOT NULL,
+    created_at timestamp with time zone DEFAULT now() NOT NULL
+);
+
+
+--
+-- Name: reference_strategy_policy_versions; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.reference_strategy_policy_versions (
+    policy_version_id text NOT NULL,
+    version_status text DEFAULT 'ACTIVE'::text NOT NULL,
+    policy_json jsonb NOT NULL,
+    signed_at timestamp with time zone,
+    signed_key_id text,
+    unsigned_reason text,
+    evidence_path text,
+    activated_at timestamp with time zone DEFAULT now() NOT NULL,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    CONSTRAINT reference_strategy_policy_versions_version_status_check CHECK ((version_status = ANY (ARRAY['ACTIVE'::text, 'INACTIVE'::text])))
 );
 
 
@@ -3483,6 +4300,47 @@ CREATE TABLE public.regulatory_incidents (
     created_at timestamp with time zone DEFAULT now() NOT NULL,
     CONSTRAINT regulatory_incidents_severity_check CHECK ((severity = ANY (ARRAY['LOW'::text, 'MEDIUM'::text, 'HIGH'::text, 'CRITICAL'::text]))),
     CONSTRAINT regulatory_incidents_status_check CHECK ((status = ANY (ARRAY['OPEN'::text, 'UNDER_INVESTIGATION'::text, 'REPORTED'::text, 'CLOSED'::text])))
+);
+
+
+--
+-- Name: regulatory_report_submission_attempts; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.regulatory_report_submission_attempts (
+    attempt_id uuid DEFAULT gen_random_uuid() NOT NULL,
+    report_id text NOT NULL,
+    endpoint text NOT NULL,
+    status text NOT NULL,
+    response_code integer,
+    attempted_at timestamp with time zone DEFAULT now() NOT NULL
+);
+
+
+--
+-- Name: regulatory_retraction_approvals; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.regulatory_retraction_approvals (
+    approval_id uuid DEFAULT gen_random_uuid() NOT NULL,
+    report_id text NOT NULL,
+    approver_role text NOT NULL,
+    approval_stage text NOT NULL,
+    approved_at timestamp with time zone DEFAULT now() NOT NULL
+);
+
+
+--
+-- Name: resign_sweeps; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.resign_sweeps (
+    sweep_id uuid DEFAULT gen_random_uuid() NOT NULL,
+    sweep_completed_timestamp timestamp with time zone NOT NULL,
+    artifacts_resigned_count integer NOT NULL,
+    artifacts_with_pending_tier_assignment_cleared boolean DEFAULT false CONSTRAINT resign_sweeps_artifacts_with_pending_tier_assignment_c_not_null NOT NULL,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    CONSTRAINT resign_sweeps_artifacts_resigned_count_check CHECK ((artifacts_resigned_count >= 0))
 );
 
 
@@ -3536,6 +4394,62 @@ CREATE TABLE public.schema_migrations (
     version text NOT NULL,
     checksum text NOT NULL,
     applied_at timestamp with time zone DEFAULT now() NOT NULL
+);
+
+
+--
+-- Name: signing_audit_log; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.signing_audit_log (
+    sign_event_id uuid DEFAULT gen_random_uuid() NOT NULL,
+    caller_id text NOT NULL,
+    key_id text NOT NULL,
+    key_class public.key_class_enum NOT NULL,
+    artifact_type text NOT NULL,
+    digest_hash text NOT NULL,
+    canonicalization_version text,
+    signing_service_id text NOT NULL,
+    trust_chain_ref text,
+    assurance_tier text NOT NULL,
+    signing_path text NOT NULL,
+    outcome text NOT NULL,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    CONSTRAINT signing_audit_log_outcome_check CHECK ((outcome = ANY (ARRAY['PASS'::text, 'REJECTED'::text, 'BLOCKED'::text]))),
+    CONSTRAINT signing_audit_log_signing_path_check CHECK ((signing_path = ANY (ARRAY['HSM'::text, 'KMS'::text, 'SOFTWARE_BYPASS'::text])))
+);
+
+
+--
+-- Name: signing_authorization_matrix; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.signing_authorization_matrix (
+    matrix_id uuid DEFAULT gen_random_uuid() NOT NULL,
+    caller_id text NOT NULL,
+    key_class public.key_class_enum NOT NULL,
+    permitted_artifact_types text[] DEFAULT '{}'::text[] NOT NULL,
+    key_backend text NOT NULL,
+    exportable boolean DEFAULT false NOT NULL,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    CONSTRAINT signing_authorization_matrix_key_backend_check CHECK ((key_backend = ANY (ARRAY['HSM'::text, 'KMS'::text, 'SOFTWARE'::text])))
+);
+
+
+--
+-- Name: signing_throughput_runs; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.signing_throughput_runs (
+    run_id uuid DEFAULT gen_random_uuid() NOT NULL,
+    target_tps integer NOT NULL,
+    achieved_tps integer NOT NULL,
+    p95_latency_ms integer NOT NULL,
+    pass boolean NOT NULL,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    CONSTRAINT signing_throughput_runs_achieved_tps_check CHECK ((achieved_tps >= 0)),
+    CONSTRAINT signing_throughput_runs_p95_latency_ms_check CHECK ((p95_latency_ms >= 0)),
+    CONSTRAINT signing_throughput_runs_target_tps_check CHECK ((target_tps > 0))
 );
 
 
@@ -3765,6 +4679,14 @@ ALTER TABLE ONLY public.adjustment_instructions
 
 
 --
+-- Name: anchor_backfill_jobs anchor_backfill_jobs_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.anchor_backfill_jobs
+    ADD CONSTRAINT anchor_backfill_jobs_pkey PRIMARY KEY (job_id);
+
+
+--
 -- Name: anchor_sync_operations anchor_sync_operations_pack_id_key; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -3778,6 +4700,46 @@ ALTER TABLE ONLY public.anchor_sync_operations
 
 ALTER TABLE ONLY public.anchor_sync_operations
     ADD CONSTRAINT anchor_sync_operations_pkey PRIMARY KEY (operation_id);
+
+
+--
+-- Name: archive_verification_runs archive_verification_runs_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.archive_verification_runs
+    ADD CONSTRAINT archive_verification_runs_pkey PRIMARY KEY (run_id);
+
+
+--
+-- Name: artifact_signing_batch_items artifact_signing_batch_items_batch_id_leaf_index_key; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.artifact_signing_batch_items
+    ADD CONSTRAINT artifact_signing_batch_items_batch_id_leaf_index_key UNIQUE (batch_id, leaf_index);
+
+
+--
+-- Name: artifact_signing_batch_items artifact_signing_batch_items_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.artifact_signing_batch_items
+    ADD CONSTRAINT artifact_signing_batch_items_pkey PRIMARY KEY (item_id);
+
+
+--
+-- Name: artifact_signing_batches artifact_signing_batches_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.artifact_signing_batches
+    ADD CONSTRAINT artifact_signing_batches_pkey PRIMARY KEY (batch_id);
+
+
+--
+-- Name: audit_tamper_evident_chains audit_tamper_evident_chains_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.audit_tamper_evident_chains
+    ADD CONSTRAINT audit_tamper_evident_chains_pkey PRIMARY KEY (chain_id);
 
 
 --
@@ -3802,6 +4764,70 @@ ALTER TABLE ONLY public.billable_clients
 
 ALTER TABLE ONLY public.billing_usage_events
     ADD CONSTRAINT billing_usage_events_pkey PRIMARY KEY (event_id);
+
+
+--
+-- Name: boz_operational_scenario_runs boz_operational_scenario_runs_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.boz_operational_scenario_runs
+    ADD CONSTRAINT boz_operational_scenario_runs_pkey PRIMARY KEY (run_id);
+
+
+--
+-- Name: canonicalization_archive_snapshots canonicalization_archive_snap_canonicalization_version_snap_key; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.canonicalization_archive_snapshots
+    ADD CONSTRAINT canonicalization_archive_snap_canonicalization_version_snap_key UNIQUE (canonicalization_version, snapshot_sha256);
+
+
+--
+-- Name: canonicalization_archive_snapshots canonicalization_archive_snapshots_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.canonicalization_archive_snapshots
+    ADD CONSTRAINT canonicalization_archive_snapshots_pkey PRIMARY KEY (snapshot_id);
+
+
+--
+-- Name: canonicalization_registry canonicalization_registry_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.canonicalization_registry
+    ADD CONSTRAINT canonicalization_registry_pkey PRIMARY KEY (canonicalization_version);
+
+
+--
+-- Name: dispatch_reference_collision_events dispatch_reference_collision_events_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.dispatch_reference_collision_events
+    ADD CONSTRAINT dispatch_reference_collision_events_pkey PRIMARY KEY (collision_event_id);
+
+
+--
+-- Name: dispatch_reference_registry dispatch_reference_registry_canon_unique; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.dispatch_reference_registry
+    ADD CONSTRAINT dispatch_reference_registry_canon_unique UNIQUE (rail_id, canonicalized_reference);
+
+
+--
+-- Name: dispatch_reference_registry dispatch_reference_registry_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.dispatch_reference_registry
+    ADD CONSTRAINT dispatch_reference_registry_pkey PRIMARY KEY (registry_id);
+
+
+--
+-- Name: dispatch_reference_registry dispatch_reference_registry_ref_unique; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.dispatch_reference_registry
+    ADD CONSTRAINT dispatch_reference_registry_ref_unique UNIQUE (rail_id, allocated_reference);
 
 
 --
@@ -3893,6 +4919,30 @@ ALTER TABLE public.external_proofs
 
 
 --
+-- Name: global_rate_limit_policies global_rate_limit_policies_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.global_rate_limit_policies
+    ADD CONSTRAINT global_rate_limit_policies_pkey PRIMARY KEY (policy_id);
+
+
+--
+-- Name: historical_verification_runs historical_verification_runs_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.historical_verification_runs
+    ADD CONSTRAINT historical_verification_runs_pkey PRIMARY KEY (verification_run_id);
+
+
+--
+-- Name: hsm_fail_closed_events hsm_fail_closed_events_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.hsm_fail_closed_events
+    ADD CONSTRAINT hsm_fail_closed_events_pkey PRIMARY KEY (event_id);
+
+
+--
 -- Name: incident_events incident_events_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -3946,6 +4996,14 @@ ALTER TABLE ONLY public.instruction_finality_conflicts
 
 ALTER TABLE ONLY public.instruction_settlement_finality
     ADD CONSTRAINT instruction_settlement_finality_pkey PRIMARY KEY (finality_id);
+
+
+--
+-- Name: key_rotation_drills key_rotation_drills_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.key_rotation_drills
+    ADD CONSTRAINT key_rotation_drills_pkey PRIMARY KEY (drill_id);
 
 
 --
@@ -4149,11 +5207,43 @@ ALTER TABLE ONLY public.payment_outbox_pending
 
 
 --
+-- Name: penalty_defense_packs penalty_defense_packs_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.penalty_defense_packs
+    ADD CONSTRAINT penalty_defense_packs_pkey PRIMARY KEY (pack_id);
+
+
+--
 -- Name: persons persons_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.persons
     ADD CONSTRAINT persons_pkey PRIMARY KEY (person_id);
+
+
+--
+-- Name: pii_erased_subject_placeholders pii_erased_subject_placeholders_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.pii_erased_subject_placeholders
+    ADD CONSTRAINT pii_erased_subject_placeholders_pkey PRIMARY KEY (placeholder_id);
+
+
+--
+-- Name: pii_erased_subject_placeholders pii_erased_subject_placeholders_placeholder_ref_key; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.pii_erased_subject_placeholders
+    ADD CONSTRAINT pii_erased_subject_placeholders_placeholder_ref_key UNIQUE (placeholder_ref);
+
+
+--
+-- Name: pii_erasure_journal pii_erasure_journal_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.pii_erasure_journal
+    ADD CONSTRAINT pii_erasure_journal_pkey PRIMARY KEY (erasure_id);
 
 
 --
@@ -4173,11 +5263,43 @@ ALTER TABLE ONLY public.pii_purge_requests
 
 
 --
+-- Name: pii_tokenization_registry pii_tokenization_registry_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.pii_tokenization_registry
+    ADD CONSTRAINT pii_tokenization_registry_pkey PRIMARY KEY (token_id);
+
+
+--
+-- Name: pii_tokenization_registry pii_tokenization_registry_token_value_key; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.pii_tokenization_registry
+    ADD CONSTRAINT pii_tokenization_registry_token_value_key UNIQUE (token_value);
+
+
+--
 -- Name: pii_vault_records pii_vault_records_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.pii_vault_records
     ADD CONSTRAINT pii_vault_records_pkey PRIMARY KEY (vault_id);
+
+
+--
+-- Name: policy_bundles policy_bundles_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.policy_bundles
+    ADD CONSTRAINT policy_bundles_pkey PRIMARY KEY (policy_bundle_id);
+
+
+--
+-- Name: policy_bundles policy_bundles_policy_id_policy_version_key; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.policy_bundles
+    ADD CONSTRAINT policy_bundles_policy_id_policy_version_key UNIQUE (policy_id, policy_version);
 
 
 --
@@ -4221,6 +5343,30 @@ ALTER TABLE ONLY public.programs
 
 
 --
+-- Name: proof_pack_batch_leaves proof_pack_batch_leaves_batch_id_leaf_index_key; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.proof_pack_batch_leaves
+    ADD CONSTRAINT proof_pack_batch_leaves_batch_id_leaf_index_key UNIQUE (batch_id, leaf_index);
+
+
+--
+-- Name: proof_pack_batch_leaves proof_pack_batch_leaves_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.proof_pack_batch_leaves
+    ADD CONSTRAINT proof_pack_batch_leaves_pkey PRIMARY KEY (leaf_id);
+
+
+--
+-- Name: proof_pack_batches proof_pack_batches_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.proof_pack_batches
+    ADD CONSTRAINT proof_pack_batches_pkey PRIMARY KEY (batch_id);
+
+
+--
 -- Name: rail_dispatch_truth_anchor rail_dispatch_truth_anchor_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -4229,11 +5375,59 @@ ALTER TABLE ONLY public.rail_dispatch_truth_anchor
 
 
 --
+-- Name: redaction_audit_events redaction_audit_events_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.redaction_audit_events
+    ADD CONSTRAINT redaction_audit_events_pkey PRIMARY KEY (event_id);
+
+
+--
+-- Name: reference_strategy_policy_versions reference_strategy_policy_versions_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.reference_strategy_policy_versions
+    ADD CONSTRAINT reference_strategy_policy_versions_pkey PRIMARY KEY (policy_version_id);
+
+
+--
 -- Name: regulatory_incidents regulatory_incidents_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.regulatory_incidents
     ADD CONSTRAINT regulatory_incidents_pkey PRIMARY KEY (incident_id);
+
+
+--
+-- Name: regulatory_report_submission_attempts regulatory_report_submission_attempts_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.regulatory_report_submission_attempts
+    ADD CONSTRAINT regulatory_report_submission_attempts_pkey PRIMARY KEY (attempt_id);
+
+
+--
+-- Name: regulatory_retraction_approvals regulatory_retraction_approva_report_id_approver_role_appro_key; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.regulatory_retraction_approvals
+    ADD CONSTRAINT regulatory_retraction_approva_report_id_approver_role_appro_key UNIQUE (report_id, approver_role, approval_stage);
+
+
+--
+-- Name: regulatory_retraction_approvals regulatory_retraction_approvals_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.regulatory_retraction_approvals
+    ADD CONSTRAINT regulatory_retraction_approvals_pkey PRIMARY KEY (approval_id);
+
+
+--
+-- Name: resign_sweeps resign_sweeps_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.resign_sweeps
+    ADD CONSTRAINT resign_sweeps_pkey PRIMARY KEY (sweep_id);
 
 
 --
@@ -4274,6 +5468,38 @@ ALTER TABLE ONLY public.risk_formula_versions
 
 ALTER TABLE ONLY public.schema_migrations
     ADD CONSTRAINT schema_migrations_pkey PRIMARY KEY (version);
+
+
+--
+-- Name: signing_audit_log signing_audit_log_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.signing_audit_log
+    ADD CONSTRAINT signing_audit_log_pkey PRIMARY KEY (sign_event_id);
+
+
+--
+-- Name: signing_authorization_matrix signing_authorization_matrix_caller_id_key_class_key; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.signing_authorization_matrix
+    ADD CONSTRAINT signing_authorization_matrix_caller_id_key_class_key UNIQUE (caller_id, key_class);
+
+
+--
+-- Name: signing_authorization_matrix signing_authorization_matrix_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.signing_authorization_matrix
+    ADD CONSTRAINT signing_authorization_matrix_pkey PRIMARY KEY (matrix_id);
+
+
+--
+-- Name: signing_throughput_runs signing_throughput_runs_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.signing_throughput_runs
+    ADD CONSTRAINT signing_throughput_runs_pkey PRIMARY KEY (run_id);
 
 
 --
@@ -4478,6 +5704,27 @@ CREATE INDEX idx_attempts_outbox_id ON public.payment_outbox_attempts USING btre
 --
 
 CREATE INDEX idx_billing_usage_events_correlation_id ON public.billing_usage_events USING btree (correlation_id);
+
+
+--
+-- Name: idx_dispatch_reference_collision_events_instruction; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_dispatch_reference_collision_events_instruction ON public.dispatch_reference_collision_events USING btree (instruction_id, created_at DESC);
+
+
+--
+-- Name: idx_dispatch_reference_registry_adjustment; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_dispatch_reference_registry_adjustment ON public.dispatch_reference_registry USING btree (adjustment_id, allocation_timestamp DESC);
+
+
+--
+-- Name: idx_dispatch_reference_registry_instruction; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_dispatch_reference_registry_instruction ON public.dispatch_reference_registry USING btree (instruction_id, allocation_timestamp DESC);
 
 
 --
@@ -4761,6 +6008,13 @@ CREATE INDEX idx_rail_truth_anchor_participant_anchored ON public.rail_dispatch_
 
 
 --
+-- Name: idx_reference_strategy_policy_active; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE UNIQUE INDEX idx_reference_strategy_policy_active ON public.reference_strategy_policy_versions USING btree (version_status) WHERE (version_status = 'ACTIVE'::text);
+
+
+--
 -- Name: idx_sim_swap_alerts_tenant_member_derived; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -4991,6 +6245,13 @@ CREATE TRIGGER trg_adjustment_terminal_immutability BEFORE UPDATE ON public.adju
 --
 
 CREATE TRIGGER trg_anchor_dispatched_outbox_attempt AFTER INSERT ON public.payment_outbox_attempts FOR EACH ROW EXECUTE FUNCTION public.anchor_dispatched_outbox_attempt();
+
+
+--
+-- Name: reference_strategy_policy_versions trg_block_active_reference_policy_updates; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER trg_block_active_reference_policy_updates BEFORE UPDATE ON public.reference_strategy_policy_versions FOR EACH ROW EXECUTE FUNCTION public.block_active_reference_policy_updates();
 
 
 --
@@ -5245,6 +6506,14 @@ ALTER TABLE ONLY public.anchor_sync_operations
 
 
 --
+-- Name: artifact_signing_batch_items artifact_signing_batch_items_batch_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.artifact_signing_batch_items
+    ADD CONSTRAINT artifact_signing_batch_items_batch_id_fkey FOREIGN KEY (batch_id) REFERENCES public.artifact_signing_batches(batch_id) ON DELETE CASCADE;
+
+
+--
 -- Name: billing_usage_events billing_usage_events_billable_client_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -5282,6 +6551,38 @@ ALTER TABLE ONLY public.billing_usage_events
 
 ALTER TABLE ONLY public.billing_usage_events
     ADD CONSTRAINT billing_usage_events_tenant_id_fkey FOREIGN KEY (tenant_id) REFERENCES public.tenants(tenant_id);
+
+
+--
+-- Name: canonicalization_archive_snapshots canonicalization_archive_snapshot_canonicalization_version_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.canonicalization_archive_snapshots
+    ADD CONSTRAINT canonicalization_archive_snapshot_canonicalization_version_fkey FOREIGN KEY (canonicalization_version) REFERENCES public.canonicalization_registry(canonicalization_version) ON DELETE RESTRICT;
+
+
+--
+-- Name: dispatch_reference_collision_events dispatch_reference_collision_events_adjustment_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.dispatch_reference_collision_events
+    ADD CONSTRAINT dispatch_reference_collision_events_adjustment_id_fkey FOREIGN KEY (adjustment_id) REFERENCES public.adjustment_instructions(adjustment_id) ON DELETE RESTRICT;
+
+
+--
+-- Name: dispatch_reference_registry dispatch_reference_registry_adjustment_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.dispatch_reference_registry
+    ADD CONSTRAINT dispatch_reference_registry_adjustment_id_fkey FOREIGN KEY (adjustment_id) REFERENCES public.adjustment_instructions(adjustment_id) ON DELETE RESTRICT;
+
+
+--
+-- Name: dispatch_reference_registry dispatch_reference_registry_policy_version_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.dispatch_reference_registry
+    ADD CONSTRAINT dispatch_reference_registry_policy_version_id_fkey FOREIGN KEY (policy_version_id) REFERENCES public.reference_strategy_policy_versions(policy_version_id) ON DELETE RESTRICT;
 
 
 --
@@ -5541,6 +6842,14 @@ ALTER TABLE ONLY public.payment_outbox_pending
 
 
 --
+-- Name: penalty_defense_packs penalty_defense_packs_submission_attempt_ref_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.penalty_defense_packs
+    ADD CONSTRAINT penalty_defense_packs_submission_attempt_ref_fkey FOREIGN KEY (submission_attempt_ref) REFERENCES public.regulatory_report_submission_attempts(attempt_id);
+
+
+--
 -- Name: persons persons_tenant_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -5634,6 +6943,22 @@ ALTER TABLE ONLY public.programs
 
 ALTER TABLE ONLY public.programs
     ADD CONSTRAINT programs_tenant_id_fkey FOREIGN KEY (tenant_id) REFERENCES public.tenants(tenant_id) ON DELETE RESTRICT;
+
+
+--
+-- Name: proof_pack_batch_leaves proof_pack_batch_leaves_batch_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.proof_pack_batch_leaves
+    ADD CONSTRAINT proof_pack_batch_leaves_batch_id_fkey FOREIGN KEY (batch_id) REFERENCES public.proof_pack_batches(batch_id) ON DELETE CASCADE;
+
+
+--
+-- Name: proof_pack_batches proof_pack_batches_canonicalization_version_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.proof_pack_batches
+    ADD CONSTRAINT proof_pack_batches_canonicalization_version_fkey FOREIGN KEY (canonicalization_version) REFERENCES public.canonicalization_registry(canonicalization_version) ON DELETE RESTRICT;
 
 
 --
@@ -5983,5 +7308,5 @@ ALTER TABLE public.tenants ENABLE ROW LEVEL SECURITY;
 -- PostgreSQL database dump complete
 --
 
-\unrestrict aeUE31DjlRtcvea9CHUcRQpx4dOLAvAxltiAJJOgsW726cU04ZRP20QrwCpn1xi
+\unrestrict 9vnRf0a5cEcvDXOLy9dwN1dWTzc7egYHcaMeJpLrnASGFwQYYPgWXMKIIPdGqsO
 
