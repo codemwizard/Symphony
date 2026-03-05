@@ -2,7 +2,7 @@
 -- PostgreSQL database dump
 --
 
-\restrict s7yvdfuiSoHU6zxh56PUgppk0h87npZJLRIqIO81vTYdjgtvdtrtxwdIHI9XjBi
+\restrict cEvlAQYBBGT75XpgV6F9sd1vRFUati5twgOF7EurbRWA4crygH0W5sjR6EkuY2O
 
 -- Dumped from database version 18.2 (Debian 18.2-1.pgdg13+1)
 -- Dumped by pg_dump version 18.2 (Debian 18.2-1.pgdg13+1)
@@ -76,6 +76,18 @@ CREATE TYPE public.inquiry_state_enum AS ENUM (
 
 
 --
+-- Name: key_class_enum; Type: TYPE; Schema: public; Owner: -
+--
+
+CREATE TYPE public.key_class_enum AS ENUM (
+    'EASK',
+    'PCSK',
+    'AAK',
+    'TRANSPORT_IDENTITY'
+);
+
+
+--
 -- Name: orphan_classification_enum; Type: TYPE; Schema: public; Owner: -
 --
 
@@ -97,6 +109,17 @@ CREATE TYPE public.outbox_attempt_state AS ENUM (
     'RETRYABLE',
     'FAILED',
     'ZOMBIE_REQUEUE'
+);
+
+
+--
+-- Name: policy_bundle_state_enum; Type: TYPE; Schema: public; Owner: -
+--
+
+CREATE TYPE public.policy_bundle_state_enum AS ENUM (
+    'draft',
+    'approved',
+    'active'
 );
 
 
@@ -165,6 +188,28 @@ BEGIN
   WHERE instruction_id = p_instruction_id;
 
   RETURN 'ACKNOWLEDGED';
+END;
+$$;
+
+
+--
+-- Name: activate_policy_bundle(uuid); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.activate_policy_bundle(p_policy_bundle_id uuid) RETURNS void
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO 'pg_catalog', 'public'
+    AS $$
+BEGIN
+  UPDATE public.policy_bundles
+  SET state='active', activation_timestamp=now(), verification_outcome='PASS', assurance_tier=COALESCE(assurance_tier,'HSM_BACKED')
+  WHERE policy_bundle_id = p_policy_bundle_id
+    AND state = 'approved'
+    AND signature_valid = true;
+
+  IF NOT FOUND THEN
+    RAISE EXCEPTION USING ERRCODE='P8201', MESSAGE='POLICY_BUNDLE_UNSIGNED';
+  END IF;
 END;
 $$;
 
@@ -410,6 +455,30 @@ BEGIN
   END IF;
   IF p_freeze_flag_type IS NOT NULL THEN
     RAISE EXCEPTION 'ADJUSTMENT_FREEZE_BLOCK' USING ERRCODE = 'P7702';
+  END IF;
+END;
+$$;
+
+
+--
+-- Name: assert_key_class_authorized(text, public.key_class_enum); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.assert_key_class_authorized(p_caller_id text, p_key_class public.key_class_enum) RETURNS void
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO 'pg_catalog', 'public'
+    AS $$
+DECLARE
+  v_allowed boolean;
+BEGIN
+  SELECT true INTO v_allowed
+  FROM public.signing_authorization_matrix
+  WHERE caller_id = p_caller_id
+    AND key_class = p_key_class
+  LIMIT 1;
+
+  IF COALESCE(v_allowed, false) IS NOT true THEN
+    RAISE EXCEPTION USING ERRCODE='P8101', MESSAGE='KEY_CLASS_UNAUTHORIZED';
   END IF;
 END;
 $$;
@@ -2310,6 +2379,38 @@ $$;
 
 
 --
+-- Name: sign_digest_hsm_enforced(text, text, public.key_class_enum, text, text, text, text); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.sign_digest_hsm_enforced(p_caller_id text, p_key_id text, p_key_class public.key_class_enum, p_artifact_type text, p_digest_hash text, p_signing_path text DEFAULT 'HSM'::text, p_assurance_tier text DEFAULT 'HSM_BACKED'::text) RETURNS uuid
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO 'pg_catalog', 'public'
+    AS $$
+DECLARE
+  v_event_id uuid;
+BEGIN
+  PERFORM public.assert_key_class_authorized(p_caller_id, p_key_class);
+
+  IF p_signing_path = 'SOFTWARE_BYPASS' THEN
+    RAISE EXCEPTION USING ERRCODE='P8102', MESSAGE='HSM_BYPASS_BLOCKED';
+  END IF;
+
+  INSERT INTO public.signing_audit_log(
+    caller_id, key_id, key_class, artifact_type, digest_hash,
+    canonicalization_version, signing_service_id, trust_chain_ref,
+    assurance_tier, signing_path, outcome
+  ) VALUES (
+    p_caller_id, p_key_id, p_key_class, p_artifact_type, p_digest_hash,
+    'v1', 'signing-service-v1', 'trust-chain-main',
+    p_assurance_tier, p_signing_path, 'PASS'
+  ) RETURNING sign_event_id INTO v_event_id;
+
+  RETURN v_event_id;
+END;
+$$;
+
+
+--
 -- Name: store_effect_seal(text, jsonb, text, text); Type: FUNCTION; Schema: public; Owner: -
 --
 
@@ -2737,6 +2838,25 @@ END;
 $$;
 
 
+--
+-- Name: verify_policy_bundle_runtime(uuid); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.verify_policy_bundle_runtime(p_policy_bundle_id uuid) RETURNS void
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO 'pg_catalog', 'public'
+    AS $$
+DECLARE
+  v_ok boolean;
+BEGIN
+  SELECT signature_valid INTO v_ok FROM public.policy_bundles WHERE policy_bundle_id = p_policy_bundle_id;
+  IF COALESCE(v_ok,false) IS NOT true THEN
+    RAISE EXCEPTION USING ERRCODE='P8202', MESSAGE='POLICY_BUNDLE_VERIFICATION_FAILED';
+  END IF;
+END;
+$$;
+
+
 SET default_tablespace = '';
 
 SET default_table_access_method = heap;
@@ -3106,6 +3226,22 @@ ALTER TABLE ONLY public.external_proofs FORCE ROW LEVEL SECURITY;
 
 
 --
+-- Name: historical_verification_runs; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.historical_verification_runs (
+    verification_run_id uuid DEFAULT gen_random_uuid() NOT NULL,
+    key_version text NOT NULL,
+    verified_artifact_id text NOT NULL,
+    key_used text NOT NULL,
+    operational_store_excluded boolean DEFAULT true CONSTRAINT historical_verification_run_operational_store_excluded_not_null NOT NULL,
+    outcome text NOT NULL,
+    error_code text,
+    created_at timestamp with time zone DEFAULT now() NOT NULL
+);
+
+
+--
 -- Name: incident_events; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -3212,6 +3348,27 @@ CREATE TABLE public.instruction_settlement_finality (
     CONSTRAINT instruction_settlement_finality_rail_message_type_check CHECK ((rail_message_type = ANY (ARRAY['pacs.008'::text, 'camt.056'::text]))),
     CONSTRAINT instruction_settlement_finality_self_reversal_chk CHECK (((reversal_of_instruction_id IS NULL) OR (reversal_of_instruction_id <> instruction_id))),
     CONSTRAINT instruction_settlement_finality_shape_chk CHECK ((((final_state = 'SETTLED'::text) AND (reversal_of_instruction_id IS NULL) AND (rail_message_type = 'pacs.008'::text)) OR ((final_state = 'REVERSED'::text) AND (reversal_of_instruction_id IS NOT NULL) AND (rail_message_type = 'camt.056'::text))))
+);
+
+
+--
+-- Name: key_rotation_drills; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.key_rotation_drills (
+    drill_id uuid DEFAULT gen_random_uuid() NOT NULL,
+    rotation_type text NOT NULL,
+    old_key_id text NOT NULL,
+    new_key_id text NOT NULL,
+    trigger_reason text,
+    old_key_deactivation_timestamp timestamp with time zone,
+    new_key_activation_timestamp timestamp with time zone,
+    archival_confirmed boolean DEFAULT false NOT NULL,
+    drill_outcome text NOT NULL,
+    meta_signing_key_class public.key_class_enum NOT NULL,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    CONSTRAINT key_rotation_drills_drill_outcome_check CHECK ((drill_outcome = ANY (ARRAY['PASS'::text, 'FAIL'::text]))),
+    CONSTRAINT key_rotation_drills_rotation_type_check CHECK ((rotation_type = ANY (ARRAY['SCHEDULED'::text, 'EMERGENCY'::text])))
 );
 
 
@@ -3639,6 +3796,25 @@ CREATE TABLE public.pii_vault_records (
 
 
 --
+-- Name: policy_bundles; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.policy_bundles (
+    policy_bundle_id uuid DEFAULT gen_random_uuid() NOT NULL,
+    policy_id text NOT NULL,
+    policy_version text NOT NULL,
+    state public.policy_bundle_state_enum DEFAULT 'draft'::public.policy_bundle_state_enum NOT NULL,
+    high_risk boolean DEFAULT false NOT NULL,
+    signer_key_id text,
+    signature_valid boolean DEFAULT false NOT NULL,
+    activation_timestamp timestamp with time zone,
+    verification_outcome text,
+    assurance_tier text,
+    created_at timestamp with time zone DEFAULT now() NOT NULL
+);
+
+
+--
 -- Name: policy_versions; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -3756,6 +3932,20 @@ CREATE TABLE public.regulatory_incidents (
 
 
 --
+-- Name: resign_sweeps; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.resign_sweeps (
+    sweep_id uuid DEFAULT gen_random_uuid() NOT NULL,
+    sweep_completed_timestamp timestamp with time zone NOT NULL,
+    artifacts_resigned_count integer NOT NULL,
+    artifacts_with_pending_tier_assignment_cleared boolean DEFAULT false CONSTRAINT resign_sweeps_artifacts_with_pending_tier_assignment_c_not_null NOT NULL,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    CONSTRAINT resign_sweeps_artifacts_resigned_count_check CHECK ((artifacts_resigned_count >= 0))
+);
+
+
+--
 -- Name: revoked_client_certs; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -3805,6 +3995,45 @@ CREATE TABLE public.schema_migrations (
     version text NOT NULL,
     checksum text NOT NULL,
     applied_at timestamp with time zone DEFAULT now() NOT NULL
+);
+
+
+--
+-- Name: signing_audit_log; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.signing_audit_log (
+    sign_event_id uuid DEFAULT gen_random_uuid() NOT NULL,
+    caller_id text NOT NULL,
+    key_id text NOT NULL,
+    key_class public.key_class_enum NOT NULL,
+    artifact_type text NOT NULL,
+    digest_hash text NOT NULL,
+    canonicalization_version text,
+    signing_service_id text NOT NULL,
+    trust_chain_ref text,
+    assurance_tier text NOT NULL,
+    signing_path text NOT NULL,
+    outcome text NOT NULL,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    CONSTRAINT signing_audit_log_outcome_check CHECK ((outcome = ANY (ARRAY['PASS'::text, 'REJECTED'::text, 'BLOCKED'::text]))),
+    CONSTRAINT signing_audit_log_signing_path_check CHECK ((signing_path = ANY (ARRAY['HSM'::text, 'KMS'::text, 'SOFTWARE_BYPASS'::text])))
+);
+
+
+--
+-- Name: signing_authorization_matrix; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.signing_authorization_matrix (
+    matrix_id uuid DEFAULT gen_random_uuid() NOT NULL,
+    caller_id text NOT NULL,
+    key_class public.key_class_enum NOT NULL,
+    permitted_artifact_types text[] DEFAULT '{}'::text[] NOT NULL,
+    key_backend text NOT NULL,
+    exportable boolean DEFAULT false NOT NULL,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    CONSTRAINT signing_authorization_matrix_key_backend_check CHECK ((key_backend = ANY (ARRAY['HSM'::text, 'KMS'::text, 'SOFTWARE'::text])))
 );
 
 
@@ -4194,6 +4423,14 @@ ALTER TABLE public.external_proofs
 
 
 --
+-- Name: historical_verification_runs historical_verification_runs_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.historical_verification_runs
+    ADD CONSTRAINT historical_verification_runs_pkey PRIMARY KEY (verification_run_id);
+
+
+--
 -- Name: incident_events incident_events_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -4247,6 +4484,14 @@ ALTER TABLE ONLY public.instruction_finality_conflicts
 
 ALTER TABLE ONLY public.instruction_settlement_finality
     ADD CONSTRAINT instruction_settlement_finality_pkey PRIMARY KEY (finality_id);
+
+
+--
+-- Name: key_rotation_drills key_rotation_drills_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.key_rotation_drills
+    ADD CONSTRAINT key_rotation_drills_pkey PRIMARY KEY (drill_id);
 
 
 --
@@ -4482,6 +4727,22 @@ ALTER TABLE ONLY public.pii_vault_records
 
 
 --
+-- Name: policy_bundles policy_bundles_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.policy_bundles
+    ADD CONSTRAINT policy_bundles_pkey PRIMARY KEY (policy_bundle_id);
+
+
+--
+-- Name: policy_bundles policy_bundles_policy_id_policy_version_key; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.policy_bundles
+    ADD CONSTRAINT policy_bundles_policy_id_policy_version_key UNIQUE (policy_id, policy_version);
+
+
+--
 -- Name: policy_versions policy_versions_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -4546,6 +4807,14 @@ ALTER TABLE ONLY public.regulatory_incidents
 
 
 --
+-- Name: resign_sweeps resign_sweeps_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.resign_sweeps
+    ADD CONSTRAINT resign_sweeps_pkey PRIMARY KEY (sweep_id);
+
+
+--
 -- Name: revoked_client_certs revoked_client_certs_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -4583,6 +4852,30 @@ ALTER TABLE ONLY public.risk_formula_versions
 
 ALTER TABLE ONLY public.schema_migrations
     ADD CONSTRAINT schema_migrations_pkey PRIMARY KEY (version);
+
+
+--
+-- Name: signing_audit_log signing_audit_log_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.signing_audit_log
+    ADD CONSTRAINT signing_audit_log_pkey PRIMARY KEY (sign_event_id);
+
+
+--
+-- Name: signing_authorization_matrix signing_authorization_matrix_caller_id_key_class_key; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.signing_authorization_matrix
+    ADD CONSTRAINT signing_authorization_matrix_caller_id_key_class_key UNIQUE (caller_id, key_class);
+
+
+--
+-- Name: signing_authorization_matrix signing_authorization_matrix_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.signing_authorization_matrix
+    ADD CONSTRAINT signing_authorization_matrix_pkey PRIMARY KEY (matrix_id);
 
 
 --
@@ -6351,5 +6644,5 @@ ALTER TABLE public.tenants ENABLE ROW LEVEL SECURITY;
 -- PostgreSQL database dump complete
 --
 
-\unrestrict s7yvdfuiSoHU6zxh56PUgppk0h87npZJLRIqIO81vTYdjgtvdtrtxwdIHI9XjBi
+\unrestrict cEvlAQYBBGT75XpgV6F9sd1vRFUati5twgOF7EurbRWA4crygH0W5sjR6EkuY2O
 

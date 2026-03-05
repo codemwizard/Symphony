@@ -1,0 +1,1 @@
+{"$schema":"http://json-schema.org/draft-07/schema#","type":"object","required":["pass","sweep_completed_timestamp","artifacts_resigned_count","artifacts_with_pending_tier_assignment_cleared"]}

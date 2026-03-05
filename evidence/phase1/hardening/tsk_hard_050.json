@@ -1,0 +1,1 @@
+{"check_id":"TSK-HARD-050","task_id":"TSK-HARD-050","status":"PASS","pass":true,"classes":["EASK","PCSK","AAK","TRANSPORT_IDENTITY"],"auth_matrix_runtime_enforced":true,"unauthorized_error_code":"P8101","timestamp_utc":"2026-03-05T12:25:38Z","git_sha":"17ef11d84d4f47b71a0a5e0ece62d25861bb18e3"}

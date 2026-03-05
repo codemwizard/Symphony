@@ -3,39 +3,39 @@ phase: '1'
 task_id: TSK-HARD-051
 title: HSM/KMS signing path enforcement
 owner_role: SUPERVISOR
-status: planned
+status: completed
 depends_on:
-- TSK-HARD-050
+  - TSK-HARD-050
 touches:
-- DEPENDENCY_NOT_READY re-sign sweep record in EXEC_LOG.md
-- digest signing endpoint
-- docs/programs/symphony-hardening/HARDENING_TASK_PACKS.md
-- evidence/phase1/hardening/tsk_hard_051.json
-- per-key-class rate limits configured
-- sign audit log
-- signing service with HSM/KMS backend fully operational
-- tasks/TSK-HARD-051/EXEC_LOG.md
-- tasks/TSK-HARD-051/PLAN.md
+  - DEPENDENCY_NOT_READY re-sign sweep record in EXEC_LOG.md
+  - digest signing endpoint
+  - docs/programs/symphony-hardening/HARDENING_TASK_PACKS.md
+  - evidence/phase1/hardening/tsk_hard_051.json
+  - per-key-class rate limits configured
+  - sign audit log
+  - signing service with HSM/KMS backend fully operational
+  - tasks/TSK-HARD-051/EXEC_LOG.md
+  - tasks/TSK-HARD-051/PLAN.md
 invariants:
-- INV-HARDENING-CANONICAL-SOURCE
+  - INV-HARDENING-CANONICAL-SOURCE
 work:
-- Enforce that all evidence artifact signing operations route through the
-- Implement exactly per canonical task block in HARDENING_TASK_PACKS.md.
+  - Enforce that all evidence artifact signing operations route through the
+  - Implement exactly per canonical task block in HARDENING_TASK_PACKS.md.
 acceptance_criteria:
-- all evidence artifact sign operations route through HSM/KMS backend;
+  - all evidence artifact sign operations route through HSM/KMS backend;
 verification:
-- bash scripts/audit/verify_tsk_hard_051.sh
+  - bash scripts/audit/verify_tsk_hard_051.sh
 evidence:
-- evidence/phase1/hardening/tsk_hard_051.json
-- evidence/schemas/hardening/tsk_hard_051.schema.json
+  - evidence/phase1/hardening/tsk_hard_051.json
+  - evidence/schemas/hardening/tsk_hard_051.schema.json
 failure_modes:
-- any sign operation bypasses HSM/KMS => FAIL_CLOSED
-- raw key material returned by signing service => FAIL_CLOSED
-- sign audit log absent or not append-only => FAIL
-- DEPENDENCY_NOT_READY re-sign sweep not completed => FAIL
+  - any sign operation bypasses HSM/KMS => FAIL_CLOSED
+  - raw key material returned by signing service => FAIL_CLOSED
+  - sign audit log absent or not append-only => FAIL
+  - DEPENDENCY_NOT_READY re-sign sweep not completed => FAIL
 must_read:
-- docs/operations/AI_AGENT_OPERATION_MANUAL.md
-- docs/programs/symphony-hardening/HARDENING_TASK_PACKS.md
+  - docs/operations/AI_AGENT_OPERATION_MANUAL.md
+  - docs/programs/symphony-hardening/HARDENING_TASK_PACKS.md
 implementation_plan: tasks/TSK-HARD-051/PLAN.md
 implementation_log: tasks/TSK-HARD-051/EXEC_LOG.md
 notes: Generated from canonical hardening task pack source; do not edit semantics

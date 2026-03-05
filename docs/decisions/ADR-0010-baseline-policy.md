@@ -54,3 +54,5 @@ This ADR remains the authoritative governance reference for baseline change chec
 - 2026-03-05: Baseline regenerated after Wave-2 adjustment governance migration adding adjustment instruction lifecycle, approvals/quorum tables, execution-idempotency and ceiling checks, cooling/freezes gate primitives, and terminal immutability trigger (0063).
 
 - 2026-03-05: Baseline refreshed after adding migration 0064_hard_wave3_reference_strategy_and_registry.sql (Wave-3 reference governance).
+
+- 2026-03-05: Baseline refreshed after adding migration 0065_hard_wave4_signing_controls_and_assurance.sql (Wave-4 signing controls and assurance).

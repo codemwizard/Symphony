@@ -1,12 +1,12 @@
 id: TSK-HARD-011B
-title: "Signed policy bundle activation"
-status: todo
-phase: "Hardening"
-wave: "4"
+title: Signed policy bundle activation
+status: done
+phase: Hardening
+wave: '4'
 depends_on:
   - TSK-HARD-054
-verifier_command: "bash scripts/audit/verify_tsk_hard_011b.sh"
-evidence_path: "evidence/phase1/hardening/tsk_hard_011b.json"
-schema_path: "evidence/schemas/hardening/tsk_hard_011b.schema.json"
-source_of_truth: "docs/programs/symphony-hardening/HARDENING_TASK_PACKS.md"
-canonical_reference: "docs/operations/AI_AGENT_OPERATION_MANUAL.md"
+verifier_command: bash scripts/audit/verify_tsk_hard_011b.sh
+evidence_path: evidence/phase1/hardening/tsk_hard_011b.json
+schema_path: evidence/schemas/hardening/tsk_hard_011b.schema.json
+source_of_truth: docs/programs/symphony-hardening/HARDENING_TASK_PACKS.md
+canonical_reference: docs/operations/AI_AGENT_OPERATION_MANUAL.md

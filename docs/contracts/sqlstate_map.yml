@@ -261,6 +261,30 @@
       "subsystem": "hardening",
       "meaning": "dispatch reference not registered in pre-dispatch registry",
       "retryable": false
+    },
+    "P8101": {
+      "class": "B",
+      "subsystem": "hardening",
+      "meaning": "caller is not authorized to use requested key class for signing",
+      "retryable": false
+    },
+    "P8102": {
+      "class": "B",
+      "subsystem": "hardening",
+      "meaning": "attempted signing path bypassed HSM/KMS enforcement",
+      "retryable": false
+    },
+    "P8201": {
+      "class": "B",
+      "subsystem": "hardening",
+      "meaning": "policy bundle activation rejected because signature is missing or invalid",
+      "retryable": false
+    },
+    "P8202": {
+      "class": "B",
+      "subsystem": "hardening",
+      "meaning": "runtime policy bundle signature verification failed",
+      "retryable": false
     }
   }
 }
