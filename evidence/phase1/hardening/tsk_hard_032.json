@@ -1,0 +1,1 @@
+{"check_id":"TSK-HARD-032","task_id":"TSK-HARD-032","status":"PASS","pass":true,"policy_max_length_loaded":true,"deterministic_canonicalization":true,"reference_length_error_code":"P7901","truncation_collision_detection":true,"timestamp_utc":"2026-03-05T10:25:11Z","git_sha":"171de0182de4707a6ed29342940cbdc5b431ebea"}

@@ -52,3 +52,5 @@ This ADR remains the authoritative governance reference for baseline change chec
 - 2026-03-05: Baseline regenerated after Wave-1 hardening inquiry state-machine migration adding `inquiry_state_machine` and fail-closed auto-finalize guard (0061).
 - 2026-03-05: Baseline regenerated after Wave-1 hardening runtime control migration adding effect sealing, finality conflict containment, malformed quarantine, circuit-breaker suspension, offline safe mode, and orphan/replay containment primitives (0062).
 - 2026-03-05: Baseline regenerated after Wave-2 adjustment governance migration adding adjustment instruction lifecycle, approvals/quorum tables, execution-idempotency and ceiling checks, cooling/freezes gate primitives, and terminal immutability trigger (0063).
+
+- 2026-03-05: Baseline refreshed after adding migration 0064_hard_wave3_reference_strategy_and_registry.sql (Wave-3 reference governance).

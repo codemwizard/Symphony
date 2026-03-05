@@ -1,0 +1,1 @@
+{"$schema":"http://json-schema.org/draft-07/schema#","type":"object","required":["pass","reference_attempted","rail_max_length","reference_length","error_code","outcome"]}

@@ -1,0 +1,25 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "strategies"],
+  "properties": {
+    "schema_version": {"type": "string", "minLength": 1},
+    "strategies": {
+      "type": "array",
+      "minItems": 4,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["strategy_type", "rail_id", "max_length", "nonce_retry_limit", "collision_action"],
+        "properties": {
+          "strategy_type": {"type": "string", "enum": ["SUFFIX", "DETERMINISTIC_ALIAS", "RE_ENCODED_HASH_TOKEN", "RAIL_NATIVE_ALT_FIELD"]},
+          "rail_id": {"type": "string", "minLength": 1},
+          "max_length": {"type": "integer", "minimum": 1},
+          "nonce_retry_limit": {"type": "integer", "minimum": 0},
+          "collision_action": {"type": "string", "minLength": 1}
+        }
+      }
+    }
+  }
+}

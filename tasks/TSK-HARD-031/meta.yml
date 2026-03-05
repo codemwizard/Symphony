@@ -3,41 +3,41 @@ phase: '1'
 task_id: TSK-HARD-031
 title: Dispatch reference allocation and registry
 owner_role: SUPERVISOR
-status: planned
+status: completed
 depends_on:
-- TSK-HARD-030
+  - TSK-HARD-030
 touches:
-- allocation engine implementing all four DSL strategy types
-- collision evidence artifact
-- dispatch reference registry (persistent, queryable store)
-- docs/programs/symphony-hardening/HARDENING_TASK_PACKS.md
-- evidence/phase1/hardening/tsk_hard_031.json
-- nonce retry logic with configurable max_retry limit
-- pre-dispatch registry registration enforcement
-- tasks/TSK-HARD-031/EXEC_LOG.md
-- tasks/TSK-HARD-031/PLAN.md
+  - allocation engine implementing all four DSL strategy types
+  - collision evidence artifact
+  - dispatch reference registry (persistent, queryable store)
+  - docs/programs/symphony-hardening/HARDENING_TASK_PACKS.md
+  - evidence/phase1/hardening/tsk_hard_031.json
+  - nonce retry logic with configurable max_retry limit
+  - pre-dispatch registry registration enforcement
+  - tasks/TSK-HARD-031/EXEC_LOG.md
+  - tasks/TSK-HARD-031/PLAN.md
 invariants:
-- INV-HARDENING-CANONICAL-SOURCE
+  - INV-HARDENING-CANONICAL-SOURCE
 work:
-- Implement the dispatch reference registry and the runtime allocation engine
-- Implement exactly per canonical task block in HARDENING_TASK_PACKS.md.
+  - Implement the dispatch reference registry and the runtime allocation engine
+  - Implement exactly per canonical task block in HARDENING_TASK_PACKS.md.
 acceptance_criteria:
-- 'dispatch reference registry is a persistent store queryable by: reference,'
+  - 'dispatch reference registry is a persistent store queryable by: reference,'
 verification:
-- bash scripts/audit/verify_tsk_hard_031.sh
+  - bash scripts/audit/verify_tsk_hard_031.sh
 evidence:
-- evidence/phase1/hardening/tsk_hard_031.json
-- evidence/schemas/hardening/tsk_hard_031.schema.json
+  - evidence/phase1/hardening/tsk_hard_031.json
+  - evidence/schemas/hardening/tsk_hard_031.schema.json
 failure_modes:
-- dispatch proceeds without registry entry => FAIL_CLOSED
-- collision silently retried without logging retry count => FAIL
-- collision exhaustion produces no evidence artifact => FAIL
-- allocation engine does not implement all four strategy types => FAIL
-- max_retry_limit hardcoded => FAIL_CLOSED [METADATA GOVERNANCE violation]
-- negative-path test absent => FAIL
+  - dispatch proceeds without registry entry => FAIL_CLOSED
+  - collision silently retried without logging retry count => FAIL
+  - collision exhaustion produces no evidence artifact => FAIL
+  - allocation engine does not implement all four strategy types => FAIL
+  - max_retry_limit hardcoded => FAIL_CLOSED [METADATA GOVERNANCE violation]
+  - negative-path test absent => FAIL
 must_read:
-- docs/operations/AI_AGENT_OPERATION_MANUAL.md
-- docs/programs/symphony-hardening/HARDENING_TASK_PACKS.md
+  - docs/operations/AI_AGENT_OPERATION_MANUAL.md
+  - docs/programs/symphony-hardening/HARDENING_TASK_PACKS.md
 implementation_plan: tasks/TSK-HARD-031/PLAN.md
 implementation_log: tasks/TSK-HARD-031/EXEC_LOG.md
 notes: Generated from canonical hardening task pack source; do not edit semantics

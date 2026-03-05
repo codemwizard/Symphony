@@ -231,6 +231,36 @@
       "subsystem": "hardening",
       "meaning": "adjustment execution blocked by active freeze/legal-hold flag",
       "retryable": false
+    },
+    "P7801": {
+      "class": "B",
+      "subsystem": "hardening",
+      "meaning": "dispatch reference allocation retry exhausted after collision retries",
+      "retryable": false
+    },
+    "P7802": {
+      "class": "B",
+      "subsystem": "hardening",
+      "meaning": "no matching active reference strategy policy for the rail",
+      "retryable": false
+    },
+    "P7803": {
+      "class": "B",
+      "subsystem": "hardening",
+      "meaning": "attempted in-place update of active reference strategy policy",
+      "retryable": false
+    },
+    "P7901": {
+      "class": "B",
+      "subsystem": "hardening",
+      "meaning": "reference exceeds per-rail canonicalized maximum length",
+      "retryable": false
+    },
+    "P8001": {
+      "class": "B",
+      "subsystem": "hardening",
+      "meaning": "dispatch reference not registered in pre-dispatch registry",
+      "retryable": false
     }
   }
 }
