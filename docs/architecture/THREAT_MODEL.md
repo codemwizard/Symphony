@@ -257,6 +257,8 @@ Mitigations:
 - Phase-1 risk formula registry + program migration introduces append-only `risk_formula_registry`, deterministic `programs.default_risk_tier` enforcement, and read-only projection posture (`vw_program_tier_effective`) with verifier-backed evidence (`TSK-P1-HIER-007`).
 - Phase-1 SIM-swap alert derivation (`TSK-P1-HIER-008`) is implemented as hardened `SECURITY DEFINER` DB function (`derive_sim_swap_alert`) writing append-only `sim_swap_alerts` rows with one-alert-per-source-event idempotency and non-null `formula_version_id` traceability (`INV-129`).
 - Phase-1 incident workflow (`TSK-P1-REG-003`) enforces append-only incident event timelines and blocks report export while status is `OPEN`, reducing premature/regulator-inaccurate disclosure risk while preserving signed 48-hour evidence output.
+- Hardening Wave-4 signing controls (`TSK-HARD-050`..`TSK-HARD-054`, `TSK-HARD-011B`, `TSK-HARD-096`) enforce key-class authorization boundaries, unsigned policy-bundle rejection, dependency-gated re-sign sweep execution, archive-only historical verification, and explicit HSM-bypass denial with verifier-backed evidence and SQLSTATE mapping alignment.
+- Wave-2 post-review hardening fix (`0068_wave2_finality_and_seal_hardening_fixes.sql`) enforces immutable effect seals, durable finality-conflict containment records (return-state hold semantics), and PUBLIC execute revocation on Wave-1 SECURITY DEFINER control functions.
 
 ## Priority security actions
 1) Implement service identity and mTLS for internal calls.
