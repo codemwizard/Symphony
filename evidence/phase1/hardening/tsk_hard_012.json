@@ -1,0 +1,14 @@
+{
+  "check_id": "TSK-HARD-012",
+  "task_id": "TSK-HARD-012",
+  "status": "PASS",
+  "pass": true,
+  "policy_version_id": "RIP-2026-03-05-v1",
+  "max_attempts_from_policy": 12,
+  "state_enum_values_enforced": true,
+  "auto_finalize_blocked_sqlstate": "P7301",
+  "illegal_transition_blocked_sqlstate": "P7300",
+  "max_attempts_policy_resolved": true,
+  "negative_path_evidence_emitted": true,
+  "blocked_event_path": "evidence/phase1/hardening/tsk_hard_012_auto_finalize_blocked_event.json"
+}

@@ -48,6 +48,14 @@ Mitigations:
 - Idempotency enforcement, append-only outbox attempts
 - Structured audit logs and policy checksum verification
 
+### Hardening Update 2026-03-05 (TSK-HARD-012)
+- Threat: auto-finalization while inquiry is in uncertain/exhausted state can release value without confirmed rail outcome.
+- Threat: illegal inquiry lifecycle transitions can bypass containment semantics.
+- Mitigations:
+- DB-enforced inquiry state enum (`SCHEDULED`, `SENT`, `ACKNOWLEDGED`, `EXHAUSTED`) and guarded transition functions.
+- Fail-closed SQLSTATE guard (`P7301`) on auto-finalize attempts from `EXHAUSTED`.
+- Policy-resolved `max_attempts` contract check to prevent compiled-in thresholds.
+
 ### Orchestration Service
 - Tampering: route changes
 - Repudiation: retry/dispatch disputes

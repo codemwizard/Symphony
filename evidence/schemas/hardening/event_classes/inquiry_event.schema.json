@@ -11,6 +11,8 @@
     "poll_count": {"type": "integer", "minimum": 0},
     "status": {"type": "string", "enum": ["INQUIRY_SENT", "INQUIRY_POLLED", "INQUIRY_EXHAUSTED", "RESOLVED"]},
     "policy_version_id": {"type": "string", "minLength": 1},
+    "attempted_action": {"type": "string", "enum": ["AUTO_FINALIZE"]},
+    "outcome": {"type": "string", "enum": ["BLOCKED"]},
     "timestamp_utc": {"type": "string", "minLength": 1}
   }
 }

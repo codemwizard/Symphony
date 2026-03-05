@@ -2,7 +2,7 @@
 -- PostgreSQL database dump
 --
 
-\restrict L6zL1zWc9APqRdeYq5xmf6al3GAQpHTZGszoJxxmT2O5U2kqLtkgyHMlH5EqK1u
+\restrict wKDIyeE9ooMGO8pBpPkbsXb9Dk2KsnpKGMdN2f1afeN4pVuBdBICla1Kq3uf0g3
 
 -- Dumped from database version 18.2 (Debian 18.2-1.pgdg13+1)
 -- Dumped by pg_dump version 18.2 (Debian 18.2-1.pgdg13+1)
@@ -27,6 +27,18 @@ CREATE SCHEMA public;
 
 
 --
+-- Name: inquiry_state_enum; Type: TYPE; Schema: public; Owner: -
+--
+
+CREATE TYPE public.inquiry_state_enum AS ENUM (
+    'SCHEDULED',
+    'SENT',
+    'ACKNOWLEDGED',
+    'EXHAUSTED'
+);
+
+
+--
 -- Name: outbox_attempt_state; Type: TYPE; Schema: public; Owner: -
 --
 
@@ -48,6 +60,40 @@ CREATE TYPE public.policy_version_status AS ENUM (
     'GRACE',
     'RETIRED'
 );
+
+
+--
+-- Name: acknowledge_inquiry_response(text, text); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.acknowledge_inquiry_response(p_instruction_id text, p_policy_version_id text) RETURNS public.inquiry_state_enum
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO 'pg_catalog', 'public'
+    AS $$
+DECLARE
+  v_state public.inquiry_state_enum;
+BEGIN
+  SELECT inquiry_state INTO v_state
+  FROM public.inquiry_state_machine
+  WHERE instruction_id = p_instruction_id
+  FOR UPDATE;
+
+  IF v_state IS NULL THEN
+    RAISE EXCEPTION 'inquiry_not_found' USING ERRCODE = 'P7300';
+  END IF;
+
+  IF v_state <> 'SENT' THEN
+    RAISE EXCEPTION 'illegal_transition_to_acknowledged_from:%', v_state USING ERRCODE = 'P7300';
+  END IF;
+
+  UPDATE public.inquiry_state_machine
+  SET inquiry_state = 'ACKNOWLEDGED',
+      policy_version_id = p_policy_version_id
+  WHERE instruction_id = p_instruction_id;
+
+  RETURN 'ACKNOWLEDGED';
+END;
+$$;
 
 
 --
@@ -94,6 +140,59 @@ BEGIN
   );
 
   RETURN NEW;
+END;
+$$;
+
+
+--
+-- Name: apply_inquiry_attempt(text, text, integer); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.apply_inquiry_attempt(p_instruction_id text, p_policy_version_id text, p_max_attempts integer) RETURNS public.inquiry_state_enum
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO 'pg_catalog', 'public'
+    AS $$
+DECLARE
+  v_state public.inquiry_state_enum;
+  v_attempts INTEGER;
+  v_max INTEGER;
+BEGIN
+  IF p_max_attempts IS NULL OR p_max_attempts <= 0 THEN
+    RAISE EXCEPTION 'invalid_max_attempts' USING ERRCODE = 'P7302';
+  END IF;
+
+  INSERT INTO public.inquiry_state_machine(instruction_id, inquiry_state, attempts, max_attempts, policy_version_id)
+  VALUES (p_instruction_id, 'SCHEDULED', 0, p_max_attempts, p_policy_version_id)
+  ON CONFLICT (instruction_id) DO NOTHING;
+
+  SELECT inquiry_state, attempts, max_attempts INTO v_state, v_attempts, v_max
+  FROM public.inquiry_state_machine
+  WHERE instruction_id = p_instruction_id
+  FOR UPDATE;
+
+  IF v_state IN ('ACKNOWLEDGED', 'EXHAUSTED') THEN
+    RAISE EXCEPTION 'illegal_transition_from_terminal_inquiry_state:%', v_state USING ERRCODE = 'P7300';
+  END IF;
+
+  v_attempts := v_attempts + 1;
+
+  IF v_attempts >= v_max THEN
+    UPDATE public.inquiry_state_machine
+    SET attempts = v_attempts,
+        inquiry_state = 'EXHAUSTED',
+        policy_version_id = p_policy_version_id,
+        max_attempts = p_max_attempts
+    WHERE instruction_id = p_instruction_id;
+    RETURN 'EXHAUSTED';
+  END IF;
+
+  UPDATE public.inquiry_state_machine
+  SET attempts = v_attempts,
+      inquiry_state = 'SENT',
+      policy_version_id = p_policy_version_id,
+      max_attempts = p_max_attempts
+  WHERE instruction_id = p_instruction_id;
+  RETURN 'SENT';
 END;
 $$;
 
@@ -981,6 +1080,28 @@ $$;
 
 
 --
+-- Name: guard_auto_finalize_when_inquiry_exhausted(text); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.guard_auto_finalize_when_inquiry_exhausted(p_instruction_id text) RETURNS void
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO 'pg_catalog', 'public'
+    AS $$
+DECLARE
+  v_state public.inquiry_state_enum;
+BEGIN
+  SELECT inquiry_state INTO v_state
+  FROM public.inquiry_state_machine
+  WHERE instruction_id = p_instruction_id;
+
+  IF v_state = 'EXHAUSTED' THEN
+    RAISE EXCEPTION 'INQUIRY_EXHAUSTED_AUTO_FINALIZE_BLOCKED' USING ERRCODE = 'P7301';
+  END IF;
+END;
+$$;
+
+
+--
 -- Name: mark_anchor_sync_anchored(uuid, uuid, text, text, text); Type: FUNCTION; Schema: public; Owner: -
 --
 
@@ -1706,6 +1827,20 @@ $$;
 
 
 --
+-- Name: touch_inquiry_state_updated_at(); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.touch_inquiry_state_updated_at() RETURNS trigger
+    LANGUAGE plpgsql
+    AS $$
+BEGIN
+  NEW.updated_at := now();
+  RETURN NEW;
+END;
+$$;
+
+
+--
 -- Name: touch_members_updated_at(); Type: FUNCTION; Schema: public; Owner: -
 --
 
@@ -2168,6 +2303,21 @@ CREATE TABLE public.ingress_attestations (
 );
 
 ALTER TABLE ONLY public.ingress_attestations FORCE ROW LEVEL SECURITY;
+
+
+--
+-- Name: inquiry_state_machine; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.inquiry_state_machine (
+    instruction_id text NOT NULL,
+    inquiry_state public.inquiry_state_enum DEFAULT 'SCHEDULED'::public.inquiry_state_enum NOT NULL,
+    attempts integer DEFAULT 0 NOT NULL,
+    max_attempts integer NOT NULL,
+    policy_version_id text NOT NULL,
+    updated_at timestamp with time zone DEFAULT now() NOT NULL,
+    CONSTRAINT inquiry_state_machine_max_attempts_check CHECK ((max_attempts > 0))
+);
 
 
 --
@@ -3007,6 +3157,14 @@ ALTER TABLE public.ingress_attestations
 
 ALTER TABLE ONLY public.ingress_attestations
     ADD CONSTRAINT ingress_attestations_pkey PRIMARY KEY (attestation_id);
+
+
+--
+-- Name: inquiry_state_machine inquiry_state_machine_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.inquiry_state_machine
+    ADD CONSTRAINT inquiry_state_machine_pkey PRIMARY KEY (instruction_id);
 
 
 --
@@ -4185,6 +4343,13 @@ CREATE TRIGGER trg_touch_escrow_updated_at BEFORE UPDATE ON public.escrow_accoun
 
 
 --
+-- Name: inquiry_state_machine trg_touch_inquiry_state_machine_updated_at; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER trg_touch_inquiry_state_machine_updated_at BEFORE UPDATE ON public.inquiry_state_machine FOR EACH ROW EXECUTE FUNCTION public.touch_inquiry_state_updated_at();
+
+
+--
 -- Name: members trg_touch_members_updated_at; Type: TRIGGER; Schema: public; Owner: -
 --
 
@@ -4952,5 +5117,5 @@ ALTER TABLE public.tenants ENABLE ROW LEVEL SECURITY;
 -- PostgreSQL database dump complete
 --
 
-\unrestrict L6zL1zWc9APqRdeYq5xmf6al3GAQpHTZGszoJxxmT2O5U2kqLtkgyHMlH5EqK1u
+\unrestrict wKDIyeE9ooMGO8pBpPkbsXb9Dk2KsnpKGMdN2f1afeN4pVuBdBICla1Kq3uf0g3
 
