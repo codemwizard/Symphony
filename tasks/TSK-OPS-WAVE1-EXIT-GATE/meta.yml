@@ -3,8 +3,18 @@ phase: '1'
 task_id: TSK-OPS-WAVE1-EXIT-GATE
 title: Wave-1 Exit Gate
 owner_role: SUPERVISOR
-status: planned
-depends_on: []
+status: completed
+depends_on:
+- TSK-OPS-A1-STABILITY-GATE
+- TSK-HARD-012
+- TSK-HARD-013
+- TSK-HARD-014
+- TSK-HARD-015
+- TSK-HARD-016
+- TSK-HARD-017
+- TSK-HARD-094
+- TSK-HARD-101
+- TSK-HARD-013B
 touches:
 - docs/programs/symphony-hardening/HARDENING_TASK_PACKS.md
 - evidence/phase1/program_wave1_exit_gate.json

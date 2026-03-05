@@ -1,0 +1,33 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "check_id",
+    "task_id",
+    "status",
+    "pass",
+    "policy_version_id",
+    "max_attempts_from_policy",
+    "state_enum_values_enforced",
+    "auto_finalize_blocked_sqlstate",
+    "illegal_transition_blocked_sqlstate",
+    "max_attempts_policy_resolved",
+    "negative_path_evidence_emitted",
+    "blocked_event_path"
+  ],
+  "properties": {
+    "check_id": {"type": "string", "const": "TSK-HARD-012"},
+    "task_id": {"type": "string", "const": "TSK-HARD-012"},
+    "status": {"type": "string", "enum": ["PASS", "FAIL"]},
+    "pass": {"type": "boolean", "const": true},
+    "policy_version_id": {"type": "string", "minLength": 1},
+    "max_attempts_from_policy": {"type": "integer", "minimum": 1},
+    "state_enum_values_enforced": {"type": "boolean", "const": true},
+    "auto_finalize_blocked_sqlstate": {"type": "string", "const": "P7301"},
+    "illegal_transition_blocked_sqlstate": {"type": "string", "const": "P7300"},
+    "max_attempts_policy_resolved": {"type": "boolean", "const": true},
+    "negative_path_evidence_emitted": {"type": "boolean", "const": true},
+    "blocked_event_path": {"type": "string", "minLength": 1}
+  }
+}

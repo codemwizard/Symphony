@@ -4,7 +4,7 @@ task_id: TSK-HARD-012
 title: "Rail inquiry engine \u2014 SCHEDULED, SENT, ACKNOWLEDGED, EXHAUSTED state\
   \ machine"
 owner_role: SUPERVISOR
-status: planned
+status: completed
 depends_on:
 - TSK-HARD-011A
 - TSK-OPS-A1-STABILITY-GATE

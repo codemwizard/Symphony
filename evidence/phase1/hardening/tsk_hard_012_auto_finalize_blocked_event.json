@@ -1,0 +1,12 @@
+{
+  "event_class": "inquiry_event",
+  "inquiry_id": "inq-hard012",
+  "instruction_id": "inst-hard012",
+  "rail": "ZIPSS",
+  "poll_count": 12,
+  "status": "INQUIRY_EXHAUSTED",
+  "policy_version_id": "RIP-2026-03-05-v1",
+  "attempted_action": "AUTO_FINALIZE",
+  "outcome": "BLOCKED",
+  "timestamp_utc": "2026-03-05T05:06:56Z"
+}

@@ -1,6 +1,6 @@
 id: TSK-HARD-016
 title: "Malformed response quarantine and evidence capture"
-status: todo
+status: done
 phase: "Hardening"
 wave: "1"
 depends_on:

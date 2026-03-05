@@ -49,3 +49,5 @@ This ADR remains the authoritative governance reference for baseline change chec
 - 2026-02-25: Baseline regenerated after supervisor-access mechanism migration adding approval queue hold/approval metadata, single-arg supervisor submission path, and self-approval denial semantics in `decide_supervisor_approval()` (0058).
 - 2026-02-25: Baseline regenerated after tenant isolation migration applying restrictive + forced RLS posture across tenant-scoped tables with cross-tenant leakage verification coverage (0059).
 - 2026-02-26: Baseline regenerated after regulatory incident workflow migration introducing `regulatory_incidents` and append-only `incident_events` for 48-hour BoZ incident report export posture (0060).
+- 2026-03-05: Baseline regenerated after Wave-1 hardening inquiry state-machine migration adding `inquiry_state_machine` and fail-closed auto-finalize guard (0061).
+- 2026-03-05: Baseline regenerated after Wave-1 hardening runtime control migration adding effect sealing, finality conflict containment, malformed quarantine, circuit-breaker suspension, offline safe mode, and orphan/replay containment primitives (0062).

@@ -1,0 +1,11 @@
+{
+  "check_id": "TSK-HARD-011A",
+  "task_id": "TSK-HARD-011A",
+  "status": "PASS",
+  "pass": true,
+  "decision_snapshot_captured": true,
+  "historical_policy_version_immutable": true,
+  "inquiry_event_schema_class": "inquiry_event",
+  "policy_activation_event_emitted": true,
+  "activation_unsigned_reason": "DEPENDENCY_NOT_READY"
+}

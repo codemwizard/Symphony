@@ -3,7 +3,7 @@ phase: '1'
 task_id: TSK-HARD-011A
 title: Policy snapshot and decision evidence baseline
 owner_role: SUPERVISOR
-status: planned
+status: completed
 depends_on:
 - TSK-HARD-011
 touches:

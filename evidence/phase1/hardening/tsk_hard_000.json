@@ -1,0 +1,18 @@
+{
+  "check_id": "TSK-HARD-000",
+  "task_id": "TSK-HARD-000",
+  "status": "PASS",
+  "pass": true,
+  "timestamp_utc": "2026-03-05T03:47:08Z",
+  "git_sha": "a3327cfbf8f88be1eafe72de4e157526c7bda672",
+  "details": {
+    "charter_exists": true,
+    "scope_exists": true,
+    "decision_log_exists": true,
+    "master_plan_exists": true,
+    "wave_plan_order_ok": true,
+    "traceability_matrix_exists": true,
+    "hard_invariant_count": 12,
+    "contains_013b_row": true
+  }
+}

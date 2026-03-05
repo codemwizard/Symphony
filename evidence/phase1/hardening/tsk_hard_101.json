@@ -1,0 +1,1 @@
+{"check_id":"TSK-HARD-101","task_id":"TSK-HARD-101","status":"PASS","pass":true,"scenarios_covered":["ASYNC_CONTRADICTION","DELAYED_SETTLEMENT","DUAL_DEBIT_RISK","SILENT_REJECTION"],"uses_behavior_profile_matching":true,"hardcoded_mmo_name_used":false,"policy_version_id":"v1.0.0"}

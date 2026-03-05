@@ -3,7 +3,7 @@ phase: '1'
 task_id: TSK-HARD-094
 title: Offline Safe Mode execution gate
 owner_role: SUPERVISOR
-status: planned
+status: completed
 depends_on:
 - TSK-HARD-017
 - TSK-OPS-A1-STABILITY-GATE

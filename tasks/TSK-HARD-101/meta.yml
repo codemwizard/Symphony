@@ -3,7 +3,7 @@ phase: '1'
 task_id: TSK-HARD-101
 title: Zambia MMO reality controls
 owner_role: SUPERVISOR
-status: planned
+status: completed
 depends_on:
 - TSK-HARD-094
 - TSK-OPS-A1-STABILITY-GATE

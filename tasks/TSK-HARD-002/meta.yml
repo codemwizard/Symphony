@@ -3,7 +3,7 @@ phase: '1'
 task_id: TSK-HARD-002
 title: Evidence event class schema registration
 owner_role: SUPERVISOR
-status: planned
+status: completed
 depends_on:
 - TSK-HARD-001
 touches:

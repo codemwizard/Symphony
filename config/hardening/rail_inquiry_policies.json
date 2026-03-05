@@ -1,0 +1,52 @@
+{
+  "active_version_id": "RIP-2026-03-05-v1",
+  "versions": [
+    {
+      "version_id": "RIP-2026-03-05-v1",
+      "created_at": "2026-03-05T00:00:00Z",
+      "created_by": "hardening-program",
+      "policies": [
+        {
+          "rail_id": "ZECHL",
+          "cadence_seconds": 120,
+          "retry_window_seconds": 3600,
+          "max_attempts": 12,
+          "timeout_threshold_seconds": 60,
+          "orphan_threshold_seconds": 900,
+          "circuit_breaker_threshold_rate": 0.25,
+          "circuit_breaker_window_seconds": 600
+        },
+        {
+          "rail_id": "DDACC",
+          "cadence_seconds": 120,
+          "retry_window_seconds": 3600,
+          "max_attempts": 12,
+          "timeout_threshold_seconds": 60,
+          "orphan_threshold_seconds": 900,
+          "circuit_breaker_threshold_rate": 0.25,
+          "circuit_breaker_window_seconds": 600
+        },
+        {
+          "rail_id": "ZIPSS",
+          "cadence_seconds": 120,
+          "retry_window_seconds": 3600,
+          "max_attempts": 12,
+          "timeout_threshold_seconds": 60,
+          "orphan_threshold_seconds": 900,
+          "circuit_breaker_threshold_rate": 0.25,
+          "circuit_breaker_window_seconds": 600
+        },
+        {
+          "rail_id": "MMO-*",
+          "cadence_seconds": 120,
+          "retry_window_seconds": 3600,
+          "max_attempts": 12,
+          "timeout_threshold_seconds": 60,
+          "orphan_threshold_seconds": 900,
+          "circuit_breaker_threshold_rate": 0.25,
+          "circuit_breaker_window_seconds": 600
+        }
+      ]
+    }
+  ]
+}

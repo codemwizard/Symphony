@@ -1,0 +1,13 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["event_class", "snapshot_id", "snapshot_timestamp", "key_class", "timestamp_utc"],
+  "properties": {
+    "event_class": {"type": "string", "const": "pka_snapshot_event"},
+    "snapshot_id": {"type": "string", "minLength": 1},
+    "snapshot_timestamp": {"type": "string", "minLength": 1},
+    "key_class": {"type": "string", "minLength": 1},
+    "timestamp_utc": {"type": "string", "minLength": 1}
+  }
+}

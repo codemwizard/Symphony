@@ -1,0 +1,14 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["event_class", "policy_id", "policy_version", "activated_by", "timestamp_utc"],
+  "properties": {
+    "event_class": {"type": "string", "const": "policy_activation_event"},
+    "policy_id": {"type": "string", "minLength": 1},
+    "policy_version": {"type": "string", "minLength": 1},
+    "activated_by": {"type": "string", "minLength": 1},
+    "unsigned_reason": {"type": "string", "enum": ["DEPENDENCY_NOT_READY"]},
+    "timestamp_utc": {"type": "string", "minLength": 1}
+  }
+}

@@ -3,7 +3,7 @@ phase: '1'
 task_id: TSK-HARD-011
 title: Metadata-driven per-rail inquiry policy
 owner_role: SUPERVISOR
-status: planned
+status: completed
 depends_on:
 - TSK-HARD-010
 touches:

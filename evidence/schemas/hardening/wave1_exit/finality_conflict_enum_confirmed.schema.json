@@ -1,0 +1,1 @@
+{ "type":"object","required":["pass","confirmation_method","enum_value_confirmed","query_timestamp"],"properties":{"pass":{"const":true},"confirmation_method":{"const":"DB_ENUM_QUERY"},"enum_value_confirmed":{"const":"FINALITY_CONFLICT"},"query_timestamp":{"type":"string"}},"additionalProperties":true }

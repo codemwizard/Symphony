@@ -3,7 +3,7 @@ phase: '1'
 task_id: TSK-HARD-016
 title: Malformed response quarantine and evidence capture
 owner_role: SUPERVISOR
-status: planned
+status: completed
 depends_on:
 - TSK-HARD-015
 - TSK-OPS-A1-STABILITY-GATE

@@ -1,0 +1,16 @@
+{
+  "check_id": "TSK-P1-203",
+  "timestamp_utc": "2026-03-05T00:00:00Z",
+  "git_sha": "d53a738a7312",
+  "task_id": "TSK-P1-203",
+  "status": "PASS",
+  "pass": true,
+  "required_manifest_files_present": true,
+  "checked_files": [
+    "infra/sandbox/k8s/namespace.yaml",
+    "infra/sandbox/k8s/kustomization.yaml",
+    "infra/sandbox/k8s/db-migration-job.yaml",
+    "infra/sandbox/k8s/executor-worker-deployment.yaml",
+    "infra/sandbox/k8s/ledger-api-deployment.yaml"
+  ]
+}

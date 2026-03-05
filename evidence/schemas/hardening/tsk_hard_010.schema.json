@@ -1,0 +1,25 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "check_id",
+    "task_id",
+    "status",
+    "pass",
+    "policy_entries",
+    "scenario_rows",
+    "required_scenarios_present",
+    "implementing_task_ids_valid"
+  ],
+  "properties": {
+    "check_id": {"type": "string", "const": "TSK-HARD-010"},
+    "task_id": {"type": "string", "const": "TSK-HARD-010"},
+    "status": {"type": "string", "enum": ["PASS", "FAIL"]},
+    "pass": {"type": "boolean"},
+    "policy_entries": {"type": "integer", "minimum": 1},
+    "scenario_rows": {"type": "integer", "minimum": 6},
+    "required_scenarios_present": {"type": "boolean", "const": true},
+    "implementing_task_ids_valid": {"type": "boolean", "const": true}
+  }
+}

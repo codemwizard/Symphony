@@ -1,0 +1,10 @@
+{
+  "check_id": "TSK-HARD-010",
+  "task_id": "TSK-HARD-010",
+  "status": "PASS",
+  "pass": true,
+  "policy_entries": 4,
+  "scenario_rows": 6,
+  "required_scenarios_present": true,
+  "implementing_task_ids_valid": true
+}

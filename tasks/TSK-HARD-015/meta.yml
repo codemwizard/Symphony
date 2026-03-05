@@ -3,7 +3,7 @@ phase: '1'
 task_id: TSK-HARD-015
 title: "Conflicting truth containment \u2014 FINALITY_CONFLICT state machine"
 owner_role: SUPERVISOR
-status: planned
+status: completed
 depends_on:
 - TSK-HARD-014
 - TSK-OPS-A1-STABILITY-GATE

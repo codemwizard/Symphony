@@ -1,0 +1,1 @@
+{ "type":"object","required":["pass","instruction_id","inquiry_state","attempted_action","outcome"],"properties":{"pass":{"const":true},"instruction_id":{"type":"string"},"inquiry_state":{"const":"EXHAUSTED"},"attempted_action":{"const":"AUTO_FINALIZE"},"outcome":{"const":"BLOCKED"}},"additionalProperties":true }

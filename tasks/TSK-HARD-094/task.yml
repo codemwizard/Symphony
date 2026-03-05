@@ -1,6 +1,6 @@
 id: TSK-HARD-094
 title: "Offline Safe Mode execution gate"
-status: todo
+status: done
 phase: "Hardening"
 wave: "1"
 depends_on:

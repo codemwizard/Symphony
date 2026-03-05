@@ -1,0 +1,24 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["check_id", "task_id", "status", "pass", "timestamp_utc", "git_sha", "details"],
+  "properties": {
+    "check_id": {"type": "string"},
+    "task_id": {"type": "string", "const": "TSK-HARD-001"},
+    "status": {"type": "string", "enum": ["PASS", "FAIL"]},
+    "pass": {"type": "boolean"},
+    "timestamp_utc": {"type": "string"},
+    "git_sha": {"type": "string"},
+    "details": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["invariant_count", "all_required_fields_present", "traceability_linked"],
+      "properties": {
+        "invariant_count": {"type": "integer"},
+        "all_required_fields_present": {"type": "boolean"},
+        "traceability_linked": {"type": "boolean"}
+      }
+    }
+  }
+}

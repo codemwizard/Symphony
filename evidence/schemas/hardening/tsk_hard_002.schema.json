@@ -1,0 +1,25 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "check_id",
+    "task_id",
+    "status",
+    "pass",
+    "event_class_schema_count",
+    "valid_samples_passed",
+    "invalid_samples_rejected",
+    "docs_mirror_gating_reference_found"
+  ],
+  "properties": {
+    "check_id": {"type": "string", "const": "TSK-HARD-002"},
+    "task_id": {"type": "string", "const": "TSK-HARD-002"},
+    "status": {"type": "string", "enum": ["PASS", "FAIL"]},
+    "pass": {"type": "boolean"},
+    "event_class_schema_count": {"type": "integer", "minimum": 10},
+    "valid_samples_passed": {"type": "integer", "minimum": 10},
+    "invalid_samples_rejected": {"type": "integer", "minimum": 10},
+    "docs_mirror_gating_reference_found": {"type": "boolean", "const": false}
+  }
+}

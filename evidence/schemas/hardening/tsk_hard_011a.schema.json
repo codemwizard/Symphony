@@ -1,0 +1,27 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "check_id",
+    "task_id",
+    "status",
+    "pass",
+    "decision_snapshot_captured",
+    "historical_policy_version_immutable",
+    "inquiry_event_schema_class",
+    "policy_activation_event_emitted",
+    "activation_unsigned_reason"
+  ],
+  "properties": {
+    "check_id": {"type": "string", "const": "TSK-HARD-011A"},
+    "task_id": {"type": "string", "const": "TSK-HARD-011A"},
+    "status": {"type": "string", "enum": ["PASS", "FAIL"]},
+    "pass": {"type": "boolean"},
+    "decision_snapshot_captured": {"type": "boolean", "const": true},
+    "historical_policy_version_immutable": {"type": "boolean", "const": true},
+    "inquiry_event_schema_class": {"type": "string", "const": "inquiry_event"},
+    "policy_activation_event_emitted": {"type": "boolean", "const": true},
+    "activation_unsigned_reason": {"type": "string", "enum": ["DEPENDENCY_NOT_READY"]}
+  }
+}

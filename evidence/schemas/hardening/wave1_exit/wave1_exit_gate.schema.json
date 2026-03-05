@@ -1,0 +1,1 @@
+{ "type":"object","required":["check_id","task_id","status","pass","artifacts_validated"],"properties":{"check_id":{"const":"TSK-OPS-WAVE1-EXIT-GATE"},"task_id":{"const":"TSK-OPS-WAVE1-EXIT-GATE"},"status":{"const":"PASS"},"pass":{"const":true},"artifacts_validated":{"type":"integer","const":7}},"additionalProperties":true }

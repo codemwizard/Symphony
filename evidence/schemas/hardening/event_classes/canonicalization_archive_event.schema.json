@@ -1,0 +1,13 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["event_class", "archive_id", "source_digest", "archive_digest", "timestamp_utc"],
+  "properties": {
+    "event_class": {"type": "string", "const": "canonicalization_archive_event"},
+    "archive_id": {"type": "string", "minLength": 1},
+    "source_digest": {"type": "string", "minLength": 1},
+    "archive_digest": {"type": "string", "minLength": 1},
+    "timestamp_utc": {"type": "string", "minLength": 1}
+  }
+}

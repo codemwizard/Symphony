@@ -1,0 +1,13 @@
+{
+  "check_id": "TSK-HARD-001",
+  "task_id": "TSK-HARD-001",
+  "status": "PASS",
+  "pass": true,
+  "timestamp_utc": "2026-03-05T03:50:47Z",
+  "git_sha": "357e9612c667e814e0d521b2c17383145e3b0f80",
+  "details": {
+    "invariant_count": 12,
+    "all_required_fields_present": true,
+    "traceability_linked": true
+  }
+}
