@@ -1,0 +1,46 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "check_id",
+    "task_id",
+    "status",
+    "pass",
+    "timestamp_utc",
+    "git_sha",
+    "details"
+  ],
+  "properties": {
+    "check_id": { "type": "string" },
+    "task_id": { "type": "string", "const": "TSK-HARD-000" },
+    "status": { "type": "string", "enum": ["PASS", "FAIL"] },
+    "pass": { "type": "boolean" },
+    "timestamp_utc": { "type": "string" },
+    "git_sha": { "type": "string" },
+    "details": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "charter_exists",
+        "scope_exists",
+        "decision_log_exists",
+        "master_plan_exists",
+        "wave_plan_order_ok",
+        "traceability_matrix_exists",
+        "hard_invariant_count",
+        "contains_013b_row"
+      ],
+      "properties": {
+        "charter_exists": { "type": "boolean" },
+        "scope_exists": { "type": "boolean" },
+        "decision_log_exists": { "type": "boolean" },
+        "master_plan_exists": { "type": "boolean" },
+        "wave_plan_order_ok": { "type": "boolean" },
+        "traceability_matrix_exists": { "type": "boolean" },
+        "hard_invariant_count": { "type": "integer" },
+        "contains_013b_row": { "type": "boolean" }
+      }
+    }
+  }
+}
