@@ -2,7 +2,7 @@
 -- PostgreSQL database dump
 --
 
-\restrict QwJxzfSOD0iTrcxoyQcifqlYgYH8jDSGCFCkJhbyNiiYh2Jkso5WQgbDDc5LGPX
+\restrict aeUE31DjlRtcvea9CHUcRQpx4dOLAvAxltiAJJOgsW726cU04ZRP20QrwCpn1xi
 
 -- Dumped from database version 18.2 (Debian 18.2-1.pgdg13+1)
 -- Dumped by pg_dump version 18.2 (Debian 18.2-1.pgdg13+1)
@@ -24,6 +24,21 @@ SET row_security = off;
 --
 
 CREATE SCHEMA public;
+
+
+--
+-- Name: adjustment_state_enum; Type: TYPE; Schema: public; Owner: -
+--
+
+CREATE TYPE public.adjustment_state_enum AS ENUM (
+    'requested',
+    'pending_approval',
+    'cooling_off',
+    'eligible_execute',
+    'executed',
+    'denied',
+    'blocked_legal_hold'
+);
 
 
 --
@@ -282,6 +297,25 @@ BEGIN
       max_attempts = p_max_attempts
   WHERE instruction_id = p_instruction_id;
   RETURN 'SENT';
+END;
+$$;
+
+
+--
+-- Name: assert_adjustment_execution_allowed(uuid, public.adjustment_state_enum, text); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.assert_adjustment_execution_allowed(p_adjustment_id uuid, p_current_state public.adjustment_state_enum, p_freeze_flag_type text DEFAULT NULL::text) RETURNS void
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO 'pg_catalog', 'public'
+    AS $$
+BEGIN
+  IF p_current_state = 'cooling_off' THEN
+    RAISE EXCEPTION 'ADJUSTMENT_COOLING_OFF_ACTIVE' USING ERRCODE = 'P7701';
+  END IF;
+  IF p_freeze_flag_type IS NOT NULL THEN
+    RAISE EXCEPTION 'ADJUSTMENT_FREEZE_BLOCK' USING ERRCODE = 'P7702';
+  END IF;
 END;
 $$;
 
@@ -934,6 +968,23 @@ $$;
 
 
 --
+-- Name: enforce_adjustment_terminal_immutability(); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.enforce_adjustment_terminal_immutability() RETURNS trigger
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO 'pg_catalog', 'public'
+    AS $$
+BEGIN
+  IF TG_OP='UPDATE' AND OLD.adjustment_state IN ('executed','denied','blocked_legal_hold') THEN
+    RAISE EXCEPTION 'ADJUSTMENT_TERMINAL_IMMUTABLE' USING ERRCODE = 'P7101';
+  END IF;
+  RETURN NEW;
+END;
+$$;
+
+
+--
 -- Name: enforce_instruction_reversal_source(); Type: FUNCTION; Schema: public; Owner: -
 --
 
@@ -1127,6 +1178,32 @@ $$;
 
 
 --
+-- Name: evaluate_adjustment_ceiling(uuid, numeric); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.evaluate_adjustment_ceiling(p_adjustment_id uuid, p_parent_instruction_value numeric) RETURNS void
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO 'pg_catalog', 'public'
+    AS $$
+DECLARE
+  v_parent text;
+  v_total numeric;
+BEGIN
+  SELECT parent_instruction_id INTO v_parent FROM public.adjustment_instructions WHERE adjustment_id = p_adjustment_id;
+  SELECT coalesce(sum(a.adjustment_value),0)
+  INTO v_total
+  FROM public.adjustment_execution_attempts e
+  JOIN public.adjustment_instructions a ON a.adjustment_id=e.adjustment_id
+  WHERE a.parent_instruction_id=v_parent AND e.outcome='executed';
+
+  IF v_total > p_parent_instruction_value THEN
+    RAISE EXCEPTION 'ADJUSTMENT_CEILING_BREACH' USING ERRCODE = 'P7201';
+  END IF;
+END;
+$$;
+
+
+--
 -- Name: evaluate_circuit_breaker(text, text, numeric, numeric, integer, text); Type: FUNCTION; Schema: public; Owner: -
 --
 
@@ -1309,6 +1386,45 @@ BEGIN
   IF v_state = 'EXHAUSTED' THEN
     RAISE EXCEPTION 'INQUIRY_EXHAUSTED_AUTO_FINALIZE_BLOCKED' USING ERRCODE = 'P7301';
   END IF;
+END;
+$$;
+
+
+--
+-- Name: issue_adjustment(text, text, numeric, text, text); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.issue_adjustment(p_parent_instruction_id text, p_adjustment_type text, p_adjustment_value numeric, p_policy_version_id text, p_justification text DEFAULT NULL::text) RETURNS uuid
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO 'pg_catalog', 'public'
+    AS $$
+DECLARE
+  v_id uuid;
+  v_recipient text;
+BEGIN
+  SELECT 'parent:' || p_parent_instruction_id INTO v_recipient;
+  INSERT INTO public.adjustment_instructions(
+    parent_instruction_id, adjustment_type, adjustment_value,
+    recipient_ref, policy_version_id, justification
+  ) VALUES (
+    p_parent_instruction_id, p_adjustment_type, p_adjustment_value,
+    v_recipient, p_policy_version_id, p_justification
+  ) RETURNING adjustment_id INTO v_id;
+  RETURN v_id;
+END;
+$$;
+
+
+--
+-- Name: issue_adjustment_with_recipient(text, text); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.issue_adjustment_with_recipient(p_parent_instruction_id text, p_recipient text) RETURNS uuid
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO 'pg_catalog', 'public'
+    AS $$
+BEGIN
+  RAISE EXCEPTION 'ADJUSTMENT_RECIPIENT_NOT_PERMITTED' USING ERRCODE = 'P7601';
 END;
 $$;
 
@@ -2434,6 +2550,84 @@ CREATE TABLE public.adapter_circuit_breakers (
 
 
 --
+-- Name: adjustment_approval_stages; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.adjustment_approval_stages (
+    stage_id uuid DEFAULT gen_random_uuid() NOT NULL,
+    adjustment_id uuid NOT NULL,
+    required_approver_count integer NOT NULL,
+    quorum_threshold integer NOT NULL,
+    stage_status text NOT NULL,
+    quorum_policy_version_id text NOT NULL,
+    created_at timestamp with time zone DEFAULT now() NOT NULL
+);
+
+
+--
+-- Name: adjustment_approvals; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.adjustment_approvals (
+    approval_id uuid DEFAULT gen_random_uuid() NOT NULL,
+    stage_id uuid NOT NULL,
+    approver_id text NOT NULL,
+    role_at_time_of_signing text NOT NULL,
+    department_at_time_of_signing text NOT NULL,
+    attestation_timestamp timestamp with time zone DEFAULT now() NOT NULL,
+    signature_ref text NOT NULL,
+    unsigned_reason text
+);
+
+
+--
+-- Name: adjustment_execution_attempts; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.adjustment_execution_attempts (
+    attempt_id uuid DEFAULT gen_random_uuid() NOT NULL,
+    adjustment_id uuid NOT NULL,
+    idempotency_key text NOT NULL,
+    adjustment_value numeric(18,2) NOT NULL,
+    attempt_timestamp timestamp with time zone DEFAULT now() NOT NULL,
+    dispatch_reference text,
+    outcome text NOT NULL
+);
+
+
+--
+-- Name: adjustment_freeze_flags; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.adjustment_freeze_flags (
+    flag_id uuid DEFAULT gen_random_uuid() NOT NULL,
+    adjustment_id uuid NOT NULL,
+    flag_type text NOT NULL,
+    authority_reference text NOT NULL,
+    operator_id text NOT NULL,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    active boolean DEFAULT true NOT NULL
+);
+
+
+--
+-- Name: adjustment_instructions; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.adjustment_instructions (
+    adjustment_id uuid DEFAULT gen_random_uuid() NOT NULL,
+    parent_instruction_id text NOT NULL,
+    adjustment_state public.adjustment_state_enum DEFAULT 'requested'::public.adjustment_state_enum NOT NULL,
+    adjustment_type text NOT NULL,
+    adjustment_value numeric(18,2) NOT NULL,
+    recipient_ref text NOT NULL,
+    justification text,
+    policy_version_id text NOT NULL,
+    created_at timestamp with time zone DEFAULT now() NOT NULL
+);
+
+
+--
 -- Name: anchor_sync_operations; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -3512,6 +3706,62 @@ ALTER TABLE ONLY public.tenants FORCE ROW LEVEL SECURITY;
 
 ALTER TABLE ONLY public.adapter_circuit_breakers
     ADD CONSTRAINT adapter_circuit_breakers_pkey PRIMARY KEY (adapter_id, rail_id);
+
+
+--
+-- Name: adjustment_approval_stages adjustment_approval_stages_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.adjustment_approval_stages
+    ADD CONSTRAINT adjustment_approval_stages_pkey PRIMARY KEY (stage_id);
+
+
+--
+-- Name: adjustment_approvals adjustment_approvals_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.adjustment_approvals
+    ADD CONSTRAINT adjustment_approvals_pkey PRIMARY KEY (approval_id);
+
+
+--
+-- Name: adjustment_approvals adjustment_approvals_stage_id_approver_id_key; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.adjustment_approvals
+    ADD CONSTRAINT adjustment_approvals_stage_id_approver_id_key UNIQUE (stage_id, approver_id);
+
+
+--
+-- Name: adjustment_execution_attempts adjustment_execution_attempts_adjustment_id_idempotency_key_key; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.adjustment_execution_attempts
+    ADD CONSTRAINT adjustment_execution_attempts_adjustment_id_idempotency_key_key UNIQUE (adjustment_id, idempotency_key);
+
+
+--
+-- Name: adjustment_execution_attempts adjustment_execution_attempts_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.adjustment_execution_attempts
+    ADD CONSTRAINT adjustment_execution_attempts_pkey PRIMARY KEY (attempt_id);
+
+
+--
+-- Name: adjustment_freeze_flags adjustment_freeze_flags_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.adjustment_freeze_flags
+    ADD CONSTRAINT adjustment_freeze_flags_pkey PRIMARY KEY (flag_id);
+
+
+--
+-- Name: adjustment_instructions adjustment_instructions_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.adjustment_instructions
+    ADD CONSTRAINT adjustment_instructions_pkey PRIMARY KEY (adjustment_id);
 
 
 --
@@ -4730,6 +4980,13 @@ CREATE RULE kyc_retention_policy_no_update AS
 
 
 --
+-- Name: adjustment_instructions trg_adjustment_terminal_immutability; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER trg_adjustment_terminal_immutability BEFORE UPDATE ON public.adjustment_instructions FOR EACH ROW EXECUTE FUNCTION public.enforce_adjustment_terminal_immutability();
+
+
+--
 -- Name: payment_outbox_attempts trg_anchor_dispatched_outbox_attempt; Type: TRIGGER; Schema: public; Owner: -
 --
 
@@ -4937,6 +5194,46 @@ CREATE TRIGGER trg_touch_persons_updated_at BEFORE UPDATE ON public.persons FOR 
 --
 
 CREATE TRIGGER trg_touch_programs_updated_at BEFORE UPDATE ON public.programs FOR EACH ROW EXECUTE FUNCTION public.touch_programs_updated_at();
+
+
+--
+-- Name: adjustment_approval_stages adjustment_approval_stages_adjustment_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.adjustment_approval_stages
+    ADD CONSTRAINT adjustment_approval_stages_adjustment_id_fkey FOREIGN KEY (adjustment_id) REFERENCES public.adjustment_instructions(adjustment_id);
+
+
+--
+-- Name: adjustment_approvals adjustment_approvals_stage_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.adjustment_approvals
+    ADD CONSTRAINT adjustment_approvals_stage_id_fkey FOREIGN KEY (stage_id) REFERENCES public.adjustment_approval_stages(stage_id);
+
+
+--
+-- Name: adjustment_execution_attempts adjustment_execution_attempts_adjustment_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.adjustment_execution_attempts
+    ADD CONSTRAINT adjustment_execution_attempts_adjustment_id_fkey FOREIGN KEY (adjustment_id) REFERENCES public.adjustment_instructions(adjustment_id);
+
+
+--
+-- Name: adjustment_freeze_flags adjustment_freeze_flags_adjustment_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.adjustment_freeze_flags
+    ADD CONSTRAINT adjustment_freeze_flags_adjustment_id_fkey FOREIGN KEY (adjustment_id) REFERENCES public.adjustment_instructions(adjustment_id);
+
+
+--
+-- Name: adjustment_instructions adjustment_parent_fk; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.adjustment_instructions
+    ADD CONSTRAINT adjustment_parent_fk FOREIGN KEY (parent_instruction_id) REFERENCES public.inquiry_state_machine(instruction_id);
 
 
 --
@@ -5686,5 +5983,5 @@ ALTER TABLE public.tenants ENABLE ROW LEVEL SECURITY;
 -- PostgreSQL database dump complete
 --
 
-\unrestrict QwJxzfSOD0iTrcxoyQcifqlYgYH8jDSGCFCkJhbyNiiYh2Jkso5WQgbDDc5LGPX
+\unrestrict aeUE31DjlRtcvea9CHUcRQpx4dOLAvAxltiAJJOgsW726cU04ZRP20QrwCpn1xi
 

@@ -1,6 +1,6 @@
 id: TSK-HARD-024
 title: "Terminal immutability enforcement (P7101) on adjustment tables"
-status: todo
+status: done
 phase: "Hardening"
 wave: "2"
 depends_on:

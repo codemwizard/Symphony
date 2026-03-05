@@ -1,0 +1,1 @@
+{"check_id":"TSK-HARD-025","task_id":"TSK-HARD-025","status":"PASS","pass":true,"cooling_off_block_sqlstate":"P7701","freeze_flag_block_sqlstate":"P7702","freeze_flags":["participant_suspended","account_frozen","aml_hold","regulator_stop","program_hold"],"timestamp_utc":"2026-03-05T10:01:27Z","git_sha":"6a33d42e7e2b1ab1f6fcaf0d4b1daa93047d4f42"}

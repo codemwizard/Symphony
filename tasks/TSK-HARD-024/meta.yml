@@ -3,7 +3,7 @@ phase: '1'
 task_id: TSK-HARD-024
 title: Terminal immutability enforcement (P7101) on adjustment tables
 owner_role: SUPERVISOR
-status: planned
+status: completed
 depends_on:
 - TSK-HARD-026
 touches:

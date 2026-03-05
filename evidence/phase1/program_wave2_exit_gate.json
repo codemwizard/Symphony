@@ -1,0 +1,9 @@
+{
+  "check_id": "TSK-OPS-WAVE2-EXIT-GATE",
+  "task_id": "TSK-OPS-WAVE2-EXIT-GATE",
+  "status": "PASS",
+  "pass": true,
+  "artifacts_validated": 9,
+  "timestamp_utc": "2026-03-05T10:01:27Z",
+  "git_sha": "6a33d42e7e2b1ab1f6fcaf0d4b1daa93047d4f42"
+}

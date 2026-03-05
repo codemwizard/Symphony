@@ -1,6 +1,6 @@
 id: TSK-HARD-025
 title: "Cooling-off and legal hold transitions"
-status: todo
+status: done
 phase: "Hardening"
 wave: "2"
 depends_on:

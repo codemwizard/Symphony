@@ -1,0 +1,1 @@
+{"check_id":"TSK-HARD-024","task_id":"TSK-HARD-024","status":"PASS","pass":true,"trigger_name":"trg_adjustment_terminal_immutability","terminal_states_covered":["executed","denied","blocked_legal_hold"],"sqlstate":"P7101","timestamp_utc":"2026-03-05T10:01:27Z","git_sha":"6a33d42e7e2b1ab1f6fcaf0d4b1daa93047d4f42"}

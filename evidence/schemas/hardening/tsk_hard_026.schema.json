@@ -1,0 +1,1 @@
+{"$schema":"http://json-schema.org/draft-07/schema#","type":"object","required":["check_id","task_id","status","pass","snapshot_attestation","stage_linked","timestamp_utc","git_sha"]}

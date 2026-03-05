@@ -87,6 +87,12 @@
       "meaning": "missing or invalid rail sequence truth anchor on dispatch",
       "retryable": false
     },
+    "P7101": {
+      "class": "B",
+      "subsystem": "immutability",
+      "meaning": "terminal-row immutability violation blocked by fail-closed trigger",
+      "retryable": false
+    },
     "P7201": {
       "class": "B",
       "subsystem": "ingress",
@@ -206,6 +212,24 @@
       "class": "B",
       "subsystem": "hardening",
       "meaning": "orphan or replay event rejected by containment policy",
+      "retryable": false
+    },
+    "P7601": {
+      "class": "B",
+      "subsystem": "hardening",
+      "meaning": "adjustment recipient input is not permitted; recipient must be inherited from parent instruction",
+      "retryable": false
+    },
+    "P7701": {
+      "class": "B",
+      "subsystem": "hardening",
+      "meaning": "adjustment execution attempted during cooling-off state",
+      "retryable": false
+    },
+    "P7702": {
+      "class": "B",
+      "subsystem": "hardening",
+      "meaning": "adjustment execution blocked by active freeze/legal-hold flag",
       "retryable": false
     }
   }
