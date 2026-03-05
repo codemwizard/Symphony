@@ -1,6 +1,6 @@
 id: TSK-HARD-011A
 title: "Policy snapshot and decision evidence baseline"
-status: todo
+status: done
 phase: "Hardening"
 wave: "1"
 depends_on:

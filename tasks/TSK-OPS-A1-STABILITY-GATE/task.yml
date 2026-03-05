@@ -1,6 +1,6 @@
 id: TSK-OPS-A1-STABILITY-GATE
 title: "Program A1 Stability Gate"
-status: todo
+status: done
 phase: "Hardening"
 wave: "1"
 depends_on: []
