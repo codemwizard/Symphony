@@ -33,11 +33,14 @@
         );
         );
         );
+        AND (r.allocated_reference = v_candidate OR r.canonicalized_reference = v_canon)
         AND COALESCE(submitted_by, '') = v_actor
         AND status = 'PENDING_SUPERVISOR_APPROVAL'
         DELETE FROM payment_outbox_pending WHERE outbox_id = v_record.outbox_id;
         DETAIL = 'Lease missing/expired or token mismatch; refusing to complete';
         END IF;
+        ERRCODE = 'P7803',
+        ERRCODE = 'P7803',
         FROM payment_outbox_pending p
         IF NOT FOUND THEN
         INSERT INTO payment_outbox_attempts (
@@ -45,6 +48,8 @@
         INSERT INTO public.dispatch_reference_collision_events(
         INTO existing_pending
         LIMIT 1;
+        MESSAGE = 'ACTIVE_REFERENCE_POLICY_IMMUTABLE';
+        MESSAGE = 'ACTIVE_REFERENCE_POLICY_IMMUTABLE';
         SELECT p.outbox_id, p.sequence_id, p.created_at
         UPDATE payment_outbox_pending SET
         USING ERRCODE = '42501';
@@ -54,6 +59,8 @@
         approved_at = NULL;
         approved_by = NULL,
         attempt_count = GREATEST(attempt_count, v_next_attempt_no),
+        canonicalization_version = EXCLUDED.canonicalization_version,
+        canonicalized_reference, strategy_used, policy_version_id, collision_retry_count
         claimed_by = NULL, lease_token = NULL, lease_expires_at = NULL
         containment_action = EXCLUDED.containment_action;
         contradiction_timestamp = EXCLUDED.contradiction_timestamp,
@@ -90,6 +97,7 @@
         participant_id,
         payload
         policy_version_id = EXCLUDED.policy_version_id,
+        policy_version_id = EXCLUDED.policy_version_id,
         policy_version_id = p_policy_version_id,
         rail_a_id = EXCLUDED.rail_a_id,
         rail_a_response = EXCLUDED.rail_a_response,
@@ -97,6 +105,7 @@
         rail_b_response = EXCLUDED.rail_b_response,
         rail_type,
         rolling_window_seconds = EXCLUDED.rolling_window_seconds,
+        sealed_at = now();
         sequence_id,
         status = 'PENDING_SUPERVISOR_APPROVAL',
         status = 'PENDING_SUPERVISOR_APPROVAL',
@@ -107,8 +116,14 @@
         timeout_at = NOW() + make_interval(mins => v_timeout),
         trigger_threshold = EXCLUDED.trigger_threshold,
         v_canon, v_strategy.strategy_type, v_strategy.policy_version_id, v_attempt
-        v_collision := true;
         v_strategy.strategy_type, v_attempt, 'EXHAUSTED', v_strategy.policy_version_id
+       OR NEW.activated_at IS DISTINCT FROM OLD.activated_at
+       OR NEW.created_at IS DISTINCT FROM OLD.created_at THEN
+       OR NEW.evidence_path IS DISTINCT FROM OLD.evidence_path
+       OR NEW.policy_version_id IS DISTINCT FROM OLD.policy_version_id
+       OR NEW.signed_at IS DISTINCT FROM OLD.signed_at
+       OR NEW.signed_key_id IS DISTINCT FROM OLD.signed_key_id
+       OR NEW.unsigned_reason IS DISTINCT FROM OLD.unsigned_reason
       'SUFFIX', 1, 'UNREGISTERED_BLOCKED', NULL
       'migrated_at', NOW(),
       'migrated_from_program_id', p_from_program_id,
@@ -151,7 +166,6 @@
       ELSE
       END IF;
       END IF;
-      ERRCODE = 'P7803',
       FROM payment_outbox_attempts a WHERE a.outbox_id = v_record.outbox_id;
       FROM payment_outbox_pending p
       FROM public.supervisor_approval_queue
@@ -162,7 +176,6 @@
       INSERT INTO public.dispatch_reference_registry(
       INTO existing_pending;
       INTO registry_id, allocated_reference, canonicalized_reference, strategy_used, policy_version_id, collision_retry_count;
-      MESSAGE = 'ACTIVE_REFERENCE_POLICY_IMMUTABLE';
       NOW(),
       NOW(),
       OR (e.state = 'AUTHORIZED' AND e.authorization_expires_at IS NOT NULL AND e.authorization_expires_at <= p_now)
@@ -171,6 +184,8 @@
       RAISE EXCEPTION 'Invalid completion state %', p_state USING ERRCODE = 'P7003';
       RAISE EXCEPTION 'LEASE_LOST' USING ERRCODE = 'P7002',
       RAISE EXCEPTION 'self approval is not permitted for instruction %', p_instruction_id
+      RAISE EXCEPTION USING
+      RAISE EXCEPTION USING
       RAISE EXCEPTION USING ERRCODE='P7801', MESSAGE='REFERENCE_ALLOCATION_RETRY_EXHAUSTED';
       RETURN NEW;
       RETURN NEXT;
@@ -183,6 +198,7 @@
       RETURNING
       RETURNING payment_outbox_pending.outbox_id, payment_outbox_pending.sequence_id, payment_outbox_pending.created_at
       SELECT 1
+      SELECT 1 FROM public.dispatch_reference_registry r
       SELECT COALESCE(MAX(a.attempt_no), 0) + 1 INTO v_next_attempt_no
       SELECT p.outbox_id, p.instruction_id, p.participant_id, p.sequence_id,
       SET next_sequence_id = participant_outbox_sequences.next_sequence_id + 1
@@ -234,10 +250,10 @@
       USING ERRCODE = 'P7401';
       VALUES (
       WHEN unique_violation THEN
-      WHEN unique_violation THEN
       WHERE instruction_id = p_instruction_id
       WHERE outbox_id = p_outbox_id;
       WHERE p.claimed_by IS NOT NULL AND p.lease_token IS NOT NULL AND p.lease_expires_at <= NOW()
+      WHERE r.rail_id = p_rail_id
       anchor_ref = p_anchor_ref,
       anchor_type = COALESCE(NULLIF(BTRIM(p_anchor_type), ''), 'HYBRID_SYNC')
       approved_at = CASE WHEN v_decision = 'APPROVED' THEN NOW() ELSE approved_at END,
@@ -408,6 +424,7 @@
     )
     )
     )
+    ) INTO v_collision;
     ) THEN
     ) VALUES (
     ) VALUES (
@@ -437,6 +454,11 @@
     ADD CONSTRAINT anchor_sync_operations_pack_id_key UNIQUE (pack_id);
     ADD CONSTRAINT anchor_sync_operations_pkey PRIMARY KEY (operation_id);
     ADD CONSTRAINT archive_verification_runs_pkey PRIMARY KEY (run_id);
+    ADD CONSTRAINT artifact_signing_batch_items_batch_id_fkey FOREIGN KEY (batch_id) REFERENCES public.artifact_signing_batches(batch_id) ON DELETE CASCADE;
+    ADD CONSTRAINT artifact_signing_batch_items_batch_id_leaf_index_key UNIQUE (batch_id, leaf_index);
+    ADD CONSTRAINT artifact_signing_batch_items_pkey PRIMARY KEY (item_id);
+    ADD CONSTRAINT artifact_signing_batches_pkey PRIMARY KEY (batch_id);
+    ADD CONSTRAINT audit_tamper_evident_chains_pkey PRIMARY KEY (chain_id);
     ADD CONSTRAINT billable_clients_client_key_required_new_rows_chk CHECK (((client_key IS NOT NULL) AND (length(btrim(client_key)) > 0))) NOT VALID;
     ADD CONSTRAINT billable_clients_pkey PRIMARY KEY (billable_client_id);
     ADD CONSTRAINT billing_usage_events_billable_client_id_fkey FOREIGN KEY (billable_client_id) REFERENCES public.billable_clients(billable_client_id);
@@ -445,6 +467,7 @@
     ADD CONSTRAINT billing_usage_events_subject_client_id_fkey FOREIGN KEY (subject_client_id) REFERENCES public.tenant_clients(client_id);
     ADD CONSTRAINT billing_usage_events_subject_member_id_fkey FOREIGN KEY (subject_member_id) REFERENCES public.tenant_members(member_id);
     ADD CONSTRAINT billing_usage_events_tenant_id_fkey FOREIGN KEY (tenant_id) REFERENCES public.tenants(tenant_id);
+    ADD CONSTRAINT boz_operational_scenario_runs_pkey PRIMARY KEY (run_id);
     ADD CONSTRAINT canonicalization_archive_snap_canonicalization_version_snap_key UNIQUE (canonicalization_version, snapshot_sha256);
     ADD CONSTRAINT canonicalization_archive_snapshot_canonicalization_version_fkey FOREIGN KEY (canonicalization_version) REFERENCES public.canonicalization_registry(canonicalization_version) ON DELETE RESTRICT;
     ADD CONSTRAINT canonicalization_archive_snapshots_pkey PRIMARY KEY (snapshot_id);
@@ -480,7 +503,9 @@
     ADD CONSTRAINT external_proofs_subject_member_fk FOREIGN KEY (subject_member_id) REFERENCES public.tenant_members(member_id) NOT VALID;
     ADD CONSTRAINT external_proofs_tenant_fk FOREIGN KEY (tenant_id) REFERENCES public.tenants(tenant_id) NOT VALID;
     ADD CONSTRAINT external_proofs_tenant_required_new_rows_chk CHECK ((tenant_id IS NOT NULL)) NOT VALID;
+    ADD CONSTRAINT global_rate_limit_policies_pkey PRIMARY KEY (policy_id);
     ADD CONSTRAINT historical_verification_runs_pkey PRIMARY KEY (verification_run_id);
+    ADD CONSTRAINT hsm_fail_closed_events_pkey PRIMARY KEY (event_id);
     ADD CONSTRAINT incident_events_incident_id_fkey FOREIGN KEY (incident_id) REFERENCES public.regulatory_incidents(incident_id) ON DELETE CASCADE;
     ADD CONSTRAINT incident_events_pkey PRIMARY KEY (incident_event_id);
     ADD CONSTRAINT ingress_attestations_client_id_fkey FOREIGN KEY (client_id) REFERENCES public.tenant_clients(client_id);
@@ -533,11 +558,18 @@
     ADD CONSTRAINT payment_outbox_pending_correlation_required_new_rows_chk CHECK ((correlation_id IS NOT NULL)) NOT VALID;
     ADD CONSTRAINT payment_outbox_pending_pkey PRIMARY KEY (outbox_id);
     ADD CONSTRAINT payment_outbox_pending_tenant_id_fkey FOREIGN KEY (tenant_id) REFERENCES public.tenants(tenant_id);
+    ADD CONSTRAINT penalty_defense_packs_pkey PRIMARY KEY (pack_id);
+    ADD CONSTRAINT penalty_defense_packs_submission_attempt_ref_fkey FOREIGN KEY (submission_attempt_ref) REFERENCES public.regulatory_report_submission_attempts(attempt_id);
     ADD CONSTRAINT persons_pkey PRIMARY KEY (person_id);
     ADD CONSTRAINT persons_tenant_id_fkey FOREIGN KEY (tenant_id) REFERENCES public.tenants(tenant_id) ON DELETE RESTRICT;
+    ADD CONSTRAINT pii_erased_subject_placeholders_pkey PRIMARY KEY (placeholder_id);
+    ADD CONSTRAINT pii_erased_subject_placeholders_placeholder_ref_key UNIQUE (placeholder_ref);
+    ADD CONSTRAINT pii_erasure_journal_pkey PRIMARY KEY (erasure_id);
     ADD CONSTRAINT pii_purge_events_pkey PRIMARY KEY (purge_event_id);
     ADD CONSTRAINT pii_purge_events_purge_request_id_fkey FOREIGN KEY (purge_request_id) REFERENCES public.pii_purge_requests(purge_request_id);
     ADD CONSTRAINT pii_purge_requests_pkey PRIMARY KEY (purge_request_id);
+    ADD CONSTRAINT pii_tokenization_registry_pkey PRIMARY KEY (token_id);
+    ADD CONSTRAINT pii_tokenization_registry_token_value_key UNIQUE (token_value);
     ADD CONSTRAINT pii_vault_records_pkey PRIMARY KEY (vault_id);
     ADD CONSTRAINT pii_vault_records_purge_request_fk FOREIGN KEY (purge_request_id) REFERENCES public.pii_purge_requests(purge_request_id) DEFERRABLE;
     ADD CONSTRAINT policy_bundles_pkey PRIMARY KEY (policy_bundle_id);
@@ -563,9 +595,13 @@
     ADD CONSTRAINT proof_pack_batches_pkey PRIMARY KEY (batch_id);
     ADD CONSTRAINT rail_dispatch_truth_anchor_pkey PRIMARY KEY (anchor_id);
     ADD CONSTRAINT rail_truth_anchor_attempt_fk FOREIGN KEY (attempt_id) REFERENCES public.payment_outbox_attempts(attempt_id) DEFERRABLE;
+    ADD CONSTRAINT redaction_audit_events_pkey PRIMARY KEY (event_id);
     ADD CONSTRAINT reference_strategy_policy_versions_pkey PRIMARY KEY (policy_version_id);
     ADD CONSTRAINT regulatory_incidents_pkey PRIMARY KEY (incident_id);
     ADD CONSTRAINT regulatory_incidents_tenant_id_fkey FOREIGN KEY (tenant_id) REFERENCES public.tenants(tenant_id) ON DELETE RESTRICT;
+    ADD CONSTRAINT regulatory_report_submission_attempts_pkey PRIMARY KEY (attempt_id);
+    ADD CONSTRAINT regulatory_retraction_approva_report_id_approver_role_appro_key UNIQUE (report_id, approver_role, approval_stage);
+    ADD CONSTRAINT regulatory_retraction_approvals_pkey PRIMARY KEY (approval_id);
     ADD CONSTRAINT resign_sweeps_pkey PRIMARY KEY (sweep_id);
     ADD CONSTRAINT revoked_client_certs_pkey PRIMARY KEY (cert_fingerprint_sha256);
     ADD CONSTRAINT revoked_tokens_pkey PRIMARY KEY (token_jti);
@@ -575,6 +611,7 @@
     ADD CONSTRAINT signing_audit_log_pkey PRIMARY KEY (sign_event_id);
     ADD CONSTRAINT signing_authorization_matrix_caller_id_key_class_key UNIQUE (caller_id, key_class);
     ADD CONSTRAINT signing_authorization_matrix_pkey PRIMARY KEY (matrix_id);
+    ADD CONSTRAINT signing_throughput_runs_pkey PRIMARY KEY (run_id);
     ADD CONSTRAINT sim_swap_alerts_formula_version_id_fkey FOREIGN KEY (formula_version_id) REFERENCES public.risk_formula_versions(formula_version_id) ON DELETE RESTRICT;
     ADD CONSTRAINT sim_swap_alerts_member_id_fkey FOREIGN KEY (member_id) REFERENCES public.members(member_id) ON DELETE RESTRICT;
     ADD CONSTRAINT sim_swap_alerts_pkey PRIMARY KEY (alert_id);
@@ -708,7 +745,10 @@
     AS $$
     AS $$
     AS $$
-    BEGIN
+    AS $$
+    AS $$
+    AS $$
+    AS $$
     BEGIN
     CASE WHEN v_state='FINALITY_CONFLICT' THEN 'HOLD_RELEASE' ELSE NULL END
     CASE WHEN v_state='FINALITY_CONFLICT' THEN now() ELSE NULL END,
@@ -721,6 +761,8 @@
     CONSTRAINT anchor_sync_operations_state_check CHECK ((state = ANY (ARRAY['PENDING'::text, 'ANCHORING'::text, 'ANCHORED'::text, 'COMPLETED'::text, 'FAILED'::text]))),
     CONSTRAINT archive_verification_runs_outcome_check CHECK ((outcome = ANY (ARRAY['PASS'::text, 'FAIL'::text]))),
     CONSTRAINT archive_verification_runs_years_covered_check CHECK ((years_covered >= 1))
+    CONSTRAINT artifact_signing_batch_items_leaf_index_check CHECK ((leaf_index >= 0))
+    CONSTRAINT artifact_signing_batches_total_artifacts_check CHECK ((total_artifacts > 0))
     CONSTRAINT billable_clients_client_type_check CHECK ((client_type = ANY (ARRAY['BANK'::text, 'MMO'::text, 'NGO'::text, 'GOV_PROGRAM'::text, 'COOP_FEDERATION'::text, 'ENTERPRISE'::text]))),
     CONSTRAINT billable_clients_status_check CHECK ((status = ANY (ARRAY['ACTIVE'::text, 'SUSPENDED'::text, 'CLOSED'::text])))
     CONSTRAINT billing_usage_events_event_type_check CHECK ((event_type = ANY (ARRAY['EVIDENCE_BUNDLE'::text, 'CASE_PACK'::text, 'EXCEPTION_TRIAGE'::text, 'RETENTION_ANCHOR'::text, 'ESCROW_RELEASE'::text, 'DISPUTE_PACK'::text]))),
@@ -728,6 +770,7 @@
     CONSTRAINT billing_usage_events_quantity_check CHECK ((quantity > 0)),
     CONSTRAINT billing_usage_events_subject_zero_or_one_chk CHECK (((((subject_member_id IS NOT NULL))::integer + ((subject_client_id IS NOT NULL))::integer) <= 1)),
     CONSTRAINT billing_usage_events_units_check CHECK ((units = ANY (ARRAY['count'::text, 'bytes'::text, 'seconds'::text, 'events'::text])))
+    CONSTRAINT boz_operational_scenario_runs_outcome_check CHECK ((outcome = ANY (ARRAY['PASS'::text, 'FAIL'::text])))
     CONSTRAINT ck_anchor_sync_completed_requires_anchor_ref CHECK (((state <> 'COMPLETED'::text) OR (anchor_ref IS NOT NULL)))
     CONSTRAINT ck_attempts_payload_is_object CHECK ((jsonb_typeof(payload) = 'object'::text)),
     CONSTRAINT ck_pending_payload_is_object CHECK ((jsonb_typeof(payload) = 'object'::text)),
@@ -745,6 +788,8 @@
     CONSTRAINT escrow_reservations_amount_minor_check CHECK ((amount_minor > 0))
     CONSTRAINT evidence_pack_items_path_or_hash_chk CHECK (((artifact_path IS NOT NULL) OR (artifact_hash IS NOT NULL)))
     CONSTRAINT evidence_packs_pack_type_check CHECK ((pack_type = ANY (ARRAY['INSTRUCTION_BUNDLE'::text, 'INCIDENT_PACK'::text, 'DISPUTE_PACK'::text])))
+    CONSTRAINT global_rate_limit_policies_interval_seconds_check CHECK ((interval_seconds > 0)),
+    CONSTRAINT global_rate_limit_policies_max_requests_check CHECK ((max_requests > 0))
     CONSTRAINT inquiry_state_machine_max_attempts_check CHECK ((max_attempts > 0))
     CONSTRAINT instruction_settlement_finality_final_state_check CHECK ((final_state = ANY (ARRAY['SETTLED'::text, 'REVERSED'::text]))),
     CONSTRAINT instruction_settlement_finality_is_final_true_chk CHECK ((is_final = true)),
@@ -781,6 +826,7 @@
     CONSTRAINT payment_outbox_attempts_latency_ms_check CHECK (((latency_ms IS NULL) OR (latency_ms >= 0)))
     CONSTRAINT payment_outbox_pending_attempt_count_check CHECK ((attempt_count >= 0))
     CONSTRAINT persons_status_check CHECK ((status = ANY (ARRAY['ACTIVE'::text, 'INACTIVE'::text, 'SUSPENDED'::text])))
+    CONSTRAINT pii_erasure_journal_status_check CHECK ((status = ANY (ARRAY['REQUESTED'::text, 'APPROVED'::text, 'COMPLETED'::text, 'FAILED'::text])))
     CONSTRAINT pii_purge_events_event_type_check CHECK ((event_type = ANY (ARRAY['REQUESTED'::text, 'PURGED'::text]))),
     CONSTRAINT pii_purge_events_rows_affected_check CHECK ((rows_affected >= 0))
     CONSTRAINT pii_vault_records_purge_shape_chk CHECK ((((purged_at IS NULL) AND (protected_payload IS NOT NULL) AND (purge_request_id IS NULL)) OR ((purged_at IS NOT NULL) AND (protected_payload IS NULL) AND (purge_request_id IS NOT NULL))))
@@ -797,6 +843,9 @@
     CONSTRAINT signing_audit_log_outcome_check CHECK ((outcome = ANY (ARRAY['PASS'::text, 'REJECTED'::text, 'BLOCKED'::text]))),
     CONSTRAINT signing_audit_log_signing_path_check CHECK ((signing_path = ANY (ARRAY['HSM'::text, 'KMS'::text, 'SOFTWARE_BYPASS'::text])))
     CONSTRAINT signing_authorization_matrix_key_backend_check CHECK ((key_backend = ANY (ARRAY['HSM'::text, 'KMS'::text, 'SOFTWARE'::text])))
+    CONSTRAINT signing_throughput_runs_achieved_tps_check CHECK ((achieved_tps >= 0)),
+    CONSTRAINT signing_throughput_runs_p95_latency_ms_check CHECK ((p95_latency_ms >= 0)),
+    CONSTRAINT signing_throughput_runs_target_tps_check CHECK ((target_tps > 0))
     CONSTRAINT sim_swap_alerts_alert_type_check CHECK ((alert_type = 'SIM_SWAP_DETECTED'::text)),
     CONSTRAINT sim_swap_alerts_iccid_diff_chk CHECK ((prior_iccid_hash <> new_iccid_hash))
     CONSTRAINT supervisor_access_policies_hold_timeout_minutes_check CHECK (((hold_timeout_minutes IS NULL) OR (hold_timeout_minutes > 0))),
@@ -825,10 +874,10 @@
     END IF;
     END IF;
     END IF;
+    END IF;
+    END IF;
     END LOOP;
     END;
-    END;
-    EXCEPTION
     EXCEPTION
     FOR UPDATE SKIP LOCKED
     FOR UPDATE;
@@ -857,6 +906,8 @@
     IF EXISTS (
     IF FOUND THEN
     IF FOUND THEN
+    IF NEW.policy_json IS DISTINCT FROM OLD.policy_json
+    IF NEW.version_status = 'ACTIVE' THEN
     IF NOT FOUND THEN
     IF NOT v_collision THEN
     IF current_setting('symphony.allow_pii_purge', true) = 'on' THEN
@@ -869,7 +920,6 @@
     INSERT INTO payment_outbox_attempts (
     INSERT INTO public.dispatch_reference_collision_events(
     INSERT INTO public.effect_seal_mismatch_events(instruction_id, stored_seal_hash, computed_dispatch_hash)
-    INSERT INTO public.effect_seal_mismatch_events(instruction_id, stored_seal_hash, computed_dispatch_hash)
     INSERT INTO public.members(
     INSERT INTO public.offline_safe_mode_windows(reason, policy_version_id, gap_marker_id)
     INSERT INTO public.program_migration_events(
@@ -878,7 +928,6 @@
     INTO existing_attempt
     INTO existing_pending
     INTO v_alert_id
-    INTO v_existing_hash, v_existing_version
     INTO v_instruction_id, v_participant_id, v_sequence_id, v_idempotency_key, v_rail_type, v_payload
     LANGUAGE plpgsql
     LANGUAGE plpgsql
@@ -907,6 +956,10 @@
     LANGUAGE plpgsql
     LANGUAGE plpgsql
     LANGUAGE plpgsql
+    LANGUAGE plpgsql SECURITY DEFINER
+    LANGUAGE plpgsql SECURITY DEFINER
+    LANGUAGE plpgsql SECURITY DEFINER
+    LANGUAGE plpgsql SECURITY DEFINER
     LANGUAGE plpgsql SECURITY DEFINER
     LANGUAGE plpgsql SECURITY DEFINER
     LANGUAGE plpgsql SECURITY DEFINER
@@ -1017,7 +1070,6 @@
     RAISE EXCEPTION 'approval timeout must be positive';
     RAISE EXCEPTION 'dispatch requires rail sequence reference'
     RAISE EXCEPTION 'duplicate migration call for tenant %, person %, from %, to %',
-    RAISE EXCEPTION 'effect_seal_immutable_violation' USING ERRCODE = 'P7102';
     RAISE EXCEPTION 'effect_seal_mismatch' USING ERRCODE = 'P7102';
     RAISE EXCEPTION 'entity-to-member linkage invalid'
     RAISE EXCEPTION 'escrow ceiling exceeded'
@@ -1029,6 +1081,7 @@
     RAISE EXCEPTION 'external_proofs requires tenant attribution via ingress_attestations'
     RAISE EXCEPTION 'external_proofs tenant_id does not match derived tenant_id'
     RAISE EXCEPTION 'final instruction cannot be mutated'
+    RAISE EXCEPTION 'finality_conflict_hold_release' USING ERRCODE = 'P7402';
     RAISE EXCEPTION 'from_program_id % is not in tenant %', p_from_program_id, p_tenant_id
     RAISE EXCEPTION 'from_program_id % is not in tenant %', p_from_program_id, p_tenant_id
     RAISE EXCEPTION 'from_program_id and to_program_id must differ'
@@ -1049,7 +1102,6 @@
     RAISE EXCEPTION 'member/tenant mismatch'
     RAISE EXCEPTION 'member_device_event % not found', p_event_id
     RAISE EXCEPTION 'member_id not found'
-    RAISE EXCEPTION 'missing_effect_seal' USING ERRCODE = 'P7102';
     RAISE EXCEPTION 'missing_effect_seal' USING ERRCODE = 'P7102';
     RAISE EXCEPTION 'new_entity_id must equal to_program_id'
     RAISE EXCEPTION 'no program available for supervisor approval submission';
@@ -1072,7 +1124,6 @@
     RAISE EXCEPTION 'to_program_id % is not in tenant %', p_to_program_id, p_tenant_id
     RAISE EXCEPTION 'unsupported_mmo_scenario' USING ERRCODE = 'P7502';
     RAISE EXCEPTION 'worker_id is required' USING ERRCODE = 'P7210';
-    RAISE EXCEPTION USING
     RAISE EXCEPTION USING ERRCODE='P7802', MESSAGE='REFERENCE_STRATEGY_POLICY_NOT_FOUND';
     RAISE EXCEPTION USING ERRCODE='P7802', MESSAGE='REFERENCE_STRATEGY_POLICY_NOT_FOUND';
     RAISE EXCEPTION USING ERRCODE='P7901', MESSAGE='REFERENCE_LENGTH_EXCEEDED';
@@ -1084,6 +1135,11 @@
     RAISE EXCEPTION USING ERRCODE='P8301', MESSAGE='UNVERIFIABLE_MISSING_CANONICALIZER';
     RAISE EXCEPTION USING ERRCODE='P8302', MESSAGE='MERKLE_LEAF_NOT_FOUND';
     RAISE EXCEPTION USING ERRCODE='P8303', MESSAGE='MERKLE_LEAF_HASH_MISMATCH';
+    RAISE EXCEPTION USING ERRCODE='P8303', MESSAGE='MERKLE_LEAF_HASH_MISMATCH';
+    RAISE EXCEPTION USING ERRCODE='P8401', MESSAGE='HSM_FAIL_CLOSED_ENFORCED';
+    RAISE EXCEPTION USING ERRCODE='P8402', MESSAGE='RATE_LIMIT_BREACH_BLOCKED';
+    RAISE EXCEPTION USING ERRCODE='P8403', MESSAGE='RETRACTION_SECONDARY_APPROVAL_REQUIRED';
+    RAISE EXCEPTION USING ERRCODE='P8404', MESSAGE='PII_PRESENT_IN_PENALTY_DEFENSE_PACK';
     RETURN 'EXHAUSTED';
     RETURN NEW;
     RETURN NEW;
@@ -1097,8 +1153,6 @@
     RETURN QUERY SELECT v_next_attempt_no, v_effective_state;
     RETURN allocated;
     RETURN v::uuid;
-    RETURN v_hash;
-    RETURN v_state;
     RETURN;
     RETURN;
     RETURNING (participant_outbox_sequences.next_sequence_id - 1) INTO allocated;
@@ -1115,6 +1169,7 @@
     SELECT 1
     SELECT 1
     SELECT COALESCE(MAX(a.attempt_no), 0) + 1 INTO v_next_attempt_no
+    SELECT EXISTS(
     SELECT a.outbox_id, a.sequence_id, a.created_at, a.state
     SELECT e.escrow_id
     SELECT o.operation_id
@@ -1123,9 +1178,14 @@
     SELECT p.outbox_id, p.sequence_id, p.created_at
     SELECT s.alert_id
     SET attempts = v_attempts,
+    SET effect_seal_hash = EXCLUDED.effect_seal_hash,
     SET finality_state = EXCLUDED.finality_state,
     SET program_id = EXCLUDED.program_id,
     SET program_id = EXCLUDED.program_id,
+    SET search_path TO 'pg_catalog', 'public'
+    SET search_path TO 'pg_catalog', 'public'
+    SET search_path TO 'pg_catalog', 'public'
+    SET search_path TO 'pg_catalog', 'public'
     SET search_path TO 'pg_catalog', 'public'
     SET search_path TO 'pg_catalog', 'public'
     SET search_path TO 'pg_catalog', 'public'
@@ -1178,7 +1238,6 @@
     USING ERRCODE = 'P0001';
     USING ERRCODE = 'P0001';
     USING ERRCODE = 'P7004';
-    VALUES (p_instruction_id, v_existing_hash, v_hash);
     VALUES (p_instruction_id, v_stored_hash, v_computed_hash);
     VALUES (p_participant_id, 2)
     VALUES (p_reason, p_policy_version_id, md5(p_reason || '|' || now()::text));
@@ -1202,6 +1261,9 @@
     WHERE pr.program_id = p_program_id
     WHERE r.rail_id = p_rail_id
     WHERE s.source_event_id = v_event.event_id;
+    achieved_tps integer NOT NULL,
+    action text NOT NULL,
+    activated_at timestamp with time zone DEFAULT now() NOT NULL,
     activated_at timestamp with time zone DEFAULT now() NOT NULL,
     activated_at timestamp with time zone DEFAULT now() NOT NULL,
     activated_at timestamp with time zone DEFAULT now() NOT NULL,
@@ -1211,6 +1273,7 @@
     active_to date,
     actor_id text DEFAULT CURRENT_USER NOT NULL,
     actor_id text DEFAULT CURRENT_USER NOT NULL,
+    actor_id text NOT NULL,
     adapter_id text NOT NULL,
     adapter_id text NOT NULL,
     adapter_id, rail_id, classification, truncation_applied, payload_hash,
@@ -1246,13 +1309,20 @@
     api_access boolean NOT NULL,
     applied_at timestamp with time zone DEFAULT now() NOT NULL
     approval_id uuid DEFAULT gen_random_uuid() NOT NULL,
+    approval_id uuid DEFAULT gen_random_uuid() NOT NULL,
+    approval_stage text NOT NULL,
+    approved_at timestamp with time zone DEFAULT now() NOT NULL
+    approved_at timestamp with time zone,
     approved_at timestamp with time zone,
     approved_by text,
     approver_id text NOT NULL,
+    approver_role text NOT NULL,
     archival_confirmed boolean DEFAULT false NOT NULL,
     archive_only boolean DEFAULT true NOT NULL,
     arrival_timestamp timestamp with time zone DEFAULT now() NOT NULL,
+    artifact_class text NOT NULL,
     artifact_hash text NOT NULL,
+    artifact_id text NOT NULL,
     artifact_id text NOT NULL,
     artifact_path text,
     artifact_type text NOT NULL,
@@ -1264,11 +1334,13 @@
     attempt_count integer DEFAULT 0 NOT NULL,
     attempt_count integer DEFAULT 0 NOT NULL,
     attempt_id uuid DEFAULT gen_random_uuid() NOT NULL,
+    attempt_id uuid DEFAULT gen_random_uuid() NOT NULL,
     attempt_id uuid DEFAULT public.uuid_v7_or_random() NOT NULL,
     attempt_id uuid NOT NULL,
     attempt_id,
     attempt_no integer NOT NULL,
     attempt_timestamp timestamp with time zone DEFAULT now() NOT NULL,
+    attempted_at timestamp with time zone DEFAULT now() NOT NULL
     attempts integer DEFAULT 0 NOT NULL,
     attestation_id uuid DEFAULT public.uuid_v7_or_random() NOT NULL,
     attestation_id uuid NOT NULL,
@@ -1277,6 +1349,8 @@
     authorization_expires_at timestamp with time zone,
     authorized_amount_minor bigint NOT NULL,
     batch_id uuid DEFAULT gen_random_uuid() NOT NULL,
+    batch_id uuid DEFAULT gen_random_uuid() NOT NULL,
+    batch_id uuid NOT NULL,
     batch_id uuid NOT NULL,
     behavior_profile text NOT NULL,
     behavior_profile, evidence_artifact_type
@@ -1286,6 +1360,7 @@
     billable_client_id uuid,
     block_end timestamp with time zone,
     block_start timestamp with time zone DEFAULT now() NOT NULL,
+    blocked_action text NOT NULL,
     boz_licence_reference text,
     boz_reference text,
     calculated_at timestamp with time zone,
@@ -1319,6 +1394,7 @@
     ceiling_currency,
     cert_fingerprint_sha256 text NOT NULL,
     cert_fingerprint_sha256 text,
+    chain_id uuid DEFAULT gen_random_uuid() NOT NULL,
     checksum text NOT NULL,
     checksum text NOT NULL,
     claimed_at timestamp with time zone DEFAULT now() NOT NULL,
@@ -1340,8 +1416,10 @@
     collision_retry_count integer DEFAULT 0 NOT NULL,
     completed_at timestamp with time zone,
     completed_at timestamp with time zone,
+    completed_at timestamp with time zone,
     computed_dispatch_hash text NOT NULL,
     containment_action text,
+    contains_raw_pii boolean DEFAULT false NOT NULL,
     contradiction_timestamp timestamp with time zone,
     contradiction_timestamp, containment_action
     correlation_id uuid,
@@ -1359,6 +1437,12 @@
     created_at timestamp with time zone DEFAULT now() NOT NULL
     created_at timestamp with time zone DEFAULT now() NOT NULL
     created_at timestamp with time zone DEFAULT now() NOT NULL
+    created_at timestamp with time zone DEFAULT now() NOT NULL
+    created_at timestamp with time zone DEFAULT now() NOT NULL
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
     created_at timestamp with time zone DEFAULT now() NOT NULL,
     created_at timestamp with time zone DEFAULT now() NOT NULL,
     created_at timestamp with time zone DEFAULT now() NOT NULL,
@@ -1409,6 +1493,7 @@
     currency_code character(3) NOT NULL,
     currency_code character(3) NOT NULL,
     currency_code character(3),
+    current_hash text NOT NULL,
     current_user,
     db_access boolean NOT NULL,
     decided_at timestamp with time zone,
@@ -1432,6 +1517,7 @@
     dispatch_reference text,
     display_name text NOT NULL,
     document_type text,
+    domain text NOT NULL,
     downstream_ref text,
     downstream_ref text,
     downstream_ref text,
@@ -1445,11 +1531,14 @@
     effect_seal_hash text NOT NULL,
     effective_from date NOT NULL,
     effective_to date,
+    endpoint text NOT NULL,
     enrolled_at timestamp with time zone DEFAULT now() NOT NULL,
     enrolled_at,
     entity_id text,
     entity_id uuid NOT NULL,
     entity_id,
+    erasure_id uuid DEFAULT gen_random_uuid() NOT NULL,
+    error_code text NOT NULL,
     error_code text,
     error_code text,
     error_message text,
@@ -1459,6 +1548,8 @@
     event_fingerprint
     event_fingerprint
     event_fingerprint text NOT NULL
+    event_id uuid DEFAULT gen_random_uuid() NOT NULL,
+    event_id uuid DEFAULT gen_random_uuid() NOT NULL,
     event_id uuid DEFAULT gen_random_uuid() NOT NULL,
     event_id uuid DEFAULT gen_random_uuid() NOT NULL,
     event_id uuid DEFAULT public.uuid_v7_or_random() NOT NULL,
@@ -1475,6 +1566,7 @@
     event_type,
     evidence_artifact_type text NOT NULL,
     evidence_path text,
+    evidence_ref text NOT NULL,
     existing_attempt RECORD;
     existing_pending RECORD;
     expired_at timestamp with time zone,
@@ -1503,12 +1595,15 @@
     from_program_id uuid NOT NULL,
     from_program_id,
     gap_marker_id text NOT NULL,
+    generated_at timestamp with time zone DEFAULT now() NOT NULL
+    generated_at timestamp with time zone DEFAULT now() NOT NULL
     grace_expires_at timestamp with time zone,
     hash_algorithm text,
     held_at timestamp with time zone DEFAULT now() NOT NULL,
     held_reason text,
     high_risk boolean DEFAULT false NOT NULL,
     hold_timeout_minutes integer,
+    hsm_key_ref text NOT NULL,
     iccid_hash text,
     iccid_hash text,
     id uuid DEFAULT gen_random_uuid() NOT NULL,
@@ -1554,6 +1649,7 @@
     instruction_state_at_arrival text CONSTRAINT orphaned_attestation_landin_instruction_state_at_arriv_not_null NOT NULL,
     instruction_state_at_arrival,
     instruction_state_at_arrival,
+    interval_seconds integer NOT NULL,
     is_active boolean DEFAULT true NOT NULL,
     is_active boolean DEFAULT true NOT NULL,
     is_active boolean GENERATED ALWAYS AS ((status = 'ACTIVE'::public.policy_version_status)) STORED,
@@ -1561,6 +1657,7 @@
     is_final boolean DEFAULT true NOT NULL,
     issued_at timestamp with time zone DEFAULT now() NOT NULL,
     issued_by text NOT NULL,
+    item_id uuid DEFAULT gen_random_uuid() NOT NULL,
     item_id uuid DEFAULT public.uuid_v7_or_random() NOT NULL,
     job_id uuid DEFAULT gen_random_uuid() NOT NULL,
     jsonb_build_object('executor', p_executor)
@@ -1587,7 +1684,9 @@
     latency_ms integer,
     leaf_count integer NOT NULL,
     leaf_hash text NOT NULL,
+    leaf_hash text NOT NULL,
     leaf_id uuid DEFAULT gen_random_uuid() NOT NULL,
+    leaf_index integer NOT NULL,
     leaf_index integer NOT NULL,
     lease_expires_at timestamp with time zone,
     lease_expires_at timestamp with time zone,
@@ -1605,6 +1704,7 @@
     levy_status text,
     matrix_id uuid DEFAULT gen_random_uuid() NOT NULL,
     max_attempts integer NOT NULL,
+    max_requests integer NOT NULL,
     md5(coalesce(p_event_fingerprint,'')),
     md5(coalesce(p_payload,'')),
     md5(coalesce(p_payload::text, '{}')),
@@ -1623,6 +1723,7 @@
     member_ref_hash text NOT NULL,
     member_ref_hash,
     merkle_proof jsonb NOT NULL,
+    merkle_root text NOT NULL,
     merkle_root text NOT NULL,
     meta_signing_key_class public.key_class_enum NOT NULL,
     metadata
@@ -1655,6 +1756,7 @@
     nfs_sequence_ref text,
     nfs_sequence_ref text,
     nfs_sequence_ref text,
+    observed_at timestamp with time zone DEFAULT now() NOT NULL
     observed_at timestamp with time zone NOT NULL,
     observed_rate numeric(8,6) DEFAULT 0 NOT NULL,
     occurred_at timestamp with time zone DEFAULT now() NOT NULL,
@@ -1667,6 +1769,7 @@
     operator_id text,
     operator_resolution_id text,
     orphan_id uuid DEFAULT gen_random_uuid() NOT NULL,
+    outage_source text NOT NULL,
     outbox_id uuid DEFAULT public.uuid_v7_or_random() NOT NULL,
     outbox_id uuid NOT NULL,
     outbox_id uuid NOT NULL,
@@ -1676,7 +1779,9 @@
     outcome text NOT NULL,
     outcome text NOT NULL,
     outcome text NOT NULL,
+    outcome text NOT NULL,
     outcome text,
+    p95_latency_ms integer NOT NULL,
     p_actor_id => p_actor_id,
     p_actor_id => v_actor,
     p_adapter_id,
@@ -1721,6 +1826,7 @@
     p_to_state => 'AUTHORIZED',
     p_to_state => 'RELEASED',
     p_window_seconds, p_policy_version_id,
+    pack_id uuid DEFAULT gen_random_uuid() NOT NULL,
     pack_id uuid DEFAULT public.uuid_v7_or_random() NOT NULL,
     pack_id uuid NOT NULL,
     pack_id uuid NOT NULL,
@@ -1737,6 +1843,8 @@
     participant_id text,
     participant_id,
     participant_kind text NOT NULL,
+    partition_strategy text NOT NULL,
+    pass boolean NOT NULL,
     payload jsonb NOT NULL,
     payload jsonb NOT NULL,
     payload_capture text NOT NULL,
@@ -1754,8 +1862,11 @@
     person_id,
     person_id,
     person_ref_hash text NOT NULL,
+    placeholder_id uuid DEFAULT gen_random_uuid() NOT NULL,
+    placeholder_ref text NOT NULL,
     policy_bundle_id uuid DEFAULT gen_random_uuid() NOT NULL,
     policy_id text NOT NULL,
+    policy_id uuid DEFAULT gen_random_uuid() NOT NULL,
     policy_json jsonb NOT NULL,
     policy_version text NOT NULL,
     policy_version_id text NOT NULL,
@@ -1767,6 +1878,7 @@
     policy_version_id text NOT NULL,
     policy_version_id text NOT NULL,
     policy_version_id text,
+    previous_hash text,
     prior_iccid_hash text NOT NULL,
     prior_iccid_hash,
     program_escrow_id uuid NOT NULL,
@@ -1791,6 +1903,7 @@
     public.uuid_v7_or_random(),
     public_key_pem text,
     published_at timestamp with time zone DEFAULT now() NOT NULL,
+    purge_effective_at timestamp with time zone NOT NULL,
     purge_event_id uuid DEFAULT public.uuid_v7_or_random() NOT NULL,
     purge_request_id uuid DEFAULT public.uuid_v7_or_random() NOT NULL,
     purge_request_id uuid NOT NULL,
@@ -1835,6 +1948,7 @@
     recipient_ref text NOT NULL,
     recipient_ref, policy_version_id, justification
     records_replayed integer DEFAULT 0 NOT NULL,
+    redaction_scope text NOT NULL,
     reference_attempted text CONSTRAINT dispatch_reference_collision_event_reference_attempted_not_null NOT NULL,
     registry_id uuid DEFAULT gen_random_uuid() NOT NULL,
     regulator_ref text,
@@ -1842,11 +1956,16 @@
     released_at timestamp with time zone,
     replay_day date NOT NULL,
     report_delivery boolean NOT NULL,
+    report_id text NOT NULL,
+    report_id text NOT NULL,
+    report_id text NOT NULL,
+    report_id text NOT NULL,
     reported_to_boz_at timestamp with time zone,
     reporting_period character(7),
     request_hash text NOT NULL,
     request_reason
     request_reason text NOT NULL,
+    request_source text NOT NULL,
     requested_at timestamp with time zone DEFAULT now() NOT NULL
     requested_by text NOT NULL,
     requested_by,
@@ -1855,12 +1974,14 @@
     reservation_id uuid DEFAULT public.uuid_v7_or_random() NOT NULL,
     reserved_amount_minor bigint DEFAULT 0 NOT NULL,
     resolved_at timestamp with time zone
+    response_code integer,
     response_hash text NOT NULL,
     resumed_at timestamp with time zone,
     retention_class text DEFAULT 'FIC_AML_CUSTOMER_ID'::text NOT NULL,
     retention_class text NOT NULL,
     retention_policy_version_id text NOT NULL,
     retention_years integer NOT NULL,
+    retired_at timestamp with time zone
     reversal_of_instruction_id text,
     revoked_at timestamp with time zone DEFAULT now() NOT NULL,
     revoked_at timestamp with time zone DEFAULT now() NOT NULL,
@@ -1876,9 +1997,12 @@
     rows_affected,
     rows_affected,
     run_id uuid DEFAULT gen_random_uuid() NOT NULL,
+    run_id uuid DEFAULT gen_random_uuid() NOT NULL,
+    run_id uuid DEFAULT gen_random_uuid() NOT NULL,
     run_scope text NOT NULL,
     s->>'collision_action',
     s->>'rail_id',
+    scenario_name text NOT NULL,
     scenario_type text NOT NULL,
     scope text DEFAULT 'AUDIT'::text NOT NULL,
     scope text NOT NULL,
@@ -1931,6 +2055,8 @@
     status text NOT NULL,
     status text NOT NULL,
     status text NOT NULL,
+    status text NOT NULL,
+    status text NOT NULL,
     status,
     statutory_reference text NOT NULL,
     statutory_reference text,
@@ -1940,14 +2066,19 @@
     subject_client_id uuid,
     subject_member_id uuid
     subject_member_id uuid,
+    subject_ref text NOT NULL,
+    subject_ref text NOT NULL,
+    subject_ref text NOT NULL,
     subject_token text NOT NULL,
     subject_token text NOT NULL,
     subject_token,
+    submission_attempt_ref uuid,
     submitted_by text,
     suspended_at timestamp with time zone,
     sweep_completed_timestamp timestamp with time zone NOT NULL,
     sweep_id uuid DEFAULT gen_random_uuid() NOT NULL,
     target_stream text NOT NULL,
+    target_tps integer NOT NULL,
     taxable_amount_minor bigint,
     tenant_id uuid DEFAULT gen_random_uuid() NOT NULL,
     tenant_id uuid NOT NULL,
@@ -1985,9 +2116,12 @@
     to_program_id uuid NOT NULL,
     to_program_id,
     token_hash text NOT NULL,
+    token_id uuid DEFAULT gen_random_uuid() NOT NULL,
     token_id uuid DEFAULT public.uuid_v7_or_random() NOT NULL,
     token_jti text NOT NULL,
     token_jti_hash text,
+    token_value text NOT NULL,
+    total_artifacts integer NOT NULL,
     tpin_hash bytea,
     trigger_reason text,
     trigger_threshold numeric(8,6) NOT NULL,
@@ -2016,7 +2150,6 @@
     v_class := 'UNKNOWN_REFERENCE';
     v_class := 'UNKNOWN_REFERENCE';
     v_class,
-    v_collision := false;
     v_count := v_count + 1;
     v_effective_state := p_state;
     v_env.tenant_id, NULL, NULL, 'CREATED', v_amount, v_env.currency_code, NOW() + interval '30 minutes', NOW() + interval '60 minutes'
@@ -2249,6 +2382,21 @@
   END IF;
   END IF;
   END IF;
+  END IF;
+  END IF;
+  END IF;
+  END IF;
+  END IF;
+  END IF;
+  END IF;
+  END IF;
+  END IF;
+  END IF;
+  END IF;
+  END IF;
+  END IF;
+  END IF;
+  END LOOP;
   END LOOP;
   END;
   END;
@@ -2281,7 +2429,6 @@
   FROM public.inquiry_state_machine
   FROM public.inquiry_state_machine
   FROM public.instruction_effect_seals
-  FROM public.instruction_effect_seals
   FROM public.instruction_settlement_finality
   FROM public.member_device_events e
   FROM public.member_devices md
@@ -2307,7 +2454,6 @@
   IF COALESCE(v_allowed, false) IS NOT true THEN
   IF COALESCE(v_ok,false) IS NOT true THEN
   IF EXISTS (
-  IF FOUND THEN
   IF FOUND THEN
   IF NEW.billable_client_id IS NULL THEN
   IF NEW.correlation_id IS NULL THEN
@@ -2339,20 +2485,24 @@
   IF NOT FOUND THEN
   IF NOT FOUND THEN
   IF NOT FOUND THEN
+  IF NOT p_ok THEN
   IF NOT v_exists THEN
   IF NOT v_legal THEN
   IF NULLIF(BTRIM(p_anchor_ref), '') IS NULL THEN
   IF OLD.is_final IS TRUE THEN
-  IF OLD.version_status = 'ACTIVE' AND NEW.version_status = 'ACTIVE' THEN
+  IF OLD.version_status = 'ACTIVE' THEN
   IF TG_OP = 'UPDATE' THEN
   IF TG_OP='UPDATE' AND OLD.adjustment_state IN ('executed','denied','blocked_legal_hold') THEN
   IF derived_billable_client_id IS NULL THEN
   IF derived_tenant_id IS NULL THEN
-  IF length(p_allocated_reference) > v_strategy.max_length THEN
+  IF length(v_truncated) > v_strategy.max_length THEN
   IF m_tenant <> NEW.tenant_id THEN
   IF m_tenant IS NULL THEN
+  IF p_blocked THEN
+  IF p_contains_raw_pii THEN
   IF p_current_state = 'cooling_off' THEN
   IF p_entity_id IS DISTINCT FROM p_program_id THEN
+  IF p_expected_leaf_hash IS NULL OR btrim(p_expected_leaf_hash) = '' THEN
   IF p_freeze_flag_type IS NOT NULL THEN
   IF p_from_program_id = p_to_program_id THEN
   IF p_from_program_id = p_to_program_id THEN
@@ -2365,6 +2515,7 @@
   IF p_pack_id IS NULL THEN
   IF p_rail_a_status IN ('SUCCESS','FAILED')
   IF p_scenario_type NOT IN ('ASYNC_CONTRADICTION', 'DELAYED_SETTLEMENT', 'DUAL_DEBIT_RISK', 'SILENT_REJECTION') THEN
+  IF p_should_block THEN
   IF p_signing_path = 'SOFTWARE_BYPASS' THEN
   IF v IS NULL OR btrim(v) = '' THEN
   IF v_alert_id IS NULL THEN
@@ -2375,8 +2526,6 @@
   IF v_decision NOT IN ('APPROVED', 'REJECTED') THEN
   IF v_env.reserved_amount_minor + v_amount > v_env.ceiling_amount_minor THEN
   IF v_event.event_type <> 'SIM_SWAP_DETECTED' OR v_event.iccid_hash IS NULL THEN
-  IF v_existing_hash <> v_hash OR v_existing_version <> p_canonicalization_version THEN
-  IF v_existing_hash IS NULL THEN
   IF v_formula_version_id IS NULL THEN
   IF v_formula_version_id IS NULL THEN
   IF v_formula_version_id IS NULL THEN
@@ -2473,7 +2622,7 @@
   NEW.updated_at := now();
   ON CONFLICT (adapter_id, rail_id) DO UPDATE
   ON CONFLICT (instruction_id) DO NOTHING;
-  ON CONFLICT (instruction_id) DO NOTHING;
+  ON CONFLICT (instruction_id) DO UPDATE
   ON CONFLICT (instruction_id) DO UPDATE
   ON CONFLICT (instruction_id) DO UPDATE
   ON CONFLICT (instruction_id) DO UPDATE
@@ -2528,7 +2677,8 @@
   RETURN v_count;
   RETURN v_count;
   RETURN v_event_id;
-  RETURN v_existing_hash;
+  RETURN v_event_id;
+  RETURN v_hash;
   RETURN v_id;
   RETURN v_id;
   RETURN v_id;
@@ -2562,7 +2712,6 @@
   SELECT coalesce(sum(a.adjustment_value),0)
   SELECT e.*
   SELECT e.rows_affected
-  SELECT effect_seal_hash, canonicalization_version
   SELECT effect_seal_hash, canonicalization_version
   SELECT final_state, is_final
   SELECT ia.tenant_id
@@ -2633,7 +2782,6 @@
   WHERE instruction_id = p_instruction_id;
   WHERE instruction_id = p_instruction_id;
   WHERE instruction_id = p_instruction_id;
-  WHERE instruction_id = p_instruction_id;
   WHERE m.tenant_id = p_tenant_id
   WHERE m.tenant_id = p_tenant_id
   WHERE m.tenant_id = p_tenant_id
@@ -2688,8 +2836,8 @@
   v_event public.member_device_events%ROWTYPE;
   v_event_id UUID;
   v_event_id UUID;
-  v_existing_hash text;
-  v_existing_version text;
+  v_event_id uuid;
+  v_exists boolean;
   v_formula_version_id UUID;
   v_formula_version_id UUID;
   v_formula_version_id UUID;
@@ -2757,6 +2905,10 @@
  SELECT m.entity_id AS program_id,
  SELECT tenant_id,
  leased AS (
+$$;
+$$;
+$$;
+$$;
 $$;
 $$;
 $$;
@@ -2919,6 +3071,20 @@ $$;
 );
 );
 );
+);
+);
+);
+);
+);
+);
+);
+);
+);
+);
+);
+);
+);
+);
 ALTER TABLE ONLY public.adapter_circuit_breakers
 ALTER TABLE ONLY public.adjustment_approval_stages
 ALTER TABLE ONLY public.adjustment_approval_stages
@@ -2937,6 +3103,11 @@ ALTER TABLE ONLY public.anchor_sync_operations
 ALTER TABLE ONLY public.anchor_sync_operations
 ALTER TABLE ONLY public.anchor_sync_operations
 ALTER TABLE ONLY public.archive_verification_runs
+ALTER TABLE ONLY public.artifact_signing_batch_items
+ALTER TABLE ONLY public.artifact_signing_batch_items
+ALTER TABLE ONLY public.artifact_signing_batch_items
+ALTER TABLE ONLY public.artifact_signing_batches
+ALTER TABLE ONLY public.audit_tamper_evident_chains
 ALTER TABLE ONLY public.billable_clients
 ALTER TABLE ONLY public.billing_usage_events
 ALTER TABLE ONLY public.billing_usage_events
@@ -2945,6 +3116,7 @@ ALTER TABLE ONLY public.billing_usage_events
 ALTER TABLE ONLY public.billing_usage_events
 ALTER TABLE ONLY public.billing_usage_events
 ALTER TABLE ONLY public.billing_usage_events FORCE ROW LEVEL SECURITY;
+ALTER TABLE ONLY public.boz_operational_scenario_runs
 ALTER TABLE ONLY public.canonicalization_archive_snapshots
 ALTER TABLE ONLY public.canonicalization_archive_snapshots
 ALTER TABLE ONLY public.canonicalization_archive_snapshots
@@ -2984,7 +3156,9 @@ ALTER TABLE ONLY public.external_proofs
 ALTER TABLE ONLY public.external_proofs
 ALTER TABLE ONLY public.external_proofs
 ALTER TABLE ONLY public.external_proofs FORCE ROW LEVEL SECURITY;
+ALTER TABLE ONLY public.global_rate_limit_policies
 ALTER TABLE ONLY public.historical_verification_runs
+ALTER TABLE ONLY public.hsm_fail_closed_events
 ALTER TABLE ONLY public.incident_events
 ALTER TABLE ONLY public.incident_events
 ALTER TABLE ONLY public.ingress_attestations
@@ -3044,13 +3218,20 @@ ALTER TABLE ONLY public.payment_outbox_pending
 ALTER TABLE ONLY public.payment_outbox_pending
 ALTER TABLE ONLY public.payment_outbox_pending
 ALTER TABLE ONLY public.payment_outbox_pending FORCE ROW LEVEL SECURITY;
+ALTER TABLE ONLY public.penalty_defense_packs
+ALTER TABLE ONLY public.penalty_defense_packs
 ALTER TABLE ONLY public.persons
 ALTER TABLE ONLY public.persons
 ALTER TABLE ONLY public.persons FORCE ROW LEVEL SECURITY;
+ALTER TABLE ONLY public.pii_erased_subject_placeholders
+ALTER TABLE ONLY public.pii_erased_subject_placeholders
+ALTER TABLE ONLY public.pii_erasure_journal
 ALTER TABLE ONLY public.pii_purge_events
 ALTER TABLE ONLY public.pii_purge_events
 ALTER TABLE ONLY public.pii_purge_events
 ALTER TABLE ONLY public.pii_purge_requests
+ALTER TABLE ONLY public.pii_tokenization_registry
+ALTER TABLE ONLY public.pii_tokenization_registry
 ALTER TABLE ONLY public.pii_vault_records
 ALTER TABLE ONLY public.pii_vault_records
 ALTER TABLE ONLY public.pii_vault_records
@@ -3081,9 +3262,13 @@ ALTER TABLE ONLY public.rail_dispatch_truth_anchor
 ALTER TABLE ONLY public.rail_dispatch_truth_anchor
 ALTER TABLE ONLY public.rail_dispatch_truth_anchor
 ALTER TABLE ONLY public.rail_dispatch_truth_anchor
+ALTER TABLE ONLY public.redaction_audit_events
 ALTER TABLE ONLY public.reference_strategy_policy_versions
 ALTER TABLE ONLY public.regulatory_incidents
 ALTER TABLE ONLY public.regulatory_incidents
+ALTER TABLE ONLY public.regulatory_report_submission_attempts
+ALTER TABLE ONLY public.regulatory_retraction_approvals
+ALTER TABLE ONLY public.regulatory_retraction_approvals
 ALTER TABLE ONLY public.resign_sweeps
 ALTER TABLE ONLY public.revoked_client_certs
 ALTER TABLE ONLY public.revoked_tokens
@@ -3093,6 +3278,7 @@ ALTER TABLE ONLY public.schema_migrations
 ALTER TABLE ONLY public.signing_audit_log
 ALTER TABLE ONLY public.signing_authorization_matrix
 ALTER TABLE ONLY public.signing_authorization_matrix
+ALTER TABLE ONLY public.signing_throughput_runs
 ALTER TABLE ONLY public.sim_swap_alerts
 ALTER TABLE ONLY public.sim_swap_alerts
 ALTER TABLE ONLY public.sim_swap_alerts
@@ -3211,6 +3397,10 @@ BEGIN
 BEGIN
 BEGIN
 BEGIN
+BEGIN
+BEGIN
+BEGIN
+BEGIN
 CREATE FUNCTION public.acknowledge_inquiry_response(p_instruction_id text, p_policy_version_id text) RETURNS public.inquiry_state_enum
 CREATE FUNCTION public.activate_policy_bundle(p_policy_bundle_id uuid) RETURNS void
 CREATE FUNCTION public.allocate_dispatch_reference(p_instruction_id uuid, p_adjustment_id uuid, p_parent_reference text, p_rail_id text) RETURNS TABLE(registry_id uuid, allocated_reference text, canonicalized_reference text, strategy_used public.reference_strategy_type_enum, policy_version_id text, collision_retry_count integer)
@@ -3219,9 +3409,13 @@ CREATE FUNCTION public.apply_finality_signals(p_instruction_id text, p_rail_a_id
 CREATE FUNCTION public.apply_inquiry_attempt(p_instruction_id text, p_policy_version_id text, p_max_attempts integer) RETURNS public.inquiry_state_enum
 CREATE FUNCTION public.assert_adjustment_execution_allowed(p_adjustment_id uuid, p_current_state public.adjustment_state_enum, p_freeze_flag_type text DEFAULT NULL::text) RETURNS void
 CREATE FUNCTION public.assert_canonicalization_version_exists(p_version text) RETURNS void
+CREATE FUNCTION public.assert_hsm_fail_closed(p_should_block boolean) RETURNS void
 CREATE FUNCTION public.assert_key_class_authorized(p_caller_id text, p_key_class public.key_class_enum) RETURNS void
 CREATE FUNCTION public.assert_offline_safe_mode_dispatch_allowed(p_reason text, p_policy_version_id text, p_is_offline boolean) RETURNS void
+CREATE FUNCTION public.assert_pii_absent_from_penalty_pack(p_contains_raw_pii boolean) RETURNS void
+CREATE FUNCTION public.assert_rate_limit_blocked(p_blocked boolean) RETURNS void
 CREATE FUNCTION public.assert_reference_registered(p_rail_id text, p_reference text, p_instruction_id uuid, p_adjustment_id uuid DEFAULT NULL::uuid) RETURNS void
+CREATE FUNCTION public.assert_secondary_retraction_approval(p_ok boolean) RETURNS void
 CREATE FUNCTION public.authorize_escrow_reservation(p_program_escrow_id uuid, p_amount_minor bigint, p_actor_id text DEFAULT 'system'::text, p_reason text DEFAULT NULL::text, p_metadata jsonb DEFAULT '{}'::jsonb) RETURNS uuid
 CREATE FUNCTION public.block_active_reference_policy_updates() RETURNS trigger
 CREATE FUNCTION public.bump_participant_outbox_seq(p_participant_id text) RETURNS bigint
@@ -3386,8 +3580,12 @@ CREATE TABLE public.adjustment_instructions (
 CREATE TABLE public.anchor_backfill_jobs (
 CREATE TABLE public.anchor_sync_operations (
 CREATE TABLE public.archive_verification_runs (
+CREATE TABLE public.artifact_signing_batch_items (
+CREATE TABLE public.artifact_signing_batches (
+CREATE TABLE public.audit_tamper_evident_chains (
 CREATE TABLE public.billable_clients (
 CREATE TABLE public.billing_usage_events (
+CREATE TABLE public.boz_operational_scenario_runs (
 CREATE TABLE public.canonicalization_archive_snapshots (
 CREATE TABLE public.canonicalization_registry (
 CREATE TABLE public.dispatch_reference_collision_events (
@@ -3400,7 +3598,9 @@ CREATE TABLE public.escrow_reservations (
 CREATE TABLE public.evidence_pack_items (
 CREATE TABLE public.evidence_packs (
 CREATE TABLE public.external_proofs (
+CREATE TABLE public.global_rate_limit_policies (
 CREATE TABLE public.historical_verification_runs (
+CREATE TABLE public.hsm_fail_closed_events (
 CREATE TABLE public.incident_events (
 CREATE TABLE public.ingress_attestations (
 CREATE TABLE public.inquiry_state_machine (
@@ -3425,9 +3625,13 @@ CREATE TABLE public.participant_outbox_sequences (
 CREATE TABLE public.participants (
 CREATE TABLE public.payment_outbox_attempts (
 CREATE TABLE public.payment_outbox_pending (
+CREATE TABLE public.penalty_defense_packs (
 CREATE TABLE public.persons (
+CREATE TABLE public.pii_erased_subject_placeholders (
+CREATE TABLE public.pii_erasure_journal (
 CREATE TABLE public.pii_purge_events (
 CREATE TABLE public.pii_purge_requests (
+CREATE TABLE public.pii_tokenization_registry (
 CREATE TABLE public.pii_vault_records (
 CREATE TABLE public.policy_bundles (
 CREATE TABLE public.policy_versions (
@@ -3436,8 +3640,11 @@ CREATE TABLE public.programs (
 CREATE TABLE public.proof_pack_batch_leaves (
 CREATE TABLE public.proof_pack_batches (
 CREATE TABLE public.rail_dispatch_truth_anchor (
+CREATE TABLE public.redaction_audit_events (
 CREATE TABLE public.reference_strategy_policy_versions (
 CREATE TABLE public.regulatory_incidents (
+CREATE TABLE public.regulatory_report_submission_attempts (
+CREATE TABLE public.regulatory_retraction_approvals (
 CREATE TABLE public.resign_sweeps (
 CREATE TABLE public.revoked_client_certs (
 CREATE TABLE public.revoked_tokens (
@@ -3445,6 +3652,7 @@ CREATE TABLE public.risk_formula_versions (
 CREATE TABLE public.schema_migrations (
 CREATE TABLE public.signing_audit_log (
 CREATE TABLE public.signing_authorization_matrix (
+CREATE TABLE public.signing_throughput_runs (
 CREATE TABLE public.sim_swap_alerts (
 CREATE TABLE public.supervisor_access_policies (
 CREATE TABLE public.supervisor_approval_queue (
@@ -3554,6 +3762,10 @@ DECLARE
 DECLARE
 DECLARE
 DECLARE
+END;
+END;
+END;
+END;
 END;
 END;
 END;
