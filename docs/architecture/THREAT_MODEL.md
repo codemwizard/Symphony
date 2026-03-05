@@ -264,3 +264,4 @@ Mitigations:
 3) Add append-only ledger schema and invariant tests.
 4) Define PCI boundary and tokenization approach.
 5) Establish evidence bundle generation and retention.
+- Hardening Wave-6 guard patch (`0069_hard_wave6_merkle_and_policy_rotation_guards.sql`) closes Merkle leaf null-expected-hash bypass by fail-closing with `P8303` and preserves reference-policy row immutability during ACTIVE→INACTIVE rotation by forbidding policy/signature metadata rewrites on formerly active rows.

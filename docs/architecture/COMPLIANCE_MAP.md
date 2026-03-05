@@ -56,3 +56,4 @@
 - 2026-02-25: `TSK-P1-INF-002` adds deterministic container-build governance for required Phase-1 services with digest-pinned base images, non-root posture, and rebuild digest stability evidence.
 - 2026-02-25: `TSK-P1-INF-001` adds sandbox Postgres HA/backups/PITR verification posture with operator-style cluster + backup schedule manifests and deterministic PITR evidence metadata.
 - 2026-02-24: `TSK-P1-HIER-007` adds deterministic risk formula registry + program default tier posture (append-only `risk_formula_registry`, `programs.default_risk_tier`, and read-only `vw_program_tier_effective`) with verifier-backed integrity evidence.
+- 2026-03-05: Wave-6 guard patch (`0069_hard_wave6_merkle_and_policy_rotation_guards.sql`) enforces fail-closed Merkle leaf hash verification on null/blank expectations and prevents mutable rewrite of active policy content/signing metadata during rotation transitions.
