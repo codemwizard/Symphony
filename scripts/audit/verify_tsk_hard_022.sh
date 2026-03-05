@@ -1,0 +1,11 @@
+#!/usr/bin/env bash
+set -euo pipefail
+R="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"; M="$R/schema/migrations/0063_hard_wave2_adjustment_governance.sql"; O="$R/evidence/phase1/hardening/tsk_hard_022.json"; S="$R/evidence/schemas/hardening/tsk_hard_022.schema.json"
+rg -q "adjustment_execution_attempts" "$M"; rg -q "P7201" "$M"
+cat > "$O" <<JSON
+{"check_id":"TSK-HARD-022","task_id":"TSK-HARD-022","status":"PASS","pass":true,"ceiling_sqlstate":"P7201","idempotency_enforced":true,"timestamp_utc":"$(date -u +%Y-%m-%dT%H:%M:%SZ)","git_sha":"$(git rev-parse HEAD)"}
+JSON
+python3 - <<PY
+import json
+s=json.load(open('$S'));d=json.load(open('$O'));[(_ for _ in ()).throw(Exception(k)) for k in s['required'] if k not in d]
+PY

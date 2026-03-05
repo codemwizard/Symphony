@@ -1,0 +1,1 @@
+{"$schema":"http://json-schema.org/draft-07/schema#","type":"object","required":["check_id","task_id","status","pass","quorum_policy_version_id","heterogeneity_enforced","same_department_quorum_denied","timestamp_utc","git_sha"]}

@@ -1,6 +1,6 @@
 id: TSK-OPS-WAVE2-EXIT-GATE
 title: "Wave-2 Exit Gate"
-status: todo
+status: done
 phase: "Hardening"
 wave: "2"
 depends_on:

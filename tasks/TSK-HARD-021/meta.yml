@@ -3,7 +3,7 @@ phase: '1'
 task_id: TSK-HARD-021
 title: Approval stage model and quorum baseline
 owner_role: SUPERVISOR
-status: planned
+status: completed
 depends_on:
 - TSK-HARD-020
 touches:

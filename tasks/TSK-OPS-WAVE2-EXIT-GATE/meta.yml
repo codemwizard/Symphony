@@ -3,8 +3,15 @@ phase: '1'
 task_id: TSK-OPS-WAVE2-EXIT-GATE
 title: Wave-2 Exit Gate
 owner_role: SUPERVISOR
-status: planned
-depends_on: []
+status: completed
+depends_on:
+- TSK-HARD-020
+- TSK-HARD-021
+- TSK-HARD-022
+- TSK-HARD-023
+- TSK-HARD-025
+- TSK-HARD-026
+- TSK-HARD-024
 touches:
 - docs/programs/symphony-hardening/HARDENING_TASK_PACKS.md
 - evidence/phase1/program_wave2_exit_gate.json

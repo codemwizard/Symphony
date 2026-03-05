@@ -3,7 +3,7 @@ phase: '1'
 task_id: TSK-HARD-026
 title: Approval attribution and role attestation
 owner_role: SUPERVISOR
-status: planned
+status: completed
 depends_on:
 - TSK-HARD-025
 touches:

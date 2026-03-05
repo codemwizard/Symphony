@@ -3,7 +3,7 @@ phase: '1'
 task_id: TSK-HARD-025
 title: Cooling-off and legal hold transitions
 owner_role: SUPERVISOR
-status: planned
+status: completed
 depends_on:
 - TSK-HARD-023
 touches:

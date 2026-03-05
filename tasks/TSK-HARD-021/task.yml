@@ -1,6 +1,6 @@
 id: TSK-HARD-021
 title: "Approval stage model and quorum baseline"
-status: todo
+status: done
 phase: "Hardening"
 wave: "2"
 depends_on:
