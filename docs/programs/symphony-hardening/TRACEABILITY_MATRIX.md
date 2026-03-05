@@ -66,3 +66,5 @@
 | TSK-OPS-WAVE4-EXIT-GATE | 4 | Wave-4 Exit Gate | none | evidence/phase1/program_wave4_exit_gate.json | planned |
 | TSK-OPS-WAVE5-EXIT-GATE | 5 | Wave-5 Exit Gate | none | evidence/phase1/program_wave5_exit_gate.json | planned |
 | TSK-OPS-WAVE6-EXIT-GATE | 6 | Wave-6 Exit Gate — Hardening Program Complete | none | evidence/phase1/program_wave6_exit_gate.json | planned |
+
+Reference: TRUST_INVARIANTS.md
