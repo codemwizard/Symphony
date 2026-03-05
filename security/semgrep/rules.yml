@@ -45,14 +45,14 @@ rules:
     message: "Potential SQL injection: SQL query built via string concatenation. Use parameters."
     severity: ERROR
     pattern-either:
-      - pattern-regex: '(?i)\\b\\w+\\s*=\\s*["\\''][^"\\'']*(select|insert|update|delete)[^"\\'']*["\\'']\\s*\\+'
-      - pattern-regex: '(?i)\\b\\w+\\s*=\\s*\\w+\\s*\\+\\s*["\\''][^"\\'']*(select|insert|update|delete)[^"\\'']*["\\'']'
+      - pattern-regex: "(?i)[\"']\\s*(select|insert|update|delete)[^\"']*[\"']\\s*\\+\\s*[A-Za-z_][A-Za-z0-9_]*"
+      - pattern-regex: "(?i)[A-Za-z_][A-Za-z0-9_]*\\s*\\+\\s*[\"']\\s*(select|insert|update|delete)[^\"']*[\"']"
 
   - id: symphony-python-f-string-sql
     languages: [python]
     message: "Potential SQL injection: SQL query built via f-string. Use parameters."
     severity: ERROR
-    pattern-regex: '(?i)\\b\\w+\\s*=\\s*f[\"\\''][^\"\\'']*(select|insert|update|delete)[^\"\\'']*\\{[^}]+\\}[^\"\\'']*[\"\\'']'
+    pattern-regex: "(?i)f[\"'][^\"']*(select|insert|update|delete)[^\"']*\\{[^}]+\\}[^\"']*[\"']"
 
   - id: symphony-python-percent-format-sql
     languages: [python]
@@ -76,7 +76,7 @@ rules:
     languages: [python]
     message: "Possible hardcoded secret/token. Use OpenBao/KMS or secure config provider."
     severity: ERROR
-    pattern-regex: '(?i)(api[_-]?key|secret|token|password)\\s*=\\s*\".{8,}\"'
+    pattern-regex: "(?i)(api[_-]?key|secret|token|password)\\s*=\\s*['\\\"].{8,}['\\\"]"
 
   - id: symphony-dotnet-insecure-rng
     languages: [csharp]

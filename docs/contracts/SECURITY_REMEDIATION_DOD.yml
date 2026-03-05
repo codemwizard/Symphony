@@ -709,3 +709,20 @@ tasks:
         path: "evidence/security_remediation/r_015_tests_bootstrap.json"
         schema: "evidence_schemas/r_015_tests_bootstrap.schema.json"
         must_include: [test_project_exists, tests_passed]
+
+  - task_id: R-016
+    phase: "5"
+    title: "Extract runtime self-tests from Program.cs"
+    intent: "Segregate runtime self-tests from production startup path to prevent accidental execution in production."
+    dod:
+      acceptance_checks:
+        - id: R-016-A1
+          description: "Runtime self-tests moved to dedicated test host, not embedded in Program.cs startup dispatch"
+          status: REQUIRED
+          ci_gate:
+            job: db_verify_invariants
+            command: "bash scripts/audit/verify_runtime_self_tests_extracted.sh"
+      evidence:
+        path: "evidence/security_remediation/r_016_runtime_selftests_extracted.json"
+        schema: "evidence_schemas/r_016_runtime_selftests_extracted.schema.json"
+        must_include: [program_cs_selftest_dispatch_removed, dedicated_test_host_present, ci_runner_updated]
