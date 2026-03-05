@@ -2,7 +2,7 @@
 -- PostgreSQL database dump
 --
 
-\restrict w1mmNLNxgF6bqktzY8JXoFpy0CZdlOGr52K9ehy3ZfKcL8j6csC1mkDMP2fGIX4
+\restrict 5ndSirQRAKrsmPWeU9nxZZmlv5UHgdyRByHQqHwmT6nhbPw4Mbf0x7iV1MjAuCl
 
 -- Dumped from database version 18.2 (Debian 18.2-1.pgdg13+1)
 -- Dumped by pg_dump version 18.2 (Debian 18.2-1.pgdg13+1)
@@ -243,14 +243,9 @@ BEGIN
     END IF;
 
     v_canon := public.canonicalize_reference_for_rail(v_candidate, p_rail_id);
+    v_collision := false;
 
-    SELECT EXISTS(
-      SELECT 1 FROM public.dispatch_reference_registry r
-      WHERE r.rail_id = p_rail_id
-        AND (r.allocated_reference = v_candidate OR r.canonicalized_reference = v_canon)
-    ) INTO v_collision;
-
-    IF NOT v_collision THEN
+    BEGIN
       INSERT INTO public.dispatch_reference_registry(
         instruction_id, adjustment_id, rail_id, allocated_reference,
         canonicalized_reference, strategy_used, policy_version_id, collision_retry_count
@@ -266,7 +261,12 @@ BEGIN
         dispatch_reference_registry.policy_version_id,
         dispatch_reference_registry.collision_retry_count
       INTO registry_id, allocated_reference, canonicalized_reference, strategy_used, policy_version_id, collision_retry_count;
+    EXCEPTION
+      WHEN unique_violation THEN
+        v_collision := true;
+    END;
 
+    IF NOT v_collision THEN
       IF v_attempt > 0 THEN
         INSERT INTO public.dispatch_reference_collision_events(
           instruction_id, adjustment_id, rail_id, reference_attempted,
@@ -631,11 +631,12 @@ CREATE FUNCTION public.block_active_reference_policy_updates() RETURNS trigger
     SET search_path TO 'pg_catalog', 'public'
     AS $$
 BEGIN
-  IF OLD.version_status = 'ACTIVE' THEN
+  IF OLD.version_status = 'ACTIVE' AND NEW.version_status = 'ACTIVE' THEN
     RAISE EXCEPTION USING
       ERRCODE = 'P7803',
       MESSAGE = 'ACTIVE_REFERENCE_POLICY_IMMUTABLE';
   END IF;
+
   RETURN NEW;
 END;
 $$;
@@ -677,10 +678,12 @@ DECLARE
   v_truncated text;
 BEGIN
   SELECT * INTO v_strategy FROM public.resolve_reference_strategy(p_rail_id);
-  v_truncated := left(p_allocated_reference, v_strategy.max_length);
-  IF length(v_truncated) > v_strategy.max_length THEN
+
+  IF length(p_allocated_reference) > v_strategy.max_length THEN
     RAISE EXCEPTION USING ERRCODE='P7901', MESSAGE='REFERENCE_LENGTH_EXCEEDED';
   END IF;
+
+  v_truncated := left(p_allocated_reference, v_strategy.max_length);
   RETURN v_truncated;
 END;
 $$;
@@ -6868,5 +6871,5 @@ ALTER TABLE public.tenants ENABLE ROW LEVEL SECURITY;
 -- PostgreSQL database dump complete
 --
 
-\unrestrict w1mmNLNxgF6bqktzY8JXoFpy0CZdlOGr52K9ehy3ZfKcL8j6csC1mkDMP2fGIX4
+\unrestrict 5ndSirQRAKrsmPWeU9nxZZmlv5UHgdyRByHQqHwmT6nhbPw4Mbf0x7iV1MjAuCl
 

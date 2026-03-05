@@ -33,7 +33,6 @@
         );
         );
         );
-        AND (r.allocated_reference = v_candidate OR r.canonicalized_reference = v_canon)
         AND COALESCE(submitted_by, '') = v_actor
         AND status = 'PENDING_SUPERVISOR_APPROVAL'
         DELETE FROM payment_outbox_pending WHERE outbox_id = v_record.outbox_id;
@@ -112,6 +111,7 @@
         timeout_at = NOW() + make_interval(mins => v_timeout),
         trigger_threshold = EXCLUDED.trigger_threshold,
         v_canon, v_strategy.strategy_type, v_strategy.policy_version_id, v_attempt
+        v_collision := true;
         v_strategy.strategy_type, v_attempt, 'EXHAUSTED', v_strategy.policy_version_id
       'SUFFIX', 1, 'UNREGISTERED_BLOCKED', NULL
       'migrated_at', NOW(),
@@ -187,7 +187,6 @@
       RETURNING
       RETURNING payment_outbox_pending.outbox_id, payment_outbox_pending.sequence_id, payment_outbox_pending.created_at
       SELECT 1
-      SELECT 1 FROM public.dispatch_reference_registry r
       SELECT COALESCE(MAX(a.attempt_no), 0) + 1 INTO v_next_attempt_no
       SELECT p.outbox_id, p.instruction_id, p.participant_id, p.sequence_id,
       SET next_sequence_id = participant_outbox_sequences.next_sequence_id + 1
@@ -239,10 +238,10 @@
       USING ERRCODE = 'P7401';
       VALUES (
       WHEN unique_violation THEN
+      WHEN unique_violation THEN
       WHERE instruction_id = p_instruction_id
       WHERE outbox_id = p_outbox_id;
       WHERE p.claimed_by IS NOT NULL AND p.lease_token IS NOT NULL AND p.lease_expires_at <= NOW()
-      WHERE r.rail_id = p_rail_id
       anchor_ref = p_anchor_ref,
       anchor_type = COALESCE(NULLIF(BTRIM(p_anchor_type), ''), 'HYBRID_SYNC')
       approved_at = CASE WHEN v_decision = 'APPROVED' THEN NOW() ELSE approved_at END,
@@ -413,7 +412,6 @@
     )
     )
     )
-    ) INTO v_collision;
     ) THEN
     ) VALUES (
     ) VALUES (
@@ -715,6 +713,7 @@
     AS $$
     AS $$
     BEGIN
+    BEGIN
     CASE WHEN v_state='FINALITY_CONFLICT' THEN 'HOLD_RELEASE' ELSE NULL END
     CASE WHEN v_state='FINALITY_CONFLICT' THEN now() ELSE NULL END,
     CASE WHEN v_state='SUSPENDED' THEN now() ELSE NULL END
@@ -832,6 +831,8 @@
     END IF;
     END LOOP;
     END;
+    END;
+    EXCEPTION
     EXCEPTION
     FOR UPDATE SKIP LOCKED
     FOR UPDATE;
@@ -1113,7 +1114,6 @@
     SELECT 1
     SELECT 1
     SELECT COALESCE(MAX(a.attempt_no), 0) + 1 INTO v_next_attempt_no
-    SELECT EXISTS(
     SELECT a.outbox_id, a.sequence_id, a.created_at, a.state
     SELECT e.escrow_id
     SELECT o.operation_id
@@ -2015,6 +2015,7 @@
     v_class := 'UNKNOWN_REFERENCE';
     v_class := 'UNKNOWN_REFERENCE';
     v_class,
+    v_collision := false;
     v_count := v_count + 1;
     v_effective_state := p_state;
     v_env.tenant_id, NULL, NULL, 'CREATED', v_amount, v_env.currency_code, NOW() + interval '30 minutes', NOW() + interval '60 minutes'
@@ -2349,12 +2350,12 @@
   IF NOT v_legal THEN
   IF NULLIF(BTRIM(p_anchor_ref), '') IS NULL THEN
   IF OLD.is_final IS TRUE THEN
-  IF OLD.version_status = 'ACTIVE' THEN
+  IF OLD.version_status = 'ACTIVE' AND NEW.version_status = 'ACTIVE' THEN
   IF TG_OP = 'UPDATE' THEN
   IF TG_OP='UPDATE' AND OLD.adjustment_state IN ('executed','denied','blocked_legal_hold') THEN
   IF derived_billable_client_id IS NULL THEN
   IF derived_tenant_id IS NULL THEN
-  IF length(v_truncated) > v_strategy.max_length THEN
+  IF length(p_allocated_reference) > v_strategy.max_length THEN
   IF m_tenant <> NEW.tenant_id THEN
   IF m_tenant IS NULL THEN
   IF p_current_state = 'cooling_off' THEN
