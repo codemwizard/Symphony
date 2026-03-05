@@ -1,41 +1,41 @@
 schema_version: 1
 phase: '1'
 task_id: TSK-HARD-099
-title: "Long-horizon audit replay continuity \u2014 five-year simulation"
+title: Long-horizon audit replay continuity — five-year simulation
 owner_role: SUPERVISOR
-status: planned
+status: completed
 depends_on:
-- TSK-HARD-097
+  - TSK-HARD-097
 touches:
-- archive/refresh policy per component with shelf life risk
-- docs/programs/symphony-hardening/HARDENING_TASK_PACKS.md
-- evidence/phase1/hardening/tsk_hard_099.json
-- five-year horizon simulation test
-- replay continuity evidence artifact
-- shelf life risk register
-- tasks/TSK-HARD-099/EXEC_LOG.md
-- tasks/TSK-HARD-099/PLAN.md
+  - archive/refresh policy per component with shelf life risk
+  - docs/programs/symphony-hardening/HARDENING_TASK_PACKS.md
+  - evidence/phase1/hardening/tsk_hard_099.json
+  - five-year horizon simulation test
+  - replay continuity evidence artifact
+  - shelf life risk register
+  - tasks/TSK-HARD-099/EXEC_LOG.md
+  - tasks/TSK-HARD-099/PLAN.md
 invariants:
-- INV-HARDENING-CANONICAL-SOURCE
+  - INV-HARDENING-CANONICAL-SOURCE
 work:
-- Confirm that artifacts produced today remain verifiable at a five-year
-- Implement exactly per canonical task block in HARDENING_TASK_PACKS.md.
+  - Confirm that artifacts produced today remain verifiable at a five-year
+  - Implement exactly per canonical task block in HARDENING_TASK_PACKS.md.
 acceptance_criteria:
-- 'simulation test verifies artifacts using only: archived PKA (TSK-HARD-070),'
+  - 'simulation test verifies artifacts using only: archived PKA (TSK-HARD-070),'
 verification:
-- bash scripts/audit/verify_tsk_hard_099.sh
+  - bash scripts/audit/verify_tsk_hard_099.sh
 evidence:
-- evidence/phase1/hardening/tsk_hard_099.json
-- evidence/schemas/hardening/tsk_hard_099.schema.json
+  - evidence/phase1/hardening/tsk_hard_099.json
+  - evidence/schemas/hardening/tsk_hard_099.schema.json
 failure_modes:
-- simulation depends on any operational runtime component => FAIL_CLOSED
-- any archived component shelf life risk not documented => FAIL
-- any flagged component lacks a defined refresh policy => FAIL
-- five-year simulation not performed => FAIL
-- negative-path test absent => FAIL
+  - simulation depends on any operational runtime component => FAIL_CLOSED
+  - any archived component shelf life risk not documented => FAIL
+  - any flagged component lacks a defined refresh policy => FAIL
+  - five-year simulation not performed => FAIL
+  - negative-path test absent => FAIL
 must_read:
-- docs/operations/AI_AGENT_OPERATION_MANUAL.md
-- docs/programs/symphony-hardening/HARDENING_TASK_PACKS.md
+  - docs/operations/AI_AGENT_OPERATION_MANUAL.md
+  - docs/programs/symphony-hardening/HARDENING_TASK_PACKS.md
 implementation_plan: tasks/TSK-HARD-099/PLAN.md
 implementation_log: tasks/TSK-HARD-099/EXEC_LOG.md
 notes: Generated from canonical hardening task pack source; do not edit semantics

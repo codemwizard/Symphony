@@ -266,3 +266,4 @@ Mitigations:
 3) Add append-only ledger schema and invariant tests.
 4) Define PCI boundary and tokenization approach.
 5) Establish evidence bundle generation and retention.
+- Hardening Wave-5 reference-strategy corrective migration (`0067_hard_wave5_reference_strategy_rotation_and_allocation_race.sql`) restores ACTIVE policy rotation viability, enforces fail-closed raw reference-length rejection (`P7901`) before truncation, and hardens concurrent allocation races by retrying on atomic unique-collision paths.

@@ -1,38 +1,38 @@
 schema_version: 1
 phase: '1'
 task_id: TSK-HARD-061
-title: "Historical verifier loader \u2014 no fallback to latest"
+title: Historical verifier loader — no fallback to latest
 owner_role: SUPERVISOR
-status: planned
+status: completed
 depends_on:
-- TSK-HARD-060
+  - TSK-HARD-060
 touches:
-- docs/programs/symphony-hardening/HARDENING_TASK_PACKS.md
-- historical verifier loader implementation
-- tasks/TSK-HARD-061/EXEC_LOG.md
-- tasks/TSK-HARD-061/PLAN.md
-- version resolution logic (reads canonicalization_version from artifact
+  - docs/programs/symphony-hardening/HARDENING_TASK_PACKS.md
+  - historical verifier loader implementation
+  - tasks/TSK-HARD-061/EXEC_LOG.md
+  - tasks/TSK-HARD-061/PLAN.md
+  - version resolution logic (reads canonicalization_version from artifact
 invariants:
-- INV-HARDENING-CANONICAL-SOURCE
+  - INV-HARDENING-CANONICAL-SOURCE
 work:
-- Implement the historical verifier that resolves the exact canonicalization
-- Implement exactly per canonical task block in HARDENING_TASK_PACKS.md.
+  - Implement the historical verifier that resolves the exact canonicalization
+  - Implement exactly per canonical task block in HARDENING_TASK_PACKS.md.
 acceptance_criteria:
-- historical verifier reads canonicalization_version from the artifact's
+  - historical verifier reads canonicalization_version from the artifact's
 verification:
-- bash scripts/audit/verify_tsk_hard_061.sh
+  - bash scripts/audit/verify_tsk_hard_061.sh
 evidence:
-- evidence/phase1/hardening/tsk_hard_061.json
-- evidence/schemas/hardening/tsk_hard_061.schema.json
+  - evidence/phase1/hardening/tsk_hard_061.json
+  - evidence/schemas/hardening/tsk_hard_061.schema.json
 failure_modes:
-- fallback to latest canonicalization version occurs => FAIL_CLOSED
-- missing version produces silent pass => FAIL_CLOSED
-- UNVERIFIABLE_MISSING_CANONICALIZER swallowed by catch block => FAIL_CLOSED
-- verification result missing canonicalization_version_requested field => FAIL
-- negative-path tests absent => FAIL
+  - fallback to latest canonicalization version occurs => FAIL_CLOSED
+  - missing version produces silent pass => FAIL_CLOSED
+  - UNVERIFIABLE_MISSING_CANONICALIZER swallowed by catch block => FAIL_CLOSED
+  - verification result missing canonicalization_version_requested field => FAIL
+  - negative-path tests absent => FAIL
 must_read:
-- docs/operations/AI_AGENT_OPERATION_MANUAL.md
-- docs/programs/symphony-hardening/HARDENING_TASK_PACKS.md
+  - docs/operations/AI_AGENT_OPERATION_MANUAL.md
+  - docs/programs/symphony-hardening/HARDENING_TASK_PACKS.md
 implementation_plan: tasks/TSK-HARD-061/PLAN.md
 implementation_log: tasks/TSK-HARD-061/EXEC_LOG.md
 notes: Generated from canonical hardening task pack source; do not edit semantics

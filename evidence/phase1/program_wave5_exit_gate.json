@@ -1,0 +1,9 @@
+{
+  "check_id": "TSK-OPS-WAVE5-EXIT-GATE",
+  "task_id": "TSK-OPS-WAVE5-EXIT-GATE",
+  "status": "PASS",
+  "pass": true,
+  "artifacts_validated": 4,
+  "timestamp_utc": "2026-03-05T12:40:01Z",
+  "git_sha": "4039a822595cec558760cec5fa580591b2d2a568"
+}

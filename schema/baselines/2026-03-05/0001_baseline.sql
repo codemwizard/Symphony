@@ -243,14 +243,9 @@ BEGIN
     END IF;
 
     v_canon := public.canonicalize_reference_for_rail(v_candidate, p_rail_id);
+    v_collision := false;
 
-    SELECT EXISTS(
-      SELECT 1 FROM public.dispatch_reference_registry r
-      WHERE r.rail_id = p_rail_id
-        AND (r.allocated_reference = v_candidate OR r.canonicalized_reference = v_canon)
-    ) INTO v_collision;
-
-    IF NOT v_collision THEN
+    BEGIN
       INSERT INTO public.dispatch_reference_registry(
         instruction_id, adjustment_id, rail_id, allocated_reference,
         canonicalized_reference, strategy_used, policy_version_id, collision_retry_count
@@ -266,7 +261,12 @@ BEGIN
         dispatch_reference_registry.policy_version_id,
         dispatch_reference_registry.collision_retry_count
       INTO registry_id, allocated_reference, canonicalized_reference, strategy_used, policy_version_id, collision_retry_count;
+    EXCEPTION
+      WHEN unique_violation THEN
+        v_collision := true;
+    END;
 
+    IF NOT v_collision THEN
       IF v_attempt > 0 THEN
         INSERT INTO public.dispatch_reference_collision_events(
           instruction_id, adjustment_id, rail_id, reference_attempted,
@@ -462,6 +462,22 @@ $$;
 
 
 --
+-- Name: assert_canonicalization_version_exists(text); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.assert_canonicalization_version_exists(p_version text) RETURNS void
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO 'pg_catalog', 'public'
+    AS $$
+BEGIN
+  IF NOT EXISTS (SELECT 1 FROM public.canonicalization_registry WHERE canonicalization_version = p_version) THEN
+    RAISE EXCEPTION USING ERRCODE='P8301', MESSAGE='UNVERIFIABLE_MISSING_CANONICALIZER';
+  END IF;
+END;
+$$;
+
+
+--
 -- Name: assert_key_class_authorized(text, public.key_class_enum); Type: FUNCTION; Schema: public; Owner: -
 --
 
@@ -616,11 +632,12 @@ CREATE FUNCTION public.block_active_reference_policy_updates() RETURNS trigger
     SET search_path TO 'pg_catalog', 'public'
     AS $$
 BEGIN
-  IF OLD.version_status = 'ACTIVE' THEN
+  IF OLD.version_status = 'ACTIVE' AND NEW.version_status = 'ACTIVE' THEN
     RAISE EXCEPTION USING
       ERRCODE = 'P7803',
       MESSAGE = 'ACTIVE_REFERENCE_POLICY_IMMUTABLE';
   END IF;
+
   RETURN NEW;
 END;
 $$;
@@ -662,10 +679,12 @@ DECLARE
   v_truncated text;
 BEGIN
   SELECT * INTO v_strategy FROM public.resolve_reference_strategy(p_rail_id);
-  v_truncated := left(p_allocated_reference, v_strategy.max_length);
-  IF length(v_truncated) > v_strategy.max_length THEN
+
+  IF length(p_allocated_reference) > v_strategy.max_length THEN
     RAISE EXCEPTION USING ERRCODE='P7901', MESSAGE='REFERENCE_LENGTH_EXCEEDED';
   END IF;
+
+  v_truncated := left(p_allocated_reference, v_strategy.max_length);
   RETURN v_truncated;
 END;
 $$;
@@ -2859,6 +2878,34 @@ $$;
 
 
 --
+-- Name: verify_merkle_leaf(uuid, integer, text); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.verify_merkle_leaf(p_batch_id uuid, p_leaf_index integer, p_expected_leaf_hash text) RETURNS boolean
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO 'pg_catalog', 'public'
+    AS $$
+DECLARE
+  v_hash text;
+BEGIN
+  SELECT leaf_hash INTO v_hash
+  FROM public.proof_pack_batch_leaves
+  WHERE batch_id = p_batch_id AND leaf_index = p_leaf_index;
+
+  IF v_hash IS NULL THEN
+    RAISE EXCEPTION USING ERRCODE='P8302', MESSAGE='MERKLE_LEAF_NOT_FOUND';
+  END IF;
+
+  IF v_hash <> p_expected_leaf_hash THEN
+    RAISE EXCEPTION USING ERRCODE='P8303', MESSAGE='MERKLE_LEAF_HASH_MISMATCH';
+  END IF;
+
+  RETURN true;
+END;
+$$;
+
+
+--
 -- Name: verify_policy_bundle_runtime(uuid); Type: FUNCTION; Schema: public; Owner: -
 --
 
@@ -2979,6 +3026,23 @@ CREATE TABLE public.adjustment_instructions (
 
 
 --
+-- Name: anchor_backfill_jobs; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.anchor_backfill_jobs (
+    job_id uuid DEFAULT gen_random_uuid() NOT NULL,
+    replay_day date NOT NULL,
+    status text NOT NULL,
+    source_stream text NOT NULL,
+    target_stream text NOT NULL,
+    records_replayed integer DEFAULT 0 NOT NULL,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    completed_at timestamp with time zone,
+    CONSTRAINT anchor_backfill_jobs_status_check CHECK ((status = ANY (ARRAY['STARTED'::text, 'COMPLETED'::text, 'FAILED'::text])))
+);
+
+
+--
 -- Name: anchor_sync_operations; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -2999,6 +3063,24 @@ CREATE TABLE public.anchor_sync_operations (
     CONSTRAINT anchor_sync_operations_attempt_count_check CHECK ((attempt_count >= 0)),
     CONSTRAINT anchor_sync_operations_state_check CHECK ((state = ANY (ARRAY['PENDING'::text, 'ANCHORING'::text, 'ANCHORED'::text, 'COMPLETED'::text, 'FAILED'::text]))),
     CONSTRAINT ck_anchor_sync_completed_requires_anchor_ref CHECK (((state <> 'COMPLETED'::text) OR (anchor_ref IS NOT NULL)))
+);
+
+
+--
+-- Name: archive_verification_runs; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.archive_verification_runs (
+    run_id uuid DEFAULT gen_random_uuid() NOT NULL,
+    run_scope text NOT NULL,
+    years_covered integer NOT NULL,
+    archive_only boolean DEFAULT true NOT NULL,
+    key_versions_covered text[] NOT NULL,
+    canonicalization_versions_covered text[] CONSTRAINT archive_verification_runs_canonicalization_versions_co_not_null NOT NULL,
+    outcome text NOT NULL,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    CONSTRAINT archive_verification_runs_outcome_check CHECK ((outcome = ANY (ARRAY['PASS'::text, 'FAIL'::text]))),
+    CONSTRAINT archive_verification_runs_years_covered_check CHECK ((years_covered >= 1))
 );
 
 
@@ -3046,6 +3128,34 @@ CREATE TABLE public.billing_usage_events (
 );
 
 ALTER TABLE ONLY public.billing_usage_events FORCE ROW LEVEL SECURITY;
+
+
+--
+-- Name: canonicalization_archive_snapshots; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.canonicalization_archive_snapshots (
+    snapshot_id uuid DEFAULT gen_random_uuid() NOT NULL,
+    canonicalization_version text CONSTRAINT canonicalization_archive_snap_canonicalization_version_not_null NOT NULL,
+    snapshot_path text NOT NULL,
+    snapshot_sha256 text NOT NULL,
+    created_at timestamp with time zone DEFAULT now() NOT NULL
+);
+
+
+--
+-- Name: canonicalization_registry; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.canonicalization_registry (
+    canonicalization_version text NOT NULL,
+    spec_json jsonb NOT NULL,
+    test_vectors jsonb NOT NULL,
+    activated_at timestamp with time zone DEFAULT now() NOT NULL,
+    deprecated_at timestamp with time zone,
+    immutable boolean DEFAULT true NOT NULL,
+    created_at timestamp with time zone DEFAULT now() NOT NULL
+);
 
 
 --
@@ -3895,6 +4005,35 @@ ALTER TABLE ONLY public.programs FORCE ROW LEVEL SECURITY;
 
 
 --
+-- Name: proof_pack_batch_leaves; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.proof_pack_batch_leaves (
+    leaf_id uuid DEFAULT gen_random_uuid() NOT NULL,
+    batch_id uuid NOT NULL,
+    artifact_id text NOT NULL,
+    leaf_index integer NOT NULL,
+    leaf_hash text NOT NULL,
+    merkle_proof jsonb NOT NULL,
+    CONSTRAINT proof_pack_batch_leaves_leaf_index_check CHECK ((leaf_index >= 0))
+);
+
+
+--
+-- Name: proof_pack_batches; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.proof_pack_batches (
+    batch_id uuid DEFAULT gen_random_uuid() NOT NULL,
+    merkle_root text NOT NULL,
+    leaf_count integer NOT NULL,
+    canonicalization_version text NOT NULL,
+    published_at timestamp with time zone DEFAULT now() NOT NULL,
+    CONSTRAINT proof_pack_batches_leaf_count_check CHECK ((leaf_count > 0))
+);
+
+
+--
 -- Name: rail_dispatch_truth_anchor; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -4283,6 +4422,14 @@ ALTER TABLE ONLY public.adjustment_instructions
 
 
 --
+-- Name: anchor_backfill_jobs anchor_backfill_jobs_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.anchor_backfill_jobs
+    ADD CONSTRAINT anchor_backfill_jobs_pkey PRIMARY KEY (job_id);
+
+
+--
 -- Name: anchor_sync_operations anchor_sync_operations_pack_id_key; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -4296,6 +4443,14 @@ ALTER TABLE ONLY public.anchor_sync_operations
 
 ALTER TABLE ONLY public.anchor_sync_operations
     ADD CONSTRAINT anchor_sync_operations_pkey PRIMARY KEY (operation_id);
+
+
+--
+-- Name: archive_verification_runs archive_verification_runs_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.archive_verification_runs
+    ADD CONSTRAINT archive_verification_runs_pkey PRIMARY KEY (run_id);
 
 
 --
@@ -4320,6 +4475,30 @@ ALTER TABLE ONLY public.billable_clients
 
 ALTER TABLE ONLY public.billing_usage_events
     ADD CONSTRAINT billing_usage_events_pkey PRIMARY KEY (event_id);
+
+
+--
+-- Name: canonicalization_archive_snapshots canonicalization_archive_snap_canonicalization_version_snap_key; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.canonicalization_archive_snapshots
+    ADD CONSTRAINT canonicalization_archive_snap_canonicalization_version_snap_key UNIQUE (canonicalization_version, snapshot_sha256);
+
+
+--
+-- Name: canonicalization_archive_snapshots canonicalization_archive_snapshots_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.canonicalization_archive_snapshots
+    ADD CONSTRAINT canonicalization_archive_snapshots_pkey PRIMARY KEY (snapshot_id);
+
+
+--
+-- Name: canonicalization_registry canonicalization_registry_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.canonicalization_registry
+    ADD CONSTRAINT canonicalization_registry_pkey PRIMARY KEY (canonicalization_version);
 
 
 --
@@ -4800,6 +4979,30 @@ ALTER TABLE ONLY public.programs
 
 ALTER TABLE ONLY public.programs
     ADD CONSTRAINT programs_tenant_id_program_key_key UNIQUE (tenant_id, program_key);
+
+
+--
+-- Name: proof_pack_batch_leaves proof_pack_batch_leaves_batch_id_leaf_index_key; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.proof_pack_batch_leaves
+    ADD CONSTRAINT proof_pack_batch_leaves_batch_id_leaf_index_key UNIQUE (batch_id, leaf_index);
+
+
+--
+-- Name: proof_pack_batch_leaves proof_pack_batch_leaves_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.proof_pack_batch_leaves
+    ADD CONSTRAINT proof_pack_batch_leaves_pkey PRIMARY KEY (leaf_id);
+
+
+--
+-- Name: proof_pack_batches proof_pack_batches_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.proof_pack_batches
+    ADD CONSTRAINT proof_pack_batches_pkey PRIMARY KEY (batch_id);
 
 
 --
@@ -5942,6 +6145,14 @@ ALTER TABLE ONLY public.billing_usage_events
 
 
 --
+-- Name: canonicalization_archive_snapshots canonicalization_archive_snapshot_canonicalization_version_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.canonicalization_archive_snapshots
+    ADD CONSTRAINT canonicalization_archive_snapshot_canonicalization_version_fkey FOREIGN KEY (canonicalization_version) REFERENCES public.canonicalization_registry(canonicalization_version) ON DELETE RESTRICT;
+
+
+--
 -- Name: dispatch_reference_collision_events dispatch_reference_collision_events_adjustment_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -6315,6 +6526,22 @@ ALTER TABLE ONLY public.programs
 
 ALTER TABLE ONLY public.programs
     ADD CONSTRAINT programs_tenant_id_fkey FOREIGN KEY (tenant_id) REFERENCES public.tenants(tenant_id) ON DELETE RESTRICT;
+
+
+--
+-- Name: proof_pack_batch_leaves proof_pack_batch_leaves_batch_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.proof_pack_batch_leaves
+    ADD CONSTRAINT proof_pack_batch_leaves_batch_id_fkey FOREIGN KEY (batch_id) REFERENCES public.proof_pack_batches(batch_id) ON DELETE CASCADE;
+
+
+--
+-- Name: proof_pack_batches proof_pack_batches_canonicalization_version_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.proof_pack_batches
+    ADD CONSTRAINT proof_pack_batches_canonicalization_version_fkey FOREIGN KEY (canonicalization_version) REFERENCES public.canonicalization_registry(canonicalization_version) ON DELETE RESTRICT;
 
 
 --
