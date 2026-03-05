@@ -9,3 +9,10 @@ Source: docs/programs/symphony-hardening/HARDENING_TASK_PACKS.md
 
 ## Verification
 - RUN_PHASE1_GATES=1 scripts/dev/pre_ci.sh
+
+failure_signature: HARDENING.REMEDIATION.TRACE.REQUIRED
+origin_task_id: TSK-HARD-033
+repro_command: RUN_PHASE1_GATES=1 scripts/dev/pre_ci.sh
+verification_commands_run:
+  - RUN_PHASE1_GATES=1 scripts/dev/pre_ci.sh
+final_status: completed
