@@ -56,3 +56,5 @@ This ADR remains the authoritative governance reference for baseline change chec
 - 2026-03-05: Baseline refreshed after adding migration 0064_hard_wave3_reference_strategy_and_registry.sql (Wave-3 reference governance).
 
 - 2026-03-05: Baseline refreshed after adding migration 0065_hard_wave4_signing_controls_and_assurance.sql (Wave-4 signing controls and assurance).
+- 2026-03-05: Baseline refreshed after adding migration 0067_hard_wave6_operational_resilience_and_privacy.sql (Wave-6 operational resilience, privacy controls, and reporting hardening).
+- 2026-03-05: Baseline refreshed after adding migration 0069_hard_wave6_merkle_and_policy_rotation_guards.sql (Merkle null-expected-hash fail-closed verification and policy-rotation immutability guard hardening).

@@ -2,7 +2,7 @@
 -- PostgreSQL database dump
 --
 
-\restrict zrGZ6de2l5dKP3t3ACwyIMjYOfHBvqgsGSAej8C7sa3GOI92XE4kvcJ2C4dkWcB
+\restrict femLTUkABZIbHA2h4DVmP7UhmiNgGKmVUfnibH2FO0kvyQNTcGshvX6PhuoSyCz
 
 -- Dumped from database version 18.2 (Debian 18.2-1.pgdg13+1)
 -- Dumped by pg_dump version 18.2 (Debian 18.2-1.pgdg13+1)
@@ -696,10 +696,26 @@ CREATE FUNCTION public.block_active_reference_policy_updates() RETURNS trigger
     AS $$
 BEGIN
   IF OLD.version_status = 'ACTIVE' THEN
-    RAISE EXCEPTION USING
-      ERRCODE = 'P7803',
-      MESSAGE = 'ACTIVE_REFERENCE_POLICY_IMMUTABLE';
+    IF NEW.version_status = 'ACTIVE' THEN
+      RAISE EXCEPTION USING
+        ERRCODE = 'P7803',
+        MESSAGE = 'ACTIVE_REFERENCE_POLICY_IMMUTABLE';
+    END IF;
+
+    IF NEW.policy_json IS DISTINCT FROM OLD.policy_json
+       OR NEW.signed_at IS DISTINCT FROM OLD.signed_at
+       OR NEW.signed_key_id IS DISTINCT FROM OLD.signed_key_id
+       OR NEW.unsigned_reason IS DISTINCT FROM OLD.unsigned_reason
+       OR NEW.evidence_path IS DISTINCT FROM OLD.evidence_path
+       OR NEW.policy_version_id IS DISTINCT FROM OLD.policy_version_id
+       OR NEW.activated_at IS DISTINCT FROM OLD.activated_at
+       OR NEW.created_at IS DISTINCT FROM OLD.created_at THEN
+      RAISE EXCEPTION USING
+        ERRCODE = 'P7803',
+        MESSAGE = 'ACTIVE_REFERENCE_POLICY_IMMUTABLE';
+    END IF;
   END IF;
+
   RETURN NEW;
 END;
 $$;
@@ -2929,6 +2945,10 @@ CREATE FUNCTION public.verify_merkle_leaf(p_batch_id uuid, p_leaf_index integer,
 DECLARE
   v_hash text;
 BEGIN
+  IF p_expected_leaf_hash IS NULL OR btrim(p_expected_leaf_hash) = '' THEN
+    RAISE EXCEPTION USING ERRCODE='P8303', MESSAGE='MERKLE_LEAF_HASH_MISMATCH';
+  END IF;
+
   SELECT leaf_hash INTO v_hash
   FROM public.proof_pack_batch_leaves
   WHERE batch_id = p_batch_id AND leaf_index = p_leaf_index;
@@ -7288,5 +7308,5 @@ ALTER TABLE public.tenants ENABLE ROW LEVEL SECURITY;
 -- PostgreSQL database dump complete
 --
 
-\unrestrict zrGZ6de2l5dKP3t3ACwyIMjYOfHBvqgsGSAej8C7sa3GOI92XE4kvcJ2C4dkWcB
+\unrestrict femLTUkABZIbHA2h4DVmP7UhmiNgGKmVUfnibH2FO0kvyQNTcGshvX6PhuoSyCz
 

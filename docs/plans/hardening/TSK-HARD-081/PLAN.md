@@ -7,3 +7,10 @@
 ## Verification
 - bash scripts/audit/verify_tsk_hard_081.sh
 - RUN_PHASE1_GATES=1 scripts/dev/pre_ci.sh
+
+failure_signature: HARDENING.REMEDIATION.TRACE.REQUIRED
+origin_task_id: TSK-HARD-081
+repro_command: RUN_PHASE1_GATES=1 scripts/dev/pre_ci.sh
+verification_commands_run:
+  - RUN_PHASE1_GATES=1 scripts/dev/pre_ci.sh
+final_status: completed
