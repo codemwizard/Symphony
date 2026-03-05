@@ -73,6 +73,7 @@ valid_payload = {
         "rail": "zipss",
         "poll_count": 1,
         "status": "INQUIRY_SENT",
+        "policy_version_id": "RIP-2026-03-05-v1",
         "timestamp_utc": "2026-03-05T00:00:00Z",
     },
     "malformed_quarantine_event": {

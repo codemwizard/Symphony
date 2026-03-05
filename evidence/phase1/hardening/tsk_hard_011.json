@@ -1,0 +1,12 @@
+{
+  "check_id": "TSK-HARD-011",
+  "task_id": "TSK-HARD-011",
+  "status": "PASS",
+  "pass": true,
+  "policy_store_mode": "file-backed",
+  "policy_version_id_present": true,
+  "activation_event_emitted": true,
+  "activation_unsigned_reason": "DEPENDENCY_NOT_READY",
+  "negative_missing_version_id_rejected": true,
+  "negative_in_place_edit_blocked": true
+}
