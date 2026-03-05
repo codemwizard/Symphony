@@ -17,3 +17,16 @@ Canonical-Reference: docs/operations/AI_AGENT_OPERATION_MANUAL.md
 ## Final Outcome
 - Status: COMPLETED
 - Summary: TSK-HARD-024 closed with deterministic checks and canonical-reference compliance.
+
+failure_signature: HARDENING.REMEDIATION.TRACE.REQUIRED
+origin_task_id: TSK-HARD-024
+
+## repro_command
+- RUN_PHASE1_GATES=1 scripts/dev/pre_ci.sh
+
+## verification_commands_run
+- bash scripts/audit/verify_tsk_hard_024.sh
+- RUN_PHASE1_GATES=1 scripts/dev/pre_ci.sh
+
+## final_status
+- completed
