@@ -52,11 +52,7 @@ rules:
     languages: [python]
     message: "Potential SQL injection: SQL query built via f-string. Use parameters."
     severity: ERROR
-<<<<<<< task/R-016-runtime-selftests-extract
     pattern-regex: "(?i)f[\"'][^\"']*(select|insert|update|delete)[^\"']*\\{[^}]+\\}[^\"']*[\"']"
-=======
-    pattern-regex: '(?i)\\b\\w+\\s*=\\s*f[\"\\''][^\"\\'']*(select|insert|update|delete)[^\"\\'']*\\{[^}]+\\}[^\"\\'']*[\"\\'']'
->>>>>>> main
 
   - id: symphony-python-percent-format-sql
     languages: [python]
@@ -80,11 +76,7 @@ rules:
     languages: [python]
     message: "Possible hardcoded secret/token. Use OpenBao/KMS or secure config provider."
     severity: ERROR
-<<<<<<< task/R-016-runtime-selftests-extract
     pattern-regex: "(?i)(api[_-]?key|secret|token|password)\\s*=\\s*['\\\"].{8,}['\\\"]"
-=======
-    pattern-regex: '(?i)(api[_-]?key|secret|token|password)\\s*=\\s*\".{8,}\"'
->>>>>>> main
 
   - id: symphony-dotnet-insecure-rng
     languages: [csharp]
