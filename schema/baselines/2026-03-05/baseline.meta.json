@@ -2,9 +2,9 @@
   "baseline_date": "2026-03-05",
   "baseline_path": "/home/mwiza/workspace/Symphony/schema/baselines/2026-03-05/0001_baseline.sql",
   "baseline_cutoff": "0069_hard_wave6_merkle_and_policy_rotation_guards.sql",
-  "normalized_schema_sha256": "f88928047c67becda456600d977100da437b9062cf5656083233c3b0e7acaf57",
+  "normalized_schema_sha256": "ec5da85bf0cbe111790e3c06a7b606fe966f90d4ece7e2f6fe69be2f7a031e91",
   "pg_dump_version": "pg_dump (PostgreSQL) 18.2 (Debian 18.2-1.pgdg13+1)",
   "pg_server_version": "18.2 (Debian 18.2-1.pgdg13+1)",
   "dump_source": "container:symphony-postgres",
-  "generated_at_utc": "2026-03-05T22:22:31.101064+00:00"
+  "generated_at_utc": "2026-03-06T00:58:42.720517+00:00"
 }
