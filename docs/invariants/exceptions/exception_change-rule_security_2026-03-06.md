@@ -25,12 +25,12 @@ primary_reason: security
 reason_types: migration_file_added_or_deleted, security
 
 Matched files:
-- schema/migrations/0070_hard_wave6_reference_policy_post_deactivation_immutability.sql
+- schema/migrations/0072_hard_wave6_reference_policy_post_deactivation_immutability.sql
 
 Top matches:
-- security | schema/migrations/0070_hard_wave6_reference_policy_post_deactivation_immutability.sql | +: SECURITY DEFINER
-- security | schema/migrations/0070_hard_wave6_reference_policy_post_deactivation_immutability.sql | +: SET search_path = pg_catalog, public
-- migration_file_added_or_deleted | schema/migrations/0070_hard_wave6_reference_policy_post_deactivation_immutability.sql | +: (migration file added or deleted)
+- security | schema/migrations/0072_hard_wave6_reference_policy_post_deactivation_immutability.sql | +: SECURITY DEFINER
+- security | schema/migrations/0072_hard_wave6_reference_policy_post_deactivation_immutability.sql | +: SET search_path = pg_catalog, public
+- migration_file_added_or_deleted | schema/migrations/0072_hard_wave6_reference_policy_post_deactivation_immutability.sql | +: (migration file added or deleted)
 
 ## Mitigation
 
