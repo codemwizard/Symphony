@@ -38,6 +38,8 @@
         DELETE FROM payment_outbox_pending WHERE outbox_id = v_record.outbox_id;
         DETAIL = 'Lease missing/expired or token mismatch; refusing to complete';
         END IF;
+        ERRCODE = 'P7803',
+        ERRCODE = 'P7803',
         FROM payment_outbox_pending p
         IF NOT FOUND THEN
         INSERT INTO payment_outbox_attempts (
@@ -45,6 +47,8 @@
         INSERT INTO public.dispatch_reference_collision_events(
         INTO existing_pending
         LIMIT 1;
+        MESSAGE = 'ACTIVE_REFERENCE_POLICY_IMMUTABLE';
+        MESSAGE = 'ACTIVE_REFERENCE_POLICY_IMMUTABLE';
         SELECT p.outbox_id, p.sequence_id, p.created_at
         UPDATE payment_outbox_pending SET
         USING ERRCODE = '42501';
@@ -110,6 +114,13 @@
         v_canon, v_strategy.strategy_type, v_strategy.policy_version_id, v_attempt
         v_collision := true;
         v_strategy.strategy_type, v_attempt, 'EXHAUSTED', v_strategy.policy_version_id
+       OR NEW.activated_at IS DISTINCT FROM OLD.activated_at
+       OR NEW.created_at IS DISTINCT FROM OLD.created_at THEN
+       OR NEW.evidence_path IS DISTINCT FROM OLD.evidence_path
+       OR NEW.policy_version_id IS DISTINCT FROM OLD.policy_version_id
+       OR NEW.signed_at IS DISTINCT FROM OLD.signed_at
+       OR NEW.signed_key_id IS DISTINCT FROM OLD.signed_key_id
+       OR NEW.unsigned_reason IS DISTINCT FROM OLD.unsigned_reason
       'SUFFIX', 1, 'UNREGISTERED_BLOCKED', NULL
       'migrated_at', NOW(),
       'migrated_from_program_id', p_from_program_id,
@@ -152,7 +163,6 @@
       ELSE
       END IF;
       END IF;
-      ERRCODE = 'P7803',
       FROM payment_outbox_attempts a WHERE a.outbox_id = v_record.outbox_id;
       FROM payment_outbox_pending p
       FROM public.supervisor_approval_queue
@@ -163,7 +173,6 @@
       INSERT INTO public.dispatch_reference_registry(
       INTO existing_pending;
       INTO registry_id, allocated_reference, canonicalized_reference, strategy_used, policy_version_id, collision_retry_count;
-      MESSAGE = 'ACTIVE_REFERENCE_POLICY_IMMUTABLE';
       NOW(),
       NOW(),
       OR (e.state = 'AUTHORIZED' AND e.authorization_expires_at IS NOT NULL AND e.authorization_expires_at <= p_now)
@@ -172,6 +181,8 @@
       RAISE EXCEPTION 'Invalid completion state %', p_state USING ERRCODE = 'P7003';
       RAISE EXCEPTION 'LEASE_LOST' USING ERRCODE = 'P7002',
       RAISE EXCEPTION 'self approval is not permitted for instruction %', p_instruction_id
+      RAISE EXCEPTION USING
+      RAISE EXCEPTION USING
       RAISE EXCEPTION USING ERRCODE='P7801', MESSAGE='REFERENCE_ALLOCATION_RETRY_EXHAUSTED';
       RETURN NEW;
       RETURN NEXT;
@@ -859,6 +870,8 @@
     END IF;
     END IF;
     END IF;
+    END IF;
+    END IF;
     END LOOP;
     END;
     END;
@@ -891,6 +904,8 @@
     IF EXISTS (
     IF FOUND THEN
     IF FOUND THEN
+    IF NEW.policy_json IS DISTINCT FROM OLD.policy_json
+    IF NEW.version_status = 'ACTIVE' THEN
     IF NOT FOUND THEN
     IF NOT v_collision THEN
     IF current_setting('symphony.allow_pii_purge', true) = 'on' THEN
@@ -1110,7 +1125,6 @@
     RAISE EXCEPTION 'to_program_id % is not in tenant %', p_to_program_id, p_tenant_id
     RAISE EXCEPTION 'unsupported_mmo_scenario' USING ERRCODE = 'P7502';
     RAISE EXCEPTION 'worker_id is required' USING ERRCODE = 'P7210';
-    RAISE EXCEPTION USING
     RAISE EXCEPTION USING ERRCODE='P7802', MESSAGE='REFERENCE_STRATEGY_POLICY_NOT_FOUND';
     RAISE EXCEPTION USING ERRCODE='P7802', MESSAGE='REFERENCE_STRATEGY_POLICY_NOT_FOUND';
     RAISE EXCEPTION USING ERRCODE='P7901', MESSAGE='REFERENCE_LENGTH_EXCEEDED';
@@ -2484,7 +2498,7 @@
   IF NOT v_legal THEN
   IF NULLIF(BTRIM(p_anchor_ref), '') IS NULL THEN
   IF OLD.is_final IS TRUE THEN
-  IF OLD.version_status = 'ACTIVE' AND NEW.version_status = 'ACTIVE' THEN
+  IF OLD.version_status = 'ACTIVE' THEN
   IF TG_OP = 'UPDATE' THEN
   IF TG_OP='UPDATE' AND OLD.adjustment_state IN ('executed','denied','blocked_legal_hold') THEN
   IF derived_billable_client_id IS NULL THEN

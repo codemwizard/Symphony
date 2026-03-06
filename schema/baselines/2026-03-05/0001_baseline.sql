@@ -2,7 +2,7 @@
 -- PostgreSQL database dump
 --
 
-\restrict aO4a4SJDC2gFiaVe7ZY5itI52arb43Lfqp5tl3HM9QzxZmL8nOdhYGx20TkDnet
+\restrict O9mJj0A11m1baHAq11zLRl5mZqAcIuNMSCmpuzrsXB7MmFfw6hfYFYGMDNhCi0G
 
 -- Dumped from database version 18.2 (Debian 18.2-1.pgdg13+1)
 -- Dumped by pg_dump version 18.2 (Debian 18.2-1.pgdg13+1)
@@ -696,10 +696,25 @@ CREATE FUNCTION public.block_active_reference_policy_updates() RETURNS trigger
     SET search_path TO 'pg_catalog', 'public'
     AS $$
 BEGIN
-  IF OLD.version_status = 'ACTIVE' AND NEW.version_status = 'ACTIVE' THEN
-    RAISE EXCEPTION USING
-      ERRCODE = 'P7803',
-      MESSAGE = 'ACTIVE_REFERENCE_POLICY_IMMUTABLE';
+  IF OLD.version_status = 'ACTIVE' THEN
+    IF NEW.version_status = 'ACTIVE' THEN
+      RAISE EXCEPTION USING
+        ERRCODE = 'P7803',
+        MESSAGE = 'ACTIVE_REFERENCE_POLICY_IMMUTABLE';
+    END IF;
+
+    IF NEW.policy_json IS DISTINCT FROM OLD.policy_json
+       OR NEW.signed_at IS DISTINCT FROM OLD.signed_at
+       OR NEW.signed_key_id IS DISTINCT FROM OLD.signed_key_id
+       OR NEW.unsigned_reason IS DISTINCT FROM OLD.unsigned_reason
+       OR NEW.evidence_path IS DISTINCT FROM OLD.evidence_path
+       OR NEW.policy_version_id IS DISTINCT FROM OLD.policy_version_id
+       OR NEW.activated_at IS DISTINCT FROM OLD.activated_at
+       OR NEW.created_at IS DISTINCT FROM OLD.created_at THEN
+      RAISE EXCEPTION USING
+        ERRCODE = 'P7803',
+        MESSAGE = 'ACTIVE_REFERENCE_POLICY_IMMUTABLE';
+    END IF;
   END IF;
 
   RETURN NEW;
@@ -7315,5 +7330,5 @@ ALTER TABLE public.tenants ENABLE ROW LEVEL SECURITY;
 -- PostgreSQL database dump complete
 --
 
-\unrestrict aO4a4SJDC2gFiaVe7ZY5itI52arb43Lfqp5tl3HM9QzxZmL8nOdhYGx20TkDnet
+\unrestrict O9mJj0A11m1baHAq11zLRl5mZqAcIuNMSCmpuzrsXB7MmFfw6hfYFYGMDNhCi0G
 
