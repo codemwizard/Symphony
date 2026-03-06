@@ -1,1 +1,9 @@
-{"pass":true,"error_code":"P8403","approval_stages":["primary","secondary"],"outcome":"ENFORCED"}
+{
+  "pass": true,
+  "error_code": "P8403",
+  "approval_stages": [
+    "primary",
+    "secondary"
+  ],
+  "outcome": "ENFORCED"
+}

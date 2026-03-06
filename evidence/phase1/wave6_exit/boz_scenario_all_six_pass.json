@@ -1,1 +1,5 @@
-{"pass":true,"scenarios_executed":6,"outcome":"PASS"}
+{
+  "pass": true,
+  "scenarios_executed": 6,
+  "outcome": "PASS"
+}

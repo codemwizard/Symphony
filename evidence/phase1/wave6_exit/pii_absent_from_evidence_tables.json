@@ -1,1 +1,5 @@
-{"pass":true,"contains_raw_pii":false,"outcome":"PASS"}
+{
+  "pass": true,
+  "contains_raw_pii": false,
+  "outcome": "PASS"
+}
