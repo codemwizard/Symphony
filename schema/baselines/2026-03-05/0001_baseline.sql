@@ -2,7 +2,7 @@
 -- PostgreSQL database dump
 --
 
-\restrict BBN5ysrEgf3w0TiREH89CtbrLyY3NRVTdG0NBqmJyM8aqfhwwzwR4LVs9ypXmAy
+\restrict O9mJj0A11m1baHAq11zLRl5mZqAcIuNMSCmpuzrsXB7MmFfw6hfYFYGMDNhCi0G
 
 -- Dumped from database version 18.2 (Debian 18.2-1.pgdg13+1)
 -- Dumped by pg_dump version 18.2 (Debian 18.2-1.pgdg13+1)
@@ -243,14 +243,9 @@ BEGIN
     END IF;
 
     v_canon := public.canonicalize_reference_for_rail(v_candidate, p_rail_id);
+    v_collision := false;
 
-    SELECT EXISTS(
-      SELECT 1 FROM public.dispatch_reference_registry r
-      WHERE r.rail_id = p_rail_id
-        AND (r.allocated_reference = v_candidate OR r.canonicalized_reference = v_canon)
-    ) INTO v_collision;
-
-    IF NOT v_collision THEN
+    BEGIN
       INSERT INTO public.dispatch_reference_registry(
         instruction_id, adjustment_id, rail_id, allocated_reference,
         canonicalized_reference, strategy_used, policy_version_id, collision_retry_count
@@ -266,7 +261,12 @@ BEGIN
         dispatch_reference_registry.policy_version_id,
         dispatch_reference_registry.collision_retry_count
       INTO registry_id, allocated_reference, canonicalized_reference, strategy_used, policy_version_id, collision_retry_count;
+    EXCEPTION
+      WHEN unique_violation THEN
+        v_collision := true;
+    END;
 
+    IF NOT v_collision THEN
       IF v_attempt > 0 THEN
         INSERT INTO public.dispatch_reference_collision_events(
           instruction_id, adjustment_id, rail_id, reference_attempted,
@@ -380,7 +380,8 @@ BEGIN
         containment_action = EXCLUDED.containment_action;
 
   IF v_state = 'FINALITY_CONFLICT' THEN
-    RAISE EXCEPTION 'finality_conflict_hold_release' USING ERRCODE = 'P7402';
+    -- Keep transaction durable for conflict evidence; callers must branch on return state.
+    RETURN v_state;
   END IF;
 
   RETURN v_state;
@@ -757,10 +758,12 @@ DECLARE
   v_truncated text;
 BEGIN
   SELECT * INTO v_strategy FROM public.resolve_reference_strategy(p_rail_id);
-  v_truncated := left(p_allocated_reference, v_strategy.max_length);
-  IF length(v_truncated) > v_strategy.max_length THEN
+
+  IF length(p_allocated_reference) > v_strategy.max_length THEN
     RAISE EXCEPTION USING ERRCODE='P7901', MESSAGE='REFERENCE_LENGTH_EXCEEDED';
   END IF;
+
+  v_truncated := left(p_allocated_reference, v_strategy.max_length);
   RETURN v_truncated;
 END;
 $$;
@@ -2516,16 +2519,35 @@ CREATE FUNCTION public.store_effect_seal(p_instruction_id text, p_payload jsonb,
     AS $$
 DECLARE
   v_hash text;
+  v_existing_hash text;
+  v_existing_version text;
 BEGIN
   v_hash := public.compute_effect_seal_hash(p_instruction_id, p_payload, p_canonicalization_version);
+
   INSERT INTO public.instruction_effect_seals(instruction_id, effect_seal_hash, canonicalization_version, policy_version_id)
   VALUES (p_instruction_id, v_hash, p_canonicalization_version, p_policy_version_id)
-  ON CONFLICT (instruction_id) DO UPDATE
-    SET effect_seal_hash = EXCLUDED.effect_seal_hash,
-        canonicalization_version = EXCLUDED.canonicalization_version,
-        policy_version_id = EXCLUDED.policy_version_id,
-        sealed_at = now();
-  RETURN v_hash;
+  ON CONFLICT (instruction_id) DO NOTHING;
+
+  IF FOUND THEN
+    RETURN v_hash;
+  END IF;
+
+  SELECT effect_seal_hash, canonicalization_version
+    INTO v_existing_hash, v_existing_version
+  FROM public.instruction_effect_seals
+  WHERE instruction_id = p_instruction_id;
+
+  IF v_existing_hash IS NULL THEN
+    RAISE EXCEPTION 'missing_effect_seal' USING ERRCODE = 'P7102';
+  END IF;
+
+  IF v_existing_hash <> v_hash OR v_existing_version <> p_canonicalization_version THEN
+    INSERT INTO public.effect_seal_mismatch_events(instruction_id, stored_seal_hash, computed_dispatch_hash)
+    VALUES (p_instruction_id, v_existing_hash, v_hash);
+    RAISE EXCEPTION 'effect_seal_immutable_violation' USING ERRCODE = 'P7102';
+  END IF;
+
+  RETURN v_existing_hash;
 END;
 $$;
 
@@ -7308,5 +7330,5 @@ ALTER TABLE public.tenants ENABLE ROW LEVEL SECURITY;
 -- PostgreSQL database dump complete
 --
 
-\unrestrict BBN5ysrEgf3w0TiREH89CtbrLyY3NRVTdG0NBqmJyM8aqfhwwzwR4LVs9ypXmAy
+\unrestrict O9mJj0A11m1baHAq11zLRl5mZqAcIuNMSCmpuzrsXB7MmFfw6hfYFYGMDNhCi0G
 

@@ -1,8 +1,8 @@
 ---
-exception_id: EXC-573
+exception_id: EXC-572
 inv_scope: change-rule
 expiry: 2026-03-19
-follow_up_ticket: TSK-HARD-080
+follow_up_ticket: TSK-HARD-070
 reason: Auto-generated: structural change detected; invariants linkage missing in commit.
 author: system
 created_at: 2026-03-05
@@ -15,7 +15,7 @@ but invariants linkage (manifest/docs with INV-###) was not included in the same
 
 ## Reason
 
-Required to land a forward-only hardening migration that closes Merkle null-hash verification bypass and enforces immutable active-policy content during rotation.
+Required to land a forward-only migration that fixes rotation deadlock and collision fail-open behavior in dispatch-reference allocation while preserving structural change-rule enforcement.
 
 ## Evidence
 
@@ -25,15 +25,17 @@ primary_reason: security
 reason_types: migration_file_added_or_deleted, security
 
 Matched files:
-- schema/migrations/0069_hard_wave6_merkle_and_policy_rotation_guards.sql
+- schema/migrations/0067_hard_wave5_reference_strategy_rotation_and_allocation_race.sql
 
 Top matches:
-- security | schema/migrations/0069_hard_wave6_merkle_and_policy_rotation_guards.sql | +: SECURITY DEFINER
-- security | schema/migrations/0069_hard_wave6_merkle_and_policy_rotation_guards.sql | +: SET search_path = pg_catalog, public
-- security | schema/migrations/0069_hard_wave6_merkle_and_policy_rotation_guards.sql | +: SECURITY DEFINER
-- security | schema/migrations/0069_hard_wave6_merkle_and_policy_rotation_guards.sql | +: SET search_path = pg_catalog, public
-- migration_file_added_or_deleted | schema/migrations/0069_hard_wave6_merkle_and_policy_rotation_guards.sql | +: (migration file added or deleted)
+- security | schema/migrations/0067_hard_wave5_reference_strategy_rotation_and_allocation_race.sql | +: SECURITY DEFINER
+- security | schema/migrations/0067_hard_wave5_reference_strategy_rotation_and_allocation_race.sql | +: SET search_path = pg_catalog, public
+- security | schema/migrations/0067_hard_wave5_reference_strategy_rotation_and_allocation_race.sql | +: SECURITY DEFINER
+- security | schema/migrations/0067_hard_wave5_reference_strategy_rotation_and_allocation_race.sql | +: SET search_path = pg_catalog, public
+- security | schema/migrations/0067_hard_wave5_reference_strategy_rotation_and_allocation_race.sql | +: SECURITY DEFINER
+- security | schema/migrations/0067_hard_wave5_reference_strategy_rotation_and_allocation_race.sql | +: SET search_path = pg_catalog, public
+- migration_file_added_or_deleted | schema/migrations/0067_hard_wave5_reference_strategy_rotation_and_allocation_race.sql | +: (migration file added or deleted)
 
 ## Mitigation
 
-Mitigated by pre_ci enforcement, pinned SECURITY DEFINER search_path linting, SQLSTATE fail-closed behavior, and branch-scoped audit evidence gates.
+Mitigated by SECURITY DEFINER hardening, explicit search_path pinning, pre_ci gate enforcement, and deterministic verifier coverage executed in push hooks.
