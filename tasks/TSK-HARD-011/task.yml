@@ -1,6 +1,6 @@
 id: TSK-HARD-011
 title: "Metadata-driven per-rail inquiry policy"
-status: todo
+status: done
 phase: "Hardening"
 wave: "1"
 depends_on:

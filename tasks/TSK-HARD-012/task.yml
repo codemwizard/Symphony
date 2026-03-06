@@ -1,6 +1,6 @@
 id: TSK-HARD-012
 title: "Rail inquiry engine — SCHEDULED, SENT, ACKNOWLEDGED, EXHAUSTED state machine"
-status: todo
+status: done
 phase: "Hardening"
 wave: "1"
 depends_on:
