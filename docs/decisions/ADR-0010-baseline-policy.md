@@ -52,9 +52,8 @@ This ADR remains the authoritative governance reference for baseline change chec
 - 2026-03-05: Baseline regenerated after Wave-1 hardening inquiry state-machine migration adding `inquiry_state_machine` and fail-closed auto-finalize guard (0061).
 - 2026-03-05: Baseline regenerated after Wave-1 hardening runtime control migration adding effect sealing, finality conflict containment, malformed quarantine, circuit-breaker suspension, offline safe mode, and orphan/replay containment primitives (0062).
 - 2026-03-05: Baseline regenerated after Wave-2 adjustment governance migration adding adjustment instruction lifecycle, approvals/quorum tables, execution-idempotency and ceiling checks, cooling/freezes gate primitives, and terminal immutability trigger (0063).
-
 - 2026-03-05: Baseline refreshed after adding migration 0064_hard_wave3_reference_strategy_and_registry.sql (Wave-3 reference governance).
-
 - 2026-03-05: Baseline refreshed after adding migration 0065_hard_wave4_signing_controls_and_assurance.sql (Wave-4 signing controls and assurance).
 - 2026-03-05: Baseline refreshed after adding migration 0066_hard_wave5_archive_merkle_and_replay.sql (Wave-5 archive merkle anchoring and replay integrity controls).
 - 2026-03-05: Baseline refreshed after adding migration 0067_hard_wave5_reference_strategy_rotation_and_allocation_race.sql (Wave-5 reference-strategy policy-rotation continuity, fail-closed length enforcement, and concurrent collision retry hardening).
+- 2026-03-05: Baseline refreshed after adding migration 0069_hard_wave6_merkle_and_policy_rotation_guards.sql (Merkle null-expected-hash fail-closed verification and policy-rotation immutability guard hardening).

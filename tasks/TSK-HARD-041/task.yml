@@ -1,6 +1,6 @@
 id: TSK-HARD-041
 title: "Erasure workflow and key shredding controls"
-status: todo
+status: done
 phase: "Hardening"
 wave: "6"
 depends_on:

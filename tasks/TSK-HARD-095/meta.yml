@@ -3,7 +3,7 @@ phase: '1'
 task_id: TSK-HARD-095
 title: BoZ submission audit trail primitives
 owner_role: SUPERVISOR
-status: planned
+status: completed
 depends_on:
 - TSK-HARD-093
 touches:

@@ -3,7 +3,7 @@ phase: '1'
 task_id: TSK-HARD-090
 title: QA matrix hardening completeness
 owner_role: SUPERVISOR
-status: planned
+status: completed
 depends_on:
 - TSK-HARD-082
 touches:

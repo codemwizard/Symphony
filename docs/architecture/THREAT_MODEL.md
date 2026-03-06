@@ -267,3 +267,4 @@ Mitigations:
 4) Define PCI boundary and tokenization approach.
 5) Establish evidence bundle generation and retention.
 - Hardening Wave-5 reference-strategy corrective migration (`0067_hard_wave5_reference_strategy_rotation_and_allocation_race.sql`) restores ACTIVE policy rotation viability, enforces fail-closed raw reference-length rejection (`P7901`) before truncation, and hardens concurrent allocation races by retrying on atomic unique-collision paths.
+- Hardening Wave-6 guard patch (`0069_hard_wave6_merkle_and_policy_rotation_guards.sql`) closes Merkle leaf null-expected-hash bypass by fail-closing with `P8303` and preserves reference-policy row immutability during ACTIVE→INACTIVE rotation by forbidding policy/signature metadata rewrites on formerly active rows.
