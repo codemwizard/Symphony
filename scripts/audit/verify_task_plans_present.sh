@@ -39,9 +39,20 @@ except Exception as e:
 errors = []
 checked = []
 
-for meta in sorted(tasks_dir.glob("TSK-P*/meta.yml")):
-    parent = meta.parent.name
-    if not parent.startswith("TSK-P") or parent == "TSK-P":
+def include_meta(path: Path) -> bool:
+    rel = path.relative_to(tasks_dir).as_posix()
+    if "/_template/" in rel:
+        return False
+    # Existing Phase task packs
+    if rel.startswith("TSK-P") and rel.endswith("/meta.yml"):
+        return True
+    # First-class checkpoint packs under tasks/checkpoint/<ID>/meta.yml
+    if rel.startswith("checkpoint/") and rel.endswith("/meta.yml"):
+        return True
+    return False
+
+for meta in sorted(tasks_dir.rglob("meta.yml")):
+    if not include_meta(meta):
         continue
     data = yaml.safe_load(meta.read_text(encoding="utf-8")) or {}
     if not isinstance(data, dict):

@@ -1,0 +1,25 @@
+{
+  "check_id": "TSK-P1-205-KPI-ARTIFACT",
+  "timestamp_utc": "2026-03-07T02:32:11Z",
+  "git_sha": "4ebb79cd3819b391f141ea3e78958ffb72d90acf",
+  "task_id": "TSK-P1-205",
+  "status": "PASS",
+  "measurement_truth": {
+    "ingress": "evidence/phase1/ingress_api_contract_tests.json",
+    "evidence_pack": "evidence/phase1/evidence_pack_api_contract.json",
+    "case_pack": "evidence/phase1/exception_case_pack_sample.json",
+    "perf_005_reference": "evidence/phase1/perf_005__regulatory_timing_compliance_gate.json",
+    "tenant_isolation": "evidence/phase1/authz_tenant_boundary.json"
+  },
+  "kpis": {
+    "ingress_success_rate": 100.0,
+    "p95_ingress_latency_ms": 120.0,
+    "retry_ceiling_respected_pct": 100.0,
+    "evidence_pack_generation_success_pct": 100.0,
+    "tenant_isolation_selftest_passed": {
+      "pass": true,
+      "count": 1
+    },
+    "settlement_window_compliance_pct": 100.0
+  }
+}

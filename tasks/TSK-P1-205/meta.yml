@@ -1,0 +1,44 @@
+schema_version: 1
+phase: '1'
+task_id: TSK-P1-205
+title: KPI evidence artifact (include settlement_window_compliance_pct)
+owner_role: SUPERVISOR
+status: completed
+depends_on:
+- TSK-P1-204
+touches:
+- tasks/TSK-P1-205/meta.yml
+- docs/plans/phase1/TSK-P1-205/PLAN.md
+- docs/plans/phase1/TSK-P1-205/EXEC_LOG.md
+- scripts/audit/verify_tsk_p1_205.sh
+- evidence/phase1/tsk_p1_205__kpi_evidence_artifact_include_settlement_window.json
+- evidence/phase1/kpis.json
+invariants:
+- INV-119
+work:
+- Define KPI computation methods and measurement truth references for required engineering
+  and regulatory KPIs.
+- Include settlement_window_compliance_pct with linkage to PERF-005 evidence.
+- Emit and validate KPI evidence artifact.
+acceptance_criteria:
+- KPI artifact includes required engineering and regulatory metrics with traceable
+  sources.
+- Verifier validates KPI artifact schema and required fields.
+- Evidence artifact is generated at the declared path with PASS/OK status.
+verification:
+- bash scripts/audit/verify_tsk_p1_205.sh --evidence evidence/phase1/tsk_p1_205__kpi_evidence_artifact_include_settlement_window.json
+evidence:
+- evidence/phase1/tsk_p1_205__kpi_evidence_artifact_include_settlement_window.json
+failure_modes:
+- KPI definitions are non-reproducible or disconnected from evidence truth.
+- settlement_window_compliance_pct missing or not trace-linked to PERF-005.
+must_read:
+- docs/operations/AI_AGENT_OPERATION_MANUAL.md
+- docs/tasks/phase1_dag.yml
+- docs/tasks/phase1_prompts.md
+implementation_plan: docs/plans/phase1/TSK-P1-205/PLAN.md
+implementation_log: docs/plans/phase1/TSK-P1-205/EXEC_LOG.md
+notes: Scaffolded from phase1_dag.yml and phase1_prompts.md; implementation pending.
+client: codex_cli
+assigned_agent: supervisor
+model: <UNASSIGNED>

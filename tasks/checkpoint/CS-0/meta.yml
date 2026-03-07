@@ -1,0 +1,35 @@
+schema_version: 1
+phase: '1'
+task_id: checkpoint/CS-0
+title: Checkpoint CS-0 gate
+owner_role: SUPERVISOR
+status: completed
+depends_on:
+- TSK-P1-059
+touches:
+- tasks/checkpoint/CS-0/meta.yml
+invariants:
+- INV-119
+work:
+- Validate upstream checkpoint dependencies are PASS before downstream stage starts.
+acceptance_criteria:
+- Checkpoint verifier returns PASS and emits checkpoint evidence for this checkpoint
+  ID.
+verification:
+- bash scripts/audit/verify_checkpoint.sh --checkpoint checkpoint/CS-0 --evidence
+  evidence/phase1/checkpoint__CS-0.json
+evidence:
+- evidence/phase1/checkpoint__CS-0.json
+failure_modes:
+- Missing dependency evidence or non-PASS dependency status.
+- Checkpoint evidence missing or task_id mismatch.
+must_read:
+- docs/operations/AI_AGENT_OPERATION_MANUAL.md
+- docs/tasks/phase1_dag.yml
+- docs/tasks/phase1_prompts.md
+implementation_plan: docs/plans/phase1/checkpoints/CS-0/PLAN.md
+implementation_log: docs/plans/phase1/checkpoints/CS-0/EXEC_LOG.md
+notes: Lightweight checkpoint governance pack.
+client: codex_cli
+assigned_agent: supervisor
+model: <UNASSIGNED>
