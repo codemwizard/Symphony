@@ -3,7 +3,7 @@ phase: '1'
 task_id: TASK-OI-01
 title: Remediate branch discipline for INV-134 work currently on main
 owner_role: SECURITY_GUARDIAN
-status: planned
+status: completed
 depends_on: []
 touches:
 - docs/invariants/id-management/INVARIANT_ID_MANAGEMENT.md

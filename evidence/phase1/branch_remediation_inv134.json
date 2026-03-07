@@ -1,0 +1,21 @@
+{
+  "task_id": "TASK-OI-01",
+  "status": "PASS",
+  "timestamp_utc": "2026-03-07T19:57:13Z",
+  "git_sha": "1c6a5a41169e3da6ef805212c84a97c55beb970c",
+  "branch": "fix/inv-134-dep-audit-gate",
+  "checks": [
+    {
+      "cmd": "git rev-parse --abbrev-ref HEAD | rg \"^fix/inv-134-dep-audit-gate$\"",
+      "pass": true
+    },
+    {
+      "cmd": "rg -n \"BRANCH-fix-inv-134-dep-audit-gate\" approvals -g \"*.md\" -g \"*.json\"",
+      "pass": true
+    },
+    {
+      "cmd": "git log --oneline -- docs/invariants/id-management/INVARIANT_ID_MANAGEMENT.md scripts/security/dotnet_dependency_audit.sh docs/control_planes/CONTROL_PLANES.yml | head -n 20",
+      "pass": true
+    }
+  ]
+}
