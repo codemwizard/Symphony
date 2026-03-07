@@ -1,151 +1,160 @@
-version: "1.0"
+version: '1.0'
 registry:
   scripts/db/verify_boz_observability_role.sh:
     emits:
-      - evidence/phase0/boz_observability_role.json
+    - evidence/phase0/boz_observability_role.json
   scripts/audit/lint_pii_leakage_payloads.sh:
     emits:
-      - evidence/phase0/pii_leakage_payloads.json
+    - evidence/phase0/pii_leakage_payloads.json
   scripts/db/verify_anchor_sync_hooks.sh:
     emits:
-      - evidence/phase0/anchor_sync_hooks.json
+    - evidence/phase0/anchor_sync_hooks.json
   scripts/db/verify_anchor_sync_operational_invariant.sh:
     emits:
-      - evidence/phase1/anchor_sync_operational_invariant.json
+    - evidence/phase1/anchor_sync_operational_invariant.json
   scripts/db/verify_instruction_finality_invariant.sh:
     emits:
-      - evidence/phase1/instruction_finality_invariant.json
+    - evidence/phase1/instruction_finality_invariant.json
   scripts/db/verify_pii_decoupling_hooks.sh:
     emits:
-      - evidence/phase1/pii_decoupling_invariant.json
+    - evidence/phase1/pii_decoupling_invariant.json
   scripts/db/verify_rail_sequence_truth_anchor.sh:
     emits:
-      - evidence/phase1/rail_sequence_truth_anchor.json
+    - evidence/phase1/rail_sequence_truth_anchor.json
   scripts/db/verify_timeout_posture.sh:
     emits:
-      - evidence/phase0/db_timeout_posture.json
+    - evidence/phase0/db_timeout_posture.json
   scripts/db/tests/test_ingress_hotpath_indexes.sh:
     emits:
-      - evidence/phase1/ingress_hotpath_indexes.json
+    - evidence/phase1/ingress_hotpath_indexes.json
   scripts/audit/verify_remediation_trace.sh:
     emits:
-      - evidence/phase0/remediation_trace.json
+    - evidence/phase0/remediation_trace.json
   scripts/audit/verify_agent_conformance.sh:
     emits:
-      - evidence/phase1/agent_conformance_architect.json
-      - evidence/phase1/agent_conformance_implementer.json
-      - evidence/phase1/agent_conformance_policy_guardian.json
+    - evidence/phase1/agent_conformance_architect.json
+    - evidence/phase1/agent_conformance_implementer.json
+    - evidence/phase1/agent_conformance_policy_guardian.json
   scripts/audit/verify_evidence_harness_integrity.sh:
     emits:
-      - evidence/phase1/approval_metadata.json
+    - evidence/phase1/approval_metadata.json
   scripts/security/lint_dotnet_quality.sh:
     emits:
-      - evidence/phase1/dotnet_lint_quality.json
+    - evidence/phase1/dotnet_lint_quality.json
   scripts/audit/verify_p1_057_final_perf_promotion.sh:
     emits:
-      - evidence/phase1/p1_057_final_perf_promotion.json
+    - evidence/phase1/p1_057_final_perf_promotion.json
   scripts/audit/verify_perf_001_engine_metrics_capture.sh:
     emits:
-      - evidence/phase1/perf_001_engine_metrics_capture.json
+    - evidence/phase1/perf_001_engine_metrics_capture.json
   scripts/audit/verify_perf_002_regression_detection_warmup.sh:
     emits:
-      - evidence/phase1/perf_002_regression_detection_warmup.json
+    - evidence/phase1/perf_002_regression_detection_warmup.json
   scripts/audit/verify_perf_003_rebaseline_sha_lock.sh:
     emits:
-      - evidence/phase1/perf_003_rebaseline_sha_lock.json
+    - evidence/phase1/perf_003_rebaseline_sha_lock.json
   scripts/perf/verify_perf_005.sh:
     emits:
-      - evidence/phase1/perf_005__regulatory_timing_compliance_gate.json
+    - evidence/phase1/perf_005__regulatory_timing_compliance_gate.json
   scripts/audit/verify_perf_005a_finality_seam_stub.sh:
     emits:
-      - evidence/phase1/perf_005a_finality_seam_stub.json
+    - evidence/phase1/perf_005a_finality_seam_stub.json
   scripts/perf/verify_perf_006.sh:
     emits:
-      - evidence/phase1/perf_006__operational_risk_framework_translation_layer.json
+    - evidence/phase1/perf_006__operational_risk_framework_translation_layer.json
   scripts/db/verify_tsk_p1_esc_001.sh:
     emits:
-      - evidence/phase1/tsk_p1_esc_001__escrow_state_machine_atomic_reservation_semantics.json
+    - evidence/phase1/tsk_p1_esc_001__escrow_state_machine_atomic_reservation_semantics.json
   scripts/db/verify_tsk_p1_esc_002.sh:
     emits:
-      - evidence/phase1/tsk_p1_esc_002__escrow_invariants_cross_tenant_protections.json
+    - evidence/phase1/tsk_p1_esc_002__escrow_invariants_cross_tenant_protections.json
   scripts/db/verify_tsk_p1_hier_002.sh:
     emits:
-      - evidence/phase1/tsk_p1_hier_002__programs_program_escrow_id_bridge.json
+    - evidence/phase1/tsk_p1_hier_002__programs_program_escrow_id_bridge.json
   scripts/db/verify_hier_008_sim_swap_alerts.sh:
     emits:
-      - evidence/phase1/hier_008_sim_swap_alerts.json
+    - evidence/phase1/hier_008_sim_swap_alerts.json
   scripts/db/verify_hier_009_instruction_hierarchy_sqlstates.sh:
     emits:
-      - evidence/phase1/hier_009_instruction_hierarchy_sqlstates.json
+    - evidence/phase1/hier_009_instruction_hierarchy_sqlstates.json
   scripts/db/verify_hier_010_program_migration.sh:
     emits:
-      - evidence/phase1/hier_010_program_migration.json
+    - evidence/phase1/hier_010_program_migration.json
   scripts/audit/verify_hier_011_supervisor_access_mechanisms.sh:
     emits:
-      - evidence/phase1/hier_011_supervisor_access_mechanisms.json
+    - evidence/phase1/hier_011_supervisor_access_mechanisms.json
   scripts/audit/verify_inf_002_container_build_pipeline.sh:
     emits:
-      - evidence/phase1/inf_002_container_build_pipeline.json
+    - evidence/phase1/inf_002_container_build_pipeline.json
   scripts/infra/verify_tsk_p1_inf_001.sh:
     emits:
-      - evidence/phase1/tsk_p1_inf_001__postgres_ha_backups_pitr_operator.json
+    - evidence/phase1/tsk_p1_inf_001__postgres_ha_backups_pitr_operator.json
   scripts/audit/verify_inf_005_openbao_external_secrets.sh:
     emits:
-      - evidence/phase1/inf_005_openbao_external_secrets.json
+    - evidence/phase1/inf_005_openbao_external_secrets.json
   scripts/infra/verify_tsk_p1_inf_004.sh:
     emits:
-      - evidence/phase1/tsk_p1_inf_004__service_mtls_mesh.json
+    - evidence/phase1/tsk_p1_inf_004__service_mtls_mesh.json
   scripts/infra/verify_tsk_p1_inf_003.sh:
     emits:
-      - evidence/phase1/tsk_p1_inf_003__k8s_manifests_migration_job_health_proof.json
+    - evidence/phase1/tsk_p1_inf_003__k8s_manifests_migration_job_health_proof.json
   scripts/infra/verify_tsk_p1_inf_006.sh:
     emits:
-      - evidence/phase1/tsk_p1_inf_006__evidence_signing_key_management_openbao_rotation.json
+    - evidence/phase1/tsk_p1_inf_006__evidence_signing_key_management_openbao_rotation.json
   scripts/audit/verify_ten_001_ingress_tenant_context.sh:
     emits:
-      - evidence/phase1/ten_001_ingress_tenant_context.json
+    - evidence/phase1/ten_001_ingress_tenant_context.json
   scripts/audit/verify_ten_002_rls_leakage.sh:
     emits:
-      - evidence/phase1/ten_002_rls_leakage.json
+    - evidence/phase1/ten_002_rls_leakage.json
   scripts/audit/verify_ten_003_tenant_onboarding_admin.sh:
     emits:
-      - evidence/phase1/ten_003_tenant_onboarding_admin.json
+    - evidence/phase1/ten_003_tenant_onboarding_admin.json
   scripts/audit/verify_adp_001_adapter_contract_tests.sh:
     emits:
-      - evidence/phase1/adp_001_adapter_contract_tests.json
+    - evidence/phase1/adp_001_adapter_contract_tests.json
   scripts/audit/verify_adp_002_simulated_rail_adapter.sh:
     emits:
-      - evidence/phase1/adp_002_simulated_rail_adapter.json
+    - evidence/phase1/adp_002_simulated_rail_adapter.json
   scripts/audit/verify_adp_003_deterministic_rail_routing.sh:
     emits:
-      - evidence/phase1/adp_003_deterministic_rail_routing.json
+    - evidence/phase1/adp_003_deterministic_rail_routing.json
   scripts/audit/verify_led_001_invariants_ci_cluster.sh:
     emits:
-      - evidence/phase1/led_001_invariants_ci_cluster.json
+    - evidence/phase1/led_001_invariants_ci_cluster.json
   scripts/audit/verify_led_003_canonical_message_model.sh:
     emits:
-      - evidence/phase1/led_003_canonical_message_model.json
+    - evidence/phase1/led_003_canonical_message_model.json
   scripts/audit/verify_led_004_kyc_hash_bridge_endpoint.sh:
     emits:
-      - evidence/phase1/led_004_kyc_hash_bridge_endpoint.json
+    - evidence/phase1/led_004_kyc_hash_bridge_endpoint.json
   scripts/audit/verify_led_002_retention_archive_restore.sh:
     emits:
-      - evidence/phase1/led_002_retention_archive_restore.json
+    - evidence/phase1/led_002_retention_archive_restore.json
   scripts/audit/verify_tsk_p1_reg_001.sh:
     emits:
-      - evidence/phase1/tsk_p1_reg_001__boz_observability_role_read_only_views.json
+    - evidence/phase1/tsk_p1_reg_001__boz_observability_role_read_only_views.json
   scripts/audit/verify_reg_002_daily_report_signed_output.sh:
     emits:
-      - evidence/phase1/reg_002_daily_report_signed_output.json
+    - evidence/phase1/reg_002_daily_report_signed_output.json
   scripts/audit/verify_reg_003_incident_48h_export.sh:
     emits:
-      - evidence/phase1/reg_003_incident_48h_export.json
+    - evidence/phase1/reg_003_incident_48h_export.json
   scripts/audit/verify_tsk_p1_202.sh:
     emits:
-      - evidence/phase1/tsk_p1_202__closeout_verifier_scaffold_fail_if_contract.json
+    - evidence/phase1/tsk_p1_202__closeout_verifier_scaffold_fail_if_contract.json
   scripts/perf/verify_perf_004.sh:
     emits:
-      - evidence/phase1/perf_004__perf_contracts_closeout_checks_extends_verify.json
+    - evidence/phase1/perf_004__perf_contracts_closeout_checks_extends_verify.json
   scripts/audit/verify_drd_policy_usage.sh:
     emits:
-      - evidence/phase0/drd_policy_usage.json
+    - evidence/phase0/drd_policy_usage.json
+  scripts/audit/verify_tsk_p1_203.sh:
+    emits:
+    - evidence/phase1/tsk_p1_203__sandbox_deploy_manifests_restore_posture_verifier.json
+  scripts/audit/verify_tsk_p1_204.sh:
+    emits:
+    - evidence/phase1/tsk_p1_204__exception_case_pack_generator_script_tool.json
+  scripts/audit/verify_tsk_p1_205.sh:
+    emits:
+    - evidence/phase1/tsk_p1_205__kpi_evidence_artifact_include_settlement_window.json

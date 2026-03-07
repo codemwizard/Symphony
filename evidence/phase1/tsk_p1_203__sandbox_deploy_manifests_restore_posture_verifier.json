@@ -1,0 +1,23 @@
+{
+  "check_id": "TSK-P1-203-VERIFY",
+  "timestamp_utc": "2026-03-07T02:32:10Z",
+  "git_sha": "4ebb79cd3819b391f141ea3e78958ffb72d90acf",
+  "task_id": "TSK-P1-203",
+  "status": "PASS",
+  "pass": true,
+  "required_files": {
+    "kustomization": "infra/sandbox/k8s/kustomization.yaml",
+    "migration_job": "infra/sandbox/k8s/db-migration-job.yaml",
+    "ledger_api": "infra/sandbox/k8s/ledger-api-deployment.yaml",
+    "executor_worker": "infra/sandbox/k8s/executor-worker-deployment.yaml",
+    "secrets_bootstrap": "infra/sandbox/k8s/secrets-bootstrap.yaml"
+  },
+  "checks": {
+    "kustomization_references": true,
+    "migration_job_kind": true,
+    "ledger_waits_for_migration": true,
+    "executor_waits_for_migration": true,
+    "secrets_kind_secret": true
+  },
+  "errors": []
+}

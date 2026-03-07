@@ -1,18 +1,18 @@
 {
   "check_id": "CHECKPOINT-VERIFY",
   "details": {
-    "checkpoint": "checkpoint/PERF-ENG",
+    "checkpoint": "checkpoint/BASE-OPS",
     "dependencies": [
-      "PERF-003"
+      "TSK-P1-REG-003"
     ],
     "dependency_evidence": {
-      "PERF-003": "evidence/phase1/perf_003_rebaseline_sha_lock.json"
+      "TSK-P1-REG-003": "evidence/phase1/reg_003_incident_48h_export.json"
     }
   },
   "errors": [],
   "git_sha": "a54ab609e3b332966a2e49301f53a9ad626b1fd7",
   "pass": true,
   "status": "PASS",
-  "task_id": "checkpoint/PERF-ENG",
-  "timestamp_utc": "2026-03-07T02:13:32Z"
+  "task_id": "checkpoint/BASE-OPS",
+  "timestamp_utc": "2026-03-07T02:13:33Z"
 }

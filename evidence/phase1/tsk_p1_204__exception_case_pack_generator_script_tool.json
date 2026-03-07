@@ -1,0 +1,10 @@
+{
+  "check_id": "TSK-P1-204-VERIFY",
+  "timestamp_utc": "2026-03-07T02:32:10Z",
+  "git_sha": "4ebb79cd3819b391f141ea3e78958ffb72d90acf",
+  "task_id": "TSK-P1-204",
+  "status": "PASS",
+  "pass": true,
+  "sample_pack_path": "evidence/phase1/exception_case_pack_sample.json",
+  "errors": []
+}
