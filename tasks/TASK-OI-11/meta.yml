@@ -1,0 +1,44 @@
+schema_version: 1
+phase: '1'
+task_id: TASK-OI-11
+title: Create retroactive scaffolds for all resolved governance contradiction tasks
+owner_role: QA_VERIFIER
+status: completed
+depends_on:
+- TASK-OI-08
+touches:
+- tasks/TASK-GOV-*/meta.yml
+- docs/plans/phase1/TASK-GOV-*/PLAN.md
+- docs/plans/phase1/TASK-GOV-*/EXEC_LOG.md
+- docs/tasks/PHASE1_TASKS.md
+invariants:
+- RETRO_SCAFFOLD_COMPLETENESS
+work:
+- Scaffold each resolved governance task with canonical task meta and plan/log docs.
+acceptance_criteria:
+- All listed TASK-GOV-* and TASK-INV-134 have meta/plan/log artifacts.
+verification:
+- test "$(find tasks -maxdepth 2 -type f -name meta.yml | rg "TASK-GOV|TASK-INV-134"
+  | wc -l)" -ge 10
+- test "$(find docs/plans/phase1 -maxdepth 2 -type f -name PLAN.md | rg "TASK-GOV|TASK-INV-134"
+  | wc -l)" -ge 10
+- test "$(find docs/plans/phase1 -maxdepth 2 -type f -name EXEC_LOG.md | rg "TASK-GOV|TASK-INV-134"
+  | wc -l)" -ge 10
+evidence:
+- evidence/phase1/retro_scaffold_completion.json
+failure_modes:
+- Evidence file missing
+- Verification command fails
+- Approval artifact missing for regulated-surface changes
+must_read:
+- docs/operations/AI_AGENT_OPERATION_MANUAL.md
+- docs/operations/TASK_CREATION_PROCESS.md
+- docs/operations/PHASE_LIFECYCLE.md
+- docs/operations/REMEDIATION_TRACE_WORKFLOW.md
+implementation_plan: docs/plans/phase1/TASK-OI-11/PLAN.md
+implementation_log: docs/plans/phase1/TASK-OI-11/EXEC_LOG.md
+notes: Completed on 2026-03-07T19:21:21.219292+00:00 after verification and evidence
+  emission.
+client: codex_cli
+assigned_agent: qa_verifier
+model: gpt-5

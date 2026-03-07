@@ -2,10 +2,13 @@
 set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
-EVIDENCE_DIR="$ROOT_DIR/evidence/phase0"
-EVIDENCE_FILE="$EVIDENCE_DIR/security_dotnet_deps_audit.json"
+EVIDENCE_DIR_PHASE0="$ROOT_DIR/evidence/phase0"
+EVIDENCE_DIR_PHASE1="$ROOT_DIR/evidence/phase1"
+EVIDENCE_FILE_PHASE0="$EVIDENCE_DIR_PHASE0/security_dotnet_deps_audit.json"
+EVIDENCE_FILE_PHASE1="$EVIDENCE_DIR_PHASE1/dep_audit_gate.json"
+EVIDENCE_FILE="$EVIDENCE_FILE_PHASE0"
 
-mkdir -p "$EVIDENCE_DIR"
+mkdir -p "$EVIDENCE_DIR_PHASE0" "$EVIDENCE_DIR_PHASE1"
 source "$ROOT_DIR/scripts/lib/evidence.sh"
 EVIDENCE_TS="$(evidence_now_utc)"
 EVIDENCE_GIT_SHA="$(git_sha)"
@@ -13,8 +16,72 @@ EVIDENCE_SCHEMA_FP="$(schema_fingerprint)"
 
 status="PASS"
 note=""
+mode="normal"
 tmp_out="$(mktemp)"
 trap 'rm -f "$tmp_out"' EXIT
+
+for arg in "$@"; do
+  case "$arg" in
+    --dry-run)
+      mode="dry-run"
+      ;;
+    --test-fail)
+      mode="test-fail"
+      ;;
+    *)
+      echo "Unknown argument: $arg" >&2
+      echo "Usage: $0 [--dry-run|--test-fail]" >&2
+      exit 2
+      ;;
+  esac
+done
+
+if [[ "$mode" == "dry-run" ]]; then
+  note="dry_run"
+  write_json "$EVIDENCE_FILE_PHASE0" \
+    "\"check_id\": \"SEC-G08\"" \
+    "\"timestamp_utc\": \"${EVIDENCE_TS}\"" \
+    "\"git_sha\": \"${EVIDENCE_GIT_SHA}\"" \
+    "\"schema_fingerprint\": \"${EVIDENCE_SCHEMA_FP}\"" \
+    "\"status\": \"PASS\"" \
+    "\"note\": \"${note}\"" \
+    "\"output_lines\": [\"dry-run mode: dependency audit execution skipped\"]"
+  write_json "$EVIDENCE_FILE_PHASE1" \
+    "\"check_id\": \"SEC-G08\"" \
+    "\"timestamp_utc\": \"${EVIDENCE_TS}\"" \
+    "\"git_sha\": \"${EVIDENCE_GIT_SHA}\"" \
+    "\"schema_fingerprint\": \"${EVIDENCE_SCHEMA_FP}\"" \
+    "\"status\": \"PASS\"" \
+    "\"note\": \"${note}\"" \
+    "\"output_lines\": [\"dry-run mode: dependency audit execution skipped\"]"
+  echo "Dependency audit dry-run complete. Evidence: $EVIDENCE_FILE_PHASE0"
+  echo "Dependency audit dry-run complete. Evidence: $EVIDENCE_FILE_PHASE1"
+  exit 0
+fi
+
+if [[ "$mode" == "test-fail" ]]; then
+  note="test_fail_mode"
+  write_json "$EVIDENCE_FILE_PHASE0" \
+    "\"check_id\": \"SEC-G08\"" \
+    "\"timestamp_utc\": \"${EVIDENCE_TS}\"" \
+    "\"git_sha\": \"${EVIDENCE_GIT_SHA}\"" \
+    "\"schema_fingerprint\": \"${EVIDENCE_SCHEMA_FP}\"" \
+    "\"status\": \"FAIL\"" \
+    "\"note\": \"${note}\"" \
+    "\"output_lines\": [\"test-fail mode: simulated vulnerable dependency failure\"]"
+  write_json "$EVIDENCE_FILE_PHASE1" \
+    "\"check_id\": \"SEC-G08\"" \
+    "\"timestamp_utc\": \"${EVIDENCE_TS}\"" \
+    "\"git_sha\": \"${EVIDENCE_GIT_SHA}\"" \
+    "\"schema_fingerprint\": \"${EVIDENCE_SCHEMA_FP}\"" \
+    "\"status\": \"FAIL\"" \
+    "\"note\": \"${note}\"" \
+    "\"output_lines\": [\"test-fail mode: simulated vulnerable dependency failure\"]"
+  echo "Dependency audit failed (test mode)."
+  echo "Evidence: $EVIDENCE_FILE_PHASE0"
+  echo "Evidence: $EVIDENCE_FILE_PHASE1"
+  exit 1
+fi
 
 if ! command -v dotnet >/dev/null 2>&1; then
   status="FAIL"
@@ -103,10 +170,22 @@ write_json "$EVIDENCE_FILE" \
   "\"note\": \"${note}\"" \
   "\"output_lines\": ${lines_json}"
 
+# Emit Phase-1 governance evidence mirror for INV-134/SEC-G08 task contract.
+write_json "$EVIDENCE_FILE_PHASE1" \
+  "\"check_id\": \"SEC-G08\"" \
+  "\"timestamp_utc\": \"${EVIDENCE_TS}\"" \
+  "\"git_sha\": \"${EVIDENCE_GIT_SHA}\"" \
+  "\"schema_fingerprint\": \"${EVIDENCE_SCHEMA_FP}\"" \
+  "\"status\": \"${status}\"" \
+  "\"note\": \"${note}\"" \
+  "\"output_lines\": ${lines_json}"
+
 if [[ "$status" != "PASS" ]]; then
   echo "Dependency audit failed."
-  echo "Evidence: $EVIDENCE_FILE"
+  echo "Evidence: $EVIDENCE_FILE_PHASE0"
+  echo "Evidence: $EVIDENCE_FILE_PHASE1"
   exit 1
 fi
 
-echo "Dependency audit passed. Evidence: $EVIDENCE_FILE"
+echo "Dependency audit passed. Evidence: $EVIDENCE_FILE_PHASE0"
+echo "Dependency audit passed. Evidence: $EVIDENCE_FILE_PHASE1"

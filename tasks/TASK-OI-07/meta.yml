@@ -1,0 +1,41 @@
+schema_version: 1
+phase: '1'
+task_id: TASK-OI-07
+title: Wire dependency audit script into CI as fail-closed gate
+owner_role: SECURITY_GUARDIAN
+status: completed
+depends_on:
+- TASK-INV-134
+touches:
+- .github/workflows/
+- scripts/security/dotnet_dependency_audit.sh
+invariants:
+- SEC-G08_CI_ENFORCEMENT
+work:
+- Add CI job invoking dependency audit script and verify merge-block behavior on failure.
+acceptance_criteria:
+- CI contains dependency-audit job.
+- Known-vulnerable test path fails closed.
+- Evidence emitted on clean run.
+verification:
+- rg -n "dotnet_dependency_audit|dep-audit" .github/workflows/*.yml
+- '! SYMPHONY_ENV=development bash scripts/security/dotnet_dependency_audit.sh --test-fail'
+evidence:
+- evidence/phase1/dep_audit_ci_wiring.json
+- evidence/phase1/dep_audit_gate.json
+failure_modes:
+- Evidence file missing
+- Verification command fails
+- Approval artifact missing for regulated-surface changes
+must_read:
+- docs/operations/AI_AGENT_OPERATION_MANUAL.md
+- docs/operations/TASK_CREATION_PROCESS.md
+- docs/operations/PHASE_LIFECYCLE.md
+- docs/operations/REMEDIATION_TRACE_WORKFLOW.md
+implementation_plan: docs/plans/phase1/TASK-OI-07/PLAN.md
+implementation_log: docs/plans/phase1/TASK-OI-07/EXEC_LOG.md
+notes: 'Hardened execution scaffold: stricter verification, real-path touches, and
+  role-aligned agent assignment.'
+client: codex_cli
+assigned_agent: security_guardian
+model: gpt-5

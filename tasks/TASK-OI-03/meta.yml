@@ -1,0 +1,39 @@
+schema_version: 1
+phase: '1'
+task_id: TASK-OI-03
+title: Create Stage-A approval artifacts for INV-134 remediation branch
+owner_role: QA_VERIFIER
+status: completed
+depends_on:
+- TASK-OI-01
+touches:
+- approvals/
+- evidence/phase1/
+invariants:
+- APPROVAL_STAGE_A_REQUIRED
+work:
+- Generate branch-linked markdown + sidecar approval set before push.
+acceptance_criteria:
+- Stage-A markdown and sidecar JSON exist and validate.
+verification:
+- ls approvals/*/BRANCH-fix-inv-134-dep-audit-gate.md
+- ls approvals/*/BRANCH-fix-inv-134-dep-audit-gate.approval.json
+- test -f evidence/phase1/approval_metadata.json
+evidence:
+- evidence/phase1/governance_oi03_stage_a_artifacts.json
+failure_modes:
+- Evidence file missing
+- Verification command fails
+- Approval artifact missing for regulated-surface changes
+must_read:
+- docs/operations/AI_AGENT_OPERATION_MANUAL.md
+- docs/operations/TASK_CREATION_PROCESS.md
+- docs/operations/PHASE_LIFECYCLE.md
+- docs/operations/REMEDIATION_TRACE_WORKFLOW.md
+implementation_plan: docs/plans/phase1/TASK-OI-03/PLAN.md
+implementation_log: docs/plans/phase1/TASK-OI-03/EXEC_LOG.md
+notes: Completed on 2026-03-07T19:26:12.131115+00:00 after verification and evidence
+  emission.
+client: codex_cli
+assigned_agent: qa_verifier
+model: gpt-5

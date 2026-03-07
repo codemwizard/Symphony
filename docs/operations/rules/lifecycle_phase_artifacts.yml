@@ -1,0 +1,25 @@
+phases:
+  "0":
+    required_artifacts:
+      - "docs/PHASE0/PHASE0_CONTRACT.md"
+      - "evidence/phase0/**"
+  "1":
+    required_artifacts:
+      - "docs/PHASE1/PHASE1_CONTRACT.md"
+      - "docs/PHASE1/phase1_contract.yml"
+      - "evidence/phase1/**"
+  "2":
+    required_artifacts:
+      - "docs/PHASE2/PHASE2_CONTRACT.md"
+      - "docs/PHASE2/phase2_contract.yml"
+      - "evidence/phase2/**"
+  "3":
+    required_artifacts:
+      - "docs/PHASE3/PHASE3_CONTRACT.md"
+      - "docs/PHASE3/phase3_contract.yml"
+      - "evidence/phase3/**"
+  "4":
+    required_artifacts:
+      - "docs/PHASE4/PHASE4_CONTRACT.md"
+      - "docs/PHASE4/phase4_contract.yml"
+      - "evidence/phase4/**"

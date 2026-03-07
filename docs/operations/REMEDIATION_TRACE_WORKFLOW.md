@@ -87,6 +87,7 @@ Optionally extract stable “next time” learnings into `docs/operations/troubl
 
 ## DRD Escalation (Lite -> Full)
 
+- DRD escalation is triggered when severity thresholds fire **or** time/attempt thresholds fire (whichever occurs first).
 - Use DRD Lite for local blockers (`L1`) that interrupt execution.
 - Use DRD Full for non-converging or multi-gate incidents (`L2/L3`).
 - Two-strike non-convergence rule: after 2 failed full reruns (or if first blocker changes), switch to DRD Full and first-fail triage.

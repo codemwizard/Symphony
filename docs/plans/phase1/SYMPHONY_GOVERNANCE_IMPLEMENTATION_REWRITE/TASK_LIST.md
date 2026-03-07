@@ -1,0 +1,23 @@
+# Governance Rewrite Task List
+
+- `TASK-GOV-C1`: Establish policy precedence and remove apex-authority contradictions
+- `TASK-GOV-C2C3`: Canonicalize branch and commit conventions under lifecycle taxonomy
+- `TASK-GOV-C4O4`: Canonicalize remediation trace and DRD threshold semantics
+- `TASK-GOV-C5`: Split editable vs regulated path authority in agent docs
+- `TASK-GOV-C6`: Canonicalize INVARIANTS_QUICK regeneration trigger rule
+- `TASK-GOV-C7`: Maintain lifecycle taxonomy machine rules and artifact/process maps
+- `TASK-GOV-O1`: Enforce mandatory 7-step task scaffold sequence
+- `TASK-GOV-O2`: Model and document two-stage approval flow (Stage A/Stage B)
+- `TASK-GOV-O3`: Canonicalize agent boot sequence to root AGENT_ENTRYPOINT
+- `TASK-INV-134`: Declare and enforce SEC-G08 dependency audit invariant task contract
+- `TASK-OI-01`: Remediate branch discipline for INV-134 work currently on main
+- `TASK-OI-02`: Create missing scaffold artifacts for INV-134 task pack
+- `TASK-OI-03`: Create Stage-A approval artifacts for INV-134 remediation branch
+- `TASK-OI-04`: Enforce Stage-A and Stage-B approval validation in conformance verifier
+- `TASK-OI-05`: Update conformance spec document for two-stage approval model
+- `TASK-OI-06`: Refresh TASK_CREATION_PROCESS quick-reference path list
+- `TASK-OI-07`: Wire dependency audit script into CI as fail-closed gate
+- `TASK-OI-08`: Remediate branch discipline for governance contradiction bundle on main
+- `TASK-OI-09`: Re-home SEC-G08 control-plane annotation onto INV-134 branch context
+- `TASK-OI-10`: Perform mandatory human assurance review over governance changes
+- `TASK-OI-11`: Create retroactive scaffolds for all resolved governance contradiction tasks

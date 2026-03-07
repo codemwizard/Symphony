@@ -1,0 +1,15 @@
+{
+  "task_id": "TASK-OI-09",
+  "status": "PASS",
+  "timestamp_utc": "2026-03-07T19:56:20Z",
+  "git_sha": "9aa38545195a65654d72b2dec0d04bc224bd5a81",
+  "control_plane_file": "docs/control_planes/CONTROL_PLANES.yml",
+  "gate_id": "SEC-G08",
+  "checks": [
+    {
+      "cmd": "rg -n \"SEC-G08\" docs/control_planes/CONTROL_PLANES.yml",
+      "pass": true
+    }
+  ],
+  "check_id": "TASK-OI-09-CONTROL-PLANE"
+}

@@ -1,0 +1,22 @@
+{
+  "task_id": "TASK-OI-02",
+  "status": "PASS",
+  "timestamp_utc": "2026-03-07T19:56:20Z",
+  "git_sha": "9aa38545195a65654d72b2dec0d04bc224bd5a81",
+  "checks": [
+    {
+      "cmd": "test -s tasks/TASK-INV-134/meta.yml",
+      "pass": true
+    },
+    {
+      "cmd": "test -s docs/plans/phase1/TASK-INV-134/PLAN.md",
+      "pass": true
+    },
+    {
+      "cmd": "test -s docs/plans/phase1/TASK-INV-134/EXEC_LOG.md",
+      "pass": true
+    }
+  ],
+  "index_file": "docs/tasks/PHASE1_GOVERNANCE_TASKS.md",
+  "check_id": "TASK-OI-02-SCAFFOLD"
+}

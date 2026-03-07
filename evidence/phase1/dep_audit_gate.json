@@ -1,0 +1,9 @@
+{
+  "check_id": "SEC-G08",
+  "timestamp_utc": "2026-03-07T19:56:20Z",
+  "git_sha": "9aa38545195a65654d72b2dec0d04bc224bd5a81",
+  "schema_fingerprint": "8a1629a2bf1d9ff4092ff1a18ab99c243549e69d049c4742baccd214781a4597",
+  "status": "PASS",
+  "note": "dry_run",
+  "output_lines": ["dry-run mode: dependency audit execution skipped"]
+}

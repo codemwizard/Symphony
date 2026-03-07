@@ -12,6 +12,10 @@ AI output is never authoritative unless backed by enforcement + verification.
 - **No direct push to `main`.** Work only on feature branches and open PRs.
 - **No direct pull from `main` into working branches.** Use PRs for integration.
 
+## Path Authority
+- Editable paths: follow agent-specific allowed paths below.
+- Regulated paths requiring approval metadata: `schema/migrations/**`, `scripts/audit/**`, `scripts/db/**`, `docs/invariants/**`, `docs/operations/**`, `evidence/**`, `.github/workflows/**`.
+
 ## Agents
 
 ### Supervisor (Orchestrator)
@@ -52,7 +56,7 @@ Role: Supervisor
 - Escalate any ambiguous Powered by compliance gaps immediately.
 
 ## Non-Negotiables
-- All Phase-1 work must cite `docs/operations/AI_AGENT_OPERATION_MANUAL.md` as the single source of truth.
+- All Phase-1 work must cite `docs/operations/AI_AGENT_OPERATION_MANUAL.md` as apex authority and defer to domain-canonical documents for scoped rules.
 - No agent runs unless `verify_agent_conformance.sh` or its equivalent passes locally.
 - Approval metadata must precede any production-affecting change.
 

@@ -1,0 +1,43 @@
+schema_version: 1
+phase: '1'
+task_id: TASK-OI-08
+title: Remediate branch discipline for governance contradiction bundle on main
+owner_role: ARCHITECT
+status: completed
+depends_on: []
+touches:
+- docs/operations/
+- AGENTS.md
+- AGENT_ENTRYPOINT.md
+- IDE_AGENT_ENTRYPOINT.md
+- .agent/
+- .codex/
+- approvals/
+invariants:
+- BRANCH_DISCIPLINE
+work:
+- Re-establish governance contradiction changes on dedicated branch with approvals.
+acceptance_criteria:
+- Governance bundle represented on non-main branch with required Stage-A approvals.
+verification:
+- git rev-parse --abbrev-ref HEAD | rg "^fix/governance-contradiction-resolution$"
+- rg -n "BRANCH-fix-governance-contradiction-resolution" approvals -g "*.md" -g "*.json"
+- git diff --name-only main...HEAD | rg "^(docs/operations/|AGENTS.md|AGENT_ENTRYPOINT.md|IDE_AGENT_ENTRYPOINT.md|\.agent/|\.codex/)"
+evidence:
+- evidence/phase1/branch_remediation_governance_bundle.json
+failure_modes:
+- Evidence file missing
+- Verification command fails
+- Approval artifact missing for regulated-surface changes
+must_read:
+- docs/operations/AI_AGENT_OPERATION_MANUAL.md
+- docs/operations/TASK_CREATION_PROCESS.md
+- docs/operations/PHASE_LIFECYCLE.md
+- docs/operations/REMEDIATION_TRACE_WORKFLOW.md
+implementation_plan: docs/plans/phase1/TASK-OI-08/PLAN.md
+implementation_log: docs/plans/phase1/TASK-OI-08/EXEC_LOG.md
+notes: 'Hardened execution scaffold: stricter verification, real-path touches, and
+  role-aligned agent assignment.'
+client: codex_cli
+assigned_agent: architect
+model: gpt-5

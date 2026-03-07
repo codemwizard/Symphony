@@ -686,6 +686,13 @@ jobs:
             echo "scripts/audit/run_security_fast_checks.sh not found/executable; skipping (Phase 1 repo may not include it yet)."
           fi
 
+      - name: Run SEC-G08 dependency audit gate (required)
+        shell: bash
+        run: |
+          set -euo pipefail
+          chmod +x scripts/security/dotnet_dependency_audit.sh
+          scripts/security/dotnet_dependency_audit.sh
+
       - name: Run DDL lock-risk lint
         shell: bash
         run: |

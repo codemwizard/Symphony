@@ -1,0 +1,16 @@
+preflight:
+  - "PRE-01: confirm task meta exists"
+  - "PRE-02: confirm lifecycle_phase key is canonical"
+  - "PRE-03: confirm plan/log path matches lifecycle_phase mapping"
+  - "PRE-04: confirm approvals are present for regulated-surface changes"
+  - "PRE-05: confirm verification commands are deterministic"
+  - "PRE-06: confirm evidence paths are declared"
+carry_forward:
+  - "CF-01: unresolved implemented rows become deferred rows in next lifecycle phase"
+  - "CF-02: evidence references remain immutable once closed"
+  - "CF-03: phase opening requires explicit approval artifact set"
+  - "CF-04: closeout requires contract + evidence verifier pass"
+refusal_protocol:
+  - "Refuse if lifecycle key is invalid"
+  - "Refuse if regulated-surface approval metadata is missing"
+  - "Refuse if evidence declaration is absent for implemented status"

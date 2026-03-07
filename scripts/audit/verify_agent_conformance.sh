@@ -2,6 +2,23 @@
 set -euo pipefail
 
 ROOT="${ROOT:-$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)}"
+MODE="${MODE:-auto}"
+BRANCH_NAME="${BRANCH_NAME:-}"
+PR_NUMBER="${PR_NUMBER:-}"
+
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    --mode=*) MODE="${1#*=}"; shift ;;
+    --mode) MODE="${2:-}"; shift 2 ;;
+    --branch=*) BRANCH_NAME="${1#*=}"; shift ;;
+    --branch) BRANCH_NAME="${2:-}"; shift 2 ;;
+    --pr=*) PR_NUMBER="${1#*=}"; shift ;;
+    --pr) PR_NUMBER="${2:-}"; shift 2 ;;
+    *) echo "Unknown argument: $1" >&2; exit 2 ;;
+  esac
+done
+
+export MODE BRANCH_NAME PR_NUMBER
 EVIDENCE_DIR="$ROOT/evidence/phase1"
 ARCH_EVIDENCE_FILE="$EVIDENCE_DIR/agent_conformance_architect.json"
 IMPLEMENTER_EVIDENCE_FILE="$EVIDENCE_DIR/agent_conformance_implementer.json"
@@ -170,6 +187,37 @@ def check_approval_metadata(regulated_changed):
     return True
 
 
+def check_stage_artifacts(mode):
+    if mode not in {"stage-a", "stage-b"}:
+        return
+    approvals_root = ROOT / "approvals"
+    if mode == "stage-a":
+        branch = os.environ.get("BRANCH_NAME", "").strip()
+        if not branch:
+            fail("CONFORMANCE_014_STAGE_A_BRANCH_MISSING", "Stage-A mode requires --branch=<name>")
+            return
+        branch_key = branch.replace("/", "-")
+        md_matches = list(approvals_root.glob(f"*/BRANCH-{branch_key}.md"))
+        json_matches = list(approvals_root.glob(f"*/BRANCH-{branch_key}.approval.json"))
+        if not md_matches or not json_matches:
+            fail(
+                "CONFORMANCE_015_STAGE_A_ARTIFACT_MISSING",
+                f"Missing Stage-A approval artifact set for branch '{branch}' (normalized key '{branch_key}')",
+            )
+    if mode == "stage-b":
+        pr = os.environ.get("PR_NUMBER", "").strip()
+        if not pr:
+            fail("CONFORMANCE_016_STAGE_B_PR_MISSING", "Stage-B mode requires --pr=<number>")
+            return
+        md_matches = list(approvals_root.glob(f"*/PR-{pr}.md"))
+        json_matches = list(approvals_root.glob(f"*/PR-{pr}.approval.json"))
+        if not md_matches or not json_matches:
+            fail(
+                "CONFORMANCE_017_STAGE_B_ARTIFACT_MISSING",
+                f"Missing Stage-B approval artifact set for PR '{pr}'",
+            )
+
+
 def compute_hash(path):
     digest = hashlib.sha256()
     digest.update(path.read_bytes())
@@ -196,6 +244,8 @@ def main():
     changed_files = set(ctx["changed_files"])
     regulated_paths = list(ctx["regulated_changed_paths"])
     regulated_changed = bool(ctx["approval_required"])
+    mode = (os.environ.get("MODE", "auto") or "auto").strip().lower()
+    check_stage_artifacts(mode)
     approval_present = check_approval_metadata(regulated_changed)
 
     common_evidence = {

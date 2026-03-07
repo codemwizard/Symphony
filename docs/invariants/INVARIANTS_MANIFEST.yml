@@ -560,6 +560,15 @@
   sla_days: 30
   verification: "scripts/audit/validate_evidence_schema.sh"
 
+- id: INV-134
+  aliases: ["SEC-G08"]
+  status: implemented
+  severity: P1
+  title: "Dependency vulnerability audit gate is fail-closed and evidenced"
+  owners: ["team-security"]
+  sla_days: 14
+  verification: "scripts/security/dotnet_dependency_audit.sh (CI-wired via .github/workflows/invariants.yml)"
+
 - id: INV-078
   aliases: ["I-YAML-01"]
   status: implemented

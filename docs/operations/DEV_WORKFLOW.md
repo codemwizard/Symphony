@@ -6,6 +6,10 @@ This repo uses **mechanical gates first** and treats invariants as “real” on
 
 Your job as a developer is to keep changes **cheap** by catching “structural” issues **before push**.
 
+Canonical governance references:
+- `docs/operations/POLICY_PRECEDENCE.md`
+- `docs/operations/GIT_CONVENTIONS.md`
+
 ---
 
 ## Quick start (local)

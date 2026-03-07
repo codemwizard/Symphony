@@ -1,0 +1,36 @@
+schema_version: 1
+phase: '1'
+task_id: TASK-OI-05
+title: Update conformance spec document for two-stage approval model
+owner_role: QA_VERIFIER
+status: completed
+depends_on:
+- TASK-OI-04
+touches:
+- docs/operations/VERIFY_AGENT_CONFORMANCE_SPEC.md
+invariants:
+- CONFORMANCE_SPEC_ALIGNMENT
+work:
+- Align spec prose and examples with implemented two-stage enforcement.
+acceptance_criteria:
+- Spec reflects Stage-A and Stage-B behavior and failure conditions.
+verification:
+- rg -ni "Stage A|Stage B|stage-a|stage-b" docs/operations/VERIFY_AGENT_CONFORMANCE_SPEC.md
+evidence:
+- evidence/phase1/conformance_spec_two_stage_alignment.json
+failure_modes:
+- Evidence file missing
+- Verification command fails
+- Approval artifact missing for regulated-surface changes
+must_read:
+- docs/operations/AI_AGENT_OPERATION_MANUAL.md
+- docs/operations/TASK_CREATION_PROCESS.md
+- docs/operations/PHASE_LIFECYCLE.md
+- docs/operations/REMEDIATION_TRACE_WORKFLOW.md
+implementation_plan: docs/plans/phase1/TASK-OI-05/PLAN.md
+implementation_log: docs/plans/phase1/TASK-OI-05/EXEC_LOG.md
+notes: Completed on 2026-03-07T19:25:05.159242+00:00 after verification and evidence
+  emission.
+client: codex_cli
+assigned_agent: qa_verifier
+model: gpt-5

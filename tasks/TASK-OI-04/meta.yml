@@ -1,0 +1,44 @@
+schema_version: 1
+phase: '1'
+task_id: TASK-OI-04
+title: Enforce Stage-A and Stage-B approval validation in conformance verifier
+owner_role: QA_VERIFIER
+status: completed
+depends_on:
+- TASK-GOV-O2
+touches:
+- scripts/audit/verify_agent_conformance.sh
+- docs/operations/VERIFY_AGENT_CONFORMANCE_SPEC.md
+invariants:
+- AGENT_CONFORMANCE_TWO_STAGE
+work:
+- Implement and document both branch-linked and PR-linked approval checks.
+acceptance_criteria:
+- Verifier fails when Stage-A artifact is missing.
+- Verifier fails when Stage-B artifact is missing.
+- Evidence emitted on pass.
+verification:
+- bash -lc 'if bash scripts/audit/verify_agent_conformance.sh --mode=stage-a --branch=missing-branch
+  >/dev/null 2>&1; then exit 1; else exit 0; fi'
+- bash -lc 'if bash scripts/audit/verify_agent_conformance.sh --mode=stage-b --pr=123456
+  >/dev/null 2>&1; then exit 1; else exit 0; fi'
+- bash scripts/audit/verify_agent_conformance.sh --mode=stage-a --branch=fix/1-governance-rewrite-remaining
+- bash scripts/audit/verify_agent_conformance.sh --mode=stage-b --pr=9999
+evidence:
+- evidence/phase1/agent_conformance_policy_guardian.json
+failure_modes:
+- Evidence file missing
+- Verification command fails
+- Approval artifact missing for regulated-surface changes
+must_read:
+- docs/operations/AI_AGENT_OPERATION_MANUAL.md
+- docs/operations/TASK_CREATION_PROCESS.md
+- docs/operations/PHASE_LIFECYCLE.md
+- docs/operations/REMEDIATION_TRACE_WORKFLOW.md
+implementation_plan: docs/plans/phase1/TASK-OI-04/PLAN.md
+implementation_log: docs/plans/phase1/TASK-OI-04/EXEC_LOG.md
+notes: Completed on 2026-03-07T19:26:12.933886+00:00 after verification and evidence
+  emission.
+client: codex_cli
+assigned_agent: qa_verifier
+model: gpt-5

@@ -10,6 +10,10 @@ Role: Security Guardian Agent
 - Run security/listed lints (SAST, config, secrets, DDL risk) to keep PCI/ISO/OWASP guarantees intact.
 - Coordinate with DB/Foundation and QA to ensure evidence and gate parity.
 
+## Path Authority
+- Editable paths: `scripts/security/**`, `scripts/audit/**`, `.github/workflows/**`, `docs/security/**`
+- Regulated paths requiring approval metadata: `scripts/security/**`, `scripts/audit/**`, `.github/workflows/**`, `docs/operations/**`, `docs/invariants/**`, `evidence/**`
+
 ## Non-Negotiables
 - No privileges restored on runtime roles; no runtime DDL introduced.
 - Every security doc change requires approval metadata and regeneration of relevant gate evidence.
