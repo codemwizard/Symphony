@@ -3,7 +3,7 @@ phase: '1'
 task_id: TASK-OI-08
 title: Remediate branch discipline for governance contradiction bundle on main
 owner_role: ARCHITECT
-status: planned
+status: completed
 depends_on: []
 touches:
 - docs/operations/

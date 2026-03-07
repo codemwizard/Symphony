@@ -21,7 +21,7 @@ This index tracks governance rewrite tasks derived from `Symphony_Governance_Imp
 | TASK-OI-05 | QA_VERIFIER | completed | docs/plans/phase1/TASK-OI-05/PLAN.md | docs/plans/phase1/TASK-OI-05/EXEC_LOG.md |
 | TASK-OI-06 | QA_VERIFIER | completed | docs/plans/phase1/TASK-OI-06/PLAN.md | docs/plans/phase1/TASK-OI-06/EXEC_LOG.md |
 | TASK-OI-07 | SECURITY_GUARDIAN | completed | docs/plans/phase1/TASK-OI-07/PLAN.md | docs/plans/phase1/TASK-OI-07/EXEC_LOG.md |
-| TASK-OI-08 | ARCHITECT | planned | docs/plans/phase1/TASK-OI-08/PLAN.md | docs/plans/phase1/TASK-OI-08/EXEC_LOG.md |
+| TASK-OI-08 | ARCHITECT | completed | docs/plans/phase1/TASK-OI-08/PLAN.md | docs/plans/phase1/TASK-OI-08/EXEC_LOG.md |
 | TASK-OI-09 | SECURITY_GUARDIAN | completed | docs/plans/phase1/TASK-OI-09/PLAN.md | docs/plans/phase1/TASK-OI-09/EXEC_LOG.md |
 | TASK-OI-10 | ARCHITECT | planned | docs/plans/phase1/TASK-OI-10/PLAN.md | docs/plans/phase1/TASK-OI-10/EXEC_LOG.md |
 | TASK-OI-11 | QA_VERIFIER | completed | docs/plans/phase1/TASK-OI-11/PLAN.md | docs/plans/phase1/TASK-OI-11/EXEC_LOG.md |

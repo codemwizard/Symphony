@@ -1,0 +1,21 @@
+{
+  "task_id": "TASK-OI-08",
+  "status": "PASS",
+  "timestamp_utc": "2026-03-07T19:57:53Z",
+  "git_sha": "1c6a5a41169e3da6ef805212c84a97c55beb970c",
+  "branch": "fix/governance-contradiction-resolution",
+  "checks": [
+    {
+      "cmd": "git rev-parse --abbrev-ref HEAD | rg \"^fix/governance-contradiction-resolution$\"",
+      "pass": true
+    },
+    {
+      "cmd": "rg -n \"BRANCH-fix-governance-contradiction-resolution\" approvals -g \"*.md\" -g \"*.json\"",
+      "pass": true
+    },
+    {
+      "cmd": "git diff --name-only main...HEAD | rg \"^(docs/operations/|AGENTS.md|AGENT_ENTRYPOINT.md|IDE_AGENT_ENTRYPOINT.md|\\.agent/|\\.codex/)\"",
+      "pass": true
+    }
+  ]
+}
