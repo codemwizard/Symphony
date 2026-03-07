@@ -1,4 +1,5 @@
 {
+  "check_id": "TASK-OI-09-CONTROL-PLANE",
   "task_id": "TASK-OI-09",
   "status": "PASS",
   "timestamp_utc": "2026-03-07T19:56:20Z",
@@ -10,6 +11,5 @@
       "cmd": "rg -n \"SEC-G08\" docs/control_planes/CONTROL_PLANES.yml",
       "pass": true
     }
-  ],
-  "check_id": "TASK-OI-09-CONTROL-PLANE"
+  ]
 }
