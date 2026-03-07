@@ -17,5 +17,6 @@
       "pass": true
     }
   ],
-  "index_file": "docs/tasks/PHASE1_GOVERNANCE_TASKS.md"
+  "index_file": "docs/tasks/PHASE1_GOVERNANCE_TASKS.md",
+  "check_id": "TASK-OI-02-SCAFFOLD"
 }

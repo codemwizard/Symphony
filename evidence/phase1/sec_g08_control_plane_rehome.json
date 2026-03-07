@@ -10,5 +10,6 @@
       "cmd": "rg -n \"SEC-G08\" docs/control_planes/CONTROL_PLANES.yml",
       "pass": true
     }
-  ]
+  ],
+  "check_id": "TASK-OI-09-CONTROL-PLANE"
 }

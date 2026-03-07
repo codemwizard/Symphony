@@ -17,5 +17,6 @@
       "cmd": "git log --oneline -- docs/invariants/id-management/INVARIANT_ID_MANAGEMENT.md scripts/security/dotnet_dependency_audit.sh docs/control_planes/CONTROL_PLANES.yml | head -n 20",
       "pass": true
     }
-  ]
+  ],
+  "check_id": "TASK-OI-01-BRANCH-REMEDIATION"
 }
