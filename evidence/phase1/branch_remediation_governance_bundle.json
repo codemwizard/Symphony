@@ -17,5 +17,6 @@
       "cmd": "git diff --name-only main...HEAD | rg \"^(docs/operations/|AGENTS.md|AGENT_ENTRYPOINT.md|IDE_AGENT_ENTRYPOINT.md|\\.agent/|\\.codex/)\"",
       "pass": true
     }
-  ]
+  ],
+  "check_id": "TASK-OI-08-BRANCH-REMEDIATION"
 }

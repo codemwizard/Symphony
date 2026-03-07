@@ -14,5 +14,6 @@
       "cmd": "! SYMPHONY_ENV=development bash scripts/security/dotnet_dependency_audit.sh --test-fail",
       "pass": true
     }
-  ]
+  ],
+  "check_id": "TASK-OI-07-CI-WIRING"
 }
