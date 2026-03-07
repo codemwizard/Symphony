@@ -1,0 +1,36 @@
+schema_version: 1
+phase: '1'
+task_id: TASK-GOV-O1
+title: Enforce mandatory 7-step task scaffold sequence
+owner_role: QA_VERIFIER
+status: completed
+depends_on:
+- TASK-GOV-C7
+touches:
+- docs/operations/TASK_CREATION_PROCESS.md
+invariants:
+- TASK_SCAFFOLD_SEQUENCE
+work:
+- Align task process document to strict 7-step sequence and ordering.
+acceptance_criteria:
+- Task process section enumerates and preserves 7 mandatory steps.
+verification:
+- rg -n "Step 1|Step 2|Step 3|Step 4|Step 5|Step 6|Step 7" docs/operations/TASK_CREATION_PROCESS.md
+evidence:
+- evidence/phase1/governance_o1_task_scaffold.json
+failure_modes:
+- Evidence file missing
+- Verification command fails
+- Approval artifact missing for regulated-surface changes
+must_read:
+- docs/operations/AI_AGENT_OPERATION_MANUAL.md
+- docs/operations/TASK_CREATION_PROCESS.md
+- docs/operations/PHASE_LIFECYCLE.md
+- docs/operations/REMEDIATION_TRACE_WORKFLOW.md
+implementation_plan: docs/plans/phase1/TASK-GOV-O1/PLAN.md
+implementation_log: docs/plans/phase1/TASK-GOV-O1/EXEC_LOG.md
+notes: Completed on 2026-03-07T19:21:19.837454+00:00 after verification and evidence
+  emission.
+client: codex_cli
+assigned_agent: qa_verifier
+model: gpt-5

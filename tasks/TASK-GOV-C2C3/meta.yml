@@ -1,0 +1,43 @@
+schema_version: 1
+phase: '1'
+task_id: TASK-GOV-C2C3
+title: Canonicalize branch and commit conventions under lifecycle taxonomy
+owner_role: ARCHITECT
+status: completed
+depends_on:
+- TASK-GOV-C1
+touches:
+- docs/operations/GIT_CONVENTIONS.md
+- .agent/workflows/git-conventions.md
+invariants:
+- LIFECYCLE_TAXONOMY_FORMAT
+work:
+- Keep GIT_CONVENTIONS.md as sole normative source.
+- Retire legacy workflow doc to pointer-only content.
+- Preserve explanatory forbidden examples while constraining accepted format blocks.
+acceptance_criteria:
+- Normative branch/commit rules disallow dotted and named lifecycle keys.
+- Explanatory invalid examples may exist only in explicitly non-normative sections.
+verification:
+- test -f docs/operations/GIT_CONVENTIONS.md
+- rg -n "^## (Lifecycle Key Rules|Branch Format|Commit Header Format)" docs/operations/GIT_CONVENTIONS.md
+- '! rg -n "^(branch|commit|format|example).*(0\.1|0\.2|Hardening)" docs/operations/GIT_CONVENTIONS.md'
+- rg -n "non-normative|GIT_CONVENTIONS.md" .agent/workflows/git-conventions.md
+evidence:
+- evidence/phase1/governance_c2c3_git_conventions.json
+failure_modes:
+- Evidence file missing
+- Verification command fails
+- Approval artifact missing for regulated-surface changes
+must_read:
+- docs/operations/AI_AGENT_OPERATION_MANUAL.md
+- docs/operations/TASK_CREATION_PROCESS.md
+- docs/operations/PHASE_LIFECYCLE.md
+- docs/operations/REMEDIATION_TRACE_WORKFLOW.md
+implementation_plan: docs/plans/phase1/TASK-GOV-C2C3/PLAN.md
+implementation_log: docs/plans/phase1/TASK-GOV-C2C3/EXEC_LOG.md
+notes: Completed on 2026-03-07T19:26:12.082128+00:00 after verification and evidence
+  emission.
+client: codex_cli
+assigned_agent: architect
+model: gpt-5

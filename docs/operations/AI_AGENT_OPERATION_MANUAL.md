@@ -2,7 +2,7 @@
 
 ## Purpose
 
-This manual is the **single source of truth** for AI agent behavior and processes in Symphony. All other agent rule artifacts (e.g., `AGENTS.md`, `docs/operations/AGENT_ROLE_RECONCILIATION.md`, `.codex/agents/**`, `.cursor/agents/**`) are **derived from it**, and any reference to a “canonical” document must point first to this manual. When a task needs the more focused mapping in `AGENT_ROLE_RECONCILIATION.md`, it must explicitly state “see `AI_AGENT_OPERATION_MANUAL.md` for the authoritative rule set and `AGENT_ROLE_RECONCILIATION.md` for the role mapping snapshot.”
+This manual is the apex authority for broad AI agent behavior and processes in Symphony. Domain-canonical documents (for example lifecycle taxonomy, remediation trace thresholds, and git format conventions) own detailed rules for their domain and must be referenced, not redefined.
 
 This manual defines:
 
@@ -108,12 +108,23 @@ When a regulated surface changes, the resulting evidence or remediation trace MU
 
 These metadata values must never include raw PII (emails, national IDs, phone numbers). Use `docs/operations/approval_metadata.schema.json` to validate structure when possible.
 
-## Approval Artifact Format
+## Approval Artifact Format (Two-Stage)
 
 Approval artifacts must follow this structure:
 
-- Markdown record: `approvals/YYYY-MM-DD/PR-<number>.md` with the required H2 headers (Summary, Scope, Invariants & Phase Discipline, AI Disclosure, Verification & Evidence, Risk Assessment, Approval, Cross-References).
-- Approval sidecar JSON: `approvals/YYYY-MM-DD/PR-<number>.approval.json` that mirrors the metadata in `approval_metadata.json` and passes `docs/operations/approval_sidecar.schema.json`.
-- Evidence metadata: `evidence/phase1/approval_metadata.json` linking AI + human approvals and regulated-surface scope.
+- Stage A (pre-push, branch-linked):
+  - Markdown record: `approvals/YYYY-MM-DD/BRANCH-<branch-key>.md`
+  - Sidecar JSON: `approvals/YYYY-MM-DD/BRANCH-<branch-key>.approval.json`
+  - `branch-key` is branch name normalized with `/` replaced by `-`
+  - `change_ref` must be `branch/<branch-name>`
+- Stage B (post-push, PR-linked):
+  - Markdown record: `approvals/YYYY-MM-DD/PR-<number>.md`
+  - Sidecar JSON: `approvals/YYYY-MM-DD/PR-<number>.approval.json`
+  - `change_ref` must be `pr/<number>`
 
-The Markdown file must include a cross-reference block (H2 `## 8. Cross-References (Machine-Readable)`) containing an exact line `Approval Sidecar JSON: approvals/YYYY-MM-DD/PR-<number>.approval.json`. The verifier relies on this to ensure traceability.
+Both stages must pass `docs/operations/approval_sidecar.schema.json`.
+Evidence metadata (`evidence/phase1/approval_metadata.json`) must link AI + human approvals and regulated-surface scope.
+
+Each markdown approval file must include:
+- H2 `## 8. Cross-References (Machine-Readable)`
+- exact line: `Approval Sidecar JSON: <sidecar-path>`

@@ -1,0 +1,47 @@
+{
+  "schema_version": "1.0",
+  "approval": {
+    "status": "APPROVED",
+    "approver_id": "governance-human-reviewer",
+    "change_reason": "Governance rewrite hardening and conformance enforcement alignment",
+    "approved_at_utc": "2026-03-07T19:20:05.903308+00:00",
+    "role_authority": "Human Approver"
+  },
+  "ai": {
+    "ai_used": true,
+    "ai_prompt_hash": "c3318411224cc5a410cab1d6d9ec5f442233a8035484b13581dc356debb39483",
+    "model_id": "gpt-5",
+    "client": "codex_cli",
+    "session_id": "local-governance-rewrite"
+  },
+  "scope": {
+    "regulated_surfaces_touched": true,
+    "paths_changed": [
+      "docs/operations/POLICY_PRECEDENCE.md",
+      "docs/operations/GIT_CONVENTIONS.md",
+      "docs/operations/AI_AGENT_OPERATION_MANUAL.md",
+      "docs/operations/VERIFY_AGENT_CONFORMANCE_SPEC.md",
+      "docs/operations/TASK_CREATION_PROCESS.md",
+      "docs/operations/DEV_WORKFLOW.md",
+      "docs/operations/REMEDIATION_TRACE_WORKFLOW.md",
+      "scripts/audit/verify_agent_conformance.sh",
+      "AGENT_ENTRYPOINT.md",
+      "IDE_AGENT_ENTRYPOINT.md",
+      ".agent/workflows/git-conventions.md",
+      "AGENTS.md"
+    ],
+    "invariants": [
+      "GOVERNANCE_PRECEDENCE",
+      "REMEDIATION_TRACE_CANONICAL",
+      "AGENT_CONFORMANCE_TWO_STAGE"
+    ],
+    "phase_boundary_ok": true
+  },
+  "verification": {
+    "commands": [
+      "python3 -c \"import yaml; yaml.safe_load(open('docs/operations/rules/lifecycle_phase_taxonomy.yml'))\""
+    ],
+    "pre_ci_passed": false,
+    "notes": "Targeted governance verification completed; full pre_ci pending."
+  }
+}

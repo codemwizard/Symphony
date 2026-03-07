@@ -32,43 +32,60 @@ Do not require DRD for `L0` trivial fixes.
 4. **Fail‑closed bias**
    - Never mark “implemented” without enforcement + verification evidence.
 
-## 2) Task creation (structure + templates)
+## 2) Mandatory 7-Step Task Creation Sequence
 
-Tasks exist in **two places**:
+Follow this exact order. Do not skip or reorder steps.
 
-### A) Human plan
-- File: `docs/tasks/PHASE0_TASKS.md`
-- Required fields per task:
-  - `TASK ID`, `Title`, `Owner Role`, `Depends On`
-  - `Touches` (explicit file paths)
-  - `Invariant(s)`
-  - `Work` (step-by-step)
-  - `Acceptance Criteria` (testable)
-  - `Verification Commands`
-  - `Evidence Artifact(s)`
-  - `Failure Modes`
+### Step 1 — Create minimal meta stub
+- Path: `tasks/<TASK_ID>/meta.yml`
+- Minimum fields: `schema_version`, `phase`, `task_id`, `title`, `owner_role`, `status: planned`
 
-### B) Machine meta
-- File: `tasks/<TASK_ID>/meta.yml`
-- Required fields:
-  - `phase`, `task_id`, `title`, `owner_role`
-  - `Depends On`, `Touches`, `Invariant(s)`
-  - `Work`, `Acceptance Criteria`, `Verification Commands`
-  - `Evidence Artifact(s)`, `Failure Modes`
-  - `must_read`, `evidence`, `verification`, `status`
-  - `client`, `assigned_agent`, `model`
+### Step 2 — Validate lifecycle phase key
+- Confirm phase key is valid per `docs/operations/PHASE_LIFECYCLE.md` (`0`,`1`,`2`,`3`,`4` only).
+- Dotted or named phase values are invalid for lifecycle phase.
 
-Use the meta template from the repo instructions and keep the `Touches` list aligned with the assigned agent’s allowed paths.
+### Step 3 — Create plan
+- Path mapping:
+  - `phase: '0'` -> `docs/plans/phase0/<TASK_ID>/PLAN.md`
+  - `phase: '1'` -> `docs/plans/phase1/<TASK_ID>/PLAN.md`
+- Required sections: mission, constraints, verification commands, approval references, evidence paths.
+
+### Step 4 — Populate meta fully
+- Add: `depends_on`, `touches`, `invariants`, `work`, `acceptance_criteria`, `verification`, `evidence`, `failure_modes`, `must_read`, `implementation_plan`, `implementation_log`, `client`, `assigned_agent`, `model`.
+
+### Step 5 — Create execution log
+- Path mapping mirrors Step 3:
+  - `phase: '0'` -> `docs/plans/phase0/<TASK_ID>/EXEC_LOG.md`
+  - `phase: '1'` -> `docs/plans/phase1/<TASK_ID>/EXEC_LOG.md`
+- Log is append-only from this point.
+
+### Step 6 — Register in human task index
+- Add task to the phase-appropriate index (for example `docs/tasks/PHASE0_TASKS.md` or `docs/tasks/PHASE1_GOVERNANCE_TASKS.md`).
+- Include required human fields: task id, title, owner, depends on, touches, invariants, work, acceptance criteria, verification, evidence, failure modes.
+
+### Step 7 — Begin implementation
+- Implementation may begin only after Steps 1-6 exist and meta paths resolve.
+- Use the task meta template from `tasks/_template/meta.yml`.
 
 ## 3) Agent assignment (permissions + roles)
 
-Assignment is determined by **Allowed paths** in `AGENTS.md` and `.codex/agents/*.md`:
+Assignment is determined by **Allowed paths** in `AGENTS.md` and `.codex/agents/*.md`, with explicit editable vs regulated split:
 
-- **DB Foundation**: `schema/migrations/**`, `scripts/db/**`, `infra/docker/**`
-- **Security Guardian**: `scripts/security/**`, `scripts/audit/**`, `docs/security/**`, `.github/workflows/**`
-- **Invariants Curator**: `docs/invariants/**`
-- **QA Verifier**: `scripts/db/tests/**`, `scripts/audit/tests/**`, `docs/operations/**`
-- **Architect**: ADRs, architecture docs, planning
+- **DB Foundation**
+  - Editable: `schema/migrations/**`, `scripts/db/**`, `infra/docker/**`
+  - Regulated: `schema/migrations/**`, `scripts/db/**`
+- **Security Guardian**
+  - Editable: `scripts/security/**`, `scripts/audit/**`, `.github/workflows/**`
+  - Regulated: `scripts/security/**`, `scripts/audit/**`, `.github/workflows/**`, `docs/operations/**`
+- **Invariants Curator**
+  - Editable: `docs/invariants/**`
+  - Regulated: `docs/invariants/**`, `docs/operations/**`
+- **QA Verifier**
+  - Editable: `scripts/db/tests/**`, `scripts/audit/tests/**`, `docs/operations/**`
+  - Regulated: `scripts/audit/**`, `docs/operations/**`, `evidence/**`
+- **Architect**
+  - Editable: ADRs, architecture docs, planning
+  - Regulated: `docs/operations/**`, `docs/tasks/**`
 
 **Rule:** If `Touches` span multiple agent surfaces, split into multiple tasks with explicit dependencies.
 
@@ -110,6 +127,10 @@ When listing `Touches`, place new documents in canonical locations:
 - Phase-0 governance/contracts docs: `docs/PHASE0/**`
 - Authoritative ADRs: `docs/decisions/**`
 - Task plans/logs: `docs/plans/phase0/**`
+
+Lifecycle plan path mapping:
+- `phase: '0'` -> `docs/plans/phase0/<TASK_ID>/PLAN.md` and `EXEC_LOG.md`
+- `phase: '1'` -> `docs/plans/phase1/<TASK_ID>/PLAN.md` and `EXEC_LOG.md`
 
 Legacy locations still exist but are not default targets for new documents:
 - `docs/phase-0/**`

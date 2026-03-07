@@ -1,0 +1,10 @@
+allowed_keys:
+  - "0"
+  - "1"
+  - "2"
+  - "3"
+  - "4"
+forbidden_patterns:
+  - "^\\d+\\.\\d+$"
+forbidden_named_values:
+  - "Hardening"

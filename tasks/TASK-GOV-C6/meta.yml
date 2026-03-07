@@ -1,0 +1,37 @@
+schema_version: 1
+phase: '1'
+task_id: TASK-GOV-C6
+title: Canonicalize INVARIANTS_QUICK regeneration trigger rule
+owner_role: INVARIANTS_CURATOR
+status: completed
+depends_on:
+- TASK-GOV-C1
+touches:
+- .codex/rules/02-invariants-contract.md
+invariants:
+- INVARIANTS_QUICK_TRIGGER
+work:
+- Set manifest-change trigger and required regeneration command in canonical rule
+  file.
+acceptance_criteria:
+- Canonical rule references manifest trigger and regeneration command.
+verification:
+- rg -n "INVARIANTS_MANIFEST|generate_invariants_quick" .codex/rules/02-invariants-contract.md
+evidence:
+- evidence/phase1/governance_c6_invariants_quick.json
+failure_modes:
+- Evidence file missing
+- Verification command fails
+- Approval artifact missing for regulated-surface changes
+must_read:
+- docs/operations/AI_AGENT_OPERATION_MANUAL.md
+- docs/operations/TASK_CREATION_PROCESS.md
+- docs/operations/PHASE_LIFECYCLE.md
+- docs/operations/REMEDIATION_TRACE_WORKFLOW.md
+implementation_plan: docs/plans/phase1/TASK-GOV-C6/PLAN.md
+implementation_log: docs/plans/phase1/TASK-GOV-C6/EXEC_LOG.md
+notes: Completed on 2026-03-07T19:21:19.675685+00:00 after verification and evidence
+  emission.
+client: codex_cli
+assigned_agent: invariants_curator
+model: gpt-5

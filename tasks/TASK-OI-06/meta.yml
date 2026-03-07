@@ -1,0 +1,37 @@
+schema_version: 1
+phase: '1'
+task_id: TASK-OI-06
+title: Refresh TASK_CREATION_PROCESS quick-reference path list
+owner_role: QA_VERIFIER
+status: completed
+depends_on:
+- TASK-GOV-C5
+touches:
+- docs/operations/TASK_CREATION_PROCESS.md
+invariants:
+- TASK_PROCESS_PATH_AUTHORITY_ALIGNMENT
+work:
+- Update stale quick-reference list to match editable/regulated split model.
+acceptance_criteria:
+- Quick-reference paths match current path authority model.
+verification:
+- rg -n "Editable:|Regulated:" docs/operations/TASK_CREATION_PROCESS.md
+- rg -n "Step 1|Step 2|Step 3|Step 4|Step 5|Step 6|Step 7" docs/operations/TASK_CREATION_PROCESS.md
+evidence:
+- evidence/phase1/task_creation_process_path_alignment.json
+failure_modes:
+- Evidence file missing
+- Verification command fails
+- Approval artifact missing for regulated-surface changes
+must_read:
+- docs/operations/AI_AGENT_OPERATION_MANUAL.md
+- docs/operations/TASK_CREATION_PROCESS.md
+- docs/operations/PHASE_LIFECYCLE.md
+- docs/operations/REMEDIATION_TRACE_WORKFLOW.md
+implementation_plan: docs/plans/phase1/TASK-OI-06/PLAN.md
+implementation_log: docs/plans/phase1/TASK-OI-06/EXEC_LOG.md
+notes: Completed on 2026-03-07T19:25:05.209816+00:00 after verification and evidence
+  emission.
+client: codex_cli
+assigned_agent: qa_verifier
+model: gpt-5

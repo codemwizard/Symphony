@@ -1,0 +1,39 @@
+schema_version: 1
+phase: '1'
+task_id: TASK-GOV-C7
+title: Maintain lifecycle taxonomy machine rules and artifact/process maps
+owner_role: ARCHITECT
+status: completed
+depends_on:
+- TASK-GOV-C2C3
+touches:
+- docs/operations/rules/lifecycle_phase_taxonomy.yml
+- docs/operations/rules/lifecycle_phase_artifacts.yml
+- docs/operations/rules/lifecycle_phase_process.yml
+invariants:
+- LIFECYCLE_MACHINE_RULES
+work:
+- Validate allowed lifecycle key set and forbidden patterns are machine-enforced.
+acceptance_criteria:
+- All lifecycle rule files exist and parse successfully.
+verification:
+- python3 -c "import yaml; [yaml.safe_load(open(p)) for p in ['docs/operations/rules/lifecycle_phase_taxonomy.yml','docs/operations/rules/lifecycle_phase_artifacts.yml','docs/operations/rules/lifecycle_phase_process.yml']];
+  print('PASS')"
+evidence:
+- evidence/phase1/governance_c7_lifecycle_taxonomy.json
+failure_modes:
+- Evidence file missing
+- Verification command fails
+- Approval artifact missing for regulated-surface changes
+must_read:
+- docs/operations/AI_AGENT_OPERATION_MANUAL.md
+- docs/operations/TASK_CREATION_PROCESS.md
+- docs/operations/PHASE_LIFECYCLE.md
+- docs/operations/REMEDIATION_TRACE_WORKFLOW.md
+implementation_plan: docs/plans/phase1/TASK-GOV-C7/PLAN.md
+implementation_log: docs/plans/phase1/TASK-GOV-C7/EXEC_LOG.md
+notes: Completed on 2026-03-07T19:21:19.790225+00:00 after verification and evidence
+  emission.
+client: codex_cli
+assigned_agent: architect
+model: gpt-5

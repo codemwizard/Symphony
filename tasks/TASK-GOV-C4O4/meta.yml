@@ -1,0 +1,42 @@
+schema_version: 1
+phase: '1'
+task_id: TASK-GOV-C4O4
+title: Canonicalize remediation trace and DRD threshold semantics
+owner_role: QA_VERIFIER
+status: completed
+depends_on:
+- TASK-GOV-C1
+touches:
+- docs/operations/REMEDIATION_TRACE_WORKFLOW.md
+- docs/operations/AI_AGENT_OPERATION_MANUAL.md
+- docs/operations/TASK_CREATION_PROCESS.md
+invariants:
+- REMEDIATION_TRACE_CANONICAL
+work:
+- Set REMEDIATION_TRACE_WORKFLOW.md as canonical source for DRD triggers.
+- Use OR semantics for severity/time-attempt threshold firing.
+- Remove conflicting restatements from other governance docs.
+acceptance_criteria:
+- DRD trigger statement uses OR semantics consistently.
+- No independent DRD threshold table exists outside canonical workflow doc.
+verification:
+- rg -n "severity.*or.*time|attempt" docs/operations/REMEDIATION_TRACE_WORKFLOW.md
+- '! rg -n "DRD Trigger Table" docs/operations/AI_AGENT_OPERATION_MANUAL.md docs/operations/TASK_CREATION_PROCESS.md'
+evidence:
+- evidence/phase1/governance_c4o4_trace_triggers.json
+failure_modes:
+- Evidence file missing
+- Verification command fails
+- Approval artifact missing for regulated-surface changes
+must_read:
+- docs/operations/AI_AGENT_OPERATION_MANUAL.md
+- docs/operations/TASK_CREATION_PROCESS.md
+- docs/operations/PHASE_LIFECYCLE.md
+- docs/operations/REMEDIATION_TRACE_WORKFLOW.md
+implementation_plan: docs/plans/phase1/TASK-GOV-C4O4/PLAN.md
+implementation_log: docs/plans/phase1/TASK-GOV-C4O4/EXEC_LOG.md
+notes: Completed on 2026-03-07T19:25:04.137140+00:00 after verification and evidence
+  emission.
+client: codex_cli
+assigned_agent: qa_verifier
+model: gpt-5

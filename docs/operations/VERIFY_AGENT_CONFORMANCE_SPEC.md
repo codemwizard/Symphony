@@ -34,6 +34,9 @@
    - Required fields: `ai.ai_prompt_hash`, `ai.model_id`, `human_approval.approver_id`, `human_approval.approval_artifact_ref`, `human_approval.change_reason`.
 6. Approval markdown and sidecar must be cross-linked and value-consistent.
 7. Potential raw-PII patterns in approval metadata must fail closed.
+8. Stage-mode enforcement:
+   - `--mode=stage-a --branch=<branch>` requires branch-linked approval artifacts (`BRANCH-<branch-key>.md` + `.approval.json`), where `branch-key` is `<branch>` with `/` replaced by `-`.
+   - `--mode=stage-b --pr=<number>` requires PR-linked approval artifacts (`PR-<number>.md` + `.approval.json`).
 
 ## Failure Codes
 - `CONFORMANCE_001_CANONICAL_MISSING`
@@ -48,6 +51,10 @@
 - `CONFORMANCE_010_APPROVAL_SIDECAR_INVALID`
 - `CONFORMANCE_011_APPROVAL_MISMATCH`
 - `CONFORMANCE_012_PII_LEAK_DETECTED`
+- `CONFORMANCE_014_STAGE_A_BRANCH_MISSING`
+- `CONFORMANCE_015_STAGE_A_ARTIFACT_MISSING`
+- `CONFORMANCE_016_STAGE_B_PR_MISSING`
+- `CONFORMANCE_017_STAGE_B_ARTIFACT_MISSING`
 
 ## Output Contract
 - Evidence outputs (role-scoped, no shared legacy file):
@@ -68,3 +75,6 @@
 - Diff-aware mode is used when `BASE_REF` (or `GITHUB_BASE_REF`) is available.
 - Full-scan fallback is used when no diff base is available.
 - In both modes, conformance checks are fail-closed.
+- Explicit stage modes are supported:
+  - `--mode=stage-a --branch=<branch>`
+  - `--mode=stage-b --pr=<number>`

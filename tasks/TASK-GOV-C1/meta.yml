@@ -1,0 +1,44 @@
+schema_version: 1
+phase: '1'
+task_id: TASK-GOV-C1
+title: Establish policy precedence and remove apex-authority contradictions
+owner_role: ARCHITECT
+status: completed
+depends_on:
+- TASK-OI-08
+touches:
+- docs/operations/POLICY_PRECEDENCE.md
+- AGENTS.md
+- .agent/README.md
+invariants:
+- GOVERNANCE_PRECEDENCE
+work:
+- Reconcile authority hierarchy across governance docs.
+- Ensure apex claims defer to POLICY_PRECEDENCE.md.
+- Document domain-canonical rule override semantics.
+acceptance_criteria:
+- No contradictory apex-authority claim remains in active governance docs.
+- POLICY_PRECEDENCE.md includes broad-rank vs domain-canonical rule language.
+verification:
+- test -f docs/operations/POLICY_PRECEDENCE.md
+- test "$(rg -n "single source of truth" AGENTS.md .agent/README.md docs/operations
+  2>/dev/null | wc -l)" -eq 0
+- rg -n "domain-canonical|must defer" docs/operations/POLICY_PRECEDENCE.md
+evidence:
+- evidence/phase1/governance_c1_policy_precedence.json
+failure_modes:
+- Evidence file missing
+- Verification command fails
+- Approval artifact missing for regulated-surface changes
+must_read:
+- docs/operations/AI_AGENT_OPERATION_MANUAL.md
+- docs/operations/TASK_CREATION_PROCESS.md
+- docs/operations/PHASE_LIFECYCLE.md
+- docs/operations/REMEDIATION_TRACE_WORKFLOW.md
+implementation_plan: docs/plans/phase1/TASK-GOV-C1/PLAN.md
+implementation_log: docs/plans/phase1/TASK-GOV-C1/EXEC_LOG.md
+notes: Completed on 2026-03-07T19:21:19.450396+00:00 after verification and evidence
+  emission.
+client: codex_cli
+assigned_agent: architect
+model: gpt-5
