@@ -1,0 +1,50 @@
+schema_version: 1
+phase: '1'
+task_id: TASK-INVPROC-06
+title: Wire invariants process governance verifiers into CI and closeout
+owner_role: SECURITY_GUARDIAN
+status: ready
+depends_on:
+- TASK-INVPROC-02
+- TASK-INVPROC-03
+- TASK-INVPROC-04
+- TASK-INVPROC-05
+touches:
+- scripts/audit/run_invariants_fast_checks.sh
+- scripts/dev/pre_ci.sh
+- .github/workflows/invariants.yml
+- docs/invariants/INVARIANT_ENFORCEMENT_MATRIX.md
+- docs/tasks/PHASE1_GOVERNANCE_TASKS.md
+invariants:
+- INV-072
+- INV-081
+- INV-119
+work:
+- Wire new governance verifiers into fast checks and CI with fail-closed behavior.
+- Ensure local pre_ci and CI execute the same governance drift checks.
+- Update governance task index and evidence expectations for closeout visibility.
+acceptance_criteria:
+- New governance verifiers run in local pre_ci and CI mechanical path.
+- CI fails when governance docs drift from manifest/workflow/contracts.
+- Governance evidence artifacts are emitted and referenced in enforcement matrix.
+verification:
+- bash scripts/audit/run_invariants_fast_checks.sh
+- scripts/dev/pre_ci.sh
+- rg -n "verify_invariant_register_parity.sh|verify_ci_gate_spec_parity.sh|verify_regulator_pack_template.sh|verify_invariant_process_governance_links.sh" scripts/audit/run_invariants_fast_checks.sh .github/workflows/invariants.yml
+evidence:
+- evidence/phase1/invproc_06_ci_wiring_closeout.json
+failure_modes:
+- Evidence file missing
+- Verification command fails
+- Approval artifact missing for regulated-surface changes
+must_read:
+- scripts/dev/pre_ci.sh
+- .github/workflows/invariants.yml
+- docs/invariants/INVARIANT_ENFORCEMENT_MATRIX.md
+implementation_plan: docs/plans/phase1/TASK-INVPROC-06/PLAN.md
+implementation_log: docs/plans/phase1/TASK-INVPROC-06/EXEC_LOG.md
+notes: Planning scaffold completed and aligned to current governance path authority.
+  No implementation started.
+client: codex_cli
+assigned_agent: security_guardian
+model: gpt-5

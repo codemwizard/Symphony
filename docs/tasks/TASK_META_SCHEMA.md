@@ -2,6 +2,9 @@
 
 This schema is **normative** for all `tasks/**/meta.yml` files.
 
+Schema conformance does **not** imply execution-readiness. Execution-readiness is
+defined separately in `docs/operations/TASK_PACK_READINESS_SPEC.md`.
+
 ## Required Keys
 - `phase` (string, e.g. "0")
 - `task_id` (string, e.g. "TSK-P0-056")

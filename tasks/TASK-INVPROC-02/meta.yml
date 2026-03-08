@@ -1,0 +1,45 @@
+schema_version: 1
+phase: '1'
+task_id: TASK-INVPROC-02
+title: Implement invariant register to manifest parity verifier
+owner_role: INVARIANTS_CURATOR
+status: ready
+depends_on:
+- TASK-INVPROC-01
+touches:
+- scripts/audit/verify_invariant_register_parity.sh
+- docs/governance/invariant-register-v1.md
+- docs/invariants/INVARIANTS_MANIFEST.yml
+- scripts/audit/run_invariants_fast_checks.sh
+invariants:
+- INV-044
+- INV-071
+- INV-072
+work:
+- Build a fail-closed verifier that checks invariant register references against manifest IDs/status semantics.
+- Enforce canonical-source linkage from register to manifest and enforcement matrix.
+- Wire verifier into fast checks.
+acceptance_criteria:
+- Verifier fails when register references missing/invalid invariant IDs.
+- Verifier fails when register claims implemented controls with missing mechanical verifier references.
+- Fast checks execute verifier in local and CI parity paths.
+verification:
+- bash scripts/audit/verify_invariant_register_parity.sh
+- rg -n "verify_invariant_register_parity.sh" scripts/audit/run_invariants_fast_checks.sh
+evidence:
+- evidence/phase1/invproc_02_register_parity.json
+failure_modes:
+- Evidence file missing
+- Verification command fails
+- Approval artifact missing for regulated-surface changes
+must_read:
+- docs/invariants/INVARIANTS_MANIFEST.yml
+- docs/invariants/INVARIANT_ENFORCEMENT_MATRIX.md
+- docs/operations/TASK_CREATION_PROCESS.md
+implementation_plan: docs/plans/phase1/TASK-INVPROC-02/PLAN.md
+implementation_log: docs/plans/phase1/TASK-INVPROC-02/EXEC_LOG.md
+notes: Planning scaffold completed and aligned to current governance path authority.
+  No implementation started.
+client: codex_cli
+assigned_agent: invariants_curator
+model: gpt-5

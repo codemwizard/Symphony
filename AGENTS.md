@@ -30,18 +30,28 @@ Must run: `scripts/db/verify_invariants.sh`, `scripts/db/tests/test_db_functions
 Never: weaken fencing semantics, grants, or append-only guarantees.
 
 ### Invariants Curator Agent
-Allowed paths: `docs/invariants/**`, `docs/PHASE0/**`, `docs/tasks/**`, `scripts/audit/**`, `scripts/db/**`, `schema/**`, `.github/codex/prompts/invariants_review.md`
+Allowed paths: `docs/invariants/**`, `docs/governance/**`, `docs/architecture/**`, `docs/PHASE0/**`, `docs/tasks/**`, `scripts/audit/**`, `scripts/db/**`, `schema/**`, `.github/codex/prompts/invariants_review.md`
 Must run: `scripts/audit/run_invariants_fast_checks.sh`
 Never: mark implemented without enforcement + verification evidence.
 
 ### Security Guardian Agent
-Allowed paths: `scripts/security/**`, `scripts/audit/**`, `docs/security/**`, `.github/workflows/**`, `infra/**`, `src/**`, `packages/**`, `Dockerfile`
+Allowed paths: `scripts/security/**`, `scripts/audit/**`, `scripts/dev/pre_ci.sh`, `docs/security/**`, `docs/governance/**`, `docs/invariants/**`, `docs/tasks/**`, `.github/workflows/**`, `infra/**`, `src/**`, `packages/**`, `Dockerfile`
 Must run: `scripts/audit/run_security_fast_checks.sh`
 Never: broaden privileges, weaken SECURITY DEFINER hardening, add runtime DDL.
 
 ### Compliance Mapper Agent (non-blocking)
 Allowed paths: `docs/security/**`, `docs/architecture/**`, `evidence/**` (read-only)
 Produces control-matrix updates and gaps. No code changes.
+
+### QA Verifier
+Allowed paths: `scripts/db/tests/**`, `scripts/audit/tests/**`, `scripts/audit/**`, `docs/operations/**`, `docs/invariants/exceptions/**`, `.github/pull_request_template.md`, `evidence/**`
+Must run: `scripts/dev/pre_ci.sh`
+Never: alter runtime logic or convert advisory governance checks into fail-open behavior.
+
+### Architect
+Allowed paths: `docs/decisions/**`, `docs/architecture/**`, `docs/governance/**`, `docs/invariants/**`, `docs/operations/**`, `docs/tasks/**`, `docs/plans/**`, `approvals/**`, `AGENTS.md`, `.agent/**`, `.codex/**`
+Must run: `scripts/dev/pre_ci.sh`
+Never: bypass domain-canonical policy or claim implementation without verifier-backed evidence.
 
 ### Research Scout (scheduled)
 Allowed paths: `docs/research/**`, `docs/overview/**`
