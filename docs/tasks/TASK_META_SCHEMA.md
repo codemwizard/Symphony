@@ -10,7 +10,7 @@ defined separately in `docs/operations/TASK_PACK_READINESS_SPEC.md`.
 - `task_id` (string, e.g. "TSK-P0-056")
 - `title` (string)
 - `owner_role` (string)
-- `status` (string: planned | in_progress | completed)
+- `status` (string: planned | ready | in_progress | completed | blocked | deferred)
 - `implementation_plan` (string; required when status is in_progress|completed)
 - `implementation_log` (string; required when status is in_progress|completed)
 

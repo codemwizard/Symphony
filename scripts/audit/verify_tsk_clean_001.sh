@@ -45,7 +45,7 @@ while IFS= read -r -d '' meta; do
     continue
   fi
   case "$st" in
-    completed|in_progress|planned|blocked|deferred) ;;
+    completed|in_progress|planned|ready|blocked|deferred) ;;
     *)
       status="FAIL"
       invalid=$((invalid + 1))
