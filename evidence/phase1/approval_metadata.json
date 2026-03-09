@@ -5,14 +5,27 @@
   "change_scope": {
     "regulated_surfaces_touched": true,
     "paths_changed": [
+      ".github/workflows/invariants.yml",
       "approvals/2026-03-09/BRANCH-governance-invproc-06-oi10.approval.json",
       "approvals/2026-03-09/BRANCH-governance-invproc-06-oi10.md",
+      "docs/PHASE1/phase1_contract.yml",
+      "docs/invariants/INVARIANT_ENFORCEMENT_MATRIX.md",
+      "docs/operations/VERIFIER_EVIDENCE_REGISTRY.yml",
+      "docs/plans/phase1/TASK-INVPROC-06/EXEC_LOG.md",
+      "docs/plans/phase1/TASK-INVPROC-06/PLAN.md",
+      "docs/plans/phase1/TASK-OI-10/EXEC_LOG.md",
+      "docs/plans/phase1/TASK-OI-10/PLAN.md",
       "docs/plans/remediation/REM-2026-03-09_invproc-06-oi10-governance/EXEC_LOG.md",
       "docs/plans/remediation/REM-2026-03-09_invproc-06-oi10-governance/PLAN.md",
+      "docs/tasks/PHASE1_GOVERNANCE_TASKS.md",
+      "evidence/phase1/approval_metadata.json",
       "evidence/phase1/human_governance_review_signoff.json",
       "evidence/phase1/invproc_06_ci_wiring_closeout.json",
+      "scripts/audit/run_invariants_fast_checks.sh",
       "scripts/audit/verify_human_governance_review_signoff.sh",
-      "scripts/audit/verify_invproc_06_ci_wiring_closeout.sh"
+      "scripts/audit/verify_invproc_06_ci_wiring_closeout.sh",
+      "tasks/TASK-INVPROC-06/meta.yml",
+      "tasks/TASK-OI-10/meta.yml"
     ]
   },
   "ai": {
