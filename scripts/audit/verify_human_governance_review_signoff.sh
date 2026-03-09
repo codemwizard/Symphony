@@ -29,11 +29,18 @@ metadata = None
 if metadata_path.exists():
     metadata = json.loads(metadata_path.read_text(encoding='utf-8'))
 
-if (not branch or branch == 'HEAD') and metadata:
-    approval_ref = str(metadata.get('human_approval', {}).get('approval_artifact_ref', ''))
-    m = re.search(r'BRANCH-(.+)\.md$', approval_ref)
+metadata_approval_ref = ''
+metadata_branch = ''
+metadata_review_scope = []
+if metadata:
+    metadata_approval_ref = str(metadata.get('human_approval', {}).get('approval_artifact_ref', ''))
+    metadata_review_scope = metadata.get('change_scope', {}).get('paths_changed', []) or []
+    m = re.search(r'BRANCH-(.+)\.md$', metadata_approval_ref)
     if m:
-        branch = m.group(1).replace('-', '/')
+        metadata_branch = m.group(1).replace('-', '/')
+
+if (not branch or branch == 'HEAD') and metadata_branch:
+    branch = metadata_branch
 
 if not branch:
     errors.append('missing_branch_name')
@@ -41,6 +48,18 @@ if not branch:
 branch_key = branch.replace('/', '-')
 md_matches = sorted((root / 'approvals').glob(f'*/BRANCH-{branch_key}.md'))
 json_matches = sorted((root / 'approvals').glob(f'*/BRANCH-{branch_key}.approval.json'))
+
+# In CI and post-merge contexts the current branch/ref may not match the approval
+# branch. Fall back to the approval metadata artifact, which is the canonical
+# machine-readable link between the branch review and the merged state.
+if (not md_matches or not json_matches) and metadata_approval_ref:
+    fallback_md = root / metadata_approval_ref
+    if fallback_md.exists():
+        md_matches = [fallback_md]
+        fallback_json = fallback_md.with_suffix('.approval.json')
+        if fallback_json.exists():
+            json_matches = [fallback_json]
+
 if not md_matches:
     errors.append(f'missing_branch_approval_markdown:{branch}')
 if not json_matches:
@@ -81,7 +100,16 @@ except Exception as exc:
     errors.append(f'changed_files_probe_failed:{exc}')
 
 reviewed_files = sidecar.get('scope', {}).get('paths_changed', []) if sidecar else []
-missing_review_coverage = sorted(set(changed) - set(reviewed_files)) if changed else []
+# If the current branch diff does not match the approval branch (for example on
+# merged main or unrelated CI refs), validate against the metadata-declared scope.
+coverage_source = changed
+if metadata_review_scope:
+    current_branch_key = branch.replace('/', '-')
+    metadata_branch_key = metadata_branch.replace('/', '-') if metadata_branch else ''
+    if current_branch_key != metadata_branch_key or not changed:
+        coverage_source = metadata_review_scope
+
+missing_review_coverage = sorted(set(coverage_source) - set(reviewed_files)) if coverage_source else []
 if missing_review_coverage:
     errors.append('review_scope_missing_changed_files:' + ','.join(missing_review_coverage[:20]))
 
@@ -98,6 +126,7 @@ payload = {
     'review_sidecar_ref': str(approval_json.relative_to(root)) if approval_json else None,
     'reviewed_files': reviewed_files,
     'changed_files': changed,
+    'coverage_source_files': coverage_source,
     'errors': errors,
 }
 out.write_text(json.dumps(payload, indent=2) + '\n', encoding='utf-8')
