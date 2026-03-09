@@ -1,10 +1,10 @@
 {
   "baseline_date": "2026-03-09",
   "baseline_path": "/home/mwiza/workspace/Symphony/schema/baselines/2026-03-09/0001_baseline.sql",
-  "baseline_cutoff": "0070_cqrs_projection_roles_and_read_models.sql",
-  "normalized_schema_sha256": "a622d90e76deba15c6685ca8930fb89979bb239a6cc5839a65b54c246d791f0b",
+  "baseline_cutoff": "0071_phase2_internal_ledger_core.sql",
+  "normalized_schema_sha256": "51c1f9b84d451be6370c14ff5a63f23a4120b66ae2e367a2414c63229744483c",
   "pg_dump_version": "pg_dump (PostgreSQL) 18.2 (Debian 18.2-1.pgdg13+1)",
   "pg_server_version": "18.2 (Debian 18.2-1.pgdg13+1)",
   "dump_source": "container:symphony-postgres",
-  "generated_at_utc": "2026-03-09T02:53:37.469340+00:00"
+  "generated_at_utc": "2026-03-09T05:30:43.427945+00:00"
 }

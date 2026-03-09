@@ -1,0 +1,78 @@
+schema_version: 1
+phase: '2'
+task_id: LEDGER-002
+title: Internal proof jobs and tenant-safe accounting verification
+owner_role: SUPERVISOR
+status: completed
+depends_on:
+- S5-GATE-001
+- LEDGER-001
+touches:
+- tasks/LEDGER-002/meta.yml
+- docs/plans/phase2/LEDGER-002/PLAN.md
+- docs/plans/phase2/LEDGER-002/EXEC_LOG.md
+- docs/plans/phase2/SPRINT5_LANE_B_BLOCKERS.md
+- docs/architecture/adrs/ADR-0002-ledger-immutability-reconciliation.md
+- scripts/db/verify_ledger_zero_sum.sh
+- scripts/db/verify_posting_idempotency.sh
+- scripts/db/verify_no_cross_tenant_postings.sh
+- scripts/audit/validate_evidence.py
+- evidence/phase2/ledger_002_internal_proof_jobs.json
+- evidence/phase2/ledger_002_posting_idempotency.json
+- evidence/phase2/ledger_002_tenant_scope_checks.json
+- docs/operations/VERIFIER_EVIDENCE_REGISTRY.yml
+- docs/PHASE2/phase2_contract.yml
+invariants:
+- INV-158
+work:
+- Implement internal zero-sum proof jobs over posting sets.
+- Implement posting idempotency verifier jobs.
+- Implement tenant-scope proof queries and no-cross-tenant posting checks.
+- Keep evidence generation tied to the current internal evidence format only.
+acceptance_criteria:
+- Zero-sum proof jobs execute deterministically against posting sets and emit machine-readable
+  pass or fail output.
+- Posting idempotency verifiers fail on replay and duplicate-submission fixture cases.
+- Tenant-scope proof queries reject cross-tenant access and produce fail-closed results.
+- No-cross-tenant posting checks are enforced by verifiers and covered by negative tests.
+- Evidence JSON is emitted for internal proof jobs and tenant-scope checks using the current
+  internal evidence format.
+- No external verification artifact canonicalization is introduced in this task.
+- No legal-hold precedence, regulatory correction authority, or production signing or export
+  chain assumptions are introduced in this task.
+verification:
+- test -x scripts/db/verify_ledger_zero_sum.sh
+- test -x scripts/db/verify_posting_idempotency.sh
+- test -x scripts/db/verify_no_cross_tenant_postings.sh
+- bash scripts/db/verify_ledger_zero_sum.sh
+- bash scripts/db/verify_posting_idempotency.sh
+- bash scripts/db/verify_no_cross_tenant_postings.sh
+- python3 scripts/audit/validate_evidence.py --task LEDGER-002 --evidence evidence/phase2/ledger_002_internal_proof_jobs.json
+- python3 scripts/audit/validate_evidence.py --task LEDGER-002 --evidence evidence/phase2/ledger_002_posting_idempotency.json
+- python3 scripts/audit/validate_evidence.py --task LEDGER-002 --evidence evidence/phase2/ledger_002_tenant_scope_checks.json
+evidence:
+- evidence/phase2/ledger_002_internal_proof_jobs.json
+- evidence/phase2/ledger_002_posting_idempotency.json
+- evidence/phase2/ledger_002_tenant_scope_checks.json
+failure_modes:
+- Regulator-facing export format design appears in LEDGER-002 => BLOCKED_SCOPE_VIOLATION.
+- Legal-hold or correction governance semantics are introduced => BLOCKED_SCOPE_VIOLATION.
+- Production signing/export chain assumptions are introduced => BLOCKED_SCOPE_VIOLATION.
+- Internal proof jobs are defined without tenant isolation checks => FAIL_CLOSED.
+- Zero-sum proofs emit documentation-only output instead of machine-readable pass or fail
+  evidence => FAIL_CLOSED.
+- Idempotency verifier does not fail on replay fixtures => FAIL_CLOSED.
+must_read:
+- docs/operations/AI_AGENT_OPERATION_MANUAL.md
+- docs/architecture/adrs/ADR-0002-ledger-immutability-reconciliation.md
+- docs/security/KEY_MANAGEMENT_POLICY.md
+- docs/operations/VERIFIER_EVIDENCE_REGISTRY.yml
+implementation_plan: docs/plans/phase2/LEDGER-002/PLAN.md
+implementation_log: docs/plans/phase2/LEDGER-002/EXEC_LOG.md
+notes: 'Lane A only. This task is intentionally restricted to internal proofs and verifier
+  jobs. Any Lane B work requires explicit architecture approval before implementation.
+  This task must follow ADR-0002 for ledger immutability and reconciliation semantics and
+  must not invent external attestation or governance-authority behavior.'
+client: codex_cli
+assigned_agent: supervisor
+model: gpt-5-codex
