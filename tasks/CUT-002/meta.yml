@@ -1,0 +1,44 @@
+schema_version: 1
+phase: '1'
+task_id: CUT-002
+title: Query-surface trust-boundary enforcement after cutover
+owner_role: SUPERVISOR
+status: completed
+depends_on:
+- CUT-001
+- SEC-001
+touches:
+- tasks/CUT-002/meta.yml
+- docs/plans/phase1/CUT-002/PLAN.md
+- docs/plans/phase1/CUT-002/EXEC_LOG.md
+- docs/PHASE1/phase1_contract.yml
+- docs/operations/VERIFIER_EVIDENCE_REGISTRY.yml
+- scripts/audit/verify_cut_002_query_surface_boundary.sh
+- evidence/phase1/cut_002_query_surface_boundary.json
+invariants:
+- INV-153
+work:
+- Prove that public read surfaces stay handler-mediated and projection-backed after cutover.
+- Preserve tenant/evidence authorization boundaries on external GET routes.
+- Fail closed if read endpoints regress into direct operational-table logic in bootstrap surfaces.
+acceptance_criteria:
+- Public GET read surfaces remain routed through query handlers, not inline data access logic.
+- Admin mutation endpoints remain separate from public read surfaces.
+- Query-surface boundary verifier emits PASS evidence against current code.
+verification:
+- bash scripts/audit/verify_cut_002_query_surface_boundary.sh
+- python3 scripts/audit/validate_evidence.py --task CUT-002 --evidence evidence/phase1/cut_002_query_surface_boundary.json
+evidence:
+- evidence/phase1/cut_002_query_surface_boundary.json
+failure_modes:
+- Public read endpoint bypasses query handlers => FAIL_CLOSED.
+- Admin mutation and public read concerns collapse into same route pattern => FAIL_REVIEW.
+must_read:
+- docs/operations/AI_AGENT_OPERATION_MANUAL.md
+- docs/architecture/THREAT_MODEL.md
+implementation_plan: docs/plans/phase1/CUT-002/PLAN.md
+implementation_log: docs/plans/phase1/CUT-002/EXEC_LOG.md
+notes: 'Sprint 3 cutover task. Trust-boundary proof sits on top of the Sprint 2 CQRS split.'
+client: codex_cli
+assigned_agent: supervisor
+model: gpt-5-codex

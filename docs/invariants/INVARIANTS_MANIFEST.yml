@@ -1216,3 +1216,55 @@
   notes: >
     Requires evidence, escrow, dispute, and summary read surfaces to avoid direct reads
     from hot operational tables and to preserve tenant/object authorization on projected reads.
+
+- id: INV-152
+  aliases: ["I-PROJECTION-CUTOVER-COMPLETENESS-01"]
+  status: implemented
+  severity: P1
+  title: "Projection cutover completeness is one-shot and legacy references are removed"
+  owners: ["team-platform", "team-invariants"]
+  sla_days: 30
+  enforcement: "scripts/audit/verify_cut_001_one_shot_projection_cutover.sh"
+  verification: "scripts/audit/verify_cut_001_one_shot_projection_cutover.sh; evidence/phase1/cut_001_one_shot_projection_cutover.json"
+  notes: >
+    Requires projection cutover artifacts to be self-consistent, free of retired legacy
+    references, and explicitly anchored on the PROJ-002 external-read cutover proof.
+
+- id: INV-153
+  aliases: ["I-QUERY-SURFACE-BOUNDARY-POST-CUTOVER-01"]
+  status: implemented
+  severity: P1
+  title: "Post-cutover query surfaces remain handler-mediated and trust-bounded"
+  owners: ["team-platform", "team-security"]
+  sla_days: 30
+  enforcement: "scripts/audit/verify_cut_002_query_surface_boundary.sh"
+  verification: "scripts/audit/verify_cut_002_query_surface_boundary.sh; evidence/phase1/cut_002_query_surface_boundary.json"
+  notes: >
+    Requires public read routes to remain projection-backed through explicit query handlers
+    while admin mutation flows stay isolated from external read surfaces.
+
+- id: INV-154
+  aliases: ["I-PROJECTION-CUTOVER-RUNBOOK-01"]
+  status: implemented
+  severity: P1
+  title: "Projection cutover runbook defines deterministic stop and rollback discipline"
+  owners: ["team-platform", "team-invariants"]
+  sla_days: 30
+  enforcement: "scripts/audit/verify_cut_003_projection_cutover_runbook.sh"
+  verification: "scripts/audit/verify_cut_003_projection_cutover_runbook.sh; evidence/phase1/cut_003_projection_cutover_runbook.json"
+  notes: >
+    Requires an operator-usable Phase-1 cutover runbook with explicit preconditions,
+    sequence, stop conditions, rollback behavior, and evidence outputs.
+
+- id: INV-155
+  aliases: ["I-PROJECTION-CUTOVER-READINESS-GATE-01"]
+  status: implemented
+  severity: P1
+  title: "Projection cutover promotion is gated by aggregated prerequisite proof"
+  owners: ["team-platform", "team-invariants"]
+  sla_days: 30
+  enforcement: "scripts/audit/verify_cut_004_projection_cutover_gate.sh"
+  verification: "scripts/audit/verify_cut_004_projection_cutover_gate.sh; evidence/phase1/cut_004_projection_cutover_gate.json"
+  notes: >
+    Requires PROJ-001, PROJ-002, CUT-001, CUT-002, and CUT-003 proofs to be present and
+    passing before Sprint-3 cutover is considered ready for promotion.

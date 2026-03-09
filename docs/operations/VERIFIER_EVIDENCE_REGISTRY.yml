@@ -158,3 +158,15 @@ registry:
   scripts/audit/verify_tsk_p1_205.sh:
     emits:
     - evidence/phase1/tsk_p1_205__kpi_evidence_artifact_include_settlement_window.json
+  scripts/audit/verify_cut_001_one_shot_projection_cutover.sh:
+    emits:
+    - evidence/phase1/cut_001_one_shot_projection_cutover.json
+  scripts/audit/verify_cut_002_query_surface_boundary.sh:
+    emits:
+    - evidence/phase1/cut_002_query_surface_boundary.json
+  scripts/audit/verify_cut_003_projection_cutover_runbook.sh:
+    emits:
+    - evidence/phase1/cut_003_projection_cutover_runbook.json
+  scripts/audit/verify_cut_004_projection_cutover_gate.sh:
+    emits:
+    - evidence/phase1/cut_004_projection_cutover_gate.json

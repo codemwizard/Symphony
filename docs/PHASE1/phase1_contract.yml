@@ -503,3 +503,35 @@
   verifier: "scripts/audit/verify_no_hot_table_external_reads.sh"
   evidence_path: "evidence/phase1/proj_002_external_query_cutover.json"
   notes: "PROJ-002 requires projection-backed external read APIs with no direct hot-table reads."
+
+- invariant_id: "INV-152"
+  status: "implemented"
+  required: true
+  gate_id: "INT-G32"
+  verifier: "scripts/audit/verify_cut_001_one_shot_projection_cutover.sh"
+  evidence_path: "evidence/phase1/cut_001_one_shot_projection_cutover.json"
+  notes: "CUT-001 requires one-shot projection cutover completeness and removal of retired legacy references."
+
+- invariant_id: "INV-153"
+  status: "implemented"
+  required: true
+  gate_id: "INT-G32"
+  verifier: "scripts/audit/verify_cut_002_query_surface_boundary.sh"
+  evidence_path: "evidence/phase1/cut_002_query_surface_boundary.json"
+  notes: "CUT-002 requires handler-mediated public query routes and preserved admin/public trust boundaries after cutover."
+
+- invariant_id: "INV-154"
+  status: "implemented"
+  required: true
+  gate_id: "INT-G32"
+  verifier: "scripts/audit/verify_cut_003_projection_cutover_runbook.sh"
+  evidence_path: "evidence/phase1/cut_003_projection_cutover_runbook.json"
+  notes: "CUT-003 requires deterministic cutover runbook, stop conditions, rollback discipline, and evidence outputs."
+
+- invariant_id: "INV-155"
+  status: "implemented"
+  required: true
+  gate_id: "INT-G32"
+  verifier: "scripts/audit/verify_cut_004_projection_cutover_gate.sh"
+  evidence_path: "evidence/phase1/cut_004_projection_cutover_gate.json"
+  notes: "CUT-004 requires aggregated prerequisite proof before projection cutover promotion."

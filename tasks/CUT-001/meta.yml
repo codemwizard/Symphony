@@ -1,0 +1,43 @@
+schema_version: 1
+phase: '1'
+task_id: CUT-001
+title: One-shot projection cutover completeness
+owner_role: SUPERVISOR
+status: completed
+depends_on:
+- PROJ-002
+touches:
+- tasks/CUT-001/meta.yml
+- docs/plans/phase1/CUT-001/PLAN.md
+- docs/plans/phase1/CUT-001/EXEC_LOG.md
+- docs/PHASE1/phase1_contract.yml
+- docs/operations/VERIFIER_EVIDENCE_REGISTRY.yml
+- scripts/audit/verify_cut_001_one_shot_projection_cutover.sh
+- evidence/phase1/cut_001_one_shot_projection_cutover.json
+invariants:
+- INV-152
+work:
+- Enforce one-shot projection cutover semantics for Phase-1 query/read artifacts.
+- Fail closed if legacy projection contract references survive in active task, plan, verifier, or contract surfaces.
+- Require PROJ-002 projection-backed reads proof as a prerequisite to cutover completion.
+acceptance_criteria:
+- Projection cutover task, plan, verifier, and contract references are complete and self-consistent.
+- No banned legacy contract references remain in active Phase-1 projection cutover artifacts.
+- PROJ-002 verifier passes as a prerequisite for CUT-001 completion.
+verification:
+- bash scripts/audit/verify_cut_001_one_shot_projection_cutover.sh
+- python3 scripts/audit/validate_evidence.py --task CUT-001 --evidence evidence/phase1/cut_001_one_shot_projection_cutover.json
+evidence:
+- evidence/phase1/cut_001_one_shot_projection_cutover.json
+failure_modes:
+- Legacy query/read contract references remain after cutover => FAIL_CLOSED.
+- Projection cutover is declared complete without PROJ-002 proof => FAIL_CLOSED.
+must_read:
+- docs/operations/AI_AGENT_OPERATION_MANUAL.md
+- docs/operations/AGENTIC_SDLC_PHASE1_POLICY.md
+implementation_plan: docs/plans/phase1/CUT-001/PLAN.md
+implementation_log: docs/plans/phase1/CUT-001/EXEC_LOG.md
+notes: 'Sprint 3 cutover task. Focus is contract and verifier completeness, not new query-surface features.'
+client: codex_cli
+assigned_agent: supervisor
+model: gpt-5-codex

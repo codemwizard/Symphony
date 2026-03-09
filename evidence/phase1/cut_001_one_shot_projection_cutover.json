@@ -1,0 +1,10 @@
+{
+  "check_id": "CUT-001-ONE-SHOT-PROJECTION-CUTOVER",
+  "task_id": "CUT-001",
+  "timestamp_utc": "2026-03-09T03:41:08Z",
+  "git_sha": "c0762e64cee7df12431d9296466726444e1bf60a",
+  "schema_fingerprint": "a006b8fc1a4b532261f0b62fb34bf285591e19e3a2b52bd90242da261e96a6e7",
+  "status": "PASS",
+  "legacy_refs_removed": true,
+  "proj_002_prereq_pass": true
+}
