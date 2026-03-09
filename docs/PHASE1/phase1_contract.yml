@@ -471,3 +471,35 @@
   verifier: "scripts/db/verify_command_lifecycle_integrity.sh"
   evidence_path: "evidence/command_integrity/cmd_002_command_lifecycle_integrity.json"
   notes: "INV-147 requires deterministic command lifecycle and dispatch-eligibility proof."
+
+- invariant_id: "INV-148"
+  status: "implemented"
+  required: true
+  gate_id: "INT-G30"
+  verifier: "scripts/audit/verify_cqrs_code_boundary.sh"
+  evidence_path: "evidence/phase1/cqrs_001_code_separation.json"
+  notes: "CQRS-001 requires structural separation of command and query logic."
+
+- invariant_id: "INV-149"
+  status: "implemented"
+  required: true
+  gate_id: "INT-G30"
+  verifier: "scripts/db/verify_command_query_role_separation.sh"
+  evidence_path: "evidence/phase1/cqrs_002_db_role_separation.json"
+  notes: "CQRS-002 requires command/query DB role isolation and projection-scoped query access."
+
+- invariant_id: "INV-150"
+  status: "implemented"
+  required: true
+  gate_id: "INT-G31"
+  verifier: "scripts/db/verify_projection_freshness_and_scope.sh"
+  evidence_path: "evidence/phase1/proj_001_initial_projection_set.json"
+  notes: "PROJ-001 requires deterministic, rebuildable, freshness-aware initial projection set."
+
+- invariant_id: "INV-151"
+  status: "implemented"
+  required: true
+  gate_id: "INT-G31"
+  verifier: "scripts/audit/verify_no_hot_table_external_reads.sh"
+  evidence_path: "evidence/phase1/proj_002_external_query_cutover.json"
+  notes: "PROJ-002 requires projection-backed external read APIs with no direct hot-table reads."

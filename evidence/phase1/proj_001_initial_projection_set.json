@@ -1,0 +1,10 @@
+{
+  "check_id": "PROJ-001-PROJECTION-FRESHNESS",
+  "task_id": "PROJ-001",
+  "timestamp_utc": "2026-03-09T02:35:26Z",
+  "git_sha": "21a2cf0c0d6ac8c06085f5a1a0db1d43e80a09cf",
+  "schema_fingerprint": "8a1629a2bf1d9ff4092ff1a18ab99c243549e69d049c4742baccd214781a4597",
+  "status": "PASS",
+  "pass": true,
+  "freshness_visible": true
+}

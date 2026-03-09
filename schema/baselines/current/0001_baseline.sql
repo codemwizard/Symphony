@@ -2,7 +2,7 @@
 -- PostgreSQL database dump
 --
 
-\restrict O9mJj0A11m1baHAq11zLRl5mZqAcIuNMSCmpuzrsXB7MmFfw6hfYFYGMDNhCi0G
+\restrict ARXba0ONXE9yo0M5iw77bEM6Bc0xsEX3D08ODOah9vJRx2VW3KR0SQwD76yKbHt
 
 -- Dumped from database version 18.2 (Debian 18.2-1.pgdg13+1)
 -- Dumped by pg_dump version 18.2 (Debian 18.2-1.pgdg13+1)
@@ -3437,6 +3437,35 @@ ALTER TABLE ONLY public.escrow_reservations FORCE ROW LEVEL SECURITY;
 
 
 --
+-- Name: escrow_summary_projection; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.escrow_summary_projection (
+    escrow_id uuid NOT NULL,
+    tenant_id uuid NOT NULL,
+    program_id uuid,
+    state text NOT NULL,
+    authorized_amount_minor bigint DEFAULT 0 NOT NULL,
+    currency_code character(3) DEFAULT 'USD'::bpchar NOT NULL,
+    as_of_utc timestamp with time zone DEFAULT now() NOT NULL,
+    projection_version text DEFAULT 'phase1-cqrs-v1'::text NOT NULL
+);
+
+
+--
+-- Name: evidence_bundle_projection; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.evidence_bundle_projection (
+    instruction_id text NOT NULL,
+    tenant_id uuid NOT NULL,
+    projection_payload jsonb NOT NULL,
+    as_of_utc timestamp with time zone DEFAULT now() NOT NULL,
+    projection_version text DEFAULT 'phase1-cqrs-v1'::text NOT NULL
+);
+
+
+--
 -- Name: evidence_pack_items; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -3535,6 +3564,20 @@ CREATE TABLE public.hsm_fail_closed_events (
     blocked_action text NOT NULL,
     error_code text NOT NULL,
     observed_at timestamp with time zone DEFAULT now() NOT NULL
+);
+
+
+--
+-- Name: incident_case_projection; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.incident_case_projection (
+    incident_id uuid NOT NULL,
+    tenant_id uuid NOT NULL,
+    status text NOT NULL,
+    projection_payload jsonb NOT NULL,
+    as_of_utc timestamp with time zone DEFAULT now() NOT NULL,
+    projection_version text DEFAULT 'phase1-cqrs-v1'::text NOT NULL
 );
 
 
@@ -3645,6 +3688,27 @@ CREATE TABLE public.instruction_settlement_finality (
     CONSTRAINT instruction_settlement_finality_rail_message_type_check CHECK ((rail_message_type = ANY (ARRAY['pacs.008'::text, 'camt.056'::text]))),
     CONSTRAINT instruction_settlement_finality_self_reversal_chk CHECK (((reversal_of_instruction_id IS NULL) OR (reversal_of_instruction_id <> instruction_id))),
     CONSTRAINT instruction_settlement_finality_shape_chk CHECK ((((final_state = 'SETTLED'::text) AND (reversal_of_instruction_id IS NULL) AND (rail_message_type = 'pacs.008'::text)) OR ((final_state = 'REVERSED'::text) AND (reversal_of_instruction_id IS NOT NULL) AND (rail_message_type = 'camt.056'::text))))
+);
+
+
+--
+-- Name: instruction_status_projection; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.instruction_status_projection (
+    instruction_id text NOT NULL,
+    tenant_id uuid NOT NULL,
+    participant_id text NOT NULL,
+    rail_type text NOT NULL,
+    status text NOT NULL,
+    attestation_id uuid NOT NULL,
+    outbox_id uuid NOT NULL,
+    payload_hash text NOT NULL,
+    amount_minor bigint DEFAULT 0 NOT NULL,
+    currency_code character(3) DEFAULT 'ZMW'::bpchar NOT NULL,
+    correlation_id uuid,
+    as_of_utc timestamp with time zone DEFAULT now() NOT NULL,
+    projection_version text DEFAULT 'phase1-cqrs-v1'::text NOT NULL
 );
 
 
@@ -4180,6 +4244,20 @@ CREATE TABLE public.policy_versions (
     CONSTRAINT ck_policy_active_has_no_grace_expiry CHECK (((status <> 'ACTIVE'::public.policy_version_status) OR (grace_expires_at IS NULL))),
     CONSTRAINT ck_policy_checksum_nonempty CHECK ((length(checksum) > 0)),
     CONSTRAINT ck_policy_grace_requires_expiry CHECK (((status <> 'GRACE'::public.policy_version_status) OR (grace_expires_at IS NOT NULL)))
+);
+
+
+--
+-- Name: program_member_summary_projection; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.program_member_summary_projection (
+    tenant_id uuid NOT NULL,
+    program_id uuid NOT NULL,
+    active_member_count bigint DEFAULT 0 NOT NULL,
+    verified_member_count bigint DEFAULT 0 CONSTRAINT program_member_summary_projectio_verified_member_count_not_null NOT NULL,
+    as_of_utc timestamp with time zone DEFAULT now() NOT NULL,
+    projection_version text DEFAULT 'phase1-cqrs-v1'::text NOT NULL
 );
 
 
@@ -4901,6 +4979,22 @@ ALTER TABLE ONLY public.escrow_reservations
 
 
 --
+-- Name: escrow_summary_projection escrow_summary_projection_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.escrow_summary_projection
+    ADD CONSTRAINT escrow_summary_projection_pkey PRIMARY KEY (escrow_id);
+
+
+--
+-- Name: evidence_bundle_projection evidence_bundle_projection_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.evidence_bundle_projection
+    ADD CONSTRAINT evidence_bundle_projection_pkey PRIMARY KEY (instruction_id);
+
+
+--
 -- Name: evidence_pack_items evidence_pack_items_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -4965,6 +5059,14 @@ ALTER TABLE ONLY public.hsm_fail_closed_events
 
 
 --
+-- Name: incident_case_projection incident_case_projection_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.incident_case_projection
+    ADD CONSTRAINT incident_case_projection_pkey PRIMARY KEY (incident_id);
+
+
+--
 -- Name: incident_events incident_events_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -5018,6 +5120,14 @@ ALTER TABLE ONLY public.instruction_finality_conflicts
 
 ALTER TABLE ONLY public.instruction_settlement_finality
     ADD CONSTRAINT instruction_settlement_finality_pkey PRIMARY KEY (finality_id);
+
+
+--
+-- Name: instruction_status_projection instruction_status_projection_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.instruction_status_projection
+    ADD CONSTRAINT instruction_status_projection_pkey PRIMARY KEY (instruction_id);
 
 
 --
@@ -5330,6 +5440,14 @@ ALTER TABLE ONLY public.policy_bundles
 
 ALTER TABLE ONLY public.policy_versions
     ADD CONSTRAINT policy_versions_pkey PRIMARY KEY (version);
+
+
+--
+-- Name: program_member_summary_projection program_member_summary_projection_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.program_member_summary_projection
+    ADD CONSTRAINT program_member_summary_projection_pkey PRIMARY KEY (tenant_id, program_id);
 
 
 --
@@ -6672,6 +6790,38 @@ ALTER TABLE ONLY public.escrow_reservations
 
 
 --
+-- Name: escrow_summary_projection escrow_summary_projection_escrow_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.escrow_summary_projection
+    ADD CONSTRAINT escrow_summary_projection_escrow_id_fkey FOREIGN KEY (escrow_id) REFERENCES public.escrow_accounts(escrow_id) ON DELETE RESTRICT;
+
+
+--
+-- Name: escrow_summary_projection escrow_summary_projection_program_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.escrow_summary_projection
+    ADD CONSTRAINT escrow_summary_projection_program_id_fkey FOREIGN KEY (program_id) REFERENCES public.programs(program_id) ON DELETE RESTRICT;
+
+
+--
+-- Name: escrow_summary_projection escrow_summary_projection_tenant_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.escrow_summary_projection
+    ADD CONSTRAINT escrow_summary_projection_tenant_id_fkey FOREIGN KEY (tenant_id) REFERENCES public.tenants(tenant_id) ON DELETE RESTRICT;
+
+
+--
+-- Name: evidence_bundle_projection evidence_bundle_projection_tenant_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.evidence_bundle_projection
+    ADD CONSTRAINT evidence_bundle_projection_tenant_id_fkey FOREIGN KEY (tenant_id) REFERENCES public.tenants(tenant_id) ON DELETE RESTRICT;
+
+
+--
 -- Name: evidence_pack_items evidence_pack_items_pack_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -6712,6 +6862,22 @@ ALTER TABLE ONLY public.external_proofs
 
 
 --
+-- Name: incident_case_projection incident_case_projection_incident_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.incident_case_projection
+    ADD CONSTRAINT incident_case_projection_incident_id_fkey FOREIGN KEY (incident_id) REFERENCES public.regulatory_incidents(incident_id) ON DELETE RESTRICT;
+
+
+--
+-- Name: incident_case_projection incident_case_projection_tenant_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.incident_case_projection
+    ADD CONSTRAINT incident_case_projection_tenant_id_fkey FOREIGN KEY (tenant_id) REFERENCES public.tenants(tenant_id) ON DELETE RESTRICT;
+
+
+--
 -- Name: incident_events incident_events_incident_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -6741,6 +6907,22 @@ ALTER TABLE ONLY public.ingress_attestations
 
 ALTER TABLE ONLY public.instruction_settlement_finality
     ADD CONSTRAINT instruction_settlement_finality_reversal_fk FOREIGN KEY (reversal_of_instruction_id) REFERENCES public.instruction_settlement_finality(instruction_id) DEFERRABLE;
+
+
+--
+-- Name: instruction_status_projection instruction_status_projection_attestation_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.instruction_status_projection
+    ADD CONSTRAINT instruction_status_projection_attestation_id_fkey FOREIGN KEY (attestation_id) REFERENCES public.ingress_attestations(attestation_id) ON DELETE RESTRICT;
+
+
+--
+-- Name: instruction_status_projection instruction_status_projection_tenant_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.instruction_status_projection
+    ADD CONSTRAINT instruction_status_projection_tenant_id_fkey FOREIGN KEY (tenant_id) REFERENCES public.tenants(tenant_id) ON DELETE RESTRICT;
 
 
 --
@@ -6893,6 +7075,22 @@ ALTER TABLE ONLY public.pii_purge_events
 
 ALTER TABLE ONLY public.pii_vault_records
     ADD CONSTRAINT pii_vault_records_purge_request_fk FOREIGN KEY (purge_request_id) REFERENCES public.pii_purge_requests(purge_request_id) DEFERRABLE;
+
+
+--
+-- Name: program_member_summary_projection program_member_summary_projection_program_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.program_member_summary_projection
+    ADD CONSTRAINT program_member_summary_projection_program_id_fkey FOREIGN KEY (program_id) REFERENCES public.programs(program_id) ON DELETE RESTRICT;
+
+
+--
+-- Name: program_member_summary_projection program_member_summary_projection_tenant_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.program_member_summary_projection
+    ADD CONSTRAINT program_member_summary_projection_tenant_id_fkey FOREIGN KEY (tenant_id) REFERENCES public.tenants(tenant_id) ON DELETE RESTRICT;
 
 
 --
@@ -7330,5 +7528,5 @@ ALTER TABLE public.tenants ENABLE ROW LEVEL SECURITY;
 -- PostgreSQL database dump complete
 --
 
-\unrestrict O9mJj0A11m1baHAq11zLRl5mZqAcIuNMSCmpuzrsXB7MmFfw6hfYFYGMDNhCi0G
+\unrestrict ARXba0ONXE9yo0M5iw77bEM6Bc0xsEX3D08ODOah9vJRx2VW3KR0SQwD76yKbHt
 

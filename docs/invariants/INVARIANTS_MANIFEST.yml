@@ -1164,3 +1164,55 @@
   notes: >
     Enforces deterministic command lifecycle, explicit held vs dispatch-eligible semantics,
     and idempotent resubmission behavior across pending/attempt/terminal states.
+
+- id: INV-148
+  aliases: ["I-CQRS-CODE-BOUNDARY-01"]
+  status: implemented
+  severity: P1
+  title: "Command and query logic are structurally separated"
+  owners: ["team-architecture", "team-platform"]
+  sla_days: 30
+  enforcement: "scripts/audit/verify_cqrs_code_boundary.sh"
+  verification: "scripts/audit/verify_cqrs_code_boundary.sh; evidence/phase1/cqrs_001_code_separation.json"
+  notes: >
+    Requires command handlers and query handlers to be physically separated, with no
+    new business logic added to monolithic bootstrap files.
+
+- id: INV-149
+  aliases: ["I-CQRS-DB-ROLE-SEPARATION-01"]
+  status: implemented
+  severity: P1
+  title: "Command-side and query-side database roles are isolated"
+  owners: ["team-db", "team-security", "team-platform"]
+  sla_days: 30
+  enforcement: "scripts/db/verify_command_query_role_separation.sh"
+  verification: "scripts/db/verify_command_query_role_separation.sh; evidence/phase1/cqrs_002_db_role_separation.json"
+  notes: >
+    Requires command-side roles to own mutation and query-side roles to remain read-only
+    and projection-scoped for externally consumed summaries.
+
+- id: INV-150
+  aliases: ["I-PROJECTION-DETERMINISM-01"]
+  status: implemented
+  severity: P1
+  title: "Initial projection set is deterministic, rebuildable, and freshness-aware"
+  owners: ["team-platform", "team-architecture"]
+  sla_days: 30
+  enforcement: "scripts/db/verify_projection_freshness_and_scope.sh"
+  verification: "scripts/db/verify_projection_freshness_and_scope.sh; evidence/phase1/proj_001_initial_projection_set.json"
+  notes: >
+    Requires core projection schemas to be deterministic, rebuildable, tenant-scoped,
+    and to expose freshness metadata such as as_of_utc and projection_version.
+
+- id: INV-151
+  aliases: ["I-EXTERNAL-READS-PROJECTION-BACKED-01"]
+  status: implemented
+  severity: P1
+  title: "Externally consumed read APIs are projection-backed"
+  owners: ["team-platform", "team-security"]
+  sla_days: 30
+  enforcement: "scripts/audit/verify_no_hot_table_external_reads.sh"
+  verification: "scripts/audit/verify_no_hot_table_external_reads.sh; evidence/phase1/proj_002_external_query_cutover.json"
+  notes: >
+    Requires evidence, escrow, dispute, and summary read surfaces to avoid direct reads
+    from hot operational tables and to preserve tenant/object authorization on projected reads.
