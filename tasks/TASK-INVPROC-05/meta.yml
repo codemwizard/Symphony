@@ -3,7 +3,7 @@ phase: '1'
 task_id: TASK-INVPROC-05
 title: Bind PR and exception governance to invariant process contracts
 owner_role: QA_VERIFIER
-status: ready
+status: completed
 depends_on:
 - TASK-INVPROC-01
 touches:
@@ -38,8 +38,7 @@ must_read:
 - docs/operations/PHASE1_PILOT_ONBOARDING_CHECKLIST.md
 implementation_plan: docs/plans/phase1/TASK-INVPROC-05/PLAN.md
 implementation_log: docs/plans/phase1/TASK-INVPROC-05/EXEC_LOG.md
-notes: Planning scaffold completed and aligned to current governance path authority.
-  No implementation started.
+notes: Bound PR, exception-template, and onboarding-checklist governance to invariant-process contracts with a fail-closed verifier. Evidence emitted at evidence/phase1/invproc_05_governance_links.json.
 client: codex_cli
 assigned_agent: qa_verifier
 model: gpt-5

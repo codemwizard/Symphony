@@ -25,9 +25,9 @@ This index tracks governance rewrite tasks derived from `Symphony_Governance_Imp
 | TASK-OI-09 | SECURITY_GUARDIAN | completed | docs/plans/phase1/TASK-OI-09/PLAN.md | docs/plans/phase1/TASK-OI-09/EXEC_LOG.md |
 | TASK-OI-10 | ARCHITECT | ready | docs/plans/phase1/TASK-OI-10/PLAN.md | docs/plans/phase1/TASK-OI-10/EXEC_LOG.md |
 | TASK-OI-11 | QA_VERIFIER | completed | docs/plans/phase1/TASK-OI-11/PLAN.md | docs/plans/phase1/TASK-OI-11/EXEC_LOG.md |
-| TASK-INVPROC-01 | ARCHITECT | ready | docs/plans/phase1/TASK-INVPROC-01/PLAN.md | docs/plans/phase1/TASK-INVPROC-01/EXEC_LOG.md |
-| TASK-INVPROC-02 | INVARIANTS_CURATOR | ready | docs/plans/phase1/TASK-INVPROC-02/PLAN.md | docs/plans/phase1/TASK-INVPROC-02/EXEC_LOG.md |
-| TASK-INVPROC-03 | SECURITY_GUARDIAN | ready | docs/plans/phase1/TASK-INVPROC-03/PLAN.md | docs/plans/phase1/TASK-INVPROC-03/EXEC_LOG.md |
-| TASK-INVPROC-04 | INVARIANTS_CURATOR | ready | docs/plans/phase1/TASK-INVPROC-04/PLAN.md | docs/plans/phase1/TASK-INVPROC-04/EXEC_LOG.md |
-| TASK-INVPROC-05 | QA_VERIFIER | ready | docs/plans/phase1/TASK-INVPROC-05/PLAN.md | docs/plans/phase1/TASK-INVPROC-05/EXEC_LOG.md |
+| TASK-INVPROC-01 | ARCHITECT | completed | docs/plans/phase1/TASK-INVPROC-01/PLAN.md | docs/plans/phase1/TASK-INVPROC-01/EXEC_LOG.md |
+| TASK-INVPROC-02 | INVARIANTS_CURATOR | completed | docs/plans/phase1/TASK-INVPROC-02/PLAN.md | docs/plans/phase1/TASK-INVPROC-02/EXEC_LOG.md |
+| TASK-INVPROC-03 | SECURITY_GUARDIAN | completed | docs/plans/phase1/TASK-INVPROC-03/PLAN.md | docs/plans/phase1/TASK-INVPROC-03/EXEC_LOG.md |
+| TASK-INVPROC-04 | INVARIANTS_CURATOR | completed | docs/plans/phase1/TASK-INVPROC-04/PLAN.md | docs/plans/phase1/TASK-INVPROC-04/EXEC_LOG.md |
+| TASK-INVPROC-05 | QA_VERIFIER | completed | docs/plans/phase1/TASK-INVPROC-05/PLAN.md | docs/plans/phase1/TASK-INVPROC-05/EXEC_LOG.md |
 | TASK-INVPROC-06 | SECURITY_GUARDIAN | ready | docs/plans/phase1/TASK-INVPROC-06/PLAN.md | docs/plans/phase1/TASK-INVPROC-06/EXEC_LOG.md |

@@ -14,6 +14,8 @@ An invariant is considered implemented only when all are true:
 4. Deterministic evidence artifact is emitted.
 
 ## Canonical Sources
+- `docs/operations/AI_AGENT_OPERATION_MANUAL.md`
+- `docs/operations/POLICY_PRECEDENCE.md`
 - `docs/invariants/INVARIANTS_MANIFEST.yml`
 - `docs/invariants/INVARIANTS_PROCESS.md`
 - `docs/invariants/INVARIANT_ENFORCEMENT_MATRIX.md`
@@ -79,3 +81,10 @@ Current examples that remain non-promotable until closed: `INV-009`, `INV-039`.
 ## Governance Note
 This register is taxonomy/authority. Detailed per-invariant command and evidence mapping is maintained in:
 `docs/invariants/INVARIANT_ENFORCEMENT_MATRIX.md`.
+
+This register is a derivative governance baseline. It must defer to:
+- `docs/operations/AI_AGENT_OPERATION_MANUAL.md` for broad agent authority and approval rules.
+- `docs/operations/POLICY_PRECEDENCE.md` for conflict handling and domain-canonical precedence.
+- `docs/invariants/INVARIANTS_MANIFEST.yml` for invariant identity and status.
+- `docs/invariants/INVARIANT_ENFORCEMENT_MATRIX.md` for exact verifier and evidence mappings.
+- `.github/workflows/invariants.yml` and `scripts/dev/pre_ci.sh` for CI/local gate semantics.

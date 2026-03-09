@@ -1,0 +1,28 @@
+{
+  "check_id": "INVPROC-04-REGULATOR-PACK-TEMPLATE",
+  "timestamp_utc": "2026-03-09T08:27:25Z",
+  "git_sha": "0e8c478f13f271670633e382be1b994168f0faf9",
+  "schema_fingerprint": "48e1f2462b2d811f14d424ac529ee731e692f992414abfdbc35c60170590957b",
+  "status": "PASS",
+  "template_invariants": [],
+  "template_evidence_paths": [
+    "evidence/phase0/control_planes_drift.json",
+    "evidence/phase0/pii_leakage_payloads.json",
+    "evidence/phase0/security_dotnet_deps_audit.json",
+    "evidence/phase0/security_insecure_patterns.json",
+    "evidence/phase0/security_secrets_scan.json",
+    "evidence/phase0/three_pillars_doc.json",
+    "evidence/phase1/agent_conformance_architect.json",
+    "evidence/phase1/agent_conformance_implementer.json",
+    "evidence/phase1/agent_conformance_policy_guardian.json",
+    "evidence/phase1/approval_metadata.json",
+    "evidence/phase1/authz_tenant_boundary.json",
+    "evidence/phase1/exception_case_pack_generation.json",
+    "evidence/phase1/instruction_finality_invariant.json",
+    "evidence/phase1/kpis.json",
+    "evidence/phase1/pii_decoupling_invariant.json",
+    "evidence/phase1/pilot_onboarding_readiness.json",
+    "evidence/phase1/tsk_p1_esc_002__escrow_invariants_cross_tenant_protections.json"
+  ],
+  "errors": []
+}

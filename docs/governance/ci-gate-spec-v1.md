@@ -49,11 +49,15 @@ Fail mode: BLOCK MERGE.
 Workflow job: `phase0_evidence_gate`  
 Purpose: ensure evidence contract requirements are satisfied and status semantics remain valid.
 
+Primary commands/hook paths:
+- `scripts/ci/check_evidence_required.sh`
+- `scripts/ci/verify_phase0_contract_evidence_status_parity.sh`
+
 Fail mode: BLOCK MERGE.
 
 ### Gate E: Local Pre-CI Parity
 Local runner: `scripts/dev/pre_ci.sh`  
-Purpose: catch CI failures before push with ordered checks and DB verification parity.
+Purpose: catch CI failures before push with ordered checks, DB verification parity, and phase-gated closeout checks.
 
 Fail mode: STOP LOCAL PUSH/WORKFLOW ADVANCE.
 
@@ -64,6 +68,13 @@ Fail mode: STOP LOCAL PUSH/WORKFLOW ADVANCE.
 4. Evidence contract gate
 
 Release-affecting work must also pass local parity (`pre_ci.sh`) before PR finalization.
+
+## Canonical Drift Rules
+This specification is derivative, not primary. It must defer to:
+- `.github/workflows/invariants.yml` for actual blocking workflow job names and execution topology.
+- `scripts/dev/pre_ci.sh` for local parity behavior.
+- `docs/invariants/INVARIANT_ENFORCEMENT_MATRIX.md` for exact invariant-to-command/evidence mapping.
+- `docs/operations/AI_AGENT_OPERATION_MANUAL.md` for approval and regulated-surface requirements.
 
 ## Mandatory Fail-Closed Conditions
 A change MUST fail when any of the following occurs:
@@ -91,6 +102,7 @@ At minimum:
 
 ## Canonical References
 - `.github/workflows/invariants.yml`
+- `scripts/dev/pre_ci.sh`
 - `docs/invariants/INVARIANTS_PROCESS.md`
 - `docs/invariants/INVARIANT_ENFORCEMENT_MATRIX.md`
 - `docs/contracts/SECURITY_REMEDIATION_DOD.yml`

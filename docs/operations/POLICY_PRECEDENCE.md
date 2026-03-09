@@ -21,6 +21,10 @@ Examples:
 - Lifecycle taxonomy: `docs/operations/PHASE_LIFECYCLE.md`
 - Remediation trigger thresholds: `docs/operations/REMEDIATION_TRACE_WORKFLOW.md`
 - Branch/commit formats: `docs/operations/GIT_CONVENTIONS.md`
+- Invariant identity and status: `docs/invariants/INVARIANTS_MANIFEST.yml`
+- Invariant verifier/evidence mapping: `docs/invariants/INVARIANT_ENFORCEMENT_MATRIX.md`
+- CI job semantics and local parity behavior: `.github/workflows/invariants.yml`, `scripts/dev/pre_ci.sh`
+- Governance baseline docs (`docs/governance/*.md`) are derivative and must defer to the sources above plus `docs/operations/AI_AGENT_OPERATION_MANUAL.md`
 
 ## Conflict Handling
 

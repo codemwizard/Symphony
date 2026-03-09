@@ -16,6 +16,7 @@ It provides three aligned layers:
 5. Reduces false closeout: invariants cannot be claimed complete without verifier + CI + evidence alignment.
 
 ## Canonical Sources
+- `docs/operations/AI_AGENT_OPERATION_MANUAL.md`
 - `docs/invariants/INVARIANTS_MANIFEST.yml`
 - `.github/workflows/invariants.yml`
 - `scripts/dev/pre_ci.sh`
@@ -27,6 +28,8 @@ It provides three aligned layers:
 3. Confirm the corresponding CI job exists and is blocking in `.github/workflows/invariants.yml`.
 4. Confirm evidence artifact path is generated and schema-valid.
 5. Only then move status to `implemented`.
+
+This matrix is the domain-canonical source for exact verifier commands and evidence paths. Governance baselines such as `docs/governance/invariant-register-v1.md`, `docs/governance/ci-gate-spec-v1.md`, and `docs/governance/regulator-evidence-pack-template-v1.md` must defer to this file instead of restating contradictory command or evidence semantics.
 
 ## A) Invariant -> Automated Verification
 

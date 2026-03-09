@@ -1,0 +1,32 @@
+{
+  "check_id": "INVPROC-01-GOVERNANCE-BASELINE",
+  "timestamp_utc": "2026-03-09T08:27:25Z",
+  "git_sha": "0e8c478f13f271670633e382be1b994168f0faf9",
+  "schema_fingerprint": "48e1f2462b2d811f14d424ac529ee731e692f992414abfdbc35c60170590957b",
+  "status": "PASS",
+  "checked_references": {
+    "invariant_register": [
+      "docs/operations/AI_AGENT_OPERATION_MANUAL.md",
+      "docs/operations/POLICY_PRECEDENCE.md",
+      "docs/invariants/INVARIANTS_MANIFEST.yml",
+      "docs/invariants/INVARIANT_ENFORCEMENT_MATRIX.md",
+      ".github/workflows/invariants.yml",
+      "scripts/dev/pre_ci.sh"
+    ],
+    "ci_gate_spec": [
+      "docs/operations/AI_AGENT_OPERATION_MANUAL.md",
+      ".github/workflows/invariants.yml",
+      "scripts/dev/pre_ci.sh",
+      "docs/invariants/INVARIANT_ENFORCEMENT_MATRIX.md"
+    ],
+    "regulator_pack_template": [
+      "docs/operations/AI_AGENT_OPERATION_MANUAL.md",
+      "docs/invariants/INVARIANTS_MANIFEST.yml",
+      "docs/invariants/INVARIANT_ENFORCEMENT_MATRIX.md",
+      "docs/operations/PHASE1_PILOT_ONBOARDING_CHECKLIST.md"
+    ],
+    "policy_precedence": [],
+    "enforcement_matrix": []
+  },
+  "errors": []
+}
