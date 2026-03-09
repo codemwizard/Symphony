@@ -182,6 +182,12 @@ registry:
   scripts/audit/verify_cut_003_projection_cutover_runbook.sh:
     emits:
     - evidence/phase1/cut_003_projection_cutover_runbook.json
+  scripts/audit/verify_invproc_06_ci_wiring_closeout.sh:
+    emits:
+    - evidence/phase1/invproc_06_ci_wiring_closeout.json
+  scripts/audit/verify_human_governance_review_signoff.sh:
+    emits:
+    - evidence/phase1/human_governance_review_signoff.json
   scripts/audit/verify_cut_004_projection_cutover_gate.sh:
     emits:
     - evidence/phase1/cut_004_projection_cutover_gate.json

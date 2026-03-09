@@ -198,6 +198,24 @@ else
 fi
 
 echo ""
+echo "==> Invariant process CI/closeout wiring verification"
+if [[ -x "scripts/audit/verify_invproc_06_ci_wiring_closeout.sh" || -f "scripts/audit/verify_invproc_06_ci_wiring_closeout.sh" ]]; then
+  run scripts/audit/verify_invproc_06_ci_wiring_closeout.sh
+else
+  echo "ERROR: scripts/audit/verify_invproc_06_ci_wiring_closeout.sh not found"
+  exit 1
+fi
+
+echo ""
+echo "==> Human governance review signoff verification"
+if [[ -x "scripts/audit/verify_human_governance_review_signoff.sh" || -f "scripts/audit/verify_human_governance_review_signoff.sh" ]]; then
+  run scripts/audit/verify_human_governance_review_signoff.sh
+else
+  echo "ERROR: scripts/audit/verify_human_governance_review_signoff.sh not found"
+  exit 1
+fi
+
+echo ""
 echo "==> Phase-1 CQRS boundary verification"
 if [[ -x "scripts/audit/verify_cqrs_code_boundary.sh" || -f "scripts/audit/verify_cqrs_code_boundary.sh" ]]; then
   run scripts/audit/verify_cqrs_code_boundary.sh

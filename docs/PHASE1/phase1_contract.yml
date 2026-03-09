@@ -102,6 +102,22 @@
   evidence_path: "evidence/phase1/agent_conformance_policy_guardian.json"
   notes: "Phase-1 agent governance conformance evidence is required for Requirements and Policy Integrity role."
 
+- invariant_id: "INV-119"
+  status: "implemented"
+  required: true
+  gate_id: "INT-G28"
+  verifier: "scripts/audit/verify_invproc_06_ci_wiring_closeout.sh"
+  evidence_path: "evidence/phase1/invproc_06_ci_wiring_closeout.json"
+  notes: "Governance-process CI and closeout wiring must remain fail-closed and visible in Phase-1 contract evidence."
+
+- invariant_id: "INV-119"
+  status: "implemented"
+  required: true
+  gate_id: "INT-G28"
+  verifier: "scripts/audit/verify_human_governance_review_signoff.sh"
+  evidence_path: "evidence/phase1/human_governance_review_signoff.json"
+  notes: "Human governance review signoff evidence is required for regulated-surface governance changes in this track."
+
 - invariant_id: "INV-077"
   status: "implemented"
   required: true

@@ -1,8 +1,20 @@
 {
   "schema_version": "1.0",
-  "generated_at_utc": "2026-03-09T09:18:05Z",
-  "git_commit": "5ba49210e408b671edfd741ca0509139ae325158",
-  "change_scope": {
+  "approval": {
+    "status": "APPROVED",
+    "approver_id": "governance-human-reviewer",
+    "change_reason": "Wire invariant-process governance verification into CI and closeout with mandatory human governance review evidence",
+    "approved_at_utc": "2026-03-09T09:18:05Z",
+    "role_authority": "Human Approver"
+  },
+  "ai": {
+    "ai_used": true,
+    "ai_prompt_hash": "26f0ee10e5834fdad1e1f290f1fb63892c71969d18806bc75c04253931d660e3",
+    "model_id": "gpt-5",
+    "client": "codex_cli",
+    "session_id": "governance-invproc-06-oi10"
+  },
+  "scope": {
     "regulated_surfaces_touched": true,
     "paths_changed": [
       ".github/workflows/invariants.yml",
@@ -26,24 +38,22 @@
       "scripts/audit/verify_invproc_06_ci_wiring_closeout.sh",
       "tasks/TASK-INVPROC-06/meta.yml",
       "tasks/TASK-OI-10/meta.yml"
-    ]
+    ],
+    "invariants": [
+      "INV-119",
+      "INV-081",
+      "INV-077"
+    ],
+    "phase_boundary_ok": true
   },
-  "ai": {
-    "ai_prompt_hash": "26f0ee10e5834fdad1e1f290f1fb63892c71969d18806bc75c04253931d660e3",
-    "model_id": "gpt-5",
-    "client": "codex_cli",
-    "session_id": "governance-invproc-06-oi10"
-  },
-  "human_approval": {
-    "approver_id": "governance-human-reviewer",
-    "approval_artifact_ref": "approvals/2026-03-09/BRANCH-governance-invproc-06-oi10.md",
-    "change_reason": "Wire invariant-process governance verification into CI and closeout with mandatory human governance review evidence",
-    "approved_at_utc": "2026-03-09T09:18:05Z"
-  },
-  "notes": "Approval metadata for TASK-INVPROC-06 and TASK-OI-10 branch-stage governance updates.",
-  "check_id": "APPROVAL-METADATA",
-  "timestamp_utc": "2026-03-09T09:18:05Z",
-  "git_sha": "5ba49210e408b671edfd741ca0509139ae325158",
-  "status": "PASS",
-  "schema_fingerprint": "48e1f2462b2d811f14d424ac529ee731e692f992414abfdbc35c60170590957b"
+  "verification": {
+    "commands": [
+      "bash scripts/audit/verify_invproc_06_ci_wiring_closeout.sh",
+      "bash scripts/audit/verify_human_governance_review_signoff.sh",
+      "bash scripts/audit/run_invariants_fast_checks.sh",
+      "scripts/dev/pre_ci.sh"
+    ],
+    "pre_ci_passed": true,
+    "notes": "Branch-scoped human governance review recorded for regulated-surface changes."
+  }
 }

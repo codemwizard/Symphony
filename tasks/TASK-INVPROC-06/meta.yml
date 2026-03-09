@@ -3,7 +3,7 @@ phase: '1'
 task_id: TASK-INVPROC-06
 title: Wire invariants process governance verifiers into CI and closeout
 owner_role: SECURITY_GUARDIAN
-status: ready
+status: completed
 depends_on:
 - TASK-INVPROC-02
 - TASK-INVPROC-03
@@ -13,6 +13,10 @@ touches:
 - scripts/audit/run_invariants_fast_checks.sh
 - scripts/dev/pre_ci.sh
 - .github/workflows/invariants.yml
+- scripts/audit/verify_invproc_06_ci_wiring_closeout.sh
+- scripts/audit/verify_human_governance_review_signoff.sh
+- docs/PHASE1/phase1_contract.yml
+- docs/operations/VERIFIER_EVIDENCE_REGISTRY.yml
 - docs/invariants/INVARIANT_ENFORCEMENT_MATRIX.md
 - docs/tasks/PHASE1_GOVERNANCE_TASKS.md
 invariants:
@@ -28,11 +32,13 @@ acceptance_criteria:
 - CI fails when governance docs drift from manifest/workflow/contracts.
 - Governance evidence artifacts are emitted and referenced in enforcement matrix.
 verification:
+- bash scripts/audit/verify_invproc_06_ci_wiring_closeout.sh
+- bash scripts/audit/verify_human_governance_review_signoff.sh
 - bash scripts/audit/run_invariants_fast_checks.sh
 - scripts/dev/pre_ci.sh
-- rg -n "verify_invariant_register_parity.sh|verify_ci_gate_spec_parity.sh|verify_regulator_pack_template.sh|verify_invariant_process_governance_links.sh" scripts/audit/run_invariants_fast_checks.sh .github/workflows/invariants.yml
 evidence:
 - evidence/phase1/invproc_06_ci_wiring_closeout.json
+- evidence/phase1/human_governance_review_signoff.json
 failure_modes:
 - Evidence file missing
 - Verification command fails
@@ -43,8 +49,7 @@ must_read:
 - docs/invariants/INVARIANT_ENFORCEMENT_MATRIX.md
 implementation_plan: docs/plans/phase1/TASK-INVPROC-06/PLAN.md
 implementation_log: docs/plans/phase1/TASK-INVPROC-06/EXEC_LOG.md
-notes: Planning scaffold completed and aligned to current governance path authority.
-  No implementation started.
+notes: Implemented CI and closeout wiring for invariant-process governance verifiers, including branch-scoped human governance review evidence and Phase-1 contract visibility.
 client: codex_cli
 assigned_agent: security_guardian
 model: gpt-5
