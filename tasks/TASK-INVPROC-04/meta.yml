@@ -1,0 +1,45 @@
+schema_version: 1
+phase: '1'
+task_id: TASK-INVPROC-04
+title: Normalize regulator evidence pack template to deterministic artifact mapping
+owner_role: INVARIANTS_CURATOR
+status: ready
+depends_on:
+- TASK-INVPROC-01
+touches:
+- docs/governance/regulator-evidence-pack-template-v1.md
+- docs/architecture/COMPLIANCE_MAP.md
+- docs/invariants/INVARIANT_ENFORCEMENT_MATRIX.md
+- scripts/audit/verify_regulator_pack_template.sh
+invariants:
+- INV-075
+- INV-077
+- INV-103
+work:
+- Normalize template sections to explicit invariant IDs and evidence paths.
+- Add verifier that checks template references valid existing evidence families.
+- Ensure template distinguishes implemented vs roadmap invariants.
+acceptance_criteria:
+- Template sections map to existing evidence paths without orphan references.
+- Verifier fails when template references nonexistent mandatory evidence artifacts.
+- Checklist includes exception disclosure and approval metadata linkage.
+verification:
+- bash scripts/audit/verify_regulator_pack_template.sh
+- rg -n "INV-|evidence/phase0|evidence/phase1" docs/governance/regulator-evidence-pack-template-v1.md
+evidence:
+- evidence/phase1/invproc_04_regulator_pack_template.json
+failure_modes:
+- Evidence file missing
+- Verification command fails
+- Approval artifact missing for regulated-surface changes
+must_read:
+- docs/architecture/COMPLIANCE_MAP.md
+- docs/invariants/INVARIANT_ENFORCEMENT_MATRIX.md
+- docs/governance/regulator-evidence-pack-template-v1.md
+implementation_plan: docs/plans/phase1/TASK-INVPROC-04/PLAN.md
+implementation_log: docs/plans/phase1/TASK-INVPROC-04/EXEC_LOG.md
+notes: Planning scaffold completed and aligned to current governance path authority.
+  No implementation started.
+client: codex_cli
+assigned_agent: compliance_mapper
+model: gpt-5

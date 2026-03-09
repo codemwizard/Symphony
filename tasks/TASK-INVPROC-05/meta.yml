@@ -1,0 +1,45 @@
+schema_version: 1
+phase: '1'
+task_id: TASK-INVPROC-05
+title: Bind PR and exception governance to invariant process contracts
+owner_role: QA_VERIFIER
+status: ready
+depends_on:
+- TASK-INVPROC-01
+touches:
+- .github/pull_request_template.md
+- docs/invariants/exceptions/EXCEPTION_TEMPLATE.md
+- docs/operations/PHASE1_PILOT_ONBOARDING_CHECKLIST.md
+- scripts/audit/verify_invariant_process_governance_links.sh
+invariants:
+- INV-105
+- INV-119
+work:
+- Add invariant-process linkage checks for PR template, exception template, and onboarding checklist.
+- Verify required fields for severity, DRD links, and invariant/evidence references are present.
+- Emit deterministic governance-link evidence artifact.
+acceptance_criteria:
+- Verifier fails when PR template lacks severity/DRD declaration sections.
+- Verifier fails when exception template lacks expiry/remediation linkage semantics.
+- Onboarding checklist references invariant process evidence and approval metadata requirements.
+verification:
+- bash scripts/audit/verify_invariant_process_governance_links.sh
+- test -f .github/pull_request_template.md
+- test -f docs/invariants/exceptions/EXCEPTION_TEMPLATE.md
+evidence:
+- evidence/phase1/invproc_05_governance_links.json
+failure_modes:
+- Evidence file missing
+- Verification command fails
+- Approval artifact missing for regulated-surface changes
+must_read:
+- docs/operations/REMEDIATION_TRACE_WORKFLOW.md
+- .agent/policies/debug-remediation-policy.md
+- docs/operations/PHASE1_PILOT_ONBOARDING_CHECKLIST.md
+implementation_plan: docs/plans/phase1/TASK-INVPROC-05/PLAN.md
+implementation_log: docs/plans/phase1/TASK-INVPROC-05/EXEC_LOG.md
+notes: Planning scaffold completed and aligned to current governance path authority.
+  No implementation started.
+client: codex_cli
+assigned_agent: qa_verifier
+model: gpt-5

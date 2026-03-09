@@ -3,7 +3,7 @@ phase: '1'
 task_id: TASK-OI-10
 title: Perform mandatory human assurance review over governance changes
 owner_role: ARCHITECT
-status: planned
+status: ready
 depends_on:
 - TASK-OI-08
 - TASK-OI-01
@@ -19,6 +19,8 @@ work:
 - Complete human review checklist and sign-offs before merge authorization.
 acceptance_criteria:
 - Human review artifacts exist and cover all governed files.
+- Review artifact records reviewer identity, review timestamp, and exact reviewed file set.
+- Merge authorization remains blocked until the human signoff artifact exists and validates.
 verification:
 - test -f evidence/phase1/human_governance_review_signoff.json
 - 'python3 - <<''PY2''
@@ -52,7 +54,8 @@ must_read:
 implementation_plan: docs/plans/phase1/TASK-OI-10/PLAN.md
 implementation_log: docs/plans/phase1/TASK-OI-10/EXEC_LOG.md
 notes: 'Hardened execution scaffold: stricter verification, real-path touches, and
-  role-aligned agent assignment.'
+  role-aligned agent assignment. Planning complete; task is ready for implementation
+  once human review is scheduled.'
 client: codex_cli
 assigned_agent: architect
 model: gpt-5

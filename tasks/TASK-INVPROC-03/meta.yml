@@ -1,0 +1,46 @@
+schema_version: 1
+phase: '1'
+task_id: TASK-INVPROC-03
+title: Implement CI gate specification drift verifier
+owner_role: SECURITY_GUARDIAN
+status: ready
+depends_on:
+- TASK-INVPROC-01
+touches:
+- scripts/audit/verify_ci_gate_spec_parity.sh
+- docs/governance/ci-gate-spec-v1.md
+- .github/workflows/invariants.yml
+- scripts/dev/pre_ci.sh
+- scripts/audit/run_invariants_fast_checks.sh
+invariants:
+- INV-072
+- INV-073
+- INV-081
+work:
+- Create verifier that checks gate names/order/mandatory fail-closed statements against current workflow.
+- Validate CI spec references actual job names and mandatory scripts.
+- Wire verifier into fast checks.
+acceptance_criteria:
+- Drift between CI spec and workflow is detected fail-closed.
+- Verifier confirms required job set exists (mechanical_invariants, security_scan, db_verify_invariants, phase0_evidence_gate).
+- Verifier confirms pre_ci includes ordered checks and phase gates.
+verification:
+- bash scripts/audit/verify_ci_gate_spec_parity.sh
+- rg -n "verify_ci_gate_spec_parity.sh" scripts/audit/run_invariants_fast_checks.sh
+evidence:
+- evidence/phase1/invproc_03_ci_gate_spec_parity.json
+failure_modes:
+- Evidence file missing
+- Verification command fails
+- Approval artifact missing for regulated-surface changes
+must_read:
+- .github/workflows/invariants.yml
+- scripts/dev/pre_ci.sh
+- docs/governance/ci-gate-spec-v1.md
+implementation_plan: docs/plans/phase1/TASK-INVPROC-03/PLAN.md
+implementation_log: docs/plans/phase1/TASK-INVPROC-03/EXEC_LOG.md
+notes: Planning scaffold completed and aligned to current governance path authority.
+  No implementation started.
+client: codex_cli
+assigned_agent: security_guardian
+model: gpt-5

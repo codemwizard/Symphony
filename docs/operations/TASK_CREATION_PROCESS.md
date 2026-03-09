@@ -65,6 +65,9 @@ Follow this exact order. Do not skip or reorder steps.
 
 ### Step 7 — Begin implementation
 - Implementation may begin only after Steps 1-6 exist and meta paths resolve.
+- Before calling a task `ready to implement`, run:
+  - `bash scripts/audit/verify_task_meta_schema.sh --mode strict --allow-legacy`
+  - `bash scripts/audit/verify_task_pack_readiness.sh --task <TASK_ID>`
 - Use the task meta template from `tasks/_template/meta.yml`.
 
 ## 3) Agent assignment (permissions + roles)
@@ -97,6 +100,11 @@ Every task must:
 - Fail if verification or evidence is missing
 - Include a **failure mode** explicitly stating: `Evidence file missing`
 - Ensure the verification command **writes** the declared evidence (not just checks text)
+
+Execution-readiness guard:
+- Schema-valid is not execution-ready.
+- Tasks with empty `acceptance_criteria`, shallow verification blocks, phase/path mismatches, or intent-marker filler in `work` must not start implementation.
+- Use `scripts/audit/verify_task_pack_readiness.sh` to enforce this before execution starts.
 
 **Mark completion** in `tasks/<TASK_ID>/meta.yml`:
 - `status: "completed"`
