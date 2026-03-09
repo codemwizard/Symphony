@@ -6,6 +6,8 @@ allow:
     justification: "INV-113 intentionally has both structural (phase0 prereq) and operational (phase1) verifier rows in current contract model."
   - invariant_id: "INV-119"
     allowed_verifiers:
+      - "scripts/audit/verify_invproc_06_ci_wiring_closeout.sh"
+      - "scripts/audit/verify_human_governance_review_signoff.sh"
       - "scripts/db/verify_hier_009_instruction_hierarchy_sqlstates.sh"
       - "scripts/db/verify_hier_010_program_migration.sh"
       - "scripts/audit/verify_hier_011_supervisor_access_mechanisms.sh"

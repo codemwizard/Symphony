@@ -126,11 +126,7 @@ def approval_requirement_context(root: Path) -> dict[str, Any]:
     try:
         base_ref, merge_base, changed_files = _run_diff_helper(root)
     except Exception as exc:
-        changed_files = _fallback_changed_files(root)
-        if changed_files:
-            diff_mode = "fallback"
-        else:
-            error = str(exc)
+        error = str(exc)
 
     patterns = load_regulated_patterns(root)
     regulated_hits = []

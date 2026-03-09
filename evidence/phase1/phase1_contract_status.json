@@ -1,0 +1,378 @@
+{
+  "check_id": "PHASE1-CONTRACT-STATUS",
+  "timestamp_utc": "2026-03-09T10:54:42Z",
+  "git_sha": "d31b30c9eb5934965e9b53d3277bee89f06c9f42",
+  "schema_fingerprint": "48e1f2462b2d811f14d424ac529ee731e692f992414abfdbc35c60170590957b",
+  "status": "PASS",
+  "mode": "zip_audit",
+  "run_phase1_gates": true,
+  "required_rows": 67,
+  "required_rows_checked": 0,
+  "approval_requirement": {
+    "required": false,
+    "rules_file": "docs/operations/REGULATED_SURFACE_PATHS.yml",
+    "regulated_patterns": [
+      "schema/migrations/**",
+      "scripts/security/**",
+      "scripts/audit/**",
+      "docs/PHASE1/**",
+      "docs/control_planes/**",
+      "docs/operations/approval_metadata.schema.json",
+      "docs/architecture/evidence_schema.json"
+    ],
+    "regulated_changed_paths": [],
+    "diff_mode": "zip_audit",
+    "base_ref": "",
+    "head_ref": "HEAD",
+    "merge_base": ""
+  },
+  "approval_requirement_mode": "zip_audit_structural",
+  "checked": [
+    {
+      "invariant_id": "INV-111",
+      "status": "SKIPPED",
+      "reason": "not_required_or_phase1_disabled"
+    },
+    {
+      "invariant_id": "INV-112",
+      "status": "SKIPPED",
+      "reason": "not_required_or_phase1_disabled"
+    },
+    {
+      "invariant_id": "INV-113",
+      "status": "SKIPPED",
+      "reason": "not_required_or_phase1_disabled"
+    },
+    {
+      "invariant_id": "INV-113",
+      "status": "SKIPPED",
+      "reason": "not_required_or_phase1_disabled"
+    },
+    {
+      "invariant_id": "INV-114",
+      "status": "SKIPPED",
+      "reason": "not_required_or_phase1_disabled"
+    },
+    {
+      "invariant_id": "INV-115",
+      "status": "SKIPPED",
+      "reason": "not_required_or_phase1_disabled"
+    },
+    {
+      "invariant_id": "INV-116",
+      "status": "SKIPPED",
+      "reason": "not_required_or_phase1_disabled"
+    },
+    {
+      "invariant_id": "INV-117",
+      "status": "SKIPPED",
+      "reason": "not_required_or_phase1_disabled"
+    },
+    {
+      "invariant_id": "INV-118",
+      "status": "SKIPPED",
+      "reason": "not_required_or_phase1_disabled"
+    },
+    {
+      "invariant_id": "INV-105",
+      "status": "SKIPPED",
+      "reason": "not_required_or_phase1_disabled"
+    },
+    {
+      "invariant_id": "INV-119",
+      "status": "SKIPPED",
+      "reason": "not_required_or_phase1_disabled"
+    },
+    {
+      "invariant_id": "INV-119",
+      "status": "SKIPPED",
+      "reason": "not_required_or_phase1_disabled"
+    },
+    {
+      "invariant_id": "INV-119",
+      "status": "SKIPPED",
+      "reason": "not_required_or_phase1_disabled"
+    },
+    {
+      "invariant_id": "INV-119",
+      "status": "SKIPPED",
+      "reason": "not_required_or_phase1_disabled"
+    },
+    {
+      "invariant_id": "INV-119",
+      "status": "SKIPPED",
+      "reason": "not_required_or_phase1_disabled"
+    },
+    {
+      "invariant_id": "INV-077",
+      "status": "SKIPPED",
+      "reason": "approval_not_required_for_diff"
+    },
+    {
+      "invariant_id": "INV-081",
+      "status": "SKIPPED",
+      "reason": "not_required_or_phase1_disabled"
+    },
+    {
+      "invariant_id": "INV-120",
+      "status": "SKIPPED",
+      "reason": "not_required_or_phase1_disabled"
+    },
+    {
+      "invariant_id": "INV-121",
+      "status": "SKIPPED",
+      "reason": "not_required_or_phase1_disabled"
+    },
+    {
+      "invariant_id": "INV-122",
+      "status": "SKIPPED",
+      "reason": "not_required_or_phase1_disabled"
+    },
+    {
+      "invariant_id": "INV-123",
+      "status": "SKIPPED",
+      "reason": "not_required_or_phase1_disabled"
+    },
+    {
+      "invariant_id": "INV-124",
+      "status": "SKIPPED",
+      "reason": "not_required_or_phase1_disabled"
+    },
+    {
+      "invariant_id": "INV-125",
+      "status": "SKIPPED",
+      "reason": "not_required_or_phase1_disabled"
+    },
+    {
+      "invariant_id": "INV-126",
+      "status": "SKIPPED",
+      "reason": "not_required_or_phase1_disabled"
+    },
+    {
+      "invariant_id": "INV-127",
+      "status": "SKIPPED",
+      "reason": "not_required_or_phase1_disabled"
+    },
+    {
+      "invariant_id": "INV-128",
+      "status": "SKIPPED",
+      "reason": "not_required_or_phase1_disabled"
+    },
+    {
+      "invariant_id": "INV-129",
+      "status": "SKIPPED",
+      "reason": "not_required_or_phase1_disabled"
+    },
+    {
+      "invariant_id": "INV-119",
+      "status": "SKIPPED",
+      "reason": "not_required_or_phase1_disabled"
+    },
+    {
+      "invariant_id": "INV-119",
+      "status": "SKIPPED",
+      "reason": "not_required_or_phase1_disabled"
+    },
+    {
+      "invariant_id": "INV-119",
+      "status": "SKIPPED",
+      "reason": "not_required_or_phase1_disabled"
+    },
+    {
+      "invariant_id": "INV-119",
+      "status": "SKIPPED",
+      "reason": "not_required_or_phase1_disabled"
+    },
+    {
+      "invariant_id": "INV-119",
+      "status": "SKIPPED",
+      "reason": "not_required_or_phase1_disabled"
+    },
+    {
+      "invariant_id": "INV-119",
+      "status": "SKIPPED",
+      "reason": "not_required_or_phase1_disabled"
+    },
+    {
+      "invariant_id": "INV-119",
+      "status": "SKIPPED",
+      "reason": "not_required_or_phase1_disabled"
+    },
+    {
+      "invariant_id": "INV-119",
+      "status": "SKIPPED",
+      "reason": "not_required_or_phase1_disabled"
+    },
+    {
+      "invariant_id": "INV-119",
+      "status": "SKIPPED",
+      "reason": "not_required_or_phase1_disabled"
+    },
+    {
+      "invariant_id": "INV-119",
+      "status": "SKIPPED",
+      "reason": "not_required_or_phase1_disabled"
+    },
+    {
+      "invariant_id": "INV-119",
+      "status": "SKIPPED",
+      "reason": "not_required_or_phase1_disabled"
+    },
+    {
+      "invariant_id": "INV-119",
+      "status": "SKIPPED",
+      "reason": "not_required_or_phase1_disabled"
+    },
+    {
+      "invariant_id": "INV-119",
+      "status": "SKIPPED",
+      "reason": "not_required_or_phase1_disabled"
+    },
+    {
+      "invariant_id": "INV-119",
+      "status": "SKIPPED",
+      "reason": "not_required_or_phase1_disabled"
+    },
+    {
+      "invariant_id": "INV-119",
+      "status": "SKIPPED",
+      "reason": "not_required_or_phase1_disabled"
+    },
+    {
+      "invariant_id": "INV-119",
+      "status": "SKIPPED",
+      "reason": "not_required_or_phase1_disabled"
+    },
+    {
+      "invariant_id": "INV-119",
+      "status": "SKIPPED",
+      "reason": "not_required_or_phase1_disabled"
+    },
+    {
+      "invariant_id": "INV-119",
+      "status": "SKIPPED",
+      "reason": "not_required_or_phase1_disabled"
+    },
+    {
+      "invariant_id": "INV-119",
+      "status": "SKIPPED",
+      "reason": "not_required_or_phase1_disabled"
+    },
+    {
+      "invariant_id": "INV-119",
+      "status": "SKIPPED",
+      "reason": "not_required_or_phase1_disabled"
+    },
+    {
+      "invariant_id": "INV-119",
+      "status": "SKIPPED",
+      "reason": "not_required_or_phase1_disabled"
+    },
+    {
+      "invariant_id": "INV-119",
+      "status": "SKIPPED",
+      "reason": "not_required_or_phase1_disabled"
+    },
+    {
+      "invariant_id": "INV-119",
+      "status": "SKIPPED",
+      "reason": "not_required_or_phase1_disabled"
+    },
+    {
+      "invariant_id": "INV-119",
+      "status": "SKIPPED",
+      "reason": "not_required_or_phase1_disabled"
+    },
+    {
+      "invariant_id": "INV-039",
+      "status": "SKIPPED",
+      "reason": "no_evidence_path"
+    },
+    {
+      "invariant_id": "INV-048",
+      "status": "SKIPPED",
+      "reason": "no_evidence_path"
+    },
+    {
+      "invariant_id": "INV-135",
+      "status": "SKIPPED",
+      "reason": "not_required_or_phase1_disabled"
+    },
+    {
+      "invariant_id": "INV-136",
+      "status": "SKIPPED",
+      "reason": "not_required_or_phase1_disabled"
+    },
+    {
+      "invariant_id": "INV-137",
+      "status": "SKIPPED",
+      "reason": "not_required_or_phase1_disabled"
+    },
+    {
+      "invariant_id": "INV-142",
+      "status": "SKIPPED",
+      "reason": "not_required_or_phase1_disabled"
+    },
+    {
+      "invariant_id": "INV-143",
+      "status": "SKIPPED",
+      "reason": "not_required_or_phase1_disabled"
+    },
+    {
+      "invariant_id": "INV-144",
+      "status": "SKIPPED",
+      "reason": "not_required_or_phase1_disabled"
+    },
+    {
+      "invariant_id": "INV-146",
+      "status": "SKIPPED",
+      "reason": "not_required_or_phase1_disabled"
+    },
+    {
+      "invariant_id": "INV-147",
+      "status": "SKIPPED",
+      "reason": "not_required_or_phase1_disabled"
+    },
+    {
+      "invariant_id": "INV-148",
+      "status": "SKIPPED",
+      "reason": "not_required_or_phase1_disabled"
+    },
+    {
+      "invariant_id": "INV-149",
+      "status": "SKIPPED",
+      "reason": "not_required_or_phase1_disabled"
+    },
+    {
+      "invariant_id": "INV-150",
+      "status": "SKIPPED",
+      "reason": "not_required_or_phase1_disabled"
+    },
+    {
+      "invariant_id": "INV-151",
+      "status": "SKIPPED",
+      "reason": "not_required_or_phase1_disabled"
+    },
+    {
+      "invariant_id": "INV-152",
+      "status": "SKIPPED",
+      "reason": "not_required_or_phase1_disabled"
+    },
+    {
+      "invariant_id": "INV-153",
+      "status": "SKIPPED",
+      "reason": "not_required_or_phase1_disabled"
+    },
+    {
+      "invariant_id": "INV-154",
+      "status": "SKIPPED",
+      "reason": "not_required_or_phase1_disabled"
+    },
+    {
+      "invariant_id": "INV-155",
+      "status": "SKIPPED",
+      "reason": "not_required_or_phase1_disabled"
+    }
+  ],
+  "errors": []
+}

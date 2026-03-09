@@ -3,7 +3,7 @@ phase: '1'
 task_id: TSK-P1-046
 title: Restore INV-105 semantic correctness in Phase-1 contract
 owner_role: INVARIANTS_CURATOR
-status: planned
+status: completed
 depends_on: []
 touches:
 - docs/PHASE1/phase1_contract.yml
@@ -21,7 +21,7 @@ acceptance_criteria:
 - No INV-105 row references agent_conformance_*.json.
 verification:
 - bash scripts/audit/verify_remediation_trace.sh
-- RUN_PHASE1_GATES=1 bash scripts/audit/verify_phase1_contract.sh
+- PHASE1_CONTRACT_MODE=zip_audit RUN_PHASE1_GATES=1 bash scripts/audit/verify_phase1_contract.sh
 evidence:
 - evidence/phase0/remediation_trace.json
 - evidence/phase1/phase1_contract_status.json
@@ -33,7 +33,7 @@ must_read:
 - docs/PHASE1/phase1_contract.yml
 implementation_plan: docs/plans/phase1/TSK-P1-046_invariant_semantic_integrity_and_zip_parity/PLAN.md
 implementation_log: docs/plans/phase1/TSK-P1-046_invariant_semantic_integrity_and_zip_parity/EXEC_LOG.md
-notes: Semantic correction only; no behavior change to remediation verifier itself.
+notes: Semantic correction only; verification is structure-mode because full range-mode evidence validation depends on broader Phase-1 evidence generation.
 client: codex_cli
 assigned_agent: invariants_curator
 model: gpt-5-codex

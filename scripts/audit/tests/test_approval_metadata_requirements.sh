@@ -70,6 +70,7 @@ init_git() {
   echo "base" > "$case_dir/README.md"
   git -C "$case_dir" add .
   git -C "$case_dir" commit -q -m "base"
+  git -C "$case_dir" branch origin/main HEAD
 }
 
 run_case() {
@@ -89,6 +90,7 @@ run_case() {
   mkdir -p "$case_dir/$(dirname "$change_path")"
   echo "change" > "$case_dir/$change_path"
   git -C "$case_dir" add "$change_path"
+  git -C "$case_dir" commit -q -m "change"
 
   if [[ "$approval_mode" == "invalid" ]]; then
     cat > "$case_dir/evidence/phase1/approval_metadata.json" <<'JSON'
@@ -145,5 +147,32 @@ run_case "regulated_missing_approval" "scripts/audit/example.sh" "none" "range" 
 run_case "regulated_invalid_approval" "scripts/audit/example.sh" "invalid" "range" 1 "FAIL" "schema_validation_failed"
 run_case "regulated_valid_approval" "scripts/audit/example.sh" "valid" "range" 0 "PASS" ""
 run_case "zip_mode_regulated_no_approval" "scripts/audit/example.sh" "none" "zip_audit" 0 "PASS" ""
+
+missing_ref_case="$tmp_dir/missing_range_ref"
+mkdir -p "$missing_ref_case"
+write_common_files "$missing_ref_case"
+git -C "$missing_ref_case" init -q
+git -C "$missing_ref_case" config user.email "ci@example.com"
+git -C "$missing_ref_case" config user.name "CI"
+echo "base" > "$missing_ref_case/README.md"
+git -C "$missing_ref_case" add .
+git -C "$missing_ref_case" commit -q -m "base"
+mkdir -p "$missing_ref_case/scripts/audit"
+echo "change" > "$missing_ref_case/scripts/audit/example.sh"
+git -C "$missing_ref_case" add scripts/audit/example.sh
+git -C "$missing_ref_case" commit -q -m "change"
+set +e
+ROOT_DIR="$missing_ref_case" RUN_PHASE1_GATES=1 PHASE1_CONTRACT_MODE="range" \
+  EVIDENCE_FILE="$missing_ref_case/evidence/phase1/phase1_contract_status.json" \
+  bash "$SCRIPT" >/tmp/approval_req_case.log 2>&1
+rc=$?
+set -e
+if [[ "$rc" -eq 0 ]]; then
+  echo "Case missing_range_ref unexpectedly passed"
+  cat /tmp/approval_req_case.log
+  exit 1
+fi
+assert_status "$missing_ref_case/evidence/phase1/phase1_contract_status.json" "FAIL"
+assert_error_contains "$missing_ref_case/evidence/phase1/phase1_contract_status.json" "approval_requirement_diff_error"
 
 echo "Approval metadata requirement tests passed."

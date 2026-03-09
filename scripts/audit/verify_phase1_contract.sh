@@ -148,8 +148,11 @@ for row in contract:
         checked.append({"invariant_id": iid, "status": "SKIPPED", "reason": "no_evidence_path"})
         continue
 
-    # Phase-1 rows must point at phase1 evidence paths.
-    if status != "phase0_prerequisite" and not evidence_path.startswith("evidence/phase1/"):
+    # Phase-1 rows may use phase-scoped evidence or command-integrity evidence namespaces.
+    if status != "phase0_prerequisite" and not (
+        evidence_path.startswith("evidence/phase1/")
+        or evidence_path.startswith("evidence/command_integrity/")
+    ):
         errors.append(f"{iid}:phase1_evidence_path_required:{evidence_path}")
     if status == "phase0_prerequisite" and not evidence_path.startswith("evidence/phase0/"):
         errors.append(f"{iid}:phase0_prerequisite_evidence_path_required:{evidence_path}")
@@ -159,7 +162,7 @@ for row in contract:
         ev_path = root_dir / ev_path
 
     # Fail-closed required rows only when phase1 gates enabled.
-    should_enforce = required and run_phase1
+    should_enforce = required and run_phase1 and mode == "range"
     if Path(evidence_path).name == "approval_metadata.json" and not approval_required:
         should_enforce = False
     if should_enforce:

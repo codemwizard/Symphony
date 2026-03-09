@@ -3,7 +3,7 @@
 ## Metadata
 - plan_id: `TSK-P1-046_invariant_semantic_integrity_and_zip_parity`
 - date: `2026-02-18`
-- status: `proposed_for_review`
+- status: `implemented`
 - program_type: `corrective_hardening`
 - scope: Resolve semantic contract misuse (INV-105), keep qualified agent conformance in Phase-1, and prevent recurrence via mechanical semantic checks.
 

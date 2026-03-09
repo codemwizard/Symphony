@@ -1,0 +1,13 @@
+{
+  "check_id": "SEM-I01",
+  "timestamp_utc": "2026-03-09T10:54:42Z",
+  "git_sha": "d31b30c9eb5934965e9b53d3277bee89f06c9f42",
+  "schema_fingerprint": "48e1f2462b2d811f14d424ac529ee731e692f992414abfdbc35c60170590957b",
+  "status": "PASS",
+  "manifest_file": "/home/mwiza/workspace/Symphony/docs/invariants/INVARIANTS_MANIFEST.yml",
+  "contract_file": "/home/mwiza/workspace/Symphony/docs/PHASE1/phase1_contract.yml",
+  "control_planes_file": "/home/mwiza/workspace/Symphony/docs/control_planes/CONTROL_PLANES.yml",
+  "registry_file": "/home/mwiza/workspace/Symphony/docs/operations/VERIFIER_EVIDENCE_REGISTRY.yml",
+  "allowlist_file": "/home/mwiza/workspace/Symphony/docs/operations/SEMANTIC_INTEGRITY_ALLOWLIST.yml",
+  "violations": []
+}
