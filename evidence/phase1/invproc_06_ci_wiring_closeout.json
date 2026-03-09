@@ -1,0 +1,115 @@
+{
+  "check_id": "TASK-INVPROC-06",
+  "timestamp_utc": "2026-03-09T09:18:31Z",
+  "git_sha": "5ba49210e408b671edfd741ca0509139ae325158",
+  "schema_fingerprint": "48e1f2462b2d811f14d424ac529ee731e692f992414abfdbc35c60170590957b",
+  "status": "PASS",
+  "checks": [
+    {
+      "surface": "run_invariants_fast_checks.sh",
+      "item": "scripts/audit/verify_invproc_01_governance_baseline.sh",
+      "ok": true
+    },
+    {
+      "surface": "run_invariants_fast_checks.sh",
+      "item": "scripts/audit/verify_invariant_register_parity.sh",
+      "ok": true
+    },
+    {
+      "surface": "run_invariants_fast_checks.sh",
+      "item": "scripts/audit/verify_ci_gate_spec_parity.sh",
+      "ok": true
+    },
+    {
+      "surface": "run_invariants_fast_checks.sh",
+      "item": "scripts/audit/verify_regulator_pack_template.sh",
+      "ok": true
+    },
+    {
+      "surface": "run_invariants_fast_checks.sh",
+      "item": "scripts/audit/verify_invariant_process_governance_links.sh",
+      "ok": true
+    },
+    {
+      "surface": "run_invariants_fast_checks.sh",
+      "item": "scripts/audit/verify_invproc_06_ci_wiring_closeout.sh",
+      "ok": true
+    },
+    {
+      "surface": "run_invariants_fast_checks.sh",
+      "item": "scripts/audit/verify_human_governance_review_signoff.sh",
+      "ok": true
+    },
+    {
+      "surface": "pre_ci.sh",
+      "item": "scripts/audit/run_phase0_ordered_checks.sh",
+      "ok": true
+    },
+    {
+      "surface": "pre_ci.sh",
+      "item": "scripts/audit/verify_phase1_contract.sh",
+      "ok": true
+    },
+    {
+      "surface": "pre_ci.sh",
+      "item": "scripts/audit/verify_phase1_closeout.sh",
+      "ok": true
+    },
+    {
+      "surface": ".github/workflows/invariants.yml",
+      "item": "scripts/audit/run_phase0_ordered_checks.sh",
+      "ok": true
+    },
+    {
+      "surface": ".github/workflows/invariants.yml",
+      "item": "scripts/audit/verify_invproc_06_ci_wiring_closeout.sh",
+      "ok": true
+    },
+    {
+      "surface": ".github/workflows/invariants.yml",
+      "item": "scripts/audit/verify_human_governance_review_signoff.sh",
+      "ok": true
+    },
+    {
+      "surface": "docs/PHASE1/phase1_contract.yml",
+      "item": "evidence/phase1/invproc_06_ci_wiring_closeout.json",
+      "ok": true
+    },
+    {
+      "surface": "docs/PHASE1/phase1_contract.yml",
+      "item": "evidence/phase1/human_governance_review_signoff.json",
+      "ok": true
+    },
+    {
+      "surface": "docs/operations/VERIFIER_EVIDENCE_REGISTRY.yml",
+      "item": "scripts/audit/verify_invproc_06_ci_wiring_closeout.sh",
+      "ok": true
+    },
+    {
+      "surface": "docs/operations/VERIFIER_EVIDENCE_REGISTRY.yml",
+      "item": "evidence/phase1/invproc_06_ci_wiring_closeout.json",
+      "ok": true
+    },
+    {
+      "surface": "docs/operations/VERIFIER_EVIDENCE_REGISTRY.yml",
+      "item": "scripts/audit/verify_human_governance_review_signoff.sh",
+      "ok": true
+    },
+    {
+      "surface": "docs/operations/VERIFIER_EVIDENCE_REGISTRY.yml",
+      "item": "evidence/phase1/human_governance_review_signoff.json",
+      "ok": true
+    },
+    {
+      "surface": "docs/invariants/INVARIANT_ENFORCEMENT_MATRIX.md",
+      "item": "verify_invproc_06_ci_wiring_closeout.sh",
+      "ok": true
+    },
+    {
+      "surface": "docs/invariants/INVARIANT_ENFORCEMENT_MATRIX.md",
+      "item": "human_governance_review_signoff.json",
+      "ok": true
+    }
+  ],
+  "errors": []
+}

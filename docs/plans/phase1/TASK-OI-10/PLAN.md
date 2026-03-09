@@ -9,10 +9,12 @@ Perform mandatory human assurance review over governance changes
 - DRD/trace semantics must defer to `REMEDIATION_TRACE_WORKFLOW.md`.
 
 ## Verification Commands
-- `rg -n "Human Review|Approval" approvals`
+- `bash scripts/audit/verify_human_governance_review_signoff.sh`
+- `test -f evidence/phase1/human_governance_review_signoff.json`
 
 ## Evidence Paths
 - `evidence/phase1/human_governance_review_signoff.json`
+- `evidence/phase1/approval_metadata.json`
 
 ## Approval References
 - `docs/operations/AI_AGENT_OPERATION_MANUAL.md` approval schema + sidecar requirements.

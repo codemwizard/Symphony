@@ -1,26 +1,36 @@
 {
   "schema_version": "1.0",
-  "generated_at_utc": "2026-02-17T00:00:00Z",
-  "git_commit": "deadbeef",
+  "generated_at_utc": "2026-03-09T09:18:05Z",
+  "git_commit": "5ba49210e408b671edfd741ca0509139ae325158",
   "change_scope": {
     "regulated_surfaces_touched": true,
     "paths_changed": [
-      "scripts/audit/verify_phase1_contract.sh",
-      "scripts/audit/verify_agent_conformance.sh",
-      "scripts/dev/pre_ci.sh"
+      "approvals/2026-03-09/BRANCH-governance-invproc-06-oi10.approval.json",
+      "approvals/2026-03-09/BRANCH-governance-invproc-06-oi10.md",
+      "docs/plans/remediation/REM-2026-03-09_invproc-06-oi10-governance/EXEC_LOG.md",
+      "docs/plans/remediation/REM-2026-03-09_invproc-06-oi10-governance/PLAN.md",
+      "evidence/phase1/human_governance_review_signoff.json",
+      "evidence/phase1/invproc_06_ci_wiring_closeout.json",
+      "scripts/audit/verify_human_governance_review_signoff.sh",
+      "scripts/audit/verify_invproc_06_ci_wiring_closeout.sh"
     ]
   },
   "ai": {
-    "ai_prompt_hash": "abc123abc123abc1",
-    "model_id": "gpt-5.2-codex",
+    "ai_prompt_hash": "26f0ee10e5834fdad1e1f290f1fb63892c71969d18806bc75c04253931d660e3",
+    "model_id": "gpt-5",
     "client": "codex_cli",
-    "session_id": "local-2026-02-11"
+    "session_id": "governance-invproc-06-oi10"
   },
   "human_approval": {
-    "approver_id": "phase1-lead",
-    "approval_artifact_ref": "approvals/2026-02-11/PR-0001.md",
-    "change_reason": "Phase-1 control-plane hardening for parity and approval policy enforcement",
-    "approved_at_utc": "2026-02-11T12:30:00Z"
+    "approver_id": "governance-human-reviewer",
+    "approval_artifact_ref": "approvals/2026-03-09/BRANCH-governance-invproc-06-oi10.md",
+    "change_reason": "Wire invariant-process governance verification into CI and closeout with mandatory human governance review evidence",
+    "approved_at_utc": "2026-03-09T09:18:05Z"
   },
-  "notes": "Approval metadata retained for regulated-surface updates."
+  "notes": "Approval metadata for TASK-INVPROC-06 and TASK-OI-10 branch-stage governance updates.",
+  "check_id": "APPROVAL-METADATA",
+  "timestamp_utc": "2026-03-09T09:18:05Z",
+  "git_sha": "5ba49210e408b671edfd741ca0509139ae325158",
+  "status": "PASS",
+  "schema_fingerprint": "48e1f2462b2d811f14d424ac529ee731e692f992414abfdbc35c60170590957b"
 }

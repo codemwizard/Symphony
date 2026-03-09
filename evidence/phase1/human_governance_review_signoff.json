@@ -1,0 +1,24 @@
+{
+  "check_id": "TASK-OI-10",
+  "timestamp_utc": "2026-03-09T09:18:31Z",
+  "git_sha": "5ba49210e408b671edfd741ca0509139ae325158",
+  "schema_fingerprint": "48e1f2462b2d811f14d424ac529ee731e692f992414abfdbc35c60170590957b",
+  "status": "PASS",
+  "reviewer_id": "governance-human-reviewer",
+  "signed_at_utc": "2026-03-09T09:18:05Z",
+  "change_ref": "branch/governance/invproc-06-oi10",
+  "review_artifact_ref": "approvals/2026-03-09/BRANCH-governance-invproc-06-oi10.md",
+  "review_sidecar_ref": "approvals/2026-03-09/BRANCH-governance-invproc-06-oi10.approval.json",
+  "reviewed_files": [
+    "approvals/2026-03-09/BRANCH-governance-invproc-06-oi10.approval.json",
+    "approvals/2026-03-09/BRANCH-governance-invproc-06-oi10.md",
+    "docs/plans/remediation/REM-2026-03-09_invproc-06-oi10-governance/EXEC_LOG.md",
+    "docs/plans/remediation/REM-2026-03-09_invproc-06-oi10-governance/PLAN.md",
+    "evidence/phase1/human_governance_review_signoff.json",
+    "evidence/phase1/invproc_06_ci_wiring_closeout.json",
+    "scripts/audit/verify_human_governance_review_signoff.sh",
+    "scripts/audit/verify_invproc_06_ci_wiring_closeout.sh"
+  ],
+  "changed_files": [],
+  "errors": []
+}
