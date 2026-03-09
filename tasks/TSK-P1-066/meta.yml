@@ -1,0 +1,42 @@
+schema_version: 1
+phase: '1'
+task_id: TSK-P1-066
+title: Enforce bounded ingress amount validation
+owner_role: SECURITY_GUARDIAN
+status: planned
+depends_on: []
+touches:
+- services/ledger-api/dotnet/src/LedgerApi/Commands/IngressAndKycHandlers.cs
+- scripts/audit/**
+- tests/**
+- tasks/TSK-P1-066/meta.yml
+- docs/plans/phase1/TSK-P1-066_bounded_amount_validation/PLAN.md
+- docs/plans/phase1/TSK-P1-066_bounded_amount_validation/EXEC_LOG.md
+invariants:
+- INV-077
+- INV-119
+work:
+- Add explicit upper-bound and precision-safe amount validation for ingress commands.
+- Cover large-value and malformed boundary cases with deterministic negative tests.
+- Bind the new checks into Phase-1 verifier/evidence flow if required.
+acceptance_criteria:
+- Amount validation rejects zero, negative, out-of-range, or precision-unsafe values.
+- Negative tests exist for upper-bound abuse and malformed amount payloads.
+- Client-facing validation remains deterministic and documented.
+verification:
+- bash scripts/dev/pre_ci.sh
+- rg -n "amount_minor" services/ledger-api/dotnet/src/LedgerApi/Commands/IngressAndKycHandlers.cs
+evidence:
+- evidence/phase1/ingress_api_contract_tests.json
+failure_modes:
+- Amount fields still allow extreme values that can destabilize downstream financial logic.
+- Validation fix changes accepted payload semantics without test coverage.
+must_read:
+- docs/operations/AI_AGENT_OPERATION_MANUAL.md
+- docs/security/TIER_1_FINANCIAL_SECURITY_AUDIT_2026-03-09.md
+implementation_plan: docs/plans/phase1/TSK-P1-066_bounded_amount_validation/PLAN.md
+implementation_log: docs/plans/phase1/TSK-P1-066_bounded_amount_validation/EXEC_LOG.md
+notes: Maps to the high severity amount-validation finding in the Tier-1 audit.
+client: codex_cli
+assigned_agent: security_guardian
+model: gpt-5-codex

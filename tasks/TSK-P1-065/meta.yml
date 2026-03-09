@@ -1,0 +1,44 @@
+schema_version: 1
+phase: '1'
+task_id: TSK-P1-065
+title: Remove hardcoded self-test secrets from production-path code surfaces
+owner_role: SECURITY_GUARDIAN
+status: planned
+depends_on: []
+touches:
+- services/ledger-api/dotnet/src/LedgerApi/Program.cs
+- scripts/security/**
+- scripts/audit/**
+- docs/security/TIER_1_FINANCIAL_SECURITY_AUDIT_2026-03-09.md
+- tasks/TSK-P1-065/meta.yml
+- docs/plans/phase1/TSK-P1-065_remove_hardcoded_self_test_secrets/PLAN.md
+- docs/plans/phase1/TSK-P1-065_remove_hardcoded_self_test_secrets/EXEC_LOG.md
+invariants:
+- INV-005
+- INV-108
+work:
+- Remove hardcoded test API keys and signing keys from self-test code paths in Program.cs.
+- Replace them with environment-driven or fixture-injected test configuration that fails closed when missing.
+- Extend security verification so hardcoded secret regressions are caught mechanically.
+acceptance_criteria:
+- No hardcoded test secrets remain in production-path source files.
+- Self-tests continue to function with explicit environment or deterministic test fixture injection.
+- Security scan coverage includes the removed pattern and fails closed on reintroduction.
+verification:
+- bash scripts/audit/run_security_fast_checks.sh
+- rg -n "test-api-key|signing key|secret" services/ledger-api/dotnet/src/LedgerApi/Program.cs
+evidence:
+- evidence/phase0/security_secrets_scan.json
+- evidence/phase0/security_insecure_patterns.json
+failure_modes:
+- Self-test code still embeds secrets that can leak into production runs.
+- Remediation removes secrets but silently weakens self-test execution.
+must_read:
+- docs/operations/AI_AGENT_OPERATION_MANUAL.md
+- docs/security/TIER_1_FINANCIAL_SECURITY_AUDIT_2026-03-09.md
+implementation_plan: docs/plans/phase1/TSK-P1-065_remove_hardcoded_self_test_secrets/PLAN.md
+implementation_log: docs/plans/phase1/TSK-P1-065_remove_hardcoded_self_test_secrets/EXEC_LOG.md
+notes: Maps to the critical hardcoded-secret finding in the Tier-1 audit.
+client: codex_cli
+assigned_agent: security_guardian
+model: gpt-5-codex

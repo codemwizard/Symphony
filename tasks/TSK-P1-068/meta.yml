@@ -1,0 +1,42 @@
+schema_version: 1
+phase: '1'
+task_id: TSK-P1-068
+title: Add endpoint-specific rate limiting for sensitive surfaces
+owner_role: SECURITY_GUARDIAN
+status: planned
+depends_on: []
+touches:
+- services/ledger-api/dotnet/src/LedgerApi/Program.cs
+- docs/security/TIER_1_FINANCIAL_SECURITY_AUDIT_2026-03-09.md
+- scripts/audit/**
+- tasks/TSK-P1-068/meta.yml
+- docs/plans/phase1/TSK-P1-068_sensitive_endpoint_rate_limits/PLAN.md
+- docs/plans/phase1/TSK-P1-068_sensitive_endpoint_rate_limits/EXEC_LOG.md
+invariants:
+- INV-077
+- INV-108
+work:
+- Identify sensitive or admin endpoints that require tighter rate limits than the global default.
+- Implement endpoint-specific rate limiting without weakening existing API access control semantics.
+- Add verification for policy assignment and fail-closed behavior on sensitive endpoints.
+acceptance_criteria:
+- Sensitive endpoints have explicit rate-limit policies separate from the global default.
+- Rate limiting is testable and documented for the protected endpoints.
+- Failure or misconfiguration does not silently disable protection on those endpoints.
+verification:
+- bash scripts/audit/run_security_fast_checks.sh
+- rg -n "RateLimiter|RequireRateLimiting|rate limit" services/ledger-api/dotnet/src/LedgerApi/Program.cs
+evidence:
+- evidence/phase0/security_secure_config_lint.json
+failure_modes:
+- Sensitive endpoints remain protected only by a broad global limit.
+- Endpoint-specific limits are added but not actually attached to the intended routes.
+must_read:
+- docs/operations/AI_AGENT_OPERATION_MANUAL.md
+- docs/security/TIER_1_FINANCIAL_SECURITY_AUDIT_2026-03-09.md
+implementation_plan: docs/plans/phase1/TSK-P1-068_sensitive_endpoint_rate_limits/PLAN.md
+implementation_log: docs/plans/phase1/TSK-P1-068_sensitive_endpoint_rate_limits/EXEC_LOG.md
+notes: Maps to the medium severity rate-limiting finding in the Tier-1 audit.
+client: codex_cli
+assigned_agent: security_guardian
+model: gpt-5-codex

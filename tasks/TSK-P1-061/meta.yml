@@ -1,0 +1,47 @@
+schema_version: 1
+phase: '1'
+task_id: TSK-P1-061
+title: Codify repository-wide Git containment rule for mutable fixtures
+owner_role: SUPERVISOR
+status: planned
+depends_on: []
+touches:
+- docs/audits/FORENSIC_REPORT_DIFF_PARITY_FIXTURE_2026-03-09.md
+- docs/operations/AI_AGENT_OPERATION_MANUAL.md
+- docs/tasks/PHASE1_SECURITY_AND_GIT_CONTAINMENT_REMEDIATION_2026-03-09.md
+- scripts/audit/**
+- tasks/TSK-P1-061/meta.yml
+- docs/plans/phase1/TSK-P1-061_git_containment_rule/PLAN.md
+- docs/plans/phase1/TSK-P1-061_git_containment_rule/EXEC_LOG.md
+invariants:
+- INV-077
+- INV-105
+- INV-119
+work:
+- Define the reusable engineering rule for any fixture or script that mutates Git state.
+- Inventory current mutable Git fixtures and record which ones already comply or violate the rule.
+- Bind the rule to audit and operator documentation so future work does not treat containment as ad hoc.
+acceptance_criteria:
+- A canonical containment rule exists with explicit requirements for Git env scrubbing and repository identity assertions.
+- Mutable Git fixtures and runners are inventoried with compliance status.
+- The rule is linked from the operation manual or equivalent governance surface.
+verification:
+- rg -n "Git containment|GIT_DIR|GIT_WORK_TREE|repository identity" docs/audits/FORENSIC_REPORT_DIFF_PARITY_FIXTURE_2026-03-09.md docs/tasks/PHASE1_SECURITY_AND_GIT_CONTAINMENT_REMEDIATION_2026-03-09.md docs/operations/AI_AGENT_OPERATION_MANUAL.md
+- bash scripts/audit/run_invariants_fast_checks.sh
+evidence:
+- evidence/phase1/agent_conformance_architect.json
+- evidence/phase1/agent_conformance_implementer.json
+- evidence/phase1/agent_conformance_policy_guardian.json
+failure_modes:
+- Containment rule remains incident-specific and does not become a reusable engineering control.
+- Mutable Git fixtures remain undiscovered and continue to rely on unsafe default shell state.
+must_read:
+- docs/operations/AI_AGENT_OPERATION_MANUAL.md
+- docs/audits/FORENSIC_REPORT_DIFF_PARITY_FIXTURE_2026-03-09.md
+- docs/security/TIER_1_FINANCIAL_SECURITY_AUDIT_2026-03-09.md
+implementation_plan: docs/plans/phase1/TSK-P1-061_git_containment_rule/PLAN.md
+implementation_log: docs/plans/phase1/TSK-P1-061_git_containment_rule/EXEC_LOG.md
+notes: Governance/bootstrap task for repo-wide Git mutation safety.
+client: codex_cli
+assigned_agent: supervisor
+model: gpt-5-codex
