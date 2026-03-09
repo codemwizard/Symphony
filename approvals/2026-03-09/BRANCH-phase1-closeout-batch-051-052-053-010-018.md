@@ -31,3 +31,6 @@ Approved At: 2026-03-09T11:36:00Z
 ## 8. Cross-References (Machine-Readable)
 
 Approval Sidecar JSON: approvals/2026-03-09/BRANCH-phase1-closeout-batch-051-052-053-010-018.approval.json
+
+## Amendment (2026-03-09T14:57:00Z)
+Approval scope extended to cover CI-merged-ref governance signoff verifier behavior, the verifier implementation update at `scripts/audit/verify_human_governance_review_signoff.sh`, and the associated agent conformance evidence files emitted on this branch.

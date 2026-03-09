@@ -3,8 +3,8 @@
   "approval": {
     "status": "APPROVED",
     "approver_id": "governance-human-reviewer",
-    "change_reason": "Close the Phase-1 semantic/closeout batch truthfully and preserve blocked closeout dependencies where prerequisites remain incomplete",
-    "approved_at_utc": "2026-03-09T11:36:00Z",
+    "change_reason": "Close the Phase-1 semantic/closeout batch truthfully and preserve blocked closeout dependencies where prerequisites remain incomplete; amended to cover governance signoff verifier and conformance evidence drift on CI refs",
+    "approved_at_utc": "2026-03-09T14:57:00Z",
     "role_authority": "Human Approver"
   },
   "ai": {
@@ -61,7 +61,12 @@
       "tasks/TSK-P1-018/meta.yml",
       "tasks/TSK-P1-051/meta.yml",
       "tasks/TSK-P1-052/meta.yml",
-      "tasks/TSK-P1-053/meta.yml"
+      "tasks/TSK-P1-053/meta.yml",
+      "evidence/phase1/agent_conformance_architect.json",
+      "evidence/phase1/agent_conformance_implementer.json",
+      "evidence/phase1/agent_conformance_policy_guardian.json",
+      "evidence/phase1/agent_role_mapping.json",
+      "scripts/audit/verify_human_governance_review_signoff.sh"
     ],
     "invariants": [
       "INV-105",
