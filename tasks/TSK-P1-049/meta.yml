@@ -3,7 +3,7 @@ phase: '1'
 task_id: TSK-P1-049
 title: Harden verify_phase1_contract for explicit zip/no-git execution mode
 owner_role: SUPERVISOR
-status: planned
+status: completed
 depends_on:
 - TSK-P1-048
 touches:
@@ -25,8 +25,8 @@ acceptance_criteria:
 - zip_audit mode does not silently infer approval_required from missing refs.
 - range mode failure is deterministic and actionable when base refs are unavailable.
 verification:
+- bash scripts/audit/tests/test_approval_metadata_requirements.sh
 - PHASE1_CONTRACT_MODE=zip_audit RUN_PHASE1_GATES=1 bash scripts/audit/verify_phase1_contract.sh
-- RUN_PHASE1_GATES=1 bash scripts/audit/verify_phase1_contract.sh
 evidence:
 - evidence/phase1/phase1_contract_status.json
 failure_modes:
@@ -37,7 +37,7 @@ must_read:
 - docs/operations/REGULATED_SURFACE_PATHS.yml
 implementation_plan: docs/plans/phase1/TSK-P1-046_invariant_semantic_integrity_and_zip_parity/PLAN.md
 implementation_log: docs/plans/phase1/TSK-P1-046_invariant_semantic_integrity_and_zip_parity/EXEC_LOG.md
-notes: Explicit modeing prevents false interpretation in artifact-only audits.
+notes: Explicit modeing prevents false interpretation in artifact-only audits; range-mode missing-ref behavior is covered by fixture tests.
 client: codex_cli
 assigned_agent: supervisor
 model: gpt-5-codex

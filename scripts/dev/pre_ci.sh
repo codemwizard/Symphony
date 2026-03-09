@@ -626,6 +626,70 @@ if [[ "${RUN_PHASE1_GATES:-0}" == "1" ]]; then
     exit 1
   fi
 
+  echo "==> Phase-1 no backward calls verification (INV-135)"
+  if [[ -x scripts/audit/verify_no_backward_calls.sh ]]; then
+    scripts/audit/verify_no_backward_calls.sh
+  else
+    echo "ERROR: scripts/audit/verify_no_backward_calls.sh not found"
+    exit 1
+  fi
+
+  echo "==> Phase-1 OU ownership registry verification (INV-136)"
+  if [[ -x scripts/db/verify_ou_ownership_registry.sh ]]; then
+    scripts/db/verify_ou_ownership_registry.sh
+  else
+    echo "ERROR: scripts/db/verify_ou_ownership_registry.sh not found"
+    exit 1
+  fi
+
+  echo "==> Phase-1 plane isolation verification (INV-137)"
+  if [[ -x scripts/db/verify_plane_isolation.sh ]]; then
+    scripts/db/verify_plane_isolation.sh
+  else
+    echo "ERROR: scripts/db/verify_plane_isolation.sh not found"
+    exit 1
+  fi
+
+  echo "==> Phase-1 identity provenance immutability verification (INV-142)"
+  if [[ -x scripts/audit/verify_identity_provenance_immutability.sh ]]; then
+    scripts/audit/verify_identity_provenance_immutability.sh
+  else
+    echo "ERROR: scripts/audit/verify_identity_provenance_immutability.sh not found"
+    exit 1
+  fi
+
+  echo "==> Phase-1 audit precedence verification (INV-143)"
+  if [[ -x scripts/audit/verify_audit_precedence.sh ]]; then
+    scripts/audit/verify_audit_precedence.sh
+  else
+    echo "ERROR: scripts/audit/verify_audit_precedence.sh not found"
+    exit 1
+  fi
+
+  echo "==> Phase-1 card-data non-presence verification (INV-144)"
+  if [[ -x scripts/security/verify_card_data_non_presence.sh ]]; then
+    scripts/security/verify_card_data_non_presence.sh
+  else
+    echo "ERROR: scripts/security/verify_card_data_non_presence.sh not found"
+    exit 1
+  fi
+
+  echo "==> Phase-1 attestation/outbox atomicity verification (INV-146)"
+  if [[ -x scripts/db/verify_attestation_outbox_atomicity.sh ]]; then
+    scripts/db/verify_attestation_outbox_atomicity.sh
+  else
+    echo "ERROR: scripts/db/verify_attestation_outbox_atomicity.sh not found"
+    exit 1
+  fi
+
+  echo "==> Phase-1 command lifecycle integrity verification (INV-147)"
+  if [[ -x scripts/db/verify_command_lifecycle_integrity.sh ]]; then
+    scripts/db/verify_command_lifecycle_integrity.sh
+  else
+    echo "ERROR: scripts/db/verify_command_lifecycle_integrity.sh not found"
+    exit 1
+  fi
+
   echo "==> Phase-1 instruction hierarchy SQLSTATE mapping verification (TSK-P1-HIER-009)"
   if [[ -x scripts/db/verify_hier_009_instruction_hierarchy_sqlstates.sh ]]; then
     scripts/db/verify_hier_009_instruction_hierarchy_sqlstates.sh --evidence evidence/phase1/hier_009_instruction_hierarchy_sqlstates.json
@@ -714,6 +778,14 @@ if [[ "${RUN_PHASE1_GATES:-0}" == "1" ]]; then
     exit 1
   fi
 
+  echo "==> Phase-1 command/query DB role separation verification (INV-149)"
+  if [[ -x scripts/db/verify_command_query_role_separation.sh ]]; then
+    scripts/db/verify_command_query_role_separation.sh
+  else
+    echo "ERROR: scripts/db/verify_command_query_role_separation.sh not found"
+    exit 1
+  fi
+
   echo "==> Phase-1 adapter interface contract tests (TSK-P1-ADP-001)"
   if [[ -x scripts/audit/verify_adp_001_adapter_contract_tests.sh ]]; then
     scripts/audit/verify_adp_001_adapter_contract_tests.sh --evidence evidence/phase1/adp_001_adapter_contract_tests.json
@@ -727,6 +799,14 @@ if [[ "${RUN_PHASE1_GATES:-0}" == "1" ]]; then
     scripts/audit/verify_adp_002_simulated_rail_adapter.sh --evidence evidence/phase1/adp_002_simulated_rail_adapter.json
   else
     echo "ERROR: scripts/audit/verify_adp_002_simulated_rail_adapter.sh not found"
+    exit 1
+  fi
+
+  echo "==> Phase-1 no hot-table external reads verification (INV-151)"
+  if [[ -x scripts/audit/verify_no_hot_table_external_reads.sh ]]; then
+    scripts/audit/verify_no_hot_table_external_reads.sh
+  else
+    echo "ERROR: scripts/audit/verify_no_hot_table_external_reads.sh not found"
     exit 1
   fi
 

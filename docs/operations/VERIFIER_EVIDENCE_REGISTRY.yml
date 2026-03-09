@@ -191,3 +191,39 @@ registry:
   scripts/audit/verify_cut_004_projection_cutover_gate.sh:
     emits:
     - evidence/phase1/cut_004_projection_cutover_gate.json
+  scripts/audit/verify_no_backward_calls.sh:
+    emits:
+    - evidence/phase1/no_backward_calls.json
+  scripts/db/verify_ou_ownership_registry.sh:
+    emits:
+    - evidence/phase1/ou_ownership_registry.json
+  scripts/db/verify_plane_isolation.sh:
+    emits:
+    - evidence/phase1/plane_isolation.json
+  scripts/audit/verify_identity_provenance_immutability.sh:
+    emits:
+    - evidence/phase1/identity_provenance_immutability.json
+  scripts/audit/verify_audit_precedence.sh:
+    emits:
+    - evidence/phase1/audit_precedence.json
+  scripts/security/verify_card_data_non_presence.sh:
+    emits:
+    - evidence/phase1/card_data_non_presence.json
+  scripts/db/verify_attestation_outbox_atomicity.sh:
+    emits:
+    - evidence/command_integrity/cmd_001_attestation_outbox_atomicity.json
+  scripts/db/verify_command_lifecycle_integrity.sh:
+    emits:
+    - evidence/command_integrity/cmd_002_command_lifecycle_integrity.json
+  scripts/audit/verify_cqrs_code_boundary.sh:
+    emits:
+    - evidence/phase1/cqrs_001_code_separation.json
+  scripts/db/verify_command_query_role_separation.sh:
+    emits:
+    - evidence/phase1/cqrs_002_db_role_separation.json
+  scripts/db/verify_projection_freshness_and_scope.sh:
+    emits:
+    - evidence/phase1/proj_001_initial_projection_set.json
+  scripts/audit/verify_no_hot_table_external_reads.sh:
+    emits:
+    - evidence/phase1/proj_002_external_query_cutover.json

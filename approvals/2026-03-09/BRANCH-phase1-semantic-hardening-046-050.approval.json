@@ -1,8 +1,20 @@
 {
   "schema_version": "1.0",
-  "generated_at_utc": "2026-03-09T10:47:00Z",
-  "git_commit": "f50ef8ceb47fed24d6f62225b78ee609f7cd5480",
-  "change_scope": {
+  "approval": {
+    "status": "APPROVED",
+    "approver_id": "governance-human-reviewer",
+    "change_reason": "Implement TSK-P1-046 through TSK-P1-050 semantic contract hardening and deterministic zip/offline verification behavior",
+    "approved_at_utc": "2026-03-09T10:47:00Z",
+    "role_authority": "Human Approver"
+  },
+  "ai": {
+    "ai_used": true,
+    "ai_prompt_hash": "7c1f12fce956ae39f490a212b59529471188722a39c01ae3b497dff316fda1c3",
+    "model_id": "gpt-5-codex",
+    "client": "codex_cli",
+    "session_id": "phase1-semantic-hardening-046-050"
+  },
+  "scope": {
     "regulated_surfaces_touched": true,
     "paths_changed": [
       "approvals/2026-03-09/BRANCH-phase1-semantic-hardening-046-050.approval.json",
@@ -37,24 +49,28 @@
       "tasks/TSK-P1-048/meta.yml",
       "tasks/TSK-P1-049/meta.yml",
       "tasks/TSK-P1-050/meta.yml"
-    ]
+    ],
+    "invariants": [
+      "INV-105",
+      "INV-119",
+      "INV-077",
+      "INV-081"
+    ],
+    "phase_boundary_ok": true
   },
-  "ai": {
-    "ai_prompt_hash": "7c1f12fce956ae39f490a212b59529471188722a39c01ae3b497dff316fda1c3",
-    "model_id": "gpt-5-codex",
-    "client": "codex_cli",
-    "session_id": "phase1-semantic-hardening-046-050"
-  },
-  "human_approval": {
-    "approver_id": "governance-human-reviewer",
-    "approval_artifact_ref": "approvals/2026-03-09/BRANCH-phase1-semantic-hardening-046-050.md",
-    "change_reason": "Implement TSK-P1-046 through TSK-P1-050 semantic contract hardening and deterministic zip/offline verification behavior",
-    "approved_at_utc": "2026-03-09T10:47:00Z"
-  },
-  "notes": "Approval metadata for TSK-P1-046 through TSK-P1-050 semantic hardening branch.",
-  "check_id": "APPROVAL-METADATA",
-  "timestamp_utc": "2026-03-09T10:47:00Z",
-  "git_sha": "f50ef8ceb47fed24d6f62225b78ee609f7cd5480",
-  "status": "PASS",
-  "schema_fingerprint": "48e1f2462b2d811f14d424ac529ee731e692f992414abfdbc35c60170590957b"
+  "verification": {
+    "commands": [
+      "bash scripts/audit/verify_remediation_trace.sh",
+      "bash scripts/audit/verify_agent_conformance.sh",
+      "bash scripts/audit/tests/test_approval_metadata_requirements.sh",
+      "bash scripts/audit/tests/test_invariant_semantic_integrity.sh",
+      "bash scripts/audit/verify_invariant_semantic_integrity.sh",
+      "PHASE1_CONTRACT_MODE=zip_audit RUN_PHASE1_GATES=1 bash scripts/audit/verify_phase1_contract.sh",
+      "SYMPHONY_OFFLINE=1 bash scripts/audit/bootstrap_local_ci_toolchain.sh",
+      "bash scripts/audit/verify_ci_toolchain.sh",
+      "scripts/dev/pre_ci.sh"
+    ],
+    "pre_ci_passed": true,
+    "notes": "Branch-scoped approval covers semantic hardening and verifier retargeting required for truthful Phase-1 contract execution."
+  }
 }

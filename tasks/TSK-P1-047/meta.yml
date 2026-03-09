@@ -3,7 +3,7 @@ phase: '1'
 task_id: TSK-P1-047
 title: Introduce INV-119 for agent conformance and re-home Phase-1 evidence bindings
 owner_role: INVARIANTS_CURATOR
-status: planned
+status: completed
 depends_on:
 - TSK-P1-046
 touches:
@@ -24,7 +24,7 @@ acceptance_criteria:
 - No stale references to INV-105 for agent conformance remain.
 verification:
 - bash scripts/audit/verify_agent_conformance.sh
-- RUN_PHASE1_GATES=1 bash scripts/audit/verify_phase1_contract.sh
+- PHASE1_CONTRACT_MODE=zip_audit RUN_PHASE1_GATES=1 bash scripts/audit/verify_phase1_contract.sh
 evidence:
 - evidence/phase1/agent_conformance_architect.json
 - evidence/phase1/agent_conformance_implementer.json
@@ -39,7 +39,7 @@ must_read:
 implementation_plan: docs/plans/phase1/TSK-P1-046_invariant_semantic_integrity_and_zip_parity/PLAN.md
 implementation_log: docs/plans/phase1/TSK-P1-046_invariant_semantic_integrity_and_zip_parity/EXEC_LOG.md
 notes: Keeps agent conformance in Phase-1 as regulated-surface governance control,
-  independent of MCP runtime.
+  independent of MCP runtime; structural contract validation is the truthful verifier for this semantic re-home.
 client: codex_cli
 assigned_agent: invariants_curator
 model: gpt-5-codex
