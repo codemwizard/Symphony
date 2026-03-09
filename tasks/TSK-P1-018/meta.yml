@@ -3,7 +3,7 @@ phase: '1'
 task_id: TSK-P1-018
 title: Exception Case Pack Generator
 owner_role: SECURITY_GUARDIAN
-status: planned
+status: completed
 depends_on:
 - TSK-P1-016
 - TSK-P1-017
@@ -26,7 +26,9 @@ acceptance_criteria:
 - Case pack generation is reproducible with deterministic content rules.
 - Missing required lifecycle references fail generation deterministically.
 verification:
-- scripts/dev/pre_ci.sh
+- bash scripts/services/test_exception_case_pack_generator.sh
+- python3 scripts/audit/validate_evidence.py --task TSK-P1-018 --evidence evidence/phase1/exception_case_pack_generation.json
+- python3 scripts/audit/validate_evidence.py --task TSK-P1-018 --evidence evidence/phase1/exception_case_pack_completeness.json
 evidence:
 - evidence/phase1/exception_case_pack_generation.json
 - evidence/phase1/exception_case_pack_completeness.json

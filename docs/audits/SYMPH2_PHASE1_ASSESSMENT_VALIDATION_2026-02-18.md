@@ -223,3 +223,10 @@ Fixes already in place and verified:
 1. Add explicit zip/no-git contract verification mode for `verify_phase1_contract.sh` (clear deterministic behavior without remote refs).
 2. Add official offline toolchain mode in `bootstrap_local_ci_toolchain.sh` with clear fail semantics or vendored toolchain package.
 3. Clarify governance docs to distinguish “agent conformance required” from “MCP allowed”, removing ambiguity in future audits.
+
+## 2026-03-09 Addendum
+- Re-ran `RUN_PHASE1_GATES=1 bash scripts/audit/verify_phase1_contract.sh` -> PASS.
+- Re-ran `RUN_PHASE1_GATES=1 bash scripts/audit/verify_phase1_closeout.sh` -> PASS.
+- Fixed deterministic self-test isolation in `LedgerApi` so file-mode Phase-1 self-tests no longer reuse shared global projection files under `/tmp`.
+- This removed a non-semantic local failure mode that could mask the actual Phase-1 contract state.
+

@@ -67,6 +67,7 @@ Status: Stage-1 complete, Stage-2 policy guard complete (evidence emitter pendin
 - Added real native AOT compilation reporting for executor-worker.
 
 ## Final Summary
+- `TSK-P1-053`: completed (audit alignment ratified; staged remediation chain allocated through `TSK-P1-060`).
 - `TSK-P1-054`: completed (Npgsql hot-path migration landed and validated).
 - `TSK-P1-055`: completed (file-store mode policy guard + evidence verifier landed).
 - `TSK-P1-056`: completed (single payload materialization optimization landed).
@@ -77,6 +78,6 @@ Status: Stage-1 complete, Stage-2 policy guard complete (evidence emitter pendin
 - repro_command: `git push origin feature/phase1-semantic-integrity-prA`
 - verification_commands_run:
   - `RUN_PHASE1_GATES=1 bash scripts/dev/pre_ci.sh` -> PASS
-- final_status: `in_progress`
+- final_status: `completed_for_phase1_followthrough`
 - origin_task_id: `TSK-P1-053`
 - origin_gate_id: `INT-G28`

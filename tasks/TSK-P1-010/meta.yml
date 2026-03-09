@@ -3,7 +3,7 @@ phase: '1'
 task_id: TSK-P1-010
 title: Phase-1 Closeout Verification
 owner_role: SUPERVISOR
-status: planned
+status: blocked
 depends_on:
 - TSK-P1-007
 - TSK-P1-008
@@ -63,7 +63,9 @@ must_read:
 - Phase1-Draft_Plan.md
 implementation_plan: docs/plans/phase1/TSK-P1-010_phase_1_closeout_verification/PLAN.md
 implementation_log: docs/plans/phase1/TSK-P1-010_phase_1_closeout_verification/EXEC_LOG.md
-notes: Final approval gate for Phase-1 implementation readiness.
+notes: Phase-1 contract and closeout verifiers are passing, but this task remains
+  blocked until declared upstream dependencies TSK-P1-019, TSK-P1-020, TSK-P1-024,
+  and TSK-P1-025 are completed or dependency scope is explicitly revised.
 client: codex_cli
 assigned_agent: supervisor
 model: <UNASSIGNED>

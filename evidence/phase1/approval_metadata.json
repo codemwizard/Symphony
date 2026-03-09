@@ -1,60 +1,14 @@
 {
-  "schema_version": "1.0",
-  "generated_at_utc": "2026-03-09T10:47:00Z",
-  "git_commit": "f50ef8ceb47fed24d6f62225b78ee609f7cd5480",
-  "change_scope": {
-    "regulated_surfaces_touched": true,
-    "paths_changed": [
-      "approvals/2026-03-09/BRANCH-phase1-semantic-hardening-046-050.approval.json",
-      "approvals/2026-03-09/BRANCH-phase1-semantic-hardening-046-050.md",
-      "docs/operations/SEMANTIC_INTEGRITY_ALLOWLIST.yml",
-      "docs/operations/VERIFIER_EVIDENCE_REGISTRY.yml",
-      "docs/plans/phase1/TSK-P1-046_invariant_semantic_integrity_and_zip_parity/EXEC_LOG.md",
-      "docs/plans/phase1/TSK-P1-046_invariant_semantic_integrity_and_zip_parity/PLAN.md",
-      "evidence/phase0/ci_toolchain.json",
-      "evidence/phase0/remediation_trace.json",
-      "evidence/phase1/agent_conformance_architect.json",
-      "evidence/phase1/agent_conformance_implementer.json",
-      "evidence/phase1/agent_conformance_policy_guardian.json",
-      "evidence/phase1/approval_metadata.json",
-      "evidence/phase1/human_governance_review_signoff.json",
-      "evidence/phase1/invariant_semantic_integrity.json",
-      "evidence/phase1/phase1_contract_status.json",
-      "scripts/audit/lib/approval_requirement.py",
-      "scripts/audit/tests/test_approval_metadata_requirements.sh",
-      "scripts/audit/verify_audit_precedence.sh",
-      "scripts/audit/verify_identity_provenance_immutability.sh",
-      "scripts/audit/verify_no_backward_calls.sh",
-      "scripts/audit/verify_phase1_contract.sh",
-      "scripts/db/verify_attestation_outbox_atomicity.sh",
-      "scripts/db/verify_command_lifecycle_integrity.sh",
-      "scripts/db/verify_ou_ownership_registry.sh",
-      "scripts/db/verify_plane_isolation.sh",
-      "scripts/dev/pre_ci.sh",
-      "scripts/security/verify_card_data_non_presence.sh",
-      "tasks/TSK-P1-046/meta.yml",
-      "tasks/TSK-P1-047/meta.yml",
-      "tasks/TSK-P1-048/meta.yml",
-      "tasks/TSK-P1-049/meta.yml",
-      "tasks/TSK-P1-050/meta.yml"
-    ]
-  },
-  "ai": {
-    "ai_prompt_hash": "7c1f12fce956ae39f490a212b59529471188722a39c01ae3b497dff316fda1c3",
-    "model_id": "gpt-5-codex",
-    "client": "codex_cli",
-    "session_id": "phase1-semantic-hardening-046-050"
-  },
-  "human_approval": {
-    "approver_id": "governance-human-reviewer",
-    "approval_artifact_ref": "approvals/2026-03-09/BRANCH-phase1-semantic-hardening-046-050.md",
-    "change_reason": "Implement TSK-P1-046 through TSK-P1-050 semantic contract hardening and deterministic zip/offline verification behavior",
-    "approved_at_utc": "2026-03-09T10:47:00Z"
-  },
-  "notes": "Approval metadata for TSK-P1-046 through TSK-P1-050 semantic hardening branch.",
   "check_id": "APPROVAL-METADATA",
-  "timestamp_utc": "2026-03-09T10:47:00Z",
-  "git_sha": "f50ef8ceb47fed24d6f62225b78ee609f7cd5480",
-  "status": "PASS",
-  "schema_fingerprint": "48e1f2462b2d811f14d424ac529ee731e692f992414abfdbc35c60170590957b"
+  "timestamp_utc": "2026-03-09T11:36:00Z",
+  "git_sha": "PENDING_COMMIT",
+  "schema_fingerprint": "PENDING_SCHEMA",
+  "human_approval": {
+    "approval_artifact_ref": "approvals/2026-03-09/BRANCH-phase1-closeout-batch-051-052-053-010-018.md",
+    "approver_id": "governance-human-reviewer",
+    "approved_at_utc": "2026-03-09T11:36:00Z",
+    "status": "APPROVED"
+  },
+  "branch": "phase1/closeout-batch-051-052-053-010-018",
+  "notes": "Branch approval metadata for regulated-surface Phase-1 closeout batch."
 }

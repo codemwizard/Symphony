@@ -1,0 +1,349 @@
+{
+  "check_id": "PHASE1-CLOSEOUT-VERIFICATION",
+  "timestamp_utc": "2026-03-09T11:33:50Z",
+  "git_sha": "ba00446fb5cdf29487d7f5faca90c4c39cbbe954",
+  "schema_fingerprint": "48e1f2462b2d811f14d424ac529ee731e692f992414abfdbc35c60170590957b",
+  "status": "PASS",
+  "run_phase1_gates": true,
+  "contract_file": "/home/mwiza/workspace/Symphony/docs/PHASE1/phase1_contract.yml",
+  "required_artifacts": [
+    "evidence/command_integrity/cmd_001_attestation_outbox_atomicity.json",
+    "evidence/command_integrity/cmd_002_command_lifecycle_integrity.json",
+    "evidence/phase0/anchor_sync_hooks.json",
+    "evidence/phase0/boz_observability_role.json",
+    "evidence/phase0/db_timeout_posture.json",
+    "evidence/phase0/pii_leakage_payloads.json",
+    "evidence/phase0/remediation_trace.json",
+    "evidence/phase1/adp_001_adapter_contract_tests.json",
+    "evidence/phase1/adp_002_simulated_rail_adapter.json",
+    "evidence/phase1/adp_003_deterministic_rail_routing.json",
+    "evidence/phase1/agent_conformance_architect.json",
+    "evidence/phase1/agent_conformance_implementer.json",
+    "evidence/phase1/agent_conformance_policy_guardian.json",
+    "evidence/phase1/anchor_sync_operational_invariant.json",
+    "evidence/phase1/approval_metadata.json",
+    "evidence/phase1/audit_precedence.json",
+    "evidence/phase1/card_data_non_presence.json",
+    "evidence/phase1/cqrs_001_code_separation.json",
+    "evidence/phase1/cqrs_002_db_role_separation.json",
+    "evidence/phase1/cut_001_one_shot_projection_cutover.json",
+    "evidence/phase1/cut_002_query_surface_boundary.json",
+    "evidence/phase1/cut_003_projection_cutover_runbook.json",
+    "evidence/phase1/cut_004_projection_cutover_gate.json",
+    "evidence/phase1/dotnet_lint_quality.json",
+    "evidence/phase1/hier_008_sim_swap_alerts.json",
+    "evidence/phase1/hier_009_instruction_hierarchy_sqlstates.json",
+    "evidence/phase1/hier_010_program_migration.json",
+    "evidence/phase1/hier_011_supervisor_access_mechanisms.json",
+    "evidence/phase1/human_governance_review_signoff.json",
+    "evidence/phase1/identity_provenance_immutability.json",
+    "evidence/phase1/inf_002_container_build_pipeline.json",
+    "evidence/phase1/inf_005_openbao_external_secrets.json",
+    "evidence/phase1/ingress_hotpath_indexes.json",
+    "evidence/phase1/instruction_finality_invariant.json",
+    "evidence/phase1/invproc_06_ci_wiring_closeout.json",
+    "evidence/phase1/led_001_invariants_ci_cluster.json",
+    "evidence/phase1/led_002_retention_archive_restore.json",
+    "evidence/phase1/led_003_canonical_message_model.json",
+    "evidence/phase1/led_004_kyc_hash_bridge_endpoint.json",
+    "evidence/phase1/no_backward_calls.json",
+    "evidence/phase1/ou_ownership_registry.json",
+    "evidence/phase1/p1_057_final_perf_promotion.json",
+    "evidence/phase1/perf_001_engine_metrics_capture.json",
+    "evidence/phase1/perf_002_regression_detection_warmup.json",
+    "evidence/phase1/perf_003_rebaseline_sha_lock.json",
+    "evidence/phase1/perf_004__perf_contracts_closeout_checks_extends_verify.json",
+    "evidence/phase1/perf_005__regulatory_timing_compliance_gate.json",
+    "evidence/phase1/perf_005a_finality_seam_stub.json",
+    "evidence/phase1/perf_006__operational_risk_framework_translation_layer.json",
+    "evidence/phase1/pii_decoupling_invariant.json",
+    "evidence/phase1/plane_isolation.json",
+    "evidence/phase1/proj_001_initial_projection_set.json",
+    "evidence/phase1/proj_002_external_query_cutover.json",
+    "evidence/phase1/rail_sequence_truth_anchor.json",
+    "evidence/phase1/reg_002_daily_report_signed_output.json",
+    "evidence/phase1/reg_003_incident_48h_export.json",
+    "evidence/phase1/ten_001_ingress_tenant_context.json",
+    "evidence/phase1/ten_002_rls_leakage.json",
+    "evidence/phase1/ten_003_tenant_onboarding_admin.json",
+    "evidence/phase1/tsk_p1_202__closeout_verifier_scaffold_fail_if_contract.json",
+    "evidence/phase1/tsk_p1_esc_001__escrow_state_machine_atomic_reservation_semantics.json",
+    "evidence/phase1/tsk_p1_esc_002__escrow_invariants_cross_tenant_protections.json",
+    "evidence/phase1/tsk_p1_inf_001__postgres_ha_backups_pitr_operator.json",
+    "evidence/phase1/tsk_p1_inf_003__k8s_manifests_migration_job_health_proof.json",
+    "evidence/phase1/tsk_p1_inf_004__service_mtls_mesh.json",
+    "evidence/phase1/tsk_p1_inf_006__evidence_signing_key_management_openbao_rotation.json",
+    "evidence/phase1/tsk_p1_reg_001__boz_observability_role_read_only_views.json"
+  ],
+  "checked": [
+    {
+      "path": "evidence/command_integrity/cmd_001_attestation_outbox_atomicity.json",
+      "status": "PASS"
+    },
+    {
+      "path": "evidence/command_integrity/cmd_002_command_lifecycle_integrity.json",
+      "status": "PASS"
+    },
+    {
+      "path": "evidence/phase0/anchor_sync_hooks.json",
+      "status": "PASS"
+    },
+    {
+      "path": "evidence/phase0/boz_observability_role.json",
+      "status": "PASS"
+    },
+    {
+      "path": "evidence/phase0/db_timeout_posture.json",
+      "status": "PASS"
+    },
+    {
+      "path": "evidence/phase0/pii_leakage_payloads.json",
+      "status": "PASS"
+    },
+    {
+      "path": "evidence/phase0/remediation_trace.json",
+      "status": "PASS"
+    },
+    {
+      "path": "evidence/phase1/adp_001_adapter_contract_tests.json",
+      "status": "PASS"
+    },
+    {
+      "path": "evidence/phase1/adp_002_simulated_rail_adapter.json",
+      "status": "PASS"
+    },
+    {
+      "path": "evidence/phase1/adp_003_deterministic_rail_routing.json",
+      "status": "PASS"
+    },
+    {
+      "path": "evidence/phase1/agent_conformance_architect.json",
+      "status": "PASS"
+    },
+    {
+      "path": "evidence/phase1/agent_conformance_implementer.json",
+      "status": "PASS"
+    },
+    {
+      "path": "evidence/phase1/agent_conformance_policy_guardian.json",
+      "status": "PASS"
+    },
+    {
+      "path": "evidence/phase1/anchor_sync_operational_invariant.json",
+      "status": "PASS"
+    },
+    {
+      "path": "evidence/phase1/approval_metadata.json",
+      "status": "PASS"
+    },
+    {
+      "path": "evidence/phase1/audit_precedence.json",
+      "status": "PASS"
+    },
+    {
+      "path": "evidence/phase1/card_data_non_presence.json",
+      "status": "PASS"
+    },
+    {
+      "path": "evidence/phase1/cqrs_001_code_separation.json",
+      "status": "PASS"
+    },
+    {
+      "path": "evidence/phase1/cqrs_002_db_role_separation.json",
+      "status": "PASS"
+    },
+    {
+      "path": "evidence/phase1/cut_001_one_shot_projection_cutover.json",
+      "status": "PASS"
+    },
+    {
+      "path": "evidence/phase1/cut_002_query_surface_boundary.json",
+      "status": "PASS"
+    },
+    {
+      "path": "evidence/phase1/cut_003_projection_cutover_runbook.json",
+      "status": "PASS"
+    },
+    {
+      "path": "evidence/phase1/cut_004_projection_cutover_gate.json",
+      "status": "PASS"
+    },
+    {
+      "path": "evidence/phase1/dotnet_lint_quality.json",
+      "status": "PASS"
+    },
+    {
+      "path": "evidence/phase1/hier_008_sim_swap_alerts.json",
+      "status": "PASS"
+    },
+    {
+      "path": "evidence/phase1/hier_009_instruction_hierarchy_sqlstates.json",
+      "status": "PASS"
+    },
+    {
+      "path": "evidence/phase1/hier_010_program_migration.json",
+      "status": "PASS"
+    },
+    {
+      "path": "evidence/phase1/hier_011_supervisor_access_mechanisms.json",
+      "status": "PASS"
+    },
+    {
+      "path": "evidence/phase1/human_governance_review_signoff.json",
+      "status": "FAIL"
+    },
+    {
+      "path": "evidence/phase1/identity_provenance_immutability.json",
+      "status": "PASS"
+    },
+    {
+      "path": "evidence/phase1/inf_002_container_build_pipeline.json",
+      "status": "PASS"
+    },
+    {
+      "path": "evidence/phase1/inf_005_openbao_external_secrets.json",
+      "status": "PASS"
+    },
+    {
+      "path": "evidence/phase1/ingress_hotpath_indexes.json",
+      "status": "PASS"
+    },
+    {
+      "path": "evidence/phase1/instruction_finality_invariant.json",
+      "status": "PASS"
+    },
+    {
+      "path": "evidence/phase1/invproc_06_ci_wiring_closeout.json",
+      "status": "PASS"
+    },
+    {
+      "path": "evidence/phase1/led_001_invariants_ci_cluster.json",
+      "status": "PASS"
+    },
+    {
+      "path": "evidence/phase1/led_002_retention_archive_restore.json",
+      "status": "PASS"
+    },
+    {
+      "path": "evidence/phase1/led_003_canonical_message_model.json",
+      "status": "PASS"
+    },
+    {
+      "path": "evidence/phase1/led_004_kyc_hash_bridge_endpoint.json",
+      "status": "PASS"
+    },
+    {
+      "path": "evidence/phase1/no_backward_calls.json",
+      "status": "PASS"
+    },
+    {
+      "path": "evidence/phase1/ou_ownership_registry.json",
+      "status": "PASS"
+    },
+    {
+      "path": "evidence/phase1/p1_057_final_perf_promotion.json",
+      "status": "PASS"
+    },
+    {
+      "path": "evidence/phase1/perf_001_engine_metrics_capture.json",
+      "status": "PASS"
+    },
+    {
+      "path": "evidence/phase1/perf_002_regression_detection_warmup.json",
+      "status": "PASS"
+    },
+    {
+      "path": "evidence/phase1/perf_003_rebaseline_sha_lock.json",
+      "status": "PASS"
+    },
+    {
+      "path": "evidence/phase1/perf_004__perf_contracts_closeout_checks_extends_verify.json",
+      "status": "PASS"
+    },
+    {
+      "path": "evidence/phase1/perf_005__regulatory_timing_compliance_gate.json",
+      "status": "PASS"
+    },
+    {
+      "path": "evidence/phase1/perf_005a_finality_seam_stub.json",
+      "status": "PASS"
+    },
+    {
+      "path": "evidence/phase1/perf_006__operational_risk_framework_translation_layer.json",
+      "status": "PASS"
+    },
+    {
+      "path": "evidence/phase1/pii_decoupling_invariant.json",
+      "status": "PASS"
+    },
+    {
+      "path": "evidence/phase1/plane_isolation.json",
+      "status": "PASS"
+    },
+    {
+      "path": "evidence/phase1/proj_001_initial_projection_set.json",
+      "status": "PASS"
+    },
+    {
+      "path": "evidence/phase1/proj_002_external_query_cutover.json",
+      "status": "PASS"
+    },
+    {
+      "path": "evidence/phase1/rail_sequence_truth_anchor.json",
+      "status": "PASS"
+    },
+    {
+      "path": "evidence/phase1/reg_002_daily_report_signed_output.json",
+      "status": "PASS"
+    },
+    {
+      "path": "evidence/phase1/reg_003_incident_48h_export.json",
+      "status": "PASS"
+    },
+    {
+      "path": "evidence/phase1/ten_001_ingress_tenant_context.json",
+      "status": "PASS"
+    },
+    {
+      "path": "evidence/phase1/ten_002_rls_leakage.json",
+      "status": "PASS"
+    },
+    {
+      "path": "evidence/phase1/ten_003_tenant_onboarding_admin.json",
+      "status": "PASS"
+    },
+    {
+      "path": "evidence/phase1/tsk_p1_202__closeout_verifier_scaffold_fail_if_contract.json",
+      "status": "PASS"
+    },
+    {
+      "path": "evidence/phase1/tsk_p1_esc_001__escrow_state_machine_atomic_reservation_semantics.json",
+      "status": "PASS"
+    },
+    {
+      "path": "evidence/phase1/tsk_p1_esc_002__escrow_invariants_cross_tenant_protections.json",
+      "status": "PASS"
+    },
+    {
+      "path": "evidence/phase1/tsk_p1_inf_001__postgres_ha_backups_pitr_operator.json",
+      "status": "PASS"
+    },
+    {
+      "path": "evidence/phase1/tsk_p1_inf_003__k8s_manifests_migration_job_health_proof.json",
+      "status": "PASS"
+    },
+    {
+      "path": "evidence/phase1/tsk_p1_inf_004__service_mtls_mesh.json",
+      "status": "PASS"
+    },
+    {
+      "path": "evidence/phase1/tsk_p1_inf_006__evidence_signing_key_management_openbao_rotation.json",
+      "status": "PASS"
+    },
+    {
+      "path": "evidence/phase1/tsk_p1_reg_001__boz_observability_role_read_only_views.json",
+      "status": "PASS"
+    }
+  ],
+  "failures": []
+}

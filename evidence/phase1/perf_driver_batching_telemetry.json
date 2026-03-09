@@ -1,0 +1,20 @@
+{
+  "check_id": "TSK-P1-057",
+  "timestamp_utc": "2026-03-09T11:29:44Z",
+  "git_sha": "ba00446fb5cdf29487d7f5faca90c4c39cbbe954",
+  "schema_fingerprint": "ba00446f",
+  "status": "PASS",
+  "details": {
+    "runtime_version": ".NET 10",
+    "batching_enabled": true,
+    "batched_operations": 128,
+    "non_batched_operations": 32,
+    "batch_executions": 8,
+    "workload_profile": "non_batched=32;batched_batches=8;batch_size=16",
+    "telemetry_source": "OpenTelemetry",
+    "metric_api": "System.Diagnostics.Metrics",
+    "rows_inserted": 160,
+    "deterministic": true,
+    "error": null
+  }
+}
