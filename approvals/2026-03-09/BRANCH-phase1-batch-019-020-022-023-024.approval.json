@@ -1,8 +1,20 @@
 {
   "schema_version": "1.0",
-  "generated_at_utc": "2026-03-09T12:05:00Z",
-  "git_commit": "PENDING_COMMIT",
-  "change_scope": {
+  "approval": {
+    "status": "APPROVED",
+    "approver_id": "governance-human-reviewer",
+    "change_reason": "Complete the Phase-1 pilot-readiness task batch truthfully by binding deterministic task-level verification and evidence contracts for TSK-P1-019, TSK-P1-020, TSK-P1-022, TSK-P1-023, and TSK-P1-024",
+    "approved_at_utc": "2026-03-09T12:05:00Z",
+    "role_authority": "Human Approver"
+  },
+  "ai": {
+    "ai_used": true,
+    "ai_prompt_hash": "phase1-batch-019-020-022-023-024",
+    "model_id": "gpt-5-codex",
+    "client": "codex_cli",
+    "session_id": "phase1-batch-019-020-022-023-024"
+  },
+  "scope": {
     "regulated_surfaces_touched": true,
     "paths_changed": [
       "approvals/2026-03-09/BRANCH-phase1-batch-019-020-022-023-024.approval.json",
@@ -43,19 +55,27 @@
       "tasks/TSK-P1-022/meta.yml",
       "tasks/TSK-P1-023/meta.yml",
       "tasks/TSK-P1-024/meta.yml"
-    ]
+    ],
+    "invariants": [
+      "INV-028",
+      "INV-029",
+      "INV-072",
+      "INV-081",
+      "INV-105",
+      "INV-113"
+    ],
+    "phase_boundary_ok": true
   },
-  "ai": {
-    "ai_prompt_hash": "phase1-batch-019-020-022-023-024",
-    "model_id": "gpt-5-codex",
-    "client": "codex_cli",
-    "session_id": "phase1-batch-019-020-022-023-024"
-  },
-  "human_approval": {
-    "approver_id": "governance-human-reviewer",
-    "approval_artifact_ref": "approvals/2026-03-09/BRANCH-phase1-batch-019-020-022-023-024.md",
-    "change_reason": "Complete the Phase-1 pilot-readiness task batch truthfully by binding deterministic task-level verification and evidence contracts for TSK-P1-019, TSK-P1-020, TSK-P1-022, TSK-P1-023, and TSK-P1-024",
-    "approved_at_utc": "2026-03-09T12:05:00Z"
-  },
-  "notes": "Branch approval metadata for the regulated-surface Phase-1 pilot-readiness batch."
+  "verification": {
+    "commands": [
+      "bash scripts/audit/verify_tsk_p1_019.sh",
+      "bash scripts/audit/verify_tsk_p1_020.sh",
+      "bash scripts/audit/verify_tsk_p1_022.sh",
+      "bash scripts/audit/verify_tsk_p1_023.sh",
+      "bash scripts/audit/verify_tsk_p1_024.sh",
+      "scripts/dev/pre_ci.sh"
+    ],
+    "pre_ci_passed": true,
+    "notes": "Branch-scoped approval covers deterministic task-level verification and evidence-contract reconciliation for the pilot-readiness batch."
+  }
 }

@@ -21,4 +21,4 @@ Out of scope:
 - Verification commands complete successfully.
 
 ## Verification Commands
-- `scripts/dev/pre_ci.sh`
+- `bash scripts/audit/verify_tsk_p1_023.sh`

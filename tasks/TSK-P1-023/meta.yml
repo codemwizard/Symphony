@@ -3,7 +3,7 @@ phase: '1'
 task_id: TSK-P1-023
 title: Sandbox Deployability Baseline and Redundancy Proof
 owner_role: SECURITY_GUARDIAN
-status: planned
+status: completed
 depends_on:
 - TSK-P1-016
 - TSK-P1-019
@@ -26,7 +26,7 @@ acceptance_criteria:
 - Deploy posture checker validates required sandbox settings deterministically.
 - Artifacts support participant VPC-style deployment baseline.
 verification:
-- scripts/dev/pre_ci.sh
+- bash scripts/audit/verify_tsk_p1_023.sh
 evidence:
 - evidence/phase1/sandbox_deploy_manifest_posture.json
 failure_modes:
@@ -39,4 +39,4 @@ implementation_log: docs/plans/phase1/TSK-P1-023_sandbox_deployability_baseline_
 notes: Converts pilot from code-ready to deploy-ready posture.
 client: codex_cli
 assigned_agent: security_guardian
-model: <UNASSIGNED>
+model: gpt-5-codex

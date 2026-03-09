@@ -431,6 +431,7 @@ static class IngressSelfTestRunner
     public static async Task<int> RunAsync(ILogger logger, CancellationToken cancellationToken)
     {
         var storageFile = $"/tmp/symphony_ingress_selftest_{Guid.NewGuid():N}.ndjson";
+        using var projectionScope = SelfTestProjectionScope.Create("ingress");
         var store = new FileIngressDurabilityStore(logger, storageFile);
 
         var pass = 0;
@@ -602,6 +603,39 @@ static class IngressSelfTestRunner
         }
 
         return count;
+    }
+}
+
+sealed class SelfTestProjectionScope : IDisposable
+{
+    private readonly Dictionary<string, string?> _previousValues = new(StringComparer.Ordinal);
+
+    private SelfTestProjectionScope()
+    {
+    }
+
+    public static SelfTestProjectionScope Create(string prefix)
+    {
+        var scope = new SelfTestProjectionScope();
+        var suffix = Guid.NewGuid().ToString("N");
+        scope.Set("INSTRUCTION_STATUS_PROJECTION_FILE", $"/tmp/symphony_{prefix}_instruction_status_{suffix}.ndjson");
+        scope.Set("EVIDENCE_BUNDLE_PROJECTION_FILE", $"/tmp/symphony_{prefix}_evidence_bundle_{suffix}.ndjson");
+        scope.Set("INCIDENT_CASE_PROJECTION_FILE", $"/tmp/symphony_{prefix}_incident_case_{suffix}.ndjson");
+        return scope;
+    }
+
+    private void Set(string key, string value)
+    {
+        _previousValues[key] = Environment.GetEnvironmentVariable(key);
+        Environment.SetEnvironmentVariable(key, value);
+    }
+
+    public void Dispose()
+    {
+        foreach (var (key, previousValue) in _previousValues)
+        {
+            Environment.SetEnvironmentVariable(key, previousValue);
+        }
     }
 }
 
@@ -893,9 +927,9 @@ static class EvidencePackSelfTestRunner
         Directory.CreateDirectory(evidenceDir);
 
         var storageFile = $"/tmp/symphony_evidence_pack_selftest_{Guid.NewGuid():N}.ndjson";
-        Environment.SetEnvironmentVariable("EVIDENCE_BUNDLE_PROJECTION_FILE", storageFile);
+        using var projectionScope = SelfTestProjectionScope.Create("evidence_pack");
         var ingressStore = new FileIngressDurabilityStore(logger, storageFile);
-        var evidenceStore = new FileEvidencePackStore(logger, storageFile);
+        var evidenceStore = new FileEvidencePackStore(logger, ProjectionFiles.EvidenceBundlePath());
 
         var tenantA = Guid.NewGuid().ToString();
         var tenantB = Guid.NewGuid().ToString();
@@ -997,9 +1031,9 @@ static class ExceptionCasePackSelfTestRunner
         Directory.CreateDirectory(evidenceDir);
 
         var storageFile = $"/tmp/symphony_case_pack_selftest_{Guid.NewGuid():N}.ndjson";
-        Environment.SetEnvironmentVariable("EVIDENCE_BUNDLE_PROJECTION_FILE", storageFile);
+        using var projectionScope = SelfTestProjectionScope.Create("case_pack");
         var ingressStore = new FileIngressDurabilityStore(logger, storageFile);
-        var evidenceStore = new FileEvidencePackStore(logger, storageFile);
+        var evidenceStore = new FileEvidencePackStore(logger, ProjectionFiles.EvidenceBundlePath());
 
         var tenantA = Guid.NewGuid().ToString();
         var tenantB = Guid.NewGuid().ToString();
@@ -1038,6 +1072,7 @@ static class ExceptionCasePackSelfTestRunner
         await File.WriteAllTextAsync(generationPath, JsonSerializer.Serialize(new
         {
             check_id = "PHASE1-EXCEPTION-CASE-PACK-GENERATION",
+            task_id = "TSK-P1-018",
             timestamp_utc = meta.TimestampUtc,
             git_sha = meta.GitSha,
             schema_fingerprint = meta.SchemaFingerprint,
@@ -1053,6 +1088,7 @@ static class ExceptionCasePackSelfTestRunner
         await File.WriteAllTextAsync(completenessPath, JsonSerializer.Serialize(new
         {
             check_id = "PHASE1-EXCEPTION-CASE-PACK-COMPLETENESS",
+            task_id = "TSK-P1-018",
             timestamp_utc = meta.TimestampUtc,
             git_sha = meta.GitSha,
             schema_fingerprint = meta.SchemaFingerprint,
@@ -1246,6 +1282,7 @@ static class PilotAuthSelfTestRunner
         await File.WriteAllTextAsync(tenantPath, JsonSerializer.Serialize(new
         {
             check_id = "PHASE1-AUTHZ-TENANT-BOUNDARY",
+            task_id = "TSK-P1-022",
             timestamp_utc = meta.TimestampUtc,
             git_sha = meta.GitSha,
             schema_fingerprint = meta.SchemaFingerprint,
@@ -1260,6 +1297,7 @@ static class PilotAuthSelfTestRunner
         await File.WriteAllTextAsync(bozPath, JsonSerializer.Serialize(new
         {
             check_id = "PHASE1-BOZ-ACCESS-BOUNDARY-RUNTIME",
+            task_id = "TSK-P1-022",
             timestamp_utc = meta.TimestampUtc,
             git_sha = meta.GitSha,
             schema_fingerprint = meta.SchemaFingerprint,
