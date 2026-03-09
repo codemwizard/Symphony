@@ -1,5 +1,8 @@
 # TSK-P1-065 Plan
 
+Failure_Signature: PHASE1.SECURITY.SELFTEST.SECRET.FALLBACK
+Origin_Task_ID: TSK-P1-065
+
 ## Mission
 Remove hardcoded self-test secrets from production-path code surfaces.
 
@@ -9,6 +12,9 @@ Remove hardcoded self-test secrets from production-path code surfaces.
 
 ## Verification Commands
 - `bash scripts/audit/run_security_fast_checks.sh`
+- `rg -n "test-api-key|signing key|secret" services/ledger-api/dotnet/src/LedgerApi/Program.cs`
+
+## Repro_Command
 - `rg -n "test-api-key|signing key|secret" services/ledger-api/dotnet/src/LedgerApi/Program.cs`
 
 ## Evidence Paths
