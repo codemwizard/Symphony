@@ -1,0 +1,70 @@
+{
+  "check_id": "PHASE1-PERF-SMOKE-PROFILE",
+  "timestamp_utc": "2026-03-09T11:29:27Z",
+  "git_sha": "ba00446fb5cdf29487d7f5faca90c4c39cbbe954",
+  "schema_fingerprint": "48e1f2462b2d811f14d424ac529ee731e692f992414abfdbc35c60170590957b",
+  "status": "PASS",
+  "profile": {
+    "runner": "dotnet-selftest-profile",
+    "iterations": 3,
+    "workload": [
+      "ingress_selftest",
+      "evidence_pack_selftest",
+      "case_pack_selftest"
+    ],
+    "environment": "local",
+    "storage_mode": "file",
+    "baseline_file": "docs/operations/perf_smoke_baseline.json"
+  },
+  "warmup": {
+    "enabled": true,
+    "total_requests": 500,
+    "warmup_requests": 50,
+    "warmup_ratio_target": 0.1,
+    "minimum_warmup_requests": 50,
+    "executed_steps": [
+      "warmup_ingress_selftest",
+      "warmup_evidence_pack_selftest",
+      "warmup_case_pack_selftest"
+    ],
+    "discarded_results": true
+  },
+  "results": [
+    {
+      "name": "ingress_selftest",
+      "exit_code": 0,
+      "elapsed_ms": 1899
+    },
+    {
+      "name": "evidence_pack_selftest",
+      "exit_code": 0,
+      "elapsed_ms": 1798
+    },
+    {
+      "name": "case_pack_selftest",
+      "exit_code": 0,
+      "elapsed_ms": 1793
+    }
+  ],
+  "summary": {
+    "total_elapsed_ms": 5490,
+    "avg_elapsed_ms": 1830,
+    "p50_ms": 1798,
+    "p95_ms": 1899,
+    "p99_ms": 1899
+  },
+  "promotion": {
+    "baseline_locked": true,
+    "soft_regression_threshold_pct": 0.1,
+    "hard_regression_threshold_pct": 0.15,
+    "baseline_p95_ms": 5500.0,
+    "current_p95_ms": 1899.0,
+    "drift_pct": -0.6547272727272727,
+    "regression_classification": "PASS",
+    "allowed_p95_ms": 6324.999999999999,
+    "mode": "enforced",
+    "regression_detected": false,
+    "regression_enforced": true
+  },
+  "regression_classification": "PASS"
+}

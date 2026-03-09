@@ -3,7 +3,7 @@ phase: '1'
 task_id: TSK-P1-052
 title: Publish semantic repair closeout and regression-proof evidence report
 owner_role: SUPERVISOR
-status: planned
+status: completed
 depends_on:
 - TSK-P1-051
 touches:
@@ -34,8 +34,8 @@ failure_modes:
 - Future reviewers cannot trace semantic repair rationale and outcomes.
 must_read:
 - docs/audits/SYMPH2_PHASE1_ASSESSMENT_VALIDATION_2026-02-18.md
-implementation_plan: docs/plans/phase1/TSK-P1-046_invariant_semantic_integrity_and_zip_parity/PLAN.md
-implementation_log: docs/plans/phase1/TSK-P1-046_invariant_semantic_integrity_and_zip_parity/EXEC_LOG.md
+implementation_plan: docs/plans/phase1/TSK-P1-052_semantic_repair_closeout/PLAN.md
+implementation_log: docs/plans/phase1/TSK-P1-052_semantic_repair_closeout/EXEC_LOG.md
 notes: Program closeout task with explicit anti-regression evidence narrative.
 client: codex_cli
 assigned_agent: supervisor

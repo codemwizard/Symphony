@@ -1,8 +1,20 @@
 {
   "schema_version": "1.0",
-  "generated_at_utc": "2026-03-09T14:57:00Z",
-  "git_commit": "7ad42dba",
-  "change_scope": {
+  "approval": {
+    "status": "APPROVED",
+    "approver_id": "governance-human-reviewer",
+    "change_reason": "Close the Phase-1 semantic/closeout batch truthfully and preserve blocked closeout dependencies where prerequisites remain incomplete; amended to cover governance signoff verifier and conformance evidence drift on CI refs",
+    "approved_at_utc": "2026-03-09T14:57:00Z",
+    "role_authority": "Human Approver"
+  },
+  "ai": {
+    "ai_used": true,
+    "ai_prompt_hash": "phase1-closeout-batch-051-052-053-010-018",
+    "model_id": "gpt-5-codex",
+    "client": "codex_cli",
+    "session_id": "phase1-closeout-batch-051-052-053-010-018"
+  },
+  "scope": {
     "regulated_surfaces_touched": true,
     "paths_changed": [
       "approvals/2026-03-09/BRANCH-phase1-closeout-batch-051-052-053-010-018.approval.json",
@@ -56,19 +68,24 @@
       "evidence/phase1/agent_role_mapping.json",
       "scripts/audit/verify_human_governance_review_signoff.sh",
       "evidence/phase1/invproc_06_ci_wiring_closeout.json"
-    ]
+    ],
+    "invariants": [
+      "INV-105",
+      "INV-119",
+      "INV-077",
+      "INV-081"
+    ],
+    "phase_boundary_ok": true
   },
-  "ai": {
-    "ai_prompt_hash": "phase1-closeout-batch-051-052-053-010-018",
-    "model_id": "gpt-5-codex",
-    "client": "codex_cli",
-    "session_id": "phase1-closeout-batch-051-052-053-010-018"
-  },
-  "human_approval": {
-    "approver_id": "governance-human-reviewer",
-    "approval_artifact_ref": "approvals/2026-03-09/BRANCH-phase1-closeout-batch-051-052-053-010-018.md",
-    "change_reason": "Close the Phase-1 semantic/closeout batch truthfully and preserve blocked closeout dependencies where prerequisites remain incomplete; amended to cover governance signoff verifier and conformance evidence drift on CI refs",
-    "approved_at_utc": "2026-03-09T14:57:00Z"
-  },
-  "notes": "Branch approval metadata for regulated-surface Phase-1 closeout batch."
+  "verification": {
+    "commands": [
+      "bash scripts/services/test_exception_case_pack_generator.sh",
+      "bash scripts/audit/verify_control_planes_drift.sh",
+      "RUN_PHASE1_GATES=1 bash scripts/audit/verify_phase1_contract.sh",
+      "RUN_PHASE1_GATES=1 bash scripts/audit/verify_phase1_closeout.sh",
+      "scripts/dev/pre_ci.sh"
+    ],
+    "pre_ci_passed": true,
+    "notes": "Branch-scoped approval covers deterministic self-test isolation repair and closeout task truth reconciliation."
+  }
 }

@@ -1,11 +1,11 @@
 {
-  "timestamp_utc": "2026-03-09T10:54:38Z",
-  "git_sha": "d31b30c9eb5934965e9b53d3277bee89f06c9f42",
+  "timestamp_utc": "2026-03-09T11:42:36Z",
+  "git_sha": "45b281287de971d029f28a00b5a15464768a497f",
   "schema_fingerprint": "48e1f2462b2d811f14d424ac529ee731e692f992414abfdbc35c60170590957b",
   "schema_version": "1.0",
   "status": "PASS",
-  "checked_at_utc": "2026-03-09T10:54:38.588629+00:00",
-  "git_commit": "d31b30c9eb5934965e9b53d3277bee89f06c9f42",
+  "checked_at_utc": "2026-03-09T11:42:36.307724+00:00",
+  "git_commit": "45b281287de971d029f28a00b5a15464768a497f",
   "mode": "auto",
   "canonical_docs": [
     {
@@ -77,7 +77,7 @@
     "mode": "range",
     "base_ref": "refs/remotes/origin/main",
     "head_ref": "HEAD",
-    "merge_base": "d31b30c9eb5934965e9b53d3277bee89f06c9f42"
+    "merge_base": "ba00446fb5cdf29487d7f5faca90c4c39cbbe954"
   },
   "approval_required": false,
   "approval_metadata_present": true,

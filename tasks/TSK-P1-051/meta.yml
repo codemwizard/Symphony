@@ -3,7 +3,7 @@ phase: '1'
 task_id: TSK-P1-051
 title: Reconcile control-plane and Phase-1 contract after semantic hardening
 owner_role: SUPERVISOR
-status: planned
+status: completed
 depends_on:
 - TSK-P1-050
 touches:
@@ -34,8 +34,8 @@ failure_modes:
 must_read:
 - docs/control_planes/CONTROL_PLANES.yml
 - docs/PHASE1/phase1_contract.yml
-implementation_plan: docs/plans/phase1/TSK-P1-046_invariant_semantic_integrity_and_zip_parity/PLAN.md
-implementation_log: docs/plans/phase1/TSK-P1-046_invariant_semantic_integrity_and_zip_parity/EXEC_LOG.md
+implementation_plan: docs/plans/phase1/TSK-P1-051_control_plane_contract_reconciliation/PLAN.md
+implementation_log: docs/plans/phase1/TSK-P1-051_control_plane_contract_reconciliation/EXEC_LOG.md
 notes: Final governance topology reconciliation before closeout reporting.
 client: codex_cli
 assigned_agent: supervisor

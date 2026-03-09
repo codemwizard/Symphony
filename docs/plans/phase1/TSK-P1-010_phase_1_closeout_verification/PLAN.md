@@ -9,24 +9,19 @@ Phase-1 Closeout Verification.
 
 ## Scope
 In scope:
-- Deliver task outputs defined in `tasks/TSK-P1-010/meta.yml`.
-- Emit deterministic evidence artifacts and keep Phase-0 non-regression.
+- Run the current Phase-1 contract and closeout verification gates.
+- Record whether final closeout is mechanically green.
+- Keep the task blocked until all declared upstream dependencies are complete.
 
 Out of scope:
-- Unrelated roadmap invariants and cross-phase expansion beyond this task.
+- Overriding incomplete upstream dependencies.
+- Reclassifying declared prerequisite tasks without an explicit dependency change.
 
 ## Acceptance
-- Acceptance criteria in `tasks/TSK-P1-010/meta.yml` are met.
-- Evidence artifacts listed in task meta are generated and valid.
-- Verification commands complete successfully.
+- `RUN_PHASE1_GATES=1 bash scripts/audit/verify_phase1_contract.sh` passes.
+- `RUN_PHASE1_GATES=1 bash scripts/audit/verify_phase1_closeout.sh` passes.
+- Task remains blocked until declared upstream dependencies are all complete.
 
 ## Verification Commands
-- `scripts/audit/verify_control_planes_drift.sh`
-- `scripts/audit/validate_evidence_schema.sh`
-- `scripts/audit/verify_phase1_contract.sh`
-- `python3 scripts/audit/check_docs_match_manifest.py`
-- `scripts/audit/check_sqlstate_map_drift.sh`
-- `scripts/audit/verify_remediation_trace.sh`
-- `scripts/audit/verify_ci_order.sh`
-- `scripts/dev/pre_ci.sh`
-- `RUN_PHASE1_GATES=1 scripts/dev/pre_ci.sh`
+- `RUN_PHASE1_GATES=1 bash scripts/audit/verify_phase1_contract.sh`
+- `RUN_PHASE1_GATES=1 bash scripts/audit/verify_phase1_closeout.sh`

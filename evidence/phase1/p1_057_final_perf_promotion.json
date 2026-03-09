@@ -1,0 +1,26 @@
+{
+  "check_id": "TSK-P1-057-FINAL",
+  "task_id": "TSK-P1-057-FINAL",
+  "timestamp_utc": "2026-03-09T11:28:32Z",
+  "git_sha": "ba00446fb5cdf29487d7f5faca90c4c39cbbe954",
+  "schema_fingerprint": "48e1f2462b2d811f14d424ac529ee731e692f992414abfdbc35c60170590957b",
+  "status": "PASS",
+  "pass": true,
+  "details": {
+    "baseline_locked": true,
+    "regression_enforced": true,
+    "regression_detected": false,
+    "smoke_status": "PASS",
+    "batch_status": "PASS",
+    "aot_status": "PASS",
+    "smoke_check_id": "PHASE1-PERF-SMOKE-PROFILE",
+    "batch_check_id": "TSK-P1-057",
+    "aot_check_id": "TSK-P1-057-NATIVE-AOT"
+  },
+  "errors": [],
+  "inputs": {
+    "smoke_profile": "evidence/phase1/perf_smoke_profile.json",
+    "batching_telemetry": "evidence/phase1/perf_driver_batching_telemetry.json",
+    "native_aot_report": "evidence/phase1/native_aot_compilation_report.json"
+  }
+}

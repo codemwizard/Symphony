@@ -1,0 +1,32 @@
+{
+  "check_id": "PHASE1-PERF-DB-DRIVER-BENCH",
+  "timestamp_utc": "2026-03-09T11:29:27Z",
+  "git_sha": "ba00446fb5cdf29487d7f5faca90c4c39cbbe954",
+  "schema_fingerprint": "48e1f2462b2d811f14d424ac529ee731e692f992414abfdbc35c60170590957b",
+  "status": "PASS",
+  "driver": "NpgsqlDataSource",
+  "results": [
+    {
+      "name": "ingress_selftest",
+      "exit_code": 0,
+      "elapsed_ms": 1899
+    },
+    {
+      "name": "evidence_pack_selftest",
+      "exit_code": 0,
+      "elapsed_ms": 1798
+    },
+    {
+      "name": "case_pack_selftest",
+      "exit_code": 0,
+      "elapsed_ms": 1793
+    }
+  ],
+  "summary": {
+    "total_elapsed_ms": 5490,
+    "avg_elapsed_ms": 1830,
+    "p50_ms": 1798,
+    "p95_ms": 1899,
+    "p99_ms": 1899
+  }
+}

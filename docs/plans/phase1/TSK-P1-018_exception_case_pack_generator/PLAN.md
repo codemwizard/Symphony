@@ -9,16 +9,19 @@ Exception Case Pack Generator.
 
 ## Scope
 In scope:
-- Deliver task outputs defined in `tasks/TSK-P1-018/meta.yml`.
+- Use the existing LedgerApi exception case-pack self-test as the deterministic generator proof for Phase-1.
 - Emit deterministic evidence artifacts and keep Phase-0 non-regression.
 
 Out of scope:
-- Unrelated roadmap invariants and cross-phase expansion beyond this task.
+- New runtime service surfaces.
+- External dispute workflow expansion beyond the current Phase-1 case-pack format.
 
 ## Acceptance
-- Acceptance criteria in `tasks/TSK-P1-018/meta.yml` are met.
+- Case pack generation is reproducible with deterministic content rules.
+- Missing required lifecycle references fail generation deterministically.
 - Evidence artifacts listed in task meta are generated and valid.
-- Verification commands complete successfully.
 
 ## Verification Commands
-- `scripts/dev/pre_ci.sh`
+- `bash scripts/services/test_exception_case_pack_generator.sh`
+- `python3 scripts/audit/validate_evidence.py --task TSK-P1-018 --evidence evidence/phase1/exception_case_pack_generation.json`
+- `python3 scripts/audit/validate_evidence.py --task TSK-P1-018 --evidence evidence/phase1/exception_case_pack_completeness.json`

@@ -35,3 +35,6 @@ Plan: `docs/plans/phase1/TSK-P1-046_invariant_semantic_integrity_and_zip_parity/
 - `TSK-P1-048` completed: semantic integrity verifier/tests/allowlist/registry now pass against the current contract.
 - `TSK-P1-049` completed: explicit `zip_audit` structure-only behavior and deterministic missing-ref failure semantics are implemented and tested.
 - `TSK-P1-050` completed: offline local toolchain bootstrap remains deterministic and documented.
+- `TSK-P1-051` completed: control-plane drift and Phase-1 contract topology were revalidated after semantic repair, with Phase-1 contract PASS.
+- `TSK-P1-052` completed: published final semantic repair closeout with PASS contract and closeout evidence.
+
