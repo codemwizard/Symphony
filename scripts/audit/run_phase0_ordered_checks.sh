@@ -9,7 +9,8 @@ echo "==> Phase-0 ordered checks (canonical order)"
 run() { echo ""; echo "-> $*"; "$@"; }
 
 # Order: YAML lint → control-plane drift → plane checks → evidence schema validate → contract check
-run scripts/audit/test_diff_semantics_parity.sh
+run env -u GIT_DIR -u GIT_WORK_TREE -u GIT_INDEX_FILE -u GIT_COMMON_DIR -u GIT_OBJECT_DIRECTORY -u GIT_ALTERNATE_OBJECT_DIRECTORIES -u GIT_PREFIX scripts/audit/test_diff_semantics_parity.sh
+run scripts/audit/test_diff_semantics_parity_hostile_env.sh
 run scripts/audit/verify_diff_semantics_parity.sh
 run scripts/audit/lint_yaml_conventions.sh
 run scripts/audit/verify_control_planes_drift.sh
