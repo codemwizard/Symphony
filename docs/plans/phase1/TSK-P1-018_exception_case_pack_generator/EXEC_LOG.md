@@ -18,3 +18,8 @@ COMPLETED
 - Reused the existing `LedgerApi` deterministic case-pack self-test as the authoritative proof path.
 - Confirmed generation and completeness evidence emit under `evidence/phase1/` and validate cleanly.
 - Kept the task scoped to the existing Phase-1 primitive rather than introducing a new runtime service.
+
+Plan: `docs/plans/phase1/TSK-P1-018_exception_case_pack_generator/PLAN.md`
+
+## final summary
+- Completed as recorded above.
