@@ -54,6 +54,14 @@ rules:
     severity: ERROR
     pattern-regex: "(?i)f[\"'][^\"']*(select|insert|update|delete)[^\"']*\\{[^}]+\\}[^\"']*[\"']"
 
+  - id: symphony-python-psql-wrapper-dynamic-sink
+    languages: [python]
+    message: "Potential SQL injection: dynamic SQL passed to psql wrapper or subprocess sink."
+    severity: ERROR
+    pattern-either:
+      - pattern-regex: "(?s)psql_(scalar|json_array)\\s*\\(\\s*(f[\"']|[A-Za-z_][A-Za-z0-9_]*\\s*\\+|.*\\.format\\()"
+      - pattern-regex: "(?s)subprocess\\.(check_output|run|Popen)\\([^\\)]*['\\\"]psql['\\\"][^\\)]*['\\\"]-c['\\\"][^\\)]*(f[\"']|\\+|\\.format\\()"
+
   - id: symphony-python-percent-format-sql
     languages: [python]
     message: "Potential SQL injection: SQL query built via % formatting. Use parameters."

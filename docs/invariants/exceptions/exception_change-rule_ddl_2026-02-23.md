@@ -6,6 +6,7 @@ follow_up_ticket: TSK-P0-LEVY-004
 reason: Levy regex hardening migration updates DDL/baseline artifacts; security/compliance linkage already present in canonical docs.
 author: supervisor
 created_at: 2026-02-23
+closed_at: 2026-03-09
 ---
 
 # Exception: ddl structural change without invariants linkage

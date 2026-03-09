@@ -1,0 +1,53 @@
+schema_version: 1
+phase: '1'
+task_id: SEC-002
+title: Security scan truthfulness repair
+owner_role: SUPERVISOR
+status: completed
+depends_on:
+- FP-001
+touches:
+- scripts/security/run_semgrep_sast.sh
+- scripts/audit/verify_scan_scope.sh
+- scripts/audit/verify_semgrep_languages.sh
+- docs/contracts/SECURITY_SCAN_SCOPE.yml
+- .github/workflows/
+- security/fixtures/scan_scope/
+- tasks/SEC-002/meta.yml
+- docs/plans/phase1/SEC-002/PLAN.md
+- docs/plans/phase1/SEC-002/EXEC_LOG.md
+- evidence/security/sec_002_scan_scope_truth.json
+invariants:
+- INV-085
+work:
+- Canonicalize required scan roots so CI and evidence runs cover the same code roots.
+- Require services/ and relevant scripts/ to be scanned with per-root target counts.
+- Make Python scan parity fail closed and add required-root zero-target failure.
+acceptance_criteria:
+- Scan roots are aligned across CI and evidence generation.
+- Evidence includes scanned-root counts and zero-target required roots fail the build.
+- Python parity verification fails closed when expected findings disappear.
+verification:
+- bash scripts/audit/verify_scan_scope.sh
+- bash scripts/audit/verify_semgrep_languages.sh
+- python3 scripts/audit/validate_evidence.py --task SEC-002 --evidence evidence/security/sec_002_scan_scope_truth.json
+- RUN_PHASE1_GATES=1 scripts/dev/pre_ci.sh
+evidence:
+- evidence/security/sec_002_scan_scope_truth.json
+failure_modes:
+- Required runtime roots are omitted or unscanned => FAIL.
+- Python parity degrades to warn-only => FAIL.
+must_read:
+- docs/operations/AI_AGENT_OPERATION_MANUAL.md
+- docs/operations/AI_AGENT_WORKFLOW_AND_ROLE_PLAN_v2.md
+- docs/operations/AGENT_ROLE_RECONCILIATION.md
+implementation_plan: docs/plans/phase1/SEC-002/PLAN.md
+implementation_log: docs/plans/phase1/SEC-002/EXEC_LOG.md
+notes: 'Replaces scanner-presence theater with effective required-root coverage proof.
+
+  Intent infusion: Category B priorities and non-goals embedded from SECURITY_REVAMP_IMPL_PLAN.md;
+  mapped deterministically via intent_map.yml. Non-goals: Do not downgrade fail-closed
+  scanner behavior'
+client: codex_cli
+assigned_agent: supervisor
+model: gpt-5-codex

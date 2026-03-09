@@ -405,3 +405,69 @@
   verifier: ""
   evidence_path: ""
   notes: "Explicitly deferred in Phase-1 closeout contract."
+
+# Sprint-1 proposed phase1_contract additions
+
+- invariant_id: "INV-135"
+  status: "implemented"
+  required: true
+  gate_id: "INT-G28"
+  verifier: "scripts/audit/verify_no_backward_calls.sh"
+  evidence_path: "evidence/phase1/no_backward_calls.json"
+  notes: "INV-135 requires explicit runtime backward-call blocking proof."
+
+- invariant_id: "INV-136"
+  status: "implemented"
+  required: true
+  gate_id: "INT-G28"
+  verifier: "scripts/db/verify_ou_ownership_registry.sh"
+  evidence_path: "evidence/phase1/ou_ownership_registry.json"
+  notes: "INV-136 requires singular ownership registry enforcement for protected contexts."
+
+- invariant_id: "INV-137"
+  status: "implemented"
+  required: true
+  gate_id: "INT-G28"
+  verifier: "scripts/db/verify_plane_isolation.sh"
+  evidence_path: "evidence/phase1/plane_isolation.json"
+  notes: "INV-137 requires mechanical control-plane/data-plane isolation proof."
+
+- invariant_id: "INV-142"
+  status: "implemented"
+  required: true
+  gate_id: "INT-G28"
+  verifier: "scripts/audit/verify_identity_provenance_immutability.sh"
+  evidence_path: "evidence/phase1/identity_provenance_immutability.json"
+  notes: "INV-142 requires immutable verified identity provenance evidence."
+
+- invariant_id: "INV-143"
+  status: "implemented"
+  required: true
+  gate_id: "INT-G28"
+  verifier: "scripts/audit/verify_audit_precedence.sh"
+  evidence_path: "evidence/phase1/audit_precedence.json"
+  notes: "INV-143 requires audit-before-side-effect proof."
+
+- invariant_id: "INV-144"
+  status: "implemented"
+  required: true
+  gate_id: "INT-G28"
+  verifier: "scripts/security/verify_card_data_non_presence.sh"
+  evidence_path: "evidence/phase1/card_data_non_presence.json"
+  notes: "INV-144 requires raw-card-data non-presence evidence."
+
+- invariant_id: "INV-146"
+  status: "implemented"
+  required: true
+  gate_id: "INT-G28"
+  verifier: "scripts/db/verify_attestation_outbox_atomicity.sh"
+  evidence_path: "evidence/command_integrity/cmd_001_attestation_outbox_atomicity.json"
+  notes: "INV-146 requires no-ACK-without-durable-attestation+outbox lineage proof."
+
+- invariant_id: "INV-147"
+  status: "implemented"
+  required: true
+  gate_id: "INT-G28"
+  verifier: "scripts/db/verify_command_lifecycle_integrity.sh"
+  evidence_path: "evidence/command_integrity/cmd_002_command_lifecycle_integrity.json"
+  notes: "INV-147 requires deterministic command lifecycle and dispatch-eligibility proof."

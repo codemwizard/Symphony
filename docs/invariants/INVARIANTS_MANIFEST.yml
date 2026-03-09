@@ -1061,3 +1061,106 @@
   owners: ["team-security"]
   sla_days: 14
   verification: "scripts/audit/test_tenant_allowlist_deny_all.sh"
+# Sprint-1 proposed manifest additions
+
+- id: INV-135
+  aliases: ["I-FLOW-NO-BACKWARD-CALLS-01"]
+  status: implemented
+  severity: P1
+  title: "No backward calls across protected runtime boundaries"
+  owners: ["team-platform", "team-security"]
+  sla_days: 30
+  enforcement: "scripts/audit/verify_no_backward_calls.sh"
+  verification: "scripts/audit/verify_no_backward_calls.sh; evidence/phase1/no_backward_calls.json"
+  notes: >
+    Requires Symphony runtime/control-plane components to reject prohibited backward calls
+    before state mutation, audit commit, or external side-effects.
+
+- id: INV-136
+  aliases: ["I-FLOW-OWNERSHIP-REGISTRY-01"]
+  status: implemented
+  severity: P1
+  title: "Atomic ownership registry is explicit and enforced"
+  owners: ["team-db", "team-architecture"]
+  sla_days: 30
+  enforcement: "scripts/db/verify_ou_ownership_registry.sh"
+  verification: "scripts/db/verify_ou_ownership_registry.sh; evidence/phase1/ou_ownership_registry.json"
+  notes: >
+    Requires every protected table/context to have singular ownership and no undocumented
+    cross-context mutation paths.
+
+- id: INV-137
+  aliases: ["I-PLANE-ISOLATION-01"]
+  status: implemented
+  severity: P1
+  title: "Control plane cannot mutate data plane outside approved seams"
+  owners: ["team-db", "team-security", "team-platform"]
+  sla_days: 30
+  enforcement: "scripts/db/verify_plane_isolation.sh"
+  verification: "scripts/db/verify_plane_isolation.sh; evidence/phase1/plane_isolation.json"
+  notes: >
+    Requires explicit separation between control-plane and data-plane mutation privileges,
+    with fail-closed verifier coverage.
+
+- id: INV-142
+  aliases: ["I-IDENTITY-PROVENANCE-IMMUTABLE-01"]
+  status: implemented
+  severity: P1
+  title: "Identity provenance is immutable once verified"
+  owners: ["team-security", "team-platform"]
+  sla_days: 30
+  enforcement: "scripts/audit/verify_identity_provenance_immutability.sh"
+  verification: "scripts/audit/verify_identity_provenance_immutability.sh; evidence/phase1/identity_provenance_immutability.json"
+  notes: >
+    Requires verified identity context to remain immutable across downstream processing and
+    prohibits silent re-derivation or override.
+
+- id: INV-143
+  aliases: ["I-AUDIT-PRECEDENCE-01"]
+  status: implemented
+  severity: P1
+  title: "Audit records precede external side-effects"
+  owners: ["team-platform", "team-security"]
+  sla_days: 30
+  enforcement: "scripts/audit/verify_audit_precedence.sh"
+  verification: "scripts/audit/verify_audit_precedence.sh; evidence/phase1/audit_precedence.json"
+  notes: >
+    Requires audit commitment before external side-effects for protected runtime flows.
+
+- id: INV-144
+  aliases: ["I-CARD-DATA-NON-PRESENCE-01"]
+  status: implemented
+  severity: P1
+  title: "Raw card data is absent from schemas, logs, and traces"
+  owners: ["team-security", "team-platform"]
+  sla_days: 30
+  enforcement: "scripts/security/verify_card_data_non_presence.sh"
+  verification: "scripts/security/verify_card_data_non_presence.sh; evidence/phase1/card_data_non_presence.json"
+  notes: >
+    Enforces card-data non-presence for production schemas, logs, traces, and evidence artifacts.
+
+- id: INV-146
+  aliases: ["I-ATTESTATION-OUTBOX-ATOMICITY-01"]
+  status: implemented
+  severity: P1
+  title: "Acknowledged commands require durable attestation and outbox lineage"
+  owners: ["team-db", "team-platform"]
+  sla_days: 30
+  enforcement: "scripts/db/verify_attestation_outbox_atomicity.sh"
+  verification: "scripts/db/verify_attestation_outbox_atomicity.sh; evidence/command_integrity/cmd_001_attestation_outbox_atomicity.json"
+  notes: >
+    Enforces that acknowledged command acceptance cannot occur without durable attestation
+    and outbox lineage in the same persistence boundary.
+
+- id: INV-147
+  aliases: ["I-COMMAND-LIFECYCLE-INTEGRITY-01"]
+  status: implemented
+  severity: P1
+  title: "Command lifecycle states and dispatch eligibility remain deterministic"
+  owners: ["team-db", "team-platform"]
+  sla_days: 30
+  enforcement: "scripts/db/verify_command_lifecycle_integrity.sh"
+  verification: "scripts/db/verify_command_lifecycle_integrity.sh; evidence/command_integrity/cmd_002_command_lifecycle_integrity.json"
+  notes: >
+    Enforces deterministic command lifecycle, explicit held vs dispatch-eligible semantics,
+    and idempotent resubmission behavior across pending/attempt/terminal states.

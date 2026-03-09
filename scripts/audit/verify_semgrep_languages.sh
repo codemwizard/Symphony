@@ -162,7 +162,8 @@ if [[ "$cs_findings" -eq 0 ]]; then
 fi
 
 if [[ "$py_findings" -eq 0 ]]; then
-    echo "⚠️  Python smoke fixture produced 0 findings; coverage is enforced by rule-count and language checks."
+    echo "❌ Python test patterns not detected (rules may not be working)"
+    exit 1
 fi
 
 echo ""

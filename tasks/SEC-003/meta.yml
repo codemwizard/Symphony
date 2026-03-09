@@ -1,0 +1,50 @@
+schema_version: 1
+phase: '1'
+task_id: SEC-003
+title: Weak trust-assumption reduction
+owner_role: SUPERVISOR
+status: completed
+depends_on:
+- FP-001
+touches:
+- services/ledger-api/dotnet/src/LedgerApi/Program.cs
+- services/ledger-api/dotnet/src/LedgerApi/RequestSecurityGuards.cs
+- tasks/SEC-003/meta.yml
+- docs/plans/phase1/SEC-003/PLAN.md
+- docs/plans/phase1/SEC-003/EXEC_LOG.md
+- evidence/security/sec_003_trust_boundary_corrections.json
+invariants:
+- INV-142
+- INV-137
+work:
+- Correct forwarded-header trust assumptions and spoofable client identity handling.
+- Tighten tenant/object authorization on high-risk read/report surfaces.
+- Document any retained shared-key trust as temporary with compensating controls and
+  expiry.
+acceptance_criteria:
+- Trusted-proxy behavior is explicit or risky fallback is disabled.
+- High-risk read surfaces require tenant/object scope.
+- Residual shared-key trust shortcuts are isolated and time-bounded.
+verification:
+- bash scripts/audit/verify_sec_003_trust_boundary_corrections.sh
+- python3 scripts/audit/validate_evidence.py --task SEC-003 --evidence evidence/security/sec_003_trust_boundary_corrections.json
+- RUN_PHASE1_GATES=1 scripts/dev/pre_ci.sh
+evidence:
+- evidence/security/sec_003_trust_boundary_corrections.json
+failure_modes:
+- Forwarded-header spoof remains viable on protected paths => FAIL.
+- Cross-tenant read/report access remains possible => FAIL.
+must_read:
+- docs/operations/AI_AGENT_OPERATION_MANUAL.md
+- docs/operations/AI_AGENT_WORKFLOW_AND_ROLE_PLAN_v2.md
+- docs/operations/AGENT_ROLE_RECONCILIATION.md
+implementation_plan: docs/plans/phase1/SEC-003/PLAN.md
+implementation_log: docs/plans/phase1/SEC-003/EXEC_LOG.md
+notes: 'Targeted trust-boundary corrections prior to trust-plane rebuild.
+
+  Intent infusion: Category B priorities and non-goals embedded from SECURITY_REVAMP_IMPL_PLAN.md;
+  mapped deterministically via intent_map.yml. Non-goals: No provider integration
+  expansion'
+client: codex_cli
+assigned_agent: supervisor
+model: gpt-5-codex

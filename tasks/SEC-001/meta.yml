@@ -1,0 +1,55 @@
+schema_version: 1
+phase: '1'
+task_id: SEC-001
+title: Runtime dangerous-sink eradication
+owner_role: SUPERVISOR
+status: completed
+depends_on:
+- FP-001
+touches:
+- services/supervisor_api/server.py
+- security/semgrep/rules.yml
+- scripts/security/lint_app_sql_injection.sh
+- security/fixtures/python_sqli_sink/
+- security/fixtures/shell_embedded_python/
+- tasks/SEC-001/meta.yml
+- docs/plans/phase1/SEC-001/PLAN.md
+- docs/plans/phase1/SEC-001/EXEC_LOG.md
+- evidence/security/sec_001_dangerous_sink_policy.json
+invariants:
+- INV-130
+- INV-131
+- INV-083
+work:
+- Eliminate runtime shell-to-DB query execution from control-plane/app paths.
+- Add sink-aware blocking rules for psql_scalar(...), psql_json_array(...), and subprocess
+  psql -c usage.
+- Add regression fixtures for multi-fragment SQL assembly and direct subprocess sink
+  forms.
+acceptance_criteria:
+- No runtime shell-to-DB query path remains in production/control-plane path.
+- Dangerous sink patterns fail CI.
+- Fixture corpus proves detection of direct and composed sink forms.
+verification:
+- bash scripts/security/verify_sec_001_dangerous_sink_policy.sh
+- python3 scripts/audit/validate_evidence.py --task SEC-001 --evidence evidence/security/sec_001_dangerous_sink_policy.json
+- RUN_PHASE1_GATES=1 scripts/dev/pre_ci.sh
+evidence:
+- evidence/security/sec_001_dangerous_sink_policy.json
+failure_modes:
+- Dynamic psql -c SQL survives in app/runtime path => FAIL.
+- Fixture-triggered sink cases do not fail closed => FAIL.
+must_read:
+- docs/operations/AI_AGENT_OPERATION_MANUAL.md
+- docs/operations/AI_AGENT_WORKFLOW_AND_ROLE_PLAN_v2.md
+- docs/operations/AGENT_ROLE_RECONCILIATION.md
+implementation_plan: docs/plans/phase1/SEC-001/PLAN.md
+implementation_log: docs/plans/phase1/SEC-001/EXEC_LOG.md
+notes: 'P0 remediation of the confirmed supervisor/control-plane SQLi sink class.
+
+  Intent infusion: Category B priorities and non-goals embedded from SECURITY_REVAMP_IMPL_PLAN.md;
+  mapped deterministically via intent_map.yml. Non-goals: No broad architectural refactor
+  here'
+client: codex_cli
+assigned_agent: supervisor
+model: gpt-5-codex

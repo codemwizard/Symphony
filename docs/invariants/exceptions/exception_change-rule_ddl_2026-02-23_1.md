@@ -6,6 +6,7 @@ follow_up_ticket: TSK-P0-KYC-001
 reason: Forward-only DDL hardening migration for KYC provider registry uniqueness semantics and verifier fail-closed behavior.
 author: codex
 created_at: 2026-02-23
+closed_at: 2026-03-09
 ---
 
 # Exception: ddl structural change without invariants linkage

@@ -3,30 +3,29 @@ import hashlib
 import json
 import os
 import secrets
-import subprocess
 import urllib.parse
 from datetime import datetime, timezone
 from http.server import BaseHTTPRequestHandler, HTTPServer
+
+import psycopg
 
 DATABASE_URL = os.environ.get("DATABASE_URL", "")
 if not DATABASE_URL:
     raise SystemExit("DATABASE_URL is required")
 
 
-def psql_scalar(sql: str) -> str:
-    out = subprocess.check_output(
-        ["psql", DATABASE_URL, "-X", "-A", "-t", "-v", "ON_ERROR_STOP=1", "-c", sql],
-        text=True,
-        stderr=subprocess.STDOUT,
-    )
-    return out.strip()
+def fetch_one(query: str, params=()):
+    with psycopg.connect(DATABASE_URL, autocommit=True) as conn:
+        with conn.cursor() as cur:
+            cur.execute(query, params)
+            return cur.fetchone()
 
 
-def psql_json_array(sql: str):
-    out = psql_scalar(sql)
-    if not out:
-        return []
-    return json.loads(out)
+def fetch_value(query: str, params=()):
+    row = fetch_one(query, params)
+    if row is None:
+        return None
+    return row[0]
 
 
 class Handler(BaseHTTPRequestHandler):
@@ -80,24 +79,35 @@ class Handler(BaseHTTPRequestHandler):
         token_plain = secrets.token_urlsafe(32)
         token_hash = hashlib.sha256(token_plain.encode("utf-8")).hexdigest()
 
-        row = psql_scalar(
-            "WITH ins AS ("
-            "INSERT INTO public.supervisor_audit_tokens(program_id, token_hash, issued_by, expires_at) "
-            f"VALUES ('{program_id}'::uuid, '{token_hash}', '{issued_by}', NOW() + make_interval(secs => {ttl_seconds})) "
-            "RETURNING token_id::text, expires_at"
-            ") "
-            "SELECT row_to_json(ins)::text FROM ins;"
+        row = fetch_value(
+            """
+            WITH ins AS (
+              INSERT INTO public.supervisor_audit_tokens(program_id, token_hash, issued_by, expires_at)
+              VALUES (%s::uuid, %s, %s, NOW() + make_interval(secs => %s))
+              RETURNING token_id::text, expires_at
+            )
+            SELECT row_to_json(ins)::text FROM ins;
+            """,
+            (program_id, token_hash, issued_by, ttl_seconds),
         )
+        if not row:
+            return self._json(500, {"error": "TOKEN_CREATE_FAILED"})
         token_row = json.loads(row)
         token_row["token"] = token_plain
         return self._json(201, token_row)
 
     def handle_revoke_audit_token(self, token_id: str):
-        affected = psql_scalar(
-            "WITH upd AS ("
-            "UPDATE public.supervisor_audit_tokens SET revoked_at = COALESCE(revoked_at, NOW()) "
-            f"WHERE token_id = '{token_id}'::uuid RETURNING 1"
-            ") SELECT count(*)::text FROM upd;"
+        affected = fetch_value(
+            """
+            WITH upd AS (
+              UPDATE public.supervisor_audit_tokens
+                 SET revoked_at = COALESCE(revoked_at, NOW())
+               WHERE token_id = %s::uuid
+               RETURNING 1
+            )
+            SELECT count(*)::text FROM upd;
+            """,
+            (token_id,),
         )
         if affected == "0":
             return self._json(404, {"error": "TOKEN_NOT_FOUND"})
@@ -111,12 +121,16 @@ class Handler(BaseHTTPRequestHandler):
             return self._json(401, {"error": "TOKEN_REQUIRED"})
 
         token_hash = hashlib.sha256(token.encode("utf-8")).hexdigest()
-        row = psql_scalar(
-            "SELECT row_to_json(t)::text FROM ("
-            "SELECT token_id::text, program_id::text, expires_at, revoked_at "
-            "FROM public.supervisor_audit_tokens "
-            f"WHERE token_hash = '{token_hash}'"
-            ") t;"
+        row = fetch_value(
+            """
+            SELECT row_to_json(t)::text
+              FROM (
+                    SELECT token_id::text, program_id::text, expires_at, revoked_at
+                      FROM public.supervisor_audit_tokens
+                     WHERE token_hash = %s
+                   ) t;
+            """,
+            (token_hash,),
         )
         if not row:
             return self._json(401, {"error": "TOKEN_INVALID"})
@@ -129,18 +143,25 @@ class Handler(BaseHTTPRequestHandler):
             return self._json(401, {"error": "TOKEN_EXPIRED"})
 
         program_id = token_row["program_id"]
-        records = psql_json_array(
-            "WITH src AS ("
-            "SELECT tenant_id::text, member_id::text, instruction_id, event_type, observed_at "
-            "FROM public.supervisor_audit_member_device_events "
-            f"WHERE program_id = '{program_id}'::uuid"
-            "), anon AS ("
-            "SELECT tenant_id, encode(digest(member_id, 'sha256'),'hex') AS anonymized_member_id, "
-            "instruction_id, event_type, observed_at "
-            "FROM src"
-            ") "
-            "SELECT COALESCE(json_agg(row_to_json(anon)), '[]'::json)::text FROM anon;"
+        records_raw = fetch_value(
+            """
+            WITH src AS (
+              SELECT tenant_id::text, member_id::text, instruction_id, event_type, observed_at
+                FROM public.supervisor_audit_member_device_events
+               WHERE program_id = %s::uuid
+            ), anon AS (
+              SELECT tenant_id,
+                     encode(digest(member_id, 'sha256'),'hex') AS anonymized_member_id,
+                     instruction_id,
+                     event_type,
+                     observed_at
+                FROM src
+            )
+            SELECT COALESCE(json_agg(row_to_json(anon)), '[]'::json)::text FROM anon;
+            """,
+            (program_id,),
         )
+        records = json.loads(records_raw or "[]")
 
         return self._json(200, {"program_id": program_id, "records": records})
 
@@ -152,14 +173,12 @@ class Handler(BaseHTTPRequestHandler):
             return self._json(400, {"error": "APPROVER_REQUIRED"})
 
         try:
-            psql_scalar(
-                "SELECT public.decide_supervisor_approval("
-                f"'{instruction_id}', 'APPROVED', '{actor}', "
-                + ("NULL" if reason is None else f"'{reason}'")
-                + ");"
+            fetch_value(
+                "SELECT public.decide_supervisor_approval(%s, 'APPROVED', %s, %s);",
+                (instruction_id, actor, reason),
             )
-        except subprocess.CalledProcessError as exc:
-            msg = (exc.output or "").strip()
+        except psycopg.Error as exc:
+            msg = str(exc).strip()
             if "self approval is not permitted" in msg:
                 return self._json(403, {"error": "SELF_APPROVAL_FORBIDDEN"})
             if "not pending supervisor approval" in msg:

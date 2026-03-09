@@ -54,6 +54,10 @@ coverage_requirements:
     - rule: "python-present => scanned"
       description: "If .py files exist, Python scanners must run"
       check_script: "scripts/audit/verify_scan_scope.sh"
+  root_presence_rules:
+    - rule: "required-runtime-roots => scanned"
+      description: "services/ and scripts/ must be included in evidence-backed SAST when present"
+      check_script: "scripts/audit/verify_scan_scope.sh"
       
     - rule: "csharp-present => scanned"
       description: "If .cs files exist, C# scanners must run"

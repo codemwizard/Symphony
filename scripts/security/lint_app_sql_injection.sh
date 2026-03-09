@@ -22,6 +22,15 @@ PY
   cat >"$tmp_dir/bad.py" <<'PY'
 query = f"SELECT * FROM users WHERE id = {user_id}"
 PY
+  cat >"$tmp_dir/bad_sink.py" <<'PY'
+def psql_scalar(sql):
+    return sql
+
+psql_scalar(
+    "SELECT * FROM users WHERE id = "
+    + user_id
+)
+PY
 
   local hits=0
   if rg -n --no-heading -P '(?i)\b(select|insert|update|delete)\b.*\+' "$tmp_dir/bad.cs" >/dev/null; then
@@ -30,8 +39,11 @@ PY
   if rg -n --no-heading -P "(?i)f[\"'][^\"']*\\b(select|insert|update|delete)\\b[^\"']*\\{[^}]+\\}" "$tmp_dir/bad.py" >/dev/null; then
     hits=$((hits + 1))
   fi
+  if rg -n --no-heading -P '(?s)psql_(scalar|json_array)\s*\(\s*(f["'\'']|[A-Za-z_][A-Za-z0-9_]*\s*\+|.*\.format\()' "$tmp_dir/bad_sink.py" >/dev/null; then
+    hits=$((hits + 1))
+  fi
 
-  if [[ "$hits" -lt 2 ]]; then
+  if [[ "$hits" -lt 3 ]]; then
     echo "Fixture verification failed: expected SQLi patterns were not detected"
     exit 1
   fi
@@ -86,6 +98,16 @@ for f in "${files[@]}"; do
   [[ "$f" == *.py ]] || continue
   if rg -n --no-heading -P "(?i)(f[\"'][^\"']*\\b(select|insert|update|delete)\\b[^\"']*\\{[^}]+\\}|\\b(select|insert|update|delete)\\b.*\\+)" "$f" >/tmp/sqli_hits.txt; then
     echo "❌ Python SQLi pattern in $f"
+    cat /tmp/sqli_hits.txt
+    violations=$((violations + 1))
+  fi
+  if rg -n --no-heading -P '(?s)psql_(scalar|json_array)\s*\(\s*(f["'\'']|[A-Za-z_][A-Za-z0-9_]*\s*\+|.*\.format\()' "$f" >/tmp/sqli_hits.txt; then
+    echo "❌ Python psql wrapper sink in $f"
+    cat /tmp/sqli_hits.txt
+    violations=$((violations + 1))
+  fi
+  if rg -n --no-heading -P '(?s)subprocess\.(check_output|run|Popen)\([^\)]*["'\'']psql["'\''][^\)]*["'\'']-c["'\''][^\)]*(f["'\'']|\+|\.format\()' "$f" >/tmp/sqli_hits.txt; then
+    echo "❌ Python subprocess psql sink in $f"
     cat /tmp/sqli_hits.txt
     violations=$((violations + 1))
   fi

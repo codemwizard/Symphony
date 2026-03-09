@@ -1,5 +1,6 @@
 using System.Diagnostics;
 using System.Diagnostics.Metrics;
+using System.Net;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
@@ -13,11 +14,30 @@ using Npgsql;
 var builder = WebApplication.CreateBuilder(args);
 builder.Services.Configure<ForwardedHeadersOptions>(options =>
 {
-    options.ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto;
-    // Ingress/proxy topologies vary; prefer explicit forwarded chain over collapsing every caller to proxy IP.
     options.KnownIPNetworks.Clear();
     options.KnownProxies.Clear();
     options.ForwardLimit = 1;
+
+    var rawTrustedProxies = (Environment.GetEnvironmentVariable("SYMPHONY_TRUSTED_PROXIES") ?? string.Empty).Trim();
+    var trustedProxies = rawTrustedProxies
+        .Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+        .Where(value => !string.IsNullOrWhiteSpace(value))
+        .ToArray();
+
+    if (trustedProxies.Length == 0)
+    {
+        options.ForwardedHeaders = ForwardedHeaders.None;
+        return;
+    }
+
+    options.ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto;
+    foreach (var proxy in trustedProxies)
+    {
+        if (IPAddress.TryParse(proxy, out var address))
+        {
+            options.KnownProxies.Add(address);
+        }
+    }
 });
 builder.Services.AddRateLimiter(options =>
 {
