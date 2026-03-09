@@ -149,8 +149,10 @@ fi
 while IFS= read -r path; do
   [[ -z "$path" ]] && continue
   # Phase-1 KYC hash bridge intentionally reads provider registry via Ledger API.
+  # The query moved from Program.cs into Infrastructure/Stores.cs during CQRS extraction.
   # Keep the structural hook strict everywhere else.
-  if [[ "$path" == "$ROOT_DIR/services/ledger-api/dotnet/src/LedgerApi/Program.cs" ]]; then
+  if [[ "$path" == "$ROOT_DIR/services/ledger-api/dotnet/src/LedgerApi/Program.cs" ]] || \
+     [[ "$path" == "$ROOT_DIR/services/ledger-api/dotnet/src/LedgerApi/Infrastructure/Stores.cs" ]]; then
     continue
   fi
   runtime_reference_paths+=("$path")
