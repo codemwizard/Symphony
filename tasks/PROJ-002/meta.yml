@@ -1,0 +1,51 @@
+schema_version: 1
+phase: '1'
+task_id: PROJ-002
+title: External query API projection cutover
+owner_role: SUPERVISOR
+status: completed
+depends_on:
+- PROJ-001
+- CQRS-002
+touches:
+- services/ledger-api/dotnet/src/LedgerApi/Queries/
+- services/ledger-api/dotnet/src/LedgerApi/ReadModels/
+- services/ledger-api/dotnet/src/LedgerApi/Infrastructure/
+- tasks/PROJ-002/meta.yml
+- docs/plans/phase1/PROJ-002/PLAN.md
+- docs/plans/phase1/PROJ-002/EXEC_LOG.md
+- evidence/phase1/proj_002_external_query_cutover.json
+invariants:
+- INV-151
+work:
+- Move targeted external query surfaces to projection-backed stores only.
+- Preserve tenant/object authorization rigor on all projected reads.
+- Expose projection freshness metadata and stale-state semantics.
+acceptance_criteria:
+- No targeted external query surface reads hot operational tables directly.
+- Tenant/object authorization remains enforced on projected reads.
+- Clients can distinguish current vs stale projection state.
+verification:
+- dotnet test services/ledger-api/dotnet/tests --filter QueryProjection
+- bash scripts/audit/verify_no_hot_table_external_reads.sh
+- python3 scripts/audit/validate_evidence.py --task PROJ-002 --evidence evidence/phase1/proj_002_external_query_cutover.json
+evidence:
+- evidence/phase1/proj_002_external_query_cutover.json
+failure_modes:
+- Silent fallback to write-table reads retained for convenience => FAIL_REVIEW.
+- Freshness semantics omitted to simulate synchronous truth => FAIL_REVIEW.
+must_read:
+- docs/operations/AI_AGENT_OPERATION_MANUAL.md
+- docs/operations/AI_AGENT_WORKFLOW_AND_ROLE_PLAN_v2.md
+- docs/operations/AGENT_ROLE_RECONCILIATION.md
+implementation_plan: docs/plans/phase1/PROJ-002/PLAN.md
+implementation_log: docs/plans/phase1/PROJ-002/EXEC_LOG.md
+notes: 'If parity is incomplete, version the endpoint or keep it internal-only until
+  trustworthy.
+
+  Intent infusion: Category F priorities and non-goals embedded from SECURITY_REVAMP_IMPL_PLAN.md;
+  mapped deterministically via intent_map.yml. Non-goals: No bypass to write-store
+  point queries on public surfaces'
+client: codex_cli
+assigned_agent: supervisor
+model: gpt-5-codex

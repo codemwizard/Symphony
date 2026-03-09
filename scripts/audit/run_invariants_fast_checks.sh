@@ -149,6 +149,22 @@ else
 fi
 
 echo ""
+echo "==> Phase-1 CQRS boundary verification"
+if [[ -x "scripts/audit/verify_cqrs_code_boundary.sh" || -f "scripts/audit/verify_cqrs_code_boundary.sh" ]]; then
+  run scripts/audit/verify_cqrs_code_boundary.sh
+else
+  echo "   (skipping CQRS boundary verification; script not present)"
+fi
+
+echo ""
+echo "==> Phase-1 projection freshness verification"
+if [[ -x "scripts/db/verify_projection_freshness_and_scope.sh" || -f "scripts/db/verify_projection_freshness_and_scope.sh" ]]; then
+  run scripts/db/verify_projection_freshness_and_scope.sh
+else
+  echo "   (skipping projection freshness verification; script not present)"
+fi
+
+echo ""
 echo "==> Evidence harness integrity (watch-the-watcher)"
 if [[ -x "scripts/audit/verify_evidence_harness_integrity.sh" || -f "scripts/audit/verify_evidence_harness_integrity.sh" ]]; then
   run scripts/audit/verify_evidence_harness_integrity.sh

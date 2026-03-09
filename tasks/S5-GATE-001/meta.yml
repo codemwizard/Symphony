@@ -1,0 +1,52 @@
+schema_version: 1
+phase: '2'
+task_id: S5-GATE-001
+title: Sprint 5 gated accounting boundary approval
+owner_role: SUPERVISOR
+status: completed
+depends_on: []
+touches:
+- tasks/S5-GATE-001/meta.yml
+- docs/plans/phase2/S5-GATE-001/PLAN.md
+- docs/plans/phase2/S5-GATE-001/EXEC_LOG.md
+- docs/plans/phase2/SPRINT5_LANE_B_BLOCKERS.md
+- scripts/audit/verify_s5_gate_001.sh
+- docs/PHASE2/phase2_contract.yml
+- evidence/phase2/s5_gate_001_boundary_approval.json
+- docs/security/KEY_MANAGEMENT_POLICY.md
+- docs/operations/AGENTIC_SDLC_PHASE1_POLICY.md
+- docs/operations/VERIFIER_EVIDENCE_REGISTRY.yml
+invariants: []
+work:
+- Record the Sprint 5 gating rule that internal ledger semantics may proceed, but external
+  trust-contract work remains blocked pending architecture ratification.
+- Require explicit human confirmation for key-management architecture, governance-event
+  authority model, and external verification artifact format before Lane B work may start.
+- Make Lane B blockers mechanically visible to later Sprint 5 ledger tasks.
+acceptance_criteria:
+- Sprint 5 gate documentation exists and cites docs/operations/AI_AGENT_OPERATION_MANUAL.md
+  as the canonical operational reference.
+- Lane A and Lane B boundaries are written explicitly with no mixed-scope language.
+- LEDGER-001 and LEDGER-002 reference this gate before implementation begins.
+- Gate evidence is emitted and validated under evidence/phase2/s5_gate_001_boundary_approval.json.
+verification:
+- bash scripts/audit/verify_s5_gate_001.sh
+- python3 scripts/audit/validate_evidence.py --task S5-GATE-001 --evidence evidence/phase2/s5_gate_001_boundary_approval.json
+evidence:
+- evidence/phase2/s5_gate_001_boundary_approval.json
+failure_modes:
+- Lane B is not explicitly blocked => FAIL_CLOSED.
+- LEDGER tasks do not depend on S5-GATE-001 => FAIL_REVIEW.
+- Canonical operation manual reference omitted => FAIL_REVIEW.
+must_read:
+- docs/operations/AI_AGENT_OPERATION_MANUAL.md
+- docs/security/KEY_MANAGEMENT_POLICY.md
+- docs/operations/AGENTIC_SDLC_PHASE1_POLICY.md
+implementation_plan: docs/plans/phase2/S5-GATE-001/PLAN.md
+implementation_log: docs/plans/phase2/S5-GATE-001/EXEC_LOG.md
+notes: 'This is a gating/documentation task only. It does not authorize regulator-facing
+  exports, legal-hold precedence logic, regulatory correction authority logic, or final
+  production signing/export assumptions.'
+client: codex_cli
+assigned_agent: supervisor
+model: gpt-5-codex

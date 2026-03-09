@@ -2,7 +2,7 @@
 -- PostgreSQL database dump
 --
 
-\restrict O9mJj0A11m1baHAq11zLRl5mZqAcIuNMSCmpuzrsXB7MmFfw6hfYFYGMDNhCi0G
+\restrict nlrZF1beyapDW7P8iPEKEryrokdbp19hFB6faDesenUIUyvByfPOIihV44iPbrK
 
 -- Dumped from database version 18.2 (Debian 18.2-1.pgdg13+1)
 -- Dumped by pg_dump version 18.2 (Debian 18.2-1.pgdg13+1)
@@ -1023,6 +1023,67 @@ $$;
 
 
 --
+-- Name: create_internal_ledger_journal(uuid, text, text, text, jsonb, text); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.create_internal_ledger_journal(p_tenant_id uuid, p_idempotency_key text, p_journal_type text, p_currency_code text, p_postings jsonb, p_reference_id text DEFAULT NULL::text) RETURNS uuid
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO 'pg_catalog', 'public'
+    AS $$
+DECLARE
+  v_existing UUID;
+  v_journal_id UUID;
+  v_item JSONB;
+BEGIN
+  IF p_postings IS NULL OR jsonb_typeof(p_postings) <> 'array' OR jsonb_array_length(p_postings) < 2 THEN
+    RAISE EXCEPTION 'p_postings must contain at least two postings'
+      USING ERRCODE = '23514';
+  END IF;
+
+  SELECT journal_id
+    INTO v_existing
+  FROM public.internal_ledger_journals
+  WHERE tenant_id = p_tenant_id
+    AND idempotency_key = p_idempotency_key;
+
+  IF v_existing IS NOT NULL THEN
+    RETURN v_existing;
+  END IF;
+
+  INSERT INTO public.internal_ledger_journals(
+    tenant_id, idempotency_key, journal_type, reference_id, currency_code
+  ) VALUES (
+    p_tenant_id, p_idempotency_key, p_journal_type, p_reference_id, p_currency_code
+  )
+  RETURNING journal_id INTO v_journal_id;
+
+  FOR v_item IN
+    SELECT value
+    FROM jsonb_array_elements(p_postings)
+  LOOP
+    INSERT INTO public.internal_ledger_postings(
+      journal_id, tenant_id, account_code, direction, amount_minor, currency_code
+    ) VALUES (
+      v_journal_id,
+      p_tenant_id,
+      v_item->>'account_code',
+      upper(v_item->>'direction'),
+      (v_item->>'amount_minor')::BIGINT,
+      COALESCE(v_item->>'currency_code', p_currency_code)
+    );
+  END LOOP;
+
+  IF NOT public.verify_internal_ledger_journal_balance(v_journal_id) THEN
+    RAISE EXCEPTION 'journal is not balanced'
+      USING ERRCODE = '23514';
+  END IF;
+
+  RETURN v_journal_id;
+END;
+$$;
+
+
+--
 -- Name: current_tenant_id_or_null(); Type: FUNCTION; Schema: public; Owner: -
 --
 
@@ -1355,6 +1416,43 @@ BEGIN
   IF v_source_state <> 'SETTLED' OR v_source_final IS DISTINCT FROM TRUE THEN
     RAISE EXCEPTION 'reversal source instruction must be final and SETTLED: %', NEW.reversal_of_instruction_id
       USING ERRCODE = 'P7003';
+  END IF;
+
+  RETURN NEW;
+END;
+$$;
+
+
+--
+-- Name: enforce_internal_ledger_posting_context(); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.enforce_internal_ledger_posting_context() RETURNS trigger
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO 'pg_catalog', 'public'
+    AS $$
+DECLARE
+  v_journal_tenant UUID;
+  v_journal_currency TEXT;
+BEGIN
+  SELECT tenant_id, currency_code
+    INTO v_journal_tenant, v_journal_currency
+  FROM public.internal_ledger_journals
+  WHERE journal_id = NEW.journal_id;
+
+  IF v_journal_tenant IS NULL THEN
+    RAISE EXCEPTION 'journal not found for posting'
+      USING ERRCODE = '23503';
+  END IF;
+
+  IF NEW.tenant_id IS DISTINCT FROM v_journal_tenant THEN
+    RAISE EXCEPTION 'cross-tenant posting rejected'
+      USING ERRCODE = '23514';
+  END IF;
+
+  IF NEW.currency_code IS DISTINCT FROM v_journal_currency THEN
+    RAISE EXCEPTION 'posting currency must match journal currency'
+      USING ERRCODE = '23514';
   END IF;
 
   RETURN NEW;
@@ -2957,6 +3055,33 @@ $$;
 
 
 --
+-- Name: verify_internal_ledger_journal_balance(uuid); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.verify_internal_ledger_journal_balance(p_journal_id uuid) RETURNS boolean
+    LANGUAGE sql STABLE
+    AS $$
+  WITH sums AS (
+    SELECT
+      COALESCE(SUM(CASE WHEN direction = 'DEBIT' THEN amount_minor ELSE 0 END), 0) AS debit_total,
+      COALESCE(SUM(CASE WHEN direction = 'CREDIT' THEN amount_minor ELSE 0 END), 0) AS credit_total,
+      COUNT(*) AS posting_count,
+      COUNT(DISTINCT account_code) AS distinct_accounts,
+      COUNT(*) FILTER (WHERE direction = 'DEBIT') AS debit_count,
+      COUNT(*) FILTER (WHERE direction = 'CREDIT') AS credit_count
+    FROM public.internal_ledger_postings
+    WHERE journal_id = p_journal_id
+  )
+  SELECT posting_count >= 2
+     AND debit_count >= 1
+     AND credit_count >= 1
+     AND distinct_accounts >= 2
+     AND debit_total = credit_total
+  FROM sums;
+$$;
+
+
+--
 -- Name: verify_merkle_leaf(uuid, integer, text); Type: FUNCTION; Schema: public; Owner: -
 --
 
@@ -3437,6 +3562,35 @@ ALTER TABLE ONLY public.escrow_reservations FORCE ROW LEVEL SECURITY;
 
 
 --
+-- Name: escrow_summary_projection; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.escrow_summary_projection (
+    escrow_id uuid NOT NULL,
+    tenant_id uuid NOT NULL,
+    program_id uuid,
+    state text NOT NULL,
+    authorized_amount_minor bigint DEFAULT 0 NOT NULL,
+    currency_code character(3) DEFAULT 'USD'::bpchar NOT NULL,
+    as_of_utc timestamp with time zone DEFAULT now() NOT NULL,
+    projection_version text DEFAULT 'phase1-cqrs-v1'::text NOT NULL
+);
+
+
+--
+-- Name: evidence_bundle_projection; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.evidence_bundle_projection (
+    instruction_id text NOT NULL,
+    tenant_id uuid NOT NULL,
+    projection_payload jsonb NOT NULL,
+    as_of_utc timestamp with time zone DEFAULT now() NOT NULL,
+    projection_version text DEFAULT 'phase1-cqrs-v1'::text NOT NULL
+);
+
+
+--
 -- Name: evidence_pack_items; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -3535,6 +3689,20 @@ CREATE TABLE public.hsm_fail_closed_events (
     blocked_action text NOT NULL,
     error_code text NOT NULL,
     observed_at timestamp with time zone DEFAULT now() NOT NULL
+);
+
+
+--
+-- Name: incident_case_projection; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.incident_case_projection (
+    incident_id uuid NOT NULL,
+    tenant_id uuid NOT NULL,
+    status text NOT NULL,
+    projection_payload jsonb NOT NULL,
+    as_of_utc timestamp with time zone DEFAULT now() NOT NULL,
+    projection_version text DEFAULT 'phase1-cqrs-v1'::text NOT NULL
 );
 
 
@@ -3645,6 +3813,63 @@ CREATE TABLE public.instruction_settlement_finality (
     CONSTRAINT instruction_settlement_finality_rail_message_type_check CHECK ((rail_message_type = ANY (ARRAY['pacs.008'::text, 'camt.056'::text]))),
     CONSTRAINT instruction_settlement_finality_self_reversal_chk CHECK (((reversal_of_instruction_id IS NULL) OR (reversal_of_instruction_id <> instruction_id))),
     CONSTRAINT instruction_settlement_finality_shape_chk CHECK ((((final_state = 'SETTLED'::text) AND (reversal_of_instruction_id IS NULL) AND (rail_message_type = 'pacs.008'::text)) OR ((final_state = 'REVERSED'::text) AND (reversal_of_instruction_id IS NOT NULL) AND (rail_message_type = 'camt.056'::text))))
+);
+
+
+--
+-- Name: instruction_status_projection; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.instruction_status_projection (
+    instruction_id text NOT NULL,
+    tenant_id uuid NOT NULL,
+    participant_id text NOT NULL,
+    rail_type text NOT NULL,
+    status text NOT NULL,
+    attestation_id uuid NOT NULL,
+    outbox_id uuid NOT NULL,
+    payload_hash text NOT NULL,
+    amount_minor bigint DEFAULT 0 NOT NULL,
+    currency_code character(3) DEFAULT 'ZMW'::bpchar NOT NULL,
+    correlation_id uuid,
+    as_of_utc timestamp with time zone DEFAULT now() NOT NULL,
+    projection_version text DEFAULT 'phase1-cqrs-v1'::text NOT NULL
+);
+
+
+--
+-- Name: internal_ledger_journals; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.internal_ledger_journals (
+    journal_id uuid DEFAULT public.uuid_v7_or_random() NOT NULL,
+    tenant_id uuid NOT NULL,
+    idempotency_key text NOT NULL,
+    journal_type text NOT NULL,
+    reference_id text,
+    currency_code text NOT NULL,
+    created_by text DEFAULT CURRENT_USER NOT NULL,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    CONSTRAINT internal_ledger_journals_currency_code_check CHECK ((currency_code ~ '^[A-Z]{3}$'::text))
+);
+
+
+--
+-- Name: internal_ledger_postings; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.internal_ledger_postings (
+    posting_id uuid DEFAULT public.uuid_v7_or_random() NOT NULL,
+    journal_id uuid NOT NULL,
+    tenant_id uuid NOT NULL,
+    account_code text NOT NULL,
+    direction text NOT NULL,
+    amount_minor bigint NOT NULL,
+    currency_code text NOT NULL,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    CONSTRAINT internal_ledger_postings_amount_minor_check CHECK ((amount_minor > 0)),
+    CONSTRAINT internal_ledger_postings_currency_code_check CHECK ((currency_code ~ '^[A-Z]{3}$'::text)),
+    CONSTRAINT internal_ledger_postings_direction_check CHECK ((direction = ANY (ARRAY['DEBIT'::text, 'CREDIT'::text])))
 );
 
 
@@ -4180,6 +4405,20 @@ CREATE TABLE public.policy_versions (
     CONSTRAINT ck_policy_active_has_no_grace_expiry CHECK (((status <> 'ACTIVE'::public.policy_version_status) OR (grace_expires_at IS NULL))),
     CONSTRAINT ck_policy_checksum_nonempty CHECK ((length(checksum) > 0)),
     CONSTRAINT ck_policy_grace_requires_expiry CHECK (((status <> 'GRACE'::public.policy_version_status) OR (grace_expires_at IS NOT NULL)))
+);
+
+
+--
+-- Name: program_member_summary_projection; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.program_member_summary_projection (
+    tenant_id uuid NOT NULL,
+    program_id uuid NOT NULL,
+    active_member_count bigint DEFAULT 0 NOT NULL,
+    verified_member_count bigint DEFAULT 0 CONSTRAINT program_member_summary_projectio_verified_member_count_not_null NOT NULL,
+    as_of_utc timestamp with time zone DEFAULT now() NOT NULL,
+    projection_version text DEFAULT 'phase1-cqrs-v1'::text NOT NULL
 );
 
 
@@ -4901,6 +5140,22 @@ ALTER TABLE ONLY public.escrow_reservations
 
 
 --
+-- Name: escrow_summary_projection escrow_summary_projection_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.escrow_summary_projection
+    ADD CONSTRAINT escrow_summary_projection_pkey PRIMARY KEY (escrow_id);
+
+
+--
+-- Name: evidence_bundle_projection evidence_bundle_projection_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.evidence_bundle_projection
+    ADD CONSTRAINT evidence_bundle_projection_pkey PRIMARY KEY (instruction_id);
+
+
+--
 -- Name: evidence_pack_items evidence_pack_items_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -4965,6 +5220,14 @@ ALTER TABLE ONLY public.hsm_fail_closed_events
 
 
 --
+-- Name: incident_case_projection incident_case_projection_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.incident_case_projection
+    ADD CONSTRAINT incident_case_projection_pkey PRIMARY KEY (incident_id);
+
+
+--
 -- Name: incident_events incident_events_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -5018,6 +5281,38 @@ ALTER TABLE ONLY public.instruction_finality_conflicts
 
 ALTER TABLE ONLY public.instruction_settlement_finality
     ADD CONSTRAINT instruction_settlement_finality_pkey PRIMARY KEY (finality_id);
+
+
+--
+-- Name: instruction_status_projection instruction_status_projection_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.instruction_status_projection
+    ADD CONSTRAINT instruction_status_projection_pkey PRIMARY KEY (instruction_id);
+
+
+--
+-- Name: internal_ledger_journals internal_ledger_journals_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.internal_ledger_journals
+    ADD CONSTRAINT internal_ledger_journals_pkey PRIMARY KEY (journal_id);
+
+
+--
+-- Name: internal_ledger_journals internal_ledger_journals_tenant_id_idempotency_key_key; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.internal_ledger_journals
+    ADD CONSTRAINT internal_ledger_journals_tenant_id_idempotency_key_key UNIQUE (tenant_id, idempotency_key);
+
+
+--
+-- Name: internal_ledger_postings internal_ledger_postings_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.internal_ledger_postings
+    ADD CONSTRAINT internal_ledger_postings_pkey PRIMARY KEY (posting_id);
 
 
 --
@@ -5330,6 +5625,14 @@ ALTER TABLE ONLY public.policy_bundles
 
 ALTER TABLE ONLY public.policy_versions
     ADD CONSTRAINT policy_versions_pkey PRIMARY KEY (version);
+
+
+--
+-- Name: program_member_summary_projection program_member_summary_projection_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.program_member_summary_projection
+    ADD CONSTRAINT program_member_summary_projection_pkey PRIMARY KEY (tenant_id, program_id);
 
 
 --
@@ -5862,6 +6165,13 @@ CREATE INDEX idx_instruction_settlement_finality_participant_finalized ON public
 
 
 --
+-- Name: idx_internal_ledger_postings_journal; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_internal_ledger_postings_journal ON public.internal_ledger_postings USING btree (journal_id, direction);
+
+
+--
 -- Name: idx_malformed_quarantine_adapter_rail_time; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -6326,6 +6636,20 @@ CREATE TRIGGER trg_deny_ingress_attestations_mutation BEFORE DELETE OR UPDATE ON
 
 
 --
+-- Name: internal_ledger_journals trg_deny_internal_ledger_journals_mutation; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER trg_deny_internal_ledger_journals_mutation BEFORE DELETE OR UPDATE ON public.internal_ledger_journals FOR EACH ROW EXECUTE FUNCTION public.deny_append_only_mutation();
+
+
+--
+-- Name: internal_ledger_postings trg_deny_internal_ledger_postings_mutation; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER trg_deny_internal_ledger_postings_mutation BEFORE DELETE OR UPDATE ON public.internal_ledger_postings FOR EACH ROW EXECUTE FUNCTION public.deny_append_only_mutation();
+
+
+--
 -- Name: member_device_events trg_deny_member_device_events_mutation; Type: TRIGGER; Schema: public; Owner: -
 --
 
@@ -6393,6 +6717,13 @@ CREATE TRIGGER trg_deny_sim_swap_alerts_mutation BEFORE DELETE OR UPDATE ON publ
 --
 
 CREATE TRIGGER trg_enforce_instruction_reversal_source BEFORE INSERT ON public.instruction_settlement_finality FOR EACH ROW EXECUTE FUNCTION public.enforce_instruction_reversal_source();
+
+
+--
+-- Name: internal_ledger_postings trg_enforce_internal_ledger_posting_context; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER trg_enforce_internal_ledger_posting_context BEFORE INSERT OR UPDATE ON public.internal_ledger_postings FOR EACH ROW EXECUTE FUNCTION public.enforce_internal_ledger_posting_context();
 
 
 --
@@ -6672,6 +7003,38 @@ ALTER TABLE ONLY public.escrow_reservations
 
 
 --
+-- Name: escrow_summary_projection escrow_summary_projection_escrow_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.escrow_summary_projection
+    ADD CONSTRAINT escrow_summary_projection_escrow_id_fkey FOREIGN KEY (escrow_id) REFERENCES public.escrow_accounts(escrow_id) ON DELETE RESTRICT;
+
+
+--
+-- Name: escrow_summary_projection escrow_summary_projection_program_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.escrow_summary_projection
+    ADD CONSTRAINT escrow_summary_projection_program_id_fkey FOREIGN KEY (program_id) REFERENCES public.programs(program_id) ON DELETE RESTRICT;
+
+
+--
+-- Name: escrow_summary_projection escrow_summary_projection_tenant_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.escrow_summary_projection
+    ADD CONSTRAINT escrow_summary_projection_tenant_id_fkey FOREIGN KEY (tenant_id) REFERENCES public.tenants(tenant_id) ON DELETE RESTRICT;
+
+
+--
+-- Name: evidence_bundle_projection evidence_bundle_projection_tenant_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.evidence_bundle_projection
+    ADD CONSTRAINT evidence_bundle_projection_tenant_id_fkey FOREIGN KEY (tenant_id) REFERENCES public.tenants(tenant_id) ON DELETE RESTRICT;
+
+
+--
 -- Name: evidence_pack_items evidence_pack_items_pack_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -6712,6 +7075,22 @@ ALTER TABLE ONLY public.external_proofs
 
 
 --
+-- Name: incident_case_projection incident_case_projection_incident_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.incident_case_projection
+    ADD CONSTRAINT incident_case_projection_incident_id_fkey FOREIGN KEY (incident_id) REFERENCES public.regulatory_incidents(incident_id) ON DELETE RESTRICT;
+
+
+--
+-- Name: incident_case_projection incident_case_projection_tenant_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.incident_case_projection
+    ADD CONSTRAINT incident_case_projection_tenant_id_fkey FOREIGN KEY (tenant_id) REFERENCES public.tenants(tenant_id) ON DELETE RESTRICT;
+
+
+--
 -- Name: incident_events incident_events_incident_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -6741,6 +7120,46 @@ ALTER TABLE ONLY public.ingress_attestations
 
 ALTER TABLE ONLY public.instruction_settlement_finality
     ADD CONSTRAINT instruction_settlement_finality_reversal_fk FOREIGN KEY (reversal_of_instruction_id) REFERENCES public.instruction_settlement_finality(instruction_id) DEFERRABLE;
+
+
+--
+-- Name: instruction_status_projection instruction_status_projection_attestation_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.instruction_status_projection
+    ADD CONSTRAINT instruction_status_projection_attestation_id_fkey FOREIGN KEY (attestation_id) REFERENCES public.ingress_attestations(attestation_id) ON DELETE RESTRICT;
+
+
+--
+-- Name: instruction_status_projection instruction_status_projection_tenant_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.instruction_status_projection
+    ADD CONSTRAINT instruction_status_projection_tenant_id_fkey FOREIGN KEY (tenant_id) REFERENCES public.tenants(tenant_id) ON DELETE RESTRICT;
+
+
+--
+-- Name: internal_ledger_journals internal_ledger_journals_tenant_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.internal_ledger_journals
+    ADD CONSTRAINT internal_ledger_journals_tenant_id_fkey FOREIGN KEY (tenant_id) REFERENCES public.tenants(tenant_id) ON DELETE RESTRICT;
+
+
+--
+-- Name: internal_ledger_postings internal_ledger_postings_journal_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.internal_ledger_postings
+    ADD CONSTRAINT internal_ledger_postings_journal_id_fkey FOREIGN KEY (journal_id) REFERENCES public.internal_ledger_journals(journal_id) ON DELETE RESTRICT;
+
+
+--
+-- Name: internal_ledger_postings internal_ledger_postings_tenant_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.internal_ledger_postings
+    ADD CONSTRAINT internal_ledger_postings_tenant_id_fkey FOREIGN KEY (tenant_id) REFERENCES public.tenants(tenant_id) ON DELETE RESTRICT;
 
 
 --
@@ -6893,6 +7312,22 @@ ALTER TABLE ONLY public.pii_purge_events
 
 ALTER TABLE ONLY public.pii_vault_records
     ADD CONSTRAINT pii_vault_records_purge_request_fk FOREIGN KEY (purge_request_id) REFERENCES public.pii_purge_requests(purge_request_id) DEFERRABLE;
+
+
+--
+-- Name: program_member_summary_projection program_member_summary_projection_program_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.program_member_summary_projection
+    ADD CONSTRAINT program_member_summary_projection_program_id_fkey FOREIGN KEY (program_id) REFERENCES public.programs(program_id) ON DELETE RESTRICT;
+
+
+--
+-- Name: program_member_summary_projection program_member_summary_projection_tenant_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.program_member_summary_projection
+    ADD CONSTRAINT program_member_summary_projection_tenant_id_fkey FOREIGN KEY (tenant_id) REFERENCES public.tenants(tenant_id) ON DELETE RESTRICT;
 
 
 --
@@ -7330,5 +7765,5 @@ ALTER TABLE public.tenants ENABLE ROW LEVEL SECURITY;
 -- PostgreSQL database dump complete
 --
 
-\unrestrict O9mJj0A11m1baHAq11zLRl5mZqAcIuNMSCmpuzrsXB7MmFfw6hfYFYGMDNhCi0G
+\unrestrict nlrZF1beyapDW7P8iPEKEryrokdbp19hFB6faDesenUIUyvByfPOIihV44iPbrK
 

@@ -1,0 +1,54 @@
+schema_version: 1
+phase: '1'
+task_id: PROJ-001
+title: First projection set
+owner_role: SUPERVISOR
+status: completed
+depends_on:
+- CQRS-001
+- CMD-002
+touches:
+- schema/migrations/
+- services/ledger-api/dotnet/src/LedgerApi/ReadModels/
+- services/ledger-api/dotnet/src/LedgerApi/Queries/
+- services/ledger-api/dotnet/src/LedgerApi/Infrastructure/
+- tasks/PROJ-001/meta.yml
+- docs/plans/phase1/PROJ-001/PLAN.md
+- docs/plans/phase1/PROJ-001/EXEC_LOG.md
+- evidence/phase1/proj_001_initial_projection_set.json
+invariants:
+- INV-150
+work:
+- 'Create initial projection schemas: instruction status, evidence bundle, escrow
+  summary, IPDR/dispute case, and member/program summary.'
+- Define deterministic projection updater paths from command-side durable state/events.
+- Expose freshness metadata in projection models and responses.
+acceptance_criteria:
+- Each initial projection has schema, updater, and query model.
+- Projection update path is deterministic and test-backed.
+- Projection freshness semantics are visible in models/responses.
+verification:
+- bash scripts/db/verify_projection_freshness_and_scope.sh
+- dotnet test services/ledger-api/dotnet/tests --filter Projection
+- python3 scripts/audit/validate_evidence.py --task PROJ-001 --evidence evidence/phase1/proj_001_initial_projection_set.json
+evidence:
+- evidence/phase1/proj_001_initial_projection_set.json
+failure_modes:
+- Projection update logic is inserted inline between attestation and outbox creation
+  => FAIL_REVIEW.
+- Projection convenience drives premature command-table schema distortion => FAIL_REVIEW.
+must_read:
+- docs/operations/AI_AGENT_OPERATION_MANUAL.md
+- docs/operations/AI_AGENT_WORKFLOW_AND_ROLE_PLAN_v2.md
+- docs/operations/AGENT_ROLE_RECONCILIATION.md
+implementation_plan: docs/plans/phase1/PROJ-001/PLAN.md
+implementation_log: docs/plans/phase1/PROJ-001/EXEC_LOG.md
+notes: 'Projections must be additive and rebuildable; no direct external mutation
+  paths.
+
+  Intent infusion: Category F priorities and non-goals embedded from SECURITY_REVAMP_IMPL_PLAN.md;
+  mapped deterministically via intent_map.yml. Non-goals: No direct write-side mutation
+  from projection services'
+client: codex_cli
+assigned_agent: supervisor
+model: gpt-5-codex

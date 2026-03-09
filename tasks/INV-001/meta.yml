@@ -1,0 +1,51 @@
+schema_version: 1
+phase: '1'
+task_id: INV-001
+title: Invariant governance upgrade
+owner_role: SUPERVISOR
+status: completed
+depends_on:
+- FP-001
+- SEC-002
+touches:
+- docs/invariants/INVARIANTS_MANIFEST.yml
+- docs/invariants/INVARIANTS_QUICK.md
+- docs/invariants/INVARIANTS_IMPLEMENTED.md
+- docs/PHASE1/phase1_contract.yml
+- tasks/INV-001/meta.yml
+- docs/plans/phase1/INV-001/PLAN.md
+- docs/plans/phase1/INV-001/EXEC_LOG.md
+- evidence/invariants/inv_001_governance_upgrade.json
+invariants: []
+work:
+- 'Install fail-closed invariant promotion semantics: verifier + CI gate + deterministic
+  evidence.'
+- Bind invariant -> verifier -> gate -> evidence path in canonical docs/contracts.
+- Prevent new invariants from being claimed implemented without mechanical proof.
+acceptance_criteria:
+- Implemented invariant status requires verifier, blocking CI path, and evidence path.
+- Contract/manifest/docs are synchronized for promoted invariants.
+- Evidence validation path is explicit and reusable by agents/reviewers.
+verification:
+- bash scripts/audit/verify_inv_001_governance_upgrade.sh
+- python3 scripts/audit/validate_evidence.py --task INV-001 --evidence evidence/invariants/inv_001_governance_upgrade.json
+- RUN_PHASE1_GATES=1 scripts/dev/pre_ci.sh
+evidence:
+- evidence/invariants/inv_001_governance_upgrade.json
+failure_modes:
+- Second truth source created outside canonical manifest/contract => FAIL_REVIEW.
+- Invariant promoted without verifier/evidence linkage => FAIL_CLOSED.
+must_read:
+- docs/operations/AI_AGENT_OPERATION_MANUAL.md
+- docs/operations/AI_AGENT_WORKFLOW_AND_ROLE_PLAN_v2.md
+- docs/operations/AGENT_ROLE_RECONCILIATION.md
+implementation_plan: docs/plans/phase1/INV-001/PLAN.md
+implementation_log: docs/plans/phase1/INV-001/EXEC_LOG.md
+notes: 'Operationalizes invariant-register, CI gate spec, and regulator evidence alignment.
+
+  Intent infusion: Category C priorities and non-goals embedded from SECURITY_REVAMP_IMPL_PLAN.md;
+  mapped deterministically via intent_map.yml. Non-goals: No paper-only invariant
+  promotion'
+client: codex_cli
+assigned_agent: supervisor
+model: gpt-5-codex

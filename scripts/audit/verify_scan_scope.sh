@@ -4,15 +4,15 @@
 
 set -euo pipefail
 
+ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
+EVIDENCE_FILE="$ROOT_DIR/evidence/security/sec_002_scan_scope_truth.json"
+mkdir -p "$(dirname "$EVIDENCE_FILE")"
+
 echo "=== Verifying Scan Scope Coverage ==="
 
-# Count language files in repository (git-tracked only for deterministic parity)
+required_roots=("services" "scripts")
 cs_files=$(git ls-files '*.cs' | wc -l)
 py_files=$(git ls-files '*.py' | wc -l)
-
-echo "Language files found:"
-echo "  C# files: $cs_files"
-echo "  Python files: $py_files"
 
 # Check CI configuration for required scanners
 CI_WORKFLOW=".github/workflows/invariants.yml"
@@ -136,6 +136,51 @@ else
     echo "❌ Semgrep rules file not found"
     exit 1
 fi
+
+echo ""
+echo "=== Checking Required Scan Roots ==="
+semgrep_roots=$(python3 - <<'PY' "$ROOT_DIR/evidence/phase0/semgrep_sast.json"
+import json,sys
+from pathlib import Path
+p=Path(sys.argv[1])
+if not p.exists():
+    print("")
+    raise SystemExit(0)
+data=json.loads(p.read_text(encoding="utf-8"))
+print("\n".join(data.get("scanned_roots", [])))
+PY
+)
+missing_roots=()
+for root in "${required_roots[@]}"; do
+    if git ls-files "$root/**" | grep -q .; then
+        if ! printf '%s\n' "$semgrep_roots" | grep -qx "$root"; then
+            echo "❌ Required root missing from semgrep evidence: $root"
+            missing_roots+=("$root")
+        else
+            echo "✅ Required root scanned: $root"
+        fi
+    fi
+done
+
+if [[ "${#missing_roots[@]}" -gt 0 ]]; then
+    exit 1
+fi
+
+python3 - <<'PY' "$EVIDENCE_FILE" "$cs_files" "$py_files" "${required_roots[@]}"
+import json,sys
+path=sys.argv[1]
+cs=int(sys.argv[2]); py=int(sys.argv[3]); roots=sys.argv[4:]
+payload={
+  "task_id":"SEC-002",
+  "status":"PASS",
+  "pass": True,
+  "languages":{"cs_files":cs,"py_files":py},
+  "required_roots": roots,
+}
+with open(path, "w", encoding="utf-8") as fh:
+    json.dump(payload, fh, indent=2)
+    fh.write("\n")
+PY
 
 echo ""
 echo "=== Summary ==="

@@ -1,0 +1,15 @@
+{
+  "check_id": "LEDGER-002-ZERO-SUM",
+  "task_id": "LEDGER-002",
+  "timestamp_utc": "2026-03-09T05:20:59Z",
+  "git_sha": "d619d5c8757ba8a0d1a3cd289940093a07f2aaa7",
+  "schema_fingerprint": "a006b8fc1a4b532261f0b62fb34bf285591e19e3a2b52bd90242da261e96a6e7",
+  "status": "PASS",
+  "pass": true,
+  "details": {
+    "tables_exist": true,
+    "function_exists": true,
+    "balanced_fixture_passed": true,
+    "imbalanced_fixture_rejected": true
+  }
+}

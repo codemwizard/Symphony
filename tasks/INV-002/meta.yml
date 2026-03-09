@@ -1,0 +1,62 @@
+schema_version: 1
+phase: '1'
+task_id: INV-002
+title: Immediate runtime-truth invariant pack
+owner_role: SUPERVISOR
+status: completed
+depends_on:
+- INV-001
+touches:
+- docs/invariants/INVARIANTS_MANIFEST.yml
+- docs/invariants/INVARIANTS_QUICK.md
+- docs/invariants/INVARIANTS_IMPLEMENTED.md
+- docs/PHASE1/phase1_contract.yml
+- scripts/audit/
+- scripts/db/
+- scripts/security/
+- tasks/INV-002/meta.yml
+- docs/plans/phase1/INV-002/PLAN.md
+- docs/plans/phase1/INV-002/EXEC_LOG.md
+- evidence/invariants/inv_002_runtime_truth_pack.json
+invariants:
+- INV-135
+- INV-136
+- INV-137
+- INV-142
+- INV-143
+- INV-144
+work:
+- Adopt the first runtime-truth invariant pack with Symphony-specific wording and
+  verifier bindings.
+- Add manifest rows, quick/implemented/roadmap doc updates, contract rows, and evidence
+  paths.
+- Keep future accounting invariants deferred; do not overclaim design-only controls
+  as implemented.
+acceptance_criteria:
+- Every adopted invariant has concrete Symphony wording.
+- Every implemented invariant has a verifier and evidence path.
+- Deferred/advisory invariants are clearly labeled and not overclaimed.
+verification:
+- bash scripts/audit/verify_inv_002_runtime_truth_pack.sh
+- python3 scripts/audit/validate_evidence.py --task INV-002 --evidence evidence/invariants/inv_002_runtime_truth_pack.json
+- RUN_PHASE1_GATES=1 scripts/dev/pre_ci.sh
+evidence:
+- evidence/invariants/inv_002_runtime_truth_pack.json
+failure_modes:
+- Ledger/accounting invariants imported into Sprint-1 pack => FAIL_REVIEW.
+- Abstract framework jargon used without Symphony-specific enforcement mapping =>
+  FAIL_REVIEW.
+must_read:
+- docs/operations/AI_AGENT_OPERATION_MANUAL.md
+- docs/operations/AI_AGENT_WORKFLOW_AND_ROLE_PLAN_v2.md
+- docs/operations/AGENT_ROLE_RECONCILIATION.md
+implementation_plan: docs/plans/phase1/INV-002/PLAN.md
+implementation_log: docs/plans/phase1/INV-002/EXEC_LOG.md
+notes: 'Implements runtime-truth invariants only; accounting invariants stay phase-gated.
+
+  Intent infusion: Category C priorities and non-goals embedded from SECURITY_REVAMP_IMPL_PLAN.md;
+  mapped deterministically via intent_map.yml. Non-goals: No unverifiable roadmap-to-implemented
+  jumps'
+client: codex_cli
+assigned_agent: supervisor
+model: gpt-5-codex

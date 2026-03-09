@@ -1,0 +1,27 @@
+phase: "2"
+phase_name: "Internal Ledger Truth"
+status: "planned"
+rows:
+  - invariant_id: "INV-156"
+    status: "implemented"
+    required: true
+    gate_id: "INT-G29"
+    verifier: "scripts/audit/verify_s5_gate_001.sh"
+    evidence_path: "evidence/phase2/s5_gate_001_boundary_approval.json"
+    notes: "Sprint 5 must remain in gated Lane A mode until key-management, governance authority, and external verification format are ratified."
+
+  - invariant_id: "INV-157"
+    status: "implemented"
+    required: true
+    gate_id: "INT-G29"
+    verifier: "scripts/audit/verify_ledger_internal_model.sh"
+    evidence_path: "evidence/phase2/ledger_001_internal_model.json"
+    notes: "Internal posting-set model, event taxonomy, compensation model, and escrow or freeze or FX schema are defined without external trust-surface assumptions."
+
+  - invariant_id: "INV-158"
+    status: "implemented"
+    required: true
+    gate_id: "INT-G29"
+    verifier: "scripts/db/verify_ledger_zero_sum.sh"
+    evidence_path: "evidence/phase2/ledger_002_internal_proof_jobs.json"
+    notes: "Internal ledger proofs must be deterministic, idempotent, and tenant-safe under fail-closed verification."

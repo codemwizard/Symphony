@@ -9,10 +9,6 @@ public static class RequestSecurityGuards
     {
         var tenant = ReadHeader(context.Request, "x-tenant-id");
         var clientIp = context.Connection.RemoteIpAddress?.ToString();
-        if (string.IsNullOrWhiteSpace(clientIp))
-        {
-            clientIp = ReadForwardedFor(context.Request);
-        }
 
         var normalizedTenant = string.IsNullOrWhiteSpace(tenant) ? "no-tenant" : tenant.Trim().ToLowerInvariant();
         var normalizedIp = string.IsNullOrWhiteSpace(clientIp) ? "unknown-ip" : clientIp.Trim();
@@ -83,23 +79,6 @@ public static class RequestSecurityGuards
             request.Body.Position = 0;
             ArrayPool<byte>.Shared.Return(buffer);
         }
-    }
-
-    private static string ReadForwardedFor(HttpRequest request)
-    {
-        if (!request.Headers.TryGetValue("X-Forwarded-For", out var headerValue))
-        {
-            return string.Empty;
-        }
-
-        var raw = headerValue.ToString();
-        if (string.IsNullOrWhiteSpace(raw))
-        {
-            return string.Empty;
-        }
-
-        var first = raw.Split(',', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries).FirstOrDefault();
-        return first ?? string.Empty;
     }
 
     private static string ReadHeader(HttpRequest request, string name)

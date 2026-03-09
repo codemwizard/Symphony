@@ -1,0 +1,50 @@
+schema_version: 1
+phase: '1'
+task_id: CQRS-002
+title: Command-side and query-side DB role separation
+owner_role: SUPERVISOR
+status: completed
+depends_on:
+- CQRS-001
+touches:
+- schema/migrations/
+- services/ledger-api/dotnet/src/LedgerApi/Infrastructure/
+- services/ledger-api/dotnet/src/LedgerApi/Queries/
+- services/ledger-api/dotnet/src/LedgerApi/Commands/
+- docs/security/
+- tasks/CQRS-002/meta.yml
+- docs/plans/phase1/CQRS-002/PLAN.md
+- docs/plans/phase1/CQRS-002/EXEC_LOG.md
+- evidence/phase1/cqrs_002_db_role_separation.json
+invariants:
+- INV-149
+work:
+- Define command-side DB role with mutation rights restricted to command-side surfaces.
+- Define query-side DB role with read-only access restricted to projection/read surfaces.
+- Bind store code to the correct role paths and document allowed surfaces.
+acceptance_criteria:
+- Query role cannot mutate data.
+- Query role is scoped to projections/read models where available.
+- Command role and query role separation is documented and testable.
+verification:
+- bash scripts/db/verify_command_query_role_separation.sh
+- python3 scripts/audit/validate_evidence.py --task CQRS-002 --evidence evidence/phase1/cqrs_002_db_role_separation.json
+evidence:
+- evidence/phase1/cqrs_002_db_role_separation.json
+failure_modes:
+- Query role granted access to write tables to preserve old shortcuts => FAIL_REVIEW.
+- RLS or role separation is weakened to make query migration easier => FAIL_REVIEW.
+must_read:
+- docs/operations/AI_AGENT_OPERATION_MANUAL.md
+- docs/operations/AI_AGENT_WORKFLOW_AND_ROLE_PLAN_v2.md
+- docs/operations/AGENT_ROLE_RECONCILIATION.md
+implementation_plan: docs/plans/phase1/CQRS-002/PLAN.md
+implementation_log: docs/plans/phase1/CQRS-002/EXEC_LOG.md
+notes: 'Use transitional internal-only exceptions with expiry instead of broad permanent
+  grants.
+
+  Intent infusion: Category E priorities and non-goals embedded from SECURITY_REVAMP_IMPL_PLAN.md;
+  mapped deterministically via intent_map.yml. Non-goals: No new product features'
+client: codex_cli
+assigned_agent: supervisor
+model: gpt-5-codex

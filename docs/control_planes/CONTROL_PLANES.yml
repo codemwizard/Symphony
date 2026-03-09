@@ -182,6 +182,14 @@ control_planes:
         script: scripts/db/verify_anchor_sync_operational_invariant.sh
         evidence: evidence/phase1/anchor_sync_operational_invariant.json
 
+      - gate_id: INT-G30
+        script: scripts/audit/verify_cqrs_code_boundary.sh
+        evidence: evidence/phase1/cqrs_001_code_separation.json
+
+      - gate_id: INT-G31
+        script: scripts/db/verify_projection_freshness_and_scope.sh
+        evidence: evidence/phase1/proj_001_initial_projection_set.json
+
       - gate_id: INT-G32
         script: scripts/db/verify_timeout_posture.sh
         evidence: evidence/phase0/db_timeout_posture.json

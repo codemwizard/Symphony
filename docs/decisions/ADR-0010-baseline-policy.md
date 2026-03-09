@@ -57,3 +57,4 @@ This ADR remains the authoritative governance reference for baseline change chec
 - 2026-03-05: Baseline refreshed after adding migration 0066_hard_wave5_archive_merkle_and_replay.sql (Wave-5 archive merkle anchoring and replay integrity controls).
 - 2026-03-05: Baseline refreshed after adding migration 0067_hard_wave5_reference_strategy_rotation_and_allocation_race.sql (Wave-5 reference-strategy policy-rotation continuity, fail-closed length enforcement, and concurrent collision retry hardening).
 - 2026-03-05: Baseline refreshed after adding migration 0069_hard_wave6_merkle_and_policy_rotation_guards.sql (Merkle null-expected-hash fail-closed verification and policy-rotation immutability guard hardening).
+- 2026-03-09: Baseline refreshed after adding migration 0070_cqrs_projection_roles_and_read_models.sql (Phase-1 CQRS/projection role separation and deterministic projection read-model cutover).

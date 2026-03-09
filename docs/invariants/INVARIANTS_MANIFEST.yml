@@ -1061,3 +1061,251 @@
   owners: ["team-security"]
   sla_days: 14
   verification: "scripts/audit/test_tenant_allowlist_deny_all.sh"
+# Sprint-1 proposed manifest additions
+
+- id: INV-135
+  aliases: ["I-FLOW-NO-BACKWARD-CALLS-01"]
+  status: implemented
+  severity: P1
+  title: "No backward calls across protected runtime boundaries"
+  owners: ["team-platform", "team-security"]
+  sla_days: 30
+  enforcement: "scripts/audit/verify_no_backward_calls.sh"
+  verification: "scripts/audit/verify_no_backward_calls.sh; evidence/phase1/no_backward_calls.json"
+  notes: >
+    Requires Symphony runtime/control-plane components to reject prohibited backward calls
+    before state mutation, audit commit, or external side-effects.
+
+- id: INV-136
+  aliases: ["I-FLOW-OWNERSHIP-REGISTRY-01"]
+  status: implemented
+  severity: P1
+  title: "Atomic ownership registry is explicit and enforced"
+  owners: ["team-db", "team-architecture"]
+  sla_days: 30
+  enforcement: "scripts/db/verify_ou_ownership_registry.sh"
+  verification: "scripts/db/verify_ou_ownership_registry.sh; evidence/phase1/ou_ownership_registry.json"
+  notes: >
+    Requires every protected table/context to have singular ownership and no undocumented
+    cross-context mutation paths.
+
+- id: INV-137
+  aliases: ["I-PLANE-ISOLATION-01"]
+  status: implemented
+  severity: P1
+  title: "Control plane cannot mutate data plane outside approved seams"
+  owners: ["team-db", "team-security", "team-platform"]
+  sla_days: 30
+  enforcement: "scripts/db/verify_plane_isolation.sh"
+  verification: "scripts/db/verify_plane_isolation.sh; evidence/phase1/plane_isolation.json"
+  notes: >
+    Requires explicit separation between control-plane and data-plane mutation privileges,
+    with fail-closed verifier coverage.
+
+- id: INV-142
+  aliases: ["I-IDENTITY-PROVENANCE-IMMUTABLE-01"]
+  status: implemented
+  severity: P1
+  title: "Identity provenance is immutable once verified"
+  owners: ["team-security", "team-platform"]
+  sla_days: 30
+  enforcement: "scripts/audit/verify_identity_provenance_immutability.sh"
+  verification: "scripts/audit/verify_identity_provenance_immutability.sh; evidence/phase1/identity_provenance_immutability.json"
+  notes: >
+    Requires verified identity context to remain immutable across downstream processing and
+    prohibits silent re-derivation or override.
+
+- id: INV-143
+  aliases: ["I-AUDIT-PRECEDENCE-01"]
+  status: implemented
+  severity: P1
+  title: "Audit records precede external side-effects"
+  owners: ["team-platform", "team-security"]
+  sla_days: 30
+  enforcement: "scripts/audit/verify_audit_precedence.sh"
+  verification: "scripts/audit/verify_audit_precedence.sh; evidence/phase1/audit_precedence.json"
+  notes: >
+    Requires audit commitment before external side-effects for protected runtime flows.
+
+- id: INV-144
+  aliases: ["I-CARD-DATA-NON-PRESENCE-01"]
+  status: implemented
+  severity: P1
+  title: "Raw card data is absent from schemas, logs, and traces"
+  owners: ["team-security", "team-platform"]
+  sla_days: 30
+  enforcement: "scripts/security/verify_card_data_non_presence.sh"
+  verification: "scripts/security/verify_card_data_non_presence.sh; evidence/phase1/card_data_non_presence.json"
+  notes: >
+    Enforces card-data non-presence for production schemas, logs, traces, and evidence artifacts.
+
+- id: INV-146
+  aliases: ["I-ATTESTATION-OUTBOX-ATOMICITY-01"]
+  status: implemented
+  severity: P1
+  title: "Acknowledged commands require durable attestation and outbox lineage"
+  owners: ["team-db", "team-platform"]
+  sla_days: 30
+  enforcement: "scripts/db/verify_attestation_outbox_atomicity.sh"
+  verification: "scripts/db/verify_attestation_outbox_atomicity.sh; evidence/command_integrity/cmd_001_attestation_outbox_atomicity.json"
+  notes: >
+    Enforces that acknowledged command acceptance cannot occur without durable attestation
+    and outbox lineage in the same persistence boundary.
+
+- id: INV-147
+  aliases: ["I-COMMAND-LIFECYCLE-INTEGRITY-01"]
+  status: implemented
+  severity: P1
+  title: "Command lifecycle states and dispatch eligibility remain deterministic"
+  owners: ["team-db", "team-platform"]
+  sla_days: 30
+  enforcement: "scripts/db/verify_command_lifecycle_integrity.sh"
+  verification: "scripts/db/verify_command_lifecycle_integrity.sh; evidence/command_integrity/cmd_002_command_lifecycle_integrity.json"
+  notes: >
+    Enforces deterministic command lifecycle, explicit held vs dispatch-eligible semantics,
+    and idempotent resubmission behavior across pending/attempt/terminal states.
+
+- id: INV-148
+  aliases: ["I-CQRS-CODE-BOUNDARY-01"]
+  status: implemented
+  severity: P1
+  title: "Command and query logic are structurally separated"
+  owners: ["team-architecture", "team-platform"]
+  sla_days: 30
+  enforcement: "scripts/audit/verify_cqrs_code_boundary.sh"
+  verification: "scripts/audit/verify_cqrs_code_boundary.sh; evidence/phase1/cqrs_001_code_separation.json"
+  notes: >
+    Requires command handlers and query handlers to be physically separated, with no
+    new business logic added to monolithic bootstrap files.
+
+- id: INV-149
+  aliases: ["I-CQRS-DB-ROLE-SEPARATION-01"]
+  status: implemented
+  severity: P1
+  title: "Command-side and query-side database roles are isolated"
+  owners: ["team-db", "team-security", "team-platform"]
+  sla_days: 30
+  enforcement: "scripts/db/verify_command_query_role_separation.sh"
+  verification: "scripts/db/verify_command_query_role_separation.sh; evidence/phase1/cqrs_002_db_role_separation.json"
+  notes: >
+    Requires command-side roles to own mutation and query-side roles to remain read-only
+    and projection-scoped for externally consumed summaries.
+
+- id: INV-150
+  aliases: ["I-PROJECTION-DETERMINISM-01"]
+  status: implemented
+  severity: P1
+  title: "Initial projection set is deterministic, rebuildable, and freshness-aware"
+  owners: ["team-platform", "team-architecture"]
+  sla_days: 30
+  enforcement: "scripts/db/verify_projection_freshness_and_scope.sh"
+  verification: "scripts/db/verify_projection_freshness_and_scope.sh; evidence/phase1/proj_001_initial_projection_set.json"
+  notes: >
+    Requires core projection schemas to be deterministic, rebuildable, tenant-scoped,
+    and to expose freshness metadata such as as_of_utc and projection_version.
+
+- id: INV-151
+  aliases: ["I-EXTERNAL-READS-PROJECTION-BACKED-01"]
+  status: implemented
+  severity: P1
+  title: "Externally consumed read APIs are projection-backed"
+  owners: ["team-platform", "team-security"]
+  sla_days: 30
+  enforcement: "scripts/audit/verify_no_hot_table_external_reads.sh"
+  verification: "scripts/audit/verify_no_hot_table_external_reads.sh; evidence/phase1/proj_002_external_query_cutover.json"
+  notes: >
+    Requires evidence, escrow, dispute, and summary read surfaces to avoid direct reads
+    from hot operational tables and to preserve tenant/object authorization on projected reads.
+
+- id: INV-152
+  aliases: ["I-PROJECTION-CUTOVER-COMPLETENESS-01"]
+  status: implemented
+  severity: P1
+  title: "Projection cutover completeness is one-shot and legacy references are removed"
+  owners: ["team-platform", "team-invariants"]
+  sla_days: 30
+  enforcement: "scripts/audit/verify_cut_001_one_shot_projection_cutover.sh"
+  verification: "scripts/audit/verify_cut_001_one_shot_projection_cutover.sh; evidence/phase1/cut_001_one_shot_projection_cutover.json"
+  notes: >
+    Requires projection cutover artifacts to be self-consistent, free of retired legacy
+    references, and explicitly anchored on the PROJ-002 external-read cutover proof.
+
+- id: INV-153
+  aliases: ["I-QUERY-SURFACE-BOUNDARY-POST-CUTOVER-01"]
+  status: implemented
+  severity: P1
+  title: "Post-cutover query surfaces remain handler-mediated and trust-bounded"
+  owners: ["team-platform", "team-security"]
+  sla_days: 30
+  enforcement: "scripts/audit/verify_cut_002_query_surface_boundary.sh"
+  verification: "scripts/audit/verify_cut_002_query_surface_boundary.sh; evidence/phase1/cut_002_query_surface_boundary.json"
+  notes: >
+    Requires public read routes to remain projection-backed through explicit query handlers
+    while admin mutation flows stay isolated from external read surfaces.
+
+- id: INV-154
+  aliases: ["I-PROJECTION-CUTOVER-RUNBOOK-01"]
+  status: implemented
+  severity: P1
+  title: "Projection cutover runbook defines deterministic stop and rollback discipline"
+  owners: ["team-platform", "team-invariants"]
+  sla_days: 30
+  enforcement: "scripts/audit/verify_cut_003_projection_cutover_runbook.sh"
+  verification: "scripts/audit/verify_cut_003_projection_cutover_runbook.sh; evidence/phase1/cut_003_projection_cutover_runbook.json"
+  notes: >
+    Requires an operator-usable Phase-1 cutover runbook with explicit preconditions,
+    sequence, stop conditions, rollback behavior, and evidence outputs.
+
+- id: INV-155
+  aliases: ["I-PROJECTION-CUTOVER-READINESS-GATE-01"]
+  status: implemented
+  severity: P1
+  title: "Projection cutover promotion is gated by aggregated prerequisite proof"
+  owners: ["team-platform", "team-invariants"]
+  sla_days: 30
+  enforcement: "scripts/audit/verify_cut_004_projection_cutover_gate.sh"
+  verification: "scripts/audit/verify_cut_004_projection_cutover_gate.sh; evidence/phase1/cut_004_projection_cutover_gate.json"
+  notes: >
+    Requires PROJ-001, PROJ-002, CUT-001, CUT-002, and CUT-003 proofs to be present and
+    passing before Sprint-3 cutover is considered ready for promotion.
+
+- id: INV-156
+  aliases: ["I-SPRINT5-GATED-LANE-BOUNDARY-01"]
+  status: implemented
+  severity: P2
+  title: "Sprint 5 ledger work remains gated from external trust-surface decisions"
+  owners: ["team-architecture", "team-platform"]
+  sla_days: 30
+  enforcement: "scripts/audit/verify_s5_gate_001.sh"
+  verification: "scripts/audit/verify_s5_gate_001.sh; evidence/phase2/s5_gate_001_boundary_approval.json"
+  notes: >
+    Requires Lane A and Lane B boundaries to remain explicit so internal ledger work
+    does not implicitly define production signing, governance authority, or external
+    verification format semantics.
+
+- id: INV-157
+  aliases: ["I-INTERNAL-LEDGER-MODEL-01"]
+  status: implemented
+  severity: P2
+  title: "Internal ledger model is append-only, explicit, and tenant-bound"
+  owners: ["team-db", "team-architecture"]
+  sla_days: 30
+  enforcement: "scripts/audit/verify_ledger_internal_model.sh"
+  verification: "scripts/audit/verify_ledger_internal_model.sh; evidence/phase2/ledger_001_internal_model.json"
+  notes: >
+    Requires internal journal and posting schema, explicit posting-set semantics,
+    tenant binding, currency explicitness, and append-only mutation denial for Phase-2
+    accounting internals.
+
+- id: INV-158
+  aliases: ["I-INTERNAL-LEDGER-PROOF-JOBS-01"]
+  status: implemented
+  severity: P2
+  title: "Internal ledger proof jobs are deterministic, idempotent, and tenant-safe"
+  owners: ["team-db", "team-platform"]
+  sla_days: 30
+  enforcement: "scripts/db/verify_ledger_zero_sum.sh; scripts/db/verify_posting_idempotency.sh; scripts/db/verify_no_cross_tenant_postings.sh"
+  verification: "scripts/db/verify_ledger_zero_sum.sh; scripts/db/verify_posting_idempotency.sh; scripts/db/verify_no_cross_tenant_postings.sh; evidence/phase2/ledger_002_internal_proof_jobs.json; evidence/phase2/ledger_002_posting_idempotency.json; evidence/phase2/ledger_002_tenant_scope_checks.json"
+  notes: >
+    Requires zero-sum proof execution, duplicate or replay-safe idempotency, and
+    fail-closed cross-tenant posting rejection for internal accounting verification.

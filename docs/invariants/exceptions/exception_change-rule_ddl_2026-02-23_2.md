@@ -6,6 +6,7 @@ follow_up_ticket: TSK-P0-KYC-002
 reason: Structural DDL was introduced under task-governed migration and verifier wiring; invariants linkage is tracked via this bounded exception.
 author: codex
 created_at: 2026-02-23
+closed_at: 2026-03-09
 ---
 
 # Exception: ddl structural change without invariants linkage

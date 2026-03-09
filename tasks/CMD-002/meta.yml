@@ -1,0 +1,50 @@
+schema_version: 1
+phase: '1'
+task_id: CMD-002
+title: Command lifecycle integrity and dispatch eligibility
+owner_role: SUPERVISOR
+status: completed
+depends_on:
+- CMD-001
+touches:
+- services/ledger-api/dotnet/src/LedgerApi/Program.cs
+- schema/
+- scripts/db/
+- tasks/CMD-002/meta.yml
+- docs/plans/phase1/CMD-002/PLAN.md
+- docs/plans/phase1/CMD-002/EXEC_LOG.md
+- evidence/command_integrity/cmd_002_command_lifecycle_integrity.json
+- docs/PHASE1/phase1_contract.yml
+invariants:
+- INV-147
+work:
+- Tighten idempotent resubmission semantics across pending/attempt/terminal states.
+- Define dispatch-eligible vs held states explicitly and verifier-back them.
+- Prove no illegal state regressions in the command lifecycle.
+acceptance_criteria:
+- Command lifecycle states are explicit and test-backed.
+- Dispatch eligibility is deterministic.
+- Duplicate submission behavior is stable and proven.
+verification:
+- bash scripts/db/verify_command_lifecycle_integrity.sh
+- python3 scripts/audit/validate_evidence.py --task CMD-002 --evidence evidence/command_integrity/cmd_002_command_lifecycle_integrity.json
+- RUN_PHASE1_GATES=1 scripts/dev/pre_ci.sh
+evidence:
+- evidence/command_integrity/cmd_002_command_lifecycle_integrity.json
+failure_modes:
+- Illegal state regression remains possible => FAIL.
+- Held vs dispatch-eligible semantics remain implicit => FAIL_REVIEW.
+must_read:
+- docs/operations/AI_AGENT_OPERATION_MANUAL.md
+- docs/operations/AI_AGENT_WORKFLOW_AND_ROLE_PLAN_v2.md
+- docs/operations/AGENT_ROLE_RECONCILIATION.md
+implementation_plan: docs/plans/phase1/CMD-002/PLAN.md
+implementation_log: docs/plans/phase1/CMD-002/EXEC_LOG.md
+notes: 'Final Sprint-1 write-side trust pack before CQRS structural split begins.
+
+  Intent infusion: Category D priorities and non-goals embedded from SECURITY_REVAMP_IMPL_PLAN.md;
+  mapped deterministically via intent_map.yml. Non-goals: No projection/API surface
+  expansion'
+client: codex_cli
+assigned_agent: supervisor
+model: gpt-5-codex

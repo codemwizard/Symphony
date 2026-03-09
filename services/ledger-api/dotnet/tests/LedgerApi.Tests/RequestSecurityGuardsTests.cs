@@ -1,14 +1,15 @@
 using Microsoft.AspNetCore.Http;
+using System.Net;
 using Xunit;
 
 public class RequestSecurityGuardsTests
 {
     [Fact]
-    public void BuildRateLimitPartitionKey_UsesTenantAndForwardedClientIp()
+    public void BuildRateLimitPartitionKey_UsesTenantAndRemoteClientIp()
     {
         var ctx = new DefaultHttpContext();
         ctx.Request.Headers["x-tenant-id"] = "tenant-abc";
-        ctx.Request.Headers["X-Forwarded-For"] = "198.51.100.10, 10.0.0.10";
+        ctx.Connection.RemoteIpAddress = IPAddress.Parse("198.51.100.10");
 
         var key = RequestSecurityGuards.BuildRateLimitPartitionKey(ctx);
 

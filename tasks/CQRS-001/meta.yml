@@ -1,0 +1,56 @@
+schema_version: 1
+phase: '1'
+task_id: CQRS-001
+title: Command/query code separation
+owner_role: SUPERVISOR
+status: completed
+depends_on:
+- CMD-002
+- INV-002
+touches:
+- services/ledger-api/dotnet/src/LedgerApi/Program.cs
+- services/ledger-api/dotnet/src/LedgerApi/Commands/
+- services/ledger-api/dotnet/src/LedgerApi/Queries/
+- services/ledger-api/dotnet/src/LedgerApi/ReadModels/
+- services/ledger-api/dotnet/src/LedgerApi/Infrastructure/
+- services/ledger-api/dotnet/src/LedgerApi/Security/
+- tasks/CQRS-001/meta.yml
+- docs/plans/phase1/CQRS-001/PLAN.md
+- docs/plans/phase1/CQRS-001/EXEC_LOG.md
+- evidence/phase1/cqrs_001_code_separation.json
+invariants:
+- INV-148
+work:
+- Extract command handlers from monolithic service bootstrap code and separate them
+  from query handlers.
+- Define command-side and query-side interfaces and namespaces/assemblies.
+- Prevent new business logic from landing in monolithic bootstrap files.
+acceptance_criteria:
+- Command handlers and query handlers are physically separated in code.
+- Bootstrap files no longer own large bodies of command/query logic.
+- No command-side mutation logic is callable through query abstractions.
+verification:
+- bash scripts/audit/verify_cqrs_code_boundary.sh
+- dotnet build services/ledger-api/dotnet/src/LedgerApi
+- dotnet test services/ledger-api/dotnet/tests
+- python3 scripts/audit/validate_evidence.py --task CQRS-001 --evidence evidence/phase1/cqrs_001_code_separation.json
+evidence:
+- evidence/phase1/cqrs_001_code_separation.json
+failure_modes:
+- Attestation/outbox durability logic is refactored or weakened as part of structural
+  cleanup => FAIL_REVIEW.
+- Query handlers gain mutation behavior or command-side side-effects => FAIL_REVIEW.
+must_read:
+- docs/operations/AI_AGENT_OPERATION_MANUAL.md
+- docs/operations/AI_AGENT_WORKFLOW_AND_ROLE_PLAN_v2.md
+- docs/operations/AGENT_ROLE_RECONCILIATION.md
+implementation_plan: docs/plans/phase1/CQRS-001/PLAN.md
+implementation_log: docs/plans/phase1/CQRS-001/EXEC_LOG.md
+notes: 'Structure-only separation first; do not redesign command durability in this
+  task.
+
+  Intent infusion: Category E priorities and non-goals embedded from SECURITY_REVAMP_IMPL_PLAN.md;
+  mapped deterministically via intent_map.yml. Non-goals: No change in business semantics'
+client: codex_cli
+assigned_agent: supervisor
+model: gpt-5-codex

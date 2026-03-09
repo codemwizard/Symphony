@@ -1,0 +1,45 @@
+schema_version: 1
+phase: '1'
+task_id: CUT-004
+title: Projection cutover readiness gate
+owner_role: SUPERVISOR
+status: completed
+depends_on:
+- CUT-002
+- CUT-003
+- PROJ-002
+touches:
+- tasks/CUT-004/meta.yml
+- docs/plans/phase1/CUT-004/PLAN.md
+- docs/plans/phase1/CUT-004/EXEC_LOG.md
+- docs/PHASE1/phase1_contract.yml
+- docs/operations/VERIFIER_EVIDENCE_REGISTRY.yml
+- scripts/audit/verify_cut_004_projection_cutover_gate.sh
+- evidence/phase1/cut_004_projection_cutover_gate.json
+invariants:
+- INV-155
+work:
+- Aggregate cutover prerequisites into a fail-closed readiness gate.
+- Require CUT-001, CUT-002, CUT-003, PROJ-001, and PROJ-002 proofs before declaring cutover ready.
+- Emit a single evidence artifact for Phase-1 cutover promotion review.
+acceptance_criteria:
+- Readiness gate fails if any prerequisite verifier fails or required evidence is missing.
+- Readiness evidence names the prerequisite proofs it validated.
+- Phase-1 contract and verifier registry include CUT-004 as the cutover promotion gate.
+verification:
+- bash scripts/audit/verify_cut_004_projection_cutover_gate.sh
+- python3 scripts/audit/validate_evidence.py --task CUT-004 --evidence evidence/phase1/cut_004_projection_cutover_gate.json
+evidence:
+- evidence/phase1/cut_004_projection_cutover_gate.json
+failure_modes:
+- Cutover promoted without prerequisite proof aggregation => FAIL_CLOSED.
+- Gate treats missing evidence as warning-only => FAIL_CLOSED.
+must_read:
+- docs/operations/AI_AGENT_OPERATION_MANUAL.md
+- docs/operations/AGENTIC_SDLC_PHASE1_POLICY.md
+implementation_plan: docs/plans/phase1/CUT-004/PLAN.md
+implementation_log: docs/plans/phase1/CUT-004/EXEC_LOG.md
+notes: 'Sprint 3 completion gate. This is the handoff seam between projection buildout and later performance work.'
+client: codex_cli
+assigned_agent: supervisor
+model: gpt-5-codex

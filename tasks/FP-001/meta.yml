@@ -1,0 +1,50 @@
+schema_version: 1
+phase: '1'
+task_id: FP-001
+title: Architecture freeze and no-touch zone control
+owner_role: SUPERVISOR
+status: completed
+depends_on: []
+touches:
+- docs/program/architecture_freeze.md
+- docs/program/no_touch_zones.md
+- docs/program/rollback_and_exception_policy.md
+- docs/program/sprint1_change_control.md
+- tasks/FP-001/meta.yml
+- docs/plans/phase1/FP-001/PLAN.md
+- docs/plans/phase1/FP-001/EXEC_LOG.md
+- evidence/program/fp_001_architecture_freeze.json
+invariants: []
+work:
+- Define Sprint-1 no-touch zones protecting DB invariants, append-only evidence, and
+  tenant isolation.
+- Define exception/rollback policy for architecture-affecting changes.
+- Require every Sprint-1 change to declare blast radius and no-touch status.
+acceptance_criteria:
+- Architecture freeze docs exist and are repo-specific.
+- No-touch zones, allowed-refactor zones, and exception template are published.
+- Rollback guidance exists for code, schema, and CI-rule changes.
+verification:
+- python3 scripts/audit/validate_evidence.py --task FP-001 --evidence evidence/program/fp_001_architecture_freeze.json
+- bash scripts/audit/verify_fp_001_architecture_freeze.sh
+- RUN_PHASE1_GATES=1 scripts/dev/pre_ci.sh
+evidence:
+- evidence/program/fp_001_architecture_freeze.json
+failure_modes:
+- No-touch zones omitted or generic => FAIL_REVIEW.
+- Rollback/exception policy missing => FAIL_CLOSED.
+must_read:
+- docs/operations/AI_AGENT_OPERATION_MANUAL.md
+- docs/operations/AI_AGENT_WORKFLOW_AND_ROLE_PLAN_v2.md
+- docs/operations/AGENT_ROLE_RECONCILIATION.md
+implementation_plan: docs/plans/phase1/FP-001/PLAN.md
+implementation_log: docs/plans/phase1/FP-001/EXEC_LOG.md
+notes: 'Documentation/control wrapper for Sprint-1 execution; no runtime or schema
+  changes are authorized by this task alone.
+
+  Intent infusion: Category A priorities and non-goals embedded from SECURITY_REVAMP_IMPL_PLAN.md;
+  mapped deterministically via intent_map.yml. Non-goals: No runtime feature expansion;
+  No trust-plane rewrite in this task'
+client: codex_cli
+assigned_agent: supervisor
+model: gpt-5-codex

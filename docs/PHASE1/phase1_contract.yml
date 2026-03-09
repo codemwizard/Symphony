@@ -405,3 +405,133 @@
   verifier: ""
   evidence_path: ""
   notes: "Explicitly deferred in Phase-1 closeout contract."
+
+# Sprint-1 proposed phase1_contract additions
+
+- invariant_id: "INV-135"
+  status: "implemented"
+  required: true
+  gate_id: "INT-G28"
+  verifier: "scripts/audit/verify_no_backward_calls.sh"
+  evidence_path: "evidence/phase1/no_backward_calls.json"
+  notes: "INV-135 requires explicit runtime backward-call blocking proof."
+
+- invariant_id: "INV-136"
+  status: "implemented"
+  required: true
+  gate_id: "INT-G28"
+  verifier: "scripts/db/verify_ou_ownership_registry.sh"
+  evidence_path: "evidence/phase1/ou_ownership_registry.json"
+  notes: "INV-136 requires singular ownership registry enforcement for protected contexts."
+
+- invariant_id: "INV-137"
+  status: "implemented"
+  required: true
+  gate_id: "INT-G28"
+  verifier: "scripts/db/verify_plane_isolation.sh"
+  evidence_path: "evidence/phase1/plane_isolation.json"
+  notes: "INV-137 requires mechanical control-plane/data-plane isolation proof."
+
+- invariant_id: "INV-142"
+  status: "implemented"
+  required: true
+  gate_id: "INT-G28"
+  verifier: "scripts/audit/verify_identity_provenance_immutability.sh"
+  evidence_path: "evidence/phase1/identity_provenance_immutability.json"
+  notes: "INV-142 requires immutable verified identity provenance evidence."
+
+- invariant_id: "INV-143"
+  status: "implemented"
+  required: true
+  gate_id: "INT-G28"
+  verifier: "scripts/audit/verify_audit_precedence.sh"
+  evidence_path: "evidence/phase1/audit_precedence.json"
+  notes: "INV-143 requires audit-before-side-effect proof."
+
+- invariant_id: "INV-144"
+  status: "implemented"
+  required: true
+  gate_id: "INT-G28"
+  verifier: "scripts/security/verify_card_data_non_presence.sh"
+  evidence_path: "evidence/phase1/card_data_non_presence.json"
+  notes: "INV-144 requires raw-card-data non-presence evidence."
+
+- invariant_id: "INV-146"
+  status: "implemented"
+  required: true
+  gate_id: "INT-G28"
+  verifier: "scripts/db/verify_attestation_outbox_atomicity.sh"
+  evidence_path: "evidence/command_integrity/cmd_001_attestation_outbox_atomicity.json"
+  notes: "INV-146 requires no-ACK-without-durable-attestation+outbox lineage proof."
+
+- invariant_id: "INV-147"
+  status: "implemented"
+  required: true
+  gate_id: "INT-G28"
+  verifier: "scripts/db/verify_command_lifecycle_integrity.sh"
+  evidence_path: "evidence/command_integrity/cmd_002_command_lifecycle_integrity.json"
+  notes: "INV-147 requires deterministic command lifecycle and dispatch-eligibility proof."
+
+- invariant_id: "INV-148"
+  status: "implemented"
+  required: true
+  gate_id: "INT-G30"
+  verifier: "scripts/audit/verify_cqrs_code_boundary.sh"
+  evidence_path: "evidence/phase1/cqrs_001_code_separation.json"
+  notes: "CQRS-001 requires structural separation of command and query logic."
+
+- invariant_id: "INV-149"
+  status: "implemented"
+  required: true
+  gate_id: "INT-G30"
+  verifier: "scripts/db/verify_command_query_role_separation.sh"
+  evidence_path: "evidence/phase1/cqrs_002_db_role_separation.json"
+  notes: "CQRS-002 requires command/query DB role isolation and projection-scoped query access."
+
+- invariant_id: "INV-150"
+  status: "implemented"
+  required: true
+  gate_id: "INT-G31"
+  verifier: "scripts/db/verify_projection_freshness_and_scope.sh"
+  evidence_path: "evidence/phase1/proj_001_initial_projection_set.json"
+  notes: "PROJ-001 requires deterministic, rebuildable, freshness-aware initial projection set."
+
+- invariant_id: "INV-151"
+  status: "implemented"
+  required: true
+  gate_id: "INT-G31"
+  verifier: "scripts/audit/verify_no_hot_table_external_reads.sh"
+  evidence_path: "evidence/phase1/proj_002_external_query_cutover.json"
+  notes: "PROJ-002 requires projection-backed external read APIs with no direct hot-table reads."
+
+- invariant_id: "INV-152"
+  status: "implemented"
+  required: true
+  gate_id: "INT-G32"
+  verifier: "scripts/audit/verify_cut_001_one_shot_projection_cutover.sh"
+  evidence_path: "evidence/phase1/cut_001_one_shot_projection_cutover.json"
+  notes: "CUT-001 requires one-shot projection cutover completeness and removal of retired legacy references."
+
+- invariant_id: "INV-153"
+  status: "implemented"
+  required: true
+  gate_id: "INT-G32"
+  verifier: "scripts/audit/verify_cut_002_query_surface_boundary.sh"
+  evidence_path: "evidence/phase1/cut_002_query_surface_boundary.json"
+  notes: "CUT-002 requires handler-mediated public query routes and preserved admin/public trust boundaries after cutover."
+
+- invariant_id: "INV-154"
+  status: "implemented"
+  required: true
+  gate_id: "INT-G32"
+  verifier: "scripts/audit/verify_cut_003_projection_cutover_runbook.sh"
+  evidence_path: "evidence/phase1/cut_003_projection_cutover_runbook.json"
+  notes: "CUT-003 requires deterministic cutover runbook, stop conditions, rollback discipline, and evidence outputs."
+
+- invariant_id: "INV-155"
+  status: "implemented"
+  required: true
+  gate_id: "INT-G32"
+  verifier: "scripts/audit/verify_cut_004_projection_cutover_gate.sh"
+  evidence_path: "evidence/phase1/cut_004_projection_cutover_gate.json"
+  notes: "CUT-004 requires aggregated prerequisite proof before projection cutover promotion."
