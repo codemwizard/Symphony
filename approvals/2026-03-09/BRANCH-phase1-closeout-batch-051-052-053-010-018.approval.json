@@ -66,7 +66,8 @@
       "evidence/phase1/agent_conformance_implementer.json",
       "evidence/phase1/agent_conformance_policy_guardian.json",
       "evidence/phase1/agent_role_mapping.json",
-      "scripts/audit/verify_human_governance_review_signoff.sh"
+      "scripts/audit/verify_human_governance_review_signoff.sh",
+      "evidence/phase1/invproc_06_ci_wiring_closeout.json"
     ],
     "invariants": [
       "INV-105",

@@ -1,7 +1,7 @@
 {
   "check_id": "TASK-OI-10",
-  "timestamp_utc": "2026-03-09T14:55:59Z",
-  "git_sha": "7ad42dba6052b067fb6f8e910a8a979027bafdc2",
+  "timestamp_utc": "2026-03-09T16:08:03Z",
+  "git_sha": "6a13873af7b426d65d6813150dcfdc2298b5fbfb",
   "schema_fingerprint": "48e1f2462b2d811f14d424ac529ee731e692f992414abfdbc35c60170590957b",
   "status": "PASS",
   "reviewer_id": "governance-human-reviewer",
@@ -59,7 +59,8 @@
     "evidence/phase1/agent_conformance_implementer.json",
     "evidence/phase1/agent_conformance_policy_guardian.json",
     "evidence/phase1/agent_role_mapping.json",
-    "scripts/audit/verify_human_governance_review_signoff.sh"
+    "scripts/audit/verify_human_governance_review_signoff.sh",
+    "evidence/phase1/invproc_06_ci_wiring_closeout.json"
   ],
   "changed_files": [
     "approvals/2026-03-09/BRANCH-phase1-closeout-batch-051-052-053-010-018.approval.json",
@@ -92,6 +93,7 @@
     "evidence/phase1/exception_case_pack_generation.json",
     "evidence/phase1/human_governance_review_signoff.json",
     "evidence/phase1/identity_provenance_immutability.json",
+    "evidence/phase1/invproc_06_ci_wiring_closeout.json",
     "evidence/phase1/native_aot_compilation_report.json",
     "evidence/phase1/no_backward_calls.json",
     "evidence/phase1/ou_ownership_registry.json",
@@ -144,6 +146,7 @@
     "evidence/phase1/exception_case_pack_generation.json",
     "evidence/phase1/human_governance_review_signoff.json",
     "evidence/phase1/identity_provenance_immutability.json",
+    "evidence/phase1/invproc_06_ci_wiring_closeout.json",
     "evidence/phase1/native_aot_compilation_report.json",
     "evidence/phase1/no_backward_calls.json",
     "evidence/phase1/ou_ownership_registry.json",
