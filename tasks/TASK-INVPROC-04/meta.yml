@@ -3,7 +3,7 @@ phase: '1'
 task_id: TASK-INVPROC-04
 title: Normalize regulator evidence pack template to deterministic artifact mapping
 owner_role: INVARIANTS_CURATOR
-status: ready
+status: completed
 depends_on:
 - TASK-INVPROC-01
 touches:
@@ -38,8 +38,7 @@ must_read:
 - docs/governance/regulator-evidence-pack-template-v1.md
 implementation_plan: docs/plans/phase1/TASK-INVPROC-04/PLAN.md
 implementation_log: docs/plans/phase1/TASK-INVPROC-04/EXEC_LOG.md
-notes: Planning scaffold completed and aligned to current governance path authority.
-  No implementation started.
+notes: Normalized the regulator evidence pack template to existing artifact families and implemented a fail-closed template verifier. Evidence emitted at evidence/phase1/invproc_04_regulator_pack_template.json.
 client: codex_cli
 assigned_agent: compliance_mapper
 model: gpt-5

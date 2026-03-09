@@ -1,0 +1,21 @@
+{
+  "check_id": "INVPROC-03-CI-GATE-SPEC-PARITY",
+  "timestamp_utc": "2026-03-09T08:27:25Z",
+  "git_sha": "0e8c478f13f271670633e382be1b994168f0faf9",
+  "schema_fingerprint": "48e1f2462b2d811f14d424ac529ee731e692f992414abfdbc35c60170590957b",
+  "status": "PASS",
+  "required_jobs": [
+    "mechanical_invariants",
+    "security_scan",
+    "db_verify_invariants",
+    "phase0_evidence_gate"
+  ],
+  "required_pre_ci_refs": [
+    "scripts/audit/run_phase0_ordered_checks.sh",
+    "scripts/db/verify_invariants.sh",
+    "scripts/ci/verify_phase0_contract_evidence_status_parity.sh",
+    "scripts/audit/verify_phase1_contract.sh",
+    "scripts/audit/verify_phase1_closeout.sh"
+  ],
+  "errors": []
+}

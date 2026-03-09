@@ -3,7 +3,7 @@ phase: '1'
 task_id: TASK-INVPROC-03
 title: Implement CI gate specification drift verifier
 owner_role: SECURITY_GUARDIAN
-status: ready
+status: completed
 depends_on:
 - TASK-INVPROC-01
 touches:
@@ -39,8 +39,7 @@ must_read:
 - docs/governance/ci-gate-spec-v1.md
 implementation_plan: docs/plans/phase1/TASK-INVPROC-03/PLAN.md
 implementation_log: docs/plans/phase1/TASK-INVPROC-03/EXEC_LOG.md
-notes: Planning scaffold completed and aligned to current governance path authority.
-  No implementation started.
+notes: Implemented CI gate spec parity verifier against the live workflow and pre_ci runner, and wired it into fast invariant checks. Evidence emitted at evidence/phase1/invproc_03_ci_gate_spec_parity.json.
 client: codex_cli
 assigned_agent: security_guardian
 model: gpt-5

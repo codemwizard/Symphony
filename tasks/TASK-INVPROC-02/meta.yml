@@ -3,7 +3,7 @@ phase: '1'
 task_id: TASK-INVPROC-02
 title: Implement invariant register to manifest parity verifier
 owner_role: INVARIANTS_CURATOR
-status: ready
+status: completed
 depends_on:
 - TASK-INVPROC-01
 touches:
@@ -38,8 +38,7 @@ must_read:
 - docs/operations/TASK_CREATION_PROCESS.md
 implementation_plan: docs/plans/phase1/TASK-INVPROC-02/PLAN.md
 implementation_log: docs/plans/phase1/TASK-INVPROC-02/EXEC_LOG.md
-notes: Planning scaffold completed and aligned to current governance path authority.
-  No implementation started.
+notes: Implemented fail-closed invariant-register parity verifier and wired it into fast invariant checks. Evidence emitted at evidence/phase1/invproc_02_register_parity.json.
 client: codex_cli
 assigned_agent: invariants_curator
 model: gpt-5

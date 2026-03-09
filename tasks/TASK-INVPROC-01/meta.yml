@@ -3,7 +3,7 @@ phase: '1'
 task_id: TASK-INVPROC-01
 title: Canonicalize invariants governance baseline documents and precedence
 owner_role: ARCHITECT
-status: ready
+status: completed
 depends_on: []
 touches:
 - docs/governance/invariant-register-v1.md
@@ -11,6 +11,7 @@ touches:
 - docs/governance/regulator-evidence-pack-template-v1.md
 - docs/operations/POLICY_PRECEDENCE.md
 - docs/invariants/INVARIANT_ENFORCEMENT_MATRIX.md
+- scripts/audit/verify_invproc_01_governance_baseline.sh
 invariants:
 - INV-071
 - INV-072
@@ -24,11 +25,9 @@ acceptance_criteria:
 - Domain-canonical precedence wording is explicit and consistent with POLICY_PRECEDENCE.
 - Each governance doc has deterministic references to verifier/evidence sources.
 verification:
-- test -f docs/governance/invariant-register-v1.md
-- test -f docs/governance/ci-gate-spec-v1.md
-- test -f docs/governance/regulator-evidence-pack-template-v1.md
-- rg -n "INVARIANTS_MANIFEST.yml|invariants.yml|pre_ci.sh" docs/governance/*.md
-- rg -n "domain-canonical|must defer" docs/operations/POLICY_PRECEDENCE.md
+- bash scripts/audit/verify_invproc_01_governance_baseline.sh
+- rg -n "AI_AGENT_OPERATION_MANUAL.md|INVARIANTS_MANIFEST.yml|INVARIANT_ENFORCEMENT_MATRIX.md|invariants.yml|pre_ci.sh" docs/governance/*.md
+- rg -n "INVARIANTS_MANIFEST.yml|INVARIANT_ENFORCEMENT_MATRIX.md|invariants.yml|pre_ci.sh" docs/operations/POLICY_PRECEDENCE.md
 evidence:
 - evidence/phase1/invproc_01_governance_baseline.json
 failure_modes:
@@ -42,8 +41,7 @@ must_read:
 - docs/operations/POLICY_PRECEDENCE.md
 implementation_plan: docs/plans/phase1/TASK-INVPROC-01/PLAN.md
 implementation_log: docs/plans/phase1/TASK-INVPROC-01/EXEC_LOG.md
-notes: Planning scaffold completed and aligned to current governance path authority.
-  No implementation started.
+notes: Implemented governance baseline canonicalization and fail-closed baseline verifier. Evidence emitted at evidence/phase1/invproc_01_governance_baseline.json.
 client: codex_cli
 assigned_agent: architect
 model: gpt-5

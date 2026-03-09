@@ -10,7 +10,8 @@ Use this checklist for a limited customer-facing sandbox pilot handoff.
 
 ## Compliance Preconditions
 - Regulated surface changes include approval metadata (`evidence/phase1/approval_metadata.json`).
-- Agent conformance evidence is green (`evidence/phase1/agent_conformance.json`).
+- Agent conformance evidence is green (`evidence/phase1/agent_conformance_architect.json`, `evidence/phase1/agent_conformance_implementer.json`, `evidence/phase1/agent_conformance_policy_guardian.json`).
+- Invariant-process governance evidence is green (`evidence/phase1/invproc_01_governance_baseline.json` through `evidence/phase1/invproc_05_governance_links.json`).
 - PII lint and security fast checks pass in `scripts/dev/pre_ci.sh`.
 
 ## Replay Validation
@@ -23,3 +24,4 @@ Use this checklist for a limited customer-facing sandbox pilot handoff.
 - Pilot contract: `docs/operations/PHASE1_PILOT_INTEGRATION_CONTRACT.md`
 - Onboarding checklist: `docs/operations/PHASE1_PILOT_ONBOARDING_CHECKLIST.md`
 - Deterministic machine evidence in `evidence/phase1/**`
+- Approval metadata and invariant-process governance evidence attached for regulated-surface handoff

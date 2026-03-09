@@ -46,6 +46,7 @@
 ## Notes
 - Control-plane gates (SEC/INT) are the authoritative enforcement points for Phase-0.
 - Evidence artifacts are the proof objects; mapping does not imply production readiness.
+- Regulator evidence packs must reference only existing `evidence/phase0/**` and `evidence/phase1/**` artifacts and must distinguish implemented invariants from roadmap disclosures.
 - Where controls are roadmap-only, evidence will be document-based (Phase-0).
 - Security privilege posture remains fail-closed even when SQL grant statements are wrapped across multiple lines.
 - 2026-02-24: `TSK-P1-HIER-002` adds Phase-1 hierarchy bridge checks (`programs.program_escrow_id` and `person_roles.member_id` FK posture) as regulated-surface integrity hardening validated through verifier evidence.

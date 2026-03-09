@@ -20,6 +20,10 @@ set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 cd "$ROOT"
+
+# Keep standalone fast checks aligned with pre_ci evidence-write posture.
+export SYMPHONY_ENV="${SYMPHONY_ENV:-development}"
+
 source "$ROOT/scripts/lib/evidence.sh"
 source "$ROOT/scripts/audit/lib/git_diff.sh"
 EVIDENCE_TS="$(evidence_now_utc)"
@@ -145,6 +149,51 @@ if [[ -x "scripts/audit/verify_control_planes_drift.sh" || -f "scripts/audit/ver
   run scripts/audit/verify_control_planes_drift.sh
 else
   echo "ERROR: scripts/audit/verify_control_planes_drift.sh not found"
+  exit 1
+fi
+
+echo ""
+echo "==> Governance baseline verification"
+if [[ -x "scripts/audit/verify_invproc_01_governance_baseline.sh" || -f "scripts/audit/verify_invproc_01_governance_baseline.sh" ]]; then
+  run scripts/audit/verify_invproc_01_governance_baseline.sh
+else
+  echo "ERROR: scripts/audit/verify_invproc_01_governance_baseline.sh not found"
+  exit 1
+fi
+
+echo ""
+echo "==> Invariant register parity verification"
+if [[ -x "scripts/audit/verify_invariant_register_parity.sh" || -f "scripts/audit/verify_invariant_register_parity.sh" ]]; then
+  run scripts/audit/verify_invariant_register_parity.sh
+else
+  echo "ERROR: scripts/audit/verify_invariant_register_parity.sh not found"
+  exit 1
+fi
+
+echo ""
+echo "==> CI gate spec parity verification"
+if [[ -x "scripts/audit/verify_ci_gate_spec_parity.sh" || -f "scripts/audit/verify_ci_gate_spec_parity.sh" ]]; then
+  run scripts/audit/verify_ci_gate_spec_parity.sh
+else
+  echo "ERROR: scripts/audit/verify_ci_gate_spec_parity.sh not found"
+  exit 1
+fi
+
+echo ""
+echo "==> Regulator pack template verification"
+if [[ -x "scripts/audit/verify_regulator_pack_template.sh" || -f "scripts/audit/verify_regulator_pack_template.sh" ]]; then
+  run scripts/audit/verify_regulator_pack_template.sh
+else
+  echo "ERROR: scripts/audit/verify_regulator_pack_template.sh not found"
+  exit 1
+fi
+
+echo ""
+echo "==> Invariant process governance link verification"
+if [[ -x "scripts/audit/verify_invariant_process_governance_links.sh" || -f "scripts/audit/verify_invariant_process_governance_links.sh" ]]; then
+  run scripts/audit/verify_invariant_process_governance_links.sh
+else
+  echo "ERROR: scripts/audit/verify_invariant_process_governance_links.sh not found"
   exit 1
 fi
 
