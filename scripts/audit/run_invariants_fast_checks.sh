@@ -92,10 +92,23 @@ echo "==> Detector unit tests"
 # Prefer pytest if available, otherwise try unittest
 if [[ -d "scripts/audit/tests" ]]; then
   if have_cmd pytest; then
-    run "$PYTHON_BIN" -m pytest -q scripts/audit/tests
+    run pytest -q scripts/audit/tests
+  elif [[ -x "$ROOT/.toolchain/bin/pytest" ]]; then
+    run "$ROOT/.toolchain/bin/pytest" -q scripts/audit/tests
+  elif [[ -x "scripts/audit/bootstrap_local_ci_toolchain.sh" ]]; then
+    run scripts/audit/bootstrap_local_ci_toolchain.sh
+    export PATH="$ROOT/.toolchain/bin:$PATH"
+    if [[ -x "$ROOT/.toolchain/bin/pytest" ]]; then
+      run "$ROOT/.toolchain/bin/pytest" -q scripts/audit/tests
+    elif [[ -x "$ROOT/.venv/bin/python3" ]]; then
+      run "$ROOT/.venv/bin/python3" -m pytest -q scripts/audit/tests
+    else
+      echo "ERROR: bootstrap completed but pytest is still unavailable"
+      exit 1
+    fi
   else
-    # If PATH doesn't expose pytest, try via venv/module invocation.
-    run "$PYTHON_BIN" -m pytest -q scripts/audit/tests
+    echo "ERROR: pytest is unavailable and no local bootstrap is present"
+    exit 1
   fi
 elif [[ -f "scripts/audit/tests/test_detect_structural_changes.py" ]]; then
   # Run as unittest module if it is written that way
@@ -212,6 +225,42 @@ if [[ -x "scripts/audit/verify_human_governance_review_signoff.sh" || -f "script
   run scripts/audit/verify_human_governance_review_signoff.sh
 else
   echo "ERROR: scripts/audit/verify_human_governance_review_signoff.sh not found"
+  exit 1
+fi
+
+echo ""
+echo "==> TSK-P1-069 fail-first triage banner verification"
+if [[ -x "scripts/audit/verify_tsk_p1_069.sh" || -f "scripts/audit/verify_tsk_p1_069.sh" ]]; then
+  run bash scripts/audit/verify_tsk_p1_069.sh
+else
+  echo "ERROR: scripts/audit/verify_tsk_p1_069.sh not found"
+  exit 1
+fi
+
+echo ""
+echo "==> TSK-P1-070 remediation casefile scaffolder verification"
+if [[ -x "scripts/audit/verify_tsk_p1_070.sh" || -f "scripts/audit/verify_tsk_p1_070.sh" ]]; then
+  run bash scripts/audit/verify_tsk_p1_070.sh
+else
+  echo "ERROR: scripts/audit/verify_tsk_p1_070.sh not found"
+  exit 1
+fi
+
+echo ""
+echo "==> TSK-P1-071 failure-layer taxonomy verification"
+if [[ -x "scripts/audit/verify_tsk_p1_071.sh" || -f "scripts/audit/verify_tsk_p1_071.sh" ]]; then
+  run bash scripts/audit/verify_tsk_p1_071.sh
+else
+  echo "ERROR: scripts/audit/verify_tsk_p1_071.sh not found"
+  exit 1
+fi
+
+echo ""
+echo "==> TSK-P1-072 two-strike escalation verification"
+if [[ -x "scripts/audit/verify_tsk_p1_072.sh" || -f "scripts/audit/verify_tsk_p1_072.sh" ]]; then
+  run bash scripts/audit/verify_tsk_p1_072.sh
+else
+  echo "ERROR: scripts/audit/verify_tsk_p1_072.sh not found"
   exit 1
 fi
 

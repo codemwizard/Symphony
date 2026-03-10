@@ -1,0 +1,47 @@
+schema_version: 1
+phase: '1'
+task_id: TSK-P1-069
+title: Add fail-first triage banner and first-failure guidance to local gate entrypoints
+owner_role: SUPERVISOR
+status: completed
+depends_on: []
+touches:
+- scripts/dev/pre_ci.sh
+- docs/process/debug-remediation-policy.md
+- docs/operations/REMEDIATION_TRACE_WORKFLOW.md
+- docs/process/DEBUG_PROCESS_MATERIAL_GAIN_ANALYSIS_2026-03-10.md
+- docs/tasks/phase1_prompts.md
+- tasks/TSK-P1-069/meta.yml
+- docs/plans/phase1/TSK-P1-069_fail_first_triage_banner/PLAN.md
+- docs/plans/phase1/TSK-P1-069_fail_first_triage_banner/EXEC_LOG.md
+invariants:
+- INV-077
+- INV-105
+- INV-119
+work:
+- "Add an explicit fail-first triage banner at the start of `scripts/dev/pre_ci.sh`."
+- Surface the canonical debug/remediation policy and workflow paths in failure-facing output.
+- Make repeated reruns harder by instructing operators and agents to isolate the first failing layer before retry.
+acceptance_criteria:
+- "`pre_ci` prints a compact fail-first triage contract before or at first failure for production-affecting paths."
+- The triage output links to the canonical remediation policy and workflow docs.
+- The failure message distinguishes immediate rerun from remediation-required behavior.
+verification:
+- bash scripts/audit/verify_tsk_p1_069.sh
+- bash scripts/audit/run_invariants_fast_checks.sh
+evidence:
+- evidence/phase1/tsk_p1_069_fail_first_triage_banner.json
+failure_modes:
+- "`pre_ci` still fails without surfacing the remediation/triage contract."
+- The banner exists only in docs and not in the actual gate entrypoint agents use.
+must_read:
+- docs/operations/AI_AGENT_OPERATION_MANUAL.md
+- docs/process/debug-remediation-policy.md
+- docs/operations/REMEDIATION_TRACE_WORKFLOW.md
+- docs/process/DEBUG_PROCESS_MATERIAL_GAIN_ANALYSIS_2026-03-10.md
+implementation_plan: docs/plans/phase1/TSK-P1-069_fail_first_triage_banner/PLAN.md
+implementation_log: docs/plans/phase1/TSK-P1-069_fail_first_triage_banner/EXEC_LOG.md
+notes: Implements the first process-hardening action identified in the March 10 debug-process analysis.
+client: codex_cli
+assigned_agent: supervisor
+model: gpt-5-codex
