@@ -91,6 +91,7 @@ static class IngressHandler
 static class IngressValidation
 {
     private static readonly Regex CurrencyRegex = new("^[A-Z]{3}$", RegexOptions.Compiled);
+    private const long MaxAmountMinor = 1_000_000_000_000;
 
     public static bool IsForcedFailureEnabled()
     {
@@ -201,6 +202,10 @@ static class IngressValidation
         else if (amountMinor <= 0)
         {
             violations.Add(new { field = "amount_minor", message = "amount_minor must be greater than 0" });
+        }
+        else if (amountMinor > MaxAmountMinor)
+        {
+            violations.Add(new { field = "amount_minor", message = $"amount_minor must not exceed {MaxAmountMinor}" });
         }
 
         RequireString("currency_code", s => CurrencyRegex.IsMatch(s), "currency_code must be ISO 4217 uppercase alpha-3");

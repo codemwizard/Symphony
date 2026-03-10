@@ -103,3 +103,9 @@ interface ITenantOnboardingStore
 }
 
 record HandlerResult(int StatusCode, object Body);
+
+static class StoreErrorMessages
+{
+    public const string PersistenceUnavailable = "persistence unavailable";
+    public const string ReportLookupUnavailable = "report lookup unavailable";
+}

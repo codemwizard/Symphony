@@ -12,11 +12,10 @@ Remove hardcoded self-test secrets from production-path code surfaces.
 
 ## Verification Commands
 - `bash scripts/audit/run_security_fast_checks.sh`
-- `rg -n "test-api-key|signing key|secret" services/ledger-api/dotnet/src/LedgerApi/Program.cs`
+- `bash scripts/audit/verify_tsk_p1_065.sh`
 
 ## Repro_Command
-- `rg -n "test-api-key|signing key|secret" services/ledger-api/dotnet/src/LedgerApi/Program.cs`
+- `rg -n "tenant-context-self-test-key|pilot-self-test-key|ten-003-admin-key|phase1-reg-00[23]-self-test-key" services/ledger-api/dotnet/src/LedgerApi/Program.cs`
 
 ## Evidence Paths
-- `evidence/phase0/security_secrets_scan.json`
-- `evidence/phase0/security_insecure_patterns.json`
+- `evidence/phase1/tsk_p1_065_selftest_secret_posture.json`
