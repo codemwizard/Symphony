@@ -3,7 +3,7 @@ phase: '1'
 task_id: TSK-P1-034
 title: INV-077 Deterministic Approval Metadata Evidence Hardening
 owner_role: COMPLIANCE_MAPPER
-status: planned
+status: completed
 depends_on:
 - TSK-P1-033
 touches:
@@ -42,12 +42,15 @@ acceptance_criteria:
 - Fixture tests prove: regulated change without approval fails, malformed approval
     fails, non-regulated change passes per declared policy.
 verification:
+- bash scripts/audit/verify_tsk_p1_034.sh
+- python3 scripts/audit/validate_evidence.py --task TSK-P1-034 --evidence evidence/phase1/tsk_p1_034_approval_metadata_hardening.json
 - bash scripts/audit/verify_agent_conformance.sh
 - RUN_PHASE1_GATES=1 bash scripts/audit/verify_phase1_contract.sh
 - bash scripts/audit/tests/test_approval_metadata_requirements.sh
 - RUN_PHASE1_GATES=1 bash scripts/dev/pre_ci.sh
 evidence:
 - evidence/phase1/approval_metadata.json
+- evidence/phase1/tsk_p1_034_approval_metadata_hardening.json
 failure_modes:
 - Contract weakened to remove approval evidence requirement without equivalent deterministic
   rule.
@@ -64,4 +67,4 @@ notes: Treats current INV-077 failure as control-plane work to fix evidence prod
   not to weaken Phase-1 contract.
 client: codex_cli
 assigned_agent: compliance_mapper
-model: <UNASSIGNED>
+model: gpt-5-codex

@@ -3,7 +3,7 @@ phase: '1'
 task_id: TSK-P1-033
 title: Phase-1 No-MCP Reintroduction Guard
 owner_role: INVARIANTS_CURATOR
-status: planned
+status: completed
 depends_on:
 - TSK-P1-027
 touches:
@@ -36,11 +36,14 @@ acceptance_criteria:
 - Fixture test suite proves both fail and pass behavior deterministically.
 - pre_ci with RUN_PHASE1_GATES=1 invokes the guard before phase1 contract verification.
 verification:
+- bash scripts/audit/verify_tsk_p1_033.sh
+- python3 scripts/audit/validate_evidence.py --task TSK-P1-033 --evidence evidence/phase1/tsk_p1_033_no_mcp_reintroduction_guard.json
 - bash scripts/audit/verify_no_mcp_phase1.sh
 - bash scripts/audit/tests/test_no_mcp_phase1_guard.sh
 - RUN_PHASE1_GATES=1 bash scripts/dev/pre_ci.sh
 evidence:
 - evidence/phase1/no_mcp_phase1_guard.json
+- evidence/phase1/tsk_p1_033_no_mcp_reintroduction_guard.json
 failure_modes:
 - MCP artifacts are reintroduced in Phase-1 without gate failure.
 - Guard excludes critical file areas and leaves bypass paths.
@@ -54,4 +57,4 @@ notes: Implements mechanical enforcement for Option A cleanup so MCP cannot cree
   back into Phase-1.
 client: codex_cli
 assigned_agent: invariants_curator
-model: <UNASSIGNED>
+model: gpt-5-codex
