@@ -1,0 +1,31 @@
+schema_version: 1
+phase: "1"
+task_id: TSK-P1-076
+title: Verify and document the two-level local gate topology
+owner_role: INVARIANTS_CURATOR
+status: planned
+depends_on:
+  - TSK-P1-074
+  - TSK-P1-075
+blocks: []
+scope:
+  - "scripts/audit/**"
+  - "docs/operations/**"
+  - "docs/process/**"
+  - "docs/tasks/phase1_prompts.md"
+plan_path: docs/plans/phase1/TSK-P1-076_local_gate_topology_verification/PLAN.md
+exec_log_path: docs/plans/phase1/TSK-P1-076_local_gate_topology_verification/EXEC_LOG.md
+evidence_paths:
+  - evidence/phase1/tsk_p1_076_local_gate_topology.json
+verification:
+  - bash scripts/audit/verify_tsk_p1_076.sh
+  - bash scripts/audit/run_invariants_fast_checks.sh
+acceptance_criteria:
+  - Repo docs explicitly describe the light pre-flight gate and the heavy push-time pre-CI gate as separate levels.
+  - A verifier fails if installed hooks, tracked hook sources, and documented gate topology disagree.
+  - Evidence is emitted proving the topology check passed.
+must_read:
+  - docs/operations/AI_AGENT_OPERATION_MANUAL.md
+  - docs/process/DEBUG_PROCESS_MATERIAL_GAIN_ANALYSIS_2026-03-10.md
+notes:
+  - This task is verification/documentation closure for the hook-topology follow-up line.

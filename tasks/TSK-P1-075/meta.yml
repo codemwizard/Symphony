@@ -1,0 +1,34 @@
+schema_version: 1
+phase: "1"
+task_id: TSK-P1-075
+title: Split light pre-flight from heavy push-time pre-CI
+owner_role: SUPERVISOR
+status: planned
+depends_on:
+  - TSK-P1-074
+blocks:
+  - TSK-P1-076
+scope:
+  - ".githooks/**"
+  - "scripts/dev/install_git_hooks.sh"
+  - "scripts/dev/pre_flight.sh"
+  - "scripts/dev/pre_ci.sh"
+  - "scripts/audit/**"
+  - "docs/operations/**"
+  - "docs/tasks/phase1_prompts.md"
+plan_path: docs/plans/phase1/TSK-P1-075_preflight_preci_split/PLAN.md
+exec_log_path: docs/plans/phase1/TSK-P1-075_preflight_preci_split/EXEC_LOG.md
+evidence_paths:
+  - evidence/phase1/tsk_p1_075_preflight_preci_split.json
+verification:
+  - bash scripts/audit/verify_tsk_p1_075.sh
+  - bash scripts/audit/run_invariants_fast_checks.sh
+acceptance_criteria:
+  - A light pre-flight gate exists and runs on the local commit path without rerunning the heavy pre-CI stack.
+  - The heavy push-time pre-CI gate remains the canonical expensive parity path for local push validation.
+  - Documentation and verifier output make the two-level gate model explicit and mechanically checkable.
+must_read:
+  - docs/operations/AI_AGENT_OPERATION_MANUAL.md
+  - docs/process/debug-remediation-policy.md
+notes:
+  - The goal is separation of gate levels, not reduction of push-time assurance.

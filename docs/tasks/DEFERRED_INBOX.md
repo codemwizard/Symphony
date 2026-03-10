@@ -124,6 +124,41 @@ Rules:
   - `tasks/TSK-P1-071/meta.yml`
   - `tasks/TSK-P1-072/meta.yml`
 
+### INBOX-2026-03-10-007 — Local hook topology is inconsistent and the two-level gate model is not explicitly enforced
+- Source incident:
+  - `.githooks/pre-push`
+  - `scripts/dev/install_git_hooks.sh`
+  - `scripts/dev/pre_ci.sh`
+- Priority: `P1`
+- Owner role: `SUPERVISOR`
+- Status: `deferred`
+- Created: `2026-03-10`
+- Classification: `L1`
+- Why deferred:
+  - Local guarded execution is correct in principle, but the current hook topology is too implicit and too easy to misread.
+  - Active execution currently comes from tracked `.githooks/*`, while the installer writes to `.git/hooks`, creating topology ambiguity.
+  - The intended local gate model is also under-specified: a lighter `pre_flight` should run just after commit, while the heavier `pre_ci` should remain the push-time parity gate.
+  - This should be fixed deliberately, not opportunistically while the local working-tree and bootstrap behavior are still being stabilized.
+- Unblock trigger:
+  - Start after current branch/process stabilization work is merged and the repo is back to a clean, low-drift local state.
+- Required done criteria:
+  - Implement executable tasks:
+    - `TSK-P1-074`
+    - `TSK-P1-075`
+    - `TSK-P1-076`
+  - Normalize the local hook installation/source model so tracked hook templates and active installed hooks are unambiguous.
+  - Make the light `pre_flight` gate and heavy push-time `pre_ci` gate explicit in both docs and scripts.
+  - Add a verifier that fails if installed local hooks diverge from the documented two-level gate topology.
+  - Emit evidence proving the normalized hook topology and gate split are active.
+- Links:
+  - `docs/process/DEBUG_PROCESS_MATERIAL_GAIN_ANALYSIS_2026-03-10.md`
+  - `.githooks/pre-push`
+  - `scripts/dev/install_git_hooks.sh`
+  - `scripts/dev/pre_ci.sh`
+  - `tasks/TSK-P1-074/meta.yml`
+  - `tasks/TSK-P1-075/meta.yml`
+  - `tasks/TSK-P1-076/meta.yml`
+
 ### INBOX-2026-02-22-001 — TSK-P1-059 completion gap (narrative vs implemented scope)
 - Source task: `TSK-P1-059`
 - Priority: `P1`

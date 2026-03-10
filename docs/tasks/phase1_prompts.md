@@ -5471,6 +5471,105 @@ failure_modes:
 
 ## Audit Patch Notes
 
+## TSK-P1-074 — Normalize local hook source and installation path
+
+### Goal
+Normalize the local hook topology so the tracked hook source and the active installed hook destination are explicit, documented, and mechanically verifiable.
+
+#### Execution Metadata Patch Block (orchestrator source)
+
+```yaml
+task_id: TSK-P1-074
+depends_on: []
+verifier_command: bash -lc 'bash scripts/audit/verify_tsk_p1_074.sh && bash scripts/audit/run_invariants_fast_checks.sh'
+evidence_path: evidence/phase1/tsk_p1_074_hook_source_normalization.json
+files_to_change:
+- tasks/TSK-P1-074/meta.yml
+- docs/plans/phase1/TSK-P1-074_hook_source_normalization/PLAN.md
+- docs/plans/phase1/TSK-P1-074_hook_source_normalization/EXEC_LOG.md
+- docs/tasks/phase1_prompts.md
+- docs/operations/**
+- scripts/dev/install_git_hooks.sh
+- scripts/dev/pre_flight.sh
+- .githooks/**
+- scripts/audit/**
+acceptance_assertions:
+- A single tracked hook source model is documented.
+- A single active installed hook destination model is documented.
+- Installer behavior and docs agree.
+- A verifier fails if the topology diverges.
+failure_modes:
+- Missing prompt section or execution metadata block => STOP.
+- Hook source/install topology still ambiguous => FAIL.
+- Verifier missing or non-fail-closed => FAIL.
+```
+
+## TSK-P1-075 — Split light pre-flight from heavy push-time pre-CI
+
+### Goal
+Implement the intended two-level local gate model: light pre-flight after commit, heavy pre-CI on push.
+
+#### Execution Metadata Patch Block (orchestrator source)
+
+```yaml
+task_id: TSK-P1-075
+depends_on:
+- TSK-P1-074
+verifier_command: bash -lc 'bash scripts/audit/verify_tsk_p1_075.sh && bash scripts/audit/run_invariants_fast_checks.sh'
+evidence_path: evidence/phase1/tsk_p1_075_preflight_preci_split.json
+files_to_change:
+- tasks/TSK-P1-075/meta.yml
+- docs/plans/phase1/TSK-P1-075_preflight_preci_split/PLAN.md
+- docs/plans/phase1/TSK-P1-075_preflight_preci_split/EXEC_LOG.md
+- docs/tasks/phase1_prompts.md
+- docs/operations/**
+- scripts/dev/pre_flight.sh
+- scripts/dev/pre_ci.sh
+- .githooks/**
+- scripts/audit/**
+acceptance_assertions:
+- Light pre-flight and heavy pre-CI are separate execution levels.
+- Push-time parity remains heavy.
+- The light gate does not rerun the heavy stack.
+failure_modes:
+- Missing prompt section or execution metadata block => STOP.
+- Light gate duplicates heavy gate => FAIL.
+- Push-time parity is weakened => FAIL.
+```
+
+## TSK-P1-076 — Verify and document the two-level local gate topology
+
+### Goal
+Close the hook-topology line by making the two-level gate model documented and mechanically verified.
+
+#### Execution Metadata Patch Block (orchestrator source)
+
+```yaml
+task_id: TSK-P1-076
+depends_on:
+- TSK-P1-074
+- TSK-P1-075
+verifier_command: bash -lc 'bash scripts/audit/verify_tsk_p1_076.sh && bash scripts/audit/run_invariants_fast_checks.sh'
+evidence_path: evidence/phase1/tsk_p1_076_local_gate_topology.json
+files_to_change:
+- tasks/TSK-P1-076/meta.yml
+- docs/plans/phase1/TSK-P1-076_local_gate_topology_verification/PLAN.md
+- docs/plans/phase1/TSK-P1-076_local_gate_topology_verification/EXEC_LOG.md
+- docs/tasks/phase1_prompts.md
+- docs/operations/**
+- docs/process/**
+- scripts/audit/**
+- .githooks/**
+acceptance_assertions:
+- Docs, hook installation, and verifier behavior agree on the two-level gate topology.
+- Evidence is emitted proving the topology check passed.
+- Drift between docs and hook behavior fails closed.
+failure_modes:
+- Missing prompt section or execution metadata block => STOP.
+- Topology verifier missing or incomplete => FAIL.
+- Docs and hook behavior diverge => FAIL.
+```
+
 - DAG task nodes processed: 54
 
 - Existing prompt sections matched: 23
