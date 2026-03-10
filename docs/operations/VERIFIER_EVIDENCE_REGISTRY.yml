@@ -275,6 +275,15 @@ registry:
   scripts/audit/verify_tsk_p1_034.sh:
     emits:
     - evidence/phase1/tsk_p1_034_approval_metadata_hardening.json
+  scripts/audit/verify_tsk_p1_010.sh:
+    emits:
+    - evidence/phase1/tsk_p1_010_phase1_closeout_verification.json
+  scripts/audit/verify_tsk_p1_058.sh:
+    emits:
+    - evidence/phase1/outbox_retry_semantics.json
+  scripts/audit/verify_p1_060_phase2_followthrough_gate.sh:
+    emits:
+    - evidence/phase1/p1_060_phase2_followthrough_gate.json
   scripts/audit/verify_remediation_artifact_freshness.sh:
     emits:
     - evidence/phase1/tsk_p1_073_remediation_artifact_freshness.json

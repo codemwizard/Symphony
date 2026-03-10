@@ -1,0 +1,21 @@
+{
+  "check_id": "TSK-P1-058-OUTBOX-RETRY-SEMANTICS",
+  "task_id": "TSK-P1-058",
+  "timestamp_utc": "2026-03-10T18:30:51Z",
+  "git_sha": "7a50171736a509ec30d969907d4cd1b6d034ff58",
+  "schema_fingerprint": "33e36565282f1592203a3db8c735f6d6a51bdcfa289c00e1c2040e30adc98ddb",
+  "status": "PASS",
+  "pass": true,
+  "details": {
+    "perf_002_status": "PASS",
+    "driver_batching_status": "PASS",
+    "outbox_claim_semantics_status": "PASS",
+    "outbox_lease_fencing_status": "PASS",
+    "idempotency_zombie_status": "PASS",
+    "telemetry_trigger_met": false,
+    "trigger_reason": "telemetry_below_contention_threshold",
+    "optimization_applied": false,
+    "decision": "NO_CHANGE_APPLIED_PHASE1"
+  },
+  "errors": []
+}

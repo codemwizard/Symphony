@@ -141,3 +141,19 @@ Risks and mitigations:
 
 Dependencies:
 - Rail integration and policy-as-code.
+
+## Phase-2 Followthrough Program (Post Phase-1 Closeout)
+Goals:
+- Land boundary conformance verifier coverage aligned to ADR-0001.
+- Stage a forward-only domain schema charter for post-Phase-1 expansion.
+- Keep governance fail-closed: no implementation claims before verifier/evidence wiring.
+
+Implementation plan and tasks:
+- Add boundary conformance verifier and evidence contract.
+- Define forward-only domain schema charter and sequencing constraints.
+- Allocate any new invariant/gate IDs before implementation starts.
+
+Required CI controls/gates:
+- boundary conformance verifier (mechanical pass/fail)
+- evidence validation for followthrough gate artifact
+- no implementation claims before verifier/evidence wiring

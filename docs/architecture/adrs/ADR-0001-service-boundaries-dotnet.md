@@ -26,3 +26,11 @@ directly mutate tables outside stored procedures.
 - Clear ownership and test seams enable contract testing and compliance evidence.
 - Requires service-to-service auth and observability from the start.
 - Enables incremental implementation with deterministic boundaries.
+
+## Boundary Conformance Checks
+- No-cross-boundary direct writes:
+  Services must not write tables outside their owned boundary except through approved stored procedures/contracts.
+- Forward-only domain-schema migration sequencing:
+  Domain schema evolution must be staged as forward-only migrations with explicit sequencing and rollback-safe cut points.
+- Verifier-backed scope:
+  Any boundary expansion must ship with a verifier and evidence artifact before being claimed as implemented.
