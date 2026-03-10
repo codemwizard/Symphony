@@ -6,6 +6,7 @@ Source: docs/programs/symphony-hardening/HARDENING_TASK_PACKS.md
 ## Scope
 - Implement canonical Wave-3 deliverables for TSK-HARD-030.
 - Keep enforcement on schema/migration/verifier/evidence surfaces.
+- Track follow-up remediation trace linkage for migration `0072_hard_wave6_reference_policy_post_deactivation_immutability.sql`.
 
 ## Verification
 - RUN_PHASE1_GATES=1 scripts/dev/pre_ci.sh

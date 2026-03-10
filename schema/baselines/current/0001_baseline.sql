@@ -2,7 +2,7 @@
 -- PostgreSQL database dump
 --
 
-\restrict nlrZF1beyapDW7P8iPEKEryrokdbp19hFB6faDesenUIUyvByfPOIihV44iPbrK
+\restrict MMD5ZnYVJGhafAwrv61iwhll6Hu3CsJnMkBagHMYMRQy1ixblSs9Hi0HErWVkYI
 
 -- Dumped from database version 18.2 (Debian 18.2-1.pgdg13+1)
 -- Dumped by pg_dump version 18.2 (Debian 18.2-1.pgdg13+1)
@@ -696,25 +696,26 @@ CREATE FUNCTION public.block_active_reference_policy_updates() RETURNS trigger
     SET search_path TO 'pg_catalog', 'public'
     AS $$
 BEGIN
-  IF OLD.version_status = 'ACTIVE' THEN
-    IF NEW.version_status = 'ACTIVE' THEN
-      RAISE EXCEPTION USING
-        ERRCODE = 'P7803',
-        MESSAGE = 'ACTIVE_REFERENCE_POLICY_IMMUTABLE';
-    END IF;
+  -- Protected policy/signature/evidence fields are immutable across all states.
+  -- This prevents two-step tampering after ACTIVE -> INACTIVE rotation.
+  IF NEW.policy_json IS DISTINCT FROM OLD.policy_json
+     OR NEW.signed_at IS DISTINCT FROM OLD.signed_at
+     OR NEW.signed_key_id IS DISTINCT FROM OLD.signed_key_id
+     OR NEW.unsigned_reason IS DISTINCT FROM OLD.unsigned_reason
+     OR NEW.evidence_path IS DISTINCT FROM OLD.evidence_path
+     OR NEW.policy_version_id IS DISTINCT FROM OLD.policy_version_id
+     OR NEW.activated_at IS DISTINCT FROM OLD.activated_at
+     OR NEW.created_at IS DISTINCT FROM OLD.created_at THEN
+    RAISE EXCEPTION USING
+      ERRCODE = 'P7803',
+      MESSAGE = 'ACTIVE_REFERENCE_POLICY_IMMUTABLE';
+  END IF;
 
-    IF NEW.policy_json IS DISTINCT FROM OLD.policy_json
-       OR NEW.signed_at IS DISTINCT FROM OLD.signed_at
-       OR NEW.signed_key_id IS DISTINCT FROM OLD.signed_key_id
-       OR NEW.unsigned_reason IS DISTINCT FROM OLD.unsigned_reason
-       OR NEW.evidence_path IS DISTINCT FROM OLD.evidence_path
-       OR NEW.policy_version_id IS DISTINCT FROM OLD.policy_version_id
-       OR NEW.activated_at IS DISTINCT FROM OLD.activated_at
-       OR NEW.created_at IS DISTINCT FROM OLD.created_at THEN
-      RAISE EXCEPTION USING
-        ERRCODE = 'P7803',
-        MESSAGE = 'ACTIVE_REFERENCE_POLICY_IMMUTABLE';
-    END IF;
+  -- Mutations that keep a row ACTIVE are blocked; only legal status rotations pass.
+  IF OLD.version_status = 'ACTIVE' AND NEW.version_status = 'ACTIVE' THEN
+    RAISE EXCEPTION USING
+      ERRCODE = 'P7803',
+      MESSAGE = 'ACTIVE_REFERENCE_POLICY_IMMUTABLE';
   END IF;
 
   RETURN NEW;
@@ -7765,5 +7766,5 @@ ALTER TABLE public.tenants ENABLE ROW LEVEL SECURITY;
 -- PostgreSQL database dump complete
 --
 
-\unrestrict nlrZF1beyapDW7P8iPEKEryrokdbp19hFB6faDesenUIUyvByfPOIihV44iPbrK
+\unrestrict MMD5ZnYVJGhafAwrv61iwhll6Hu3CsJnMkBagHMYMRQy1ixblSs9Hi0HErWVkYI
 
