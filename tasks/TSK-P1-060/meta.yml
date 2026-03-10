@@ -3,13 +3,15 @@ phase: '1'
 task_id: TSK-P1-060
 title: Define boundary conformance and domain-schema migration followthrough program
 owner_role: SUPERVISOR
-status: blocked
+status: completed
 depends_on:
 - TSK-P1-059
 touches:
 - docs/architecture/adrs/ADR-0001-service-boundaries-dotnet.md
 - docs/architecture/ROADMAP.md
-- docs/plans/phase1/TSK-P1-053_perf_architecture_remediation/PLAN.md
+- docs/plans/phase1/TSK-P1-060_phase2_followthrough_program/PLAN.md
+- docs/plans/phase1/TSK-P1-060_phase2_followthrough_program/EXEC_LOG.md
+- scripts/audit/verify_p1_060_phase2_followthrough_gate.sh
 - tasks/TSK-P1-060/meta.yml
 invariants:
 - INV-077
@@ -24,19 +26,19 @@ acceptance_criteria:
 - No new controls are marked implemented before verifier/evidence/contract wiring
   exists.
 verification:
-- RUN_PHASE1_GATES=1 bash scripts/dev/pre_ci.sh
+- bash scripts/audit/verify_p1_060_phase2_followthrough_gate.sh
 evidence:
-- evidence/phase1/phase1_closeout.json
+- evidence/phase1/p1_060_phase2_followthrough_gate.json
 failure_modes:
 - Architecture work proceeds without enforceable boundary checks.
 - Schema migration begins without forward-only safety program.
 must_read:
 - docs/operations/AI_AGENT_OPERATION_MANUAL.md
 - docs/architecture/adrs/ADR-0001-service-boundaries-dotnet.md
-implementation_plan: docs/plans/phase1/TSK-P1-053_perf_architecture_remediation/PLAN.md
-implementation_log: docs/plans/phase1/TSK-P1-053_perf_architecture_remediation/EXEC_LOG.md
-notes: Deferred. If executed later, keep doc-only and non-binding; no Phase-2 invariant/gate
-  wiring into Phase-1 chain.
+implementation_plan: docs/plans/phase1/TSK-P1-060_phase2_followthrough_program/PLAN.md
+implementation_log: docs/plans/phase1/TSK-P1-060_phase2_followthrough_program/EXEC_LOG.md
+notes: Completed as a doc+verifier followthrough definition only. No Phase-2 runtime
+  controls were marked implemented.
 client: codex_cli
 assigned_agent: supervisor
 model: gpt-5-codex

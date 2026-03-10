@@ -11,7 +11,7 @@ Phase-1 Closeout Verification.
 In scope:
 - Run the current Phase-1 contract and closeout verification gates.
 - Record whether final closeout is mechanically green.
-- Keep the task blocked until all declared upstream dependencies are complete.
+- Verify declared upstream dependencies are complete and remove stale block reason.
 
 Out of scope:
 - Overriding incomplete upstream dependencies.
@@ -20,8 +20,9 @@ Out of scope:
 ## Acceptance
 - `RUN_PHASE1_GATES=1 bash scripts/audit/verify_phase1_contract.sh` passes.
 - `RUN_PHASE1_GATES=1 bash scripts/audit/verify_phase1_closeout.sh` passes.
-- Task remains blocked until declared upstream dependencies are all complete.
+- `bash scripts/audit/verify_tsk_p1_010.sh` passes and emits task-closeout evidence.
 
 ## Verification Commands
 - `RUN_PHASE1_GATES=1 bash scripts/audit/verify_phase1_contract.sh`
 - `RUN_PHASE1_GATES=1 bash scripts/audit/verify_phase1_closeout.sh`
+- `bash scripts/audit/verify_tsk_p1_010.sh`

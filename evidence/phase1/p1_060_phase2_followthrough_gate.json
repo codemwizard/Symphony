@@ -1,0 +1,15 @@
+{
+  "check_id": "TSK-P1-060-PHASE2-FOLLOWTHROUGH-GATE",
+  "task_id": "TSK-P1-060",
+  "timestamp_utc": "2026-03-10T18:30:51Z",
+  "git_sha": "7a50171736a509ec30d969907d4cd1b6d034ff58",
+  "schema_fingerprint": "33e36565282f1592203a3db8c735f6d6a51bdcfa289c00e1c2040e30adc98ddb",
+  "status": "PASS",
+  "pass": true,
+  "details": {
+    "dependency_status_TSK-P1-059": "completed",
+    "adr_marker_count": 3,
+    "roadmap_marker_count": 4
+  },
+  "errors": []
+}

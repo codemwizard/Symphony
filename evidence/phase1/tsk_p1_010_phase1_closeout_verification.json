@@ -1,0 +1,38 @@
+{
+  "check_id": "TSK-P1-010-CLOSEOUT",
+  "task_id": "TSK-P1-010",
+  "timestamp_utc": "2026-03-10T18:30:51Z",
+  "git_sha": "7a50171736a509ec30d969907d4cd1b6d034ff58",
+  "schema_fingerprint": "33e36565282f1592203a3db8c735f6d6a51bdcfa289c00e1c2040e30adc98ddb",
+  "status": "PASS",
+  "pass": true,
+  "details": {
+    "dependency_status": {
+      "TSK-P1-007": "completed",
+      "TSK-P1-008": "completed",
+      "TSK-P1-009": "completed",
+      "TSK-P1-015": "completed",
+      "TSK-P1-016": "completed",
+      "TSK-P1-017": "completed",
+      "TSK-P1-018": "completed",
+      "TSK-P1-019": "completed",
+      "TSK-P1-020": "completed",
+      "TSK-P1-024": "completed",
+      "TSK-P1-025": "completed",
+      "TSK-P1-026": "completed"
+    },
+    "phase1_closeout": {
+      "exists": true,
+      "status": "PASS"
+    },
+    "regulator_demo_pack": {
+      "exists": true,
+      "status": "PASS"
+    },
+    "tier1_pilot_demo_pack": {
+      "exists": true,
+      "status": "PASS"
+    }
+  },
+  "errors": []
+}
