@@ -1,56 +1,47 @@
 {
   "schema_version": "1.0",
-  "generated_at_utc": "2026-03-10T16:45:00Z",
+  "generated_at_utc": "2026-03-10T17:35:00Z",
   "git_commit": "PENDING_COMMIT",
   "change_scope": {
     "regulated_surfaces_touched": true,
     "paths_changed": [
-      "approvals/2026-03-10/BRANCH-phase1-security-remediation-065-068.approval.json",
-      "approvals/2026-03-10/BRANCH-phase1-security-remediation-065-068.md",
+      "approvals/2026-03-10/BRANCH-phase1-next-batch-025-027-033-034.approval.json",
+      "approvals/2026-03-10/BRANCH-phase1-next-batch-025-027-033-034.md",
       "docs/operations/VERIFIER_EVIDENCE_REGISTRY.yml",
-      "docs/plans/phase1/TSK-P1-065_remove_hardcoded_self_test_secrets/PLAN.md",
-      "docs/plans/phase1/TSK-P1-065_remove_hardcoded_self_test_secrets/EXEC_LOG.md",
-      "docs/plans/phase1/TSK-P1-066_bounded_amount_validation/PLAN.md",
-      "docs/plans/phase1/TSK-P1-066_bounded_amount_validation/EXEC_LOG.md",
-      "docs/plans/phase1/TSK-P1-067_db_error_sanitization/PLAN.md",
-      "docs/plans/phase1/TSK-P1-067_db_error_sanitization/EXEC_LOG.md",
-      "docs/plans/phase1/TSK-P1-068_sensitive_endpoint_rate_limits/PLAN.md",
-      "docs/plans/phase1/TSK-P1-068_sensitive_endpoint_rate_limits/EXEC_LOG.md",
+      "docs/plans/phase1/TSK-P1-025_regulator_and_tier_1_demo_proof_pack/EXEC_LOG.md",
+      "docs/plans/phase1/TSK-P1-027_range_only_diff_parity_hardening/EXEC_LOG.md",
+      "docs/plans/phase1/TSK-P1-033_no_mcp_reintroduction_guard/PLAN.md",
+      "docs/plans/phase1/TSK-P1-033_no_mcp_reintroduction_guard/EXEC_LOG.md",
+      "docs/plans/phase1/TSK-P1-034_inv077_approval_metadata_hardening/PLAN.md",
+      "docs/plans/phase1/TSK-P1-034_inv077_approval_metadata_hardening/EXEC_LOG.md",
       "evidence/phase1/approval_metadata.json",
       "evidence/phase1/human_governance_review_signoff.json",
-      "evidence/phase1/tsk_p1_065_selftest_secret_posture.json",
-      "evidence/phase1/tsk_p1_066_bounded_amount_validation.json",
-      "evidence/phase1/tsk_p1_067_db_error_sanitization.json",
-      "evidence/phase1/tsk_p1_068_sensitive_endpoint_rate_limits.json",
-      "scripts/audit/run_security_fast_checks.sh",
+      "evidence/phase1/tsk_p1_025_demo_proof_pack.json",
+      "evidence/phase1/tsk_p1_027_range_only_diff_parity.json",
+      "evidence/phase1/tsk_p1_033_no_mcp_reintroduction_guard.json",
+      "evidence/phase1/tsk_p1_034_approval_metadata_hardening.json",
       "scripts/audit/verify_human_governance_review_signoff.sh",
-      "scripts/audit/verify_tsk_p1_065.sh",
-      "scripts/audit/verify_tsk_p1_066.sh",
-      "scripts/audit/verify_tsk_p1_067.sh",
-      "scripts/audit/verify_tsk_p1_068.sh",
-      "scripts/security/lint_insecure_patterns.sh",
-      "scripts/security/scan_secrets.sh",
-      "services/ledger-api/dotnet/src/LedgerApi/Commands/CommandContracts.cs",
-      "services/ledger-api/dotnet/src/LedgerApi/Commands/IngressAndKycHandlers.cs",
-      "services/ledger-api/dotnet/src/LedgerApi/Infrastructure/Stores.cs",
-      "services/ledger-api/dotnet/src/LedgerApi/Program.cs",
-      "tasks/TSK-P1-065/meta.yml",
-      "tasks/TSK-P1-066/meta.yml",
-      "tasks/TSK-P1-067/meta.yml",
-      "tasks/TSK-P1-068/meta.yml"
+      "scripts/audit/verify_tsk_p1_025.sh",
+      "scripts/audit/verify_tsk_p1_027.sh",
+      "scripts/audit/verify_tsk_p1_033.sh",
+      "scripts/audit/verify_tsk_p1_034.sh",
+      "tasks/TSK-P1-025/meta.yml",
+      "tasks/TSK-P1-027/meta.yml",
+      "tasks/TSK-P1-033/meta.yml",
+      "tasks/TSK-P1-034/meta.yml"
     ]
   },
   "ai": {
-    "ai_prompt_hash": "phase1-security-remediation-065-068",
+    "ai_prompt_hash": "phase1-next-batch-025-027-033-034",
     "model_id": "gpt-5-codex",
     "client": "codex_cli",
-    "session_id": "phase1-security-remediation-065-068"
+    "session_id": "phase1-next-batch-025-027-033-034"
   },
   "human_approval": {
     "approver_id": "governance-human-reviewer",
-    "approval_artifact_ref": "approvals/2026-03-10/BRANCH-phase1-security-remediation-065-068.md",
-    "change_reason": "Implement the Phase-1 security remediation batch for TSK-P1-065 through TSK-P1-068 by removing hardcoded self-test secrets, bounding ingress amount validation, sanitizing client-facing database failures, and adding sensitive endpoint rate limiting.",
-    "approved_at_utc": "2026-03-10T16:45:00Z"
+    "approval_artifact_ref": "approvals/2026-03-10/BRANCH-phase1-next-batch-025-027-033-034.md",
+    "change_reason": "Close the Phase-1 next batch for TSK-P1-025, TSK-P1-027, TSK-P1-033, and TSK-P1-034 with deterministic task-level verifiers, evidence contracts, and governance-safe approval metadata linkage.",
+    "approved_at_utc": "2026-03-10T18:15:00Z"
   },
-  "notes": "Branch approval metadata for Phase-1 security remediation batch."
+  "notes": "Branch approval metadata for Phase-1 next batch (025/027/033/034)."
 }
