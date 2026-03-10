@@ -15,6 +15,10 @@ Repair task-level verification truth for the Phase-1 pilot-readiness batch by bi
 ## Failure Signature
 PHASE1.BATCH.019_020_022_023_024.TASK_VERIFICATION_DRIFT
 
+origin_task_id: TSK-P1-019
+
+repro_command: scripts/dev/pre_ci.sh
+
 ## Verification
 - `bash scripts/audit/verify_tsk_p1_019.sh`
 - `bash scripts/audit/verify_tsk_p1_020.sh`
