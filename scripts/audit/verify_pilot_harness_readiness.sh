@@ -80,6 +80,7 @@ status = "PASS" if not failures else "FAIL"
 
 replay = {
     "check_id": "PHASE1-PILOT-HARNESS-REPLAY",
+    "task_id": "TSK-P1-019",
     "timestamp_utc": os.environ.get("EVIDENCE_TS"),
     "git_sha": os.environ.get("EVIDENCE_GIT_SHA"),
     "schema_fingerprint": os.environ.get("EVIDENCE_SCHEMA_FP"),
@@ -93,6 +94,7 @@ replay = {
 
 onboarding = {
     "check_id": "PHASE1-PILOT-ONBOARDING-READINESS",
+    "task_id": "TSK-P1-019",
     "timestamp_utc": os.environ.get("EVIDENCE_TS"),
     "git_sha": os.environ.get("EVIDENCE_GIT_SHA"),
     "schema_fingerprint": os.environ.get("EVIDENCE_SCHEMA_FP"),

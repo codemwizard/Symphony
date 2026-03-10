@@ -3,7 +3,7 @@ phase: '1'
 task_id: TSK-P1-022
 title: Pilot AuthN AuthZ and Tenant Boundary Enforcement
 owner_role: SECURITY_GUARDIAN
-status: planned
+status: completed
 depends_on:
 - TSK-P1-015
 - TSK-P1-017
@@ -27,7 +27,7 @@ acceptance_criteria:
 - Cross-tenant/participant access is denied by default.
 - AuthN/AuthZ behavior is deterministic and auditable.
 verification:
-- scripts/dev/pre_ci.sh
+- bash scripts/audit/verify_tsk_p1_022.sh
 evidence:
 - evidence/phase1/authz_tenant_boundary.json
 - evidence/phase1/boz_access_boundary_runtime.json
@@ -41,4 +41,4 @@ implementation_log: docs/plans/phase1/TSK-P1-022_pilot_authn_authz_and_tenant_bo
 notes: 'Pilot safety gate: required for external customer exposure.'
 client: codex_cli
 assigned_agent: security_guardian
-model: <UNASSIGNED>
+model: gpt-5-codex

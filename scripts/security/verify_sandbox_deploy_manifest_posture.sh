@@ -88,6 +88,7 @@ for p in (root / "infra/sandbox/k8s").glob("*.yaml"):
 status = "PASS" if not failures else "FAIL"
 report = {
     "check_id": "PHASE1-SANDBOX-DEPLOY-MANIFEST-POSTURE",
+    "task_id": "TSK-P1-023",
     "timestamp_utc": os.environ.get("EVIDENCE_TS"),
     "git_sha": os.environ.get("EVIDENCE_GIT_SHA"),
     "schema_fingerprint": os.environ.get("EVIDENCE_SCHEMA_FP"),

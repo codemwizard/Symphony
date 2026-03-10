@@ -3,7 +3,7 @@ phase: '1'
 task_id: TSK-P1-019
 title: Pilot Integration Contract and Sandbox Harness
 owner_role: SUPERVISOR
-status: planned
+status: completed
 depends_on:
 - TSK-P1-015
 - TSK-P1-016
@@ -25,7 +25,7 @@ acceptance_criteria:
 - Pilot harness replay is deterministic and reproducible.
 - Malformed participant payloads fail with deterministic contract errors.
 verification:
-- scripts/dev/pre_ci.sh
+- bash scripts/audit/verify_tsk_p1_019.sh
 evidence:
 - evidence/phase1/pilot_harness_replay.json
 - evidence/phase1/pilot_onboarding_readiness.json
@@ -39,4 +39,4 @@ implementation_log: docs/plans/phase1/TSK-P1-019_pilot_integration_contract_and_
 notes: Bridges implementation to pilot onboarding readiness.
 client: codex_cli
 assigned_agent: supervisor
-model: <UNASSIGNED>
+model: gpt-5-codex

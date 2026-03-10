@@ -3,7 +3,7 @@ phase: '1'
 task_id: TSK-P1-024
 title: INV-113 Operational Anchor-Sync Enforcement
 owner_role: DB_FOUNDATION
-status: planned
+status: completed
 depends_on:
 - TSK-P1-006
 - TSK-P1-017
@@ -26,7 +26,7 @@ acceptance_criteria:
 - Anchor-sync completion without anchored state fails deterministically.
 - Resume-after-crash path is deterministic and verifiable by automated tests.
 verification:
-- scripts/dev/pre_ci.sh
+- bash scripts/audit/verify_tsk_p1_024.sh
 evidence:
 - evidence/phase1/anchor_sync_operational_invariant.json
 - evidence/phase1/anchor_sync_resume_semantics.json
@@ -41,4 +41,4 @@ implementation_log: docs/plans/phase1/TSK-P1-024_inv_113_operational_anchor_sync
 notes: Closes INV-113 operational behavior gap for regulator-grade proof.
 client: codex_cli
 assigned_agent: db_foundation
-model: <UNASSIGNED>
+model: gpt-5-codex

@@ -1282,6 +1282,7 @@ static class PilotAuthSelfTestRunner
         await File.WriteAllTextAsync(tenantPath, JsonSerializer.Serialize(new
         {
             check_id = "PHASE1-AUTHZ-TENANT-BOUNDARY",
+            task_id = "TSK-P1-022",
             timestamp_utc = meta.TimestampUtc,
             git_sha = meta.GitSha,
             schema_fingerprint = meta.SchemaFingerprint,
@@ -1296,6 +1297,7 @@ static class PilotAuthSelfTestRunner
         await File.WriteAllTextAsync(bozPath, JsonSerializer.Serialize(new
         {
             check_id = "PHASE1-BOZ-ACCESS-BOUNDARY-RUNTIME",
+            task_id = "TSK-P1-022",
             timestamp_utc = meta.TimestampUtc,
             git_sha = meta.GitSha,
             schema_fingerprint = meta.SchemaFingerprint,

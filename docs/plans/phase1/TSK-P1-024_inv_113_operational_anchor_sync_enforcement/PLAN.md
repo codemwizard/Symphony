@@ -20,4 +20,4 @@ Out of scope:
 - Resume-after-crash path is provably deterministic via automated checks.
 
 ## Verification Commands
-- `scripts/dev/pre_ci.sh`
+- `bash scripts/audit/verify_tsk_p1_024.sh`

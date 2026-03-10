@@ -3,7 +3,7 @@ phase: '1'
 task_id: TSK-P1-020
 title: Product KPI Evidence Gate
 owner_role: INVARIANTS_CURATOR
-status: planned
+status: completed
 depends_on:
 - TSK-P1-019
 touches:
@@ -22,7 +22,7 @@ acceptance_criteria:
 - KPI report generation is deterministic and CI/pre-CI compatible.
 - Stale KPI report fails validation.
 verification:
-- scripts/dev/pre_ci.sh
+- bash scripts/audit/verify_tsk_p1_020.sh
 evidence:
 - evidence/phase1/product_kpi_readiness_report.json
 failure_modes:
@@ -35,4 +35,4 @@ implementation_log: docs/plans/phase1/TSK-P1-020_product_kpi_evidence_gate/EXEC_
 notes: Commercial-readiness proof layer for leadership sign-off.
 client: codex_cli
 assigned_agent: invariants_curator
-model: <UNASSIGNED>
+model: gpt-5-codex

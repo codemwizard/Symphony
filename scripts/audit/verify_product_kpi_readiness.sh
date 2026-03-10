@@ -157,6 +157,7 @@ status = "PASS" if not failures else "FAIL"
 
 report = {
     "check_id": "PHASE1-PRODUCT-KPI-READINESS",
+    "task_id": "TSK-P1-020",
     "timestamp_utc": os.environ.get("EVIDENCE_TS"),
     "git_sha": os.environ.get("EVIDENCE_GIT_SHA"),
     "schema_fingerprint": os.environ.get("EVIDENCE_SCHEMA_FP"),

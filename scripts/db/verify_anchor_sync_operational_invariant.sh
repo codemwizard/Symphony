@@ -57,6 +57,7 @@ failures = [c for c in os.environ.get("FAILURES_JOINED", "").split("\n") if c]
 out = {
   "schema_version": "1.0",
   "check_id": "DB-ANCHOR-SYNC-OPERATIONAL-INVARIANT",
+  "task_id": "TSK-P1-024",
   "gate_id": "INT-G29",
   "invariant_id": "INV-113",
   "timestamp_utc": "${EVIDENCE_TS}",
