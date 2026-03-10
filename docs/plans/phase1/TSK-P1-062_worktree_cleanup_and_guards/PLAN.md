@@ -11,7 +11,7 @@ Resolve contaminated and stale worktree state and add fail-closed worktree hygie
 - Do not silently destroy investigative artifacts.
 
 ## Verification Commands
-- `git worktree list --porcelain`
+- `bash scripts/audit/verify_tsk_p1_062.sh`
 - `bash scripts/audit/run_invariants_fast_checks.sh`
 
 ## Repro_Command
@@ -19,4 +19,4 @@ Resolve contaminated and stale worktree state and add fail-closed worktree hygie
 - `git worktree prune --dry-run`
 
 ## Evidence Paths
-- `evidence/phase0/remediation_trace.json`
+- `evidence/phase1/tsk_p1_062_worktree_cleanup_and_guards.json`

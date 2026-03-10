@@ -3,7 +3,7 @@ phase: '1'
 task_id: TSK-P1-064
 title: Wire hostile Git plumbing regression tests into guarded flows
 owner_role: SUPERVISOR
-status: planned
+status: completed
 depends_on:
 - TSK-P1-063
 touches:
@@ -26,10 +26,9 @@ acceptance_criteria:
 - Regression failure blocks guarded execution.
 - Evidence or registry linkage shows the regression is no longer an optional ad hoc check.
 verification:
-- rg -n "test_diff_semantics_parity_hostile_env.sh" scripts/dev/pre_ci.sh scripts/audit/run_phase0_ordered_checks.sh .github/workflows
-- bash scripts/audit/test_diff_semantics_parity_hostile_env.sh
+- bash scripts/audit/verify_tsk_p1_064.sh
 evidence:
-- evidence/phase1/git_diff_semantics.json
+- evidence/phase1/tsk_p1_064_git_regression_wiring.json
 failure_modes:
 - Regression test exists but is never enforced.
 - Guarded flows still permit fixture execution without hostile-env coverage.

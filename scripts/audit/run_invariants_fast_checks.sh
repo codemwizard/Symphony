@@ -265,6 +265,51 @@ else
 fi
 
 echo ""
+echo "==> TSK-P1-061 Git containment rule verification"
+if [[ -x "scripts/audit/verify_tsk_p1_061.sh" || -f "scripts/audit/verify_tsk_p1_061.sh" ]]; then
+  run bash scripts/audit/verify_tsk_p1_061.sh
+else
+  echo "ERROR: scripts/audit/verify_tsk_p1_061.sh not found"
+  exit 1
+fi
+
+echo ""
+echo "==> TSK-P1-062 worktree hygiene verification"
+if [[ -x "scripts/audit/verify_tsk_p1_062.sh" || -f "scripts/audit/verify_tsk_p1_062.sh" ]]; then
+  run bash scripts/audit/verify_tsk_p1_062.sh
+else
+  echo "ERROR: scripts/audit/verify_tsk_p1_062.sh not found"
+  exit 1
+fi
+
+echo ""
+echo "==> TSK-P1-063 mutable Git script audit verification"
+if [[ -x "scripts/audit/verify_tsk_p1_063.sh" || -f "scripts/audit/verify_tsk_p1_063.sh" ]]; then
+  run bash scripts/audit/verify_tsk_p1_063.sh
+else
+  echo "ERROR: scripts/audit/verify_tsk_p1_063.sh not found"
+  exit 1
+fi
+
+echo ""
+echo "==> TSK-P1-064 hostile-env wiring verification"
+if [[ -x "scripts/audit/verify_tsk_p1_064.sh" || -f "scripts/audit/verify_tsk_p1_064.sh" ]]; then
+  run bash scripts/audit/verify_tsk_p1_064.sh
+else
+  echo "ERROR: scripts/audit/verify_tsk_p1_064.sh not found"
+  exit 1
+fi
+
+echo ""
+echo "==> TSK-P1-073 remediation artifact freshness verification"
+if [[ -x "scripts/audit/verify_tsk_p1_073.sh" || -f "scripts/audit/verify_tsk_p1_073.sh" ]]; then
+  run bash scripts/audit/verify_tsk_p1_073.sh
+else
+  echo "ERROR: scripts/audit/verify_tsk_p1_073.sh not found"
+  exit 1
+fi
+
+echo ""
 echo "==> Phase-1 CQRS boundary verification"
 if [[ -x "scripts/audit/verify_cqrs_code_boundary.sh" || -f "scripts/audit/verify_cqrs_code_boundary.sh" ]]; then
   run scripts/audit/verify_cqrs_code_boundary.sh

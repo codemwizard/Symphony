@@ -239,3 +239,21 @@ registry:
   scripts/audit/verify_no_hot_table_external_reads.sh:
     emits:
     - evidence/phase1/proj_002_external_query_cutover.json
+  scripts/audit/verify_tsk_p1_061.sh:
+    emits:
+    - evidence/phase1/tsk_p1_061_git_containment_rule.json
+  scripts/audit/verify_tsk_p1_062.sh:
+    emits:
+    - evidence/phase1/tsk_p1_062_worktree_cleanup_and_guards.json
+  scripts/audit/verify_tsk_p1_063.sh:
+    emits:
+    - evidence/phase1/tsk_p1_063_git_script_audit.json
+  scripts/audit/verify_tsk_p1_064.sh:
+    emits:
+    - evidence/phase1/tsk_p1_064_git_regression_wiring.json
+  scripts/audit/verify_remediation_artifact_freshness.sh:
+    emits:
+    - evidence/phase1/tsk_p1_073_remediation_artifact_freshness.json
+  scripts/audit/verify_tsk_p1_073.sh:
+    emits:
+    - evidence/phase1/tsk_p1_073_task_surface.json

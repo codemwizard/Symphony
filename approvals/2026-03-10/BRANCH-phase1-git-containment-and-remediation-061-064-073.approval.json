@@ -1,8 +1,20 @@
 {
   "schema_version": "1.0",
-  "generated_at_utc": "2026-03-10T14:12:00Z",
-  "git_commit": "PENDING_COMMIT",
-  "change_scope": {
+  "approval": {
+    "status": "APPROVED",
+    "approver_id": "governance-human-reviewer",
+    "change_reason": "Implement Git containment hardening, worktree hygiene, mutable Git script audit, hostile-env regression wiring, and remediation artifact freshness enforcement for Phase-1 guarded execution.",
+    "approved_at_utc": "2026-03-10T14:12:00Z",
+    "role_authority": "Human Approver"
+  },
+  "ai": {
+    "ai_used": true,
+    "ai_prompt_hash": "79e836ce35c1d956c7c9ad0581632a3a2b9ac17e50909f875db165bbd3a5969c",
+    "model_id": "gpt-5",
+    "client": "codex_cli",
+    "session_id": "phase1-git-containment-and-remediation-061-064-073"
+  },
+  "scope": {
     "regulated_surfaces_touched": true,
     "paths_changed": [
       "approvals/2026-03-10/BRANCH-phase1-git-containment-and-remediation-061-064-073.approval.json",
@@ -46,19 +58,26 @@
       "tasks/TSK-P1-064/meta.yml",
       "tasks/TSK-P1-073/meta.yml",
       "evidence/phase1/human_governance_review_signoff.json"
-    ]
+    ],
+    "invariants": [
+      "INV-077",
+      "INV-081",
+      "INV-105",
+      "INV-119"
+    ],
+    "phase_boundary_ok": true
   },
-  "ai": {
-    "ai_prompt_hash": "79e836ce35c1d956c7c9ad0581632a3a2b9ac17e50909f875db165bbd3a5969c",
-    "model_id": "gpt-5",
-    "client": "codex_cli",
-    "session_id": "phase1-git-containment-and-remediation-061-064-073"
-  },
-  "human_approval": {
-    "approver_id": "governance-human-reviewer",
-    "approval_artifact_ref": "approvals/2026-03-10/BRANCH-phase1-git-containment-and-remediation-061-064-073.md",
-    "change_reason": "Implement Git containment hardening, worktree hygiene, mutable Git script audit, hostile-env regression wiring, and remediation artifact freshness enforcement for Phase-1 guarded execution.",
-    "approved_at_utc": "2026-03-10T14:12:00Z"
-  },
-  "notes": "Branch approval metadata for Phase-1 Git containment and remediation hardening batch."
+  "verification": {
+    "commands": [
+      "bash scripts/audit/verify_tsk_p1_061.sh",
+      "bash scripts/audit/verify_tsk_p1_062.sh",
+      "bash scripts/audit/verify_tsk_p1_063.sh",
+      "bash scripts/audit/verify_tsk_p1_064.sh",
+      "bash scripts/audit/verify_tsk_p1_073.sh",
+      "bash scripts/audit/run_invariants_fast_checks.sh",
+      "scripts/dev/pre_ci.sh"
+    ],
+    "pre_ci_passed": true,
+    "notes": "Branch-scoped approval for regulated-surface Git containment and remediation hardening."
+  }
 }

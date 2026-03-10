@@ -1,0 +1,28 @@
+{
+  "check_id": "TSK-P1-063",
+  "task_id": "TSK-P1-063",
+  "timestamp_utc": "2026-03-10T14:23:38Z",
+  "git_sha": "d51d603fc49bdb3c713f422ec511d62b668ec9ab",
+  "schema_fingerprint": "33e36565282f1592203a3db8c735f6d6a51bdcfa289c00e1c2040e30adc98ddb",
+  "status": "PASS",
+  "audited_paths": [
+    "scripts/audit/lib/approval_requirement.py",
+    "scripts/audit/migrate_task_meta_to_v1.py",
+    "scripts/audit/preflight_structural_staged.sh",
+    "scripts/audit/test_diff_semantics_parity.sh",
+    "scripts/audit/test_diff_semantics_parity_hostile_env.sh",
+    "scripts/audit/tests/test_approval_metadata_requirements.sh",
+    "scripts/audit/verify_agent_conformance.sh",
+    "scripts/audit/verify_diff_semantics_parity.sh",
+    "scripts/audit/verify_history_secret_scan_report_present.sh",
+    "scripts/audit/verify_human_governance_review_signoff.sh",
+    "scripts/audit/verify_invariants_local.sh",
+    "scripts/audit/verify_tsk_p1_062.sh",
+    "scripts/dev/install_git_hooks.sh",
+    "scripts/dev/pre_ci.sh",
+    "scripts/lib/git_diff_range_only.sh",
+    "scripts/security/lint_app_sql_injection.sh"
+  ],
+  "missing_from_audit": [],
+  "failures": []
+}

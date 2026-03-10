@@ -3,7 +3,7 @@ phase: '1'
 task_id: TSK-P1-062
 title: Clean contaminated worktrees and fail closed on stale worktree state
 owner_role: SUPERVISOR
-status: planned
+status: completed
 depends_on:
 - TSK-P1-061
 touches:
@@ -24,10 +24,10 @@ acceptance_criteria:
 - Stale/prunable worktree entries are removed or fail-closed with actionable guidance.
 - A verifier exists for clean worktree registry state.
 verification:
-- git worktree list --porcelain
+- bash scripts/audit/verify_tsk_p1_062.sh
 - bash scripts/audit/run_invariants_fast_checks.sh
 evidence:
-- evidence/phase0/remediation_trace.json
+- evidence/phase1/tsk_p1_062_worktree_cleanup_and_guards.json
 failure_modes:
 - Contaminated worktrees remain live and continue polluting future automation runs.
 - Broken worktree registry state is silently tolerated.

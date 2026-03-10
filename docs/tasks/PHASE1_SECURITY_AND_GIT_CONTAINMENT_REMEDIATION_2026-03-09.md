@@ -45,3 +45,6 @@ Convert the 2026-03-09 parity-fixture containment incident and Tier-1 security a
 - `TSK-P1-061..064` are containment and governance work. They should run before additional hook-heavy or Git-mutating automation changes.
 - `TSK-P1-065..068` are application-security remediations derived directly from the Tier-1 audit.
 - None of these tasks authorize new runtime DDL in production paths.
+
+5. `TSK-P1-073`
+   Fail closed when guarded execution surface fixes land without remediation or task artifact freshness.
