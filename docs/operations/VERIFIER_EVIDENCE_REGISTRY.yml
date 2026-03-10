@@ -263,6 +263,18 @@ registry:
   scripts/audit/verify_tsk_p1_068.sh:
     emits:
     - evidence/phase1/tsk_p1_068_sensitive_endpoint_rate_limits.json
+  scripts/audit/verify_tsk_p1_025.sh:
+    emits:
+    - evidence/phase1/tsk_p1_025_demo_proof_pack.json
+  scripts/audit/verify_tsk_p1_027.sh:
+    emits:
+    - evidence/phase1/tsk_p1_027_range_only_diff_parity.json
+  scripts/audit/verify_tsk_p1_033.sh:
+    emits:
+    - evidence/phase1/tsk_p1_033_no_mcp_reintroduction_guard.json
+  scripts/audit/verify_tsk_p1_034.sh:
+    emits:
+    - evidence/phase1/tsk_p1_034_approval_metadata_hardening.json
   scripts/audit/verify_remediation_artifact_freshness.sh:
     emits:
     - evidence/phase1/tsk_p1_073_remediation_artifact_freshness.json

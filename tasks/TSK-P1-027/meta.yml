@@ -3,7 +3,7 @@ phase: '1'
 task_id: TSK-P1-027
 title: Range-only Diff Parity Hardening (follow-on to TSK-P1-021)
 owner_role: INVARIANTS_CURATOR
-status: planned
+status: completed
 depends_on:
 - TSK-P1-021
 touches:
@@ -48,12 +48,15 @@ acceptance_criteria:
 - pre_ci and CI produce equivalent changed-file decisions for parity-critical gates
   with evidence hash parity.
 verification:
+- bash scripts/audit/verify_tsk_p1_027.sh
+- python3 scripts/audit/validate_evidence.py --task TSK-P1-027 --evidence evidence/phase1/tsk_p1_027_range_only_diff_parity.json
 - bash scripts/audit/test_diff_semantics_parity.sh
 - bash scripts/audit/verify_diff_semantics_parity.sh
 - bash scripts/audit/verify_remediation_trace.sh
 - RUN_PHASE1_GATES=1 bash scripts/dev/pre_ci.sh
 evidence:
 - evidence/phase1/git_diff_semantics.json
+- evidence/phase1/tsk_p1_027_range_only_diff_parity.json
 failure_modes:
 - Range-only policy declared but staged/worktree helpers remain reachable from parity-critical
   scripts.
@@ -73,4 +76,4 @@ notes: Hardens canonical parity intent from P0-152/154/155 by making staged/work
   access impossible in parity-critical script paths.
 client: codex_cli
 assigned_agent: invariants_curator
-model: <UNASSIGNED>
+model: gpt-5-codex

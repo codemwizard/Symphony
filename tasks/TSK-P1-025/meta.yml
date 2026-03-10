@@ -3,7 +3,7 @@ phase: '1'
 task_id: TSK-P1-025
 title: Regulator and Tier-1 Demo-Proof Pack
 owner_role: SUPERVISOR
-status: planned
+status: completed
 depends_on:
 - TSK-P1-017
 - TSK-P1-018
@@ -31,10 +31,13 @@ acceptance_criteria:
 - All required demo scenarios execute deterministically from scripted commands.
 - Executive summary references and links every underlying machine evidence artifact.
 verification:
+- bash scripts/audit/verify_tsk_p1_025.sh
+- python3 scripts/audit/validate_evidence.py --task TSK-P1-025 --evidence evidence/phase1/tsk_p1_025_demo_proof_pack.json
 - scripts/dev/pre_ci.sh
 evidence:
 - evidence/phase1/regulator_demo_pack.json
 - evidence/phase1/tier1_pilot_demo_pack.json
+- evidence/phase1/tsk_p1_025_demo_proof_pack.json
 failure_modes:
 - Demo pack claims are not backed by machine-generated evidence.
 - Evidence file missing.
@@ -46,4 +49,4 @@ implementation_log: docs/plans/phase1/TSK-P1-025_regulator_and_tier_1_demo_proof
 notes: Bridges technical completion to regulator/commercial narrative proof.
 client: codex_cli
 assigned_agent: supervisor
-model: <UNASSIGNED>
+model: gpt-5-codex
