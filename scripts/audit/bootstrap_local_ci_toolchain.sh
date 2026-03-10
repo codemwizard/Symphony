@@ -8,14 +8,18 @@ cd "$ROOT_DIR"
 # CI installs pinned PyPI deps and a pinned rg binary. Locally we do the same, repo-scoped.
 
 source "$ROOT_DIR/scripts/audit/ci_toolchain_versions.env"
+export PYYAML_VERSION JSONSCHEMA_VERSION SEMGREP_VERSION RIPGREP_VERSION
 
 VENV_DIR="${SYMPHONY_VENV_DIR:-$ROOT_DIR/.venv}"
 TOOLCHAIN_DIR="${SYMPHONY_TOOLCHAIN_DIR:-$ROOT_DIR/.toolchain}"
 BIN_DIR="$TOOLCHAIN_DIR/bin"
 OFFLINE_MODE="${SYMPHONY_OFFLINE:-0}"
 VENDORED_RG_PATH="${SYMPHONY_VENDORED_RG_PATH:-}"
+BOOTSTRAP_LOCK="${SYMPHONY_TOOLCHAIN_LOCK:-$ROOT_DIR/.toolchain/bootstrap.lock}"
+TOOLCHAIN_STATE_FILE="$TOOLCHAIN_DIR/state.env"
 
 mkdir -p "$BIN_DIR"
+mkdir -p "$(dirname "$BOOTSTRAP_LOCK")"
 
 # Keep semgrep runtime paths repo-local to avoid host permission drift.
 SEMGREP_RUNTIME_DIR="${SYMPHONY_SEMGREP_RUNTIME_DIR:-$ROOT_DIR/.cache/semgrep}"
@@ -32,12 +36,49 @@ if [[ ! -x "$VENV_DIR/bin/python3" ]]; then
   python3 -m venv "$VENV_DIR"
 fi
 
-"$VENV_DIR/bin/python3" -m pip install --upgrade pip >/dev/null
-"$VENV_DIR/bin/python3" -m pip install \
-  "pyyaml==${PYYAML_VERSION}" \
-  "jsonschema==${JSONSCHEMA_VERSION}" \
-  "semgrep==${SEMGREP_VERSION}" \
-  pytest >/dev/null
+toolchain_python_ready() {
+  "$VENV_DIR/bin/python3" - <<'PY'
+from importlib import metadata as m
+import os
+import sys
+
+required = {
+    "PyYAML": os.environ["PYYAML_VERSION"],
+    "jsonschema": os.environ["JSONSCHEMA_VERSION"],
+    "semgrep": os.environ["SEMGREP_VERSION"],
+}
+
+for package, expected in required.items():
+    try:
+        actual = m.version(package)
+    except m.PackageNotFoundError:
+        sys.exit(1)
+    if actual != expected:
+        sys.exit(1)
+
+try:
+    m.version("pytest")
+except m.PackageNotFoundError:
+    sys.exit(1)
+PY
+}
+
+ensure_python_toolchain() {
+  if toolchain_python_ready; then
+    return 0
+  fi
+
+  "$VENV_DIR/bin/python3" -m pip install --upgrade pip >/dev/null
+  "$VENV_DIR/bin/python3" -m pip install \
+    "pyyaml==${PYYAML_VERSION}" \
+    "jsonschema==${JSONSCHEMA_VERSION}" \
+    "semgrep==${SEMGREP_VERSION}" \
+    pytest >/dev/null
+}
+
+exec 9>"$BOOTSTRAP_LOCK"
+flock 9
+ensure_python_toolchain
 
 # Install pinned rg binary into repo toolchain bin if missing/mismatched.
 need_rg=1
@@ -75,6 +116,13 @@ fi
 if [[ -x "$VENV_DIR/bin/semgrep" ]]; then
   ln -sf "$VENV_DIR/bin/semgrep" "$BIN_DIR/semgrep"
 fi
+
+cat > "$TOOLCHAIN_STATE_FILE" <<EOF
+PYYAML_VERSION=${PYYAML_VERSION}
+JSONSCHEMA_VERSION=${JSONSCHEMA_VERSION}
+SEMGREP_VERSION=${SEMGREP_VERSION}
+RIPGREP_VERSION=${RIPGREP_VERSION}
+EOF
 
 echo "Local toolchain bootstrapped:"
 echo "  python: $VENV_DIR/bin/python3"
