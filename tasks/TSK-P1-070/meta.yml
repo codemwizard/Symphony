@@ -1,0 +1,49 @@
+schema_version: 1
+phase: '1'
+task_id: TSK-P1-070
+title: Add remediation casefile scaffolder for local gate and push failures
+owner_role: SUPERVISOR
+status: completed
+depends_on:
+- TSK-P1-069
+touches:
+- scripts/audit/**
+- docs/process/debug-remediation-policy.md
+- docs/operations/REMEDIATION_TRACE_WORKFLOW.md
+- docs/remediation/templates/**
+- docs/tasks/phase1_prompts.md
+- tasks/TSK-P1-070/meta.yml
+- docs/plans/phase1/TSK-P1-070_remediation_casefile_scaffolder/PLAN.md
+- docs/plans/phase1/TSK-P1-070_remediation_casefile_scaffolder/EXEC_LOG.md
+invariants:
+- INV-077
+- INV-105
+- INV-119
+work:
+- Create a helper that scaffolds a compliant remediation casefile from failure signature, branch, and gate name.
+- Ensure the scaffolder emits the required markers defined by the remediation trace workflow.
+- Link the scaffolder from failure guidance so using it is cheaper than ad hoc manual setup.
+acceptance_criteria:
+- "A deterministic scaffolder exists for `REM-*` casefiles with required markers pre-filled."
+- "The scaffolder produces `PLAN.md` and `EXEC_LOG.md` that satisfy remediation-trace marker requirements after basic field fill-in."
+- The failure guidance references the scaffolder directly.
+verification:
+- bash scripts/audit/verify_tsk_p1_070.sh
+- bash scripts/audit/run_invariants_fast_checks.sh
+evidence:
+- evidence/phase1/tsk_p1_070_remediation_casefile_scaffolder.json
+failure_modes:
+- Agents still need to hand-build remediation casefiles under time pressure.
+- Scaffolder output omits required remediation markers and fails the trace gate.
+must_read:
+- docs/operations/AI_AGENT_OPERATION_MANUAL.md
+- docs/process/debug-remediation-policy.md
+- docs/operations/REMEDIATION_TRACE_WORKFLOW.md
+- docs/remediation/templates/drd-lite-template.md
+- docs/remediation/templates/drd-full-template.md
+implementation_plan: docs/plans/phase1/TSK-P1-070_remediation_casefile_scaffolder/PLAN.md
+implementation_log: docs/plans/phase1/TSK-P1-070_remediation_casefile_scaffolder/EXEC_LOG.md
+notes: Makes remediation-compliant casefile creation cheaper than repeated push retries.
+client: codex_cli
+assigned_agent: supervisor
+model: gpt-5-codex

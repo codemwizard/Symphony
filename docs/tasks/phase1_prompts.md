@@ -212,6 +212,116 @@ failure_modes:
 - Evidence file missing / invalid JSON / task_id mismatch / pass != true => FAIL.
 ```
 
+## TSK-P1-069 — Fail-first triage banner for local gate failures
+
+### Goal
+Surface a compact fail-first triage contract directly in `scripts/dev/pre_ci.sh` so agents and operators stop treating repeated local gate failures as blind rerun problems.
+
+#### Execution Metadata Patch Block (orchestrator source)
+
+```yaml
+task_id: TSK-P1-069
+depends_on: []
+verifier_command: bash -lc 'bash scripts/audit/verify_tsk_p1_069.sh && bash scripts/audit/run_invariants_fast_checks.sh'
+evidence_path: evidence/phase1/tsk_p1_069_fail_first_triage_banner.json
+files_to_change:
+- scripts/dev/pre_ci.sh
+- docs/process/debug-remediation-policy.md
+- docs/operations/REMEDIATION_TRACE_WORKFLOW.md
+- docs/process/DEBUG_PROCESS_MATERIAL_GAIN_ANALYSIS_2026-03-10.md
+- tasks/TSK-P1-069/meta.yml
+acceptance_assertions:
+- Local gate entrypoint prints fail-first triage guidance.
+- Guidance links to the canonical remediation docs.
+- Guidance discourages blind reruns after repeated failure.
+failure_modes:
+- Guidance exists only in docs and not in the actual gate path.
+- Local gate output still gives no remediation/triage direction.
+```
+
+## TSK-P1-070 — Remediation casefile scaffolder
+
+### Goal
+Make compliant remediation casefile creation faster than ad hoc reruns by adding a scaffolder for `REM-*` plans/logs.
+
+#### Execution Metadata Patch Block (orchestrator source)
+
+```yaml
+task_id: TSK-P1-070
+depends_on:
+- TSK-P1-069
+verifier_command: bash -lc 'bash scripts/audit/verify_tsk_p1_070.sh && bash scripts/audit/run_invariants_fast_checks.sh'
+evidence_path: evidence/phase1/tsk_p1_070_remediation_casefile_scaffolder.json
+files_to_change:
+- scripts/audit/**
+- docs/remediation/templates/**
+- docs/operations/REMEDIATION_TRACE_WORKFLOW.md
+- tasks/TSK-P1-070/meta.yml
+acceptance_assertions:
+- A remediation casefile scaffolder exists.
+- Output includes required remediation-trace markers.
+- Failure guidance references the scaffolder directly.
+failure_modes:
+- Agents still have to hand-build remediation casefiles.
+- Scaffolder output is not remediation-trace compliant.
+```
+
+## TSK-P1-071 — Failure-layer taxonomy for local gates
+
+### Goal
+Classify local gate failures by layer so agents can distinguish branch-content failures from shared local/environment failures.
+
+#### Execution Metadata Patch Block (orchestrator source)
+
+```yaml
+task_id: TSK-P1-071
+depends_on:
+- TSK-P1-069
+verifier_command: bash -lc 'bash scripts/audit/verify_tsk_p1_071.sh && bash scripts/audit/run_invariants_fast_checks.sh'
+evidence_path: evidence/phase1/tsk_p1_071_failure_layer_taxonomy.json
+files_to_change:
+- scripts/dev/pre_ci.sh
+- scripts/audit/**
+- tasks/TSK-P1-071/meta.yml
+acceptance_assertions:
+- Failure output includes a stable failure-layer classification.
+- Classification distinguishes branch and shared-environment failures.
+- The taxonomy is exercised by verification.
+failure_modes:
+- All failures still collapse into generic `pre_ci failed`.
+- Agents misclassify shared infra failures as branch defects.
+```
+
+## TSK-P1-072 — Two-strike non-convergence escalation
+
+### Goal
+Mechanize the existing two-strike non-convergence rule so repeated failing reruns escalate to remediation/DRD instead of continuing indefinitely.
+
+#### Execution Metadata Patch Block (orchestrator source)
+
+```yaml
+task_id: TSK-P1-072
+depends_on:
+- TSK-P1-069
+- TSK-P1-070
+- TSK-P1-071
+verifier_command: bash -lc 'bash scripts/audit/verify_tsk_p1_072.sh && bash scripts/audit/run_invariants_fast_checks.sh'
+evidence_path: evidence/phase1/tsk_p1_072_two_strike_escalation.json
+files_to_change:
+- scripts/dev/pre_ci.sh
+- scripts/audit/**
+- docs/process/debug-remediation-policy.md
+- docs/operations/REMEDIATION_TRACE_WORKFLOW.md
+- tasks/TSK-P1-072/meta.yml
+acceptance_assertions:
+- Repeated non-converging reruns trigger escalation guidance.
+- Escalation points to remediation/DRD workflow and scaffolder.
+- The rule is surfaced mechanically in local gate flows.
+failure_modes:
+- Agents can still rerun the same failing gate indefinitely.
+- The two-strike rule remains policy text only.
+```
+
 ## TSK-CLEAN-001 — Task metadata truth pass
 
 ### Goal

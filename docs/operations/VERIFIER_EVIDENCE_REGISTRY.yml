@@ -188,6 +188,18 @@ registry:
   scripts/audit/verify_human_governance_review_signoff.sh:
     emits:
     - evidence/phase1/human_governance_review_signoff.json
+  scripts/audit/verify_tsk_p1_069.sh:
+    emits:
+    - evidence/phase1/tsk_p1_069_fail_first_triage_banner.json
+  scripts/audit/verify_tsk_p1_070.sh:
+    emits:
+    - evidence/phase1/tsk_p1_070_remediation_casefile_scaffolder.json
+  scripts/audit/verify_tsk_p1_071.sh:
+    emits:
+    - evidence/phase1/tsk_p1_071_failure_layer_taxonomy.json
+  scripts/audit/verify_tsk_p1_072.sh:
+    emits:
+    - evidence/phase1/tsk_p1_072_two_strike_escalation.json
   scripts/audit/verify_cut_004_projection_cutover_gate.sh:
     emits:
     - evidence/phase1/cut_004_projection_cutover_gate.json

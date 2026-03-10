@@ -10,6 +10,54 @@ Rules:
 
 ## Entries
 
+### INBOX-2026-03-10-004 — Debug/remediation process is too easy to bypass during local gate failures
+- Source incident:
+  - `docs/audits/FORENSIC_REPORT_DIFF_PARITY_FIXTURE_2026-03-09.md`
+  - `docs/process/DEBUG_PROCESS_MATERIAL_GAIN_ANALYSIS_2026-03-10.md`
+- Priority: `P1`
+- Owner role: `SUPERVISOR`
+- Status: `resolved`
+- Created: `2026-03-10`
+- Classification: `L2`
+- DRD Full:
+  - `docs/audits/FORENSIC_REPORT_DIFF_PARITY_FIXTURE_2026-03-09.md`
+- Why deferred:
+  - Recent push/debug failures showed the current remediation process is documented but still too easy to ignore during repeated local `pre_ci` and pre-push failures.
+  - The concrete failure sequence mixed four distinct failure classes:
+    1. unsafe `origin/main` parity fetch handling,
+    2. mutable Git fixture containment escape,
+    3. concurrent toolchain bootstrap contention across worktrees,
+    4. expired exception-state records blocking unrelated branches.
+  - The process exists, but the repo does not yet force fail-first triage, failure-layer classification, remediation scaffolding, or two-strike escalation strongly enough to stop retry thrash.
+- Unblock trigger:
+  - Triggered on `2026-03-10` after repeated local gate failures proved the process hardening was immediately needed.
+- Resolved: `2026-03-10`
+- Resolution summary:
+  - Implemented `TSK-P1-069..072` to make fail-first triage, remediation scaffolding, failure-layer taxonomy, and two-strike escalation mechanical in the local gate path.
+  - Added verifier-backed evidence for each task and wired them into `run_invariants_fast_checks.sh`.
+  - Updated `pre_ci` to use the new debug contract, safe remote-main parity fetch, and service-evidence synchronization before KPI checks.
+- Required done criteria:
+  - Implement executable tasks:
+    - `TSK-P1-069`
+    - `TSK-P1-070`
+    - `TSK-P1-071`
+    - `TSK-P1-072`
+  - Add a mechanical fail-first triage banner to `pre_ci` / push-path failures.
+  - Add a remediation casefile scaffolder that is faster than ad hoc manual setup.
+  - Add failure-layer taxonomy output so agents can distinguish branch-content failures from shared local/environment failures.
+  - Add two-strike non-convergence escalation so repeated local reruns force remediation discipline.
+  - Re-run local gate flow and confirm the new process surfaces on failure before repeated retries.
+- Links:
+  - `docs/process/debug-remediation-policy.md`
+  - `docs/operations/REMEDIATION_TRACE_WORKFLOW.md`
+  - `docs/process/DEBUG_PROCESS_MATERIAL_GAIN_ANALYSIS_2026-03-10.md`
+  - `docs/audits/FORENSIC_REPORT_DIFF_PARITY_FIXTURE_2026-03-09.md`
+  - `docs/tasks/phase1_prompts.md`
+  - `tasks/TSK-P1-069/meta.yml`
+  - `tasks/TSK-P1-070/meta.yml`
+  - `tasks/TSK-P1-071/meta.yml`
+  - `tasks/TSK-P1-072/meta.yml`
+
 ### INBOX-2026-02-22-001 — TSK-P1-059 completion gap (narrative vs implemented scope)
 - Source task: `TSK-P1-059`
 - Priority: `P1`
