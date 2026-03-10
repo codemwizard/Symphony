@@ -1,8 +1,20 @@
 {
   "schema_version": "1.0",
-  "generated_at_utc": "2026-03-10T16:45:00Z",
-  "git_commit": "PENDING_COMMIT",
-  "change_scope": {
+  "approval": {
+    "status": "APPROVED",
+    "approver_id": "governance-human-reviewer",
+    "change_reason": "Implement the Phase-1 security remediation batch for TSK-P1-065 through TSK-P1-068 by removing hardcoded self-test secrets, bounding ingress amount validation, sanitizing client-facing database failures, and adding sensitive endpoint rate limiting.",
+    "approved_at_utc": "2026-03-10T16:45:00Z",
+    "role_authority": "Human Approver"
+  },
+  "ai": {
+    "ai_used": true,
+    "ai_prompt_hash": "phase1-security-remediation-065-068",
+    "model_id": "gpt-5-codex",
+    "client": "codex_cli",
+    "session_id": "phase1-security-remediation-065-068"
+  },
+  "scope": {
     "regulated_surfaces_touched": true,
     "paths_changed": [
       "approvals/2026-03-10/BRANCH-phase1-security-remediation-065-068.approval.json",
@@ -38,19 +50,20 @@
       "tasks/TSK-P1-066/meta.yml",
       "tasks/TSK-P1-067/meta.yml",
       "tasks/TSK-P1-068/meta.yml"
-    ]
+    ],
+    "invariants": ["INV-005", "INV-077", "INV-108", "INV-119"],
+    "phase_boundary_ok": true
   },
-  "ai": {
-    "ai_prompt_hash": "phase1-security-remediation-065-068",
-    "model_id": "gpt-5-codex",
-    "client": "codex_cli",
-    "session_id": "phase1-security-remediation-065-068"
-  },
-  "human_approval": {
-    "approver_id": "governance-human-reviewer",
-    "approval_artifact_ref": "approvals/2026-03-10/BRANCH-phase1-security-remediation-065-068.md",
-    "change_reason": "Implement the Phase-1 security remediation batch for TSK-P1-065 through TSK-P1-068 by removing hardcoded self-test secrets, bounding ingress amount validation, sanitizing client-facing database failures, and adding sensitive endpoint rate limiting.",
-    "approved_at_utc": "2026-03-10T16:45:00Z"
-  },
-  "notes": "Branch approval metadata for Phase-1 security remediation batch."
+  "verification": {
+    "commands": [
+      "bash scripts/audit/verify_tsk_p1_065.sh",
+      "bash scripts/audit/verify_tsk_p1_066.sh",
+      "bash scripts/audit/verify_tsk_p1_067.sh",
+      "bash scripts/audit/verify_tsk_p1_068.sh",
+      "bash scripts/audit/run_security_fast_checks.sh",
+      "scripts/dev/pre_ci.sh"
+    ],
+    "pre_ci_passed": true,
+    "notes": "Branch-scoped approval for the Phase-1 security remediation batch."
+  }
 }

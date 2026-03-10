@@ -3,7 +3,7 @@ phase: '1'
 task_id: TSK-P1-067
 title: Sanitize database failure messages at client boundaries
 owner_role: SECURITY_GUARDIAN
-status: planned
+status: completed
 depends_on: []
 touches:
 - services/ledger-api/dotnet/src/LedgerApi/Infrastructure/Stores.cs
@@ -25,15 +25,14 @@ acceptance_criteria:
 - Regression coverage exists for the sanitized error path.
 verification:
 - bash scripts/audit/run_security_fast_checks.sh
-- rg -n "Database operation failed|ex.Message" services/ledger-api/dotnet/src/LedgerApi/Infrastructure/Stores.cs
+- bash scripts/audit/verify_tsk_p1_067.sh
 evidence:
-- evidence/phase0/security_insecure_patterns.json
+- evidence/phase1/tsk_p1_067_db_error_sanitization.json
 failure_modes:
 - Database internals continue to leak to clients.
 - Sanitization removes all observability and makes operator diagnosis impossible.
 must_read:
 - docs/operations/AI_AGENT_OPERATION_MANUAL.md
-- docs/security/TIER_1_FINANCIAL_SECURITY_AUDIT_2026-03-09.md
 implementation_plan: docs/plans/phase1/TSK-P1-067_db_error_sanitization/PLAN.md
 implementation_log: docs/plans/phase1/TSK-P1-067_db_error_sanitization/EXEC_LOG.md
 notes: Maps to the medium severity information disclosure finding in the Tier-1 audit.

@@ -91,7 +91,7 @@ sealed class FileIngressDurabilityStore(ILogger logger, string? path = null) : I
         catch (Exception ex)
         {
             logger.LogError(ex, "Failed to persist ingress attestation to file store.");
-            return PersistResult.Fail(ex.Message);
+            return PersistResult.Fail(StoreErrorMessages.PersistenceUnavailable);
         }
     }
 }
@@ -245,7 +245,7 @@ DO UPDATE SET
         catch (Exception ex)
         {
             logger.LogError(ex, "Npgsql ingress persistence failed.");
-            return PersistResult.Fail($"db_failed:{ex.Message}");
+            return PersistResult.Fail(StoreErrorMessages.PersistenceUnavailable);
         }
     }
 }
@@ -313,7 +313,7 @@ sealed class FileTenantOnboardingStore(ILogger logger, string? path = null) : IT
         catch (Exception ex)
         {
             logger.LogError(ex, "Failed tenant onboarding file persistence.");
-            return TenantOnboardingResult.Fail(ex.Message);
+            return TenantOnboardingResult.Fail(StoreErrorMessages.PersistenceUnavailable);
         }
     }
 }
@@ -472,7 +472,7 @@ LIMIT 1;";
         catch (Exception ex)
         {
             logger.LogError(ex, "Npgsql tenant onboarding persistence failed.");
-            return TenantOnboardingResult.Fail($"db_failed:{ex.Message}");
+            return TenantOnboardingResult.Fail(StoreErrorMessages.PersistenceUnavailable);
         }
     }
 }
@@ -521,7 +521,7 @@ sealed class FileKycHashBridgeStore(ILogger logger, string? path = null) : IKycH
         catch (Exception ex)
         {
             logger.LogError(ex, "Failed KYC hash bridge file persistence.");
-            return KycHashPersistResult.Fail(ex.Message);
+            return KycHashPersistResult.Fail(StoreErrorMessages.PersistenceUnavailable);
         }
     }
 }
@@ -614,7 +614,7 @@ RETURNING id::text, anchored_at::text, outcome, retention_class;";
         catch (Exception ex)
         {
             logger.LogError(ex, "Npgsql KYC hash bridge persistence failed.");
-            return KycHashPersistResult.Fail($"db_failed:{ex.Message}");
+            return KycHashPersistResult.Fail(StoreErrorMessages.PersistenceUnavailable);
         }
     }
 }
@@ -680,7 +680,7 @@ sealed class FileRegulatoryIncidentStore(ILogger logger, string? path = null) : 
         catch (Exception ex)
         {
             logger.LogError(ex, "Regulatory incident file create failed.");
-            return RegulatoryIncidentCreateResult.Fail(ex.Message);
+            return RegulatoryIncidentCreateResult.Fail(StoreErrorMessages.PersistenceUnavailable);
         }
     }
 
@@ -765,7 +765,7 @@ sealed class FileRegulatoryIncidentStore(ILogger logger, string? path = null) : 
         catch (Exception ex)
         {
             logger.LogError(ex, "Regulatory incident file status update failed.");
-            return RegulatoryIncidentUpdateResult.Fail(ex.Message);
+            return RegulatoryIncidentUpdateResult.Fail(StoreErrorMessages.PersistenceUnavailable);
         }
     }
 
@@ -813,7 +813,7 @@ sealed class FileRegulatoryIncidentStore(ILogger logger, string? path = null) : 
         catch (Exception ex)
         {
             logger.LogError(ex, "Regulatory incident file read failed.");
-            return new RegulatoryIncidentReportLookup(false, null, Array.Empty<RegulatoryIncidentEventRecord>(), ex.Message);
+            return new RegulatoryIncidentReportLookup(false, null, Array.Empty<RegulatoryIncidentEventRecord>(), StoreErrorMessages.ReportLookupUnavailable);
         }
     }
 }
@@ -899,7 +899,7 @@ DO UPDATE SET
         catch (Exception ex)
         {
             logger.LogError(ex, "Regulatory incident db create failed.");
-            return RegulatoryIncidentCreateResult.Fail(ex.Message);
+            return RegulatoryIncidentCreateResult.Fail(StoreErrorMessages.PersistenceUnavailable);
         }
     }
 
@@ -996,7 +996,7 @@ DO UPDATE SET
         catch (Exception ex)
         {
             logger.LogError(ex, "Regulatory incident db update failed.");
-            return RegulatoryIncidentUpdateResult.Fail(ex.Message);
+            return RegulatoryIncidentUpdateResult.Fail(StoreErrorMessages.PersistenceUnavailable);
         }
     }
 
@@ -1048,7 +1048,7 @@ WHERE incident_id = @incident_id;";
         catch (Exception ex)
         {
             logger.LogError(ex, "Regulatory incident db read failed.");
-            return new RegulatoryIncidentReportLookup(false, null, Array.Empty<RegulatoryIncidentEventRecord>(), ex.Message);
+            return new RegulatoryIncidentReportLookup(false, null, Array.Empty<RegulatoryIncidentEventRecord>(), StoreErrorMessages.ReportLookupUnavailable);
         }
     }
 }

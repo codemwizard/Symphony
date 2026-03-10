@@ -26,6 +26,7 @@ patterns=(
   "BEARER_TOKEN::(?i)bearer\\s+[a-z0-9\\-_\\.]+"
   "OPENBAO_TOKEN::(?i)openbao_token"
   "VAULT_TOKEN::(?i)vault_token"
+  "HARDCODED_SELFTEST_SIGNING_KEY::phase1-reg-00[23]-self-test-key"
 )
 
 rg_scan() {

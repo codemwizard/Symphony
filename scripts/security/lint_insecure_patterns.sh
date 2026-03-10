@@ -26,6 +26,8 @@ rules=(
   "WEAK_HASH_SHA1::\\bSHA1\\b"
   "BINARYFORMATTER::\\bBinaryFormatter\\b"
   "HARDCODED_PASSWORD_JSON::\"(password|pwd|clientSecret|connectionString)\"\\s*:"
+  "RAW_DB_ERROR_MESSAGE_LEAK::(Fail\\(ex\\.Message\\)|db_failed:\\{ex\\.Message\\}|ReportLookup\\([^\\n]*ex\\.Message)"
+  "HARDCODED_SELFTEST_SECRET::(tenant-context-self-test-key|pilot-self-test-key|ten-003-admin-key|phase1-reg-00[23]-self-test-key)"
 )
 
 scan_roots=(

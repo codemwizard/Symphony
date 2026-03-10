@@ -47,6 +47,12 @@ builder.Services.AddRateLimiter(options =>
     var windowSeconds = int.TryParse(Environment.GetEnvironmentVariable("SYMPHONY_RATE_LIMIT_WINDOW_SECONDS"), out var parsedWindow)
         ? parsedWindow
         : 60;
+    var sensitivePermitLimit = int.TryParse(Environment.GetEnvironmentVariable("SYMPHONY_SENSITIVE_RATE_LIMIT_PERMITS"), out var parsedSensitivePermit)
+        ? parsedSensitivePermit
+        : 10;
+    var sensitiveWindowSeconds = int.TryParse(Environment.GetEnvironmentVariable("SYMPHONY_SENSITIVE_RATE_LIMIT_WINDOW_SECONDS"), out var parsedSensitiveWindow)
+        ? parsedSensitiveWindow
+        : 60;
     options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
     options.GlobalLimiter = PartitionedRateLimiter.Create<HttpContext, string>(context =>
         RateLimitPartition.GetFixedWindowLimiter(
@@ -55,6 +61,15 @@ builder.Services.AddRateLimiter(options =>
             {
                 PermitLimit = Math.Max(1, permitLimit),
                 Window = TimeSpan.FromSeconds(Math.Max(1, windowSeconds)),
+                QueueLimit = 0
+            }));
+    options.AddPolicy("sensitive-endpoint", context =>
+        RateLimitPartition.GetFixedWindowLimiter(
+            partitionKey: $"{RequestSecurityGuards.BuildRateLimitPartitionKey(context)}:sensitive",
+            factory: _ => new FixedWindowRateLimiterOptions
+            {
+                PermitLimit = Math.Max(1, sensitivePermitLimit),
+                Window = TimeSpan.FromSeconds(Math.Max(1, sensitiveWindowSeconds)),
                 QueueLimit = 0
             }));
 });
@@ -234,7 +249,7 @@ app.MapPost("/v1/ingress/instructions", async (IngressRequest request, HttpConte
 
     var result = await IngressHandler.HandleAsync(request, store, logger, forceFailure, cancellationToken);
     return Results.Json(result.Body, statusCode: result.StatusCode);
-});
+}).RequireRateLimiting("sensitive-endpoint");
 
 app.MapGet("/v1/evidence-packs/{instruction_id}", async (string instruction_id, HttpContext httpContext, CancellationToken cancellationToken) =>
 {
@@ -256,7 +271,7 @@ app.MapGet("/v1/evidence-packs/{instruction_id}", async (string instruction_id, 
 
     var result = await EvidencePackHandler.HandleAsync(instruction_id, tenantId, evidenceStore, logger, cancellationToken);
     return Results.Json(result.Body, statusCode: result.StatusCode);
-});
+}).RequireRateLimiting("sensitive-endpoint");
 
 app.MapPost("/v1/admin/tenants", async (TenantOnboardingRequest request, HttpContext httpContext, CancellationToken cancellationToken) =>
 {
@@ -301,7 +316,7 @@ app.MapPost("/v1/admin/tenants", async (TenantOnboardingRequest request, HttpCon
         tenant_id = onboarding.TenantId,
         created_at = onboarding.CreatedAt.Value.ToString("O")
     }, statusCode: StatusCodes.Status200OK);
-});
+}).RequireRateLimiting("sensitive-endpoint");
 
 app.MapPost("/v1/kyc/hash", async (JsonElement requestBody, HttpContext httpContext, CancellationToken cancellationToken) =>
 {
@@ -332,7 +347,7 @@ app.MapPost("/v1/kyc/hash", async (JsonElement requestBody, HttpContext httpCont
 
     var result = await KycHashBridgeHandler.HandleAsync(parse.Request, kycHashBridgeStore, logger, cancellationToken);
     return Results.Json(result.Body, statusCode: result.StatusCode);
-});
+}).RequireRateLimiting("sensitive-endpoint");
 
 app.MapGet("/v1/regulatory/reports/daily", async (string date, HttpContext httpContext, CancellationToken cancellationToken) =>
 {
@@ -354,7 +369,7 @@ app.MapGet("/v1/regulatory/reports/daily", async (string date, HttpContext httpC
 
     var generated = await RegulatoryReportHandler.GenerateDailyReportAsync(date, tenantId, storageMode, dataSource, cancellationToken);
     return generated.ToHttpResult();
-});
+}).RequireRateLimiting("sensitive-endpoint");
 
 app.MapPost("/v1/admin/incidents", async (RegulatoryIncidentCreateRequest request, HttpContext httpContext, CancellationToken cancellationToken) =>
 {
@@ -391,7 +406,7 @@ app.MapPost("/v1/admin/incidents", async (RegulatoryIncidentCreateRequest reques
         status = created.Status,
         created_at = created.CreatedAt
     }, statusCode: StatusCodes.Status200OK);
-});
+}).RequireRateLimiting("sensitive-endpoint");
 
 app.MapGet("/v1/regulatory/incidents/{incident_id}/report", async (string incident_id, HttpContext httpContext, CancellationToken cancellationToken) =>
 {
@@ -403,7 +418,7 @@ app.MapGet("/v1/regulatory/incidents/{incident_id}/report", async (string incide
 
     var result = await RegulatoryIncidentReportHandler.GenerateIncidentReportAsync(incident_id, regulatoryIncidentStore, cancellationToken);
     return result.ToHttpResult();
-});
+}).RequireRateLimiting("sensitive-endpoint");
 
 await app.RunAsync();
 
@@ -639,6 +654,34 @@ sealed class SelfTestProjectionScope : IDisposable
     }
 }
 
+sealed class SelfTestEnvironmentScope : IDisposable
+{
+    private readonly Dictionary<string, string?> _previousValues = new(StringComparer.Ordinal);
+
+    public void Set(string key, string value)
+    {
+        _previousValues[key] = Environment.GetEnvironmentVariable(key);
+        Environment.SetEnvironmentVariable(key, value);
+    }
+
+    public void Dispose()
+    {
+        foreach (var (key, previousValue) in _previousValues)
+        {
+            Environment.SetEnvironmentVariable(key, previousValue);
+        }
+    }
+}
+
+static class SelfTestSecrets
+{
+    public static string CreateApiKey(string purpose)
+        => $"sym-{purpose}-{Convert.ToHexString(RandomNumberGenerator.GetBytes(16)).ToLowerInvariant()}";
+
+    public static string CreateSigningKey()
+        => Convert.ToHexString(RandomNumberGenerator.GetBytes(32)).ToLowerInvariant();
+}
+
 static class BatchingTelemetrySelfTestRunner
 {
     public static async Task<int> RunAsync(ILogger logger, CancellationToken cancellationToken)
@@ -783,12 +826,13 @@ static class TenantContextSelfTestRunner
 {
     public static async Task<int> RunAsync(CancellationToken cancellationToken)
     {
-        const string apiKey = "tenant-context-self-test-key";
+        var apiKey = SelfTestSecrets.CreateApiKey("tenant-context");
         var validTenant = "11111111-1111-1111-1111-111111111111";
         var unknownTenant = "22222222-2222-2222-2222-222222222222";
 
-        Environment.SetEnvironmentVariable("INGRESS_API_KEY", apiKey);
-        Environment.SetEnvironmentVariable("SYMPHONY_KNOWN_TENANTS", validTenant);
+        using var env = new SelfTestEnvironmentScope();
+        env.Set("INGRESS_API_KEY", apiKey);
+        env.Set("SYMPHONY_KNOWN_TENANTS", validTenant);
 
         var payload = JsonSerializer.Deserialize<JsonElement>("{\"amount\":100,\"currency\":\"ZMW\"}");
         var results = new List<SelfTestCase>();
@@ -1133,7 +1177,8 @@ static class TenantOnboardingAdminSelfTestRunner
         var store = new FileTenantOnboardingStore(logger, storageFile);
         var tenantId = Guid.NewGuid().ToString();
 
-        Environment.SetEnvironmentVariable("ADMIN_API_KEY", "ten-003-admin-key");
+        using var env = new SelfTestEnvironmentScope();
+        env.Set("ADMIN_API_KEY", SelfTestSecrets.CreateApiKey("tenant-admin"));
 
         var tenantCreated = false;
         var outboxEventEmitted = false;
@@ -1215,12 +1260,13 @@ static class PilotAuthSelfTestRunner
         var pass = 0;
         var fail = 0;
 
-        const string apiKey = "pilot-self-test-key";
-        Environment.SetEnvironmentVariable("INGRESS_API_KEY", apiKey);
+        var apiKey = SelfTestSecrets.CreateApiKey("pilot-auth");
+        using var env = new SelfTestEnvironmentScope();
+        env.Set("INGRESS_API_KEY", apiKey);
 
         var tenantA = "11111111-1111-1111-1111-111111111111";
         var tenantB = "22222222-2222-2222-2222-222222222222";
-        Environment.SetEnvironmentVariable("SYMPHONY_KNOWN_TENANTS", $"{tenantA},{tenantB}");
+        env.Set("SYMPHONY_KNOWN_TENANTS", $"{tenantA},{tenantB}");
         var payload = JsonSerializer.Deserialize<JsonElement>("{\"amount\":100}");
 
         await RunCase("ingress_valid_scope_allowed", () =>
@@ -1415,6 +1461,36 @@ static class CanonicalMessageModelSelfTestRunner
             """
         );
 
+        var fractionalAmountPayload = JsonSerializer.Deserialize<JsonElement>(
+            $$"""
+            {
+              "instruction_id": "{{validInstruction}}",
+              "tenant_id": "{{validTenant}}",
+              "rail_type": "RTGS",
+              "amount_minor": 10.5,
+              "currency_code": "ZMW",
+              "beneficiary_ref_hash": "hash-abc-001",
+              "idempotency_key": "led003-idem-4",
+              "submitted_at_utc": "2026-02-26T01:03:00Z"
+            }
+            """
+        );
+
+        var oversizedAmountPayload = JsonSerializer.Deserialize<JsonElement>(
+            $$"""
+            {
+              "instruction_id": "{{validInstruction}}",
+              "tenant_id": "{{validTenant}}",
+              "rail_type": "RTGS",
+              "amount_minor": 1000000000001,
+              "currency_code": "ZMW",
+              "beneficiary_ref_hash": "hash-abc-001",
+              "idempotency_key": "led003-idem-5",
+              "submitted_at_utc": "2026-02-26T01:04:00Z"
+            }
+            """
+        );
+
         var validResult = await IngressHandler.HandleAsync(
             BuildRequest(validInstruction, validTenant, "idem-valid", validPayload),
             store,
@@ -1441,6 +1517,24 @@ static class CanonicalMessageModelSelfTestRunner
             cancellationToken
         );
         tests.Add(ToCase("wrong_type_rejected", IsSchemaFailure(wrongTypeResult), wrongTypeResult.Body));
+
+        var fractionalAmountResult = await IngressHandler.HandleAsync(
+            BuildRequest(Guid.NewGuid().ToString(), validTenant, "idem-fractional", fractionalAmountPayload),
+            store,
+            logger,
+            forceFailure: false,
+            cancellationToken
+        );
+        tests.Add(ToCase("fractional_amount_rejected", IsSchemaFailure(fractionalAmountResult), fractionalAmountResult.Body));
+
+        var oversizedAmountResult = await IngressHandler.HandleAsync(
+            BuildRequest(Guid.NewGuid().ToString(), validTenant, "idem-oversized", oversizedAmountPayload),
+            store,
+            logger,
+            forceFailure: false,
+            cancellationToken
+        );
+        tests.Add(ToCase("oversized_amount_rejected", IsSchemaFailure(oversizedAmountResult), oversizedAmountResult.Body));
 
         var status = tests.All(t => t.Status == "PASS") ? "PASS" : "FAIL";
 
@@ -1671,10 +1765,11 @@ static class RegulatoryDailyReportSelfTestRunner
     {
         var ingressFile = $"/tmp/symphony_reg002_{Guid.NewGuid():N}.ndjson";
         var projectionFile = $"/tmp/symphony_reg002_projection_{Guid.NewGuid():N}.ndjson";
-        Environment.SetEnvironmentVariable("INGRESS_STORAGE_FILE", ingressFile);
-        Environment.SetEnvironmentVariable("INSTRUCTION_STATUS_PROJECTION_FILE", projectionFile);
-        Environment.SetEnvironmentVariable("EVIDENCE_SIGNING_KEY", "phase1-reg-002-self-test-key");
-        Environment.SetEnvironmentVariable("EVIDENCE_SIGNING_KEY_ID", "phase1-reg-002-key");
+        using var env = new SelfTestEnvironmentScope();
+        env.Set("INGRESS_STORAGE_FILE", ingressFile);
+        env.Set("INSTRUCTION_STATUS_PROJECTION_FILE", projectionFile);
+        env.Set("EVIDENCE_SIGNING_KEY", SelfTestSecrets.CreateSigningKey());
+        env.Set("EVIDENCE_SIGNING_KEY_ID", "phase1-reg-002-key");
 
         var ingressStore = new FileIngressDurabilityStore(logger, ingressFile);
         var reportDate = DateTimeOffset.UtcNow.ToString("yyyy-MM-dd");
@@ -1769,10 +1864,11 @@ static class RegulatoryIncident48hSelfTestRunner
     {
         var incidentFile = $"/tmp/symphony_reg003_{Guid.NewGuid():N}.ndjson";
         var projectionFile = $"/tmp/symphony_reg003_projection_{Guid.NewGuid():N}.ndjson";
-        Environment.SetEnvironmentVariable("REGULATORY_INCIDENTS_FILE", incidentFile);
-        Environment.SetEnvironmentVariable("INCIDENT_CASE_PROJECTION_FILE", projectionFile);
-        Environment.SetEnvironmentVariable("EVIDENCE_SIGNING_KEY", "phase1-reg-003-self-test-key");
-        Environment.SetEnvironmentVariable("EVIDENCE_SIGNING_KEY_ID", "phase1-reg-003-key");
+        using var env = new SelfTestEnvironmentScope();
+        env.Set("REGULATORY_INCIDENTS_FILE", incidentFile);
+        env.Set("INCIDENT_CASE_PROJECTION_FILE", projectionFile);
+        env.Set("EVIDENCE_SIGNING_KEY", SelfTestSecrets.CreateSigningKey());
+        env.Set("EVIDENCE_SIGNING_KEY_ID", "phase1-reg-003-key");
 
         var store = new FileRegulatoryIncidentStore(logger, incidentFile);
         var tenantId = "11111111-1111-1111-1111-111111111111";

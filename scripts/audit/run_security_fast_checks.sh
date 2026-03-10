@@ -3,6 +3,7 @@ set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 cd "$ROOT"
+export SYMPHONY_ENV="${SYMPHONY_ENV:-development}"
 
 echo "==> Fast security checks (cheap, deterministic)"
 
@@ -64,6 +65,15 @@ fi
 if [[ -x scripts/security/verify_ddl_allowlist_governance.sh || -f scripts/security/verify_ddl_allowlist_governance.sh ]]; then
   run scripts/security/verify_ddl_allowlist_governance.sh
 fi
+for verifier in \
+  scripts/audit/verify_tsk_p1_065.sh \
+  scripts/audit/verify_tsk_p1_067.sh \
+  scripts/audit/verify_tsk_p1_068.sh
+do
+  if [[ -x "$verifier" || -f "$verifier" ]]; then
+    run "$verifier"
+  fi
+done
 
 echo ""
 echo "==> SAST baseline (Semgrep; pinned in CI)"
