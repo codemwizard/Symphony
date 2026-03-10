@@ -6,6 +6,7 @@ follow_up_ticket: TSK-P1-HIER-003
 reason: Auto-generated: structural change detected; invariants linkage missing in commit.
 author: system
 created_at: 2026-02-24
+closed_at: 2026-03-10
 ---
 
 # Exception: ddl structural change without invariants linkage

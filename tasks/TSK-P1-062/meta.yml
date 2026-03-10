@@ -1,0 +1,42 @@
+schema_version: 1
+phase: '1'
+task_id: TSK-P1-062
+title: Clean contaminated worktrees and fail closed on stale worktree state
+owner_role: SUPERVISOR
+status: planned
+depends_on:
+- TSK-P1-061
+touches:
+- docs/audits/FORENSIC_REPORT_DIFF_PARITY_FIXTURE_2026-03-09.md
+- scripts/audit/**
+- tasks/TSK-P1-062/meta.yml
+- docs/plans/phase1/TSK-P1-062_worktree_cleanup_and_guards/PLAN.md
+- docs/plans/phase1/TSK-P1-062_worktree_cleanup_and_guards/EXEC_LOG.md
+invariants:
+- INV-077
+- INV-105
+work:
+- Remove or archive the contaminated temp worktree after forensic retention requirements are satisfied.
+- Clean stale/prunable worktree entries and ensure local guard scripts detect or fail on broken worktree state.
+- Emit deterministic evidence showing worktree registry is clean before future guarded runs proceed.
+acceptance_criteria:
+- Contaminated forensic worktree retention state is explicitly resolved and documented.
+- Stale/prunable worktree entries are removed or fail-closed with actionable guidance.
+- A verifier exists for clean worktree registry state.
+verification:
+- git worktree list --porcelain
+- bash scripts/audit/run_invariants_fast_checks.sh
+evidence:
+- evidence/phase0/remediation_trace.json
+failure_modes:
+- Contaminated worktrees remain live and continue polluting future automation runs.
+- Broken worktree registry state is silently tolerated.
+must_read:
+- docs/operations/AI_AGENT_OPERATION_MANUAL.md
+- docs/audits/FORENSIC_REPORT_DIFF_PARITY_FIXTURE_2026-03-09.md
+implementation_plan: docs/plans/phase1/TSK-P1-062_worktree_cleanup_and_guards/PLAN.md
+implementation_log: docs/plans/phase1/TSK-P1-062_worktree_cleanup_and_guards/EXEC_LOG.md
+notes: Execute only after the required forensic retention decision is recorded.
+client: codex_cli
+assigned_agent: supervisor
+model: gpt-5-codex

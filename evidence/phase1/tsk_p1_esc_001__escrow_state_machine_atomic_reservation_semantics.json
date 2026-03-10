@@ -1,0 +1,24 @@
+{
+  "task_id": "TSK-P1-ESC-001",
+  "check_id": "TSK-P1-ESC-001",
+  "timestamp_utc": "2026-03-09T11:28:32Z",
+  "git_sha": "ba00446fb5cdf29487d7f5faca90c4c39cbbe954",
+  "schema_fingerprint": "48e1f2462b2d811f14d424ac529ee731e692f992414abfdbc35c60170590957b",
+  "status": "PASS",
+  "pass": true,
+  "details": {
+    "migration_exists": true,
+    "tables_exist": true,
+    "states_contract_verified": true,
+    "append_only_event_verified": true,
+    "transition_function_hardened": true,
+    "expire_function_hardened": true,
+    "release_function_hardened": true,
+    "legal_transitions_verified": true,
+    "illegal_transition_rejected": true,
+    "expiry_reachable_from_created": true,
+    "expiry_reachable_from_authorized": true,
+    "release_semantics_verified": true,
+    "stable_sqlstates_verified": true
+  }
+}

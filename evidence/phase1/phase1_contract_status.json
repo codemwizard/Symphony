@@ -1,13 +1,13 @@
 {
   "check_id": "PHASE1-CONTRACT-STATUS",
-  "timestamp_utc": "2026-03-09T10:54:42Z",
-  "git_sha": "d31b30c9eb5934965e9b53d3277bee89f06c9f42",
+  "timestamp_utc": "2026-03-09T11:33:49Z",
+  "git_sha": "ba00446fb5cdf29487d7f5faca90c4c39cbbe954",
   "schema_fingerprint": "48e1f2462b2d811f14d424ac529ee731e692f992414abfdbc35c60170590957b",
   "status": "PASS",
-  "mode": "zip_audit",
+  "mode": "range",
   "run_phase1_gates": true,
   "required_rows": 67,
-  "required_rows_checked": 0,
+  "required_rows_checked": 66,
   "approval_requirement": {
     "required": false,
     "rules_file": "docs/operations/REGULATED_SURFACE_PATHS.yml",
@@ -21,87 +21,102 @@
       "docs/architecture/evidence_schema.json"
     ],
     "regulated_changed_paths": [],
-    "diff_mode": "zip_audit",
-    "base_ref": "",
+    "diff_mode": "range",
+    "base_ref": "refs/remotes/origin/main",
     "head_ref": "HEAD",
-    "merge_base": ""
+    "merge_base": "ba00446fb5cdf29487d7f5faca90c4c39cbbe954"
   },
-  "approval_requirement_mode": "zip_audit_structural",
+  "approval_requirement_mode": "diff_range",
   "checked": [
     {
       "invariant_id": "INV-111",
-      "status": "SKIPPED",
-      "reason": "not_required_or_phase1_disabled"
+      "status": "PASS",
+      "evidence_path": "evidence/phase0/boz_observability_role.json",
+      "schema": "default"
     },
     {
       "invariant_id": "INV-112",
-      "status": "SKIPPED",
-      "reason": "not_required_or_phase1_disabled"
+      "status": "PASS",
+      "evidence_path": "evidence/phase0/pii_leakage_payloads.json",
+      "schema": "default"
     },
     {
       "invariant_id": "INV-113",
-      "status": "SKIPPED",
-      "reason": "not_required_or_phase1_disabled"
+      "status": "PASS",
+      "evidence_path": "evidence/phase0/anchor_sync_hooks.json",
+      "schema": "default"
     },
     {
       "invariant_id": "INV-113",
-      "status": "SKIPPED",
-      "reason": "not_required_or_phase1_disabled"
+      "status": "PASS",
+      "evidence_path": "evidence/phase1/anchor_sync_operational_invariant.json",
+      "schema": "default"
     },
     {
       "invariant_id": "INV-114",
-      "status": "SKIPPED",
-      "reason": "not_required_or_phase1_disabled"
+      "status": "PASS",
+      "evidence_path": "evidence/phase1/instruction_finality_invariant.json",
+      "schema": "default"
     },
     {
       "invariant_id": "INV-115",
-      "status": "SKIPPED",
-      "reason": "not_required_or_phase1_disabled"
+      "status": "PASS",
+      "evidence_path": "evidence/phase1/pii_decoupling_invariant.json",
+      "schema": "default"
     },
     {
       "invariant_id": "INV-116",
-      "status": "SKIPPED",
-      "reason": "not_required_or_phase1_disabled"
+      "status": "PASS",
+      "evidence_path": "evidence/phase1/rail_sequence_truth_anchor.json",
+      "schema": "default"
     },
     {
       "invariant_id": "INV-117",
-      "status": "SKIPPED",
-      "reason": "not_required_or_phase1_disabled"
+      "status": "PASS",
+      "evidence_path": "evidence/phase0/db_timeout_posture.json",
+      "schema": "default"
     },
     {
       "invariant_id": "INV-118",
-      "status": "SKIPPED",
-      "reason": "not_required_or_phase1_disabled"
+      "status": "PASS",
+      "evidence_path": "evidence/phase1/ingress_hotpath_indexes.json",
+      "schema": "default"
     },
     {
       "invariant_id": "INV-105",
-      "status": "SKIPPED",
-      "reason": "not_required_or_phase1_disabled"
+      "status": "PASS",
+      "evidence_path": "evidence/phase0/remediation_trace.json",
+      "schema": "default"
     },
     {
       "invariant_id": "INV-119",
-      "status": "SKIPPED",
-      "reason": "not_required_or_phase1_disabled"
+      "status": "PASS",
+      "evidence_path": "evidence/phase1/agent_conformance_architect.json",
+      "schema": "default"
     },
     {
       "invariant_id": "INV-119",
-      "status": "SKIPPED",
-      "reason": "not_required_or_phase1_disabled"
+      "status": "PASS",
+      "evidence_path": "evidence/phase1/agent_conformance_implementer.json",
+      "schema": "default"
     },
     {
       "invariant_id": "INV-119",
-      "status": "SKIPPED",
-      "reason": "not_required_or_phase1_disabled"
+      "status": "PASS",
+      "evidence_path": "evidence/phase1/agent_conformance_policy_guardian.json",
+      "schema": "default"
     },
     {
       "invariant_id": "INV-119",
-      "status": "SKIPPED",
-      "reason": "not_required_or_phase1_disabled"
+      "status": "PASS",
+      "evidence_path": "evidence/phase1/invproc_06_ci_wiring_closeout.json",
+      "schema": "default"
     },
     {
       "invariant_id": "INV-119",
-      "status": "SKIPPED",
-      "reason": "not_required_or_phase1_disabled"
+      "status": "PASS",
+      "evidence_path": "evidence/phase1/human_governance_review_signoff.json",
+      "schema": "default"
     },
     {
       "invariant_id": "INV-077",
@@ -110,178 +125,213 @@
     },
     {
       "invariant_id": "INV-081",
-      "status": "SKIPPED",
-      "reason": "not_required_or_phase1_disabled"
+      "status": "PASS",
+      "evidence_path": "evidence/phase1/dotnet_lint_quality.json",
+      "schema": "default"
     },
     {
       "invariant_id": "INV-120",
-      "status": "SKIPPED",
-      "reason": "not_required_or_phase1_disabled"
+      "status": "PASS",
+      "evidence_path": "evidence/phase1/p1_057_final_perf_promotion.json",
+      "schema": "default"
     },
     {
       "invariant_id": "INV-121",
-      "status": "SKIPPED",
-      "reason": "not_required_or_phase1_disabled"
+      "status": "PASS",
+      "evidence_path": "evidence/phase1/perf_001_engine_metrics_capture.json",
+      "schema": "default"
     },
     {
       "invariant_id": "INV-122",
-      "status": "SKIPPED",
-      "reason": "not_required_or_phase1_disabled"
+      "status": "PASS",
+      "evidence_path": "evidence/phase1/perf_002_regression_detection_warmup.json",
+      "schema": "default"
     },
     {
       "invariant_id": "INV-123",
-      "status": "SKIPPED",
-      "reason": "not_required_or_phase1_disabled"
+      "status": "PASS",
+      "evidence_path": "evidence/phase1/perf_003_rebaseline_sha_lock.json",
+      "schema": "default"
     },
     {
       "invariant_id": "INV-124",
-      "status": "SKIPPED",
-      "reason": "not_required_or_phase1_disabled"
+      "status": "PASS",
+      "evidence_path": "evidence/phase1/perf_005__regulatory_timing_compliance_gate.json",
+      "schema": "default"
     },
     {
       "invariant_id": "INV-125",
-      "status": "SKIPPED",
-      "reason": "not_required_or_phase1_disabled"
+      "status": "PASS",
+      "evidence_path": "evidence/phase1/perf_005a_finality_seam_stub.json",
+      "schema": "default"
     },
     {
       "invariant_id": "INV-126",
-      "status": "SKIPPED",
-      "reason": "not_required_or_phase1_disabled"
+      "status": "PASS",
+      "evidence_path": "evidence/phase1/perf_006__operational_risk_framework_translation_layer.json",
+      "schema": "default"
     },
     {
       "invariant_id": "INV-127",
-      "status": "SKIPPED",
-      "reason": "not_required_or_phase1_disabled"
+      "status": "PASS",
+      "evidence_path": "evidence/phase1/tsk_p1_esc_001__escrow_state_machine_atomic_reservation_semantics.json",
+      "schema": "default"
     },
     {
       "invariant_id": "INV-128",
-      "status": "SKIPPED",
-      "reason": "not_required_or_phase1_disabled"
+      "status": "PASS",
+      "evidence_path": "evidence/phase1/tsk_p1_esc_002__escrow_invariants_cross_tenant_protections.json",
+      "schema": "default"
     },
     {
       "invariant_id": "INV-129",
-      "status": "SKIPPED",
-      "reason": "not_required_or_phase1_disabled"
+      "status": "PASS",
+      "evidence_path": "evidence/phase1/hier_008_sim_swap_alerts.json",
+      "schema": "default"
     },
     {
       "invariant_id": "INV-119",
-      "status": "SKIPPED",
-      "reason": "not_required_or_phase1_disabled"
+      "status": "PASS",
+      "evidence_path": "evidence/phase1/hier_009_instruction_hierarchy_sqlstates.json",
+      "schema": "default"
     },
     {
       "invariant_id": "INV-119",
-      "status": "SKIPPED",
-      "reason": "not_required_or_phase1_disabled"
+      "status": "PASS",
+      "evidence_path": "evidence/phase1/hier_010_program_migration.json",
+      "schema": "default"
     },
     {
       "invariant_id": "INV-119",
-      "status": "SKIPPED",
-      "reason": "not_required_or_phase1_disabled"
+      "status": "PASS",
+      "evidence_path": "evidence/phase1/hier_011_supervisor_access_mechanisms.json",
+      "schema": "default"
     },
     {
       "invariant_id": "INV-119",
-      "status": "SKIPPED",
-      "reason": "not_required_or_phase1_disabled"
+      "status": "PASS",
+      "evidence_path": "evidence/phase1/inf_002_container_build_pipeline.json",
+      "schema": "default"
     },
     {
       "invariant_id": "INV-119",
-      "status": "SKIPPED",
-      "reason": "not_required_or_phase1_disabled"
+      "status": "PASS",
+      "evidence_path": "evidence/phase1/tsk_p1_inf_001__postgres_ha_backups_pitr_operator.json",
+      "schema": "default"
     },
     {
       "invariant_id": "INV-119",
-      "status": "SKIPPED",
-      "reason": "not_required_or_phase1_disabled"
+      "status": "PASS",
+      "evidence_path": "evidence/phase1/inf_005_openbao_external_secrets.json",
+      "schema": "default"
     },
     {
       "invariant_id": "INV-119",
-      "status": "SKIPPED",
-      "reason": "not_required_or_phase1_disabled"
+      "status": "PASS",
+      "evidence_path": "evidence/phase1/tsk_p1_inf_004__service_mtls_mesh.json",
+      "schema": "default"
     },
     {
       "invariant_id": "INV-119",
-      "status": "SKIPPED",
-      "reason": "not_required_or_phase1_disabled"
+      "status": "PASS",
+      "evidence_path": "evidence/phase1/tsk_p1_inf_003__k8s_manifests_migration_job_health_proof.json",
+      "schema": "default"
     },
     {
       "invariant_id": "INV-119",
-      "status": "SKIPPED",
-      "reason": "not_required_or_phase1_disabled"
+      "status": "PASS",
+      "evidence_path": "evidence/phase1/tsk_p1_inf_006__evidence_signing_key_management_openbao_rotation.json",
+      "schema": "default"
     },
     {
       "invariant_id": "INV-119",
-      "status": "SKIPPED",
-      "reason": "not_required_or_phase1_disabled"
+      "status": "PASS",
+      "evidence_path": "evidence/phase1/ten_001_ingress_tenant_context.json",
+      "schema": "default"
     },
     {
       "invariant_id": "INV-119",
-      "status": "SKIPPED",
-      "reason": "not_required_or_phase1_disabled"
+      "status": "PASS",
+      "evidence_path": "evidence/phase1/ten_002_rls_leakage.json",
+      "schema": "default"
     },
     {
       "invariant_id": "INV-119",
-      "status": "SKIPPED",
-      "reason": "not_required_or_phase1_disabled"
+      "status": "PASS",
+      "evidence_path": "evidence/phase1/ten_003_tenant_onboarding_admin.json",
+      "schema": "default"
     },
     {
       "invariant_id": "INV-119",
-      "status": "SKIPPED",
-      "reason": "not_required_or_phase1_disabled"
+      "status": "PASS",
+      "evidence_path": "evidence/phase1/adp_001_adapter_contract_tests.json",
+      "schema": "default"
     },
     {
       "invariant_id": "INV-119",
-      "status": "SKIPPED",
-      "reason": "not_required_or_phase1_disabled"
+      "status": "PASS",
+      "evidence_path": "evidence/phase1/adp_002_simulated_rail_adapter.json",
+      "schema": "default"
     },
     {
       "invariant_id": "INV-119",
-      "status": "SKIPPED",
-      "reason": "not_required_or_phase1_disabled"
+      "status": "PASS",
+      "evidence_path": "evidence/phase1/adp_003_deterministic_rail_routing.json",
+      "schema": "default"
     },
     {
       "invariant_id": "INV-119",
-      "status": "SKIPPED",
-      "reason": "not_required_or_phase1_disabled"
+      "status": "PASS",
+      "evidence_path": "evidence/phase1/led_001_invariants_ci_cluster.json",
+      "schema": "default"
     },
     {
       "invariant_id": "INV-119",
-      "status": "SKIPPED",
-      "reason": "not_required_or_phase1_disabled"
+      "status": "PASS",
+      "evidence_path": "evidence/phase1/led_003_canonical_message_model.json",
+      "schema": "default"
     },
     {
       "invariant_id": "INV-119",
-      "status": "SKIPPED",
-      "reason": "not_required_or_phase1_disabled"
+      "status": "PASS",
+      "evidence_path": "evidence/phase1/led_004_kyc_hash_bridge_endpoint.json",
+      "schema": "default"
     },
     {
       "invariant_id": "INV-119",
-      "status": "SKIPPED",
-      "reason": "not_required_or_phase1_disabled"
+      "status": "PASS",
+      "evidence_path": "evidence/phase1/led_002_retention_archive_restore.json",
+      "schema": "default"
     },
     {
       "invariant_id": "INV-119",
-      "status": "SKIPPED",
-      "reason": "not_required_or_phase1_disabled"
+      "status": "PASS",
+      "evidence_path": "evidence/phase1/tsk_p1_reg_001__boz_observability_role_read_only_views.json",
+      "schema": "default"
     },
     {
       "invariant_id": "INV-119",
-      "status": "SKIPPED",
-      "reason": "not_required_or_phase1_disabled"
+      "status": "PASS",
+      "evidence_path": "evidence/phase1/reg_002_daily_report_signed_output.json",
+      "schema": "default"
     },
     {
       "invariant_id": "INV-119",
-      "status": "SKIPPED",
-      "reason": "not_required_or_phase1_disabled"
+      "status": "PASS",
+      "evidence_path": "evidence/phase1/reg_003_incident_48h_export.json",
+      "schema": "default"
     },
     {
       "invariant_id": "INV-119",
-      "status": "SKIPPED",
-      "reason": "not_required_or_phase1_disabled"
+      "status": "PASS",
+      "evidence_path": "evidence/phase1/tsk_p1_202__closeout_verifier_scaffold_fail_if_contract.json",
+      "schema": "default"
     },
     {
       "invariant_id": "INV-119",
-      "status": "SKIPPED",
-      "reason": "not_required_or_phase1_disabled"
+      "status": "PASS",
+      "evidence_path": "evidence/phase1/perf_004__perf_contracts_closeout_checks_extends_verify.json",
+      "schema": "default"
     },
     {
       "invariant_id": "INV-039",
@@ -295,83 +345,99 @@
     },
     {
       "invariant_id": "INV-135",
-      "status": "SKIPPED",
-      "reason": "not_required_or_phase1_disabled"
+      "status": "PASS",
+      "evidence_path": "evidence/phase1/no_backward_calls.json",
+      "schema": "default"
     },
     {
       "invariant_id": "INV-136",
-      "status": "SKIPPED",
-      "reason": "not_required_or_phase1_disabled"
+      "status": "PASS",
+      "evidence_path": "evidence/phase1/ou_ownership_registry.json",
+      "schema": "default"
     },
     {
       "invariant_id": "INV-137",
-      "status": "SKIPPED",
-      "reason": "not_required_or_phase1_disabled"
+      "status": "PASS",
+      "evidence_path": "evidence/phase1/plane_isolation.json",
+      "schema": "default"
     },
     {
       "invariant_id": "INV-142",
-      "status": "SKIPPED",
-      "reason": "not_required_or_phase1_disabled"
+      "status": "PASS",
+      "evidence_path": "evidence/phase1/identity_provenance_immutability.json",
+      "schema": "default"
     },
     {
       "invariant_id": "INV-143",
-      "status": "SKIPPED",
-      "reason": "not_required_or_phase1_disabled"
+      "status": "PASS",
+      "evidence_path": "evidence/phase1/audit_precedence.json",
+      "schema": "default"
     },
     {
       "invariant_id": "INV-144",
-      "status": "SKIPPED",
-      "reason": "not_required_or_phase1_disabled"
+      "status": "PASS",
+      "evidence_path": "evidence/phase1/card_data_non_presence.json",
+      "schema": "default"
     },
     {
       "invariant_id": "INV-146",
-      "status": "SKIPPED",
-      "reason": "not_required_or_phase1_disabled"
+      "status": "PASS",
+      "evidence_path": "evidence/command_integrity/cmd_001_attestation_outbox_atomicity.json",
+      "schema": "default"
     },
     {
       "invariant_id": "INV-147",
-      "status": "SKIPPED",
-      "reason": "not_required_or_phase1_disabled"
+      "status": "PASS",
+      "evidence_path": "evidence/command_integrity/cmd_002_command_lifecycle_integrity.json",
+      "schema": "default"
     },
     {
       "invariant_id": "INV-148",
-      "status": "SKIPPED",
-      "reason": "not_required_or_phase1_disabled"
+      "status": "PASS",
+      "evidence_path": "evidence/phase1/cqrs_001_code_separation.json",
+      "schema": "default"
     },
     {
       "invariant_id": "INV-149",
-      "status": "SKIPPED",
-      "reason": "not_required_or_phase1_disabled"
+      "status": "PASS",
+      "evidence_path": "evidence/phase1/cqrs_002_db_role_separation.json",
+      "schema": "default"
     },
     {
       "invariant_id": "INV-150",
-      "status": "SKIPPED",
-      "reason": "not_required_or_phase1_disabled"
+      "status": "PASS",
+      "evidence_path": "evidence/phase1/proj_001_initial_projection_set.json",
+      "schema": "default"
     },
     {
       "invariant_id": "INV-151",
-      "status": "SKIPPED",
-      "reason": "not_required_or_phase1_disabled"
+      "status": "PASS",
+      "evidence_path": "evidence/phase1/proj_002_external_query_cutover.json",
+      "schema": "default"
     },
     {
       "invariant_id": "INV-152",
-      "status": "SKIPPED",
-      "reason": "not_required_or_phase1_disabled"
+      "status": "PASS",
+      "evidence_path": "evidence/phase1/cut_001_one_shot_projection_cutover.json",
+      "schema": "default"
     },
     {
       "invariant_id": "INV-153",
-      "status": "SKIPPED",
-      "reason": "not_required_or_phase1_disabled"
+      "status": "PASS",
+      "evidence_path": "evidence/phase1/cut_002_query_surface_boundary.json",
+      "schema": "default"
     },
     {
       "invariant_id": "INV-154",
-      "status": "SKIPPED",
-      "reason": "not_required_or_phase1_disabled"
+      "status": "PASS",
+      "evidence_path": "evidence/phase1/cut_003_projection_cutover_runbook.json",
+      "schema": "default"
     },
     {
       "invariant_id": "INV-155",
-      "status": "SKIPPED",
-      "reason": "not_required_or_phase1_disabled"
+      "status": "PASS",
+      "evidence_path": "evidence/phase1/cut_004_projection_cutover_gate.json",
+      "schema": "default"
     }
   ],
   "errors": []

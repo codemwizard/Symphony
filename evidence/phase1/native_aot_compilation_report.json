@@ -1,0 +1,16 @@
+{
+  "check_id": "TSK-P1-057-NATIVE-AOT",
+  "timestamp_utc": "2026-03-09T11:29:27Z",
+  "git_sha": "ba00446fb5cdf29487d7f5faca90c4c39cbbe954",
+  "schema_fingerprint": "48e1f2462b2d811f14d424ac529ee731e692f992414abfdbc35c60170590957b",
+  "status": "PASS",
+  "details": {
+    "command": "dotnet publish services/executor-worker/dotnet/src/ExecutorWorker/ExecutorWorker.csproj -c Release -p:PublishAot=true -p:StripSymbols=false",
+    "publish_exit_code": 0,
+    "success": true,
+    "binary_path": "/tmp/symphony_executor_aot_publish/ExecutorWorker",
+    "binary_size_bytes": 7971736,
+    "warnings_count": 0,
+    "warnings": []
+  }
+}

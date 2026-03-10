@@ -1,0 +1,46 @@
+schema_version: 1
+phase: '1'
+task_id: TSK-P1-071
+title: Add failure-layer taxonomy output to local gate failures
+owner_role: SUPERVISOR
+status: completed
+depends_on:
+- TSK-P1-069
+touches:
+- scripts/dev/pre_ci.sh
+- scripts/audit/**
+- docs/process/DEBUG_PROCESS_MATERIAL_GAIN_ANALYSIS_2026-03-10.md
+- docs/tasks/phase1_prompts.md
+- tasks/TSK-P1-071/meta.yml
+- docs/plans/phase1/TSK-P1-071_failure_layer_taxonomy/PLAN.md
+- docs/plans/phase1/TSK-P1-071_failure_layer_taxonomy/EXEC_LOG.md
+invariants:
+- INV-077
+- INV-105
+- INV-119
+work:
+- Add a small failure taxonomy so local gate output can classify failures by layer.
+- Surface classifications such as branch-content, source-control parity, bootstrap/toolchain, shared governance state, and DB/environment.
+- Ensure the taxonomy appears in the actual failure path agents see.
+acceptance_criteria:
+- Local failure output includes a machine-readable or grep-friendly failure-layer classification.
+- The taxonomy is sufficient to distinguish branch-specific failures from shared local environment failures.
+- At least one verifier or test covers the taxonomy output path.
+verification:
+- bash scripts/audit/verify_tsk_p1_071.sh
+- bash scripts/audit/run_invariants_fast_checks.sh
+evidence:
+- evidence/phase1/tsk_p1_071_failure_layer_taxonomy.json
+failure_modes:
+- "Different failure classes still collapse into generic `pre_ci failed`."
+- Agents continue debugging branch content when the failure is shared infrastructure or stale governance state.
+must_read:
+- docs/operations/AI_AGENT_OPERATION_MANUAL.md
+- docs/process/DEBUG_PROCESS_MATERIAL_GAIN_ANALYSIS_2026-03-10.md
+- docs/operations/REMEDIATION_TRACE_WORKFLOW.md
+implementation_plan: docs/plans/phase1/TSK-P1-071_failure_layer_taxonomy/PLAN.md
+implementation_log: docs/plans/phase1/TSK-P1-071_failure_layer_taxonomy/EXEC_LOG.md
+notes: Addresses the misclassification problem documented in the March 10 analysis.
+client: codex_cli
+assigned_agent: supervisor
+model: gpt-5-codex

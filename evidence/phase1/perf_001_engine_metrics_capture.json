@@ -1,0 +1,27 @@
+{
+  "check_id": "PERF-001",
+  "task_id": "PERF-001",
+  "timestamp_utc": "2026-03-09T11:29:05Z",
+  "git_sha": "ba00446fb5cdf29487d7f5faca90c4c39cbbe954",
+  "schema_fingerprint": "48e1f2462b2d811f14d424ac529ee731e692f992414abfdbc35c60170590957b",
+  "status": "PASS",
+  "pass": true,
+  "details": {
+    "engine_metrics": {
+      "cpu_user_ms": 19740,
+      "cpu_sys_ms": 2390,
+      "gc_collections": 0,
+      "db_query_count": 160,
+      "db_query_p95_ms": 1975.0,
+      "max_rss_kb": 162368
+    },
+    "source_artifacts": {
+      "perf_smoke_profile": "evidence/phase1/perf_smoke_profile.json",
+      "perf_db_driver_bench": "evidence/phase1/perf_db_driver_bench.json",
+      "perf_driver_batching_telemetry": "evidence/phase1/perf_driver_batching_telemetry.json"
+    },
+    "trace_debug_logging_enabled": false,
+    "non_invasive_capture": true
+  },
+  "errors": []
+}

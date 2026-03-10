@@ -1,8 +1,29 @@
 #!/usr/bin/env bash
-set -euo pipefail
+set -Eeuo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 cd "$ROOT"
+
+PRE_CI_REPRO_COMMAND="${PRE_CI_REPRO_COMMAND:-scripts/dev/pre_ci.sh}"
+export PRE_CI_REPRO_COMMAND
+
+if [[ -f scripts/audit/pre_ci_debug_contract.sh ]]; then
+  # shellcheck disable=SC1090
+  source scripts/audit/pre_ci_debug_contract.sh
+else
+  echo "ERROR: scripts/audit/pre_ci_debug_contract.sh not found"
+  exit 1
+fi
+
+pre_ci_on_error() {
+  local rc=$?
+  pre_ci_record_failure
+  exit "$rc"
+}
+
+pre_ci_debug_init
+trap pre_ci_on_error ERR
+pre_ci_print_triage_banner
 
 if [[ -f scripts/audit/env/phase0_flags.sh ]]; then
   # shellcheck disable=SC1090
@@ -23,6 +44,8 @@ DB_CONTAINER="symphony-postgres"
 DB_HOST_PORT="${HOST_POSTGRES_PORT:-5432}"
 FRESH_DB="${FRESH_DB:-1}"   # enforce CI parity by default (ephemeral DB per run)
 KEEP_TEMP_DB="${KEEP_TEMP_DB:-0}" # set to 1 to keep temp DB for debugging
+SERVICE_PHASE1_EVIDENCE_DIR="$ROOT/services/ledger-api/dotnet/src/LedgerApi/evidence/phase1"
+ROOT_PHASE1_EVIDENCE_DIR="$ROOT/evidence/phase1"
 
 # For strict parity with GitHub Actions, do not allow a developer shell to override diff refs.
 # Use only the canonical remote-tracking base ref.
@@ -41,6 +64,15 @@ require_docker_access() {
     echo "Hint: start Docker and verify access with: docker info"
     echo "Hint: if permission denied on /var/run/docker.sock, add your user to the docker group and re-login."
     return 1
+  fi
+}
+
+sync_phase1_service_evidence() {
+  if [[ -d "$SERVICE_PHASE1_EVIDENCE_DIR" ]]; then
+    mkdir -p "$ROOT_PHASE1_EVIDENCE_DIR"
+    find "$SERVICE_PHASE1_EVIDENCE_DIR" -maxdepth 1 -type f -name '*.json' -print0 | while IFS= read -r -d '' file; do
+      cp "$file" "$ROOT_PHASE1_EVIDENCE_DIR/$(basename "$file")"
+    done
   fi
 }
 
@@ -103,6 +135,7 @@ run_ci_db_parity_migration_probe() {
     -c "DROP DATABASE IF EXISTS \"${probe_db}\";" >/dev/null 2>&1 || true
 }
 
+pre_ci_set_context "bootstrap/toolchain" "PRECI.BOOTSTRAP.TOOLCHAIN" "pre_ci.bootstrap_local_ci_toolchain" "Toolchain parity bootstrap"
 echo "==> Toolchain parity bootstrap (local)"
 if [[ -x scripts/audit/bootstrap_local_ci_toolchain.sh ]]; then
   scripts/audit/bootstrap_local_ci_toolchain.sh
@@ -112,8 +145,9 @@ else
   exit 1
 fi
 
+pre_ci_set_context "source-control parity" "PRECI.SOURCE_CONTROL.ORIGIN_MAIN_SYNC" "pre_ci.origin_main_sync" "Sync base ref for CI parity"
 echo "==> Sync base ref for CI parity (refs/remotes/origin/main)"
-if ! git fetch --no-tags --prune origin main:refs/remotes/origin/main >/dev/null 2>&1; then
+if ! git fetch --no-tags --prune origin +refs/heads/main:refs/remotes/origin/main >/dev/null 2>&1; then
   echo "ERROR: failed to fetch refs/remotes/origin/main; cannot run parity diff gates"
   exit 1
 fi
@@ -130,6 +164,7 @@ if ! git rev-parse --verify "${BASE_REF}^{commit}" >/dev/null 2>&1; then
 fi
 export BASE_REF="refs/remotes/origin/main"
 
+pre_ci_set_context "branch-content" "PRECI.STRUCTURAL.CHANGE_RULE" "pre_ci.enforce_change_rule" "Structural change-rule gate"
 if [[ -x scripts/audit/enforce_change_rule.sh ]]; then
   echo "==> Structural change-rule gate (CI parity, range diff)"
   BASE_REF="$BASE_REF" HEAD_REF="HEAD" scripts/audit/enforce_change_rule.sh
@@ -147,6 +182,7 @@ if [[ "$CLEAN_EVIDENCE" == "1" ]]; then
   fi
 fi
 
+pre_ci_set_context "shared governance state" "PRECI.GOVERNANCE.TASK_PLAN_LOG" "pre_ci.verify_task_plans_present" "Governance preflight task plan/log presence"
 echo "==> Governance preflight: task plan/log presence"
 if [[ -x scripts/audit/verify_task_plans_present.sh ]]; then
   scripts/audit/verify_task_plans_present.sh
@@ -155,6 +191,7 @@ else
   exit 1
 fi
 
+pre_ci_set_context "shared governance state" "PRECI.GOVERNANCE.TASK_META_SCHEMA" "pre_ci.verify_task_meta_schema" "Governance preflight strict task meta schema"
 echo "==> Governance preflight: strict task meta schema"
 if [[ -x scripts/audit/verify_task_meta_schema.sh ]]; then
   scripts/audit/verify_task_meta_schema.sh --mode strict --scope changed --json --out evidence/security_remediation/r_026_run_task_strict_enforcement.json
@@ -187,6 +224,7 @@ else
   exit 1
 fi
 
+pre_ci_set_context "shared governance state" "PRECI.REMEDIATION.TRACE" "pre_ci.verify_remediation_trace" "Remediation trace gate"
 echo "==> Remediation trace gate (production-affecting changes)"
 if [[ -f scripts/audit/verify_remediation_trace.sh ]]; then
   # Range diff is required for parity with CI (commit-range, not worktree/staged).
@@ -196,6 +234,7 @@ else
   exit 1
 fi
 
+pre_ci_set_context "shared governance state" "PRECI.AGENT.CONFORMANCE" "pre_ci.verify_agent_conformance" "Agent conformance verification"
 echo "==> Agent conformance verification"
 if [[ -x scripts/audit/verify_agent_conformance.sh ]]; then
   scripts/audit/verify_agent_conformance.sh
@@ -212,6 +251,7 @@ else
   exit 1
 fi
 
+pre_ci_set_context "branch-content" "PRECI.PHASE1.SELFTESTS" "pre_ci.phase1_selftests" "Phase-1 self-tests"
 if [[ -x scripts/services/test_ingress_api_contract.sh ]]; then
   echo "==> Phase-1 ingress API contract self-test"
   scripts/services/test_ingress_api_contract.sh
@@ -237,6 +277,8 @@ if [[ -x scripts/services/test_pilot_authz_tenant_boundary.sh ]]; then
   scripts/services/test_pilot_authz_tenant_boundary.sh
 fi
 
+sync_phase1_service_evidence
+
 if [[ -x scripts/audit/verify_pilot_harness_readiness.sh ]]; then
   echo "==> Phase-1 pilot harness readiness verification"
   scripts/audit/verify_pilot_harness_readiness.sh
@@ -252,6 +294,7 @@ if [[ -x scripts/security/verify_sandbox_deploy_manifest_posture.sh ]]; then
   scripts/security/verify_sandbox_deploy_manifest_posture.sh
 fi
 
+pre_ci_set_context "DB/environment" "PRECI.DB.ENVIRONMENT" "pre_ci.phase1_db_verifiers" "Phase-1 DB and environment verifiers"
 if [[ -f "$ENV_FILE" ]]; then
   set -a
   # shellcheck disable=SC1090
@@ -891,4 +934,5 @@ if [[ "${RUN_PHASE1_GATES:-0}" == "1" ]]; then
   fi
 fi
 
+pre_ci_clear_failure_state
 echo "✅ Pre-CI local checks PASSED."

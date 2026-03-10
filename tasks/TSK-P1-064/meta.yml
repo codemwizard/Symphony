@@ -1,0 +1,44 @@
+schema_version: 1
+phase: '1'
+task_id: TSK-P1-064
+title: Wire hostile Git plumbing regression tests into guarded flows
+owner_role: SUPERVISOR
+status: planned
+depends_on:
+- TSK-P1-063
+touches:
+- scripts/audit/**
+- scripts/dev/pre_ci.sh
+- .github/workflows/**
+- tasks/TSK-P1-064/meta.yml
+- docs/plans/phase1/TSK-P1-064_git_regression_wiring/PLAN.md
+- docs/plans/phase1/TSK-P1-064_git_regression_wiring/EXEC_LOG.md
+invariants:
+- INV-077
+- INV-081
+- INV-105
+work:
+- Add hostile Git plumbing regression tests to the local and CI guard paths.
+- Ensure regression coverage is deterministic and does not mutate the caller repository.
+- Emit evidence proving the regression test is part of enforced guarded execution.
+acceptance_criteria:
+- Hostile-environment regression coverage is wired into at least one enforced local/CI path.
+- Regression failure blocks guarded execution.
+- Evidence or registry linkage shows the regression is no longer an optional ad hoc check.
+verification:
+- rg -n "test_diff_semantics_parity_hostile_env.sh" scripts/dev/pre_ci.sh scripts/audit/run_phase0_ordered_checks.sh .github/workflows
+- bash scripts/audit/test_diff_semantics_parity_hostile_env.sh
+evidence:
+- evidence/phase1/git_diff_semantics.json
+failure_modes:
+- Regression test exists but is never enforced.
+- Guarded flows still permit fixture execution without hostile-env coverage.
+must_read:
+- docs/operations/AI_AGENT_OPERATION_MANUAL.md
+- docs/audits/FORENSIC_REPORT_DIFF_PARITY_FIXTURE_2026-03-09.md
+implementation_plan: docs/plans/phase1/TSK-P1-064_git_regression_wiring/PLAN.md
+implementation_log: docs/plans/phase1/TSK-P1-064_git_regression_wiring/EXEC_LOG.md
+notes: Follow-on to the parity fixture quarantine. Keeps the bug class from returning silently.
+client: codex_cli
+assigned_agent: supervisor
+model: gpt-5-codex

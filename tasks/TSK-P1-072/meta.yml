@@ -1,0 +1,50 @@
+schema_version: 1
+phase: '1'
+task_id: TSK-P1-072
+title: Enforce two-strike non-convergence escalation in local gate flows
+owner_role: SUPERVISOR
+status: completed
+depends_on:
+- TSK-P1-069
+- TSK-P1-070
+- TSK-P1-071
+touches:
+- scripts/dev/pre_ci.sh
+- scripts/audit/**
+- docs/process/debug-remediation-policy.md
+- docs/operations/REMEDIATION_TRACE_WORKFLOW.md
+- docs/tasks/phase1_prompts.md
+- tasks/TSK-P1-072/meta.yml
+- docs/plans/phase1/TSK-P1-072_two_strike_escalation/PLAN.md
+- docs/plans/phase1/TSK-P1-072_two_strike_escalation/EXEC_LOG.md
+invariants:
+- INV-077
+- INV-105
+- INV-119
+work:
+- Mechanize the two-strike non-convergence rule for local reruns of production-affecting gates.
+- Persist enough local state to detect repeated non-converging reruns safely.
+- Force escalation guidance to remediation/DRD artifacts instead of allowing silent repeated retries.
+acceptance_criteria:
+- Local gate flow detects repeated non-converging reruns for the same failure class.
+- After the configured threshold, the user is directed to remediation/DRD escalation instead of another blind rerun.
+- The escalation path references the remediation scaffolder and workflow docs.
+verification:
+- bash scripts/audit/verify_tsk_p1_072.sh
+- bash scripts/audit/run_invariants_fast_checks.sh
+evidence:
+- evidence/phase1/tsk_p1_072_two_strike_escalation.json
+failure_modes:
+- Agents can still rerun the same failing gate indefinitely without escalation.
+- Escalation exists only as narrative policy and is not surfaced mechanically.
+must_read:
+- docs/operations/AI_AGENT_OPERATION_MANUAL.md
+- docs/process/debug-remediation-policy.md
+- docs/operations/REMEDIATION_TRACE_WORKFLOW.md
+- docs/process/DEBUG_PROCESS_MATERIAL_GAIN_ANALYSIS_2026-03-10.md
+implementation_plan: docs/plans/phase1/TSK-P1-072_two_strike_escalation/PLAN.md
+implementation_log: docs/plans/phase1/TSK-P1-072_two_strike_escalation/EXEC_LOG.md
+notes: Converts the existing advisory two-strike rule into actual operator-visible enforcement.
+client: codex_cli
+assigned_agent: supervisor
+model: gpt-5-codex
