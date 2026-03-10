@@ -23,3 +23,17 @@ Symphony uses severity-based DRD documentation to avoid non-converging debug loo
 ## Templates
 - `docs/remediation/templates/drd-lite-template.md`
 - `docs/remediation/templates/drd-full-template.md`
+
+## Freshness Requirement For Late Fixes
+
+If a branch changes guarded execution surfaces after a failing CI or local gate incident is identified, the same diff must also refresh at least one of:
+- a task `PLAN.md` or `EXEC_LOG.md`
+- a `REM-*` remediation casefile
+
+Guarded execution surfaces include:
+- `scripts/dev/pre_ci.sh`
+- `scripts/audit/**`
+- `scripts/security/**`
+- `.github/workflows/**`
+
+Branches that change those surfaces without casefile freshness must fail closed.

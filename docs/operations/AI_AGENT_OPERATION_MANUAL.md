@@ -64,6 +64,9 @@ Violations stop the agent; escalate to a human supervisor.
   - `L2/L3` non-converging or systemic: DRD Full required.
 - Two-strike rule is mandatory for non-convergence: after two full reruns without convergence (or blocker changes), stop blind reruns and switch to first-fail artifact triage with DRD Full.
 
+## Git Mutation Containment
+Any fixture or script that mutates Git state must follow the canonical containment rule in `docs/operations/GIT_MUTATION_CONTAINMENT_RULE.md`. `git -C` alone is not a sufficient containment boundary.
+
 ## Agent Roles (Mapping to v2)
 
 Use `docs/operations/AGENT_ROLE_RECONCILIATION.md` to map current agents to Phase-1 roles.  

@@ -234,6 +234,15 @@ else
   exit 1
 fi
 
+pre_ci_set_context "shared governance state" "PRECI.REMEDIATION.FRESHNESS" "pre_ci.verify_remediation_artifact_freshness" "Remediation artifact freshness gate"
+echo "==> Remediation artifact freshness gate (guarded execution surface changes)"
+if [[ -f scripts/audit/verify_remediation_artifact_freshness.sh ]]; then
+  BASE_REF="$BASE_REF" HEAD_REF="HEAD" bash scripts/audit/verify_remediation_artifact_freshness.sh
+else
+  echo "ERROR: scripts/audit/verify_remediation_artifact_freshness.sh not found"
+  exit 1
+fi
+
 pre_ci_set_context "shared governance state" "PRECI.AGENT.CONFORMANCE" "pre_ci.verify_agent_conformance" "Agent conformance verification"
 echo "==> Agent conformance verification"
 if [[ -x scripts/audit/verify_agent_conformance.sh ]]; then

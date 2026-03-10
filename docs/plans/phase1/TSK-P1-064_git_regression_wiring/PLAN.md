@@ -11,11 +11,10 @@ Wire hostile Git plumbing regression tests into enforced guarded flows.
 - The regression itself must not mutate the caller repository.
 
 ## Verification Commands
-- `rg -n "test_diff_semantics_parity_hostile_env.sh" scripts/dev/pre_ci.sh scripts/audit/run_phase0_ordered_checks.sh .github/workflows`
-- `bash scripts/audit/test_diff_semantics_parity_hostile_env.sh`
+- `bash scripts/audit/verify_tsk_p1_064.sh`
 
 ## Repro_Command
 - `GIT_DIR=.git GIT_WORK_TREE=. bash scripts/audit/test_diff_semantics_parity_hostile_env.sh`
 
 ## Evidence Paths
-- `evidence/phase1/git_diff_semantics.json`
+- `evidence/phase1/tsk_p1_064_git_regression_wiring.json`

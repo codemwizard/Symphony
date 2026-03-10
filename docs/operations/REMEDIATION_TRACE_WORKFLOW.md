@@ -97,3 +97,13 @@ Optionally extract stable “next time” learnings into `docs/operations/troubl
 To avoid forcing everything into `REM-*`, the remediation trace gate is satisfied by either:
 1. A remediation casefile `docs/plans/**/REM-*/{PLAN.md,EXEC_LOG.md}`, or
 2. A normal task plan/log `docs/plans/**/TSK-*/{PLAN.md,EXEC_LOG.md}` that includes the required remediation fields above (meaning the work is explicitly tracked as a fix, not feature-only).
+
+## Artifact Freshness
+
+When a branch changes guarded execution surfaces after a failure has already been identified, remediation truth must be refreshed in the same diff. Acceptable freshness artifacts are:
+- a task `PLAN.md`
+- a task `EXEC_LOG.md`
+- a `REM-*` `PLAN.md`
+- a `REM-*` `EXEC_LOG.md`
+
+Do not rely on stale casefiles when a verifier, hook, or guarded execution script changed afterward.

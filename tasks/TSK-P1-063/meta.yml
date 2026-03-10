@@ -3,13 +3,14 @@ phase: '1'
 task_id: TSK-P1-063
 title: Audit and harden mutable Git scripts against inherited plumbing
 owner_role: SUPERVISOR
-status: planned
+status: completed
 depends_on:
 - TSK-P1-061
 touches:
 - scripts/audit/**
 - scripts/dev/**
 - .githooks/**
+- docs/audits/GIT_MUTATION_SURFACE_AUDIT_2026-03-10.md
 - docs/tasks/PHASE1_SECURITY_AND_GIT_CONTAINMENT_REMEDIATION_2026-03-09.md
 - tasks/TSK-P1-063/meta.yml
 - docs/plans/phase1/TSK-P1-063_git_script_audit/PLAN.md
@@ -27,10 +28,10 @@ acceptance_criteria:
 - Unsafe scripts are either hardened or explicitly blocked pending follow-up.
 - The audit is reproducible and produces machine-readable evidence.
 verification:
-- rg -n "git -C|git worktree|git checkout|git branch|git commit" scripts .githooks
+- bash scripts/audit/verify_tsk_p1_063.sh
 - bash scripts/audit/run_invariants_fast_checks.sh
 evidence:
-- evidence/phase0/remediation_trace.json
+- evidence/phase1/tsk_p1_063_git_script_audit.json
 failure_modes:
 - Additional fixtures share the same containment bug class and remain latent.
 - Audit is incomplete and omits nested-shell or hook-invoked Git flows.

@@ -16,15 +16,15 @@ Rules:
   - `docs/process/DEBUG_PROCESS_MATERIAL_GAIN_ANALYSIS_2026-03-10.md`
 - Priority: `P1`
 - Owner role: `INVARIANTS_CURATOR`
-- Status: `deferred`
+- Status: `resolved`
 - Created: `2026-03-10`
 - Classification: `L1`
 - Why deferred:
   - The recent CI import-path failure on `phase1/debug-process-069-072` required a real branch fix, but the remediation/task artifacts were not automatically forced to update in the same change.
   - This proves the current debug-process hardening remains incomplete: it improves triage and escalation, but it does not yet fail closed when a post-CI fix is made without refreshing the relevant remediation trace or task execution log.
   - As a result, an agent can still repair a CI-only bug while leaving remediation history stale unless it remembers to update it manually.
-- Unblock trigger:
-  - Start after `TSK-P1-069` through `TSK-P1-072` are merged and the branch/push path is stable enough to add one more enforcement seam.
+- Resolution:
+  - Implemented by `TSK-P1-073`.
 - Required done criteria:
   - Create and execute a task that enforces remediation/task artifact freshness after CI-discovered fixes.
   - Detect when a branch changes after a failing CI incident and require at least one of:
