@@ -44,7 +44,8 @@
       "tasks/TSK-P1-062/meta.yml",
       "tasks/TSK-P1-063/meta.yml",
       "tasks/TSK-P1-064/meta.yml",
-      "tasks/TSK-P1-073/meta.yml"
+      "tasks/TSK-P1-073/meta.yml",
+      "evidence/phase1/human_governance_review_signoff.json"
     ]
   },
   "ai": {
