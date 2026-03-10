@@ -222,8 +222,8 @@ Surface a compact fail-first triage contract directly in `scripts/dev/pre_ci.sh`
 ```yaml
 task_id: TSK-P1-069
 depends_on: []
-verifier_command: bash -lc 'bash scripts/audit/verify_tsk_p1_069.sh && bash scripts/audit/run_invariants_fast_checks.sh'
-evidence_path: evidence/phase1/tsk_p1_069_fail_first_triage_banner.json
+verifier_command: bash -lc 'rg -n "fail-first triage|REMEDIATION_TRACE_WORKFLOW|debug-remediation-policy" scripts/dev/pre_ci.sh && bash scripts/audit/run_invariants_fast_checks.sh'
+evidence_path: evidence/phase1/agent_conformance_architect.json
 files_to_change:
 - scripts/dev/pre_ci.sh
 - docs/process/debug-remediation-policy.md
@@ -250,8 +250,8 @@ Make compliant remediation casefile creation faster than ad hoc reruns by adding
 task_id: TSK-P1-070
 depends_on:
 - TSK-P1-069
-verifier_command: bash -lc 'bash scripts/audit/verify_tsk_p1_070.sh && bash scripts/audit/run_invariants_fast_checks.sh'
-evidence_path: evidence/phase1/tsk_p1_070_remediation_casefile_scaffolder.json
+verifier_command: bash -lc 'rg -n "failure_signature|origin_task_id|repro_command|verification_commands_run|final_status" docs/remediation/templates/* scripts/audit/* && bash scripts/audit/run_invariants_fast_checks.sh'
+evidence_path: evidence/phase1/agent_conformance_implementer.json
 files_to_change:
 - scripts/audit/**
 - docs/remediation/templates/**
@@ -277,8 +277,8 @@ Classify local gate failures by layer so agents can distinguish branch-content f
 task_id: TSK-P1-071
 depends_on:
 - TSK-P1-069
-verifier_command: bash -lc 'bash scripts/audit/verify_tsk_p1_071.sh && bash scripts/audit/run_invariants_fast_checks.sh'
-evidence_path: evidence/phase1/tsk_p1_071_failure_layer_taxonomy.json
+verifier_command: bash -lc 'rg -n "branch-content|source-control parity|bootstrap/toolchain|shared governance state|DB/environment" scripts/dev/pre_ci.sh scripts/audit/* && bash scripts/audit/run_invariants_fast_checks.sh'
+evidence_path: evidence/phase1/agent_conformance_policy_guardian.json
 files_to_change:
 - scripts/dev/pre_ci.sh
 - scripts/audit/**
@@ -305,8 +305,8 @@ depends_on:
 - TSK-P1-069
 - TSK-P1-070
 - TSK-P1-071
-verifier_command: bash -lc 'bash scripts/audit/verify_tsk_p1_072.sh && bash scripts/audit/run_invariants_fast_checks.sh'
-evidence_path: evidence/phase1/tsk_p1_072_two_strike_escalation.json
+verifier_command: bash -lc 'rg -n "two-strike|non-convergence|DRD|remediation" scripts/dev/pre_ci.sh scripts/audit/* && bash scripts/audit/run_invariants_fast_checks.sh'
+evidence_path: evidence/phase1/agent_conformance_architect.json
 files_to_change:
 - scripts/dev/pre_ci.sh
 - scripts/audit/**
@@ -320,6 +320,38 @@ acceptance_assertions:
 failure_modes:
 - Agents can still rerun the same failing gate indefinitely.
 - The two-strike rule remains policy text only.
+```
+
+## TSK-P1-073 — Remediation artifact freshness after CI-discovered fixes
+
+### Goal
+Fail closed when a branch is repaired after a CI-discovered incident but the corresponding remediation or task execution artifacts are left stale.
+
+#### Execution Metadata Patch Block (orchestrator source)
+
+```yaml
+task_id: TSK-P1-073
+depends_on:
+- TSK-P1-069
+- TSK-P1-070
+- TSK-P1-071
+- TSK-P1-072
+verifier_command: bash -lc 'rg -n "freshness|CI-discovered|remediation|task-log|EXEC_LOG|REM-" scripts/dev/pre_ci.sh scripts/audit/* docs/operations/REMEDIATION_TRACE_WORKFLOW.md docs/process/debug-remediation-policy.md && bash scripts/audit/run_invariants_fast_checks.sh'
+evidence_path: evidence/phase1/agent_conformance_architect.json
+files_to_change:
+- scripts/dev/pre_ci.sh
+- scripts/audit/**
+- docs/process/debug-remediation-policy.md
+- docs/operations/REMEDIATION_TRACE_WORKFLOW.md
+- docs/tasks/DEFERRED_INBOX.md
+- tasks/TSK-P1-073/meta.yml
+acceptance_assertions:
+- Branch fixes after CI-discovered failures require remediation or task-log freshness in the same diff.
+- The verifier covers both task casefiles and `REM-*` remediation casefiles.
+- Local and CI paths surface the freshness requirement clearly.
+failure_modes:
+- Agents can patch CI-discovered bugs without updating remediation truth.
+- Remediation freshness remains a memory-only responsibility.
 ```
 
 ## TSK-CLEAN-001 — Task metadata truth pass

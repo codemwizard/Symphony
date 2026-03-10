@@ -10,13 +10,84 @@ Rules:
 
 ## Entries
 
+### INBOX-2026-03-10-006 — CI-discovered fixes can land without remediation artifact freshness
+- Source incident:
+  - `phase1/debug-process-069-072`
+  - `docs/process/DEBUG_PROCESS_MATERIAL_GAIN_ANALYSIS_2026-03-10.md`
+- Priority: `P1`
+- Owner role: `INVARIANTS_CURATOR`
+- Status: `deferred`
+- Created: `2026-03-10`
+- Classification: `L1`
+- Why deferred:
+  - The recent CI import-path failure on `phase1/debug-process-069-072` required a real branch fix, but the remediation/task artifacts were not automatically forced to update in the same change.
+  - This proves the current debug-process hardening remains incomplete: it improves triage and escalation, but it does not yet fail closed when a post-CI fix is made without refreshing the relevant remediation trace or task execution log.
+  - As a result, an agent can still repair a CI-only bug while leaving remediation history stale unless it remembers to update it manually.
+- Unblock trigger:
+  - Start after `TSK-P1-069` through `TSK-P1-072` are merged and the branch/push path is stable enough to add one more enforcement seam.
+- Required done criteria:
+  - Create and execute a task that enforces remediation/task artifact freshness after CI-discovered fixes.
+  - Detect when a branch changes after a failing CI incident and require at least one of:
+    - remediation casefile update,
+    - task `EXEC_LOG.md` update,
+    - or another approved remediation trace artifact update.
+  - Add a verifier that fails when code or verifier logic changes after a CI incident but no remediation/task log changed with it.
+  - Ensure the verifier works for both normal task casefiles and `REM-*` remediation casefiles.
+  - Emit evidence proving the freshness rule is enforced.
+- Links:
+  - `docs/process/debug-remediation-policy.md`
+  - `docs/operations/REMEDIATION_TRACE_WORKFLOW.md`
+  - `docs/process/DEBUG_PROCESS_MATERIAL_GAIN_ANALYSIS_2026-03-10.md`
+  - `tasks/TSK-P1-069/meta.yml`
+  - `tasks/TSK-P1-070/meta.yml`
+  - `tasks/TSK-P1-071/meta.yml`
+  - `tasks/TSK-P1-072/meta.yml`
+
+### INBOX-2026-03-10-005 — DRD declaration exists in PR template but is not mechanically enforced
+- Source incident:
+  - `.github/pull_request_template.md`
+  - `docs/process/debug-remediation-policy.md`
+  - `docs/operations/REMEDIATION_TRACE_WORKFLOW.md`
+- Priority: `P1`
+- Owner role: `INVARIANTS_CURATOR`
+- Status: `deferred`
+- Created: `2026-03-10`
+- Classification: `L1`
+- Why deferred:
+  - The PR template includes a `DRD Declaration` section, but it is still manual-only.
+  - Current branch workflow allows remediation/DRD policy to be satisfied in casefiles and evidence while the PR body remains blank.
+  - There is no mechanical linkage today from remediation metadata, approval metadata, or `pre_ci` debug state into the PR declaration fields.
+  - This creates a process-truth gap: the PR surface can imply DRD discipline without actually proving severity classification or DRD linkage.
+- Unblock trigger:
+  - Start after the current debug-process hardening branch is merged and the branch/push path is stable again.
+- Required done criteria:
+  - Create an executable task for PR/DRD enforcement.
+  - Define the canonical mapping from remediation/debug metadata to PR declaration fields:
+    - severity,
+    - DRD required or not required,
+    - Lite link,
+    - Full link.
+  - Add a verifier or CI gate that fails when:
+    - DRD is required by policy but the PR declaration is blank,
+    - a DRD link is required but missing,
+    - the PR declaration contradicts remediation casefile metadata.
+  - Prefer machine-populating the PR declaration or emitting a deterministic PR compliance summary instead of relying on manual checkboxes alone.
+  - Update the PR template to reference the mechanical verifier explicitly.
+  - Emit evidence showing that the PR DRD declaration is truthful and policy-aligned.
+- Links:
+  - `.github/pull_request_template.md`
+  - `docs/process/debug-remediation-policy.md`
+  - `docs/operations/REMEDIATION_TRACE_WORKFLOW.md`
+  - `docs/operations/AI_AGENT_OPERATION_MANUAL.md`
+  - `docs/process/DEBUG_PROCESS_MATERIAL_GAIN_ANALYSIS_2026-03-10.md`
+
 ### INBOX-2026-03-10-004 — Debug/remediation process is too easy to bypass during local gate failures
 - Source incident:
   - `docs/audits/FORENSIC_REPORT_DIFF_PARITY_FIXTURE_2026-03-09.md`
   - `docs/process/DEBUG_PROCESS_MATERIAL_GAIN_ANALYSIS_2026-03-10.md`
 - Priority: `P1`
 - Owner role: `SUPERVISOR`
-- Status: `resolved`
+- Status: `deferred`
 - Created: `2026-03-10`
 - Classification: `L2`
 - DRD Full:
@@ -30,12 +101,7 @@ Rules:
     4. expired exception-state records blocking unrelated branches.
   - The process exists, but the repo does not yet force fail-first triage, failure-layer classification, remediation scaffolding, or two-strike escalation strongly enough to stop retry thrash.
 - Unblock trigger:
-  - Triggered on `2026-03-10` after repeated local gate failures proved the process hardening was immediately needed.
-- Resolved: `2026-03-10`
-- Resolution summary:
-  - Implemented `TSK-P1-069..072` to make fail-first triage, remediation scaffolding, failure-layer taxonomy, and two-strike escalation mechanical in the local gate path.
-  - Added verifier-backed evidence for each task and wired them into `run_invariants_fast_checks.sh`.
-  - Updated `pre_ci` to use the new debug contract, safe remote-main parity fetch, and service-evidence synchronization before KPI checks.
+  - Start after the currently rebased branch push backlog is cleared and local branch transport returns to stable behavior.
 - Required done criteria:
   - Implement executable tasks:
     - `TSK-P1-069`
