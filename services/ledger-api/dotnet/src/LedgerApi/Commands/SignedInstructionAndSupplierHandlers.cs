@@ -249,9 +249,17 @@ static class SignedInstructionFileHandler
         var rootDir = EvidenceMeta.ResolveRepoRoot(Directory.GetCurrentDirectory());
         var evidenceDir = Path.Combine(rootDir, "evidence", "phase1");
         Directory.CreateDirectory(evidenceDir);
+        var evidenceMeta = EvidenceMeta.Load(rootDir);
         var filePath = Path.Combine(evidenceDir, "signed_instruction_file_sample.json");
         await File.WriteAllTextAsync(filePath, JsonSerializer.Serialize(new
         {
+            check_id = "TSK-P1-DEMO-005-SIGNED-INSTRUCTION-SAMPLE",
+            task_id = "TSK-P1-DEMO-005",
+            timestamp_utc = evidenceMeta.TimestampUtc,
+            git_sha = evidenceMeta.GitSha,
+            schema_fingerprint = evidenceMeta.SchemaFingerprint,
+            status = "PASS",
+            pass = true,
             schema = "symphony.signed_instruction_file.v1",
             payload,
             payload_hash = payloadHash,

@@ -9,6 +9,8 @@ EVIDENCE_PATH="$OUT_DIR/tsk_p1_demo_010_reveal_rehearsal.json"
 mkdir -p "$FALLBACK_DIR"
 TS="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
 VERSION_TAG="demo-rehearsal-v1"
+GIT_SHA="$(git rev-parse HEAD)"
+SCHEMA_FP="$(sha256sum "$ROOT_DIR/schema/baseline.sql" | awk '{print $1}')"
 
 cat > "$FALLBACK_DIR/programme_overview.json" <<JSON
 {"generated_at_utc":"$TS","version":"$VERSION_TAG","section":"programme_overview"}
@@ -26,11 +28,11 @@ cat > "$FALLBACK_DIR/risk_hold_example.json" <<JSON
 {"generated_at_utc":"$TS","version":"$VERSION_TAG","section":"risk_triggered_hold_example","signal":"SIM_SWAP"}
 JSON
 
-python3 - <<'PY' "$EVIDENCE_PATH" "$TS" "$VERSION_TAG"
+python3 - <<'PY' "$EVIDENCE_PATH" "$TS" "$VERSION_TAG" "$GIT_SHA" "$SCHEMA_FP"
 import json, sys
 from pathlib import Path
 
-out, ts, version = sys.argv[1:]
+out, ts, version, git_sha, schema_fp = sys.argv[1:]
 steps = [
     "programme_overview",
     "settled_path_drilldown",
@@ -42,6 +44,8 @@ payload = {
     "check_id": "TSK-P1-DEMO-010-REVEAL-REHEARSAL",
     "task_id": "TSK-P1-DEMO-010",
     "timestamp_utc": ts,
+    "git_sha": git_sha,
+    "schema_fingerprint": schema_fp,
     "status": "PASS",
     "pass": True,
     "details": {

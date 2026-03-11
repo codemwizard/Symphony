@@ -80,6 +80,13 @@ public static class SignedInstructionEgressSelfTestRunner
 
         var tamperedEnvelope = new
         {
+            check_id = parsed.RootElement.TryGetProperty("check_id", out var checkIdNode) ? checkIdNode.GetString() : "TSK-P1-DEMO-005-SIGNED-INSTRUCTION-SAMPLE",
+            task_id = parsed.RootElement.TryGetProperty("task_id", out var taskIdNode) ? taskIdNode.GetString() : "TSK-P1-DEMO-005",
+            timestamp_utc = parsed.RootElement.TryGetProperty("timestamp_utc", out var tsNode) ? tsNode.GetString() : evidenceMeta.TimestampUtc,
+            git_sha = parsed.RootElement.TryGetProperty("git_sha", out var shaNode) ? shaNode.GetString() : evidenceMeta.GitSha,
+            schema_fingerprint = parsed.RootElement.TryGetProperty("schema_fingerprint", out var sfpNode) ? sfpNode.GetString() : evidenceMeta.SchemaFingerprint,
+            status = "PASS",
+            pass = true,
             schema = parsed.RootElement.GetProperty("schema").GetString(),
             payload = tamperedPayload,
             payload_hash = parsed.RootElement.GetProperty("payload_hash").GetString(),

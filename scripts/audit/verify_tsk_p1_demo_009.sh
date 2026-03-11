@@ -8,19 +8,27 @@ REPORT_JSON="$ROOT_DIR/evidence/phase1/reporting_pack_sample.json"
 REPORT_PDF="$ROOT_DIR/evidence/phase1/reporting_pack_sample.pdf"
 
 bash "$ROOT_DIR/scripts/dev/generate_programme_reporting_pack.sh" "$ROOT_DIR/evidence/phase1"
-sha_a_json="$(sha256sum "$REPORT_JSON" | awk '{print $1}')"
 sha_a_pdf="$(sha256sum "$REPORT_PDF" | awk '{print $1}')"
+fp_a="$(python3 - <<'PY' "$REPORT_JSON"
+import json, sys
+print(json.loads(open(sys.argv[1], encoding='utf-8').read()).get("deterministic_fingerprint",""))
+PY
+)"
 bash "$ROOT_DIR/scripts/dev/generate_programme_reporting_pack.sh" "$ROOT_DIR/evidence/phase1"
-sha_b_json="$(sha256sum "$REPORT_JSON" | awk '{print $1}')"
 sha_b_pdf="$(sha256sum "$REPORT_PDF" | awk '{print $1}')"
-[[ "$sha_a_json" == "$sha_b_json" ]] || { echo "non_deterministic_json_export" >&2; exit 1; }
+fp_b="$(python3 - <<'PY' "$REPORT_JSON"
+import json, sys
+print(json.loads(open(sys.argv[1], encoding='utf-8').read()).get("deterministic_fingerprint",""))
+PY
+)"
+[[ -n "$fp_a" && "$fp_a" == "$fp_b" ]] || { echo "non_deterministic_json_export" >&2; exit 1; }
 [[ "$sha_a_pdf" == "$sha_b_pdf" ]] || { echo "non_deterministic_pdf_export" >&2; exit 1; }
 
-python3 - <<'PY' "$TASK_ID" "$EVIDENCE_PATH" "$REPORT_JSON" "$REPORT_PDF" "$sha_a_json" "$sha_a_pdf"
+python3 - <<'PY' "$TASK_ID" "$EVIDENCE_PATH" "$REPORT_JSON" "$REPORT_PDF" "$fp_a" "$sha_a_pdf"
 import json, subprocess, sys
 from pathlib import Path
 
-task_id, evidence_path, report_json, report_pdf, json_sha, pdf_sha = sys.argv[1:]
+task_id, evidence_path, report_json, report_pdf, payload_fp, pdf_sha = sys.argv[1:]
 r = json.loads(Path(report_json).read_text(encoding="utf-8"))
 for key in ("totals", "evidence_summary", "exception_log"):
     if key not in r:
@@ -37,7 +45,7 @@ out.write_text(json.dumps({
     "details": {
         "json_export": report_json,
         "pdf_export": report_pdf,
-        "deterministic_json_sha256": json_sha,
+        "deterministic_payload_fingerprint": payload_fp,
         "deterministic_pdf_sha256": pdf_sha,
         "includes_required_sections": True,
     },

@@ -1,9 +1,9 @@
 {
   "check_id": "TSK-P1-DEMO-005-SIGNED-EGRESS",
   "task_id": "TSK-P1-DEMO-005",
-  "timestamp_utc": "2026-03-11T07:23:03Z",
-  "git_sha": "6eb482b4fd75fcdffe509738659d953404de7f0c",
-  "schema_fingerprint": "6eb482b4",
+  "timestamp_utc": "2026-03-11T07:35:08Z",
+  "git_sha": "475bae8c404898f76c8fbec767955e5110c5aaee",
+  "schema_fingerprint": "475bae8c",
   "status": "PASS",
   "pass": true,
   "details": {

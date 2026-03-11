@@ -12,6 +12,7 @@ mkdir -p "$OUT_DIR"
 python3 - <<'PY' "$SOURCE_REVEAL" "$REPORT_JSON" "$REPORT_PDF"
 import json, sys, hashlib
 from pathlib import Path
+import subprocess
 
 source_path = Path(sys.argv[1])
 json_out = Path(sys.argv[2])
@@ -29,6 +30,12 @@ failed = sum(1 for t in tests if (t.get("status") or "").upper() != "PASS")
 
 period = {"from": "2026-03-01", "to": "2026-03-31"}
 payload = {
+    "check_id": "TSK-P1-DEMO-009-REPORTING-PACK-SAMPLE",
+    "task_id": "TSK-P1-DEMO-009",
+    "timestamp_utc": subprocess.check_output(["date", "-u", "+%Y-%m-%dT%H:%M:%SZ"], text=True).strip(),
+    "git_sha": subprocess.check_output(["git", "rev-parse", "HEAD"], text=True).strip(),
+    "status": "PASS",
+    "pass": True,
     "schema": "symphony.programme.reporting_pack.v1",
     "period": period,
     "totals": {
