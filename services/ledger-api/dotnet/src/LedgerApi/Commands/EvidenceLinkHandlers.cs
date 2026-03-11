@@ -113,7 +113,7 @@ static class EvidenceLinkSubmitHandler
             return new HandlerResult(StatusCodes.Status401Unauthorized, new
             {
                 error_code = "LINK_TOKEN_MISSING",
-                errors = new[] { "Bearer token or x-evidence-link-token is required" }
+                errors = new[] { "Authorization header credential or x-evidence-link-token is required" }
             });
         }
 
