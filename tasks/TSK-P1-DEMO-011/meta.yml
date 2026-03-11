@@ -18,12 +18,12 @@ invariants:
 - INV-105
 - INV-119
 work:
-- Encode the applicable thresholds defined in Symphony_PRD_GreenTech4CE(3).docx, Section 6 ("Pilot Success Criteria"), including Section 6.3 ("Regulatory Success Criteria — The BoZ Test"), into machine-verifiable gate checks.
+- Encode the applicable thresholds defined in docs/product/greentech4ce/Symphony_PRD_GreenTech4CE(3).docx, Section 6 ("Pilot Success Criteria"), including Section 6.3 ("Regulatory Success Criteria — The BoZ Test"), into machine-verifiable gate checks.
 - Validate technical, operational, and regulatory criteria coverage.
 - Confirm reveal presents interpreted evidence state first, with drill-down access to raw artifacts second.
 - Emit single summary artifact for go/no-go decision.
 acceptance_criteria:
-- Gate includes all applicable criteria and target thresholds from Symphony_PRD_GreenTech4CE(3).docx, Section 6 ("Pilot Success Criteria").
+- Gate includes all applicable criteria and target thresholds from docs/product/greentech4ce/Symphony_PRD_GreenTech4CE(3).docx, Section 6 ("Pilot Success Criteria").
 - Gate fails if threshold evidence is missing or below target.
 - Supervisory reveal demonstrates interpreted evidence status (PRESENT/FAILED/MISSING) and not merely raw uploaded files.
 - Raw evidence artifacts remain drill-down accessible from the same flow.
@@ -39,7 +39,7 @@ failure_modes:
 - Criteria present but not bound to evidence paths.
 - Demo shows raw files only, making Symphony look like document storage rather than governed evidence infrastructure.
 must_read:
-- Symphony_PRD_GreenTech4CE(3).docx
+- docs/product/greentech4ce/Symphony_PRD_GreenTech4CE(3).docx
 implementation_plan: docs/plans/phase1/TSK-P1-DEMO-011/PLAN.md
 implementation_log: docs/plans/phase1/TSK-P1-DEMO-011/EXEC_LOG.md
 notes: Mechanical closeout layer; interpreted evidence state is mandatory.

@@ -93,10 +93,11 @@ public static class SignedInstructionEgressSelfTestRunner
             signature_alg = parsed.RootElement.GetProperty("signature_alg").GetString(),
             signature = parsed.RootElement.GetProperty("signature").GetString()
         };
-        await File.WriteAllTextAsync(generatedPath, JsonSerializer.Serialize(tamperedEnvelope, new JsonSerializerOptions { WriteIndented = true }) + Environment.NewLine, cancellationToken);
+        var tamperedPath = Path.Combine(evidenceDir, "signed_instruction_file_sample.tampered.json");
+        await File.WriteAllTextAsync(tamperedPath, JsonSerializer.Serialize(tamperedEnvelope, new JsonSerializerOptions { WriteIndented = true }) + Environment.NewLine, cancellationToken);
 
         var verifyTampered = await global::SignedInstructionFileHandler.VerifyAsync(
-            new global::SignedInstructionVerifyRequest(generatedPath),
+            new global::SignedInstructionVerifyRequest(tamperedPath),
             cancellationToken);
 
         var tests = new[]
@@ -121,6 +122,7 @@ public static class SignedInstructionEgressSelfTestRunner
                 details = new
                 {
                     instruction_file_path = generatedPath,
+                    tampered_instruction_file_path = tamperedPath,
                     tamper_error_code = "CHECKSUM_BREAK",
                     critical_fields_covered = new[] { "amount_minor", "supplier_account", "reference" },
                     tests

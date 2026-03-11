@@ -14,7 +14,7 @@ static class SupervisoryRevealReadModelHandler
         }
 
         var submissions = EvidenceLinkSubmissionLog.ReadAll()
-            .Where(x => Matches(x, "tenant_id", tenantId))
+            .Where(x => Matches(x, "tenant_id", tenantId) && Matches(x, "program_id", programId))
             .ToArray();
 
         var exceptions = DemoExceptionLog.ReadAll()

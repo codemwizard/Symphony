@@ -30,7 +30,7 @@ failure_modes:
 - Evidence accepted without submitter match.
 - Claim language exceeds network-layer identity scope.
 must_read:
-- Symphony_PRD_GreenTech4CE(3).docx
+- docs/product/greentech4ce/Symphony_PRD_GreenTech4CE(3).docx
 implementation_plan: docs/plans/phase1/TSK-P1-DEMO-004/PLAN.md
 implementation_log: docs/plans/phase1/TSK-P1-DEMO-004/EXEC_LOG.md
 notes: Implements PRD Section 4.3 claim boundary.

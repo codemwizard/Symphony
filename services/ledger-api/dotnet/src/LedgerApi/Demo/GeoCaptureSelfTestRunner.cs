@@ -22,6 +22,7 @@ public static class GeoCaptureSelfTestRunner
             new global::EvidenceLinkIssueRequest(
                 tenantId,
                 "geo-ins-001",
+                "program-a",
                 "FIELD_OFFICER",
                 "+260971000222",
                 -15.3900m,
@@ -100,4 +101,3 @@ public static class GeoCaptureSelfTestRunner
         return status == "PASS" ? 0 : 1;
     }
 }
-

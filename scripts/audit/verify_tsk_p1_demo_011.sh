@@ -44,7 +44,7 @@ payload = {
     "status": "PASS",
     "pass": True,
     "details": {
-      "source_of_truth": "Symphony_PRD_GreenTech4CE(3).docx §6 Pilot Success Criteria, incl. §6.3",
+      "source_of_truth": "docs/product/greentech4ce/Symphony_PRD_GreenTech4CE(3).docx §6 Pilot Success Criteria, incl. §6.3",
       "interpreted_evidence_primary": True,
       "raw_artifact_drilldown_secondary": True,
       "criteria_gate_enforced": True,

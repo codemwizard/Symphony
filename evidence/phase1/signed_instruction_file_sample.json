@@ -1,9 +1,9 @@
 {
   "check_id": "TSK-P1-DEMO-005-SIGNED-INSTRUCTION-SAMPLE",
   "task_id": "TSK-P1-DEMO-005",
-  "timestamp_utc": "2026-03-11T07:35:08Z",
-  "git_sha": "475bae8c404898f76c8fbec767955e5110c5aaee",
-  "schema_fingerprint": "475bae8c",
+  "timestamp_utc": "2026-03-11T08:06:44Z",
+  "git_sha": "8f4989d449d6528139e589a0de3c8445e133a177",
+  "schema_fingerprint": "8f4989d4",
   "status": "PASS",
   "pass": true,
   "schema": "symphony.signed_instruction_file.v1",
@@ -12,13 +12,13 @@
     "program_id": "program-a",
     "instruction_id": "instr-005-001",
     "supplier_id": "supplier-001",
-    "supplier_account": "MMO:\u002B260970999999",
-    "amount_minor": 250001,
+    "supplier_account": "MMO:\u002B260970000001",
+    "amount_minor": 250000,
     "currency_code": "ZMW",
-    "reference": "INV-005-TAMPER",
-    "generated_at_utc": "2026-03-11T07:35:08.5015669\u002B00:00"
+    "reference": "INV-005-001",
+    "generated_at_utc": "2026-03-11T08:06:44.0251162\u002B00:00"
   },
-  "payload_hash": "b012675bc621874b3526ed1d43f1cb518c3de307a79d2ca9ab4225973aaf84fd",
+  "payload_hash": "e6b01082344704ea50bdf749ec496d60d7dcf1b15a9f810746743a4ff946f5df",
   "signature_alg": "HMAC-SHA256",
-  "signature": "f9ce0159376e1a14b47ed884a2753e56bf4f33575bfda88d609439068631441f"
+  "signature": "0544c2b72b4b9dbc0023731438ea1a855154f93f4e7128545b497339f03b4606"
 }

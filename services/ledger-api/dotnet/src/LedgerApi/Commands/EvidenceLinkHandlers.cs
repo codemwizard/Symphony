@@ -19,6 +19,10 @@ static class EvidenceLinkIssueHandler
         {
             errors.Add("instruction_id is required");
         }
+        if (string.IsNullOrWhiteSpace(request.program_id))
+        {
+            errors.Add("program_id is required");
+        }
         if (string.IsNullOrWhiteSpace(request.submitter_class))
         {
             errors.Add("submitter_class is required");
@@ -64,6 +68,7 @@ static class EvidenceLinkIssueHandler
         var token = EvidenceLinkTokenService.CreateToken(
             request.tenant_id.Trim(),
             request.instruction_id.Trim(),
+            request.program_id.Trim(),
             request.submitter_class.Trim(),
             request.submitter_msisdn.Trim(),
             request.expected_latitude,
@@ -76,6 +81,7 @@ static class EvidenceLinkIssueHandler
         {
             tenant_id = request.tenant_id.Trim(),
             instruction_id = request.instruction_id.Trim(),
+            program_id = request.program_id.Trim(),
             submitter_class = request.submitter_class.Trim(),
             submitter_msisdn = request.submitter_msisdn.Trim(),
             dispatched_at_utc = DateTimeOffset.UtcNow.ToString("O"),
@@ -88,6 +94,7 @@ static class EvidenceLinkIssueHandler
             issued = true,
             tenant_id = request.tenant_id.Trim(),
             instruction_id = request.instruction_id.Trim(),
+            program_id = request.program_id.Trim(),
             submitter_class = request.submitter_class.Trim(),
             submitter_msisdn = request.submitter_msisdn.Trim(),
             expires_at_utc = expiresAt.ToString("O"),
@@ -201,6 +208,7 @@ static class EvidenceLinkSubmitHandler
         {
             tenant_id = validation.TenantId,
             instruction_id = validation.InstructionId,
+            program_id = validation.ProgramId,
             submitter_class = validation.SubmitterClass,
             submitter_msisdn = validation.SubmitterMsisdn,
             artifact_type = request.artifact_type.Trim(),
@@ -216,6 +224,7 @@ static class EvidenceLinkSubmitHandler
             accepted = true,
             tenant_id = validation.TenantId,
             instruction_id = validation.InstructionId,
+            program_id = validation.ProgramId,
             submitter_class = validation.SubmitterClass,
             submitter_msisdn = validation.SubmitterMsisdn
         });
@@ -252,6 +261,7 @@ static class EvidenceLinkTokenService
     public static string CreateToken(
         string tenantId,
         string instructionId,
+        string programId,
         string submitterClass,
         string submitterMsisdn,
         decimal? expectedLatitude,
@@ -264,6 +274,7 @@ static class EvidenceLinkTokenService
         {
             tenant_id = tenantId,
             instruction_id = instructionId,
+            program_id = programId,
             submitter_class = submitterClass,
             submitter_msisdn = submitterMsisdn,
             expected_latitude = expectedLatitude,
@@ -317,6 +328,7 @@ static class EvidenceLinkTokenService
             var root = parsed.RootElement;
             var tenant = root.TryGetProperty("tenant_id", out var t) ? t.GetString() : null;
             var instruction = root.TryGetProperty("instruction_id", out var i) ? i.GetString() : null;
+            var program = root.TryGetProperty("program_id", out var p) ? p.GetString() : null;
             var submitter = root.TryGetProperty("submitter_class", out var s) ? s.GetString() : null;
             var submitterMsisdn = root.TryGetProperty("submitter_msisdn", out var sm) ? sm.GetString() : null;
             var expectedLat = root.TryGetProperty("expected_latitude", out var lat) && lat.ValueKind != JsonValueKind.Null ? lat.GetDecimal() : (decimal?)null;
@@ -324,7 +336,7 @@ static class EvidenceLinkTokenService
             var maxDistance = root.TryGetProperty("max_distance_meters", out var md) && md.ValueKind != JsonValueKind.Null ? md.GetDecimal() : (decimal?)null;
             var exp = root.TryGetProperty("exp", out var e) && e.TryGetInt64(out var expSec) ? expSec : 0;
 
-            if (string.IsNullOrWhiteSpace(tenant) || string.IsNullOrWhiteSpace(instruction) || string.IsNullOrWhiteSpace(submitter) || string.IsNullOrWhiteSpace(submitterMsisdn) || exp <= 0)
+            if (string.IsNullOrWhiteSpace(tenant) || string.IsNullOrWhiteSpace(instruction) || string.IsNullOrWhiteSpace(program) || string.IsNullOrWhiteSpace(submitter) || string.IsNullOrWhiteSpace(submitterMsisdn) || exp <= 0)
             {
                 return EvidenceLinkTokenValidation.Fail("LINK_TOKEN_INVALID", "required claims missing");
             }
@@ -334,7 +346,7 @@ static class EvidenceLinkTokenService
                 return EvidenceLinkTokenValidation.Fail("LINK_TOKEN_EXPIRED", "secure link expired");
             }
 
-            return EvidenceLinkTokenValidation.Ok(tenant!, instruction!, submitter!, submitterMsisdn!, expectedLat, expectedLon, maxDistance, exp);
+            return EvidenceLinkTokenValidation.Ok(tenant!, instruction!, program!, submitter!, submitterMsisdn!, expectedLat, expectedLon, maxDistance, exp);
         }
     }
 
@@ -374,6 +386,7 @@ readonly record struct EvidenceLinkTokenValidation(
     bool Success,
     string? TenantId,
     string? InstructionId,
+    string? ProgramId,
     string? SubmitterClass,
     string? SubmitterMsisdn,
     decimal? ExpectedLatitude,
@@ -386,16 +399,17 @@ readonly record struct EvidenceLinkTokenValidation(
     public static EvidenceLinkTokenValidation Ok(
         string tenantId,
         string instructionId,
+        string programId,
         string submitterClass,
         string submitterMsisdn,
         decimal? expectedLatitude,
         decimal? expectedLongitude,
         decimal? maxDistanceMeters,
         long expiresAtUnix)
-        => new(true, tenantId, instructionId, submitterClass, submitterMsisdn, expectedLatitude, expectedLongitude, maxDistanceMeters, expiresAtUnix, null, string.Empty);
+        => new(true, tenantId, instructionId, programId, submitterClass, submitterMsisdn, expectedLatitude, expectedLongitude, maxDistanceMeters, expiresAtUnix, null, string.Empty);
 
     public static EvidenceLinkTokenValidation Fail(string errorCode, string errorMessage)
-        => new(false, null, null, null, null, null, null, null, 0, errorCode, errorMessage);
+        => new(false, null, null, null, null, null, null, null, null, 0, errorCode, errorMessage);
 }
 
 static class EvidenceLinkSmsDispatchLog

@@ -10,10 +10,10 @@ Translate demo and pilot-readiness claims into mechanical pass/fail thresholds.
 Reveal must present interpreted evidence state first and raw artifacts second.
 
 ## source_of_truth
-`Symphony_PRD_GreenTech4CE(3).docx`, Section 6 ("Pilot Success Criteria"), including Section 6.3 ("Regulatory Success Criteria — The BoZ Test").
+`docs/product/greentech4ce/Symphony_PRD_GreenTech4CE(3).docx`, Section 6 ("Pilot Success Criteria"), including Section 6.3 ("Regulatory Success Criteria — The BoZ Test").
 
 ## required_gate_assertions
-1. Applicable criteria and thresholds from `Symphony_PRD_GreenTech4CE(3).docx` Section 6 are encoded as machine checks.
+1. Applicable criteria and thresholds from `docs/product/greentech4ce/Symphony_PRD_GreenTech4CE(3).docx` Section 6 are encoded as machine checks.
 2. Missing threshold evidence fails closed.
 3. Interpreted evidence state is visible in reveal.
 4. Raw artifacts available via drill-down.

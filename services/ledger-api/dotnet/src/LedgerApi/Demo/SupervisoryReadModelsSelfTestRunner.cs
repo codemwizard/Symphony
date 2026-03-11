@@ -65,6 +65,7 @@ public static class SupervisoryReadModelsSelfTestRunner
             new global::EvidenceLinkIssueRequest(
                 tenantId,
                 "instr-007-allow",
+                programId,
                 "FIELD_OFFICER",
                 "+260971700700",
                 null,

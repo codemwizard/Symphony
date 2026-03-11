@@ -51,6 +51,7 @@ record RegulatoryIncidentCreateRequest(
 record EvidenceLinkIssueRequest(
     string tenant_id,
     string instruction_id,
+    string program_id,
     string submitter_class,
     string submitter_msisdn,
     decimal? expected_latitude,

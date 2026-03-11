@@ -35,7 +35,7 @@ failure_modes:
 - Tamper event not emitted on checksum break.
 - Empty supplier fixture set produces misleading governance pass narrative.
 must_read:
-- Symphony_PRD_GreenTech4CE(3).docx
+- docs/product/greentech4ce/Symphony_PRD_GreenTech4CE(3).docx
 implementation_plan: docs/plans/phase1/TSK-P1-DEMO-005/PLAN.md
 implementation_log: docs/plans/phase1/TSK-P1-DEMO-005/EXEC_LOG.md
 notes: Implements PRD UC-01-E default Phase-1 egress bridge.

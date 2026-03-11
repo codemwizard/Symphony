@@ -24,6 +24,7 @@ public static class EvidenceLinkSelfTestRunner
             new global::EvidenceLinkIssueRequest(
                 tenantId,
                 "demo-ins-001",
+                "program-a",
                 "VENDOR",
                 "+260971000111",
                 -15.39m,

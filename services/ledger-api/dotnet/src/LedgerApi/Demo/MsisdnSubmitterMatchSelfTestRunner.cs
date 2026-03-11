@@ -22,6 +22,7 @@ public static class MsisdnSubmitterMatchSelfTestRunner
             new global::EvidenceLinkIssueRequest(
                 tenantId,
                 "msisdn-ins-001",
+                "program-a",
                 "VENDOR",
                 "+260971000333",
                 null,
@@ -98,4 +99,3 @@ public static class MsisdnSubmitterMatchSelfTestRunner
         return status == "PASS" ? 0 : 1;
     }
 }
-

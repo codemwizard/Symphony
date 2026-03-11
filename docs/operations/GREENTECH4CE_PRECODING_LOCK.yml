@@ -1,5 +1,5 @@
 schema_version: 1
-document: Symphony_PRD_GreenTech4CE(3).docx
+document: docs/product/greentech4ce/Symphony_PRD_GreenTech4CE(3).docx
 section: "Section 4 checklist + Section 6 Pilot Success Criteria"
 status: APPROVED
 approved_at_utc: "2026-03-11T00:00:00Z"
@@ -17,7 +17,7 @@ confirmations:
   section4_checklist_signed_off: true
 
 references:
-  startup_review: "StartUP.md"
-  signoff_review: "SymphonySignOff.md"
-  prd_source: "Symphony_PRD_GreenTech4CE(3).docx"
+  startup_review: "docs/product/greentech4ce/StartUP.md"
+  signoff_review: "docs/product/greentech4ce/SymphonySignOff.md"
+  prd_source: "docs/product/greentech4ce/Symphony_PRD_GreenTech4CE(3).docx"
 

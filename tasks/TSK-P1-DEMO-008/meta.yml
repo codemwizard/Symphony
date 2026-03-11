@@ -33,7 +33,7 @@ failure_modes:
 - UI requires technical decoding by observer.
 - Unsupported live-rail claims appear in surface copy.
 must_read:
-- Symphony_PRD_GreenTech4CE(3).docx
+- docs/product/greentech4ce/Symphony_PRD_GreenTech4CE(3).docx
 implementation_plan: docs/plans/phase1/TSK-P1-DEMO-008/PLAN.md
 implementation_log: docs/plans/phase1/TSK-P1-DEMO-008/EXEC_LOG.md
 notes: Critical path deliverable for Day 61-90 reveal.
