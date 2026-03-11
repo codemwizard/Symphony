@@ -1,0 +1,42 @@
+schema_version: 1
+phase: '1'
+task_id: TSK-P1-DEMO-015
+title: Pipeline split (core pre_ci vs demo pre_ci)
+owner_role: SUPERVISOR
+status: completed
+depends_on:
+- TSK-P1-DEMO-014
+touches:
+- scripts/dev/pre_ci.sh
+- scripts/dev/pre_ci_demo.sh
+- scripts/audit/verify_tsk_p1_demo_015.sh
+- evidence/phase1/tsk_p1_demo_015_pipeline_split.json
+- docs/plans/phase1/TSK-P1-DEMO-015/PLAN.md
+- docs/plans/phase1/TSK-P1-DEMO-015/EXEC_LOG.md
+invariants:
+- INV-105
+work:
+- Split core and demo verification paths into explicit pipelines.
+- Keep core pre_ci focused on production path checks.
+- Move demo-heavy checks to dedicated demo pipeline entrypoint.
+acceptance_criteria:
+- Core pre_ci passes without requiring demo runner module execution.
+- Demo pre_ci validates demo/reveal artifacts.
+- Non-expansion: no business logic changes, no schema changes, no new product features.
+- Timebox: task execution within 2-3 engineering days; overrun requires explicit re-approval.
+verification:
+- bash scripts/audit/verify_tsk_p1_demo_015.sh
+- python3 scripts/audit/validate_evidence.py --task TSK-P1-DEMO-015 --evidence evidence/phase1/tsk_p1_demo_015_pipeline_split.json
+evidence:
+- evidence/phase1/tsk_p1_demo_015_pipeline_split.json
+failure_modes:
+- Core pipeline still executes demo-heavy checks by default.
+- Task scope expanded beyond demo/core separation into feature work or schema changes.
+must_read:
+- docs/operations/AI_AGENT_OPERATION_MANUAL.md
+implementation_plan: docs/plans/phase1/TSK-P1-DEMO-015/PLAN.md
+implementation_log: docs/plans/phase1/TSK-P1-DEMO-015/EXEC_LOG.md
+notes: Required decoupling lane task with highest immediate CI signal benefit.
+client: codex_cli
+assigned_agent: supervisor
+model: gpt-5-codex

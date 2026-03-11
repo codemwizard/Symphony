@@ -1,0 +1,21 @@
+{
+  "check_id": "TSK-P1-DEMO-010-REVEAL-REHEARSAL",
+  "task_id": "TSK-P1-DEMO-010",
+  "timestamp_utc": "2026-03-11T07:23:24Z",
+  "status": "PASS",
+  "pass": true,
+  "details": {
+    "scripted_duration_seconds": 540,
+    "scripted_duration_leq_10_minutes": true,
+    "steps": [
+      "programme_overview",
+      "settled_path_drilldown",
+      "hold_path_drilldown",
+      "export_step",
+      "risk_triggered_hold_example_sim_swap"
+    ],
+    "risk_hold_positioning": "optional risk-triggered hold example; not fraud-platform identity",
+    "executed_via_demo_runner": true,
+    "fallback_pack_version": "demo-rehearsal-v1"
+  }
+}

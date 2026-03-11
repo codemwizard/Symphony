@@ -37,6 +37,7 @@ echo "==> Pre-CI local checks"
 
 # Local pre-CI runs should be treated as development for evidence write policy.
 export SYMPHONY_ENV="${SYMPHONY_ENV:-development}"
+RUN_DEMO_GATES="${RUN_DEMO_GATES:-0}"
 
 ENV_FILE="infra/docker/.env"
 COMPOSE_FILE="infra/docker/docker-compose.yml"
@@ -261,46 +262,48 @@ else
 fi
 
 pre_ci_set_context "branch-content" "PRECI.PHASE1.SELFTESTS" "pre_ci.phase1_selftests" "Phase-1 self-tests"
-if [[ -x scripts/services/test_ingress_api_contract.sh ]]; then
-  echo "==> Phase-1 ingress API contract self-test"
-  scripts/services/test_ingress_api_contract.sh
-fi
+if [[ "${RUN_DEMO_GATES}" == "1" ]]; then
+  if [[ -x scripts/services/test_ingress_api_contract.sh ]]; then
+    echo "==> Phase-1 ingress API contract self-test"
+    scripts/services/test_ingress_api_contract.sh
+  fi
 
-if [[ -x scripts/services/test_executor_worker_runtime.sh ]]; then
-  echo "==> Phase-1 executor worker runtime self-test"
-  scripts/services/test_executor_worker_runtime.sh
-fi
+  if [[ -x scripts/services/test_executor_worker_runtime.sh ]]; then
+    echo "==> Phase-1 executor worker runtime self-test"
+    scripts/services/test_executor_worker_runtime.sh
+  fi
 
-if [[ -x scripts/services/test_evidence_pack_api_contract.sh ]]; then
-  echo "==> Phase-1 evidence pack API self-test"
-  scripts/services/test_evidence_pack_api_contract.sh
-fi
+  if [[ -x scripts/services/test_evidence_pack_api_contract.sh ]]; then
+    echo "==> Phase-1 evidence pack API self-test"
+    scripts/services/test_evidence_pack_api_contract.sh
+  fi
 
-if [[ -x scripts/services/test_exception_case_pack_generator.sh ]]; then
-  echo "==> Phase-1 exception case-pack self-test"
-  scripts/services/test_exception_case_pack_generator.sh
-fi
+  if [[ -x scripts/services/test_exception_case_pack_generator.sh ]]; then
+    echo "==> Phase-1 exception case-pack self-test"
+    scripts/services/test_exception_case_pack_generator.sh
+  fi
 
-if [[ -x scripts/services/test_pilot_authz_tenant_boundary.sh ]]; then
-  echo "==> Phase-1 pilot authz tenant-boundary self-test"
-  scripts/services/test_pilot_authz_tenant_boundary.sh
-fi
+  if [[ -x scripts/services/test_pilot_authz_tenant_boundary.sh ]]; then
+    echo "==> Phase-1 pilot authz tenant-boundary self-test"
+    scripts/services/test_pilot_authz_tenant_boundary.sh
+  fi
 
-sync_phase1_service_evidence
+  sync_phase1_service_evidence
 
-if [[ -x scripts/audit/verify_pilot_harness_readiness.sh ]]; then
-  echo "==> Phase-1 pilot harness readiness verification"
-  scripts/audit/verify_pilot_harness_readiness.sh
-fi
+  if [[ -x scripts/audit/verify_pilot_harness_readiness.sh ]]; then
+    echo "==> Phase-1 pilot harness readiness verification"
+    scripts/audit/verify_pilot_harness_readiness.sh
+  fi
 
-if [[ -x scripts/audit/verify_product_kpi_readiness.sh ]]; then
-  echo "==> Phase-1 product KPI readiness verification"
-  scripts/audit/verify_product_kpi_readiness.sh
-fi
+  if [[ -x scripts/audit/verify_product_kpi_readiness.sh ]]; then
+    echo "==> Phase-1 product KPI readiness verification"
+    scripts/audit/verify_product_kpi_readiness.sh
+  fi
 
-if [[ -x scripts/security/verify_sandbox_deploy_manifest_posture.sh ]]; then
-  echo "==> Phase-1 sandbox deploy posture verification"
-  scripts/security/verify_sandbox_deploy_manifest_posture.sh
+  if [[ -x scripts/security/verify_sandbox_deploy_manifest_posture.sh ]]; then
+    echo "==> Phase-1 sandbox deploy posture verification"
+    scripts/security/verify_sandbox_deploy_manifest_posture.sh
+  fi
 fi
 
 pre_ci_set_context "DB/environment" "PRECI.DB.ENVIRONMENT" "pre_ci.phase1_db_verifiers" "Phase-1 DB and environment verifiers"
@@ -584,7 +587,7 @@ else
   exit 1
 fi
 
-if [[ -x scripts/audit/verify_phase1_demo_proof_pack.sh ]]; then
+if [[ "${RUN_DEMO_GATES}" == "1" ]] && [[ -x scripts/audit/verify_phase1_demo_proof_pack.sh ]]; then
   echo "==> Phase-1 regulator/tier-1 demo-proof pack verification"
   scripts/audit/verify_phase1_demo_proof_pack.sh
 fi

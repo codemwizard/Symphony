@@ -1,0 +1,32 @@
+{
+  "check_id": "TSK-P1-DEMO-005-SIGNED-EGRESS",
+  "task_id": "TSK-P1-DEMO-005",
+  "timestamp_utc": "2026-03-11T07:23:03Z",
+  "git_sha": "6eb482b4fd75fcdffe509738659d953404de7f0c",
+  "schema_fingerprint": "6eb482b4",
+  "status": "PASS",
+  "pass": true,
+  "details": {
+    "instruction_file_path": "/home/mwiza/workspace/Symphony/evidence/phase1/signed_instruction_file_sample.json",
+    "tamper_error_code": "CHECKSUM_BREAK",
+    "critical_fields_covered": [
+      "amount_minor",
+      "supplier_account",
+      "reference"
+    ],
+    "tests": [
+      {
+        "name": "generate_signed_instruction_file",
+        "status": "PASS"
+      },
+      {
+        "name": "verify_untouched_file",
+        "status": "PASS"
+      },
+      {
+        "name": "verify_tampered_file_fails",
+        "status": "PASS"
+      }
+    ]
+  }
+}

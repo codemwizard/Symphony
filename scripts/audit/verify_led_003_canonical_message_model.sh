@@ -3,7 +3,7 @@ set -euo pipefail
 
 TASK_ID="TSK-P1-LED-003"
 EVIDENCE_PATH="evidence/phase1/led_003_canonical_message_model.json"
-PROJECT="services/ledger-api/dotnet/src/LedgerApi/LedgerApi.csproj"
+PROJECT="services/ledger-api/dotnet/src/LedgerApi.DemoHost/LedgerApi.DemoHost.csproj"
 SCHEMA_PATH="schema/messages/canonical_instruction_v1.json"
 
 while [[ $# -gt 0 ]]; do

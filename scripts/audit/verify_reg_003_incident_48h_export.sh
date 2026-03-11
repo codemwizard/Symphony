@@ -3,7 +3,7 @@ set -euo pipefail
 
 TASK_ID="TSK-P1-REG-003"
 EVIDENCE_PATH="evidence/phase1/reg_003_incident_48h_export.json"
-PROJECT="services/ledger-api/dotnet/src/LedgerApi/LedgerApi.csproj"
+PROJECT="services/ledger-api/dotnet/src/LedgerApi.DemoHost/LedgerApi.DemoHost.csproj"
 
 while [[ $# -gt 0 ]]; do
   case "$1" in

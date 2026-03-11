@@ -1,0 +1,39 @@
+schema_version: 1
+phase: '1'
+task_id: TSK-P1-DEMO-002
+title: Evidence edge SMS secure-link issuance
+owner_role: SUPERVISOR
+status: completed
+depends_on:
+- TSK-P1-DEMO-001
+touches:
+- services/ledger-api/**
+- scripts/audit/verify_tsk_p1_demo_002.sh
+- evidence/phase1/tsk_p1_demo_002_sms_secure_link.json
+- docs/plans/phase1/TSK-P1-DEMO-002/PLAN.md
+- docs/plans/phase1/TSK-P1-DEMO-002/EXEC_LOG.md
+invariants:
+- INV-119
+- INV-133
+work:
+- Implement time-limited secure upload-link issuance and SMS dispatch integration seam.
+- Enforce tenant-scoped token validation and expiry.
+acceptance_criteria:
+- Expired/invalid/tenant-mismatched links are rejected fail-closed.
+- Evidence captures valid and invalid token path outcomes.
+verification:
+- bash scripts/audit/verify_tsk_p1_demo_002.sh
+- python3 scripts/audit/validate_evidence.py --task TSK-P1-DEMO-002 --evidence evidence/phase1/tsk_p1_demo_002_sms_secure_link.json
+evidence:
+- evidence/phase1/tsk_p1_demo_002_sms_secure_link.json
+failure_modes:
+- Reusable or unscoped links allow cross-tenant submission.
+- Expired link acceptance.
+must_read:
+- Symphony_PRD_GreenTech4CE(3).docx
+implementation_plan: docs/plans/phase1/TSK-P1-DEMO-002/PLAN.md
+implementation_log: docs/plans/phase1/TSK-P1-DEMO-002/EXEC_LOG.md
+notes: PRD Section 4 edge integration delta.
+client: codex_cli
+assigned_agent: supervisor
+model: gpt-5-codex

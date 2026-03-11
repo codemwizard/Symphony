@@ -1,0 +1,39 @@
+schema_version: 1
+phase: '1'
+task_id: TSK-P1-DEMO-004
+title: MSISDN submitter-match confirmation for evidence submissions
+owner_role: SUPERVISOR
+status: completed
+depends_on:
+- TSK-P1-DEMO-003
+touches:
+- services/ledger-api/**
+- scripts/audit/verify_tsk_p1_demo_004.sh
+- evidence/phase1/tsk_p1_demo_004_msisdn_submitter_match.json
+- docs/plans/phase1/TSK-P1-DEMO-004/PLAN.md
+- docs/plans/phase1/TSK-P1-DEMO-004/EXEC_LOG.md
+invariants:
+- INV-129
+- INV-133
+work:
+- Enforce submitter MSISDN match against borrower/vendor record on evidence submission.
+- Emit scoped identity confirmation result without overclaiming legal-signature equivalence.
+acceptance_criteria:
+- Unbound MSISDN submissions are rejected.
+- Bound MSISDN submissions are accepted and linked in evidence.
+verification:
+- bash scripts/audit/verify_tsk_p1_demo_004.sh
+- python3 scripts/audit/validate_evidence.py --task TSK-P1-DEMO-004 --evidence evidence/phase1/tsk_p1_demo_004_msisdn_submitter_match.json
+evidence:
+- evidence/phase1/tsk_p1_demo_004_msisdn_submitter_match.json
+failure_modes:
+- Evidence accepted without submitter match.
+- Claim language exceeds network-layer identity scope.
+must_read:
+- Symphony_PRD_GreenTech4CE(3).docx
+implementation_plan: docs/plans/phase1/TSK-P1-DEMO-004/PLAN.md
+implementation_log: docs/plans/phase1/TSK-P1-DEMO-004/EXEC_LOG.md
+notes: Implements PRD Section 4.3 claim boundary.
+client: codex_cli
+assigned_agent: supervisor
+model: gpt-5-codex

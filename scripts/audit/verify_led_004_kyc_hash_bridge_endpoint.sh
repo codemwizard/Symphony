@@ -3,7 +3,7 @@ set -euo pipefail
 
 TASK_ID="TSK-P1-LED-004"
 EVIDENCE_PATH="evidence/phase1/led_004_kyc_hash_bridge_endpoint.json"
-PROJECT="services/ledger-api/dotnet/src/LedgerApi/LedgerApi.csproj"
+PROJECT="services/ledger-api/dotnet/src/LedgerApi.DemoHost/LedgerApi.DemoHost.csproj"
 
 while [[ $# -gt 0 ]]; do
   case "$1" in

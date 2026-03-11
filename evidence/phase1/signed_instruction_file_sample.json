@@ -1,0 +1,17 @@
+{
+  "schema": "symphony.signed_instruction_file.v1",
+  "payload": {
+    "tenant_id": "11111111-1111-1111-1111-111111111111",
+    "program_id": "program-a",
+    "instruction_id": "instr-007-allow",
+    "supplier_id": "supplier-007",
+    "supplier_account": "MMO:\u002B260970000007",
+    "amount_minor": 9900,
+    "currency_code": "ZMW",
+    "reference": "INV-007-A",
+    "generated_at_utc": "2026-03-11T07:23:23.3351183\u002B00:00"
+  },
+  "payload_hash": "a34e1d5daba8a3676d9619d0f8487889120ab30a45869eb4c8662379b40f8d69",
+  "signature_alg": "HMAC-SHA256",
+  "signature": "396106f2c74fea7280a3b26c7433624dfd172d9675ef6419bf25984169defa6a"
+}

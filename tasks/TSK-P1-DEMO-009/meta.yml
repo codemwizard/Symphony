@@ -1,0 +1,44 @@
+schema_version: 1
+phase: '1'
+task_id: TSK-P1-DEMO-009
+title: Programme reporting pack export (PDF + JSON)
+owner_role: SUPERVISOR
+status: completed
+depends_on:
+- TSK-P1-DEMO-008
+- TSK-P1-DEMO-013
+- TSK-P1-DEMO-014
+- TSK-P1-DEMO-015
+touches:
+- services/ledger-api/**
+- scripts/audit/verify_tsk_p1_demo_009.sh
+- evidence/phase1/tsk_p1_demo_009_reporting_pack_export.json
+- evidence/phase1/reporting_pack_sample.json
+- docs/plans/phase1/TSK-P1-DEMO-009/PLAN.md
+- docs/plans/phase1/TSK-P1-DEMO-009/EXEC_LOG.md
+invariants:
+- INV-111
+- INV-119
+work:
+- Define period-bound reporting schema and deterministic export generation.
+- Provide one-action JSON/PDF report export for donor/operator use.
+acceptance_criteria:
+- Export includes totals, holds, per-instruction evidence summary, and exception log.
+- Export output is deterministic for identical period filters.
+verification:
+- bash scripts/audit/verify_tsk_p1_demo_009.sh
+- python3 scripts/audit/validate_evidence.py --task TSK-P1-DEMO-009 --evidence evidence/phase1/tsk_p1_demo_009_reporting_pack_export.json
+evidence:
+- evidence/phase1/tsk_p1_demo_009_reporting_pack_export.json
+- evidence/phase1/reporting_pack_sample.json
+failure_modes:
+- Export omits hold/exception traces.
+- Non-deterministic totals for same input window.
+must_read:
+- Symphony_PRD_GreenTech4CE(3).docx
+implementation_plan: docs/plans/phase1/TSK-P1-DEMO-009/PLAN.md
+implementation_log: docs/plans/phase1/TSK-P1-DEMO-009/EXEC_LOG.md
+notes: Implements US-PO-02 and reveal export step.
+client: codex_cli
+assigned_agent: supervisor
+model: gpt-5-codex

@@ -1,0 +1,14 @@
+{
+  "check_id": "TSK-P1-DEMO-013-DEMO-HOST-EXTRACTION",
+  "task_id": "TSK-P1-DEMO-013",
+  "timestamp_utc": "2026-03-11T07:23:29Z",
+  "git_sha": "6eb482b4fd75fcdffe509738659d953404de7f0c",
+  "schema_fingerprint": "33e36565282f1592203a3db8c735f6d6a51bdcfa289c00e1c2040e30adc98ddb",
+  "status": "PASS",
+  "pass": true,
+  "details": {
+    "program_bootstrap_selftest_dispatch_removed": true,
+    "demo_host_project_present": true,
+    "demo_runner_smoke_passed": true
+  }
+}

@@ -1,0 +1,38 @@
+schema_version: 1
+phase: '1'
+task_id: TSK-P1-DEMO-003
+title: Browser Geolocation API capture for evidence submission
+owner_role: SUPERVISOR
+status: completed
+depends_on:
+- TSK-P1-DEMO-002
+touches:
+- services/ledger-api/**
+- scripts/audit/verify_tsk_p1_demo_003.sh
+- evidence/phase1/tsk_p1_demo_003_browser_geo_capture.json
+- docs/plans/phase1/TSK-P1-DEMO-003/PLAN.md
+- docs/plans/phase1/TSK-P1-DEMO-003/EXEC_LOG.md
+invariants:
+- INV-119
+work:
+- Implement explicit Geolocation API coordinate capture at submission time (not EXIF).
+- Verify coordinates against registered asset location when required by policy.
+acceptance_criteria:
+- Missing coordinates fail closed when location proof is required.
+- Evidence confirms non-EXIF coordinate capture path.
+verification:
+- bash scripts/audit/verify_tsk_p1_demo_003.sh
+- python3 scripts/audit/validate_evidence.py --task TSK-P1-DEMO-003 --evidence evidence/phase1/tsk_p1_demo_003_browser_geo_capture.json
+evidence:
+- evidence/phase1/tsk_p1_demo_003_browser_geo_capture.json
+failure_modes:
+- EXIF-based assumptions cause silent GPS loss.
+- Location-required proofs accepted without coordinates.
+must_read:
+- Symphony_PRD_GreenTech4CE(3).docx
+implementation_plan: docs/plans/phase1/TSK-P1-DEMO-003/PLAN.md
+implementation_log: docs/plans/phase1/TSK-P1-DEMO-003/EXEC_LOG.md
+notes: Implements PRD Section 4.2 correct technical approach.
+client: codex_cli
+assigned_agent: supervisor
+model: gpt-5-codex

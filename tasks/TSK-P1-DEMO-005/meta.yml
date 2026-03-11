@@ -1,0 +1,44 @@
+schema_version: 1
+phase: '1'
+task_id: TSK-P1-DEMO-005
+title: UC-01-E signed instruction file egress with checksum break detection
+owner_role: SUPERVISOR
+status: completed
+depends_on:
+- TSK-P1-DEMO-004
+touches:
+- services/ledger-api/**
+- scripts/audit/verify_tsk_p1_demo_005.sh
+- evidence/phase1/tsk_p1_demo_005_signed_instruction_file_egress.json
+- evidence/phase1/signed_instruction_file_sample.json
+- docs/plans/phase1/TSK-P1-DEMO-005/PLAN.md
+- docs/plans/phase1/TSK-P1-DEMO-005/EXEC_LOG.md
+invariants:
+- INV-114
+- INV-119
+work:
+- Generate signed payment instruction file (CSV/JSON) with canonicalized payload hashing.
+- Add verification path that fails on any modified critical field.
+- Emit checksum-break exception evidence for tampered files.
+acceptance_criteria:
+- Verification passes on untouched file and fails on field modifications.
+- Critical fields are covered by signature (amount, supplier account, reference).
+- If supplier-governance assertions are executed in this task, a valid supplier fixture must be pre-seeded; otherwise scope remains signature/tamper mechanics only.
+verification:
+- bash scripts/audit/verify_tsk_p1_demo_005.sh
+- python3 scripts/audit/validate_evidence.py --task TSK-P1-DEMO-005 --evidence evidence/phase1/tsk_p1_demo_005_signed_instruction_file_egress.json
+evidence:
+- evidence/phase1/tsk_p1_demo_005_signed_instruction_file_egress.json
+- evidence/phase1/signed_instruction_file_sample.json
+failure_modes:
+- Signature excludes critical fields.
+- Tamper event not emitted on checksum break.
+- Empty supplier fixture set produces misleading governance pass narrative.
+must_read:
+- Symphony_PRD_GreenTech4CE(3).docx
+implementation_plan: docs/plans/phase1/TSK-P1-DEMO-005/PLAN.md
+implementation_log: docs/plans/phase1/TSK-P1-DEMO-005/EXEC_LOG.md
+notes: Implements PRD UC-01-E default Phase-1 egress bridge.
+client: codex_cli
+assigned_agent: supervisor
+model: gpt-5-codex

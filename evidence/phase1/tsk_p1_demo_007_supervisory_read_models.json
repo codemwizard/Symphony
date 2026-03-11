@@ -1,0 +1,23 @@
+{
+  "check_id": "TSK-P1-DEMO-007-SUPERVISORY-READ-MODELS",
+  "task_id": "TSK-P1-DEMO-007",
+  "timestamp_utc": "2026-03-11T07:23:23Z",
+  "git_sha": "6eb482b4fd75fcdffe509738659d953404de7f0c",
+  "schema_fingerprint": "6eb482b4",
+  "status": "PASS",
+  "pass": true,
+  "details": {
+    "reveal_api": "/v1/supervisory/programmes/{program_id}/reveal",
+    "read_only": true,
+    "tests": [
+      {
+        "name": "reveal_read_model_components_present",
+        "status": "PASS"
+      },
+      {
+        "name": "cross_tenant_denied_fail_closed",
+        "status": "PASS"
+      }
+    ]
+  }
+}

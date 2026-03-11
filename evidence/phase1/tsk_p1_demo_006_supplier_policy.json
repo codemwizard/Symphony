@@ -1,0 +1,34 @@
+{
+  "check_id": "TSK-P1-DEMO-006-SUPPLIER-POLICY",
+  "task_id": "TSK-P1-DEMO-006",
+  "timestamp_utc": "2026-03-11T07:23:13Z",
+  "git_sha": "6eb482b4fd75fcdffe509738659d953404de7f0c",
+  "schema_fingerprint": "6eb482b4",
+  "status": "PASS",
+  "pass": true,
+  "details": {
+    "enforced_error_code": "SUPPLIER_NOT_ALLOWLISTED",
+    "tests": [
+      {
+        "name": "program_a_supplier_allowed",
+        "status": "PASS"
+      },
+      {
+        "name": "program_b_same_supplier_denied",
+        "status": "PASS"
+      },
+      {
+        "name": "unknown_supplier_denied",
+        "status": "PASS"
+      },
+      {
+        "name": "policy_surface_program_a_allow",
+        "status": "PASS"
+      },
+      {
+        "name": "policy_surface_program_b_deny",
+        "status": "PASS"
+      }
+    ]
+  }
+}

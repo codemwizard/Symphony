@@ -1,0 +1,26 @@
+{
+  "check_id": "TSK-P1-DEMO-004-MSISDN-MATCH",
+  "task_id": "TSK-P1-DEMO-004",
+  "timestamp_utc": "2026-03-11T07:22:53Z",
+  "git_sha": "6eb482b4fd75fcdffe509738659d953404de7f0c",
+  "schema_fingerprint": "6eb482b4",
+  "status": "PASS",
+  "pass": true,
+  "details": {
+    "identity_claim_boundary": "network_layer_submitter_match_only",
+    "tests": [
+      {
+        "name": "matching_msisdn_accepted",
+        "status": "PASS"
+      },
+      {
+        "name": "mismatched_msisdn_rejected",
+        "status": "PASS"
+      },
+      {
+        "name": "missing_msisdn_rejected",
+        "status": "PASS"
+      }
+    ]
+  }
+}
