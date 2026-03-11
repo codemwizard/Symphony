@@ -1,0 +1,44 @@
+schema_version: 1
+phase: '1'
+task_id: TSK-P1-DEMO-006
+title: Supplier registry and minimal programme-scoped supplier allowlist enforcement
+owner_role: SUPERVISOR
+status: completed
+depends_on:
+- TSK-P1-DEMO-001
+- TSK-P1-DEMO-005
+touches:
+- services/ledger-api/**
+- scripts/audit/verify_tsk_p1_demo_006.sh
+- evidence/phase1/tsk_p1_demo_006_supplier_policy.json
+- docs/plans/phase1/TSK-P1-DEMO-006/PLAN.md
+- docs/plans/phase1/TSK-P1-DEMO-006/EXEC_LOG.md
+invariants:
+- INV-111
+- INV-133
+work:
+- Implement minimal supplier_registry support for UC-01 with verified payout targets and canonical registered location fields.
+- Enforce programme-scoped supplier allowlist checks at governed release time.
+- Add minimal programme-facing confirmation surface sufficient to prove supplier policy is scoped by programme and not globally hardcoded.
+acceptance_criteria:
+- A supplier approved for Programme A can be used successfully within Programme A.
+- The same supplier can be denied for Programme B when not present in Programme B's allowlist.
+- Unknown or non-allowlisted suppliers emit SUPPLIER_NOT_ALLOWLISTED and block release.
+- Demo surface shows that supplier approval is programme-scoped without exposing full multi-tenant internal complexity.
+verification:
+- bash scripts/audit/verify_tsk_p1_demo_006.sh
+- python3 scripts/audit/validate_evidence.py --task TSK-P1-DEMO-006 --evidence evidence/phase1/tsk_p1_demo_006_supplier_policy.json
+evidence:
+- evidence/phase1/tsk_p1_demo_006_supplier_policy.json
+failure_modes:
+- Supplier policy enforced globally rather than per programme.
+- No visible proof that programme-scoped governance exists.
+- Cross-tenant supplier lookup leakage.
+must_read:
+- docs/product/greentech4ce/Symphony_PRD_GreenTech4CE(3).docx
+implementation_plan: docs/plans/phase1/TSK-P1-DEMO-006/PLAN.md
+implementation_log: docs/plans/phase1/TSK-P1-DEMO-006/EXEC_LOG.md
+notes: Implements US-MS-01 delta while providing visible proof of programme-bounded governance.
+client: codex_cli
+assigned_agent: supervisor
+model: gpt-5-codex

@@ -1,0 +1,48 @@
+schema_version: 1
+phase: '1'
+task_id: TSK-P1-DEMO-011
+title: Pilot success criteria verifier gate (technical/operational/regulatory)
+owner_role: SUPERVISOR
+status: completed
+depends_on:
+- TSK-P1-DEMO-010
+- TSK-P1-DEMO-013
+- TSK-P1-DEMO-014
+- TSK-P1-DEMO-015
+touches:
+- scripts/audit/verify_tsk_p1_demo_011.sh
+- evidence/phase1/tsk_p1_demo_011_pilot_success_criteria_gate.json
+- docs/plans/phase1/TSK-P1-DEMO-011/PLAN.md
+- docs/plans/phase1/TSK-P1-DEMO-011/EXEC_LOG.md
+invariants:
+- INV-105
+- INV-119
+work:
+- Encode the applicable thresholds defined in docs/product/greentech4ce/Symphony_PRD_GreenTech4CE(3).docx, Section 6 ("Pilot Success Criteria"), including Section 6.3 ("Regulatory Success Criteria — The BoZ Test"), into machine-verifiable gate checks.
+- Validate technical, operational, and regulatory criteria coverage.
+- Confirm reveal presents interpreted evidence state first, with drill-down access to raw artifacts second.
+- Emit single summary artifact for go/no-go decision.
+acceptance_criteria:
+- Gate includes all applicable criteria and target thresholds from docs/product/greentech4ce/Symphony_PRD_GreenTech4CE(3).docx, Section 6 ("Pilot Success Criteria").
+- Gate fails if threshold evidence is missing or below target.
+- Supervisory reveal demonstrates interpreted evidence status (PRESENT/FAILED/MISSING) and not merely raw uploaded files.
+- Raw evidence artifacts remain drill-down accessible from the same flow.
+- Evidence output is machine-readable and task-bound.
+- Success gate fails if production profile exposes demo-only routes/features.
+verification:
+- bash scripts/audit/verify_tsk_p1_demo_011.sh
+- python3 scripts/audit/validate_evidence.py --task TSK-P1-DEMO-011 --evidence evidence/phase1/tsk_p1_demo_011_pilot_success_criteria_gate.json
+evidence:
+- evidence/phase1/tsk_p1_demo_011_pilot_success_criteria_gate.json
+failure_modes:
+- Manual subjective success claims with no threshold gate.
+- Criteria present but not bound to evidence paths.
+- Demo shows raw files only, making Symphony look like document storage rather than governed evidence infrastructure.
+must_read:
+- docs/product/greentech4ce/Symphony_PRD_GreenTech4CE(3).docx
+implementation_plan: docs/plans/phase1/TSK-P1-DEMO-011/PLAN.md
+implementation_log: docs/plans/phase1/TSK-P1-DEMO-011/EXEC_LOG.md
+notes: Mechanical closeout layer; interpreted evidence state is mandatory.
+client: codex_cli
+assigned_agent: supervisor
+model: gpt-5-codex

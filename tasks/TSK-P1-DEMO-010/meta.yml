@@ -1,0 +1,49 @@
+schema_version: 1
+phase: '1'
+task_id: TSK-P1-DEMO-010
+title: Day 61-90 Supervisory Reveal rehearsal and fallback artifacts
+owner_role: SUPERVISOR
+status: completed
+depends_on:
+- TSK-P1-DEMO-009
+- TSK-P1-DEMO-013
+- TSK-P1-DEMO-014
+- TSK-P1-DEMO-015
+touches:
+- scripts/dev/**
+- scripts/audit/verify_tsk_p1_demo_010.sh
+- evidence/phase1/tsk_p1_demo_010_reveal_rehearsal.json
+- evidence/phase1/demo_reveal_fallback_pack/**
+- docs/plans/phase1/TSK-P1-DEMO-010/PLAN.md
+- docs/plans/phase1/TSK-P1-DEMO-010/EXEC_LOG.md
+invariants:
+- INV-105
+work:
+- Encode PRD Section 7.2 into a deterministic 10-minute scripted reveal flow.
+- Validate programme overview, settled-path drill-down, hold-path drill-down, and export narrative.
+- Include one optional risk-triggered hold example (SIM-swap signal) to demonstrate that governed green disbursement can incorporate operational risk conditions without repositioning Symphony as a standalone anti-fraud platform.
+- Generate fallback static artifacts for offline presentation continuity.
+acceptance_criteria:
+- Reveal script executes in <=10 minutes.
+- Includes programme overview, settled drill-down, hold drill-down, export step, and one clearly labeled risk-triggered hold example.
+- SIM-swap scenario is presented as a programme/FSP-configurable risk hold, not as the primary product identity.
+- Fallback artifacts are complete and date/version stamped.
+- Reveal rehearsal runs via extracted demo runner/host from TSK-P1-DEMO-013 (not production bootstrap path).
+verification:
+- bash scripts/audit/verify_tsk_p1_demo_010.sh
+- python3 scripts/audit/validate_evidence.py --task TSK-P1-DEMO-010 --evidence evidence/phase1/tsk_p1_demo_010_reveal_rehearsal.json
+evidence:
+- evidence/phase1/tsk_p1_demo_010_reveal_rehearsal.json
+- evidence/phase1/demo_reveal_fallback_pack/
+failure_modes:
+- Demo relies on ad hoc clicks not reproducible from reset.
+- SIM-swap case overwhelms the governed-disbursement story and drags the reveal into generic fraud-platform positioning.
+- Missing fallback when live surface fails.
+must_read:
+- docs/product/greentech4ce/Symphony_PRD_GreenTech4CE(3).docx
+implementation_plan: docs/plans/phase1/TSK-P1-DEMO-010/PLAN.md
+implementation_log: docs/plans/phase1/TSK-P1-DEMO-010/EXEC_LOG.md
+notes: Converts PRD script to operator-runbook quality while preserving bounded risk-hold example.
+client: codex_cli
+assigned_agent: supervisor
+model: gpt-5-codex

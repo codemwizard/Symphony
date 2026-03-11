@@ -2,7 +2,7 @@
 set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
-PROJECT="$ROOT_DIR/services/ledger-api/dotnet/src/LedgerApi/LedgerApi.csproj"
+PROJECT="$ROOT_DIR/services/ledger-api/dotnet/src/LedgerApi.DemoHost/LedgerApi.DemoHost.csproj"
 
 if ! command -v dotnet >/dev/null 2>&1; then
   echo "ERROR: dotnet is required for exception case-pack self-test"

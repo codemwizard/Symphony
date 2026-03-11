@@ -1,0 +1,31 @@
+{
+  "check_id": "TSK-P1-DEMO-002-SMS-SECURE-LINK",
+  "task_id": "TSK-P1-DEMO-002",
+  "timestamp_utc": "2026-03-11T08:07:03Z",
+  "git_sha": "8f4989d449d6528139e589a0de3c8445e133a177",
+  "schema_fingerprint": "8f4989d4",
+  "status": "PASS",
+  "pass": true,
+  "details": {
+    "token_transport": "bearer-or-x-evidence-link-token",
+    "sms_dispatch_seam": "SIMULATED_DISPATCHED",
+    "tests": [
+      {
+        "name": "issue_secure_link",
+        "status": "PASS"
+      },
+      {
+        "name": "submit_with_valid_token",
+        "status": "PASS"
+      },
+      {
+        "name": "submit_with_tampered_token_rejected",
+        "status": "PASS"
+      },
+      {
+        "name": "submit_with_expired_token_rejected",
+        "status": "PASS"
+      }
+    ]
+  }
+}

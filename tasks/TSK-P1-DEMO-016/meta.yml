@@ -1,0 +1,37 @@
+schema_version: 1
+phase: '1'
+task_id: TSK-P1-DEMO-016
+title: Conditional project/assembly split for demo module
+owner_role: SUPERVISOR
+status: blocked
+depends_on:
+- TSK-P1-DEMO-013
+touches:
+- services/ledger-api/**
+- scripts/audit/verify_tsk_p1_demo_016.sh
+- evidence/phase1/tsk_p1_demo_016_assembly_split.json
+- docs/plans/phase1/TSK-P1-DEMO-016/PLAN.md
+- docs/plans/phase1/TSK-P1-DEMO-016/EXEC_LOG.md
+invariants:
+- INV-105
+work:
+- Perform minimal project/assembly split only if required to complete DEMO-013 extraction cleanly.
+acceptance_criteria:
+- Open this task only when DEMO-013 execution log records blocking assembly coupling.
+- If executed, ensure demo module references core contracts and not vice versa.
+verification:
+- bash scripts/audit/verify_tsk_p1_demo_016.sh
+- python3 scripts/audit/validate_evidence.py --task TSK-P1-DEMO-016 --evidence evidence/phase1/tsk_p1_demo_016_assembly_split.json
+evidence:
+- evidence/phase1/tsk_p1_demo_016_assembly_split.json
+failure_modes:
+- Opened without DEMO-013 coupling proof.
+- Scope expands into broad refactor not required for separation.
+must_read:
+- docs/operations/AI_AGENT_OPERATION_MANUAL.md
+implementation_plan: docs/plans/phase1/TSK-P1-DEMO-016/PLAN.md
+implementation_log: docs/plans/phase1/TSK-P1-DEMO-016/EXEC_LOG.md
+notes: Conditional cleanup lane; not a sprint anchor.
+client: codex_cli
+assigned_agent: supervisor
+model: gpt-5-codex

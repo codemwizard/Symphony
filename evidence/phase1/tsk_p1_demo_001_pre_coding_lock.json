@@ -1,0 +1,22 @@
+{
+  "check_id": "TSK-P1-DEMO-001-PRECODING-LOCK",
+  "task_id": "TSK-P1-DEMO-001",
+  "timestamp_utc": "2026-03-11T07:22:24Z",
+  "git_sha": "6eb482b4fd75fcdffe509738659d953404de7f0c",
+  "schema_fingerprint": "33e36565282f1592203a3db8c735f6d6a51bdcfa289c00e1c2040e30adc98ddb",
+  "status": "PASS",
+  "pass": true,
+  "details": {
+    "lock_file": "docs/operations/GREENTECH4CE_PRECODING_LOCK.yml",
+    "source_document": "Symphony_PRD_GreenTech4CE(3).docx",
+    "source_section": "Section 4 checklist + Section 6 Pilot Success Criteria",
+    "required_confirmations": [
+      "db_engine_confirmed",
+      "tenant_isolation_pattern_confirmed",
+      "evidence_event_append_only_confirmed",
+      "proof_type_registry_confirmed",
+      "section4_checklist_signed_off"
+    ],
+    "all_required_confirmations_true": true
+  }
+}

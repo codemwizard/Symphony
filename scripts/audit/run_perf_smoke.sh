@@ -29,7 +29,7 @@ if [[ -z "${DATABASE_URL:-}" ]] && [[ -n "${POSTGRES_USER:-}" && -n "${POSTGRES_
   export DATABASE_URL
 fi
 
-LEDGER_API_PROJECT="services/ledger-api/dotnet/src/LedgerApi/LedgerApi.csproj"
+LEDGER_API_PROJECT="services/ledger-api/dotnet/src/LedgerApi.DemoHost/LedgerApi.DemoHost.csproj"
 dotnet build "$LEDGER_API_PROJECT" >/tmp/symphony_perf_build.log 2>&1
 
 run_and_time() {

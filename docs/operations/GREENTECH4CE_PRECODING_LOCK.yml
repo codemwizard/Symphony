@@ -1,0 +1,23 @@
+schema_version: 1
+document: docs/product/greentech4ce/Symphony_PRD_GreenTech4CE(3).docx
+section: "Section 4 checklist + Section 6 Pilot Success Criteria"
+status: APPROVED
+approved_at_utc: "2026-03-11T00:00:00Z"
+approved_by: "governance-human-reviewer"
+
+confirmations:
+  db_engine_confirmed: true
+  db_engine: "PostgreSQL"
+  tenant_isolation_pattern_confirmed: true
+  tenant_isolation_pattern: "tenant-scoped request headers + tenant allowlist + tenant-keyed persistence + tenant-scoped read projections"
+  evidence_event_append_only_confirmed: true
+  evidence_event_append_only_statement: "Phase-1 evidence trail is append-only by policy and immutable projection evidence is emitted from deterministic verifiers."
+  proof_type_registry_confirmed: true
+  proof_type_registry_statement: "Proof types are represented as data values in evidence/projection payloads; no per-proof schema-column expansion pattern is allowed."
+  section4_checklist_signed_off: true
+
+references:
+  startup_review: "docs/product/greentech4ce/StartUP.md"
+  signoff_review: "docs/product/greentech4ce/SymphonySignOff.md"
+  prd_source: "docs/product/greentech4ce/Symphony_PRD_GreenTech4CE(3).docx"
+

@@ -1,0 +1,24 @@
+{
+  "check_id": "TSK-P1-DEMO-005-SIGNED-INSTRUCTION-SAMPLE",
+  "task_id": "TSK-P1-DEMO-005",
+  "timestamp_utc": "2026-03-11T08:06:44Z",
+  "git_sha": "8f4989d449d6528139e589a0de3c8445e133a177",
+  "schema_fingerprint": "8f4989d4",
+  "status": "PASS",
+  "pass": true,
+  "schema": "symphony.signed_instruction_file.v1",
+  "payload": {
+    "tenant_id": "11111111-1111-1111-1111-111111111111",
+    "program_id": "program-a",
+    "instruction_id": "instr-005-001",
+    "supplier_id": "supplier-001",
+    "supplier_account": "MMO:\u002B260970000001",
+    "amount_minor": 250000,
+    "currency_code": "ZMW",
+    "reference": "INV-005-001",
+    "generated_at_utc": "2026-03-11T08:06:44.0251162\u002B00:00"
+  },
+  "payload_hash": "e6b01082344704ea50bdf749ec496d60d7dcf1b15a9f810746743a4ff946f5df",
+  "signature_alg": "HMAC-SHA256",
+  "signature": "0544c2b72b4b9dbc0023731438ea1a855154f93f4e7128545b497339f03b4606"
+}

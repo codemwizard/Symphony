@@ -1,0 +1,40 @@
+schema_version: 1
+phase: '1'
+task_id: TSK-P1-DEMO-014
+title: Profile-based wiring (production vs pilot-demo)
+owner_role: SUPERVISOR
+status: completed
+depends_on:
+- TSK-P1-DEMO-013
+touches:
+- services/ledger-api/**
+- scripts/audit/verify_tsk_p1_demo_014.sh
+- evidence/phase1/tsk_p1_demo_014_profile_wiring.json
+- docs/plans/phase1/TSK-P1-DEMO-014/PLAN.md
+- docs/plans/phase1/TSK-P1-DEMO-014/EXEC_LOG.md
+invariants:
+- INV-105
+work:
+- Introduce explicit runtime profiles: production and pilot-demo.
+- Ensure demo-only routes/components load only in pilot-demo profile.
+acceptance_criteria:
+- Production profile does not expose demo-only routes/features.
+- Pilot-demo profile exposes required demo routes/features.
+- Non-expansion: no business logic changes, no schema changes, no new product features.
+- Timebox: task execution within 2-3 engineering days; overrun requires explicit re-approval.
+verification:
+- bash scripts/audit/verify_tsk_p1_demo_014.sh
+- python3 scripts/audit/validate_evidence.py --task TSK-P1-DEMO-014 --evidence evidence/phase1/tsk_p1_demo_014_profile_wiring.json
+evidence:
+- evidence/phase1/tsk_p1_demo_014_profile_wiring.json
+failure_modes:
+- Demo-only routes appear in production profile.
+- Task scope expanded beyond demo/core separation into feature work or schema changes.
+must_read:
+- docs/operations/AI_AGENT_OPERATION_MANUAL.md
+implementation_plan: docs/plans/phase1/TSK-P1-DEMO-014/PLAN.md
+implementation_log: docs/plans/phase1/TSK-P1-DEMO-014/EXEC_LOG.md
+notes: Required decoupling lane task.
+client: codex_cli
+assigned_agent: supervisor
+model: gpt-5-codex

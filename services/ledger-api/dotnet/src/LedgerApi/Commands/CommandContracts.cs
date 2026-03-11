@@ -48,6 +48,57 @@ record RegulatoryIncidentCreateRequest(
     string severity
 );
 
+record EvidenceLinkIssueRequest(
+    string tenant_id,
+    string instruction_id,
+    string program_id,
+    string submitter_class,
+    string submitter_msisdn,
+    decimal? expected_latitude,
+    decimal? expected_longitude,
+    decimal? max_distance_meters,
+    int? expires_in_seconds
+);
+
+record EvidenceLinkSubmitRequest(
+    string artifact_type,
+    string artifact_ref,
+    decimal? latitude,
+    decimal? longitude
+);
+
+record SignedInstructionGenerateRequest(
+    string tenant_id,
+    string program_id,
+    string instruction_id,
+    string supplier_id,
+    string supplier_account,
+    long amount_minor,
+    string currency_code,
+    string reference
+);
+
+record SignedInstructionVerifyRequest(
+    string instruction_file_path
+);
+
+record SupplierRegistryUpsertRequest(
+    string tenant_id,
+    string supplier_id,
+    string supplier_name,
+    string payout_target,
+    decimal? registered_latitude,
+    decimal? registered_longitude,
+    bool active
+);
+
+record ProgramSupplierAllowlistUpsertRequest(
+    string tenant_id,
+    string program_id,
+    string supplier_id,
+    bool allowed
+);
+
 record PersistInput(
     string instruction_id,
     string participant_id,

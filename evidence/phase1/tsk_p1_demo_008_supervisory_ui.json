@@ -1,0 +1,14 @@
+{
+  "check_id": "TSK-P1-DEMO-008-SUPERVISORY-UI",
+  "task_id": "TSK-P1-DEMO-008",
+  "timestamp_utc": "2026-03-11T07:54:07Z",
+  "git_sha": "8f4989d449d6528139e589a0de3c8445e133a177",
+  "status": "PASS",
+  "pass": true,
+  "details": {
+    "non_technical_navigation_ready": true,
+    "interpreted_evidence_primary": true,
+    "raw_artifact_drilldown_available": true,
+    "phase1_truthful_claims_only": true
+  }
+}

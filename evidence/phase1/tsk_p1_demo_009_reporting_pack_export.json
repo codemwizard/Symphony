@@ -1,0 +1,15 @@
+{
+  "check_id": "TSK-P1-DEMO-009-REPORTING-EXPORT",
+  "task_id": "TSK-P1-DEMO-009",
+  "timestamp_utc": "2026-03-11T07:54:07Z",
+  "git_sha": "8f4989d449d6528139e589a0de3c8445e133a177",
+  "status": "PASS",
+  "pass": true,
+  "details": {
+    "json_export": "/home/mwiza/workspace/Symphony/evidence/phase1/reporting_pack_sample.json",
+    "pdf_export": "/home/mwiza/workspace/Symphony/evidence/phase1/reporting_pack_sample.pdf",
+    "deterministic_payload_fingerprint": "f9944d12c40b363e1320727a41b16f91e311755866e7e0593188e818b212857d",
+    "deterministic_pdf_sha256": "bd24f1273a00b782463824a745f5ed7b68dac819cb873f646709829edf1c5d06",
+    "includes_required_sections": true
+  }
+}

@@ -1,0 +1,38 @@
+schema_version: 1
+phase: '1'
+task_id: TSK-P1-DEMO-012
+title: Asset Heartbeat monthly verification loop (optional add-on)
+owner_role: SUPERVISOR
+status: blocked
+depends_on:
+- TSK-P1-DEMO-011
+touches:
+- services/ledger-api/**
+- scripts/audit/verify_tsk_p1_demo_012.sh
+- evidence/phase1/tsk_p1_demo_012_asset_heartbeat.json
+- docs/plans/phase1/TSK-P1-DEMO-012/PLAN.md
+- docs/plans/phase1/TSK-P1-DEMO-012/EXEC_LOG.md
+invariants:
+- INV-119
+work:
+- Implement monthly heartbeat scheduling and response capture.
+- Add HEARTBEAT-MISSED exception handling and reporting linkage.
+acceptance_criteria:
+- Heartbeat cycle and missed-heartbeat exceptions are deterministic.
+- History appears in evidence/report surfaces.
+verification:
+- bash scripts/audit/verify_tsk_p1_demo_012.sh
+- python3 scripts/audit/validate_evidence.py --task TSK-P1-DEMO-012 --evidence evidence/phase1/tsk_p1_demo_012_asset_heartbeat.json
+evidence:
+- evidence/phase1/tsk_p1_demo_012_asset_heartbeat.json
+failure_modes:
+- Scheduler drift or missing exception linkage.
+- Heartbeat evidence not tied to instruction lifecycle.
+must_read:
+- docs/product/greentech4ce/Symphony_PRD_GreenTech4CE(3).docx
+implementation_plan: docs/plans/phase1/TSK-P1-DEMO-012/PLAN.md
+implementation_log: docs/plans/phase1/TSK-P1-DEMO-012/EXEC_LOG.md
+notes: Optional PRD add-on; blocked until explicit enablement.
+client: codex_cli
+assigned_agent: supervisor
+model: gpt-5-codex

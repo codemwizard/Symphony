@@ -4,7 +4,7 @@ set -euo pipefail
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 source "$REPO_ROOT/scripts/lib/evidence.sh"
 
-PROJECT_DIR="$REPO_ROOT/services/ledger-api/dotnet/src/LedgerApi"
+PROJECT_DIR="$REPO_ROOT/services/ledger-api/dotnet/src/LedgerApi.DemoHost"
 EVIDENCE_FILE="$REPO_ROOT/evidence/security_remediation/r_014_refactor.json"
 mkdir -p "$(dirname "$EVIDENCE_FILE")"
 

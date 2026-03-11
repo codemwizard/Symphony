@@ -10,6 +10,7 @@ using Microsoft.AspNetCore.Http.Features;
 using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.RateLimiting;
 using Npgsql;
+using Symphony.LedgerApi.Demo;
 
 var builder = WebApplication.CreateBuilder(args);
 builder.Services.Configure<ForwardedHeadersOptions>(options =>
@@ -75,6 +76,7 @@ builder.Services.AddRateLimiter(options =>
 });
 var app = builder.Build();
 var logger = app.Logger;
+var runtimeProfile = (Environment.GetEnvironmentVariable("SYMPHONY_RUNTIME_PROFILE") ?? "production").Trim().ToLowerInvariant();
 
 var maxBodyBytes = long.TryParse(Environment.GetEnvironmentVariable("SYMPHONY_MAX_BODY_BYTES"), out var parsedMaxBodyBytes)
     ? parsedMaxBodyBytes
@@ -102,70 +104,9 @@ app.Use(async (httpContext, next) =>
 });
 app.UseRateLimiter();
 
-if (args.Contains("--self-test", StringComparer.OrdinalIgnoreCase))
+if (await DemoSelfTestEntryPoint.TryRunAsync(args, runtimeProfile, logger, CancellationToken.None) is int demoExitCode)
 {
-    var code = await IngressSelfTestRunner.RunAsync(logger, CancellationToken.None);
-    Environment.ExitCode = code;
-    return;
-}
-if (args.Contains("--self-test-evidence-pack", StringComparer.OrdinalIgnoreCase))
-{
-    var code = await EvidencePackSelfTestRunner.RunAsync(logger, CancellationToken.None);
-    Environment.ExitCode = code;
-    return;
-}
-if (args.Contains("--self-test-case-pack", StringComparer.OrdinalIgnoreCase))
-{
-    var code = await ExceptionCasePackSelfTestRunner.RunAsync(logger, CancellationToken.None);
-    Environment.ExitCode = code;
-    return;
-}
-if (args.Contains("--self-test-authz", StringComparer.OrdinalIgnoreCase))
-{
-    var code = await PilotAuthSelfTestRunner.RunAsync(CancellationToken.None);
-    Environment.ExitCode = code;
-    return;
-}
-if (args.Contains("--self-test-batching-telemetry", StringComparer.OrdinalIgnoreCase))
-{
-    var code = await BatchingTelemetrySelfTestRunner.RunAsync(logger, CancellationToken.None);
-    Environment.ExitCode = code;
-    return;
-}
-if (args.Contains("--self-test-tenant-context", StringComparer.OrdinalIgnoreCase))
-{
-    var code = await TenantContextSelfTestRunner.RunAsync(CancellationToken.None);
-    Environment.ExitCode = code;
-    return;
-}
-if (args.Contains("--self-test-tenant-onboarding-admin", StringComparer.OrdinalIgnoreCase))
-{
-    var code = await TenantOnboardingAdminSelfTestRunner.RunAsync(logger, CancellationToken.None);
-    Environment.ExitCode = code;
-    return;
-}
-if (args.Contains("--self-test-canonical-message-model", StringComparer.OrdinalIgnoreCase))
-{
-    var code = await CanonicalMessageModelSelfTestRunner.RunAsync(logger, CancellationToken.None);
-    Environment.ExitCode = code;
-    return;
-}
-if (args.Contains("--self-test-kyc-hash-bridge", StringComparer.OrdinalIgnoreCase))
-{
-    var code = await KycHashBridgeSelfTestRunner.RunAsync(logger, CancellationToken.None);
-    Environment.ExitCode = code;
-    return;
-}
-if (args.Contains("--self-test-reg-daily-report", StringComparer.OrdinalIgnoreCase))
-{
-    var code = await RegulatoryDailyReportSelfTestRunner.RunAsync(logger, CancellationToken.None);
-    Environment.ExitCode = code;
-    return;
-}
-if (args.Contains("--self-test-reg-incident-48h-report", StringComparer.OrdinalIgnoreCase))
-{
-    var code = await RegulatoryIncident48hSelfTestRunner.RunAsync(logger, CancellationToken.None);
-    Environment.ExitCode = code;
+    Environment.ExitCode = demoExitCode;
     return;
 }
 
@@ -222,7 +163,8 @@ app.MapGet("/health", () => Results.Ok(new
     signing_key_present = signingKeyPresent,
     tenant_allowlist_configured = tenantAllowlistConfigured,
     git_sha = EvidenceMeta.Load(EvidenceMeta.ResolveRepoRoot(Directory.GetCurrentDirectory())).GitSha,
-    env_profile = Environment.GetEnvironmentVariable("SYMPHONY_ENV") ?? "unknown"
+    env_profile = Environment.GetEnvironmentVariable("SYMPHONY_ENV") ?? "unknown",
+    runtime_profile = runtimeProfile
 }));
 
 app.MapPost("/v1/ingress/instructions", async (IngressRequest request, HttpContext httpContext, CancellationToken cancellationToken) =>
@@ -316,6 +258,139 @@ app.MapPost("/v1/admin/tenants", async (TenantOnboardingRequest request, HttpCon
         tenant_id = onboarding.TenantId,
         created_at = onboarding.CreatedAt.Value.ToString("O")
     }, statusCode: StatusCodes.Status200OK);
+}).RequireRateLimiting("sensitive-endpoint");
+
+app.MapPost("/v1/evidence-links/issue", async (EvidenceLinkIssueRequest request, HttpContext httpContext, CancellationToken cancellationToken) =>
+{
+    var authFailure = ApiAuthorization.AuthorizeAdminTenantOnboarding(httpContext);
+    if (authFailure is not null)
+    {
+        return Results.Json(authFailure.Body, statusCode: authFailure.StatusCode);
+    }
+
+    var tenantAuthFailure = ApiAuthorization.AuthorizeTenantScope(request.tenant_id);
+    if (tenantAuthFailure is not null)
+    {
+        return Results.Json(tenantAuthFailure.Body, statusCode: tenantAuthFailure.StatusCode);
+    }
+
+    var result = await EvidenceLinkIssueHandler.HandleAsync(request, logger, cancellationToken);
+    return Results.Json(result.Body, statusCode: result.StatusCode);
+}).RequireRateLimiting("sensitive-endpoint");
+
+app.MapPost("/v1/evidence-links/submit", async (EvidenceLinkSubmitRequest request, HttpContext httpContext, CancellationToken cancellationToken) =>
+{
+    var result = await EvidenceLinkSubmitHandler.HandleAsync(request, httpContext, logger, cancellationToken);
+    return Results.Json(result.Body, statusCode: result.StatusCode);
+}).RequireRateLimiting("sensitive-endpoint");
+
+app.MapPost("/v1/admin/suppliers/upsert", async (SupplierRegistryUpsertRequest request, HttpContext httpContext) =>
+{
+    var authFailure = ApiAuthorization.AuthorizeAdminTenantOnboarding(httpContext);
+    if (authFailure is not null)
+    {
+        return Results.Json(authFailure.Body, statusCode: authFailure.StatusCode);
+    }
+
+    var tenantAuthFailure = ApiAuthorization.AuthorizeTenantScope(request.tenant_id);
+    if (tenantAuthFailure is not null)
+    {
+        return Results.Json(tenantAuthFailure.Body, statusCode: tenantAuthFailure.StatusCode);
+    }
+
+    var result = await SupplierRegistryUpsertHandler.HandleAsync(request);
+    return Results.Json(result.Body, statusCode: result.StatusCode);
+}).RequireRateLimiting("sensitive-endpoint");
+
+app.MapPost("/v1/admin/program-supplier-allowlist/upsert", async (ProgramSupplierAllowlistUpsertRequest request, HttpContext httpContext) =>
+{
+    var authFailure = ApiAuthorization.AuthorizeAdminTenantOnboarding(httpContext);
+    if (authFailure is not null)
+    {
+        return Results.Json(authFailure.Body, statusCode: authFailure.StatusCode);
+    }
+
+    var tenantAuthFailure = ApiAuthorization.AuthorizeTenantScope(request.tenant_id);
+    if (tenantAuthFailure is not null)
+    {
+        return Results.Json(tenantAuthFailure.Body, statusCode: tenantAuthFailure.StatusCode);
+    }
+
+    var result = await ProgramSupplierAllowlistUpsertHandler.HandleAsync(request);
+    return Results.Json(result.Body, statusCode: result.StatusCode);
+}).RequireRateLimiting("sensitive-endpoint");
+
+app.MapGet("/v1/programs/{programId}/suppliers/{supplierId}/policy", (string programId, string supplierId, HttpContext httpContext) =>
+{
+    var authFailure = ApiAuthorization.AuthorizeEvidenceRead(httpContext);
+    if (authFailure is not null)
+    {
+        return Results.Json(authFailure.Body, statusCode: authFailure.StatusCode);
+    }
+
+    var tenantId = httpContext.Request.Headers.TryGetValue("x-tenant-id", out var tenantHeader)
+        ? tenantHeader.ToString().Trim()
+        : string.Empty;
+    var tenantAuthFailure = ApiAuthorization.AuthorizeTenantScope(tenantId);
+    if (tenantAuthFailure is not null)
+    {
+        return Results.Json(tenantAuthFailure.Body, statusCode: tenantAuthFailure.StatusCode);
+    }
+
+    var result = ProgramSupplierPolicyReadHandler.Handle(tenantId, programId.Trim(), supplierId.Trim());
+    return Results.Json(result.Body, statusCode: result.StatusCode);
+}).RequireRateLimiting("sensitive-endpoint");
+
+app.MapPost("/v1/instruction-files/generate", async (SignedInstructionGenerateRequest request, HttpContext httpContext, CancellationToken cancellationToken) =>
+{
+    var authFailure = ApiAuthorization.AuthorizeAdminTenantOnboarding(httpContext);
+    if (authFailure is not null)
+    {
+        return Results.Json(authFailure.Body, statusCode: authFailure.StatusCode);
+    }
+
+    var tenantAuthFailure = ApiAuthorization.AuthorizeTenantScope(request.tenant_id);
+    if (tenantAuthFailure is not null)
+    {
+        return Results.Json(tenantAuthFailure.Body, statusCode: tenantAuthFailure.StatusCode);
+    }
+
+    var result = await SignedInstructionFileHandler.GenerateAsync(request, logger, cancellationToken);
+    return Results.Json(result.Body, statusCode: result.StatusCode);
+}).RequireRateLimiting("sensitive-endpoint");
+
+app.MapPost("/v1/instruction-files/verify", async (SignedInstructionVerifyRequest request, HttpContext httpContext, CancellationToken cancellationToken) =>
+{
+    var authFailure = ApiAuthorization.AuthorizeEvidenceRead(httpContext);
+    if (authFailure is not null)
+    {
+        return Results.Json(authFailure.Body, statusCode: authFailure.StatusCode);
+    }
+
+    var result = await SignedInstructionFileHandler.VerifyAsync(request, cancellationToken);
+    return Results.Json(result.Body, statusCode: result.StatusCode);
+}).RequireRateLimiting("sensitive-endpoint");
+
+app.MapGet("/v1/supervisory/programmes/{programId}/reveal", (string programId, HttpContext httpContext) =>
+{
+    var authFailure = ApiAuthorization.AuthorizeEvidenceRead(httpContext);
+    if (authFailure is not null)
+    {
+        return Results.Json(authFailure.Body, statusCode: authFailure.StatusCode);
+    }
+
+    var tenantId = httpContext.Request.Headers.TryGetValue("x-tenant-id", out var tenantHeader)
+        ? tenantHeader.ToString().Trim()
+        : string.Empty;
+
+    var tenantAuthFailure = ApiAuthorization.AuthorizeTenantScope(tenantId);
+    if (tenantAuthFailure is not null)
+    {
+        return Results.Json(tenantAuthFailure.Body, statusCode: tenantAuthFailure.StatusCode);
+    }
+
+    var result = SupervisoryRevealReadModelHandler.Handle(tenantId, programId.Trim());
+    return Results.Json(result.Body, statusCode: result.StatusCode);
 }).RequireRateLimiting("sensitive-endpoint");
 
 app.MapPost("/v1/kyc/hash", async (JsonElement requestBody, HttpContext httpContext, CancellationToken cancellationToken) =>
