@@ -16,10 +16,14 @@ scope:
   - "scripts/audit/**"
   - "docs/operations/**"
   - "docs/tasks/phase1_prompts.md"
-plan_path: docs/plans/phase1/TSK-P1-075_preflight_preci_split/PLAN.md
-exec_log_path: docs/plans/phase1/TSK-P1-075_preflight_preci_split/EXEC_LOG.md
+implementation_plan: docs/plans/phase1/TSK-P1-075_preflight_preci_split/PLAN.md
+implementation_log: docs/plans/phase1/TSK-P1-075_preflight_preci_split/EXEC_LOG.md
 evidence_paths:
   - evidence/phase1/tsk_p1_075_preflight_preci_split.json
+work:
+  - Separate light local pre-flight checks from the heavy push-time pre-CI path.
+  - Preserve the current expensive parity stack as the canonical push-time gate.
+  - Make the two-level local gate model explicit in scripts, docs, and verifier output.
 verification:
   - bash scripts/audit/verify_tsk_p1_075.sh
   - bash scripts/audit/run_invariants_fast_checks.sh

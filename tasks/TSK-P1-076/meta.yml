@@ -13,10 +13,14 @@ scope:
   - "docs/operations/**"
   - "docs/process/**"
   - "docs/tasks/phase1_prompts.md"
-plan_path: docs/plans/phase1/TSK-P1-076_local_gate_topology_verification/PLAN.md
-exec_log_path: docs/plans/phase1/TSK-P1-076_local_gate_topology_verification/EXEC_LOG.md
+implementation_plan: docs/plans/phase1/TSK-P1-076_local_gate_topology_verification/PLAN.md
+implementation_log: docs/plans/phase1/TSK-P1-076_local_gate_topology_verification/EXEC_LOG.md
 evidence_paths:
   - evidence/phase1/tsk_p1_076_local_gate_topology.json
+work:
+  - Verify the documented two-level local gate topology against installed hooks and tracked hook sources.
+  - Fail closed when hook topology, gate behavior, and documentation drift apart.
+  - Emit evidence proving the topology verification passes.
 verification:
   - bash scripts/audit/verify_tsk_p1_076.sh
   - bash scripts/audit/run_invariants_fast_checks.sh

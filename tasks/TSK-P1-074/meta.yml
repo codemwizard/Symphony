@@ -15,10 +15,14 @@ scope:
   - "docs/operations/**"
   - "scripts/audit/**"
   - "docs/tasks/phase1_prompts.md"
-plan_path: docs/plans/phase1/TSK-P1-074_hook_source_normalization/PLAN.md
-exec_log_path: docs/plans/phase1/TSK-P1-074_hook_source_normalization/EXEC_LOG.md
+implementation_plan: docs/plans/phase1/TSK-P1-074_hook_source_normalization/PLAN.md
+implementation_log: docs/plans/phase1/TSK-P1-074_hook_source_normalization/EXEC_LOG.md
 evidence_paths:
   - evidence/phase1/tsk_p1_074_hook_source_normalization.json
+work:
+  - Normalize the repo to one canonical tracked hook source location and one installed hook destination.
+  - Update local hook installation so tracked hook templates and active installed hooks are unambiguous.
+  - Add verifier-backed detection for hook topology drift between docs, tracked sources, and installed behavior.
 verification:
   - bash scripts/audit/verify_tsk_p1_074.sh
   - bash scripts/audit/run_invariants_fast_checks.sh
