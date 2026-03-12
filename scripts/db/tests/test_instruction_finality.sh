@@ -42,6 +42,15 @@ DECLARE
   v_settled TEXT := 'if_settled_' || replace(gen_random_uuid()::text, '-', '');
   v_reversal TEXT := 'if_reversal_' || replace(gen_random_uuid()::text, '-', '');
 BEGIN
+  INSERT INTO public.inquiry_state_machine(
+    instruction_id, inquiry_state, attempts, max_attempts, policy_version_id
+  ) VALUES (
+    v_settled, 'ACKNOWLEDGED', 0, 1, 'test-policy'
+  )
+  ON CONFLICT (instruction_id) DO UPDATE
+    SET inquiry_state = 'ACKNOWLEDGED',
+        policy_version_id = EXCLUDED.policy_version_id;
+
   INSERT INTO public.instruction_settlement_finality(
     instruction_id,
     participant_id,
@@ -77,6 +86,46 @@ SELECT 'PASS';
 SQL
 )"
 run_test "insert settled + reversal records succeeds" "$seed_sql"
+
+missing_ack_sql="$(cat <<'SQL'
+CREATE OR REPLACE FUNCTION pg_temp._expect_missing_ack_denied() RETURNS text
+LANGUAGE plpgsql AS $fn$
+DECLARE
+  v_instruction_id TEXT := 'if_missing_ack_' || replace(gen_random_uuid()::text, '-', '');
+BEGIN
+  INSERT INTO public.inquiry_state_machine(
+    instruction_id, inquiry_state, attempts, max_attempts, policy_version_id
+  ) VALUES (
+    v_instruction_id, 'AWAITING_EXECUTION', 0, 1, 'test-policy'
+  )
+  ON CONFLICT (instruction_id) DO UPDATE
+    SET inquiry_state = 'AWAITING_EXECUTION',
+        policy_version_id = EXCLUDED.policy_version_id;
+
+  BEGIN
+    INSERT INTO public.instruction_settlement_finality(
+      instruction_id,
+      participant_id,
+      final_state,
+      rail_message_type,
+      finalized_at
+    ) VALUES (
+      v_instruction_id,
+      'participant_finality_test',
+      'SETTLED',
+      'pacs.008',
+      NOW()
+    );
+    RETURN 'FAIL';
+  EXCEPTION WHEN SQLSTATE 'P7301' THEN
+    RETURN 'PASS';
+  END;
+END;
+$fn$;
+SELECT pg_temp._expect_missing_ack_denied();
+SQL
+)"
+run_test "settlement requires ACKNOWLEDGED inquiry state" "$missing_ack_sql"
 
 update_sql="$(cat <<'SQL'
 CREATE OR REPLACE FUNCTION pg_temp._expect_update_denied() RETURNS text

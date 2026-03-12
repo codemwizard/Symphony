@@ -1908,6 +1908,24 @@ $$;
 
 
 --
+-- Name: enforce_settlement_acknowledgement(); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.enforce_settlement_acknowledgement() RETURNS trigger
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO 'pg_catalog', 'public'
+    AS $$
+BEGIN
+  IF NEW.final_state = 'SETTLED' THEN
+    PERFORM public.guard_settlement_requires_acknowledgement(NEW.instruction_id);
+  END IF;
+
+  RETURN NEW;
+END;
+$$;
+
+
+--
 -- Name: issue_adjustment(text, text, numeric, text, text); Type: FUNCTION; Schema: public; Owner: -
 --
 
@@ -6966,6 +6984,13 @@ CREATE TRIGGER trg_enforce_instruction_reversal_source BEFORE INSERT ON public.i
 
 
 --
+-- Name: instruction_settlement_finality trg_enforce_settlement_acknowledgement; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER trg_enforce_settlement_acknowledgement BEFORE INSERT ON public.instruction_settlement_finality FOR EACH ROW EXECUTE FUNCTION public.enforce_settlement_acknowledgement();
+
+
+--
 -- Name: internal_ledger_postings trg_enforce_internal_ledger_posting_context; Type: TRIGGER; Schema: public; Owner: -
 --
 
@@ -8020,4 +8045,3 @@ ALTER TABLE public.tenants ENABLE ROW LEVEL SECURITY;
 --
 
 \unrestrict UUa8yvNNh87CiyatlmluwHmfEnSb4EwACIS7gHZqL6e6WlrL7GC8mtXqWsBH489
-
