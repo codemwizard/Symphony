@@ -61,6 +61,48 @@ obj=json.loads('''$pitr_json''')
 print('true' if obj.get('pitr_test_passed') else 'false')
 PY
 )"
+restore_operation_performed="$(python3 - <<PY
+import json
+obj=json.loads('''$pitr_json''')
+print('true' if obj.get('restore_operation_performed') else 'false')
+PY
+)"
+restore_probe_mode="$(python3 - <<PY
+import json
+obj=json.loads('''$pitr_json''')
+print(obj.get('restore_probe_mode',''))
+PY
+)"
+declared_rto_seconds="$(python3 - <<PY
+import json
+obj=json.loads('''$pitr_json''')
+print(obj.get('declared_rto_seconds',''))
+PY
+)"
+restore_elapsed_seconds="$(python3 - <<PY
+import json
+obj=json.loads('''$pitr_json''')
+print(obj.get('restore_elapsed_seconds',''))
+PY
+)"
+rto_met="$(python3 - <<PY
+import json
+obj=json.loads('''$pitr_json''')
+print('true' if obj.get('rto_met') else 'false')
+PY
+)"
+rto_signoff_ref="$(python3 - <<PY
+import json
+obj=json.loads('''$pitr_json''')
+print(obj.get('rto_signoff_ref') or '')
+PY
+)"
+storage_backend="$(python3 - <<PY
+import json
+obj=json.loads('''$pitr_json''')
+print(obj.get('storage_backend',''))
+PY
+)"
 restore_target_timestamp="$(python3 - <<PY
 import json
 obj=json.loads('''$pitr_json''')
@@ -77,6 +119,21 @@ PY
 if [[ "$pitr_test_passed" != "true" || -z "$restore_target_timestamp" || -z "$restored_schema_version" ]]; then
   errors=$((errors+1))
 fi
+if [[ "$restore_operation_performed" != "true" || "$restore_probe_mode" != "baseline_restore_drill" ]]; then
+  errors=$((errors+1))
+fi
+if [[ -z "$declared_rto_seconds" || -z "$restore_elapsed_seconds" || "$storage_backend" != "seaweedfs" ]]; then
+  errors=$((errors+1))
+fi
+if ! [[ "$restore_elapsed_seconds" =~ ^[0-9]+$ ]]; then
+  errors=$((errors+1))
+fi
+if ! [[ "$declared_rto_seconds" =~ ^[0-9]+$ ]]; then
+  errors=$((errors+1))
+fi
+if [[ "$rto_met" != "true" && -z "$rto_signoff_ref" ]]; then
+  errors=$((errors+1))
+fi
 
 ha_py="False"
 [[ "$ha_config_verified" == "true" ]] && ha_py="True"
@@ -84,6 +141,8 @@ backup_py="False"
 [[ "$backup_schedule_confirmed" == "true" ]] && backup_py="True"
 pitr_py="False"
 [[ "$pitr_test_passed" == "true" ]] && pitr_py="True"
+restore_performed_py="False"
+[[ "$restore_operation_performed" == "true" ]] && restore_performed_py="True"
 
 status="PASS"
 if (( errors > 0 )); then
@@ -92,7 +151,7 @@ fi
 
 mkdir -p "$(dirname "$EVIDENCE_PATH")"
 python3 - <<PY
-import datetime, json, pathlib, subprocess
+import datetime, json, os, pathlib, subprocess
 try:
     git_sha=subprocess.check_output(["git","rev-parse","HEAD"], text=True).strip()
 except Exception:
@@ -101,6 +160,7 @@ except Exception:
 out={
   "check_id":"$TASK_ID",
   "task_id":"$TASK_ID",
+  "run_id": os.environ.get("SYMPHONY_RUN_ID", "inf001-"+datetime.datetime.now(datetime.timezone.utc).strftime("%Y%m%dT%H%M%SZ")),
   "status":"$status",
   "pass":"$status"=="PASS",
   "timestamp_utc":datetime.datetime.now(datetime.timezone.utc).replace(microsecond=0).isoformat().replace('+00:00','Z'),
@@ -110,6 +170,13 @@ out={
   "pitr_test_passed": $pitr_py,
   "restore_target_timestamp": "$restore_target_timestamp",
   "restored_schema_version": "$restored_schema_version",
+  "restore_operation_performed": $restore_performed_py,
+  "restore_probe_mode": "$restore_probe_mode",
+  "declared_rto_seconds": int("$declared_rto_seconds") if "$declared_rto_seconds" else None,
+  "restore_elapsed_seconds": int("$restore_elapsed_seconds") if "$restore_elapsed_seconds" else None,
+  "rto_met": "$rto_met"=="true",
+  "rto_signoff_ref": "$rto_signoff_ref" if "$rto_signoff_ref" else None,
+  "storage_backend": "$storage_backend",
   "manifests": {
     "cluster": "$cluster_manifest",
     "backup_schedule": "$backup_manifest"

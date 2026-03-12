@@ -1,0 +1,49 @@
+schema_version: 1
+phase: '1'
+task_id: TSK-P1-INT-009A
+title: Storage policy rescope and RTO discipline before SeaweedFS cutover
+owner_role: SUPERVISOR
+status: completed
+depends_on:
+- TSK-P1-INT-001
+touches:
+- tasks/TSK-P1-INT-009A/meta.yml
+- docs/operations/STORAGE_AND_INTEGRITY_POSITION_MINIO_TO_SEAWEEDFS.md
+- tasks/TSK-P1-STOR-001/meta.yml
+- docs/plans/phase1/TSK-P1-INT-009A/PLAN.md
+- docs/plans/phase1/TSK-P1-INT-009A/EXEC_LOG.md
+- scripts/audit/verify_tsk_p1_int_009a.sh
+- evidence/phase1/tsk_p1_int_009a_storage_policy_rescope.json
+- docs/operations/VERIFIER_EVIDENCE_REGISTRY.yml
+invariants:
+- INV-105
+- INV-119
+work:
+- Define storage migration posture as infrastructure/durability work, not trust-root semantics.
+- Define Phase-1 RTO policy with hard cap and signoff exception rule.
+- Define STOR-001 acceptance vocabulary for backend-neutral retention controls.
+- Wire verifier/evidence registry mapping before implementation cutover.
+acceptance_criteria:
+- Storage trust language is explicitly tamper-evident architecture and not backend immutability claims.
+- RTO policy is explicit (default cap 4 hours) with signoff requirement when exceeded.
+- STOR-001 criteria include post-cutover smoke IO and parity checks as mandatory gates.
+- Registry contains verifier-to-evidence mapping for INT-009A, STOR-001, and INT-009B scripts.
+verification:
+- bash scripts/audit/verify_tsk_p1_int_009a.sh
+- python3 scripts/audit/validate_evidence.py --task TSK-P1-INT-009A --evidence evidence/phase1/tsk_p1_int_009a_storage_policy_rescope.json
+evidence:
+- evidence/phase1/tsk_p1_int_009a_storage_policy_rescope.json
+failure_modes:
+- Task leaks into storage infrastructure implementation scope.
+- RTO policy is implicit, missing, or non-binding.
+- Storage backend is still described as trust root.
+- Registry omits the verifier-to-evidence mapping needed for INT-009A, STOR-001, or INT-009B cutover sequencing.
+must_read:
+- docs/operations/AI_AGENT_OPERATION_MANUAL.md
+- docs/operations/REMEDIATION_TRACE_WORKFLOW.md
+implementation_plan: docs/plans/phase1/TSK-P1-INT-009A/PLAN.md
+implementation_log: docs/plans/phase1/TSK-P1-INT-009A/EXEC_LOG.md
+notes: INT-009A is policy/gate hardening only and must complete before STOR-001 cutover work starts.
+client: codex_cli
+assigned_agent: supervisor
+model: gpt-5-codex

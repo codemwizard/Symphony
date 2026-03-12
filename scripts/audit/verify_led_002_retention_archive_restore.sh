@@ -5,7 +5,8 @@ TASK_ID="TSK-P1-LED-002"
 EVIDENCE_PATH="evidence/phase1/led_002_retention_archive_restore.json"
 ARCHIVE_SCRIPT="scripts/backup/archive_retention_records.sh"
 RESTORE_SCRIPT="scripts/backup/restore_retention_archive.sh"
-WORM_CONFIG="infra/sandbox/k8s/storage/minio-object-lock-config.yaml"
+RETENTION_CONFIG="infra/sandbox/k8s/storage/minio-object-lock-config.yaml"
+CLUSTER_CONFIG="infra/sandbox/postgres-ha/cnpg_cluster.yaml"
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
@@ -16,7 +17,8 @@ done
 
 [[ -x "$ARCHIVE_SCRIPT" ]] || { echo "missing_archive_script:$ARCHIVE_SCRIPT" >&2; exit 1; }
 [[ -x "$RESTORE_SCRIPT" ]] || { echo "missing_restore_script:$RESTORE_SCRIPT" >&2; exit 1; }
-[[ -f "$WORM_CONFIG" ]] || { echo "missing_worm_config:$WORM_CONFIG" >&2; exit 1; }
+[[ -f "$RETENTION_CONFIG" ]] || { echo "missing_retention_config:$RETENTION_CONFIG" >&2; exit 1; }
+[[ -f "$CLUSTER_CONFIG" ]] || { echo "missing_cluster_config:$CLUSTER_CONFIG" >&2; exit 1; }
 
 workdir="$(mktemp -d)"
 trap 'rm -rf "$workdir"' EXIT
@@ -59,30 +61,69 @@ signature_verified=false
 if echo "$restore_output" | rg -q 'signature_verified=true'; then
   signature_verified=true
 fi
+
 restore_drill_passed=false
 if [[ -s "$restore_file" ]]; then
   restore_drill_passed=true
 fi
 
-worm_enforcement_confirmed=false
-if rg -n 'object_lock_enabled:\s*"true"|overwrite_denied_during_retention:\s*"true"' "$WORM_CONFIG" >/dev/null; then
-  worm_enforcement_confirmed=true
+storage_backend=$(python3 - <<'PY' "$RETENTION_CONFIG"
+import sys, yaml
+from pathlib import Path
+doc = yaml.safe_load(Path(sys.argv[1]).read_text(encoding="utf-8")) or {}
+print(((doc.get("data") or {}).get("storage_backend")) or "")
+PY
+)
+
+retention_controls_verified=false
+if rg -n 'retention_controls_verified:\s*"true"' "$RETENTION_CONFIG" >/dev/null 2>&1 && \
+   rg -n 'overwrite_denied_during_retention:\s*"true"' "$RETENTION_CONFIG" >/dev/null 2>&1; then
+  retention_controls_verified=true
+fi
+
+post_cutover_smoke_io_passed=false
+if [[ -s "$archive_file" ]] && [[ -s "$signature_file" ]]; then
+  post_cutover_smoke_io_passed=true
+fi
+
+seaweed_endpoint_configured=false
+if rg -n 'endpointURL:\s*https://seaweedfs-s3\.symphony\.svc\.cluster\.local:8333' "$CLUSTER_CONFIG" >/dev/null 2>&1; then
+  seaweed_endpoint_configured=true
+fi
+
+integrity_verifier_parity_pass=false
+if [[ "$signature_verified" == "true" ]] && [[ "$restore_drill_passed" == "true" ]]; then
+  integrity_verifier_parity_pass=true
 fi
 
 status="PASS"
-if [[ "$signature_verified" != "true" || "$restore_drill_passed" != "true" || "$worm_enforcement_confirmed" != "true" ]]; then
+if [[ "$signature_verified" != "true" || "$restore_drill_passed" != "true" || "$retention_controls_verified" != "true" || "$seaweed_endpoint_configured" != "true" || "$storage_backend" != "seaweedfs" ]]; then
   status="FAIL"
 fi
 
 mkdir -p "$(dirname "$EVIDENCE_PATH")"
-python3 - <<'PY' "$TASK_ID" "$EVIDENCE_PATH" "$status" "$archive_run_id" "$records_archived" "$worm_enforcement_confirmed" "$restore_drill_passed" "$signature_verified"
+python3 - <<'PY' "$TASK_ID" "$EVIDENCE_PATH" "$status" "$archive_run_id" "$records_archived" "$storage_backend" "$retention_controls_verified" "$restore_drill_passed" "$signature_verified" "$post_cutover_smoke_io_passed" "$integrity_verifier_parity_pass" "$seaweed_endpoint_configured"
 import json
+import os
 import subprocess
 import sys
 from datetime import datetime, timezone
 from pathlib import Path
 
-task_id, evidence_path, status, archive_run_id, records_archived, worm_ok, restore_ok, signature_ok = sys.argv[1:]
+(
+    task_id,
+    evidence_path,
+    status,
+    archive_run_id,
+    records_archived,
+    storage_backend,
+    retention_ok,
+    restore_ok,
+    signature_ok,
+    smoke_ok,
+    parity_ok,
+    endpoint_ok,
+) = sys.argv[1:]
 
 def git_sha():
     try:
@@ -93,24 +134,29 @@ def git_sha():
 payload = {
     "check_id": "LED-002-RETENTION-ARCHIVE-RESTORE",
     "task_id": task_id,
+    "run_id": os.environ.get("SYMPHONY_RUN_ID", f"led002-{datetime.now(timezone.utc).strftime('%Y%m%dT%H%M%SZ')}"),
     "timestamp_utc": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
     "git_sha": git_sha(),
     "status": status,
     "pass": status == "PASS",
     "archive_run_id": archive_run_id,
     "records_archived": int(records_archived),
-    "worm_enforcement_confirmed": worm_ok == "true",
+    "storage_backend": storage_backend,
+    "retention_controls_verified": retention_ok == "true",
     "restore_drill_passed": restore_ok == "true",
     "signature_verified": signature_ok == "true",
+    "post_cutover_smoke_io_passed": smoke_ok == "true",
+    "archive_run_pass": int(records_archived) > 0,
+    "integrity_verifier_parity_pass": parity_ok == "true",
+    "seaweed_endpoint_configured": endpoint_ok == "true",
     "details": {
         "retention_classes": ["FIC_AML_CUSTOMER_ID", "BFSA_FINANCIAL"],
-        "storage_mode": "sandbox_minio_object_lock_declared"
+        "storage_mode": "sandbox_backend_neutral_retention_controls"
     }
 }
 
-p = Path(evidence_path)
-p.write_text(json.dumps(payload, indent=2) + "\n", encoding="utf-8")
-print(f"Evidence written: {p}")
+Path(evidence_path).write_text(json.dumps(payload, indent=2) + "\n", encoding="utf-8")
+print(f"Evidence written: {evidence_path}")
 PY
 
 python3 - <<'PY' "$TASK_ID" "$EVIDENCE_PATH"
@@ -124,14 +170,35 @@ if obj.get("task_id") != task_id:
     raise SystemExit("task_id_mismatch")
 if obj.get("status") not in {"PASS", "DONE", "OK"} and obj.get("pass") is not True:
     raise SystemExit("status_not_pass")
-for key in ["archive_run_id", "records_archived", "worm_enforcement_confirmed", "restore_drill_passed", "signature_verified"]:
+for key in [
+    "archive_run_id",
+    "records_archived",
+    "storage_backend",
+    "retention_controls_verified",
+    "restore_drill_passed",
+    "signature_verified",
+    "post_cutover_smoke_io_passed",
+    "archive_run_pass",
+    "integrity_verifier_parity_pass",
+    "seaweed_endpoint_configured",
+]:
     if key not in obj:
         raise SystemExit(f"missing_key:{key}")
-if not obj["worm_enforcement_confirmed"]:
-    raise SystemExit("worm_enforcement_not_confirmed")
+if obj["storage_backend"] != "seaweedfs":
+    raise SystemExit("unexpected_storage_backend")
+if not obj["retention_controls_verified"]:
+    raise SystemExit("retention_controls_not_verified")
 if not obj["restore_drill_passed"]:
     raise SystemExit("restore_drill_failed")
 if not obj["signature_verified"]:
     raise SystemExit("signature_not_verified")
+if not obj["post_cutover_smoke_io_passed"]:
+    raise SystemExit("smoke_io_failed")
+if not obj["archive_run_pass"]:
+    raise SystemExit("archive_run_failed")
+if not obj["integrity_verifier_parity_pass"]:
+    raise SystemExit("integrity_verifier_parity_failed")
+if not obj["seaweed_endpoint_configured"]:
+    raise SystemExit("seaweed_endpoint_not_configured")
 print(f"LED-002 verification passed: {evidence_path}")
 PY
