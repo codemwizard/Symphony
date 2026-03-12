@@ -1,4 +1,17 @@
 version: '1.0'
+evidence_contract:
+  runner_targeted_json_evidence:
+    applies_to:
+    - JSON evidence artifacts emitted by verifier scripts and later freshness-checked by scripts/agent/run_task.sh
+    required_fields:
+    - check_id
+    - run_id
+    - timestamp_utc
+    - git_sha
+    - status
+    freshness_rule:
+      when_invoked_via_runner: run_id must equal SYMPHONY_RUN_ID for the current deterministic run
+      standalone_verifier_runs: run_id must still be emitted and non-empty
 registry:
   scripts/db/verify_boz_observability_role.sh:
     emits:
@@ -131,6 +144,48 @@ registry:
   scripts/audit/verify_led_002_retention_archive_restore.sh:
     emits:
     - evidence/phase1/led_002_retention_archive_restore.json
+  scripts/audit/verify_tsk_p1_int_009a.sh:
+    emits:
+    - evidence/phase1/tsk_p1_int_009a_storage_policy_rescope.json
+  scripts/audit/verify_tsk_p1_stor_001.sh:
+    emits:
+    - evidence/phase1/tsk_p1_stor_001_minio_to_seaweedfs_cutover.json
+  scripts/audit/verify_tsk_p1_int_009b.sh:
+    emits:
+    - evidence/phase1/tsk_p1_int_009b_restore_parity.json
+  scripts/audit/verify_tsk_p1_int_001.sh:
+    emits:
+    - evidence/phase1/tsk_p1_int_001_claim_reframe.json
+  scripts/audit/verify_tsk_p1_int_002.sh:
+    emits:
+    - evidence/phase1/tsk_p1_int_002_integrity_verifier_stack.json
+  scripts/audit/verify_tsk_p1_int_003.sh:
+    emits:
+    - evidence/phase1/tsk_p1_int_003_tamper_detection.json
+  scripts/audit/verify_tsk_p1_int_004.sh:
+    emits:
+    - evidence/phase1/tsk_p1_int_004_ack_gap_controls.json
+  scripts/audit/verify_tsk_p1_int_005.sh:
+    emits:
+    - evidence/phase1/tsk_p1_int_005_restricted_posture.json
+  scripts/audit/verify_tsk_p1_int_006.sh:
+    emits:
+    - evidence/phase1/tsk_p1_int_006_offline_bridge.json
+  scripts/audit/verify_tsk_p1_int_007.sh:
+    emits:
+    - evidence/phase1/tsk_p1_int_007_dr_bundle_generator.json
+  scripts/audit/verify_tsk_p1_int_008.sh:
+    emits:
+    - evidence/phase1/tsk_p1_int_008_offline_verification.json
+  scripts/audit/verify_tsk_p1_int_010.sh:
+    emits:
+    - evidence/phase1/tsk_p1_int_010_language_sync.json
+  scripts/audit/verify_tsk_p1_int_011.sh:
+    emits:
+    - evidence/phase1/tsk_p1_int_011_closeout_gate.json
+  scripts/audit/verify_tsk_p1_int_012.sh:
+    emits:
+    - evidence/phase1/tsk_p1_int_012_retention_policy.json
   scripts/audit/verify_tsk_p1_reg_001.sh:
     emits:
     - evidence/phase1/tsk_p1_reg_001__boz_observability_role_read_only_views.json

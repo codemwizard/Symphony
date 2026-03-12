@@ -1,0 +1,48 @@
+schema_version: 1
+phase: '1'
+task_id: TSK-P1-INT-009B
+title: Post-cutover restore-time proof and integrity parity validation
+owner_role: SUPERVISOR
+status: completed
+depends_on:
+- TSK-P1-STOR-001
+touches:
+- tasks/TSK-P1-INT-009B/meta.yml
+- infra/sandbox/postgres-ha/pitr_test.sh
+- scripts/audit/verify_inf_001_postgres_ha_pitr.sh
+- scripts/audit/verify_tsk_p1_int_009b.sh
+- docs/plans/phase1/TSK-P1-INT-009B/PLAN.md
+- docs/plans/phase1/TSK-P1-INT-009B/EXEC_LOG.md
+- evidence/phase1/tsk_p1_int_009b_restore_parity.json
+- docs/operations/VERIFIER_EVIDENCE_REGISTRY.yml
+invariants:
+- INV-105
+- INV-119
+work:
+- Validate measured restore behavior on post-cutover backend using declared RTO policy.
+- Verify PITR evidence includes elapsed-seconds metrics and fail-closed behavior when missing.
+- Verify storage substitution does not regress integrity verifier behavior.
+- Verify STOR-001 evidence is consumed as predecessor proof for backend context.
+acceptance_criteria:
+- Evidence records declared_rto_seconds, restore_elapsed_seconds, rto_met, and optional rto_signoff_ref when cap is exceeded.
+- PITR verifier fails when restore_elapsed_seconds is missing or invalid.
+- Restore proof is measured on post-cutover backend and is linked to STOR-001 evidence.
+- Integrity verifier parity passes after cutover.
+verification:
+- bash scripts/audit/verify_tsk_p1_int_009b.sh
+- python3 scripts/audit/validate_evidence.py --task TSK-P1-INT-009B --evidence evidence/phase1/tsk_p1_int_009b_restore_parity.json
+evidence:
+- evidence/phase1/tsk_p1_int_009b_restore_parity.json
+failure_modes:
+- Restore proof remains timestamp-only or stubbed.
+- RTO compliance is claimed without elapsed-seconds measurement.
+- Post-cutover backend context is not bound to STOR-001 evidence.
+must_read:
+- docs/operations/AI_AGENT_OPERATION_MANUAL.md
+- docs/operations/STORAGE_AND_INTEGRITY_POSITION_MINIO_TO_SEAWEEDFS.md
+implementation_plan: docs/plans/phase1/TSK-P1-INT-009B/PLAN.md
+implementation_log: docs/plans/phase1/TSK-P1-INT-009B/EXEC_LOG.md
+notes: INT-009B is proof-only and must not restate or replace INT-009A policy decisions.
+client: codex_cli
+assigned_agent: supervisor
+model: gpt-5-codex

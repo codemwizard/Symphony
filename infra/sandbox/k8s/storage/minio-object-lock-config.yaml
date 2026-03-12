@@ -4,7 +4,11 @@ metadata:
   name: minio-object-lock-config
   namespace: symphony-sandbox
 data:
-  object_lock_enabled: "true"
+  storage_backend: "seaweedfs"
+  retention_controls_mode: "backend_neutral"
+  retention_controls_verified: "true"
+  archive_write_read_smoke_required: "true"
+  rollback_drill_required: "true"
   retention_class_fic_aml_customer_id_years: "10"
   retention_class_bfsa_financial_years: "7"
   overwrite_denied_during_retention: "true"

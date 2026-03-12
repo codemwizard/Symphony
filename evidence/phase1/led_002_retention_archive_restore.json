@@ -1,20 +1,26 @@
 {
   "check_id": "LED-002-RETENTION-ARCHIVE-RESTORE",
   "task_id": "TSK-P1-LED-002",
-  "timestamp_utc": "2026-02-26T01:59:24Z",
-  "git_sha": "adb972a894edfd0fa5a6e133fee3badcc0ac7a81",
+  "run_id": "led002-20260312T122303Z",
+  "timestamp_utc": "2026-03-12T12:23:03Z",
+  "git_sha": "6aa3d6495ab70257717f686fe03c3c9ae8bca54e",
   "status": "PASS",
   "pass": true,
-  "archive_run_id": "arch_20260226T015924Z_28579",
+  "archive_run_id": "arch_20260312T122303Z_25618",
   "records_archived": 2,
-  "worm_enforcement_confirmed": true,
+  "storage_backend": "seaweedfs",
+  "retention_controls_verified": true,
   "restore_drill_passed": true,
   "signature_verified": true,
+  "post_cutover_smoke_io_passed": true,
+  "archive_run_pass": true,
+  "integrity_verifier_parity_pass": true,
+  "seaweed_endpoint_configured": true,
   "details": {
     "retention_classes": [
       "FIC_AML_CUSTOMER_ID",
       "BFSA_FINANCIAL"
     ],
-    "storage_mode": "sandbox_minio_object_lock_declared"
+    "storage_mode": "sandbox_backend_neutral_retention_controls"
   }
 }
