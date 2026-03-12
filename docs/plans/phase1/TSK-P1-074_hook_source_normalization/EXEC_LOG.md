@@ -5,6 +5,7 @@ Task: TSK-P1-074
 Status: COMPLETED
 failure_signature: PHASE1.TSK.P1.074.HOOK_SOURCE_NORMALIZATION
 origin_task_id: TSK-P1-074
+Plan: `docs/plans/phase1/TSK-P1-074_hook_source_normalization/PLAN.md`
 
 ## Notes
 - Normalized local hook installation so `.githooks/` is the canonical tracked hook source and `.git/hooks/` is the installed destination.
@@ -20,3 +21,8 @@ origin_task_id: TSK-P1-074
 
 ## final_status
 - `COMPLETED`
+
+## final summary
+- `.githooks/` is now the single tracked source of truth for local hooks.
+- The installer copies tracked hooks into `.git/hooks` instead of generating inline hook bodies.
+- The hook topology is documented and verified mechanically.

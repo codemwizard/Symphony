@@ -5,6 +5,7 @@ Task: TSK-P1-076
 Status: COMPLETED
 failure_signature: PHASE1.TSK.P1.076.LOCAL_GATE_TOPOLOGY_VERIFICATION
 origin_task_id: TSK-P1-076
+Plan: `docs/plans/phase1/TSK-P1-076_local_gate_topology_verification/PLAN.md`
 
 ## Notes
 - Added a dedicated topology verifier that checks tracked hook sources, installed hooks, installer behavior, and docs for agreement.
@@ -20,3 +21,8 @@ origin_task_id: TSK-P1-076
 
 ## final_status
 - `COMPLETED`
+
+## final summary
+- Hook topology drift is now mechanically checked instead of inferred.
+- Installed hooks, tracked hook sources, installer behavior, and documentation are verified together.
+- The topology verifier emits task-scoped evidence proving the local gate model is coherent.
