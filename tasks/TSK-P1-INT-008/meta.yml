@@ -36,6 +36,7 @@ failure_modes:
 - Depends on host paths or live services.
 - Operationally too slow.
 - Manifest signature is ignored or tampered artifacts still pass hash validation.
+notes: Offline verification is proven only through the exported DR bundle and temporary shared-nothing workspace; the task does not permit fallback to live runtime paths, host-specific dependencies, or unsigned manifests.
 must_read:
 - docs/operations/AI_AGENT_OPERATION_MANUAL.md
 implementation_plan: docs/plans/phase1/TSK-P1-INT-008/PLAN.md
