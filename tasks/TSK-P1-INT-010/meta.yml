@@ -45,6 +45,7 @@ evidence:
 failure_modes:
 - Old WORM wording remains.
 - Claims exceed implemented controls.
+notes: Language-sync task is documentation-facing only; it must accurately reflect the implemented tamper-evident and signed offline/pre-rail controls without implying stronger storage or settlement guarantees than the runtime and verifiers actually enforce.
 must_read:
 - docs/operations/AI_AGENT_OPERATION_MANUAL.md
 - docs/product/greentech4ce/StartUP.md
