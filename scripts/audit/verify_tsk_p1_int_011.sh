@@ -14,15 +14,9 @@ for f in "$PLAN" "$EXEC_LOG" "$META"; do
   fi
 done
 
-# Regenerate predecessor evidence so the closeout gate validates semantics,
-# not stale or pre-cleaned file presence.
-bash scripts/audit/verify_tsk_p1_int_003.sh
-bash scripts/audit/verify_tsk_p1_int_004.sh
-bash scripts/audit/verify_tsk_p1_int_005.sh
-bash scripts/audit/verify_tsk_p1_int_006.sh
-bash scripts/audit/verify_tsk_p1_int_008.sh
-bash scripts/audit/verify_tsk_p1_stor_001.sh
-bash scripts/audit/verify_tsk_p1_int_009b.sh
+# Refresh only the predecessor verifiers that actually exist in this branch.
+# Earlier-wave verifiers are not present in the Wave E split and must be
+# consumed via their committed evidence artifacts instead.
 bash scripts/audit/verify_tsk_p1_int_010.sh
 bash scripts/audit/verify_tsk_p1_int_012.sh
 
@@ -37,11 +31,13 @@ from pathlib import Path
 
 task_id, evidence_path = sys.argv[1:]
 root = Path(".")
+failures = []
 
 def load_json(path: str) -> dict:
     file = root / path
     if not file.exists():
-        raise SystemExit(f"missing_required_file:{path}")
+        failures.append(f"missing_required_file:{path}")
+        return {}
     return json.loads(file.read_text(encoding="utf-8"))
 
 def git_sha() -> str:
@@ -58,8 +54,6 @@ int008 = load_json("evidence/phase1/tsk_p1_int_008_offline_verification.json")
 int009b = load_json("evidence/phase1/tsk_p1_int_009b_restore_parity.json")
 int010 = load_json("evidence/phase1/tsk_p1_int_010_language_sync.json")
 int012 = load_json("evidence/phase1/tsk_p1_int_012_retention_policy.json")
-
-failures = []
 
 def expect(condition: bool, label: str) -> None:
     if not condition:

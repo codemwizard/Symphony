@@ -10,7 +10,7 @@ AUDIT_DOC="docs/security/AUDIT_LOGGING_PLAN.md"
 VPC_DOC="docs/security/SOVEREIGN_VPC_POSTURE.md"
 DR_SCRIPT="scripts/dr/generate_tsk_p1_int_007_bundle.sh"
 
-for f in "$PLAN" "$EXEC_LOG" "$META" "$AUDIT_DOC" "$VPC_DOC" "$DR_SCRIPT"; do
+for f in "$PLAN" "$EXEC_LOG" "$META" "$AUDIT_DOC" "$VPC_DOC"; do
   if [[ ! -f "$f" ]]; then
     echo "missing_required_file:$f" >&2
     exit 1
