@@ -420,7 +420,7 @@ static class EvidenceLinkSmsDispatchLog
     public static async Task AppendAsync(object payload, CancellationToken cancellationToken)
     {
         Directory.CreateDirectory(Path.GetDirectoryName(PathValue) ?? "/tmp");
-        await File.AppendAllTextAsync(PathValue, JsonSerializer.Serialize(payload) + Environment.NewLine, cancellationToken);
+        await TamperEvidentChain.AppendJsonAsync(PathValue, "evidence_event_sms_dispatch", payload, cancellationToken);
     }
 }
 
@@ -432,7 +432,7 @@ static class EvidenceLinkSubmissionLog
     public static async Task AppendAsync(object payload, CancellationToken cancellationToken)
     {
         Directory.CreateDirectory(Path.GetDirectoryName(PathValue) ?? "/tmp");
-        await File.AppendAllTextAsync(PathValue, JsonSerializer.Serialize(payload) + Environment.NewLine, cancellationToken);
+        await TamperEvidentChain.AppendJsonAsync(PathValue, "evidence_event_submission", payload, cancellationToken);
     }
 
     public static IReadOnlyList<JsonElement> ReadAll()
@@ -447,7 +447,7 @@ static class DemoExceptionLog
     public static async Task AppendAsync(object payload, CancellationToken cancellationToken)
     {
         Directory.CreateDirectory(Path.GetDirectoryName(PathValue) ?? "/tmp");
-        await File.AppendAllTextAsync(PathValue, JsonSerializer.Serialize(payload) + Environment.NewLine, cancellationToken);
+        await TamperEvidentChain.AppendJsonAsync(PathValue, "evidence_event_exception", payload, cancellationToken);
     }
 
     public static IReadOnlyList<JsonElement> ReadAll()
