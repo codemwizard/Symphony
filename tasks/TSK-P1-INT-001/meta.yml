@@ -34,6 +34,7 @@ must_read:
 - docs/operations/AI_AGENT_OPERATION_MANUAL.md
 implementation_plan: docs/plans/phase1/TSK-P1-INT-001/PLAN.md
 implementation_log: docs/plans/phase1/TSK-P1-INT-001/EXEC_LOG.md
+notes: Claim-discipline task completed on the governance split path. Evidence records the tamper-evident trust model reframe and removes storage-backend immutability as the Phase-1 trust-root claim.
 client: codex_cli
 assigned_agent: supervisor
 model: gpt-5-codex
