@@ -95,6 +95,8 @@ tasks:
           required: true
 
       evidence:
+        # Mirror this concrete evidence path into the task pack `touches:` list.
+        # Evidence outputs complete scope but do not determine assigned_agent.
         path: "evidence/<program_name>/example_001_input_validation.json"
         schema: "evidence_schemas/example_001_input_validation.schema.json"
         must_include:

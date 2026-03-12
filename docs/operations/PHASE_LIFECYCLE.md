@@ -84,6 +84,9 @@ Rules:
 1. A wave may structure delivery sequencing within Phase-N.
 2. Wave completion does not replace phase closeout criteria.
 3. Waves do not get separate phase contracts; they deliver against the parent phase contract.
+For the full construction rule, dependency constraints, and enforcement
+expectations for wave schedules, see:
+`docs/operations/WAVE_EXECUTION_SEMANTICS.md`
 
 ## 6) Entry and Exit Rules (Global)
 

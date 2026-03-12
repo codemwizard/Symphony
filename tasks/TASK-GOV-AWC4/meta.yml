@@ -1,0 +1,47 @@
+schema_version: 1
+phase: '1'
+task_id: TASK-GOV-AWC4
+title: Amend TASK-GOV-AWC2 contract for bootstrap invocation hardening
+owner_role: ARCHITECT
+status: completed
+depends_on:
+  - TASK-GOV-AWC3
+touches:
+  - tasks/TASK-GOV-AWC2/meta.yml
+  - docs/plans/phase1/TASK-GOV-AWC2/PLAN.md
+  - docs/plans/phase1/TASK-GOV-AWC2/EXEC_LOG.md
+  - evidence/phase1/task_gov_awc2.json
+  - evidence/phase1/task_gov_awc4_awc2_contract_repair.json
+  - tasks/TASK-GOV-AWC4/meta.yml
+  - docs/plans/phase1/TASK-GOV-AWC4/PLAN.md
+  - docs/plans/phase1/TASK-GOV-AWC4/EXEC_LOG.md
+invariants:
+  - INV-119
+work:
+  - Amend the AWC2 task contract so the bootstrap invocation hardening is explicitly declared.
+  - Update AWC2 acceptance criteria, verification, and failure modes to match the implemented behavior.
+acceptance_criteria:
+  - AWC2 plan explicitly declares the bootstrap invocation replacement.
+  - AWC2 acceptance criteria and verification cover the bootstrap invocation hardening.
+  - AWC2 evidence and exec log state that the task contract was amended after the out-of-scope but correct change was discovered.
+verification:
+  - rg -n "bash scripts/agent/bootstrap.sh|No other lines in `run_task.sh` are modified" docs/plans/phase1/TASK-GOV-AWC2/PLAN.md
+  - rg -n "bootstrap invocation|scope drift|Undeclared scope drift" tasks/TASK-GOV-AWC2/meta.yml docs/plans/phase1/TASK-GOV-AWC2/EXEC_LOG.md evidence/phase1/task_gov_awc2.json
+  - bash scripts/audit/verify_task_pack_readiness.sh --task TASK-GOV-AWC2
+evidence:
+  - evidence/phase1/task_gov_awc4_awc2_contract_repair.json
+failure_modes:
+  - Evidence file missing
+  - AWC2 plan still omits the bootstrap change
+  - AWC2 acceptance criteria still under-specify the implemented behavior
+  - Scope drift remains undocumented
+must_read:
+  - tasks/TASK-GOV-AWC2/meta.yml
+  - docs/plans/phase1/TASK-GOV-AWC2/PLAN.md
+  - docs/plans/phase1/TASK-GOV-AWC2/EXEC_LOG.md
+implementation_plan: docs/plans/phase1/TASK-GOV-AWC4/PLAN.md
+implementation_log: docs/plans/phase1/TASK-GOV-AWC4/EXEC_LOG.md
+notes: Repairs the AWC2 task pack only; no additional runner behavior is introduced here.
+client: codex_cli
+assigned_agent: architect
+model: gpt-5-codex

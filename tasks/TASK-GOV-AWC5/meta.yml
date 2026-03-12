@@ -1,0 +1,47 @@
+schema_version: 1
+phase: '1'
+task_id: TASK-GOV-AWC5
+title: Canonicalize evidence-output inclusion in touches for new task packs
+owner_role: ARCHITECT
+status: completed
+depends_on:
+  - TASK-GOV-AWC4
+touches:
+  - docs/operations/AGENT_ASSIGNMENT_PROCESS.md
+  - docs/operations/AGENT_WORKFLOW_CONTROL_PLAN.md
+  - docs/operations/TASK_CREATION_PROCESS.md
+  - docs/contracts/templates/TASK_DOD_TEMPLATE.yml
+  - evidence/phase1/task_gov_awc5_evidence_touches_rule.json
+  - tasks/TASK-GOV-AWC5/meta.yml
+  - docs/plans/phase1/TASK-GOV-AWC5/PLAN.md
+  - docs/plans/phase1/TASK-GOV-AWC5/EXEC_LOG.md
+invariants:
+  - INV-119
+work:
+  - Add a canonical rule that every concrete evidence path must also appear in touches for new task packs.
+  - Keep assignment logic anchored to non-evidence writable implementation surfaces.
+  - Reflect the rule in the task DOD template and task creation process.
+acceptance_criteria:
+  - AGENT_ASSIGNMENT_PROCESS, AGENT_WORKFLOW_CONTROL_PLAN, TASK_CREATION_PROCESS, and TASK_DOD_TEMPLATE all state the same evidence-in-touches rule.
+  - The rule explicitly says evidence outputs do not determine assigned_agent.
+verification:
+  - rg -n "evidence.*touches|do not determine `assigned_agent`|do not use declared evidence paths as assignment signals" docs/operations/AGENT_ASSIGNMENT_PROCESS.md docs/operations/AGENT_WORKFLOW_CONTROL_PLAN.md docs/operations/TASK_CREATION_PROCESS.md
+  - rg -n "Mirror this concrete evidence path into the task pack `touches:` list" docs/contracts/templates/TASK_DOD_TEMPLATE.yml
+  - python3 -c "import yaml; yaml.safe_load(open('docs/contracts/templates/TASK_DOD_TEMPLATE.yml')); print('PASS')"
+evidence:
+  - evidence/phase1/task_gov_awc5_evidence_touches_rule.json
+failure_modes:
+  - Evidence file missing
+  - Rule present in one canonical surface but absent in another
+  - Assignment guidance becomes contradictory
+  - Template omits the new rule
+must_read:
+  - docs/operations/AGENT_ASSIGNMENT_PROCESS.md
+  - docs/operations/AGENT_WORKFLOW_CONTROL_PLAN.md
+  - docs/operations/TASK_CREATION_PROCESS.md
+implementation_plan: docs/plans/phase1/TASK-GOV-AWC5/PLAN.md
+implementation_log: docs/plans/phase1/TASK-GOV-AWC5/EXEC_LOG.md
+notes: Forward-looking only; existing task-pack inconsistencies are inventoried separately in TASK-GOV-AWC6.
+client: codex_cli
+assigned_agent: architect
+model: gpt-5-codex

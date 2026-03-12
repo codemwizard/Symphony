@@ -88,6 +88,9 @@ def _run_diff_helper(root: Path) -> tuple[str, str, list[str]]:
 
 
 def _path_matches(path: str, pattern: str) -> bool:
+    if pattern.endswith("/**"):
+        prefix = pattern[:-3]
+        return path == prefix or path.startswith(prefix + "/")
     p = Path(path)
     # Path.match supports ** glob matching in repo-relative paths.
     return p.match(pattern)
