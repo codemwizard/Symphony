@@ -18,6 +18,7 @@ Plan: `docs/plans/phase1/TSK-P1-075_preflight_preci_split/PLAN.md`
 ## verification_commands_run
 - `bash scripts/audit/verify_tsk_p1_075.sh`
 - `bash scripts/audit/verify_tsk_p1_076.sh`
+- `bash scripts/audit/run_invariants_fast_checks.sh`
 
 ## final_status
 - `COMPLETED`
@@ -25,4 +26,4 @@ Plan: `docs/plans/phase1/TSK-P1-075_preflight_preci_split/PLAN.md`
 ## final summary
 - The commit path now runs a light `pre_flight` gate instead of the heavy push-time stack.
 - The push path remains anchored on `scripts/dev/pre_ci.sh`.
-- The two-level local gate model is explicit in tracked hooks, scripts, and docs.
+- The two-level local gate model is explicit in tracked hooks, scripts, and docs, and both hook-split verifiers now execute from the shared fast invariants gate.

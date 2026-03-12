@@ -18,6 +18,7 @@ Plan: `docs/plans/phase1/TSK-P1-074_hook_source_normalization/PLAN.md`
 ## verification_commands_run
 - `bash scripts/dev/install_git_hooks.sh`
 - `bash scripts/audit/verify_tsk_p1_074.sh`
+- `bash scripts/audit/run_invariants_fast_checks.sh`
 
 ## final_status
 - `COMPLETED`
@@ -25,4 +26,4 @@ Plan: `docs/plans/phase1/TSK-P1-074_hook_source_normalization/PLAN.md`
 ## final summary
 - `.githooks/` is now the single tracked source of truth for local hooks.
 - The installer copies tracked hooks into `.git/hooks` instead of generating inline hook bodies.
-- The hook topology is documented and verified mechanically.
+- The hook topology is documented and verified mechanically, and the task verifier now runs from the shared fast invariants gate.
