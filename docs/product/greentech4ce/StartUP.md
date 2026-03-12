@@ -1506,6 +1506,23 @@ Evaluate whether required proof set is complete for release.
 
 ---
 
+## Phase-1 Messaging Guardrails
+
+All product/demo language for the current Phase-1 posture must use these claims:
+
+* Symphony provides a **tamper-evident** evidence and execution architecture.
+* The offline/pre-rail release path is a **signed offline/pre-rail bridge**, not a workaround.
+* Settlement finality depends on **explicit acknowledgement** from the downstream execution boundary.
+* `AWAITING_EXECUTION` is the visible state when proof is complete but external acknowledgement has not yet been received.
+
+The following claims are not permitted unless separately evidenced as additional controls:
+
+* WORM or immutable storage as the primary trust guarantee
+* silent settlement or implied external execution completion
+* storage backend alone as the trust root
+
+---
+
 ### GT-BE-009 — Implement duplicate submission detection
 
 **Owner:** Backend

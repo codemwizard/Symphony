@@ -1,0 +1,55 @@
+schema_version: 1
+phase: '1'
+task_id: TSK-P1-INT-010
+title: Product/demo/doc language synchronization
+owner_role: SUPERVISOR
+status: completed
+depends_on:
+- TSK-P1-INT-001
+- TSK-P1-INT-006
+touches:
+- tasks/TSK-P1-INT-010/meta.yml
+- docs/product/greentech4ce/StartUP.md
+- scripts/audit/verify_tsk_p1_int_010.sh
+- docs/plans/phase1/TSK-P1-INT-010/PLAN.md
+- docs/plans/phase1/TSK-P1-INT-010/EXEC_LOG.md
+- evidence/phase1/tsk_p1_int_010_language_sync.json
+invariants:
+- INV-105
+- INV-119
+work:
+- Replace immutability-first messaging with tamper-evident wording.
+- Add signed offline/pre-rail bridge wording.
+- Add explicit acknowledgement dependency wording.
+acceptance_criteria:
+- Public/demo materials use tamper-evident language.
+- Public/demo materials include signed offline/pre-rail bridge framing.
+- No unproven WORM or silent-settlement implications remain.
+verification:
+- rg -n --fixed-strings "tamper-evident" docs/product/greentech4ce/StartUP.md
+- python3 - <<'PY'
+  import json
+  from pathlib import Path
+  path = Path("evidence/phase1/tsk_p1_int_010_language_sync.json")
+  payload = json.loads(path.read_text(encoding="utf-8"))
+  assert payload["status"] == "PASS"
+  assert payload["tamper_evident_language_present"] is True
+  assert payload["signed_offline_bridge_language_present"] is True
+  assert payload["acknowledgement_dependency_present"] is True
+  assert payload["awaiting_execution_state_visible"] is True
+  print("PASS")
+  PY
+- bash scripts/audit/verify_tsk_p1_int_010.sh
+evidence:
+- evidence/phase1/tsk_p1_int_010_language_sync.json
+failure_modes:
+- Old WORM wording remains.
+- Claims exceed implemented controls.
+must_read:
+- docs/operations/AI_AGENT_OPERATION_MANUAL.md
+- docs/product/greentech4ce/StartUP.md
+implementation_plan: docs/plans/phase1/TSK-P1-INT-010/PLAN.md
+implementation_log: docs/plans/phase1/TSK-P1-INT-010/EXEC_LOG.md
+client: codex_cli
+assigned_agent: supervisor
+model: gpt-5-codex

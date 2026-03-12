@@ -1,0 +1,61 @@
+schema_version: 1
+phase: '1'
+task_id: TSK-P1-INT-012
+title: Evidence retention and archival boundary policy
+owner_role: SUPERVISOR
+status: completed
+depends_on:
+- TSK-P1-INT-001
+- TSK-P1-INT-007
+touches:
+- tasks/TSK-P1-INT-012/meta.yml
+- docs/security/AUDIT_LOGGING_PLAN.md
+- docs/security/SOVEREIGN_VPC_POSTURE.md
+- scripts/audit/verify_tsk_p1_int_012.sh
+- docs/plans/phase1/TSK-P1-INT-012/PLAN.md
+- docs/plans/phase1/TSK-P1-INT-012/EXEC_LOG.md
+- evidence/phase1/tsk_p1_int_012_retention_policy.json
+invariants:
+- INV-105
+- INV-119
+work:
+- Define active, archived, and historical evidence classes and retention windows.
+- Define archival eligibility and rotation boundaries.
+- Tie DR bundle selection to declared retention policy.
+acceptance_criteria:
+- Retention windows are defined for all evidence classes.
+- Archival triggers are machine-checkable.
+- DR bundle selection follows declared policy.
+- No silent deletion before verification and audit obligations are satisfied.
+verification:
+- rg -n --fixed-strings "Active evidence" docs/security/AUDIT_LOGGING_PLAN.md
+- python3 - <<'PY'
+  import json
+  from pathlib import Path
+  path = Path("evidence/phase1/tsk_p1_int_012_retention_policy.json")
+  payload = json.loads(path.read_text(encoding="utf-8"))
+  assert payload["status"] == "PASS"
+  assert payload["active_retention_days"] == 90
+  assert payload["archived_retention_years"] == 7
+  assert payload["historical_retention_years"] == 10
+  assert payload["machine_checkable_triggers_present"] is True
+  assert payload["dr_bundle_policy_link_present"] is True
+  print("PASS")
+  PY
+- bash scripts/audit/verify_tsk_p1_int_012.sh
+evidence:
+- evidence/phase1/tsk_p1_int_012_retention_policy.json
+failure_modes:
+- Historical boundary undefined.
+- Evidence can age out prematurely.
+- Policy is not connected to bundle generation.
+must_read:
+- docs/operations/AI_AGENT_OPERATION_MANUAL.md
+- docs/security/AUDIT_LOGGING_PLAN.md
+- docs/security/SOVEREIGN_VPC_POSTURE.md
+implementation_plan: docs/plans/phase1/TSK-P1-INT-012/PLAN.md
+implementation_log: docs/plans/phase1/TSK-P1-INT-012/EXEC_LOG.md
+notes: Complementary to LED-002 retention classes; does not replace LED-002.
+client: codex_cli
+assigned_agent: supervisor
+model: gpt-5-codex
