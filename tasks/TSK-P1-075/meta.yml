@@ -6,19 +6,24 @@ owner_role: SUPERVISOR
 status: planned
 depends_on:
   - TSK-P1-074
-blocks:
-  - TSK-P1-076
-scope:
-  - ".githooks/**"
-  - "scripts/dev/install_git_hooks.sh"
-  - "scripts/dev/pre_flight.sh"
-  - "scripts/dev/pre_ci.sh"
-  - "scripts/audit/**"
-  - "docs/operations/**"
-  - "docs/tasks/phase1_prompts.md"
+touches:
+  - .githooks/**
+  - scripts/dev/install_git_hooks.sh
+  - scripts/dev/pre_flight.sh
+  - scripts/dev/pre_ci.sh
+  - scripts/audit/**
+  - docs/operations/**
+  - docs/tasks/phase1_prompts.md
+  - tasks/TSK-P1-075/meta.yml
+  - docs/plans/phase1/TSK-P1-075_preflight_preci_split/PLAN.md
+  - docs/plans/phase1/TSK-P1-075_preflight_preci_split/EXEC_LOG.md
+invariants:
+  - INV-077
+  - INV-105
+  - INV-119
 implementation_plan: docs/plans/phase1/TSK-P1-075_preflight_preci_split/PLAN.md
 implementation_log: docs/plans/phase1/TSK-P1-075_preflight_preci_split/EXEC_LOG.md
-evidence_paths:
+evidence:
   - evidence/phase1/tsk_p1_075_preflight_preci_split.json
 work:
   - Separate light local pre-flight checks from the heavy push-time pre-CI path.
@@ -34,5 +39,10 @@ acceptance_criteria:
 must_read:
   - docs/operations/AI_AGENT_OPERATION_MANUAL.md
   - docs/process/debug-remediation-policy.md
-notes:
-  - The goal is separation of gate levels, not reduction of push-time assurance.
+failure_modes:
+  - The light pre-flight path accidentally reruns or replaces the heavy push-time pre-CI stack.
+  - Documentation and scripts disagree about which gate runs on commit versus push.
+notes: The goal is separation of gate levels, not reduction of push-time assurance.
+client: codex_cli
+assigned_agent: supervisor
+model: gpt-5-codex

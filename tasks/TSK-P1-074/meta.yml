@@ -5,19 +5,23 @@ title: Normalize local hook source and installation path
 owner_role: SUPERVISOR
 status: planned
 depends_on: []
-blocks:
-  - TSK-P1-075
-  - TSK-P1-076
-scope:
-  - ".githooks/**"
-  - "scripts/dev/install_git_hooks.sh"
-  - "scripts/dev/pre_flight.sh"
-  - "docs/operations/**"
-  - "scripts/audit/**"
-  - "docs/tasks/phase1_prompts.md"
+touches:
+  - .githooks/**
+  - scripts/dev/install_git_hooks.sh
+  - scripts/dev/pre_flight.sh
+  - docs/operations/**
+  - scripts/audit/**
+  - docs/tasks/phase1_prompts.md
+  - tasks/TSK-P1-074/meta.yml
+  - docs/plans/phase1/TSK-P1-074_hook_source_normalization/PLAN.md
+  - docs/plans/phase1/TSK-P1-074_hook_source_normalization/EXEC_LOG.md
+invariants:
+  - INV-077
+  - INV-105
+  - INV-119
 implementation_plan: docs/plans/phase1/TSK-P1-074_hook_source_normalization/PLAN.md
 implementation_log: docs/plans/phase1/TSK-P1-074_hook_source_normalization/EXEC_LOG.md
-evidence_paths:
+evidence:
   - evidence/phase1/tsk_p1_074_hook_source_normalization.json
 work:
   - Normalize the repo to one canonical tracked hook source location and one installed hook destination.
@@ -33,6 +37,10 @@ acceptance_criteria:
 must_read:
   - docs/operations/AI_AGENT_OPERATION_MANUAL.md
   - docs/process/DEBUG_PROCESS_MATERIAL_GAIN_ANALYSIS_2026-03-10.md
-notes:
-  - Preserve heavy push-time parity checks.
-  - This task normalizes hook topology only; it must not weaken push-time gate coverage.
+failure_modes:
+  - Hook installation remains ambiguous between tracked templates and active installed hooks.
+  - Topology normalization weakens or bypasses the existing heavy push-time parity path.
+notes: Preserve heavy push-time parity checks; this task normalizes hook topology only and must not weaken push-time gate coverage.
+client: codex_cli
+assigned_agent: supervisor
+model: gpt-5-codex

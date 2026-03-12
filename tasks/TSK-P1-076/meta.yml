@@ -7,15 +7,21 @@ status: planned
 depends_on:
   - TSK-P1-074
   - TSK-P1-075
-blocks: []
-scope:
-  - "scripts/audit/**"
-  - "docs/operations/**"
-  - "docs/process/**"
-  - "docs/tasks/phase1_prompts.md"
+touches:
+  - scripts/audit/**
+  - docs/operations/**
+  - docs/process/**
+  - docs/tasks/phase1_prompts.md
+  - tasks/TSK-P1-076/meta.yml
+  - docs/plans/phase1/TSK-P1-076_local_gate_topology_verification/PLAN.md
+  - docs/plans/phase1/TSK-P1-076_local_gate_topology_verification/EXEC_LOG.md
+invariants:
+  - INV-077
+  - INV-105
+  - INV-119
 implementation_plan: docs/plans/phase1/TSK-P1-076_local_gate_topology_verification/PLAN.md
 implementation_log: docs/plans/phase1/TSK-P1-076_local_gate_topology_verification/EXEC_LOG.md
-evidence_paths:
+evidence:
   - evidence/phase1/tsk_p1_076_local_gate_topology.json
 work:
   - Verify the documented two-level local gate topology against installed hooks and tracked hook sources.
@@ -31,5 +37,10 @@ acceptance_criteria:
 must_read:
   - docs/operations/AI_AGENT_OPERATION_MANUAL.md
   - docs/process/DEBUG_PROCESS_MATERIAL_GAIN_ANALYSIS_2026-03-10.md
-notes:
-  - This task is verification/documentation closure for the hook-topology follow-up line.
+failure_modes:
+  - Hook topology drift is described in docs but not mechanically detected.
+  - Evidence is emitted without proving agreement between installed hooks, tracked sources, and documented topology.
+notes: This task is verification and documentation closure for the hook-topology follow-up line.
+client: codex_cli
+assigned_agent: invariants_curator
+model: gpt-5-codex
