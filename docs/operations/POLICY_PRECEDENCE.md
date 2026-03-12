@@ -19,6 +19,7 @@ Rank order governs broad authority. For narrowly scoped domains, the explicitly 
 
 Examples:
 - Lifecycle taxonomy: `docs/operations/PHASE_LIFECYCLE.md`
+- Wave execution semantics: `docs/operations/WAVE_EXECUTION_SEMANTICS.md`
 - Remediation trigger thresholds: `docs/operations/REMEDIATION_TRACE_WORKFLOW.md`
 - Branch/commit formats: `docs/operations/GIT_CONVENTIONS.md`
 - Invariant identity and status: `docs/invariants/INVARIANTS_MANIFEST.yml`

@@ -9,8 +9,9 @@ source "$ROOT_DIR/scripts/lib/evidence.sh"
 EVIDENCE_TS="$(evidence_now_utc)"
 EVIDENCE_GIT_SHA="$(git_sha)"
 EVIDENCE_SCHEMA_FP="$(schema_fingerprint)"
+EVIDENCE_RUN_ID="${SYMPHONY_RUN_ID:-standalone-${EVIDENCE_TS}}"
 export ROOT_DIR EVIDENCE_FILE
-export EVIDENCE_TS EVIDENCE_GIT_SHA EVIDENCE_SCHEMA_FP
+export EVIDENCE_TS EVIDENCE_GIT_SHA EVIDENCE_SCHEMA_FP EVIDENCE_RUN_ID
 
 python3 <<'PY'
 import json
@@ -94,6 +95,7 @@ for item in [
 
 payload = {
     'check_id': 'TASK-INVPROC-06',
+    'run_id': os.environ['EVIDENCE_RUN_ID'],
     'timestamp_utc': os.environ['EVIDENCE_TS'],
     'git_sha': os.environ['EVIDENCE_GIT_SHA'],
     'schema_fingerprint': os.environ['EVIDENCE_SCHEMA_FP'],

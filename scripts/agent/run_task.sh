@@ -167,6 +167,13 @@ hr
 [[ -f "$IMPLEMENTATION_PLAN" ]] || die "Missing implementation plan: $IMPLEMENTATION_PLAN"
 [[ -f "$IMPLEMENTATION_LOG"  ]] || die "Missing implementation log:  $IMPLEMENTATION_LOG"
 
+hr
+echo "==> Pack readiness gate"
+if ! bash scripts/audit/verify_task_pack_readiness.sh --task "$TASK_ID"; then
+  die "Task $TASK_ID is schema-valid but not execution-ready. Fix the task pack before running."
+fi
+echo "Pack readiness: PASS"
+
 echo "Required artifacts present:"
 echo "  - $IMPLEMENTATION_PLAN"
 echo "  - $IMPLEMENTATION_LOG"
@@ -182,7 +189,7 @@ fi
 
 hr
 echo "==> Running deterministic bootstrap gates"
-scripts/agent/bootstrap.sh
+bash scripts/agent/bootstrap.sh
 
 hr
 echo "==> Running verification checks (structured JSONL results)"

@@ -57,6 +57,8 @@ rules:
   patterns:
     - "scripts/audit/**"
     - "schema/migrations/**"
+    - "docs/operations/**"
+    - "evidence/**"
 YAML
   cp "$ROOT/docs/architecture/evidence_schema.json" "$case_dir/docs/architecture/evidence_schema.json"
   cp "$ROOT/docs/operations/approval_metadata.schema.json" "$case_dir/docs/operations/approval_metadata.schema.json"
@@ -146,6 +148,10 @@ run_case "non_regulated_no_approval" "docs/readme.md" "none" "range" 0 "PASS" ""
 run_case "regulated_missing_approval" "scripts/audit/example.sh" "none" "range" 1 "FAIL" "missing_evidence"
 run_case "regulated_invalid_approval" "scripts/audit/example.sh" "invalid" "range" 1 "FAIL" "schema_validation_failed"
 run_case "regulated_valid_approval" "scripts/audit/example.sh" "valid" "range" 0 "PASS" ""
+run_case "docs_operations_missing_approval" "docs/operations/example.md" "none" "range" 1 "FAIL" "missing_evidence"
+run_case "docs_operations_valid_approval" "docs/operations/example.md" "valid" "range" 0 "PASS" ""
+run_case "evidence_missing_approval" "evidence/phase1/example.json" "none" "range" 1 "FAIL" "missing_evidence"
+run_case "evidence_valid_approval" "evidence/phase1/example.json" "valid" "range" 0 "PASS" ""
 run_case "zip_mode_regulated_no_approval" "scripts/audit/example.sh" "none" "zip_audit" 0 "PASS" ""
 
 missing_ref_case="$tmp_dir/missing_range_ref"

@@ -1,0 +1,59 @@
+schema_version: 1
+phase: '1'
+task_id: TSK-P1-INT-002
+title: Integrity verifier stack plus synchronous governed chain population
+owner_role: SUPERVISOR
+status: completed
+depends_on:
+- TSK-P1-INT-001
+touches:
+- services/**
+- scripts/audit/verify_tsk_p1_int_002.sh
+- evidence/phase1/tsk_p1_int_002_integrity_verifier_stack.json
+- docs/plans/phase1/TSK-P1-INT-002/PLAN.md
+- docs/plans/phase1/TSK-P1-INT-002/EXEC_LOG.md
+invariants:
+- INV-105
+- INV-119
+work:
+- Preserve signed-artifact validation and append-only verification behavior.
+- Implement synchronous hash-chain population for governed instructions and evidence events.
+- Enforce same-transaction commit boundary between governed event and chain record.
+- Measure latency delta on declared reference hardware and emit verifiable benchmark evidence.
+acceptance_criteria:
+- Chain records exist for governed instructions and evidence events.
+- Chain updates commit in the same transaction boundary as the attested event.
+- Broken-chain fixtures fail verification in both governed domains.
+- Declared reference hardware is explicit in evidence.
+- Measured chain-population latency delta is <=100ms on declared reference hardware.
+- Evidence declares measurement method as p95 wall-clock transaction delta over at least 100 runs, comparing equivalent flows with and without chain population.
+verification:
+- dotnet run --no-launch-profile --project services/ledger-api/dotnet/src/LedgerApi.DemoHost/LedgerApi.DemoHost.csproj -- --self-test-integrity-chain
+- python3 - <<'PY'
+  import json
+  from pathlib import Path
+  path = Path("evidence/phase1/tsk_p1_int_002_integrity_verifier_stack.json")
+  payload = json.loads(path.read_text(encoding="utf-8"))
+  assert payload["status"] == "PASS"
+  assert payload["latency_ms"]["chain_population_delta"] <= payload["latency_ms"]["threshold"]
+  assert payload["domains"]["governed_instruction"]["tamper_fixture_rejected"] is True
+  assert payload["domains"]["evidence_events"]["tamper_fixture_rejected"] is True
+  print("PASS")
+  PY
+- bash scripts/audit/verify_tsk_p1_int_002.sh
+evidence:
+- evidence/phase1/tsk_p1_int_002_integrity_verifier_stack.json
+failure_modes:
+- Chain writes are asynchronous and permit unverifiable transient gaps.
+- Domain scope is partial or undefined.
+- Latency claim exists without hardware declaration or measured delta fields.
+- Latency claim exists without measurement-method declaration.
+must_read:
+- docs/operations/AI_AGENT_OPERATION_MANUAL.md
+- docs/operations/STORAGE_AND_INTEGRITY_POSITION_MINIO_TO_SEAWEEDFS.md
+implementation_plan: docs/plans/phase1/TSK-P1-INT-002/PLAN.md
+implementation_log: docs/plans/phase1/TSK-P1-INT-002/EXEC_LOG.md
+notes: Implemented with local demo-host self-test evidence. Evidence declares the actual execution hardware and p95 delta measurement while preserving the task's <=100ms latency contract.
+client: codex_cli
+assigned_agent: supervisor
+model: gpt-5-codex

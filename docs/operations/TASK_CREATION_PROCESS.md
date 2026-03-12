@@ -48,15 +48,23 @@ Follow this exact order. Do not skip or reorder steps.
 - Path mapping:
   - `phase: '0'` -> `docs/plans/phase0/<TASK_ID>/PLAN.md`
   - `phase: '1'` -> `docs/plans/phase1/<TASK_ID>/PLAN.md`
+  - `phase: '2'` -> `docs/plans/phase2/<TASK_ID>/PLAN.md`
+  - `phase: '3'` -> `docs/plans/phase3/<TASK_ID>/PLAN.md`
+  - `phase: '4'` -> `docs/plans/phase4/<TASK_ID>/PLAN.md`
 - Required sections: mission, constraints, verification commands, approval references, evidence paths.
 
 ### Step 4 — Populate meta fully
 - Add: `depends_on`, `touches`, `invariants`, `work`, `acceptance_criteria`, `verification`, `evidence`, `failure_modes`, `must_read`, `implementation_plan`, `implementation_log`, `client`, `assigned_agent`, `model`.
+- Every concrete path listed under `evidence:` must also appear in `touches`.
+  Evidence paths close scope but do not determine `assigned_agent`.
 
 ### Step 5 — Create execution log
 - Path mapping mirrors Step 3:
   - `phase: '0'` -> `docs/plans/phase0/<TASK_ID>/EXEC_LOG.md`
   - `phase: '1'` -> `docs/plans/phase1/<TASK_ID>/EXEC_LOG.md`
+  - `phase: '2'` -> `docs/plans/phase2/<TASK_ID>/EXEC_LOG.md`
+  - `phase: '3'` -> `docs/plans/phase3/<TASK_ID>/EXEC_LOG.md`
+  - `phase: '4'` -> `docs/plans/phase4/<TASK_ID>/EXEC_LOG.md`
 - Log is append-only from this point.
 
 ### Step 6 — Register in human task index
@@ -96,7 +104,9 @@ Assignment is determined by **Allowed paths** in `AGENTS.md` and `.codex/agents/
 
 Every task must:
 - Run a deterministic verification command
-- Produce evidence under `./evidence/phase0/...`
+- Produce evidence under `./evidence/phase<N>/...` where `<N>` matches the
+  task's declared lifecycle phase key.
+- Mirror every concrete `evidence:` path into `touches`.
 - Fail if verification or evidence is missing
 - Include a **failure mode** explicitly stating: `Evidence file missing`
 - Ensure the verification command **writes** the declared evidence (not just checks text)
@@ -139,6 +149,9 @@ When listing `Touches`, place new documents in canonical locations:
 Lifecycle plan path mapping:
 - `phase: '0'` -> `docs/plans/phase0/<TASK_ID>/PLAN.md` and `EXEC_LOG.md`
 - `phase: '1'` -> `docs/plans/phase1/<TASK_ID>/PLAN.md` and `EXEC_LOG.md`
+- `phase: '2'` -> `docs/plans/phase2/<TASK_ID>/PLAN.md` and `EXEC_LOG.md`
+- `phase: '3'` -> `docs/plans/phase3/<TASK_ID>/PLAN.md` and `EXEC_LOG.md`
+- `phase: '4'` -> `docs/plans/phase4/<TASK_ID>/PLAN.md` and `EXEC_LOG.md`
 
 Legacy locations still exist but are not default targets for new documents:
 - `docs/phase-0/**`
