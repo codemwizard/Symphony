@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 import json
+import shutil
 import subprocess
 import sys
 from pathlib import Path
@@ -7,6 +8,19 @@ from pathlib import Path
 
 def run(*args: str) -> None:
     subprocess.run(args, check=True)
+
+
+def locate_age(root: Path) -> Path:
+    for candidate in (
+        shutil.which("age"),
+        root / ".toolchain/age/usr/bin/age",
+    ):
+        if not candidate:
+            continue
+        path = Path(candidate)
+        if path.exists():
+            return path
+    raise SystemExit("missing_age_binary")
 
 
 def main() -> int:
@@ -20,7 +34,7 @@ def main() -> int:
     recipient_file = out_dir / "bundle.age.recipient.txt"
     custody_doc = out_dir / "custody_handoff.md"
     evidence = root / "evidence/phase1/tsk_p1_int_007_dr_bundle_generator.json"
-    age_bin = root / ".toolchain/age/usr/bin/age"
+    age_bin = locate_age(root)
 
     for path in (manifest, signature, signing_pub, encrypted, recovery_key, recipient_file, custody_doc, evidence):
         if not path.exists():

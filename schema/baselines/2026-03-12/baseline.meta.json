@@ -6,5 +6,5 @@
   "pg_dump_version": "pg_dump (PostgreSQL) 18.2 (Debian 18.2-1.pgdg13+1)",
   "pg_server_version": "18.2 (Debian 18.2-1.pgdg13+1)",
   "dump_source": "container:symphony-postgres",
-  "generated_at_utc": "2026-03-12T17:26:54.744512+00:00"
+  "generated_at_utc": "2026-03-12T17:26:54.744859+00:00"
 }

@@ -50,6 +50,45 @@ def validate_manifest_entries(manifest_payload: dict, extracted_root: Path) -> b
     return True
 
 
+def validate_bundle_members(tf: tarfile.TarFile, expected_files: set[str]) -> list[tarfile.TarInfo]:
+    allowed_dirs = {""}
+    for rel_path in expected_files:
+        parent = Path(rel_path).parent
+        while str(parent) not in {"", "."}:
+            allowed_dirs.add(parent.as_posix())
+            parent = parent.parent
+
+    safe_members: list[tarfile.TarInfo] = []
+    for member in tf.getmembers():
+        normalized = Path(member.name).as_posix().lstrip("./")
+        if not normalized:
+            safe_members.append(member)
+            continue
+
+        member_path = Path(normalized)
+        if member_path.is_absolute() or ".." in member_path.parts:
+            raise SystemExit(f"unsafe_tar_member:{member.name}")
+
+        if member.issym() or member.islnk():
+            raise SystemExit(f"unsupported_tar_member:{member.name}")
+
+        if member.isdir():
+            if normalized not in allowed_dirs:
+                raise SystemExit(f"unexpected_tar_directory:{member.name}")
+            safe_members.append(member)
+            continue
+
+        if not member.isfile():
+            raise SystemExit(f"unsupported_tar_member:{member.name}")
+
+        if normalized not in expected_files:
+            raise SystemExit(f"unexpected_tar_member:{member.name}")
+
+        safe_members.append(member)
+
+    return safe_members
+
+
 def main() -> int:
     root = Path(__file__).resolve().parents[2]
     out_dir = root / "scripts/dr/output/tsk_p1_int_007"
@@ -97,10 +136,12 @@ def main() -> int:
             check=True,
         )
 
-        with tarfile.open(tar_path) as tf:
-            tf.extractall(extracted)
-
         manifest_payload = json.loads((bundle_root / "manifest.json").read_text(encoding="utf-8"))
+        with tarfile.open(tar_path) as tf:
+            safe_members = validate_bundle_members(tf, {entry["path"] for entry in manifest_payload.get("entries", [])})
+            for member in safe_members:
+                tf.extract(member, extracted)
+
         manifest_pass = validate_manifest_entries(manifest_payload, extracted)
         if not manifest_pass:
             raise SystemExit("manifest_validation_failed")
