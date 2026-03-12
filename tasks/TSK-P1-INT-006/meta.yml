@@ -1,0 +1,52 @@
+schema_version: 1
+phase: '1'
+task_id: TSK-P1-INT-006
+title: Signed offline/pre-rail bridge proof pack
+owner_role: SUPERVISOR
+status: completed
+depends_on:
+- TSK-P1-INT-002
+- TSK-P1-INT-004
+touches:
+- scripts/audit/verify_tsk_p1_int_006.sh
+- docs/plans/phase1/TSK-P1-INT-006/PLAN.md
+- docs/plans/phase1/TSK-P1-INT-006/EXEC_LOG.md
+- evidence/phase1/tsk_p1_int_006_offline_bridge.json
+invariants:
+- INV-105
+- INV-119
+work:
+- Aggregate signed instruction generation proof.
+- Aggregate tamper-failure proof for modified artifacts.
+- Aggregate AWAITING_EXECUTION and missing-ack escalation proof.
+- Prove chain-of-custody visibility for offline handoff.
+acceptance_criteria:
+- Signed instruction file is generated and verifiable.
+- Modified copy fails verification (CHECKSUM_BREAK or equivalent).
+- Missing acknowledgement remains explicit and escalates by policy.
+- Evidence shows bridge as governed control path, not workaround.
+verification:
+- bash scripts/audit/verify_tsk_p1_int_002.sh
+- python3 - <<'PY'
+  import json
+  from pathlib import Path
+  path = Path("evidence/phase1/tsk_p1_int_006_offline_bridge.json")
+  payload = json.loads(path.read_text(encoding="utf-8"))
+  assert payload["status"] == "PASS"
+  assert payload["bridge_claim"]["governed_control_path_not_workaround"] is True
+  print("PASS")
+  PY
+- bash scripts/audit/verify_tsk_p1_int_006.sh
+evidence:
+- evidence/phase1/tsk_p1_int_006_offline_bridge.json
+failure_modes:
+- Acknowledgement dependency omitted from bridge evidence.
+- Bridge presented as ad hoc workaround.
+must_read:
+- docs/operations/AI_AGENT_OPERATION_MANUAL.md
+notes: Aggregates upstream INT-002, INT-003, and INT-004 evidence into a single offline/pre-rail bridge proof pack; does not introduce new runtime behavior.
+implementation_plan: docs/plans/phase1/TSK-P1-INT-006/PLAN.md
+implementation_log: docs/plans/phase1/TSK-P1-INT-006/EXEC_LOG.md
+client: codex_cli
+assigned_agent: supervisor
+model: gpt-5-codex

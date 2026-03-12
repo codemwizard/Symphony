@@ -1,0 +1,51 @@
+schema_version: 1
+phase: '1'
+task_id: TSK-P1-INT-007
+title: DR verification bundle generator with explicit protection and custody
+owner_role: SUPERVISOR
+status: completed
+depends_on:
+- TSK-P1-INT-002
+- TSK-P1-INT-005
+touches:
+- scripts/dr/**
+- scripts/audit/verify_tsk_p1_int_007.sh
+- docs/plans/phase1/TSK-P1-INT-007/PLAN.md
+- docs/plans/phase1/TSK-P1-INT-007/EXEC_LOG.md
+- evidence/phase1/tsk_p1_int_007_dr_bundle_generator.json
+invariants:
+- INV-105
+- INV-119
+work:
+- Build DR bundle from live evidence inputs.
+- Include canonicalization archive, trust anchors, revocation material, policy archive, and verifier tooling.
+- Produce signed manifest with hashes, version, and signing reference.
+- Protect bundle with age and record protection method.
+- Document recovery-material custody handoff and designated holders.
+- Enforce a bundle-generation threshold of 120000 ms and record the measured elapsed time in evidence.
+acceptance_criteria:
+- Bundle is generated from real artifacts.
+- Bundle manifest is complete and portable.
+- Bundle is decryptable only with intended recovery material.
+- Custody handoff is documented and linked in evidence.
+- Bundle generation meets declared operational threshold.
+- Sandbox custody documentation explicitly distinguishes demo recovery material from production custody expectations.
+verification:
+- bash scripts/audit/verify_tsk_p1_int_007.sh
+- python3 scripts/dr/verify_tsk_p1_int_007_bundle.py
+evidence:
+- evidence/phase1/tsk_p1_int_007_dr_bundle_generator.json
+failure_modes:
+- Placeholder bundle only.
+- Protection declared but not exercised.
+- Custody undefined.
+- Bundle generation exceeds the declared 120000 ms threshold.
+must_read:
+- docs/operations/AI_AGENT_OPERATION_MANUAL.md
+- docs/operations/KEY_ROTATION_SOP.md
+implementation_plan: docs/plans/phase1/TSK-P1-INT-007/PLAN.md
+implementation_log: docs/plans/phase1/TSK-P1-INT-007/EXEC_LOG.md
+notes: Key rotation/re-encryption follow-on must be anchored in KEY_ROTATION_SOP.md. Sandbox demonstration stores recovery material in-repo only so TSK-P1-INT-008 can verify the bundle offline; production custody must externalize that material.
+client: codex_cli
+assigned_agent: supervisor
+model: gpt-5-codex
