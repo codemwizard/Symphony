@@ -1,0 +1,43 @@
+schema_version: 1
+phase: '1'
+task_id: TASK-GOV-AWC6
+title: Inventory evidence versus touches inconsistencies and propose cleanup batches
+owner_role: ARCHITECT
+status: completed
+depends_on:
+  - TASK-GOV-AWC5
+touches:
+  - docs/operations/EVIDENCE_TOUCHES_AUDIT.md
+  - evidence/phase1/task_gov_awc6_evidence_touches_audit.json
+  - tasks/TASK-GOV-AWC6/meta.yml
+  - docs/plans/phase1/TASK-GOV-AWC6/PLAN.md
+  - docs/plans/phase1/TASK-GOV-AWC6/EXEC_LOG.md
+invariants:
+  - INV-119
+work:
+  - Audit current task packs for declared evidence outputs not covered by touches.
+  - Separate concrete evidence outputs from schema/reference evidence paths.
+  - Propose explicit cleanup batches by family for follow-on implementation.
+acceptance_criteria:
+  - EVIDENCE_TOUCHES_AUDIT.md inventories the current inconsistencies and includes TASK-GOV-AWC1 and TASK-GOV-AWC2.
+  - The audit distinguishes concrete outputs from schema-path references.
+  - The audit proposes explicit batch task IDs and recommended owners by family.
+verification:
+  - rg -n "TASK-GOV-AWC1|TASK-GOV-AWC2|TASK-GOV|TASK-INVPROC|TASK-OI|TSK-P1|TSK-HARD|PERF-|R-" docs/operations/EVIDENCE_TOUCHES_AUDIT.md
+  - python3 -c "from pathlib import Path; import yaml; rows=[]; [rows.append((data.get('task_id'), miss)) for p in sorted(Path('tasks').glob('*/meta.yml')) for data in [yaml.safe_load(p.read_text()) or {}] for miss in [[ev for ev in (data.get('evidence') or []) if isinstance(ev,str) and not any(isinstance(t,str) and (t==ev or t=='evidence/phase1/**' or t=='evidence/**' or (t.endswith('/**') and ev.startswith(t[:-2]))) for t in (data.get('touches') or []))]] if miss]; assert any(tid=='TASK-GOV-AWC1' for tid,_ in rows) and any(tid=='TASK-GOV-AWC2' for tid,_ in rows); print(len(rows)); print('PASS')"
+evidence:
+  - evidence/phase1/task_gov_awc6_evidence_touches_audit.json
+failure_modes:
+  - Evidence file missing
+  - Inventory omits known inconsistent tasks
+  - Schema-path and output-path cases are conflated
+  - Cleanup batches are not explicit enough to execute
+must_read:
+  - docs/operations/AGENT_ASSIGNMENT_PROCESS.md
+  - docs/operations/TASK_CREATION_PROCESS.md
+implementation_plan: docs/plans/phase1/TASK-GOV-AWC6/PLAN.md
+implementation_log: docs/plans/phase1/TASK-GOV-AWC6/EXEC_LOG.md
+notes: Creates the cleanup backlog; does not backfill existing task packs.
+client: codex_cli
+assigned_agent: architect
+model: gpt-5-codex

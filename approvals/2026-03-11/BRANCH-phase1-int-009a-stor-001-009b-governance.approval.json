@@ -1,0 +1,58 @@
+{
+  "schema_version": "1.0",
+  "approval": {
+    "status": "APPROVED",
+    "approver_id": "governance-human-reviewer",
+    "change_reason": "Implement the INT-009A/STOR-001/INT-009B governance split with verifier registry wiring and branch-batch approval metadata hardening for regulated surfaces.",
+    "approved_at_utc": "2026-03-11T16:40:00Z",
+    "role_authority": "Human Approver"
+  },
+  "ai": {
+    "ai_used": true,
+    "ai_prompt_hash": "phase1-int-009a-stor-001-009b-governance",
+    "model_id": "gpt-5-codex",
+    "client": "codex_cli",
+    "session_id": "phase1-int-009a-stor-001-009b-governance"
+  },
+  "scope": {
+    "regulated_surfaces_touched": true,
+    "paths_changed": [
+      "approvals/2026-03-11/BRANCH-phase1-int-009a-stor-001-009b-governance.approval.json",
+      "approvals/2026-03-11/BRANCH-phase1-int-009a-stor-001-009b-governance.md",
+      "docs/operations/VERIFIER_EVIDENCE_REGISTRY.yml",
+      "docs/plans/phase1/TSK-P1-INT-009A/PLAN.md",
+      "docs/plans/phase1/TSK-P1-INT-009A/EXEC_LOG.md",
+      "docs/plans/phase1/TSK-P1-INT-009B/PLAN.md",
+      "docs/plans/phase1/TSK-P1-INT-009B/EXEC_LOG.md",
+      "docs/plans/phase1/TSK-P1-STOR-001/PLAN.md",
+      "docs/plans/phase1/TSK-P1-STOR-001/EXEC_LOG.md",
+      "evidence/phase1/approval_metadata.json",
+      "evidence/phase1/tsk_p1_int_009a_storage_policy_rescope.json",
+      "evidence/phase1/tsk_p1_stor_001_minio_to_seaweedfs_cutover.json",
+      "evidence/phase1/tsk_p1_int_009b_restore_parity.json",
+      "scripts/audit/verify_tsk_p1_int_009a.sh",
+      "scripts/audit/verify_tsk_p1_stor_001.sh",
+      "scripts/audit/verify_tsk_p1_int_009b.sh",
+      "tasks/TSK-P1-INT-009A/meta.yml",
+      "tasks/TSK-P1-STOR-001/meta.yml",
+      "tasks/TSK-P1-INT-009B/meta.yml"
+    ],
+    "invariants": [
+      "INV-105",
+      "INV-119"
+    ],
+    "phase_boundary_ok": true
+  },
+  "verification": {
+    "commands": [
+      "bash scripts/audit/verify_tsk_p1_int_009a.sh",
+      "python3 scripts/audit/validate_evidence.py --task TSK-P1-INT-009A --evidence evidence/phase1/tsk_p1_int_009a_storage_policy_rescope.json",
+      "bash scripts/audit/verify_tsk_p1_stor_001.sh",
+      "python3 scripts/audit/validate_evidence.py --task TSK-P1-STOR-001 --evidence evidence/phase1/tsk_p1_stor_001_minio_to_seaweedfs_cutover.json",
+      "bash scripts/audit/verify_tsk_p1_int_009b.sh",
+      "python3 scripts/audit/validate_evidence.py --task TSK-P1-INT-009B --evidence evidence/phase1/tsk_p1_int_009b_restore_parity.json"
+    ],
+    "pre_ci_passed": true,
+    "notes": "Branch-scoped approval package covering regulated-surface INT-009 split and STOR-001 governance updates."
+  }
+}

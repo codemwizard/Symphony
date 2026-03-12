@@ -4,10 +4,14 @@ version: 1
 project: Symphony
 
 canonical_docs:
+  - AGENT_ENTRYPOINT.md
+  - docs/operations/AGENT_PROMPT_ROUTER.md
   - docs/operations/AI_AGENT_OPERATION_MANUAL.md
   - AGENTS.md
 
 mandatory_boot_sequence:
+  - AGENT_ENTRYPOINT.md
+  - docs/operations/AGENT_PROMPT_ROUTER.md
   - scripts/audit/verify_agent_conformance.sh
   - scripts/dev/pre_ci.sh
 

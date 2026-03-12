@@ -49,7 +49,7 @@ Must run: `scripts/dev/pre_ci.sh`
 Never: alter runtime logic or convert advisory governance checks into fail-open behavior.
 
 ### Architect
-Allowed paths: `docs/decisions/**`, `docs/architecture/**`, `docs/governance/**`, `docs/invariants/**`, `docs/operations/**`, `docs/tasks/**`, `docs/plans/**`, `approvals/**`, `AGENTS.md`, `.agent/**`, `.codex/**`
+Allowed paths: `docs/decisions/**`, `docs/architecture/**`, `docs/governance/**`, `docs/invariants/**`, `docs/operations/**`, `docs/tasks/**`, `docs/plans/**`, `approvals/**`, `AGENTS.md`, `.agent/**`, `.codex/**`, `AGENT_ENTRYPOINT.md`, `agent_manifest.yml`, `scripts/agent/**`
 Must run: `scripts/dev/pre_ci.sh`
 Never: bypass domain-canonical policy or claim implementation without verifier-backed evidence.
 
@@ -67,6 +67,7 @@ Role: Supervisor
 
 ## Non-Negotiables
 - All Phase-1 work must cite `docs/operations/AI_AGENT_OPERATION_MANUAL.md` as apex authority and defer to domain-canonical documents for scoped rules.
+- Before any action, read `AGENT_ENTRYPOINT.md` and classify the prompt using `docs/operations/AGENT_PROMPT_ROUTER.md`. Do not proceed until exactly one mode is identified.
 - No agent runs unless `verify_agent_conformance.sh` or its equivalent passes locally.
 - Approval metadata must precede any production-affecting change.
 
@@ -84,6 +85,8 @@ Role: Supervisor
 - `evidence/phase1/agent_conformance_policy_guardian.json`
 
 ## Canonical References
+- `AGENT_ENTRYPOINT.md`
+- `docs/operations/AGENT_PROMPT_ROUTER.md`
 - `docs/operations/AI_AGENT_OPERATION_MANUAL.md`
 - `docs/operations/AI_AGENT_WORKFLOW_AND_ROLE_PLAN_v2.md`
 - `docs/operations/AGENT_ROLE_RECONCILIATION.md`

@@ -1,0 +1,71 @@
+schema_version: 1
+phase: '1'
+task_id: TASK-GOV-AWC1
+title: Agent workflow routing and startup binding
+owner_role: ARCHITECT
+status: completed
+depends_on: []
+touches:
+  - AGENT_ENTRYPOINT.md
+  - AGENTS.md
+  - agent_manifest.yml
+  - docs/operations/AGENT_ASSIGNMENT_PROCESS.md
+  - docs/operations/AGENT_PROMPT_ROUTER.md
+  - docs/operations/AGENT_WORKFLOW_CONTROL_PLAN.md
+  - docs/operations/TASK_CREATION_PROCESS.md
+  - docs/operations/POLICY_PRECEDENCE.md
+  - docs/operations/PHASE_LIFECYCLE.md
+  - tasks/TASK-GOV-AWC1/meta.yml
+  - docs/plans/phase1/TASK-GOV-AWC1/PLAN.md
+  - docs/plans/phase1/TASK-GOV-AWC1/EXEC_LOG.md
+invariants:
+  - INV-119
+work:
+  - Save the canonical assignment process and workflow control plan documents.
+  - Bind repo startup surfaces to AGENT_ENTRYPOINT.md and docs/operations/AGENT_PROMPT_ROUTER.md.
+  - Extend Architect path authority to cover AGENT_ENTRYPOINT.md, agent_manifest.yml, and scripts/agent/**.
+  - Correct lifecycle path and evidence guidance in docs/operations/TASK_CREATION_PROCESS.md.
+  - Wire docs/operations/WAVE_EXECUTION_SEMANTICS.md into precedence and lifecycle docs.
+acceptance_criteria:
+  - Repo-scoped prompts have an explicit activation rule.
+  - AGENTS.md binds agents to read the entrypoint and router before acting.
+  - agent_manifest.yml lists the entrypoint and router in canonical startup docs.
+  - Architect path authority explicitly covers AGENT_ENTRYPOINT.md, agent_manifest.yml, and scripts/agent/**.
+  - docs/operations/TASK_CREATION_PROCESS.md supports phases 0 through 4.
+  - docs/operations/TASK_CREATION_PROCESS.md uses phase-correct evidence guidance.
+  - docs/operations/POLICY_PRECEDENCE.md references docs/operations/WAVE_EXECUTION_SEMANTICS.md.
+  - docs/operations/PHASE_LIFECYCLE.md references docs/operations/WAVE_EXECUTION_SEMANTICS.md.
+verification:
+  - test -f docs/operations/AGENT_PROMPT_ROUTER.md
+  - grep -q "AGENT_PROMPT_ROUTER" AGENT_ENTRYPOINT.md
+  - grep -q "Before any action, read" AGENTS.md
+  - grep -q "AGENT_ENTRYPOINT.md" agent_manifest.yml
+  - grep -q "AGENT_PROMPT_ROUTER.md" agent_manifest.yml
+  - "grep -q \"phase: '2'\" docs/operations/TASK_CREATION_PROCESS.md"
+  - grep -q "phase<N>" docs/operations/TASK_CREATION_PROCESS.md
+  - grep -q "WAVE_EXECUTION_SEMANTICS" docs/operations/POLICY_PRECEDENCE.md
+  - grep -q "expectations for wave schedules" docs/operations/PHASE_LIFECYCLE.md
+  - bash scripts/audit/verify_agent_conformance.sh
+evidence:
+  - evidence/phase1/task_gov_awc1.json
+failure_modes:
+  - Evidence file missing
+  - Prompt activation still implied instead of explicit
+  - AGENTS bootstrap still bypasses entrypoint/router
+  - Manifest bootstrap still omits entrypoint/router
+  - Architect path authority still omits bootstrap/control assets
+  - Phase mappings still stop at phase 1
+  - Wave semantics cross-reference missing
+must_read:
+  - AGENTS.md
+  - AGENT_ENTRYPOINT.md
+  - agent_manifest.yml
+  - docs/operations/AI_AGENT_OPERATION_MANUAL.md
+  - docs/operations/AGENT_ASSIGNMENT_PROCESS.md
+  - docs/operations/AGENT_WORKFLOW_CONTROL_PLAN.md
+implementation_plan: docs/plans/phase1/TASK-GOV-AWC1/PLAN.md
+implementation_log: docs/plans/phase1/TASK-GOV-AWC1/EXEC_LOG.md
+notes: Save assignment governance and workflow-control governance before handing implementation to lower-capability agents.
+client: codex_cli
+assigned_agent: architect
+model: gpt-5-codex

@@ -16,9 +16,10 @@
 - `docs/operations/approval_sidecar.schema.json`
 
 ## Regulated Surface Definition
-- The verifier reads regulated-surface path patterns from `AI_AGENT_OPERATION_MANUAL.md` section:
-  `## Definitions (Phase-1 Regulated Surfaces)`.
-- If no regulated-surface list is present, verification fails closed.
+- The verifier reads regulated-surface path patterns from
+  `docs/operations/REGULATED_SURFACE_PATHS.yml`.
+- If the regulated-surface rules file is missing or unreadable, verification
+  fails closed.
 
 ## Verification Rules
 1. Canonical docs must exist and be non-empty.

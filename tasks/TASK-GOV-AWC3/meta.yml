@@ -1,0 +1,56 @@
+schema_version: 1
+phase: '1'
+task_id: TASK-GOV-AWC3
+title: Retroactive approval and remediation closeout for AWC1 and AWC2
+owner_role: ARCHITECT
+status: completed
+depends_on:
+  - TASK-GOV-AWC1
+  - TASK-GOV-AWC2
+touches:
+  - approvals/2026-03-12/BRANCH-main-gov-awc-retroactive-closeout.md
+  - approvals/2026-03-12/BRANCH-main-gov-awc-retroactive-closeout.approval.json
+  - evidence/phase1/approval_metadata.json
+  - evidence/phase1/task_gov_awc1.json
+  - evidence/phase1/task_gov_awc2.json
+  - evidence/phase1/task_gov_awc3_retroactive_approval_closeout.json
+  - docs/operations/AGENT_WORKFLOW_CONTROL_PLAN.md
+  - docs/plans/phase1/TASK-GOV-AWC1/EXEC_LOG.md
+  - docs/plans/phase1/TASK-GOV-AWC2/EXEC_LOG.md
+  - tasks/TASK-GOV-AWC3/meta.yml
+  - docs/plans/phase1/TASK-GOV-AWC3/PLAN.md
+  - docs/plans/phase1/TASK-GOV-AWC3/EXEC_LOG.md
+invariants:
+  - INV-077
+  - INV-119
+work:
+  - Create a retroactive branch approval package covering the actual regulated-surface changes from TASK-GOV-AWC1 and TASK-GOV-AWC2 and the governance closeout follow-ons.
+  - Update approval metadata and AWC evidence/log artifacts so the late-approval anomaly is explicitly documented and closed.
+  - Add a Known Execution Anomaly section to the workflow control plan.
+acceptance_criteria:
+  - Retroactive approval markdown and sidecar exist and are cross-linked.
+  - approval_metadata.json references the retroactive approval artifact.
+  - AGENT_WORKFLOW_CONTROL_PLAN.md documents the AWC1/AWC2 execution anomaly and retroactive closure.
+  - AWC1 and AWC2 exec logs explicitly record the late-approval remediation closeout.
+verification:
+  - rg -n "BRANCH-main-gov-awc-retroactive-closeout" approvals/2026-03-12/BRANCH-main-gov-awc-retroactive-closeout.md approvals/2026-03-12/BRANCH-main-gov-awc-retroactive-closeout.approval.json evidence/phase1/approval_metadata.json
+  - python3 -c "import json; d=json.load(open('approvals/2026-03-12/BRANCH-main-gov-awc-retroactive-closeout.approval.json')); paths=set(d['scope']['paths_changed']); required={'AGENT_ENTRYPOINT.md','AGENTS.md','agent_manifest.yml','docs/operations/AGENT_ASSIGNMENT_PROCESS.md','docs/operations/AGENT_PROMPT_ROUTER.md','docs/operations/AGENT_WORKFLOW_CONTROL_PLAN.md','docs/operations/TASK_CREATION_PROCESS.md','docs/operations/POLICY_PRECEDENCE.md','docs/operations/PHASE_LIFECYCLE.md','scripts/agent/run_task.sh','docs/plans/phase1/TASK-GOV-AWC1/EXEC_LOG.md','docs/plans/phase1/TASK-GOV-AWC2/EXEC_LOG.md','evidence/phase1/task_gov_awc1.json','evidence/phase1/task_gov_awc2.json'}; missing=sorted(required-paths); assert not missing, missing; print('PASS')"
+  - rg -n "Known Execution Anomaly|retroactive approval|late-approval" docs/operations/AGENT_WORKFLOW_CONTROL_PLAN.md docs/plans/phase1/TASK-GOV-AWC1/EXEC_LOG.md docs/plans/phase1/TASK-GOV-AWC2/EXEC_LOG.md
+evidence:
+  - evidence/phase1/task_gov_awc3_retroactive_approval_closeout.json
+failure_modes:
+  - Evidence file missing
+  - Approval package missing
+  - Approval sidecar paths incomplete
+  - approval_metadata.json not linked to the retroactive approval package
+  - Execution anomaly remains undocumented
+must_read:
+  - AGENTS.md
+  - docs/operations/AI_AGENT_OPERATION_MANUAL.md
+  - docs/operations/AGENT_WORKFLOW_CONTROL_PLAN.md
+implementation_plan: docs/plans/phase1/TASK-GOV-AWC3/PLAN.md
+implementation_log: docs/plans/phase1/TASK-GOV-AWC3/EXEC_LOG.md
+notes: Completes the late-approval remediation for the AWC governance tasks without rolling back the functional changes.
+client: codex_cli
+assigned_agent: architect
+model: gpt-5-codex

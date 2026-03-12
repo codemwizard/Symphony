@@ -1,0 +1,49 @@
+schema_version: 1
+phase: '1'
+task_id: TASK-GOV-AWC2
+title: Enforce task-pack readiness in deterministic task runner
+owner_role: ARCHITECT
+status: completed
+depends_on:
+  - TASK-GOV-AWC1
+touches:
+  - scripts/agent/run_task.sh
+  - evidence/phase1/task_gov_awc2.json
+  - tasks/TASK-GOV-AWC2/meta.yml
+  - docs/plans/phase1/TASK-GOV-AWC2/PLAN.md
+  - docs/plans/phase1/TASK-GOV-AWC2/EXEC_LOG.md
+invariants:
+  - INV-119
+work:
+  - Insert a task-pack readiness gate into scripts/agent/run_task.sh.
+  - Fail before bootstrap when a task is schema-valid but not execution-ready.
+  - Verify the full runner path using TASK-INVPROC-06.
+acceptance_criteria:
+  - scripts/agent/run_task.sh invokes verify_task_pack_readiness.sh before bootstrap.
+  - The readiness gate sits immediately after implementation plan/log existence checks.
+  - scripts/agent/run_task.sh invokes bootstrap via `bash scripts/agent/bootstrap.sh`.
+  - A readiness-clean completed task in this repo copy exercises the full runner path successfully.
+verification:
+  - grep -q "verify_task_pack_readiness" scripts/agent/run_task.sh
+  - grep -q "bash scripts/agent/bootstrap.sh" scripts/agent/run_task.sh
+  - bash scripts/audit/verify_task_pack_readiness.sh --task TASK-INVPROC-06
+  - bash scripts/agent/run_task.sh TASK-INVPROC-06
+evidence:
+  - evidence/phase1/task_gov_awc2.json
+failure_modes:
+  - Evidence file missing
+  - Readiness gate missing from runner
+  - Bootstrap invocation hardening missing from runner
+  - Runner still proceeds on schema-valid but not-ready task
+  - Controlled verification task fails because the chosen task pack is not readiness-clean
+  - Undeclared scope drift in bootstrap invocation (resolved by TASK-GOV-AWC4)
+must_read:
+  - scripts/agent/run_task.sh
+  - docs/operations/AGENT_WORKFLOW_CONTROL_PLAN.md
+  - tasks/TASK-INVPROC-06/meta.yml
+implementation_plan: docs/plans/phase1/TASK-GOV-AWC2/PLAN.md
+implementation_log: docs/plans/phase1/TASK-GOV-AWC2/EXEC_LOG.md
+notes: "Depends on TASK-GOV-AWC1 because startup binding and governance-save must be in place first. TASK-GOV-AWC4 retroactively amends the task contract to include the bootstrap invocation hardening that was implemented alongside the readiness gate. The prior TASK-INVPROC-06 evidence freshness blocker was resolved by TASK-GOV-AWC9, and bash scripts/agent/run_task.sh TASK-INVPROC-06 now passes."
+client: codex_cli
+assigned_agent: architect
+model: gpt-5-codex

@@ -5,6 +5,8 @@ rules:
     - "schema/migrations/**"
     - "scripts/security/**"
     - "scripts/audit/**"
+    - "docs/operations/**"
+    - "evidence/**"
     - "docs/PHASE1/**"
     - "docs/control_planes/**"
     - "docs/operations/approval_metadata.schema.json"
