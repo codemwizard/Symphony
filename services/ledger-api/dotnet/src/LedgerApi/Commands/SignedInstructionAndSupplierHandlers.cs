@@ -250,8 +250,12 @@ static class SignedInstructionFileHandler
         var evidenceDir = Path.Combine(rootDir, "evidence", "phase1");
         Directory.CreateDirectory(evidenceDir);
         var evidenceMeta = EvidenceMeta.Load(rootDir);
-        var filePath = Path.Combine(evidenceDir, "signed_instruction_file_sample.json");
-        await File.WriteAllTextAsync(filePath, JsonSerializer.Serialize(new
+        var filePath = Environment.GetEnvironmentVariable("DEMO_SIGNED_INSTRUCTION_FILE");
+        if (string.IsNullOrWhiteSpace(filePath))
+        {
+            filePath = Path.Combine(evidenceDir, "signed_instruction_file_sample.json");
+        }
+        await TamperEvidentChain.WriteJsonAsync(filePath, "governed_instruction", new
         {
             check_id = "TSK-P1-DEMO-005-SIGNED-INSTRUCTION-SAMPLE",
             task_id = "TSK-P1-DEMO-005",
@@ -265,7 +269,7 @@ static class SignedInstructionFileHandler
             payload_hash = payloadHash,
             signature_alg = "HMAC-SHA256",
             signature
-        }, new JsonSerializerOptions { WriteIndented = true }) + Environment.NewLine, cancellationToken);
+        }, cancellationToken);
 
         logger.LogInformation("Generated signed instruction file for instruction {InstructionId}", request.instruction_id);
 
