@@ -6,22 +6,21 @@ cd "$ROOT"
 
 mkdir -p .git/hooks
 
-cat > .git/hooks/pre-commit <<'HOOK'
-#!/usr/bin/env bash
-set -euo pipefail
+HOOK_SOURCE_DIR=".githooks"
 
-scripts/audit/preflight_structural_staged.sh
-HOOK
+install_hook() {
+  local hook_name="$1"
+  local src="$HOOK_SOURCE_DIR/$hook_name"
+  local dst=".git/hooks/$hook_name"
 
-chmod +x .git/hooks/pre-commit
-echo "✅ Installed pre-commit hook: scripts/audit/preflight_structural_staged.sh"
+  if [[ ! -f "$src" ]]; then
+    echo "ERROR: tracked hook source missing: $src"
+    exit 1
+  fi
 
-cat > .git/hooks/pre-push <<'HOOK'
-#!/usr/bin/env bash
-set -euo pipefail
+  install -m 0755 "$src" "$dst"
+  echo "✅ Installed $hook_name hook from tracked source: $src -> $dst"
+}
 
-scripts/dev/pre_ci.sh
-HOOK
-
-chmod +x .git/hooks/pre-push
-echo "✅ Installed pre-push hook: scripts/dev/pre_ci.sh"
+install_hook pre-commit
+install_hook pre-push

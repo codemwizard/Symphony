@@ -3,7 +3,7 @@ phase: "1"
 task_id: TSK-P1-075
 title: Split light pre-flight from heavy push-time pre-CI
 owner_role: SUPERVISOR
-status: planned
+status: completed
 depends_on:
   - TSK-P1-074
 touches:
@@ -39,6 +39,7 @@ acceptance_criteria:
 must_read:
   - docs/operations/AI_AGENT_OPERATION_MANUAL.md
   - docs/process/debug-remediation-policy.md
+  - docs/operations/LOCAL_HOOK_TOPOLOGY.md
 failure_modes:
   - The light pre-flight path accidentally reruns or replaces the heavy push-time pre-CI stack.
   - Documentation and scripts disagree about which gate runs on commit versus push.

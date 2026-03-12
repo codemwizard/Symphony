@@ -238,6 +238,15 @@ else
 fi
 
 echo ""
+echo "==> TSK-P1-076 local hook topology verification"
+if [[ -x "scripts/audit/verify_tsk_p1_076.sh" || -f "scripts/audit/verify_tsk_p1_076.sh" ]]; then
+  run bash scripts/audit/verify_tsk_p1_076.sh
+else
+  echo "ERROR: scripts/audit/verify_tsk_p1_076.sh not found"
+  exit 1
+fi
+
+echo ""
 echo "==> TSK-P1-070 remediation casefile scaffolder verification"
 if [[ -x "scripts/audit/verify_tsk_p1_070.sh" || -f "scripts/audit/verify_tsk_p1_070.sh" ]]; then
   run bash scripts/audit/verify_tsk_p1_070.sh

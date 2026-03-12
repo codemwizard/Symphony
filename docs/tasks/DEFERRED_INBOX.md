@@ -131,7 +131,7 @@ Rules:
   - `scripts/dev/pre_ci.sh`
 - Priority: `P1`
 - Owner role: `SUPERVISOR`
-- Status: `deferred`
+- Status: `resolved`
 - Created: `2026-03-10`
 - Classification: `L1`
 - Why deferred:
@@ -141,6 +141,8 @@ Rules:
   - This should be fixed deliberately, not opportunistically while the local working-tree and bootstrap behavior are still being stabilized.
 - Unblock trigger:
   - Start after current branch/process stabilization work is merged and the repo is back to a clean, low-drift local state.
+- Resolution:
+  - Implemented by `TSK-P1-074`, `TSK-P1-075`, and `TSK-P1-076`.
 - Required done criteria:
   - Implement executable tasks:
     - `TSK-P1-074`

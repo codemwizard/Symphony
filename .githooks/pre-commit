@@ -1,4 +1,4 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-scripts/audit/preflight_structural_staged.sh
+bash scripts/dev/pre_flight.sh

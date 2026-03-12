@@ -3,7 +3,7 @@ phase: "1"
 task_id: TSK-P1-076
 title: Verify and document the two-level local gate topology
 owner_role: INVARIANTS_CURATOR
-status: planned
+status: completed
 depends_on:
   - TSK-P1-074
   - TSK-P1-075
@@ -36,7 +36,8 @@ acceptance_criteria:
   - Evidence is emitted proving the topology check passed.
 must_read:
   - docs/operations/AI_AGENT_OPERATION_MANUAL.md
-  - docs/process/DEBUG_PROCESS_MATERIAL_GAIN_ANALYSIS_2026-03-10.md
+  - docs/tasks/DEFERRED_INBOX.md
+  - docs/operations/LOCAL_HOOK_TOPOLOGY.md
 failure_modes:
   - Hook topology drift is described in docs but not mechanically detected.
   - Evidence is emitted without proving agreement between installed hooks, tracked sources, and documented topology.
