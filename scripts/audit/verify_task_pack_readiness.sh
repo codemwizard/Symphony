@@ -64,22 +64,38 @@ phase_prefix = {
 }
 
 
-def verification_is_thin(commands, blast_radius):
+def normalize_verification_commands(commands):
+    if isinstance(commands, str):
+        commands = [commands]
     if not isinstance(commands, list):
-        return True
+        return []
+    normalized = []
+    for item in commands:
+        if isinstance(item, str):
+            cmd = item.strip()
+            if cmd:
+                normalized.append(cmd)
+        elif isinstance(item, dict):
+            cmd = str(item.get("cmd", "")).strip()
+            if cmd:
+                normalized.append(cmd)
+    return normalized
+
+
+def verification_is_thin(commands, blast_radius):
+    normalized_commands = normalize_verification_commands(commands)
     min_count = 2 if blast_radius == "DOCS_ONLY" else 3
-    if len(commands) < min_count:
+    if len(normalized_commands) < min_count:
         return True
     if blast_radius != "DOCS_ONLY":
         has_task_verifier = any(
-            isinstance(cmd, str)
-            and (
+            (
                 "bash scripts/" in cmd
                 or "python3 scripts/" in cmd
                 or cmd.startswith("scripts/")
             )
             and "validate_evidence.py" not in cmd
-            for cmd in commands
+            for cmd in normalized_commands
         )
         if not has_task_verifier:
             return True
