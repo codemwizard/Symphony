@@ -17,10 +17,10 @@ This plan keeps **Phase‑0 parity** with dev while enabling **production‑grad
 2) **Ingress ledger** (append‑only Postgres `ingress_attestations`)
 3) **Application/service logs** (API, worker, scheduler, policy engine)
 
-### Must‑have properties
-- **Fail‑closed evidence**: audit log creation should be mechanically verifiable.
+### Must-have properties
+- **Fail-closed evidence**: audit log creation should be mechanically verifiable.
 - **Environment portability**: dev/staging/prod share the same logical pipeline, only sink changes.
-- **Tamper evidence**: logs should be write‑once or immutable at rest where possible.
+- **Tamper-evident integrity**: audit evidence must remain attributable, chain-of-custody visible, and divergence-detectable across environments. Storage-level immutability may be an additional control, but it is not the primary Phase-1 trust guarantee.
 
 ---
 
@@ -89,7 +89,7 @@ OpenBao supports **declarative audit device configuration**; audit devices can b
 
 ---
 
-## Production‑Grade Swappable Topology
+## Production-Grade Swappable Topology
 
 ```
 [OpenBao Audit] -> File -> Collector -> (OpenSearch | Loki | Wazuh)
@@ -100,7 +100,11 @@ OpenBao supports **declarative audit device configuration**; audit devices can b
 **Swap rules** (by environment):
 - **dev**: local file + Loki
 - **staging**: OpenSearch (single node)
-- **prod**: OpenSearch cluster + WORM storage (if required)
+- **prod**: OpenSearch cluster with optional retention/immutability controls where separately required
+
+Trust note:
+- sink choice and storage posture do not, by themselves, establish Symphony's integrity claim
+- the trust basis remains signed artifacts, append-only history, verifiable chain-of-custody, tamper detection, and acknowledgement visibility for externally executed flows
 
 ---
 
@@ -132,11 +136,44 @@ Evidence requirement is enforced by the Phase‑0 contract.
 - Wazuh Documentation
 - OpenBao Audit Devices Documentation / RFC
 
-## Action Plan (Phase‑1)
+## Action Plan (Phase-1)
 
 - Add collector configuration for chosen backend.
-- Add retention and immutability policy (WORM or object‑store) for production audit.
+- Add retention and optional immutability policy for production audit as an additional control, not as the default global integrity claim.
 - Add alerting rules for audit gaps.
+
+## Evidence Retention Classes and Archival Boundary
+
+### Evidence classes
+
+- **Active evidence**: current verifier output required for daily operational checks and wave closeout.
+  Default retention window: 90 days in the active evidence surface.
+- **Archived evidence**: verified artifacts moved out of the active surface but still required for audit,
+  regulator, or DR bundle reconstruction.
+  Default retention window: 7 years.
+- **Historical evidence**: retained reference material beyond active operational use when legal,
+  regulatory, or programme obligations require it.
+  Default retention window: 10 years for governed historical classes unless a stricter control applies.
+
+### Machine-checkable archival eligibility
+
+Evidence is eligible for archival only when all of the following are true:
+
+- verifier status is `PASS`
+- required approval and signoff references exist
+- no open remediation state blocks archival
+- retention class is explicitly assigned
+- archive manifest/hash reference is recorded before the active copy is removed
+
+No evidence may be silently deleted before verification, approval, audit, and retention obligations are satisfied.
+
+### DR bundle selection rule
+
+Disaster-recovery bundle generation must select evidence according to declared retention class and current obligation state:
+
+- active evidence required for current verification remains in the active set
+- archived evidence remains addressable for bundle reconstruction
+- historical evidence must remain discoverable by manifest reference even when not kept in the active surface
 
 ## Language Scope
 This policy applies to all backend implementation languages in Symphony, including:

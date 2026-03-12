@@ -19,6 +19,7 @@ public static class DemoSelfTestEntryPoint
             ["--self-test-reg-daily-report"] = (logger, ct) => global::RegulatoryDailyReportSelfTestRunner.RunAsync(logger, ct),
             ["--self-test-reg-incident-48h-report"] = (logger, ct) => global::RegulatoryIncident48hSelfTestRunner.RunAsync(logger, ct),
             ["--self-test-evidence-link-issuance"] = (logger, ct) => EvidenceLinkSelfTestRunner.RunAsync(logger, ct),
+            ["--self-test-integrity-chain"] = (logger, ct) => IntegrityChainSelfTestRunner.RunAsync(logger, ct),
             ["--self-test-geo-capture"] = (logger, ct) => GeoCaptureSelfTestRunner.RunAsync(logger, ct),
             ["--self-test-msisdn-submitter-match"] = (logger, ct) => MsisdnSubmitterMatchSelfTestRunner.RunAsync(logger, ct),
             ["--self-test-signed-egress"] = (logger, ct) => SignedInstructionEgressSelfTestRunner.RunAsync(logger, ct),
