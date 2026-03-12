@@ -3,7 +3,7 @@ phase: "1"
 task_id: TSK-P1-074
 title: Normalize local hook source and installation path
 owner_role: SUPERVISOR
-status: planned
+status: completed
 depends_on: []
 touches:
   - .githooks/**
@@ -36,7 +36,8 @@ acceptance_criteria:
   - A verifier fails if the documented hook topology and installed hook behavior diverge.
 must_read:
   - docs/operations/AI_AGENT_OPERATION_MANUAL.md
-  - docs/process/DEBUG_PROCESS_MATERIAL_GAIN_ANALYSIS_2026-03-10.md
+  - docs/tasks/DEFERRED_INBOX.md
+  - docs/operations/LOCAL_HOOK_TOPOLOGY.md
 failure_modes:
   - Hook installation remains ambiguous between tracked templates and active installed hooks.
   - Topology normalization weakens or bypasses the existing heavy push-time parity path.

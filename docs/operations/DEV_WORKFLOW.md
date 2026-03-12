@@ -52,6 +52,23 @@ Local pre-CI defaults to CI-equivalent DB freshness:
    ```
 3) Commit + push + open PR
 
+### Local hook model
+
+The canonical local hook topology is:
+
+- `.githooks/` is the tracked hook source
+- `.git/hooks/` is the installed active destination
+- `scripts/dev/pre_flight.sh` is the light commit-path gate
+- `scripts/dev/pre_ci.sh` is the heavy push-time gate
+
+Install or refresh local hooks with:
+
+```bash
+bash scripts/dev/install_git_hooks.sh
+```
+
+See `docs/operations/LOCAL_HOOK_TOPOLOGY.md`.
+
 ## Remediation workflow (mandatory for fixes)
 
 When you are fixing a failure (CI or local) and the fix touches production-affecting surfaces, you must create a durable remediation trace casefile and keep it updated during implementation.
