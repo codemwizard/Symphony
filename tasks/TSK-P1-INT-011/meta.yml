@@ -1,0 +1,60 @@
+schema_version: 1
+phase: '1'
+task_id: TSK-P1-INT-011
+title: Semantic closeout gate for proven tamper-evident integrity and offline verification
+owner_role: SUPERVISOR
+status: completed
+depends_on:
+- TSK-P1-INT-003
+- TSK-P1-INT-004
+- TSK-P1-INT-005
+- TSK-P1-INT-006
+- TSK-P1-INT-008
+- TSK-P1-INT-009B
+- TSK-P1-INT-010
+- TSK-P1-INT-012
+touches:
+- tasks/TSK-P1-INT-011/meta.yml
+- scripts/audit/verify_tsk_p1_int_011.sh
+- docs/plans/phase1/TSK-P1-INT-011/PLAN.md
+- docs/plans/phase1/TSK-P1-INT-011/EXEC_LOG.md
+- evidence/phase1/tsk_p1_int_011_closeout_gate.json
+invariants:
+- INV-105
+- INV-119
+work:
+- Rerun predecessor verifiers to regenerate the closeout evidence set, including STOR-001 as the backend-context proof required by INT-009B.
+- Parse semantic fields, not file existence.
+- Fail on missing tamper semantics, governance states, offline-proof flags, restore parity, language sync, or retention linkage.
+acceptance_criteria:
+- Gate enforces semantic flags and expected predecessor fields.
+- Gate fails when tamper-trigger semantics are missing.
+- Gate fails when offline verification is not isolated/bundle-only.
+- Gate fails when retention/archival policy is absent or disconnected.
+- Gate fails on placeholder bundles or restore stubs.
+verification:
+- python3 - <<'PY'
+  import json
+  from pathlib import Path
+  path = Path("evidence/phase1/tsk_p1_int_011_closeout_gate.json")
+  payload = json.loads(path.read_text(encoding="utf-8"))
+  assert payload["status"] == "PASS"
+  semantic = payload["semantic_closeout"]
+  assert all(semantic.values())
+  print("PASS")
+  PY
+- bash scripts/audit/verify_tsk_p1_int_011.sh
+evidence:
+- evidence/phase1/tsk_p1_int_011_closeout_gate.json
+failure_modes:
+- Closeout accepts file presence as proof.
+- Stub evidence passes.
+- Policy linkage ignored.
+notes: Reruns the predecessor verifiers for INT-003, INT-004, INT-005, INT-006, INT-008, INT-009B, INT-010, and INT-012 so the closeout gate validates fresh semantics after evidence cleanup.
+must_read:
+- docs/operations/AI_AGENT_OPERATION_MANUAL.md
+implementation_plan: docs/plans/phase1/TSK-P1-INT-011/PLAN.md
+implementation_log: docs/plans/phase1/TSK-P1-INT-011/EXEC_LOG.md
+client: codex_cli
+assigned_agent: supervisor
+model: gpt-5-codex
