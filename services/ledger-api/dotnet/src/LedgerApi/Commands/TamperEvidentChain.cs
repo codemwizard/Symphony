@@ -2,6 +2,7 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Nodes;
+using System.Collections.Concurrent;
 
 sealed record ChainRecord(
     string domain,
@@ -28,6 +29,7 @@ static class TamperEvidentChain
     {
         WriteIndented = true
     };
+    private static readonly ConcurrentDictionary<string, SemaphoreSlim> FileLocks = new(StringComparer.Ordinal);
 
     public static bool Enabled =>
         !string.Equals(Environment.GetEnvironmentVariable("SYMPHONY_CHAIN_POPULATION"), "0", StringComparison.Ordinal);
@@ -35,15 +37,33 @@ static class TamperEvidentChain
     public static async Task AppendJsonAsync(string path, string domain, object payload, CancellationToken cancellationToken)
     {
         Directory.CreateDirectory(Path.GetDirectoryName(path) ?? "/tmp");
-        var envelope = await BuildEnvelopeAsync(path, domain, payload, cancellationToken);
-        await File.AppendAllTextAsync(path, JsonSerializer.Serialize(envelope) + Environment.NewLine, cancellationToken);
+        var fileLock = FileLocks.GetOrAdd(path, _ => new SemaphoreSlim(1, 1));
+        await fileLock.WaitAsync(cancellationToken);
+        try
+        {
+            var envelope = await BuildEnvelopeAsync(path, domain, payload, cancellationToken);
+            await File.AppendAllTextAsync(path, JsonSerializer.Serialize(envelope) + Environment.NewLine, cancellationToken);
+        }
+        finally
+        {
+            fileLock.Release();
+        }
     }
 
     public static async Task WriteJsonAsync(string path, string domain, object payload, CancellationToken cancellationToken)
     {
         Directory.CreateDirectory(Path.GetDirectoryName(path) ?? "/tmp");
-        var envelope = await BuildEnvelopeAsync(path, domain, payload, cancellationToken);
-        await File.WriteAllTextAsync(path, JsonSerializer.Serialize(envelope, SerializerOptions) + Environment.NewLine, cancellationToken);
+        var fileLock = FileLocks.GetOrAdd(path, _ => new SemaphoreSlim(1, 1));
+        await fileLock.WaitAsync(cancellationToken);
+        try
+        {
+            var envelope = await BuildEnvelopeAsync(path, domain, payload, cancellationToken);
+            await File.WriteAllTextAsync(path, JsonSerializer.Serialize(envelope, SerializerOptions) + Environment.NewLine, cancellationToken);
+        }
+        finally
+        {
+            fileLock.Release();
+        }
     }
 
     public static ChainVerificationResult VerifyJsonFile(string path, string expectedDomain)
@@ -99,13 +119,14 @@ static class TamperEvidentChain
                 return ChainVerificationResult.Fail("JSON_INVALID", "NDJSON object required");
             }
 
+            var currentHash = node["chain_record"]?["current_hash"]?.GetValue<string>();
             var result = VerifyNode(node, expectedDomain, previousHash);
             if (!result.Pass)
             {
                 return result;
             }
 
-            previousHash = node["chain_record"]?["current_hash"]?.GetValue<string>();
+            previousHash = currentHash;
         }
 
         return ChainVerificationResult.Ok();
@@ -203,8 +224,9 @@ static class TamperEvidentChain
             return ChainVerificationResult.Fail("CHAIN_PREVIOUS_HASH_INVALID", "previous_hash does not match the prior record");
         }
 
-        node.Remove("chain_record");
-        var canonicalPayload = JsonSerializer.Serialize(node);
+        var payloadNode = node.DeepClone() as JsonObject ?? new JsonObject();
+        payloadNode.Remove("chain_record");
+        var canonicalPayload = JsonSerializer.Serialize(payloadNode);
         var actualPayloadHash = ComputeHash(canonicalPayload);
         if (!string.Equals(actualPayloadHash, payloadHash, StringComparison.Ordinal))
         {

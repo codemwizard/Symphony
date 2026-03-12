@@ -1,10 +1,10 @@
 {
-  "baseline_date": "2026-03-10",
-  "baseline_path": "/tmp/fix-reference-policy-rebase/schema/baselines/2026-03-10/0001_baseline.sql",
-  "baseline_cutoff": "0072_hard_wave6_reference_policy_post_deactivation_immutability.sql",
-  "normalized_schema_sha256": "64991e26ac7393db082acc0b6cfb4d2fc8ee5ab3bee776f58f4b7dc65e39dd6b",
+  "baseline_date": "2026-03-12",
+  "baseline_path": "/home/mwiza/workspace/Symphony/schema/baselines/2026-03-12/0001_baseline.sql",
+  "baseline_cutoff": "0073_int_004_ack_gap_controls.sql",
+  "normalized_schema_sha256": "fb49fca2dec08c16e5ff861c9466376ad193cf9f4f6c5f0e81766d91282a9281",
   "pg_dump_version": "pg_dump (PostgreSQL) 18.2 (Debian 18.2-1.pgdg13+1)",
   "pg_server_version": "18.2 (Debian 18.2-1.pgdg13+1)",
   "dump_source": "container:symphony-postgres",
-  "generated_at_utc": "2026-03-10T08:17:45.473575+00:00"
+  "generated_at_utc": "2026-03-12T11:23:46.598428+00:00"
 }

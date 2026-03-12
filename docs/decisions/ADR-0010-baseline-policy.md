@@ -59,3 +59,4 @@ This ADR remains the authoritative governance reference for baseline change chec
 - 2026-03-05: Baseline refreshed after adding migration 0069_hard_wave6_merkle_and_policy_rotation_guards.sql (Merkle null-expected-hash fail-closed verification and policy-rotation immutability guard hardening).
 - 2026-03-09: Baseline refreshed after adding migration 0070_cqrs_projection_roles_and_read_models.sql (Phase-1 CQRS/projection role separation and deterministic projection read-model cutover).
 - 2026-03-06: Baseline refreshed after adding migration 0072_hard_wave6_reference_policy_post_deactivation_immutability.sql (post-deactivation policy-row immutability enforcement for previously ACTIVE records).
+- 2026-03-12: Baseline refreshed after adding migration 0073_int_004_ack_gap_controls.sql (AWAITING_EXECUTION acknowledgement-gap escalation, supervisor recovery controls, and append-only interrupt audit trail).

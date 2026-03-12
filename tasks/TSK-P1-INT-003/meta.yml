@@ -1,0 +1,54 @@
+schema_version: 1
+phase: '1'
+task_id: TSK-P1-INT-003
+title: Extend tamper detection fixtures for chain-break and metadata divergence
+owner_role: SUPERVISOR
+status: completed
+depends_on:
+- TSK-P1-INT-002
+touches:
+- scripts/audit/tests/**
+- scripts/audit/verify_tsk_p1_int_003.sh
+- docs/plans/phase1/TSK-P1-INT-003/PLAN.md
+- docs/plans/phase1/TSK-P1-INT-003/EXEC_LOG.md
+- evidence/phase1/tsk_p1_int_003_tamper_detection.json
+invariants:
+- INV-105
+- INV-119
+work:
+- Preserve signed-file tamper fixture coverage.
+- Add governed-instruction chain-break fixture.
+- Add evidence-event chain-break fixture.
+- Add metadata-divergence fixture.
+acceptance_criteria:
+- Signed-file tamper case fails verification.
+- Instruction chain-break case fails verification.
+- Evidence-event chain-break case fails verification.
+- Metadata divergence fails verification or emits tamper signal.
+- Evidence records tamper detection trigger semantics.
+verification:
+- bash scripts/audit/tests/test_tsk_p1_int_003_tamper_detection.sh
+- python3 - <<'PY'
+  import json
+  from pathlib import Path
+  path = Path("evidence/phase1/tsk_p1_int_003_tamper_detection.json")
+  payload = json.loads(path.read_text(encoding="utf-8"))
+  assert payload["status"] == "PASS"
+  assert payload["tamper_detection_trigger_semantics"]["instruction_chain_break"] == "CHAIN_CURRENT_HASH_INVALID"
+  assert payload["tamper_detection_trigger_semantics"]["metadata_divergence"] == "CHAIN_PAYLOAD_HASH_INVALID"
+  print("PASS")
+  PY
+- bash scripts/audit/verify_tsk_p1_int_003.sh
+evidence:
+- evidence/phase1/tsk_p1_int_003_tamper_detection.json
+failure_modes:
+- Chain-break fixtures missing.
+- Tamper detection not surfaced in evidence.
+notes: Implemented with fixture-backed audit tests over the INT-002 integrity-chain artifacts. Evidence records exact trigger codes for signed-file tamper, chain-break, and metadata-divergence failures.
+must_read:
+- docs/operations/AI_AGENT_OPERATION_MANUAL.md
+implementation_plan: docs/plans/phase1/TSK-P1-INT-003/PLAN.md
+implementation_log: docs/plans/phase1/TSK-P1-INT-003/EXEC_LOG.md
+client: codex_cli
+assigned_agent: supervisor
+model: gpt-5-codex
