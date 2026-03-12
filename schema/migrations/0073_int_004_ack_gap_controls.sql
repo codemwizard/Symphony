@@ -282,6 +282,29 @@ BEGIN
 END;
 $$;
 
+CREATE OR REPLACE FUNCTION public.enforce_settlement_acknowledgement()
+RETURNS TRIGGER
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = pg_catalog, public
+AS $$
+BEGIN
+  IF NEW.final_state = 'SETTLED' THEN
+    PERFORM public.guard_settlement_requires_acknowledgement(NEW.instruction_id);
+  END IF;
+
+  RETURN NEW;
+END;
+$$;
+
+DROP TRIGGER IF EXISTS trg_enforce_settlement_acknowledgement
+  ON public.instruction_settlement_finality;
+
+CREATE TRIGGER trg_enforce_settlement_acknowledgement
+BEFORE INSERT ON public.instruction_settlement_finality
+FOR EACH ROW
+EXECUTE FUNCTION public.enforce_settlement_acknowledgement();
+
 COMMENT ON FUNCTION public.mark_instruction_awaiting_execution(TEXT, UUID, TEXT, TEXT)
   IS 'TSK-P1-INT-004: records post-egress pre-ack lifecycle as AWAITING_EXECUTION.';
 COMMENT ON FUNCTION public.escalate_missing_acknowledgement(TEXT, UUID, TEXT, TEXT, TEXT, INTEGER)
@@ -290,9 +313,12 @@ COMMENT ON FUNCTION public.resolve_missing_acknowledgement_interrupt(TEXT, TEXT,
   IS 'TSK-P1-INT-004: supports ACKNOWLEDGE, RESUME, and RESET interrupt actions with append-only audit evidence; RESET returns to AWAITING_EXECUTION only.';
 COMMENT ON FUNCTION public.guard_settlement_requires_acknowledgement(TEXT)
   IS 'TSK-P1-INT-004: fail-closed settlement guard requiring explicit acknowledgement state.';
+COMMENT ON FUNCTION public.enforce_settlement_acknowledgement()
+  IS 'TSK-P1-INT-004: wires acknowledgement guard into settlement writes so SETTLED records fail closed until ACKNOWLEDGED.';
 
 REVOKE ALL ON TABLE public.supervisor_interrupt_audit_events FROM PUBLIC;
 REVOKE ALL ON FUNCTION public.mark_instruction_awaiting_execution(TEXT, UUID, TEXT, TEXT) FROM PUBLIC;
 REVOKE ALL ON FUNCTION public.escalate_missing_acknowledgement(TEXT, UUID, TEXT, TEXT, TEXT, INTEGER) FROM PUBLIC;
 REVOKE ALL ON FUNCTION public.resolve_missing_acknowledgement_interrupt(TEXT, TEXT, TEXT, TEXT) FROM PUBLIC;
 REVOKE ALL ON FUNCTION public.guard_settlement_requires_acknowledgement(TEXT) FROM PUBLIC;
+REVOKE ALL ON FUNCTION public.enforce_settlement_acknowledgement() FROM PUBLIC;

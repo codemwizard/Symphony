@@ -30,6 +30,7 @@ static class TamperEvidentChain
         WriteIndented = true
     };
     private static readonly ConcurrentDictionary<string, SemaphoreSlim> FileLocks = new(StringComparer.Ordinal);
+    private static readonly ConcurrentDictionary<string, string?> LastHashCache = new(StringComparer.Ordinal);
 
     public static bool Enabled =>
         !string.Equals(Environment.GetEnvironmentVariable("SYMPHONY_CHAIN_POPULATION"), "0", StringComparison.Ordinal);
@@ -41,8 +42,9 @@ static class TamperEvidentChain
         await fileLock.WaitAsync(cancellationToken);
         try
         {
-            var envelope = await BuildEnvelopeAsync(path, domain, payload, cancellationToken);
+            var envelope = await BuildEnvelopeAsync(path, domain, payload, cancellationToken, forceRootRecord: false);
             await File.AppendAllTextAsync(path, JsonSerializer.Serialize(envelope) + Environment.NewLine, cancellationToken);
+            LastHashCache[path] = GetCurrentHash(envelope);
         }
         finally
         {
@@ -57,8 +59,9 @@ static class TamperEvidentChain
         await fileLock.WaitAsync(cancellationToken);
         try
         {
-            var envelope = await BuildEnvelopeAsync(path, domain, payload, cancellationToken);
+            var envelope = await BuildEnvelopeAsync(path, domain, payload, cancellationToken, forceRootRecord: true);
             await File.WriteAllTextAsync(path, JsonSerializer.Serialize(envelope, SerializerOptions) + Environment.NewLine, cancellationToken);
+            LastHashCache[path] = GetCurrentHash(envelope);
         }
         finally
         {
@@ -132,7 +135,7 @@ static class TamperEvidentChain
         return ChainVerificationResult.Ok();
     }
 
-    private static async Task<JsonObject> BuildEnvelopeAsync(string path, string domain, object payload, CancellationToken cancellationToken)
+    private static async Task<JsonObject> BuildEnvelopeAsync(string path, string domain, object payload, CancellationToken cancellationToken, bool forceRootRecord)
     {
         var envelope = JsonNode.Parse(JsonSerializer.Serialize(payload))?.AsObject()
             ?? throw new InvalidOperationException("Unable to serialize payload envelope");
@@ -144,7 +147,7 @@ static class TamperEvidentChain
 
         var canonicalPayload = JsonSerializer.Serialize(envelope);
         var payloadHash = ComputeHash(canonicalPayload);
-        var previousHash = await ReadLastHashAsync(path, cancellationToken);
+        var previousHash = forceRootRecord ? null : await ReadLastHashAsync(path, cancellationToken);
         var currentHash = ComputeHash($"{domain}\n{previousHash ?? string.Empty}\n{payloadHash}");
         var chainRecord = new ChainRecord(
             domain: domain,
@@ -162,7 +165,13 @@ static class TamperEvidentChain
     {
         if (!File.Exists(path))
         {
+            LastHashCache.TryRemove(path, out _);
             return null;
+        }
+
+        if (LastHashCache.TryGetValue(path, out var cachedHash))
+        {
+            return cachedHash;
         }
 
         var lines = await File.ReadAllLinesAsync(path, cancellationToken);
@@ -179,6 +188,7 @@ static class TamperEvidentChain
                 var currentHash = node?["chain_record"]?["current_hash"]?.GetValue<string>();
                 if (!string.IsNullOrWhiteSpace(currentHash))
                 {
+                    LastHashCache[path] = currentHash;
                     return currentHash;
                 }
             }
@@ -190,6 +200,9 @@ static class TamperEvidentChain
 
         return null;
     }
+
+    private static string? GetCurrentHash(JsonObject envelope)
+        => envelope["chain_record"]?["current_hash"]?.GetValue<string>();
 
     private static ChainVerificationResult VerifyNode(JsonObject node, string expectedDomain, string? expectedPreviousHash)
     {

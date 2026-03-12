@@ -1,0 +1,46 @@
+schema_version: 1
+phase: '1'
+task_id: TSK-P1-INT-008
+title: Offline historical verification from DR bundle in shared-nothing environment
+owner_role: SUPERVISOR
+status: completed
+depends_on:
+- TSK-P1-INT-007
+touches:
+- tasks/TSK-P1-INT-008/meta.yml
+- scripts/dr/**
+- scripts/audit/verify_tsk_p1_int_008.sh
+- docs/plans/phase1/TSK-P1-INT-008/PLAN.md
+- docs/plans/phase1/TSK-P1-INT-008/EXEC_LOG.md
+- evidence/phase1/tsk_p1_int_008_offline_verification.json
+invariants:
+- INV-105
+- INV-119
+work:
+- Execute offline verification in clean shared-nothing environment.
+- Verify valid artifacts using bundle only.
+- Verify tampered artifacts fail using bundle only.
+- Prove the offline verification completes within 300000 ms using only the exported bundle root and a temporary workspace.
+acceptance_criteria:
+- Valid artifacts pass and tampered artifacts fail.
+- Verification requires no network and no live Symphony runtime.
+- Environment proves portability from developer host.
+- Verification completes within five minutes on declared reference environment.
+- Detached manifest signature is verified before artifact hashes are trusted.
+verification:
+- bash scripts/audit/verify_tsk_p1_int_008.sh
+- python3 scripts/dr/verify_tsk_p1_int_008_offline.py
+evidence:
+- evidence/phase1/tsk_p1_int_008_offline_verification.json
+failure_modes:
+- Depends on host paths or live services.
+- Operationally too slow.
+- Manifest signature is ignored or tampered artifacts still pass hash validation.
+notes: Offline verification is proven only through the exported DR bundle and temporary shared-nothing workspace; the task does not permit fallback to live runtime paths, host-specific dependencies, or unsigned manifests.
+must_read:
+- docs/operations/AI_AGENT_OPERATION_MANUAL.md
+implementation_plan: docs/plans/phase1/TSK-P1-INT-008/PLAN.md
+implementation_log: docs/plans/phase1/TSK-P1-INT-008/EXEC_LOG.md
+client: codex_cli
+assigned_agent: supervisor
+model: gpt-5-codex

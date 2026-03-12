@@ -20,6 +20,9 @@ rg -n "CREATE OR REPLACE FUNCTION public.resolve_missing_acknowledgement_interru
 rg -n "WHEN 'RESUME' THEN 'RESUMED'" "$MIGRATION" >/dev/null
 rg -n "SET inquiry_state = 'AWAITING_EXECUTION'" "$MIGRATION" >/dev/null
 rg -n "CREATE OR REPLACE FUNCTION public.guard_settlement_requires_acknowledgement" "$MIGRATION" >/dev/null
+rg -n "CREATE OR REPLACE FUNCTION public.enforce_settlement_acknowledgement" "$MIGRATION" >/dev/null
+rg -n "CREATE TRIGGER trg_enforce_settlement_acknowledgement" "$MIGRATION" >/dev/null
+rg -n "PERFORM public.guard_settlement_requires_acknowledgement\\(NEW.instruction_id\\)" "$MIGRATION" >/dev/null
 rg -n "ACKNOWLEDGEMENT_REQUIRED_BEFORE_SETTLEMENT" "$MIGRATION" >/dev/null
 
 python3 - <<'PY' "$MIGRATION" "$EVIDENCE"
@@ -43,6 +46,8 @@ payload = {
         "interrupt_audit_append_only": "CREATE TABLE IF NOT EXISTS public.supervisor_interrupt_audit_events" in migration,
         "reset_returns_to_awaiting_execution": migration.count("SET inquiry_state = 'AWAITING_EXECUTION'") >= 2,
         "settlement_guard_present": "ACKNOWLEDGEMENT_REQUIRED_BEFORE_SETTLEMENT" in migration,
+        "settlement_guard_wired_to_trigger": "CREATE TRIGGER trg_enforce_settlement_acknowledgement" in migration
+            and "PERFORM public.guard_settlement_requires_acknowledgement(NEW.instruction_id)" in migration,
     },
     "trigger_semantics": {
         "tier3_escalation": "ESCALATED",
