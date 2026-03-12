@@ -2,6 +2,8 @@
 
 Canonical-Reference: docs/operations/AI_AGENT_OPERATION_MANUAL.md
 Task: TSK-P1-075
+failure_signature: PHASE1.TSK.P1.075.PREFLIGHT_PRECI_SPLIT
+origin_task_id: TSK-P1-075
 
 ## Goal
 Implement the intended two-level local gate model: light pre-flight immediately after commit, heavy pre-CI on push.
@@ -19,3 +21,13 @@ Implement the intended two-level local gate model: light pre-flight immediately 
 ## Verification Commands
 - `bash scripts/audit/verify_tsk_p1_075.sh`
 - `bash scripts/audit/run_invariants_fast_checks.sh`
+
+## repro_command
+- `bash scripts/audit/verify_tsk_p1_075.sh`
+
+## verification_commands_run
+- `bash scripts/audit/verify_tsk_p1_075.sh`
+- `bash scripts/audit/run_invariants_fast_checks.sh`
+
+## final_status
+- `planned`

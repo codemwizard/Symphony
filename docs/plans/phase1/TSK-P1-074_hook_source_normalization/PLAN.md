@@ -2,6 +2,8 @@
 
 Canonical-Reference: docs/operations/AI_AGENT_OPERATION_MANUAL.md
 Task: TSK-P1-074
+failure_signature: PHASE1.TSK.P1.074.HOOK_SOURCE_NORMALIZATION
+origin_task_id: TSK-P1-074
 
 ## Goal
 Normalize the local hook topology so the tracked hook source and the active installed hook destination are explicit, documented, and mechanically verifiable.
@@ -21,3 +23,13 @@ Normalize the local hook topology so the tracked hook source and the active inst
 ## Verification Commands
 - `bash scripts/audit/verify_tsk_p1_074.sh`
 - `bash scripts/audit/run_invariants_fast_checks.sh`
+
+## repro_command
+- `bash scripts/audit/verify_tsk_p1_074.sh`
+
+## verification_commands_run
+- `bash scripts/audit/verify_tsk_p1_074.sh`
+- `bash scripts/audit/run_invariants_fast_checks.sh`
+
+## final_status
+- `planned`
