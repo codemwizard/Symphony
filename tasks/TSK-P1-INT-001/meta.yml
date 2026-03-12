@@ -1,0 +1,40 @@
+schema_version: 1
+phase: '1'
+task_id: TSK-P1-INT-001
+title: Reframe integrity model from storage immutability to tamper-evident architecture
+owner_role: SUPERVISOR
+status: completed
+depends_on: []
+touches:
+- docs/operations/STORAGE_AND_INTEGRITY_POSITION_MINIO_TO_SEAWEEDFS.md
+- docs/security/AUDIT_LOGGING_PLAN.md
+- scripts/audit/verify_tsk_p1_int_001.sh
+- docs/plans/phase1/TSK-P1-INT-001/PLAN.md
+- docs/plans/phase1/TSK-P1-INT-001/EXEC_LOG.md
+- evidence/phase1/tsk_p1_int_001_claim_reframe.json
+invariants:
+- INV-105
+- INV-119
+work:
+- Replace WORM/immutability-first language in Phase-1 integrity and storage docs.
+- Explicitly distinguish tamper-evident vs tamper-resistant guarantees.
+- Explicitly define external execution acknowledgement within the trust boundary model.
+acceptance_criteria:
+- No Phase-1 integrity document treats storage backend as primary trust guarantee.
+- Banned language is absent or explicitly qualified.
+- Trust basis is stated as signed artifacts, append-only history, verifiable chain-of-custody, and acknowledgement visibility.
+verification:
+- bash scripts/audit/verify_tsk_p1_int_001.sh
+evidence:
+- evidence/phase1/tsk_p1_int_001_claim_reframe.json
+failure_modes:
+- WORM/immutability wording remains central.
+- External execution boundary remains ambiguous.
+must_read:
+- docs/operations/AI_AGENT_OPERATION_MANUAL.md
+implementation_plan: docs/plans/phase1/TSK-P1-INT-001/PLAN.md
+implementation_log: docs/plans/phase1/TSK-P1-INT-001/EXEC_LOG.md
+notes: Claim-discipline task completed on the governance split path. Evidence records the tamper-evident trust model reframe and removes storage-backend immutability as the Phase-1 trust-root claim.
+client: codex_cli
+assigned_agent: supervisor
+model: gpt-5-codex

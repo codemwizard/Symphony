@@ -1,33 +1,33 @@
 {
-  "timestamp_utc": "2026-03-09T11:42:36Z",
-  "git_sha": "45b281287de971d029f28a00b5a15464768a497f",
-  "schema_fingerprint": "48e1f2462b2d811f14d424ac529ee731e692f992414abfdbc35c60170590957b",
+  "timestamp_utc": "2026-03-12T14:59:42Z",
+  "git_sha": "b373022adbeba212579dcf0c9509edcae966e10c",
+  "schema_fingerprint": "33e36565282f1592203a3db8c735f6d6a51bdcfa289c00e1c2040e30adc98ddb",
   "schema_version": "1.0",
   "status": "PASS",
-  "checked_at_utc": "2026-03-09T11:42:36.307724+00:00",
-  "git_commit": "45b281287de971d029f28a00b5a15464768a497f",
+  "checked_at_utc": "2026-03-12T14:59:42.662825+00:00",
+  "git_commit": "b373022adbeba212579dcf0c9509edcae966e10c",
   "mode": "auto",
   "canonical_docs": [
     {
-      "path": "/home/mwiza/workspace/Symphony/docs/operations/AI_AGENT_WORKFLOW_AND_ROLE_PLAN_v2.md",
+      "path": "/tmp/symphony_wave_split_wts_20260312/governance/docs/operations/AI_AGENT_WORKFLOW_AND_ROLE_PLAN_v2.md",
       "exists": true,
       "sha256": "b7f52cb859c3780915db31946ec3b4b4b49f53d62693c0db8d84b6ba7fc6f5a1"
     },
     {
-      "path": "/home/mwiza/workspace/Symphony/docs/operations/AGENT_ROLE_RECONCILIATION.md",
+      "path": "/tmp/symphony_wave_split_wts_20260312/governance/docs/operations/AGENT_ROLE_RECONCILIATION.md",
       "exists": true,
       "sha256": "6334490f2c397cd67888ed140abf2c1a2a2c919b08bc2f33666773e58ff65c0d"
     },
     {
-      "path": "/home/mwiza/workspace/Symphony/docs/operations/AI_AGENT_OPERATION_MANUAL.md",
+      "path": "/tmp/symphony_wave_split_wts_20260312/governance/docs/operations/AI_AGENT_OPERATION_MANUAL.md",
       "exists": true,
-      "sha256": "52238f37e759f730de7ccf74530c9d85db22c0bbf704a023a301f1c41ae14673"
+      "sha256": "e89379900375daec52c4ba479fb5418486a2b4c639ded812305d5693f0913e6b"
     }
   ],
   "agent_files_checked": {
     "count": 11,
     "files": [
-      "/home/mwiza/workspace/Symphony/AGENTS.md",
+      "/tmp/symphony_wave_split_wts_20260312/governance/AGENTS.md",
       ".codex/agents/architect.md",
       ".codex/agents/compliance_mapper.md",
       ".codex/agents/db_foundation.md",
@@ -61,13 +61,43 @@
       "8. Cross-References (Machine-Readable)"
     ]
   },
-  "regulated_surface_changes_detected": false,
-  "regulated_surface_changed_paths": [],
+  "regulated_surface_changes_detected": true,
+  "regulated_surface_changed_paths": [
+    "docs/operations/AGENT_ASSIGNMENT_PROCESS.md",
+    "docs/operations/AGENT_PROMPT_ROUTER.md",
+    "docs/operations/AGENT_WORKFLOW_CONTROL_PLAN.md",
+    "docs/operations/EVIDENCE_CHURN_CLEANUP_POLICY.md",
+    "docs/operations/EVIDENCE_TOUCHES_AUDIT.md",
+    "docs/operations/PHASE1_DEMO_DEPLOY_AND_TEST_CHECKLIST.md",
+    "docs/operations/PHASE_LIFECYCLE.md",
+    "docs/operations/POLICY_PRECEDENCE.md",
+    "docs/operations/REGULATED_SURFACE_PATHS.yml",
+    "docs/operations/RUN_ID_EVIDENCE_AUDIT.md",
+    "docs/operations/TASK_CREATION_PROCESS.md",
+    "docs/operations/VERIFIER_EVIDENCE_REGISTRY.yml",
+    "docs/operations/VERIFY_AGENT_CONFORMANCE_SPEC.md",
+    "docs/operations/WAVE_EXECUTION_SEMANTICS.md",
+    "docs/operations/WAVE_ORDERING_CLARIFICATION_PLAN.md",
+    "evidence/phase1/agent_conformance_architect.json",
+    "evidence/phase1/agent_conformance_implementer.json",
+    "evidence/phase1/agent_conformance_policy_guardian.json",
+    "evidence/phase1/approval_metadata.json",
+    "evidence/phase1/human_governance_review_signoff.json",
+    "evidence/phase1/invproc_06_ci_wiring_closeout.json",
+    "evidence/phase1/verify_agent_conformance_spec.json",
+    "evidence/security_remediation/r_026_run_task_strict_enforcement.json",
+    "scripts/audit/lib/approval_requirement.py",
+    "scripts/audit/tests/test_approval_metadata_requirements.sh",
+    "scripts/audit/verify_human_governance_review_signoff.sh",
+    "scripts/audit/verify_invproc_06_ci_wiring_closeout.sh"
+  ],
   "regulated_surface_rule_source": "docs/operations/REGULATED_SURFACE_PATHS.yml",
   "regulated_surface_patterns": [
     "schema/migrations/**",
     "scripts/security/**",
     "scripts/audit/**",
+    "docs/operations/**",
+    "evidence/**",
     "docs/PHASE1/**",
     "docs/control_planes/**",
     "docs/operations/approval_metadata.schema.json",
@@ -77,11 +107,11 @@
     "mode": "range",
     "base_ref": "refs/remotes/origin/main",
     "head_ref": "HEAD",
-    "merge_base": "ba00446fb5cdf29487d7f5faca90c4c39cbbe954"
+    "merge_base": "6aa3d6495ab70257717f686fe03c3c9ae8bca54e"
   },
-  "approval_required": false,
+  "approval_required": true,
   "approval_metadata_present": true,
-  "approval_metadata_ref": "/home/mwiza/workspace/Symphony/evidence/phase1/approval_metadata.json",
+  "approval_metadata_ref": "/tmp/symphony_wave_split_wts_20260312/governance/evidence/phase1/approval_metadata.json",
   "failures": [],
   "check_id": "AGENT-CONFORMANCE-IMPLEMENTER",
   "subject_role": "Implementer Agent"

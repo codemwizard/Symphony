@@ -1,0 +1,52 @@
+schema_version: 1
+phase: '1'
+task_id: TSK-P1-INT-005
+title: Restricted/offline posture proof on implemented guarded paths
+owner_role: SUPERVISOR
+status: completed
+depends_on:
+- TSK-P1-INT-001
+touches:
+- docs/security/SOVEREIGN_VPC_POSTURE.md
+- scripts/audit/verify_tsk_p1_int_005.sh
+- docs/plans/phase1/TSK-P1-INT-005/PLAN.md
+- docs/plans/phase1/TSK-P1-INT-005/EXEC_LOG.md
+- evidence/phase1/tsk_p1_int_005_restricted_posture.json
+invariants:
+- INV-105
+- INV-119
+work:
+- Prove restricted-mode run without required DB dependency.
+- Prove no required external network dependency in restricted scenario.
+- Prove off-domain artifacts exclude raw regulated payloads.
+- Prove guarded path rejection for forbidden fields on implemented endpoints.
+acceptance_criteria:
+- Restricted mode succeeds without required DB/network dependencies.
+- Off-domain artifacts contain verification material without raw regulated payloads.
+- Guarded paths reject forbidden regulated fields with evidence.
+verification:
+- bash scripts/audit/verify_led_004_kyc_hash_bridge_endpoint.sh
+- python3 - <<'PY'
+  import json
+  from pathlib import Path
+  path = Path("evidence/phase1/tsk_p1_int_005_restricted_posture.json")
+  payload = json.loads(path.read_text(encoding="utf-8"))
+  assert payload["status"] == "PASS"
+  details = payload["details"]
+  assert details["retention_class"] == "FIC_AML_CUSTOMER_ID"
+  print("PASS")
+  PY
+- bash scripts/audit/verify_tsk_p1_int_005.sh
+evidence:
+- evidence/phase1/tsk_p1_int_005_restricted_posture.json
+failure_modes:
+- Overclaiming network-deny coverage outside implemented guards.
+- Guarded-path criteria asserted where no gate exists.
+must_read:
+- docs/operations/AI_AGENT_OPERATION_MANUAL.md
+notes: Restricted/offline posture is proven only on the implemented KYC hash bridge guarded path and must not be generalized beyond that path.
+implementation_plan: docs/plans/phase1/TSK-P1-INT-005/PLAN.md
+implementation_log: docs/plans/phase1/TSK-P1-INT-005/EXEC_LOG.md
+client: codex_cli
+assigned_agent: supervisor
+model: gpt-5-codex

@@ -2,7 +2,7 @@
 -- PostgreSQL database dump
 --
 
-\restrict MMD5ZnYVJGhafAwrv61iwhll6Hu3CsJnMkBagHMYMRQy1ixblSs9Hi0HErWVkYI
+\restrict UUa8yvNNh87CiyatlmluwHmfEnSb4EwACIS7gHZqL6e6WlrL7GC8mtXqWsBH489
 
 -- Dumped from database version 18.2 (Debian 18.2-1.pgdg13+1)
 -- Dumped by pg_dump version 18.2 (Debian 18.2-1.pgdg13+1)
@@ -70,6 +70,8 @@ CREATE TYPE public.finality_signal_status_enum AS ENUM (
 CREATE TYPE public.inquiry_state_enum AS ENUM (
     'SCHEDULED',
     'SENT',
+    'AWAITING_EXECUTION',
+    'ESCALATED',
     'ACKNOWLEDGED',
     'EXHAUSTED'
 );
@@ -1615,6 +1617,62 @@ $$;
 
 
 --
+-- Name: escalate_missing_acknowledgement(text, uuid, text, text, text, integer); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.escalate_missing_acknowledgement(p_instruction_id text, p_program_id uuid, p_policy_version_id text, p_actor text DEFAULT 'system'::text, p_reason text DEFAULT 'missing_acknowledgement'::text, p_timeout_minutes integer DEFAULT 30) RETURNS void
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO 'pg_catalog', 'public'
+    AS $$
+DECLARE
+  v_state public.inquiry_state_enum;
+  v_actor TEXT := COALESCE(NULLIF(BTRIM(COALESCE(p_actor, '')), ''), 'system');
+BEGIN
+  SELECT inquiry_state INTO v_state
+  FROM public.inquiry_state_machine
+  WHERE instruction_id = p_instruction_id
+  FOR UPDATE;
+
+  IF v_state IS NULL THEN
+    RAISE EXCEPTION 'acknowledgement_state_not_found' USING ERRCODE = 'P7300';
+  END IF;
+
+  IF v_state <> 'AWAITING_EXECUTION' THEN
+    RAISE EXCEPTION 'illegal_escalation_from_state:%', v_state USING ERRCODE = 'P7300';
+  END IF;
+
+  PERFORM public.submit_for_supervisor_approval(
+    p_instruction_id,
+    p_program_id,
+    p_timeout_minutes,
+    p_reason,
+    v_actor
+  );
+
+  UPDATE public.supervisor_approval_queue
+  SET status = 'ESCALATED',
+      held_reason = COALESCE(p_reason, held_reason, 'missing_acknowledgement'),
+      escalated_at = NOW(),
+      decided_at = NULL,
+      decided_by = NULL,
+      decision_reason = NULL
+  WHERE instruction_id = p_instruction_id;
+
+  UPDATE public.inquiry_state_machine
+  SET inquiry_state = 'ESCALATED',
+      policy_version_id = p_policy_version_id
+  WHERE instruction_id = p_instruction_id;
+
+  INSERT INTO public.supervisor_interrupt_audit_events(
+    instruction_id, program_id, action, queue_status, actor, reason
+  ) VALUES (
+    p_instruction_id, p_program_id, 'ESCALATED', 'ESCALATED', v_actor, p_reason
+  );
+END;
+$$;
+
+
+--
 -- Name: evaluate_adjustment_ceiling(uuid, numeric); Type: FUNCTION; Schema: public; Owner: -
 --
 
@@ -1828,6 +1886,28 @@ $$;
 
 
 --
+-- Name: guard_settlement_requires_acknowledgement(text); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.guard_settlement_requires_acknowledgement(p_instruction_id text) RETURNS void
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO 'pg_catalog', 'public'
+    AS $$
+DECLARE
+  v_state public.inquiry_state_enum;
+BEGIN
+  SELECT inquiry_state INTO v_state
+  FROM public.inquiry_state_machine
+  WHERE instruction_id = p_instruction_id;
+
+  IF v_state IS DISTINCT FROM 'ACKNOWLEDGED' THEN
+    RAISE EXCEPTION 'ACKNOWLEDGEMENT_REQUIRED_BEFORE_SETTLEMENT' USING ERRCODE = 'P7301';
+  END IF;
+END;
+$$;
+
+
+--
 -- Name: issue_adjustment(text, text, numeric, text, text); Type: FUNCTION; Schema: public; Owner: -
 --
 
@@ -1906,6 +1986,29 @@ BEGIN
       anchor_ref = p_anchor_ref,
       anchor_type = COALESCE(NULLIF(BTRIM(p_anchor_type), ''), 'HYBRID_SYNC')
   WHERE operation_id = v_op.operation_id;
+END;
+$$;
+
+
+--
+-- Name: mark_instruction_awaiting_execution(text, uuid, text, text); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.mark_instruction_awaiting_execution(p_instruction_id text, p_program_id uuid, p_policy_version_id text, p_actor text DEFAULT 'system'::text) RETURNS public.inquiry_state_enum
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO 'pg_catalog', 'public'
+    AS $$
+BEGIN
+  INSERT INTO public.inquiry_state_machine(
+    instruction_id, inquiry_state, attempts, max_attempts, policy_version_id
+  ) VALUES (
+    p_instruction_id, 'AWAITING_EXECUTION', 0, 1, p_policy_version_id
+  )
+  ON CONFLICT (instruction_id) DO UPDATE
+    SET inquiry_state = 'AWAITING_EXECUTION',
+        policy_version_id = EXCLUDED.policy_version_id;
+
+  RETURN 'AWAITING_EXECUTION';
 END;
 $$;
 
@@ -2465,6 +2568,112 @@ BEGIN
   );
 
   RETURN v_request_id;
+END;
+$$;
+
+
+--
+-- Name: resolve_missing_acknowledgement_interrupt(text, text, text, text); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.resolve_missing_acknowledgement_interrupt(p_instruction_id text, p_action text, p_actor text, p_reason text DEFAULT NULL::text) RETURNS public.inquiry_state_enum
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO 'pg_catalog', 'public'
+    AS $$
+DECLARE
+  v_action TEXT := UPPER(BTRIM(COALESCE(p_action, '')));
+  v_actor TEXT := COALESCE(NULLIF(BTRIM(COALESCE(p_actor, '')), ''), 'system');
+  v_program_id UUID;
+  v_state public.inquiry_state_enum;
+  v_queue_status TEXT;
+BEGIN
+  IF v_action NOT IN ('ACKNOWLEDGE', 'RESUME', 'RESET') THEN
+    RAISE EXCEPTION 'invalid_interrupt_action:%', p_action USING ERRCODE = 'P7300';
+  END IF;
+
+  SELECT program_id INTO v_program_id
+  FROM public.supervisor_approval_queue
+  WHERE instruction_id = p_instruction_id
+  FOR UPDATE;
+
+  IF v_program_id IS NULL THEN
+    RAISE EXCEPTION 'supervisor_interrupt_not_found' USING ERRCODE = 'P7300';
+  END IF;
+
+  SELECT inquiry_state INTO v_state
+  FROM public.inquiry_state_machine
+  WHERE instruction_id = p_instruction_id
+  FOR UPDATE;
+
+  IF v_state IS NULL OR v_state NOT IN ('ESCALATED', 'AWAITING_EXECUTION') THEN
+    RAISE EXCEPTION 'illegal_interrupt_resolution_state:%', v_state USING ERRCODE = 'P7300';
+  END IF;
+
+  IF v_action = 'ACKNOWLEDGE' THEN
+    UPDATE public.inquiry_state_machine
+    SET inquiry_state = 'ACKNOWLEDGED'
+    WHERE instruction_id = p_instruction_id;
+
+    UPDATE public.supervisor_approval_queue
+    SET status = 'APPROVED',
+        approved_at = NOW(),
+        approved_by = v_actor,
+        decided_at = NOW(),
+        decided_by = v_actor,
+        decision_reason = COALESCE(p_reason, 'acknowledged')
+    WHERE instruction_id = p_instruction_id;
+
+    v_queue_status := 'APPROVED';
+    v_state := 'ACKNOWLEDGED';
+  ELSIF v_action = 'RESUME' THEN
+    UPDATE public.inquiry_state_machine
+    SET inquiry_state = 'AWAITING_EXECUTION'
+    WHERE instruction_id = p_instruction_id;
+
+    UPDATE public.supervisor_approval_queue
+    SET status = 'APPROVED',
+        resumed_at = NOW(),
+        approved_at = NOW(),
+        approved_by = v_actor,
+        decided_at = NOW(),
+        decided_by = v_actor,
+        decision_reason = COALESCE(p_reason, 'resume_ack_wait')
+    WHERE instruction_id = p_instruction_id;
+
+    v_queue_status := 'APPROVED';
+    v_state := 'AWAITING_EXECUTION';
+  ELSE
+    UPDATE public.inquiry_state_machine
+    SET inquiry_state = 'AWAITING_EXECUTION'
+    WHERE instruction_id = p_instruction_id;
+
+    UPDATE public.supervisor_approval_queue
+    SET status = 'RESET',
+        reset_at = NOW(),
+        decided_at = NOW(),
+        decided_by = v_actor,
+        decision_reason = COALESCE(p_reason, 'reset_to_ack_wait')
+    WHERE instruction_id = p_instruction_id;
+
+    v_queue_status := 'RESET';
+    v_state := 'AWAITING_EXECUTION';
+  END IF;
+
+  INSERT INTO public.supervisor_interrupt_audit_events(
+    instruction_id, program_id, action, queue_status, actor, reason
+  ) VALUES (
+    p_instruction_id, v_program_id,
+    CASE v_action
+      WHEN 'ACKNOWLEDGE' THEN 'ACKNOWLEDGED'
+      WHEN 'RESUME' THEN 'RESUMED'
+      ELSE 'RESET'
+    END,
+    v_queue_status,
+    v_actor,
+    p_reason
+  );
+
+  RETURN v_state;
 END;
 $$;
 
@@ -4773,7 +4982,10 @@ CREATE TABLE public.supervisor_approval_queue (
     submitted_by text,
     approved_by text,
     approved_at timestamp with time zone,
-    CONSTRAINT supervisor_approval_queue_status_check CHECK ((status = ANY (ARRAY['PENDING_SUPERVISOR_APPROVAL'::text, 'APPROVED'::text, 'REJECTED'::text, 'TIMED_OUT'::text])))
+    escalated_at timestamp with time zone,
+    reset_at timestamp with time zone,
+    resumed_at timestamp with time zone,
+    CONSTRAINT supervisor_approval_queue_status_check CHECK ((status = ANY (ARRAY['PENDING_SUPERVISOR_APPROVAL'::text, 'APPROVED'::text, 'REJECTED'::text, 'TIMED_OUT'::text, 'ESCALATED'::text, 'RESET'::text])))
 );
 
 
@@ -4806,6 +5018,24 @@ CREATE TABLE public.supervisor_audit_tokens (
     expires_at timestamp with time zone NOT NULL,
     revoked_at timestamp with time zone,
     CONSTRAINT supervisor_audit_tokens_scope_check CHECK ((scope = 'AUDIT'::text))
+);
+
+
+--
+-- Name: supervisor_interrupt_audit_events; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.supervisor_interrupt_audit_events (
+    event_id uuid DEFAULT public.uuid_v7_or_random() NOT NULL,
+    instruction_id text NOT NULL,
+    program_id uuid NOT NULL,
+    action text NOT NULL,
+    queue_status text NOT NULL,
+    actor text NOT NULL,
+    reason text,
+    recorded_at timestamp with time zone DEFAULT now() NOT NULL,
+    CONSTRAINT supervisor_interrupt_audit_events_action_check CHECK ((action = ANY (ARRAY['ESCALATED'::text, 'ACKNOWLEDGED'::text, 'RESUMED'::text, 'RESET'::text]))),
+    CONSTRAINT supervisor_interrupt_audit_events_queue_status_check CHECK ((queue_status = ANY (ARRAY['PENDING_SUPERVISOR_APPROVAL'::text, 'APPROVED'::text, 'REJECTED'::text, 'TIMED_OUT'::text, 'ESCALATED'::text, 'RESET'::text])))
 );
 
 
@@ -5877,6 +6107,14 @@ ALTER TABLE ONLY public.supervisor_audit_tokens
 
 
 --
+-- Name: supervisor_interrupt_audit_events supervisor_interrupt_audit_events_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.supervisor_interrupt_audit_events
+    ADD CONSTRAINT supervisor_interrupt_audit_events_pkey PRIMARY KEY (event_id);
+
+
+--
 -- Name: tenant_clients tenant_clients_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -6366,6 +6604,13 @@ CREATE INDEX idx_supervisor_approval_queue_status_timeout ON public.supervisor_a
 --
 
 CREATE INDEX idx_supervisor_audit_tokens_program_expires ON public.supervisor_audit_tokens USING btree (program_id, expires_at DESC);
+
+
+--
+-- Name: idx_supervisor_interrupt_audit_events_instruction_recorded; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_supervisor_interrupt_audit_events_instruction_recorded ON public.supervisor_interrupt_audit_events USING btree (instruction_id, recorded_at DESC);
 
 
 --
@@ -7484,6 +7729,14 @@ ALTER TABLE ONLY public.supervisor_audit_tokens
 
 
 --
+-- Name: supervisor_interrupt_audit_events supervisor_interrupt_audit_events_program_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.supervisor_interrupt_audit_events
+    ADD CONSTRAINT supervisor_interrupt_audit_events_program_id_fkey FOREIGN KEY (program_id) REFERENCES public.programs(program_id) ON DELETE RESTRICT;
+
+
+--
 -- Name: tenant_clients tenant_clients_tenant_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -7766,5 +8019,5 @@ ALTER TABLE public.tenants ENABLE ROW LEVEL SECURITY;
 -- PostgreSQL database dump complete
 --
 
-\unrestrict MMD5ZnYVJGhafAwrv61iwhll6Hu3CsJnMkBagHMYMRQy1ixblSs9Hi0HErWVkYI
+\unrestrict UUa8yvNNh87CiyatlmluwHmfEnSb4EwACIS7gHZqL6e6WlrL7GC8mtXqWsBH489
 

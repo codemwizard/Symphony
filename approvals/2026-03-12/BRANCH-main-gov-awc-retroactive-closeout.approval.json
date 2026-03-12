@@ -1,0 +1,75 @@
+{
+  "schema_version": "1.0",
+  "approval": {
+    "status": "APPROVED",
+    "approver_id": "governance-human-reviewer",
+    "change_reason": "Retroactively close the TASK-GOV-AWC1/TASK-GOV-AWC2 approval gap, repair the AWC2 task contract, codify evidence-in-touches, inventory legacy inconsistencies, and align mechanical approval enforcement with the written regulated-surface contract.",
+    "approved_at_utc": "2026-03-12T07:24:39Z",
+    "role_authority": "Human Approver"
+  },
+  "ai": {
+    "ai_used": true,
+    "ai_prompt_hash": "main-gov-awc-retroactive-closeout",
+    "model_id": "gpt-5-codex",
+    "client": "codex_cli",
+    "session_id": "main-gov-awc-retroactive-closeout"
+  },
+  "scope": {
+    "regulated_surfaces_touched": true,
+    "paths_changed": [
+      "AGENT_ENTRYPOINT.md",
+      "AGENTS.md",
+      "agent_manifest.yml",
+      "approvals/2026-03-12/BRANCH-main-gov-awc-retroactive-closeout.approval.json",
+      "approvals/2026-03-12/BRANCH-main-gov-awc-retroactive-closeout.md",
+      "docs/contracts/templates/TASK_DOD_TEMPLATE.yml",
+      "docs/operations/AGENT_ASSIGNMENT_PROCESS.md",
+      "docs/operations/AGENT_PROMPT_ROUTER.md",
+      "docs/operations/AGENT_WORKFLOW_CONTROL_PLAN.md",
+      "docs/operations/EVIDENCE_TOUCHES_AUDIT.md",
+      "docs/operations/PHASE_LIFECYCLE.md",
+      "docs/operations/POLICY_PRECEDENCE.md",
+      "docs/operations/REGULATED_SURFACE_PATHS.yml",
+      "docs/operations/TASK_CREATION_PROCESS.md",
+      "docs/operations/VERIFY_AGENT_CONFORMANCE_SPEC.md",
+      "docs/plans/phase1/TASK-GOV-AWC1/EXEC_LOG.md",
+      "docs/plans/phase1/TASK-GOV-AWC2/PLAN.md",
+      "docs/plans/phase1/TASK-GOV-AWC2/EXEC_LOG.md",
+      "docs/tasks/PHASE1_GOVERNANCE_TASKS.md",
+      "evidence/phase1/approval_metadata.json",
+      "evidence/phase1/task_gov_awc1.json",
+      "evidence/phase1/task_gov_awc2.json",
+      "evidence/phase1/task_gov_awc3_retroactive_approval_closeout.json",
+      "evidence/phase1/task_gov_awc4_awc2_contract_repair.json",
+      "evidence/phase1/task_gov_awc5_evidence_touches_rule.json",
+      "evidence/phase1/task_gov_awc6_evidence_touches_audit.json",
+      "evidence/phase1/task_gov_awc7_regulated_surface_alignment.json",
+      "scripts/agent/run_task.sh",
+      "scripts/audit/lib/approval_requirement.py",
+      "scripts/audit/tests/test_approval_metadata_requirements.sh",
+      "tasks/TASK-GOV-AWC2/meta.yml",
+      "tasks/TASK-GOV-AWC3/meta.yml",
+      "tasks/TASK-GOV-AWC4/meta.yml",
+      "tasks/TASK-GOV-AWC5/meta.yml",
+      "tasks/TASK-GOV-AWC6/meta.yml",
+      "tasks/TASK-GOV-AWC7/meta.yml"
+    ],
+    "invariants": [
+      "INV-077",
+      "INV-119"
+    ],
+    "phase_boundary_ok": true
+  },
+  "verification": {
+    "commands": [
+      "bash scripts/audit/verify_task_pack_readiness.sh --task TASK-GOV-AWC3",
+      "bash scripts/audit/verify_task_pack_readiness.sh --task TASK-GOV-AWC4",
+      "bash scripts/audit/verify_task_pack_readiness.sh --task TASK-GOV-AWC5",
+      "bash scripts/audit/verify_task_pack_readiness.sh --task TASK-GOV-AWC6",
+      "bash scripts/audit/verify_task_pack_readiness.sh --task TASK-GOV-AWC7",
+      "bash scripts/audit/tests/test_approval_metadata_requirements.sh"
+    ],
+    "pre_ci_passed": false,
+    "notes": "Retroactive approval closeout and enforcement alignment batch. Full pre_ci remains blocked by unrelated shared governance state outside this batch."
+  }
+}

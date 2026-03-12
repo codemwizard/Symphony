@@ -1,0 +1,49 @@
+schema_version: 1
+phase: '1'
+task_id: TASK-GOV-AWC10
+title: Audit runner-targeted JSON evidence writers for missing run_id
+owner_role: QA_VERIFIER
+status: completed
+depends_on:
+  - TASK-GOV-AWC9
+touches:
+  - approvals/2026-03-12/BRANCH-feat-task-gov-awc8-wave-ordering.md
+  - approvals/2026-03-12/BRANCH-feat-task-gov-awc8-wave-ordering.approval.json
+  - docs/operations/RUN_ID_EVIDENCE_AUDIT.md
+  - evidence/phase1/approval_metadata.json
+  - evidence/phase1/task_gov_awc10_run_id_audit.json
+  - tasks/TASK-GOV-AWC10/meta.yml
+  - docs/plans/phase1/TASK-GOV-AWC10/PLAN.md
+  - docs/plans/phase1/TASK-GOV-AWC10/EXEC_LOG.md
+invariants:
+  - INV-119
+work:
+  - Audit runner-targeted JSON evidence writers that still omit run_id.
+  - Separate the resolved INVPROC-06 case from the remaining backlog.
+  - Produce explicit cleanup batches for the remaining verifier families.
+acceptance_criteria:
+  - docs/operations/RUN_ID_EVIDENCE_AUDIT.md inventories the remaining runner-targeted JSON evidence backlog.
+  - The audit names TASK-INVPROC-06 as a resolved reference case.
+  - The audit proposes explicit cleanup batches with recommended owner roles.
+  - The audit does not over-claim universal breakage where the repo is only partially inconsistent.
+verification:
+  - rg -n "Resolved Reference Case|TASK-INVPROC-06|Cleanup Batches|TASK-GOV-RUNID-INT1|TASK-GOV-RUNID-GOV1|TASK-GOV-RUNID-DEMO1|TASK-GOV-RUNID-HARD1|TASK-GOV-RUNID-CUT1|TASK-GOV-RUNID-P0A" docs/operations/RUN_ID_EVIDENCE_AUDIT.md
+  - rg -n "run_id|SYMPHONY_RUN_ID" scripts/audit/verify_invproc_06_ci_wiring_closeout.sh scripts/audit/verify_human_governance_review_signoff.sh
+  - bash scripts/audit/verify_agent_conformance.sh
+evidence:
+  - evidence/phase1/task_gov_awc10_run_id_audit.json
+failure_modes:
+  - Evidence file missing
+  - Audit omits the resolved INVPROC-06 case
+  - Cleanup batches are not explicit enough to execute
+  - Audit overstates repo-wide breakage without evidence
+must_read:
+  - docs/operations/RUN_ID_EVIDENCE_AUDIT.md
+  - docs/operations/VERIFIER_EVIDENCE_REGISTRY.yml
+  - tasks/TASK-GOV-AWC9/meta.yml
+implementation_plan: docs/plans/phase1/TASK-GOV-AWC10/PLAN.md
+implementation_log: docs/plans/phase1/TASK-GOV-AWC10/EXEC_LOG.md
+notes: Completed. Produced the run_id evidence backlog and explicit cleanup batches; did not backfill the remaining verifier scripts in this task.
+client: codex_cli
+assigned_agent: qa_verifier
+model: gpt-5-codex

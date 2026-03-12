@@ -1,0 +1,55 @@
+schema_version: 1
+phase: '1'
+task_id: TASK-GOV-AWC9
+title: Normalize TASK-INVPROC-06 evidence to deterministic runner run_id contract
+owner_role: QA_VERIFIER
+status: completed
+depends_on:
+  - TASK-GOV-AWC8
+touches:
+  - approvals/2026-03-12/BRANCH-feat-task-gov-awc8-wave-ordering.md
+  - approvals/2026-03-12/BRANCH-feat-task-gov-awc8-wave-ordering.approval.json
+  - docs/operations/VERIFIER_EVIDENCE_REGISTRY.yml
+  - evidence/phase1/approval_metadata.json
+  - evidence/phase1/human_governance_review_signoff.json
+  - evidence/phase1/invproc_06_ci_wiring_closeout.json
+  - evidence/phase1/task_gov_awc9_invproc06_run_id_contract.json
+  - scripts/audit/verify_human_governance_review_signoff.sh
+  - scripts/audit/verify_invproc_06_ci_wiring_closeout.sh
+  - tasks/TASK-GOV-AWC9/meta.yml
+  - docs/plans/phase1/TASK-GOV-AWC9/PLAN.md
+  - docs/plans/phase1/TASK-GOV-AWC9/EXEC_LOG.md
+invariants:
+  - INV-119
+work:
+  - Add run_id emission to the two TASK-INVPROC-06 evidence writers.
+  - Document the run_id requirement for runner-targeted JSON evidence.
+  - Regenerate TASK-INVPROC-06 evidence so deterministic freshness checks can pass.
+acceptance_criteria:
+  - scripts/audit/verify_invproc_06_ci_wiring_closeout.sh emits non-empty run_id.
+  - scripts/audit/verify_human_governance_review_signoff.sh emits non-empty run_id.
+  - Under scripts/agent/run_task.sh, both evidence files carry the current SYMPHONY_RUN_ID.
+  - docs/operations/VERIFIER_EVIDENCE_REGISTRY.yml documents the run_id contract for runner-targeted JSON evidence.
+  - bash scripts/agent/run_task.sh TASK-INVPROC-06 passes the final freshness gate.
+verification:
+  - bash scripts/audit/verify_invproc_06_ci_wiring_closeout.sh
+  - bash scripts/audit/verify_human_governance_review_signoff.sh
+  - python3 -c "import json; paths=['evidence/phase1/invproc_06_ci_wiring_closeout.json','evidence/phase1/human_governance_review_signoff.json']; [(__import__('sys').exit(1) if not json.load(open(p)).get('run_id') else None) for p in paths]; print('PASS')"
+  - bash scripts/agent/run_task.sh TASK-INVPROC-06
+evidence:
+  - evidence/phase1/task_gov_awc9_invproc06_run_id_contract.json
+failure_modes:
+  - Evidence file missing
+  - INVPROC-06 verifier still emits legacy JSON without run_id
+  - Human governance review evidence still emits legacy JSON without run_id
+  - Deterministic runner freshness still fails for TASK-INVPROC-06
+must_read:
+  - scripts/agent/run_task.sh
+  - tasks/TASK-INVPROC-06/meta.yml
+  - docs/operations/VERIFIER_EVIDENCE_REGISTRY.yml
+implementation_plan: docs/plans/phase1/TASK-GOV-AWC9/PLAN.md
+implementation_log: docs/plans/phase1/TASK-GOV-AWC9/EXEC_LOG.md
+notes: Completed. TASK-INVPROC-06 evidence now emits run_id and passes deterministic freshness checks under scripts/agent/run_task.sh.
+client: codex_cli
+assigned_agent: qa_verifier
+model: gpt-5-codex

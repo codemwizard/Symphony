@@ -1,0 +1,45 @@
+schema_version: 1
+phase: '1'
+task_id: TSK-P1-DEMO-017
+title: Tenant and programme provisioning runbook
+owner_role: SUPERVISOR
+status: completed
+depends_on:
+- TSK-P1-DEMO-006
+- TSK-P1-DEMO-011
+touches:
+- docs/operations/GREENTECH4CE_TENANT_PROGRAMME_PROVISIONING_RUNBOOK.md
+- scripts/audit/verify_tsk_p1_demo_017.sh
+- evidence/phase1/tsk_p1_demo_017_provisioning_runbook.json
+- docs/plans/phase1/TSK-P1-DEMO-017/PLAN.md
+- docs/plans/phase1/TSK-P1-DEMO-017/EXEC_LOG.md
+invariants:
+- INV-105
+- INV-119
+- INV-133
+work:
+- Define a documented, repeatable tenant and programme provisioning procedure (no self-service UI).
+- Specify required migration commands, programme/policy fields, supplier seed requirements, and pre-go-live isolation verification.
+- Add checklist-based completion criteria and rollback notes for partner onboarding.
+acceptance_criteria:
+- Runbook defines deterministic command/order for provisioning and verification.
+- Required policy/config fields and supplier seed data are explicitly enumerated.
+- Isolation verification checklist includes tenant/programme separation checks before go-live.
+- Verifier emits evidence proving the runbook exists and includes mandatory sections.
+verification:
+- bash scripts/audit/verify_tsk_p1_demo_017.sh
+- python3 scripts/audit/validate_evidence.py --task TSK-P1-DEMO-017 --evidence evidence/phase1/tsk_p1_demo_017_provisioning_runbook.json
+evidence:
+- evidence/phase1/tsk_p1_demo_017_provisioning_runbook.json
+failure_modes:
+- Manual onboarding remains ad hoc and non-repeatable.
+- Missing supplier seed prerequisites cause inconsistent programme behavior.
+- Isolation checks omitted before partner go-live.
+must_read:
+- docs/product/greentech4ce/Symphony_PRD_GreenTech4CE(3).docx
+implementation_plan: docs/plans/phase1/TSK-P1-DEMO-017/PLAN.md
+implementation_log: docs/plans/phase1/TSK-P1-DEMO-017/EXEC_LOG.md
+notes: Process-only task to make partner onboarding reproducible and auditable without adding Phase-1 UI scope.
+client: codex_cli
+assigned_agent: supervisor
+model: gpt-5-codex

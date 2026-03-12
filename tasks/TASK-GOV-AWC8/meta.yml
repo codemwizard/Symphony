@@ -1,0 +1,57 @@
+schema_version: 1
+phase: '1'
+task_id: TASK-GOV-AWC8
+title: Clarify serial wave-order derivation in wave execution semantics
+owner_role: ARCHITECT
+status: completed
+depends_on:
+  - TASK-GOV-AWC7
+touches:
+  - approvals/2026-03-12/BRANCH-feat-task-gov-awc8-wave-ordering.md
+  - approvals/2026-03-12/BRANCH-feat-task-gov-awc8-wave-ordering.approval.json
+  - docs/operations/WAVE_EXECUTION_SEMANTICS.md
+  - docs/operations/WAVE_ORDERING_CLARIFICATION_PLAN.md
+  - evidence/phase1/approval_metadata.json
+  - evidence/phase1/task_gov_awc8_wave_ordering_clarification.json
+  - tasks/TASK-GOV-AWC8/meta.yml
+  - docs/plans/phase1/TASK-GOV-AWC8/PLAN.md
+  - docs/plans/phase1/TASK-GOV-AWC8/EXEC_LOG.md
+invariants:
+  - INV-119
+work:
+  - Add an explicit serial derivation rule to docs/operations/WAVE_EXECUTION_SEMANTICS.md.
+  - Define canonical ordering from task metadata as dependency-first and numeric-second.
+  - Prevent agents from interpreting waves as parallel frontier batches.
+  - Provide a concrete INT-001 / INT-002 / INT-003 / INT-004 example showing why INT-003 may follow immediately after INT-002.
+acceptance_criteria:
+  - docs/operations/WAVE_EXECUTION_SEMANTICS.md contains a section titled "4A. Serial Derivation Rule".
+  - The new section defines runnable-set recomputation after each completed task.
+  - The new section states that blocked, deferred, and completed tasks are excluded from the runnable set.
+  - The new section states that numeric or canonical order is used only as the tie-break among currently runnable tasks.
+  - The new section explicitly says wave boundaries cannot reorder the derived serial order.
+  - The new section includes the INT-001 / INT-002 / INT-003 / INT-004 example.
+verification:
+  - rg -n "## 4A\\. Serial Derivation Rule" docs/operations/WAVE_EXECUTION_SEMANTICS.md
+  - rg -n "currently runnable set|recompute the runnable set|numeric or canonical|Wave boundaries must not reorder" docs/operations/WAVE_EXECUTION_SEMANTICS.md
+  - rg -n "INT-001|INT-002|INT-003|INT-004" docs/operations/WAVE_EXECUTION_SEMANTICS.md
+  - bash scripts/audit/verify_agent_conformance.sh
+evidence:
+  - evidence/phase1/task_gov_awc8_wave_ordering_clarification.json
+failure_modes:
+  - Evidence file missing
+  - Wave doc still permits frontier-style interpretation
+  - Numeric ordering is stated as primary instead of a tie-break
+  - Serial recomputation rule is absent
+  - Example does not demonstrate why INT-003 can follow INT-002 before INT-004
+must_read:
+  - AGENTS.md
+  - docs/operations/AI_AGENT_OPERATION_MANUAL.md
+  - docs/operations/WAVE_EXECUTION_SEMANTICS.md
+  - docs/operations/PHASE_LIFECYCLE.md
+  - docs/operations/WAVE_ORDERING_CLARIFICATION_PLAN.md
+implementation_plan: docs/plans/phase1/TASK-GOV-AWC8/PLAN.md
+implementation_log: docs/plans/phase1/TASK-GOV-AWC8/EXEC_LOG.md
+notes: Completed. WAVE_EXECUTION_SEMANTICS.md now defines serial derivation from task metadata as dependency-first and numeric-second before wave partitioning.
+client: codex_cli
+assigned_agent: architect
+model: gpt-5-codex

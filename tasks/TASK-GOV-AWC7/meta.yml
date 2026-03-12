@@ -1,0 +1,53 @@
+schema_version: 1
+phase: '1'
+task_id: TASK-GOV-AWC7
+title: Align mechanical approval enforcement with AGENTS regulated-surface policy
+owner_role: QA_VERIFIER
+status: completed
+depends_on:
+  - TASK-GOV-AWC3
+touches:
+  - docs/operations/REGULATED_SURFACE_PATHS.yml
+  - docs/operations/VERIFY_AGENT_CONFORMANCE_SPEC.md
+  - scripts/audit/lib/approval_requirement.py
+  - scripts/audit/tests/test_approval_metadata_requirements.sh
+  - evidence/phase1/task_gov_awc7_regulated_surface_alignment.json
+  - tasks/TASK-GOV-AWC7/meta.yml
+  - docs/plans/phase1/TASK-GOV-AWC7/PLAN.md
+  - docs/plans/phase1/TASK-GOV-AWC7/EXEC_LOG.md
+invariants:
+  - INV-077
+  - INV-119
+work:
+  - Add docs/operations and evidence surfaces to mechanical approval enforcement.
+  - Make the shared approval path matcher treat `/**` patterns as nested prefix matches.
+  - Update the approval-requirement test harness to cover the newly regulated surfaces.
+  - Update the conformance spec so it names REGULATED_SURFACE_PATHS.yml as the mechanical source of truth.
+acceptance_criteria:
+  - Mechanical approval enforcement now includes docs/operations and evidence surfaces.
+  - The approval-requirement tests include docs/operations and evidence cases.
+  - VERIFY_AGENT_CONFORMANCE_SPEC.md names REGULATED_SURFACE_PATHS.yml as the regulated-surface source of truth.
+verification:
+  - rg -n "docs/operations/\\*\\*|evidence/\\*\\*" docs/operations/REGULATED_SURFACE_PATHS.yml
+  - rg -n "pattern.endswith\\(\"/\\*\\*\"\\)|startswith\\(prefix \\+ \"/\"\\)" scripts/audit/lib/approval_requirement.py
+  - rg -n "docs/operations|evidence/phase1" scripts/audit/tests/test_approval_metadata_requirements.sh
+  - rg -n "REGULATED_SURFACE_PATHS.yml" docs/operations/VERIFY_AGENT_CONFORMANCE_SPEC.md
+  - bash scripts/audit/tests/test_approval_metadata_requirements.sh
+evidence:
+  - evidence/phase1/task_gov_awc7_regulated_surface_alignment.json
+failure_modes:
+  - Evidence file missing
+  - Mechanical policy still omits one of the written regulated surfaces
+  - Shared approval path matcher still fails to recognize nested `/**` evidence patterns
+  - Approval-requirement tests do not cover the new patterns
+  - Conformance spec still names the wrong source of truth
+must_read:
+  - AGENTS.md
+  - docs/operations/VERIFY_AGENT_CONFORMANCE_SPEC.md
+  - docs/operations/REGULATED_SURFACE_PATHS.yml
+implementation_plan: docs/plans/phase1/TASK-GOV-AWC7/PLAN.md
+implementation_log: docs/plans/phase1/TASK-GOV-AWC7/EXEC_LOG.md
+notes: Aligns the mechanical approval policy with the broader written AGENTS regulated-surface contract.
+client: codex_cli
+assigned_agent: qa_verifier
+model: gpt-5-codex

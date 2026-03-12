@@ -1,8 +1,9 @@
 {
   "check_id": "TASK-INVPROC-06",
-  "timestamp_utc": "2026-03-09T16:07:28Z",
-  "git_sha": "6a13873af7b426d65d6813150dcfdc2298b5fbfb",
-  "schema_fingerprint": "48e1f2462b2d811f14d424ac529ee731e692f992414abfdbc35c60170590957b",
+  "run_id": "standalone-2026-03-12T12:27:28Z",
+  "timestamp_utc": "2026-03-12T12:27:28Z",
+  "git_sha": "6aa3d6495ab70257717f686fe03c3c9ae8bca54e",
+  "schema_fingerprint": "65b4b49fc3e892f1482781140ce63e7053803010b618fbc9e39d132452c13821",
   "status": "PASS",
   "checks": [
     {
