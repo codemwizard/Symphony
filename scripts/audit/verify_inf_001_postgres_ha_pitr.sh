@@ -61,6 +61,18 @@ obj=json.loads('''$pitr_json''')
 print('true' if obj.get('pitr_test_passed') else 'false')
 PY
 )"
+restore_operation_performed="$(python3 - <<PY
+import json
+obj=json.loads('''$pitr_json''')
+print('true' if obj.get('restore_operation_performed') else 'false')
+PY
+)"
+restore_probe_mode="$(python3 - <<PY
+import json
+obj=json.loads('''$pitr_json''')
+print(obj.get('restore_probe_mode',''))
+PY
+)"
 declared_rto_seconds="$(python3 - <<PY
 import json
 obj=json.loads('''$pitr_json''')
@@ -107,6 +119,9 @@ PY
 if [[ "$pitr_test_passed" != "true" || -z "$restore_target_timestamp" || -z "$restored_schema_version" ]]; then
   errors=$((errors+1))
 fi
+if [[ "$restore_operation_performed" != "true" || "$restore_probe_mode" != "baseline_restore_drill" ]]; then
+  errors=$((errors+1))
+fi
 if [[ -z "$declared_rto_seconds" || -z "$restore_elapsed_seconds" || "$storage_backend" != "seaweedfs" ]]; then
   errors=$((errors+1))
 fi
@@ -126,6 +141,8 @@ backup_py="False"
 [[ "$backup_schedule_confirmed" == "true" ]] && backup_py="True"
 pitr_py="False"
 [[ "$pitr_test_passed" == "true" ]] && pitr_py="True"
+restore_performed_py="False"
+[[ "$restore_operation_performed" == "true" ]] && restore_performed_py="True"
 
 status="PASS"
 if (( errors > 0 )); then
@@ -153,6 +170,8 @@ out={
   "pitr_test_passed": $pitr_py,
   "restore_target_timestamp": "$restore_target_timestamp",
   "restored_schema_version": "$restored_schema_version",
+  "restore_operation_performed": $restore_performed_py,
+  "restore_probe_mode": "$restore_probe_mode",
   "declared_rto_seconds": int("$declared_rto_seconds") if "$declared_rto_seconds" else None,
   "restore_elapsed_seconds": int("$restore_elapsed_seconds") if "$restore_elapsed_seconds" else None,
   "rto_met": "$rto_met"=="true",

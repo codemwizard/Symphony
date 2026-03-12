@@ -20,10 +20,8 @@ bash scripts/audit/verify_inf_001_postgres_ha_pitr.sh
 
 [[ -f "$PITR_EVIDENCE" ]] || { echo "missing_required_file:$PITR_EVIDENCE" >&2; exit 1; }
 
-status="PASS"
-
 mkdir -p "$(dirname "$EVIDENCE")"
-python3 - <<'PY' "$TASK_ID" "$EVIDENCE" "$status" "$PRED_EVIDENCE" "$PITR_EVIDENCE"
+python3 - <<'PY' "$TASK_ID" "$EVIDENCE" "$PRED_EVIDENCE" "$PITR_EVIDENCE"
 import json
 import os
 import subprocess
@@ -31,7 +29,7 @@ import sys
 from datetime import datetime, timezone
 from pathlib import Path
 
-task_id, evidence_path, status, pred_path, pitr_path = sys.argv[1:]
+task_id, evidence_path, pred_path, pitr_path = sys.argv[1:]
 pred = json.loads(Path(pred_path).read_text(encoding="utf-8"))
 pitr = json.loads(Path(pitr_path).read_text(encoding="utf-8"))
 failures = []
@@ -82,11 +80,8 @@ payload = {
 
 Path(evidence_path).write_text(json.dumps(payload, indent=2) + "\n", encoding="utf-8")
 print(f"Evidence written: {evidence_path}")
+if failures:
+    raise SystemExit(1)
 PY
-
-if [[ "$status" != "PASS" ]]; then
-  echo "TSK-P1-INT-009B verification failed" >&2
-  exit 1
-fi
 
 echo "TSK-P1-INT-009B verification passed. Evidence: $EVIDENCE"
