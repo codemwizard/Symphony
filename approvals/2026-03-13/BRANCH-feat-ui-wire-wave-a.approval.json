@@ -3,7 +3,7 @@
   "approval": {
     "status": "APPROVED",
     "approver_id": "governance-human-reviewer",
-    "change_reason": "Implement Wave A of the GreenTech4CE supervisory UI port, including canonical source-of-truth, pilot-demo shell serving, repo-aligned adapter behavior, verifier updates, and regulated-surface approval metadata.",
+    "change_reason": "Implement Wave A of the GreenTech4CE supervisory UI port, including canonical source-of-truth, pilot-demo shell serving, repo-aligned adapter behavior, verifier updates, regulated-surface approval metadata, and the remediation trace casefile required by the pre-push governance gate.",
     "approved_at_utc": "2026-03-13T10:30:00Z",
     "role_authority": "Human Approver"
   },
@@ -26,6 +26,8 @@
       "docs/plans/phase1/TASK-UI-WIRE-001/EXEC_LOG.md",
       "docs/plans/phase1/TASK-UI-WIRE-002/PLAN.md",
       "docs/plans/phase1/TASK-UI-WIRE-002/EXEC_LOG.md",
+      "docs/plans/phase1/REM-2026-03-13_pre_ci-verify_remediation_trace/PLAN.md",
+      "docs/plans/phase1/REM-2026-03-13_pre_ci-verify_remediation_trace/EXEC_LOG.md",
       "docs/tasks/phase1_prompts.md",
       "evidence/phase1/approval_metadata.json",
       "evidence/phase1/task_ui_wire_000_source_of_truth.json",
@@ -62,7 +64,8 @@
       "python3 scripts/audit/validate_evidence.py --task TASK-UI-WIRE-002 --evidence evidence/phase1/task_ui_wire_002_adapter_alignment.json",
       "bash scripts/audit/verify_agent_conformance.sh",
       "bash scripts/audit/run_invariants_fast_checks.sh",
-      "bash scripts/dev/pre_ci.sh"
+      "bash scripts/dev/pre_ci.sh",
+      "bash scripts/audit/verify_human_governance_review_signoff.sh"
     ],
     "pre_ci_passed": true,
     "notes": "Wave A implementation batch. Local pre_ci progressed through the full Wave A stack and only hit the recursive signoff dependency that requires this flag to be true; the branch verification set was rerun after updating approval scope."

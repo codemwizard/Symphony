@@ -1,6 +1,6 @@
 ## 1. Summary of Change
 
-Implement Wave A of the GreenTech4CE supervisory UI port: create the Wave A task packs, freeze the canonical supervisory UI source-of-truth, port and serve the v3 shell on pilot-demo routes, and align the client adapter to repo-native `/v1` routes and explicit HYBRID fallback behavior.
+Implement Wave A of the GreenTech4CE supervisory UI port: create the Wave A task packs, freeze the canonical supervisory UI source-of-truth, port and serve the v3 shell on pilot-demo routes, align the client adapter to repo-native `/v1` routes and explicit HYBRID fallback behavior, and record the required remediation trace casefile for the pre-push governance gate.
 
 ## 2. Scope of Impact
 
