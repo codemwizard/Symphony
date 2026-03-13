@@ -12,9 +12,9 @@ This document defines the canonical supervisory UI shell for Phase-1 demo scope 
 
 - Canonical target shell: the v3 supervisory shell derived from `symphony-ui-wire-pack-v2.zip`
 - Primary route: `GET /pilot-demo/supervisory`
-- Legacy route during transition: `GET /pilot-demo/supervisory-legacy`
+- Legacy route: `GET /pilot-demo/supervisory-legacy` only when `SYMPHONY_ENABLE_LEGACY_SUPERVISORY_UI=1`
 - Outside `pilot-demo`: both routes must return `404`
-- Existing thin shell is legacy and transitional only
+- Existing thin shell is retired from normal demo navigation and available only for explicit debug access
 
 ## Non-Canonical Assumptions Rejected
 
