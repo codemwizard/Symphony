@@ -27,7 +27,10 @@
       "src/supervisory-dashboard/index.html",
       "tasks/TASK-UI-WIRE-008/meta.yml",
       "tasks/TASK-UI-WIRE-009/meta.yml",
-      "tasks/TASK-UI-WIRE-010/meta.yml"
+      "tasks/TASK-UI-WIRE-010/meta.yml",
+      "docs/plans/phase1/REM-2026-03-13_ui-wave-d-pre_ci-remediation-trace/PLAN.md",
+      "docs/plans/phase1/REM-2026-03-13_ui-wave-d-pre_ci-remediation-trace/EXEC_LOG.md",
+      "evidence/phase1/human_governance_review_signoff.json"
     ]
   },
   "ai": {
