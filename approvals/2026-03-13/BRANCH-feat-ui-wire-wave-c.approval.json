@@ -1,0 +1,62 @@
+{
+  "schema_version": "1.0",
+  "approval": {
+    "status": "APPROVED",
+    "approver_id": "governance-human-reviewer",
+    "change_reason": "Complete Wave C of the GreenTech4CE supervisory UI port by expanding the reveal proof model, adding the real instruction-detail route, and wiring the supervisory drill-down to backend payloads without inventing ack/interrupt state.",
+    "approved_at_utc": "2026-03-13T14:10:00Z",
+    "role_authority": "Human Approver"
+  },
+  "ai": {
+    "ai_used": true,
+    "ai_prompt_hash": "feat-ui-wire-wave-c",
+    "model_id": "gpt-5-codex",
+    "client": "codex_cli",
+    "session_id": "feat-ui-wire-wave-c"
+  },
+  "scope": {
+    "regulated_surfaces_touched": true,
+    "paths_changed": [
+      "approvals/2026-03-13/BRANCH-feat-ui-wire-wave-c.approval.json",
+      "approvals/2026-03-13/BRANCH-feat-ui-wire-wave-c.md",
+      "docs/operations/SUPERVISORY_REVEAL_API_V2.md",
+      "docs/plans/phase1/TASK-UI-WIRE-005/PLAN.md",
+      "docs/plans/phase1/TASK-UI-WIRE-005/EXEC_LOG.md",
+      "docs/plans/phase1/TASK-UI-WIRE-006/PLAN.md",
+      "docs/plans/phase1/TASK-UI-WIRE-006/EXEC_LOG.md",
+      "evidence/phase1/approval_metadata.json",
+      "evidence/phase1/task_ui_wire_005_proof_model.json",
+      "evidence/phase1/task_ui_wire_006_instruction_detail.json",
+      "scripts/audit/verify_task_ui_wire_005.sh",
+      "scripts/audit/verify_task_ui_wire_006.sh",
+      "services/ledger-api/dotnet/src/LedgerApi/Demo/SupervisoryReadModelsSelfTestRunner.cs",
+      "services/ledger-api/dotnet/src/LedgerApi/Program.cs",
+      "services/ledger-api/dotnet/src/LedgerApi/ReadModels/SupervisoryRevealReadModelHandler.cs",
+      "src/supervisory-dashboard/index.html",
+      "tasks/TASK-UI-WIRE-005/meta.yml",
+      "tasks/TASK-UI-WIRE-006/meta.yml"
+    ],
+    "invariants": [
+      "INV-077",
+      "INV-105",
+      "INV-119"
+    ],
+    "phase_boundary_ok": true
+  },
+  "verification": {
+    "commands": [
+      "bash scripts/audit/verify_task_meta_schema.sh --mode strict --allow-legacy",
+      "bash scripts/audit/verify_task_pack_readiness.sh --task TASK-UI-WIRE-005 --task TASK-UI-WIRE-006",
+      "dotnet build services/ledger-api/dotnet/src/LedgerApi/LedgerApi.csproj -nologo",
+      "bash scripts/audit/verify_task_ui_wire_005.sh",
+      "python3 scripts/audit/validate_evidence.py --task TASK-UI-WIRE-005 --evidence evidence/phase1/task_ui_wire_005_proof_model.json",
+      "bash scripts/audit/verify_task_ui_wire_006.sh",
+      "python3 scripts/audit/validate_evidence.py --task TASK-UI-WIRE-006 --evidence evidence/phase1/task_ui_wire_006_instruction_detail.json",
+      "bash scripts/audit/verify_human_governance_review_signoff.sh",
+      "bash scripts/audit/verify_agent_conformance.sh",
+      "bash scripts/dev/pre_ci.sh"
+    ],
+    "pre_ci_passed": false,
+    "notes": "Wave C complete batch. Approval scope covers the reveal proof-model expansion, the new instruction-detail route, the drill-down UI binding, and the Wave C task evidence."
+  }
+}

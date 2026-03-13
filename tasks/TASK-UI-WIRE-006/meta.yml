@@ -1,0 +1,52 @@
+schema_version: 1
+phase: "1"
+task_id: "TASK-UI-WIRE-006"
+title: "Add the real instruction-detail route and drill-down surface"
+owner_role: "SUPERVISOR"
+status: "completed"
+depends_on:
+  - TASK-UI-WIRE-005
+touches:
+  - services/ledger-api/dotnet/src/LedgerApi/**
+  - src/supervisory-dashboard/**
+  - docs/operations/SUPERVISORY_REVEAL_API_V2.md
+  - tasks/TASK-UI-WIRE-006/meta.yml
+  - docs/plans/phase1/TASK-UI-WIRE-006/PLAN.md
+  - docs/plans/phase1/TASK-UI-WIRE-006/EXEC_LOG.md
+  - docs/tasks/phase1_prompts.md
+  - scripts/audit/verify_task_ui_wire_006.sh
+  - evidence/phase1/task_ui_wire_006_instruction_detail.json
+invariants:
+  - INV-077
+  - INV-105
+  - INV-119
+work:
+  - Add a real instruction-detail route for supervisory drill-down.
+  - Return interpreted proof state, raw artifact references, supplier/policy context, and ack/interrupt placeholder fields.
+  - Wire the slideout/detail panel to the real route and keep the view read-only and tenant/programme scoped.
+acceptance_criteria:
+  - Drill-down uses a real detail route rather than in-memory stub data.
+  - Raw artifacts are reachable from the detail view.
+  - Route remains tenant/programme scoped and read-only.
+  - Ack and interrupt slots exist in the detail UI but remain null, pending, or unavailable until TASK-UI-WIRE-008 projects real payload state.
+verification:
+  - bash scripts/audit/verify_task_ui_wire_006.sh
+  - python3 scripts/audit/validate_evidence.py --task TASK-UI-WIRE-006 --evidence evidence/phase1/task_ui_wire_006_instruction_detail.json
+evidence:
+  - evidence/phase1/task_ui_wire_006_instruction_detail.json
+failure_modes:
+  - Detail route remains abstract or fake.
+  - Raw artifacts are disconnected from interpreted state.
+  - Ack and interrupt UI is hidden entirely, forcing rework when TASK-UI-WIRE-008 lands.
+  - Evidence file missing.
+must_read:
+  - AGENT_ENTRYPOINT.md
+  - docs/operations/AGENT_PROMPT_ROUTER.md
+  - docs/operations/AI_AGENT_OPERATION_MANUAL.md
+  - docs/operations/SUPERVISORY_UI_SOURCE_OF_TRUTH.md
+implementation_plan: "docs/plans/phase1/TASK-UI-WIRE-006/PLAN.md"
+implementation_log: "docs/plans/phase1/TASK-UI-WIRE-006/EXEC_LOG.md"
+notes: "Wave C drill-down task. The route contract is GET /v1/supervisory/instructions/{instructionId}/detail and must replace fake local drill-down behavior."
+client: "codex_cli"
+assigned_agent: "supervisor"
+model: "gpt-5-codex"

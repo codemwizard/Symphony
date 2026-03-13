@@ -539,6 +539,28 @@ app.MapGet("/v1/supervisory/programmes/{programId}/reveal", (string programId, H
     return Results.Json(result.Body, statusCode: result.StatusCode);
 }).RequireRateLimiting("sensitive-endpoint");
 
+app.MapGet("/v1/supervisory/instructions/{instructionId}/detail", (string instructionId, HttpContext httpContext) =>
+{
+    var authFailure = ApiAuthorization.AuthorizeEvidenceRead(httpContext);
+    if (authFailure is not null)
+    {
+        return Results.Json(authFailure.Body, statusCode: authFailure.StatusCode);
+    }
+
+    var tenantId = httpContext.Request.Headers.TryGetValue("x-tenant-id", out var tenantHeader)
+        ? tenantHeader.ToString().Trim()
+        : string.Empty;
+
+    var tenantAuthFailure = ApiAuthorization.AuthorizeTenantScope(tenantId);
+    if (tenantAuthFailure is not null)
+    {
+        return Results.Json(tenantAuthFailure.Body, statusCode: tenantAuthFailure.StatusCode);
+    }
+
+    var result = SupervisoryInstructionDetailReadModelHandler.Handle(tenantId, instructionId.Trim());
+    return Results.Json(result.Body, statusCode: result.StatusCode);
+}).RequireRateLimiting("sensitive-endpoint");
+
 app.MapPost("/v1/supervisory/programmes/{programId}/export", async (string programId, HttpContext httpContext, CancellationToken cancellationToken) =>
 {
     var authFailure = ApiAuthorization.AuthorizeEvidenceRead(httpContext);
