@@ -69,3 +69,11 @@ The new shell must preserve or alias these DEMO-008 verifier IDs:
 - `exception-log-panel`
 - `export-trigger`
 - `raw-artifact-drilldown`
+
+## Privileged Action Rule
+
+Privileged operator actions must keep admin credentials server-side.
+
+- The browser must not receive `SYMPHONY_UI_ADMIN_API_KEY` or any equivalent admin secret in bootstrap context.
+- The browser must not send `x-admin-api-key`.
+- Any privileged supervisory/operator action needed by the shell must flow through same-origin pilot-demo proxy routes implemented server-side.

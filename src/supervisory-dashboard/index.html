@@ -653,29 +653,29 @@ html, body { width:100%; min-height:100vh; background:var(--bg); font-family:var
         <!-- Programme bar -->
         <div class="programme-bar">
           <div class="pb-item">
-            <div class="pb-label">Total Instructions</div>
-            <div class="pb-value">18</div>
-            <div class="pb-sub">Q1 2026</div>
+            <div class="pb-label">Evidence Submissions</div>
+            <div class="pb-value" id="pbEvidenceSubmissions">18</div>
+            <div class="pb-sub" id="pbProgrammeLabel">Q1 2026</div>
           </div>
           <div class="pb-item">
-            <div class="pb-label">Released</div>
-            <div class="pb-value green">ZMW 684,000</div>
-            <div class="pb-sub">14 settled</div>
+            <div class="pb-label">Timeline Events</div>
+            <div class="pb-value green" id="pbTimelineEvents">0</div>
+            <div class="pb-sub" id="pbTimelineSub">live reveal</div>
           </div>
           <div class="pb-item">
-            <div class="pb-label">Held</div>
-            <div class="pb-value amber">ZMW 114,000</div>
-            <div class="pb-sub">3 on hold</div>
+            <div class="pb-label">Exceptions</div>
+            <div class="pb-value amber" id="pbExceptionCount">0</div>
+            <div class="pb-sub" id="pbExceptionSub">active</div>
           </div>
           <div class="pb-item">
             <div class="pb-label">Evidence Complete</div>
-            <div class="pb-value green">89%</div>
-            <div class="pb-sub">16 / 18 full</div>
+            <div class="pb-value green" id="pbEvidencePercent">0%</div>
+            <div class="pb-sub" id="pbEvidenceSub">0 / 0 present</div>
           </div>
           <div class="pb-item">
-            <div class="pb-label">Active Exceptions</div>
-            <div class="pb-value amber">4</div>
-            <div class="pb-sub">2 resolved</div>
+            <div class="pb-label">As Of</div>
+            <div class="pb-value amber" id="pbAsOf">—</div>
+            <div class="pb-sub" id="pbModeState">HYBRID</div>
           </div>
         </div>
 
@@ -690,7 +690,7 @@ html, body { width:100%; min-height:100vh; background:var(--bg); font-family:var
               <thead>
                 <tr><th>Ref</th><th>Borrower</th><th>Asset Class</th><th>Supplier</th><th>Amount ZMW</th><th>Status</th><th>Evidence</th></tr>
               </thead>
-              <tbody>
+              <tbody id="timelineRows">
                 <tr onclick="openDrill('settled1')"><td>SYM-2026-00041</td><td>Kabwata Recycling</td><td>Plastic Shredder</td><td>EcoTech Supplies</td><td>38,000</td><td><span class="status-chip chip-auth">Settled</span></td><td>4/4 ✓</td></tr>
                 <tr onclick="openDrill('settled2')"><td>SYM-2026-00038</td><td>Matero Green Hub</td><td>Solar Panel Array</td><td>SunTech Zambia</td><td>62,000</td><td><span class="status-chip chip-auth">Settled</span></td><td>4/4 ✓</td></tr>
                 <tr onclick="openDrill('hold1')" style="background:rgba(212,130,30,.03);"><td>SYM-2026-00045</td><td>Chelstone Coop</td><td>Biogas Unit</td><td>GreenPower Ltd</td><td>41,000</td><td><span class="status-chip chip-hold">Hold</span></td><td>2/4 ⚠</td></tr>
@@ -706,13 +706,19 @@ html, body { width:100%; min-height:100vh; background:var(--bg); font-family:var
           <div class="dc-head"><span class="dc-head-title">Exception / Hold Log</span></div>
           <table class="exc-table">
             <thead><tr><th>Ref</th><th>Type</th><th>Flagged</th><th>Description</th><th>Resolved</th></tr></thead>
-            <tbody>
+            <tbody id="exceptionRows">
               <tr><td>SYM-2026-00045</td><td class="type">MISSING_PROOF</td><td>2026-03-08</td><td>PT-002 and PT-003 not submitted within window</td><td class="resolved-n">No</td></tr>
               <tr><td>SYM-2026-00047</td><td class="type">SIM_SWAP_FLAG</td><td>2026-03-09</td><td>MSISDN registered 6 days before disbursement</td><td class="resolved-n">No</td></tr>
               <tr><td>SYM-2026-00031</td><td class="type">GPS_MATCH_FAILED</td><td>2026-02-14</td><td>Coordinates 1.2km from registered asset location</td><td class="resolved-y">Yes</td></tr>
               <tr><td>SYM-2026-00029</td><td class="type">SUPPLIER_NOT_ALLOWLISTED</td><td>2026-02-09</td><td>Supplier not registered for this programme</td><td class="resolved-y">Yes</td></tr>
             </tbody>
           </table>
+        </div>
+        <div class="dash-card">
+          <div class="dc-head"><span class="dc-head-title">Evidence Completeness</span></div>
+          <div class="ev-grid" id="evidenceCompletenessList">
+            <div class="ev-row ev-present"><div class="ind ind-present"></div><div><div class="ev-name">INVOICE</div><div class="ev-meta">reveal-backed</div></div><div class="ev-badge present">PRESENT</div></div>
+          </div>
         </div>
       </div>
 
@@ -1037,6 +1043,7 @@ window.SYMPHONY_HYBRID_FALLBACK = __SYMPHONY_HYBRID_FALLBACK__;
 const DATA_MODE = (window.SYMPHONY_UI_CONTEXT?.dataMode || 'HYBRID'); // change to 'HYBRID' or 'LIVE' as wiring progresses
 
 const SYMPHONY_API_BASE = '/v1'; // update to real base URL when wiring
+const PILOT_DEMO_PROXY_BASE = '/pilot-demo/api';
 
 // ── ADAPTER (UI-WIRE-002) ──────────────────────────────────────
 // Each method returns a Promise. In STATIC_DEMO mode it resolves immediately
@@ -1057,14 +1064,6 @@ function revealHeaders() {
   return headers;
 }
 
-function adminHeaders() {
-  const ctx = uiContext();
-  const headers = { 'Content-Type': 'application/json' };
-  if (ctx.adminApiKey) headers['x-admin-api-key'] = ctx.adminApiKey;
-  if (ctx.tenantId) headers['x-tenant-id'] = ctx.tenantId;
-  return headers;
-}
-
 function fallbackData() {
   return window.SYMPHONY_HYBRID_FALLBACK || {};
 }
@@ -1075,6 +1074,24 @@ function liveFallbackActive(message) {
 }
 
 const adapter = {
+  _revealCache: new Map(),
+
+  async getReveal(programId) {
+    const cacheKey = String(programId || '').trim();
+    if (!cacheKey) throw new Error('programId is required');
+    if (this._revealCache.has(cacheKey)) return this._revealCache.get(cacheKey);
+    const request = fetch(`${SYMPHONY_API_BASE}/supervisory/programmes/${cacheKey}/reveal`, { headers: revealHeaders() })
+      .then(async r => {
+        if (!r.ok) throw new Error(`Reveal API error: ${r.status}`);
+        return await r.json();
+      })
+      .catch(err => {
+        this._revealCache.delete(cacheKey);
+        throw err;
+      });
+    this._revealCache.set(cacheKey, request);
+    return request;
+  },
 
   // TODO UI-WIRE-003: replace STATIC_DEMO branch with real fetch
   async getProgrammeSummary(programId) {
@@ -1083,9 +1100,7 @@ const adapter = {
       return fallback;
     }
     try {
-      const r = await fetch(`${SYMPHONY_API_BASE}/supervisory/programmes/${programId}/reveal`, { headers: revealHeaders() });
-      if (!r.ok) throw new Error(`Reveal API error: ${r.status}`);
-      const d = await r.json();
+      const d = await this.getReveal(programId);
       return d.programme_summary;
     } catch (err) {
       if (DATA_MODE === 'HYBRID' && fallback) {
@@ -1103,9 +1118,7 @@ const adapter = {
       return fallback || [];
     }
     try {
-      const r = await fetch(`${SYMPHONY_API_BASE}/supervisory/programmes/${programId}/reveal`, { headers: revealHeaders() });
-      if (!r.ok) throw new Error(`Reveal API error: ${r.status}`);
-      const d = await r.json();
+      const d = await this.getReveal(programId);
       return d.timeline || [];
     } catch (err) {
       if (DATA_MODE === 'HYBRID' && fallback) {
@@ -1123,9 +1136,7 @@ const adapter = {
       return fallback || [];
     }
     try {
-      const r = await fetch(`${SYMPHONY_API_BASE}/supervisory/programmes/${programId}/reveal`, { headers: revealHeaders() });
-      if (!r.ok) throw new Error(`Reveal API error: ${r.status}`);
-      const d = await r.json();
+      const d = await this.getReveal(programId);
       return d.exception_log || [];
     } catch (err) {
       if (DATA_MODE === 'HYBRID' && fallback) {
@@ -1136,46 +1147,121 @@ const adapter = {
     }
   },
 
-  // TODO UI-WIRE-004: wire real evidence-link issuance
+  async getEvidenceCompleteness(programId) {
+    const fallback = fallbackData().evidence_completeness;
+    if (DATA_MODE === 'STATIC_DEMO') {
+      return fallback || [];
+    }
+    try {
+      const d = await this.getReveal(programId);
+      return d.evidence_completeness || [];
+    } catch (err) {
+      if (DATA_MODE === 'HYBRID' && fallback) {
+        liveFallbackActive('Demo-backed fallback active: evidence completeness');
+        return fallback;
+      }
+      throw err;
+    }
+  },
+
   async issueEvidenceLink(programId, instructionId) {
+    const presets = fallbackData().action_presets || {};
     if (DATA_MODE === 'STATIC_DEMO') {
       return { token: 'DEMO-TOKEN-NOT-REAL', expiresAt: new Date(Date.now() + 3600000).toISOString() };
     }
-    if (DATA_MODE === 'HYBRID') {
-      return { unavailable: true, mode: 'DEMO_BACKED' };
+    try {
+      const r = await fetch(`${PILOT_DEMO_PROXY_BASE}/evidence-links/issue`, {
+        method: 'POST',
+        headers: revealHeaders(),
+        body: JSON.stringify({
+          tenant_id: presets.tenant_id || uiContext().tenantId || '',
+          instruction_id: instructionId,
+          program_id: programId || presets.programme_id || '',
+          submitter_class: presets.submitter_class || 'BORROWER',
+          submitter_msisdn: presets.submitter_msisdn || '',
+          expected_latitude: presets.expected_latitude,
+          expected_longitude: presets.expected_longitude,
+          max_distance_meters: presets.max_distance_meters,
+          expires_in_seconds: presets.expires_in_seconds
+        })
+      });
+      if (!r.ok) throw new Error(`Evidence-link issue failed: ${r.status}`);
+      return await r.json();
+    } catch (err) {
+      if (DATA_MODE === 'HYBRID') {
+        return { unavailable: true, mode: 'DEMO_BACKED', reason: err.message };
+      }
+      throw err;
     }
-    throw new Error('Evidence-link issue action is not enabled until TASK-UI-WIRE-004');
   },
 
-  // TODO UI-WIRE-007: wire real signed instruction generate
   async generateInstructionFile(instructionId) {
+    const presets = fallbackData().action_presets || {};
     if (DATA_MODE === 'STATIC_DEMO') {
       return { hmac: 'DEMO-HMAC-NOT-REAL', filename: `symphony_${instructionId}_demo.json`, state: 'AWAITING_EXECUTION' };
     }
-    if (DATA_MODE === 'HYBRID') {
-      return { unavailable: true, mode: 'DEMO_BACKED' };
+    try {
+      const r = await fetch(`${PILOT_DEMO_PROXY_BASE}/instruction-files/generate`, {
+        method: 'POST',
+        headers: revealHeaders(),
+        body: JSON.stringify({
+          tenant_id: presets.tenant_id || uiContext().tenantId || '',
+          program_id: presets.programme_id || '',
+          instruction_id: instructionId,
+          supplier_id: presets.supplier_id || '',
+          supplier_account: presets.supplier_account || '',
+          amount_minor: presets.amount_minor || 0,
+          currency_code: presets.currency_code || 'ZMW',
+          reference: presets.reference || instructionId
+        })
+      });
+      if (!r.ok) throw new Error(`Instruction generate failed: ${r.status}`);
+      return await r.json();
+    } catch (err) {
+      if (DATA_MODE === 'HYBRID') {
+        return { unavailable: true, mode: 'DEMO_BACKED', reason: err.message };
+      }
+      throw err;
     }
-    throw new Error('Signed instruction generate is not enabled until TASK-UI-WIRE-004');
   },
 
-  // TODO UI-WIRE-007: wire real signed instruction verify
   async verifyInstructionFile(fileRef) {
     if (DATA_MODE === 'STATIC_DEMO') {
       return { valid: true, state: 'VERIFIED' };
     }
-    if (DATA_MODE === 'HYBRID') {
-      return { unavailable: true, mode: 'DEMO_BACKED' };
+    try {
+      const r = await fetch(`${SYMPHONY_API_BASE}/instruction-files/verify-ref`, {
+        method: 'POST',
+        headers: revealHeaders(),
+        body: JSON.stringify({ instruction_file_ref: fileRef })
+      });
+      if (!r.ok) throw new Error(`Instruction verify failed: ${r.status}`);
+      return await r.json();
+    } catch (err) {
+      if (DATA_MODE === 'HYBRID') {
+        return { unavailable: true, mode: 'DEMO_BACKED', reason: err.message };
+      }
+      throw err;
     }
-    throw new Error('Browser-safe verification is not enabled until TASK-UI-WIRE-004');
+  },
+
+  async getSupplierPolicy(programId, supplierId) {
+    if (DATA_MODE === 'STATIC_DEMO') {
+      return { decision: 'ALLOW', allowlisted: true, supplier_active: true };
+    }
+    const r = await fetch(`${SYMPHONY_API_BASE}/programs/${programId}/suppliers/${supplierId}/policy`, { headers: revealHeaders() });
+    if (!r.ok) throw new Error(`Supplier policy failed: ${r.status}`);
+    return await r.json();
   },
 
   // TODO UI-WIRE-010: wire real instruction detail for drill-down
   async getInstructionDetail(instructionId) {
+    const drillKey = resolveDrillKey(instructionId);
     if (DATA_MODE === 'STATIC_DEMO') {
-      return drillData[instructionId] || null;
+      return drillData[drillKey] || null;
     }
     if (DATA_MODE === 'HYBRID') {
-      return drillData[instructionId] || null;
+      return drillData[drillKey] || null;
     }
     throw new Error('Instruction detail route is not enabled until TASK-UI-WIRE-006');
   },
@@ -1185,10 +1271,26 @@ const adapter = {
     if (DATA_MODE === 'STATIC_DEMO') {
       return null;
     }
-    if (DATA_MODE === 'HYBRID') {
-      return null;
+    try {
+      const r = await fetch(`${SYMPHONY_API_BASE}/supervisory/programmes/${programId}/export`, {
+        method: 'POST',
+        headers: revealHeaders()
+      });
+      if (!r.ok) throw new Error(`Export API error: ${r.status}`);
+      const d = await r.json();
+      return {
+        jsonUrl: d.json_url,
+        pdfUrl: d.pdf_url,
+        generatedAtUtc: d.generated_at_utc,
+        deterministicFingerprint: d.deterministic_fingerprint
+      };
+    } catch (err) {
+      if (DATA_MODE === 'HYBRID') {
+        liveFallbackActive('Demo-backed fallback active: export');
+        return null;
+      }
+      throw err;
     }
-    throw new Error('Export route is not enabled until TASK-UI-WIRE-007');
   },
 
 };
@@ -1467,6 +1569,18 @@ const drillData = {
   }
 };
 
+const drillKeyByInstructionRef = Object.fromEntries(
+  Object.entries(drillData)
+    .map(([key, value]) => [String(value?.ref || '').split('·')[0].trim(), key])
+    .filter(([ref]) => ref.length > 0)
+);
+
+function resolveDrillKey(id) {
+  const raw = String(id || '').trim();
+  if (!raw) return raw;
+  return drillKeyByInstructionRef[raw] || raw;
+}
+
 async function openDrill(id) {
   document.getElementById('drillTitle').textContent = 'Loading…';
   document.getElementById('drillRef').textContent = '—';
@@ -1476,7 +1590,7 @@ async function openDrill(id) {
     // In STATIC_DEMO mode, adapter.getInstructionDetail returns drillData[id]
     // In HYBRID/LIVE mode (UI-WIRE-010), it fetches from the real API
     const raw = await adapter.getInstructionDetail(id);
-    const d = raw || drillData[id];
+    const d = raw || drillData[resolveDrillKey(id)];
     if (!d) {
       document.getElementById('drillTitle').textContent = 'Not found';
       document.getElementById('drillBody').innerHTML = '<div style="font-family:var(--mono);font-size:9px;color:var(--smoke);padding:20px 0;">Instruction detail not available.</div>';
@@ -1491,6 +1605,89 @@ async function openDrill(id) {
   }
 }
 function closeDrill() { document.getElementById('slideout').classList.remove('open'); }
+
+function statusChip(status) {
+  const value = String(status || '').toUpperCase();
+  if (value.includes('SIM')) return { cls: 'chip-sim', label: 'SIM Hold' };
+  if (value.includes('HOLD') || value.includes('MISSING') || value.includes('EXCEPTION')) return { cls: 'chip-hold', label: 'Hold' };
+  if (value.includes('SETTLED') || value.includes('AUTHORIZED') || value.includes('SUBMITTED')) return { cls: 'chip-auth', label: value.includes('SUBMITTED') ? 'Submitted' : 'Settled' };
+  return { cls: 'chip-hold', label: value || 'Unknown' };
+}
+
+function renderProgrammeSummary(summary, completeness, exceptionLog) {
+  const evidenceSubmissions = summary?.evidence_submissions ?? 0;
+  const timelineEvents = summary?.timeline_events ?? 0;
+  const exceptionCount = summary?.exception_count ?? 0;
+  const present = (completeness || []).filter(x => String(x.status || '').toUpperCase() === 'PRESENT').length;
+  const total = (completeness || []).length;
+  const percent = total > 0 ? Math.round((present / total) * 100) : 0;
+  document.getElementById('pbEvidenceSubmissions').textContent = String(evidenceSubmissions);
+  document.getElementById('pbProgrammeLabel').textContent = fallbackData().programme_summary?.name || 'pilot-demo';
+  document.getElementById('pbTimelineEvents').textContent = String(timelineEvents);
+  document.getElementById('pbTimelineSub').textContent = 'observed events';
+  document.getElementById('pbExceptionCount').textContent = String(exceptionCount);
+  document.getElementById('pbExceptionSub').textContent = `${(exceptionLog || []).filter(x => !x.resolved).length} unresolved`;
+  document.getElementById('pbEvidencePercent').textContent = `${percent}%`;
+  document.getElementById('pbEvidenceSub').textContent = `${present} / ${total} present`;
+  document.getElementById('pbAsOf').textContent = new Date().toISOString().slice(0, 10);
+  document.getElementById('pbModeState').textContent = DATA_MODE;
+}
+
+function renderTimelineRows(rows) {
+  const tbody = document.getElementById('timelineRows');
+  tbody.innerHTML = '';
+  (rows || []).forEach(row => {
+    const ref = row.instruction_id || row.id || '—';
+    const chip = statusChip(row.event_type || row.status);
+    const tr = document.createElement('tr');
+    tr.innerHTML = `<td>${ref}</td><td>${row.borrower || '—'}</td><td>${row.asset || row.artifact_type || row.event_type || '—'}</td><td>${row.supplier || row.error_code || '—'}</td><td>${row.amount || '—'}</td><td><span class="status-chip ${chip.cls}">${chip.label}</span></td><td>${row.proofs || row.observed_at_utc || '—'}</td>`;
+    tr.onclick = () => openDrill(ref);
+    tbody.appendChild(tr);
+  });
+}
+
+function renderExceptionRows(rows) {
+  const tbody = document.getElementById('exceptionRows');
+  tbody.innerHTML = '';
+  (rows || []).forEach(row => {
+    const resolved = Boolean(row.resolved);
+    const tr = document.createElement('tr');
+    tr.innerHTML = `<td>${row.instruction_id || row.instructionId || '—'}</td><td class="type">${row.error_code || row.type || '—'}</td><td>${(row.recorded_at_utc || row.date || '—').slice(0, 10)}</td><td>${row.detail || row.supplier_id || '—'}</td><td class="${resolved ? 'resolved-y' : 'resolved-n'}">${resolved ? 'Yes' : 'No'}</td>`;
+    tbody.appendChild(tr);
+  });
+}
+
+function renderEvidenceCompleteness(rows) {
+  const host = document.getElementById('evidenceCompletenessList');
+  host.innerHTML = '';
+  (rows || []).forEach(row => {
+    const status = String(row.status || '').toUpperCase();
+    const rowClass = status === 'PRESENT' ? 'ev-present' : 'ev-missing';
+    const indClass = status === 'PRESENT' ? 'ind-present' : 'ind-missing';
+    const badgeClass = status === 'PRESENT' ? 'present' : 'missing';
+    const el = document.createElement('div');
+    el.className = `ev-row ${rowClass}`;
+    el.innerHTML = `<div class="ind ${indClass}"></div><div><div class="ev-name">${row.artifact_type || row.label || '—'}</div><div class="ev-meta">reveal-backed</div></div><div class="ev-badge ${badgeClass}">${status || 'UNKNOWN'}</div>`;
+    host.appendChild(el);
+  });
+}
+
+async function hydrateDashboard(programId) {
+  try {
+    const [summary, timeline, exceptions, completeness] = await Promise.all([
+      adapter.getProgrammeSummary(programId),
+      adapter.getTimeline(programId),
+      adapter.getExceptionLog(programId),
+      adapter.getEvidenceCompleteness(programId)
+    ]);
+    renderProgrammeSummary(summary, completeness, exceptions);
+    renderTimelineRows(timeline);
+    renderExceptionRows(exceptions);
+    renderEvidenceCompleteness(completeness);
+  } catch (err) {
+    console.error('Failed to hydrate dashboard', err);
+  }
+}
 
 // ── EXPORT (UI-WIRE-011: replace this stub with real adapter.exportProgrammeReport() call) ──
 async function triggerExport() {
@@ -1536,6 +1733,7 @@ log(`Tenant: zambia_green_mfi · Phase 1 sandbox · DATA_MODE: ${DATA_MODE}`, 'd
 if (DATA_MODE !== 'STATIC_DEMO') {
   log('· Adapter in ' + DATA_MODE + ' mode — calling live Symphony API', 'gold');
 }
+hydrateDashboard(fallbackData().programme_summary?.programId || fallbackData().action_presets?.programme_id || 'PGM-ZAMBIA-GRN-001');
 </script>
 </body>
 </html>

@@ -1,49 +1,49 @@
 {
   "schema_version": "1.0",
-  "generated_at_utc": "2026-03-13T10:30:00Z",
+  "generated_at_utc": "2026-03-13T13:40:00Z",
   "git_commit": "PENDING_COMMIT",
   "change_scope": {
     "regulated_surfaces_touched": true,
     "paths_changed": [
-      "approvals/2026-03-13/BRANCH-feat-ui-wire-wave-a.approval.json",
-      "approvals/2026-03-13/BRANCH-feat-ui-wire-wave-a.md",
+      "approvals/2026-03-13/BRANCH-feat-ui-wire-wave-b.approval.json",
+      "approvals/2026-03-13/BRANCH-feat-ui-wire-wave-b.md",
       "docs/operations/SUPERVISORY_UI_SOURCE_OF_TRUTH.md",
-      "docs/plans/phase1/TASK-UI-WIRE-000/PLAN.md",
-      "docs/plans/phase1/TASK-UI-WIRE-000/EXEC_LOG.md",
-      "docs/plans/phase1/TASK-UI-WIRE-001/PLAN.md",
-      "docs/plans/phase1/TASK-UI-WIRE-001/EXEC_LOG.md",
-      "docs/plans/phase1/TASK-UI-WIRE-002/PLAN.md",
-      "docs/plans/phase1/TASK-UI-WIRE-002/EXEC_LOG.md",
-      "docs/plans/phase1/REM-2026-03-13_pre_ci-verify_remediation_trace/PLAN.md",
-      "docs/plans/phase1/REM-2026-03-13_pre_ci-verify_remediation_trace/EXEC_LOG.md",
+      "docs/plans/phase1/REM-2026-03-13_ui-wave-b-pre_ci-remediation-trace/PLAN.md",
+      "docs/plans/phase1/REM-2026-03-13_ui-wave-b-pre_ci-remediation-trace/EXEC_LOG.md",
+      "docs/plans/phase1/TASK-UI-WIRE-003/PLAN.md",
+      "docs/plans/phase1/TASK-UI-WIRE-003/EXEC_LOG.md",
+      "docs/plans/phase1/TASK-UI-WIRE-004/PLAN.md",
+      "docs/plans/phase1/TASK-UI-WIRE-004/EXEC_LOG.md",
+      "docs/plans/phase1/TASK-UI-WIRE-007/PLAN.md",
+      "docs/plans/phase1/TASK-UI-WIRE-007/EXEC_LOG.md",
       "docs/tasks/phase1_prompts.md",
       "evidence/phase1/approval_metadata.json",
-      "evidence/phase1/task_ui_wire_000_source_of_truth.json",
-      "evidence/phase1/task_ui_wire_001_shell_port.json",
-      "evidence/phase1/task_ui_wire_002_adapter_alignment.json",
-      "scripts/audit/verify_task_ui_wire_000.sh",
-      "scripts/audit/verify_task_ui_wire_001.sh",
-      "scripts/audit/verify_task_ui_wire_002.sh",
+      "evidence/phase1/task_ui_wire_003_reveal_live_wiring.json",
+      "evidence/phase1/task_ui_wire_004_operator_action_wiring.json",
+      "evidence/phase1/task_ui_wire_007_export.json",
+      "scripts/audit/verify_task_ui_wire_003.sh",
+      "scripts/audit/verify_task_ui_wire_004.sh",
+      "scripts/audit/verify_task_ui_wire_007.sh",
+      "services/ledger-api/dotnet/src/LedgerApi/Commands/CommandContracts.cs",
       "services/ledger-api/dotnet/src/LedgerApi/Program.cs",
       "src/supervisory-dashboard/data/supervisory_hybrid_fallback.json",
       "src/supervisory-dashboard/index.html",
-      "src/supervisory-dashboard/legacy.html",
-      "tasks/TASK-UI-WIRE-000/meta.yml",
-      "tasks/TASK-UI-WIRE-001/meta.yml",
-      "tasks/TASK-UI-WIRE-002/meta.yml"
+      "tasks/TASK-UI-WIRE-003/meta.yml",
+      "tasks/TASK-UI-WIRE-004/meta.yml",
+      "tasks/TASK-UI-WIRE-007/meta.yml"
     ]
   },
   "ai": {
-    "ai_prompt_hash": "feat-ui-wire-wave-a",
+    "ai_prompt_hash": "feat-ui-wire-wave-b",
     "model_id": "gpt-5-codex",
     "client": "codex_cli",
-    "session_id": "feat-ui-wire-wave-a"
+    "session_id": "feat-ui-wire-wave-b"
   },
   "human_approval": {
     "approver_id": "governance-human-reviewer",
-    "approval_artifact_ref": "approvals/2026-03-13/BRANCH-feat-ui-wire-wave-a.md",
-    "change_reason": "Implement Wave A of the GreenTech4CE supervisory UI port, including canonical source-of-truth, pilot-demo shell serving, repo-aligned adapter behavior, verifier updates, regulated-surface approval metadata, and the remediation trace casefile required by the pre-push governance gate.",
-    "approved_at_utc": "2026-03-13T10:30:00Z"
+    "approval_artifact_ref": "approvals/2026-03-13/BRANCH-feat-ui-wire-wave-b.md",
+    "change_reason": "Complete Wave B of the GreenTech4CE supervisory UI port, including reveal wiring, browser-safe operator action wiring, synchronous export routing, and server-side handling of privileged actions without exposing admin credentials to the browser.",
+    "approved_at_utc": "2026-03-13T13:40:00Z"
   },
-  "notes": "Branch approval metadata for the Wave A GreenTech4CE supervisory UI port batch."
+  "notes": "Branch approval metadata for the completed Wave B GreenTech4CE supervisory UI port batch, including the remediation casefile required by pre-push parity."
 }

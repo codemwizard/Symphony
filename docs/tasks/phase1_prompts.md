@@ -5674,3 +5674,101 @@ failure_modes:
 - Repo-native route or tenant assumptions remain incorrect => FAIL.
 - HYBRID fallback remains implicit => FAIL.
 ```
+
+## TASK-UI-WIRE-003 — Wire reveal panels to the real reveal API
+
+### Goal
+Connect the main supervisory panels to the real reveal endpoint using the repo-native payload keys.
+
+#### Execution Metadata Patch Block (orchestrator source)
+
+```yaml
+task_id: TASK-UI-WIRE-003
+depends_on:
+- TASK-UI-WIRE-002
+verifier_command: bash -lc 'bash scripts/audit/verify_task_ui_wire_003.sh && python3 scripts/audit/validate_evidence.py --task TASK-UI-WIRE-003 --evidence evidence/phase1/task_ui_wire_003_reveal_live_wiring.json'
+evidence_path: evidence/phase1/task_ui_wire_003_reveal_live_wiring.json
+files_to_change:
+- tasks/TASK-UI-WIRE-003/meta.yml
+- docs/plans/phase1/TASK-UI-WIRE-003/PLAN.md
+- docs/plans/phase1/TASK-UI-WIRE-003/EXEC_LOG.md
+- docs/tasks/phase1_prompts.md
+- src/supervisory-dashboard/**
+- services/ledger-api/dotnet/src/LedgerApi/ReadModels/**
+- scripts/audit/verify_task_ui_wire_003.sh
+acceptance_assertions:
+- Main reveal panels render from /v1/supervisory/programmes/{programId}/reveal.
+- Current payload keys programme_summary, timeline, evidence_completeness, and exception_log are used.
+- HYBRID fallback remains visible when used.
+failure_modes:
+- Missing prompt section or execution metadata block => STOP.
+- Reveal panels still rely on demo constants => FAIL.
+- Wrong reveal payload keys remain in use => FAIL.
+```
+
+## TASK-UI-WIRE-004 — Wire operator actions with browser-safe backend contracts
+
+### Goal
+Keep privileged credentials server-side and route operator actions through pilot-demo proxy endpoints instead of exposing admin secrets to the browser.
+
+#### Execution Metadata Patch Block (orchestrator source)
+
+```yaml
+task_id: TASK-UI-WIRE-004
+depends_on:
+- TASK-UI-WIRE-002
+verifier_command: bash -lc 'bash scripts/audit/verify_task_ui_wire_004.sh && python3 scripts/audit/validate_evidence.py --task TASK-UI-WIRE-004 --evidence evidence/phase1/task_ui_wire_004_operator_action_wiring.json'
+evidence_path: evidence/phase1/task_ui_wire_004_operator_action_wiring.json
+files_to_change:
+- tasks/TASK-UI-WIRE-004/meta.yml
+- docs/plans/phase1/TASK-UI-WIRE-004/PLAN.md
+- docs/plans/phase1/TASK-UI-WIRE-004/EXEC_LOG.md
+- docs/tasks/phase1_prompts.md
+- docs/operations/SUPERVISORY_UI_SOURCE_OF_TRUTH.md
+- src/supervisory-dashboard/**
+- services/ledger-api/dotnet/src/LedgerApi/**
+- scripts/audit/verify_task_ui_wire_004.sh
+- evidence/phase1/task_ui_wire_004_operator_action_wiring.json
+acceptance_assertions:
+- Browser bootstrap context contains no admin API key.
+- Client code sends no x-admin-api-key header.
+- Pilot-demo proxy routes exist for privileged operator actions.
+- Supervisory UI issues links and observes submissions; it does not submit proof.
+failure_modes:
+- Missing prompt section or execution metadata block => STOP.
+- Browser still receives SYMPHONY_UI_ADMIN_API_KEY => FAIL.
+- Client still sends x-admin-api-key => FAIL.
+- Privileged actions depend on direct browser access to admin-only endpoints => FAIL.
+```
+
+## TASK-UI-WIRE-007 — Add synchronous export route and wire reporting-pack export
+
+### Goal
+Expose a real export route for the supervisory shell while preserving DEMO-009 reporting-pack behavior.
+
+#### Execution Metadata Patch Block (orchestrator source)
+
+```yaml
+task_id: TASK-UI-WIRE-007
+depends_on:
+- TASK-UI-WIRE-003
+- TSK-P1-DEMO-009
+verifier_command: bash -lc 'bash scripts/audit/verify_task_ui_wire_007.sh && python3 scripts/audit/validate_evidence.py --task TASK-UI-WIRE-007 --evidence evidence/phase1/task_ui_wire_007_export.json'
+evidence_path: evidence/phase1/task_ui_wire_007_export.json
+files_to_change:
+- tasks/TASK-UI-WIRE-007/meta.yml
+- docs/plans/phase1/TASK-UI-WIRE-007/PLAN.md
+- docs/plans/phase1/TASK-UI-WIRE-007/EXEC_LOG.md
+- docs/tasks/phase1_prompts.md
+- src/supervisory-dashboard/**
+- services/ledger-api/dotnet/src/LedgerApi/**
+- scripts/audit/verify_task_ui_wire_007.sh
+acceptance_assertions:
+- POST /v1/supervisory/programmes/{programId}/export exists and responds synchronously.
+- Returned output includes deterministic_fingerprint alongside artifact references.
+- Route output is compared directly against DEMO-009 generator output.
+failure_modes:
+- Missing prompt section or execution metadata block => STOP.
+- Export remains a stub or alert-only UI action => FAIL.
+- HTTP route diverges from DEMO-009 generator output => FAIL.
+```

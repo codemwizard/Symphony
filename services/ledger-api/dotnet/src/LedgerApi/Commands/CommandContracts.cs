@@ -82,6 +82,10 @@ record SignedInstructionVerifyRequest(
     string instruction_file_path
 );
 
+record SignedInstructionVerifyRefRequest(
+    string instruction_file_ref
+);
+
 record SupplierRegistryUpsertRequest(
     string tenant_id,
     string supplier_id,
