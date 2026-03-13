@@ -5577,3 +5577,100 @@ failure_modes:
 - Stub sections inserted: 31
 
 - Missing IDs patched as stubs: TSK-CLEAN-001, TSK-CLEAN-002, TSK-P1-059, TSK-P0-102, TSK-P0-208, TSK-P1-057-FINAL, PERF-001, PERF-002, PERF-003, PERF-005A, TSK-P1-HIER-008, TSK-P1-HIER-009, TSK-P1-HIER-010, TSK-P1-HIER-011, TSK-P1-INF-002, TSK-P1-INF-001, TSK-P1-INF-005, TSK-P1-INF-003, TSK-P1-TEN-001, TSK-P1-TEN-002, TSK-P1-TEN-003, TSK-P1-ADP-001, TSK-P1-ADP-002, TSK-P1-ADP-003, TSK-P1-LED-001, TSK-P1-LED-003, TSK-P1-LED-004, TSK-P1-LED-002, TSK-P1-REG-002, TSK-P1-REG-003, TSK-P1-060
+
+## TASK-UI-WIRE-000 — Freeze the canonical supervisory shell and backing-mode matrix
+
+### Goal
+Declare the v3 supervisory shell as the canonical GreenTech4CE demo shell and freeze the per-surface backing-mode matrix before implementation begins.
+
+#### Execution Metadata Patch Block (orchestrator source)
+
+```yaml
+task_id: TASK-UI-WIRE-000
+depends_on:
+- TSK-P1-DEMO-008
+- TSK-P1-DEMO-009
+- TSK-P1-DEMO-010
+- TSK-P1-DEMO-011
+verifier_command: bash -lc 'bash scripts/audit/verify_task_ui_wire_000.sh && python3 scripts/audit/validate_evidence.py --task TASK-UI-WIRE-000 --evidence evidence/phase1/task_ui_wire_000_source_of_truth.json'
+evidence_path: evidence/phase1/task_ui_wire_000_source_of_truth.json
+files_to_change:
+- tasks/TASK-UI-WIRE-000/meta.yml
+- docs/plans/phase1/TASK-UI-WIRE-000/PLAN.md
+- docs/plans/phase1/TASK-UI-WIRE-000/EXEC_LOG.md
+- docs/tasks/phase1_prompts.md
+- docs/operations/SUPERVISORY_UI_SOURCE_OF_TRUTH.md
+- scripts/audit/verify_task_ui_wire_000.sh
+- evidence/phase1/task_ui_wire_000_source_of_truth.json
+acceptance_assertions:
+- One canonical supervisory shell is declared.
+- Every visible surface has an explicit backing mode.
+- SIM-swap is resolved as DEMO_BACKED for Phase 1.
+- DEMO prerequisites are treated as capabilities to revalidate, not proof of completed new-shell integration.
+failure_modes:
+- Missing prompt section or execution metadata block => STOP.
+- Canonical shell or backing-mode matrix remains ambiguous => FAIL.
+- Verifier or evidence missing => FAIL.
+```
+
+## TASK-UI-WIRE-001 — Port the v3 shell and serve it at the pilot-demo supervisory route
+
+### Goal
+Replace the thin shell with the v3 shell on the primary pilot-demo route while preserving DEMO-008 verifier compatibility.
+
+#### Execution Metadata Patch Block (orchestrator source)
+
+```yaml
+task_id: TASK-UI-WIRE-001
+depends_on:
+- TASK-UI-WIRE-000
+verifier_command: bash -lc 'bash scripts/audit/verify_tsk_p1_demo_008.sh && bash scripts/audit/verify_task_ui_wire_001.sh && python3 scripts/audit/validate_evidence.py --task TASK-UI-WIRE-001 --evidence evidence/phase1/task_ui_wire_001_shell_port.json'
+evidence_path: evidence/phase1/task_ui_wire_001_shell_port.json
+files_to_change:
+- tasks/TASK-UI-WIRE-001/meta.yml
+- docs/plans/phase1/TASK-UI-WIRE-001/PLAN.md
+- docs/plans/phase1/TASK-UI-WIRE-001/EXEC_LOG.md
+- docs/tasks/phase1_prompts.md
+- src/supervisory-dashboard/**
+- services/ledger-api/dotnet/src/LedgerApi/**
+- scripts/audit/verify_task_ui_wire_001.sh
+acceptance_assertions:
+- The v3 shell is served at /pilot-demo/supervisory in pilot-demo only.
+- The thin shell is served only at /pilot-demo/supervisory-legacy during transition.
+- DEMO-008 compatibility IDs are preserved or aliased and forbidden unsupported-claim substrings are absent.
+failure_modes:
+- Missing prompt section or execution metadata block => STOP.
+- Shell is ported but not served => FAIL.
+- DEMO-008 compatibility or claim-safety breaks => FAIL.
+```
+
+## TASK-UI-WIRE-002 — Build the repo-aligned supervisory UI adapter
+
+### Goal
+Replace the zip-specific adapter assumptions with a repo-native adapter using /v1, tenant-scoped behavior, and explicit HYBRID fallback semantics.
+
+#### Execution Metadata Patch Block (orchestrator source)
+
+```yaml
+task_id: TASK-UI-WIRE-002
+depends_on:
+- TASK-UI-WIRE-001
+verifier_command: bash -lc 'bash scripts/audit/verify_task_ui_wire_002.sh && bash scripts/audit/run_invariants_fast_checks.sh && python3 scripts/audit/validate_evidence.py --task TASK-UI-WIRE-002 --evidence evidence/phase1/task_ui_wire_002_adapter_alignment.json'
+evidence_path: evidence/phase1/task_ui_wire_002_adapter_alignment.json
+files_to_change:
+- tasks/TASK-UI-WIRE-002/meta.yml
+- docs/plans/phase1/TASK-UI-WIRE-002/PLAN.md
+- docs/plans/phase1/TASK-UI-WIRE-002/EXEC_LOG.md
+- docs/tasks/phase1_prompts.md
+- src/supervisory-dashboard/**
+- src/supervisory-dashboard/data/supervisory_hybrid_fallback.json
+- scripts/audit/verify_task_ui_wire_002.sh
+acceptance_assertions:
+- No adapter call uses /api/v1.
+- LIVE surfaces do not silently fall back to static data.
+- The canonical HYBRID fallback dataset is committed explicitly as a fixture file.
+failure_modes:
+- Missing prompt section or execution metadata block => STOP.
+- Repo-native route or tenant assumptions remain incorrect => FAIL.
+- HYBRID fallback remains implicit => FAIL.
+```

@@ -1,0 +1,215 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Symphony Supervisory Dashboard</title>
+  <style>
+    :root {
+      --bg-top: #f6f8ec;
+      --bg-bottom: #e7efe7;
+      --panel: #ffffff;
+      --ink: #11222d;
+      --muted: #4f5f6a;
+      --accent: #0f766e;
+      --warn: #b45309;
+      --fail: #b91c1c;
+      --ok: #166534;
+      --line: #c5d3d1;
+    }
+
+    body {
+      margin: 0;
+      font-family: "IBM Plex Sans", "Segoe UI", sans-serif;
+      color: var(--ink);
+      background: linear-gradient(170deg, var(--bg-top), var(--bg-bottom));
+    }
+
+    .shell {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 28px 18px 42px;
+    }
+
+    .hero {
+      background: radial-gradient(circle at top right, #d9efe8 0%, #f8faf3 60%);
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      padding: 18px;
+      margin-bottom: 16px;
+    }
+
+    h1 {
+      margin: 0 0 6px;
+      font-size: 1.5rem;
+      letter-spacing: 0.01em;
+    }
+
+    .hero p { margin: 0; color: var(--muted); }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 14px;
+      margin-bottom: 14px;
+    }
+
+    .panel {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 14px;
+    }
+
+    .panel h2 { margin: 0 0 10px; font-size: 1rem; }
+    .muted { color: var(--muted); }
+
+    .badge {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 999px;
+      font-size: 0.78rem;
+      border: 1px solid var(--line);
+    }
+
+    .badge.present { color: var(--ok); border-color: #9ec7a7; background: #effaf1; }
+    .badge.missing { color: var(--warn); border-color: #efd79a; background: #fff9eb; }
+    .badge.failed { color: var(--fail); border-color: #f2b2b2; background: #fff1f1; }
+
+    ul { margin: 0; padding-left: 20px; }
+    li { margin: 5px 0; }
+
+    .actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 12px;
+    }
+
+    button {
+      border: 1px solid var(--accent);
+      background: var(--accent);
+      color: #fff;
+      border-radius: 9px;
+      padding: 9px 12px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    button.secondary {
+      background: #fff;
+      color: var(--accent);
+    }
+
+    @media (max-width: 680px) {
+      .shell { padding: 12px 10px 20px; }
+      h1 { font-size: 1.2rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="shell">
+    <section class="hero">
+      <h1>Supervisory Reveal Dashboard</h1>
+      <p>Phase-1 governed disbursement view. No live-rail settlement claims.</p>
+    </section>
+
+    <div class="grid">
+      <section class="panel" id="programme-summary-panel">
+        <h2>Programme Summary</h2>
+        <div id="programme-summary" class="muted">Awaiting reveal payload.</div>
+      </section>
+
+      <section class="panel" id="evidence-completeness-panel">
+        <h2>Evidence Completeness</h2>
+        <ul id="evidence-completeness-list"></ul>
+      </section>
+    </div>
+
+    <div class="grid">
+      <section class="panel" id="timeline-panel">
+        <h2>Instruction Timeline</h2>
+        <ul id="timeline-list"></ul>
+      </section>
+
+      <section class="panel" id="exception-log-panel">
+        <h2>Exception Log</h2>
+        <ul id="exception-log-list"></ul>
+      </section>
+    </div>
+
+    <section class="panel">
+      <h2>Actions</h2>
+      <div class="actions">
+        <button id="export-trigger">Export Reporting Pack</button>
+        <button id="raw-artifact-drilldown" class="secondary">Raw Artifact Drill-Down</button>
+      </div>
+      <p class="muted">Interpreted status is primary; raw artifact drill-down is secondary.</p>
+    </section>
+  </div>
+
+  <script>
+    const demoData = {
+      programme_summary: { evidence_submissions: 2, exception_count: 1, timeline_events: 3 },
+      evidence_completeness: [
+        { artifact_type: 'INVOICE', status: 'PRESENT' },
+        { artifact_type: 'DELIVERY_PHOTO', status: 'PRESENT' },
+        { artifact_type: 'BORROWER_ACK', status: 'MISSING' }
+      ],
+      timeline: [
+        { event_type: 'EVIDENCE_SUBMITTED', instruction_id: 'instr-007-allow', observed_at_utc: '2026-03-11T00:00:01Z' },
+        { event_type: 'EVIDENCE_SUBMITTED', instruction_id: 'instr-007-allow', observed_at_utc: '2026-03-11T00:00:02Z' },
+        { event_type: 'EXCEPTION', instruction_id: 'instr-007-denied', error_code: 'SUPPLIER_NOT_ALLOWLISTED', observed_at_utc: '2026-03-11T00:00:03Z' }
+      ],
+      exception_log: [
+        { instruction_id: 'instr-007-denied', error_code: 'SUPPLIER_NOT_ALLOWLISTED', recorded_at_utc: '2026-03-11T00:00:03Z' }
+      ]
+    };
+
+    function badge(status) {
+      const normalized = (status || '').toUpperCase();
+      const klass = normalized === 'PRESENT' ? 'present' : normalized === 'FAILED' ? 'failed' : 'missing';
+      return `<span class="badge ${klass}">${normalized}</span>`;
+    }
+
+    function render(payload) {
+      const summaryNode = document.getElementById('programme-summary');
+      summaryNode.textContent = `Submissions: ${payload.programme_summary.evidence_submissions}, Exceptions: ${payload.programme_summary.exception_count}, Timeline Events: ${payload.programme_summary.timeline_events}`;
+
+      const evidenceList = document.getElementById('evidence-completeness-list');
+      evidenceList.innerHTML = '';
+      (payload.evidence_completeness || []).forEach(row => {
+        const li = document.createElement('li');
+        li.innerHTML = `${row.artifact_type}: ${badge(row.status)}`;
+        evidenceList.appendChild(li);
+      });
+
+      const timelineList = document.getElementById('timeline-list');
+      timelineList.innerHTML = '';
+      (payload.timeline || []).forEach(row => {
+        const li = document.createElement('li');
+        li.textContent = `${row.observed_at_utc} - ${row.event_type} (${row.instruction_id})`;
+        timelineList.appendChild(li);
+      });
+
+      const exceptionsList = document.getElementById('exception-log-list');
+      exceptionsList.innerHTML = '';
+      (payload.exception_log || []).forEach(row => {
+        const li = document.createElement('li');
+        li.textContent = `${row.recorded_at_utc}: ${row.error_code} (${row.instruction_id})`;
+        exceptionsList.appendChild(li);
+      });
+    }
+
+    render(demoData);
+
+    document.getElementById('export-trigger').addEventListener('click', () => {
+      alert('Export trigger is wired to reporting-pack flow in pilot-demo profile.');
+    });
+
+    document.getElementById('raw-artifact-drilldown').addEventListener('click', () => {
+      alert('Raw artifact drill-down opens the underlying invoice/photo objects.');
+    });
+  </script>
+</body>
+</html>

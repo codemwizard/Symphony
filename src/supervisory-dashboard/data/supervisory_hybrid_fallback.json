@@ -1,0 +1,22 @@
+{
+  "programme_summary": {
+    "programId": "PGM-ZAMBIA-GRN-001",
+    "name": "GreenTech4CE — Phase 1 Pilot",
+    "tenant": "zambia_green_mfi",
+    "status": "ACTIVE",
+    "totalInstructions": 4,
+    "settled": 2,
+    "held": 1,
+    "awaiting": 1
+  },
+  "timeline": [
+    {"id": "SYM-2026-00041", "borrower": "Kabwata Recycling Coop", "asset": "Plastic Shredder PS-400", "supplier": "EcoTech Supplies", "amount": "38,000", "status": "SETTLED", "proofs": "4/4"},
+    {"id": "SYM-2026-00045", "borrower": "Chelstone Coop", "asset": "Solar Dryer SD-200", "supplier": "EcoTech Supplies", "amount": "41,000", "status": "HOLD", "proofs": "2/4"},
+    {"id": "SYM-2026-00047", "borrower": "Kanyama Women", "asset": "Composting Unit", "supplier": "EcoTech Supplies", "amount": "35,000", "status": "SIM_HOLD", "proofs": "3/4 ⚠"},
+    {"id": "SYM-2026-00038", "borrower": "Matero Green Hub", "asset": "Biogas Unit BG-150", "supplier": "EcoTech Supplies", "amount": "62,000", "status": "SETTLED", "proofs": "4/4"}
+  ],
+  "exception_log": [
+    {"instructionId": "SYM-2026-00045", "type": "MISSING_PROOF", "date": "2026-03-08", "detail": "PT-002 and PT-003 not submitted within window", "resolved": false},
+    {"instructionId": "SYM-2026-00047", "type": "SIM_SWAP_FLAG", "date": "2026-03-09", "detail": "MSISDN registered 6 days before disbursement", "resolved": false}
+  ]
+}

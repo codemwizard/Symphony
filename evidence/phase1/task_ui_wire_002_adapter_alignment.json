@@ -1,0 +1,19 @@
+{
+  "check_id": "TASK-UI-WIRE-002-ADAPTER-ALIGNMENT",
+  "task_id": "TASK-UI-WIRE-002",
+  "timestamp_utc": "2026-03-13T11:09:27Z",
+  "git_sha": "7541dfaa60162e2e3b8ea0f87b4f081f8fcce1b0",
+  "status": "PASS",
+  "pass": true,
+  "details": {
+    "api_base_v1": true,
+    "hybrid_default": true,
+    "tenant_header_handling": true,
+    "explicit_fallback_labeling": true,
+    "fallback_fixture_keys": [
+      "exception_log",
+      "programme_summary",
+      "timeline"
+    ]
+  }
+}

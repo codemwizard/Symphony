@@ -1,0 +1,53 @@
+schema_version: 1
+phase: "1"
+task_id: "TASK-UI-WIRE-000"
+title: "Freeze the canonical supervisory shell and backing-mode matrix"
+owner_role: "SUPERVISOR"
+status: "completed"
+depends_on:
+  - TSK-P1-DEMO-008
+  - TSK-P1-DEMO-009
+  - TSK-P1-DEMO-010
+  - TSK-P1-DEMO-011
+touches:
+  - docs/operations/SUPERVISORY_UI_SOURCE_OF_TRUTH.md
+  - tasks/TASK-UI-WIRE-000/meta.yml
+  - docs/plans/phase1/TASK-UI-WIRE-000/PLAN.md
+  - docs/plans/phase1/TASK-UI-WIRE-000/EXEC_LOG.md
+  - docs/tasks/phase1_prompts.md
+  - scripts/audit/verify_task_ui_wire_000.sh
+  - evidence/phase1/task_ui_wire_000_source_of_truth.json
+invariants:
+  - INV-077
+  - INV-105
+  - INV-119
+work:
+  - Declare the v3 supervisory shell as the canonical target shell for GreenTech4CE pilot-demo scope.
+  - Freeze the per-surface backing-mode matrix before implementation begins.
+  - Mark the existing thin shell as legacy and document repo-native route and contract assumptions.
+acceptance_criteria:
+  - One canonical target shell is declared for pilot-demo supervisory use.
+  - Every visible panel and action has an explicit backing mode.
+  - SIM-swap is explicitly resolved as DEMO_BACKED for Phase 1.
+  - Existing DEMO prerequisites are described as capabilities to revalidate against the new shell rather than proof of completed integration.
+verification:
+  - bash scripts/audit/verify_task_ui_wire_000.sh
+  - python3 scripts/audit/validate_evidence.py --task TASK-UI-WIRE-000 --evidence evidence/phase1/task_ui_wire_000_source_of_truth.json
+  - bash scripts/audit/verify_agent_conformance.sh
+evidence:
+  - evidence/phase1/task_ui_wire_000_source_of_truth.json
+failure_modes:
+  - Multiple shells remain canonical or the thin shell is not marked legacy.
+  - Backing modes remain implicit or ambiguous.
+  - Evidence file missing.
+must_read:
+  - AGENT_ENTRYPOINT.md
+  - docs/operations/AGENT_PROMPT_ROUTER.md
+  - docs/operations/AI_AGENT_OPERATION_MANUAL.md
+  - docs/operations/SUPERVISORY_UI_SOURCE_OF_TRUTH.md
+implementation_plan: "docs/plans/phase1/TASK-UI-WIRE-000/PLAN.md"
+implementation_log: "docs/plans/phase1/TASK-UI-WIRE-000/EXEC_LOG.md"
+notes: "Wave A foundation task. This task freezes the source-of-truth matrix and is completed when the canonical document and evidence exist."
+client: "codex_cli"
+assigned_agent: "supervisor"
+model: "gpt-5-codex"

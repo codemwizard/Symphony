@@ -1,0 +1,15 @@
+{
+  "check_id": "TASK-UI-WIRE-001-SHELL-PORT",
+  "task_id": "TASK-UI-WIRE-001",
+  "timestamp_utc": "2026-03-13T11:09:27Z",
+  "git_sha": "7541dfaa60162e2e3b8ea0f87b4f081f8fcce1b0",
+  "status": "PASS",
+  "pass": true,
+  "details": {
+    "pilot_demo_primary_route_present": true,
+    "pilot_demo_legacy_route_present": true,
+    "compatibility_ids_preserved": true,
+    "remote_assets_removed": true,
+    "forbidden_claim_substrings_absent": true
+  }
+}
