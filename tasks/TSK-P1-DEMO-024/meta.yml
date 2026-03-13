@@ -3,7 +3,7 @@ phase: '1'
 task_id: TSK-P1-DEMO-024
 title: Align demo health endpoints with deployment probes
 owner_role: SUPERVISOR
-status: planned
+status: completed
 depends_on:
 - TSK-P1-DEMO-014
 touches:

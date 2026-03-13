@@ -1,0 +1,31 @@
+{
+  "check_id": "TSK-P1-DEMO-028-IMAGE-FLOW",
+  "task_id": "TSK-P1-DEMO-028",
+  "timestamp_utc": "2026-03-13T19:49:26Z",
+  "git_sha": "22f5f6309473194c3ab23e57ac10136e87c8f036",
+  "status": "PASS",
+  "pass": true,
+  "details": {
+    "host_based_publish_supported_path": true,
+    "ledger_api_image": {
+      "tag": "symphony/demo-ledger-api:tsk-p1-demo-028",
+      "image_id": "sha256:22917d7168a90017f5e750bf2b3a71ddcdb7b794ffeee716e4542507e96e3c75",
+      "entrypoint": [
+        "dotnet",
+        "LedgerApi.dll"
+      ],
+      "bundles_supervisory_ui": true
+    },
+    "executor_worker_image": {
+      "tag": "symphony/demo-executor-worker:tsk-p1-demo-028",
+      "image_id": "sha256:0b05b11f03224cbefadcba676a137d487c2cd61f2621ceaee9fb215ac058bb42",
+      "entrypoint": [
+        "dotnet",
+        "ExecutorWorker.dll"
+      ]
+    },
+    "build_commands": [
+      "LEDGER_TAG=symphony/demo-ledger-api:tsk-p1-demo-028 WORKER_TAG=symphony/demo-executor-worker:tsk-p1-demo-028 scripts/dev/build_demo_images.sh"
+    ]
+  }
+}

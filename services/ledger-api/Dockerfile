@@ -8,7 +8,12 @@ RUN set -eux; \
     if ! id -u app >/dev/null 2>&1; then useradd --uid "${APP_UID}" --gid app --create-home --shell /usr/sbin/nologin app; fi
 
 WORKDIR /app
+EXPOSE 8080
+ENV ASPNETCORE_URLS=http://0.0.0.0:8080
+COPY .publish/app/ ./
+COPY .publish/src/supervisory-dashboard ./src/supervisory-dashboard
+COPY .publish/scripts ./scripts
+COPY .publish/evidence ./evidence
 USER app
 
-# Deterministic placeholder entrypoint for Phase-1 containerization gate.
-CMD ["/bin/sh", "-lc", "echo ledger-api container image built"]
+ENTRYPOINT ["dotnet", "LedgerApi.dll"]

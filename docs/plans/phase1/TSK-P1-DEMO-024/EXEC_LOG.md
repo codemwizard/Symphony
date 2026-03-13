@@ -6,14 +6,16 @@ Plan: docs/plans/phase1/TSK-P1-DEMO-024/PLAN.md
 
 ## repro_command
 
-auto-generated task pack scaffold; implementation pending
+dotnet build services/ledger-api/dotnet/src/LedgerApi/LedgerApi.csproj -nologo
 
 ## verification_commands_run
-- PENDING: bash scripts/audit/verify_tsk_p1_demo_024.sh
+- `dotnet build services/ledger-api/dotnet/src/LedgerApi/LedgerApi.csproj -nologo` -> PASS
+- `bash scripts/audit/verify_tsk_p1_demo_024.sh` -> PASS
+- `python3 scripts/audit/validate_evidence.py --task TSK-P1-DEMO-024 --evidence evidence/phase1/tsk_p1_demo_024_health_probe_parity.json` -> PASS
 
 ## Final Summary
 
-Planned only. No implementation commands have been executed yet.
+Implemented health-probe parity by adding `/healthz` and `/readyz` alongside `/health` in `LedgerApi`, preserving the existing Kubernetes `ledger-api` probe contract and documenting the supported routes in the deployment guide.
 
 ## final_status
-PLANNED
+COMPLETED

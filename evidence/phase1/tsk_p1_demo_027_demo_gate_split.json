@@ -1,0 +1,13 @@
+{
+  "check_id": "TSK-P1-DEMO-027-DEMO-GATE-SPLIT",
+  "task_id": "TSK-P1-DEMO-027",
+  "timestamp_utc": "2026-03-13T19:49:03Z",
+  "git_sha": "22f5f6309473194c3ab23e57ac10136e87c8f036",
+  "status": "PASS",
+  "pass": true,
+  "details": {
+    "demo_gate_script": "scripts/dev/pre_ci_demo.sh",
+    "pre_ci_reserved_for_engineering": true,
+    "enumerated_verifier_set_fixed": true
+  }
+}

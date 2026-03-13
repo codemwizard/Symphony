@@ -11,6 +11,7 @@ Provide a repeatable, auditable onboarding procedure for tenant and programme pr
 2. Required regulated-surface approval metadata is present for the active change batch.
 3. The operator has the tenant identifier, programme identifier, policy binding, and supplier seed data required for onboarding.
 4. The environment is in a known-good state and `scripts/dev/pre_ci.sh` passes before provisioning starts.
+5. The deployment runtime contract in `docs/operations/SYMPHONY_DEMO_DEPLOYMENT_GUIDE.md` is satisfied, including tenant allowlist and read/admin key configuration.
 
 ## 3. Provisioning Steps
 1. Run baseline verification before any onboarding action:

@@ -8,12 +8,17 @@ start deterministic testing.
 This checklist is operator-facing. It uses the existing sandbox manifests,
 pilot harness, and demo rehearsal scripts already present in the repo.
 
+Read first:
+
+- `docs/operations/SYMPHONY_DEMO_DEPLOYMENT_GUIDE.md`
+
 ## Preconditions
 
 - Work is on a feature branch, not `main`.
 - Required approval metadata exists for the active regulated-surface batch.
 - Kubernetes access to the target cluster is configured.
 - Required secrets for `symphony-pilot-secrets` are available.
+- Host-based deployments must have `psql` available before running migrations.
 - The operator has the tenant/programme inputs required by:
   - `docs/operations/GREENTECH4CE_TENANT_PROGRAMME_PROVISIONING_RUNBOOK.md`
 
@@ -22,17 +27,29 @@ pilot harness, and demo rehearsal scripts already present in the repo.
 Run:
 
 ```bash
-bash scripts/dev/pre_ci.sh
+bash scripts/dev/pre_ci_demo.sh
 bash scripts/security/verify_sandbox_deploy_manifest_posture.sh
 ```
 
+Required runtime contract before you continue:
+
+- `SYMPHONY_RUNTIME_PROFILE=pilot-demo`
+- `ASPNETCORE_URLS=http://0.0.0.0:8080`
+- `DATABASE_URL=...`
+- `INGRESS_STORAGE_MODE=db_psql`
+- `SYMPHONY_UI_TENANT_ID=<tenant-id>`
+- `SYMPHONY_UI_API_KEY=<read-key>`
+- `INGRESS_API_KEY=<same-read-key>`
+- `ADMIN_API_KEY=<server-side-admin-key>`
+- `SYMPHONY_KNOWN_TENANTS=<tenant-id>`
+
 Pass conditions:
-- `pre_ci.sh` exits `0`
+- `pre_ci_demo.sh` exits `0`
 - sandbox deploy posture verifier exits `0`
 - evidence exists at `evidence/phase1/sandbox_deploy_manifest_posture.json`
 
 Stop conditions:
-- any failure in `pre_ci.sh`
+- any failure in `pre_ci_demo.sh`
 - missing or invalid sandbox manifest posture evidence
 
 ## Step 2 — Deploy the Sandbox
@@ -191,7 +208,7 @@ Optional but recommended:
 ## Default Command Sequence
 
 ```bash
-bash scripts/dev/pre_ci.sh
+bash scripts/dev/pre_ci_demo.sh
 bash scripts/security/verify_sandbox_deploy_manifest_posture.sh
 kubectl apply -k infra/sandbox/k8s
 kubectl wait --for=condition=complete --timeout=600s job/db-migration-job -n symphony-pilot
@@ -208,3 +225,5 @@ bash scripts/audit/verify_phase1_demo_proof_pack.sh
 - Secret material for `symphony-pilot-secrets` is handled outside this checklist.
 - Tenant/programme provisioning is still operator-run and not self-service.
 - This checklist covers deployment and initial testing, not production go-live.
+- The supported demo server is Kestrel; nginx/IIS are optional reverse proxies, not required deployment steps.
+- `scripts/dev/pre_ci.sh` remains the engineering branch-quality gate; this checklist uses the narrower operator demo gate.

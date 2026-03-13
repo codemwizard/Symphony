@@ -1,0 +1,90 @@
+{
+  "schema_version": "1.0",
+  "approval": {
+    "status": "APPROVED",
+    "approver_id": "governance-human-reviewer",
+    "change_reason": "Implement the demo deployment hardening task pack by aligning health/probe parity, completing the host-based deployment runtime contract, keeping admin credentials server-side for privileged demo actions, finishing the operator demo gate split, and replacing placeholder image build flow with reproducible Docker builds while keeping host-based dotnet publish as the supported demo path.",
+    "approved_at_utc": "2026-03-13T19:35:43Z",
+    "role_authority": "Human Approver"
+  },
+  "ai": {
+    "ai_used": true,
+    "ai_prompt_hash": "feat-demo-deployment-hardening-tasks",
+    "model_id": "gpt-5-codex",
+    "client": "codex_cli",
+    "session_id": "feat-demo-deployment-hardening-tasks"
+  },
+  "scope": {
+    "regulated_surfaces_touched": true,
+    "paths_changed": [
+      "approvals/2026-03-13/BRANCH-feat-demo-deployment-hardening-tasks.approval.json",
+      "approvals/2026-03-13/BRANCH-feat-demo-deployment-hardening-tasks.md",
+      "docs/operations/GREENTECH4CE_TENANT_PROGRAMME_PROVISIONING_RUNBOOK.md",
+      "docs/operations/PHASE1_DEMO_DEPLOY_AND_TEST_CHECKLIST.md",
+      "docs/operations/SUPERVISORY_UI_SOURCE_OF_TRUTH.md",
+      "docs/operations/SYMPHONY_DEMO_DEPLOYMENT_GUIDE.md",
+      "docs/plans/phase1/REM-2026-03-13_demo-deployment-hardening-pre_ci-remediation-trace/EXEC_LOG.md",
+      "docs/plans/phase1/REM-2026-03-13_demo-deployment-hardening-pre_ci-remediation-trace/PLAN.md",
+      "docs/plans/phase1/TSK-P1-DEMO-024/EXEC_LOG.md",
+      "docs/plans/phase1/TSK-P1-DEMO-024/PLAN.md",
+      "docs/plans/phase1/TSK-P1-DEMO-025/EXEC_LOG.md",
+      "docs/plans/phase1/TSK-P1-DEMO-025/PLAN.md",
+      "docs/plans/phase1/TSK-P1-DEMO-026/EXEC_LOG.md",
+      "docs/plans/phase1/TSK-P1-DEMO-026/PLAN.md",
+      "docs/plans/phase1/TSK-P1-DEMO-027/EXEC_LOG.md",
+      "docs/plans/phase1/TSK-P1-DEMO-027/PLAN.md",
+      "docs/plans/phase1/TSK-P1-DEMO-028/EXEC_LOG.md",
+      "docs/plans/phase1/TSK-P1-DEMO-028/PLAN.md",
+      "docs/tasks/phase1_prompts.md",
+      "evidence/phase1/approval_metadata.json",
+      "evidence/phase1/human_governance_review_signoff.json",
+      "evidence/phase1/tsk_p1_demo_024_health_probe_parity.json",
+      "evidence/phase1/tsk_p1_demo_025_runtime_contract.json",
+      "evidence/phase1/tsk_p1_demo_026_server_side_admin_proxy.json",
+      "evidence/phase1/tsk_p1_demo_027_demo_gate_split.json",
+      "evidence/phase1/tsk_p1_demo_028_image_flow.json",
+      "scripts/audit/verify_tsk_p1_demo_024.sh",
+      "scripts/audit/verify_tsk_p1_demo_025.sh",
+      "scripts/audit/verify_tsk_p1_demo_026.sh",
+      "scripts/audit/verify_tsk_p1_demo_027.sh",
+      "scripts/audit/verify_tsk_p1_demo_028.sh",
+      "scripts/dev/build_demo_images.sh",
+      "scripts/dev/pre_ci_demo.sh",
+      "services/executor-worker/Dockerfile",
+      "services/ledger-api/Dockerfile",
+      "services/ledger-api/dotnet/src/LedgerApi/Program.cs",
+      "tasks/TSK-P1-DEMO-024/meta.yml",
+      "tasks/TSK-P1-DEMO-025/meta.yml",
+      "tasks/TSK-P1-DEMO-026/meta.yml",
+      "tasks/TSK-P1-DEMO-027/meta.yml",
+      "tasks/TSK-P1-DEMO-028/meta.yml"
+    ],
+    "invariants": [
+      "INV-077",
+      "INV-105",
+      "INV-119",
+      "INVPROC-06"
+    ],
+    "phase_boundary_ok": true
+  },
+  "verification": {
+    "commands": [
+      "bash scripts/audit/verify_task_meta_schema.sh --mode strict --allow-legacy",
+      "bash scripts/audit/verify_task_pack_readiness.sh --task TSK-P1-DEMO-024 --task TSK-P1-DEMO-025 --task TSK-P1-DEMO-026 --task TSK-P1-DEMO-027 --task TSK-P1-DEMO-028",
+      "bash scripts/audit/verify_tsk_p1_demo_024.sh",
+      "python3 scripts/audit/validate_evidence.py --task TSK-P1-DEMO-024 --evidence evidence/phase1/tsk_p1_demo_024_health_probe_parity.json",
+      "bash scripts/audit/verify_tsk_p1_demo_025.sh",
+      "python3 scripts/audit/validate_evidence.py --task TSK-P1-DEMO-025 --evidence evidence/phase1/tsk_p1_demo_025_runtime_contract.json",
+      "bash scripts/audit/verify_tsk_p1_demo_026.sh",
+      "python3 scripts/audit/validate_evidence.py --task TSK-P1-DEMO-026 --evidence evidence/phase1/tsk_p1_demo_026_server_side_admin_proxy.json",
+      "bash scripts/audit/verify_tsk_p1_demo_027.sh",
+      "python3 scripts/audit/validate_evidence.py --task TSK-P1-DEMO-027 --evidence evidence/phase1/tsk_p1_demo_027_demo_gate_split.json",
+      "bash scripts/audit/verify_tsk_p1_demo_028.sh",
+      "python3 scripts/audit/validate_evidence.py --task TSK-P1-DEMO-028 --evidence evidence/phase1/tsk_p1_demo_028_image_flow.json",
+      "bash scripts/audit/verify_human_governance_review_signoff.sh",
+      "bash scripts/dev/pre_ci.sh"
+    ],
+    "pre_ci_passed": false,
+    "notes": "Targeted verifiers and documentation checks passed. Full local pre_ci remains blocked in this auxiliary worktree by the pre-existing TSK-P1-076 local hook topology verifier assuming a .git directory rather than a linked-worktree gitfile."
+  }
+}

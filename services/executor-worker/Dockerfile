@@ -8,7 +8,8 @@ RUN set -eux; \
     if ! id -u app >/dev/null 2>&1; then useradd --uid "${APP_UID}" --gid app --create-home --shell /usr/sbin/nologin app; fi
 
 WORKDIR /app
+ENV DOTNET_EnableDiagnostics=0
+COPY .publish/app/ ./
 USER app
 
-# Deterministic placeholder entrypoint for Phase-1 containerization gate.
-CMD ["/bin/sh", "-lc", "echo executor-worker container image built"]
+ENTRYPOINT ["dotnet", "ExecutorWorker.dll"]

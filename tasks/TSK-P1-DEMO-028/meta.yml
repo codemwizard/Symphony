@@ -3,13 +3,14 @@ phase: '1'
 task_id: TSK-P1-DEMO-028
 title: Complete image build flow while keeping host-based publish as the supported demo path
 owner_role: SUPERVISOR
-status: planned
+status: completed
 depends_on:
 - TSK-P1-DEMO-024
 - TSK-P1-DEMO-025
 touches:
 - services/ledger-api/Dockerfile
 - services/executor-worker/Dockerfile
+- scripts/dev/build_demo_images.sh
 - docs/operations/SYMPHONY_DEMO_DEPLOYMENT_GUIDE.md
 - docs/plans/phase1/TSK-P1-DEMO-028/PLAN.md
 - docs/plans/phase1/TSK-P1-DEMO-028/EXEC_LOG.md
