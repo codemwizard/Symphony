@@ -8,6 +8,8 @@
       "approvals/2026-03-13/BRANCH-feat-ui-wire-wave-b.approval.json",
       "approvals/2026-03-13/BRANCH-feat-ui-wire-wave-b.md",
       "docs/operations/SUPERVISORY_UI_SOURCE_OF_TRUTH.md",
+      "docs/plans/phase1/REM-2026-03-13_ui-wave-b-pre_ci-remediation-trace/PLAN.md",
+      "docs/plans/phase1/REM-2026-03-13_ui-wave-b-pre_ci-remediation-trace/EXEC_LOG.md",
       "docs/plans/phase1/TASK-UI-WIRE-003/PLAN.md",
       "docs/plans/phase1/TASK-UI-WIRE-003/EXEC_LOG.md",
       "docs/plans/phase1/TASK-UI-WIRE-004/PLAN.md",
@@ -43,5 +45,5 @@
     "change_reason": "Complete Wave B of the GreenTech4CE supervisory UI port, including reveal wiring, browser-safe operator action wiring, synchronous export routing, and server-side handling of privileged actions without exposing admin credentials to the browser.",
     "approved_at_utc": "2026-03-13T13:40:00Z"
   },
-  "notes": "Branch approval metadata for the completed Wave B GreenTech4CE supervisory UI port batch."
+  "notes": "Branch approval metadata for the completed Wave B GreenTech4CE supervisory UI port batch, including the remediation casefile required by pre-push parity."
 }

@@ -4,7 +4,7 @@ Complete Wave B of the GreenTech4CE supervisory UI port: wire the main reveal pa
 
 ## 2. Scope of Impact
 
-Phase-1 task packs, Phase-1 planning docs, supervisory UI governance docs, Wave B verifier scaffolding, approval metadata, pilot-demo route wiring, supervisory dashboard client behavior, browser-safe instruction verification contract, and the committed HYBRID fallback dataset.
+Phase-1 task packs, Phase-1 planning docs, supervisory UI governance docs, the Wave B remediation casefile, Wave B verifier scaffolding, approval metadata, pilot-demo route wiring, supervisory dashboard client behavior, browser-safe instruction verification contract, and the committed HYBRID fallback dataset.
 
 ## 3. Invariants & Phase Discipline
 
@@ -16,7 +16,7 @@ Prepared with Codex; human review required for branch closeout.
 
 ## 5. Verification & Evidence
 
-Wave B task-pack schema/readiness checks, agent conformance, targeted Wave B verifiers, evidence validation, dotnet build, human governance signoff verification, and pre-CI execution are used for this branch batch.
+Wave B task-pack schema/readiness checks, agent conformance, targeted Wave B verifiers, evidence validation, dotnet build, remediation trace verification, human governance signoff verification, and pre-CI execution are used for this branch batch.
 
 ## 6. Risk Assessment
 

@@ -20,6 +20,8 @@
       "approvals/2026-03-13/BRANCH-feat-ui-wire-wave-b.approval.json",
       "approvals/2026-03-13/BRANCH-feat-ui-wire-wave-b.md",
       "docs/operations/SUPERVISORY_UI_SOURCE_OF_TRUTH.md",
+      "docs/plans/phase1/REM-2026-03-13_ui-wave-b-pre_ci-remediation-trace/PLAN.md",
+      "docs/plans/phase1/REM-2026-03-13_ui-wave-b-pre_ci-remediation-trace/EXEC_LOG.md",
       "docs/plans/phase1/TASK-UI-WIRE-003/PLAN.md",
       "docs/plans/phase1/TASK-UI-WIRE-003/EXEC_LOG.md",
       "docs/plans/phase1/TASK-UI-WIRE-004/PLAN.md",
@@ -65,6 +67,6 @@
       "bash scripts/audit/verify_human_governance_review_signoff.sh"
     ],
     "pre_ci_passed": true,
-    "notes": "Wave B complete batch. Approval scope covers reveal wiring, browser-safe operator action wiring, synchronous export transport, and the no-secret-in-browser posture."
+    "notes": "Wave B complete batch. Approval scope covers reveal wiring, browser-safe operator action wiring, synchronous export transport, the no-secret-in-browser posture, and the branch remediation casefile required by pre-push parity."
   }
 }
