@@ -1,0 +1,13 @@
+{
+  "check_id": "TASK-UI-WIRE-004-OPERATOR-ACTIONS",
+  "task_id": "TASK-UI-WIRE-004",
+  "timestamp_utc": "2026-03-13T11:45:05Z",
+  "git_sha": "1205712216e99cb9c0f063cf376286037367b311",
+  "status": "PASS",
+  "pass": true,
+  "details": {
+    "admin_secret_not_exposed_to_browser": true,
+    "client_admin_header_absent": true,
+    "privileged_proxy_routes_present": true
+  }
+}

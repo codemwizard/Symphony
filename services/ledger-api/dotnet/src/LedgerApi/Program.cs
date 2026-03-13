@@ -180,8 +180,7 @@ app.MapGet("/pilot-demo/supervisory", () =>
     {
         dataMode = "HYBRID",
         tenantId = Environment.GetEnvironmentVariable("SYMPHONY_UI_TENANT_ID") ?? string.Empty,
-        apiKey = Environment.GetEnvironmentVariable("SYMPHONY_UI_API_KEY") ?? string.Empty,
-        adminApiKey = Environment.GetEnvironmentVariable("SYMPHONY_UI_ADMIN_API_KEY") ?? string.Empty
+        apiKey = Environment.GetEnvironmentVariable("SYMPHONY_UI_API_KEY") ?? string.Empty
     });
 
     html = html.Replace("__SYMPHONY_UI_CONTEXT__", contextJson)
@@ -326,6 +325,29 @@ app.MapPost("/v1/evidence-links/issue", async (EvidenceLinkIssueRequest request,
     return Results.Json(result.Body, statusCode: result.StatusCode);
 }).RequireRateLimiting("sensitive-endpoint");
 
+app.MapPost("/pilot-demo/api/evidence-links/issue", async (EvidenceLinkIssueRequest request, HttpContext httpContext, CancellationToken cancellationToken) =>
+{
+    if (!string.Equals(runtimeProfile, "pilot-demo", StringComparison.OrdinalIgnoreCase))
+    {
+        return Results.NotFound();
+    }
+
+    var authFailure = ApiAuthorization.AuthorizeEvidenceRead(httpContext);
+    if (authFailure is not null)
+    {
+        return Results.Json(authFailure.Body, statusCode: authFailure.StatusCode);
+    }
+
+    var tenantAuthFailure = ApiAuthorization.AuthorizeTenantScope(request.tenant_id);
+    if (tenantAuthFailure is not null)
+    {
+        return Results.Json(tenantAuthFailure.Body, statusCode: tenantAuthFailure.StatusCode);
+    }
+
+    var result = await EvidenceLinkIssueHandler.HandleAsync(request, logger, cancellationToken);
+    return Results.Json(result.Body, statusCode: result.StatusCode);
+}).RequireRateLimiting("sensitive-endpoint");
+
 app.MapPost("/v1/evidence-links/submit", async (EvidenceLinkSubmitRequest request, HttpContext httpContext, CancellationToken cancellationToken) =>
 {
     var result = await EvidenceLinkSubmitHandler.HandleAsync(request, httpContext, logger, cancellationToken);
@@ -392,6 +414,29 @@ app.MapGet("/v1/programs/{programId}/suppliers/{supplierId}/policy", (string pro
 app.MapPost("/v1/instruction-files/generate", async (SignedInstructionGenerateRequest request, HttpContext httpContext, CancellationToken cancellationToken) =>
 {
     var authFailure = ApiAuthorization.AuthorizeAdminTenantOnboarding(httpContext);
+    if (authFailure is not null)
+    {
+        return Results.Json(authFailure.Body, statusCode: authFailure.StatusCode);
+    }
+
+    var tenantAuthFailure = ApiAuthorization.AuthorizeTenantScope(request.tenant_id);
+    if (tenantAuthFailure is not null)
+    {
+        return Results.Json(tenantAuthFailure.Body, statusCode: tenantAuthFailure.StatusCode);
+    }
+
+    var result = await SignedInstructionFileHandler.GenerateAsync(request, logger, cancellationToken);
+    return Results.Json(result.Body, statusCode: result.StatusCode);
+}).RequireRateLimiting("sensitive-endpoint");
+
+app.MapPost("/pilot-demo/api/instruction-files/generate", async (SignedInstructionGenerateRequest request, HttpContext httpContext, CancellationToken cancellationToken) =>
+{
+    if (!string.Equals(runtimeProfile, "pilot-demo", StringComparison.OrdinalIgnoreCase))
+    {
+        return Results.NotFound();
+    }
+
+    var authFailure = ApiAuthorization.AuthorizeEvidenceRead(httpContext);
     if (authFailure is not null)
     {
         return Results.Json(authFailure.Body, statusCode: authFailure.StatusCode);

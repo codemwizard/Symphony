@@ -1057,14 +1057,6 @@ function revealHeaders() {
   return headers;
 }
 
-function adminHeaders() {
-  const ctx = uiContext();
-  const headers = { 'Content-Type': 'application/json' };
-  if (ctx.adminApiKey) headers['x-admin-api-key'] = ctx.adminApiKey;
-  if (ctx.tenantId) headers['x-tenant-id'] = ctx.tenantId;
-  return headers;
-}
-
 function fallbackData() {
   return window.SYMPHONY_HYBRID_FALLBACK || {};
 }

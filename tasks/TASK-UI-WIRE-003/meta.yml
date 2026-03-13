@@ -1,0 +1,48 @@
+schema_version: 1
+phase: "1"
+task_id: "TASK-UI-WIRE-003"
+title: "Wire reveal panels to the real reveal API"
+owner_role: "SUPERVISOR"
+status: "planned"
+depends_on:
+  - TASK-UI-WIRE-002
+touches:
+  - src/supervisory-dashboard/**
+  - services/ledger-api/dotnet/src/LedgerApi/ReadModels/**
+  - tasks/TASK-UI-WIRE-003/meta.yml
+  - docs/plans/phase1/TASK-UI-WIRE-003/PLAN.md
+  - docs/plans/phase1/TASK-UI-WIRE-003/EXEC_LOG.md
+  - docs/tasks/phase1_prompts.md
+  - scripts/audit/verify_task_ui_wire_003.sh
+  - evidence/phase1/task_ui_wire_003_reveal_live_wiring.json
+invariants:
+  - INV-077
+  - INV-105
+  - INV-119
+work:
+  - Wire programme summary, timeline, evidence completeness, and exception log to the real reveal API.
+  - Bind the shell to repo-native reveal payload keys and explicit loading and error states.
+acceptance_criteria:
+  - Main reveal panels render from the real reveal API.
+  - No panel still expects nonexistent summary or exceptions keys.
+  - HYBRID fallback is visibly labeled when used.
+verification:
+  - bash scripts/audit/verify_task_ui_wire_003.sh
+  - python3 scripts/audit/validate_evidence.py --task TASK-UI-WIRE-003 --evidence evidence/phase1/task_ui_wire_003_reveal_live_wiring.json
+evidence:
+  - evidence/phase1/task_ui_wire_003_reveal_live_wiring.json
+failure_modes:
+  - Reveal panels still rely on demo constants.
+  - Wrong response keys are used.
+  - Evidence file missing.
+must_read:
+  - AGENT_ENTRYPOINT.md
+  - docs/operations/AGENT_PROMPT_ROUTER.md
+  - docs/operations/AI_AGENT_OPERATION_MANUAL.md
+  - docs/operations/SUPERVISORY_UI_SOURCE_OF_TRUTH.md
+implementation_plan: "docs/plans/phase1/TASK-UI-WIRE-003/PLAN.md"
+implementation_log: "docs/plans/phase1/TASK-UI-WIRE-003/EXEC_LOG.md"
+notes: "Wave B reveal-wiring task. This task starts after Wave A adapter alignment is complete."
+client: "codex_cli"
+assigned_agent: "supervisor"
+model: "gpt-5-codex"

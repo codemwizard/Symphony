@@ -1,0 +1,59 @@
+{
+  "schema_version": "1.0",
+  "approval": {
+    "status": "APPROVED",
+    "approver_id": "governance-human-reviewer",
+    "change_reason": "Start Wave B of the GreenTech4CE supervisory UI port, including Wave B task packs, proxy-only privileged action rules, pilot-demo proxy routes, and removal of the admin secret from the browser bootstrap context.",
+    "approved_at_utc": "2026-03-13T11:25:00Z",
+    "role_authority": "Human Approver"
+  },
+  "ai": {
+    "ai_used": true,
+    "ai_prompt_hash": "feat-ui-wire-wave-b",
+    "model_id": "gpt-5-codex",
+    "client": "codex_cli",
+    "session_id": "feat-ui-wire-wave-b"
+  },
+  "scope": {
+    "regulated_surfaces_touched": true,
+    "paths_changed": [
+      "approvals/2026-03-13/BRANCH-feat-ui-wire-wave-b.approval.json",
+      "approvals/2026-03-13/BRANCH-feat-ui-wire-wave-b.md",
+      "docs/operations/SUPERVISORY_UI_SOURCE_OF_TRUTH.md",
+      "docs/plans/phase1/TASK-UI-WIRE-003/PLAN.md",
+      "docs/plans/phase1/TASK-UI-WIRE-003/EXEC_LOG.md",
+      "docs/plans/phase1/TASK-UI-WIRE-004/PLAN.md",
+      "docs/plans/phase1/TASK-UI-WIRE-004/EXEC_LOG.md",
+      "docs/plans/phase1/TASK-UI-WIRE-007/PLAN.md",
+      "docs/plans/phase1/TASK-UI-WIRE-007/EXEC_LOG.md",
+      "docs/tasks/phase1_prompts.md",
+      "evidence/phase1/approval_metadata.json",
+      "evidence/phase1/task_ui_wire_004_operator_action_wiring.json",
+      "scripts/audit/verify_task_ui_wire_003.sh",
+      "scripts/audit/verify_task_ui_wire_004.sh",
+      "scripts/audit/verify_task_ui_wire_007.sh",
+      "services/ledger-api/dotnet/src/LedgerApi/Program.cs",
+      "src/supervisory-dashboard/index.html",
+      "tasks/TASK-UI-WIRE-003/meta.yml",
+      "tasks/TASK-UI-WIRE-004/meta.yml",
+      "tasks/TASK-UI-WIRE-007/meta.yml"
+    ],
+    "invariants": [
+      "INV-077",
+      "INV-105",
+      "INV-119"
+    ],
+    "phase_boundary_ok": true
+  },
+  "verification": {
+    "commands": [
+      "bash scripts/audit/verify_task_meta_schema.sh --mode strict --allow-legacy",
+      "bash scripts/audit/verify_task_pack_readiness.sh --task TASK-UI-WIRE-003 --task TASK-UI-WIRE-004 --task TASK-UI-WIRE-007",
+      "bash scripts/audit/verify_task_ui_wire_004.sh",
+      "python3 scripts/audit/validate_evidence.py --task TASK-UI-WIRE-004 --evidence evidence/phase1/task_ui_wire_004_operator_action_wiring.json",
+      "bash scripts/audit/verify_agent_conformance.sh"
+    ],
+    "pre_ci_passed": true,
+    "notes": "Wave B start batch. Approval scope covers task-pack creation plus the admin-key bootstrap removal and pilot-demo proxy-route implementation slice."
+  }
+}
