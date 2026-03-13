@@ -1,0 +1,50 @@
+schema_version: 1
+phase: "1"
+task_id: "TASK-UI-WIRE-002"
+title: "Build the repo-aligned supervisory UI adapter"
+owner_role: "SUPERVISOR"
+status: "completed"
+depends_on:
+  - TASK-UI-WIRE-001
+touches:
+  - src/supervisory-dashboard/**
+  - src/supervisory-dashboard/data/supervisory_hybrid_fallback.json
+  - tasks/TASK-UI-WIRE-002/meta.yml
+  - docs/plans/phase1/TASK-UI-WIRE-002/PLAN.md
+  - docs/plans/phase1/TASK-UI-WIRE-002/EXEC_LOG.md
+  - docs/tasks/phase1_prompts.md
+  - scripts/audit/verify_task_ui_wire_002.sh
+  - evidence/phase1/task_ui_wire_002_adapter_alignment.json
+invariants:
+  - INV-077
+  - INV-105
+  - INV-119
+work:
+  - Replace zip-specific route and contract assumptions with a repo-native adapter using /v1 and x-tenant-id.
+  - Set default UI mode to HYBRID and make fallback behavior explicit rather than silent.
+  - Commit the canonical HYBRID fallback dataset as a fixture file in the UI tree.
+acceptance_criteria:
+  - No adapter call uses /api/v1.
+  - LIVE surfaces show explicit error/unavailable state on live failure instead of silent static fallback.
+  - The canonical fallback dataset is committed and referenced explicitly.
+verification:
+  - bash scripts/audit/verify_task_ui_wire_002.sh
+  - bash scripts/audit/run_invariants_fast_checks.sh
+  - python3 scripts/audit/validate_evidence.py --task TASK-UI-WIRE-002 --evidence evidence/phase1/task_ui_wire_002_adapter_alignment.json
+evidence:
+  - evidence/phase1/task_ui_wire_002_adapter_alignment.json
+failure_modes:
+  - Wrong API base or tenant-handling assumptions remain in the adapter.
+  - HYBRID fallback remains implicit or LIVE panels silently use static data.
+  - Evidence file missing.
+must_read:
+  - AGENT_ENTRYPOINT.md
+  - docs/operations/AGENT_PROMPT_ROUTER.md
+  - docs/operations/AI_AGENT_OPERATION_MANUAL.md
+  - docs/operations/SUPERVISORY_UI_SOURCE_OF_TRUTH.md
+implementation_plan: "docs/plans/phase1/TASK-UI-WIRE-002/PLAN.md"
+implementation_log: "docs/plans/phase1/TASK-UI-WIRE-002/EXEC_LOG.md"
+notes: "Wave A adapter task. HYBRID fallback must be explicit and the canonical fallback dataset must live in src/supervisory-dashboard/data/supervisory_hybrid_fallback.json."
+client: "codex_cli"
+assigned_agent: "supervisor"
+model: "gpt-5-codex"

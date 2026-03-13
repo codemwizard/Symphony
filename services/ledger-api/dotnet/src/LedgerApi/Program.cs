@@ -157,6 +157,54 @@ if (!tenantAllowlistConfigured)
     logger.LogWarning("SECURITY ALERT: tenant_allowlist_configured=false. All tenant requests will be rejected with 503.");
 }
 
+var repoRoot = EvidenceMeta.ResolveRepoRoot(Directory.GetCurrentDirectory());
+var supervisoryUiDir = Path.Combine(repoRoot, "src", "supervisory-dashboard");
+
+app.MapGet("/pilot-demo/supervisory", () =>
+{
+    if (!string.Equals(runtimeProfile, "pilot-demo", StringComparison.OrdinalIgnoreCase))
+    {
+        return Results.NotFound();
+    }
+
+    var templatePath = Path.Combine(supervisoryUiDir, "index.html");
+    var fallbackPath = Path.Combine(supervisoryUiDir, "data", "supervisory_hybrid_fallback.json");
+    if (!File.Exists(templatePath) || !File.Exists(fallbackPath))
+    {
+        return Results.NotFound();
+    }
+
+    var html = File.ReadAllText(templatePath);
+    var fallbackJson = File.ReadAllText(fallbackPath);
+    var contextJson = JsonSerializer.Serialize(new
+    {
+        dataMode = "HYBRID",
+        tenantId = Environment.GetEnvironmentVariable("SYMPHONY_UI_TENANT_ID") ?? string.Empty,
+        apiKey = Environment.GetEnvironmentVariable("SYMPHONY_UI_API_KEY") ?? string.Empty,
+        adminApiKey = Environment.GetEnvironmentVariable("SYMPHONY_UI_ADMIN_API_KEY") ?? string.Empty
+    });
+
+    html = html.Replace("__SYMPHONY_UI_CONTEXT__", contextJson)
+               .Replace("__SYMPHONY_HYBRID_FALLBACK__", fallbackJson);
+    return Results.Content(html, "text/html; charset=utf-8");
+});
+
+app.MapGet("/pilot-demo/supervisory-legacy", () =>
+{
+    if (!string.Equals(runtimeProfile, "pilot-demo", StringComparison.OrdinalIgnoreCase))
+    {
+        return Results.NotFound();
+    }
+
+    var legacyPath = Path.Combine(supervisoryUiDir, "legacy.html");
+    if (!File.Exists(legacyPath))
+    {
+        return Results.NotFound();
+    }
+
+    return Results.Content(File.ReadAllText(legacyPath), "text/html; charset=utf-8");
+});
+
 app.MapGet("/health", () => Results.Ok(new
 {
     status = "ok",

@@ -1,0 +1,15 @@
+{
+  "check_id": "TASK-UI-WIRE-000-SOURCE-OF-TRUTH",
+  "task_id": "TASK-UI-WIRE-000",
+  "timestamp_utc": "2026-03-13T11:09:27Z",
+  "git_sha": "7541dfaa60162e2e3b8ea0f87b4f081f8fcce1b0",
+  "status": "PASS",
+  "pass": true,
+  "details": {
+    "canonical_shell_declared": true,
+    "backing_modes_locked": true,
+    "sim_swap_demo_backed": true,
+    "legacy_shell_marked": true,
+    "demo_prerequisites_revalidate_only": true
+  }
+}
