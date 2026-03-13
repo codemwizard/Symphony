@@ -22,7 +22,8 @@
       "services/ledger-api/dotnet/src/LedgerApi/ReadModels/SupervisoryRevealReadModelHandler.cs",
       "src/supervisory-dashboard/index.html",
       "tasks/TASK-UI-WIRE-005/meta.yml",
-      "tasks/TASK-UI-WIRE-006/meta.yml"
+      "tasks/TASK-UI-WIRE-006/meta.yml",
+      "evidence/phase1/human_governance_review_signoff.json"
     ]
   },
   "ai": {

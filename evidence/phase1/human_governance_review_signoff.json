@@ -1,8 +1,8 @@
 {
   "check_id": "TASK-OI-10",
-  "run_id": "standalone-2026-03-13T13:37:39Z",
-  "timestamp_utc": "2026-03-13T13:37:39Z",
-  "git_sha": "6d0bce2cdb30efde7464ef22b5f3f8874a95f3b5",
+  "run_id": "standalone-2026-03-13T13:43:03Z",
+  "timestamp_utc": "2026-03-13T13:43:03Z",
+  "git_sha": "589ae3ff8f812ee562bf9b9d526391e938d331d0",
   "schema_fingerprint": "69acffc9187356ccc2270735cf4c3702c96925fc5932fe6221e47a9815c15b08",
   "status": "PASS",
   "reviewer_id": "governance-human-reviewer",
@@ -28,7 +28,8 @@
     "services/ledger-api/dotnet/src/LedgerApi/ReadModels/SupervisoryRevealReadModelHandler.cs",
     "src/supervisory-dashboard/index.html",
     "tasks/TASK-UI-WIRE-005/meta.yml",
-    "tasks/TASK-UI-WIRE-006/meta.yml"
+    "tasks/TASK-UI-WIRE-006/meta.yml",
+    "evidence/phase1/human_governance_review_signoff.json"
   ],
   "changed_files": [
     "approvals/2026-03-13/BRANCH-feat-ui-wire-wave-c.approval.json",
@@ -39,6 +40,7 @@
     "docs/plans/phase1/TASK-UI-WIRE-006/EXEC_LOG.md",
     "docs/plans/phase1/TASK-UI-WIRE-006/PLAN.md",
     "evidence/phase1/approval_metadata.json",
+    "evidence/phase1/human_governance_review_signoff.json",
     "scripts/audit/verify_task_ui_wire_005.sh",
     "scripts/audit/verify_task_ui_wire_006.sh",
     "services/ledger-api/dotnet/src/LedgerApi/Demo/SupervisoryReadModelsSelfTestRunner.cs",
@@ -57,6 +59,7 @@
     "docs/plans/phase1/TASK-UI-WIRE-006/EXEC_LOG.md",
     "docs/plans/phase1/TASK-UI-WIRE-006/PLAN.md",
     "evidence/phase1/approval_metadata.json",
+    "evidence/phase1/human_governance_review_signoff.json",
     "scripts/audit/verify_task_ui_wire_005.sh",
     "scripts/audit/verify_task_ui_wire_006.sh",
     "services/ledger-api/dotnet/src/LedgerApi/Demo/SupervisoryReadModelsSelfTestRunner.cs",
