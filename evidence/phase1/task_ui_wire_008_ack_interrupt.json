@@ -1,0 +1,17 @@
+{
+  "check_id": "TASK-UI-WIRE-008-ACK-INTERRUPT-PROJECTION",
+  "task_id": "TASK-UI-WIRE-008",
+  "timestamp_utc": "2026-03-13T14:34:35Z",
+  "git_sha": "33cdc1d3a105e37d116cb8e816ed163b032734b8",
+  "status": "PASS",
+  "pass": true,
+  "details": {
+    "instruction_id": "SYM-2026-00041",
+    "reveal_missing_fields": [],
+    "detail_missing_fields": [],
+    "acknowledgement_state": null,
+    "escalation_tier": null,
+    "supervisor_interrupt_state": null,
+    "ack_interrupt_projection_state": "UNAVAILABLE_STORAGE_MODE_FILE"
+  }
+}

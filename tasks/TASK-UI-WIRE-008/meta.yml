@@ -1,0 +1,53 @@
+schema_version: 1
+phase: "1"
+task_id: "TASK-UI-WIRE-008"
+title: "Project AWAITING_EXECUTION and supervisor-interrupt state into the reveal/detail UI"
+owner_role: "SUPERVISOR"
+status: "completed"
+depends_on:
+  - TASK-UI-WIRE-005
+  - TASK-UI-WIRE-006
+  - TSK-P1-INT-004
+touches:
+  - services/ledger-api/dotnet/src/LedgerApi/**
+  - src/supervisory-dashboard/**
+  - tasks/TASK-UI-WIRE-008/meta.yml
+  - docs/plans/phase1/TASK-UI-WIRE-008/PLAN.md
+  - docs/plans/phase1/TASK-UI-WIRE-008/EXEC_LOG.md
+  - docs/tasks/phase1_prompts.md
+  - scripts/audit/verify_task_ui_wire_008.sh
+  - evidence/phase1/task_ui_wire_008_ack_interrupt.json
+invariants:
+  - INV-077
+  - INV-105
+  - INV-119
+work:
+  - Treat TSK-P1-INT-004 as the completed backend prerequisite and add reveal/detail read-model projection for AWAITING_EXECUTION, acknowledgement state, escalation tier, and supervisor interrupt or recovery state.
+  - Render those projected states in the supervisory shell without inventing frontend-only state.
+  - Add seeded scenarios and verifier coverage for awaiting execution, escalation active, supervisor interrupt present, and acknowledged or cleared state.
+acceptance_criteria:
+  - UI surfaces AWAITING_EXECUTION truthfully.
+  - Acknowledgement and escalation state are visible where applicable.
+  - Supervisor interrupt or recovery state is visible where applicable.
+  - The UI never implies settled execution without explicit acknowledgement or approved equivalent.
+verification:
+  - bash scripts/audit/verify_task_ui_wire_008.sh
+  - python3 scripts/audit/validate_evidence.py --task TASK-UI-WIRE-008 --evidence evidence/phase1/task_ui_wire_008_ack_interrupt.json
+evidence:
+  - evidence/phase1/task_ui_wire_008_ack_interrupt.json
+failure_modes:
+  - Task closes with frontend-only invented state.
+  - Backend payloads omit the projected state model.
+  - UI implies settlement finality without acknowledgement.
+  - Evidence file missing.
+must_read:
+  - AGENT_ENTRYPOINT.md
+  - docs/operations/AGENT_PROMPT_ROUTER.md
+  - docs/operations/AI_AGENT_OPERATION_MANUAL.md
+  - docs/operations/SUPERVISORY_UI_SOURCE_OF_TRUTH.md
+implementation_plan: "docs/plans/phase1/TASK-UI-WIRE-008/PLAN.md"
+implementation_log: "docs/plans/phase1/TASK-UI-WIRE-008/EXEC_LOG.md"
+notes: "Wave D state-projection task. This task projects completed INT-004 control state into reveal/detail payloads and the v3 supervisory shell."
+client: "codex_cli"
+assigned_agent: "supervisor"
+model: "gpt-5-codex"

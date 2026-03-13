@@ -1,0 +1,14 @@
+{
+  "check_id": "TASK-UI-WIRE-009-SIM-SWAP-TRUTH",
+  "task_id": "TASK-UI-WIRE-009",
+  "timestamp_utc": "2026-03-13T14:34:35Z",
+  "git_sha": "33cdc1d3a105e37d116cb8e816ed163b032734b8",
+  "status": "PASS",
+  "pass": true,
+  "details": {
+    "panel_visible": true,
+    "backing_mode": "DEMO_BACKED",
+    "phase_scope": "Phase 1",
+    "future_live_upgrade_requires_new_task": true
+  }
+}

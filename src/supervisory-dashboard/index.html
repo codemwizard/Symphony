@@ -403,7 +403,7 @@ html, body { width:100%; min-height:100vh; background:var(--bg); font-family:var
   <div class="tab-bar">
     <div class="tab active" onclick="switchTab('main',this)">Governed Disbursement</div>
     <div class="tab" onclick="switchTab('dash',this)">Supervisory Dashboard</div>
-    <div class="tab risk-tab" onclick="switchTab('sim',this)">⚠ SIM-Swap Risk Hold <span style="font-size:7px;opacity:.55;letter-spacing:.05em">(demo scenario · backing mode: see UI-WIRE-014)</span></div>
+    <div class="tab risk-tab" onclick="switchTab('sim',this)">⚠ SIM-Swap Risk Hold <span style="font-size:7px;opacity:.55;letter-spacing:.05em">(Phase 1 · DEMO_BACKED)</span></div>
     <div class="tab" onclick="switchTab('s6',this)">Pilot Success Criteria</div>
   </div>
 
@@ -826,7 +826,7 @@ html, body { width:100%; min-height:100vh; background:var(--bg); font-family:var
         <div class="sim-positioning">
           <div class="sp-title">How to present this in the demo</div>
           <div class="sp-body">
-            Symphony is <strong>not</strong> a fraud detection platform. The SIM-swap hold is one example of <strong>programme-configurable risk conditions</strong> — the same mechanism that holds for GPS mismatch or missing proofs. The MFI chose to include a 30-day MSISDN registration threshold in their policy. Symphony enforces it and records it. <strong>The story is: governed green disbursement can incorporate operational risk thresholds defined by the FSP, without Symphony becoming the arbiter of fraud.</strong> Spend 60–90 seconds here maximum. The main story is evidence-backed release, not risk interception.
+            <strong>Backing mode: DEMO_BACKED for Phase 1.</strong> Symphony is <strong>not</strong> a fraud detection platform. The SIM-swap hold is one example of <strong>programme-configurable risk conditions</strong> — the same mechanism that holds for GPS mismatch or missing proofs. The MFI chose to include a 30-day MSISDN registration threshold in their policy. Symphony enforces it and records it. <strong>The story is: governed green disbursement can incorporate operational risk thresholds defined by the FSP, without Symphony becoming the arbiter of fraud.</strong> Spend 60–90 seconds here maximum. The main story is evidence-backed release, not risk interception.
           </div>
         </div>
 
@@ -837,7 +837,7 @@ html, body { width:100%; min-height:100vh; background:var(--bg); font-family:var
          SCREEN 4: SECTION 6 PILOT CRITERIA
     ════════════════════════════════════════ -->
     <div class="screen" id="screen-s6">
-      <div class="s6-body" style="width:100%;">
+      <div class="s6-body" style="width:100%;" id="pilotSuccessPanel">
 
         <div class="s6-intro">
           <div class="s6-intro-title">Pilot Success Criteria</div>
@@ -1035,7 +1035,7 @@ window.SYMPHONY_HYBRID_FALLBACK = __SYMPHONY_HYBRID_FALLBACK__;
 //   UI-WIRE-011  — wire live export (replaces triggerExport stub below)
 //   UI-WIRE-012  — wire AWAITING_EXECUTION / ack state
 //   UI-WIRE-013  — wire supervisor interrupt / recovery UX
-//   UI-WIRE-014  — resolve SIM-swap (real runtime OR explicit scripted example)
+//   Wave D keeps SIM-swap visible and explicitly DEMO_BACKED for Phase 1.
 //   UI-WIRE-015  — resolve Pilot Success Criteria (runtime module OR rehearsal)
 //   UI-WIRE-016  — retire legacy shell, remove remaining stubs
 // ════════════════════════════════════════════════════════════════
@@ -1301,6 +1301,14 @@ const adapter = {
     }
   },
 
+  async getPilotSuccessPanel() {
+    const r = await fetch(`${PILOT_DEMO_PROXY_BASE}/pilot-success`, {
+      headers: revealHeaders()
+    });
+    if (!r.ok) throw new Error(`Pilot success API error: ${r.status}`);
+    return await r.json();
+  },
+
 };
 
 // ── TAB SWITCHING ──
@@ -1309,6 +1317,9 @@ function switchTab(id, el) {
   document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
   document.getElementById('screen-' + id).classList.add('visible');
   el.classList.add('active');
+  if (id === 's6') {
+    loadPilotSuccessPanel();
+  }
 }
 
 // ── DEMO LOGIC ──
@@ -1687,11 +1698,85 @@ function renderTimelineRows(rows) {
   (rows || []).forEach(row => {
     const ref = row.instruction_id || row.id || '—';
     const chip = statusChip(row.event_type || row.status);
+    const ackParts = [];
+    if (row.acknowledgement_state) ackParts.push(`ack ${row.acknowledgement_state}`);
+    if (row.escalation_tier != null) ackParts.push(`tier ${row.escalation_tier}`);
+    if (row.supervisor_interrupt_state) ackParts.push(`interrupt ${row.supervisor_interrupt_state}`);
+    const ackMeta = ackParts.length > 0
+      ? `<div style="font-family:var(--mono);font-size:7px;color:var(--smoke);opacity:.8;margin-top:4px;">${ackParts.join(' · ')}</div>`
+      : '';
     const tr = document.createElement('tr');
-    tr.innerHTML = `<td>${ref}</td><td>${row.borrower || '—'}</td><td>${row.asset || row.artifact_type || row.event_type || '—'}</td><td>${row.supplier || row.error_code || '—'}</td><td>${row.amount || '—'}</td><td><span class="status-chip ${chip.cls}">${chip.label}</span></td><td>${row.proofs || row.observed_at_utc || '—'}</td>`;
+    tr.innerHTML = `<td>${ref}</td><td>${row.borrower || '—'}</td><td>${row.asset || row.artifact_type || row.event_type || '—'}</td><td>${row.supplier || row.error_code || '—'}</td><td>${row.amount || '—'}</td><td><span class="status-chip ${chip.cls}">${chip.label}</span>${ackMeta}</td><td>${row.proofs || row.observed_at_utc || '—'}</td>`;
     tr.onclick = () => openDrill(ref);
     tbody.appendChild(tr);
   });
+}
+
+let pilotSuccessLoadPromise = null;
+
+function renderPilotSuccessPanel(payload) {
+  const host = document.getElementById('pilotSuccessPanel');
+  if (!host) return;
+
+  if (!payload || !Array.isArray(payload.criteria)) {
+    host.innerHTML = '<div class="s6-intro"><div class="s6-intro-title">Pilot Success Criteria</div><div class="s6-intro-body">Evidence-backed panel unavailable.</div></div>';
+    return;
+  }
+
+  const grouped = payload.criteria.reduce((acc, item) => {
+    const category = item.category || 'Operational';
+    (acc[category] ||= []).push(item);
+    return acc;
+  }, {});
+
+  const order = ['Technical', 'Operational', 'Regulatory'];
+  const cards = order.map(category => {
+    const rows = grouped[category] || [];
+    const items = rows.map(item => {
+      const status = String(item.status || 'FAIL').toUpperCase();
+      const indClass = status === 'PASS' ? 'ind-present' : 'ind-missing';
+      const statusClass = status === 'PASS' ? 'pass' : 'pending';
+      return `<div class="criteria-item"><div class="ci-ind"><div class="ind ${indClass}"></div></div><div class="ci-body"><div class="ci-name">${item.label}</div><div class="ci-threshold">Source: <span>${item.criterion_id}</span></div><div class="ci-status ${statusClass}">${status}</div></div></div>`;
+    }).join('');
+    return `<div class="s6-card"><div class="s6-card-hdr"><span class="s6-card-title">${category} Criteria</span><span class="s6-card-count">${rows.length} criteria</span></div>${items || '<div class="criteria-item"><div class="ci-body"><div class="ci-name">No criteria loaded</div></div></div>'}</div>`;
+  }).join('');
+
+  const gateStatus = String(payload.status || 'FAIL').toUpperCase();
+  const gateClass = gateStatus === 'PASS' ? 'pass' : '';
+  host.innerHTML = `
+    <div class="s6-intro">
+      <div class="s6-intro-title">Pilot Success Criteria</div>
+      <div class="s6-intro-ref">${payload.source_of_truth || 'DEMO-011 evidence-backed panel'}</div>
+      <div class="s6-intro-body">This panel is rendered from DEMO-011 and related demo evidence artifacts. Missing or contradictory evidence fails closed.</div>
+    </div>
+    <div class="s6-three-col">${cards}</div>
+    <div class="s6-gate">
+      <div>
+        <div class="s6-gate-label">TSK-P1-DEMO-011 · Go/No-Go Gate</div>
+        <div class="s6-gate-status ${gateClass}">${gateStatus}</div>
+      </div>
+      <div class="s6-gate-meta">
+        <div class="s6-gate-note">Passes: <span>${payload.pass_count || 0}</span></div>
+        <div class="s6-gate-note" style="margin-top:4px;">Fails: <span>${payload.fail_count || 0}</span></div>
+        <div class="s6-gate-note" style="margin-top:4px;font-size:8px;">Evidence-backed via pilot-demo route</div>
+      </div>
+    </div>`;
+}
+
+async function loadPilotSuccessPanel() {
+  if (pilotSuccessLoadPromise) return pilotSuccessLoadPromise;
+  const host = document.getElementById('pilotSuccessPanel');
+  if (host) {
+    host.innerHTML = '<div class="s6-intro"><div class="s6-intro-title">Pilot Success Criteria</div><div class="s6-intro-body">Loading evidence-backed criteria…</div></div>';
+  }
+  pilotSuccessLoadPromise = adapter.getPilotSuccessPanel()
+    .then(renderPilotSuccessPanel)
+    .catch(err => {
+      if (host) {
+        host.innerHTML = `<div class="s6-intro"><div class="s6-intro-title">Pilot Success Criteria</div><div class="s6-intro-body">Failed to load evidence-backed criteria: ${err.message}</div></div>`;
+      }
+    });
+  return pilotSuccessLoadPromise;
 }
 
 function renderExceptionRows(rows) {
