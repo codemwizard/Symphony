@@ -242,7 +242,7 @@ app.MapPost("/v1/ingress/instructions", async (IngressRequest request, HttpConte
 
 app.MapGet("/v1/evidence-packs/{instruction_id}", async (string instruction_id, HttpContext httpContext, CancellationToken cancellationToken) =>
 {
-    var authFailure = ApiAuthorization.AuthorizeEvidenceRead(httpContext);
+    var authFailure = ApiAuthorization.AuthorizeAdminTenantOnboarding(httpContext);
     if (authFailure is not null)
     {
         return Results.Json(authFailure.Body, statusCode: authFailure.StatusCode);
@@ -332,7 +332,7 @@ app.MapPost("/pilot-demo/api/evidence-links/issue", async (EvidenceLinkIssueRequ
         return Results.NotFound();
     }
 
-    var authFailure = ApiAuthorization.AuthorizeEvidenceRead(httpContext);
+    var authFailure = ApiAuthorization.AuthorizeAdminTenantOnboarding(httpContext);
     if (authFailure is not null)
     {
         return Results.Json(authFailure.Body, statusCode: authFailure.StatusCode);
@@ -436,7 +436,7 @@ app.MapPost("/pilot-demo/api/instruction-files/generate", async (SignedInstructi
         return Results.NotFound();
     }
 
-    var authFailure = ApiAuthorization.AuthorizeEvidenceRead(httpContext);
+    var authFailure = ApiAuthorization.AuthorizeAdminTenantOnboarding(httpContext);
     if (authFailure is not null)
     {
         return Results.Json(authFailure.Body, statusCode: authFailure.StatusCode);

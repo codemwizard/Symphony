@@ -1084,6 +1084,10 @@ const adapter = {
       .then(async r => {
         if (!r.ok) throw new Error(`Reveal API error: ${r.status}`);
         return await r.json();
+      })
+      .catch(err => {
+        this._revealCache.delete(cacheKey);
+        throw err;
       });
     this._revealCache.set(cacheKey, request);
     return request;
@@ -1252,11 +1256,12 @@ const adapter = {
 
   // TODO UI-WIRE-010: wire real instruction detail for drill-down
   async getInstructionDetail(instructionId) {
+    const drillKey = resolveDrillKey(instructionId);
     if (DATA_MODE === 'STATIC_DEMO') {
-      return drillData[instructionId] || null;
+      return drillData[drillKey] || null;
     }
     if (DATA_MODE === 'HYBRID') {
-      return drillData[instructionId] || null;
+      return drillData[drillKey] || null;
     }
     throw new Error('Instruction detail route is not enabled until TASK-UI-WIRE-006');
   },
@@ -1564,6 +1569,18 @@ const drillData = {
   }
 };
 
+const drillKeyByInstructionRef = Object.fromEntries(
+  Object.entries(drillData)
+    .map(([key, value]) => [String(value?.ref || '').split('·')[0].trim(), key])
+    .filter(([ref]) => ref.length > 0)
+);
+
+function resolveDrillKey(id) {
+  const raw = String(id || '').trim();
+  if (!raw) return raw;
+  return drillKeyByInstructionRef[raw] || raw;
+}
+
 async function openDrill(id) {
   document.getElementById('drillTitle').textContent = 'Loading…';
   document.getElementById('drillRef').textContent = '—';
@@ -1573,7 +1590,7 @@ async function openDrill(id) {
     // In STATIC_DEMO mode, adapter.getInstructionDetail returns drillData[id]
     // In HYBRID/LIVE mode (UI-WIRE-010), it fetches from the real API
     const raw = await adapter.getInstructionDetail(id);
-    const d = raw || drillData[id];
+    const d = raw || drillData[resolveDrillKey(id)];
     if (!d) {
       document.getElementById('drillTitle').textContent = 'Not found';
       document.getElementById('drillBody').innerHTML = '<div style="font-family:var(--mono);font-size:9px;color:var(--smoke);padding:20px 0;">Instruction detail not available.</div>';

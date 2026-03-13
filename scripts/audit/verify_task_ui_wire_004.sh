@@ -14,6 +14,20 @@ rg -Fq 'app.MapPost("/pilot-demo/api/evidence-links/issue"' "$PROGRAM_FILE" || {
 rg -Fq 'app.MapPost("/pilot-demo/api/instruction-files/generate"' "$PROGRAM_FILE" || { echo 'missing_instruction_generate_proxy_route' >&2; exit 1; }
 rg -Fq 'app.MapPost("/v1/instruction-files/verify-ref"' "$PROGRAM_FILE" || { echo 'missing_instruction_verify_ref_route' >&2; exit 1; }
 rg -Fq 'instruction_file_ref' "$PROGRAM_FILE" || { echo 'missing_instruction_file_ref_contract' >&2; exit 1; }
+python3 - <<'PY' "$PROGRAM_FILE"
+from pathlib import Path
+import sys
+text = Path(sys.argv[1]).read_text(encoding='utf-8')
+start = text.find('app.MapPost("/pilot-demo/api/instruction-files/generate"')
+if start < 0:
+    raise SystemExit('missing_instruction_generate_proxy_route')
+end = text.find('app.MapPost("/v1/instruction-files/verify"', start)
+segment = text[start:end if end > start else None]
+if 'AuthorizeAdminTenantOnboarding(httpContext)' not in segment:
+    raise SystemExit('pilot_demo_generate_route_not_admin_guarded')
+if 'AuthorizeEvidenceRead(httpContext)' in segment:
+    raise SystemExit('pilot_demo_generate_route_uses_evidence_read')
+PY
 python3 - <<'PY' "$TASK_ID" "$EVIDENCE_PATH"
 import json, os, subprocess, sys
 from pathlib import Path
@@ -32,7 +46,8 @@ out.write_text(json.dumps({
     'admin_secret_not_exposed_to_browser':True,
     'client_admin_header_absent':True,
     'privileged_proxy_routes_present':True,
-    'browser_safe_verify_ref_route_present':True
+    'browser_safe_verify_ref_route_present':True,
+    'pilot_demo_generate_route_admin_guarded':True
   }
 }, indent=2)+"\n", encoding='utf-8')
 print(f'Evidence written: {out}')

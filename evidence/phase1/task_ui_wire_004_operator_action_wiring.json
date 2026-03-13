@@ -1,14 +1,15 @@
 {
   "check_id": "TASK-UI-WIRE-004-OPERATOR-ACTIONS",
   "task_id": "TASK-UI-WIRE-004",
-  "timestamp_utc": "2026-03-13T12:22:28Z",
-  "git_sha": "4b7ba9058b8bfa3f118efb00ede7109f27bc0c4e",
+  "timestamp_utc": "2026-03-13T12:46:21Z",
+  "git_sha": "1eb31eb0baa47dff1df6e80c653ef9905e12f1f4",
   "status": "PASS",
   "pass": true,
   "details": {
     "admin_secret_not_exposed_to_browser": true,
     "client_admin_header_absent": true,
     "privileged_proxy_routes_present": true,
-    "browser_safe_verify_ref_route_present": true
+    "browser_safe_verify_ref_route_present": true,
+    "pilot_demo_generate_route_admin_guarded": true
   }
 }
