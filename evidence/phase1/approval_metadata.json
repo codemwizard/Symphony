@@ -16,7 +16,9 @@
       "scripts/audit/verify_task_ui_wire_011.sh",
       "services/ledger-api/dotnet/src/LedgerApi/Program.cs",
       "src/supervisory-dashboard/index.html",
-      "tasks/TASK-UI-WIRE-011/meta.yml"
+      "tasks/TASK-UI-WIRE-011/meta.yml",
+      "docs/plans/phase1/REM-2026-03-13_ui-wave-e-pre_ci-remediation-trace/PLAN.md",
+      "docs/plans/phase1/REM-2026-03-13_ui-wave-e-pre_ci-remediation-trace/EXEC_LOG.md"
     ]
   },
   "ai": {
