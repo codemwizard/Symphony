@@ -1,0 +1,15 @@
+{
+  "check_id": "TASK-UI-WIRE-010-PILOT-SUCCESS-PANEL",
+  "task_id": "TASK-UI-WIRE-010",
+  "timestamp_utc": "2026-03-13T14:34:41Z",
+  "git_sha": "33cdc1d3a105e37d116cb8e816ed163b032734b8",
+  "status": "PASS",
+  "pass": true,
+  "details": {
+    "missing_top_level_fields": [],
+    "criteria_count": 5,
+    "gate_status_from_route": "PASS",
+    "gate_status_from_demo_011": "PASS",
+    "source_of_truth": "docs/product/greentech4ce/Symphony_PRD_GreenTech4CE(3).docx \u00a76 Pilot Success Criteria, incl. \u00a76.3"
+  }
+}

@@ -535,7 +535,7 @@ app.MapGet("/v1/supervisory/programmes/{programId}/reveal", (string programId, H
         return Results.Json(tenantAuthFailure.Body, statusCode: tenantAuthFailure.StatusCode);
     }
 
-    var result = SupervisoryRevealReadModelHandler.Handle(tenantId, programId.Trim());
+    var result = SupervisoryRevealReadModelHandler.Handle(tenantId, programId.Trim(), dataSource);
     return Results.Json(result.Body, statusCode: result.StatusCode);
 }).RequireRateLimiting("sensitive-endpoint");
 
@@ -557,7 +557,34 @@ app.MapGet("/v1/supervisory/instructions/{instructionId}/detail", (string instru
         return Results.Json(tenantAuthFailure.Body, statusCode: tenantAuthFailure.StatusCode);
     }
 
-    var result = SupervisoryInstructionDetailReadModelHandler.Handle(tenantId, instructionId.Trim());
+    var result = SupervisoryInstructionDetailReadModelHandler.Handle(tenantId, instructionId.Trim(), dataSource);
+    return Results.Json(result.Body, statusCode: result.StatusCode);
+}).RequireRateLimiting("sensitive-endpoint");
+
+app.MapGet("/pilot-demo/api/pilot-success", (HttpContext httpContext) =>
+{
+    if (!string.Equals(runtimeProfile, "pilot-demo", StringComparison.OrdinalIgnoreCase))
+    {
+        return Results.NotFound();
+    }
+
+    var authFailure = ApiAuthorization.AuthorizeEvidenceRead(httpContext);
+    if (authFailure is not null)
+    {
+        return Results.Json(authFailure.Body, statusCode: authFailure.StatusCode);
+    }
+
+    var tenantId = httpContext.Request.Headers.TryGetValue("x-tenant-id", out var tenantHeader)
+        ? tenantHeader.ToString().Trim()
+        : string.Empty;
+    var tenantAuthFailure = ApiAuthorization.AuthorizeTenantScope(tenantId);
+    if (tenantAuthFailure is not null)
+    {
+        return Results.Json(tenantAuthFailure.Body, statusCode: tenantAuthFailure.StatusCode);
+    }
+
+    var rootDir = EvidenceMeta.ResolveRepoRoot(Directory.GetCurrentDirectory());
+    var result = PilotSuccessCriteriaReadModelHandler.Handle(rootDir);
     return Results.Json(result.Body, statusCode: result.StatusCode);
 }).RequireRateLimiting("sensitive-endpoint");
 

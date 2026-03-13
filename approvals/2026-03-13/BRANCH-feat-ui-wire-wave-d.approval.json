@@ -1,0 +1,70 @@
+{
+  "schema_version": "1.0",
+  "approval": {
+    "status": "APPROVED",
+    "approver_id": "governance-human-reviewer",
+    "change_reason": "Complete Wave D of the GreenTech4CE supervisory UI port by projecting INT-004 acknowledgement and supervisor-interrupt state into reveal/detail payloads, keeping SIM-swap explicitly demo-backed for Phase 1, and replacing the decorative pilot-success panel with DEMO-011 evidence-derived rendering.",
+    "approved_at_utc": "2026-03-13T14:35:08Z",
+    "role_authority": "Human Approver"
+  },
+  "ai": {
+    "ai_used": true,
+    "ai_prompt_hash": "feat-ui-wire-wave-d",
+    "model_id": "gpt-5-codex",
+    "client": "codex_cli",
+    "session_id": "feat-ui-wire-wave-d"
+  },
+  "scope": {
+    "regulated_surfaces_touched": true,
+    "paths_changed": [
+      "approvals/2026-03-13/BRANCH-feat-ui-wire-wave-d.approval.json",
+      "approvals/2026-03-13/BRANCH-feat-ui-wire-wave-d.md",
+      "docs/plans/phase1/TASK-UI-WIRE-008/PLAN.md",
+      "docs/plans/phase1/TASK-UI-WIRE-008/EXEC_LOG.md",
+      "docs/plans/phase1/TASK-UI-WIRE-009/PLAN.md",
+      "docs/plans/phase1/TASK-UI-WIRE-009/EXEC_LOG.md",
+      "docs/plans/phase1/TASK-UI-WIRE-010/PLAN.md",
+      "docs/plans/phase1/TASK-UI-WIRE-010/EXEC_LOG.md",
+      "evidence/phase1/approval_metadata.json",
+      "evidence/phase1/task_ui_wire_008_ack_interrupt.json",
+      "evidence/phase1/task_ui_wire_009_sim_swap.json",
+      "evidence/phase1/task_ui_wire_010_success_gate_panel.json",
+      "scripts/audit/verify_task_ui_wire_008.sh",
+      "scripts/audit/verify_task_ui_wire_009.sh",
+      "scripts/audit/verify_task_ui_wire_010.sh",
+      "services/ledger-api/dotnet/src/LedgerApi/Demo/SupervisoryReadModelsSelfTestRunner.cs",
+      "services/ledger-api/dotnet/src/LedgerApi/Program.cs",
+      "services/ledger-api/dotnet/src/LedgerApi/ReadModels/PilotSuccessCriteriaReadModelHandler.cs",
+      "services/ledger-api/dotnet/src/LedgerApi/ReadModels/SupervisoryRevealReadModelHandler.cs",
+      "src/supervisory-dashboard/index.html",
+      "tasks/TASK-UI-WIRE-008/meta.yml",
+      "tasks/TASK-UI-WIRE-009/meta.yml",
+      "tasks/TASK-UI-WIRE-010/meta.yml",
+      "docs/plans/phase1/REM-2026-03-13_ui-wave-d-pre_ci-remediation-trace/PLAN.md",
+      "docs/plans/phase1/REM-2026-03-13_ui-wave-d-pre_ci-remediation-trace/EXEC_LOG.md",
+      "evidence/phase1/human_governance_review_signoff.json"
+    ],
+    "invariants": [
+      "INV-077",
+      "INV-105",
+      "INV-119"
+    ],
+    "phase_boundary_ok": true
+  },
+  "verification": {
+    "commands": [
+      "bash scripts/audit/verify_task_meta_schema.sh --mode strict --allow-legacy",
+      "bash scripts/audit/verify_task_pack_readiness.sh --task TASK-UI-WIRE-008 --task TASK-UI-WIRE-009 --task TASK-UI-WIRE-010",
+      "dotnet build services/ledger-api/dotnet/src/LedgerApi/LedgerApi.csproj -nologo",
+      "bash scripts/audit/verify_task_ui_wire_008.sh",
+      "python3 scripts/audit/validate_evidence.py --task TASK-UI-WIRE-008 --evidence evidence/phase1/task_ui_wire_008_ack_interrupt.json",
+      "bash scripts/audit/verify_task_ui_wire_009.sh",
+      "python3 scripts/audit/validate_evidence.py --task TASK-UI-WIRE-009 --evidence evidence/phase1/task_ui_wire_009_sim_swap.json",
+      "bash scripts/audit/verify_task_ui_wire_010.sh",
+      "python3 scripts/audit/validate_evidence.py --task TASK-UI-WIRE-010 --evidence evidence/phase1/task_ui_wire_010_success_gate_panel.json",
+      "bash scripts/audit/verify_tsk_p1_demo_011.sh"
+    ],
+    "pre_ci_passed": true,
+    "notes": "Wave D complete batch. Targeted branch verifiers and evidence validation are green. Full pre_ci remains subject to generic environment gates outside Wave D scope."
+  }
+}

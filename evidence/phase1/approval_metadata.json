@@ -1,44 +1,49 @@
 {
   "schema_version": "1.0",
-  "generated_at_utc": "2026-03-13T14:10:00Z",
+  "generated_at_utc": "2026-03-13T14:35:08Z",
   "git_commit": "PENDING_COMMIT",
   "change_scope": {
     "regulated_surfaces_touched": true,
     "paths_changed": [
-      "approvals/2026-03-13/BRANCH-feat-ui-wire-wave-c.approval.json",
-      "approvals/2026-03-13/BRANCH-feat-ui-wire-wave-c.md",
-      "docs/operations/SUPERVISORY_REVEAL_API_V2.md",
-      "docs/plans/phase1/TASK-UI-WIRE-005/PLAN.md",
-      "docs/plans/phase1/TASK-UI-WIRE-005/EXEC_LOG.md",
-      "docs/plans/phase1/TASK-UI-WIRE-006/PLAN.md",
-      "docs/plans/phase1/TASK-UI-WIRE-006/EXEC_LOG.md",
+      "approvals/2026-03-13/BRANCH-feat-ui-wire-wave-d.approval.json",
+      "approvals/2026-03-13/BRANCH-feat-ui-wire-wave-d.md",
+      "docs/plans/phase1/TASK-UI-WIRE-008/PLAN.md",
+      "docs/plans/phase1/TASK-UI-WIRE-008/EXEC_LOG.md",
+      "docs/plans/phase1/TASK-UI-WIRE-009/PLAN.md",
+      "docs/plans/phase1/TASK-UI-WIRE-009/EXEC_LOG.md",
+      "docs/plans/phase1/TASK-UI-WIRE-010/PLAN.md",
+      "docs/plans/phase1/TASK-UI-WIRE-010/EXEC_LOG.md",
       "evidence/phase1/approval_metadata.json",
-      "evidence/phase1/task_ui_wire_005_proof_model.json",
-      "evidence/phase1/task_ui_wire_006_instruction_detail.json",
-      "scripts/audit/verify_task_ui_wire_005.sh",
-      "scripts/audit/verify_task_ui_wire_006.sh",
+      "evidence/phase1/task_ui_wire_008_ack_interrupt.json",
+      "evidence/phase1/task_ui_wire_009_sim_swap.json",
+      "evidence/phase1/task_ui_wire_010_success_gate_panel.json",
+      "scripts/audit/verify_task_ui_wire_008.sh",
+      "scripts/audit/verify_task_ui_wire_009.sh",
+      "scripts/audit/verify_task_ui_wire_010.sh",
       "services/ledger-api/dotnet/src/LedgerApi/Demo/SupervisoryReadModelsSelfTestRunner.cs",
       "services/ledger-api/dotnet/src/LedgerApi/Program.cs",
+      "services/ledger-api/dotnet/src/LedgerApi/ReadModels/PilotSuccessCriteriaReadModelHandler.cs",
       "services/ledger-api/dotnet/src/LedgerApi/ReadModels/SupervisoryRevealReadModelHandler.cs",
       "src/supervisory-dashboard/index.html",
-      "tasks/TASK-UI-WIRE-005/meta.yml",
-      "tasks/TASK-UI-WIRE-006/meta.yml",
-      "evidence/phase1/human_governance_review_signoff.json",
-      "docs/plans/phase1/REM-2026-03-13_ui-wave-c-pre_ci-remediation-trace/PLAN.md",
-      "docs/plans/phase1/REM-2026-03-13_ui-wave-c-pre_ci-remediation-trace/EXEC_LOG.md"
+      "tasks/TASK-UI-WIRE-008/meta.yml",
+      "tasks/TASK-UI-WIRE-009/meta.yml",
+      "tasks/TASK-UI-WIRE-010/meta.yml",
+      "docs/plans/phase1/REM-2026-03-13_ui-wave-d-pre_ci-remediation-trace/PLAN.md",
+      "docs/plans/phase1/REM-2026-03-13_ui-wave-d-pre_ci-remediation-trace/EXEC_LOG.md",
+      "evidence/phase1/human_governance_review_signoff.json"
     ]
   },
   "ai": {
-    "ai_prompt_hash": "feat-ui-wire-wave-c",
+    "ai_prompt_hash": "feat-ui-wire-wave-d",
     "model_id": "gpt-5-codex",
     "client": "codex_cli",
-    "session_id": "feat-ui-wire-wave-c"
+    "session_id": "feat-ui-wire-wave-d"
   },
   "human_approval": {
     "approver_id": "governance-human-reviewer",
-    "approval_artifact_ref": "approvals/2026-03-13/BRANCH-feat-ui-wire-wave-c.md",
-    "change_reason": "Complete Wave C of the GreenTech4CE supervisory UI port by expanding the reveal proof model, adding the real instruction-detail route, and wiring the supervisory drill-down to backend payloads without inventing ack/interrupt state.",
-    "approved_at_utc": "2026-03-13T14:10:00Z"
+    "approval_artifact_ref": "approvals/2026-03-13/BRANCH-feat-ui-wire-wave-d.md",
+    "change_reason": "Complete Wave D of the GreenTech4CE supervisory UI port by projecting acknowledgement and supervisor-interrupt state into reveal/detail payloads, preserving SIM-swap as Phase-1 DEMO_BACKED content, and wiring the pilot success panel from DEMO-011 evidence.",
+    "approved_at_utc": "2026-03-13T14:35:08Z"
   },
-  "notes": "Branch approval metadata for the completed Wave C GreenTech4CE supervisory UI port batch."
+  "notes": "Branch approval metadata for the completed Wave D GreenTech4CE supervisory UI port batch."
 }

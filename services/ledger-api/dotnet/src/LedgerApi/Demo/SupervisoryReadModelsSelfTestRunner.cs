@@ -211,8 +211,8 @@ public static class SupervisoryReadModelsSelfTestRunner
             recorded_at_utc = DateTimeOffset.UtcNow.ToString("O")
         }, cancellationToken);
 
-        var reveal = global::SupervisoryRevealReadModelHandler.Handle(tenantId, programId);
-        var detail = global::SupervisoryInstructionDetailReadModelHandler.Handle(tenantId, "SYM-2026-00041");
+        var reveal = global::SupervisoryRevealReadModelHandler.Handle(tenantId, programId, null);
+        var detail = global::SupervisoryInstructionDetailReadModelHandler.Handle(tenantId, "SYM-2026-00041", null);
         var crossTenantDenied = global::ApiAuthorization.AuthorizeTenantScope("22222222-2222-2222-2222-222222222222");
 
         bool HasTopLevel(JsonElement root, params string[] fields)

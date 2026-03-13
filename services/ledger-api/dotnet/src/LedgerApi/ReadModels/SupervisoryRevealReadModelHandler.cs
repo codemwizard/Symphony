@@ -1,15 +1,17 @@
 using System.Text.Json;
+using Npgsql;
+using NpgsqlTypes;
 
 static class SupervisoryRevealReadModelHandler
 {
-    public static HandlerResult Handle(string tenantId, string programId)
+    public static HandlerResult Handle(string tenantId, string programId, NpgsqlDataSource? dataSource)
     {
         if (string.IsNullOrWhiteSpace(tenantId) || string.IsNullOrWhiteSpace(programId))
         {
             return InvalidRequest();
         }
 
-        var model = SupervisoryProofModel.BuildProgrammeModel(tenantId, programId);
+        var model = SupervisoryProofModel.BuildProgrammeModel(tenantId, programId, dataSource);
         var payload = new
         {
             tenant_id = tenantId,
@@ -18,7 +20,9 @@ static class SupervisoryRevealReadModelHandler
             {
                 evidence_submissions = model.Submissions.Length,
                 exception_count = model.Exceptions.Length,
-                timeline_events = model.Timeline.Length
+                timeline_events = model.Timeline.Length,
+                awaiting_execution_count = model.ProofRows.Count(x => string.Equals(x.acknowledgement_state, "PENDING_ACKNOWLEDGEMENT", StringComparison.Ordinal)),
+                escalated_count = model.ProofRows.Count(x => x.escalation_tier.HasValue)
             },
             timeline = model.Timeline,
             evidence_completeness = model.EvidenceCompleteness,
@@ -41,7 +45,7 @@ static class SupervisoryRevealReadModelHandler
 
 static class SupervisoryInstructionDetailReadModelHandler
 {
-    public static HandlerResult Handle(string tenantId, string instructionId)
+    public static HandlerResult Handle(string tenantId, string instructionId, NpgsqlDataSource? dataSource)
     {
         if (string.IsNullOrWhiteSpace(tenantId) || string.IsNullOrWhiteSpace(instructionId))
         {
@@ -52,7 +56,7 @@ static class SupervisoryInstructionDetailReadModelHandler
             });
         }
 
-        var detail = SupervisoryProofModel.BuildInstructionDetail(tenantId, instructionId);
+        var detail = SupervisoryProofModel.BuildInstructionDetail(tenantId, instructionId, dataSource);
         if (detail is null)
         {
             return new HandlerResult(StatusCodes.Status404NotFound, new
@@ -76,7 +80,7 @@ file static class SupervisoryProofModel
         new("PT-004", "Borrower ACK", "BORROWER_ACK")
     };
 
-    internal static ProgrammeModel BuildProgrammeModel(string tenantId, string programId)
+    internal static ProgrammeModel BuildProgrammeModel(string tenantId, string programId, NpgsqlDataSource? dataSource)
     {
         var submissions = EvidenceLinkSubmissionLog.ReadAll()
             .Where(x => Matches(x, "tenant_id", tenantId) && Matches(x, "program_id", programId))
@@ -93,8 +97,11 @@ file static class SupervisoryProofModel
             .OrderBy(x => x, StringComparer.Ordinal)
             .ToArray();
 
-        var timeline = BuildTimeline(submissions, exceptions, instructionIds);
-        var proofRows = instructionIds.Select(id => BuildInstructionProofSummary(id, submissions, exceptions)).ToArray();
+        var projections = AckInterruptProjectionStore.LoadForInstructionIds(instructionIds, dataSource);
+        var timeline = BuildTimeline(submissions, exceptions, instructionIds, projections);
+        var proofRows = instructionIds
+            .Select(id => BuildInstructionProofSummary(id, submissions.Where(x => Matches(x, "instruction_id", id)).ToArray(), exceptions.Where(x => Matches(x, "instruction_id", id)).ToArray(), projections.GetValueOrDefault(id, AckInterruptProjectionStore.Unavailable(id, dataSource))))
+            .ToArray();
         var evidenceCompleteness = BuildEvidenceCompleteness(proofRows);
         var exceptionLog = exceptions.Select(x => new
         {
@@ -107,7 +114,7 @@ file static class SupervisoryProofModel
         return new ProgrammeModel(submissions, exceptions, timeline, evidenceCompleteness, exceptionLog, proofRows);
     }
 
-    public static object? BuildInstructionDetail(string tenantId, string instructionId)
+    public static object? BuildInstructionDetail(string tenantId, string instructionId, NpgsqlDataSource? dataSource)
     {
         var submissions = EvidenceLinkSubmissionLog.ReadAll()
             .Where(x => Matches(x, "tenant_id", tenantId) && Matches(x, "instruction_id", instructionId))
@@ -122,7 +129,9 @@ file static class SupervisoryProofModel
             return null;
         }
 
-        var instructionSummary = BuildInstructionProofSummary(instructionId, submissions, exceptions);
+        var projection = AckInterruptProjectionStore.LoadForInstructionIds(new[] { instructionId }, dataSource)
+            .GetValueOrDefault(instructionId, AckInterruptProjectionStore.Unavailable(instructionId, dataSource));
+        var instructionSummary = BuildInstructionProofSummary(instructionId, submissions, exceptions, projection);
         var firstProgramId = submissions.Select(x => ReadString(x, "program_id"))
             .Concat(exceptions.Select(x => ReadString(x, "program_id")))
             .FirstOrDefault(x => !string.IsNullOrWhiteSpace(x)) ?? string.Empty;
@@ -154,22 +163,23 @@ file static class SupervisoryProofModel
                 recorded_at_utc = ReadString(x, "recorded_at_utc")
             }).ToArray(),
             supplier_policy_context = supplierPolicy,
-            acknowledgement_state = (string?)null,
-            escalation_tier = (int?)null,
-            supervisor_interrupt_state = (string?)null,
-            ack_interrupt_projection_state = "PENDING_TASK_UI_WIRE_008",
+            acknowledgement_state = projection.acknowledgement_state,
+            escalation_tier = projection.escalation_tier,
+            supervisor_interrupt_state = projection.supervisor_interrupt_state,
+            ack_interrupt_projection_state = projection.ack_interrupt_projection_state,
             read_only = true
         };
     }
 
-    private static object[] BuildTimeline(JsonElement[] submissions, JsonElement[] exceptions, string[] instructionIds)
+    private static object[] BuildTimeline(JsonElement[] submissions, JsonElement[] exceptions, string[] instructionIds, IReadOnlyDictionary<string, AckInterruptProjectionStore.AckInterruptProjection> projections)
     {
         var rows = new List<object>();
         foreach (var instructionId in instructionIds)
         {
             var instructionSubmissions = submissions.Where(x => Matches(x, "instruction_id", instructionId)).ToArray();
             var instructionExceptions = exceptions.Where(x => Matches(x, "instruction_id", instructionId)).ToArray();
-            var summary = BuildInstructionProofSummary(instructionId, instructionSubmissions, instructionExceptions);
+            var projection = projections.GetValueOrDefault(instructionId, AckInterruptProjectionStore.Unavailable(instructionId, null));
+            var summary = BuildInstructionProofSummary(instructionId, instructionSubmissions, instructionExceptions, projection);
             var latestObserved = instructionSubmissions
                 .Select(x => ReadString(x, "submitted_at_utc"))
                 .Concat(instructionExceptions.Select(x => ReadString(x, "recorded_at_utc")))
@@ -184,7 +194,11 @@ file static class SupervisoryProofModel
                 observed_at_utc = latestObserved,
                 proofs = $"{summary.present_count}/4",
                 proof_status = summary.status,
-                drill_instruction_id = instructionId
+                drill_instruction_id = instructionId,
+                acknowledgement_state = summary.acknowledgement_state,
+                escalation_tier = summary.escalation_tier,
+                supervisor_interrupt_state = summary.supervisor_interrupt_state,
+                ack_interrupt_projection_state = summary.ack_interrupt_projection_state
             });
         }
 
@@ -198,14 +212,9 @@ file static class SupervisoryProofModel
         return ProofSpecs.Select(spec =>
         {
             var statuses = proofRows
-                .Select(row => row.GetType().GetProperty("proofs")?.GetValue(row) as Array)
-                .Where(arr => arr is not null)
-                .SelectMany(arr => arr!.Cast<object>())
-                .Where(proof => string.Equals(
-                    proof.GetType().GetProperty("proof_type_id")?.GetValue(proof)?.ToString(),
-                    spec.ProofTypeId,
-                    StringComparison.Ordinal))
-                .Select(proof => proof.GetType().GetProperty("status")?.GetValue(proof)?.ToString() ?? string.Empty)
+                .SelectMany(row => row.proofs)
+                .Where(proof => string.Equals(proof.proof_type_id, spec.ProofTypeId, StringComparison.Ordinal))
+                .Select(proof => proof.status)
                 .ToArray();
 
             var status = statuses.Contains("FAILED", StringComparer.OrdinalIgnoreCase)
@@ -226,7 +235,7 @@ file static class SupervisoryProofModel
         }).ToArray<object>();
     }
 
-    private static InstructionProofSummary BuildInstructionProofSummary(string instructionId, JsonElement[] submissions, JsonElement[] exceptions)
+    private static InstructionProofSummary BuildInstructionProofSummary(string instructionId, JsonElement[] submissions, JsonElement[] exceptions, AckInterruptProjectionStore.AckInterruptProjection projection)
     {
         var proofRows = ProofSpecs.Select(spec => BuildProofRow(spec, submissions, exceptions)).ToArray();
         var presentCount = proofRows.Count(x => string.Equals(x.status, "PRESENT", StringComparison.Ordinal));
@@ -242,7 +251,11 @@ file static class SupervisoryProofModel
             instructionId,
             status,
             presentCount,
-            proofRows);
+            proofRows,
+            projection.acknowledgement_state,
+            projection.escalation_tier,
+            projection.supervisor_interrupt_state,
+            projection.ack_interrupt_projection_state);
     }
 
     private static object BuildSupplierPolicyContext(string tenantId, string programId, string supplierId)
@@ -357,7 +370,11 @@ file static class SupervisoryProofModel
         string instruction_id,
         string status,
         int present_count,
-        ProofRow[] proofs);
+        ProofRow[] proofs,
+        string? acknowledgement_state,
+        int? escalation_tier,
+        string? supervisor_interrupt_state,
+        string ack_interrupt_projection_state);
 
     internal sealed record ProofRow(
         string proof_type_id,
@@ -368,4 +385,136 @@ file static class SupervisoryProofModel
         string? msisdn_result,
         string? submitter_class,
         string? submitted_at_utc);
+}
+
+file static class AckInterruptProjectionStore
+{
+    internal sealed record AckInterruptProjection(
+        string instruction_id,
+        string? acknowledgement_state,
+        int? escalation_tier,
+        string? supervisor_interrupt_state,
+        string ack_interrupt_projection_state);
+
+    internal static IReadOnlyDictionary<string, AckInterruptProjection> LoadForInstructionIds(IEnumerable<string> instructionIds, NpgsqlDataSource? dataSource)
+    {
+        var ids = instructionIds
+            .Where(id => !string.IsNullOrWhiteSpace(id))
+            .Distinct(StringComparer.Ordinal)
+            .ToArray();
+
+        if (ids.Length == 0)
+        {
+            return new Dictionary<string, AckInterruptProjection>(StringComparer.Ordinal);
+        }
+
+        if (dataSource is null)
+        {
+            return ids.ToDictionary(id => id, id => Unavailable(id, null), StringComparer.Ordinal);
+        }
+
+        try
+        {
+            using var connection = dataSource.OpenConnection();
+            using var command = connection.CreateCommand();
+            command.CommandText = @"
+SELECT ids.instruction_id,
+       ism.inquiry_state::text AS inquiry_state,
+       saq.status AS queue_status,
+       evt.action AS latest_action
+FROM unnest(@instruction_ids) AS ids(instruction_id)
+LEFT JOIN public.inquiry_state_machine ism ON ism.instruction_id = ids.instruction_id
+LEFT JOIN public.supervisor_approval_queue saq ON saq.instruction_id = ids.instruction_id
+LEFT JOIN LATERAL (
+  SELECT action
+  FROM public.supervisor_interrupt_audit_events audit
+  WHERE audit.instruction_id = ids.instruction_id
+  ORDER BY audit.recorded_at DESC
+  LIMIT 1
+) evt ON TRUE;";
+            command.Parameters.Add(new NpgsqlParameter<string[]>("instruction_ids", NpgsqlDbType.Array | NpgsqlDbType.Text)
+            {
+                TypedValue = ids
+            });
+
+            using var reader = command.ExecuteReader();
+            var projections = new Dictionary<string, AckInterruptProjection>(StringComparer.Ordinal);
+            while (reader.Read())
+            {
+                var instructionId = reader.GetString(0);
+                var inquiryState = reader.IsDBNull(1) ? null : reader.GetString(1);
+                var queueStatus = reader.IsDBNull(2) ? null : reader.GetString(2);
+                var latestAction = reader.IsDBNull(3) ? null : reader.GetString(3);
+                projections[instructionId] = FromDatabaseValues(instructionId, inquiryState, queueStatus, latestAction);
+            }
+
+            foreach (var id in ids)
+            {
+                projections.TryAdd(id, new AckInterruptProjection(id, null, null, null, "LIVE_DB_PROJECTED_NO_STATE"));
+            }
+
+            return projections;
+        }
+        catch
+        {
+            return ids.ToDictionary(id => id, id => Unavailable(id, dataSource), StringComparer.Ordinal);
+        }
+    }
+
+    internal static AckInterruptProjection Unavailable(string instructionId, NpgsqlDataSource? dataSource)
+        => new(
+            instructionId,
+            null,
+            null,
+            null,
+            dataSource is null ? "UNAVAILABLE_STORAGE_MODE_FILE" : "UNAVAILABLE_DB_LOOKUP_ERROR");
+
+    private static AckInterruptProjection FromDatabaseValues(string instructionId, string? inquiryState, string? queueStatus, string? latestAction)
+    {
+        if (string.IsNullOrWhiteSpace(inquiryState) && string.IsNullOrWhiteSpace(queueStatus) && string.IsNullOrWhiteSpace(latestAction))
+        {
+            return new AckInterruptProjection(instructionId, null, null, null, "LIVE_DB_PROJECTED_NO_STATE");
+        }
+
+        var acknowledgementState = inquiryState switch
+        {
+            "ACKNOWLEDGED" => "ACKNOWLEDGED",
+            "ESCALATED" => "PENDING_ACKNOWLEDGEMENT",
+            "AWAITING_EXECUTION" => "PENDING_ACKNOWLEDGEMENT",
+            _ => latestAction switch
+            {
+                "ACKNOWLEDGED" => "ACKNOWLEDGED",
+                "RESUMED" => "PENDING_ACKNOWLEDGEMENT",
+                "RESET" => "PENDING_ACKNOWLEDGEMENT",
+                _ => null
+            }
+        };
+
+        int? escalationTier = string.Equals(inquiryState, "ESCALATED", StringComparison.Ordinal)
+            || string.Equals(queueStatus, "ESCALATED", StringComparison.Ordinal)
+            ? 3
+            : null;
+
+        var supervisorInterruptState = latestAction switch
+        {
+            "ESCALATED" => "ESCALATED",
+            "ACKNOWLEDGED" => "ACKNOWLEDGED",
+            "RESUMED" => "RESUMED",
+            "RESET" => "RESET",
+            _ => queueStatus switch
+            {
+                "ESCALATED" => "ESCALATED",
+                "RESET" => "RESET",
+                "TIMED_OUT" => "TIMED_OUT",
+                _ => null
+            }
+        };
+
+        return new AckInterruptProjection(
+            instructionId,
+            acknowledgementState,
+            escalationTier,
+            supervisorInterruptState,
+            "LIVE_DB_PROJECTED");
+    }
 }
