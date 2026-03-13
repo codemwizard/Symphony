@@ -9,6 +9,11 @@
     "held": 1,
     "awaiting": 1
   },
+  "evidence_completeness": [
+    {"artifact_type": "INVOICE", "status": "PRESENT"},
+    {"artifact_type": "DELIVERY_PHOTO", "status": "MISSING"},
+    {"artifact_type": "BORROWER_ACK", "status": "PRESENT"}
+  ],
   "timeline": [
     {"id": "SYM-2026-00041", "borrower": "Kabwata Recycling Coop", "asset": "Plastic Shredder PS-400", "supplier": "EcoTech Supplies", "amount": "38,000", "status": "SETTLED", "proofs": "4/4"},
     {"id": "SYM-2026-00045", "borrower": "Chelstone Coop", "asset": "Solar Dryer SD-200", "supplier": "EcoTech Supplies", "amount": "41,000", "status": "HOLD", "proofs": "2/4"},
@@ -18,5 +23,20 @@
   "exception_log": [
     {"instructionId": "SYM-2026-00045", "type": "MISSING_PROOF", "date": "2026-03-08", "detail": "PT-002 and PT-003 not submitted within window", "resolved": false},
     {"instructionId": "SYM-2026-00047", "type": "SIM_SWAP_FLAG", "date": "2026-03-09", "detail": "MSISDN registered 6 days before disbursement", "resolved": false}
-  ]
+  ],
+  "action_presets": {
+    "programme_id": "PGM-ZAMBIA-GRN-001",
+    "tenant_id": "11111111-1111-1111-1111-111111111111",
+    "supplier_id": "SUP-ECO-001",
+    "supplier_account": "ZM00ECO1234567890",
+    "reference": "GT4CE-DEMO-00041",
+    "submitter_class": "BORROWER",
+    "submitter_msisdn": "+260971000041",
+    "expected_latitude": -15.4167,
+    "expected_longitude": 28.2833,
+    "max_distance_meters": 500,
+    "expires_in_seconds": 900,
+    "currency_code": "ZMW",
+    "amount_minor": 3800000
+  }
 }

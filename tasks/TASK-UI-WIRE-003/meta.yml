@@ -3,7 +3,7 @@ phase: "1"
 task_id: "TASK-UI-WIRE-003"
 title: "Wire reveal panels to the real reveal API"
 owner_role: "SUPERVISOR"
-status: "planned"
+status: "completed"
 depends_on:
   - TASK-UI-WIRE-002
 touches:
@@ -42,7 +42,7 @@ must_read:
   - docs/operations/SUPERVISORY_UI_SOURCE_OF_TRUTH.md
 implementation_plan: "docs/plans/phase1/TASK-UI-WIRE-003/PLAN.md"
 implementation_log: "docs/plans/phase1/TASK-UI-WIRE-003/EXEC_LOG.md"
-notes: "Wave B reveal-wiring task. This task starts after Wave A adapter alignment is complete."
+notes: "Wave B reveal-wiring task completed on feat/ui-wire-wave-b. The supervisory dashboard now hydrates programme summary, timeline, evidence completeness, and exception log from the repo-native reveal API with explicit HYBRID fallback labeling."
 client: "codex_cli"
 assigned_agent: "supervisor"
 model: "gpt-5-codex"

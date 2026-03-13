@@ -3,7 +3,7 @@ phase: "1"
 task_id: "TASK-UI-WIRE-004"
 title: "Wire operator actions with browser-safe backend contracts"
 owner_role: "SUPERVISOR"
-status: "in_progress"
+status: "completed"
 depends_on:
   - TASK-UI-WIRE-002
 touches:
@@ -23,11 +23,13 @@ invariants:
 work:
   - Keep admin credentials server-side and remove browser exposure of SYMPHONY_UI_ADMIN_API_KEY.
   - Prevent client-side x-admin-api-key usage and route privileged operator actions through same-origin pilot-demo proxy routes.
-  - Continue later with browser-safe verify-ref and full operator action wiring.
+  - Add browser-safe signed-instruction verification using instruction_file_ref instead of instruction_file_path.
+  - Complete operator action wiring for evidence-link issue, instruction-file generate, verify-ref, and supplier-policy lookup.
 acceptance_criteria:
   - Browser bootstrap context contains no admin API key.
   - Client code sends no x-admin-api-key header.
   - Pilot-demo proxy routes exist for privileged operator actions instead of direct browser-to-admin-route calls.
+  - Browser-safe verify-ref route exists and the client uses instruction_file_ref instead of filesystem path.
   - Evidence file records the no-secret-in-browser posture.
 verification:
   - bash scripts/audit/verify_task_ui_wire_004.sh
@@ -46,7 +48,7 @@ must_read:
   - docs/operations/SUPERVISORY_UI_SOURCE_OF_TRUTH.md
 implementation_plan: "docs/plans/phase1/TASK-UI-WIRE-004/PLAN.md"
 implementation_log: "docs/plans/phase1/TASK-UI-WIRE-004/EXEC_LOG.md"
-notes: "Wave B operator-action task. This branch starts the task by removing the browser-side admin secret and introducing proxy-only privileged actions."
+notes: "Wave B operator-action task completed on feat/ui-wire-wave-b. Browser-exposed admin credentials were removed, privileged operator actions are proxied server-side, and browser-safe verify-ref wiring replaces raw instruction file path usage."
 client: "codex_cli"
 assigned_agent: "supervisor"
 model: "gpt-5-codex"

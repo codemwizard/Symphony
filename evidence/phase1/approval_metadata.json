@@ -1,6 +1,6 @@
 {
   "schema_version": "1.0",
-  "generated_at_utc": "2026-03-13T11:25:00Z",
+  "generated_at_utc": "2026-03-13T13:40:00Z",
   "git_commit": "PENDING_COMMIT",
   "change_scope": {
     "regulated_surfaces_touched": true,
@@ -16,11 +16,15 @@
       "docs/plans/phase1/TASK-UI-WIRE-007/EXEC_LOG.md",
       "docs/tasks/phase1_prompts.md",
       "evidence/phase1/approval_metadata.json",
+      "evidence/phase1/task_ui_wire_003_reveal_live_wiring.json",
       "evidence/phase1/task_ui_wire_004_operator_action_wiring.json",
+      "evidence/phase1/task_ui_wire_007_export.json",
       "scripts/audit/verify_task_ui_wire_003.sh",
       "scripts/audit/verify_task_ui_wire_004.sh",
       "scripts/audit/verify_task_ui_wire_007.sh",
+      "services/ledger-api/dotnet/src/LedgerApi/Commands/CommandContracts.cs",
       "services/ledger-api/dotnet/src/LedgerApi/Program.cs",
+      "src/supervisory-dashboard/data/supervisory_hybrid_fallback.json",
       "src/supervisory-dashboard/index.html",
       "tasks/TASK-UI-WIRE-003/meta.yml",
       "tasks/TASK-UI-WIRE-004/meta.yml",
@@ -36,8 +40,8 @@
   "human_approval": {
     "approver_id": "governance-human-reviewer",
     "approval_artifact_ref": "approvals/2026-03-13/BRANCH-feat-ui-wire-wave-b.md",
-    "change_reason": "Start Wave B of the GreenTech4CE supervisory UI port, including Wave B task packs, proxy-only privileged action rules, pilot-demo proxy routes, and removal of the admin secret from the browser bootstrap context.",
-    "approved_at_utc": "2026-03-13T11:25:00Z"
+    "change_reason": "Complete Wave B of the GreenTech4CE supervisory UI port, including reveal wiring, browser-safe operator action wiring, synchronous export routing, and server-side handling of privileged actions without exposing admin credentials to the browser.",
+    "approved_at_utc": "2026-03-13T13:40:00Z"
   },
-  "notes": "Branch approval metadata for the Wave B GreenTech4CE supervisory UI port batch."
+  "notes": "Branch approval metadata for the completed Wave B GreenTech4CE supervisory UI port batch."
 }

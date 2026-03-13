@@ -5,9 +5,15 @@ TASK_ID="TASK-UI-WIRE-003"
 EVIDENCE_PATH="${1:-$ROOT_DIR/evidence/phase1/task_ui_wire_003_reveal_live_wiring.json}"
 UI_FILE="$ROOT_DIR/src/supervisory-dashboard/index.html"
 [[ -f "$UI_FILE" ]] || { echo "missing_ui:$UI_FILE" >&2; exit 1; }
-rg -Fq "/v1/supervisory/programmes/" "$UI_FILE" || { echo 'missing_reveal_route_usage' >&2; exit 1; }
+rg -Fq "getReveal(programId)" "$UI_FILE" || { echo 'missing_reveal_route_usage' >&2; exit 1; }
+rg -Fq '/supervisory/programmes/${cacheKey}/reveal' "$UI_FILE" || { echo 'missing_reveal_route_template' >&2; exit 1; }
 rg -Fq "programme_summary" "$UI_FILE" || { echo 'missing_programme_summary_binding' >&2; exit 1; }
 rg -Fq "exception_log" "$UI_FILE" || { echo 'missing_exception_log_binding' >&2; exit 1; }
+rg -Fq "evidence_completeness" "$UI_FILE" || { echo 'missing_evidence_completeness_binding' >&2; exit 1; }
+rg -Fq "hydrateDashboard(" "$UI_FILE" || { echo 'missing_dashboard_hydration' >&2; exit 1; }
+rg -Fq 'id="timelineRows"' "$UI_FILE" || { echo 'missing_timeline_rows_target' >&2; exit 1; }
+rg -Fq 'id="exceptionRows"' "$UI_FILE" || { echo 'missing_exception_rows_target' >&2; exit 1; }
+rg -Fq 'id="evidenceCompletenessList"' "$UI_FILE" || { echo 'missing_evidence_completeness_target' >&2; exit 1; }
 python3 - <<'PY' "$TASK_ID" "$EVIDENCE_PATH"
 import json, os, subprocess, sys
 from pathlib import Path
@@ -21,7 +27,12 @@ out.write_text(json.dumps({
   'timestamp_utc':os.popen('date -u +%Y-%m-%dT%H:%M:%SZ').read().strip(),
   'git_sha':sha,
   'status':'PASS',
-  'pass':True
+  'pass':True,
+  'details':{
+    'reveal_route_bound':True,
+    'dashboard_hydration_present':True,
+    'evidence_completeness_rendered':True
+  }
 }, indent=2)+"\n", encoding='utf-8')
 print(f'Evidence written: {out}')
 PY

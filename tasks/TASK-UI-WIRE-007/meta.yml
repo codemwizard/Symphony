@@ -3,7 +3,7 @@ phase: "1"
 task_id: "TASK-UI-WIRE-007"
 title: "Add synchronous export route and wire reporting-pack export"
 owner_role: "SUPERVISOR"
-status: "planned"
+status: "completed"
 depends_on:
   - TASK-UI-WIRE-003
   - TSK-P1-DEMO-009
@@ -43,7 +43,7 @@ must_read:
   - docs/operations/SUPERVISORY_UI_SOURCE_OF_TRUTH.md
 implementation_plan: "docs/plans/phase1/TASK-UI-WIRE-007/PLAN.md"
 implementation_log: "docs/plans/phase1/TASK-UI-WIRE-007/EXEC_LOG.md"
-notes: "Wave B export task. Transport is synchronous and must be verified against DEMO-009 generator output."
+notes: "Wave B export task completed on feat/ui-wire-wave-b. The supervisory shell now uses a synchronous export route whose deterministic fingerprint is compared directly against DEMO-009 generator output."
 client: "codex_cli"
 assigned_agent: "supervisor"
 model: "gpt-5-codex"

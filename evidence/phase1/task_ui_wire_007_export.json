@@ -1,0 +1,12 @@
+{
+  "check_id": "TASK-UI-WIRE-007-EXPORT",
+  "task_id": "TASK-UI-WIRE-007",
+  "timestamp_utc": "2026-03-13T12:22:35Z",
+  "git_sha": "4b7ba9058b8bfa3f118efb00ede7109f27bc0c4e",
+  "status": "PASS",
+  "pass": true,
+  "details": {
+    "http_route_verified": true,
+    "deterministic_fingerprint": "f9944d12c40b363e1320727a41b16f91e311755866e7e0593188e818b212857d"
+  }
+}

@@ -3,8 +3,8 @@
   "approval": {
     "status": "APPROVED",
     "approver_id": "governance-human-reviewer",
-    "change_reason": "Start Wave B of the GreenTech4CE supervisory UI port, including Wave B task packs, proxy-only privileged action rules, pilot-demo proxy routes, and removal of the admin secret from the browser bootstrap context.",
-    "approved_at_utc": "2026-03-13T11:25:00Z",
+    "change_reason": "Complete Wave B of the GreenTech4CE supervisory UI port, including reveal wiring, browser-safe operator actions, synchronous export routing, and server-side handling of privileged actions without exposing admin credentials to the browser.",
+    "approved_at_utc": "2026-03-13T13:40:00Z",
     "role_authority": "Human Approver"
   },
   "ai": {
@@ -28,11 +28,15 @@
       "docs/plans/phase1/TASK-UI-WIRE-007/EXEC_LOG.md",
       "docs/tasks/phase1_prompts.md",
       "evidence/phase1/approval_metadata.json",
+      "evidence/phase1/task_ui_wire_003_reveal_live_wiring.json",
       "evidence/phase1/task_ui_wire_004_operator_action_wiring.json",
+      "evidence/phase1/task_ui_wire_007_export.json",
       "scripts/audit/verify_task_ui_wire_003.sh",
       "scripts/audit/verify_task_ui_wire_004.sh",
       "scripts/audit/verify_task_ui_wire_007.sh",
+      "services/ledger-api/dotnet/src/LedgerApi/Commands/CommandContracts.cs",
       "services/ledger-api/dotnet/src/LedgerApi/Program.cs",
+      "src/supervisory-dashboard/data/supervisory_hybrid_fallback.json",
       "src/supervisory-dashboard/index.html",
       "tasks/TASK-UI-WIRE-003/meta.yml",
       "tasks/TASK-UI-WIRE-004/meta.yml",
@@ -47,13 +51,20 @@
   },
   "verification": {
     "commands": [
+      "bash scripts/audit/verify_agent_conformance.sh",
+      "bash scripts/dev/pre_ci.sh",
       "bash scripts/audit/verify_task_meta_schema.sh --mode strict --allow-legacy",
       "bash scripts/audit/verify_task_pack_readiness.sh --task TASK-UI-WIRE-003 --task TASK-UI-WIRE-004 --task TASK-UI-WIRE-007",
+      "dotnet build services/ledger-api/dotnet/src/LedgerApi/LedgerApi.csproj -nologo",
+      "bash scripts/audit/verify_task_ui_wire_003.sh",
+      "python3 scripts/audit/validate_evidence.py --task TASK-UI-WIRE-003 --evidence evidence/phase1/task_ui_wire_003_reveal_live_wiring.json",
       "bash scripts/audit/verify_task_ui_wire_004.sh",
       "python3 scripts/audit/validate_evidence.py --task TASK-UI-WIRE-004 --evidence evidence/phase1/task_ui_wire_004_operator_action_wiring.json",
-      "bash scripts/audit/verify_agent_conformance.sh"
+      "bash scripts/audit/verify_task_ui_wire_007.sh",
+      "python3 scripts/audit/validate_evidence.py --task TASK-UI-WIRE-007 --evidence evidence/phase1/task_ui_wire_007_export.json",
+      "bash scripts/audit/verify_human_governance_review_signoff.sh"
     ],
     "pre_ci_passed": true,
-    "notes": "Wave B start batch. Approval scope covers task-pack creation plus the admin-key bootstrap removal and pilot-demo proxy-route implementation slice."
+    "notes": "Wave B complete batch. Approval scope covers reveal wiring, browser-safe operator action wiring, synchronous export transport, and the no-secret-in-browser posture."
   }
 }
