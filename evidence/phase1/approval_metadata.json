@@ -1,49 +1,35 @@
 {
   "schema_version": "1.0",
-  "generated_at_utc": "2026-03-13T14:35:08Z",
+  "generated_at_utc": "2026-03-13T15:35:00Z",
   "git_commit": "PENDING_COMMIT",
   "change_scope": {
     "regulated_surfaces_touched": true,
     "paths_changed": [
-      "approvals/2026-03-13/BRANCH-feat-ui-wire-wave-d.approval.json",
-      "approvals/2026-03-13/BRANCH-feat-ui-wire-wave-d.md",
-      "docs/plans/phase1/TASK-UI-WIRE-008/PLAN.md",
-      "docs/plans/phase1/TASK-UI-WIRE-008/EXEC_LOG.md",
-      "docs/plans/phase1/TASK-UI-WIRE-009/PLAN.md",
-      "docs/plans/phase1/TASK-UI-WIRE-009/EXEC_LOG.md",
-      "docs/plans/phase1/TASK-UI-WIRE-010/PLAN.md",
-      "docs/plans/phase1/TASK-UI-WIRE-010/EXEC_LOG.md",
+      "approvals/2026-03-13/BRANCH-feat-ui-wire-wave-e.approval.json",
+      "approvals/2026-03-13/BRANCH-feat-ui-wire-wave-e.md",
+      "docs/operations/SUPERVISORY_UI_SOURCE_OF_TRUTH.md",
+      "docs/plans/phase1/TASK-UI-WIRE-011/PLAN.md",
+      "docs/plans/phase1/TASK-UI-WIRE-011/EXEC_LOG.md",
       "evidence/phase1/approval_metadata.json",
-      "evidence/phase1/task_ui_wire_008_ack_interrupt.json",
-      "evidence/phase1/task_ui_wire_009_sim_swap.json",
-      "evidence/phase1/task_ui_wire_010_success_gate_panel.json",
-      "scripts/audit/verify_task_ui_wire_008.sh",
-      "scripts/audit/verify_task_ui_wire_009.sh",
-      "scripts/audit/verify_task_ui_wire_010.sh",
-      "services/ledger-api/dotnet/src/LedgerApi/Demo/SupervisoryReadModelsSelfTestRunner.cs",
+      "evidence/phase1/human_governance_review_signoff.json",
+      "evidence/phase1/task_ui_wire_011_closeout.json",
+      "scripts/audit/verify_task_ui_wire_011.sh",
       "services/ledger-api/dotnet/src/LedgerApi/Program.cs",
-      "services/ledger-api/dotnet/src/LedgerApi/ReadModels/PilotSuccessCriteriaReadModelHandler.cs",
-      "services/ledger-api/dotnet/src/LedgerApi/ReadModels/SupervisoryRevealReadModelHandler.cs",
       "src/supervisory-dashboard/index.html",
-      "tasks/TASK-UI-WIRE-008/meta.yml",
-      "tasks/TASK-UI-WIRE-009/meta.yml",
-      "tasks/TASK-UI-WIRE-010/meta.yml",
-      "docs/plans/phase1/REM-2026-03-13_ui-wave-d-pre_ci-remediation-trace/PLAN.md",
-      "docs/plans/phase1/REM-2026-03-13_ui-wave-d-pre_ci-remediation-trace/EXEC_LOG.md",
-      "evidence/phase1/human_governance_review_signoff.json"
+      "tasks/TASK-UI-WIRE-011/meta.yml"
     ]
   },
   "ai": {
-    "ai_prompt_hash": "feat-ui-wire-wave-d",
+    "ai_prompt_hash": "feat-ui-wire-wave-e",
     "model_id": "gpt-5-codex",
     "client": "codex_cli",
-    "session_id": "feat-ui-wire-wave-d"
+    "session_id": "feat-ui-wire-wave-e"
   },
   "human_approval": {
     "approver_id": "governance-human-reviewer",
-    "approval_artifact_ref": "approvals/2026-03-13/BRANCH-feat-ui-wire-wave-d.md",
-    "change_reason": "Complete Wave D of the GreenTech4CE supervisory UI port by projecting acknowledgement and supervisor-interrupt state into reveal/detail payloads, preserving SIM-swap as Phase-1 DEMO_BACKED content, and wiring the pilot success panel from DEMO-011 evidence.",
-    "approved_at_utc": "2026-03-13T14:35:08Z"
+    "approval_artifact_ref": "approvals/2026-03-13/BRANCH-feat-ui-wire-wave-e.md",
+    "change_reason": "Complete Wave E of the GreenTech4CE supervisory UI port by isolating the thin shell behind explicit debug access and proving the v3 shell is the sole truthful primary demo supervisory surface.",
+    "approved_at_utc": "2026-03-13T15:35:00Z"
   },
-  "notes": "Branch approval metadata for the completed Wave D GreenTech4CE supervisory UI port batch."
+  "notes": "Branch approval metadata for the completed Wave E GreenTech4CE supervisory UI closeout batch."
 }

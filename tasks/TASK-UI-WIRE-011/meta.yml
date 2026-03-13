@@ -1,0 +1,56 @@
+schema_version: 1
+phase: "1"
+task_id: "TASK-UI-WIRE-011"
+title: "Close out the v3 supervisory UI port and retire the thin shell"
+owner_role: "SUPERVISOR"
+status: "completed"
+depends_on:
+  - TASK-UI-WIRE-008
+  - TASK-UI-WIRE-009
+  - TASK-UI-WIRE-010
+touches:
+  - src/supervisory-dashboard/**
+  - services/ledger-api/dotnet/src/LedgerApi/**
+  - docs/operations/SUPERVISORY_UI_SOURCE_OF_TRUTH.md
+  - tasks/TASK-UI-WIRE-011/meta.yml
+  - docs/plans/phase1/TASK-UI-WIRE-011/PLAN.md
+  - docs/plans/phase1/TASK-UI-WIRE-011/EXEC_LOG.md
+  - docs/tasks/phase1_prompts.md
+  - scripts/audit/verify_task_ui_wire_011.sh
+  - evidence/phase1/task_ui_wire_011_closeout.json
+invariants:
+  - INV-077
+  - INV-105
+  - INV-119
+work:
+  - Remove the thin shell from normal demo navigation and keep legacy or debug access only if explicitly justified.
+  - Close out the v3 supervisory shell against the source-of-truth matrix.
+  - Fail if any LIVE surface still relies on static fallback under healthy pilot-demo conditions.
+acceptance_criteria:
+  - Exactly one primary demo supervisory shell remains.
+  - Thin shell is isolated to explicit legacy or debug access or removed.
+  - Every visible surface is LIVE, LIVE_FROM_EVIDENCE, or explicitly DEMO_BACKED.
+  - No LIVE surface still uses static fallback under healthy conditions.
+  - Closeout evidence proves the shell is operational and truthful in demo scope.
+verification:
+  - bash scripts/audit/verify_task_ui_wire_011.sh
+  - python3 scripts/audit/validate_evidence.py --task TASK-UI-WIRE-011 --evidence evidence/phase1/task_ui_wire_011_closeout.json
+  - bash scripts/dev/pre_ci.sh
+evidence:
+  - evidence/phase1/task_ui_wire_011_closeout.json
+failure_modes:
+  - Multiple shells remain primary.
+  - Dead or mislabeled surfaces survive.
+  - Live-backed panels still depend on fallback.
+  - Closeout passes despite nonexistent routes or fake wiring.
+must_read:
+  - AGENT_ENTRYPOINT.md
+  - docs/operations/AGENT_PROMPT_ROUTER.md
+  - docs/operations/AI_AGENT_OPERATION_MANUAL.md
+  - docs/operations/SUPERVISORY_UI_SOURCE_OF_TRUTH.md
+implementation_plan: "docs/plans/phase1/TASK-UI-WIRE-011/PLAN.md"
+implementation_log: "docs/plans/phase1/TASK-UI-WIRE-011/EXEC_LOG.md"
+notes: "Wave E closeout task. This task retires the thin shell from primary demo use and proves the v3 shell is the sole truthful supervisory surface."
+client: "codex_cli"
+assigned_agent: "supervisor"
+model: "gpt-5-codex"

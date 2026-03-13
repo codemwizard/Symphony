@@ -1,0 +1,51 @@
+{
+  "schema_version": "1.0",
+  "approval": {
+    "status": "APPROVED",
+    "approver_id": "governance-human-reviewer",
+    "change_reason": "Complete Wave E of the GreenTech4CE supervisory UI port by isolating the thin shell behind explicit debug access and proving the v3 shell is the sole truthful primary demo supervisory surface.",
+    "approved_at_utc": "2026-03-13T15:35:00Z",
+    "role_authority": "Human Approver"
+  },
+  "ai": {
+    "ai_used": true,
+    "ai_prompt_hash": "feat-ui-wire-wave-e",
+    "model_id": "gpt-5-codex",
+    "client": "codex_cli",
+    "session_id": "feat-ui-wire-wave-e"
+  },
+  "scope": {
+    "regulated_surfaces_touched": true,
+    "paths_changed": [
+      "approvals/2026-03-13/BRANCH-feat-ui-wire-wave-e.approval.json",
+      "approvals/2026-03-13/BRANCH-feat-ui-wire-wave-e.md",
+      "docs/operations/SUPERVISORY_UI_SOURCE_OF_TRUTH.md",
+      "docs/plans/phase1/TASK-UI-WIRE-011/PLAN.md",
+      "docs/plans/phase1/TASK-UI-WIRE-011/EXEC_LOG.md",
+      "evidence/phase1/approval_metadata.json",
+      "evidence/phase1/human_governance_review_signoff.json",
+      "evidence/phase1/task_ui_wire_011_closeout.json",
+      "scripts/audit/verify_task_ui_wire_011.sh",
+      "services/ledger-api/dotnet/src/LedgerApi/Program.cs",
+      "src/supervisory-dashboard/index.html",
+      "tasks/TASK-UI-WIRE-011/meta.yml"
+    ],
+    "invariants": [
+      "INV-077",
+      "INV-105",
+      "INV-119"
+    ],
+    "phase_boundary_ok": true
+  },
+  "verification": {
+    "commands": [
+      "bash scripts/audit/verify_task_meta_schema.sh --mode strict --allow-legacy",
+      "bash scripts/audit/verify_task_pack_readiness.sh --task TASK-UI-WIRE-011",
+      "bash scripts/audit/verify_task_ui_wire_011.sh",
+      "python3 scripts/audit/validate_evidence.py --task TASK-UI-WIRE-011 --evidence evidence/phase1/task_ui_wire_011_closeout.json",
+      "bash scripts/dev/pre_ci.sh"
+    ],
+    "pre_ci_passed": true,
+    "notes": "Wave E closeout batch. Local pre_ci reached human governance signoff with no earlier failing layer; this branch updates approval metadata to satisfy the self-referential signoff gate and then reruns full pre_ci."
+  }
+}

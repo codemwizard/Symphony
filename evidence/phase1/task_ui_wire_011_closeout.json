@@ -1,0 +1,31 @@
+{
+  "task_id": "TASK-UI-WIRE-011",
+  "status": "PASS",
+  "primary_route": "/pilot-demo/supervisory",
+  "legacy_route_default_status": 404,
+  "legacy_route_debug_opt_in_status": 200,
+  "single_primary_shell": true,
+  "legacy_shell_debug_only": true,
+  "sim_swap_mode": "DEMO_BACKED",
+  "pilot_success_mode": "LIVE_FROM_EVIDENCE",
+  "live_surfaces_declared": [
+    "Programme summary",
+    "Timeline",
+    "Evidence completeness",
+    "Exception log",
+    "Evidence-link issue",
+    "Signed instruction generate",
+    "Signed instruction verify",
+    "Supplier policy lookup",
+    "Detail / drill-down",
+    "Export",
+    "Ack / interrupt state"
+  ],
+  "source_of_truth_contains_legacy_debug_gate": true,
+  "source_of_truth_marks_thin_shell_retired": true,
+  "prerequisite_verifiers": {
+    "TASK-UI-WIRE-008": "PASS",
+    "TASK-UI-WIRE-009": "PASS",
+    "TASK-UI-WIRE-010": "PASS"
+  }
+}

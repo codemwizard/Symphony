@@ -159,6 +159,10 @@ if (!tenantAllowlistConfigured)
 
 var repoRoot = EvidenceMeta.ResolveRepoRoot(Directory.GetCurrentDirectory());
 var supervisoryUiDir = Path.Combine(repoRoot, "src", "supervisory-dashboard");
+var legacySupervisoryUiEnabled = string.Equals(
+    Environment.GetEnvironmentVariable("SYMPHONY_ENABLE_LEGACY_SUPERVISORY_UI"),
+    "1",
+    StringComparison.OrdinalIgnoreCase);
 
 app.MapGet("/pilot-demo/supervisory", () =>
 {
@@ -190,7 +194,7 @@ app.MapGet("/pilot-demo/supervisory", () =>
 
 app.MapGet("/pilot-demo/supervisory-legacy", () =>
 {
-    if (!string.Equals(runtimeProfile, "pilot-demo", StringComparison.OrdinalIgnoreCase))
+    if (!string.Equals(runtimeProfile, "pilot-demo", StringComparison.OrdinalIgnoreCase) || !legacySupervisoryUiEnabled)
     {
         return Results.NotFound();
     }
