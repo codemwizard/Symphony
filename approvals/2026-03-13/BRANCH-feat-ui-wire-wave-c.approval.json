@@ -56,7 +56,7 @@
       "bash scripts/audit/verify_agent_conformance.sh",
       "bash scripts/dev/pre_ci.sh"
     ],
-    "pre_ci_passed": false,
+    "pre_ci_passed": true,
     "notes": "Wave C complete batch. Approval scope covers the reveal proof-model expansion, the new instruction-detail route, the drill-down UI binding, and the Wave C task evidence."
   }
 }
