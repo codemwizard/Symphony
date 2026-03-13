@@ -1,5 +1,8 @@
 {
+  "check_id": "TASK-UI-WIRE-011-CLOSEOUT",
   "task_id": "TASK-UI-WIRE-011",
+  "timestamp_utc": "2026-03-13T16:42:56Z",
+  "git_sha": "251b0dec489563ab38c3e9528f24e09d150bcdaa",
   "status": "PASS",
   "primary_route": "/pilot-demo/supervisory",
   "legacy_route_default_status": 404,

@@ -6,6 +6,34 @@ cd "$ROOT_DIR"
 
 EVIDENCE_PATH="evidence/phase1/task_ui_wire_011_closeout.json"
 mkdir -p "$(dirname "$EVIDENCE_PATH")"
+CHECK_ID="TASK-UI-WIRE-011-CLOSEOUT"
+TIMESTAMP_UTC="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+GIT_SHA="$(git rev-parse HEAD)"
+
+write_failure_evidence() {
+  local error="$1"
+  local detail_key="${2:-}"
+  local detail_value="${3:-}"
+  python3 - "$EVIDENCE_PATH" "$CHECK_ID" "$TIMESTAMP_UTC" "$GIT_SHA" "$error" "$detail_key" "$detail_value" <<'PY'
+import json
+import sys
+
+path, check_id, timestamp_utc, git_sha, error, detail_key, detail_value = sys.argv[1:8]
+payload = {
+    "check_id": check_id,
+    "task_id": "TASK-UI-WIRE-011",
+    "timestamp_utc": timestamp_utc,
+    "git_sha": git_sha,
+    "status": "FAIL",
+    "error": error,
+}
+if detail_key:
+    payload[detail_key] = detail_value
+with open(path, "w", encoding="utf-8") as fh:
+    json.dump(payload, fh, indent=2)
+    fh.write("\n")
+PY
+}
 
 required_files=(
   "src/supervisory-dashboard/index.html"
@@ -19,9 +47,7 @@ required_files=(
 
 for file in "${required_files[@]}"; do
   if [[ ! -f "$file" ]]; then
-    cat >"$EVIDENCE_PATH" <<JSON
-{"task_id":"TASK-UI-WIRE-011","status":"FAIL","error":"missing_required_file","file":"$file"}
-JSON
+    write_failure_evidence "missing_required_file" "file" "$file"
     echo "missing_required_file:$file" >&2
     exit 1
   fi
@@ -89,17 +115,13 @@ primary_status="$(curl -s -o /tmp/task_ui_wire_011_primary.html -w '%{http_code}
 legacy_default_status="$(curl -s -o /tmp/task_ui_wire_011_legacy_default.html -w '%{http_code}' "http://127.0.0.1:$PORT_PRIMARY/pilot-demo/supervisory-legacy")"
 
 if [[ "$primary_status" != "200" ]]; then
-  cat >"$EVIDENCE_PATH" <<JSON
-{"task_id":"TASK-UI-WIRE-011","status":"FAIL","error":"primary_route_unavailable","http_status":"$primary_status"}
-JSON
+  write_failure_evidence "primary_route_unavailable" "http_status" "$primary_status"
   echo "primary_route_unavailable:$primary_status" >&2
   exit 1
 fi
 
 if [[ "$legacy_default_status" != "404" ]]; then
-  cat >"$EVIDENCE_PATH" <<JSON
-{"task_id":"TASK-UI-WIRE-011","status":"FAIL","error":"legacy_route_not_isolated","http_status":"$legacy_default_status"}
-JSON
+  write_failure_evidence "legacy_route_not_isolated" "http_status" "$legacy_default_status"
   echo "legacy_route_not_isolated:$legacy_default_status" >&2
   exit 1
 fi
@@ -121,20 +143,23 @@ wait_for_http "http://127.0.0.1:$PORT_LEGACY/health"
 legacy_debug_status="$(curl -s -o /tmp/task_ui_wire_011_legacy_debug.html -w '%{http_code}' "http://127.0.0.1:$PORT_LEGACY/pilot-demo/supervisory-legacy")"
 
 if [[ "$legacy_debug_status" != "200" ]]; then
-  cat >"$EVIDENCE_PATH" <<JSON
-{"task_id":"TASK-UI-WIRE-011","status":"FAIL","error":"legacy_debug_route_unavailable","http_status":"$legacy_debug_status"}
-JSON
+  write_failure_evidence "legacy_debug_route_unavailable" "http_status" "$legacy_debug_status"
   echo "legacy_debug_route_unavailable:$legacy_debug_status" >&2
   exit 1
 fi
 
-python3 - <<'PY' > "$EVIDENCE_PATH"
+python3 - "$CHECK_ID" "$TIMESTAMP_UTC" "$GIT_SHA" <<'PY' > "$EVIDENCE_PATH"
 import json
+import sys
 from pathlib import Path
 
+check_id, timestamp_utc, git_sha = sys.argv[1:4]
 source = Path("docs/operations/SUPERVISORY_UI_SOURCE_OF_TRUTH.md").read_text()
 evidence = {
+    "check_id": check_id,
     "task_id": "TASK-UI-WIRE-011",
+    "timestamp_utc": timestamp_utc,
+    "git_sha": git_sha,
     "status": "PASS",
     "primary_route": "/pilot-demo/supervisory",
     "legacy_route_default_status": 404,
