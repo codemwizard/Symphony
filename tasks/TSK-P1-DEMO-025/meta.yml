@@ -1,0 +1,55 @@
+schema_version: 1
+phase: '1'
+task_id: TSK-P1-DEMO-025
+title: Complete the host-based demo deployment runtime contract
+owner_role: SUPERVISOR
+status: planned
+depends_on:
+- TSK-P1-DEMO-024
+touches:
+- docs/operations/SYMPHONY_DEMO_DEPLOYMENT_GUIDE.md
+- docs/operations/PHASE1_DEMO_DEPLOY_AND_TEST_CHECKLIST.md
+- docs/operations/GREENTECH4CE_TENANT_PROGRAMME_PROVISIONING_RUNBOOK.md
+- docs/plans/phase1/TSK-P1-DEMO-025/PLAN.md
+- docs/plans/phase1/TSK-P1-DEMO-025/EXEC_LOG.md
+- docs/tasks/phase1_prompts.md
+- tasks/TSK-P1-DEMO-025/meta.yml
+- scripts/audit/verify_tsk_p1_demo_025.sh
+- evidence/phase1/tsk_p1_demo_025_runtime_contract.json
+invariants:
+- INV-105
+- INV-119
+- INVPROC-06
+work:
+- Add a complete environment and dependency contract for the host-based demo deployment path.
+- Document `INGRESS_API_KEY`, `ADMIN_API_KEY`, and `SYMPHONY_KNOWN_TENANTS` as required runtime configuration where applicable.
+- Document that `SYMPHONY_UI_API_KEY` must carry a value the backend accepts as `INGRESS_API_KEY`.
+- Document Kestrel on port `8080` as the supported default server and `psql` as a required host dependency for migration-based bring-up.
+acceptance_criteria:
+- The deployment guide lists every required runtime variable for a functioning demo.
+- The guide explicitly documents the `SYMPHONY_UI_API_KEY` to `INGRESS_API_KEY` relationship.
+- psql is listed as required for host-based deployment.
+- The guide presents Kestrel as the default demo web server and does not imply nginx or IIS is required.
+verification:
+- bash scripts/audit/verify_tsk_p1_demo_025.sh
+- python3 scripts/audit/validate_evidence.py --task TSK-P1-DEMO-025 --evidence evidence/phase1/tsk_p1_demo_025_runtime_contract.json
+evidence:
+- evidence/phase1/tsk_p1_demo_025_runtime_contract.json
+failure_modes:
+- Guide still omits required env vars.
+- Guide still suggests the UI key is independent of backend read auth.
+- psql remains undocumented.
+- Deployment guidance still implies nginx or IIS is required.
+- Evidence file missing.
+must_read:
+- AGENT_ENTRYPOINT.md
+- docs/operations/AGENT_PROMPT_ROUTER.md
+- docs/operations/AI_AGENT_OPERATION_MANUAL.md
+- docs/operations/SYMPHONY_DEMO_DEPLOYMENT_GUIDE.md
+- docs/operations/PHASE1_DEMO_DEPLOY_AND_TEST_CHECKLIST.md
+implementation_plan: docs/plans/phase1/TSK-P1-DEMO-025/PLAN.md
+implementation_log: docs/plans/phase1/TSK-P1-DEMO-025/EXEC_LOG.md
+notes: Runtime-contract task for the supported host-based demo path. This task completes the operator-facing env and dependency guidance rather than changing runtime code.
+client: codex_cli
+assigned_agent: supervisor
+model: gpt-5-codex
