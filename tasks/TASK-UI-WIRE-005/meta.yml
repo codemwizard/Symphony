@@ -1,0 +1,53 @@
+schema_version: 1
+phase: "1"
+task_id: "TASK-UI-WIRE-005"
+title: "Expand reveal to the canonical PT-001..PT-004 proof model"
+owner_role: "SUPERVISOR"
+status: "completed"
+depends_on:
+  - TASK-UI-WIRE-003
+  - TASK-UI-WIRE-004
+touches:
+  - services/ledger-api/dotnet/src/LedgerApi/ReadModels/**
+  - services/ledger-api/dotnet/src/LedgerApi/**
+  - docs/operations/SUPERVISORY_REVEAL_API_V2.md
+  - tasks/TASK-UI-WIRE-005/meta.yml
+  - docs/plans/phase1/TASK-UI-WIRE-005/PLAN.md
+  - docs/plans/phase1/TASK-UI-WIRE-005/EXEC_LOG.md
+  - docs/tasks/phase1_prompts.md
+  - scripts/audit/verify_task_ui_wire_005.sh
+  - evidence/phase1/task_ui_wire_005_proof_model.json
+invariants:
+  - INV-077
+  - INV-105
+  - INV-119
+work:
+  - Expand the reveal payload to a canonical PT-001 through PT-004 proof array.
+  - Add rich proof status values and metadata needed by the v3 shell without breaking existing reveal consumers.
+  - Update reveal documentation and verifier coverage for the expanded proof model.
+acceptance_criteria:
+  - Reveal returns a PT-001 through PT-004 proof array.
+  - Rich proof statuses include FAILED and FLAGGED.
+  - GPS and MSISDN-related fields are present where applicable.
+  - Existing reveal consumers remain compatible with the expanded payload.
+verification:
+  - bash scripts/audit/verify_task_ui_wire_005.sh
+  - python3 scripts/audit/validate_evidence.py --task TASK-UI-WIRE-005 --evidence evidence/phase1/task_ui_wire_005_proof_model.json
+evidence:
+  - evidence/phase1/task_ui_wire_005_proof_model.json
+failure_modes:
+  - Proof rows remain client-side invention.
+  - Reveal payload drifts away from PT-001 through PT-004.
+  - Rich proof statuses are absent.
+  - Evidence file missing.
+must_read:
+  - AGENT_ENTRYPOINT.md
+  - docs/operations/AGENT_PROMPT_ROUTER.md
+  - docs/operations/AI_AGENT_OPERATION_MANUAL.md
+  - docs/operations/SUPERVISORY_UI_SOURCE_OF_TRUTH.md
+implementation_plan: "docs/plans/phase1/TASK-UI-WIRE-005/PLAN.md"
+implementation_log: "docs/plans/phase1/TASK-UI-WIRE-005/EXEC_LOG.md"
+notes: "Wave C proof-model task. This task expands reveal to the canonical PT-001 through PT-004 model required by the v3 supervisory shell."
+client: "codex_cli"
+assigned_agent: "supervisor"
+model: "gpt-5-codex"

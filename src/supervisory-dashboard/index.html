@@ -1254,16 +1254,24 @@ const adapter = {
     return await r.json();
   },
 
-  // TODO UI-WIRE-010: wire real instruction detail for drill-down
   async getInstructionDetail(instructionId) {
     const drillKey = resolveDrillKey(instructionId);
     if (DATA_MODE === 'STATIC_DEMO') {
       return drillData[drillKey] || null;
     }
-    if (DATA_MODE === 'HYBRID') {
-      return drillData[drillKey] || null;
+    try {
+      const r = await fetch(`${SYMPHONY_API_BASE}/supervisory/instructions/${encodeURIComponent(instructionId)}/detail`, {
+        headers: revealHeaders()
+      });
+      if (!r.ok) throw new Error(`Instruction detail failed: ${r.status}`);
+      return await r.json();
+    } catch (err) {
+      if (DATA_MODE === 'HYBRID') {
+        liveFallbackActive('Demo-backed fallback active: instruction detail');
+        return drillData[drillKey] || null;
+      }
+      throw err;
     }
-    throw new Error('Instruction detail route is not enabled until TASK-UI-WIRE-006');
   },
 
   // TODO UI-WIRE-011: wire real export
@@ -1581,16 +1589,56 @@ function resolveDrillKey(id) {
   return drillKeyByInstructionRef[raw] || raw;
 }
 
+function renderInstructionDetailPayload(detail) {
+  if (!detail || detail.html) return detail;
+  const title = `${detail.instruction_id || '—'} — ${detail.instruction_status || 'Detail'}`;
+  const ref = `${detail.instruction_id || '—'} · ${detail.program_id || '—'} · read-only`;
+  const proofs = Array.isArray(detail.proof_rows) ? detail.proof_rows : [];
+  const rawArtifacts = Array.isArray(detail.raw_artifacts) ? detail.raw_artifacts : [];
+  const exceptions = Array.isArray(detail.exception_log) ? detail.exception_log : [];
+  const supplierPolicy = detail.supplier_policy_context || {};
+  const ackState = detail.acknowledgement_state ?? 'PENDING';
+  const escalationTier = detail.escalation_tier ?? 'PENDING';
+  const interruptState = detail.supervisor_interrupt_state ?? 'PENDING';
+  const proofHtml = proofs.map(proof => {
+    const status = String(proof.status || 'UNKNOWN').toUpperCase();
+    const rowClass = status === 'PRESENT' ? 'ev-present' : status === 'FLAGGED' ? 'ev-failed' : status === 'FAILED' ? 'ev-failed' : 'ev-missing';
+    const indClass = status === 'PRESENT' ? 'ind-present' : status === 'FLAGGED' ? 'ind-failed' : status === 'FAILED' ? 'ind-failed' : 'ind-missing';
+    const badgeClass = status === 'PRESENT' ? 'present' : status === 'FLAGGED' ? 'failed' : status === 'FAILED' ? 'failed' : 'missing';
+    const meta = [proof.artifact_type, proof.gps_result, proof.msisdn_result, proof.submitter_class, proof.submitted_at_utc]
+      .filter(Boolean)
+      .join(' · ');
+    return `<div class="ev-row ${rowClass}"><div class="ind ${indClass}"></div><div><div class="ev-name">${proof.proof_type_id} · ${proof.label}</div><div class="ev-meta">${meta || 'No detail available'}</div></div><div class="ev-badge ${badgeClass}">${status}</div></div>`;
+  }).join('');
+  const rawArtifactHtml = rawArtifacts.map(artifact => {
+    const coords = artifact.latitude != null && artifact.longitude != null
+      ? `${artifact.latitude}, ${artifact.longitude}`
+      : 'coords unavailable';
+    return `<div class="exc-row"><span class="exc-type">${artifact.artifact_type || 'ARTIFACT'}</span><div><div class="exc-detail">${artifact.artifact_ref || 'ref unavailable'} · ${artifact.submitter_class || 'submitter unknown'} · ${coords}</div><div class="exc-time">${artifact.submitted_at_utc || 'time unavailable'}</div></div></div>`;
+  }).join('');
+  const exceptionHtml = exceptions.length > 0
+    ? exceptions.map(row => `<div class="exc-row"><span class="exc-type">${row.error_code || 'EXCEPTION'}</span><div><div class="exc-detail">${row.supplier_id || 'supplier unavailable'}</div><div class="exc-time">${row.recorded_at_utc || 'time unavailable'}</div></div></div>`).join('')
+    : '<div style="font-size:12px;color:var(--smoke);line-height:1.6;">No active exceptions recorded.</div>';
+  const supplierHtml = supplierPolicy.available === false
+    ? '<div style="font-size:12px;color:var(--smoke);line-height:1.6;">Supplier policy context unavailable for this instruction detail.</div>'
+    : `<div class="gps-block"><div class="gps-label">Decision</div><div class="gps-val">${supplierPolicy.decision || 'UNKNOWN'}</div><div style="margin-top:6px;"><div class="gps-label">Allowlisted</div><div class="gps-val">${String(supplierPolicy.allowlisted ?? 'unknown')}</div></div></div>`;
+  const html = `
+    <div class="so-section"><div class="so-sec-title">Canonical Proof Rows</div><div class="ev-grid">${proofHtml || '<div style="font-size:12px;color:var(--smoke);line-height:1.6;">No proof rows available.</div>'}</div></div>
+    <div class="so-section"><div class="so-sec-title">Raw Artifacts</div>${rawArtifactHtml || '<div style="font-size:12px;color:var(--smoke);line-height:1.6;">No raw artifacts available.</div>'}</div>
+    <div class="so-section"><div class="so-sec-title">Supplier Policy Context</div>${supplierHtml}</div>
+    <div class="so-section"><div class="so-sec-title">Ack / Interrupt Projection</div><div class="gps-block"><div class="gps-label">Projection State</div><div class="gps-val">${detail.ack_interrupt_projection_state || 'PENDING_TASK_UI_WIRE_008'}</div><div style="margin-top:6px;"><div class="gps-label">Acknowledgement State</div><div class="gps-val">${ackState}</div></div><div style="margin-top:6px;"><div class="gps-label">Escalation Tier</div><div class="gps-val">${escalationTier}</div></div><div style="margin-top:6px;"><div class="gps-label">Supervisor Interrupt</div><div class="gps-val">${interruptState}</div></div></div></div>
+    <div class="so-section"><div class="so-sec-title">Exception Log</div>${exceptionHtml}</div>`;
+  return { title, ref, html };
+}
+
 async function openDrill(id) {
   document.getElementById('drillTitle').textContent = 'Loading…';
   document.getElementById('drillRef').textContent = '—';
   document.getElementById('drillBody').innerHTML = '<div style="font-family:var(--mono);font-size:9px;color:var(--smoke);padding:20px 0;">Loading instruction detail…</div>';
   document.getElementById('slideout').classList.add('open');
   try {
-    // In STATIC_DEMO mode, adapter.getInstructionDetail returns drillData[id]
-    // In HYBRID/LIVE mode (UI-WIRE-010), it fetches from the real API
     const raw = await adapter.getInstructionDetail(id);
-    const d = raw || drillData[resolveDrillKey(id)];
+    const d = renderInstructionDetailPayload(raw) || drillData[resolveDrillKey(id)];
     if (!d) {
       document.getElementById('drillTitle').textContent = 'Not found';
       document.getElementById('drillBody').innerHTML = '<div style="font-family:var(--mono);font-size:9px;color:var(--smoke);padding:20px 0;">Instruction detail not available.</div>';
