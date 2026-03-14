@@ -77,6 +77,98 @@ builder.Services.AddRateLimiter(options =>
 var app = builder.Build();
 var logger = app.Logger;
 var runtimeProfile = (Environment.GetEnvironmentVariable("SYMPHONY_RUNTIME_PROFILE") ?? "production").Trim().ToLowerInvariant();
+const string PilotDemoOperatorCookieName = "symphony_pilot_demo_operator";
+
+static string ComputePilotDemoSessionSignature(string tenantId, long expiresAtUnix, string adminKey)
+{
+    using var hmac = new HMACSHA256(Encoding.UTF8.GetBytes(adminKey));
+    var payload = Encoding.UTF8.GetBytes($"{tenantId}|{expiresAtUnix}");
+    return Convert.ToHexString(hmac.ComputeHash(payload));
+}
+
+static string CreatePilotDemoOperatorCookie(string tenantId, string adminKey, TimeSpan lifetime)
+{
+    var expiresAtUnix = DateTimeOffset.UtcNow.Add(lifetime).ToUnixTimeSeconds();
+    var signature = ComputePilotDemoSessionSignature(tenantId, expiresAtUnix, adminKey);
+    var raw = $"{tenantId}|{expiresAtUnix}|{signature}";
+    return Convert.ToBase64String(Encoding.UTF8.GetBytes(raw));
+}
+
+static bool TryValidatePilotDemoOperatorCookie(HttpContext httpContext, string expectedTenantId, out string errorCode, out string[] errors)
+{
+    errorCode = string.Empty;
+    errors = Array.Empty<string>();
+
+    var adminKey = (Environment.GetEnvironmentVariable("ADMIN_API_KEY") ?? string.Empty).Trim();
+    if (string.IsNullOrWhiteSpace(adminKey))
+    {
+        errorCode = "ADMIN_API_KEY_UNAVAILABLE";
+        errors = new[] { "ADMIN_API_KEY must be configured for pilot-demo privileged operator actions." };
+        return false;
+    }
+
+    if (!httpContext.Request.Cookies.TryGetValue(PilotDemoOperatorCookieName, out var cookieValue) || string.IsNullOrWhiteSpace(cookieValue))
+    {
+        errorCode = "PILOT_DEMO_OPERATOR_SESSION_REQUIRED";
+        errors = new[] { "pilot-demo operator session cookie is missing" };
+        return false;
+    }
+
+    string decoded;
+    try
+    {
+        decoded = Encoding.UTF8.GetString(Convert.FromBase64String(cookieValue));
+    }
+    catch (FormatException)
+    {
+        errorCode = "PILOT_DEMO_OPERATOR_SESSION_INVALID";
+        errors = new[] { "pilot-demo operator session cookie is invalid" };
+        return false;
+    }
+
+    var parts = decoded.Split('|', StringSplitOptions.None);
+    if (parts.Length != 3)
+    {
+        errorCode = "PILOT_DEMO_OPERATOR_SESSION_INVALID";
+        errors = new[] { "pilot-demo operator session cookie has an unexpected shape" };
+        return false;
+    }
+
+    var tenantId = parts[0].Trim();
+    if (!long.TryParse(parts[1], out var expiresAtUnix))
+    {
+        errorCode = "PILOT_DEMO_OPERATOR_SESSION_INVALID";
+        errors = new[] { "pilot-demo operator session cookie has an invalid expiry" };
+        return false;
+    }
+
+    var signature = parts[2].Trim();
+    var expectedSignature = ComputePilotDemoSessionSignature(tenantId, expiresAtUnix, adminKey);
+    if (!CryptographicOperations.FixedTimeEquals(
+            Encoding.UTF8.GetBytes(signature),
+            Encoding.UTF8.GetBytes(expectedSignature)))
+    {
+        errorCode = "PILOT_DEMO_OPERATOR_SESSION_INVALID";
+        errors = new[] { "pilot-demo operator session signature is invalid" };
+        return false;
+    }
+
+    if (DateTimeOffset.UtcNow.ToUnixTimeSeconds() > expiresAtUnix)
+    {
+        errorCode = "PILOT_DEMO_OPERATOR_SESSION_EXPIRED";
+        errors = new[] { "pilot-demo operator session has expired" };
+        return false;
+    }
+
+    if (!string.Equals(tenantId, expectedTenantId, StringComparison.OrdinalIgnoreCase))
+    {
+        errorCode = "PILOT_DEMO_OPERATOR_SESSION_TENANT_MISMATCH";
+        errors = new[] { "pilot-demo operator session does not match the requested tenant" };
+        return false;
+    }
+
+    return true;
+}
 
 var maxBodyBytes = long.TryParse(Environment.GetEnvironmentVariable("SYMPHONY_MAX_BODY_BYTES"), out var parsedMaxBodyBytes)
     ? parsedMaxBodyBytes
@@ -164,7 +256,7 @@ var legacySupervisoryUiEnabled = string.Equals(
     "1",
     StringComparison.OrdinalIgnoreCase);
 
-app.MapGet("/pilot-demo/supervisory", () =>
+app.MapGet("/pilot-demo/supervisory", (HttpContext httpContext) =>
 {
     if (!string.Equals(runtimeProfile, "pilot-demo", StringComparison.OrdinalIgnoreCase))
     {
@@ -180,12 +272,27 @@ app.MapGet("/pilot-demo/supervisory", () =>
 
     var html = File.ReadAllText(templatePath);
     var fallbackJson = File.ReadAllText(fallbackPath);
+    var uiTenantId = Environment.GetEnvironmentVariable("SYMPHONY_UI_TENANT_ID") ?? string.Empty;
     var contextJson = JsonSerializer.Serialize(new
     {
         dataMode = "HYBRID",
-        tenantId = Environment.GetEnvironmentVariable("SYMPHONY_UI_TENANT_ID") ?? string.Empty,
+        tenantId = uiTenantId,
         apiKey = Environment.GetEnvironmentVariable("SYMPHONY_UI_API_KEY") ?? string.Empty
     });
+
+    var adminKey = (Environment.GetEnvironmentVariable("ADMIN_API_KEY") ?? string.Empty).Trim();
+    if (!string.IsNullOrWhiteSpace(adminKey) && !string.IsNullOrWhiteSpace(uiTenantId))
+    {
+        httpContext.Response.Cookies.Append(PilotDemoOperatorCookieName, CreatePilotDemoOperatorCookie(uiTenantId, adminKey, TimeSpan.FromHours(8)), new CookieOptions
+        {
+            HttpOnly = true,
+            IsEssential = true,
+            SameSite = SameSiteMode.Strict,
+            Secure = httpContext.Request.IsHttps,
+            MaxAge = TimeSpan.FromHours(8),
+            Path = "/pilot-demo"
+        });
+    }
 
     html = html.Replace("__SYMPHONY_UI_CONTEXT__", contextJson)
                .Replace("__SYMPHONY_HYBRID_FALLBACK__", fallbackJson);
@@ -209,6 +316,27 @@ app.MapGet("/pilot-demo/supervisory-legacy", () =>
 });
 
 app.MapGet("/health", () => Results.Ok(new
+{
+    status = "ok",
+    signing_key_present = signingKeyPresent,
+    tenant_allowlist_configured = tenantAllowlistConfigured,
+    git_sha = EvidenceMeta.Load(EvidenceMeta.ResolveRepoRoot(Directory.GetCurrentDirectory())).GitSha,
+    env_profile = Environment.GetEnvironmentVariable("SYMPHONY_ENV") ?? "unknown",
+    runtime_profile = runtimeProfile
+}));
+
+// Probe aliases keep K8s manifests and host-based health checks aligned.
+app.MapGet("/healthz", () => Results.Ok(new
+{
+    status = "ok",
+    signing_key_present = signingKeyPresent,
+    tenant_allowlist_configured = tenantAllowlistConfigured,
+    git_sha = EvidenceMeta.Load(EvidenceMeta.ResolveRepoRoot(Directory.GetCurrentDirectory())).GitSha,
+    env_profile = Environment.GetEnvironmentVariable("SYMPHONY_ENV") ?? "unknown",
+    runtime_profile = runtimeProfile
+}));
+
+app.MapGet("/readyz", () => Results.Ok(new
 {
     status = "ok",
     signing_key_present = signingKeyPresent,
@@ -336,7 +464,7 @@ app.MapPost("/pilot-demo/api/evidence-links/issue", async (EvidenceLinkIssueRequ
         return Results.NotFound();
     }
 
-    var authFailure = ApiAuthorization.AuthorizeAdminTenantOnboarding(httpContext);
+    var authFailure = ApiAuthorization.AuthorizeEvidenceRead(httpContext);
     if (authFailure is not null)
     {
         return Results.Json(authFailure.Body, statusCode: authFailure.StatusCode);
@@ -346,6 +474,15 @@ app.MapPost("/pilot-demo/api/evidence-links/issue", async (EvidenceLinkIssueRequ
     if (tenantAuthFailure is not null)
     {
         return Results.Json(tenantAuthFailure.Body, statusCode: tenantAuthFailure.StatusCode);
+    }
+
+    if (!TryValidatePilotDemoOperatorCookie(httpContext, request.tenant_id, out var errorCode, out var errors))
+    {
+        return Results.Json(new
+        {
+            error_code = errorCode,
+            errors
+        }, statusCode: StatusCodes.Status403Forbidden);
     }
 
     var result = await EvidenceLinkIssueHandler.HandleAsync(request, logger, cancellationToken);
@@ -440,7 +577,7 @@ app.MapPost("/pilot-demo/api/instruction-files/generate", async (SignedInstructi
         return Results.NotFound();
     }
 
-    var authFailure = ApiAuthorization.AuthorizeAdminTenantOnboarding(httpContext);
+    var authFailure = ApiAuthorization.AuthorizeEvidenceRead(httpContext);
     if (authFailure is not null)
     {
         return Results.Json(authFailure.Body, statusCode: authFailure.StatusCode);
@@ -450,6 +587,15 @@ app.MapPost("/pilot-demo/api/instruction-files/generate", async (SignedInstructi
     if (tenantAuthFailure is not null)
     {
         return Results.Json(tenantAuthFailure.Body, statusCode: tenantAuthFailure.StatusCode);
+    }
+
+    if (!TryValidatePilotDemoOperatorCookie(httpContext, request.tenant_id, out var errorCode, out var errors))
+    {
+        return Results.Json(new
+        {
+            error_code = errorCode,
+            errors
+        }, statusCode: StatusCodes.Status403Forbidden);
     }
 
     var result = await SignedInstructionFileHandler.GenerateAsync(request, logger, cancellationToken);

@@ -1,0 +1,57 @@
+schema_version: 1
+phase: '1'
+task_id: TSK-P1-DEMO-026
+title: Keep admin credentials server-side for privileged demo actions
+owner_role: SUPERVISOR
+status: completed
+depends_on:
+- TASK-UI-WIRE-004
+- TSK-P1-DEMO-025
+touches:
+- services/ledger-api/dotnet/src/LedgerApi/**
+- src/supervisory-dashboard/**
+- docs/operations/SUPERVISORY_UI_SOURCE_OF_TRUTH.md
+- docs/operations/SYMPHONY_DEMO_DEPLOYMENT_GUIDE.md
+- docs/plans/phase1/TSK-P1-DEMO-026/PLAN.md
+- docs/plans/phase1/TSK-P1-DEMO-026/EXEC_LOG.md
+- docs/tasks/phase1_prompts.md
+- tasks/TSK-P1-DEMO-026/meta.yml
+- scripts/audit/verify_tsk_p1_demo_026.sh
+- evidence/phase1/tsk_p1_demo_026_server_side_admin_proxy.json
+invariants:
+- INV-077
+- INV-105
+- INV-119
+work:
+- Treat `TASK-UI-WIRE-004` as the prerequisite browser-safe operator action baseline.
+- Make the cross-pack dependency explicit in the task plan so this task extends, rather than contradicts, the existing UI Wave-B mediation model.
+- Implement a server-side operator session or proxy pattern for privileged pilot-demo actions while keeping `ADMIN_API_KEY` server-side only.
+- Ensure the browser never serializes or sends admin credentials and uses same-origin pilot-demo routes under non-admin read context.
+acceptance_criteria:
+- No page source or bootstrap context contains admin credentials.
+- Privileged operator actions work in pilot-demo through server-side mediation.
+- The task does not weaken existing admin-only backend routes into browser-readable routes.
+- The deployment guide explains that admin secrets remain server-side.
+verification:
+- bash scripts/audit/verify_tsk_p1_demo_026.sh
+- python3 scripts/audit/validate_evidence.py --task TSK-P1-DEMO-026 --evidence evidence/phase1/tsk_p1_demo_026_server_side_admin_proxy.json
+evidence:
+- evidence/phase1/tsk_p1_demo_026_server_side_admin_proxy.json
+failure_modes:
+- Admin secret is still visible in page source or devtools bootstrap.
+- Browser calls privileged routes directly with admin semantics.
+- Privilege is broadened instead of mediated server-side.
+- TASK-UI-WIRE-004 is bypassed or contradicted instead of extended.
+- Evidence file missing.
+must_read:
+- AGENT_ENTRYPOINT.md
+- docs/operations/AGENT_PROMPT_ROUTER.md
+- docs/operations/AI_AGENT_OPERATION_MANUAL.md
+- docs/operations/SUPERVISORY_UI_SOURCE_OF_TRUTH.md
+- docs/operations/SYMPHONY_DEMO_DEPLOYMENT_GUIDE.md
+implementation_plan: docs/plans/phase1/TSK-P1-DEMO-026/PLAN.md
+implementation_log: docs/plans/phase1/TSK-P1-DEMO-026/EXEC_LOG.md
+notes: Privileged-action mediation task. This task hardens the demo operator flow so browser-visible sessions never contain admin credentials.
+client: codex_cli
+assigned_agent: supervisor
+model: gpt-5-codex

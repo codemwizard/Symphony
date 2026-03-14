@@ -5772,3 +5772,23 @@ failure_modes:
 - Export remains a stub or alert-only UI action => FAIL.
 - HTTP route diverges from DEMO-009 generator output => FAIL.
 ```
+
+## TSK-P1-DEMO-024 — Align demo health endpoints with deployment probes
+
+Make the ledger-api health routes and Kubernetes probes agree. Prefer parity with the app's existing health style: add `/healthz` and `/readyz` only if consistent; otherwise retarget manifests to `/health`. Update the deployment guide to document the real route set and keep scope limited to ledger-api.
+
+## TSK-P1-DEMO-025 — Complete the host-based demo deployment runtime contract
+
+Complete the deployment guide and checklist for the supported host-based demo path. Document all required env vars, including `INGRESS_API_KEY`, `ADMIN_API_KEY`, `SYMPHONY_KNOWN_TENANTS`, and the fact that `SYMPHONY_UI_API_KEY` must be accepted by the backend as `INGRESS_API_KEY`. Document Kestrel as the default demo server and `psql` as a required host dependency.
+
+## TSK-P1-DEMO-026 — Keep admin credentials server-side for privileged demo actions
+
+Harden the privileged demo operator flow so the browser never receives `ADMIN_API_KEY`. Extend the Wave-B UI mediation model with a real server-side operator session/proxy path for privileged pilot-demo actions. The browser must not serialize or send admin credentials.
+
+## TSK-P1-DEMO-027 — Finish the operator demo gate split
+
+Extend `TSK-P1-DEMO-015` into a real operator deployment gate that is narrower than engineering `pre_ci`. The operator gate must run the exact enumerated demo and UI verifiers plus runtime readiness checks, and the deployment guide must use this gate instead of full `pre_ci.sh` for routine bring-up.
+
+## TSK-P1-DEMO-028 — Complete image build flow while keeping host-based publish as the supported demo path
+
+Replace placeholder Docker build behavior with real, reproducible image build flow where the repo supports it. Keep the deployment guide explicit that host-based `dotnet publish` on Kestrel remains the supported demo path and image build is secondary.

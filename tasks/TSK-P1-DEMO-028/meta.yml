@@ -1,0 +1,54 @@
+schema_version: 1
+phase: '1'
+task_id: TSK-P1-DEMO-028
+title: Complete image build flow while keeping host-based publish as the supported demo path
+owner_role: SUPERVISOR
+status: completed
+depends_on:
+- TSK-P1-DEMO-024
+- TSK-P1-DEMO-025
+touches:
+- services/ledger-api/Dockerfile
+- services/executor-worker/Dockerfile
+- scripts/dev/build_demo_images.sh
+- docs/operations/SYMPHONY_DEMO_DEPLOYMENT_GUIDE.md
+- docs/plans/phase1/TSK-P1-DEMO-028/PLAN.md
+- docs/plans/phase1/TSK-P1-DEMO-028/EXEC_LOG.md
+- docs/tasks/phase1_prompts.md
+- tasks/TSK-P1-DEMO-028/meta.yml
+- scripts/audit/verify_tsk_p1_demo_028.sh
+- evidence/phase1/tsk_p1_demo_028_image_flow.json
+invariants:
+- INV-105
+- INV-119
+- INVPROC-06
+work:
+- Replace placeholder image behavior with real build flow for ledger-api and executor-worker where the repo supports a runnable image path.
+- Align image runtime behavior with the actual application startup contract, including entrypoint, ports, and bundled UI assets where required.
+- Update deployment guidance to state explicitly that host-based `dotnet publish` on Kestrel remains the supported demo path while image build exists for reproducibility and cluster use.
+acceptance_criteria:
+- The checked-in Dockerfile or Dockerfiles are no longer placeholders.
+- A reproducible image build exists for the app surface or surfaces covered by the repo.
+- The deployment guide explicitly keeps host-based `dotnet publish` as the supported demo path.
+- The guide no longer implies image build is the primary demo bring-up path.
+verification:
+- bash scripts/audit/verify_tsk_p1_demo_028.sh
+- python3 scripts/audit/validate_evidence.py --task TSK-P1-DEMO-028 --evidence evidence/phase1/tsk_p1_demo_028_image_flow.json
+evidence:
+- evidence/phase1/tsk_p1_demo_028_image_flow.json
+failure_modes:
+- Dockerfile remains placeholder-only.
+- Image build exists but deployment docs still overstate it as the supported demo path.
+- Static UI assets are omitted from the built app image.
+- Evidence file missing.
+must_read:
+- AGENT_ENTRYPOINT.md
+- docs/operations/AGENT_PROMPT_ROUTER.md
+- docs/operations/AI_AGENT_OPERATION_MANUAL.md
+- docs/operations/SYMPHONY_DEMO_DEPLOYMENT_GUIDE.md
+implementation_plan: docs/plans/phase1/TSK-P1-DEMO-028/PLAN.md
+implementation_log: docs/plans/phase1/TSK-P1-DEMO-028/EXEC_LOG.md
+notes: Image-flow hardening task. This task completes reproducible container packaging without changing the fact that host-based publish is the supported demo operator path.
+client: codex_cli
+assigned_agent: supervisor
+model: gpt-5-codex

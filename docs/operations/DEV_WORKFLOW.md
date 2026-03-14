@@ -57,7 +57,7 @@ Local pre-CI defaults to CI-equivalent DB freshness:
 The canonical local hook topology is:
 
 - `.githooks/` is the tracked hook source
-- `.git/hooks/` is the installed active destination
+- `git rev-parse --git-path hooks` is the installed active destination
 - `scripts/dev/pre_flight.sh` is the light commit-path gate
 - `scripts/dev/pre_ci.sh` is the heavy push-time gate
 

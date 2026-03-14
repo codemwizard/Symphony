@@ -1,0 +1,52 @@
+schema_version: 1
+phase: '1'
+task_id: TSK-P1-DEMO-024
+title: Align demo health endpoints with deployment probes
+owner_role: SUPERVISOR
+status: completed
+depends_on:
+- TSK-P1-DEMO-014
+touches:
+- services/ledger-api/dotnet/src/LedgerApi/Program.cs
+- infra/sandbox/k8s/ledger-api-deployment.yaml
+- docs/operations/SYMPHONY_DEMO_DEPLOYMENT_GUIDE.md
+- docs/plans/phase1/TSK-P1-DEMO-024/PLAN.md
+- docs/plans/phase1/TSK-P1-DEMO-024/EXEC_LOG.md
+- docs/tasks/phase1_prompts.md
+- tasks/TSK-P1-DEMO-024/meta.yml
+- scripts/audit/verify_tsk_p1_demo_024.sh
+- evidence/phase1/tsk_p1_demo_024_health_probe_parity.json
+invariants:
+- INV-105
+- INV-119
+- INVPROC-06
+work:
+- Inspect the repo's current health convention and choose parity with the existing app style rather than inventing a new one.
+- Add `/healthz` and `/readyz` aliases if that is consistent with the app, otherwise retarget the Kubernetes probes to `/health`.
+- Update the demo deployment guide so the documented health routes match the implemented runtime behavior.
+- Keep scope limited to ledger-api and do not invent executor-worker HTTP behavior.
+acceptance_criteria:
+- The app and Kubernetes manifests agree on the supported health and readiness route set.
+- A fresh deployment no longer fails purely because probes target non-existent routes.
+- The deployment guide documents the real probe route or routes.
+verification:
+- bash scripts/audit/verify_tsk_p1_demo_024.sh
+- python3 scripts/audit/validate_evidence.py --task TSK-P1-DEMO-024 --evidence evidence/phase1/tsk_p1_demo_024_health_probe_parity.json
+evidence:
+- evidence/phase1/tsk_p1_demo_024_health_probe_parity.json
+failure_modes:
+- Kubernetes probes still target non-existent routes.
+- The guide documents `/healthz` or `/readyz` while the app only serves `/health`.
+- The task silently broadens scope into non-existent worker HTTP surfaces.
+- Evidence file missing.
+must_read:
+- AGENT_ENTRYPOINT.md
+- docs/operations/AGENT_PROMPT_ROUTER.md
+- docs/operations/AI_AGENT_OPERATION_MANUAL.md
+- docs/operations/SYMPHONY_DEMO_DEPLOYMENT_GUIDE.md
+implementation_plan: docs/plans/phase1/TSK-P1-DEMO-024/PLAN.md
+implementation_log: docs/plans/phase1/TSK-P1-DEMO-024/EXEC_LOG.md
+notes: Health-probe parity task. This task closes the current mismatch between ledger-api health routing and the Kubernetes deployment assets.
+client: codex_cli
+assigned_agent: supervisor
+model: gpt-5-codex

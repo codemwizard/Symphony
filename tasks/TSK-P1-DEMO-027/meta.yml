@@ -1,0 +1,59 @@
+schema_version: 1
+phase: '1'
+task_id: TSK-P1-DEMO-027
+title: Finish the operator demo gate split
+owner_role: SUPERVISOR
+status: completed
+depends_on:
+- TSK-P1-DEMO-015
+- TSK-P1-DEMO-025
+- TSK-P1-DEMO-026
+touches:
+- scripts/dev/pre_ci_demo.sh
+- scripts/dev/pre_ci.sh
+- scripts/dev/**
+- docs/operations/SYMPHONY_DEMO_DEPLOYMENT_GUIDE.md
+- docs/operations/PHASE1_DEMO_DEPLOY_AND_TEST_CHECKLIST.md
+- docs/plans/phase1/TSK-P1-DEMO-027/PLAN.md
+- docs/plans/phase1/TSK-P1-DEMO-027/EXEC_LOG.md
+- docs/tasks/phase1_prompts.md
+- tasks/TSK-P1-DEMO-027/meta.yml
+- scripts/audit/verify_tsk_p1_demo_027.sh
+- evidence/phase1/tsk_p1_demo_027_demo_gate_split.json
+invariants:
+- INV-105
+- INV-119
+- INVPROC-06
+work:
+- Treat `TSK-P1-DEMO-015` as the starting point and extend its demo gate split rather than inventing a parallel path.
+- Define and implement a lean operator demo gate that runs the exact verifier list from the approved plan plus explicit runtime readiness checks.
+- Keep `scripts/dev/pre_ci.sh` as the engineering parity gate and update deployment docs to use the lean demo gate for operator bring-up.
+- Ensure `verify_tsk_p1_demo_026.sh` is included in the lean gate so server-side admin mediation is part of demo readiness.
+acceptance_criteria:
+- There is a distinct operator demo gate entrypoint.
+- Deployment docs no longer tell operators to run full `pre_ci.sh` for routine demo bring-up.
+- pre_ci.sh remains the engineering branch-quality gate.
+- The operator demo gate is deterministically narrower because it runs the exact enumerated verifier set plus explicit runtime readiness checks.
+verification:
+- bash scripts/audit/verify_tsk_p1_demo_027.sh
+- python3 scripts/audit/validate_evidence.py --task TSK-P1-DEMO-027 --evidence evidence/phase1/tsk_p1_demo_027_demo_gate_split.json
+evidence:
+- evidence/phase1/tsk_p1_demo_027_demo_gate_split.json
+failure_modes:
+- Demo deployment still depends on full `pre_ci.sh`.
+- The lean demo gate duplicates `pre_ci` instead of narrowing scope.
+- TSK-P1-DEMO-015 is ignored and a parallel split is invented.
+- Different agents could implement different demo gates because the verifier set is not fixed.
+- Evidence file missing.
+must_read:
+- AGENT_ENTRYPOINT.md
+- docs/operations/AGENT_PROMPT_ROUTER.md
+- docs/operations/AI_AGENT_OPERATION_MANUAL.md
+- docs/operations/SYMPHONY_DEMO_DEPLOYMENT_GUIDE.md
+- docs/operations/PHASE1_DEMO_DEPLOY_AND_TEST_CHECKLIST.md
+implementation_plan: docs/plans/phase1/TSK-P1-DEMO-027/PLAN.md
+implementation_log: docs/plans/phase1/TSK-P1-DEMO-027/EXEC_LOG.md
+notes: Demo-gate split task. This task finishes the operator deployment gate split started by TSK-P1-DEMO-015 and fixes the exact verifier set by contract.
+client: codex_cli
+assigned_agent: supervisor
+model: gpt-5-codex

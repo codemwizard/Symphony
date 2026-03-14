@@ -77,3 +77,4 @@ Privileged operator actions must keep admin credentials server-side.
 - The browser must not receive `SYMPHONY_UI_ADMIN_API_KEY` or any equivalent admin secret in bootstrap context.
 - The browser must not send `x-admin-api-key`.
 - Any privileged supervisory/operator action needed by the shell must flow through same-origin pilot-demo proxy routes implemented server-side.
+- The pilot-demo shell must use a server-issued operator session boundary, not a browser-visible admin credential.
