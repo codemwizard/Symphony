@@ -10,6 +10,7 @@ EVIDENCE_GIT_SHA="$(git_sha)"
 EVIDENCE_SCHEMA_FP="$(schema_fingerprint)"
 
 failures=()
+HOOKS_DIR="$(git -C "$ROOT" rev-parse --git-path hooks)"
 
 for target in \
   "$ROOT/.githooks/pre-commit" \
@@ -24,23 +25,25 @@ done
 
 bash "$ROOT/scripts/dev/install_git_hooks.sh" >/dev/null || failures+=("install_git_hooks_failed")
 
-cmp -s "$ROOT/.githooks/pre-commit" "$ROOT/.git/hooks/pre-commit" || failures+=("installed_pre_commit_drift")
-cmp -s "$ROOT/.githooks/pre-push" "$ROOT/.git/hooks/pre-push" || failures+=("installed_pre_push_drift")
-rg -q 'scripts/dev/pre_flight.sh' "$ROOT/.git/hooks/pre-commit" || failures+=("installed_pre_commit_missing_pre_flight")
-rg -q 'scripts/dev/pre_ci.sh' "$ROOT/.git/hooks/pre-push" || failures+=("installed_pre_push_missing_pre_ci")
+[[ -d "$HOOKS_DIR" ]] || failures+=("resolved_hooks_dir_missing:$HOOKS_DIR")
+cmp -s "$ROOT/.githooks/pre-commit" "$HOOKS_DIR/pre-commit" || failures+=("installed_pre_commit_drift")
+cmp -s "$ROOT/.githooks/pre-push" "$HOOKS_DIR/pre-push" || failures+=("installed_pre_push_drift")
+rg -q 'scripts/dev/pre_flight.sh' "$HOOKS_DIR/pre-commit" || failures+=("installed_pre_commit_missing_pre_flight")
+rg -q 'scripts/dev/pre_ci.sh' "$HOOKS_DIR/pre-push" || failures+=("installed_pre_push_missing_pre_ci")
 rg -q 'Local hook model' "$ROOT/docs/operations/DEV_WORKFLOW.md" || failures+=("dev_workflow_missing_hook_section")
 rg -q 'See `docs/operations/LOCAL_HOOK_TOPOLOGY.md`' "$ROOT/docs/operations/DEV_WORKFLOW.md" || failures+=("dev_workflow_missing_topology_link")
 
-python3 - <<'PY' "$OUT" "$EVIDENCE_TS" "$EVIDENCE_GIT_SHA" "$EVIDENCE_SCHEMA_FP" "$(printf '%s\n' "${failures[@]}")"
+python3 - <<'PY' "$OUT" "$EVIDENCE_TS" "$EVIDENCE_GIT_SHA" "$EVIDENCE_SCHEMA_FP" "$HOOKS_DIR" "$(printf '%s\n' "${failures[@]}")"
 import json, sys
-out, ts, sha, fp = sys.argv[1:5]
-failures = [x for x in sys.argv[5:] if x]
+out, ts, sha, fp, hooks_dir = sys.argv[1:6]
+failures = [x for x in sys.argv[6:] if x]
 payload = {
   "check_id": "TSK-P1-076",
   "task_id": "TSK-P1-076",
   "timestamp_utc": ts,
   "git_sha": sha,
   "schema_fingerprint": fp,
+  "resolved_hooks_dir": hooks_dir,
   "status": "PASS" if not failures else "FAIL",
   "failures": failures,
 }

@@ -31,6 +31,7 @@ Purpose: inventory repository scripts that mutate Git state or rely on Git state
 | `scripts/audit/verify_invariants_local.sh` | yes | partial | PASS | Local wrapper reads Git state and delegates to verifiers; no uncontained mutation path. |
 | `scripts/audit/verify_tsk_p1_062.sh` | yes | partial | PASS | Worktree hygiene verifier reads Git worktree registry and enforces no stale/prunable entries. |
 | `scripts/audit/verify_tsk_p1_076.sh` | yes | partial | PASS | Verifies installed hook files in `.git/hooks` against tracked `.githooks/*` sources after running the canonical hook installer. |
+| `scripts/audit/verify_tsk_p1_demo_028.sh` | yes | partial | PASS | Demo image-flow verifier records `git rev-parse HEAD` in evidence while exercising deterministic Docker builds; it reads Git state without mutating refs. |
 | `scripts/dev/install_git_hooks.sh` | yes | partial | PASS | Installs hook files into `.git/hooks`; mutates local Git-related state and must remain explicitly operator-invoked. |
 | `scripts/lib/git_diff_range_only.sh` | yes | partial | PASS | Shared Git diff helper; safe only when callers control inherited Git plumbing. |
 | `scripts/security/lint_app_sql_injection.sh` | yes | partial | PASS | Reads tracked/untracked file lists through Git; no ref mutation. |

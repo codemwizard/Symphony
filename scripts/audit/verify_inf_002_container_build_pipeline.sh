@@ -29,8 +29,8 @@ declare -a NAMES=(
 )
 
 declare -a CONTEXTS=(
-  "services/ledger-api"
-  "services/executor-worker"
+  "."
+  "."
   "infra/db-migration-job"
 )
 

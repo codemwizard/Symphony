@@ -1,9 +1,10 @@
 {
   "check_id": "TSK-P1-076",
   "task_id": "TSK-P1-076",
-  "timestamp_utc": "2026-03-12T19:35:42Z",
-  "git_sha": "a9d75d1f09b5783f3ed6df9465799b80e9db454f",
+  "timestamp_utc": "2026-03-14T02:19:27Z",
+  "git_sha": "e6fea4e7e798ccab0563ad0f8cf4d754f0e869f0",
   "schema_fingerprint": "69acffc9187356ccc2270735cf4c3702c96925fc5932fe6221e47a9815c15b08",
+  "resolved_hooks_dir": ".githooks",
   "status": "PASS",
   "failures": []
 }

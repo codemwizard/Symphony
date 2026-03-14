@@ -9,10 +9,14 @@ Define the canonical local hook topology for this repo so the tracked hook sourc
 ## Canonical Model
 
 - Tracked hook source: `.githooks/`
-- Active installed destination: `.git/hooks/`
+- Active installed destination: the Git-resolved hooks path from `git rev-parse --git-path hooks`
 - Installer: `scripts/dev/install_git_hooks.sh`
 
-The installer must copy tracked hook sources from `.githooks/` into `.git/hooks/`.
+In a standard checkout this usually resolves to `.git/hooks/`.
+In a linked worktree it resolves into the shared worktree gitdir, not a literal `.git/hooks/` directory.
+If `core.hooksPath` is set, it may resolve directly to `.githooks/`, in which case the tracked hook source is also the active hook destination.
+
+The installer must copy tracked hook sources from `.githooks/` into the Git-resolved hooks path.
 It must not synthesize hook bodies inline.
 
 ## Gate Levels
@@ -39,8 +43,8 @@ bash scripts/dev/install_git_hooks.sh
 
 After installation:
 
-- `.git/hooks/pre-commit` must match `.githooks/pre-commit`
-- `.git/hooks/pre-push` must match `.githooks/pre-push`
+- `<git hooks path>/pre-commit` must match `.githooks/pre-commit`
+- `<git hooks path>/pre-push` must match `.githooks/pre-push`
 
 ## Drift Policy
 
@@ -48,8 +52,8 @@ Hook topology drift is a failure condition.
 
 Examples:
 
-- `.git/hooks/pre-commit` does not match `.githooks/pre-commit`
-- `.git/hooks/pre-push` does not match `.githooks/pre-push`
+- the Git-resolved hooks path `pre-commit` file does not match `.githooks/pre-commit`
+- the Git-resolved hooks path `pre-push` file does not match `.githooks/pre-push`
 - the installer no longer copies from `.githooks/`
 - `pre_flight` starts calling `pre_ci`
 - docs describe a different topology than the scripts implement

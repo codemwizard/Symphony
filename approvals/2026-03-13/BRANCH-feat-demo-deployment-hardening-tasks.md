@@ -16,7 +16,7 @@ Prepared with Codex; human review required for branch closeout.
 
 ## 5. Verification & Evidence
 
-Task-pack schema/readiness, task-specific verifiers, governance signoff, and branch evidence regeneration executed on this branch. Full local pre_ci remains a separate proving step and is not claimed as passed in this approval package.
+Task-pack schema/readiness, task-specific verifiers, governance signoff, container-build verification, linked-worktree hook-topology remediation, and a full pre_ci rerun from a plain checkout executed for this branch.
 
 ## 6. Risk Assessment
 

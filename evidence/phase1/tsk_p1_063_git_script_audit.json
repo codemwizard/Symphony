@@ -1,9 +1,9 @@
 {
   "check_id": "TSK-P1-063",
   "task_id": "TSK-P1-063",
-  "timestamp_utc": "2026-03-10T14:23:38Z",
-  "git_sha": "d51d603fc49bdb3c713f422ec511d62b668ec9ab",
-  "schema_fingerprint": "33e36565282f1592203a3db8c735f6d6a51bdcfa289c00e1c2040e30adc98ddb",
+  "timestamp_utc": "2026-03-14T02:02:33Z",
+  "git_sha": "e6fea4e7e798ccab0563ad0f8cf4d754f0e869f0",
+  "schema_fingerprint": "69acffc9187356ccc2270735cf4c3702c96925fc5932fe6221e47a9815c15b08",
   "status": "PASS",
   "audited_paths": [
     "scripts/audit/lib/approval_requirement.py",
@@ -18,6 +18,8 @@
     "scripts/audit/verify_human_governance_review_signoff.sh",
     "scripts/audit/verify_invariants_local.sh",
     "scripts/audit/verify_tsk_p1_062.sh",
+    "scripts/audit/verify_tsk_p1_076.sh",
+    "scripts/audit/verify_tsk_p1_demo_028.sh",
     "scripts/dev/install_git_hooks.sh",
     "scripts/dev/pre_ci.sh",
     "scripts/lib/git_diff_range_only.sh",
