@@ -1,0 +1,51 @@
+schema_version: 1
+phase: '1'
+task_id: TSK-P1-208
+title: Restore admin-only auth boundary for pilot-demo instruction generation
+owner_role: SUPERVISOR
+status: planned
+depends_on:
+- TSK-P1-DEMO-026
+touches:
+- services/ledger-api/dotnet/src/LedgerApi/Program.cs
+- src/supervisory-dashboard/index.html
+- scripts/audit/verify_task_ui_wire_004.sh
+- scripts/audit/verify_tsk_p1_208.sh
+- evidence/phase1/tsk_p1_208_pilot_demo_generate_auth_boundary.json
+- docs/plans/phase1/TSK-P1-208/PLAN.md
+- docs/plans/phase1/TSK-P1-208/EXEC_LOG.md
+invariants:
+- INV-077
+- INV-119
+work:
+- Change /pilot-demo/api/instruction-files/generate from evidence-read auth to admin auth.
+- Replace AuthorizeEvidenceRead(httpContext) with AuthorizeAdminTenantOnboarding(httpContext) in that route.
+- Preserve tenant-scope enforcement, pilot-demo gating, and the existing TryValidatePilotDemoOperatorCookie defence-in-depth layer.
+- Update adapter.generateInstructionFile() in index.html so the UI stays on browser-safe same-origin mediation semantics.
+- Align verify_task_ui_wire_004.sh and the task verifier to the corrected route contract.
+acceptance_criteria:
+- verify_task_ui_wire_004.sh passes.
+- The pilot-demo generate route is admin-guarded and still enforces the operator-cookie layer.
+- No admin secret appears in browser source, bootstrap payload, or UI headers.
+verification:
+- bash scripts/audit/verify_task_ui_wire_004.sh
+- bash scripts/audit/verify_tsk_p1_208.sh
+- python3 scripts/audit/validate_evidence.py --task TSK-P1-208 --evidence evidence/phase1/tsk_p1_208_pilot_demo_generate_auth_boundary.json
+evidence:
+- evidence/phase1/tsk_p1_208_pilot_demo_generate_auth_boundary.json
+failure_modes:
+- The route still uses AuthorizeEvidenceRead as the first auth check.
+- The operator-cookie defence-in-depth layer is removed.
+- Browser-visible admin secret leakage is introduced.
+- Evidence file missing.
+must_read:
+- AGENT_ENTRYPOINT.md
+- docs/operations/AI_AGENT_OPERATION_MANUAL.md
+- services/ledger-api/dotnet/src/LedgerApi/Program.cs
+- scripts/audit/verify_task_ui_wire_004.sh
+implementation_plan: docs/plans/phase1/TSK-P1-208/PLAN.md
+implementation_log: docs/plans/phase1/TSK-P1-208/EXEC_LOG.md
+notes: Pilot-demo generate auth-boundary repair task.
+client: codex_cli
+assigned_agent: supervisor
+model: gpt-5-codex

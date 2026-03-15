@@ -1,0 +1,56 @@
+schema_version: 1
+phase: '1'
+task_id: TSK-P1-DEMO-021
+title: Define executable demo key OpenBao TLS and rotation policy
+owner_role: SUPERVISOR
+status: completed
+depends_on:
+- TSK-P1-DEMO-018
+touches:
+- docs/security/SYMPHONY_DEMO_KEY_AND_ROTATION_POLICY.md
+- scripts/audit/verify_tsk_p1_demo_021.sh
+- evidence/phase1/tsk_p1_demo_021_key_rotation_policy.json
+- docs/plans/phase1/TSK-P1-DEMO-021/PLAN.md
+- docs/plans/phase1/TSK-P1-DEMO-021/EXEC_LOG.md
+invariants:
+- INV-105
+- INV-119
+- INV-133
+work:
+- Create the demo-specific executable key, OpenBao, TLS, and rotation policy for the
+  host-based run.
+- Resolve OpenBao into one executable truth for the canonical run and clearly label
+  any weaker mode as rehearsal-only or non-signoff.
+- Define admin-key non-exposure requirements across logs, run bundles, rendered HTML,
+  and UI/bootstrap payloads.
+- Operationalize post-demo rotation closeout and INF-006 signing posture requirements.
+acceptance_criteria:
+- Operators do not need to infer whether OpenBao is required or how to close out key
+  rotation.
+- Policy is executable rather than descriptive.
+- Any weaker posture is clearly labeled non-signoff or rehearsal-only.
+- The document does not weaken existing identity or secret-handling posture.
+verification:
+- bash scripts/audit/verify_tsk_p1_demo_021.sh
+- python3 scripts/audit/validate_evidence.py --task TSK-P1-DEMO-021 --evidence evidence/phase1/tsk_p1_demo_021_key_rotation_policy.json
+evidence:
+- evidence/phase1/tsk_p1_demo_021_key_rotation_policy.json
+failure_modes:
+- OpenBao remains ambiguous.
+- Rotation remains policy-only with no executable closeout.
+- Weak rehearsal posture is misrepresented as demo readiness.
+- Secret handling still permits unsafe bundle, log, or bootstrap leakage.
+- Evidence file missing.
+must_read:
+- AGENT_ENTRYPOINT.md
+- docs/security/KEY_MANAGEMENT_POLICY.md
+- docs/security/TLS_DEPLOYMENT_GUIDE.md
+- docs/security/AUTH_IDENTITY_BOUNDARY.md
+- docs/operations/KEY_ROTATION_SOP.md
+implementation_plan: docs/plans/phase1/TSK-P1-DEMO-021/PLAN.md
+implementation_log: docs/plans/phase1/TSK-P1-DEMO-021/EXEC_LOG.md
+notes: Full-demo sign-off must fail closed if host posture cannot satisfy required
+  OpenBao-backed signing truth.
+client: codex_cli
+assigned_agent: supervisor
+model: gpt-5-codex

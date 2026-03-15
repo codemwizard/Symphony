@@ -1,0 +1,47 @@
+schema_version: 1
+phase: '1'
+task_id: TSK-P1-209
+title: Reconcile supervisory UI compatibility alias traceability
+owner_role: SUPERVISOR
+status: planned
+depends_on:
+- TSK-P1-DEMO-008
+touches:
+- src/supervisory-dashboard/index.html
+- scripts/audit/verify_tsk_p1_demo_008.sh
+- scripts/audit/verify_tsk_p1_209.sh
+- evidence/phase1/tsk_p1_209_ui_traceability_cleanup.json
+- docs/plans/phase1/TSK-P1-209/PLAN.md
+- docs/plans/phase1/TSK-P1-209/EXEC_LOG.md
+invariants:
+- INV-105
+- INV-119
+work:
+- Decide and encode one compatibility strategy for export-trigger and raw-artifact-drilldown in index.html.
+- Keep aliases but either wire them to the same underlying behavior as the real control or explicitly mark them inert in verifier logic.
+- Add a verifier that inventories actionable controls and confirms whether each control is a real wired action, intentional compatibility alias, or explicit non-action placeholder.
+- Keep this task scoped to index.html only.
+acceptance_criteria:
+- Compatibility alias behavior is no longer ambiguous.
+- Verifier-backed UI control inventory exists and passes.
+verification:
+- bash scripts/audit/verify_tsk_p1_demo_008.sh
+- bash scripts/audit/verify_tsk_p1_209.sh
+- python3 scripts/audit/validate_evidence.py --task TSK-P1-209 --evidence evidence/phase1/tsk_p1_209_ui_traceability_cleanup.json
+evidence:
+- evidence/phase1/tsk_p1_209_ui_traceability_cleanup.json
+failure_modes:
+- Alias controls remain semantically ambiguous.
+- UI control inventory does not exist or does not classify alias behavior.
+- Evidence file missing.
+must_read:
+- AGENT_ENTRYPOINT.md
+- docs/operations/AI_AGENT_OPERATION_MANUAL.md
+- src/supervisory-dashboard/index.html
+- scripts/audit/verify_tsk_p1_demo_008.sh
+implementation_plan: docs/plans/phase1/TSK-P1-209/PLAN.md
+implementation_log: docs/plans/phase1/TSK-P1-209/EXEC_LOG.md
+notes: Supervisory UI alias traceability task.
+client: codex_cli
+assigned_agent: supervisor
+model: gpt-5-codex

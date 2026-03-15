@@ -1,0 +1,54 @@
+schema_version: 1
+phase: '1'
+task_id: TSK-P1-DEMO-019
+title: Add hardened reproducible demo server snapshot capture
+owner_role: SUPERVISOR
+status: completed
+depends_on:
+- TSK-P1-DEMO-018
+touches:
+- scripts/dev/capture_demo_server_snapshot.sh
+- scripts/audit/verify_tsk_p1_demo_019.sh
+- evidence/phase1/tsk_p1_demo_019_server_snapshot.json
+- docs/plans/phase1/TSK-P1-DEMO-019/PLAN.md
+- docs/plans/phase1/TSK-P1-DEMO-019/EXEC_LOG.md
+invariants:
+- INV-105
+- INV-119
+- INV-133
+work:
+- Create the snapshot script that emits a reproducible demo-run bundle under evidence/phase1/demo_run/<run_id>/.
+- Capture host, process, network, resource, git, Postgres, and OpenBao posture for
+  debugging and reproduction.
+- Fingerprint secret env presence with HMAC-SHA256 using run-scoped ephemeral key
+  material that is not persisted in the bundle.
+- Enforce root-bounded output-path handling, fail on symbolic-link output targets,
+  and use explicit restrictive permissions on output files.
+acceptance_criteria:
+- Snapshot bundle is sufficient for reproduction and debugging of demo failures.
+- Secret correlation across runs is reduced by run-scoped HMAC fingerprinting.
+- Bundle includes operator, process, network, and resource posture.
+- Snapshot outputs are created with explicit safe permissions.
+- Output-path handling is root-bounded and symlink-safe.
+verification:
+- bash scripts/audit/verify_tsk_p1_demo_019.sh
+- python3 scripts/audit/validate_evidence.py --task TSK-P1-DEMO-019 --evidence evidence/phase1/tsk_p1_demo_019_server_snapshot.json
+evidence:
+- evidence/phase1/tsk_p1_demo_019_server_snapshot.json
+failure_modes:
+- Snapshot lacks enough state to debug demo failures.
+- Secret fingerprinting leaks cross-run correlation unnecessarily.
+- Snapshot outputs are too permissive.
+- Output-path handling is not root-bounded and symlink-safe.
+- Compose output is emitted from ambiguous detection logic.
+- Evidence file missing.
+must_read:
+- AGENT_ENTRYPOINT.md
+- docs/operations/AI_AGENT_OPERATION_MANUAL.md
+- docs/operations/SYMPHONY_DEMO_E2E_RUNBOOK.md
+implementation_plan: docs/plans/phase1/TSK-P1-DEMO-019/PLAN.md
+implementation_log: docs/plans/phase1/TSK-P1-DEMO-019/EXEC_LOG.md
+notes: Operator-tooling task; no schema or runtime business-logic changes.
+client: codex_cli
+assigned_agent: supervisor
+model: gpt-5-codex

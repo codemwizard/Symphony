@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 import hashlib
+import hmac
 import json
 import os
 import secrets
-import urllib.parse
 from datetime import datetime, timezone
 from http.server import BaseHTTPRequestHandler, HTTPServer
 
@@ -12,6 +12,11 @@ import psycopg
 DATABASE_URL = os.environ.get("DATABASE_URL", "")
 if not DATABASE_URL:
     raise SystemExit("DATABASE_URL is required")
+
+TEST_MODE = os.environ.get("SUPERVISOR_API_TEST_MODE", "") == "1"
+ADMIN_API_KEY = (os.environ.get("ADMIN_API_KEY") or "").strip()
+if not TEST_MODE and not ADMIN_API_KEY:
+    raise SystemExit("ADMIN_API_KEY is required (set SUPERVISOR_API_TEST_MODE=1 for test environments)")
 
 
 def fetch_one(query: str, params=()):
@@ -41,14 +46,31 @@ class Handler(BaseHTTPRequestHandler):
         n = int(self.headers.get("Content-Length", "0"))
         if n <= 0:
             return {}
-        return json.loads(self.rfile.read(n).decode("utf-8"))
+        try:
+            return json.loads(self.rfile.read(n).decode("utf-8"))
+        except (json.JSONDecodeError, UnicodeDecodeError):
+            return None
+
+    def _check_admin_auth(self) -> bool:
+        """Verify admin API key via Authorization header."""
+        if TEST_MODE:
+            return True
+        auth_header = (self.headers.get("Authorization") or "").strip()
+        if not auth_header.startswith("Bearer "):
+            return False
+        provided = auth_header[7:]
+        return hmac.compare_digest(provided.encode("utf-8"), ADMIN_API_KEY.encode("utf-8"))
 
     def do_POST(self):
         if self.path == "/v1/admin/supervisor/audit-token":
+            if not self._check_admin_auth():
+                return self._json(401, {"error": "UNAUTHORIZED"})
             self.handle_create_audit_token()
             return
 
         if self.path.startswith("/v1/admin/supervisor/approve/"):
+            if not self._check_admin_auth():
+                return self._json(401, {"error": "UNAUTHORIZED"})
             instruction_id = self.path.split("/approve/", 1)[1]
             self.handle_approve(instruction_id)
             return
@@ -57,20 +79,29 @@ class Handler(BaseHTTPRequestHandler):
 
     def do_DELETE(self):
         if self.path.startswith("/v1/admin/supervisor/audit-token/"):
+            if not self._check_admin_auth():
+                return self._json(401, {"error": "UNAUTHORIZED"})
             token_id = self.path.split("/audit-token/", 1)[1]
             return self.handle_revoke_audit_token(token_id)
         self._json(404, {"error": "NOT_FOUND"})
 
     def do_GET(self):
         if self.path.startswith("/v1/admin/supervisor/audit-records"):
+            if not self._check_admin_auth():
+                return self._json(401, {"error": "UNAUTHORIZED"})
             return self.handle_audit_records()
         self._json(404, {"error": "NOT_FOUND"})
 
     def handle_create_audit_token(self):
         body = self._read_json()
+        if body is None:
+            return self._json(400, {"error": "MALFORMED_JSON"})
         program_id = body.get("program_id")
         issued_by = (body.get("issued_by") or "system").strip() or "system"
-        ttl_seconds = int(body.get("ttl_seconds") or 86400)
+        try:
+            ttl_seconds = int(body.get("ttl_seconds") or 86400)
+        except (ValueError, TypeError):
+            return self._json(400, {"error": "INVALID_TTL"})
         if not program_id:
             return self._json(400, {"error": "PROGRAM_ID_REQUIRED"})
         if ttl_seconds <= 0:
@@ -114,9 +145,10 @@ class Handler(BaseHTTPRequestHandler):
         return self._json(200, {"status": "revoked", "token_id": token_id})
 
     def handle_audit_records(self):
-        q = urllib.parse.urlparse(self.path)
-        params = urllib.parse.parse_qs(q.query)
-        token = (params.get("token") or [""])[0]
+        auth_header = (self.headers.get("Authorization") or "").strip()
+        if not auth_header.startswith("Bearer "):
+            return self._json(401, {"error": "TOKEN_REQUIRED"})
+        token = auth_header[7:]
         if not token:
             return self._json(401, {"error": "TOKEN_REQUIRED"})
 
@@ -167,6 +199,8 @@ class Handler(BaseHTTPRequestHandler):
 
     def handle_approve(self, instruction_id: str):
         body = self._read_json()
+        if body is None:
+            return self._json(400, {"error": "MALFORMED_JSON"})
         actor = (body.get("approved_by") or self.headers.get("X-Supervisor-Actor") or "").strip()
         reason = body.get("reason")
         if not actor:
@@ -183,7 +217,7 @@ class Handler(BaseHTTPRequestHandler):
                 return self._json(403, {"error": "SELF_APPROVAL_FORBIDDEN"})
             if "not pending supervisor approval" in msg:
                 return self._json(409, {"error": "NOT_PENDING"})
-            return self._json(500, {"error": "APPROVAL_FAILED", "detail": msg})
+            return self._json(500, {"error": "APPROVAL_FAILED"})
 
         return self._json(200, {"instruction_id": instruction_id, "status": "APPROVED", "approved_by": actor})
 

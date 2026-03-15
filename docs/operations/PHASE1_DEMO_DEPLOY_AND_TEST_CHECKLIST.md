@@ -1,229 +1,67 @@
-# Phase-1 Demo Deployment and Test Checklist
+# Phase-1 Demo Deploy and Test Checklist
 
 ## Purpose
+This checklist now points operators to the canonical **host-based** demo path.
 
-Use this checklist to deploy the Phase-1 GreenTech4CE pilot/demo sandbox and
-start deterministic testing.
+Primary operator document:
+- `docs/operations/SYMPHONY_DEMO_E2E_RUNBOOK.md`
 
-This checklist is operator-facing. It uses the existing sandbox manifests,
-pilot harness, and demo rehearsal scripts already present in the repo.
+This checklist is now a compact entrypoint and evidence checklist, not the authoritative run sequence.
 
-Read first:
+## Canonical Local Path
+Use the host-based runbook for the current server.
 
-- `docs/operations/SYMPHONY_DEMO_DEPLOYMENT_GUIDE.md`
+Required posture:
+- use a clean deployment checkout tracking `origin/main`
+- do not run the demo from an active development checkout
+- Dell laptop remains browser-only
+- do not use `pre_ci.sh` as the operator deploy step for this local path
 
-## Preconditions
-
-- Work is on a feature branch, not `main`.
-- Required approval metadata exists for the active regulated-surface batch.
-- Kubernetes access to the target cluster is configured.
-- Required secrets for `symphony-pilot-secrets` are available.
-- Host-based deployments must have `psql` available before running migrations.
-- The operator has the tenant/programme inputs required by:
-  - `docs/operations/GREENTECH4CE_TENANT_PROGRAMME_PROVISIONING_RUNBOOK.md`
-
-## Step 1 — Pre-Deploy Validation
-
-Run:
-
+Primary commands:
 ```bash
-bash scripts/dev/pre_ci_demo.sh
-bash scripts/security/verify_sandbox_deploy_manifest_posture.sh
+bash scripts/dev/run_demo_e2e.sh --run-id <run_id> --dry-run
+bash scripts/dev/run_demo_e2e.sh --run-id <run_id>
 ```
 
-Required runtime contract before you continue:
+## Required Local Preconditions
+- PostgreSQL reachable on `127.0.0.1:5432`
+- required env contract populated
+- OpenBao posture resolved for the intended run mode
+- operator inputs for tenant/programme provisioning recorded
 
-- `SYMPHONY_RUNTIME_PROFILE=pilot-demo`
-- `ASPNETCORE_URLS=http://0.0.0.0:8080`
-- `DATABASE_URL=...`
-- `INGRESS_STORAGE_MODE=db_psql`
-- `SYMPHONY_UI_TENANT_ID=<tenant-id>`
-- `SYMPHONY_UI_API_KEY=<read-key>`
-- `INGRESS_API_KEY=<same-read-key>`
-- `ADMIN_API_KEY=<server-side-admin-key>`
-- `SYMPHONY_KNOWN_TENANTS=<tenant-id>`
+## Required Evidence For A Local Demo Run
+Task/tooling evidence:
+- `evidence/phase1/tsk_p1_demo_018_e2e_runbook.json`
+- `evidence/phase1/tsk_p1_demo_019_server_snapshot.json`
+- `evidence/phase1/tsk_p1_demo_020_demo_runner.json`
+- `evidence/phase1/tsk_p1_demo_021_key_rotation_policy.json`
+- `evidence/phase1/tsk_p1_demo_022_doc_reconciliation.json`
 
-Pass conditions:
-- `pre_ci_demo.sh` exits `0`
-- sandbox deploy posture verifier exits `0`
-- evidence exists at `evidence/phase1/sandbox_deploy_manifest_posture.json`
-
-Stop conditions:
-- any failure in `pre_ci_demo.sh`
-- missing or invalid sandbox manifest posture evidence
-
-## Step 2 — Deploy the Sandbox
-
-Apply the sandbox kustomization:
-
-```bash
-kubectl apply -k infra/sandbox/k8s
-```
-
-This deploys:
-- namespace
-- DB migration job
-- ledger API deployment/service
-- executor worker deployment
-- secrets bootstrap
-- strict mesh policy
-
-Source of truth:
-- `infra/sandbox/k8s/kustomization.yaml`
-
-## Step 3 — Wait for Readiness
-
-Run:
-
-```bash
-kubectl wait --for=condition=complete --timeout=600s job/db-migration-job -n symphony-pilot
-kubectl rollout status deployment/ledger-api -n symphony-pilot --timeout=600s
-kubectl rollout status deployment/executor-worker -n symphony-pilot --timeout=600s
-kubectl get pods -n symphony-pilot
-kubectl get svc -n symphony-pilot
-```
-
-Pass conditions:
-- migration job completes
-- both deployments roll out successfully
-- pods are healthy in `symphony-pilot`
-
-Stop conditions:
-- migration job timeout/failure
-- either deployment fails rollout
-- pods remain crash-looping or pending
-
-## Step 4 — Provision Tenant and Programme
-
-Follow exactly:
-
-- `docs/operations/GREENTECH4CE_TENANT_PROGRAMME_PROVISIONING_RUNBOOK.md`
-
-Execute the runbook in this order:
-1. record tenant/programme/policy/operator identifiers
-2. confirm supplier seed prerequisites
-3. apply configuration in this order:
-   - tenant context
-   - programme context
-   - policy binding
-   - supplier allowlist data
-   - evidence/report routing data
-4. run pre-go-live isolation verification
-
-Stop conditions:
-- any missing identifier or supplier prerequisite
-- failed isolation check
-- incomplete programme configuration that cannot be cleanly rolled back
-
-## Step 5 — Run Pilot Harness
-
-Run:
-
-```bash
-bash scripts/dev/run_phase1_pilot_harness.sh
-```
-
-This executes:
-- ingress API contract self-test
-- executor worker runtime self-test
-- evidence-pack API self-test
-- exception case-pack self-test
-- pilot harness readiness verification when present
-
-Pass conditions:
-- command exits `0`
-- `evidence/phase1/pilot_harness_replay.json` has `status = PASS`
-- `evidence/phase1/pilot_onboarding_readiness.json` has `status = PASS`
-
-Stop conditions:
-- any self-test failure
-- either evidence file missing
-- either evidence file not `PASS`
-
-## Step 6 — Run Demo Rehearsal
-
-Run:
-
-```bash
-bash scripts/dev/run_demo_rehearsal.sh
-```
-
-Pass conditions:
-- command exits `0`
-- `evidence/phase1/tsk_p1_demo_010_reveal_rehearsal.json` exists and has `status = PASS`
-- fallback pack exists under `evidence/phase1/demo_reveal_fallback_pack/`
-
-Stop conditions:
-- rehearsal evidence missing
-- fallback pack missing
-- rehearsal output not `PASS`
-
-## Step 7 — Validate Demo Proof Pack
-
-Run:
-
-```bash
-bash scripts/audit/verify_phase1_demo_proof_pack.sh
-```
-
-Pass conditions:
-- command exits `0`
-- demo proof evidence generated successfully
-
-Stop conditions:
-- any missing demo proof artifact
-- proof-pack verifier failure
-
-## Step 8 — Manual Contract Spot Checks
-
-Use the Phase-1 pilot contract in:
-
-- `docs/operations/PHASE1_PILOT_INTEGRATION_CONTRACT.md`
-
-Check these flows:
-1. `POST /v1/ingress/instructions` with the deterministic sample payload
-2. `POST /v1/ingress/instructions` with the malformed payload and confirm `400 INVALID_REQUEST`
-3. `GET /v1/evidence-packs/{instruction_id}` with correct `x-tenant-id`
-4. `GET /v1/exceptions/{instruction_id}/case-pack` with correct `x-tenant-id`
-
-Expected:
-- ingress success returns `202` with `ack=true`
-- malformed ingress returns `400 INVALID_REQUEST`
-- evidence pack returns `200` or `404` when tenant scope is wrong
-- case pack returns `200` or `422 CASE_PACK_INCOMPLETE` when lifecycle refs are incomplete
-
-## Required Evidence at End
-
-The deployment/test run is ready for operator signoff only if all of these are
-present and passing:
-
-- `evidence/phase1/sandbox_deploy_manifest_posture.json`
+Run evidence:
+- `evidence/phase1/demo_run/<run_id>/server_snapshot.json`
+- `evidence/phase1/demo_run/<run_id>/browser_smoke_checklist.json`
+- `evidence/phase1/demo_run/<run_id>/run_summary.json`
 - `evidence/phase1/pilot_harness_replay.json`
 - `evidence/phase1/pilot_onboarding_readiness.json`
 - `evidence/phase1/tsk_p1_demo_010_reveal_rehearsal.json`
+- `evidence/phase1/regulator_demo_pack.json`
+- `evidence/phase1/tier1_pilot_demo_pack.json`
 
-Optional but recommended:
-- demo proof-pack evidence produced by `scripts/audit/verify_phase1_demo_proof_pack.sh`
+## Provisioning Reference
+Provisioning order and prerequisites remain in:
+- `docs/operations/GREENTECH4CE_TENANT_PROGRAMME_PROVISIONING_RUNBOOK.md`
 
-## Default Command Sequence
+For this branch, the repo-backed executable provisioning entrypoint is tenant onboarding via:
+- `POST /v1/admin/tenants`
 
-```bash
-bash scripts/dev/pre_ci_demo.sh
-bash scripts/security/verify_sandbox_deploy_manifest_posture.sh
-kubectl apply -k infra/sandbox/k8s
-kubectl wait --for=condition=complete --timeout=600s job/db-migration-job -n symphony-pilot
-kubectl rollout status deployment/ledger-api -n symphony-pilot --timeout=600s
-kubectl rollout status deployment/executor-worker -n symphony-pilot --timeout=600s
-bash scripts/dev/run_phase1_pilot_harness.sh
-bash scripts/dev/run_demo_rehearsal.sh
-bash scripts/audit/verify_phase1_demo_proof_pack.sh
-```
+Programme context, policy binding, supplier allowlist state, and evidence/report routing still require explicit operator confirmation and must not be silently assumed.
 
-## Assumptions
+## Kubernetes Appendix Status
+Kubernetes remains a secondary path only.
 
-- The cluster already has access to the images referenced by the sandbox manifests.
-- Secret material for `symphony-pilot-secrets` is handled outside this checklist.
-- Tenant/programme provisioning is still operator-run and not self-service.
-- This checklist covers deployment and initial testing, not production go-live.
-- The supported demo server is Kestrel; nginx/IIS are optional reverse proxies, not required deployment steps.
-- `scripts/dev/pre_ci.sh` remains the engineering branch-quality gate; this checklist uses the narrower operator demo gate.
+It is:
+- non-canonical for this local server
+- not part of local demo readiness sign-off
+- not validated on the current host baseline
+
+Use the runbook appendix if you intentionally need the sandbox K8s reference path later.

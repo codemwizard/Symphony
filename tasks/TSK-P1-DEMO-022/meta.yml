@@ -1,0 +1,57 @@
+schema_version: 1
+phase: '1'
+task_id: TSK-P1-DEMO-022
+title: Reconcile provisioning and checklist docs with the strict host-based execution
+  contract
+owner_role: SUPERVISOR
+status: completed
+depends_on:
+- TSK-P1-DEMO-017
+- TSK-P1-DEMO-018
+- TSK-P1-DEMO-020
+- TSK-P1-DEMO-021
+touches:
+- docs/operations/PHASE1_DEMO_DEPLOY_AND_TEST_CHECKLIST.md
+- docs/operations/GREENTECH4CE_TENANT_PROGRAMME_PROVISIONING_RUNBOOK.md
+- scripts/audit/verify_tsk_p1_demo_022.sh
+- evidence/phase1/tsk_p1_demo_022_doc_reconciliation.json
+- docs/plans/phase1/TSK-P1-DEMO-022/PLAN.md
+- docs/plans/phase1/TSK-P1-DEMO-022/EXEC_LOG.md
+invariants:
+- INV-105
+- INV-119
+- INV-133
+work:
+- Update the demo deploy checklist to point to the new E2E runbook as primary and
+  to demote Kubernetes to appendix-only status.
+- Update the provisioning runbook to define an exact entrypoint, required inputs,
+  expected outputs, idempotency posture, and failure conditions inside the E2E flow.
+- Remove or clearly deprecate contradictory legacy wording rather than merely adding
+  superseding guidance.
+- Make teardown and retention behavior explicit across the affected docs.
+acceptance_criteria:
+- Operators no longer need to improvise provisioning behavior from a separate doc.
+- Existing docs no longer conflict with the host-based runbook.
+- Contradictory language is removed or clearly deprecated.
+- Teardown and retention behavior is explicit.
+verification:
+- bash scripts/audit/verify_tsk_p1_demo_022.sh
+- python3 scripts/audit/validate_evidence.py --task TSK-P1-DEMO-022 --evidence evidence/phase1/tsk_p1_demo_022_doc_reconciliation.json
+evidence:
+- evidence/phase1/tsk_p1_demo_022_doc_reconciliation.json
+failure_modes:
+- Provisioning is still a handoff seam.
+- Teardown is still ambiguous.
+- Existing docs still conflict with the canonical host-based path.
+- Evidence file missing.
+must_read:
+- AGENT_ENTRYPOINT.md
+- docs/operations/SYMPHONY_DEMO_E2E_RUNBOOK.md
+- docs/operations/GREENTECH4CE_TENANT_PROGRAMME_PROVISIONING_RUNBOOK.md
+- docs/operations/PHASE1_DEMO_DEPLOY_AND_TEST_CHECKLIST.md
+implementation_plan: docs/plans/phase1/TSK-P1-DEMO-022/PLAN.md
+implementation_log: docs/plans/phase1/TSK-P1-DEMO-022/EXEC_LOG.md
+notes: Reconciliation task only; no new product features.
+client: codex_cli
+assigned_agent: supervisor
+model: gpt-5-codex

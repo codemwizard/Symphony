@@ -1,0 +1,61 @@
+schema_version: 1
+phase: '1'
+task_id: TSK-P1-DEMO-020
+title: Add fail-closed host-based demo runner with explicit process control
+owner_role: SUPERVISOR
+status: completed
+depends_on:
+- TSK-P1-DEMO-018
+- TSK-P1-DEMO-019
+- TSK-P1-DEMO-021
+touches:
+- scripts/dev/run_demo_e2e.sh
+- scripts/audit/verify_tsk_p1_demo_020.sh
+- evidence/phase1/tsk_p1_demo_020_demo_runner.json
+- docs/plans/phase1/TSK-P1-DEMO-020/PLAN.md
+- docs/plans/phase1/TSK-P1-DEMO-020/EXEC_LOG.md
+invariants:
+- INV-105
+- INV-119
+- INV-133
+work:
+- Create the deterministic host-based demo runner with fresh-fetch source gating against
+  origin/main and a required floor commit.
+- Enforce current demo env contract, tenant allowlist contract, and fail-closed OpenBao
+  posture per TSK-P1-DEMO-021.
+- Implement explicit process supervision for the Kestrel-hosted app: run directory,
+    log directory, PID file, timeout, stale-process handling, cleanup, and single-active-run
+    default on host.
+- Separate server-side API smoke from machine-readable Dell browser smoke checklist
+  output.
+- Emit a structured run summary and fail with a blocker note if repo truth lacks a
+  stable provisioning entrypoint or stable health contract.
+acceptance_criteria:
+- Runner is deterministic and fail-closed.
+- Process supervision is explicit, reproducible, and single-active-run by default.
+- Browser smoke and secret-bearing API smoke are separated.
+- Browser checks produce machine-readable status output.
+- Run summary is structured and useful for sign-off and debugging.
+verification:
+- bash scripts/audit/verify_tsk_p1_demo_020.sh
+- python3 scripts/audit/validate_evidence.py --task TSK-P1-DEMO-020 --evidence evidence/phase1/tsk_p1_demo_020_demo_runner.json
+evidence:
+- evidence/phase1/tsk_p1_demo_020_demo_runner.json
+failure_modes:
+- Runner still depends on pre_ci_demo.sh.
+- Source gating uses stale remote-tracking state.
+- Kestrel process handling is ad hoc.
+- Health endpoints drift between docs and script.
+- API and browser smoke remain mixed.
+- Evidence file missing.
+must_read:
+- AGENT_ENTRYPOINT.md
+- docs/operations/SYMPHONY_DEMO_E2E_RUNBOOK.md
+- docs/security/SYMPHONY_DEMO_KEY_AND_ROTATION_POLICY.md
+implementation_plan: docs/plans/phase1/TSK-P1-DEMO-020/PLAN.md
+implementation_log: docs/plans/phase1/TSK-P1-DEMO-020/EXEC_LOG.md
+notes: Escalate instead of inventing operator-only workarounds when health or provisioning
+  truth is missing.
+client: codex_cli
+assigned_agent: supervisor
+model: gpt-5-codex

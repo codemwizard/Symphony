@@ -1,0 +1,70 @@
+schema_version: 1
+phase: '1'
+task_id: TSK-P1-DEMO-030
+title: Repair the demo task-line collision and move deployment work to a clean main-based branch
+owner_role: SUPERVISOR
+status: completed
+depends_on:
+- TSK-P1-DEMO-023
+touches:
+- docs/audits/GIT_MUTATION_SURFACE_AUDIT_2026-03-10.md
+- tasks/TSK-P1-DEMO-024/**
+- tasks/TSK-P1-DEMO-025/**
+- tasks/TSK-P1-DEMO-026/**
+- tasks/TSK-P1-DEMO-027/**
+- tasks/TSK-P1-DEMO-028/**
+- tasks/TSK-P1-DEMO-029/**
+- tasks/TSK-P1-DEMO-030/meta.yml
+- docs/plans/phase1/TSK-P1-DEMO-024/**
+- docs/plans/phase1/TSK-P1-DEMO-025/**
+- docs/plans/phase1/TSK-P1-DEMO-026/**
+- docs/plans/phase1/TSK-P1-DEMO-027/**
+- docs/plans/phase1/TSK-P1-DEMO-028/**
+- docs/plans/phase1/TSK-P1-DEMO-029/**
+- docs/plans/phase1/TSK-P1-DEMO-030/PLAN.md
+- docs/plans/phase1/TSK-P1-DEMO-030/EXEC_LOG.md
+- docs/plans/phase1/REM-2026-03-14_demo-030-git-audit-fix/PLAN.md
+- docs/plans/phase1/REM-2026-03-14_demo-030-git-audit-fix/EXEC_LOG.md
+- docs/tasks/PHASE1_GOVERNANCE_TASKS.md
+- approvals/2026-03-13/BRANCH-feat-ui-wire-wave-e.md
+- approvals/2026-03-13/BRANCH-feat-ui-wire-wave-e.approval.json
+- approvals/2026-03-14/BRANCH-feat-demo-deployment-repair.md
+- approvals/2026-03-14/BRANCH-feat-demo-deployment-repair.approval.json
+- evidence/phase1/approval_metadata.json
+- scripts/audit/verify_tsk_p1_demo_030.sh
+- evidence/phase1/tsk_p1_demo_030_branch_repair.json
+invariants:
+- INV-105
+- INV-119
+- INV-133
+work:
+- Restore the canonical demo deployment hardening task line `TSK-P1-DEMO-024..028` from clean mainline truth after local `main` is brought into parity with `origin/main`.
+- Move the erroneously created provisioning sample-pack task off occupied ID `TSK-P1-DEMO-024` onto `TSK-P1-DEMO-029` and update all task, plan, verifier, and evidence references consistently.
+- Execute the repair on the fresh deployment branch `feat/demo-deployment-repair` created from parity-restored local `main`, not on the published `feat/ui-wire-wave-e` branch; remove stale Wave-E approval carryover on the repaired branch and refresh approval metadata only after the repaired branch task line is coherent.
+- If branch relocation surfaces a new Git-mutation audit gap, open a remediation casefile, update the canonical audit document, and close the gap before the final pre-CI pass.
+acceptance_criteria:
+- Local `main` is fast-forward aligned with `origin/main` before task-line restoration starts.
+- The repaired branch contains canonical `TSK-P1-DEMO-024..028` with their original meanings and the provisioning sample-pack task only as `TSK-P1-DEMO-029`.
+- No deployment repair remains attached to `feat/ui-wire-wave-e`, stale Wave-E approval files are not carried forward on the repaired branch, and approval metadata references only `feat/demo-deployment-repair` scope after the move.
+verification:
+- bash scripts/audit/verify_tsk_p1_demo_030.sh
+- python3 scripts/audit/validate_evidence.py --task TSK-P1-DEMO-030 --evidence evidence/phase1/tsk_p1_demo_030_branch_repair.json
+evidence:
+- evidence/phase1/tsk_p1_demo_030_branch_repair.json
+failure_modes:
+- Canonical `TSK-P1-DEMO-024..028` remain absent or semantically wrong after repair.
+- The provisioning sample-pack task still occupies `TSK-P1-DEMO-024` or has mixed references across `024` and `029`.
+- Deployment repair work is applied directly onto `feat/ui-wire-wave-e` instead of a new main-based branch.
+- Evidence file missing.
+must_read:
+- AGENT_ENTRYPOINT.md
+- docs/operations/AGENT_PROMPT_ROUTER.md
+- docs/operations/AI_AGENT_OPERATION_MANUAL.md
+- docs/operations/TASK_CREATION_PROCESS.md
+- docs/operations/REMEDIATION_TRACE_WORKFLOW.md
+implementation_plan: docs/plans/phase1/TSK-P1-DEMO-030/PLAN.md
+implementation_log: docs/plans/phase1/TSK-P1-DEMO-030/EXEC_LOG.md
+notes: Branch-discipline repair task. This task exists because the canonical demo task line on feat/ui-wire-wave-e diverged from main and TSK-P1-DEMO-024 was accidentally reused.
+client: codex_cli
+assigned_agent: supervisor
+model: gpt-5-codex

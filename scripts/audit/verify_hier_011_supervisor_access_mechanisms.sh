@@ -99,7 +99,10 @@ fi
 
 # AUDIT + APPROVAL_REQUIRED API runtime.
 export SUPERVISOR_API_PORT=18081
-python3 services/supervisor_api/server.py >"$TMPDIR/api.log" 2>&1 &
+export SUPERVISOR_API_TEST_MODE=1
+python3 -m venv "$TMPDIR/venv"
+"$TMPDIR/venv/bin/pip" install -r services/supervisor_api/requirements.txt >/dev/null 2>&1
+"$TMPDIR/venv/bin/python3" services/supervisor_api/server.py >"$TMPDIR/api.log" 2>&1 &
 API_PID=$!
 for _ in 1 2 3 4 5; do
   if curl -fsS "http://127.0.0.1:${SUPERVISOR_API_PORT}/nope" >/dev/null 2>&1 || rg -q "supervisor_api_listening" "$TMPDIR/api.log"; then
@@ -121,7 +124,7 @@ else
 fi
 
 sleep 2
-expired_code="$(curl -sS -o "$TMPDIR/expired.json" -w '%{http_code}' "http://127.0.0.1:${SUPERVISOR_API_PORT}/v1/admin/supervisor/audit-records?token=${short_token}")"
+expired_code="$(curl -sS -o "$TMPDIR/expired.json" -w '%{http_code}' "http://127.0.0.1:${SUPERVISOR_API_PORT}/v1/admin/supervisor/audit-records" -H "Authorization: Bearer ${short_token}")"
 if [[ "$expired_code" == "401" ]] && jq -e '.error=="TOKEN_EXPIRED"' "$TMPDIR/expired.json" >/dev/null 2>&1; then
   record PASS "audit_token_expires" "AUDIT token expires automatically"
 else
@@ -136,7 +139,7 @@ curl -sS -X POST "http://127.0.0.1:${SUPERVISOR_API_PORT}/v1/admin/supervisor/au
 token="$(jq -r '.token' "$create_resp")"
 token_id="$(jq -r '.token_id' "$create_resp")"
 
-read_code="$(curl -sS -o "$TMPDIR/read.json" -w '%{http_code}' "http://127.0.0.1:${SUPERVISOR_API_PORT}/v1/admin/supervisor/audit-records?token=${token}")"
+read_code="$(curl -sS -o "$TMPDIR/read.json" -w '%{http_code}' "http://127.0.0.1:${SUPERVISOR_API_PORT}/v1/admin/supervisor/audit-records" -H "Authorization: Bearer ${token}")"
 if [[ "$read_code" == "200" ]] && jq -e '.records | type == "array"' "$TMPDIR/read.json" >/dev/null 2>&1 && ! jq -e '.records[]? | has("member_id") or has("person_id")' "$TMPDIR/read.json" >/dev/null 2>&1; then
   record PASS "audit_records_anonymized" "AUDIT token returns anonymized raw records"
 else
@@ -144,7 +147,7 @@ else
 fi
 
 revoke_code="$(curl -sS -o "$TMPDIR/revoke.json" -w '%{http_code}' -X DELETE "http://127.0.0.1:${SUPERVISOR_API_PORT}/v1/admin/supervisor/audit-token/${token_id}")"
-post_revoke_code="$(curl -sS -o "$TMPDIR/revoked_read.json" -w '%{http_code}' "http://127.0.0.1:${SUPERVISOR_API_PORT}/v1/admin/supervisor/audit-records?token=${token}")"
+post_revoke_code="$(curl -sS -o "$TMPDIR/revoked_read.json" -w '%{http_code}' "http://127.0.0.1:${SUPERVISOR_API_PORT}/v1/admin/supervisor/audit-records" -H "Authorization: Bearer ${token}")"
 if [[ "$revoke_code" == "200" && "$post_revoke_code" == "401" ]] && jq -e '.error=="TOKEN_REVOKED"' "$TMPDIR/revoked_read.json" >/dev/null 2>&1; then
   record PASS "audit_token_revocable" "AUDIT token is revocable via DELETE endpoint"
 else

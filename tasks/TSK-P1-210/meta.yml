@@ -1,0 +1,48 @@
+schema_version: 1
+phase: '1'
+task_id: TSK-P1-210
+title: Remove supervisory fallback duplication and repeated reveal-model scans
+owner_role: SUPERVISOR
+status: planned
+depends_on:
+- TSK-P1-208
+- TSK-P1-209
+touches:
+- src/supervisory-dashboard/index.html
+- services/ledger-api/dotnet/src/LedgerApi/ReadModels/SupervisoryRevealReadModelHandler.cs
+- scripts/audit/verify_tsk_p1_210.sh
+- evidence/phase1/tsk_p1_210_supervisory_optimization.json
+- docs/plans/phase1/TSK-P1-210/PLAN.md
+- docs/plans/phase1/TSK-P1-210/EXEC_LOG.md
+invariants:
+- INV-105
+- INV-119
+work:
+- Refactor duplicated adapter fallback handling in the supervisory UI into one shared helper with preserved STATIC_DEMO and HYBRID semantics.
+- Pre-index reveal-model inputs in SupervisoryProofModel so instruction-scoped work stops re-filtering the same arrays repeatedly.
+- Keep wire behavior identical; this is a maintainability and performance task, not a product-behavior change.
+acceptance_criteria:
+- Fallback semantics remain unchanged for STATIC_DEMO, HYBRID, and live failure paths.
+- Reveal-model output remains behaviorally identical for the same inputs.
+- The duplicated fallback skeleton and repeated per-instruction scans are materially reduced.
+verification:
+- bash scripts/audit/verify_tsk_p1_210.sh
+- python3 scripts/audit/validate_evidence.py --task TSK-P1-210 --evidence evidence/phase1/tsk_p1_210_supervisory_optimization.json
+evidence:
+- evidence/phase1/tsk_p1_210_supervisory_optimization.json
+failure_modes:
+- Fallback semantics drift.
+- Reveal or detail output shape changes unexpectedly.
+- Repeated-scan reduction is not achieved.
+- Evidence file missing.
+must_read:
+- AGENT_ENTRYPOINT.md
+- docs/operations/AI_AGENT_OPERATION_MANUAL.md
+- src/supervisory-dashboard/index.html
+- services/ledger-api/dotnet/src/LedgerApi/ReadModels/SupervisoryRevealReadModelHandler.cs
+implementation_plan: docs/plans/phase1/TSK-P1-210/PLAN.md
+implementation_log: docs/plans/phase1/TSK-P1-210/EXEC_LOG.md
+notes: Supervisory optimization cleanup task.
+client: codex_cli
+assigned_agent: supervisor
+model: gpt-5-codex

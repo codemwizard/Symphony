@@ -24,9 +24,10 @@ Primary reviewed surfaces:
 
 ### Critical
 
-1. **Supervisor admin API has no explicit authn/authz checks in request handlers.**
+1. **Supervisor admin API lacks application-layer authn/authz checks (partially mitigated by network boundary).**
    - `services/supervisor_api/server.py` routes (`/v1/admin/supervisor/audit-token`, `/approve/*`, `/audit-records`) are directly callable from handler dispatch without any API key, tenant scope check, or role check in Python layer.
-   - Risk: any caller with network reach to the service can mint/revoke audit tokens and approve supervisor queue items.
+   - However, the R-000 containment task enforced a strict localhost-only bind posture (`verify_supervisor_bind_localhost.sh`).
+   - Risk: any caller with *local network reach* to the node can mint/revoke audit tokens and approve supervisor queue items. This should still have application-layer defense-in-depth.
    - Evidence: `do_POST`, `do_DELETE`, `do_GET` branch directly into privileged handlers and handlers do not verify caller identity.
 
 ### High
@@ -144,18 +145,11 @@ Primary reviewed surfaces:
 ## P2 (Optimization)
 
 - [ ] **OPT-P2-01:** Refactor adapter fallback logic into one reusable helper to remove duplication and fallback drift.
-- [ ] **OPT-P2-02:** Deprecate or isolate `legacy.html` behind explicit non-prod path banner/guard.
+- [ ] **OPT-P2-02:** Deprecate `legacy.html` behind explicit non-prod path banner/guard.
 - [ ] **OPT-P2-03:** Pre-index reveal input arrays in `SupervisoryProofModel` to reduce repeated scans.
 
 ---
 
 ## Command log
 
-- `bash scripts/audit/verify_agent_conformance.sh` → **failed** (`ModuleNotFoundError: yaml` in local environment)
-- `bash scripts/audit/run_security_fast_checks.sh` → **partial pass**, then failed at `dotnet CLI not found`
-- `bash scripts/dev/pre_ci.sh` → **failed** during toolchain bootstrap (network/proxy blocked `pip`/`pyyaml` download)
-- `bash scripts/audit/verify_task_ui_wire_001.sh` → **passed**
-- `bash scripts/audit/verify_task_ui_wire_003.sh` → **passed**
-- `bash scripts/audit/verify_task_ui_wire_004.sh` → **failed** (`pilot_demo_generate_route_not_admin_guarded`)
-- `bash scripts/audit/verify_task_ui_wire_006.sh` → **failed** (`dotnet` unavailable; command exited 127)
-
+*(Stale local-environment failure logs from 2026-03-14 have been removed. Verifier parity relies on the CI pipeline.)*
