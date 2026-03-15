@@ -97,10 +97,15 @@ file static class SupervisoryProofModel
             .OrderBy(x => x, StringComparer.Ordinal)
             .ToArray();
 
+        // TSK-P1-210: Pre-index submissions and exceptions by instruction_id
+        // to eliminate repeated linear scans per instruction.
+        var submissionsByInstruction = submissions.ToLookup(x => ReadString(x, "instruction_id"), StringComparer.Ordinal);
+        var exceptionsByInstruction = exceptions.ToLookup(x => ReadString(x, "instruction_id"), StringComparer.Ordinal);
+
         var projections = AckInterruptProjectionStore.LoadForInstructionIds(instructionIds, dataSource);
-        var timeline = BuildTimeline(submissions, exceptions, instructionIds, projections);
+        var timeline = BuildTimeline(submissionsByInstruction, exceptionsByInstruction, instructionIds, projections);
         var proofRows = instructionIds
-            .Select(id => BuildInstructionProofSummary(id, submissions.Where(x => Matches(x, "instruction_id", id)).ToArray(), exceptions.Where(x => Matches(x, "instruction_id", id)).ToArray(), projections.GetValueOrDefault(id, AckInterruptProjectionStore.Unavailable(id, dataSource))))
+            .Select(id => BuildInstructionProofSummary(id, submissionsByInstruction[id].ToArray(), exceptionsByInstruction[id].ToArray(), projections.GetValueOrDefault(id, AckInterruptProjectionStore.Unavailable(id, dataSource))))
             .ToArray();
         var evidenceCompleteness = BuildEvidenceCompleteness(proofRows);
         var exceptionLog = exceptions.Select(x => new
@@ -171,13 +176,14 @@ file static class SupervisoryProofModel
         };
     }
 
-    private static object[] BuildTimeline(JsonElement[] submissions, JsonElement[] exceptions, string[] instructionIds, IReadOnlyDictionary<string, AckInterruptProjectionStore.AckInterruptProjection> projections)
+    // TSK-P1-210: Accepts pre-indexed lookups instead of flat arrays
+    private static object[] BuildTimeline(ILookup<string, JsonElement> submissionsByInstruction, ILookup<string, JsonElement> exceptionsByInstruction, string[] instructionIds, IReadOnlyDictionary<string, AckInterruptProjectionStore.AckInterruptProjection> projections)
     {
         var rows = new List<object>();
         foreach (var instructionId in instructionIds)
         {
-            var instructionSubmissions = submissions.Where(x => Matches(x, "instruction_id", instructionId)).ToArray();
-            var instructionExceptions = exceptions.Where(x => Matches(x, "instruction_id", instructionId)).ToArray();
+            var instructionSubmissions = submissionsByInstruction[instructionId].ToArray();
+            var instructionExceptions = exceptionsByInstruction[instructionId].ToArray();
             var projection = projections.GetValueOrDefault(instructionId, AckInterruptProjectionStore.Unavailable(instructionId, null));
             var summary = BuildInstructionProofSummary(instructionId, instructionSubmissions, instructionExceptions, projection);
             var latestObserved = instructionSubmissions

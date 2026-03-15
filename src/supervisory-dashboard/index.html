@@ -1000,6 +1000,26 @@ html, body { width:100%; min-height:100vh; background:var(--bg); font-family:var
 </div><!-- /app -->
 
 
+<!-- ════════════════════════════════════════════════════════════════
+     SYMPHONY_UI_CONTROL_INVENTORY
+     Classification of every actionable DOM control in this UI.
+     Updated: TSK-P1-209
+
+     WIRED_ACTION          — control calls a real adapter method or navigation function
+     COMPATIBILITY_ALIAS   — control delegates to the same behavior as a WIRED_ACTION
+     INERT_PLACEHOLDER     — control exists for structural/test reasons, no user effect
+
+     Control ID                      | Classification         | Delegates To
+     ─────────────────────────────── | ────────────────────── | ──────────────────────
+     submitBtn                       | WIRED_ACTION           | submitInstruction()
+     exportBtn                       | WIRED_ACTION           | triggerExport()
+     programme-summary-panel         | COMPATIBILITY_ALIAS    | screen-dash (panel data)
+     timeline-panel                  | COMPATIBILITY_ALIAS    | timelineRows (panel data)
+     evidence-completeness-panel     | COMPATIBILITY_ALIAS    | evidenceCompletenessList
+     exception-log-panel             | COMPATIBILITY_ALIAS    | exceptionRows (panel data)
+     export-trigger                  | COMPATIBILITY_ALIAS    | triggerExport() via click
+     raw-artifact-drilldown          | COMPATIBILITY_ALIAS    | openDrill() via first row
+     ════════════════════════════════════════════════════════════════ -->
 <div hidden aria-hidden="true" id="symphony-compat-aliases">
   <div id="programme-summary-panel"></div>
   <div id="timeline-panel"></div>
@@ -1008,6 +1028,18 @@ html, body { width:100%; min-height:100vh; background:var(--bg); font-family:var
   <button id="export-trigger" type="button"></button>
   <button id="raw-artifact-drilldown" type="button"></button>
 </div>
+<script>
+// TSK-P1-209: Wire compatibility alias buttons to their real counterparts
+(function() {
+  var et = document.getElementById('export-trigger');
+  if (et) et.addEventListener('click', function() { if (typeof triggerExport === 'function') triggerExport(); });
+  var rad = document.getElementById('raw-artifact-drilldown');
+  if (rad) rad.addEventListener('click', function() {
+    var firstRow = document.querySelector('#timelineRows tr[onclick]');
+    if (firstRow) firstRow.click();
+  });
+})();
+</script>
 <script>
 window.SYMPHONY_UI_CONTEXT = __SYMPHONY_UI_CONTEXT__;
 window.SYMPHONY_HYBRID_FALLBACK = __SYMPHONY_HYBRID_FALLBACK__;
@@ -1073,6 +1105,23 @@ function liveFallbackActive(message) {
   return true;
 }
 
+async function _fetchWithFallback(fallbackKey, fetchFn, fallbackDefault) {
+  const fallback = fallbackData()[fallbackKey];
+  if (DATA_MODE === 'STATIC_DEMO') {
+    return fallback || fallbackDefault;
+  }
+  try {
+    return await fetchFn();
+  } catch (err) {
+    if (DATA_MODE === 'HYBRID' && fallback) {
+      liveFallbackActive(`Demo-backed fallback active: ${fallbackKey}`);
+      return fallback;
+    }
+    throw err;
+  }
+}
+
+
 const adapter = {
   _revealCache: new Map(),
 
@@ -1095,79 +1144,40 @@ const adapter = {
 
   // TODO UI-WIRE-003: replace STATIC_DEMO branch with real fetch
   async getProgrammeSummary(programId) {
-    const fallback = fallbackData().programme_summary;
-    if (DATA_MODE === 'STATIC_DEMO') {
-      return fallback;
-    }
-    try {
+    return _fetchWithFallback('programme_summary', async () => {
       const d = await this.getReveal(programId);
       return d.programme_summary;
-    } catch (err) {
-      if (DATA_MODE === 'HYBRID' && fallback) {
-        liveFallbackActive('Demo-backed fallback active: programme summary');
-        return fallback;
-      }
-      throw err;
-    }
+    }, null);
   },
 
   // TODO UI-WIRE-003
   async getTimeline(programId) {
-    const fallback = fallbackData().timeline;
-    if (DATA_MODE === 'STATIC_DEMO') {
-      return fallback || [];
-    }
-    try {
+    return _fetchWithFallback('timeline', async () => {
       const d = await this.getReveal(programId);
       return d.timeline || [];
-    } catch (err) {
-      if (DATA_MODE === 'HYBRID' && fallback) {
-        liveFallbackActive('Demo-backed fallback active: timeline');
-        return fallback;
-      }
-      throw err;
-    }
+    }, []);
   },
 
   // TODO UI-WIRE-003
   async getExceptionLog(programId) {
-    const fallback = fallbackData().exception_log;
-    if (DATA_MODE === 'STATIC_DEMO') {
-      return fallback || [];
-    }
-    try {
+    return _fetchWithFallback('exception_log', async () => {
       const d = await this.getReveal(programId);
       return d.exception_log || [];
-    } catch (err) {
-      if (DATA_MODE === 'HYBRID' && fallback) {
-        liveFallbackActive('Demo-backed fallback active: exception log');
-        return fallback;
-      }
-      throw err;
-    }
+    }, []);
   },
 
   async getEvidenceCompleteness(programId) {
-    const fallback = fallbackData().evidence_completeness;
-    if (DATA_MODE === 'STATIC_DEMO') {
-      return fallback || [];
-    }
-    try {
+    return _fetchWithFallback('evidence_completeness', async () => {
       const d = await this.getReveal(programId);
       return d.evidence_completeness || [];
-    } catch (err) {
-      if (DATA_MODE === 'HYBRID' && fallback) {
-        liveFallbackActive('Demo-backed fallback active: evidence completeness');
-        return fallback;
-      }
-      throw err;
-    }
+    }, []);
   },
 
   async issueEvidenceLink(programId, instructionId) {
     const presets = fallbackData().action_presets || {};
+    const fallbackDefault = { token: 'DEMO-TOKEN-NOT-REAL', expiresAt: new Date(Date.now() + 3600000).toISOString() };
     if (DATA_MODE === 'STATIC_DEMO') {
-      return { token: 'DEMO-TOKEN-NOT-REAL', expiresAt: new Date(Date.now() + 3600000).toISOString() };
+      return fallbackDefault;
     }
     try {
       const r = await fetch(`${PILOT_DEMO_PROXY_BASE}/evidence-links/issue`, {
@@ -1197,8 +1207,9 @@ const adapter = {
 
   async generateInstructionFile(instructionId) {
     const presets = fallbackData().action_presets || {};
+    const fallbackDefault = { hmac: 'DEMO-HMAC-NOT-REAL', filename: `symphony_${instructionId}_demo.json`, state: 'AWAITING_EXECUTION' };
     if (DATA_MODE === 'STATIC_DEMO') {
-      return { hmac: 'DEMO-HMAC-NOT-REAL', filename: `symphony_${instructionId}_demo.json`, state: 'AWAITING_EXECUTION' };
+      return fallbackDefault;
     }
     try {
       const r = await fetch(`${PILOT_DEMO_PROXY_BASE}/instruction-files/generate`, {

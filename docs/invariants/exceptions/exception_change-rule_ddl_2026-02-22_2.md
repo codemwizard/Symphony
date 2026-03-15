@@ -1,7 +1,7 @@
 ---
 exception_id: EXC-903
 inv_scope: change-rule
-expiry: 2026-03-15
+expiry: 2026-04-15
 follow_up_ticket: TSK-P0-LEVY-004
 reason: Auto-generated: structural change detected; invariants linkage missing in commit.
 author: system

@@ -1,0 +1,51 @@
+schema_version: 1
+phase: '1'
+task_id: TSK-P1-DEMO-029
+title: Create the demo provisioning sample pack and signoff threshold guide
+owner_role: QA_VERIFIER
+status: completed
+depends_on:
+- TSK-P1-DEMO-017
+- TSK-P1-DEMO-021
+- TSK-P1-DEMO-022
+- TSK-P1-DEMO-023
+touches:
+- docs/operations/GREENTECH4CE_DEMO_PROVISIONING_SAMPLE_PACK.md
+- docs/operations/GREENTECH4CE_DEMO_PROVISIONING_SAMPLE_PACK.sample.json
+- scripts/audit/verify_tsk_p1_demo_029.sh
+- evidence/phase1/tsk_p1_demo_029_provisioning_sample_pack.json
+- docs/plans/phase1/TSK-P1-DEMO-029/PLAN.md
+- docs/plans/phase1/TSK-P1-DEMO-029/EXEC_LOG.md
+invariants:
+- INV-105
+- INV-119
+- INV-133
+work:
+- Create an operator-readable GreenTech4CE demo provisioning sample pack with one fixed tenant, programme, policy version, supplier set, allowlist, and reporting or evidence routing identifiers.
+- Create a machine-readable sample JSON artifact that mirrors the same values exactly and can be used as the canonical source for example payload generation.
+- Include exact sample curl commands for the existing repo-backed onboarding, supplier upsert, allowlist upsert, and supplier policy verification endpoints, and explicitly distinguish operator-confirmed non-repo-backed signoff prerequisites from executable repo-backed steps.
+acceptance_criteria:
+- The sample pack document and sample JSON define the same fixed tenant, programme, policy, supplier, allowlist, and routing values.
+- The sample pack includes exact sample commands for POST /v1/admin/tenants, POST /v1/admin/suppliers/upsert, POST /v1/admin/program-supplier-allowlist/upsert, and GET /v1/programs/{programId}/suppliers/{supplierId}/policy.
+- The sample pack defines expected verification outcomes for allowlisted and blocked suppliers and explicitly states that sample values alone do not grant full-demo signoff.
+verification:
+- bash scripts/audit/verify_tsk_p1_demo_029.sh
+- python3 scripts/audit/validate_evidence.py --task TSK-P1-DEMO-029 --evidence evidence/phase1/tsk_p1_demo_029_provisioning_sample_pack.json
+evidence:
+- evidence/phase1/tsk_p1_demo_029_provisioning_sample_pack.json
+failure_modes:
+- Sample pack invents non-existent repo APIs or omits exact sample commands for the repo-backed ones.
+- Sample pack does not distinguish repo-backed provisioning from operator-confirmed non-repo-backed signoff state.
+- Sample pack implies that sample values alone are enough for full-demo signoff.
+- Evidence file missing.
+must_read:
+- AGENT_ENTRYPOINT.md
+- docs/operations/GREENTECH4CE_TENANT_PROGRAMME_PROVISIONING_RUNBOOK.md
+- docs/operations/SYMPHONY_DEMO_E2E_RUNBOOK.md
+- docs/security/SYMPHONY_DEMO_KEY_AND_ROTATION_POLICY.md
+implementation_plan: docs/plans/phase1/TSK-P1-DEMO-029/PLAN.md
+implementation_log: docs/plans/phase1/TSK-P1-DEMO-029/EXEC_LOG.md
+notes: Docs-plus-verifier task only; no runtime or schema changes.
+client: codex_cli
+assigned_agent: qa_verifier
+model: gpt-5-codex

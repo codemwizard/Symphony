@@ -31,8 +31,12 @@ Purpose: inventory repository scripts that mutate Git state or rely on Git state
 | `scripts/audit/verify_invariants_local.sh` | yes | partial | PASS | Local wrapper reads Git state and delegates to verifiers; no uncontained mutation path. |
 | `scripts/audit/verify_tsk_p1_062.sh` | yes | partial | PASS | Worktree hygiene verifier reads Git worktree registry and enforces no stale/prunable entries. |
 | `scripts/audit/verify_tsk_p1_076.sh` | yes | partial | PASS | Verifies installed hook files in `.git/hooks` against tracked `.githooks/*` sources after running the canonical hook installer. |
-| `scripts/audit/verify_tsk_p1_demo_028.sh` | yes | partial | PASS | Demo image-flow verifier records `git rev-parse HEAD` in evidence while exercising deterministic Docker builds; it reads Git state without mutating refs. |
+| `scripts/audit/verify_tsk_p1_demo_020.sh` | yes | partial | PASS | Verifies the host-based demo runner's fetch/source-gate and single-active-run process controls by inspecting Git-sensitive orchestration surfaces without mutating caller refs. |
+| `scripts/audit/verify_tsk_p1_demo_028.sh` | yes | partial | PASS | Verifies the demo image-build flow against host-based deployment guidance by inspecting Git-tracked runtime and Docker surfaces without mutating caller refs. |
+| `scripts/audit/verify_tsk_p1_demo_030.sh` | yes | partial | PASS | Verifies the clean-branch task-line repair by checking local-main parity, canonical demo task identity, and repaired-branch approval scope without mutating caller refs. |
+| `scripts/dev/capture_demo_server_snapshot.sh` | yes | partial | PASS | Captures branch/ref and `origin/main` posture for demo-run evidence; reads Git state only and relies on bounded output paths instead of mutating refs. |
 | `scripts/dev/install_git_hooks.sh` | yes | partial | PASS | Installs hook files into `.git/hooks`; mutates local Git-related state and must remain explicitly operator-invoked. |
+| `scripts/dev/run_demo_e2e.sh` | yes | partial | PASS | Fetches `origin` and gates clean deployment checkouts against `origin/main` before host-based demo execution; mutating remote-tracking state is contained to the explicit operator runner. |
 | `scripts/lib/git_diff_range_only.sh` | yes | partial | PASS | Shared Git diff helper; safe only when callers control inherited Git plumbing. |
 | `scripts/security/lint_app_sql_injection.sh` | yes | partial | PASS | Reads tracked/untracked file lists through Git; no ref mutation. |
 

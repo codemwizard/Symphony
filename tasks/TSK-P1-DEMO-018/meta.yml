@@ -1,0 +1,56 @@
+schema_version: 1
+phase: '1'
+task_id: TSK-P1-DEMO-018
+title: Create the operator-grade host-based E2E demo runbook
+owner_role: SUPERVISOR
+status: completed
+depends_on:
+- TSK-P1-DEMO-017
+touches:
+- docs/operations/SYMPHONY_DEMO_E2E_RUNBOOK.md
+- scripts/audit/verify_tsk_p1_demo_018.sh
+- evidence/phase1/tsk_p1_demo_018_e2e_runbook.json
+- docs/plans/phase1/TSK-P1-DEMO-018/PLAN.md
+- docs/plans/phase1/TSK-P1-DEMO-018/EXEC_LOG.md
+invariants:
+- INV-105
+- INV-119
+- INV-133
+work:
+- Create the primary host-based end-to-end demo runbook for the current local server.
+- Define the clean deployment checkout contract: no development on main, no direct
+    push to main, no direct pull from main into working branches, and deployment from
+    a clean checkout tracking origin/main.
+- For every runbook step, define pass condition, fail condition, stop or continue
+  action, and evidence emitted.
+- Split server-side API smoke checks from Dell browser-only UX smoke checks.
+- Distinguish task evidence from run evidence and demote Kubernetes to an appendix-only
+  path.
+acceptance_criteria:
+- Runbook is operator-executable without inference about branch posture, process handling,
+  or smoke-check ownership.
+- Every step defines pass or fail conditions, operator action, and evidence emitted.
+- Browser smoke and secret-bearing API smoke are clearly separated.
+- Teardown and key-rotation closeout are explicit runbook steps.
+- Kubernetes is clearly labeled non-canonical and not part of local demo sign-off.
+verification:
+- bash scripts/audit/verify_tsk_p1_demo_018.sh
+- python3 scripts/audit/validate_evidence.py --task TSK-P1-DEMO-018 --evidence evidence/phase1/tsk_p1_demo_018_e2e_runbook.json
+evidence:
+- evidence/phase1/tsk_p1_demo_018_e2e_runbook.json
+failure_modes:
+- Runbook still relies on branch-name checks only.
+- Runbook still mixes browser checks with secret-bearing API checks.
+- Task evidence and run evidence are conflated.
+- Teardown or rotation closeout remains optional prose instead of a runbook step.
+- Evidence file missing.
+must_read:
+- AGENT_ENTRYPOINT.md
+- docs/operations/AI_AGENT_OPERATION_MANUAL.md
+- docs/operations/GREENTECH4CE_TENANT_PROGRAMME_PROVISIONING_RUNBOOK.md
+implementation_plan: docs/plans/phase1/TSK-P1-DEMO-018/PLAN.md
+implementation_log: docs/plans/phase1/TSK-P1-DEMO-018/EXEC_LOG.md
+notes: Docs-and-operator-tooling only; no product or schema changes.
+client: codex_cli
+assigned_agent: supervisor
+model: gpt-5-codex

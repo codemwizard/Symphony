@@ -1,0 +1,15 @@
+{
+  "check_id": "TSK-P1-210",
+  "timestamp_utc": "2026-03-15T02:56:07Z",
+  "git_sha": "3e23d1b4942812f61d3e8d9088e0ee08ffe255ed",
+  "schema_fingerprint": "69acffc9187356ccc2270735cf4c3702c96925fc5932fe6221e47a9815c15b08",
+  "status": "PASS",
+  "task_id": "TSK-P1-210",
+  "run_id": "standalone-20260315T025607Z",
+  "checks": {
+    "read_model_handler_pre_indexed": true,
+    "ui_fetch_helper_implemented": true,
+    "ui_fetch_helper_utilized": true
+  },
+  "errors": []
+}

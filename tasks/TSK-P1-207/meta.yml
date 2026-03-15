@@ -1,0 +1,52 @@
+schema_version: 1
+phase: '1'
+task_id: TSK-P1-207
+title: Harden supervisor API privileged routes and token transport
+owner_role: SUPERVISOR
+status: planned
+depends_on:
+- R-000
+- TSK-P1-HIER-011
+touches:
+- services/supervisor_api/server.py
+- scripts/audit/verify_hier_011_supervisor_access_mechanisms.sh
+- scripts/audit/verify_tsk_p1_207.sh
+- evidence/phase1/tsk_p1_207_supervisor_api_auth_hardening.json
+- docs/plans/phase1/TSK-P1-207/PLAN.md
+- docs/plans/phase1/TSK-P1-207/EXEC_LOG.md
+invariants:
+- INV-119
+- INV-133
+work:
+- Add explicit authn and authz enforcement for all /v1/admin/supervisor/* routes in server.py.
+- Read ADMIN_API_KEY from environment in server.py and validate it on privileged routes using a constant-time comparison.
+- Move audit-record token transport from query-string token input to HTTP authorization header transport and reject query tokens.
+- Harden malformed JSON and ttl_seconds parsing to deterministic 4xx responses and remove raw DB exception detail reflection.
+- Upgrade the HIER-011 verifier to assert the hardened auth contract and the new token transport.
+acceptance_criteria:
+- No privileged supervisor route is callable without explicit authn/authz.
+- Audit-record token retrieval no longer accepts query-string tokens.
+- Malformed body and TTL failures return deterministic 4xx responses.
+- Approval failures no longer reflect raw DB exception text.
+verification:
+- bash scripts/audit/verify_hier_011_supervisor_access_mechanisms.sh
+- bash scripts/audit/verify_tsk_p1_207.sh
+- python3 scripts/audit/validate_evidence.py --task TSK-P1-207 --evidence evidence/phase1/tsk_p1_207_supervisor_api_auth_hardening.json
+evidence:
+- evidence/phase1/tsk_p1_207_supervisor_api_auth_hardening.json
+failure_modes:
+- Privileged supervisor routes still lack explicit authn/authz.
+- Audit token still works via query-string transport.
+- Raw DB exception detail still leaks.
+- Evidence file missing.
+must_read:
+- AGENT_ENTRYPOINT.md
+- docs/operations/AI_AGENT_OPERATION_MANUAL.md
+- services/supervisor_api/server.py
+- scripts/audit/verify_hier_011_supervisor_access_mechanisms.sh
+implementation_plan: docs/plans/phase1/TSK-P1-207/PLAN.md
+implementation_log: docs/plans/phase1/TSK-P1-207/EXEC_LOG.md
+notes: Supervisor API auth hardening task.
+client: codex_cli
+assigned_agent: supervisor
+model: gpt-5-codex

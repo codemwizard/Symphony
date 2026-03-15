@@ -577,7 +577,7 @@ app.MapPost("/pilot-demo/api/instruction-files/generate", async (SignedInstructi
         return Results.NotFound();
     }
 
-    var authFailure = ApiAuthorization.AuthorizeEvidenceRead(httpContext);
+    var authFailure = ApiAuthorization.AuthorizeAdminTenantOnboarding(httpContext);
     if (authFailure is not null)
     {
         return Results.Json(authFailure.Body, statusCode: authFailure.StatusCode);

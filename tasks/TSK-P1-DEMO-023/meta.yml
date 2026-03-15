@@ -1,0 +1,49 @@
+schema_version: 1
+phase: '1'
+task_id: TSK-P1-DEMO-023
+title: Create the strict start-now checklist for demo deployment and end-to-end rehearsal
+owner_role: QA_VERIFIER
+status: completed
+depends_on:
+- TSK-P1-DEMO-020
+- TSK-P1-DEMO-021
+- TSK-P1-DEMO-022
+touches:
+- docs/operations/SYMPHONY_DEMO_START_NOW_CHECKLIST.md
+- scripts/audit/verify_tsk_p1_demo_023.sh
+- evidence/phase1/tsk_p1_demo_023_start_now_checklist.json
+- docs/plans/phase1/TSK-P1-DEMO-023/PLAN.md
+- docs/plans/phase1/TSK-P1-DEMO-023/EXEC_LOG.md
+invariants:
+- INV-105
+- INV-119
+- INV-133
+work:
+- Create a strict start-now checklist that gives operators a go or no-go sequence for beginning host-based demo deployment in rehearsal-only mode.
+- Separate start conditions from full-demo signoff conditions so operators can begin end-to-end testing without misclassifying the run.
+- Define exact stop conditions, continuation conditions, and result classification for deployment start, health, onboarding, smoke, rehearsal, and browser checks.
+acceptance_criteria:
+- Operators can determine whether the system is ready to start end-to-end deployment and testing without conflating rehearsal readiness with signoff readiness.
+- The checklist defines explicit start conditions, stop conditions, and success criteria for a rehearsal-only run.
+- The checklist points operators to full-demo signoff conditions without requiring them before the first end-to-end rehearsal starts.
+verification:
+- bash scripts/audit/verify_tsk_p1_demo_023.sh
+- python3 scripts/audit/validate_evidence.py --task TSK-P1-DEMO-023 --evidence evidence/phase1/tsk_p1_demo_023_start_now_checklist.json
+evidence:
+- evidence/phase1/tsk_p1_demo_023_start_now_checklist.json
+failure_modes:
+- Checklist still conflates start readiness with full-demo signoff readiness.
+- Checklist omits explicit stop conditions or success criteria for rehearsal-only startup.
+- Checklist does not anchor to the host-based runbook and current demo mode semantics.
+- Evidence file missing.
+must_read:
+- AGENT_ENTRYPOINT.md
+- docs/operations/SYMPHONY_DEMO_E2E_RUNBOOK.md
+- docs/security/SYMPHONY_DEMO_KEY_AND_ROTATION_POLICY.md
+- docs/operations/GREENTECH4CE_TENANT_PROGRAMME_PROVISIONING_RUNBOOK.md
+implementation_plan: docs/plans/phase1/TSK-P1-DEMO-023/PLAN.md
+implementation_log: docs/plans/phase1/TSK-P1-DEMO-023/EXEC_LOG.md
+notes: Checklist-only task; no runtime or schema changes.
+client: codex_cli
+assigned_agent: qa_verifier
+model: gpt-5-codex
