@@ -1,8 +1,16 @@
 {
-  "task_id": "TSK-P1-DEMO-017",
-  "status": "FAIL",
-  "runbook": "/tmp/fake_runbook.md",
-  "missing_sections": [
-    "Provisioning Procedure"
+  "check_id": "TSK-P1-DEMO-017",
+  "timestamp_utc": "2026-03-16T06:46:58Z",
+  "git_sha": "49db1a8e9265cb35de326e9f9bc9776da5f241fd",
+  "schema_fingerprint": "e3be1cd2a92efa46b1db6d15f36e21ffb927ff159f1238b9ff46702696aa70fc",
+  "status": "PASS",
+  "runbook": "docs/operations/GREENTECH4CE_TENANT_PROGRAMME_PROVISIONING_RUNBOOK.md",
+  "missing_sections": [],
+  "checks": [
+    "purpose_present",
+    "provisioning_procedure_present",
+    "required_inputs_present",
+    "isolation_verification_present",
+    "completion_checklist_present"
   ]
 }
