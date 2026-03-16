@@ -58,6 +58,9 @@ cat > "$STATE_DIR/policy.hcl" <<'POLICY'
 path "kv/data/symphony/secrets/*" {
   capabilities = ["read"]
 }
+path "kv/data/allowed/test" {
+  capabilities = ["read"]
+}
 POLICY
 
 docker cp "$STATE_DIR/policy.hcl" symphony-openbao:/tmp/policy.hcl
