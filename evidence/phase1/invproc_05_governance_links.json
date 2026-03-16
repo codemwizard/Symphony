@@ -1,8 +1,8 @@
 {
   "check_id": "INVPROC-05-GOVERNANCE-LINKS",
-  "timestamp_utc": "2026-03-09T08:27:26Z",
-  "git_sha": "0e8c478f13f271670633e382be1b994168f0faf9",
-  "schema_fingerprint": "48e1f2462b2d811f14d424ac529ee731e692f992414abfdbc35c60170590957b",
+  "timestamp_utc": "2026-03-16T11:58:26Z",
+  "git_sha": "494dc7efd39c7ccaf6fd9f994a2c6cef04fd3269",
+  "schema_fingerprint": "59eef2a10b166543339b310ae67181cc9a8d6b22aa216e649e56652c2316e165",
   "status": "PASS",
   "errors": []
 }

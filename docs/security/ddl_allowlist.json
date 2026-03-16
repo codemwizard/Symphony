@@ -306,6 +306,60 @@
       "expires_on": "2027-01-01",
       "reviewed_by": "architect",
       "approved_at": "2026-03-16"
+    },
+    {
+      "id": "DDL-ALLOW-0056",
+      "migration": "schema/migrations/0076_onboarding_control_plane.sql",
+      "statement_fingerprint": "76cec637881d5ab0b3005e5095595ca69986564ef3c8b7b63e552ec79c12d25b",
+      "reason": "Wave 2 Onboarding control plane (tenant_registry RLS)",
+      "expires_on": "2026-12-31",
+      "reviewed_by": "security_guardian",
+      "approved_at": "2026-03-16"
+    },
+    {
+      "id": "DDL-ALLOW-0057",
+      "migration": "schema/migrations/0076_onboarding_control_plane.sql",
+      "statement_fingerprint": "65f0b6d53646db6903ee1f4e7f159dd9f97e326be1ca4ec0a3fa26a7595f3602",
+      "reason": "Wave 2 Onboarding control plane (tenant_registry RLS force)",
+      "expires_on": "2026-12-31",
+      "reviewed_by": "security_guardian",
+      "approved_at": "2026-03-16"
+    },
+    {
+      "id": "DDL-ALLOW-0058",
+      "migration": "schema/migrations/0076_onboarding_control_plane.sql",
+      "statement_fingerprint": "005095426be6c145aba32ee2f483ab8966f741a92f2ddda24c9f9f1454960e16",
+      "reason": "Wave 2 Onboarding control plane (programme_registry RLS)",
+      "expires_on": "2026-12-31",
+      "reviewed_by": "security_guardian",
+      "approved_at": "2026-03-16"
+    },
+    {
+      "id": "DDL-ALLOW-0059",
+      "migration": "schema/migrations/0076_onboarding_control_plane.sql",
+      "statement_fingerprint": "bedb0472f81334cb66a7fbac01bbf9ea9766cb17bf0ba1cd6d44bc60314d9a1e",
+      "reason": "Wave 2 Onboarding control plane (programme_registry RLS force)",
+      "expires_on": "2026-12-31",
+      "reviewed_by": "security_guardian",
+      "approved_at": "2026-03-16"
+    },
+    {
+      "id": "DDL-ALLOW-0060",
+      "migration": "schema/migrations/0076_onboarding_control_plane.sql",
+      "statement_fingerprint": "f31e03cc2b8d8684883b70d685e6a416ee19ec284549741fdf455be0bad4a492",
+      "reason": "Wave 2 Onboarding control plane (programme_policy_binding RLS)",
+      "expires_on": "2026-12-31",
+      "reviewed_by": "security_guardian",
+      "approved_at": "2026-03-16"
+    },
+    {
+      "id": "DDL-ALLOW-0061",
+      "migration": "schema/migrations/0076_onboarding_control_plane.sql",
+      "statement_fingerprint": "29c3cb0da9d7791b859a514f322bb4ff8438c9b20a62935527831c43de7ccac8",
+      "reason": "Wave 2 Onboarding control plane (programme_policy_binding RLS force)",
+      "expires_on": "2026-12-31",
+      "reviewed_by": "security_guardian",
+      "approved_at": "2026-03-16"
     }
   ]
 }

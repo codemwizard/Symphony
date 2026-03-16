@@ -1,9 +1,9 @@
 {
   "check_id": "TSK-P1-063",
   "task_id": "TSK-P1-063",
-  "timestamp_utc": "2026-03-14T02:02:33Z",
-  "git_sha": "e6fea4e7e798ccab0563ad0f8cf4d754f0e869f0",
-  "schema_fingerprint": "69acffc9187356ccc2270735cf4c3702c96925fc5932fe6221e47a9815c15b08",
+  "timestamp_utc": "2026-03-16T11:58:28Z",
+  "git_sha": "494dc7efd39c7ccaf6fd9f994a2c6cef04fd3269",
+  "schema_fingerprint": "59eef2a10b166543339b310ae67181cc9a8d6b22aa216e649e56652c2316e165",
   "status": "PASS",
   "audited_paths": [
     "scripts/audit/lib/approval_requirement.py",
@@ -19,9 +19,13 @@
     "scripts/audit/verify_invariants_local.sh",
     "scripts/audit/verify_tsk_p1_062.sh",
     "scripts/audit/verify_tsk_p1_076.sh",
+    "scripts/audit/verify_tsk_p1_demo_020.sh",
     "scripts/audit/verify_tsk_p1_demo_028.sh",
+    "scripts/audit/verify_tsk_p1_demo_030.sh",
+    "scripts/dev/capture_demo_server_snapshot.sh",
     "scripts/dev/install_git_hooks.sh",
     "scripts/dev/pre_ci.sh",
+    "scripts/dev/run_demo_e2e.sh",
     "scripts/lib/git_diff_range_only.sh",
     "scripts/security/lint_app_sql_injection.sh"
   ],

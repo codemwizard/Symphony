@@ -1,0 +1,19 @@
+{
+  "check_id": "TSK-P1-219",
+  "timestamp_utc": "2026-03-16T09:07:30Z",
+  "git_sha": "8e108aa4f7b6a80cdbbd484139cf88afde442b14",
+  "schema_fingerprint": "e3be1cd2a92efa46b1db6d15f36e21ffb927ff159f1238b9ff46702696aa70fc",
+  "status": "PASS",
+  "task_id": "TSK-P1-219",
+  "run_id": "standalone-20260316T090730Z",
+  "checks": {
+    "onboarding_tab": true,
+    "onboarding_screen": true,
+    "load_function": true,
+    "status_api_call": true,
+    "no_admin_key_in_browser": true,
+    "session_credentials": true,
+    "five_tabs": true
+  },
+  "errors": []
+}

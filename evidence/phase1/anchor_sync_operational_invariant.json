@@ -4,9 +4,9 @@
   "task_id": "TSK-P1-024",
   "gate_id": "INT-G29",
   "invariant_id": "INV-113",
-  "timestamp_utc": "2026-03-09T13:38:44Z",
-  "git_sha": "ba00446fb5cdf29487d7f5faca90c4c39cbbe954",
-  "schema_fingerprint": "48e1f2462b2d811f14d424ac529ee731e692f992414abfdbc35c60170590957b",
+  "timestamp_utc": "2026-03-16T11:59:46Z",
+  "git_sha": "494dc7efd39c7ccaf6fd9f994a2c6cef04fd3269",
+  "schema_fingerprint": "59eef2a10b166543339b310ae67181cc9a8d6b22aa216e649e56652c2316e165",
   "status": "PASS",
   "details": {
     "checks": [

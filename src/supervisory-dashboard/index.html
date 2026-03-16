@@ -405,6 +405,7 @@ html, body { width:100%; min-height:100vh; background:var(--bg); font-family:var
     <div class="tab" onclick="switchTab('dash',this)">Supervisory Dashboard</div>
     <div class="tab risk-tab" onclick="switchTab('sim',this)">⚠ SIM-Swap Risk Hold <span style="font-size:7px;opacity:.55;letter-spacing:.05em">(Phase 1 · DEMO_BACKED)</span></div>
     <div class="tab" onclick="switchTab('s6',this)">Pilot Success Criteria</div>
+    <div class="tab" onclick="switchTab('onboarding',this)">Onboarding</div>
   </div>
 
   <!-- SCREENS -->
@@ -996,6 +997,60 @@ html, body { width:100%; min-height:100vh; background:var(--bg); font-family:var
       </div>
     </div>
 
+    <!-- ════════════════════════════════════════
+         SCREEN 5: OPERATOR ONBOARDING CONSOLE (TSK-P1-219)
+    ════════════════════════════════════════ -->
+    <div class="screen" id="screen-onboarding">
+      <div class="onb-body" style="width:100%;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
+          <div>
+            <div style="font-family:var(--mono);font-size:8px;letter-spacing:.3em;text-transform:uppercase;color:var(--gold);opacity:.65;margin-bottom:4px;">Operator Onboarding Console</div>
+            <div style="font-family:var(--serif);font-size:22px;color:#fff;">Tenant & Programme Registry</div>
+            <div style="font-family:var(--mono);font-size:8.5px;color:var(--smoke);opacity:.5;margin-top:3px;letter-spacing:.1em;">Persisted control-plane state · TSK-P1-217/218</div>
+          </div>
+          <button class="btn btn-primary" style="width:auto;padding:9px 18px;" onclick="loadOnboardingState()">↻ Refresh</button>
+        </div>
+
+        <!-- Tenant Registry -->
+        <div class="dash-card" style="margin-bottom:18px;">
+          <div class="dc-head">
+            <span class="dc-head-title">Registered Tenants</span>
+            <span class="dc-head-action" id="onbTenantCount">0 tenants</span>
+          </div>
+          <table class="timeline-table">
+            <thead><tr><th>Tenant ID</th><th>Key</th><th>Display Name</th><th>Status</th><th>Created</th></tr></thead>
+            <tbody id="onbTenantRows"><tr><td colspan="5" style="opacity:.4;text-align:center;">Loading…</td></tr></tbody>
+          </table>
+        </div>
+
+        <!-- Programme Registry -->
+        <div class="dash-card" style="margin-bottom:18px;">
+          <div class="dc-head">
+            <span class="dc-head-title">Programmes</span>
+            <span class="dc-head-action" id="onbProgrammeCount">0 programmes</span>
+          </div>
+          <table class="timeline-table">
+            <thead><tr><th>Programme ID</th><th>Tenant</th><th>Key</th><th>Display Name</th><th>Status</th><th>Policy</th><th>Updated</th></tr></thead>
+            <tbody id="onbProgrammeRows"><tr><td colspan="7" style="opacity:.4;text-align:center;">Loading…</td></tr></tbody>
+          </table>
+        </div>
+
+        <!-- Status summary -->
+        <div class="dash-card">
+          <div class="dc-head">
+            <span class="dc-head-title">Onboarding Status</span>
+            <span class="dc-head-action" id="onbTimestamp">—</span>
+          </div>
+          <div style="padding:16px 18px;display:flex;gap:24px;">
+            <div class="pb-item"><div class="pb-label">Active Tenants</div><div class="pb-value green" id="onbActiveTenants">0</div></div>
+            <div class="pb-item"><div class="pb-label">Active Programmes</div><div class="pb-value green" id="onbActiveProgrammes">0</div></div>
+            <div class="pb-item"><div class="pb-label">Bound Policies</div><div class="pb-value" id="onbBoundPolicies">0</div></div>
+            <div class="pb-item"><div class="pb-label">Data Source</div><div class="pb-value amber" style="font-size:14px;">Persisted DB</div><div class="pb-sub">Not env-variable</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
   </div><!-- /screens -->
 </div><!-- /app -->
 
@@ -1330,6 +1385,9 @@ function switchTab(id, el) {
   el.classList.add('active');
   if (id === 's6') {
     loadPilotSuccessPanel();
+  }
+  if (id === 'onboarding') {
+    loadOnboardingState();
   }
 }
 
@@ -1879,5 +1937,53 @@ if (DATA_MODE !== 'STATIC_DEMO') {
 }
 hydrateDashboard(fallbackData().programme_summary?.programId || fallbackData().action_presets?.programme_id || 'PGM-ZAMBIA-GRN-001');
 </script>
+<script>
+// ── TSK-P1-219: Onboarding Console ──
+async function loadOnboardingState() {
+  try {
+    const resp = await fetch('/api/admin/onboarding/status', { credentials: 'include' });
+    if (!resp.ok) {
+      document.getElementById('onbTenantRows').innerHTML = '<tr><td colspan="5" style="color:var(--red-lt);">Auth failed or API unavailable (' + resp.status + ')</td></tr>';
+      return;
+    }
+    const data = await resp.json();
+
+    // Render tenants
+    const tenants = data.tenants || [];
+    document.getElementById('onbTenantCount').textContent = tenants.length + ' tenant' + (tenants.length !== 1 ? 's' : '');
+    if (tenants.length === 0) {
+      document.getElementById('onbTenantRows').innerHTML = '<tr><td colspan="5" style="opacity:.4;text-align:center;">No tenants registered</td></tr>';
+    } else {
+      document.getElementById('onbTenantRows').innerHTML = tenants.map(t =>
+        '<tr><td>' + t.tenant_id.substring(0,8) + '…</td><td>' + (t.tenant_key||'—') + '</td><td>' + t.display_name + '</td><td><span class="status-chip ' + (t.status==='ACTIVE'?'chip-auth':'chip-hold') + '">' + t.status + '</span></td><td>' + new Date(t.created_at).toLocaleDateString() + '</td></tr>'
+      ).join('');
+    }
+
+    // Render programmes
+    const progs = data.programmes || [];
+    document.getElementById('onbProgrammeCount').textContent = progs.length + ' programme' + (progs.length !== 1 ? 's' : '');
+    if (progs.length === 0) {
+      document.getElementById('onbProgrammeRows').innerHTML = '<tr><td colspan="7" style="opacity:.4;text-align:center;">No programmes registered</td></tr>';
+    } else {
+      document.getElementById('onbProgrammeRows').innerHTML = progs.map(p =>
+        '<tr><td>' + p.programme_id.substring(0,8) + '…</td><td>' + p.tenant_id.substring(0,8) + '…</td><td>' + p.programme_key + '</td><td>' + p.display_name + '</td><td><span class="status-chip ' + (p.status==='ACTIVE'?'chip-auth': p.status==='CREATED'?'chip-hold':'chip-sim') + '">' + p.status + '</span></td><td>' + (p.policy_code||'—') + '</td><td>' + new Date(p.updated_at).toLocaleDateString() + '</td></tr>'
+      ).join('');
+    }
+
+    // Summary stats
+    document.getElementById('onbActiveTenants').textContent = tenants.filter(t => t.status === 'ACTIVE').length;
+    document.getElementById('onbActiveProgrammes').textContent = progs.filter(p => p.status === 'ACTIVE').length;
+    document.getElementById('onbBoundPolicies').textContent = progs.filter(p => p.policy_code).length;
+    document.getElementById('onbTimestamp').textContent = data.timestamp ? new Date(data.timestamp).toLocaleString() : '—';
+  } catch (err) {
+    document.getElementById('onbTenantRows').innerHTML = '<tr><td colspan="5" style="color:var(--red-lt);">Error: ' + err.message + '</td></tr>';
+  }
+}
+</script>
+<style>
+/* ── SCREEN 5: ONBOARDING CONSOLE ── */
+#screen-onboarding { flex-direction:column; background:var(--bg); overflow-y:auto; }
+.onb-body { padding:24px 28px; display:flex; flex-direction:column; gap:0; }
+</style>
 </body>
 </html>

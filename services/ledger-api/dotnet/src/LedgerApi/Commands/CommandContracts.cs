@@ -164,3 +164,56 @@ static class StoreErrorMessages
     public const string PersistenceUnavailable = "persistence unavailable";
     public const string ReportLookupUnavailable = "report lookup unavailable";
 }
+
+// ─── Onboarding Control-Plane Contracts (TSK-P1-217) ───────────────
+
+record TenantRegistryEntry(
+    string TenantId,
+    string TenantKey,
+    string DisplayName,
+    string Status,
+    DateTimeOffset CreatedAt,
+    DateTimeOffset UpdatedAt);
+
+record TenantRegistryResult(bool Success, TenantRegistryEntry? Entry, bool CreatedNew, string? Error)
+{
+    public static TenantRegistryResult Ok(TenantRegistryEntry entry, bool createdNew)
+        => new(true, entry, createdNew, null);
+    public static TenantRegistryResult Fail(string error)
+        => new(false, null, false, error);
+}
+
+interface ITenantRegistryStore
+{
+    Task<bool> ExistsAsync(Guid tenantId, CancellationToken cancellationToken);
+    Task<TenantRegistryEntry?> GetAsync(Guid tenantId, CancellationToken cancellationToken);
+    Task<IReadOnlyList<TenantRegistryEntry>> ListAsync(CancellationToken cancellationToken);
+    Task<TenantRegistryResult> UpsertAsync(Guid tenantId, string tenantKey, string displayName, CancellationToken cancellationToken);
+}
+
+record ProgrammeEntry(
+    string ProgrammeId,
+    string TenantId,
+    string ProgrammeKey,
+    string DisplayName,
+    string Status,
+    string? PolicyCode,
+    DateTimeOffset CreatedAt,
+    DateTimeOffset UpdatedAt);
+
+record ProgrammeResult(bool Success, ProgrammeEntry? Entry, bool CreatedNew, string? Error)
+{
+    public static ProgrammeResult Ok(ProgrammeEntry entry, bool createdNew)
+        => new(true, entry, createdNew, null);
+    public static ProgrammeResult Fail(string error)
+        => new(false, null, false, error);
+}
+
+interface IProgrammeStore
+{
+    Task<IReadOnlyList<ProgrammeEntry>> ListAsync(Guid? tenantId, CancellationToken cancellationToken);
+    Task<ProgrammeResult> CreateAsync(Guid tenantId, string programmeKey, string displayName, CancellationToken cancellationToken);
+    Task<ProgrammeResult> ActivateAsync(Guid programmeId, CancellationToken cancellationToken);
+    Task<ProgrammeResult> SuspendAsync(Guid programmeId, CancellationToken cancellationToken);
+    Task<ProgrammeResult> BindPolicyAsync(Guid programmeId, Guid tenantId, string policyCode, CancellationToken cancellationToken);
+}

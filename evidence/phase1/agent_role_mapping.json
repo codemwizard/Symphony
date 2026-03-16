@@ -1,8 +1,8 @@
 {
   "check_id": "AGENT-ROLE-MAPPING",
-  "timestamp_utc": "2026-03-12T14:59:42Z",
-  "git_sha": "b373022adbeba212579dcf0c9509edcae966e10c",
-  "schema_fingerprint": "33e36565282f1592203a3db8c735f6d6a51bdcfa289c00e1c2040e30adc98ddb",
+  "timestamp_utc": "2026-03-16T11:54:49Z",
+  "git_sha": "494dc7efd39c7ccaf6fd9f994a2c6cef04fd3269",
+  "schema_fingerprint": "59eef2a10b166543339b310ae67181cc9a8d6b22aa216e649e56652c2316e165",
   "status": "PASS",
   "canonical_roles": [
     "Compliance / Invariant Mapper Agent",
@@ -16,7 +16,7 @@
   ],
   "agent_role_rows": [
     {
-      "path": "/tmp/symphony_wave_split_wts_20260312/governance/AGENTS.md",
+      "path": "/home/mwiza/workspace/Symphony/AGENTS.md",
       "role": "Supervisor",
       "valid": true
     },

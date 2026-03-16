@@ -1,8 +1,8 @@
 {
   "check_id": "EVIDENCE-SCHEMA-VALIDATION",
-  "timestamp_utc": "2026-03-09T02:35:38Z",
-  "git_sha": "21a2cf0c0d6ac8c06085f5a1a0db1d43e80a09cf",
-  "schema_fingerprint": "8a1629a2bf1d9ff4092ff1a18ab99c243549e69d049c4742baccd214781a4597",
+  "timestamp_utc": "2026-03-16T11:58:39Z",
+  "git_sha": "494dc7efd39c7ccaf6fd9f994a2c6cef04fd3269",
+  "schema_fingerprint": "59eef2a10b166543339b310ae67181cc9a8d6b22aa216e649e56652c2316e165",
   "status": "PASS",
   "checked_dirs": [
     "/home/mwiza/workspace/Symphony/evidence/phase0",
@@ -112,10 +112,12 @@
     "/home/mwiza/workspace/Symphony/evidence/phase1/anchor_sync_operational_invariant.json",
     "/home/mwiza/workspace/Symphony/evidence/phase1/anchor_sync_resume_semantics.json",
     "/home/mwiza/workspace/Symphony/evidence/phase1/approval_metadata.json",
+    "/home/mwiza/workspace/Symphony/evidence/phase1/audit_precedence.json",
     "/home/mwiza/workspace/Symphony/evidence/phase1/authz_tenant_boundary.json",
     "/home/mwiza/workspace/Symphony/evidence/phase1/boz_access_boundary_runtime.json",
     "/home/mwiza/workspace/Symphony/evidence/phase1/branch_remediation_governance_bundle.json",
     "/home/mwiza/workspace/Symphony/evidence/phase1/branch_remediation_inv134.json",
+    "/home/mwiza/workspace/Symphony/evidence/phase1/card_data_non_presence.json",
     "/home/mwiza/workspace/Symphony/evidence/phase1/checkpoint__BASE-OPS.json",
     "/home/mwiza/workspace/Symphony/evidence/phase1/checkpoint__CS-0.json",
     "/home/mwiza/workspace/Symphony/evidence/phase1/checkpoint__ESC.json",
@@ -123,8 +125,13 @@
     "/home/mwiza/workspace/Symphony/evidence/phase1/checkpoint__P0-DONE.json",
     "/home/mwiza/workspace/Symphony/evidence/phase1/checkpoint__PERF-ENG.json",
     "/home/mwiza/workspace/Symphony/evidence/phase1/checkpoint__PERF-REG.json",
+    "/home/mwiza/workspace/Symphony/evidence/phase1/checkpoint__PHASE-1-CLOSEOUT.json",
     "/home/mwiza/workspace/Symphony/evidence/phase1/cqrs_001_code_separation.json",
     "/home/mwiza/workspace/Symphony/evidence/phase1/cqrs_002_db_role_separation.json",
+    "/home/mwiza/workspace/Symphony/evidence/phase1/cut_001_one_shot_projection_cutover.json",
+    "/home/mwiza/workspace/Symphony/evidence/phase1/cut_002_query_surface_boundary.json",
+    "/home/mwiza/workspace/Symphony/evidence/phase1/cut_003_projection_cutover_runbook.json",
+    "/home/mwiza/workspace/Symphony/evidence/phase1/cut_004_projection_cutover_gate.json",
     "/home/mwiza/workspace/Symphony/evidence/phase1/dep_audit_ci_wiring.json",
     "/home/mwiza/workspace/Symphony/evidence/phase1/dep_audit_gate.json",
     "/home/mwiza/workspace/Symphony/evidence/phase1/dotnet_lint_quality.json",
@@ -140,6 +147,8 @@
     "/home/mwiza/workspace/Symphony/evidence/phase1/hier_009_instruction_hierarchy_sqlstates.json",
     "/home/mwiza/workspace/Symphony/evidence/phase1/hier_010_program_migration.json",
     "/home/mwiza/workspace/Symphony/evidence/phase1/hier_011_supervisor_access_mechanisms.json",
+    "/home/mwiza/workspace/Symphony/evidence/phase1/human_governance_review_signoff.json",
+    "/home/mwiza/workspace/Symphony/evidence/phase1/identity_provenance_immutability.json",
     "/home/mwiza/workspace/Symphony/evidence/phase1/inf_002_container_build_pipeline.json",
     "/home/mwiza/workspace/Symphony/evidence/phase1/inf_005_openbao_external_secrets.json",
     "/home/mwiza/workspace/Symphony/evidence/phase1/ingress_ack_attestation_semantics.json",
@@ -148,21 +157,42 @@
     "/home/mwiza/workspace/Symphony/evidence/phase1/instruction_finality_invariant.json",
     "/home/mwiza/workspace/Symphony/evidence/phase1/instruction_finality_runtime.json",
     "/home/mwiza/workspace/Symphony/evidence/phase1/inv134_task_scaffold.json",
+    "/home/mwiza/workspace/Symphony/evidence/phase1/invariant_semantic_integrity.json",
+    "/home/mwiza/workspace/Symphony/evidence/phase1/invproc_01_governance_baseline.json",
+    "/home/mwiza/workspace/Symphony/evidence/phase1/invproc_02_register_parity.json",
+    "/home/mwiza/workspace/Symphony/evidence/phase1/invproc_03_ci_gate_spec_parity.json",
+    "/home/mwiza/workspace/Symphony/evidence/phase1/invproc_04_regulator_pack_template.json",
+    "/home/mwiza/workspace/Symphony/evidence/phase1/invproc_05_governance_links.json",
+    "/home/mwiza/workspace/Symphony/evidence/phase1/invproc_06_ci_wiring_closeout.json",
     "/home/mwiza/workspace/Symphony/evidence/phase1/k8s_manifests_validation.json",
     "/home/mwiza/workspace/Symphony/evidence/phase1/kpis.json",
     "/home/mwiza/workspace/Symphony/evidence/phase1/led_001_invariants_ci_cluster.json",
     "/home/mwiza/workspace/Symphony/evidence/phase1/led_002_retention_archive_restore.json",
     "/home/mwiza/workspace/Symphony/evidence/phase1/led_003_canonical_message_model.json",
     "/home/mwiza/workspace/Symphony/evidence/phase1/led_004_kyc_hash_bridge_endpoint.json",
+    "/home/mwiza/workspace/Symphony/evidence/phase1/native_aot_compilation_report.json",
+    "/home/mwiza/workspace/Symphony/evidence/phase1/no_backward_calls.json",
+    "/home/mwiza/workspace/Symphony/evidence/phase1/ou_ownership_registry.json",
+    "/home/mwiza/workspace/Symphony/evidence/phase1/outbox_retry_semantics.json",
+    "/home/mwiza/workspace/Symphony/evidence/phase1/p1_057_final_perf_promotion.json",
+    "/home/mwiza/workspace/Symphony/evidence/phase1/p1_060_phase2_followthrough_gate.json",
+    "/home/mwiza/workspace/Symphony/evidence/phase1/perf_001_engine_metrics_capture.json",
+    "/home/mwiza/workspace/Symphony/evidence/phase1/perf_002_regression_detection_warmup.json",
     "/home/mwiza/workspace/Symphony/evidence/phase1/perf_003_rebaseline_sha_lock.json",
     "/home/mwiza/workspace/Symphony/evidence/phase1/perf_004__perf_contracts_closeout_checks_extends_verify.json",
     "/home/mwiza/workspace/Symphony/evidence/phase1/perf_005__regulatory_timing_compliance_gate.json",
     "/home/mwiza/workspace/Symphony/evidence/phase1/perf_005a_finality_seam_stub.json",
     "/home/mwiza/workspace/Symphony/evidence/phase1/perf_006__operational_risk_framework_translation_layer.json",
+    "/home/mwiza/workspace/Symphony/evidence/phase1/perf_db_driver_bench.json",
+    "/home/mwiza/workspace/Symphony/evidence/phase1/perf_driver_batching_telemetry.json",
+    "/home/mwiza/workspace/Symphony/evidence/phase1/perf_smoke_profile.json",
+    "/home/mwiza/workspace/Symphony/evidence/phase1/phase1_closeout.json",
+    "/home/mwiza/workspace/Symphony/evidence/phase1/phase1_contract_status.json",
     "/home/mwiza/workspace/Symphony/evidence/phase1/pii_decoupling_invariant.json",
     "/home/mwiza/workspace/Symphony/evidence/phase1/pii_decoupling_runtime.json",
     "/home/mwiza/workspace/Symphony/evidence/phase1/pilot_harness_replay.json",
     "/home/mwiza/workspace/Symphony/evidence/phase1/pilot_onboarding_readiness.json",
+    "/home/mwiza/workspace/Symphony/evidence/phase1/plane_isolation.json",
     "/home/mwiza/workspace/Symphony/evidence/phase1/product_kpi_readiness_report.json",
     "/home/mwiza/workspace/Symphony/evidence/phase1/program_a1_stability_gate.json",
     "/home/mwiza/workspace/Symphony/evidence/phase1/program_wave1_exit_gate.json",
@@ -178,18 +208,80 @@
     "/home/mwiza/workspace/Symphony/evidence/phase1/reg_002_daily_report_signed_output.json",
     "/home/mwiza/workspace/Symphony/evidence/phase1/reg_003_incident_48h_export.json",
     "/home/mwiza/workspace/Symphony/evidence/phase1/regulator_demo_pack.json",
+    "/home/mwiza/workspace/Symphony/evidence/phase1/reporting_pack_sample.json",
     "/home/mwiza/workspace/Symphony/evidence/phase1/sandbox_deploy_dry_run.json",
     "/home/mwiza/workspace/Symphony/evidence/phase1/sandbox_deploy_manifest_posture.json",
     "/home/mwiza/workspace/Symphony/evidence/phase1/sec_g08_control_plane_rehome.json",
+    "/home/mwiza/workspace/Symphony/evidence/phase1/signed_instruction_file_sample.json",
+    "/home/mwiza/workspace/Symphony/evidence/phase1/task_ui_wire_000_source_of_truth.json",
+    "/home/mwiza/workspace/Symphony/evidence/phase1/task_ui_wire_001_shell_port.json",
+    "/home/mwiza/workspace/Symphony/evidence/phase1/task_ui_wire_002_adapter_alignment.json",
+    "/home/mwiza/workspace/Symphony/evidence/phase1/task_ui_wire_003_reveal_live_wiring.json",
+    "/home/mwiza/workspace/Symphony/evidence/phase1/task_ui_wire_004_operator_action_wiring.json",
+    "/home/mwiza/workspace/Symphony/evidence/phase1/task_ui_wire_007_export.json",
+    "/home/mwiza/workspace/Symphony/evidence/phase1/task_ui_wire_008_ack_interrupt.json",
+    "/home/mwiza/workspace/Symphony/evidence/phase1/task_ui_wire_009_sim_swap.json",
+    "/home/mwiza/workspace/Symphony/evidence/phase1/task_ui_wire_010_success_gate_panel.json",
+    "/home/mwiza/workspace/Symphony/evidence/phase1/task_ui_wire_011_closeout.json",
     "/home/mwiza/workspace/Symphony/evidence/phase1/ten_001_ingress_tenant_context.json",
     "/home/mwiza/workspace/Symphony/evidence/phase1/ten_002_rls_leakage.json",
     "/home/mwiza/workspace/Symphony/evidence/phase1/ten_003_tenant_onboarding_admin.json",
     "/home/mwiza/workspace/Symphony/evidence/phase1/tier1_pilot_demo_pack.json",
+    "/home/mwiza/workspace/Symphony/evidence/phase1/tsk_p1_010_phase1_closeout_verification.json",
     "/home/mwiza/workspace/Symphony/evidence/phase1/tsk_p1_059__gate_script_modularization_no_behavior_changes.json",
+    "/home/mwiza/workspace/Symphony/evidence/phase1/tsk_p1_061_git_containment_rule.json",
+    "/home/mwiza/workspace/Symphony/evidence/phase1/tsk_p1_062_worktree_cleanup_and_guards.json",
+    "/home/mwiza/workspace/Symphony/evidence/phase1/tsk_p1_063_git_script_audit.json",
+    "/home/mwiza/workspace/Symphony/evidence/phase1/tsk_p1_064_git_regression_wiring.json",
+    "/home/mwiza/workspace/Symphony/evidence/phase1/tsk_p1_065_selftest_secret_posture.json",
+    "/home/mwiza/workspace/Symphony/evidence/phase1/tsk_p1_066_bounded_amount_validation.json",
+    "/home/mwiza/workspace/Symphony/evidence/phase1/tsk_p1_067_db_error_sanitization.json",
+    "/home/mwiza/workspace/Symphony/evidence/phase1/tsk_p1_068_sensitive_endpoint_rate_limits.json",
+    "/home/mwiza/workspace/Symphony/evidence/phase1/tsk_p1_069_fail_first_triage_banner.json",
+    "/home/mwiza/workspace/Symphony/evidence/phase1/tsk_p1_070_remediation_casefile_scaffolder.json",
+    "/home/mwiza/workspace/Symphony/evidence/phase1/tsk_p1_071_failure_layer_taxonomy.json",
+    "/home/mwiza/workspace/Symphony/evidence/phase1/tsk_p1_072_two_strike_escalation.json",
+    "/home/mwiza/workspace/Symphony/evidence/phase1/tsk_p1_073_remediation_artifact_freshness.json",
+    "/home/mwiza/workspace/Symphony/evidence/phase1/tsk_p1_073_task_surface.json",
+    "/home/mwiza/workspace/Symphony/evidence/phase1/tsk_p1_074_hook_source_normalization.json",
+    "/home/mwiza/workspace/Symphony/evidence/phase1/tsk_p1_075_preflight_preci_split.json",
+    "/home/mwiza/workspace/Symphony/evidence/phase1/tsk_p1_076_local_gate_topology.json",
     "/home/mwiza/workspace/Symphony/evidence/phase1/tsk_p1_202__closeout_verifier_scaffold_fail_if_contract.json",
     "/home/mwiza/workspace/Symphony/evidence/phase1/tsk_p1_203__sandbox_deploy_manifests_restore_posture_verifier.json",
     "/home/mwiza/workspace/Symphony/evidence/phase1/tsk_p1_204__exception_case_pack_generator_script_tool.json",
     "/home/mwiza/workspace/Symphony/evidence/phase1/tsk_p1_205__kpi_evidence_artifact_include_settlement_window.json",
+    "/home/mwiza/workspace/Symphony/evidence/phase1/tsk_p1_210_supervisory_optimization.json",
+    "/home/mwiza/workspace/Symphony/evidence/phase1/tsk_p1_211_billable_clients_constraint_fix.json",
+    "/home/mwiza/workspace/Symphony/evidence/phase1/tsk_p1_212_npgsql_ingress_store_fix.json",
+    "/home/mwiza/workspace/Symphony/evidence/phase1/tsk_p1_213_demo_017_verifier_realignment.json",
+    "/home/mwiza/workspace/Symphony/evidence/phase1/tsk_p1_214_supplier_registry_persistence.json",
+    "/home/mwiza/workspace/Symphony/evidence/phase1/tsk_p1_215_openbao_secret_provider.json",
+    "/home/mwiza/workspace/Symphony/evidence/phase1/tsk_p1_216_key_domain_separation_rotation.json",
+    "/home/mwiza/workspace/Symphony/evidence/phase1/tsk_p1_217_onboarding_control_plane.json",
+    "/home/mwiza/workspace/Symphony/evidence/phase1/tsk_p1_218_server_side_onboarding_apis.json",
+    "/home/mwiza/workspace/Symphony/evidence/phase1/tsk_p1_219_operator_onboarding_console.json",
+    "/home/mwiza/workspace/Symphony/evidence/phase1/tsk_p1_220_canonical_bootstrap.json",
+    "/home/mwiza/workspace/Symphony/evidence/phase1/tsk_p1_demo_001_pre_coding_lock.json",
+    "/home/mwiza/workspace/Symphony/evidence/phase1/tsk_p1_demo_002_sms_secure_link.json",
+    "/home/mwiza/workspace/Symphony/evidence/phase1/tsk_p1_demo_003_browser_geo_capture.json",
+    "/home/mwiza/workspace/Symphony/evidence/phase1/tsk_p1_demo_004_msisdn_submitter_match.json",
+    "/home/mwiza/workspace/Symphony/evidence/phase1/tsk_p1_demo_005_signed_instruction_file_egress.json",
+    "/home/mwiza/workspace/Symphony/evidence/phase1/tsk_p1_demo_006_supplier_policy.json",
+    "/home/mwiza/workspace/Symphony/evidence/phase1/tsk_p1_demo_007_supervisory_read_models.json",
+    "/home/mwiza/workspace/Symphony/evidence/phase1/tsk_p1_demo_008_supervisory_ui.json",
+    "/home/mwiza/workspace/Symphony/evidence/phase1/tsk_p1_demo_009_reporting_pack_export.json",
+    "/home/mwiza/workspace/Symphony/evidence/phase1/tsk_p1_demo_010_reveal_rehearsal.json",
+    "/home/mwiza/workspace/Symphony/evidence/phase1/tsk_p1_demo_011_pilot_success_criteria_gate.json",
+    "/home/mwiza/workspace/Symphony/evidence/phase1/tsk_p1_demo_013_demo_host_extraction.json",
+    "/home/mwiza/workspace/Symphony/evidence/phase1/tsk_p1_demo_014_profile_wiring.json",
+    "/home/mwiza/workspace/Symphony/evidence/phase1/tsk_p1_demo_015_pipeline_split.json",
+    "/home/mwiza/workspace/Symphony/evidence/phase1/tsk_p1_demo_017_provisioning_runbook.json",
+    "/home/mwiza/workspace/Symphony/evidence/phase1/tsk_p1_demo_024_health_probe_parity.json",
+    "/home/mwiza/workspace/Symphony/evidence/phase1/tsk_p1_demo_025_runtime_contract.json",
+    "/home/mwiza/workspace/Symphony/evidence/phase1/tsk_p1_demo_026_server_side_admin_proxy.json",
+    "/home/mwiza/workspace/Symphony/evidence/phase1/tsk_p1_demo_027_demo_gate_split.json",
+    "/home/mwiza/workspace/Symphony/evidence/phase1/tsk_p1_demo_028_image_flow.json",
+    "/home/mwiza/workspace/Symphony/evidence/phase1/tsk_p1_esc_001__escrow_state_machine_atomic_reservation_semantics.json",
     "/home/mwiza/workspace/Symphony/evidence/phase1/tsk_p1_esc_002__escrow_invariants_cross_tenant_protections.json",
     "/home/mwiza/workspace/Symphony/evidence/phase1/tsk_p1_hier_002__programs_program_escrow_id_bridge.json",
     "/home/mwiza/workspace/Symphony/evidence/phase1/tsk_p1_hier_003__distribution_entities_tenant_denorm_ceilings.json",
@@ -618,6 +710,10 @@
       "schema": "approval_metadata"
     },
     {
+      "file": "/home/mwiza/workspace/Symphony/evidence/phase1/audit_precedence.json",
+      "schema": "default"
+    },
+    {
       "file": "/home/mwiza/workspace/Symphony/evidence/phase1/authz_tenant_boundary.json",
       "schema": "default"
     },
@@ -631,6 +727,10 @@
     },
     {
       "file": "/home/mwiza/workspace/Symphony/evidence/phase1/branch_remediation_inv134.json",
+      "schema": "default"
+    },
+    {
+      "file": "/home/mwiza/workspace/Symphony/evidence/phase1/card_data_non_presence.json",
       "schema": "default"
     },
     {
@@ -662,11 +762,31 @@
       "schema": "default"
     },
     {
+      "file": "/home/mwiza/workspace/Symphony/evidence/phase1/checkpoint__PHASE-1-CLOSEOUT.json",
+      "schema": "default"
+    },
+    {
       "file": "/home/mwiza/workspace/Symphony/evidence/phase1/cqrs_001_code_separation.json",
       "schema": "default"
     },
     {
       "file": "/home/mwiza/workspace/Symphony/evidence/phase1/cqrs_002_db_role_separation.json",
+      "schema": "default"
+    },
+    {
+      "file": "/home/mwiza/workspace/Symphony/evidence/phase1/cut_001_one_shot_projection_cutover.json",
+      "schema": "default"
+    },
+    {
+      "file": "/home/mwiza/workspace/Symphony/evidence/phase1/cut_002_query_surface_boundary.json",
+      "schema": "default"
+    },
+    {
+      "file": "/home/mwiza/workspace/Symphony/evidence/phase1/cut_003_projection_cutover_runbook.json",
+      "schema": "default"
+    },
+    {
+      "file": "/home/mwiza/workspace/Symphony/evidence/phase1/cut_004_projection_cutover_gate.json",
       "schema": "default"
     },
     {
@@ -730,6 +850,14 @@
       "schema": "default"
     },
     {
+      "file": "/home/mwiza/workspace/Symphony/evidence/phase1/human_governance_review_signoff.json",
+      "schema": "default"
+    },
+    {
+      "file": "/home/mwiza/workspace/Symphony/evidence/phase1/identity_provenance_immutability.json",
+      "schema": "default"
+    },
+    {
       "file": "/home/mwiza/workspace/Symphony/evidence/phase1/inf_002_container_build_pipeline.json",
       "schema": "default"
     },
@@ -762,6 +890,34 @@
       "schema": "default"
     },
     {
+      "file": "/home/mwiza/workspace/Symphony/evidence/phase1/invariant_semantic_integrity.json",
+      "schema": "default"
+    },
+    {
+      "file": "/home/mwiza/workspace/Symphony/evidence/phase1/invproc_01_governance_baseline.json",
+      "schema": "default"
+    },
+    {
+      "file": "/home/mwiza/workspace/Symphony/evidence/phase1/invproc_02_register_parity.json",
+      "schema": "default"
+    },
+    {
+      "file": "/home/mwiza/workspace/Symphony/evidence/phase1/invproc_03_ci_gate_spec_parity.json",
+      "schema": "default"
+    },
+    {
+      "file": "/home/mwiza/workspace/Symphony/evidence/phase1/invproc_04_regulator_pack_template.json",
+      "schema": "default"
+    },
+    {
+      "file": "/home/mwiza/workspace/Symphony/evidence/phase1/invproc_05_governance_links.json",
+      "schema": "default"
+    },
+    {
+      "file": "/home/mwiza/workspace/Symphony/evidence/phase1/invproc_06_ci_wiring_closeout.json",
+      "schema": "default"
+    },
+    {
       "file": "/home/mwiza/workspace/Symphony/evidence/phase1/k8s_manifests_validation.json",
       "schema": "default"
     },
@@ -786,6 +942,38 @@
       "schema": "default"
     },
     {
+      "file": "/home/mwiza/workspace/Symphony/evidence/phase1/native_aot_compilation_report.json",
+      "schema": "default"
+    },
+    {
+      "file": "/home/mwiza/workspace/Symphony/evidence/phase1/no_backward_calls.json",
+      "schema": "default"
+    },
+    {
+      "file": "/home/mwiza/workspace/Symphony/evidence/phase1/ou_ownership_registry.json",
+      "schema": "default"
+    },
+    {
+      "file": "/home/mwiza/workspace/Symphony/evidence/phase1/outbox_retry_semantics.json",
+      "schema": "default"
+    },
+    {
+      "file": "/home/mwiza/workspace/Symphony/evidence/phase1/p1_057_final_perf_promotion.json",
+      "schema": "default"
+    },
+    {
+      "file": "/home/mwiza/workspace/Symphony/evidence/phase1/p1_060_phase2_followthrough_gate.json",
+      "schema": "default"
+    },
+    {
+      "file": "/home/mwiza/workspace/Symphony/evidence/phase1/perf_001_engine_metrics_capture.json",
+      "schema": "default"
+    },
+    {
+      "file": "/home/mwiza/workspace/Symphony/evidence/phase1/perf_002_regression_detection_warmup.json",
+      "schema": "default"
+    },
+    {
       "file": "/home/mwiza/workspace/Symphony/evidence/phase1/perf_003_rebaseline_sha_lock.json",
       "schema": "default"
     },
@@ -806,6 +994,26 @@
       "schema": "default"
     },
     {
+      "file": "/home/mwiza/workspace/Symphony/evidence/phase1/perf_db_driver_bench.json",
+      "schema": "default"
+    },
+    {
+      "file": "/home/mwiza/workspace/Symphony/evidence/phase1/perf_driver_batching_telemetry.json",
+      "schema": "default"
+    },
+    {
+      "file": "/home/mwiza/workspace/Symphony/evidence/phase1/perf_smoke_profile.json",
+      "schema": "default"
+    },
+    {
+      "file": "/home/mwiza/workspace/Symphony/evidence/phase1/phase1_closeout.json",
+      "schema": "default"
+    },
+    {
+      "file": "/home/mwiza/workspace/Symphony/evidence/phase1/phase1_contract_status.json",
+      "schema": "default"
+    },
+    {
       "file": "/home/mwiza/workspace/Symphony/evidence/phase1/pii_decoupling_invariant.json",
       "schema": "default"
     },
@@ -819,6 +1027,10 @@
     },
     {
       "file": "/home/mwiza/workspace/Symphony/evidence/phase1/pilot_onboarding_readiness.json",
+      "schema": "default"
+    },
+    {
+      "file": "/home/mwiza/workspace/Symphony/evidence/phase1/plane_isolation.json",
       "schema": "default"
     },
     {
@@ -882,6 +1094,10 @@
       "schema": "default"
     },
     {
+      "file": "/home/mwiza/workspace/Symphony/evidence/phase1/reporting_pack_sample.json",
+      "schema": "default"
+    },
+    {
       "file": "/home/mwiza/workspace/Symphony/evidence/phase1/sandbox_deploy_dry_run.json",
       "schema": "default"
     },
@@ -891,6 +1107,50 @@
     },
     {
       "file": "/home/mwiza/workspace/Symphony/evidence/phase1/sec_g08_control_plane_rehome.json",
+      "schema": "default"
+    },
+    {
+      "file": "/home/mwiza/workspace/Symphony/evidence/phase1/signed_instruction_file_sample.json",
+      "schema": "default"
+    },
+    {
+      "file": "/home/mwiza/workspace/Symphony/evidence/phase1/task_ui_wire_000_source_of_truth.json",
+      "schema": "default"
+    },
+    {
+      "file": "/home/mwiza/workspace/Symphony/evidence/phase1/task_ui_wire_001_shell_port.json",
+      "schema": "default"
+    },
+    {
+      "file": "/home/mwiza/workspace/Symphony/evidence/phase1/task_ui_wire_002_adapter_alignment.json",
+      "schema": "default"
+    },
+    {
+      "file": "/home/mwiza/workspace/Symphony/evidence/phase1/task_ui_wire_003_reveal_live_wiring.json",
+      "schema": "default"
+    },
+    {
+      "file": "/home/mwiza/workspace/Symphony/evidence/phase1/task_ui_wire_004_operator_action_wiring.json",
+      "schema": "default"
+    },
+    {
+      "file": "/home/mwiza/workspace/Symphony/evidence/phase1/task_ui_wire_007_export.json",
+      "schema": "default"
+    },
+    {
+      "file": "/home/mwiza/workspace/Symphony/evidence/phase1/task_ui_wire_008_ack_interrupt.json",
+      "schema": "default"
+    },
+    {
+      "file": "/home/mwiza/workspace/Symphony/evidence/phase1/task_ui_wire_009_sim_swap.json",
+      "schema": "default"
+    },
+    {
+      "file": "/home/mwiza/workspace/Symphony/evidence/phase1/task_ui_wire_010_success_gate_panel.json",
+      "schema": "default"
+    },
+    {
+      "file": "/home/mwiza/workspace/Symphony/evidence/phase1/task_ui_wire_011_closeout.json",
       "schema": "default"
     },
     {
@@ -910,7 +1170,79 @@
       "schema": "default"
     },
     {
+      "file": "/home/mwiza/workspace/Symphony/evidence/phase1/tsk_p1_010_phase1_closeout_verification.json",
+      "schema": "default"
+    },
+    {
       "file": "/home/mwiza/workspace/Symphony/evidence/phase1/tsk_p1_059__gate_script_modularization_no_behavior_changes.json",
+      "schema": "default"
+    },
+    {
+      "file": "/home/mwiza/workspace/Symphony/evidence/phase1/tsk_p1_061_git_containment_rule.json",
+      "schema": "default"
+    },
+    {
+      "file": "/home/mwiza/workspace/Symphony/evidence/phase1/tsk_p1_062_worktree_cleanup_and_guards.json",
+      "schema": "default"
+    },
+    {
+      "file": "/home/mwiza/workspace/Symphony/evidence/phase1/tsk_p1_063_git_script_audit.json",
+      "schema": "default"
+    },
+    {
+      "file": "/home/mwiza/workspace/Symphony/evidence/phase1/tsk_p1_064_git_regression_wiring.json",
+      "schema": "default"
+    },
+    {
+      "file": "/home/mwiza/workspace/Symphony/evidence/phase1/tsk_p1_065_selftest_secret_posture.json",
+      "schema": "default"
+    },
+    {
+      "file": "/home/mwiza/workspace/Symphony/evidence/phase1/tsk_p1_066_bounded_amount_validation.json",
+      "schema": "default"
+    },
+    {
+      "file": "/home/mwiza/workspace/Symphony/evidence/phase1/tsk_p1_067_db_error_sanitization.json",
+      "schema": "default"
+    },
+    {
+      "file": "/home/mwiza/workspace/Symphony/evidence/phase1/tsk_p1_068_sensitive_endpoint_rate_limits.json",
+      "schema": "default"
+    },
+    {
+      "file": "/home/mwiza/workspace/Symphony/evidence/phase1/tsk_p1_069_fail_first_triage_banner.json",
+      "schema": "default"
+    },
+    {
+      "file": "/home/mwiza/workspace/Symphony/evidence/phase1/tsk_p1_070_remediation_casefile_scaffolder.json",
+      "schema": "default"
+    },
+    {
+      "file": "/home/mwiza/workspace/Symphony/evidence/phase1/tsk_p1_071_failure_layer_taxonomy.json",
+      "schema": "default"
+    },
+    {
+      "file": "/home/mwiza/workspace/Symphony/evidence/phase1/tsk_p1_072_two_strike_escalation.json",
+      "schema": "default"
+    },
+    {
+      "file": "/home/mwiza/workspace/Symphony/evidence/phase1/tsk_p1_073_remediation_artifact_freshness.json",
+      "schema": "default"
+    },
+    {
+      "file": "/home/mwiza/workspace/Symphony/evidence/phase1/tsk_p1_073_task_surface.json",
+      "schema": "default"
+    },
+    {
+      "file": "/home/mwiza/workspace/Symphony/evidence/phase1/tsk_p1_074_hook_source_normalization.json",
+      "schema": "default"
+    },
+    {
+      "file": "/home/mwiza/workspace/Symphony/evidence/phase1/tsk_p1_075_preflight_preci_split.json",
+      "schema": "default"
+    },
+    {
+      "file": "/home/mwiza/workspace/Symphony/evidence/phase1/tsk_p1_076_local_gate_topology.json",
       "schema": "default"
     },
     {
@@ -927,6 +1259,134 @@
     },
     {
       "file": "/home/mwiza/workspace/Symphony/evidence/phase1/tsk_p1_205__kpi_evidence_artifact_include_settlement_window.json",
+      "schema": "default"
+    },
+    {
+      "file": "/home/mwiza/workspace/Symphony/evidence/phase1/tsk_p1_210_supervisory_optimization.json",
+      "schema": "default"
+    },
+    {
+      "file": "/home/mwiza/workspace/Symphony/evidence/phase1/tsk_p1_211_billable_clients_constraint_fix.json",
+      "schema": "default"
+    },
+    {
+      "file": "/home/mwiza/workspace/Symphony/evidence/phase1/tsk_p1_212_npgsql_ingress_store_fix.json",
+      "schema": "default"
+    },
+    {
+      "file": "/home/mwiza/workspace/Symphony/evidence/phase1/tsk_p1_213_demo_017_verifier_realignment.json",
+      "schema": "default"
+    },
+    {
+      "file": "/home/mwiza/workspace/Symphony/evidence/phase1/tsk_p1_214_supplier_registry_persistence.json",
+      "schema": "default"
+    },
+    {
+      "file": "/home/mwiza/workspace/Symphony/evidence/phase1/tsk_p1_215_openbao_secret_provider.json",
+      "schema": "default"
+    },
+    {
+      "file": "/home/mwiza/workspace/Symphony/evidence/phase1/tsk_p1_216_key_domain_separation_rotation.json",
+      "schema": "default"
+    },
+    {
+      "file": "/home/mwiza/workspace/Symphony/evidence/phase1/tsk_p1_217_onboarding_control_plane.json",
+      "schema": "default"
+    },
+    {
+      "file": "/home/mwiza/workspace/Symphony/evidence/phase1/tsk_p1_218_server_side_onboarding_apis.json",
+      "schema": "default"
+    },
+    {
+      "file": "/home/mwiza/workspace/Symphony/evidence/phase1/tsk_p1_219_operator_onboarding_console.json",
+      "schema": "default"
+    },
+    {
+      "file": "/home/mwiza/workspace/Symphony/evidence/phase1/tsk_p1_220_canonical_bootstrap.json",
+      "schema": "default"
+    },
+    {
+      "file": "/home/mwiza/workspace/Symphony/evidence/phase1/tsk_p1_demo_001_pre_coding_lock.json",
+      "schema": "default"
+    },
+    {
+      "file": "/home/mwiza/workspace/Symphony/evidence/phase1/tsk_p1_demo_002_sms_secure_link.json",
+      "schema": "default"
+    },
+    {
+      "file": "/home/mwiza/workspace/Symphony/evidence/phase1/tsk_p1_demo_003_browser_geo_capture.json",
+      "schema": "default"
+    },
+    {
+      "file": "/home/mwiza/workspace/Symphony/evidence/phase1/tsk_p1_demo_004_msisdn_submitter_match.json",
+      "schema": "default"
+    },
+    {
+      "file": "/home/mwiza/workspace/Symphony/evidence/phase1/tsk_p1_demo_005_signed_instruction_file_egress.json",
+      "schema": "default"
+    },
+    {
+      "file": "/home/mwiza/workspace/Symphony/evidence/phase1/tsk_p1_demo_006_supplier_policy.json",
+      "schema": "default"
+    },
+    {
+      "file": "/home/mwiza/workspace/Symphony/evidence/phase1/tsk_p1_demo_007_supervisory_read_models.json",
+      "schema": "default"
+    },
+    {
+      "file": "/home/mwiza/workspace/Symphony/evidence/phase1/tsk_p1_demo_008_supervisory_ui.json",
+      "schema": "default"
+    },
+    {
+      "file": "/home/mwiza/workspace/Symphony/evidence/phase1/tsk_p1_demo_009_reporting_pack_export.json",
+      "schema": "default"
+    },
+    {
+      "file": "/home/mwiza/workspace/Symphony/evidence/phase1/tsk_p1_demo_010_reveal_rehearsal.json",
+      "schema": "default"
+    },
+    {
+      "file": "/home/mwiza/workspace/Symphony/evidence/phase1/tsk_p1_demo_011_pilot_success_criteria_gate.json",
+      "schema": "default"
+    },
+    {
+      "file": "/home/mwiza/workspace/Symphony/evidence/phase1/tsk_p1_demo_013_demo_host_extraction.json",
+      "schema": "default"
+    },
+    {
+      "file": "/home/mwiza/workspace/Symphony/evidence/phase1/tsk_p1_demo_014_profile_wiring.json",
+      "schema": "default"
+    },
+    {
+      "file": "/home/mwiza/workspace/Symphony/evidence/phase1/tsk_p1_demo_015_pipeline_split.json",
+      "schema": "default"
+    },
+    {
+      "file": "/home/mwiza/workspace/Symphony/evidence/phase1/tsk_p1_demo_017_provisioning_runbook.json",
+      "schema": "default"
+    },
+    {
+      "file": "/home/mwiza/workspace/Symphony/evidence/phase1/tsk_p1_demo_024_health_probe_parity.json",
+      "schema": "default"
+    },
+    {
+      "file": "/home/mwiza/workspace/Symphony/evidence/phase1/tsk_p1_demo_025_runtime_contract.json",
+      "schema": "default"
+    },
+    {
+      "file": "/home/mwiza/workspace/Symphony/evidence/phase1/tsk_p1_demo_026_server_side_admin_proxy.json",
+      "schema": "default"
+    },
+    {
+      "file": "/home/mwiza/workspace/Symphony/evidence/phase1/tsk_p1_demo_027_demo_gate_split.json",
+      "schema": "default"
+    },
+    {
+      "file": "/home/mwiza/workspace/Symphony/evidence/phase1/tsk_p1_demo_028_image_flow.json",
+      "schema": "default"
+    },
+    {
+      "file": "/home/mwiza/workspace/Symphony/evidence/phase1/tsk_p1_esc_001__escrow_state_machine_atomic_reservation_semantics.json",
       "schema": "default"
     },
     {

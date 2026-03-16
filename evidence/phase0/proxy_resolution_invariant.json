@@ -1,8 +1,8 @@
 {
   "check_id": "PROXY-RESOLUTION-INVARIANT",
-  "timestamp_utc": "2026-03-04T03:16:59Z",
-  "git_sha": "0cca4e691cfcb5a1729ab79e08cf21858f5e9b58",
-  "schema_fingerprint": "8066e70aafdc28540785da569dfbda5ebb13a2710d7f31e1b395cf2b3323bb15",
+  "timestamp_utc": "2026-03-16T11:58:38Z",
+  "git_sha": "494dc7efd39c7ccaf6fd9f994a2c6cef04fd3269",
+  "schema_fingerprint": "59eef2a10b166543339b310ae67181cc9a8d6b22aa216e649e56652c2316e165",
   "status": "PASS",
   "issues": []
 }
