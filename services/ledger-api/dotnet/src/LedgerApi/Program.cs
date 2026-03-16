@@ -1020,11 +1020,18 @@ app.MapGet("/api/admin/onboarding/tenants", async (HttpContext httpContext, Canc
         return Results.Json(authFailure.Body, statusCode: authFailure.StatusCode);
 
     var tenants = await tenantRegistryStore.ListAsync(cancellationToken);
-    return Results.Json(new { tenants = tenants.Select(t => new
+    return Results.Json(new
     {
-        tenant_id = t.TenantId, tenant_key = t.TenantKey, display_name = t.DisplayName,
-        status = t.Status, created_at = t.CreatedAt.ToString("O"), updated_at = t.UpdatedAt.ToString("O")
-    })}, statusCode: 200);
+        tenants = tenants.Select(t => new
+        {
+            tenant_id = t.TenantId,
+            tenant_key = t.TenantKey,
+            display_name = t.DisplayName,
+            status = t.Status,
+            created_at = t.CreatedAt.ToString("O"),
+            updated_at = t.UpdatedAt.ToString("O")
+        })
+    }, statusCode: 200);
 }).RequireRateLimiting("sensitive-endpoint");
 
 // POST /api/admin/onboarding/programmes — Create programme
@@ -1046,9 +1053,12 @@ app.MapPost("/api/admin/onboarding/programmes", async (JsonElement body, HttpCon
 
     return Results.Json(new
     {
-        programme_id = result.Entry.ProgrammeId, tenant_id = result.Entry.TenantId,
-        programme_key = result.Entry.ProgrammeKey, display_name = result.Entry.DisplayName,
-        status = result.Entry.Status, created_new = result.CreatedNew,
+        programme_id = result.Entry.ProgrammeId,
+        tenant_id = result.Entry.TenantId,
+        programme_key = result.Entry.ProgrammeKey,
+        display_name = result.Entry.DisplayName,
+        status = result.Entry.Status,
+        created_new = result.CreatedNew,
         created_at = result.Entry.CreatedAt.ToString("O")
     }, statusCode: 200);
 }).RequireRateLimiting("sensitive-endpoint");
@@ -1065,12 +1075,20 @@ app.MapGet("/api/admin/onboarding/programmes", async (HttpContext httpContext, C
         tenantFilter = tf;
 
     var programmes = await programmeStore.ListAsync(tenantFilter, cancellationToken);
-    return Results.Json(new { programmes = programmes.Select(p => new
+    return Results.Json(new
     {
-        programme_id = p.ProgrammeId, tenant_id = p.TenantId, programme_key = p.ProgrammeKey,
-        display_name = p.DisplayName, status = p.Status, policy_code = p.PolicyCode,
-        created_at = p.CreatedAt.ToString("O"), updated_at = p.UpdatedAt.ToString("O")
-    })}, statusCode: 200);
+        programmes = programmes.Select(p => new
+        {
+            programme_id = p.ProgrammeId,
+            tenant_id = p.TenantId,
+            programme_key = p.ProgrammeKey,
+            display_name = p.DisplayName,
+            status = p.Status,
+            policy_code = p.PolicyCode,
+            created_at = p.CreatedAt.ToString("O"),
+            updated_at = p.UpdatedAt.ToString("O")
+        })
+    }, statusCode: 200);
 }).RequireRateLimiting("sensitive-endpoint");
 
 // PUT /api/admin/onboarding/programmes/{id}/activate — Activate programme
@@ -1124,8 +1142,10 @@ app.MapPost("/api/admin/onboarding/programmes/{id}/policy-binding", async (strin
 
     return Results.Json(new
     {
-        programme_id = result.Entry.ProgrammeId, policy_code = result.Entry.PolicyCode,
-        status = result.Entry.Status, updated_at = result.Entry.UpdatedAt.ToString("O")
+        programme_id = result.Entry.ProgrammeId,
+        policy_code = result.Entry.PolicyCode,
+        status = result.Entry.Status,
+        updated_at = result.Entry.UpdatedAt.ToString("O")
     }, statusCode: 200);
 }).RequireRateLimiting("sensitive-endpoint");
 
@@ -1142,14 +1162,22 @@ app.MapGet("/api/admin/onboarding/status", async (HttpContext httpContext, Cance
     {
         tenants = tenants.Select(t => new
         {
-            tenant_id = t.TenantId, tenant_key = t.TenantKey, display_name = t.DisplayName,
-            status = t.Status, created_at = t.CreatedAt.ToString("O")
+            tenant_id = t.TenantId,
+            tenant_key = t.TenantKey,
+            display_name = t.DisplayName,
+            status = t.Status,
+            created_at = t.CreatedAt.ToString("O")
         }),
         programmes = programmes.Select(p => new
         {
-            programme_id = p.ProgrammeId, tenant_id = p.TenantId, programme_key = p.ProgrammeKey,
-            display_name = p.DisplayName, status = p.Status, policy_code = p.PolicyCode,
-            created_at = p.CreatedAt.ToString("O"), updated_at = p.UpdatedAt.ToString("O")
+            programme_id = p.ProgrammeId,
+            tenant_id = p.TenantId,
+            programme_key = p.ProgrammeKey,
+            display_name = p.DisplayName,
+            status = p.Status,
+            policy_code = p.PolicyCode,
+            created_at = p.CreatedAt.ToString("O"),
+            updated_at = p.UpdatedAt.ToString("O")
         }),
         timestamp = DateTimeOffset.UtcNow.ToString("O")
     }, statusCode: 200);
