@@ -61,3 +61,4 @@ This ADR remains the authoritative governance reference for baseline change chec
 - 2026-03-06: Baseline refreshed after adding migration 0072_hard_wave6_reference_policy_post_deactivation_immutability.sql (post-deactivation policy-row immutability enforcement for previously ACTIVE records).
 - 2026-03-12: Baseline refreshed after adding migration 0073_int_004_ack_gap_controls.sql (AWAITING_EXECUTION acknowledgement-gap escalation, supervisor recovery controls, and append-only interrupt audit trail).
 - 2026-03-12: Baseline refreshed again after wiring `guard_settlement_requires_acknowledgement()` into `instruction_settlement_finality` settlement inserts via `trg_enforce_settlement_acknowledgement`, preserving the `0073_int_004_ack_gap_controls.sql` cutoff while closing the runtime enforcement gap.
+- 2026-03-16: Baseline regenerated after Wave 1 security hardening adding billable clients conflict target uniqueness (0074) and supplier registry persistance/RLS (0075).
