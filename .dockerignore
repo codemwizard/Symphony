@@ -1,0 +1,8 @@
+**/obj/
+**/bin/
+**/.vs/
+**/node_modules/
+.git/
+.toolchain/
+evidence/
+.venv/

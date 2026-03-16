@@ -1,15 +1,15 @@
 {
   "check_id": "TSK-P1-DEMO-028-IMAGE-FLOW",
   "task_id": "TSK-P1-DEMO-028",
-  "timestamp_utc": "2026-03-14T01:48:30Z",
-  "git_sha": "e6fea4e7e798ccab0563ad0f8cf4d754f0e869f0",
+  "timestamp_utc": "2026-03-16T23:12:53Z",
+  "git_sha": "c436580fedd737823e2fccfb8cc8443a45aa0acc",
   "status": "PASS",
   "pass": true,
   "details": {
     "host_based_publish_supported_path": true,
     "ledger_api_image": {
       "tag": "symphony/demo-ledger-api:tsk-p1-demo-028",
-      "image_id": "sha256:8068d1594b30256a172db1ac87e117da811d61f8d9908e9e982652ab28d23deb",
+      "image_id": "sha256:d3f772af250158a061bf972e4a1261e75b6f667e47c021c4d243eb6771a34dfe",
       "entrypoint": [
         "dotnet",
         "LedgerApi.dll"

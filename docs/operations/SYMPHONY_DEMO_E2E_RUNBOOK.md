@@ -289,35 +289,38 @@ Evidence emitted:
 - endpoint used and result in `run_summary.json`
 
 ### Step 8 — Provisioning entrypoint
-Repo-backed provisioning entrypoint on this branch:
-- `POST /v1/admin/tenants`
+Repo-backed provisioning entrypoints on this branch:
+- `POST /api/admin/onboarding/tenants` — create or upsert tenant
+- `POST /api/admin/onboarding/programmes` — create programme
+- `POST /api/admin/onboarding/programmes/{id}/policy-binding` — bind policy
+- `PUT /api/admin/onboarding/programmes/{id}/activate` — activate programme
+- `GET /api/admin/onboarding/status` — full readback
 
 What is deterministic in-repo:
-- tenant onboarding endpoint exists
+- tenant and programme onboarding endpoints exist
 - admin authorization exists via `x-admin-api-key`
 - idempotency key is derived as `tenant_onboarding:<tenant_id>`
+- programme lifecycle (create/bind/activate) is server-side
 
 What is not fully repo-backed on this branch:
-- programme context application
-- policy binding application
 - supplier allowlist application
 - evidence/report routing application
 
 Canonical operator rule:
-- tenant onboarding may be executed by the runner
-- full programme/policy/supplier/routing state must either already be satisfied externally or the run remains non-signoff
+- tenant and programme onboarding may be executed by the runner
+- full supplier/routing state must either already be satisfied externally or the run remains non-signoff
 
 Pass condition:
-- tenant onboarding endpoint succeeds or returns idempotent existing state, and external provisioning inputs are recorded as satisfied
+- tenant and programme onboarding endpoints succeed, and external provisioning inputs are recorded as satisfied
 
 Fail condition:
-- tenant onboarding fails, or required external provisioning prerequisites are not satisfied for the intended signoff posture
+- onboarding fails, or required external provisioning prerequisites are not satisfied for the intended signoff posture
 
 Operator action:
 - stop for signoff runs; rehearsal-only runs may continue only if clearly labeled non-signoff
 
 Evidence emitted:
-- tenant onboarding response in the run bundle
+- onboarding responses in the run bundle
 - provisioning status in `run_summary.json`
 - operator checklist state for external provisioning prerequisites
 
@@ -328,7 +331,7 @@ Required checks:
 - `GET /pilot-demo/api/pilot-success`
 - `GET /v1/supervisory/programmes/{programId}/reveal` with `x-api-key` and `x-tenant-id`
 - `POST /v1/supervisory/programmes/{programId}/export` with `x-api-key` and `x-tenant-id`
-- `POST /v1/admin/tenants` with `x-admin-api-key` when provisioning is executed by the runner
+- `POST /api/admin/onboarding/tenants` with `x-admin-api-key` when provisioning is executed by the runner
 
 Pass condition:
 - expected HTTP success codes returned

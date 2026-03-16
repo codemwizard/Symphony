@@ -1,0 +1,29 @@
+# Wave 4: Consolidation
+
+**Phase Name:** Wave4_Consolidation | **Phase Key:** W4
+
+## Bookkeeping
+- [x] TSK-P1-221: Fix provisioning runbook API routes → verifier PASS
+- [x] TSK-P1-206: Flip meta.yml to completed, write EXEC_LOG
+- [x] TSK-P1-207: Flip meta.yml to completed, write EXEC_LOG
+- [x] TSK-P1-208: Flip meta.yml to completed, write EXEC_LOG
+- [x] TSK-P1-209: Flip meta.yml to completed, write EXEC_LOG
+- [x] DEMO-021: Retire (superseded by TSK-P1-215/216)
+- [x] DEMO-022: Retire (superseded by TSK-P1-217/218)
+- [x] DEMO-025: Retire (superseded by TSK-P1-220)
+- [x] DEMO-026: Retire (superseded by TSK-P1-218/219)
+- [x] DEMO-027: Retire (superseded by TSK-P1-220/221)
+- [x] DEMO-029: Retire (superseded by TSK-P1-218)
+- [x] Update PHASE1_GOVERNANCE_TASKS.md
+
+## Implementation
+- [x] DEMO-018: E2E runbook already passes verifier; updated API refs
+- [x] DEMO-019: Server snapshot script already passes verifier
+- [x] DEMO-020: Demo runner already passes verifier
+- [x] DEMO-023: Start-now checklist already passes verifier
+- [x] DEMO-028: Image build passes after .dockerignore fix
+
+## Gate
+- [/] Run all verifiers
+- [ ] Run `pre_ci.sh`
+- [ ] Push, PR, generate `Wave4_Consolidation/` deliverables

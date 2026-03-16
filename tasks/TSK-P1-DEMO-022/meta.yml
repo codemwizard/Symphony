@@ -4,7 +4,7 @@ task_id: TSK-P1-DEMO-022
 title: Reconcile provisioning and checklist docs with the strict host-based execution
   contract
 owner_role: SUPERVISOR
-status: completed
+status: deferred
 depends_on:
 - TSK-P1-DEMO-017
 - TSK-P1-DEMO-018

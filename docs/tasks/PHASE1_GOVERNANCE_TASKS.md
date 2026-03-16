@@ -39,7 +39,7 @@ This index tracks governance rewrite tasks derived from `Symphony_Governance_Imp
 
 ## Demo Deployment Runbook Hardening Pack
 
-### TSK-P1-DEMO-018 — Create the operator-grade host-based E2E demo runbook
+### TSK-P1-DEMO-018 — Create the operator-grade host-based E2E demo runbook ✅ completed
 - **Owner:** SUPERVISOR
 - **Depends on:** `TSK-P1-DEMO-017`
 - **Touches:** `docs/operations/SYMPHONY_DEMO_E2E_RUNBOOK.md`, `scripts/audit/verify_tsk_p1_demo_018.sh`, `evidence/phase1/tsk_p1_demo_018_e2e_runbook.json`
@@ -50,7 +50,7 @@ This index tracks governance rewrite tasks derived from `Symphony_Governance_Imp
 - **Evidence:** `evidence/phase1/tsk_p1_demo_018_e2e_runbook.json`
 - **Failure Modes:** branch-name theater remains; API/browser smoke still mixed; task/run evidence conflated; evidence file missing
 
-### TSK-P1-DEMO-019 — Add hardened reproducible demo server snapshot capture
+### TSK-P1-DEMO-019 — Add hardened reproducible demo server snapshot capture ✅ completed
 - **Owner:** SUPERVISOR
 - **Depends on:** `TSK-P1-DEMO-018`
 - **Touches:** `scripts/dev/capture_demo_server_snapshot.sh`, `scripts/audit/verify_tsk_p1_demo_019.sh`, `evidence/phase1/tsk_p1_demo_019_server_snapshot.json`
@@ -61,7 +61,7 @@ This index tracks governance rewrite tasks derived from `Symphony_Governance_Imp
 - **Evidence:** `evidence/phase1/tsk_p1_demo_019_server_snapshot.json`
 - **Failure Modes:** insufficient debug state; permissive outputs; ambiguous compose detection; evidence file missing
 
-### TSK-P1-DEMO-020 — Add fail-closed host-based demo runner with explicit process control
+### TSK-P1-DEMO-020 — Add fail-closed host-based demo runner with explicit process control ✅ completed
 - **Owner:** SUPERVISOR
 - **Depends on:** `TSK-P1-DEMO-018`, `TSK-P1-DEMO-019`, `TSK-P1-DEMO-021`
 - **Touches:** `scripts/dev/run_demo_e2e.sh`, `scripts/audit/verify_tsk_p1_demo_020.sh`, `evidence/phase1/tsk_p1_demo_020_demo_runner.json`
@@ -72,7 +72,7 @@ This index tracks governance rewrite tasks derived from `Symphony_Governance_Imp
 - **Evidence:** `evidence/phase1/tsk_p1_demo_020_demo_runner.json`
 - **Failure Modes:** stale remote state accepted; process handling ad hoc; smoke checks mixed; evidence file missing
 
-### TSK-P1-DEMO-021 — Define executable demo key OpenBao TLS and rotation policy
+### TSK-P1-DEMO-021 — ~~Define executable demo key OpenBao TLS and rotation policy~~ RETIRED (superseded by TSK-P1-215/216)
 - **Owner:** SUPERVISOR
 - **Depends on:** `TSK-P1-DEMO-018`
 - **Touches:** `docs/security/SYMPHONY_DEMO_KEY_AND_ROTATION_POLICY.md`, `scripts/audit/verify_tsk_p1_demo_021.sh`, `evidence/phase1/tsk_p1_demo_021_key_rotation_policy.json`
@@ -83,7 +83,7 @@ This index tracks governance rewrite tasks derived from `Symphony_Governance_Imp
 - **Evidence:** `evidence/phase1/tsk_p1_demo_021_key_rotation_policy.json`
 - **Failure Modes:** OpenBao remains ambiguous; weak posture misrepresented as readiness; evidence file missing
 
-### TSK-P1-DEMO-022 — Reconcile provisioning and checklist docs with the strict host-based execution contract
+### TSK-P1-DEMO-022 — ~~Reconcile provisioning and checklist docs with the strict host-based execution contract~~ RETIRED (superseded by TSK-P1-217/218)
 - **Owner:** SUPERVISOR
 - **Depends on:** `TSK-P1-DEMO-017`, `TSK-P1-DEMO-018`, `TSK-P1-DEMO-020`, `TSK-P1-DEMO-021`
 - **Touches:** `docs/operations/PHASE1_DEMO_DEPLOY_AND_TEST_CHECKLIST.md`, `docs/operations/GREENTECH4CE_TENANT_PROGRAMME_PROVISIONING_RUNBOOK.md`, `scripts/audit/verify_tsk_p1_demo_022.sh`, `evidence/phase1/tsk_p1_demo_022_doc_reconciliation.json`
@@ -94,7 +94,7 @@ This index tracks governance rewrite tasks derived from `Symphony_Governance_Imp
 - **Evidence:** `evidence/phase1/tsk_p1_demo_022_doc_reconciliation.json`
 - **Failure Modes:** provisioning remains a seam; teardown remains ambiguous; evidence file missing
 
-### TSK-P1-DEMO-023 — Create the strict start-now checklist for demo deployment and end-to-end rehearsal
+### TSK-P1-DEMO-023 — Create the strict start-now checklist for demo deployment and end-to-end rehearsal ✅ completed
 - **Owner:** QA_VERIFIER
 - **Depends on:** `TSK-P1-DEMO-020`, `TSK-P1-DEMO-021`, `TSK-P1-DEMO-022`
 - **Touches:** `docs/operations/SYMPHONY_DEMO_START_NOW_CHECKLIST.md`, `scripts/audit/verify_tsk_p1_demo_023.sh`, `evidence/phase1/tsk_p1_demo_023_start_now_checklist.json`
@@ -116,7 +116,7 @@ This index tracks governance rewrite tasks derived from `Symphony_Governance_Imp
 - **Evidence:** `evidence/phase1/tsk_p1_demo_024_health_probe_parity.json`
 - **Failure Modes:** probes still hit missing routes; the guide documents the wrong health route set; evidence file missing
 
-### TSK-P1-DEMO-025 — Complete the host-based demo deployment runtime contract
+### TSK-P1-DEMO-025 — ~~Complete the host-based demo deployment runtime contract~~ RETIRED (superseded by TSK-P1-220)
 - **Owner:** SUPERVISOR
 - **Depends on:** `TSK-P1-DEMO-024`
 - **Touches:** `docs/operations/SYMPHONY_DEMO_DEPLOYMENT_GUIDE.md`, `docs/operations/PHASE1_DEMO_DEPLOY_AND_TEST_CHECKLIST.md`, `docs/operations/GREENTECH4CE_TENANT_PROGRAMME_PROVISIONING_RUNBOOK.md`, `scripts/audit/verify_tsk_p1_demo_025.sh`, `evidence/phase1/tsk_p1_demo_025_runtime_contract.json`
@@ -127,7 +127,7 @@ This index tracks governance rewrite tasks derived from `Symphony_Governance_Imp
 - **Evidence:** `evidence/phase1/tsk_p1_demo_025_runtime_contract.json`
 - **Failure Modes:** required env vars remain undocumented; `psql` remains undocumented; the guide still overstates non-Kestrel servers; evidence file missing
 
-### TSK-P1-DEMO-026 — Keep admin credentials server-side for privileged demo actions
+### TSK-P1-DEMO-026 — ~~Keep admin credentials server-side for privileged demo actions~~ RETIRED (superseded by TSK-P1-218/219)
 - **Owner:** SUPERVISOR
 - **Depends on:** `TASK-UI-WIRE-004`, `TSK-P1-DEMO-025`
 - **Touches:** `services/ledger-api/dotnet/src/LedgerApi/**`, `src/supervisory-dashboard/**`, `docs/operations/SUPERVISORY_UI_SOURCE_OF_TRUTH.md`, `docs/operations/SYMPHONY_DEMO_DEPLOYMENT_GUIDE.md`, `scripts/audit/verify_tsk_p1_demo_026.sh`, `evidence/phase1/tsk_p1_demo_026_server_side_admin_proxy.json`
@@ -138,7 +138,7 @@ This index tracks governance rewrite tasks derived from `Symphony_Governance_Imp
 - **Evidence:** `evidence/phase1/tsk_p1_demo_026_server_side_admin_proxy.json`
 - **Failure Modes:** admin secrets leak to the browser, privileged routes are called directly with admin semantics, or the UI-wire mediation model is weakened; evidence file missing
 
-### TSK-P1-DEMO-027 — Finish the operator demo gate split
+### TSK-P1-DEMO-027 — ~~Finish the operator demo gate split~~ RETIRED (superseded by TSK-P1-220/221)
 - **Owner:** SUPERVISOR
 - **Depends on:** `TSK-P1-DEMO-015`, `TSK-P1-DEMO-025`, `TSK-P1-DEMO-026`
 - **Touches:** `scripts/dev/pre_ci_demo.sh`, `scripts/dev/pre_ci.sh`, `scripts/dev/**`, `docs/operations/SYMPHONY_DEMO_DEPLOYMENT_GUIDE.md`, `docs/operations/PHASE1_DEMO_DEPLOY_AND_TEST_CHECKLIST.md`, `scripts/audit/verify_tsk_p1_demo_027.sh`, `evidence/phase1/tsk_p1_demo_027_demo_gate_split.json`
@@ -149,7 +149,7 @@ This index tracks governance rewrite tasks derived from `Symphony_Governance_Imp
 - **Evidence:** `evidence/phase1/tsk_p1_demo_027_demo_gate_split.json`
 - **Failure Modes:** deployment still depends on full `pre_ci.sh`; the operator gate is ambiguous or duplicates full `pre_ci`; evidence file missing
 
-### TSK-P1-DEMO-028 — Complete image build flow while keeping host-based publish as the supported demo path
+### TSK-P1-DEMO-028 — Complete image build flow while keeping host-based publish as the supported demo path ✅ completed
 - **Owner:** SUPERVISOR
 - **Depends on:** `TSK-P1-DEMO-024`, `TSK-P1-DEMO-025`
 - **Touches:** `services/ledger-api/Dockerfile`, `services/executor-worker/Dockerfile`, `scripts/dev/build_demo_images.sh`, `docs/operations/SYMPHONY_DEMO_DEPLOYMENT_GUIDE.md`, `scripts/audit/verify_tsk_p1_demo_028.sh`, `evidence/phase1/tsk_p1_demo_028_image_flow.json`
@@ -160,7 +160,7 @@ This index tracks governance rewrite tasks derived from `Symphony_Governance_Imp
 - **Evidence:** `evidence/phase1/tsk_p1_demo_028_image_flow.json`
 - **Failure Modes:** Dockerfiles remain placeholder-only, the guide overstates image build as the primary path, or evidence is missing
 
-### TSK-P1-DEMO-029 — Create the demo provisioning sample pack and signoff threshold guide
+### TSK-P1-DEMO-029 — ~~Create the demo provisioning sample pack and signoff threshold guide~~ RETIRED (superseded by TSK-P1-218)
 - **Owner:** QA_VERIFIER
 - **Depends on:** `TSK-P1-DEMO-017`, `TSK-P1-DEMO-021`, `TSK-P1-DEMO-022`, `TSK-P1-DEMO-023`
 - **Touches:** `docs/operations/GREENTECH4CE_DEMO_PROVISIONING_SAMPLE_PACK.md`, `docs/operations/GREENTECH4CE_DEMO_PROVISIONING_SAMPLE_PACK.sample.json`, `scripts/audit/verify_tsk_p1_demo_029.sh`, `evidence/phase1/tsk_p1_demo_029_provisioning_sample_pack.json`
@@ -184,7 +184,7 @@ This index tracks governance rewrite tasks derived from `Symphony_Governance_Imp
 
 ## Security Optimization Traceability Audit Remediation Pack
 
-### TSK-P1-206 — Rebaseline the security optimization traceability audit to current repo truth
+### TSK-P1-206 — Rebaseline the security optimization traceability audit to current repo truth ✅ completed
 - **Owner:** SUPERVISOR
 - **Depends on:** none
 - **Touches:** `docs/tasks/2026-03-14_security_optimization_traceability_audit.md`, `scripts/audit/verify_tsk_p1_206.sh`, `evidence/phase1/tsk_p1_206_audit_truth_rebaseline.json`
@@ -195,7 +195,7 @@ This index tracks governance rewrite tasks derived from `Symphony_Governance_Imp
 - **Evidence:** `evidence/phase1/tsk_p1_206_audit_truth_rebaseline.json`
 - **Failure Modes:** stale failures remain; severity language still overstated; evidence file missing
 
-### TSK-P1-207 — Harden supervisor API privileged routes and token transport
+### TSK-P1-207 — Harden supervisor API privileged routes and token transport ✅ completed
 - **Owner:** SUPERVISOR
 - **Depends on:** `R-000`, `TSK-P1-HIER-011`
 - **Touches:** `services/supervisor_api/server.py`, `scripts/audit/verify_hier_011_supervisor_access_mechanisms.sh`, `scripts/audit/verify_tsk_p1_207.sh`, `evidence/phase1/tsk_p1_207_supervisor_api_auth_hardening.json`
@@ -206,7 +206,7 @@ This index tracks governance rewrite tasks derived from `Symphony_Governance_Imp
 - **Evidence:** `evidence/phase1/tsk_p1_207_supervisor_api_auth_hardening.json`
 - **Failure Modes:** auth gap remains; query-token transport remains; DB error detail still leaks; evidence file missing
 
-### TSK-P1-208 — Restore admin-only auth boundary for pilot-demo instruction generation
+### TSK-P1-208 — Restore admin-only auth boundary for pilot-demo instruction generation ✅ completed
 - **Owner:** SUPERVISOR
 - **Depends on:** `TSK-P1-DEMO-026`
 - **Touches:** `services/ledger-api/dotnet/src/LedgerApi/Program.cs`, `src/supervisory-dashboard/index.html`, `scripts/audit/verify_task_ui_wire_004.sh`, `scripts/audit/verify_tsk_p1_208.sh`, `evidence/phase1/tsk_p1_208_pilot_demo_generate_auth_boundary.json`
@@ -217,7 +217,7 @@ This index tracks governance rewrite tasks derived from `Symphony_Governance_Imp
 - **Evidence:** `evidence/phase1/tsk_p1_208_pilot_demo_generate_auth_boundary.json`
 - **Failure Modes:** route still uses evidence-read auth; cookie layer removed; browser sees admin secret; evidence file missing
 
-### TSK-P1-209 — Reconcile supervisory UI compatibility alias traceability
+### TSK-P1-209 — Reconcile supervisory UI compatibility alias traceability ✅ completed
 - **Owner:** SUPERVISOR
 - **Depends on:** `TSK-P1-DEMO-008`
 - **Touches:** `src/supervisory-dashboard/index.html`, `scripts/audit/verify_tsk_p1_demo_008.sh`, `scripts/audit/verify_tsk_p1_209.sh`, `evidence/phase1/tsk_p1_209_ui_traceability_cleanup.json`

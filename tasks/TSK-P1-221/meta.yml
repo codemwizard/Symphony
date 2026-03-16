@@ -3,7 +3,7 @@ phase: '1'
 task_id: TSK-P1-221
 title: Rewrite runbooks, readiness, and gates to enforce the hardened deployment and onboarding architecture
 owner_role: QA_VERIFIER
-status: planned
+status: completed
 depends_on:
 - TSK-P1-219
 - TSK-P1-220

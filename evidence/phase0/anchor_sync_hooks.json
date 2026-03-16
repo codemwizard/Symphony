@@ -20,7 +20,7 @@
     "signer_participant_id": "text"
   },
   "gate_id": "INT-G24",
-  "git_sha": "494dc7efd39c7ccaf6fd9f994a2c6cef04fd3269",
+  "git_sha": "c436580fedd737823e2fccfb8cc8443a45aa0acc",
   "index": {
     "definition": "CREATE INDEX idx_evidence_packs_anchor_ref ON public.evidence_packs USING btree (anchor_ref) WHERE (anchor_ref IS NOT NULL)",
     "name": "idx_evidence_packs_anchor_ref"
@@ -39,5 +39,5 @@
   },
   "schema_fingerprint": "59eef2a10b166543339b310ae67181cc9a8d6b22aa216e649e56652c2316e165",
   "status": "PASS",
-  "timestamp_utc": "2026-03-16T11:59:46Z"
+  "timestamp_utc": "2026-03-16T23:29:21Z"
 }

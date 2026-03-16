@@ -1,17 +1,19 @@
 # GreenTech4CE Tenant and Programme Provisioning Runbook
 
-Status: reconciled with host-based E2E operator flow
-Scope: Phase-1 partner onboarding procedure inside the host-based demo execution path
+Status: reconciled with hardened onboarding control-plane architecture
+Scope: Phase-1 partner onboarding procedure using server-side onboarding APIs and persisted control-plane state
 
 ## 1. Purpose
 Provide a repeatable, auditable onboarding procedure for tenant and programme provisioning so manual partner configuration is deterministic, reviewable, and verifiable before go-live.
 
-This runbook is no longer framed as an independent `pre_ci.sh`-gated workflow. It is now a provisioning component inside:
+This runbook is a provisioning component inside:
 - `docs/operations/SYMPHONY_DEMO_E2E_RUNBOOK.md`
 
+All provisioning now uses the server-side onboarding APIs backed by persisted control-plane state (TSK-P1-217/218). Environment-variable-based provisioning is no longer the supported path.
+
 ## 2. Provisioning Entry Point Contract
-### Repo-backed executable entrypoint
-- `POST /v1/admin/tenants`
+### Tenant onboarding
+- `POST /api/admin/onboarding/tenants`
 
 Authorization:
 - header: `x-admin-api-key`
@@ -31,14 +33,42 @@ Expected response:
   - `tenant_id`
   - `created_at`
 
+### Programme onboarding
+- `POST /api/admin/onboarding/programmes`
+
+Authorization:
+- header: `x-admin-api-key`
+
+Request contract:
+- `programme_id`
+- `tenant_id`
+- `display_name`
+- `policy_version` (optional at creation; bind separately)
+
+Expected response:
+- `200 OK` or `201 Created`
+- body contains:
+  - `programme_id`
+  - `tenant_id`
+  - `status`
+
+### Programme activation
+- `PUT /api/admin/onboarding/programmes/{id}/activate`
+
+### Policy binding
+- `POST /api/admin/onboarding/programmes/{id}/policy-binding`
+
+### Onboarding status readback
+- `GET /api/admin/onboarding/status`
+
+Returns the full persisted onboarding state for verification.
+
 Verification reference:
 - `bash scripts/audit/verify_ten_003_tenant_onboarding_admin.sh`
 - evidence: `evidence/phase1/ten_003_tenant_onboarding_admin.json`
 
-### Non-repo-backed external prerequisites on this branch
+### Non-repo-backed external prerequisites
 The following must still be explicitly confirmed by the operator because this branch does not provide a single repo-backed command that applies them end-to-end:
-- programme context
-- policy binding
 - supplier allowlist data
 - evidence/report routing data
 
@@ -70,9 +100,9 @@ Operator action:
 Evidence emitted:
 - operator notes or run-summary provisioning section
 
-### Step 2 — Execute tenant onboarding entrypoint
-Use the repo-backed admin endpoint:
-- `POST /v1/admin/tenants`
+### Step 2 — Execute tenant onboarding
+Use the server-side onboarding API:
+- `POST /api/admin/onboarding/tenants`
 
 Pass condition:
 - endpoint returns `200`
@@ -88,15 +118,31 @@ Evidence emitted:
 - onboarding response captured in the run bundle
 - `evidence/phase1/ten_003_tenant_onboarding_admin.json` as contract proof
 
-### Step 3 — Confirm external provisioning prerequisites
-Confirm, in this order:
-1. programme context
-2. policy binding
-3. supplier allowlist data
-4. evidence/report routing data
+### Step 3 — Execute programme onboarding
+Use the server-side onboarding API:
+- `POST /api/admin/onboarding/programmes`
 
 Pass condition:
-- all four are explicitly confirmed for the demo run
+- endpoint returns `200` or `201`
+- response contains `programme_id`, `tenant_id`, `status`
+
+Fail condition:
+- endpoint rejects request or returns malformed response
+
+Operator action:
+- stop; inspect programme onboarding response and server logs
+
+### Step 4 — Bind policy and activate programme
+1. `POST /api/admin/onboarding/programmes/{id}/policy-binding`
+2. `PUT /api/admin/onboarding/programmes/{id}/activate`
+
+### Step 5 — Confirm external provisioning prerequisites
+Confirm, in this order:
+1. supplier allowlist data
+2. evidence/report routing data
+
+Pass condition:
+- all items are explicitly confirmed for the demo run
 
 Fail condition:
 - any item is missing, unknown, or assumed implicitly
@@ -107,7 +153,13 @@ Operator action:
 Evidence emitted:
 - provisioning status recorded in `run_summary.json`
 
-### Step 4 — Run isolation verification before go-live
+### Step 6 — Verify onboarding state
+- `GET /api/admin/onboarding/status`
+
+Pass condition:
+- readback shows tenant, programme, policy binding, and activation state as expected
+
+### Step 7 — Run isolation verification before go-live
 Checks:
 1. confirm cross-tenant access rejection
 2. confirm cross-programme supplier denial when allowlists differ
@@ -130,7 +182,7 @@ Evidence emitted:
 ## 5. Retry and Failure Rules
 - tenant onboarding is idempotent by `tenant_id`
 - failed onboarding must not be retried blindly without reviewing the prior response/logs
-- incomplete external programme/policy/supplier/routing state must not be silently reused as if complete
+- incomplete external supplier/routing state must not be silently reused as if complete
 
 ## 6. Rollback / Abort
 1. Abort onboarding immediately if any isolation or seed prerequisite check fails.
@@ -154,8 +206,10 @@ Reuse vs recreate:
 ## 8. Completion Checklist
 - [ ] Required inputs recorded
 - [ ] Tenant onboarding endpoint executed successfully or idempotently confirmed
-- [ ] Programme context confirmed
-- [ ] Policy binding confirmed
+- [ ] Programme onboarding endpoint executed successfully
+- [ ] Policy binding applied
+- [ ] Programme activated
+- [ ] Onboarding status readback verified
 - [ ] Supplier allowlist confirmed
 - [ ] Evidence/report routing confirmed
 - [ ] Isolation verification passed

@@ -3,7 +3,7 @@ phase: '1'
 task_id: TSK-P1-DEMO-026
 title: Keep admin credentials server-side for privileged demo actions
 owner_role: SUPERVISOR
-status: completed
+status: deferred
 depends_on:
 - TASK-UI-WIRE-004
 - TSK-P1-DEMO-025
