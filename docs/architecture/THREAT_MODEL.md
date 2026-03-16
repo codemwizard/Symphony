@@ -124,36 +124,6 @@ Mitigations:
 - Anchor-sync operational state machine enforces lease-token worker fencing, anchored-before-complete gating, and deterministic expired-lease repair in DB functions.
 - Phase-0 levy schema hooks are storage-only (`levy_rates`, `ingress_attestations.levy_applicable`) with explicit runtime-read/write prohibition until Phase-2 and verifier enforcement to prevent scope creep.
 - Phase-0 levy calculation records hook (`levy_calculation_records`) is storage-only and verifier-guarded against runtime references/index drift until Phase-2 activation.
-- Phase-0 levy period format checks are hardened to canonical regex (`^[0-9]{4}-[0-9]{2}# Threat Model
-
-## Assets
-- Payment instructions and routing decisions
-- Ledger journal and postings
-- Policy bundles and checksums
-- Secrets, keys, certificates
-- Audit logs and evidence bundles
-
-## Actors
-- External attackers (internet-based)
-- Malicious insider
-- Compromised service identity
-- Supply-chain attacker (dependencies)
-
-## Attack surfaces
-- Public API endpoints
-- Service-to-service RPC
-- Database functions and roles
-- Secrets management and key access
-- CI/CD and policy promotion pipeline
-
-## STRIDE threats by component
-
-### Edge Gateway
-- Spoofing: forged client identity
-- Tampering: payload modification
-- Repudiation: lack of request logging
-- Information disclosure: data leakage in errors
-- Denial of service: request floods
 - Elevation of privilege: authz bypass
 
 Mitigations:
@@ -264,7 +234,7 @@ Mitigations:
 - Sprint-3 cutover (`CUT-001`..`CUT-004`) treats projection promotion as a fail-closed governance seam: legacy references must be removed, public query surfaces must stay handler-mediated, rollback/runbook discipline must be explicit, and promotion must be blocked unless prerequisite proofs are present.
 - Hardening Wave-4 signing controls (`TSK-HARD-050`..`TSK-HARD-054`, `TSK-HARD-011B`, `TSK-HARD-096`) enforce key-class authorization boundaries, unsigned policy-bundle rejection, dependency-gated re-sign sweep execution, archive-only historical verification, and explicit HSM-bypass denial with verifier-backed evidence and SQLSTATE mapping alignment.
 - Wave-2 post-review hardening fix (`0068_wave2_finality_and_seal_hardening_fixes.sql`) enforces immutable effect seals, durable finality-conflict containment records (return-state hold semantics), and PUBLIC execute revocation on Wave-1 SECURITY DEFINER control functions.
-
+- Wave-2 hardening (`0076_onboarding_control_plane.sql`, TSK-P1-216, TSK-P1-217) persists operator onboarding state, enabling fully decoupled key domains (`api`, `admin`, `session`, `instruction`, `signing`) and removing dynamic `SYMPHONY_KNOWN_TENANTS` scope-bypass risks. Onboarding control-plane tables are safeguarded by RLS and audit timestamps.
 ## Priority security actions
 1) Implement service identity and mTLS for internal calls.
 2) Enforce policy checksum verification in ingest/orchestration path.
