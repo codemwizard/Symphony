@@ -14,4 +14,6 @@ final_status: PASS
 - action: generated SHA256 statement fingerprints for the 6 `ALTER TABLE ... ROW LEVEL SECURITY` statements added in `0076_onboarding_control_plane.sql`.
 - action: added the 6 fingerprints (DDL-ALLOW-0056 to DDL-ALLOW-0061) to `docs/security/ddl_allowlist.json`.
 - action: ran `scripts/security/lint_ddl_lock_risk.sh` locally to confirm the lock risk lint now passes cleanly.
+- action: ran `scripts/dev/pre_ci.sh` which then failed at `verify_invariants.sh` due to a top-level `BEGIN` in `0076_onboarding_control_plane.sql`.
+- action: removed the `BEGIN;` and `COMMIT;` from `0076_onboarding_control_plane.sql`.
 - result: PASS

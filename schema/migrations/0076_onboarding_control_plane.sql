@@ -4,7 +4,6 @@
 -- Task: TSK-P1-217
 -- Depends on: 0075 (supplier_registry_and_programme_allowlist)
 
-BEGIN;
 
 -- ─── tenant_registry ───────────────────────────────────────────────
 -- Canonical source of known tenants for the hardened profile.
@@ -69,4 +68,3 @@ ALTER TABLE public.programme_policy_binding FORCE ROW LEVEL SECURITY;
 INSERT INTO public.schema_migrations (version, description, installed_by)
 VALUES ('0076', 'onboarding_control_plane: tenant_registry, programme_registry, programme_policy_binding', current_user);
 
-COMMIT;
