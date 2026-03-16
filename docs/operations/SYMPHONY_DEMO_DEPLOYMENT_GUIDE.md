@@ -38,22 +38,15 @@ Minimum required demo environment:
 - `SYMPHONY_RUNTIME_PROFILE=pilot-demo`
 - `ASPNETCORE_URLS=http://0.0.0.0:8080`
 - `DATABASE_URL=postgres://...`
-- `INGRESS_STORAGE_MODE=db_psql`
-- `SYMPHONY_UI_TENANT_ID=<demo tenant id>`
-- `SYMPHONY_UI_API_KEY=<browser read key>`
-- `INGRESS_API_KEY=<backend read key>`
-- `ADMIN_API_KEY=<server-side privileged key>`
-- `SYMPHONY_KNOWN_TENANTS=<allowlisted tenant ids>`
+- `SYMPHONY_SECRETS_PROVIDER=vault`
+- `VAULT_ADDR=http://127.0.0.1:8200`
+- `BAO_TOKEN=<token>`
 
 Optional:
 
 - `SYMPHONY_ENABLE_LEGACY_SUPERVISORY_UI=1`
 
-Critical relationship:
-
-- `SYMPHONY_UI_API_KEY` must be populated with a value the backend accepts as `INGRESS_API_KEY`.
-- If `SYMPHONY_UI_API_KEY` and `INGRESS_API_KEY` do not match in effective value, browser reads fail even if the UI loads.
-- `ADMIN_API_KEY` is server-side only. It must not be exposed to browser bootstrap context, page source, or client-side JavaScript.
+Keys, tenants, and policies are managed via the OpenBao control plane and the server-side onboarding APIs, not raw environment overrides.
 
 ## 4. Ports and Exposure
 
@@ -149,13 +142,10 @@ Recommended host-based launch:
 ```bash
 export SYMPHONY_RUNTIME_PROFILE=pilot-demo
 export ASPNETCORE_URLS=http://0.0.0.0:8080
-export INGRESS_STORAGE_MODE=db_psql
 export DATABASE_URL=postgres://symphony_admin:symphony_pass@localhost:5432/symphony
-export SYMPHONY_UI_TENANT_ID=<tenant-id>
-export SYMPHONY_UI_API_KEY=<read-key>
-export INGRESS_API_KEY=<same-read-key>
-export ADMIN_API_KEY=<server-side-admin-key>
-export SYMPHONY_KNOWN_TENANTS=<tenant-id>
+export SYMPHONY_SECRETS_PROVIDER=vault
+export VAULT_ADDR=http://127.0.0.1:8200
+export BAO_TOKEN=root
 
 dotnet /opt/symphony/ledger-api/LedgerApi.dll
 ```
@@ -165,13 +155,10 @@ Or from source:
 ```bash
 SYMPHONY_RUNTIME_PROFILE=pilot-demo \
 ASPNETCORE_URLS=http://0.0.0.0:8080 \
-INGRESS_STORAGE_MODE=db_psql \
 DATABASE_URL=postgres://symphony_admin:symphony_pass@localhost:5432/symphony \
-SYMPHONY_UI_TENANT_ID=<tenant-id> \
-SYMPHONY_UI_API_KEY=<read-key> \
-INGRESS_API_KEY=<same-read-key> \
-ADMIN_API_KEY=<server-side-admin-key> \
-SYMPHONY_KNOWN_TENANTS=<tenant-id> \
+SYMPHONY_SECRETS_PROVIDER=vault \
+VAULT_ADDR=http://127.0.0.1:8200 \
+BAO_TOKEN=root \
 dotnet run --no-launch-profile --project services/ledger-api/dotnet/src/LedgerApi/LedgerApi.csproj
 ```
 
@@ -227,21 +214,25 @@ nginx and IIS are optional outer layers only. They are not required deployment s
 
 ## 13. Ordered Demo Bring-Up Sequence
 
-1. Install runtime prerequisites
-2. Start PostgreSQL
-3. Export required environment variables
-4. Run `bash scripts/db/migrate.sh`
-5. Publish the app
-6. Start the app on Kestrel
-7. Provision tenant and programme per `docs/operations/GREENTECH4CE_TENANT_PROGRAMME_PROVISIONING_RUNBOOK.md`
-8. Run the operator demo gate:
+1. Install runtime prerequisites (Docker, dotnet, psql, bash)
+2. Start local dependencies:
+```bash
+cd infra/docker && docker compose up -d
+```
+3. Run the canonical bootstrap script (compiles code, applies schema, provisions OpenBao, validates runtime):
+```bash
+bash scripts/dev/bootstrap.sh
+```
+4. Start the app on Kestrel
+5. Provision tenant and programme per `docs/operations/GREENTECH4CE_TENANT_PROGRAMME_PROVISIONING_RUNBOOK.md`
+6. Run the operator demo gate:
 
 ```bash
 bash scripts/dev/pre_ci_demo.sh
 ```
 
-9. If additional sandbox posture checks are required, run the checklist items in `docs/operations/PHASE1_DEMO_DEPLOY_AND_TEST_CHECKLIST.md`
-10. Open the UI from the operator laptop
+7. If additional sandbox posture checks are required, run the checklist items in `docs/operations/PHASE1_DEMO_DEPLOY_AND_TEST_CHECKLIST.md`
+8. Open the UI from the operator laptop
 
 ## 14. Honest Caveats
 
