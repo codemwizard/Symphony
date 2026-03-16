@@ -1,0 +1,110 @@
+schema_version: 1
+phase: '1'
+task_id: TSK-P1-211
+title: Replace billable_clients unique index with unique constraint and retire manual schema patch
+owner_role: ARCHITECT
+status: planned
+depends_on: []
+touches:
+- schema/migrations/0074_billable_clients_client_key_constraint.sql
+- services/ledger-api/dotnet/src/LedgerApi/Infrastructure/Stores.cs
+- docs/operations/SYMPHONY_DEMO_DEPLOYMENT_GUIDE.md
+- scripts/audit/verify_tsk_p1_211.sh
+- evidence/phase1/tsk_p1_211_billable_clients_constraint_fix.json
+- docs/plans/phase1/TSK-P1-211/PLAN.md
+- docs/plans/phase1/TSK-P1-211/EXEC_LOG.md
+- tasks/TSK-P1-211/meta.yml
+invariants:
+- INV-119
+work:
+- Migration 0027 created a UNIQUE INDEX CONCURRENTLY on public.billable_clients(client_key)
+  with a partial WHERE client_key IS NOT NULL clause. A unique index, including a partial
+  one, does not create an entry in pg_constraint. PostgreSQL ON CONFLICT (column_name) syntax
+  requires a pg_constraint entry with contype='u' or contype='p'. Without it, every call to
+  NpgsqlTenantOnboardingStore.OnboardAsync fails with SQLSTATE 42P10 at the billable_upsert
+  CTE step.
+- Add forward-only migration 0074 that converges every supported database state onto a full
+  non-partial UNIQUE CONSTRAINT on public.billable_clients(client_key). The exact SQL the
+  migration must execute is given below and must not be substituted with an alternative approach.
+  The required SQL is exactly these two statements in order inside a single transaction block.
+  First - DROP INDEX CONCURRENTLY IF EXISTS public.ux_billable_clients_client_key;
+  Second - ALTER TABLE public.billable_clients ADD CONSTRAINT ux_billable_clients_client_key
+  UNIQUE (client_key);
+  No other approach is acceptable. In particular, ALTER TABLE ... ADD CONSTRAINT ... UNIQUE
+  USING INDEX must NOT be used because it promotes the existing partial index and inherits
+  its WHERE clause, producing a partial unique constraint. A partial unique constraint still
+  does not satisfy ON CONFLICT (client_key) without a matching WHERE clause in the application
+  SQL, which NpgsqlTenantOnboardingStore does not have. The result would still be SQLSTATE
+  42P10 and the fix would be incomplete.
+- The migration must be safe on three starting states. On a clean database with only the
+  original partial unique index, the DROP removes it and ADD CONSTRAINT creates the full
+  constraint. On a database already patched manually where the constraint exists but the
+  index has already been dropped, the DROP is a no-op (IF EXISTS) and ADD CONSTRAINT
+  must be guarded with a DO $$ IF NOT EXISTS in pg_constraint block to avoid duplicate
+  constraint error. On a database where both the index and the manually-added constraint
+  co-exist, the DROP removes the old index and the IF NOT EXISTS guard skips the ADD.
+  All three paths must converge to the same final state - one UNIQUE CONSTRAINT entry in
+  pg_constraint, no bare partial unique index on client_key.
+- The migration must NOT be marked symphony:no_tx. DROP INDEX CONCURRENTLY cannot run
+  inside a transaction, so use DROP INDEX (without CONCURRENTLY) in migration 0074. The
+  table is small and the lock window is acceptable. The migration runs inside a transaction
+  for atomicity.
+- Remove the need for any manual ALTER TABLE patch from the supported deployment path.
+  After this task lands, the official deployment guide and bootstrap flow must rely on
+  migrations only. The manual SQL workaround applied during the provisional demo must be
+  explicitly removed from any deployment documentation that still references it.
+- Verify the DB-backed tenant onboarding path end-to-end under INGRESS_STORAGE_MODE=db_psql.
+  This task is not complete until db_psql onboarding is proven working without any manual
+  schema intervention.
+acceptance_criteria:
+- Migration 0074 applies without error on a clean schema and the result is confirmed by
+  SELECT conname, contype FROM pg_constraint WHERE conrelid = 'public.billable_clients'::regclass
+  AND conname = 'ux_billable_clients_client_key' returning one row with contype = 'u'.
+- Migration 0074 applies without error on a database that still has only the old bare
+  partial index.
+- Migration 0074 applies without error on a database already patched manually and converges
+  to one final state with no duplicate indexes or duplicate constraints.
+- After migration 0074, SELECT indexname, indisprimary FROM pg_indexes WHERE tablename =
+  'billable_clients' AND indexname = 'ux_billable_clients_client_key' returns one row
+  whose backing index is a full non-partial btree index with no WHERE predicate.
+- POST /v1/admin/tenants returns 200 with tenant_id and created_at when
+  INGRESS_STORAGE_MODE=db_psql, with no manual schema intervention.
+- POST /v1/admin/tenants remains idempotent for repeated calls with the same tenant_id.
+- The deployment guide (docs/operations/SYMPHONY_DEMO_DEPLOYMENT_GUIDE.md) and any bootstrap path
+  no longer instruct the operator to run manual SQL for billable_clients. They must explicitly replace
+  the workaround text with the single supported migration-backed path.
+verification:
+- bash scripts/audit/verify_tsk_p1_211.sh
+- python3 scripts/audit/validate_evidence.py --task TSK-P1-211 --evidence evidence/phase1/tsk_p1_211_billable_clients_constraint_fix.json
+evidence:
+- evidence/phase1/tsk_p1_211_billable_clients_constraint_fix.json
+failure_modes:
+- Migration uses ADD CONSTRAINT ... UNIQUE USING INDEX which promotes the partial index
+  and produces a partial constraint that still fails ON CONFLICT (client_key).
+- Migration drops the index but the IF NOT EXISTS guard on ADD CONSTRAINT is omitted,
+  causing the migration to fail on databases where the constraint was already added manually.
+- Migration leaves the old partial index in place alongside the new full constraint,
+  creating two uniqueness objects on client_key.
+- The verifier checks pg_indexes instead of pg_constraint and passes even when only
+  the bare index exists.
+- db_psql onboarding still fails with SQLSTATE 42P10 after migration because the
+  partial constraint inherited a WHERE clause.
+must_read:
+- docs/operations/AI_AGENT_OPERATION_MANUAL.md
+- services/ledger-api/dotnet/src/LedgerApi/Infrastructure/Stores.cs
+- schema/migrations/0027_billable_clients_client_key_index_concurrently.sql
+- docs/operations/SYMPHONY_DEMO_DEPLOYMENT_GUIDE.md
+implementation_plan: docs/plans/phase1/TSK-P1-211/PLAN.md
+implementation_log: docs/plans/phase1/TSK-P1-211/EXEC_LOG.md
+notes: >
+  Hardening task. Manual schema fixes are forbidden in the supported deployment path
+  after closure. The migration chain must be the only supported mechanism for correcting
+  the billable_clients conflict target defect. The specific failure mode of ADD CONSTRAINT
+  USING INDEX is documented in the work section because it produces a constraint that
+  passes a naive schema check but still fails at runtime with 42P10. The verifier must
+  confirm the pg_constraint entry and must confirm the backing index has no WHERE predicate.
+  The verifier must also verify that docs/operations/SYMPHONY_DEMO_DEPLOYMENT_GUIDE.md docs do not
+  contain the manual sql instruction, and explicitly requires the single supported migration-backed path.
+client: codex_cli
+assigned_agent: architect
+model: <UNASSIGNED>

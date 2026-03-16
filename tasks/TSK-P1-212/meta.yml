@@ -1,0 +1,63 @@
+schema_version: 1
+phase: '1'
+task_id: TSK-P1-212
+title: Fix Npgsql ingress durability lifecycle bug and promote db_psql to canonical demo mode
+owner_role: SECURITY_GUARDIAN
+status: planned
+depends_on:
+- TSK-P1-211
+touches:
+- services/ledger-api/dotnet/src/LedgerApi/Infrastructure/Stores.cs
+- services/ledger-api/dotnet/src/LedgerApi/Demo/DemoSelfTestEntryPoint.cs
+- scripts/dev/pre_ci_demo.sh
+- scripts/audit/verify_tsk_p1_212.sh
+- evidence/phase1/tsk_p1_212_npgsql_ingress_store_fix.json
+- docs/plans/phase1/TSK-P1-212/PLAN.md
+- docs/plans/phase1/TSK-P1-212/EXEC_LOG.md
+- tasks/TSK-P1-212/meta.yml
+invariants:
+- INV-119
+work:
+- NpgsqlIngressDurabilityStore.PersistAsync currently executes a second command on the same
+  connection while a reader from the first command is still open, triggering
+  NpgsqlOperationInProgressException and collapsing the DB-backed ingress path.
+- Correct the resource lifecycle so the first result is fully consumed and disposed before the
+  second command executes, without weakening the transaction semantics or idempotency behavior.
+- After the fix, db_psql must become the canonical GreenTech4CE demo storage mode. This task is
+  not complete if the deployment guide, demo gates, or bootstrap flow still direct operators to
+  use INGRESS_STORAGE_MODE=file for the hardened demo path.
+- Update the self-tests and demo gates so the primary ingress verification runs against db_psql,
+  not just file mode.
+acceptance_criteria:
+- POST /v1/ingress/instructions with INGRESS_STORAGE_MODE=db_psql returns 202 with ack=true and a
+  valid attestation_id.
+- NpgsqlOperationInProgressException no longer appears in server logs during DB-backed ingress.
+- Idempotency key deduplication still works correctly after the fix.
+- The existing ingress self-test suite passes with db_psql storage mode.
+- scripts/dev/pre_ci_demo.sh exercises the canonical hardened path with db_psql storage mode.
+- The supported deployment documentation no longer tells operators to use INGRESS_STORAGE_MODE=file
+  for the hardened demo path.
+verification:
+- bash scripts/audit/verify_tsk_p1_212.sh
+- python3 scripts/audit/validate_evidence.py --task TSK-P1-212 --evidence evidence/phase1/tsk_p1_212_npgsql_ingress_store_fix.json
+evidence:
+- evidence/phase1/tsk_p1_212_npgsql_ingress_store_fix.json
+failure_modes:
+- Reader disposal is still incorrect and the connection remains busy for the second command.
+- Transaction boundaries are weakened or split across commands.
+- db_psql works only in an ad hoc test but is not adopted as the supported demo path.
+- File mode remains documented as the standard deployment mode after this task closes.
+must_read:
+- docs/operations/AI_AGENT_OPERATION_MANUAL.md
+- services/ledger-api/dotnet/src/LedgerApi/Infrastructure/Stores.cs
+- docs/operations/SYMPHONY_DEMO_DEPLOYMENT_GUIDE.md
+- scripts/dev/pre_ci_demo.sh
+implementation_plan: docs/plans/phase1/TSK-P1-212/PLAN.md
+implementation_log: docs/plans/phase1/TSK-P1-212/EXEC_LOG.md
+notes: >
+  Hardening task. The file-backed ingress path may remain for local developer convenience only,
+  but it must not remain the supported GreenTech4CE hardened deployment path after this task is
+  complete.
+client: codex_cli
+assigned_agent: security_guardian
+model: <UNASSIGNED>

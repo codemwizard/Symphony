@@ -5,10 +5,11 @@ using System.Text.RegularExpressions;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Npgsql;
+using Symphony.LedgerApi.Infrastructure;
 
 static class ApiAuthorization
 {
-    public static HandlerResult? AuthorizeIngressWrite(HttpContext httpContext, IngressRequest request)
+    public static HandlerResult? AuthorizeIngressWrite(HttpContext httpContext, IngressRequest request, RuntimeSecrets secrets)
     {
         if (httpContext.Request.Query.ContainsKey("token"))
         {
@@ -20,7 +21,7 @@ static class ApiAuthorization
             });
         }
 
-        var configuredKey = (Environment.GetEnvironmentVariable("INGRESS_API_KEY") ?? string.Empty).Trim();
+        var configuredKey = secrets.IngressApiKey.Trim();
         if (string.IsNullOrWhiteSpace(configuredKey))
         {
             return new HandlerResult(StatusCodes.Status503ServiceUnavailable, new
@@ -138,7 +139,7 @@ static class ApiAuthorization
         return known.Contains(tenantId.Trim());
     }
 
-    public static HandlerResult? AuthorizeEvidenceRead(HttpContext httpContext)
+    public static HandlerResult? AuthorizeEvidenceRead(HttpContext httpContext, RuntimeSecrets secrets)
     {
         if (httpContext.Request.Query.ContainsKey("token"))
         {
@@ -149,7 +150,7 @@ static class ApiAuthorization
             });
         }
 
-        var configuredKey = (Environment.GetEnvironmentVariable("INGRESS_API_KEY") ?? string.Empty).Trim();
+        var configuredKey = secrets.IngressApiKey.Trim();
         if (string.IsNullOrWhiteSpace(configuredKey))
         {
             return new HandlerResult(StatusCodes.Status503ServiceUnavailable, new
@@ -176,9 +177,9 @@ static class ApiAuthorization
         return null;
     }
 
-    public static HandlerResult? AuthorizeAdminTenantOnboarding(HttpContext httpContext)
+    public static HandlerResult? AuthorizeAdminTenantOnboarding(HttpContext httpContext, RuntimeSecrets secrets)
     {
-        var configuredAdminKey = (Environment.GetEnvironmentVariable("ADMIN_API_KEY") ?? string.Empty).Trim();
+        var configuredAdminKey = secrets.AdminApiKey.Trim();
         if (string.IsNullOrWhiteSpace(configuredAdminKey))
         {
             return new HandlerResult(StatusCodes.Status503ServiceUnavailable, new

@@ -1,0 +1,8 @@
+{
+  "task_id": "TSK-P1-DEMO-017",
+  "status": "FAIL",
+  "runbook": "/tmp/fake_runbook.md",
+  "missing_sections": [
+    "Provisioning Procedure"
+  ]
+}

@@ -45,7 +45,7 @@ static class SupervisoryRevealReadModelHandler
 
 static class SupervisoryInstructionDetailReadModelHandler
 {
-    public static HandlerResult Handle(string tenantId, string instructionId, NpgsqlDataSource? dataSource)
+    public static async Task<HandlerResult> HandleAsync(string tenantId, string instructionId, NpgsqlDataSource? dataSource)
     {
         if (string.IsNullOrWhiteSpace(tenantId) || string.IsNullOrWhiteSpace(instructionId))
         {
@@ -56,7 +56,7 @@ static class SupervisoryInstructionDetailReadModelHandler
             });
         }
 
-        var detail = SupervisoryProofModel.BuildInstructionDetail(tenantId, instructionId, dataSource);
+        var detail = await SupervisoryProofModel.BuildInstructionDetailAsync(tenantId, instructionId, dataSource);
         if (detail is null)
         {
             return new HandlerResult(StatusCodes.Status404NotFound, new
@@ -119,7 +119,7 @@ file static class SupervisoryProofModel
         return new ProgrammeModel(submissions, exceptions, timeline, evidenceCompleteness, exceptionLog, proofRows);
     }
 
-    public static object? BuildInstructionDetail(string tenantId, string instructionId, NpgsqlDataSource? dataSource)
+    public static async Task<object?> BuildInstructionDetailAsync(string tenantId, string instructionId, NpgsqlDataSource? dataSource)
     {
         var submissions = EvidenceLinkSubmissionLog.ReadAll()
             .Where(x => Matches(x, "tenant_id", tenantId) && Matches(x, "instruction_id", instructionId))
@@ -142,7 +142,7 @@ file static class SupervisoryProofModel
             .FirstOrDefault(x => !string.IsNullOrWhiteSpace(x)) ?? string.Empty;
         var supplierId = exceptions.Select(x => ReadString(x, "supplier_id"))
             .FirstOrDefault(x => !string.IsNullOrWhiteSpace(x)) ?? string.Empty;
-        var supplierPolicy = BuildSupplierPolicyContext(tenantId, firstProgramId, supplierId);
+        var supplierPolicy = await BuildSupplierPolicyContextAsync(tenantId, firstProgramId, supplierId);
 
         return new
         {
@@ -264,7 +264,7 @@ file static class SupervisoryProofModel
             projection.ack_interrupt_projection_state);
     }
 
-    private static object BuildSupplierPolicyContext(string tenantId, string programId, string supplierId)
+    private static async Task<object> BuildSupplierPolicyContextAsync(string tenantId, string programId, string supplierId)
     {
         if (string.IsNullOrWhiteSpace(programId) || string.IsNullOrWhiteSpace(supplierId))
         {
@@ -276,7 +276,7 @@ file static class SupervisoryProofModel
             };
         }
 
-        var result = ProgramSupplierPolicyReadHandler.Handle(tenantId, programId, supplierId);
+        var result = await ProgramSupplierPolicyReadHandler.HandleAsync(tenantId, programId, supplierId);
         return result.Body;
     }
 

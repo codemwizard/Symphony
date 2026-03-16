@@ -1,0 +1,57 @@
+schema_version: 1
+phase: '1'
+task_id: TSK-P1-221
+title: Rewrite runbooks, readiness, and gates to enforce the hardened deployment and onboarding architecture
+owner_role: QA_VERIFIER
+status: planned
+depends_on:
+- TSK-P1-219
+- TSK-P1-220
+touches:
+- docs/operations/SYMPHONY_DEMO_DEPLOYMENT_GUIDE.md
+- docs/operations/GREENTECH4CE_TENANT_PROGRAMME_PROVISIONING_RUNBOOK.md
+- services/ledger-api/dotnet/src/LedgerApi/Program.cs
+- scripts/dev/pre_ci_demo.sh
+- scripts/audit/verify_tsk_p1_221.sh
+- evidence/phase1/tsk_p1_221_hardened_docs_and_gates.json
+- docs/plans/phase1/TSK-P1-221/PLAN.md
+- docs/plans/phase1/TSK-P1-221/EXEC_LOG.md
+- tasks/TSK-P1-221/meta.yml
+invariants:
+- INV-105
+- INV-119
+work:
+- Rewrite deployment and onboarding docs so they describe only the hardened architecture - OpenBao-
+  backed runtime secrets, persisted onboarding control plane, server-side onboarding APIs, website
+  onboarding console, and canonical bootstrap flow.
+- Strengthen readiness and demo gates so they validate real dependency health, not just config string
+  presence. Readiness must include database, secret-provider, required-secret, and control-plane
+  availability checks relevant to the hardened profile.
+- Remove or quarantine provisional workaround instructions from the supported docs and gates.
+acceptance_criteria:
+- Supported docs no longer describe manual SQL schema patches, file-mode ingress as the hardened
+  standard, HTML alias shims, raw env-secret choreography, or restart reseeding as acceptable.
+- Health and readiness checks fail when OpenBao, required secrets, database, or onboarding control-
+  plane dependencies are unavailable.
+- pre_ci_demo.sh and related verifiers enforce the hardened path and reject provisional escapes.
+verification:
+- bash scripts/audit/verify_tsk_p1_221.sh
+- python3 scripts/audit/validate_evidence.py --task TSK-P1-221 --evidence evidence/phase1/tsk_p1_221_hardened_docs_and_gates.json
+evidence:
+- evidence/phase1/tsk_p1_221_hardened_docs_and_gates.json
+failure_modes:
+- Docs still normalize provisional workarounds.
+- Readiness reports healthy even when OpenBao or control-plane dependencies are unavailable.
+- Gates continue to pass while exercising only the provisional path.
+must_read:
+- docs/operations/AI_AGENT_OPERATION_MANUAL.md
+- docs/operations/SYMPHONY_DEMO_DEPLOYMENT_GUIDE.md
+- docs/operations/GREENTECH4CE_TENANT_PROGRAMME_PROVISIONING_RUNBOOK.md
+- scripts/dev/pre_ci_demo.sh
+implementation_plan: docs/plans/phase1/TSK-P1-221/PLAN.md
+implementation_log: docs/plans/phase1/TSK-P1-221/EXEC_LOG.md
+notes: >
+  Hardening closeout task. No provisional escape hatch is allowed to remain in the supported path.
+client: codex_cli
+assigned_agent: qa_verifier
+model: <UNASSIGNED>

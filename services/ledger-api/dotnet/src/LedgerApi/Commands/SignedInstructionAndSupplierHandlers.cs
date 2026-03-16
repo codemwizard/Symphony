@@ -17,25 +17,126 @@ sealed record SupplierRegistryEntry(
 
 static class SupplierPolicyStore
 {
+    private static Npgsql.NpgsqlDataSource? _dataSource;
     private static readonly ConcurrentDictionary<string, SupplierRegistryEntry> SupplierRegistry = new(StringComparer.Ordinal);
     private static readonly ConcurrentDictionary<string, bool> ProgramSupplierAllowlist = new(StringComparer.Ordinal);
 
-    public static void UpsertSupplier(SupplierRegistryEntry entry)
-        => SupplierRegistry[$"{entry.tenant_id}:{entry.supplier_id}"] = entry;
+    public static void Initialize(Npgsql.NpgsqlDataSource? dataSource)
+    {
+        _dataSource = dataSource;
+    }
 
-    public static void UpsertAllowlist(string tenantId, string programId, string supplierId, bool allowed)
-        => ProgramSupplierAllowlist[$"{tenantId}:{programId}:{supplierId}"] = allowed;
+    public static async Task UpsertSupplierAsync(SupplierRegistryEntry entry)
+    {
+        if (_dataSource is not null)
+        {
+            await using var cmd = _dataSource.CreateCommand(@"
+                INSERT INTO public.supplier_registry (tenant_id, supplier_id, supplier_name, payout_target, registered_latitude, registered_longitude, active, updated_at_utc)
+                VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+                ON CONFLICT (tenant_id, supplier_id) DO UPDATE SET
+                    supplier_name = EXCLUDED.supplier_name,
+                    payout_target = EXCLUDED.payout_target,
+                    registered_latitude = EXCLUDED.registered_latitude,
+                    registered_longitude = EXCLUDED.registered_longitude,
+                    active = EXCLUDED.active,
+                    updated_at_utc = EXCLUDED.updated_at_utc;");
+            cmd.Parameters.AddWithValue(Guid.Parse(entry.tenant_id));
+            cmd.Parameters.AddWithValue(entry.supplier_id);
+            cmd.Parameters.AddWithValue(entry.supplier_name);
+            cmd.Parameters.AddWithValue(entry.payout_target);
+            cmd.Parameters.AddWithValue(entry.registered_latitude ?? (object)DBNull.Value);
+            cmd.Parameters.AddWithValue(entry.registered_longitude ?? (object)DBNull.Value);
+            cmd.Parameters.AddWithValue(entry.active);
+            cmd.Parameters.AddWithValue(entry.updated_at_utc);
+            await cmd.ExecuteNonQueryAsync();
+        }
+        SupplierRegistry[$"{entry.tenant_id}:{entry.supplier_id}"] = entry;
+    }
 
-    public static SupplierRegistryEntry? GetSupplier(string tenantId, string supplierId)
-        => SupplierRegistry.TryGetValue($"{tenantId}:{supplierId}", out var entry) ? entry : null;
+    public static async Task UpsertAllowlistAsync(string tenantId, string programId, string supplierId, bool allowed)
+    {
+        if (_dataSource is not null)
+        {
+            await using var cmd = _dataSource.CreateCommand(@"
+                INSERT INTO public.program_supplier_allowlist (tenant_id, program_id, supplier_id, allowed, updated_at_utc)
+                VALUES ($1, $2, $3, $4, $5)
+                ON CONFLICT (tenant_id, program_id, supplier_id) DO UPDATE SET
+                    allowed = EXCLUDED.allowed,
+                    updated_at_utc = EXCLUDED.updated_at_utc;");
+            cmd.Parameters.AddWithValue(Guid.Parse(tenantId));
+            cmd.Parameters.AddWithValue(Guid.Parse(programId));
+            cmd.Parameters.AddWithValue(supplierId);
+            cmd.Parameters.AddWithValue(allowed);
+            cmd.Parameters.AddWithValue(DateTimeOffset.UtcNow.ToString("O"));
+            await cmd.ExecuteNonQueryAsync();
+        }
+        ProgramSupplierAllowlist[$"{tenantId}:{programId}:{supplierId}"] = allowed;
+    }
 
-    public static bool IsAllowlisted(string tenantId, string programId, string supplierId)
-        => ProgramSupplierAllowlist.TryGetValue($"{tenantId}:{programId}:{supplierId}", out var allowed) && allowed;
+    public static async Task<SupplierRegistryEntry?> GetSupplierAsync(string tenantId, string supplierId)
+    {
+        if (SupplierRegistry.TryGetValue($"{tenantId}:{supplierId}", out var entry))
+        {
+            return entry;
+        }
+
+        if (_dataSource is not null)
+        {
+            await using var cmd = _dataSource.CreateCommand(@"
+                SELECT supplier_name, payout_target, registered_latitude, registered_longitude, active, updated_at_utc
+                FROM public.supplier_registry
+                WHERE tenant_id = $1 AND supplier_id = $2");
+            cmd.Parameters.AddWithValue(Guid.Parse(tenantId));
+            cmd.Parameters.AddWithValue(supplierId);
+            await using var reader = await cmd.ExecuteReaderAsync();
+            if (await reader.ReadAsync())
+            {
+                var loaded = new SupplierRegistryEntry(
+                    tenant_id: tenantId,
+                    supplier_id: supplierId,
+                    supplier_name: reader.GetString(0),
+                    payout_target: reader.GetString(1),
+                    registered_latitude: reader.IsDBNull(2) ? null : reader.GetDecimal(2),
+                    registered_longitude: reader.IsDBNull(3) ? null : reader.GetDecimal(3),
+                    active: reader.GetBoolean(4),
+                    updated_at_utc: reader.GetString(5)
+                );
+                SupplierRegistry[$"{tenantId}:{supplierId}"] = loaded;
+                return loaded;
+            }
+        }
+        return null;
+    }
+
+    public static async Task<bool> IsAllowlistedAsync(string tenantId, string programId, string supplierId)
+    {
+        if (ProgramSupplierAllowlist.TryGetValue($"{tenantId}:{programId}:{supplierId}", out var allowed))
+        {
+            return allowed;
+        }
+        if (_dataSource is not null)
+        {
+            await using var cmd = _dataSource.CreateCommand(@"
+                SELECT allowed
+                FROM public.program_supplier_allowlist
+                WHERE tenant_id = $1 AND program_id = $2 AND supplier_id = $3");
+            cmd.Parameters.AddWithValue(Guid.Parse(tenantId));
+            cmd.Parameters.AddWithValue(Guid.Parse(programId));
+            cmd.Parameters.AddWithValue(supplierId);
+            var result = await cmd.ExecuteScalarAsync();
+            if (result is bool dbAllowed)
+            {
+                ProgramSupplierAllowlist[$"{tenantId}:{programId}:{supplierId}"] = dbAllowed;
+                return dbAllowed;
+            }
+        }
+        return false;
+    }
 }
 
 static class SupplierRegistryUpsertHandler
 {
-    public static Task<HandlerResult> HandleAsync(SupplierRegistryUpsertRequest request)
+    public static async Task<HandlerResult> HandleAsync(SupplierRegistryUpsertRequest request)
     {
         var errors = new List<string>();
         if (string.IsNullOrWhiteSpace(request.tenant_id) || !Guid.TryParse(request.tenant_id, out _))
@@ -57,11 +158,11 @@ static class SupplierRegistryUpsertHandler
 
         if (errors.Count > 0)
         {
-            return Task.FromResult(new HandlerResult(StatusCodes.Status400BadRequest, new
+            return new HandlerResult(StatusCodes.Status400BadRequest, new
             {
                 error_code = "INVALID_REQUEST",
                 errors
-            }));
+            });
         }
 
         var normalized = new SupplierRegistryEntry(
@@ -74,19 +175,19 @@ static class SupplierRegistryUpsertHandler
             active: request.active,
             updated_at_utc: DateTimeOffset.UtcNow.ToString("O"));
 
-        SupplierPolicyStore.UpsertSupplier(normalized);
+        await SupplierPolicyStore.UpsertSupplierAsync(normalized);
 
-        return Task.FromResult(new HandlerResult(StatusCodes.Status200OK, new
+        return new HandlerResult(StatusCodes.Status200OK, new
         {
             upserted = true,
             supplier = normalized
-        }));
+        });
     }
 }
 
 static class ProgramSupplierAllowlistUpsertHandler
 {
-    public static Task<HandlerResult> HandleAsync(ProgramSupplierAllowlistUpsertRequest request)
+    public static async Task<HandlerResult> HandleAsync(ProgramSupplierAllowlistUpsertRequest request)
     {
         var errors = new List<string>();
         if (string.IsNullOrWhiteSpace(request.tenant_id) || !Guid.TryParse(request.tenant_id, out _))
@@ -104,32 +205,32 @@ static class ProgramSupplierAllowlistUpsertHandler
 
         if (errors.Count > 0)
         {
-            return Task.FromResult(new HandlerResult(StatusCodes.Status400BadRequest, new
+            return new HandlerResult(StatusCodes.Status400BadRequest, new
             {
                 error_code = "INVALID_REQUEST",
                 errors
-            }));
+            });
         }
 
-        SupplierPolicyStore.UpsertAllowlist(request.tenant_id.Trim(), request.program_id.Trim(), request.supplier_id.Trim(), request.allowed);
+        await SupplierPolicyStore.UpsertAllowlistAsync(request.tenant_id.Trim(), request.program_id.Trim(), request.supplier_id.Trim(), request.allowed);
 
-        return Task.FromResult(new HandlerResult(StatusCodes.Status200OK, new
+        return new HandlerResult(StatusCodes.Status200OK, new
         {
             updated = true,
             tenant_id = request.tenant_id.Trim(),
             program_id = request.program_id.Trim(),
             supplier_id = request.supplier_id.Trim(),
             allowed = request.allowed
-        }));
+        });
     }
 }
 
 static class ProgramSupplierPolicyReadHandler
 {
-    public static HandlerResult Handle(string tenantId, string programId, string supplierId)
+    public static async Task<HandlerResult> HandleAsync(string tenantId, string programId, string supplierId)
     {
-        var supplier = SupplierPolicyStore.GetSupplier(tenantId, supplierId);
-        var allowlisted = SupplierPolicyStore.IsAllowlisted(tenantId, programId, supplierId);
+        var supplier = await SupplierPolicyStore.GetSupplierAsync(tenantId, supplierId);
+        var allowlisted = await SupplierPolicyStore.IsAllowlistedAsync(tenantId, programId, supplierId);
 
         return new HandlerResult(StatusCodes.Status200OK, new
         {
@@ -194,8 +295,8 @@ static class SignedInstructionFileHandler
         var tenantId = request.tenant_id.Trim();
         var programId = request.program_id.Trim();
         var supplierId = request.supplier_id.Trim();
-        var supplier = SupplierPolicyStore.GetSupplier(tenantId, supplierId);
-        var allowlisted = SupplierPolicyStore.IsAllowlisted(tenantId, programId, supplierId);
+        var supplier = await SupplierPolicyStore.GetSupplierAsync(tenantId, supplierId);
+        var allowlisted = await SupplierPolicyStore.IsAllowlistedAsync(tenantId, programId, supplierId);
         if (supplier is null || !supplier.active || !allowlisted)
         {
             await DemoExceptionLog.AppendAsync(new
@@ -366,8 +467,10 @@ static class SignedInstructionFileHandler
         });
     }
 
-    public static string ResolveSigningKey()
-        => (Environment.GetEnvironmentVariable("DEMO_INSTRUCTION_SIGNING_KEY")
+    public static string ResolveSigningKey(string? demoInstructionSigningKey = null, string? evidenceSigningKey = null)
+        => (demoInstructionSigningKey
+            ?? evidenceSigningKey
+            ?? Environment.GetEnvironmentVariable("DEMO_INSTRUCTION_SIGNING_KEY")
             ?? Environment.GetEnvironmentVariable("EVIDENCE_SIGNING_KEY")
             ?? string.Empty).Trim();
 

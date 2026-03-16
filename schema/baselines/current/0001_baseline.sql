@@ -2,7 +2,7 @@
 -- PostgreSQL database dump
 --
 
-\restrict UUa8yvNNh87CiyatlmluwHmfEnSb4EwACIS7gHZqL6e6WlrL7GC8mtXqWsBH489
+\restrict Xl5nWXwERwcc0kxLPOHfwMmWLbsySwc9HKcn4QBX33ER3SJlbQpkJ3oF2J5rNPW
 
 -- Dumped from database version 18.2 (Debian 18.2-1.pgdg13+1)
 -- Dumped by pg_dump version 18.2 (Debian 18.2-1.pgdg13+1)
@@ -1502,6 +1502,24 @@ $$;
 
 
 --
+-- Name: enforce_settlement_acknowledgement(); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.enforce_settlement_acknowledgement() RETURNS trigger
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO 'pg_catalog', 'public'
+    AS $$
+BEGIN
+  IF NEW.final_state = 'SETTLED' THEN
+    PERFORM public.guard_settlement_requires_acknowledgement(NEW.instruction_id);
+  END IF;
+
+  RETURN NEW;
+END;
+$$;
+
+
+--
 -- Name: enqueue_payment_outbox(text, text, text, text, jsonb); Type: FUNCTION; Schema: public; Owner: -
 --
 
@@ -1903,24 +1921,6 @@ BEGIN
   IF v_state IS DISTINCT FROM 'ACKNOWLEDGED' THEN
     RAISE EXCEPTION 'ACKNOWLEDGEMENT_REQUIRED_BEFORE_SETTLEMENT' USING ERRCODE = 'P7301';
   END IF;
-END;
-$$;
-
-
---
--- Name: enforce_settlement_acknowledgement(); Type: FUNCTION; Schema: public; Owner: -
---
-
-CREATE FUNCTION public.enforce_settlement_acknowledgement() RETURNS trigger
-    LANGUAGE plpgsql SECURITY DEFINER
-    SET search_path TO 'pg_catalog', 'public'
-    AS $$
-BEGIN
-  IF NEW.final_state = 'SETTLED' THEN
-    PERFORM public.guard_settlement_requires_acknowledgement(NEW.instruction_id);
-  END IF;
-
-  RETURN NEW;
 END;
 $$;
 
@@ -4674,6 +4674,21 @@ ALTER TABLE ONLY public.program_migration_events FORCE ROW LEVEL SECURITY;
 
 
 --
+-- Name: program_supplier_allowlist; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.program_supplier_allowlist (
+    tenant_id uuid NOT NULL,
+    program_id uuid NOT NULL,
+    supplier_id text NOT NULL,
+    allowed boolean DEFAULT true NOT NULL,
+    updated_at_utc text NOT NULL
+);
+
+ALTER TABLE ONLY public.program_supplier_allowlist FORCE ROW LEVEL SECURITY;
+
+
+--
 -- Name: programs; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -5055,6 +5070,24 @@ CREATE TABLE public.supervisor_interrupt_audit_events (
     CONSTRAINT supervisor_interrupt_audit_events_action_check CHECK ((action = ANY (ARRAY['ESCALATED'::text, 'ACKNOWLEDGED'::text, 'RESUMED'::text, 'RESET'::text]))),
     CONSTRAINT supervisor_interrupt_audit_events_queue_status_check CHECK ((queue_status = ANY (ARRAY['PENDING_SUPERVISOR_APPROVAL'::text, 'APPROVED'::text, 'REJECTED'::text, 'TIMED_OUT'::text, 'ESCALATED'::text, 'RESET'::text])))
 );
+
+
+--
+-- Name: supplier_registry; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.supplier_registry (
+    tenant_id uuid NOT NULL,
+    supplier_id text NOT NULL,
+    supplier_name text NOT NULL,
+    payout_target text NOT NULL,
+    registered_latitude numeric,
+    registered_longitude numeric,
+    active boolean DEFAULT true NOT NULL,
+    updated_at_utc text NOT NULL
+);
+
+ALTER TABLE ONLY public.supplier_registry FORCE ROW LEVEL SECURITY;
 
 
 --
@@ -5893,6 +5926,14 @@ ALTER TABLE ONLY public.program_migration_events
 
 
 --
+-- Name: program_supplier_allowlist program_supplier_allowlist_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.program_supplier_allowlist
+    ADD CONSTRAINT program_supplier_allowlist_pkey PRIMARY KEY (tenant_id, program_id, supplier_id);
+
+
+--
 -- Name: programs programs_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -6133,6 +6174,14 @@ ALTER TABLE ONLY public.supervisor_interrupt_audit_events
 
 
 --
+-- Name: supplier_registry supplier_registry_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.supplier_registry
+    ADD CONSTRAINT supplier_registry_pkey PRIMARY KEY (tenant_id, supplier_id);
+
+
+--
 -- Name: tenant_clients tenant_clients_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -6194,6 +6243,14 @@ ALTER TABLE ONLY public.tenants
 
 ALTER TABLE ONLY public.payment_outbox_attempts
     ADD CONSTRAINT ux_attempts_outbox_attempt_no UNIQUE (outbox_id, attempt_no);
+
+
+--
+-- Name: billable_clients ux_billable_clients_client_key; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.billable_clients
+    ADD CONSTRAINT ux_billable_clients_client_key UNIQUE (client_key);
 
 
 --
@@ -6765,13 +6822,6 @@ CREATE UNIQUE INDEX levy_rates_one_active_per_jurisdiction ON public.levy_rates 
 
 
 --
--- Name: ux_billable_clients_client_key; Type: INDEX; Schema: public; Owner: -
---
-
-CREATE UNIQUE INDEX ux_billable_clients_client_key ON public.billable_clients USING btree (client_key) WHERE (client_key IS NOT NULL);
-
-
---
 -- Name: ux_billing_usage_events_idempotency; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -6984,17 +7034,17 @@ CREATE TRIGGER trg_enforce_instruction_reversal_source BEFORE INSERT ON public.i
 
 
 --
--- Name: instruction_settlement_finality trg_enforce_settlement_acknowledgement; Type: TRIGGER; Schema: public; Owner: -
---
-
-CREATE TRIGGER trg_enforce_settlement_acknowledgement BEFORE INSERT ON public.instruction_settlement_finality FOR EACH ROW EXECUTE FUNCTION public.enforce_settlement_acknowledgement();
-
-
---
 -- Name: internal_ledger_postings trg_enforce_internal_ledger_posting_context; Type: TRIGGER; Schema: public; Owner: -
 --
 
 CREATE TRIGGER trg_enforce_internal_ledger_posting_context BEFORE INSERT OR UPDATE ON public.internal_ledger_postings FOR EACH ROW EXECUTE FUNCTION public.enforce_internal_ledger_posting_context();
+
+
+--
+-- Name: instruction_settlement_finality trg_enforce_settlement_acknowledgement; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER trg_enforce_settlement_acknowledgement BEFORE INSERT ON public.instruction_settlement_finality FOR EACH ROW EXECUTE FUNCTION public.enforce_settlement_acknowledgement();
 
 
 --
@@ -7658,6 +7708,30 @@ ALTER TABLE ONLY public.program_migration_events
 
 
 --
+-- Name: program_supplier_allowlist program_supplier_allowlist_program_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.program_supplier_allowlist
+    ADD CONSTRAINT program_supplier_allowlist_program_id_fkey FOREIGN KEY (program_id) REFERENCES public.programs(program_id) ON DELETE RESTRICT;
+
+
+--
+-- Name: program_supplier_allowlist program_supplier_allowlist_tenant_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.program_supplier_allowlist
+    ADD CONSTRAINT program_supplier_allowlist_tenant_id_fkey FOREIGN KEY (tenant_id) REFERENCES public.tenants(tenant_id) ON DELETE RESTRICT;
+
+
+--
+-- Name: program_supplier_allowlist program_supplier_allowlist_tenant_id_supplier_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.program_supplier_allowlist
+    ADD CONSTRAINT program_supplier_allowlist_tenant_id_supplier_id_fkey FOREIGN KEY (tenant_id, supplier_id) REFERENCES public.supplier_registry(tenant_id, supplier_id) ON DELETE RESTRICT;
+
+
+--
 -- Name: programs programs_program_escrow_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -7759,6 +7833,14 @@ ALTER TABLE ONLY public.supervisor_audit_tokens
 
 ALTER TABLE ONLY public.supervisor_interrupt_audit_events
     ADD CONSTRAINT supervisor_interrupt_audit_events_program_id_fkey FOREIGN KEY (program_id) REFERENCES public.programs(program_id) ON DELETE RESTRICT;
+
+
+--
+-- Name: supplier_registry supplier_registry_tenant_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.supplier_registry
+    ADD CONSTRAINT supplier_registry_tenant_id_fkey FOREIGN KEY (tenant_id) REFERENCES public.tenants(tenant_id) ON DELETE RESTRICT;
 
 
 --
@@ -7878,6 +7960,12 @@ ALTER TABLE public.persons ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.program_migration_events ENABLE ROW LEVEL SECURITY;
 
 --
+-- Name: program_supplier_allowlist; Type: ROW SECURITY; Schema: public; Owner: -
+--
+
+ALTER TABLE public.program_supplier_allowlist ENABLE ROW LEVEL SECURITY;
+
+--
 -- Name: programs; Type: ROW SECURITY; Schema: public; Owner: -
 --
 
@@ -7982,6 +8070,13 @@ CREATE POLICY rls_tenant_isolation_program_migration_events ON public.program_mi
 
 
 --
+-- Name: program_supplier_allowlist rls_tenant_isolation_program_supplier_allowlist; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY rls_tenant_isolation_program_supplier_allowlist ON public.program_supplier_allowlist AS RESTRICTIVE USING ((tenant_id = public.current_tenant_id_or_null())) WITH CHECK ((tenant_id = public.current_tenant_id_or_null()));
+
+
+--
 -- Name: programs rls_tenant_isolation_programs; Type: POLICY; Schema: public; Owner: -
 --
 
@@ -7993,6 +8088,13 @@ CREATE POLICY rls_tenant_isolation_programs ON public.programs AS RESTRICTIVE US
 --
 
 CREATE POLICY rls_tenant_isolation_sim_swap_alerts ON public.sim_swap_alerts AS RESTRICTIVE USING ((tenant_id = public.current_tenant_id_or_null())) WITH CHECK ((tenant_id = public.current_tenant_id_or_null()));
+
+
+--
+-- Name: supplier_registry rls_tenant_isolation_supplier_registry; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY rls_tenant_isolation_supplier_registry ON public.supplier_registry AS RESTRICTIVE USING ((tenant_id = public.current_tenant_id_or_null())) WITH CHECK ((tenant_id = public.current_tenant_id_or_null()));
 
 
 --
@@ -8023,6 +8125,12 @@ CREATE POLICY rls_tenant_isolation_tenants ON public.tenants AS RESTRICTIVE USIN
 ALTER TABLE public.sim_swap_alerts ENABLE ROW LEVEL SECURITY;
 
 --
+-- Name: supplier_registry; Type: ROW SECURITY; Schema: public; Owner: -
+--
+
+ALTER TABLE public.supplier_registry ENABLE ROW LEVEL SECURITY;
+
+--
 -- Name: tenant_clients; Type: ROW SECURITY; Schema: public; Owner: -
 --
 
@@ -8044,4 +8152,5 @@ ALTER TABLE public.tenants ENABLE ROW LEVEL SECURITY;
 -- PostgreSQL database dump complete
 --
 
-\unrestrict UUa8yvNNh87CiyatlmluwHmfEnSb4EwACIS7gHZqL6e6WlrL7GC8mtXqWsBH489
+\unrestrict Xl5nWXwERwcc0kxLPOHfwMmWLbsySwc9HKcn4QBX33ER3SJlbQpkJ3oF2J5rNPW
+

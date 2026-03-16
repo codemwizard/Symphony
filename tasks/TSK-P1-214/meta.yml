@@ -1,0 +1,74 @@
+schema_version: 1
+phase: '1'
+task_id: TSK-P1-214
+title: Persist supplier registry and programme allowlist in PostgreSQL as the only hardened source of truth
+owner_role: ARCHITECT
+status: planned
+depends_on:
+- TSK-P1-211
+- TSK-P1-212
+touches:
+- schema/migrations/0075_supplier_registry_and_programme_allowlist.sql
+- services/ledger-api/dotnet/src/LedgerApi/Commands/SignedInstructionAndSupplierHandlers.cs
+- services/ledger-api/dotnet/src/LedgerApi/Infrastructure/Stores.cs
+- services/ledger-api/dotnet/src/LedgerApi/Program.cs
+- scripts/audit/verify_tsk_p1_214.sh
+- evidence/phase1/tsk_p1_214_supplier_registry_persistence.json
+- docs/plans/phase1/TSK-P1-214/PLAN.md
+- docs/plans/phase1/TSK-P1-214/EXEC_LOG.md
+- tasks/TSK-P1-214/meta.yml
+invariants:
+- INV-111
+- INV-119
+- INV-133
+work:
+- SupplierPolicyStore currently uses process-local ConcurrentDictionary instances for supplier
+  registry and programme-scoped allowlist state. Restarting the API wipes the state and forces
+  operators to replay onboarding actions.
+- Add migration 0075 to create PostgreSQL-backed supplier_registry and program_supplier_allowlist
+  tables with tenant foreign keys, row-level security, and deterministic upsert semantics.
+- Replace the in-memory dictionaries as the authoritative store. For the hardened GreenTech4CE path,
+  PostgreSQL is the only supported source of truth for supplier registry and programme allowlist
+  state. In-memory structures may exist only as read-through caches whose contents are derived from
+  and invalidated by the database.
+- Do not preserve a file-backed supplier or allowlist path as an acceptable hardened deployment mode.
+  Any local developer-only adapter must be explicitly outside GreenTech4CE hardening scope and must
+  not be referenced by the supported deployment flow.
+- Scope boundary - this task owns supplier registry and programme allowlist persistence only. Tenant
+  registry, programme lifecycle, policy binding, and activation workflow belong to TSK-P1-217.
+acceptance_criteria:
+- POST /v1/admin/suppliers/upsert persists supplier state to PostgreSQL in the hardened demo profile.
+- POST /v1/admin/program-supplier-allowlist/upsert persists allowlist state to PostgreSQL in the
+  hardened demo profile.
+- After a server restart, previously upserted suppliers and allowlist entries remain readable with no
+  operator reseeding or replay.
+- ALLOW and DENY decisions remain correct after restart with no operator intervention.
+- The new tables enforce tenant-scoped RLS and cross-tenant reads are rejected.
+- No supported GreenTech4CE deployment document or bootstrap flow describes /tmp ndjson or other
+  file-backed supplier-policy storage as an acceptable hardened mode.
+- Migration 0075 is idempotent.
+verification:
+- bash scripts/audit/verify_tsk_p1_214.sh
+- python3 scripts/audit/validate_evidence.py --task TSK-P1-214 --evidence evidence/phase1/tsk_p1_214_supplier_registry_persistence.json
+evidence:
+- evidence/phase1/tsk_p1_214_supplier_registry_persistence.json
+failure_modes:
+- In-memory cache becomes the real source of truth and diverges from the database.
+- RLS is absent or incomplete and cross-tenant reads succeed.
+- Restart still requires supplier or allowlist reseeding.
+- Hardened deployment docs continue to permit file-backed supplier-policy storage.
+must_read:
+- docs/operations/AI_AGENT_OPERATION_MANUAL.md
+- services/ledger-api/dotnet/src/LedgerApi/Commands/SignedInstructionAndSupplierHandlers.cs
+- services/ledger-api/dotnet/src/LedgerApi/Infrastructure/Stores.cs
+- schema/migrations/0026_business_foundation_delta_tightening.sql
+- schema/migrations/0047_hier_002_programs_person_member_bridge.sql
+- docs/operations/SYMPHONY_DEMO_DEPLOYMENT_GUIDE.md
+implementation_plan: docs/plans/phase1/TSK-P1-214/PLAN.md
+implementation_log: docs/plans/phase1/TSK-P1-214/EXEC_LOG.md
+notes: >
+  Hardening task. Restart-safe supplier and allowlist state is mandatory. Seed scripts and file-mode
+  persistence are not accepted as substitutes for the hardened GreenTech4CE deployment path.
+client: codex_cli
+assigned_agent: architect
+model: <UNASSIGNED>

@@ -74,8 +74,8 @@ public static class SupplierPolicySelfTestRunner
             logger,
             cancellationToken);
 
-        var policyProgramA = global::ProgramSupplierPolicyReadHandler.Handle(tenantId, programA, supplierId);
-        var policyProgramB = global::ProgramSupplierPolicyReadHandler.Handle(tenantId, programB, supplierId);
+        var policyProgramA = await global::ProgramSupplierPolicyReadHandler.HandleAsync(tenantId, programA, supplierId);
+        var policyProgramB = await global::ProgramSupplierPolicyReadHandler.HandleAsync(tenantId, programB, supplierId);
 
         var tests = new[]
         {

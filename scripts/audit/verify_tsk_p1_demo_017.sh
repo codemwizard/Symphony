@@ -6,9 +6,9 @@ EVIDENCE="evidence/phase1/tsk_p1_demo_017_provisioning_runbook.json"
 
 required_patterns=(
   "Purpose"
-  "Provisioning Steps"
-  "Required Configuration Fields"
-  "Isolation Verification Before Go-Live"
+  "Provisioning Procedure"
+  "Required Inputs"
+  "isolation verification before go-live"
   "Completion Checklist"
 )
 
@@ -47,8 +47,8 @@ cat > "$EVIDENCE" <<JSON
   "runbook": "$RUNBOOK",
   "checks": [
     "purpose_present",
-    "provisioning_steps_present",
-    "required_configuration_fields_present",
+    "provisioning_procedure_present",
+    "required_inputs_present",
     "isolation_verification_present",
     "completion_checklist_present"
   ]
