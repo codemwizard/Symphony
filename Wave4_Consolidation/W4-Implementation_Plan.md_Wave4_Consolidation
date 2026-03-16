@@ -1,0 +1,69 @@
+# Wave 4: Consolidation
+
+**Phase Name:** Wave4_Consolidation | **Phase Key:** W4
+
+Single wave. One `pre_ci` at the end.
+
+---
+
+## Bookkeeping (quick edits)
+
+### TSK-P1-221 — Fix provisioning runbook (3 string replacements)
+
+#### [MODIFY] [GREENTECH4CE_TENANT_PROGRAMME_PROVISIONING_RUNBOOK.md](file:///home/mwiza/workspace/Symphony/docs/operations/GREENTECH4CE_TENANT_PROGRAMME_PROVISIONING_RUNBOOK.md)
+
+Verifier fails on 3 checks:
+- Remove `POST /v1/admin/tenants` references → `POST /api/admin/onboarding/tenants`
+- Add `POST /api/admin/onboarding/programmes` documentation
+- Align sample commands with TSK-P1-218 API contract
+
+### TSK-P1-206, 207, 208, 209 — Status flip
+
+All 4 verifiers already PASS. Flip `meta.yml` → `status: completed`, write EXEC_LOG.md where missing.
+
+### DEMO Retirements (021, 022, 025, 026, 027, 029)
+
+Set `meta.yml` → `status: retired` with `retirement_reason` referencing the superseding TSK. Update EXEC_LOG.md and `PHASE1_GOVERNANCE_TASKS.md`.
+
+---
+
+## Implementation (real work)
+
+### DEMO-018 — Rewrite E2E runbook for hardened bootstrap
+
+Rewrite `docs/operations/SYMPHONY_DEMO_E2E_RUNBOOK.md` to document the hardened path: `bootstrap.sh`, OpenBao-backed secrets, persisted onboarding state. Not the old manual host-based steps.
+
+### DEMO-019 — Create server snapshot capture script (net-new)
+
+Create `scripts/dev/capture_demo_server_snapshot.sh`. Capture process/network/resource state, OpenBao health, persisted control-plane status, HMAC env fingerprint. Architecture-agnostic debugging tool.
+
+### DEMO-020 — Rewrite demo runner as bootstrap wrapper
+
+Rewrite `scripts/dev/run_demo_e2e.sh` as a thin wrapper around `bootstrap.sh` with fail-closed semantics, single-active-run guard, and structured summary.
+
+### DEMO-023 — Rewrite start-now checklist for hardened readiness
+
+Rewrite `docs/operations/SYMPHONY_DEMO_START_NOW_CHECKLIST.md` with go/no-go criteria reflecting OpenBao availability, DB persisted state health, and bootstrap readiness — not env-var checks.
+
+### DEMO-028 — Update image build flow
+
+Update Dockerfiles and `scripts/dev/build_demo_images.sh` for reproducible image builds. Align deployment guide references with TSK-P1-220/221 hardened path.
+
+---
+
+## Verification Plan
+
+```bash
+# All verifiers in one pass, then pre_ci
+bash scripts/audit/verify_tsk_p1_221.sh
+bash scripts/audit/verify_tsk_p1_206.sh
+bash scripts/audit/verify_tsk_p1_207.sh
+bash scripts/audit/verify_tsk_p1_208.sh
+bash scripts/audit/verify_tsk_p1_209.sh
+bash scripts/audit/verify_tsk_p1_demo_018.sh
+bash scripts/audit/verify_tsk_p1_demo_019.sh
+bash scripts/audit/verify_tsk_p1_demo_020.sh
+bash scripts/audit/verify_tsk_p1_demo_023.sh
+bash scripts/audit/verify_tsk_p1_demo_028.sh
+bash scripts/dev/pre_ci.sh
+```

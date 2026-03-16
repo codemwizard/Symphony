@@ -3,7 +3,7 @@ phase: '1'
 task_id: TSK-P1-DEMO-021
 title: Define executable demo key OpenBao TLS and rotation policy
 owner_role: SUPERVISOR
-status: completed
+status: deferred
 depends_on:
 - TSK-P1-DEMO-018
 touches:

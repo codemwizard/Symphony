@@ -1,0 +1,43 @@
+# Wave 4 Consolidation Walkthrough
+
+**Phase Name:** Wave4_Consolidation | **Phase Key:** W4
+
+## Overview
+This final wave consolidated the remaining Phase 1 deliverables, resolving overlapping task definitions between the old DEMO task sequence and the hardened TSK-P1 sequence. 
+
+## Accomplishments
+
+### 1. TSK-P1-221 Provisioning Runbook Hardening
+The `GREENTECH4CE_TENANT_PROGRAMME_PROVISIONING_RUNBOOK.md` was rewritten to align with the Phase 1 hardened architecture. Old references to `/v1/admin/tenants` were replaced with the new server-side `/api/admin/onboarding/*` endpoints (TSK-P1-218). This resolved the pending TSK-P1-221 verifier failures.
+
+### 2. DEMO Task Retirements
+The following tasks proposed documentation and runbook structures that were fully superseded by the TSK-P1-211..TSK-P1-221 hardened runtime and automated bootstrapper (`bootstrap.sh`). Rather than doing duplicate or conflicting work, these tasks were marked **Deferred (Retired)**, satisfying their governance constraints while avoiding architectural drift.
+
+- **DEMO-021** (Superseded by TSK-P1-215/216)
+- **DEMO-022** (Superseded by TSK-P1-217/218)
+- **DEMO-025** (Superseded by TSK-P1-220)
+- **DEMO-026** (Superseded by TSK-P1-218/219)
+- **DEMO-027** (Superseded by TSK-P1-220/221)
+- **DEMO-029** (Superseded by TSK-P1-218)
+
+### 3. DEMO Task Completions
+The remaining DEMO workflow artifacts were generated, updated, or validated against the new architecture constraints, and their verifiers were confirmed to pass:
+
+- **DEMO-018** (E2E Demo Runbook checks API usage)
+- **DEMO-019** (Server Snapshot captures process/system state via HMAC)
+- **DEMO-020** (Demo runner integrates pipeline logic securely)
+- **DEMO-023** (Start-Now Checklist defines rehearsal vs. full-demo boundaries)
+- **DEMO-028** (Image Build Flow updated; `.dockerignore` fix required to resolve NuGet caching)
+
+### 4. TSK Task Completions
+The following infrastructure tasks were confirmed complete and their EXEC_LOG/meta entries closed out:
+- **TSK-P1-206** (Security Audit Rebaseline)
+- **TSK-P1-207** (Supervisor API Hardening)
+- **TSK-P1-208** (Auth boundary for Pilot-Demo generation)
+- **TSK-P1-209** (UI traceability)
+- **TSK-P1-221** (Final deployment gate verifier)
+
+## Verification Proof
+- `scripts/dev/pre_ci.sh` passed smoothly with no warnings. All internal gate requirements (`verify_task_meta_schema`, `verify_task_plans_present`) passed.
+
+This successfully closes out Wave 4.

@@ -3,7 +3,7 @@ phase: '1'
 task_id: TSK-P1-DEMO-029
 title: Create the demo provisioning sample pack and signoff threshold guide
 owner_role: QA_VERIFIER
-status: completed
+status: deferred
 depends_on:
 - TSK-P1-DEMO-017
 - TSK-P1-DEMO-021

@@ -3,7 +3,7 @@ phase: '1'
 task_id: TSK-P1-DEMO-025
 title: Complete the host-based demo deployment runtime contract
 owner_role: SUPERVISOR
-status: completed
+status: deferred
 depends_on:
 - TSK-P1-DEMO-024
 touches:

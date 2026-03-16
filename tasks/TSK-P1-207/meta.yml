@@ -3,7 +3,7 @@ phase: '1'
 task_id: TSK-P1-207
 title: Harden supervisor API privileged routes and token transport
 owner_role: SUPERVISOR
-status: planned
+status: completed
 depends_on:
 - R-000
 - TSK-P1-HIER-011
