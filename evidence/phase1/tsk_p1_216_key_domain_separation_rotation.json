@@ -1,0 +1,20 @@
+{
+  "check_id": "TSK-P1-216",
+  "timestamp_utc": "2026-03-16T08:03:09Z",
+  "git_sha": "19a8fbbd276ef2715ebae6ec6531203e3c2fd670",
+  "schema_fingerprint": "e3be1cd2a92efa46b1db6d15f36e21ffb927ff159f1238b9ff46702696aa70fc",
+  "status": "PASS",
+  "task_id": "TSK-P1-216",
+  "run_id": "standalone-20260316T080252Z",
+  "checks": {
+    "five_hardened_keys": true,
+    "five_distinct_paths": true,
+    "admin_ingress_separated": true,
+    "operator_session_key_in_runtime": true,
+    "operator_session_key_resolved": true,
+    "bootstrap_seeds_all_domains": true,
+    "bootstrap_generates_distinct_keys": true,
+    "build_compiles": true
+  },
+  "errors": []
+}

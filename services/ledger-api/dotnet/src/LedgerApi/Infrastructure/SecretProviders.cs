@@ -60,6 +60,7 @@ public static class OpenBaoPathContract
     {
         "INGRESS_API_KEY",
         "ADMIN_API_KEY",
+        "OPERATOR_SESSION_KEY",
         "DEMO_INSTRUCTION_SIGNING_KEY",
         "EVIDENCE_SIGNING_KEY"
     };
@@ -71,16 +72,19 @@ public static class OpenBaoPathContract
     /// </summary>
     public static readonly Dictionary<string, (string Path, string Property)> KeyMapping = new(StringComparer.Ordinal)
     {
-        // API authentication secrets
-        { "INGRESS_API_KEY",              ("symphony/secrets/api", "ingress_api_key") },
-        { "ADMIN_API_KEY",                ("symphony/secrets/api", "admin_api_key") },
+        // API authentication secrets — each domain at a distinct OpenBao path
+        { "INGRESS_API_KEY",              ("symphony/secrets/api",         "ingress_api_key") },
+        { "ADMIN_API_KEY",                ("symphony/secrets/admin",       "admin_api_key") },
 
-        // Signing key material
-        { "DEMO_INSTRUCTION_SIGNING_KEY", ("symphony/secrets/signing", "demo_instruction_signing_key") },
-        { "EVIDENCE_SIGNING_KEY",         ("symphony/secrets/signing", "evidence_signing_key") },
+        // Operator session signing — dedicated domain, NOT shared with admin
+        { "OPERATOR_SESSION_KEY",         ("symphony/secrets/session",     "operator_session_key") },
 
-        // Operator session signing (cookie material) — same key domain as admin
-        { "EVIDENCE_SIGNING_KEY_ID",      ("symphony/secrets/signing", "evidence_signing_key_id") },
+        // Signing key material — one path per signing concern
+        { "DEMO_INSTRUCTION_SIGNING_KEY", ("symphony/secrets/instruction", "demo_instruction_signing_key") },
+        { "EVIDENCE_SIGNING_KEY",         ("symphony/secrets/signing",     "evidence_signing_key") },
+
+        // Evidence signing key ID (non-hardened, informational)
+        { "EVIDENCE_SIGNING_KEY_ID",      ("symphony/secrets/signing",     "evidence_signing_key_id") },
     };
 }
 

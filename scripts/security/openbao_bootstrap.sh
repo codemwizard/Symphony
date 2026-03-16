@@ -53,9 +53,9 @@ bao_exec secrets enable -path=kv kv-v2 || true
 # Enable approle auth (ignore if exists)
 bao_exec auth enable approle || true
 
-# Write policy: allow read on kv/data/allowed/*
+# Write policy: allow read on kv/data/symphony/secrets/*
 cat > "$STATE_DIR/policy.hcl" <<'POLICY'
-path "kv/data/allowed/*" {
+path "kv/data/symphony/secrets/*" {
   capabilities = ["read"]
 }
 POLICY
@@ -66,7 +66,24 @@ bao_exec policy write "$POLICY_NAME" /tmp/policy.hcl
 # Create role
 bao_exec write auth/approle/role/$ROLE_NAME token_policies="$POLICY_NAME" token_ttl=1h token_max_ttl=4h
 
-# Create secrets for smoke test
+# ─── Seed 5 distinct key domains ───
+# Each domain has its own OpenBao path to prevent key-domain collapse.
+# Secrets are generated fresh on each bootstrap (dev/smoke-test only).
+
+INGRESS_KEY=$(openssl rand -hex 32)
+ADMIN_KEY=$(openssl rand -hex 32)
+SESSION_KEY=$(openssl rand -hex 32)
+INSTRUCTION_KEY=$(openssl rand -hex 32)
+EVIDENCE_KEY=$(openssl rand -hex 32)
+EVIDENCE_KEY_ID="evidence-signing-key-v1"
+
+bao_exec kv put kv/symphony/secrets/api         ingress_api_key="$INGRESS_KEY"
+bao_exec kv put kv/symphony/secrets/admin        admin_api_key="$ADMIN_KEY"
+bao_exec kv put kv/symphony/secrets/session      operator_session_key="$SESSION_KEY"
+bao_exec kv put kv/symphony/secrets/instruction  demo_instruction_signing_key="$INSTRUCTION_KEY"
+bao_exec kv put kv/symphony/secrets/signing      evidence_signing_key="$EVIDENCE_KEY" evidence_signing_key_id="$EVIDENCE_KEY_ID"
+
+# Legacy smoke-test paths (kept for openbao_smoke_test.sh compatibility)
 bao_exec kv put kv/allowed/test value="ok"
 bao_exec kv put kv/forbidden/test value="nope"
 
@@ -77,4 +94,14 @@ SECRET_ID=$(bao_exec write -field=secret_id -f auth/approle/role/$ROLE_NAME/secr
 printf '%s' "$ROLE_ID" > "$STATE_DIR/role_id"
 printf '%s' "$SECRET_ID" > "$STATE_DIR/secret_id"
 
-echo "OpenBao bootstrap complete. role_id and secret_id saved to $STATE_DIR."
+# Export keys for local dev convenience (env-based provider fallback)
+cat > "$STATE_DIR/secrets.env" <<EOF
+export INGRESS_API_KEY="$INGRESS_KEY"
+export ADMIN_API_KEY="$ADMIN_KEY"
+export OPERATOR_SESSION_KEY="$SESSION_KEY"
+export DEMO_INSTRUCTION_SIGNING_KEY="$INSTRUCTION_KEY"
+export EVIDENCE_SIGNING_KEY="$EVIDENCE_KEY"
+export EVIDENCE_SIGNING_KEY_ID="$EVIDENCE_KEY_ID"
+EOF
+
+echo "OpenBao bootstrap complete. role_id, secret_id, and secrets.env saved to $STATE_DIR."
