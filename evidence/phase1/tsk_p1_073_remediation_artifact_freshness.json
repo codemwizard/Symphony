@@ -1,13 +1,25 @@
 {
   "check_id": "TSK-P1-073",
   "task_id": "TSK-P1-073",
-  "timestamp_utc": "2026-03-10T14:23:39Z",
-  "git_sha": "d51d603fc49bdb3c713f422ec511d62b668ec9ab",
-  "schema_fingerprint": "33e36565282f1592203a3db8c735f6d6a51bdcfa289c00e1c2040e30adc98ddb",
+  "timestamp_utc": "2026-03-16T10:52:19Z",
+  "git_sha": "7327ccde469b21e74a200ae7bb460dcae7ceb4ca",
+  "schema_fingerprint": "e3be1cd2a92efa46b1db6d15f36e21ffb927ff159f1238b9ff46702696aa70fc",
   "status": "PASS",
   "base_ref": "refs/remotes/origin/main",
   "head_ref": "HEAD",
-  "triggered_files": [],
-  "freshness_docs": [],
+  "triggered_files": [
+    "scripts/audit/verify_tsk_p1_216.sh",
+    "scripts/audit/verify_tsk_p1_217.sh",
+    "scripts/audit/verify_tsk_p1_218.sh",
+    "scripts/audit/verify_tsk_p1_219.sh",
+    "scripts/audit/verify_tsk_p1_220.sh",
+    "scripts/security/openbao_bootstrap.sh"
+  ],
+  "freshness_docs": [
+    "docs/plans/phase1/REM-2026-03-16_pre_ci-enforce_change_rule/EXEC_LOG.md",
+    "docs/plans/phase1/REM-2026-03-16_pre_ci-enforce_change_rule/PLAN.md",
+    "docs/plans/phase1/REM-2026-03-16_pre_ci-phase1_db_verifiers/EXEC_LOG.md",
+    "docs/plans/phase1/REM-2026-03-16_pre_ci-phase1_db_verifiers/PLAN.md"
+  ],
   "failures": []
 }

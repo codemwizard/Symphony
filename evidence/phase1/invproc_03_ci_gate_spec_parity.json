@@ -1,8 +1,8 @@
 {
   "check_id": "INVPROC-03-CI-GATE-SPEC-PARITY",
-  "timestamp_utc": "2026-03-09T08:27:25Z",
-  "git_sha": "0e8c478f13f271670633e382be1b994168f0faf9",
-  "schema_fingerprint": "48e1f2462b2d811f14d424ac529ee731e692f992414abfdbc35c60170590957b",
+  "timestamp_utc": "2026-03-16T10:52:17Z",
+  "git_sha": "7327ccde469b21e74a200ae7bb460dcae7ceb4ca",
+  "schema_fingerprint": "e3be1cd2a92efa46b1db6d15f36e21ffb927ff159f1238b9ff46702696aa70fc",
   "status": "PASS",
   "required_jobs": [
     "mechanical_invariants",

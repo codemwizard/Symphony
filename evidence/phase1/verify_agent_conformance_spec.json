@@ -1,8 +1,8 @@
 {
   "check_id": "AGENT-CONFORMANCE-SPEC",
-  "timestamp_utc": "2026-03-12T12:24:33Z",
-  "git_sha": "6aa3d6495ab70257717f686fe03c3c9ae8bca54e",
-  "schema_fingerprint": "65b4b49fc3e892f1482781140ce63e7053803010b618fbc9e39d132452c13821",
+  "timestamp_utc": "2026-03-16T10:48:47Z",
+  "git_sha": "7327ccde469b21e74a200ae7bb460dcae7ceb4ca",
+  "schema_fingerprint": "e3be1cd2a92efa46b1db6d15f36e21ffb927ff159f1238b9ff46702696aa70fc",
   "status": "PASS",
   "spec_file": "/home/mwiza/workspace/Symphony/docs/operations/VERIFY_AGENT_CONFORMANCE_SPEC.md",
   "required_headers": [

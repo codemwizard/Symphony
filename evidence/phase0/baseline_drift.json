@@ -1,12 +1,12 @@
 {
   "check_id": "DB-BASELINE-DRIFT",
-  "timestamp_utc": "2026-03-04T03:17:31Z",
-  "git_sha": "0cca4e691cfcb5a1729ab79e08cf21858f5e9b58",
-  "schema_fingerprint": "8066e70aafdc28540785da569dfbda5ebb13a2710d7f31e1b395cf2b3323bb15",
+  "timestamp_utc": "2026-03-16T10:55:16Z",
+  "git_sha": "7327ccde469b21e74a200ae7bb460dcae7ceb4ca",
+  "schema_fingerprint": "e3be1cd2a92efa46b1db6d15f36e21ffb927ff159f1238b9ff46702696aa70fc",
   "status": "PASS",
   "baseline_path": "/home/mwiza/workspace/Symphony/schema/baselines/current/0001_baseline.sql",
-  "baseline_hash": "085e32dc454d6e6755dc99e11841857f7a9ed06dfb5b6fbf32a876064ebd36c2",
-  "current_hash": "085e32dc454d6e6755dc99e11841857f7a9ed06dfb5b6fbf32a876064ebd36c2",
+  "baseline_hash": "d5fa2c70c2a5889de5b56af20dd1204a9f4907797352237af0fbc6b4630087fa",
+  "current_hash": "d5fa2c70c2a5889de5b56af20dd1204a9f4907797352237af0fbc6b4630087fa",
   "pg_dump_version": "pg_dump (PostgreSQL) 18.2 (Debian 18.2-1.pgdg13+1)",
   "pg_server_version": "18.2 (Debian 18.2-1.pgdg13+1)",
   "dump_source": "container:symphony-postgres"
