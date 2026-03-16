@@ -64,7 +64,3 @@ CREATE POLICY rls_tenant_isolation_programme_policy_binding ON public.programme_
 ALTER TABLE public.programme_policy_binding ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.programme_policy_binding FORCE ROW LEVEL SECURITY;
 
--- ─── Migration bookkeeping ─────────────────────────────────────────
-INSERT INTO public.schema_migrations (version, description, installed_by)
-VALUES ('0076', 'onboarding_control_plane: tenant_registry, programme_registry, programme_policy_binding', current_user);
-
