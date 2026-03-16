@@ -1080,3 +1080,313 @@ static class ProjectionPayload
         }
     }
 }
+
+// ─── Onboarding Control-Plane Stores (TSK-P1-217) ──────────────────
+
+sealed class NpgsqlTenantRegistryStore(ILogger logger, NpgsqlDataSource dataSource) : ITenantRegistryStore
+{
+    public async Task<bool> ExistsAsync(Guid tenantId, CancellationToken cancellationToken)
+    {
+        try
+        {
+            await using var conn = await dataSource.OpenConnectionAsync(cancellationToken);
+            await using var cmd = conn.CreateCommand();
+            cmd.CommandText = @"
+SELECT EXISTS(
+  SELECT 1 FROM public.tenant_registry
+  WHERE tenant_id = @tenant_id AND status = 'ACTIVE'
+  LIMIT 1
+);";
+            cmd.Parameters.AddWithValue("tenant_id", tenantId);
+            var result = await cmd.ExecuteScalarAsync(cancellationToken);
+            return result is true;
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Tenant registry existence check failed.");
+            return false;
+        }
+    }
+
+    public async Task<TenantRegistryEntry?> GetAsync(Guid tenantId, CancellationToken cancellationToken)
+    {
+        try
+        {
+            await using var conn = await dataSource.OpenConnectionAsync(cancellationToken);
+            await using var cmd = conn.CreateCommand();
+            cmd.CommandText = @"
+SELECT tenant_id::text, tenant_key, display_name, status, created_at, updated_at
+FROM public.tenant_registry
+WHERE tenant_id = @tenant_id
+LIMIT 1;";
+            cmd.Parameters.AddWithValue("tenant_id", tenantId);
+            await using var reader = await cmd.ExecuteReaderAsync(cancellationToken);
+            if (!await reader.ReadAsync(cancellationToken))
+                return null;
+            return new TenantRegistryEntry(
+                reader.GetString(0), reader.GetString(1), reader.GetString(2),
+                reader.GetString(3), reader.GetFieldValue<DateTimeOffset>(4), reader.GetFieldValue<DateTimeOffset>(5));
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Tenant registry get failed.");
+            return null;
+        }
+    }
+
+    public async Task<IReadOnlyList<TenantRegistryEntry>> ListAsync(CancellationToken cancellationToken)
+    {
+        var results = new List<TenantRegistryEntry>();
+        try
+        {
+            await using var conn = await dataSource.OpenConnectionAsync(cancellationToken);
+            await using var cmd = conn.CreateCommand();
+            cmd.CommandText = @"
+SELECT tenant_id::text, tenant_key, display_name, status, created_at, updated_at
+FROM public.tenant_registry
+ORDER BY created_at ASC
+LIMIT 1000;";
+            await using var reader = await cmd.ExecuteReaderAsync(cancellationToken);
+            while (await reader.ReadAsync(cancellationToken))
+            {
+                results.Add(new TenantRegistryEntry(
+                    reader.GetString(0), reader.GetString(1), reader.GetString(2),
+                    reader.GetString(3), reader.GetFieldValue<DateTimeOffset>(4), reader.GetFieldValue<DateTimeOffset>(5)));
+            }
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Tenant registry list failed.");
+        }
+        return results;
+    }
+
+    public async Task<TenantRegistryResult> UpsertAsync(Guid tenantId, string tenantKey, string displayName, CancellationToken cancellationToken)
+    {
+        try
+        {
+            await using var conn = await dataSource.OpenConnectionAsync(cancellationToken);
+            await using var tx = await conn.BeginTransactionAsync(cancellationToken);
+            await using var cmd = conn.CreateCommand();
+            cmd.Transaction = tx;
+            cmd.CommandText = @"
+INSERT INTO public.tenant_registry (tenant_id, tenant_key, display_name, status)
+VALUES (@tenant_id, @tenant_key, @display_name, 'ACTIVE')
+ON CONFLICT (tenant_id) DO UPDATE SET
+  display_name = EXCLUDED.display_name,
+  updated_at = now()
+RETURNING tenant_id::text, tenant_key, display_name, status, created_at, updated_at,
+  (xmax = 0) AS created_new;";
+            cmd.Parameters.AddWithValue("tenant_id", tenantId);
+            cmd.Parameters.AddWithValue("tenant_key", tenantKey);
+            cmd.Parameters.AddWithValue("display_name", displayName);
+            await using var reader = await cmd.ExecuteReaderAsync(cancellationToken);
+            if (!await reader.ReadAsync(cancellationToken))
+            {
+                await tx.RollbackAsync(cancellationToken);
+                return TenantRegistryResult.Fail("db returned no result");
+            }
+            var entry = new TenantRegistryEntry(
+                reader.GetString(0), reader.GetString(1), reader.GetString(2),
+                reader.GetString(3), reader.GetFieldValue<DateTimeOffset>(4), reader.GetFieldValue<DateTimeOffset>(5));
+            var createdNew = reader.GetBoolean(6);
+            await tx.CommitAsync(cancellationToken);
+            return TenantRegistryResult.Ok(entry, createdNew);
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Tenant registry upsert failed.");
+            return TenantRegistryResult.Fail(StoreErrorMessages.PersistenceUnavailable);
+        }
+    }
+}
+
+sealed class NpgsqlProgrammeStore(ILogger logger, NpgsqlDataSource dataSource) : IProgrammeStore
+{
+    public async Task<IReadOnlyList<ProgrammeEntry>> ListAsync(Guid? tenantId, CancellationToken cancellationToken)
+    {
+        var results = new List<ProgrammeEntry>();
+        try
+        {
+            await using var conn = await dataSource.OpenConnectionAsync(cancellationToken);
+            await using var cmd = conn.CreateCommand();
+            cmd.CommandText = tenantId.HasValue
+                ? @"SELECT p.id::text, p.tenant_id::text, p.programme_key, p.display_name, p.status,
+                     b.policy_code, p.created_at, p.updated_at
+                   FROM public.programme_registry p
+                   LEFT JOIN public.programme_policy_binding b ON b.programme_id = p.id AND b.is_active = true
+                   WHERE p.tenant_id = @tenant_id
+                   ORDER BY p.created_at ASC LIMIT 1000"
+                : @"SELECT p.id::text, p.tenant_id::text, p.programme_key, p.display_name, p.status,
+                     b.policy_code, p.created_at, p.updated_at
+                   FROM public.programme_registry p
+                   LEFT JOIN public.programme_policy_binding b ON b.programme_id = p.id AND b.is_active = true
+                   ORDER BY p.created_at ASC LIMIT 1000";
+            if (tenantId.HasValue)
+                cmd.Parameters.AddWithValue("tenant_id", tenantId.Value);
+            await using var reader = await cmd.ExecuteReaderAsync(cancellationToken);
+            while (await reader.ReadAsync(cancellationToken))
+            {
+                results.Add(new ProgrammeEntry(
+                    reader.GetString(0), reader.GetString(1), reader.GetString(2),
+                    reader.GetString(3), reader.GetString(4),
+                    reader.IsDBNull(5) ? null : reader.GetString(5),
+                    reader.GetFieldValue<DateTimeOffset>(6), reader.GetFieldValue<DateTimeOffset>(7)));
+            }
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Programme list failed.");
+        }
+        return results;
+    }
+
+    public async Task<ProgrammeResult> CreateAsync(Guid tenantId, string programmeKey, string displayName, CancellationToken cancellationToken)
+    {
+        try
+        {
+            await using var conn = await dataSource.OpenConnectionAsync(cancellationToken);
+            await using var tx = await conn.BeginTransactionAsync(cancellationToken);
+            await using var cmd = conn.CreateCommand();
+            cmd.Transaction = tx;
+            cmd.CommandText = @"
+INSERT INTO public.programme_registry (tenant_id, programme_key, display_name, status)
+VALUES (@tenant_id, @programme_key, @display_name, 'CREATED')
+ON CONFLICT (tenant_id, programme_key) DO UPDATE SET
+  display_name = EXCLUDED.display_name,
+  updated_at = now()
+RETURNING id::text, tenant_id::text, programme_key, display_name, status, created_at, updated_at,
+  (xmax = 0) AS created_new;";
+            cmd.Parameters.AddWithValue("tenant_id", tenantId);
+            cmd.Parameters.AddWithValue("programme_key", programmeKey);
+            cmd.Parameters.AddWithValue("display_name", displayName);
+            await using var reader = await cmd.ExecuteReaderAsync(cancellationToken);
+            if (!await reader.ReadAsync(cancellationToken))
+            {
+                await tx.RollbackAsync(cancellationToken);
+                return ProgrammeResult.Fail("db returned no result");
+            }
+            var entry = new ProgrammeEntry(
+                reader.GetString(0), reader.GetString(1), reader.GetString(2),
+                reader.GetString(3), reader.GetString(4), null,
+                reader.GetFieldValue<DateTimeOffset>(5), reader.GetFieldValue<DateTimeOffset>(6));
+            var createdNew = reader.GetBoolean(7);
+            await tx.CommitAsync(cancellationToken);
+            return ProgrammeResult.Ok(entry, createdNew);
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Programme create failed.");
+            return ProgrammeResult.Fail(StoreErrorMessages.PersistenceUnavailable);
+        }
+    }
+
+    public async Task<ProgrammeResult> ActivateAsync(Guid programmeId, CancellationToken cancellationToken)
+        => await UpdateStatusAsync(programmeId, "ACTIVE", cancellationToken);
+
+    public async Task<ProgrammeResult> SuspendAsync(Guid programmeId, CancellationToken cancellationToken)
+        => await UpdateStatusAsync(programmeId, "SUSPENDED", cancellationToken);
+
+    private async Task<ProgrammeResult> UpdateStatusAsync(Guid programmeId, string newStatus, CancellationToken cancellationToken)
+    {
+        try
+        {
+            await using var conn = await dataSource.OpenConnectionAsync(cancellationToken);
+            await using var tx = await conn.BeginTransactionAsync(cancellationToken);
+            await using var cmd = conn.CreateCommand();
+            cmd.Transaction = tx;
+            cmd.CommandText = @"
+UPDATE public.programme_registry
+SET status = @status, updated_at = now()
+WHERE id = @programme_id
+RETURNING id::text, tenant_id::text, programme_key, display_name, status, created_at, updated_at;";
+            cmd.Parameters.AddWithValue("programme_id", programmeId);
+            cmd.Parameters.AddWithValue("status", newStatus);
+            await using var reader = await cmd.ExecuteReaderAsync(cancellationToken);
+            if (!await reader.ReadAsync(cancellationToken))
+            {
+                await tx.RollbackAsync(cancellationToken);
+                return ProgrammeResult.Fail("programme not found");
+            }
+            var entry = new ProgrammeEntry(
+                reader.GetString(0), reader.GetString(1), reader.GetString(2),
+                reader.GetString(3), reader.GetString(4), null,
+                reader.GetFieldValue<DateTimeOffset>(5), reader.GetFieldValue<DateTimeOffset>(6));
+            await tx.CommitAsync(cancellationToken);
+            return ProgrammeResult.Ok(entry, false);
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Programme status update failed.");
+            return ProgrammeResult.Fail(StoreErrorMessages.PersistenceUnavailable);
+        }
+    }
+
+    public async Task<ProgrammeResult> BindPolicyAsync(Guid programmeId, Guid tenantId, string policyCode, CancellationToken cancellationToken)
+    {
+        try
+        {
+            await using var conn = await dataSource.OpenConnectionAsync(cancellationToken);
+            await using var tx = await conn.BeginTransactionAsync(cancellationToken);
+
+            // Deactivate any existing binding
+            await using var deactivate = conn.CreateCommand();
+            deactivate.Transaction = tx;
+            deactivate.CommandText = @"
+UPDATE public.programme_policy_binding
+SET is_active = false
+WHERE programme_id = @programme_id AND is_active = true;";
+            deactivate.Parameters.AddWithValue("programme_id", programmeId);
+            await deactivate.ExecuteNonQueryAsync(cancellationToken);
+
+            // Insert new active binding
+            await using var insert = conn.CreateCommand();
+            insert.Transaction = tx;
+            insert.CommandText = @"
+INSERT INTO public.programme_policy_binding (programme_id, tenant_id, policy_code, version, is_active)
+SELECT @programme_id, @tenant_id, @policy_code,
+  COALESCE((SELECT MAX(version) FROM public.programme_policy_binding WHERE programme_id = @programme_id LIMIT 1), 0) + 1,
+  true
+RETURNING programme_id::text;";
+            insert.Parameters.AddWithValue("programme_id", programmeId);
+            insert.Parameters.AddWithValue("tenant_id", tenantId);
+            insert.Parameters.AddWithValue("policy_code", policyCode);
+            var result = await insert.ExecuteScalarAsync(cancellationToken);
+            if (result is null)
+            {
+                await tx.RollbackAsync(cancellationToken);
+                return ProgrammeResult.Fail("policy binding insert failed");
+            }
+
+            // Re-read the programme with the new binding
+            await using var read = conn.CreateCommand();
+            read.Transaction = tx;
+            read.CommandText = @"
+SELECT p.id::text, p.tenant_id::text, p.programme_key, p.display_name, p.status,
+       b.policy_code, p.created_at, p.updated_at
+FROM public.programme_registry p
+LEFT JOIN public.programme_policy_binding b ON b.programme_id = p.id AND b.is_active = true
+WHERE p.id = @programme_id
+LIMIT 1;";
+            read.Parameters.AddWithValue("programme_id", programmeId);
+            await using var reader = await read.ExecuteReaderAsync(cancellationToken);
+            if (!await reader.ReadAsync(cancellationToken))
+            {
+                await tx.RollbackAsync(cancellationToken);
+                return ProgrammeResult.Fail("programme not found after binding");
+            }
+            var entry = new ProgrammeEntry(
+                reader.GetString(0), reader.GetString(1), reader.GetString(2),
+                reader.GetString(3), reader.GetString(4),
+                reader.IsDBNull(5) ? null : reader.GetString(5),
+                reader.GetFieldValue<DateTimeOffset>(6), reader.GetFieldValue<DateTimeOffset>(7));
+            await tx.CommitAsync(cancellationToken);
+            return ProgrammeResult.Ok(entry, false);
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Programme policy binding failed.");
+            return ProgrammeResult.Fail(StoreErrorMessages.PersistenceUnavailable);
+        }
+    }
+}
