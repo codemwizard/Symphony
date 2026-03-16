@@ -1345,7 +1345,9 @@ WHERE programme_id = @programme_id AND is_active = true;";
             insert.CommandText = @"
 INSERT INTO public.programme_policy_binding (programme_id, tenant_id, policy_code, version, is_active)
 SELECT @programme_id, @tenant_id, @policy_code,
-  COALESCE((SELECT MAX(version) FROM public.programme_policy_binding WHERE programme_id = @programme_id LIMIT 1), 0) + 1,
+  COALESCE((
+      SELECT MAX(version) FROM public.programme_policy_binding WHERE programme_id = @programme_id LIMIT 1
+  ), 0) + 1,
   true
 RETURNING programme_id::text;";
             insert.Parameters.AddWithValue("programme_id", programmeId);
