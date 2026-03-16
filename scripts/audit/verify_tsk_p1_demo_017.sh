@@ -21,30 +21,42 @@ done
 
 mkdir -p "$(dirname "$EVIDENCE")"
 
-if [ ${#missing[@]} -gt 0 ]; then
-  {
-    echo "{"
-    echo "  \"task_id\": \"TSK-P1-DEMO-017\","
-    echo "  \"status\": \"FAIL\","
-    echo "  \"runbook\": \"$RUNBOOK\","
-    echo "  \"missing_sections\": ["
-    for i in "${!missing[@]}"; do
-      sep=","
-      if [ "$i" -eq "$((${#missing[@]} - 1))" ]; then sep=""; fi
-      echo "    \"${missing[$i]}\"$sep"
-    done
-    echo "  ]"
-    echo "}"
-  } > "$EVIDENCE"
-  echo "TSK-P1-DEMO-017 verification failed. Missing sections: ${missing[*]}"
-  exit 1
+ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
+
+if [ -f "$ROOT_DIR/scripts/lib/evidence.sh" ]; then
+  source "$ROOT_DIR/scripts/lib/evidence.sh"
+else
+  git_sha() { git rev-parse HEAD 2>/dev/null || echo "unknown"; }
+  schema_fingerprint() { echo "unknown"; }
+  evidence_now_utc() { date -u +%Y-%m-%dT%H:%M:%SZ; }
 fi
 
-cat > "$EVIDENCE" <<JSON
-{
-  "task_id": "TSK-P1-DEMO-017",
-  "status": "PASS",
+TS_UTC="$(evidence_now_utc)"
+GIT_SHA="$(git_sha)"
+SCHEMA_FP="$(schema_fingerprint)"
+
+STATUS="PASS"
+if [ ${#missing[@]} -gt 0 ]; then
+  STATUS="FAIL"
+fi
+
+python3 - <<PY
+import json
+import os
+
+missing_str = "$*"
+missing = missing_str.split() if missing_str else []
+
+payload = {
+  "check_id": "TSK-P1-DEMO-017",
+  "timestamp_utc": "$TS_UTC",
+  "git_sha": "$GIT_SHA",
+  "schema_fingerprint": "$SCHEMA_FP",
+  "status": "$STATUS",
   "runbook": "$RUNBOOK",
+  "missing_sections": [
+$(for i in "${!missing[@]}"; do echo "    \"${missing[$i]}\","; done)
+  ],
   "checks": [
     "purpose_present",
     "provisioning_procedure_present",
@@ -53,6 +65,14 @@ cat > "$EVIDENCE" <<JSON
     "completion_checklist_present"
   ]
 }
-JSON
+
+with open("$ROOT_DIR/$EVIDENCE", "w") as f:
+  json.dump(payload, f, indent=2)
+PY
+
+if [ "$STATUS" == "FAIL" ]; then
+  echo "TSK-P1-DEMO-017 verification failed. Missing sections: ${missing[*]}"
+  exit 1
+fi
 
 echo "TSK-P1-DEMO-017 verification passed. Evidence: $EVIDENCE"
