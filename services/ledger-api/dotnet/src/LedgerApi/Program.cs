@@ -266,6 +266,18 @@ IRegulatoryIncidentStore regulatoryIncidentStore = storageMode switch
 // TSK-P1-214: Wire supplier policy store with the shared data source
 SupplierPolicyStore.Initialize(dataSource);
 
+// TSK-P1-217: Wire onboarding control-plane stores
+ITenantRegistryStore tenantRegistryStore = storageMode switch
+{
+    "db" or "db_psql" or "db_npgsql" => new NpgsqlTenantRegistryStore(logger, dataSource!),
+    _ => new NpgsqlTenantRegistryStore(logger, dataSource!) // control-plane always needs DB
+};
+IProgrammeStore programmeStore = storageMode switch
+{
+    "db" or "db_psql" or "db_npgsql" => new NpgsqlProgrammeStore(logger, dataSource!),
+    _ => new NpgsqlProgrammeStore(logger, dataSource!)
+};
+
 // Startup capability probes
 // Startup capability probes — use resolved secrets, not raw env
 var signingKeyPresent = !string.IsNullOrWhiteSpace(secrets.EvidenceSigningKey);
@@ -969,6 +981,178 @@ app.MapGet("/v1/regulatory/incidents/{incident_id}/report", async (string incide
 
     var result = await RegulatoryIncidentReportHandler.GenerateIncidentReportAsync(incident_id, regulatoryIncidentStore, cancellationToken);
     return result.ToHttpResult();
+}).RequireRateLimiting("sensitive-endpoint");
+
+// ─── TSK-P1-218: Server-Side Onboarding APIs ──────────────────────
+
+// POST /api/admin/onboarding/tenants — Create/upsert tenant in registry
+app.MapPost("/api/admin/onboarding/tenants", async (JsonElement body, HttpContext httpContext, CancellationToken cancellationToken) =>
+{
+    var authFailure = ApiAuthorization.AuthorizeAdminTenantOnboarding(httpContext, secrets);
+    if (authFailure is not null)
+        return Results.Json(authFailure.Body, statusCode: authFailure.StatusCode);
+
+    if (!body.TryGetProperty("tenant_id", out var tenantIdProp) || !Guid.TryParse(tenantIdProp.GetString(), out var tenantId))
+        return Results.Json(new { error_code = "INVALID_REQUEST", errors = new[] { "tenant_id is required and must be a valid UUID" } }, statusCode: 400);
+    var tenantKey = body.TryGetProperty("tenant_key", out var tkProp) ? (tkProp.GetString() ?? $"ten-{tenantId.ToString("N")[..12]}") : $"ten-{tenantId.ToString("N")[..12]}";
+    var displayName = body.TryGetProperty("display_name", out var dnProp) ? (dnProp.GetString() ?? "Unnamed") : "Unnamed";
+
+    var result = await tenantRegistryStore.UpsertAsync(tenantId, tenantKey, displayName, cancellationToken);
+    if (!result.Success || result.Entry is null)
+        return Results.Json(new { error_code = "ONBOARDING_FAILED", errors = new[] { result.Error ?? "tenant registry upsert failed" } }, statusCode: 503);
+
+    return Results.Json(new
+    {
+        tenant_id = result.Entry.TenantId,
+        tenant_key = result.Entry.TenantKey,
+        display_name = result.Entry.DisplayName,
+        status = result.Entry.Status,
+        created_new = result.CreatedNew,
+        created_at = result.Entry.CreatedAt.ToString("O")
+    }, statusCode: 200);
+}).RequireRateLimiting("sensitive-endpoint");
+
+// GET /api/admin/onboarding/tenants — List all tenants
+app.MapGet("/api/admin/onboarding/tenants", async (HttpContext httpContext, CancellationToken cancellationToken) =>
+{
+    var authFailure = ApiAuthorization.AuthorizeAdminTenantOnboarding(httpContext, secrets);
+    if (authFailure is not null)
+        return Results.Json(authFailure.Body, statusCode: authFailure.StatusCode);
+
+    var tenants = await tenantRegistryStore.ListAsync(cancellationToken);
+    return Results.Json(new { tenants = tenants.Select(t => new
+    {
+        tenant_id = t.TenantId, tenant_key = t.TenantKey, display_name = t.DisplayName,
+        status = t.Status, created_at = t.CreatedAt.ToString("O"), updated_at = t.UpdatedAt.ToString("O")
+    })}, statusCode: 200);
+}).RequireRateLimiting("sensitive-endpoint");
+
+// POST /api/admin/onboarding/programmes — Create programme
+app.MapPost("/api/admin/onboarding/programmes", async (JsonElement body, HttpContext httpContext, CancellationToken cancellationToken) =>
+{
+    var authFailure = ApiAuthorization.AuthorizeAdminTenantOnboarding(httpContext, secrets);
+    if (authFailure is not null)
+        return Results.Json(authFailure.Body, statusCode: authFailure.StatusCode);
+
+    if (!body.TryGetProperty("tenant_id", out var tidProp) || !Guid.TryParse(tidProp.GetString(), out var tenantId))
+        return Results.Json(new { error_code = "INVALID_REQUEST", errors = new[] { "tenant_id is required" } }, statusCode: 400);
+    if (!body.TryGetProperty("programme_key", out var pkProp) || string.IsNullOrWhiteSpace(pkProp.GetString()))
+        return Results.Json(new { error_code = "INVALID_REQUEST", errors = new[] { "programme_key is required" } }, statusCode: 400);
+    var displayName = body.TryGetProperty("display_name", out var dnProp) ? (dnProp.GetString() ?? "Unnamed Programme") : "Unnamed Programme";
+
+    var result = await programmeStore.CreateAsync(tenantId, pkProp.GetString()!.Trim(), displayName, cancellationToken);
+    if (!result.Success || result.Entry is null)
+        return Results.Json(new { error_code = "PROGRAMME_CREATE_FAILED", errors = new[] { result.Error ?? "programme create failed" } }, statusCode: 503);
+
+    return Results.Json(new
+    {
+        programme_id = result.Entry.ProgrammeId, tenant_id = result.Entry.TenantId,
+        programme_key = result.Entry.ProgrammeKey, display_name = result.Entry.DisplayName,
+        status = result.Entry.Status, created_new = result.CreatedNew,
+        created_at = result.Entry.CreatedAt.ToString("O")
+    }, statusCode: 200);
+}).RequireRateLimiting("sensitive-endpoint");
+
+// GET /api/admin/onboarding/programmes — List programmes
+app.MapGet("/api/admin/onboarding/programmes", async (HttpContext httpContext, CancellationToken cancellationToken) =>
+{
+    var authFailure = ApiAuthorization.AuthorizeAdminTenantOnboarding(httpContext, secrets);
+    if (authFailure is not null)
+        return Results.Json(authFailure.Body, statusCode: authFailure.StatusCode);
+
+    Guid? tenantFilter = null;
+    if (httpContext.Request.Query.TryGetValue("tenant_id", out var tq) && Guid.TryParse(tq.ToString(), out var tf))
+        tenantFilter = tf;
+
+    var programmes = await programmeStore.ListAsync(tenantFilter, cancellationToken);
+    return Results.Json(new { programmes = programmes.Select(p => new
+    {
+        programme_id = p.ProgrammeId, tenant_id = p.TenantId, programme_key = p.ProgrammeKey,
+        display_name = p.DisplayName, status = p.Status, policy_code = p.PolicyCode,
+        created_at = p.CreatedAt.ToString("O"), updated_at = p.UpdatedAt.ToString("O")
+    })}, statusCode: 200);
+}).RequireRateLimiting("sensitive-endpoint");
+
+// PUT /api/admin/onboarding/programmes/{id}/activate — Activate programme
+app.MapPut("/api/admin/onboarding/programmes/{id}/activate", async (string id, HttpContext httpContext, CancellationToken cancellationToken) =>
+{
+    var authFailure = ApiAuthorization.AuthorizeAdminTenantOnboarding(httpContext, secrets);
+    if (authFailure is not null)
+        return Results.Json(authFailure.Body, statusCode: authFailure.StatusCode);
+    if (!Guid.TryParse(id, out var programmeId))
+        return Results.Json(new { error_code = "INVALID_REQUEST", errors = new[] { "programme id must be a valid UUID" } }, statusCode: 400);
+
+    var result = await programmeStore.ActivateAsync(programmeId, cancellationToken);
+    if (!result.Success || result.Entry is null)
+        return Results.Json(new { error_code = "ACTIVATION_FAILED", errors = new[] { result.Error ?? "activation failed" } }, statusCode: result.Error == "programme not found" ? 404 : 503);
+
+    return Results.Json(new { programme_id = result.Entry.ProgrammeId, status = result.Entry.Status, updated_at = result.Entry.UpdatedAt.ToString("O") }, statusCode: 200);
+}).RequireRateLimiting("sensitive-endpoint");
+
+// PUT /api/admin/onboarding/programmes/{id}/suspend — Suspend programme
+app.MapPut("/api/admin/onboarding/programmes/{id}/suspend", async (string id, HttpContext httpContext, CancellationToken cancellationToken) =>
+{
+    var authFailure = ApiAuthorization.AuthorizeAdminTenantOnboarding(httpContext, secrets);
+    if (authFailure is not null)
+        return Results.Json(authFailure.Body, statusCode: authFailure.StatusCode);
+    if (!Guid.TryParse(id, out var programmeId))
+        return Results.Json(new { error_code = "INVALID_REQUEST", errors = new[] { "programme id must be a valid UUID" } }, statusCode: 400);
+
+    var result = await programmeStore.SuspendAsync(programmeId, cancellationToken);
+    if (!result.Success || result.Entry is null)
+        return Results.Json(new { error_code = "SUSPENSION_FAILED", errors = new[] { result.Error ?? "suspension failed" } }, statusCode: result.Error == "programme not found" ? 404 : 503);
+
+    return Results.Json(new { programme_id = result.Entry.ProgrammeId, status = result.Entry.Status, updated_at = result.Entry.UpdatedAt.ToString("O") }, statusCode: 200);
+}).RequireRateLimiting("sensitive-endpoint");
+
+// POST /api/admin/onboarding/programmes/{id}/policy-binding — Bind policy to programme
+app.MapPost("/api/admin/onboarding/programmes/{id}/policy-binding", async (string id, JsonElement body, HttpContext httpContext, CancellationToken cancellationToken) =>
+{
+    var authFailure = ApiAuthorization.AuthorizeAdminTenantOnboarding(httpContext, secrets);
+    if (authFailure is not null)
+        return Results.Json(authFailure.Body, statusCode: authFailure.StatusCode);
+    if (!Guid.TryParse(id, out var programmeId))
+        return Results.Json(new { error_code = "INVALID_REQUEST", errors = new[] { "programme id must be a valid UUID" } }, statusCode: 400);
+    if (!body.TryGetProperty("tenant_id", out var tidProp) || !Guid.TryParse(tidProp.GetString(), out var tenantId))
+        return Results.Json(new { error_code = "INVALID_REQUEST", errors = new[] { "tenant_id is required" } }, statusCode: 400);
+    if (!body.TryGetProperty("policy_code", out var pcProp) || string.IsNullOrWhiteSpace(pcProp.GetString()))
+        return Results.Json(new { error_code = "INVALID_REQUEST", errors = new[] { "policy_code is required" } }, statusCode: 400);
+
+    var result = await programmeStore.BindPolicyAsync(programmeId, tenantId, pcProp.GetString()!.Trim(), cancellationToken);
+    if (!result.Success || result.Entry is null)
+        return Results.Json(new { error_code = "POLICY_BIND_FAILED", errors = new[] { result.Error ?? "policy binding failed" } }, statusCode: 503);
+
+    return Results.Json(new
+    {
+        programme_id = result.Entry.ProgrammeId, policy_code = result.Entry.PolicyCode,
+        status = result.Entry.Status, updated_at = result.Entry.UpdatedAt.ToString("O")
+    }, statusCode: 200);
+}).RequireRateLimiting("sensitive-endpoint");
+
+// GET /api/admin/onboarding/status — Full readback of onboarding state
+app.MapGet("/api/admin/onboarding/status", async (HttpContext httpContext, CancellationToken cancellationToken) =>
+{
+    var authFailure = ApiAuthorization.AuthorizeAdminTenantOnboarding(httpContext, secrets);
+    if (authFailure is not null)
+        return Results.Json(authFailure.Body, statusCode: authFailure.StatusCode);
+
+    var tenants = await tenantRegistryStore.ListAsync(cancellationToken);
+    var programmes = await programmeStore.ListAsync(null, cancellationToken);
+    return Results.Json(new
+    {
+        tenants = tenants.Select(t => new
+        {
+            tenant_id = t.TenantId, tenant_key = t.TenantKey, display_name = t.DisplayName,
+            status = t.Status, created_at = t.CreatedAt.ToString("O")
+        }),
+        programmes = programmes.Select(p => new
+        {
+            programme_id = p.ProgrammeId, tenant_id = p.TenantId, programme_key = p.ProgrammeKey,
+            display_name = p.DisplayName, status = p.Status, policy_code = p.PolicyCode,
+            created_at = p.CreatedAt.ToString("O"), updated_at = p.UpdatedAt.ToString("O")
+        }),
+        timestamp = DateTimeOffset.UtcNow.ToString("O")
+    }, statusCode: 200);
 }).RequireRateLimiting("sensitive-endpoint");
 
 await app.RunAsync();
