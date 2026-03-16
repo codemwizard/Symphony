@@ -652,6 +652,13 @@
     ADD CONSTRAINT program_supplier_allowlist_program_id_fkey FOREIGN KEY (program_id) REFERENCES public.programs(program_id) ON DELETE RESTRICT;
     ADD CONSTRAINT program_supplier_allowlist_tenant_id_fkey FOREIGN KEY (tenant_id) REFERENCES public.tenants(tenant_id) ON DELETE RESTRICT;
     ADD CONSTRAINT program_supplier_allowlist_tenant_id_supplier_id_fkey FOREIGN KEY (tenant_id, supplier_id) REFERENCES public.supplier_registry(tenant_id, supplier_id) ON DELETE RESTRICT;
+    ADD CONSTRAINT programme_policy_binding_pkey PRIMARY KEY (id);
+    ADD CONSTRAINT programme_policy_binding_programme_id_fkey FOREIGN KEY (programme_id) REFERENCES public.programme_registry(id);
+    ADD CONSTRAINT programme_policy_binding_programme_id_is_active_key UNIQUE (programme_id, is_active);
+    ADD CONSTRAINT programme_policy_binding_tenant_id_fkey FOREIGN KEY (tenant_id) REFERENCES public.tenant_registry(tenant_id);
+    ADD CONSTRAINT programme_registry_pkey PRIMARY KEY (id);
+    ADD CONSTRAINT programme_registry_tenant_id_fkey FOREIGN KEY (tenant_id) REFERENCES public.tenant_registry(tenant_id);
+    ADD CONSTRAINT programme_registry_tenant_id_programme_key_key UNIQUE (tenant_id, programme_key);
     ADD CONSTRAINT programs_pkey PRIMARY KEY (program_id);
     ADD CONSTRAINT programs_program_escrow_id_fkey FOREIGN KEY (program_escrow_id) REFERENCES public.escrow_accounts(escrow_id) ON DELETE RESTRICT;
     ADD CONSTRAINT programs_tenant_id_fkey FOREIGN KEY (tenant_id) REFERENCES public.tenants(tenant_id) ON DELETE RESTRICT;
@@ -703,6 +710,9 @@
     ADD CONSTRAINT tenant_members_pkey PRIMARY KEY (member_id);
     ADD CONSTRAINT tenant_members_tenant_id_fkey FOREIGN KEY (tenant_id) REFERENCES public.tenants(tenant_id);
     ADD CONSTRAINT tenant_members_tenant_id_member_ref_key UNIQUE (tenant_id, member_ref);
+    ADD CONSTRAINT tenant_registry_pkey PRIMARY KEY (id);
+    ADD CONSTRAINT tenant_registry_tenant_id_key UNIQUE (tenant_id);
+    ADD CONSTRAINT tenant_registry_tenant_key_key UNIQUE (tenant_key);
     ADD CONSTRAINT tenants_billable_client_fk FOREIGN KEY (billable_client_id) REFERENCES public.billable_clients(billable_client_id) NOT VALID;
     ADD CONSTRAINT tenants_billable_client_required_new_rows_chk CHECK ((billable_client_id IS NOT NULL)) NOT VALID;
     ADD CONSTRAINT tenants_parent_tenant_fk FOREIGN KEY (parent_tenant_id) REFERENCES public.tenants(tenant_id) NOT VALID;
@@ -920,6 +930,7 @@
     CONSTRAINT pii_purge_events_rows_affected_check CHECK ((rows_affected >= 0))
     CONSTRAINT pii_vault_records_purge_shape_chk CHECK ((((purged_at IS NULL) AND (protected_payload IS NOT NULL) AND (purge_request_id IS NULL)) OR ((purged_at IS NOT NULL) AND (protected_payload IS NULL) AND (purge_request_id IS NOT NULL))))
     CONSTRAINT program_migration_events_from_to_chk CHECK ((from_program_id <> to_program_id))
+    CONSTRAINT programme_registry_status_check CHECK ((status = ANY (ARRAY['CREATED'::text, 'ACTIVE'::text, 'SUSPENDED'::text, 'CLOSED'::text])))
     CONSTRAINT programs_status_check CHECK ((status = ANY (ARRAY['ACTIVE'::text, 'SUSPENDED'::text, 'CLOSED'::text])))
     CONSTRAINT proof_pack_batch_leaves_leaf_index_check CHECK ((leaf_index >= 0))
     CONSTRAINT proof_pack_batches_leaf_count_check CHECK ((leaf_count > 0))
@@ -946,6 +957,7 @@
     CONSTRAINT supervisor_interrupt_audit_events_queue_status_check CHECK ((queue_status = ANY (ARRAY['PENDING_SUPERVISOR_APPROVAL'::text, 'APPROVED'::text, 'REJECTED'::text, 'TIMED_OUT'::text, 'ESCALATED'::text, 'RESET'::text])))
     CONSTRAINT tenant_clients_status_check CHECK ((status = ANY (ARRAY['ACTIVE'::text, 'SUSPENDED'::text, 'REVOKED'::text])))
     CONSTRAINT tenant_members_status_check CHECK ((status = ANY (ARRAY['ACTIVE'::text, 'SUSPENDED'::text, 'EXITED'::text])))
+    CONSTRAINT tenant_registry_status_check CHECK ((status = ANY (ARRAY['ACTIVE'::text, 'SUSPENDED'::text, 'CLOSED'::text])))
     CONSTRAINT tenants_status_check CHECK ((status = ANY (ARRAY['ACTIVE'::text, 'SUSPENDED'::text, 'CLOSED'::text]))),
     CONSTRAINT tenants_tenant_type_check CHECK ((tenant_type = ANY (ARRAY['NGO'::text, 'COOPERATIVE'::text, 'GOVERNMENT'::text, 'COMMERCIAL'::text])))
     DO UPDATE
@@ -1527,6 +1539,7 @@
     block_end timestamp with time zone,
     block_start timestamp with time zone DEFAULT now() NOT NULL,
     blocked_action text NOT NULL,
+    bound_at timestamp with time zone DEFAULT now() NOT NULL
     boz_licence_reference text,
     boz_reference text,
     calculated_at timestamp with time zone,
@@ -1653,6 +1666,8 @@
     created_at timestamp with time zone DEFAULT now() NOT NULL,
     created_at timestamp with time zone DEFAULT now() NOT NULL,
     created_at timestamp with time zone DEFAULT now() NOT NULL,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
     created_at timestamp with time zone DEFAULT now(),
     created_at timestamp with time zone NOT NULL,
     created_by text DEFAULT CURRENT_USER NOT NULL,
@@ -1690,6 +1705,8 @@
     dispatch_attempted_at timestamp with time zone,
     dispatch_blocked boolean DEFAULT true NOT NULL,
     dispatch_reference text,
+    display_name text NOT NULL,
+    display_name text NOT NULL,
     display_name text NOT NULL,
     document_type text,
     domain text NOT NULL,
@@ -1790,6 +1807,9 @@
     id uuid DEFAULT gen_random_uuid() NOT NULL,
     id uuid DEFAULT gen_random_uuid() NOT NULL,
     id uuid DEFAULT gen_random_uuid() NOT NULL,
+    id uuid DEFAULT public.uuid_v7_or_random() NOT NULL,
+    id uuid DEFAULT public.uuid_v7_or_random() NOT NULL,
+    id uuid DEFAULT public.uuid_v7_or_random() NOT NULL,
     idempotency_key text NOT NULL,
     idempotency_key text NOT NULL,
     idempotency_key text NOT NULL,
@@ -1836,6 +1856,7 @@
     instruction_state_at_arrival,
     instruction_state_at_arrival,
     interval_seconds integer NOT NULL,
+    is_active boolean DEFAULT true NOT NULL,
     is_active boolean DEFAULT true NOT NULL,
     is_active boolean DEFAULT true NOT NULL,
     is_active boolean GENERATED ALWAYS AS ((status = 'ACTIVE'::public.policy_version_status)) STORED,
@@ -2067,6 +2088,7 @@
     placeholder_id uuid DEFAULT gen_random_uuid() NOT NULL,
     placeholder_ref text NOT NULL,
     policy_bundle_id uuid DEFAULT gen_random_uuid() NOT NULL,
+    policy_code text NOT NULL,
     policy_id text NOT NULL,
     policy_id uuid DEFAULT gen_random_uuid() NOT NULL,
     policy_json jsonb NOT NULL,
@@ -2096,6 +2118,8 @@
     program_id uuid,
     program_key text NOT NULL,
     program_name text NOT NULL,
+    programme_id uuid NOT NULL,
+    programme_key text NOT NULL,
     projection_payload jsonb NOT NULL,
     projection_payload jsonb NOT NULL,
     projection_version text DEFAULT 'phase1-cqrs-v1'::text NOT NULL
@@ -2276,6 +2300,8 @@
     status text DEFAULT 'ACTIVE'::text NOT NULL,
     status text DEFAULT 'ACTIVE'::text NOT NULL,
     status text DEFAULT 'ACTIVE'::text NOT NULL,
+    status text DEFAULT 'ACTIVE'::text NOT NULL,
+    status text DEFAULT 'CREATED'::text NOT NULL,
     status text NOT NULL,
     status text NOT NULL,
     status text NOT NULL,
@@ -2334,6 +2360,9 @@
     tenant_id uuid NOT NULL,
     tenant_id uuid NOT NULL,
     tenant_id uuid NOT NULL,
+    tenant_id uuid NOT NULL,
+    tenant_id uuid NOT NULL,
+    tenant_id uuid NOT NULL,
     tenant_id uuid,
     tenant_id uuid,
     tenant_id uuid,
@@ -2344,6 +2373,7 @@
     tenant_id, idempotency_key, journal_type, reference_id, currency_code
     tenant_id, program_escrow_id, reservation_escrow_id, amount_minor, actor_id, reason, metadata, created_at
     tenant_id, program_id, entity_id, state, authorized_amount_minor, currency_code, authorization_expires_at, release_due_at
+    tenant_key text NOT NULL,
     tenant_key text NOT NULL,
     tenant_member_id uuid NOT NULL,
     tenant_member_id,
@@ -2369,6 +2399,8 @@
     units text NOT NULL,
     unsigned_reason text
     unsigned_reason text,
+    updated_at timestamp with time zone DEFAULT now() NOT NULL,
+    updated_at timestamp with time zone DEFAULT now() NOT NULL,
     updated_at timestamp with time zone DEFAULT now() NOT NULL,
     updated_at timestamp with time zone DEFAULT now() NOT NULL,
     updated_at timestamp with time zone DEFAULT now() NOT NULL,
@@ -2450,6 +2482,7 @@
     verified_at timestamp with time zone,
     verified_at_provider timestamp with time zone,
     verified_member_count bigint DEFAULT 0 CONSTRAINT program_member_summary_projectio_verified_member_count_not_null NOT NULL,
+    version integer DEFAULT 1 NOT NULL,
     version text NOT NULL,
     version text NOT NULL,
     version_status text DEFAULT 'ACTIVE'::text NOT NULL,
@@ -3466,6 +3499,9 @@ $$;
 );
 );
 );
+);
+);
+);
 ALTER TABLE ONLY public.adapter_circuit_breakers
 ALTER TABLE ONLY public.adjustment_approval_stages
 ALTER TABLE ONLY public.adjustment_approval_stages
@@ -3655,6 +3691,15 @@ ALTER TABLE ONLY public.program_supplier_allowlist
 ALTER TABLE ONLY public.program_supplier_allowlist
 ALTER TABLE ONLY public.program_supplier_allowlist
 ALTER TABLE ONLY public.program_supplier_allowlist FORCE ROW LEVEL SECURITY;
+ALTER TABLE ONLY public.programme_policy_binding
+ALTER TABLE ONLY public.programme_policy_binding
+ALTER TABLE ONLY public.programme_policy_binding
+ALTER TABLE ONLY public.programme_policy_binding
+ALTER TABLE ONLY public.programme_policy_binding FORCE ROW LEVEL SECURITY;
+ALTER TABLE ONLY public.programme_registry
+ALTER TABLE ONLY public.programme_registry
+ALTER TABLE ONLY public.programme_registry
+ALTER TABLE ONLY public.programme_registry FORCE ROW LEVEL SECURITY;
 ALTER TABLE ONLY public.programs
 ALTER TABLE ONLY public.programs
 ALTER TABLE ONLY public.programs
@@ -3713,6 +3758,10 @@ ALTER TABLE ONLY public.tenant_members
 ALTER TABLE ONLY public.tenant_members
 ALTER TABLE ONLY public.tenant_members
 ALTER TABLE ONLY public.tenant_members FORCE ROW LEVEL SECURITY;
+ALTER TABLE ONLY public.tenant_registry
+ALTER TABLE ONLY public.tenant_registry
+ALTER TABLE ONLY public.tenant_registry
+ALTER TABLE ONLY public.tenant_registry FORCE ROW LEVEL SECURITY;
 ALTER TABLE ONLY public.tenants
 ALTER TABLE ONLY public.tenants
 ALTER TABLE ONLY public.tenants
@@ -3739,11 +3788,14 @@ ALTER TABLE public.payment_outbox_pending ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.persons ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.program_migration_events ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.program_supplier_allowlist ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.programme_policy_binding ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.programme_registry ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.programs ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.sim_swap_alerts ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.supplier_registry ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.tenant_clients ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.tenant_members ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.tenant_registry ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.tenants
 ALTER TABLE public.tenants ENABLE ROW LEVEL SECURITY;
 BEGIN
@@ -3996,11 +4048,14 @@ CREATE POLICY rls_tenant_isolation_payment_outbox_pending ON public.payment_outb
 CREATE POLICY rls_tenant_isolation_persons ON public.persons AS RESTRICTIVE USING ((tenant_id = public.current_tenant_id_or_null())) WITH CHECK ((tenant_id = public.current_tenant_id_or_null()));
 CREATE POLICY rls_tenant_isolation_program_migration_events ON public.program_migration_events AS RESTRICTIVE USING ((tenant_id = public.current_tenant_id_or_null())) WITH CHECK ((tenant_id = public.current_tenant_id_or_null()));
 CREATE POLICY rls_tenant_isolation_program_supplier_allowlist ON public.program_supplier_allowlist AS RESTRICTIVE USING ((tenant_id = public.current_tenant_id_or_null())) WITH CHECK ((tenant_id = public.current_tenant_id_or_null()));
+CREATE POLICY rls_tenant_isolation_programme_policy_binding ON public.programme_policy_binding USING ((tenant_id = (current_setting('app.current_tenant_id'::text, true))::uuid));
+CREATE POLICY rls_tenant_isolation_programme_registry ON public.programme_registry USING ((tenant_id = (current_setting('app.current_tenant_id'::text, true))::uuid));
 CREATE POLICY rls_tenant_isolation_programs ON public.programs AS RESTRICTIVE USING ((tenant_id = public.current_tenant_id_or_null())) WITH CHECK ((tenant_id = public.current_tenant_id_or_null()));
 CREATE POLICY rls_tenant_isolation_sim_swap_alerts ON public.sim_swap_alerts AS RESTRICTIVE USING ((tenant_id = public.current_tenant_id_or_null())) WITH CHECK ((tenant_id = public.current_tenant_id_or_null()));
 CREATE POLICY rls_tenant_isolation_supplier_registry ON public.supplier_registry AS RESTRICTIVE USING ((tenant_id = public.current_tenant_id_or_null())) WITH CHECK ((tenant_id = public.current_tenant_id_or_null()));
 CREATE POLICY rls_tenant_isolation_tenant_clients ON public.tenant_clients AS RESTRICTIVE USING ((tenant_id = public.current_tenant_id_or_null())) WITH CHECK ((tenant_id = public.current_tenant_id_or_null()));
 CREATE POLICY rls_tenant_isolation_tenant_members ON public.tenant_members AS RESTRICTIVE USING ((tenant_id = public.current_tenant_id_or_null())) WITH CHECK ((tenant_id = public.current_tenant_id_or_null()));
+CREATE POLICY rls_tenant_isolation_tenant_registry ON public.tenant_registry USING ((tenant_id = (current_setting('app.current_tenant_id'::text, true))::uuid));
 CREATE POLICY rls_tenant_isolation_tenants ON public.tenants AS RESTRICTIVE USING ((tenant_id = public.current_tenant_id_or_null())) WITH CHECK ((tenant_id = public.current_tenant_id_or_null()));
 CREATE RULE kyc_retention_policy_no_delete AS
 CREATE RULE kyc_retention_policy_no_update AS
@@ -4078,6 +4133,8 @@ CREATE TABLE public.policy_versions (
 CREATE TABLE public.program_member_summary_projection (
 CREATE TABLE public.program_migration_events (
 CREATE TABLE public.program_supplier_allowlist (
+CREATE TABLE public.programme_policy_binding (
+CREATE TABLE public.programme_registry (
 CREATE TABLE public.programs (
 CREATE TABLE public.proof_pack_batch_leaves (
 CREATE TABLE public.proof_pack_batches (
@@ -4103,6 +4160,7 @@ CREATE TABLE public.supervisor_interrupt_audit_events (
 CREATE TABLE public.supplier_registry (
 CREATE TABLE public.tenant_clients (
 CREATE TABLE public.tenant_members (
+CREATE TABLE public.tenant_registry (
 CREATE TABLE public.tenants (
 CREATE TRIGGER trg_adjustment_terminal_immutability BEFORE UPDATE ON public.adjustment_instructions FOR EACH ROW EXECUTE FUNCTION public.enforce_adjustment_terminal_immutability();
 CREATE TRIGGER trg_anchor_dispatched_outbox_attempt AFTER INSERT ON public.payment_outbox_attempts FOR EACH ROW EXECUTE FUNCTION public.anchor_dispatched_outbox_attempt();

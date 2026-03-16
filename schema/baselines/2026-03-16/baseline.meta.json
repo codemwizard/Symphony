@@ -1,10 +1,10 @@
 {
   "baseline_date": "2026-03-16",
   "baseline_path": "/home/mwiza/workspace/Symphony/schema/baselines/2026-03-16/0001_baseline.sql",
-  "baseline_cutoff": "0075_supplier_registry_and_programme_allowlist.sql",
-  "normalized_schema_sha256": "d5fa2c70c2a5889de5b56af20dd1204a9f4907797352237af0fbc6b4630087fa",
+  "baseline_cutoff": "0076_onboarding_control_plane.sql",
+  "normalized_schema_sha256": "e688e976ffb89f74ec5f9b3b2fde7b4c81f14d8cdbb539613048bd7ae9c09978",
   "pg_dump_version": "pg_dump (PostgreSQL) 18.2 (Debian 18.2-1.pgdg13+1)",
   "pg_server_version": "18.2 (Debian 18.2-1.pgdg13+1)",
   "dump_source": "container:symphony-postgres",
-  "generated_at_utc": "2026-03-16T05:17:55.234619+00:00"
+  "generated_at_utc": "2026-03-16T11:16:30.195666+00:00"
 }

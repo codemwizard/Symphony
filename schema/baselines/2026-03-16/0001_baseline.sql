@@ -2,7 +2,7 @@
 -- PostgreSQL database dump
 --
 
-\restrict Xl5nWXwERwcc0kxLPOHfwMmWLbsySwc9HKcn4QBX33ER3SJlbQpkJ3oF2J5rNPW
+\restrict qsmm2AAc5fCuTXiNloyiqiyZRlhX0hXthhYjM5p0KIR91VyCN4PWiiFOcXFD2d4
 
 -- Dumped from database version 18.2 (Debian 18.2-1.pgdg13+1)
 -- Dumped by pg_dump version 18.2 (Debian 18.2-1.pgdg13+1)
@@ -4689,6 +4689,41 @@ ALTER TABLE ONLY public.program_supplier_allowlist FORCE ROW LEVEL SECURITY;
 
 
 --
+-- Name: programme_policy_binding; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.programme_policy_binding (
+    id uuid DEFAULT public.uuid_v7_or_random() NOT NULL,
+    programme_id uuid NOT NULL,
+    tenant_id uuid NOT NULL,
+    policy_code text NOT NULL,
+    version integer DEFAULT 1 NOT NULL,
+    is_active boolean DEFAULT true NOT NULL,
+    bound_at timestamp with time zone DEFAULT now() NOT NULL
+);
+
+ALTER TABLE ONLY public.programme_policy_binding FORCE ROW LEVEL SECURITY;
+
+
+--
+-- Name: programme_registry; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.programme_registry (
+    id uuid DEFAULT public.uuid_v7_or_random() NOT NULL,
+    tenant_id uuid NOT NULL,
+    programme_key text NOT NULL,
+    display_name text NOT NULL,
+    status text DEFAULT 'CREATED'::text NOT NULL,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    updated_at timestamp with time zone DEFAULT now() NOT NULL,
+    CONSTRAINT programme_registry_status_check CHECK ((status = ANY (ARRAY['CREATED'::text, 'ACTIVE'::text, 'SUSPENDED'::text, 'CLOSED'::text])))
+);
+
+ALTER TABLE ONLY public.programme_registry FORCE ROW LEVEL SECURITY;
+
+
+--
 -- Name: programs; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -5135,6 +5170,24 @@ CREATE VIEW public.tenant_program_year_unique_beneficiaries AS
     count(DISTINCT person_id) AS unique_beneficiaries
    FROM public.members m
   GROUP BY tenant_id, (EXTRACT(year FROM enrolled_at));
+
+
+--
+-- Name: tenant_registry; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.tenant_registry (
+    id uuid DEFAULT public.uuid_v7_or_random() NOT NULL,
+    tenant_id uuid NOT NULL,
+    tenant_key text NOT NULL,
+    display_name text NOT NULL,
+    status text DEFAULT 'ACTIVE'::text NOT NULL,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    updated_at timestamp with time zone DEFAULT now() NOT NULL,
+    CONSTRAINT tenant_registry_status_check CHECK ((status = ANY (ARRAY['ACTIVE'::text, 'SUSPENDED'::text, 'CLOSED'::text])))
+);
+
+ALTER TABLE ONLY public.tenant_registry FORCE ROW LEVEL SECURITY;
 
 
 --
@@ -5934,6 +5987,38 @@ ALTER TABLE ONLY public.program_supplier_allowlist
 
 
 --
+-- Name: programme_policy_binding programme_policy_binding_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.programme_policy_binding
+    ADD CONSTRAINT programme_policy_binding_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: programme_policy_binding programme_policy_binding_programme_id_is_active_key; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.programme_policy_binding
+    ADD CONSTRAINT programme_policy_binding_programme_id_is_active_key UNIQUE (programme_id, is_active);
+
+
+--
+-- Name: programme_registry programme_registry_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.programme_registry
+    ADD CONSTRAINT programme_registry_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: programme_registry programme_registry_tenant_id_programme_key_key; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.programme_registry
+    ADD CONSTRAINT programme_registry_tenant_id_programme_key_key UNIQUE (tenant_id, programme_key);
+
+
+--
 -- Name: programs programs_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -6211,6 +6296,30 @@ ALTER TABLE ONLY public.tenant_members
 
 ALTER TABLE ONLY public.tenant_members
     ADD CONSTRAINT tenant_members_tenant_id_member_ref_key UNIQUE (tenant_id, member_ref);
+
+
+--
+-- Name: tenant_registry tenant_registry_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.tenant_registry
+    ADD CONSTRAINT tenant_registry_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: tenant_registry tenant_registry_tenant_id_key; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.tenant_registry
+    ADD CONSTRAINT tenant_registry_tenant_id_key UNIQUE (tenant_id);
+
+
+--
+-- Name: tenant_registry tenant_registry_tenant_key_key; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.tenant_registry
+    ADD CONSTRAINT tenant_registry_tenant_key_key UNIQUE (tenant_key);
 
 
 --
@@ -7732,6 +7841,30 @@ ALTER TABLE ONLY public.program_supplier_allowlist
 
 
 --
+-- Name: programme_policy_binding programme_policy_binding_programme_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.programme_policy_binding
+    ADD CONSTRAINT programme_policy_binding_programme_id_fkey FOREIGN KEY (programme_id) REFERENCES public.programme_registry(id);
+
+
+--
+-- Name: programme_policy_binding programme_policy_binding_tenant_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.programme_policy_binding
+    ADD CONSTRAINT programme_policy_binding_tenant_id_fkey FOREIGN KEY (tenant_id) REFERENCES public.tenant_registry(tenant_id);
+
+
+--
+-- Name: programme_registry programme_registry_tenant_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.programme_registry
+    ADD CONSTRAINT programme_registry_tenant_id_fkey FOREIGN KEY (tenant_id) REFERENCES public.tenant_registry(tenant_id);
+
+
+--
 -- Name: programs programs_program_escrow_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -7966,6 +8099,18 @@ ALTER TABLE public.program_migration_events ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.program_supplier_allowlist ENABLE ROW LEVEL SECURITY;
 
 --
+-- Name: programme_policy_binding; Type: ROW SECURITY; Schema: public; Owner: -
+--
+
+ALTER TABLE public.programme_policy_binding ENABLE ROW LEVEL SECURITY;
+
+--
+-- Name: programme_registry; Type: ROW SECURITY; Schema: public; Owner: -
+--
+
+ALTER TABLE public.programme_registry ENABLE ROW LEVEL SECURITY;
+
+--
 -- Name: programs; Type: ROW SECURITY; Schema: public; Owner: -
 --
 
@@ -8077,6 +8222,20 @@ CREATE POLICY rls_tenant_isolation_program_supplier_allowlist ON public.program_
 
 
 --
+-- Name: programme_policy_binding rls_tenant_isolation_programme_policy_binding; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY rls_tenant_isolation_programme_policy_binding ON public.programme_policy_binding USING ((tenant_id = (current_setting('app.current_tenant_id'::text, true))::uuid));
+
+
+--
+-- Name: programme_registry rls_tenant_isolation_programme_registry; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY rls_tenant_isolation_programme_registry ON public.programme_registry USING ((tenant_id = (current_setting('app.current_tenant_id'::text, true))::uuid));
+
+
+--
 -- Name: programs rls_tenant_isolation_programs; Type: POLICY; Schema: public; Owner: -
 --
 
@@ -8112,6 +8271,13 @@ CREATE POLICY rls_tenant_isolation_tenant_members ON public.tenant_members AS RE
 
 
 --
+-- Name: tenant_registry rls_tenant_isolation_tenant_registry; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY rls_tenant_isolation_tenant_registry ON public.tenant_registry USING ((tenant_id = (current_setting('app.current_tenant_id'::text, true))::uuid));
+
+
+--
 -- Name: tenants rls_tenant_isolation_tenants; Type: POLICY; Schema: public; Owner: -
 --
 
@@ -8143,6 +8309,12 @@ ALTER TABLE public.tenant_clients ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.tenant_members ENABLE ROW LEVEL SECURITY;
 
 --
+-- Name: tenant_registry; Type: ROW SECURITY; Schema: public; Owner: -
+--
+
+ALTER TABLE public.tenant_registry ENABLE ROW LEVEL SECURITY;
+
+--
 -- Name: tenants; Type: ROW SECURITY; Schema: public; Owner: -
 --
 
@@ -8152,5 +8324,5 @@ ALTER TABLE public.tenants ENABLE ROW LEVEL SECURITY;
 -- PostgreSQL database dump complete
 --
 
-\unrestrict Xl5nWXwERwcc0kxLPOHfwMmWLbsySwc9HKcn4QBX33ER3SJlbQpkJ3oF2J5rNPW
+\unrestrict qsmm2AAc5fCuTXiNloyiqiyZRlhX0hXthhYjM5p0KIR91VyCN4PWiiFOcXFD2d4
 
