@@ -1,0 +1,55 @@
+schema_version: 1
+phase: '1'
+task_id: TSK-P1-219
+title: Website onboarding console for operators using server-side auth and persisted onboarding state
+owner_role: WORKER
+status: planned
+depends_on:
+- TSK-P1-218
+touches:
+- src/supervisory-dashboard/index.html
+- services/ledger-api/dotnet/src/LedgerApi/Program.cs
+- services/ledger-api/dotnet/src/LedgerApi/Security/ApiAuthorization.cs
+- scripts/audit/verify_tsk_p1_219.sh
+- evidence/phase1/tsk_p1_219_operator_onboarding_console.json
+- docs/plans/phase1/TSK-P1-219/PLAN.md
+- docs/plans/phase1/TSK-P1-219/EXEC_LOG.md
+- tasks/TSK-P1-219/meta.yml
+invariants:
+- INV-105
+- INV-111
+- INV-119
+work:
+- Extend the pilot-demo supervisory website with an operator onboarding console that can create
+  tenants, manage programme lifecycle, bind policy, register suppliers, and manage programme
+  supplier allowlists through the server-side onboarding APIs.
+- The browser must never receive ADMIN_API_KEY or signing-key material. Privileged actions must be
+  mediated by same-origin server routes protected by the operator session boundary.
+- Present onboarding state, validation errors, and readiness outcomes in the UI so onboarding is a
+  product workflow rather than an operator shell ritual.
+acceptance_criteria:
+- Operators can complete the supported onboarding flow from the website without manually issuing raw
+  provisioning curl commands for normal operations.
+- Browser-delivered HTML and JavaScript do not embed admin or signing secrets.
+- UI actions call same-origin server routes that enforce operator-session authorization.
+- The UI reflects persisted onboarding state after page reload and after server restart.
+verification:
+- bash scripts/audit/verify_tsk_p1_219.sh
+- python3 scripts/audit/validate_evidence.py --task TSK-P1-219 --evidence evidence/phase1/tsk_p1_219_operator_onboarding_console.json
+evidence:
+- evidence/phase1/tsk_p1_219_operator_onboarding_console.json
+failure_modes:
+- Browser code receives admin credentials or calls privileged endpoints directly with raw secret headers.
+- UI stores onboarding state only in local browser state and loses it on reload.
+- The onboarding path still requires shell-based API choreography for standard use.
+must_read:
+- docs/operations/AI_AGENT_OPERATION_MANUAL.md
+- src/supervisory-dashboard/index.html
+- services/ledger-api/dotnet/src/LedgerApi/Program.cs
+implementation_plan: docs/plans/phase1/TSK-P1-219/PLAN.md
+implementation_log: docs/plans/phase1/TSK-P1-219/EXEC_LOG.md
+notes: >
+  Hardening task. This is the website-based onboarding surface the current runbook lacks.
+client: codex_cli
+assigned_agent: worker
+model: <UNASSIGNED>

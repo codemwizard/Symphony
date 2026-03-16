@@ -1,0 +1,78 @@
+schema_version: 1
+phase: '1'
+task_id: TSK-P1-215
+title: Runtime secret provider integration with OpenBao for hardened demo and onboarding flows
+owner_role: SECURITY_GUARDIAN
+status: planned
+depends_on:
+- TSK-P1-212
+- TSK-P1-INF-005
+- TSK-P1-INF-006
+- TSK-P1-INF-005
+- TSK-P1-INF-006
+touches:
+- services/ledger-api/dotnet/src/LedgerApi/Program.cs
+- services/ledger-api/dotnet/src/LedgerApi/Security/ApiAuthorization.cs
+- services/ledger-api/dotnet/src/LedgerApi/Commands/EvidenceLinkHandlers.cs
+- services/ledger-api/dotnet/src/LedgerApi/Commands/SignedInstructionAndSupplierHandlers.cs
+- services/ledger-api/dotnet/src/LedgerApi/Queries/RegulatoryReports.cs
+- services/ledger-api/dotnet/src/LedgerApi/Infrastructure/SecretProviders.cs
+- services/ledger-api/dotnet/src/LedgerApi/appsettings.json
+- scripts/audit/verify_tsk_p1_215.sh
+- evidence/phase1/tsk_p1_215_openbao_secret_provider.json
+- docs/plans/phase1/TSK-P1-215/PLAN.md
+- docs/plans/phase1/TSK-P1-215/EXEC_LOG.md
+- tasks/TSK-P1-215/meta.yml
+invariants:
+- INV-024
+- INV-119
+work:
+- The current application reads INGRESS_API_KEY, ADMIN_API_KEY, EVIDENCE_SIGNING_KEY,
+  DEMO_INSTRUCTION_SIGNING_KEY, and tenant allowlist inputs directly from process environment
+  variables. OpenBao exists in infrastructure posture, but the application runtime does not use it
+  as the secret source of truth.
+- Introduce a first-class secret provider abstraction for runtime secret resolution with at least an
+  environment-backed adapter and an OpenBao-backed adapter. Wire the application through dependency
+  injection so security-sensitive code paths stop reading environment variables directly.
+- Hardened GreenTech4CE deployment must use OpenBao-backed runtime secret resolution. Environment
+  fallback may remain only for self-tests and explicitly developer-only profiles, not for the
+  supported hardened demo profile.
+- Startup and readiness must fail closed when required OpenBao-backed secrets are unavailable.
+acceptance_criteria:
+- Security-sensitive runtime paths no longer call Environment.GetEnvironmentVariable directly for
+  ingress, admin, instruction-signing, evidence-signing, or operator-session secrets.
+- Hardened demo profile resolves required secrets through the OpenBao provider and starts only when
+  those secrets are retrievable and valid.
+- Readiness fails when OpenBao is unreachable or required secret material is missing.
+- Existing self-tests continue to work through an explicitly scoped developer/test provider path.
+- Evidence proves runtime secret consumption, not just infrastructure reachability.
+verification:
+- bash scripts/audit/verify_tsk_p1_215.sh
+- python3 scripts/audit/validate_evidence.py --task TSK-P1-215 --evidence evidence/phase1/tsk_p1_215_openbao_secret_provider.json
+evidence:
+- evidence/phase1/tsk_p1_215_openbao_secret_provider.json
+failure_modes:
+- OpenBao remains infrastructure-only and the application still trusts env vars directly.
+- Hardened profile silently falls back to env when OpenBao retrieval fails.
+- Readiness reports healthy even though required secrets cannot be resolved.
+must_read:
+- docs/operations/AI_AGENT_OPERATION_MANUAL.md
+- services/ledger-api/dotnet/src/LedgerApi/Program.cs
+- services/ledger-api/dotnet/src/LedgerApi/Security/ApiAuthorization.cs
+- services/ledger-api/dotnet/src/LedgerApi/Commands/EvidenceLinkHandlers.cs
+- services/ledger-api/dotnet/src/LedgerApi/Commands/SignedInstructionAndSupplierHandlers.cs
+- services/ledger-api/dotnet/src/LedgerApi/Queries/RegulatoryReports.cs
+- infra/openbao/docker-compose.prod.yml
+- docs/plans/phase1/TSK-P1-INF-005/EXEC_LOG.md
+- docs/plans/phase1/TSK-P1-INF-006/EXEC_LOG.md
+implementation_plan: docs/plans/phase1/TSK-P1-215/PLAN.md
+implementation_log: docs/plans/phase1/TSK-P1-215/EXEC_LOG.md
+notes: >
+  This task completes the missing runtime integration seam. OpenBao presence in infrastructure is not
+  sufficient; the application must consume secrets from it in the hardened path. TSK-P1-INF-005
+  proved the OpenBao and ESO sandbox manifests. TSK-P1-INF-006 proved the signing key management
+  path. This task builds the application-side wire that those tasks deferred. Read both exec logs
+  before implementing to understand what was built and what must not be re-implemented.
+client: codex_cli
+assigned_agent: security_guardian
+model: <UNASSIGNED>

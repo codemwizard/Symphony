@@ -261,6 +261,51 @@
       "expires_on": "2026-12-31",
       "reviewed_by": "security_guardian",
       "approved_at": "2026-02-25"
+    },
+    {
+      "id": "DDL-ALLOW-0030",
+      "migration": "schema/migrations/0074_billable_clients_client_key_constraint.sql",
+      "statement_fingerprint": "f5f04bea9bef85e006ce296202da0fc1b4f0a9275e5f780dd9f356e7b43bb993",
+      "reason": "TSK-P1-211: Safe drop of obsolete partial index on non-hot table",
+      "expires_on": "2027-01-01",
+      "reviewed_by": "architect",
+      "approved_at": "2026-03-16"
+    },
+    {
+      "id": "DDL-ALLOW-0031",
+      "migration": "schema/migrations/0075_supplier_registry_and_programme_allowlist.sql",
+      "statement_fingerprint": "d8b82a9183513093fb000b1a89702177f1c9a2f771dc27f1b02195470569206c",
+      "reason": "TSK-P1-214: Enabling RLS on new non-hot table",
+      "expires_on": "2027-01-01",
+      "reviewed_by": "architect",
+      "approved_at": "2026-03-16"
+    },
+    {
+      "id": "DDL-ALLOW-0032",
+      "migration": "schema/migrations/0075_supplier_registry_and_programme_allowlist.sql",
+      "statement_fingerprint": "7d4eac55635ca8229a6b6fa611d32365d1dad7a42b04c63c479dc030bfa417c5",
+      "reason": "TSK-P1-214: Forcing RLS on new non-hot table",
+      "expires_on": "2027-01-01",
+      "reviewed_by": "architect",
+      "approved_at": "2026-03-16"
+    },
+    {
+      "id": "DDL-ALLOW-0033",
+      "migration": "schema/migrations/0075_supplier_registry_and_programme_allowlist.sql",
+      "statement_fingerprint": "42a590cea6ad20ede0bdf52195071f31fb0aec3931a7bd94f22112d2631a20f3",
+      "reason": "TSK-P1-214: Enabling RLS on new non-hot table",
+      "expires_on": "2027-01-01",
+      "reviewed_by": "architect",
+      "approved_at": "2026-03-16"
+    },
+    {
+      "id": "DDL-ALLOW-0034",
+      "migration": "schema/migrations/0075_supplier_registry_and_programme_allowlist.sql",
+      "statement_fingerprint": "a457fd64067b93f75bd16d0b94d719f5a6bbe7773f486e5346f8bc215f8a52df",
+      "reason": "TSK-P1-214: Forcing RLS on new non-hot table",
+      "expires_on": "2027-01-01",
+      "reviewed_by": "architect",
+      "approved_at": "2026-03-16"
     }
   ]
 }

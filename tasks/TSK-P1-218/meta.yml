@@ -1,0 +1,53 @@
+schema_version: 1
+phase: '1'
+task_id: TSK-P1-218
+title: Server-side onboarding APIs for tenant, programme, policy, and activation workflows
+owner_role: INTEGRATION_CONTRACTS
+status: planned
+depends_on:
+- TSK-P1-217
+touches:
+- services/ledger-api/dotnet/src/LedgerApi/Commands/CommandContracts.cs
+- services/ledger-api/dotnet/src/LedgerApi/Program.cs
+- services/ledger-api/dotnet/src/LedgerApi/Infrastructure/Stores.cs
+- services/ledger-api/dotnet/src/LedgerApi/Security/ApiAuthorization.cs
+- scripts/audit/verify_tsk_p1_218.sh
+- evidence/phase1/tsk_p1_218_server_onboarding_apis.json
+- docs/plans/phase1/TSK-P1-218/PLAN.md
+- docs/plans/phase1/TSK-P1-218/EXEC_LOG.md
+- tasks/TSK-P1-218/meta.yml
+invariants:
+- INV-111
+- INV-119
+work:
+- Add governed server-side onboarding endpoints for tenant lifecycle, programme CRUD, policy binding,
+  activation/suspension, and readback of onboarding status.
+- These APIs must operate on persisted control-plane state and must enforce server-side authorization
+  boundaries using the hardened secret and operator-session model.
+- Do not push privileged onboarding responsibility into browser code or require operators to assemble
+  raw curl sequences for normal onboarding.
+acceptance_criteria:
+- The backend exposes documented onboarding APIs for tenant, programme, policy, and activation flows.
+- APIs validate control-plane invariants and reject cross-tenant or invalid lifecycle transitions.
+- APIs are idempotent where appropriate and return deterministic machine-readable errors.
+- Raw admin API keys are not required in browser JavaScript to use these flows.
+verification:
+- bash scripts/audit/verify_tsk_p1_218.sh
+- python3 scripts/audit/validate_evidence.py --task TSK-P1-218 --evidence evidence/phase1/tsk_p1_218_server_onboarding_apis.json
+evidence:
+- evidence/phase1/tsk_p1_218_server_onboarding_apis.json
+failure_modes:
+- New APIs still depend on SYMPHONY_KNOWN_TENANTS or other env-only onboarding state.
+- Lifecycle transitions bypass validation and create invalid programme states.
+- Browser code must hold admin credentials to call the APIs.
+must_read:
+- docs/operations/AI_AGENT_OPERATION_MANUAL.md
+- services/ledger-api/dotnet/src/LedgerApi/Program.cs
+- services/ledger-api/dotnet/src/LedgerApi/Commands/CommandContracts.cs
+implementation_plan: docs/plans/phase1/TSK-P1-218/PLAN.md
+implementation_log: docs/plans/phase1/TSK-P1-218/EXEC_LOG.md
+notes: >
+  Hardening task. These are the productized onboarding APIs that replace raw operator shell choreography.
+client: codex_cli
+assigned_agent: integration_contracts
+model: <UNASSIGNED>

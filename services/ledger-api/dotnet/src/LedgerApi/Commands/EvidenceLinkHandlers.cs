@@ -104,8 +104,10 @@ static class EvidenceLinkIssueHandler
         });
     }
 
-    public static string ResolveSigningKey()
-        => (Environment.GetEnvironmentVariable("DEMO_EVIDENCE_LINK_SIGNING_KEY")
+    public static string ResolveSigningKey(string? demoLinkSigningKey = null, string? evidenceSigningKey = null)
+        => (demoLinkSigningKey
+            ?? evidenceSigningKey
+            ?? Environment.GetEnvironmentVariable("DEMO_EVIDENCE_LINK_SIGNING_KEY")
             ?? Environment.GetEnvironmentVariable("EVIDENCE_SIGNING_KEY")
             ?? string.Empty).Trim();
 }

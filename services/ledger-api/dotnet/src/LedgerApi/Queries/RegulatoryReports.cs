@@ -38,7 +38,9 @@ static class RegulatoryIncidentReportHandler
     public static async Task<RegulatoryIncidentReportResult> GenerateIncidentReportAsync(
         string incidentId,
         IRegulatoryIncidentStore store,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken,
+        string? evidenceSigningKey = null,
+        string? evidenceSigningKeyId = null)
     {
         if (!Guid.TryParse(incidentId, out _))
         {
@@ -81,13 +83,13 @@ static class RegulatoryIncidentReportHandler
         };
 
         var reportJson = JsonSerializer.Serialize(reportWithoutTimestamp);
-        var keyMaterial = Environment.GetEnvironmentVariable("EVIDENCE_SIGNING_KEY");
+        var keyMaterial = evidenceSigningKey ?? Environment.GetEnvironmentVariable("EVIDENCE_SIGNING_KEY");
         if (string.IsNullOrWhiteSpace(keyMaterial))
         {
             return new RegulatoryIncidentReportResult(false, StatusCodes.Status503ServiceUnavailable, null, string.Empty, string.Empty, RegulatoryErrors.SigningCapabilityMissing, "EVIDENCE_SIGNING_KEY must be configured");
         }
 
-        var keyId = Environment.GetEnvironmentVariable("EVIDENCE_SIGNING_KEY_ID") ?? string.Empty;
+        var keyId = evidenceSigningKeyId ?? Environment.GetEnvironmentVariable("EVIDENCE_SIGNING_KEY_ID") ?? string.Empty;
         var signature = RegulatoryReportHandler.VerifySignature(reportJson, RegulatoryReportComputeHmac(reportJson, keyMaterial), keyMaterial)
             ? RegulatoryReportComputeHmac(reportJson, keyMaterial)
             : string.Empty;
@@ -187,7 +189,9 @@ static class RegulatoryReportHandler
         string? tenantId,
         string storageMode,
         NpgsqlDataSource? dataSource,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken,
+        string? evidenceSigningKey = null,
+        string? evidenceSigningKeyId = null)
     {
         await Task.Yield();
         if (!DateOnly.TryParse(reportDate, out var parsedDate))
@@ -279,13 +283,13 @@ WHERE (@tenant_id::uuid IS NULL OR tenant_id = @tenant_id)
         };
 
         var reportJson = JsonSerializer.Serialize(reportWithoutTimestamp);
-        var keyMaterial = Environment.GetEnvironmentVariable("EVIDENCE_SIGNING_KEY");
+        var keyMaterial = evidenceSigningKey ?? Environment.GetEnvironmentVariable("EVIDENCE_SIGNING_KEY");
         if (string.IsNullOrWhiteSpace(keyMaterial))
         {
             return RegulatoryReportResult.Fail(RegulatoryErrors.SigningCapabilityMissing, "EVIDENCE_SIGNING_KEY must be configured");
         }
 
-        var keyId = Environment.GetEnvironmentVariable("EVIDENCE_SIGNING_KEY_ID") ?? string.Empty;
+        var keyId = evidenceSigningKeyId ?? Environment.GetEnvironmentVariable("EVIDENCE_SIGNING_KEY_ID") ?? string.Empty;
         var signature = ComputeHmac(reportJson, keyMaterial);
 
         var report = new

@@ -1,0 +1,29 @@
+# Task Breakdown
+
+- [x] Extract `docs/operations/updated_tasks_p1_211_to_221.zip` to a temporary directory.
+- [x] Analyze the contents of the unzipped files.
+- [x] Understand the Symphony convention for tasks.
+- [x] Scaffold directories for the new tasks.
+- [x] Create or move Implementation Plans and Tasks to the proper locations.
+- [x] Define Wave groupings (5 tasks each).
+- [x] Create Implementation Plan for the Wave Strategy.
+- [x] Initialize Wave 1 (TSK-P1-211 to 215).
+- [/] Implement and verify tasks in Wave 1 (excluding `pre_ci`).
+  - [x] TSK-P1-211: Repair schema conflict-target defect permanently.
+  - [x] TSK-P1-212: Restore db_psql ingress and make it canonical.
+  - [x] TSK-P1-213: Align verifier patterns with the current provisioning runbook.
+  - [x] TSK-P1-214: Persist supplier registry and programme allowlist in PostgreSQL.
+  - [x] TSK-P1-215: Integrate runtime secret provider with OpenBao.
+    - [x] Create `ISecretProvider` abstraction with strict fail-closed semantics.
+    - [x] Create `OpenBaoSecretProvider` with AppRole auth, typed HttpClient, path contract.
+    - [x] Create `EnvironmentSecretProvider` (dev/test-only).
+    - [x] Create `RuntimeSecrets` for startup-resolved secret caching.
+    - [x] Refactor `ApiAuthorization.cs` to accept `RuntimeSecrets`.
+    - [x] Wire DI registration and startup resolution in `Program.cs`.
+    - [x] Update all call sites across handlers.
+    - [x] Build compiles cleanly (only pre-existing CS0117 errors).
+    - [x] Create verifier script and unit tests.
+- [x] Run `pre_ci` for Wave 1.
+  - [x] Fix YAML parsing errors (remove unquoted colons).
+  - [x] Suppress safe DDL mutations from lock-risk audit.
+  - [x] Regenerate ephemeral baseline database snapshot to conform to CI standards.

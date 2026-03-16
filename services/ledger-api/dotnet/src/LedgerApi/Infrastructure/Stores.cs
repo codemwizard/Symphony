@@ -153,14 +153,19 @@ SELECT (SELECT attestation_id FROM inserted), (SELECT outbox_id FROM enqueued LI
             cmd.Parameters.AddWithValue("rail_type", input.rail_type);
             cmd.Parameters.AddWithValue("payload_json", input.payload_json);
 
-            await using var reader = await cmd.ExecuteReaderAsync(cancellationToken);
-            if (!await reader.ReadAsync(cancellationToken))
+            string attestationId;
+            string outboxId;
+            await using (var reader = await cmd.ExecuteReaderAsync(cancellationToken))
             {
-                return PersistResult.Fail("db returned no attestation/outbox output");
+                if (!await reader.ReadAsync(cancellationToken))
+                {
+                    return PersistResult.Fail("db returned no attestation/outbox output");
+                }
+
+                attestationId = reader.IsDBNull(0) ? string.Empty : reader.GetString(0);
+                outboxId = reader.IsDBNull(1) ? string.Empty : reader.GetString(1);
             }
 
-            var attestationId = reader.IsDBNull(0) ? string.Empty : reader.GetString(0);
-            var outboxId = reader.IsDBNull(1) ? string.Empty : reader.GetString(1);
             if (string.IsNullOrWhiteSpace(attestationId) || string.IsNullOrWhiteSpace(outboxId))
             {
                 await tx.RollbackAsync(cancellationToken);

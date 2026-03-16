@@ -1,0 +1,66 @@
+schema_version: 1
+phase: '1'
+task_id: TSK-P1-217
+title: Persist tenant registry, programme lifecycle, and policy binding as onboarding control-plane state
+owner_role: ARCHITECT
+status: planned
+depends_on:
+- TSK-P1-214
+- TSK-P1-215
+touches:
+- schema/migrations/0076_onboarding_control_plane.sql
+- services/ledger-api/dotnet/src/LedgerApi/Commands/CommandContracts.cs
+- services/ledger-api/dotnet/src/LedgerApi/Infrastructure/Stores.cs
+- services/ledger-api/dotnet/src/LedgerApi/Security/ApiAuthorization.cs
+- services/ledger-api/dotnet/src/LedgerApi/Program.cs
+- scripts/audit/verify_tsk_p1_217.sh
+- evidence/phase1/tsk_p1_217_onboarding_control_plane.json
+- docs/plans/phase1/TSK-P1-217/PLAN.md
+- docs/plans/phase1/TSK-P1-217/EXEC_LOG.md
+- tasks/TSK-P1-217/meta.yml
+invariants:
+- INV-111
+- INV-119
+- INV-133
+work:
+- The current onboarding model depends on SYMPHONY_KNOWN_TENANTS and ad hoc operator sequencing.
+  The repo has tenant creation, supplier upsert, and allowlist upsert endpoints, but no durable
+  programme lifecycle, governed activation state, or policy binding control plane.
+- Add persisted control-plane tables and store abstractions for tenant registry, programme registry,
+  programme activation state, and programme-to-policy binding. The hardened onboarding path must not
+  depend on mutable startup environment allowlists.
+- Replace env-driven tenant allowlisting for the hardened profile with governed persisted state.
+  Bootstrap env may seed the first admin or first bootstrap context only; it must not remain the
+  live operational registry.
+- Scope exclusion - supplier registry and programme supplier allowlist are already owned by
+  TSK-P1-214 and must not be re-implemented here.
+acceptance_criteria:
+- Tenant recognition in the hardened profile is backed by persisted control-plane state, not by
+  SYMPHONY_KNOWN_TENANTS as the operational source of truth.
+- Programmes can be created, updated, activated, suspended, and bound to policy identifiers through
+  durable backend state.
+- Restart does not erase tenant or programme onboarding state.
+- API authorization and readiness checks use the governed control plane for tenant existence and
+  activation decisions in the hardened profile.
+verification:
+- bash scripts/audit/verify_tsk_p1_217.sh
+- python3 scripts/audit/validate_evidence.py --task TSK-P1-217 --evidence evidence/phase1/tsk_p1_217_onboarding_control_plane.json
+evidence:
+- evidence/phase1/tsk_p1_217_onboarding_control_plane.json
+failure_modes:
+- Tenant allowlisting still depends on process env in the hardened profile.
+- Programme lifecycle exists only in docs or in-memory code and not in persisted state.
+- This task duplicates supplier/allowlist schema already owned by TSK-P1-214.
+must_read:
+- docs/operations/AI_AGENT_OPERATION_MANUAL.md
+- services/ledger-api/dotnet/src/LedgerApi/Security/ApiAuthorization.cs
+- services/ledger-api/dotnet/src/LedgerApi/Program.cs
+- services/ledger-api/dotnet/src/LedgerApi/Infrastructure/Stores.cs
+implementation_plan: docs/plans/phase1/TSK-P1-217/PLAN.md
+implementation_log: docs/plans/phase1/TSK-P1-217/EXEC_LOG.md
+notes: >
+  Hardening task. This is the missing onboarding control plane. It intentionally excludes supplier
+  registry and programme supplier allowlist persistence, which belong to TSK-P1-214.
+client: codex_cli
+assigned_agent: architect
+model: <UNASSIGNED>

@@ -1,0 +1,53 @@
+schema_version: 1
+phase: '1'
+task_id: TSK-P1-213
+title: Align verifier patterns with the current provisioning runbook and remove compatibility aliases
+owner_role: QA_VERIFIER
+status: planned
+depends_on:
+- TSK-P1-DEMO-017
+touches:
+- scripts/audit/verify_tsk_p1_demo_017.sh
+- docs/operations/GREENTECH4CE_TENANT_PROGRAMME_PROVISIONING_RUNBOOK.md
+- scripts/audit/verify_tsk_p1_213.sh
+- evidence/phase1/tsk_p1_213_demo_017_verifier_realignment.json
+- docs/plans/phase1/TSK-P1-213/PLAN.md
+- docs/plans/phase1/TSK-P1-213/EXEC_LOG.md
+- tasks/TSK-P1-213/meta.yml
+invariants:
+- INV-105
+work:
+- verify_tsk_p1_demo_017.sh still matches stale section names from the pre-Wave-7 runbook and was
+  temporarily unblocked with HTML compatibility comments appended to the runbook.
+- Update the verifier to assert against the real current document structure and remove the injected
+  compatibility aliases from the runbook. The permanent fix is to make the verifier truthful, not
+  to preserve shim strings in operator documentation.
+- Keep the verifier fail-closed. It must still fail when required sections are genuinely absent.
+acceptance_criteria:
+- bash scripts/audit/verify_tsk_p1_demo_017.sh passes against the current runbook with no HTML
+  compatibility aliases present.
+- The runbook does not contain the temporary alias comments used during provisional testing.
+- The verifier still fails if any required section is removed from the runbook.
+- pre_ci_demo.sh passes end-to-end after the verifier update.
+verification:
+- bash scripts/audit/verify_tsk_p1_demo_017.sh
+- bash scripts/audit/verify_tsk_p1_213.sh
+- python3 scripts/audit/validate_evidence.py --task TSK-P1-213 --evidence evidence/phase1/tsk_p1_213_demo_017_verifier_realignment.json
+evidence:
+- evidence/phase1/tsk_p1_213_demo_017_verifier_realignment.json
+failure_modes:
+- Updated verifier patterns are so loose they pass when required sections are actually missing.
+- Compatibility aliases remain in the runbook after the verifier is fixed.
+- The task edits the runbook to preserve stale wording instead of fixing the verifier.
+must_read:
+- docs/operations/AI_AGENT_OPERATION_MANUAL.md
+- docs/operations/GREENTECH4CE_TENANT_PROGRAMME_PROVISIONING_RUNBOOK.md
+- scripts/audit/verify_tsk_p1_demo_017.sh
+implementation_plan: docs/plans/phase1/TSK-P1-213/PLAN.md
+implementation_log: docs/plans/phase1/TSK-P1-213/EXEC_LOG.md
+notes: >
+  Hygiene task, not a structural deployment hardening milestone. The hardening rule still applies:
+  temporary verifier shims must be removed, not normalized.
+client: codex_cli
+assigned_agent: qa_verifier
+model: <UNASSIGNED>

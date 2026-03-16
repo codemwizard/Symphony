@@ -1,0 +1,60 @@
+schema_version: 1
+phase: '1'
+task_id: TSK-P1-216
+title: Separate admin, read, signing, and operator-session key domains with OpenBao-backed rotation
+owner_role: SECURITY_GUARDIAN
+status: planned
+depends_on:
+- TSK-P1-215
+touches:
+- services/ledger-api/dotnet/src/LedgerApi/Program.cs
+- services/ledger-api/dotnet/src/LedgerApi/Security/ApiAuthorization.cs
+- services/ledger-api/dotnet/src/LedgerApi/Commands/EvidenceLinkHandlers.cs
+- services/ledger-api/dotnet/src/LedgerApi/Commands/SignedInstructionAndSupplierHandlers.cs
+- services/ledger-api/dotnet/src/LedgerApi/Queries/RegulatoryReports.cs
+- scripts/security/openbao_bootstrap.sh
+- scripts/audit/verify_tsk_p1_216.sh
+- evidence/phase1/tsk_p1_216_key_domain_separation_rotation.json
+- docs/plans/phase1/TSK-P1-216/PLAN.md
+- docs/plans/phase1/TSK-P1-216/EXEC_LOG.md
+- tasks/TSK-P1-216/meta.yml
+invariants:
+- INV-024
+- INV-119
+work:
+- The current pilot-demo path reuses ADMIN_API_KEY as the signing basis for the operator cookie and
+  also allows evidence/instruction signing to collapse onto shared environment key material. That is
+  weak key-domain separation and makes rotation unsafe.
+- Define separate secret domains at minimum for ingress/read API auth, admin API auth, operator
+  session signing, evidence signing, and instruction-file signing.
+- Resolve each domain through the secret provider abstraction backed by OpenBao and support managed
+  bootstrap plus rotation verification.
+- Remove key reuse from the hardened profile. One compromised key domain must not automatically grant
+  another capability.
+acceptance_criteria:
+- ADMIN_API_KEY is no longer reused as operator-session cookie signing material.
+- Evidence-signing and instruction-signing keys are independently addressable and rotatable.
+- Rotation verification proves each required domain can be updated without collapsing the others.
+- Hardened profile documentation and bootstrap material enumerate distinct key domains and their
+  OpenBao paths.
+verification:
+- bash scripts/audit/verify_tsk_p1_216.sh
+- python3 scripts/audit/validate_evidence.py --task TSK-P1-216 --evidence evidence/phase1/tsk_p1_216_key_domain_separation_rotation.json
+evidence:
+- evidence/phase1/tsk_p1_216_key_domain_separation_rotation.json
+failure_modes:
+- Admin and operator-session secrets remain the same value or same secret path.
+- Rotation proof exercises only one key while the rest remain undocumented or coupled.
+- Browser-visible code gains access to admin or signing secrets.
+must_read:
+- docs/operations/AI_AGENT_OPERATION_MANUAL.md
+- services/ledger-api/dotnet/src/LedgerApi/Program.cs
+- services/ledger-api/dotnet/src/LedgerApi/Security/ApiAuthorization.cs
+- scripts/security/openbao_bootstrap.sh
+implementation_plan: docs/plans/phase1/TSK-P1-216/PLAN.md
+implementation_log: docs/plans/phase1/TSK-P1-216/EXEC_LOG.md
+notes: >
+  Hardening task. This closes key-reuse debt after runtime secret provider integration exists.
+client: codex_cli
+assigned_agent: security_guardian
+model: <UNASSIGNED>

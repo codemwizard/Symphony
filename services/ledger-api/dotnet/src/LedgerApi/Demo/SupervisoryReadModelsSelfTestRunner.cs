@@ -212,7 +212,9 @@ public static class SupervisoryReadModelsSelfTestRunner
         }, cancellationToken);
 
         var reveal = global::SupervisoryRevealReadModelHandler.Handle(tenantId, programId, null);
-        var detail = global::SupervisoryInstructionDetailReadModelHandler.Handle(tenantId, "SYM-2026-00041", null);
+        var instructionId = "SYM-2026-00041";
+        var dataSource = (Npgsql.NpgsqlDataSource?)null;
+        var detail = await SupervisoryInstructionDetailReadModelHandler.HandleAsync(tenantId, instructionId, dataSource);
         var crossTenantDenied = global::ApiAuthorization.AuthorizeTenantScope("22222222-2222-2222-2222-222222222222");
 
         bool HasTopLevel(JsonElement root, params string[] fields)

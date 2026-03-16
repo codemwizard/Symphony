@@ -1,0 +1,59 @@
+schema_version: 1
+phase: '1'
+task_id: TSK-P1-220
+title: Canonical one-command bootstrap for the hardened GreenTech4CE deployment
+owner_role: SUPERVISOR
+status: planned
+depends_on:
+- TSK-P1-214
+- TSK-P1-215
+- TSK-P1-216
+- TSK-P1-217
+- TSK-P1-218
+touches:
+- scripts/demo/bootstrap_greentech4ce.sh
+- scripts/demo/verify_bootstrap_greentech4ce.sh
+- docs/operations/SYMPHONY_DEMO_DEPLOYMENT_GUIDE.md
+- scripts/dev/pre_ci_demo.sh
+- scripts/audit/verify_tsk_p1_220.sh
+- evidence/phase1/tsk_p1_220_canonical_bootstrap.json
+- docs/plans/phase1/TSK-P1-220/PLAN.md
+- docs/plans/phase1/TSK-P1-220/EXEC_LOG.md
+- tasks/TSK-P1-220/meta.yml
+invariants:
+- INV-119
+work:
+- Implement the single supported bootstrap entrypoint for the hardened GreenTech4CE demo. The
+  bootstrap must start dependencies, initialize or verify OpenBao secret material, run migrations,
+  verify control-plane readiness, start the application, and fail closed on any missing prerequisite.
+- Remove manual key generation, manual secret export choreography, and other provisional deployment
+  steps from the supported deployment path.
+- Retire any helper script whose purpose is to generate env secrets for the demo as the endorsed path.
+  Such helpers may remain only if clearly marked developer-only and excluded from the hardened guide.
+acceptance_criteria:
+- A single documented bootstrap command brings up the hardened demo from a clean checkout.
+- The bootstrap flow provisions or verifies required OpenBao-backed secrets instead of asking the
+  operator to mint and export them manually.
+- The bootstrap flow runs migrations and verifies readiness before declaring success.
+- The supported deployment guide no longer instructs manual secret generation or multi-step shell
+  choreography for the hardened path.
+verification:
+- bash scripts/audit/verify_tsk_p1_220.sh
+- python3 scripts/audit/validate_evidence.py --task TSK-P1-220 --evidence evidence/phase1/tsk_p1_220_canonical_bootstrap.json
+evidence:
+- evidence/phase1/tsk_p1_220_canonical_bootstrap.json
+failure_modes:
+- Bootstrap is only a wrapper around old manual export steps.
+- Hardened deployment still requires manual secret generation or undocumented sequencing.
+- The script succeeds without proving application readiness.
+must_read:
+- docs/operations/AI_AGENT_OPERATION_MANUAL.md
+- docs/operations/SYMPHONY_DEMO_DEPLOYMENT_GUIDE.md
+- scripts/dev/pre_ci_demo.sh
+implementation_plan: docs/plans/phase1/TSK-P1-220/PLAN.md
+implementation_log: docs/plans/phase1/TSK-P1-220/EXEC_LOG.md
+notes: >
+  Hardening task. This task replaces provisional operator choreography with a canonical bootstrap.
+client: codex_cli
+assigned_agent: supervisor
+model: <UNASSIGNED>

@@ -11,6 +11,7 @@ using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.RateLimiting;
 using Npgsql;
 using Symphony.LedgerApi.Demo;
+using Symphony.LedgerApi.Infrastructure;
 
 var builder = WebApplication.CreateBuilder(args);
 builder.Services.Configure<ForwardedHeadersOptions>(options =>
@@ -77,6 +78,29 @@ builder.Services.AddRateLimiter(options =>
 var app = builder.Build();
 var logger = app.Logger;
 var runtimeProfile = (Environment.GetEnvironmentVariable("SYMPHONY_RUNTIME_PROFILE") ?? "production").Trim().ToLowerInvariant();
+
+// --- Secret Provider: resolved at startup, fail-closed for hardened profiles ---
+var isHardenedProfile = runtimeProfile is "pilot-demo" or "production" or "staging";
+ISecretProvider secretProvider;
+if (isHardenedProfile)
+{
+    var baoAddr = Environment.GetEnvironmentVariable("BAO_ADDR") ?? "http://127.0.0.1:8200";
+    var roleId = Environment.GetEnvironmentVariable("BAO_ROLE_ID") ?? string.Empty;
+    var secretId = Environment.GetEnvironmentVariable("BAO_SECRET_ID") ?? string.Empty;
+    var kvMount = Environment.GetEnvironmentVariable("BAO_KV_MOUNT") ?? "kv";
+    secretProvider = new OpenBaoSecretProvider(new HttpClient(), baoAddr, roleId, secretId, kvMount);
+    logger.LogInformation("Secret provider: OpenBao (hardened profile: {Profile})", runtimeProfile);
+}
+else
+{
+    secretProvider = new EnvironmentSecretProvider();
+    logger.LogInformation("Secret provider: Environment (developer profile: {Profile})", runtimeProfile);
+}
+
+// Resolve all in-scope secrets at startup. Fails closed if any required secret is missing.
+var secrets = await RuntimeSecrets.ResolveAsync(secretProvider);
+logger.LogInformation("Runtime secrets resolved successfully.");
+
 const string PilotDemoOperatorCookieName = "symphony_pilot_demo_operator";
 
 static string ComputePilotDemoSessionSignature(string tenantId, long expiresAtUnix, string adminKey)
@@ -94,12 +118,12 @@ static string CreatePilotDemoOperatorCookie(string tenantId, string adminKey, Ti
     return Convert.ToBase64String(Encoding.UTF8.GetBytes(raw));
 }
 
-static bool TryValidatePilotDemoOperatorCookie(HttpContext httpContext, string expectedTenantId, out string errorCode, out string[] errors)
+bool TryValidatePilotDemoOperatorCookie(HttpContext httpContext, string expectedTenantId, out string errorCode, out string[] errors)
 {
     errorCode = string.Empty;
     errors = Array.Empty<string>();
 
-    var adminKey = (Environment.GetEnvironmentVariable("ADMIN_API_KEY") ?? string.Empty).Trim();
+    var adminKey = secrets.AdminApiKey.Trim();
     if (string.IsNullOrWhiteSpace(adminKey))
     {
         errorCode = "ADMIN_API_KEY_UNAVAILABLE";
@@ -239,8 +263,12 @@ IRegulatoryIncidentStore regulatoryIncidentStore = storageMode switch
     _ => new FileRegulatoryIncidentStore(logger)
 };
 
+// TSK-P1-214: Wire supplier policy store with the shared data source
+SupplierPolicyStore.Initialize(dataSource);
+
 // Startup capability probes
-var signingKeyPresent = !string.IsNullOrWhiteSpace(Environment.GetEnvironmentVariable("EVIDENCE_SIGNING_KEY"));
+// Startup capability probes — use resolved secrets, not raw env
+var signingKeyPresent = !string.IsNullOrWhiteSpace(secrets.EvidenceSigningKey);
 var rawAllowlist = (Environment.GetEnvironmentVariable("SYMPHONY_KNOWN_TENANTS") ?? string.Empty).Trim();
 var tenantAllowlistConfigured = !string.IsNullOrWhiteSpace(rawAllowlist);
 
@@ -280,7 +308,7 @@ app.MapGet("/pilot-demo/supervisory", (HttpContext httpContext) =>
         apiKey = Environment.GetEnvironmentVariable("SYMPHONY_UI_API_KEY") ?? string.Empty
     });
 
-    var adminKey = (Environment.GetEnvironmentVariable("ADMIN_API_KEY") ?? string.Empty).Trim();
+    var adminKey = secrets.AdminApiKey.Trim();
     if (!string.IsNullOrWhiteSpace(adminKey) && !string.IsNullOrWhiteSpace(uiTenantId))
     {
         httpContext.Response.Cookies.Append(PilotDemoOperatorCookieName, CreatePilotDemoOperatorCookie(uiTenantId, adminKey, TimeSpan.FromHours(8)), new CookieOptions
@@ -348,7 +376,7 @@ app.MapGet("/readyz", () => Results.Ok(new
 
 app.MapPost("/v1/ingress/instructions", async (IngressRequest request, HttpContext httpContext, CancellationToken cancellationToken) =>
 {
-    var authFailure = ApiAuthorization.AuthorizeIngressWrite(httpContext, request);
+    var authFailure = ApiAuthorization.AuthorizeIngressWrite(httpContext, request, secrets);
     if (authFailure is not null)
     {
         return Results.Json(authFailure.Body, statusCode: authFailure.StatusCode);
@@ -374,7 +402,7 @@ app.MapPost("/v1/ingress/instructions", async (IngressRequest request, HttpConte
 
 app.MapGet("/v1/evidence-packs/{instruction_id}", async (string instruction_id, HttpContext httpContext, CancellationToken cancellationToken) =>
 {
-    var authFailure = ApiAuthorization.AuthorizeAdminTenantOnboarding(httpContext);
+    var authFailure = ApiAuthorization.AuthorizeAdminTenantOnboarding(httpContext, secrets);
     if (authFailure is not null)
     {
         return Results.Json(authFailure.Body, statusCode: authFailure.StatusCode);
@@ -396,7 +424,7 @@ app.MapGet("/v1/evidence-packs/{instruction_id}", async (string instruction_id, 
 
 app.MapPost("/v1/admin/tenants", async (TenantOnboardingRequest request, HttpContext httpContext, CancellationToken cancellationToken) =>
 {
-    var authFailure = ApiAuthorization.AuthorizeAdminTenantOnboarding(httpContext);
+    var authFailure = ApiAuthorization.AuthorizeAdminTenantOnboarding(httpContext, secrets);
     if (authFailure is not null)
     {
         return Results.Json(authFailure.Body, statusCode: authFailure.StatusCode);
@@ -441,7 +469,7 @@ app.MapPost("/v1/admin/tenants", async (TenantOnboardingRequest request, HttpCon
 
 app.MapPost("/v1/evidence-links/issue", async (EvidenceLinkIssueRequest request, HttpContext httpContext, CancellationToken cancellationToken) =>
 {
-    var authFailure = ApiAuthorization.AuthorizeAdminTenantOnboarding(httpContext);
+    var authFailure = ApiAuthorization.AuthorizeAdminTenantOnboarding(httpContext, secrets);
     if (authFailure is not null)
     {
         return Results.Json(authFailure.Body, statusCode: authFailure.StatusCode);
@@ -464,7 +492,7 @@ app.MapPost("/pilot-demo/api/evidence-links/issue", async (EvidenceLinkIssueRequ
         return Results.NotFound();
     }
 
-    var authFailure = ApiAuthorization.AuthorizeEvidenceRead(httpContext);
+    var authFailure = ApiAuthorization.AuthorizeEvidenceRead(httpContext, secrets);
     if (authFailure is not null)
     {
         return Results.Json(authFailure.Body, statusCode: authFailure.StatusCode);
@@ -497,7 +525,7 @@ app.MapPost("/v1/evidence-links/submit", async (EvidenceLinkSubmitRequest reques
 
 app.MapPost("/v1/admin/suppliers/upsert", async (SupplierRegistryUpsertRequest request, HttpContext httpContext) =>
 {
-    var authFailure = ApiAuthorization.AuthorizeAdminTenantOnboarding(httpContext);
+    var authFailure = ApiAuthorization.AuthorizeAdminTenantOnboarding(httpContext, secrets);
     if (authFailure is not null)
     {
         return Results.Json(authFailure.Body, statusCode: authFailure.StatusCode);
@@ -515,7 +543,7 @@ app.MapPost("/v1/admin/suppliers/upsert", async (SupplierRegistryUpsertRequest r
 
 app.MapPost("/v1/admin/program-supplier-allowlist/upsert", async (ProgramSupplierAllowlistUpsertRequest request, HttpContext httpContext) =>
 {
-    var authFailure = ApiAuthorization.AuthorizeAdminTenantOnboarding(httpContext);
+    var authFailure = ApiAuthorization.AuthorizeAdminTenantOnboarding(httpContext, secrets);
     if (authFailure is not null)
     {
         return Results.Json(authFailure.Body, statusCode: authFailure.StatusCode);
@@ -531,9 +559,9 @@ app.MapPost("/v1/admin/program-supplier-allowlist/upsert", async (ProgramSupplie
     return Results.Json(result.Body, statusCode: result.StatusCode);
 }).RequireRateLimiting("sensitive-endpoint");
 
-app.MapGet("/v1/programs/{programId}/suppliers/{supplierId}/policy", (string programId, string supplierId, HttpContext httpContext) =>
+app.MapGet("/v1/programs/{programId}/suppliers/{supplierId}/policy", async (string programId, string supplierId, HttpContext httpContext) =>
 {
-    var authFailure = ApiAuthorization.AuthorizeEvidenceRead(httpContext);
+    var authFailure = ApiAuthorization.AuthorizeEvidenceRead(httpContext, secrets);
     if (authFailure is not null)
     {
         return Results.Json(authFailure.Body, statusCode: authFailure.StatusCode);
@@ -548,13 +576,13 @@ app.MapGet("/v1/programs/{programId}/suppliers/{supplierId}/policy", (string pro
         return Results.Json(tenantAuthFailure.Body, statusCode: tenantAuthFailure.StatusCode);
     }
 
-    var result = ProgramSupplierPolicyReadHandler.Handle(tenantId, programId.Trim(), supplierId.Trim());
+    var result = await ProgramSupplierPolicyReadHandler.HandleAsync(tenantId, programId.Trim(), supplierId.Trim());
     return Results.Json(result.Body, statusCode: result.StatusCode);
 }).RequireRateLimiting("sensitive-endpoint");
 
 app.MapPost("/v1/instruction-files/generate", async (SignedInstructionGenerateRequest request, HttpContext httpContext, CancellationToken cancellationToken) =>
 {
-    var authFailure = ApiAuthorization.AuthorizeAdminTenantOnboarding(httpContext);
+    var authFailure = ApiAuthorization.AuthorizeAdminTenantOnboarding(httpContext, secrets);
     if (authFailure is not null)
     {
         return Results.Json(authFailure.Body, statusCode: authFailure.StatusCode);
@@ -577,7 +605,7 @@ app.MapPost("/pilot-demo/api/instruction-files/generate", async (SignedInstructi
         return Results.NotFound();
     }
 
-    var authFailure = ApiAuthorization.AuthorizeAdminTenantOnboarding(httpContext);
+    var authFailure = ApiAuthorization.AuthorizeAdminTenantOnboarding(httpContext, secrets);
     if (authFailure is not null)
     {
         return Results.Json(authFailure.Body, statusCode: authFailure.StatusCode);
@@ -623,7 +651,7 @@ app.MapPost("/pilot-demo/api/instruction-files/generate", async (SignedInstructi
 
 app.MapPost("/v1/instruction-files/verify", async (SignedInstructionVerifyRequest request, HttpContext httpContext, CancellationToken cancellationToken) =>
 {
-    var authFailure = ApiAuthorization.AuthorizeEvidenceRead(httpContext);
+    var authFailure = ApiAuthorization.AuthorizeEvidenceRead(httpContext, secrets);
     if (authFailure is not null)
     {
         return Results.Json(authFailure.Body, statusCode: authFailure.StatusCode);
@@ -635,7 +663,7 @@ app.MapPost("/v1/instruction-files/verify", async (SignedInstructionVerifyReques
 
 app.MapPost("/v1/instruction-files/verify-ref", async (SignedInstructionVerifyRefRequest request, HttpContext httpContext, CancellationToken cancellationToken) =>
 {
-    var authFailure = ApiAuthorization.AuthorizeEvidenceRead(httpContext);
+    var authFailure = ApiAuthorization.AuthorizeEvidenceRead(httpContext, secrets);
     if (authFailure is not null)
     {
         return Results.Json(authFailure.Body, statusCode: authFailure.StatusCode);
@@ -669,7 +697,7 @@ app.MapPost("/v1/instruction-files/verify-ref", async (SignedInstructionVerifyRe
 
 app.MapGet("/v1/supervisory/programmes/{programId}/reveal", (string programId, HttpContext httpContext) =>
 {
-    var authFailure = ApiAuthorization.AuthorizeEvidenceRead(httpContext);
+    var authFailure = ApiAuthorization.AuthorizeEvidenceRead(httpContext, secrets);
     if (authFailure is not null)
     {
         return Results.Json(authFailure.Body, statusCode: authFailure.StatusCode);
@@ -689,9 +717,9 @@ app.MapGet("/v1/supervisory/programmes/{programId}/reveal", (string programId, H
     return Results.Json(result.Body, statusCode: result.StatusCode);
 }).RequireRateLimiting("sensitive-endpoint");
 
-app.MapGet("/v1/supervisory/instructions/{instructionId}/detail", (string instructionId, HttpContext httpContext) =>
+app.MapGet("/v1/supervisory/instructions/{instructionId}/detail", async (string instructionId, HttpContext httpContext) =>
 {
-    var authFailure = ApiAuthorization.AuthorizeEvidenceRead(httpContext);
+    var authFailure = ApiAuthorization.AuthorizeEvidenceRead(httpContext, secrets);
     if (authFailure is not null)
     {
         return Results.Json(authFailure.Body, statusCode: authFailure.StatusCode);
@@ -707,7 +735,7 @@ app.MapGet("/v1/supervisory/instructions/{instructionId}/detail", (string instru
         return Results.Json(tenantAuthFailure.Body, statusCode: tenantAuthFailure.StatusCode);
     }
 
-    var result = SupervisoryInstructionDetailReadModelHandler.Handle(tenantId, instructionId.Trim(), dataSource);
+    var result = await SupervisoryInstructionDetailReadModelHandler.HandleAsync(tenantId, instructionId.Trim(), dataSource);
     return Results.Json(result.Body, statusCode: result.StatusCode);
 }).RequireRateLimiting("sensitive-endpoint");
 
@@ -718,7 +746,7 @@ app.MapGet("/pilot-demo/api/pilot-success", (HttpContext httpContext) =>
         return Results.NotFound();
     }
 
-    var authFailure = ApiAuthorization.AuthorizeEvidenceRead(httpContext);
+    var authFailure = ApiAuthorization.AuthorizeEvidenceRead(httpContext, secrets);
     if (authFailure is not null)
     {
         return Results.Json(authFailure.Body, statusCode: authFailure.StatusCode);
@@ -740,7 +768,7 @@ app.MapGet("/pilot-demo/api/pilot-success", (HttpContext httpContext) =>
 
 app.MapPost("/v1/supervisory/programmes/{programId}/export", async (string programId, HttpContext httpContext, CancellationToken cancellationToken) =>
 {
-    var authFailure = ApiAuthorization.AuthorizeEvidenceRead(httpContext);
+    var authFailure = ApiAuthorization.AuthorizeEvidenceRead(httpContext, secrets);
     if (authFailure is not null)
     {
         return Results.Json(authFailure.Body, statusCode: authFailure.StatusCode);
@@ -843,7 +871,7 @@ app.MapGet("/pilot-demo/artifacts/{fileName}", (string fileName) =>
 
 app.MapPost("/v1/kyc/hash", async (JsonElement requestBody, HttpContext httpContext, CancellationToken cancellationToken) =>
 {
-    var authFailure = ApiAuthorization.AuthorizeEvidenceRead(httpContext);
+    var authFailure = ApiAuthorization.AuthorizeEvidenceRead(httpContext, secrets);
     if (authFailure is not null)
     {
         return Results.Json(authFailure.Body, statusCode: authFailure.StatusCode);
@@ -874,7 +902,7 @@ app.MapPost("/v1/kyc/hash", async (JsonElement requestBody, HttpContext httpCont
 
 app.MapGet("/v1/regulatory/reports/daily", async (string date, HttpContext httpContext, CancellationToken cancellationToken) =>
 {
-    var authFailure = ApiAuthorization.AuthorizeEvidenceRead(httpContext);
+    var authFailure = ApiAuthorization.AuthorizeEvidenceRead(httpContext, secrets);
     if (authFailure is not null)
     {
         return Results.Json(authFailure.Body, statusCode: authFailure.StatusCode);
@@ -896,7 +924,7 @@ app.MapGet("/v1/regulatory/reports/daily", async (string date, HttpContext httpC
 
 app.MapPost("/v1/admin/incidents", async (RegulatoryIncidentCreateRequest request, HttpContext httpContext, CancellationToken cancellationToken) =>
 {
-    var authFailure = ApiAuthorization.AuthorizeAdminTenantOnboarding(httpContext);
+    var authFailure = ApiAuthorization.AuthorizeAdminTenantOnboarding(httpContext, secrets);
     if (authFailure is not null)
     {
         return Results.Json(authFailure.Body, statusCode: authFailure.StatusCode);
@@ -933,7 +961,7 @@ app.MapPost("/v1/admin/incidents", async (RegulatoryIncidentCreateRequest reques
 
 app.MapGet("/v1/regulatory/incidents/{incident_id}/report", async (string incident_id, HttpContext httpContext, CancellationToken cancellationToken) =>
 {
-    var authFailure = ApiAuthorization.AuthorizeEvidenceRead(httpContext);
+    var authFailure = ApiAuthorization.AuthorizeEvidenceRead(httpContext, secrets);
     if (authFailure is not null)
     {
         return Results.Json(authFailure.Body, statusCode: authFailure.StatusCode);
@@ -1358,6 +1386,7 @@ static class TenantContextSelfTestRunner
         env.Set("SYMPHONY_KNOWN_TENANTS", validTenant);
 
         var payload = JsonSerializer.Deserialize<JsonElement>("{\"amount\":100,\"currency\":\"ZMW\"}");
+        var secrets = await RuntimeSecrets.ResolveAsync(new EnvironmentSecretProvider(), cancellationToken);
         var results = new List<SelfTestCase>();
         var pass = 0;
         var fail = 0;
@@ -1419,7 +1448,7 @@ static class TenantContextSelfTestRunner
 
         void RunCase(string name, DefaultHttpContext ctx, IngressRequest req, int expectedStatus, string? expectedErrorCode)
         {
-            var result = ApiAuthorization.AuthorizeIngressWrite(ctx, req);
+            var result = ApiAuthorization.AuthorizeIngressWrite(ctx, req, secrets);
             var actualStatus = result?.StatusCode ?? StatusCodes.Status200OK;
             string? actualErrorCode = null;
             if (result is not null)
@@ -1703,6 +1732,7 @@ static class TenantOnboardingAdminSelfTestRunner
         using var env = new SelfTestEnvironmentScope();
         env.Set("ADMIN_API_KEY", SelfTestSecrets.CreateApiKey("tenant-admin"));
 
+        var secrets = await RuntimeSecrets.ResolveAsync(new EnvironmentSecretProvider(), cancellationToken);
         var tenantCreated = false;
         var outboxEventEmitted = false;
         var idempotencyConfirmed = false;
@@ -1711,7 +1741,7 @@ static class TenantOnboardingAdminSelfTestRunner
         // Non-admin request must fail closed.
         {
             var nonAdminCtx = new DefaultHttpContext();
-            var authz = ApiAuthorization.AuthorizeAdminTenantOnboarding(nonAdminCtx);
+            var authz = ApiAuthorization.AuthorizeAdminTenantOnboarding(nonAdminCtx, secrets);
             nonAdminRejected = authz is not null && authz.StatusCode == StatusCodes.Status403Forbidden;
         }
 
@@ -1779,6 +1809,7 @@ static class PilotAuthSelfTestRunner
     public static async Task<int> RunAsync(CancellationToken cancellationToken)
     {
         await Task.Yield();
+        var secrets = await RuntimeSecrets.ResolveAsync(new EnvironmentSecretProvider(), cancellationToken);
         var tests = new List<SelfTestCase>();
         var pass = 0;
         var fail = 0;
@@ -1796,14 +1827,14 @@ static class PilotAuthSelfTestRunner
         {
             var ctx = ContextWithHeaders(apiKey, tenantA, "bank-a");
             var req = Request(tenantA, "bank-a", payload);
-            return ApiAuthorization.AuthorizeIngressWrite(ctx, req) is null;
+            return ApiAuthorization.AuthorizeIngressWrite(ctx, req, secrets) is null;
         });
 
         await RunCase("ingress_cross_tenant_denied", () =>
         {
             var ctx = ContextWithHeaders(apiKey, tenantA, "bank-a");
             var req = Request(tenantB, "bank-a", payload);
-            var result = ApiAuthorization.AuthorizeIngressWrite(ctx, req);
+            var result = ApiAuthorization.AuthorizeIngressWrite(ctx, req, secrets);
             return result is not null && result.StatusCode == StatusCodes.Status403Forbidden;
         });
 
@@ -1811,7 +1842,7 @@ static class PilotAuthSelfTestRunner
         {
             var ctx = ContextWithHeaders(apiKey, tenantA, "bank-a");
             var req = Request(tenantA, "bank-b", payload);
-            var result = ApiAuthorization.AuthorizeIngressWrite(ctx, req);
+            var result = ApiAuthorization.AuthorizeIngressWrite(ctx, req, secrets);
             return result is not null && result.StatusCode == StatusCodes.Status403Forbidden;
         });
 
@@ -1821,7 +1852,7 @@ static class PilotAuthSelfTestRunner
             ctx.Request.Headers["x-tenant-id"] = tenantA;
             ctx.Request.Headers["x-participant-id"] = "bank-a";
             var req = Request(tenantA, "bank-a", payload);
-            var result = ApiAuthorization.AuthorizeIngressWrite(ctx, req);
+            var result = ApiAuthorization.AuthorizeIngressWrite(ctx, req, secrets);
             return result is not null && result.StatusCode == StatusCodes.Status401Unauthorized;
         });
 
@@ -1829,13 +1860,13 @@ static class PilotAuthSelfTestRunner
         {
             var ctx = new DefaultHttpContext();
             ctx.Request.Headers["x-api-key"] = apiKey;
-            return ApiAuthorization.AuthorizeEvidenceRead(ctx) is null;
+            return ApiAuthorization.AuthorizeEvidenceRead(ctx, secrets) is null;
         });
 
         await RunCase("read_missing_key_denied", () =>
         {
             var ctx = new DefaultHttpContext();
-            var result = ApiAuthorization.AuthorizeEvidenceRead(ctx);
+            var result = ApiAuthorization.AuthorizeEvidenceRead(ctx, secrets);
             return result is not null && result.StatusCode == StatusCodes.Status401Unauthorized;
         });
 
@@ -2294,6 +2325,7 @@ static class RegulatoryDailyReportSelfTestRunner
         env.Set("EVIDENCE_SIGNING_KEY", SelfTestSecrets.CreateSigningKey());
         env.Set("EVIDENCE_SIGNING_KEY_ID", "phase1-reg-002-key");
 
+        var secrets = await RuntimeSecrets.ResolveAsync(new EnvironmentSecretProvider(), cancellationToken);
         var ingressStore = new FileIngressDurabilityStore(logger, ingressFile);
         var reportDate = DateTimeOffset.UtcNow.ToString("yyyy-MM-dd");
         var tenant = "11111111-1111-1111-1111-111111111111";
@@ -2346,7 +2378,7 @@ static class RegulatoryDailyReportSelfTestRunner
         var signatureVerified = RegulatoryReportHandler.VerifySignature(
             firstCanonical,
             first.Signature,
-            Environment.GetEnvironmentVariable("EVIDENCE_SIGNING_KEY") ?? string.Empty
+            secrets.EvidenceSigningKey
         );
 
         var status = determinismConfirmed && signatureVerified ? "PASS" : "FAIL";
@@ -2393,6 +2425,7 @@ static class RegulatoryIncident48hSelfTestRunner
         env.Set("EVIDENCE_SIGNING_KEY", SelfTestSecrets.CreateSigningKey());
         env.Set("EVIDENCE_SIGNING_KEY_ID", "phase1-reg-003-key");
 
+        var secrets = await RuntimeSecrets.ResolveAsync(new EnvironmentSecretProvider(), cancellationToken);
         var store = new FileRegulatoryIncidentStore(logger, incidentFile);
         var tenantId = "11111111-1111-1111-1111-111111111111";
         var created = await store.CreateIncidentAsync(new RegulatoryIncidentCreateRequest(
@@ -2447,7 +2480,7 @@ static class RegulatoryIncident48hSelfTestRunner
         var signatureVerified = RegulatoryIncidentReportHandler.VerifySignature(
             canonical,
             reportResult.Signature,
-            Environment.GetEnvironmentVariable("EVIDENCE_SIGNING_KEY") ?? string.Empty
+            secrets.EvidenceSigningKey
         );
 
         using var reportDoc = JsonDocument.Parse(JsonSerializer.Serialize(reportResult.Report));
