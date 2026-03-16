@@ -29,13 +29,17 @@ patterns=(
   "HARDCODED_SELFTEST_SIGNING_KEY::phase1-reg-00[23]-self-test-key"
 )
 
+# ── Prevent self-referencing: clear prior evidence so a stale "hits" array
+#    containing pattern names (e.g. VAULT_TOKEN) is not scanned.
+: > "$EVIDENCE_FILE"
+
 rg_scan() {
   local name="$1"
   local regex="$2"
   shift 2
   local rc=0
   rg -n --no-messages -S --pcre2 -e "$regex" -- "$@" \
-    | awk -F: -v n="$name" '{ if ($1 ~ /scan_secrets\.sh$/) next; print n ":" $1 ":" $2 }' >> "$tmp_hits" || rc=$? # symphony:allow_or_true
+    | awk -F: -v n="$name" '{ if ($1 ~ /scan_secrets\.sh$/ || $1 ~ /security_secrets_scan\.json$/) next; print n ":" $1 ":" $2 }' >> "$tmp_hits" || rc=$? # symphony:allow_or_true
   # rg returns 1 when no matches; this is not an execution failure.
   if [[ "$rc" -ne 0 && "$rc" -ne 1 ]]; then
     scan_error="rg_failed:$name:rc=$rc"
@@ -51,8 +55,9 @@ grep_scan() {
   local rc=0
   grep -RInE \
     --exclude 'scan_secrets.sh' \
+    --exclude 'security_secrets_scan.json' \
     "$regex" "$@" \
-    | awk -F: -v n="$name" '{ if ($1 ~ /scan_secrets\.sh$/) next; print n ":" $1 ":" $2 }' >> "$tmp_hits" || rc=$? # symphony:allow_or_true
+    | awk -F: -v n="$name" '{ if ($1 ~ /scan_secrets\.sh$/ || $1 ~ /security_secrets_scan\.json$/) next; print n ":" $1 ":" $2 }' >> "$tmp_hits" || rc=$? # symphony:allow_or_true
   # grep returns 1 when no matches; this is not an execution failure.
   if [[ "$rc" -ne 0 && "$rc" -ne 1 ]]; then
     scan_error="grep_failed:$name:rc=$rc"

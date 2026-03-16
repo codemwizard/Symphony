@@ -1,0 +1,81 @@
+# Wave 3: DEMO-029 + DEMO-030 — Final Phase-1 Governance Tasks
+
+**Phase Name:** Wave3_Final_Governance | **Phase Key:** W3
+
+All other task registries are complete:
+- ✅ TSK-HARD Waves 1-6 (all exit gates pass)  
+- ✅ Security Remediation (R-000 through R-002)  
+- ✅ TSK-P1-206 through TSK-P1-220  
+- ✅ TSK-P1-DEMO-001 through TSK-P1-DEMO-028  
+
+**Remaining: 2 tasks**
+
+---
+
+### TSK-P1-DEMO-029 — Provisioning sample pack and signoff threshold guide
+
+**Owner:** QA_VERIFIER  
+**Depends on:** DEMO-017, DEMO-021, DEMO-022, DEMO-023 (all ✅)
+
+**Deliverables:**
+- `docs/operations/GREENTECH4CE_DEMO_PROVISIONING_SAMPLE_PACK.md`
+- `docs/operations/GREENTECH4CE_DEMO_PROVISIONING_SAMPLE_PACK.sample.json`
+- Verifier: `scripts/audit/verify_tsk_p1_demo_029.sh`
+- Evidence: `evidence/phase1/tsk_p1_demo_029_provisioning_sample_pack.json`
+
+**Work:**
+1. Create governed demo provisioning sample pack with fixed sample values
+2. Include exact repo-backed API commands for onboarding endpoints
+3. Add explicit signoff-threshold guidance (what the sample pack does/does not prove)
+4. Document and JSON must agree on sample set
+
+---
+
+### TSK-P1-DEMO-030 — Repair demo task-line collision and move to clean branch
+
+**Owner:** SUPERVISOR  
+**Depends on:** DEMO-023 (✅)
+
+**Deliverables:**
+- Restore canonical DEMO-024..028 meanings
+- Ensure provisioning sample-pack task exists only as 029
+- Approval metadata references only repaired branch scope
+- Verifier: `scripts/audit/verify_tsk_p1_demo_030.sh`
+- Evidence: `evidence/phase1/tsk_p1_demo_030_branch_repair.json`
+
+**Work:**
+1. Create branch `feat/demo-deployment-repair` (verifier expects this branch name)
+2. Verify all canonical DEMO-024..028 meanings are correct
+3. Ensure DEMO-029 is the provisioning sample-pack task (not 024)
+4. Close Git-mutation audit gap
+5. Update approval metadata
+
+---
+
+### TSK-P1-221 — Rewrite runbooks, readiness, and gates to enforce hardened architecture
+
+**Owner:** SUPERVISOR  
+
+**Deliverables:**
+- Rewrite deployment docs for hardened architecture
+- Strengthen readiness/demo gates
+- Re-wire `ISecretProvider` into `LedgerApi/Program.cs` for active OpenBao health tracking
+- Prevent `ISecretProvider` / OpenBao failure from silently degrading system security.
+- Refactor readiness endpoint to return `503 Service Unavailable` if backing dependency is down
+- Verifier: `scripts/audit/verify_tsk_p1_221.sh`
+
+---
+
+## Verification Plan
+
+### Automated Tests
+- `bash scripts/audit/verify_tsk_p1_demo_029.sh`
+- `bash scripts/audit/verify_tsk_p1_demo_030.sh`
+- `bash scripts/audit/verify_tsk_p1_221.sh`
+- `bash scripts/dev/pre_ci.sh`
+
+### Execution Order
+1. TSK-P1-DEMO-029 first (no branch requirement)
+2. TSK-P1-DEMO-030 second (requires `feat/demo-deployment-repair` branch)
+3. TSK-P1-221 execution
+4. Secrets scan and quality lint fixes across the board.

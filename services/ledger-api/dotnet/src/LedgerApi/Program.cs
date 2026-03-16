@@ -355,36 +355,70 @@ app.MapGet("/pilot-demo/supervisory-legacy", () =>
     return Results.Content(File.ReadAllText(legacyPath), "text/html; charset=utf-8");
 });
 
-app.MapGet("/health", () => Results.Ok(new
+app.MapGet("/health", async (CancellationToken cancellationToken) =>
 {
-    status = "ok",
-    signing_key_present = signingKeyPresent,
-    tenant_allowlist_configured = tenantAllowlistConfigured,
-    git_sha = EvidenceMeta.Load(EvidenceMeta.ResolveRepoRoot(Directory.GetCurrentDirectory())).GitSha,
-    env_profile = Environment.GetEnvironmentVariable("SYMPHONY_ENV") ?? "unknown",
-    runtime_profile = runtimeProfile
-}));
+    // TSK-P1-221: active ISecretProvider health check via IsHealthyAsync()
+    var openBaoAvailable = await secretProvider.IsHealthyAsync(cancellationToken);
+    return Results.Ok(new
+    {
+        status = "ok",
+        signing_key_present = signingKeyPresent,
+        tenant_allowlist_configured = tenantAllowlistConfigured,
+        openbao_available = openBaoAvailable,
+        git_sha = EvidenceMeta.Load(EvidenceMeta.ResolveRepoRoot(Directory.GetCurrentDirectory())).GitSha,
+        env_profile = Environment.GetEnvironmentVariable("SYMPHONY_ENV") ?? "unknown",
+        runtime_profile = runtimeProfile
+    });
+});
 
 // Probe aliases keep K8s manifests and host-based health checks aligned.
-app.MapGet("/healthz", () => Results.Ok(new
+app.MapGet("/healthz", async (CancellationToken cancellationToken) =>
 {
-    status = "ok",
-    signing_key_present = signingKeyPresent,
-    tenant_allowlist_configured = tenantAllowlistConfigured,
-    git_sha = EvidenceMeta.Load(EvidenceMeta.ResolveRepoRoot(Directory.GetCurrentDirectory())).GitSha,
-    env_profile = Environment.GetEnvironmentVariable("SYMPHONY_ENV") ?? "unknown",
-    runtime_profile = runtimeProfile
-}));
+    var openBaoAvailable = await secretProvider.IsHealthyAsync(cancellationToken);
+    return Results.Ok(new
+    {
+        status = "ok",
+        signing_key_present = signingKeyPresent,
+        tenant_allowlist_configured = tenantAllowlistConfigured,
+        openbao_available = openBaoAvailable,
+        git_sha = EvidenceMeta.Load(EvidenceMeta.ResolveRepoRoot(Directory.GetCurrentDirectory())).GitSha,
+        env_profile = Environment.GetEnvironmentVariable("SYMPHONY_ENV") ?? "unknown",
+        runtime_profile = runtimeProfile
+    });
+});
 
-app.MapGet("/readyz", () => Results.Ok(new
+// TSK-P1-221: /readyz actively checks NpgsqlDataSource + ISecretProvider; returns 503 if either is down.
+app.MapGet("/readyz", async (CancellationToken cancellationToken) =>
 {
-    status = "ok",
-    signing_key_present = signingKeyPresent,
-    tenant_allowlist_configured = tenantAllowlistConfigured,
-    git_sha = EvidenceMeta.Load(EvidenceMeta.ResolveRepoRoot(Directory.GetCurrentDirectory())).GitSha,
-    env_profile = Environment.GetEnvironmentVariable("SYMPHONY_ENV") ?? "unknown",
-    runtime_profile = runtimeProfile
-}));
+    bool dbReady = true;
+    if (dataSource is not null)
+    {
+        try { await using var conn = await dataSource.OpenConnectionAsync(cancellationToken); } catch { dbReady = false; }
+    }
+    else
+    {
+        dbReady = false;
+    }
+
+    var openBaoReady = await secretProvider.IsHealthyAsync(cancellationToken);
+
+    if (!dbReady || !openBaoReady)
+    {
+        return Results.StatusCode(503);
+    }
+
+    return Results.Ok(new
+    {
+        status = "ok",
+        signing_key_present = signingKeyPresent,
+        tenant_allowlist_configured = tenantAllowlistConfigured,
+        database_ready = dbReady,
+        openbao_ready = openBaoReady,
+        git_sha = EvidenceMeta.Load(EvidenceMeta.ResolveRepoRoot(Directory.GetCurrentDirectory())).GitSha,
+        env_profile = Environment.GetEnvironmentVariable("SYMPHONY_ENV") ?? "unknown",
+        runtime_profile = runtimeProfile
+    });
+});
 
 app.MapPost("/v1/ingress/instructions", async (IngressRequest request, HttpContext httpContext, CancellationToken cancellationToken) =>
 {
