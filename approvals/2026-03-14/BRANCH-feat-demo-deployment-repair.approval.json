@@ -37,9 +37,13 @@
       "scripts/audit/verify_tsk_p1_demo_030.sh",
       "scripts/audit/verify_tsk_p1_221.sh",
       "scripts/dev/pre_ci_demo.sh",
+      "scripts/security/scan_secrets.sh",
       "services/ledger-api/dotnet/src/LedgerApi/Program.cs",
       "tasks/TSK-P1-DEMO-029/meta.yml",
-      "tasks/TSK-P1-DEMO-030/meta.yml"
+      "tasks/TSK-P1-DEMO-030/meta.yml",
+      "Wave3_Final_Governance/W3-Implementation.md_Wave3_Final_Governance",
+      "Wave3_Final_Governance/W3-Task.md_Wave3_Final_Governance",
+      "Wave3_Final_Governance/W3-Walkthrough.md_Wave3_Final_Governance"
     ],
     "invariants": [
       "INV-105",
