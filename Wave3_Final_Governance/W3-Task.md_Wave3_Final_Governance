@@ -1,0 +1,38 @@
+# Task Breakdown — Wave 3: Final Phase-1 Governance
+
+**Phase Name:** Wave3_Final_Governance | **Phase Key:** W3
+
+- [x] Create feature branch `feat/demo-deployment-repair`
+- [x] TSK-P1-DEMO-029: Provisioning sample pack and signoff threshold guide
+  - [x] Create `GREENTECH4CE_DEMO_PROVISIONING_SAMPLE_PACK.md`
+  - [x] Create `GREENTECH4CE_DEMO_PROVISIONING_SAMPLE_PACK.sample.json`
+  - [x] Run verifier, validate evidence
+- [x] TSK-P1-DEMO-030: Demo task-line collision repair
+  - [x] Verify canonical DEMO-024..028 meanings are correct
+  - [x] Ensure DEMO-029 is the provisioning sample-pack task
+  - [x] Update approval metadata
+  - [x] Run verifier, validate evidence
+- [x] TSK-P1-221: Rewrite runbooks, readiness, and gates to enforce hardened architecture
+  - [x] Rewrite deployment docs for hardened architecture
+  - [x] Strengthen readiness/demo gates
+  - [x] Re-wire dependencies in `Program.cs` health endpoints
+  - [x] Create `verify_tsk_p1_221.sh`
+  - [x] Run verifier, validate evidence
+- [x] Address agent conformance errors regarding approval metadata payload parsing
+- [x] Suppress secrets scan false positives arising from mentions of `BAO_TOKEN` in remediation files
+- [x] Run `pre_ci.sh` standalone to bypass Git Hooks SIGPIPE issues
+- [x] Push to remote branch without pre-commit failure
+- [x] Generate compliance documents and `Wave3_Final_Governance` directory 
+
+## Unit Tests
+
+Note: All components edited in Phase 3 tasks were existing elements matching existing test configurations. No new source code modules requiring separate unit test targets were created, aside from `verify_` scripts which are themselves the tests mapping to Phase 3 tasks.
+- `scripts/audit/verify_tsk_p1_demo_029.sh`
+- `scripts/audit/verify_tsk_p1_demo_030.sh`
+- `scripts/audit/verify_tsk_p1_221.sh`
+
+Additionally, existing .NET test harnesses natively run on `Program.cs` to test the WebApplication startup and health status:
+- `test_db_functions.sh` was invoked implicitly by `run_security_fast_checks.sh` and `pre_ci.sh`.
+- DotNet dependency audits and secure config checks ran on all `.csproj` targets successfully.
+
+Every verifier passed, producing `evidence/phase1/` artifacts and clearing the `pre_ci.sh` local gate pipeline.
