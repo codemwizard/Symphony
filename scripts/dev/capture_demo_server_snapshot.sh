@@ -69,8 +69,8 @@ import secrets
 print(secrets.token_hex(32))
 PY
 )"
-export SYMPHONY_# Secret fingerprints use HMAC-SHA256 with run-scoped ephemeral key material.
-SNAPSHOT_HMAC_KEY="$SNAPSHOT_HMAC_KEY"
+# Secret fingerprints use HMAC-SHA256 with run-scoped ephemeral key material.
+export SYMPHONY_SNAPSHOT_HMAC_KEY="$SNAPSHOT_HMAC_KEY"
 
 BRANCH_REF="$(git branch --show-current 2>/dev/null || true)"
 [[ -n "$BRANCH_REF" ]] || BRANCH_REF="HEAD"

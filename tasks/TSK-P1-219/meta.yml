@@ -3,7 +3,7 @@ phase: '1'
 task_id: TSK-P1-219
 title: Website onboarding console for operators using server-side auth and persisted onboarding state
 owner_role: WORKER
-status: planned
+status: completed
 depends_on:
 - TSK-P1-218
 touches:

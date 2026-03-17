@@ -3,7 +3,7 @@ phase: '1'
 task_id: TSK-P1-211
 title: Replace billable_clients unique index with unique constraint and retire manual schema patch
 owner_role: ARCHITECT
-status: planned
+status: completed
 depends_on: []
 touches:
 - schema/migrations/0074_billable_clients_client_key_constraint.sql

@@ -3,7 +3,7 @@ phase: '1'
 task_id: TSK-P1-217
 title: Persist tenant registry, programme lifecycle, and policy binding as onboarding control-plane state
 owner_role: ARCHITECT
-status: planned
+status: completed
 depends_on:
 - TSK-P1-214
 - TSK-P1-215

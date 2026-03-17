@@ -3,7 +3,7 @@ phase: '1'
 task_id: TSK-P1-212
 title: Fix Npgsql ingress durability lifecycle bug and promote db_psql to canonical demo mode
 owner_role: SECURITY_GUARDIAN
-status: planned
+status: completed
 depends_on:
 - TSK-P1-211
 touches:

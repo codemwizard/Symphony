@@ -3,7 +3,7 @@ phase: '1'
 task_id: TSK-P1-213
 title: Align verifier patterns with the current provisioning runbook and remove compatibility aliases
 owner_role: QA_VERIFIER
-status: planned
+status: completed
 depends_on:
 - TSK-P1-DEMO-017
 touches:

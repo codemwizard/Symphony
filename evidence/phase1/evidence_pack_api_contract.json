@@ -1,8 +1,8 @@
 {
   "check_id": "PHASE1-EVIDENCE-PACK-API-CONTRACT",
-  "timestamp_utc": "2026-03-09T13:38:05Z",
-  "git_sha": "ba00446fb5cdf29487d7f5faca90c4c39cbbe954",
-  "schema_fingerprint": "ba00446f",
+  "timestamp_utc": "2026-03-17T01:03:09Z",
+  "git_sha": "9f4c091829d39813bf5e8485e122c826b424eb5a",
+  "schema_fingerprint": "9f4c0918",
   "status": "PASS",
   "api_version": "v1",
   "schema_version": "phase1-evidence-pack-v1",

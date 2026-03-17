@@ -1,0 +1,2 @@
+6d17e2619a3e postgres:18 0.0.0.0:55432->5432/tcp, [::]:55432->5432/tcp symphony-postgres
+f8e433998e7b openbao/openbao:latest 0.0.0.0:8200->8200/tcp, [::]:8200->8200/tcp symphony-openbao

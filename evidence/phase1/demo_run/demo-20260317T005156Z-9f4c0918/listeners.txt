@@ -1,0 +1,20 @@
+State  Recv-Q Send-Q Local Address:Port  Peer Address:PortProcess                                      
+LISTEN 0      4096       127.0.0.1:39629      0.0.0.0:*    users:(("language_server",pid=4767,fd=12))  
+LISTEN 0      4096   127.0.0.53%lo:53         0.0.0.0:*                                                
+LISTEN 0      4096         0.0.0.0:55432      0.0.0.0:*                                                
+LISTEN 0      511        127.0.0.1:37225      0.0.0.0:*    users:(("node",pid=3986,fd=48))             
+LISTEN 0      4096      127.0.0.54:53         0.0.0.0:*                                                
+LISTEN 0      4096       127.0.0.1:37727      0.0.0.0:*    users:(("language_server",pid=237009,fd=15))
+LISTEN 0      511        127.0.0.1:37515      0.0.0.0:*    users:(("node",pid=3722,fd=21))             
+LISTEN 0      4096       127.0.0.1:33387      0.0.0.0:*    users:(("language_server",pid=237009,fd=10))
+LISTEN 0      511        127.0.0.1:34237      0.0.0.0:*    users:(("node",pid=2867,fd=38))             
+LISTEN 0      511        127.0.0.1:46509      0.0.0.0:*    users:(("node",pid=2867,fd=34))             
+LISTEN 0      200        127.0.0.1:5432       0.0.0.0:*                                                
+LISTEN 0      511        127.0.0.1:38841      0.0.0.0:*    users:(("node",pid=2167,fd=21))             
+LISTEN 0      4096       127.0.0.1:42819      0.0.0.0:*    users:(("language_server",pid=237009,fd=9)) 
+LISTEN 0      4096       127.0.0.1:46851      0.0.0.0:*    users:(("language_server",pid=4767,fd=4))   
+LISTEN 0      4096         0.0.0.0:22         0.0.0.0:*                                                
+LISTEN 0      4096         0.0.0.0:8200       0.0.0.0:*                                                
+LISTEN 0      4096            [::]:55432         [::]:*                                                
+LISTEN 0      4096            [::]:22            [::]:*                                                
+LISTEN 0      4096            [::]:8200          [::]:*                                                

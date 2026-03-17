@@ -1,7 +1,7 @@
 {
   "check_id": "ROUTING-FALLBACK",
-  "timestamp_utc": "2026-03-16T23:24:04Z",
-  "git_sha": "c436580fedd737823e2fccfb8cc8443a45aa0acc",
+  "timestamp_utc": "2026-03-17T04:15:19Z",
+  "git_sha": "e8491b43c6bca1dba873e74d815cf144c9583048",
   "schema_fingerprint": "59eef2a10b166543339b310ae67181cc9a8d6b22aa216e649e56652c2316e165",
   "status": "PASS",
   "required_fields": [

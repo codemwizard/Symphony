@@ -46,7 +46,7 @@ Optional:
 
 - `SYMPHONY_ENABLE_LEGACY_SUPERVISORY_UI=1`
 
-Keys, tenants, and policies are managed via the OpenBao control plane and the server-side onboarding APIs, not raw environment overrides.
+Keys, tenants, and policies are managed via the OpenBao control plane and the server-side onboarding APIs, not raw environment overrides. Note that `ADMIN_API_KEY` is server-side only and never exposed to the browser.
 
 ## 4. Ports and Exposure
 
@@ -145,7 +145,8 @@ export ASPNETCORE_URLS=http://0.0.0.0:8080
 export DATABASE_URL=postgres://symphony_admin:symphony_pass@localhost:5432/symphony
 export SYMPHONY_SECRETS_PROVIDER=vault
 export VAULT_ADDR=http://127.0.0.1:8200
-export BAO_TOKEN=root
+export BAO_ROLE_ID=$(cat /tmp/symphony_openbao/role_id)
+export BAO_SECRET_ID=$(cat /tmp/symphony_openbao/secret_id)
 
 dotnet /opt/symphony/ledger-api/LedgerApi.dll
 ```
@@ -154,11 +155,13 @@ Or from source:
 
 ```bash
 SYMPHONY_RUNTIME_PROFILE=pilot-demo \
+INGRESS_STORAGE_MODE=db_psql \
 ASPNETCORE_URLS=http://0.0.0.0:8080 \
 DATABASE_URL=postgres://symphony_admin:symphony_pass@localhost:5432/symphony \
 SYMPHONY_SECRETS_PROVIDER=vault \
 VAULT_ADDR=http://127.0.0.1:8200 \
-BAO_TOKEN=root \
+BAO_ROLE_ID=$(cat /tmp/symphony_openbao/role_id) \
+BAO_SECRET_ID=$(cat /tmp/symphony_openbao/secret_id) \
 dotnet run --no-launch-profile --project services/ledger-api/dotnet/src/LedgerApi/LedgerApi.csproj
 ```
 

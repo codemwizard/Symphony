@@ -1,0 +1,11 @@
+branch_ref=rehearsal/e2e-demo-signoff
+current_sha=9f4c091829d39813bf5e8485e122c826b424eb5a
+origin_main_sha=fd190438a8fa7505b9c0464590a746376306ea48
+floor_commit=0e2da15d
+floor_ok=true
+tree_clean=false
+origin	git@github.com:codemwizard/Symphony.git (fetch)
+origin	git@github.com:codemwizard/Symphony.git (push)
+ M scripts/dev/capture_demo_server_snapshot.sh
+ M scripts/dev/run_demo_e2e.sh
+?? evidence/phase1/demo_run/
