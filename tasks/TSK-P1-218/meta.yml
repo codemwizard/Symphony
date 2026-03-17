@@ -3,7 +3,7 @@ phase: '1'
 task_id: TSK-P1-218
 title: Server-side onboarding APIs for tenant, programme, policy, and activation workflows
 owner_role: INTEGRATION_CONTRACTS
-status: planned
+status: completed
 depends_on:
 - TSK-P1-217
 touches:

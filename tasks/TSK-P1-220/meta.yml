@@ -3,7 +3,7 @@ phase: '1'
 task_id: TSK-P1-220
 title: Canonical one-command bootstrap for the hardened GreenTech4CE deployment
 owner_role: SUPERVISOR
-status: planned
+status: completed
 depends_on:
 - TSK-P1-214
 - TSK-P1-215

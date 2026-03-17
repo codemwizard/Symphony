@@ -228,7 +228,7 @@ This index tracks governance rewrite tasks derived from `Symphony_Governance_Imp
 - **Evidence:** `evidence/phase1/tsk_p1_209_ui_traceability_cleanup.json`
 - **Failure Modes:** alias ambiguity remains; inventory missing; evidence file missing
 
-### TSK-P1-210 — Remove supervisory fallback duplication and repeated reveal-model scans
+### TSK-P1-210 — Remove supervisory fallback duplication and repeated reveal-model scans ✅ completed
 - **Owner:** SUPERVISOR
 - **Depends on:** `TSK-P1-208`, `TSK-P1-209`
 - **Touches:** `src/supervisory-dashboard/index.html`, `services/ledger-api/dotnet/src/LedgerApi/ReadModels/SupervisoryRevealReadModelHandler.cs`, `scripts/audit/verify_tsk_p1_210.sh`, `evidence/phase1/tsk_p1_210_supervisory_optimization.json`

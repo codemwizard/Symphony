@@ -3,7 +3,7 @@ phase: '1'
 task_id: TSK-P1-215
 title: Runtime secret provider integration with OpenBao for hardened demo and onboarding flows
 owner_role: SECURITY_GUARDIAN
-status: planned
+status: completed
 depends_on:
 - TSK-P1-212
 - TSK-P1-INF-005

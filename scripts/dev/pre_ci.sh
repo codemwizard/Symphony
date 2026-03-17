@@ -947,4 +947,12 @@ if [[ "${RUN_PHASE1_GATES:-0}" == "1" ]]; then
 fi
 
 pre_ci_clear_failure_state
+echo "==> Verifying TSK-P1-210 to 220 (Hardening and Demo Architecture)"
+for i in {210..220}; do
+  if [[ -x "scripts/audit/verify_tsk_p1_${i}.sh" ]]; then
+    "scripts/audit/verify_tsk_p1_${i}.sh"
+  fi
+done
+
 echo "✅ Pre-CI local checks PASSED."
+

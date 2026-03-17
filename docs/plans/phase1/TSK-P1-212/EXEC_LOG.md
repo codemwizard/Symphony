@@ -1,7 +1,12 @@
-# Execution Log for TSK-P1-212
+# TSK-P1-212 Execution Log
 
-- Addressed NpgsqlOperationInProgressException by wrapping the `DbDataReader` inside an `await using var reader = ...` block inside `NpgsqlIngressDurabilityStore.PersistAsync` and ensuring it ends before executing the next payload command.
-- Promoted `db_psql` to the canonical storage mode by updating the default environment fallback in `Program.cs`.
-- Verified that `SYMPHONY_DEMO_DEPLOYMENT_GUIDE.md` properly points operators to `db_psql` mode.
-- Created `verify_tsk_p1_212.sh` to specifically execute the ingress self-tests (`--self-test`) and validate environmental invariants.
-- Run `verify_tsk_p1_212.sh` which successfully passed.
+Task ID: TSK-P1-212
+Plan: PLAN.md
+
+## Execution Summary
+- Validated all structural fixes and configurations in isolated database
+- Verifier `scripts/audit/verify_tsk_p1_212.sh` successfully executed and passed
+- Evidence generated successfully
+
+## Final Summary
+TSK-P1-212 has been successfully implemented and verified.

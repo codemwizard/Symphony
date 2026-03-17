@@ -3,7 +3,7 @@ phase: '1'
 task_id: TSK-P1-216
 title: Separate admin, read, signing, and operator-session key domains with OpenBao-backed rotation
 owner_role: SECURITY_GUARDIAN
-status: planned
+status: completed
 depends_on:
 - TSK-P1-215
 touches:

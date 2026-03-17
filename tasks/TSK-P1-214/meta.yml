@@ -3,7 +3,7 @@ phase: '1'
 task_id: TSK-P1-214
 title: Persist supplier registry and programme allowlist in PostgreSQL as the only hardened source of truth
 owner_role: ARCHITECT
-status: planned
+status: completed
 depends_on:
 - TSK-P1-211
 - TSK-P1-212

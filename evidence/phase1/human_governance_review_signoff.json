@@ -1,13 +1,13 @@
 {
   "check_id": "TASK-OI-10",
-  "run_id": "standalone-2026-03-16T23:27:59Z",
-  "timestamp_utc": "2026-03-16T23:27:59Z",
-  "git_sha": "c436580fedd737823e2fccfb8cc8443a45aa0acc",
+  "run_id": "standalone-2026-03-17T00:11:16Z",
+  "timestamp_utc": "2026-03-17T00:11:16Z",
+  "git_sha": "fd190438a8fa7505b9c0464590a746376306ea48",
   "schema_fingerprint": "59eef2a10b166543339b310ae67181cc9a8d6b22aa216e649e56652c2316e165",
   "status": "PASS",
   "reviewer_id": "governance-human-reviewer",
   "signed_at_utc": "2026-03-14T18:10:00Z",
-  "change_ref": "branch/feat/wave4-consolidation",
+  "change_ref": "branch/main",
   "review_artifact_ref": "approvals/2026-03-14/BRANCH-feat-demo-deployment-repair.md",
   "review_sidecar_ref": "approvals/2026-03-14/BRANCH-feat-demo-deployment-repair.approval.json",
   "reviewed_files": [

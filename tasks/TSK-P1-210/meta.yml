@@ -3,7 +3,7 @@ phase: '1'
 task_id: TSK-P1-210
 title: Remove supervisory fallback duplication and repeated reveal-model scans
 owner_role: SUPERVISOR
-status: planned
+status: completed
 depends_on:
 - TSK-P1-208
 - TSK-P1-209

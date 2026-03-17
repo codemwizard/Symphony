@@ -154,6 +154,7 @@ Or from source:
 
 ```bash
 SYMPHONY_RUNTIME_PROFILE=pilot-demo \
+INGRESS_STORAGE_MODE=db_psql \
 ASPNETCORE_URLS=http://0.0.0.0:8080 \
 DATABASE_URL=postgres://symphony_admin:symphony_pass@localhost:5432/symphony \
 SYMPHONY_SECRETS_PROVIDER=vault \
