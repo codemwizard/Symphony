@@ -1,0 +1,18 @@
+df -h
+Filesystem                         Size  Used Avail Use% Mounted on
+tmpfs                              776M  1.7M  774M   1% /run
+efivarfs                            56K   13K   39K  25% /sys/firmware/efi/efivars
+/dev/mapper/ubuntu--vg-ubuntu--lv  452G   32G  398G   8% /
+tmpfs                              3.8G  8.0K  3.8G   1% /dev/shm
+tmpfs                              5.0M     0  5.0M   0% /run/lock
+/dev/sda2                          2.0G  201M  1.6G  11% /boot
+/dev/sda1                          1.1G  6.2M  1.1G   1% /boot/efi
+tmpfs                              776M   16K  776M   1% /run/user/1000
+
+free -h
+               total        used        free      shared  buff/cache   available
+Mem:           7.6Gi       2.9Gi       2.0Gi        88Mi       3.0Gi       4.6Gi
+Swap:          4.0Gi          0B       4.0Gi
+
+uptime
+ 00:52:05 up  3:22,  5 users,  load average: 0.75, 0.74, 0.68

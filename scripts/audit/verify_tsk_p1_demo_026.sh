@@ -14,7 +14,7 @@ rg -Fq 'PilotDemoOperatorCookieName' "$PROGRAM_FILE" || { echo "missing_operator
 rg -Fq 'TryValidatePilotDemoOperatorCookie' "$PROGRAM_FILE" || { echo "missing_operator_cookie_validation" >&2; exit 1; }
 rg -Fq 'app.MapPost("/pilot-demo/api/evidence-links/issue"' "$PROGRAM_FILE" || { echo "missing_pilot_demo_evidence_link_route" >&2; exit 1; }
 rg -Fq 'app.MapPost("/pilot-demo/api/instruction-files/generate"' "$PROGRAM_FILE" || { echo "missing_pilot_demo_instruction_generate_route" >&2; exit 1; }
-rg -Fq 'ApiAuthorization.AuthorizeEvidenceRead(httpContext)' "$PROGRAM_FILE" || { echo "missing_browser_read_auth" >&2; exit 1; }
+rg -Fq 'ApiAuthorization.AuthorizeEvidenceRead(httpContext, secrets)' "$PROGRAM_FILE" || { echo "missing_browser_read_auth" >&2; exit 1; }
 rg -Fq 'server-issued operator session boundary' "$SOT" || { echo "missing_operator_session_doc" >&2; exit 1; }
 rg -Fq 'ADMIN_API_KEY` is server-side only' "$GUIDE" || { echo "missing_server_side_admin_doc" >&2; exit 1; }
 

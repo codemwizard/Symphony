@@ -1,0 +1,15 @@
+hostname
+symphony
+
+hostname -I
+192.168.43.233 172.18.0.1 172.17.0.1 172.19.0.1 
+
+ip -brief addr
+lo               UNKNOWN        127.0.0.1/8 ::1/128 
+enp4s0f0         DOWN           
+wlp3s0           UP             192.168.43.233/24 metric 600 fe80::c218:85ff:fe04:6ec5/64 
+br-2b85efaa1a97  UP             172.18.0.1/16 fe80::60a3:e5ff:fec1:4908/64 
+docker0          DOWN           172.17.0.1/16 fe80::f4a2:4aff:fe6c:6a91/64 
+br-359cf165e87d  UP             172.19.0.1/16 fe80::a453:c4ff:feb1:d818/64 
+veth77d6975@if2  UP             fe80::c8f7:9dff:fe1b:b78a/64 
+vethe5aa60e@if2  UP             fe80::10ab:eff:fe39:2e54/64 

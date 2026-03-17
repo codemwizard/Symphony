@@ -1,0 +1,21 @@
+   1184       1 postgres postgres        /usr/lib/postgresql/18/bin/postgres -D /data/postgres-18 -c config_file=/etc/postgresql/18/main/postgresql.conf
+   1202    1184 postgres postgres        postgres: 18/main: io worker 0
+   1203    1184 postgres postgres        postgres: 18/main: io worker 1
+   1204    1184 postgres postgres        postgres: 18/main: io worker 2
+   1205    1184 postgres postgres        postgres: 18/main: checkpointer 
+   1206    1184 postgres postgres        postgres: 18/main: background writer 
+   1230    1184 postgres postgres        postgres: 18/main: walwriter 
+   1231    1184 postgres postgres        postgres: 18/main: autovacuum launcher 
+   1232    1184 postgres postgres        postgres: 18/main: logical replication launcher 
+  14986   14962 dnsmasq  postgres        postgres
+  15191   14986 dnsmasq  postgres        postgres: io worker 0
+  15192   14986 dnsmasq  postgres        postgres: io worker 1
+  15193   14986 dnsmasq  postgres        postgres: io worker 2
+  15194   14986 dnsmasq  postgres        postgres: checkpointer 
+  15195   14986 dnsmasq  postgres        postgres: background writer 
+  15242   14986 dnsmasq  postgres        postgres: walwriter 
+  15243   14986 dnsmasq  postgres        postgres: autovacuum launcher 
+  15244   14986 dnsmasq  postgres        postgres: logical replication launcher 
+ 109909  109884 root     docker-entrypoi /usr/bin/dumb-init /bin/sh /usr/local/bin/docker-entrypoint.sh server -dev -dev-root-token-id=root -dev-listen-address=0.0.0.0:8200 -config=/openbao/config/openbao.hcl
+ 109976  109909 dhcpcd   bao             bao server -config=/openbao/config -dev-root-token-id= -dev-listen-address=0.0.0.0:8200 -dev -dev-root-token-id=root -dev-listen-address=0.0.0.0:8200 -config=/openbao/config/openbao.hcl
+ 255193  255017 mwiza    rg              rg dotnet|LedgerApi|symphony|openbao|postgres

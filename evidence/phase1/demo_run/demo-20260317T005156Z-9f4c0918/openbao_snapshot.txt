@@ -1,0 +1,3 @@
+BAO_ADDR=http://127.0.0.1:8200
+{"initialized":true,"sealed":false,"standby":false,"performance_standby":false,"replication_performance_mode":"disabled","replication_dr_mode":"disabled","server_time_utc":1773708725,"version":"2.5.0","cluster_name":"vault-cluster-95146430","cluster_id":"6dfa0324-ad47-5435-258f-e0215d65e4ab"}
+verify_openbao_not_dev_present=true

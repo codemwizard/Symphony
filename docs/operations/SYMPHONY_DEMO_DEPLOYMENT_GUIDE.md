@@ -46,7 +46,7 @@ Optional:
 
 - `SYMPHONY_ENABLE_LEGACY_SUPERVISORY_UI=1`
 
-Keys, tenants, and policies are managed via the OpenBao control plane and the server-side onboarding APIs, not raw environment overrides.
+Keys, tenants, and policies are managed via the OpenBao control plane and the server-side onboarding APIs, not raw environment overrides. Note that `ADMIN_API_KEY` is server-side only and never exposed to the browser.
 
 ## 4. Ports and Exposure
 
