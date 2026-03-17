@@ -145,7 +145,8 @@ export ASPNETCORE_URLS=http://0.0.0.0:8080
 export DATABASE_URL=postgres://symphony_admin:symphony_pass@localhost:5432/symphony
 export SYMPHONY_SECRETS_PROVIDER=vault
 export VAULT_ADDR=http://127.0.0.1:8200
-export BAO_TOKEN=root
+export BAO_ROLE_ID=$(cat /tmp/symphony_openbao/role_id)
+export BAO_SECRET_ID=$(cat /tmp/symphony_openbao/secret_id)
 
 dotnet /opt/symphony/ledger-api/LedgerApi.dll
 ```
@@ -159,7 +160,8 @@ ASPNETCORE_URLS=http://0.0.0.0:8080 \
 DATABASE_URL=postgres://symphony_admin:symphony_pass@localhost:5432/symphony \
 SYMPHONY_SECRETS_PROVIDER=vault \
 VAULT_ADDR=http://127.0.0.1:8200 \
-BAO_TOKEN=root \
+BAO_ROLE_ID=$(cat /tmp/symphony_openbao/role_id) \
+BAO_SECRET_ID=$(cat /tmp/symphony_openbao/secret_id) \
 dotnet run --no-launch-profile --project services/ledger-api/dotnet/src/LedgerApi/LedgerApi.csproj
 ```
 

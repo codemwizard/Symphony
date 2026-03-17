@@ -118,7 +118,7 @@ static string CreatePilotDemoOperatorCookie(string tenantId, string adminKey, Ti
     return Convert.ToBase64String(Encoding.UTF8.GetBytes(raw));
 }
 
-bool TryValidatePilotDemoOperatorCookie(HttpContext httpContext, string expectedTenantId, out string errorCode, out string[] errors)
+bool TryValidatePilotDemoOperatorCookie(HttpContext httpContext, string? expectedTenantId, out string errorCode, out string[] errors)
 {
     errorCode = string.Empty;
     errors = Array.Empty<string>();
@@ -184,7 +184,7 @@ bool TryValidatePilotDemoOperatorCookie(HttpContext httpContext, string expected
         return false;
     }
 
-    if (!string.Equals(tenantId, expectedTenantId, StringComparison.OrdinalIgnoreCase))
+    if (expectedTenantId != null && !string.Equals(tenantId, expectedTenantId, StringComparison.OrdinalIgnoreCase))
     {
         errorCode = "PILOT_DEMO_OPERATOR_SESSION_TENANT_MISMATCH";
         errors = new[] { "pilot-demo operator session does not match the requested tenant" };
@@ -1024,7 +1024,10 @@ app.MapPost("/api/admin/onboarding/tenants", async (JsonElement body, HttpContex
 {
     var authFailure = ApiAuthorization.AuthorizeAdminTenantOnboarding(httpContext, secrets);
     if (authFailure is not null)
-        return Results.Json(authFailure.Body, statusCode: authFailure.StatusCode);
+    {
+        if (runtimeProfile != "pilot-demo" || !TryValidatePilotDemoOperatorCookie(httpContext, null, out _, out _))
+            return Results.Json(authFailure.Body, statusCode: authFailure.StatusCode);
+    }
 
     if (!body.TryGetProperty("tenant_id", out var tenantIdProp) || !Guid.TryParse(tenantIdProp.GetString(), out var tenantId))
         return Results.Json(new { error_code = "INVALID_REQUEST", errors = new[] { "tenant_id is required and must be a valid UUID" } }, statusCode: 400);
@@ -1051,7 +1054,10 @@ app.MapGet("/api/admin/onboarding/tenants", async (HttpContext httpContext, Canc
 {
     var authFailure = ApiAuthorization.AuthorizeAdminTenantOnboarding(httpContext, secrets);
     if (authFailure is not null)
-        return Results.Json(authFailure.Body, statusCode: authFailure.StatusCode);
+    {
+        if (runtimeProfile != "pilot-demo" || !TryValidatePilotDemoOperatorCookie(httpContext, null, out _, out _))
+            return Results.Json(authFailure.Body, statusCode: authFailure.StatusCode);
+    }
 
     var tenants = await tenantRegistryStore.ListAsync(cancellationToken);
     return Results.Json(new
@@ -1073,7 +1079,10 @@ app.MapPost("/api/admin/onboarding/programmes", async (JsonElement body, HttpCon
 {
     var authFailure = ApiAuthorization.AuthorizeAdminTenantOnboarding(httpContext, secrets);
     if (authFailure is not null)
-        return Results.Json(authFailure.Body, statusCode: authFailure.StatusCode);
+    {
+        if (runtimeProfile != "pilot-demo" || !TryValidatePilotDemoOperatorCookie(httpContext, null, out _, out _))
+            return Results.Json(authFailure.Body, statusCode: authFailure.StatusCode);
+    }
 
     if (!body.TryGetProperty("tenant_id", out var tidProp) || !Guid.TryParse(tidProp.GetString(), out var tenantId))
         return Results.Json(new { error_code = "INVALID_REQUEST", errors = new[] { "tenant_id is required" } }, statusCode: 400);
@@ -1102,7 +1111,10 @@ app.MapGet("/api/admin/onboarding/programmes", async (HttpContext httpContext, C
 {
     var authFailure = ApiAuthorization.AuthorizeAdminTenantOnboarding(httpContext, secrets);
     if (authFailure is not null)
-        return Results.Json(authFailure.Body, statusCode: authFailure.StatusCode);
+    {
+        if (runtimeProfile != "pilot-demo" || !TryValidatePilotDemoOperatorCookie(httpContext, null, out _, out _))
+            return Results.Json(authFailure.Body, statusCode: authFailure.StatusCode);
+    }
 
     Guid? tenantFilter = null;
     if (httpContext.Request.Query.TryGetValue("tenant_id", out var tq) && Guid.TryParse(tq.ToString(), out var tf))
@@ -1130,7 +1142,10 @@ app.MapPut("/api/admin/onboarding/programmes/{id}/activate", async (string id, H
 {
     var authFailure = ApiAuthorization.AuthorizeAdminTenantOnboarding(httpContext, secrets);
     if (authFailure is not null)
-        return Results.Json(authFailure.Body, statusCode: authFailure.StatusCode);
+    {
+        if (runtimeProfile != "pilot-demo" || !TryValidatePilotDemoOperatorCookie(httpContext, null, out _, out _))
+            return Results.Json(authFailure.Body, statusCode: authFailure.StatusCode);
+    }
     if (!Guid.TryParse(id, out var programmeId))
         return Results.Json(new { error_code = "INVALID_REQUEST", errors = new[] { "programme id must be a valid UUID" } }, statusCode: 400);
 
@@ -1146,7 +1161,10 @@ app.MapPut("/api/admin/onboarding/programmes/{id}/suspend", async (string id, Ht
 {
     var authFailure = ApiAuthorization.AuthorizeAdminTenantOnboarding(httpContext, secrets);
     if (authFailure is not null)
-        return Results.Json(authFailure.Body, statusCode: authFailure.StatusCode);
+    {
+        if (runtimeProfile != "pilot-demo" || !TryValidatePilotDemoOperatorCookie(httpContext, null, out _, out _))
+            return Results.Json(authFailure.Body, statusCode: authFailure.StatusCode);
+    }
     if (!Guid.TryParse(id, out var programmeId))
         return Results.Json(new { error_code = "INVALID_REQUEST", errors = new[] { "programme id must be a valid UUID" } }, statusCode: 400);
 
@@ -1162,7 +1180,10 @@ app.MapPost("/api/admin/onboarding/programmes/{id}/policy-binding", async (strin
 {
     var authFailure = ApiAuthorization.AuthorizeAdminTenantOnboarding(httpContext, secrets);
     if (authFailure is not null)
-        return Results.Json(authFailure.Body, statusCode: authFailure.StatusCode);
+    {
+        if (runtimeProfile != "pilot-demo" || !TryValidatePilotDemoOperatorCookie(httpContext, null, out _, out _))
+            return Results.Json(authFailure.Body, statusCode: authFailure.StatusCode);
+    }
     if (!Guid.TryParse(id, out var programmeId))
         return Results.Json(new { error_code = "INVALID_REQUEST", errors = new[] { "programme id must be a valid UUID" } }, statusCode: 400);
     if (!body.TryGetProperty("tenant_id", out var tidProp) || !Guid.TryParse(tidProp.GetString(), out var tenantId))
@@ -1188,7 +1209,10 @@ app.MapGet("/api/admin/onboarding/status", async (HttpContext httpContext, Cance
 {
     var authFailure = ApiAuthorization.AuthorizeAdminTenantOnboarding(httpContext, secrets);
     if (authFailure is not null)
-        return Results.Json(authFailure.Body, statusCode: authFailure.StatusCode);
+    {
+        if (runtimeProfile != "pilot-demo" || !TryValidatePilotDemoOperatorCookie(httpContext, null, out _, out _))
+            return Results.Json(authFailure.Body, statusCode: authFailure.StatusCode);
+    }
 
     var tenants = await tenantRegistryStore.ListAsync(cancellationToken);
     var programmes = await programmeStore.ListAsync(null, cancellationToken);
@@ -1216,6 +1240,46 @@ app.MapGet("/api/admin/onboarding/status", async (HttpContext httpContext, Cance
         timestamp = DateTimeOffset.UtcNow.ToString("O")
     }, statusCode: 200);
 }).RequireRateLimiting("sensitive-endpoint");
+
+if (string.Equals(runtimeProfile, "pilot-demo", StringComparison.OrdinalIgnoreCase))
+{
+    try
+    {
+        var existingTenants = await tenantRegistryStore.ListAsync(default);
+        if (!existingTenants.Any())
+        {
+            logger.LogInformation("Auto-seeding default Pilot Demo tenant and programme...");
+            var uiTidStr = Environment.GetEnvironmentVariable("SYMPHONY_UI_TENANT_ID");
+            if (!Guid.TryParse(uiTidStr, out var tenantId))
+            {
+                tenantId = Guid.NewGuid();
+            }
+            var tenantResult = await tenantRegistryStore.UpsertAsync(tenantId, "ten-zambiagrn", "Zambia Green MFI", default);
+            if (tenantResult.Success && tenantResult.Entry is not null)
+            {
+                var progResult = await programmeStore.CreateAsync(tenantId, "PGM-ZAMBIA-GRN-001", "GreenTech4CE · Solar Cluster A", default);
+                if (progResult.Success && progResult.Entry is not null)
+                {
+                    var pidStr = progResult.Entry.ProgrammeId;
+                    if (Guid.TryParse(pidStr, out var pidGuid))
+                    {
+                        await programmeStore.ActivateAsync(pidGuid, default);
+                        await programmeStore.BindPolicyAsync(pidGuid, tenantId, "green_eq_v1", default);
+                        logger.LogInformation("Successfully auto-seeded default Pilot Demo tenant and programme.");
+                    }
+                    else
+                    {
+                        logger.LogWarning($"Failed to parse ProgrammeId {pidStr} as Guid during auto-seed.");
+                    }
+                }
+            }
+        }
+    }
+    catch (Exception ex)
+    {
+        logger.LogWarning(ex, "Failed to auto-seed default Pilot Demo tenant.");
+    }
+}
 
 await app.RunAsync();
 
