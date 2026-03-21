@@ -3,8 +3,8 @@
   "task_id": "TSK-P1-HIER-011",
   "status": "PASS",
   "pass": true,
-  "git_sha": "f1c9b7b685c5495897324f5e2250774d07779578",
-  "timestamp_utc": "2026-02-25T10:16:49Z",
+  "git_sha": "4e6f00472e156e493c115045d031f5516bfbceba",
+  "timestamp_utc": "2026-03-18T01:41:16Z",
   "details": {
     "mechanisms": [
       "READ_ONLY",

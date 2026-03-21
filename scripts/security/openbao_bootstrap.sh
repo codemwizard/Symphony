@@ -99,6 +99,9 @@ printf '%s' "$SECRET_ID" > "$STATE_DIR/secret_id"
 
 # Export keys for local dev convenience (env-based provider fallback)
 cat > "$STATE_DIR/secrets.env" <<EOF
+export SYMPHONY_RUNTIME_PROFILE="pilot-demo"
+export BAO_ROLE_ID="$ROLE_ID"
+export BAO_SECRET_ID="$SECRET_ID"
 export INGRESS_API_KEY="$INGRESS_KEY"
 export ADMIN_API_KEY="$ADMIN_KEY"
 export OPERATOR_SESSION_KEY="$SESSION_KEY"

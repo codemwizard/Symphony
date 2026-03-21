@@ -1085,12 +1085,26 @@ static class ProjectionPayload
 
 sealed class NpgsqlTenantRegistryStore(ILogger logger, NpgsqlDataSource dataSource) : ITenantRegistryStore
 {
-    public async Task<bool> ExistsAsync(Guid tenantId, CancellationToken cancellationToken)
+    public async Task<bool> ExistsAsync(Guid tenantId, CancellationToken cancellationToken, bool bypassRls = false)
     {
         try
         {
             await using var conn = await dataSource.OpenConnectionAsync(cancellationToken);
+            await using var tx = await conn.BeginTransactionAsync(cancellationToken);
             await using var cmd = conn.CreateCommand();
+            cmd.Transaction = tx;
+
+            if (bypassRls)
+            {
+                cmd.CommandText = "SELECT set_config('app.bypass_rls', 'on', true)";
+                await cmd.ExecuteScalarAsync(cancellationToken);
+            }
+
+            cmd.CommandText = "SELECT set_config('app.current_tenant_id', @tenant_id::text, true)";
+            cmd.Parameters.AddWithValue("tenant_id", tenantId);
+            await cmd.ExecuteScalarAsync(cancellationToken);
+
+            cmd.Parameters.Clear();
             cmd.CommandText = @"
 SELECT EXISTS(
   SELECT 1 FROM public.tenant_registry
@@ -1099,21 +1113,37 @@ SELECT EXISTS(
 );";
             cmd.Parameters.AddWithValue("tenant_id", tenantId);
             var result = await cmd.ExecuteScalarAsync(cancellationToken);
+            await tx.CommitAsync(cancellationToken);
             return result is true;
         }
         catch (Exception ex)
         {
+            if (ex is Npgsql.PostgresException pex && pex.SqlState == "42P01") throw;
             logger.LogError(ex, "Tenant registry existence check failed.");
             return false;
         }
     }
 
-    public async Task<TenantRegistryEntry?> GetAsync(Guid tenantId, CancellationToken cancellationToken)
+    public async Task<TenantRegistryEntry?> GetAsync(Guid tenantId, CancellationToken cancellationToken, bool bypassRls = false)
     {
         try
         {
             await using var conn = await dataSource.OpenConnectionAsync(cancellationToken);
+            await using var tx = await conn.BeginTransactionAsync(cancellationToken);
             await using var cmd = conn.CreateCommand();
+            cmd.Transaction = tx;
+
+            if (bypassRls)
+            {
+                cmd.CommandText = "SELECT set_config('app.bypass_rls', 'on', true)";
+                await cmd.ExecuteScalarAsync(cancellationToken);
+            }
+
+            cmd.CommandText = "SELECT set_config('app.current_tenant_id', @tenant_id::text, true)";
+            cmd.Parameters.AddWithValue("tenant_id", tenantId);
+            await cmd.ExecuteScalarAsync(cancellationToken);
+
+            cmd.Parameters.Clear();
             cmd.CommandText = @"
 SELECT tenant_id::text, tenant_key, display_name, status, created_at, updated_at
 FROM public.tenant_registry
@@ -1121,26 +1151,42 @@ WHERE tenant_id = @tenant_id
 LIMIT 1;";
             cmd.Parameters.AddWithValue("tenant_id", tenantId);
             await using var reader = await cmd.ExecuteReaderAsync(cancellationToken);
-            if (!await reader.ReadAsync(cancellationToken))
-                return null;
-            return new TenantRegistryEntry(
-                reader.GetString(0), reader.GetString(1), reader.GetString(2),
-                reader.GetString(3), reader.GetFieldValue<DateTimeOffset>(4), reader.GetFieldValue<DateTimeOffset>(5));
+            if (await reader.ReadAsync(cancellationToken))
+            {
+                var entry = new TenantRegistryEntry(
+                    reader.GetString(0), reader.GetString(1), reader.GetString(2),
+                    reader.GetString(3), reader.GetFieldValue<DateTimeOffset>(4), reader.GetFieldValue<DateTimeOffset>(5));
+                await reader.DisposeAsync();
+                await tx.CommitAsync(cancellationToken);
+                return entry;
+            }
+            await tx.CommitAsync(cancellationToken);
+            return null;
         }
         catch (Exception ex)
         {
+            if (ex is Npgsql.PostgresException pex && pex.SqlState == "42P01") throw;
             logger.LogError(ex, "Tenant registry get failed.");
             return null;
         }
     }
 
-    public async Task<IReadOnlyList<TenantRegistryEntry>> ListAsync(CancellationToken cancellationToken)
+    public async Task<IReadOnlyList<TenantRegistryEntry>> ListAsync(CancellationToken cancellationToken, bool bypassRls = false)
     {
         var results = new List<TenantRegistryEntry>();
         try
         {
             await using var conn = await dataSource.OpenConnectionAsync(cancellationToken);
+            await using var tx = await conn.BeginTransactionAsync(cancellationToken);
             await using var cmd = conn.CreateCommand();
+            cmd.Transaction = tx;
+
+            if (bypassRls)
+            {
+                cmd.CommandText = "SELECT set_config('app.bypass_rls', 'on', true)";
+                await cmd.ExecuteScalarAsync(cancellationToken);
+            }
+
             cmd.CommandText = @"
 SELECT tenant_id::text, tenant_key, display_name, status, created_at, updated_at
 FROM public.tenant_registry
@@ -1153,15 +1199,18 @@ LIMIT 1000;";
                     reader.GetString(0), reader.GetString(1), reader.GetString(2),
                     reader.GetString(3), reader.GetFieldValue<DateTimeOffset>(4), reader.GetFieldValue<DateTimeOffset>(5)));
             }
+            await reader.DisposeAsync();
+            await tx.CommitAsync(cancellationToken);
         }
         catch (Exception ex)
         {
+            if (ex is Npgsql.PostgresException pex && pex.SqlState == "42P01") throw;
             logger.LogError(ex, "Tenant registry list failed.");
         }
         return results;
     }
 
-    public async Task<TenantRegistryResult> UpsertAsync(Guid tenantId, string tenantKey, string displayName, CancellationToken cancellationToken)
+    public async Task<TenantRegistryResult> UpsertAsync(Guid tenantId, string tenantKey, string displayName, CancellationToken cancellationToken, bool bypassRls = false)
     {
         try
         {
@@ -1169,10 +1218,24 @@ LIMIT 1000;";
             await using var tx = await conn.BeginTransactionAsync(cancellationToken);
             await using var cmd = conn.CreateCommand();
             cmd.Transaction = tx;
+
+            if (bypassRls)
+            {
+                cmd.CommandText = "SELECT set_config('app.bypass_rls', 'on', true)";
+                await cmd.ExecuteScalarAsync(cancellationToken);
+            }
+
+            // Set RLS context first
+            cmd.CommandText = "SELECT set_config('app.current_tenant_id', @tenant_id::text, true)";
+            cmd.Parameters.AddWithValue("tenant_id", tenantId);
+            await cmd.ExecuteScalarAsync(cancellationToken);
+
+            // Now perform the upsert on tenant_key for seeding robustness
+            cmd.Parameters.Clear();
             cmd.CommandText = @"
 INSERT INTO public.tenant_registry (tenant_id, tenant_key, display_name, status)
 VALUES (@tenant_id, @tenant_key, @display_name, 'ACTIVE')
-ON CONFLICT (tenant_id) DO UPDATE SET
+ON CONFLICT (tenant_key) DO UPDATE SET
   display_name = EXCLUDED.display_name,
   updated_at = now()
 RETURNING tenant_id::text, tenant_key, display_name, status, created_at, updated_at,
@@ -1190,38 +1253,100 @@ RETURNING tenant_id::text, tenant_key, display_name, status, created_at, updated
                 reader.GetString(0), reader.GetString(1), reader.GetString(2),
                 reader.GetString(3), reader.GetFieldValue<DateTimeOffset>(4), reader.GetFieldValue<DateTimeOffset>(5));
             var createdNew = reader.GetBoolean(6);
+            await reader.DisposeAsync();
             await tx.CommitAsync(cancellationToken);
             return TenantRegistryResult.Ok(entry, createdNew);
         }
         catch (Exception ex)
         {
+            if (ex is Npgsql.PostgresException pex && pex.SqlState == "42P01") throw;
             logger.LogError(ex, "Tenant registry upsert failed.");
             return TenantRegistryResult.Fail(StoreErrorMessages.PersistenceUnavailable);
+        }
+    }
+    public async Task<bool> RegisterSupplierAsync(Guid tenantId, string supplierId, string supplierName, string payoutTarget, CancellationToken cancellationToken, bool bypassRls = false)
+    {
+        try
+        {
+            await using var conn = await dataSource.OpenConnectionAsync(cancellationToken);
+            await using var tx = await conn.BeginTransactionAsync(cancellationToken);
+            await using var cmd = conn.CreateCommand();
+            cmd.Transaction = tx;
+
+            if (bypassRls)
+            {
+                cmd.CommandText = "SELECT set_config('app.bypass_rls', 'on', true)";
+                await cmd.ExecuteScalarAsync(cancellationToken);
+            }
+
+            cmd.CommandText = "SELECT set_config('app.current_tenant_id', @tenant_id::text, true)";
+            cmd.Parameters.AddWithValue("tenant_id", tenantId);
+            await cmd.ExecuteScalarAsync(cancellationToken);
+
+            cmd.Parameters.Clear();
+            cmd.CommandText = @"
+INSERT INTO public.supplier_registry (tenant_id, supplier_id, supplier_name, payout_target, active, updated_at_utc)
+VALUES (@tenant_id, @supplier_id, @supplier_name, @payout_target, true, timezone('UTC', now())::text)
+ON CONFLICT (tenant_id, supplier_id) DO UPDATE SET
+  supplier_name = EXCLUDED.supplier_name,
+  payout_target = EXCLUDED.payout_target,
+  active = true,
+  updated_at_utc = timezone('UTC', now())::text;";
+            cmd.Parameters.AddWithValue("tenant_id", tenantId);
+            cmd.Parameters.AddWithValue("supplier_id", supplierId);
+            cmd.Parameters.AddWithValue("supplier_name", supplierName);
+            cmd.Parameters.AddWithValue("payout_target", payoutTarget);
+            await cmd.ExecuteNonQueryAsync(cancellationToken);
+            await tx.CommitAsync(cancellationToken);
+            return true;
+        }
+        catch (Exception ex)
+        {
+            if (ex is Npgsql.PostgresException pex && pex.SqlState == "42P01") throw;
+            logger.LogError(ex, "Supplier registry upsert failed.");
+            return false;
         }
     }
 }
 
 sealed class NpgsqlProgrammeStore(ILogger logger, NpgsqlDataSource dataSource) : IProgrammeStore
 {
-    public async Task<IReadOnlyList<ProgrammeEntry>> ListAsync(Guid? tenantId, CancellationToken cancellationToken)
+    public async Task<IReadOnlyList<ProgrammeEntry>> ListAsync(Guid? tenantId, CancellationToken cancellationToken, bool bypassRls = false)
     {
         var results = new List<ProgrammeEntry>();
         try
         {
             await using var conn = await dataSource.OpenConnectionAsync(cancellationToken);
+            await using var tx = await conn.BeginTransactionAsync(cancellationToken);
             await using var cmd = conn.CreateCommand();
+            cmd.Transaction = tx;
+
+            if (bypassRls)
+            {
+                cmd.CommandText = "SELECT set_config('app.bypass_rls', 'on', true)";
+                await cmd.ExecuteScalarAsync(cancellationToken);
+            }
+
+            if (tenantId.HasValue)
+            {
+                cmd.CommandText = "SELECT set_config('app.current_tenant_id', @tenant_id::text, true)";
+                cmd.Parameters.AddWithValue("tenant_id", tenantId.Value);
+                await cmd.ExecuteScalarAsync(cancellationToken);
+                cmd.Parameters.Clear();
+            }
+
             cmd.CommandText = tenantId.HasValue
                 ? @"SELECT p.id::text, p.tenant_id::text, p.programme_key, p.display_name, p.status,
-                     b.policy_code, p.created_at, p.updated_at
-                   FROM public.programme_registry p
-                   LEFT JOIN public.programme_policy_binding b ON b.programme_id = p.id AND b.is_active = true
-                   WHERE p.tenant_id = @tenant_id
-                   ORDER BY p.created_at ASC LIMIT 1000"
+                      b.policy_code, p.created_at, p.updated_at
+                    FROM public.programme_registry p
+                    LEFT JOIN public.programme_policy_binding b ON b.programme_id = p.id AND b.is_active = true
+                    WHERE p.tenant_id = @tenant_id
+                    ORDER BY p.created_at ASC LIMIT 1000"
                 : @"SELECT p.id::text, p.tenant_id::text, p.programme_key, p.display_name, p.status,
-                     b.policy_code, p.created_at, p.updated_at
-                   FROM public.programme_registry p
-                   LEFT JOIN public.programme_policy_binding b ON b.programme_id = p.id AND b.is_active = true
-                   ORDER BY p.created_at ASC LIMIT 1000";
+                      b.policy_code, p.created_at, p.updated_at
+                    FROM public.programme_registry p
+                    LEFT JOIN public.programme_policy_binding b ON b.programme_id = p.id AND b.is_active = true
+                    ORDER BY p.created_at ASC LIMIT 1000";
             if (tenantId.HasValue)
                 cmd.Parameters.AddWithValue("tenant_id", tenantId.Value);
             await using var reader = await cmd.ExecuteReaderAsync(cancellationToken);
@@ -1233,15 +1358,21 @@ sealed class NpgsqlProgrammeStore(ILogger logger, NpgsqlDataSource dataSource) :
                     reader.IsDBNull(5) ? null : reader.GetString(5),
                     reader.GetFieldValue<DateTimeOffset>(6), reader.GetFieldValue<DateTimeOffset>(7)));
             }
+            if (tx != null)
+            {
+                await reader.DisposeAsync();
+                await tx.CommitAsync(cancellationToken);
+            }
         }
         catch (Exception ex)
         {
+            if (ex is Npgsql.PostgresException pex && pex.SqlState == "42P01") throw;
             logger.LogError(ex, "Programme list failed.");
         }
         return results;
     }
 
-    public async Task<ProgrammeResult> CreateAsync(Guid tenantId, string programmeKey, string displayName, CancellationToken cancellationToken)
+    public async Task<ProgrammeResult> CreateAsync(Guid tenantId, string programmeKey, string displayName, CancellationToken cancellationToken, bool bypassRls = false)
     {
         try
         {
@@ -1249,6 +1380,20 @@ sealed class NpgsqlProgrammeStore(ILogger logger, NpgsqlDataSource dataSource) :
             await using var tx = await conn.BeginTransactionAsync(cancellationToken);
             await using var cmd = conn.CreateCommand();
             cmd.Transaction = tx;
+
+            if (bypassRls)
+            {
+                cmd.CommandText = "SELECT set_config('app.bypass_rls', 'on', true)";
+                await cmd.ExecuteScalarAsync(cancellationToken);
+            }
+
+            // Set RLS context first
+            cmd.CommandText = "SELECT set_config('app.current_tenant_id', @tenant_id::text, true)";
+            cmd.Parameters.AddWithValue("tenant_id", tenantId);
+            await cmd.ExecuteScalarAsync(cancellationToken);
+
+            // Now perform the creation
+            cmd.Parameters.Clear();
             cmd.CommandText = @"
 INSERT INTO public.programme_registry (tenant_id, programme_key, display_name, status)
 VALUES (@tenant_id, @programme_key, @display_name, 'CREATED')
@@ -1271,23 +1416,25 @@ RETURNING id::text, tenant_id::text, programme_key, display_name, status, create
                 reader.GetString(3), reader.GetString(4), null,
                 reader.GetFieldValue<DateTimeOffset>(5), reader.GetFieldValue<DateTimeOffset>(6));
             var createdNew = reader.GetBoolean(7);
+            await reader.DisposeAsync();
             await tx.CommitAsync(cancellationToken);
             return ProgrammeResult.Ok(entry, createdNew);
         }
         catch (Exception ex)
         {
+            if (ex is Npgsql.PostgresException pex && pex.SqlState == "42P01") throw;
             logger.LogError(ex, "Programme create failed.");
             return ProgrammeResult.Fail(StoreErrorMessages.PersistenceUnavailable);
         }
     }
 
-    public async Task<ProgrammeResult> ActivateAsync(Guid programmeId, CancellationToken cancellationToken)
-        => await UpdateStatusAsync(programmeId, "ACTIVE", cancellationToken);
+    public async Task<ProgrammeResult> ActivateAsync(Guid programmeId, Guid tenantId, CancellationToken cancellationToken, bool bypassRls = false)
+        => await UpdateStatusAsync(programmeId, tenantId, "ACTIVE", cancellationToken, bypassRls);
 
-    public async Task<ProgrammeResult> SuspendAsync(Guid programmeId, CancellationToken cancellationToken)
-        => await UpdateStatusAsync(programmeId, "SUSPENDED", cancellationToken);
+    public async Task<ProgrammeResult> SuspendAsync(Guid programmeId, Guid tenantId, CancellationToken cancellationToken, bool bypassRls = false)
+        => await UpdateStatusAsync(programmeId, tenantId, "SUSPENDED", cancellationToken, bypassRls);
 
-    private async Task<ProgrammeResult> UpdateStatusAsync(Guid programmeId, string newStatus, CancellationToken cancellationToken)
+    private async Task<ProgrammeResult> UpdateStatusAsync(Guid programmeId, Guid tenantId, string newStatus, CancellationToken cancellationToken, bool bypassRls = false)
     {
         try
         {
@@ -1295,11 +1442,26 @@ RETURNING id::text, tenant_id::text, programme_key, display_name, status, create
             await using var tx = await conn.BeginTransactionAsync(cancellationToken);
             await using var cmd = conn.CreateCommand();
             cmd.Transaction = tx;
+
+            if (bypassRls)
+            {
+                cmd.CommandText = "SELECT set_config('app.bypass_rls', 'on', true)";
+                await cmd.ExecuteScalarAsync(cancellationToken);
+            }
+
+            // Set RLS context first
+            cmd.CommandText = "SELECT set_config('app.current_tenant_id', @tenant_id::text, true)";
+            cmd.Parameters.AddWithValue("tenant_id", tenantId);
+            await cmd.ExecuteScalarAsync(cancellationToken);
+
+            // Now perform the update
+            cmd.Parameters.Clear();
             cmd.CommandText = @"
 UPDATE public.programme_registry
 SET status = @status, updated_at = now()
 WHERE id = @programme_id
 RETURNING id::text, tenant_id::text, programme_key, display_name, status, created_at, updated_at;";
+            cmd.Parameters.AddWithValue("tenant_id", tenantId);
             cmd.Parameters.AddWithValue("programme_id", programmeId);
             cmd.Parameters.AddWithValue("status", newStatus);
             await using var reader = await cmd.ExecuteReaderAsync(cancellationToken);
@@ -1312,22 +1474,39 @@ RETURNING id::text, tenant_id::text, programme_key, display_name, status, create
                 reader.GetString(0), reader.GetString(1), reader.GetString(2),
                 reader.GetString(3), reader.GetString(4), null,
                 reader.GetFieldValue<DateTimeOffset>(5), reader.GetFieldValue<DateTimeOffset>(6));
+            await reader.DisposeAsync();
             await tx.CommitAsync(cancellationToken);
             return ProgrammeResult.Ok(entry, false);
         }
         catch (Exception ex)
         {
+            if (ex is Npgsql.PostgresException pex && pex.SqlState == "42P01") throw;
             logger.LogError(ex, "Programme status update failed.");
             return ProgrammeResult.Fail(StoreErrorMessages.PersistenceUnavailable);
         }
     }
 
-    public async Task<ProgrammeResult> BindPolicyAsync(Guid programmeId, Guid tenantId, string policyCode, CancellationToken cancellationToken)
+    public async Task<ProgrammeResult> BindPolicyAsync(Guid programmeId, Guid tenantId, string policyCode, CancellationToken cancellationToken, bool bypassRls = false)
     {
         try
         {
             await using var conn = await dataSource.OpenConnectionAsync(cancellationToken);
             await using var tx = await conn.BeginTransactionAsync(cancellationToken);
+
+            if (bypassRls)
+            {
+                await using var bypassCmd = conn.CreateCommand();
+                bypassCmd.Transaction = tx;
+                bypassCmd.CommandText = "SELECT set_config('app.bypass_rls', 'on', true)";
+                await bypassCmd.ExecuteScalarAsync(cancellationToken);
+            }
+
+            // Set RLS context first
+            await using var setConfig = conn.CreateCommand();
+            setConfig.Transaction = tx;
+            setConfig.CommandText = "SELECT set_config('app.current_tenant_id', @tenant_id::text, true)";
+            setConfig.Parameters.AddWithValue("tenant_id", tenantId);
+            await setConfig.ExecuteScalarAsync(cancellationToken);
 
             // Deactivate any existing binding
             await using var deactivate = conn.CreateCommand();
@@ -1382,11 +1561,17 @@ LIMIT 1;";
                 reader.GetString(3), reader.GetString(4),
                 reader.IsDBNull(5) ? null : reader.GetString(5),
                 reader.GetFieldValue<DateTimeOffset>(6), reader.GetFieldValue<DateTimeOffset>(7));
+            await reader.DisposeAsync();
             await tx.CommitAsync(cancellationToken);
             return ProgrammeResult.Ok(entry, false);
         }
         catch (Exception ex)
         {
+            if (ex is Npgsql.PostgresException pex)
+            {
+                if (pex.SqlState == "42P01") throw;
+                if (pex.SqlState == "23505") return ProgrammeResult.Fail("policy binding already exists");
+            }
             logger.LogError(ex, "Programme policy binding failed.");
             return ProgrammeResult.Fail(StoreErrorMessages.PersistenceUnavailable);
         }

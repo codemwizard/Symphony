@@ -1,0 +1,23 @@
+{
+  "taskId": "TASK-UI-WIRE-012",
+  "status": "PASS",
+  "timestamp": "2026-03-17T22:25:00Z",
+  "verificationScript": "scripts/audit/verify_task_ui_wire_012.sh",
+  "checks": [
+    {
+      "name": "onbFetch checks response.ok and parses JSON errors",
+      "status": "PASS"
+    },
+    {
+      "name": "activate mutation sends tenant_id",
+      "status": "PASS"
+    },
+    {
+      "name": "row action controls exist",
+      "status": "PASS"
+    }
+  ],
+  "check_id": "TASK-UI-WIRE-012",
+  "timestamp_utc": "2026-03-17T23:37:04Z",
+  "git_sha": "unknown"
+}

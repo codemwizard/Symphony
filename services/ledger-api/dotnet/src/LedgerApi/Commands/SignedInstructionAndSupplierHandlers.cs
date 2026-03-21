@@ -30,25 +30,44 @@ static class SupplierPolicyStore
     {
         if (_dataSource is not null)
         {
-            await using var cmd = _dataSource.CreateCommand(@"
-                INSERT INTO public.supplier_registry (tenant_id, supplier_id, supplier_name, payout_target, registered_latitude, registered_longitude, active, updated_at_utc)
-                VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
-                ON CONFLICT (tenant_id, supplier_id) DO UPDATE SET
-                    supplier_name = EXCLUDED.supplier_name,
-                    payout_target = EXCLUDED.payout_target,
-                    registered_latitude = EXCLUDED.registered_latitude,
-                    registered_longitude = EXCLUDED.registered_longitude,
-                    active = EXCLUDED.active,
-                    updated_at_utc = EXCLUDED.updated_at_utc;");
-            cmd.Parameters.AddWithValue(Guid.Parse(entry.tenant_id));
-            cmd.Parameters.AddWithValue(entry.supplier_id);
-            cmd.Parameters.AddWithValue(entry.supplier_name);
-            cmd.Parameters.AddWithValue(entry.payout_target);
-            cmd.Parameters.AddWithValue(entry.registered_latitude ?? (object)DBNull.Value);
-            cmd.Parameters.AddWithValue(entry.registered_longitude ?? (object)DBNull.Value);
-            cmd.Parameters.AddWithValue(entry.active);
-            cmd.Parameters.AddWithValue(entry.updated_at_utc);
-            await cmd.ExecuteNonQueryAsync();
+            await using var conn = await _dataSource.OpenConnectionAsync();
+            await using var tx = await conn.BeginTransactionAsync();
+            try
+            {
+                await using var contextCmd = conn.CreateCommand();
+                contextCmd.Transaction = tx;
+                contextCmd.CommandText = "SELECT set_config('app.current_tenant_id', $1::text, true)";
+                contextCmd.Parameters.AddWithValue(entry.tenant_id);
+                await contextCmd.ExecuteScalarAsync();
+
+                await using var cmd = conn.CreateCommand();
+                cmd.Transaction = tx;
+                cmd.CommandText = @"
+                    INSERT INTO public.supplier_registry (tenant_id, supplier_id, supplier_name, payout_target, registered_latitude, registered_longitude, active, updated_at_utc)
+                    VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+                    ON CONFLICT (tenant_id, supplier_id) DO UPDATE SET
+                        supplier_name = EXCLUDED.supplier_name,
+                        payout_target = EXCLUDED.payout_target,
+                        registered_latitude = EXCLUDED.registered_latitude,
+                        registered_longitude = EXCLUDED.registered_longitude,
+                        active = EXCLUDED.active,
+                        updated_at_utc = EXCLUDED.updated_at_utc;";
+                cmd.Parameters.AddWithValue(Guid.Parse(entry.tenant_id));
+                cmd.Parameters.AddWithValue(entry.supplier_id);
+                cmd.Parameters.AddWithValue(entry.supplier_name);
+                cmd.Parameters.AddWithValue(entry.payout_target);
+                cmd.Parameters.AddWithValue(entry.registered_latitude ?? (object)DBNull.Value);
+                cmd.Parameters.AddWithValue(entry.registered_longitude ?? (object)DBNull.Value);
+                cmd.Parameters.AddWithValue(entry.active);
+                cmd.Parameters.AddWithValue(entry.updated_at_utc);
+                await cmd.ExecuteNonQueryAsync();
+                await tx.CommitAsync();
+            }
+            catch
+            {
+                await tx.RollbackAsync();
+                throw;
+            }
         }
         SupplierRegistry[$"{entry.tenant_id}:{entry.supplier_id}"] = entry;
     }
@@ -57,18 +76,37 @@ static class SupplierPolicyStore
     {
         if (_dataSource is not null)
         {
-            await using var cmd = _dataSource.CreateCommand(@"
-                INSERT INTO public.program_supplier_allowlist (tenant_id, program_id, supplier_id, allowed, updated_at_utc)
-                VALUES ($1, $2, $3, $4, $5)
-                ON CONFLICT (tenant_id, program_id, supplier_id) DO UPDATE SET
-                    allowed = EXCLUDED.allowed,
-                    updated_at_utc = EXCLUDED.updated_at_utc;");
-            cmd.Parameters.AddWithValue(Guid.Parse(tenantId));
-            cmd.Parameters.AddWithValue(Guid.Parse(programId));
-            cmd.Parameters.AddWithValue(supplierId);
-            cmd.Parameters.AddWithValue(allowed);
-            cmd.Parameters.AddWithValue(DateTimeOffset.UtcNow.ToString("O"));
-            await cmd.ExecuteNonQueryAsync();
+            await using var conn = await _dataSource.OpenConnectionAsync();
+            await using var tx = await conn.BeginTransactionAsync();
+            try
+            {
+                await using var contextCmd = conn.CreateCommand();
+                contextCmd.Transaction = tx;
+                contextCmd.CommandText = "SELECT set_config('app.current_tenant_id', $1::text, true)";
+                contextCmd.Parameters.AddWithValue(tenantId);
+                await contextCmd.ExecuteScalarAsync();
+
+                await using var cmd = conn.CreateCommand();
+                cmd.Transaction = tx;
+                cmd.CommandText = @"
+                    INSERT INTO public.program_supplier_allowlist (tenant_id, program_id, supplier_id, allowed, updated_at_utc)
+                    VALUES ($1, $2, $3, $4, $5)
+                    ON CONFLICT (tenant_id, program_id, supplier_id) DO UPDATE SET
+                        allowed = EXCLUDED.allowed,
+                        updated_at_utc = EXCLUDED.updated_at_utc;";
+                cmd.Parameters.AddWithValue(Guid.Parse(tenantId));
+                cmd.Parameters.AddWithValue(Guid.Parse(programId));
+                cmd.Parameters.AddWithValue(supplierId);
+                cmd.Parameters.AddWithValue(allowed);
+                cmd.Parameters.AddWithValue(DateTimeOffset.UtcNow.ToString("O"));
+                await cmd.ExecuteNonQueryAsync();
+                await tx.CommitAsync();
+            }
+            catch
+            {
+                await tx.RollbackAsync();
+                throw;
+            }
         }
         ProgramSupplierAllowlist[$"{tenantId}:{programId}:{supplierId}"] = allowed;
     }
@@ -82,27 +120,49 @@ static class SupplierPolicyStore
 
         if (_dataSource is not null)
         {
-            await using var cmd = _dataSource.CreateCommand(@"
-                SELECT supplier_name, payout_target, registered_latitude, registered_longitude, active, updated_at_utc
-                FROM public.supplier_registry
-                WHERE tenant_id = $1 AND supplier_id = $2");
-            cmd.Parameters.AddWithValue(Guid.Parse(tenantId));
-            cmd.Parameters.AddWithValue(supplierId);
-            await using var reader = await cmd.ExecuteReaderAsync();
-            if (await reader.ReadAsync())
+            await using var conn = await _dataSource.OpenConnectionAsync();
+            await using var tx = await conn.BeginTransactionAsync();
+            try
             {
-                var loaded = new SupplierRegistryEntry(
-                    tenant_id: tenantId,
-                    supplier_id: supplierId,
-                    supplier_name: reader.GetString(0),
-                    payout_target: reader.GetString(1),
-                    registered_latitude: reader.IsDBNull(2) ? null : reader.GetDecimal(2),
-                    registered_longitude: reader.IsDBNull(3) ? null : reader.GetDecimal(3),
-                    active: reader.GetBoolean(4),
-                    updated_at_utc: reader.GetString(5)
-                );
-                SupplierRegistry[$"{tenantId}:{supplierId}"] = loaded;
-                return loaded;
+                await using var contextCmd = conn.CreateCommand();
+                contextCmd.Transaction = tx;
+                contextCmd.CommandText = "SELECT set_config('app.current_tenant_id', $1::text, true)";
+                contextCmd.Parameters.AddWithValue(tenantId);
+                await contextCmd.ExecuteScalarAsync();
+
+                await using var cmd = conn.CreateCommand();
+                cmd.Transaction = tx;
+                cmd.CommandText = @"
+                    SELECT supplier_name, payout_target, registered_latitude, registered_longitude, active, updated_at_utc
+                    FROM public.supplier_registry
+                    WHERE tenant_id = $1 AND supplier_id = $2";
+                cmd.Parameters.AddWithValue(Guid.Parse(tenantId));
+                cmd.Parameters.AddWithValue(supplierId);
+                await using var reader = await cmd.ExecuteReaderAsync();
+                if (await reader.ReadAsync())
+                {
+                    var loaded = new SupplierRegistryEntry(
+                        tenant_id: tenantId,
+                        supplier_id: supplierId,
+                        supplier_name: reader.GetString(0),
+                        payout_target: reader.GetString(1),
+                        registered_latitude: reader.IsDBNull(2) ? null : reader.GetDecimal(2),
+                        registered_longitude: reader.IsDBNull(3) ? null : reader.GetDecimal(3),
+                        active: reader.GetBoolean(4),
+                        updated_at_utc: reader.GetString(5)
+                    );
+                    SupplierRegistry[$"{tenantId}:{supplierId}"] = loaded;
+                    await reader.DisposeAsync();
+                    await tx.CommitAsync();
+                    return loaded;
+                }
+                await reader.DisposeAsync();
+                await tx.CommitAsync();
+            }
+            catch
+            {
+                await tx.RollbackAsync();
+                throw;
             }
         }
         return null;
@@ -116,18 +176,38 @@ static class SupplierPolicyStore
         }
         if (_dataSource is not null)
         {
-            await using var cmd = _dataSource.CreateCommand(@"
-                SELECT allowed
-                FROM public.program_supplier_allowlist
-                WHERE tenant_id = $1 AND program_id = $2 AND supplier_id = $3");
-            cmd.Parameters.AddWithValue(Guid.Parse(tenantId));
-            cmd.Parameters.AddWithValue(Guid.Parse(programId));
-            cmd.Parameters.AddWithValue(supplierId);
-            var result = await cmd.ExecuteScalarAsync();
-            if (result is bool dbAllowed)
+            await using var conn = await _dataSource.OpenConnectionAsync();
+            await using var tx = await conn.BeginTransactionAsync();
+            try
             {
-                ProgramSupplierAllowlist[$"{tenantId}:{programId}:{supplierId}"] = dbAllowed;
-                return dbAllowed;
+                await using var contextCmd = conn.CreateCommand();
+                contextCmd.Transaction = tx;
+                contextCmd.CommandText = "SELECT set_config('app.current_tenant_id', $1::text, true)";
+                contextCmd.Parameters.AddWithValue(tenantId);
+                await contextCmd.ExecuteScalarAsync();
+
+                await using var cmd = conn.CreateCommand();
+                cmd.Transaction = tx;
+                cmd.CommandText = @"
+                    SELECT allowed
+                    FROM public.program_supplier_allowlist
+                    WHERE tenant_id = $1 AND program_id = $2 AND supplier_id = $3";
+                cmd.Parameters.AddWithValue(Guid.Parse(tenantId));
+                cmd.Parameters.AddWithValue(Guid.Parse(programId));
+                cmd.Parameters.AddWithValue(supplierId);
+                var result = await cmd.ExecuteScalarAsync();
+                await tx.CommitAsync();
+
+                if (result is bool dbAllowed)
+                {
+                    ProgramSupplierAllowlist[$"{tenantId}:{programId}:{supplierId}"] = dbAllowed;
+                    return dbAllowed;
+                }
+            }
+            catch
+            {
+                await tx.RollbackAsync();
+                throw;
             }
         }
         return false;

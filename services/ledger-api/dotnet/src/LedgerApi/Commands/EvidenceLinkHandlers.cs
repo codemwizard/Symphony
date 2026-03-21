@@ -99,6 +99,7 @@ static class EvidenceLinkIssueHandler
             submitter_msisdn = request.submitter_msisdn.Trim(),
             expires_at_utc = expiresAt.ToString("O"),
             token,
+            landing_url = $"/pilot-demo/evidence-link#token={token}",
             upload_path = "/v1/evidence-links/submit",
             sms_dispatch_status = "SIMULATED_DISPATCHED"
         });
@@ -204,6 +205,21 @@ static class EvidenceLinkSubmitHandler
                     max_distance_meters = maxDistance
                 });
             }
+        }
+
+        var existingSubmissions = EvidenceLinkSubmissionLog.ReadAll();
+        var alreadySubmitted = existingSubmissions.Any(e =>
+            e.TryGetProperty("instruction_id", out var iid) &&
+            string.Equals(iid.GetString(), validation.InstructionId, StringComparison.Ordinal));
+
+        if (alreadySubmitted)
+        {
+            return new HandlerResult(StatusCodes.Status409Conflict, new
+            {
+                error_code = "DUPLICATE_SUBMISSION",
+                errors = new[] { "evidence for this instruction has already been submitted" },
+                instruction_id = validation.InstructionId
+            });
         }
 
         await EvidenceLinkSubmissionLog.AppendAsync(new

@@ -1,7 +1,7 @@
 {
   "check_id": "EVIDENCE-SCHEMA-VALIDATION",
-  "timestamp_utc": "2026-03-17T01:08:05Z",
-  "git_sha": "9f4c091829d39813bf5e8485e122c826b424eb5a",
+  "timestamp_utc": "2026-03-20T05:52:15Z",
+  "git_sha": "4e6f00472e156e493c115045d031f5516bfbceba",
   "schema_fingerprint": "59eef2a10b166543339b310ae67181cc9a8d6b22aa216e649e56652c2316e165",
   "status": "PASS",
   "checked_dirs": [
@@ -223,6 +223,11 @@
     "/home/mwiza/workspace/Symphony/evidence/phase1/task_ui_wire_009_sim_swap.json",
     "/home/mwiza/workspace/Symphony/evidence/phase1/task_ui_wire_010_success_gate_panel.json",
     "/home/mwiza/workspace/Symphony/evidence/phase1/task_ui_wire_011_closeout.json",
+    "/home/mwiza/workspace/Symphony/evidence/phase1/task_ui_wire_012_onboarding_mutation_contracts.json",
+    "/home/mwiza/workspace/Symphony/evidence/phase1/task_ui_wire_013_guided_onboarding_workflow.json",
+    "/home/mwiza/workspace/Symphony/evidence/phase1/task_ui_wire_014_public_landing_context.json",
+    "/home/mwiza/workspace/Symphony/evidence/phase1/task_ui_wire_015_artifact_upload.json",
+    "/home/mwiza/workspace/Symphony/evidence/phase1/task_ui_wire_016_landing_submission_ux.json",
     "/home/mwiza/workspace/Symphony/evidence/phase1/ten_001_ingress_tenant_context.json",
     "/home/mwiza/workspace/Symphony/evidence/phase1/ten_002_rls_leakage.json",
     "/home/mwiza/workspace/Symphony/evidence/phase1/ten_003_tenant_onboarding_admin.json",
@@ -1151,6 +1156,26 @@
     },
     {
       "file": "/home/mwiza/workspace/Symphony/evidence/phase1/task_ui_wire_011_closeout.json",
+      "schema": "default"
+    },
+    {
+      "file": "/home/mwiza/workspace/Symphony/evidence/phase1/task_ui_wire_012_onboarding_mutation_contracts.json",
+      "schema": "default"
+    },
+    {
+      "file": "/home/mwiza/workspace/Symphony/evidence/phase1/task_ui_wire_013_guided_onboarding_workflow.json",
+      "schema": "default"
+    },
+    {
+      "file": "/home/mwiza/workspace/Symphony/evidence/phase1/task_ui_wire_014_public_landing_context.json",
+      "schema": "default"
+    },
+    {
+      "file": "/home/mwiza/workspace/Symphony/evidence/phase1/task_ui_wire_015_artifact_upload.json",
+      "schema": "default"
+    },
+    {
+      "file": "/home/mwiza/workspace/Symphony/evidence/phase1/task_ui_wire_016_landing_submission_ux.json",
       "schema": "default"
     },
     {

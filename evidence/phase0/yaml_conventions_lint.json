@@ -1,21 +1,9 @@
 {
   "check_id": "YAML-CONVENTIONS",
-  "timestamp_utc": "2026-03-17T04:15:17Z",
-  "git_sha": "e8491b43c6bca1dba873e74d815cf144c9583048",
+  "timestamp_utc": "2026-03-21T16:23:51Z",
+  "git_sha": "120d6e7fbc106a47f75bcb88d897768b3569c7e3",
   "schema_fingerprint": "59eef2a10b166543339b310ae67181cc9a8d6b22aa216e649e56652c2316e165",
   "status": "PASS",
-  "checked_files": [
-    "/home/mwiza/workspace/Symphony/tasks/TSK-P1-210/meta.yml",
-    "/home/mwiza/workspace/Symphony/tasks/TSK-P1-211/meta.yml",
-    "/home/mwiza/workspace/Symphony/tasks/TSK-P1-212/meta.yml",
-    "/home/mwiza/workspace/Symphony/tasks/TSK-P1-213/meta.yml",
-    "/home/mwiza/workspace/Symphony/tasks/TSK-P1-214/meta.yml",
-    "/home/mwiza/workspace/Symphony/tasks/TSK-P1-215/meta.yml",
-    "/home/mwiza/workspace/Symphony/tasks/TSK-P1-216/meta.yml",
-    "/home/mwiza/workspace/Symphony/tasks/TSK-P1-217/meta.yml",
-    "/home/mwiza/workspace/Symphony/tasks/TSK-P1-218/meta.yml",
-    "/home/mwiza/workspace/Symphony/tasks/TSK-P1-219/meta.yml",
-    "/home/mwiza/workspace/Symphony/tasks/TSK-P1-220/meta.yml"
-  ],
+  "checked_files": [],
   "errors": []
 }

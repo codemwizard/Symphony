@@ -1,0 +1,547 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Symphony · Evidence Submission</title>
+<meta name="description" content="Securely submit evidence for GreenTech4CE programme verification.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #0c1117;
+  --surface: #161b22;
+  --surface-raised: #1c2129;
+  --border: #30363d;
+  --text: #e6edf3;
+  --text-muted: #8b949e;
+  --accent: #2ea043;
+  --accent-glow: rgba(46,160,67,0.25);
+  --warning: #d29922;
+  --danger: #f85149;
+  --info: #58a6ff;
+  --radius: 12px;
+  --font: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: var(--font);
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+}
+
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  max-width: 480px;
+  width: 100%;
+  padding: 32px;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+}
+
+.logo {
+  text-align: center;
+  margin-bottom: 24px;
+}
+.logo h1 {
+  font-size: 1.25rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  background: linear-gradient(135deg, var(--accent), #58a6ff);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+.logo small {
+  display: block;
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  margin-top: 4px;
+}
+
+.screen { display: none; }
+.screen.active { display: block; }
+
+.status-banner {
+  padding: 16px;
+  border-radius: 8px;
+  margin-bottom: 16px;
+  text-align: center;
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+.status-banner.loading { background: rgba(88,166,255,0.1); border: 1px solid rgba(88,166,255,0.3); color: var(--info); }
+.status-banner.error   { background: rgba(248,81,73,0.1);  border: 1px solid rgba(248,81,73,0.3);  color: var(--danger); }
+.status-banner.warning { background: rgba(210,153,34,0.1); border: 1px solid rgba(210,153,34,0.3); color: var(--warning); }
+.status-banner.success { background: rgba(46,160,67,0.1);  border: 1px solid rgba(46,160,67,0.3);  color: var(--accent); }
+
+.spinner {
+  display: inline-block;
+  width: 16px; height: 16px;
+  border: 2px solid var(--info);
+  border-top-color: transparent;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+  vertical-align: middle;
+  margin-right: 8px;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.context-details {
+  background: var(--surface-raised);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 16px;
+  margin-bottom: 20px;
+}
+.context-details dt {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-muted);
+  margin-top: 8px;
+}
+.context-details dt:first-child { margin-top: 0; }
+.context-details dd {
+  font-size: 0.85rem;
+  font-weight: 500;
+  word-break: break-all;
+}
+
+.upload-zone {
+  border: 2px dashed var(--border);
+  border-radius: 8px;
+  padding: 24px;
+  text-align: center;
+  cursor: pointer;
+  transition: border-color 0.2s, background 0.2s;
+  margin-bottom: 16px;
+}
+.upload-zone:hover, .upload-zone.active {
+  border-color: var(--accent);
+  background: var(--accent-glow);
+}
+.upload-zone input { display: none; }
+.upload-zone .icon { font-size: 2rem; margin-bottom: 8px; }
+.upload-zone .label { font-size: 0.85rem; color: var(--text-muted); }
+.upload-zone .filename {
+  font-size: 0.8rem;
+  color: var(--accent);
+  margin-top: 8px;
+  font-weight: 600;
+}
+
+.btn {
+  display: block;
+  width: 100%;
+  padding: 12px;
+  border: none;
+  border-radius: 8px;
+  font-family: var(--font);
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: opacity 0.2s, transform 0.1s;
+}
+.btn:active { transform: scale(0.98); }
+.btn:disabled { opacity: 0.4; cursor: not-allowed; }
+.btn-primary {
+  background: var(--accent);
+  color: #fff;
+}
+.btn-primary:hover:not(:disabled) { opacity: 0.9; }
+
+.gps-banner {
+  padding: 12px 16px;
+  border-radius: 8px;
+  background: rgba(210,153,34,0.1);
+  border: 1px solid rgba(210,153,34,0.3);
+  color: var(--warning);
+  font-size: 0.8rem;
+  margin-bottom: 16px;
+  text-align: center;
+}
+
+.progress-bar {
+  width: 100%;
+  height: 4px;
+  background: var(--surface-raised);
+  border-radius: 2px;
+  overflow: hidden;
+  margin-bottom: 16px;
+}
+.progress-bar .fill {
+  height: 100%;
+  background: var(--accent);
+  border-radius: 2px;
+  transition: width 0.3s ease;
+}
+
+.steps {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 20px;
+}
+.step {
+  flex: 1;
+  height: 3px;
+  border-radius: 2px;
+  background: var(--border);
+  transition: background 0.3s;
+}
+.step.done { background: var(--accent); }
+.step.active { background: var(--info); }
+
+footer {
+  margin-top: 16px;
+  text-align: center;
+  font-size: 0.7rem;
+  color: var(--text-muted);
+}
+</style>
+</head>
+<body>
+
+<div class="card">
+  <div class="logo">
+    <h1>Symphony Evidence Portal</h1>
+    <small>GreenTech4CE · Secure Submission</small>
+  </div>
+
+  <!-- Screen 1: Loading -->
+  <div id="screen-loading" class="screen active">
+    <div class="status-banner loading">
+      <span class="spinner"></span> Validating your secure link…
+    </div>
+  </div>
+
+  <!-- Screen 2: Error states -->
+  <div id="screen-error" class="screen">
+    <div class="status-banner error" id="error-message">
+      This link is invalid or has expired.
+    </div>
+  </div>
+
+  <!-- Screen 3: Already submitted -->
+  <div id="screen-duplicate" class="screen">
+    <div class="status-banner warning">
+      ✔ Evidence for this instruction has already been submitted.
+    </div>
+    <p style="text-align:center;font-size:0.85rem;color:var(--text-muted);margin-top:12px;">
+      No further action is needed. Contact your programme administrator if you believe this is incorrect.
+    </p>
+  </div>
+
+  <!-- Screen 4: Ready to submit -->
+  <div id="screen-ready" class="screen">
+    <div class="steps">
+      <div class="step" id="step-upload"></div>
+      <div class="step" id="step-gps"></div>
+      <div class="step" id="step-submit"></div>
+    </div>
+
+    <dl class="context-details" id="context-details">
+      <dt>Programme</dt><dd id="ctx-program">—</dd>
+      <dt>Instruction</dt><dd id="ctx-instruction">—</dd>
+      <dt>Submitter</dt><dd id="ctx-submitter">—</dd>
+      <dt>Expires</dt><dd id="ctx-expires">—</dd>
+    </dl>
+
+    <div class="upload-zone" id="upload-zone">
+      <div class="icon">📄</div>
+      <div class="label">Tap to select evidence file (max 10 MB)</div>
+      <div class="filename" id="upload-filename"></div>
+      <input type="file" id="file-input" accept="image/*,.pdf,.doc,.docx,.xls,.xlsx">
+    </div>
+
+    <div class="gps-banner" id="gps-banner" style="display:none;">
+      <span class="spinner"></span> Acquiring GPS position…
+    </div>
+
+    <div class="progress-bar" id="progress-bar" style="display:none;">
+      <div class="fill" id="progress-fill" style="width:0%"></div>
+    </div>
+
+    <div class="status-banner error" id="submit-error" style="display:none;"></div>
+
+    <button class="btn btn-primary" id="btn-submit" disabled>Upload & Submit Evidence</button>
+  </div>
+
+  <!-- Screen 5: Success -->
+  <div id="screen-success" class="screen">
+    <div class="status-banner success">
+      ✅ Evidence submitted successfully!
+    </div>
+    <dl class="context-details" id="success-details">
+      <dt>Instruction</dt><dd id="success-instruction">—</dd>
+      <dt>Submitted At</dt><dd id="success-timestamp">—</dd>
+    </dl>
+    <p style="text-align:center;font-size:0.85rem;color:var(--text-muted);margin-top:12px;">
+      Your submission has been recorded. You may close this page.
+    </p>
+  </div>
+</div>
+
+<footer>Symphony Ledger · Secured Link Submission</footer>
+
+<script>
+(function() {
+  'use strict';
+
+  /* ── State ─────────────────────────────────── */
+  var token = '';
+  var ctx = null;
+  var uploadedArtifact = null;
+  var gpsCoords = null;
+
+  /* ── DOM refs ──────────────────────────────── */
+  var screenLoading   = document.getElementById('screen-loading');
+  var screenError     = document.getElementById('screen-error');
+  var screenDuplicate = document.getElementById('screen-duplicate');
+  var screenReady     = document.getElementById('screen-ready');
+  var screenSuccess   = document.getElementById('screen-success');
+  var errorMessage    = document.getElementById('error-message');
+  var submitError     = document.getElementById('submit-error');
+  var btnSubmit       = document.getElementById('btn-submit');
+  var fileInput       = document.getElementById('file-input');
+  var uploadZone      = document.getElementById('upload-zone');
+  var uploadFilename  = document.getElementById('upload-filename');
+  var gpsBanner       = document.getElementById('gps-banner');
+  var progressBar     = document.getElementById('progress-bar');
+  var progressFill    = document.getElementById('progress-fill');
+
+  /* ── Helpers ───────────────────────────────── */
+  function show(screen) {
+    [screenLoading, screenError, screenDuplicate, screenReady, screenSuccess]
+      .forEach(function(s) { s.classList.remove('active'); });
+    screen.classList.add('active');
+  }
+
+  function setStep(active) {
+    var steps = ['step-upload', 'step-gps', 'step-submit'];
+    var reached = false;
+    for (var i = 0; i < steps.length; i++) {
+      var el = document.getElementById(steps[i]);
+      if (steps[i] === active) {
+        el.className = 'step active';
+        reached = true;
+      } else if (!reached) {
+        el.className = 'step done';
+      } else {
+        el.className = 'step';
+      }
+    }
+  }
+
+  /* ── Token extraction ──────────────────────── */
+  var hash = window.location.hash;
+  if (hash) {
+    var m = hash.match(/token=([^&]+)/);
+    if (m) token = decodeURIComponent(m[1]);
+  }
+  if (!token) {
+    var params = new URLSearchParams(window.location.search);
+    token = params.get('token') || '';
+  }
+
+  if (!token) {
+    errorMessage.textContent = '⚠ No secure link token found. Please use the link provided via SMS.';
+    show(screenError);
+    return;
+  }
+
+  /* ── Load context ──────────────────────────── */
+  fetch('/api/public/evidence-links/context?token=' + encodeURIComponent(token))
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+      if (!data.valid) {
+        if (data.error_code === 'ALREADY_SUBMITTED') {
+          show(screenDuplicate);
+        } else if (data.error_code === 'LINK_TOKEN_EXPIRED') {
+          errorMessage.textContent = '⏰ This secure link has expired. Please request a new link from your administrator.';
+          show(screenError);
+        } else {
+          errorMessage.textContent = '⚠ ' + (data.error_code || 'This link is invalid.');
+          show(screenError);
+        }
+        return;
+      }
+      ctx = data;
+      document.getElementById('ctx-program').textContent = data.program_id || '—';
+      document.getElementById('ctx-instruction').textContent = data.instruction_id || '—';
+      document.getElementById('ctx-submitter').textContent = (data.submitter_class || '') + ' · ' + (data.submitter_msisdn || '');
+      document.getElementById('ctx-expires').textContent = data.expires_at ? new Date(data.expires_at).toLocaleString() : '—';
+
+      if (!data.require_gps) {
+        document.getElementById('step-gps').style.display = 'none';
+      }
+
+      setStep('step-upload');
+      show(screenReady);
+    })
+    .catch(function() {
+      errorMessage.textContent = '⚠ Unable to validate the link. Please try again later.';
+      show(screenError);
+    });
+
+  /* ── File upload ───────────────────────────── */
+  uploadZone.addEventListener('click', function() { fileInput.click(); });
+
+  fileInput.addEventListener('change', function() {
+    var file = fileInput.files[0];
+    if (!file) return;
+
+    if (file.size > 10 * 1024 * 1024) {
+      submitError.style.display = 'block';
+      submitError.textContent = 'File is too large. Maximum size is 10 MB.';
+      return;
+    }
+
+    submitError.style.display = 'none';
+    uploadFilename.textContent = file.name + ' (' + (file.size / 1024).toFixed(1) + ' KB)';
+    uploadZone.classList.add('active');
+
+    /* Upload immediately */
+    var fd = new FormData();
+    fd.append('artifact', file);
+
+    progressBar.style.display = 'block';
+    progressFill.style.width = '30%';
+    btnSubmit.disabled = true;
+
+    fetch('/api/public/evidence-links/upload?token=' + encodeURIComponent(token), {
+      method: 'POST',
+      body: fd
+    })
+    .then(function(r) { return r.json().then(function(b) { return { ok: r.ok, body: b }; }); })
+    .then(function(res) {
+      if (!res.ok) {
+        progressBar.style.display = 'none';
+        submitError.style.display = 'block';
+        submitError.textContent = 'Upload failed: ' + (res.body.error_code || 'unknown error');
+        return;
+      }
+      uploadedArtifact = res.body;
+      progressFill.style.width = '60%';
+      setStep('step-gps');
+
+      if (ctx && ctx.require_gps) {
+        acquireGPS();
+      } else {
+        progressFill.style.width = '80%';
+        setStep('step-submit');
+        btnSubmit.disabled = false;
+      }
+    })
+    .catch(function() {
+      progressBar.style.display = 'none';
+      submitError.style.display = 'block';
+      submitError.textContent = 'Upload failed. Please check your connection and try again.';
+    });
+  });
+
+  /* ── GPS acquisition ───────────────────────── */
+  function acquireGPS() {
+    gpsBanner.style.display = 'block';
+
+    if (!navigator.geolocation) {
+      gpsBanner.innerHTML = '⚠ GPS not available on this device. Submission will proceed without coordinates.';
+      gpsBanner.style.borderColor = 'rgba(248,81,73,0.3)';
+      gpsBanner.style.color = 'var(--danger)';
+      setStep('step-submit');
+      progressFill.style.width = '80%';
+      btnSubmit.disabled = false;
+      return;
+    }
+
+    navigator.geolocation.getCurrentPosition(
+      function(pos) {
+        gpsCoords = { latitude: pos.coords.latitude, longitude: pos.coords.longitude };
+        gpsBanner.innerHTML = '📍 GPS acquired: ' + pos.coords.latitude.toFixed(5) + ', ' + pos.coords.longitude.toFixed(5);
+        gpsBanner.style.borderColor = 'rgba(46,160,67,0.3)';
+        gpsBanner.style.color = 'var(--accent)';
+        gpsBanner.style.background = 'rgba(46,160,67,0.1)';
+        progressFill.style.width = '80%';
+        setStep('step-submit');
+        btnSubmit.disabled = false;
+      },
+      function() {
+        gpsBanner.innerHTML = '⚠ GPS permission denied. Submission will proceed without coordinates.';
+        gpsBanner.style.borderColor = 'rgba(248,81,73,0.3)';
+        gpsBanner.style.color = 'var(--danger)';
+        setStep('step-submit');
+        progressFill.style.width = '80%';
+        btnSubmit.disabled = false;
+      },
+      { enableHighAccuracy: true, timeout: 15000 }
+    );
+  }
+
+  /* ── Final submission ──────────────────────── */
+  btnSubmit.addEventListener('click', function() {
+    if (!ctx || !uploadedArtifact) return;
+
+    btnSubmit.disabled = true;
+    btnSubmit.textContent = 'Submitting…';
+    progressFill.style.width = '90%';
+    submitError.style.display = 'none';
+
+    var payload = {
+      artifact_type: uploadedArtifact.artifact_type || 'DOCUMENT',
+      artifact_ref: uploadedArtifact.artifact_ref
+    };
+    if (gpsCoords) {
+      payload.latitude = gpsCoords.latitude;
+      payload.longitude = gpsCoords.longitude;
+    }
+
+    fetch('/v1/evidence-links/submit', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer ' + token,
+        'x-tenant-id': ctx.tenant_id,
+        'x-submitter-msisdn': ctx.submitter_msisdn
+      },
+      body: JSON.stringify(payload)
+    })
+    .then(function(r) { return r.json().then(function(b) { return { ok: r.ok, status: r.status, body: b }; }); })
+    .then(function(res) {
+      if (res.status === 409) {
+        show(screenDuplicate);
+        return;
+      }
+      if (!res.ok) {
+        submitError.style.display = 'block';
+        submitError.textContent = 'Submission failed: ' + (res.body.error_code || 'unknown error');
+        btnSubmit.disabled = false;
+        btnSubmit.textContent = 'Upload & Submit Evidence';
+        progressFill.style.width = '80%';
+        return;
+      }
+      progressFill.style.width = '100%';
+      document.getElementById('success-instruction').textContent = res.body.instruction_id || ctx.instruction_id;
+      document.getElementById('success-timestamp').textContent = new Date().toLocaleString();
+      show(screenSuccess);
+    })
+    .catch(function() {
+      submitError.style.display = 'block';
+      submitError.textContent = 'Network error. Please check your connection and try again.';
+      btnSubmit.disabled = false;
+      btnSubmit.textContent = 'Upload & Submit Evidence';
+    });
+  });
+
+})();
+</script>
+</body>
+</html>
