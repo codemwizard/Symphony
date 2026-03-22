@@ -1530,65 +1530,7 @@ async Task SeedDemoTenant(string rp, ITenantRegistryStore trs, IProgrammeStore p
     {
         if (ex is Npgsql.PostgresException pex && pex.SqlState == "42P01")
         {
-            l.LogWarning("Database schema not found (Error 42P01). Attempting automatic self-healing migration...");
-            try
-            {
-                // Resolve absolute path to migrate.sh by walking up from BaseDirectory
-                string? scriptPath = null;
-                var currentDir = new DirectoryInfo(AppContext.BaseDirectory);
-                while (currentDir != null)
-                {
-                    var potentialPath = Path.Combine(currentDir.FullName, "scripts", "db", "migrate.sh");
-                    if (File.Exists(potentialPath))
-                    {
-                        scriptPath = potentialPath;
-                        break;
-                    }
-                    currentDir = currentDir.Parent;
-                }
-
-                if (scriptPath == null)
-                {
-                    l.LogCritical("Could not find migration script 'scripts/db/migrate.sh' in any parent directory.");
-                }
-                else
-                {
-                    l.LogInformation($"Found migration script at: {scriptPath}");
-                    var psi = new System.Diagnostics.ProcessStartInfo
-                    {
-                        FileName = "bash",
-                        Arguments = scriptPath,
-                        RedirectStandardOutput = true,
-                        RedirectStandardError = true,
-                        UseShellExecute = false,
-                        CreateNoWindow = true
-                    };
-
-                    using var process = System.Diagnostics.Process.Start(psi);
-                    if (process != null)
-                    {
-                        process.WaitForExit();
-                        if (process.ExitCode == 0)
-                        {
-                            l.LogInformation("Automatic migration succeeded. Retrying auto-seed...");
-                            // Recursive retry once
-                            await SeedDemoTenant(rp, trs, ps, l);
-                            return;
-                        }
-                        else
-                        {
-                            var error = await process.StandardError.ReadToEndAsync();
-                            l.LogCritical($"Automatic migration failed with exit code {process.ExitCode}: {error}");
-                        }
-                    }
-                }
-            }
-            catch (Exception migEx)
-            {
-                l.LogCritical(migEx, "Failed to launch automatic migration script.");
-            }
-
-            l.LogCritical("Relation 'tenant_registry' still does not exist. Please ensure DATABASE_URL is correct and run 'bash scripts/db/migrate.sh' manually.");
+            l.LogCritical("Database schema not found (Error 42P01). Auto-migration at runtime is disabled. Please ensure DATABASE_URL is correct and run 'bash scripts/db/migrate.sh' manually before starting the api.");
         }
         else
         {

@@ -1235,7 +1235,8 @@ LIMIT 1000;";
             cmd.CommandText = @"
 INSERT INTO public.tenant_registry (tenant_id, tenant_key, display_name, status)
 VALUES (@tenant_id, @tenant_key, @display_name, 'ACTIVE')
-ON CONFLICT (tenant_key) DO UPDATE SET
+ON CONFLICT (tenant_id) DO UPDATE SET
+  tenant_key = EXCLUDED.tenant_key,
   display_name = EXCLUDED.display_name,
   updated_at = now()
 RETURNING tenant_id::text, tenant_key, display_name, status, created_at, updated_at,
