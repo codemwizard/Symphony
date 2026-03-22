@@ -2720,11 +2720,64 @@
                 style="font-family:var(--mono);font-size:8.5px;color:var(--smoke);opacity:.5;margin-top:3px;letter-spacing:.1em;">
                 Persisted control-plane state · TSK-P1-217/218</div>
             </div>
-            <div style="display:flex;gap:10px;">
-              <button class="btn btn-warn" style="width:auto;padding:9px 18px;" onclick="quickProvisionDemo()">+ Seed Demo Tenant</button>
-              <button class="btn btn-primary" style="width:auto;padding:9px 18px;" onclick="loadOnboardingState()">↻
-                Refresh</button>
+            <div style="display:flex;gap:10px;align-items:center;">
+              <button class="btn btn-primary" style="width:auto;padding:9px 18px;" onclick="loadOnboardingState()">↻ Refresh</button>
+              <div style="flex:1"></div>
+              <span style="font-size:10px;color:var(--smoke);opacity:0.7;">For demo only:</span>
+              <button class="btn" style="width:auto;padding:9px 18px;background:rgba(255,255,255,0.05);color:var(--smoke);border:1px solid rgba(255,255,255,0.1);" onclick="quickProvisionDemo()">+ Seed Demo Tenant</button>
             </div>
+          </div>
+
+          <!-- Onboarding Actions (Manual) -->
+          <div style="display:grid;grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));gap:18px;margin-bottom:24px;">
+            
+            <!-- Register Tenant Form -->
+            <div class="dash-card">
+              <div class="dc-head"><span class="dc-head-title">Register New Tenant</span></div>
+              <div style="padding:16px;display:flex;flex-direction:column;gap:12px;">
+                <input type="text" id="onb-ten-id" placeholder="Tenant UUID (Random if empty)" class="input-dark">
+                <input type="text" id="onb-ten-key" placeholder="Tenant Key (e.g. t-local-green)" class="input-dark">
+                <input type="text" id="onb-ten-name" placeholder="Display Name" class="input-dark">
+                <button class="btn btn-primary" onclick="manualRegisterTenant()">Register Tenant</button>
+              </div>
+            </div>
+
+            <!-- Create Programme Form -->
+            <div class="dash-card">
+              <div class="dc-head"><span class="dc-head-title">Create Programme</span></div>
+              <div style="padding:16px;display:flex;flex-direction:column;gap:12px;">
+                <select id="onb-prog-ten-id" class="input-dark"><option value="">Select Tenant...</option></select>
+                <input type="text" id="onb-prog-key" placeholder="Programme Key (e.g. PGM-001)" class="input-dark">
+                <input type="text" id="onb-prog-name" placeholder="Display Name" class="input-dark">
+                <button id="btn-create-prog" class="btn btn-primary" onclick="manualCreateProgramme()" disabled>Create Programme</button>
+              </div>
+            </div>
+
+            <!-- Register Supplier Form -->
+            <div class="dash-card">
+              <div class="dc-head"><span class="dc-head-title">Register Supplier</span></div>
+              <div style="padding:16px;display:flex;flex-direction:column;gap:12px;">
+                <select id="onb-sup-ten-id" class="input-dark"><option value="">Select Tenant...</option></select>
+                <input type="text" id="onb-sup-id" placeholder="Supplier ID (e.g. SUP-99)" class="input-dark">
+                <input type="text" id="onb-sup-name" placeholder="Supplier Name" class="input-dark">
+                <input type="text" id="onb-sup-target" placeholder="Payout Target (e.g. MSISDN:260...)" class="input-dark">
+                <button id="btn-register-sup" class="btn btn-primary" onclick="manualRegisterSupplier()" disabled>Register Supplier</button>
+              </div>
+            </div>
+
+            <!-- Bind Policy Form -->
+            <div class="dash-card">
+              <div class="dc-head"><span class="dc-head-title">Bind Policy to Programme</span></div>
+              <div style="padding:16px;display:flex;flex-direction:column;gap:12px;">
+                <select id="onb-pol-prog-id" class="input-dark"><option value="">Select Programme...</option></select>
+                <input type="text" id="onb-pol-code" placeholder="Policy Code (e.g. green_eq_v1)" class="input-dark">
+                <div style="display:flex;gap:10px;">
+                  <button id="btn-bind-policy" class="btn btn-primary" style="flex:1;" onclick="manualBindPolicy()" disabled>Bind Policy</button>
+                  <button id="btn-activate-prog" class="btn btn-warn" style="flex:1;" onclick="manualActivateProg()" disabled>Activate</button>
+                </div>
+              </div>
+            </div>
+
           </div>
 
           <!-- Tenant Registry -->
@@ -3746,69 +3799,341 @@
       }
     }
     
-    // Quick Provision tool
+    // Quick Provision tool — SOLC TASK-UI-WIRE-012
     async function quickProvisionDemo() {
-      if (DATA_MODE === 'STATIC_DEMO') { alert('Cannot provision in static demo mode'); return; }
+      if (DATA_MODE === 'STATIC_DEMO') { setOnbStatus('Cannot provision in static demo mode', 'error'); return; }
+      setOnbStatus('Provisioning demo tenant…', 'info');
+      const DEMO_TENANT_ID = '11111111-2222-3333-4444-555555555555';
       try {
-        const tId = '11111111-2222-3333-4444-555555555555';
-        await fetch('/api/admin/onboarding/tenants', { method: 'POST', body: JSON.stringify({ tenant_id: tId, tenant_key: 'ten-zambiagrn', display_name: 'Zambia Green MFI' }), headers: { 'Content-Type': 'application/json' }, credentials: 'include' });
-        const pRes = await fetch('/api/admin/onboarding/programmes', { method: 'POST', body: JSON.stringify({ tenant_id: tId, programme_key: 'PGM-ZAMBIA-GRN-001', display_name: 'GreenTech4CE · Solar Cluster A' }), headers: { 'Content-Type': 'application/json' }, credentials: 'include' });
-        const pData = await pRes.json();
-        if (pData.programme_id) {
-           await fetch(`/api/admin/onboarding/programmes/${pData.programme_id}/activate`, { method: 'PUT', credentials: 'include' });
-           await fetch(`/api/admin/onboarding/programmes/${pData.programme_id}/policy-binding`, { method: 'POST', body: JSON.stringify({ tenant_id: tId, policy_code: 'green_eq_v1' }), headers: { 'Content-Type': 'application/json' }, credentials: 'include' });
-        }
+        // Step 1: Register tenant
+        const tenantRes = await onbFetch('/api/admin/onboarding/tenants', {
+          method: 'POST',
+          body: JSON.stringify({
+            tenant_id: DEMO_TENANT_ID,
+            tenant_key: 'ten-zambiagrn',
+            display_name: 'Zambia Green MFI'
+          })
+        });
+        const actualTenantId = tenantRes.tenant_id;
+        if (!actualTenantId) throw new Error('Server did not return a tenant_id');
+        setOnbStatus('Tenant registered. Creating programme…', 'info');
+
+        // Step 2: Create programme
+        const progData = await onbFetch('/api/admin/onboarding/programmes', {
+          method: 'POST',
+          body: JSON.stringify({
+            tenant_id: actualTenantId,
+            programme_key: 'PGM-ZAMBIA-GRN-001',
+            display_name: 'GreenTech4CE · Solar Cluster A'
+          })
+        });
+        const programmeId = progData.programme_id;
+        if (!programmeId) throw new Error('Server did not return programme_id');
+        setOnbStatus('Programme created. Binding policy…', 'info');
+
+        // Step 3: Bind policy (before activate — correct order)
+        await onbFetch(`/api/admin/onboarding/programmes/${programmeId}/policy-binding`, {
+          method: 'POST',
+          body: JSON.stringify({
+            tenant_id: actualTenantId,
+            policy_code: 'green_eq_v1'
+          })
+        });
+        setOnbStatus('Policy bound. Activating…', 'info');
+
+        // Step 4: Activate — requires tenant_id in body
+        await onbFetch(`/api/admin/onboarding/programmes/${programmeId}/activate`, {
+          method: 'PUT',
+          body: JSON.stringify({ tenant_id: actualTenantId })
+        });
+
+        // Refresh first, THEN show success — invariant #2
         await loadOnboardingState();
-        initDashboard();
-      } catch (e) {
-        console.error('Provision failed', e);
-        alert('Provisioning failed: ' + e.message);
+        setOnbStatus('Demo tenant provisioned successfully.', 'success');
+      } catch (err) {
+        setOnbStatus('Provisioning failed: ' + err.message, 'error');
+        console.error('quickProvisionDemo error:', err);
       }
     }
 
     initDashboard();
   </script>
   <script>
-    // ── TSK-P1-219: Onboarding Console ──
+    // ── TSK-P1-219: Onboarding Console — SOLC TASK-UI-WIRE-012 ──
+
+    /**
+     * onbFetch — fetch wrapper for onboarding mutations.
+     * Uses credentials: 'include' so the pilot-demo session cookie
+     * is sent automatically. Do not remove credentials: 'include'.
+     * Throws on non-ok response with error_code from body if available.
+     */
+    async function onbFetch(url, options = {}) {
+      const headers = Object.assign({ 'Content-Type': 'application/json' }, options.headers || {});
+      const actx = typeof uiContext === 'function' ? uiContext() : {};
+      if (actx.apiKey) headers['x-api-key'] = actx.apiKey;
+      
+      const resp = await fetch(url, Object.assign({ credentials: 'include' }, options, { headers }));
+      if (!resp.ok) {
+        let errMsg = `HTTP ${resp.status}`;
+        try {
+          const errBody = await resp.json();
+          if (errBody && errBody.error_code) errMsg = errBody.error_code;
+          else if (errBody && errBody.error) errMsg = errBody.error;
+        } catch (_) { /* body not JSON */ }
+        throw new Error(errMsg);
+      }
+      return resp.json();
+    }
+
+    /**
+     * setOnbStatus — inline status message in the onboarding header.
+     * type: 'info' | 'success' | 'error'. Uses class-based styling.
+     */
+    function setOnbStatus(msg, type) {
+      let el = document.getElementById('onbStatusMsg');
+      if (!el) {
+        el = document.createElement('div');
+        el.id = 'onbStatusMsg';
+        const headerBtnRow = document.querySelector(
+          '#screen-onboarding .onb-body > div:first-child > div:last-child'
+        );
+        if (headerBtnRow) headerBtnRow.insertAdjacentElement('afterend', el);
+      }
+      el.className = 'onb-status-msg onb-status-' + (type || 'info');
+      el.textContent = msg;
+      if (type !== 'error') {
+        setTimeout(() => { if (el) el.textContent = ''; }, 6000);
+      }
+    }
+
+    /**
+     * buildProgrammeActions — updated for TASK-UI-WIRE-012.
+     */
+    function buildProgrammeActions(p) {
+      const pid = p.programme_id;
+      const tid = p.tenant_id;
+      let html = '';
+      if (!p.policy_code) {
+        html += `<button class="btn btn-primary" style="padding:4px 8px;font-size:10px;width:auto;" onclick="doRowAction('${pid}', '${tid}', 'bind')">Bind Policy</button> `;
+      }
+      if (p.status === 'CREATED' && p.policy_code) {
+        html += `<button class="btn btn-warn" style="padding:4px 8px;font-size:10px;width:auto;" onclick="doRowAction('${pid}', '${tid}', 'activate')">Activate</button> `;
+      }
+      if (p.status === 'ACTIVE') {
+        html += `<button class="btn" style="padding:4px 8px;font-size:10px;width:auto;background:rgba(255,255,255,0.1);" onclick="doRowAction('${pid}', '${tid}', 'suspend')">Suspend</button> `;
+      }
+      return html || '—';
+    }
+
+    async function doRowAction(pId, tId, action) {
+      try {
+        if (action === 'bind') {
+          const code = prompt('Enter policy code (e.g. green_eq_v1):', 'green_eq_v1');
+          if (!code) return;
+          await onbFetch(`/api/admin/onboarding/programmes/${pId}/policy-binding`, {
+            method: 'POST', body: JSON.stringify({ tenant_id: tId, policy_code: code })
+          });
+        } else if (action === 'activate') {
+          await onbFetch(`/api/admin/onboarding/programmes/${pId}/activate`, {
+            method: 'PUT', body: JSON.stringify({ tenant_id: tId })
+          });
+        } else if (action === 'suspend') {
+          await onbFetch(`/api/admin/onboarding/programmes/${pId}/suspend`, {
+            method: 'PUT', body: JSON.stringify({ tenant_id: tId })
+          });
+        }
+        await loadOnboardingState();
+        setOnbStatus(`Action '${action}' successful.`, 'success');
+      } catch (err) {
+        setOnbStatus(`Action '${action}' failed: ` + err.message, 'error');
+      }
+    }
+
     async function loadOnboardingState() {
       try {
-        const resp = await fetch('/api/admin/onboarding/status', { credentials: 'include' });
-        if (!resp.ok) {
-          document.getElementById('onbTenantRows').innerHTML = '<tr><td colspan="5" style="color:var(--red-lt);">Auth failed or API unavailable (' + resp.status + ')</td></tr>';
-          return;
-        }
-        const data = await resp.json();
+        const data = await onbFetch('/api/admin/onboarding/status');
 
         // Render tenants
         const tenants = data.tenants || [];
-        document.getElementById('onbTenantCount').textContent = tenants.length + ' tenant' + (tenants.length !== 1 ? 's' : '');
+        document.getElementById('onbTenantCount').textContent =
+          tenants.length + ' tenant' + (tenants.length !== 1 ? 's' : '');
+
         if (tenants.length === 0) {
-          document.getElementById('onbTenantRows').innerHTML = '<tr><td colspan="5" style="opacity:.4;text-align:center;">No tenants registered</td></tr>';
+          document.getElementById('onbTenantRows').innerHTML =
+            '<tr><td colspan="5" style="opacity:.4;text-align:center;">No tenants registered</td></tr>';
         } else {
           document.getElementById('onbTenantRows').innerHTML = tenants.map(t =>
-            '<tr><td>' + t.tenant_id.substring(0, 8) + '…</td><td>' + (t.tenant_key || '—') + '</td><td>' + t.display_name + '</td><td><span class="status-chip ' + (t.status === 'ACTIVE' ? 'chip-auth' : 'chip-hold') + '">' + t.status + '</span></td><td>' + new Date(t.created_at).toLocaleDateString() + '</td></tr>'
+            '<tr>' +
+            '<td>' + t.tenant_id.substring(0, 8) + '…</td>' +
+            '<td>' + (t.tenant_key || '—') + '</td>' +
+            '<td>' + t.display_name + '</td>' +
+            '<td><span class="status-chip ' +
+              (t.status === 'ACTIVE' ? 'chip-auth' : 'chip-hold') + '">' +
+              t.status + '</span></td>' +
+            '<td>' + new Date(t.created_at).toLocaleDateString() + '</td>' +
+            '</tr>'
           ).join('');
         }
 
-        // Render programmes
+        // Render programmes — 8 columns, Actions is last
         const progs = data.programmes || [];
-        document.getElementById('onbProgrammeCount').textContent = progs.length + ' programme' + (progs.length !== 1 ? 's' : '');
+        document.getElementById('onbProgrammeCount').textContent =
+          progs.length + ' programme' + (progs.length !== 1 ? 's' : '');
+
         if (progs.length === 0) {
-          document.getElementById('onbProgrammeRows').innerHTML = '<tr><td colspan="7" style="opacity:.4;text-align:center;">No programmes registered</td></tr>';
+          document.getElementById('onbProgrammeRows').innerHTML =
+            '<tr><td colspan="8" style="opacity:.4;text-align:center;">No programmes registered</td></tr>';
         } else {
-          document.getElementById('onbProgrammeRows').innerHTML = progs.map(p =>
-            '<tr><td>' + p.programme_id.substring(0, 8) + '…</td><td>' + p.tenant_id.substring(0, 8) + '…</td><td>' + p.programme_key + '</td><td>' + p.display_name + '</td><td><span class="status-chip ' + (p.status === 'ACTIVE' ? 'chip-auth' : p.status === 'CREATED' ? 'chip-hold' : 'chip-sim') + '">' + p.status + '</span></td><td>' + (p.policy_code || '—') + '</td><td>' + new Date(p.updated_at).toLocaleDateString() + '</td></tr>'
-          ).join('');
+          document.getElementById('onbProgrammeRows').innerHTML = progs.map(p => {
+            const statusClass = p.status === 'ACTIVE' ? 'chip-auth'
+              : p.status === 'CREATED' ? 'chip-hold' : 'chip-sim';
+            const actions = buildProgrammeActions(p);
+            return '<tr>' +
+              '<td>' + p.programme_id.substring(0, 8) + '…</td>' +
+              '<td>' + p.tenant_id.substring(0, 8) + '…</td>' +
+              '<td>' + p.programme_key + '</td>' +
+              '<td>' + p.display_name + '</td>' +
+              '<td><span class="status-chip ' + statusClass + '">' + p.status + '</span></td>' +
+              '<td>' + (p.policy_code || '—') + '</td>' +
+              '<td>' + new Date(p.updated_at).toLocaleDateString() + '</td>' +
+              '<td>' + actions + '</td>' +
+              '</tr>';
+          }).join('');
         }
+
+        // Hydrate form selects
+        const tenSelects = ['onb-prog-ten-id', 'onb-sup-ten-id'];
+        tenSelects.forEach(sid => {
+          const el = document.getElementById(sid);
+          if (el) {
+            const val = el.value;
+            el.innerHTML = '<option value="">Select Tenant...</option>' + tenants.map(t => `<option value="${t.tenant_id}">${t.display_name} (${t.tenant_key})</option>`).join('');
+            el.value = val;
+          }
+        });
+
+        const progSelect = document.getElementById('onb-pol-prog-id');
+        if (progSelect) {
+          const val = progSelect.value;
+          progSelect.innerHTML = '<option value="">Select Programme...</option>' + progs.map(p => `<option value="${p.programme_id}">${p.display_name} (${p.programme_key})</option>`).join('');
+          progSelect.value = val;
+        }
+
+        const checkDisabled = (selId, ...btnIds) => {
+          const sel = document.getElementById(selId);
+          if (sel) {
+            const updateState = () => {
+              const disabled = !sel.value;
+              btnIds.forEach(id => {
+                const b = document.getElementById(id);
+                if (b) b.disabled = disabled;
+              });
+            };
+            updateState();
+            sel.addEventListener('change', updateState);
+          }
+        };
+        checkDisabled('onb-prog-ten-id', 'btn-create-prog');
+        checkDisabled('onb-sup-ten-id', 'btn-register-sup');
+        checkDisabled('onb-pol-prog-id', 'btn-bind-policy', 'btn-activate-prog');
 
         // Summary stats
-        document.getElementById('onbActiveTenants').textContent = tenants.filter(t => t.status === 'ACTIVE').length;
-        document.getElementById('onbActiveProgrammes').textContent = progs.filter(p => p.status === 'ACTIVE').length;
-        document.getElementById('onbBoundPolicies').textContent = progs.filter(p => p.policy_code).length;
-        document.getElementById('onbTimestamp').textContent = data.timestamp ? new Date(data.timestamp).toLocaleString() : '—';
+        document.getElementById('onbActiveTenants').textContent =
+          tenants.filter(t => t.status === 'ACTIVE').length;
+        document.getElementById('onbActiveProgrammes').textContent =
+          progs.filter(p => p.status === 'ACTIVE').length;
+        document.getElementById('onbBoundPolicies').textContent =
+          progs.filter(p => p.policy_code).length;
+        document.getElementById('onbTimestamp').textContent =
+          data.timestamp ? new Date(data.timestamp).toLocaleString() : '—';
+
       } catch (err) {
-        document.getElementById('onbTenantRows').innerHTML = '<tr><td colspan="5" style="color:var(--red-lt);">Error: ' + err.message + '</td></tr>';
+        document.getElementById('onbTenantRows').innerHTML =
+          '<tr><td colspan="5" style="color:var(--red-lt);">Error: ' + err.message + '</td></tr>';
+        console.error('loadOnboardingState error:', err);
       }
+    }
+
+    async function manualRegisterTenant() {
+      const id = document.getElementById('onb-ten-id').value;
+      const key = document.getElementById('onb-ten-key').value;
+      const name = document.getElementById('onb-ten-name').value;
+      if (!key || !name) { setOnbStatus('Key and name required', 'error'); return; }
+      try {
+        await onbFetch('/api/admin/onboarding/tenants', { method: 'POST', body: JSON.stringify({ tenant_id: id || undefined, tenant_key: key, display_name: name }), headers: { 'Content-Type': 'application/json' } });
+        setOnbStatus('Tenant registered.', 'success');
+        await loadOnboardingState();
+      } catch (e) { setOnbStatus('Failed to register tenant: ' + e.message, 'error'); }
+    }
+
+    async function manualCreateProgramme() {
+      const tId = document.getElementById('onb-prog-ten-id').value;
+      const key = document.getElementById('onb-prog-key').value;
+      const name = document.getElementById('onb-prog-name').value;
+      if (!tId || !key || !name) { setOnbStatus('Tenant ID, Key, and Name are required', 'error'); return; }
+      try {
+        await onbFetch('/api/admin/onboarding/programmes', { 
+            method: 'POST', 
+            body: JSON.stringify({ tenant_id: tId, programme_key: key, display_name: name }), 
+            headers: { 'Content-Type': 'application/json' } 
+        });
+        setOnbStatus('Programme created.', 'success');
+        await loadOnboardingState();
+      } catch (e) { setOnbStatus('Failed to create programme: ' + e.message, 'error'); }
+    }
+
+    async function manualRegisterSupplier() {
+      const tId = document.getElementById('onb-sup-ten-id').value;
+      const sId = document.getElementById('onb-sup-id').value;
+      const name = document.getElementById('onb-sup-name').value;
+      const target = document.getElementById('onb-sup-target').value;
+      if (!tId || !name || !target) { setOnbStatus('Tenant ID, Name, and Payout Target are required', 'error'); return; }
+      try {
+        await onbFetch('/api/admin/onboarding/suppliers', { 
+            method: 'POST', 
+            body: JSON.stringify({ tenant_id: tId, supplier_id: sId || undefined, supplier_name: name, payout_target: target }), 
+            headers: { 'Content-Type': 'application/json' } 
+        });
+        setOnbStatus('Supplier registered.', 'success');
+      } catch (e) { setOnbStatus('Failed to register supplier: ' + e.message, 'error'); }
+    }
+
+    async function manualBindPolicy() {
+      const pId = document.getElementById('onb-pol-prog-id').value;
+      const code = document.getElementById('onb-pol-code').value;
+      if (!pId || !code) { setOnbStatus('Selection invalid', 'error'); return; }
+      try {
+        const statusData = await onbFetch('/api/admin/onboarding/status');
+        const prog = (statusData.programmes || []).find(p => p.programme_id === pId);
+        if (!prog) { setOnbStatus('Programme not found', 'error'); return; }
+        
+        await onbFetch(`/api/admin/onboarding/programmes/${pId}/policy-binding`, { 
+            method: 'POST', 
+            body: JSON.stringify({ tenant_id: prog.tenant_id, policy_code: code }), 
+            headers: { 'Content-Type': 'application/json' } 
+        });
+        setOnbStatus('Policy bound successfully.', 'success');
+        await loadOnboardingState();
+      } catch (e) { setOnbStatus('Failed to bind policy: ' + e.message, 'error'); }
+    }
+
+    async function manualActivateProg() {
+      const pId = document.getElementById('onb-pol-prog-id').value;
+      if (!pId) { setOnbStatus('Selection required', 'error'); return; }
+      try {
+        const statusData = await onbFetch('/api/admin/onboarding/status');
+        const prog = (statusData.programmes || []).find(p => p.programme_id === pId);
+        if (!prog) { setOnbStatus('Programme not found', 'error'); return; }
+        
+        await onbFetch(`/api/admin/onboarding/programmes/${pId}/activate`, { 
+            method: 'PUT',
+            body: JSON.stringify({ tenant_id: prog.tenant_id }),
+            headers: { 'Content-Type': 'application/json' }
+        });
+        setOnbStatus('Programme activated successfully.', 'success');
+        await loadOnboardingState();
+        initDashboard();
+      } catch (e) { setOnbStatus('Failed to activate programme: ' + e.message, 'error'); }
     }
   </script>
   <style>
@@ -3824,6 +4149,31 @@
       display: flex;
       flex-direction: column;
       gap: 0;
+    }
+
+    /* Inline status message — class-based state (SOLC TASK-UI-WIRE-012) */
+    .onb-status-msg {
+      font-family: var(--mono);
+      font-size: 9px;
+      padding: 6px 12px;
+      border-radius: 2px;
+      margin-top: 8px;
+      letter-spacing: .05em;
+    }
+    .onb-status-info {
+      color: var(--smoke);
+      background: rgba(138,158,141,.08);
+      border: 1px solid rgba(138,158,141,.15);
+    }
+    .onb-status-success {
+      color: var(--bright);
+      background: rgba(61,184,90,.08);
+      border: 1px solid rgba(61,184,90,.18);
+    }
+    .onb-status-error {
+      color: var(--red-lt);
+      background: rgba(176,48,32,.08);
+      border: 1px solid rgba(176,48,32,.18);
     }
   </style>
 </body>

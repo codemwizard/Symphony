@@ -2,6 +2,7 @@
 exception_id: EXC-314
 inv_scope: change-rule
 expiry: 2026-03-19
+closed_at: 2026-03-21
 follow_up_ticket: TSK-HARD-050-054-011B-096
 reason: Auto-generated: structural change detected; invariants linkage missing in commit.
 author: system

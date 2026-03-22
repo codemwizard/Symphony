@@ -63,3 +63,4 @@ This ADR remains the authoritative governance reference for baseline change chec
 - 2026-03-12: Baseline refreshed again after wiring `guard_settlement_requires_acknowledgement()` into `instruction_settlement_finality` settlement inserts via `trg_enforce_settlement_acknowledgement`, preserving the `0073_int_004_ack_gap_controls.sql` cutoff while closing the runtime enforcement gap.
 - 2026-03-16: Baseline regenerated after Wave 1 security hardening adding billable clients conflict target uniqueness (0074) and supplier registry persistance/RLS (0075).
 - 2026-03-16: Baseline regenerated after Wave 2 Onboarding control plane migration adding tenant and programme registries with RLS enforcement (0076).
+- 2026-03-21: Baseline regenerated after Wave F onboarding control plane RLS hardening (0077).

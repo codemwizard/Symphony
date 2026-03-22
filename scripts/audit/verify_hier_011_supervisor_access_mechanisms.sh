@@ -68,15 +68,39 @@ tenant_member_id="$(psql "$DATABASE_URL" -X -A -t -v ON_ERROR_STOP=1 -c "SELECT 
 event_instruction="hier011-evt-${RANDOM}-$(date +%s)"
 self_instruction="hier011-self-${RANDOM}-$(date +%s)"
 
-psql "$DATABASE_URL" -X -v ON_ERROR_STOP=1 -c "INSERT INTO public.billable_clients(billable_client_id, legal_name, client_type, regulator_ref, status, client_key) VALUES ('$billable_client_id'::uuid, 'HIER011 Billable Client', 'ENTERPRISE', NULL, 'ACTIVE', 'hier011-client-${RANDOM}') ON CONFLICT DO NOTHING;" >/dev/null
-psql "$DATABASE_URL" -X -v ON_ERROR_STOP=1 -c "INSERT INTO public.tenants(tenant_id, tenant_key, tenant_name, tenant_type, status, billable_client_id) VALUES ('$tenant_id'::uuid, 'hier011-${RANDOM}', 'HIER-011 Tenant', 'COMMERCIAL', 'ACTIVE', '$billable_client_id'::uuid) ON CONFLICT DO NOTHING;" >/dev/null
-psql "$DATABASE_URL" -X -v ON_ERROR_STOP=1 -c "INSERT INTO public.escrow_accounts(escrow_id, tenant_id, program_id, entity_id, state, authorized_amount_minor, currency_code) VALUES ('$escrow_id'::uuid, '$tenant_id'::uuid, NULL, NULL, 'CREATED', 0, 'USD') ON CONFLICT DO NOTHING;" >/dev/null
-psql "$DATABASE_URL" -X -v ON_ERROR_STOP=1 -c "INSERT INTO public.programs(program_id, tenant_id, program_key, program_name, status, program_escrow_id) VALUES ('$program_id'::uuid, '$tenant_id'::uuid, 'hier011-program-${RANDOM}', 'HIER011 Program', 'ACTIVE', '$escrow_id'::uuid) ON CONFLICT DO NOTHING;" >/dev/null
-psql "$DATABASE_URL" -X -v ON_ERROR_STOP=1 -c "INSERT INTO public.persons(person_id, tenant_id, person_ref_hash) VALUES ('$person_id'::uuid, '$tenant_id'::uuid, encode(digest('hier011-${person_id}', 'sha256'), 'hex')) ON CONFLICT DO NOTHING;" >/dev/null
-psql "$DATABASE_URL" -X -v ON_ERROR_STOP=1 -c "INSERT INTO public.tenant_members(member_id, tenant_id, member_ref, status) VALUES ('$tenant_member_id'::uuid, '$tenant_id'::uuid, 'hier011-tenant-member-${RANDOM}', 'ACTIVE') ON CONFLICT DO NOTHING;" >/dev/null
-psql "$DATABASE_URL" -X -v ON_ERROR_STOP=1 -c "INSERT INTO public.members(member_id, tenant_id, tenant_member_id, person_id, entity_id, member_ref_hash, status, enrolled_at) VALUES ('$member_id'::uuid, '$tenant_id'::uuid, '$tenant_member_id'::uuid, '$person_id'::uuid, '$program_id'::uuid, encode(digest('hier011-member-${member_id}', 'sha256'), 'hex'), 'ACTIVE', NOW()) ON CONFLICT DO NOTHING;" >/dev/null
-psql "$DATABASE_URL" -X -v ON_ERROR_STOP=1 -c "INSERT INTO public.ingress_attestations(instruction_id, tenant_id, payload_hash, member_id) VALUES ('$event_instruction', '$tenant_id'::uuid, encode(digest('hier011-payload-${event_instruction}', 'sha256'), 'hex'), '$tenant_member_id'::uuid);" >/dev/null
-psql "$DATABASE_URL" -X -v ON_ERROR_STOP=1 -c "INSERT INTO public.member_device_events(tenant_id, member_id, instruction_id, device_id, event_type, observed_at) VALUES ('$tenant_id'::uuid, '$member_id'::uuid, '$event_instruction', 'device-hier011', 'SIM_SWAP_DETECTED', NOW());" >/dev/null
+psql "$DATABASE_URL" -X -v ON_ERROR_STOP=1 <<EOF >/dev/null
+BEGIN;
+ALTER TABLE public.billable_clients NO FORCE ROW LEVEL SECURITY;
+ALTER TABLE public.tenants NO FORCE ROW LEVEL SECURITY;
+ALTER TABLE public.escrow_accounts NO FORCE ROW LEVEL SECURITY;
+ALTER TABLE public.programs NO FORCE ROW LEVEL SECURITY;
+ALTER TABLE public.persons NO FORCE ROW LEVEL SECURITY;
+ALTER TABLE public.tenant_members NO FORCE ROW LEVEL SECURITY;
+ALTER TABLE public.members NO FORCE ROW LEVEL SECURITY;
+ALTER TABLE public.ingress_attestations NO FORCE ROW LEVEL SECURITY;
+ALTER TABLE public.member_device_events NO FORCE ROW LEVEL SECURITY;
+
+INSERT INTO public.billable_clients(billable_client_id, legal_name, client_type, regulator_ref, status, client_key) VALUES ('$billable_client_id'::uuid, 'HIER011 Billable Client', 'ENTERPRISE', NULL, 'ACTIVE', 'hier011-client-${RANDOM}') ON CONFLICT DO NOTHING;
+INSERT INTO public.tenants(tenant_id, tenant_key, tenant_name, tenant_type, status, billable_client_id) VALUES ('$tenant_id'::uuid, 'hier011-${RANDOM}', 'HIER-011 Tenant', 'COMMERCIAL', 'ACTIVE', '$billable_client_id'::uuid) ON CONFLICT DO NOTHING;
+INSERT INTO public.escrow_accounts(escrow_id, tenant_id, program_id, entity_id, state, authorized_amount_minor, currency_code) VALUES ('$escrow_id'::uuid, '$tenant_id'::uuid, NULL, NULL, 'CREATED', 0, 'USD') ON CONFLICT DO NOTHING;
+INSERT INTO public.programs(program_id, tenant_id, program_key, program_name, status, program_escrow_id) VALUES ('$program_id'::uuid, '$tenant_id'::uuid, 'hier011-program-${RANDOM}', 'HIER011 Program', 'ACTIVE', '$escrow_id'::uuid) ON CONFLICT DO NOTHING;
+INSERT INTO public.persons(person_id, tenant_id, person_ref_hash) VALUES ('$person_id'::uuid, '$tenant_id'::uuid, encode(digest('hier011-${person_id}', 'sha256'), 'hex')) ON CONFLICT DO NOTHING;
+INSERT INTO public.tenant_members(member_id, tenant_id, member_ref, status) VALUES ('$tenant_member_id'::uuid, '$tenant_id'::uuid, 'hier011-tenant-member-${RANDOM}', 'ACTIVE') ON CONFLICT DO NOTHING;
+INSERT INTO public.members(member_id, tenant_id, tenant_member_id, person_id, entity_id, member_ref_hash, status, enrolled_at) VALUES ('$member_id'::uuid, '$tenant_id'::uuid, '$tenant_member_id'::uuid, '$person_id'::uuid, '$program_id'::uuid, encode(digest('hier011-member-${member_id}', 'sha256'), 'hex'), 'ACTIVE', NOW()) ON CONFLICT DO NOTHING;
+INSERT INTO public.ingress_attestations(instruction_id, tenant_id, payload_hash, member_id) VALUES ('$event_instruction', '$tenant_id'::uuid, encode(digest('hier011-payload-${event_instruction}', 'sha256'), 'hex'), '$tenant_member_id'::uuid);
+INSERT INTO public.member_device_events(tenant_id, member_id, instruction_id, device_id, event_type, observed_at) VALUES ('$tenant_id'::uuid, '$member_id'::uuid, '$event_instruction', 'device-hier011', 'SIM_SWAP_DETECTED', NOW());
+
+ALTER TABLE public.billable_clients FORCE ROW LEVEL SECURITY;
+ALTER TABLE public.tenants FORCE ROW LEVEL SECURITY;
+ALTER TABLE public.escrow_accounts FORCE ROW LEVEL SECURITY;
+ALTER TABLE public.programs FORCE ROW LEVEL SECURITY;
+ALTER TABLE public.persons FORCE ROW LEVEL SECURITY;
+ALTER TABLE public.tenant_members FORCE ROW LEVEL SECURITY;
+ALTER TABLE public.members FORCE ROW LEVEL SECURITY;
+ALTER TABLE public.ingress_attestations FORCE ROW LEVEL SECURITY;
+ALTER TABLE public.member_device_events FORCE ROW LEVEL SECURITY;
+COMMIT;
+EOF
 
 # READ_ONLY: signed aggregate report delivery.
 openssl genrsa -out "$TMPDIR/report_signing_key.pem" 2048 >/dev/null 2>&1
@@ -115,6 +139,8 @@ done
 create_short_resp="$TMPDIR/create_short.json"
 curl -sS -X POST "http://127.0.0.1:${SUPERVISOR_API_PORT}/v1/admin/supervisor/audit-token" \
   -H 'Content-Type: application/json' \
+  -H 'X-Supervisor-Role: admin' \
+  -H "X-Tenant-Id: ${tenant_id}" \
   -d "{\"program_id\":\"$program_id\",\"issued_by\":\"hier011-verifier\",\"ttl_seconds\":1}" > "$create_short_resp"
 short_token="$(jq -r '.token' "$create_short_resp")"
 if [[ -n "$short_token" && "$short_token" != "null" ]]; then
@@ -124,7 +150,7 @@ else
 fi
 
 sleep 2
-expired_code="$(curl -sS -o "$TMPDIR/expired.json" -w '%{http_code}' "http://127.0.0.1:${SUPERVISOR_API_PORT}/v1/admin/supervisor/audit-records" -H "Authorization: Bearer ${short_token}")"
+expired_code="$(curl -sS -o "$TMPDIR/expired.json" -w '%{http_code}' "http://127.0.0.1:${SUPERVISOR_API_PORT}/v1/admin/supervisor/audit-records" -H "Authorization: Bearer ${short_token}" -H 'X-Supervisor-Role: admin' -H "X-Tenant-Id: ${tenant_id}")"
 if [[ "$expired_code" == "401" ]] && jq -e '.error=="TOKEN_EXPIRED"' "$TMPDIR/expired.json" >/dev/null 2>&1; then
   record PASS "audit_token_expires" "AUDIT token expires automatically"
 else
@@ -135,19 +161,21 @@ fi
 create_resp="$TMPDIR/create.json"
 curl -sS -X POST "http://127.0.0.1:${SUPERVISOR_API_PORT}/v1/admin/supervisor/audit-token" \
   -H 'Content-Type: application/json' \
+  -H 'X-Supervisor-Role: admin' \
+  -H "X-Tenant-Id: ${tenant_id}" \
   -d "{\"program_id\":\"$program_id\",\"issued_by\":\"hier011-verifier\"}" > "$create_resp"
 token="$(jq -r '.token' "$create_resp")"
 token_id="$(jq -r '.token_id' "$create_resp")"
 
-read_code="$(curl -sS -o "$TMPDIR/read.json" -w '%{http_code}' "http://127.0.0.1:${SUPERVISOR_API_PORT}/v1/admin/supervisor/audit-records" -H "Authorization: Bearer ${token}")"
+read_code="$(curl -sS -o "$TMPDIR/read.json" -w '%{http_code}' "http://127.0.0.1:${SUPERVISOR_API_PORT}/v1/admin/supervisor/audit-records" -H "Authorization: Bearer ${token}" -H 'X-Supervisor-Role: admin' -H "X-Tenant-Id: ${tenant_id}")"
 if [[ "$read_code" == "200" ]] && jq -e '.records | type == "array"' "$TMPDIR/read.json" >/dev/null 2>&1 && ! jq -e '.records[]? | has("member_id") or has("person_id")' "$TMPDIR/read.json" >/dev/null 2>&1; then
   record PASS "audit_records_anonymized" "AUDIT token returns anonymized raw records"
 else
   record FAIL "audit_records_anonymized" "AUDIT record payload is not anonymized"
 fi
 
-revoke_code="$(curl -sS -o "$TMPDIR/revoke.json" -w '%{http_code}' -X DELETE "http://127.0.0.1:${SUPERVISOR_API_PORT}/v1/admin/supervisor/audit-token/${token_id}")"
-post_revoke_code="$(curl -sS -o "$TMPDIR/revoked_read.json" -w '%{http_code}' "http://127.0.0.1:${SUPERVISOR_API_PORT}/v1/admin/supervisor/audit-records" -H "Authorization: Bearer ${token}")"
+revoke_code="$(curl -sS -o "$TMPDIR/revoke.json" -w '%{http_code}' -X DELETE "http://127.0.0.1:${SUPERVISOR_API_PORT}/v1/admin/supervisor/audit-token/${token_id}" -H 'X-Supervisor-Role: admin' -H "X-Tenant-Id: ${tenant_id}")"
+post_revoke_code="$(curl -sS -o "$TMPDIR/revoked_read.json" -w '%{http_code}' "http://127.0.0.1:${SUPERVISOR_API_PORT}/v1/admin/supervisor/audit-records" -H "Authorization: Bearer ${token}" -H 'X-Supervisor-Role: admin' -H "X-Tenant-Id: ${tenant_id}")"
 if [[ "$revoke_code" == "200" && "$post_revoke_code" == "401" ]] && jq -e '.error=="TOKEN_REVOKED"' "$TMPDIR/revoked_read.json" >/dev/null 2>&1; then
   record PASS "audit_token_revocable" "AUDIT token is revocable via DELETE endpoint"
 else
@@ -156,14 +184,14 @@ fi
 
 # APPROVAL_REQUIRED: cannot self-approve.
 psql "$DATABASE_URL" -X -v ON_ERROR_STOP=1 -c "SELECT public.submit_for_supervisor_approval('$self_instruction', '$program_id'::uuid, 30, 'fraud_watch', 'actor_self');" >/dev/null
-self_code="$(curl -sS -o "$TMPDIR/self.json" -w '%{http_code}' -X POST "http://127.0.0.1:${SUPERVISOR_API_PORT}/v1/admin/supervisor/approve/${self_instruction}" -H 'Content-Type: application/json' -d '{"approved_by":"actor_self","reason":"attempt self approval"}')"
+self_code="$(curl -sS -o "$TMPDIR/self.json" -w '%{http_code}' -X POST "http://127.0.0.1:${SUPERVISOR_API_PORT}/v1/admin/supervisor/approve/${self_instruction}" -H 'Content-Type: application/json' -H 'X-Supervisor-Role: admin' -H "X-Tenant-Id: ${tenant_id}" -d '{"approved_by":"actor_self","reason":"attempt self approval"}')"
 if [[ "$self_code" == "403" ]] && jq -e '.error=="SELF_APPROVAL_FORBIDDEN"' "$TMPDIR/self.json" >/dev/null 2>&1; then
   record PASS "approval_cannot_self_approve" "APPROVAL_REQUIRED blocks self-approval"
 else
   record FAIL "approval_cannot_self_approve" "self-approval was not blocked"
 fi
 
-approve_code="$(curl -sS -o "$TMPDIR/approve.json" -w '%{http_code}' -X POST "http://127.0.0.1:${SUPERVISOR_API_PORT}/v1/admin/supervisor/approve/${self_instruction}" -H 'Content-Type: application/json' -d '{"approved_by":"actor_supervisor","reason":"manual approval"}')"
+approve_code="$(curl -sS -o "$TMPDIR/approve.json" -w '%{http_code}' -X POST "http://127.0.0.1:${SUPERVISOR_API_PORT}/v1/admin/supervisor/approve/${self_instruction}" -H 'Content-Type: application/json' -H 'X-Supervisor-Role: admin' -H "X-Tenant-Id: ${tenant_id}" -d '{"approved_by":"actor_supervisor","reason":"manual approval"}')"
 if [[ "$approve_code" == "200" ]]; then
   record PASS "approval_endpoint_approves" "APPROVAL_REQUIRED endpoint approves pending instruction"
 else

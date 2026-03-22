@@ -2,6 +2,7 @@
 exception_id: EXC-1289
 inv_scope: change-rule
 expiry: 2026-03-19
+closed_at: 2026-03-21
 follow_up_ticket: WAVE2-DDL-HARDENING-FIX
 reason: Structural hardening fix migration added; invariants linkage documented via exception and verifier coverage.
 author: codex

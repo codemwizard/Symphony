@@ -1,0 +1,19 @@
+{
+  "check_id": "TASK-UI-WIRE-014-PUBLIC-LANDING-CONTEXT",
+  "task_id": "TASK-UI-WIRE-014",
+  "timestamp_utc": "2026-03-17T23:13:55Z",
+  "status": "PASS",
+  "tests_passed": 7,
+  "tests_failed": 0,
+  "details": {
+    "landing_route": "/pilot-demo/evidence-link",
+    "context_api": "/api/public/evidence-links/context",
+    "landing_url_in_issue": true,
+    "token_extraction": "query_param_and_bearer",
+    "duplicate_check": "EvidenceLinkSubmissionLog.ReadAll()",
+    "require_gps_flag": true,
+    "build_status": "0 warnings, 0 errors"
+  },
+  "git_sha": "unknown",
+  "schema_fingerprint": "wave-g-v1"
+}

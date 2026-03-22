@@ -1,0 +1,27 @@
+{
+  "taskId": "TASK-UI-WIRE-013",
+  "status": "PASS",
+  "timestamp": "2026-03-17T22:25:00Z",
+  "verificationScript": "scripts/audit/verify_task_ui_wire_013.sh",
+  "checks": [
+    {
+      "name": "Create Programme button is constrained/disabled by default",
+      "status": "PASS"
+    },
+    {
+      "name": "Register Supplier button is constrained/disabled by default",
+      "status": "PASS"
+    },
+    {
+      "name": "Activate button is constrained/disabled by default",
+      "status": "PASS"
+    },
+    {
+      "name": "Event listener constraints for forms were implemented",
+      "status": "PASS"
+    }
+  ],
+  "check_id": "TASK-UI-WIRE-013",
+  "timestamp_utc": "2026-03-17T23:37:04Z",
+  "git_sha": "unknown"
+}

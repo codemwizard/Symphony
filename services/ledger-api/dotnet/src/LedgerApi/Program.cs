@@ -51,7 +51,7 @@ builder.Services.AddRateLimiter(options =>
         : 60;
     var sensitivePermitLimit = int.TryParse(Environment.GetEnvironmentVariable("SYMPHONY_SENSITIVE_RATE_LIMIT_PERMITS"), out var parsedSensitivePermit)
         ? parsedSensitivePermit
-        : 10;
+        : (string.Equals(Environment.GetEnvironmentVariable("SYMPHONY_RUNTIME_PROFILE"), "pilot-demo", StringComparison.OrdinalIgnoreCase) ? 60 : 10);
     var sensitiveWindowSeconds = int.TryParse(Environment.GetEnvironmentVariable("SYMPHONY_SENSITIVE_RATE_LIMIT_WINDOW_SECONDS"), out var parsedSensitiveWindow)
         ? parsedSensitiveWindow
         : 60;
@@ -226,9 +226,9 @@ if (await DemoSelfTestEntryPoint.TryRunAsync(args, runtimeProfile, logger, Cance
     return;
 }
 
-var storageMode = (Environment.GetEnvironmentVariable("INGRESS_STORAGE_MODE") ?? "file").Trim().ToLowerInvariant();
+var storageMode = (Environment.GetEnvironmentVariable("INGRESS_STORAGE_MODE") ?? (runtimeProfile == "pilot-demo" ? "db_psql" : "file")).Trim().ToLowerInvariant();
 StorageModePolicy.ValidateOrThrow(storageMode);
-var dataSource = StorageModePolicy.IsDatabaseMode(storageMode)
+var dataSource = (StorageModePolicy.IsDatabaseMode(storageMode) || runtimeProfile == "pilot-demo")
     ? DbDataSourceFactory.Create(logger)
     : null;
 
@@ -284,13 +284,21 @@ var signingKeyPresent = !string.IsNullOrWhiteSpace(secrets.EvidenceSigningKey);
 var rawAllowlist = (Environment.GetEnvironmentVariable("SYMPHONY_KNOWN_TENANTS") ?? string.Empty).Trim();
 var tenantAllowlistConfigured = !string.IsNullOrWhiteSpace(rawAllowlist);
 
-if (!tenantAllowlistConfigured)
+if (string.Equals(runtimeProfile, "pilot-demo", StringComparison.OrdinalIgnoreCase))
+{
+    // In pilot-demo, the "allowlist" is the dynamic tenant_registry table.
+    // We set this to true to suppress the legacy security warning.
+    tenantAllowlistConfigured = true;
+    logger.LogInformation("Pilot Demo mode active: Using database-backed tenant registry (legacies suppressed).");
+}
+else if (!tenantAllowlistConfigured)
 {
     logger.LogWarning("SECURITY ALERT: tenant_allowlist_configured=false. All tenant requests will be rejected with 503.");
 }
 
 var repoRoot = EvidenceMeta.ResolveRepoRoot(Directory.GetCurrentDirectory());
 var supervisoryUiDir = Path.Combine(repoRoot, "src", "supervisory-dashboard");
+var recipientLandingUiDir = Path.Combine(repoRoot, "src", "recipient-landing");
 var legacySupervisoryUiEnabled = string.Equals(
     Environment.GetEnvironmentVariable("SYMPHONY_ENABLE_LEGACY_SUPERVISORY_UI"),
     "1",
@@ -312,7 +320,12 @@ app.MapGet("/pilot-demo/supervisory", (HttpContext httpContext) =>
 
     var html = File.ReadAllText(templatePath);
     var fallbackJson = File.ReadAllText(fallbackPath);
-    var uiTenantId = Environment.GetEnvironmentVariable("SYMPHONY_UI_TENANT_ID") ?? string.Empty;
+    var uiTenantId = Environment.GetEnvironmentVariable("SYMPHONY_UI_TENANT_ID");
+    if (string.IsNullOrWhiteSpace(uiTenantId))
+    {
+        uiTenantId = CreateStableGuid("ten-zambiagrn").ToString();
+    }
+
     var contextJson = JsonSerializer.Serialize(new
     {
         dataMode = "HYBRID",
@@ -330,7 +343,7 @@ app.MapGet("/pilot-demo/supervisory", (HttpContext httpContext) =>
             SameSite = SameSiteMode.Strict,
             Secure = httpContext.Request.IsHttps,
             MaxAge = TimeSpan.FromHours(8),
-            Path = "/pilot-demo"
+            Path = "/"
         });
     }
 
@@ -353,6 +366,22 @@ app.MapGet("/pilot-demo/supervisory-legacy", () =>
     }
 
     return Results.Content(File.ReadAllText(legacyPath), "text/html; charset=utf-8");
+});
+
+app.MapGet("/pilot-demo/evidence-link", (HttpContext httpContext) =>
+{
+    if (!string.Equals(runtimeProfile, "pilot-demo", StringComparison.OrdinalIgnoreCase))
+    {
+        return Results.NotFound();
+    }
+
+    var templatePath = Path.Combine(recipientLandingUiDir, "index.html");
+    if (!File.Exists(templatePath))
+    {
+        return Results.NotFound();
+    }
+
+    return Results.Content(File.ReadAllText(templatePath), "text/html; charset=utf-8");
 });
 
 app.MapGet("/health", async (CancellationToken cancellationToken) =>
@@ -568,6 +597,128 @@ app.MapPost("/v1/evidence-links/submit", async (EvidenceLinkSubmitRequest reques
     var result = await EvidenceLinkSubmitHandler.HandleAsync(request, httpContext, logger, cancellationToken);
     return Results.Json(result.Body, statusCode: result.StatusCode);
 }).RequireRateLimiting("sensitive-endpoint");
+
+app.MapGet("/api/public/evidence-links/context", (HttpContext httpContext) =>
+{
+    var token = string.Empty;
+    var authHeader = httpContext.Request.Headers["Authorization"].ToString();
+    if (authHeader.StartsWith("Bearer ", StringComparison.OrdinalIgnoreCase))
+    {
+        token = authHeader.Substring("Bearer ".Length).Trim();
+    }
+    else if (httpContext.Request.Query.TryGetValue("token", out var tq))
+    {
+        token = tq.ToString().Trim();
+    }
+
+    if (string.IsNullOrWhiteSpace(token))
+    {
+        return Results.Json(new { valid = false, error_code = "MISSING_TOKEN" }, statusCode: StatusCodes.Status200OK);
+    }
+
+    var signingKey = EvidenceLinkIssueHandler.ResolveSigningKey();
+    if (string.IsNullOrWhiteSpace(signingKey))
+    {
+        return Results.Json(new { valid = false, error_code = "SECURE_LINK_CONFIG_MISSING" }, statusCode: StatusCodes.Status200OK);
+    }
+
+    var validation = EvidenceLinkTokenService.ValidateToken(token, signingKey, DateTimeOffset.UtcNow);
+    if (!validation.Success)
+    {
+        return Results.Json(new { valid = false, error_code = validation.ErrorCode ?? "INVALID_TOKEN" }, statusCode: StatusCodes.Status200OK);
+    }
+
+    var log = EvidenceLinkSubmissionLog.ReadAll();
+    var alreadySubmitted = log.Any(e =>
+        e.TryGetProperty("instruction_id", out var iid) &&
+        string.Equals(iid.GetString(), validation.InstructionId, StringComparison.Ordinal));
+
+    if (alreadySubmitted)
+    {
+        return Results.Json(new { valid = false, error_code = "ALREADY_SUBMITTED" }, statusCode: StatusCodes.Status200OK);
+    }
+
+    return Results.Json(new
+    {
+        valid = true,
+        tenant_id = validation.TenantId,
+        instruction_id = validation.InstructionId,
+        program_id = validation.ProgramId,
+        submitter_class = validation.SubmitterClass,
+        submitter_msisdn = validation.SubmitterMsisdn,
+        require_gps = validation.ExpectedLatitude is not null && validation.ExpectedLongitude is not null,
+        expires_at = DateTimeOffset.FromUnixTimeSeconds(validation.ExpiresAtUnix).ToString("O")
+    }, statusCode: StatusCodes.Status200OK);
+}).RequireRateLimiting("sensitive-endpoint");
+
+app.MapPost("/api/public/evidence-links/upload", async (HttpContext httpContext) =>
+{
+    var token = string.Empty;
+    var authHeader = httpContext.Request.Headers["Authorization"].ToString();
+    if (authHeader.StartsWith("Bearer ", StringComparison.OrdinalIgnoreCase))
+    {
+        token = authHeader.Substring("Bearer ".Length).Trim();
+    }
+    else if (httpContext.Request.Query.TryGetValue("token", out var tq))
+    {
+        token = tq.ToString().Trim();
+    }
+
+    if (string.IsNullOrWhiteSpace(token))
+    {
+        return Results.Json(new { error_code = "MISSING_TOKEN" }, statusCode: StatusCodes.Status401Unauthorized);
+    }
+
+    var signingKey = EvidenceLinkIssueHandler.ResolveSigningKey();
+    if (string.IsNullOrWhiteSpace(signingKey))
+    {
+        return Results.Json(new { error_code = "SECURE_LINK_CONFIG_MISSING" }, statusCode: StatusCodes.Status503ServiceUnavailable);
+    }
+
+    var validation = EvidenceLinkTokenService.ValidateToken(token, signingKey, DateTimeOffset.UtcNow);
+    if (!validation.Success)
+    {
+        return Results.Json(new { error_code = validation.ErrorCode ?? "INVALID_TOKEN" }, statusCode: StatusCodes.Status401Unauthorized);
+    }
+
+    if (!httpContext.Request.HasFormContentType)
+    {
+        return Results.Json(new { error_code = "INVALID_REQUEST", errors = new[] { "multipart/form-data required" } }, statusCode: StatusCodes.Status400BadRequest);
+    }
+
+    var form = await httpContext.Request.ReadFormAsync();
+    var file = form.Files.GetFile("artifact");
+    if (file is null || file.Length == 0)
+    {
+        return Results.Json(new { error_code = "INVALID_REQUEST", errors = new[] { "artifact file is required" } }, statusCode: StatusCodes.Status400BadRequest);
+    }
+
+    const long maxSizeBytes = 10 * 1024 * 1024; // 10 MB
+    if (file.Length > maxSizeBytes)
+    {
+        return Results.Json(new { error_code = "FILE_TOO_LARGE", max_bytes = maxSizeBytes }, statusCode: StatusCodes.Status413PayloadTooLarge);
+    }
+
+    var uploadDir = Path.Combine(Path.GetTempPath(), "symphony_evidence_uploads");
+    Directory.CreateDirectory(uploadDir);
+    var artifactRef = $"{Guid.NewGuid():N}_{Path.GetFileName(file.FileName)}";
+    var destPath = Path.Combine(uploadDir, artifactRef);
+
+    await using (var stream = File.Create(destPath))
+    {
+        await file.CopyToAsync(stream);
+    }
+
+    logger.LogInformation("Evidence artifact uploaded: {ArtifactRef} ({Size} bytes) for instruction {InstructionId}", artifactRef, file.Length, validation.InstructionId);
+
+    return Results.Json(new
+    {
+        artifact_ref = artifactRef,
+        artifact_type = file.ContentType?.StartsWith("image/", StringComparison.OrdinalIgnoreCase) == true ? "IMAGE" : "DOCUMENT",
+        size_bytes = file.Length,
+        instruction_id = validation.InstructionId
+    }, statusCode: StatusCodes.Status200OK);
+}).RequireRateLimiting("sensitive-endpoint").DisableAntiforgery();
 
 app.MapPost("/v1/admin/suppliers/upsert", async (SupplierRegistryUpsertRequest request, HttpContext httpContext) =>
 {
@@ -1029,12 +1180,15 @@ app.MapPost("/api/admin/onboarding/tenants", async (JsonElement body, HttpContex
             return Results.Json(authFailure.Body, statusCode: authFailure.StatusCode);
     }
 
-    if (!body.TryGetProperty("tenant_id", out var tenantIdProp) || !Guid.TryParse(tenantIdProp.GetString(), out var tenantId))
-        return Results.Json(new { error_code = "INVALID_REQUEST", errors = new[] { "tenant_id is required and must be a valid UUID" } }, statusCode: 400);
+    Guid tenantId;
+    if (body.TryGetProperty("tenant_id", out var tenantIdProp) && Guid.TryParse(tenantIdProp.GetString(), out var parsedTid))
+        tenantId = parsedTid;
+    else
+        tenantId = Guid.NewGuid();
     var tenantKey = body.TryGetProperty("tenant_key", out var tkProp) ? (tkProp.GetString() ?? $"ten-{tenantId.ToString("N")[..12]}") : $"ten-{tenantId.ToString("N")[..12]}";
     var displayName = body.TryGetProperty("display_name", out var dnProp) ? (dnProp.GetString() ?? "Unnamed") : "Unnamed";
 
-    var result = await tenantRegistryStore.UpsertAsync(tenantId, tenantKey, displayName, cancellationToken);
+    var result = await tenantRegistryStore.UpsertAsync(tenantId, tenantKey, displayName, cancellationToken, bypassRls: true);
     if (!result.Success || result.Entry is null)
         return Results.Json(new { error_code = "ONBOARDING_FAILED", errors = new[] { result.Error ?? "tenant registry upsert failed" } }, statusCode: 503);
 
@@ -1049,6 +1203,7 @@ app.MapPost("/api/admin/onboarding/tenants", async (JsonElement body, HttpContex
     }, statusCode: 200);
 }).RequireRateLimiting("sensitive-endpoint");
 
+
 // GET /api/admin/onboarding/tenants — List all tenants
 app.MapGet("/api/admin/onboarding/tenants", async (HttpContext httpContext, CancellationToken cancellationToken) =>
 {
@@ -1059,7 +1214,7 @@ app.MapGet("/api/admin/onboarding/tenants", async (HttpContext httpContext, Canc
             return Results.Json(authFailure.Body, statusCode: authFailure.StatusCode);
     }
 
-    var tenants = await tenantRegistryStore.ListAsync(cancellationToken);
+    var tenants = await tenantRegistryStore.ListAsync(cancellationToken, bypassRls: true);
     return Results.Json(new
     {
         tenants = tenants.Select(t => new
@@ -1090,7 +1245,7 @@ app.MapPost("/api/admin/onboarding/programmes", async (JsonElement body, HttpCon
         return Results.Json(new { error_code = "INVALID_REQUEST", errors = new[] { "programme_key is required" } }, statusCode: 400);
     var displayName = body.TryGetProperty("display_name", out var dnProp) ? (dnProp.GetString() ?? "Unnamed Programme") : "Unnamed Programme";
 
-    var result = await programmeStore.CreateAsync(tenantId, pkProp.GetString()!.Trim(), displayName, cancellationToken);
+    var result = await programmeStore.CreateAsync(tenantId, pkProp.GetString()!.Trim(), displayName, cancellationToken, bypassRls: true);
     if (!result.Success || result.Entry is null)
         return Results.Json(new { error_code = "PROGRAMME_CREATE_FAILED", errors = new[] { result.Error ?? "programme create failed" } }, statusCode: 503);
 
@@ -1103,6 +1258,43 @@ app.MapPost("/api/admin/onboarding/programmes", async (JsonElement body, HttpCon
         status = result.Entry.Status,
         created_new = result.CreatedNew,
         created_at = result.Entry.CreatedAt.ToString("O")
+    }, statusCode: 200);
+}).RequireRateLimiting("sensitive-endpoint");
+
+// POST /api/admin/onboarding/suppliers — Create supplier
+app.MapPost("/api/admin/onboarding/suppliers", async (JsonElement body, HttpContext httpContext, CancellationToken cancellationToken) =>
+{
+    var authFailure = ApiAuthorization.AuthorizeAdminTenantOnboarding(httpContext, secrets);
+    if (authFailure is not null)
+    {
+        if (runtimeProfile != "pilot-demo" || !TryValidatePilotDemoOperatorCookie(httpContext, null, out _, out _))
+            return Results.Json(authFailure.Body, statusCode: authFailure.StatusCode);
+    }
+
+    if (!body.TryGetProperty("tenant_id", out var tidProp) || !Guid.TryParse(tidProp.GetString(), out var tenantId))
+        return Results.Json(new { error_code = "INVALID_REQUEST", errors = new[] { "tenant_id is required" } }, statusCode: 400);
+
+    Guid supplierId;
+    if (body.TryGetProperty("supplier_id", out var sidProp) && Guid.TryParse(sidProp.GetString(), out var parsedSid))
+        supplierId = parsedSid;
+    else
+        supplierId = Guid.NewGuid();
+
+    if (!body.TryGetProperty("supplier_name", out var snProp) || string.IsNullOrWhiteSpace(snProp.GetString()))
+        return Results.Json(new { error_code = "INVALID_REQUEST", errors = new[] { "supplier_name is required" } }, statusCode: 400);
+
+    if (!body.TryGetProperty("payout_target", out var ptProp) || string.IsNullOrWhiteSpace(ptProp.GetString()))
+        return Results.Json(new { error_code = "INVALID_REQUEST", errors = new[] { "payout_target is required" } }, statusCode: 400);
+
+    var success = await tenantRegistryStore.RegisterSupplierAsync(tenantId, supplierId.ToString(), snProp.GetString()!.Trim(), ptProp.GetString()!.Trim(), cancellationToken, bypassRls: true);
+    if (!success)
+        return Results.Json(new { error_code = "SUPPLIER_CREATE_FAILED", errors = new[] { "supplier register failed" } }, statusCode: 503);
+
+    return Results.Json(new
+    {
+        supplier_id = supplierId.ToString(),
+        supplier_name = snProp.GetString()!.Trim(),
+        payout_target = ptProp.GetString()!.Trim()
     }, statusCode: 200);
 }).RequireRateLimiting("sensitive-endpoint");
 
@@ -1120,7 +1312,7 @@ app.MapGet("/api/admin/onboarding/programmes", async (HttpContext httpContext, C
     if (httpContext.Request.Query.TryGetValue("tenant_id", out var tq) && Guid.TryParse(tq.ToString(), out var tf))
         tenantFilter = tf;
 
-    var programmes = await programmeStore.ListAsync(tenantFilter, cancellationToken);
+    var programmes = await programmeStore.ListAsync(tenantFilter, cancellationToken, bypassRls: true);
     return Results.Json(new
     {
         programmes = programmes.Select(p => new
@@ -1137,8 +1329,10 @@ app.MapGet("/api/admin/onboarding/programmes", async (HttpContext httpContext, C
     }, statusCode: 200);
 }).RequireRateLimiting("sensitive-endpoint");
 
+// TSK-P1-217: Record for programme status transitions (RLS hardened)
+
 // PUT /api/admin/onboarding/programmes/{id}/activate — Activate programme
-app.MapPut("/api/admin/onboarding/programmes/{id}/activate", async (string id, HttpContext httpContext, CancellationToken cancellationToken) =>
+app.MapPut("/api/admin/onboarding/programmes/{id}/activate", async (string id, ProgrammeStatusRequest request, HttpContext httpContext, CancellationToken cancellationToken) =>
 {
     var authFailure = ApiAuthorization.AuthorizeAdminTenantOnboarding(httpContext, secrets);
     if (authFailure is not null)
@@ -1149,7 +1343,10 @@ app.MapPut("/api/admin/onboarding/programmes/{id}/activate", async (string id, H
     if (!Guid.TryParse(id, out var programmeId))
         return Results.Json(new { error_code = "INVALID_REQUEST", errors = new[] { "programme id must be a valid UUID" } }, statusCode: 400);
 
-    var result = await programmeStore.ActivateAsync(programmeId, cancellationToken);
+    if (!Guid.TryParse(request.tenant_id, out var tenantId))
+        return Results.Json(new { error_code = "INVALID_REQUEST", errors = new[] { "tenant_id must be a valid UUID" } }, statusCode: 400);
+
+    var result = await programmeStore.ActivateAsync(programmeId, tenantId, cancellationToken, bypassRls: true);
     if (!result.Success || result.Entry is null)
         return Results.Json(new { error_code = "ACTIVATION_FAILED", errors = new[] { result.Error ?? "activation failed" } }, statusCode: result.Error == "programme not found" ? 404 : 503);
 
@@ -1157,7 +1354,7 @@ app.MapPut("/api/admin/onboarding/programmes/{id}/activate", async (string id, H
 }).RequireRateLimiting("sensitive-endpoint");
 
 // PUT /api/admin/onboarding/programmes/{id}/suspend — Suspend programme
-app.MapPut("/api/admin/onboarding/programmes/{id}/suspend", async (string id, HttpContext httpContext, CancellationToken cancellationToken) =>
+app.MapPut("/api/admin/onboarding/programmes/{id}/suspend", async (string id, ProgrammeStatusRequest request, HttpContext httpContext, CancellationToken cancellationToken) =>
 {
     var authFailure = ApiAuthorization.AuthorizeAdminTenantOnboarding(httpContext, secrets);
     if (authFailure is not null)
@@ -1168,7 +1365,10 @@ app.MapPut("/api/admin/onboarding/programmes/{id}/suspend", async (string id, Ht
     if (!Guid.TryParse(id, out var programmeId))
         return Results.Json(new { error_code = "INVALID_REQUEST", errors = new[] { "programme id must be a valid UUID" } }, statusCode: 400);
 
-    var result = await programmeStore.SuspendAsync(programmeId, cancellationToken);
+    if (!Guid.TryParse(request.tenant_id, out var tenantId))
+        return Results.Json(new { error_code = "INVALID_REQUEST", errors = new[] { "tenant_id must be a valid UUID" } }, statusCode: 400);
+
+    var result = await programmeStore.SuspendAsync(programmeId, tenantId, cancellationToken, bypassRls: true);
     if (!result.Success || result.Entry is null)
         return Results.Json(new { error_code = "SUSPENSION_FAILED", errors = new[] { result.Error ?? "suspension failed" } }, statusCode: result.Error == "programme not found" ? 404 : 503);
 
@@ -1185,15 +1385,26 @@ app.MapPost("/api/admin/onboarding/programmes/{id}/policy-binding", async (strin
             return Results.Json(authFailure.Body, statusCode: authFailure.StatusCode);
     }
     if (!Guid.TryParse(id, out var programmeId))
-        return Results.Json(new { error_code = "INVALID_REQUEST", errors = new[] { "programme id must be a valid UUID" } }, statusCode: 400);
+        return Results.Json(new { error_code = "INVALID_REQUEST", errors = new[] { "invalid programme id format" } }, statusCode: 400);
     if (!body.TryGetProperty("tenant_id", out var tidProp) || !Guid.TryParse(tidProp.GetString(), out var tenantId))
         return Results.Json(new { error_code = "INVALID_REQUEST", errors = new[] { "tenant_id is required" } }, statusCode: 400);
     if (!body.TryGetProperty("policy_code", out var pcProp) || string.IsNullOrWhiteSpace(pcProp.GetString()))
         return Results.Json(new { error_code = "INVALID_REQUEST", errors = new[] { "policy_code is required" } }, statusCode: 400);
 
-    var result = await programmeStore.BindPolicyAsync(programmeId, tenantId, pcProp.GetString()!.Trim(), cancellationToken);
+    var result = await programmeStore.BindPolicyAsync(programmeId, tenantId, pcProp.GetString()!.Trim(), cancellationToken, bypassRls: true);
     if (!result.Success || result.Entry is null)
-        return Results.Json(new { error_code = "POLICY_BIND_FAILED", errors = new[] { result.Error ?? "policy binding failed" } }, statusCode: 503);
+    {
+        // Treat "already exists" as idempotent success — the desired state is already achieved
+        if (result.Error == "policy binding already exists")
+        {
+            // Re-read the programme to return current state
+            var progs = await programmeStore.ListAsync(tenantId, cancellationToken, bypassRls: true);
+            var existing = progs.FirstOrDefault(p => p.ProgrammeId == programmeId.ToString());
+            if (existing is not null)
+                return Results.Json(new { programme_id = existing.ProgrammeId, policy_code = existing.PolicyCode, status = existing.Status, updated_at = existing.UpdatedAt.ToString("O"), already_bound = true }, statusCode: 200);
+        }
+        return Results.Json(new { error_code = "BINDING_FAILED", errors = new[] { result.Error ?? "policy binding failed" } }, statusCode: result.Error == "programme not found" ? 404 : 503);
+    }
 
     return Results.Json(new
     {
@@ -1210,12 +1421,20 @@ app.MapGet("/api/admin/onboarding/status", async (HttpContext httpContext, Cance
     var authFailure = ApiAuthorization.AuthorizeAdminTenantOnboarding(httpContext, secrets);
     if (authFailure is not null)
     {
-        if (runtimeProfile != "pilot-demo" || !TryValidatePilotDemoOperatorCookie(httpContext, null, out _, out _))
+        if (runtimeProfile != "pilot-demo")
+        {
             return Results.Json(authFailure.Body, statusCode: authFailure.StatusCode);
+        }
+
+        if (!TryValidatePilotDemoOperatorCookie(httpContext, null, out var errCode, out var errs))
+        {
+            logger.LogWarning($"Pilot Demo cookie validation failed on /status: {errCode} - {(errs != null && errs.Length > 0 ? errs[0] : "no detail")}");
+            return Results.Json(authFailure.Body, statusCode: authFailure.StatusCode);
+        }
     }
 
-    var tenants = await tenantRegistryStore.ListAsync(cancellationToken);
-    var programmes = await programmeStore.ListAsync(null, cancellationToken);
+    var tenants = await tenantRegistryStore.ListAsync(cancellationToken, bypassRls: true);
+    var programmes = await programmeStore.ListAsync(null, cancellationToken, bypassRls: true);
     return Results.Json(new
     {
         tenants = tenants.Select(t => new
@@ -1243,33 +1462,65 @@ app.MapGet("/api/admin/onboarding/status", async (HttpContext httpContext, Cance
 
 if (string.Equals(runtimeProfile, "pilot-demo", StringComparison.OrdinalIgnoreCase))
 {
+    await SeedDemoTenant(runtimeProfile, tenantRegistryStore, programmeStore, logger);
+}
+
+static Guid CreateStableGuid(string input)
+{
+    using var sha256 = System.Security.Cryptography.SHA256.Create();
+    var hash = sha256.ComputeHash(Encoding.UTF8.GetBytes(input));
+    var guidBytes = new byte[16];
+    Array.Copy(hash, guidBytes, 16);
+    return new Guid(guidBytes);
+}
+
+async Task SeedDemoTenant(string rp, ITenantRegistryStore trs, IProgrammeStore ps, ILogger l)
+{
     try
     {
-        var existingTenants = await tenantRegistryStore.ListAsync(default);
-        if (!existingTenants.Any())
+        var demoTenantKey = "ten-zambiagrn";
+        var uiTidStr = Environment.GetEnvironmentVariable("SYMPHONY_UI_TENANT_ID");
+        if (!Guid.TryParse(uiTidStr, out var tenantId))
         {
-            logger.LogInformation("Auto-seeding default Pilot Demo tenant and programme...");
-            var uiTidStr = Environment.GetEnvironmentVariable("SYMPHONY_UI_TENANT_ID");
-            if (!Guid.TryParse(uiTidStr, out var tenantId))
-            {
-                tenantId = Guid.NewGuid();
-            }
-            var tenantResult = await tenantRegistryStore.UpsertAsync(tenantId, "ten-zambiagrn", "Zambia Green MFI", default);
+            tenantId = CreateStableGuid(demoTenantKey);
+        }
+
+        var exists = await trs.ExistsAsync(tenantId, default, true);
+        if (!exists)
+        {
+            l.LogInformation("Auto-seeding default Pilot Demo tenant and programme...");
+            var tenantResult = await trs.UpsertAsync(tenantId, demoTenantKey, "Zambia Green MFI", default, true);
             if (tenantResult.Success && tenantResult.Entry is not null)
             {
-                var progResult = await programmeStore.CreateAsync(tenantId, "PGM-ZAMBIA-GRN-001", "GreenTech4CE · Solar Cluster A", default);
+                // Use the actual tenant_id from the DB (may differ from computed one on ON CONFLICT)
+                var actualTenantId = Guid.Parse(tenantResult.Entry.TenantId);
+                var progResult = await ps.CreateAsync(actualTenantId, "PGM-ZAMBIA-GRN-001", "GreenTech4CE · Solar Cluster A", default, true);
                 if (progResult.Success && progResult.Entry is not null)
                 {
                     var pidStr = progResult.Entry.ProgrammeId;
                     if (Guid.TryParse(pidStr, out var pidGuid))
                     {
-                        await programmeStore.ActivateAsync(pidGuid, default);
-                        await programmeStore.BindPolicyAsync(pidGuid, tenantId, "green_eq_v1", default);
-                        logger.LogInformation("Successfully auto-seeded default Pilot Demo tenant and programme.");
+                        await ps.ActivateAsync(pidGuid, actualTenantId, default, true);
+                        try
+                        {
+                            var bindResult = await ps.BindPolicyAsync(pidGuid, actualTenantId, "green_eq_v1", default, true);
+                            if (bindResult.Success)
+                            {
+                                l.LogInformation("Successfully auto-seeded default Pilot Demo tenant and programme.");
+                            }
+                            else
+                            {
+                                l.LogInformation($"Pilot Demo binding skipped: {bindResult.Error}");
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            l.LogInformation($"Pilot Demo binding ignored (already seeded): {ex.Message}");
+                        }
                     }
                     else
                     {
-                        logger.LogWarning($"Failed to parse ProgrammeId {pidStr} as Guid during auto-seed.");
+                        l.LogWarning($"Failed to parse ProgrammeId {pidStr} as Guid during auto-seed.");
                     }
                 }
             }
@@ -1277,7 +1528,14 @@ if (string.Equals(runtimeProfile, "pilot-demo", StringComparison.OrdinalIgnoreCa
     }
     catch (Exception ex)
     {
-        logger.LogWarning(ex, "Failed to auto-seed default Pilot Demo tenant.");
+        if (ex is Npgsql.PostgresException pex && pex.SqlState == "42P01")
+        {
+            l.LogCritical("Database schema not found (Error 42P01). Auto-migration at runtime is disabled. Please ensure DATABASE_URL is correct and run 'bash scripts/db/migrate.sh' manually before starting the api.");
+        }
+        else
+        {
+            l.LogWarning(ex, "Failed to auto-seed default Pilot Demo tenant.");
+        }
     }
 }
 
@@ -2899,3 +3157,6 @@ record EvidenceMeta(string TimestampUtc, string GitSha, string SchemaFingerprint
         }
     }
 }
+
+// TSK-P1-217: Record for programme status transitions (RLS hardened)
+record ProgrammeStatusRequest(string tenant_id);

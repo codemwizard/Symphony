@@ -86,55 +86,31 @@ For signoff posture, these must be satisfied and recorded before the run is decl
 9. Evidence/report routing target
 10. Operator access mode or supervisory access flag where required
 
-## 4. Provisioning Procedure
-### Step 1 — Confirm operator inputs
-Pass condition:
-- all required inputs are recorded
+## 4. Provisioning Procedure (UI Guided Workflow)
 
-Fail condition:
-- any required field is missing
+The onboarding flow is strictly sequenced in the Operator Onboarding Console:
 
-Operator action:
-- stop provisioning; do not infer missing values
+### Step 1 — Register Tenant
+- **Form:** "Register New Tenant"
+- **Action:** Enter Tenant UUID (or leave blank to auto-generate), Tenant Key, and Display Name.
+- **Pass condition:** Submitting returns success; Tenant populates in the registry table and dropdowns.
 
-Evidence emitted:
-- operator notes or run-summary provisioning section
+### Step 2 — Create Programme
+- **Form:** "Create Programme"
+- **Prerequisite:** A Tenant **must** be selected from the `Select Tenant...` dropdown to enable the "Create Programme" button.
+- **Action:** Select Tenant, enter Programme Key and Display Name.
+- **Pass condition:** Submitting returns success; Programme appears in the registry table and unlocks the Policy dropdowns.
 
-### Step 2 — Execute tenant onboarding
-Use the server-side onboarding API:
-- `POST /api/admin/onboarding/tenants`
+### Step 3 — Register Supplier
+- **Form:** "Register Supplier"
+- **Prerequisite:** A Tenant **must** be selected to enable the "Register Supplier" button.
+- **Action:** Enter Supplier ID (optional), Supplier Name, and Payout Target (e.g., MSISDN).
 
-Pass condition:
-- endpoint returns `200`
-- response contains `tenant_id` and `created_at`
-
-Fail condition:
-- endpoint rejects request or returns malformed response
-
-Operator action:
-- stop; inspect tenant onboarding response and server logs
-
-Evidence emitted:
-- onboarding response captured in the run bundle
-- `evidence/phase1/ten_003_tenant_onboarding_admin.json` as contract proof
-
-### Step 3 — Execute programme onboarding
-Use the server-side onboarding API:
-- `POST /api/admin/onboarding/programmes`
-
-Pass condition:
-- endpoint returns `200` or `201`
-- response contains `programme_id`, `tenant_id`, `status`
-
-Fail condition:
-- endpoint rejects request or returns malformed response
-
-Operator action:
-- stop; inspect programme onboarding response and server logs
-
-### Step 4 — Bind policy and activate programme
-1. `POST /api/admin/onboarding/programmes/{id}/policy-binding`
-2. `PUT /api/admin/onboarding/programmes/{id}/activate`
+### Step 4 — Bind Policy and Activate
+- **Form:** "Bind Policy to Programme"
+- **Prerequisite:** A Programme **must** be selected to enable "Bind Policy" and "Activate" buttons.
+- **Action 1:** Select Programme, enter Policy Code (e.g. `green_eq_v1`), click "Bind Policy".
+- **Action 2:** Once bound, click "Activate" (the UI automatically routes the correct `tenant_id` payload).
 
 ### Step 5 — Confirm external provisioning prerequisites
 Confirm, in this order:

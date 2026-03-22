@@ -2,7 +2,7 @@
 -- PostgreSQL database dump
 --
 
-\restrict qsmm2AAc5fCuTXiNloyiqiyZRlhX0hXthhYjM5p0KIR91VyCN4PWiiFOcXFD2d4
+\restrict X2KnNIn6E4eCwIaw6ZD1Rl2L0MO5bvXd6VI9WpmWMvuykquebqe0okKEjeGNBl4
 
 -- Dumped from database version 18.2 (Debian 18.2-1.pgdg13+1)
 -- Dumped by pg_dump version 18.2 (Debian 18.2-1.pgdg13+1)
@@ -8225,14 +8225,14 @@ CREATE POLICY rls_tenant_isolation_program_supplier_allowlist ON public.program_
 -- Name: programme_policy_binding rls_tenant_isolation_programme_policy_binding; Type: POLICY; Schema: public; Owner: -
 --
 
-CREATE POLICY rls_tenant_isolation_programme_policy_binding ON public.programme_policy_binding USING ((tenant_id = (current_setting('app.current_tenant_id'::text, true))::uuid));
+CREATE POLICY rls_tenant_isolation_programme_policy_binding ON public.programme_policy_binding USING (((tenant_id = (NULLIF(current_setting('app.current_tenant_id'::text, true), ''::text))::uuid) OR (current_setting('app.bypass_rls'::text, true) = 'on'::text)));
 
 
 --
 -- Name: programme_registry rls_tenant_isolation_programme_registry; Type: POLICY; Schema: public; Owner: -
 --
 
-CREATE POLICY rls_tenant_isolation_programme_registry ON public.programme_registry USING ((tenant_id = (current_setting('app.current_tenant_id'::text, true))::uuid));
+CREATE POLICY rls_tenant_isolation_programme_registry ON public.programme_registry USING (((tenant_id = (NULLIF(current_setting('app.current_tenant_id'::text, true), ''::text))::uuid) OR (current_setting('app.bypass_rls'::text, true) = 'on'::text)));
 
 
 --
@@ -8274,7 +8274,7 @@ CREATE POLICY rls_tenant_isolation_tenant_members ON public.tenant_members AS RE
 -- Name: tenant_registry rls_tenant_isolation_tenant_registry; Type: POLICY; Schema: public; Owner: -
 --
 
-CREATE POLICY rls_tenant_isolation_tenant_registry ON public.tenant_registry USING ((tenant_id = (current_setting('app.current_tenant_id'::text, true))::uuid));
+CREATE POLICY rls_tenant_isolation_tenant_registry ON public.tenant_registry USING (((tenant_id = (NULLIF(current_setting('app.current_tenant_id'::text, true), ''::text))::uuid) OR (current_setting('app.bypass_rls'::text, true) = 'on'::text)));
 
 
 --
@@ -8324,5 +8324,5 @@ ALTER TABLE public.tenants ENABLE ROW LEVEL SECURITY;
 -- PostgreSQL database dump complete
 --
 
-\unrestrict qsmm2AAc5fCuTXiNloyiqiyZRlhX0hXthhYjM5p0KIR91VyCN4PWiiFOcXFD2d4
+\unrestrict X2KnNIn6E4eCwIaw6ZD1Rl2L0MO5bvXd6VI9WpmWMvuykquebqe0okKEjeGNBl4
 

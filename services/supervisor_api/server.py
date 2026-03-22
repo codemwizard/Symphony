@@ -6,6 +6,7 @@ import os
 import secrets
 from datetime import datetime, timezone
 from http.server import BaseHTTPRequestHandler, HTTPServer
+import sys
 
 import psycopg
 
@@ -43,23 +44,61 @@ class Handler(BaseHTTPRequestHandler):
         self.wfile.write(body)
 
     def _read_json(self):
-        n = int(self.headers.get("Content-Length", "0"))
-        if n <= 0:
+        length = int(self.headers.get('Content-Length', 0))
+        if length == 0:
             return {}
         try:
-            return json.loads(self.rfile.read(n).decode("utf-8"))
-        except (json.JSONDecodeError, UnicodeDecodeError):
+            return json.loads(self.rfile.read(length).decode("utf-8"))
+        except json.JSONDecodeError:
+            self.send_response(400)
+            self.send_header('Content-Type', 'application/json')
+            self.end_headers()
+            self.wfile.write(json.dumps({
+                "error": "MALFORMED_JSON",
+                "detail": "Request body must be valid JSON."
+            }).encode('utf-8'))
+            return None
+        except UnicodeDecodeError: # Keep original UnicodeDecodeError handling
+            self.send_response(400)
+            self.send_header('Content-Type', 'application/json')
+            self.end_headers()
+            self.wfile.write(json.dumps({
+                "error": "MALFORMED_JSON",
+                "detail": "Request body must be valid UTF-8."
+            }).encode('utf-8'))
             return None
 
     def _check_admin_auth(self) -> bool:
-        """Verify admin API key via Authorization header."""
-        if TEST_MODE:
-            return True
-        auth_header = (self.headers.get("Authorization") or "").strip()
-        if not auth_header.startswith("Bearer "):
+        """Verify admin API key, required headers, and emit structured audit log."""
+        tenant_id = (self.headers.get("X-Tenant-Id") or "").strip()
+        role = (self.headers.get("X-Supervisor-Role") or "").strip()
+        
+        # Enforce presence of headers even in test mode
+        if not tenant_id or role != "admin":
             return False
-        provided = auth_header[7:]
-        return hmac.compare_digest(provided.encode("utf-8"), ADMIN_API_KEY.encode("utf-8"))
+
+        # Check API key unless in test mode
+        if not TEST_MODE:
+            auth_header = (self.headers.get("Authorization") or "").strip()
+            if not auth_header.startswith("Bearer "):
+                return False
+            provided = auth_header[7:]
+            if not hmac.compare_digest(provided.encode("utf-8"), ADMIN_API_KEY.encode("utf-8")):
+                return False
+
+        # Emit structured audit log
+        audit_entry = {
+            "event": "SUPERVISOR_API_ACCESS",
+            "timestamp_utc": datetime.now(timezone.utc).isoformat().replace('+00:00','Z'),
+            "tenant_id": tenant_id,
+            "role": role,
+            "path": self.path,
+            "method": self.command,
+            "actor": self.headers.get("X-Supervisor-Actor", "unknown")
+        }
+        print(json.dumps(audit_entry), flush=True)
+        return True
+
 
     def do_POST(self):
         if self.path == "/v1/admin/supervisor/audit-token":
@@ -93,15 +132,24 @@ class Handler(BaseHTTPRequestHandler):
         self._json(404, {"error": "NOT_FOUND"})
 
     def handle_create_audit_token(self):
+        # The instruction implies _check_admin_auth should handle its own response,
+        # but the current _check_admin_auth returns a bool.
+        # Keeping the original _json(401, ...) call for consistency with _check_admin_auth's current behavior.
+        # The provided snippet for handle_create_audit_token also had a conflicting `if not self._check_admin_auth('POST', '/audit-token'): return`
+        # which is not compatible with the current _check_admin_auth signature.
+        # I will assume the `do_POST` check is sufficient for admin auth.
+
         body = self._read_json()
-        if body is None:
-            return self._json(400, {"error": "MALFORMED_JSON"})
+        if body is None: # _read_json now sends the error response if malformed
+            return
         program_id = body.get("program_id")
         issued_by = (body.get("issued_by") or "system").strip() or "system"
+        
         try:
             ttl_seconds = int(body.get("ttl_seconds") or 86400)
-        except (ValueError, TypeError):
-            return self._json(400, {"error": "INVALID_TTL"})
+        except ValueError:
+            return self._json(400, {"error": "INVALID_TTL", "detail": "ttl_seconds must be an integer"})
+
         if not program_id:
             return self._json(400, {"error": "PROGRAM_ID_REQUIRED"})
         if ttl_seconds <= 0:
@@ -198,28 +246,37 @@ class Handler(BaseHTTPRequestHandler):
         return self._json(200, {"program_id": program_id, "records": records})
 
     def handle_approve(self, instruction_id: str):
+        # Similar to handle_create_audit_token, assuming do_POST handles admin auth.
         body = self._read_json()
-        if body is None:
-            return self._json(400, {"error": "MALFORMED_JSON"})
+        if body is None: # _read_json now sends the error response if malformed
+            return
         actor = (body.get("approved_by") or self.headers.get("X-Supervisor-Actor") or "").strip()
         reason = body.get("reason")
         if not actor:
             return self._json(400, {"error": "APPROVER_REQUIRED"})
 
         try:
-            fetch_value(
-                "SELECT public.decide_supervisor_approval(%s, 'APPROVED', %s, %s);",
-                (instruction_id, actor, reason),
-            )
-        except psycopg.Error as exc:
-            msg = str(exc).strip()
-            if "self approval is not permitted" in msg:
+            with psycopg.connect(DATABASE_URL) as conn:
+                with conn.cursor() as cur:
+                    cur.execute(
+                        "SELECT public.decide_supervisor_approval(%s, 'APPROVED', %s, %s);",
+                        (instruction_id, actor, reason)
+                    )
+                    conn.commit()
+            return self._json(200, {"success": True})
+        except psycopg.Error as e:
+            print(f"DB Error in handle_approve: {e}", file=sys.stderr)
+            if "self approval is not permitted" in str(e):
                 return self._json(403, {"error": "SELF_APPROVAL_FORBIDDEN"})
-            if "not pending supervisor approval" in msg:
+            # The original code had a check for "not pending supervisor approval"
+            # This needs to be re-added if the new SQL function can return such an error.
+            # For now, assuming it's covered by a generic error or needs explicit handling.
+            if "not pending supervisor approval" in str(e): # Re-adding specific check
                 return self._json(409, {"error": "NOT_PENDING"})
-            return self._json(500, {"error": "APPROVAL_FAILED"})
-
-        return self._json(200, {"instruction_id": instruction_id, "status": "APPROVED", "approved_by": actor})
+            return self._json(500, {"error": "INTERNAL_SERVER_ERROR", "detail": "Database operation failed."})
+        except Exception as e:
+            print(f"Unexpected Error in handle_approve: {e}", file=sys.stderr)
+            return self._json(500, {"error": "INTERNAL_SERVER_ERROR", "detail": "An unexpected error occurred."})
 
 
 def main():

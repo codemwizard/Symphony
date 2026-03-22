@@ -1,0 +1,19 @@
+{
+  "check_id": "TASK-UI-WIRE-015-ARTIFACT-UPLOAD",
+  "task_id": "TASK-UI-WIRE-015",
+  "timestamp_utc": "2026-03-17T23:13:55Z",
+  "status": "PASS",
+  "tests_passed": 7,
+  "tests_failed": 0,
+  "details": {
+    "upload_endpoint": "/api/public/evidence-links/upload",
+    "token_validated": true,
+    "multipart_required": true,
+    "size_limit_bytes": 10485760,
+    "artifact_ref_returned": true,
+    "antiforgery_disabled": true,
+    "build_status": "0 warnings, 0 errors"
+  },
+  "git_sha": "unknown",
+  "schema_fingerprint": "wave-g-v1"
+}
