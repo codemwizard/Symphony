@@ -360,6 +360,330 @@
       "expires_on": "2026-12-31",
       "reviewed_by": "security_guardian",
       "approved_at": "2026-03-16"
+    },
+    {
+      "id": "DDL-ALLOW-0062",
+      "migration": "schema/migrations/0093_gf_fn_verifier_read_token.sql",
+      "statement_fingerprint": "a00b61bea6e49bac3463970a966b2b1a1de456561f63f6df5fdae22ca58dd87d",
+      "reason": "Wave 1 Green Finance RLS enforcement (safe non-hot tables)",
+      "expires_on": "2026-12-31",
+      "reviewed_by": "security_guardian",
+      "approved_at": "2026-03-26"
+    },
+    {
+      "id": "DDL-ALLOW-0063",
+      "migration": "schema/migrations/0093_gf_fn_verifier_read_token.sql",
+      "statement_fingerprint": "8f0e409a641e23692b7dd706c54fdcab5a1c872649164575bab98a6eaf6a12a5",
+      "reason": "Wave 1 Green Finance RLS enforcement (safe non-hot tables)",
+      "expires_on": "2026-12-31",
+      "reviewed_by": "security_guardian",
+      "approved_at": "2026-03-26"
+    },
+    {
+      "id": "DDL-ALLOW-0064",
+      "migration": "schema/migrations/0083_gf_evidence_lineage.sql",
+      "statement_fingerprint": "8430ac10e7ac99009b05b05efb13f695d9090398807c2aa0873a41dd575ad716",
+      "reason": "Wave 1 Green Finance RLS enforcement (safe non-hot tables)",
+      "expires_on": "2026-12-31",
+      "reviewed_by": "security_guardian",
+      "approved_at": "2026-03-26"
+    },
+    {
+      "id": "DDL-ALLOW-0065",
+      "migration": "schema/migrations/0083_gf_evidence_lineage.sql",
+      "statement_fingerprint": "71fe1dfb2893d9dc9a8a68f5a1cdea22f02cecef45e0d73880e60141916aa720",
+      "reason": "Wave 1 Green Finance RLS enforcement (safe non-hot tables)",
+      "expires_on": "2026-12-31",
+      "reviewed_by": "security_guardian",
+      "approved_at": "2026-03-26"
+    },
+    {
+      "id": "DDL-ALLOW-0066",
+      "migration": "schema/migrations/0083_gf_evidence_lineage.sql",
+      "statement_fingerprint": "4f1ea51ad1bfd6d779b001143cc4e5c910741f435302d74b95b8c58563d33d68",
+      "reason": "Wave 1 Green Finance RLS enforcement (safe non-hot tables)",
+      "expires_on": "2026-12-31",
+      "reviewed_by": "security_guardian",
+      "approved_at": "2026-03-26"
+    },
+    {
+      "id": "DDL-ALLOW-0067",
+      "migration": "schema/migrations/0083_gf_evidence_lineage.sql",
+      "statement_fingerprint": "abf2d153881d5488a43b3812ead7789a7e9da604ab155fc2bddf35226afa78c7",
+      "reason": "Wave 1 Green Finance RLS enforcement (safe non-hot tables)",
+      "expires_on": "2026-12-31",
+      "reviewed_by": "security_guardian",
+      "approved_at": "2026-03-26"
+    },
+    {
+      "id": "DDL-ALLOW-0068",
+      "migration": "schema/migrations/0091_gf_fn_regulatory_transitions.sql",
+      "statement_fingerprint": "c71435dc65093b321bee07f0999f82f7b955098a8bc03040245f23bbcbc2b513",
+      "reason": "Wave 1 Green Finance RLS enforcement (safe non-hot tables)",
+      "expires_on": "2026-12-31",
+      "reviewed_by": "security_guardian",
+      "approved_at": "2026-03-26"
+    },
+    {
+      "id": "DDL-ALLOW-0069",
+      "migration": "schema/migrations/0091_gf_fn_regulatory_transitions.sql",
+      "statement_fingerprint": "ff4e1cb8c2c11cfb242f526ba2dedc54562631e118de6560c50105cc7dac19cb",
+      "reason": "Wave 1 Green Finance RLS enforcement (safe non-hot tables)",
+      "expires_on": "2026-12-31",
+      "reviewed_by": "security_guardian",
+      "approved_at": "2026-03-26"
+    },
+    {
+      "id": "DDL-ALLOW-0070",
+      "migration": "schema/migrations/0080_gf_adapter_registrations.sql",
+      "statement_fingerprint": "9294893674d54bffa6bf817be25f6afd368181cdb54fde9c8f8fe6d9898397d4",
+      "reason": "Wave 1 Green Finance RLS enforcement (safe non-hot tables)",
+      "expires_on": "2026-12-31",
+      "reviewed_by": "security_guardian",
+      "approved_at": "2026-03-26"
+    },
+    {
+      "id": "DDL-ALLOW-0071",
+      "migration": "schema/migrations/0080_gf_adapter_registrations.sql",
+      "statement_fingerprint": "8df4113f2413b30a983dcfe180a33a2bb8ce9be7d40023a1da12f4c1a0194b1b",
+      "reason": "Wave 1 Green Finance RLS enforcement (safe non-hot tables)",
+      "expires_on": "2026-12-31",
+      "reviewed_by": "security_guardian",
+      "approved_at": "2026-03-26"
+    },
+    {
+      "id": "DDL-ALLOW-0072",
+      "migration": "schema/migrations/0095_rls_dual_policy_architecture.sql",
+      "statement_fingerprint": "ade78bec5db9449490f7de9948f93828cf24fc8d20faabb403104cb9ed799d18",
+      "reason": "Wave 1 Green Finance RLS enforcement (safe non-hot tables)",
+      "expires_on": "2026-12-31",
+      "reviewed_by": "security_guardian",
+      "approved_at": "2026-03-26"
+    },
+    {
+      "id": "DDL-ALLOW-0073",
+      "migration": "schema/migrations/0095_rls_dual_policy_architecture.sql",
+      "statement_fingerprint": "d01494ed2f639d465722b6701b2384ef9dd395508e2b91b16ca66de61f3bd889",
+      "reason": "Wave 1 Green Finance RLS enforcement (safe non-hot tables)",
+      "expires_on": "2026-12-31",
+      "reviewed_by": "security_guardian",
+      "approved_at": "2026-03-26"
+    },
+    {
+      "id": "DDL-ALLOW-0074",
+      "migration": "schema/migrations/0095_rls_dual_policy_architecture.sql",
+      "statement_fingerprint": "ade78bec5db9449490f7de9948f93828cf24fc8d20faabb403104cb9ed799d18",
+      "reason": "Wave 1 Green Finance RLS enforcement (safe non-hot tables)",
+      "expires_on": "2026-12-31",
+      "reviewed_by": "security_guardian",
+      "approved_at": "2026-03-26"
+    },
+    {
+      "id": "DDL-ALLOW-0075",
+      "migration": "schema/migrations/0095_rls_dual_policy_architecture.sql",
+      "statement_fingerprint": "d01494ed2f639d465722b6701b2384ef9dd395508e2b91b16ca66de61f3bd889",
+      "reason": "Wave 1 Green Finance RLS enforcement (safe non-hot tables)",
+      "expires_on": "2026-12-31",
+      "reviewed_by": "security_guardian",
+      "approved_at": "2026-03-26"
+    },
+    {
+      "id": "DDL-ALLOW-0076",
+      "migration": "schema/migrations/0081_gf_interpretation_packs.sql",
+      "statement_fingerprint": "894db6799ff85fb79c92fd43f86e1eb98db4ddc95790d54b4025cec76136a96a",
+      "reason": "Wave 1 Green Finance RLS enforcement (safe non-hot tables)",
+      "expires_on": "2026-12-31",
+      "reviewed_by": "security_guardian",
+      "approved_at": "2026-03-26"
+    },
+    {
+      "id": "DDL-ALLOW-0077",
+      "migration": "schema/migrations/0081_gf_interpretation_packs.sql",
+      "statement_fingerprint": "bf9da4066219e2c45fa5eb44bbf11ac5fe9a897ab3fec21ac7f506e4f9cd05bb",
+      "reason": "Wave 1 Green Finance RLS enforcement (safe non-hot tables)",
+      "expires_on": "2026-12-31",
+      "reviewed_by": "security_guardian",
+      "approved_at": "2026-03-26"
+    },
+    {
+      "id": "DDL-ALLOW-0078",
+      "migration": "schema/migrations/0086_gf_jurisdiction_profiles.sql",
+      "statement_fingerprint": "af946f785c22de18a4a0896438a6b0ed56235d1b3a01bdb499473e8e48f775bb",
+      "reason": "Wave 1 Green Finance RLS enforcement (safe non-hot tables)",
+      "expires_on": "2026-12-31",
+      "reviewed_by": "security_guardian",
+      "approved_at": "2026-03-26"
+    },
+    {
+      "id": "DDL-ALLOW-0079",
+      "migration": "schema/migrations/0086_gf_jurisdiction_profiles.sql",
+      "statement_fingerprint": "d2112390d2ccc2a56fefac66610d843a6bf50b3ff08e0bbbfdb21d775d6d933f",
+      "reason": "Wave 1 Green Finance RLS enforcement (safe non-hot tables)",
+      "expires_on": "2026-12-31",
+      "reviewed_by": "security_guardian",
+      "approved_at": "2026-03-26"
+    },
+    {
+      "id": "DDL-ALLOW-0080",
+      "migration": "schema/migrations/0086_gf_jurisdiction_profiles.sql",
+      "statement_fingerprint": "14ee2b3d683bf3667459cc59833a350e83f9025495b7c6bf5399cec51114a598",
+      "reason": "Wave 1 Green Finance RLS enforcement (safe non-hot tables)",
+      "expires_on": "2026-12-31",
+      "reviewed_by": "security_guardian",
+      "approved_at": "2026-03-26"
+    },
+    {
+      "id": "DDL-ALLOW-0081",
+      "migration": "schema/migrations/0086_gf_jurisdiction_profiles.sql",
+      "statement_fingerprint": "8b617f3960b7d40f96c1ff560984243dbe3457bbf3a319a3c2f1b840d6dc9f12",
+      "reason": "Wave 1 Green Finance RLS enforcement (safe non-hot tables)",
+      "expires_on": "2026-12-31",
+      "reviewed_by": "security_guardian",
+      "approved_at": "2026-03-26"
+    },
+    {
+      "id": "DDL-ALLOW-0082",
+      "migration": "schema/migrations/0085_gf_regulatory_plane.sql",
+      "statement_fingerprint": "8437edf1c7e88f28c2a1447dcd681517565c8a4f55474ff19da28635655cbaff",
+      "reason": "Wave 1 Green Finance RLS enforcement (safe non-hot tables)",
+      "expires_on": "2026-12-31",
+      "reviewed_by": "security_guardian",
+      "approved_at": "2026-03-26"
+    },
+    {
+      "id": "DDL-ALLOW-0083",
+      "migration": "schema/migrations/0085_gf_regulatory_plane.sql",
+      "statement_fingerprint": "f9dd88913838c10d858e4d45754a1bcbef5ea88fde2fa514b8a9a6e13bf40f24",
+      "reason": "Wave 1 Green Finance RLS enforcement (safe non-hot tables)",
+      "expires_on": "2026-12-31",
+      "reviewed_by": "security_guardian",
+      "approved_at": "2026-03-26"
+    },
+    {
+      "id": "DDL-ALLOW-0084",
+      "migration": "schema/migrations/0085_gf_regulatory_plane.sql",
+      "statement_fingerprint": "eb94f771f949211284cf191707a8ed874faa71ff917dc3182e5e615489365b7f",
+      "reason": "Wave 1 Green Finance RLS enforcement (safe non-hot tables)",
+      "expires_on": "2026-12-31",
+      "reviewed_by": "security_guardian",
+      "approved_at": "2026-03-26"
+    },
+    {
+      "id": "DDL-ALLOW-0085",
+      "migration": "schema/migrations/0085_gf_regulatory_plane.sql",
+      "statement_fingerprint": "ed105452b1c0f2527e27d0670cd1021c7e0e510c738be8576edc0f5708992725",
+      "reason": "Wave 1 Green Finance RLS enforcement (safe non-hot tables)",
+      "expires_on": "2026-12-31",
+      "reviewed_by": "security_guardian",
+      "approved_at": "2026-03-26"
+    },
+    {
+      "id": "DDL-ALLOW-0086",
+      "migration": "schema/migrations/0082_gf_monitoring_records.sql",
+      "statement_fingerprint": "19bfba896d115978ed25ab6f27d559529fb1ae3c0deda9c43980a5041019279b",
+      "reason": "Wave 1 Green Finance RLS enforcement (safe non-hot tables)",
+      "expires_on": "2026-12-31",
+      "reviewed_by": "security_guardian",
+      "approved_at": "2026-03-26"
+    },
+    {
+      "id": "DDL-ALLOW-0087",
+      "migration": "schema/migrations/0082_gf_monitoring_records.sql",
+      "statement_fingerprint": "7ec64b9f38196ac8551673fef46a3aed2fa8cc3d18063574736827c690776b1b",
+      "reason": "Wave 1 Green Finance RLS enforcement (safe non-hot tables)",
+      "expires_on": "2026-12-31",
+      "reviewed_by": "security_guardian",
+      "approved_at": "2026-03-26"
+    },
+    {
+      "id": "DDL-ALLOW-0088",
+      "migration": "schema/migrations/0087_gf_verifier_registry.sql",
+      "statement_fingerprint": "4f814d1799ee552ffdc8250e231985e096d116490f1194b8ea188d6e54c69aec",
+      "reason": "Wave 1 Green Finance RLS enforcement (safe non-hot tables)",
+      "expires_on": "2026-12-31",
+      "reviewed_by": "security_guardian",
+      "approved_at": "2026-03-26"
+    },
+    {
+      "id": "DDL-ALLOW-0089",
+      "migration": "schema/migrations/0087_gf_verifier_registry.sql",
+      "statement_fingerprint": "72c4e4070cb8e540c34c8ea96666cf2bc3d706b60b26ead4974c97232d0bf3e5",
+      "reason": "Wave 1 Green Finance RLS enforcement (safe non-hot tables)",
+      "expires_on": "2026-12-31",
+      "reviewed_by": "security_guardian",
+      "approved_at": "2026-03-26"
+    },
+    {
+      "id": "DDL-ALLOW-0090",
+      "migration": "schema/migrations/0087_gf_verifier_registry.sql",
+      "statement_fingerprint": "ec1e78629b806a830163e5a9a366269bcc512b9f46ac61057cee3ecccd9ec47c",
+      "reason": "Wave 1 Green Finance RLS enforcement (safe non-hot tables)",
+      "expires_on": "2026-12-31",
+      "reviewed_by": "security_guardian",
+      "approved_at": "2026-03-26"
+    },
+    {
+      "id": "DDL-ALLOW-0091",
+      "migration": "schema/migrations/0087_gf_verifier_registry.sql",
+      "statement_fingerprint": "94f018a2e24a032901300bd2dd67a47465b21c0ca6c92aaecf78b1d8f343b623",
+      "reason": "Wave 1 Green Finance RLS enforcement (safe non-hot tables)",
+      "expires_on": "2026-12-31",
+      "reviewed_by": "security_guardian",
+      "approved_at": "2026-03-26"
+    },
+    {
+      "id": "DDL-ALLOW-0092",
+      "migration": "schema/migrations/0084_gf_asset_lifecycle.sql",
+      "statement_fingerprint": "62fdc9b915baf9a244fdad42c61fc2229f4e088581be75bc9836d09d9be52f25",
+      "reason": "Wave 1 Green Finance RLS enforcement (safe non-hot tables)",
+      "expires_on": "2026-12-31",
+      "reviewed_by": "security_guardian",
+      "approved_at": "2026-03-26"
+    },
+    {
+      "id": "DDL-ALLOW-0093",
+      "migration": "schema/migrations/0084_gf_asset_lifecycle.sql",
+      "statement_fingerprint": "e9b4c9384244b2ff405301561bb9e168e291ee6d016ac3ce634e15c81191a3f8",
+      "reason": "Wave 1 Green Finance RLS enforcement (safe non-hot tables)",
+      "expires_on": "2026-12-31",
+      "reviewed_by": "security_guardian",
+      "approved_at": "2026-03-26"
+    },
+    {
+      "id": "DDL-ALLOW-0094",
+      "migration": "schema/migrations/0084_gf_asset_lifecycle.sql",
+      "statement_fingerprint": "4ebb677d6777653fa97d2a0d5c7c35d99361fb5f80a32db59d004505555624d2",
+      "reason": "Wave 1 Green Finance RLS enforcement (safe non-hot tables)",
+      "expires_on": "2026-12-31",
+      "reviewed_by": "security_guardian",
+      "approved_at": "2026-03-26"
+    },
+    {
+      "id": "DDL-ALLOW-0095",
+      "migration": "schema/migrations/0084_gf_asset_lifecycle.sql",
+      "statement_fingerprint": "8a733f1a3e8036f3c2363096de3f645bfe6aadcd40515780daa8bffee9de6ad0",
+      "reason": "Wave 1 Green Finance RLS enforcement (safe non-hot tables)",
+      "expires_on": "2026-12-31",
+      "reviewed_by": "security_guardian",
+      "approved_at": "2026-03-26"
+    },
+    {
+      "id": "DDL-ALLOW-0096",
+      "migration": "schema/migrations/0084_gf_asset_lifecycle.sql",
+      "statement_fingerprint": "d81111c82e2e1996cc63a63829eb7077d4616065d5e6726d9d9a983444b9f179",
+      "reason": "Wave 1 Green Finance RLS enforcement (safe non-hot tables)",
+      "expires_on": "2026-12-31",
+      "reviewed_by": "security_guardian",
+      "approved_at": "2026-03-26"
+    },
+    {
+      "id": "DDL-ALLOW-0097",
+      "migration": "schema/migrations/0084_gf_asset_lifecycle.sql",
+      "statement_fingerprint": "eb17210e4d5c1892d742abeeefe58428d518a9646c74ec9d509e826ba25e1b60",
+      "reason": "Wave 1 Green Finance RLS enforcement (safe non-hot tables)",
+      "expires_on": "2026-12-31",
+      "reviewed_by": "security_guardian",
+      "approved_at": "2026-03-26"
     }
   ]
 }
