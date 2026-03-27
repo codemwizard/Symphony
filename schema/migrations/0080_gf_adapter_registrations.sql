@@ -71,5 +71,5 @@ CREATE TRIGGER adapter_registrations_append_only
 
 -- Revoke-first privilege posture
 REVOKE ALL ON TABLE adapter_registrations FROM PUBLIC;
-GRANT SELECT, INSERT ON TABLE adapter_registrations TO authenticated_role;
-GRANT ALL ON TABLE adapter_registrations TO system_role;
+GRANT SELECT, INSERT ON TABLE adapter_registrations TO symphony_command;
+GRANT ALL ON TABLE adapter_registrations TO symphony_control;

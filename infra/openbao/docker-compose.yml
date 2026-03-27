@@ -1,6 +1,6 @@
 services:
   openbao:
-    image: openbao/openbao:latest
+    image: quay.io/openbao/openbao:latest
     container_name: symphony-openbao
     environment:
       OPENBAO_DEV_ROOT_TOKEN_ID: root
