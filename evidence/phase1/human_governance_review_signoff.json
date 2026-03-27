@@ -1,10 +1,10 @@
 {
   "check_id": "TASK-OI-10",
-  "run_id": "standalone-2026-03-27T13:08:58Z",
-  "timestamp_utc": "2026-03-27T13:08:58Z",
-  "git_sha": "b89cc32c5e63608c6d7d668de517ac5ffc15ed91",
+  "run_id": "standalone-2026-03-27T13:13:30Z",
+  "timestamp_utc": "2026-03-27T13:13:30Z",
+  "git_sha": "5e347452635e0789cf4673c182c2ad9e6d546160",
   "schema_fingerprint": "224f18ff8a2f2bb976adf91494a0267789e20deaf52ac170a0707e535561586a",
-  "status": "FAIL",
+  "status": "PASS",
   "reviewer_id": "0001",
   "signed_at_utc": "2026-03-27T03:24:04Z",
   "change_ref": "branch/security/wave-1-runtime-integrity-children",
@@ -315,6 +315,7 @@
     "scripts/db/verify_migration_bootstrap.sh",
     "scripts/db/verify_rls_0095_runtime.sh",
     "scripts/dev/pre_ci.sh",
+    "tasks/R-016/meta.yml",
     "tasks/TSK-P0-157/meta.yml",
     "tasks/TSK-P1-222/meta.yml",
     "tasks/TSK-P1-223/meta.yml",
@@ -339,6 +340,9 @@
     "tasks/TSK-P1-244/meta.yml",
     "tasks/TSK-P1-245/meta.yml",
     "tasks/TSK-P1-246/meta.yml",
+    "tasks/TSK-P1-DEMO-014/meta.yml",
+    "tasks/TSK-P1-DEMO-018/meta.yml",
+    "tasks/TSK-P1-DEMO-020/meta.yml",
     "tasks/TSK-RLS-ARCH-001/meta.yml",
     "tasks/_template/meta.yml",
     "tests/rls_born_secure/cases/test_06_policy_or_true.sql",
@@ -1260,7 +1264,5 @@
     "wave1_task_pack/wave1_tasks/tasks/GF-W1-SCH-009/meta.yml",
     "wave1_task_pack/wave1_tasks/wave1_dag.yml"
   ],
-  "errors": [
-    "review_scope_missing_changed_files:tasks/R-016/meta.yml,tasks/TSK-P1-DEMO-014/meta.yml,tasks/TSK-P1-DEMO-018/meta.yml,tasks/TSK-P1-DEMO-020/meta.yml"
-  ]
+  "errors": []
 }

@@ -1,7 +1,7 @@
 {
   "check_id": "EVIDENCE-GENERATE",
-  "timestamp_utc": "2026-03-27T13:05:58Z",
-  "git_sha": "b89cc32c5e63608c6d7d668de517ac5ffc15ed91",
+  "timestamp_utc": "2026-03-27T13:10:16Z",
+  "git_sha": "5e347452635e0789cf4673c182c2ad9e6d546160",
   "schema_fingerprint": "224f18ff8a2f2bb976adf91494a0267789e20deaf52ac170a0707e535561586a",
   "migrations_fingerprint": "cc2d41b0fa909612384c9cca10fde23f0c0d4ebc7f75abde2b447cbc8f8788d9",
   "status": "PASS",
