@@ -1,8 +1,8 @@
 {
   "check_id": "DB-NO-TX-MARKER-LINT",
-  "timestamp_utc": "2026-03-17T01:08:07Z",
-  "git_sha": "9f4c091829d39813bf5e8485e122c826b424eb5a",
-  "schema_fingerprint": "59eef2a10b166543339b310ae67181cc9a8d6b22aa216e649e56652c2316e165",
+  "timestamp_utc": "2026-03-27T13:39:37Z",
+  "git_sha": "73391a945feec9ac8db94afb746ea06f13fe7a44",
+  "schema_fingerprint": "224f18ff8a2f2bb976adf91494a0267789e20deaf52ac170a0707e535561586a",
   "status": "PASS",
   "violations": []
 }
