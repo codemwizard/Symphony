@@ -1,7 +1,7 @@
 {
   "check_id": "REMEDIATION-TRACE",
-  "timestamp_utc": "2026-03-27T13:09:51Z",
-  "git_sha": "5e347452635e0789cf4673c182c2ad9e6d546160",
+  "timestamp_utc": "2026-03-27T13:20:41Z",
+  "git_sha": "3c985bc370302d376898aa6ac5b56785bd0b0992",
   "schema_fingerprint": "224f18ff8a2f2bb976adf91494a0267789e20deaf52ac170a0707e535561586a",
   "status": "PASS",
   "diff_mode": "range",
@@ -36,6 +36,7 @@
     "docs/architecture/COMPLIANCE_MAP.md",
     "docs/architecture/INTERPRETATION_PACK_SCHEMA.md",
     "docs/architecture/INTERPRETATION_PACK_VALIDATION_SPEC.md",
+    "docs/audits/GIT_MUTATION_SURFACE_AUDIT_2026-03-10.md",
     "docs/contracts/templates/PLAN_TEMPLATE.md",
     "docs/invariants/INVARIANTS_MANIFEST.yml",
     "docs/invariants/INVARIANTS_ROADMAP.md",

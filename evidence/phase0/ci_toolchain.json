@@ -1,8 +1,8 @@
 {
   "check_id": "CI-TOOLCHAIN",
-  "timestamp_utc": "2026-03-17T01:08:02Z",
-  "git_sha": "9f4c091829d39813bf5e8485e122c826b424eb5a",
-  "schema_fingerprint": "59eef2a10b166543339b310ae67181cc9a8d6b22aa216e649e56652c2316e165",
+  "timestamp_utc": "2026-03-27T13:20:39Z",
+  "git_sha": "3c985bc370302d376898aa6ac5b56785bd0b0992",
+  "schema_fingerprint": "224f18ff8a2f2bb976adf91494a0267789e20deaf52ac170a0707e535561586a",
   "status": "PASS",
   "expected": {
     "ripgrep": "14.1.1",

@@ -1,6 +1,6 @@
 {
   "check_id": "REPO-STRUCTURE",
-  "git_sha": "5e347452635e0789cf4673c182c2ad9e6d546160",
+  "git_sha": "3c985bc370302d376898aa6ac5b56785bd0b0992",
   "missing_dirs": [],
   "missing_files": [],
   "missing_refs": [],
@@ -52,5 +52,5 @@
   ],
   "schema_fingerprint": "224f18ff8a2f2bb976adf91494a0267789e20deaf52ac170a0707e535561586a",
   "status": "PASS",
-  "timestamp_utc": "2026-03-27T13:10:16Z"
+  "timestamp_utc": "2026-03-27T13:17:26Z"
 }

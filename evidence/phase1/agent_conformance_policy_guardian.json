@@ -1,11 +1,11 @@
 {
-  "timestamp_utc": "2026-03-27T13:09:51Z",
-  "git_sha": "5e347452635e0789cf4673c182c2ad9e6d546160",
+  "timestamp_utc": "2026-03-27T13:17:01Z",
+  "git_sha": "3c985bc370302d376898aa6ac5b56785bd0b0992",
   "schema_fingerprint": "224f18ff8a2f2bb976adf91494a0267789e20deaf52ac170a0707e535561586a",
   "schema_version": "1.0",
   "status": "PASS",
-  "checked_at_utc": "2026-03-27T13:09:51.852087+00:00",
-  "git_commit": "5e347452635e0789cf4673c182c2ad9e6d546160",
+  "checked_at_utc": "2026-03-27T13:17:01.635149+00:00",
+  "git_commit": "3c985bc370302d376898aa6ac5b56785bd0b0992",
   "mode": "auto",
   "canonical_docs": [
     {
