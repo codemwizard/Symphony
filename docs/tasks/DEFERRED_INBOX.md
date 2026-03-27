@@ -271,4 +271,23 @@ Rules:
   - `.github/workflows/invariants.yml`
   - `scripts/ci/check_evidence_required.sh`
   - `scripts/audit/verify_phase0_contract_evidence_status.sh`
-  - `scripts/ci/verify_phase0_contract_evidence_status_parity.sh`
+- `scripts/ci/verify_phase0_contract_evidence_status_parity.sh`
+
+### INBOX-2026-03-27-001 — Deterministic Keep-Set Enforcement for Evidence Churn Cleanup
+- Priority: `P1`
+- Owner role: `ARCHITECT`
+- Status: `deferred`
+- Created: `2026-03-27`
+- Classification: `L1`
+- Why deferred:
+  - The `EVIDENCE_CHURN_CLEANUP_POLICY.md` (v3.3) currently relies on manual developer discipline (`rg -n`, visual inspection) to resolve the correct Keep-Set artifacts. 
+  - There is no unified script to programmatically resolve the required artifacts from `tasks/**/meta.yml`, `VERIFIER_EVIDENCE_REGISTRY.yml`, and `approval_metadata.json`, leading to operational risk during large batch cleanup tasks.
+- Unblock trigger:
+  - Start after the immediate `GF-W1` runtime integrity migration structure and Phase 1 tasks are stably closed out to avoid execution thrash.
+- Required done criteria:
+  - Implement an automated Keep-Set generator script (`scripts/audit/generate_batch_keep_set.sh`).
+  - The script must parse the active YAML definitions, the registered verifiers, and the governed task packs to emit an absolute array of exact local file paths representing the immutable proof Keep-Set.
+  - Implement `scripts/dev/safe_clean_evidence.sh` which wraps standard `git clean` or custom RM commands safely inside the computed bounding box of the deterministic Keep-Set array, guaranteeing no "Keep-Set" files are deleted.
+  - Execute the script natively and record execution evidence mapping the programmatically driven clean-state output.
+- Links:
+  - `docs/operations/EVIDENCE_CHURN_CLEANUP_POLICY.md`
