@@ -30,9 +30,17 @@ jobs:
 
     - name: Setup PostgreSQL
       run: |
-        sudo systemctl start postgresql.service
-        sudo -u postgres psql -c "ALTER USER postgres PASSWORD 'postgres';"
-        sudo -u postgres createdb test_db
+        sudo apt-get update
+        sudo apt-get install -y ca-certificates wget lsb-release
+        echo "deb https://apt.postgresql.org/pub/repos/apt $(lsb_release -cs)-pgdg main" | sudo tee /etc/apt/sources.list.d/pgdg.list
+        wget -qO- https://www.postgresql.org/media/keys/ACCC4CF8.asc | sudo tee /etc/apt/trusted.gpg.d/postgresql.asc >/dev/null
+        sudo apt-get update
+        sudo systemctl stop postgresql.service || true
+        sudo pg_dropcluster 14 main --stop || true
+        sudo apt-get install -y postgresql-18 postgresql-client-18
+        sudo systemctl start postgresql@18-main || sudo systemctl start postgresql
+        sudo -u postgres psql -c "CREATE ROLE postgres LOGIN SUPERUSER PASSWORD 'postgres';" || sudo -u postgres psql -c "ALTER ROLE postgres WITH PASSWORD 'postgres';"
+        sudo -u postgres createdb -O postgres test_db || true
 
     - name: Run contract gate fixtures
       run: |
@@ -50,9 +58,17 @@ jobs:
 
     - name: Setup PostgreSQL
       run: |
-        sudo systemctl start postgresql.service
-        sudo -u postgres psql -c "ALTER USER postgres PASSWORD 'postgres';"
-        sudo -u postgres createdb test_db
+        sudo apt-get update
+        sudo apt-get install -y ca-certificates wget lsb-release
+        echo "deb https://apt.postgresql.org/pub/repos/apt $(lsb_release -cs)-pgdg main" | sudo tee /etc/apt/sources.list.d/pgdg.list
+        wget -qO- https://www.postgresql.org/media/keys/ACCC4CF8.asc | sudo tee /etc/apt/trusted.gpg.d/postgresql.asc >/dev/null
+        sudo apt-get update
+        sudo systemctl stop postgresql.service || true
+        sudo pg_dropcluster 14 main --stop || true
+        sudo apt-get install -y postgresql-18 postgresql-client-18
+        sudo systemctl start postgresql@18-main || sudo systemctl start postgresql
+        sudo -u postgres psql -c "CREATE ROLE postgres LOGIN SUPERUSER PASSWORD 'postgres';" || sudo -u postgres psql -c "ALTER ROLE postgres WITH PASSWORD 'postgres';"
+        sudo -u postgres createdb -O postgres test_db || true
 
     - name: Run contract gate
       run: |
