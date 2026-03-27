@@ -684,6 +684,42 @@
       "expires_on": "2026-12-31",
       "reviewed_by": "security_guardian",
       "approved_at": "2026-03-26"
+    },
+    {
+      "id": "DDL-ALLOW-0098",
+      "migration": "schema/migrations/0097_gf_projects.sql",
+      "statement_fingerprint": "98682c28e014d8df6c758ef84b026edd7073e9ddfae504af48180f5904892a1f",
+      "reason": "Wave 2 Foundation Domain RLS enforcement",
+      "expires_on": "2026-12-31",
+      "reviewed_by": "security_guardian",
+      "approved_at": "2026-03-27"
+    },
+    {
+      "id": "DDL-ALLOW-0099",
+      "migration": "schema/migrations/0097_gf_projects.sql",
+      "statement_fingerprint": "456fa3bc265ccc0453f5c1377e6fe09a335bab80f3b020ed75089dc679a6f5c6",
+      "reason": "Wave 2 Foundation Domain RLS enforcement",
+      "expires_on": "2026-12-31",
+      "reviewed_by": "security_guardian",
+      "approved_at": "2026-03-27"
+    },
+    {
+      "id": "DDL-ALLOW-0100",
+      "migration": "schema/migrations/0098_gf_methodology_versions.sql",
+      "statement_fingerprint": "1a8853f98798e00c867b42c471264438ff8ab3b945873de691f1a0c43492281b",
+      "reason": "Wave 2 Foundation Domain RLS enforcement",
+      "expires_on": "2026-12-31",
+      "reviewed_by": "security_guardian",
+      "approved_at": "2026-03-27"
+    },
+    {
+      "id": "DDL-ALLOW-0101",
+      "migration": "schema/migrations/0098_gf_methodology_versions.sql",
+      "statement_fingerprint": "968bc5a973fc7e737d57b6da786e54730651db60e3e8c3dd70c18fa1e138ecf6",
+      "reason": "Wave 2 Foundation Domain RLS enforcement",
+      "expires_on": "2026-12-31",
+      "reviewed_by": "security_guardian",
+      "approved_at": "2026-03-27"
     }
   ]
 }
