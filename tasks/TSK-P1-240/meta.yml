@@ -1,156 +1,78 @@
 schema_version: 1
 phase: '1'
 task_id: TSK-P1-240
-title: "Implement Verifier Integrity & Proof Enforcement Gate to statically validate task proof graphs"
+title: Implement Verifier Integrity & Proof Enforcement Gate to statically validate
+  task proof graphs
 owner_role: SECURITY_GUARDIAN
 status: completed
-priority: HIGH
-risk_class: INTEGRITY
-blast_radius: DOCS_ONLY
-
-intent: >-
-  Replace heuristic alignment guessing with provable task integrity.
-  Every future task must form a closed proof graph (objective -> work ->
-  acceptance -> verification -> evidence). Every edge must be explicit,
-  machine-checkable, and failure-testable. No task may pass if
-  verification does not fail under corruption, if evidence is not
-  derived from real system state, or if acceptance criteria are orphaned.
-
-anti_patterns:
-  - "Relying on length comparison, keyword similarity, or semantic guessing for alignment"
-  - "Writing verifiers that never fail (e.g. static 'exit 0' or 'echo PASS')"
-  - "Evidence files that contain static, self-declared values rather than observed system state"
-  - "Orphan nodes in the task graph (e.g. work items without acceptance criteria)"
-  - "Self-referential validation (e.g. grep PLAN.md) instead of external state inspection"
-
 depends_on:
-  - TSK-P1-239
-
-blocks: []
-
+- TSK-P1-239
 touches:
-  - scripts/audit/verify_plan_semantic_alignment.py
-  - docs/operations/TASK_CREATION_PROCESS.md
-  - evidence/phase1/tsk_p1_240_semantic_alignment.json
-  - tasks/TSK-P1-240/meta.yml
-
+- scripts/audit/verify_plan_semantic_alignment.py
+- docs/operations/TASK_CREATION_PROCESS.md
+- evidence/phase1/tsk_p1_240_semantic_alignment.json
+- tasks/TSK-P1-240/meta.yml
 invariants:
-  - INV-GOV-TEMPLATE-004  # The task graph must be fully connected with zero orphan nodes
-  - INV-GOV-TEMPLATE-005  # Every verification command must demonstrate a failure obligation via lightweight symbolic boundaries
-
+- INV-GOV-TEMPLATE-004
+- INV-GOV-TEMPLATE-005
 work:
-  - >-
-    [ID tsk_p1_240_work_item_01] Write the core verify_plan_semantic_alignment.py script enforcing
-    the Proof Graph Constraint (objective->work->acceptance->verify->evidence).
-  - >-
-    [ID tsk_p1_240_work_item_02] Implement the Failure-Based Verification Obligation in the scanner:
-    evaluate missing artifacts symbolically and ensure verifiers would fail.
-  - >-
-    [ID tsk_p1_240_work_item_03] Implement the Proof-Carrying Evidence standard: evidence must
-    include observed_paths, observed_hashes, command_outputs, and
-    execution_trace.
-  - >-
-    [ID tsk_p1_240_work_item_04] Implement the Non-Triviality Constraint: verifiers must inspect
-    external state, rejecting self-referential greps.
-  - >-
-    [ID tsk_p1_240_work_item_05] Implement Drift-Density Escalation: sum subjective language markers
-    and fail the plan if they sum to >= 3.
-  - >-
-    [ID tsk_p1_240_work_item_06] Add Step 3c to TASK_CREATION_PROCESS.md to strictly require the
-    Integrity & Proof Verification gate.TASK_CREATION_PROCESS.md
-    as a blocking hard-stop gate.
-
+- '[ID tsk_p1_240_work_item_01] Write the core verify_plan_semantic_alignment.py script
+  enforcing the Proof Graph Constraint (objective->work->acceptance->verify->evidence).'
+- '[ID tsk_p1_240_work_item_02] Implement the Failure-Based Verification Obligation
+  in the scanner: evaluate missing artifacts symbolically and ensure verifiers would
+  fail.'
+- '[ID tsk_p1_240_work_item_03] Implement the Proof-Carrying Evidence standard: evidence
+  must include observed_paths, observed_hashes, command_outputs, and execution_trace.'
+- '[ID tsk_p1_240_work_item_04] Implement the Non-Triviality Constraint: verifiers
+  must inspect external state, rejecting self-referential greps.'
+- '[ID tsk_p1_240_work_item_05] Implement Drift-Density Escalation: sum subjective
+  language markers and fail the plan if they sum to >= 3.'
+- '[ID tsk_p1_240_work_item_06] Add Step 3c to TASK_CREATION_PROCESS.md to strictly
+  require the Integrity & Proof Verification gate.TASK_CREATION_PROCESS.md as a blocking
+  hard-stop gate.'
 acceptance_criteria:
-  - >-
-    [ID tsk_p1_240_work_item_01] verify_plan_semantic_alignment.py successfully parses plan sections
-    and asserts NO_ORPHANS == true and GRAPH_CONNECTED == true.
-  - >-
-    [ID tsk_p1_240_work_item_02] The scanner performs symbolic failure evaluation (without mutating files)
-    and forcefully rejects verification strings lacking fail domains.
-  - >-
-    [ID tsk_p1_240_work_item_03] The scanner rejects static, self-declared evidence JSONs absent
-    real execution traces and observed hashes.
-  - >-
-    [ID tsk_p1_240_work_item_04] The scanner explicitly rejects non-triviality violations that
-    fail to inspect external state (DB, file, or output).
-  - >-
-    [ID tsk_p1_240_work_item_05] The scanner properly aggregates weak signals and enforces a
-    hard fail when the sum is >= 3.
-  - >-
-    [ID tsk_p1_240_work_item_06] TASK_CREATION_PROCESS.md contains the Integrity & Proof gate as
-    a required sequence step.
-
-negative_tests:
-  - id: TSK-P1-240-N1
-    description: "Scanner exits non-zero against a 'no-op verifier' (e.g. exit 0)"
-    required: true
-  - id: TSK-P1-240-N2
-    description: "Scanner exits non-zero against an 'orphan acceptance' (no matching verifier)"
-    required: true
-  - id: TSK-P1-240-N3
-    description: "Scanner exits non-zero against 'fake evidence' (written with static JSON)"
-    required: true
-  - id: TSK-P1-240-N4
-    description: "Scanner exits non-zero against a 'non-failing verifier' (passes when artifact removed)"
-    required: true
-  - id: TSK-P1-240-N5
-    description: "Scanner exits non-zero against a 'self-referential validation' (only reads PLAN.md)"
-    required: true
-
-positive_tests:
-  - id: TSK-P1-240-P1
-    description: "Scanner exits 0 against a fully bound proof chain where evidence derives from real state and verifier fails under simulation."
-    required: true
-
+- '[ID tsk_p1_240_work_item_01] verify_plan_semantic_alignment.py successfully parses
+  plan sections and asserts NO_ORPHANS == true and GRAPH_CONNECTED == true.'
+- '[ID tsk_p1_240_work_item_02] The scanner performs symbolic failure evaluation (without
+  mutating files) and forcefully rejects verification strings lacking fail domains.'
+- '[ID tsk_p1_240_work_item_03] The scanner rejects static, self-declared evidence
+  JSONs absent real execution traces and observed hashes.'
+- '[ID tsk_p1_240_work_item_04] The scanner explicitly rejects non-triviality violations
+  that fail to inspect external state (DB, file, or output).'
+- '[ID tsk_p1_240_work_item_05] The scanner properly aggregates weak signals and enforces
+  a hard fail when the sum is >= 3.'
+- '[ID tsk_p1_240_work_item_06] TASK_CREATION_PROCESS.md contains the Integrity &
+  Proof gate as a required sequence step.'
 verification:
-  - >-
-    # [ID tsk_p1_240_work_item_01] [ID tsk_p1_240_work_item_02] [ID tsk_p1_240_work_item_03] [ID tsk_p1_240_work_item_04] [ID tsk_p1_240_work_item_05] [ID tsk_p1_240_work_item_06]
-    test -x scripts/audit/verify_tsk_p1_240.sh && bash scripts/audit/verify_tsk_p1_240.sh > evidence/phase1/tsk_p1_240_semantic_alignment.json || exit 1
-  - >-
-    # [ID tsk_p1_240_work_item_03] 
-    test -f evidence/phase1/tsk_p1_240_semantic_alignment.json && cat evidence/phase1/tsk_p1_240_semantic_alignment.json | grep "observed_hashes" || exit 1
-  - >-
-    # [ID tsk_p1_240_work_item_06]
-    test -x scripts/dev/pre_ci.sh && RUN_PHASE1_GATES=1 bash scripts/dev/pre_ci.sh || exit 1
-
+- '# [ID tsk_p1_240_work_item_01] [ID tsk_p1_240_work_item_02] [ID tsk_p1_240_work_item_03]
+  [ID tsk_p1_240_work_item_04] [ID tsk_p1_240_work_item_05] [ID tsk_p1_240_work_item_06]
+  test -x scripts/audit/verify_tsk_p1_240.sh && bash scripts/audit/verify_tsk_p1_240.sh
+  > evidence/phase1/tsk_p1_240_semantic_alignment.json || exit 1'
+- '# [ID tsk_p1_240_work_item_03]  test -f evidence/phase1/tsk_p1_240_semantic_alignment.json
+  && cat evidence/phase1/tsk_p1_240_semantic_alignment.json | grep "observed_hashes"
+  || exit 1'
+- '# [ID tsk_p1_240_work_item_06] test -x scripts/dev/pre_ci.sh && RUN_PHASE1_GATES=1
+  bash scripts/dev/pre_ci.sh || exit 1'
 evidence:
-  - path: evidence/phase1/tsk_p1_240_semantic_alignment.json
-    must_include:
-      - task_id
-      - git_sha
-      - timestamp_utc
-      - status
-      - checks
-      - observed_paths
-      - observed_hashes
-      - command_outputs
-      - execution_trace
-      - graph_validation_enabled
-      - cheat_patterns_blocked
-
+- '{''path'': ''evidence/phase1/tsk_p1_240_semantic_alignment.json'', ''must_include'':
+  [''task_id'', ''git_sha'', ''timestamp_utc'', ''status'', ''checks'', ''observed_paths'',
+  ''observed_hashes'', ''command_outputs'', ''execution_trace'', ''graph_validation_enabled'',
+  ''cheat_patterns_blocked'']}'
 failure_modes:
-  - "Scanner relies on length or keyword heuristics instead of graph mapping => CRITICAL_FAIL"
-  - "Scanner accepts a verifier that lacks a failure obligation => CRITICAL_FAIL"
-  - "Scanner accepts static evidence that was not derived by execution => CRITICAL_FAIL"
-  - "Scanner allows >=3 weak signals to pass without hard failing => FAIL"
-  - "Evidence file missing => FAIL"
-
+- Scanner relies on length or keyword heuristics instead of graph mapping => CRITICAL_FAIL
+- Scanner accepts a verifier that lacks a failure obligation => CRITICAL_FAIL
+- Scanner accepts static evidence that was not derived by execution => CRITICAL_FAIL
+- Scanner allows >=3 weak signals to pass without hard failing => FAIL
+- Evidence file missing => FAIL
 must_read:
-  - docs/operations/AI_AGENT_OPERATION_MANUAL.md
-  - docs/operations/TASK_CREATION_PROCESS.md
-
+- docs/operations/AI_AGENT_OPERATION_MANUAL.md
+- docs/operations/TASK_CREATION_PROCESS.md
 implementation_plan: docs/plans/phase1/TSK-P1-240/PLAN.md
 implementation_log: docs/plans/phase1/TSK-P1-240/EXEC_LOG.md
-
-notes: >-
-  This hardened version explicitly shifts from semantic heuristics to
-  enforcement-grade graph mathematically validation. This makes cheating
-  expensive, detectable, and non-scalable, ensuring adversarial resilience.
-  Phase Key: GOVH. Phase Name: Governance Hardening.
-
+notes: 'This hardened version explicitly shifts from semantic heuristics to enforcement-grade
+  graph mathematically validation. This makes cheating expensive, detectable, and
+  non-scalable, ensuring adversarial resilience. Phase Key: GOVH. Phase Name: Governance
+  Hardening.'
 client: cursor
 assigned_agent: security_guardian
 model: claude-sonnet-4-20250514
-
-domain: green_finance
-pilot: true

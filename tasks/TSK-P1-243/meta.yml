@@ -1,148 +1,80 @@
 schema_version: 1
 phase: '1'
 task_id: TSK-P1-243
-title: "Establish the canonical guarded execution core in scripts/audit so downstream runtime-integrity tasks share one fail-closed entrypoint"
+title: Establish the canonical guarded execution core in scripts/audit so downstream
+  runtime-integrity tasks share one fail-closed entrypoint
 owner_role: SECURITY_GUARDIAN
 status: completed
-priority: HIGH
-risk_class: INTEGRITY
-blast_radius: CI_GATES
-intent: >-
-  TSK-P1-242 resolved the runtime host-path blocker into the already-owned
-  `scripts/audit/**` surface, but downstream runtime-integrity work still lacks one
-  canonical fail-closed execution entrypoint. This task creates that contract as a
-  narrow execution-core slice so repository/filesystem integrity, evidence
-  finalization, and adversarial coverage do not get bundled into the same work item.
-anti_patterns:
-  - "Bundling repository/filesystem integrity logic into the guarded execution core task"
-  - "Treating the execution entrypoint as complete without fail-closed bootstrap and repo-root confinement"
-  - "Using documentation text or self-declared claims instead of executable contract inspection"
 depends_on:
-  - TSK-P1-242
-blocks:
-  - TSK-P1-244
-  - TSK-P1-245
-  - TSK-P1-246
+- TSK-P1-242
 touches:
-  - scripts/audit/runtime_guarded_execution_core.sh
-  - scripts/audit/verify_tsk_p1_243.sh
-  - evidence/phase1/tsk_p1_243_guarded_execution_core.json
-  - tasks/TSK-P1-243/meta.yml
-  - docs/plans/phase1/TSK-P1-243/PLAN.md
-  - docs/plans/phase1/TSK-P1-243/EXEC_LOG.md
-  - docs/tasks/PHASE1_GOVERNANCE_TASKS.md
+- scripts/audit/runtime_guarded_execution_core.sh
+- scripts/audit/verify_tsk_p1_243.sh
+- evidence/phase1/tsk_p1_243_guarded_execution_core.json
+- tasks/TSK-P1-243/meta.yml
+- docs/plans/phase1/TSK-P1-243/PLAN.md
+- docs/plans/phase1/TSK-P1-243/EXEC_LOG.md
+- docs/tasks/PHASE1_GOVERNANCE_TASKS.md
 invariants:
-  - INV-105
-  - INV-119
+- INV-105
+- INV-119
 work:
-  - >-
-    [ID tsk_p1_243_work_item_01] Define one canonical guarded execution entrypoint at
-    `scripts/audit/runtime_guarded_execution_core.sh` with supported modes limited to
-    `repo-guard` and `contract-check`.
-  - >-
-    [ID tsk_p1_243_work_item_02] Enforce fail-closed shell posture, deterministic
-    argument parsing, and repo-root confinement so the execution core rejects unknown
-    modes and unauthorized roots before downstream integrity logic exists.
-  - >-
-    [ID tsk_p1_243_work_item_03] Add `scripts/audit/verify_tsk_p1_243.sh` so the
-    verifier inspects the real script contract, executable bit, supported modes, and
-    confinement behavior instead of relying on documentation text.
-  - >-
-    [ID tsk_p1_243_work_item_04] Emit bounded evidence at
-    `evidence/phase1/tsk_p1_243_guarded_execution_core.json` proving only the
-    execution-core contract and explicitly leaving repository integrity and evidence
-    finalization as downstream work.
+- '[ID tsk_p1_243_work_item_01] Define one canonical guarded execution entrypoint
+  at `scripts/audit/runtime_guarded_execution_core.sh` with supported modes limited
+  to `repo-guard` and `contract-check`.'
+- '[ID tsk_p1_243_work_item_02] Enforce fail-closed shell posture, deterministic argument
+  parsing, and repo-root confinement so the execution core rejects unknown modes and
+  unauthorized roots before downstream integrity logic exists.'
+- '[ID tsk_p1_243_work_item_03] Add `scripts/audit/verify_tsk_p1_243.sh` so the verifier
+  inspects the real script contract, executable bit, supported modes, and confinement
+  behavior instead of relying on documentation text.'
+- '[ID tsk_p1_243_work_item_04] Emit bounded evidence at `evidence/phase1/tsk_p1_243_guarded_execution_core.json`
+  proving only the execution-core contract and explicitly leaving repository integrity
+  and evidence finalization as downstream work.'
 acceptance_criteria:
-  - >-
-    [ID tsk_p1_243_work_item_01] The repo contains one canonical guarded execution
-    core script at `scripts/audit/runtime_guarded_execution_core.sh`, and its
-    interface is limited to the declared execution-core modes.
-  - >-
-    [ID tsk_p1_243_work_item_02] The guarded execution core uses hard-fail shell
-    posture, rejects unsupported modes, and exits non-zero when `--repo-root`
-    resolves outside the working tree or to a missing path.
-  - >-
-    [ID tsk_p1_243_work_item_03] `scripts/audit/verify_tsk_p1_243.sh` inspects the
-    real executable contract and emits
-    `evidence/phase1/tsk_p1_243_guarded_execution_core.json`.
-  - >-
-    [ID tsk_p1_243_work_item_04] The evidence proves only execution-core contract
-    properties and explicitly states that repository/filesystem integrity and
-    evidence-finalization guarantees remain downstream obligations.
-negative_tests:
-  - id: TSK-P1-243-N1
-    description: >-
-      Invoke the execution core with an unsupported `--mode` value and confirm it
-      exits non-zero instead of accepting an ad hoc execution branch.
-    required: true
-  - id: TSK-P1-243-N2
-    description: >-
-      Invoke the execution core with a `--repo-root` value that resolves outside the
-      working tree or to a missing path and confirm the script fails closed.
-    required: true
-  - id: TSK-P1-243-N3
-    description: >-
-      Attempt to emit evidence without an explicit `--evidence` path and confirm the
-      execution core performs no repo-tracked writes.
-    required: true
-positive_tests:
-  - id: TSK-P1-243-P1
-    description: >-
-      Run the verifier against the implemented execution core and confirm it emits a
-      passing proof artifact with the declared mode list, confinement result, and
-      bounded scope statement.
-    required: false
+- '[ID tsk_p1_243_work_item_01] The repo contains one canonical guarded execution
+  core script at `scripts/audit/runtime_guarded_execution_core.sh`, and its interface
+  is limited to the declared execution-core modes.'
+- '[ID tsk_p1_243_work_item_02] The guarded execution core uses hard-fail shell posture,
+  rejects unsupported modes, and exits non-zero when `--repo-root` resolves outside
+  the working tree or to a missing path.'
+- '[ID tsk_p1_243_work_item_03] `scripts/audit/verify_tsk_p1_243.sh` inspects the
+  real executable contract and emits `evidence/phase1/tsk_p1_243_guarded_execution_core.json`.'
+- '[ID tsk_p1_243_work_item_04] The evidence proves only execution-core contract properties
+  and explicitly states that repository/filesystem integrity and evidence-finalization
+  guarantees remain downstream obligations.'
 verification:
-  - >-
-    # [ID tsk_p1_243_work_item_01] [ID tsk_p1_243_work_item_02]
-    # [ID tsk_p1_243_work_item_03] [ID tsk_p1_243_work_item_04]
-    bash -lc 'test -x scripts/audit/verify_tsk_p1_243.sh &&
-    bash scripts/audit/verify_tsk_p1_243.sh >
-    evidence/phase1/tsk_p1_243_guarded_execution_core.json || exit 1'
-  - >-
-    # [ID tsk_p1_243_work_item_04]
-    bash -lc 'test -f evidence/phase1/tsk_p1_243_guarded_execution_core.json &&
-    python3 scripts/audit/validate_evidence.py --task TSK-P1-243 --evidence
-    evidence/phase1/tsk_p1_243_guarded_execution_core.json || exit 1'
-  - >-
-    # [ID tsk_p1_243_work_item_01] [ID tsk_p1_243_work_item_02]
-    # [ID tsk_p1_243_work_item_03] [ID tsk_p1_243_work_item_04]
-    bash -lc 'test -x scripts/dev/pre_ci.sh && RUN_PHASE1_GATES=1
-    bash scripts/dev/pre_ci.sh || exit 1'
+- '# [ID tsk_p1_243_work_item_01] [ID tsk_p1_243_work_item_02] # [ID tsk_p1_243_work_item_03]
+  [ID tsk_p1_243_work_item_04] bash -lc ''test -x scripts/audit/verify_tsk_p1_243.sh
+  && bash scripts/audit/verify_tsk_p1_243.sh > evidence/phase1/tsk_p1_243_guarded_execution_core.json
+  || exit 1'''
+- '# [ID tsk_p1_243_work_item_04] bash -lc ''test -f evidence/phase1/tsk_p1_243_guarded_execution_core.json
+  && python3 scripts/audit/validate_evidence.py --task TSK-P1-243 --evidence evidence/phase1/tsk_p1_243_guarded_execution_core.json
+  || exit 1'''
+- '# [ID tsk_p1_243_work_item_01] [ID tsk_p1_243_work_item_02] # [ID tsk_p1_243_work_item_03]
+  [ID tsk_p1_243_work_item_04] bash -lc ''test -x scripts/dev/pre_ci.sh && RUN_PHASE1_GATES=1
+  bash scripts/dev/pre_ci.sh || exit 1'''
 evidence:
-  - path: evidence/phase1/tsk_p1_243_guarded_execution_core.json
-    must_include:
-      - task_id
-      - git_sha
-      - timestamp_utc
-      - status
-      - checks
-      - observed_paths
-      - observed_hashes
-      - command_outputs
-      - execution_trace
-      - entrypoint_path
-      - supported_modes
-      - repo_root_confinement
-      - strict_failure_posture
-      - scope_boundary
+- '{''path'': ''evidence/phase1/tsk_p1_243_guarded_execution_core.json'', ''must_include'':
+  [''task_id'', ''git_sha'', ''timestamp_utc'', ''status'', ''checks'', ''observed_paths'',
+  ''observed_hashes'', ''command_outputs'', ''execution_trace'', ''entrypoint_path'',
+  ''supported_modes'', ''repo_root_confinement'', ''strict_failure_posture'', ''scope_boundary'']}'
 failure_modes:
-  - "Guarded execution core is not rooted in the authorized audit surface => FAIL"
-  - "Execution entrypoint lacks fail-closed bootstrap or confinement checks => FAIL"
-  - "Verifier inspects documentation text instead of executable contract state => FAIL"
-  - "Evidence file missing => FAIL"
+- Guarded execution core is not rooted in the authorized audit surface => FAIL
+- Execution entrypoint lacks fail-closed bootstrap or confinement checks => FAIL
+- Verifier inspects documentation text instead of executable contract state => FAIL
+- Evidence file missing => FAIL
 must_read:
-  - docs/operations/AI_AGENT_OPERATION_MANUAL.md
-  - AGENT_ENTRYPOINT.md
-  - docs/operations/AGENT_PROMPT_ROUTER.md
-  - docs/operations/TASK_CREATION_PROCESS.md
-  - AGENTS.md
-  - tasks/TSK-P1-242/meta.yml
-  - docs/plans/phase1/TSK-P1-242/PLAN.md
+- docs/operations/AI_AGENT_OPERATION_MANUAL.md
+- AGENT_ENTRYPOINT.md
+- docs/operations/AGENT_PROMPT_ROUTER.md
+- docs/operations/TASK_CREATION_PROCESS.md
+- AGENTS.md
+- tasks/TSK-P1-242/meta.yml
+- docs/plans/phase1/TSK-P1-242/PLAN.md
 implementation_plan: docs/plans/phase1/TSK-P1-243/PLAN.md
 implementation_log: docs/plans/phase1/TSK-P1-243/EXEC_LOG.md
-notes: >-
-  This task defines only the guarded execution core contract. Repository/filesystem
+notes: This task defines only the guarded execution core contract. Repository/filesystem
   integrity rules belong in TSK-P1-244, evidence finalization belongs in TSK-P1-245,
   and adversarial verifier coverage belongs in TSK-P1-246.
 client: codex_ide

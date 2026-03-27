@@ -1,121 +1,56 @@
 schema_version: 1
 phase: '0'
 task_id: TSK-P0-157
-title: "Fix verify_task_meta_schema.sh --scope filtering to limit to planned tasks"
+title: Fix verify_task_meta_schema.sh --scope filtering to limit to planned tasks
 owner_role: DB_FOUNDATION
 status: completed
-priority: HIGH
-risk_class: GOVERNANCE
-blast_radius: CI_GATES
-domain: core
-pilot: false
-
-intent: >-
-  The verify_task_meta_schema.sh script parses --scope parameter but never uses it.
-  When pre_ci.sh runs with --scope changed, it checks ALL tasks including legacy ones
-  that don't meet v2 standards, causing CI failures. This task implements the missing
-  scope filtering logic to limit verification to only tasks with status: planned,
-  enabling proper CI gating for new implementation work.
-
-anti_patterns:
-  - "Implementing --scope changed (git-based) when the system uses status-based workflow"
-  - "Breaking existing --task single-task verification mode"
-  - "Making scope filtering optional when it should be mandatory for CI"
-
 depends_on: []
-
-blocks: []
-
 touches:
-  - scripts/audit/verify_task_meta_schema.sh
-  - tasks/TSK-P0-157/meta.yml
-
+- scripts/audit/verify_task_meta_schema.sh
+- tasks/TSK-P0-157/meta.yml
 invariants: []
-
 work:
-  - >-
-    Add SCOPE filtering logic to verify_task_meta_schema.sh. When --scope planned
-    is used, filter tasks to only include those with status: planned in meta.yml.
-    Use Python YAML parsing to read status field before calling check_task().
-  - >-
-    Preserve existing --task single-task mode. When --task is specified, ignore
-    --scope and process only the specified task as before.
-  - >-
-    Add error handling for invalid --scope values. Supported scopes: 'planned'.
-    Fail fast with clear error message for unsupported scopes.
-  - >-
-    Update script help text to document the new --scope planned functionality.
-    Add examples showing usage patterns.
-  - >-
-    Test the implementation: verify that --scope planned excludes completed tasks
-    and includes only planned tasks. Verify --task mode still works independently.
-
+- 'Add SCOPE filtering logic to verify_task_meta_schema.sh. When --scope planned is
+  used, filter tasks to only include those with status: planned in meta.yml. Use Python
+  YAML parsing to read status field before calling check_task().'
+- Preserve existing --task single-task mode. When --task is specified, ignore --scope
+  and process only the specified task as before.
+- 'Add error handling for invalid --scope values. Supported scopes: ''planned''. Fail
+  fast with clear error message for unsupported scopes.'
+- Update script help text to document the new --scope planned functionality. Add examples
+  showing usage patterns.
+- 'Test the implementation: verify that --scope planned excludes completed tasks and
+  includes only planned tasks. Verify --task mode still works independently.'
 acceptance_criteria:
-  - >-
-    bash scripts/audit/verify_task_meta_schema.sh --scope planned runs without
-    errors and processes only tasks with status: planned.
-  - >-
-    bash scripts/audit/verify_task_meta_schema.sh --task GF-W1-FRZ-001 --mode strict
-    still works and processes only the specified task, ignoring any --scope flag.
-  - >-
-    bash scripts/audit/verify_task_meta_schema.sh --scope invalid exits with
-    error message "Supported scopes: planned".
-  - >-
-    pre_ci.sh can now run successfully with the fixed --scope filtering, no longer
-    failing on legacy task meta schema violations.
-
-negative_tests:
-  - id: TSK-P0-157-N1
-    description: >-
-      Run verify_task_meta_schema.sh --scope planned on a repo with completed
-      tasks that have v1 meta schema violations. The script must exit 0 and
-      not report any violations from completed tasks.
-    required: true
-  - id: TSK-P0-157-N2
-    description: >-
-      Run verify_task_meta_schema.sh --scope nonsense. Must exit non-zero with
-      clear error message about supported scopes.
-    required: true
-
+- 'bash scripts/audit/verify_task_meta_schema.sh --scope planned runs without errors
+  and processes only tasks with status: planned.'
+- bash scripts/audit/verify_task_meta_schema.sh --task GF-W1-FRZ-001 --mode strict
+  still works and processes only the specified task, ignoring any --scope flag.
+- 'bash scripts/audit/verify_task_meta_schema.sh --scope invalid exits with error
+  message "Supported scopes: planned".'
+- pre_ci.sh can now run successfully with the fixed --scope filtering, no longer failing
+  on legacy task meta schema violations.
 verification:
-  - bash scripts/audit/verify_task_meta_schema.sh --scope planned --mode basic
-  - bash scripts/audit/verify_task_meta_schema.sh --task TSK-P0-157 --mode strict
-  - bash scripts/dev/pre_ci.sh
-
+- bash scripts/audit/verify_task_meta_schema.sh --scope planned --mode basic
+- bash scripts/audit/verify_task_meta_schema.sh --task TSK-P0-157 --mode strict
+- bash scripts/dev/pre_ci.sh
 evidence:
-  - path: evidence/phase0/task_meta_scope_filtering.json
-    must_include:
-      - task_id
-      - timestamp_utc
-      - git_sha
-      - status
-      - scope_filter
-      - tasks_checked
-      - violations_found
-
+- '{''path'': ''evidence/phase0/task_meta_scope_filtering.json'', ''must_include'':
+  [''task_id'', ''timestamp_utc'', ''git_sha'', ''status'', ''scope_filter'', ''tasks_checked'',
+  ''violations_found'']}'
 failure_modes:
-  - "Scope filtering not implemented -- pre_ci.sh still fails on legacy tasks => CRITICAL_FAIL"
-  - "Single task --task mode broken -- existing workflows break => CRITICAL_FAIL"
-  - "Invalid scope handling causes script to continue with wrong scope => FAIL"
-
+- Scope filtering not implemented -- pre_ci.sh still fails on legacy tasks => CRITICAL_FAIL
+- Single task --task mode broken -- existing workflows break => CRITICAL_FAIL
+- Invalid scope handling causes script to continue with wrong scope => FAIL
 must_read:
-  - docs/operations/AI_AGENT_OPERATION_MANUAL.md
-  - docs/operations/TASK_AUTHORING_STANDARD_v2.md
-  - scripts/audit/verify_task_meta_schema.sh
-
-second_pilot_test: >-
-  This task fixes CI filtering logic only. The scope filtering applies identically
-  to any domain - green finance, payments, security, or core infrastructure.
-  No sector-specific logic is introduced.
-
-pilot_scope_ref: not_applicable
-
+- docs/operations/AI_AGENT_OPERATION_MANUAL.md
+- docs/operations/TASK_AUTHORING_STANDARD_v2.md
+- scripts/audit/verify_task_meta_schema.sh
 implementation_plan: docs/plans/phase0/TSK-P0-157/PLAN.md
 implementation_log: docs/plans/phase0/TSK-P0-157/EXEC_LOG.md
-notes: >-
-  This is a critical infrastructure fix that enables Wave 1 implementation.
-  The --scope parameter was already being used by pre_ci.sh but was not
-  implemented, causing CI failures on legacy tasks.
+notes: This is a critical infrastructure fix that enables Wave 1 implementation. The
+  --scope parameter was already being used by pre_ci.sh but was not implemented, causing
+  CI failures on legacy tasks.
 client: codex_cli
 assigned_agent: <UNASSIGNED>
 model: <UNASSIGNED>

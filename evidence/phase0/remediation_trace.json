@@ -1,7 +1,7 @@
 {
   "check_id": "REMEDIATION-TRACE",
-  "timestamp_utc": "2026-03-27T12:03:06Z",
-  "git_sha": "32441e0084c06f978581ecca67d083a73ac717f9",
+  "timestamp_utc": "2026-03-27T12:13:01Z",
+  "git_sha": "560e1f19ff1c36016987437d0e40f4ba5717737e",
   "schema_fingerprint": "224f18ff8a2f2bb976adf91494a0267789e20deaf52ac170a0707e535561586a",
   "status": "PASS",
   "diff_mode": "range",
@@ -210,6 +210,7 @@
     "evidence/phase1/tsk_p1_075_preflight_preci_split.json",
     "evidence/phase1/tsk_p1_076_local_gate_topology.json",
     "evidence/phase1/verify_agent_conformance_spec.json",
+    "evidence/security_remediation/r_026_run_task_strict_enforcement.json",
     "evidence/task_governance/task_meta_schema_conformance.json",
     "rls_task_pack/rls_tasks/tasks/TSK-P1-RLS-001/meta.yml",
     "rls_task_pack/rls_tasks/tasks/TSK-P1-RLS-002/meta.yml",

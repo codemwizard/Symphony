@@ -1,151 +1,87 @@
 schema_version: 1
 phase: '1'
 task_id: TSK-P1-245
-title: "Finalize guarded execution evidence emission so runtime-integrity proof artifacts are deterministic, bounded, and machine-validated"
+title: Finalize guarded execution evidence emission so runtime-integrity proof artifacts
+  are deterministic, bounded, and machine-validated
 owner_role: SECURITY_GUARDIAN
 status: completed
-priority: HIGH
-risk_class: INTEGRITY
-blast_radius: CI_GATES
-intent: >-
-  TSK-P1-243 defines the guarded execution core and TSK-P1-244 fixes its
-  repository/filesystem boundaries, but the runtime-integrity line still lacks one
-  deterministic evidence-finalization contract for proof emission. This task
-  finalizes that narrow slice so guarded-runtime proof artifacts are machine-
-  validated, bounded to real execution outputs, and stable enough for downstream
-  adversarial coverage without expanding back into path-boundary enforcement.
-anti_patterns:
-  - "Treating evidence emission as incidental shell output instead of a bounded contract"
-  - "Mixing repository/filesystem integrity enforcement with evidence-finalization semantics"
-  - "Allowing the verifier to accept evidence that is not derived from real execution outputs"
 depends_on:
-  - TSK-P1-243
-blocks:
-  - TSK-P1-246
+- TSK-P1-243
 touches:
-  - scripts/audit/runtime_guarded_execution_core.sh
-  - scripts/audit/verify_tsk_p1_245.sh
-  - evidence/phase1/tsk_p1_245_evidence_finalization.json
-  - tasks/TSK-P1-245/meta.yml
-  - docs/plans/phase1/TSK-P1-245/PLAN.md
-  - docs/plans/phase1/TSK-P1-245/EXEC_LOG.md
-  - docs/tasks/PHASE1_GOVERNANCE_TASKS.md
+- scripts/audit/runtime_guarded_execution_core.sh
+- scripts/audit/verify_tsk_p1_245.sh
+- evidence/phase1/tsk_p1_245_evidence_finalization.json
+- tasks/TSK-P1-245/meta.yml
+- docs/plans/phase1/TSK-P1-245/PLAN.md
+- docs/plans/phase1/TSK-P1-245/EXEC_LOG.md
+- docs/tasks/PHASE1_GOVERNANCE_TASKS.md
 invariants:
-  - INV-105
-  - INV-119
+- INV-105
+- INV-119
 work:
-  - >-
-    [ID tsk_p1_245_work_item_01] Extend
-    `scripts/audit/runtime_guarded_execution_core.sh` so guarded execution can emit a
-    deterministic final proof artifact only when an explicit evidence target is
-    provided.
-  - >-
-    [ID tsk_p1_245_work_item_02] Finalize the guarded evidence payload so it includes
-    strong proof fields tied to real execution outputs, bounded scope statements, and
-    stable metadata needed by `validate_evidence.py`.
-  - >-
-    [ID tsk_p1_245_work_item_03] Create `scripts/audit/verify_tsk_p1_245.sh` so the
-    verifier exercises real evidence emission behavior and rejects incomplete or
-    self-declared proof payloads.
-  - >-
-    [ID tsk_p1_245_work_item_04] Emit bounded evidence at
-    `evidence/phase1/tsk_p1_245_evidence_finalization.json` proving the guarded
-    evidence-finalization contract and explicitly leaving adversarial coverage
-    downstream.
+- '[ID tsk_p1_245_work_item_01] Extend `scripts/audit/runtime_guarded_execution_core.sh`
+  so guarded execution can emit a deterministic final proof artifact only when an
+  explicit evidence target is provided.'
+- '[ID tsk_p1_245_work_item_02] Finalize the guarded evidence payload so it includes
+  strong proof fields tied to real execution outputs, bounded scope statements, and
+  stable metadata needed by `validate_evidence.py`.'
+- '[ID tsk_p1_245_work_item_03] Create `scripts/audit/verify_tsk_p1_245.sh` so the
+  verifier exercises real evidence emission behavior and rejects incomplete or self-declared
+  proof payloads.'
+- '[ID tsk_p1_245_work_item_04] Emit bounded evidence at `evidence/phase1/tsk_p1_245_evidence_finalization.json`
+  proving the guarded evidence-finalization contract and explicitly leaving adversarial
+  coverage downstream.'
 acceptance_criteria:
-  - >-
-    [ID tsk_p1_245_work_item_01] The guarded execution core emits a proof artifact only
-    when an explicit evidence path is supplied and does not silently finalize proof
-    output on other execution paths.
-  - >-
-    [ID tsk_p1_245_work_item_02] The emitted guarded-runtime evidence contains strong
-    proof fields derived from real execution state, including observed paths, hashes,
-    command outputs, execution trace, and a bounded scope statement.
-  - >-
-    [ID tsk_p1_245_work_item_03] `scripts/audit/verify_tsk_p1_245.sh` exercises the
-    real evidence emission path, rejects incomplete proof payloads, and emits
-    `evidence/phase1/tsk_p1_245_evidence_finalization.json`.
-  - >-
-    [ID tsk_p1_245_work_item_04] The evidence proves only guarded evidence-finalization
-    behavior and states that adversarial or corruption-focused coverage remains a
-    downstream obligation.
-negative_tests:
-  - id: TSK-P1-245-N1
-    description: >-
-      Invoke the guarded execution core without an explicit evidence path and confirm
-      it does not silently emit a final proof artifact.
-    required: true
-  - id: TSK-P1-245-N2
-    description: >-
-      Remove or corrupt one required strong evidence field and confirm the verifier
-      fails closed instead of accepting the incomplete payload.
-    required: true
-  - id: TSK-P1-245-N3
-    description: >-
-      Attempt to satisfy the verifier with self-declared or static proof content and
-      confirm it is rejected because the payload is not tied to real execution outputs.
-    required: true
-positive_tests:
-  - id: TSK-P1-245-P1
-    description: >-
-      Run the verifier against a valid guarded-runtime proof emission path and confirm
-      it emits a passing bounded evidence artifact with the declared strong fields.
-    required: false
+- '[ID tsk_p1_245_work_item_01] The guarded execution core emits a proof artifact
+  only when an explicit evidence path is supplied and does not silently finalize proof
+  output on other execution paths.'
+- '[ID tsk_p1_245_work_item_02] The emitted guarded-runtime evidence contains strong
+  proof fields derived from real execution state, including observed paths, hashes,
+  command outputs, execution trace, and a bounded scope statement.'
+- '[ID tsk_p1_245_work_item_03] `scripts/audit/verify_tsk_p1_245.sh` exercises the
+  real evidence emission path, rejects incomplete proof payloads, and emits `evidence/phase1/tsk_p1_245_evidence_finalization.json`.'
+- '[ID tsk_p1_245_work_item_04] The evidence proves only guarded evidence-finalization
+  behavior and states that adversarial or corruption-focused coverage remains a downstream
+  obligation.'
 verification:
-  - >-
-    # [ID tsk_p1_245_work_item_01] [ID tsk_p1_245_work_item_02]
-    # [ID tsk_p1_245_work_item_03] [ID tsk_p1_245_work_item_04]
-    bash -lc 'test -x scripts/audit/verify_tsk_p1_245.sh &&
-    bash scripts/audit/verify_tsk_p1_245.sh >
-    evidence/phase1/tsk_p1_245_evidence_finalization.json || exit 1'
-  - >-
-    # [ID tsk_p1_245_work_item_04]
-    bash -lc 'test -f evidence/phase1/tsk_p1_245_evidence_finalization.json &&
-    python3 scripts/audit/validate_evidence.py --task TSK-P1-245 --evidence
-    evidence/phase1/tsk_p1_245_evidence_finalization.json || exit 1'
-  - >-
-    # [ID tsk_p1_245_work_item_01] [ID tsk_p1_245_work_item_02]
-    # [ID tsk_p1_245_work_item_03] [ID tsk_p1_245_work_item_04]
-    bash -lc 'test -x scripts/dev/pre_ci.sh && RUN_PHASE1_GATES=1
-    bash scripts/dev/pre_ci.sh || exit 1'
+- '# [ID tsk_p1_245_work_item_01] [ID tsk_p1_245_work_item_02] # [ID tsk_p1_245_work_item_03]
+  [ID tsk_p1_245_work_item_04] bash -lc ''test -x scripts/audit/verify_tsk_p1_245.sh
+  && bash scripts/audit/verify_tsk_p1_245.sh > evidence/phase1/tsk_p1_245_evidence_finalization.json
+  || exit 1'''
+- '# [ID tsk_p1_245_work_item_04] bash -lc ''test -f evidence/phase1/tsk_p1_245_evidence_finalization.json
+  && python3 scripts/audit/validate_evidence.py --task TSK-P1-245 --evidence evidence/phase1/tsk_p1_245_evidence_finalization.json
+  || exit 1'''
+- '# [ID tsk_p1_245_work_item_01] [ID tsk_p1_245_work_item_02] # [ID tsk_p1_245_work_item_03]
+  [ID tsk_p1_245_work_item_04] bash -lc ''test -x scripts/dev/pre_ci.sh && RUN_PHASE1_GATES=1
+  bash scripts/dev/pre_ci.sh || exit 1'''
 evidence:
-  - path: evidence/phase1/tsk_p1_245_evidence_finalization.json
-    must_include:
-      - task_id
-      - git_sha
-      - timestamp_utc
-      - status
-      - checks
-      - observed_paths
-      - observed_hashes
-      - command_outputs
-      - execution_trace
-      - entrypoint_path
-      - finalized_evidence_path
-      - evidence_contract_fields
-      - proof_binding_result
-      - scope_boundary
+- '{''path'': ''evidence/phase1/tsk_p1_245_evidence_finalization.json'', ''must_include'':
+  [''task_id'', ''git_sha'', ''timestamp_utc'', ''status'', ''checks'', ''observed_paths'',
+  ''observed_hashes'', ''command_outputs'', ''execution_trace'', ''entrypoint_path'',
+  ''finalized_evidence_path'', ''evidence_contract_fields'', ''proof_binding_result'',
+  ''scope_boundary'']}'
 failure_modes:
-  - "Guarded execution evidence finalization accepts incomplete or self-declared proof payloads => FAIL"
-  - "Execution core silently emits final proof without explicit evidence targeting => FAIL"
-  - "Verifier accepts evidence not derived from real execution outputs => FAIL"
-  - "Evidence file missing => FAIL"
+- Guarded execution evidence finalization accepts incomplete or self-declared proof
+  payloads => FAIL
+- Execution core silently emits final proof without explicit evidence targeting =>
+  FAIL
+- Verifier accepts evidence not derived from real execution outputs => FAIL
+- Evidence file missing => FAIL
 must_read:
-  - docs/operations/AI_AGENT_OPERATION_MANUAL.md
-  - AGENT_ENTRYPOINT.md
-  - docs/operations/AGENT_PROMPT_ROUTER.md
-  - docs/operations/TASK_CREATION_PROCESS.md
-  - AGENTS.md
-  - tasks/TSK-P1-243/meta.yml
-  - tasks/TSK-P1-244/meta.yml
-  - docs/plans/phase1/TSK-P1-243/PLAN.md
-  - docs/plans/phase1/TSK-P1-244/PLAN.md
+- docs/operations/AI_AGENT_OPERATION_MANUAL.md
+- AGENT_ENTRYPOINT.md
+- docs/operations/AGENT_PROMPT_ROUTER.md
+- docs/operations/TASK_CREATION_PROCESS.md
+- AGENTS.md
+- tasks/TSK-P1-243/meta.yml
+- tasks/TSK-P1-244/meta.yml
+- docs/plans/phase1/TSK-P1-243/PLAN.md
+- docs/plans/phase1/TSK-P1-244/PLAN.md
 implementation_plan: docs/plans/phase1/TSK-P1-245/PLAN.md
 implementation_log: docs/plans/phase1/TSK-P1-245/EXEC_LOG.md
-notes: >-
-  This task owns only the evidence-finalization contract for the guarded execution
-  path. Repository/filesystem boundary enforcement remains TSK-P1-244 work, and
-  adversarial or corruption-focused verifier coverage remains TSK-P1-246 work.
+notes: This task owns only the evidence-finalization contract for the guarded execution
+  path. Repository/filesystem boundary enforcement remains TSK-P1-244 work, and adversarial
+  or corruption-focused verifier coverage remains TSK-P1-246 work.
 client: codex_ide
 assigned_agent: security_guardian
 model: Cascade

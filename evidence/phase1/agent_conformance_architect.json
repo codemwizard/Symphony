@@ -1,11 +1,11 @@
 {
-  "timestamp_utc": "2026-03-27T12:03:30Z",
-  "git_sha": "32441e0084c06f978581ecca67d083a73ac717f9",
+  "timestamp_utc": "2026-03-27T12:13:01Z",
+  "git_sha": "560e1f19ff1c36016987437d0e40f4ba5717737e",
   "schema_fingerprint": "224f18ff8a2f2bb976adf91494a0267789e20deaf52ac170a0707e535561586a",
   "schema_version": "1.0",
-  "status": "FAIL",
-  "checked_at_utc": "2026-03-27T12:03:30.275094+00:00",
-  "git_commit": "32441e0084c06f978581ecca67d083a73ac717f9",
+  "status": "PASS",
+  "checked_at_utc": "2026-03-27T12:13:01.664733+00:00",
+  "git_commit": "560e1f19ff1c36016987437d0e40f4ba5717737e",
   "mode": "auto",
   "canonical_docs": [
     {
@@ -135,6 +135,7 @@
     "evidence/phase1/tsk_p1_075_preflight_preci_split.json",
     "evidence/phase1/tsk_p1_076_local_gate_topology.json",
     "evidence/phase1/verify_agent_conformance_spec.json",
+    "evidence/security_remediation/r_026_run_task_strict_enforcement.json",
     "evidence/task_governance/task_meta_schema_conformance.json",
     "schema/migrations/0070_green_finance_host_schema.meta.yml",
     "schema/migrations/0071_phase2_internal_ledger_core.meta.yml",
@@ -236,13 +237,7 @@
   "approval_required": true,
   "approval_metadata_present": true,
   "approval_metadata_ref": "/home/mwiza/workspace/Symphony/evidence/phase1/approval_metadata.json",
-  "failures": [
-    {
-      "code": "CONFORMANCE_011_APPROVAL_MISMATCH",
-      "message": "Prompt hash mismatch between metadata and sidecar",
-      "files": []
-    }
-  ],
+  "failures": [],
   "check_id": "AGENT-CONFORMANCE-ARCHITECT",
   "subject_role": "Architect Agent"
 }
