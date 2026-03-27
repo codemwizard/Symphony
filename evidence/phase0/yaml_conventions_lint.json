@@ -1,10 +1,11 @@
 {
   "check_id": "YAML-CONVENTIONS",
-  "timestamp_utc": "2026-03-27T12:13:25Z",
-  "git_sha": "560e1f19ff1c36016987437d0e40f4ba5717737e",
+  "timestamp_utc": "2026-03-27T13:05:57Z",
+  "git_sha": "b89cc32c5e63608c6d7d668de517ac5ffc15ed91",
   "schema_fingerprint": "224f18ff8a2f2bb976adf91494a0267789e20deaf52ac170a0707e535561586a",
   "status": "PASS",
   "checked_files": [
+    "/home/mwiza/workspace/Symphony/tasks/R-016/meta.yml",
     "/home/mwiza/workspace/Symphony/tasks/TSK-P0-157/meta.yml",
     "/home/mwiza/workspace/Symphony/tasks/TSK-P1-222/meta.yml",
     "/home/mwiza/workspace/Symphony/tasks/TSK-P1-223/meta.yml",
@@ -29,6 +30,9 @@
     "/home/mwiza/workspace/Symphony/tasks/TSK-P1-244/meta.yml",
     "/home/mwiza/workspace/Symphony/tasks/TSK-P1-245/meta.yml",
     "/home/mwiza/workspace/Symphony/tasks/TSK-P1-246/meta.yml",
+    "/home/mwiza/workspace/Symphony/tasks/TSK-P1-DEMO-014/meta.yml",
+    "/home/mwiza/workspace/Symphony/tasks/TSK-P1-DEMO-018/meta.yml",
+    "/home/mwiza/workspace/Symphony/tasks/TSK-P1-DEMO-020/meta.yml",
     "/home/mwiza/workspace/Symphony/tasks/TSK-RLS-ARCH-001/meta.yml",
     "/home/mwiza/workspace/Symphony/.github/workflows/green_finance_contract_gate.yml",
     "/home/mwiza/workspace/Symphony/docs/invariants/INVARIANTS_MANIFEST.yml",

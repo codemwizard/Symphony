@@ -1,7 +1,7 @@
 {
   "check_id": "TSK-P1-067",
-  "timestamp_utc": "2026-03-27T12:16:31Z",
-  "git_sha": "560e1f19ff1c36016987437d0e40f4ba5717737e",
+  "timestamp_utc": "2026-03-27T13:08:40Z",
+  "git_sha": "b89cc32c5e63608c6d7d668de517ac5ffc15ed91",
   "schema_fingerprint": "224f18ff8a2f2bb976adf91494a0267789e20deaf52ac170a0707e535561586a",
   "status": "PASS",
   "details": "raw db exception messages removed from client-facing store results"
