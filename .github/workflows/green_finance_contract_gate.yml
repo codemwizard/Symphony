@@ -36,7 +36,7 @@ jobs:
         wget -qO- https://www.postgresql.org/media/keys/ACCC4CF8.asc | sudo tee /etc/apt/trusted.gpg.d/postgresql.asc >/dev/null
         sudo apt-get update
         sudo systemctl stop postgresql.service || true
-        sudo pg_dropcluster 14 main --stop || true
+        python3 -c 'import os; [os.system(f"sudo pg_dropcluster {d} main --stop") for d in os.listdir("/etc/postgresql/") if d.isdigit()]' || true
         sudo apt-get install -y postgresql-18 postgresql-client-18
         sudo systemctl start postgresql@18-main || sudo systemctl start postgresql
         sudo -u postgres psql -c "CREATE ROLE postgres LOGIN SUPERUSER PASSWORD 'postgres';" || sudo -u postgres psql -c "ALTER ROLE postgres WITH PASSWORD 'postgres';"
@@ -64,7 +64,7 @@ jobs:
         wget -qO- https://www.postgresql.org/media/keys/ACCC4CF8.asc | sudo tee /etc/apt/trusted.gpg.d/postgresql.asc >/dev/null
         sudo apt-get update
         sudo systemctl stop postgresql.service || true
-        sudo pg_dropcluster 14 main --stop || true
+        python3 -c 'import os; [os.system(f"sudo pg_dropcluster {d} main --stop") for d in os.listdir("/etc/postgresql/") if d.isdigit()]' || true
         sudo apt-get install -y postgresql-18 postgresql-client-18
         sudo systemctl start postgresql@18-main || sudo systemctl start postgresql
         sudo -u postgres psql -c "CREATE ROLE postgres LOGIN SUPERUSER PASSWORD 'postgres';" || sudo -u postgres psql -c "ALTER ROLE postgres WITH PASSWORD 'postgres';"

@@ -453,13 +453,6 @@ jobs:
     needs: [mechanical_invariants]
     if: always() && github.event_name != 'schedule'
 
-    steps:
-      - name: Setup Native PostgreSQL
-        run: |
-          sudo systemctl start postgresql.service
-          sudo -u postgres psql -c "CREATE ROLE symphony LOGIN SUPERUSER PASSWORD 'symphony';" || true
-          sudo -u postgres psql -c "ALTER ROLE symphony WITH PASSWORD 'symphony';" || true
-          sudo -u postgres createdb -O symphony symphony || true
 
       - uses: actions/checkout@v4
         with:
@@ -488,14 +481,19 @@ jobs:
 
           rg --version
 
-      - name: Install psql client
+      - name: Install and Start PostgreSQL 18
         run: |
           sudo apt-get update
           sudo apt-get install -y ca-certificates wget lsb-release
           echo "deb https://apt.postgresql.org/pub/repos/apt $(lsb_release -cs)-pgdg main" | sudo tee /etc/apt/sources.list.d/pgdg.list
           wget -qO- https://www.postgresql.org/media/keys/ACCC4CF8.asc | sudo tee /etc/apt/trusted.gpg.d/postgresql.asc >/dev/null
           sudo apt-get update
-          sudo apt-get install -y postgresql-client-18
+          sudo systemctl stop postgresql.service || true
+          python3 -c 'import os; [os.system(f"sudo pg_dropcluster {d} main --stop") for d in os.listdir("/etc/postgresql/") if d.isdigit()]' || true
+          sudo apt-get install -y postgresql-18 postgresql-client-18
+          sudo systemctl start postgresql@18-main || sudo systemctl start postgresql
+          sudo -u postgres psql -c "CREATE ROLE symphony LOGIN SUPERUSER PASSWORD 'symphony';" || sudo -u postgres psql -c "ALTER ROLE symphony WITH PASSWORD 'symphony';"
+          sudo -u postgres createdb -O symphony symphony || true
           pg_dump --version
 
       - name: Wait for Postgres
