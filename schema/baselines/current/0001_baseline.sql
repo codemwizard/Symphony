@@ -2,7 +2,7 @@
 -- PostgreSQL database dump
 --
 
-\restrict X2KnNIn6E4eCwIaw6ZD1Rl2L0MO5bvXd6VI9WpmWMvuykquebqe0okKEjeGNBl4
+\restrict zWtRvrWff1o5sXIzPc0ZmgchgFiQ9mybq8pUiuP77Dz0FxD9B0ZH0xj4xkNxa93
 
 -- Dumped from database version 18.2 (Debian 18.2-1.pgdg13+1)
 -- Dumped by pg_dump version 18.2 (Debian 18.2-1.pgdg13+1)
@@ -212,6 +212,24 @@ BEGIN
   IF NOT FOUND THEN
     RAISE EXCEPTION USING ERRCODE='P8201', MESSAGE='POLICY_BUNDLE_UNSIGNED';
   END IF;
+END;
+$$;
+
+
+--
+-- Name: adapter_registrations_append_only_trigger(); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.adapter_registrations_append_only_trigger() RETURNS trigger
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO 'pg_catalog', 'public'
+    AS $$
+BEGIN
+    -- Block UPDATE and DELETE operations
+    IF TG_OP = 'UPDATE' OR TG_OP = 'DELETE' THEN
+        RAISE EXCEPTION 'adapter_registrations is append-only - % operations not allowed', TG_OP;
+    END IF;
+    RETURN NEW;
 END;
 $$;
 
@@ -3384,6 +3402,36 @@ CREATE TABLE public.adapter_circuit_breakers (
 
 
 --
+-- Name: adapter_registrations; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.adapter_registrations (
+    adapter_registration_id uuid DEFAULT public.uuid_v7_or_random() NOT NULL,
+    tenant_id uuid NOT NULL,
+    adapter_code text NOT NULL,
+    methodology_code text NOT NULL,
+    methodology_authority text NOT NULL,
+    version_code text NOT NULL,
+    is_active boolean DEFAULT false NOT NULL,
+    payload_schema_refs jsonb DEFAULT '[]'::jsonb NOT NULL,
+    checklist_refs jsonb DEFAULT '[]'::jsonb NOT NULL,
+    entrypoint_refs jsonb DEFAULT '[]'::jsonb NOT NULL,
+    issuance_semantic_mode text NOT NULL,
+    retirement_semantic_mode text NOT NULL,
+    jurisdiction_compatibility jsonb DEFAULT '{}'::jsonb NOT NULL,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    CONSTRAINT adapter_registrations_checklist_refs_check CHECK ((jsonb_typeof(checklist_refs) = 'array'::text)),
+    CONSTRAINT adapter_registrations_entrypoint_refs_check CHECK ((jsonb_typeof(entrypoint_refs) = 'array'::text)),
+    CONSTRAINT adapter_registrations_issuance_semantic_mode_check CHECK ((issuance_semantic_mode = ANY (ARRAY['STRICT'::text, 'LENIENT'::text, 'HYBRID'::text]))),
+    CONSTRAINT adapter_registrations_jurisdiction_compatibility_check CHECK ((jsonb_typeof(jurisdiction_compatibility) = 'object'::text)),
+    CONSTRAINT adapter_registrations_payload_schema_refs_check CHECK ((jsonb_typeof(payload_schema_refs) = 'array'::text)),
+    CONSTRAINT adapter_registrations_retirement_semantic_mode_check CHECK ((retirement_semantic_mode = ANY (ARRAY['STRICT'::text, 'LENIENT'::text, 'HYBRID'::text])))
+);
+
+ALTER TABLE ONLY public.adapter_registrations FORCE ROW LEVEL SECURITY;
+
+
+--
 -- Name: adjustment_approval_stages; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -5219,6 +5267,22 @@ ALTER TABLE ONLY public.adapter_circuit_breakers
 
 
 --
+-- Name: adapter_registrations adapter_registration_unique; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.adapter_registrations
+    ADD CONSTRAINT adapter_registration_unique UNIQUE (tenant_id, adapter_code, methodology_code, version_code);
+
+
+--
+-- Name: adapter_registrations adapter_registrations_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.adapter_registrations
+    ADD CONSTRAINT adapter_registrations_pkey PRIMARY KEY (adapter_registration_id);
+
+
+--
 -- Name: adjustment_approval_stages adjustment_approval_stages_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -6427,6 +6491,27 @@ ALTER TABLE ONLY public.rail_dispatch_truth_anchor
 
 
 --
+-- Name: idx_adapter_registrations_adapter_code; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_adapter_registrations_adapter_code ON public.adapter_registrations USING btree (adapter_code);
+
+
+--
+-- Name: idx_adapter_registrations_methodology; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_adapter_registrations_methodology ON public.adapter_registrations USING btree (methodology_code, methodology_authority);
+
+
+--
+-- Name: idx_adapter_registrations_tenant_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_adapter_registrations_tenant_id ON public.adapter_registrations USING btree (tenant_id);
+
+
+--
 -- Name: idx_anchor_sync_operations_state_due; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -6989,6 +7074,13 @@ CREATE RULE kyc_retention_policy_no_update AS
 
 
 --
+-- Name: adapter_registrations adapter_registrations_append_only; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER adapter_registrations_append_only BEFORE DELETE OR UPDATE ON public.adapter_registrations FOR EACH ROW EXECUTE FUNCTION public.adapter_registrations_append_only_trigger();
+
+
+--
 -- Name: adjustment_instructions trg_adjustment_terminal_immutability; Type: TRIGGER; Schema: public; Owner: -
 --
 
@@ -7238,6 +7330,14 @@ CREATE TRIGGER trg_touch_persons_updated_at BEFORE UPDATE ON public.persons FOR 
 --
 
 CREATE TRIGGER trg_touch_programs_updated_at BEFORE UPDATE ON public.programs FOR EACH ROW EXECUTE FUNCTION public.touch_programs_updated_at();
+
+
+--
+-- Name: adapter_registrations adapter_registrations_tenant_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.adapter_registrations
+    ADD CONSTRAINT adapter_registrations_tenant_id_fkey FOREIGN KEY (tenant_id) REFERENCES public.tenants(tenant_id) ON DELETE RESTRICT;
 
 
 --
@@ -8009,6 +8109,12 @@ ALTER TABLE ONLY public.tenants
 
 
 --
+-- Name: adapter_registrations; Type: ROW SECURITY; Schema: public; Owner: -
+--
+
+ALTER TABLE public.adapter_registrations ENABLE ROW LEVEL SECURITY;
+
+--
 -- Name: billing_usage_events; Type: ROW SECURITY; Schema: public; Owner: -
 --
 
@@ -8115,6 +8221,13 @@ ALTER TABLE public.programme_registry ENABLE ROW LEVEL SECURITY;
 --
 
 ALTER TABLE public.programs ENABLE ROW LEVEL SECURITY;
+
+--
+-- Name: adapter_registrations rls_tenant_isolation_adapter_registrations; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY rls_tenant_isolation_adapter_registrations ON public.adapter_registrations USING ((tenant_id = public.current_tenant_id_or_null())) WITH CHECK ((tenant_id = public.current_tenant_id_or_null()));
+
 
 --
 -- Name: billing_usage_events rls_tenant_isolation_billing_usage_events; Type: POLICY; Schema: public; Owner: -
@@ -8324,5 +8437,5 @@ ALTER TABLE public.tenants ENABLE ROW LEVEL SECURITY;
 -- PostgreSQL database dump complete
 --
 
-\unrestrict X2KnNIn6E4eCwIaw6ZD1Rl2L0MO5bvXd6VI9WpmWMvuykquebqe0okKEjeGNBl4
+\unrestrict zWtRvrWff1o5sXIzPc0ZmgchgFiQ9mybq8pUiuP77Dz0FxD9B0ZH0xj4xkNxa93
 

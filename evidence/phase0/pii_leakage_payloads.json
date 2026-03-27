@@ -24,14 +24,14 @@
   ],
   "findings": [],
   "gate_id": "SEC-G17",
-  "git_sha": "a7ea0288fbb2fda0c4dec6af401df3cbd89792a2",
+  "git_sha": "7da7e8718697b610b9cc8d1dc5124442a7f1dbe0",
   "invariant_id": "INV-112",
   "ok": true,
   "pattern_note": "PII keyword within 80 chars of regulated context keyword; allow via symphony:pii_ok marker",
   "roots": [
-    "/tmp/tmp.AMxB8lb8lQ/src"
+    "/tmp/tmp.Tz1oGr7Hj6/src"
   ],
-  "schema_fingerprint": "224f18ff8a2f2bb976adf91494a0267789e20deaf52ac170a0707e535561586a",
+  "schema_fingerprint": "b5fc38953353fba104cf3cd3fdb4d348214259086b5c9a1827519a18e5f1352e",
   "status": "PASS",
-  "timestamp_utc": "2026-03-27T13:49:45Z"
+  "timestamp_utc": "2026-03-27T14:17:52Z"
 }

@@ -1,8 +1,8 @@
 {
   "check_id": "SEC-G08",
-  "timestamp_utc": "2026-03-27T13:47:04Z",
-  "git_sha": "a7ea0288fbb2fda0c4dec6af401df3cbd89792a2",
-  "schema_fingerprint": "224f18ff8a2f2bb976adf91494a0267789e20deaf52ac170a0707e535561586a",
+  "timestamp_utc": "2026-03-27T14:15:12Z",
+  "git_sha": "7da7e8718697b610b9cc8d1dc5124442a7f1dbe0",
+  "schema_fingerprint": "b5fc38953353fba104cf3cd3fdb4d348214259086b5c9a1827519a18e5f1352e",
   "status": "PASS",
   "note": "",
   "output_lines": ["=== /home/mwiza/workspace/Symphony/services/executor-worker/dotnet/src/ExecutorWorker/ExecutorWorker.csproj ===", "  Determining projects to restore...", "  All projects are up-to-date for restore.", "The following sources were used:", "   https://api.nuget.org/v3/index.json", "The given project `ExecutorWorker` has no vulnerable packages given the current sources.", "=== /home/mwiza/workspace/Symphony/services/ledger-api/dotnet/src/LedgerApi.DemoHost/LedgerApi.DemoHost.csproj ===", "  Determining projects to restore...", "  All projects are up-to-date for restore.", "The following sources were used:", "   https://api.nuget.org/v3/index.json", "The given project `LedgerApi.DemoHost` has no vulnerable packages given the current sources.", "=== /home/mwiza/workspace/Symphony/services/ledger-api/dotnet/src/LedgerApi/LedgerApi.csproj ===", "  Determining projects to restore...", "  All projects are up-to-date for restore.", "The following sources were used:", "   https://api.nuget.org/v3/index.json", "The given project `LedgerApi` has no vulnerable packages given the current sources."]
