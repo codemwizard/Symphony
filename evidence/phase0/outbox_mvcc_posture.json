@@ -1,8 +1,10 @@
 {
   "check_id": "DB-OUTBOX-MVCC",
-  "timestamp_utc": "2026-03-17T01:08:07Z",
-  "git_sha": "9f4c091829d39813bf5e8485e122c826b424eb5a",
-  "schema_fingerprint": "59eef2a10b166543339b310ae67181cc9a8d6b22aa216e649e56652c2316e165",
+  "expected_fillfactor": "80",
+  "git_sha": "a7ea0288fbb2fda0c4dec6af401df3cbd89792a2",
+  "ok": true,
+  "reloptions": "{fillfactor=80}",
+  "schema_fingerprint": "224f18ff8a2f2bb976adf91494a0267789e20deaf52ac170a0707e535561586a",
   "status": "PASS",
-  "reloptions": "fillfactor=80"
+  "timestamp_utc": "2026-03-27T13:50:44Z"
 }
