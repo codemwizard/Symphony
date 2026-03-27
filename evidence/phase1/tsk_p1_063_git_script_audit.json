@@ -1,10 +1,10 @@
 {
   "check_id": "TSK-P1-063",
   "task_id": "TSK-P1-063",
-  "timestamp_utc": "2026-03-17T01:07:53Z",
-  "git_sha": "9f4c091829d39813bf5e8485e122c826b424eb5a",
-  "schema_fingerprint": "59eef2a10b166543339b310ae67181cc9a8d6b22aa216e649e56652c2316e165",
-  "status": "PASS",
+  "timestamp_utc": "2026-03-26T19:09:04Z",
+  "git_sha": "f294a7db8fa046214cee3044ca0fcd7e73b42f3f",
+  "schema_fingerprint": "224f18ff8a2f2bb976adf91494a0267789e20deaf52ac170a0707e535561586a",
+  "status": "FAIL",
   "audited_paths": [
     "scripts/audit/lib/approval_requirement.py",
     "scripts/audit/migrate_task_meta_to_v1.py",
@@ -17,6 +17,7 @@
     "scripts/audit/verify_history_secret_scan_report_present.sh",
     "scripts/audit/verify_human_governance_review_signoff.sh",
     "scripts/audit/verify_invariants_local.sh",
+    "scripts/audit/verify_migration_sequence.sh",
     "scripts/audit/verify_tsk_p1_062.sh",
     "scripts/audit/verify_tsk_p1_076.sh",
     "scripts/audit/verify_tsk_p1_demo_020.sh",
@@ -29,6 +30,10 @@
     "scripts/lib/git_diff_range_only.sh",
     "scripts/security/lint_app_sql_injection.sh"
   ],
-  "missing_from_audit": [],
-  "failures": []
+  "missing_from_audit": [
+    "scripts/audit/verify_migration_sequence.sh"
+  ],
+  "failures": [
+    "missing_from_audit:scripts/audit/verify_migration_sequence.sh"
+  ]
 }

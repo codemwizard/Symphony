@@ -1,0 +1,121 @@
+schema_version: 1
+phase: '1'
+task_id: TSK-P1-231
+title: "Implement a report-only scope ceiling and objective-work-touches alignment gate so fake narrowness is surfaced before implementation begins"
+owner_role: SECURITY_GUARDIAN
+status: completed
+priority: HIGH
+risk_class: INTEGRITY
+blast_radius: CI_GATES
+intent: >-
+  Structural validity alone still allows oversized tasks and, more dangerously, tasks
+  that look narrow while quietly importing extra concerns. This task adds a report-only
+  scope and alignment gate with confidence-bounded scoring so obvious breadth and hidden
+  conceptual expansion are surfaced without letting heuristic uncertainty overclaim
+  authority.
+anti_patterns:
+  - "Treating touches-count heuristics as sufficient proof of narrowness"
+  - "Escalating low-confidence heuristic scope findings as if they were hard structural truth"
+  - "Re-implementing authoring or parity checks inside the scope gate until responsibilities blur"
+depends_on:
+  - TSK-P1-227
+  - TSK-P1-224
+  - TSK-P1-229
+  - TSK-P1-230
+blocks:
+  - TSK-P1-232
+touches:
+  - scripts/audit/task_scope_gate.py
+  - scripts/audit/verify_tsk_p1_231.sh
+  - evidence/phase1/tsk_p1_231_scope_alignment.json
+  - tasks/TSK-P1-231/meta.yml
+  - docs/plans/phase1/TSK-P1-231/PLAN.md
+  - docs/plans/phase1/TSK-P1-231/EXEC_LOG.md
+invariants:
+  - INV-105
+  - INV-119
+work:
+  - >-
+    Implement a report-only scope gate that detects touches-count threshold breaches,
+    multi-family verifier breadth, mixed platform/domain surface classes, objective-work-
+    touches misalignment, and hidden scope expansion implied by touched files.
+  - >-
+    Emit alignment scoring and confidence through the shared gate result contract, define
+    deterministic severity rules for obvious oversized tasks and high-confidence fake-
+    narrowness cases, and declare the same enforcement-transition model used by the
+    authoring gate.
+  - >-
+    Add a task-specific verifier that exercises obvious oversized and structurally narrow
+    but conceptually expanded fixtures and emits declared evidence.
+acceptance_criteria:
+  - >-
+    The scope gate surfaces both obvious oversized tasks and hidden conceptual drift that
+    would survive a simple touches-count heuristic.
+  - >-
+    Scope findings include bounded alignment scoring and confidence so low-confidence
+    heuristics do not overclaim authority while high-confidence cases escalate
+    deterministically.
+  - >-
+    The scope gate consumes upstream parity/authoring context where relevant and does not
+    duplicate structural checks already owned by the authoring gate.
+  - >-
+    `scripts/audit/verify_tsk_p1_231.sh` exercises oversized and fake-narrowness fixtures
+    and emits `evidence/phase1/tsk_p1_231_scope_alignment.json`.
+negative_tests:
+  - id: TSK-P1-231-N1
+    description: >-
+      Run the scope gate against an obviously oversized multi-surface fixture task and
+      confirm deterministic high-severity output is emitted through the shared gate
+      result contract.
+    required: true
+  - id: TSK-P1-231-N2
+    description: >-
+      Run the scope gate against a structurally narrow fixture whose work imports hidden
+      extra concerns and confirm the alignment logic surfaces fake narrowness with
+      confidence-bounded output.
+    required: true
+positive_tests:
+  - id: TSK-P1-231-P1
+    description: >-
+      Run the scope gate against a genuinely narrow fixture task pack and confirm it emits
+      a clean structured report-only result.
+    required: false
+verification:
+  - bash scripts/audit/verify_tsk_p1_231.sh
+  - python3 scripts/audit/validate_evidence.py --task TSK-P1-231 --evidence evidence/phase1/tsk_p1_231_scope_alignment.json
+  - RUN_PHASE1_GATES=1 bash scripts/dev/pre_ci.sh
+evidence:
+  - path: evidence/phase1/tsk_p1_231_scope_alignment.json
+    must_include:
+      - task_id
+      - git_sha
+      - timestamp_utc
+      - status
+      - checks
+      - gate_result_contract_fields
+      - alignment_score
+      - confidence
+      - severity_rules
+      - oversized_fixture_result
+      - fake_narrowness_fixture_result
+      - valid_fixture_result
+failure_modes:
+  - "Scope gate treats low-confidence heuristics as hard authority => FAIL"
+  - "Fake narrowness remains invisible because only coarse breadth heuristics are applied => BLOCKED"
+  - "Scope gate duplicates structural checks already owned by the authoring gate => FAIL_REVIEW"
+  - "Evidence file missing => FAIL"
+must_read:
+  - docs/operations/AI_AGENT_OPERATION_MANUAL.md
+  - AGENT_ENTRYPOINT.md
+  - docs/operations/AGENT_PROMPT_ROUTER.md
+  - docs/operations/TASK_CREATION_PROCESS.md
+  - docs/reference/rls-anti-drift-wave2-task-plan.md
+implementation_plan: docs/plans/phase1/TSK-P1-231/PLAN.md
+implementation_log: docs/plans/phase1/TSK-P1-231/EXEC_LOG.md
+notes: >-
+  Detection scope is bounded heuristic alignment, not semantic proof. This gate must emit
+  confidence with every meaningful finding and share the same transition model as the
+  Pack B authoring and proof-integrity gates.
+client: cursor
+assigned_agent: security_guardian
+model: Cascade

@@ -53,6 +53,11 @@ Follow this exact order. Do not skip or reorder steps.
   - `phase: '4'` -> `docs/plans/phase4/<TASK_ID>/PLAN.md`
 - Required sections: mission, constraints, verification commands, approval references, evidence paths.
 
+### Step 3c — Verify proof graph integrity
+- Before a plan can be finalized, you MUST pass the strict structural enforcement scanner.
+- Run: `python3 scripts/audit/verify_plan_semantic_alignment.py --plan <PLAN_PATH> --meta <META_PATH>`
+- The scanner enforces objective->work->acceptance->verify->evidence mappings via explicit ID tags (e.g., `[ID tsk_p1_xxx]`). Verifiers lacking structural failure domains or external state inspection will flatline the task.
+
 ### Step 4 — Populate meta fully
 - Add: `depends_on`, `touches`, `invariants`, `work`, `acceptance_criteria`, `verification`, `evidence`, `failure_modes`, `must_read`, `implementation_plan`, `implementation_log`, `client`, `assigned_agent`, `model`.
 - Every concrete path listed under `evidence:` must also appear in `touches`.
@@ -138,6 +143,13 @@ Execution-readiness guard:
 - Allowing tasks to touch files outside the assigned agent’s allowed paths
 - Failing to emit evidence artifacts
 - Missing `Depends On` when a verifier relies on earlier work
+- Writing verifiers that use literal string matching instead of pattern-class blocking
+- Checking absence of bad things without asserting presence of correct things
+- Using vague language as specification (e.g. 'execution ergonomics are blocking')
+- Omitting stop conditions, allowing partial completion to become 'done'
+- Evidence overclaiming — asserting guarantees the verifier cannot prove
+- Allowing implicit scope leakage via semantic wording
+- Not enforcing strict set-equality on touches arrays
 
 ## 7) Document placement (for task touch lists)
 
@@ -158,3 +170,13 @@ Legacy locations still exist but are not default targets for new documents:
 - `docs/architecture/adrs/**`
 
 See `docs/operations/DOCUMENT_PLACEMENT.md`.
+
+## 8) Anti-Drift Authoring Policy
+
+All task packs MUST adhere to the following anti-drift authoring rules. These are hard repo policies, not optional guidance:
+- **One Primary Objective:** Tasks must define exactly one primary objective. Scope expansion is strictly forbidden.
+- **Explicit Boundaries:** You must explicitly declare `out_of_scope` (non-goals), `stop_conditions`, `proof_guarantees`, and `proof_limitations` in the task metadata.
+- **Honest Proof:** Proof guarantees must honestly reflect the deterministic capability of the verifier. Proof limitations must transparently state what the verifier cannot prove. Aspirational evidence is rejected.
+- **No Placeholder Verifiers:** Verification scripts must perform actual checks. Decorative or placeholder verifiers that merely exit 0 are strictly prohibited.
+- **Document Parity:** YAML metadata declarations must maintain strict parity with human-readable companion documents (e.g. PLAN.md).
+- **Anti-Drift Cheating Limits:** Foundational task packs must explicitly state which anti-drift cheating modes remain open after their implementation.

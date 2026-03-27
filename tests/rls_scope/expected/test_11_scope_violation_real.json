@@ -1,0 +1,5 @@
+{
+  "should_pass": false,
+  "expected_errors": ["SCOPE_VIOLATION"],
+  "purpose": "Catches ALTER on table not created in this migration"
+}

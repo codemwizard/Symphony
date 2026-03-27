@@ -10,6 +10,35 @@ Rules:
 
 ## Entries
 
+### INBOX-2026-03-26-001 — [RESOLVED via TSK-P1-242] Runtime host-path and ownership decision bound to existing SECURITY_GUARDIAN surface scripts/audit/**
+- Source task:
+  - `TSK-P1-241`
+- Priority: `P1`
+- Owner role: `ARCHITECT`
+- Status: `deferred`
+- Created: `2026-03-26`
+- Classification: `L1`
+- Why deferred:
+  - The runtime-integrity sandbox line was decomposed into narrower repo-local work because the original bundle was too broad for the anti-drift task discipline.
+  - `scripts/runtime/**` is not an existing owned path in `AGENTS.md`, so the guarded execution controls cannot be scheduled honestly by assuming that host location.
+  - The host-path and ownership decision must be revisited through the child-task graph created under `TSK-P1-241`, not settled ad hoc during implementation.
+- Unblock trigger:
+  - Start after the TSK-P1-241 parent task pack is ready and the first child-task graph is registered repo-locally.
+- Required done criteria:
+  - Create an executable child task that resolves the canonical host path for the guarded runtime controls.
+  - Name the owning agent surface for that path or explicitly rehost the implementation in an already-owned surface.
+  - Confirm the host-path decision is reflected in the child-task `touches`, plan, verification, and evidence contract.
+  - Ensure no runtime implementation task starts before that authority decision is represented by an executable repo-local task.
+- Resolution path:
+  - `TSK-P1-242`
+- Links:
+  - `tasks/TSK-P1-241/meta.yml`
+  - `docs/plans/phase1/TSK-P1-241/PLAN.md`
+  - `tasks/TSK-P1-242/meta.yml`
+  - `docs/plans/phase1/TSK-P1-242/PLAN.md`
+  - `docs/tasks/PHASE1_GOVERNANCE_TASKS.md`
+  - `AGENTS.md`
+
 ### INBOX-2026-03-10-006 — CI-discovered fixes can land without remediation artifact freshness
 - Source incident:
   - `phase1/debug-process-069-072`

@@ -1,8 +1,8 @@
 {
   "check_id": "CONTROL-PLANES-DRIFT",
-  "timestamp_utc": "2026-03-21T16:23:52Z",
-  "git_sha": "120d6e7fbc106a47f75bcb88d897768b3569c7e3",
-  "schema_fingerprint": "59eef2a10b166543339b310ae67181cc9a8d6b22aa216e649e56652c2316e165",
+  "timestamp_utc": "2026-03-27T09:12:10Z",
+  "git_sha": "f294a7db8fa046214cee3044ca0fcd7e73b42f3f",
+  "schema_fingerprint": "224f18ff8a2f2bb976adf91494a0267789e20deaf52ac170a0707e535561586a",
   "status": "PASS",
   "errors": [],
   "warnings": [

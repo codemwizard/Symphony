@@ -1,0 +1,158 @@
+schema_version: 1
+phase: '0'
+task_id: GF-W1-SCH-003
+title: "Migration 0099: monitoring_records neutral append-only event ledger"
+owner_role: DB_FOUNDATION
+status: planned
+priority: CRITICAL
+risk_class: INTEGRITY
+blast_radius: DB_SCHEMA
+
+intent: >-
+  `monitoring_records` is the first downstream neutral ledger that depends on
+  the corrected foundational ownership of `projects` and
+  `methodology_versions`. This task exists to isolate monitoring-only schema
+  work from root-table creation so the append-only event layer cannot silently
+  recreate or mutate foundational scope.
+
+anti_patterns:
+  - "Recreating projects or methodology_versions in the monitoring task"
+  - "Adding mutable or destructive semantics to the monitoring ledger"
+  - "Creating undeclared helper tables under the cover of monitoring scope"
+
+depends_on:
+  - GF-W1-SCH-002A
+
+blocks:
+  - GF-W1-SCH-004
+
+touches:
+  - schema/migrations/0099_gf_monitoring_records.sql
+  - schema/migrations/0099_gf_monitoring_records.meta.yml
+  - schema/migrations/MIGRATION_HEAD
+  - scripts/db/verify_gf_monitoring_records.sh
+  - evidence/phase0/gf_monitoring_records.json
+  - tasks/GF-W1-SCH-003/meta.yml
+
+invariants:
+  - INV-SCHEMA-ORDER-002
+  - INV-SCHEMA-NO-FORWARD-REF-003
+  - INV-SCHEMA-TASK-REF-DEP-006
+  - INV-SCHEMA-OWNERSHIP-MAP-007
+  - INV-SCHEMA-OWNERSHIP-CLOSURE-008
+  - INV-SCHEMA-STATIC-DDL-ONLY-010
+  - INV-SCHEMA-SIDECAR-SQL-CONSISTENCY-012
+  - INV-SCHEMA-NO-PROCEDURAL-DDL-013
+  - INV-SCHEMA-NO-DESTRUCTIVE-DDL-015
+
+work:
+  - >-
+    [ID gf_w1_sch_003_work_item_01] Create migration 0099 for
+    `public.monitoring_records` only.
+  - >-
+    [ID gf_w1_sch_003_work_item_02] Add the sidecar and update `MIGRATION_HEAD`
+    from actual filesystem state.
+  - >-
+    [ID gf_w1_sch_003_work_item_03] Write `scripts/db/verify_gf_monitoring_records.sh`
+    to prove monitoring-only ownership, append-only semantics, and rejection of
+    undeclared/procedural/destructive behavior.
+  - >-
+    [ID gf_w1_sch_003_work_item_04] Emit bounded evidence to
+    `evidence/phase0/gf_monitoring_records.json`.
+
+acceptance_criteria:
+  - >-
+    [ID gf_w1_sch_003_work_item_01] Migration 0099 introduces only
+    `public.monitoring_records` and its declared dependent governed objects.
+  - >-
+    [ID gf_w1_sch_003_work_item_02] The migration sidecar matches parsed SQL
+    exactly and the task continues to depend directly on `GF-W1-SCH-002A`.
+  - >-
+    [ID gf_w1_sch_003_work_item_03] The verifier exits 0 and fails closed on
+    undeclared objects, procedural SQL, destructive DDL, UPDATE/DELETE support,
+    or root-table leakage.
+  - >-
+    [ID gf_w1_sch_003_work_item_04] Evidence file
+    `evidence/phase0/gf_monitoring_records.json` exists and includes the declared proof fields.
+
+negative_tests:
+  - id: GF-W1-SCH-003-N1
+    description: >-
+      Add a second governed table to migration 0099 without declaring it in the
+      sidecar. Ownership closure and sidecar/SQL consistency must fail.
+    required: true
+  - id: GF-W1-SCH-003-N2
+    description: >-
+      Add an UPDATE or DELETE path to `monitoring_records`. The append-only
+      verifier must fail.
+    required: true
+
+verification:
+  - >-
+    grep -n "monitoring_records" schema/migrations/0099_gf_monitoring_records.sql || exit 1 # [ID gf_w1_sch_003_work_item_01] [ID gf_w1_sch_003_work_item_02]
+  - >-
+    bash scripts/db/verify_gf_monitoring_records.sh | tee evidence/phase0/gf_monitoring_records.json >/dev/null && test -f evidence/phase0/gf_monitoring_records.json || exit 1 # [ID gf_w1_sch_003_work_item_03]
+  - >-
+    test -f evidence/phase0/gf_monitoring_records.json || exit 1 # [ID gf_w1_sch_003_work_item_04]
+
+evidence:
+  - path: evidence/phase0/gf_monitoring_records.json
+    must_include:
+      - task_id
+      - git_sha
+      - timestamp_utc
+      - status
+      - monitoring_records_owner
+      - append_only_confirmed
+      - ownership_closure_confirmed
+      - sidecar_sql_consistency_confirmed
+      - checks
+      - observed_paths
+      - observed_hashes
+      - command_outputs
+      - execution_trace
+
+failure_modes:
+  - "Monitoring task recreates foundational tables => CRITICAL_FAIL"
+  - "Monitoring ledger permits destructive mutation => CRITICAL_FAIL"
+  - "Undeclared created object => CRITICAL_FAIL"
+  - "Procedural or destructive DDL detected => CRITICAL_FAIL"
+  - "Evidence file missing => FAIL"
+
+must_read:
+  - docs/operations/AI_AGENT_OPERATION_MANUAL.md
+  - docs/operations/AGENTIC_SDLC_PILOT_POLICY.md
+  - docs/operations/PILOT_REJECTION_PLAYBOOK.md
+  - docs/operations/AGENT_GUARDRAILS_GREEN_FINANCE.md
+
+implementation_plan: docs/plans/phase0/GF-W1-SCH-003/PLAN.md
+implementation_log: docs/plans/phase0/GF-W1-SCH-003/EXEC_LOG.md
+
+notes: >-
+  This repaired task owns monitoring only. Foundational root ownership moved to
+  `GF-W1-SCH-002A`; this task must never recreate it.
+client: codex_cli
+assigned_agent: <UNASSIGNED>
+model: <UNASSIGNED>
+
+domain: green_finance
+pilot: true
+second_pilot_test:
+  candidate_sector_1: solar_energy
+  candidate_sector_2: forestry_carbon
+  unchanged_core_tables: [monitoring_records]
+  unchanged_core_functions: [record_monitoring_record]
+  adapter_only_differences:
+    - "Record payload contents and record_type values differ by adapter"
+    - "Sector-specific field semantics remain in opaque payload/data contracts"
+  jurisdiction_profile_impact: >-
+    Jurisdiction changes alter seeded policy/profile data, not the monitoring
+    ledger schema.
+  required_core_changes: []
+  explanation: >-
+    A solar generation reading and a forestry field inspection are both
+    append-only monitoring events. They differ in record payload and adapter
+    semantics, not in the neutral event-ledger table. The same monitoring
+    schema therefore works for both without modification.
+  second_pilot_reviewed_by: Architecture Owner
+pilot_scope_ref: not_applicable

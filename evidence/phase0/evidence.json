@@ -1,9 +1,9 @@
 {
   "check_id": "EVIDENCE-GENERATE",
-  "timestamp_utc": "2026-03-21T16:23:52Z",
-  "git_sha": "120d6e7fbc106a47f75bcb88d897768b3569c7e3",
-  "schema_fingerprint": "59eef2a10b166543339b310ae67181cc9a8d6b22aa216e649e56652c2316e165",
-  "migrations_fingerprint": "ef99da20961475b3246e6f3594adbd7f24d21b4d23f60137db5663cb2ac7794c",
+  "timestamp_utc": "2026-03-27T09:09:14Z",
+  "git_sha": "f294a7db8fa046214cee3044ca0fcd7e73b42f3f",
+  "schema_fingerprint": "224f18ff8a2f2bb976adf91494a0267789e20deaf52ac170a0707e535561586a",
+  "migrations_fingerprint": "cc2d41b0fa909612384c9cca10fde23f0c0d4ebc7f75abde2b447cbc8f8788d9",
   "status": "PASS",
   "producer": "generate_evidence.sh",
   "inputs": {

@@ -1,0 +1,5 @@
+{
+  "should_pass": false,
+  "expected_errors": ["POST_POLICY_MUTATION"],
+  "purpose": "Catches DISABLE ROW LEVEL SECURITY after CREATE POLICY"
+}

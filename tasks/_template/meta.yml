@@ -1,31 +1,279 @@
-# Canonical Task Meta Template (lower_snake_case)
+# ══════════════════════════════════════════════════════════════════════════════
+# Symphony Task Meta — Canonical Template v2
+#
+# HOW TO USE THIS TEMPLATE
+# ────────────────────────
+# 1. Copy this file to tasks/<TASK-ID>/meta.yml
+# 2. Fill every field. Empty lists [] are not acceptable on required fields.
+#    Fields marked REQUIRED must be non-empty before status can move to 'ready'.
+#    Fields marked REQUIRED-AT-CLOSE must be non-empty before status = 'completed'.
+# 3. The companion PLAN.md must be created at implementation_plan path before
+#    any code is written. See docs/contracts/templates/PLAN_TEMPLATE.md.
+# 4. Run verify_task_meta_schema.sh --mode strict to check conformance.
+#
+# FIELD REFERENCE (what each field means and what makes it good vs hollow):
+# ─────────────────────────────────────────────────────────────────────────
+# schema_version    : Always 1. Do not change.
+# phase             : String. '0', '1', 'sec-revamp', etc. Must match DAG stage.
+# task_id           : Exact ID used in DAG nodes and depends_on chains.
+# title             : One sentence. Verb + noun + outcome. NOT "do the thing".
+# owner_role        : From AGENTS.md agent list. Determines allowed file paths.
+# status            : planned | ready | in-progress | completed | blocked
+# priority          : CRITICAL | HIGH | NORMAL | LOW
+#                     CRITICAL = exploitable now or blocks everything downstream.
+# risk_class        : SECURITY | GOVERNANCE | INTEGRITY | PERFORMANCE | INFRASTRUCTURE
+#                     Used by agents to select review policies and DRD thresholds.
+# blast_radius      : DB_SCHEMA | APP_LAYER | CI_GATES | DOCS_ONLY | INFRA
+#                     Controls which parallel tracks can run concurrently.
+# anti_patterns     : What NOT to do. Explicit named failure modes from architecture
+#                     diagnosis. This is the field that prevents governance theater.
+# depends_on        : REQUIRED. Exact task_ids or checkpoint ids. [] only if root.
+# blocks            : Downstream task_ids that cannot start until this is done.
+#                     Inverse of depends_on. Makes DAG bidirectional and auditable.
+# touches           : REQUIRED. Exact file paths modified. No glob patterns.
+#                     If you touch a file not listed here: FAIL_REVIEW.
+# invariants        : INV-### codes this task enforces or introduces.
+#                     If status=implemented is claimed, enforcement must exist here.
+# work              : REQUIRED. Ordered bullet list. Each item is an atomic,
+#                     verifiable action. NOT "implement the feature". Each item
+#                     must correspond to at least one acceptance_criteria check.
+# acceptance_criteria: REQUIRED. Each criterion maps to a CI gate or test.
+#                     Must include: what is checked, what script runs, what output
+#                     proves it passed. Vague criteria ("it works") are invalid.
+# negative_tests    : REQUIRED (minimum 1). Proof that the exploit or failure mode
+#                     is actually blocked. A task with no negative tests is a demo,
+#                     not a security control.
+# positive_tests    : Optional but encouraged. Prove the happy path still works
+#                     after the fix.
+# verification      : REQUIRED. Exact commands. Must be runnable verbatim.
+#                     Minimum: the verifier script + validate_evidence.py + pre_ci.sh
+# evidence          : REQUIRED. Exact paths. Must include field inventory for what
+#                     the JSON must contain. Not just a path — an evidence contract.
+# failure_modes     : REQUIRED (minimum 2). Named failure signatures.
+#                     Format: <what goes wrong> => <consequence code>
+#                     FAIL = fails CI. BLOCKED = downstream cannot proceed.
+#                     CRITICAL FAIL = security incident, stop everything.
+# must_read         : Docs an agent must read before touching a single file.
+#                     Always include AI_AGENT_OPERATION_MANUAL.md.
+# implementation_plan: Path to PLAN.md. Must exist before status = 'in-progress'.
+# implementation_log: Path to EXEC_LOG.md. Append-only record of work done.
+# notes             : Freeform. Use for: ordering rationale, known exceptions,
+#                     architecture decisions made during implementation.
+# client            : codex_cli | codex_ide | cursor
+# assigned_agent    : agent id from AGENTS.md
+# model             : Model string or <UNASSIGNED>
+# ══════════════════════════════════════════════════════════════════════════════
 
 schema_version: 1
-phase: "0"
-task_id: "TSK-P0-XXX"
-title: "Short imperative title"
-owner_role: "ARCHITECT"
-status: "planned"   # planned | in_progress | completed
+phase: '<PHASE>'                        # REQUIRED: '0', '1', 'sec-revamp', etc.
+task_id: <TASK-ID>                      # REQUIRED: matches DAG node id exactly
+title: "<Verb> <object> so that <outcome>"  # REQUIRED: one sentence, outcome-oriented
+owner_role: <AGENT-ROLE>               # REQUIRED: from AGENTS.md agent list
+status: planned                        # planned | ready | in-progress | completed | blocked
+priority: NORMAL                       # CRITICAL | HIGH | NORMAL | LOW
+risk_class: GOVERNANCE                 # SECURITY | GOVERNANCE | INTEGRITY | PERFORMANCE | INFRASTRUCTURE
+blast_radius: DOCS_ONLY               # DB_SCHEMA | APP_LAYER | CI_GATES | DOCS_ONLY | INFRA
 
-depends_on: []
+# ── Why this task exists ───────────────────────────────────────────────────
+# REQUIRED. 2-4 sentences. Answer: what problem does this solve, what risk does
+# it close, why now and not later. This is the architectural diagnosis field.
+# Bad: "Implements the feature as described in the backlog."
+# Good: "The Python supervisor builds SQL from request data via f-strings, which
+#        bypasses the DB layer's parameterized SECURITY DEFINER functions entirely.
+#        This task eliminates all interpolation patterns and installs a CI gate that
+#        prevents regression. Must complete before any CQRS refactor touches the
+#        supervisor, or the sin gets ported into the new runtime."
+intent: >-
+  <2-4 sentences: what problem, what risk, why now. Reference the architectural
+  diagnosis from the revamp plan. Cite the anti-pattern being closed.>
 
-touches: []
-invariants: []
+# ── What this task must NOT do ─────────────────────────────────────────────
+# REQUIRED. Name the governance theater and fake-PASS patterns specific to this
+# task's domain. Each entry is a named anti-pattern to actively avoid.
+# These come directly from the architectural diagnosis and "what will go wrong" list.
+anti_patterns:
+  - "<Anti-pattern 1: e.g., 'Declaring implemented without a running enforcement script'>"
+  - "<Anti-pattern 2: e.g., 'Writing the negative test after the fix is declared done'>"
+  - "<Anti-pattern 3: e.g., 'Marking completed when only the happy path is tested'>"
 
-work: []
-acceptance_criteria: []
+# ── Anti-drift boundaries ──────────────────────────────────────────────────
+# REQUIRED. Name the out-of-scope items and strict stop conditions to prevent drift.
+out_of_scope:
+  - "<Non-goal 1: specific items explicitly omitted from this task payload>"
+stop_conditions:
+  - "<Stop condition 1: boundary failure states that force the runner path to close>"
 
-verification: []
-evidence: []
+# ── Proof limits ───────────────────────────────────────────────────────────
+# REQUIRED. Distinguish exactly what verification mechanisms guarantee versus their limits.
+proof_guarantees:
+  - "<Guarantee: specific assertion covered by the verification harness natively>"
+proof_limitations:
+  - "<Limitation: specific verification bypasses, mocked subsystems, or manual review gaps>"
 
-failure_modes: []
+# ── Dependencies ───────────────────────────────────────────────────────────
+depends_on:                            # REQUIRED. [] only if this is a root node.
+  - <TASK-ID-OR-CHECKPOINT>
 
-must_read: []
+blocks:                                # Downstream tasks that cannot start until this is done.
+  - <TASK-ID>
 
-implementation_plan: ""
-implementation_log: ""
+# ── File scope ─────────────────────────────────────────────────────────────
+touches:                               # REQUIRED. Exact paths. No globs.
+  - <exact/file/path/one>
+  - <exact/file/path/two>
+  - tasks/<TASK-ID>/meta.yml           # Always include the meta.yml itself.
 
-notes: ""
-client: "codex_cli"
-assigned_agent: "architect"
-model: "<UNASSIGNED>"
+# ── Invariants ─────────────────────────────────────────────────────────────
+# List INV-### codes. For each new invariant introduced: status in manifest
+# must be 'implemented' with enforcement_location, verification_command,
+# evidence_path, promoted_by, promoted_date — per SEC-C-002 promotion criteria.
+invariants:
+  - INV-XXX                            # Existing invariant this task must preserve.
+  # - INV-SEC-XXX                      # New invariant introduced by this task.
+
+# ── Work items ─────────────────────────────────────────────────────────────
+# REQUIRED. Each item is an atomic action. Order matters — later items depend
+# on earlier ones. Each item must map to at least one acceptance_criteria check.
+# Bad: "Implement the SQL injection fix."
+# Good: "Audit src/supervisor_api/ for f-string SQL patterns; document every
+#        occurrence in EXEC_LOG.md before writing a single line of fix code."
+work:
+  - >-
+    <Step 1: specific, verifiable, atomic action. What exactly gets done.>
+  - >-
+    <Step 2: next atomic action. Include exact file names where known.>
+  - >-
+    <Step 3: ...>
+
+# ── Acceptance criteria ────────────────────────────────────────────────────
+# REQUIRED. Each criterion: what is checked, which script/command proves it,
+# what output is required. Map directly to CI gates.
+# Bad: "The feature works correctly."
+# Good: "lint_sql_interpolation.sh exits 0 on the fixed codebase AND exits
+#        non-zero on a test file containing a known f-string SQL pattern."
+acceptance_criteria:
+  - >-
+    <Criterion 1: what is true, how is it verified, what CI job enforces it.>
+  - >-
+    <Criterion 2: ...>
+  - >-
+    <Criterion N: ...>
+
+# ── Negative tests ─────────────────────────────────────────────────────────
+# REQUIRED (minimum 1). These prove the exploit path or failure mode is blocked.
+# A task with no negative tests is a demo, not a security control.
+# Format: ID, description of the adversarial input/condition, expected rejection.
+negative_tests:
+  - id: <TASK-ID>-N1
+    description: >-
+      <What adversarial input or missing condition is tested. What the system
+      must do: reject, fail closed, return error code, raise SQLSTATE.>
+    required: true
+  # - id: <TASK-ID>-N2
+  #   description: >-
+  #     <Second negative test scenario if the task has multiple exploit paths.>
+  #   required: true
+
+# ── Positive tests ─────────────────────────────────────────────────────────
+# Optional but required for any task that changes a hot path.
+# Prove the happy path still works after the fix.
+positive_tests:
+  - id: <TASK-ID>-P1
+    description: >-
+      <What the legitimate/expected input produces after the fix.>
+    required: false
+
+# ── Verification commands ──────────────────────────────────────────────────
+# REQUIRED. Exact commands, runnable verbatim. Must include:
+# 1. The specific verifier script for this task.
+# 2. validate_evidence.py for schema conformance.
+# 3. pre_ci.sh for full local parity check.
+# Bad: "Run the tests."
+# Good: "bash scripts/security/lint_sql_interpolation.sh"
+verification:
+  - bash scripts/<verifier-type>/verify_<task_slug>.sh
+  - python3 scripts/audit/validate_evidence.py --task <TASK-ID> --evidence evidence/<program>/<task_slug>.json
+  - RUN_PHASE1_GATES=1 bash scripts/dev/pre_ci.sh
+
+# ── Evidence contract ──────────────────────────────────────────────────────
+# REQUIRED. Not just a path. State what the JSON must contain.
+# The must_include list becomes the acceptance check for the evidence validator.
+evidence:
+  - path: evidence/<program_name>/<task_slug>.json
+    must_include:
+      - task_id
+      - git_sha
+      - timestamp_utc
+      - status                         # Must be PASS
+      - checks                         # Array of check objects
+      - <domain_specific_field_1>      # e.g., "files_audited" for a scan task
+      - <domain_specific_field_2>      # e.g., "violations_found" for a lint task
+
+# ── Failure modes ──────────────────────────────────────────────────────────
+# REQUIRED (minimum 2). Named failure signatures with consequence codes.
+# Consequence codes: FAIL | BLOCKED | CRITICAL_FAIL | FAIL_REVIEW
+# FAIL          = CI fails, PR cannot merge.
+# BLOCKED       = downstream tasks cannot start.
+# CRITICAL_FAIL = security incident; stop all agents; escalate to human.
+# FAIL_REVIEW   = task closes but must be re-reviewed before next phase.
+failure_modes:
+  - "<What goes wrong: specific, named> => FAIL"
+  - "<What the agent does wrong: e.g., marks completed without negative test> => BLOCKED"
+  - "<What creates a security regression: named anti-pattern from anti_patterns list> => CRITICAL_FAIL"
+
+# ── Required reading ───────────────────────────────────────────────────────
+must_read:
+  - docs/operations/AI_AGENT_OPERATION_MANUAL.md  # Always first.
+  - <domain-specific doc 1>
+  - <domain-specific doc 2>
+
+# ── Companion documents ────────────────────────────────────────────────────
+implementation_plan: docs/plans/<phase>/<TASK-ID>/PLAN.md     # Must exist before status='in-progress'
+implementation_log: docs/plans/<phase>/<TASK-ID>/EXEC_LOG.md  # Append-only; never rewrite history
+
+# ── Metadata ───────────────────────────────────────────────────────────────
+notes: >-
+  <Ordering rationale, known exceptions, architecture decisions made during
+  implementation. This is the field for "why we did it this way" context that
+  does not belong in the work items or acceptance criteria.>
+client: codex_cli
+assigned_agent: <agent-id>
+model: <UNASSIGNED>
+
+# ── Green Finance / Pilot Containment (required when domain: green_finance or pilot: true)
+# ─────────────────────────────────────────────────────────────────────────────────────────
+# Remove this section entirely for non-green-finance tasks.
+# For any task tagged domain: green_finance OR pilot: true, all fields below are
+# REQUIRED and will be enforced by verify_task_meta_schema.sh --mode strict.
+# Omitting them causes FAIL. Providing weak answers causes FAIL.
+domain: green_finance                  # Remove if not a green finance task
+pilot: false                           # true if this task is part of a specific pilot run
+
+# second_pilot_test: non-negotiable. Must name two unrelated sectors explicitly
+# and explain why the design works for both without modification.
+# Bad:  "yes" / "applies to all" / "N/A"
+# Good: "The monitoring_records table with record_type discriminator works for
+#        PWRM0001 plastic collection (record_type='PWRM_COLLECTION_EVENT') and
+#        VM0044 solar energy (record_type='SOLAR_GENERATION_READING') without
+#        any schema changes. Both sectors use record_payload_json for their
+#        respective field payloads validated against adapter-registered schemas."
+second_pilot_test:
+  candidate_sector_1: <text - first sector name>
+  candidate_sector_2: <text - second sector name, must be different class from sector_1>
+  unchanged_core_tables: [<list - core tables unchanged by this task>]
+  unchanged_core_functions: [<list - core functions unchanged by this task>]
+  adapter_only_differences: [<list - MUST be non-empty, adapter-specific differences>]
+  jurisdiction_profile_impact: <text - how jurisdiction profiles are affected>
+  required_core_changes: []  # Must be empty for adapter-contained work
+  explanation: >-
+    <text - minimum 150 characters explaining why design works for both sectors
+    without modification. Must be concrete and specific.>
+  second_pilot_reviewed_by: <text - name/role of reviewer>
+
+# pilot_scope_ref: path to the SCOPE.md for the pilot this task serves.
+# If this task is not tied to a specific pilot run, set to 'not_applicable'
+# and explain in notes why no scope file is required.
+pilot_scope_ref: docs/pilots/PILOT_<NAME>/SCOPE.md
+
+# Pilot policy and playbook must always appear in must_read for green tasks.
+# (Already enforced by verify_task_meta_schema.sh — this is a reminder.)

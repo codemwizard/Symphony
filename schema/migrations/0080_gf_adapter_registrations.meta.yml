@@ -1,0 +1,17 @@
+phase: '0'
+layer: CORE_SCHEMA
+volatility_class: CORE_SCHEMA
+touches_core_schema: true
+introduces_identifiers:
+  - adapter_registrations
+  - adapter_registrations_append_only_trigger
+  - idx_adapter_registrations_tenant_id
+  - idx_adapter_registrations_adapter_code
+  - idx_adapter_registrations_methodology
+  - tenant_isolation_adapter_registrations
+  - system_full_access_adapter_registrations
+second_pilot_justification_required: true
+notes: >-
+  Core adapter registration schema enabling neutral host architecture.
+  Provides tenant isolation, business constraints, and append-only guarantees.
+  Foundation for all green finance pilot adapters.

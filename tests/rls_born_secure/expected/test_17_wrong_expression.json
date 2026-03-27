@@ -1,0 +1,6 @@
+{
+  "should_pass": false,
+  "expected_errors": ["WRONG_USING_EXPRESSION", "WRONG_WITH_CHECK"],
+  "purpose": "Catches legacy current_setting pattern — exact GF regression",
+  "enforced_by": "lint_rls_born_secure.sh"
+}

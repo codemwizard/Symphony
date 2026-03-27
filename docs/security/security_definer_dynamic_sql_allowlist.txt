@@ -8,3 +8,20 @@
 0059_ten_002_rls_tenant_isolation.sql:50:      EXECUTE format(
 0059_ten_002_rls_tenant_isolation.sql:59:    EXECUTE format('ALTER TABLE public.%I ENABLE ROW LEVEL SECURITY', rec.relname);
 0059_ten_002_rls_tenant_isolation.sql:60:    EXECUTE format('ALTER TABLE public.%I FORCE ROW LEVEL SECURITY', rec.relname);
+0095_rollback.sql:26:        EXECUTE format('DROP POLICY %I ON public.%I', pol.polname, pol.relname);
+0095_rls_dual_policy_architecture.sql:113:        EXECUTE format('DROP POLICY %I ON public.%I', pol.polname, pol.relname);
+0095_rls_dual_policy_architecture.sql:200:        EXECUTE format('ALTER TABLE public.%I ENABLE ROW LEVEL SECURITY', tbl.table_name);
+0095_rls_dual_policy_architecture.sql:201:        EXECUTE format('ALTER TABLE public.%I FORCE ROW LEVEL SECURITY', tbl.table_name);
+0095_rls_dual_policy_architecture.sql:204:        EXECUTE format('DROP POLICY IF EXISTS rls_base_%I ON public.%I',
+0095_rls_dual_policy_architecture.sql:206:        EXECUTE format('DROP POLICY IF EXISTS rls_iso_%I ON public.%I',
+0095_rls_dual_policy_architecture.sql:210:        EXECUTE format(
+0095_rls_dual_policy_architecture.sql:215:        EXECUTE format(
+0095_rls_dual_policy_architecture.sql:228:        EXECUTE format('ALTER TABLE public.%I ENABLE ROW LEVEL SECURITY', tbl.table_name);
+0095_rls_dual_policy_architecture.sql:229:        EXECUTE format('ALTER TABLE public.%I FORCE ROW LEVEL SECURITY', tbl.table_name);
+0095_rls_dual_policy_architecture.sql:232:        EXECUTE format('DROP POLICY IF EXISTS rls_base_%I ON public.%I',
+0095_rls_dual_policy_architecture.sql:234:        EXECUTE format('DROP POLICY IF EXISTS rls_iso_%I ON public.%I',
+0095_rls_dual_policy_architecture.sql:238:        EXECUTE format(
+0095_rls_dual_policy_architecture.sql:243:        EXECUTE format(
+0095_rls_dual_policy_architecture.sql:265:          AND p.polname = format('rls_iso_%s', tbl.table_name)
+0095_rls_dual_policy_architecture.sql:281:          AND p.polname = format('rls_iso_%s', tbl.table_name)
+0095_rls_dual_policy_architecture.sql:347:        format('%s:%s:%s:%s',

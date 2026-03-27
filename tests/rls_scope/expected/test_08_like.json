@@ -1,0 +1,5 @@
+{
+  "should_pass": false,
+  "expected_errors": ["LIKE_WITHOUT_RLS"],
+  "purpose": "Catches CREATE TABLE LIKE without RLS block (tenant_id may be inherited)"
+}

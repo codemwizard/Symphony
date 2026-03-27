@@ -1,0 +1,5 @@
+{
+  "should_pass": true,
+  "expected_errors": [],
+  "purpose": "Proves parser handles ONLY modifier without false positive"
+}

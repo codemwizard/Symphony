@@ -1,0 +1,6 @@
+{
+  "should_pass": false,
+  "expected_errors": ["WRONG_WITH_CHECK"],
+  "purpose": "Catches missing WITH CHECK clause",
+  "enforced_by": "lint_rls_born_secure.sh"
+}

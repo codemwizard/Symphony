@@ -1,0 +1,148 @@
+schema_version: 1
+phase: '1'
+task_id: GF-W1-FNC-005
+title: "Phase 1 functions: issue_asset_batch and retire_asset_batch"
+owner_role: DB_FOUNDATION
+status: completed
+priority: CRITICAL
+risk_class: INTEGRITY
+blast_radius: DB_SCHEMA
+domain: green_finance
+pilot: false
+
+intent: >-
+  issue_asset_batch and retire_asset_batch complete the Wave 1 asset lifecycle.
+  Issue requires adapter registration and at least one satisfied ISSUANCE_AUTHORIZATION
+  checkpoint. It does not require verification_decision_id or evidence_snapshot_id
+  in Wave 1 — those belong with the verification case workflow. Retire enforces
+  the quantity guard and irrevocability permanently.
+
+anti_patterns:
+  - "Requiring verification_decision_id or evidence_snapshot_id — deferred to verification workflow phase"
+  - "Allowing retirement reversal under any condition — retirement is irrevocable"
+  - "Hardcoding issuance rules instead of reading adapter_registration and checkpoint data"
+
+depends_on:
+  - GF-W1-FNC-004
+  - GF-W1-FNC-007
+
+blocks:
+  - GF-W1-FNC-006
+
+touches:
+  - schema/migrations/0092_gf_fn_asset_lifecycle.sql
+  - scripts/db/verify_gf_fnc_005.sh
+  - tasks/GF-W1-FNC-005/meta.yml
+
+invariants:
+  - INV-160
+  - INV-164
+  - INV-165
+
+work:
+  - >-
+    Write issue_asset_batch as SECURITY DEFINER. Inputs: project_id,
+    methodology_version_id, adapter_registration_id, asset_type, quantity,
+    unit, interpretation_pack_id. Validate: project ACTIVE, adapter exists
+    and is active, at least one ISSUANCE_AUTHORIZATION checkpoint satisfied
+    for this project and jurisdiction. Insert asset_batches row with status
+    ISSUED. Record lifecycle event with interpretation_pack_id.
+  - >-
+    Write retire_asset_batch as SECURITY DEFINER. Inputs: asset_batch_id,
+    quantity, retirement_reason, interpretation_pack_id. Validate: quantity
+    does not exceed remaining unretired quantity (sum of prior retirements).
+    Insert retirement_events row. Update asset_lifecycle_events. Never
+    allow UPDATE or DELETE on retirement_events — append-only trigger must
+    already exist from GF-W1-SCH-005.
+  - >-
+    Write scripts/db/verify_gf_fnc_005.sh confirming both functions, SECURITY
+    DEFINER posture, quantity guard enforcement, irrevocability, and negative tests.
+
+acceptance_criteria:
+  - >-
+    issue_asset_batch and retire_asset_batch are SECURITY DEFINER with hardened
+    search_path. bash scripts/db/verify_gf_fnc_005.sh exits 0.
+  - >-
+    issue_asset_batch fails when no ISSUANCE_AUTHORIZATION checkpoint is satisfied.
+    Explicit SQLSTATE returned.
+  - >-
+    retire_asset_batch fails when retirement quantity exceeds remaining quantity.
+    Explicit SQLSTATE returned.
+  - >-
+    Attempt to UPDATE or DELETE a retirement_events row fails with append-only
+    SQLSTATE. Retirement is permanent.
+  - >-
+    issue_asset_batch and retire_asset_batch both capture interpretation_pack_id
+    in lifecycle event records.
+
+negative_tests:
+  - id: GF-W1-FNC-005-N1
+    description: >-
+      Call issue_asset_batch on a project with no satisfied
+      ISSUANCE_AUTHORIZATION checkpoint. Must fail with explicit SQLSTATE.
+      This is the core issuance gate test.
+    required: true
+  - id: GF-W1-FNC-005-N2
+    description: >-
+      Issue a batch of quantity 100. Retire 60. Then attempt to retire 50
+      more (total would exceed 100). Must fail with quantity guard SQLSTATE.
+    required: true
+  - id: GF-W1-FNC-005-N3
+    description: >-
+      Attempt direct UPDATE on a retirement_events row. Must fail with
+      append-only trigger. Proves retirement is irrevocable at DB layer.
+    required: true
+
+verification:
+  - bash scripts/db/verify_gf_fnc_005.sh
+  - python3 scripts/audit/verify_neutral_schema_ast.py schema/migrations/0092_gf_fn_asset_lifecycle.sql
+  - bash scripts/dev/pre_ci.sh
+
+evidence:
+  - path: evidence/phase1/gf_fnc_005.json
+    must_include:
+      - task_id
+      - git_sha
+      - timestamp_utc
+      - status
+      - functions_verified
+      - security_definer_confirmed
+      - negative_tests_passed
+
+failure_modes:
+  - "Issuance allowed without satisfied checkpoint => CRITICAL_FAIL (Rule 6)"
+  - "Retirement is reversible — UPDATE not blocked => CRITICAL_FAIL (Rule 7)"
+  - "SECURITY DEFINER posture absent => CRITICAL_FAIL"
+
+must_read:
+  - docs/operations/AI_AGENT_OPERATION_MANUAL.md
+  - docs/operations/AGENTIC_SDLC_PILOT_POLICY.md
+  - docs/operations/PILOT_REJECTION_PLAYBOOK.md
+  - docs/architecture/ADAPTER_CONTRACT_INTERFACE.md
+
+second_pilot_test:
+  candidate_sector_1: solar_energy
+  candidate_sector_2: forestry_carbon
+  unchanged_core_tables: []
+  unchanged_core_functions: [register_project, activate_project, record_monitoring_record, attach_evidence, link_evidence_to_record, record_authority_decision, attempt_lifecycle_transition]
+  adapter_only_differences: [asset_type value, adapter_registration_id value, checkpoint configuration data rows]
+  jurisdiction_profile_impact: ISSUANCE_AUTHORIZATION checkpoint rules are data rows — no code change
+  required_core_changes: []
+  explanation: >-
+    issue_asset_batch reads checkpoint satisfaction from data. A solar energy
+    pilot and a forestry pilot both use the same function — the ISSUANCE_AUTHORIZATION
+    checkpoints required before issuance differ as data rows in
+    lifecycle_checkpoint_rules, not as function logic. retire_asset_batch
+    enforces quantity arithmetic identically for any asset type.
+  second_pilot_reviewed_by: Architecture Owner
+pilot_scope_ref: not_applicable
+
+implementation_plan: docs/plans/phase1/GF-W1-FNC-005/PLAN.md
+implementation_log: docs/plans/phase1/GF-W1-FNC-005/EXEC_LOG.md
+notes: >-
+  Do not add verification_decision_id or evidence_snapshot_id requirements
+  to Wave 1 issue_asset_batch. Those belong when the verification workflow
+  tables exist. The issuance gate in Wave 1 is checkpoint satisfaction only.
+client: codex_cli
+assigned_agent: <UNASSIGNED>
+model: <UNASSIGNED>

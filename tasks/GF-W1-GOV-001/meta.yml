@@ -1,0 +1,166 @@
+schema_version: 1
+phase: '0'
+task_id: GF-W1-GOV-001
+title: "Replace text-length second-pilot heuristic with structured machine-checkable fields and human sign-off"
+owner_role: SUPERVISOR
+status: completed
+priority: HIGH
+risk_class: GOVERNANCE
+blast_radius: CI_GATES
+domain: green_finance
+pilot: false
+
+intent: >-
+  The current second_pilot_test check is a text-length heuristic: under
+  80 characters fails. This is trivially bypassable by padding and does
+  not prove the design works for two sectors. Rule 8 must be enforced by
+  structured fields that CI validates deterministically — not by word count.
+  The structured format also makes human review tractable by surfacing
+  exactly what changes per sector and what stays identical in core.
+
+anti_patterns:
+  - "Keeping the length heuristic as a fallback — agents will use it instead of structured fields"
+  - "Making structured fields optional for green finance tasks — they must be required"
+  - "Accepting candidate_sector_1 == candidate_sector_2 silently"
+
+depends_on:
+  - GF-W1-FRZ-001
+
+blocks:
+  - GF-W1-PLT-001
+
+touches:
+  - tasks/_template/meta.yml
+  - scripts/audit/verify_task_meta_schema.sh
+  - docs/pilots/PILOT_SCOPE_TEMPLATE.md
+  - tasks/GF-W1-GOV-001/meta.yml
+
+invariants:
+  - INV-159
+  - INV-168
+
+work:
+  - >-
+    Add structured second_pilot_test block to tasks/_template/meta.yml green
+    finance section with these required sub-fields: candidate_sector_1 (text),
+    candidate_sector_2 (text), unchanged_core_tables (list),
+    unchanged_core_functions (list), adapter_only_differences (list — MUST be
+    non-empty, not an empty list), jurisdiction_profile_impact (text),
+    required_core_changes (list — must be empty for adapter-contained work),
+    explanation (text min 150 chars), second_pilot_reviewed_by (name/role string).
+  - >-
+    Update verify_task_meta_schema.sh strict mode: remove length heuristic
+    entirely, add field-level checks — fail if candidate_sector_1 equals
+    candidate_sector_2, fail if candidate_sector_1 or candidate_sector_2 are
+    in the same SECTOR_CLASS group (e.g. two carbon credit sectors do not prove
+    cross-sector generality — must be from different classes), fail if
+    required_core_changes is non-empty on an adapter-scoped task, fail if
+    second_pilot_reviewed_by is absent or empty, fail if explanation is under
+    150 chars, fail if adapter_only_differences is an empty list.
+  - >-
+    Add SECTOR_CLASS groupings to scripts/audit/sector_vocabulary.yml:
+    CARBON_CREDIT (plastic, forestry, agriculture, soil),
+    ENERGY (solar, wind, hydro, efficiency),
+    EXTRACTIVE (mining, oil_gas),
+    SERVICES (tourism, transport, water).
+    The verifier must reject second_pilot_tests where both candidate sectors
+    are from the same class — same-class tests do not prove cross-sector generality.
+  - >-
+    Update PILOT_SCOPE_TEMPLATE.md to include the same structured fields
+    with guidance on completing each one, including an example of what
+    constitutes an inadequate adapter_only_differences list.
+  - >-
+    Add reviewer-must-differ-from-author rule: second_pilot_reviewed_by must
+    not match the task's assigned_agent field. Enforce in verifier.
+  - >-
+    Update verify_core_contract_gate.sh to cross-check: if a task meta
+    declares required_core_changes as non-empty and the task is domain:
+    green_finance, the gate emits a FAIL for Rule 8 violation.
+
+acceptance_criteria:
+  - >-
+    verify_task_meta_schema.sh --mode strict exits non-zero when
+    candidate_sector_1 == candidate_sector_2 on any green finance task.
+  - >-
+    Exits non-zero when both sectors are in the same SECTOR_CLASS group.
+  - >-
+    Exits non-zero when required_core_changes is non-empty for adapter task.
+  - >-
+    Exits non-zero when second_pilot_reviewed_by is absent or matches assigned_agent.
+  - >-
+    Exits non-zero when adapter_only_differences is empty list.
+  - >-
+    Exits non-zero when explanation is under 150 chars.
+  - >-
+    Text-length heuristic is absent from the script.
+
+negative_tests:
+  - id: GF-W1-GOV-001-N1
+    description: >-
+      Run verifier against a green finance meta.yml where candidate_sector_1
+      and candidate_sector_2 are both "plastic_collection". Must exit non-zero
+      with a clear rejection message naming the field and rule violated.
+    required: true
+  - id: GF-W1-GOV-001-N2
+    description: >-
+      Run verifier against a task with required_core_changes containing one
+      entry. Must exit non-zero even if all other fields are valid.
+    required: true
+  - id: GF-W1-GOV-001-N3
+    description: >-
+      Run verifier against a task with second_pilot_reviewed_by absent.
+      Must exit non-zero.
+    required: true
+
+verification:
+  - bash scripts/audit/verify_task_meta_schema.sh --mode strict --task GF-W1-GOV-001
+  - bash scripts/audit/verify_core_contract_gate.sh
+  - bash scripts/dev/pre_ci.sh
+
+evidence:
+  - path: evidence/phase0/gov_001_structured_second_pilot.json
+    must_include:
+      - task_id
+      - git_sha
+      - timestamp_utc
+      - status
+      - checks_run
+      - negative_test_results
+
+failure_modes:
+  - "Length heuristic retained as fallback — Rule 8 remains bypassable => FAIL"
+  - "candidate_sector_1 == candidate_sector_2 accepted silently => CRITICAL_FAIL"
+  - "required_core_changes non-empty accepted on adapter task => CRITICAL_FAIL"
+
+must_read:
+  - docs/operations/AI_AGENT_OPERATION_MANUAL.md
+  - docs/operations/AGENTIC_SDLC_PILOT_POLICY.md
+  - docs/operations/PILOT_REJECTION_PLAYBOOK.md
+
+second_pilot_test:
+  candidate_sector_1: solar_energy
+  candidate_sector_2: forestry_carbon
+  unchanged_core_tables: [tasks/_template/meta.yml structure, verify_task_meta_schema.sh logic]
+  unchanged_core_functions: [all — no DB functions touched]
+  adapter_only_differences:
+    - "Governance wiring applies identically across all sectors — no adapter-specific surface"
+  jurisdiction_profile_impact: none — governance tooling is jurisdiction-agnostic
+  required_core_changes: []
+  explanation: >-
+    This task modifies governance tooling only. The structured second-pilot
+    test fields apply identically to a solar energy adapter task and a
+    forestry carbon adapter task. The verifier logic does not encode any
+    sector knowledge — it checks field structure and cross-field consistency
+    regardless of which sectors are named.
+  second_pilot_reviewed_by: Architecture Owner
+pilot_scope_ref: not_applicable
+
+implementation_plan: docs/plans/phase0/GF-W1-GOV-001/PLAN.md
+implementation_log: docs/plans/phase0/GF-W1-GOV-001/EXEC_LOG.md
+notes: >-
+  The structured second_pilot_test block in this task's own meta.yml is the
+  canonical example of the format being enforced. If this task's own meta
+  fails the verifier, the implementation is wrong.
+client: codex_cli
+assigned_agent: <UNASSIGNED>
+model: <UNASSIGNED>

@@ -1,0 +1,104 @@
+schema_version: 1
+phase: '1'
+task_id: TSK-P1-233
+title: "Implement a report-only dependency truth validator so downstream tasks cannot proceed on socially assumed upstream completion"
+owner_role: SECURITY_GUARDIAN
+status: completed
+priority: HIGH
+risk_class: INTEGRITY
+blast_radius: CI_GATES
+intent: >-
+  Once proof-integrity exists for individual task packs, the next drift risk is trusting
+  dependencies socially instead of mechanically. This task adds a report-only dependency
+  truth validator so downstream tasks cannot rely on upstream completion claims unless
+  proof artifacts, evidence validity, and required outputs are actually present.
+anti_patterns:
+  - "Treating `depends_on` as ceremonial metadata instead of a proof-backed dependency contract"
+  - "Allowing downstream tasks to proceed using stale or missing upstream outputs"
+  - "Reducing dependency truth to textual duplication detection instead of proof-backed readiness"
+depends_on:
+  - TSK-P1-232
+blocks: []
+touches:
+  - scripts/audit/task_dependency_truth_gate.py
+  - scripts/audit/verify_tsk_p1_233.sh
+  - evidence/phase1/tsk_p1_233_dependency_truth.json
+  - tasks/TSK-P1-233/meta.yml
+  - docs/plans/phase1/TSK-P1-233/PLAN.md
+  - docs/plans/phase1/TSK-P1-233/EXEC_LOG.md
+invariants:
+  - INV-105
+  - INV-119
+work:
+  - >-
+    Implement a report-only dependency truth gate that checks whether dependencies are
+    completed through valid proof artifacts, whether required dependency outputs exist,
+    and whether downstream tasks attempt to reimplement dependency responsibilities.
+  - >-
+    Emit dependency findings through the shared gate result contract with detection scope
+    limited to dependency truth rather than broad semantic task analysis.
+  - >-
+    Add a task-specific verifier that exercises dependency-complete-but-unproven and
+    missing-output fixtures and emits declared dependency-truth evidence.
+acceptance_criteria:
+  - >-
+    Downstream tasks no longer rely on socially assumed upstream completion when proof or
+    required outputs are missing.
+  - >-
+    Dependency truth findings use the shared gate result contract instead of ad hoc
+    dependency-warning output.
+  - >-
+    `scripts/audit/verify_tsk_p1_233.sh` exercises invalid and valid dependency fixtures
+    and emits `evidence/phase1/tsk_p1_233_dependency_truth.json`.
+negative_tests:
+  - id: TSK-P1-233-N1
+    description: >-
+      Run the dependency truth gate against a fixture task whose dependency is marked
+      complete without valid proof artifacts and confirm the gate surfaces the dependency
+      as unproven.
+    required: true
+  - id: TSK-P1-233-N2
+    description: >-
+      Run the gate against a fixture task whose dependency outputs are missing and confirm
+      downstream readiness is flagged as socially assumed rather than mechanically valid.
+    required: true
+positive_tests:
+  - id: TSK-P1-233-P1
+    description: >-
+      Run the dependency truth gate against a fixture task with valid dependency proof and
+      outputs and confirm it emits a clean structured report-only result.
+    required: false
+verification:
+  - bash scripts/audit/verify_tsk_p1_233.sh
+  - python3 scripts/audit/validate_evidence.py --task TSK-P1-233 --evidence evidence/phase1/tsk_p1_233_dependency_truth.json
+  - RUN_PHASE1_GATES=1 bash scripts/dev/pre_ci.sh
+evidence:
+  - path: evidence/phase1/tsk_p1_233_dependency_truth.json
+    must_include:
+      - task_id
+      - git_sha
+      - timestamp_utc
+      - status
+      - checks
+      - gate_result_contract_fields
+      - unproven_dependency_result
+      - missing_output_result
+      - valid_dependency_result
+failure_modes:
+  - "Dependency truth gate allows socially assumed upstream completion => FAIL"
+  - "Missing dependency outputs are not surfaced before downstream execution => BLOCKED"
+  - "Evidence file missing => FAIL"
+must_read:
+  - docs/operations/AI_AGENT_OPERATION_MANUAL.md
+  - AGENT_ENTRYPOINT.md
+  - docs/operations/AGENT_PROMPT_ROUTER.md
+  - docs/operations/TASK_CREATION_PROCESS.md
+  - docs/reference/rls-anti-drift-wave2-task-plan.md
+implementation_plan: docs/plans/phase1/TSK-P1-233/PLAN.md
+implementation_log: docs/plans/phase1/TSK-P1-233/EXEC_LOG.md
+notes: >-
+  This gate validates dependency truth, not cross-task architecture purity. Freshness and
+  broader lineage semantics remain later follow-on work.
+client: cursor
+assigned_agent: security_guardian
+model: Cascade

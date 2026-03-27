@@ -1,0 +1,148 @@
+schema_version: 1
+phase: '0'
+task_id: GF-W1-SCH-004
+title: "Migration 0076: evidence_nodes and evidence_edges universal lineage graph"
+owner_role: DB_FOUNDATION
+status: planned
+priority: CRITICAL
+risk_class: INTEGRITY
+blast_radius: DB_SCHEMA
+domain: green_finance
+pilot: false
+
+intent: >-
+  The evidence lineage graph is a Phase 0 structural requirement, not a later
+  addition. Every pilot uses the same evidence_nodes and evidence_edges tables.
+  The evidence_class CHECK constraint enforcing the seven canonical classes is
+  the primary structural defence against false equivalence between raw proof
+  and derived judgment — a borrower declaration must never be stored at the
+  same class as a verifier certificate. This table is universal evidence
+  infrastructure, not a green finance domain feature.
+
+anti_patterns:
+  - "Adding sector-specific evidence classes to the CHECK constraint"
+  - "Making evidence_edges optional — both tables are Phase 0 requirements together"
+  - "Conflating evidence_nodes with evidence_snapshots — snapshots are Phase 1"
+
+depends_on:
+  - GF-W1-SCH-003
+
+blocks:
+  - GF-W1-SCH-006
+
+touches:
+  - schema/migrations/0076_gf_evidence_lineage.sql
+  - schema/migrations/0076_gf_evidence_lineage.meta.yml
+  - schema/migrations/MIGRATION_HEAD
+  - scripts/db/verify_gf_evidence_lineage.sh
+  - tasks/GF-W1-SCH-004/meta.yml
+
+invariants:
+  - INV-138
+
+work:
+  - >-
+    Write 0076_gf_evidence_lineage.sql. evidence_nodes fields:
+    evidence_node_id UUID PK, tenant_id UUID NOT NULL FK tenants,
+    project_id UUID NULL FK projects, evidence_class TEXT NOT NULL
+    CHECK IN ('RAW_SOURCE','ATTESTED_SOURCE','NORMALIZED_RECORD',
+    'ANALYST_FINDING','VERIFIER_FINDING','REGULATORY_EXPORT','ISSUANCE_ARTIFACT'),
+    document_type TEXT NOT NULL, file_hash_sha256 TEXT NOT NULL,
+    storage_reference TEXT NOT NULL, uploaded_by UUID NOT NULL,
+    uploaded_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+    metadata_json JSONB NOT NULL DEFAULT '{}'.
+    Append-only trigger. RLS by tenant_id.
+  - >-
+    evidence_edges fields: evidence_edge_id UUID PK, source_node_id UUID NOT NULL
+    FK evidence_nodes, target_node_id UUID NOT NULL FK evidence_nodes,
+    edge_type TEXT NOT NULL CHECK IN ('DERIVED_FROM','CORROBORATES',
+    'CONTRADICTS','SUPERSEDES','TRANSLATED_FROM','NORMALIZED_FROM',
+    'APPROVED_BY'), created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+    created_by UUID NOT NULL.
+    Append-only trigger. CONSTRAINT no_self_loop CHECK (source_node_id != target_node_id).
+  - >-
+    Write sidecar. Update MIGRATION_HEAD to 0076.
+  - >-
+    Write verify_gf_evidence_lineage.sh confirming both tables, class constraint,
+    edge type constraint, append-only posture, and self-loop prevention.
+
+acceptance_criteria:
+  - >-
+    INSERT of evidence_node with evidence_class = 'SECTOR_SPECIFIC' fails
+    with CHECK constraint violation.
+  - >-
+    INSERT of evidence_edge with source_node_id = target_node_id fails
+    with no_self_loop constraint violation.
+  - >-
+    UPDATE on evidence_nodes fails with append-only SQLSTATE.
+  - >-
+    All seven evidence classes insert successfully.
+  - >-
+    AST verifier exits 0 on migration file.
+
+negative_tests:
+  - id: GF-W1-SCH-004-N1
+    description: >-
+      Attempt INSERT with evidence_class = 'PLASTIC_COLLECTION_PROOF'.
+      Must fail with CHECK constraint violation naming the invalid class.
+    required: true
+  - id: GF-W1-SCH-004-N2
+    description: >-
+      Attempt to insert a self-referencing evidence_edge (source = target).
+      Must fail with no_self_loop constraint.
+    required: true
+
+verification:
+  - bash scripts/db/verify_gf_evidence_lineage.sh
+  - python3 scripts/audit/verify_neutral_schema_ast.py schema/migrations/0076_gf_evidence_lineage.sql
+  - bash scripts/audit/verify_migration_sequence.sh
+  - bash scripts/dev/pre_ci.sh
+
+evidence:
+  - path: evidence/phase0/gf_evidence_lineage.json
+    must_include:
+      - task_id
+      - git_sha
+      - timestamp_utc
+      - status
+      - evidence_nodes_verified
+      - evidence_edges_verified
+      - class_constraint_confirmed
+      - edge_type_constraint_confirmed
+      - append_only_confirmed
+      - ast_scan_clean
+
+failure_modes:
+  - "Sector-specific evidence class added to CHECK constraint => CRITICAL_FAIL"
+  - "evidence_edges deferred — lineage graph is incomplete without it => BLOCKED"
+  - "Self-loop constraint absent — circular lineage possible => FAIL"
+
+must_read:
+  - docs/operations/AI_AGENT_OPERATION_MANUAL.md
+  - docs/operations/AGENTIC_SDLC_PILOT_POLICY.md
+  - docs/operations/GREEN_FINANCE_VOLATILITY_MAP.md
+
+second_pilot_test:
+  candidate_sector_1: solar_energy
+  candidate_sector_2: forestry_carbon
+  unchanged_core_tables: [evidence_nodes, evidence_edges]
+  unchanged_core_functions: []
+  adapter_only_differences:
+    - document_type value
+    - metadata_json content
+  jurisdiction_profile_impact: none
+  required_core_changes: []
+  explanation: >-
+    A solar installation photo and a forestry satellite image both store as
+    RAW_SOURCE evidence_nodes. A field verification record for solar and a
+    biomass survey for forestry both store as ATTESTED_SOURCE. The evidence
+    class taxonomy is universal. No new class is needed for any sector.
+  second_pilot_reviewed_by: Architecture Owner
+pilot_scope_ref: not_applicable
+
+implementation_plan: docs/plans/phase0/GF-W1-SCH-004/PLAN.md
+implementation_log: docs/plans/phase0/GF-W1-SCH-004/EXEC_LOG.md
+notes: evidence_snapshots (issuance anchors) are deferred to Phase 1 verification functions.
+client: codex_cli
+assigned_agent: <UNASSIGNED>
+model: <UNASSIGNED>

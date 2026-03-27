@@ -1,0 +1,100 @@
+schema_version: 1
+phase: '1'
+task_id: TSK-P1-226
+title: "Implement proof-blocker detection and hard stop so that Wave 1 cannot fake progress when verification is not honest"
+owner_role: SECURITY_GUARDIAN
+status: completed
+priority: HIGH
+risk_class: INTEGRITY
+blast_radius: CI_GATES
+intent: >-
+  After the report-only runner and first contract gate exist, Wave 1 still needs a
+  mechanical way to stop instead of guessing when proof cannot proceed honestly.
+  This task adds proof-blocker detection and hard-stop behavior so missing runtime
+  dependencies or unavailable proof paths halt the chain before deeper gates or
+  misleading evidence can be produced.
+anti_patterns:
+  - "Continuing verification after proof prerequisites are missing because the output looks plausible"
+  - "Treating proof blockers as advisory warnings instead of stop conditions"
+  - "Producing evidence after the runner has already determined that proof is blocked"
+depends_on:
+  - TSK-P1-224
+  - TSK-P1-225
+blocks: []
+touches:
+  - scripts/audit/task_proof_blocker_gate.py
+  - scripts/audit/verify_tsk_p1_226.sh
+  - evidence/phase1/tsk_p1_226_proof_blocker.json
+  - tasks/TSK-P1-226/meta.yml
+  - docs/plans/phase1/TSK-P1-226/PLAN.md
+  - docs/plans/phase1/TSK-P1-226/EXEC_LOG.md
+invariants:
+  - INV-105
+  - INV-119
+work:
+  - >-
+    Implement a proof-blocker gate that detects unavailable proof prerequisites,
+    classifies them as `PROOF_BLOCKED`, and prevents downstream gate execution.
+  - >-
+    Ensure the runner halts evidence-producing downstream execution when the
+    proof-blocker gate reports a blocked state.
+  - >-
+    Add a task-specific verifier that proves blocked and unblocked cases behave
+    differently and emits the declared Phase-1 evidence.
+acceptance_criteria:
+  - >-
+    Missing or unavailable proof prerequisites are classified as `PROOF_BLOCKED`
+    through the shared runner instead of being treated as advisory warnings.
+  - >-
+    Once `PROOF_BLOCKED` is emitted, downstream gate execution does not continue
+    and no misleading success evidence is produced for the blocked path.
+  - >-
+    `scripts/audit/verify_tsk_p1_226.sh` exercises blocked and unblocked cases and
+    emits `evidence/phase1/tsk_p1_226_proof_blocker.json`.
+negative_tests:
+  - id: TSK-P1-226-N1
+    description: >-
+      Simulate a missing runtime dependency or unavailable proof path and confirm
+      the runner halts downstream execution with `PROOF_BLOCKED` instead of
+      continuing toward evidence emission.
+    required: true
+positive_tests:
+  - id: TSK-P1-226-P1
+    description: >-
+      Run the same verification path with required prerequisites available and
+      confirm the proof-blocker gate does not stop legitimate report-only execution.
+    required: false
+verification:
+  - bash scripts/audit/verify_tsk_p1_226.sh
+  - python3 scripts/audit/validate_evidence.py --task TSK-P1-226 --evidence evidence/phase1/tsk_p1_226_proof_blocker.json
+  - RUN_PHASE1_GATES=1 bash scripts/dev/pre_ci.sh
+evidence:
+  - path: evidence/phase1/tsk_p1_226_proof_blocker.json
+    must_include:
+      - task_id
+      - git_sha
+      - timestamp_utc
+      - status
+      - checks
+      - blocked_case_result
+      - unblocked_case_result
+      - fail_class
+failure_modes:
+  - "Runner continues after proof prerequisites are missing => FAIL"
+  - "Blocked path still emits misleading downstream success state => BLOCKED"
+  - "Evidence file missing => FAIL"
+must_read:
+  - docs/operations/AI_AGENT_OPERATION_MANUAL.md
+  - AGENT_ENTRYPOINT.md
+  - docs/operations/AGENT_PROMPT_ROUTER.md
+  - docs/reference/rls-remediation-final-plan.md
+  - docs/reference/rls-remediation-first-five-tasks.md
+implementation_plan: docs/plans/phase1/TSK-P1-226/PLAN.md
+implementation_log: docs/plans/phase1/TSK-P1-226/EXEC_LOG.md
+notes: >-
+  This is the last Wave 1 task because it depends on the runner path and the first
+  contract gate already existing. It must remain focused on stop behavior rather
+  than on fixing blockers or adding deep semantic checks.
+client: cursor
+assigned_agent: security_guardian
+model: Cascade

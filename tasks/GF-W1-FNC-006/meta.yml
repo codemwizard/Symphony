@@ -1,0 +1,199 @@
+schema_version: 1
+phase: '1'
+task_id: GF-W1-FNC-006
+title: "Phase 1 function: issue_verifier_read_token DB primitive — token issuance only, not read surface"
+owner_role: DB_FOUNDATION
+status: completed
+priority: CRITICAL
+risk_class: SECURITY
+blast_radius: DB_SCHEMA
+domain: green_finance
+pilot: false
+
+intent: >-
+  The verifier read token is a security boundary, a multi-tenant data exposure
+  surface, and a cross-table read abstraction. It must not be treated as a
+  simple function. This task builds only the DB-level token issuance primitive
+  — it creates the token, scopes it to a project_id and verifier_id, sets
+  expiry, and enforces Regulation 26 separation-of-duties before issuing.
+  The API surface that actually exposes data through the token — filtering,
+  pagination, joins, projections — is Phase 2 work and is explicitly deferred.
+  Conflating the two would either overbuild Phase 1 or under-specify security.
+  The split follows the same pattern as the financial layer's supervisor audit
+  token system: token issuance is a DB primitive, the read surface is a
+  product API layer.
+
+anti_patterns:
+  - "Implementing the verifier read API surface in this task — it is explicitly Phase 2"
+  - "Issuing a token without calling check_reg26_separation — Regulation 26 bypass"
+  - "Making the token scope broader than project_id level — violates tenant isolation"
+  - "Storing the token secret in plaintext — must be stored as a hash, same as supervisor audit tokens"
+
+depends_on:
+  - GF-W1-FNC-005
+  - GF-W1-SCH-008
+
+blocks:
+  - GF-W1-PLT-001
+
+touches:
+  - schema/migrations/0093_gf_fn_verifier_read_token.sql
+  - scripts/db/verify_gf_fnc_006.sh
+  - tasks/GF-W1-FNC-006/meta.yml
+
+invariants:
+  - INV-163
+  - INV-165
+  - INV-169
+
+work:
+  - >-
+    Create gf_verifier_read_tokens table in migration 0093:
+    token_id UUID PK DEFAULT uuid_generate_v4(),
+    verifier_id UUID NOT NULL FK verifier_registry(verifier_id),
+    project_id UUID NOT NULL FK projects(project_id),
+    tenant_id UUID NOT NULL FK tenants(tenant_id),
+    token_hash TEXT NOT NULL UNIQUE,
+    scoped_tables JSONB NOT NULL,
+    issued_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+    expires_at TIMESTAMPTZ NOT NULL,
+    revoked_at TIMESTAMPTZ NULL,
+    issued_by TEXT NOT NULL DEFAULT CURRENT_USER.
+    Append-only insert. Revocation sets revoked_at only — no DELETE.
+    RLS by tenant_id.
+  - >-
+    Write issue_verifier_read_token(p_verifier_id UUID, p_project_id UUID,
+    p_ttl_hours INTEGER DEFAULT 72) RETURNS TEXT SECURITY DEFINER
+    SET search_path = pg_catalog, public. Logic:
+    (1) Verify verifier exists in verifier_registry with is_active = true.
+    (2) Verify verifier's methodology_scope includes the project's methodology.
+    (3) Call check_reg26_separation(p_verifier_id, p_project_id, 'VERIFIER')
+        — raises GF001 if Regulation 26 is violated.
+    (4) Generate a cryptographically random token secret.
+    (5) Store hash of secret in gf_verifier_read_tokens with scoped_tables
+        = ["evidence_nodes","monitoring_records","asset_batches",
+           "verification_cases"] and expires_at = now() + p_ttl_hours.
+    (6) Return the raw token secret (shown once, not stored).
+    Never return the token hash — only the raw secret on issuance.
+  - >-
+    Write revoke_verifier_read_token(p_token_hash TEXT) RETURNS void
+    SECURITY DEFINER. Sets revoked_at = now() on the matching row.
+    Cannot DELETE. Revocation is append-only.
+  - >-
+    Write scripts/db/verify_gf_fnc_006.sh confirming: table exists,
+    function is SECURITY DEFINER with hardened search_path, Regulation 26
+    enforcement fires before token issuance, token hash stored not plaintext,
+    revocation is non-destructive.
+
+acceptance_criteria:
+  - >-
+    bash scripts/db/verify_gf_fnc_006.sh exits 0.
+  - >-
+    issue_verifier_read_token for a verifier previously assigned as VALIDATOR
+    on the same project raises SQLSTATE GF001 before any token is created.
+    No partial token creation occurs.
+  - >-
+    Issued token is stored as a hash, not plaintext. Direct SELECT on
+    gf_verifier_read_tokens returns token_hash only, not a recoverable secret.
+  - >-
+    revoke_verifier_read_token sets revoked_at. Subsequent SELECT confirms
+    revoked_at IS NOT NULL. The row still exists — no DELETE.
+  - >-
+    issue_verifier_read_token for an inactive verifier (is_active = false)
+    fails with explicit SQLSTATE before reaching the Regulation 26 check.
+  - >-
+    Evidence file evidence/phase1/gf_fnc_006.json exists and passes verifier.
+
+negative_tests:
+  - id: GF-W1-FNC-006-N1
+    description: >-
+      Assign verifier V as VALIDATOR on project P. Call
+      issue_verifier_read_token(V, P). Must raise SQLSTATE GF001 with
+      Regulation 26 message. No token must be written to
+      gf_verifier_read_tokens. This proves the check fires before any
+      state mutation.
+    required: true
+  - id: GF-W1-FNC-006-N2
+    description: >-
+      Call issue_verifier_read_token for a verifier with is_active = false.
+      Must fail before Regulation 26 check with explicit inactive-verifier
+      SQLSTATE.
+    required: true
+  - id: GF-W1-FNC-006-N3
+    description: >-
+      Issue a token. Attempt direct DELETE on the gf_verifier_read_tokens
+      row. Must fail with append-only SQLSTATE. Revocation must go through
+      revoke_verifier_read_token only.
+    required: true
+  - id: GF-W1-FNC-006-N4
+    description: >-
+      Issue a token. Call revoke_verifier_read_token. Verify row still exists
+      with revoked_at populated. Verify no DELETE occurred. Proves revocation
+      is non-destructive and audit trail is preserved.
+    required: true
+
+verification:
+  - bash scripts/db/verify_gf_fnc_006.sh
+  - python3 scripts/audit/verify_neutral_schema_ast.py schema/migrations/0093_gf_fn_verifier_read_token.sql
+  - bash scripts/dev/pre_ci.sh
+
+evidence:
+  - path: evidence/phase1/gf_fnc_006.json
+    must_include:
+      - task_id
+      - git_sha
+      - timestamp_utc
+      - status
+      - functions_verified
+      - security_definer_confirmed
+      - reg26_enforcement_confirmed
+      - token_hash_not_plaintext
+      - negative_tests_passed
+
+failure_modes:
+  - "Regulation 26 check absent from issue_verifier_read_token => CRITICAL_FAIL (INV-169)"
+  - "Token secret stored in plaintext => CRITICAL_FAIL"
+  - "Token issued with scope beyond project_id level => CRITICAL_FAIL"
+  - "Verifier read API surface implemented in this task => BLOCKED (Phase 2 boundary violation)"
+  - "Evidence file absent at task completion => FAIL"
+
+must_read:
+  - docs/operations/AI_AGENT_OPERATION_MANUAL.md
+  - docs/operations/AGENTIC_SDLC_PILOT_POLICY.md
+  - docs/operations/PILOT_REJECTION_PLAYBOOK.md
+  - docs/architecture/ADAPTER_CONTRACT_INTERFACE.md
+
+second_pilot_test:
+  candidate_sector_1: solar_energy
+  candidate_sector_2: forestry_carbon
+  unchanged_core_tables: [gf_verifier_read_tokens]
+  unchanged_core_functions: [issue_verifier_read_token, revoke_verifier_read_token]
+  adapter_only_differences:
+    - "project_id value differs between pilots"
+    - "methodology_scope check uses different adapter codes as data"
+  jurisdiction_profile_impact: >-
+    Regulation 26 check applies identically for Zambia and Zimbabwe verifiers.
+    Token scope is project_id based — jurisdiction-agnostic at function level.
+  required_core_changes: []
+  explanation: >-
+    issue_verifier_read_token is a generic DB primitive. A verifier for a
+    solar energy project and a verifier for a forestry carbon project both
+    call the same function with different project_id values. The Regulation 26
+    check, the active-verifier check, and the token creation are all
+    project-agnostic at the function level. No sector-specific logic exists.
+  second_pilot_reviewed_by: Architecture Owner
+pilot_scope_ref: not_applicable
+
+implementation_plan: docs/plans/phase1/GF-W1-FNC-006/PLAN.md
+implementation_log: docs/plans/phase1/GF-W1-FNC-006/EXEC_LOG.md
+notes: >-
+  This is a Phase 1 DB primitive only. The verifier read API surface —
+  the .NET endpoint that accepts a token, validates it, and returns filtered
+  evidence data — is Phase 2 work. Do not build any API endpoint, query
+  abstraction, or response formatting in this task. The boundary is clean:
+  issue_verifier_read_token produces a token. A Phase 2 API uses that token
+  to scope read access. Building both here violates the Phase 1 scope guard
+  and creates an untested security boundary at the worst possible moment.
+client: codex_cli
+assigned_agent: <UNASSIGNED>
+model: <UNASSIGNED>

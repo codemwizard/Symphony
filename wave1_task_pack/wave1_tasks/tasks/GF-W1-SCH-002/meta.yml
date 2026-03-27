@@ -1,0 +1,202 @@
+schema_version: 1
+phase: '0'
+task_id: GF-W1-SCH-002
+title: "Migration 0071: interpretation_packs structural hook"
+owner_role: DB_FOUNDATION
+status: planned
+priority: CRITICAL
+risk_class: INTEGRITY
+blast_radius: DB_SCHEMA
+domain: green_finance
+pilot: false
+
+intent: >-
+  interpretation_packs is deliberately separated from adapter_registrations
+  because it is policy-volatile — its schema is likely to need adjustments
+  as Zambia's regulatory practice clarifies and as interpretation domains
+  expand. Keeping it in its own migration means regulatory schema evolution
+  never touches the adapter contract assumptions in migration 0070. This is
+  the volatility separation principle applied concretely.
+
+anti_patterns:
+  - "Merging with adapter_registrations migration — these have different volatility classes"
+  - "Hardcoding Zambia-specific fields — schema must be jurisdiction-neutral"
+  - "Omitting the adapter-scoped uniqueness constraint — breaks methodology-specific override capability"
+  - "Making superseded_by_id NOT NULL — active packs have no supersessor by definition"
+
+depends_on:
+  - GF-W1-SCH-001
+  - GF-W1-DSN-002
+  - GF-W1-DSN-003
+
+blocks:
+  - GF-W1-SCH-004
+
+touches:
+  - schema/migrations/0071_gf_interpretation_packs.sql
+  - schema/migrations/0071_gf_interpretation_packs.meta.yml
+  - schema/migrations/MIGRATION_HEAD
+  - scripts/db/verify_gf_sch_002.sh
+  - tasks/GF-W1-SCH-002/meta.yml
+
+invariants:
+  - INV-141
+  - INV-143
+
+work:
+  - >-
+    Write 0071_gf_interpretation_packs.sql exactly per GF-W1-DSN-002 field spec
+    and GF-W1-DSN-003 validation spec. Fields: interpretation_pack_id UUID PK,
+    domain TEXT NOT NULL CHECK (domain IN ('CARBON_MARKET','TAXONOMY',
+    'CLAIMS_SUBSTANTIATION','METHODOLOGY')),
+    jurisdiction_code TEXT NOT NULL,
+    authority_level TEXT NOT NULL CHECK (authority_level IN
+    ('SOVEREIGN','REGULATORY','INTERNAL','DEFAULT')),
+    legal_source_reference TEXT NOT NULL,
+    rule_text TEXT NOT NULL,
+    confidence_level TEXT NOT NULL CHECK (confidence_level IN
+    ('CONFIRMED','PRACTICE_ASSUMED','PENDING_CLARIFICATION')),
+    effective_from TIMESTAMPTZ NOT NULL,
+    effective_to TIMESTAMPTZ NULL,
+    superseded_by_id UUID NULL REFERENCES interpretation_packs(interpretation_pack_id)
+      DEFERRABLE INITIALLY DEFERRED,
+    adapter_registration_id UUID NULL REFERENCES adapter_registrations(adapter_registration_id),
+    dependency_refs JSONB NULL,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+    created_by TEXT NOT NULL DEFAULT CURRENT_USER.
+  - >-
+    Add CONSTRAINT A (global packs): UNIQUE (domain, jurisdiction_code,
+    authority_level) WHERE effective_to IS NULL
+    AND adapter_registration_id IS NULL.
+  - >-
+    Add CONSTRAINT B (adapter-scoped packs): UNIQUE (domain, jurisdiction_code,
+    authority_level, adapter_registration_id) WHERE effective_to IS NULL
+    AND adapter_registration_id IS NOT NULL.
+    These two partial unique indexes cover every case without overlap.
+  - >-
+    Add append-only trigger. Add RLS by jurisdiction_code (or tenant-scoped
+    if jurisdiction packs are tenant-owned — confirm per DSN-003). Revoke-first.
+  - >-
+    Write 0071_gf_interpretation_packs.meta.yml sidecar:
+    phase=0, layer=POLICY_TABLE, volatility_class=POLICY_TABLE,
+    touches_core_schema=true, introduces_identifiers=[interpretation_packs],
+    second_pilot_justification_required=true.
+    Note: volatility_class=POLICY_TABLE because rows change per regulatory
+    clarification; schema changes should be rare but possible.
+  - >-
+    Update MIGRATION_HEAD from 0070 to 0071.
+  - >-
+    Write scripts/db/verify_gf_sch_002.sh: both uniqueness constraints present,
+    all CHECK constraints present, append-only trigger present, RLS enabled,
+    nullable FK to adapter_registrations confirmed, deferrable self-FK confirmed.
+
+acceptance_criteria:
+  - >-
+    bash scripts/db/verify_gf_sch_002.sh exits 0 against test DB.
+  - >-
+    INSERT two active global packs with same (domain, jurisdiction_code,
+    authority_level), both adapter_registration_id NULL, both effective_to NULL.
+    Second INSERT must fail — Constraint A.
+  - >-
+    INSERT one global pack (adapter_registration_id NULL) and one adapter-scoped
+    pack (adapter_registration_id = test_id), same domain/jurisdiction/authority,
+    both effective_to NULL. Both INSERTs must SUCCEED — different constraint buckets.
+  - >-
+    INSERT with confidence_level = 'GUESSING' fails CHECK constraint.
+  - >-
+    Evidence file evidence/phase0/gf_sch_002.json exists and passes verifier.
+
+negative_tests:
+  - id: GF-W1-SCH-002-N1
+    description: >-
+      Insert two active global interpretation packs with identical
+      (domain, jurisdiction_code, authority_level), both adapter_registration_id
+      NULL, both effective_to NULL. Second INSERT must fail Constraint A.
+    required: true
+  - id: GF-W1-SCH-002-N2
+    description: >-
+      Insert one global pack and one adapter-scoped pack with same
+      domain/jurisdiction/authority but different adapter_registration_id
+      (one NULL, one non-NULL), both effective_to NULL. Both must succeed.
+      This proves the two constraints are independent and methodology-specific
+      overrides are possible.
+    required: true
+  - id: GF-W1-SCH-002-N3
+    description: >-
+      Attempt UPDATE on an interpretation_packs row. Must fail with append-only
+      SQLSTATE. Interpretation packs are immutable once written — supersede
+      by inserting a new row and setting effective_to on the old one via
+      the designated supersession function only.
+    required: true
+  - id: GF-W1-SCH-002-N4
+    description: >-
+      INSERT a pack with confidence_level not in the allowed CHECK list.
+      Must fail with constraint violation.
+    required: true
+
+verification:
+  - bash scripts/db/verify_gf_sch_002.sh
+  - python3 scripts/audit/verify_neutral_schema_ast.py schema/migrations/0071_gf_interpretation_packs.sql
+  - python3 scripts/audit/verify_migration_meta_alignment.py
+  - bash scripts/audit/verify_migration_sequence.sh
+  - bash scripts/dev/pre_ci.sh
+
+evidence:
+  - path: evidence/phase0/gf_sch_002.json
+    must_include:
+      - task_id
+      - git_sha
+      - timestamp_utc
+      - status
+      - table_exists
+      - constraint_a_verified
+      - constraint_b_verified
+      - append_only_confirmed
+      - rls_confirmed
+      - ast_scan_clean
+      - migration_head_updated
+
+failure_modes:
+  - "Constraint A absent — double-active global packs possible => CRITICAL_FAIL"
+  - "Constraint B absent — adapter-scoped override impossible => BLOCKED"
+  - "Append-only trigger absent — packs can be mutated => CRITICAL_FAIL"
+  - "Evidence file absent at task completion => FAIL"
+
+must_read:
+  - docs/operations/AI_AGENT_OPERATION_MANUAL.md
+  - docs/operations/AGENTIC_SDLC_PILOT_POLICY.md
+  - docs/architecture/INTERPRETATION_PACK_SCHEMA.md
+  - docs/architecture/ADAPTER_CONTRACT_INTERFACE.md
+  - docs/operations/GREEN_FINANCE_VOLATILITY_MAP.md
+
+second_pilot_test:
+  candidate_sector_1: solar_energy
+  candidate_sector_2: forestry_carbon
+  unchanged_core_tables: [adapter_registrations, interpretation_packs]
+  unchanged_core_functions: []
+  adapter_only_differences:
+    - "Zambia carbon market pack rows differ from Zimbabwe carbon market pack rows — data only"
+    - "PWRM0001 adapter-scoped pack differs from VM0044 adapter-scoped pack — data only"
+  jurisdiction_profile_impact: >-
+    A Zimbabwe pilot inserts interpretation_packs rows with jurisdiction_code='ZW'.
+    No schema change. The table structure handles any jurisdiction via data rows.
+  required_core_changes: []
+  explanation: >-
+    interpretation_packs schema is jurisdiction-neutral. Zambia packs and
+    Zimbabwe packs are data rows with different jurisdiction_code values.
+    Solar and forestry adapter-scoped packs differ only in adapter_registration_id.
+    The table structure, constraints, and triggers are identical for every sector
+    and jurisdiction combination.
+  second_pilot_reviewed_by: Architecture Owner
+pilot_scope_ref: not_applicable
+
+implementation_plan: docs/plans/phase0/GF-W1-SCH-002/PLAN.md
+implementation_log: docs/plans/phase0/GF-W1-SCH-002/EXEC_LOG.md
+notes: >-
+  volatility_class=POLICY_TABLE. Schema changes here are possible but should
+  be rare. Row changes (new interpretation packs as law clarifies) are the
+  expected mode of evolution. Depends on DSN-003 (interpretation pack
+  validation spec) to confirm edge cases before this migration is written.
+client: codex_cli
+assigned_agent: <UNASSIGNED>
+model: <UNASSIGNED>

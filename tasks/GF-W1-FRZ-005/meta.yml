@@ -1,0 +1,157 @@
+schema_version: 1
+phase: '0'
+task_id: GF-W1-FRZ-005
+title: "Create green finance volatility map to classify legal and design stability before implementation starts"
+owner_role: SUPERVISOR
+status: completed
+priority: CRITICAL
+risk_class: GOVERNANCE
+blast_radius: DOCS_ONLY
+domain: green_finance
+pilot: false
+
+intent: >-
+  Zambia's carbon market SI is from January 2026 and government practice is
+  still settling. Without a canonical volatility map, agents making schema
+  decisions will not have a reference for whether a given requirement belongs
+  in a core table, a policy data row, or an adapter. The wrong placement
+  creates either schema rigidity or governance theater. This document must
+  exist before any schema migration is written.
+
+anti_patterns:
+  - "Writing the volatility map after schema decisions have already been made"
+  - "Classifying everything as 'stable' to simplify implementation"
+  - "Making the map so abstract it cannot be consulted during task authoring"
+
+depends_on:
+  - GF-W1-FRZ-001
+
+blocks:
+  - GF-W1-DSN-001
+  - GF-W1-SCH-001
+
+touches:
+  - docs/operations/GREEN_FINANCE_VOLATILITY_MAP.md
+  - tasks/GF-W1-FRZ-005/meta.yml
+
+invariants: []
+
+work:
+  - >-
+    Create docs/operations/GREEN_FINANCE_VOLATILITY_MAP.md with three sections.
+  - >-
+    Section 1 — Legally stable / Phase 0 locked: items that do not change
+    when regulations are clarified. Includes: append-only evidence records,
+    project identity, asset identity, lifecycle event records, authority
+    decision records, retirement events, evidence node/edge structure and
+    class taxonomy.
+  - >-
+    Section 2 — Legally volatile / must live in policy data not code: items
+    that change when interpretation packs are updated. Includes: which
+    checkpoints are mandatory, what evidence sufficiency threshold applies,
+    which authority type gates which transition, which interpretation version
+    was used at decision time, which forms or letters are required. These
+    must never be hardcoded in function bodies.
+  - >-
+    Section 3 — Highly volatile / adapter layer only: items that change per
+    methodology version or per country. Includes: methodology-specific
+    calculation parameters, sector eligibility criteria, credit type
+    definitions, material type registries, payload field schemas.
+  - >-
+    Add a PLACEMENT DECISION GUIDE section with four questions an agent must
+    answer before deciding where something belongs: (1) Does this change
+    when the law is clarified? (2) Does this change per methodology? (3)
+    Would a second unrelated sector need a different version? (4) Can this
+    be expressed as a data row in a policy table?
+  - >-
+    Add a LIVING DOCUMENT note: every Wave 1 task that introduces a new
+    table, function, or rule must update this map as part of its acceptance
+    criteria.
+  - >-
+    Add a VOLATILITY CLASS TAXONOMY section defining three machine-referenceable
+    classes: CORE_SCHEMA (tables and constraints in Phase 0/1 migrations that
+    do not change when law is clarified), POLICY_TABLE (rows in jurisdiction
+    profiles, interpretation packs, checkpoint rules — change via data not
+    migration), ADAPTER_LAYER (everything inside a Phase 2 adapter registration
+    — free to vary per methodology). Every row in a green finance migration
+    sidecar manifest must declare one of these three classes.
+  - >-
+    Define enforcement rules per class:
+    CORE_SCHEMA — full Core Contract Gate checks apply, all five criteria required.
+    POLICY_TABLE — neutrality and second-pilot checks apply; access-pattern
+    check relaxed since policy tables serve all adapters equally.
+    ADAPTER_LAYER — pilot containment rules apply; Core Contract Gate does
+    not run on adapter-layer files.
+
+acceptance_criteria:
+  - >-
+    File exists at docs/operations/GREEN_FINANCE_VOLATILITY_MAP.md with all
+    three required sections.
+  - >-
+    Placement decision guide contains all four questions.
+  - >-
+    Living document note is present and referenced in Wave 1 task acceptance
+    criteria going forward.
+  - >-
+    Document reviewed and approved by architecture owner before GF-W1-DSN-001 begins.
+  - >-
+    File contains VOLATILITY CLASS TAXONOMY section with all three classes defined.
+    grep -q "CORE_SCHEMA" docs/operations/GREEN_FINANCE_VOLATILITY_MAP.md exits 0.
+  - >-
+    volatility_class field is declared as a required field in migration sidecar
+    manifests (wired in GF-W1-GOV-003). Every migration must declare one of:
+    CORE_SCHEMA, POLICY_TABLE, ADAPTER_LAYER.
+
+negative_tests:
+  - id: GF-W1-FRZ-005-N1
+    description: >-
+      Attempt to begin GF-W1-DSN-001 (adapter contract skeleton) without
+      this document existing. The task authoring process must identify this
+      as a missing dependency and block start.
+    required: true
+
+verification:
+  - test -f docs/operations/GREEN_FINANCE_VOLATILITY_MAP.md
+  - grep -q "Legally stable" docs/operations/GREEN_FINANCE_VOLATILITY_MAP.md
+  - grep -q "Legally volatile" docs/operations/GREEN_FINANCE_VOLATILITY_MAP.md
+  - grep -q "Highly volatile" docs/operations/GREEN_FINANCE_VOLATILITY_MAP.md
+  - grep -q "CORE_SCHEMA" docs/operations/GREEN_FINANCE_VOLATILITY_MAP.md
+  - grep -q "POLICY_TABLE" docs/operations/GREEN_FINANCE_VOLATILITY_MAP.md
+  - grep -q "ADAPTER_LAYER" docs/operations/GREEN_FINANCE_VOLATILITY_MAP.md
+  - bash scripts/dev/pre_ci.sh
+
+evidence:
+  - path: evidence/phase0/green_finance_volatility_map.json
+    must_include:
+      - task_id
+      - timestamp_utc
+      - git_sha
+      - status
+      - sections_present
+
+failure_modes:
+  - "Map written after schema decisions already made — placements are post-hoc rationalisations => FAIL_REVIEW"
+  - "Sections too vague to be consulted during task authoring => FAIL"
+
+must_read:
+  - docs/operations/AI_AGENT_OPERATION_MANUAL.md
+  - docs/operations/AGENTIC_SDLC_PILOT_POLICY.md
+  - docs/operations/PILOT_REJECTION_PLAYBOOK.md
+
+second_pilot_test: >-
+  The volatility classification applies identically to solar energy and
+  forestry carbon pilots. Legal stability of core tables does not change
+  by sector. Policy data volatility does not change by sector. The adapter
+  layer absorbs all sector-specific volatility regardless of sector.
+pilot_scope_ref: not_applicable
+
+implementation_plan: docs/plans/phase0/GF-W1-FRZ-005/PLAN.md
+implementation_log: docs/plans/phase0/GF-W1-FRZ-005/EXEC_LOG.md
+notes: >-
+  This is a prerequisite for GF-W1-DSN-001. Do not start design completion
+  tasks until this document is approved. The map is a living document —
+  every subsequent Wave 1 task must update it if its scope decisions change
+  a placement assumption.
+client: codex_cli
+assigned_agent: <UNASSIGNED>
+model: <UNASSIGNED>

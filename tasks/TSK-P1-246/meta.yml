@@ -1,0 +1,149 @@
+schema_version: 1
+phase: '1'
+task_id: TSK-P1-246
+title: "Add the adversarial verifier suite for guarded runtime integrity so corrupted execution, path, and proof scenarios fail closed"
+owner_role: QA_VERIFIER
+status: completed
+priority: HIGH
+risk_class: INTEGRITY
+blast_radius: CI_GATES
+intent: >-
+  TSK-P1-244 and TSK-P1-245 separate repository/filesystem integrity from
+  evidence-finalization semantics, but the runtime-integrity line still needs one
+  downstream adversarial suite that proves those contracts fail closed under
+  corrupted inputs. This task adds that verifier-focused coverage without
+  re-defining the underlying execution, path-boundary, or evidence contracts.
+anti_patterns:
+  - "Treating contract existence as sufficient without corruption-focused failure coverage"
+  - "Re-implementing execution-core or evidence-finalization logic inside the adversarial suite"
+  - "Allowing the verifier suite to assert integrity guarantees without exercising hostile inputs"
+depends_on:
+  - TSK-P1-244
+  - TSK-P1-245
+blocks: []
+touches:
+  - scripts/audit/tests/test_tsk_p1_246_guarded_runtime_adversarial.sh
+  - scripts/audit/verify_tsk_p1_246.sh
+  - evidence/phase1/tsk_p1_246_adversarial_verifier_suite.json
+  - tasks/TSK-P1-246/meta.yml
+  - docs/plans/phase1/TSK-P1-246/PLAN.md
+  - docs/plans/phase1/TSK-P1-246/EXEC_LOG.md
+  - docs/tasks/PHASE1_GOVERNANCE_TASKS.md
+invariants:
+  - INV-105
+  - INV-119
+work:
+  - >-
+    [ID tsk_p1_246_work_item_01] Create
+    `scripts/audit/tests/test_tsk_p1_246_guarded_runtime_adversarial.sh` to exercise
+    hostile repo-root, path-traversal, unauthorized write, and malformed-proof cases
+    against the guarded runtime contract.
+  - >-
+    [ID tsk_p1_246_work_item_02] Create `scripts/audit/verify_tsk_p1_246.sh` so the
+    task-specific verifier runs the adversarial suite, captures the hostile-case
+    results, and fails closed when any corrupted scenario is accepted.
+  - >-
+    [ID tsk_p1_246_work_item_03] Prove that the adversarial suite covers both the
+    repository/filesystem integrity layer and the evidence-finalization layer without
+    reimplementing either contract in the tests.
+  - >-
+    [ID tsk_p1_246_work_item_04] Emit bounded evidence at
+    `evidence/phase1/tsk_p1_246_adversarial_verifier_suite.json` proving hostile
+    scenarios were exercised and rejected by the guarded runtime path.
+acceptance_criteria:
+  - >-
+    [ID tsk_p1_246_work_item_01] The adversarial suite exercises hostile repo-root,
+    path-traversal, unauthorized-write, and malformed-proof scenarios against the real
+    guarded runtime entrypoint rather than documentation text or mocked contracts.
+  - >-
+    [ID tsk_p1_246_work_item_02] `scripts/audit/verify_tsk_p1_246.sh` fails closed if
+    any hostile scenario is accepted and emits
+    `evidence/phase1/tsk_p1_246_adversarial_verifier_suite.json`.
+  - >-
+    [ID tsk_p1_246_work_item_03] The adversarial suite demonstrates coverage across
+    both TSK-P1-244 path-boundary guarantees and TSK-P1-245 evidence-finalization
+    guarantees without taking ownership of those implementation layers.
+  - >-
+    [ID tsk_p1_246_work_item_04] The evidence proves hostile-case rejection results
+    only and does not overclaim broader runtime integrity beyond the exercised suite.
+negative_tests:
+  - id: TSK-P1-246-N1
+    description: >-
+      Feed the guarded runtime an out-of-repo or traversal-based root/input and
+      confirm the adversarial suite records a rejected hostile-path result.
+    required: true
+  - id: TSK-P1-246-N2
+    description: >-
+      Attempt an unauthorized proof-output target or malformed proof payload and
+      confirm the verifier suite rejects the corrupted finalization path.
+    required: true
+  - id: TSK-P1-246-N3
+    description: >-
+      Simulate a verifier run where one hostile case is accepted and confirm the
+      task-specific verifier exits non-zero instead of emitting a false PASS.
+    required: true
+positive_tests:
+  - id: TSK-P1-246-P1
+    description: >-
+      Run the adversarial suite against the correctly hardened guarded runtime path
+      and confirm it emits a passing evidence artifact enumerating rejected hostile
+      scenarios.
+    required: false
+verification:
+  - >-
+    # [ID tsk_p1_246_work_item_01] [ID tsk_p1_246_work_item_02]
+    # [ID tsk_p1_246_work_item_03] [ID tsk_p1_246_work_item_04]
+    bash -lc 'test -x scripts/audit/verify_tsk_p1_246.sh &&
+    bash scripts/audit/verify_tsk_p1_246.sh >
+    evidence/phase1/tsk_p1_246_adversarial_verifier_suite.json || exit 1'
+  - >-
+    # [ID tsk_p1_246_work_item_04]
+    bash -lc 'test -f evidence/phase1/tsk_p1_246_adversarial_verifier_suite.json &&
+    python3 scripts/audit/validate_evidence.py --task TSK-P1-246 --evidence
+    evidence/phase1/tsk_p1_246_adversarial_verifier_suite.json || exit 1'
+  - >-
+    # [ID tsk_p1_246_work_item_01] [ID tsk_p1_246_work_item_02]
+    # [ID tsk_p1_246_work_item_03] [ID tsk_p1_246_work_item_04]
+    bash -lc 'test -x scripts/dev/pre_ci.sh && RUN_PHASE1_GATES=1
+    bash scripts/dev/pre_ci.sh || exit 1'
+evidence:
+  - path: evidence/phase1/tsk_p1_246_adversarial_verifier_suite.json
+    must_include:
+      - task_id
+      - git_sha
+      - timestamp_utc
+      - status
+      - checks
+      - observed_paths
+      - observed_hashes
+      - command_outputs
+      - execution_trace
+      - hostile_cases
+      - rejected_case_results
+      - coverage_scope
+      - scope_boundary
+failure_modes:
+  - "Adversarial suite allows hostile runtime-integrity scenarios to pass without failing closed => FAIL"
+  - "Verifier suite reimplements upstream contracts instead of exercising the real guarded runtime path => FAIL"
+  - "Evidence overclaims broader runtime integrity than the hostile scenarios actually covered => FAIL"
+  - "Evidence file missing => FAIL"
+must_read:
+  - docs/operations/AI_AGENT_OPERATION_MANUAL.md
+  - AGENT_ENTRYPOINT.md
+  - docs/operations/AGENT_PROMPT_ROUTER.md
+  - docs/operations/TASK_CREATION_PROCESS.md
+  - AGENTS.md
+  - tasks/TSK-P1-244/meta.yml
+  - tasks/TSK-P1-245/meta.yml
+  - docs/plans/phase1/TSK-P1-244/PLAN.md
+  - docs/plans/phase1/TSK-P1-245/PLAN.md
+implementation_plan: docs/plans/phase1/TSK-P1-246/PLAN.md
+implementation_log: docs/plans/phase1/TSK-P1-246/EXEC_LOG.md
+notes: >-
+  This task owns only adversarial verifier coverage for the guarded runtime path.
+  It must exercise the contracts defined by TSK-P1-244 and TSK-P1-245 without
+  expanding back into execution-core, path-boundary, or evidence-finalization
+  implementation work.
+client: codex_ide
+assigned_agent: qa_verifier
+model: Cascade

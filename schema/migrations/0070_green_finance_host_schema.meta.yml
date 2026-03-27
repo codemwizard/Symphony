@@ -1,0 +1,15 @@
+phase: '0'
+layer: CORE_SCHEMA
+touches_core_schema: true
+introduces_identifiers:
+  - green_finance_host
+  - pilot_registry
+  - pilot_config
+  - pilot_adapter_interface
+  - pilot_audit_log
+second_pilot_justification_required: false
+volatility_class: STABLE
+notes: >-
+  Establishes the neutral host schema that all green finance pilots
+  will adapt to. This is the foundational schema that enables
+  sector-agnostic multi-pilot architecture.

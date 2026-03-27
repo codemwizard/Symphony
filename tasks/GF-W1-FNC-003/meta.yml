@@ -1,0 +1,140 @@
+schema_version: 1
+phase: '1'
+task_id: GF-W1-FNC-003
+title: "Phase 1 functions: attach_evidence and link_evidence_to_record"
+owner_role: DB_FOUNDATION
+status: completed
+priority: CRITICAL
+risk_class: INTEGRITY
+blast_radius: DB_SCHEMA
+domain: green_finance
+pilot: false
+
+intent: >-
+  attach_evidence and link_evidence_to_record create the evidence lineage
+  records that every pilot will use to anchor proofs to governed entities.
+  They enforce the universal evidence class taxonomy and prevent invalid
+  linkages. freeze_evidence_snapshot is explicitly deferred — it belongs when
+  verification and issuance snapshotting workflows are introduced.
+
+anti_patterns:
+  - "Implementing freeze_evidence_snapshot — this is deferred to the verification workflow phase"
+  - "Encoding sector-specific evidence class values not in the approved taxonomy"
+  - "Allowing evidence_class values outside the seven-class CHECK constraint"
+
+depends_on:
+  - GF-W1-FNC-002
+
+blocks:
+  - GF-W1-FNC-004
+
+touches:
+  - schema/migrations/0090_gf_fn_evidence_lineage.sql
+  - scripts/db/verify_gf_fnc_003.sh
+  - tasks/GF-W1-FNC-003/meta.yml
+
+invariants:
+  - INV-160
+  - INV-162
+  - INV-165
+
+work:
+  - >-
+    Write attach_evidence as SECURITY DEFINER with SET search_path = pg_catalog,
+    public. Inserts into evidence_nodes. Validates evidence_class is one of:
+    RAW_SOURCE, ATTESTED_SOURCE, NORMALIZED_RECORD, ANALYST_FINDING,
+    VERIFIER_FINDING, REGULATORY_EXPORT, ISSUANCE_ARTIFACT. Append-only.
+    Returns evidence_node_id.
+  - >-
+    Write link_evidence_to_record as SECURITY DEFINER. Inserts into
+    evidence_edges linking an evidence_node_id to a governed record
+    (project_id, monitoring_record_id, asset_batch_id, or similar) with a
+    typed edge_type. Append-only. Validate referenced node exists within
+    the same tenant_id.
+  - >-
+    Write scripts/db/verify_gf_fnc_003.sh confirming SECURITY DEFINER posture,
+    evidence class CHECK enforcement, append-only triggers, and negative tests.
+
+acceptance_criteria:
+  - >-
+    attach_evidence and link_evidence_to_record are SECURITY DEFINER with
+    hardened search_path. bash scripts/db/verify_gf_fnc_003.sh exits 0.
+  - >-
+    attach_evidence rejects evidence_class values outside the seven approved
+    values with CHECK constraint violation SQLSTATE 23514.
+  - >-
+    Direct UPDATE or DELETE on evidence_nodes triggers append-only guard and
+    raises SQLSTATE P0001 or equivalent.
+  - >-
+    link_evidence_to_record rejects cross-tenant linkages.
+
+negative_tests:
+  - id: GF-W1-FNC-003-N1
+    description: >-
+      Call attach_evidence with evidence_class = 'PLASTIC_PROOF'. Must fail
+      with CHECK constraint violation. This proves the universal class taxonomy
+      is enforced and sector-specific class additions are blocked.
+    required: true
+  - id: GF-W1-FNC-003-N2
+    description: >-
+      Attempt direct UPDATE on an evidence_nodes row. Must fail with
+      append-only trigger. Proves lineage records cannot be mutated.
+    required: true
+  - id: GF-W1-FNC-003-N3
+    description: >-
+      Call link_evidence_to_record with an evidence_node_id belonging to a
+      different tenant_id. Must fail with explicit SQLSTATE.
+    required: true
+
+verification:
+  - bash scripts/db/verify_gf_fnc_003.sh
+  - python3 scripts/audit/verify_neutral_schema_ast.py schema/migrations/0090_gf_fn_evidence_lineage.sql
+  - bash scripts/dev/pre_ci.sh
+
+evidence:
+  - path: evidence/phase1/gf_fnc_003.json
+    must_include:
+      - task_id
+      - git_sha
+      - timestamp_utc
+      - status
+      - functions_verified
+      - security_definer_confirmed
+      - negative_tests_passed
+
+failure_modes:
+  - "attach_evidence accepts sector-specific class values => CRITICAL_FAIL (Rule 5)"
+  - "Evidence records are mutable — UPDATE not blocked => CRITICAL_FAIL"
+  - "SECURITY DEFINER posture absent => CRITICAL_FAIL"
+
+must_read:
+  - docs/operations/AI_AGENT_OPERATION_MANUAL.md
+  - docs/operations/AGENTIC_SDLC_PILOT_POLICY.md
+  - docs/operations/PILOT_REJECTION_PLAYBOOK.md
+  - docs/architecture/ADAPTER_CONTRACT_INTERFACE.md
+
+second_pilot_test:
+  candidate_sector_1: solar_energy
+  candidate_sector_2: forestry_carbon
+  unchanged_core_tables: []
+  unchanged_core_functions: [register_project, activate_project, record_monitoring_record]
+  adapter_only_differences: [evidence_class value used, edge_type value used]
+  jurisdiction_profile_impact: none
+  required_core_changes: []
+  explanation: >-
+    The seven evidence classes are universal across all sectors. A solar
+    installation photo is ATTESTED_SOURCE. A forestry satellite image is
+    RAW_SOURCE. A regulatory approval letter is REGULATORY_EXPORT. The same
+    attach_evidence function handles all of them. No sector logic exists in
+    the function bodies.
+  second_pilot_reviewed_by: Architecture Owner
+pilot_scope_ref: not_applicable
+
+implementation_plan: docs/plans/phase1/GF-W1-FNC-003/PLAN.md
+implementation_log: docs/plans/phase1/GF-W1-FNC-003/EXEC_LOG.md
+notes: >-
+  freeze_evidence_snapshot is deliberately not in scope for Wave 1. Do not
+  implement it here. It belongs with the verification case workflow.
+client: codex_cli
+assigned_agent: <UNASSIGNED>
+model: <UNASSIGNED>

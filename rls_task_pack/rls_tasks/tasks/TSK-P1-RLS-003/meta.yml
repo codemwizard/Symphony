@@ -1,0 +1,217 @@
+schema_version: 1
+phase: '1'
+task_id: TSK-P1-RLS-003
+title: "Apply born-secure RLS to all GF migrations 0071+ with strict scope enforcement"
+owner_role: DB_FOUNDATION
+status: planned
+priority: HIGH
+risk_class: INTEGRITY
+blast_radius: DB_SCHEMA
+
+intent: >-
+  GF Wave 1 migrations (0071-0087) create new tables that have not been applied
+  to any database. With the born-secure lint gate from TSK-P1-RLS-002 in place,
+  this task ensures every GF migration that creates a tenant-scoped table includes
+  inline ENABLE ROW LEVEL SECURITY, FORCE ROW LEVEL SECURITY, and an
+  exactly-templated isolation policy in strict order. GF migrations must also
+  not modify any pre-existing table — they create only. A GF migration that
+  modifies an existing table signals scope creep that must be reviewed and
+  managed separately, not silently absorbed into this task. No DDL-ALLOW entries
+  are needed for RLS operations in GF migrations — the born-secure exception
+  handles them. If a GF migration requires an allowlist entry for RLS, the
+  migration is wrong.
+
+constraints:
+  no_allowlist_for_rls: true
+  no_existing_table_modification: true
+  dynamic_table_detection: true
+  no_new_ddl_allow_entries_for_rls: true
+  policy_must_be_exact_template: "USING (tenant_id = public.current_tenant_id_or_null())"
+  enable_and_force_and_policy: "all three required, none optional, strict order"
+  gf_migrations_create_only: >-
+    GF migrations 0071+ must not modify any table not created within the same
+    migration file. ALTER TABLE on a pre-existing table is a scope violation.
+    Failure mode: migration modifies table not created in same file => FAIL.
+
+anti_patterns:
+  - "Adding DDL-ALLOW entries for RLS operations in GF migrations — born-secure eliminates the need"
+  - "Using a dynamic loop to apply RLS across multiple tables — one explicit block per table"
+  - "Enabling RLS in a separate later GF migration instead of inline at creation"
+  - "ENABLE without FORCE — table owner bypass"
+  - "Policy expression other than the exact template"
+  - "GF migration altering a pre-existing table without an explicit scope review"
+
+depends_on:
+  - TSK-P1-RLS-002
+
+touches:
+  - schema/migrations/0071_gf_adapter_registrations.sql
+  - schema/migrations/0072_gf_interpretation_packs.sql
+  - schema/migrations/0073_gf_methodology_versions.sql
+  - schema/migrations/0074_gf_projects.sql
+  - schema/migrations/0075_gf_monitoring_records.sql
+  - schema/migrations/0076_gf_evidence_nodes_edges.sql
+  - schema/migrations/0077_gf_asset_lifecycle.sql
+  - schema/migrations/0078_gf_regulatory_authorities.sql
+  - schema/migrations/0079_gf_jurisdiction_profiles.sql
+  - schema/migrations/0085_gf_verifier_registry.sql
+  - schema/migrations/0086_gf_fn_verifier_read_token.sql
+  - tasks/TSK-P1-RLS-003/meta.yml
+  - docs/plans/phase1/TSK-P1-RLS-003/PLAN.md
+  - docs/plans/phase1/TSK-P1-RLS-003/EXEC_LOG.md
+
+invariants:
+  - INV-146
+
+work:
+  - >-
+    For every GF migration (0071+):
+
+    Detect dynamically:
+    Any table with tenant_id MUST:
+
+      - ENABLE RLS after CREATE TABLE
+      - FORCE RLS
+      - CREATE POLICY enforcing EXACT template:
+
+        USING (tenant_id = public.current_tenant_id_or_null())
+        WITH CHECK (tenant_id = public.current_tenant_id_or_null())
+
+    These must occur before migration end.
+
+  - >-
+    Reject any migration that:
+    - Alters or modifies any table not created in the same migration file
+    - Requires DDL-ALLOW entry for RLS
+    - Omits any RLS component
+    - Deviates from exact policy template
+
+  - >-
+    For each GF migration that creates a table with tenant_id, add immediately
+    after the CREATE TABLE block and before any other statement in the migration:
+
+    ALTER TABLE public.<table> ENABLE ROW LEVEL SECURITY;
+    ALTER TABLE public.<table> FORCE ROW LEVEL SECURITY;
+
+    CREATE POLICY rls_tenant_isolation_<table>
+      ON public.<table>
+      AS RESTRICTIVE FOR ALL TO PUBLIC
+      USING (tenant_id = public.current_tenant_id_or_null())
+      WITH CHECK (tenant_id = public.current_tenant_id_or_null());
+
+    This block must appear immediately after its CREATE TABLE — not at the end
+    of the file after other tables have been created. Each table gets its own
+    RLS block inline at creation, not batched at the bottom of the migration.
+
+    Tables requiring this treatment: adapter_registrations, interpretation_packs,
+    methodology_versions, projects, monitoring_records, evidence_nodes,
+    evidence_edges, asset_batches, asset_lifecycle_events, retirement_events,
+    regulatory_authorities, regulatory_checkpoints, jurisdiction_profiles,
+    lifecycle_checkpoint_rules, verifier_registry, verifier_project_assignments,
+    gf_verifier_read_tokens.
+    Tables that do NOT require this treatment: any table without a tenant_id
+    column. Confirm the column list before adding RLS.
+  - >-
+    Run lint_rls_born_secure.sh against all GF migrations. All must exit 0.
+    If any fails, fix the migration — do not add an allowlist entry.
+  - >-
+    Run lint_ddl_lock_risk.sh against all GF migrations. Zero new allowlist
+    entries for RLS operations. If the lint flags any GF RLS statement, the
+    born-secure exception from TSK-P1-RLS-002 is not firing correctly —
+    diagnose and fix.
+  - >-
+    After applying all GF migrations to a test DB, run
+    verify_ten_002_rls_leakage.sh. The primary pg_class check must show all
+    GF tenant tables with rls_enabled=true, rls_forced=true,
+    restrictive_policy_tenant_bound=true, failures=[].
+
+acceptance_criteria:
+  - >-
+    lint_rls_born_secure.sh exits 0 on all GF migrations.
+  - >-
+    lint_ddl_lock_risk.sh exits 0 on all GF migrations with zero new
+    allowlist entries for RLS operations.
+  - >-
+    No GF migration contains an ALTER TABLE on a table not created in the
+    same file — confirmed by scope scan.
+  - >-
+    verify_ten_002_rls_leakage.sh exits 0 after GF migrations applied,
+    with all GF tenant tables in rls_tables with all three flags true.
+  - >-
+    pre_ci.sh exits 0 after all GF migrations are applied.
+
+negative_tests:
+  - id: TSK-P1-RLS-003-N1
+    description: >-
+      Temporarily remove the ENABLE ROW LEVEL SECURITY block from one GF
+      migration file. Run lint_rls_born_secure.sh. Must exit non-zero with
+      BORN_SECURE_VIOLATION naming the migration and table. Restore the block.
+      Proves the gate catches missing born-secure RLS in GF migrations.
+    required: true
+  - id: TSK-P1-RLS-003-N2
+    description: >-
+      Apply all GF migrations to a test DB. Temporarily replace one GF migration
+      policy with USING (true). Run verify_ten_002_rls_leakage.sh. The primary
+      pg_class check must fail with restrictive_policy_missing_or_not_tenant_bound
+      for that table. Restore the correct policy. Proves runtime verification
+      catches weak policies that might slip past lint.
+    required: true
+  - id: TSK-P1-RLS-003-N3
+    description: >-
+      Temporarily add ALTER TABLE public.tenants ADD COLUMN gf_test TEXT to one
+      GF migration file. Run the scope scan. Must emit
+      SCOPE_VIOLATION for that migration — tenants was not created in the same
+      file. Remove the line. Proves GF migrations cannot silently modify
+      pre-existing tables.
+    required: true
+  - id: TSK-P1-RLS-003-N4
+    description: >-
+      Confirm zero new DDL-ALLOW entries were added to ddl_allowlist.json for
+      any RLS-related statement in any GF migration. If any exist, this task
+      is not complete — the migration has a born-secure violation.
+    required: true
+
+verification:
+  - bash scripts/db/lint_rls_born_secure.sh
+  - bash scripts/security/lint_ddl_lock_risk.sh
+  - bash scripts/audit/verify_ten_002_rls_leakage.sh
+  - bash scripts/dev/pre_ci.sh
+
+evidence:
+  - path: evidence/phase1/rls_born_secure_gate.json
+    must_include:
+      - task_id
+      - git_sha
+      - timestamp_utc
+      - status
+      - migrations_checked
+      - violations
+
+failure_conditions:
+  - "Any GF migration introduces RLS via allowlist"
+  - "Any tenant table missing from TEN-002 output"
+  - "Any policy not matching exact tenant isolation template"
+  - "Migration modifies pre-existing table => INVALID_SCOPE => FAIL"
+
+failure_modes:
+  - "Any GF migration requires a DDL-ALLOW entry for RLS => born-secure violated => FAIL"
+  - "GF migration modifies table not created in same file => scope violation => FAIL"
+  - "GF tenant table absent from pg_class RLS check after migration => CRITICAL_FAIL"
+  - "Weak or logically-extended policy on any GF table => isolation broken => CRITICAL_FAIL"
+  - "FORCE RLS absent on any GF table => table owner bypass possible => CRITICAL_FAIL"
+  - "ENABLE without FORCE, or FORCE without POLICY, or POLICY without ENABLE => CRITICAL_FAIL"
+  - "RLS block not immediately after CREATE TABLE (batched at file end) => ordering violation => FAIL"
+
+must_read:
+  - docs/operations/AI_AGENT_OPERATION_MANUAL.md
+  - tasks/TSK-P1-RLS-001/meta.yml
+  - tasks/TSK-P1-RLS-002/meta.yml
+
+implementation_plan: docs/plans/phase1/TSK-P1-RLS-003/PLAN.md
+implementation_log: docs/plans/phase1/TSK-P1-RLS-003/EXEC_LOG.md
+notes: >-
+  Two acceptance conditions are the structural anchors for this task: zero
+  DDL-ALLOW entries for RLS, and zero scope violations. Both are verified by
+  negative tests (N4 and N3). The scope enforcement in particular is new —
+  previous versions implied GF migrations only create tables but never enforced
+  it. This task makes the implication a hard gate.

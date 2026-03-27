@@ -1,0 +1,6 @@
+{
+  "should_pass": false,
+  "expected_errors": ["IS_RESTRICTIVE"],
+  "purpose": "Catches AS RESTRICTIVE policy — blocks all access without companion PERMISSIVE",
+  "enforced_by": "lint_rls_born_secure.sh"
+}

@@ -1,0 +1,34 @@
+phase: '0'
+layer: POLICY_TABLE
+volatility_class: POLICY_TABLE
+touches_core_schema: true
+introduces_identifiers:
+  - regulatory_authorities
+  - regulatory_checkpoints
+  - regulatory_authorities_append_only_trigger
+  - regulatory_checkpoints_append_only_trigger
+  - create_regulatory_authority
+  - create_regulatory_checkpoint
+  - query_regulatory_checkpoints
+  - idx_regulatory_authorities_jurisdiction
+  - idx_regulatory_authorities_type
+  - idx_regulatory_authorities_effective_from
+  - idx_regulatory_authorities_effective_to
+  - idx_regulatory_authorities_created_at
+  - idx_regulatory_checkpoints_jurisdiction
+  - idx_regulatory_checkpoints_authority
+  - idx_regulatory_checkpoints_transition
+  - idx_regulatory_checkpoints_type
+  - idx_regulatory_checkpoints_mandatory
+  - idx_regulatory_checkpoints_interpretation
+  - idx_regulatory_checkpoints_created_at
+  - idx_regulatory_checkpoints_lookup
+  - regulatory_authorities_jurisdiction_access
+  - regulatory_authorities_system_full_access
+  - regulatory_checkpoints_jurisdiction_access
+  - regulatory_checkpoints_system_full_access
+second_pilot_justification_required: true
+notes: >-
+  Regulatory authorities and checkpoints with jurisdiction-driven compliance.
+  Non-nullable jurisdiction_code on all tables. Append-only with RLS
+  scoped by jurisdiction. No country-specific logic in schema.

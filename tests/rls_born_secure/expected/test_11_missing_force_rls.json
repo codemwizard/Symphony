@@ -1,0 +1,6 @@
+{
+  "should_pass": false,
+  "expected_errors": ["MISSING_FORCE_RLS"],
+  "purpose": "Table has ENABLE but not FORCE RLS — superuser bypass possible",
+  "enforced_by": "lint_rls_born_secure.sh"
+}

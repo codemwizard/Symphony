@@ -1,0 +1,6 @@
+{
+  "should_pass": false,
+  "expected_errors": ["USING_TRUE_POLICY"],
+  "purpose": "Catches unconditional USING (true) bypass",
+  "enforced_by": "lint_rls_born_secure.sh"
+}

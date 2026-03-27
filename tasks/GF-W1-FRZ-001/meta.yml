@@ -1,0 +1,152 @@
+schema_version: 1
+phase: '0'
+task_id: GF-W1-FRZ-001
+title: "Merge governance package v2 to establish green finance policy baseline"
+owner_role: SUPERVISOR
+status: completed
+priority: CRITICAL
+risk_class: GOVERNANCE
+blast_radius: DOCS_ONLY
+domain: green_finance
+pilot: false
+
+intent: >-
+  The pilot containment policy, rejection playbook, agent guardrails, scope
+  template, core contract gate script, and updated task metadata schema exist
+  as outputs but are not yet part of the repo baseline. Until they are merged,
+  no governance rule is enforced and agents are not bound by any pilot
+  containment constraint. This task makes the governance package real.
+
+anti_patterns:
+  - "Merging docs without wiring CI — policy exists on paper but nothing enforces it"
+  - "Marking complete before all file paths resolve and repo lints pass"
+  - "Adding sector-specific content to any governance document during merge"
+
+depends_on: []
+
+blocks:
+  - GF-W1-FRZ-002
+  - GF-W1-FRZ-003
+  - GF-W1-GOV-001
+  - GF-W1-GOV-002
+  - GF-W1-GOV-003
+
+touches:
+  - docs/operations/AGENTIC_SDLC_PILOT_POLICY.md
+  - docs/operations/AGENT_GUARDRAILS_GREEN_FINANCE.md
+  - docs/operations/PILOT_REJECTION_PLAYBOOK.md
+  - docs/operations/TASK_AUTHORING_STANDARD_v2.md
+  - docs/pilots/PILOT_SCOPE_TEMPLATE.md
+  - docs/invariants/NEUTRAL_HOST_INVARIANT_ENTRIES.md
+  - docs/invariants/INVARIANTS_MANIFEST.yml
+  - scripts/audit/verify_core_contract_gate.sh
+  - scripts/audit/verify_task_meta_schema.sh
+  - tasks/_template/meta.yml
+  - tasks/GF-W1-FRZ-001/meta.yml
+
+invariants:
+  - INV-159
+  - INV-160
+  - INV-161
+  - INV-162
+  - INV-163
+  - INV-164
+  - INV-165
+  - INV-166
+  - INV-167
+  - INV-168
+
+work:
+  - >-
+    Copy docs/operations/AGENTIC_SDLC_PILOT_POLICY.md from governance package v2
+    into repo. Confirm Layer B is labelled "Neutral host substrate". Confirm
+    Non-Negotiable Clause appears as a numbered clause in section 4.
+  - >-
+    Copy docs/operations/AGENT_GUARDRAILS_GREEN_FINANCE.md,
+    PILOT_REJECTION_PLAYBOOK.md, PILOT_SCOPE_TEMPLATE.md, and
+    TASK_AUTHORING_STANDARD_v2.md into repo.
+  - >-
+    Append INV-159 through INV-168 from NEUTRAL_HOST_INVARIANT_ENTRIES.md into
+    INVARIANTS_MANIFEST.yml. All entries must have status: roadmap. Do not
+    promote any entry to implemented — no verifier exists yet.
+  - >-
+    Replace scripts/audit/verify_core_contract_gate.sh with hardened v2.
+    Confirm: irrational_area typo is gone, fixture count is 8, neutrality
+    scan covers columns/enums/constraints/quoted identifiers.
+  - >-
+    Replace scripts/audit/verify_task_meta_schema.sh with v2 that includes
+    green finance pilot containment field checks in strict mode.
+  - >-
+    Update tasks/_template/meta.yml to include domain, pilot,
+    second_pilot_test, and pilot_scope_ref fields with usage guidance.
+  - >-
+    Run repo lints. Confirm all doc paths resolve. Confirm no broken references.
+
+acceptance_criteria:
+  - >-
+    All seven governance files exist at declared paths. bash scripts/dev/pre_ci.sh
+    exits 0. No broken internal references.
+  - >-
+    bash scripts/audit/verify_core_contract_gate.sh --fixtures exits 0 with
+    all 8 fixture scenarios passing.
+  - >-
+    INV-159 through INV-168 appear in INVARIANTS_MANIFEST.yml with status:
+    roadmap. Zero entries have status: implemented.
+  - >-
+    bash scripts/audit/verify_task_meta_schema.sh --mode strict on a green
+    finance task missing second_pilot_test exits non-zero.
+
+negative_tests:
+  - id: GF-W1-FRZ-001-N1
+    description: >-
+      Run verify_core_contract_gate.sh against a migration file containing
+      CREATE TABLE public.plastic_credit_batches. Gate must exit non-zero and
+      report the neutrality violation.
+    required: true
+  - id: GF-W1-FRZ-001-N2
+    description: >-
+      Run verify_task_meta_schema.sh --mode strict against a green finance
+      task meta.yml with second_pilot_test omitted. Must exit non-zero.
+    required: true
+
+verification:
+  - bash scripts/audit/verify_core_contract_gate.sh --fixtures
+  - bash scripts/audit/verify_task_meta_schema.sh --mode strict --task GF-W1-FRZ-001
+  - bash scripts/dev/pre_ci.sh
+
+evidence:
+  - path: evidence/phase0/core_contract_gate.json
+    must_include:
+      - check_id
+      - timestamp_utc
+      - git_sha
+      - status
+      - violations
+      - checks_run
+
+failure_modes:
+  - "Sector noun found in any governance document => FAIL"
+  - "INV entry promoted to implemented without verifier => BLOCKED"
+  - "Fixture self-test fails after merge => CRITICAL_FAIL"
+
+must_read:
+  - docs/operations/AI_AGENT_OPERATION_MANUAL.md
+  - docs/operations/AGENTIC_SDLC_PILOT_POLICY.md
+  - docs/operations/PILOT_REJECTION_PLAYBOOK.md
+
+second_pilot_test: >-
+  This task installs governance documents only. It introduces no schema.
+  The governance rules apply identically to a solar energy pilot and a
+  forestry carbon pilot — same ten rules, same gate checks, same template.
+  No sector-specific content exists in any governance file.
+pilot_scope_ref: not_applicable
+
+implementation_plan: docs/plans/phase0/GF-W1-FRZ-001/PLAN.md
+implementation_log: docs/plans/phase0/GF-W1-FRZ-001/EXEC_LOG.md
+notes: >-
+  Source files are in governance_package_v2.zip from the architecture session.
+  Confirm file checksums match before merge. This is Tranche A — runs in
+  parallel with FRZ-002 through FRZ-005 but must complete before any schema work.
+client: codex_cli
+assigned_agent: <UNASSIGNED>
+model: <UNASSIGNED>

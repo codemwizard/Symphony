@@ -1,0 +1,337 @@
+# ══════════════════════════════════════════════════════════════════════════════
+# RLS Table Registry — Single Source of Truth
+# TSK-RLS-ARCH-001 v10.1
+#
+# VALIDATED AGAINST LIVE DB: 2026-03-24T19:38:00Z
+# DB: symphony @ localhost:55432
+# Tables in public schema: 102, with tenant_id: 30
+#
+# RULES:
+# - Every table with tenant_id MUST be listed here
+# - CI query enforces: no public table with tenant_id may be absent
+# - No auto-discovery fallback. Missing table = CI failure.
+# - Tables marked "exists: false" are from unapplied migrations
+# ══════════════════════════════════════════════════════════════════════════════
+
+tables:
+  # ──────────────────────────────────────────────────────────────────────────
+  # DIRECT: table has its own tenant_id column (EXISTS IN DB)
+  # ──────────────────────────────────────────────────────────────────────────
+
+  # Core tenant tables
+  - name: tenants
+    type: DIRECT
+    tenant_column: tenant_id
+    source_migration: "0003"
+
+  - name: tenant_clients
+    type: DIRECT
+    tenant_column: tenant_id
+    source_migration: "0015"
+
+  - name: tenant_members
+    type: DIRECT
+    tenant_column: tenant_id
+    source_migration: "0016"
+
+  # Business foundation
+  - name: billing_usage_events
+    type: DIRECT
+    tenant_column: tenant_id
+    source_migration: "0020"
+    notes: "tenant_id is nullable — isolation may be partial"
+
+  # Escrow / state machine
+  - name: escrow_accounts
+    type: DIRECT
+    tenant_column: tenant_id
+    source_migration: "0045"
+
+  - name: escrow_events
+    type: DIRECT
+    tenant_column: tenant_id
+    source_migration: "0045"
+
+  - name: escrow_envelopes
+    type: DIRECT
+    tenant_column: tenant_id
+    source_migration: "0045"
+
+  - name: escrow_reservations
+    type: DIRECT
+    tenant_column: tenant_id
+    source_migration: "0045"
+
+  # Hierarchy (persons, programs, members, devices)
+  - name: programs
+    type: DIRECT
+    tenant_column: tenant_id
+    source_migration: "0046"
+
+  - name: persons
+    type: DIRECT
+    tenant_column: tenant_id
+    source_migration: "0047"
+
+  - name: members
+    type: DIRECT
+    tenant_column: tenant_id
+    source_migration: "0047"
+
+  - name: member_devices
+    type: DIRECT
+    tenant_column: tenant_id
+    source_migration: "0048"
+
+  - name: member_device_events
+    type: DIRECT
+    tenant_column: tenant_id
+    source_migration: "0049"
+
+  - name: program_migration_events
+    type: DIRECT
+    tenant_column: tenant_id
+    source_migration: "0052"
+
+  - name: sim_swap_alerts
+    type: DIRECT
+    tenant_column: tenant_id
+    source_migration: "0053"
+
+  # Regulatory
+  - name: regulatory_incidents
+    type: DIRECT
+    tenant_column: tenant_id
+    source_migration: "0060"
+
+  # CQRS projections
+  - name: instruction_status_projection
+    type: DIRECT
+    tenant_column: tenant_id
+    source_migration: "0070"
+
+  - name: evidence_bundle_projection
+    type: DIRECT
+    tenant_column: tenant_id
+    source_migration: "0070"
+
+  - name: escrow_summary_projection
+    type: DIRECT
+    tenant_column: tenant_id
+    source_migration: "0070"
+
+  - name: incident_case_projection
+    type: DIRECT
+    tenant_column: tenant_id
+    source_migration: "0070"
+
+  - name: program_member_summary_projection
+    type: DIRECT
+    tenant_column: tenant_id
+    source_migration: "0070"
+
+  # Ledger
+  - name: internal_ledger_journals
+    type: DIRECT
+    tenant_column: tenant_id
+    source_migration: "0071"
+
+  - name: internal_ledger_postings
+    type: DIRECT
+    tenant_column: tenant_id
+    source_migration: "0071"
+
+  # Suppliers
+  - name: supplier_registry
+    type: DIRECT
+    tenant_column: tenant_id
+    source_migration: "0075"
+
+  - name: program_supplier_allowlist
+    type: DIRECT
+    tenant_column: tenant_id
+    source_migration: "0075"
+
+  # Onboarding control plane
+  - name: tenant_registry
+    type: DIRECT
+    tenant_column: tenant_id
+    source_migration: "0076"
+
+  - name: programme_registry
+    type: DIRECT
+    tenant_column: tenant_id
+    source_migration: "0076"
+
+  - name: programme_policy_binding
+    type: DIRECT
+    tenant_column: tenant_id
+    source_migration: "0076"
+
+  # Payment outbox
+  - name: payment_outbox_attempts
+    type: DIRECT
+    tenant_column: tenant_id
+    source_migration: "0028"
+    notes: "tenant_id is nullable — isolation may be partial"
+
+  - name: payment_outbox_pending
+    type: DIRECT
+    tenant_column: tenant_id
+    source_migration: "0028"
+    notes: "tenant_id is nullable — isolation may be partial"
+
+  # External proofs
+  - name: external_proofs
+    type: DIRECT
+    tenant_column: tenant_id
+    source_migration: "0038"
+    notes: "tenant_id is nullable — isolation may be partial"
+
+  # ──────────────────────────────────────────────────────────────────────────
+  # INGRESS: tenant_id is nullable TEXT (not UUID)
+  # ──────────────────────────────────────────────────────────────────────────
+
+  - name: ingress_attestations
+    type: GLOBAL
+    reason: INGRESS_TABLE
+    reviewer: "architect"
+    reviewed_at: "2026-03-24T18:40:00Z"
+    notes: "tenant_id is nullable TEXT, not UUID FK — ingest landing zone, not tenant-scoped"
+
+  # ──────────────────────────────────────────────────────────────────────────
+  # GLOBAL: config/reference tables (no tenant isolation)
+  # ──────────────────────────────────────────────────────────────────────────
+
+  - name: risk_formula_versions
+    type: GLOBAL
+    reason: CONFIG_TABLE
+    reviewer: "architect"
+    reviewed_at: "2026-03-24T18:40:00Z"
+    notes: "Risk formula registry — shared configuration, no tenant_id"
+
+  # ──────────────────────────────────────────────────────────────────────────
+  # FUTURE: tables from unapplied GF migrations (0080–0093)
+  # These will be added when their migrations are applied.
+  # Listed here for completeness — do NOT generate policies for these.
+  # ──────────────────────────────────────────────────────────────────────────
+
+  - name: adapter_registrations
+    type: DIRECT
+    tenant_column: tenant_id
+    source_migration: "0080"
+    exists: false
+    notes: "GF migration not yet applied"
+
+  - name: monitoring_records
+    type: DIRECT
+    tenant_column: tenant_id
+    source_migration: "0082"
+    exists: false
+    notes: "GF migration not yet applied"
+
+  - name: evidence_nodes
+    type: DIRECT
+    tenant_column: tenant_id
+    source_migration: "0083"
+    exists: false
+    notes: "GF migration not yet applied"
+
+  - name: evidence_edges
+    type: JOIN
+    parent: evidence_nodes
+    fk_column: source_node_id
+    parent_pk: node_id
+    source_migration: "0083"
+    exists: false
+    notes: "GF migration not yet applied"
+
+  - name: asset_batches
+    type: DIRECT
+    tenant_column: tenant_id
+    source_migration: "0084"
+    exists: false
+    notes: "GF migration not yet applied"
+
+  - name: retirement_events
+    type: DIRECT
+    tenant_column: tenant_id
+    source_migration: "0084"
+    exists: false
+    notes: "GF migration not yet applied"
+
+  - name: asset_lifecycle_events
+    type: JOIN
+    parent: asset_batches
+    fk_column: asset_batch_id
+    parent_pk: asset_batch_id
+    source_migration: "0084"
+    exists: false
+    notes: "GF migration not yet applied"
+
+  - name: verifier_registry
+    type: DIRECT
+    tenant_column: tenant_id
+    source_migration: "0087"
+    exists: false
+    notes: "GF migration not yet applied"
+
+  - name: verifier_project_assignments
+    type: JOIN
+    parent: verifier_registry
+    fk_column: verifier_id
+    parent_pk: verifier_id
+    source_migration: "0087"
+    exists: false
+    notes: "GF migration not yet applied"
+
+  - name: gf_verifier_read_tokens
+    type: DIRECT
+    tenant_column: tenant_id
+    source_migration: "0093"
+    exists: false
+    notes: "GF migration not yet applied"
+
+  - name: interpretation_packs
+    type: GLOBAL
+    reason: CONFIG_TABLE
+    reviewer: "architect"
+    reviewed_at: "2026-03-24T18:40:00Z"
+    exists: false
+    notes: "GF migration not yet applied — sector methodology packs, shared across tenants"
+
+  # JURISDICTION tables (from unapplied GF migrations)
+  - name: regulatory_authorities
+    type: JURISDICTION
+    isolation_column: jurisdiction_id
+    source_migration: "0085"
+    exists: false
+    notes: "GF migration not yet applied"
+
+  - name: regulatory_checkpoints
+    type: JURISDICTION
+    isolation_column: jurisdiction_id
+    source_migration: "0085"
+    exists: false
+    notes: "GF migration not yet applied"
+
+  - name: jurisdiction_profiles
+    type: JURISDICTION
+    isolation_column: jurisdiction_id
+    source_migration: "0086"
+    exists: false
+    notes: "GF migration not yet applied"
+
+  - name: lifecycle_checkpoint_rules
+    type: JURISDICTION
+    isolation_column: jurisdiction_id
+    source_migration: "0086"
+    exists: false
+    notes: "GF migration not yet applied"
+
+  - name: authority_decisions
+    type: JURISDICTION
+    isolation_column: jurisdiction_id
+    source_migration: "0091"
+    exists: false
+    notes: "GF migration not yet applied"

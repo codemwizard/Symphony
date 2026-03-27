@@ -1,0 +1,197 @@
+schema_version: 1
+phase: '2'
+task_id: GF-W1-PLT-001
+title: "Register PWRM0001 as the first methodology adapter without any core schema modification"
+owner_role: SUPERVISOR
+status: planned
+priority: HIGH
+risk_class: GOVERNANCE
+blast_radius: DOCS_ONLY
+domain: green_finance
+pilot: true
+
+intent: >-
+  This is the architectural proof-of-concept. PWRM0001 must be registered as
+  a Phase 2 adapter using only the neutral Phase 0/1 infrastructure — no new
+  tables, no new lifecycle states, no new core functions. If this task requires
+  any schema change, the neutral host design has a gap that must be fixed first
+  through proper Phase 0/1 process. The pilot activation gate must pass before
+  this task is declared complete.
+
+anti_patterns:
+  - "Adding any migration as part of this task — zero migrations allowed"
+  - "Adding a new lifecycle state for PWRM workflow"
+  - "Hardcoding Zambia SI procedure details in code rather than interpretation pack data rows"
+  - "Declaring pilot live before verify_pilot_activation_gate.sh passes"
+
+depends_on:
+  - GF-W1-FNC-005
+  - GF-W1-GOV-001
+  - GF-W1-GOV-004
+
+blocks: []
+
+touches:
+  - docs/pilots/PILOT_PWRM0001/SCOPE.md
+  - tasks/GF-W1-PLT-001/meta.yml
+
+invariants:
+  - INV-135
+  - INV-136
+  - INV-139
+  - INV-141
+  - INV-144
+
+work:
+  - >-
+    Create docs/pilots/PILOT_PWRM0001/SCOPE.md with all required fields per
+    PILOT_SCOPE_TEMPLATE.md: methodology_adapter, neutral_host_tables used,
+    phase2_dependencies, no_new_neutral_tables_confirmed: true,
+    no_neutral_tables_altered_confirmed: true, jurisdiction_profile: ZM,
+    interpretation_pack_version: active Zambia carbon market pack,
+    structured second_pilot_test with candidate_sector_1: solar_energy and
+    candidate_sector_2: forestry_carbon, second_pilot_reviewed_by: Architecture Owner.
+  - >-
+    Insert adapter_registrations row for PWRM0001: adapter_code='PWRM0001',
+    methodology_code='PWRM', methodology_authority='Verra',
+    version_code='0001', issuance_semantic_mode='BATCH',
+    retirement_semantic_mode='PARTIAL', payload_schema_refs with entries for
+    'PWRM_COLLECTION_EVENT' and 'PWRM_WEIGHBRIDGE_RECORD' schema reference ids,
+    jurisdiction_compatibility: ['ZM'].
+  - >-
+    Insert methodology_versions row for PWRM0001 linking to the adapter row.
+  - >-
+    Insert jurisdiction_profiles row for Zambia: jurisdiction_code='ZM',
+    country_name='Zambia', national_registry_reference='ZEMA-NCR',
+    article6_participant=true, profile_status='ACTIVE'.
+  - >-
+    Insert interpretation_packs rows for Zambia carbon market domain at
+    REGULATORY authority level. confidence_level='PRACTICE_ASSUMED' for
+    any checkpoint practice not yet formally confirmed. legal_source_reference=
+    'ZM-SI-5-2026'. All provisional checkpoints set to
+    PENDING_AUTHORITY_CLARIFICATION or CONDITIONALLY_REQUIRED.
+  - >-
+    Insert lifecycle_checkpoint_rules rows for the PWRM0001 pilot with
+    rule_status values that honestly reflect current certainty:
+    REQUIRED for clearly mandated steps, PENDING_AUTHORITY_CLARIFICATION
+    for steps whose practice is not yet confirmed in government operations.
+  - >-
+    Run verify_pilot_activation_gate.sh --pilot PWRM0001. All six check groups
+    must pass before SCOPE.md is marked approved.
+  - >-
+    Do not insert any pilot-specific data that requires a new table or column.
+    If any data cannot be stored in the neutral schema, raise a Core Design Gap
+    issue per section 8 of AGENTIC_SDLC_PILOT_POLICY.md.
+
+acceptance_criteria:
+  - >-
+    bash scripts/audit/verify_pilot_activation_gate.sh --pilot PWRM0001 exits 0.
+  - >-
+    Zero migration files were created as part of this task. git diff --name-only
+    HEAD shows no schema/migrations files.
+  - >-
+    docs/pilots/PILOT_PWRM0001/SCOPE.md exists with all required fields populated
+    and second_pilot_reviewed_by non-empty.
+  - >-
+    adapter_registrations contains one row with adapter_code='PWRM0001'.
+  - >-
+    All interpretation pack rows have confidence_level explicitly set.
+  - >-
+    All lifecycle_checkpoint_rules rows have rule_status explicitly set — no NULL states.
+
+negative_tests:
+  - id: GF-W1-PLT-001-N1
+    description: >-
+      Attempt to run verify_pilot_activation_gate.sh before adapter_registrations
+      row is inserted. Gate must exit non-zero on check group 3 failure.
+    required: true
+  - id: GF-W1-PLT-001-N2
+    description: >-
+      Attempt to insert a monitoring_records row with record_type=
+      'PWRM_COLLECTION_EVENT' and payload containing a field named
+      'contamination_rate_pct'. The core function must accept it (opaque payload).
+      Then confirm no core function references contamination_rate_pct by name.
+      AST scan of all core function SQL must exit 0.
+    required: true
+
+verification:
+  - bash scripts/audit/verify_pilot_activation_gate.sh --pilot PWRM0001
+  - bash scripts/audit/verify_core_contract_gate.sh
+  - python3 scripts/audit/verify_neutral_schema_ast.py schema/migrations/
+  - bash scripts/dev/pre_ci.sh
+
+evidence:
+  - path: evidence/phase0/pilot_activation_PWRM0001.json
+    must_include:
+      - task_id
+      - git_sha
+      - timestamp_utc
+      - pilot_id
+      - status
+      - check_group_results
+      - zero_migrations_confirmed
+      - adapter_registration_confirmed
+      - interpretation_packs_seeded
+      - checkpoint_rules_complete
+
+failure_modes:
+  - "Any migration created as part of this task => CRITICAL_FAIL (Rules 1, 2)"
+  - "Pilot activation gate not run before declaring complete => CRITICAL_FAIL"
+  - "Any checkpoint rule with null state at time of pilot go-live => CRITICAL_FAIL"
+  - "Core Design Gap raised but bypassed under pilot deadline pressure => CRITICAL_FAIL"
+
+must_read:
+  - docs/operations/AI_AGENT_OPERATION_MANUAL.md
+  - docs/operations/AGENTIC_SDLC_PILOT_POLICY.md
+  - docs/operations/PILOT_REJECTION_PLAYBOOK.md
+  - docs/architecture/ADAPTER_CONTRACT_INTERFACE.md
+  - docs/architecture/INTERPRETATION_PACK_SCHEMA.md
+  - docs/operations/GREEN_FINANCE_VOLATILITY_MAP.md
+
+second_pilot_test:
+  candidate_sector_1: solar_energy
+  candidate_sector_2: forestry_carbon
+  unchanged_core_tables:
+    - adapter_registrations
+    - methodology_versions
+    - monitoring_records
+    - evidence_nodes
+    - asset_batches
+    - regulatory_checkpoints
+    - interpretation_packs
+  unchanged_core_functions:
+    - register_project
+    - record_monitoring_record
+    - attach_evidence
+    - attempt_lifecycle_transition
+    - issue_asset_batch
+    - retire_asset_batch
+  adapter_only_differences:
+    - adapter_code value (PWRM0001 vs VM0044 for solar)
+    - payload_schema_refs content
+    - record_type values registered
+    - methodology_code and version_code values
+  jurisdiction_profile_impact: >-
+    A solar pilot in Zimbabwe would add jurisdiction_profiles row with
+    jurisdiction_code='ZW' and its own interpretation_packs rows. The
+    PWRM0001 Zambia rows are not changed.
+  required_core_changes: []
+  explanation: >-
+    The second pilot can begin immediately after the neutral host is stable
+    by registering its adapter in adapter_registrations and seeding its
+    jurisdiction profile and interpretation packs. No core schema modification
+    is required. No core function modification is required. The entire
+    difference between Pilot 1 (PWRM0001/Zambia) and Pilot 2 (Solar/Zimbabwe)
+    is data in the neutral tables. This is the architecture working as designed.
+  second_pilot_reviewed_by: Architecture Owner
+pilot_scope_ref: docs/pilots/PILOT_PWRM0001/SCOPE.md
+
+implementation_plan: docs/plans/phase2/GF-W1-PLT-001/PLAN.md
+implementation_log: docs/plans/phase2/GF-W1-PLT-001/EXEC_LOG.md
+notes: >-
+  This is the proof. If it requires a schema change, the neutral host has a
+  gap. Fix the gap through Phase 0/1 process. Never proceed with a schema
+  change disguised as pilot data work.
+client: codex_cli
+assigned_agent: <UNASSIGNED>
+model: <UNASSIGNED>

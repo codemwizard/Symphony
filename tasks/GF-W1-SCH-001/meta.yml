@@ -1,0 +1,171 @@
+schema_version: 1
+phase: '0'
+task_id: GF-W1-SCH-001
+title: "Migration 0070: adapter_registrations structural hook"
+owner_role: DB_FOUNDATION
+status: completed
+priority: CRITICAL
+risk_class: INTEGRITY
+blast_radius: DB_SCHEMA
+domain: green_finance
+pilot: false
+
+intent: >-
+  adapter_registrations is the most structurally stable green finance table.
+  It defines what a methodology adapter is — nothing more. It must be in its
+  own migration, separate from interpretation_packs, because interpretation
+  schema is legally volatile and will need revision as regulations clarify.
+  Coupling these two tables in one migration would require touching adapter
+  contract assumptions every time an interpretation schema field is adjusted.
+  They have different volatility classes and must be separated.
+
+anti_patterns:
+  - "Adding interpretation_packs to this migration — it belongs in SCH-002 because it is policy-volatile"
+  - "Adding sector-specific columns to adapter_registrations under any justification"
+  - "Seeding real methodology data here — seed data belongs at PLT-001"
+  - "Adding Phase 1 functions — Phase 0 is structural hooks only"
+
+depends_on:
+  - GF-W1-DSN-001
+  - GF-W1-GOV-002
+  - GF-W1-GOV-003
+  - GF-W1-GOV-005
+  - GF-W1-FRZ-005
+
+blocks:
+  - GF-W1-SCH-002
+
+touches:
+  - schema/migrations/0080_gf_adapter_registrations.sql
+  - schema/migrations/0080_gf_adapter_registrations.meta.yml
+  - schema/migrations/MIGRATION_HEAD
+  - scripts/db/verify_gf_sch_001.sh
+  - tasks/GF-W1-SCH-001/meta.yml
+
+invariants:
+  - INV-160
+
+work:
+  - >-
+    Write 0080_gf_adapter_registrations.sql exactly per GF-W1-DSN-001 field
+    spec. Fields: adapter_registration_id UUID PK, tenant_id UUID NOT NULL FK,
+    adapter_code TEXT NOT NULL, methodology_code TEXT NOT NULL,
+    methodology_authority TEXT NOT NULL, version_code TEXT NOT NULL,
+    is_active BOOLEAN NOT NULL DEFAULT false,
+    payload_schema_refs JSONB NOT NULL DEFAULT '[]',
+    checklist_refs JSONB NOT NULL DEFAULT '[]',
+    entrypoint_refs JSONB NOT NULL DEFAULT '[]',
+    issuance_semantic_mode TEXT NOT NULL,
+    retirement_semantic_mode TEXT NOT NULL,
+    jurisdiction_compatibility JSONB NOT NULL DEFAULT '{}',
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+    UNIQUE(tenant_id, adapter_code, methodology_code, version_code).
+    No sector nouns anywhere. Append-only trigger. RLS by tenant_id.
+    Revoke-first privilege posture.
+  - >-
+    Write 0080_gf_adapter_registrations.meta.yml sidecar:
+    phase=0, layer=CORE_SCHEMA, volatility_class=CORE_SCHEMA,
+    touches_core_schema=true, introduces_identifiers=[adapter_registrations],
+    second_pilot_justification_required=true.
+  - >-
+    Update schema/migrations/MIGRATION_HEAD from 0079 to 0080.
+  - >-
+    Write scripts/db/verify_gf_sch_001.sh: confirm table exists, append-only
+    trigger present, RLS enabled, UNIQUE constraint exists, no sector nouns
+    in table or column names.
+  - >-
+    Run AST verifier and migration sequence guard before PR.
+
+acceptance_criteria:
+  - >-
+    bash scripts/db/verify_gf_sch_001.sh exits 0 against test DB.
+  - >-
+    INSERT into adapter_registrations with neutral data succeeds.
+    UPDATE fails with append-only SQLSTATE.
+  - >-
+    python3 scripts/audit/verify_neutral_schema_ast.py
+    schema/migrations/0070_gf_adapter_registrations.sql exits 0.
+  - >-
+    bash scripts/audit/verify_migration_sequence.sh exits 0 with MIGRATION_HEAD=0070.
+  - >-
+    Evidence file evidence/phase0/gf_sch_001.json exists and passes verifier.
+
+negative_tests:
+  - id: GF-W1-SCH-001-N1
+    description: >-
+      Attempt UPDATE on adapter_registrations after INSERT. Must fail with
+      append-only SQLSTATE. Append-only is non-negotiable for adapter contract.
+    required: true
+  - id: GF-W1-SCH-001-N2
+    description: >-
+      Run AST verifier against the migration file. Must exit 0 — zero sector
+      nouns in any identifier position.
+    required: true
+  - id: GF-W1-SCH-001-N3
+    description: >-
+      Insert two adapter registrations with identical
+      (tenant_id, adapter_code, methodology_code, version_code). Second INSERT
+      must fail with unique constraint violation.
+    required: true
+
+verification:
+  - bash scripts/db/verify_gf_sch_001.sh
+  - python3 scripts/audit/verify_neutral_schema_ast.py schema/migrations/0070_gf_adapter_registrations.sql
+  - python3 scripts/audit/verify_migration_meta_alignment.py
+  - bash scripts/audit/verify_migration_sequence.sh
+  - bash scripts/dev/pre_ci.sh
+
+evidence:
+  - path: evidence/phase0/gf_sch_001.json
+    must_include:
+      - task_id
+      - git_sha
+      - timestamp_utc
+      - status
+      - table_exists
+      - append_only_confirmed
+      - rls_confirmed
+      - ast_scan_clean
+      - migration_head_updated
+
+failure_modes:
+  - "Sector noun in migration detected by AST verifier => CRITICAL_FAIL"
+  - "Append-only trigger absent => CRITICAL_FAIL"
+  - "interpretation_packs added to this migration => BLOCKED (volatility class violation)"
+  - "Evidence file absent at task completion => FAIL"
+
+must_read:
+  - docs/operations/AI_AGENT_OPERATION_MANUAL.md
+  - docs/operations/AGENTIC_SDLC_PILOT_POLICY.md
+  - docs/operations/PILOT_REJECTION_PLAYBOOK.md
+  - docs/architecture/ADAPTER_CONTRACT_INTERFACE.md
+  - docs/operations/GREEN_FINANCE_VOLATILITY_MAP.md
+
+second_pilot_test:
+  candidate_sector_1: solar_energy
+  candidate_sector_2: forestry_carbon
+  unchanged_core_tables: [adapter_registrations]
+  unchanged_core_functions: []
+  adapter_only_differences:
+    - "adapter_code value: 'VM0044' for solar vs 'REDD_PLUS' for forestry"
+    - "methodology_code value differs"
+    - "payload_schema_refs content differs — registered in the adapter row, not in schema"
+  jurisdiction_profile_impact: none — adapter_registrations has no jurisdiction column
+  required_core_changes: []
+  explanation: >-
+    adapter_registrations holds methodology identity only. A solar adapter and
+    a forestry adapter both insert rows into the same table with different
+    adapter_code and methodology_code values. The table structure does not
+    change between sectors. No migration is required for the second pilot.
+  second_pilot_reviewed_by: Architecture Owner
+pilot_scope_ref: not_applicable
+
+implementation_plan: docs/plans/phase0/GF-W1-SCH-001/PLAN.md
+implementation_log: docs/plans/phase0/GF-W1-SCH-001/EXEC_LOG.md
+notes: >-
+  volatility_class=CORE_SCHEMA. This table should almost never need migration
+  after Wave 1. If a proposed change to this migration is driven by
+  interpretation schema evolution, reject it — that belongs in SCH-002.
+client: codex_cli
+assigned_agent: <UNASSIGNED>
+model: <UNASSIGNED>

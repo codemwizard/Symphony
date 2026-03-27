@@ -1,0 +1,188 @@
+schema_version: 1
+phase: '0'
+task_id: GF-W1-SCH-002A
+title: "Introduce foundational root tables projects and methodology_versions before all dependent Green Finance schema tasks"
+owner_role: DB_FOUNDATION
+status: planned
+priority: CRITICAL
+risk_class: INTEGRITY
+blast_radius: DB_SCHEMA
+
+intent: >-
+  The previous Green Finance schema chain drifted because foundational ownership
+  of `projects` and `methodology_versions` was deferred to downstream patching.
+  This task restores the neutral-host root by creating those tables exactly
+  once, before any dependent task is allowed to reference them, and by binding
+  their ownership to one corrective task pack.
+
+anti_patterns:
+  - "Recreating foundational ownership in downstream tasks"
+  - "Using IF NOT EXISTS to hide duplicate root-table ownership"
+  - "Mixing downstream lifecycle or evidence tables into this foundational task"
+  - "Declaring sidecars as authoritative without matching them against parsed SQL"
+
+depends_on: []
+
+blocks:
+  - GF-W1-SCH-003
+  - GF-W1-SCH-004
+  - GF-W1-SCH-005
+  - GF-W1-SCH-008
+  - GF-W1-PLT-001
+
+touches:
+  - schema/migrations/0097_gf_projects.sql
+  - schema/migrations/0097_gf_projects.meta.yml
+  - schema/migrations/0098_gf_methodology_versions.sql
+  - schema/migrations/0098_gf_methodology_versions.meta.yml
+  - schema/migrations/MIGRATION_HEAD
+  - scripts/db/verify_gf_sch_002a.sh
+  - evidence/phase0/gf_sch_002a.json
+  - tasks/GF-W1-SCH-002A/meta.yml
+
+invariants:
+  - INV-SCHEMA-OWNERSHIP-001
+  - INV-SCHEMA-ORDER-002
+  - INV-SCHEMA-NO-FORWARD-REF-003
+  - INV-SCHEMA-DETERMINISM-004
+  - INV-SCHEMA-EXPLICIT-DEP-005
+  - INV-SCHEMA-TASK-REF-DEP-006
+  - INV-SCHEMA-OWNERSHIP-MAP-007
+  - INV-SCHEMA-OWNERSHIP-CLOSURE-008
+  - INV-SCHEMA-STATIC-DDL-ONLY-010
+  - INV-MIGRATION-HEAD-CONSISTENCY-011
+  - INV-SCHEMA-SIDECAR-SQL-CONSISTENCY-012
+  - INV-SCHEMA-NO-PROCEDURAL-DDL-013
+  - INV-MIGRATION-SEQUENCE-INTEGRITY-014
+  - INV-SCHEMA-NO-DESTRUCTIVE-DDL-015
+
+work:
+  - >-
+    [ID gf_w1_sch_002a_work_item_01] Create migration 0097 for
+    `public.projects` as the sole governed owner of the foundational projects table.
+  - >-
+    [ID gf_w1_sch_002a_work_item_02] Create migration 0098 for
+    `public.methodology_versions` with a forward-safe FK to `projects`.
+  - >-
+    [ID gf_w1_sch_002a_work_item_03] Write sidecars that declare
+    `task_id`, `introduced_identifiers`, `phase`, `layer`, and
+    `volatility_class`, and update `MIGRATION_HEAD` from actual filesystem state.
+  - >-
+    [ID gf_w1_sch_002a_work_item_04] Add `scripts/db/verify_gf_sch_002a.sh`
+    to prove unique ownership, root ordering, sidecar/SQL consistency, and
+    rejection of undeclared, procedural, dynamic, or destructive schema behavior.
+  - >-
+    [ID gf_w1_sch_002a_work_item_05] Emit bounded evidence to
+    `evidence/phase0/gf_sch_002a.json`.
+
+acceptance_criteria:
+  - >-
+    [ID gf_w1_sch_002a_work_item_01] `public.projects` is created exactly once
+    by migration 0097 and not recreated elsewhere.
+  - >-
+    [ID gf_w1_sch_002a_work_item_02] `public.methodology_versions` is created
+    exactly once by migration 0098 and its `project_id` FK resolves to
+    `public.projects` in ordered graph validation.
+  - >-
+    [ID gf_w1_sch_002a_work_item_03] Sidecars for 0097 and 0098 exactly match
+    the governed objects parsed from SQL and `MIGRATION_HEAD` equals the highest
+    migration prefix on disk.
+  - >-
+    [ID gf_w1_sch_002a_work_item_04] `bash scripts/db/verify_gf_sch_002a.sh`
+    exits 0 and fails closed on duplicate ownership, undeclared objects,
+    procedural SQL, dynamic DDL, or destructive DDL.
+  - >-
+    [ID gf_w1_sch_002a_work_item_05] Evidence file
+    `evidence/phase0/gf_sch_002a.json` exists and includes the declared proof fields.
+
+negative_tests:
+  - id: GF-W1-SCH-002A-N1
+    description: >-
+      Add `IF NOT EXISTS` to either root table create statement. The verifier
+      must fail and mark the root-table conditional create as invalid.
+    required: true
+  - id: GF-W1-SCH-002A-N2
+    description: >-
+      Create an undeclared extra governed object in either migration side-by-side
+      with the root tables. Sidecar/SQL consistency and ownership closure must fail.
+    required: true
+
+verification:
+  - >-
+    grep -n "CREATE TABLE" schema/migrations/0097_gf_projects.sql schema/migrations/0098_gf_methodology_versions.sql || exit 1 # [ID gf_w1_sch_002a_work_item_01] [ID gf_w1_sch_002a_work_item_02]
+  - >-
+    test -x scripts/audit/verify_migration_meta_alignment.py && python3 scripts/audit/verify_migration_meta_alignment.py || exit 1 # [ID gf_w1_sch_002a_work_item_03]
+  - >-
+    bash scripts/db/verify_gf_sch_002a.sh | tee evidence/phase0/gf_sch_002a.json >/dev/null && test -f evidence/phase0/gf_sch_002a.json || exit 1 # [ID gf_w1_sch_002a_work_item_04] [ID gf_w1_sch_002a_work_item_05]
+
+evidence:
+  - path: evidence/phase0/gf_sch_002a.json
+    must_include:
+      - task_id
+      - git_sha
+      - timestamp_utc
+      - status
+      - projects_owner
+      - methodology_versions_owner
+      - ownership_uniqueness_confirmed
+      - reference_order_confirmed
+      - no_if_not_exists_confirmed
+      - owning_task_mapping_confirmed
+      - ownership_closure_confirmed
+      - sidecar_sql_consistency_confirmed
+      - migration_head_confirmed
+      - checks
+      - observed_paths
+      - observed_hashes
+      - command_outputs
+      - execution_trace
+
+failure_modes:
+  - "projects has multiple create owners => CRITICAL_FAIL"
+  - "methodology_versions has multiple create owners => CRITICAL_FAIL"
+  - "Root table uses IF NOT EXISTS => FAIL"
+  - "Sidecar does not match parsed SQL => CRITICAL_FAIL"
+  - "Undeclared created schema object => CRITICAL_FAIL"
+  - "Dynamic or procedural schema creation detected => CRITICAL_FAIL"
+  - "Destructive DDL detected => CRITICAL_FAIL"
+  - "Evidence file missing => FAIL"
+
+must_read:
+  - docs/operations/AI_AGENT_OPERATION_MANUAL.md
+  - docs/operations/AGENTIC_SDLC_PILOT_POLICY.md
+  - docs/operations/PILOT_REJECTION_PLAYBOOK.md
+  - docs/operations/AGENT_GUARDRAILS_GREEN_FINANCE.md
+
+implementation_plan: docs/plans/phase0/GF-W1-SCH-002A/PLAN.md
+implementation_log: docs/plans/phase0/GF-W1-SCH-002A/EXEC_LOG.md
+
+notes: >-
+  The original `0072`-`0076` target range is already occupied in the live repo
+  state. The corrective sequence is therefore renumbered forward starting at
+  0097 to avoid collision while preserving a contiguous Green Finance rebuild
+  block.
+client: codex_cli
+assigned_agent: <UNASSIGNED>
+model: <UNASSIGNED>
+
+domain: green_finance
+pilot: true
+second_pilot_test:
+  candidate_sector_1: solar_energy
+  candidate_sector_2: forestry_carbon
+  unchanged_core_tables: [projects, methodology_versions]
+  unchanged_core_functions: [all]
+  adapter_only_differences:
+    - "Only adapter/data rows change between sectors; the foundational tables remain neutral"
+    - "Sector-specific semantics belong in downstream data and adapter registration, not in root-table schema"
+  jurisdiction_profile_impact: >-
+    Jurisdiction variation appears in downstream policy/profile rows. The
+    foundational `projects` and `methodology_versions` tables remain unchanged.
+  required_core_changes: []
+  explanation: >-
+    Solar and forestry pilots both require the same neutral ownership anchors:
+    a project record and one or more methodology-version records linked to that
+    project. No sector-specific columns are needed in either table, so a second
+    pilot reuses the same foundational schema with different data only.
+  second_pilot_reviewed_by: Architecture Owner
+pilot_scope_ref: not_applicable

@@ -1,0 +1,157 @@
+schema_version: 1
+phase: '0'
+task_id: GF-W1-SCH-005
+title: "Migration 0077: asset_batches, asset_lifecycle_events, retirement_events neutral lifecycle tables"
+owner_role: DB_FOUNDATION
+status: planned
+priority: CRITICAL
+risk_class: INTEGRITY
+blast_radius: DB_SCHEMA
+domain: green_finance
+pilot: false
+
+intent: >-
+  Asset lifecycle is the issuance and retirement layer for all green finance
+  instruments. The five-state minimal lifecycle (DRAFT, ACTIVE, ISSUED, RETIRED,
+  CANCELLED) deliberately excludes intermediate states that belong in checkpoint
+  configuration. Partial retirement is expressed through retirement_events
+  retired_quantity field, not a PARTIALLY_RETIRED state. Retirement is
+  irrevocable by trigger. No sector-specific states are permitted.
+
+anti_patterns:
+  - "Adding SOLAR_VERIFIED, PLASTIC_ISSUED, or any sector-prefixed state"
+  - "Adding PARTIALLY_RETIRED as a lifecycle state — use retirement_events quantity"
+  - "Adding verification_decision_id or evidence_snapshot_id as required FKs — deferred to Phase 1"
+
+depends_on:
+  - GF-W1-SCH-004
+
+blocks:
+  - GF-W1-SCH-007
+
+touches:
+  - schema/migrations/0077_gf_asset_lifecycle.sql
+  - schema/migrations/0077_gf_asset_lifecycle.meta.yml
+  - schema/migrations/MIGRATION_HEAD
+  - scripts/db/verify_gf_asset_lifecycle.sh
+  - tasks/GF-W1-SCH-005/meta.yml
+
+invariants:
+  - INV-140
+
+work:
+  - >-
+    Write 0077_gf_asset_lifecycle.sql. asset_batches fields: asset_batch_id UUID PK,
+    tenant_id UUID NOT NULL FK tenants, project_id UUID NOT NULL FK projects,
+    methodology_version_id UUID NOT NULL FK methodology_versions,
+    adapter_registration_id UUID NOT NULL FK adapter_registrations,
+    asset_type TEXT NOT NULL, vintage_start DATE NULL, vintage_end DATE NULL,
+    issuable_quantity NUMERIC(20,6) NOT NULL CHECK (issuable_quantity > 0),
+    unit TEXT NOT NULL, status TEXT NOT NULL CHECK IN
+    ('DRAFT','ACTIVE','ISSUED','RETIRED','CANCELLED'),
+    issued_at TIMESTAMPTZ NULL, created_at TIMESTAMPTZ NOT NULL DEFAULT now().
+    RLS by tenant_id. Status transitions via lifecycle events only — no direct
+    UPDATE on status.
+  - >-
+    asset_lifecycle_events: event_id UUID PK, asset_batch_id UUID NOT NULL FK
+    asset_batches, from_status TEXT NULL, to_status TEXT NOT NULL,
+    event_reason TEXT NOT NULL, event_payload_json JSONB NOT NULL DEFAULT '{}',
+    performed_by UUID NOT NULL, occurred_at TIMESTAMPTZ NOT NULL DEFAULT now().
+    Append-only trigger.
+  - >-
+    retirement_events: retirement_event_id UUID PK, tenant_id UUID NOT NULL,
+    asset_batch_id UUID NOT NULL FK asset_batches,
+    claim_reference TEXT NULL, retired_quantity NUMERIC(20,6) NOT NULL
+    CHECK (retired_quantity > 0), retirement_reason TEXT NOT NULL,
+    certificate_reference TEXT NULL, retired_at TIMESTAMPTZ NOT NULL DEFAULT now().
+    Append-only trigger. Irrevocable trigger: once a retirement row exists,
+    raise SQLSTATE on any attempt to UPDATE or DELETE it.
+    Quantity guard: trigger ensures retired_quantity does not exceed
+    remaining (issuable_quantity minus sum of prior retirement_events).
+  - >-
+    Write sidecar. Update MIGRATION_HEAD to 0077.
+  - >-
+    Write verify_gf_asset_lifecycle.sh.
+
+acceptance_criteria:
+  - >-
+    status CHECK allows exactly DRAFT, ACTIVE, ISSUED, RETIRED, CANCELLED.
+    INSERT with status = 'SOLAR_VERIFIED' fails.
+  - >-
+    Retirement irrevocable trigger fires on UPDATE of any retirement_events row.
+  - >-
+    Retirement quantity guard fires when retired_quantity would exceed remaining.
+  - >-
+    asset_lifecycle_events append-only trigger fires on UPDATE.
+  - >-
+    AST verifier exits 0.
+
+negative_tests:
+  - id: GF-W1-SCH-005-N1
+    description: >-
+      Insert asset_batch with status = 'PLASTIC_ISSUED'. Must fail with
+      CHECK constraint violation.
+    required: true
+  - id: GF-W1-SCH-005-N2
+    description: >-
+      Insert a retirement_events row, then attempt UPDATE on retired_quantity.
+      Must fail with irrevocable trigger SQLSTATE.
+    required: true
+  - id: GF-W1-SCH-005-N3
+    description: >-
+      Insert retirement_events rows whose sum exceeds asset_batch
+      issuable_quantity. Final insert must fail with quantity guard SQLSTATE.
+    required: true
+
+verification:
+  - bash scripts/db/verify_gf_asset_lifecycle.sh
+  - python3 scripts/audit/verify_neutral_schema_ast.py schema/migrations/0077_gf_asset_lifecycle.sql
+  - bash scripts/audit/verify_migration_sequence.sh
+  - bash scripts/dev/pre_ci.sh
+
+evidence:
+  - path: evidence/phase0/gf_asset_lifecycle.json
+    must_include:
+      - task_id
+      - git_sha
+      - timestamp_utc
+      - status
+      - lifecycle_states_confirmed
+      - retirement_irrevocable_confirmed
+      - quantity_guard_confirmed
+      - ast_scan_clean
+
+failure_modes:
+  - "Sector-prefixed lifecycle state added => CRITICAL_FAIL (Rule 7)"
+  - "Retirement not irrevocable — credits can be un-retired => CRITICAL_FAIL"
+  - "Quantity guard absent — over-retirement possible => CRITICAL_FAIL"
+
+must_read:
+  - docs/operations/AI_AGENT_OPERATION_MANUAL.md
+  - docs/operations/AGENTIC_SDLC_PILOT_POLICY.md
+  - docs/operations/GREEN_FINANCE_VOLATILITY_MAP.md
+
+second_pilot_test:
+  candidate_sector_1: solar_energy
+  candidate_sector_2: forestry_carbon
+  unchanged_core_tables: [asset_batches, asset_lifecycle_events, retirement_events]
+  unchanged_core_functions: []
+  adapter_only_differences:
+    - asset_type value (SOLAR_GENERATION_CREDIT vs FOREST_CARBON_CREDIT)
+    - unit value (MWh vs tCO2e)
+  jurisdiction_profile_impact: none
+  required_core_changes: []
+  explanation: >-
+    Solar generation credits and forest carbon credits both issue via asset_batches.
+    Both retire via retirement_events. The lifecycle states are identical.
+    The only difference is asset_type and unit — both are data field values,
+    not schema changes. The irrevocable retirement guarantee applies to both.
+  second_pilot_reviewed_by: Architecture Owner
+pilot_scope_ref: not_applicable
+
+implementation_plan: docs/plans/phase0/GF-W1-SCH-005/PLAN.md
+implementation_log: docs/plans/phase0/GF-W1-SCH-005/EXEC_LOG.md
+notes: verification_decision_id and evidence_snapshot_id are intentionally absent from Wave 1.
+client: codex_cli
+assigned_agent: <UNASSIGNED>
+model: <UNASSIGNED>

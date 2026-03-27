@@ -1,0 +1,15 @@
+phase: '1'
+layer: CORE_FUNCTIONS
+volatility_class: CORE_FUNCTIONS
+touches_core_schema: false
+introduces_identifiers:
+  - attempt_lifecycle_transition
+  - record_authority_decision
+  - query_authority_decisions
+  - get_checkpoint_requirements
+  - authority_decisions_append_only_trigger
+second_pilot_justification_required: true
+notes: >-
+  Phase 1 regulatory transition and authority decision functions.
+  SECURITY DEFINER with hardened search_path.
+  Fail-closed checkpoint gating with PENDING_CLARIFICATION provisional pass.

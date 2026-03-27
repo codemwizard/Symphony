@@ -1,0 +1,15 @@
+phase: '1'
+layer: CORE_FUNCTIONS
+volatility_class: CORE_FUNCTIONS
+touches_core_schema: false
+introduces_identifiers:
+  - issue_asset_batch
+  - retire_asset_batch
+  - record_asset_lifecycle_event
+  - query_asset_batch
+  - list_project_asset_batches
+second_pilot_justification_required: true
+notes: >-
+  Phase 1 asset lifecycle functions for issuance and retirement.
+  SECURITY DEFINER with hardened search_path.
+  Fail-closed checkpoint gating, quantity guards, append-only retirement events.

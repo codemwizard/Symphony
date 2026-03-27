@@ -1,0 +1,145 @@
+schema_version: 1
+phase: '0'
+task_id: GF-W1-GOV-005
+title: "Add migration sequence guard to prevent numbering gaps, duplicates, and collisions"
+owner_role: DB_FOUNDATION
+status: planned
+priority: HIGH
+risk_class: INTEGRITY
+blast_radius: CI_GATES
+domain: green_finance
+pilot: false
+
+intent: >-
+  Migration numbering collisions, gaps, and out-of-order applications are a
+  class of failure that always happens eventually and is always attributed to
+  human error. Agents do not check sequence state unless forced. A CI script
+  that validates the migration sequence against the repo HEAD state makes this
+  impossible to miss before merge. The next available number for green finance
+  is 0070 — this guard enforces that and all subsequent assignments.
+
+anti_patterns:
+  - "Relying on developers to manually check the highest migration number"
+  - "Running the guard only locally — it must be blocking in CI"
+  - "Checking only for duplicates without checking for gaps"
+
+depends_on:
+  - GF-W1-FRZ-001
+  - GF-W1-FRZ-003
+
+blocks:
+  - GF-W1-SCH-001
+
+touches:
+  - scripts/audit/verify_migration_sequence.sh
+  - .github/workflows/green_finance_contract_gate.yml
+  - tasks/GF-W1-GOV-005/meta.yml
+
+invariants: []
+
+work:
+  - >-
+    Create scripts/audit/verify_migration_sequence.sh. Scan schema/migrations/
+    for all *.sql files matching the four-digit prefix pattern. Extract all
+    migration numbers. Check: no gaps in the sequence, no duplicate numbers,
+    highest number matches the expected HEAD state from a declared
+    MIGRATION_HEAD file or from git log of the migrations directory.
+  - >-
+    Create schema/migrations/MIGRATION_HEAD: a single-line file containing the
+    current highest committed migration number (0069). This file is updated
+    atomically in the same PR as any new migration. The guard script compares
+    the actual highest number in the directory against MIGRATION_HEAD.
+  - >-
+    Rules enforced by the script:
+    (1) No gaps — if 0070 and 0072 exist but 0071 does not, fail.
+    (2) No duplicates — if two files share the same four-digit prefix, fail.
+    (3) HEAD match — if the highest file number does not match MIGRATION_HEAD,
+    fail.
+    (4) New migration must be exactly MIGRATION_HEAD + 1 in the PR.
+  - >-
+    Wire into .github/workflows/green_finance_contract_gate.yml as a blocking
+    job that runs before any schema migration is permitted to merge.
+  - >-
+    Document the process: when adding migration 0070, the PR must also update
+    MIGRATION_HEAD from 0069 to 0070. These are atomic. Separate PRs are not allowed.
+
+acceptance_criteria:
+  - >-
+    bash scripts/audit/verify_migration_sequence.sh exits non-zero when a gap
+    exists between 0070 and 0072 with 0071 absent.
+  - >-
+    Exits non-zero when two files share the 0070_ prefix.
+  - >-
+    Exits non-zero when MIGRATION_HEAD says 0069 but the highest file is 0071.
+  - >-
+    Exits 0 on a clean sequential set with matching HEAD file.
+
+negative_tests:
+  - id: GF-W1-GOV-005-N1
+    description: >-
+      Create a test directory with migrations 0070, 0072 (gap at 0071).
+      Run sequence guard against it. Must exit non-zero and identify the gap.
+    required: true
+  - id: GF-W1-GOV-005-N2
+    description: >-
+      Create two files with prefix 0070_ in the test directory. Guard must
+      exit non-zero and identify the duplicate.
+    required: true
+  - id: GF-W1-GOV-005-N3
+    description: >-
+      Set MIGRATION_HEAD to 0069 but add migration 0071 to the directory.
+      Guard must exit non-zero and report the HEAD mismatch.
+    required: true
+
+verification:
+  - bash scripts/audit/verify_migration_sequence.sh
+  - bash scripts/dev/pre_ci.sh
+
+evidence:
+  - path: evidence/phase0/migration_sequence_guard.json
+    must_include:
+      - task_id
+      - git_sha
+      - timestamp_utc
+      - status
+      - migrations_found
+      - highest_number
+      - migration_head
+      - gaps_detected
+      - duplicates_detected
+
+failure_modes:
+  - "Gap between migration numbers causes out-of-order application in deploy => CRITICAL_FAIL"
+  - "Duplicate migration number causes deploy failure in production => CRITICAL_FAIL"
+  - "Guard runs locally only — collision merges undetected => CRITICAL_FAIL"
+
+must_read:
+  - docs/operations/AI_AGENT_OPERATION_MANUAL.md
+  - docs/operations/AGENTIC_SDLC_PILOT_POLICY.md
+
+second_pilot_test:
+  candidate_sector_1: solar_energy
+  candidate_sector_2: forestry_carbon
+  unchanged_core_tables: [all — no schema touched]
+  unchanged_core_functions: [all]
+  adapter_only_differences:
+    - "Migration sequence guard is sector-agnostic — no adapter-specific surface"
+  jurisdiction_profile_impact: none
+  required_core_changes: []
+  explanation: >-
+    The migration sequence guard is entirely sector-agnostic. It validates
+    numeric sequence and HEAD consistency for any migration regardless of its
+    content. A solar migration and a forestry migration both pass through the
+    same numeric validation. The guard has no sector knowledge.
+  second_pilot_reviewed_by: Architecture Owner
+pilot_scope_ref: not_applicable
+
+implementation_plan: docs/plans/phase0/GF-W1-GOV-005/PLAN.md
+implementation_log: docs/plans/phase0/GF-W1-GOV-005/EXEC_LOG.md
+notes: >-
+  MIGRATION_HEAD file must be created as part of this task with value 0069.
+  Every subsequent migration PR must update it atomically. This is a repo-wide
+  convention, not only for green finance migrations.
+client: codex_cli
+assigned_agent: <UNASSIGNED>
+model: <UNASSIGNED>

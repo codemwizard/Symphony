@@ -1,0 +1,111 @@
+{
+  "schema_version": "1.0",
+  "approval": {
+    "status": "CONDITIONALLY_APPROVED",
+    "conditions": [
+      "All verification.commands must pass before merge"
+    ],
+    "approver_id": "0001",
+    "change_reason": "Refresh branch approval truth for the Green Finance wrong-diagnosis rollback and replacement task-pack creation wave on security/wave-1-runtime-integrity-children.",
+    "approved_at_utc": "2026-03-27T03:24:04Z",
+    "role_authority": "Human Approver"
+  },
+  "remediation": {
+    "rollback_executed": true,
+    "rollback_verified": true,
+    "ownerless_reference_check_passed": true
+  },
+  "ai": {
+    "ai_used": true,
+    "ai_prompt_id": "security-wave-1-runtime-integrity-children",
+    "model_id": "gpt-5-codex",
+    "client": "codex_cli",
+    "session_id": "security-wave-1-runtime-integrity-children"
+  },
+  "scope": {
+    "change_scope_type": "TASK_PACK_CREATION_ONLY",
+    "regulated_surfaces": [
+      "DB_SCHEMA",
+      "CI_GATES",
+      "TASK_DAG"
+    ],
+    "paths_changed": [
+      "approvals/2026-03-26/BRANCH-security-wave-1-runtime-integrity-children.md",
+      "approvals/2026-03-26/BRANCH-security-wave-1-runtime-integrity-children.approval.json",
+      "evidence/phase1/approval_metadata.json",
+      "docs/plans/phase1/REM-2026-03-27_gf-wave1-migration-graph-wrong-diagnosis-rollback/PLAN.md",
+      "docs/plans/phase1/REM-2026-03-27_gf-wave1-migration-graph-wrong-diagnosis-rollback/EXEC_LOG.md",
+      "tasks/GF-W1-SCH-002A/meta.yml",
+      "docs/plans/phase0/GF-W1-SCH-002A/PLAN.md",
+      "docs/plans/phase0/GF-W1-SCH-002A/EXEC_LOG.md",
+      "tasks/GF-W1-GOV-005A/meta.yml",
+      "docs/plans/phase0/GF-W1-GOV-005A/PLAN.md",
+      "docs/plans/phase0/GF-W1-GOV-005A/EXEC_LOG.md",
+      "tasks/GF-W1-SCH-003/meta.yml",
+      "docs/plans/phase0/GF-W1-SCH-003/PLAN.md",
+      "docs/plans/phase0/GF-W1-SCH-003/EXEC_LOG.md",
+      "tasks/GF-W1-SCH-004/meta.yml",
+      "docs/plans/phase0/GF-W1-SCH-004/PLAN.md",
+      "docs/plans/phase0/GF-W1-SCH-004/EXEC_LOG.md",
+      "tasks/GF-W1-SCH-005/meta.yml",
+      "docs/plans/phase0/GF-W1-SCH-005/PLAN.md",
+      "docs/plans/phase0/GF-W1-SCH-005/EXEC_LOG.md",
+      "tasks/GF-W1-SCH-008/meta.yml",
+      "tasks/GF-W1-PLT-001/meta.yml",
+      "docs/tasks/PHASE0_TASKS.md",
+      "docs/plans/GFW1_IMPLEMENTATION_PLAN_CORRECTED.md",
+      "docs/plans/WAVE1_DAG.md",
+      "docs/plans/wave1_dag.yml"
+    ],
+    "invariants": [
+      "INV-SCHEMA-OWNERSHIP-001",
+      "INV-SCHEMA-ORDER-002",
+      "INV-SCHEMA-NO-FORWARD-REF-003",
+      "INV-SCHEMA-DETERMINISM-004",
+      "INV-SCHEMA-EXPLICIT-DEP-005",
+      "INV-SCHEMA-TASK-REF-DEP-006",
+      "INV-SCHEMA-OWNERSHIP-MAP-007",
+      "INV-SCHEMA-OWNERSHIP-CLOSURE-008",
+      "INV-SCHEMA-STATIC-DDL-ONLY-010",
+      "INV-MIGRATION-HEAD-CONSISTENCY-011"
+    ],
+    "invariant_enforcement": {
+      "INV-SCHEMA-OWNERSHIP-001": "verify_migration_reference_order.py",
+      "INV-SCHEMA-ORDER-002": "verify_migration_reference_order.py",
+      "INV-SCHEMA-NO-FORWARD-REF-003": "verify_migration_reference_order.py",
+      "INV-SCHEMA-DETERMINISM-004": "pre_ci.sh semantic checks",
+      "INV-SCHEMA-EXPLICIT-DEP-005": "verify_migration_reference_order.py",
+      "INV-SCHEMA-TASK-REF-DEP-006": "verify_migration_reference_order.py",
+      "INV-SCHEMA-OWNERSHIP-MAP-007": "verify_migration_reference_order.py",
+      "INV-SCHEMA-OWNERSHIP-CLOSURE-008": "verify_migration_reference_order.py",
+      "INV-SCHEMA-STATIC-DDL-ONLY-010": "pre_ci.sh semantic checks",
+      "INV-MIGRATION-HEAD-CONSISTENCY-011": "verify_migration_head_consistency.sh"
+    },
+    "phase_boundary_ok": true
+  },
+  "verification": {
+    "commands": [
+      "python3 scripts/audit/verify_migration_reference_order.py --mode pre_rebuild --fail-on-missing-owner",
+      "bash scripts/audit/verify_migration_head_consistency.sh",
+      "bash scripts/audit/verify_human_governance_review_signoff.sh",
+      "bash scripts/audit/verify_agent_conformance.sh --mode=stage-a --branch=security/wave-1-runtime-integrity-children",
+      "python3 scripts/audit/verify_plan_semantic_alignment.py --plan docs/plans/phase0/GF-W1-SCH-002A/PLAN.md --meta tasks/GF-W1-SCH-002A/meta.yml",
+      "python3 scripts/audit/verify_plan_semantic_alignment.py --plan docs/plans/phase0/GF-W1-GOV-005A/PLAN.md --meta tasks/GF-W1-GOV-005A/meta.yml",
+      "python3 scripts/audit/verify_plan_semantic_alignment.py --plan docs/plans/phase0/GF-W1-SCH-003/PLAN.md --meta tasks/GF-W1-SCH-003/meta.yml",
+      "python3 scripts/audit/verify_plan_semantic_alignment.py --plan docs/plans/phase0/GF-W1-SCH-004/PLAN.md --meta tasks/GF-W1-SCH-004/meta.yml",
+      "python3 scripts/audit/verify_plan_semantic_alignment.py --plan docs/plans/phase0/GF-W1-SCH-005/PLAN.md --meta tasks/GF-W1-SCH-005/meta.yml",
+      "bash scripts/audit/verify_task_meta_schema.sh --mode strict --allow-legacy --root tasks/GF-W1-SCH-002A --json",
+      "bash scripts/audit/verify_task_meta_schema.sh --mode strict --allow-legacy --root tasks/GF-W1-GOV-005A --json",
+      "bash scripts/audit/verify_task_meta_schema.sh --mode strict --allow-legacy --root tasks/GF-W1-SCH-003 --json",
+      "bash scripts/audit/verify_task_meta_schema.sh --mode strict --allow-legacy --root tasks/GF-W1-SCH-004 --json",
+      "bash scripts/audit/verify_task_meta_schema.sh --mode strict --allow-legacy --root tasks/GF-W1-SCH-005 --json",
+      "bash scripts/audit/verify_task_pack_readiness.sh --task GF-W1-SCH-002A",
+      "bash scripts/audit/verify_task_pack_readiness.sh --task GF-W1-GOV-005A",
+      "bash scripts/audit/verify_task_pack_readiness.sh --task GF-W1-SCH-003",
+      "bash scripts/audit/verify_task_pack_readiness.sh --task GF-W1-SCH-004",
+      "bash scripts/audit/verify_task_pack_readiness.sh --task GF-W1-SCH-005"
+    ],
+    "pre_ci_passed": false,
+    "notes": "Approval scope refreshed for rollback and corrective task-pack creation. Full parity remains pending later implementation work."
+  }
+}

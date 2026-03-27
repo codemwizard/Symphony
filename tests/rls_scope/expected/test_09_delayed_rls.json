@@ -1,0 +1,5 @@
+{
+  "should_pass": true,
+  "expected_errors": [],
+  "purpose": "Proves flexible ordering: indexes between CREATE TABLE and RLS are allowed"
+}

@@ -1,0 +1,101 @@
+schema_version: 1
+phase: '1'
+task_id: TSK-P1-227
+title: "Harden the canonical task template so all future task packs must declare anti-drift boundaries and proof limits"
+owner_role: SUPERVISOR
+status: completed
+priority: HIGH
+risk_class: GOVERNANCE
+blast_radius: DOCS_ONLY
+intent: >-
+  Wave 1 established exemplar task packs, but the canonical template still allows future
+  tasks to omit anti-drift boundaries and proof limitations unless authors remember them
+  manually. This task hardens the shared template so anti-drift structure becomes the
+  default contract for every future task pack instead of remaining planning-only guidance.
+anti_patterns:
+  - "Leaving anti-drift boundaries as plan prose while the canonical template remains permissive"
+  - "Treating structural template hardening as semantic enforcement of task truthfulness"
+  - "Adding new template fields without keeping strict schema/readiness flows compatible"
+depends_on:
+  - TSK-P1-226
+blocks:
+  - TSK-P1-228
+touches:
+  - tasks/_template/meta.yml
+  - scripts/audit/verify_tsk_p1_227.sh
+  - evidence/phase1/tsk_p1_227_template_hardening.json
+  - tasks/TSK-P1-227/meta.yml
+  - docs/plans/phase1/TSK-P1-227/PLAN.md
+  - docs/plans/phase1/TSK-P1-227/EXEC_LOG.md
+invariants:
+  - INV-105
+  - INV-119
+work:
+  - >-
+    Update the canonical task template so anti-drift boundary fields or clearly equivalent
+    canonical sections for out-of-scope, non-goals, stop conditions, proof guarantees,
+    and proof limitations are required for newly authored task packs.
+  - >-
+    Strengthen the template guidance so parity drift, fake narrowness, placeholder
+    verification, scope theater, and completion claims beyond proof are called out as
+    named authoring anti-patterns.
+  - >-
+    Add a task-specific verifier that exercises a fixture task missing the hardened
+    anti-drift contract shape and emits declared Phase-1 evidence for strict rejection.
+acceptance_criteria:
+  - >-
+    The canonical template requires the hardened anti-drift contract shape for newly
+    authored tasks instead of leaving those sections optional or implicit.
+  - >-
+    Template guidance names the key anti-drift authoring failures explicitly enough that
+    future task authors are not forced to infer them from separate planning artifacts.
+  - >-
+    `scripts/audit/verify_tsk_p1_227.sh` demonstrates that a fixture task missing the
+    hardened anti-drift sections fails the strict validation flow and emits
+    `evidence/phase1/tsk_p1_227_template_hardening.json`.
+negative_tests:
+  - id: TSK-P1-227-N1
+    description: >-
+      Construct a fixture task pack that omits the hardened anti-drift boundary sections
+      and confirm the strict schema/readiness flow rejects it instead of accepting a
+      structurally hollow contract.
+    required: true
+positive_tests:
+  - id: TSK-P1-227-P1
+    description: >-
+      Validate that a fixture task using the hardened template shape passes the task-
+      specific verifier without requiring ad hoc exceptions.
+    required: false
+verification:
+  - bash scripts/audit/verify_tsk_p1_227.sh
+  - python3 scripts/audit/validate_evidence.py --task TSK-P1-227 --evidence evidence/phase1/tsk_p1_227_template_hardening.json
+  - RUN_PHASE1_GATES=1 bash scripts/dev/pre_ci.sh
+evidence:
+  - path: evidence/phase1/tsk_p1_227_template_hardening.json
+    must_include:
+      - task_id
+      - git_sha
+      - timestamp_utc
+      - status
+      - checks
+      - required_boundary_fields
+      - rejected_fixture_id
+      - strict_validation_commands
+failure_modes:
+  - "Canonical template still permits omission of anti-drift boundary sections => FAIL"
+  - "Fixture task without hardened anti-drift sections passes strict validation => BLOCKED"
+  - "Evidence file missing => FAIL"
+must_read:
+  - docs/operations/AI_AGENT_OPERATION_MANUAL.md
+  - AGENT_ENTRYPOINT.md
+  - docs/operations/AGENT_PROMPT_ROUTER.md
+  - docs/operations/TASK_CREATION_PROCESS.md
+  - docs/reference/rls-anti-drift-wave2-task-plan.md
+implementation_plan: docs/plans/phase1/TSK-P1-227/PLAN.md
+implementation_log: docs/plans/phase1/TSK-P1-227/EXEC_LOG.md
+notes: >-
+  This task hardens the structural authoring contract only. It must not claim semantic
+  truthfulness enforcement, gate promotion, or proof-integrity validation by itself.
+client: cursor
+assigned_agent: supervisor
+model: Cascade

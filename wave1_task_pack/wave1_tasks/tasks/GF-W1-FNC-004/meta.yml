@@ -1,0 +1,168 @@
+schema_version: 1
+phase: '1'
+task_id: GF-W1-FNC-004
+title: "Phase 1 functions: record_authority_decision and attempt_lifecycle_transition"
+owner_role: DB_FOUNDATION
+status: planned
+priority: CRITICAL
+risk_class: INTEGRITY
+blast_radius: DB_SCHEMA
+domain: green_finance
+pilot: false
+
+intent: >-
+  record_authority_decision and attempt_lifecycle_transition are the regulatory
+  gate functions that make the jurisdiction-profile engine real rather than
+  aspirational. Both require interpretation_pack_id — without it, replayability
+  is broken. attempt_lifecycle_transition must check checkpoint satisfaction
+  before allowing any state change. Decisions are append-only and replayable
+  under a later interpretation version.
+
+anti_patterns:
+  - "Allowing record_authority_decision without interpretation_pack_id — breaks replayability"
+  - "Hardcoding Zambia-specific checkpoint types instead of reading from lifecycle_checkpoint_rules"
+  - "Allowing attempt_lifecycle_transition to bypass checkpoints for 'pilot convenience'"
+
+depends_on:
+  - GF-W1-FNC-003
+  - GF-W1-DSN-003
+
+blocks:
+  - GF-W1-FNC-005
+  - GF-W1-FNC-007
+
+touches:
+  - schema/migrations/0083_gf_fn_regulatory_transitions.sql
+  - scripts/db/verify_gf_fnc_004.sh
+  - tasks/GF-W1-FNC-004/meta.yml
+
+invariants:
+  - INV-136
+  - INV-139
+  - INV-141
+
+work:
+  - >-
+    Write record_authority_decision as SECURITY DEFINER. Required inputs:
+    regulatory_authority_id, jurisdiction_code, decision_type, decision_outcome,
+    interpretation_pack_id (NOT NULL — enforced in function body, not only
+    column constraint), asset_batch_id or project_id as subject reference.
+    Insert append-only into authority_decisions. Return decision_id.
+  - >-
+    Write attempt_lifecycle_transition as SECURITY DEFINER. Inputs: subject_id,
+    subject_type, from_status, to_status, interpretation_pack_id. Before
+    performing the transition: query lifecycle_checkpoint_rules for the
+    jurisdiction and transition pair. For each REQUIRED checkpoint: verify
+    a satisfied checkpoint record exists — if absent, raise SQLSTATE with
+    the missing checkpoint code. For each CONDITIONALLY_REQUIRED checkpoint:
+    check if the active interpretation pack has confidence_level =
+    PENDING_CLARIFICATION — if so, record the transition with
+    checkpoint_satisfaction_state = CONDITIONALLY_SATISFIED and
+    provisional_reason = 'PENDING_CLARIFICATION' rather than blocking.
+    This is the provisional pass behaviour specified in DSN-003 Section 5.
+    Record the transition in asset_lifecycle_events with interpretation_pack_id
+    and checkpoint_satisfaction_state captured.
+  - >-
+    Write scripts/db/verify_gf_fnc_004.sh confirming both functions exist,
+    SECURITY DEFINER posture, interpretation_pack_id enforcement, and
+    checkpoint gate negative tests.
+
+acceptance_criteria:
+  - >-
+    record_authority_decision and attempt_lifecycle_transition are SECURITY
+    DEFINER with hardened search_path. bash scripts/db/verify_gf_fnc_004.sh
+    exits 0.
+  - >-
+    record_authority_decision with interpretation_pack_id = NULL fails with
+    explicit SQLSTATE P0001. The check is in the function body.
+  - >-
+    attempt_lifecycle_transition with an unsatisfied REQUIRED checkpoint fails
+    with explicit SQLSTATE identifying the blocking checkpoint.
+  - >-
+    Successful transition records interpretation_pack_id in asset_lifecycle_events.
+    Query confirms the column is populated.
+
+negative_tests:
+  - id: GF-W1-FNC-004-N1
+    description: >-
+      Call record_authority_decision with interpretation_pack_id = NULL. Must
+      fail with explicit SQLSTATE. Proves INV-141 enforcement is in the
+      function body, not only the column constraint.
+    required: true
+  - id: GF-W1-FNC-004-N2
+    description: >-
+      Create a lifecycle_checkpoint_rule for DRAFT->ACTIVE with checkpoint_type
+      REQUIRED. Call attempt_lifecycle_transition without satisfying that
+      checkpoint. Must fail with SQLSTATE identifying the unsatisfied checkpoint.
+      This is the core gate enforcement test.
+    required: true
+  - id: GF-W1-FNC-004-N3
+    description: >-
+      Attempt direct UPDATE on an authority_decisions row. Must fail with
+      append-only trigger.
+    required: true
+  - id: GF-W1-FNC-004-N4
+    description: >-
+      Create a CONDITIONALLY_REQUIRED checkpoint linked to a
+      PENDING_CLARIFICATION interpretation pack. Call
+      attempt_lifecycle_transition without satisfying that checkpoint.
+      Must SUCCEED and record checkpoint_satisfaction_state =
+      CONDITIONALLY_SATISFIED. This proves the provisional pass behaviour
+      does not block pilot execution when regulatory practice is unsettled.
+    required: true
+
+verification:
+  - bash scripts/db/verify_gf_fnc_004.sh
+  - python3 scripts/audit/verify_neutral_schema_ast.py schema/migrations/0083_gf_fn_regulatory_transitions.sql
+  - bash scripts/dev/pre_ci.sh
+
+evidence:
+  - path: evidence/phase1/gf_fnc_004.json
+    must_include:
+      - task_id
+      - git_sha
+      - timestamp_utc
+      - status
+      - functions_verified
+      - security_definer_confirmed
+      - negative_tests_passed
+
+failure_modes:
+  - "Transition allowed without interpretation_pack_id => CRITICAL_FAIL (INV-141 / Check 4)"
+  - "Transition bypasses checkpoint gate => CRITICAL_FAIL (Rule 6)"
+  - "SECURITY DEFINER posture absent => CRITICAL_FAIL"
+
+must_read:
+  - docs/operations/AI_AGENT_OPERATION_MANUAL.md
+  - docs/operations/AGENTIC_SDLC_PILOT_POLICY.md
+  - docs/operations/PILOT_REJECTION_PLAYBOOK.md
+  - docs/architecture/INTERPRETATION_PACK_SCHEMA.md
+  - docs/architecture/INTERPRETATION_PACK_VALIDATION_SPEC.md
+  - docs/architecture/ADAPTER_CONTRACT_INTERFACE.md
+
+second_pilot_test:
+  candidate_sector_1: solar_energy
+  candidate_sector_2: forestry_carbon
+  unchanged_core_tables: []
+  unchanged_core_functions: [register_project, activate_project, record_monitoring_record, attach_evidence, link_evidence_to_record]
+  adapter_only_differences: [checkpoint rules registered for the methodology, jurisdiction profile active]
+  jurisdiction_profile_impact: checkpoint rules are data rows in lifecycle_checkpoint_rules — no code changes
+  required_core_changes: []
+  explanation: >-
+    The checkpoint gate reads lifecycle_checkpoint_rules as data. Zambia carbon
+    market rules and Zimbabwe carbon market rules are both data rows with
+    different jurisdiction_code values. A solar pilot in Zimbabwe and a forestry
+    pilot in Zambia both call attempt_lifecycle_transition — the function logic
+    does not change, only the checkpoint data rows differ.
+  second_pilot_reviewed_by: Architecture Owner
+pilot_scope_ref: not_applicable
+
+implementation_plan: docs/plans/phase1/GF-W1-FNC-004/PLAN.md
+implementation_log: docs/plans/phase1/GF-W1-FNC-004/EXEC_LOG.md
+notes: >-
+  This is the function that makes the Regulatory Control Plane engine real.
+  If attempt_lifecycle_transition can be called without checkpoint enforcement,
+  the entire jurisdiction-profile architecture becomes decorative.
+client: codex_cli
+assigned_agent: <UNASSIGNED>
+model: <UNASSIGNED>

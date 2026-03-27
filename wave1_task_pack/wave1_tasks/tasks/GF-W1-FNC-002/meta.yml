@@ -1,0 +1,142 @@
+schema_version: 1
+phase: '1'
+task_id: GF-W1-FNC-002
+title: "Phase 1 function: record_monitoring_record neutral ingestion verb"
+owner_role: DB_FOUNDATION
+status: planned
+priority: CRITICAL
+risk_class: INTEGRITY
+blast_radius: DB_SCHEMA
+domain: green_finance
+pilot: false
+
+intent: >-
+  record_monitoring_record is the most critical Phase 1 function for neutrality.
+  It must validate project active, methodology version matches, and payload is
+  valid JSON. It must never interpret payload field semantics. Rule 10 applies
+  absolutely here — any payload field reference by name is a CRITICAL_FAIL.
+
+anti_patterns:
+  - "Encoding any methodology-specific logic in the function body"
+  - "Referencing payload field names directly (e.g. payload->>'capacity_kw') in core validation"
+  - "Adding schema_reference validation that encodes sector field expectations"
+
+depends_on:
+  - GF-W1-FNC-001
+
+blocks:
+  - GF-W1-FNC-003
+
+touches:
+  - schema/migrations/0081_gf_fn_monitoring_ingestion.sql
+  - scripts/db/verify_gf_fnc_002.sh
+  - tasks/GF-W1-FNC-002/meta.yml
+
+invariants:
+  - INV-136
+  - INV-141
+  - INV-142
+
+work:
+  - >-
+    Write record_monitoring_record as SECURITY DEFINER with
+    SET search_path = pg_catalog, public. Validate: project exists and is ACTIVE,
+    methodology_version_id matches project.methodology_version_id,
+    payload_schema_reference_id is NOT NULL, record_payload_json is valid JSONB.
+    Never reference specific field names inside the payload.
+  - >-
+    The only allowed payload interaction is: (a) IS NOT NULL check on the whole
+    payload, (b) jsonb_typeof check for OBJECT, (c) passing opaque payload to
+    adapter schema validator by schema_reference_id. No ->> field extractions.
+  - >-
+    Write scripts/db/verify_gf_fnc_002.sh confirming SECURITY DEFINER posture,
+    hardened search_path, function exists, and all negative tests pass.
+  - >-
+    Run python3 scripts/audit/verify_neutral_schema_ast.py against the migration
+    SQL. Must detect zero payload field name references in the function body.
+
+acceptance_criteria:
+  - >-
+    record_monitoring_record is SECURITY DEFINER with SET search_path =
+    pg_catalog, public. bash scripts/db/verify_gf_fnc_002.sh exits 0.
+  - >-
+    Call with payload_schema_reference_id NULL fails with SQLSTATE P0001 or
+    equivalent explicit code.
+  - >-
+    python3 scripts/audit/verify_neutral_schema_ast.py migration file exits 0
+    — no sector field names found in function body.
+  - >-
+    Call with record_payload_json not a JSON object fails with explicit SQLSTATE.
+
+negative_tests:
+  - id: GF-W1-FNC-002-N1
+    description: >-
+      Call record_monitoring_record with payload_schema_reference_id = NULL.
+      Must fail with explicit SQLSTATE. The NULL check must be in the function
+      body, not rely on a NOT NULL column constraint alone.
+    required: true
+  - id: GF-W1-FNC-002-N2
+    description: >-
+      Write a version of the function body that contains
+      (record_payload_json->>'capacity_kw') and run the AST verifier against it.
+      Verifier must exit non-zero flagging the semantic payload drift. This
+      proves the verifier catches Rule 10 violations in function bodies.
+    required: true
+  - id: GF-W1-FNC-002-N3
+    description: >-
+      Call record_monitoring_record on a project whose status is not ACTIVE.
+      Must fail with explicit SQLSTATE.
+    required: true
+
+verification:
+  - bash scripts/db/verify_gf_fnc_002.sh
+  - python3 scripts/audit/verify_neutral_schema_ast.py schema/migrations/0081_gf_fn_monitoring_ingestion.sql
+  - bash scripts/dev/pre_ci.sh
+
+evidence:
+  - path: evidence/phase1/gf_fnc_002.json
+    must_include:
+      - task_id
+      - git_sha
+      - timestamp_utc
+      - status
+      - functions_verified
+      - security_definer_confirmed
+      - negative_tests_passed
+
+failure_modes:
+  - "Function references payload field by name => CRITICAL_FAIL (Rule 10)"
+  - "Function encodes sector-specific validation logic => CRITICAL_FAIL (Rule 3)"
+  - "SECURITY DEFINER posture absent => CRITICAL_FAIL"
+
+must_read:
+  - docs/operations/AI_AGENT_OPERATION_MANUAL.md
+  - docs/operations/AGENTIC_SDLC_PILOT_POLICY.md
+  - docs/operations/PILOT_REJECTION_PLAYBOOK.md
+  - docs/architecture/ADAPTER_CONTRACT_INTERFACE.md
+
+second_pilot_test:
+  candidate_sector_1: solar_energy
+  candidate_sector_2: forestry_carbon
+  unchanged_core_tables: []
+  unchanged_core_functions: [register_project, activate_project]
+  adapter_only_differences: [methodology_version_id value, payload_schema_reference_id value]
+  jurisdiction_profile_impact: none
+  required_core_changes: []
+  explanation: >-
+    record_monitoring_record accepts any monitoring record type with any opaque
+    payload. A solar installation event and a forestry biomass measurement both
+    use the same function — they differ only in record_type value and
+    payload_schema_reference_id. No function logic changes between sectors.
+  second_pilot_reviewed_by: Architecture Owner
+pilot_scope_ref: not_applicable
+
+implementation_plan: docs/plans/phase1/GF-W1-FNC-002/PLAN.md
+implementation_log: docs/plans/phase1/GF-W1-FNC-002/EXEC_LOG.md
+notes: >-
+  This is the highest-risk function for Rule 10 violations. The AST verifier
+  negative test (N2) is mandatory — it proves the detection mechanism works,
+  not just that this function happens to be clean.
+client: codex_cli
+assigned_agent: <UNASSIGNED>
+model: <UNASSIGNED>

@@ -1,0 +1,6 @@
+{
+  "should_pass": false,
+  "expected_errors": ["SYSTEM_FULL_ACCESS_PRESENT", "WRONG_POLICY_COUNT"],
+  "purpose": "Catches system_full_access bypass policy and wrong policy count",
+  "enforced_by": "lint_rls_born_secure.sh"
+}

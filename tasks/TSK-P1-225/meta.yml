@@ -1,0 +1,99 @@
+schema_version: 1
+phase: '1'
+task_id: TSK-P1-225
+title: "Implement a report-only contract gate so that Wave 1 can reject invalid task packs through one runner path"
+owner_role: SECURITY_GUARDIAN
+status: completed
+priority: HIGH
+risk_class: INTEGRITY
+blast_radius: CI_GATES
+intent: >-
+  Once the runner and result contract exist, Wave 1 needs the first real gate that
+  catches task-pack invalidity before deeper verification begins. This task adds a
+  report-only contract gate on governed audit surfaces so malformed or incomplete
+  task packs are surfaced through the runner with structured failure output instead
+  of being discovered ad hoc during later work.
+anti_patterns:
+  - "Starting deeper verification without a first gate for basic contract invalidity"
+  - "Silently tolerating missing required fields or invalid touch paths in report-only mode"
+  - "Embedding contract checks outside the shared runner path"
+depends_on:
+  - TSK-P1-224
+blocks:
+  - TSK-P1-226
+touches:
+  - scripts/audit/task_contract_gate.py
+  - scripts/audit/verify_tsk_p1_225.sh
+  - evidence/phase1/tsk_p1_225_contract_gate.json
+  - tasks/TSK-P1-225/meta.yml
+  - docs/plans/phase1/TSK-P1-225/PLAN.md
+  - docs/plans/phase1/TSK-P1-225/EXEC_LOG.md
+invariants:
+  - INV-105
+  - INV-119
+work:
+  - >-
+    Implement a report-only task contract gate that validates required metadata
+    presence and safe touch-path resolution through the shared runner path.
+  - >-
+    Ensure the gate emits structured failure output using the shared gate result
+    contract instead of raw parser or shell errors.
+  - >-
+    Add a task-specific verifier that proves invalid task-pack inputs fail closed
+    while valid inputs pass in report-only mode and emit the declared evidence.
+acceptance_criteria:
+  - >-
+    Missing required task-pack fields or invalid touch-path references are surfaced
+    by the contract gate through the shared runner instead of being ignored.
+  - >-
+    Contract-gate failures use the shared structured output shape rather than raw,
+    unclassified parser or shell errors.
+  - >-
+    `scripts/audit/verify_tsk_p1_225.sh` exercises valid and invalid task-pack
+    cases and emits `evidence/phase1/tsk_p1_225_contract_gate.json`.
+negative_tests:
+  - id: TSK-P1-225-N1
+    description: >-
+      Remove or corrupt a required task-pack field in a test case and confirm the
+      contract gate fails closed with structured output instead of allowing the
+      malformed contract to continue through the runner.
+    required: true
+positive_tests:
+  - id: TSK-P1-225-P1
+    description: >-
+      Run the contract gate against a valid repaired task pack and confirm the
+      report-only pass case still emits a structured gate result.
+    required: false
+verification:
+  - bash scripts/audit/verify_tsk_p1_225.sh
+  - python3 scripts/audit/validate_evidence.py --task TSK-P1-225 --evidence evidence/phase1/tsk_p1_225_contract_gate.json
+  - RUN_PHASE1_GATES=1 bash scripts/dev/pre_ci.sh
+evidence:
+  - path: evidence/phase1/tsk_p1_225_contract_gate.json
+    must_include:
+      - task_id
+      - git_sha
+      - timestamp_utc
+      - status
+      - checks
+      - invalid_case_result
+      - valid_case_result
+      - fail_class_fields
+failure_modes:
+  - "Invalid task pack passes through the contract gate => FAIL"
+  - "Contract-gate failures are emitted without structured fields => BLOCKED"
+  - "Evidence file missing => FAIL"
+must_read:
+  - docs/operations/AI_AGENT_OPERATION_MANUAL.md
+  - AGENT_ENTRYPOINT.md
+  - docs/operations/AGENT_PROMPT_ROUTER.md
+  - docs/reference/rls-remediation-final-plan.md
+  - docs/reference/rls-remediation-first-five-tasks.md
+implementation_plan: docs/plans/phase1/TSK-P1-225/PLAN.md
+implementation_log: docs/plans/phase1/TSK-P1-225/EXEC_LOG.md
+notes: >-
+  Keep this gate report-only in Wave 1. It should catch obvious contract invalidity
+  without promoting itself to CI authority or full undeclared-file enforcement yet.
+client: cursor
+assigned_agent: security_guardian
+model: Cascade

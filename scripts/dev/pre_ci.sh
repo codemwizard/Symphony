@@ -174,6 +174,13 @@ else
   exit 1
 fi
 
+echo "==> Green Finance born-secure RLS lint gate (RLS-002)"
+if [[ -x scripts/db/lint_rls_born_secure.sh ]]; then
+  scripts/db/lint_rls_born_secure.sh
+else
+  echo "WARN: scripts/db/lint_rls_born_secure.sh not found; skipping"
+fi
+
 CLEAN_EVIDENCE="${CLEAN_EVIDENCE:-1}"
 if [[ "$CLEAN_EVIDENCE" == "1" ]]; then
   if [[ -x scripts/ci/clean_evidence.sh ]]; then
@@ -526,6 +533,11 @@ if [[ -x scripts/db/verify_pii_decoupling_hooks.sh ]]; then
 fi
 if [[ -x scripts/db/verify_rail_sequence_truth_anchor.sh ]]; then
   scripts/db/verify_rail_sequence_truth_anchor.sh
+fi
+
+echo "==> Green Finance RLS runtime verification (RLS-002)"
+if [[ -x scripts/audit/verify_gf_rls_runtime.sh ]]; then
+  scripts/audit/verify_gf_rls_runtime.sh
 fi
 
 if [[ -n "${DATABASE_URL:-}" ]]; then
@@ -945,6 +957,54 @@ if [[ "${RUN_PHASE1_GATES:-0}" == "1" ]]; then
     exit 1
   fi
 fi
+
+echo "==> GF migration scope enforcement (TSK-P1-RLS-003)"
+VENV_PYTHON=".venv/bin/python3"
+if [[ ! -x "$VENV_PYTHON" ]]; then
+  VENV_PYTHON="python3"
+fi
+GF_MIGRATIONS=(schema/migrations/008[0-9]_gf_*.sql schema/migrations/009[0-9]_gf_*.sql)
+if [[ -f scripts/db/lint_gf_migration_scope.py ]]; then
+  "$VENV_PYTHON" scripts/db/lint_gf_migration_scope.py "${GF_MIGRATIONS[@]}" 2>/dev/null
+else
+  echo "ERROR: scripts/db/lint_gf_migration_scope.py not found"
+  exit 1
+fi
+
+echo "==> RLS scope lint adversarial tests"
+if [[ -f tests/rls_scope/run_tests.py ]]; then
+  "$VENV_PYTHON" tests/rls_scope/run_tests.py
+else
+  echo "ERROR: tests/rls_scope/run_tests.py not found"
+  exit 1
+fi
+
+echo "==> Green Finance Schema + Function Verification"
+GREEN_FINANCE_VERIFIERS=(
+  "scripts/db/verify_gf_sch_001.sh"
+  "scripts/db/verify_gf_sch_002.sh"
+  "scripts/db/verify_gf_monitoring_records.sh"
+  "scripts/db/verify_gf_evidence_lineage.sh"
+  "scripts/db/verify_gf_asset_lifecycle.sh"
+  "scripts/db/verify_gf_regulatory_plane.sh"
+  "scripts/db/verify_gf_sch_008.sh"
+  "scripts/db/verify_gf_fnc_001.sh"
+  "scripts/db/verify_gf_fnc_002.sh"
+  "scripts/db/verify_gf_fnc_003.sh"
+  "scripts/db/verify_gf_fnc_004.sh"
+  "scripts/db/verify_gf_fnc_005.sh"
+  "scripts/db/verify_gf_fnc_006.sh"
+)
+
+for verifier in "${GREEN_FINANCE_VERIFIERS[@]}"; do
+  if [[ -x "$verifier" ]]; then
+    echo "Running $verifier..."
+    "$verifier"
+  else
+    echo "ERROR: $verifier not found or not executable"
+    exit 1
+  fi
+done
 
 pre_ci_clear_failure_state
 echo "==> Verifying TSK-P1-210 to 220 (Hardening and Demo Architecture)"

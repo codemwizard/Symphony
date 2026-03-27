@@ -1,0 +1,37 @@
+phase: '0'
+layer: POLICY_TABLE
+volatility_class: POLICY_TABLE
+touches_core_schema: true
+introduces_identifiers:
+  - jurisdiction_profiles
+  - lifecycle_checkpoint_rules
+  - jurisdiction_profiles_append_only_trigger
+  - lifecycle_checkpoint_rules_append_only_trigger
+  - create_jurisdiction_profile
+  - create_lifecycle_checkpoint_rule
+  - query_active_checkpoint_rules
+  - query_jurisdiction_profile_summary
+  - idx_jurisdiction_profiles_jurisdiction
+  - idx_jurisdiction_profiles_country
+  - idx_jurisdiction_profiles_status
+  - idx_jurisdiction_profiles_article6
+  - idx_jurisdiction_profiles_effective_from
+  - idx_jurisdiction_profiles_created_at
+  - idx_lifecycle_checkpoint_rules_jurisdiction
+  - idx_lifecycle_checkpoint_rules_transition
+  - idx_lifecycle_checkpoint_rules_checkpoint
+  - idx_lifecycle_checkpoint_rules_status
+  - idx_lifecycle_checkpoint_rules_interpretation
+  - idx_lifecycle_checkpoint_rules_effective_from
+  - idx_lifecycle_checkpoint_rules_effective_to
+  - idx_lifecycle_checkpoint_rules_created_at
+  - idx_lifecycle_checkpoint_rules_active_lookup
+  - jurisdiction_profiles_jurisdiction_access
+  - jurisdiction_profiles_system_full_access
+  - lifecycle_checkpoint_rules_jurisdiction_access
+  - lifecycle_checkpoint_rules_system_full_access
+second_pilot_justification_required: true
+notes: >-
+  Jurisdiction profiles and lifecycle checkpoint rules for regulatory compliance.
+  Unique active rule constraint prevents duplicates. Article 6 participation
+  tracking. Non-nullable jurisdiction_code throughout.

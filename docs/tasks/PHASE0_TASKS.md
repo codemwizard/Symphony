@@ -2574,3 +2574,124 @@ Evidence Artifact(s):
 Failure Modes:
 - Evidence file missing.
 - Semgrep still `SKIPPED` in CI due to missing toolchain install.
+
+---
+
+TASK ID: GF-W1-SCH-002A
+Title: Introduce foundational root tables projects and methodology_versions before all dependent Green Finance schema tasks
+Owner Role: DB_FOUNDATION
+Depends On: none
+Touches: `schema/migrations/0097_gf_projects.sql`, `schema/migrations/0097_gf_projects.meta.yml`, `schema/migrations/0098_gf_methodology_versions.sql`, `schema/migrations/0098_gf_methodology_versions.meta.yml`, `schema/migrations/MIGRATION_HEAD`, `scripts/db/verify_gf_sch_002a.sh`, `evidence/phase0/gf_sch_002a.json`, `tasks/GF-W1-SCH-002A/meta.yml`
+Invariant(s): INV-SCHEMA-OWNERSHIP-001, INV-SCHEMA-ORDER-002, INV-SCHEMA-NO-FORWARD-REF-003, INV-SCHEMA-OWNERSHIP-MAP-007, INV-SCHEMA-SIDECAR-SQL-CONSISTENCY-012
+Work:
+- Create only foundational root migrations and sidecars for `projects` and `methodology_versions`.
+- Add verifier and evidence proving unique ownership, ordered references, and no conditional root creation.
+Acceptance Criteria:
+- Foundational tables are each created exactly once and sidecar/SQL consistency passes.
+- `bash scripts/db/verify_gf_sch_002a.sh` emits `evidence/phase0/gf_sch_002a.json`.
+Verification Commands:
+- `bash scripts/db/verify_gf_sch_002a.sh`
+- `python3 scripts/audit/verify_neutral_schema_ast.py schema/migrations/0097_gf_projects.sql schema/migrations/0098_gf_methodology_versions.sql`
+- `python3 scripts/audit/verify_migration_meta_alignment.py`
+Evidence Artifact(s):
+- `evidence/phase0/gf_sch_002a.json`
+Failure Modes:
+- Root table uses IF NOT EXISTS or has duplicate ownership.
+- Sidecar does not match parsed SQL.
+- Evidence file missing.
+
+---
+
+TASK ID: GF-W1-GOV-005A
+Title: Fail closed on invalid migration ownership and reference order
+Owner Role: SECURITY_GUARDIAN
+Depends On: GF-W1-GOV-005
+Touches: `scripts/audit/verify_migration_reference_order.py`, `scripts/audit/tests/test_verify_migration_reference_order.py`, `evidence/phase0/gf_gov_005a_reference_order.json`, `tasks/GF-W1-GOV-005A/meta.yml`
+Invariant(s): INV-SCHEMA-OWNERSHIP-001, INV-SCHEMA-NO-FORWARD-REF-003, INV-SCHEMA-TASK-REF-DEP-006, INV-SCHEMA-SIDECAR-SQL-CONSISTENCY-012
+Work:
+- Enforce parsed-SQL ownership/reference checks and sidecar/SQL consistency failures.
+- Enforce direct task dependency completeness from sidecar ownership map.
+Acceptance Criteria:
+- Duplicate owner, forward reference, ownerless reference, and sidecar mismatch all fail closed.
+- `python3 scripts/audit/verify_migration_reference_order.py` emits reference-order evidence.
+Verification Commands:
+- `python3 scripts/audit/verify_migration_reference_order.py`
+- `python3 -m pytest scripts/audit/tests/test_verify_migration_reference_order.py`
+Evidence Artifact(s):
+- `evidence/phase0/gf_gov_005a_reference_order.json`
+Failure Modes:
+- Verifier reduces to regex-only matching.
+- Invalid ownership/reference graph passes.
+- Evidence file missing.
+
+---
+
+TASK ID: GF-W1-SCH-003
+Title: Migration 0099: monitoring_records neutral append-only event ledger
+Owner Role: DB_FOUNDATION
+Depends On: GF-W1-SCH-002A
+Touches: `schema/migrations/0099_gf_monitoring_records.sql`, `schema/migrations/0099_gf_monitoring_records.meta.yml`, `schema/migrations/MIGRATION_HEAD`, `scripts/db/verify_gf_monitoring_records.sh`, `evidence/phase0/gf_monitoring_records.json`, `tasks/GF-W1-SCH-003/meta.yml`
+Invariant(s): INV-SCHEMA-ORDER-002, INV-SCHEMA-TASK-REF-DEP-006, INV-SCHEMA-OWNERSHIP-CLOSURE-008
+Work:
+- Create monitoring-only migration and sidecar.
+- Enforce append-only and no scope leakage beyond monitoring objects.
+Acceptance Criteria:
+- Migration 0099 introduces only monitoring scope and declared dependent objects.
+- `bash scripts/db/verify_gf_monitoring_records.sh` emits evidence.
+Verification Commands:
+- `bash scripts/db/verify_gf_monitoring_records.sh`
+- `python3 scripts/audit/verify_migration_meta_alignment.py`
+Evidence Artifact(s):
+- `evidence/phase0/gf_monitoring_records.json`
+Failure Modes:
+- Foundational objects recreated in monitoring task.
+- Undeclared object or destructive behavior present.
+- Evidence file missing.
+
+---
+
+TASK ID: GF-W1-SCH-004
+Title: Migration 0100: evidence_nodes and evidence_edges universal lineage graph
+Owner Role: DB_FOUNDATION
+Depends On: GF-W1-SCH-003, GF-W1-SCH-002A
+Touches: `schema/migrations/0100_gf_evidence_lineage.sql`, `schema/migrations/0100_gf_evidence_lineage.meta.yml`, `schema/migrations/MIGRATION_HEAD`, `scripts/db/verify_gf_evidence_lineage.sh`, `evidence/phase0/gf_evidence_lineage.json`, `tasks/GF-W1-SCH-004/meta.yml`
+Invariant(s): INV-SCHEMA-ORDER-002, INV-SCHEMA-TASK-REF-DEP-006, INV-SCHEMA-OWNERSHIP-CLOSURE-008
+Work:
+- Create lineage-only migration and sidecar.
+- Enforce self-loop prevention and fail-closed lineage verifier behavior.
+Acceptance Criteria:
+- Migration 0100 owns only lineage tables and declared dependent objects.
+- `bash scripts/db/verify_gf_evidence_lineage.sh` emits evidence.
+Verification Commands:
+- `bash scripts/db/verify_gf_evidence_lineage.sh`
+- `python3 scripts/audit/verify_migration_meta_alignment.py`
+Evidence Artifact(s):
+- `evidence/phase0/gf_evidence_lineage.json`
+Failure Modes:
+- Non-lineage scope leakage or destructive cascade behavior.
+- Sidecar/SQL mismatch.
+- Evidence file missing.
+
+---
+
+TASK ID: GF-W1-SCH-005
+Title: Migration 0101: asset_batches, asset_lifecycle_events, retirement_events neutral lifecycle tables
+Owner Role: DB_FOUNDATION
+Depends On: GF-W1-SCH-004, GF-W1-SCH-002A
+Touches: `schema/migrations/0101_gf_asset_lifecycle.sql`, `schema/migrations/0101_gf_asset_lifecycle.meta.yml`, `schema/migrations/MIGRATION_HEAD`, `scripts/db/verify_gf_asset_lifecycle.sh`, `evidence/phase0/gf_asset_lifecycle.json`, `tasks/GF-W1-SCH-005/meta.yml`
+Invariant(s): INV-SCHEMA-ORDER-002, INV-SCHEMA-TASK-REF-DEP-006, INV-SCHEMA-OWNERSHIP-CLOSURE-008
+Work:
+- Create lifecycle-only migration and sidecar.
+- Enforce no procedural or destructive DDL and no undeclared scope leakage.
+Acceptance Criteria:
+- Migration 0101 introduces only lifecycle scope and declared dependent objects.
+- `bash scripts/db/verify_gf_asset_lifecycle.sh` emits evidence.
+Verification Commands:
+- `bash scripts/db/verify_gf_asset_lifecycle.sh`
+- `python3 scripts/audit/verify_migration_meta_alignment.py`
+Evidence Artifact(s):
+- `evidence/phase0/gf_asset_lifecycle.json`
+Failure Modes:
+- Non-lifecycle scope leakage or destructive behavior.
+- Sidecar/SQL mismatch.
+- Evidence file missing.
