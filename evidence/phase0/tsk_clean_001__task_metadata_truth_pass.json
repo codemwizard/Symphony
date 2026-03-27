@@ -1,13 +1,13 @@
 {
   "check_id": "TSK-CLEAN-001",
   "task_id": "TSK-CLEAN-001",
-  "timestamp_utc": "2026-03-27T09:08:45Z",
-  "git_sha": "f294a7db8fa046214cee3044ca0fcd7e73b42f3f",
+  "timestamp_utc": "2026-03-27T12:03:01Z",
+  "git_sha": "32441e0084c06f978581ecca67d083a73ac717f9",
   "schema_fingerprint": "224f18ff8a2f2bb976adf91494a0267789e20deaf52ac170a0707e535561586a",
   "status": "PASS",
   "pass": true,
   "details": {
-    "meta_files_checked": 555,
+    "meta_files_checked": 523,
     "invalid_meta_files": 0,
     "errors": []
   }

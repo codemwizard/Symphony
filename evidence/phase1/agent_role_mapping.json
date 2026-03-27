@@ -1,9 +1,9 @@
 {
   "check_id": "AGENT-ROLE-MAPPING",
-  "timestamp_utc": "2026-03-27T09:08:50Z",
-  "git_sha": "f294a7db8fa046214cee3044ca0fcd7e73b42f3f",
+  "timestamp_utc": "2026-03-27T12:03:30Z",
+  "git_sha": "32441e0084c06f978581ecca67d083a73ac717f9",
   "schema_fingerprint": "224f18ff8a2f2bb976adf91494a0267789e20deaf52ac170a0707e535561586a",
-  "status": "PASS",
+  "status": "FAIL",
   "canonical_roles": [
     "Compliance / Invariant Mapper Agent",
     "DB/Schema Agent",

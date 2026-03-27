@@ -17,7 +17,7 @@
   },
   "ai": {
     "ai_used": true,
-    "ai_prompt_id": "security-wave-1-runtime-integrity-children",
+    "ai_prompt_hash": "security-wave-1-runtime-integrity-children",
     "model_id": "gpt-5-codex",
     "client": "codex_cli",
     "session_id": "security-wave-1-runtime-integrity-children"
