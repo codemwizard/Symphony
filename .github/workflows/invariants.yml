@@ -452,21 +452,15 @@ jobs:
     runs-on: ubuntu-latest
     needs: [mechanical_invariants]
     if: always() && github.event_name != 'schedule'
-    services:
-      postgres:
-        image: postgres:18@sha256:69e8582b781cb44fa4557b98ed586fe68361e320d9b12f9707494335634f4f3d
-        env:
-          POSTGRES_USER: symphony
-          POSTGRES_PASSWORD: symphony
-          POSTGRES_DB: symphony
-        ports:
-          - 5432:5432
-        options: >-
-          --health-cmd "pg_isready -U symphony -d symphony"
-          --health-interval 5s
-          --health-timeout 5s
-          --health-retries 30
+
     steps:
+      - name: Setup Native PostgreSQL
+        run: |
+          sudo systemctl start postgresql.service
+          sudo -u postgres psql -c "CREATE ROLE symphony LOGIN SUPERUSER PASSWORD 'symphony';" || true
+          sudo -u postgres psql -c "ALTER ROLE symphony WITH PASSWORD 'symphony';" || true
+          sudo -u postgres createdb -O symphony symphony || true
+
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
