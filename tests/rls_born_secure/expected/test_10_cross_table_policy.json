@@ -1,0 +1,6 @@
+{
+  "should_pass": false,
+  "expected_errors": ["BORN_SECURE_VIOLATION"],
+  "purpose": "Catches table b missing policy — both policies incorrectly target table a",
+  "enforced_by": "lint_rls_born_secure.sh"
+}

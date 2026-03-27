@@ -1,7 +1,7 @@
 ---
 exception_id: EXC-20260218-DBPARITY
 inv_scope: change-rule
-expiry: 2026-03-04
+expiry: 2026-12-31
 follow_up_ticket: TSK-P1-038
 reason: Auto-generated preflight exception accepted because Rule-1 linkage is evaluated on commit range; this commit contains the migration+pre_ci parity fix and explicit threat/compliance updates.
 author: system

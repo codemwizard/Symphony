@@ -1,0 +1,155 @@
+schema_version: 1
+phase: '0'
+task_id: GF-W1-SCH-003
+title: "Migration 0075: monitoring_records neutral append-only event ledger"
+owner_role: DB_FOUNDATION
+status: planned
+priority: CRITICAL
+risk_class: INTEGRITY
+blast_radius: DB_SCHEMA
+domain: green_finance
+pilot: false
+
+intent: >-
+  monitoring_records is the universal MRV ledger for every green finance pilot.
+  It must be strictly neutral — no sector-specific columns, payload is opaque
+  JSONB validated only against a schema_reference_id registered by the adapter.
+  Rule 10 applies absolutely here: core never interprets payload field meaning.
+  This table is where the neutrality principle is most likely to be violated
+  under pilot pressure ("just add a weight_kg column"). The append-only trigger
+  and opaque payload enforcement are the primary defences.
+
+anti_patterns:
+  - "Adding sector-specific columns (weight_kg, capacity_kw, biomass_reading)"
+  - "Validating payload field semantics in core — only schema reference validation allowed"
+  - "Adding monitoring_record_quality_scores in this migration — deferred to Wave 2"
+
+depends_on:
+  - GF-W1-SCH-002
+
+blocks:
+  - GF-W1-SCH-005
+
+touches:
+  - schema/migrations/0075_gf_monitoring_records.sql
+  - schema/migrations/0075_gf_monitoring_records.meta.yml
+  - schema/migrations/MIGRATION_HEAD
+  - scripts/db/verify_gf_monitoring_records.sh
+  - tasks/GF-W1-SCH-003/meta.yml
+
+invariants:
+  - INV-135
+  - INV-142
+
+work:
+  - >-
+    Write 0075_gf_monitoring_records.sql. Fields: monitoring_record_id UUID PK,
+    tenant_id UUID NOT NULL FK tenants, project_id UUID NOT NULL FK projects,
+    methodology_version_id UUID NOT NULL FK methodology_versions,
+    record_type TEXT NOT NULL, event_timestamp TIMESTAMPTZ NOT NULL,
+    entry_timestamp TIMESTAMPTZ NOT NULL DEFAULT now(),
+    entry_method TEXT NOT NULL CHECK IN ('PRIMARY_DIRECT','SECONDARY_DELAYED'),
+    entry_operator_id UUID NULL, source_reference TEXT NULL,
+    record_payload_json JSONB NOT NULL,
+    payload_schema_reference_id TEXT NOT NULL,
+    instruction_id UUID NULL, correlation_id UUID NULL,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now().
+    Append-only trigger. RLS by tenant_id.
+    Idempotency: UNIQUE(tenant_id, instruction_id) WHERE instruction_id IS NOT NULL.
+  - >-
+    The payload_schema_reference_id field is critical: it records which adapter-registered
+    schema was used for validation. Core does not validate payload semantics — only
+    that payload_schema_reference_id is non-null and record_payload_json is valid JSON.
+  - >-
+    Write sidecar and update MIGRATION_HEAD to 0075.
+  - >-
+    Write verify_gf_monitoring_records.sh confirming append-only, RLS, idempotency
+    constraint, and that no sector-specific column exists.
+
+acceptance_criteria:
+  - >-
+    INSERT into monitoring_records with arbitrary JSONB payload succeeds when
+    payload_schema_reference_id is present.
+  - >-
+    UPDATE on any monitoring_records row fails with append-only SQLSTATE.
+  - >-
+    Duplicate (tenant_id, instruction_id) insert fails with unique constraint
+    when instruction_id is non-null.
+  - >-
+    AST verifier exits 0 — no sector nouns.
+  - >-
+    Table has no column named weight_kg, capacity_kw, or any sector field.
+
+negative_tests:
+  - id: GF-W1-SCH-003-N1
+    description: >-
+      Attempt UPDATE on a monitoring_records row. Must fail with append-only
+      SQLSTATE. The trigger must fire regardless of which field is targeted.
+    required: true
+  - id: GF-W1-SCH-003-N2
+    description: >-
+      Insert two rows with identical tenant_id and instruction_id (non-null).
+      Second insert must fail with unique constraint violation.
+    required: true
+
+verification:
+  - bash scripts/db/verify_gf_monitoring_records.sh
+  - python3 scripts/audit/verify_neutral_schema_ast.py schema/migrations/0075_gf_monitoring_records.sql
+  - bash scripts/audit/verify_migration_sequence.sh
+  - bash scripts/dev/pre_ci.sh
+
+evidence:
+  - path: evidence/phase0/gf_monitoring_records.json
+    must_include:
+      - task_id
+      - git_sha
+      - timestamp_utc
+      - status
+      - append_only_confirmed
+      - rls_confirmed
+      - idempotency_confirmed
+      - no_sector_columns_confirmed
+      - ast_scan_clean
+
+failure_modes:
+  - "Sector-specific column added to monitoring_records under any justification => CRITICAL_FAIL"
+  - "Core function added that interprets payload field by name => CRITICAL_FAIL (Rule 10)"
+  - "Append-only trigger absent => FAIL"
+
+must_read:
+  - docs/operations/AI_AGENT_OPERATION_MANUAL.md
+  - docs/operations/AGENTIC_SDLC_PILOT_POLICY.md
+  - docs/operations/PILOT_REJECTION_PLAYBOOK.md
+  - docs/operations/GREEN_FINANCE_VOLATILITY_MAP.md
+
+second_pilot_test:
+  candidate_sector_1: solar_energy
+  candidate_sector_2: forestry_carbon
+  unchanged_core_tables: [monitoring_records]
+  unchanged_core_functions: []
+  adapter_only_differences:
+    - record_type value (SOLAR_GENERATION_READING vs VM0044_BIOMASS_MONITORING)
+    - payload_schema_reference_id value
+    - record_payload_json content
+  jurisdiction_profile_impact: none
+  required_core_changes: []
+  explanation: >-
+    A solar generation reading and a forestry biomass measurement both store in
+    monitoring_records. The record_type discriminates the type. The payload is
+    opaque JSONB. The schema_reference_id points to the adapter-registered
+    payload schema. No column is added for either sector. No core validation
+    interprets the payload content.
+  second_pilot_reviewed_by: Architecture Owner
+pilot_scope_ref: not_applicable
+
+implementation_plan: docs/plans/phase0/GF-W1-SCH-003/PLAN.md
+implementation_log: docs/plans/phase0/GF-W1-SCH-003/EXEC_LOG.md
+notes: >-
+  This table will face the most pilot pressure of any in Wave 1. Every time
+  a pilot team says "we need a column for X", the answer is: X goes in
+  record_payload_json, validated by the adapter-registered schema at
+  payload_schema_reference_id. Document this in EXEC_LOG.md each time
+  it comes up.
+client: codex_cli
+assigned_agent: <UNASSIGNED>
+model: <UNASSIGNED>

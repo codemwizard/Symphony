@@ -1747,7 +1747,7 @@
       "evidence/phase0/tsk_p0_208__gate_invariant_linkage_audit.json"
     ],
     "evidence_scope": "repo",
-    "notes": "Phase-0 gate↔invariant linkage audit ensuring contract gate IDs resolve and invariant references are non-orphaned.",
+    "notes": "Phase-0 gate\u2194invariant linkage audit ensuring contract gate IDs resolve and invariant references are non-orphaned.",
     "gate_ids": [
       "INT-G15"
     ]
@@ -1765,5 +1765,15 @@
     "gate_ids": [
       "INT-G23"
     ]
+  },
+  {
+    "task_id": "TSK-P0-157",
+    "status": "completed",
+    "verification_mode": "both",
+    "evidence_required": false,
+    "evidence_paths": [],
+    "evidence_scope": "repo",
+    "notes": "Governance verification node",
+    "gate_ids": []
   }
 ]

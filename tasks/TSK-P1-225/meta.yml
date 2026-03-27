@@ -1,0 +1,58 @@
+schema_version: 1
+phase: '1'
+task_id: TSK-P1-225
+title: Implement a report-only contract gate so that Wave 1 can reject invalid task
+  packs through one runner path
+owner_role: SECURITY_GUARDIAN
+status: completed
+depends_on:
+- TSK-P1-224
+touches:
+- scripts/audit/task_contract_gate.py
+- scripts/audit/verify_tsk_p1_225.sh
+- evidence/phase1/tsk_p1_225_contract_gate.json
+- tasks/TSK-P1-225/meta.yml
+- docs/plans/phase1/TSK-P1-225/PLAN.md
+- docs/plans/phase1/TSK-P1-225/EXEC_LOG.md
+invariants:
+- INV-105
+- INV-119
+work:
+- Implement a report-only task contract gate that validates required metadata presence
+  and safe touch-path resolution through the shared runner path.
+- Ensure the gate emits structured failure output using the shared gate result contract
+  instead of raw parser or shell errors.
+- Add a task-specific verifier that proves invalid task-pack inputs fail closed while
+  valid inputs pass in report-only mode and emit the declared evidence.
+acceptance_criteria:
+- Missing required task-pack fields or invalid touch-path references are surfaced
+  by the contract gate through the shared runner instead of being ignored.
+- Contract-gate failures use the shared structured output shape rather than raw, unclassified
+  parser or shell errors.
+- '`scripts/audit/verify_tsk_p1_225.sh` exercises valid and invalid task-pack cases
+  and emits `evidence/phase1/tsk_p1_225_contract_gate.json`.'
+verification:
+- bash scripts/audit/verify_tsk_p1_225.sh
+- python3 scripts/audit/validate_evidence.py --task TSK-P1-225 --evidence evidence/phase1/tsk_p1_225_contract_gate.json
+- RUN_PHASE1_GATES=1 bash scripts/dev/pre_ci.sh
+evidence:
+- '{''path'': ''evidence/phase1/tsk_p1_225_contract_gate.json'', ''must_include'':
+  [''task_id'', ''git_sha'', ''timestamp_utc'', ''status'', ''checks'', ''invalid_case_result'',
+  ''valid_case_result'', ''fail_class_fields'']}'
+failure_modes:
+- Invalid task pack passes through the contract gate => FAIL
+- Contract-gate failures are emitted without structured fields => BLOCKED
+- Evidence file missing => FAIL
+must_read:
+- docs/operations/AI_AGENT_OPERATION_MANUAL.md
+- AGENT_ENTRYPOINT.md
+- docs/operations/AGENT_PROMPT_ROUTER.md
+- docs/reference/rls-remediation-final-plan.md
+- docs/reference/rls-remediation-first-five-tasks.md
+implementation_plan: docs/plans/phase1/TSK-P1-225/PLAN.md
+implementation_log: docs/plans/phase1/TSK-P1-225/EXEC_LOG.md
+notes: Keep this gate report-only in Wave 1. It should catch obvious contract invalidity
+  without promoting itself to CI authority or full undeclared-file enforcement yet.
+client: cursor
+assigned_agent: security_guardian
+model: Cascade

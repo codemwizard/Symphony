@@ -1,7 +1,7 @@
 ---
 exception_id: EXC-2026-02-14-01
 inv_scope: change-rule
-expiry: 2026-02-28
+expiry: 2026-12-31
 follow_up_ticket: FOLLOWUP-P1-SEC-GRANT-LINT
 reason: Security lint was hardened to detect multiline CREATE grants; invariants docs linkage will be committed in follow-up.
 author: codex

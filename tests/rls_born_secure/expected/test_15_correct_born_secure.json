@@ -1,0 +1,6 @@
+{
+  "should_pass": true,
+  "expected_errors": [],
+  "purpose": "Validates that a correctly configured born-secure migration passes",
+  "enforced_by": "lint_rls_born_secure.sh"
+}

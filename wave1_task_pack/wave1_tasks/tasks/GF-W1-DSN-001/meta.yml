@@ -1,0 +1,152 @@
+schema_version: 1
+phase: '0'
+task_id: GF-W1-DSN-001
+title: "Define adapter contract interface skeleton establishing the neutral host-to-adapter boundary"
+owner_role: SUPERVISOR
+status: planned
+priority: CRITICAL
+risk_class: GOVERNANCE
+blast_radius: DOCS_ONLY
+domain: green_finance
+pilot: false
+
+intent: >-
+  Phase 1 generic verbs (record_monitoring_record, issue_asset_batch, etc.)
+  must call registered adapters for methodology-specific logic. Until the
+  adapter contract boundary is defined precisely — what fields adapter_registrations
+  contains, what verbs an adapter must implement, how the host invokes the
+  adapter — those functions cannot be written safely. Writing Phase 1 functions
+  without this contract guarantees informal coupling that hardens into de facto
+  standards before the canonical contract exists.
+
+anti_patterns:
+  - "Writing the full Phase 2 adapter spec — this is a skeleton only"
+  - "Encoding any sector noun or methodology name in the contract interface"
+  - "Designing the invocation pattern around a specific methodology's needs"
+
+depends_on:
+  - GF-W1-FRZ-002
+  - GF-W1-FRZ-005
+
+blocks:
+  - GF-W1-DSN-002
+  - GF-W1-SCH-001
+
+touches:
+  - docs/architecture/ADAPTER_CONTRACT_INTERFACE.md
+  - tasks/GF-W1-DSN-001/meta.yml
+
+invariants:
+  - INV-136
+
+work:
+  - >-
+    Create docs/architecture/ADAPTER_CONTRACT_INTERFACE.md. Document the
+    authoritative adapter registration record fields per the final spec:
+    adapter_id (UUID PK),
+    adapter_code (TEXT UNIQUE NOT NULL — globally unique adapter identifier),
+    methodology_code (TEXT NOT NULL),
+    methodology_authority (TEXT NOT NULL),
+    version_code (TEXT NOT NULL),
+    is_active (BOOL NOT NULL DEFAULT false),
+    tenant_id (UUID NOT NULL FK tenants — Symphony platform RLS requirement,
+      not in the domain spec but required for tenant isolation),
+    payload_schema_refs (JSONB NOT NULL CHECK (jsonb_typeof(payload_schema_refs) = 'object')
+      — map of RECORD_TYPE to schema_ref_id, e.g. {"PWRM_COLLECTION": "schema_abc"}),
+    checklist_refs (JSONB NOT NULL CHECK (jsonb_typeof(checklist_refs) = 'object')
+      — map of CASE_TYPE to template_id).
+    Required uniqueness constraint: UNIQUE (methodology_code, methodology_authority,
+    version_code) WHERE is_active = true — only one active adapter per methodology
+    triple. Multiple inactive registrations are permitted (version history).
+  - >-
+    Document the five required adapter verbs that the host calls via
+    registered entrypoints: get_monitoring_schema(record_type) → JSON Schema,
+    get_checklist_template(case_type) → checklist rows,
+    get_calculation_entrypoint() → function reference,
+    get_issuance_semantics() → issuance rules object,
+    get_retirement_semantics() → retirement rules object.
+  - >-
+    Document the host invocation pattern: host loads adapter_registrations
+    row by methodology_version_id from the project, calls registered
+    entrypoint by reference, never embeds methodology logic in host functions.
+  - >-
+    Document extension points: optional fields adapters may register but
+    host does not require — evidence_class_overrides, custom_checkpoint_types,
+    jurisdiction_specific_overrides.
+  - >-
+    Confirm no sector noun appears in any field name, enum value, or example
+    in the document. Examples must use generic placeholders (METHODOLOGY_X,
+    SECTOR_Y) not real methodology codes.
+
+acceptance_criteria:
+  - >-
+    docs/architecture/ADAPTER_CONTRACT_INTERFACE.md exists with all five
+    required sections: registration fields, required verbs, invocation pattern,
+    extension points, neutrality confirmation.
+  - >-
+    No sector noun appears in the document. python3
+    scripts/audit/verify_neutral_schema_ast.py
+    docs/architecture/ADAPTER_CONTRACT_INTERFACE.md exits 0.
+  - >-
+    Document approved by architecture owner before GF-W1-DSN-002 begins.
+
+negative_tests:
+  - id: GF-W1-DSN-001-N1
+    description: >-
+      Scan the completed document with the AST verifier using a text-mode
+      scan for sector vocabulary. Any sector noun in an example or field
+      name must be caught and removed before acceptance.
+    required: true
+
+verification:
+  - test -f docs/architecture/ADAPTER_CONTRACT_INTERFACE.md
+  - python3 scripts/audit/verify_neutral_schema_ast.py docs/architecture/ADAPTER_CONTRACT_INTERFACE.md
+  - bash scripts/dev/pre_ci.sh
+
+evidence:
+  - path: evidence/phase0/adapter_contract_interface.json
+    must_include:
+      - task_id
+      - git_sha
+      - timestamp_utc
+      - status
+      - sections_present
+      - neutrality_scan_result
+
+failure_modes:
+  - "Sector noun in any example or field name — contract encodes sector bias => FAIL"
+  - "Missing required verb from the five-verb list — Phase 1 functions cannot be written safely => BLOCKED"
+  - "GF-W1-DSN-002 starts before this document is approved => CRITICAL_FAIL"
+
+must_read:
+  - docs/operations/AI_AGENT_OPERATION_MANUAL.md
+  - docs/operations/AGENTIC_SDLC_PILOT_POLICY.md
+  - docs/operations/GREEN_FINANCE_VOLATILITY_MAP.md
+
+second_pilot_test:
+  candidate_sector_1: solar_energy
+  candidate_sector_2: forestry_carbon
+  unchanged_core_tables: [all — no schema touched]
+  unchanged_core_functions: [all]
+  adapter_only_differences: [adapter_code value, methodology_code value, payload_schema_refs content]
+  jurisdiction_profile_impact: none — contract is jurisdiction-agnostic
+  required_core_changes: []
+  explanation: >-
+    The adapter contract interface is the same structure for a solar energy
+    adapter and a forestry carbon adapter. Both register under the same
+    adapter_registrations schema. Both implement the same five required verbs.
+    Both use the same invocation pattern. The only difference is the values
+    they register — not the structure of the registration or the interface.
+  second_pilot_reviewed_by: Architecture Owner
+pilot_scope_ref: not_applicable
+
+implementation_plan: docs/plans/phase0/GF-W1-DSN-001/PLAN.md
+implementation_log: docs/plans/phase0/GF-W1-DSN-001/EXEC_LOG.md
+notes: >-
+  This is a design document, not a schema migration. The adapter_registrations
+  table DDL is written in GF-W1-SCH-001, not here. This document specifies
+  what will be built so that GF-W1-DSN-002 and GF-W1-SCH-001 can proceed
+  with a canonical reference.
+client: codex_cli
+assigned_agent: <UNASSIGNED>
+model: <UNASSIGNED>

@@ -1,0 +1,186 @@
+dag_version: 4
+project: symphony
+scope: green-finance-wave1-remediation
+
+description: >-
+  Fully locked execution DAG for Green Finance Wave 1 remediation.
+  Enforces fail-closed governance, explicit dependency completeness,
+  static DDL determinism, and ownership mapping via verifier-gated execution.
+
+defaults:
+  runner: orchestrator
+  fail_fast: true
+  domain: green_finance
+
+global_constraints:
+  invariants:
+    - INV-SCHEMA-OWNERSHIP-001
+    - INV-SCHEMA-ORDER-002
+    - INV-SCHEMA-NO-FORWARD-REF-003
+    - INV-SCHEMA-DETERMINISM-004
+    - INV-SCHEMA-EXPLICIT-DEP-005
+    - INV-SCHEMA-TASK-REF-DEP-006
+    - INV-SCHEMA-OWNERSHIP-MAP-007
+    - INV-SCHEMA-OWNERSHIP-CLOSURE-008
+    - INV-SCHEMA-STATIC-DDL-ONLY-010
+    - INV-MIGRATION-HEAD-CONSISTENCY-011
+
+  enforcement:
+    ownership_and_order: scripts/audit/verify_migration_reference_order.py
+    migration_head: scripts/audit/verify_migration_head_consistency.sh
+    semantic_alignment: scripts/audit/verify_plan_semantic_alignment.py
+
+# ─────────────────────────────────────────────────────────────────────────────
+# PHASE A — REMEDIATION (HARD GATE)
+# ─────────────────────────────────────────────────────────────────────────────
+nodes:
+
+- id: REMEDIATION_ROOT
+  kind: gate
+  stage: Phase-A-Remediation
+  depends_on: []
+  guarantees:
+    rollback_validated: true
+    invalid_artifacts_removed: true
+    no_ownerless_references: true
+    migration_head_correct: true
+  verify:
+    - python3 scripts/audit/verify_migration_reference_order.py --mode pre_rebuild --fail-on-missing-owner
+    - bash scripts/audit/verify_migration_head_consistency.sh
+
+# ─────────────────────────────────────────────────────────────────────────────
+# GLOBAL FAIL-CLOSED GOVERNANCE GATE
+# ─────────────────────────────────────────────────────────────────────────────
+
+- id: GLOBAL_VERIFIER_GATE
+  kind: gate
+  stage: Governance-Enforcement
+  depends_on: [REMEDIATION_ROOT]
+  runs:
+    - GF-W1-GOV-005A
+  guarantees:
+    no_dynamic_ddl: true
+    ownership_unique: true
+    no_forward_references: true
+    ownership_closure_complete: true
+    dependency_completeness_enforced: true
+  verify:
+    - python3 scripts/audit/verify_migration_reference_order.py
+    - bash scripts/audit/verify_migration_head_consistency.sh
+
+# ─────────────────────────────────────────────────────────────────────────────
+# PHASE B — DOMAIN DAG (EXPLICIT + COMPLETE DEPENDENCIES)
+# ─────────────────────────────────────────────────────────────────────────────
+
+- id: GF-W1-SCH-002A
+  kind: task
+  stage: Phase-B-Domain
+  depends_on: [GLOBAL_VERIFIER_GATE]
+  owns:
+    - public.projects
+    - public.methodology_versions
+  constraints:
+    static_ddl_only: true
+    forbid_if_not_exists: true
+    ownership_closure_required: true
+
+- id: GF-W1-SCH-003
+  kind: task
+  stage: Phase-B-Domain
+  depends_on:
+    - GF-W1-SCH-002A
+  owns:
+    - public.monitoring_records
+  constraints:
+    append_only: true
+    no_update: true
+    no_delete: true
+
+- id: GF-W1-SCH-004
+  kind: task
+  stage: Phase-B-Domain
+  depends_on:
+    - GF-W1-SCH-003
+    - GF-W1-SCH-002A   # REQUIRED for ownership completeness (do not remove)
+  owns:
+    - public.evidence_nodes
+    - public.evidence_edges
+  constraints:
+    no_destructive_cascade: true
+    self_loop_prevention: true
+
+- id: GF-W1-SCH-005
+  kind: task
+  stage: Phase-B-Domain
+  depends_on:
+    - GF-W1-SCH-004
+    - GF-W1-SCH-002A   # REQUIRED (direct dependency rule)
+  owns:
+    - public.asset_batches
+    - public.asset_lifecycle_events
+    - public.retirement_events
+  constraints:
+    lifecycle_integrity: true
+    no_unauthorized_mutation: true
+
+- id: GF-W1-SCH-008
+  kind: task
+  stage: Phase-B-Domain
+  depends_on:
+    - GF-W1-SCH-002A
+  owns:
+    - public.verifier_registry
+    - public.verifier_project_assignments
+
+- id: GF-W1-PLT-001
+  kind: task
+  stage: Phase-B-Domain
+  depends_on:
+    - GF-W1-SCH-002A
+  owns: []
+  constraints:
+    no_schema_creation: true
+
+# ─────────────────────────────────────────────────────────────────────────────
+# EXECUTION RULES (NON-NEGOTIABLE)
+# ─────────────────────────────────────────────────────────────────────────────
+
+execution_rules:
+
+  - rule: ALL_TASKS_REQUIRE_VERIFIER_GATE
+    description: >
+      No Phase-B task may execute unless GLOBAL_VERIFIER_GATE has succeeded.
+
+  - rule: FAIL_ON_UNDECLARED_OBJECT
+    description: >
+      Any schema object created but not declared in ownership metadata causes immediate failure.
+
+  - rule: FAIL_ON_DYNAMIC_DDL
+    description: >
+      Any dynamic SQL producing schema objects is a hard failure.
+
+  - rule: ENFORCE_DIRECT_DEPENDENCIES
+    description: >
+      Tasks must explicitly depend on all owners of referenced schema objects.
+
+  - rule: MIGRATION_HEAD_MUST_MATCH
+    description: >
+      Migration head must equal the highest numeric prefix in filesystem.
+
+  - rule: NO_FORWARD_REFERENCES
+    description: >
+      No reference may resolve to a schema object created in a later migration.
+
+# ─────────────────────────────────────────────────────────────────────────────
+# END STATE GUARANTEE
+# ─────────────────────────────────────────────────────────────────────────────
+
+final_state:
+
+  guarantees:
+    - single_owner_per_table
+    - deterministic_empty_db_execution
+    - no_forward_references
+    - static_ddl_only_graph
+    - complete_task_dependency_mapping
+    - verifier_enforced_integrity

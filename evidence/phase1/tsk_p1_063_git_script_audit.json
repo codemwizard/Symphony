@@ -1,9 +1,9 @@
 {
   "check_id": "TSK-P1-063",
   "task_id": "TSK-P1-063",
-  "timestamp_utc": "2026-03-17T01:07:53Z",
-  "git_sha": "9f4c091829d39813bf5e8485e122c826b424eb5a",
-  "schema_fingerprint": "59eef2a10b166543339b310ae67181cc9a8d6b22aa216e649e56652c2316e165",
+  "timestamp_utc": "2026-03-27T14:18:01Z",
+  "git_sha": "7da7e8718697b610b9cc8d1dc5124442a7f1dbe0",
+  "schema_fingerprint": "b5fc38953353fba104cf3cd3fdb4d348214259086b5c9a1827519a18e5f1352e",
   "status": "PASS",
   "audited_paths": [
     "scripts/audit/lib/approval_requirement.py",
@@ -17,6 +17,7 @@
     "scripts/audit/verify_history_secret_scan_report_present.sh",
     "scripts/audit/verify_human_governance_review_signoff.sh",
     "scripts/audit/verify_invariants_local.sh",
+    "scripts/audit/verify_migration_sequence.sh",
     "scripts/audit/verify_tsk_p1_062.sh",
     "scripts/audit/verify_tsk_p1_076.sh",
     "scripts/audit/verify_tsk_p1_demo_020.sh",

@@ -1,0 +1,234 @@
+schema_version: 1
+phase: '1'
+task_id: TSK-P1-RLS-002
+title: "Enforce born-secure RLS with order-aware lint, strict policy template, and partial-compliance guards"
+owner_role: DB_FOUNDATION
+status: planned
+priority: HIGH
+risk_class: INTEGRITY
+blast_radius: CI_GATES
+
+intent: >-
+  All green finance migrations (0071+) and any future core migrations create
+  new tables. Every new table with tenant_id must have ENABLE ROW LEVEL SECURITY,
+  FORCE ROW LEVEL SECURITY, and a correctly-formed tenant isolation policy in the
+  same migration as CREATE TABLE, in that strict order, before the migration ends.
+  The lint currently cannot distinguish born-secure RLS (zero-risk) from a retrofit
+  on a live table (real lock-risk). This task adds order-aware line-number
+  validation to the lint, implements a strict policy template check that blocks
+  logical bypass attempts, adds explicit partial-compliance guards, and registers
+  INV-146 as an implemented invariant.
+
+constraints:
+  no_string_only_checks: true
+  require_order_validation: true
+  require_semantic_policy_validation: true
+  cutoff_boundary: "migrations > 0069 only — never apply retroactively to 0001-0069"
+  strict_policy_template: >-
+    Policy USING clause must match exactly:
+    tenant_id = public.current_tenant_id_or_null()
+    No other expression is acceptable. Template match, not substring match.
+  no_partial_compliance: >-
+    ENABLE without FORCE is a failure. FORCE without POLICY is a failure.
+    POLICY without ENABLE is a failure. All three required or all three absent.
+
+anti_patterns:
+  - "Substring match on policy expression — USING (true AND tenant_id = current_tenant_id_or_null()) would pass a substring check"
+  - "Grep-based order checking — cannot distinguish line order, only presence"
+  - "Applying born-secure lint to migrations 0001-0069 — they are applied and immutable"
+  - "Allowing partial RLS: ENABLE without FORCE, FORCE without POLICY, or POLICY without ENABLE"
+  - "Accepting any logical extension of the template expression: OR true, OR 1=1, AND true"
+
+depends_on:
+  - TSK-P1-RLS-001
+
+blocks:
+  - TSK-P1-RLS-003
+
+touches:
+  - scripts/security/lint_ddl_lock_risk.sh
+  - scripts/db/lint_rls_born_secure.sh
+  - docs/invariants/INVARIANTS_MANIFEST.yml
+  - .github/workflows/invariants.yml
+  - scripts/dev/pre_ci.sh
+  - tasks/TSK-P1-RLS-002/meta.yml
+  - docs/plans/phase1/TSK-P1-RLS-002/PLAN.md
+  - docs/plans/phase1/TSK-P1-RLS-002/EXEC_LOG.md
+
+invariants:
+  - INV-146
+
+work:
+  - >-
+    Implement scripts/db/lint_rls_born_secure.sh:
+
+    For each migration:
+      1. Identify tables created with tenant_id
+      2. Enforce strict ordering using line numbers:
+
+         CREATE TABLE <T>
+         → ALTER TABLE <T> ENABLE ROW LEVEL SECURITY
+         → ALTER TABLE <T> FORCE ROW LEVEL SECURITY
+         → CREATE POLICY <T>
+
+      3. Ensure all occur within the same migration file
+      4. Reject any mutation of <T> after CREATE POLICY
+
+  - >-
+    Enforce strict policy template (exact match required):
+
+    USING (tenant_id = public.current_tenant_id_or_null())
+    WITH CHECK (tenant_id = public.current_tenant_id_or_null())
+
+    Reject any deviation, including:
+    - OR conditions
+    - AND true
+    - alternative column references
+    - partial expressions
+
+  - >-
+    Reject partial compliance:
+
+    - ENABLE without FORCE → FAIL
+    - FORCE without POLICY → FAIL
+    - POLICY without ENABLE → FAIL
+
+  - >-
+    Add the born-secure exception to scripts/security/lint_ddl_lock_risk.sh
+    using Python line-number comparison. For each entry matching
+    "ENABLE ROW LEVEL SECURITY" or "FORCE ROW LEVEL SECURITY": extract the
+    migration file path and table name. Open the file. Record line numbers for
+    (a) CREATE TABLE <table>, (b) ALTER TABLE <table> ENABLE ROW LEVEL SECURITY,
+    (c) ALTER TABLE <table> FORCE ROW LEVEL SECURITY. Skip the lint entry
+    (born-secure) ONLY if all three conditions hold:
+    (1) CREATE TABLE line exists and is before ENABLE line.
+    (2) ENABLE line exists and is before FORCE line.
+    (3) All three are in the same file.
+    If any condition fails — CREATE TABLE absent, wrong order, or different
+    file — do NOT skip. Use Python for line-number comparison, not bash or grep.
+  - >-
+    Add INV-146 to docs/invariants/INVARIANTS_MANIFEST.yml with status: implemented.
+    id: INV-146
+    aliases: ["I-RLS-BORN-SECURE-01"]
+    status: implemented
+    severity: P1
+    title: >-
+      All new tenant-scoped tables (migrations after baseline cutoff 0069) must
+      have RLS enabled, forced, and exactly-templated tenant isolation policy
+      defined in the same migration as CREATE TABLE in strict order
+    owners: ["team-db", "team-security"]
+    sla_days: 7
+    enforcement: "scripts/db/lint_rls_born_secure.sh"
+    verification: "scripts/db/lint_rls_born_secure.sh"
+    notes: >-
+      Applies only to migrations after baseline cutoff 0069.
+      Pre-cutoff tables are covered by verify_ten_002_rls_leakage.sh (runtime,
+      pg_class authoritative). The two mechanisms together give complete
+      coverage: past tables verified at runtime, future tables verified
+      at lint time before application.
+  - >-
+    Wire lint_rls_born_secure.sh into scripts/dev/pre_ci.sh and
+    .github/workflows/invariants.yml as a blocking gate.
+  - >-
+    Produce evidence artifact evidence/phase1/rls_born_secure_gate.json.
+
+acceptance_criteria:
+  - "lint_rls_born_secure.sh exits 0 on valid migrations"
+  - "fails on missing RLS, incorrect order, or weak policy"
+  - "fails on any deviation from exact policy template"
+  - "cannot be bypassed by reordering or logical manipulation"
+
+failure_conditions:
+  - "Any tenant_id table passes without full RLS enforcement"
+  - "Policy validation accepts non-exact template"
+  - "Any mutation occurs after policy creation"
+
+negative_tests:
+  - id: TSK-P1-RLS-002-N1
+    description: >-
+      Test migration: CREATE TABLE public.test_no_rls (id UUID PRIMARY KEY,
+      tenant_id UUID NOT NULL). No RLS. Run lint_rls_born_secure.sh. Must exit
+      non-zero with BORN_SECURE_VIOLATION citing missing_enable, missing_force,
+      missing_policy. Proves gate blocks non-compliant migrations.
+    required: true
+  - id: TSK-P1-RLS-002-N2
+    description: >-
+      Test migration containing only:
+      ALTER TABLE public.ingress_attestations ENABLE ROW LEVEL SECURITY;
+      No CREATE TABLE in file. Run lint_ddl_lock_risk.sh. Must NOT be exempted
+      by born-secure exception. Must require allowlist or fail. Proves retrofit
+      operations cannot exploit the born-secure exception.
+    required: true
+  - id: TSK-P1-RLS-002-N3
+    description: >-
+      Test migration with ALTER TABLE ENABLE RLS before CREATE TABLE (reversed).
+      Run lint_ddl_lock_risk.sh. Must NOT be exempted — CREATE TABLE line number
+      is greater than ALTER TABLE line number. Proves order enforcement is real.
+    required: true
+  - id: TSK-P1-RLS-002-N4
+    description: >-
+      Test migration with structurally complete but weak policy:
+      CREATE TABLE public.test_weak (...tenant_id...);
+      ALTER TABLE ENABLE RLS; ALTER TABLE FORCE RLS;
+      CREATE POLICY p ON public.test_weak USING (true);
+      Run lint_rls_born_secure.sh. Must exit non-zero. Proves USING (true)
+      is rejected even when all structural elements are present.
+    required: true
+  - id: TSK-P1-RLS-002-N5
+    description: >-
+      Test migration with logically extended policy that passes substring check
+      but is not the exact template:
+      USING (tenant_id = public.current_tenant_id_or_null() OR true)
+      Run lint_rls_born_secure.sh. Must exit non-zero. Proves normalised string
+      equality is used, not substring matching. This is the logical bypass test.
+    required: true
+  - id: TSK-P1-RLS-002-N6
+    description: >-
+      Three separate test migrations, each with a different partial state:
+      (a) ENABLE present, FORCE absent, POLICY absent.
+      (b) ENABLE present, FORCE present, POLICY absent.
+      (c) POLICY present, ENABLE absent, FORCE absent.
+      All three must independently produce a BORN_SECURE_VIOLATION with the
+      specific missing element named. Proves partial compliance is not accepted.
+    required: true
+
+verification:
+  - bash scripts/db/lint_rls_born_secure.sh
+  - bash scripts/security/lint_ddl_lock_risk.sh
+  - bash scripts/dev/pre_ci.sh
+
+evidence:
+  - path: evidence/phase1/rls_born_secure_gate.json
+    must_include:
+      - task_id
+      - git_sha
+      - timestamp_utc
+      - status
+      - migrations_checked
+      - violations
+      - exempted_pre_baseline
+
+failure_modes:
+  - "Born-secure lint applied retroactively to 0001-0069 => false failures => FAIL"
+  - "Lint exception is grep-based not line-number-aware => order bypass possible => CRITICAL_FAIL"
+  - "Policy check is substring not template equality => logical bypass possible => CRITICAL_FAIL"
+  - "ENABLE without FORCE accepted => table owner bypass possible => CRITICAL_FAIL"
+  - "FORCE without POLICY accepted => deny-all table possible => CRITICAL_FAIL"
+  - "POLICY without ENABLE accepted => policy declared but inactive => CRITICAL_FAIL"
+  - "OR-extended policy expressions accepted => unconditional access bypass => CRITICAL_FAIL"
+
+must_read:
+  - docs/operations/AI_AGENT_OPERATION_MANUAL.md
+  - docs/operations/AGENTIC_SDLC_PHASE1_POLICY.md
+  - scripts/security/lint_ddl_lock_risk.sh
+  - schema/baselines/current/baseline.cutoff
+  - tasks/TSK-P1-RLS-001/meta.yml
+
+implementation_plan: docs/plans/phase1/TSK-P1-RLS-002/PLAN.md
+implementation_log: docs/plans/phase1/TSK-P1-RLS-002/EXEC_LOG.md
+notes: >-
+  Six negative tests are required. N5 is the most important — it is the
+  logical bypass test that previous versions missed entirely. An agent that
+  passes N1-N4 but fails N5 has built a lint that looks correct and can be
+  defeated by a single OR clause. N6 ensures partial compliance does not
+  produce silent half-configured tables.

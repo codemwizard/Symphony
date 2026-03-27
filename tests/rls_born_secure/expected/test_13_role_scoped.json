@@ -1,0 +1,6 @@
+{
+  "should_pass": false,
+  "expected_errors": ["ROLE_SCOPED_POLICY"],
+  "purpose": "Catches role-scoped TO authenticated_role — must be TO PUBLIC",
+  "enforced_by": "lint_rls_born_secure.sh"
+}

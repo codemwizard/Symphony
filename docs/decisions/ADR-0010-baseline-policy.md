@@ -59,8 +59,5 @@ This ADR remains the authoritative governance reference for baseline change chec
 - 2026-03-05: Baseline refreshed after adding migration 0069_hard_wave6_merkle_and_policy_rotation_guards.sql (Merkle null-expected-hash fail-closed verification and policy-rotation immutability guard hardening).
 - 2026-03-09: Baseline refreshed after adding migration 0070_cqrs_projection_roles_and_read_models.sql (Phase-1 CQRS/projection role separation and deterministic projection read-model cutover).
 - 2026-03-06: Baseline refreshed after adding migration 0072_hard_wave6_reference_policy_post_deactivation_immutability.sql (post-deactivation policy-row immutability enforcement for previously ACTIVE records).
-- 2026-03-12: Baseline refreshed after adding migration 0073_int_004_ack_gap_controls.sql (AWAITING_EXECUTION acknowledgement-gap escalation, supervisor recovery controls, and append-only interrupt audit trail).
-- 2026-03-12: Baseline refreshed again after wiring `guard_settlement_requires_acknowledgement()` into `instruction_settlement_finality` settlement inserts via `trg_enforce_settlement_acknowledgement`, preserving the `0073_int_004_ack_gap_controls.sql` cutoff while closing the runtime enforcement gap.
-- 2026-03-16: Baseline regenerated after Wave 1 security hardening adding billable clients conflict target uniqueness (0074) and supplier registry persistance/RLS (0075).
-- 2026-03-16: Baseline regenerated after Wave 2 Onboarding control plane migration adding tenant and programme registries with RLS enforcement (0076).
 - 2026-03-21: Baseline regenerated after Wave F onboarding control plane RLS hardening (0077).
+- 2026-03-27: Baseline regenerated after scrubbing orphaned Wave 2 configuration components (0085-0094).

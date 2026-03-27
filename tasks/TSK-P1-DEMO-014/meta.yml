@@ -15,7 +15,7 @@ touches:
 invariants:
 - INV-105
 work:
-- Introduce explicit runtime profiles: production and pilot-demo.
+- '{''Introduce explicit runtime profiles'': ''production and pilot-demo.''}'
 - Ensure demo-only routes/components load only in pilot-demo profile.
 acceptance_criteria:
 - Production profile does not expose demo-only routes/features.

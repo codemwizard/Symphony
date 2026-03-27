@@ -1,0 +1,170 @@
+schema_version: 1
+phase: '0'
+task_id: GF-W1-SCH-006
+title: "Migrations 0078-0079: regulatory_authorities, jurisdiction_profiles, regulatory_checkpoints, lifecycle_checkpoint_rules"
+owner_role: DB_FOUNDATION
+status: planned
+priority: CRITICAL
+risk_class: INTEGRITY
+blast_radius: DB_SCHEMA
+domain: green_finance
+pilot: false
+
+intent: >-
+  The regulatory control plane hooks must exist before the first pilot registers
+  its jurisdiction profile and checkpoint configuration. These tables are
+  jurisdiction-data-driven, not sector-driven. The engine reads profile data —
+  it does not encode country-specific behaviour in function bodies. jurisdiction_code
+  is non-nullable everywhere. No Zambia-specific logic appears in the schema.
+
+anti_patterns:
+  - "Hardcoding Zambia authority names or SI references in CHECK constraints"
+  - "Adding registry_binding_configs, transfer_constraint_rules, NDC accounting — deferred"
+  - "Making jurisdiction_code optional on any regulatory table"
+
+depends_on:
+  - GF-W1-SCH-005
+
+blocks:
+  - GF-W1-SCH-008
+
+touches:
+  - schema/migrations/0078_gf_regulatory_plane.sql
+  - schema/migrations/0078_gf_regulatory_plane.meta.yml
+  - schema/migrations/0079_gf_jurisdiction_profiles.sql
+  - schema/migrations/0079_gf_jurisdiction_profiles.meta.yml
+  - schema/migrations/MIGRATION_HEAD
+  - scripts/db/verify_gf_regulatory_plane.sh
+  - tasks/GF-W1-SCH-006/meta.yml
+
+invariants:
+  - INV-139
+  - INV-141
+
+work:
+  - >-
+    Write 0078_gf_regulatory_plane.sql. regulatory_authorities fields:
+    authority_id UUID PK, jurisdiction_code TEXT NOT NULL,
+    legal_basis_reference TEXT NOT NULL, authority_type TEXT NOT NULL
+    CHECK IN ('SOVEREIGN','REGULATOR','DESIGNATED_BODY'),
+    authority_name TEXT NOT NULL, enforcement_scope TEXT NOT NULL,
+    effective_from DATE NOT NULL, effective_to DATE NULL,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now(). Append-only.
+  - >-
+    regulatory_checkpoints: checkpoint_id UUID PK, jurisdiction_code TEXT NOT NULL,
+    authority_id UUID NOT NULL FK regulatory_authorities,
+    lifecycle_transition TEXT NOT NULL, checkpoint_type TEXT NOT NULL
+    CHECK IN ('REGISTRATION','METHODOLOGY_APPROVAL','ISSUANCE_AUTHORIZATION',
+    'TRANSFER_APPROVAL','EXPORT_APPROVAL','RETIREMENT_RECORDING'),
+    is_mandatory BOOL NOT NULL DEFAULT true,
+    interpretation_pack_id UUID NULL FK interpretation_packs,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now(). Append-only. RLS by
+    jurisdiction_code (policy: each tenant sees only their jurisdictions).
+  - >-
+    Write 0079_gf_jurisdiction_profiles.sql. jurisdiction_profiles fields:
+    profile_id UUID PK, jurisdiction_code TEXT NOT NULL UNIQUE,
+    country_name TEXT NOT NULL, national_registry_reference TEXT NULL,
+    article6_participant BOOL NOT NULL DEFAULT false,
+    profile_status TEXT NOT NULL CHECK IN ('ACTIVE','SUSPENDED','DRAFT'),
+    effective_from DATE NOT NULL, created_at TIMESTAMPTZ NOT NULL DEFAULT now().
+    Append-only.
+  - >-
+    lifecycle_checkpoint_rules: rule_id UUID PK, jurisdiction_code TEXT NOT NULL,
+    lifecycle_transition TEXT NOT NULL, checkpoint_id UUID NOT NULL FK
+    regulatory_checkpoints, rule_status TEXT NOT NULL CHECK IN
+    ('REQUIRED','CONDITIONALLY_REQUIRED','WAIVED_FOR_PILOT',
+    'PENDING_AUTHORITY_CLARIFICATION'), interpretation_pack_id UUID NOT NULL
+    FK interpretation_packs, effective_from TIMESTAMPTZ NOT NULL,
+    effective_to TIMESTAMPTZ NULL, created_at TIMESTAMPTZ NOT NULL DEFAULT now().
+    Append-only. Uniqueness: UNIQUE(jurisdiction_code, lifecycle_transition,
+    checkpoint_id) WHERE effective_to IS NULL.
+  - >-
+    Write sidecars for both migrations. Update MIGRATION_HEAD to 0079.
+  - >-
+    Write verify_gf_regulatory_plane.sh confirming jurisdiction_code non-null
+    on all tables, append-only posture, and checkpoint rule uniqueness.
+
+acceptance_criteria:
+  - >-
+    jurisdiction_code is NOT NULL on all four tables. Attempt NULL insert fails.
+  - >-
+    Duplicate active checkpoint rule (same jurisdiction/transition/checkpoint)
+    fails with unique constraint.
+  - >-
+    lifecycle_checkpoint_rules accepts all five rule_status values including
+    PENDING_AUTHORITY_CLARIFICATION.
+  - >-
+    No Zambia-specific value appears in any CHECK constraint.
+  - >-
+    AST verifier exits 0 on both migration files.
+
+negative_tests:
+  - id: GF-W1-SCH-006-N1
+    description: >-
+      Attempt INSERT into regulatory_authorities with jurisdiction_code = NULL.
+      Must fail with NOT NULL constraint.
+    required: true
+  - id: GF-W1-SCH-006-N2
+    description: >-
+      Insert two active lifecycle_checkpoint_rules with identical
+      jurisdiction_code, lifecycle_transition, and checkpoint_id where both
+      have effective_to IS NULL. Second insert must fail with unique constraint.
+    required: true
+
+verification:
+  - bash scripts/db/verify_gf_regulatory_plane.sh
+  - python3 scripts/audit/verify_neutral_schema_ast.py schema/migrations/0078_gf_regulatory_plane.sql
+  - python3 scripts/audit/verify_neutral_schema_ast.py schema/migrations/0079_gf_jurisdiction_profiles.sql
+  - bash scripts/audit/verify_migration_sequence.sh
+  - bash scripts/dev/pre_ci.sh
+
+evidence:
+  - path: evidence/phase0/gf_regulatory_plane.json
+    must_include:
+      - task_id
+      - git_sha
+      - timestamp_utc
+      - status
+      - jurisdiction_code_nonnull_confirmed
+      - checkpoint_uniqueness_confirmed
+      - append_only_confirmed
+      - ast_scan_clean
+
+failure_modes:
+  - "jurisdiction_code nullable on any regulatory table => CRITICAL_FAIL (Rule 6)"
+  - "Zambia hardcoded in any CHECK constraint => FAIL (Rule 6)"
+  - "PENDING_AUTHORITY_CLARIFICATION absent from rule_status CHECK => BLOCKED"
+
+must_read:
+  - docs/operations/AI_AGENT_OPERATION_MANUAL.md
+  - docs/operations/AGENTIC_SDLC_PILOT_POLICY.md
+  - docs/operations/GREEN_FINANCE_VOLATILITY_MAP.md
+
+second_pilot_test:
+  candidate_sector_1: solar_energy_zambia
+  candidate_sector_2: forestry_carbon_zimbabwe
+  unchanged_core_tables: [regulatory_authorities, regulatory_checkpoints, jurisdiction_profiles, lifecycle_checkpoint_rules]
+  unchanged_core_functions: []
+  adapter_only_differences:
+    - "jurisdiction_code data values differ per country (ZM vs ZW)"
+    - "checkpoint configuration data rows differ per regulatory regime"
+    - "authority_name and legal_basis_reference values differ per jurisdiction"
+  jurisdiction_profile_impact: >-
+    Zambia inserts its profile with jurisdiction_code='ZM'. Zimbabwe inserts
+    with jurisdiction_code='ZW'. The table structure is identical.
+  required_core_changes: []
+  explanation: >-
+    The regulatory plane is explicitly jurisdictional, not sectoral. A solar
+    energy project in Zambia and a forestry project in Zimbabwe both use the
+    same four tables. Zambia's checkpoints are data rows with jurisdiction_code='ZM'.
+    Zimbabwe's are data rows with jurisdiction_code='ZW'. No schema change is
+    required for the second jurisdiction.
+  second_pilot_reviewed_by: Architecture Owner
+pilot_scope_ref: not_applicable
+
+implementation_plan: docs/plans/phase0/GF-W1-SCH-006/PLAN.md
+implementation_log: docs/plans/phase0/GF-W1-SCH-006/EXEC_LOG.md
+notes: registry_binding_configs, transfer_constraint_rules, NDC accounting explicitly deferred.
+client: codex_cli
+assigned_agent: <UNASSIGNED>
+model: <UNASSIGNED>

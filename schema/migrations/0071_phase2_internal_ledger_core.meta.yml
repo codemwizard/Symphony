@@ -1,0 +1,17 @@
+phase: '1'
+layer: CORE_SCHEMA
+touches_core_schema: true
+introduces_identifiers:
+  - internal_ledger_journals
+  - internal_ledger_postings
+  - create_internal_ledger_journal
+  - verify_internal_ledger_journal_balance
+  - enforce_internal_ledger_posting_context
+  - deny_append_only_mutation
+  - idx_internal_ledger_postings_journal
+second_pilot_justification_required: true
+volatility_class: STABLE
+notes: >-
+  Core financial transaction schema that all pilots will use for
+  internal value transfer and settlement calculations. Neutral
+  to support any financial instrument type.

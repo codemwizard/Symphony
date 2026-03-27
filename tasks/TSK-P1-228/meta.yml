@@ -1,0 +1,62 @@
+schema_version: 1
+phase: '1'
+task_id: TSK-P1-228
+title: Harden the task creation process so anti-drift authoring rules become canonical
+  repo policy
+owner_role: SUPERVISOR
+status: completed
+depends_on:
+- TSK-P1-227
+touches:
+- docs/operations/TASK_CREATION_PROCESS.md
+- scripts/audit/verify_tsk_p1_228.sh
+- evidence/phase1/tsk_p1_228_process_hardening.json
+- tasks/TSK-P1-228/meta.yml
+- docs/plans/phase1/TSK-P1-228/PLAN.md
+- docs/plans/phase1/TSK-P1-228/EXEC_LOG.md
+invariants:
+- INV-105
+- INV-119
+work:
+- Amend the canonical task-creation process so one-primary-objective discipline, explicit
+  out-of-scope/non-goals/stop-conditions, honest proof guarantees and proof limitations,
+  and YAML-to-human-doc parity expectations are mandatory authoring rules.
+- Add explicit prohibitions against placeholder verifiers, aspirational evidence,
+  and foundational task packs that fail to state which anti-drift cheating modes remain
+  open after their implementation.
+- Add a task-specific verifier that checks the hardened process document contains
+  the required anti-drift authoring rules and emits declared Phase-1 evidence.
+acceptance_criteria:
+- The canonical task-creation process makes anti-drift authoring rules explicit repo
+  policy instead of leaving them in plan prose or reviewer memory.
+- The process document explicitly prohibits placeholder verification and requires
+  truthful proof-guarantee/proof-limitation language for task packs.
+- '`scripts/audit/verify_tsk_p1_228.sh` verifies the hardened process requirements
+  and emits `evidence/phase1/tsk_p1_228_process_hardening.json`.'
+verification:
+- bash scripts/audit/verify_tsk_p1_228.sh
+- python3 scripts/audit/validate_evidence.py --task TSK-P1-228 --evidence evidence/phase1/tsk_p1_228_process_hardening.json
+- RUN_PHASE1_GATES=1 bash scripts/dev/pre_ci.sh
+evidence:
+- '{''path'': ''evidence/phase1/tsk_p1_228_process_hardening.json'', ''must_include'':
+  [''task_id'', ''git_sha'', ''timestamp_utc'', ''status'', ''checks'', ''required_process_rules'',
+  ''rejected_gap_case'', ''document_path'']}'
+failure_modes:
+- Task creation process still leaves anti-drift authoring as optional guidance =>
+  FAIL
+- Placeholder verifier or dishonest proof-language gaps remain permissible in process
+  policy => BLOCKED
+- Evidence file missing => FAIL
+must_read:
+- docs/operations/AI_AGENT_OPERATION_MANUAL.md
+- AGENT_ENTRYPOINT.md
+- docs/operations/AGENT_PROMPT_ROUTER.md
+- docs/operations/TASK_CREATION_PROCESS.md
+- docs/reference/rls-anti-drift-wave2-task-plan.md
+implementation_plan: docs/plans/phase1/TSK-P1-228/PLAN.md
+implementation_log: docs/plans/phase1/TSK-P1-228/EXEC_LOG.md
+notes: This task governs authoring policy, not runtime gate logic. Keep it focused
+  on canonical process requirements so later gates can enforce a stable declared contract.
+client: cursor
+assigned_agent: supervisor
+model: Cascade

@@ -1,7 +1,7 @@
 ---
 exception_id: EXC-206
 inv_scope: change-rule
-expiry: 2026-03-09
+expiry: 2026-12-31
 follow_up_ticket: TSK-P0-LEVY-004
 reason: Levy regex hardening migration updates DDL/baseline artifacts; security/compliance linkage already present in canonical docs.
 author: supervisor

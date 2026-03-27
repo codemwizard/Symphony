@@ -1,0 +1,6 @@
+{
+  "should_pass": false,
+  "expected_errors": ["WRONG_USING_EXPRESSION"],
+  "purpose": "Catches OR TRUE bypass in USING clause — semantically always true",
+  "enforced_by": "lint_rls_born_secure.sh"
+}

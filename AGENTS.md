@@ -11,6 +11,7 @@ AI output is never authoritative unless backed by enforcement + verification.
 - Append-only outbox attempts must remain append-only.
 - **No direct push to `main`.** Work only on feature branches and open PRs.
 - **No direct pull from `main` into working branches.** Use PRs for integration.
+- **Pilot Containment:** Any agent working on a task tagged `domain: green_finance` or `pilot: true` MUST read `docs/operations/AGENTIC_SDLC_PILOT_POLICY.md` before beginning implementation.
 
 ## Path Authority
 - Editable paths: follow agent-specific allowed paths below.
@@ -27,11 +28,13 @@ Decides which specialist agent runs based on:
 ### DB Foundation Agent
 Allowed paths: `schema/migrations/**`, `scripts/db/**`
 Must run: `scripts/db/verify_invariants.sh`, `scripts/db/tests/test_db_functions.sh`
+Must read: `docs/operations/AGENTIC_SDLC_PILOT_POLICY.md`, `docs/operations/PILOT_REJECTION_PLAYBOOK.md`, `docs/operations/AGENT_GUARDRAILS_GREEN_FINANCE.md`
 Never: weaken fencing semantics, grants, or append-only guarantees.
 
 ### Invariants Curator Agent
 Allowed paths: `docs/invariants/**`, `docs/governance/**`, `docs/architecture/**`, `docs/PHASE0/**`, `docs/tasks/**`, `scripts/audit/**`, `scripts/db/**`, `schema/**`, `.github/codex/prompts/invariants_review.md`
 Must run: `scripts/audit/run_invariants_fast_checks.sh`
+Must read: `docs/operations/AGENTIC_SDLC_PILOT_POLICY.md`, `docs/operations/PILOT_REJECTION_PLAYBOOK.md`, `docs/operations/AGENT_GUARDRAILS_GREEN_FINANCE.md`
 Never: mark implemented without enforcement + verification evidence.
 
 ### Security Guardian Agent

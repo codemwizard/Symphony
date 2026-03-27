@@ -1,0 +1,251 @@
+dag_version: 1
+project: symphony
+scope: green-finance-wave1
+description: >-
+  Wave 1 implementation DAG for the neutral green-finance host.
+  Pilots are adapters. Core is neutral. Volatility lives in tables not code.
+  No task may cross the Phase 2 boundary line before all Phase 0/1 tasks are closed.
+
+defaults:
+  runner: orchestrator
+  fail_fast: true
+  domain: green_finance
+
+# ── TRANCHE A — Governance freeze (parallel, no inter-dependencies) ──────────
+
+nodes:
+
+- id: GF-W1-FRZ-001
+  stage: A-governance-freeze
+  title: Merge governance package v2
+  depends_on: []
+  kind: task
+
+- id: GF-W1-FRZ-002
+  stage: A-governance-freeze
+  title: Wire policy into AGENTS.md
+  depends_on: [GF-W1-FRZ-001]
+  kind: task
+
+- id: GF-W1-FRZ-003
+  stage: A-governance-freeze
+  title: CI blocking wiring
+  depends_on: [GF-W1-FRZ-001]
+  kind: task
+
+- id: GF-W1-FRZ-004
+  stage: A-governance-freeze
+  title: Supersede plastic-first migration plan
+  depends_on: [GF-W1-FRZ-001]
+  kind: task
+
+- id: GF-W1-FRZ-005
+  stage: A-governance-freeze
+  title: Volatility map — PREREQUISITE for all schema work
+  depends_on: [GF-W1-FRZ-001]
+  kind: task
+  note: Must be merged and approved before Tranche C or D starts
+
+- id: checkpoint/TRANCHE-A
+  stage: A-governance-freeze
+  title: Tranche A complete — governance baseline established
+  kind: checkpoint
+  depends_on:
+    - GF-W1-FRZ-001
+    - GF-W1-FRZ-002
+    - GF-W1-FRZ-003
+    - GF-W1-FRZ-004
+    - GF-W1-FRZ-005
+
+# ── TRANCHE B — Governance tooling (parallel after FRZ-001) ─────────────────
+
+- id: GF-W1-GOV-001
+  stage: B-governance-tooling
+  title: Structured second-pilot test fields
+  depends_on: [GF-W1-FRZ-001]
+  kind: task
+
+- id: GF-W1-GOV-002
+  stage: B-governance-tooling
+  title: AST-based neutral schema verifier
+  depends_on: [GF-W1-FRZ-001, GF-W1-FRZ-003]
+  kind: task
+
+- id: GF-W1-GOV-003
+  stage: B-governance-tooling
+  title: Migration sidecar manifests and alignment verifier
+  depends_on: [GF-W1-FRZ-001, GF-W1-FRZ-003]
+  kind: task
+
+- id: GF-W1-GOV-004
+  stage: B-governance-tooling
+  title: Pilot activation gate (six check groups)
+  depends_on:
+    - GF-W1-FRZ-001
+    - GF-W1-FRZ-003
+    - GF-W1-GOV-001
+    - GF-W1-GOV-002
+    - GF-W1-GOV-003
+  kind: task
+
+- id: GF-W1-GOV-005
+  stage: B-governance-tooling
+  title: Migration sequence guard — no gaps, no duplicates, HEAD match
+  depends_on: [GF-W1-FRZ-001, GF-W1-FRZ-003]
+  kind: task
+
+- id: checkpoint/TRANCHE-B
+  stage: B-governance-tooling
+  title: Tranche B complete — enforcement tooling operational
+  kind: checkpoint
+  depends_on:
+    - GF-W1-GOV-001
+    - GF-W1-GOV-002
+    - GF-W1-GOV-003
+    - GF-W1-GOV-004
+    - GF-W1-GOV-005
+
+# ── TRANCHE C — Design completion (sequential) ───────────────────────────────
+
+- id: GF-W1-DSN-001
+  stage: C-design-completion
+  title: Adapter contract interface skeleton
+  depends_on:
+    - checkpoint/TRANCHE-A
+    - GF-W1-FRZ-002
+    - GF-W1-FRZ-005
+  kind: task
+
+- id: GF-W1-DSN-002
+  stage: C-design-completion
+  title: Interpretation pack exact schema with resolution hierarchy
+  depends_on: [GF-W1-DSN-001]
+  kind: task
+
+- id: checkpoint/TRANCHE-C
+  stage: C-design-completion
+  title: Tranche C complete — boundary objects fully specified
+  kind: checkpoint
+  depends_on:
+    - GF-W1-DSN-001
+    - GF-W1-DSN-002
+
+# ── TRANCHE D — Phase 0 neutral schema (sequential migrations) ───────────────
+
+- id: GF-W1-SCH-001
+  stage: D-phase0-schema
+  title: "Migrations 0070-0071: adapter_registrations, interpretation_packs"
+  depends_on:
+    - checkpoint/TRANCHE-B
+    - checkpoint/TRANCHE-C
+    - GF-W1-GOV-005
+  kind: task
+
+- id: GF-W1-SCH-002
+  stage: D-phase0-schema
+  title: "Migrations 0072-0073: methodology_versions, projects"
+  depends_on: [GF-W1-SCH-001]
+  kind: task
+
+- id: GF-W1-SCH-003
+  stage: D-phase0-schema
+  title: "Migration 0074: monitoring_records"
+  depends_on: [GF-W1-SCH-002]
+  kind: task
+
+- id: GF-W1-SCH-004
+  stage: D-phase0-schema
+  title: "Migration 0075: evidence_nodes, evidence_edges"
+  depends_on: [GF-W1-SCH-003]
+  kind: task
+
+- id: GF-W1-SCH-005
+  stage: D-phase0-schema
+  title: "Migration 0076: asset_batches, asset_lifecycle_events, retirement_events"
+  depends_on: [GF-W1-SCH-004]
+  kind: task
+
+- id: GF-W1-SCH-006
+  stage: D-phase0-schema
+  title: "Migrations 0077-0078: regulatory_authorities, jurisdiction_profiles, checkpoints"
+  depends_on: [GF-W1-SCH-005]
+  kind: task
+
+- id: GF-W1-SCH-007
+  stage: D-phase0-schema
+  title: Wire verifiers into CI — Phase 0 schema closeout
+  depends_on: [GF-W1-SCH-006]
+  kind: task
+
+- id: checkpoint/TRANCHE-D
+  stage: D-phase0-schema
+  title: Tranche D complete — Phase 0 neutral schema stable
+  kind: checkpoint
+  depends_on: [GF-W1-SCH-007]
+
+# ── TRANCHE E — Phase 1 host functions (sequential) ─────────────────────────
+
+- id: GF-W1-FNC-001
+  stage: E-phase1-functions
+  title: "Migrations 0079: register_project, activate_project"
+  depends_on: [checkpoint/TRANCHE-D]
+  kind: task
+
+- id: GF-W1-FNC-002
+  stage: E-phase1-functions
+  title: "Migration 0080: record_monitoring_record"
+  depends_on: [GF-W1-FNC-001]
+  kind: task
+
+- id: GF-W1-FNC-003
+  stage: E-phase1-functions
+  title: "Migration 0081: attach_evidence, link_evidence_to_record"
+  depends_on: [GF-W1-FNC-002]
+  kind: task
+
+- id: GF-W1-FNC-004
+  stage: E-phase1-functions
+  title: "Migration 0082: record_authority_decision, attempt_lifecycle_transition"
+  depends_on: [GF-W1-FNC-003]
+  kind: task
+
+- id: GF-W1-FNC-005
+  stage: E-phase1-functions
+  title: "Migration 0083: issue_asset_batch, retire_asset_batch"
+  depends_on: [GF-W1-FNC-004]
+  kind: task
+
+- id: checkpoint/TRANCHE-E
+  stage: E-phase1-functions
+  title: Tranche E complete — Phase 1 host functions operational
+  kind: checkpoint
+  depends_on: [GF-W1-FNC-005]
+
+# ── TRANCHE F — First pilot registration (adapter only) ─────────────────────
+
+- id: GF-W1-PLT-001
+  stage: F-pilot-registration
+  title: Register PWRM0001 as first adapter — zero schema changes
+  depends_on:
+    - checkpoint/TRANCHE-E
+    - GF-W1-GOV-001
+    - GF-W1-GOV-004
+  kind: task
+
+- id: checkpoint/TRANCHE-F
+  stage: F-pilot-registration
+  title: "Wave 1 complete — neutral host stable, first pilot live"
+  kind: checkpoint
+  depends_on: [GF-W1-PLT-001]
+
+# ── WAVE 1 FINAL GATE ────────────────────────────────────────────────────────
+
+- id: checkpoint/WAVE-1-COMPLETE
+  stage: wave1-closeout
+  title: "Wave 1 declared complete — architecture holds, pilot runs without schema mutation"
+  kind: checkpoint
+  depends_on: [checkpoint/TRANCHE-F]
+  note: >-
+    Proof of success: second pilot can begin by registering a new adapter row
+    in adapter_registrations and seeding its jurisdiction profile.
+    Zero migrations required for second pilot.

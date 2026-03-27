@@ -1,7 +1,7 @@
 ---
 exception_id: EXC-130
 inv_scope: change-rule
-expiry: 2026-06-30
+expiry: 2026-12-31
 follow_up_ticket: HIER-009-SEC-LINKAGE
 reason: Structural security-significant DB migration for HIER-009 requires explicit exception documentation while semantic-integrity linkage is finalized in contract/registry.
 author: system

@@ -1,0 +1,63 @@
+schema_version: 1
+phase: '1'
+task_id: TSK-P1-239
+title: Harden PLAN_TEMPLATE.md and TASK_CREATION_PROCESS.md with mandatory anti-drift
+  verifier design requirements
+owner_role: ARCHITECT
+status: completed
+depends_on: []
+touches:
+- docs/contracts/templates/PLAN_TEMPLATE.md
+- docs/operations/TASK_CREATION_PROCESS.md
+- scripts/audit/verify_plan_anti_drift.sh
+- evidence/phase1/tsk_p1_239_template_hardening.json
+- tasks/TSK-P1-239/meta.yml
+invariants:
+- INV-GOV-TEMPLATE-001
+- INV-GOV-TEMPLATE-002
+- INV-GOV-TEMPLATE-003
+work:
+- '[ID tsk_p1_239_work_item_01] Overwrite docs/contracts/templates/PLAN_TEMPLATE.md
+  with explicit Stop Conditions and tracking IDs.'
+- '[ID tsk_p1_239_work_item_02] Verify the updated template against grep validations.'
+- '[ID tsk_p1_239_work_item_03] Update Section 6 Common pitfalls in TASK_CREATION_PROCESS.md
+  and emit evidence.'
+acceptance_criteria:
+- '[ID tsk_p1_239_work_item_01] PLAN_TEMPLATE.md contains mathematical Stop Conditions
+  and Machine-verifiable ID tracking schemas securely mapped to TSK-P1-240''s execution
+  framework.'
+- '[ID tsk_p1_239_work_item_02] [ID tsk_p1_239_work_item_03] TASK_CREATION_PROCESS.md
+  lists all 7 anti-drift pitfalls, and verify_tsk_p1_239.sh explicitly asserts their
+  existence and emits the trace natively.'
+verification:
+- '# [ID tsk_p1_239_work_item_01] [ID tsk_p1_239_work_item_02] [ID tsk_p1_239_work_item_03]
+  test -x scripts/audit/verify_tsk_p1_239.sh && bash scripts/audit/verify_tsk_p1_239.sh
+  > evidence/phase1/tsk_p1_239_template_hardening.json || exit 1'
+- '# [ID tsk_p1_239_work_item_03] test -f evidence/phase1/tsk_p1_239_template_hardening.json
+  && cat evidence/phase1/tsk_p1_239_template_hardening.json | grep "sections_added"
+  || exit 1'
+evidence:
+- '{''path'': ''evidence/phase1/tsk_p1_239_template_hardening.json'', ''must_include'':
+  [''task_id'', ''git_sha'', ''timestamp_utc'', ''status'', ''checks'', ''observed_paths'',
+  ''observed_hashes'', ''command_outputs'', ''execution_trace'', ''sections_added'',
+  ''pitfalls_documented'', ''verifier_gates_added'']}'
+failure_modes:
+- PLAN_TEMPLATE.md still lacks Stop Conditions => CRITICAL_FAIL
+- Verifier Design Requirements section missing => CRITICAL_FAIL
+- Done-when examples remain subjective => FAIL
+- TASK_CREATION_PROCESS.md lacks Verifier Design Review gate => FAIL
+- verify_plan_anti_drift.sh does not exist => FAIL
+- Evidence file missing => FAIL
+must_read:
+- docs/operations/AI_AGENT_OPERATION_MANUAL.md
+- docs/contracts/templates/PLAN_TEMPLATE.md
+- docs/operations/TASK_CREATION_PROCESS.md
+implementation_plan: docs/plans/phase1/TSK-P1-239/PLAN.md
+implementation_log: docs/plans/phase1/TSK-P1-239/EXEC_LOG.md
+notes: 'This task is standalone with no dependencies. It hardens the process-level
+  templates so that the 7 anti-drift pitfalls discovered during TSK-P1-222 review
+  are structurally prevented in all future task plans, not just in the single instance
+  where they were found. Phase Key: GOVH. Phase Name: Governance Hardening.'
+client: cursor
+assigned_agent: architect
+model: claude-sonnet-4-20250514

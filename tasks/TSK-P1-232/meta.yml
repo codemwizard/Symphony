@@ -1,0 +1,74 @@
+schema_version: 1
+phase: '1'
+task_id: TSK-P1-232
+title: Implement a report-only proof-integrity gate so declared verification, acceptance
+  criteria, evidence, and proof guarantees must align
+owner_role: SECURITY_GUARDIAN
+status: completed
+depends_on:
+- TSK-P1-224
+- TSK-P1-225
+- TSK-P1-227
+- TSK-P1-230
+- TSK-P1-231
+touches:
+- scripts/audit/task_proof_integrity_gate.py
+- scripts/audit/verify_tsk_p1_232.sh
+- evidence/phase1/tsk_p1_232_proof_integrity.json
+- tasks/TSK-P1-232/meta.yml
+- docs/plans/phase1/TSK-P1-232/PLAN.md
+- docs/plans/phase1/TSK-P1-232/EXEC_LOG.md
+invariants:
+- INV-105
+- INV-119
+work:
+- Implement a report-only proof-integrity gate that detects decorative or obviously
+  non-proving verifier declarations, acceptance criteria without verifier linkage,
+  acceptance criteria without evidence linkage, orphan evidence, and proof guarantees
+  unsupported by declared verification/evidence shape.
+- "Enforce hard scope constraints so the gate validates declared contract alignment\
+  \ only, prohibits semantic execution analysis, and does not claim runtime proof\
+  \ truth beyond the task pack\u2019s declared verifier and evidence contract."
+- Consume upstream authoring and scope outputs rather than duplicating their logic,
+  and add a task-specific verifier that exercises decorative-verifier, orphan-evidence,
+  and overclaimed-proof fixtures while emitting declared evidence.
+acceptance_criteria:
+- The proof-integrity gate surfaces proof-chain mismatches across acceptance criteria,
+  verifier declarations, evidence declarations, and proof guarantees through the shared
+  gate result contract.
+- The proof-integrity gate stays bounded to declared contract alignment and does not
+  perform semantic execution analysis or runtime truth claims.
+- Structural proof-chain mismatches produce high-confidence findings, while semantic
+  guesses remain low-confidence and cannot escalate into strong authority claims.
+- '`scripts/audit/verify_tsk_p1_232.sh` exercises decorative-verifier, orphan-evidence,
+  and overclaimed-proof fixtures and emits `evidence/phase1/tsk_p1_232_proof_integrity.json`.'
+verification:
+- bash scripts/audit/verify_tsk_p1_232.sh
+- python3 scripts/audit/validate_evidence.py --task TSK-P1-232 --evidence evidence/phase1/tsk_p1_232_proof_integrity.json
+- RUN_PHASE1_GATES=1 bash scripts/dev/pre_ci.sh
+evidence:
+- '{''path'': ''evidence/phase1/tsk_p1_232_proof_integrity.json'', ''must_include'':
+  [''task_id'', ''git_sha'', ''timestamp_utc'', ''status'', ''checks'', ''gate_result_contract_fields'',
+  ''hard_scope_constraints'', ''proof_chain_requirements'', ''decorative_verifier_result'',
+  ''orphan_evidence_result'', ''overclaimed_proof_result'', ''valid_fixture_result'']}'
+failure_modes:
+- Proof-integrity gate claims semantic or runtime truth beyond declared contract alignment
+  => FAIL
+- Acceptance criteria without verifier support are not surfaced as critical proof
+  findings => BLOCKED
+- Proof-integrity output does not use the shared gate result contract => FAIL
+- Evidence file missing => FAIL
+must_read:
+- docs/operations/AI_AGENT_OPERATION_MANUAL.md
+- AGENT_ENTRYPOINT.md
+- docs/operations/AGENT_PROMPT_ROUTER.md
+- docs/operations/TASK_CREATION_PROCESS.md
+- docs/reference/rls-anti-drift-wave2-task-plan.md
+implementation_plan: docs/plans/phase1/TSK-P1-232/PLAN.md
+implementation_log: docs/plans/phase1/TSK-P1-232/EXEC_LOG.md
+notes: This gate is intentionally narrow and contract-bound. It must consume upstream
+  Pack B signals, share the same transition model, and refuse semantic proof claims
+  outside the declared verifier/evidence contract.
+client: cursor
+assigned_agent: security_guardian
+model: Cascade

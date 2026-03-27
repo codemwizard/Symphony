@@ -1,0 +1,72 @@
+schema_version: 1
+phase: '1'
+task_id: TSK-P1-238
+title: Repair execution-order authority drift so anti-hallucination task metadata,
+  registry, and pickup guidance agree
+owner_role: SUPERVISOR
+status: completed
+depends_on: []
+touches:
+- tasks/TSK-P1-227/meta.yml
+- tasks/TSK-P1-234/meta.yml
+- tasks/TSK-P1-235/meta.yml
+- docs/tasks/RLS_ANTI_HALLUCINATION_EXECUTION_ORDER.md
+- docs/tasks/PHASE1_GOVERNANCE_TASKS.md
+- scripts/audit/verify_tsk_p1_238.sh
+- evidence/phase1/tsk_p1_238_order_authority.json
+- tasks/TSK-P1-238/meta.yml
+- docs/plans/phase1/TSK-P1-238/PLAN.md
+- docs/plans/phase1/TSK-P1-238/EXEC_LOG.md
+invariants:
+- INV-105
+- INV-119
+work:
+- Repair the execution-order authority model for `TSK-P1-222` through `TSK-P1-235`
+  by aligning `depends_on` with the intended canonical sequence or explicitly documenting
+  any legitimate parallel branch in both metadata and pickup guidance.
+- Deduplicate and normalize the downstream backlog in `docs/tasks/RLS_ANTI_HALLUCINATION_EXECUTION_ORDER.md`
+  so each future work item appears once with one clear meaning.
+- Register the pickup guide from `docs/tasks/PHASE1_GOVERNANCE_TASKS.md` and add a
+  task-specific verifier that fails when metadata order, handoff order, and registry
+  discoverability drift apart again.
+acceptance_criteria:
+- The repository no longer contains a stricter narrative execution order than the
+  actual `depends_on` graph for the anti-hallucination chain, unless any intentional
+  parallelism is stated explicitly and consistently in both places.
+- The execution-order artifact contains one deduplicated downstream backlog with unambiguous
+  staging language instead of repeated or aliased items that could be mistaken for
+  separate tasks.
+- '`docs/tasks/PHASE1_GOVERNANCE_TASKS.md` points readers to `docs/tasks/RLS_ANTI_HALLUCINATION_EXECUTION_ORDER.md`
+  so another agent can discover the canonical pickup authority from the primary task
+  index.'
+- '`scripts/audit/verify_tsk_p1_238.sh` detects an order-authority mismatch or missing
+  index reference and emits `evidence/phase1/tsk_p1_238_order_authority.json`.'
+verification:
+- bash scripts/audit/verify_tsk_p1_238.sh
+- python3 scripts/audit/validate_evidence.py --task TSK-P1-238 --evidence evidence/phase1/tsk_p1_238_order_authority.json
+- RUN_PHASE1_GATES=1 bash scripts/dev/pre_ci.sh
+evidence:
+- '{''path'': ''evidence/phase1/tsk_p1_238_order_authority.json'', ''must_include'':
+  [''task_id'', ''git_sha'', ''timestamp_utc'', ''status'', ''checks'', ''corrected_dependency_edges'',
+  ''index_reference_result'', ''backlog_dedup_result'']}'
+failure_modes:
+- Task metadata and pickup guidance still disagree on which anti-hallucination task
+  may start next => FAIL
+- Execution-order backlog still contains duplicate or aliased future work items =>
+  BLOCKED
+- Primary governance index still omits the pickup-guide reference => FAIL
+- Evidence file missing => FAIL
+must_read:
+- docs/operations/AI_AGENT_OPERATION_MANUAL.md
+- AGENT_ENTRYPOINT.md
+- docs/operations/AGENT_PROMPT_ROUTER.md
+- docs/operations/TASK_CREATION_PROCESS.md
+- docs/reference/phase1-anti-drift-artifacts-standards-review-report.md
+implementation_plan: docs/plans/phase1/TSK-P1-238/PLAN.md
+implementation_log: docs/plans/phase1/TSK-P1-238/EXEC_LOG.md
+notes: This is a narrow governance-remediation task. It must repair ordering authority
+  and handoff clarity only, not expand into implementing the anti-hallucination features
+  themselves.
+client: cursor
+assigned_agent: supervisor
+model: Cascade

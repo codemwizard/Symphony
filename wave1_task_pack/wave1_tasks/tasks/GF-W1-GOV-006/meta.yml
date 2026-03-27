@@ -1,0 +1,182 @@
+schema_version: 1
+phase: '0'
+task_id: GF-W1-GOV-006
+title: "Define and enforce Phase 2 green finance entry gate blocking submission API and verifier read surface"
+owner_role: SUPERVISOR
+status: planned
+priority: HIGH
+risk_class: GOVERNANCE
+blast_radius: CI_GATES
+domain: green_finance
+pilot: false
+
+intent: >-
+  Phase 1 scope guard explicitly prohibits product API expansion without
+  contract, gate, evidence bindings, and authz assertions. The project
+  developer submission API and the verifier read API surface are both
+  Phase 2 items. Without a hard Phase 2 entry gate, someone will start
+  building these APIs before the adapter contract and interpretation packs
+  are stable — resulting in hardcoded payload assumptions, bypassed adapter
+  validation, and schema leakage into the API layer. This task creates the
+  formal gate that blocks Phase 2 green finance API work until the Phase 1
+  neutral host is complete and verified. It also establishes the Phase 2
+  deferred item list so nothing is silently lost.
+
+anti_patterns:
+  - "Building any green finance API endpoint before this gate passes"
+  - "Starting verifier read surface (API layer) work in Phase 1 — only the token primitive belongs in Phase 1"
+  - "Starting project developer submission API before adapter_registrations and interpretation_packs are verified"
+  - "Treating Phase 2 deferred items as optional — they are explicit deferrals, not cancellations"
+
+depends_on:
+  - GF-W1-FRZ-001
+
+blocks: []
+
+touches:
+  - docs/operations/GF_PHASE2_ENTRY_GATE.md
+  - docs/operations/GF_PHASE2_DEFERRED_ITEMS.md
+  - scripts/audit/verify_gf_phase2_entry_gate.sh
+  - tasks/GF-W1-GOV-006/meta.yml
+
+invariants: []
+
+work:
+  - >-
+    Write docs/operations/GF_PHASE2_ENTRY_GATE.md defining the rule:
+    No Phase 2 green finance work — including any API endpoint, query
+    abstraction, response projection, monitoring report generator, or
+    verifier read surface — may begin until all of the following are
+    verified and evidenced:
+    (1) adapter_registrations (SCH-001) evidence file exists and passes.
+    (2) interpretation_packs (SCH-002) evidence file exists and passes.
+    (3) verifier_registry (SCH-008) evidence file exists and passes.
+    (4) issue_verifier_read_token (FNC-006) evidence file exists and passes.
+    (5) Core Contract Gate passes with zero violations on all GF migrations.
+    (6) Phase 0 closeout (SCH-009) evidence file exists and passes.
+    (7) Formal Phase 2 opening approval artifact exists at
+        approvals/YYYY-MM-DD/PHASE2-GF-OPENING.md per PHASE_LIFECYCLE.md.
+  - >-
+    Write docs/operations/GF_PHASE2_DEFERRED_ITEMS.md as an explicit
+    register of items deferred from Wave 1. Required entries:
+    DEFER-001: Verifier read API surface — the .NET endpoint that accepts
+    a GF verifier token and returns scoped evidence data (pagination,
+    filtering, projections). Blocked on FNC-006 and Phase 2 opening.
+    DEFER-002: Project developer submission API — the inbound API through
+    which a developer submits a monitoring record and receives validation
+    feedback against their adapter-registered schema. Blocked on Phase 2
+    opening and stable adapter contract.
+    DEFER-003: Monitoring report generation — the verifier-facing export
+    pack that becomes the monitoring report submitted to ZEMA under
+    S.I. Regulation 10. Blocked on Phase 2 opening.
+    DEFER-004: Interpretation pack confidence as user-visible artifact —
+    what the API returns when an authority decision was made under a
+    PENDING_CLARIFICATION pack. Blocked on Phase 2 API design.
+    DEFER-005: Phase 2 contract rows for green finance domain — INV-159
+    and above for the green finance API surface. Blocked on Phase 2 opening.
+    Each deferred item must include: what it is, why it is deferred,
+    what it is blocked on, and which Wave 1 task must be complete before
+    it can begin.
+  - >-
+    Write scripts/audit/verify_gf_phase2_entry_gate.sh. This script
+    checks all seven entry conditions above. It reads evidence file paths
+    and confirms they exist and contain status: PASS. It is run by agents
+    at the start of any task claiming Phase 2 green finance scope. If any
+    condition fails, the script exits non-zero with the blocking condition
+    named. This script is the mechanical version of the gate document.
+  - >-
+    Wire verify_gf_phase2_entry_gate.sh into
+    .github/workflows/green_finance_contract_gate.yml as a check that runs
+    on any PR where the task meta declares phase: '2' and domain:
+    green_finance. If the gate has not passed, the PR is blocked.
+
+acceptance_criteria:
+  - >-
+    docs/operations/GF_PHASE2_ENTRY_GATE.md exists with all seven entry
+    conditions listed.
+  - >-
+    docs/operations/GF_PHASE2_DEFERRED_ITEMS.md exists with all five
+    deferred items documented.
+  - >-
+    scripts/audit/verify_gf_phase2_entry_gate.sh exists and exits non-zero
+    when run against a repo where Phase 0 evidence files do not yet exist.
+  - >-
+    A test PR with a task declaring phase: '2' and domain: green_finance
+    is blocked by the workflow when the entry gate has not passed.
+
+negative_tests:
+  - id: GF-W1-GOV-006-N1
+    description: >-
+      Create a task meta with phase: '2' and domain: green_finance and
+      attempt to open a PR before Phase 0 evidence files exist. The
+      verify_gf_phase2_entry_gate.sh check in CI must block the PR with
+      a clear message naming which entry condition failed.
+    required: true
+  - id: GF-W1-GOV-006-N2
+    description: >-
+      Attempt to start building a green finance API endpoint (verifier read
+      surface) without the Phase 2 opening approval artifact existing.
+      The gate script must detect this and block. This proves the deferred
+      items list is enforced, not advisory.
+    required: true
+
+verification:
+  - test -f docs/operations/GF_PHASE2_ENTRY_GATE.md
+  - test -f docs/operations/GF_PHASE2_DEFERRED_ITEMS.md
+  - bash scripts/audit/verify_gf_phase2_entry_gate.sh
+  - bash scripts/dev/pre_ci.sh
+
+evidence:
+  - path: evidence/phase0/gf_phase2_entry_gate.json
+    must_include:
+      - task_id
+      - git_sha
+      - timestamp_utc
+      - status
+      - entry_gate_doc_present
+      - deferred_items_doc_present
+      - gate_script_present
+      - ci_wiring_present
+
+failure_modes:
+  - "Phase 2 API work starts before gate passes => CRITICAL_FAIL (Phase scope violation)"
+  - "Deferred items document absent — items silently lost from backlog => BLOCKED"
+  - "Gate script not wired into CI — mechanical enforcement absent => FAIL"
+
+must_read:
+  - docs/operations/AI_AGENT_OPERATION_MANUAL.md
+  - docs/operations/AGENTIC_SDLC_PILOT_POLICY.md
+  - docs/operations/PHASE_LIFECYCLE.md
+  - docs/operations/AGENTIC_SDLC_PHASE1_POLICY.md
+
+second_pilot_test:
+  candidate_sector_1: solar_energy
+  candidate_sector_2: forestry_carbon
+  unchanged_core_tables: []
+  unchanged_core_functions: []
+  adapter_only_differences:
+    - "Phase 2 gate applies identically to solar and forestry API work"
+  jurisdiction_profile_impact: none — gate is jurisdiction-agnostic
+  required_core_changes: []
+  explanation: >-
+    The Phase 2 entry gate applies to all green finance domain API work
+    regardless of sector. A solar energy submission API and a forestry
+    carbon submission API are both blocked until the same seven conditions
+    pass. The deferred items list covers both sectors without differentiation.
+    No sector-specific gate logic exists.
+  second_pilot_reviewed_by: Architecture Owner
+pilot_scope_ref: not_applicable
+
+implementation_plan: docs/plans/phase0/GF-W1-GOV-006/PLAN.md
+implementation_log: docs/plans/phase0/GF-W1-GOV-006/EXEC_LOG.md
+notes: >-
+  This task protects the architecture from the most common failure mode:
+  someone starting to build APIs before the foundation is stable, resulting
+  in hardcoded assumptions that later require expensive refactoring.
+  The deferred items document is not a wishlist — it is a formal register
+  that must be present when Phase 2 planning begins, so every deferred item
+  gets a proper Phase 2 contract row with invariant ID, verifier, and
+  evidence path.
+client: codex_cli
+assigned_agent: <UNASSIGNED>
+model: <UNASSIGNED>

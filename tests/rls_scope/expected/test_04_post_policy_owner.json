@@ -1,0 +1,5 @@
+{
+  "should_pass": false,
+  "expected_errors": ["POST_POLICY_MUTATION"],
+  "purpose": "Catches stealth OWNER TO after CREATE POLICY"
+}

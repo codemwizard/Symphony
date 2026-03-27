@@ -1,0 +1,86 @@
+schema_version: 1
+phase: '1'
+task_id: TSK-P1-242
+title: Resolve the canonical host path and owner surface for guarded runtime controls
+  so runtime tasks start inside an authorized boundary
+owner_role: SUPERVISOR
+status: completed
+depends_on:
+- TSK-P1-241
+touches:
+- docs/tasks/DEFERRED_INBOX.md
+- tasks/TSK-P1-242/meta.yml
+- docs/plans/phase1/TSK-P1-242/PLAN.md
+- docs/plans/phase1/TSK-P1-242/EXEC_LOG.md
+- evidence/phase1/tsk_p1_242_runtime_host_path_authority.json
+invariants:
+- INV-105
+- INV-119
+work:
+- '[ID tsk_p1_242_work_item_01] Evaluate existing owned repo surfaces and select the
+  canonical host path for guarded runtime controls without inventing a new unowned
+  path.'
+- '[ID tsk_p1_242_work_item_02] Record the chosen owner surface and explain why that
+  surface is authoritative enough for downstream guarded execution work.'
+- '[ID tsk_p1_242_work_item_03] Update the deferred inbox line so the runtime host-path
+  blocker points to the resolved authority decision rather than an ad hoc reminder.'
+acceptance_criteria:
+- '[ID tsk_p1_242_work_item_01] The task names one canonical host path for guarded
+  runtime controls and that path is already owned in `AGENTS.md`.'
+- '[ID tsk_p1_242_work_item_02] The task names the owning agent surface for the chosen
+  host path and states the downstream scope consequence for runtime and verifier work.'
+- '[ID tsk_p1_242_work_item_03] The deferred inbox entry for the runtime host-path
+  blocker references the resolved authority task outcome rather than leaving the decision
+  socially implied.'
+verification:
+- "# [ID tsk_p1_242_work_item_01] [ID tsk_p1_242_work_item_02] [ID tsk_p1_242_work_item_03]\
+  \ bash -lc 'grep -n \"### Security Guardian Agent\" AGENTS.md >/tmp/tsk_p1_242_owner.txt\
+  \ && grep -n \"scripts/audit/\\*\\*\" AGENTS.md >/tmp/tsk_p1_242_path.txt && grep\
+  \ -n \"INBOX-2026-03-26-001\" docs/tasks/DEFERRED_INBOX.md >/tmp/tsk_p1_242_inbox.txt\
+  \ && python3 - <<'\"'\"'PY'\"'\"' > evidence/phase1/tsk_p1_242_runtime_host_path_authority.json\
+  \ import json from pathlib import Path\nowner_lines = Path('/tmp/tsk_p1_242_owner.txt').read_text().splitlines()\
+  \ path_lines = Path('/tmp/tsk_p1_242_path.txt').read_text().splitlines() inbox_lines\
+  \ = Path('/tmp/tsk_p1_242_inbox.txt').read_text().splitlines()\nreport = {\n   \
+  \ 'task_id': 'TSK-P1-242',\n    'git_sha': 'UNSET',\n    'timestamp_utc': 'UNSET',\n\
+  \    'status': 'PASS',\n    'checks': {\n        'owner_surface_present': len(owner_lines),\n\
+  \        'host_path_present': len(path_lines),\n        'inbox_entry_present': len(inbox_lines),\n\
+  \    },\n    'observed_paths': [\n        'AGENTS.md',\n        'docs/tasks/DEFERRED_INBOX.md',\n\
+  \    ],\n    'observed_hashes': {},\n    'command_outputs': {\n        'owner_surface_lines':\
+  \ owner_lines,\n        'host_path_lines': path_lines,\n        'inbox_lines': inbox_lines,\n\
+  \    },\n    'execution_trace': [\n        'grep -n \"### Security Guardian Agent\"\
+  \ AGENTS.md',\n        'grep -n \"scripts/audit/**\" AGENTS.md',\n        'grep\
+  \ -n \"INBOX-2026-03-26-001\" docs/tasks/DEFERRED_INBOX.md',\n    ],\n    'chosen_host_path':\
+  \ 'scripts/audit/**',\n    'chosen_owner_surface': 'SECURITY_GUARDIAN',\n    'owner_surface_candidates':\
+  \ ['SECURITY_GUARDIAN', 'QA_VERIFIER'],\n    'rehost_rationale': 'Guarded runtime\
+  \ controls remain verifier-scoped and can start inside an already-owned audit surface\
+  \ without inventing scripts/runtime/**.',\n    'deferred_inbox_entry': 'INBOX-2026-03-26-001',\n\
+  }\nprint(json.dumps(report, indent=2)) PY' || exit 1"
+- '# [ID tsk_p1_242_work_item_01] [ID tsk_p1_242_work_item_02] [ID tsk_p1_242_work_item_03]
+  bash -lc ''test -f evidence/phase1/tsk_p1_242_runtime_host_path_authority.json &&
+  cat evidence/phase1/tsk_p1_242_runtime_host_path_authority.json | grep ''"chosen_host_path":
+  "scripts/audit/\*\*"'' >/dev/null && cat evidence/phase1/tsk_p1_242_runtime_host_path_authority.json
+  | grep ''"chosen_owner_surface": "SECURITY_GUARDIAN"'' >/dev/null'' || exit 1'
+evidence:
+- '{''path'': ''evidence/phase1/tsk_p1_242_runtime_host_path_authority.json'', ''must_include'':
+  [''task_id'', ''git_sha'', ''timestamp_utc'', ''status'', ''checks'', ''observed_paths'',
+  ''observed_hashes'', ''command_outputs'', ''execution_trace'', ''chosen_host_path'',
+  ''chosen_owner_surface'', ''owner_surface_candidates'', ''rehost_rationale'', ''deferred_inbox_entry'']}'
+failure_modes:
+- Host path remains unowned or socially implied => BLOCKED
+- Chosen host path is not already present in AGENTS.md => FAIL
+- Evidence file missing => FAIL
+must_read:
+- docs/operations/AI_AGENT_OPERATION_MANUAL.md
+- AGENT_ENTRYPOINT.md
+- docs/operations/AGENT_PROMPT_ROUTER.md
+- AGENTS.md
+- docs/tasks/DEFERRED_INBOX.md
+- docs/operations/TASK_CREATION_PROCESS.md
+implementation_plan: docs/plans/phase1/TSK-P1-242/PLAN.md
+implementation_log: docs/plans/phase1/TSK-P1-242/EXEC_LOG.md
+notes: This task resolves the runtime host-path blocker by rehosting the future guarded
+  runtime controls inside an already-owned audit surface. It does not implement the
+  guarded runtime itself and it does not create `scripts/runtime/**`.
+client: codex_ide
+assigned_agent: supervisor
+model: Cascade

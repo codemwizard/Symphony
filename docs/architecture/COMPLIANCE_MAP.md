@@ -43,6 +43,8 @@
 | OWASP ASVS 4.0+ | Secrets management | Security | SEC-G07, SEC-G05 | Secrets scan + OpenBao smoke | security_secrets_scan.json, openbao_smoke.json |
 | Zero Trust | Continuous verification (policy) | Integrity | INT-G02, INT-G03 | Evidence contract + phase0 contract | task_evidence_contract.json, phase0_contract.json |
 | Zero Trust | Continuous verification (security) | Security | SEC-G06 | CI toolchain pinned | ci_toolchain.json |
+| ISO 27001/27002 | Schema DAG structural determinism | Integrity | INT-G28 | V4/V5 explicit DAG dependency closure and anchored pre-flight governance routing | wave1_dag.yml, WAVE1_DAG.md |
+| NIST CSF / NIST 800-53 | Phase-1 GF-W1 Topological DAG Integrity | Integrity | INT-G28 | V5 DAG structurally confines schema topologies to explicit minimal bounds and enforces strict REMEDIATION_ROOT checks locally blocking chronological mutations. | WAVE1_DAG.md, wave1_dag.yml |
 
 ## Notes
 - Control-plane gates (SEC/INT) are the authoritative enforcement points for Phase-0.
@@ -69,3 +71,4 @@
 - Projection cutover compliance posture (`CUT-001`..`CUT-004`) requires projection-backed external reads, preserved tenant/evidence authorization on handler-mediated query routes, explicit rollback/stop conditions, and a single aggregated readiness gate before Phase-1 cutover promotion.
 - 2026-03-06: Wave-6 immutability follow-up (`0072_hard_wave6_reference_policy_post_deactivation_immutability.sql`) closes post-deactivation tampering by enforcing protected policy/signature/evidence field immutability across rotation transitions.
 - 2026-03-21: Wave-F onboarding RLS hardening (`0077_harden_rls_onboarding_control_plane.sql`) enforces FORCE ROW LEVEL SECURITY on onboarding control-plane tables, extending tenant isolation posture (SEC-G01, INT-G20) to operator provisioning flows. UI wire verifiers 012–016 provide evidence for onboarding mutation contracts, guided workflow, public landing context, artifact upload, and submission UX.
+- 2026-03-27: `PRECI.STRUCTURAL.CHANGE_RULE` DAG architectural remediation. Replaced standard topological schema executions natively with the explicit V4 dependency closure algorithm ensuring schema determinism without ambiguous edge inheritance. Decoupled Governance enforcement into `GLOBAL_VERIFIER_GATE`.

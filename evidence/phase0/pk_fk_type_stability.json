@@ -1,8 +1,8 @@
 {
   "check_id": "DB-PK-FK-TYPE-STABILITY",
-  "timestamp_utc": "2026-03-17T01:08:11Z",
-  "git_sha": "9f4c091829d39813bf5e8485e122c826b424eb5a",
-  "schema_fingerprint": "59eef2a10b166543339b310ae67181cc9a8d6b22aa216e649e56652c2316e165",
+  "timestamp_utc": "2026-03-27T14:18:19Z",
+  "git_sha": "7da7e8718697b610b9cc8d1dc5124442a7f1dbe0",
+  "schema_fingerprint": "b5fc38953353fba104cf3cd3fdb4d348214259086b5c9a1827519a18e5f1352e",
   "status": "PASS",
   "scanned_files": [
     "0001_init.sql",
@@ -72,7 +72,6 @@
     "0065_hard_wave4_signing_controls_and_assurance.sql",
     "0066_hard_wave5_archive_merkle_and_replay.sql",
     "0067_hard_wave5_reference_strategy_rotation_and_allocation_race.sql",
-    "0067_hard_wave6_operational_resilience_and_privacy.sql",
     "0068_wave2_finality_and_seal_hardening_fixes.sql",
     "0069_hard_wave6_merkle_and_policy_rotation_guards.sql",
     "0070_cqrs_projection_roles_and_read_models.sql",
@@ -81,7 +80,15 @@
     "0073_int_004_ack_gap_controls.sql",
     "0074_billable_clients_client_key_constraint.sql",
     "0075_supplier_registry_and_programme_allowlist.sql",
-    "0076_onboarding_control_plane.sql"
+    "0076_onboarding_control_plane.sql",
+    "0077_harden_rls_onboarding_control_plane.sql",
+    "0078_sequence_gap_fix.sql",
+    "0079_hard_wave6_operational_resilience_and_privacy.sql",
+    "0080_gf_adapter_registrations.sql",
+    "0095_pre_snapshot.sql",
+    "0095_rls_dual_policy_architecture.sql",
+    "0095_rollback.sql",
+    "0096_rls_admin_governance.sql"
   ],
   "type_changes_found": 1,
   "violations": [],

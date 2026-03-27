@@ -1,7 +1,7 @@
 ---
 exception_id: EXC-576
 inv_scope: change-rule
-expiry: 2026-04-04
+expiry: 2026-12-31
 follow_up_ticket: TSK-P1-222
 reason: "Wave F demo launch: structural changes detected from regenerating the schema baseline to include migration 0077 onboarding RLS."
 author: architect

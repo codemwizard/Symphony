@@ -23,9 +23,9 @@ work:
   origin/main and a required floor commit.
 - Enforce current demo env contract, tenant allowlist contract, and fail-closed OpenBao
   posture per TSK-P1-DEMO-021.
-- Implement explicit process supervision for the Kestrel-hosted app: run directory,
-    log directory, PID file, timeout, stale-process handling, cleanup, and single-active-run
-    default on host.
+- '{''Implement explicit process supervision for the Kestrel-hosted app'': ''run directory,
+  log directory, PID file, timeout, stale-process handling, cleanup, and single-active-run
+  default on host.''}'
 - Separate server-side API smoke from machine-readable Dell browser smoke checklist
   output.
 - Emit a structured run summary and fail with a blocker note if repo truth lacks a

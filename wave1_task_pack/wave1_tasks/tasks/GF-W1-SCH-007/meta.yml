@@ -1,0 +1,134 @@
+schema_version: 1
+phase: '0'
+task_id: GF-W1-SCH-007
+title: "Wire all green finance Phase 0 verifiers into CI and promote invariants from roadmap to planned"
+owner_role: DB_FOUNDATION
+status: planned
+priority: HIGH
+risk_class: GOVERNANCE
+blast_radius: CI_GATES
+domain: green_finance
+pilot: false
+
+intent: >-
+  Phase 0 schema closeout requires all verifiers to run in CI and all invariant
+  entries to reflect their true enforcement state. An invariant entry pointing
+  to a verifier script that does not yet exist is a promise. Entries are
+  promoted from roadmap to planned only when the verifier script exists and
+  passes. They move to implemented only when the script runs in CI and produces
+  evidence. This task executes that promotion for the Wave 1 schema tranche.
+
+anti_patterns:
+  - "Promoting invariants to implemented without confirming CI wiring"
+  - "Marking implemented before evidence artifacts are emitted and schema-valid"
+  - "Promoting all invariants in one pass without individual verifier confirmation"
+
+depends_on:
+  - GF-W1-SCH-006
+
+blocks:
+  - GF-W1-SCH-008
+
+touches:
+  - .github/workflows/green_finance_contract_gate.yml
+  - scripts/dev/pre_ci.sh
+  - docs/invariants/INVARIANTS_MANIFEST.yml
+  - tasks/GF-W1-SCH-007/meta.yml
+
+invariants:
+  - INV-135
+  - INV-136
+  - INV-137
+  - INV-138
+  - INV-139
+  - INV-140
+  - INV-141
+  - INV-142
+  - INV-143
+  - INV-144
+
+work:
+  - >-
+    Add all DB verifier scripts written in SCH-001 through SCH-006 to
+    scripts/dev/pre_ci.sh green finance section.
+  - >-
+    Add all DB verifier scripts to .github/workflows/green_finance_contract_gate.yml
+    as blocking jobs.
+  - >-
+    For each verifier that now exists and passes: update corresponding invariant
+    entry in INVARIANTS_MANIFEST.yml from status: roadmap to status: planned.
+    Do not promote to implemented yet — implemented requires CI evidence.
+  - >-
+    Emit evidence/phase0/gf_phase0_schema_closeout.json confirming all nine
+    migrations are applied, all verifiers pass, all invariants are at planned
+    or implemented status.
+  - >-
+    Run the full pre_ci.sh locally. Confirm all green finance checks pass.
+    Confirm no regressions in existing payment domain checks.
+
+acceptance_criteria:
+  - >-
+    All nine green finance DB verifier scripts are listed in pre_ci.sh and
+    in the CI workflow.
+  - >-
+    INV-135 through INV-144 are all at minimum status: planned in the manifest.
+    Zero remain at roadmap after this task.
+  - >-
+    evidence/phase0/gf_phase0_schema_closeout.json emitted with status PASS.
+  - >-
+    Existing payment domain CI checks still pass — no regression.
+
+negative_tests:
+  - id: GF-W1-SCH-007-N1
+    description: >-
+      Remove one green finance verifier from pre_ci.sh and run it. The
+      pre_ci.sh must detect the missing check and exit non-zero.
+    required: true
+
+verification:
+  - bash scripts/dev/pre_ci.sh
+  - python3 scripts/audit/validate_evidence.py --task GF-W1-SCH-007 --evidence evidence/phase0/gf_phase0_schema_closeout.json
+
+evidence:
+  - path: evidence/phase0/gf_phase0_schema_closeout.json
+    must_include:
+      - task_id
+      - git_sha
+      - timestamp_utc
+      - status
+      - migrations_applied
+      - verifiers_run
+      - invariants_promoted
+      - regressions_detected
+
+failure_modes:
+  - "Invariant promoted to implemented without CI evidence => FAIL"
+  - "Payment domain regression introduced => CRITICAL_FAIL"
+  - "Any verifier missing from pre_ci.sh => FAIL"
+
+must_read:
+  - docs/operations/AI_AGENT_OPERATION_MANUAL.md
+  - docs/operations/AGENTIC_SDLC_PILOT_POLICY.md
+
+second_pilot_test:
+  candidate_sector_1: solar_energy
+  candidate_sector_2: forestry_carbon
+  unchanged_core_tables: [all — this task wires CI only]
+  unchanged_core_functions: [all]
+  adapter_only_differences:
+    - "CI wiring is sector-agnostic — same verifiers run for any pilot"
+  jurisdiction_profile_impact: none
+  required_core_changes: []
+  explanation: >-
+    This task wires CI and promotes invariant status. The CI wiring is
+    sector-agnostic. The same verifiers run for any pilot. The invariant
+    promotion applies to structural invariants that hold for all methodologies.
+  second_pilot_reviewed_by: Architecture Owner
+pilot_scope_ref: not_applicable
+
+implementation_plan: docs/plans/phase0/GF-W1-SCH-007/PLAN.md
+implementation_log: docs/plans/phase0/GF-W1-SCH-007/EXEC_LOG.md
+notes: Phase 0 schema tranche is declared stable after this task passes.
+client: codex_cli
+assigned_agent: <UNASSIGNED>
+model: <UNASSIGNED>

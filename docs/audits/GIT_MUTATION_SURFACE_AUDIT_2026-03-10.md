@@ -39,6 +39,7 @@ Purpose: inventory repository scripts that mutate Git state or rely on Git state
 | `scripts/dev/run_demo_e2e.sh` | yes | partial | PASS | Fetches `origin` and gates clean deployment checkouts against `origin/main` before host-based demo execution; mutating remote-tracking state is contained to the explicit operator runner. |
 | `scripts/lib/git_diff_range_only.sh` | yes | partial | PASS | Shared Git diff helper; safe only when callers control inherited Git plumbing. |
 | `scripts/security/lint_app_sql_injection.sh` | yes | partial | PASS | Reads tracked/untracked file lists through Git; no ref mutation. |
+| `scripts/audit/verify_migration_sequence.sh` | yes | partial | PASS | Uses git range diff strictly for validating the migration history chain cleanly without ref mutation. |
 
 ## Findings
 - The original containment failure class is now covered at both fixture and runner level.

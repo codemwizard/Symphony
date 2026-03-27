@@ -1,0 +1,179 @@
+schema_version: 1
+phase: '1'
+task_id: TSK-P1-RLS-001
+title: "Forward-fix missing RLS on regulatory_incidents and close TEN-002 verifier temporal blind spot"
+owner_role: DB_FOUNDATION
+status: planned
+priority: CRITICAL
+risk_class: SECURITY
+blast_radius: DB_SCHEMA
+
+intent: >-
+  Migration 0059 (TEN-002) dynamically enables RLS on all tables with tenant_id
+  at the moment it runs. Migration 0060 creates regulatory_incidents with tenant_id
+  AFTER 0059 executed, so the bulk loop never covered it. The result is one table
+  with tenant_id NOT NULL but no RLS and no isolation policy — a live cross-tenant
+  leakage risk. The TEN-002 verifier correctly queries pg_attribute at runtime and
+  finds all tables with tenant_id, so it WOULD catch this if run today. However
+  the evidence artifact predates migration 0060, meaning the PASS was valid at
+  the time but is stale now. This task applies the forward-fix, re-runs the
+  verifier to produce fresh evidence with the new git_sha, and closes the temporal
+  blind spot permanently so any future post-0059 tenant_id table is caught automatically.
+
+constraints:
+  data_scope: "Live schema — migrations 0001-0069 are applied and baselined. No rewrites."
+  no_dynamic_loops: true
+  no_implicit_logic: true
+  explicit_table_enumeration: true
+  runtime_truth_is_primary: >-
+    The verifier must assert ALL tables in pg_attribute with tenant_id have RLS.
+    Migration parsing is a secondary cross-check, not the primary signal.
+    pg_class is ground truth.
+
+anti_patterns:
+  - "Rewriting migration 0059 or 0060 — they are applied and baselined"
+  - "Using a dynamic DO block loop to discover tables — explicit enumeration only"
+  - "Adding DDL-ALLOW entries without the exact forward-fix justification text"
+  - "Treating the verifier as broken — it is correct, the evidence is stale"
+  - "Partial RLS — ENABLE without FORCE, or FORCE without policy, is worse than no RLS"
+  - "Trusting migration parsing as the primary RLS coverage check — pg_class is authoritative"
+
+depends_on:
+  - TSK-P1-TEN-002
+
+blocks:
+  - TSK-P1-RLS-002
+
+touches:
+  - schema/migrations/0070_rls_forward_fix_post_0059_tables.sql
+  - scripts/audit/verify_ten_002_rls_leakage.sh
+  - docs/security/ddl_allowlist.json
+  - evidence/phase1/ten_002_rls_leakage.json
+  - tasks/TSK-P1-RLS-001/meta.yml
+  - docs/plans/phase1/TSK-P1-RLS-001/PLAN.md
+  - docs/plans/phase1/TSK-P1-RLS-001/EXEC_LOG.md
+
+invariants:
+  - INV-146
+
+work:
+  - >-
+    Write migration 0070_rls_forward_fix_post_0059_tables.sql.
+    Apply explicitly and only to regulatory_incidents — the one table with
+    tenant_id created after migration 0059 ran. Do NOT use a dynamic DO block
+    loop; enumerate tables explicitly so coverage is auditable and deterministic.
+
+    ALTER TABLE public.regulatory_incidents ENABLE ROW LEVEL SECURITY;
+    ALTER TABLE public.regulatory_incidents FORCE ROW LEVEL SECURITY;
+
+    CREATE POLICY rls_tenant_isolation_regulatory_incidents
+      ON public.regulatory_incidents
+      AS RESTRICTIVE FOR ALL TO PUBLIC
+      USING (tenant_id = public.current_tenant_id_or_null())
+      WITH CHECK (tenant_id = public.current_tenant_id_or_null());
+
+    Add an assertion DO block at the end of the migration that queries pg_class
+    to confirm relrowsecurity=true AND relforcerowsecurity=true for
+    regulatory_incidents and raises SQLSTATE P0001 if either is false.
+    Migration must fail closed if the enable did not take.
+  - >-
+    Add two DDL-ALLOW entries to docs/security/ddl_allowlist.json.
+    DDL-ALLOW-0030 for ENABLE ROW LEVEL SECURITY on regulatory_incidents.
+    DDL-ALLOW-0031 for FORCE ROW LEVEL SECURITY on regulatory_incidents.
+    Both entries must use this exact reason text:
+    "Forward-fix RLS enable on pre-existing table missed by migration 0059;
+    pre-production, no production traffic, zero lock contention risk.
+    This entry documents corrective action, not a security exemption."
+    This wording must be preserved verbatim — it is the audit trail.
+  - >-
+    Update verify_ten_002_rls_leakage.sh:
+
+    Extend logic to:
+    (1) Query pg_attribute for ALL tables with tenant_id (authoritative source)
+    (2) Assert each has:
+        - rls_enabled = true
+        - rls_forced = true
+        - tenant-bound restrictive policy
+    (3) Scan migrations AFTER 0059 for additional coverage validation (secondary)
+
+    Failure condition:
+    Any tenant_id table missing RLS → FAIL
+  - >-
+    After applying migration 0070, re-run verify_ten_002_rls_leakage.sh against
+    the live DB. The evidence artifact must be freshly generated with a git_sha
+    that matches the commit containing migration 0070, not a prior commit.
+    Evidence must show regulatory_incidents covered, failures=[], and
+    tenant_table_count at least 1 higher than the prior evidence file.
+
+acceptance_criteria:
+  - "regulatory_incidents has RLS enabled, forced, and policy applied"
+  - "verify_ten_002_rls_leakage.sh exits 0 with full coverage"
+  - "New TEN-002 evidence generated post-migration with matching git_sha"
+  - "pre_ci.sh exits 0"
+
+failure_conditions:
+  - "Any tenant_id table missing RLS after fix"
+  - "Verifier does not enforce runtime coverage of all tenant_id tables"
+
+negative_tests:
+  - id: TSK-P1-RLS-001-N1
+    description: >-
+      Apply migration 0070. SELECT from regulatory_incidents as the rls_tester
+      role without setting app.current_tenant_id. Must return zero rows — RLS
+      blocks all access when tenant context is absent. Proves the policy is
+      active and enforcing, not merely declared.
+    required: true
+  - id: TSK-P1-RLS-001-N2
+    description: >-
+      Before applying migration 0070, run the updated verify_ten_002_rls_leakage.sh.
+      The primary pg_class check must produce failure "rls_missing:regulatory_incidents"
+      and exit non-zero. Proves the verifier catches missing RLS via pg_class
+      (runtime truth) without requiring migration parsing.
+    required: true
+  - id: TSK-P1-RLS-001-N3
+    description: >-
+      After applying migration 0070, insert a row for tenant_A into
+      regulatory_incidents. Query as rls_tester with app.current_tenant_id
+      set to tenant_B. Must return zero rows. Cross-tenant leakage is blocked.
+    required: true
+
+verification:
+  - bash scripts/db/migrate.sh
+  - bash scripts/audit/verify_ten_002_rls_leakage.sh
+  - bash scripts/security/lint_ddl_lock_risk.sh
+  - bash scripts/dev/pre_ci.sh
+
+evidence:
+  - path: evidence/phase1/ten_002_rls_leakage.json
+    must_include:
+      - task_id
+      - git_sha
+      - timestamp_utc
+      - status
+      - tenant_table_count
+      - rls_tables
+      - failures
+
+failure_modes:
+  - "regulatory_incidents still missing RLS after migration => CRITICAL_FAIL"
+  - "Evidence git_sha unchanged from prior stale evidence => task not complete, evidence invalid"
+  - "Temporal coverage check is primary instead of pg_class — migration parsing is not ground truth => FAIL"
+  - "DDL-ALLOW entries missing mandated reason text => audit trail incomplete => FAIL"
+  - "FORCE RLS absent — table owner bypass possible => CRITICAL_FAIL"
+  - "ENABLE without FORCE present => CRITICAL_FAIL"
+  - "FORCE without POLICY present => CRITICAL_FAIL"
+
+must_read:
+  - docs/operations/AI_AGENT_OPERATION_MANUAL.md
+  - docs/operations/AGENTIC_SDLC_PHASE1_POLICY.md
+  - schema/migrations/0059_ten_002_rls_tenant_isolation.sql
+  - schema/migrations/0060_reg_003_incident_workflow_48h_export.sql
+  - docs/security/ddl_allowlist.json
+
+implementation_plan: docs/plans/phase1/TSK-P1-RLS-001/PLAN.md
+implementation_log: docs/plans/phase1/TSK-P1-RLS-001/EXEC_LOG.md
+notes: >-
+  The primary verifier check is pg_class — it cannot be fooled by unusual
+  table creation syntax. The temporal migration scan is a secondary diagnostic.
+  If they disagree, pg_class wins. Both the forward-fix migration and the fresh
+  evidence with updated git_sha are required for task closure.

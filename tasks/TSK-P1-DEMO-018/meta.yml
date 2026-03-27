@@ -18,9 +18,9 @@ invariants:
 - INV-133
 work:
 - Create the primary host-based end-to-end demo runbook for the current local server.
-- Define the clean deployment checkout contract: no development on main, no direct
-    push to main, no direct pull from main into working branches, and deployment from
-    a clean checkout tracking origin/main.
+- '{''Define the clean deployment checkout contract'': ''no development on main, no
+  direct push to main, no direct pull from main into working branches, and deployment
+  from a clean checkout tracking origin/main.''}'
 - For every runbook step, define pass condition, fail condition, stop or continue
   action, and evidence emitted.
 - Split server-side API smoke checks from Dell browser-only UX smoke checks.

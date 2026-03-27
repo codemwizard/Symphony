@@ -1,0 +1,197 @@
+schema_version: 1
+phase: '0'
+task_id: GF-W1-GOV-002
+title: "Build AST-based Python verifier for neutral schema enforcement replacing heuristic grep"
+owner_role: DB_FOUNDATION
+status: planned
+priority: HIGH
+risk_class: GOVERNANCE
+blast_radius: CI_GATES
+domain: green_finance
+pilot: false
+
+intent: >-
+  The shell-based verify_core_contract_gate.sh uses grep patterns that miss
+  quoted identifiers, enum values inside CREATE TYPE, constraint names with
+  sector prefixes, and multi-line definitions. An attacker or careless agent
+  can smuggle sector leakage through naming tricks that pass all regex checks.
+  A Python AST/token-level parser that walks SQL migration identifiers
+  deterministically closes every bypass path the grep approach leaves open.
+  This is the difference between heuristic detection and verifiable enforcement.
+
+anti_patterns:
+  - "Building a more sophisticated grep instead of a real parser"
+  - "Parsing only CREATE TABLE statements — must cover all identifier-producing statements"
+  - "Running as advisory only — must be blocking in CI"
+  - "Checking only public schema — must cover any schema prefix"
+
+depends_on:
+  - GF-W1-FRZ-001
+  - GF-W1-FRZ-003
+
+blocks:
+  - GF-W1-SCH-001
+
+touches:
+  - scripts/audit/verify_neutral_schema_ast.py
+  - .github/workflows/green_finance_contract_gate.yml
+  - tasks/GF-W1-GOV-002/meta.yml
+
+invariants:
+  - INV-135
+  - INV-136
+  - INV-137
+  - INV-142
+
+work:
+  - >-
+    Create scripts/audit/verify_neutral_schema_ast.py. Use Python's built-in
+    tokenize module or pglast (if available) to walk SQL migration files.
+    Extract all identifier tokens from: CREATE TABLE, CREATE VIEW, CREATE INDEX,
+    CREATE TYPE, CREATE FUNCTION, ALTER TABLE ADD COLUMN, CONSTRAINT declarations,
+    and enum value lists.
+  - >-
+    Load the sector noun vocabulary from a canonical YAML file
+    scripts/audit/sector_vocabulary.yml so the list is maintained in one place
+    and referenced by both the AST verifier and the shell gate script.
+  - >-
+    For each extracted identifier, check against the vocabulary. If any match:
+    emit the file path, line number, identifier, and the matched sector noun.
+    Exit non-zero after full scan (do not stop at first hit — collect all
+    violations).
+  - >-
+    Add a --scope flag: full (all identifiers), tables (only table names),
+    columns (only column names), enums (only enum values). Default: full.
+  - >-
+    Add self-test fixtures under scripts/audit/fixtures/ast/ with known-bad
+    and known-good migration files covering: quoted table names, enum values,
+    multi-line column definitions, constraint names, function signatures.
+    Self-test must exit 0 before CI scan runs.
+  - >-
+    SEMANTIC DRIFT EXTENSION: Extend the verifier to scan Phase 1 DB function
+    bodies for semantic payload field references. A core function may only
+    interact with record_payload_json using: (a) jsonb_typeof, (b) schema
+    validation against a registered schema_reference_id, or (c) passing the
+    entire payload opaquely to an adapter entrypoint. Any pattern matching
+    payload->>'<field_name>' or payload->'<field_name>' where field_name is
+    not a generic structural key (e.g. 'type', 'version', 'schema_ref') must
+    be flagged as a semantic drift violation. This is distinct from the
+    vocabulary check — it catches legal-looking code that still encodes
+    domain logic in the platform layer. Load allowed structural keys from
+    sector_vocabulary.yml under an allowed_structural_keys list.
+  - >-
+    Wire into .github/workflows/green_finance_contract_gate.yml as a blocking
+    job after the shell gate. Both must pass for PR to be mergeable.
+  - >-
+    Create scripts/audit/sector_vocabulary.yml with all sector nouns currently
+    in SECTOR_NOUNS array of verify_core_contract_gate.sh, plus an
+    allowed_structural_keys list for semantic drift detection. This becomes the
+    single source of truth for both tools.
+
+acceptance_criteria:
+  - >-
+    python3 scripts/audit/verify_neutral_schema_ast.py
+    scripts/audit/fixtures/ast/bad_quoted_table.sql exits non-zero and names
+    the quoted identifier and its line number.
+  - >-
+    python3 scripts/audit/verify_neutral_schema_ast.py
+    scripts/audit/fixtures/ast/bad_enum_value.sql exits non-zero and identifies
+    the enum value.
+  - >-
+    python3 scripts/audit/verify_neutral_schema_ast.py
+    scripts/audit/fixtures/ast/good_neutral_migration.sql exits 0.
+  - >-
+    AST verifier and shell gate both use sector_vocabulary.yml as source.
+    grep -q "sector_vocabulary" scripts/audit/verify_core_contract_gate.sh exits 0.
+  - >-
+    CI job fails when AST verifier finds a violation even if shell gate passes.
+
+negative_tests:
+  - id: GF-W1-GOV-002-N1
+    description: >-
+      Run AST verifier against a migration containing CREATE TABLE
+      public."solar_installation_records" with quoted identifier. Must exit
+      non-zero and report the quoted name on the correct line number.
+    required: true
+  - id: GF-W1-GOV-002-N2
+    description: >-
+      Run against a migration containing CREATE TYPE asset_kind AS ENUM
+      ('plastic_credit', 'neutral_credit'). Must exit non-zero and identify
+      the plastic_credit enum value specifically.
+    required: true
+  - id: GF-W1-GOV-002-N3
+    description: >-
+      Run against a migration containing ALTER TABLE t ADD COLUMN
+      collection_weight_kg NUMERIC. Must exit non-zero.
+    required: true
+  - id: GF-W1-GOV-002-N4
+    description: >-
+      SEMANTIC DRIFT: Run against a Phase 1 DB function body containing
+      IF (record_payload_json->>'capacity_kw') IS NOT NULL THEN. Must exit
+      non-zero and identify this as a semantic payload field reference
+      violation even though 'capacity_kw' is not in the schema identifier
+      positions. This proves the semantic drift check fires separately from
+      the vocabulary identifier check.
+    required: true
+  - id: GF-W1-GOV-002-N5
+    description: >-
+      Run against a Phase 1 function that uses jsonb_validates_against_schema
+      (payload, schema_ref) only — no field extraction by name. Must exit 0.
+      This proves the allowed pattern is not a false positive.
+    required: true
+    required: true
+
+verification:
+  - python3 scripts/audit/verify_neutral_schema_ast.py --self-test
+  - python3 scripts/audit/verify_neutral_schema_ast.py schema/migrations/
+  - bash scripts/audit/verify_core_contract_gate.sh
+  - bash scripts/dev/pre_ci.sh
+
+evidence:
+  - path: evidence/phase0/neutral_schema_ast_verification.json
+    must_include:
+      - task_id
+      - git_sha
+      - timestamp_utc
+      - status
+      - files_scanned
+      - violations_found
+      - fixture_self_test_result
+
+failure_modes:
+  - "AST verifier catches violation shell gate misses — proves grep was insufficient => FAIL_REVIEW on prior work"
+  - "sector_vocabulary.yml diverges between tools — false negatives possible => CRITICAL_FAIL"
+  - "Verifier runs as advisory not blocking — leakage can still merge => CRITICAL_FAIL"
+
+must_read:
+  - docs/operations/AI_AGENT_OPERATION_MANUAL.md
+  - docs/operations/AGENTIC_SDLC_PILOT_POLICY.md
+  - scripts/audit/verify_core_contract_gate.sh
+
+second_pilot_test:
+  candidate_sector_1: solar_energy
+  candidate_sector_2: mining_esg
+  unchanged_core_tables: [all — no schema touched]
+  unchanged_core_functions: [all — no DB functions touched]
+  adapter_only_differences:
+    - "AST verifier logic is sector-agnostic — no adapter-specific surface"
+  jurisdiction_profile_impact: none
+  required_core_changes: []
+  explanation: >-
+    The AST verifier scans identifier tokens against the sector vocabulary.
+    The vocabulary list is sector-agnostic — it blocks any sector noun. A solar
+    pilot and a mining ESG pilot both trigger the same scan against the same
+    vocabulary. The verifier does not know or care which pilot is running.
+  second_pilot_reviewed_by: Architecture Owner
+pilot_scope_ref: not_applicable
+
+implementation_plan: docs/plans/phase0/GF-W1-GOV-002/PLAN.md
+implementation_log: docs/plans/phase0/GF-W1-GOV-002/EXEC_LOG.md
+notes: >-
+  If pglast is not available in the CI environment, use Python's tokenize
+  module with a hand-written identifier extractor. Do not make the tool
+  dependent on a library that may not install cleanly. The tool must work
+  with stdlib only as a fallback.
+client: codex_cli
+assigned_agent: <UNASSIGNED>
+model: <UNASSIGNED>

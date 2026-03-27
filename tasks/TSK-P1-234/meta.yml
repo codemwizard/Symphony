@@ -1,0 +1,60 @@
+schema_version: 1
+phase: '1'
+task_id: TSK-P1-234
+title: Define the canonical verify-task entrypoint so task verification has one sanctioned
+  execution shell
+owner_role: SECURITY_GUARDIAN
+status: completed
+depends_on:
+- TSK-P1-233
+touches:
+- scripts/audit/verify_task.sh
+- scripts/audit/verify_tsk_p1_234.sh
+- evidence/phase1/tsk_p1_234_verify_task_entrypoint.json
+- tasks/TSK-P1-234/meta.yml
+- docs/plans/phase1/TSK-P1-234/PLAN.md
+- docs/plans/phase1/TSK-P1-234/EXEC_LOG.md
+invariants:
+- INV-105
+- INV-119
+work:
+- Define a single canonical `verify-task` entrypoint that invokes the sanctioned task
+  verification flow and documents the invocation contract for humans and wrapper scripts.
+- Keep the task focused on entrypoint definition and runner invocation authority rather
+  than bypass detection or deeper gate semantics.
+- Add a task-specific verifier that proves the sanctioned entrypoint executes the
+  expected verification path and emits declared evidence.
+acceptance_criteria:
+- Task verification has one explicit sanctioned shell entrypoint instead of relying
+  on implicit internal module knowledge.
+- The entrypoint contract is deterministic enough that later authority checks can
+  judge whether a run is canonical or non-canonical.
+- '`scripts/audit/verify_tsk_p1_234.sh` verifies the canonical entrypoint flow and
+  emits `evidence/phase1/tsk_p1_234_verify_task_entrypoint.json`.'
+verification:
+- bash scripts/audit/verify_tsk_p1_234.sh
+- python3 scripts/audit/validate_evidence.py --task TSK-P1-234 --evidence evidence/phase1/tsk_p1_234_verify_task_entrypoint.json
+- RUN_PHASE1_GATES=1 bash scripts/dev/pre_ci.sh
+evidence:
+- '{''path'': ''evidence/phase1/tsk_p1_234_verify_task_entrypoint.json'', ''must_include'':
+  [''task_id'', ''git_sha'', ''timestamp_utc'', ''status'', ''checks'', ''canonical_entrypoint'',
+  ''sanctioned_flow_result'', ''bypass_comparison_result'']}'
+failure_modes:
+- Canonical verify-task entrypoint remains undefined or ambiguous => FAIL
+- Entrypoint task silently expands into bypass-detection logic owned by later work
+  => FAIL_REVIEW
+- Evidence file missing => FAIL
+must_read:
+- docs/operations/AI_AGENT_OPERATION_MANUAL.md
+- AGENT_ENTRYPOINT.md
+- docs/operations/AGENT_PROMPT_ROUTER.md
+- docs/operations/TASK_CREATION_PROCESS.md
+- docs/reference/rls-anti-drift-wave2-task-plan.md
+implementation_plan: docs/plans/phase1/TSK-P1-234/PLAN.md
+implementation_log: docs/plans/phase1/TSK-P1-234/EXEC_LOG.md
+notes: Keep this task narrowly focused on sanctioned entrypoint definition. Non-canonical
+  path detection and authority classification belong to the immediately dependent
+  next task.
+client: cursor
+assigned_agent: security_guardian
+model: Cascade

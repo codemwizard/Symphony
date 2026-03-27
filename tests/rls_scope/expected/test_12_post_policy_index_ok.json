@@ -1,0 +1,5 @@
+{
+  "should_pass": true,
+  "expected_errors": [],
+  "purpose": "Proves CREATE INDEX after CREATE POLICY is permitted (not a mutation)"
+}
