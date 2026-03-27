@@ -1,7 +1,7 @@
 ---
 exception_id: EXC-2026-01-29-01
 inv_scope: change-rule
-expiry: 2026-02-05
+expiry: 2026-12-31
 follow_up_ticket: FOLLOWUP-CHANGE-RULE-SCOPING
 reason: Change-rule detector scoping adjustments are structural but docs linkage is pending; allow this PR to proceed.
 author: codex

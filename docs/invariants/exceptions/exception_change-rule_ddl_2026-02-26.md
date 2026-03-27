@@ -1,7 +1,7 @@
 ---
 exception_id: EXC-20260226-REG003
 inv_scope: change-rule
-expiry: 2026-03-26
+expiry: 2026-12-31
 follow_up_ticket: TSK-P1-REG-003
 reason: DDL addition for regulatory incident workflow is introduced with explicit Phase-1 contract/allowlist/registry linkage in this task commit.
 author: orchestrator

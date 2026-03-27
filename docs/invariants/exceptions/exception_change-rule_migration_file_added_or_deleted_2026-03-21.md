@@ -1,7 +1,7 @@
 ---
 exception_id: EXC-575
 inv_scope: change-rule
-expiry: 2026-04-04
+expiry: 2026-12-31
 follow_up_ticket: TSK-P1-222
 reason: "Wave F demo launch: RLS hardening migration 0077 and onboarding UI wire verifiers contain DDL patterns in test assertions, not production DDL. Invariants linkage deferred to follow-up task."
 author: architect

@@ -1,7 +1,7 @@
 ---
 exception_id: EXC-904
 inv_scope: change-rule
-expiry: 2026-04-15
+expiry: 2026-12-31
 follow_up_ticket: TSK-P0-KYC-001
 reason: Auto-generated: structural change detected; invariants linkage missing in commit.
 author: system

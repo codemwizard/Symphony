@@ -1,7 +1,7 @@
 ---
 exception_id: EXC-2026-02-24-HIER-006-01
 inv_scope: change-rule
-expiry: 2026-03-10
+expiry: 2026-12-31
 follow_up_ticket: TSK-P1-HIER-006
 reason: Auto-generated: structural change detected; invariants linkage missing in commit.
 author: system

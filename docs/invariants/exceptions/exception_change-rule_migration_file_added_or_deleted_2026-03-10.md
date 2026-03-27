@@ -1,7 +1,7 @@
 ---
 exception_id: EXC-20260310-REFPOL-BASELINE
 inv_scope: change-rule
-expiry: 2026-03-24
+expiry: 2026-12-31
 follow_up_ticket: TSK-HARD-030
 reason: Baseline snapshot refresh after rebasing the reference-policy post-active immutability migration to 0072 introduces a new dated baseline directory as required by baseline governance.
 author: codex

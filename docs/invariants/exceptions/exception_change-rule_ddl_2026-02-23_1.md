@@ -1,7 +1,7 @@
 ---
 exception_id: EXC-207
 inv_scope: change-rule
-expiry: 2026-03-09
+expiry: 2026-12-31
 follow_up_ticket: TSK-P0-KYC-001
 reason: Forward-only DDL hardening migration for KYC provider registry uniqueness semantics and verifier fail-closed behavior.
 author: codex

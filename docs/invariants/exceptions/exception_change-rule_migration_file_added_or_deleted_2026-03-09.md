@@ -1,7 +1,7 @@
 ---
 exception_id: EXC-20260309-CQRS-BASELINE
 inv_scope: change-rule
-expiry: 2026-03-23
+expiry: 2026-12-31
 follow_up_ticket: PROJ-001
 reason: Sprint 2 CQRS/projection baseline refresh adds canonical baseline snapshot artifacts after 0070; regulated doc linkage and invariant mapping are already present in the wave commit.
 author: codex

@@ -1,7 +1,7 @@
 ---
 exception_id: EXC-000
 inv_scope: change-rule
-expiry: 2099-12-31
+expiry: 2026-12-31
 follow_up_ticket: PLACEHOLDER-000
 remediation_task: TASK-ID
 approved_by: approver-id

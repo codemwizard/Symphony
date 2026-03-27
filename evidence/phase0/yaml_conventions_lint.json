@@ -1,7 +1,7 @@
 {
   "check_id": "YAML-CONVENTIONS",
-  "timestamp_utc": "2026-03-27T13:20:40Z",
-  "git_sha": "3c985bc370302d376898aa6ac5b56785bd0b0992",
+  "timestamp_utc": "2026-03-27T13:28:38Z",
+  "git_sha": "5cbc78dfd7b02c5f1668303e20aa3f4794884937",
   "schema_fingerprint": "224f18ff8a2f2bb976adf91494a0267789e20deaf52ac170a0707e535561586a",
   "status": "PASS",
   "checked_files": [
@@ -35,6 +35,7 @@
     "/home/mwiza/workspace/Symphony/tasks/TSK-P1-DEMO-020/meta.yml",
     "/home/mwiza/workspace/Symphony/tasks/TSK-RLS-ARCH-001/meta.yml",
     "/home/mwiza/workspace/Symphony/.github/workflows/green_finance_contract_gate.yml",
+    "/home/mwiza/workspace/Symphony/docs/PHASE0/phase0_contract.yml",
     "/home/mwiza/workspace/Symphony/docs/invariants/INVARIANTS_MANIFEST.yml",
     "/home/mwiza/workspace/Symphony/docs/plans/wave1_dag.yml"
   ],

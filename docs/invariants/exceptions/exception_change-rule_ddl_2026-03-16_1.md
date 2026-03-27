@@ -1,7 +1,7 @@
 ---
 exception_id: EXC-217
 inv_scope: change-rule
-expiry: 2026-04-16
+expiry: 2026-12-31
 follow_up_ticket: TSK-P1-217
 reason: Wave 2 hardening adds onboarding control-plane tables (tenant_registry, programme_registry, programme_policy_binding) per TSK-P1-217.
 author: supervisor

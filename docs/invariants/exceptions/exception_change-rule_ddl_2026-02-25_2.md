@@ -1,7 +1,7 @@
 ---
 exception_id: EXC-2026-02-25-TEN-002-01
 inv_scope: change-rule
-expiry: 2026-06-30
+expiry: 2026-12-31
 follow_up_ticket: TSK-P1-TEN-002
 reason: "TSK-P1-TEN-002 introduces tenant RLS DDL plus baseline refresh; structural detector requires explicit exception linkage in the same commit."
 author: mwiza

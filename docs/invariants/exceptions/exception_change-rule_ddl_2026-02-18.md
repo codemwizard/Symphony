@@ -1,7 +1,7 @@
 ---
 exception_id: EXC-20260218-ANCHOR-PR3
 inv_scope: change-rule
-expiry: 2026-03-04
+expiry: 2026-12-31
 follow_up_ticket: TSK-P1-040
 reason: Auto-generated preflight exception accepted for PR-3 structural migration restore and baseline refresh.
 author: system

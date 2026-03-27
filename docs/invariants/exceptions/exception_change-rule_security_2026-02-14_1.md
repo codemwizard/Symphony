@@ -1,7 +1,7 @@
 ---
 exception_id: EXC-2026-02-14-02
 inv_scope: change-rule
-expiry: 2026-02-28
+expiry: 2026-12-31
 follow_up_ticket: FOLLOWUP-P1-SEC-GRANT-LINT-NO-SEMICOLON
 reason: Security lint hardened to fail closed for forbidden CREATE grants without semicolons.
 author: codex

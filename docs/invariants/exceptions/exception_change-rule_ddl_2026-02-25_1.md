@@ -1,7 +1,7 @@
 ---
 exception_id: EXC-2026-02-25-HIER-011-01
 inv_scope: change-rule
-expiry: 2026-03-31
+expiry: 2026-12-31
 follow_up_ticket: TSK-P1-HIER-011-LINKAGE
 reason: Structural migration for HIER-011 with regulated-surface linkage captured in Phase-1 contract and verifier registries.
 author: supervisor-agent

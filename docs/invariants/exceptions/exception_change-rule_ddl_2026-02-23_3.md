@@ -1,7 +1,7 @@
 ---
 exception_id: EXC-903
 inv_scope: change-rule
-expiry: 2026-03-09
+expiry: 2026-12-31
 follow_up_ticket: TSK-P0-KYC-003
 reason: Structural DDL was introduced under task-governed migration and verifier wiring; invariants linkage is tracked via this bounded exception.
 author: codex

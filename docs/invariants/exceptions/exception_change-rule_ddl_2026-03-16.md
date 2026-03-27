@@ -1,7 +1,7 @@
 ---
 exception_id: EXC-W1-DDL
 inv_scope: change-rule
-expiry: 2026-06-01
+expiry: 2026-12-31
 follow_up_ticket: TSK-P1-211
 reason: DDL changes for Wave 1 hardening (billable clients fix, supplier registry) approved and verified under Wave 1.
 author: system

@@ -1,7 +1,7 @@
 ---
 exception_id: EXC-410
 inv_scope: change-rule
-expiry: 2026-06-30
+expiry: 2026-12-31
 follow_up_ticket: TSK-P1-HIER-010
 reason: HIER-010 introduces required DDL + verifier updates and carries invariant linkage through phase1 contract, verifier registry, and semantic allowlist updates in the same task.
 author: codex

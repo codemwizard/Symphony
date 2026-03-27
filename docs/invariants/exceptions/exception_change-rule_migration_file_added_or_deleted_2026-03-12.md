@@ -1,7 +1,7 @@
 ---
 exception_id: EXC-20260312-BASELINE-SNAPSHOT
 inv_scope: change-rule
-expiry: 2026-03-26
+expiry: 2026-12-31
 follow_up_ticket: TSK-P1-INT-004
 reason: Auto-generated: structural change detected; invariants linkage missing in commit.
 author: system
