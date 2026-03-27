@@ -1,0 +1,11 @@
+phase: '0'
+layer: CORE_SCHEMA
+volatility_class: CORE_SCHEMA
+touches_core_schema: true
+introduces_identifiers:
+  - methodology_versions
+  - idx_methodology_versions_tenant_id
+second_pilot_justification_required: true
+notes: >-
+  Foundational root migration for Green Finance methodology_versions entities.
+  Seamless recursive validation explicitly bridging towards native adapter registrations mapping natively securely.

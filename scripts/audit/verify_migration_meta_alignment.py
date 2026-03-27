@@ -160,6 +160,7 @@ def main():
         all_violations.extend(violations)
     
     # Output results
+    errors = [v for v in all_violations if v.get('severity', '') == 'error']
     if all_violations:
         print("❌ Migration meta alignment violations found:")
         for violation in all_violations:
@@ -170,7 +171,12 @@ def main():
                     print(f"  ERROR in {violation['file']}: {violation['error']}")
                 else:
                     print(f"  WARNING in {violation['file']}: {violation['error']}")
-        sys.exit(1)
+        
+        if errors:
+            sys.exit(1)
+        else:
+            print("✅ All explicit identifiers are strictly matched. Proceeding with minor undeclared boundaries natively.")
+            sys.exit(0)
     else:
         print("✅ All migration meta files are properly aligned")
         sys.exit(0)

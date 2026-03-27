@@ -1,0 +1,45 @@
+schema_version: 1
+phase: '0'
+task_id: GF-W1-SCH-002A
+title: "Introduce foundational root tables projects and methodology_versions"
+owner_role: DB_FOUNDATION
+status: planned
+priority: CRITICAL
+risk_class: INTEGRITY
+blast_radius: DB_SCHEMA
+domain: green_finance
+pilot: false
+
+touches:
+  - schema/migrations/0097_gf_projects.sql
+  - schema/migrations/0097_gf_projects.meta.yml
+  - schema/migrations/0098_gf_methodology_versions.sql
+  - schema/migrations/0098_gf_methodology_versions.meta.yml
+  - schema/migrations/MIGRATION_HEAD
+  - scripts/db/verify_gf_sch_002a.sh
+  - evidence/phase0/gf_sch_002a.json
+  - tasks/GF-W1-SCH-002A/meta.yml
+
+invariants:
+  - INV-SCHEMA-OWNERSHIP-001
+  - INV-SCHEMA-ORDER-002
+  - INV-SCHEMA-NO-FORWARD-REF-003
+  - INV-SCHEMA-OWNERSHIP-MAP-007
+  - INV-SCHEMA-SIDECAR-SQL-CONSISTENCY-012
+
+verification:
+  - bash scripts/db/verify_gf_sch_002a.sh
+  - python3 scripts/audit/verify_neutral_schema_ast.py schema/migrations/0097_gf_projects.sql
+  - python3 scripts/audit/verify_neutral_schema_ast.py schema/migrations/0098_gf_methodology_versions.sql
+  - python3 scripts/audit/verify_migration_meta_alignment.py
+
+evidence:
+  - path: evidence/phase0/gf_sch_002a.json
+    must_include:
+      - task_id
+      - git_sha
+      - timestamp_utc
+      - status
+      - ast_scan_clean
+      - sidecar_consistency
+      - migration_head_updated

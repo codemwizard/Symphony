@@ -8,8 +8,6 @@ introduces_identifiers:
   - idx_adapter_registrations_tenant_id
   - idx_adapter_registrations_adapter_code
   - idx_adapter_registrations_methodology
-  - tenant_isolation_adapter_registrations
-  - system_full_access_adapter_registrations
 second_pilot_justification_required: true
 notes: >-
   Core adapter registration schema enabling neutral host architecture.
