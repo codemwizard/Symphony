@@ -1,0 +1,56 @@
+﻿# .github/workflows/failure-index.yml
+# TARGET: .github/workflows/failure-index.yml
+#
+# Automatically rebuilds docs/operations/failure_index.md whenever a
+# remediation casefile is added or edited, or the failure signature registry
+# changes. Commits the updated index back to the branch so it never drifts.
+#
+# APPLY:
+#   cp _staging/symphony-enforcement-v1/layer-4-knowledge-base/failure-index.yml \
+#      .github/workflows/failure-index.yml
+
+name: Rebuild Failure Index
+
+on:
+  push:
+    paths:
+      - 'docs/plans/**/PLAN.md'
+      - 'docs/plans/**/EXEC_LOG.md'
+      - 'docs/operations/failure_signatures.yml'
+      - 'scripts/audit/build_failure_index.sh'
+
+jobs:
+  rebuild-index:
+    name: Rebuild failure index
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          # Use the branch that triggered the push so we commit back to it.
+          ref: ${{ github.head_ref || github.ref_name }}
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install PyYAML
+        run: pip install pyyaml
+
+      - name: Validate failure registry
+        run: bash scripts/audit/validate_failure_registry.sh
+
+      - name: Build failure index
+        run: bash scripts/audit/build_failure_index.sh
+
+      - name: Commit updated index
+        uses: stefanzweifel/git-auto-commit-action@v5
+        with:
+          commit_message: "chore: rebuild failure index [skip ci]"
+          file_pattern: docs/operations/failure_index.md
+          commit_user_name: "Symphony CI"
+          commit_user_email: "ci@symphony.local"
