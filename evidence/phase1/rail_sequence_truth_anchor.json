@@ -3,8 +3,8 @@
   "check_id": "DB-RAIL-SEQUENCE-TRUTH-ANCHOR",
   "gate_id": "INT-G27",
   "invariant_id": "INV-116",
-  "timestamp_utc": "2026-04-01T22:48:08Z",
-  "git_sha": "826237d5373e62894f2628314dedc76338435648",
+  "timestamp_utc": "2026-04-01T23:26:00Z",
+  "git_sha": "64bdea9c3f6d92c87afbaef32440ad7811366164",
   "schema_fingerprint": "1f92363c69ba235e552a6aac05045062fc0097fc93cde3b89e76455b80628019",
   "status": "PASS",
   "details": {

@@ -2,13 +2,13 @@
   "check_id": "GF-W1-FNC-006",
   "task_id": "GF-W1-FNC-006",
   "status": "FAIL",
-  "timestamp_utc": "2026-04-01T23:13:18Z",
-  "generated_at": "2026-04-01T23:13:18.640309+00:00",
-  "git_sha": "826237d5373e62894f2628314dedc76338435648",
-  "pre_ci_run_id": "rem-cleanup-v1",
+  "timestamp_utc": "2026-04-01T23:39:01Z",
+  "generated_at": "2026-04-01T23:39:01.485853+00:00",
+  "git_sha": "64bdea9c3f6d92c87afbaef32440ad7811366164",
+  "pre_ci_run_id": "rem-2f2e12a37912",
   "source_file": "schema/migrations/0113_gf_fn_confidence_enforcement.sql",
   "source_file_sha256": "28fb422fcfdf353c6f0641aedfa11dab898f862dc13cec47a9773621fcc2375e",
   "command_output": "{\"probes\": [{\"probe\": \"validate_confidence_score\", \"status\": \"FAIL\", \"reason\": \"function_missing\"},{\"probe\": \"enforce_confidence_before_issuance\", \"status\": \"FAIL\", \"reason\": \"function_missing\"},{\"probe\": \"trigger:confidence_enforcement\", \"status\": \"FAIL\", \"reason\": \"trigger_missing\"}]}",
-  "_signature": "e91ef24a9ed6ffe3f9cb0ff57844a49cd67124bc4718ab5072144115e829d15f",
+  "_signature": "0565a85eadfd286d3f2fd9ad0a1ac75c8ab66fd709325740e673e9c82c1a065e",
   "_signing_version": "symphony-v1"
 }

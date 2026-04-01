@@ -1,10 +1,10 @@
 # Symphony verifier script integrity manifest
-# Generated: 2026-04-01T22:42:04Z
+# Generated: 2026-04-01T23:38:08Z
 # Regenerate: bash _staging/symphony-enforcement-v2/execution-confinement/apply_execution_confinement.sh
 #
-647437af393b1d8ccd04bf49f6b7dc1881fcd2eb4cc51af9fba413d17d31ffde  scripts/db/verify_gf_sch_001.sh
+79a7bfb070e3b48853d916cbc3194ad28c844ca7015f1d960c6e57ab33295ece  scripts/db/verify_gf_sch_001.sh
 d9de74ec6e9125f27bbea4d3225735ad1dcfd5c964ac703bb18fc374b876a8e1  scripts/db/verify_gf_sch_002a.sh
-acb9decc4f7fa52ddd9c6f2ad710fc98ed9374f8a9a075c7744cae1ddca08285  scripts/db/verify_gf_sch_008.sh
+6ea4bab62674ba751f44143dbec9b2e504ed658d830bbf2e3e9eb03e433e11eb  scripts/db/verify_gf_sch_008.sh
 021810b144fd3c00d0df93b58d785201b0154c29d91f7ae7699b5a16bd5b1c7e  scripts/db/verify_gf_fnc_001.sh
 c7947cb8dea601389e37441f47761858a501f111bf8e3aeaa56e85968778b6d4  scripts/db/verify_gf_fnc_002.sh
 f5b55412da76ec441e5daad9a99ae149a97b363f0d6e679945ae45ee2a6bc8bc  scripts/db/verify_gf_fnc_003.sh

@@ -2,13 +2,13 @@
   "check_id": "GF-W1-FNC-002",
   "task_id": "GF-W1-FNC-002",
   "status": "FAIL",
-  "timestamp_utc": "2026-04-01T23:13:15Z",
-  "generated_at": "2026-04-01T23:13:15.439906+00:00",
-  "git_sha": "826237d5373e62894f2628314dedc76338435648",
-  "pre_ci_run_id": "rem-cleanup-v1",
+  "timestamp_utc": "2026-04-01T23:38:58Z",
+  "generated_at": "2026-04-01T23:38:58.255891+00:00",
+  "git_sha": "64bdea9c3f6d92c87afbaef32440ad7811366164",
+  "pre_ci_run_id": "rem-2f2e12a37912",
   "source_file": "schema/migrations/0108_gf_fn_monitoring_ingestion.sql",
   "source_file_sha256": "e6b2666013077b1b62ef7759ac796ac4130e27450b8069eaabeb5dd24436682e",
   "command_output": "{\"probes\": [{\"probe\": \"query_monitoring_records\", \"status\": \"FAIL\", \"reason\": \"function_missing\"},{\"probe\": \"record_monitoring_record\", \"status\": \"FAIL\", \"reason\": \"function_missing\"},{\"probe\": \"validate_payload_against_schema\", \"status\": \"FAIL\", \"reason\": \"function_missing\"},{\"probe\": \"get_monitoring_record_payload\", \"status\": \"FAIL\", \"reason\": \"function_missing\"}]}",
-  "_signature": "0de4b6c1a235c332d24f420d77f29ebc54f124939aa96d203601903fe977f074",
+  "_signature": "ba40ecb17ede59f24aa48d218d94f1cf9b97a842f7dc93ffec18ebb5ccf214c4",
   "_signing_version": "symphony-v1"
 }
