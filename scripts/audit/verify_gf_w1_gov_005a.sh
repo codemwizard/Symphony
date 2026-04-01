@@ -188,33 +188,17 @@ OVERALL_STATUS="PASS"
 # ── Build execution trace ────────────────────────────────────────────────────
 EXEC_TRACE="presence_check OK; fk_order_check: ${#fk_violations_arr[@]} violations; sector_noun_check: ${#sector_violations_arr[@]} violations; overall=$OVERALL_STATUS"
 
-# ── Emit evidence JSON ────────────────────────────────────────────────────────
-cat > "$EVIDENCE_PATH" <<EOF
-{
-  "task_id": "${TASK_ID}",
-  "run_id": "${RUN_ID}",
-  "git_sha": "${GIT_SHA}",
-  "timestamp_utc": "${TIMESTAMP_UTC}",
-  "status": "${OVERALL_STATUS}",
-  "migrations_present": ${migrations_present},
-  "observed_paths": ${observed_paths_json},
-  "observed_hashes": ${observed_hashes_json},
-  "command_outputs": ${command_outputs_json},
-  "execution_trace": "${EXEC_TRACE}",
-  "forward_fk_violations": ${forward_fk_violations_json},
-  "sector_noun_violations": ${sector_noun_violations_json},
-  "failures": $(
-    if [[ ${#failures[@]} -eq 0 ]]; then
-      echo "[]"
-    else
-      printf '"%s",' "${failures[@]}" | sed 's/,$//' | sed 's/^/[/' | sed 's/$/]/'
-    fi
-  )
-}
-EOF
+# ── Emit signed evidence ───────────────────────────────────
+python3 scripts/audit/sign_evidence.py \
+    --write \
+    --out "$EVIDENCE_PATH" \
+    --task "${TASK_ID}" \
+    --status "${OVERALL_STATUS}" \
+    --source-file "schema/migrations/0080_gf_adapter_registrations.sql" \
+    --command-output "{\"trace\": \"$EXEC_TRACE\", \"migrations_present\": $migrations_present}"
 
 echo ""
-echo "Evidence written to ${EVIDENCE_PATH#$ROOT_DIR/}"
+echo "Evidence signed and written to ${EVIDENCE_PATH#$ROOT_DIR/}"
 echo ""
 
 if [[ "${OVERALL_STATUS}" == "PASS" ]]; then

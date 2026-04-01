@@ -1,14 +1,14 @@
 {
+  "check_id": "GF-W1-FNC-003",
   "task_id": "GF-W1-FNC-003",
-  "status": "PASS",
-  "generated_at": "2026-04-01T14:33:19.165355+00:00",
-  "pre_ci_run_id": "20260401T142600Z_86887",
+  "status": "FAIL",
+  "timestamp_utc": "2026-04-01T23:13:16Z",
+  "generated_at": "2026-04-01T23:13:16.277097+00:00",
+  "git_sha": "826237d5373e62894f2628314dedc76338435648",
+  "pre_ci_run_id": "rem-cleanup-v1",
   "source_file": "schema/migrations/0109_gf_fn_evidence_lineage.sql",
   "source_file_sha256": "b6440f453c17b68a7ff52f4dd099de148b3f32d5f2cb9f6a3160a7ffca56a9f6",
-  "command_output": "{\"probes\": [{\"probe\": \"link_evidence_to_record\", \"status\": \"PASS\"},{\"probe\": \"get_evidence_node\", \"status\": \"PASS\"},{\"probe\": \"list_project_evidence\", \"status\": \"PASS\"},{\"probe\": \"attach_evidence\", \"status\": \"PASS\"},{\"probe\": \"query_evidence_lineage\", \"status\": \"PASS\"}]}",
-  "_signature": "4e0bd258e923ed89afba6a4df9621db311936cbbc80a83dc60555d5ee6040117",
-  "_signing_version": "symphony-v1",
-  "check_id": "GF-W1-FNC-003",
-  "timestamp_utc": "2026-04-01T14:33:19Z",
-  "git_sha": "0a50bc179d7abf1b2458048d32e49dd5be009b92"
+  "command_output": "{\"probes\": [{\"probe\": \"link_evidence_to_record\", \"status\": \"FAIL\", \"reason\": \"function_missing\"},{\"probe\": \"get_evidence_node\", \"status\": \"FAIL\", \"reason\": \"function_missing\"},{\"probe\": \"list_project_evidence\", \"status\": \"FAIL\", \"reason\": \"function_missing\"},{\"probe\": \"attach_evidence\", \"status\": \"FAIL\", \"reason\": \"function_missing\"},{\"probe\": \"query_evidence_lineage\", \"status\": \"FAIL\", \"reason\": \"function_missing\"}]}",
+  "_signature": "080735e75065e12ed18127adfcc2ca9de523f39fc0b9e6690f07c1a08d66c49a",
+  "_signing_version": "symphony-v1"
 }

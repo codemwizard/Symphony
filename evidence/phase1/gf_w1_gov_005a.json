@@ -1,44 +1,14 @@
 {
+  "check_id": "GF-W1-GOV-005A",
   "task_id": "GF-W1-GOV-005A",
-  "run_id": "1775053996",
-  "git_sha": "e9fcfde480212cbd571a5515bdda57668f9876dc",
-  "timestamp_utc": "2026-04-01T14:33:16Z",
   "status": "PASS",
-  "migrations_present": 9,
-  "observed_paths": [
-    "schema/migrations/0080_gf_adapter_registrations.sql",
-    "schema/migrations/0097_gf_projects.sql",
-    "schema/migrations/0098_gf_methodology_versions.sql",
-    "schema/migrations/0099_gf_monitoring_records.sql",
-    "schema/migrations/0100_gf_evidence_lineage.sql",
-    "schema/migrations/0101_gf_asset_lifecycle.sql",
-    "schema/migrations/0102_gf_regulatory_plane.sql",
-    "schema/migrations/0103_gf_jurisdiction_rules.sql",
-    "schema/migrations/0106_gf_verifier_registry.sql"
-  ],
-  "observed_hashes": {
-    "0080_gf_adapter_registrations.sql": "0abb5ec1325c2a194470df5c281b5d49a6ba1841272cbddecbb1b3208afdd7f9",
-    "0097_gf_projects.sql": "9e16c67525d435913665b2cb6df7f2cf75755fa44eee50fd629ec1d6aa40b749",
-    "0098_gf_methodology_versions.sql": "27109cf458ed6c647b8f28d047bea0f3f2abe75f669c78e097d21ef437c8a7f4",
-    "0099_gf_monitoring_records.sql": "91f4db2df4d7b19817f6515c47b4b153dbbabb7a064cc42830d45797f24c08e7",
-    "0100_gf_evidence_lineage.sql": "8dded034864eb7724356ccacb185f4823764996c4320dc6f07dca35d1ec3d748",
-    "0101_gf_asset_lifecycle.sql": "e0db7eabf584825bb861623fdba5b249a4d060659108fd36902b27fa275b11cc",
-    "0102_gf_regulatory_plane.sql": "27b67a91635d5163ba2c6a06337b3bed6b01cf826a916b4972a9bb80e86316bf",
-    "0103_gf_jurisdiction_rules.sql": "b045ce5a15419605958769a43ad77c2a0adfbdbee99919e10667f07e46338b9c",
-    "0106_gf_verifier_registry.sql": "85858a9f5c8edffdeed7e77d7c157adc26b017c9cd980642a6f0fb444877d2bf"
-  },
-  "command_outputs": [
-    "presence_check: 9/9 files present",
-    "fk_order_check: 0 forward FK violations",
-    "sector_noun_check: 0 sector noun violations"
-  ],
-  "execution_trace": "presence_check OK; fk_order_check: 0 violations; sector_noun_check: 0 violations; overall=PASS",
-  "forward_fk_violations": [
-    ""
-  ],
-  "sector_noun_violations": [
-    ""
-  ],
-  "failures": [],
-  "check_id": "GF-W1-GOV-005A"
+  "timestamp_utc": "2026-04-01T23:13:13Z",
+  "generated_at": "2026-04-01T23:13:13.685230+00:00",
+  "git_sha": "826237d5373e62894f2628314dedc76338435648",
+  "pre_ci_run_id": "rem-cleanup-v1",
+  "source_file": "schema/migrations/0080_gf_adapter_registrations.sql",
+  "source_file_sha256": "0abb5ec1325c2a194470df5c281b5d49a6ba1841272cbddecbb1b3208afdd7f9",
+  "command_output": "{\"trace\": \"presence_check OK; fk_order_check: 0 violations; sector_noun_check: 0 violations; overall=PASS\", \"migrations_present\": 9}",
+  "_signature": "e4fba2e218875d9767ae6545d63292ebf8d5b2028b0719fc5b8edf6bccf77b74",
+  "_signing_version": "symphony-v1"
 }

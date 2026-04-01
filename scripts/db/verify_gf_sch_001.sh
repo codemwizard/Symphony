@@ -214,6 +214,16 @@ fi
 echo ""
 echo "✅ All checks passed for GF-W1-SCH-001"
 echo "Migration: 0080_gf_adapter_registrations.sql"
-echo "Status: READY"
+
+# ── Emit signed evidence ───────────────────────────────────
+python3 scripts/audit/sign_evidence.py \
+    --write \
+    --out "evidence/phase1/gf_sch_001.json" \
+    --task "GF-W1-SCH-001" \
+    --status "PASS" \
+    --source-file "schema/migrations/0080_gf_adapter_registrations.sql" \
+    --command-output "{\"check\": \"schema_verification\", \"migration\": \"0080_gf_adapter_registrations.sql\"}"
+
+echo "Status: READY (evidence signed)"
 
 exit 0
