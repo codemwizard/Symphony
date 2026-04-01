@@ -1,0 +1,165 @@
+schema_version: 1
+phase: '1'
+task_id: ENF-003A
+title: Add evidence ack gate and retry counter to run_task.sh so agents cannot retry a failed task without reading failure artifacts first
+owner_role: ARCHITECT
+status: completed
+priority: HIGH
+risk_class: GOVERNANCE
+blast_radius: CI_GATES
+
+intent: >-
+  Agents have repeatedly retried failing tasks without reading the failure
+  artifacts, causing non-convergence accumulation (38+ failures before human
+  intervention). The evidence ack gate forces a structured acknowledgement —
+  the agent must write a YAML file with a specific root_cause diagnosis before
+  run_task.sh will proceed on a retry. The retry counter hard-blocks at 3
+  consecutive failures and requires human reset via reset_evidence_gate.sh
+  (ENF-003B). This closes the tight loop that previously allowed unlimited
+  unreviewed retries.
+
+anti_patterns:
+  - "Inserting the gate after the pack readiness check instead of before it — agents could still reach pack parse before being blocked"
+  - "Using a retry limit other than 3 — the MANIFEST specifies 3 as the hard-block threshold"
+  - "Writing root_cause validation that accepts 'pending' or empty strings — these are the exact patterns agents use to bypass"
+  - "Cleaning up .ack.attempt_* files on success — they must be kept as audit trail"
+
+out_of_scope:
+  - "Creating reset_evidence_gate.sh (that is ENF-003B)"
+  - "Any changes to pre_ci.sh, pre_ci_debug_contract.sh, or verify_drd_casefile.sh"
+  - "DRD lockout gate (that is ENF-001)"
+
+stop_conditions:
+  - "If ENF-001 is not yet applied to run_task.sh → STOP; apply_patch.sh checks for the ENF-001 marker and will exit 1"
+  - "If ENF-003 markers are already present in run_task.sh → skip (idempotent); do not re-apply"
+  - "If the 'Pack readiness gate' anchor is not found → STOP; report to human; apply_patch.sh will error"
+
+proof_guarantees:
+  - "verify_enf_003a.sh confirms ENF-003 gate marker present in run_task.sh"
+  - "verify_enf_003a.sh confirms ENF-003 retry counter marker present in run_task.sh"
+  - "verify_enf_003a.sh confirms ENF-003 cleanup marker present in run_task.sh"
+  - "verify_enf_003a.sh simulates a .required file and confirms run_task.sh exits 51 without a valid ack"
+
+proof_limitations:
+  - "Verifier cannot test the full ack validation path end-to-end against a real failed task — it only tests the gate blocking behaviour"
+  - "Verifier cannot confirm YAML parse of the ack file handles all edge cases without exhaustive input testing"
+
+depends_on:
+  - ENF-001
+
+blocks:
+  - ENF-004
+
+touches:
+  - scripts/agent/run_task.sh
+  - scripts/audit/verify_enf_003a.sh
+  - evidence/phase1/enf_003a_run_task_evidence_ack_gate.json
+  - tasks/ENF-003A/meta.yml
+
+invariants: []
+
+work:
+  - >-
+    [ID enf_003a_wi01] Run bash symphony-enforcement-v2/enf-003-evidence-ack-gate/apply_patch.sh
+    from repo root. Confirm it prints 'ENF-003: evidence ack gate applied' or
+    'already applied'. Confirm grep finds ENF-003 gate, retry counter, and
+    cleanup markers in scripts/agent/run_task.sh.
+  - >-
+    [ID enf_003a_wi02] Create scripts/audit/verify_enf_003a.sh: confirm all three
+    ENF-003 markers present; simulate a .required file for a dummy task ID and run
+    run_task.sh, assert exit 51; simulate retry count >= 3 and assert exit 50;
+    clean up temp files; emit evidence/phase1/enf_003a_run_task_evidence_ack_gate.json.
+
+acceptance_criteria:
+  - >-
+    [ID enf_003a_wi01] grep 'ENF-003: evidence ack gate' scripts/agent/run_task.sh
+    returns a match.
+  - >-
+    [ID enf_003a_wi01] grep 'ENF-003: retry counter increment on failure'
+    scripts/agent/run_task.sh returns a match.
+  - >-
+    [ID enf_003a_wi01] grep 'ENF-003: cleanup on success' scripts/agent/run_task.sh
+    returns a match.
+  - >-
+    [ID enf_003a_wi02] With a .required file present and no valid .ack file,
+    run_task.sh exits 51 and prints 'EVIDENCE ACK REQUIRED'.
+  - >-
+    [ID enf_003a_wi02] With .retries file containing 3, run_task.sh exits 50
+    and prints 'HARD BLOCK'.
+  - >-
+    [ID enf_003a_wi02] verify_enf_003a.sh exits 0 with status=PASS in evidence JSON.
+
+negative_tests:
+  - id: ENF-003A-N1
+    description: >-
+      With a .toolchain/evidence_ack/<TASK_ID>.required file present and no
+      matching valid ack file, run_task.sh must exit 51 and print 'EVIDENCE ACK
+      REQUIRED'. Must not proceed to pack readiness.
+    required: true
+  - id: ENF-003A-N2
+    description: >-
+      With a .toolchain/evidence_ack/<TASK_ID>.retries file containing the value 3,
+      run_task.sh must exit 50 and print 'HARD BLOCK'. Must not check for ack file.
+    required: true
+  - id: ENF-003A-N3
+    description: >-
+      An ack file with root_cause set to 'pending' must cause the ack validation
+      to return INVALID, leaving the gate blocked (exit 51).
+    required: true
+
+positive_tests:
+  - id: ENF-003A-P1
+    description: >-
+      With a valid ack file containing task_id, evidence_read=true, a non-empty
+      non-pending root_cause, and an acknowledged_at ISO timestamp, run_task.sh
+      must proceed past the evidence ack gate (exit is not 51).
+    required: false
+
+verification:
+  - bash scripts/audit/verify_enf_003a.sh
+  - python3 scripts/audit/validate_evidence.py --task ENF-003A --evidence evidence/phase1/enf_003a_run_task_evidence_ack_gate.json
+  - bash scripts/dev/pre_ci.sh
+
+evidence:
+  - path: evidence/phase1/enf_003a_run_task_evidence_ack_gate.json
+    must_include:
+      - task_id
+      - git_sha
+      - timestamp_utc
+      - status
+      - checks
+      - failures
+      - gate_marker_confirmed
+      - retry_marker_confirmed
+      - cleanup_marker_confirmed
+      - exit_51_on_missing_ack_confirmed
+      - exit_50_on_retry_limit_confirmed
+
+failure_modes:
+  - "Evidence file missing → BLOCKED (ENF-004 cannot start)"
+  - "ENF-003 gate marker absent → FAIL (retry loop remains ungated)"
+  - "run_task.sh does not exit 51 with .required present and no ack → CRITICAL_FAIL (evidence ack is bypassed)"
+  - "run_task.sh does not exit 50 at retry limit → CRITICAL_FAIL (hard block does not fire)"
+  - "apply_patch.sh applied before ENF-001 → FAIL (apply_patch.sh will have errored; run_task.sh may be corrupted)"
+
+must_read:
+  - docs/operations/AI_AGENT_OPERATION_MANUAL.md
+  - symphony-enforcement-v2/MANIFEST.md
+  - symphony-enforcement-v2/enf-003-evidence-ack-gate/apply_patch.sh
+  - tasks/ENF-001/meta.yml
+
+implementation_plan: docs/plans/phase1/ENF-003A/PLAN.md
+implementation_log: docs/plans/phase1/ENF-003A/EXEC_LOG.md
+
+notes: >-
+  scripts/agent/run_task.sh is a governance file per SYSTEM INVARIANTS. This
+  task requires explicit human approval before implementation begins. ENF-003A
+  is split from the MANIFEST's ENF-003 because run_task.sh belongs to the
+  Architect agent surface (scripts/agent/**) while reset_evidence_gate.sh
+  belongs to the Security Guardian surface (scripts/audit/**). The apply_patch.sh
+  explicitly checks for the ENF-001 marker and will exit 1 if ENF-001 has not
+  been applied first.
+
+client: codex_cli
+assigned_agent: architect
+model: <UNASSIGNED>

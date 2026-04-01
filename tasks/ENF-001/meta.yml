@@ -1,0 +1,146 @@
+schema_version: 1
+phase: '1'
+task_id: ENF-001
+title: Add DRD lockout gate as the first check in run_task.sh so no task can execute while a lockout is active
+owner_role: ARCHITECT
+status: completed
+priority: HIGH
+risk_class: GOVERNANCE
+blast_radius: CI_GATES
+
+intent: >-
+  Agents have been observed continuing to run tasks after a DRD lockout is
+  written, because run_task.sh had no awareness of the lockout file. This allowed
+  new failures to accumulate on top of unresolved incidents. The gate must be the
+  absolute first action in run_task.sh — before meta parse, OUTDIR creation,
+  bootstrap, and pack readiness — so the lockout cannot be bypassed by any
+  execution path. Exit code 99 matches pre_ci.sh so orchestrators handle both
+  with one check.
+
+anti_patterns:
+  - "Inserting the gate after the meta parse or OUTDIR creation — partial execution before the block is still a bypass"
+  - "Using exit 1 instead of exit 99 — orchestrators expect 99 as the DRD lockout code"
+  - "Printing the DRD scaffold command without sourcing the lockout env — the signature and gate ID must come from the file"
+  - "Applying the patch manually without using apply.sh — the Python-based insertion preserves idempotency"
+
+out_of_scope:
+  - "Creating verify_drd_casefile.sh (that is ENF-002)"
+  - "Any changes to pre_ci.sh or pre_ci_debug_contract.sh"
+  - "Evidence ack gate or retry counter (that is ENF-003A)"
+
+stop_conditions:
+  - "If the 'export TASK_ID' anchor line is not found in run_task.sh → STOP, apply.sh will error; report to human"
+  - "If ENF-001 marker is already present in run_task.sh → skip (idempotent); do not re-apply"
+
+proof_guarantees:
+  - "verify_enf_001.sh confirms grep finds 'ENF-001: DRD lockout gate' marker in run_task.sh"
+  - "verify_enf_001.sh simulates an active lockout file and confirms run_task.sh exits 99"
+  - "verify_enf_001.sh confirms run_task.sh proceeds normally when no lockout file exists"
+
+proof_limitations:
+  - "Verifier cannot confirm the gate fires before every possible code path in run_task.sh without reading the full AST — it relies on grep-confirmed marker position"
+  - "Verifier cannot test real DRD incident recovery end-to-end — only that the gate blocks execution"
+
+depends_on:
+  - ENF-000
+
+blocks:
+  - ENF-003A
+
+touches:
+  - scripts/agent/run_task.sh
+  - scripts/audit/verify_enf_001.sh
+  - evidence/phase1/enf_001_run_task_drd_gate.json
+  - tasks/ENF-001/meta.yml
+
+invariants: []
+
+work:
+  - >-
+    [ID enf_001_wi01] Run bash symphony-enforcement-v2/enf-001-run-task-drd-gate/apply.sh
+    from repo root. Confirm it prints "ENF-001: gate inserted" or "already applied".
+    Confirm grep finds the ENF-001 marker in scripts/agent/run_task.sh.
+  - >-
+    [ID enf_001_wi02] Create scripts/audit/verify_enf_001.sh: check marker present
+    in run_task.sh; simulate lockout by writing a temp drd_lockout.env; run
+    run_task.sh on a dummy task ID and assert exit code is 99; clean up temp file;
+    emit evidence/phase1/enf_001_run_task_drd_gate.json with status=PASS/FAIL.
+
+acceptance_criteria:
+  - >-
+    [ID enf_001_wi01] grep 'ENF-001: DRD lockout gate' scripts/agent/run_task.sh
+    returns a match.
+  - >-
+    [ID enf_001_wi02] verify_enf_001.sh exits 0 with status=PASS in evidence JSON.
+  - >-
+    [ID enf_001_wi02] With a drd_lockout.env present containing
+    DRD_LOCKED_SIGNATURE='TEST', run_task.sh exits 99 and prints 'DRD LOCKOUT ACTIVE'.
+  - >-
+    [ID enf_001_wi02] With no lockout file, run_task.sh proceeds past the gate
+    (exits 1 for missing task, not 99).
+
+negative_tests:
+  - id: ENF-001-N1
+    description: >-
+      Writing a drd_lockout.env file and running run_task.sh with any TASK_ID
+      must exit 99 with 'DRD LOCKOUT ACTIVE' in stderr. Exit code must not be
+      1 or 0 — it must be exactly 99.
+    required: true
+  - id: ENF-001-N2
+    description: >-
+      Running apply.sh a second time must print 'already applied' and exit 0
+      without modifying run_task.sh. The gate block must not be duplicated.
+    required: true
+
+positive_tests:
+  - id: ENF-001-P1
+    description: >-
+      With no lockout file, run_task.sh given an invalid TASK_ID must exit
+      with code 1 (missing meta), not 99 — proving the gate does not fire
+      when there is no lockout.
+    required: false
+
+verification:
+  - bash scripts/audit/verify_enf_001.sh
+  - python3 scripts/audit/validate_evidence.py --task ENF-001 --evidence evidence/phase1/enf_001_run_task_drd_gate.json
+  - bash scripts/dev/pre_ci.sh
+
+evidence:
+  - path: evidence/phase1/enf_001_run_task_drd_gate.json
+    must_include:
+      - task_id
+      - git_sha
+      - timestamp_utc
+      - status
+      - checks
+      - failures
+      - gate_marker_confirmed
+      - exit_99_on_lockout_confirmed
+      - no_false_positive_confirmed
+
+failure_modes:
+  - "Evidence file missing → BLOCKED (ENF-003A cannot start)"
+  - "Gate marker absent from run_task.sh → FAIL (lockout bypass remains possible)"
+  - "run_task.sh does not exit 99 with lockout active → CRITICAL_FAIL (lockout enforcement is broken)"
+  - "Gate inserted after meta parse instead of before → CRITICAL_FAIL (partial execution bypass)"
+
+must_read:
+  - docs/operations/AI_AGENT_OPERATION_MANUAL.md
+  - symphony-enforcement-v2/MANIFEST.md
+  - symphony-enforcement-v2/enf-001-run-task-drd-gate/apply.sh
+  - .agent/policies/debug-remediation-policy.md
+
+implementation_plan: docs/plans/phase1/ENF-001/PLAN.md
+implementation_log: docs/plans/phase1/ENF-001/EXEC_LOG.md
+
+notes: >-
+  scripts/agent/run_task.sh is a governance file per SYSTEM INVARIANTS. This
+  task requires explicit human approval before implementation begins. The apply
+  script uses Python-based line insertion anchored to 'export TASK_ID' — it is
+  idempotent and will skip if the ENF-001 marker is already present. Exit code
+  99 was chosen to match pre_ci.sh DRD lockout exit code so orchestrators need
+  only one exit-code check.
+
+client: codex_cli
+assigned_agent: architect
+model: <UNASSIGNED>

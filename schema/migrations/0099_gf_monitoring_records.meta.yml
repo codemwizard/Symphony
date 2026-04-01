@@ -1,0 +1,13 @@
+phase: '0'
+layer: CORE_SCHEMA
+volatility_class: CORE_SCHEMA
+touches_core_schema: true
+introduces_identifiers:
+  - monitoring_records
+  - idx_monitoring_records_tenant_id
+  - idx_monitoring_records_project_id
+second_pilot_justification_required: true
+notes: >-
+  Append-only monitoring event ledger for Green Finance. Depends on migration
+  0097 (projects). UPDATE and DELETE are revoked from the runtime role to
+  enforce immutability at the privilege layer.

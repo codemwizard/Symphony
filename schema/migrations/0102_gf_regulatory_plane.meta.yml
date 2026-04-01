@@ -1,0 +1,16 @@
+phase: '0'
+layer: CORE_SCHEMA
+volatility_class: CORE_SCHEMA
+touches_core_schema: true
+introduces_identifiers:
+  - current_jurisdiction_code_or_null
+  - interpretation_packs
+  - regulatory_authorities
+  - idx_interpretation_packs_jurisdiction
+  - idx_regulatory_authorities_jurisdiction
+second_pilot_justification_required: true
+notes: >-
+  Jurisdiction function and first two regulatory plane tables. The function is
+  SECURITY DEFINER with SET search_path = pg_catalog, public to prevent
+  search_path injection. All tables use jurisdiction isolation RLS, not tenant
+  isolation.

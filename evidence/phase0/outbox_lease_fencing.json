@@ -1,8 +1,8 @@
 {
   "check_id": "DB-OUTBOX-LEASE-FENCING",
-  "timestamp_utc": "2026-03-17T01:09:24Z",
-  "git_sha": "9f4c091829d39813bf5e8485e122c826b424eb5a",
-  "schema_fingerprint": "59eef2a10b166543339b310ae67181cc9a8d6b22aa216e649e56652c2316e165",
+  "timestamp_utc": "2026-04-01T14:31:43Z",
+  "git_sha": "e9fcfde480212cbd571a5515bdda57668f9876dc",
+  "schema_fingerprint": "1f92363c69ba235e552a6aac05045062fc0097fc93cde3b89e76455b80628019",
   "status": "PASS",
   "tests_passed": 3,
   "tests_failed": 0

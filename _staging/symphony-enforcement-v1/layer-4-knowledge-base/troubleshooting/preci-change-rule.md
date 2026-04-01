@@ -1,4 +1,4 @@
-﻿# Troubleshooting: PRECI.STRUCTURAL.CHANGE_RULE
+# Troubleshooting: PRECI.STRUCTURAL.CHANGE_RULE
 
 **Failure signature:** `PRECI.STRUCTURAL.CHANGE_RULE`
 **Gate:** `pre_ci.enforce_change_rule`
@@ -44,7 +44,6 @@ FAILURE_SIGNATURE=PRECI.STRUCTURAL.CHANGE_RULE
 ## Clearing the DRD lockout
 
 ```bash
-# Step 1 ΓÇö create the casefile
 scripts/audit/new_remediation_casefile.sh \
   --phase phase1 \
   --slug change-rule \
@@ -52,11 +51,6 @@ scripts/audit/new_remediation_casefile.sh \
   --origin-gate-id pre_ci.enforce_change_rule \
   --repro-command "scripts/dev/pre_ci.sh"
 
-# Step 2 ΓÇö document root cause in PLAN.md
-
-# Step 3 ΓÇö remove lockout
 rm .toolchain/pre_ci_debug/drd_lockout.env
-
-# Step 4 ΓÇö re-run
 scripts/dev/pre_ci.sh
 ```

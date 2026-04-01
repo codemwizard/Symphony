@@ -2695,3 +2695,288 @@ Failure Modes:
 - Non-lifecycle scope leakage or destructive behavior.
 - Sidecar/SQL mismatch.
 - Evidence file missing.
+
+---
+
+TASK ID: GF-W1-SCH-006
+Title: Migrations 0102–0103: regulatory plane tables and current_jurisdiction_code_or_null() jurisdiction resolver
+Owner Role: DB_FOUNDATION
+Depends On: GF-W1-SCH-005
+Touches: `schema/migrations/0102_gf_regulatory_plane.sql`, `schema/migrations/0102_gf_regulatory_plane.meta.yml`, `schema/migrations/0103_gf_jurisdiction_rules.sql`, `schema/migrations/0103_gf_jurisdiction_rules.meta.yml`, `schema/migrations/MIGRATION_HEAD`, `scripts/db/verify_gf_regulatory_plane.sh`, `evidence/phase0/gf_regulatory_plane.json`, `tasks/GF-W1-SCH-006/meta.yml`
+Invariant(s): INV-SCHEMA-OWNERSHIP-001, INV-SCHEMA-ORDER-002, INV-SCHEMA-NO-FORWARD-REF-003, INV-SCHEMA-OWNERSHIP-MAP-007, INV-SCHEMA-SIDECAR-SQL-CONSISTENCY-012
+Work:
+- Create 0102_gf_regulatory_plane.sql: current_jurisdiction_code_or_null() SECURITY DEFINER with hardened search_path, interpretation_packs and regulatory_authorities with jurisdiction isolation RLS.
+- Create 0103_gf_jurisdiction_rules.sql: regulatory_checkpoints, jurisdiction_profiles, lifecycle_checkpoint_rules, authority_decisions with jurisdiction isolation RLS.
+- Create sidecars for both migrations; update MIGRATION_HEAD to 0103.
+- Create verify_gf_regulatory_plane.sh enforcing SECURITY DEFINER hardening and jurisdiction isolation on all six tables.
+Acceptance Criteria:
+- current_jurisdiction_code_or_null() is SECURITY DEFINER with SET search_path = pg_catalog, public.
+- All six tables use jurisdiction isolation RLS (not tenant isolation).
+- `bash scripts/db/verify_gf_regulatory_plane.sh` emits evidence with jurisdiction_function_hardened=true.
+Verification Commands:
+- `bash scripts/db/verify_gf_regulatory_plane.sh`
+- `python3 scripts/audit/verify_migration_meta_alignment.py`
+Evidence Artifact(s):
+- `evidence/phase0/gf_regulatory_plane.json`
+Failure Modes:
+- SECURITY DEFINER function lacks hardened search_path — search_path injection possible.
+- Any regulatory table uses tenant isolation instead of jurisdiction isolation.
+- Evidence file missing.
+
+---
+
+TASK ID: GF-W1-SCH-007
+Title: Phase 0 schema closeout verifier — aggregate all GF schema verifiers (SCH-002A through SCH-006)
+Owner Role: DB_FOUNDATION
+Depends On: GF-W1-SCH-006
+Touches: `scripts/db/verify_gf_schema_closeout.sh`, `evidence/phase0/gf_schema_closeout.json`, `tasks/GF-W1-SCH-007/meta.yml`
+Invariant(s): INV-SCHEMA-OWNERSHIP-001
+Work:
+- Create verify_gf_schema_closeout.sh invoking all five prior GF schema verifiers in DAG order.
+- Script must exit non-zero if any individual verifier fails; emit evidence with all_verifiers_pass field.
+Acceptance Criteria:
+- Closeout script invokes verify_gf_sch_002a.sh, verify_gf_monitoring_records.sh, verify_gf_evidence_lineage.sh, verify_gf_asset_lifecycle.sh, and verify_gf_regulatory_plane.sh.
+- Script exits non-zero if any sub-verifier exits non-zero.
+- `bash scripts/db/verify_gf_schema_closeout.sh` emits evidence with all_verifiers_pass field.
+Verification Commands:
+- `bash scripts/db/verify_gf_schema_closeout.sh`
+Evidence Artifact(s):
+- `evidence/phase0/gf_schema_closeout.json`
+Failure Modes:
+- Closeout exits 0 when any sub-verifier fails — downstream tasks run against broken schema.
+- Script omits one or more GF schema verifiers.
+- Evidence file missing.
+
+---
+
+TASK ID: GF-W1-SCH-008
+Title: Migration 0087: verifier_registry, verifier_project_assignments, gf_verifier_read_tokens, and Reg 26 DB constraint
+Owner Role: DB_FOUNDATION
+Depends On: GF-W1-SCH-007
+Touches: `schema/migrations/0087_gf_verifier_registry.sql`, `schema/migrations/0087_gf_verifier_registry.meta.yml`, `schema/migrations/MIGRATION_HEAD`, `scripts/db/verify_gf_verifier_registry.sh`, `evidence/phase0/gf_verifier_registry.json`, `tasks/GF-W1-SCH-008/meta.yml`
+Invariant(s): INV-SCHEMA-OWNERSHIP-001, INV-SCHEMA-ORDER-002, INV-SCHEMA-NO-FORWARD-REF-003, INV-SCHEMA-OWNERSHIP-MAP-007, INV-SCHEMA-SIDECAR-SQL-CONSISTENCY-012
+Work:
+- Create 0087_gf_verifier_registry.sql: check_reg26_separation() SECURITY DEFINER with hardened search_path, verifier_registry and verifier_project_assignments with REVOKE UPDATE/DELETE, gf_verifier_read_tokens with tenant isolation.
+- Create sidecar; update MIGRATION_HEAD to 0087.
+- Create verify_gf_verifier_registry.sh enforcing Reg 26 hardening, append-only semantics, and IF NOT EXISTS rejection.
+Acceptance Criteria:
+- check_reg26_separation() is SECURITY DEFINER with SET search_path = pg_catalog, public.
+- verifier_registry and verifier_project_assignments are append-only (REVOKE UPDATE/DELETE).
+- `bash scripts/db/verify_gf_verifier_registry.sh` emits evidence with reg26_function_hardened=true.
+Verification Commands:
+- `bash scripts/db/verify_gf_verifier_registry.sh`
+- `python3 scripts/audit/verify_migration_meta_alignment.py`
+Evidence Artifact(s):
+- `evidence/phase0/gf_verifier_registry.json`
+Failure Modes:
+- check_reg26_separation() lacks hardened search_path — SECURITY DEFINER search_path injection on Reg 26 constraint.
+- verifier_registry is mutable — Reg 26 separation records can be tampered.
+- Evidence file missing.
+
+---
+
+TASK ID: GF-W1-SCH-009
+Title: Phase 0 closeout for GF Phase 1 migration DAG
+Owner Role: DB_FOUNDATION
+Depends On: GF-W1-SCH-008
+Touches: `scripts/db/verify_gf_phase1_w4_closeout.sh`, `evidence/phase0/gf_phase1_w4_closeout.json`, `tasks/GF-W1-SCH-009/meta.yml`
+Invariant(s): INV-SCHEMA-OWNERSHIP-001
+Work:
+- Create verify_gf_phase1_w4_closeout.sh invoking verifiers from Wave 4 to prove base schema is physically complete.
+Acceptance Criteria:
+- Shell script exits cleanly.
+Verification Commands:
+- `bash scripts/db/verify_gf_phase1_w4_closeout.sh`
+Evidence Artifact(s):
+- `evidence/phase0/gf_phase1_w4_closeout.json`
+Failure Modes:
+- Evidence file missing
+- Missing evidence or upstream failure.
+
+---
+
+TASK ID: GF-W1-FNC-001
+Title: Implement register_project and activate_project functions
+Owner Role: DB_FOUNDATION
+Depends On: GF-W1-SCH-009
+Touches: `schema/migrations/0107_gf_register_activate_project.sql`, `scripts/db/verify_gf_w1_fnc_001.sh`, `tasks/GF-W1-FNC-001/meta.yml`
+Invariant(s): INV-GF-001
+Work:
+- Create 0107_gf_register_activate_project.sql.
+- Build verifier asserting SECURITY DEFINER.
+Acceptance Criteria:
+- Migration applied cleanly and verifier emits evidence.
+Verification Commands:
+- `bash scripts/db/verify_gf_w1_fnc_001.sh`
+Evidence Artifact(s):
+- `evidence/phase1/gf_w1_fnc_001.json`
+Failure Modes:
+- Evidence file missing
+- Bad signature or syntax collision.
+
+---
+
+TASK ID: GF-W1-FNC-002
+Title: Implement record_monitoring_record function
+Owner Role: DB_FOUNDATION
+Depends On: GF-W1-FNC-001
+Touches: `schema/migrations/0108_gf_record_monitoring_record.sql`, `scripts/db/verify_gf_w1_fnc_002.sh`, `tasks/GF-W1-FNC-002/meta.yml`
+Invariant(s): INV-GF-001
+Work:
+- Create 0108_gf_record_monitoring_record.sql.
+- Build verifier asserting SECURITY DEFINER.
+Acceptance Criteria:
+- Migration applied cleanly and verifier emits evidence.
+Verification Commands:
+- `bash scripts/db/verify_gf_w1_fnc_002.sh`
+Evidence Artifact(s):
+- `evidence/phase1/gf_w1_fnc_002.json`
+Failure Modes:
+- Evidence file missing
+- Bad signature or syntax collision.
+
+---
+
+TASK ID: GF-W1-FNC-003
+Title: Implement attach_evidence and link_evidence_to_record
+Owner Role: DB_FOUNDATION
+Depends On: GF-W1-FNC-002
+Touches: `schema/migrations/0109_gf_attach_evidence_functions.sql`, `scripts/db/verify_gf_w1_fnc_003.sh`, `tasks/GF-W1-FNC-003/meta.yml`
+Invariant(s): INV-GF-001
+Work:
+- Create 0109_gf_attach_evidence_functions.sql.
+- Build verifier asserting SECURITY DEFINER.
+Acceptance Criteria:
+- Migration applied cleanly and verifier emits evidence.
+Verification Commands:
+- `bash scripts/db/verify_gf_w1_fnc_003.sh`
+Evidence Artifact(s):
+- `evidence/phase1/gf_w1_fnc_003.json`
+Failure Modes:
+- Evidence file missing
+- Bad signature or syntax collision.
+
+---
+
+TASK ID: GF-W1-FNC-004
+Title: Implement record_authority_decision and attempt_lifecycle_transition
+Owner Role: DB_FOUNDATION
+Depends On: GF-W1-FNC-003
+Touches: `schema/migrations/0110_gf_authority_decision_functions.sql`, `scripts/db/verify_gf_w1_fnc_004.sh`, `tasks/GF-W1-FNC-004/meta.yml`
+Invariant(s): INV-GF-001
+Work:
+- Create 0110_gf_authority_decision_functions.sql.
+- Build verifier asserting SECURITY DEFINER.
+Acceptance Criteria:
+- Migration applied cleanly and verifier emits evidence.
+Verification Commands:
+- `bash scripts/db/verify_gf_w1_fnc_004.sh`
+Evidence Artifact(s):
+- `evidence/phase1/gf_w1_fnc_004.json`
+Failure Modes:
+- Evidence file missing
+- Bad signature or syntax collision.
+
+---
+
+TASK ID: GF-W1-FNC-006
+Title: Implement issue_verifier_read_token
+Owner Role: DB_FOUNDATION
+Depends On: GF-W1-FNC-004
+Touches: `schema/migrations/0086_gf_verifier_token.sql`, `scripts/db/verify_gf_w1_fnc_006.sh`, `tasks/GF-W1-FNC-006/meta.yml`
+Invariant(s): INV-GF-001
+Work:
+- Create 0086_gf_verifier_token.sql.
+- Build verifier asserting SECURITY DEFINER.
+Acceptance Criteria:
+- Migration applied cleanly and verifier emits evidence.
+Verification Commands:
+- `bash scripts/db/verify_gf_w1_fnc_006.sh`
+Evidence Artifact(s):
+- `evidence/phase1/gf_w1_fnc_006.json`
+Failure Modes:
+- Evidence file missing
+- Bad signature or syntax collision.
+
+---
+
+TASK ID: GF-W1-FNC-007A
+Title: Implement confidence enforcement schema constraint
+Owner Role: DB_FOUNDATION
+Depends On: GF-W1-FNC-006
+Touches: `schema/migrations/0104_gf_confidence_enforcement.sql`, `scripts/db/verify_gf_w1_fnc_007a.sh`, `tasks/GF-W1-FNC-007A/meta.yml`
+Invariant(s): INV-GF-001
+Work:
+- Create 0104_gf_confidence_enforcement.sql.
+- Build verifier asserting schema check presence.
+Acceptance Criteria:
+- Migration applied cleanly and verifier emits evidence.
+Verification Commands:
+- `bash scripts/db/verify_gf_w1_fnc_007a.sh`
+Evidence Artifact(s):
+- `evidence/phase1/gf_w1_fnc_007a.json`
+Failure Modes:
+- Evidence file missing
+- Bad trigger configuration.
+
+---
+
+TASK ID: GF-W1-FNC-007B
+Title: Wire issuance gate verifying script into CI
+Owner Role: SECURITY_GUARDIAN
+Depends On: GF-W1-FNC-007A
+Touches: `scripts/dev/pre_ci.sh`, `scripts/audit/verify_gf_w1_fnc_007b.sh`, `tasks/GF-W1-FNC-007B/meta.yml`
+Invariant(s): INV-GF-001
+Work:
+- Extend pre_ci.sh with GF-W1-FNC-007A verification checks.
+- Build verifier asserting CI presence.
+Acceptance Criteria:
+- Pre-CI invokes verifier.
+Verification Commands:
+- `bash scripts/audit/verify_gf_w1_fnc_007b.sh`
+Evidence Artifact(s):
+- `evidence/phase1/gf_w1_fnc_007b.json`
+Failure Modes:
+- Evidence file missing
+- Bypassable CI hooks.
+
+---
+
+TASK ID: GF-W1-FNC-005
+Title: Implement issue_asset_batch and retire_asset_batch
+Owner Role: DB_FOUNDATION
+Depends On: GF-W1-FNC-007B
+Touches: `schema/migrations/0084_gf_asset_batch_functions.sql`, `scripts/db/verify_gf_w1_fnc_005.sh`, `tasks/GF-W1-FNC-005/meta.yml`
+Invariant(s): INV-GF-001
+Work:
+- Create 0084_gf_asset_batch_functions.sql.
+- Build verifier asserting SECURITY DEFINER.
+Acceptance Criteria:
+- Migration applied cleanly and verifier emits evidence.
+Verification Commands:
+- `bash scripts/db/verify_gf_w1_fnc_005.sh`
+Evidence Artifact(s):
+- `evidence/phase1/gf_w1_fnc_005.json`
+Failure Modes:
+- Evidence file missing
+- Bad signature or syntax collision.
+
+---
+
+TASK ID: GF-W1-PLT-001
+Title: Register PWRM0001 adapter
+Owner Role: DB_FOUNDATION
+Depends On: GF-W1-FNC-005
+Touches: `scripts/db/register_pwrm0001_adapter.sh`, `scripts/audit/verify_gf_w1_plt_001.sh`, `tasks/GF-W1-PLT-001/meta.yml`
+Invariant(s): INV-GF-001
+Work:
+- Inject base pilot records via data manipulation script (no migrations).
+Acceptance Criteria:
+- Row values match spec.
+Verification Commands:
+- `bash scripts/audit/verify_gf_w1_plt_001.sh`
+Evidence Artifact(s):
+- `evidence/phase1/gf_w1_plt_001.json`
+Failure Modes:
+- Evidence file missing
+- Missing dependencies or wrong JSON schema.

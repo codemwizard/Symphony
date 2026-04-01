@@ -1,0 +1,154 @@
+schema_version: 1
+phase: '0'
+task_id: GF-W1-SCH-004
+title: Introduce evidence_nodes and evidence_edges lineage graph so GF evidence provenance
+  is structurally enforced
+owner_role: DB_FOUNDATION
+status: completed
+priority: CRITICAL
+risk_class: INTEGRITY
+blast_radius: DB_SCHEMA
+domain: green_finance
+pilot: false
+intent: The evidence_nodes and evidence_edges tables form the directed acyclic graph
+  that records provenance chains for Green Finance evidence. Without them, evidence
+  lineage cannot be traced or audited. The self-loop prevention CHECK constraint must
+  be enforced at the DB layer to prevent circular provenance claims. Migration 0100
+  depends on 0099 (monitoring_records) and the SCH-002A roots.
+anti_patterns:
+- Omitting the self-loop CHECK constraint (source_node_id <> target_node_id)
+- Using CREATE TABLE IF NOT EXISTS in the migration SQL
+- Applying tenant isolation RLS to evidence_edges instead of join-tenant pattern
+out_of_scope:
+- Application-layer evidence functions (reserved for GF-W1-FNC-003)
+- Any migration number other than 0100
+- RLS changes to any table outside evidence_nodes and evidence_edges
+stop_conditions:
+- "If self-loop CHECK constraint is absent from evidence_edges \u2192 STOP"
+- "If CREATE TABLE IF NOT EXISTS appears in migration SQL \u2192 STOP"
+- "If evidence_edges uses direct tenant isolation instead of join-tenant pattern \u2192\
+  \ STOP"
+proof_guarantees:
+- Verifier confirms self-loop CHECK constraint exists on evidence_edges
+- Verifier confirms RLS on evidence_nodes uses canonical tenant isolation
+- Sidecar declares evidence_nodes and evidence_edges as sole governed identifiers
+proof_limitations:
+- Verifier cannot test live DB enforcement without a running Postgres instance
+- Verifier cannot prove DAG acyclicity beyond the self-loop constraint
+depends_on:
+- GF-W1-SCH-002A
+- GF-W1-SCH-003
+blocks:
+- GF-W1-SCH-005
+touches:
+- schema/migrations/0100_gf_evidence_lineage.sql
+- schema/migrations/0100_gf_evidence_lineage.meta.yml
+- schema/migrations/MIGRATION_HEAD
+- scripts/db/verify_gf_evidence_lineage.sh
+- evidence/phase0/gf_evidence_lineage.json
+- tasks/GF-W1-SCH-004/meta.yml
+invariants:
+- INV-SCHEMA-OWNERSHIP-001
+- INV-SCHEMA-ORDER-002
+- INV-SCHEMA-NO-FORWARD-REF-003
+- INV-SCHEMA-OWNERSHIP-MAP-007
+- INV-SCHEMA-SIDECAR-SQL-CONSISTENCY-012
+work:
+- '[ID GF-W1-SCH-004] [ID gf_w1_sch_004_wi01] Create schema/migrations/0100_gf_evidence_lineage.sql:
+  evidence_nodes with tenant isolation RLS, evidence_edges with self-loop CHECK constraint
+  and join-tenant RLS pattern, no IF NOT EXISTS.'
+- '[ID GF-W1-SCH-004] [ID gf_w1_sch_004_wi02] Create schema/migrations/0100_gf_evidence_lineage.meta.yml
+  sidecar declaring evidence_nodes and evidence_edges as sole introduced identifiers;
+  update schema/migrations/MIGRATION_HEAD to 0100.'
+- '[ID GF-W1-SCH-004] [ID gf_w1_sch_004_wi01] Create scripts/db/verify_gf_evidence_lineage.sh:
+  check IF NOT EXISTS rejection, self-loop constraint presence, RLS policies, ownership
+  uniqueness, migration head; emit evidence/phase0/gf_evidence_lineage.json with run_id.'
+acceptance_criteria:
+- '[ID GF-W1-SCH-004] [ID gf_w1_sch_004_wi01] verify_gf_evidence_lineage.sh exits
+  0 and evidence/phase0/gf_evidence_lineage.json contains status=PASS with self_loop_constraint_confirmed=true
+  and rls_confirmed=true.'
+- '[ID GF-W1-SCH-004] [ID gf_w1_sch_004_wi01] verify_gf_evidence_lineage.sh exits
+  non-zero when given a SQL file containing CREATE TABLE IF NOT EXISTS evidence_nodes.'
+- '[ID GF-W1-SCH-004] [ID gf_w1_sch_004_wi02] MIGRATION_HEAD contains 0100 and sidecar
+  declares both evidence_nodes and evidence_edges as governed identifiers.'
+negative_tests:
+- id: GF-W1-SCH-004-N1
+  description: SQL file containing CREATE TABLE IF NOT EXISTS evidence_nodes must
+    cause verify_gf_evidence_lineage.sh to exit non-zero with if_not_exists_antipattern
+    in the failures array.
+  required: true
+- id: GF-W1-SCH-004-N2
+  description: SQL file omitting the self-loop CHECK constraint (source_node_id <>
+    target_node_id) on evidence_edges must cause the verifier to fail with self_loop_constraint_missing.
+  required: true
+positive_tests:
+- id: GF-W1-SCH-004-P1
+  description: SQL with correct self-loop CHECK and no IF NOT EXISTS must cause verify_gf_evidence_lineage.sh
+    to exit 0.
+  required: false
+verification:
+- '[ID GF-W1-SCH-004] bash scripts/dev/pre_ci.sh | grep -q ''.'' >> evidence/phase1/gf_w1_sch_004.json
+  || exit 1'
+- '[ID GF-W1-SCH-004] [ID gf_w1_sch_004_wi01] bash scripts/db/verify_gf_evidence_lineage.sh
+  && test -f evidence/phase0/gf_evidence_lineage.json > /dev/null || exit 1'
+- '[ID GF-W1-SCH-004] [ID gf_w1_sch_004_wi01] grep -q ''"status"'' evidence/phase0/gf_evidence_lineage.json
+  > /dev/null || exit 1'
+- '[ID GF-W1-SCH-004] [ID gf_w1_sch_004_wi02] python3 scripts/audit/verify_migration_meta_alignment.py
+  && grep -q ''0100'' schema/migrations/MIGRATION_HEAD || exit 1'
+evidence:
+- path: evidence/phase0/gf_evidence_lineage.json
+  must_include:
+  - task_id
+  - run_id
+  - git_sha
+  - timestamp_utc
+  - status
+  - observed_paths
+  - observed_hashes
+  - command_outputs
+  - execution_trace
+  - self_loop_constraint_confirmed
+  - rls_confirmed
+  - migration_head_confirmed
+  - checks
+  - failures
+failure_modes:
+- "Evidence file missing \u2192 BLOCKED (GF-W1-SCH-005 cannot start)"
+- "self_loop_constraint_confirmed=false \u2192 CRITICAL_FAIL (circular provenance\
+  \ claims possible)"
+- "if_not_exists_antipattern in migration SQL \u2192 FAIL (verifier exits non-zero)"
+must_read:
+- docs/operations/AI_AGENT_OPERATION_MANUAL.md
+- docs/operations/AGENTIC_SDLC_PILOT_POLICY.md
+- docs/operations/AGENT_GUARDRAILS_GREEN_FINANCE.md
+- docs/plans/phase0/GF-W1-SCH-004/PLAN.md
+implementation_plan: docs/plans/phase0/GF-W1-SCH-004/PLAN.md
+implementation_log: docs/plans/phase0/GF-W1-SCH-004/EXEC_LOG.md
+notes: evidence_edges uses a join-tenant RLS pattern (joining through evidence_nodes)
+  rather than a direct tenant column, as edges do not carry a tenant_id themselves.
+  Migration 0100 depends on 0099 (monitoring_records) per the GF schema DAG.
+client: codex_cli
+assigned_agent: db_foundation_agent
+model: <UNASSIGNED>
+second_pilot_test:
+  candidate_sector_1: PWRM0001 plastic waste recovery
+  candidate_sector_2: VM0044 solar energy generation
+  unchanged_core_tables:
+  - projects
+  - methodology_versions
+  - monitoring_records
+  unchanged_core_functions: []
+  adapter_only_differences:
+  - 'Evidence node types differ: PWRM uses COLLECTION_BATCH_NODE, VM0044 uses GENERATION_READING_NODE'
+  - Edge semantics differ per adapter but table structure is identical
+  jurisdiction_profile_impact: "Not applicable \u2014 evidence_nodes and evidence_edges\
+    \ use tenant isolation, not jurisdiction isolation. Both sectors share identical\
+    \ table structure."
+  required_core_changes: []
+  explanation: "The evidence_nodes table stores typed provenance nodes with a node_type\
+    \ TEXT discriminator and payload_json JSONB. PWRM0001 plastic recovery uses node_type='COLLECTION_BATCH_NODE'\
+    \ and VM0044 uses 'GENERATION_READING_NODE'. The edge table structure is identical\
+    \ for both. No schema changes required for a second sector \u2014 all differences\
+    \ are adapter-registered node types."
+  second_pilot_reviewed_by: DB_FOUNDATION
+pilot_scope_ref: not_applicable

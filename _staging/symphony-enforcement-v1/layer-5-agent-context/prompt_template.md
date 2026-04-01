@@ -1,4 +1,4 @@
-﻿# Symphony Agent Prompt Template
+# Symphony Agent Prompt Template
 # TARGET: .agent/prompt_template.md
 #
 # PURPOSE: Standardises every agent invocation. The five sections ensure
@@ -10,7 +10,7 @@
 
 ## REJECTION CONTEXT
 [If .agent/rejection_context.md exists, paste its FULL contents here.]
-[If it does not exist, write: NONE ΓÇö no prior failure in this session.]
+[If it does not exist, write: NONE -- no prior failure in this session.]
 [If DRD_STATUS is ACTIVE_LOCKOUT: do not proceed past this section until casefile is created.]
 
 ---
@@ -19,13 +19,13 @@
 TASK_ID: [e.g. GF-W1-SCH-002A]
 Read the full task contract at: tasks/[TASK_ID]/meta.yml
 
-Do not re-state all meta.yml fields here ΓÇö read the file directly.
+Do not re-state all meta.yml fields here -- read the file directly.
 The meta.yml is the source of truth. This prompt does not override it.
 
 ---
 
 ## ALLOWED FILES
-[Copy the `touches` list from meta.yml EXACTLY ΓÇö one path per line.]
+[Copy the `touches` list from meta.yml EXACTLY -- one path per line.]
 [You may not modify any file not on this list.]
 [Scope drift = immediate STOP and report to human.]
 
@@ -40,7 +40,7 @@ These are re-stated every invocation because they are subject to context decay.
 - NEVER fabricate evidence or approval hashes. SHA256 hex (64 lowercase chars) only.
 - NEVER modify governance files (.githooks/, scripts/audit/, scripts/dev/pre_ci.sh,
   scripts/agent/run_task.sh, .github/workflows/) without explicit human approval.
-- STOP on ambiguity ΓÇö incomplete work is always preferred over incorrect work.
+- STOP on ambiguity -- incomplete work is always preferred over incorrect work.
 - All execution must go through run_task.sh.
 - If DRD lockout is active: create casefile FIRST. Do not touch anything else.
 
@@ -52,7 +52,7 @@ These are re-stated every invocation because they are subject to context decay.
 - If this is your second failed attempt on the same signature: DRD Full is mandatory.
   Do not retry. Do not modify the failing script. Create the casefile first.
 - If the same failure signature occurs twice, consult docs/operations/failure_index.md
-  before attempting any fix ΓÇö prior incidents for that signature are indexed there.
+  before attempting any fix -- prior incidents for that signature are indexed there.
 - Do not modify files outside the ALLOWED FILES list above.
 - Do not run pre_ci.sh if a DRD lockout file exists at .toolchain/pre_ci_debug/drd_lockout.env.
 
@@ -66,6 +66,6 @@ These are re-stated every invocation because they are subject to context decay.
 
 ## FAILURE REGISTRY REFERENCE
 If your failure matches a known signature, check the playbook before guessing:
-- docs/operations/failure_index.md  ΓÇö searchable index of all prior incidents
-- docs/operations/failure_signatures.yml  ΓÇö signatures with playbook links
-- docs/troubleshooting/  ΓÇö per-signature diagnostic guides
+- docs/operations/failure_index.md -- searchable index of all prior incidents
+- docs/operations/failure_signatures.yml -- signatures with playbook links
+- docs/troubleshooting/ -- per-signature diagnostic guides

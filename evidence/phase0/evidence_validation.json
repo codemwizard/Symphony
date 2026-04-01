@@ -1,8 +1,8 @@
 {
   "check_id": "EVIDENCE-SCHEMA-VALIDATION",
-  "timestamp_utc": "2026-03-27T14:18:13Z",
-  "git_sha": "7da7e8718697b610b9cc8d1dc5124442a7f1dbe0",
-  "schema_fingerprint": "b5fc38953353fba104cf3cd3fdb4d348214259086b5c9a1827519a18e5f1352e",
+  "timestamp_utc": "2026-04-01T14:30:08Z",
+  "git_sha": "e9fcfde480212cbd571a5515bdda57668f9876dc",
+  "schema_fingerprint": "1f92363c69ba235e552a6aac05045062fc0097fc93cde3b89e76455b80628019",
   "status": "PASS",
   "checked_dirs": [
     "/home/mwiza/workspace/Symphony/evidence/phase0",
@@ -44,6 +44,7 @@
     "/home/mwiza/workspace/Symphony/evidence/phase0/evidence_harness_integrity.json",
     "/home/mwiza/workspace/Symphony/evidence/phase0/evidence_schema_validation.json",
     "/home/mwiza/workspace/Symphony/evidence/phase0/evidence_validation.json",
+    "/home/mwiza/workspace/Symphony/evidence/phase0/gf_sch_002a.json",
     "/home/mwiza/workspace/Symphony/evidence/phase0/idempotency_zombie.json",
     "/home/mwiza/workspace/Symphony/evidence/phase0/ingress_attestation.json",
     "/home/mwiza/workspace/Symphony/evidence/phase0/invariants_docs_match.json",
@@ -440,6 +441,10 @@
     },
     {
       "file": "/home/mwiza/workspace/Symphony/evidence/phase0/evidence_validation.json",
+      "schema": "default"
+    },
+    {
+      "file": "/home/mwiza/workspace/Symphony/evidence/phase0/gf_sch_002a.json",
       "schema": "default"
     },
     {

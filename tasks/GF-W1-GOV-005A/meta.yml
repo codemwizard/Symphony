@@ -1,0 +1,203 @@
+schema_version: 1
+phase: '1'
+task_id: GF-W1-GOV-005A
+title: Ownership/reference-order fail-closed verifier — statically confirm all GF
+  Phase 0 schema migrations are present and contain no forward FK references or sector
+  nouns before Phase 1 functions begin
+owner_role: SECURITY_GUARDIAN
+status: completed
+priority: HIGH
+risk_class: GOVERNANCE
+blast_radius: CI_GATES
+domain: green_finance
+pilot: false
+
+intent: >-
+  Before Wave 5 Phase 1 functions are allowed to execute against the GF schema,
+  a fail-closed static gate must confirm that: (1) all 9 expected GF Phase 0
+  schema migration SQL files are present; (2) no GF migration introduces a FK
+  that references a table defined in a later-numbered migration (no forward FK
+  references); (3) no GF migration file contains a sector-specific table name
+  that would violate the neutral-host contract. No database connection is required;
+  all checks are static file analysis on schema/migrations/.
+
+anti_patterns:
+  - Connecting to a live database when static file analysis is sufficient
+  - Passing the verifier when any migration file is absent
+  - Allowing a forward FK reference to pass silently
+  - Suppressing sector-noun violations to avoid noise
+
+out_of_scope:
+  - Runtime RLS verification (covered by verify_gf_rls_runtime.sh)
+  - Checking non-GF migration files (0001-0079, 0095-0096)
+  - Any schema migration SQL (CI wiring only — no migration in this task)
+
+stop_conditions:
+  - If any GF migration file is absent from schema/migrations/ — STOP, do not emit PASS
+  - If any forward FK reference is detected — STOP, do not emit PASS
+  - If any sector noun is found in a GF table name — STOP, do not emit PASS
+
+proof_guarantees:
+  - Script confirms all 9 expected GF migration SQL files exist at declared paths
+  - Script parses REFERENCES clauses in each migration and confirms the referenced
+    table is defined in the same or an earlier-numbered migration file
+  - Script greps migration SQL for sector-specific table name prefixes and fails if any match
+
+proof_limitations:
+  - Static analysis cannot detect runtime FK violations introduced by application code
+  - Sector-noun check uses a fixed prefix list; novel sector prefixes added after this
+    task would not be caught until the list is updated
+  - Does not verify column ownership, only table-level FK ordering
+
+depends_on:
+  - GF-W1-SCH-008
+
+blocks:
+  - GF-W1-SCH-009
+
+touches:
+  - tasks/GF-W1-GOV-005A/meta.yml
+  - docs/plans/phase1/GF-W1-GOV-005A/PLAN.md
+  - docs/plans/phase1/GF-W1-GOV-005A/EXEC_LOG.md
+  - scripts/audit/verify_gf_w1_gov_005a.sh
+  - evidence/phase1/gf_w1_gov_005a.json
+
+invariants:
+  - INV-GF-001
+
+work:
+  - >-
+    [ID GF-W1-GOV-005A-WI01] Verify all 9 GF Phase 0 schema migration SQL files
+    are present: 0080_gf_adapter_registrations.sql, 0097_gf_projects.sql,
+    0098_gf_methodology_versions.sql, 0099_gf_monitoring_records.sql,
+    0100_gf_evidence_lineage.sql, 0101_gf_asset_lifecycle.sql,
+    0102_gf_regulatory_plane.sql, 0103_gf_jurisdiction_rules.sql,
+    0106_gf_verifier_registry.sql.
+  - >-
+    [ID GF-W1-GOV-005A-WI02] Parse each GF migration SQL file for REFERENCES
+    clauses; for each FK, confirm the referenced table name appears in a migration
+    file with an equal or lower sequence number. Exit non-zero on the first forward
+    reference detected.
+  - >-
+    [ID GF-W1-GOV-005A-WI03] Grep all GF migration SQL files for sector-specific
+    table name prefixes (plastic_, solar_, pwrm_, forest_, mining_, agriculture_,
+    collection_, recycling_). Exit non-zero if any match is found.
+  - >-
+    [ID GF-W1-GOV-005A-WI04] Emit evidence/phase1/gf_w1_gov_005a.json with
+    task_id, git_sha, timestamp_utc, status, observed_paths, observed_hashes,
+    command_outputs, execution_trace, migrations_present, forward_fk_violations,
+    sector_noun_violations.
+
+acceptance_criteria:
+  - >-
+    [ID GF-W1-GOV-005A-WI01] All 9 GF migration SQL files exist; any absent file
+    causes verify_gf_w1_gov_005a.sh to exit 1 with FAIL naming the missing file.
+  - >-
+    [ID GF-W1-GOV-005A-WI02] No forward FK references exist across all 9 GF
+    migration files; any detected forward FK causes verify_gf_w1_gov_005a.sh to
+    exit 1 with FAIL naming the offending migration and the forward-referenced table.
+  - >-
+    [ID GF-W1-GOV-005A-WI03] No sector nouns found in GF table names; any match
+    causes verify_gf_w1_gov_005a.sh to exit 1 with FAIL naming the migration file
+    and the matched pattern.
+  - >-
+    [ID GF-W1-GOV-005A-WI04] evidence/phase1/gf_w1_gov_005a.json exists and
+    contains status=PASS when all prior checks succeed; verify_gf_w1_gov_005a.sh
+    exits 0.
+
+negative_tests:
+  - id: GF-W1-GOV-005A-N1
+    description: >-
+      When one of the 9 expected migration files is renamed/removed, the verifier
+      must exit 1 and name the missing file.
+    required: true
+  - id: GF-W1-GOV-005A-N2
+    description: >-
+      When a GF migration SQL file contains REFERENCES plastic_batches (a sector
+      noun), the verifier must exit 1 naming the file and the matched pattern.
+    required: true
+
+positive_tests:
+  - id: GF-W1-GOV-005A-P1
+    description: >-
+      With all 9 migration files present, no forward FKs, and no sector nouns,
+      the verifier exits 0 and status=PASS in the evidence JSON.
+    required: true
+
+verification:
+  - >-
+    [ID GF-W1-GOV-005A-WI01] [ID GF-W1-GOV-005A-WI02] [ID GF-W1-GOV-005A-WI03]
+    [ID GF-W1-GOV-005A-WI04] bash scripts/audit/verify_gf_w1_gov_005a.sh || exit 1
+  - >-
+    [ID GF-W1-GOV-005A-WI04] test -f evidence/phase1/gf_w1_gov_005a.json &&
+    grep -q '"status": "PASS"' evidence/phase1/gf_w1_gov_005a.json || exit 1
+  - >-
+    [ID GF-W1-GOV-005A-WI04] python3 scripts/audit/validate_evidence.py
+    --task GF-W1-GOV-005A --evidence evidence/phase1/gf_w1_gov_005a.json || exit 1
+
+evidence:
+  - path: evidence/phase1/gf_w1_gov_005a.json
+    must_include:
+      - task_id
+      - git_sha
+      - timestamp_utc
+      - status
+      - observed_paths
+      - observed_hashes
+      - command_outputs
+      - execution_trace
+      - migrations_present
+      - forward_fk_violations
+      - sector_noun_violations
+
+failure_modes:
+  - Evidence file missing => FAIL
+  - Any GF migration SQL file absent => FAIL (GF-W1-SCH-009 cannot start)
+  - Forward FK reference detected in any GF migration => CRITICAL_FAIL
+  - Sector noun found in any GF migration table name => CRITICAL_FAIL
+  - Verifier exits non-zero => FAIL
+
+must_read:
+  - docs/operations/AI_AGENT_OPERATION_MANUAL.md
+  - docs/operations/AGENTIC_SDLC_PILOT_POLICY.md
+  - docs/operations/PILOT_REJECTION_PLAYBOOK.md
+  - docs/operations/AGENT_GUARDRAILS_GREEN_FINANCE.md
+
+implementation_plan: docs/plans/phase1/GF-W1-GOV-005A/PLAN.md
+implementation_log: docs/plans/phase1/GF-W1-GOV-005A/EXEC_LOG.md
+
+notes: >-
+  CI-wiring-only task. No migration. Statically checks schema/migrations/ files
+  to enforce the neutral-host contract and reference ordering invariant before
+  Phase 1 functions begin. Blocks GF-W1-SCH-009.
+
+client: internal
+assigned_agent: security_guardian
+model: <UNASSIGNED>
+
+second_pilot_test:
+  candidate_sector_1: PWRM0001 plastic waste recovery
+  candidate_sector_2: VM0044 solar energy generation
+  unchanged_core_tables:
+    - projects
+    - methodology_versions
+    - monitoring_records
+    - evidence_nodes
+    - evidence_edges
+    - asset_batches
+    - asset_lifecycle_events
+    - retirement_events
+    - verifier_registry
+  unchanged_core_functions: []
+  adapter_only_differences:
+    - No adapter-specific differences — this verifier is sector-agnostic static analysis
+  jurisdiction_profile_impact: Not applicable — static file check only.
+  required_core_changes: []
+  explanation: >-
+    The ownership/reference-order verifier performs static analysis on migration
+    SQL files. It contains no sector-specific logic. Both PWRM0001 and VM0044
+    pilots pass through the same gate without modification because the gate
+    checks structural properties (file presence, FK ordering, absence of sector
+    nouns) that are invariant across any sector.
+  second_pilot_reviewed_by: ARCHITECT
+pilot_scope_ref: not_applicable

@@ -1,0 +1,136 @@
+schema_version: 1
+phase: '1'
+task_id: ENF-000
+title: Add .gitattributes LF enforcement so CRLF line endings cannot be committed for shell, YAML, JSON, Python, and Markdown files
+owner_role: ARCHITECT
+status: completed
+priority: NORMAL
+risk_class: GOVERNANCE
+blast_radius: CI_GATES
+
+intent: >-
+  Windows MCP writes and cross-platform contributors have introduced CRLF line
+  endings into shell scripts and YAML files, requiring a manual fix_encoding.sh
+  repair pass. .gitattributes eol=lf rules prevent this at the git layer, making
+  CRLF impossible to commit regardless of authoring OS. This task closes the
+  encoding drift risk before it contaminates future enforcement scripts added by
+  ENF-001 through ENF-004.
+
+anti_patterns:
+  - "Setting text=auto without per-extension eol=lf — text=auto is heuristic and does not guarantee LF for all tracked types"
+  - "Applying only to .sh files and omitting .yml, .json, .py, .md, .toml, .env — partial coverage allows bypass via other file types"
+  - "Marking completed without verifying the rule fires on a test file with CRLF endings"
+
+out_of_scope:
+  - "Normalising existing committed files with CRLF (that is a separate cleanup task)"
+  - "Binary file handling or LFS configuration"
+  - "Any changes to scripts/agent/run_task.sh or other governance files"
+
+stop_conditions:
+  - "If .gitattributes already exists with conflicting rules that would override the new eol=lf entries → STOP and report to human"
+
+proof_guarantees:
+  - "verify_enf_000.sh confirms grep finds eol=lf for all required extensions in .gitattributes"
+  - "verify_enf_000.sh confirms .gitattributes exists at repo root"
+
+proof_limitations:
+  - "Verifier cannot test that git actually enforces the rule on a live commit — it only checks the file content"
+  - "Verifier cannot detect if a higher-priority .gitattributes in a subdirectory overrides the rule"
+
+depends_on: []
+
+blocks:
+  - ENF-001
+  - ENF-002
+  - ENF-003A
+  - ENF-003B
+  - ENF-004
+
+touches:
+  - .gitattributes
+  - scripts/audit/verify_enf_000.sh
+  - evidence/phase1/enf_000_gitattributes_lf.json
+  - tasks/ENF-000/meta.yml
+
+invariants: []
+
+work:
+  - >-
+    [ID enf_000_wi01] Copy symphony-enforcement-v2/gitattributes/.gitattributes
+    to .gitattributes at repo root. Confirm the file contains eol=lf rules for
+    .sh, .md, .yml, .env, .json, .py, and .toml extensions.
+  - >-
+    [ID enf_000_wi02] Create scripts/audit/verify_enf_000.sh: check .gitattributes
+    exists at repo root; grep for each required extension eol=lf rule; emit
+    evidence/phase1/enf_000_gitattributes_lf.json with status=PASS/FAIL and
+    observed_rules list.
+
+acceptance_criteria:
+  - >-
+    [ID enf_000_wi01] grep 'eol=lf' .gitattributes returns matches for *.sh,
+    *.md, *.yml, *.env, *.json, *.py, and *.toml.
+  - >-
+    [ID enf_000_wi02] verify_enf_000.sh exits 0 and evidence file exists with
+    status=PASS.
+  - >-
+    [ID enf_000_wi02] verify_enf_000.sh exits non-zero when .gitattributes is
+    absent.
+
+negative_tests:
+  - id: ENF-000-N1
+    description: >-
+      Running verify_enf_000.sh against a repo root that has no .gitattributes
+      must exit non-zero with a message indicating the file is missing.
+    required: true
+  - id: ENF-000-N2
+    description: >-
+      Running verify_enf_000.sh against a .gitattributes that omits the *.yml
+      eol=lf rule must exit non-zero, proving partial coverage is caught.
+    required: true
+
+positive_tests:
+  - id: ENF-000-P1
+    description: >-
+      Running verify_enf_000.sh against the correctly applied .gitattributes
+      must exit 0 with status=PASS in evidence JSON.
+    required: false
+
+verification:
+  - bash scripts/audit/verify_enf_000.sh
+  - python3 scripts/audit/validate_evidence.py --task ENF-000 --evidence evidence/phase1/enf_000_gitattributes_lf.json
+  - bash scripts/dev/pre_ci.sh
+
+evidence:
+  - path: evidence/phase1/enf_000_gitattributes_lf.json
+    must_include:
+      - task_id
+      - git_sha
+      - timestamp_utc
+      - status
+      - checks
+      - failures
+      - observed_rules
+
+failure_modes:
+  - "Evidence file missing → BLOCKED (ENF task wave cannot be marked complete)"
+  - "eol=lf rule absent for any required extension → FAIL (CRLF encoding bypass remains open)"
+  - "verify_enf_000.sh is a placeholder that exits 0 unconditionally → CRITICAL_FAIL (governance theater)"
+
+must_read:
+  - docs/operations/AI_AGENT_OPERATION_MANUAL.md
+  - symphony-enforcement-v2/MANIFEST.md
+  - docs/operations/TASK_CREATION_PROCESS.md
+
+implementation_plan: docs/plans/phase1/ENF-000/PLAN.md
+implementation_log: docs/plans/phase1/ENF-000/EXEC_LOG.md
+
+notes: >-
+  Source file is symphony-enforcement-v2/gitattributes/.gitattributes.
+  The apply step is a plain file copy — no patch script is needed.
+  This task is logically first in the ENF wave but does not block any
+  ENF task at the code level; it is listed as blocking all of them to
+  ensure encoding hygiene before new scripts are written.
+
+client: codex_cli
+assigned_agent: architect
+model: <UNASSIGNED>

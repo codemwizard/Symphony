@@ -1,0 +1,102 @@
+schema_version: 1
+phase: '1'
+task_id: GF-W1-FNC-007A
+title: Implement confidence enforcement schema constraint so that invalid batches
+  physically cannot mint.
+owner_role: DB Foundation Agent
+status: completed
+priority: HIGH
+risk_class: GOVERNANCE
+blast_radius: DB_SCHEMA
+intent: Establishes the database-level trigger or check constraints (the mechanical
+  gate) that  prevent any batch lifecycle transition into "ISSUED" unless the required
+  cryptographic  authority confidence scores are mathematically present in the database.
+anti_patterns:
+- Declaring implemented without a functional verification shell.
+- Writing constraints that bypass RLS by lacking SECURITY DEFINER hardening.
+- Implementing the CI gate wiring in this task. (Must be handled in 007B by Security
+  Guardian)
+out_of_scope:
+- Modifying core tables created in previous Wave 4 tasks.
+- Modifying CI pipelines or external audit scripts.
+stop_conditions:
+- If baseline SQL conflicts with new schema changes or functions.
+proof_guarantees:
+- Verification mathematically matches function signature parameters to the schema.
+proof_limitations:
+- Cannot guarantee business alignment of fields beyond the specification map.
+depends_on:
+- GF-W1-FNC-006
+blocks:
+- GF-W1-FNC-007B
+touches:
+- tasks/GF-W1-FNC-007A/meta.yml
+- schema/migrations/0113_gf_fn_confidence_enforcement.sql
+- scripts/db/verify_gf_fnc_007a.sh
+- docs/plans/phase1/GF-W1-FNC-007A/PLAN.md
+- docs/plans/phase1/GF-W1-FNC-007A/EXEC_LOG.md
+invariants:
+- INV-GF-001
+work:
+- '[ID GF-W1-FNC-007A] Draft the PLAN.md logic for GF-W1-FNC-007A.'
+- '[ID GF-W1-FNC-007A] Implement the database changes via migration 0113_gf_fn_confidence_enforcement.sql.'
+- '[ID GF-W1-FNC-007A] Implement verify_gf_fnc_007a.sh to rigorously assert the
+  changes.'
+acceptance_criteria:
+- '[ID GF-W1-FNC-007A] verify_gf_fnc_007a.sh exits 0.'
+- '[ID GF-W1-FNC-007A] Evidence artifact validates via validate_evidence.py.'
+- '[ID GF-W1-FNC-007A] pre_ci.sh passes cleanly over the new modifications.'
+negative_tests:
+- id: GF-W1-FNC-007A-N1
+  description: Attempting to update a batch status to 'ISSUED' without corresponding
+    verified signatures must trigger a postgres EXCEPTION.
+  required: true
+positive_tests:
+- id: GF-W1-FNC-007A-P1
+  description: Valid execution parameters construct expected row state without panic.
+  required: true
+verification:
+- '[ID GF-W1-FNC-007A] bash scripts/dev/pre_ci.sh | grep -q ''.'' >> evidence/phase1/gf_w1_fnc_007a.json
+  || exit 1'
+- '[ID GF-W1-FNC-007A] bash scripts/audit/verify_gf_fnc_007a.sh | grep -q ''.''
+  >> evidence/phase1/gf_w1_fnc_007a.json || exit 1'
+- '[ID GF-W1-FNC-007A] python3 scripts/audit/validate_evidence.py --task GF-W1-FNC-007A
+  --evidence evidence/phase1/gf_w1_fnc_007a.json | grep PASS >> evidence/phase1/gf_w1_fnc_007a.json
+  || exit 1'
+evidence:
+- evidence/phase1/gf_w1_fnc_007a.json
+failure_modes:
+  - "Evidence file missing"
+  - Evidence file missing => FAIL
+  - Verification script panics or exits > 0 => FAIL
+  - Creating schema bypasses => CRITICAL_FAIL
+must_read:
+- docs/operations/AI_AGENT_OPERATION_MANUAL.md
+- docs/operations/AGENTIC_SDLC_PILOT_POLICY.md
+- docs/operations/PILOT_REJECTION_PLAYBOOK.md
+- docs/operations/AGENT_GUARDRAILS_GREEN_FINANCE.md
+implementation_plan: docs/plans/phase1/GF-W1-FNC-007A/PLAN.md
+implementation_log: docs/plans/phase1/GF-W1-FNC-007A/EXEC_LOG.md
+notes: Scaffolded mechanically to satisfy the DAG sequence rules for Wave 6. Split
+  from 007 to preserve DB agent boundaries.
+client: internal
+assigned_agent: DB Foundation Agent
+model: <UNASSIGNED>
+domain: green_finance
+pilot: false
+second_pilot_test:
+  candidate_sector_1: PWRM0001 plastic collection
+  candidate_sector_2: VM0044 solar energy
+  unchanged_core_tables:
+  - workflow_transitions
+  unchanged_core_functions:
+  - attempt_lifecycle_transition
+  adapter_only_differences:
+  - Internal threshold numbers logic.
+  jurisdiction_profile_impact: None expected.
+  required_core_changes: []
+  explanation: The confidence enforcement trigger operates generically over the workflow
+    table. The core logic of checking if the sum of valid attestations equals or exceeds
+    the policy threshold is completely independent of the payload type.
+  second_pilot_reviewed_by: ARCHITECT_AGENT
+pilot_scope_ref: not_applicable

@@ -1,9 +1,27 @@
 {
+  "check_id": "GF-W1-SCH-002A",
   "task_id": "GF-W1-SCH-002A",
-  "git_sha": "92f74fd276716d8e44b7975ae45d63e03a2a2aaa",
-  "timestamp_utc": "2026-03-27T17:17:23Z",
+  "run_id": "",
+  "git_sha": "e9fcfde480212cbd571a5515bdda57668f9876dc",
+  "timestamp_utc": "2026-03-29T21:12:41Z",
   "status": "PASS",
-  "ast_scan_clean": true,
-  "sidecar_consistency": true,
-  "migration_head_updated": true
+  "projects_owner": "0097",
+  "methodology_versions_owner": "0098",
+  "ownership_uniqueness_confirmed": true,
+  "reference_order_confirmed": true,
+  "no_if_not_exists_confirmed": true,
+  "owning_task_mapping_confirmed": true,
+  "ownership_closure_confirmed": true,
+  "sidecar_sql_consistency_confirmed": true,
+  "migration_head_confirmed": true,
+  "checks": {
+    "files_present": true,
+    "no_if_not_exists": true,
+    "ownership_unique": true,
+    "reference_order": true,
+    "sidecar_sql_consistent": true,
+    "migration_head": true,
+    "ownership_closure": true
+  },
+  "failures": []
 }

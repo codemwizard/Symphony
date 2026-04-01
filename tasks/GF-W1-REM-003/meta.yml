@@ -1,0 +1,151 @@
+schema_version: 1
+phase: '1'
+task_id: GF-W1-REM-003
+title: "Remove rogue migration filename references from GF-W1-FNC-002 through GF-W1-FNC-007A PLAN.md execution details so that companion docs match the corrected task meta contracts"
+owner_role: Architect
+status: completed
+priority: HIGH
+risk_class: GOVERNANCE
+blast_radius: DOCS_ONLY
+
+intent: >-
+  After correcting the task meta.yml files in GF-W1-REM-002, the companion PLAN.md
+  execution-details sections for FNC-002 through FNC-007A still name the rogue
+  agent's wrong migration filenames. Per TASK_CREATION_PROCESS.md anti-drift authoring
+  policy, YAML metadata declarations must maintain strict parity with human-readable
+  companion documents. Leaving the PLAN.md files stale creates a document parity gap
+  that will be flagged by the task parity gate (TSK-P1-229) and will mislead any
+  implementing agent reading the plan.
+
+anti_patterns:
+  - Fixing only the meta.yml without updating the companion PLAN.md
+  - Leaving the PLAN.md execution section naming files that no longer match the task contract
+  - Marking complete before confirming zero stale refs via grep
+
+out_of_scope:
+  - Modifying GF-W1-FNC-001 PLAN.md (its execution details do not reference the rogue filenames)
+  - Modifying PLAN.md files for FNC-007B
+  - Any changes to functional plan logic beyond the migration filename strings
+
+stop_conditions:
+  - If a PLAN.md execution section references a migration filename for a reason other than the rogue substitution — stop and confirm before overwriting
+
+proof_guarantees:
+  - grep confirms zero rogue migration filename refs in FNC-002 through FNC-007A PLAN.md files
+  - Each PLAN.md execution details section names the canonical migration filename
+
+proof_limitations:
+  - Does not verify broader doc/meta parity beyond the specific migration filename fields
+  - Does not check the full PLAN.md content for other types of rogue substitutions
+
+depends_on:
+  - GF-W1-REM-002
+
+blocks:
+  - GF-W1-FNC-002
+  - GF-W1-FNC-003
+  - GF-W1-FNC-004
+  - GF-W1-FNC-005
+  - GF-W1-FNC-006
+  - GF-W1-FNC-007A
+
+touches:
+  - tasks/GF-W1-REM-003/meta.yml
+  - docs/plans/phase1/GF-W1-REM-003/PLAN.md
+  - docs/plans/phase1/GF-W1-REM-003/EXEC_LOG.md
+  - docs/plans/phase1/GF-W1-FNC-002/PLAN.md
+  - docs/plans/phase1/GF-W1-FNC-003/PLAN.md
+  - docs/plans/phase1/GF-W1-FNC-004/PLAN.md
+  - docs/plans/phase1/GF-W1-FNC-005/PLAN.md
+  - docs/plans/phase1/GF-W1-FNC-006/PLAN.md
+  - docs/plans/phase1/GF-W1-FNC-007A/PLAN.md
+  - scripts/audit/verify_gf_w1_rem_003.sh
+  - evidence/phase1/gf_w1_rem_003.json
+
+invariants:
+  - INV-GF-001
+
+work:
+  - >-
+    [ID GF-W1-REM-003] In docs/plans/phase1/GF-W1-FNC-002/PLAN.md, confirm the
+    execution details section already names 0108_gf_fn_monitoring_ingestion.sql;
+    if not, apply the correction.
+  - >-
+    [ID GF-W1-REM-003] In FNC-003/PLAN.md replace 0109_gf_attach_evidence_functions.sql
+    with 0109_gf_fn_evidence_lineage.sql.
+  - >-
+    [ID GF-W1-REM-003] In FNC-004/PLAN.md replace 0110_gf_authority_decision_functions.sql
+    with 0110_gf_fn_regulatory_transitions.sql.
+  - >-
+    [ID GF-W1-REM-003] In FNC-005/PLAN.md replace 0084_gf_asset_batch_functions.sql
+    with 0111_gf_fn_asset_lifecycle.sql.
+  - >-
+    [ID GF-W1-REM-003] In FNC-006/PLAN.md replace 0086_gf_verifier_token.sql
+    with 0112_gf_fn_verifier_read_token.sql.
+  - >-
+    [ID GF-W1-REM-003] In FNC-007A/PLAN.md replace 0104_gf_confidence_enforcement.sql
+    with 0113_gf_fn_confidence_enforcement.sql.
+  - >-
+    [ID GF-W1-REM-003] Run verify_gf_w1_rem_003.sh to confirm zero stale refs and
+    emit evidence/phase1/gf_w1_rem_003.json with status PASS.
+
+acceptance_criteria:
+  - >-
+    [ID GF-W1-REM-003] grep for rogue migration patterns across all 6 FNC
+    PLAN.md files (FNC-002 through FNC-007A) returns zero matches.
+  - >-
+    [ID GF-W1-REM-003] bash scripts/audit/verify_gf_w1_rem_003.sh exits 0 and
+    evidence/phase1/gf_w1_rem_003.json contains status=PASS and stale_refs_found=0.
+
+negative_tests:
+  - id: GF-W1-REM-003-N1
+    description: >-
+      A PLAN.md still containing "0109_gf_attach_evidence_functions.sql" must cause
+      verify_gf_w1_rem_003.sh to exit 1 with a FAIL message naming the offending file.
+    required: true
+
+positive_tests:
+  - id: GF-W1-REM-003-P1
+    description: >-
+      All three PLAN.md files with canonical migration names cause verify_gf_w1_rem_003.sh
+      to exit 0 PASS and emit a valid evidence JSON.
+    required: false
+
+verification:
+  - bash scripts/audit/verify_gf_w1_rem_003.sh
+  - python3 scripts/audit/validate_evidence.py --task GF-W1-REM-003 --evidence evidence/phase1/gf_w1_rem_003.json
+  - bash scripts/dev/pre_ci.sh
+
+evidence:
+  - path: evidence/phase1/gf_w1_rem_003.json
+    must_include:
+      - task_id
+      - git_sha
+      - timestamp_utc
+      - status
+      - files_checked
+      - stale_refs_found
+      - files_audited
+
+failure_modes:
+  - "Any rogue migration filename remaining in FNC-002/003/004 PLAN.md => FAIL"
+  - "Evidence file missing or stale_refs_found > 0 in evidence => FAIL"
+  - "Task marked completed without running verify_gf_w1_rem_003.sh => BLOCKED"
+
+must_read:
+  - docs/operations/AI_AGENT_OPERATION_MANUAL.md
+  - docs/operations/AGENTIC_SDLC_PILOT_POLICY.md
+  - AGENT_ENTRYPOINT.md
+
+implementation_plan: docs/plans/phase1/GF-W1-REM-003/PLAN.md
+implementation_log: docs/plans/phase1/GF-W1-REM-003/EXEC_LOG.md
+
+notes: >-
+  FNC-002 PLAN.md was already corrected in the prior unauthorized session. FNC-003
+  through FNC-007A PLAN.md required correction. Scope was expanded during implementation
+  to include FNC-005, FNC-006, FNC-007A after their rogue refs were discovered in the
+  final clean-state grep check. Depends on GF-W1-REM-002 completing first.
+
+client: codex_ide
+assigned_agent: architect
+model: <UNASSIGNED>

@@ -1,0 +1,20 @@
+phase: '0'
+layer: POLICY_TABLE
+volatility_class: POLICY_TABLE
+touches_core_schema: true
+introduces_identifiers:
+  - verifier_registry
+  - verifier_project_assignments
+  - check_reg26_separation
+  - gf_verifier_tables_append_only
+  - idx_verifier_registry_tenant_id
+  - idx_verifier_registry_jurisdiction
+  - idx_verifier_project_assignments_verifier
+  - idx_verifier_project_assignments_project
+second_pilot_justification_required: true
+notes: >-
+  Verifier registry and project assignment tables for SI Regulation 23
+  (accreditation) and Regulation 26 (validator/verifier separation). Both
+  tables are append-only via trigger. check_reg26_separation() is SECURITY
+  DEFINER with hardened search_path.  Depends on 0097 (projects). Renumbered from 0087 to 0106 to resolve forward-reference
+  ordering: 0087 is numerically before 0097 but depends on it.

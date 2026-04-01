@@ -1,0 +1,20 @@
+phase: '0'
+layer: CORE_SCHEMA
+volatility_class: CORE_SCHEMA
+touches_core_schema: true
+introduces_identifiers:
+  - asset_batches
+  - asset_lifecycle_events
+  - retirement_events
+  - idx_asset_batches_tenant_id
+  - idx_asset_batches_project_id
+  - idx_asset_lifecycle_events_tenant_id
+  - idx_asset_lifecycle_events_batch_id
+  - idx_retirement_events_tenant_id
+  - idx_retirement_events_batch_id
+second_pilot_justification_required: true
+notes: >-
+  Neutral lifecycle tables for Green Finance asset batches. Depends on 0097
+  (projects). All three tables are append-only for runtime role (no UPDATE/DELETE
+  on lifecycle events or retirement events). asset_batches status transitions are
+  managed via INSERT-only lifecycle events.

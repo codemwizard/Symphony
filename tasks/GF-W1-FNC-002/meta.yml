@@ -1,0 +1,102 @@
+schema_version: 1
+phase: '1'
+task_id: GF-W1-FNC-002
+title: Implement record_monitoring_record function so that project yields are natively
+  captured.
+owner_role: DB Foundation Agent
+status: completed
+priority: HIGH
+risk_class: GOVERNANCE
+blast_radius: DB_SCHEMA
+intent: Establishes the capability to natively capture yields (telemetry, physical
+  scans, or  adapter-based payloads) directly linking them to an activated project.
+  This captures raw  events before evidence processing happens, ensuring all claims
+  start from a raw record.
+anti_patterns:
+- Declaring implemented without a functional verification shell.
+- Writing functions that bypass RLS by lacking SECURITY DEFINER hardening.
+- Allowing records to be attached to unactivated or fully retired projects.
+out_of_scope:
+- Modifying core tables created in previous Wave 4 tasks.
+- Validating internal schema logic belonging to the domain adapter.
+stop_conditions:
+- If baseline SQL conflicts with new schema changes or functions.
+proof_guarantees:
+- Verification mathematically matches function signature parameters to the schema.
+proof_limitations:
+- Cannot guarantee business alignment of fields beyond the specification map.
+depends_on:
+- GF-W1-FNC-001
+blocks:
+- GF-W1-FNC-003
+touches:
+- tasks/GF-W1-FNC-002/meta.yml
+- schema/migrations/0108_gf_fn_monitoring_ingestion.sql
+- scripts/db/verify_gf_fnc_002.sh
+- docs/plans/phase1/GF-W1-FNC-002/PLAN.md
+- docs/plans/phase1/GF-W1-FNC-002/EXEC_LOG.md
+invariants:
+- INV-GF-001
+work:
+- '[ID GF-W1-FNC-002] Draft the PLAN.md logic for GF-W1-FNC-002.'
+- '[ID GF-W1-FNC-002] Implement the database changes via migration 0108_gf_fn_monitoring_ingestion.sql.'
+- '[ID GF-W1-FNC-002] Implement verify_gf_fnc_002.sh to rigorously assert the changes.'
+acceptance_criteria:
+- '[ID GF-W1-FNC-002] verify_gf_fnc_002.sh exits 0.'
+- '[ID GF-W1-FNC-002] Evidence artifact validates via validate_evidence.py.'
+- '[ID GF-W1-FNC-002] pre_ci.sh passes cleanly over the new modifications.'
+negative_tests:
+- id: GF-W1-FNC-002-N1
+  description: Calling record_monitoring_record for a non-existent or inactive project
+    must fail dynamically via RLS.
+  required: true
+positive_tests:
+- id: GF-W1-FNC-002-P1
+  description: Valid execution parameters construct expected row state without panic.
+  required: true
+verification:
+- '[ID GF-W1-FNC-002] bash scripts/dev/pre_ci.sh | grep -q ''.'' >> evidence/phase1/gf_w1_fnc_002.json
+  || exit 1'
+- '[ID GF-W1-FNC-002] bash scripts/audit/verify_gf_fnc_002.sh | grep -q ''.'' >>
+  evidence/phase1/gf_w1_fnc_002.json || exit 1'
+- '[ID GF-W1-FNC-002] python3 scripts/audit/validate_evidence.py --task GF-W1-FNC-002
+  --evidence evidence/phase1/gf_w1_fnc_002.json | grep PASS >> evidence/phase1/gf_w1_fnc_002.json
+  || exit 1'
+evidence:
+- evidence/phase1/gf_w1_fnc_002.json
+failure_modes:
+  - "Evidence file missing"
+  - Evidence file missing => FAIL
+  - Verification script panics or exits > 0 => FAIL
+  - Creating schema bypasses => CRITICAL_FAIL
+must_read:
+- docs/operations/AI_AGENT_OPERATION_MANUAL.md
+- docs/operations/AGENTIC_SDLC_PILOT_POLICY.md
+- docs/operations/PILOT_REJECTION_PLAYBOOK.md
+- docs/operations/AGENT_GUARDRAILS_GREEN_FINANCE.md
+implementation_plan: docs/plans/phase1/GF-W1-FNC-002/PLAN.md
+implementation_log: docs/plans/phase1/GF-W1-FNC-002/EXEC_LOG.md
+notes: Scaffolded mechanically to satisfy the DAG sequence rules for Wave 5 functions.
+client: internal
+assigned_agent: DB Foundation Agent
+model: <UNASSIGNED>
+domain: green_finance
+pilot: false
+second_pilot_test:
+  candidate_sector_1: PWRM0001 plastic collection
+  candidate_sector_2: VM0044 solar energy
+  unchanged_core_tables:
+  - monitoring_records
+  unchanged_core_functions:
+  - record_monitoring_record
+  adapter_only_differences:
+  - validation schemas
+  - expected payload keys
+  jurisdiction_profile_impact: None expected.
+  required_core_changes: []
+  explanation: This function accepts generalized payloads mapping entirely into the
+    `record_payload_json` field. Whether receiving weight profiles for plastics or
+    wattage outputs for solar fields, the core function encapsulates them agnostically,
+    pushing domain validation out to the adapter layer naturally.
+  second_pilot_reviewed_by: ARCHITECT_AGENT
+pilot_scope_ref: not_applicable

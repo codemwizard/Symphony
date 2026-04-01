@@ -1,0 +1,18 @@
+phase: '0'
+layer: CORE_SCHEMA
+volatility_class: CORE_SCHEMA
+touches_core_schema: true
+introduces_identifiers:
+  - regulatory_checkpoints
+  - jurisdiction_profiles
+  - lifecycle_checkpoint_rules
+  - authority_decisions
+  - idx_regulatory_checkpoints_jurisdiction
+  - idx_jurisdiction_profiles_jurisdiction
+  - idx_lifecycle_checkpoint_rules_jurisdiction
+  - idx_authority_decisions_jurisdiction
+second_pilot_justification_required: true
+notes: >-
+  Remaining four jurisdiction rules tables. Depends on 0102 (regulatory_authorities,
+  current_jurisdiction_code_or_null). All tables use jurisdiction isolation RLS
+  referencing the SECURITY DEFINER function created in 0102.

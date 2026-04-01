@@ -1,4 +1,4 @@
-﻿# Troubleshooting: PRECI.GOVERNANCE.*
+# Troubleshooting: PRECI.GOVERNANCE.*
 
 **Failure signatures:** `PRECI.GOVERNANCE.TASK_PLAN_LOG`, `PRECI.GOVERNANCE.TASK_META_SCHEMA`
 **Gates:** `pre_ci.verify_task_plans_present`, `pre_ci.verify_task_meta_schema`
@@ -7,12 +7,11 @@
 
 ---
 
-## PRECI.GOVERNANCE.TASK_PLAN_LOG ΓÇö Task plan/log missing
+## PRECI.GOVERNANCE.TASK_PLAN_LOG -- Task plan/log missing
 
 ### What this means
 
-A task is referenced but its `PLAN.md` or `EXEC_LOG.md` is missing from
-the expected path.
+A task is referenced but its `PLAN.md` or `EXEC_LOG.md` is missing.
 
 ### Expected failure output
 
@@ -27,7 +26,6 @@ Expected at: tasks/GF-W1-SCH-002A/PLAN.md
    ```bash
    scripts/audit/verify_task_plans_present.sh
    ```
-   The output names the task ID and which file is missing.
 
 2. **Check the `plan_path` in meta.yml matches the actual file location:**
    ```bash
@@ -41,7 +39,7 @@ Expected at: tasks/GF-W1-SCH-002A/PLAN.md
 
 ---
 
-## PRECI.GOVERNANCE.TASK_META_SCHEMA ΓÇö Schema validation failed
+## PRECI.GOVERNANCE.TASK_META_SCHEMA -- Schema validation failed
 
 ### What this means
 
@@ -77,7 +75,6 @@ FAIL tasks/GF-W1-SCH-002A/meta.yml: schema_version must be "1"
 ## Clearing the DRD lockout
 
 ```bash
-# Step 1 ΓÇö create the casefile (use the signature that actually fired)
 scripts/audit/new_remediation_casefile.sh \
   --phase phase1 \
   --slug governance-task-meta \
@@ -85,11 +82,6 @@ scripts/audit/new_remediation_casefile.sh \
   --origin-gate-id pre_ci.verify_task_meta_schema \
   --repro-command "scripts/dev/pre_ci.sh"
 
-# Step 2 ΓÇö document root cause in PLAN.md
-
-# Step 3 ΓÇö remove lockout
 rm .toolchain/pre_ci_debug/drd_lockout.env
-
-# Step 4 ΓÇö re-run
 scripts/dev/pre_ci.sh
 ```

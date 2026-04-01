@@ -1,0 +1,162 @@
+schema_version: 1
+phase: '0'
+task_id: GF-W1-SCH-008
+title: Introduce verifier_registry, verifier_project_assignments, gf_verifier_read_tokens
+  and Reg 26 constraint so GF verifier separation is DB-enforced
+owner_role: DB_FOUNDATION
+status: completed
+priority: CRITICAL
+risk_class: INTEGRITY
+blast_radius: DB_SCHEMA
+domain: green_finance
+pilot: false
+intent: Regulation 26 requires that the entity verifying a project is legally separate
+  from the entity that issued the credits. check_reg26_separation() enforces this
+  at the DB layer. verifier_registry and verifier_project_assignments must be append-only.
+  The SECURITY DEFINER function must be hardened. Migration 0087 depends on the full
+  GF schema chain being verified by SCH-007 closeout.
+anti_patterns:
+- Granting UPDATE or DELETE on verifier_registry or verifier_project_assignments
+- Defining check_reg26_separation() without SET search_path = pg_catalog, public
+- Using CREATE TABLE IF NOT EXISTS in the migration SQL
+out_of_scope:
+- Application-layer verifier token issuance (reserved for GF-W1-FNC-006)
+- Any migration number other than 0087
+- RLS changes to any table outside the three verifier registry tables
+stop_conditions:
+- "If UPDATE or DELETE is grantable on verifier_registry to any runtime role \u2192\
+  \ STOP"
+- "If check_reg26_separation() lacks SET search_path = pg_catalog, public \u2192 STOP"
+- "If CREATE TABLE IF NOT EXISTS appears in the migration SQL \u2192 STOP"
+proof_guarantees:
+- Verifier confirms REVOKE UPDATE/DELETE on verifier_registry and verifier_project_assignments
+- Verifier confirms check_reg26_separation() has SECURITY DEFINER with hardened search_path
+- Sidecar declares all three tables and the function as sole governed identifiers
+proof_limitations:
+- Verifier cannot test live Reg 26 enforcement without a running Postgres instance
+- Verifier cannot confirm legal separation semantics beyond the DB constraint
+depends_on:
+- GF-W1-SCH-007
+blocks: []
+touches:
+- schema/migrations/0087_gf_verifier_registry.sql
+- schema/migrations/0087_gf_verifier_registry.meta.yml
+- schema/migrations/MIGRATION_HEAD
+- scripts/db/verify_gf_verifier_registry.sh
+- evidence/phase0/gf_verifier_registry.json
+- tasks/GF-W1-SCH-008/meta.yml
+invariants:
+- INV-SCHEMA-OWNERSHIP-001
+- INV-SCHEMA-ORDER-002
+- INV-SCHEMA-NO-FORWARD-REF-003
+- INV-SCHEMA-OWNERSHIP-MAP-007
+- INV-SCHEMA-SIDECAR-SQL-CONSISTENCY-012
+work:
+- '[ID GF-W1-SCH-008] [ID gf_w1_sch_008_wi01] Create schema/migrations/0087_gf_verifier_registry.sql:
+  check_reg26_separation() SECURITY DEFINER with hardened search_path, verifier_registry
+  and verifier_project_assignments with REVOKE UPDATE/DELETE and appropriate RLS,
+  gf_verifier_read_tokens with tenant isolation; no IF NOT EXISTS.'
+- '[ID GF-W1-SCH-008] [ID gf_w1_sch_008_wi02] Create schema/migrations/0087_gf_verifier_registry.meta.yml
+  sidecar declaring all three tables and check_reg26_separation as governed identifiers;
+  update schema/migrations/MIGRATION_HEAD to 0087.'
+- '[ID GF-W1-SCH-008] [ID gf_w1_sch_008_wi01] Create scripts/db/verify_gf_verifier_registry.sh:
+  check IF NOT EXISTS rejection, append-only privileges on registry tables, SECURITY
+  DEFINER hardening, RLS, migration head; emit evidence/phase0/gf_verifier_registry.json.'
+acceptance_criteria:
+- '[ID GF-W1-SCH-008] [ID gf_w1_sch_008_wi01] verify_gf_verifier_registry.sh exits
+  0 and evidence/phase0/gf_verifier_registry.json contains status=PASS with reg26_function_hardened=true
+  and registry_append_only_confirmed=true.'
+- '[ID GF-W1-SCH-008] [ID gf_w1_sch_008_wi01] verify_gf_verifier_registry.sh exits
+  non-zero when given a SQL file containing CREATE TABLE IF NOT EXISTS verifier_registry.'
+- '[ID GF-W1-SCH-008] [ID gf_w1_sch_008_wi02] MIGRATION_HEAD contains 0087 and sidecar
+  declares all three tables and the function as governed identifiers.'
+negative_tests:
+- id: GF-W1-SCH-008-N1
+  description: SQL defining check_reg26_separation() without SET search_path must
+    cause verify_gf_verifier_registry.sh to exit non-zero with security_definer_not_hardened
+    in the failures array.
+  required: true
+- id: GF-W1-SCH-008-N2
+  description: SQL containing CREATE TABLE IF NOT EXISTS verifier_registry must cause
+    the verifier to exit non-zero with if_not_exists_antipattern in failures.
+  required: true
+positive_tests:
+- id: GF-W1-SCH-008-P1
+  description: SQL with correctly hardened check_reg26_separation(), REVOKE UPDATE/DELETE
+    on registry tables, and no IF NOT EXISTS must cause verify_gf_verifier_registry.sh
+    to exit 0.
+  required: false
+verification:
+- '[ID GF-W1-SCH-008] bash scripts/dev/pre_ci.sh | grep -q ''.'' >> evidence/phase1/gf_w1_sch_008.json
+  || exit 1'
+- '[ID GF-W1-SCH-008] [ID gf_w1_sch_008_wi01] bash scripts/db/verify_gf_verifier_registry.sh
+  && test -f evidence/phase0/gf_verifier_registry.json > /dev/null || exit 1'
+- '[ID GF-W1-SCH-008] [ID gf_w1_sch_008_wi01] grep -q ''"status"'' evidence/phase0/gf_verifier_registry.json
+  > /dev/null || exit 1'
+- '[ID GF-W1-SCH-008] [ID gf_w1_sch_008_wi02] python3 scripts/audit/verify_migration_meta_alignment.py
+  && grep -q ''0087'' schema/migrations/MIGRATION_HEAD || exit 1'
+evidence:
+- path: evidence/phase0/gf_verifier_registry.json
+  must_include:
+  - task_id
+  - run_id
+  - git_sha
+  - timestamp_utc
+  - status
+  - observed_paths
+  - observed_hashes
+  - command_outputs
+  - execution_trace
+  - reg26_function_hardened
+  - registry_append_only_confirmed
+  - migration_head_confirmed
+  - checks
+  - failures
+failure_modes:
+- "Evidence file missing \u2192 BLOCKED (Wave 4 closeout cannot complete)"
+- "reg26_function_hardened=false \u2192 CRITICAL_FAIL (SECURITY DEFINER search_path\
+  \ bypass on Reg 26 constraint)"
+- "registry_append_only_confirmed=false \u2192 CRITICAL_FAIL (verifier registry is\
+  \ mutable)"
+must_read:
+- docs/operations/AI_AGENT_OPERATION_MANUAL.md
+- docs/operations/AGENTIC_SDLC_PILOT_POLICY.md
+- docs/operations/AGENT_GUARDRAILS_GREEN_FINANCE.md
+- docs/plans/phase0/GF-W1-SCH-008/PLAN.md
+implementation_plan: docs/plans/phase0/GF-W1-SCH-008/PLAN.md
+implementation_log: docs/plans/phase0/GF-W1-SCH-008/EXEC_LOG.md
+notes: Migration number 0087 is owned by SCH-008 (Wave 4, final schema task). FNC-007
+  was originally assigned 0087 but was corrected to 0104 in GFW1_IMPLEMENTATION_PLAN_CORRECTED.md.
+  verifier_project_assignments uses join-tenant RLS because it references verifier_registry.
+client: codex_cli
+assigned_agent: db_foundation_agent
+model: <UNASSIGNED>
+second_pilot_test:
+  candidate_sector_1: PWRM0001 plastic waste recovery
+  candidate_sector_2: VM0044 solar energy generation
+  unchanged_core_tables:
+  - projects
+  - methodology_versions
+  - monitoring_records
+  - evidence_nodes
+  - evidence_edges
+  - asset_batches
+  - asset_lifecycle_events
+  - retirement_events
+  unchanged_core_functions:
+  - current_jurisdiction_code_or_null
+  adapter_only_differences:
+  - 'Verifier organisations differ per sector registry: PWRM uses plastic-auditing
+    bodies, VM0044 uses energy-auditing bodies'
+  - Reg 26 separation check operates identically for both sectors at the DB layer
+  jurisdiction_profile_impact: "Not applicable \u2014 verifier_registry and verifier_project_assignments\
+    \ use tenant isolation. The Reg 26 check is tenant-agnostic at DB layer."
+  required_core_changes: []
+  explanation: "The verifier_registry table stores accredited verifier organisations\
+    \ with a verifier_type TEXT discriminator. PWRM0001 uses plastic-waste auditing\
+    \ bodies and VM0044 uses solar energy auditing bodies. check_reg26_separation()\
+    \ enforces issuer-verifier separation identically for both sectors. No schema\
+    \ changes are required for a second sector \u2014 all differences are in the registered\
+    \ verifier records, not the table structure."
+  second_pilot_reviewed_by: DB_FOUNDATION
+pilot_scope_ref: not_applicable

@@ -1,0 +1,172 @@
+schema_version: 1
+phase: '1'
+task_id: ENF-005
+title: Create clear_drd_lockout_privileged.sh and patch verify_drd_casefile.sh so raw rm on the lockout file is replaced by a sudo-gated privileged wrapper
+owner_role: SECURITY_GUARDIAN
+status: completed
+priority: HIGH
+risk_class: SECURITY
+blast_radius: CI_GATES
+
+intent: >-
+  verify_drd_casefile.sh --clear currently calls rm directly on the lockout
+  file, meaning any agent process that can execute the script can delete the
+  lockout without privilege separation. Tracing every touchpoint in the repo
+  shows that rm on drd_lockout.env is only ever legitimate inside
+  verify_drd_casefile.sh --clear, and only after casefile validation has passed.
+  This task replaces that direct rm with a call to a privileged wrapper script
+  (clear_drd_lockout_privileged.sh) that the agent OS user may only invoke via
+  sudo. The sudoers entry restricts the agent to that one script exclusively.
+  A rogue agent running rm directly on the file will be denied by the OS.
+
+anti_patterns:
+  - "Adding sudo to the rm line inside verify_drd_casefile.sh without creating the wrapper — sudo rm is not a whitelist, it grants full rm privilege"
+  - "Making clear_drd_lockout_privileged.sh writable by the agent user — the agent could then rewrite it to delete arbitrary files"
+  - "Skipping the sudoers step and marking completed — the OS-level block does not exist until the sudoers entry is applied"
+  - "Using a broad sudoers entry like 'NOPASSWD: /bin/rm' — the entry must name the exact wrapper script path only"
+
+out_of_scope:
+  - "chattr +i or directory permission approaches — the sudo whitelist is the selected implementation"
+  - "Changes to pre_ci_debug_contract.sh, run_task.sh, or any file outside scripts/audit/"
+  - "Clearing the DRD lockout itself — this task only adds the privilege gate"
+  - "Automating the sudoers entry — that step is human-only and is a prerequisite gate in the verifier"
+
+stop_conditions:
+  - "If ENF-002 evidence does not show PASS → STOP; verify_drd_casefile.sh must be installed before it can be patched"
+  - "If the sudoers entry has not been applied by a human → the verifier will WARN but not hard-block; document in EXEC_LOG.md"
+  - "If clear_drd_lockout_privileged.sh would be owned by the agent user → STOP; fix ownership before proceeding"
+
+proof_guarantees:
+  - "verify_enf_005.sh confirms clear_drd_lockout_privileged.sh exists and is executable"
+  - "verify_enf_005.sh confirms verify_drd_casefile.sh --clear path calls sudo scripts/audit/clear_drd_lockout_privileged.sh and not a direct rm on the lockout file"
+  - "verify_enf_005.sh confirms clear_drd_lockout_privileged.sh does not unconditionally rm — it validates the lockout file path before deleting"
+
+proof_limitations:
+  - "Verifier cannot confirm the sudoers entry is in place without elevated privilege to read /etc/sudoers — it checks only script content and file presence"
+  - "Verifier cannot confirm that direct rm on the lockout file actually fails at the OS level without running as the agent OS user in a controlled test"
+  - "Verifier cannot confirm the wrapper is not writable by the agent user without knowing the agent OS username at verification time"
+
+depends_on:
+  - ENF-002
+
+blocks: []
+
+touches:
+  - scripts/audit/clear_drd_lockout_privileged.sh
+  - scripts/audit/verify_drd_casefile.sh
+  - scripts/audit/verify_enf_005.sh
+  - evidence/phase1/enf_005_drd_lockout_sudo_gate.json
+  - tasks/ENF-005/meta.yml
+
+invariants: []
+
+work:
+  - >-
+    [ID enf_005_wi01] Create scripts/audit/clear_drd_lockout_privileged.sh:
+    the script must accept no arguments (the lockout path is hardcoded to
+    .toolchain/pre_ci_debug/drd_lockout.env), verify the file exists before
+    deleting, log the deletion to .toolchain/pre_ci_debug/clear_log.jsonl
+    with timestamp and caller identity (SUDO_USER env var), then rm the file.
+    Set ownership to root:root (or supervisor user) and chmod 750. The agent
+    user must not be in the owning group for write access.
+  - >-
+    [ID enf_005_wi02] Patch scripts/audit/verify_drd_casefile.sh: find the
+    rm "$DRD_LOCKOUT_FILE" line inside the --clear branch and replace it with
+    sudo scripts/audit/clear_drd_lockout_privileged.sh. Confirm no other direct
+    rm of the lockout file remains in the script.
+  - >-
+    [ID enf_005_wi03] Document the required sudoers entry in EXEC_LOG.md.
+    The entry format is: <agent-user> ALL=(root) NOPASSWD: /absolute/path/to/scripts/audit/clear_drd_lockout_privileged.sh
+    A human with root must apply this before the full gate is active. The
+    verifier will check script content but will warn (not hard-fail) if the
+    sudoers entry cannot be confirmed.
+  - >-
+    [ID enf_005_wi04] Create scripts/audit/verify_enf_005.sh: check wrapper
+    exists; grep verify_drd_casefile.sh for absence of direct rm on lockout
+    path; grep for presence of sudo call to wrapper; emit
+    evidence/phase1/enf_005_drd_lockout_sudo_gate.json.
+
+acceptance_criteria:
+  - >-
+    [ID enf_005_wi01] ls -la scripts/audit/clear_drd_lockout_privileged.sh
+    shows the file exists and is executable. The agent OS user does not have
+    write permission on the file.
+  - >-
+    [ID enf_005_wi01] The script contains logic to log to clear_log.jsonl
+    and exits non-zero if the lockout file does not exist.
+  - >-
+    [ID enf_005_wi02] grep 'rm.*drd_lockout' scripts/audit/verify_drd_casefile.sh
+    returns no match for a direct rm. grep 'sudo.*clear_drd_lockout_privileged'
+    returns a match.
+  - >-
+    [ID enf_005_wi04] verify_enf_005.sh exits 0 with status=PASS in evidence JSON.
+
+negative_tests:
+  - id: ENF-005-N1
+    description: >-
+      grep for a direct 'rm.*drd_lockout.env' line (not preceded by sudo) in
+      verify_drd_casefile.sh must return no match after the patch is applied.
+      Any match means the direct rm bypass still exists.
+    required: true
+  - id: ENF-005-N2
+    description: >-
+      Running clear_drd_lockout_privileged.sh when no lockout file exists must
+      exit non-zero with a message indicating the file is not present. It must
+      not silently succeed on a missing file.
+    required: true
+
+positive_tests:
+  - id: ENF-005-P1
+    description: >-
+      Running clear_drd_lockout_privileged.sh (as privileged user) with a
+      drd_lockout.env present must delete the file and write an entry to
+      clear_log.jsonl. Exit code must be 0.
+    required: false
+
+verification:
+  - bash scripts/audit/verify_enf_005.sh
+  - python3 scripts/audit/validate_evidence.py --task ENF-005 --evidence evidence/phase1/enf_005_drd_lockout_sudo_gate.json
+  - bash scripts/dev/pre_ci.sh
+
+evidence:
+  - path: evidence/phase1/enf_005_drd_lockout_sudo_gate.json
+    must_include:
+      - task_id
+      - git_sha
+      - timestamp_utc
+      - status
+      - checks
+      - failures
+      - wrapper_script_exists_confirmed
+      - direct_rm_absent_confirmed
+      - sudo_call_present_confirmed
+      - sudoers_entry_note
+
+failure_modes:
+  - "Evidence file missing → FAIL (ENF-005 not verified)"
+  - "Direct rm on lockout file remains in verify_drd_casefile.sh → CRITICAL_FAIL (privilege bypass still open)"
+  - "clear_drd_lockout_privileged.sh writable by agent user → CRITICAL_FAIL (agent can rewrite the wrapper)"
+  - "sudoers entry not applied by human → WARN (gate defined but not enforced at OS level; must be resolved before production use)"
+
+must_read:
+  - docs/operations/AI_AGENT_OPERATION_MANUAL.md
+  - symphony-enforcement-v2/MANIFEST.md
+  - symphony-enforcement-v2/enf-002-verify-drd-casefile/verify_drd_casefile.sh
+  - tasks/ENF-002/meta.yml
+
+implementation_plan: docs/plans/phase1/ENF-005/PLAN.md
+implementation_log: docs/plans/phase1/ENF-005/EXEC_LOG.md
+
+notes: >-
+  The sudoers entry is the only step that cannot be automated by an agent. It
+  requires a human with root. The task verifier checks script content and warns
+  if the sudoers entry cannot be confirmed, but does not hard-block on it to
+  avoid a chicken-and-egg situation where the task cannot complete without
+  external infrastructure. The EXEC_LOG.md must record when the sudoers entry
+  was applied and by whom. clear_drd_lockout_privileged.sh must be owned by
+  root or a supervisor OS user, not by the agent process user, to prevent the
+  agent from rewriting the wrapper.
+
+client: codex_cli
+assigned_agent: security_guardian
+model: <UNASSIGNED>

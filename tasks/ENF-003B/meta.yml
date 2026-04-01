@@ -1,0 +1,140 @@
+schema_version: 1
+phase: '1'
+task_id: ENF-003B
+title: Create reset_evidence_gate.sh so humans have a governed, audited path to clear the ENF-003A retry hard-block
+owner_role: SECURITY_GUARDIAN
+status: completed
+priority: HIGH
+risk_class: GOVERNANCE
+blast_radius: CI_GATES
+
+intent: >-
+  ENF-003A introduces a hard-block at 3 consecutive task failures that only
+  a human can clear. Without reset_evidence_gate.sh, the only clear path is
+  manual deletion of .toolchain/evidence_ack/ files, which leaves no audit
+  trail and bypasses the intent of the hard-block. reset_evidence_gate.sh
+  logs every reset to .toolchain/evidence_ack/reset_log.jsonl before deleting
+  state files, ensuring humans who override the block are on record.
+
+anti_patterns:
+  - "Creating reset_evidence_gate.sh as a silent file deleter with no audit log — the reset_log.jsonl is mandatory"
+  - "Allowing the script to accept no arguments — it must require TASK_ID to prevent accidental mass reset"
+  - "Making reset_evidence_gate.sh executable by run_task.sh — only humans may call it, not agents"
+
+out_of_scope:
+  - "Changes to run_task.sh (ENF-001, ENF-003A)"
+  - "Evidence ack gate logic itself (ENF-003A)"
+  - "DRD lockout or verify_drd_casefile.sh (ENF-002)"
+
+stop_conditions:
+  - "If reset_evidence_gate.sh already exists in scripts/audit/ → read it; do not overwrite without reviewing differences"
+
+proof_guarantees:
+  - "verify_enf_003b.sh confirms reset_evidence_gate.sh exists and is executable"
+  - "verify_enf_003b.sh confirms reset_evidence_gate.sh --help exits 0 with usage text"
+  - "verify_enf_003b.sh simulates a retry state, runs the reset, and confirms .retries and .required are gone and reset_log.jsonl was written"
+
+proof_limitations:
+  - "Verifier cannot confirm the reset_log.jsonl schema covers all required fields without exhaustive schema testing"
+  - "Verifier cannot confirm the script is only callable by humans in production — it only tests functional behaviour"
+
+depends_on:
+  - ENF-000
+
+blocks: []
+
+touches:
+  - scripts/audit/reset_evidence_gate.sh
+  - scripts/audit/verify_enf_003b.sh
+  - evidence/phase1/enf_003b_reset_evidence_gate.json
+  - tasks/ENF-003B/meta.yml
+
+invariants: []
+
+work:
+  - >-
+    [ID enf_003b_wi01] Copy symphony-enforcement-v2/enf-003-evidence-ack-gate/reset_evidence_gate.sh
+    to scripts/audit/reset_evidence_gate.sh and chmod +x. Read the script to confirm
+    it: requires a TASK_ID argument, logs the reset to .toolchain/evidence_ack/reset_log.jsonl,
+    deletes .retries and .required files, and keeps .ack.attempt_* files for audit.
+  - >-
+    [ID enf_003b_wi02] Create scripts/audit/verify_enf_003b.sh: check script exists
+    and is executable; run --help and assert exit 0; create dummy .retries and
+    .required files for a test task ID, run the reset, assert both files are gone,
+    assert reset_log.jsonl has a new entry; emit evidence/phase1/enf_003b_reset_evidence_gate.json.
+
+acceptance_criteria:
+  - >-
+    [ID enf_003b_wi01] ls -la scripts/audit/reset_evidence_gate.sh shows the file
+    exists with execute permission.
+  - >-
+    [ID enf_003b_wi01] bash scripts/audit/reset_evidence_gate.sh --help exits 0
+    and prints usage including TASK_ID parameter description.
+  - >-
+    [ID enf_003b_wi02] After running reset_evidence_gate.sh on a dummy task ID,
+    the .retries and .required files no longer exist.
+  - >-
+    [ID enf_003b_wi02] .toolchain/evidence_ack/reset_log.jsonl contains a new
+    entry for the test reset with a timestamp.
+  - >-
+    [ID enf_003b_wi02] verify_enf_003b.sh exits 0 with status=PASS in evidence JSON.
+
+negative_tests:
+  - id: ENF-003B-N1
+    description: >-
+      Running reset_evidence_gate.sh with no arguments must exit non-zero and
+      print a usage message requiring TASK_ID. Must not silently succeed with
+      no arguments.
+    required: true
+
+positive_tests:
+  - id: ENF-003B-P1
+    description: >-
+      Running reset_evidence_gate.sh with a valid TASK_ID that has .retries and
+      .required files must delete both files, write to reset_log.jsonl, and exit 0.
+    required: false
+
+verification:
+  - bash scripts/audit/verify_enf_003b.sh
+  - python3 scripts/audit/validate_evidence.py --task ENF-003B --evidence evidence/phase1/enf_003b_reset_evidence_gate.json
+  - bash scripts/dev/pre_ci.sh
+
+evidence:
+  - path: evidence/phase1/enf_003b_reset_evidence_gate.json
+    must_include:
+      - task_id
+      - git_sha
+      - timestamp_utc
+      - status
+      - checks
+      - failures
+      - script_executable_confirmed
+      - help_flag_confirmed
+      - reset_clears_state_confirmed
+      - audit_log_written_confirmed
+
+failure_modes:
+  - "Evidence file missing → FAIL (ENF-003B not verified)"
+  - "reset_evidence_gate.sh missing or not executable → FAIL (humans have no governed path to clear hard-block)"
+  - "reset_evidence_gate.sh deletes files without writing audit log → CRITICAL_FAIL (bypass is untracked)"
+  - "reset_evidence_gate.sh accepts empty TASK_ID → FAIL (mass accidental reset possible)"
+
+must_read:
+  - docs/operations/AI_AGENT_OPERATION_MANUAL.md
+  - symphony-enforcement-v2/MANIFEST.md
+  - symphony-enforcement-v2/enf-003-evidence-ack-gate/reset_evidence_gate.sh
+  - tasks/ENF-003A/meta.yml
+
+implementation_plan: docs/plans/phase1/ENF-003B/PLAN.md
+implementation_log: docs/plans/phase1/ENF-003B/EXEC_LOG.md
+
+notes: >-
+  ENF-003B is split from the MANIFEST's ENF-003 because reset_evidence_gate.sh
+  belongs to scripts/audit/ (Security Guardian surface) while the run_task.sh
+  patch belongs to scripts/agent/ (Architect surface). The two deliverables can
+  be implemented in parallel once ENF-000 is done. This script is explicitly
+  human-only — it is not invoked by run_task.sh.
+
+client: codex_cli
+assigned_agent: security_guardian
+model: <UNASSIGNED>

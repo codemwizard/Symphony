@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 set -Eeuo pipefail
 
+
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 cd "$ROOT"
 
@@ -22,6 +23,58 @@ pre_ci_on_error() {
 }
 
 pre_ci_debug_init
+
+# -- DRD lockout gate ---------------------------------------------------------
+# Must run BEFORE any other gate. If a DRD lockout is active (two-strike
+# non-convergence on the same failure signature), pre_ci refuses to run.
+# The lockout is only cleared manually after a remediation casefile is created.
+# Exit code 99 = DRD lockout. No other gate uses this code.
+pre_ci_check_drd_lockout
+
+# --- PRE_CI_CONTEXT_EXPORT ---
+# Export execution context so guarded verifiers know they run inside the harness.
+export PRE_CI_CONTEXT=1
+
+# Unique run ID. Evidence files embed this; pre-generated outputs won't match.
+PRE_CI_RUN_ID="$(date -u +%Y%m%dT%H%M%SZ)_$$"
+export PRE_CI_RUN_ID
+
+# Strip known bypass variables. Presence indicates an exploit attempt.
+unset SKIP_VALIDATION SKIP_GATES CI_BYPASS DEBUG_OVERRIDE FORCE_PASS 2>/dev/null || true
+# --- end PRE_CI_CONTEXT_EXPORT ---
+
+# --- PRE_CI_INTEGRITY_CHECK ---
+# Verify integrity of guarded verifier scripts before any gate runs.
+# Hard-fails if manifest is missing or any hash mismatches.
+_ic_manifest=".toolchain/script_integrity/verifier_hashes.sha256"
+if [[ ! -f "$_ic_manifest" ]]; then
+  echo "ERROR: integrity manifest not found at $_ic_manifest" >&2
+  echo "  Run apply_execution_confinement.sh to generate it." >&2
+  exit 1
+fi
+if ! sha256sum --check "$_ic_manifest" --quiet 2>/dev/null; then
+  echo "INTEGRITY FAIL: one or more guarded scripts have been modified." >&2
+  echo "  Run sha256sum --check $_ic_manifest to identify which files changed." >&2
+  echo "  After reviewing, regenerate: bash _staging/symphony-enforcement-v2/execution-confinement/apply_execution_confinement.sh" >&2
+  exit 1
+fi
+_ic_count="$(grep -c '^[0-9a-f]' "$_ic_manifest" 2>/dev/null || echo 0)"
+echo "==> Script integrity OK ($_ic_count guarded scripts verified)"
+unset _ic_manifest _ic_count
+# --- end PRE_CI_INTEGRITY_CHECK ---
+
+# --- STRIP_BYPASS_ENV_VARS_SOURCED ---
+# Strip all known bypass environment variables unconditionally.
+# An agent that sets SKIP_CI_DB_PARITY_PROBE=1 or similar is detected,
+# logged, and blocked here before any gate runs.
+# Sourced (not executed) so unset affects this shell.
+[[ -f scripts/audit/strip_bypass_env_vars.sh ]] || {
+  echo "FATAL: scripts/audit/strip_bypass_env_vars.sh missing -- env hygiene cannot be enforced" >&2
+  exit 1
+}
+source scripts/audit/strip_bypass_env_vars.sh
+# --- end STRIP_BYPASS_ENV_VARS_SOURCED ---
+
 trap pre_ci_on_error ERR
 pre_ci_print_triage_banner
 
@@ -488,7 +541,7 @@ else
   exit 1
 fi
 
-echo "==> Phase-0 gate↔invariant linkage audit (TSK-P0-208)"
+echo "==> Phase-0 gate?invariant linkage audit (TSK-P0-208)"
 if [[ -x scripts/audit/verify_tsk_p0_208.sh ]]; then
   scripts/audit/verify_tsk_p0_208.sh --evidence evidence/phase0/tsk_p0_208__gate_invariant_linkage_audit.json
 else
@@ -958,12 +1011,29 @@ if [[ "${RUN_PHASE1_GATES:-0}" == "1" ]]; then
   fi
 fi
 
+# --- AST_LINT_GATE ---
+# AST-level structural lint: verifies psql appears as a real command
+# invocation, not a comment or dead string. Mandatory — missing tool = exit 1.
+echo "==> GF verifier AST lint (structural command invocation check)"
+[[ -f scripts/audit/lint_verifier_ast.py ]] || {
+  echo "FATAL: scripts/audit/lint_verifier_ast.py not found" >&2
+  exit 1
+}
+/usr/bin/python3 scripts/audit/lint_verifier_ast.py \
+  scripts/db/verify_gf_fnc_001.sh \
+  scripts/db/verify_gf_fnc_002.sh \
+  scripts/db/verify_gf_fnc_003.sh \
+  scripts/db/verify_gf_fnc_004.sh \
+  scripts/db/verify_gf_fnc_005.sh \
+  scripts/db/verify_gf_fnc_006.sh
+# --- end AST_LINT_GATE ---
+
 echo "==> GF migration scope enforcement (TSK-P1-RLS-003)"
 VENV_PYTHON=".venv/bin/python3"
 if [[ ! -x "$VENV_PYTHON" ]]; then
   VENV_PYTHON="python3"
 fi
-GF_MIGRATIONS=(schema/migrations/008[0-9]_gf_*.sql schema/migrations/009[0-9]_gf_*.sql)
+GF_MIGRATIONS=(schema/migrations/008[0-9]_gf_*.sql schema/migrations/009[0-9]_gf_*.sql schema/migrations/01[0-9][0-9]_gf_*.sql)
 if [[ -f scripts/db/lint_gf_migration_scope.py ]]; then
   "$VENV_PYTHON" scripts/db/lint_gf_migration_scope.py "${GF_MIGRATIONS[@]}" 2>/dev/null
 else
@@ -979,8 +1049,27 @@ else
   exit 1
 fi
 
+# --- EVIDENCE_SIGNATURE_VERIFY ---
+# Verify phase1 evidence was signed by sign_evidence.py in THIS run.
+# Pre-generated, hand-typed, or tampered JSON files are rejected.
+echo "==> Phase-1 evidence signature integrity check"
+[[ -f scripts/audit/sign_evidence.py ]] || {
+  echo "FATAL: scripts/audit/sign_evidence.py not found" >&2
+  exit 1
+}
+if [[ -d evidence/phase1 ]] && compgen -G "evidence/phase1/*.json" > /dev/null 2>&1; then
+  /usr/bin/python3 scripts/audit/sign_evidence.py \
+    --verify \
+    --dir evidence/phase1 \
+    --enrollment-file scripts/audit/signed_evidence_enrollment.txt
+else
+  echo "  INFO: no phase1 evidence files yet -- skipping signature check"
+fi
+# --- end EVIDENCE_SIGNATURE_VERIFY ---
+
 echo "==> Green Finance Schema + Function Verification"
 GREEN_FINANCE_VERIFIERS=(
+  "scripts/audit/verify_gf_w1_gov_005a.sh"
   "scripts/db/verify_gf_sch_001.sh"
   "scripts/db/verify_gf_sch_008.sh"
   "scripts/db/verify_gf_fnc_001.sh"
@@ -989,6 +1078,7 @@ GREEN_FINANCE_VERIFIERS=(
   "scripts/db/verify_gf_fnc_004.sh"
   "scripts/db/verify_gf_fnc_005.sh"
   "scripts/db/verify_gf_fnc_006.sh"
+  "scripts/db/verify_gf_fnc_007a.sh"
 )
 
 for verifier in "${GREEN_FINANCE_VERIFIERS[@]}"; do
@@ -1008,5 +1098,23 @@ for i in {210..220}; do
   fi
 done
 
-echo "✅ Pre-CI local checks PASSED."
+
+# --- TSK_POST_EXEC_INTEGRITY ---
+# Post-execution integrity re-check: re-verify all manifested files have not
+# been swapped or modified during this run. Catches runtime swap attacks.
+echo "==> Post-execution integrity check"
+_post_manifest="/home/mwiza/workspace/Symphony/.toolchain/trust_manifest.sha256"
+if [[ -f "$_post_manifest" ]]; then
+  if ! sha256sum --check "$_post_manifest" --quiet 2>/dev/null; then
+    echo "POST-EXECUTION INTEGRITY FAILURE: files were modified during the run." >&2
+    echo "  This indicates a runtime swap attack or concurrent modification." >&2
+    echo "  The run result is UNTRUSTED even though gates passed." >&2
+    exit 1
+  fi
+  echo "  Post-execution integrity: OK"
+else
+  echo "WARN: post-execution manifest not found -- skipping re-check" >&2
+fi
+# --- end TSK_POST_EXEC_INTEGRITY ---
+echo "? Pre-CI local checks PASSED."
 
