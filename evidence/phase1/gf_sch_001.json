@@ -1,14 +1,14 @@
 {
-  "check_id": "GF-W1-GOV-005A",
-  "task_id": "GF-W1-GOV-005A",
+  "check_id": "GF-W1-SCH-001",
+  "task_id": "GF-W1-SCH-001",
   "status": "PASS",
   "timestamp_utc": "2026-04-02T02:02:45Z",
-  "generated_at": "2026-04-02T02:02:45.127746+00:00",
+  "generated_at": "2026-04-02T02:02:45.318338+00:00",
   "git_sha": "6d4d95d9122b976f7a571081d6a128e72e52952e",
   "pre_ci_run_id": "rem-4e1e3106d4d2",
   "source_file": "schema/migrations/0080_gf_adapter_registrations.sql",
   "source_file_sha256": "0abb5ec1325c2a194470df5c281b5d49a6ba1841272cbddecbb1b3208afdd7f9",
-  "command_output": "{\"trace\": \"presence_check OK; fk_order_check: 0 violations; sector_noun_check: 0 violations; overall=PASS\", \"migrations_present\": 9}",
-  "_signature": "a9c206bcf1198d0de7f19b77fb6b9ad7aa5f234fffd81aa2e1c8d3da0a4bf358",
+  "command_output": "{\"check\": \"schema_verification\", \"migration\": \"0080_gf_adapter_registrations.sql\"}",
+  "_signature": "b8627b125dfba5918f4bcdbbef549a66bdf6374b3240fbf227198e685c0efde4",
   "_signing_version": "symphony-v1"
 }

@@ -1,5 +1,5 @@
 # Symphony verifier script integrity manifest
-# Generated: 2026-04-01T23:38:08Z
+# Generated: 2026-04-02T01:50:55Z
 # Regenerate: bash _staging/symphony-enforcement-v2/execution-confinement/apply_execution_confinement.sh
 #
 79a7bfb070e3b48853d916cbc3194ad28c844ca7015f1d960c6e57ab33295ece  scripts/db/verify_gf_sch_001.sh
