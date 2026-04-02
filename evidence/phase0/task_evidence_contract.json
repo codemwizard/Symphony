@@ -1,7 +1,7 @@
 {
   "check_id": "TASK-EVIDENCE-CONTRACT",
-  "timestamp_utc": "2026-04-01T14:30:05Z",
-  "git_sha": "e9fcfde480212cbd571a5515bdda57668f9876dc",
+  "timestamp_utc": "2026-04-02T00:46:23Z",
+  "git_sha": "76c8fcb770623b9d6674514e0381aaf0ebde7362",
   "schema_fingerprint": "1f92363c69ba235e552a6aac05045062fc0097fc93cde3b89e76455b80628019",
   "status": "PASS",
   "checked_tasks": [
@@ -116,7 +116,20 @@
     "GF-W1-GOV-005A",
     "GF-W1-SCH-003",
     "GF-W1-SCH-004",
-    "GF-W1-SCH-005"
+    "GF-W1-SCH-005",
+    "GF-W1-SCH-006",
+    "GF-W1-SCH-007",
+    "GF-W1-SCH-008",
+    "GF-W1-SCH-009",
+    "GF-W1-FNC-001",
+    "GF-W1-FNC-002",
+    "GF-W1-FNC-003",
+    "GF-W1-FNC-004",
+    "GF-W1-FNC-006",
+    "GF-W1-FNC-007A",
+    "GF-W1-FNC-007B",
+    "GF-W1-FNC-005",
+    "GF-W1-PLT-001"
   ],
   "issues": []
 }

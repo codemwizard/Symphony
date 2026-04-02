@@ -1,11 +1,11 @@
 {
   "check_id": "TSK-P1-213",
-  "timestamp_utc": "2026-04-01T23:21:31Z",
-  "git_sha": "64bdea9c3f6d92c87afbaef32440ad7811366164",
+  "timestamp_utc": "2026-04-02T00:49:46Z",
+  "git_sha": "76c8fcb770623b9d6674514e0381aaf0ebde7362",
   "schema_fingerprint": "1f92363c69ba235e552a6aac05045062fc0097fc93cde3b89e76455b80628019",
   "status": "PASS",
   "task_id": "TSK-P1-213",
-  "run_id": "standalone-20260401T232130Z",
+  "run_id": "standalone-20260402T004946Z",
   "checks": {
     "runbook_clean": true,
     "verifier_updated": true,
