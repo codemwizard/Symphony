@@ -1,0 +1,14 @@
+{
+  "check_id": "GF-W1-FNC-004",
+  "task_id": "GF-W1-FNC-004",
+  "status": "PASS",
+  "timestamp_utc": "2026-04-02T02:02:48Z",
+  "generated_at": "2026-04-02T02:02:48.599089+00:00",
+  "git_sha": "6d4d95d9122b976f7a571081d6a128e72e52952e",
+  "pre_ci_run_id": "rem-4e1e3106d4d2",
+  "source_file": "schema/migrations/0110_gf_fn_regulatory_transitions.sql",
+  "source_file_sha256": "40b4dbf25a900b152edf620aefc8f7c003955df50bb6fd6f9d6e267be182d5fc",
+  "command_output": "{\"probes\": [{\"probe\": \"get_checkpoint_requirements\", \"status\": \"PASS\"},{\"probe\": \"query_authority_decisions\", \"status\": \"PASS\"},{\"probe\": \"transition_asset_status\", \"status\": \"PASS\"},{\"probe\": \"attempt_lifecycle_transition\", \"status\": \"PASS\"},{\"probe\": \"record_authority_decision\", \"status\": \"PASS\"}]}",
+  "_signature": "8f83ed35596b41bf80552c19e0764cbd9baf5c8649b9cf0ef3062815607a4804",
+  "_signing_version": "symphony-v1"
+}

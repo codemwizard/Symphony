@@ -1,0 +1,154 @@
+schema_version: 1
+phase: '1'
+task_id: ENF-002
+title: Create verify_drd_casefile.sh and patch pre_ci_debug_contract.sh so lockout clearance requires a verified casefile instead of raw rm
+owner_role: SECURITY_GUARDIAN
+status: completed
+priority: HIGH
+risk_class: GOVERNANCE
+blast_radius: CI_GATES
+
+intent: >-
+  The lockout clear instruction in pre_ci_debug_contract.sh currently says
+  'rm $PRE_CI_DRD_LOCKOUT_FILE', which allows agents and humans to bypass the
+  casefile requirement entirely. verify_drd_casefile.sh replaces that raw rm
+  with a controlled clear that validates a casefile exists with a documented
+  root cause before removing the lockout. Without this, the DRD discipline is
+  opt-in and unenforced. With it, clearing a lockout is mechanically gated on
+  documented remediation.
+
+anti_patterns:
+  - "Creating verify_drd_casefile.sh as a pass-through that always exits 0 — it must actually parse the casefile"
+  - "Using raw string matching instead of yaml.safe_load for casefile validation — YAML is the canonical format"
+  - "Omitting the --clear flag behaviour — the script must support both verify mode (no args) and clear mode (--clear)"
+  - "Patching pre_ci_debug_contract.sh without testing that the anchor text matches exactly"
+
+out_of_scope:
+  - "Changes to scripts/agent/run_task.sh (ENF-001, ENF-003A)"
+  - "Creating reset_evidence_gate.sh (ENF-003B)"
+  - "Changes to AGENT_ENTRYPOINT.md or prompt_template.md (ENF-004)"
+
+stop_conditions:
+  - "If the anchor text 'rm $PRE_CI_DRD_LOCKOUT_FILE' is not found in pre_ci_debug_contract.sh → STOP; apply_patch.sh will error; report to human"
+  - "If verify_drd_casefile.sh already exists in scripts/audit/ → read it first; do not overwrite without reviewing differences"
+
+proof_guarantees:
+  - "verify_enf_002.sh confirms verify_drd_casefile.sh exists and is executable"
+  - "verify_enf_002.sh confirms pre_ci_debug_contract.sh contains 'verify_drd_casefile.sh --clear' instead of raw rm"
+  - "verify_enf_002.sh runs verify_drd_casefile.sh with no lockout active and confirms exit 0"
+  - "verify_enf_002.sh simulates lockout with no casefile and confirms verify_drd_casefile.sh exits 1"
+
+proof_limitations:
+  - "Verifier cannot test the full --clear path against a real casefile in CI — it only tests the no-lockout and missing-casefile paths"
+  - "Verifier cannot confirm YAML parse behaviour covers every edge case in legacy casefiles without exhaustive input testing"
+
+depends_on:
+  - ENF-000
+
+blocks:
+  - ENF-004
+
+touches:
+  - scripts/audit/verify_drd_casefile.sh
+  - scripts/audit/pre_ci_debug_contract.sh
+  - scripts/audit/verify_enf_002.sh
+  - evidence/phase1/enf_002_verify_drd_casefile.json
+  - tasks/ENF-002/meta.yml
+
+invariants: []
+
+work:
+  - >-
+    [ID enf_002_wi01] Copy symphony-enforcement-v2/enf-002-verify-drd-casefile/verify_drd_casefile.sh
+    to scripts/audit/verify_drd_casefile.sh and chmod +x. Read the script to confirm
+    it validates active lockout has a matching casefile with root_cause, supports
+    --clear mode with audit logging to .toolchain/pre_ci_debug/clear_log.jsonl,
+    and falls back to regex for non-YAML legacy casefiles with a warning.
+  - >-
+    [ID enf_002_wi02] Run bash symphony-enforcement-v2/enf-002-verify-drd-casefile/apply_patch.sh
+    from repo root to patch pre_ci_debug_contract.sh. Confirm grep finds
+    'verify_drd_casefile.sh --clear' in that file and not the old raw rm instruction.
+  - >-
+    [ID enf_002_wi03] Create scripts/audit/verify_enf_002.sh: check script exists
+    and is executable; check pre_ci_debug_contract.sh patch applied; run
+    verify_drd_casefile.sh with no lockout and assert exit 0; simulate lockout
+    with no casefile and assert exit 1; emit evidence/phase1/enf_002_verify_drd_casefile.json.
+
+acceptance_criteria:
+  - >-
+    [ID enf_002_wi01] ls -la scripts/audit/verify_drd_casefile.sh shows the file
+    exists and is executable (x bit set).
+  - >-
+    [ID enf_002_wi02] grep 'verify_drd_casefile.sh --clear' scripts/audit/pre_ci_debug_contract.sh
+    returns a match. grep 'rm \$PRE_CI_DRD_LOCKOUT_FILE' returns no match.
+  - >-
+    [ID enf_002_wi03] verify_enf_002.sh exits 0 with status=PASS in evidence JSON.
+  - >-
+    [ID enf_002_wi03] verify_drd_casefile.sh exits 1 when a lockout file is present
+    with no matching casefile.
+
+negative_tests:
+  - id: ENF-002-N1
+    description: >-
+      Running verify_drd_casefile.sh with a drd_lockout.env present that has no
+      matching casefile must exit 1 and print a message indicating the casefile
+      is missing. Must not exit 0.
+    required: true
+  - id: ENF-002-N2
+    description: >-
+      Running apply_patch.sh a second time must print 'already applied' and exit 0
+      without modifying pre_ci_debug_contract.sh a second time.
+    required: true
+
+positive_tests:
+  - id: ENF-002-P1
+    description: >-
+      Running verify_drd_casefile.sh with no lockout file present must exit 0,
+      confirming the script does not false-positive block when there is no lockout.
+    required: false
+
+verification:
+  - bash scripts/audit/verify_enf_002.sh
+  - python3 scripts/audit/validate_evidence.py --task ENF-002 --evidence evidence/phase1/enf_002_verify_drd_casefile.json
+  - bash scripts/dev/pre_ci.sh
+
+evidence:
+  - path: evidence/phase1/enf_002_verify_drd_casefile.json
+    must_include:
+      - task_id
+      - git_sha
+      - timestamp_utc
+      - status
+      - checks
+      - failures
+      - script_executable_confirmed
+      - contract_patch_confirmed
+      - no_lockout_exit_0_confirmed
+      - lockout_no_casefile_exit_1_confirmed
+
+failure_modes:
+  - "Evidence file missing → BLOCKED (ENF-004 cannot start)"
+  - "verify_drd_casefile.sh missing or not executable → FAIL (lockout clear remains ungated)"
+  - "pre_ci_debug_contract.sh still contains raw rm instruction → FAIL (agents can bypass casefile requirement)"
+  - "verify_drd_casefile.sh exits 0 with lockout present and no casefile → CRITICAL_FAIL (gate is a pass-through)"
+
+must_read:
+  - docs/operations/AI_AGENT_OPERATION_MANUAL.md
+  - symphony-enforcement-v2/MANIFEST.md
+  - symphony-enforcement-v2/enf-002-verify-drd-casefile/verify_drd_casefile.sh
+  - symphony-enforcement-v2/enf-002-verify-drd-casefile/apply_patch.sh
+  - .agent/policies/debug-remediation-policy.md
+
+implementation_plan: docs/plans/phase1/ENF-002/PLAN.md
+implementation_log: docs/plans/phase1/ENF-002/EXEC_LOG.md
+
+notes: >-
+  scripts/audit/pre_ci_debug_contract.sh is in scripts/audit/ which is the
+  Security Guardian's allowed path. verify_drd_casefile.sh also goes in
+  scripts/audit/. The apply_patch.sh uses exact Python string replacement
+  anchored on the raw rm line — it will error if the anchor is not found,
+  which is intentional to prevent silent misapplication.
+
+client: codex_cli
+assigned_agent: security_guardian
+model: <UNASSIGNED>

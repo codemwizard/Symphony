@@ -1,8 +1,8 @@
 {
   "check_id": "INVARIANTS-DOCS-MATCH",
-  "timestamp_utc": "2026-03-27T14:17:57Z",
-  "git_sha": "7da7e8718697b610b9cc8d1dc5124442a7f1dbe0",
-  "schema_fingerprint": "b5fc38953353fba104cf3cd3fdb4d348214259086b5c9a1827519a18e5f1352e",
+  "timestamp_utc": "2026-04-02T01:59:22Z",
+  "git_sha": "6d4d95d9122b976f7a571081d6a128e72e52952e",
+  "schema_fingerprint": "1f92363c69ba235e552a6aac05045062fc0097fc93cde3b89e76455b80628019",
   "status": "PASS",
   "check": "docs_match_manifest"
 }

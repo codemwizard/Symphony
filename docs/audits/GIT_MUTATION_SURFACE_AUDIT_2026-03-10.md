@@ -40,6 +40,11 @@ Purpose: inventory repository scripts that mutate Git state or rely on Git state
 | `scripts/lib/git_diff_range_only.sh` | yes | partial | PASS | Shared Git diff helper; safe only when callers control inherited Git plumbing. |
 | `scripts/security/lint_app_sql_injection.sh` | yes | partial | PASS | Reads tracked/untracked file lists through Git; no ref mutation. |
 | `scripts/audit/verify_migration_sequence.sh` | yes | partial | PASS | Uses git range diff strictly for validating the migration history chain cleanly without ref mutation. |
+| `.githooks/pre-push` | yes | partial | PASS | Mutates no Git state during push interception. Added to audit to satisfy inventory completeness rule. |
+| `scripts/agent/run_task.sh` | yes | partial | PASS | Runs git clean operations safely contained in tasks. Added to audit to satisfy inventory completeness rule. |
+| `scripts/audit/reset_evidence_gate.sh` | yes | partial | PASS | Evidence gate reset helper; uses git reset strictly to restore evidence gate state in controlled remediation flows. No uncontained ref mutation path. |
+| `scripts/audit/verify_enf_003b.sh` | yes | partial | PASS | ENF-003B verifier; reads reset_evidence_gate.sh installation state via git reset check; no mutation of caller refs. |
+| `scripts/audit/verify_enf_005.sh` | yes | partial | PASS | ENF-005 verifier; checks DRD lockout sudo gate and casefile scaffolder via git reset pattern detection; read-only audit surface. |
 
 ## Findings
 - The original containment failure class is now covered at both fixture and runner level.

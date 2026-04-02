@@ -1,0 +1,57 @@
+# Symphony CODEOWNERS
+# TARGET: .github/CODEOWNERS
+# STATUS: NEW -- copy to .github/CODEOWNERS to activate.
+#
+# PURPOSE:
+#   Protects governance files from agent self-modification.
+#   Any PR touching a file matching these patterns requires explicit approval
+#   from the owner before it can merge, regardless of CI status.
+#
+# ACTIVATION:
+#   1. Copy this file to .github/CODEOWNERS
+#   2. In GitHub repo settings -> Branches -> main branch protection:
+#      - Enable "Require review from Code Owners"
+#      - Enable "Require pull request before merging"
+#      - Enable "Require status checks to pass"
+#      - Enable "Do not allow bypassing the above settings" (for admins too)
+#
+# REPLACE @your-github-username with your actual GitHub username or a team name.
+
+# CI and workflow definitions
+.github/workflows/*                             @codemwizard
+.github/CODEOWNERS                              @codemwizard
+
+# Git enforcement hooks
+.githooks/                                      @codemwizard
+
+# Core execution kernel
+scripts/agent/run_task.sh                       @codemwizard
+scripts/agent/bootstrap.sh                      @codemwizard
+
+# Pre-CI and DRD enforcement
+scripts/dev/pre_ci.sh                           @codemwizard
+scripts/audit/pre_ci_debug_contract.sh          @codemwizard
+scripts/audit/verify_agent_conformance.sh       @codemwizard
+scripts/audit/verify_agent_conformance_spec.sh  @codemwizard
+
+# Agent policy and governance
+.agent/                                         @codemwizard
+AGENT_ENTRYPOINT.md                             @codemwizard
+AGENTS.md                                       @codemwizard
+agent_manifest.yml                              @codemwizard
+.codex/                                         @codemwizard
+.cursor/                                        @codemwizard
+
+# DRD lockout infrastructure
+.toolchain/pre_ci_debug/                        @codemwizard
+
+# Knowledge base and operations docs
+docs/operations/failure_signatures.yml          @codemwizard
+docs/operations/failure_index.md                @codemwizard
+docs/troubleshooting/                           @codemwizard
+
+# Approval and evidence infrastructure
+scripts/audit/validate_evidence.py              @codemwizard
+scripts/audit/validate_evidence_json.sh         @codemwizard
+scripts/audit/validate_evidence_schema.sh       @codemwizard
+scripts/ci/check_evidence_required.sh           @codemwizard

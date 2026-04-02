@@ -10,6 +10,7 @@ verification_commands_run:
 - bash scripts/audit/verify_tsk_p1_063.sh
 - bash scripts/dev/pre_ci.sh
 final_status: CLOSED
+root_cause: Legacy baseline drift (remediated in previous session).
 
 ## Scope
 - Record the failing layer, root cause, and fix sequence for this remediation.

@@ -61,3 +61,4 @@ This ADR remains the authoritative governance reference for baseline change chec
 - 2026-03-06: Baseline refreshed after adding migration 0072_hard_wave6_reference_policy_post_deactivation_immutability.sql (post-deactivation policy-row immutability enforcement for previously ACTIVE records).
 - 2026-03-21: Baseline regenerated after Wave F onboarding control plane RLS hardening (0077).
 - 2026-03-27: Baseline regenerated after scrubbing orphaned Wave 2 configuration components (0085-0094).
+- 2026-04-01: Baseline regenerated after Green Finance Wave 1 DB verifier integration (0097-0114).

@@ -1,0 +1,97 @@
+schema_version: 1
+phase: '1'
+task_id: GF-W1-PLT-001
+title: Register PWRM0001 adapter so that the first pilot payload can activate.
+owner_role: DB Foundation Agent
+status: planned
+priority: HIGH
+risk_class: GOVERNANCE
+blast_radius: APP_LAYER
+intent: Registers the actual business logic schemas and jurisdiction profiles for
+  the PWRM0001 Plastic Waste  pilot. This bridges the generalized Green Finance core
+  schema into a specific, usable implementation  without modifying any foundational
+  SQL tables.
+anti_patterns:
+- Declaring implemented without a functional verification shell.
+- Writing adapter configurations that bleed domain logic into the core tables.
+- Executing schema DDL in this task. (This task is data/config only).
+out_of_scope:
+- Modifying core tables created in previous Wave 4 or Wave 5/6 tasks.
+- Creating migrations. This task uses data insertion scripts.
+stop_conditions:
+- If the adapter registration script fails to cleanly insert the configuration payload.
+proof_guarantees:
+- Verification mathematically confirms the adapter records exist in the registry.
+proof_limitations:
+- Cannot guarantee the PWRM0001 rules themselves are climatically sound.
+depends_on:
+- GF-W1-FNC-005
+blocks: []
+touches:
+- tasks/GF-W1-PLT-001/meta.yml
+- scripts/db/register_pwrm0001_adapter.sh
+- scripts/audit/verify_gf_w1_plt_001.sh
+- docs/plans/phase1/GF-W1-PLT-001/PLAN.md
+- docs/plans/phase1/GF-W1-PLT-001/EXEC_LOG.md
+invariants:
+- INV-GF-001
+work:
+- '[ID GF-W1-PLT-001] Draft the PLAN.md logic for GF-W1-PLT-001.'
+- '[ID GF-W1-PLT-001] Implement the database row insertions via scripts/db/register_pwrm0001_adapter.sh.'
+- '[ID GF-W1-PLT-001] Implement verify_gf_w1_plt_001.sh to rigorously assert the changes.'
+acceptance_criteria:
+- '[ID GF-W1-PLT-001] verify_gf_w1_plt_001.sh exits 0.'
+- '[ID GF-W1-PLT-001] Evidence artifact validates via validate_evidence.py.'
+- '[ID GF-W1-PLT-001] pre_ci.sh passes cleanly over the new modifications.'
+negative_tests:
+- id: GF-W1-PLT-001-N1
+  description: Attempting to register a malformed adapter payload must be rejected.
+  required: true
+positive_tests:
+- id: GF-W1-PLT-001-P1
+  description: Valid execution parameters construct expected row state without panic.
+  required: true
+verification:
+- '[ID GF-W1-PLT-001] bash scripts/dev/pre_ci.sh | grep -q ''.'' >> evidence/phase1/gf_w1_plt_001.json
+  || exit 1'
+- '[ID GF-W1-PLT-001] bash scripts/audit/verify_gf_w1_plt_001.sh | grep -q ''.'' >>
+  evidence/phase1/gf_w1_plt_001.json || exit 1'
+- '[ID GF-W1-PLT-001] python3 scripts/audit/validate_evidence.py --task GF-W1-PLT-001
+  --evidence evidence/phase1/gf_w1_plt_001.json | grep PASS >> evidence/phase1/gf_w1_plt_001.json
+  || exit 1'
+evidence:
+- evidence/phase1/gf_w1_plt_001.json
+failure_modes:
+  - "Evidence file missing"
+  - Evidence file missing => FAIL
+  - Verification script panics or exits > 0 => FAIL
+  - Adapter conflicts with core invariants => CRITICAL_FAIL
+must_read:
+- docs/operations/AI_AGENT_OPERATION_MANUAL.md
+- docs/operations/AGENTIC_SDLC_PILOT_POLICY.md
+- docs/operations/PILOT_REJECTION_PLAYBOOK.md
+- docs/operations/AGENT_GUARDRAILS_GREEN_FINANCE.md
+implementation_plan: docs/plans/phase1/GF-W1-PLT-001/PLAN.md
+implementation_log: docs/plans/phase1/GF-W1-PLT-001/EXEC_LOG.md
+notes: Scaffolded mechanically to satisfy the DAG sequence rules. ZERO migrations
+  task.
+client: internal
+assigned_agent: DB Foundation Agent
+model: claude-sonnet-4-20250514
+domain: green_finance
+pilot: true
+second_pilot_test:
+  candidate_sector_1: PWRM0001 plastic collection
+  candidate_sector_2: VM0044 solar energy
+  unchanged_core_tables: []
+  unchanged_core_functions: []
+  adapter_only_differences:
+  - This entire task is adapter-only logic by definition.
+  jurisdiction_profile_impact: Configures the Global South profile specific to PWRM0001.
+  required_core_changes: []
+  explanation: This task proves the architecture designed in earlier tasks. We are
+    inserting PWRM0001 configuration data using the agnostic functions we built, demonstrating
+    that zero generic table modifications are required to onboard a drastically specific
+    sector.
+  second_pilot_reviewed_by: ARCHITECT_AGENT
+pilot_scope_ref: docs/pilots/PILOT_PWRM0001/SCOPE.md

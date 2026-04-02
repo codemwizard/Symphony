@@ -63,7 +63,11 @@ canonical_keys = {
     "schema_version","phase","task_id","title","owner_role","status",
     "depends_on","touches","invariants","work","acceptance_criteria",
     "verification","evidence","failure_modes","must_read","notes",
-    "client","assigned_agent","model","implementation_plan","implementation_log"
+    "client","assigned_agent","model","implementation_plan","implementation_log",
+    "priority","risk_class","blast_radius","intent","anti_patterns","out_of_scope",
+    "stop_conditions","proof_guarantees","proof_limitations","blocks",
+    "negative_tests","positive_tests",
+    "domain","pilot","second_pilot_test","pilot_scope_ref"
 }
 
 list_fields = {

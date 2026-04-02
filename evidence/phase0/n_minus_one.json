@@ -1,15 +1,15 @@
 {
   "check_id": "DB-N-1-COMPAT",
-  "curr_table_count": 104,
-  "git_sha": "9f4c091829d39813bf5e8485e122c826b424eb5a",
-  "last_migration": "0076_onboarding_control_plane.sql",
+  "curr_table_count": 122,
+  "git_sha": "6d4d95d9122b976f7a571081d6a128e72e52952e",
+  "last_migration": "0114_gf_fn_asset_lifecycle.sql",
   "missing_columns": [],
   "missing_tables": [],
   "nullable_relaxations": [],
   "ok": true,
-  "prev_table_count": 101,
-  "schema_fingerprint": "59eef2a10b166543339b310ae67181cc9a8d6b22aa216e649e56652c2316e165",
+  "prev_table_count": 122,
+  "schema_fingerprint": "1f92363c69ba235e552a6aac05045062fc0097fc93cde3b89e76455b80628019",
   "status": "PASS",
-  "timestamp_utc": "2026-03-17T01:09:32Z",
+  "timestamp_utc": "2026-04-02T02:01:20Z",
   "type_mismatches": []
 }

@@ -17,7 +17,7 @@
   },
   "ai": {
     "ai_used": true,
-    "ai_prompt_hash": "security-wave-1-runtime-integrity-children",
+    "ai_prompt_hash": "c37a8200dd45f0543444e714ffba2d7d8b87addb90aaae74213b326cc9fbdd61",
     "model_id": "gpt-5-codex",
     "client": "codex_cli",
     "session_id": "security-wave-1-runtime-integrity-children"
@@ -558,7 +558,14 @@
       "wave1_task_pack/wave1_tasks/tasks/GF-W1-SCH-007/meta.yml",
       "wave1_task_pack/wave1_tasks/tasks/GF-W1-SCH-008/meta.yml",
       "wave1_task_pack/wave1_tasks/tasks/GF-W1-SCH-009/meta.yml",
-      "wave1_task_pack/wave1_tasks/wave1_dag.yml"
+      "wave1_task_pack/wave1_tasks/wave1_dag.yml",
+      "tasks/GF-W1-GOV-005A/meta.yml",
+      "tasks/GF-W1-PLT-001/meta.yml",
+      "tasks/GF-W1-SCH-002A/meta.yml",
+      "tasks/GF-W1-SCH-003/meta.yml",
+      "tasks/GF-W1-SCH-004/meta.yml",
+      "tasks/GF-W1-SCH-005/meta.yml",
+      "tasks/GF-W1-SCH-008/meta.yml"
     ],
     "invariants": [
       "INV-SCHEMA-OWNERSHIP-001",

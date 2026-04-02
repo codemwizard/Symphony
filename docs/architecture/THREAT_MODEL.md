@@ -235,6 +235,7 @@ Mitigations:
 - Hardening Wave-4 signing controls (`TSK-HARD-050`..`TSK-HARD-054`, `TSK-HARD-011B`, `TSK-HARD-096`) enforce key-class authorization boundaries, unsigned policy-bundle rejection, dependency-gated re-sign sweep execution, archive-only historical verification, and explicit HSM-bypass denial with verifier-backed evidence and SQLSTATE mapping alignment.
 - Wave-2 post-review hardening fix (`0068_wave2_finality_and_seal_hardening_fixes.sql`) enforces immutable effect seals, durable finality-conflict containment records (return-state hold semantics), and PUBLIC execute revocation on Wave-1 SECURITY DEFINER control functions.
 - Wave-2 hardening (`0076_onboarding_control_plane.sql`, TSK-P1-216, TSK-P1-217) persists operator onboarding state, enabling fully decoupled key domains (`api`, `admin`, `session`, `instruction`, `signing`) and removing dynamic `SYMPHONY_KNOWN_TENANTS` scope-bypass risks. Onboarding control-plane tables are safeguarded by RLS and audit timestamps.
+- Phase-1 Green Finance Wave 1 (`GF-W1-FNC-001`..`GF-W1-FNC-007B`) enforces comprehensive DB-layer functional verifiers, execution confinement, cryptographic evidence signatures, and RLS constraint propagation for project structures, asset lifecycles, and verification authorities.
 ## Priority security actions
 1) Implement service identity and mTLS for internal calls.
 2) Enforce policy checksum verification in ingest/orchestration path.

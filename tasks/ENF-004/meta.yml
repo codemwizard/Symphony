@@ -1,0 +1,145 @@
+schema_version: 1
+phase: '1'
+task_id: ENF-004
+title: Replace AGENT_ENTRYPOINT.md and prompt_template.md with versions that reference the evidence ack gate and the verify_drd_casefile.sh --clear path
+owner_role: ARCHITECT
+status: completed
+priority: NORMAL
+risk_class: GOVERNANCE
+blast_radius: DOCS_ONLY
+
+intent: >-
+  AGENT_ENTRYPOINT.md and prompt_template.md are the canonical documents that
+  every agent reads at session start. They currently reference 'rm' for lockout
+  clearance and have no mention of the evidence ack gate. Agents operating from
+  the old versions will not know that run_task.sh now exits 51 (ack required)
+  or 50 (hard block), and will not know they must use verify_drd_casefile.sh
+  --clear instead of raw rm. This task replaces both documents with the versions
+  from the staging package that include these references.
+
+anti_patterns:
+  - "Editing the existing files surgically instead of replacing them — the staging files are the canonical version and must be used as-is"
+  - "Applying ENF-004 before ENF-002 and ENF-003A are done — the docs reference verify_drd_casefile.sh and evidence_ack, which must exist first"
+  - "Marking completed without grepping for the new content — file copy can silently succeed on a wrong source path"
+
+out_of_scope:
+  - "Creating verify_drd_casefile.sh (ENF-002)"
+  - "Patching run_task.sh for ack gate or DRD gate (ENF-001, ENF-003A)"
+  - "Changes to any script in scripts/audit/ or scripts/agent/"
+
+stop_conditions:
+  - "If ENF-002 evidence does not show PASS → STOP; verify_drd_casefile.sh must exist before docs reference it"
+  - "If ENF-003A evidence does not show PASS → STOP; evidence_ack gate must be in run_task.sh before docs reference it"
+
+proof_guarantees:
+  - "verify_enf_004.sh confirms 'evidence_ack' appears in AGENT_ENTRYPOINT.md"
+  - "verify_enf_004.sh confirms 'evidence_ack' appears in .agent/prompt_template.md"
+  - "verify_enf_004.sh confirms 'verify_drd_casefile.sh --clear' appears in both files"
+  - "verify_enf_004.sh confirms 'Never use raw rm to clear lockout' or equivalent appears in prompt_template.md"
+
+proof_limitations:
+  - "Verifier checks content presence only — it cannot confirm agents will actually read and follow the updated docs"
+  - "Verifier cannot detect if a stale copy of the old docs exists elsewhere in the repo that agents might read instead"
+
+depends_on:
+  - ENF-002
+  - ENF-003A
+
+blocks: []
+
+touches:
+  - AGENT_ENTRYPOINT.md
+  - .agent/prompt_template.md
+  - scripts/audit/verify_enf_004.sh
+  - evidence/phase1/enf_004_agent_entrypoint_docs.json
+  - tasks/ENF-004/meta.yml
+
+invariants: []
+
+work:
+  - >-
+    [ID enf_004_wi01] Copy symphony-enforcement-v2/enf-004-agent-entrypoint-docs/AGENT_ENTRYPOINT.md
+    to AGENT_ENTRYPOINT.md at repo root. Copy symphony-enforcement-v2/enf-004-agent-entrypoint-docs/prompt_template.md
+    to .agent/prompt_template.md. Confirm each destination file is updated.
+  - >-
+    [ID enf_004_wi02] Create scripts/audit/verify_enf_004.sh: grep for 'evidence_ack'
+    and 'verify_drd_casefile.sh --clear' in both files; assert all greps return
+    matches; emit evidence/phase1/enf_004_agent_entrypoint_docs.json with status=PASS/FAIL
+    and observed_markers list.
+
+acceptance_criteria:
+  - >-
+    [ID enf_004_wi01] grep 'evidence_ack' AGENT_ENTRYPOINT.md returns a match.
+  - >-
+    [ID enf_004_wi01] grep 'evidence_ack' .agent/prompt_template.md returns a match.
+  - >-
+    [ID enf_004_wi01] grep 'verify_drd_casefile.sh --clear' AGENT_ENTRYPOINT.md
+    returns a match.
+  - >-
+    [ID enf_004_wi01] grep 'verify_drd_casefile.sh --clear' .agent/prompt_template.md
+    returns a match.
+  - >-
+    [ID enf_004_wi02] verify_enf_004.sh exits 0 with status=PASS in evidence JSON.
+
+negative_tests:
+  - id: ENF-004-N1
+    description: >-
+      Running verify_enf_004.sh against the original AGENT_ENTRYPOINT.md (which
+      does not contain 'evidence_ack') must exit non-zero with a message identifying
+      which marker is missing.
+    required: true
+
+positive_tests:
+  - id: ENF-004-P1
+    description: >-
+      Running verify_enf_004.sh after both files are correctly replaced must exit 0
+      with status=PASS and all four expected markers confirmed in the evidence JSON.
+    required: false
+
+verification:
+  - bash scripts/audit/verify_enf_004.sh
+  - python3 scripts/audit/validate_evidence.py --task ENF-004 --evidence evidence/phase1/enf_004_agent_entrypoint_docs.json
+  - bash scripts/dev/pre_ci.sh
+
+evidence:
+  - path: evidence/phase1/enf_004_agent_entrypoint_docs.json
+    must_include:
+      - task_id
+      - git_sha
+      - timestamp_utc
+      - status
+      - checks
+      - failures
+      - entrypoint_evidence_ack_confirmed
+      - entrypoint_clear_cmd_confirmed
+      - prompt_template_evidence_ack_confirmed
+      - prompt_template_clear_cmd_confirmed
+
+failure_modes:
+  - "Evidence file missing → FAIL (ENF-004 not verified)"
+  - "'evidence_ack' absent from either file → FAIL (agents unaware of exit 51/50 behaviour)"
+  - "'verify_drd_casefile.sh --clear' absent from either file → FAIL (agents may still use raw rm)"
+  - "ENF-004 applied before ENF-002 or ENF-003A → FAIL_REVIEW (docs reference non-existent tooling)"
+
+must_read:
+  - docs/operations/AI_AGENT_OPERATION_MANUAL.md
+  - symphony-enforcement-v2/MANIFEST.md
+  - symphony-enforcement-v2/enf-004-agent-entrypoint-docs/AGENT_ENTRYPOINT.md
+  - symphony-enforcement-v2/enf-004-agent-entrypoint-docs/prompt_template.md
+  - tasks/ENF-002/meta.yml
+  - tasks/ENF-003A/meta.yml
+
+implementation_plan: docs/plans/phase1/ENF-004/PLAN.md
+implementation_log: docs/plans/phase1/ENF-004/EXEC_LOG.md
+
+notes: >-
+  This task is a direct file replacement — no patch script or Python insertion
+  is needed. The staging files are the complete canonical versions. Apply them
+  with cp. ENF-004 must be the last task in the wave because it references
+  the outputs of ENF-002 (verify_drd_casefile.sh) and ENF-003A (evidence_ack
+  gate in run_task.sh). Applying it first would create docs that reference
+  non-existent tooling.
+
+client: codex_cli
+assigned_agent: architect
+model: <UNASSIGNED>

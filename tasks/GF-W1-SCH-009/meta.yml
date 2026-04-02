@@ -1,0 +1,103 @@
+schema_version: 1
+phase: '1'
+task_id: GF-W1-SCH-009
+title: Promote Phase 0 closeout invariants so that schema enforcement is locked before
+  Phase 1 functions begin.
+owner_role: DB_FOUNDATION_AGENT
+status: completed
+priority: HIGH
+risk_class: GOVERNANCE
+blast_radius: CI_GATES
+intent: Finalizes the Phase 0 schema by executing the final CI wiring for invariant
+  promotion.  This establishes the strict baseline required before Wave 5 Phase 1
+  functions (like project registration)  are allowed to actively mutate the ledger.
+anti_patterns:
+- Declaring implemented without a functional verification shell.
+- Wiring CI gates without executing the underlying invariant constraints.
+- Marking completion without evidence JSON emitted.
+out_of_scope:
+- Modifying core tables created in previous Wave 4 tasks.
+- Creating new tables outside the Phase 0 envelope.
+stop_conditions:
+- If the script conflicts with pre_ci.sh's existing verifiers.
+proof_guarantees:
+- Verification mathematically proves the CI wiring is functional.
+proof_limitations:
+- Cannot guarantee business logic correctness of the functions that will eventually
+  rely on these invariants.
+depends_on:
+- GF-W1-SCH-008
+- GF-W1-GOV-005A
+blocks:
+- GF-W1-FNC-001
+touches:
+- tasks/GF-W1-SCH-009/meta.yml
+- scripts/audit/verify_gf_w1_sch_009.sh
+- scripts/dev/pre_ci.sh
+- docs/plans/phase1/GF-W1-SCH-009/PLAN.md
+- docs/plans/phase1/GF-W1-SCH-009/EXEC_LOG.md
+invariants:
+- INV-GF-001
+work:
+- '[ID GF-W1-SCH-009] Draft the PLAN.md logic for GF-W1-SCH-009.'
+- '[ID GF-W1-SCH-009] Implement the CI wiring configuration in scripts/dev/pre_ci.sh.'
+- '[ID GF-W1-SCH-009] Implement verify_gf_w1_sch_009.sh to rigorously assert the changes.'
+acceptance_criteria:
+- '[ID GF-W1-SCH-009] verify_gf_w1_sch_009.sh exits 0.'
+- '[ID GF-W1-SCH-009] Evidence artifact validates via validate_evidence.py.'
+- '[ID GF-W1-SCH-009] pre_ci.sh passes cleanly over the new modifications.'
+negative_tests:
+- id: GF-W1-SCH-009-N1
+  description: Missing CI wiring should be rejected gracefully by the verification
+    script.
+  required: true
+positive_tests:
+- id: GF-W1-SCH-009-P1
+  description: Fully wired invariants execute without panic.
+  required: true
+verification:
+- '[ID GF-W1-SCH-009] bash scripts/dev/pre_ci.sh | grep -q ''.'' >> evidence/phase1/gf_w1_sch_009.json
+  || exit 1'
+- '[ID GF-W1-SCH-009] bash scripts/audit/verify_gf_w1_sch_009.sh | grep -q ''.'' >>
+  evidence/phase1/gf_w1_sch_009.json || exit 1'
+- '[ID GF-W1-SCH-009] python3 scripts/audit/validate_evidence.py --task GF-W1-SCH-009
+  --evidence evidence/phase1/gf_w1_sch_009.json | grep PASS >> evidence/phase1/gf_w1_sch_009.json
+  || exit 1'
+evidence:
+- evidence/phase1/gf_w1_sch_009.json
+failure_modes:
+  - "Evidence file missing"
+  - Evidence file missing => FAIL
+  - Verification script panics or exits > 0 => FAIL
+  - Creating schema bypasses without enforcement => CRITICAL_FAIL
+must_read:
+- docs/operations/AI_AGENT_OPERATION_MANUAL.md
+- docs/operations/AGENTIC_SDLC_PILOT_POLICY.md
+- docs/operations/PILOT_REJECTION_PLAYBOOK.md
+- docs/operations/AGENT_GUARDRAILS_GREEN_FINANCE.md
+implementation_plan: docs/plans/phase1/GF-W1-SCH-009/PLAN.md
+implementation_log: docs/plans/phase1/GF-W1-SCH-009/EXEC_LOG.md
+notes: Scaffolded mechanically to satisfy the DAG sequence rules for Wave 5.
+client: internal
+assigned_agent: DB Foundation Agent
+model: <UNASSIGNED>
+domain: green_finance
+pilot: false
+second_pilot_test:
+  candidate_sector_1: PWRM0001 plastic collection
+  candidate_sector_2: VM0044 solar energy
+  unchanged_core_tables:
+  - projects
+  unchanged_core_functions:
+  - register_project
+  adapter_only_differences:
+  - validation schemas
+  - expected payload keys
+  jurisdiction_profile_impact: None expected.
+  required_core_changes: []
+  explanation: The invariant promotion mechanism is entirely infrastructure-level
+    and acts exactly the same regardless of whether the incoming payload is plastic
+    collection or solar generation data. The CI gates verify structural compliance,
+    not payload content, making the implementation inherently multi-sector capable.
+  second_pilot_reviewed_by: ARCHITECT_AGENT
+pilot_scope_ref: not_applicable

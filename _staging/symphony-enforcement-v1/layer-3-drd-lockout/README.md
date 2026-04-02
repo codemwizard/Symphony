@@ -1,11 +1,11 @@
-﻿# LAYER 3: DRD Mechanical Lockout
+# LAYER 3: DRD Mechanical Lockout
 # STATUS: Already written to repo. These are canonical snapshots.
 #
 # Files modified in repo:
-#   scripts/audit/pre_ci_debug_contract.sh  ΓÇö added pre_ci_write_drd_lockout(), pre_ci_check_drd_lockout()
-#   scripts/dev/pre_ci.sh                   ΓÇö added pre_ci_check_drd_lockout() call at startup
-#   scripts/agent/run_task.sh               ΓÇö added rejection context with DRD state
-#   AGENT_ENTRYPOINT.md                     ΓÇö added Pre-Step with DRD lockout awareness
+#   scripts/audit/pre_ci_debug_contract.sh  -- added pre_ci_write_drd_lockout(), pre_ci_check_drd_lockout()
+#   scripts/dev/pre_ci.sh                   -- added pre_ci_check_drd_lockout() call at startup
+#   scripts/agent/run_task.sh               -- added rejection context with DRD state
+#   AGENT_ENTRYPOINT.md                     -- added Pre-Step with DRD lockout awareness
 #
 # How it works:
 #   1. pre_ci_record_failure() in pre_ci_debug_contract.sh counts failures per signature

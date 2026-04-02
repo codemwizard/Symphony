@@ -1,7 +1,7 @@
-﻿#!/usr/bin/env bash
+#!/usr/bin/env bash
 set -euo pipefail
 
-# pre_ci_debug_contract.sh ΓÇö STAGING SNAPSHOT (Layer 3 + registry lookup)
+# pre_ci_debug_contract.sh -- STAGING SNAPSHOT (Layer 3 + registry lookup)
 # TARGET: scripts/audit/pre_ci_debug_contract.sh
 # STATUS: This snapshot is the live version already written to repo,
 #         PLUS an enhancement to pre_ci_check_drd_lockout() that looks up
@@ -12,7 +12,7 @@ set -euo pipefail
 #   Replace pre_ci_check_drd_lockout() in the live file with the version below.
 #   Everything else in the live file remains unchanged.
 
-# ΓöÇΓöÇ ENHANCED pre_ci_check_drd_lockout() ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
+# -- ENHANCED pre_ci_check_drd_lockout() ---------------------------------------
 # Replace the existing function body with this version.
 # The addition is the "Registry lookup" block after the REQUIRED STEPS section.
 
@@ -24,7 +24,7 @@ pre_ci_check_drd_lockout() {
   # shellcheck disable=SC1090
   source "$PRE_CI_DRD_LOCKOUT_FILE"
 
-  echo "Γ¥î DRD LOCKOUT ACTIVE ΓÇö pre_ci.sh is blocked." >&2
+  echo "❌ DRD LOCKOUT ACTIVE -- pre_ci.sh is blocked." >&2
   echo "" >&2
   echo "  Failure signature : ${DRD_LOCKED_SIGNATURE:-unknown}" >&2
   echo "  Failure gate      : ${DRD_LOCKED_GATE_ID:-unknown}" >&2
@@ -43,12 +43,9 @@ pre_ci_check_drd_lockout() {
   echo "  4. Re-run pre_ci.sh" >&2
   echo "" >&2
 
-  # ΓöÇΓöÇ Registry lookup (new addition) ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
-  # If failure_signatures.yml exists, look up this signature and print the
-  # playbook link. This converts the lockout from a hard stop into a
-  # guided hard stop ΓÇö agents and humans know exactly where to look.
-  # Uses yaml.safe_load ΓÇö not line scanning ΓÇö so valid YAML formatting,
-  # multiline descriptions, and field reordering never break the lookup.
+  # -- Registry lookup (new addition) -----------------------------------------
+  # Look up this signature in failure_signatures.yml and print the playbook
+  # link. Uses yaml.safe_load so any valid YAML formatting works.
   local registry="${ROOT:-$(pwd)}/docs/operations/failure_signatures.yml"
   local sig="${DRD_LOCKED_SIGNATURE:-}"
   if [[ -n "$sig" && -f "$registry" ]]; then
@@ -71,7 +68,7 @@ PY
     fi
   fi
 
-  # ΓöÇΓöÇ Failure index reference ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
+  # -- Failure index reference -------------------------------------------------
   local index="${ROOT:-$(pwd)}/docs/operations/failure_index.md"
   if [[ -f "$index" ]]; then
     echo "  Prior incidents for this signature:" >&2

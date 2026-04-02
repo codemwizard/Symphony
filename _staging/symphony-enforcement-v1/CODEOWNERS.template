@@ -1,19 +1,15 @@
-﻿# Symphony CODEOWNERS
+# Symphony CODEOWNERS
 # TARGET: .github/CODEOWNERS
-# STATUS: NEW ΓÇö copy to .github/CODEOWNERS to activate.
+# STATUS: NEW -- copy to .github/CODEOWNERS to activate.
 #
 # PURPOSE:
 #   Protects governance files from agent self-modification.
 #   Any PR touching a file matching these patterns requires explicit approval
 #   from the owner before it can merge, regardless of CI status.
 #
-#   This closes the "CI sabotage" and "governance erosion" attack vectors:
-#   an agent cannot weaken its own enforcement scripts through a PR because
-#   the PR will be stuck awaiting human review.
-#
 # ACTIVATION:
 #   1. Copy this file to .github/CODEOWNERS
-#   2. In GitHub repo settings ΓåÆ Branches ΓåÆ main branch protection:
+#   2. In GitHub repo settings -> Branches -> main branch protection:
 #      - Enable "Require review from Code Owners"
 #      - Enable "Require pull request before merging"
 #      - Enable "Require status checks to pass"
@@ -21,29 +17,24 @@
 #
 # REPLACE @your-github-username with your actual GitHub username or a team name.
 
-# ΓöÇΓöÇ CI and workflow definitions ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
-# Agents must not disable or weaken CI gates through workflow file changes.
+# CI and workflow definitions
 .github/workflows/*                             @your-github-username
 .github/CODEOWNERS                              @your-github-username
 
-# ΓöÇΓöÇ Git enforcement hooks ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
-# Agents must not remove or weaken the pre-push or pre-commit hooks.
+# Git enforcement hooks
 .githooks/                                      @your-github-username
 
-# ΓöÇΓöÇ Core execution kernel ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
-# Agents must not modify the task runner or bootstrap to bypass gates.
+# Core execution kernel
 scripts/agent/run_task.sh                       @your-github-username
 scripts/agent/bootstrap.sh                      @your-github-username
 
-# ΓöÇΓöÇ Pre-CI and DRD enforcement ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
-# Agents must not weaken the pre-CI gate, DRD contract, or conformance checks.
+# Pre-CI and DRD enforcement
 scripts/dev/pre_ci.sh                           @your-github-username
 scripts/audit/pre_ci_debug_contract.sh          @your-github-username
 scripts/audit/verify_agent_conformance.sh       @your-github-username
 scripts/audit/verify_agent_conformance_spec.sh  @your-github-username
 
-# ΓöÇΓöÇ Agent policy and governance ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
-# Agents must not modify their own operating contracts.
+# Agent policy and governance
 .agent/                                         @your-github-username
 AGENT_ENTRYPOINT.md                             @your-github-username
 AGENTS.md                                       @your-github-username
@@ -51,18 +42,15 @@ agent_manifest.yml                              @your-github-username
 .codex/                                         @your-github-username
 .cursor/                                        @your-github-username
 
-# ΓöÇΓöÇ DRD lockout infrastructure ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
-# Agents must not remove lockout files without human awareness.
+# DRD lockout infrastructure
 .toolchain/pre_ci_debug/                        @your-github-username
 
-# ΓöÇΓöÇ Knowledge base and operations docs ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
-# Agents must not alter failure registries or troubleshooting guides.
+# Knowledge base and operations docs
 docs/operations/failure_signatures.yml          @your-github-username
 docs/operations/failure_index.md                @your-github-username
 docs/troubleshooting/                           @your-github-username
 
-# ΓöÇΓöÇ Approval and evidence infrastructure ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
-# Agents must not modify the scripts that validate their own evidence.
+# Approval and evidence infrastructure
 scripts/audit/validate_evidence.py              @your-github-username
 scripts/audit/validate_evidence_json.sh         @your-github-username
 scripts/audit/validate_evidence_schema.sh       @your-github-username

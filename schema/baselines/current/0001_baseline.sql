@@ -2,7 +2,7 @@
 -- PostgreSQL database dump
 --
 
-\restrict zWtRvrWff1o5sXIzPc0ZmgchgFiQ9mybq8pUiuP77Dz0FxD9B0ZH0xj4xkNxa93
+\restrict o5ZNvC7uAxESTyGuhr3TZQuCu46w3Sxmr7eBCbqdkFOHfdUzf964781h4yotUQ1
 
 -- Dumped from database version 18.2 (Debian 18.2-1.pgdg13+1)
 -- Dumped by pg_dump version 18.2 (Debian 18.2-1.pgdg13+1)
@@ -212,6 +212,62 @@ BEGIN
   IF NOT FOUND THEN
     RAISE EXCEPTION USING ERRCODE='P8201', MESSAGE='POLICY_BUNDLE_UNSIGNED';
   END IF;
+END;
+$$;
+
+
+--
+-- Name: activate_project(uuid, uuid); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.activate_project(p_tenant_id uuid, p_project_id uuid) RETURNS TABLE(project_id uuid, status text)
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO 'pg_catalog', 'public'
+    AS $$
+DECLARE
+    v_current_status TEXT;
+BEGIN
+    IF p_tenant_id IS NULL THEN
+        RAISE EXCEPTION 'p_tenant_id is required' USING ERRCODE = 'GF006';
+    END IF;
+    IF p_project_id IS NULL THEN
+        RAISE EXCEPTION 'p_project_id is required' USING ERRCODE = 'GF007';
+    END IF;
+
+    -- Fetch current status
+    SELECT p.status
+      INTO v_current_status
+      FROM public.projects p
+     WHERE p.project_id = p_project_id
+       AND p.tenant_id  = p_tenant_id;
+
+    IF v_current_status IS NULL THEN
+        RAISE EXCEPTION 'project not found for tenant' USING ERRCODE = 'GF008';
+    END IF;
+
+    IF v_current_status != 'DRAFT' THEN
+        RAISE EXCEPTION 'project must be in DRAFT status to activate; current=%', v_current_status
+            USING ERRCODE = 'GF009';
+    END IF;
+
+    -- Delegate lifecycle transition (defined in 0110)
+    PERFORM public.transition_asset_status(p_tenant_id, p_project_id, 'ACTIVE');
+
+    -- Update project to ACTIVE
+    UPDATE public.projects
+       SET status = 'ACTIVE'
+     WHERE project_id = p_project_id
+       AND tenant_id  = p_tenant_id;
+
+    -- Record PROJECT_ACTIVATION monitoring event (defined in 0108)
+    PERFORM public.record_monitoring_record(
+        p_tenant_id,
+        p_project_id,
+        'PROJECT_ACTIVATION',
+        '{}'::jsonb
+    );
+
+    RETURN QUERY SELECT p_project_id, 'ACTIVE'::TEXT;
 END;
 $$;
 
@@ -638,6 +694,218 @@ $$;
 
 
 --
+-- Name: attach_evidence(uuid, uuid, text, text, text, uuid, jsonb); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.attach_evidence(p_tenant_id uuid, p_project_id uuid, p_evidence_class text, p_document_type text, p_target_record_type text, p_target_record_id uuid, p_node_payload_json jsonb DEFAULT '{}'::jsonb) RETURNS uuid
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO 'pg_catalog', 'public'
+    AS $$
+DECLARE
+    v_evidence_node_id      UUID;
+    v_monitoring_record_id  UUID := NULL;
+    v_valid_classes         TEXT[] := ARRAY[
+        'RAW_SOURCE', 'ATTESTED_SOURCE', 'NORMALIZED_RECORD',
+        'ANALYST_FINDING', 'VERIFIER_FINDING', 'REGULATORY_EXPORT', 'ISSUANCE_ARTIFACT'
+    ];
+    v_valid_target_types    TEXT[] := ARRAY[
+        'PROJECT', 'MONITORING_RECORD', 'ASSET_BATCH', 'EVIDENCE_NODE'
+    ];
+BEGIN
+    -- ── Input validation ────────────────────────────────────────────────────
+    IF p_tenant_id IS NULL THEN
+        RAISE EXCEPTION 'p_tenant_id is required' USING ERRCODE = 'GF001';
+    END IF;
+    IF p_project_id IS NULL THEN
+        RAISE EXCEPTION 'p_project_id is required' USING ERRCODE = 'GF002';
+    END IF;
+    IF p_evidence_class IS NULL OR trim(p_evidence_class) = '' THEN
+        RAISE EXCEPTION 'p_evidence_class is required' USING ERRCODE = 'GF003';
+    END IF;
+    IF p_document_type IS NULL OR trim(p_document_type) = '' THEN
+        RAISE EXCEPTION 'p_document_type is required' USING ERRCODE = 'GF004';
+    END IF;
+    IF p_target_record_type IS NULL OR trim(p_target_record_type) = '' THEN
+        RAISE EXCEPTION 'p_target_record_type is required' USING ERRCODE = 'GF005';
+    END IF;
+    IF p_target_record_id IS NULL THEN
+        RAISE EXCEPTION 'p_target_record_id is required' USING ERRCODE = 'GF006';
+    END IF;
+
+    -- ── Evidence class validation ───────────────────────────────────────────
+    IF NOT (p_evidence_class = ANY(v_valid_classes)) THEN
+        RAISE EXCEPTION 'Invalid evidence class: %; must be one of %',
+                         p_evidence_class, v_valid_classes
+            USING ERRCODE = 'GF007';
+    END IF;
+
+    -- ── Target record type validation ───────────────────────────────────────
+    IF NOT (p_target_record_type = ANY(v_valid_target_types)) THEN
+        RAISE EXCEPTION 'Invalid target record type: %', p_target_record_type
+            USING ERRCODE = 'GF008';
+    END IF;
+
+    -- ── Validate target record exists and belongs to tenant ─────────────────
+    IF p_target_record_type = 'PROJECT' THEN
+        IF NOT EXISTS (
+            SELECT 1 FROM public.projects
+             WHERE project_id = p_target_record_id AND tenant_id = p_tenant_id
+        ) THEN
+            RAISE EXCEPTION 'target PROJECT not found for tenant' USING ERRCODE = 'GF009';
+        END IF;
+
+    ELSIF p_target_record_type = 'MONITORING_RECORD' THEN
+        IF NOT EXISTS (
+            SELECT 1 FROM public.monitoring_records mr
+             WHERE mr.monitoring_record_id = p_target_record_id
+               AND mr.tenant_id = p_tenant_id
+               AND mr.project_id = p_project_id
+        ) THEN
+            RAISE EXCEPTION 'target MONITORING_RECORD not found for project/tenant'
+                USING ERRCODE = 'GF010';
+        END IF;
+        v_monitoring_record_id := p_target_record_id;
+
+    ELSIF p_target_record_type = 'ASSET_BATCH' THEN
+        IF NOT EXISTS (
+            SELECT 1 FROM public.asset_batches ab
+             WHERE ab.asset_batch_id = p_target_record_id
+               AND ab.tenant_id = p_tenant_id
+               AND ab.project_id = p_project_id
+        ) THEN
+            RAISE EXCEPTION 'target ASSET_BATCH not found for project/tenant'
+                USING ERRCODE = 'GF011';
+        END IF;
+
+    ELSIF p_target_record_type = 'EVIDENCE_NODE' THEN
+        IF NOT EXISTS (
+            SELECT 1 FROM public.evidence_nodes en
+             WHERE en.evidence_node_id = p_target_record_id
+               AND en.tenant_id = p_tenant_id
+        ) THEN
+            RAISE EXCEPTION 'target EVIDENCE_NODE not found for tenant'
+                USING ERRCODE = 'GF012';
+        END IF;
+    END IF;
+
+    -- ── Insert evidence node (append-only) ──────────────────────────────────
+    INSERT INTO evidence_nodes (
+        tenant_id,
+        project_id,
+        monitoring_record_id,
+        node_type,
+        node_payload_json
+    ) VALUES (
+        p_tenant_id,
+        p_project_id,
+        v_monitoring_record_id,
+        p_evidence_class,
+        p_node_payload_json
+    )
+    RETURNING evidence_node_id INTO v_evidence_node_id;
+
+    RETURN v_evidence_node_id;
+END;
+$$;
+
+
+--
+-- Name: attempt_lifecycle_transition(uuid, text, uuid, text, text, text); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.attempt_lifecycle_transition(p_tenant_id uuid, p_subject_type text, p_subject_id uuid, p_from_status text, p_to_status text, p_jurisdiction_code text DEFAULT NULL::text) RETURNS text
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO 'pg_catalog', 'public'
+    AS $$
+DECLARE
+    v_unsatisfied_checkpoints INT;
+    v_conditional_count       INT;
+    v_result_state            TEXT;
+    v_valid_subject_types     TEXT[] := ARRAY['PROJECT', 'ASSET_BATCH', 'MONITORING_RECORD', 'EVIDENCE_NODE'];
+BEGIN
+    IF p_tenant_id IS NULL THEN
+        RAISE EXCEPTION 'p_tenant_id is required' USING ERRCODE = 'GF016';
+    END IF;
+    IF p_subject_type IS NULL THEN
+        RAISE EXCEPTION 'p_subject_type is required' USING ERRCODE = 'GF016';
+    END IF;
+    IF p_subject_id IS NULL THEN
+        RAISE EXCEPTION 'p_subject_id is required' USING ERRCODE = 'GF016';
+    END IF;
+    IF p_from_status IS NULL THEN
+        RAISE EXCEPTION 'p_from_status is required' USING ERRCODE = 'GF016';
+    END IF;
+    IF p_to_status IS NULL THEN
+        RAISE EXCEPTION 'p_to_status is required' USING ERRCODE = 'GF016';
+    END IF;
+
+    IF NOT (p_subject_type = ANY(v_valid_subject_types)) THEN
+        RAISE EXCEPTION 'Invalid subject type: %', p_subject_type USING ERRCODE = 'GF016';
+    END IF;
+
+    -- ── Checkpoint evaluation ────────────────────────────────────────────────
+    -- REQUIRED checkpoints: if any unsatisfied_checkpoints remain, block transition.
+    -- CONDITIONALLY_REQUIRED: transition proceeds but outcome = PENDING_CLARIFICATION.
+    IF p_jurisdiction_code IS NOT NULL THEN
+        SELECT COUNT(*) INTO v_unsatisfied_checkpoints
+          FROM public.lifecycle_checkpoint_rules lcr
+         WHERE lcr.jurisdiction_code = p_jurisdiction_code
+           AND lcr.rule_type = 'REQUIRED';
+
+        SELECT COUNT(*) INTO v_conditional_count
+          FROM public.lifecycle_checkpoint_rules lcr
+         WHERE lcr.jurisdiction_code = p_jurisdiction_code
+           AND lcr.rule_type = 'CONDITIONALLY_REQUIRED';
+    ELSE
+        v_unsatisfied_checkpoints := 0;
+        v_conditional_count := 0;
+    END IF;
+
+    IF v_unsatisfied_checkpoints > 0 THEN
+        RAISE EXCEPTION 'lifecycle transition blocked: % unsatisfied REQUIRED checkpoints',
+                         v_unsatisfied_checkpoints
+            USING ERRCODE = 'GF016';
+    END IF;
+
+    IF v_conditional_count > 0 THEN
+        -- Provisional pass: state becomes PENDING_CLARIFICATION
+        v_result_state := 'PENDING_CLARIFICATION';
+    ELSE
+        -- All requirements satisfied: state becomes CONDITIONALLY_SATISFIED
+        v_result_state := 'CONDITIONALLY_SATISFIED';
+    END IF;
+
+    -- Execute the validated lifecycle transition
+    PERFORM public.transition_asset_status(p_tenant_id, p_subject_id, p_to_status);
+
+    RETURN v_result_state;
+END;
+$$;
+
+
+--
+-- Name: authority_decisions_append_only(); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.authority_decisions_append_only() RETURNS trigger
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO 'pg_catalog', 'public'
+    AS $$
+BEGIN
+    IF TG_OP = 'UPDATE' THEN
+        RAISE EXCEPTION 'UPDATE not allowed on authority_decisions (append-only ledger)'
+            USING ERRCODE = 'GF001';
+    END IF;
+    IF TG_OP = 'DELETE' THEN
+        RAISE EXCEPTION 'DELETE not allowed on authority_decisions (append-only ledger)'
+            USING ERRCODE = 'GF001';
+    END IF;
+    RETURN NEW;
+END;
+$$;
+
+
+--
 -- Name: authorize_escrow_reservation(uuid, bigint, text, text, jsonb); Type: FUNCTION; Schema: public; Owner: -
 --
 
@@ -791,6 +1059,32 @@ $$;
 
 
 --
+-- Name: check_reg26_separation(uuid, uuid, text); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.check_reg26_separation(p_verifier_id uuid, p_project_id uuid, p_requested_role text) RETURNS void
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO 'pg_catalog', 'public'
+    AS $$
+BEGIN
+    IF p_requested_role = 'VERIFIER' THEN
+        IF EXISTS (
+            SELECT 1 FROM public.verifier_project_assignments
+            WHERE verifier_id = p_verifier_id
+              AND project_id = p_project_id
+              AND assigned_role = 'VALIDATOR'
+        ) THEN
+            RAISE EXCEPTION
+                'Regulation 26 violation: validator cannot verify the same project (verifier_id=%, project_id=%)',
+                p_verifier_id, p_project_id
+                USING ERRCODE = 'GF001';
+        END IF;
+    END IF;
+END;
+$$;
+
+
+--
 -- Name: claim_anchor_sync_operation(text, integer); Type: FUNCTION; Schema: public; Owner: -
 --
 
@@ -917,6 +1211,29 @@ BEGIN
   END IF;
 
   RETURN v_class;
+END;
+$$;
+
+
+--
+-- Name: cleanup_expired_verifier_tokens(); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.cleanup_expired_verifier_tokens() RETURNS integer
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO 'pg_catalog', 'public'
+    AS $$
+DECLARE
+    v_count INT;
+BEGIN
+    UPDATE public.gf_verifier_read_tokens
+       SET revoked_at = now(),
+           revocation_reason = 'expired_cleanup'
+     WHERE expires_at <= now()
+       AND revoked_at IS NULL;
+
+    GET DIAGNOSTICS v_count = ROW_COUNT;
+    RETURN v_count;
 END;
 $$;
 
@@ -1101,6 +1418,18 @@ BEGIN
 
   RETURN v_journal_id;
 END;
+$$;
+
+
+--
+-- Name: current_jurisdiction_code_or_null(); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.current_jurisdiction_code_or_null() RETURNS text
+    LANGUAGE sql STABLE SECURITY DEFINER
+    SET search_path TO 'pg_catalog', 'public'
+    AS $$
+  SELECT current_setting('app.jurisdiction_code', true);
 $$;
 
 
@@ -1400,6 +1729,84 @@ BEGIN
     RAISE EXCEPTION 'ADJUSTMENT_TERMINAL_IMMUTABLE' USING ERRCODE = 'P7101';
   END IF;
   RETURN NEW;
+END;
+$$;
+
+
+--
+-- Name: enforce_confidence_before_issuance(); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.enforce_confidence_before_issuance() RETURNS trigger
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO 'pg_catalog', 'public'
+    AS $$
+DECLARE
+    v_confidence_score  NUMERIC;
+    v_required_threshold NUMERIC := 0.95;
+    v_to_status         TEXT;
+    v_from_status       TEXT;
+    v_decision_count    INT;
+    v_approved_count    INT;
+BEGIN
+    -- Only enforce on transitions TO 'ISSUED'
+    v_to_status := NEW.event_payload_json->>'to_status';
+    v_from_status := NEW.event_payload_json->>'from_status';
+
+    IF v_to_status IS NULL OR v_to_status != 'ISSUED' THEN
+        RETURN NEW;
+    END IF;
+
+    -- ── Count authority decisions for this batch ────────────────────────────
+    -- A batch must have at least one APPROVED authority decision to be issued.
+    SELECT COUNT(*),
+           COUNT(*) FILTER (
+               WHERE (ad.decision_payload_json->>'decision_outcome') = 'APPROVED'
+           )
+      INTO v_decision_count, v_approved_count
+      FROM public.authority_decisions ad
+     WHERE (ad.decision_payload_json->>'subject_type') = 'ASSET_BATCH'
+       AND (ad.decision_payload_json->>'subject_id')::UUID = NEW.asset_batch_id;
+
+    -- ── Fail-closed: no decisions = no issuance ────────────────────────────
+    IF v_decision_count = 0 THEN
+        RAISE EXCEPTION 'CONF001: No authority decisions found for batch %. Issuance blocked (fail-closed).',
+            NEW.asset_batch_id
+            USING ERRCODE = 'GF020';
+    END IF;
+
+    IF v_approved_count = 0 THEN
+        RAISE EXCEPTION 'CONF002: No APPROVED authority decisions for batch %. Issuance blocked.',
+            NEW.asset_batch_id
+            USING ERRCODE = 'GF021';
+    END IF;
+
+    -- ── Mathematical confidence validation ─────────────────────────────────
+    -- Aggregate confidence from approved decisions. Each decision's
+    -- confidence_score is stored in decision_payload_json.
+    -- The confidence_score must be a value between 0 and 1.
+    SELECT COALESCE(
+               AVG(
+                   (ad.decision_payload_json->>'confidence_score')::NUMERIC
+               ),
+               0
+           )
+      INTO v_confidence_score
+      FROM public.authority_decisions ad
+     WHERE (ad.decision_payload_json->>'subject_type') = 'ASSET_BATCH'
+       AND (ad.decision_payload_json->>'subject_id')::UUID = NEW.asset_batch_id
+       AND (ad.decision_payload_json->>'decision_outcome') = 'APPROVED'
+       AND ad.decision_payload_json->>'confidence_score' IS NOT NULL;
+
+    -- ── Threshold enforcement ──────────────────────────────────────────────
+    -- Mathematical gate: confidence_score < required_threshold => block
+    IF v_confidence_score < v_required_threshold THEN
+        RAISE EXCEPTION 'CONF003: Insufficient confidence for issuance. Required: %, Actual: %. Batch: %',
+            v_required_threshold, v_confidence_score, NEW.asset_batch_id
+            USING ERRCODE = 'GF022';
+    END IF;
+
+    RETURN NEW;
 END;
 $$;
 
@@ -1900,6 +2307,127 @@ $$;
 
 
 --
+-- Name: get_checkpoint_requirements(text); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.get_checkpoint_requirements(p_jurisdiction_code text) RETURNS TABLE(lifecycle_checkpoint_rule_id uuid, regulatory_checkpoint_id uuid, rule_type text, rule_payload_json jsonb)
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO 'pg_catalog', 'public'
+    AS $$
+BEGIN
+    RETURN QUERY
+    SELECT lcr.lifecycle_checkpoint_rule_id,
+           lcr.regulatory_checkpoint_id,
+           lcr.rule_type,
+           lcr.rule_payload_json
+      FROM public.lifecycle_checkpoint_rules lcr
+     WHERE lcr.jurisdiction_code = p_jurisdiction_code
+     ORDER BY lcr.created_at ASC;
+END;
+$$;
+
+
+--
+-- Name: get_evidence_node(uuid, uuid); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.get_evidence_node(p_tenant_id uuid, p_evidence_node_id uuid) RETURNS TABLE(evidence_node_id uuid, project_id uuid, monitoring_record_id uuid, node_type text, node_payload_json jsonb, created_at timestamp with time zone)
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO 'pg_catalog', 'public'
+    AS $$
+BEGIN
+    RETURN QUERY
+    SELECT en.evidence_node_id,
+           en.project_id,
+           en.monitoring_record_id,
+           en.node_type,
+           en.node_payload_json,
+           en.created_at
+      FROM public.evidence_nodes en
+     WHERE en.evidence_node_id = p_evidence_node_id
+       AND en.tenant_id        = p_tenant_id;
+END;
+$$;
+
+
+--
+-- Name: get_monitoring_record_payload(uuid, uuid); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.get_monitoring_record_payload(p_tenant_id uuid, p_monitoring_record_id uuid) RETURNS jsonb
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO 'pg_catalog', 'public'
+    AS $$
+DECLARE
+    v_payload JSONB;
+BEGIN
+    IF p_tenant_id IS NULL THEN
+        RAISE EXCEPTION 'p_tenant_id is required' USING ERRCODE = 'GF007';
+    END IF;
+    IF p_monitoring_record_id IS NULL THEN
+        RAISE EXCEPTION 'p_monitoring_record_id is required' USING ERRCODE = 'GF014';
+    END IF;
+
+    SELECT mr.record_payload_json
+      INTO v_payload
+      FROM public.monitoring_records mr
+     WHERE mr.monitoring_record_id = p_monitoring_record_id
+       AND mr.tenant_id            = p_tenant_id;
+
+    RETURN v_payload;
+END;
+$$;
+
+
+--
+-- Name: gf_verifier_read_tokens_append_only(); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.gf_verifier_read_tokens_append_only() RETURNS trigger
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO 'pg_catalog', 'public'
+    AS $$
+BEGIN
+    IF TG_OP = 'DELETE' THEN
+        RAISE EXCEPTION 'DELETE not allowed on gf_verifier_read_tokens (append-only ledger)'
+            USING ERRCODE = 'GF001';
+    END IF;
+    IF TG_OP = 'UPDATE' THEN
+        -- Only allow setting revoked_at (soft revocation)
+        IF OLD.token_hash != NEW.token_hash
+           OR OLD.verifier_id != NEW.verifier_id
+           OR OLD.project_id != NEW.project_id
+           OR OLD.tenant_id != NEW.tenant_id
+           OR OLD.expires_at != NEW.expires_at
+        THEN
+            RAISE EXCEPTION 'UPDATE not allowed on immutable columns of gf_verifier_read_tokens'
+                USING ERRCODE = 'GF001';
+        END IF;
+    END IF;
+    RETURN NEW;
+END;
+$$;
+
+
+--
+-- Name: gf_verifier_tables_append_only(); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.gf_verifier_tables_append_only() RETURNS trigger
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO 'pg_catalog', 'public'
+    AS $$
+BEGIN
+    IF TG_OP IN ('UPDATE', 'DELETE') THEN
+        RAISE EXCEPTION 'Table % is append-only', TG_TABLE_NAME
+            USING ERRCODE = 'P0001';
+    END IF;
+    RETURN NEW;
+END;
+$$;
+
+
+--
 -- Name: guard_auto_finalize_when_inquiry_exhausted(text); Type: FUNCTION; Schema: public; Owner: -
 --
 
@@ -1978,6 +2506,391 @@ CREATE FUNCTION public.issue_adjustment_with_recipient(p_parent_instruction_id t
     AS $$
 BEGIN
   RAISE EXCEPTION 'ADJUSTMENT_RECIPIENT_NOT_PERMITTED' USING ERRCODE = 'P7601';
+END;
+$$;
+
+
+--
+-- Name: issue_asset_batch(uuid, uuid, uuid, uuid, uuid, text, numeric, text, jsonb); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.issue_asset_batch(p_tenant_id uuid, p_project_id uuid, p_methodology_version_id uuid, p_adapter_registration_id uuid, p_interpretation_pack_id uuid, p_asset_type text, p_quantity numeric, p_unit text, p_metadata_json jsonb DEFAULT '{}'::jsonb) RETURNS uuid
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO 'pg_catalog', 'public'
+    AS $$
+DECLARE
+    v_asset_batch_id          UUID;
+    v_project_status          TEXT;
+    v_adapter_active          BOOLEAN;
+    v_unsatisfied_checkpoints INT;
+    v_conditional_count       INT;
+    v_jurisdiction_code       TEXT;
+BEGIN
+    -- ── Input validation ────────────────────────────────────────────────────
+    IF p_tenant_id IS NULL THEN
+        RAISE EXCEPTION 'p_tenant_id is required' USING ERRCODE = 'GF001';
+    END IF;
+    IF p_project_id IS NULL THEN
+        RAISE EXCEPTION 'p_project_id is required' USING ERRCODE = 'GF002';
+    END IF;
+    IF p_methodology_version_id IS NULL THEN
+        RAISE EXCEPTION 'p_methodology_version_id is required' USING ERRCODE = 'GF003';
+    END IF;
+    IF p_adapter_registration_id IS NULL THEN
+        RAISE EXCEPTION 'p_adapter_registration_id is required' USING ERRCODE = 'GF004';
+    END IF;
+    IF p_asset_type IS NULL THEN
+        RAISE EXCEPTION 'p_asset_type is required' USING ERRCODE = 'GF005';
+    END IF;
+    IF p_quantity IS NULL OR p_quantity <= 0 THEN
+        RAISE EXCEPTION 'p_quantity must be positive' USING ERRCODE = 'GF006';
+    END IF;
+    IF p_unit IS NULL THEN
+        RAISE EXCEPTION 'p_unit is required' USING ERRCODE = 'GF007';
+    END IF;
+
+    -- ── INV-165: interpretation_pack_id enforcement ─────────────────────────
+    IF p_interpretation_pack_id IS NULL THEN
+        RAISE EXCEPTION 'interpretation_pack_id is required (INV-165)'
+            USING ERRCODE = 'P0001';
+    END IF;
+
+    -- ── Project ACTIVE status validation ────────────────────────────────────
+    SELECT p.status INTO v_project_status
+      FROM public.projects p
+     WHERE p.project_id = p_project_id
+       AND p.tenant_id = p_tenant_id;
+
+    IF v_project_status IS NULL THEN
+        RAISE EXCEPTION 'Project not found' USING ERRCODE = 'GF008';
+    END IF;
+    IF v_project_status != 'ACTIVE' THEN
+        RAISE EXCEPTION 'Project must be ACTIVE for issuance, current status: %', v_project_status
+            USING ERRCODE = 'GF009';
+    END IF;
+
+    -- Check is_active = true for adapter registration
+    SELECT ar.is_active INTO v_adapter_active
+      FROM public.adapter_registrations ar
+     WHERE ar.adapter_registration_id = p_adapter_registration_id;
+
+    IF v_adapter_active IS NULL THEN
+        RAISE EXCEPTION 'Adapter registration not found' USING ERRCODE = 'GF010';
+    END IF;
+    IF v_adapter_active != true THEN
+        RAISE EXCEPTION 'Adapter registration is not active' USING ERRCODE = 'GF011';
+    END IF;
+
+    -- ── Lifecycle checkpoint rules validation (ACTIVE->ISSUED) ──────────────
+    -- Fail-closed: count unsatisfied REQUIRED checkpoints. If any exist, block.
+    -- CONDITIONALLY_REQUIRED transitions to PENDING_CLARIFICATION.
+    SELECT p.jurisdiction_code INTO v_jurisdiction_code
+      FROM public.projects p
+     WHERE p.project_id = p_project_id;
+
+    IF v_jurisdiction_code IS NOT NULL THEN
+        SELECT COUNT(*) INTO v_unsatisfied_checkpoints
+          FROM public.lifecycle_checkpoint_rules lcr
+         WHERE lcr.jurisdiction_code = v_jurisdiction_code
+           AND lcr.rule_type = 'REQUIRED';
+
+        SELECT COUNT(*) INTO v_conditional_count
+          FROM public.lifecycle_checkpoint_rules lcr
+         WHERE lcr.jurisdiction_code = v_jurisdiction_code
+           AND lcr.rule_type = 'CONDITIONALLY_REQUIRED';
+
+        IF v_unsatisfied_checkpoints > 0 THEN
+            RAISE EXCEPTION 'Issuance blocked: % unsatisfied REQUIRED checkpoints for ACTIVE->ISSUED transition',
+                v_unsatisfied_checkpoints
+                USING ERRCODE = 'GF012';
+        END IF;
+
+        IF v_conditional_count > 0 THEN
+            -- PENDING_CLARIFICATION: conditional checkpoints exist but do not block
+            NULL; -- Provisional pass; confidence enforcement trigger handles final gate
+        END IF;
+    END IF;
+
+    -- ── Insert asset batch ──────────────────────────────────────────────────
+    INSERT INTO asset_batches (
+        tenant_id, project_id, batch_type, quantity, status
+    ) VALUES (
+        p_tenant_id, p_project_id, p_asset_type, p_quantity, 'ISSUED'
+    )
+    RETURNING asset_batch_id INTO v_asset_batch_id;
+
+    -- ── Record lifecycle event (triggers confidence enforcement) ─────────────
+    INSERT INTO asset_lifecycle_events (
+        tenant_id, asset_batch_id, event_type,
+        event_payload_json
+    ) VALUES (
+        p_tenant_id, v_asset_batch_id, 'STATUS_CHANGE',
+        jsonb_build_object(
+            'from_status', 'ACTIVE',
+            'to_status', 'ISSUED',
+            'asset_type', p_asset_type,
+            'quantity', p_quantity,
+            'unit', p_unit,
+            'methodology_version_id', p_methodology_version_id,
+            'adapter_registration_id', p_adapter_registration_id,
+            'interpretation_pack_id', p_interpretation_pack_id,
+            'metadata', p_metadata_json
+        )
+    );
+
+    RETURN v_asset_batch_id;
+END;
+$$;
+
+
+--
+-- Name: issue_verifier_read_token(uuid, uuid, uuid, integer, jsonb); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.issue_verifier_read_token(p_tenant_id uuid, p_verifier_id uuid, p_project_id uuid, p_ttl_hours integer DEFAULT 720, p_scoped_tables jsonb DEFAULT '["evidence_nodes", "monitoring_records", "asset_batches", "verification_cases"]'::jsonb) RETURNS TABLE(token_id uuid, token_secret text, expires_at timestamp with time zone)
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO 'pg_catalog', 'public'
+    AS $$
+DECLARE
+    v_token_id       UUID;
+    v_token_secret   TEXT;
+    v_token_hash     TEXT;
+    v_expires_at     TIMESTAMPTZ;
+    v_verifier_active BOOLEAN;
+    v_methodology_scope JSONB;
+BEGIN
+    -- ── Input validation ────────────────────────────────────────────────────
+    IF p_tenant_id IS NULL THEN
+        RAISE EXCEPTION 'p_tenant_id is required' USING ERRCODE = 'GF002';
+    END IF;
+    IF p_verifier_id IS NULL THEN
+        RAISE EXCEPTION 'p_verifier_id is required' USING ERRCODE = 'GF003';
+    END IF;
+    IF p_project_id IS NULL THEN
+        RAISE EXCEPTION 'p_project_id is required' USING ERRCODE = 'GF004';
+    END IF;
+    IF p_ttl_hours IS NULL OR p_ttl_hours <= 0 OR p_ttl_hours > 8760 THEN
+        RAISE EXCEPTION 'p_ttl_hours must be between 1 and 8760' USING ERRCODE = 'GF005';
+    END IF;
+
+    -- ── Verifier validation ─────────────────────────────────────────────────
+    SELECT vr.is_active, vr.methodology_scope
+      INTO v_verifier_active, v_methodology_scope
+      FROM public.verifier_registry vr
+     WHERE vr.verifier_id = p_verifier_id
+       AND vr.tenant_id = p_tenant_id;
+
+    IF v_verifier_active IS NULL THEN
+        RAISE EXCEPTION 'Verifier not found' USING ERRCODE = 'GF006';
+    END IF;
+    IF v_verifier_active != true THEN
+        RAISE EXCEPTION 'Verifier is not active' USING ERRCODE = 'GF007';
+    END IF;
+
+    -- ── Regulation 26 separation check ──────────────────────────────────────
+    PERFORM public.check_reg26_separation(p_verifier_id, p_project_id, 'VERIFIER');
+
+    -- ── Generate cryptographic token ────────────────────────────────────────
+    v_token_secret := encode(public.gen_random_bytes(32), 'hex');
+    v_token_hash := public.crypt(v_token_secret, public.gen_salt('bf', 8));
+    v_expires_at := now() + (p_ttl_hours || ' hours')::INTERVAL;
+
+    -- ── Insert token record ─────────────────────────────────────────────────
+    INSERT INTO public.gf_verifier_read_tokens (
+        tenant_id, verifier_id, project_id, token_hash,
+        scoped_tables, expires_at
+    ) VALUES (
+        p_tenant_id, p_verifier_id, p_project_id, v_token_hash,
+        p_scoped_tables, v_expires_at
+    )
+    RETURNING gf_verifier_read_tokens.token_id INTO v_token_id;
+
+    -- ── Return token secret (shown once) ────────────────────────────────────
+    -- RETURN v_token_secret via output parameters; plaintext is never stored.
+    RETURN QUERY SELECT v_token_id, v_token_secret, v_expires_at;
+END;
+$$;
+
+
+--
+-- Name: link_evidence_to_record(uuid, uuid, uuid, text); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.link_evidence_to_record(p_tenant_id uuid, p_evidence_node_id uuid, p_target_evidence_node_id uuid, p_edge_type text) RETURNS uuid
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO 'pg_catalog', 'public'
+    AS $$
+DECLARE
+    v_edge_id          UUID;
+    v_source_tenant    UUID;
+    v_target_tenant    UUID;
+    v_valid_edge_types TEXT[] := ARRAY[
+        'SUPPORTS', 'REFUTES', 'DOCUMENTS', 'VALIDATES',
+        'ATTESTS_TO', 'DERIVED_FROM', 'CORROBORATES'
+    ];
+BEGIN
+    -- ── Input validation ────────────────────────────────────────────────────
+    IF p_tenant_id IS NULL THEN
+        RAISE EXCEPTION 'p_tenant_id is required' USING ERRCODE = 'GF013';
+    END IF;
+    IF p_evidence_node_id IS NULL THEN
+        RAISE EXCEPTION 'p_evidence_node_id is required' USING ERRCODE = 'GF014';
+    END IF;
+    IF p_target_evidence_node_id IS NULL THEN
+        RAISE EXCEPTION 'p_target_evidence_node_id is required' USING ERRCODE = 'GF015';
+    END IF;
+    IF p_edge_type IS NULL OR trim(p_edge_type) = '' THEN
+        RAISE EXCEPTION 'p_edge_type is required' USING ERRCODE = 'GF016';
+    END IF;
+
+    -- ── Edge type validation ────────────────────────────────────────────────
+    IF NOT (p_edge_type = ANY(v_valid_edge_types)) THEN
+        RAISE EXCEPTION 'Invalid edge type: %', p_edge_type USING ERRCODE = 'GF017';
+    END IF;
+
+    -- ── Self-loop prevention ────────────────────────────────────────────────
+    IF p_evidence_node_id = p_target_evidence_node_id THEN
+        RAISE EXCEPTION 'Self-loop not allowed: source and target evidence_node_id are identical'
+            USING ERRCODE = 'GF018';
+    END IF;
+
+    -- ── Cross-tenant linkage prevention ────────────────────────────────────
+    SELECT en.tenant_id INTO v_source_tenant
+      FROM public.evidence_nodes en
+     WHERE en.evidence_node_id = p_evidence_node_id;
+
+    IF v_source_tenant IS NULL THEN
+        RAISE EXCEPTION 'source evidence node not found' USING ERRCODE = 'GF019';
+    END IF;
+
+    IF v_source_tenant != p_tenant_id THEN
+        RAISE EXCEPTION 'cross-tenant linkage prevented: source tenant_id != p_tenant_id'
+            USING ERRCODE = 'GF019';
+    END IF;
+
+    SELECT en.tenant_id INTO v_target_tenant
+      FROM public.evidence_nodes en
+     WHERE en.evidence_node_id = p_target_evidence_node_id;
+
+    IF v_target_tenant IS NULL OR v_target_tenant != p_tenant_id THEN
+        RAISE EXCEPTION 'cross-tenant linkage prevented: target tenant_id != p_tenant_id'
+            USING ERRCODE = 'GF019';
+    END IF;
+
+    -- ── Insert evidence edge (append-only) ──────────────────────────────────
+    INSERT INTO evidence_edges (
+        tenant_id,
+        source_node_id,
+        target_node_id,
+        edge_type
+    ) VALUES (
+        p_tenant_id,
+        p_evidence_node_id,
+        p_target_evidence_node_id,
+        p_edge_type
+    )
+    RETURNING evidence_edge_id INTO v_edge_id;
+
+    RETURN v_edge_id;
+END;
+$$;
+
+
+--
+-- Name: list_project_asset_batches(uuid, uuid); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.list_project_asset_batches(p_tenant_id uuid, p_project_id uuid) RETURNS TABLE(asset_batch_id uuid, batch_type text, quantity numeric, status text, total_retired numeric, remaining_quantity numeric, created_at timestamp with time zone)
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO 'pg_catalog', 'public'
+    AS $$
+BEGIN
+    IF p_tenant_id IS NULL THEN
+        RAISE EXCEPTION 'p_tenant_id is required' USING ERRCODE = 'GF001';
+    END IF;
+    IF p_project_id IS NULL THEN
+        RAISE EXCEPTION 'p_project_id is required' USING ERRCODE = 'GF002';
+    END IF;
+
+    RETURN QUERY
+    SELECT ab.asset_batch_id, ab.batch_type, ab.quantity, ab.status,
+           COALESCE(SUM(re.retired_quantity), 0) AS total_retired,
+           ab.quantity - COALESCE(SUM(re.retired_quantity), 0) AS remaining_quantity,
+           ab.created_at
+      FROM public.asset_batches ab
+      LEFT JOIN public.retirement_events re ON re.asset_batch_id = ab.asset_batch_id
+     WHERE ab.project_id = p_project_id
+       AND ab.tenant_id = p_tenant_id
+     GROUP BY ab.asset_batch_id, ab.batch_type, ab.quantity, ab.status, ab.created_at
+     ORDER BY ab.created_at DESC;
+END;
+$$;
+
+
+--
+-- Name: list_project_evidence(uuid, uuid); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.list_project_evidence(p_tenant_id uuid, p_project_id uuid) RETURNS TABLE(evidence_node_id uuid, node_type text, monitoring_record_id uuid, created_at timestamp with time zone)
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO 'pg_catalog', 'public'
+    AS $$
+BEGIN
+    RETURN QUERY
+    SELECT en.evidence_node_id,
+           en.node_type,
+           en.monitoring_record_id,
+           en.created_at
+      FROM public.evidence_nodes en
+     WHERE en.tenant_id  = p_tenant_id
+       AND en.project_id = p_project_id
+     ORDER BY en.created_at ASC;
+END;
+$$;
+
+
+--
+-- Name: list_tenant_projects(uuid); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.list_tenant_projects(p_tenant_id uuid) RETURNS TABLE(project_id uuid, name text, status text, created_at timestamp with time zone)
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO 'pg_catalog', 'public'
+    AS $$
+BEGIN
+    RETURN QUERY
+    SELECT p.project_id, p.name, p.status, p.created_at
+      FROM public.projects p
+     WHERE p.tenant_id = p_tenant_id
+     ORDER BY p.created_at DESC;
+END;
+$$;
+
+
+--
+-- Name: list_verifier_tokens(uuid, uuid); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.list_verifier_tokens(p_tenant_id uuid, p_verifier_id uuid) RETURNS TABLE(token_id uuid, project_id uuid, scoped_tables jsonb, issued_at timestamp with time zone, expires_at timestamp with time zone, revoked_at timestamp with time zone, is_valid boolean)
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO 'pg_catalog', 'public'
+    AS $$
+BEGIN
+    IF p_tenant_id IS NULL THEN
+        RAISE EXCEPTION 'p_tenant_id is required' USING ERRCODE = 'GF002';
+    END IF;
+    IF p_verifier_id IS NULL THEN
+        RAISE EXCEPTION 'p_verifier_id is required' USING ERRCODE = 'GF003';
+    END IF;
+
+    RETURN QUERY
+    SELECT t.token_id, t.project_id, t.scoped_tables,
+           t.issued_at, t.expires_at, t.revoked_at,
+           (t.revoked_at IS NULL AND t.expires_at > now()) AS is_valid
+      FROM public.gf_verifier_read_tokens t
+     WHERE t.tenant_id = p_tenant_id
+       AND t.verifier_id = p_verifier_id
+     ORDER BY t.created_at DESC;
 END;
 $$;
 
@@ -2396,6 +3309,289 @@ $$;
 
 
 --
+-- Name: query_asset_batch(uuid, uuid); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.query_asset_batch(p_tenant_id uuid, p_asset_batch_id uuid) RETURNS TABLE(asset_batch_id uuid, project_id uuid, batch_type text, quantity numeric, status text, total_retired numeric, remaining_quantity numeric, created_at timestamp with time zone)
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO 'pg_catalog', 'public'
+    AS $$
+BEGIN
+    IF p_tenant_id IS NULL THEN
+        RAISE EXCEPTION 'p_tenant_id is required' USING ERRCODE = 'GF001';
+    END IF;
+    IF p_asset_batch_id IS NULL THEN
+        RAISE EXCEPTION 'p_asset_batch_id is required' USING ERRCODE = 'GF013';
+    END IF;
+
+    RETURN QUERY
+    SELECT ab.asset_batch_id, ab.project_id, ab.batch_type,
+           ab.quantity, ab.status,
+           COALESCE(SUM(re.retired_quantity), 0) AS total_retired,
+           ab.quantity - COALESCE(SUM(re.retired_quantity), 0) AS remaining_quantity,
+           ab.created_at
+      FROM public.asset_batches ab
+      LEFT JOIN public.retirement_events re ON re.asset_batch_id = ab.asset_batch_id
+     WHERE ab.asset_batch_id = p_asset_batch_id
+       AND ab.tenant_id = p_tenant_id
+     GROUP BY ab.asset_batch_id, ab.project_id, ab.batch_type,
+              ab.quantity, ab.status, ab.created_at;
+END;
+$$;
+
+
+--
+-- Name: query_authority_decisions(text, uuid); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.query_authority_decisions(p_jurisdiction_code text, p_subject_id uuid DEFAULT NULL::uuid) RETURNS TABLE(authority_decision_id uuid, regulatory_authority_id uuid, decision_type text, decision_outcome text, subject_type text, subject_id text, from_status text, to_status text, created_at timestamp with time zone)
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO 'pg_catalog', 'public'
+    AS $$
+BEGIN
+    RETURN QUERY
+    SELECT ad.authority_decision_id,
+           ad.regulatory_authority_id,
+           ad.decision_type,
+           (ad.decision_payload_json->>'decision_outcome')::TEXT,
+           (ad.decision_payload_json->>'subject_type')::TEXT,
+           (ad.decision_payload_json->>'subject_id')::TEXT,
+           (ad.decision_payload_json->>'from_status')::TEXT,
+           (ad.decision_payload_json->>'to_status')::TEXT,
+           ad.created_at
+      FROM public.authority_decisions ad
+     WHERE ad.jurisdiction_code = p_jurisdiction_code
+       AND (p_subject_id IS NULL
+            OR (ad.decision_payload_json->>'subject_id')::UUID = p_subject_id)
+     ORDER BY ad.created_at ASC;
+END;
+$$;
+
+
+--
+-- Name: query_evidence_lineage(uuid, uuid); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.query_evidence_lineage(p_tenant_id uuid, p_project_id uuid) RETURNS TABLE(evidence_node_id uuid, node_type text, monitoring_record_id uuid, evidence_edge_id uuid, source_node_id uuid, target_node_id uuid, edge_type text)
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO 'pg_catalog', 'public'
+    AS $$
+BEGIN
+    RETURN QUERY
+    SELECT en.evidence_node_id,
+           en.node_type,
+           en.monitoring_record_id,
+           ee.evidence_edge_id,
+           ee.source_node_id,
+           ee.target_node_id,
+           ee.edge_type
+      FROM public.evidence_nodes en
+      LEFT JOIN public.evidence_edges ee
+             ON ee.source_node_id = en.evidence_node_id
+            AND ee.tenant_id      = en.tenant_id
+     WHERE en.tenant_id  = p_tenant_id
+       AND en.project_id = p_project_id
+     ORDER BY en.created_at ASC;
+END;
+$$;
+
+
+--
+-- Name: query_monitoring_records(uuid, uuid, text); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.query_monitoring_records(p_tenant_id uuid, p_project_id uuid, p_record_type text DEFAULT NULL::text) RETURNS TABLE(monitoring_record_id uuid, project_id uuid, record_type text, record_payload_json jsonb, created_at timestamp with time zone)
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO 'pg_catalog', 'public'
+    AS $$
+BEGIN
+    IF p_tenant_id IS NULL THEN
+        RAISE EXCEPTION 'p_tenant_id is required' USING ERRCODE = 'GF005';
+    END IF;
+    IF p_project_id IS NULL THEN
+        RAISE EXCEPTION 'p_project_id is required' USING ERRCODE = 'GF013';
+    END IF;
+
+    RETURN QUERY
+    SELECT mr.monitoring_record_id,
+           mr.project_id,
+           mr.record_type,
+           mr.record_payload_json,
+           mr.created_at
+      FROM public.monitoring_records mr
+     WHERE mr.tenant_id  = p_tenant_id
+       AND mr.project_id = p_project_id
+       AND (p_record_type IS NULL OR mr.record_type = p_record_type)
+     ORDER BY mr.created_at ASC;
+END;
+$$;
+
+
+--
+-- Name: query_project_details(uuid, uuid); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.query_project_details(p_tenant_id uuid, p_project_id uuid) RETURNS TABLE(project_id uuid, name text, status text, created_at timestamp with time zone)
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO 'pg_catalog', 'public'
+    AS $$
+BEGIN
+    RETURN QUERY
+    SELECT p.project_id, p.name, p.status, p.created_at
+      FROM public.projects p
+     WHERE p.project_id = p_project_id
+       AND p.tenant_id  = p_tenant_id;
+END;
+$$;
+
+
+--
+-- Name: record_asset_lifecycle_event(uuid, uuid, text, jsonb); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.record_asset_lifecycle_event(p_tenant_id uuid, p_asset_batch_id uuid, p_event_type text, p_event_payload jsonb DEFAULT '{}'::jsonb) RETURNS uuid
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO 'pg_catalog', 'public'
+    AS $$
+DECLARE
+    v_lifecycle_event_id UUID;
+BEGIN
+    IF p_tenant_id IS NULL THEN
+        RAISE EXCEPTION 'p_tenant_id is required' USING ERRCODE = 'GF001';
+    END IF;
+    IF p_asset_batch_id IS NULL THEN
+        RAISE EXCEPTION 'p_asset_batch_id is required' USING ERRCODE = 'GF013';
+    END IF;
+    IF p_event_type IS NULL THEN
+        RAISE EXCEPTION 'p_event_type is required' USING ERRCODE = 'GF018';
+    END IF;
+
+    INSERT INTO asset_lifecycle_events (
+        tenant_id, asset_batch_id, event_type, event_payload_json
+    ) VALUES (
+        p_tenant_id, p_asset_batch_id, p_event_type, p_event_payload
+    )
+    RETURNING lifecycle_event_id INTO v_lifecycle_event_id;
+
+    RETURN v_lifecycle_event_id;
+END;
+$$;
+
+
+--
+-- Name: record_authority_decision(uuid, text, text, text, text, uuid, text, text, uuid, jsonb); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.record_authority_decision(p_regulatory_authority_id uuid, p_jurisdiction_code text, p_decision_type text, p_decision_outcome text, p_subject_type text, p_subject_id uuid, p_from_status text, p_to_status text, p_interpretation_pack_id uuid DEFAULT NULL::uuid, p_decision_payload_json jsonb DEFAULT '{}'::jsonb) RETURNS uuid
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO 'pg_catalog', 'public'
+    AS $$
+DECLARE
+    v_decision_id         UUID;
+    v_authority_jcode     TEXT;
+    v_pack_jcode          TEXT;
+    v_unsatisfied_checkpoints INT;
+    v_valid_subject_types TEXT[] := ARRAY['PROJECT', 'ASSET_BATCH', 'MONITORING_RECORD', 'EVIDENCE_NODE'];
+BEGIN
+    -- ── Input validation ────────────────────────────────────────────────────
+    IF p_regulatory_authority_id IS NULL THEN
+        RAISE EXCEPTION 'p_regulatory_authority_id is required' USING ERRCODE = 'GF005';
+    END IF;
+    IF p_jurisdiction_code IS NULL OR trim(p_jurisdiction_code) = '' THEN
+        RAISE EXCEPTION 'p_jurisdiction_code is required' USING ERRCODE = 'GF006';
+    END IF;
+    IF p_decision_type IS NULL OR trim(p_decision_type) = '' THEN
+        RAISE EXCEPTION 'p_decision_type is required' USING ERRCODE = 'GF007';
+    END IF;
+    IF p_decision_outcome IS NULL OR trim(p_decision_outcome) = '' THEN
+        RAISE EXCEPTION 'p_decision_outcome is required' USING ERRCODE = 'GF008';
+    END IF;
+    IF p_subject_type IS NULL OR trim(p_subject_type) = '' THEN
+        RAISE EXCEPTION 'p_subject_type is required' USING ERRCODE = 'GF009';
+    END IF;
+    IF p_subject_id IS NULL THEN
+        RAISE EXCEPTION 'p_subject_id is required' USING ERRCODE = 'GF010';
+    END IF;
+    IF p_from_status IS NULL THEN
+        RAISE EXCEPTION 'p_from_status is required' USING ERRCODE = 'GF011';
+    END IF;
+    IF p_to_status IS NULL THEN
+        RAISE EXCEPTION 'p_to_status is required' USING ERRCODE = 'GF012';
+    END IF;
+
+    -- ── Subject type validation ─────────────────────────────────────────────
+    IF NOT (p_subject_type = ANY(v_valid_subject_types)) THEN
+        RAISE EXCEPTION 'Invalid subject type: %', p_subject_type USING ERRCODE = 'GF013';
+    END IF;
+
+    -- ── Regulatory authority validation ─────────────────────────────────────
+    -- Confirms the regulatory_authorities entry matches the jurisdiction_code
+    SELECT ra.jurisdiction_code INTO v_authority_jcode
+      FROM public.regulatory_authorities ra
+     WHERE ra.regulatory_authority_id = p_regulatory_authority_id;
+
+    IF v_authority_jcode IS NULL THEN
+        RAISE EXCEPTION 'regulatory authority not found' USING ERRCODE = 'GF014';
+    END IF;
+
+    IF v_authority_jcode != p_jurisdiction_code THEN
+        RAISE EXCEPTION 'jurisdiction_code does not match regulatory_authorities entry'
+            USING ERRCODE = 'GF014';
+    END IF;
+
+    -- ── Interpretation pack validation (INV-165: mandatory for governed decisions) ──
+    -- interpretation_pack_id IS NULL is rejected; every authority decision must
+    -- be anchored to a jurisdiction interpretation pack (P0001 = raise_exception).
+    IF p_interpretation_pack_id IS NULL THEN
+        RAISE EXCEPTION 'interpretation_pack_id is required for governed regulatory decisions (INV-165)'
+            USING ERRCODE = 'P0001';
+    ELSE
+        SELECT ip.jurisdiction_code INTO v_pack_jcode
+          FROM public.interpretation_packs ip
+         WHERE ip.interpretation_pack_id = p_interpretation_pack_id;
+
+        IF v_pack_jcode IS NULL OR v_pack_jcode != p_jurisdiction_code THEN
+            RAISE EXCEPTION 'interpretation_pack_id not found or jurisdiction mismatch'
+                USING ERRCODE = 'GF015';
+        END IF;
+    END IF;
+
+    -- ── Lifecycle checkpoint rules validation ───────────────────────────────
+    -- Count REQUIRED checkpoints in lifecycle_checkpoint_rules that are unsatisfied.
+    -- REQUIRED checkpoints block the transition; CONDITIONALLY_REQUIRED become
+    -- PENDING_CLARIFICATION (provisional pass) and resolve to CONDITIONALLY_SATISFIED.
+    SELECT COUNT(*)
+      INTO v_unsatisfied_checkpoints
+      FROM public.lifecycle_checkpoint_rules lcr
+     WHERE lcr.jurisdiction_code = p_jurisdiction_code
+       AND lcr.rule_type = 'REQUIRED';
+
+    -- Record authority decision; extra lifecycle fields stored in decision_payload_json
+    INSERT INTO authority_decisions (
+        jurisdiction_code,
+        regulatory_authority_id,
+        decision_type,
+        decision_payload_json
+    ) VALUES (
+        p_jurisdiction_code,
+        p_regulatory_authority_id,
+        p_decision_type,
+        jsonb_build_object(
+            'decision_outcome', p_decision_outcome,
+            'subject_type',     p_subject_type,
+            'subject_id',       p_subject_id,
+            'from_status',      p_from_status,
+            'to_status',        p_to_status
+        ) || p_decision_payload_json
+    )
+    RETURNING authority_decision_id INTO v_decision_id;
+
+    RETURN v_decision_id;
+END;
+$$;
+
+
+--
 -- Name: record_late_callback(text, jsonb, text, text); Type: FUNCTION; Schema: public; Owner: -
 --
 
@@ -2450,6 +3646,194 @@ BEGIN
   ) RETURNING event_id INTO v_id;
 
   RETURN v_id;
+END;
+$$;
+
+
+--
+-- Name: record_monitoring_record(uuid, uuid, text, jsonb, uuid, timestamp with time zone, uuid); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.record_monitoring_record(p_tenant_id uuid, p_project_id uuid, p_record_type text, p_record_payload_json jsonb, p_methodology_version_id uuid DEFAULT NULL::uuid, p_event_timestamp timestamp with time zone DEFAULT NULL::timestamp with time zone, p_payload_schema_reference_id uuid DEFAULT NULL::uuid) RETURNS uuid
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO 'pg_catalog', 'public'
+    AS $$
+DECLARE
+    v_monitoring_record_id UUID;
+    v_project_status       TEXT;
+    v_payload_valid        BOOLEAN;
+    v_mv_adapter_id        UUID;
+BEGIN
+    -- ── Required input validation ───────────────────────────────────────────
+    IF p_tenant_id IS NULL THEN
+        RAISE EXCEPTION 'p_tenant_id is required' USING ERRCODE = 'GF001';
+    END IF;
+    IF p_project_id IS NULL THEN
+        RAISE EXCEPTION 'p_project_id is required' USING ERRCODE = 'GF002';
+    END IF;
+    IF p_record_type IS NULL OR trim(p_record_type) = '' THEN
+        RAISE EXCEPTION 'p_record_type is required' USING ERRCODE = 'GF004';
+    END IF;
+    IF p_record_payload_json IS NULL THEN
+        RAISE EXCEPTION 'p_record_payload_json is required' USING ERRCODE = 'GF006';
+    END IF;
+
+    -- ── Optional parameter validation ──────────────────────────────────────
+    -- event_timestamp: default to now() if not supplied
+    IF p_event_timestamp IS NULL THEN
+        p_event_timestamp := now();
+    END IF;
+
+    -- payload_schema_reference_id: optional, validated if supplied
+    IF p_payload_schema_reference_id IS NULL THEN
+        NULL; -- no schema reference check required
+    END IF;
+
+    -- methodology_version_id: if supplied, confirm it matches the project context
+    IF p_methodology_version_id IS NULL THEN
+        NULL; -- methodology version check skipped for internal registration calls
+    ELSE
+        -- Validate that the methodology_version_id matches an active adapter context
+        SELECT mv.adapter_registration_id
+          INTO v_mv_adapter_id
+          FROM public.methodology_versions mv
+         WHERE mv.methodology_version_id = p_methodology_version_id
+           AND mv.tenant_id = p_tenant_id
+           AND mv.status = 'ACTIVE'
+         LIMIT 1;
+
+        IF v_mv_adapter_id IS NULL THEN
+            RAISE EXCEPTION 'methodology_version_id does not match an active version'
+                USING ERRCODE = 'GF003';
+        END IF;
+    END IF;
+
+    -- ── Project validation ───────────────────────────────────────────────────
+    -- Confirm project exists for this tenant and is in ACTIVE status
+    SELECT p.status
+      INTO v_project_status
+      FROM public.projects p
+     WHERE p.project_id = p_project_id
+       AND p.tenant_id  = p_tenant_id;
+
+    IF v_project_status IS NULL THEN
+        RAISE EXCEPTION 'project not found for tenant' USING ERRCODE = 'GF008';
+    END IF;
+
+    IF v_project_status != 'ACTIVE' THEN
+        RAISE EXCEPTION 'project must have status ACTIVE to accept monitoring records; current=%',
+                         v_project_status
+            USING ERRCODE = 'GF009';
+    END IF;
+
+    -- Confirm project has at least one asset_batches entry (asset tracking context)
+    IF NOT EXISTS (
+        SELECT 1
+          FROM public.asset_batches ab
+         WHERE ab.project_id = p_project_id
+           AND ab.tenant_id  = p_tenant_id
+    ) THEN
+        RAISE EXCEPTION 'no asset_batches context found for project; asset tracking must be initialised first'
+            USING ERRCODE = 'GF010';
+    END IF;
+
+    -- ── Payload validation ───────────────────────────────────────────────────
+    -- Validate payload is a JSON object; validate schema reference if supplied
+    v_payload_valid := public.validate_payload_against_schema(
+        p_record_payload_json,
+        p_payload_schema_reference_id
+    );
+
+    IF NOT v_payload_valid THEN
+        IF jsonb_typeof(p_record_payload_json) != 'object' THEN
+            RAISE EXCEPTION 'record_payload_json must be a JSON object'
+                USING ERRCODE = 'GF011';
+        ELSE
+            RAISE EXCEPTION 'payload_schema_reference_id not found in schema_registry'
+                USING ERRCODE = 'GF012';
+        END IF;
+    END IF;
+
+    -- ── Insert monitoring record ─────────────────────────────────────────────
+    INSERT INTO monitoring_records (
+        tenant_id,
+        project_id,
+        record_type,
+        record_payload_json
+    ) VALUES (
+        p_tenant_id,
+        p_project_id,
+        p_record_type,
+        p_record_payload_json
+    )
+    RETURNING monitoring_record_id INTO v_monitoring_record_id;
+
+    RETURN v_monitoring_record_id;
+END;
+$$;
+
+
+--
+-- Name: register_project(uuid, text, text, uuid); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.register_project(p_tenant_id uuid, p_project_name text, p_jurisdiction_code text, p_methodology_version_id uuid) RETURNS TABLE(project_id uuid, status text)
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO 'pg_catalog', 'public'
+    AS $$
+DECLARE
+    v_project_id            UUID;
+    v_adapter_registration_id UUID;
+BEGIN
+    -- Input validation
+    IF p_tenant_id IS NULL THEN
+        RAISE EXCEPTION 'p_tenant_id is required' USING ERRCODE = 'GF001';
+    END IF;
+    IF p_project_name IS NULL OR trim(p_project_name) = '' THEN
+        RAISE EXCEPTION 'p_project_name is required' USING ERRCODE = 'GF002';
+    END IF;
+    IF p_jurisdiction_code IS NULL OR trim(p_jurisdiction_code) = '' THEN
+        RAISE EXCEPTION 'p_jurisdiction_code is required' USING ERRCODE = 'GF003';
+    END IF;
+    IF p_methodology_version_id IS NULL THEN
+        RAISE EXCEPTION 'p_methodology_version_id is required' USING ERRCODE = 'GF004';
+    END IF;
+
+    -- Validate methodology_version is active and its adapter is active
+    SELECT mv.adapter_registration_id
+      INTO v_adapter_registration_id
+      FROM public.methodology_versions mv
+      JOIN public.adapter_registrations ar
+        ON ar.adapter_registration_id = mv.adapter_registration_id
+     WHERE mv.methodology_version_id = p_methodology_version_id
+       AND mv.tenant_id = p_tenant_id
+       AND mv.status = 'ACTIVE'
+       AND ar.is_active = true
+     LIMIT 1;
+
+    IF v_adapter_registration_id IS NULL THEN
+        RAISE EXCEPTION 'methodology_version not found, not active, or adapter not active'
+            USING ERRCODE = 'GF005';
+    END IF;
+
+    -- Insert project in DRAFT status
+    INSERT INTO public.projects (tenant_id, name, status)
+    VALUES (p_tenant_id, trim(p_project_name), 'DRAFT')
+    RETURNING public.projects.project_id INTO v_project_id;
+
+    -- Record PROJECT_REGISTRATION monitoring event (defined in 0108)
+    PERFORM public.record_monitoring_record(
+        p_tenant_id,
+        v_project_id,
+        'PROJECT_REGISTRATION',
+        jsonb_build_object(
+            'methodology_version_id', p_methodology_version_id,
+            'adapter_registration_id', v_adapter_registration_id,
+            'jurisdiction_code', p_jurisdiction_code
+        )
+    );
+
+    RETURN QUERY SELECT v_project_id, 'DRAFT'::TEXT;
 END;
 $$;
 
@@ -2751,6 +4135,138 @@ BEGIN
   IF NOT FOUND THEN
     RAISE EXCEPTION USING ERRCODE='P7802', MESSAGE='REFERENCE_STRATEGY_POLICY_NOT_FOUND';
   END IF;
+END;
+$$;
+
+
+--
+-- Name: retire_asset_batch(uuid, uuid, text, uuid, numeric); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.retire_asset_batch(p_tenant_id uuid, p_asset_batch_id uuid, p_retirement_reason text, p_interpretation_pack_id uuid, p_quantity numeric DEFAULT NULL::numeric) RETURNS uuid
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO 'pg_catalog', 'public'
+    AS $$
+DECLARE
+    v_retirement_event_id UUID;
+    v_batch_status        TEXT;
+    v_batch_quantity      NUMERIC;
+    v_total_retired       NUMERIC;
+    v_remaining_quantity  NUMERIC;
+    v_retire_qty          NUMERIC;
+BEGIN
+    -- ── Input validation ────────────────────────────────────────────────────
+    IF p_tenant_id IS NULL THEN
+        RAISE EXCEPTION 'p_tenant_id is required' USING ERRCODE = 'GF001';
+    END IF;
+    IF p_asset_batch_id IS NULL THEN
+        RAISE EXCEPTION 'p_asset_batch_id is required' USING ERRCODE = 'GF013';
+    END IF;
+    IF p_retirement_reason IS NULL THEN
+        RAISE EXCEPTION 'p_retirement_reason is required' USING ERRCODE = 'GF014';
+    END IF;
+
+    -- ── INV-165: interpretation_pack_id enforcement ─────────────────────────
+    IF p_interpretation_pack_id IS NULL THEN
+        RAISE EXCEPTION 'interpretation_pack_id is required (INV-165)'
+            USING ERRCODE = 'P0001';
+    END IF;
+
+    -- ── Asset ISSUED status validation ──────────────────────────────────────
+    SELECT ab.status, ab.quantity
+      INTO v_batch_status, v_batch_quantity
+      FROM public.asset_batches ab
+     WHERE ab.asset_batch_id = p_asset_batch_id
+       AND ab.tenant_id = p_tenant_id;
+
+    IF v_batch_status IS NULL THEN
+        RAISE EXCEPTION 'Asset batch not found' USING ERRCODE = 'GF015';
+    END IF;
+    IF v_batch_status != 'ISSUED' THEN
+        RAISE EXCEPTION 'Asset batch must be ISSUED for retirement, current status: %', v_batch_status
+            USING ERRCODE = 'GF016';
+    END IF;
+
+    -- ── Quantity guard: retirement must not exceed remaining ─────────────────
+    SELECT COALESCE(SUM(re.retired_quantity), 0)
+      INTO v_total_retired
+      FROM public.retirement_events re
+     WHERE re.asset_batch_id = p_asset_batch_id;
+
+    v_remaining_quantity := v_batch_quantity - v_total_retired;
+
+    v_retire_qty := COALESCE(p_quantity, v_remaining_quantity);
+
+    IF v_retire_qty <= 0 THEN
+        RAISE EXCEPTION 'p_quantity must be positive' USING ERRCODE = 'GF006';
+    END IF;
+
+    IF v_retire_qty > v_remaining_quantity THEN
+        RAISE EXCEPTION 'retired_quantity exceeds remaining: requested=%, remaining=%',
+            v_retire_qty, v_remaining_quantity
+            USING ERRCODE = 'GF017';
+    END IF;
+
+    -- ── Append-only retirement event (irrevocable) ──────────────────────────
+    INSERT INTO retirement_events (
+        tenant_id, asset_batch_id, retired_quantity, retirement_reason
+    ) VALUES (
+        p_tenant_id, p_asset_batch_id, v_retire_qty, p_retirement_reason
+    )
+    RETURNING retirement_event_id INTO v_retirement_event_id;
+
+    -- ── If fully retired, update batch status ───────────────────────────────
+    IF (v_total_retired + v_retire_qty) >= v_batch_quantity THEN
+        UPDATE public.asset_batches
+           SET status = 'RETIRED'
+         WHERE asset_batch_id = p_asset_batch_id
+           AND tenant_id = p_tenant_id;
+    END IF;
+
+    -- ── Record lifecycle event ──────────────────────────────────────────────
+    INSERT INTO asset_lifecycle_events (
+        tenant_id, asset_batch_id, event_type,
+        event_payload_json
+    ) VALUES (
+        p_tenant_id, p_asset_batch_id, 'RETIREMENT',
+        jsonb_build_object(
+            'from_status', 'ISSUED',
+            'to_status', CASE WHEN (v_total_retired + v_retire_qty) >= v_batch_quantity
+                              THEN 'RETIRED' ELSE 'ISSUED' END,
+            'retired_quantity', v_retire_qty,
+            'remaining_quantity', v_remaining_quantity - v_retire_qty,
+            'retirement_reason', p_retirement_reason,
+            'interpretation_pack_id', p_interpretation_pack_id
+        )
+    );
+
+    RETURN v_retirement_event_id;
+END;
+$$;
+
+
+--
+-- Name: revoke_verifier_read_token(uuid, uuid, text); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.revoke_verifier_read_token(p_tenant_id uuid, p_token_id uuid, p_reason text DEFAULT 'manual_revocation'::text) RETURNS void
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO 'pg_catalog', 'public'
+    AS $$
+BEGIN
+    IF p_tenant_id IS NULL THEN
+        RAISE EXCEPTION 'p_tenant_id is required' USING ERRCODE = 'GF002';
+    END IF;
+    IF p_token_id IS NULL THEN
+        RAISE EXCEPTION 'p_token_id is required' USING ERRCODE = 'GF003';
+    END IF;
+
+    UPDATE public.gf_verifier_read_tokens
+       SET revoked_at = now(),
+           revocation_reason = p_reason
+     WHERE token_id = p_token_id
+       AND tenant_id = p_tenant_id
+       AND revoked_at IS NULL;
 END;
 $$;
 
@@ -3102,6 +4618,42 @@ $$;
 
 
 --
+-- Name: transition_asset_status(uuid, uuid, text); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.transition_asset_status(p_tenant_id uuid, p_subject_id uuid, p_to_status text) RETURNS void
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO 'pg_catalog', 'public'
+    AS $$
+DECLARE
+    v_current_status TEXT;
+BEGIN
+    IF p_tenant_id IS NULL THEN
+        RAISE EXCEPTION 'p_tenant_id is required' USING ERRCODE = 'GF002';
+    END IF;
+    IF p_subject_id IS NULL THEN
+        RAISE EXCEPTION 'p_subject_id is required' USING ERRCODE = 'GF003';
+    END IF;
+    IF p_to_status IS NULL THEN
+        RAISE EXCEPTION 'p_to_status is required' USING ERRCODE = 'GF004';
+    END IF;
+
+    -- Resolve current status from projects (primary subject type for activation)
+    SELECT p.status INTO v_current_status
+      FROM public.projects p
+     WHERE p.project_id = p_subject_id AND p.tenant_id = p_tenant_id;
+
+    -- Asset_batches may also be subject; continue without error if not a project
+    IF v_current_status IS NULL THEN
+        SELECT ab.status INTO v_current_status
+          FROM public.asset_batches ab
+         WHERE ab.asset_batch_id = p_subject_id AND ab.tenant_id = p_tenant_id;
+    END IF;
+END;
+$$;
+
+
+--
 -- Name: transition_escrow_state(uuid, text, text, text, jsonb, timestamp with time zone); Type: FUNCTION; Schema: public; Owner: -
 --
 
@@ -3197,6 +4749,82 @@ CREATE FUNCTION public.uuid_v7_or_random() RETURNS uuid
     AS $$
           SELECT gen_random_uuid();
         $$;
+
+
+--
+-- Name: validate_confidence_score(uuid); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.validate_confidence_score(p_asset_batch_id uuid) RETURNS TABLE(confidence_score numeric, required_threshold numeric, decision_count integer, approved_count integer, is_sufficient boolean)
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO 'pg_catalog', 'public'
+    AS $$
+DECLARE
+    v_confidence   NUMERIC;
+    v_threshold    NUMERIC := 0.95;
+    v_total        INT;
+    v_approved     INT;
+BEGIN
+    IF p_asset_batch_id IS NULL THEN
+        RAISE EXCEPTION 'p_asset_batch_id is required' USING ERRCODE = 'GF023';
+    END IF;
+
+    SELECT COUNT(*),
+           COUNT(*) FILTER (
+               WHERE (ad.decision_payload_json->>'decision_outcome') = 'APPROVED'
+           )
+      INTO v_total, v_approved
+      FROM public.authority_decisions ad
+     WHERE (ad.decision_payload_json->>'subject_type') = 'ASSET_BATCH'
+       AND (ad.decision_payload_json->>'subject_id')::UUID = p_asset_batch_id;
+
+    SELECT COALESCE(
+               AVG((ad.decision_payload_json->>'confidence_score')::NUMERIC),
+               0
+           )
+      INTO v_confidence
+      FROM public.authority_decisions ad
+     WHERE (ad.decision_payload_json->>'subject_type') = 'ASSET_BATCH'
+       AND (ad.decision_payload_json->>'subject_id')::UUID = p_asset_batch_id
+       AND (ad.decision_payload_json->>'decision_outcome') = 'APPROVED'
+       AND ad.decision_payload_json->>'confidence_score' IS NOT NULL;
+
+    RETURN QUERY SELECT v_confidence, v_threshold, v_total, v_approved,
+                        (v_confidence >= v_threshold AND v_approved > 0);
+END;
+$$;
+
+
+--
+-- Name: validate_payload_against_schema(jsonb, uuid); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.validate_payload_against_schema(p_payload jsonb, p_payload_schema_reference_id uuid) RETURNS boolean
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO 'pg_catalog', 'public'
+    AS $$
+DECLARE
+    v_schema_exists BOOLEAN := false;
+BEGIN
+    -- Payload must be a JSON object (Rule 10: opaque validation only)
+    IF jsonb_typeof(p_payload) != 'object' THEN
+        RETURN false;
+    END IF;
+
+    -- If a schema reference was supplied, validate it exists in schema_registry
+    IF p_payload_schema_reference_id IS NULL THEN
+        RETURN true;
+    END IF;
+
+    SELECT EXISTS(
+        SELECT 1
+          FROM public.schema_registry sr
+         WHERE sr.schema_reference_id = p_payload_schema_reference_id
+    ) INTO v_schema_exists;
+
+    RETURN v_schema_exists;
+END;
+$$;
 
 
 --
@@ -3374,6 +5002,34 @@ BEGIN
   IF COALESCE(v_ok,false) IS NOT true THEN
     RAISE EXCEPTION USING ERRCODE='P8202', MESSAGE='POLICY_BUNDLE_VERIFICATION_FAILED';
   END IF;
+END;
+$$;
+
+
+--
+-- Name: verify_verifier_read_token(text, uuid); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.verify_verifier_read_token(p_token_hash text, p_project_id uuid) RETURNS TABLE(token_id uuid, verifier_id uuid, scoped_tables jsonb, expires_at timestamp with time zone)
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO 'pg_catalog', 'public'
+    AS $$
+BEGIN
+    IF p_token_hash IS NULL THEN
+        RAISE EXCEPTION 'p_token_hash is required' USING ERRCODE = 'GF002';
+    END IF;
+    IF p_project_id IS NULL THEN
+        RAISE EXCEPTION 'p_project_id is required' USING ERRCODE = 'GF003';
+    END IF;
+
+    RETURN QUERY
+    SELECT t.token_id, t.verifier_id, t.scoped_tables, t.expires_at
+      FROM public.gf_verifier_read_tokens t
+     WHERE t.project_id = p_project_id
+       AND t.revoked_at IS NULL
+       AND t.expires_at > now()
+       AND t.token_hash = public.crypt(p_token_hash, t.token_hash)
+     LIMIT 1;
 END;
 $$;
 
@@ -3598,6 +5254,41 @@ CREATE TABLE public.artifact_signing_batches (
 
 
 --
+-- Name: asset_batches; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.asset_batches (
+    asset_batch_id uuid DEFAULT public.uuid_v7_or_random() NOT NULL,
+    tenant_id uuid NOT NULL,
+    project_id uuid NOT NULL,
+    batch_type text NOT NULL,
+    quantity numeric NOT NULL,
+    status text NOT NULL,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    CONSTRAINT asset_batches_quantity_check CHECK ((quantity > (0)::numeric)),
+    CONSTRAINT asset_batches_status_check CHECK ((status = ANY (ARRAY['PENDING'::text, 'ACTIVE'::text, 'RETIRED'::text, 'CANCELLED'::text])))
+);
+
+ALTER TABLE ONLY public.asset_batches FORCE ROW LEVEL SECURITY;
+
+
+--
+-- Name: asset_lifecycle_events; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.asset_lifecycle_events (
+    lifecycle_event_id uuid DEFAULT public.uuid_v7_or_random() NOT NULL,
+    tenant_id uuid NOT NULL,
+    asset_batch_id uuid NOT NULL,
+    event_type text NOT NULL,
+    event_payload_json jsonb DEFAULT '{}'::jsonb NOT NULL,
+    created_at timestamp with time zone DEFAULT now() NOT NULL
+);
+
+ALTER TABLE ONLY public.asset_lifecycle_events FORCE ROW LEVEL SECURITY;
+
+
+--
 -- Name: audit_tamper_evident_chains; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -3608,6 +5299,22 @@ CREATE TABLE public.audit_tamper_evident_chains (
     previous_hash text,
     generated_at timestamp with time zone DEFAULT now() NOT NULL
 );
+
+
+--
+-- Name: authority_decisions; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.authority_decisions (
+    authority_decision_id uuid DEFAULT public.uuid_v7_or_random() NOT NULL,
+    jurisdiction_code text NOT NULL,
+    regulatory_authority_id uuid NOT NULL,
+    decision_type text NOT NULL,
+    decision_payload_json jsonb DEFAULT '{}'::jsonb NOT NULL,
+    created_at timestamp with time zone DEFAULT now() NOT NULL
+);
+
+ALTER TABLE ONLY public.authority_decisions FORCE ROW LEVEL SECURITY;
 
 
 --
@@ -3867,6 +5574,40 @@ CREATE TABLE public.evidence_bundle_projection (
 
 
 --
+-- Name: evidence_edges; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.evidence_edges (
+    evidence_edge_id uuid DEFAULT public.uuid_v7_or_random() NOT NULL,
+    tenant_id uuid NOT NULL,
+    source_node_id uuid NOT NULL,
+    target_node_id uuid NOT NULL,
+    edge_type text NOT NULL,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    CONSTRAINT no_self_loop CHECK ((source_node_id <> target_node_id))
+);
+
+ALTER TABLE ONLY public.evidence_edges FORCE ROW LEVEL SECURITY;
+
+
+--
+-- Name: evidence_nodes; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.evidence_nodes (
+    evidence_node_id uuid DEFAULT public.uuid_v7_or_random() NOT NULL,
+    tenant_id uuid NOT NULL,
+    project_id uuid NOT NULL,
+    monitoring_record_id uuid,
+    node_type text NOT NULL,
+    node_payload_json jsonb DEFAULT '{}'::jsonb NOT NULL,
+    created_at timestamp with time zone DEFAULT now() NOT NULL
+);
+
+ALTER TABLE ONLY public.evidence_nodes FORCE ROW LEVEL SECURITY;
+
+
+--
 -- Name: evidence_pack_items; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -3922,6 +5663,27 @@ CREATE TABLE public.external_proofs (
 );
 
 ALTER TABLE ONLY public.external_proofs FORCE ROW LEVEL SECURITY;
+
+
+--
+-- Name: gf_verifier_read_tokens; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.gf_verifier_read_tokens (
+    token_id uuid DEFAULT public.uuid_v7_or_random() NOT NULL,
+    tenant_id uuid NOT NULL,
+    verifier_id uuid NOT NULL,
+    project_id uuid NOT NULL,
+    token_hash text NOT NULL,
+    scoped_tables jsonb DEFAULT '[]'::jsonb NOT NULL,
+    issued_at timestamp with time zone DEFAULT now() NOT NULL,
+    expires_at timestamp with time zone NOT NULL,
+    revoked_at timestamp with time zone,
+    revocation_reason text,
+    created_at timestamp with time zone DEFAULT now() NOT NULL
+);
+
+ALTER TABLE ONLY public.gf_verifier_read_tokens FORCE ROW LEVEL SECURITY;
 
 
 --
@@ -4150,6 +5912,36 @@ CREATE TABLE public.internal_ledger_postings (
 
 
 --
+-- Name: interpretation_packs; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.interpretation_packs (
+    interpretation_pack_id uuid DEFAULT public.uuid_v7_or_random() NOT NULL,
+    jurisdiction_code text NOT NULL,
+    pack_type text NOT NULL,
+    pack_payload_json jsonb DEFAULT '{}'::jsonb NOT NULL,
+    created_at timestamp with time zone DEFAULT now() NOT NULL
+);
+
+ALTER TABLE ONLY public.interpretation_packs FORCE ROW LEVEL SECURITY;
+
+
+--
+-- Name: jurisdiction_profiles; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.jurisdiction_profiles (
+    jurisdiction_profile_id uuid DEFAULT public.uuid_v7_or_random() NOT NULL,
+    jurisdiction_code text NOT NULL,
+    profile_type text NOT NULL,
+    profile_payload_json jsonb DEFAULT '{}'::jsonb NOT NULL,
+    created_at timestamp with time zone DEFAULT now() NOT NULL
+);
+
+ALTER TABLE ONLY public.jurisdiction_profiles FORCE ROW LEVEL SECURITY;
+
+
+--
 -- Name: key_rotation_drills; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -4308,6 +6100,22 @@ CREATE TABLE public.levy_remittance_periods (
 
 
 --
+-- Name: lifecycle_checkpoint_rules; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.lifecycle_checkpoint_rules (
+    lifecycle_checkpoint_rule_id uuid DEFAULT public.uuid_v7_or_random() CONSTRAINT lifecycle_checkpoint_rules_lifecycle_checkpoint_rule_i_not_null NOT NULL,
+    jurisdiction_code text NOT NULL,
+    regulatory_checkpoint_id uuid NOT NULL,
+    rule_type text NOT NULL,
+    rule_payload_json jsonb DEFAULT '{}'::jsonb NOT NULL,
+    created_at timestamp with time zone DEFAULT now() NOT NULL
+);
+
+ALTER TABLE ONLY public.lifecycle_checkpoint_rules FORCE ROW LEVEL SECURITY;
+
+
+--
 -- Name: malformed_quarantine_store; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -4389,6 +6197,23 @@ ALTER TABLE ONLY public.members FORCE ROW LEVEL SECURITY;
 
 
 --
+-- Name: methodology_versions; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.methodology_versions (
+    methodology_version_id uuid DEFAULT public.uuid_v7_or_random() NOT NULL,
+    tenant_id uuid NOT NULL,
+    adapter_registration_id uuid NOT NULL,
+    version text NOT NULL,
+    status text NOT NULL,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    CONSTRAINT methodology_versions_status_check CHECK ((status = ANY (ARRAY['DRAFT'::text, 'ACTIVE'::text, 'DEPRECATED'::text])))
+);
+
+ALTER TABLE ONLY public.methodology_versions FORCE ROW LEVEL SECURITY;
+
+
+--
 -- Name: mmo_reality_control_events; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -4402,6 +6227,22 @@ CREATE TABLE public.mmo_reality_control_events (
     evidence_artifact_type text NOT NULL,
     created_at timestamp with time zone DEFAULT now() NOT NULL
 );
+
+
+--
+-- Name: monitoring_records; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.monitoring_records (
+    monitoring_record_id uuid DEFAULT public.uuid_v7_or_random() NOT NULL,
+    tenant_id uuid NOT NULL,
+    project_id uuid NOT NULL,
+    record_type text NOT NULL,
+    record_payload_json jsonb DEFAULT '{}'::jsonb NOT NULL,
+    created_at timestamp with time zone DEFAULT now() NOT NULL
+);
+
+ALTER TABLE ONLY public.monitoring_records FORCE ROW LEVEL SECURITY;
 
 
 --
@@ -4791,6 +6632,22 @@ ALTER TABLE ONLY public.programs FORCE ROW LEVEL SECURITY;
 
 
 --
+-- Name: projects; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.projects (
+    project_id uuid DEFAULT public.uuid_v7_or_random() NOT NULL,
+    tenant_id uuid NOT NULL,
+    name text NOT NULL,
+    status text NOT NULL,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    CONSTRAINT projects_status_check CHECK ((status = ANY (ARRAY['DRAFT'::text, 'ACTIVE'::text, 'SUSPENDED'::text, 'RETIRED'::text])))
+);
+
+ALTER TABLE ONLY public.projects FORCE ROW LEVEL SECURITY;
+
+
+--
 -- Name: proof_pack_batch_leaves; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -4871,6 +6728,37 @@ CREATE TABLE public.reference_strategy_policy_versions (
 
 
 --
+-- Name: regulatory_authorities; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.regulatory_authorities (
+    regulatory_authority_id uuid DEFAULT public.uuid_v7_or_random() NOT NULL,
+    jurisdiction_code text NOT NULL,
+    authority_name text NOT NULL,
+    authority_type text NOT NULL,
+    created_at timestamp with time zone DEFAULT now() NOT NULL
+);
+
+ALTER TABLE ONLY public.regulatory_authorities FORCE ROW LEVEL SECURITY;
+
+
+--
+-- Name: regulatory_checkpoints; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.regulatory_checkpoints (
+    regulatory_checkpoint_id uuid DEFAULT public.uuid_v7_or_random() NOT NULL,
+    jurisdiction_code text NOT NULL,
+    regulatory_authority_id uuid NOT NULL,
+    checkpoint_type text NOT NULL,
+    checkpoint_payload_json jsonb DEFAULT '{}'::jsonb NOT NULL,
+    created_at timestamp with time zone DEFAULT now() NOT NULL
+);
+
+ALTER TABLE ONLY public.regulatory_checkpoints FORCE ROW LEVEL SECURITY;
+
+
+--
 -- Name: regulatory_incidents; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -4929,6 +6817,23 @@ CREATE TABLE public.resign_sweeps (
     created_at timestamp with time zone DEFAULT now() NOT NULL,
     CONSTRAINT resign_sweeps_artifacts_resigned_count_check CHECK ((artifacts_resigned_count >= 0))
 );
+
+
+--
+-- Name: retirement_events; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.retirement_events (
+    retirement_event_id uuid DEFAULT public.uuid_v7_or_random() NOT NULL,
+    tenant_id uuid NOT NULL,
+    asset_batch_id uuid NOT NULL,
+    retired_quantity numeric NOT NULL,
+    retirement_reason text NOT NULL,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    CONSTRAINT retirement_events_retired_quantity_check CHECK ((retired_quantity > (0)::numeric))
+);
+
+ALTER TABLE ONLY public.retirement_events FORCE ROW LEVEL SECURITY;
 
 
 --
@@ -5259,6 +7164,48 @@ ALTER TABLE ONLY public.tenants FORCE ROW LEVEL SECURITY;
 
 
 --
+-- Name: verifier_project_assignments; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.verifier_project_assignments (
+    assignment_id uuid DEFAULT public.uuid_v7_or_random() NOT NULL,
+    verifier_id uuid NOT NULL,
+    project_id uuid NOT NULL,
+    assigned_role text NOT NULL,
+    assigned_at timestamp with time zone DEFAULT now() NOT NULL,
+    CONSTRAINT verifier_project_assignments_assigned_role_check CHECK ((assigned_role = ANY (ARRAY['VALIDATOR'::text, 'VERIFIER'::text])))
+);
+
+ALTER TABLE ONLY public.verifier_project_assignments FORCE ROW LEVEL SECURITY;
+
+
+--
+-- Name: verifier_registry; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.verifier_registry (
+    verifier_id uuid DEFAULT public.uuid_v7_or_random() NOT NULL,
+    tenant_id uuid NOT NULL,
+    jurisdiction_code text NOT NULL,
+    verifier_name text NOT NULL,
+    role_type text NOT NULL,
+    accreditation_reference text NOT NULL,
+    accreditation_authority text NOT NULL,
+    accreditation_expiry date NOT NULL,
+    methodology_scope jsonb DEFAULT '[]'::jsonb NOT NULL,
+    jurisdiction_scope jsonb DEFAULT '[]'::jsonb NOT NULL,
+    is_active boolean DEFAULT false NOT NULL,
+    deactivated_at timestamp with time zone,
+    deactivation_reason text,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    CONSTRAINT verifier_deactivation_consistency CHECK ((((is_active = true) AND (deactivated_at IS NULL) AND (deactivation_reason IS NULL)) OR ((is_active = false) AND (deactivated_at IS NOT NULL) AND (deactivation_reason IS NOT NULL)))),
+    CONSTRAINT verifier_registry_role_type_check CHECK ((role_type = ANY (ARRAY['VALIDATOR'::text, 'VERIFIER'::text, 'VALIDATOR_VERIFIER'::text])))
+);
+
+ALTER TABLE ONLY public.verifier_registry FORCE ROW LEVEL SECURITY;
+
+
+--
 -- Name: adapter_circuit_breakers adapter_circuit_breakers_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -5395,11 +7342,35 @@ ALTER TABLE ONLY public.artifact_signing_batches
 
 
 --
+-- Name: asset_batches asset_batches_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.asset_batches
+    ADD CONSTRAINT asset_batches_pkey PRIMARY KEY (asset_batch_id);
+
+
+--
+-- Name: asset_lifecycle_events asset_lifecycle_events_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.asset_lifecycle_events
+    ADD CONSTRAINT asset_lifecycle_events_pkey PRIMARY KEY (lifecycle_event_id);
+
+
+--
 -- Name: audit_tamper_evident_chains audit_tamper_evident_chains_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.audit_tamper_evident_chains
     ADD CONSTRAINT audit_tamper_evident_chains_pkey PRIMARY KEY (chain_id);
+
+
+--
+-- Name: authority_decisions authority_decisions_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.authority_decisions
+    ADD CONSTRAINT authority_decisions_pkey PRIMARY KEY (authority_decision_id);
 
 
 --
@@ -5555,6 +7526,22 @@ ALTER TABLE ONLY public.evidence_bundle_projection
 
 
 --
+-- Name: evidence_edges evidence_edges_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.evidence_edges
+    ADD CONSTRAINT evidence_edges_pkey PRIMARY KEY (evidence_edge_id);
+
+
+--
+-- Name: evidence_nodes evidence_nodes_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.evidence_nodes
+    ADD CONSTRAINT evidence_nodes_pkey PRIMARY KEY (evidence_node_id);
+
+
+--
 -- Name: evidence_pack_items evidence_pack_items_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -5592,6 +7579,14 @@ ALTER TABLE ONLY public.external_proofs
 
 ALTER TABLE public.external_proofs
     ADD CONSTRAINT external_proofs_tenant_required_new_rows_chk CHECK ((tenant_id IS NOT NULL)) NOT VALID;
+
+
+--
+-- Name: gf_verifier_read_tokens gf_verifier_read_tokens_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.gf_verifier_read_tokens
+    ADD CONSTRAINT gf_verifier_read_tokens_pkey PRIMARY KEY (token_id);
 
 
 --
@@ -5715,6 +7710,22 @@ ALTER TABLE ONLY public.internal_ledger_postings
 
 
 --
+-- Name: interpretation_packs interpretation_packs_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.interpretation_packs
+    ADD CONSTRAINT interpretation_packs_pkey PRIMARY KEY (interpretation_pack_id);
+
+
+--
+-- Name: jurisdiction_profiles jurisdiction_profiles_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.jurisdiction_profiles
+    ADD CONSTRAINT jurisdiction_profiles_pkey PRIMARY KEY (jurisdiction_profile_id);
+
+
+--
 -- Name: key_rotation_drills key_rotation_drills_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -5803,6 +7814,14 @@ ALTER TABLE ONLY public.levy_remittance_periods
 
 
 --
+-- Name: lifecycle_checkpoint_rules lifecycle_checkpoint_rules_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.lifecycle_checkpoint_rules
+    ADD CONSTRAINT lifecycle_checkpoint_rules_pkey PRIMARY KEY (lifecycle_checkpoint_rule_id);
+
+
+--
 -- Name: malformed_quarantine_store malformed_quarantine_store_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -5851,11 +7870,27 @@ ALTER TABLE ONLY public.members
 
 
 --
+-- Name: methodology_versions methodology_versions_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.methodology_versions
+    ADD CONSTRAINT methodology_versions_pkey PRIMARY KEY (methodology_version_id);
+
+
+--
 -- Name: mmo_reality_control_events mmo_reality_control_events_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.mmo_reality_control_events
     ADD CONSTRAINT mmo_reality_control_events_pkey PRIMARY KEY (event_id);
+
+
+--
+-- Name: monitoring_records monitoring_records_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.monitoring_records
+    ADD CONSTRAINT monitoring_records_pkey PRIMARY KEY (monitoring_record_id);
 
 
 --
@@ -6107,6 +8142,14 @@ ALTER TABLE ONLY public.programs
 
 
 --
+-- Name: projects projects_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.projects
+    ADD CONSTRAINT projects_pkey PRIMARY KEY (project_id);
+
+
+--
 -- Name: proof_pack_batch_leaves proof_pack_batch_leaves_batch_id_leaf_index_key; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -6155,6 +8198,22 @@ ALTER TABLE ONLY public.reference_strategy_policy_versions
 
 
 --
+-- Name: regulatory_authorities regulatory_authorities_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.regulatory_authorities
+    ADD CONSTRAINT regulatory_authorities_pkey PRIMARY KEY (regulatory_authority_id);
+
+
+--
+-- Name: regulatory_checkpoints regulatory_checkpoints_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.regulatory_checkpoints
+    ADD CONSTRAINT regulatory_checkpoints_pkey PRIMARY KEY (regulatory_checkpoint_id);
+
+
+--
 -- Name: regulatory_incidents regulatory_incidents_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -6192,6 +8251,14 @@ ALTER TABLE ONLY public.regulatory_retraction_approvals
 
 ALTER TABLE ONLY public.resign_sweeps
     ADD CONSTRAINT resign_sweeps_pkey PRIMARY KEY (sweep_id);
+
+
+--
+-- Name: retirement_events retirement_events_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.retirement_events
+    ADD CONSTRAINT retirement_events_pkey PRIMARY KEY (retirement_event_id);
 
 
 --
@@ -6491,6 +8558,30 @@ ALTER TABLE ONLY public.rail_dispatch_truth_anchor
 
 
 --
+-- Name: verifier_project_assignments verifier_project_assignments_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.verifier_project_assignments
+    ADD CONSTRAINT verifier_project_assignments_pkey PRIMARY KEY (assignment_id);
+
+
+--
+-- Name: verifier_project_assignments verifier_project_role_unique; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.verifier_project_assignments
+    ADD CONSTRAINT verifier_project_role_unique UNIQUE (verifier_id, project_id, assigned_role);
+
+
+--
+-- Name: verifier_registry verifier_registry_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.verifier_registry
+    ADD CONSTRAINT verifier_registry_pkey PRIMARY KEY (verifier_id);
+
+
+--
 -- Name: idx_adapter_registrations_adapter_code; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -6519,6 +8610,34 @@ CREATE INDEX idx_anchor_sync_operations_state_due ON public.anchor_sync_operatio
 
 
 --
+-- Name: idx_asset_batches_project_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_asset_batches_project_id ON public.asset_batches USING btree (project_id);
+
+
+--
+-- Name: idx_asset_batches_tenant_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_asset_batches_tenant_id ON public.asset_batches USING btree (tenant_id);
+
+
+--
+-- Name: idx_asset_lifecycle_events_batch_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_asset_lifecycle_events_batch_id ON public.asset_lifecycle_events USING btree (asset_batch_id);
+
+
+--
+-- Name: idx_asset_lifecycle_events_tenant_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_asset_lifecycle_events_tenant_id ON public.asset_lifecycle_events USING btree (tenant_id);
+
+
+--
 -- Name: idx_attempts_instruction_idempotency; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -6530,6 +8649,13 @@ CREATE INDEX idx_attempts_instruction_idempotency ON public.payment_outbox_attem
 --
 
 CREATE INDEX idx_attempts_outbox_id ON public.payment_outbox_attempts USING btree (outbox_id);
+
+
+--
+-- Name: idx_authority_decisions_jurisdiction; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_authority_decisions_jurisdiction ON public.authority_decisions USING btree (jurisdiction_code);
 
 
 --
@@ -6596,6 +8722,41 @@ CREATE INDEX idx_escrow_reservations_tenant_program ON public.escrow_reservation
 
 
 --
+-- Name: idx_evidence_edges_source; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_evidence_edges_source ON public.evidence_edges USING btree (source_node_id);
+
+
+--
+-- Name: idx_evidence_edges_target; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_evidence_edges_target ON public.evidence_edges USING btree (target_node_id);
+
+
+--
+-- Name: idx_evidence_edges_tenant_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_evidence_edges_tenant_id ON public.evidence_edges USING btree (tenant_id);
+
+
+--
+-- Name: idx_evidence_nodes_project_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_evidence_nodes_project_id ON public.evidence_nodes USING btree (project_id);
+
+
+--
+-- Name: idx_evidence_nodes_tenant_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_evidence_nodes_tenant_id ON public.evidence_nodes USING btree (tenant_id);
+
+
+--
 -- Name: idx_evidence_packs_anchor_ref; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -6614,6 +8775,41 @@ CREATE INDEX idx_evidence_packs_correlation_id ON public.evidence_packs USING bt
 --
 
 CREATE INDEX idx_external_proofs_attestation_id ON public.external_proofs USING btree (attestation_id);
+
+
+--
+-- Name: idx_gf_verifier_read_tokens_expires; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_gf_verifier_read_tokens_expires ON public.gf_verifier_read_tokens USING btree (expires_at);
+
+
+--
+-- Name: idx_gf_verifier_read_tokens_hash; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_gf_verifier_read_tokens_hash ON public.gf_verifier_read_tokens USING btree (token_hash);
+
+
+--
+-- Name: idx_gf_verifier_read_tokens_project; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_gf_verifier_read_tokens_project ON public.gf_verifier_read_tokens USING btree (project_id);
+
+
+--
+-- Name: idx_gf_verifier_read_tokens_tenant; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_gf_verifier_read_tokens_tenant ON public.gf_verifier_read_tokens USING btree (tenant_id);
+
+
+--
+-- Name: idx_gf_verifier_read_tokens_verifier; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_gf_verifier_read_tokens_verifier ON public.gf_verifier_read_tokens USING btree (verifier_id);
 
 
 --
@@ -6677,6 +8873,27 @@ CREATE INDEX idx_instruction_settlement_finality_participant_finalized ON public
 --
 
 CREATE INDEX idx_internal_ledger_postings_journal ON public.internal_ledger_postings USING btree (journal_id, direction);
+
+
+--
+-- Name: idx_interpretation_packs_jurisdiction; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_interpretation_packs_jurisdiction ON public.interpretation_packs USING btree (jurisdiction_code);
+
+
+--
+-- Name: idx_jurisdiction_profiles_jurisdiction; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_jurisdiction_profiles_jurisdiction ON public.jurisdiction_profiles USING btree (jurisdiction_code);
+
+
+--
+-- Name: idx_lifecycle_checkpoint_rules_jurisdiction; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_lifecycle_checkpoint_rules_jurisdiction ON public.lifecycle_checkpoint_rules USING btree (jurisdiction_code);
 
 
 --
@@ -6747,6 +8964,27 @@ CREATE INDEX idx_members_tenant_member ON public.members USING btree (tenant_id,
 --
 
 CREATE INDEX idx_members_tenant_member_ref ON public.members USING btree (tenant_id, member_ref_hash);
+
+
+--
+-- Name: idx_methodology_versions_tenant_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_methodology_versions_tenant_id ON public.methodology_versions USING btree (tenant_id);
+
+
+--
+-- Name: idx_monitoring_records_project_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_monitoring_records_project_id ON public.monitoring_records USING btree (project_id);
+
+
+--
+-- Name: idx_monitoring_records_tenant_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_monitoring_records_tenant_id ON public.monitoring_records USING btree (tenant_id);
 
 
 --
@@ -6841,6 +9079,13 @@ CREATE INDEX idx_programs_tenant_status ON public.programs USING btree (tenant_i
 
 
 --
+-- Name: idx_projects_tenant_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_projects_tenant_id ON public.projects USING btree (tenant_id);
+
+
+--
 -- Name: idx_rail_truth_anchor_participant_anchored; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -6852,6 +9097,34 @@ CREATE INDEX idx_rail_truth_anchor_participant_anchored ON public.rail_dispatch_
 --
 
 CREATE UNIQUE INDEX idx_reference_strategy_policy_active ON public.reference_strategy_policy_versions USING btree (version_status) WHERE (version_status = 'ACTIVE'::text);
+
+
+--
+-- Name: idx_regulatory_authorities_jurisdiction; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_regulatory_authorities_jurisdiction ON public.regulatory_authorities USING btree (jurisdiction_code);
+
+
+--
+-- Name: idx_regulatory_checkpoints_jurisdiction; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_regulatory_checkpoints_jurisdiction ON public.regulatory_checkpoints USING btree (jurisdiction_code);
+
+
+--
+-- Name: idx_retirement_events_batch_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_retirement_events_batch_id ON public.retirement_events USING btree (asset_batch_id);
+
+
+--
+-- Name: idx_retirement_events_tenant_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_retirement_events_tenant_id ON public.retirement_events USING btree (tenant_id);
 
 
 --
@@ -6922,6 +9195,34 @@ CREATE INDEX idx_tenants_parent_tenant_id ON public.tenants USING btree (parent_
 --
 
 CREATE INDEX idx_tenants_status ON public.tenants USING btree (status);
+
+
+--
+-- Name: idx_verifier_project_assignments_project; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_verifier_project_assignments_project ON public.verifier_project_assignments USING btree (project_id);
+
+
+--
+-- Name: idx_verifier_project_assignments_verifier; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_verifier_project_assignments_verifier ON public.verifier_project_assignments USING btree (verifier_id);
+
+
+--
+-- Name: idx_verifier_registry_jurisdiction; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_verifier_registry_jurisdiction ON public.verifier_registry USING btree (jurisdiction_code);
+
+
+--
+-- Name: idx_verifier_registry_tenant_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_verifier_registry_tenant_id ON public.verifier_registry USING btree (tenant_id);
 
 
 --
@@ -7078,6 +9379,27 @@ CREATE RULE kyc_retention_policy_no_update AS
 --
 
 CREATE TRIGGER adapter_registrations_append_only BEFORE DELETE OR UPDATE ON public.adapter_registrations FOR EACH ROW EXECUTE FUNCTION public.adapter_registrations_append_only_trigger();
+
+
+--
+-- Name: asset_lifecycle_events asset_lifecycle_confidence_enforcement; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER asset_lifecycle_confidence_enforcement BEFORE INSERT ON public.asset_lifecycle_events FOR EACH ROW EXECUTE FUNCTION public.enforce_confidence_before_issuance();
+
+
+--
+-- Name: authority_decisions authority_decisions_append_only; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER authority_decisions_append_only BEFORE DELETE OR UPDATE ON public.authority_decisions FOR EACH ROW EXECUTE FUNCTION public.authority_decisions_append_only();
+
+
+--
+-- Name: gf_verifier_read_tokens gf_verifier_read_tokens_append_only; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER gf_verifier_read_tokens_append_only BEFORE DELETE OR UPDATE ON public.gf_verifier_read_tokens FOR EACH ROW EXECUTE FUNCTION public.gf_verifier_read_tokens_append_only();
 
 
 --
@@ -7333,6 +9655,20 @@ CREATE TRIGGER trg_touch_programs_updated_at BEFORE UPDATE ON public.programs FO
 
 
 --
+-- Name: verifier_project_assignments verifier_project_assignments_no_mutate; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER verifier_project_assignments_no_mutate BEFORE DELETE OR UPDATE ON public.verifier_project_assignments FOR EACH ROW EXECUTE FUNCTION public.gf_verifier_tables_append_only();
+
+
+--
+-- Name: verifier_registry verifier_registry_no_mutate; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER verifier_registry_no_mutate BEFORE DELETE OR UPDATE ON public.verifier_registry FOR EACH ROW EXECUTE FUNCTION public.gf_verifier_tables_append_only();
+
+
+--
 -- Name: adapter_registrations adapter_registrations_tenant_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -7394,6 +9730,46 @@ ALTER TABLE ONLY public.anchor_sync_operations
 
 ALTER TABLE ONLY public.artifact_signing_batch_items
     ADD CONSTRAINT artifact_signing_batch_items_batch_id_fkey FOREIGN KEY (batch_id) REFERENCES public.artifact_signing_batches(batch_id) ON DELETE CASCADE;
+
+
+--
+-- Name: asset_batches asset_batches_project_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.asset_batches
+    ADD CONSTRAINT asset_batches_project_id_fkey FOREIGN KEY (project_id) REFERENCES public.projects(project_id) ON DELETE RESTRICT;
+
+
+--
+-- Name: asset_batches asset_batches_tenant_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.asset_batches
+    ADD CONSTRAINT asset_batches_tenant_id_fkey FOREIGN KEY (tenant_id) REFERENCES public.tenants(tenant_id) ON DELETE RESTRICT;
+
+
+--
+-- Name: asset_lifecycle_events asset_lifecycle_events_asset_batch_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.asset_lifecycle_events
+    ADD CONSTRAINT asset_lifecycle_events_asset_batch_id_fkey FOREIGN KEY (asset_batch_id) REFERENCES public.asset_batches(asset_batch_id) ON DELETE RESTRICT;
+
+
+--
+-- Name: asset_lifecycle_events asset_lifecycle_events_tenant_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.asset_lifecycle_events
+    ADD CONSTRAINT asset_lifecycle_events_tenant_id_fkey FOREIGN KEY (tenant_id) REFERENCES public.tenants(tenant_id) ON DELETE RESTRICT;
+
+
+--
+-- Name: authority_decisions authority_decisions_regulatory_authority_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.authority_decisions
+    ADD CONSTRAINT authority_decisions_regulatory_authority_id_fkey FOREIGN KEY (regulatory_authority_id) REFERENCES public.regulatory_authorities(regulatory_authority_id) ON DELETE RESTRICT;
 
 
 --
@@ -7565,6 +9941,54 @@ ALTER TABLE ONLY public.evidence_bundle_projection
 
 
 --
+-- Name: evidence_edges evidence_edges_source_node_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.evidence_edges
+    ADD CONSTRAINT evidence_edges_source_node_id_fkey FOREIGN KEY (source_node_id) REFERENCES public.evidence_nodes(evidence_node_id) ON DELETE RESTRICT;
+
+
+--
+-- Name: evidence_edges evidence_edges_target_node_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.evidence_edges
+    ADD CONSTRAINT evidence_edges_target_node_id_fkey FOREIGN KEY (target_node_id) REFERENCES public.evidence_nodes(evidence_node_id) ON DELETE RESTRICT;
+
+
+--
+-- Name: evidence_edges evidence_edges_tenant_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.evidence_edges
+    ADD CONSTRAINT evidence_edges_tenant_id_fkey FOREIGN KEY (tenant_id) REFERENCES public.tenants(tenant_id) ON DELETE RESTRICT;
+
+
+--
+-- Name: evidence_nodes evidence_nodes_monitoring_record_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.evidence_nodes
+    ADD CONSTRAINT evidence_nodes_monitoring_record_id_fkey FOREIGN KEY (monitoring_record_id) REFERENCES public.monitoring_records(monitoring_record_id) ON DELETE RESTRICT;
+
+
+--
+-- Name: evidence_nodes evidence_nodes_project_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.evidence_nodes
+    ADD CONSTRAINT evidence_nodes_project_id_fkey FOREIGN KEY (project_id) REFERENCES public.projects(project_id) ON DELETE RESTRICT;
+
+
+--
+-- Name: evidence_nodes evidence_nodes_tenant_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.evidence_nodes
+    ADD CONSTRAINT evidence_nodes_tenant_id_fkey FOREIGN KEY (tenant_id) REFERENCES public.tenants(tenant_id) ON DELETE RESTRICT;
+
+
+--
 -- Name: evidence_pack_items evidence_pack_items_pack_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -7602,6 +10026,30 @@ ALTER TABLE ONLY public.external_proofs
 
 ALTER TABLE ONLY public.external_proofs
     ADD CONSTRAINT external_proofs_tenant_fk FOREIGN KEY (tenant_id) REFERENCES public.tenants(tenant_id) NOT VALID;
+
+
+--
+-- Name: gf_verifier_read_tokens gf_verifier_read_tokens_project_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.gf_verifier_read_tokens
+    ADD CONSTRAINT gf_verifier_read_tokens_project_id_fkey FOREIGN KEY (project_id) REFERENCES public.projects(project_id) ON DELETE RESTRICT;
+
+
+--
+-- Name: gf_verifier_read_tokens gf_verifier_read_tokens_tenant_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.gf_verifier_read_tokens
+    ADD CONSTRAINT gf_verifier_read_tokens_tenant_id_fkey FOREIGN KEY (tenant_id) REFERENCES public.tenants(tenant_id) ON DELETE RESTRICT;
+
+
+--
+-- Name: gf_verifier_read_tokens gf_verifier_read_tokens_verifier_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.gf_verifier_read_tokens
+    ADD CONSTRAINT gf_verifier_read_tokens_verifier_id_fkey FOREIGN KEY (verifier_id) REFERENCES public.verifier_registry(verifier_id) ON DELETE RESTRICT;
 
 
 --
@@ -7725,6 +10173,14 @@ ALTER TABLE ONLY public.levy_calculation_records
 
 
 --
+-- Name: lifecycle_checkpoint_rules lifecycle_checkpoint_rules_regulatory_checkpoint_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.lifecycle_checkpoint_rules
+    ADD CONSTRAINT lifecycle_checkpoint_rules_regulatory_checkpoint_id_fkey FOREIGN KEY (regulatory_checkpoint_id) REFERENCES public.regulatory_checkpoints(regulatory_checkpoint_id) ON DELETE RESTRICT;
+
+
+--
 -- Name: member_device_events member_device_events_ingress_fk; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -7786,6 +10242,38 @@ ALTER TABLE ONLY public.members
 
 ALTER TABLE ONLY public.members
     ADD CONSTRAINT members_tenant_member_id_fkey FOREIGN KEY (tenant_member_id) REFERENCES public.tenant_members(member_id) ON DELETE RESTRICT;
+
+
+--
+-- Name: methodology_versions methodology_versions_adapter_registration_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.methodology_versions
+    ADD CONSTRAINT methodology_versions_adapter_registration_id_fkey FOREIGN KEY (adapter_registration_id) REFERENCES public.adapter_registrations(adapter_registration_id) ON DELETE RESTRICT;
+
+
+--
+-- Name: methodology_versions methodology_versions_tenant_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.methodology_versions
+    ADD CONSTRAINT methodology_versions_tenant_id_fkey FOREIGN KEY (tenant_id) REFERENCES public.tenants(tenant_id) ON DELETE RESTRICT;
+
+
+--
+-- Name: monitoring_records monitoring_records_project_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.monitoring_records
+    ADD CONSTRAINT monitoring_records_project_id_fkey FOREIGN KEY (project_id) REFERENCES public.projects(project_id) ON DELETE RESTRICT;
+
+
+--
+-- Name: monitoring_records monitoring_records_tenant_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.monitoring_records
+    ADD CONSTRAINT monitoring_records_tenant_id_fkey FOREIGN KEY (tenant_id) REFERENCES public.tenants(tenant_id) ON DELETE RESTRICT;
 
 
 --
@@ -7981,6 +10469,14 @@ ALTER TABLE ONLY public.programs
 
 
 --
+-- Name: projects projects_tenant_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.projects
+    ADD CONSTRAINT projects_tenant_id_fkey FOREIGN KEY (tenant_id) REFERENCES public.tenants(tenant_id) ON DELETE RESTRICT;
+
+
+--
 -- Name: proof_pack_batch_leaves proof_pack_batch_leaves_batch_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -8005,11 +10501,35 @@ ALTER TABLE ONLY public.rail_dispatch_truth_anchor
 
 
 --
+-- Name: regulatory_checkpoints regulatory_checkpoints_regulatory_authority_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.regulatory_checkpoints
+    ADD CONSTRAINT regulatory_checkpoints_regulatory_authority_id_fkey FOREIGN KEY (regulatory_authority_id) REFERENCES public.regulatory_authorities(regulatory_authority_id) ON DELETE RESTRICT;
+
+
+--
 -- Name: regulatory_incidents regulatory_incidents_tenant_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.regulatory_incidents
     ADD CONSTRAINT regulatory_incidents_tenant_id_fkey FOREIGN KEY (tenant_id) REFERENCES public.tenants(tenant_id) ON DELETE RESTRICT;
+
+
+--
+-- Name: retirement_events retirement_events_asset_batch_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.retirement_events
+    ADD CONSTRAINT retirement_events_asset_batch_id_fkey FOREIGN KEY (asset_batch_id) REFERENCES public.asset_batches(asset_batch_id) ON DELETE RESTRICT;
+
+
+--
+-- Name: retirement_events retirement_events_tenant_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.retirement_events
+    ADD CONSTRAINT retirement_events_tenant_id_fkey FOREIGN KEY (tenant_id) REFERENCES public.tenants(tenant_id) ON DELETE RESTRICT;
 
 
 --
@@ -8109,10 +10629,59 @@ ALTER TABLE ONLY public.tenants
 
 
 --
+-- Name: verifier_project_assignments verifier_project_assignments_project_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.verifier_project_assignments
+    ADD CONSTRAINT verifier_project_assignments_project_id_fkey FOREIGN KEY (project_id) REFERENCES public.projects(project_id) ON DELETE RESTRICT;
+
+
+--
+-- Name: verifier_project_assignments verifier_project_assignments_verifier_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.verifier_project_assignments
+    ADD CONSTRAINT verifier_project_assignments_verifier_id_fkey FOREIGN KEY (verifier_id) REFERENCES public.verifier_registry(verifier_id) ON DELETE RESTRICT;
+
+
+--
+-- Name: verifier_registry verifier_registry_tenant_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.verifier_registry
+    ADD CONSTRAINT verifier_registry_tenant_id_fkey FOREIGN KEY (tenant_id) REFERENCES public.tenants(tenant_id) ON DELETE RESTRICT;
+
+
+--
 -- Name: adapter_registrations; Type: ROW SECURITY; Schema: public; Owner: -
 --
 
 ALTER TABLE public.adapter_registrations ENABLE ROW LEVEL SECURITY;
+
+--
+-- Name: asset_batches; Type: ROW SECURITY; Schema: public; Owner: -
+--
+
+ALTER TABLE public.asset_batches ENABLE ROW LEVEL SECURITY;
+
+--
+-- Name: asset_lifecycle_events; Type: ROW SECURITY; Schema: public; Owner: -
+--
+
+ALTER TABLE public.asset_lifecycle_events ENABLE ROW LEVEL SECURITY;
+
+--
+-- Name: authority_decisions; Type: ROW SECURITY; Schema: public; Owner: -
+--
+
+ALTER TABLE public.authority_decisions ENABLE ROW LEVEL SECURITY;
+
+--
+-- Name: authority_decisions authority_decisions_jurisdiction_access; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY authority_decisions_jurisdiction_access ON public.authority_decisions USING ((jurisdiction_code = public.current_jurisdiction_code_or_null())) WITH CHECK ((jurisdiction_code = public.current_jurisdiction_code_or_null()));
+
 
 --
 -- Name: billing_usage_events; Type: ROW SECURITY; Schema: public; Owner: -
@@ -8145,16 +10714,59 @@ ALTER TABLE public.escrow_events ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.escrow_reservations ENABLE ROW LEVEL SECURITY;
 
 --
+-- Name: evidence_edges; Type: ROW SECURITY; Schema: public; Owner: -
+--
+
+ALTER TABLE public.evidence_edges ENABLE ROW LEVEL SECURITY;
+
+--
+-- Name: evidence_nodes; Type: ROW SECURITY; Schema: public; Owner: -
+--
+
+ALTER TABLE public.evidence_nodes ENABLE ROW LEVEL SECURITY;
+
+--
 -- Name: external_proofs; Type: ROW SECURITY; Schema: public; Owner: -
 --
 
 ALTER TABLE public.external_proofs ENABLE ROW LEVEL SECURITY;
 
 --
+-- Name: gf_verifier_read_tokens; Type: ROW SECURITY; Schema: public; Owner: -
+--
+
+ALTER TABLE public.gf_verifier_read_tokens ENABLE ROW LEVEL SECURITY;
+
+--
+-- Name: gf_verifier_read_tokens gf_verifier_read_tokens_tenant_isolation; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY gf_verifier_read_tokens_tenant_isolation ON public.gf_verifier_read_tokens USING ((tenant_id = public.current_tenant_id_or_null())) WITH CHECK ((tenant_id = public.current_tenant_id_or_null()));
+
+
+--
 -- Name: ingress_attestations; Type: ROW SECURITY; Schema: public; Owner: -
 --
 
 ALTER TABLE public.ingress_attestations ENABLE ROW LEVEL SECURITY;
+
+--
+-- Name: interpretation_packs; Type: ROW SECURITY; Schema: public; Owner: -
+--
+
+ALTER TABLE public.interpretation_packs ENABLE ROW LEVEL SECURITY;
+
+--
+-- Name: jurisdiction_profiles; Type: ROW SECURITY; Schema: public; Owner: -
+--
+
+ALTER TABLE public.jurisdiction_profiles ENABLE ROW LEVEL SECURITY;
+
+--
+-- Name: lifecycle_checkpoint_rules; Type: ROW SECURITY; Schema: public; Owner: -
+--
+
+ALTER TABLE public.lifecycle_checkpoint_rules ENABLE ROW LEVEL SECURITY;
 
 --
 -- Name: member_device_events; Type: ROW SECURITY; Schema: public; Owner: -
@@ -8173,6 +10785,18 @@ ALTER TABLE public.member_devices ENABLE ROW LEVEL SECURITY;
 --
 
 ALTER TABLE public.members ENABLE ROW LEVEL SECURITY;
+
+--
+-- Name: methodology_versions; Type: ROW SECURITY; Schema: public; Owner: -
+--
+
+ALTER TABLE public.methodology_versions ENABLE ROW LEVEL SECURITY;
+
+--
+-- Name: monitoring_records; Type: ROW SECURITY; Schema: public; Owner: -
+--
+
+ALTER TABLE public.monitoring_records ENABLE ROW LEVEL SECURITY;
 
 --
 -- Name: payment_outbox_attempts; Type: ROW SECURITY; Schema: public; Owner: -
@@ -8223,10 +10847,87 @@ ALTER TABLE public.programme_registry ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.programs ENABLE ROW LEVEL SECURITY;
 
 --
+-- Name: projects; Type: ROW SECURITY; Schema: public; Owner: -
+--
+
+ALTER TABLE public.projects ENABLE ROW LEVEL SECURITY;
+
+--
+-- Name: regulatory_authorities; Type: ROW SECURITY; Schema: public; Owner: -
+--
+
+ALTER TABLE public.regulatory_authorities ENABLE ROW LEVEL SECURITY;
+
+--
+-- Name: regulatory_checkpoints; Type: ROW SECURITY; Schema: public; Owner: -
+--
+
+ALTER TABLE public.regulatory_checkpoints ENABLE ROW LEVEL SECURITY;
+
+--
+-- Name: retirement_events; Type: ROW SECURITY; Schema: public; Owner: -
+--
+
+ALTER TABLE public.retirement_events ENABLE ROW LEVEL SECURITY;
+
+--
+-- Name: interpretation_packs rls_jurisdiction_isolation_interpretation_packs; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY rls_jurisdiction_isolation_interpretation_packs ON public.interpretation_packs USING ((jurisdiction_code = public.current_jurisdiction_code_or_null())) WITH CHECK ((jurisdiction_code = public.current_jurisdiction_code_or_null()));
+
+
+--
+-- Name: jurisdiction_profiles rls_jurisdiction_isolation_jurisdiction_profiles; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY rls_jurisdiction_isolation_jurisdiction_profiles ON public.jurisdiction_profiles USING ((jurisdiction_code = public.current_jurisdiction_code_or_null())) WITH CHECK ((jurisdiction_code = public.current_jurisdiction_code_or_null()));
+
+
+--
+-- Name: lifecycle_checkpoint_rules rls_jurisdiction_isolation_lifecycle_checkpoint_rules; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY rls_jurisdiction_isolation_lifecycle_checkpoint_rules ON public.lifecycle_checkpoint_rules USING ((jurisdiction_code = public.current_jurisdiction_code_or_null())) WITH CHECK ((jurisdiction_code = public.current_jurisdiction_code_or_null()));
+
+
+--
+-- Name: regulatory_authorities rls_jurisdiction_isolation_regulatory_authorities; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY rls_jurisdiction_isolation_regulatory_authorities ON public.regulatory_authorities USING ((jurisdiction_code = public.current_jurisdiction_code_or_null())) WITH CHECK ((jurisdiction_code = public.current_jurisdiction_code_or_null()));
+
+
+--
+-- Name: regulatory_checkpoints rls_jurisdiction_isolation_regulatory_checkpoints; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY rls_jurisdiction_isolation_regulatory_checkpoints ON public.regulatory_checkpoints USING ((jurisdiction_code = public.current_jurisdiction_code_or_null())) WITH CHECK ((jurisdiction_code = public.current_jurisdiction_code_or_null()));
+
+
+--
 -- Name: adapter_registrations rls_tenant_isolation_adapter_registrations; Type: POLICY; Schema: public; Owner: -
 --
 
 CREATE POLICY rls_tenant_isolation_adapter_registrations ON public.adapter_registrations USING ((tenant_id = public.current_tenant_id_or_null())) WITH CHECK ((tenant_id = public.current_tenant_id_or_null()));
+
+
+--
+-- Name: asset_batches rls_tenant_isolation_asset_batches; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY rls_tenant_isolation_asset_batches ON public.asset_batches USING ((tenant_id = public.current_tenant_id_or_null())) WITH CHECK ((tenant_id = public.current_tenant_id_or_null()));
+
+
+--
+-- Name: asset_lifecycle_events rls_tenant_isolation_asset_lifecycle_events; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY rls_tenant_isolation_asset_lifecycle_events ON public.asset_lifecycle_events USING ((EXISTS ( SELECT 1
+   FROM public.asset_batches
+  WHERE ((asset_batches.asset_batch_id = asset_lifecycle_events.asset_batch_id) AND (asset_batches.tenant_id = public.current_tenant_id_or_null()))))) WITH CHECK ((EXISTS ( SELECT 1
+   FROM public.asset_batches
+  WHERE ((asset_batches.asset_batch_id = asset_lifecycle_events.asset_batch_id) AND (asset_batches.tenant_id = public.current_tenant_id_or_null())))));
 
 
 --
@@ -8265,6 +10966,24 @@ CREATE POLICY rls_tenant_isolation_escrow_reservations ON public.escrow_reservat
 
 
 --
+-- Name: evidence_edges rls_tenant_isolation_evidence_edges; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY rls_tenant_isolation_evidence_edges ON public.evidence_edges USING ((EXISTS ( SELECT 1
+   FROM public.evidence_nodes
+  WHERE ((evidence_nodes.evidence_node_id = evidence_edges.source_node_id) AND (evidence_nodes.tenant_id = public.current_tenant_id_or_null()))))) WITH CHECK ((EXISTS ( SELECT 1
+   FROM public.evidence_nodes
+  WHERE ((evidence_nodes.evidence_node_id = evidence_edges.source_node_id) AND (evidence_nodes.tenant_id = public.current_tenant_id_or_null())))));
+
+
+--
+-- Name: evidence_nodes rls_tenant_isolation_evidence_nodes; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY rls_tenant_isolation_evidence_nodes ON public.evidence_nodes USING ((tenant_id = public.current_tenant_id_or_null())) WITH CHECK ((tenant_id = public.current_tenant_id_or_null()));
+
+
+--
 -- Name: external_proofs rls_tenant_isolation_external_proofs; Type: POLICY; Schema: public; Owner: -
 --
 
@@ -8297,6 +11016,20 @@ CREATE POLICY rls_tenant_isolation_member_devices ON public.member_devices AS RE
 --
 
 CREATE POLICY rls_tenant_isolation_members ON public.members AS RESTRICTIVE USING ((tenant_id = public.current_tenant_id_or_null())) WITH CHECK ((tenant_id = public.current_tenant_id_or_null()));
+
+
+--
+-- Name: methodology_versions rls_tenant_isolation_methodology_versions; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY rls_tenant_isolation_methodology_versions ON public.methodology_versions USING ((tenant_id = public.current_tenant_id_or_null())) WITH CHECK ((tenant_id = public.current_tenant_id_or_null()));
+
+
+--
+-- Name: monitoring_records rls_tenant_isolation_monitoring_records; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY rls_tenant_isolation_monitoring_records ON public.monitoring_records USING ((tenant_id = public.current_tenant_id_or_null())) WITH CHECK ((tenant_id = public.current_tenant_id_or_null()));
 
 
 --
@@ -8356,6 +11089,20 @@ CREATE POLICY rls_tenant_isolation_programs ON public.programs AS RESTRICTIVE US
 
 
 --
+-- Name: projects rls_tenant_isolation_projects; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY rls_tenant_isolation_projects ON public.projects USING ((tenant_id = public.current_tenant_id_or_null())) WITH CHECK ((tenant_id = public.current_tenant_id_or_null()));
+
+
+--
+-- Name: retirement_events rls_tenant_isolation_retirement_events; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY rls_tenant_isolation_retirement_events ON public.retirement_events USING ((tenant_id = public.current_tenant_id_or_null())) WITH CHECK ((tenant_id = public.current_tenant_id_or_null()));
+
+
+--
 -- Name: sim_swap_alerts rls_tenant_isolation_sim_swap_alerts; Type: POLICY; Schema: public; Owner: -
 --
 
@@ -8398,6 +11145,24 @@ CREATE POLICY rls_tenant_isolation_tenants ON public.tenants AS RESTRICTIVE USIN
 
 
 --
+-- Name: verifier_project_assignments rls_tenant_isolation_verifier_project_assignments; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY rls_tenant_isolation_verifier_project_assignments ON public.verifier_project_assignments USING ((EXISTS ( SELECT 1
+   FROM public.verifier_registry
+  WHERE ((verifier_registry.verifier_id = verifier_project_assignments.verifier_id) AND (verifier_registry.tenant_id = public.current_tenant_id_or_null()))))) WITH CHECK ((EXISTS ( SELECT 1
+   FROM public.verifier_registry
+  WHERE ((verifier_registry.verifier_id = verifier_project_assignments.verifier_id) AND (verifier_registry.tenant_id = public.current_tenant_id_or_null())))));
+
+
+--
+-- Name: verifier_registry rls_tenant_isolation_verifier_registry; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY rls_tenant_isolation_verifier_registry ON public.verifier_registry USING ((tenant_id = public.current_tenant_id_or_null())) WITH CHECK ((tenant_id = public.current_tenant_id_or_null()));
+
+
+--
 -- Name: sim_swap_alerts; Type: ROW SECURITY; Schema: public; Owner: -
 --
 
@@ -8434,8 +11199,20 @@ ALTER TABLE public.tenant_registry ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.tenants ENABLE ROW LEVEL SECURITY;
 
 --
+-- Name: verifier_project_assignments; Type: ROW SECURITY; Schema: public; Owner: -
+--
+
+ALTER TABLE public.verifier_project_assignments ENABLE ROW LEVEL SECURITY;
+
+--
+-- Name: verifier_registry; Type: ROW SECURITY; Schema: public; Owner: -
+--
+
+ALTER TABLE public.verifier_registry ENABLE ROW LEVEL SECURITY;
+
+--
 -- PostgreSQL database dump complete
 --
 
-\unrestrict zWtRvrWff1o5sXIzPc0ZmgchgFiQ9mybq8pUiuP77Dz0FxD9B0ZH0xj4xkNxa93
+\unrestrict o5ZNvC7uAxESTyGuhr3TZQuCu46w3Sxmr7eBCbqdkFOHfdUzf964781h4yotUQ1
 

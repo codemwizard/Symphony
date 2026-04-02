@@ -1,0 +1,41 @@
+# scripts/audit/required_checks/GF-W1-PLT-001.yml
+version: 1
+task_id: GF-W1-PLT-001
+idempotent: true
+checks:
+  - tag: adapter_registered
+    description: "PWRM0001 adapter row exists in adapter_registrations"
+    runner: sql
+    expect: row_exists
+    minimum_where_columns: [adapter_code, methodology_code]
+    minimum_where_values:
+      adapter_code: "PWRM0001"
+      methodology_code: "PLASTIC_WASTE_V1"
+  - tag: methodology_version_active
+    description: "Active methodology version linked to PWRM0001"
+    runner: sql
+    expect: row_exists
+    minimum_where_columns: [status]
+    minimum_where_values:
+      status: "ACTIVE"
+  - tag: jurisdiction_profile_configured
+    description: "Global South jurisdiction profile exists"
+    runner: sql
+    expect: row_exists
+    minimum_where_columns: [jurisdiction_code, profile_type]
+    minimum_where_values:
+      jurisdiction_code: "GLOBAL_SOUTH"
+      profile_type: "METHODOLOGY_ADAPTER"
+  - tag: no_ddl_in_script
+    description: "Registration script contains no DDL statements"
+    runner: filesystem
+    expect: no_regex
+  - tag: idempotent_registration
+    description: "Registration script uses ON CONFLICT"
+    runner: filesystem
+    expect: has_regex
+  - tag: pilot_policy_referenced
+    description: "Registration script references pilot policy"
+    runner: filesystem
+    expect: has_regex
+

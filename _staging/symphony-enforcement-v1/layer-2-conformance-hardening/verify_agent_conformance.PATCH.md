@@ -1,4 +1,4 @@
-﻿# LAYER 2: verify_agent_conformance.sh ΓÇö Hash validation patch
+# LAYER 2: verify_agent_conformance.sh -- Hash validation patch
 # TARGET: scripts/audit/verify_agent_conformance.sh
 # STATUS: NOT YET APPLIED. Apply this manually.
 #
@@ -7,13 +7,13 @@
 # labeled FIND THIS and replace it with the block labeled REPLACE WITH.
 # Also ensure `import re` is present at the top of the embedded Python block.
 
-# ΓöÇΓöÇ FIND THIS (exact text to locate) ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
+# -- FIND THIS (exact text to locate) ------------------------------------------
 
 #     for field in ["ai_prompt_hash", "model_id"]:
 #         if not data.get("ai", {}).get(field):
 #             fail("CONFORMANCE_008_APPROVAL_METADATA_INVALID", f"Approval metadata missing ai.{field}")
 
-# ΓöÇΓöÇ REPLACE WITH ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
+# -- REPLACE WITH ---------------------------------------------------------------
 
 #     ai = data.get("ai", {})
 #
@@ -40,16 +40,16 @@
 #         fail("CONFORMANCE_020_BRANCH_MAIN_FORBIDDEN",
 #              "Agent conformance check run on 'main' branch is forbidden.")
 
-# ΓöÇΓöÇ ALSO ENSURE ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
+# -- ALSO ENSURE ---------------------------------------------------------------
 # At the top of the embedded Python block (near other imports), add:
 #     import re
 # if it is not already present.
 
-# ΓöÇΓöÇ WHY THIS MATTERS ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
+# -- WHY THIS MATTERS ----------------------------------------------------------
 # Current state: ai_prompt_hash accepts any non-empty string.
 # This allowed Gemini to submit "security-wave-1-runtime-integrity-children"
 # (a branch name) as a hash, which passed conformance checks.
 # After this patch: only valid 64-char lowercase SHA256 hex strings pass.
 # New failure codes introduced:
-#   CONFORMANCE_018_PROMPT_HASH_INVALID  ΓÇö format validation
-#   CONFORMANCE_020_BRANCH_MAIN_FORBIDDEN ΓÇö branch guard
+#   CONFORMANCE_018_PROMPT_HASH_INVALID  -- format validation
+#   CONFORMANCE_020_BRANCH_MAIN_FORBIDDEN -- branch guard

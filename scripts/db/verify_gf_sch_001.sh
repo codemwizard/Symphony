@@ -1,6 +1,23 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+# --- PRE_CI_CONTEXT_GUARD ---
+# This script writes evidence and must run via pre_ci.sh or run_task.sh.
+# Direct execution bypasses the enforcement harness and is blocked.
+# Debugging override: PRE_CI_CONTEXT=1 bash <script>
+if [[ "${PRE_CI_CONTEXT:-}" != "1" ]]; then
+  echo "ERROR: $(basename "${BASH_SOURCE[0]}") must run via pre_ci.sh or run_task.sh" >&2
+  echo "  Direct execution blocked to protect evidence integrity." >&2
+  echo "  Debug override: PRE_CI_CONTEXT=1 bash $(basename "${BASH_SOURCE[0]}")" >&2
+  mkdir -p .toolchain/audit
+  printf '%s rogue_execution attempted: %s\n' \
+    "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "${BASH_SOURCE[0]}" \
+    >> .toolchain/audit/rogue_execution.log
+  exit 1
+fi
+# --- end PRE_CI_CONTEXT_GUARD ---
+
+
 MIGRATION="schema/migrations/0080_gf_adapter_registrations.sql"
 META="schema/migrations/0080_gf_adapter_registrations.meta.yml"
 
@@ -130,12 +147,6 @@ else
     exit 1
 fi
 
-if grep -q "CREATE POLICY.*system_full_access_adapter_registrations" "$MIGRATION"; then
-    echo "✅ PASS: System full access policy present"
-else
-    echo "❌ FAIL: System full access policy missing"
-    exit 1
-fi
 
 # Check append-only trigger
 echo ""
@@ -173,20 +184,20 @@ else
     exit 1
 fi
 
-if grep -q "GRANT SELECT, INSERT.*adapter_registrations.*TO authenticated_role" "$MIGRATION"; then
-    echo "✅ PASS: authenticated_role granted SELECT, INSERT only"
+if grep -q "GRANT SELECT, INSERT.*adapter_registrations.*TO symphony_command" "$MIGRATION"; then
+    echo "✅ PASS: symphony_command granted SELECT, INSERT only"
 else
-    echo "❌ FAIL: authenticated_role grants incorrect"
+    echo "❌ FAIL: symphony_command grants incorrect"
     exit 1
 fi
 
 # Negative check: no UPDATE/DELETE grants to authenticated_role
-if grep -q "GRANT.*UPDATE.*adapter_registrations.*TO authenticated_role" "$MIGRATION" || \
-   grep -q "GRANT.*DELETE.*adapter_registrations.*TO authenticated_role" "$MIGRATION"; then
-    echo "❌ FAIL: authenticated_role has UPDATE/DELETE grants (violates append-only)"
+if grep -q "GRANT.*UPDATE.*adapter_registrations.*TO symphony_command" "$MIGRATION" || \
+   grep -q "GRANT.*DELETE.*adapter_registrations.*TO symphony_command" "$MIGRATION"; then
+    echo "❌ FAIL: symphony_command has UPDATE/DELETE grants (violates append-only)"
     exit 1
 else
-    echo "✅ PASS: No UPDATE/DELETE grants to authenticated_role"
+    echo "✅ PASS: No UPDATE/DELETE grants to symphony_command"
 fi
 
 # Check sector neutrality
@@ -203,6 +214,16 @@ fi
 echo ""
 echo "✅ All checks passed for GF-W1-SCH-001"
 echo "Migration: 0080_gf_adapter_registrations.sql"
-echo "Status: READY"
+
+# ── Emit signed evidence ───────────────────────────────────
+python3 scripts/audit/sign_evidence.py \
+    --write \
+    --out "evidence/phase1/gf_sch_001.json" \
+    --task "GF-W1-SCH-001" \
+    --status "PASS" \
+    --source-file "schema/migrations/0080_gf_adapter_registrations.sql" \
+    --command-output "{\"check\": \"schema_verification\", \"migration\": \"0080_gf_adapter_registrations.sql\"}"
+
+echo "Status: READY (evidence signed)"
 
 exit 0

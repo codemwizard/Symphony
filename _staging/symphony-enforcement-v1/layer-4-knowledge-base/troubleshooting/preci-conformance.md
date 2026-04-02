@@ -1,4 +1,4 @@
-﻿# Troubleshooting: PRECI.AGENT.CONFORMANCE
+# Troubleshooting: PRECI.AGENT.CONFORMANCE
 
 **Failure signature:** `PRECI.AGENT.CONFORMANCE`
 **Gate:** `pre_ci.verify_agent_conformance`
@@ -20,7 +20,7 @@ CONFORMANCE FAIL
 
 ## Diagnostic steps
 
-1. **Run the conformance check directly to see the exact failure codes:**
+1. **Run the conformance check directly:**
    ```bash
    scripts/audit/verify_agent_conformance.sh
    ```
@@ -29,17 +29,14 @@ CONFORMANCE FAIL
 
    | Code | Meaning | Fix |
    |---|---|---|
-   | `CONFORMANCE_002_PROMPT_HEADERS_MISSING` | Required `##` section missing from agent prompt | Add the missing section |
+   | `CONFORMANCE_002_PROMPT_HEADERS_MISSING` | Required `##` section missing | Add the missing section |
    | `CONFORMANCE_003_ROLE_INVALID` | `Role:` line missing or not in canonical list | Check `CANONICAL_ROLES` in the script |
-   | `CONFORMANCE_004_CANONICAL_REFERENCE_MISSING` | A canonical doc not referenced in prompt | Add reference to the doc |
+   | `CONFORMANCE_004_CANONICAL_REFERENCE_MISSING` | A canonical doc not referenced | Add reference to the doc |
    | `CONFORMANCE_008_APPROVAL_METADATA_INVALID` | `approval_metadata.json` missing a field | Add the missing field |
    | `CONFORMANCE_018_PROMPT_HASH_INVALID` | `ai_prompt_hash` is not a valid SHA256 | Generate a real hash (see below) |
    | `CONFORMANCE_020_BRANCH_MAIN_FORBIDDEN` | Running on main branch | Switch to a feature branch |
 
-3. **For hash errors (`CONFORMANCE_018`):** The `ai_prompt_hash` field in
-   `evidence/phase1/approval_metadata.json` must be a real 64-character lowercase
-   SHA256 hex string. Branch names, session IDs, and placeholder strings are rejected.
-   Generate a valid hash:
+3. **For hash errors (`CONFORMANCE_018`):** Generate a valid 64-char SHA256:
    ```bash
    echo -n "your-prompt-content" | sha256sum | cut -d' ' -f1
    ```
@@ -51,7 +48,6 @@ CONFORMANCE FAIL
 ## Clearing the DRD lockout
 
 ```bash
-# Step 1 ΓÇö create the casefile
 scripts/audit/new_remediation_casefile.sh \
   --phase phase1 \
   --slug agent-conformance \
@@ -59,11 +55,6 @@ scripts/audit/new_remediation_casefile.sh \
   --origin-gate-id pre_ci.verify_agent_conformance \
   --repro-command "scripts/dev/pre_ci.sh"
 
-# Step 2 ΓÇö document root cause in PLAN.md
-
-# Step 3 ΓÇö remove lockout
 rm .toolchain/pre_ci_debug/drd_lockout.env
-
-# Step 4 ΓÇö re-run
 scripts/dev/pre_ci.sh
 ```

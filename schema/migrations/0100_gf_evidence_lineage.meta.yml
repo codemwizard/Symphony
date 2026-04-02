@@ -1,0 +1,18 @@
+phase: '0'
+layer: CORE_SCHEMA
+volatility_class: CORE_SCHEMA
+touches_core_schema: true
+introduces_identifiers:
+  - evidence_nodes
+  - evidence_edges
+  - idx_evidence_nodes_tenant_id
+  - idx_evidence_nodes_project_id
+  - idx_evidence_edges_tenant_id
+  - idx_evidence_edges_source
+  - idx_evidence_edges_target
+  - no_self_loop
+second_pilot_justification_required: true
+notes: >-
+  Universal evidence lineage DAG for Green Finance. Depends on 0097 (projects)
+  and 0099 (monitoring_records). Self-loop prevention enforced via CHECK
+  constraint. UPDATE and DELETE revoked from runtime role on both tables.

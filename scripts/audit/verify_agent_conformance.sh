@@ -1,6 +1,23 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+# --- PRE_CI_CONTEXT_GUARD ---
+# This script writes evidence and must run via pre_ci.sh or run_task.sh.
+# Direct execution bypasses the enforcement harness and is blocked.
+# Debugging override: PRE_CI_CONTEXT=1 bash <script>
+if [[ "${PRE_CI_CONTEXT:-}" != "1" ]]; then
+  echo "ERROR: $(basename "${BASH_SOURCE[0]}") must run via pre_ci.sh or run_task.sh" >&2
+  echo "  Direct execution blocked to protect evidence integrity." >&2
+  echo "  Debug override: PRE_CI_CONTEXT=1 bash $(basename "${BASH_SOURCE[0]}")" >&2
+  mkdir -p .toolchain/audit
+  printf '%s rogue_execution attempted: %s\n' \
+    "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "${BASH_SOURCE[0]}" \
+    >> .toolchain/audit/rogue_execution.log
+  exit 1
+fi
+# --- end PRE_CI_CONTEXT_GUARD ---
+
+
 ROOT="${ROOT:-$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)}"
 MODE="${MODE:-auto}"
 BRANCH_NAME="${BRANCH_NAME:-}"
@@ -149,9 +166,30 @@ def check_approval_metadata(regulated_changed):
         fail("CONFORMANCE_007_APPROVAL_METADATA_MISSING", "Regulated surfaces changed but approval metadata missing")
         return False
     data = json.loads(metadata_file.read_text(encoding="utf-8"))
-    for field in ["ai_prompt_hash", "model_id"]:
-        if not data.get("ai", {}).get(field):
-            fail("CONFORMANCE_008_APPROVAL_METADATA_INVALID", f"Approval metadata missing ai.{field}")
+    ai = data.get("ai", {})
+
+    prompt_hash = ai.get("ai_prompt_hash", "").strip()
+    model_id = ai.get("model_id", "").strip()
+
+    if not prompt_hash:
+        fail("CONFORMANCE_008_APPROVAL_METADATA_INVALID",
+             "Missing ai.ai_prompt_hash")
+    elif not re.fullmatch(r"[a-f0-9]{64}", prompt_hash):
+        fail("CONFORMANCE_018_PROMPT_HASH_INVALID",
+             f"ai_prompt_hash must be a SHA256 hex string (64 lowercase hex chars). "
+             f"Got: '{prompt_hash}' (len={len(prompt_hash)}). "
+             f"Branch names and session IDs are not valid hashes.")
+
+    if not model_id:
+        fail("CONFORMANCE_008_APPROVAL_METADATA_INVALID",
+             "Missing ai.model_id")
+
+    branch = subprocess.check_output(
+        ["git", "rev-parse", "--abbrev-ref", "HEAD"], text=True
+    ).strip()
+    if branch == "main":
+        fail("CONFORMANCE_020_BRANCH_MAIN_FORBIDDEN",
+             "Agent conformance check run on 'main' branch is forbidden.")
     human = data.get("human_approval", {})
     missing = [key for key in ["approver_id", "approval_artifact_ref", "change_reason"] if not human.get(key)]
     if missing:

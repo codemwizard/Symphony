@@ -1,4 +1,4 @@
-﻿# Troubleshooting: PRECI.BOOTSTRAP.TOOLCHAIN
+# Troubleshooting: PRECI.BOOTSTRAP.TOOLCHAIN
 
 **Failure signature:** `PRECI.BOOTSTRAP.TOOLCHAIN`
 **Gate:** `pre_ci.bootstrap_local_ci_toolchain`
@@ -47,7 +47,7 @@ ERROR: .toolchain/bin not on PATH
 ## Clearing the DRD lockout
 
 ```bash
-# Step 1 ΓÇö create the casefile
+# Step 1 -- create the casefile
 scripts/audit/new_remediation_casefile.sh \
   --phase phase1 \
   --slug toolchain-bootstrap \
@@ -55,11 +55,11 @@ scripts/audit/new_remediation_casefile.sh \
   --origin-gate-id pre_ci.bootstrap_local_ci_toolchain \
   --repro-command "scripts/dev/pre_ci.sh"
 
-# Step 2 ΓÇö document root cause in PLAN.md
+# Step 2 -- document root cause in PLAN.md
 
-# Step 3 ΓÇö remove lockout
+# Step 3 -- remove lockout
 rm .toolchain/pre_ci_debug/drd_lockout.env
 
-# Step 4 ΓÇö re-run
+# Step 4 -- re-run
 scripts/dev/pre_ci.sh
 ```

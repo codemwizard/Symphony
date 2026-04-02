@@ -1,0 +1,169 @@
+schema_version: 1
+phase: '0'
+task_id: GF-W1-SCH-006
+title: Introduce regulatory plane tables and current_jurisdiction_code_or_null() so
+  GF jurisdiction isolation is structurally enforced
+owner_role: DB_FOUNDATION
+status: completed
+priority: CRITICAL
+risk_class: INTEGRITY
+blast_radius: DB_SCHEMA
+domain: green_finance
+pilot: false
+intent: The regulatory plane introduces six tables and the jurisdiction resolver function
+  current_jurisdiction_code_or_null(). These establish jurisdiction isolation RLS
+  for all regulatory objects, which is distinct from tenant isolation used by prior
+  GF tables. The SECURITY DEFINER function must be hardened with SET search_path =
+  pg_catalog, public. Migrations 0102-0103 depend on 0101 (asset lifecycle) and the
+  SCH-002A roots.
+anti_patterns:
+- Using tenant isolation RLS on regulatory tables instead of jurisdiction isolation
+- Defining current_jurisdiction_code_or_null() without SET search_path hardening
+- Using CREATE TABLE IF NOT EXISTS in either migration SQL
+out_of_scope:
+- Application-layer authority decision functions (reserved for GF-W1-FNC-004)
+- Any migration numbers other than 0102 and 0103
+- RLS changes to any table outside the six regulatory plane tables
+stop_conditions:
+- "If current_jurisdiction_code_or_null() lacks SET search_path = pg_catalog, public\
+  \ \u2192 STOP"
+- "If any regulatory table uses tenant_id-based RLS instead of jurisdiction isolation\
+  \ \u2192 STOP"
+- "If CREATE TABLE IF NOT EXISTS appears in either migration SQL \u2192 STOP"
+proof_guarantees:
+- Verifier confirms current_jurisdiction_code_or_null() has SECURITY DEFINER with
+  hardened search_path
+- Verifier confirms all six tables have jurisdiction isolation RLS enabled
+- Sidecars declare the correct governed identifiers for migrations 0102 and 0103 respectively
+proof_limitations:
+- Verifier cannot test live function execution without a running Postgres instance
+- Verifier cannot confirm jurisdiction code correctness at runtime
+depends_on:
+- GF-W1-SCH-005
+blocks:
+- GF-W1-SCH-007
+touches:
+- schema/migrations/0102_gf_regulatory_plane.sql
+- schema/migrations/0102_gf_regulatory_plane.meta.yml
+- schema/migrations/0103_gf_jurisdiction_rules.sql
+- schema/migrations/0103_gf_jurisdiction_rules.meta.yml
+- schema/migrations/MIGRATION_HEAD
+- scripts/db/verify_gf_regulatory_plane.sh
+- evidence/phase0/gf_regulatory_plane.json
+- tasks/GF-W1-SCH-006/meta.yml
+invariants:
+- INV-SCHEMA-OWNERSHIP-001
+- INV-SCHEMA-ORDER-002
+- INV-SCHEMA-NO-FORWARD-REF-003
+- INV-SCHEMA-OWNERSHIP-MAP-007
+- INV-SCHEMA-SIDECAR-SQL-CONSISTENCY-012
+work:
+- '[ID GF-W1-SCH-006] [ID gf_w1_sch_006_wi01] Create schema/migrations/0102_gf_regulatory_plane.sql:
+  current_jurisdiction_code_or_null() SECURITY DEFINER with hardened search_path,
+  interpretation_packs and regulatory_authorities with jurisdiction isolation RLS;
+  no IF NOT EXISTS.'
+- "[ID GF-W1-SCH-006] [ID gf_w1_sch_006_wi02] Create schema/migrations/0103_gf_jurisdiction_rules.sql:\
+  \ regulatory_checkpoints, jurisdiction_profiles, lifecycle_checkpoint_rules, authority_decisions\
+  \ \u2014 all with jurisdiction isolation RLS; no IF NOT EXISTS."
+- '[ID GF-W1-SCH-006] [ID gf_w1_sch_006_wi02] Create sidecars 0102_gf_regulatory_plane.meta.yml
+  and 0103_gf_jurisdiction_rules.meta.yml; update MIGRATION_HEAD to 0103.'
+- '[ID GF-W1-SCH-006] [ID gf_w1_sch_006_wi01] Create scripts/db/verify_gf_regulatory_plane.sh:
+  check SECURITY DEFINER hardening, jurisdiction isolation RLS on all six tables,
+  IF NOT EXISTS rejection; emit evidence/phase0/gf_regulatory_plane.json.'
+acceptance_criteria:
+- '[ID GF-W1-SCH-006] [ID gf_w1_sch_006_wi01] verify_gf_regulatory_plane.sh exits
+  0 and evidence/phase0/gf_regulatory_plane.json contains status=PASS with jurisdiction_function_hardened=true
+  and jurisdiction_rls_confirmed=true.'
+- '[ID GF-W1-SCH-006] [ID gf_w1_sch_006_wi01] verify_gf_regulatory_plane.sh exits
+  non-zero when given a migration lacking SET search_path on the SECURITY DEFINER
+  function.'
+- '[ID GF-W1-SCH-006] [ID gf_w1_sch_006_wi02] MIGRATION_HEAD contains 0103 and both
+  sidecars declare correct governed identifiers for their respective migrations.'
+negative_tests:
+- id: GF-W1-SCH-006-N1
+  description: SQL defining current_jurisdiction_code_or_null() without SET search_path
+    must cause verify_gf_regulatory_plane.sh to exit non-zero with security_definer_not_hardened
+    in the failures array.
+  required: true
+- id: GF-W1-SCH-006-N2
+  description: SQL containing CREATE TABLE IF NOT EXISTS interpretation_packs must
+    cause the verifier to exit non-zero with if_not_exists_antipattern in failures.
+  required: true
+positive_tests:
+- id: GF-W1-SCH-006-P1
+  description: SQL with correctly hardened SECURITY DEFINER function and jurisdiction
+    isolation RLS on all six tables must cause verify_gf_regulatory_plane.sh to exit
+    0.
+  required: false
+verification:
+- '[ID GF-W1-SCH-006] bash scripts/dev/pre_ci.sh | grep -q ''.'' >> evidence/phase1/gf_w1_sch_006.json
+  || exit 1'
+- '[ID GF-W1-SCH-006] [ID gf_w1_sch_006_wi01] bash scripts/db/verify_gf_regulatory_plane.sh
+  && test -f evidence/phase0/gf_regulatory_plane.json > /dev/null || exit 1'
+- '[ID GF-W1-SCH-006] [ID gf_w1_sch_006_wi01] grep -q ''"status"'' evidence/phase0/gf_regulatory_plane.json
+  > /dev/null || exit 1'
+- '[ID GF-W1-SCH-006] [ID gf_w1_sch_006_wi02] python3 scripts/audit/verify_migration_meta_alignment.py
+  && grep -q ''0103'' schema/migrations/MIGRATION_HEAD || exit 1'
+evidence:
+- path: evidence/phase0/gf_regulatory_plane.json
+  must_include:
+  - task_id
+  - run_id
+  - git_sha
+  - timestamp_utc
+  - status
+  - observed_paths
+  - observed_hashes
+  - command_outputs
+  - execution_trace
+  - jurisdiction_function_hardened
+  - jurisdiction_rls_confirmed
+  - migration_head_confirmed
+  - checks
+  - failures
+failure_modes:
+- "Evidence file missing \u2192 BLOCKED (GF-W1-SCH-007 cannot start)"
+- "jurisdiction_function_hardened=false \u2192 CRITICAL_FAIL (SECURITY DEFINER search_path\
+  \ bypass possible)"
+- "if_not_exists_antipattern in migration SQL \u2192 FAIL (verifier exits non-zero)"
+must_read:
+- docs/operations/AI_AGENT_OPERATION_MANUAL.md
+- docs/operations/AGENTIC_SDLC_PILOT_POLICY.md
+- docs/operations/AGENT_GUARDRAILS_GREEN_FINANCE.md
+- docs/plans/phase0/GF-W1-SCH-006/PLAN.md
+implementation_plan: docs/plans/phase0/GF-W1-SCH-006/PLAN.md
+implementation_log: docs/plans/phase0/GF-W1-SCH-006/EXEC_LOG.md
+notes: SCH-006 introduces jurisdiction isolation as a distinct RLS pattern from tenant
+  isolation. current_jurisdiction_code_or_null() is the canonical resolver and must
+  be defined before the six tables in migration 0102. Migration 0103 adds the rules
+  tables that reference 0102 objects.
+client: codex_cli
+assigned_agent: db_foundation_agent
+model: <UNASSIGNED>
+second_pilot_test:
+  candidate_sector_1: PWRM0001 plastic waste recovery
+  candidate_sector_2: VM0044 solar energy generation
+  unchanged_core_tables:
+  - projects
+  - methodology_versions
+  - monitoring_records
+  - evidence_nodes
+  - evidence_edges
+  - asset_batches
+  - asset_lifecycle_events
+  - retirement_events
+  unchanged_core_functions: []
+  adapter_only_differences:
+  - 'Jurisdiction codes differ: PWRM uses ZA-PLASTICS-REG, VM0044 uses ZA-ENERGY-REG'
+  - Interpretation pack content differs per adapter registration
+  jurisdiction_profile_impact: Jurisdiction profiles are the core output of this task.
+    Each sector registers its own jurisdiction profile referencing its regulatory
+    authority. The table structure is identical for both sectors.
+  required_core_changes: []
+  explanation: The regulatory plane uses jurisdiction_code TEXT as the isolation key.
+    PWRM0001 plastic waste recovery registers under ZA-PLASTICS-REG jurisdiction and
+    VM0044 solar energy under ZA-ENERGY-REG. Both sectors use the same interpretation_packs,
+    regulatory_checkpoints, and authority_decisions tables with identical structure.
+    No core schema changes needed for a second sector.
+  second_pilot_reviewed_by: DB_FOUNDATION
+pilot_scope_ref: not_applicable

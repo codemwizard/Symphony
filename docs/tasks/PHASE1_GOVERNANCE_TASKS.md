@@ -57,6 +57,28 @@ This index tracks governance rewrite tasks derived from `Symphony_Governance_Imp
 | TASK-INVPROC-04 | INVARIANTS_CURATOR | completed | docs/plans/phase1/TASK-INVPROC-04/PLAN.md | docs/plans/phase1/TASK-INVPROC-04/EXEC_LOG.md |
 | TASK-INVPROC-05 | QA_VERIFIER | completed | docs/plans/phase1/TASK-INVPROC-05/PLAN.md | docs/plans/phase1/TASK-INVPROC-05/EXEC_LOG.md |
 | TASK-INVPROC-06 | SECURITY_GUARDIAN | completed | docs/plans/phase1/TASK-INVPROC-06/PLAN.md | docs/plans/phase1/TASK-INVPROC-06/EXEC_LOG.md |
+| ENF-000 | ARCHITECT | completed | docs/plans/phase1/ENF-000/PLAN.md | docs/plans/phase1/ENF-000/EXEC_LOG.md |
+| ENF-001 | ARCHITECT | completed | docs/plans/phase1/ENF-001/PLAN.md | docs/plans/phase1/ENF-001/EXEC_LOG.md |
+| ENF-002 | SECURITY_GUARDIAN | completed | docs/plans/phase1/ENF-002/PLAN.md | docs/plans/phase1/ENF-002/EXEC_LOG.md |
+| ENF-003A | ARCHITECT | completed | docs/plans/phase1/ENF-003A/PLAN.md | docs/plans/phase1/ENF-003A/EXEC_LOG.md |
+| ENF-003B | SECURITY_GUARDIAN | completed | docs/plans/phase1/ENF-003B/PLAN.md | docs/plans/phase1/ENF-003B/EXEC_LOG.md |
+| ENF-004 | ARCHITECT | completed | docs/plans/phase1/ENF-004/PLAN.md | docs/plans/phase1/ENF-004/EXEC_LOG.md |
+
+## Symphony Enforcement v2 Wave Assignment
+
+- Source staging directory: `symphony-enforcement-v2/`
+- Umbrella plan: `docs/plans/phase1/ENF-ENFORCEMENT-V2/PLAN.md`
+- Serial-safe execution order: ENF-000 → ENF-001 → ENF-002 → ENF-003A → ENF-003B → ENF-004
+- ENF-003 from MANIFEST is split: ENF-003A (ARCHITECT, scripts/agent/**) and ENF-003B (SECURITY_GUARDIAN, scripts/audit/**)
+- Governance file approvals required before: ENF-001 and ENF-003A (both touch scripts/agent/run_task.sh)
+- ENF-003A and ENF-003B can be implemented in parallel after ENF-001 is done
+- ENF-004 must be last (references outputs of ENF-002 and ENF-003A)
+| ENF-005 | SECURITY_GUARDIAN | completed | docs/plans/phase1/ENF-005/PLAN.md | docs/plans/phase1/ENF-005/EXEC_LOG.md |
+
+### ENF-005 notes
+- Depends on ENF-002 (verify_drd_casefile.sh must be installed first)
+- Human sysadmin prerequisite: sudoers entry for agent OS user — see docs/plans/phase1/ENF-005/EXEC_LOG.md
+- Can be applied after ENF-002; does not block ENF-003A, ENF-003B, or ENF-004
 
 ## Demo Deployment Runbook Hardening Pack
 
@@ -451,6 +473,67 @@ This index tracks governance rewrite tasks derived from `Symphony_Governance_Imp
 - **Verification:** `bash scripts/audit/verify_tsk_p1_210.sh`; `python3 scripts/audit/validate_evidence.py --task TSK-P1-210 --evidence evidence/phase1/tsk_p1_210_supervisory_optimization.json`; `bash scripts/dev/pre_ci.sh`
 - **Evidence:** `evidence/phase1/tsk_p1_210_supervisory_optimization.json`
 - **Failure Modes:** fallback semantics drift; output shape changes unexpectedly; evidence file missing
+
+## Wave 4 GF — Schema Governance Gates
+
+### GF-W1-GOV-005A — Ownership/reference-order fail-closed verifier
+- **Owner:** Security Guardian
+- **Depends on:** GF-W1-SCH-008
+- **Blocks:** GF-W1-SCH-009
+- **Touches:** `scripts/audit/verify_gf_w1_gov_005a.sh`, `evidence/phase1/gf_w1_gov_005a.json`
+- **Work:** Static analysis of all 9 GF Phase 0 migration SQL files: verify all files present; verify no forward FK references; verify no sector nouns in table names; emit evidence JSON
+- **Acceptance Criteria:** all 9 migration files present; zero forward FK violations; zero sector-noun violations; `verify_gf_w1_gov_005a.sh` exits 0; `evidence/phase1/gf_w1_gov_005a.json` status=PASS
+- **Verification:** `bash scripts/audit/verify_gf_w1_gov_005a.sh`
+- **Evidence:** `evidence/phase1/gf_w1_gov_005a.json`
+- **Failure Modes:** any GF migration file absent => FAIL; forward FK reference detected => CRITICAL_FAIL; sector noun in table name => CRITICAL_FAIL; evidence missing => FAIL
+
+## Wave 5 Sabotage Remediation Pack
+
+Covers reversal of rogue-agent damage from a failed Wave 5 attempt. Tasks provide governance coverage for corrections applied to pre_ci stubs, task meta.yml files, and companion PLAN.md files. Execution order: GF-W1-REM-001, GF-W1-REM-002, GF-W1-REM-004 (parallel) → GF-W1-REM-003.
+
+### GF-W1-REM-001 — Correct stale migration number references in Wave 5 pre_ci verifier stubs
+- **Owner:** DB Foundation Agent
+- **Depends on:** none
+- **Blocks:** GF-W1-FNC-001 through GF-W1-FNC-006
+- **Touches:** `scripts/db/verify_gf_fnc_001.sh`, `scripts/db/verify_gf_fnc_002.sh`, `scripts/db/verify_gf_fnc_003.sh`, `scripts/db/verify_gf_fnc_004.sh`, `scripts/db/verify_gf_fnc_005.sh`, `scripts/db/verify_gf_fnc_006.sh`, `scripts/db/verify_gf_w1_rem_001.sh`, `evidence/phase1/gf_w1_rem_001.json`
+- **Work:** Replace stale `0088`–`0093` migration refs with correct `0107`–`0112` in all 6 stubs; confirm each stub exits 0 PENDING; emit evidence
+- **Acceptance Criteria:** `grep -E "008[89]_|009[0-3]_"` across all 6 stubs returns zero matches; all stubs exit 0 PENDING; `verify_gf_w1_rem_001.sh` exits 0 PASS
+- **Verification:** `bash scripts/db/verify_gf_w1_rem_001.sh`; `python3 scripts/audit/validate_evidence.py --task GF-W1-REM-001 --evidence evidence/phase1/gf_w1_rem_001.json`
+- **Evidence:** `evidence/phase1/gf_w1_rem_001.json`
+- **Failure Modes:** stale migration ref remains in any stub => FAIL; evidence missing => FAIL
+
+### GF-W1-REM-002 — Remove rogue migration names and fake verifier refs from GF-W1-FNC-001–007A meta.yml files
+- **Owner:** Architect
+- **Depends on:** none
+- **Blocks:** GF-W1-FNC-001 through GF-W1-FNC-007A; GF-W1-REM-003
+- **Touches:** `tasks/GF-W1-FNC-001/meta.yml`, `tasks/GF-W1-FNC-002/meta.yml`, `tasks/GF-W1-FNC-003/meta.yml`, `tasks/GF-W1-FNC-004/meta.yml`, `tasks/GF-W1-FNC-005/meta.yml`, `tasks/GF-W1-FNC-006/meta.yml`, `tasks/GF-W1-FNC-007A/meta.yml`, `scripts/audit/verify_gf_w1_rem_002.sh`, `evidence/phase1/gf_w1_rem_002.json`
+- **Work:** Replace all rogue migration filenames and `verify_gf_w1_fnc_*` refs in 7 FNC meta.yml files with canonical equivalents; emit evidence
+- **Acceptance Criteria:** grep for rogue patterns across all 7 meta.yml files returns zero matches; `verify_gf_w1_rem_002.sh` exits 0 PASS
+- **Verification:** `bash scripts/audit/verify_gf_w1_rem_002.sh`; `python3 scripts/audit/validate_evidence.py --task GF-W1-REM-002 --evidence evidence/phase1/gf_w1_rem_002.json`
+- **Evidence:** `evidence/phase1/gf_w1_rem_002.json`
+- **Failure Modes:** rogue ref remains in any meta.yml => FAIL; evidence missing => FAIL
+
+### GF-W1-REM-003 — Remove rogue migration filename refs from GF-W1-FNC-002 through GF-W1-FNC-007A PLAN.md files
+- **Owner:** Architect
+- **Depends on:** GF-W1-REM-002
+- **Blocks:** GF-W1-FNC-002, GF-W1-FNC-003, GF-W1-FNC-004, GF-W1-FNC-005, GF-W1-FNC-006, GF-W1-FNC-007A
+- **Touches:** `docs/plans/phase1/GF-W1-FNC-002/PLAN.md`, `docs/plans/phase1/GF-W1-FNC-003/PLAN.md`, `docs/plans/phase1/GF-W1-FNC-004/PLAN.md`, `docs/plans/phase1/GF-W1-FNC-005/PLAN.md`, `docs/plans/phase1/GF-W1-FNC-006/PLAN.md`, `docs/plans/phase1/GF-W1-FNC-007A/PLAN.md`, `scripts/audit/verify_gf_w1_rem_003.sh`, `evidence/phase1/gf_w1_rem_003.json`
+- **Work:** Replace rogue migration names in Execution Details of FNC-003–007A PLAN.md files; confirm FNC-002 already correct; emit evidence (scope expanded during implementation after final grep revealed additional rogue refs in FNC-005/006/007A)
+- **Acceptance Criteria:** grep for rogue migration patterns across all 6 FNC PLAN.md files returns zero matches; `verify_gf_w1_rem_003.sh` exits 0 PASS
+- **Verification:** `bash scripts/audit/verify_gf_w1_rem_003.sh`; `python3 scripts/audit/validate_evidence.py --task GF-W1-REM-003 --evidence evidence/phase1/gf_w1_rem_003.json`
+- **Evidence:** `evidence/phase1/gf_w1_rem_003.json`
+- **Failure Modes:** rogue migration name remains in any PLAN.md => FAIL; evidence missing => FAIL
+
+### GF-W1-REM-004 — Remove rogue verify_gf_w1_fnc_007b refs from GF-W1-FNC-007B meta.yml
+- **Owner:** Security Guardian Agent
+- **Depends on:** none
+- **Blocks:** GF-W1-FNC-007B
+- **Touches:** `tasks/GF-W1-FNC-007B/meta.yml`, `scripts/audit/verify_gf_w1_rem_004.sh`, `evidence/phase1/gf_w1_rem_004.json`
+- **Work:** Replace all 4 `verify_gf_w1_fnc_007b` occurrences in FNC-007B meta.yml with `verify_gf_fnc_007b`; emit evidence
+- **Acceptance Criteria:** grep for `verify_gf_w1_fnc_007b` in FNC-007B meta.yml returns zero matches; `verify_gf_w1_rem_004.sh` exits 0 PASS
+- **Verification:** `bash scripts/audit/verify_gf_w1_rem_004.sh`; `python3 scripts/audit/validate_evidence.py --task GF-W1-REM-004 --evidence evidence/phase1/gf_w1_rem_004.json`
+- **Evidence:** `evidence/phase1/gf_w1_rem_004.json`
+- **Failure Modes:** rogue verifier ref remains in FNC-007B meta.yml => FAIL; evidence missing => FAIL
 
 ## RLS Architecture Remediation Pack
 

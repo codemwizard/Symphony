@@ -1,7 +1,7 @@
 -- Migration 0097: Green Finance Projects (Root Foundation)
 -- Phase 0 foundational schema for the projects domain
 
-CREATE TABLE IF NOT EXISTS public.projects (
+CREATE TABLE public.projects (
     project_id UUID PRIMARY KEY DEFAULT public.uuid_v7_or_random(),
     tenant_id UUID NOT NULL REFERENCES public.tenants(tenant_id) ON DELETE RESTRICT,
     name TEXT NOT NULL,

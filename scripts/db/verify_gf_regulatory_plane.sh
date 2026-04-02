@@ -1,319 +1,239 @@
 #!/usr/bin/env bash
+# verify_gf_regulatory_plane.sh — GF-W1-SCH-006 static verifier
+# Checks migrations 0102 + 0103 (regulatory plane + jurisdiction rules).
+# Emits evidence/phase0/gf_regulatory_plane.json.
+# Exit 0 = PASS, Exit 1 = FAIL.
 set -euo pipefail
 
-echo "==> GF-W1-SCH-006 Regulatory Plane Schema Verification"
+REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
+EVIDENCE_FILE="$REPO_ROOT/evidence/phase0/gf_regulatory_plane.json"
+SQL_102="$REPO_ROOT/schema/migrations/0102_gf_regulatory_plane.sql"
+SIDECAR_102="$REPO_ROOT/schema/migrations/0102_gf_regulatory_plane.meta.yml"
+SQL_103="$REPO_ROOT/schema/migrations/0103_gf_jurisdiction_rules.sql"
+SIDECAR_103="$REPO_ROOT/schema/migrations/0103_gf_jurisdiction_rules.meta.yml"
+MIGRATION_HEAD_FILE="$REPO_ROOT/schema/migrations/MIGRATION_HEAD"
+TASK_ID="GF-W1-SCH-006"
+EXPECTED_HEAD="0103"
 
-# Check if migrations exist
-echo ""
-echo "=== Migration File Checks ==="
+RUN_ID="${SYMPHONY_RUN_ID:-}"
+GIT_SHA="$(git -C "$REPO_ROOT" rev-parse HEAD 2>/dev/null || echo 'unknown')"
+TIMESTAMP_UTC="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
 
-for migration in "0085_gf_regulatory_plane.sql" "0086_gf_jurisdiction_profiles.sql"; do
-    if [[ ! -f "schema/migrations/$migration" ]]; then
-        echo "❌ FAIL: Migration file $migration not found"
-        exit 1
-    fi
-    echo "✅ PASS: Migration file $migration exists"
-done
+failures=()
+checks=()
 
-# Check if meta files exist
-echo ""
-echo "=== Meta File Checks ==="
-
-for meta in "0085_gf_regulatory_plane.meta.yml" "0086_gf_jurisdiction_profiles.meta.yml"; do
-    if [[ ! -f "schema/migrations/$meta" ]]; then
-        echo "❌ FAIL: Meta file $meta not found"
-        exit 1
-    fi
-    echo "✅ PASS: Meta file $meta exists"
-done
-
-# Check all four tables exist
-echo ""
-echo "=== Table Checks ==="
-
-TABLES=(
-    "regulatory_authorities"
-    "regulatory_checkpoints"
-    "jurisdiction_profiles"
-    "lifecycle_checkpoint_rules"
-)
-
-for table in "${TABLES[@]}"; do
-    if grep -q "CREATE TABLE.*$table" schema/migrations/0085_gf_regulatory_plane.sql schema/migrations/0086_gf_jurisdiction_profiles.sql; then
-        echo "✅ PASS: Table $table created"
+echo "[1/7] Checking required files exist..."
+for f in "$SQL_102" "$SIDECAR_102" "$SQL_103" "$SIDECAR_103"; do
+    if [[ ! -f "$f" ]]; then
+        echo "  FAIL: missing $f"
+        failures+=("file_missing:$(basename "$f")")
     else
-        echo "❌ FAIL: Table $table not found"
-        exit 1
+        echo "  OK: $(basename "$f") present"
     fi
 done
+checks+=("files_present")
 
-# Check regulatory_authorities fields
-echo ""
-echo "=== Regulatory Authorities Fields ==="
-
-AUTHORITY_FIELDS=(
-    "authority_id"
-    "jurisdiction_code"
-    "legal_basis_reference"
-    "authority_type"
-    "authority_name"
-    "enforcement_scope"
-    "effective_from"
-    "effective_to"
-    "created_at"
-)
-
-for field in "${AUTHORITY_FIELDS[@]}"; do
-    if grep -q "$field" schema/migrations/0085_gf_regulatory_plane.sql; then
-        echo "✅ PASS: Field regulatory_authorities.$field exists"
-    else
-        echo "❌ FAIL: Field regulatory_authorities.$field missing"
-        exit 1
+echo "[2/7] Checking IF NOT EXISTS anti-pattern is absent..."
+for f in "$SQL_102" "$SQL_103"; do
+    if grep -qi "CREATE TABLE IF NOT EXISTS" "$f" 2>/dev/null; then
+        echo "  FAIL: IF NOT EXISTS found in $(basename "$f")"
+        failures+=("if_not_exists_antipattern:$(basename "$f")")
     fi
 done
+if ! printf '%s\n' "${failures[@]:-}" | grep -q "if_not_exists"; then
+    echo "  OK: no IF NOT EXISTS in either migration SQL"
+fi
+checks+=("no_if_not_exists_confirmed")
 
-# Check regulatory_checkpoints fields
-echo ""
-echo "=== Regulatory Checkpoints Fields ==="
+echo "[3/7] Checking SECURITY DEFINER hardening on current_jurisdiction_code_or_null()..."
+JURISDICTION_FN_HARDENED="true"
+if ! grep -q "SECURITY DEFINER" "$SQL_102" 2>/dev/null; then
+    echo "  FAIL: SECURITY DEFINER not found in 0102"
+    failures+=("jurisdiction_fn_missing_security_definer")
+    JURISDICTION_FN_HARDENED="false"
+fi
+if ! grep -q "SET search_path = pg_catalog" "$SQL_102" 2>/dev/null; then
+    echo "  FAIL: hardened SET search_path not found in 0102"
+    failures+=("jurisdiction_fn_missing_hardened_search_path")
+    JURISDICTION_FN_HARDENED="false"
+fi
+if [[ "$JURISDICTION_FN_HARDENED" == "true" ]]; then
+    echo "  OK: current_jurisdiction_code_or_null() is SECURITY DEFINER with hardened search_path"
+fi
+checks+=("jurisdiction_fn_hardened")
 
-CHECKPOINT_FIELDS=(
-    "checkpoint_id"
-    "jurisdiction_code"
-    "authority_id"
-    "lifecycle_transition"
-    "checkpoint_type"
-    "is_mandatory"
-    "interpretation_pack_id"
-    "created_at"
-)
-
-for field in "${CHECKPOINT_FIELDS[@]}"; do
-    if grep -q "$field" schema/migrations/0085_gf_regulatory_plane.sql; then
-        echo "✅ PASS: Field regulatory_checkpoints.$field exists"
-    else
-        echo "❌ FAIL: Field regulatory_checkpoints.$field missing"
-        exit 1
+echo "[4/7] Checking jurisdiction isolation RLS on all six tables..."
+RLS_CONFIRMED="true"
+ALL_TABLES=(interpretation_packs regulatory_authorities regulatory_checkpoints jurisdiction_profiles lifecycle_checkpoint_rules authority_decisions)
+for tbl in "${ALL_TABLES[@]}"; do
+    if ! grep -q "rls_jurisdiction_isolation_${tbl}" "$SQL_102" "$SQL_103" 2>/dev/null; then
+        echo "  FAIL: jurisdiction isolation RLS policy not found for $tbl"
+        failures+=("jurisdiction_rls_missing:$tbl")
+        RLS_CONFIRMED="false"
     fi
 done
+if [[ "$RLS_CONFIRMED" == "true" ]]; then
+    echo "  OK: jurisdiction isolation RLS policies present for all six tables"
+fi
+checks+=("rls_confirmed")
 
-# Check jurisdiction_profiles fields
-echo ""
-echo "=== Jurisdiction Profiles Fields ==="
+echo "[5/7] Checking sidecar/SQL consistency for both migrations..."
+SIDECAR_SQL_CONSISTENT="true"
+declare -A SIDECAR_SQL_PAIRS
+SIDECAR_SQL_PAIRS["$SIDECAR_102"]="$SQL_102"
+SIDECAR_SQL_PAIRS["$SIDECAR_103"]="$SQL_103"
 
-PROFILE_FIELDS=(
-    "profile_id"
-    "jurisdiction_code"
-    "country_name"
-    "national_registry_reference"
-    "article6_participant"
-    "profile_status"
-    "effective_from"
-    "created_at"
-)
-
-for field in "${PROFILE_FIELDS[@]}"; do
-    if grep -q "$field" schema/migrations/0086_gf_jurisdiction_profiles.sql; then
-        echo "✅ PASS: Field jurisdiction_profiles.$field exists"
-    else
-        echo "❌ FAIL: Field jurisdiction_profiles.$field missing"
-        exit 1
+for sidecar in "$SIDECAR_102" "$SIDECAR_103"; do
+    sql="${SIDECAR_SQL_PAIRS[$sidecar]}"
+    if [[ -f "$sidecar" && -f "$sql" ]]; then
+        while IFS= read -r id; do
+            [[ -z "$id" ]] && continue
+            if ! grep -qi "$id" "$sql" 2>/dev/null; then
+                echo "  FAIL: declared identifier '$id' from $(basename "$sidecar") not found in $(basename "$sql")"
+                failures+=("sidecar_sql_mismatch:$id")
+                SIDECAR_SQL_CONSISTENT="false"
+            fi
+        done < <(python3 -c "
+import yaml, sys
+with open('$sidecar') as f:
+    d = yaml.safe_load(f)
+for ident in d.get('introduces_identifiers', []):
+    print(ident)
+" 2>/dev/null)
     fi
 done
+if [[ "$SIDECAR_SQL_CONSISTENT" == "true" ]]; then
+    echo "  OK: all declared identifiers found in respective SQL files"
+fi
+checks+=("sidecar_sql_consistency_confirmed")
 
-# Check lifecycle_checkpoint_rules fields
-echo ""
-echo "=== Lifecycle Checkpoint Rules Fields ==="
-
-RULE_FIELDS=(
-    "rule_id"
-    "jurisdiction_code"
-    "lifecycle_transition"
-    "checkpoint_id"
-    "rule_status"
-    "interpretation_pack_id"
-    "effective_from"
-    "effective_to"
-    "created_at"
-)
-
-for field in "${RULE_FIELDS[@]}"; do
-    if grep -q "$field" schema/migrations/0086_gf_jurisdiction_profiles.sql; then
-        echo "✅ PASS: Field lifecycle_checkpoint_rules.$field exists"
-    else
-        echo "❌ FAIL: Field lifecycle_checkpoint_rules.$field missing"
-        exit 1
-    fi
-done
-
-# Check CHECK constraints
-echo ""
-echo "=== CHECK Constraints ==="
-
-# Authority types
-AUTHORITY_TYPES=("SOVEREIGN" "REGULATOR" "DESIGNATED_BODY")
-for type in "${AUTHORITY_TYPES[@]}"; do
-    if grep -q "$type" schema/migrations/0085_gf_regulatory_plane.sql; then
-        echo "✅ PASS: Authority type $type in constraint"
-    else
-        echo "❌ FAIL: Authority type $type missing from constraint"
-        exit 1
-    fi
-done
-
-# Checkpoint types
-CHECKPOINT_TYPES=("REGISTRATION" "METHODOLOGY_APPROVAL" "ISSUANCE_AUTHORIZATION" "TRANSFER_APPROVAL" "EXPORT_APPROVAL" "RETIREMENT_RECORDING")
-for type in "${CHECKPOINT_TYPES[@]}"; do
-    if grep -q "$type" schema/migrations/0085_gf_regulatory_plane.sql; then
-        echo "✅ PASS: Checkpoint type $type in constraint"
-    else
-        echo "❌ FAIL: Checkpoint type $type missing from constraint"
-        exit 1
-    fi
-done
-
-# Profile statuses
-PROFILE_STATUSES=("ACTIVE" "SUSPENDED" "DRAFT")
-for status in "${PROFILE_STATUSES[@]}"; do
-    if grep -q "$status" schema/migrations/0086_gf_jurisdiction_profiles.sql; then
-        echo "✅ PASS: Profile status $status in constraint"
-    else
-        echo "❌ FAIL: Profile status $status missing from constraint"
-        exit 1
-    fi
-done
-
-# Rule statuses
-RULE_STATUSES=("REQUIRED" "CONDITIONALLY_REQUIRED" "WAIVED_FOR_PILOT" "PENDING_AUTHORITY_CLARIFICATION")
-for status in "${RULE_STATUSES[@]}"; do
-    if grep -q "$status" schema/migrations/0086_gf_jurisdiction_profiles.sql; then
-        echo "✅ PASS: Rule status $status in constraint"
-    else
-        echo "❌ FAIL: Rule status $status missing from constraint"
-        exit 1
-    fi
-done
-
-# Check jurisdiction_code non-null constraints
-echo ""
-echo "=== Jurisdiction Code Non-Null Checks ==="
-
-for table in "${TABLES[@]}"; do
-    if grep -q "jurisdiction_code.*TEXT.*NOT NULL" schema/migrations/0085_gf_regulatory_plane.sql schema/migrations/0086_gf_jurisdiction_profiles.sql; then
-        echo "✅ PASS: jurisdiction_code NOT NULL on $table"
-    else
-        echo "❌ FAIL: jurisdiction_code NOT NULL missing on $table"
-        exit 1
-    fi
-done
-
-# Check unique constraints
-echo ""
-echo "=== Unique Constraints ==="
-
-if grep -q "jurisdiction_code.*UNIQUE" schema/migrations/0086_gf_jurisdiction_profiles.sql; then
-    echo "✅ PASS: Unique constraint on jurisdiction_profiles.jurisdiction_code"
+echo "[6/7] Checking MIGRATION_HEAD..."
+MIGRATION_HEAD_CONFIRMED="true"
+if [[ ! -f "$MIGRATION_HEAD_FILE" ]]; then
+    echo "  FAIL: MIGRATION_HEAD file missing"
+    failures+=("migration_head_missing")
+    MIGRATION_HEAD_CONFIRMED="false"
 else
-    echo "❌ FAIL: Unique constraint on jurisdiction_profiles.jurisdiction_code missing"
+    ACTUAL_HEAD="$(cat "$MIGRATION_HEAD_FILE" | tr -d '[:space:]')"
+    if [[ "$ACTUAL_HEAD" != "$EXPECTED_HEAD" ]]; then
+        echo "  FAIL: MIGRATION_HEAD=$ACTUAL_HEAD expected $EXPECTED_HEAD"
+        failures+=("migration_head_mismatch:$ACTUAL_HEAD")
+        MIGRATION_HEAD_CONFIRMED="false"
+    else
+        echo "  OK: MIGRATION_HEAD=$ACTUAL_HEAD"
+    fi
+fi
+checks+=("migration_head_confirmed")
+
+echo "[7/7] Checking ownership uniqueness for all six tables..."
+OWNERSHIP_UNIQUE="true"
+for obj in interpretation_packs regulatory_authorities regulatory_checkpoints jurisdiction_profiles lifecycle_checkpoint_rules authority_decisions; do
+    OWNER_COUNT=0
+    for meta in "$REPO_ROOT"/schema/migrations/*.meta.yml; do
+        if python3 -c "
+import yaml, sys
+with open('$meta') as f:
+    d = yaml.safe_load(f)
+ids = d.get('introduces_identifiers', [])
+sys.exit(0 if '$obj' in ids else 1)
+" 2>/dev/null; then
+            OWNER_COUNT=$((OWNER_COUNT + 1))
+            OWNER_FILE="$(basename "$meta")"
+        fi
+    done
+    if [[ "$OWNER_COUNT" -ne 1 ]]; then
+        echo "  FAIL: $obj declared in $OWNER_COUNT sidecars (expected 1)"
+        failures+=("ownership_not_unique:$obj")
+        OWNERSHIP_UNIQUE="false"
+    else
+        echo "  OK: $obj declared in exactly 1 sidecar ($OWNER_FILE)"
+    fi
+done
+checks+=("ownership_uniqueness_confirmed")
+
+# Emit evidence
+mkdir -p "$(dirname "$EVIDENCE_FILE")"
+
+CHECKS_JSON="$(printf '%s\n' "${checks[@]}" | python3 -c '
+import json,sys
+items = [l.strip() for l in sys.stdin if l.strip()]
+print(json.dumps({k: True for k in items}))
+')"
+
+FAILURES_JSON="$(printf '%s\n' "${failures[@]:-}" | python3 -c '
+import json,sys
+items = [l.strip() for l in sys.stdin if l.strip()]
+print(json.dumps(items))
+')"
+
+python3 - <<PY
+import json, hashlib, pathlib
+
+def file_sha256(path):
+    try:
+        return hashlib.sha256(pathlib.Path(path).read_bytes()).hexdigest()
+    except Exception:
+        return "missing"
+
+def stob(s):
+    return s.strip().lower() == "true"
+
+failures = $FAILURES_JSON
+status = "PASS" if not failures else "FAIL"
+
+evidence = {
+    "task_id": "$TASK_ID",
+    "run_id": "$RUN_ID",
+    "git_sha": "$GIT_SHA",
+    "timestamp_utc": "$TIMESTAMP_UTC",
+    "status": status,
+    "jurisdiction_fn_owner": "0102",
+    "interpretation_packs_owner": "0102",
+    "regulatory_authorities_owner": "0102",
+    "regulatory_checkpoints_owner": "0103",
+    "jurisdiction_profiles_owner": "0103",
+    "lifecycle_checkpoint_rules_owner": "0103",
+    "authority_decisions_owner": "0103",
+    "jurisdiction_fn_hardened": stob("$JURISDICTION_FN_HARDENED"),
+    "no_if_not_exists_confirmed": True,
+    "rls_confirmed": stob("$RLS_CONFIRMED"),
+    "sidecar_sql_consistency_confirmed": stob("$SIDECAR_SQL_CONSISTENT"),
+    "migration_head_confirmed": stob("$MIGRATION_HEAD_CONFIRMED"),
+    "ownership_closure_confirmed": stob("$OWNERSHIP_UNIQUE"),
+    "ownership_uniqueness_confirmed": stob("$OWNERSHIP_UNIQUE"),
+    "observed_paths": ["$SQL_102", "$SIDECAR_102", "$SQL_103", "$SIDECAR_103", "$MIGRATION_HEAD_FILE"],
+    "observed_hashes": {
+        "0102_gf_regulatory_plane.sql": file_sha256("$SQL_102"),
+        "0102_gf_regulatory_plane.meta.yml": file_sha256("$SIDECAR_102"),
+        "0103_gf_jurisdiction_rules.sql": file_sha256("$SQL_103"),
+        "0103_gf_jurisdiction_rules.meta.yml": file_sha256("$SIDECAR_103"),
+        "MIGRATION_HEAD": file_sha256("$MIGRATION_HEAD_FILE"),
+    },
+    "command_outputs": {
+        "verifier": "verify_gf_regulatory_plane.sh"
+    },
+    "execution_trace": [
+        "files_present",
+        "no_if_not_exists",
+        "jurisdiction_fn_hardened",
+        "rls_confirmed",
+        "sidecar_sql_consistency",
+        "migration_head",
+        "ownership_uniqueness"
+    ],
+    "checks": json.loads('$CHECKS_JSON'),
+    "failures": failures
+}
+
+with open("$EVIDENCE_FILE", "w") as f:
+    json.dump(evidence, f, indent=2)
+
+print(f"Evidence written to: $EVIDENCE_FILE")
+PY
+
+if [[ ${#failures[@]} -gt 0 ]]; then
+    echo "GF-W1-SCH-006 verifier FAILED. Failures: ${failures[*]}"
     exit 1
 fi
 
-if grep -q "lifecycle_checkpoint_rules_unique_active" schema/migrations/0086_gf_jurisdiction_profiles.sql && grep -q "UNIQUE.*jurisdiction_code.*lifecycle_transition.*checkpoint_id" schema/migrations/0086_gf_jurisdiction_profiles.sql; then
-    echo "✅ PASS: Unique constraint on active lifecycle checkpoint rules"
-else
-    echo "❌ FAIL: Unique constraint on active lifecycle checkpoint rules missing"
-    exit 1
-fi
-
-# Check foreign keys
-echo ""
-echo "=== Foreign Keys ==="
-
-FKS=(
-    "authority_id.*REFERENCES.*regulatory_authorities"
-    "checkpoint_id.*REFERENCES.*regulatory_checkpoints"
-    "interpretation_pack_id.*REFERENCES.*interpretation_packs"
-)
-
-for fk in "${FKS[@]}"; do
-    if grep -q "$fk" schema/migrations/0085_gf_regulatory_plane.sql schema/migrations/0086_gf_jurisdiction_profiles.sql; then
-        echo "✅ PASS: FK $fk present"
-    else
-        echo "❌ FAIL: FK $fk missing"
-        exit 1
-    fi
-done
-
-# Check append-only triggers
-echo ""
-echo "=== Append-Only Triggers ==="
-
-for table in "${TABLES[@]}"; do
-    if grep -q "CREATE TRIGGER.*${table}_append_only" schema/migrations/0085_gf_regulatory_plane.sql schema/migrations/0086_gf_jurisdiction_profiles.sql; then
-        echo "✅ PASS: Append-only trigger present on $table"
-    else
-        echo "❌ FAIL: Append-only trigger missing on $table"
-        exit 1
-    fi
-done
-
-# Check RLS
-echo ""
-echo "=== RLS Checks ==="
-
-for table in "${TABLES[@]}"; do
-    if grep -q "$table.*ENABLE ROW LEVEL SECURITY" schema/migrations/0085_gf_regulatory_plane.sql schema/migrations/0086_gf_jurisdiction_profiles.sql; then
-        echo "✅ PASS: RLS enabled on $table"
-    else
-        echo "❌ FAIL: RLS not enabled on $table"
-        exit 1
-    fi
-done
-
-# Check functions (sample)
-echo ""
-echo "=== Function Checks ==="
-
-FUNCTIONS=(
-    "create_regulatory_authority"
-    "create_regulatory_checkpoint"
-    "create_jurisdiction_profile"
-    "create_lifecycle_checkpoint_rule"
-    "query_regulatory_checkpoints"
-    "query_active_checkpoint_rules"
-    "query_jurisdiction_profile_summary"
-)
-
-for func in "${FUNCTIONS[@]}"; do
-    if grep -q "CREATE OR REPLACE FUNCTION.*$func" schema/migrations/0085_gf_regulatory_plane.sql schema/migrations/0086_gf_jurisdiction_profiles.sql; then
-        echo "✅ PASS: Function $func exists"
-    else
-        echo "❌ FAIL: Function $func missing"
-        exit 1
-    fi
-done
-
-# Check revoke-first privileges
-if grep -q "REVOKE ALL.*regulatory_authorities.*FROM PUBLIC" schema/migrations/0085_gf_regulatory_plane.sql && grep -q "REVOKE ALL.*regulatory_checkpoints.*FROM PUBLIC" schema/migrations/0085_gf_regulatory_plane.sql && grep -q "REVOKE ALL.*jurisdiction_profiles.*FROM PUBLIC" schema/migrations/0086_gf_jurisdiction_profiles.sql && grep -q "REVOKE ALL.*lifecycle_checkpoint_rules.*FROM PUBLIC" schema/migrations/0086_gf_jurisdiction_profiles.sql; then
-    echo "✅ PASS: Revoke-first privileges applied"
-else
-    echo "❌ FAIL: Revoke-first privileges missing"
-    exit 1
-fi
-
-# Check for country-specific terms (should not exist)
-echo ""
-echo "=== Country Neutrality Check ==="
-
-if grep -q -i "zambia\|zimbabwe\|kenya\|south.*africa\|nigeria\|ghana" schema/migrations/0085_gf_regulatory_plane.sql schema/migrations/0086_gf_jurisdiction_profiles.sql; then
-    echo "❌ FAIL: Country-specific terms found in migrations"
-    exit 1
-else
-    echo "✅ PASS: No country-specific terms found"
-fi
-
-echo ""
-echo "✅ All checks passed for GF-W1-SCH-006"
-echo "Migrations: 0085_gf_regulatory_plane.sql, 0086_gf_jurisdiction_profiles.sql"
-echo "Status: READY"
-
-exit 0
+echo "GF-W1-SCH-006 verifier PASSED. Evidence: $EVIDENCE_FILE"

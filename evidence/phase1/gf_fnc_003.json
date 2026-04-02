@@ -1,0 +1,14 @@
+{
+  "check_id": "GF-W1-FNC-003",
+  "task_id": "GF-W1-FNC-003",
+  "status": "PASS",
+  "timestamp_utc": "2026-04-02T02:02:47Z",
+  "generated_at": "2026-04-02T02:02:47.753741+00:00",
+  "git_sha": "6d4d95d9122b976f7a571081d6a128e72e52952e",
+  "pre_ci_run_id": "rem-4e1e3106d4d2",
+  "source_file": "schema/migrations/0109_gf_fn_evidence_lineage.sql",
+  "source_file_sha256": "b6440f453c17b68a7ff52f4dd099de148b3f32d5f2cb9f6a3160a7ffca56a9f6",
+  "command_output": "{\"probes\": [{\"probe\": \"link_evidence_to_record\", \"status\": \"PASS\"},{\"probe\": \"get_evidence_node\", \"status\": \"PASS\"},{\"probe\": \"list_project_evidence\", \"status\": \"PASS\"},{\"probe\": \"attach_evidence\", \"status\": \"PASS\"},{\"probe\": \"query_evidence_lineage\", \"status\": \"PASS\"}]}",
+  "_signature": "ac8c5b351058685812de60c4f09d246d933a7dec5930f6ea6da5de91a8e71802",
+  "_signing_version": "symphony-v1"
+}

@@ -452,8 +452,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: [mechanical_invariants]
     if: always() && github.event_name != 'schedule'
-
-
+    steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
@@ -515,6 +514,7 @@ jobs:
           SKIP_POLICY_SEED: "1"
         run: |
           set -euo pipefail
+          source scripts/audit/env/phase0_flags.sh
           # Control-plane reference (INV-031 / INT-G22): scripts/db/tests/test_outbox_pending_indexes.sh
           chmod +x scripts/db/verify_invariants.sh
           scripts/db/verify_invariants.sh
@@ -680,6 +680,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
+          source scripts/audit/env/phase0_flags.sh
           if [[ -x scripts/audit/run_security_fast_checks.sh ]]; then
             scripts/audit/run_security_fast_checks.sh
           else
@@ -786,6 +787,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
+          source scripts/audit/env/phase0_flags.sh
           mech="${{ needs.mechanical_invariants.result }}"
           db="${{ needs.db_verify_invariants.result }}"
           sec="${{ needs.security_scan.result }}"

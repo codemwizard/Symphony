@@ -1,29 +1,29 @@
-﻿# Symphony Enforcement Package v1 ΓÇö MANIFEST
-# Staging directory ΓÇö DO NOT apply to repo without reading this file first.
+# Symphony Enforcement Package v1 -- MANIFEST
+# Staging directory -- DO NOT apply to repo without reading this file first.
 # Apply layers in order. Each layer is independent and additive.
 #
 # SOURCE OF TRUTH: Everything in this staging directory is the canonical version.
-# Do not use shell commands printed in chat sessions ΓÇö those were workarounds
+# Do not use shell commands printed in chat sessions -- those were workarounds
 # for MCP write failures and may be out of date. Always apply from here.
 
 ## Current state of all layers
 
 | Layer | Name | Repo status | Action needed |
 |---|---|---|---|
-| 1 | Git enforcement (pre-push) | Γ£à Live | None ΓÇö already written |
-| 2 | Conformance hash validation | ΓÅ│ Pending | Manual patch ΓÇö see layer-2 |
-| 3 | DRD mechanical lockout | Γ£à Live | Optional enhancement ΓÇö see layer-3 |
-| 4 | Knowledge base | ΓÅ│ Pending | Apply with copy commands below |
-| 5 | Agent context | ΓÅ│ Pending | Apply with copy command below |
-| 6 | CODEOWNERS + GitHub settings | ΓÅ│ Pending | Copy + GitHub UI settings |
+| 1 | Git enforcement (pre-push) | Live | None -- already written |
+| 2 | Conformance hash validation | Pending | Manual patch -- see layer-2 |
+| 3 | DRD mechanical lockout | Live | Optional enhancement -- see layer-3 |
+| 4 | Knowledge base | Pending | Apply with copy commands below |
+| 5 | Agent context | Pending | Apply with copy command below |
+| 6 | CODEOWNERS + GitHub settings | Pending | Copy + GitHub UI settings |
 
 ## Files already live in repo (do not reapply)
 
-- `.githooks/pre-push` ΓÇö main block + force-push block (Layer 1)
-- `scripts/audit/pre_ci_debug_contract.sh` ΓÇö DRD lockout writer + checker (Layer 3)
-- `scripts/dev/pre_ci.sh` ΓÇö DRD lockout gate at startup (Layer 3)
-- `scripts/agent/run_task.sh` ΓÇö rejection context with DRD state (Layer 3)
-- `AGENT_ENTRYPOINT.md` ΓÇö pre-step with DRD lockout awareness (Layer 5)
+- `.githooks/pre-push` -- main block + force-push block (Layer 1)
+- `scripts/audit/pre_ci_debug_contract.sh` -- DRD lockout writer + checker (Layer 3)
+- `scripts/dev/pre_ci.sh` -- DRD lockout gate at startup (Layer 3)
+- `scripts/agent/run_task.sh` -- rejection context with DRD state (Layer 3)
+- `AGENT_ENTRYPOINT.md` -- pre-step with DRD lockout awareness (Layer 5)
 
 ## Current DRD lockout state
 
@@ -44,13 +44,13 @@ BEFORE running pre_ci.sh you must (in order):
 
 ---
 
-## How to apply ΓÇö full apply script
+## How to apply -- full apply script
 
 Run all of the following from the repo root on the Ubuntu server.
 The staging directory (_staging/symphony-enforcement-v1/) must be present
 in the repo (it is committed alongside the live files).
 
-### Step 1 ΓÇö Layer 4: Knowledge base
+### Step 1 -- Layer 4: Knowledge base
 
 ```bash
 # Failure signature registry
@@ -62,36 +62,34 @@ cp _staging/symphony-enforcement-v1/layer-4-knowledge-base/build_failure_index.s
    scripts/audit/build_failure_index.sh
 chmod +x scripts/audit/build_failure_index.sh
 
-# Registry validator (new ΓÇö run after editing failure_signatures.yml)
+# Registry validator
 cp _staging/symphony-enforcement-v1/layer-4-knowledge-base/validate_failure_registry.sh \
    scripts/audit/validate_failure_registry.sh
 chmod +x scripts/audit/validate_failure_registry.sh
 
-# CI workflow for automatic index rebuilds (new)
+# CI workflow for automatic index rebuilds
 mkdir -p .github/workflows
 cp _staging/symphony-enforcement-v1/layer-4-knowledge-base/failure-index.yml \
    .github/workflows/failure-index.yml
 
-# Troubleshooting playbooks (note: target is docs/troubleshooting/, not docs/operations/troubleshooting/)
+# Troubleshooting playbooks
 mkdir -p docs/troubleshooting
 cp _staging/symphony-enforcement-v1/layer-4-knowledge-base/troubleshooting/* \
    docs/troubleshooting/
 
-# Validate registry before generating index
+# Validate registry then generate index
 bash scripts/audit/validate_failure_registry.sh
-
-# Generate the searchable index from existing casefiles
 bash scripts/audit/build_failure_index.sh
 ```
 
-### Step 2 ΓÇö Layer 5: Agent prompt template
+### Step 2 -- Layer 5: Agent prompt template
 
 ```bash
 cp _staging/symphony-enforcement-v1/layer-5-agent-context/prompt_template.md \
    .agent/prompt_template.md
 ```
 
-### Step 3 ΓÇö Layer 2: Hash validation patch (manual edit, ~5 minutes)
+### Step 3 -- Layer 2: Hash validation patch (manual edit, ~5 minutes)
 
 Open `scripts/audit/verify_agent_conformance.sh`.
 Inside `check_approval_metadata()`, find this exact block:
@@ -105,9 +103,9 @@ Inside `check_approval_metadata()`, find this exact block:
 Replace it with the block in:
   `layer-2-conformance-hardening/verify_agent_conformance.PATCH.md`
 
-`import re` is already present in the file ΓÇö no additional import needed.
+`import re` is already present in the file -- no additional import needed.
 
-### Step 4 ΓÇö Layer 3 enhancement (optional, apply after Step 1 is confirmed)
+### Step 4 -- Layer 3 enhancement (optional, apply after Step 1 is confirmed)
 
 Replace `pre_ci_check_drd_lockout()` in `scripts/audit/pre_ci_debug_contract.sh`
 with the version in:
@@ -116,15 +114,14 @@ with the version in:
 This adds registry lookup to the lockout message so agents see the playbook
 link immediately when blocked. Requires failure_signatures.yml to exist (Step 1).
 
-### Step 5 ΓÇö CODEOWNERS (requires GitHub UI)
+### Step 5 -- CODEOWNERS (requires GitHub UI)
 
 ```bash
-# Copy template and set your GitHub username
 cp _staging/symphony-enforcement-v1/CODEOWNERS.template .github/CODEOWNERS
 # Edit .github/CODEOWNERS: replace @your-github-username with real username
 ```
 
-Then in GitHub ΓåÆ Settings ΓåÆ Branches ΓåÆ Add rule for `main`:
+Then in GitHub -> Settings -> Branches -> Add rule for `main`:
 - Require pull request before merging: ON
 - Require approvals: 1
 - Require review from Code Owners: ON
@@ -132,7 +129,7 @@ Then in GitHub ΓåÆ Settings ΓåÆ Branches ΓåÆ Add rule for `main`:
 - Do not allow bypassing above settings: ON
 - Allow force pushes: OFF
 
-### Step 6 ΓÇö One-time activation (if not already done)
+### Step 6 -- One-time activation (if not already done)
 
 ```bash
 git config core.hooksPath .githooks
@@ -144,7 +141,6 @@ chmod +x .githooks/pre-push
 ## Verification after apply
 
 ```bash
-# Confirm all new files exist
 ls docs/operations/failure_signatures.yml
 ls docs/operations/failure_index.md
 ls scripts/audit/build_failure_index.sh
@@ -158,9 +154,6 @@ ls docs/troubleshooting/preci-governance.md
 ls docs/troubleshooting/preci-remediation.md
 ls .agent/prompt_template.md
 
-# Confirm registry is valid
 bash scripts/audit/validate_failure_registry.sh
-
-# Confirm index builder works
 bash scripts/audit/build_failure_index.sh
 ```

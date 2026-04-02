@@ -1,0 +1,101 @@
+schema_version: 1
+phase: '1'
+task_id: GF-W1-FNC-003
+title: Implement attach_evidence and link_evidence_to_record so that lineage is irrefutable.
+owner_role: DB Foundation Agent
+status: completed
+priority: HIGH
+risk_class: GOVERNANCE
+blast_radius: DB_SCHEMA
+intent: Provides the mechanism to cryptographically bind unstructured data hashes
+  (evidence) to  the specific structural monitoring events defined in FNC-002, guaranteeing
+  a fully auditable  lineage from raw data to eventual issuance.
+anti_patterns:
+- Declaring implemented without a functional verification shell.
+- Writing functions that bypass RLS by lacking SECURITY DEFINER hardening.
+- Allowing evidence to be linked to mismatched projects or domains.
+out_of_scope:
+- Modifying core tables created in previous Wave 4 tasks.
+- Building the external evidence hashing or uploading systems.
+stop_conditions:
+- If baseline SQL conflicts with new schema changes or functions.
+proof_guarantees:
+- Verification mathematically matches function signature parameters to the schema.
+proof_limitations:
+- Cannot guarantee business alignment of fields beyond the specification map.
+depends_on:
+- GF-W1-FNC-002
+blocks:
+- GF-W1-FNC-004
+touches:
+- tasks/GF-W1-FNC-003/meta.yml
+- schema/migrations/0109_gf_fn_evidence_lineage.sql
+- scripts/db/verify_gf_fnc_003.sh
+- docs/plans/phase1/GF-W1-FNC-003/PLAN.md
+- docs/plans/phase1/GF-W1-FNC-003/EXEC_LOG.md
+invariants:
+- INV-GF-001
+work:
+- '[ID GF-W1-FNC-003] Draft the PLAN.md logic for GF-W1-FNC-003.'
+- '[ID GF-W1-FNC-003] Implement the database changes via migration 0109_gf_fn_evidence_lineage.sql.'
+- '[ID GF-W1-FNC-003] Implement verify_gf_fnc_003.sh to rigorously assert the changes.'
+acceptance_criteria:
+- '[ID GF-W1-FNC-003] verify_gf_fnc_003.sh exits 0.'
+- '[ID GF-W1-FNC-003] Evidence artifact validates via validate_evidence.py.'
+- '[ID GF-W1-FNC-003] pre_ci.sh passes cleanly over the new modifications.'
+negative_tests:
+- id: GF-W1-FNC-003-N1
+  description: Attempting to link evidence from Project A to a monitoring record of
+    Project B must be blocked by RLS/function constraints.
+  required: true
+positive_tests:
+- id: GF-W1-FNC-003-P1
+  description: Valid execution parameters construct expected row state without panic.
+  required: true
+verification:
+- '[ID GF-W1-FNC-003] bash scripts/dev/pre_ci.sh | grep -q ''.'' >> evidence/phase1/gf_w1_fnc_003.json
+  || exit 1'
+- '[ID GF-W1-FNC-003] bash scripts/audit/verify_gf_fnc_003.sh | grep -q ''.'' >>
+  evidence/phase1/gf_w1_fnc_003.json || exit 1'
+- '[ID GF-W1-FNC-003] python3 scripts/audit/validate_evidence.py --task GF-W1-FNC-003
+  --evidence evidence/phase1/gf_w1_fnc_003.json | grep PASS >> evidence/phase1/gf_w1_fnc_003.json
+  || exit 1'
+evidence:
+- evidence/phase1/gf_w1_fnc_003.json
+failure_modes:
+  - "Evidence file missing"
+  - Evidence file missing => FAIL
+  - Verification script panics or exits > 0 => FAIL
+  - Creating schema bypasses => CRITICAL_FAIL
+must_read:
+- docs/operations/AI_AGENT_OPERATION_MANUAL.md
+- docs/operations/AGENTIC_SDLC_PILOT_POLICY.md
+- docs/operations/PILOT_REJECTION_PLAYBOOK.md
+- docs/operations/AGENT_GUARDRAILS_GREEN_FINANCE.md
+implementation_plan: docs/plans/phase1/GF-W1-FNC-003/PLAN.md
+implementation_log: docs/plans/phase1/GF-W1-FNC-003/EXEC_LOG.md
+notes: Scaffolded mechanically to satisfy the DAG sequence rules for Wave 5 functions.
+client: internal
+assigned_agent: DB Foundation Agent
+model: <UNASSIGNED>
+domain: green_finance
+pilot: false
+second_pilot_test:
+  candidate_sector_1: PWRM0001 plastic collection
+  candidate_sector_2: VM0044 solar energy
+  unchanged_core_tables:
+  - evidence_edges
+  - project_evidence
+  unchanged_core_functions:
+  - attach_evidence
+  - link_evidence_to_record
+  adapter_only_differences:
+  - Not Applicable. Evidence hashing is agnostic.
+  jurisdiction_profile_impact: None expected.
+  required_core_changes: []
+  explanation: The core concept of cryptographic evidence linking relies universally
+    on generic file hashes and storage URLs. A photo of a plastic bale and the logfile
+    from a solar inverter both resolve simply to a SHA-256 string, allowing the database
+    to enforce proof lineage precisely identical for both sectors.
+  second_pilot_reviewed_by: ARCHITECT_AGENT
+pilot_scope_ref: not_applicable

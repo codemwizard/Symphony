@@ -1,4 +1,4 @@
-﻿# Troubleshooting: PRECI.REMEDIATION.*
+# Troubleshooting: PRECI.REMEDIATION.*
 
 **Failure signatures:** `PRECI.REMEDIATION.TRACE`, `PRECI.REMEDIATION.FRESHNESS`
 **Gates:** `pre_ci.verify_remediation_trace`, `pre_ci.verify_remediation_artifact_freshness`
@@ -7,7 +7,7 @@
 
 ---
 
-## PRECI.REMEDIATION.TRACE ΓÇö Remediation trace missing
+## PRECI.REMEDIATION.TRACE -- Remediation trace missing
 
 ### What this means
 
@@ -47,7 +47,7 @@ FAILURE_SIGNATURE=PRECI.REMEDIATION.TRACE
 
 ---
 
-## PRECI.REMEDIATION.FRESHNESS ΓÇö Artifact stale or missing
+## PRECI.REMEDIATION.FRESHNESS -- Artifact stale or missing
 
 ### What this means
 
@@ -69,7 +69,6 @@ FAILURE_SIGNATURE=PRECI.REMEDIATION.FRESHNESS
    BASE_REF="refs/remotes/origin/main" HEAD_REF="HEAD" \
      bash scripts/audit/verify_remediation_artifact_freshness.sh
    ```
-   The output names the guarded surface file and the expected evidence artifact path.
 
 2. **Re-generate the evidence artifact** by running the verifier associated
    with that surface. Check `scripts/audit/runtime_guarded_execution_core.sh`
@@ -80,7 +79,6 @@ FAILURE_SIGNATURE=PRECI.REMEDIATION.FRESHNESS
 ## Clearing the DRD lockout
 
 ```bash
-# Step 1 ΓÇö create the casefile
 scripts/audit/new_remediation_casefile.sh \
   --phase phase1 \
   --slug remediation-trace \
@@ -88,11 +86,6 @@ scripts/audit/new_remediation_casefile.sh \
   --origin-gate-id pre_ci.verify_remediation_trace \
   --repro-command "scripts/dev/pre_ci.sh"
 
-# Step 2 ΓÇö document root cause in PLAN.md
-
-# Step 3 ΓÇö remove lockout
 rm .toolchain/pre_ci_debug/drd_lockout.env
-
-# Step 4 ΓÇö re-run
 scripts/dev/pre_ci.sh
 ```

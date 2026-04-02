@@ -1,10 +1,10 @@
 {
-  "baseline_date": "2026-03-27",
-  "baseline_path": "/home/mwiza/workspace/Symphony/schema/baselines/2026-03-27/0001_baseline.sql",
-  "baseline_cutoff": "0096_rls_admin_governance.sql",
-  "normalized_schema_sha256": "c02ce042d86af9e00a2cb61960184a47e2e1f69a724c81862c8921bf957f7ab5",
-  "pg_dump_version": "pg_dump (PostgreSQL) 18.2 (Debian 18.2-1.pgdg13+1)",
+  "baseline_date": "2026-04-01",
+  "baseline_path": "/home/mwiza/workspace/Symphony/schema/baselines/2026-04-01/0001_baseline.sql",
+  "baseline_cutoff": "0114_gf_fn_asset_lifecycle.sql",
+  "normalized_schema_sha256": "41a738e02580956a7d374895e42afd074c6e59d3dd5b6ffbb6655d7ee7933c6c",
+  "pg_dump_version": "pg_dump (PostgreSQL) 18.2",
   "pg_server_version": "18.2 (Debian 18.2-1.pgdg13+1)",
   "dump_source": "container:symphony-postgres",
-  "generated_at_utc": "2026-03-27T14:07:24.830930+00:00"
+  "generated_at_utc": "2026-04-01T08:58:13Z"
 }
