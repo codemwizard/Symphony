@@ -12,7 +12,7 @@ public static class Pwrm002Task4ValidationRunner
         Environment.SetEnvironmentVariable("SYMPHONY_KNOWN_TENANTS", tenantId);
         Environment.SetEnvironmentVariable("DEMO_EVIDENCE_LINK_SIGNING_KEY", "pwrm002-task4-key");
         Environment.SetEnvironmentVariable("EVIDENCE_LINK_SUBMISSIONS_FILE", "/tmp/pwrm002_task4_submissions.ndjson");
-        
+
         // Clean up any existing file
         var submissionsFile = Environment.GetEnvironmentVariable("EVIDENCE_LINK_SUBMISSIONS_FILE")!;
         if (File.Exists(submissionsFile))
@@ -46,7 +46,7 @@ public static class Pwrm002Task4ValidationRunner
         ctx1.Request.Headers["x-tenant-id"] = tenantId;
         ctx1.Request.Headers["x-evidence-link-token"] = token1;
         ctx1.Request.Headers["x-submitter-msisdn"] = "+260971100001";
-        
+
         var result1 = await global::EvidenceLinkSubmitHandler.HandleAsync(
             new global::EvidenceLinkSubmitRequest("WEIGHBRIDGE_RECORD", "s3://bucket/photo-001.jpg", -15.4167m, 28.2833m, null),
             ctx1,
@@ -103,7 +103,7 @@ public static class Pwrm002Task4ValidationRunner
             cancellationToken);
 
         var test2Pass = result2.StatusCode == StatusCodes.Status202Accepted;
-        
+
         // Verify backend net was stored
         if (test2Pass)
         {
@@ -173,7 +173,7 @@ public static class Pwrm002Task4ValidationRunner
         };
 
         var allPass = tests.All(x => x.status == "PASS");
-        
+
         logger.LogInformation("PWRM-002 Task 4 Validation: {Status}", allPass ? "PASS" : "FAIL");
         foreach (var test in tests)
         {

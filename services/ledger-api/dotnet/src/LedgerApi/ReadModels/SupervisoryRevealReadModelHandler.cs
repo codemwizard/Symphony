@@ -321,7 +321,7 @@ file static class SupervisoryProofModel
 
         // proof_type_id = artifact_type
         var proofTypeId = artifactType;
-        
+
         // proof_type_display = ProofTypeDisplayLabels.TryGetValue(artifact_type, out var l) ? l : artifact_type
         var proofTypeDisplay = Pwrm0001ArtifactTypes.ProofTypeDisplayLabels.TryGetValue(artifactType, out var label)
             ? label
@@ -332,7 +332,7 @@ file static class SupervisoryProofModel
         string? msisdnResult = null;
         string? submitterClass = hasSubmission ? ReadString(submission, "submitter_class") : null;
         string? submittedAtUtc = hasSubmission ? ReadString(submission, "submitted_at_utc") : null;
-        
+
         // PWRM-003 Task 3: Weighbridge detail fields
         string? plasticType = null;
         decimal? netWeightKg = null;
@@ -372,7 +372,7 @@ file static class SupervisoryProofModel
         // Legacy logic for QUALITY_AUDIT_RECORD (was FIELD_OFFICER_TOKEN/PT-003)
         if ((string.Equals(artifactType, Pwrm0001ArtifactTypes.QUALITY_AUDIT_RECORD, StringComparison.Ordinal)
             || string.Equals(artifactType, "FIELD_OFFICER_TOKEN", StringComparison.Ordinal))
-            && hasSubmission 
+            && hasSubmission
             && !string.Equals(submitterClass, "FIELD_OFFICER", StringComparison.OrdinalIgnoreCase))
         {
             status = "FLAGGED";

@@ -985,7 +985,7 @@ app.MapGet("/pilot-demo/api/monitoring-report/{programId}", async (
             statusCode: StatusCodes.Status401Unauthorized);
 
     var rootDir = EvidenceMeta.ResolveRepoRoot(Directory.GetCurrentDirectory());
-    var result  = await Pwrm0001MonitoringReportHandler.HandleAsync(
+    var result = await Pwrm0001MonitoringReportHandler.HandleAsync(
         programId, rootDir, cancellationToken);
     return Results.Json(result.Body, statusCode: result.StatusCode);
 }).RequireRateLimiting("sensitive-endpoint");
@@ -1571,7 +1571,7 @@ async Task SeedChungaWorkers(ILogger l)
     {
         const string DemoTenantId = "11111111-1111-1111-1111-111111111111";
         const string PgmZambiaGrn = "PGM-ZAMBIA-GRN-001";
-        
+
         var workerChunga001Id = CreateStableGuid("worker-chunga-001").ToString();
         var workerChunga002Id = CreateStableGuid("worker-chunga-002").ToString();
 
@@ -1606,7 +1606,7 @@ async Task SeedDemoInstructions(ILogger l)
     {
         const string DemoTenantId = "11111111-1111-1111-1111-111111111111";
         const string PgmZambiaGrn = "PGM-ZAMBIA-GRN-001";
-        
+
         var workerChunga001Id = CreateStableGuid("worker-chunga-001").ToString();
         var workerChunga002Id = CreateStableGuid("worker-chunga-002").ToString();
 

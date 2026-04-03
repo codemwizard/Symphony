@@ -17,7 +17,7 @@ public static class GeoCaptureSelfTestRunner
         var tenantId = "11111111-1111-1111-1111-111111111111";
         Environment.SetEnvironmentVariable("SYMPHONY_KNOWN_TENANTS", tenantId);
         Environment.SetEnvironmentVariable("DEMO_EVIDENCE_LINK_SIGNING_KEY", "demo-link-geo-key");
-        
+
         var submissionsPath = "/tmp/symphony_geo_capture_test_submissions.ndjson";
         if (File.Exists(submissionsPath)) File.Delete(submissionsPath);
         Environment.SetEnvironmentVariable("EVIDENCE_LINK_SUBMISSIONS_FILE", submissionsPath);

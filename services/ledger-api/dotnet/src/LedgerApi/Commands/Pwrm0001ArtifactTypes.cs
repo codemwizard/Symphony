@@ -2,18 +2,18 @@ using System.Text.Json;
 
 static class Pwrm0001ArtifactTypes
 {
-    public const string WEIGHBRIDGE_RECORD   = "WEIGHBRIDGE_RECORD";
-    public const string COLLECTION_PHOTO     = "COLLECTION_PHOTO";
+    public const string WEIGHBRIDGE_RECORD = "WEIGHBRIDGE_RECORD";
+    public const string COLLECTION_PHOTO = "COLLECTION_PHOTO";
     public const string QUALITY_AUDIT_RECORD = "QUALITY_AUDIT_RECORD";
-    public const string TRANSFER_MANIFEST    = "TRANSFER_MANIFEST";
+    public const string TRANSFER_MANIFEST = "TRANSFER_MANIFEST";
 
     public static readonly IReadOnlyDictionary<string, string> ProofTypeDisplayLabels =
         new Dictionary<string, string>(StringComparer.Ordinal)
         {
-            [WEIGHBRIDGE_RECORD]   = "Weighbridge Collection Record",
-            [COLLECTION_PHOTO]     = "Field Collection Photo",
+            [WEIGHBRIDGE_RECORD] = "Weighbridge Collection Record",
+            [COLLECTION_PHOTO] = "Field Collection Photo",
             [QUALITY_AUDIT_RECORD] = "Quality Audit Record",
-            [TRANSFER_MANIFEST]    = "Offtake Transfer Manifest",
+            [TRANSFER_MANIFEST] = "Offtake Transfer Manifest",
         };
 
     public static bool IsPwrm0001ArtifactType(string? value) =>

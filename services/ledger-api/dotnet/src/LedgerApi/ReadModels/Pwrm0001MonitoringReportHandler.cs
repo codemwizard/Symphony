@@ -5,19 +5,24 @@ static class Pwrm0001MonitoringReportHandler
     public static async Task<HandlerResult> HandleAsync(
         string programId, string rootDir, CancellationToken ct)
     {
-        var allRecords   = EvidenceLinkSubmissionLog.ReadAll();
-        var programRecs  = allRecords
+        var allRecords = EvidenceLinkSubmissionLog.ReadAll();
+        var programRecs = allRecords
             .Where(r => string.Equals(GetStr(r, "program_id"), programId, StringComparison.Ordinal))
             .ToList();
-        var exceptions   = DemoExceptionLog.ReadAll()
+        var exceptions = DemoExceptionLog.ReadAll()
             .Where(r => string.Equals(GetStr(r, "program_id"), programId, StringComparison.Ordinal))
             .ToList();
 
         // Plastic totals — all seven keys, TOTAL in same pass
         var plasticTotals = new Dictionary<string, decimal>
         {
-            ["PET"]=0m, ["HDPE"]=0m, ["LDPE"]=0m,
-            ["PP"]=0m, ["PS"]=0m, ["OTHER"]=0m, ["TOTAL"]=0m
+            ["PET"] = 0m,
+            ["HDPE"] = 0m,
+            ["LDPE"] = 0m,
+            ["PP"] = 0m,
+            ["PS"] = 0m,
+            ["OTHER"] = 0m,
+            ["TOTAL"] = 0m
         };
 
         // Group all records by instruction_id
@@ -57,7 +62,7 @@ static class Pwrm0001MonitoringReportHandler
                 if (winner.TryGetProperty("structured_payload", out var sp)
                     && sp.ValueKind != JsonValueKind.Null)
                 {
-                    var pt  = sp.GetProperty("plastic_type").GetString() ?? "OTHER";
+                    var pt = sp.GetProperty("plastic_type").GetString() ?? "OTHER";
                     var net = sp.GetProperty("net_weight_kg").GetDecimal();  // backend-computed
 
                     if (plasticTotals.ContainsKey(pt)) plasticTotals[pt] += net;

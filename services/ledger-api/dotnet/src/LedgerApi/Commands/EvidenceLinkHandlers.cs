@@ -509,12 +509,12 @@ static class EvidenceLinkSubmissionLog
         try
         {
             var sequenceNumber = ReadAll().Count;
-            
+
             // Serialize the payload to JSON, parse it, and inject sequence_number
             var payloadJson = JsonSerializer.Serialize(payload);
             using var doc = JsonDocument.Parse(payloadJson);
             var root = doc.RootElement;
-            
+
             // Build a new object with sequence_number + all original properties
             var properties = new Dictionary<string, object?> { ["sequence_number"] = sequenceNumber };
             foreach (var prop in root.EnumerateObject())
@@ -522,8 +522,8 @@ static class EvidenceLinkSubmissionLog
                 properties[prop.Name] = prop.Value.ValueKind switch
                 {
                     JsonValueKind.String => prop.Value.GetString(),
-                    JsonValueKind.Number => prop.Value.TryGetInt32(out var i) ? (object)i : 
-                                           prop.Value.TryGetInt64(out var l) ? l : 
+                    JsonValueKind.Number => prop.Value.TryGetInt32(out var i) ? (object)i :
+                                           prop.Value.TryGetInt64(out var l) ? l :
                                            prop.Value.GetDecimal(),
                     JsonValueKind.True => true,
                     JsonValueKind.False => false,
@@ -531,7 +531,7 @@ static class EvidenceLinkSubmissionLog
                     _ => prop.Value.Clone()
                 };
             }
-            
+
             Directory.CreateDirectory(Path.GetDirectoryName(PathValue) ?? "/tmp");
             await TamperEvidentChain.AppendJsonAsync(PathValue, "evidence_event_submission", properties, cancellationToken);
         }
