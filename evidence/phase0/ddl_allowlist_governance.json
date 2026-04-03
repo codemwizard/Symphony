@@ -1,7 +1,7 @@
 {
   "check_id": "SEC-DDL-ALLOWLIST-GOV",
-  "timestamp_utc": "2026-04-02T01:59:07Z",
-  "git_sha": "6d4d95d9122b976f7a571081d6a128e72e52952e",
+  "timestamp_utc": "2026-04-03T23:29:49Z",
+  "git_sha": "8f4c8380045536304019689dd61ec3c9df52620d",
   "schema_fingerprint": "1f92363c69ba235e552a6aac05045062fc0097fc93cde3b89e76455b80628019",
   "status": "PASS",
   "entry_count": 80,

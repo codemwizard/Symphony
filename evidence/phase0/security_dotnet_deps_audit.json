@@ -1,7 +1,7 @@
 {
   "check_id": "SEC-G08",
-  "timestamp_utc": "2026-04-03T22:31:24Z",
-  "git_sha": "51b774ad677a5495804990f876425e1c86b8a0db",
+  "timestamp_utc": "2026-04-03T23:27:01Z",
+  "git_sha": "8f4c8380045536304019689dd61ec3c9df52620d",
   "schema_fingerprint": "1f92363c69ba235e552a6aac05045062fc0097fc93cde3b89e76455b80628019",
   "status": "PASS",
   "note": "",

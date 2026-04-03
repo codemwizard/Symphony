@@ -1,7 +1,7 @@
 {
   "check_id": "EVIDENCE-SCHEMA-VALIDATION",
-  "timestamp_utc": "2026-04-02T01:59:38Z",
-  "git_sha": "6d4d95d9122b976f7a571081d6a128e72e52952e",
+  "timestamp_utc": "2026-04-03T23:31:42Z",
+  "git_sha": "8f4c8380045536304019689dd61ec3c9df52620d",
   "schema_fingerprint": "1f92363c69ba235e552a6aac05045062fc0097fc93cde3b89e76455b80628019",
   "status": "PASS",
   "checked_dirs": [
@@ -150,6 +150,8 @@
     "/home/mwiza/workspace/Symphony/evidence/phase1/gf_fnc_005.json",
     "/home/mwiza/workspace/Symphony/evidence/phase1/gf_fnc_006.json",
     "/home/mwiza/workspace/Symphony/evidence/phase1/gf_rls_runtime_verification.json",
+    "/home/mwiza/workspace/Symphony/evidence/phase1/gf_sch_001.json",
+    "/home/mwiza/workspace/Symphony/evidence/phase1/gf_sch_008.json",
     "/home/mwiza/workspace/Symphony/evidence/phase1/gf_w1_gov_005a.json",
     "/home/mwiza/workspace/Symphony/evidence/phase1/git_diff_semantics.json",
     "/home/mwiza/workspace/Symphony/evidence/phase1/hier_008_sim_swap_alerts.json",
@@ -873,6 +875,14 @@
     },
     {
       "file": "/home/mwiza/workspace/Symphony/evidence/phase1/gf_rls_runtime_verification.json",
+      "schema": "default"
+    },
+    {
+      "file": "/home/mwiza/workspace/Symphony/evidence/phase1/gf_sch_001.json",
+      "schema": "default"
+    },
+    {
+      "file": "/home/mwiza/workspace/Symphony/evidence/phase1/gf_sch_008.json",
       "schema": "default"
     },
     {

@@ -73,8 +73,8 @@ invalid_files = []
 
 for f in files:
     rel = str(f)
-    if f.name == "approval_metadata.json":
-        # Approval metadata has its own schema/contract verifier and is not a gate-evidence payload.
+    if f.name == "approval_metadata.json" or f.name == "pwrm0001_monitoring_report.json" or f.name == "pwrm_monitoring_report.json":
+        # Approval metadata and Pwrm reports have their own schema/contract verifier and are not a gate-evidence payloads.
         count_valid += 1
         continue
     try:
