@@ -12,6 +12,7 @@ sealed record SupplierRegistryEntry(
     decimal? registered_latitude,
     decimal? registered_longitude,
     bool active,
+    string? supplier_type,
     string updated_at_utc
 );
 
@@ -149,6 +150,7 @@ static class SupplierPolicyStore
                         registered_latitude: reader.IsDBNull(2) ? null : reader.GetDecimal(2),
                         registered_longitude: reader.IsDBNull(3) ? null : reader.GetDecimal(3),
                         active: reader.GetBoolean(4),
+                        supplier_type: null,  // DB column not yet added; will be null for now
                         updated_at_utc: reader.GetString(5)
                     );
                     SupplierRegistry[$"{tenantId}:{supplierId}"] = loaded;
@@ -253,6 +255,7 @@ static class SupplierRegistryUpsertHandler
             registered_latitude: request.registered_latitude,
             registered_longitude: request.registered_longitude,
             active: request.active,
+            supplier_type: request.supplier_type,
             updated_at_utc: DateTimeOffset.UtcNow.ToString("O"));
 
         await SupplierPolicyStore.UpsertSupplierAsync(normalized);

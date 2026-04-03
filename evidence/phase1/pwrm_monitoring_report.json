@@ -1,0 +1,45 @@
+{
+  "check_id": "PWRM-004-MONITORING-REPORT",
+  "task_id": "PWRM-004",
+  "timestamp_utc": "2026-04-03T13:20:06Z",
+  "git_sha": "eaffac3902d05942576fdfa4340867d655a3568f",
+  "schema_fingerprint": "eaffac39",
+  "status": "PASS",
+  "pass": true,
+  "details": {
+    "tests": [
+      {
+        "name": "empty_report_defaults",
+        "status": "PASS"
+      },
+      {
+        "name": "total_accumulation_decimal_exact",
+        "status": "PASS"
+      },
+      {
+        "name": "latest_wins_by_sequence",
+        "status": "PASS"
+      },
+      {
+        "name": "complete_collection",
+        "status": "PASS"
+      },
+      {
+        "name": "incomplete_collection",
+        "status": "PASS"
+      },
+      {
+        "name": "completeness_rate",
+        "status": "PASS"
+      },
+      {
+        "name": "exception_count",
+        "status": "PASS"
+      },
+      {
+        "name": "zgft_alignment",
+        "status": "PASS"
+      }
+    ]
+  }
+}

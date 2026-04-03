@@ -1,0 +1,169 @@
+schema_version: 1
+phase: '1'
+task_id: PWRM-001-T7
+title: Create WorkerOnboardingSelfTestRunner.cs with 8 fully isolated adversarial cases so that PWRM-001 acceptance is machine-verifiable
+owner_role: IMPLEMENTER
+status: planned
+priority: HIGH
+risk_class: INTEGRITY
+blast_radius: APP_LAYER
+
+intent: >-
+  Without a self-test runner there is no machine-verifiable proof that the PWRM-001 controls work
+  end-to-end. This task creates a fully isolated 8-case runner registered as --self-test-worker-onboarding
+  that exercises the allowlist (T1), supplier_type guard (T2/T5), GPS injection and immutability
+  (T5 FIX F13), null type rejection (T5 FIX F15), and worker-not-found (T5). The runner uses a
+  separate tenant ID and namespaced stable GUIDs to guarantee it never collides with Program.cs
+  startup seeding. All sequential appends use await (no Task.WhenAll). Evidence is written to
+  evidence/phase1/pwrm_worker_onboarding.json.
+
+anti_patterns:
+  - Using Program.cs startup-seeded worker IDs or the demo tenant ID in the runner
+  - Using Task.WhenAll for sequential NDJSON appends (race condition risk)
+  - Not deleting the NDJSON files before starting (stale state from prior runs)
+  - Marking completed with fewer than 8 test cases passing
+
+out_of_scope:
+  - Any UI testing of the recipient landing page (T6 acceptance is separate)
+  - Integration with an external HTTP server; runner calls handlers in-process
+
+stop_conditions:
+  - If runner reuses DemoTenantId "11111111-1111-1111-1111-111111111111" -> STOP
+  - If Task.WhenAll is used for any sequential append operation -> STOP
+  - If fewer than 8 test cases are implemented -> STOP
+
+proof_guarantees:
+  - dotnet run --self-test-worker-onboarding exits 0 with all 8 cases PASS
+  - evidence/phase1/pwrm_worker_onboarding.json is written with run results
+
+proof_limitations:
+  - Runner tests handlers in-process; does not exercise HTTP middleware stack or cookie validation
+
+depends_on:
+  - PWRM-001-T1
+  - PWRM-001-T2
+  - PWRM-001-T3
+  - PWRM-001-T4
+  - PWRM-001-T5
+  - PWRM-001-T6
+
+blocks: []
+
+touches:
+  - services/ledger-api/Demo/WorkerOnboardingSelfTestRunner.cs
+  - services/ledger-api/Demo/DemoSelfTestEntryPoint.cs
+  - tasks/PWRM-001-T7/meta.yml
+
+invariants: []
+
+work:
+  - '[ID pwrm001_t7_work_item_01] Create Demo/WorkerOnboardingSelfTestRunner.cs. In setup:
+    use tenantId = "22222222-2222-2222-2222-222222222222", programId = "PGM-SELFTEST-pwrm001-selftest",
+    namespaced stable GUIDs for worker001, worker002, supplierFake, nullType. Delete NDJSON files
+    before starting. Set env vars for isolated NDJSON paths and signing key.'
+  - '[ID pwrm001_t7_work_item_02] Seed all test fixtures with explicit supplier_type values:
+    worker001 and worker002 with "WORKER", supplierFake with "SUPPLIER", nullType with null.
+    Add worker001 to the program allowlist only. Use sequential await for all upserts.'
+  - '[ID pwrm001_t7_work_item_03] Implement all 8 test cases exactly as specified in tasks.md:
+    Case 1 (WASTE_COLLECTOR -> 200), Case 2 (UNKNOWN_CLASS -> 400 INVALID_SUBMITTER_CLASS),
+    Case 3 (GET policy worker001 -> ALLOW), Case 4 (pilot-demo issue worker001 -> 200 with
+    registry GPS), Case 5 (pilot-demo issue worker001 with wrong caller GPS -> 200 with registry
+    GPS, FIX F13), Case 6 (supplierFake -> 400 INVALID_SUPPLIER_TYPE), Case 7 (nullType ->
+    400 INVALID_SUPPLIER_TYPE, FIX F15), Case 8 (nonexistent guid -> 404 WORKER_NOT_FOUND).'
+  - '[ID pwrm001_t7_work_item_04] Register "--self-test-worker-onboarding" in
+    DemoSelfTestEntryPoint.SelfTests dictionary mapping to WorkerOnboardingSelfTestRunner.'
+  - '[ID pwrm001_t7_work_item_05] Write evidence to evidence/phase1/pwrm_worker_onboarding.json
+    with task_id, git_sha, timestamp_utc, status, and per-case check results.'
+
+acceptance_criteria:
+  - '[ID pwrm001_t7_work_item_03] [ID pwrm001_t7_work_item_04] dotnet run --self-test-worker-onboarding
+    exits 0 with all 8 cases reporting PASS.'
+  - '[ID pwrm001_t7_work_item_03] Case 5 confirms caller GPS is discarded: token lat/lon equals
+    registry GPS (-15.4167, 28.2833), not any caller-provided value (FIX F13).'
+  - '[ID pwrm001_t7_work_item_03] Case 7 confirms null supplier_type returns 400 INVALID_SUPPLIER_TYPE
+    (FIX F15). Not treated as legacy-compatible.'
+  - '[ID pwrm001_t7_work_item_01] Runner deletes its own NDJSON files before each run; no stale
+    state from prior runs.'
+  - '[ID pwrm001_t7_work_item_02] No worker ID or tenant ID from Program.cs startup seeding is
+    used in the runner.'
+  - '[ID pwrm001_t7_work_item_05] evidence/phase1/pwrm_worker_onboarding.json exists and
+    contains status = "PASS" after a successful run.'
+
+negative_tests:
+  - id: PWRM-001-T7-N1
+    description: >-
+      Case 2: submitter_class = "UNKNOWN_CLASS" on the generic route must return 400
+      INVALID_SUBMITTER_CLASS. The runner asserts this case fails the right way.
+    required: true
+  - id: PWRM-001-T7-N2
+    description: >-
+      Case 7: worker_id pointing to nullType entry (supplier_type = null) via the pilot-demo
+      proxy must return 400 INVALID_SUPPLIER_TYPE. Null is not treated as legacy-safe.
+    required: true
+  - id: PWRM-001-T7-N3
+    description: >-
+      Case 6: worker_id pointing to supplierFake entry (supplier_type = "SUPPLIER") must return
+      400 INVALID_SUPPLIER_TYPE. Only exactly "WORKER" is permitted.
+    required: true
+  - id: PWRM-001-T7-N4
+    description: >-
+      Case 8: worker_id = nonexistent GUID must return 404 WORKER_NOT_FOUND.
+    required: true
+
+positive_tests:
+  - id: PWRM-001-T7-P1
+    description: >-
+      Case 4: pilot-demo issue with valid WORKER worker_id returns 200; decoded token embeds
+      lat = -15.4167, lon = 28.2833 from registry.
+    required: true
+  - id: PWRM-001-T7-P2
+    description: >-
+      Case 3: GET policy for worker001 returns decision = "ALLOW" confirming allowlist seeding
+      in the runner is correct.
+    required: true
+
+verification:
+  - dotnet run --self-test-worker-onboarding
+  - python3 scripts/audit/validate_evidence.py --task PWRM-001-T7 --evidence evidence/phase1/pwrm_worker_onboarding.json
+  - RUN_PHASE1_GATES=1 bash scripts/dev/pre_ci.sh
+
+evidence:
+  - path: evidence/phase1/pwrm_worker_onboarding.json
+    must_include:
+      - task_id
+      - git_sha
+      - timestamp_utc
+      - status
+      - checks
+      - cases_passed
+      - cases_failed
+      - f13_gps_immutability_confirmed
+      - f15_null_type_rejected_confirmed
+
+failure_modes:
+  - Fewer than 8 test cases implemented => FAIL
+  - Task.WhenAll used for sequential appends => FAIL (race condition risk)
+  - Demo tenant ID or startup-seeded worker IDs reused in runner => FAIL (isolation violation)
+  - Case 5 does not assert caller GPS is discarded => CRITICAL_FAIL (FIX F13 unverified)
+  - Case 7 does not assert null type rejection => CRITICAL_FAIL (FIX F15 unverified)
+  - Evidence file missing or status != PASS => BLOCKED
+
+must_read:
+  - docs/operations/AI_AGENT_OPERATION_MANUAL.md
+  - .kiro/specs/pwrm-001-worker-onboarding/design.md
+  - .kiro/specs/pwrm-001-worker-onboarding/requirements.md
+  - .kiro/steering/pwrm0001-domain-rules.md
+  - .kiro/steering/symphony-platform-conventions.md
+
+implementation_plan: docs/plans/phase1/PWRM-001-T7/PLAN.md
+implementation_log: docs/plans/phase1/PWRM-001-T7/EXEC_LOG.md
+
+notes: >-
+  This is the acceptance gate for the entire PWRM-001 feature. It depends on all six prior tasks
+  being complete. The isolation design (separate tenant, namespaced GUIDs, deleted NDJSON files)
+  is non-negotiable — the runner must be able to run on a fresh process with no prior state and
+  produce consistent results. The sequential await requirement exists because the in-memory store
+  may not be thread-safe for concurrent writes.
+client: cursor
+assigned_agent: implementer
+model: <UNASSIGNED>

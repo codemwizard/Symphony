@@ -1,0 +1,119 @@
+schema_version: 1
+phase: '1'
+task_id: PWRM-001-T2
+title: Add supplier_type field to SupplierRegistryUpsertRequest and in-memory store so that worker classification is persisted and retrievable
+owner_role: IMPLEMENTER
+status: planned
+priority: HIGH
+risk_class: INTEGRITY
+blast_radius: APP_LAYER
+
+intent: >-
+  The SupplierRegistryUpsertRequest record has no supplier_type field, meaning worker vs supplier
+  classification cannot be stored or checked at issuance time. This task extends the record with
+  an optional string? supplier_type, ensures the in-memory SupplierRegistry stores the value, and
+  exposes it on lookup. All downstream tasks (T4 seeding, T5 proxy guard, T7 self-test) depend on
+  this field being present and retrievable before they can function correctly.
+
+anti_patterns:
+  - Storing supplier_type but not exposing it on the lookup result (silent data loss)
+  - Defaulting null to any string value at storage time — null must remain null
+  - Marking completed without confirming TryGet returns the stored value verbatim
+
+out_of_scope:
+  - Validation logic on supplier_type values (that is T5)
+  - Seeding of actual worker data (that is T4)
+
+stop_conditions:
+  - If supplier_type is coerced from null to any default value at storage time -> STOP
+  - If the lookup result type does not expose SupplierType as a readable property -> STOP
+
+proof_guarantees:
+  - Self-test confirms a record upserted with supplier_type = "WORKER" returns "WORKER" on TryGet
+  - Self-test confirms a record upserted with supplier_type = null returns null on TryGet
+
+proof_limitations:
+  - In-memory store; behaviour across process restart is not tested
+
+depends_on: []
+
+blocks:
+  - PWRM-001-T4
+  - PWRM-001-T5
+  - PWRM-001-T7
+
+touches:
+  - services/ledger-api/Commands/CommandContracts.cs
+  - tasks/PWRM-001-T2/meta.yml
+
+invariants: []
+
+work:
+  - '[ID pwrm001_t2_work_item_01] Add string? supplier_type = null as an optional positional
+    parameter at the end of SupplierRegistryUpsertRequest record in CommandContracts.cs.'
+  - '[ID pwrm001_t2_work_item_02] Update the in-memory SupplierRegistry upsert logic to store
+    supplier_type from the request into the registry entry (no coercion, null stays null).'
+  - '[ID pwrm001_t2_work_item_03] Confirm the registry lookup result (TryGet return type) exposes
+    SupplierType as a readable property and returns the stored value verbatim.'
+
+acceptance_criteria:
+  - '[ID pwrm001_t2_work_item_01] SupplierRegistryUpsertRequest compiles with supplier_type = "WORKER"
+    as a named argument without requiring changes to existing call sites (optional with default null).'
+  - '[ID pwrm001_t2_work_item_02] [ID pwrm001_t2_work_item_03] TryGet for an entry upserted with
+    supplier_type = "WORKER" returns an object where SupplierType == "WORKER".'
+  - '[ID pwrm001_t2_work_item_03] TryGet for an entry upserted with supplier_type = null returns
+    an object where SupplierType == null (not empty string, not any default).'
+
+negative_tests:
+  - id: PWRM-001-T2-N1
+    description: >-
+      An entry upserted with supplier_type = null must not be retrievable as supplier_type = "WORKER".
+      TryGet must return SupplierType == null, confirming no silent defaulting occurred.
+    required: true
+
+positive_tests:
+  - id: PWRM-001-T2-P1
+    description: >-
+      An entry upserted with supplier_type = "WORKER" is retrievable and SupplierType equals
+      exactly "WORKER" (case-sensitive, no whitespace trimming).
+    required: true
+
+verification:
+  - dotnet run --self-test-worker-onboarding
+  - python3 scripts/audit/validate_evidence.py --task PWRM-001-T2 --evidence evidence/phase1/pwrm_worker_onboarding.json
+  - RUN_PHASE1_GATES=1 bash scripts/dev/pre_ci.sh
+
+evidence:
+  - path: evidence/phase1/pwrm_worker_onboarding.json
+    must_include:
+      - task_id
+      - git_sha
+      - timestamp_utc
+      - status
+      - checks
+      - supplier_type_field_added
+      - null_type_preserved_on_lookup
+
+failure_modes:
+  - supplier_type not exposed on lookup result => CRITICAL_FAIL (T5 guard silently passes all)
+  - null coerced to empty string or "SUPPLIER" on storage => CRITICAL_FAIL
+  - Existing call sites to SupplierRegistryUpsertRequest broken by non-optional parameter => FAIL
+  - Evidence file missing => BLOCKED
+
+must_read:
+  - docs/operations/AI_AGENT_OPERATION_MANUAL.md
+  - .kiro/specs/pwrm-001-worker-onboarding/design.md
+  - .kiro/specs/pwrm-001-worker-onboarding/requirements.md
+  - .kiro/steering/pwrm0001-domain-rules.md
+  - .kiro/steering/symphony-platform-conventions.md
+
+implementation_plan: docs/plans/phase1/PWRM-001-T2/PLAN.md
+implementation_log: docs/plans/phase1/PWRM-001-T2/EXEC_LOG.md
+
+notes: >-
+  The parameter must be optional (default null) so all existing call sites that do not pass
+  supplier_type continue to compile unchanged. The null-is-null guarantee is load-bearing for T7
+  test case 7, which explicitly tests that a null-type entry is rejected by the proxy.
+client: cursor
+assigned_agent: implementer
+model: <UNASSIGNED>

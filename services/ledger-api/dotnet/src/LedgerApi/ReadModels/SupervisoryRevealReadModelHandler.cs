@@ -35,6 +35,10 @@ static class SupervisoryRevealReadModelHandler
         return new HandlerResult(StatusCodes.Status200OK, payload);
     }
 
+    // Test helper: exposes IsPwrm0001Programme for self-test validation
+    internal static bool TestIsPwrm0001Programme(string programId, IReadOnlyList<JsonElement> submissions)
+        => SupervisoryProofModel.IsPwrm0001Programme(programId, submissions);
+
     private static HandlerResult InvalidRequest()
         => new(StatusCodes.Status400BadRequest, new
         {
@@ -72,13 +76,22 @@ static class SupervisoryInstructionDetailReadModelHandler
 
 file static class SupervisoryProofModel
 {
-    private static readonly ProofSpec[] ProofSpecs =
+    internal static bool IsPwrm0001Programme(string programId, IReadOnlyList<JsonElement> submissions)
     {
-        new("PT-001", "Supplier Invoice", "INVOICE"),
-        new("PT-002", "Delivery Photo + GPS", "DELIVERY_PHOTO"),
-        new("PT-003", "Field Officer Token", "FIELD_OFFICER_TOKEN"),
-        new("PT-004", "Borrower ACK", "BORROWER_ACK")
-    };
+        // Hard override — demo cannot break due to seed timing
+        if (string.Equals(programId, "PGM-ZAMBIA-GRN-001", StringComparison.Ordinal))
+            return true;
+
+        // Generic detection: both conditions required
+        bool hasArtifact = submissions.Any(s =>
+            s.TryGetProperty("artifact_type", out var at) &&
+            Pwrm0001ArtifactTypes.IsPwrm0001ArtifactType(at.GetString()));
+        bool hasWasteCollector = submissions.Any(s =>
+            s.TryGetProperty("submitter_class", out var sc) &&
+            string.Equals(sc.GetString(), "WASTE_COLLECTOR", StringComparison.Ordinal));
+
+        return hasArtifact && hasWasteCollector;
+    }
 
     internal static ProgrammeModel BuildProgrammeModel(string tenantId, string programId, NpgsqlDataSource? dataSource)
     {
@@ -215,11 +228,19 @@ file static class SupervisoryProofModel
 
     private static object[] BuildEvidenceCompleteness(InstructionProofSummary[] proofRows)
     {
-        return ProofSpecs.Select(spec =>
+        // Collect all unique artifact types from proof rows
+        var artifactTypes = proofRows
+            .SelectMany(row => row.proofs)
+            .Select(proof => proof.artifact_type)
+            .Where(at => !string.IsNullOrWhiteSpace(at))
+            .Distinct(StringComparer.Ordinal)
+            .ToArray();
+
+        return artifactTypes.Select(artifactType =>
         {
             var statuses = proofRows
                 .SelectMany(row => row.proofs)
-                .Where(proof => string.Equals(proof.proof_type_id, spec.ProofTypeId, StringComparison.Ordinal))
+                .Where(proof => string.Equals(proof.artifact_type, artifactType, StringComparison.Ordinal))
                 .Select(proof => proof.status)
                 .ToArray();
 
@@ -231,11 +252,15 @@ file static class SupervisoryProofModel
                         ? "PRESENT"
                         : "MISSING";
 
+            var proofTypeDisplay = Pwrm0001ArtifactTypes.ProofTypeDisplayLabels.TryGetValue(artifactType, out var label)
+                ? label
+                : artifactType;
+
             return new
             {
-                artifact_type = spec.ArtifactType,
-                proof_type_id = spec.ProofTypeId,
-                label = spec.Label,
+                artifact_type = artifactType,
+                proof_type_id = artifactType,
+                label = proofTypeDisplay,
                 status
             };
         }).ToArray<object>();
@@ -243,7 +268,14 @@ file static class SupervisoryProofModel
 
     private static InstructionProofSummary BuildInstructionProofSummary(string instructionId, JsonElement[] submissions, JsonElement[] exceptions, AckInterruptProjectionStore.AckInterruptProjection projection)
     {
-        var proofRows = ProofSpecs.Select(spec => BuildProofRow(spec, submissions, exceptions)).ToArray();
+        // Group submissions by artifact_type
+        var artifactTypes = submissions
+            .Select(s => ReadString(s, "artifact_type"))
+            .Where(at => !string.IsNullOrWhiteSpace(at))
+            .Distinct(StringComparer.Ordinal)
+            .ToArray();
+
+        var proofRows = artifactTypes.Select(artifactType => BuildProofRow(artifactType, submissions, exceptions)).ToArray();
         var presentCount = proofRows.Count(x => string.Equals(x.status, "PRESENT", StringComparison.Ordinal));
         var status = proofRows.Any(x => string.Equals(x.status, "FAILED", StringComparison.Ordinal))
             ? "FAILED"
@@ -280,20 +312,35 @@ file static class SupervisoryProofModel
         return result.Body;
     }
 
-    private static ProofRow BuildProofRow(ProofSpec spec, JsonElement[] submissions, JsonElement[] exceptions)
+    private static ProofRow BuildProofRow(string artifactType, JsonElement[] submissions, JsonElement[] exceptions)
     {
         var submission = submissions
-            .LastOrDefault(x => string.Equals(ReadString(x, "artifact_type"), spec.ArtifactType, StringComparison.OrdinalIgnoreCase));
+            .LastOrDefault(x => string.Equals(ReadString(x, "artifact_type"), artifactType, StringComparison.Ordinal));
         var hasSubmission = submission.ValueKind != JsonValueKind.Undefined;
         var errorCodes = exceptions.Select(x => ReadString(x, "error_code")).ToArray();
+
+        // proof_type_id = artifact_type
+        var proofTypeId = artifactType;
+        
+        // proof_type_display = ProofTypeDisplayLabels.TryGetValue(artifact_type, out var l) ? l : artifact_type
+        var proofTypeDisplay = Pwrm0001ArtifactTypes.ProofTypeDisplayLabels.TryGetValue(artifactType, out var label)
+            ? label
+            : artifactType;
 
         var status = hasSubmission ? "PRESENT" : "MISSING";
         string? gpsResult = null;
         string? msisdnResult = null;
         string? submitterClass = hasSubmission ? ReadString(submission, "submitter_class") : null;
         string? submittedAtUtc = hasSubmission ? ReadString(submission, "submitted_at_utc") : null;
+        
+        // PWRM-003 Task 3: Weighbridge detail fields
+        string? plasticType = null;
+        decimal? netWeightKg = null;
+        string? collectorId = null;
 
-        if (spec.ProofTypeId == "PT-002")
+        // Legacy logic for COLLECTION_PHOTO (was DELIVERY_PHOTO/PT-002)
+        if (string.Equals(artifactType, Pwrm0001ArtifactTypes.COLLECTION_PHOTO, StringComparison.Ordinal)
+            || string.Equals(artifactType, "DELIVERY_PHOTO", StringComparison.Ordinal))
         {
             gpsResult = hasSubmission && ReadNullableDecimal(submission, "latitude").HasValue && ReadNullableDecimal(submission, "longitude").HasValue
                 ? "CAPTURED"
@@ -304,7 +351,9 @@ file static class SupervisoryProofModel
             }
         }
 
-        if (spec.ProofTypeId == "PT-004")
+        // Legacy logic for TRANSFER_MANIFEST (was BORROWER_ACK/PT-004)
+        if (string.Equals(artifactType, Pwrm0001ArtifactTypes.TRANSFER_MANIFEST, StringComparison.Ordinal)
+            || string.Equals(artifactType, "BORROWER_ACK", StringComparison.Ordinal))
         {
             msisdnResult = hasSubmission && !string.IsNullOrWhiteSpace(ReadString(submission, "submitter_msisdn"))
                 ? "PRESENT"
@@ -320,20 +369,42 @@ file static class SupervisoryProofModel
             }
         }
 
-        if (spec.ProofTypeId == "PT-003" && hasSubmission && !string.Equals(submitterClass, "FIELD_OFFICER", StringComparison.OrdinalIgnoreCase))
+        // Legacy logic for QUALITY_AUDIT_RECORD (was FIELD_OFFICER_TOKEN/PT-003)
+        if ((string.Equals(artifactType, Pwrm0001ArtifactTypes.QUALITY_AUDIT_RECORD, StringComparison.Ordinal)
+            || string.Equals(artifactType, "FIELD_OFFICER_TOKEN", StringComparison.Ordinal))
+            && hasSubmission 
+            && !string.Equals(submitterClass, "FIELD_OFFICER", StringComparison.OrdinalIgnoreCase))
         {
             status = "FLAGGED";
         }
 
+        // PWRM-003 Task 3: Extract weighbridge detail fields when artifact_type = WEIGHBRIDGE_RECORD
+        // PWRM-002 guarantees structured_payload is non-null for WEIGHBRIDGE_RECORD
+        if (string.Equals(artifactType, Pwrm0001ArtifactTypes.WEIGHBRIDGE_RECORD, StringComparison.Ordinal)
+            && hasSubmission
+            && submission.TryGetProperty("structured_payload", out var sp)
+            && sp.ValueKind != JsonValueKind.Null)
+        {
+            // PWRM-002 guarantee: these fields are present and valid
+            plasticType = sp.TryGetProperty("plastic_type", out var pt) ? pt.GetString() : null;
+            netWeightKg = sp.TryGetProperty("net_weight_kg", out var nw) && nw.ValueKind == JsonValueKind.Number
+                ? nw.GetDecimal()
+                : null;
+            collectorId = sp.TryGetProperty("collector_id", out var cid) ? cid.GetString() : null;
+        }
+
         return new ProofRow(
-            spec.ProofTypeId,
-            spec.Label,
+            proofTypeId,
+            proofTypeDisplay,
             status,
-            spec.ArtifactType,
+            artifactType,
             gpsResult,
             msisdnResult,
             submitterClass,
-            submittedAtUtc);
+            submittedAtUtc,
+            plasticType,
+            netWeightKg,
+            collectorId);
     }
 
     private static bool Matches(JsonElement element, string key, string expected)
@@ -370,8 +441,6 @@ file static class SupervisoryProofModel
         object[] ExceptionLog,
         InstructionProofSummary[] ProofRows);
 
-    private sealed record ProofSpec(string ProofTypeId, string Label, string ArtifactType);
-
     internal sealed record InstructionProofSummary(
         string instruction_id,
         string status,
@@ -390,7 +459,10 @@ file static class SupervisoryProofModel
         string? gps_result,
         string? msisdn_result,
         string? submitter_class,
-        string? submitted_at_utc);
+        string? submitted_at_utc,
+        string? plastic_type,
+        decimal? net_weight_kg,
+        string? collector_id);
 }
 
 file static class AckInterruptProjectionStore

@@ -19,6 +19,10 @@ public static class EvidenceLinkSelfTestRunner
         Environment.SetEnvironmentVariable("DEMO_EVIDENCE_LINK_SIGNING_KEY", "demo-link-self-test-key");
         Environment.SetEnvironmentVariable("ADMIN_API_KEY", "demo-admin-key");
         Environment.SetEnvironmentVariable("SYMPHONY_ENV", "development");
+        
+        var submissionsPath = "/tmp/symphony_evidence_link_test_submissions.ndjson";
+        if (File.Exists(submissionsPath)) File.Delete(submissionsPath);
+        Environment.SetEnvironmentVariable("EVIDENCE_LINK_SUBMISSIONS_FILE", submissionsPath);
 
         var issue = await global::EvidenceLinkIssueHandler.HandleAsync(
             new global::EvidenceLinkIssueRequest(

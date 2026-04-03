@@ -17,6 +17,10 @@ public static class MsisdnSubmitterMatchSelfTestRunner
         var tenantId = "11111111-1111-1111-1111-111111111111";
         Environment.SetEnvironmentVariable("SYMPHONY_KNOWN_TENANTS", tenantId);
         Environment.SetEnvironmentVariable("DEMO_EVIDENCE_LINK_SIGNING_KEY", "demo-link-msisdn-key");
+        
+        var submissionsPath = "/tmp/symphony_msisdn_match_test_submissions.ndjson";
+        if (File.Exists(submissionsPath)) File.Delete(submissionsPath);
+        Environment.SetEnvironmentVariable("EVIDENCE_LINK_SUBMISSIONS_FILE", submissionsPath);
 
         var issue = await global::EvidenceLinkIssueHandler.HandleAsync(
             new global::EvidenceLinkIssueRequest(

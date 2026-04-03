@@ -263,6 +263,36 @@ footer {
       <input type="file" id="file-input" accept="image/*,.pdf,.doc,.docx,.xls,.xlsx">
     </div>
 
+    <!-- Weighbridge form (shown only for WASTE_COLLECTOR) -->
+    <div id="weighbridge-form" style="display:none;margin-bottom:16px;">
+      <div style="background:var(--surface-raised);border:1px solid var(--border);border-radius:8px;padding:16px;">
+        <h3 style="font-size:0.9rem;margin-bottom:12px;color:var(--text);">Weighbridge Collection Data</h3>
+        
+        <label style="display:block;font-size:0.75rem;color:var(--text-muted);margin-bottom:4px;">Plastic Type</label>
+        <select id="plastic-type" style="width:100%;padding:8px;margin-bottom:12px;background:var(--surface);border:1px solid var(--border);border-radius:6px;color:var(--text);font-family:var(--font);font-size:0.85rem;">
+          <option value="">Select plastic type</option>
+          <option value="PET">PET</option>
+          <option value="HDPE">HDPE</option>
+          <option value="LDPE">LDPE</option>
+          <option value="PP">PP</option>
+          <option value="PS">PS</option>
+          <option value="OTHER">OTHER</option>
+        </select>
+
+        <label style="display:block;font-size:0.75rem;color:var(--text-muted);margin-bottom:4px;">Gross Weight (kg)</label>
+        <input type="number" id="gross-weight" step="0.01" min="0.01" placeholder="0.00" style="width:100%;padding:8px;margin-bottom:12px;background:var(--surface);border:1px solid var(--border);border-radius:6px;color:var(--text);font-family:var(--font);font-size:0.85rem;">
+
+        <label style="display:block;font-size:0.75rem;color:var(--text-muted);margin-bottom:4px;">Tare Weight (kg)</label>
+        <input type="number" id="tare-weight" step="0.01" min="0" placeholder="0.00" style="width:100%;padding:8px;margin-bottom:12px;background:var(--surface);border:1px solid var(--border);border-radius:6px;color:var(--text);font-family:var(--font);font-size:0.85rem;">
+
+        <label style="display:block;font-size:0.75rem;color:var(--text-muted);margin-bottom:4px;">Net Weight (kg)</label>
+        <input type="number" id="net-weight" readonly placeholder="0.00" style="width:100%;padding:8px;margin-bottom:12px;background:var(--surface-raised);border:1px solid var(--border);border-radius:6px;color:var(--text-muted);font-family:var(--font);font-size:0.85rem;cursor:not-allowed;">
+
+        <label style="display:block;font-size:0.75rem;color:var(--text-muted);margin-bottom:4px;">Collector ID</label>
+        <input type="text" id="collector-id" readonly style="width:100%;padding:8px;background:var(--surface-raised);border:1px solid var(--border);border-radius:6px;color:var(--text-muted);font-family:var(--font);font-size:0.85rem;cursor:not-allowed;">
+      </div>
+    </div>
+
     <div class="gps-banner" id="gps-banner" style="display:none;">
       <span class="spinner"></span> Acquiring GPS position…
     </div>
@@ -318,6 +348,12 @@ footer {
   var gpsBanner       = document.getElementById('gps-banner');
   var progressBar     = document.getElementById('progress-bar');
   var progressFill    = document.getElementById('progress-fill');
+  var weighbridgeForm = document.getElementById('weighbridge-form');
+  var plasticTypeSelect = document.getElementById('plastic-type');
+  var grossWeightInput = document.getElementById('gross-weight');
+  var tareWeightInput = document.getElementById('tare-weight');
+  var netWeightInput = document.getElementById('net-weight');
+  var collectorIdInput = document.getElementById('collector-id');
 
   /* ── Helpers ───────────────────────────────── */
   function show(screen) {
@@ -378,7 +414,24 @@ footer {
       ctx = data;
       document.getElementById('ctx-program').textContent = data.program_id || '—';
       document.getElementById('ctx-instruction').textContent = data.instruction_id || '—';
-      document.getElementById('ctx-submitter').textContent = (data.submitter_class || '') + ' · ' + (data.submitter_msisdn || '');
+      
+      // WASTE_COLLECTOR display logic
+      var submitterDisplay = data.submitter_class || '';
+      if (data.submitter_class === 'WASTE_COLLECTOR') {
+        submitterDisplay = 'Waste Collector';
+        var zoneLabel = resolveNeighbourhoodLabel(data.expected_latitude, data.expected_longitude);
+        document.getElementById('ctx-submitter').innerHTML = 
+          '<strong>' + submitterDisplay + '</strong><br>' +
+          '<small style="color:var(--text-muted)">Collection Zone: ' + zoneLabel + '</small><br>' +
+          '<small style="color:var(--info)">Identity Check: Your phone number must match the one registered for this link</small>';
+        
+        // Show weighbridge form and pre-fill collector_id
+        weighbridgeForm.style.display = 'block';
+        collectorIdInput.value = data.worker_id || '';
+      } else {
+        document.getElementById('ctx-submitter').textContent = submitterDisplay + ' · ' + (data.submitter_msisdn || '');
+      }
+      
       document.getElementById('ctx-expires').textContent = data.expires_at ? new Date(data.expires_at).toLocaleString() : '—';
 
       if (!data.require_gps) {
@@ -392,6 +445,24 @@ footer {
       errorMessage.textContent = '⚠ Unable to validate the link. Please try again later.';
       show(screenError);
     });
+
+  /* ── Neighbourhood label resolver ──────────── */
+  function resolveNeighbourhoodLabel(lat, lon) {
+    if (lat && lon && lat >= -15.43 && lat <= -15.40 && lon >= 28.26 && lon <= 28.30) {
+      return 'Chunga Dumpsite, Lusaka';
+    }
+    return 'Lusaka';
+  }
+
+  /* ── Net weight auto-computation ────────────── */
+  function updateNetWeight() {
+    var g = parseFloat(grossWeightInput.value) || 0;
+    var t = parseFloat(tareWeightInput.value) || 0;
+    netWeightInput.value = (g - t).toFixed(2);
+  }
+  
+  grossWeightInput.addEventListener('input', updateNetWeight);
+  tareWeightInput.addEventListener('input', updateNetWeight);
 
   /* ── File upload ───────────────────────────── */
   uploadZone.addEventListener('click', function() { fileInput.click(); });
@@ -490,6 +561,25 @@ footer {
   btnSubmit.addEventListener('click', function() {
     if (!ctx || !uploadedArtifact) return;
 
+    // Validate weighbridge form if WASTE_COLLECTOR
+    if (ctx.submitter_class === 'WASTE_COLLECTOR') {
+      if (!plasticTypeSelect.value) {
+        submitError.style.display = 'block';
+        submitError.textContent = 'Please select a plastic type.';
+        return;
+      }
+      if (!grossWeightInput.value || parseFloat(grossWeightInput.value) <= 0) {
+        submitError.style.display = 'block';
+        submitError.textContent = 'Please enter a valid gross weight.';
+        return;
+      }
+      if (!tareWeightInput.value || parseFloat(tareWeightInput.value) < 0) {
+        submitError.style.display = 'block';
+        submitError.textContent = 'Please enter a valid tare weight.';
+        return;
+      }
+    }
+
     btnSubmit.disabled = true;
     btnSubmit.textContent = 'Submitting…';
     progressFill.style.width = '90%';
@@ -502,6 +592,19 @@ footer {
     if (gpsCoords) {
       payload.latitude = gpsCoords.latitude;
       payload.longitude = gpsCoords.longitude;
+    }
+
+    // Add structured_payload for WASTE_COLLECTOR (WEIGHBRIDGE_RECORD)
+    if (ctx.submitter_class === 'WASTE_COLLECTOR') {
+      payload.artifact_type = 'WEIGHBRIDGE_RECORD';
+      // net_weight_kg is for display/sanity only — backend recomputes from gross-tare
+      payload.structured_payload = {
+        plastic_type: plasticTypeSelect.value,
+        gross_weight_kg: parseFloat(grossWeightInput.value),
+        tare_weight_kg: parseFloat(tareWeightInput.value),
+        net_weight_kg: parseFloat(netWeightInput.value),
+        collector_id: collectorIdInput.value
+      };
     }
 
     fetch('/v1/evidence-links/submit', {
