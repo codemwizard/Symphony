@@ -1,7 +1,7 @@
 {
   "check_id": "INVPROC-01-GOVERNANCE-BASELINE",
-  "timestamp_utc": "2026-04-04T22:33:30Z",
-  "git_sha": "3d1092779d09cd7b7d12933eeb7a156301e5447d",
+  "timestamp_utc": "2026-04-04T23:01:22Z",
+  "git_sha": "bb5b69e48fdc970ab4d746fac4f5fa5f58eedd61",
   "schema_fingerprint": "1f92363c69ba235e552a6aac05045062fc0097fc93cde3b89e76455b80628019",
   "status": "PASS",
   "checked_references": {

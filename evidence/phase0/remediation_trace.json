@@ -1,14 +1,17 @@
 {
   "check_id": "REMEDIATION-TRACE",
-  "timestamp_utc": "2026-04-04T22:50:54Z",
-  "git_sha": "d497b6ab6f7a35a89b33d1ac6a936511fc06ab25",
+  "timestamp_utc": "2026-04-04T23:01:33Z",
+  "git_sha": "bb5b69e48fdc970ab4d746fac4f5fa5f58eedd61",
   "schema_fingerprint": "1f92363c69ba235e552a6aac05045062fc0097fc93cde3b89e76455b80628019",
-  "status": "FAIL",
+  "status": "PASS",
   "diff_mode": "range",
   "base_ref": "refs/remotes/origin/main",
   "head_ref": "HEAD",
   "merge_base": "3d1092779d09cd7b7d12933eeb7a156301e5447d",
   "changed_files": [
+    ".toolchain/pre_ci_debug/failure_state.env",
+    "docs/plans/phase1/REM-2026-04-04_demo-bugs-remediation/EXEC_LOG.md",
+    "docs/plans/phase1/REM-2026-04-04_demo-bugs-remediation/PLAN.md",
     "evidence/phase0/TSK-P0-KYC-001.json",
     "evidence/phase0/TSK-P0-KYC-002.json",
     "evidence/phase0/TSK-P0-KYC-003.json",
@@ -173,9 +176,13 @@
     "scripts/dev/pre_ci.sh",
     "src/supervisory-dashboard/index.html"
   ],
-  "trace_docs": [],
-  "satisfying_docs": [],
-  "errors": [
-    "missing_remediation_trace_doc: expected docs/plans/**/REM-*/(PLAN.md|EXEC_LOG.md) or a docs/plans/**/TSK-*/ casefile with required remediation markers"
-  ]
+  "trace_docs": [
+    "docs/plans/phase1/REM-2026-04-04_demo-bugs-remediation/EXEC_LOG.md",
+    "docs/plans/phase1/REM-2026-04-04_demo-bugs-remediation/PLAN.md"
+  ],
+  "satisfying_docs": [
+    "docs/plans/phase1/REM-2026-04-04_demo-bugs-remediation/PLAN.md",
+    "docs/plans/phase1/REM-2026-04-04_demo-bugs-remediation/EXEC_LOG.md"
+  ],
+  "errors": []
 }
