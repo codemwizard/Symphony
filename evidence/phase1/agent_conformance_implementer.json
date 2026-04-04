@@ -1,11 +1,11 @@
 {
-  "timestamp_utc": "2026-04-04T00:43:32Z",
-  "git_sha": "90b7796472e09835de9289e44c1e53740d901b1f",
+  "timestamp_utc": "2026-04-04T19:51:42Z",
+  "git_sha": "eb955ca5728bfc0c8cc24610f85ab0212c57054d",
   "schema_fingerprint": "1f92363c69ba235e552a6aac05045062fc0097fc93cde3b89e76455b80628019",
   "schema_version": "1.0",
   "status": "PASS",
-  "checked_at_utc": "2026-04-04T00:43:33.157068+00:00",
-  "git_commit": "90b7796472e09835de9289e44c1e53740d901b1f",
+  "checked_at_utc": "2026-04-04T19:51:43.036377+00:00",
+  "git_commit": "eb955ca5728bfc0c8cc24610f85ab0212c57054d",
   "mode": "auto",
   "canonical_docs": [
     {
@@ -63,9 +63,6 @@
   },
   "regulated_surface_changes_detected": true,
   "regulated_surface_changed_paths": [
-    "docs/operations/PILOT_DEMO_DEPLOYMENT.md",
-    "docs/operations/PILOT_DEMO_VIDEO_SCRIPT.md",
-    "docs/operations/failure_index.md",
     "evidence/phase0/TSK-P0-KYC-001.json",
     "evidence/phase0/TSK-P0-KYC-002.json",
     "evidence/phase0/TSK-P0-KYC-003.json",
@@ -189,8 +186,6 @@
     "evidence/phase1/pii_decoupling_invariant.json",
     "evidence/phase1/pii_decoupling_runtime.json",
     "evidence/phase1/proj_001_initial_projection_set.json",
-    "evidence/phase1/pwrm0001_monitoring_report.json",
-    "evidence/phase1/pwrm_monitoring_report.json",
     "evidence/phase1/rail_sequence_runtime.json",
     "evidence/phase1/rail_sequence_truth_anchor.json",
     "evidence/phase1/tsk_p1_061_git_containment_rule.json",
@@ -220,13 +215,9 @@
     "evidence/phase1/tsk_p1_218_server_side_onboarding_apis.json",
     "evidence/phase1/tsk_p1_219_operator_onboarding_console.json",
     "evidence/phase1/tsk_p1_220_canonical_bootstrap.json",
-    "evidence/phase1/tsk_p1_demo_002_sms_secure_link.json",
-    "evidence/phase1/tsk_p1_demo_003_browser_geo_capture.json",
-    "evidence/phase1/tsk_p1_demo_004_msisdn_submitter_match.json",
     "evidence/phase1/tsk_p1_demo_017_provisioning_runbook.json",
     "evidence/phase1/verify_agent_conformance_spec.json",
     "evidence/security_remediation/r_026_run_task_strict_enforcement.json",
-    "scripts/audit/preflight_structural_staged.sh",
     "scripts/audit/validate_evidence_json.sh",
     "scripts/audit/validate_evidence_schema.sh"
   ],
@@ -246,7 +237,7 @@
     "mode": "range",
     "base_ref": "refs/remotes/origin/main",
     "head_ref": "HEAD",
-    "merge_base": "eaffac3902d05942576fdfa4340867d655a3568f"
+    "merge_base": "2aacd7c24d5ad6ae3af5284b302857426a88a9b9"
   },
   "approval_required": true,
   "approval_metadata_present": true,

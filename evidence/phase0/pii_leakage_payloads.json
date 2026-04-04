@@ -24,14 +24,14 @@
   ],
   "findings": [],
   "gate_id": "SEC-G17",
-  "git_sha": "af16e4fb427c60f5fef488b4fc77fd3f09e4b67f",
+  "git_sha": "eb955ca5728bfc0c8cc24610f85ab0212c57054d",
   "invariant_id": "INV-112",
   "ok": true,
   "pattern_note": "PII keyword within 80 chars of regulated context keyword; allow via symphony:pii_ok marker",
   "roots": [
-    "/tmp/tmp.5aN3IGC1em/src"
+    "/tmp/tmp.mfY6qesw0j/src"
   ],
   "schema_fingerprint": "1f92363c69ba235e552a6aac05045062fc0097fc93cde3b89e76455b80628019",
   "status": "PASS",
-  "timestamp_utc": "2026-04-04T00:02:50Z"
+  "timestamp_utc": "2026-04-04T19:54:59Z"
 }

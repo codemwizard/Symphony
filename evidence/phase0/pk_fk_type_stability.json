@@ -1,7 +1,7 @@
 {
   "check_id": "DB-PK-FK-TYPE-STABILITY",
-  "timestamp_utc": "2026-04-04T00:03:18Z",
-  "git_sha": "af16e4fb427c60f5fef488b4fc77fd3f09e4b67f",
+  "timestamp_utc": "2026-04-04T19:55:27Z",
+  "git_sha": "eb955ca5728bfc0c8cc24610f85ab0212c57054d",
   "schema_fingerprint": "1f92363c69ba235e552a6aac05045062fc0097fc93cde3b89e76455b80628019",
   "status": "PASS",
   "scanned_files": [
@@ -103,7 +103,8 @@
     "0110_gf_fn_regulatory_transitions.sql",
     "0112_gf_fn_verifier_read_token.sql",
     "0113_gf_fn_confidence_enforcement.sql",
-    "0114_gf_fn_asset_lifecycle.sql"
+    "0114_gf_fn_asset_lifecycle.sql",
+    "0114_grant_onboarding_tables_to_app_role.sql"
   ],
   "type_changes_found": 1,
   "violations": [],

@@ -1,7 +1,7 @@
 {
   "check_id": "EVIDENCE-SCHEMA-VALIDATION",
-  "timestamp_utc": "2026-04-04T00:03:11Z",
-  "git_sha": "af16e4fb427c60f5fef488b4fc77fd3f09e4b67f",
+  "timestamp_utc": "2026-04-04T19:55:20Z",
+  "git_sha": "eb955ca5728bfc0c8cc24610f85ab0212c57054d",
   "schema_fingerprint": "1f92363c69ba235e552a6aac05045062fc0097fc93cde3b89e76455b80628019",
   "status": "PASS",
   "checked_dirs": [
@@ -297,6 +297,7 @@
     "/home/mwiza/workspace/Symphony/evidence/phase1/tsk_p1_demo_026_server_side_admin_proxy.json",
     "/home/mwiza/workspace/Symphony/evidence/phase1/tsk_p1_demo_027_demo_gate_split.json",
     "/home/mwiza/workspace/Symphony/evidence/phase1/tsk_p1_demo_028_image_flow.json",
+    "/home/mwiza/workspace/Symphony/evidence/phase1/tsk_p1_demo_031_verification.json",
     "/home/mwiza/workspace/Symphony/evidence/phase1/tsk_p1_esc_001__escrow_state_machine_atomic_reservation_semantics.json",
     "/home/mwiza/workspace/Symphony/evidence/phase1/tsk_p1_esc_002__escrow_invariants_cross_tenant_protections.json",
     "/home/mwiza/workspace/Symphony/evidence/phase1/tsk_p1_hier_002__programs_program_escrow_id_bridge.json",
@@ -1463,6 +1464,10 @@
     },
     {
       "file": "/home/mwiza/workspace/Symphony/evidence/phase1/tsk_p1_demo_028_image_flow.json",
+      "schema": "default"
+    },
+    {
+      "file": "/home/mwiza/workspace/Symphony/evidence/phase1/tsk_p1_demo_031_verification.json",
       "schema": "default"
     },
     {

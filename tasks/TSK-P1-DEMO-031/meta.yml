@@ -1,0 +1,51 @@
+schema_version: 1
+phase: '1'
+task_id: TSK-P1-DEMO-031
+title: Wire up missing Pilot Demo Video Script UI gaps and fix Onboarding privileges
+owner_role: SUPERVISOR
+status: completed
+depends_on: []
+touches:
+- src/supervisory-dashboard/index.html
+- schema/migrations/0114_grant_onboarding_tables_to_app_role.sql
+- services/ledger-api/dotnet/src/LedgerApi/Commands/Pwrm0001ArtifactTypes.cs
+- scripts/audit/verify_tsk_p1_demo_031.sh
+- evidence/phase1/tsk_p1_demo_031_verification.json
+- tasks/TSK-P1-DEMO-031/meta.yml
+invariants:
+- INV-GOV-TEMPLATE-004
+- INV-GOV-TEMPLATE-005
+work:
+- '[ID tsk_p1_demo_031_work_item_01] Implement Token UI issuance button in index.html'
+- '[ID tsk_p1_demo_031_work_item_02] Implement Slide-out panel for Instruction Drill-down in index.html'
+- '[ID tsk_p1_demo_031_work_item_03] Add Programm Reactivation toggle to drawProgrammes() in index.html'
+- '[ID tsk_p1_demo_031_work_item_04] Seed Data Polish (delete Kabwata, seed Chunga & pwrm_001)'
+- '[ID tsk_p1_demo_031_work_item_05] Dynamic Timeline fetch implementation'
+- '[ID tsk_p1_demo_031_work_item_06] Write migration 0114 granting SELECT, INSERT, UPDATE on tenant_registry, etc to symphony_app_role'
+- '[ID tsk_p1_demo_031_work_item_07] Correct Proof Types to mirror video sequence logic (INVENTORY_RECEIPT, WAYBILL_IMAGE)'
+acceptance_criteria:
+- '[ID tsk_p1_demo_031_work_item_01] Worker token generation fetches /issue API and renders correctly'
+- '[ID tsk_p1_demo_031_work_item_02] Drill-down slideout panel mounts DOM on timeline click'
+- '[ID tsk_p1_demo_031_work_item_03] Suspended programmes explicitly show an activate option'
+- '[ID tsk_p1_demo_031_work_item_04] UI initializes to empty timeline, and demo provisions Chunga Dumpsite default'
+- '[ID tsk_p1_demo_031_work_item_05] index.html hits /pilot-demo/api/monitoring-report/ loop and hydrates timeline dynamically'
+- '[ID tsk_p1_demo_031_work_item_06] Migration 0114 passes SQL syntactical evaluation and DB role receives grants'
+- '[ID tsk_p1_demo_031_work_item_07] Pwrm0001ArtifactTypes enforces strictly the additional proof artifacts'
+verification:
+- bash scripts/audit/verify_tsk_p1_demo_031.sh > evidence/phase1/tsk_p1_demo_031_verification.json
+evidence:
+- evidence/phase1/tsk_p1_demo_031_verification.json
+failure_modes:
+- The UI fails to trigger the post API link => CRITICAL_FAIL
+- The timeline table remains static HTML with fake data => FAIL
+- The 0114 migration is omitted making onboarding fail unconditionally => CRITICAL_FAIL
+- Proof types remain invariant violating script logic => FAIL
+must_read:
+- docs/operations/AI_AGENT_OPERATION_MANUAL.md
+- docs/operations/TASK_CREATION_PROCESS.md
+implementation_plan: docs/plans/phase1/TSK-P1-DEMO-031/PLAN.md
+implementation_log: docs/plans/phase1/TSK-P1-DEMO-031/EXEC_LOG.md
+notes: 'This closes the presentation gaps allowing an operator to execute the video demo workflow natively.'
+client: cursor
+assigned_agent: supervisor
+model: gpt-5-codex

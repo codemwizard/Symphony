@@ -1,26 +1,18 @@
 {
   "check_id": "TSK-P1-073",
   "task_id": "TSK-P1-073",
-  "timestamp_utc": "2026-04-04T00:47:07Z",
-  "git_sha": "90b7796472e09835de9289e44c1e53740d901b1f",
+  "timestamp_utc": "2026-04-04T19:55:08Z",
+  "git_sha": "eb955ca5728bfc0c8cc24610f85ab0212c57054d",
   "schema_fingerprint": "1f92363c69ba235e552a6aac05045062fc0097fc93cde3b89e76455b80628019",
   "status": "PASS",
   "base_ref": "refs/remotes/origin/main",
   "head_ref": "HEAD",
   "triggered_files": [
-    "scripts/audit/preflight_structural_staged.sh",
     "scripts/audit/validate_evidence_json.sh",
     "scripts/audit/validate_evidence_schema.sh",
     "scripts/dev/pre_ci.sh"
   ],
   "freshness_docs": [
-    "docs/plans/phase1/PWRM-001-T1/PLAN.md",
-    "docs/plans/phase1/PWRM-001-T2/PLAN.md",
-    "docs/plans/phase1/PWRM-001-T3/PLAN.md",
-    "docs/plans/phase1/PWRM-001-T4/PLAN.md",
-    "docs/plans/phase1/PWRM-001-T5/PLAN.md",
-    "docs/plans/phase1/PWRM-001-T6/PLAN.md",
-    "docs/plans/phase1/PWRM-001-T7/PLAN.md",
     "docs/plans/phase1/REM-2026-04-03_greentech4ce-demo-hardening/EXEC_LOG.md",
     "docs/plans/phase1/REM-2026-04-03_greentech4ce-demo-hardening/PLAN.md",
     "docs/plans/phase1/REM-2026-04-03_pre_ci-phase1_db_verifiers/EXEC_LOG.md",

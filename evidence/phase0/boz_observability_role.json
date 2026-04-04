@@ -69,7 +69,7 @@
   "dml_privileges_present": [],
   "errors": [],
   "gate_id": "INT-G23",
-  "git_sha": "af16e4fb427c60f5fef488b4fc77fd3f09e4b67f",
+  "git_sha": "eb955ca5728bfc0c8cc24610f85ab0212c57054d",
   "invariant_id": "INV-111",
   "missing_select": [],
   "ok": true,
@@ -88,5 +88,5 @@
     "public_usage": true
   },
   "status": "PASS",
-  "timestamp_utc": "2026-04-04T00:04:19Z"
+  "timestamp_utc": "2026-04-04T19:56:29Z"
 }
