@@ -1,7 +1,7 @@
 {
   "check_id": "COMPLIANCE-MANIFEST-VERIFY",
-  "timestamp_utc": "2026-04-04T20:51:06Z",
-  "git_sha": "d7ff0a84e87958ccd0ec3572254136a08f84786f",
+  "timestamp_utc": "2026-04-04T21:46:33Z",
+  "git_sha": "fff84d0864236cd2adf4a57f413274881651e67a",
   "schema_fingerprint": "1f92363c69ba235e552a6aac05045062fc0097fc93cde3b89e76455b80628019",
   "status": "PASS",
   "errors": [],

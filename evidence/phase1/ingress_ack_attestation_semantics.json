@@ -1,8 +1,8 @@
 {
   "check_id": "PHASE1-INGRESS-ACK-ATTESTATION",
-  "timestamp_utc": "2026-04-04T20:54:24Z",
-  "git_sha": "d7ff0a84e87958ccd0ec3572254136a08f84786f",
-  "schema_fingerprint": "d7ff0a84",
+  "timestamp_utc": "2026-04-04T21:49:53Z",
+  "git_sha": "fff84d0864236cd2adf4a57f413274881651e67a",
+  "schema_fingerprint": "fff84d08",
   "status": "PASS",
   "ack_after_durable_write": true,
   "negative_cases_fail_closed": true,

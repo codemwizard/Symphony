@@ -1,10 +1,10 @@
 {
   "check_id": "SEC-OPENBAO-AUDIT",
-  "timestamp_utc": "2026-04-04T20:50:52Z",
-  "git_sha": "d7ff0a84e87958ccd0ec3572254136a08f84786f",
+  "timestamp_utc": "2026-04-04T21:46:18Z",
+  "git_sha": "fff84d0864236cd2adf4a57f413274881651e67a",
   "schema_fingerprint": "1f92363c69ba235e552a6aac05045062fc0097fc93cde3b89e76455b80628019",
   "status": "PASS",
-  "audit_log_bytes": 39963125,
+  "audit_log_bytes": 40038022,
   "audit_log_present": true,
   "path": "/openbao/audit.log"
 }
