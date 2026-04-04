@@ -1,11 +1,11 @@
 {
   "check_id": "TSK-P1-211",
-  "timestamp_utc": "2026-04-04T00:06:23Z",
-  "git_sha": "af16e4fb427c60f5fef488b4fc77fd3f09e4b67f",
+  "timestamp_utc": "2026-04-04T00:50:31Z",
+  "git_sha": "90b7796472e09835de9289e44c1e53740d901b1f",
   "schema_fingerprint": "1f92363c69ba235e552a6aac05045062fc0097fc93cde3b89e76455b80628019",
   "status": "PASS",
   "task_id": "TSK-P1-211",
-  "run_id": "standalone-20260404T000623Z",
+  "run_id": "standalone-20260404T005031Z",
   "checks": {
     "migration_exists": true,
     "migration_rules_followed": true,

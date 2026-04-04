@@ -86,7 +86,8 @@ static class EvidenceLinkIssueHandler
             request.expected_longitude,
             request.max_distance_meters,
             expiresAt,
-            signingKey);
+            signingKey,
+            request.worker_id);
 
         await EvidenceLinkSmsDispatchLog.AppendAsync(new
         {
@@ -341,7 +342,8 @@ static class EvidenceLinkTokenService
         decimal? expectedLongitude,
         decimal? maxDistanceMeters,
         DateTimeOffset expiresAt,
-        string signingKey)
+        string signingKey,
+        string? workerId = null)
     {
         var payload = JsonSerializer.Serialize(new
         {
@@ -350,6 +352,7 @@ static class EvidenceLinkTokenService
             program_id = programId,
             submitter_class = submitterClass,
             submitter_msisdn = submitterMsisdn,
+            worker_id = workerId,
             expected_latitude = expectedLatitude,
             expected_longitude = expectedLongitude,
             max_distance_meters = maxDistanceMeters,
@@ -404,6 +407,7 @@ static class EvidenceLinkTokenService
             var program = root.TryGetProperty("program_id", out var p) ? p.GetString() : null;
             var submitter = root.TryGetProperty("submitter_class", out var s) ? s.GetString() : null;
             var submitterMsisdn = root.TryGetProperty("submitter_msisdn", out var sm) ? sm.GetString() : null;
+            var workerId = root.TryGetProperty("worker_id", out var wid) ? wid.GetString() : null;
             var expectedLat = root.TryGetProperty("expected_latitude", out var lat) && lat.ValueKind != JsonValueKind.Null ? lat.GetDecimal() : (decimal?)null;
             var expectedLon = root.TryGetProperty("expected_longitude", out var lon) && lon.ValueKind != JsonValueKind.Null ? lon.GetDecimal() : (decimal?)null;
             var maxDistance = root.TryGetProperty("max_distance_meters", out var md) && md.ValueKind != JsonValueKind.Null ? md.GetDecimal() : (decimal?)null;
@@ -419,7 +423,7 @@ static class EvidenceLinkTokenService
                 return EvidenceLinkTokenValidation.Fail("LINK_TOKEN_EXPIRED", "secure link expired");
             }
 
-            return EvidenceLinkTokenValidation.Ok(tenant!, instruction!, program!, submitter!, submitterMsisdn!, expectedLat, expectedLon, maxDistance, exp);
+            return EvidenceLinkTokenValidation.Ok(tenant!, instruction!, program!, submitter!, submitterMsisdn!, workerId, expectedLat, expectedLon, maxDistance, exp);
         }
     }
 
@@ -462,6 +466,7 @@ readonly record struct EvidenceLinkTokenValidation(
     string? ProgramId,
     string? SubmitterClass,
     string? SubmitterMsisdn,
+    string? WorkerId,
     decimal? ExpectedLatitude,
     decimal? ExpectedLongitude,
     decimal? MaxDistanceMeters,
@@ -475,14 +480,15 @@ readonly record struct EvidenceLinkTokenValidation(
         string programId,
         string submitterClass,
         string submitterMsisdn,
+        string? workerId,
         decimal? expectedLatitude,
         decimal? expectedLongitude,
         decimal? maxDistanceMeters,
         long expiresAtUnix)
-        => new(true, tenantId, instructionId, programId, submitterClass, submitterMsisdn, expectedLatitude, expectedLongitude, maxDistanceMeters, expiresAtUnix, null, string.Empty);
+        => new(true, tenantId, instructionId, programId, submitterClass, submitterMsisdn, workerId, expectedLatitude, expectedLongitude, maxDistanceMeters, expiresAtUnix, null, string.Empty);
 
     public static EvidenceLinkTokenValidation Fail(string errorCode, string errorMessage)
-        => new(false, null, null, null, null, null, null, null, null, 0, errorCode, errorMessage);
+        => new(false, null, null, null, null, null, null, null, null, null, 0, errorCode, errorMessage);
 }
 
 static class EvidenceLinkSmsDispatchLog

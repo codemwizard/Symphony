@@ -118,7 +118,7 @@ file static class SupervisoryProofModel
         var projections = AckInterruptProjectionStore.LoadForInstructionIds(instructionIds, dataSource);
         var timeline = BuildTimeline(submissionsByInstruction, exceptionsByInstruction, instructionIds, projections);
         var proofRows = instructionIds
-            .Select(id => BuildInstructionProofSummary(id, submissionsByInstruction[id].ToArray(), exceptionsByInstruction[id].ToArray(), projections.GetValueOrDefault(id, AckInterruptProjectionStore.Unavailable(id, dataSource))))
+            .Select(id => BuildInstructionProofSummary(id, programId, submissionsByInstruction[id].ToArray(), exceptionsByInstruction[id].ToArray(), projections.GetValueOrDefault(id, AckInterruptProjectionStore.Unavailable(id, dataSource))))
             .ToArray();
         var evidenceCompleteness = BuildEvidenceCompleteness(proofRows);
         var exceptionLog = exceptions.Select(x => new
@@ -149,10 +149,10 @@ file static class SupervisoryProofModel
 
         var projection = AckInterruptProjectionStore.LoadForInstructionIds(new[] { instructionId }, dataSource)
             .GetValueOrDefault(instructionId, AckInterruptProjectionStore.Unavailable(instructionId, dataSource));
-        var instructionSummary = BuildInstructionProofSummary(instructionId, submissions, exceptions, projection);
         var firstProgramId = submissions.Select(x => ReadString(x, "program_id"))
             .Concat(exceptions.Select(x => ReadString(x, "program_id")))
             .FirstOrDefault(x => !string.IsNullOrWhiteSpace(x)) ?? string.Empty;
+        var instructionSummary = BuildInstructionProofSummary(instructionId, firstProgramId, submissions, exceptions, projection);
         var supplierId = exceptions.Select(x => ReadString(x, "supplier_id"))
             .FirstOrDefault(x => !string.IsNullOrWhiteSpace(x)) ?? string.Empty;
         var supplierPolicy = await BuildSupplierPolicyContextAsync(tenantId, firstProgramId, supplierId);
@@ -198,7 +198,7 @@ file static class SupervisoryProofModel
             var instructionSubmissions = submissionsByInstruction[instructionId].ToArray();
             var instructionExceptions = exceptionsByInstruction[instructionId].ToArray();
             var projection = projections.GetValueOrDefault(instructionId, AckInterruptProjectionStore.Unavailable(instructionId, null));
-            var summary = BuildInstructionProofSummary(instructionId, instructionSubmissions, instructionExceptions, projection);
+            var summary = BuildInstructionProofSummary(instructionId, string.Empty, instructionSubmissions, instructionExceptions, projection);
             var latestObserved = instructionSubmissions
                 .Select(x => ReadString(x, "submitted_at_utc"))
                 .Concat(instructionExceptions.Select(x => ReadString(x, "recorded_at_utc")))
@@ -229,6 +229,7 @@ file static class SupervisoryProofModel
     private static object[] BuildEvidenceCompleteness(InstructionProofSummary[] proofRows)
     {
         // Collect all unique artifact types from proof rows
+        // Note: For Pwrm0001, this will now include the 4 canonical types even if missing
         var artifactTypes = proofRows
             .SelectMany(row => row.proofs)
             .Select(proof => proof.artifact_type)
@@ -266,14 +267,16 @@ file static class SupervisoryProofModel
         }).ToArray<object>();
     }
 
-    private static InstructionProofSummary BuildInstructionProofSummary(string instructionId, JsonElement[] submissions, JsonElement[] exceptions, AckInterruptProjectionStore.AckInterruptProjection projection)
+    private static InstructionProofSummary BuildInstructionProofSummary(string instructionId, string programId, JsonElement[] submissions, JsonElement[] exceptions, AckInterruptProjectionStore.AckInterruptProjection projection)
     {
-        // Group submissions by artifact_type
-        var artifactTypes = submissions
-            .Select(s => ReadString(s, "artifact_type"))
-            .Where(at => !string.IsNullOrWhiteSpace(at))
-            .Distinct(StringComparer.Ordinal)
-            .ToArray();
+        // P1 Badge FIX: Force include all missing proof types for Pwrm0001
+        var artifactTypes = IsPwrm0001Programme(programId, submissions)
+            ? Pwrm0001ArtifactTypes.ProofTypeDisplayLabels.Keys.ToArray()
+            : submissions
+                .Select(s => ReadString(s, "artifact_type"))
+                .Where(at => !string.IsNullOrWhiteSpace(at))
+                .Distinct(StringComparer.Ordinal)
+                .ToArray();
 
         var proofRows = artifactTypes.Select(artifactType => BuildProofRow(artifactType, submissions, exceptions)).ToArray();
         var presentCount = proofRows.Count(x => string.Equals(x.status, "PRESENT", StringComparison.Ordinal));
@@ -281,7 +284,7 @@ file static class SupervisoryProofModel
             ? "FAILED"
             : proofRows.Any(x => string.Equals(x.status, "FLAGGED", StringComparison.Ordinal))
                 ? "FLAGGED"
-                : proofRows.All(x => string.Equals(x.status, "PRESENT", StringComparison.Ordinal))
+                : (artifactTypes.Length > 0 && proofRows.All(x => string.Equals(x.status, "PRESENT", StringComparison.Ordinal)))
                     ? "PRESENT"
                     : "MISSING";
 

@@ -57,7 +57,8 @@ record EvidenceLinkIssueRequest(
     decimal? expected_latitude,
     decimal? expected_longitude,
     decimal? max_distance_meters,
-    int? expires_in_seconds
+    int? expires_in_seconds,
+    string? worker_id = null
 );
 
 record PilotDemoEvidenceLinkIssueRequest(

@@ -567,7 +567,7 @@ app.MapPost("/pilot-demo/api/evidence-links/issue", async (PilotDemoEvidenceLink
         return Results.NotFound();
     }
 
-    if (!TryValidatePilotDemoOperatorCookie(ctx, null, out var ec, out var errs))
+    if (!TryValidatePilotDemoOperatorCookie(ctx, req.tenant_id, out var ec, out var errs))
     {
         return Results.Json(new { error_code = ec, errors = errs }, statusCode: StatusCodes.Status401Unauthorized);
     }
@@ -597,7 +597,8 @@ app.MapPost("/pilot-demo/api/evidence-links/issue", async (PilotDemoEvidenceLink
     var issueReq = new EvidenceLinkIssueRequest(
         req.tenant_id, req.instruction_id, req.program_id,
         req.submitter_class, req.submitter_msisdn,
-        lat, lon, maxDist, req.expires_in_seconds);
+        lat, lon, maxDist, req.expires_in_seconds,
+        req.worker_id);
 
     var result = await EvidenceLinkIssueHandler.HandleAsync(issueReq, logger, ct);
     return Results.Json(result.Body, statusCode: result.StatusCode);
@@ -657,6 +658,7 @@ app.MapGet("/api/public/evidence-links/context", (HttpContext httpContext) =>
         program_id = validation.ProgramId,
         submitter_class = validation.SubmitterClass,
         submitter_msisdn = validation.SubmitterMsisdn,
+        worker_id = validation.WorkerId,
         require_gps = validation.ExpectedLatitude is not null && validation.ExpectedLongitude is not null,
         expires_at = DateTimeOffset.FromUnixTimeSeconds(validation.ExpiresAtUnix).ToString("O")
     }, statusCode: StatusCodes.Status200OK);

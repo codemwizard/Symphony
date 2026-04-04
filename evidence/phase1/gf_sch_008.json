@@ -2,13 +2,13 @@
   "check_id": "GF-W1-SCH-008",
   "task_id": "GF-W1-SCH-008",
   "status": "PASS",
-  "timestamp_utc": "2026-04-04T00:06:18Z",
-  "generated_at": "2026-04-04T00:06:18.394098+00:00",
-  "git_sha": "af16e4fb427c60f5fef488b4fc77fd3f09e4b67f",
-  "pre_ci_run_id": "rem-e4a07f207eea",
+  "timestamp_utc": "2026-04-04T00:50:26Z",
+  "generated_at": "2026-04-04T00:50:26.354299+00:00",
+  "git_sha": "90b7796472e09835de9289e44c1e53740d901b1f",
+  "pre_ci_run_id": "rem-69c5f68c12d5",
   "source_file": "schema/migrations/0106_gf_verifier_registry.sql",
   "source_file_sha256": "85858a9f5c8edffdeed7e77d7c157adc26b017c9cd980642a6f0fb444877d2bf",
   "command_output": "{\"check\": \"schema_verification\", \"migration\": \"0106_gf_verifier_registry.sql\"}",
-  "_signature": "94b7ce0b3d49a87ecd6b948d7c8235fda9d8163d58737bb1f5235ecd6c05ca83",
+  "_signature": "966ffa27caeca461b2564d20adde59417367de2bbb51f7dd08ebcb7cff961a1f",
   "_signing_version": "symphony-v1"
 }
