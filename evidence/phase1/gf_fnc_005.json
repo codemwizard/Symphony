@@ -2,13 +2,13 @@
   "check_id": "GF-W1-FNC-005",
   "task_id": "GF-W1-FNC-005",
   "status": "PASS",
-  "timestamp_utc": "2026-04-04T19:58:33Z",
-  "generated_at": "2026-04-04T19:58:33.347939+00:00",
-  "git_sha": "eb955ca5728bfc0c8cc24610f85ab0212c57054d",
-  "pre_ci_run_id": "rem-b154f77a43cc",
+  "timestamp_utc": "2026-04-04T20:54:21Z",
+  "generated_at": "2026-04-04T20:54:21.595803+00:00",
+  "git_sha": "d7ff0a84e87958ccd0ec3572254136a08f84786f",
+  "pre_ci_run_id": "rem-02c98b55d2a0",
   "source_file": "schema/migrations/0112_gf_fn_verifier_read_token.sql",
   "source_file_sha256": "b711c5a256289bf66da3969ecdf564722ce902f235430a455033fa0ff0b19dec",
   "command_output": "{\"probes\": [{\"probe\": \"revoke_verifier_read_token\", \"status\": \"PASS\"},{\"probe\": \"cleanup_expired_verifier_tokens\", \"status\": \"PASS\"},{\"probe\": \"issue_verifier_read_token\", \"status\": \"PASS\"},{\"probe\": \"list_verifier_tokens\", \"status\": \"PASS\"},{\"probe\": \"verify_verifier_read_token\", \"status\": \"PASS\"}]}",
-  "_signature": "b81bfa198a78c50e7d87e73d8eb1ac6b9408810b0caaca49f86b5d9bdb8165b8",
+  "_signature": "f5d75da32f2ddd593dd4868cf99be58f249e1cd1fd5d35d695ebf3ff7514b7a2",
   "_signing_version": "symphony-v1"
 }

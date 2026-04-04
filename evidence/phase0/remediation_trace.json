@@ -1,7 +1,7 @@
 {
   "check_id": "REMEDIATION-TRACE",
-  "timestamp_utc": "2026-04-04T19:55:17Z",
-  "git_sha": "eb955ca5728bfc0c8cc24610f85ab0212c57054d",
+  "timestamp_utc": "2026-04-04T20:51:06Z",
+  "git_sha": "d7ff0a84e87958ccd0ec3572254136a08f84786f",
   "schema_fingerprint": "1f92363c69ba235e552a6aac05045062fc0097fc93cde3b89e76455b80628019",
   "status": "PASS",
   "diff_mode": "range",
@@ -9,11 +9,20 @@
   "head_ref": "HEAD",
   "merge_base": "2aacd7c24d5ad6ae3af5284b302857426a88a9b9",
   "changed_files": [
-    ".toolchain/pre_ci_debug/failure_state.env",
+    ".toolchain/evidence_ack/reset_log.jsonl",
+    ".toolchain/pre_ci_debug/clear_log.jsonl",
+    "Not-Just-Carbon-Credits.md",
+    "docs/architecture/THREAT_MODEL.md",
+    "docs/invariants/exceptions/exception_change-rule_security_2026-04-04.md",
+    "docs/operations/PHASE1_DEMO_DEPLOY_AND_TEST_CHECKLIST.md",
+    "docs/operations/PILOT_DEMO_DEPLOYMENT.md",
+    "docs/operations/SYMPHONY_DEMO_DEPLOYMENT_GUIDE.md",
     "docs/plans/phase1/REM-2026-04-03_greentech4ce-demo-hardening/EXEC_LOG.md",
     "docs/plans/phase1/REM-2026-04-03_greentech4ce-demo-hardening/PLAN.md",
     "docs/plans/phase1/REM-2026-04-03_pre_ci-phase1_db_verifiers/EXEC_LOG.md",
     "docs/plans/phase1/REM-2026-04-03_pre_ci-phase1_db_verifiers/PLAN.md",
+    "docs/plans/phase1/TSK-P1-DEMO-031/EXEC_LOG.md",
+    "docs/plans/phase1/TSK-P1-DEMO-031/PLAN.md",
     "evidence/phase0/TSK-P0-KYC-001.json",
     "evidence/phase0/TSK-P0-KYC-002.json",
     "evidence/phase0/TSK-P0-KYC-003.json",
@@ -81,6 +90,7 @@
     "evidence/phase0/role_login_posture.json",
     "evidence/phase0/routing_fallback.json",
     "evidence/phase0/routing_fallback_validation.json",
+    "evidence/phase0/schema_hash.txt",
     "evidence/phase0/security_definer_dynamic_sql.json",
     "evidence/phase0/security_dotnet_deps_audit.json",
     "evidence/phase0/security_insecure_patterns.json",
@@ -167,10 +177,13 @@
     "evidence/phase1/tsk_p1_219_operator_onboarding_console.json",
     "evidence/phase1/tsk_p1_220_canonical_bootstrap.json",
     "evidence/phase1/tsk_p1_demo_017_provisioning_runbook.json",
+    "evidence/phase1/tsk_p1_demo_031_verification.json",
     "evidence/phase1/verify_agent_conformance_spec.json",
     "evidence/security_remediation/r_026_run_task_strict_enforcement.json",
+    "schema/migrations/0114_grant_onboarding_tables_to_app_role.sql",
     "scripts/audit/validate_evidence_json.sh",
     "scripts/audit/validate_evidence_schema.sh",
+    "scripts/audit/verify_tsk_p1_demo_031.sh",
     "scripts/dev/pre_ci.sh",
     "services/ledger-api/dotnet/src/LedgerApi/Commands/CommandContracts.cs",
     "services/ledger-api/dotnet/src/LedgerApi/Commands/EvidenceLinkHandlers.cs",
@@ -185,18 +198,26 @@
     "services/ledger-api/dotnet/src/LedgerApi/Demo/WorkerOnboardingSelfTestRunner.cs",
     "services/ledger-api/dotnet/src/LedgerApi/Program.cs",
     "services/ledger-api/dotnet/src/LedgerApi/ReadModels/Pwrm0001MonitoringReportHandler.cs",
-    "services/ledger-api/dotnet/src/LedgerApi/ReadModels/SupervisoryRevealReadModelHandler.cs"
+    "services/ledger-api/dotnet/src/LedgerApi/ReadModels/SupervisoryRevealReadModelHandler.cs",
+    "src/supervisory-dashboard/index.html",
+    "tasks/TSK-P1-DEMO-031/meta.yml"
   ],
   "triggered_files": [
+    "docs/invariants/exceptions/exception_change-rule_security_2026-04-04.md",
+    "schema/migrations/0114_grant_onboarding_tables_to_app_role.sql",
     "scripts/audit/validate_evidence_json.sh",
     "scripts/audit/validate_evidence_schema.sh",
-    "scripts/dev/pre_ci.sh"
+    "scripts/audit/verify_tsk_p1_demo_031.sh",
+    "scripts/dev/pre_ci.sh",
+    "src/supervisory-dashboard/index.html"
   ],
   "trace_docs": [
     "docs/plans/phase1/REM-2026-04-03_greentech4ce-demo-hardening/EXEC_LOG.md",
     "docs/plans/phase1/REM-2026-04-03_greentech4ce-demo-hardening/PLAN.md",
     "docs/plans/phase1/REM-2026-04-03_pre_ci-phase1_db_verifiers/EXEC_LOG.md",
-    "docs/plans/phase1/REM-2026-04-03_pre_ci-phase1_db_verifiers/PLAN.md"
+    "docs/plans/phase1/REM-2026-04-03_pre_ci-phase1_db_verifiers/PLAN.md",
+    "docs/plans/phase1/TSK-P1-DEMO-031/EXEC_LOG.md",
+    "docs/plans/phase1/TSK-P1-DEMO-031/PLAN.md"
   ],
   "satisfying_docs": [
     "docs/plans/phase1/REM-2026-04-03_greentech4ce-demo-hardening/PLAN.md",

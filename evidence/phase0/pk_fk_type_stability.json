@@ -1,7 +1,7 @@
 {
   "check_id": "DB-PK-FK-TYPE-STABILITY",
-  "timestamp_utc": "2026-04-04T19:55:27Z",
-  "git_sha": "eb955ca5728bfc0c8cc24610f85ab0212c57054d",
+  "timestamp_utc": "2026-04-04T20:51:15Z",
+  "git_sha": "d7ff0a84e87958ccd0ec3572254136a08f84786f",
   "schema_fingerprint": "1f92363c69ba235e552a6aac05045062fc0097fc93cde3b89e76455b80628019",
   "status": "PASS",
   "scanned_files": [

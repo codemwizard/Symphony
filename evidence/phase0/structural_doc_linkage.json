@@ -1,8 +1,8 @@
 {
   "check_id": "STRUCTURAL-DOC-LINKAGE",
-  "timestamp_utc": "2026-04-04T20:12:56Z",
-  "git_sha": "f133d703d1305e8b949b2e27f1a23e8c2b662077",
+  "timestamp_utc": "2026-04-04T20:47:55Z",
+  "git_sha": "d7ff0a84e87958ccd0ec3572254136a08f84786f",
   "schema_fingerprint": "1f92363c69ba235e552a6aac05045062fc0097fc93cde3b89e76455b80628019",
-  "status": "FAIL",
-  "reason": "missing threat/compliance updates"
+  "status": "PASS",
+  "structural_change": true
 }

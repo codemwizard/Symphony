@@ -1,11 +1,11 @@
 {
-  "timestamp_utc": "2026-04-04T19:51:42Z",
-  "git_sha": "eb955ca5728bfc0c8cc24610f85ab0212c57054d",
+  "timestamp_utc": "2026-04-04T20:47:27Z",
+  "git_sha": "d7ff0a84e87958ccd0ec3572254136a08f84786f",
   "schema_fingerprint": "1f92363c69ba235e552a6aac05045062fc0097fc93cde3b89e76455b80628019",
   "schema_version": "1.0",
   "status": "PASS",
-  "checked_at_utc": "2026-04-04T19:51:43.036377+00:00",
-  "git_commit": "eb955ca5728bfc0c8cc24610f85ab0212c57054d",
+  "checked_at_utc": "2026-04-04T20:47:27.180972+00:00",
+  "git_commit": "d7ff0a84e87958ccd0ec3572254136a08f84786f",
   "mode": "auto",
   "canonical_docs": [
     {
@@ -63,6 +63,9 @@
   },
   "regulated_surface_changes_detected": true,
   "regulated_surface_changed_paths": [
+    "docs/operations/PHASE1_DEMO_DEPLOY_AND_TEST_CHECKLIST.md",
+    "docs/operations/PILOT_DEMO_DEPLOYMENT.md",
+    "docs/operations/SYMPHONY_DEMO_DEPLOYMENT_GUIDE.md",
     "evidence/phase0/TSK-P0-KYC-001.json",
     "evidence/phase0/TSK-P0-KYC-002.json",
     "evidence/phase0/TSK-P0-KYC-003.json",
@@ -130,6 +133,7 @@
     "evidence/phase0/role_login_posture.json",
     "evidence/phase0/routing_fallback.json",
     "evidence/phase0/routing_fallback_validation.json",
+    "evidence/phase0/schema_hash.txt",
     "evidence/phase0/security_definer_dynamic_sql.json",
     "evidence/phase0/security_dotnet_deps_audit.json",
     "evidence/phase0/security_insecure_patterns.json",
@@ -216,10 +220,13 @@
     "evidence/phase1/tsk_p1_219_operator_onboarding_console.json",
     "evidence/phase1/tsk_p1_220_canonical_bootstrap.json",
     "evidence/phase1/tsk_p1_demo_017_provisioning_runbook.json",
+    "evidence/phase1/tsk_p1_demo_031_verification.json",
     "evidence/phase1/verify_agent_conformance_spec.json",
     "evidence/security_remediation/r_026_run_task_strict_enforcement.json",
+    "schema/migrations/0114_grant_onboarding_tables_to_app_role.sql",
     "scripts/audit/validate_evidence_json.sh",
-    "scripts/audit/validate_evidence_schema.sh"
+    "scripts/audit/validate_evidence_schema.sh",
+    "scripts/audit/verify_tsk_p1_demo_031.sh"
   ],
   "regulated_surface_rule_source": "docs/operations/REGULATED_SURFACE_PATHS.yml",
   "regulated_surface_patterns": [
