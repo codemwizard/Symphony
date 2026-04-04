@@ -7,12 +7,12 @@
   "errors": [],
   "expected_columns": "next_attempt_at,lease_expires_at,created_at",
   "expected_index": "idx_payment_outbox_pending_due_claim",
-  "git_sha": "fff84d0864236cd2adf4a57f413274881651e67a",
+  "git_sha": "3d1092779d09cd7b7d12933eeb7a156301e5447d",
   "index_columns": "next_attempt_at,lease_expires_at,created_at",
   "index_definition": "CREATE INDEX idx_payment_outbox_pending_due_claim ON public.payment_outbox_pending USING btree (next_attempt_at, lease_expires_at, created_at)",
   "index_name": "idx_payment_outbox_pending_due_claim",
   "ok": true,
   "schema_fingerprint": "1f92363c69ba235e552a6aac05045062fc0097fc93cde3b89e76455b80628019",
   "status": "PASS",
-  "timestamp_utc": "2026-04-04T21:47:18Z"
+  "timestamp_utc": "2026-04-04T22:34:25Z"
 }

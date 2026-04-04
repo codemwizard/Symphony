@@ -26,7 +26,7 @@ static class Pwrm0001MonitoringReportHandler
         };
 
         // Group all records by instruction_id
-        var allProofTypes = new HashSet<string>(Pwrm0001ArtifactTypes.ProofTypeDisplayLabels.Keys);
+        var allProofTypes = Pwrm0001ArtifactTypes.RequiredProofTypes;
         var byInstruction = programRecs
             .GroupBy(r => GetStr(r, "instruction_id") ?? "")
             .Where(g => !string.IsNullOrEmpty(g.Key))
@@ -34,6 +34,7 @@ static class Pwrm0001MonitoringReportHandler
 
         int totalCollections = 0, completeCollections = 0;
         var collectorIds = new HashSet<string>(StringComparer.Ordinal);
+        var instructionSummaries = new List<object>();
 
         foreach (var group in byInstruction)
         {
@@ -48,6 +49,9 @@ static class Pwrm0001MonitoringReportHandler
                 .Where(r => string.Equals(GetStr(r, "artifact_type"),
                     Pwrm0001ArtifactTypes.WEIGHBRIDGE_RECORD, StringComparison.Ordinal))
                 .ToList();
+
+            string? workerId = null;
+            decimal? netWeightKg = null;
 
             if (weighbridgeRecs.Count > 0)
             {
@@ -64,15 +68,32 @@ static class Pwrm0001MonitoringReportHandler
                 {
                     var pt = sp.GetProperty("plastic_type").GetString() ?? "OTHER";
                     var net = sp.GetProperty("net_weight_kg").GetDecimal();  // backend-computed
+                    netWeightKg = net;
 
                     if (plasticTotals.ContainsKey(pt)) plasticTotals[pt] += net;
                     else plasticTotals["OTHER"] += net;
                     plasticTotals["TOTAL"] += net;  // same pass
 
                     var cid = sp.TryGetProperty("collector_id", out var c) ? c.GetString() : null;
-                    if (!string.IsNullOrEmpty(cid)) collectorIds.Add(cid!);
+                    if (!string.IsNullOrEmpty(cid))
+                    {
+                        collectorIds.Add(cid!);
+                        workerId = cid;
+                    }
                 }
             }
+
+            int proofPresentCount = typesInGroup.Intersect(allProofTypes).Count();
+
+            instructionSummaries.Add(new
+            {
+                instruction_id = group.Key,
+                worker_id = workerId,
+                net_weight_kg = netWeightKg,
+                instruction_status = isComplete ? "COMPLETE" : "PENDING",
+                proof_present_count = proofPresentCount,
+                proof_required_count = allProofTypes.Count
+            });
         }
 
         var incompleteCollections = totalCollections - completeCollections;
@@ -101,7 +122,8 @@ static class Pwrm0001MonitoringReportHandler
                 pollution_prevention = true,
                 circular_economy = true,
                 do_no_significant_harm_declared = true
-            }
+            },
+            instructions = instructionSummaries
         };
 
         // Write unconditionally — even on empty result

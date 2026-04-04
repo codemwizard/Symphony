@@ -9,6 +9,15 @@ static class Pwrm0001ArtifactTypes
     public const string INVENTORY_RECEIPT = "INVENTORY_RECEIPT";
     public const string WAYBILL_IMAGE = "WAYBILL_IMAGE";
 
+    public static readonly IReadOnlySet<string> RequiredProofTypes =
+        new HashSet<string>(StringComparer.Ordinal)
+        {
+            WEIGHBRIDGE_RECORD,
+            COLLECTION_PHOTO,
+            QUALITY_AUDIT_RECORD,
+            TRANSFER_MANIFEST
+        };
+
     public static readonly IReadOnlyDictionary<string, string> ProofTypeDisplayLabels =
         new Dictionary<string, string>(StringComparer.Ordinal)
         {

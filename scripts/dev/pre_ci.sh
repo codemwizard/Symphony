@@ -37,7 +37,7 @@ export PRE_CI_CONTEXT=1
 
 # Unique run ID. Evidence files embed this; pre-generated outputs won't match.
 # Stable ID derivation: uses the git tree hash to ensure Local ID == CI ID.
-PRE_CI_RUN_ID="${PRE_CI_RUN_ID:-rem-$(git write-tree 2>/dev/null | cut -c1-12 || echo "no-tree")}"
+PRE_CI_RUN_ID="${PRE_CI_RUN_ID:-rem-$(git rev-parse HEAD 2>/dev/null | cut -c1-12 || echo "no-sha")}"
 export PRE_CI_RUN_ID
 
 # Strip known bypass variables. Presence indicates an exploit attempt.

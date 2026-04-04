@@ -2,13 +2,13 @@
   "check_id": "GF-W1-FNC-004",
   "task_id": "GF-W1-FNC-004",
   "status": "PASS",
-  "timestamp_utc": "2026-04-04T21:49:49Z",
-  "generated_at": "2026-04-04T21:49:49.579781+00:00",
-  "git_sha": "fff84d0864236cd2adf4a57f413274881651e67a",
-  "pre_ci_run_id": "rem-eeed6e26764c",
+  "timestamp_utc": "2026-04-04T22:36:58Z",
+  "generated_at": "2026-04-04T22:36:58.317837+00:00",
+  "git_sha": "3d1092779d09cd7b7d12933eeb7a156301e5447d",
+  "pre_ci_run_id": "rem-3d1092779d09",
   "source_file": "schema/migrations/0110_gf_fn_regulatory_transitions.sql",
   "source_file_sha256": "40b4dbf25a900b152edf620aefc8f7c003955df50bb6fd6f9d6e267be182d5fc",
   "command_output": "{\"probes\": [{\"probe\": \"get_checkpoint_requirements\", \"status\": \"PASS\"},{\"probe\": \"query_authority_decisions\", \"status\": \"PASS\"},{\"probe\": \"transition_asset_status\", \"status\": \"PASS\"},{\"probe\": \"attempt_lifecycle_transition\", \"status\": \"PASS\"},{\"probe\": \"record_authority_decision\", \"status\": \"PASS\"}]}",
-  "_signature": "b95124ec0472da9fec7503d9e0839931e5050a12e047c70def03a43b9dd1a27c",
+  "_signature": "f0faa30b6df5cafec834b4f770b247a4ac022d43e65b2105b1b210ab2245cf41",
   "_signing_version": "symphony-v1"
 }
