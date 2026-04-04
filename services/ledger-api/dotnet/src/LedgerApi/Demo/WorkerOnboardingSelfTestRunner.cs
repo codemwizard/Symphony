@@ -25,7 +25,7 @@ public static class WorkerOnboardingSelfTestRunner
         var smsLogPath = $"/tmp/pwrm001_selftest_sms.ndjson";
         if (File.Exists(submissionsPath)) File.Delete(submissionsPath);
         if (File.Exists(smsLogPath)) File.Delete(smsLogPath);
-        
+
         Environment.SetEnvironmentVariable("EVIDENCE_LINK_SUBMISSIONS_FILE", submissionsPath);
         Environment.SetEnvironmentVariable("EVIDENCE_LINK_SMS_DISPATCH_FILE", smsLogPath);
         Environment.SetEnvironmentVariable("SYMPHONY_KNOWN_TENANTS", tenantId);
@@ -76,7 +76,7 @@ public static class WorkerOnboardingSelfTestRunner
         // Test Case 4: Pilot-demo issue with worker_id = worker001Id + WASTE_COLLECTOR → 200; token has lat=-15.4167, lon=28.2833
         // Note: This requires the pilot-demo route which we can't directly test here, so we'll simulate the logic
         var worker001Entry = await global::SupplierPolicyStore.GetSupplierAsync(tenantId, worker001Id);
-        var test4Pass = worker001Entry is not null 
+        var test4Pass = worker001Entry is not null
             && worker001Entry.supplier_type == "WORKER"
             && worker001Entry.registered_latitude == -15.4167m
             && worker001Entry.registered_longitude == 28.2833m;
@@ -131,7 +131,7 @@ public static class WorkerOnboardingSelfTestRunner
 
         Console.WriteLine($"Evidence written: {evidencePath}");
         Console.WriteLine($"Test results: {tests.Count(x => x.status == "PASS")}/{tests.Length} passed");
-        
+
         return status == "PASS" ? 0 : 1;
     }
 

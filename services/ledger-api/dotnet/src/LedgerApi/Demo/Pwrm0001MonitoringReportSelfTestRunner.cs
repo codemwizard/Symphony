@@ -157,7 +157,7 @@ public static class Pwrm0001MonitoringReportSelfTestRunner
         // This bypasses the duplicate check to test the aggregation logic
         // seq 0: PET 12.4kg, seq 1: HDPE 8.1kg
         var instructionId = "CHG-SELFTEST-004-T3-001";
-        
+
         await global::EvidenceLinkSubmissionLog.AppendAsync(new
         {
             tenant_id = tenantId,

@@ -1,7 +1,7 @@
 {
   "check_id": "DB-EXPAND-CONTRACT-POLICY",
-  "timestamp_utc": "2026-04-02T01:59:45Z",
-  "git_sha": "6d4d95d9122b976f7a571081d6a128e72e52952e",
+  "timestamp_utc": "2026-04-04T21:46:42Z",
+  "git_sha": "fff84d0864236cd2adf4a57f413274881651e67a",
   "schema_fingerprint": "1f92363c69ba235e552a6aac05045062fc0097fc93cde3b89e76455b80628019",
   "status": "PASS",
   "scanned_files": [
@@ -103,7 +103,8 @@
     "0110_gf_fn_regulatory_transitions.sql",
     "0112_gf_fn_verifier_read_token.sql",
     "0113_gf_fn_confidence_enforcement.sql",
-    "0114_gf_fn_asset_lifecycle.sql"
+    "0114_gf_fn_asset_lifecycle.sql",
+    "0114_grant_onboarding_tables_to_app_role.sql"
   ],
   "violation_count": 0,
   "violations": [],

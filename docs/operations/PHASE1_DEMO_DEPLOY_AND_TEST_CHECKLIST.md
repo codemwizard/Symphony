@@ -4,24 +4,18 @@
 This checklist now points operators to the canonical **host-based** demo path.
 
 Primary operator document:
-- `docs/operations/SYMPHONY_DEMO_E2E_RUNBOOK.md`
+- `docs/operations/PILOT_DEMO_DEPLOYMENT.md`
 
 This checklist is now a compact entrypoint and evidence checklist, not the authoritative run sequence.
 
 ## Canonical Local Path
-Use the host-based runbook for the current server.
+Use the instructions in `PILOT_DEMO_DEPLOYMENT.md` for the current server deployment.
 
 Required posture:
 - use a clean deployment checkout tracking `origin/main`
 - do not run the demo from an active development checkout
 - Dell laptop remains browser-only
-- do not use `pre_ci.sh` as the operator deploy step for this local path
-
-Primary commands:
-```bash
-bash scripts/dev/run_demo_e2e.sh --run-id <run_id> --dry-run
-bash scripts/dev/run_demo_e2e.sh --run-id <run_id>
-```
+- OpenBao and PostgreSQL containers must be running locally
 
 ## Required Local Preconditions
 - PostgreSQL reachable on `127.0.0.1:5432`

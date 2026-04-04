@@ -1961,6 +1961,18 @@
             <div id="uploadStatus" style="font-size: 10px; margin-top: 6px; height: 12px;"></div>
           </div>
 
+          <div class="sec" style="background: rgba(61, 184, 90, 0.03); padding: 12px; margin-top: 10px; border-radius: 4px; border: 1px dashed var(--bright);">
+            <div class="sec-lbl" style="margin-bottom: 8px; color: var(--bright);">Demo Worker Link</div>
+            <div style="display: flex; flex-direction: column; gap: 8px;">
+              <select id="workerSelector" style="background: #111; color: var(--bright); border: 1px solid var(--bright); padding: 6px; border-radius: 4px; font-family: var(--mono); font-size: 11px; cursor: pointer;">
+                <option value="worker-chunga-001">worker-chunga-001</option>
+                <option value="worker-chunga-002">worker-chunga-002</option>
+              </select>
+              <button class="btn btn-primary" style="padding: 6px; font-size: 9px;" onclick="issueDemoToken()">Generate Worker Link</button>
+            </div>
+            <div id="tokenLinkResult" style="font-size: 10px; margin-top: 8px; word-break: break-all; color: var(--gold-lt);"></div>
+          </div>
+
           <div class="sec">
             <div class="sec-lbl">Actions</div>
             <button class="btn btn-primary" id="submitBtn" onclick="submitInstruction()">Submit to Symphony</button>
@@ -2270,51 +2282,7 @@
                   </tr>
                 </thead>
                 <tbody id="timelineRows">
-                  <tr onclick="openDrill('settled1')">
-                    <td>SYM-2026-00041</td>
-                    <td>Kabwata Recycling</td>
-                    <td>Plastic Shredder</td>
-                    <td>EcoTech Supplies</td>
-                    <td>38,000</td>
-                    <td><span class="status-chip chip-auth">Settled</span></td>
-                    <td>4/4 ✓</td>
-                  </tr>
-                  <tr onclick="openDrill('settled2')">
-                    <td>SYM-2026-00038</td>
-                    <td>Matero Green Hub</td>
-                    <td>Solar Panel Array</td>
-                    <td>SunTech Zambia</td>
-                    <td>62,000</td>
-                    <td><span class="status-chip chip-auth">Settled</span></td>
-                    <td>4/4 ✓</td>
-                  </tr>
-                  <tr onclick="openDrill('hold1')" style="background:rgba(212,130,30,.03);">
-                    <td>SYM-2026-00045</td>
-                    <td>Chelstone Coop</td>
-                    <td>Biogas Unit</td>
-                    <td>GreenPower Ltd</td>
-                    <td>41,000</td>
-                    <td><span class="status-chip chip-hold">Hold</span></td>
-                    <td>2/4 ⚠</td>
-                  </tr>
-                  <tr onclick="openDrill('sim1')" style="background:rgba(212,130,30,.04);">
-                    <td>SYM-2026-00047</td>
-                    <td>Kanyama Women</td>
-                    <td>Composting Unit</td>
-                    <td>EcoTech Supplies</td>
-                    <td>35,000</td>
-                    <td><span class="status-chip chip-sim">SIM Hold</span></td>
-                    <td>3/4 ⚠</td>
-                  </tr>
-                  <tr onclick="openDrill('settled3')">
-                    <td>SYM-2026-00033</td>
-                    <td>Ndola Recyclers</td>
-                    <td>Plastic Shredder</td>
-                    <td>EcoTech Supplies</td>
-                    <td>38,000</td>
-                    <td><span class="status-chip chip-auth">Settled</span></td>
-                    <td>4/4 ✓</td>
-                  </tr>
+                  <!-- Dynamically hydrated from /pilot-demo/api/monitoring-report -->
                 </tbody>
               </table>
             </div>
@@ -3592,8 +3560,17 @@
       document.getElementById('slideout').classList.add('open');
       try {
         const raw = await adapter.getInstructionDetail(id);
-        const d = renderInstructionDetailPayload(raw) || drillData[resolveDrillKey(id)];
+        const d = renderInstructionDetailPayload(raw);
         if (!d) {
+          // Fallback to static drillData if any
+          const staticKey = resolveDrillKey(id);
+          const staticData = drillData[staticKey];
+          if (staticData) {
+              document.getElementById('drillTitle').textContent = staticData.title;
+              document.getElementById('drillRef').textContent = staticData.ref;
+              document.getElementById('drillBody').innerHTML = staticData.html;
+              return;
+          }
           document.getElementById('drillTitle').textContent = 'Not found';
           document.getElementById('drillBody').innerHTML = '<div style="font-family:var(--mono);font-size:9px;color:var(--smoke);padding:20px 0;">Instruction detail not available.</div>';
           return;
@@ -3605,6 +3582,12 @@
         document.getElementById('drillTitle').textContent = 'Error';
         document.getElementById('drillBody').innerHTML = `<div style="font-family:var(--mono);font-size:9px;color:var(--red-lt);padding:20px 0;">Failed to load: ${err.message}</div>`;
       }
+    }
+
+    function resolveDrillKey(id) {
+      const raw = String(id || '').trim();
+      if (!raw) return raw;
+      return drillKeyByInstructionRef[raw] || raw;
     }
     function closeDrill() { document.getElementById('slideout').classList.remove('open'); }
 
@@ -3780,9 +3763,62 @@
         renderTimelineRows(timeline);
         renderExceptionRows(exceptions);
         renderEvidenceCompleteness(completeness);
+        
+        // Start refresh loop for dynamic timeline (Issue 5)
+        startTimelineRefresh(programId);
       } catch (err) {
         console.error('Failed to hydrate dashboard', err);
       }
+    }
+
+    let timelineInterval = null;
+    function startTimelineRefresh(programId) {
+        if (timelineInterval) clearInterval(timelineInterval);
+        timelineInterval = setInterval(async () => {
+            try {
+                const res = await fetch(`/pilot-demo/api/monitoring-report/${programId}`);
+                if (!res.ok) return;
+                const data = await res.json();
+                if (data && Array.isArray(data.instructions)) {
+                    // Map monitoring records to timeline rows
+                    const rows = data.instructions.map(ins => ({
+                        instruction_id: ins.instruction_id,
+                        borrower: ins.worker_id || 'Worker',
+                        asset: 'Plastic Collection',
+                        supplier: 'Chunga Dumpsite',
+                        amount: ins.net_weight_kg ? (parseFloat(ins.net_weight_kg).toFixed(1) + ' kg') : '0 kg',
+                        status: ins.instruction_status,
+                        proofs: `${ins.proof_present_count || 0} / ${ins.proof_required_count || 4} present`
+                    }));
+                    renderTimelineRows(rows);
+                }
+            } catch (e) {
+                console.warn('Silent timeline refresh failed', e);
+            }
+        }, 5000);
+    }
+
+    async function issueDemoToken() {
+        const workerId = document.getElementById('workerSelector').value;
+        const resultEl = document.getElementById('tokenLinkResult');
+        resultEl.textContent = 'Issuing token...';
+        try {
+            const r = await fetch(`/pilot-demo/api/evidence-links/issue`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    worker_id: workerId,
+                    allowlisted_submitter_class: 'WASTE_COLLECTOR'
+                })
+            });
+            if (!r.ok) throw new Error(`Issue failed: ${r.status}`);
+            const data = await r.json();
+            const url = `${window.location.origin}/pilot-demo/evidence-link#token=${data.token}`;
+            resultEl.innerHTML = `Link issued: <a href="${url}" target="_blank" style="color:var(--bright);text-decoration:underline;">Open Worker Interface</a>`;
+        } catch (e) {
+            resultEl.textContent = 'Error: ' + e.message;
+            resultEl.style.color = 'var(--red-lt)';
+        }
     }
 
     // ── EXPORT (UI-WIRE-011: replace this stub with real adapter.exportProgrammeReport() call) ──
@@ -3914,7 +3950,7 @@
     // Quick Provision tool — SOLC TASK-UI-WIRE-012
     async function quickProvisionDemo() {
       if (DATA_MODE === 'STATIC_DEMO') { setOnbStatus('Cannot provision in static demo mode', 'error'); return; }
-      setOnbStatus('Provisioning demo tenant…', 'info');
+      setOnbStatus('Provisioning Chunga Dumpsite demo tenant…', 'info');
       const DEMO_TENANT_ID = '11111111-2222-3333-4444-555555555555';
       try {
         // Step 1: Register tenant
@@ -3922,46 +3958,47 @@
           method: 'POST',
           body: JSON.stringify({
             tenant_id: DEMO_TENANT_ID,
-            tenant_key: 'ten-zambiagrn',
-            display_name: 'Zambia Green MFI'
+            tenant_key: 'ten-chunga',
+            display_name: 'Chunga Dumpsite Cooperative'
           })
         });
         const actualTenantId = tenantRes.tenant_id;
         if (!actualTenantId) throw new Error('Server did not return a tenant_id');
-        setOnbStatus('Tenant registered. Creating programme…', 'info');
+        setOnbStatus('Tenant registered. Creating Chunga programme…', 'info');
 
         // Step 2: Create programme
         const progData = await onbFetch('/api/admin/onboarding/programmes', {
           method: 'POST',
           body: JSON.stringify({
             tenant_id: actualTenantId,
-            programme_key: 'PGM-ZAMBIA-GRN-001',
-            display_name: 'GreenTech4CE · Solar Cluster A'
+            programme_key: 'PGM-CHUNGA-001',
+            display_name: 'Chunga Dumpsite — PWRM0001 Plastic Collection'
           })
         });
         const programmeId = progData.programme_id;
         if (!programmeId) throw new Error('Server did not return programme_id');
-        setOnbStatus('Programme created. Binding policy…', 'info');
+        setOnbStatus('Programme created. Binding Waste Policy (pwrm_001)…', 'info');
 
-        // Step 3: Bind policy (before activate — correct order)
+        // Step 3: Bind policy
         await onbFetch(`/api/admin/onboarding/programmes/${programmeId}/policy-binding`, {
           method: 'POST',
           body: JSON.stringify({
             tenant_id: actualTenantId,
-            policy_code: 'green_eq_v1'
+            policy_code: 'pwrm_001'
           })
         });
         setOnbStatus('Policy bound. Activating…', 'info');
 
-        // Step 4: Activate — requires tenant_id in body
+        // Step 4: Activate
         await onbFetch(`/api/admin/onboarding/programmes/${programmeId}/activate`, {
           method: 'PUT',
           body: JSON.stringify({ tenant_id: actualTenantId })
         });
 
-        // Refresh first, THEN show success — invariant #2
+        // Refresh first, THEN show success
         await loadOnboardingState();
-        setOnbStatus('Demo tenant provisioned successfully.', 'success');
+        setOnbStatus('Chunga Demo provisioned successfully.', 'success');
+        initDashboard();
       } catch (err) {
         setOnbStatus('Provisioning failed: ' + err.message, 'error');
         console.error('quickProvisionDemo error:', err);
@@ -4028,7 +4065,7 @@
       if (!p.policy_code) {
         html += `<button class="btn btn-primary" style="padding:4px 8px;font-size:10px;width:auto;" onclick="doRowAction('${pid}', '${tid}', 'bind')">Bind Policy</button> `;
       }
-      if (p.status === 'CREATED' && p.policy_code) {
+      if ((p.status === 'CREATED' || p.status === 'SUSPENDED') && p.policy_code) {
         html += `<button class="btn btn-warn" style="padding:4px 8px;font-size:10px;width:auto;" onclick="doRowAction('${pid}', '${tid}', 'activate')">Activate</button> `;
       }
       if (p.status === 'ACTIVE') {

@@ -22,11 +22,11 @@ public static class WeighbridgeCaptureSelfTestRunner
         // Isolated NDJSON paths
         var submissionsPath = "/tmp/pwrm002_weighbridge_submissions.ndjson";
         var smsLogPath = "/tmp/pwrm002_weighbridge_sms.ndjson";
-        
+
         // Delete at start
         if (File.Exists(submissionsPath)) File.Delete(submissionsPath);
         if (File.Exists(smsLogPath)) File.Delete(smsLogPath);
-        
+
         Environment.SetEnvironmentVariable("EVIDENCE_LINK_SUBMISSIONS_FILE", submissionsPath);
         Environment.SetEnvironmentVariable("EVIDENCE_LINK_SMS_DISPATCH_FILE", smsLogPath);
         Environment.SetEnvironmentVariable("SYMPHONY_KNOWN_TENANTS", tenantId);
@@ -94,7 +94,7 @@ public static class WeighbridgeCaptureSelfTestRunner
 
         Console.WriteLine($"Evidence written: {evidencePath}");
         Console.WriteLine($"Test results: {tests.Count(x => x.status == "PASS")}/{tests.Length} passed");
-        
+
         return status == "PASS" ? 0 : 1;
     }
 
@@ -370,14 +370,14 @@ public static class WeighbridgeCaptureSelfTestRunner
         if (submissions.Count < 2) return false;
 
         // Find our two submissions
-        var submission1 = submissions.FirstOrDefault(s => 
-            s.TryGetProperty("instruction_id", out var iid) && 
+        var submission1 = submissions.FirstOrDefault(s =>
+            s.TryGetProperty("instruction_id", out var iid) &&
             iid.GetString() == "pwrm002-wb-007");
-        var submission2 = submissions.FirstOrDefault(s => 
-            s.TryGetProperty("instruction_id", out var iid) && 
+        var submission2 = submissions.FirstOrDefault(s =>
+            s.TryGetProperty("instruction_id", out var iid) &&
             iid.GetString() == "pwrm002-wb-008");
 
-        if (submission1.ValueKind == JsonValueKind.Undefined || submission2.ValueKind == JsonValueKind.Undefined) 
+        if (submission1.ValueKind == JsonValueKind.Undefined || submission2.ValueKind == JsonValueKind.Undefined)
             return false;
 
         var hasSeq1 = submission1.TryGetProperty("sequence_number", out var seq1);

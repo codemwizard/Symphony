@@ -220,13 +220,19 @@ nginx and IIS are optional outer layers only. They are not required deployment s
 1. Install runtime prerequisites (Docker, dotnet, psql, bash)
 2. Start local dependencies:
 ```bash
-cd infra/docker && docker compose up -d
+docker compose -f infra/docker/docker-compose.yml up -d
+docker compose -f infra/openbao/docker-compose.yml up -d
 ```
-3. Run the canonical bootstrap script (compiles code, applies schema, provisions OpenBao, validates runtime):
+3. Bootstrap OpenBao and apply schema migrations:
 ```bash
-bash scripts/dev/bootstrap.sh
+bash scripts/security/openbao_bootstrap.sh
+source .env && bash scripts/db/migrate.sh
 ```
-4. Start the app on Kestrel
+4. Load Vault credentials and start the app on Kestrel:
+```bash
+source /tmp/symphony_openbao/secrets.env
+dotnet run --project services/ledger-api/dotnet/src/LedgerApi/LedgerApi.csproj
+```
 5. Provision tenant and programme per `docs/operations/GREENTECH4CE_TENANT_PROGRAMME_PROVISIONING_RUNBOOK.md`
 6. Run the operator demo gate:
 

@@ -1,0 +1,51 @@
+{
+  "check_id": "TSK-P1-DEMO-031",
+  "task_id": "TSK-P1-DEMO-031",
+  "git_sha": "eb955ca5728bfc0c8cc24610f85ab0212c57054d",
+  "timestamp_utc": "2026-04-04T19:50:11Z",
+  "status": "PASS",
+  "checks": [
+    {
+      "name": "ui_demo_control",
+      "status": "PASS",
+      "detail": "Demo Worker Link card found"
+    },
+    {
+      "name": "ui_drilldown",
+      "status": "PASS",
+      "detail": "Slideout drilldown panel found"
+    },
+    {
+      "name": "db_grants",
+      "status": "PASS",
+      "detail": "Grants found in migration 0114"
+    },
+    {
+      "name": "cs_proof_types",
+      "status": "PASS",
+      "detail": "INVENTORY_RECEIPT proof type found"
+    }
+  ],
+  "observed_paths": [
+    "schema/migrations/0114_grant_onboarding_tables_to_app_role.sql",
+    "src/supervisory-dashboard/index.html",
+    "services/ledger-api/dotnet/src/LedgerApi/Commands/Pwrm0001ArtifactTypes.cs"
+  ],
+  "observed_hashes": [
+    {
+      "schema/migrations/0114_grant_onboarding_tables_to_app_role.sql": "8784d8d05acad477d8fcf7a85af2895ae3dc7721864236e142370f1fc66ffd88"
+    },
+    {
+      "src/supervisory-dashboard/index.html": "9f4503aa0d4b7088fb6b947ded90b1ba49df87226a09b66644ad7505e3c93c0f"
+    },
+    {
+      "services/ledger-api/dotnet/src/LedgerApi/Commands/Pwrm0001ArtifactTypes.cs": "43c859840ff2e6ddcdfd30512a3caef5e2cd2e6f4663dedac1a44fbd50077405"
+    }
+  ],
+  "command_outputs": [],
+  "execution_trace": [
+    "Checking src/supervisory-dashboard/index.html for Demo Worker Link...",
+    "Checking migration 0114 for grants...",
+    "Checking Pwrm0001ArtifactTypes.cs for new proof types..."
+  ]
+}

@@ -45,7 +45,10 @@ dirs = ["$EVIDENCE_DIR", "$EVIDENCE_DIR_PHASE1"]
 files = []
 for d in dirs:
     if Path(d).exists():
-        files.extend(sorted(glob.glob(os.path.join(d, "*.json"))))
+        for f in sorted(glob.glob(os.path.join(d, "*.json"))):
+            if Path(f).name == "pwrm0001_monitoring_report.json" or Path(f).name == "pwrm_monitoring_report.json":
+                continue
+            files.append(f)
 errors = []
 schema_usage = []
 

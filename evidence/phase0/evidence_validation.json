@@ -1,7 +1,7 @@
 {
   "check_id": "EVIDENCE-SCHEMA-VALIDATION",
-  "timestamp_utc": "2026-04-02T01:59:38Z",
-  "git_sha": "6d4d95d9122b976f7a571081d6a128e72e52952e",
+  "timestamp_utc": "2026-04-04T21:46:35Z",
+  "git_sha": "fff84d0864236cd2adf4a57f413274881651e67a",
   "schema_fingerprint": "1f92363c69ba235e552a6aac05045062fc0097fc93cde3b89e76455b80628019",
   "status": "PASS",
   "checked_dirs": [
@@ -150,6 +150,8 @@
     "/home/mwiza/workspace/Symphony/evidence/phase1/gf_fnc_005.json",
     "/home/mwiza/workspace/Symphony/evidence/phase1/gf_fnc_006.json",
     "/home/mwiza/workspace/Symphony/evidence/phase1/gf_rls_runtime_verification.json",
+    "/home/mwiza/workspace/Symphony/evidence/phase1/gf_sch_001.json",
+    "/home/mwiza/workspace/Symphony/evidence/phase1/gf_sch_008.json",
     "/home/mwiza/workspace/Symphony/evidence/phase1/gf_w1_gov_005a.json",
     "/home/mwiza/workspace/Symphony/evidence/phase1/git_diff_semantics.json",
     "/home/mwiza/workspace/Symphony/evidence/phase1/hier_008_sim_swap_alerts.json",
@@ -295,6 +297,7 @@
     "/home/mwiza/workspace/Symphony/evidence/phase1/tsk_p1_demo_026_server_side_admin_proxy.json",
     "/home/mwiza/workspace/Symphony/evidence/phase1/tsk_p1_demo_027_demo_gate_split.json",
     "/home/mwiza/workspace/Symphony/evidence/phase1/tsk_p1_demo_028_image_flow.json",
+    "/home/mwiza/workspace/Symphony/evidence/phase1/tsk_p1_demo_031_verification.json",
     "/home/mwiza/workspace/Symphony/evidence/phase1/tsk_p1_esc_001__escrow_state_machine_atomic_reservation_semantics.json",
     "/home/mwiza/workspace/Symphony/evidence/phase1/tsk_p1_esc_002__escrow_invariants_cross_tenant_protections.json",
     "/home/mwiza/workspace/Symphony/evidence/phase1/tsk_p1_hier_002__programs_program_escrow_id_bridge.json",
@@ -876,6 +879,14 @@
       "schema": "default"
     },
     {
+      "file": "/home/mwiza/workspace/Symphony/evidence/phase1/gf_sch_001.json",
+      "schema": "default"
+    },
+    {
+      "file": "/home/mwiza/workspace/Symphony/evidence/phase1/gf_sch_008.json",
+      "schema": "default"
+    },
+    {
       "file": "/home/mwiza/workspace/Symphony/evidence/phase1/gf_w1_gov_005a.json",
       "schema": "default"
     },
@@ -1453,6 +1464,10 @@
     },
     {
       "file": "/home/mwiza/workspace/Symphony/evidence/phase1/tsk_p1_demo_028_image_flow.json",
+      "schema": "default"
+    },
+    {
+      "file": "/home/mwiza/workspace/Symphony/evidence/phase1/tsk_p1_demo_031_verification.json",
       "schema": "default"
     },
     {

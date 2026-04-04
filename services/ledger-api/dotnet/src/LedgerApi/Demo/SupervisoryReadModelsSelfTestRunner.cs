@@ -96,9 +96,9 @@ public static class SupervisoryReadModelsSelfTestRunner
         ctx.Request.Headers["x-submitter-msisdn"] = "+260971700700";
         _ = await global::EvidenceLinkSubmitHandler.HandleAsync(
             new global::EvidenceLinkSubmitRequest(
-                Pwrm0001ArtifactTypes.WEIGHBRIDGE_RECORD, 
-                "s3://bucket/inv-007.pdf", 
-                null, 
+                Pwrm0001ArtifactTypes.WEIGHBRIDGE_RECORD,
+                "s3://bucket/inv-007.pdf",
+                null,
                 null,
                 JsonSerializer.SerializeToElement(new
                 {
@@ -293,16 +293,16 @@ public static class SupervisoryReadModelsSelfTestRunner
             detailHasRequired = HasTopLevel(detailDoc.RootElement, "proof_rows", "raw_artifacts", "supplier_policy_context");
             detailHasAckPlaceholders = HasTopLevel(detailDoc.RootElement, "acknowledgement_state", "escalation_tier", "supervisor_interrupt_state", "ack_interrupt_projection_state");
             detailHasRawArtifacts = detailDoc.RootElement.TryGetProperty("raw_artifacts", out var rawArtifacts) && rawArtifacts.ValueKind == JsonValueKind.Array && rawArtifacts.GetArrayLength() >= 4;
-            
+
             // PWRM-003 Task 3: Verify weighbridge detail fields appear in proof_rows
             if (detailDoc.RootElement.TryGetProperty("proof_rows", out var proofRows) && proofRows.ValueKind == JsonValueKind.Array)
             {
                 foreach (var proof in proofRows.EnumerateArray())
                 {
-                    if (proof.TryGetProperty("artifact_type", out var artifactType) 
+                    if (proof.TryGetProperty("artifact_type", out var artifactType)
                         && string.Equals(artifactType.GetString(), Pwrm0001ArtifactTypes.WEIGHBRIDGE_RECORD, StringComparison.Ordinal))
                     {
-                        detailHasWeighbridgeFields = 
+                        detailHasWeighbridgeFields =
                             proof.TryGetProperty("plastic_type", out var pt) && pt.ValueKind == JsonValueKind.String &&
                             proof.TryGetProperty("net_weight_kg", out var nw) && nw.ValueKind == JsonValueKind.Number &&
                             proof.TryGetProperty("collector_id", out var cid) && cid.ValueKind == JsonValueKind.String;
@@ -315,7 +315,7 @@ public static class SupervisoryReadModelsSelfTestRunner
         // Test hard override: PGM-ZAMBIA-GRN-001 should return true even with empty submissions
         var emptySubmissions = Array.Empty<JsonElement>();
         var hardOverrideWorks = SupervisoryRevealReadModelHandler.TestIsPwrm0001Programme("PGM-ZAMBIA-GRN-001", emptySubmissions);
-        
+
         // Test generic path: requires BOTH conditions
         var nonOverrideProgramWithoutBoth = SupervisoryRevealReadModelHandler.TestIsPwrm0001Programme("OTHER-PROGRAM", emptySubmissions);
 
