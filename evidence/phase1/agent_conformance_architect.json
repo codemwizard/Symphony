@@ -1,11 +1,11 @@
 {
-  "timestamp_utc": "2026-04-04T21:42:33Z",
-  "git_sha": "fff84d0864236cd2adf4a57f413274881651e67a",
+  "timestamp_utc": "2026-04-04T22:57:39Z",
+  "git_sha": "bb5b69e48fdc970ab4d746fac4f5fa5f58eedd61",
   "schema_fingerprint": "1f92363c69ba235e552a6aac05045062fc0097fc93cde3b89e76455b80628019",
   "schema_version": "1.0",
   "status": "PASS",
-  "checked_at_utc": "2026-04-04T21:42:33.718111+00:00",
-  "git_commit": "fff84d0864236cd2adf4a57f413274881651e67a",
+  "checked_at_utc": "2026-04-04T22:57:39.906648+00:00",
+  "git_commit": "bb5b69e48fdc970ab4d746fac4f5fa5f58eedd61",
   "mode": "auto",
   "canonical_docs": [
     {
@@ -63,9 +63,6 @@
   },
   "regulated_surface_changes_detected": true,
   "regulated_surface_changed_paths": [
-    "docs/operations/PHASE1_DEMO_DEPLOY_AND_TEST_CHECKLIST.md",
-    "docs/operations/PILOT_DEMO_DEPLOYMENT.md",
-    "docs/operations/SYMPHONY_DEMO_DEPLOYMENT_GUIDE.md",
     "evidence/phase0/TSK-P0-KYC-001.json",
     "evidence/phase0/TSK-P0-KYC-002.json",
     "evidence/phase0/TSK-P0-KYC-003.json",
@@ -133,7 +130,6 @@
     "evidence/phase0/role_login_posture.json",
     "evidence/phase0/routing_fallback.json",
     "evidence/phase0/routing_fallback_validation.json",
-    "evidence/phase0/schema_hash.txt",
     "evidence/phase0/security_definer_dynamic_sql.json",
     "evidence/phase0/security_dotnet_deps_audit.json",
     "evidence/phase0/security_insecure_patterns.json",
@@ -220,13 +216,8 @@
     "evidence/phase1/tsk_p1_219_operator_onboarding_console.json",
     "evidence/phase1/tsk_p1_220_canonical_bootstrap.json",
     "evidence/phase1/tsk_p1_demo_017_provisioning_runbook.json",
-    "evidence/phase1/tsk_p1_demo_031_verification.json",
     "evidence/phase1/verify_agent_conformance_spec.json",
-    "evidence/security_remediation/r_026_run_task_strict_enforcement.json",
-    "schema/migrations/0114_grant_onboarding_tables_to_app_role.sql",
-    "scripts/audit/validate_evidence_json.sh",
-    "scripts/audit/validate_evidence_schema.sh",
-    "scripts/audit/verify_tsk_p1_demo_031.sh"
+    "evidence/security_remediation/r_026_run_task_strict_enforcement.json"
   ],
   "regulated_surface_rule_source": "docs/operations/REGULATED_SURFACE_PATHS.yml",
   "regulated_surface_patterns": [
@@ -244,7 +235,7 @@
     "mode": "range",
     "base_ref": "refs/remotes/origin/main",
     "head_ref": "HEAD",
-    "merge_base": "2aacd7c24d5ad6ae3af5284b302857426a88a9b9"
+    "merge_base": "3d1092779d09cd7b7d12933eeb7a156301e5447d"
   },
   "approval_required": true,
   "approval_metadata_present": true,

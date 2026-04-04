@@ -3802,13 +3802,20 @@
         const workerId = document.getElementById('workerSelector').value;
         const resultEl = document.getElementById('tokenLinkResult');
         resultEl.textContent = 'Issuing token...';
+        const tenantId = window.symphonyContext?.tenantId || '0ce54603-98bc-4ad3-816d-4d01395a9b4a';
+        const programId = window.symphonyContext?.programId || 'PGM-ZAMBIA-GRN-001';
         try {
             const r = await fetch(`/pilot-demo/api/evidence-links/issue`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
-                    worker_id: workerId,
-                    allowlisted_submitter_class: 'WASTE_COLLECTOR'
+                    tenant_id: tenantId,
+                    program_id: programId,
+                    instruction_id: 'DEMO-' + Date.now(),
+                    submitter_class: 'WASTE_COLLECTOR',
+                    submitter_msisdn: '+260900000000',
+                    expires_in_seconds: 86400,
+                    worker_id: workerId
                 })
             });
             if (!r.ok) throw new Error(`Issue failed: ${r.status}`);
