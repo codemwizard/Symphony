@@ -1,0 +1,123 @@
+schema_version: 1
+phase: '1'
+task_id: PWRM-001-T1
+title: Add WASTE_COLLECTOR to submitter class allowlist so that waste picker tokens can be issued
+owner_role: IMPLEMENTER
+status: planned
+priority: HIGH
+risk_class: INTEGRITY
+blast_radius: APP_LAYER
+
+intent: >-
+  The EvidenceLinkIssueHandler currently has no explicit allowlist for submitter_class values,
+  meaning WASTE_COLLECTOR tokens cannot be issued. This task introduces a HashSet-based allowlist
+  that accepts exactly the five valid classes including WASTE_COLLECTOR, and returns a structured
+  400 INVALID_SUBMITTER_CLASS for any value outside the set. Must complete before T5 (proxy route)
+  which depends on the allowlist being enforced on the generic route first.
+
+anti_patterns:
+  - Using regex or prefix matching instead of exact HashSet comparison with StringComparer.Ordinal
+  - Adding WASTE_COLLECTOR without verifying all existing classes remain in the set
+  - Marking completed without confirming existing self-tests (SUPPLIER, FIELD_OFFICER, BORROWER, VENDOR) still pass
+
+out_of_scope:
+  - Any changes to GPS injection or worker_id handling (that is T5)
+  - Any changes to CommandContracts.cs or supplier_type field (that is T2)
+
+stop_conditions:
+  - If ValidSubmitterClasses HashSet uses StringComparer other than Ordinal -> STOP
+  - If any existing passing submitter_class is removed from the set -> STOP
+
+proof_guarantees:
+  - Self-test runner confirms WASTE_COLLECTOR returns 200 on generic route
+  - Self-test runner confirms unknown class returns 400 INVALID_SUBMITTER_CLASS
+
+proof_limitations:
+  - Self-test runs in-process; does not test the HTTP stack end-to-end
+
+depends_on: []
+
+blocks:
+  - PWRM-001-T5
+  - PWRM-001-T7
+
+touches:
+  - services/ledger-api/Commands/EvidenceLinkHandlers.cs
+  - tasks/PWRM-001-T1/meta.yml
+
+invariants: []
+
+work:
+  - '[ID pwrm001_t1_work_item_01] Add ValidSubmitterClasses HashSet<string> with StringComparer.Ordinal
+    to EvidenceLinkIssueHandler containing: VENDOR, FIELD_OFFICER, BORROWER, SUPPLIER, WASTE_COLLECTOR.'
+  - '[ID pwrm001_t1_work_item_02] In HandleAsync, after the null/whitespace check on submitter_class,
+    add allowlist check: if not in ValidSubmitterClasses return 400 with error_code INVALID_SUBMITTER_CLASS.'
+  - '[ID pwrm001_t1_work_item_03] Confirm all existing self-tests that pass SUPPLIER, FIELD_OFFICER,
+    BORROWER, VENDOR still pass after the change.'
+
+acceptance_criteria:
+  - '[ID pwrm001_t1_work_item_01] [ID pwrm001_t1_work_item_02] submitter_class = "WASTE_COLLECTOR"
+    on the generic route returns 200.'
+  - '[ID pwrm001_t1_work_item_02] submitter_class = "UNKNOWN_CLASS" returns 400 with
+    error_code = "INVALID_SUBMITTER_CLASS".'
+  - '[ID pwrm001_t1_work_item_03] All previously passing submitter classes (VENDOR, FIELD_OFFICER,
+    BORROWER, SUPPLIER) continue to return 200.'
+
+negative_tests:
+  - id: PWRM-001-T1-N1
+    description: >-
+      submitter_class = "UNKNOWN_CLASS" submitted to the generic evidence-links/issue route
+      must return 400 with error_code INVALID_SUBMITTER_CLASS and not proceed to token issuance.
+    required: true
+  - id: PWRM-001-T1-N2
+    description: >-
+      submitter_class = "" (empty string) must be rejected before the allowlist check reaches
+      the HashSet; the whitespace guard fires first returning 400.
+    required: true
+
+positive_tests:
+  - id: PWRM-001-T1-P1
+    description: >-
+      submitter_class = "WASTE_COLLECTOR" with valid tenant and instruction returns 200
+      and a signed token.
+    required: true
+
+verification:
+  - dotnet run --self-test-worker-onboarding
+  - python3 scripts/audit/validate_evidence.py --task PWRM-001-T1 --evidence evidence/phase1/pwrm_worker_onboarding.json
+  - RUN_PHASE1_GATES=1 bash scripts/dev/pre_ci.sh
+
+evidence:
+  - path: evidence/phase1/pwrm_worker_onboarding.json
+    must_include:
+      - task_id
+      - git_sha
+      - timestamp_utc
+      - status
+      - checks
+      - allowlist_classes_confirmed
+      - invalid_class_rejection_confirmed
+
+failure_modes:
+  - ValidSubmitterClasses missing WASTE_COLLECTOR => FAIL
+  - Allowlist check placed after GPS injection instead of before => CRITICAL_FAIL
+  - Existing classes removed from set causing regression => FAIL
+  - Evidence file missing => BLOCKED
+
+must_read:
+  - docs/operations/AI_AGENT_OPERATION_MANUAL.md
+  - .kiro/specs/pwrm-001-worker-onboarding/design.md
+  - .kiro/specs/pwrm-001-worker-onboarding/requirements.md
+  - .kiro/steering/pwrm0001-domain-rules.md
+  - .kiro/steering/symphony-platform-conventions.md
+
+implementation_plan: docs/plans/phase1/PWRM-001-T1/PLAN.md
+implementation_log: docs/plans/phase1/PWRM-001-T1/EXEC_LOG.md
+
+notes: >-
+  Root task for PWRM-001. The allowlist must be in place before T5 adds the pilot-demo proxy
+  route, so the proxy can rely on the generic handler to enforce the class check after GPS
+  injection. StringComparer.Ordinal is non-negotiable per platform conventions.
+client: cursor
+assigned_agent: implementer
+model: <UNASSIGNED>

@@ -60,11 +60,22 @@ record EvidenceLinkIssueRequest(
     int? expires_in_seconds
 );
 
+record PilotDemoEvidenceLinkIssueRequest(
+    string? worker_id,
+    string tenant_id,
+    string instruction_id,
+    string program_id,
+    string submitter_class,
+    string submitter_msisdn,
+    int? expires_in_seconds
+);
+
 record EvidenceLinkSubmitRequest(
     string artifact_type,
     string artifact_ref,
     decimal? latitude,
-    decimal? longitude
+    decimal? longitude,
+    JsonElement? structured_payload = null
 );
 
 record SignedInstructionGenerateRequest(
@@ -93,7 +104,8 @@ record SupplierRegistryUpsertRequest(
     string payout_target,
     decimal? registered_latitude,
     decimal? registered_longitude,
-    bool active
+    bool active,
+    string? supplier_type = null
 );
 
 record ProgramSupplierAllowlistUpsertRequest(

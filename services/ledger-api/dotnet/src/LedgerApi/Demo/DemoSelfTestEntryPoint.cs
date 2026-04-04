@@ -24,7 +24,11 @@ public static class DemoSelfTestEntryPoint
             ["--self-test-msisdn-submitter-match"] = (logger, ct) => MsisdnSubmitterMatchSelfTestRunner.RunAsync(logger, ct),
             ["--self-test-signed-egress"] = (logger, ct) => SignedInstructionEgressSelfTestRunner.RunAsync(logger, ct),
             ["--self-test-supplier-policy"] = (logger, ct) => SupplierPolicySelfTestRunner.RunAsync(logger, ct),
-            ["--self-test-supervisory-read-models"] = (logger, ct) => SupervisoryReadModelsSelfTestRunner.RunAsync(logger, ct)
+            ["--self-test-supervisory-read-models"] = (logger, ct) => SupervisoryReadModelsSelfTestRunner.RunAsync(logger, ct),
+            ["--self-test-worker-onboarding"] = (logger, ct) => WorkerOnboardingSelfTestRunner.RunAsync(logger, ct),
+            ["--self-test-pwrm002-task4"] = (logger, ct) => Pwrm002Task4ValidationRunner.RunAsync(logger, ct),
+            ["--self-test-weighbridge-capture"] = (logger, ct) => WeighbridgeCaptureSelfTestRunner.RunAsync(logger, ct),
+            ["--self-test-pwrm-monitoring-report"] = (logger, ct) => Pwrm0001MonitoringReportSelfTestRunner.RunAsync(logger, ct)
         };
 
     public static async Task<int?> TryRunAsync(string[] args, string runtimeProfile, ILogger logger, CancellationToken cancellationToken)

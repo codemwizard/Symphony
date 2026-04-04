@@ -2189,7 +2189,7 @@
               <div
                 style="font-family:var(--mono);font-size:8px;letter-spacing:.3em;text-transform:uppercase;color:var(--gold);opacity:.65;margin-bottom:4px;">
                 Programme Overview</div>
-              <div style="font-family:var(--serif);font-size:22px;color:#fff;">GreenTech4CE · Solar Cluster A</div>
+              <div style="font-family:var(--serif);font-size:22px;color:#fff;" id="dashProgrammeHeader">GreenTech4CE · Solar Cluster A</div>
               <div
                 style="font-family:var(--mono);font-size:8.5px;color:var(--smoke);opacity:.5;margin-top:3px;letter-spacing:.1em;">
                 Reporting Period: 01 Jan – 31 Mar 2026 · Zambia Green MFI</div>
@@ -2198,15 +2198,18 @@
               <button class="export-btn" id="exportBtn" onclick="triggerExport()">
                 <span>⬇</span> Export Pack
               </button>
+              <button class="export-btn" id="monitoringReportBtn" onclick="generateMonitoringReport()">
+                <span>📊</span> Generate PWRM0001 Monitoring Report
+              </button>
             </div>
           </div>
 
           <!-- Programme bar -->
           <div class="programme-bar">
             <div class="pb-item">
-              <div class="pb-label">Evidence Submissions</div>
+              <div class="pb-label" id="pbProgrammeLabel">Evidence Submissions</div>
               <div class="pb-value" id="pbEvidenceSubmissions">18</div>
-              <div class="pb-sub" id="pbProgrammeLabel">Q1 2026</div>
+              <div class="pb-sub" id="pbProgrammeSub">Q1 2026</div>
             </div>
             <div class="pb-item">
               <div class="pb-label">Timeline Events</div>
@@ -2227,6 +2230,23 @@
               <div class="pb-label">As Of</div>
               <div class="pb-value amber" id="pbAsOf">—</div>
               <div class="pb-sub" id="pbModeState">HYBRID</div>
+            </div>
+          </div>
+
+          <!-- Monitoring Report Summary -->
+          <div id="report-summary" style="display:none;background:var(--surface);border:1px solid var(--border);border-radius:3px;padding:18px 22px;margin-bottom:20px;">
+            <div style="font-family:var(--mono);font-size:8px;letter-spacing:.3em;text-transform:uppercase;color:var(--gold);opacity:.75;margin-bottom:12px;">PWRM0001 Monitoring Report Summary</div>
+            <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:16px;">
+              <div class="pb-item">
+                <div class="pb-label">Total Collections</div>
+                <div class="pb-value green" id="total-collections-val">0</div>
+                <div class="pb-sub">from monitoring report</div>
+              </div>
+              <div class="pb-item">
+                <div class="pb-label">Total Weight (kg)</div>
+                <div class="pb-value green" id="total-weight-val">0.00</div>
+                <div class="pb-sub">TOTAL plastic collected</div>
+              </div>
             </div>
           </div>
 
@@ -2940,6 +2960,20 @@
     const SYMPHONY_API_BASE = '/v1'; // update to real base URL when wiring
     const PILOT_DEMO_PROXY_BASE = '/pilot-demo/api';
 
+    // ── PWRM0001 PROOF LABELS (Task 5) ────────────────────────────
+    // Mirrors ProofTypeDisplayLabels map from backend
+    const PROOF_LABELS = {
+      'WEIGHBRIDGE_RECORD':   'Weighbridge Collection Record',
+      'COLLECTION_PHOTO':     'Field Collection Photo',
+      'QUALITY_AUDIT_RECORD': 'Quality Audit Record',
+      'TRANSFER_MANIFEST':    'Offtake Transfer Manifest'
+    };
+    
+    function getProofLabel(type) {
+      return PROOF_LABELS[type] ?? type;
+    }
+    // ──────────────────────────────────────────────────────────────
+
     // ── ADAPTER (UI-WIRE-002) ──────────────────────────────────────
     // Each method returns a Promise. In STATIC_DEMO mode it resolves immediately
     // with hardcoded data. In HYBRID/LIVE mode it calls the real Symphony API.
@@ -3512,10 +3546,23 @@
         const rowClass = status === 'PRESENT' ? 'ev-present' : status === 'FLAGGED' ? 'ev-failed' : status === 'FAILED' ? 'ev-failed' : 'ev-missing';
         const indClass = status === 'PRESENT' ? 'ind-present' : status === 'FLAGGED' ? 'ind-failed' : status === 'FAILED' ? 'ind-failed' : 'ind-missing';
         const badgeClass = status === 'PRESENT' ? 'present' : status === 'FLAGGED' ? 'failed' : status === 'FAILED' ? 'failed' : 'missing';
-        const meta = [proof.artifact_type, proof.gps_result, proof.msisdn_result, proof.submitter_class, proof.submitted_at_utc]
-          .filter(Boolean)
-          .join(' · ');
-        return `<div class="ev-row ${rowClass}"><div class="ind ${indClass}"></div><div><div class="ev-name">${proof.proof_type_id} · ${proof.label}</div><div class="ev-meta">${meta || 'No detail available'}</div></div><div class="ev-badge ${badgeClass}">${status}</div></div>`;
+        
+        // Use getProofLabel for display label (Task 5)
+        const displayLabel = getProofLabel(proof.proof_type_id || proof.artifact_type);
+        
+        // Build metadata line
+        const metaParts = [proof.artifact_type, proof.gps_result, proof.msisdn_result, proof.submitter_class, proof.submitted_at_utc]
+          .filter(Boolean);
+        
+        // Add plastic type badge + net weight for WEIGHBRIDGE_RECORD (Task 5)
+        if (proof.artifact_type === 'WEIGHBRIDGE_RECORD' && proof.plastic_type) {
+          metaParts.push(`<span class="ev-badge present" style="display:inline-block;margin:0 4px;">${proof.plastic_type}</span>`);
+          metaParts.push(`${proof.net_weight_kg} kg`);
+        }
+        
+        const meta = metaParts.join(' · ');
+        
+        return `<div class="ev-row ${rowClass}"><div class="ind ${indClass}"></div><div><div class="ev-name">${proof.proof_type_id} · ${displayLabel}</div><div class="ev-meta">${meta || 'No detail available'}</div></div><div class="ev-badge ${badgeClass}">${status}</div></div>`;
       }).join('');
       const rawArtifactHtml = rawArtifacts.map(artifact => {
         const coords = artifact.latitude != null && artifact.longitude != null
@@ -3576,8 +3623,28 @@
       const present = (completeness || []).filter(x => String(x.status || '').toUpperCase() === 'PRESENT').length;
       const total = (completeness || []).length;
       const percent = total > 0 ? Math.round((present / total) * 100) : 0;
+      
+      // PWRM0001 detection (Task 5) — hard check on programme ID
+      const programId = summary?.programId || fallbackData().programme_summary?.programId || fallbackData().action_presets?.programme_id || '';
+      const isPwrm0001 = (programId === 'PGM-ZAMBIA-GRN-001');
+      
+      // Update programme header and summary card label based on PWRM0001 mode
+      const headerEl = document.getElementById('dashProgrammeHeader');
+      if (headerEl) {
+        headerEl.textContent = isPwrm0001 
+          ? 'Chunga Dumpsite — PWRM0001 Plastic Collection'
+          : (summary?.name || 'GreenTech4CE · Solar Cluster A');
+      }
+      
+      const summaryLabelEl = document.getElementById('pbProgrammeLabel');
+      if (summaryLabelEl) {
+        summaryLabelEl.textContent = isPwrm0001 
+          ? 'Collection Programme (PWRM0001)'
+          : 'Evidence Submissions';
+      }
+      
       document.getElementById('pbEvidenceSubmissions').textContent = String(evidenceSubmissions);
-      document.getElementById('pbProgrammeLabel').textContent = fallbackData().programme_summary?.name || 'pilot-demo';
+      document.getElementById('pbProgrammeSub').textContent = fallbackData().programme_summary?.name || 'pilot-demo';
       document.getElementById('pbTimelineEvents').textContent = String(timelineEvents);
       document.getElementById('pbTimelineSub').textContent = 'observed events';
       document.getElementById('pbExceptionCount').textContent = String(exceptionCount);
@@ -3740,6 +3807,51 @@
         btn.classList.remove('loading'); btn.innerHTML = '<span>⬇</span> Export Pack';
         showExportStatus(`Export failed: ${err.message}`, 'error');
       }
+    }
+
+    // ── PWRM0001 MONITORING REPORT (PWRM-004 Task 3) ──
+    async function generateMonitoringReport() {
+      const programId = window.symphonyContext?.programId ?? 'PGM-ZAMBIA-GRN-001';
+      const btn = document.getElementById('monitoringReportBtn');
+      btn.classList.add('loading');
+      btn.innerHTML = '<span>⟳</span> Generating…';
+      
+      try {
+        const res = await fetch(`/pilot-demo/api/monitoring-report/${programId}`);
+        const data = await res.json();
+        
+        if (!res.ok) {
+          showError(data.error_code ?? 'REPORT_FAILED');
+          btn.classList.remove('loading');
+          btn.innerHTML = '<span>📊</span> Generate PWRM0001 Monitoring Report';
+          return;
+        }
+
+        // Trigger JSON download
+        const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+        const a = Object.assign(document.createElement('a'), {
+          href: URL.createObjectURL(blob),
+          download: 'pwrm0001_monitoring_report.json'
+        });
+        a.click();
+
+        // Display summary in cards
+        document.getElementById('total-collections-val').textContent = data.total_collections ?? 0;
+        document.getElementById('total-weight-val').textContent = (data.plastic_totals_kg?.TOTAL ?? 0).toFixed(2);
+        document.getElementById('report-summary').style.display = 'block';
+        
+        btn.classList.remove('loading');
+        btn.innerHTML = '<span>📊</span> Generate PWRM0001 Monitoring Report';
+        showExportStatus('Monitoring report generated successfully', 'success');
+      } catch (e) {
+        showError('NETWORK_ERROR');
+        btn.classList.remove('loading');
+        btn.innerHTML = '<span>📊</span> Generate PWRM0001 Monitoring Report';
+      }
+    }
+
+    function showError(errorCode) {
+      showExportStatus(`Error: ${errorCode}`, 'error');
     }
 
     function showExportStatus(msg, type) {

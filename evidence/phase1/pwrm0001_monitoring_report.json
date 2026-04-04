@@ -1,0 +1,24 @@
+{
+  "program_id": "PGM-SELFTEST-PWRM004",
+  "generated_at_utc": "2026-04-03T13:20:06.8751895\u002B00:00",
+  "total_collections": 2,
+  "complete_collections": 1,
+  "incomplete_collections": 1,
+  "worker_count": 1,
+  "proof_completeness_rate": 0.5,
+  "exception_count": 1,
+  "plastic_totals_kg": {
+    "PET": 12.4,
+    "HDPE": 8.1,
+    "LDPE": 0,
+    "PP": 0,
+    "PS": 0,
+    "OTHER": 0,
+    "TOTAL": 20.5
+  },
+  "zgft_waste_sector_alignment": {
+    "pollution_prevention": true,
+    "circular_economy": true,
+    "do_no_significant_harm_declared": true
+  }
+}

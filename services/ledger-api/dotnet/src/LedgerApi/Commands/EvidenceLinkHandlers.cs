@@ -7,6 +7,9 @@ using Microsoft.AspNetCore.Http;
 static class EvidenceLinkIssueHandler
 {
     private static readonly Regex MsisdnRegex = new(@"^\+?[0-9]{8,15}$", RegexOptions.Compiled);
+    private static readonly HashSet<string> ValidSubmitterClasses =
+        new(StringComparer.Ordinal)
+        { "VENDOR", "FIELD_OFFICER", "BORROWER", "SUPPLIER", "WASTE_COLLECTOR" };
 
     public static async Task<HandlerResult> HandleAsync(EvidenceLinkIssueRequest request, ILogger logger, CancellationToken cancellationToken)
     {
@@ -26,6 +29,14 @@ static class EvidenceLinkIssueHandler
         if (string.IsNullOrWhiteSpace(request.submitter_class))
         {
             errors.Add("submitter_class is required");
+        }
+        else if (!ValidSubmitterClasses.Contains(request.submitter_class.Trim()))
+        {
+            return new HandlerResult(StatusCodes.Status400BadRequest, new
+            {
+                error_code = "INVALID_SUBMITTER_CLASS",
+                errors = new[] { $"submitter_class '{request.submitter_class}' is not valid" }
+            });
         }
         if (string.IsNullOrWhiteSpace(request.submitter_msisdn) || !MsisdnRegex.IsMatch(request.submitter_msisdn.Trim()))
         {
@@ -207,6 +218,35 @@ static class EvidenceLinkSubmitHandler
             }
         }
 
+        // FIX F11: WEIGHBRIDGE_RECORD requires structured_payload (pilot policy, no exceptions)
+        decimal? storedNetWeight = null;
+        if (string.Equals(request.artifact_type.Trim(), Pwrm0001ArtifactTypes.WEIGHBRIDGE_RECORD, StringComparison.Ordinal))
+        {
+            if (request.structured_payload is null ||
+                request.structured_payload.Value.ValueKind == JsonValueKind.Null)
+            {
+                return new HandlerResult(StatusCodes.Status400BadRequest, new
+                {
+                    error_code = "INVALID_REQUEST",
+                    errors = new[] { "structured_payload is required for WEIGHBRIDGE_RECORD" }
+                });
+            }
+
+            // FIX F14: backend recomputes net; violations include tolerance check
+            var (violations, backendNet) = Pwrm0001WeighbridgePayloadValidator.Validate(
+                request.structured_payload.Value);
+
+            if (violations.Length > 0)
+            {
+                return new HandlerResult(StatusCodes.Status400BadRequest, new
+                {
+                    error_code = "INVALID_WEIGHBRIDGE_PAYLOAD",
+                    violations   // non-null, non-empty
+                });
+            }
+            storedNetWeight = backendNet;  // backend value, not client value
+        }
+
         var existingSubmissions = EvidenceLinkSubmissionLog.ReadAll();
         var alreadySubmitted = existingSubmissions.Any(e =>
             e.TryGetProperty("instruction_id", out var iid) &&
@@ -222,19 +262,34 @@ static class EvidenceLinkSubmitHandler
             });
         }
 
-        await EvidenceLinkSubmissionLog.AppendAsync(new
+        // Build payload with structured_payload and backend-computed net_weight_kg
+        var payloadToStore = new Dictionary<string, object?>
         {
-            tenant_id = validation.TenantId,
-            instruction_id = validation.InstructionId,
-            program_id = validation.ProgramId,
-            submitter_class = validation.SubmitterClass,
-            submitter_msisdn = validation.SubmitterMsisdn,
-            artifact_type = request.artifact_type.Trim(),
-            artifact_ref = request.artifact_ref.Trim(),
-            latitude = request.latitude,
-            longitude = request.longitude,
-            submitted_at_utc = DateTimeOffset.UtcNow.ToString("O")
-        }, cancellationToken);
+            ["tenant_id"] = validation.TenantId,
+            ["instruction_id"] = validation.InstructionId,
+            ["program_id"] = validation.ProgramId,
+            ["submitter_class"] = validation.SubmitterClass,
+            ["submitter_msisdn"] = validation.SubmitterMsisdn,
+            ["artifact_type"] = request.artifact_type.Trim(),
+            ["artifact_ref"] = request.artifact_ref.Trim(),
+            ["latitude"] = request.latitude,
+            ["longitude"] = request.longitude,
+            ["submitted_at_utc"] = DateTimeOffset.UtcNow.ToString("O")
+        };
+
+        // Store structured_payload as raw JsonElement (not double-stringified)
+        if (request.structured_payload is not null)
+        {
+            payloadToStore["structured_payload"] = request.structured_payload.Value;
+        }
+
+        // Store backend-computed net_weight_kg (not client value)
+        if (storedNetWeight is not null)
+        {
+            payloadToStore["net_weight_kg"] = storedNetWeight.Value;
+        }
+
+        await EvidenceLinkSubmissionLog.AppendAsync(payloadToStore, cancellationToken);
 
         logger.LogInformation("Evidence submitted through secure-link for instruction {InstructionId}", validation.InstructionId);
         return new HandlerResult(StatusCodes.Status202Accepted, new
@@ -446,11 +501,44 @@ static class EvidenceLinkSubmissionLog
 {
     private static readonly string PathValue = Environment.GetEnvironmentVariable("EVIDENCE_LINK_SUBMISSIONS_FILE")
         ?? "/tmp/symphony_evidence_link_submissions.ndjson";
+    private static readonly SemaphoreSlim _appendLock = new(1, 1);
 
     public static async Task AppendAsync(object payload, CancellationToken cancellationToken)
     {
-        Directory.CreateDirectory(Path.GetDirectoryName(PathValue) ?? "/tmp");
-        await TamperEvidentChain.AppendJsonAsync(PathValue, "evidence_event_submission", payload, cancellationToken);
+        await _appendLock.WaitAsync(cancellationToken);
+        try
+        {
+            var sequenceNumber = ReadAll().Count;
+            
+            // Serialize the payload to JSON, parse it, and inject sequence_number
+            var payloadJson = JsonSerializer.Serialize(payload);
+            using var doc = JsonDocument.Parse(payloadJson);
+            var root = doc.RootElement;
+            
+            // Build a new object with sequence_number + all original properties
+            var properties = new Dictionary<string, object?> { ["sequence_number"] = sequenceNumber };
+            foreach (var prop in root.EnumerateObject())
+            {
+                properties[prop.Name] = prop.Value.ValueKind switch
+                {
+                    JsonValueKind.String => prop.Value.GetString(),
+                    JsonValueKind.Number => prop.Value.TryGetInt32(out var i) ? (object)i : 
+                                           prop.Value.TryGetInt64(out var l) ? l : 
+                                           prop.Value.GetDecimal(),
+                    JsonValueKind.True => true,
+                    JsonValueKind.False => false,
+                    JsonValueKind.Null => null,
+                    _ => prop.Value.Clone()
+                };
+            }
+            
+            Directory.CreateDirectory(Path.GetDirectoryName(PathValue) ?? "/tmp");
+            await TamperEvidentChain.AppendJsonAsync(PathValue, "evidence_event_submission", properties, cancellationToken);
+        }
+        finally
+        {
+            _appendLock.Release();
+        }
     }
 
     public static IReadOnlyList<JsonElement> ReadAll()

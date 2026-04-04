@@ -21,7 +21,7 @@
     {"id": "SYM-2026-00038", "borrower": "Matero Green Hub", "asset": "Biogas Unit BG-150", "supplier": "EcoTech Supplies", "amount": "62,000", "status": "SETTLED", "proofs": "4/4"}
   ],
   "exception_log": [
-    {"instructionId": "SYM-2026-00045", "type": "MISSING_PROOF", "date": "2026-03-08", "detail": "PT-002 and PT-003 not submitted within window", "resolved": false},
+    {"instructionId": "SYM-2026-00045", "type": "MISSING_PROOF", "date": "2026-03-08", "detail": "COLLECTION_PHOTO and QUALITY_AUDIT_RECORD not submitted within window", "resolved": false},
     {"instructionId": "SYM-2026-00047", "type": "SIM_SWAP_FLAG", "date": "2026-03-09", "detail": "MSISDN registered 6 days before disbursement", "resolved": false}
   ],
   "action_presets": {

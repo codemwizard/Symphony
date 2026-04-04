@@ -1,0 +1,150 @@
+schema_version: 1
+phase: '1'
+task_id: PWRM-001-T5
+title: Add /pilot-demo/api/evidence-links/issue proxy route with worker_id GPS injection and supplier_type guard so that registry GPS is always server-authoritative
+owner_role: IMPLEMENTER
+status: planned
+priority: CRITICAL
+risk_class: SECURITY
+blast_radius: APP_LAYER
+
+intent: >-
+  There is no pilot-demo proxy route for evidence link issuance, meaning GPS for waste picker
+  tokens cannot be injected server-side from the registry. Without this route, a caller could
+  supply arbitrary GPS coordinates (FIX F13 violation). This task adds the proxy route that
+  accepts worker_id, looks up the registry, enforces supplier_type == "WORKER" (rejecting null
+  and any other value as FIX F15 requires), discards all caller-provided GPS, and injects registry
+  GPS with max_distance = 250m before delegating to the generic EvidenceLinkIssueHandler.
+
+anti_patterns:
+  - Accepting expected_latitude/expected_longitude from the client body when worker_id is set
+  - Treating supplier_type = null as legacy-compatible or safe (null must be rejected 400)
+  - Adding worker_id parameter to the generic /v1/evidence-links/issue route
+
+out_of_scope:
+  - Any changes to EvidenceLinkIssueHandler itself
+  - Submit-time GPS validation (that is in EvidenceLinkSubmitHandler, unchanged by this task)
+
+stop_conditions:
+  - If any client-supplied GPS field is forwarded to the issue handler when worker_id is set -> STOP
+  - If supplier_type = null is allowed through -> STOP
+  - If worker_id is added to the generic /v1/evidence-links/issue route -> STOP
+
+proof_guarantees:
+  - Self-test case 4 confirms token GPS equals registry GPS when worker_id is valid
+  - Self-test case 5 confirms caller-provided GPS is discarded (FIX F13)
+  - Self-test case 6 confirms supplier_type = "SUPPLIER" returns 400 INVALID_SUPPLIER_TYPE
+  - Self-test case 7 confirms supplier_type = null returns 400 INVALID_SUPPLIER_TYPE (FIX F15)
+  - Self-test case 8 confirms unknown worker_id returns 404 WORKER_NOT_FOUND
+
+proof_limitations:
+  - Operator cookie gate is tested functionally; cryptographic validation of the cookie is
+    tested by the existing operator cookie self-test, not duplicated here
+
+depends_on:
+  - PWRM-001-T1
+  - PWRM-001-T2
+  - PWRM-001-T4
+
+blocks:
+  - PWRM-001-T7
+
+touches:
+  - services/ledger-api/Program.cs
+  - tasks/PWRM-001-T5/meta.yml
+
+invariants: []
+
+work:
+  - '[ID pwrm001_t5_work_item_01] Define PilotDemoEvidenceLinkIssueRequest record in Program.cs
+    with fields: worker_id (string?), tenant_id, instruction_id, program_id, submitter_class,
+    submitter_msisdn, expires_in_seconds (int?). No GPS fields on this record.'
+  - '[ID pwrm001_t5_work_item_02] Add app.MapPost("/pilot-demo/api/evidence-links/issue") route
+    with operator cookie gate. When worker_id is null, pass lat/lon/maxDist as null to the
+    issue handler (non-worker path).'
+  - '[ID pwrm001_t5_work_item_03] When worker_id is non-null: call SupplierRegistry.TryGet;
+    return 404 WORKER_NOT_FOUND if null; return 400 INVALID_SUPPLIER_TYPE if entry.SupplierType
+    != "WORKER" (covers null and any non-WORKER value); inject entry.RegisteredLatitude,
+    entry.RegisteredLongitude, maxDist = 250.0m; discard any client GPS.'
+  - '[ID pwrm001_t5_work_item_04] Confirm the generic /v1/evidence-links/issue route does NOT
+    accept a worker_id field and is unchanged.'
+
+acceptance_criteria:
+  - '[ID pwrm001_t5_work_item_01] [ID pwrm001_t5_work_item_02] Route exists and returns 401
+    when operator cookie is absent or invalid.'
+  - '[ID pwrm001_t5_work_item_03] worker_id pointing to a valid WORKER entry returns 200 with
+    token embedding registry GPS; caller GPS fields are silently discarded.'
+  - '[ID pwrm001_t5_work_item_03] worker_id pointing to supplier_type = null returns 400
+    INVALID_SUPPLIER_TYPE (FIX F15).'
+  - '[ID pwrm001_t5_work_item_03] worker_id pointing to supplier_type = "SUPPLIER" returns 400
+    INVALID_SUPPLIER_TYPE.'
+  - '[ID pwrm001_t5_work_item_03] Nonexistent worker_id returns 404 WORKER_NOT_FOUND.'
+  - '[ID pwrm001_t5_work_item_04] Generic /v1/evidence-links/issue route is unchanged and does
+    not accept worker_id.'
+
+negative_tests:
+  - id: PWRM-001-T5-N1
+    description: >-
+      POST to /pilot-demo/api/evidence-links/issue with worker_id set and caller body including
+      expected_latitude/expected_longitude must return 200 but the token must embed registry GPS,
+      not caller GPS. Confirms FIX F13: caller GPS is silently discarded.
+    required: true
+  - id: PWRM-001-T5-N2
+    description: >-
+      worker_id referencing an entry with supplier_type = null must return 400 INVALID_SUPPLIER_TYPE.
+      Confirms FIX F15: null is not legacy-compatible.
+    required: true
+  - id: PWRM-001-T5-N3
+    description: >-
+      Request without operator cookie must return 401. Route is not publicly accessible.
+    required: true
+
+positive_tests:
+  - id: PWRM-001-T5-P1
+    description: >-
+      worker_id = workerChunga001Id with submitter_class = "WASTE_COLLECTOR" and valid operator
+      cookie returns 200 with token; token lat/lon = -15.4167 / 28.2833.
+    required: true
+
+verification:
+  - dotnet run --self-test-worker-onboarding
+  - python3 scripts/audit/validate_evidence.py --task PWRM-001-T5 --evidence evidence/phase1/pwrm_worker_onboarding.json
+  - RUN_PHASE1_GATES=1 bash scripts/dev/pre_ci.sh
+
+evidence:
+  - path: evidence/phase1/pwrm_worker_onboarding.json
+    must_include:
+      - task_id
+      - git_sha
+      - timestamp_utc
+      - status
+      - checks
+      - f13_caller_gps_discarded_confirmed
+      - f15_null_supplier_type_rejected_confirmed
+      - worker_not_found_404_confirmed
+
+failure_modes:
+  - Caller GPS forwarded to handler when worker_id is set => CRITICAL_FAIL (FIX F13 regression)
+  - supplier_type = null allowed through => CRITICAL_FAIL (FIX F15 regression)
+  - worker_id parameter added to generic /v1/evidence-links/issue => CRITICAL_FAIL
+  - Operator cookie gate absent => CRITICAL_FAIL
+  - Evidence file missing => BLOCKED
+
+must_read:
+  - docs/operations/AI_AGENT_OPERATION_MANUAL.md
+  - .kiro/specs/pwrm-001-worker-onboarding/design.md
+  - .kiro/specs/pwrm-001-worker-onboarding/requirements.md
+  - .kiro/steering/pwrm0001-domain-rules.md
+  - .kiro/steering/symphony-platform-conventions.md
+
+implementation_plan: docs/plans/phase1/PWRM-001-T5/PLAN.md
+implementation_log: docs/plans/phase1/PWRM-001-T5/EXEC_LOG.md
+
+notes: >-
+  The proxy route is the security perimeter for worker GPS injection. The design (FIX F13) is
+  explicit: GPS is locked at issuance and must never come from the caller when worker_id is
+  present. The submit handler performs no registry lookup; it reads GPS from the token only.
+  This is the highest-risk task in PWRM-001 and requires the most careful negative testing.
+client: cursor
+assigned_agent: implementer
+model: <UNASSIGNED>

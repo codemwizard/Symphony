@@ -1,0 +1,129 @@
+schema_version: 1
+phase: '1'
+task_id: PWRM-001-T6
+title: Update recipient landing page to display worker role and zone label for WASTE_COLLECTOR tokens so that waste pickers have clear contextual guidance
+owner_role: IMPLEMENTER
+status: planned
+priority: NORMAL
+risk_class: INTEGRITY
+blast_radius: APP_LAYER
+
+intent: >-
+  The recipient landing page currently has no branch for WASTE_COLLECTOR tokens, meaning waste
+  pickers see a generic or incorrect UI. This task adds a WASTE_COLLECTOR detection branch that
+  displays the correct role label, resolves the dumpsite zone from hardcoded GPS bounds using
+  resolveNeighbourhoodLabel, shows the identity check message, and critically never renders raw
+  latitude/longitude values in the DOM.
+
+anti_patterns:
+  - Rendering raw lat/lon values anywhere in the DOM (even in hidden fields or data attributes)
+  - Calling an external geocoding API instead of using the hardcoded lookup
+  - Using the enum string "WASTE_COLLECTOR" as the display label instead of "Waste Collector"
+
+out_of_scope:
+  - Any server-side changes; this is a client-side HTML/JS change only
+  - GPS validation logic (that is in the token/submit handler)
+
+stop_conditions:
+  - If raw latitude or longitude values appear anywhere in the rendered DOM -> STOP
+  - If resolveNeighbourhoodLabel makes any network request -> STOP
+
+proof_guarantees:
+  - DOM inspection confirms role label "Waste Collector" is present
+  - DOM inspection confirms zone label "Chunga Dumpsite, Lusaka" is present for Chunga coordinates
+  - DOM inspection confirms no raw coordinate strings are present
+
+proof_limitations:
+  - Hardcoded bounds cover only the Chunga pilot area; other zones fall back to "Lusaka"
+    which is the designed behaviour per requirements.md
+
+depends_on: []
+
+blocks:
+  - PWRM-001-T7
+
+touches:
+  - src/recipient-landing/index.html
+  - tasks/PWRM-001-T6/meta.yml
+
+invariants: []
+
+work:
+  - '[ID pwrm001_t6_work_item_01] In index.html, add WASTE_COLLECTOR detection branch in the
+    token decode/display logic: when decoded token submitter_class === "WASTE_COLLECTOR", set
+    role label to "Waste Collector".'
+  - '[ID pwrm001_t6_work_item_02] Implement resolveNeighbourhoodLabel(lat, lon) function with
+    hardcoded bounds: if lat >= -15.43 && lat <= -15.40 && lon >= 28.26 && lon <= 28.30 return
+    "Chunga Dumpsite, Lusaka"; else return "Lusaka". No network calls.'
+  - '[ID pwrm001_t6_work_item_03] Display zone label using resolveNeighbourhoodLabel output and
+    identity check message: "Identity Check: Your phone number must match the one registered for
+    this link". Assert no raw lat/lon strings appear in any DOM element.'
+
+acceptance_criteria:
+  - '[ID pwrm001_t6_work_item_01] When token submitter_class = "WASTE_COLLECTOR", page displays
+    "Waste Collector" as the role label (not the enum string).'
+  - '[ID pwrm001_t6_work_item_02] For coordinates within Chunga bounds, zone label displays
+    "Chunga Dumpsite, Lusaka". For coordinates outside bounds, displays "Lusaka".'
+  - '[ID pwrm001_t6_work_item_03] Identity check message is visible. No raw lat/lon decimal
+    values appear anywhere in the DOM for any WASTE_COLLECTOR token.'
+
+negative_tests:
+  - id: PWRM-001-T6-N1
+    description: >-
+      A WASTE_COLLECTOR token with coordinates (-15.4167, 28.2833) must not render the values
+      "-15.4167" or "28.2833" anywhere in the DOM — not in visible text, data attributes,
+      hidden inputs, or script variables assigned to DOM properties.
+    required: true
+  - id: PWRM-001-T6-N2
+    description: >-
+      resolveNeighbourhoodLabel called with coordinates outside the Chunga bounds (e.g., 0, 0)
+      must return "Lusaka" and not make any network request.
+    required: true
+
+positive_tests:
+  - id: PWRM-001-T6-P1
+    description: >-
+      A WASTE_COLLECTOR token with Chunga coordinates renders "Waste Collector" role label,
+      "Chunga Dumpsite, Lusaka" zone label, and the identity check message.
+    required: true
+
+verification:
+  - dotnet run --self-test-worker-onboarding
+  - python3 scripts/audit/validate_evidence.py --task PWRM-001-T6 --evidence evidence/phase1/pwrm_worker_onboarding.json
+  - RUN_PHASE1_GATES=1 bash scripts/dev/pre_ci.sh
+
+evidence:
+  - path: evidence/phase1/pwrm_worker_onboarding.json
+    must_include:
+      - task_id
+      - git_sha
+      - timestamp_utc
+      - status
+      - checks
+      - waste_collector_branch_added
+      - raw_coordinates_not_in_dom_confirmed
+      - neighbourhood_label_hardcoded_confirmed
+
+failure_modes:
+  - Raw lat/lon values rendered in DOM => CRITICAL_FAIL (privacy violation)
+  - resolveNeighbourhoodLabel makes network request => FAIL (offline/latency risk)
+  - Role label displays "WASTE_COLLECTOR" enum string instead of "Waste Collector" => FAIL
+  - Evidence file missing => BLOCKED
+
+must_read:
+  - docs/operations/AI_AGENT_OPERATION_MANUAL.md
+  - .kiro/specs/pwrm-001-worker-onboarding/design.md
+  - .kiro/specs/pwrm-001-worker-onboarding/requirements.md
+  - .kiro/steering/pwrm0001-domain-rules.md
+  - .kiro/steering/symphony-platform-conventions.md
+
+implementation_plan: docs/plans/phase1/PWRM-001-T6/PLAN.md
+implementation_log: docs/plans/phase1/PWRM-001-T6/EXEC_LOG.md
+
+notes: >-
+  The no-raw-coordinates rule is a privacy requirement from requirements.md US-5. The hardcoded
+  bounds for Chunga Dumpsite are intentional — no geocoding API is in scope for the pilot.
+  The fallback "Lusaka" is the designed behaviour for coordinates outside the known pilot zone.
+client: cursor
+assigned_agent: implementer
+model: <UNASSIGNED>

@@ -560,35 +560,46 @@ app.MapPost("/v1/evidence-links/issue", async (EvidenceLinkIssueRequest request,
     return Results.Json(result.Body, statusCode: result.StatusCode);
 }).RequireRateLimiting("sensitive-endpoint");
 
-app.MapPost("/pilot-demo/api/evidence-links/issue", async (EvidenceLinkIssueRequest request, HttpContext httpContext, CancellationToken cancellationToken) =>
+app.MapPost("/pilot-demo/api/evidence-links/issue", async (PilotDemoEvidenceLinkIssueRequest req, HttpContext ctx, CancellationToken ct) =>
 {
     if (!string.Equals(runtimeProfile, "pilot-demo", StringComparison.OrdinalIgnoreCase))
     {
         return Results.NotFound();
     }
 
-    var authFailure = ApiAuthorization.AuthorizeEvidenceRead(httpContext, secrets);
-    if (authFailure is not null)
+    if (!TryValidatePilotDemoOperatorCookie(ctx, null, out var ec, out var errs))
     {
-        return Results.Json(authFailure.Body, statusCode: authFailure.StatusCode);
+        return Results.Json(new { error_code = ec, errors = errs }, statusCode: StatusCodes.Status401Unauthorized);
     }
 
-    var tenantAuthFailure = ApiAuthorization.AuthorizeTenantScope(request.tenant_id);
-    if (tenantAuthFailure is not null)
-    {
-        return Results.Json(tenantAuthFailure.Body, statusCode: tenantAuthFailure.StatusCode);
-    }
+    decimal? lat = null, lon = null, maxDist = null;
 
-    if (!TryValidatePilotDemoOperatorCookie(httpContext, request.tenant_id, out var errorCode, out var errors))
+    if (req.worker_id is not null)
     {
-        return Results.Json(new
+        var entry = await SupplierPolicyStore.GetSupplierAsync(req.tenant_id, req.worker_id);
+        if (entry is null)
         {
-            error_code = errorCode,
-            errors
-        }, statusCode: StatusCodes.Status403Forbidden);
+            return Results.Json(new { error_code = "WORKER_NOT_FOUND" }, statusCode: StatusCodes.Status404NotFound);
+        }
+
+        // FIX F15: null is rejected — only explicit "WORKER" is accepted
+        if (entry.supplier_type != "WORKER")
+        {
+            return Results.Json(new { error_code = "INVALID_SUPPLIER_TYPE" }, statusCode: StatusCodes.Status400BadRequest);
+        }
+
+        // FIX F13: registry GPS injected; caller GPS discarded entirely
+        lat = entry.registered_latitude;
+        lon = entry.registered_longitude;
+        maxDist = 250.0m;
     }
 
-    var result = await EvidenceLinkIssueHandler.HandleAsync(request, logger, cancellationToken);
+    var issueReq = new EvidenceLinkIssueRequest(
+        req.tenant_id, req.instruction_id, req.program_id,
+        req.submitter_class, req.submitter_msisdn,
+        lat, lon, maxDist, req.expires_in_seconds);
+
+    var result = await EvidenceLinkIssueHandler.HandleAsync(issueReq, logger, ct);
     return Results.Json(result.Body, statusCode: result.StatusCode);
 }).RequireRateLimiting("sensitive-endpoint");
 
@@ -963,6 +974,22 @@ app.MapGet("/pilot-demo/api/pilot-success", (HttpContext httpContext) =>
     return Results.Json(result.Body, statusCode: result.StatusCode);
 }).RequireRateLimiting("sensitive-endpoint");
 
+app.MapGet("/pilot-demo/api/monitoring-report/{programId}", async (
+    string programId, HttpContext httpContext, CancellationToken cancellationToken) =>
+{
+    if (!string.Equals(runtimeProfile, "pilot-demo", StringComparison.OrdinalIgnoreCase))
+        return Results.NotFound();
+
+    if (!TryValidatePilotDemoOperatorCookie(httpContext, null, out var errorCode, out var errors))
+        return Results.Json(new { error_code = errorCode, errors },
+            statusCode: StatusCodes.Status401Unauthorized);
+
+    var rootDir = EvidenceMeta.ResolveRepoRoot(Directory.GetCurrentDirectory());
+    var result  = await Pwrm0001MonitoringReportHandler.HandleAsync(
+        programId, rootDir, cancellationToken);
+    return Results.Json(result.Body, statusCode: result.StatusCode);
+}).RequireRateLimiting("sensitive-endpoint");
+
 app.MapPost("/v1/supervisory/programmes/{programId}/export", async (string programId, HttpContext httpContext, CancellationToken cancellationToken) =>
 {
     var authFailure = ApiAuthorization.AuthorizeEvidenceRead(httpContext, secrets);
@@ -1048,7 +1075,8 @@ app.MapGet("/pilot-demo/artifacts/{fileName}", (string fileName) =>
     }
 
     if (!string.Equals(safeFileName, "reporting_pack_sample.json", StringComparison.Ordinal)
-        && !string.Equals(safeFileName, "reporting_pack_sample.pdf", StringComparison.Ordinal))
+        && !string.Equals(safeFileName, "reporting_pack_sample.pdf", StringComparison.Ordinal)
+        && !string.Equals(safeFileName, "pwrm0001_monitoring_report.json", StringComparison.Ordinal))
     {
         return Results.NotFound();
     }
@@ -1463,15 +1491,13 @@ app.MapGet("/api/admin/onboarding/status", async (HttpContext httpContext, Cance
 if (string.Equals(runtimeProfile, "pilot-demo", StringComparison.OrdinalIgnoreCase))
 {
     await SeedDemoTenant(runtimeProfile, tenantRegistryStore, programmeStore, logger);
+    await SeedChungaWorkers(logger);
+    await SeedDemoInstructions(logger);
 }
 
 static Guid CreateStableGuid(string input)
 {
-    using var sha256 = System.Security.Cryptography.SHA256.Create();
-    var hash = sha256.ComputeHash(Encoding.UTF8.GetBytes(input));
-    var guidBytes = new byte[16];
-    Array.Copy(hash, guidBytes, 16);
-    return new Guid(guidBytes);
+    return StableGuidHelper.CreateStableGuid(input);
 }
 
 async Task SeedDemoTenant(string rp, ITenantRegistryStore trs, IProgrammeStore ps, ILogger l)
@@ -1536,6 +1562,139 @@ async Task SeedDemoTenant(string rp, ITenantRegistryStore trs, IProgrammeStore p
         {
             l.LogWarning(ex, "Failed to auto-seed default Pilot Demo tenant.");
         }
+    }
+}
+
+async Task SeedChungaWorkers(ILogger l)
+{
+    try
+    {
+        const string DemoTenantId = "11111111-1111-1111-1111-111111111111";
+        const string PgmZambiaGrn = "PGM-ZAMBIA-GRN-001";
+        
+        var workerChunga001Id = CreateStableGuid("worker-chunga-001").ToString();
+        var workerChunga002Id = CreateStableGuid("worker-chunga-002").ToString();
+
+        l.LogInformation("Auto-seeding Chunga workers for pilot demo...");
+
+        await SupplierRegistryUpsertHandler.HandleAsync(new SupplierRegistryUpsertRequest(
+            DemoTenantId, workerChunga001Id, "Chunga Worker 001",
+            "MMO:+260971100001", -15.4167m, 28.2833m, true,
+            supplier_type: "WORKER"));
+
+        await SupplierRegistryUpsertHandler.HandleAsync(new SupplierRegistryUpsertRequest(
+            DemoTenantId, workerChunga002Id, "Chunga Worker 002",
+            "MMO:+260971100002", -15.4167m, 28.2833m, true,
+            supplier_type: "WORKER"));
+
+        await ProgramSupplierAllowlistUpsertHandler.HandleAsync(
+            new ProgramSupplierAllowlistUpsertRequest(DemoTenantId, PgmZambiaGrn, workerChunga001Id, true));
+        await ProgramSupplierAllowlistUpsertHandler.HandleAsync(
+            new ProgramSupplierAllowlistUpsertRequest(DemoTenantId, PgmZambiaGrn, workerChunga002Id, true));
+
+        l.LogInformation("Successfully auto-seeded Chunga workers.");
+    }
+    catch (Exception ex)
+    {
+        l.LogWarning(ex, "Failed to auto-seed Chunga workers.");
+    }
+}
+
+async Task SeedDemoInstructions(ILogger l)
+{
+    try
+    {
+        const string DemoTenantId = "11111111-1111-1111-1111-111111111111";
+        const string PgmZambiaGrn = "PGM-ZAMBIA-GRN-001";
+        
+        var workerChunga001Id = CreateStableGuid("worker-chunga-001").ToString();
+        var workerChunga002Id = CreateStableGuid("worker-chunga-002").ToString();
+
+        l.LogInformation("Auto-seeding demo instructions for pilot demo...");
+
+        // CHG-2026-00001: 4 records (all proof types) for worker-chunga-001
+        await EvidenceLinkSubmissionLog.AppendAsync(new
+        {
+            tenant_id = DemoTenantId,
+            instruction_id = "CHG-2026-00001",
+            program_id = PgmZambiaGrn,
+            submitter_class = "WASTE_COLLECTOR",
+            worker_id = workerChunga001Id,
+            artifact_type = Pwrm0001ArtifactTypes.WEIGHBRIDGE_RECORD,
+            artifact_ref = "demo://weighbridge/chg-001",
+            structured_payload = JsonSerializer.SerializeToElement(new
+            {
+                plastic_type = "PET",
+                gross_weight_kg = 12.5m,
+                tare_weight_kg = 0.1m,
+                net_weight_kg = 12.4m,
+                collector_id = workerChunga001Id
+            }),
+            submitted_at_utc = DateTimeOffset.UtcNow.ToString("O")
+        }, CancellationToken.None);
+
+        await EvidenceLinkSubmissionLog.AppendAsync(new
+        {
+            tenant_id = DemoTenantId,
+            instruction_id = "CHG-2026-00001",
+            program_id = PgmZambiaGrn,
+            submitter_class = "WASTE_COLLECTOR",
+            worker_id = workerChunga001Id,
+            artifact_type = Pwrm0001ArtifactTypes.COLLECTION_PHOTO,
+            artifact_ref = "demo://photo/chg-001",
+            submitted_at_utc = DateTimeOffset.UtcNow.ToString("O")
+        }, CancellationToken.None);
+
+        await EvidenceLinkSubmissionLog.AppendAsync(new
+        {
+            tenant_id = DemoTenantId,
+            instruction_id = "CHG-2026-00001",
+            program_id = PgmZambiaGrn,
+            submitter_class = "WASTE_COLLECTOR",
+            worker_id = workerChunga001Id,
+            artifact_type = Pwrm0001ArtifactTypes.QUALITY_AUDIT_RECORD,
+            artifact_ref = "demo://audit/chg-001",
+            submitted_at_utc = DateTimeOffset.UtcNow.ToString("O")
+        }, CancellationToken.None);
+
+        await EvidenceLinkSubmissionLog.AppendAsync(new
+        {
+            tenant_id = DemoTenantId,
+            instruction_id = "CHG-2026-00001",
+            program_id = PgmZambiaGrn,
+            submitter_class = "WASTE_COLLECTOR",
+            worker_id = workerChunga001Id,
+            artifact_type = Pwrm0001ArtifactTypes.TRANSFER_MANIFEST,
+            artifact_ref = "demo://manifest/chg-001",
+            submitted_at_utc = DateTimeOffset.UtcNow.ToString("O")
+        }, CancellationToken.None);
+
+        // CHG-2026-00002: 1 record (WEIGHBRIDGE_RECORD only) for worker-chunga-002
+        await EvidenceLinkSubmissionLog.AppendAsync(new
+        {
+            tenant_id = DemoTenantId,
+            instruction_id = "CHG-2026-00002",
+            program_id = PgmZambiaGrn,
+            submitter_class = "WASTE_COLLECTOR",
+            worker_id = workerChunga002Id,
+            artifact_type = Pwrm0001ArtifactTypes.WEIGHBRIDGE_RECORD,
+            artifact_ref = "demo://weighbridge/chg-002",
+            structured_payload = JsonSerializer.SerializeToElement(new
+            {
+                plastic_type = "PET",
+                gross_weight_kg = 12.5m,
+                tare_weight_kg = 0.1m,
+                net_weight_kg = 12.4m,
+                collector_id = workerChunga002Id
+            }),
+            submitted_at_utc = DateTimeOffset.UtcNow.ToString("O")
+        }, CancellationToken.None);
+
+        l.LogInformation("Successfully auto-seeded demo instructions.");
+    }
+    catch (Exception ex)
+    {
+        l.LogWarning(ex, "Failed to auto-seed demo instructions.");
     }
 }
 
@@ -3160,3 +3319,15 @@ record EvidenceMeta(string TimestampUtc, string GitSha, string SchemaFingerprint
 
 // TSK-P1-217: Record for programme status transitions (RLS hardened)
 record ProgrammeStatusRequest(string tenant_id);
+
+static class StableGuidHelper
+{
+    public static Guid CreateStableGuid(string input)
+    {
+        using var sha256 = System.Security.Cryptography.SHA256.Create();
+        var hash = sha256.ComputeHash(Encoding.UTF8.GetBytes(input));
+        var guidBytes = new byte[16];
+        Array.Copy(hash, guidBytes, 16);
+        return new Guid(guidBytes);
+    }
+}

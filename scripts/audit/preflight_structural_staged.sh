@@ -11,24 +11,33 @@ MANIFEST="docs/invariants/INVARIANTS_MANIFEST.yml"
 DOCS_DIR="docs/invariants"
 EXCEPTIONS_DIR="docs/invariants/exceptions"
 
-mkdir -p /tmp/invariants_preflight
+# Cross-platform temp directory
+if [[ -n "${TEMP:-}" ]]; then
+  TEMP_DIR="${TEMP}/invariants_preflight"
+elif [[ -n "${TMP:-}" ]]; then
+  TEMP_DIR="${TMP}/invariants_preflight"
+else
+  TEMP_DIR="/tmp/invariants_preflight"
+fi
+
+mkdir -p "$TEMP_DIR"
 
 # Staged diff (pre-commit)
-git_write_unified_diff_staged /tmp/invariants_preflight/staged.diff 0
+git_write_unified_diff_staged "$TEMP_DIR/staged.diff" 0
 
-if [[ ! -s /tmp/invariants_preflight/staged.diff ]]; then
+if [[ ! -s "$TEMP_DIR/staged.diff" ]]; then
   echo "No staged changes; skipping."
   exit 0
 fi
 
 # Structural detector (same logic as CI, but pointed at staged diff)
 python3 scripts/audit/detect_structural_changes.py \
-  --diff-file /tmp/invariants_preflight/staged.diff \
-  --out /tmp/invariants_preflight/detect.json
+  --diff-file "$TEMP_DIR/staged.diff" \
+  --out "$TEMP_DIR/detect.json"
 
-structural="$(python3 -c 'import json; d=json.load(open("/tmp/invariants_preflight/detect.json")); print("true" if d.get("structural_change") else "false")')"
-primary="$(python3 -c 'import json; d=json.load(open("/tmp/invariants_preflight/detect.json")); print(d.get("primary_reason","other"))')"
-types="$(python3 -c 'import json; d=json.load(open("/tmp/invariants_preflight/detect.json")); print(",".join(d.get("reason_types",[])))')"
+structural="$(python3 -c "import json; d=json.load(open('$TEMP_DIR/detect.json')); print('true' if d.get('structural_change') else 'false')")"
+primary="$(python3 -c "import json; d=json.load(open('$TEMP_DIR/detect.json')); print(d.get('primary_reason','other'))")"
+types="$(python3 -c "import json; d=json.load(open('$TEMP_DIR/detect.json')); print(','.join(d.get('reason_types',[])))")"
 
 if [[ -z "$types" ]]; then
   types="none"
@@ -53,7 +62,7 @@ docs_changed=0
 inv_token_present=0
 if echo "${changed_files}" | grep -q "^${DOCS_DIR}/"; then
   docs_changed=1
-  docs_diff_file="/tmp/invariants_preflight/docs.diff"
+  docs_diff_file="$TEMP_DIR/docs.diff"
   git_write_unified_diff_staged_path "${DOCS_DIR}" "$docs_diff_file" 0
   if grep -Eo 'INV-[0-9]{3}' "$docs_diff_file" >/dev/null; then
     inv_token_present=1
@@ -91,7 +100,7 @@ fi
 echo "❌ Rule 1 would fail in CI. Auto-creating an exception file…"
 
 new_ex="$(python3 scripts/audit/auto_create_exception_from_detect.py \
-  --detect /tmp/invariants_preflight/detect.json \
+  --detect "$TEMP_DIR/detect.json" \
   --inv-scope change-rule)"
 
 git add "$new_ex"

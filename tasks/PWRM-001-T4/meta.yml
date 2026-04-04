@@ -1,0 +1,126 @@
+schema_version: 1
+phase: '1'
+task_id: PWRM-001-T4
+title: Seed Chunga workers in Program.cs with supplier_type = "WORKER" and program allowlist so that pilot demo requires no manual provisioning
+owner_role: IMPLEMENTER
+status: planned
+priority: HIGH
+risk_class: INTEGRITY
+blast_radius: APP_LAYER
+
+intent: >-
+  The pilot demo startup has no Chunga waste picker workers seeded, meaning any attempt to use
+  the worker issuance flow immediately fails with WORKER_NOT_FOUND. This task adds two stable-GUID
+  worker entries to the startup seeding block with explicit supplier_type = "WORKER" (never null),
+  correct GPS coordinates for Chunga Dumpsite, and both workers on the PGM-ZAMBIA-GRN-001 allowlist.
+  Depends on T2 having added supplier_type to the upsert request.
+
+anti_patterns:
+  - Seeding workers without supplier_type (leaving it null) — null is rejected by T5 proxy
+  - Using random GUIDs instead of CreateStableGuid to ensure idempotent seeding
+  - Omitting either worker from the PGM-ZAMBIA-GRN-001 allowlist
+
+out_of_scope:
+  - Any seeding for the self-test runner (that is T7 which uses a separate tenant and namespaced IDs)
+  - Any changes to the proxy route or allowlist validation logic
+
+stop_conditions:
+  - If supplier_type is not passed explicitly as "WORKER" (i.e., relies on default null) -> STOP
+  - If CreateStableGuid is not used for both worker IDs -> STOP
+
+proof_guarantees:
+  - On startup, GET policy for worker-chunga-001 returns decision = "ALLOW" with no manual steps
+  - Both workers are retrievable from SupplierRegistry with SupplierType == "WORKER"
+
+proof_limitations:
+  - Seeding is idempotent only if CreateStableGuid is deterministic; restart behaviour is assumed correct
+
+depends_on:
+  - PWRM-001-T2
+
+blocks:
+  - PWRM-001-T5
+  - PWRM-001-T7
+
+touches:
+  - services/ledger-api/Program.cs
+  - tasks/PWRM-001-T4/meta.yml
+
+invariants: []
+
+work:
+  - '[ID pwrm001_t4_work_item_01] In the pilot-demo startup seeding block of Program.cs, declare
+    workerChunga001Id and workerChunga002Id using CreateStableGuid("worker-chunga-001") and
+    CreateStableGuid("worker-chunga-002") respectively.'
+  - '[ID pwrm001_t4_work_item_02] Call SupplierRegistryUpsertHandler.HandleAsync for both workers
+    with: DemoTenantId, correct name, payout target (MMO:+260971100001 / MMO:+260971100002),
+    registered_latitude = -15.4167m, registered_longitude = 28.2833m, active = true,
+    supplier_type: "WORKER" (explicit named argument, never null).'
+  - '[ID pwrm001_t4_work_item_03] Call ProgramSupplierAllowlistUpsertHandler.HandleAsync for both
+    workers against PGM-ZAMBIA-GRN-001 with active = true.'
+
+acceptance_criteria:
+  - '[ID pwrm001_t4_work_item_01] [ID pwrm001_t4_work_item_02] Both registry entries exist on
+    startup with SupplierType == "WORKER" and GPS at (-15.4167, 28.2833).'
+  - '[ID pwrm001_t4_work_item_03] GET policy for worker-chunga-001 returns decision = "ALLOW"
+    against PGM-ZAMBIA-GRN-001 with no manual provisioning steps.'
+  - '[ID pwrm001_t4_work_item_02] supplier_type is passed as the explicit named argument "WORKER";
+    no reliance on the default null value.'
+
+negative_tests:
+  - id: PWRM-001-T4-N1
+    description: >-
+      If seeding is removed or supplier_type is omitted (null), the T5 proxy must return
+      400 INVALID_SUPPLIER_TYPE for worker-chunga-001. This confirms the seeding is load-bearing
+      and not incidental.
+    required: true
+
+positive_tests:
+  - id: PWRM-001-T4-P1
+    description: >-
+      After normal startup, POST /pilot-demo/api/evidence-links/issue with worker_id =
+      workerChunga001Id and submitter_class = "WASTE_COLLECTOR" returns 200 with a token
+      embedding GPS (-15.4167, 28.2833).
+    required: false
+
+verification:
+  - dotnet run --self-test-worker-onboarding
+  - python3 scripts/audit/validate_evidence.py --task PWRM-001-T4 --evidence evidence/phase1/pwrm_worker_onboarding.json
+  - RUN_PHASE1_GATES=1 bash scripts/dev/pre_ci.sh
+
+evidence:
+  - path: evidence/phase1/pwrm_worker_onboarding.json
+    must_include:
+      - task_id
+      - git_sha
+      - timestamp_utc
+      - status
+      - checks
+      - workers_seeded_count
+      - supplier_type_explicit_confirmed
+      - allowlist_seeded_confirmed
+
+failure_modes:
+  - supplier_type omitted from upsert call (left as default null) => CRITICAL_FAIL
+  - Random GUIDs used instead of CreateStableGuid (non-idempotent restarts) => FAIL
+  - Workers not added to PGM-ZAMBIA-GRN-001 allowlist => FAIL
+  - Evidence file missing => BLOCKED
+
+must_read:
+  - docs/operations/AI_AGENT_OPERATION_MANUAL.md
+  - .kiro/specs/pwrm-001-worker-onboarding/design.md
+  - .kiro/specs/pwrm-001-worker-onboarding/requirements.md
+  - .kiro/steering/pwrm0001-domain-rules.md
+  - .kiro/steering/symphony-platform-conventions.md
+
+implementation_plan: docs/plans/phase1/PWRM-001-T4/PLAN.md
+implementation_log: docs/plans/phase1/PWRM-001-T4/EXEC_LOG.md
+
+notes: >-
+  DemoTenantId = "11111111-1111-1111-1111-111111111111" and PgmZambiaGrn = "PGM-ZAMBIA-GRN-001"
+  should be declared as constants in the seeding block. The self-test runner (T7) uses a
+  different tenant "22222222-2222-2222-2222-222222222222" and namespaced IDs specifically to
+  avoid any collision with this startup seeding.
+client: cursor
+assigned_agent: implementer
+model: <UNASSIGNED>

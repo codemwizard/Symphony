@@ -1,0 +1,119 @@
+schema_version: 1
+phase: '1'
+task_id: PWRM-001-T3
+title: Create Pwrm0001ArtifactTypes.cs with artifact type constants and display labels so that PWRM-002 has a single source of truth
+owner_role: IMPLEMENTER
+status: planned
+priority: NORMAL
+risk_class: INTEGRITY
+blast_radius: APP_LAYER
+
+intent: >-
+  Artifact type string literals for the PWRM-001 domain (WEIGHBRIDGE_RECORD, COLLECTION_PHOTO,
+  QUALITY_AUDIT_RECORD, TRANSFER_MANIFEST) are currently scattered or undefined, creating a risk
+  of inconsistent values between issuance and submission validation. This task creates a single
+  static class Pwrm0001ArtifactTypes.cs that centralises all four constants, a ProofTypeDisplayLabels
+  dictionary, and an IsPwrm0001ArtifactType helper. PWRM-002 (weighbridge capture) will import
+  this file for its validation logic.
+
+anti_patterns:
+  - Defining the same string constants in multiple files (split source of truth)
+  - Using case-insensitive comparison in IsPwrm0001ArtifactType (Ordinal only)
+  - Adding a fifth constant not specified in the PWRM-001 design
+
+out_of_scope:
+  - Any usage of these constants in handlers (that is PWRM-002)
+  - Any database storage of artifact type values
+
+stop_conditions:
+  - If IsPwrm0001ArtifactType uses case-insensitive matching -> STOP
+  - If fewer or more than four constants are defined -> STOP
+
+proof_guarantees:
+  - File compiles without errors
+  - IsPwrm0001ArtifactType returns true for all four valid constants and false for unknown values
+
+proof_limitations:
+  - This task only creates the file; integration with handlers is deferred to PWRM-002
+
+depends_on: []
+
+blocks:
+  - PWRM-001-T7
+
+touches:
+  - services/ledger-api/Commands/Pwrm0001ArtifactTypes.cs
+  - tasks/PWRM-001-T3/meta.yml
+
+invariants: []
+
+work:
+  - '[ID pwrm001_t3_work_item_01] Create services/ledger-api/Commands/Pwrm0001ArtifactTypes.cs
+    as a static class with four public const string fields: WEIGHBRIDGE_RECORD, COLLECTION_PHOTO,
+    QUALITY_AUDIT_RECORD, TRANSFER_MANIFEST.'
+  - '[ID pwrm001_t3_work_item_02] Add IReadOnlyDictionary<string, string> ProofTypeDisplayLabels
+    using StringComparer.Ordinal, mapping each constant to its display label as specified in design.md.'
+  - '[ID pwrm001_t3_work_item_03] Add static bool IsPwrm0001ArtifactType(string? value) helper
+    that returns false for null and false for any value not in ProofTypeDisplayLabels keys.'
+
+acceptance_criteria:
+  - '[ID pwrm001_t3_work_item_01] File exists at the specified path and all four constants are
+    present with exact string values as defined in design.md.'
+  - '[ID pwrm001_t3_work_item_02] ProofTypeDisplayLabels contains exactly four entries; accessing
+    WEIGHBRIDGE_RECORD key returns "Weighbridge Collection Record".'
+  - '[ID pwrm001_t3_work_item_03] IsPwrm0001ArtifactType("WEIGHBRIDGE_RECORD") returns true;
+    IsPwrm0001ArtifactType("UNKNOWN") returns false; IsPwrm0001ArtifactType(null) returns false.'
+
+negative_tests:
+  - id: PWRM-001-T3-N1
+    description: >-
+      IsPwrm0001ArtifactType("weighbridge_record") (lowercase) must return false, confirming
+      StringComparer.Ordinal is used and case-insensitive matching is not permitted.
+    required: true
+
+positive_tests:
+  - id: PWRM-001-T3-P1
+    description: >-
+      IsPwrm0001ArtifactType called with each of the four exact constant values returns true.
+    required: true
+
+verification:
+  - dotnet build services/ledger-api
+  - dotnet run --self-test-worker-onboarding
+  - python3 scripts/audit/validate_evidence.py --task PWRM-001-T3 --evidence evidence/phase1/pwrm_worker_onboarding.json
+  - RUN_PHASE1_GATES=1 bash scripts/dev/pre_ci.sh
+
+evidence:
+  - path: evidence/phase1/pwrm_worker_onboarding.json
+    must_include:
+      - task_id
+      - git_sha
+      - timestamp_utc
+      - status
+      - checks
+      - artifact_type_constants_count
+      - is_pwrm_helper_case_sensitive_confirmed
+
+failure_modes:
+  - Fewer than four constants defined => FAIL (PWRM-002 validation will silently reject valid types)
+  - IsPwrm0001ArtifactType uses OrdinalIgnoreCase => CRITICAL_FAIL (security bypass risk)
+  - File placed outside Commands/ directory => FAIL_REVIEW
+  - Evidence file missing => BLOCKED
+
+must_read:
+  - docs/operations/AI_AGENT_OPERATION_MANUAL.md
+  - .kiro/specs/pwrm-001-worker-onboarding/design.md
+  - .kiro/specs/pwrm-001-worker-onboarding/requirements.md
+  - .kiro/steering/pwrm0001-domain-rules.md
+  - .kiro/steering/symphony-platform-conventions.md
+
+implementation_plan: docs/plans/phase1/PWRM-001-T3/PLAN.md
+implementation_log: docs/plans/phase1/PWRM-001-T3/EXEC_LOG.md
+
+notes: >-
+  This file is a pure constants/helpers class with no handler logic. It is a prerequisite for
+  PWRM-002 artifact type validation. Keep it free of any business logic — it must not import
+  handler types or reference request/response contracts.
+client: cursor
+assigned_agent: implementer
+model: <UNASSIGNED>

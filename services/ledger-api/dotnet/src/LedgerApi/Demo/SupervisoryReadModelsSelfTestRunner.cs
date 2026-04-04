@@ -95,7 +95,19 @@ public static class SupervisoryReadModelsSelfTestRunner
         ctx.Request.Headers["x-evidence-link-token"] = token;
         ctx.Request.Headers["x-submitter-msisdn"] = "+260971700700";
         _ = await global::EvidenceLinkSubmitHandler.HandleAsync(
-            new global::EvidenceLinkSubmitRequest("INVOICE", "s3://bucket/inv-007.pdf", null, null),
+            new global::EvidenceLinkSubmitRequest(
+                Pwrm0001ArtifactTypes.WEIGHBRIDGE_RECORD, 
+                "s3://bucket/inv-007.pdf", 
+                null, 
+                null,
+                JsonSerializer.SerializeToElement(new
+                {
+                    plastic_type = "PET",
+                    gross_weight_kg = 12.5m,
+                    tare_weight_kg = 0.1m,
+                    net_weight_kg = 12.4m,
+                    collector_id = supplierId
+                })),
             ctx,
             logger,
             cancellationToken);
@@ -124,12 +136,12 @@ public static class SupervisoryReadModelsSelfTestRunner
         officerCtx.Request.Headers["x-evidence-link-token"] = fieldOfficerToken;
         officerCtx.Request.Headers["x-submitter-msisdn"] = "+260971700701";
         _ = await global::EvidenceLinkSubmitHandler.HandleAsync(
-            new global::EvidenceLinkSubmitRequest("DELIVERY_PHOTO", "s3://bucket/photo-007.jpg", -15.4167m, 28.2833m),
+            new global::EvidenceLinkSubmitRequest(Pwrm0001ArtifactTypes.COLLECTION_PHOTO, "s3://bucket/photo-007.jpg", -15.4167m, 28.2833m),
             officerCtx,
             logger,
             cancellationToken);
         _ = await global::EvidenceLinkSubmitHandler.HandleAsync(
-            new global::EvidenceLinkSubmitRequest("FIELD_OFFICER_TOKEN", "token://field-officer/fo-007", -15.4167m, 28.2833m),
+            new global::EvidenceLinkSubmitRequest(Pwrm0001ArtifactTypes.QUALITY_AUDIT_RECORD, "token://field-officer/fo-007", -15.4167m, 28.2833m),
             officerCtx,
             logger,
             cancellationToken);
@@ -158,7 +170,7 @@ public static class SupervisoryReadModelsSelfTestRunner
         borrowerCtx.Request.Headers["x-evidence-link-token"] = borrowerToken;
         borrowerCtx.Request.Headers["x-submitter-msisdn"] = "+260971700702";
         _ = await global::EvidenceLinkSubmitHandler.HandleAsync(
-            new global::EvidenceLinkSubmitRequest("BORROWER_ACK", "sms://borrower/ack-007", null, null),
+            new global::EvidenceLinkSubmitRequest(Pwrm0001ArtifactTypes.TRANSFER_MANIFEST, "sms://borrower/ack-007", null, null),
             borrowerCtx,
             logger,
             cancellationToken);
@@ -187,17 +199,17 @@ public static class SupervisoryReadModelsSelfTestRunner
         flaggedCtx.Request.Headers["x-evidence-link-token"] = flaggedToken;
         flaggedCtx.Request.Headers["x-submitter-msisdn"] = "+260971700703";
         _ = await global::EvidenceLinkSubmitHandler.HandleAsync(
-            new global::EvidenceLinkSubmitRequest("INVOICE", "s3://bucket/inv-047.pdf", null, null),
+            new global::EvidenceLinkSubmitRequest(Pwrm0001ArtifactTypes.WEIGHBRIDGE_RECORD, "s3://bucket/inv-047.pdf", null, null),
             flaggedCtx,
             logger,
             cancellationToken);
         _ = await global::EvidenceLinkSubmitHandler.HandleAsync(
-            new global::EvidenceLinkSubmitRequest("DELIVERY_PHOTO", "s3://bucket/photo-047.jpg", null, null),
+            new global::EvidenceLinkSubmitRequest(Pwrm0001ArtifactTypes.COLLECTION_PHOTO, "s3://bucket/photo-047.jpg", null, null),
             flaggedCtx,
             logger,
             cancellationToken);
         _ = await global::EvidenceLinkSubmitHandler.HandleAsync(
-            new global::EvidenceLinkSubmitRequest("BORROWER_ACK", "sms://borrower/ack-047", null, null),
+            new global::EvidenceLinkSubmitRequest(Pwrm0001ArtifactTypes.TRANSFER_MANIFEST, "sms://borrower/ack-047", null, null),
             flaggedCtx,
             logger,
             cancellationToken);
@@ -261,20 +273,51 @@ public static class SupervisoryReadModelsSelfTestRunner
                     }
                 }
 
-                hasAllProofTypes = new[] { "PT-001", "PT-002", "PT-003", "PT-004" }.All(typeSet.Contains);
+                hasAllProofTypes = new[]
+                {
+                    Pwrm0001ArtifactTypes.WEIGHBRIDGE_RECORD,
+                    Pwrm0001ArtifactTypes.COLLECTION_PHOTO,
+                    Pwrm0001ArtifactTypes.QUALITY_AUDIT_RECORD,
+                    Pwrm0001ArtifactTypes.TRANSFER_MANIFEST
+                }.All(typeSet.Contains);
             }
         }
 
         bool detailHasRequired = false;
         bool detailHasAckPlaceholders = false;
         bool detailHasRawArtifacts = false;
+        bool detailHasWeighbridgeFields = false;
         if (detail.StatusCode == StatusCodes.Status200OK)
         {
             using var detailDoc = JsonDocument.Parse(JsonSerializer.Serialize(detail.Body));
             detailHasRequired = HasTopLevel(detailDoc.RootElement, "proof_rows", "raw_artifacts", "supplier_policy_context");
             detailHasAckPlaceholders = HasTopLevel(detailDoc.RootElement, "acknowledgement_state", "escalation_tier", "supervisor_interrupt_state", "ack_interrupt_projection_state");
             detailHasRawArtifacts = detailDoc.RootElement.TryGetProperty("raw_artifacts", out var rawArtifacts) && rawArtifacts.ValueKind == JsonValueKind.Array && rawArtifacts.GetArrayLength() >= 4;
+            
+            // PWRM-003 Task 3: Verify weighbridge detail fields appear in proof_rows
+            if (detailDoc.RootElement.TryGetProperty("proof_rows", out var proofRows) && proofRows.ValueKind == JsonValueKind.Array)
+            {
+                foreach (var proof in proofRows.EnumerateArray())
+                {
+                    if (proof.TryGetProperty("artifact_type", out var artifactType) 
+                        && string.Equals(artifactType.GetString(), Pwrm0001ArtifactTypes.WEIGHBRIDGE_RECORD, StringComparison.Ordinal))
+                    {
+                        detailHasWeighbridgeFields = 
+                            proof.TryGetProperty("plastic_type", out var pt) && pt.ValueKind == JsonValueKind.String &&
+                            proof.TryGetProperty("net_weight_kg", out var nw) && nw.ValueKind == JsonValueKind.Number &&
+                            proof.TryGetProperty("collector_id", out var cid) && cid.ValueKind == JsonValueKind.String;
+                        break;
+                    }
+                }
+            }
         }
+
+        // Test hard override: PGM-ZAMBIA-GRN-001 should return true even with empty submissions
+        var emptySubmissions = Array.Empty<JsonElement>();
+        var hardOverrideWorks = SupervisoryRevealReadModelHandler.TestIsPwrm0001Programme("PGM-ZAMBIA-GRN-001", emptySubmissions);
+        
+        // Test generic path: requires BOTH conditions
+        var nonOverrideProgramWithoutBoth = SupervisoryRevealReadModelHandler.TestIsPwrm0001Programme("OTHER-PROGRAM", emptySubmissions);
 
         var tests = new[]
         {
@@ -285,7 +328,10 @@ public static class SupervisoryReadModelsSelfTestRunner
             new { name = "detail_read_model_present", status = (detail.StatusCode == StatusCodes.Status200OK && detailHasRequired) ? "PASS" : "FAIL" },
             new { name = "detail_raw_artifacts_present", status = detailHasRawArtifacts ? "PASS" : "FAIL" },
             new { name = "detail_ack_placeholders_present", status = detailHasAckPlaceholders ? "PASS" : "FAIL" },
-            new { name = "cross_tenant_denied_fail_closed", status = (crossTenantDenied is not null && crossTenantDenied.StatusCode == StatusCodes.Status403Forbidden) ? "PASS" : "FAIL" }
+            new { name = "detail_weighbridge_fields_present", status = detailHasWeighbridgeFields ? "PASS" : "FAIL" },
+            new { name = "cross_tenant_denied_fail_closed", status = (crossTenantDenied is not null && crossTenantDenied.StatusCode == StatusCodes.Status403Forbidden) ? "PASS" : "FAIL" },
+            new { name = "pwrm0001_hard_override_fires_with_empty_submissions", status = hardOverrideWorks ? "PASS" : "FAIL" },
+            new { name = "pwrm0001_generic_path_requires_both_conditions", status = !nonOverrideProgramWithoutBoth ? "PASS" : "FAIL" }
         };
 
         var status = tests.All(x => x.status == "PASS") ? "PASS" : "FAIL";
