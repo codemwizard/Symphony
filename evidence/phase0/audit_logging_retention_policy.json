@@ -1,7 +1,7 @@
 {
   "check_id": "SEC-AUDIT-RETENTION-POLICY",
-  "timestamp_utc": "2026-04-03T23:29:59Z",
-  "git_sha": "8f4c8380045536304019689dd61ec3c9df52620d",
+  "timestamp_utc": "2026-04-04T00:02:50Z",
+  "git_sha": "af16e4fb427c60f5fef488b4fc77fd3f09e4b67f",
   "schema_fingerprint": "1f92363c69ba235e552a6aac05045062fc0097fc93cde3b89e76455b80628019",
   "status": "PASS",
   "errors": []

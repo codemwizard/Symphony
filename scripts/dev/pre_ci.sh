@@ -1050,23 +1050,7 @@ else
   exit 1
 fi
 
-# --- EVIDENCE_SIGNATURE_VERIFY ---
-# Verify phase1 evidence was signed by sign_evidence.py in THIS run.
-# Pre-generated, hand-typed, or tampered JSON files are rejected.
-echo "==> Phase-1 evidence signature integrity check"
-[[ -f scripts/audit/sign_evidence.py ]] || {
-  echo "FATAL: scripts/audit/sign_evidence.py not found" >&2
-  exit 1
-}
-if [[ -d evidence/phase1 ]] && compgen -G "evidence/phase1/*.json" > /dev/null 2>&1; then
-  /usr/bin/python3 scripts/audit/sign_evidence.py \
-    --verify \
-    --dir evidence/phase1 \
-    --enrollment-file scripts/audit/signed_evidence_enrollment.txt
-else
-  echo "  INFO: no phase1 evidence files yet -- skipping signature check"
-fi
-# --- end EVIDENCE_SIGNATURE_VERIFY ---
+
 
 echo "==> Green Finance Schema + Function Verification"
 GREEN_FINANCE_VERIFIERS=(
@@ -1090,6 +1074,25 @@ for verifier in "${GREEN_FINANCE_VERIFIERS[@]}"; do
     echo "WARN: $verifier not found or not executable. Skipping to permit gradual GF deployment."
   fi
 done
+
+# --- EVIDENCE_SIGNATURE_VERIFY ---
+# Verify phase1 evidence was signed by sign_evidence.py in THIS run.
+# Pre-generated, hand-typed, or tampered JSON files are rejected.
+# Moved after verifiers to allow run_id stabilization.
+echo "==> Phase-1 evidence signature integrity check"
+[[ -f scripts/audit/sign_evidence.py ]] || {
+  echo "FATAL: scripts/audit/sign_evidence.py not found" >&2
+  exit 1
+}
+if [[ -d evidence/phase1 ]] && compgen -G "evidence/phase1/*.json" > /dev/null 2>&1; then
+  /usr/bin/python3 scripts/audit/sign_evidence.py \
+    --verify \
+    --dir evidence/phase1 \
+    --enrollment-file scripts/audit/signed_evidence_enrollment.txt
+else
+  echo "  INFO: no phase1 evidence files yet -- skipping signature check"
+fi
+# --- end EVIDENCE_SIGNATURE_VERIFY ---
 
 pre_ci_clear_failure_state
 echo "==> Verifying TSK-P1-210 to 220 (Hardening and Demo Architecture)"

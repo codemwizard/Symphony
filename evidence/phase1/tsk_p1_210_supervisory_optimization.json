@@ -1,11 +1,11 @@
 {
   "check_id": "TSK-P1-210",
-  "timestamp_utc": "2026-04-02T02:02:50Z",
-  "git_sha": "6d4d95d9122b976f7a571081d6a128e72e52952e",
+  "timestamp_utc": "2026-04-04T00:06:23Z",
+  "git_sha": "af16e4fb427c60f5fef488b4fc77fd3f09e4b67f",
   "schema_fingerprint": "1f92363c69ba235e552a6aac05045062fc0097fc93cde3b89e76455b80628019",
   "status": "PASS",
   "task_id": "TSK-P1-210",
-  "run_id": "standalone-20260402T020250Z",
+  "run_id": "standalone-20260404T000623Z",
   "checks": {
     "read_model_handler_pre_indexed": true,
     "ui_fetch_helper_implemented": true,
