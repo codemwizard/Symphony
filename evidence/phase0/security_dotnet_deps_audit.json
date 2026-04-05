@@ -1,9 +1,9 @@
 {
   "check_id": "SEC-G08",
-  "timestamp_utc": "2026-04-04T22:58:14Z",
-  "git_sha": "bb5b69e48fdc970ab4d746fac4f5fa5f58eedd61",
+  "timestamp_utc": "2026-04-05T13:47:03Z",
+  "git_sha": "fe12dadd6fe2ac985daa9a0994ddf4a72ab21870",
   "schema_fingerprint": "1f92363c69ba235e552a6aac05045062fc0097fc93cde3b89e76455b80628019",
-  "status": "PASS",
+  "status": "FAIL",
   "note": "",
-  "output_lines": ["=== /home/mwiza/workspace/Symphony/services/executor-worker/dotnet/src/ExecutorWorker/ExecutorWorker.csproj ===", "  Determining projects to restore...", "  All projects are up-to-date for restore.", "The following sources were used:", "   https://api.nuget.org/v3/index.json", "The given project `ExecutorWorker` has no vulnerable packages given the current sources.", "=== /home/mwiza/workspace/Symphony/services/ledger-api/dotnet/src/LedgerApi.DemoHost/LedgerApi.DemoHost.csproj ===", "  Determining projects to restore...", "  All projects are up-to-date for restore.", "The following sources were used:", "   https://api.nuget.org/v3/index.json", "The given project `LedgerApi.DemoHost` has no vulnerable packages given the current sources.", "=== /home/mwiza/workspace/Symphony/services/ledger-api/dotnet/src/LedgerApi/LedgerApi.csproj ===", "  Determining projects to restore...", "  All projects are up-to-date for restore.", "The following sources were used:", "   https://api.nuget.org/v3/index.json", "The given project `LedgerApi` has no vulnerable packages given the current sources."]
+  "output_lines": ["=== /home/mwiza/workspace/Symphony/services/executor-worker/dotnet/src/ExecutorWorker/ExecutorWorker.csproj ===", "  Determining projects to restore...", "  All projects are up-to-date for restore.", "The following sources were used:", "   https://api.nuget.org/v3/index.json", "The given project `ExecutorWorker` has no vulnerable packages given the current sources.", "=== /home/mwiza/workspace/Symphony/services/ledger-api/dotnet/src/LedgerApi.DemoHost/LedgerApi.DemoHost.csproj ===", "  Determining projects to restore...", "  All projects are up-to-date for restore.", "error: The download of 'https://api.nuget.org/v3/registration5-gz-semver2/microsoft.extensions.dependencyinjection.abstractions/page/3.1.27/9.0.3.json' timed out because no data was received for 60000ms.", "error:   The operation has timed out.", "=== /home/mwiza/workspace/Symphony/services/ledger-api/dotnet/src/LedgerApi/LedgerApi.csproj ===", "  Determining projects to restore...", "  All projects are up-to-date for restore.", "The following sources were used:", "   https://api.nuget.org/v3/index.json", "The given project `LedgerApi` has no vulnerable packages given the current sources."]
 }

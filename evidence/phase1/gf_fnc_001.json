@@ -2,13 +2,13 @@
   "check_id": "GF-W1-FNC-001",
   "task_id": "GF-W1-FNC-001",
   "status": "PASS",
-  "timestamp_utc": "2026-04-04T23:04:43Z",
-  "generated_at": "2026-04-04T23:04:43.472502+00:00",
-  "git_sha": "bb5b69e48fdc970ab4d746fac4f5fa5f58eedd61",
-  "pre_ci_run_id": "rem-bb5b69e48fdc",
+  "timestamp_utc": "2026-04-05T13:06:24Z",
+  "generated_at": "2026-04-05T13:06:24.532903+00:00",
+  "git_sha": "fe12dadd6fe2ac985daa9a0994ddf4a72ab21870",
+  "pre_ci_run_id": "rem-fe12dadd6fe2",
   "source_file": "schema/migrations/0107_gf_fn_project_registration.sql",
   "source_file_sha256": "5e69f3bcd1d48b6ae1c087b2e0699aa6079be5837bb975f8461247334164dfdf",
   "command_output": "{\"probes\": [{\"probe\": \"register_project\", \"status\": \"PASS\"},{\"probe\": \"activate_project\", \"status\": \"PASS\"},{\"probe\": \"list_tenant_projects\", \"status\": \"PASS\"},{\"probe\": \"query_project_details\", \"status\": \"PASS\"}]}",
-  "_signature": "16ef1bcf1ee8792e601014639ea2f53d5641376c756547a2140cdb7d1cdde72a",
+  "_signature": "cbbfc88c480fb296671b7069f3e08fffbef478a1b8b7acc5ce4672fc5675c490",
   "_signing_version": "symphony-v1"
 }

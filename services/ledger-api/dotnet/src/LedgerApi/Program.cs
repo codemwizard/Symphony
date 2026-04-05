@@ -1522,7 +1522,7 @@ async Task SeedDemoTenant(string rp, ITenantRegistryStore trs, IProgrammeStore p
             {
                 // Use the actual tenant_id from the DB (may differ from computed one on ON CONFLICT)
                 var actualTenantId = Guid.Parse(tenantResult.Entry.TenantId);
-                
+
                 // Seed the legacy tenants table to satisfy supplier_registry's foreign key constraint
                 await tos.OnboardAsync(new TenantOnboardingInput(
                     actualTenantId, "Zambia Green MFI", "ZM", "enterprise", $"seed:{actualTenantId}"
@@ -1653,7 +1653,7 @@ async Task SeedChungaWorkers(IProgrammeStore ps, ILogger l)
             DemoTenantId = tenantGuid.ToString();
         }
         const string PgmZambiaGrnKey = "PGM-ZAMBIA-GRN-001";
-        
+
         // Resolve the actual program UUID from the database
         var pgms = await ps.ListAsync(Guid.Parse(DemoTenantId), default, true);
         var targetPgm = pgms.FirstOrDefault(p => string.Equals(p.ProgrammeKey, PgmZambiaGrnKey, StringComparison.Ordinal));

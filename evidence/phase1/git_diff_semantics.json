@@ -1,13 +1,13 @@
 {
   "check_id": "GIT-DIFF-SEMANTICS",
-  "timestamp_utc": "2026-04-04T22:58:08Z",
-  "git_sha": "bb5b69e48fdc970ab4d746fac4f5fa5f58eedd61",
+  "timestamp_utc": "2026-04-05T13:46:59Z",
+  "git_sha": "fe12dadd6fe2ac985daa9a0994ddf4a72ab21870",
   "schema_fingerprint": "1f92363c69ba235e552a6aac05045062fc0097fc93cde3b89e76455b80628019",
   "status": "PASS",
   "diff_mode": "range",
   "base_ref": "refs/remotes/origin/main",
   "head_ref": "HEAD",
-  "merge_base": "3d1092779d09cd7b7d12933eeb7a156301e5447d",
+  "merge_base": "e13873febdfb2745184b3da5b2e5b97a603081f1",
   "critical_scripts": [
     "scripts/audit/enforce_change_rule.sh",
     "scripts/audit/verify_baseline_change_governance.sh",
