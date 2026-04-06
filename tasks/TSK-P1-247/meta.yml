@@ -41,4 +41,10 @@ must_read:
   - "scripts/dev/pre_ci.sh"
 implementation_plan: docs/plans/phase1/TSK-P1-247/PLAN.md
 implementation_log: docs/plans/phase1/TSK-P1-247/EXEC_LOG.md
+invariants:
+  - INV-001
+  - INV-004
+notes: Structural stabilization of the evidence pipeline for zero-drift pushes.
+client: antigravity
 assigned_agent: security_guardian
+model: gemini-2.0-pro-exp-02-05

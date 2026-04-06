@@ -4,14 +4,21 @@
   "deny_legacy": false,
   "errors": [],
   "mode": "strict",
-  "nonconforming": [],
+  "nonconforming": [
+    {
+      "issues": [
+        "missing_required:invariants,notes,client,model"
+      ],
+      "path": "tasks/TSK-P1-247/meta.yml"
+    }
+  ],
   "scope": "changed",
-  "status": "PASS",
+  "status": "FAIL",
   "summary": {
     "error_count": 0,
-    "files_scanned": 0,
-    "nonconforming_count": 0,
+    "files_scanned": 1,
+    "nonconforming_count": 1,
     "v0_count": 0,
-    "v1_count": 0
+    "v1_count": 1
   }
 }
