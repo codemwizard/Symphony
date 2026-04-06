@@ -13,9 +13,9 @@
     "scripts"
   ],
   "satisfying_docs": [
-    "docs/plans/phase1/REM-2026-04-06_filesystem-executable-bit-drift/PLAN.md",
-    "docs/plans/phase1/REM-2026-04-06_filesystem-executable-bit-drift/EXEC_LOG.md"
+    "docs/plans/phase1/REM-2026-04-06_evidence-push-nonconvergence/PLAN.md",
+    "docs/plans/phase1/REM-2026-04-06_evidence-push-nonconvergence/EXEC_LOG.md"
   ],
-  "satisfying_doc_parent": "docs/plans/phase1/REM-2026-04-06_filesystem-executable-bit-drift",
+  "satisfying_doc_parent": "docs/plans/phase1/REM-2026-04-06_evidence-push-nonconvergence",
   "errors": []
 }
