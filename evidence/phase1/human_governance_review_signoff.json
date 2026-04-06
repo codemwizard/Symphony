@@ -1,13 +1,13 @@
 {
   "check_id": "TASK-OI-10",
-  "run_id": "standalone-2026-04-06T01:55:21Z",
-  "timestamp_utc": "2026-04-06T01:55:21Z",
-  "git_sha": "e867df6c0998d00971cb844dcdc1889b8cd85c15",
+  "run_id": "standalone-2026-04-06T04:15:16Z",
+  "timestamp_utc": "2026-04-06T04:15:16Z",
+  "git_sha": "2aa2f41e3c300039dd137c2d5f5bd80dd66d0bbd",
   "schema_fingerprint": "1f92363c69ba235e552a6aac05045062fc0097fc93cde3b89e76455b80628019",
   "status": "PASS",
   "reviewer_id": "0001",
   "signed_at_utc": "2026-03-27T03:24:04Z",
-  "change_ref": "branch/feat/demo-for-greentech4ce",
+  "change_ref": "branch/fix/demo-updates-and-evidence",
   "review_artifact_ref": "approvals/2026-03-26/BRANCH-security-wave-1-runtime-integrity-children.md",
   "review_sidecar_ref": "approvals/2026-03-26/BRANCH-security-wave-1-runtime-integrity-children.approval.json",
   "reviewed_files": [
@@ -549,6 +549,7 @@
     "tasks/GF-W1-SCH-008/meta.yml"
   ],
   "changed_files": [
+    ".toolchain/pre_ci_debug/failure_state.env",
     "evidence/phase0/TSK-P0-KYC-001.json",
     "evidence/phase0/TSK-P0-KYC-002.json",
     "evidence/phase0/TSK-P0-KYC-003.json",

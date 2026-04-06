@@ -2,13 +2,13 @@
   "check_id": "GF-W1-FNC-006",
   "task_id": "GF-W1-FNC-006",
   "status": "PASS",
-  "timestamp_utc": "2026-04-06T01:58:47Z",
-  "generated_at": "2026-04-06T01:58:47.699735+00:00",
-  "git_sha": "e867df6c0998d00971cb844dcdc1889b8cd85c15",
-  "pre_ci_run_id": "rem-e867df6c0998",
+  "timestamp_utc": "2026-04-06T04:18:45Z",
+  "generated_at": "2026-04-06T04:18:45.322989+00:00",
+  "git_sha": "2aa2f41e3c300039dd137c2d5f5bd80dd66d0bbd",
+  "pre_ci_run_id": "rem-2aa2f41e3c30",
   "source_file": "schema/migrations/0113_gf_fn_confidence_enforcement.sql",
   "source_file_sha256": "28fb422fcfdf353c6f0641aedfa11dab898f862dc13cec47a9773621fcc2375e",
   "command_output": "{\"probes\": [{\"probe\": \"validate_confidence_score\", \"status\": \"PASS\"},{\"probe\": \"enforce_confidence_before_issuance\", \"status\": \"PASS\"},{\"probe\": \"trigger:confidence_enforcement\", \"status\": \"PASS\"}]}",
-  "_signature": "46de7678b4317d9e088d0b3de9fdac3e6dde05d30947b59e4b668853cc573638",
+  "_signature": "fb8c281a86ceac6390c3df47387962992fd0c8848dcd8571ccb5721d492dc3bd",
   "_signing_version": "symphony-v1"
 }
