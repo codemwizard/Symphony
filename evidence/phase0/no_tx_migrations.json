@@ -6,6 +6,5 @@
   "status": "PASS",
   "migration_applied": "t",
   "index_exists": "t",
-  "index_validity": "idx_payment_outbox_pending_due_claim|true|true",
-  "temp_db": "symphony_test_no_tx_1775473563"
+  "index_validity": "idx_payment_outbox_pending_due_claim|true|true"
 }

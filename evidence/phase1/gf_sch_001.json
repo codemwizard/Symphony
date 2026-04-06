@@ -4,11 +4,11 @@
   "status": "PASS",
   "timestamp_utc": "1970-01-01T00:00:00Z",
   "generated_at": "1970-01-01T00:00:00+00:00",
-  "git_sha": "1d6406aa2e0bf3a897f5e03a8e790a551f1d6fc9",
-  "pre_ci_run_id": "rem-1d6406aa2e0b",
+  "git_sha": "0000000000000000000000000000000000000000",
+  "pre_ci_run_id": "rem-0000000000000000",
   "source_file": "schema/migrations/0080_gf_adapter_registrations.sql",
   "source_file_sha256": "0abb5ec1325c2a194470df5c281b5d49a6ba1841272cbddecbb1b3208afdd7f9",
   "command_output": "{\"check\": \"schema_verification\", \"migration\": \"0080_gf_adapter_registrations.sql\"}",
-  "_signature": "364be295482f511cd0492fce4b99546e275a857be5c576abac2521b35e7c53a7",
+  "_signature": "27755e201539a5241aeae8efdd8b25dd6e1818bccf8fd1aba446dfbaaa2a470b",
   "_signing_version": "symphony-v1"
 }

@@ -1,0 +1,66 @@
+schema_version: 1
+phase: '1'
+task_id: TSK-P1-252
+title: Stabilize human governance review signoff evidence against reviewed-file drift
+owner_role: SECURITY_GUARDIAN
+status: completed
+depends_on:
+  - TSK-P1-249
+touches:
+  - scripts/audit/verify_human_governance_review_signoff.sh
+  - scripts/audit/tests/test_verify_human_governance_review_signoff.sh
+  - evidence/phase1/human_governance_review_signoff.json
+  - evidence/phase1/tsk_p1_252_governance_signoff_stability.json
+  - tasks/TSK-P1-252/meta.yml
+invariants:
+  - INV-001
+  - INV-004
+work:
+  - '[ID tsk_p1_252_work_item_01] Audit scripts/audit/verify_human_governance_review_signoff.sh and identify every reviewed-file-driven field that causes evidence/phase1/human_governance_review_signoff.json to drift when adjacent branch docs change.'
+  - '[ID tsk_p1_252_work_item_02] Replace reviewed-file list emission with deterministic summaries unless a downstream consumer requires the list, in which case emit a canonicalized stable representation with explicit inclusion rules.'
+  - '[ID tsk_p1_252_work_item_03] Add scripts/audit/tests/test_verify_human_governance_review_signoff.sh to prove repeated runs against the same committed review scope emit byte-stable evidence.'
+  - '[ID tsk_p1_252_work_item_04] Emit evidence/phase1/tsk_p1_252_governance_signoff_stability.json recording the retained review projection and repeated-run equality proof.'
+acceptance_criteria:
+  - '[ID tsk_p1_252_work_item_01] human governance review signoff evidence no longer changes just because an adjacent documentation file is added to or removed from the branch.'
+  - '[ID tsk_p1_252_work_item_02] Any retained review inventory is canonicalized, governed by explicit inclusion rules, and stable for the same committed review scope.'
+  - '[ID tsk_p1_252_work_item_03] bash scripts/audit/tests/test_verify_human_governance_review_signoff.sh proves byte-stable repeated-run output for the signoff verifier.'
+  - '[ID tsk_p1_252_work_item_04] evidence/phase1/tsk_p1_252_governance_signoff_stability.json records PASS status, observed paths, observed hashes, command outputs, and execution trace.'
+verification:
+  - '[ID tsk_p1_252_work_item_01] [ID tsk_p1_252_work_item_02] [ID tsk_p1_252_work_item_03] [ID tsk_p1_252_work_item_04] test -x scripts/audit/tests/test_verify_human_governance_review_signoff.sh && SYMPHONY_ENV=development bash scripts/audit/tests/test_verify_human_governance_review_signoff.sh || exit 1'
+  - '[ID tsk_p1_252_work_item_04] test -f evidence/phase1/tsk_p1_252_governance_signoff_stability.json && cat evidence/phase1/tsk_p1_252_governance_signoff_stability.json | tee /tmp/tsk_p1_252_evidence.log >/dev/null || exit 1'
+  - '[ID tsk_p1_252_work_item_04] test -f evidence/phase1/tsk_p1_252_governance_signoff_stability.json && python3 scripts/audit/validate_evidence.py --task TSK-P1-252 --evidence evidence/phase1/tsk_p1_252_governance_signoff_stability.json || exit 1'
+  - '[ID tsk_p1_252_work_item_01] [ID tsk_p1_252_work_item_02] [ID tsk_p1_252_work_item_03] PRE_CI_CONTEXT=1 SYMPHONY_ENV=development test -x scripts/audit/verify_human_governance_review_signoff.sh && PRE_CI_CONTEXT=1 SYMPHONY_ENV=development bash scripts/audit/verify_human_governance_review_signoff.sh || exit 1'
+evidence:
+  - path: evidence/phase1/tsk_p1_252_governance_signoff_stability.json
+    must_include:
+      - task_id
+      - git_sha
+      - timestamp_utc
+      - status
+      - checks
+      - targeted_files
+      - command_outputs
+      - observed_paths
+      - observed_hashes
+      - execution_trace
+failure_modes:
+  - human governance signoff evidence still drifts because reviewed-file inventory leaks raw branch state => FAIL
+  - retained review list is not canonicalized and reorders across repeated runs => FAIL
+  - Evidence file missing => FAIL
+anti_patterns:
+  - Emitting a raw reviewed-file list without explicit stable inclusion rules
+  - Claiming stability based on one run instead of repeated-run equality proof
+must_read:
+  - AGENT_ENTRYPOINT.md
+  - docs/operations/AI_AGENT_OPERATION_MANUAL.md
+  - docs/plans/phase1/REM-2026-04-06_evidence-push-nonconvergence/PLAN.md
+  - scripts/audit/verify_human_governance_review_signoff.sh
+implementation_plan: docs/plans/phase1/TSK-P1-252/PLAN.md
+implementation_log: docs/plans/phase1/TSK-P1-252/EXEC_LOG.md
+notes: >
+  This task removes a second diff-sensitive governance evidence producer that
+  currently changes whenever nearby documentation scope changes, even when the
+  committed review target is effectively unchanged.
+client: antigravity
+assigned_agent: security_guardian
+model: gpt-5-codex

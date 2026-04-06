@@ -32,6 +32,7 @@ import os
 default_schema = json.loads(Path("$SCHEMA_FILE").read_text())
 approval_schema_path = Path("$APPROVAL_SCHEMA_FILE")
 event_classes_dir = Path("$EVENT_CLASS_SCHEMAS_DIR")
+root_dir = Path("$ROOT_DIR")
 approval_schema = None
 event_class_schemas = {}
 if approval_schema_path.exists():
@@ -42,9 +43,12 @@ if event_classes_dir.exists():
         class_name = schema_path.name.replace(".schema.json", "")
         event_class_schemas[class_name] = schema
 dirs = ["$EVIDENCE_DIR", "$EVIDENCE_DIR_PHASE1"]
+checked_dirs = []
 files = []
 for d in dirs:
-    if Path(d).exists():
+    path_d = Path(d)
+    if path_d.exists():
+        checked_dirs.append(str(path_d.relative_to(root_dir)))
         for f in sorted(glob.glob(os.path.join(d, "*.json"))):
             if Path(f).name == "pwrm0001_monitoring_report.json" or Path(f).name == "pwrm_monitoring_report.json":
                 continue
@@ -92,7 +96,7 @@ out = {
     "git_sha": os.environ.get("EVIDENCE_GIT_SHA"),
     "schema_fingerprint": os.environ.get("EVIDENCE_SCHEMA_FP"),
     "status": status,
-    "checked_dirs": dirs,
+    "checked_dirs": checked_dirs,
     "checked_file_count": len(files),
     "schema_usage_count": len(schema_usage),
     "errors": errors,

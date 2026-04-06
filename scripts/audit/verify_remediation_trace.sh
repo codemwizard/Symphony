@@ -98,8 +98,8 @@ if not triggered_files:
         "base_ref": base_ref,
         "head_ref": head_ref,
         "merge_base": merge_base,
-        "changed_files": diff_changed,
-        "triggered_files": triggered_files,
+        "triggered_change_present": False,
+        "satisfying_docs": [],
     }
     evidence_out.write_text(json.dumps(out, indent=2) + "\n")
     raise SystemExit(0)
@@ -201,10 +201,10 @@ out = {
     "base_ref": base_ref,
     "head_ref": head_ref,
     "merge_base": merge_base,
-    "changed_file_count": len(diff_changed),
-    "triggered_file_count": len(triggered_files),
-    "trace_docs": trace_docs,
+    "triggered_change_present": True,
+    "triggered_prefixes": sorted({p.split("/", 1)[0] for p in triggered_files}),
     "satisfying_docs": satisfying_docs,
+    "satisfying_doc_parent": str(Path(satisfying_docs[0]).parent) if satisfying_docs else "",
     "errors": errors,
 }
 

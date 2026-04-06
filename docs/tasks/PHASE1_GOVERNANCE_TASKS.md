@@ -10,8 +10,20 @@ This index tracks governance rewrite tasks derived from `Symphony_Governance_Imp
 | TSK-P1-244 | SECURITY_GUARDIAN | planned | docs/plans/phase1/TSK-P1-244/PLAN.md | docs/plans/phase1/TSK-P1-244/EXEC_LOG.md |
 | TSK-P1-245 | SECURITY_GUARDIAN | planned | docs/plans/phase1/TSK-P1-245/PLAN.md | docs/plans/phase1/TSK-P1-245/EXEC_LOG.md |
 | TSK-P1-246 | QA_VERIFIER | planned | docs/plans/phase1/TSK-P1-246/PLAN.md | docs/plans/phase1/TSK-P1-246/EXEC_LOG.md |
-| TSK-P1-248 | SECURITY_GUARDIAN | planned | docs/plans/phase1/TSK-P1-248/PLAN.md | docs/plans/phase1/TSK-P1-248/EXEC_LOG.md |
-| TSK-P1-249 | SECURITY_GUARDIAN | planned | docs/plans/phase1/TSK-P1-249/PLAN.md | docs/plans/phase1/TSK-P1-249/EXEC_LOG.md |
+| TSK-P1-248 | SECURITY_GUARDIAN | completed | docs/plans/phase1/TSK-P1-248/PLAN.md | docs/plans/phase1/TSK-P1-248/EXEC_LOG.md |
+| TSK-P1-249 | SECURITY_GUARDIAN | completed | docs/plans/phase1/TSK-P1-249/PLAN.md | docs/plans/phase1/TSK-P1-249/EXEC_LOG.md |
+| TSK-P1-250 | SECURITY_GUARDIAN | completed | docs/plans/phase1/TSK-P1-250/PLAN.md | docs/plans/phase1/TSK-P1-250/EXEC_LOG.md |
+| TSK-P1-251 | SECURITY_GUARDIAN | completed | docs/plans/phase1/TSK-P1-251/PLAN.md | docs/plans/phase1/TSK-P1-251/EXEC_LOG.md |
+| TSK-P1-252 | SECURITY_GUARDIAN | completed | docs/plans/phase1/TSK-P1-252/PLAN.md | docs/plans/phase1/TSK-P1-252/EXEC_LOG.md |
+| TSK-P1-253 | SECURITY_GUARDIAN | completed | docs/plans/phase1/TSK-P1-253/PLAN.md | docs/plans/phase1/TSK-P1-253/EXEC_LOG.md |
+| TSK-P1-254 | QA_VERIFIER | completed | docs/plans/phase1/TSK-P1-254/PLAN.md | docs/plans/phase1/TSK-P1-254/EXEC_LOG.md |
+| TSK-P1-255 | QA_VERIFIER | in_progress | docs/plans/phase1/TSK-P1-255/PLAN.md | docs/plans/phase1/TSK-P1-255/EXEC_LOG.md |
+
+## Evidence Push Fixed-Point Recovery
+
+- DRD Full casefile: `docs/plans/phase1/REM-2026-04-06_evidence-push-nonconvergence/PLAN.md`
+- Execution order: `TSK-P1-250` + `TSK-P1-251` + `TSK-P1-252` -> `TSK-P1-253` -> `TSK-P1-254` -> `TSK-P1-255`
+- Wave intent: restore a true pre-push fixed point so `bash scripts/dev/pre_ci.sh` leaves the tracked tree clean after a commit.
 
 ## Runtime Integrity Wave Assignment
 

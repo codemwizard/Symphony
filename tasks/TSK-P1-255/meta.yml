@@ -1,0 +1,68 @@
+schema_version: 1
+phase: '1'
+task_id: TSK-P1-255
+title: Prove end-to-end pre-push fixed-point convergence with commit-between-runs verification
+owner_role: QA_VERIFIER
+status: in_progress
+depends_on:
+  - TSK-P1-254
+touches:
+  - scripts/audit/verify_tsk_p1_255.sh
+  - scripts/audit/tests/test_zero_drift_pre_push.sh
+  - scripts/dev/pre_ci.sh
+  - evidence/phase1/tsk_p1_255_pre_push_fixed_point.json
+  - tasks/TSK-P1-255/meta.yml
+invariants:
+  - INV-001
+  - INV-004
+work:
+  - '[ID tsk_p1_255_work_item_01] Create scripts/audit/verify_tsk_p1_255.sh using the repository-approved temporary git-state strategy so the proof changes HEAD without mutating the user worktree.'
+  - '[ID tsk_p1_255_work_item_02] Execute the required protocol in the verifier: generate evidence, commit, rerun pre_ci, assert git diff evidence/ is empty, and assert git status --porcelain is clean except the documented transient if any.'
+  - '[ID tsk_p1_255_work_item_03] Add scripts/audit/tests/test_zero_drift_pre_push.sh to fail if the verifier uses the invalid run-twice-without-commit shortcut or omits any fixed-point assertion.'
+  - '[ID tsk_p1_255_work_item_04] Emit evidence/phase1/tsk_p1_255_pre_push_fixed_point.json recording before/after comparisons, command outputs, observed paths, observed hashes, and the final zero-drift result.'
+acceptance_criteria:
+  - '[ID tsk_p1_255_work_item_01] The verifier uses an isolated temporary git-state strategy and does not mutate the user branch history while proving convergence.'
+  - '[ID tsk_p1_255_work_item_02] The verifier performs the commit-between-runs protocol and fails if git diff evidence/ is non-empty or git status --porcelain remains dirty beyond the documented transient.'
+  - '[ID tsk_p1_255_work_item_03] bash scripts/audit/tests/test_zero_drift_pre_push.sh proves the invalid run-twice-without-commit method is rejected and the fixed-point assertions are present.'
+  - '[ID tsk_p1_255_work_item_04] evidence/phase1/tsk_p1_255_pre_push_fixed_point.json records PASS status, before/after comparisons, command outputs, observed paths, observed hashes, and execution trace.'
+verification:
+  - '[ID tsk_p1_255_work_item_01] [ID tsk_p1_255_work_item_02] [ID tsk_p1_255_work_item_03] [ID tsk_p1_255_work_item_04] test -x scripts/audit/tests/test_zero_drift_pre_push.sh && SYMPHONY_ENV=development bash scripts/audit/tests/test_zero_drift_pre_push.sh || exit 1'
+  - '[ID tsk_p1_255_work_item_04] test -f evidence/phase1/tsk_p1_255_pre_push_fixed_point.json && cat evidence/phase1/tsk_p1_255_pre_push_fixed_point.json | tee /tmp/tsk_p1_255_evidence.log >/dev/null || exit 1'
+  - '[ID tsk_p1_255_work_item_04] test -f evidence/phase1/tsk_p1_255_pre_push_fixed_point.json && python3 scripts/audit/validate_evidence.py --task TSK-P1-255 --evidence evidence/phase1/tsk_p1_255_pre_push_fixed_point.json || exit 1'
+  - '[ID tsk_p1_255_work_item_01] [ID tsk_p1_255_work_item_02] [ID tsk_p1_255_work_item_03] test -x scripts/audit/verify_tsk_p1_255.sh && SYMPHONY_ENV=development bash scripts/audit/verify_tsk_p1_255.sh || exit 1'
+evidence:
+  - path: evidence/phase1/tsk_p1_255_pre_push_fixed_point.json
+    must_include:
+      - task_id
+      - git_sha
+      - timestamp_utc
+      - status
+      - checks
+      - before_commit
+      - after_commit
+      - command_outputs
+      - observed_paths
+      - observed_hashes
+      - execution_trace
+failure_modes:
+  - verifier uses the invalid run-twice-without-commit protocol => FAIL
+  - verifier mutates the user branch history instead of an isolated temporary git state => FAIL
+  - Evidence file missing => FAIL
+anti_patterns:
+  - Claiming fixed-point convergence without changing HEAD between runs
+  - Reusing the user's working tree as the commit-between-runs proof environment
+must_read:
+  - AGENT_ENTRYPOINT.md
+  - docs/operations/AI_AGENT_OPERATION_MANUAL.md
+  - docs/plans/phase1/REM-2026-04-06_evidence-push-nonconvergence/PLAN.md
+  - docs/plans/phase1/TSK-P1-254/PLAN.md
+  - scripts/dev/pre_ci.sh
+implementation_plan: docs/plans/phase1/TSK-P1-255/PLAN.md
+implementation_log: docs/plans/phase1/TSK-P1-255/EXEC_LOG.md
+notes: >
+  This is the terminal proof task. It must remain verifier-led, must reject the
+  invalid no-commit shortcut, and must prove the actual push-blocking scenario
+  rather than a weaker approximation.
+client: antigravity
+assigned_agent: qa_verifier
+model: gpt-5-codex

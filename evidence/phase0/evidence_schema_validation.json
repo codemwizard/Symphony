@@ -5,16 +5,16 @@
   "git_sha": "0000000000000000000000000000000000000000",
   "status": "PASS",
   "pass": true,
-  "count_valid": 306,
+  "count_valid": 309,
   "count_invalid": 0,
   "invalid_files": [],
   "schema_version": "1.0",
   "inputs": {
-    "phase0_dir": "/home/mwiza/workspace/Symphony/evidence/phase0",
-    "phase1_dir": "/home/mwiza/workspace/Symphony/evidence/phase1",
+    "phase0_dir": "evidence/phase0",
+    "phase1_dir": "evidence/phase1",
     "strict": false
   },
   "outputs": {
-    "report_path": "/home/mwiza/workspace/Symphony/evidence/phase0/evidence_schema_validation.json"
+    "report_path": "evidence/phase0/evidence_schema_validation.json"
   }
 }

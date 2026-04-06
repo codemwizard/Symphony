@@ -1,0 +1,70 @@
+schema_version: 1
+phase: '1'
+task_id: TSK-P1-254
+title: Rebaseline stale deterministic evidence and remove legacy runtime-only fields
+owner_role: QA_VERIFIER
+status: completed
+depends_on:
+  - TSK-P1-250
+  - TSK-P1-251
+  - TSK-P1-252
+  - TSK-P1-253
+touches:
+  - scripts/audit/verify_tsk_p1_254.sh
+  - evidence/phase1/tsk_p1_254_evidence_rebaseline.json
+  - tasks/TSK-P1-254/meta.yml
+invariants:
+  - INV-001
+  - INV-004
+work:
+  - '[ID tsk_p1_254_work_item_01] Inventory every evidence file still rewritten by deterministic generators after the producer-stability tasks complete, including stale signed artifacts and legacy runtime-only fields.'
+  - '[ID tsk_p1_254_work_item_02] Rebaseline the stale evidence set exactly once from the stabilized generators and remove legacy fields that current producers no longer emit.'
+  - '[ID tsk_p1_254_work_item_03] Add scripts/audit/verify_tsk_p1_254.sh to prove the stale deterministic evidence set is empty after rebaseline.'
+  - '[ID tsk_p1_254_work_item_04] Emit evidence/phase1/tsk_p1_254_evidence_rebaseline.json recording the stale-file inventory, regenerated outputs, observed hashes, and empty-drift result.'
+acceptance_criteria:
+  - '[ID tsk_p1_254_work_item_01] The stale deterministic evidence inventory explicitly identifies every tracked file still rewritten because it was committed in the wrong deterministic shape.'
+  - '[ID tsk_p1_254_work_item_02] Files such as stale signed evidence and legacy runtime-only payloads are no longer rewritten solely to remove live values or removed fields.'
+  - '[ID tsk_p1_254_work_item_03] bash scripts/audit/verify_tsk_p1_254.sh reports zero stale deterministic evidence files remaining.'
+  - '[ID tsk_p1_254_work_item_04] evidence/phase1/tsk_p1_254_evidence_rebaseline.json records PASS status, stale-file inventory, command outputs, observed paths, observed hashes, and execution trace.'
+verification:
+  - '[ID tsk_p1_254_work_item_01] [ID tsk_p1_254_work_item_02] [ID tsk_p1_254_work_item_03] [ID tsk_p1_254_work_item_04] test -x scripts/audit/verify_tsk_p1_254.sh && SYMPHONY_ENV=development bash scripts/audit/verify_tsk_p1_254.sh || exit 1'
+  - '[ID tsk_p1_254_work_item_04] test -f evidence/phase1/tsk_p1_254_evidence_rebaseline.json && cat evidence/phase1/tsk_p1_254_evidence_rebaseline.json | tee /tmp/tsk_p1_254_evidence.log >/dev/null || exit 1'
+  - '[ID tsk_p1_254_work_item_04] test -f evidence/phase1/tsk_p1_254_evidence_rebaseline.json && python3 scripts/audit/validate_evidence.py --task TSK-P1-254 --evidence evidence/phase1/tsk_p1_254_evidence_rebaseline.json || exit 1'
+  - '[ID tsk_p1_254_work_item_01] [ID tsk_p1_254_work_item_02] [ID tsk_p1_254_work_item_03] test -x scripts/dev/pre_ci.sh && RUN_PHASE1_GATES=1 bash scripts/dev/pre_ci.sh || exit 1'
+evidence:
+  - path: evidence/phase1/tsk_p1_254_evidence_rebaseline.json
+    must_include:
+      - task_id
+      - git_sha
+      - timestamp_utc
+      - status
+      - checks
+      - targeted_files
+      - command_outputs
+      - observed_paths
+      - observed_hashes
+      - execution_trace
+failure_modes:
+  - stale deterministic evidence inventory is incomplete and some legacy artifacts continue to drift => FAIL
+  - rebaseline is attempted before upstream producer-stability tasks complete => FAIL
+  - Evidence file missing => FAIL
+anti_patterns:
+  - Recommitting stale evidence before the active producers are stable
+  - Declaring rebaseline complete without enumerating the stale-file set
+must_read:
+  - AGENT_ENTRYPOINT.md
+  - docs/operations/AI_AGENT_OPERATION_MANUAL.md
+  - docs/plans/phase1/REM-2026-04-06_evidence-push-nonconvergence/PLAN.md
+  - docs/plans/phase1/TSK-P1-250/PLAN.md
+  - docs/plans/phase1/TSK-P1-251/PLAN.md
+  - docs/plans/phase1/TSK-P1-252/PLAN.md
+  - docs/plans/phase1/TSK-P1-253/PLAN.md
+implementation_plan: docs/plans/phase1/TSK-P1-254/PLAN.md
+implementation_log: docs/plans/phase1/TSK-P1-254/EXEC_LOG.md
+notes: >
+  This task is verification-led by design. It should start only after the
+  producer-stability tasks pass so the rebaseline locks in the real fixed point
+  instead of chasing still-changing evidence generators.
+client: antigravity
+assigned_agent: qa_verifier
+model: gpt-5-codex
