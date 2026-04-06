@@ -132,7 +132,10 @@ def cmd_write(args: argparse.Namespace) -> int:
         src_path.read_bytes() if src_path.exists() else args.source_file.encode("utf-8")
     ).hexdigest()
 
-    timestamp = datetime.now(timezone.utc)
+    if os.environ.get("SYMPHONY_EVIDENCE_DETERMINISTIC") == "1":
+        timestamp = datetime.fromtimestamp(0, tz=timezone.utc)
+    else:
+        timestamp = datetime.now(timezone.utc)
     timestamp_str = timestamp.strftime("%Y-%m-%dT%H:%M:%SZ")
 
     try:

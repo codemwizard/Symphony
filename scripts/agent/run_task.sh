@@ -54,8 +54,13 @@ die() { echo "ERROR: $*" >&2; exit 1; }
 
 # Stable run identity for evidence freshness checks.
 GIT_SHA="$(git rev-parse --short HEAD 2>/dev/null || echo nogit)"
-RUN_TS_UTC="$(date -u +%Y%m%dT%H%M%SZ)"
-RUN_ID="${GIT_SHA}-${RUN_TS_UTC}"
+if [[ "${SYMPHONY_EVIDENCE_DETERMINISTIC:-0}" == "1" ]]; then
+  RUN_TS_UTC="19700101T000000Z"
+  RUN_ID="${GIT_SHA}-deterministic"
+else
+  RUN_TS_UTC="$(date -u +%Y%m%dT%H%M%SZ)"
+  RUN_ID="${GIT_SHA}-${RUN_TS_UTC}"
+fi
 
 export SYMPHONY_RUN_ID="$RUN_ID"
 export SYMPHONY_RUN_TS_UTC="$RUN_TS_UTC"

@@ -1,7 +1,7 @@
 {
   "check_id": "EVIDENCE-SCHEMA-VALIDATION",
-  "timestamp_utc": "2026-04-06T04:15:28Z",
-  "git_sha": "2aa2f41e3c300039dd137c2d5f5bd80dd66d0bbd",
+  "timestamp_utc": "1970-01-01T00:00:00Z",
+  "git_sha": "ae27ed9b3887fe008d65e74c127cbebeb79ce99e",
   "schema_fingerprint": "1f92363c69ba235e552a6aac05045062fc0097fc93cde3b89e76455b80628019",
   "status": "PASS",
   "checked_dirs": [
@@ -277,6 +277,7 @@
     "/home/mwiza/workspace/Symphony/evidence/phase1/tsk_p1_218_server_side_onboarding_apis.json",
     "/home/mwiza/workspace/Symphony/evidence/phase1/tsk_p1_219_operator_onboarding_console.json",
     "/home/mwiza/workspace/Symphony/evidence/phase1/tsk_p1_220_canonical_bootstrap.json",
+    "/home/mwiza/workspace/Symphony/evidence/phase1/tsk_p1_247_deterministic_timestamps.json",
     "/home/mwiza/workspace/Symphony/evidence/phase1/tsk_p1_demo_001_pre_coding_lock.json",
     "/home/mwiza/workspace/Symphony/evidence/phase1/tsk_p1_demo_002_sms_secure_link.json",
     "/home/mwiza/workspace/Symphony/evidence/phase1/tsk_p1_demo_003_browser_geo_capture.json",
@@ -1384,6 +1385,10 @@
     },
     {
       "file": "/home/mwiza/workspace/Symphony/evidence/phase1/tsk_p1_220_canonical_bootstrap.json",
+      "schema": "default"
+    },
+    {
+      "file": "/home/mwiza/workspace/Symphony/evidence/phase1/tsk_p1_247_deterministic_timestamps.json",
       "schema": "default"
     },
     {

@@ -49,6 +49,7 @@ _SOFT_BYPASS_VARS=(
   SKIP_POLICY_SEED
   KEEP_TEMP_DB
   CLEAN_EVIDENCE
+  PII_LINT_ROOTS
 )
 
 # ---------------------------------------------------------------------------
@@ -116,6 +117,7 @@ export FORCE_PASS=0
 export SKIP_POLICY_SEED=0
 export KEEP_TEMP_DB=0
 export CLEAN_EVIDENCE=1
+export PII_LINT_ROOTS=""
 # Restore RUN_DEMO_GATES to the validated value (0 if it was invalid).
 export RUN_DEMO_GATES="${_rdg_val:-0}"
 if [[ "$_rdg_val" != "0" && "$_rdg_val" != "1" ]]; then
