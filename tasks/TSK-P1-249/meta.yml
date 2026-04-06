@@ -3,7 +3,7 @@ phase: '1'
 task_id: TSK-P1-249
 title: Patch remaining live timestamps and strip dynamic runtime values from evidence
 owner_role: SECURITY_GUARDIAN
-status: in-progress
+status: in_progress
 depends_on:
   - TSK-P1-248
 touches:

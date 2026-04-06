@@ -3,7 +3,7 @@ phase: '1'
 task_id: TSK-P1-248
 title: Clamp git_sha and derived fields under SYMPHONY_EVIDENCE_DETERMINISTIC
 owner_role: SECURITY_GUARDIAN
-status: in-progress
+status: in_progress
 depends_on:
   - TSK-P1-247
 touches:
