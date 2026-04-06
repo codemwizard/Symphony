@@ -10,7 +10,7 @@ rg -q "P8001" "$M"
 rg -q "UNREGISTERED_BLOCKED" "$M"
 
 cat > "$O" <<JSON
-{"check_id":"TSK-HARD-033","task_id":"TSK-HARD-033","status":"PASS","pass":true,"pre_dispatch_registry_linkage_check":true,"unregistered_reference_error_code":"P8001","adjusted_reference_accepted_with_registry_link":true,"duplicate_rejection_evidence_supported":true,"timestamp_utc":"$(date -u +%Y-%m-%dT%H:%M:%SZ)","git_sha":"$([ "${SYMPHONY_EVIDENCE_DETERMINISTIC:-0}" = "1" ] && echo "0000000000000000000000000000000000000000" || git rev-parse HEAD)"}
+{"check_id":"TSK-HARD-033","task_id":"TSK-HARD-033","status":"PASS","pass":true,"pre_dispatch_registry_linkage_check":true,"unregistered_reference_error_code":"P8001","adjusted_reference_accepted_with_registry_link":true,"duplicate_rejection_evidence_supported":true,"timestamp_utc":"$([ "${SYMPHONY_EVIDENCE_DETERMINISTIC:-0}" = "1" ] && echo "1970-01-01T00:00:00Z" || date -u +%Y-%m-%dT%H:%M:%SZ)","git_sha":"$([ "${SYMPHONY_EVIDENCE_DETERMINISTIC:-0}" = "1" ] && echo "0000000000000000000000000000000000000000" || git rev-parse HEAD)"}
 JSON
 python3 - <<PY
 import json

@@ -93,8 +93,8 @@ out = {
     "schema_fingerprint": os.environ.get("EVIDENCE_SCHEMA_FP"),
     "status": status,
     "checked_dirs": dirs,
-    "checked_files": files,
-    "schema_usage": schema_usage,
+    "checked_file_count": len(files),
+    "schema_usage_count": len(schema_usage),
     "errors": errors,
 }
 Path("$REPORT_FILE").write_text(json.dumps(out, indent=2))

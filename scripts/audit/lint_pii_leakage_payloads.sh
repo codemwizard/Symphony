@@ -33,6 +33,10 @@ GATE_ID="SEC-G17"
 INVARIANT_ID="INV-112"
 
 PII_LINT_ROOTS="${PII_LINT_ROOTS:-src packages scripts schema}"
+REPORTED_PII_LINT_ROOTS="$PII_LINT_ROOTS"
+if [[ "${SYMPHONY_EVIDENCE_DETERMINISTIC:-0}" == "1" ]]; then
+  REPORTED_PII_LINT_ROOTS="src packages scripts schema"
+fi
 PII_LINT_EXCLUDE_GLOBS="${PII_LINT_EXCLUDE_GLOBS:-docs/** scripts/**/tests/** **/*_test.* **/*.md **/*.txt **/*.png **/*.jpg **/*.jpeg **/*.gif **/*.pdf **/*.zip **/*.tgz **/*.gz **/*.tar **/*.bin **/*.exe **/*.dll **/*.so **/*.dylib}"
 PII_LINT_MAX_FINDINGS="${PII_LINT_MAX_FINDINGS:-50}"
 
@@ -132,7 +136,7 @@ export EVIDENCE_FILE
 export FINDINGS_FILE="$tmp_findings"
 export CHECK_ID GATE_ID INVARIANT_ID
 export EVIDENCE_TS EVIDENCE_GIT_SHA EVIDENCE_SCHEMA_FP
-export PII_LINT_ROOTS PII_LINT_EXCLUDE_GLOBS
+export PII_LINT_ROOTS PII_LINT_EXCLUDE_GLOBS REPORTED_PII_LINT_ROOTS
 export OK="$ok"
 export STATUS="$status"
 export ERRORS="${errors[*]}"
@@ -163,7 +167,8 @@ out = {
   "schema_fingerprint": os.environ.get("EVIDENCE_SCHEMA_FP"),
   "status": os.environ["STATUS"],
   "ok": os.environ["OK"] == "1",
-  "roots": os.environ["PII_LINT_ROOTS"].split(),
+  "roots": os.environ["REPORTED_PII_LINT_ROOTS"].split(),
+  "roots_count": len(os.environ["REPORTED_PII_LINT_ROOTS"].split()),
   "exclude_globs": os.environ["PII_LINT_EXCLUDE_GLOBS"].split(),
   "pattern_note": "PII keyword within 80 chars of regulated context keyword; allow via symphony:pii_ok marker",
   "errors": [e for e in os.environ.get("ERRORS", "").split() if e],

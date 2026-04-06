@@ -65,7 +65,7 @@ if [[ "$REQUIRED_EXISTS" == "false" && "$RETRIES_COUNT" -eq 0 ]]; then
   exit 0
 fi
 
-RESET_AT="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+RESET_AT="$([ "${SYMPHONY_EVIDENCE_DETERMINISTIC:-0}" = "1" ] && echo "1970-01-01T00:00:00Z" || date -u +%Y-%m-%dT%H:%M:%SZ)"
 GIT_SHA="$(git rev-parse --short HEAD 2>/dev/null || echo nogit)"
 RESET_BY="${USER:-unknown}"
 

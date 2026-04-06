@@ -1,0 +1,72 @@
+schema_version: 1
+phase: '1'
+task_id: TSK-P1-249
+title: Patch remaining live timestamps and strip dynamic runtime values from evidence
+owner_role: SECURITY_GUARDIAN
+status: in-progress
+depends_on:
+  - TSK-P1-248
+touches:
+  - scripts/audit/verify_agent_conformance.sh
+  - scripts/audit/lint_pii_leakage_payloads.sh
+  - scripts/security/lint_dotnet_quality.sh
+  - scripts/audit/verify_tsk_p1_249.sh
+  - evidence/phase1/tsk_p1_249_runtime_value_stabilization.json
+  - tasks/TSK-P1-249/meta.yml
+invariants:
+  - INV-001
+  - INV-004
+work:
+  - '[ID tsk_p1_249_work_item_01] Clamp remaining commit-sensitive and timestamp fields in verify_agent_conformance.sh under deterministic mode.'
+  - '[ID tsk_p1_249_work_item_02] Prevent lint_pii_leakage_payloads.sh from emitting environment-specific /tmp roots into evidence under deterministic mode.'
+  - '[ID tsk_p1_249_work_item_03] Replace raw dotnet stdout capture in lint_dotnet_quality.sh with stable summary fields.'
+  - '[ID tsk_p1_249_work_item_04] Verify the already-patched no_tx_migrations and openbao audit producers do not emit temp_db or audit_log_bytes anymore.'
+  - '[ID tsk_p1_249_work_item_05] Add a verifier that asserts the targeted evidence producers emit only deterministic metadata and stable payload summaries.'
+acceptance_criteria:
+  - '[ID tsk_p1_249_work_item_01] verify_agent_conformance.sh emits deterministic checked_at_utc and git_commit values when deterministic mode is enabled.'
+  - '[ID tsk_p1_249_work_item_02] pii_leakage_payloads evidence contains no /tmp paths after deterministic runs, even when PII_LINT_ROOTS is overridden for tests.'
+  - '[ID tsk_p1_249_work_item_03] dotnet_lint_quality evidence omits raw output_lines and instead emits stable summary counts.'
+  - '[ID tsk_p1_249_work_item_04] no_tx_migrations evidence omits temp_db and openbao_audit_log evidence omits audit_log_bytes.'
+  - '[ID tsk_p1_249_work_item_05] bash scripts/audit/verify_tsk_p1_249.sh fails if any targeted evidence output still contains live timestamps, live commit metadata, /tmp roots, temp_db, audit_log_bytes, or raw build stdout.'
+verification:
+  - '[ID tsk_p1_249_work_item_01] [ID tsk_p1_249_work_item_02] [ID tsk_p1_249_work_item_03] [ID tsk_p1_249_work_item_04] [ID tsk_p1_249_work_item_05] test -x scripts/audit/verify_tsk_p1_249.sh && bash scripts/audit/verify_tsk_p1_249.sh || exit 1'
+  - '[ID tsk_p1_249_work_item_05] test -f evidence/phase1/tsk_p1_249_runtime_value_stabilization.json && cat evidence/phase1/tsk_p1_249_runtime_value_stabilization.json | tee /tmp/tsk_p1_249_evidence.log >/dev/null || exit 1'
+  - '[ID tsk_p1_249_work_item_05] test -f evidence/phase1/tsk_p1_249_runtime_value_stabilization.json && python3 scripts/audit/validate_evidence.py --task TSK-P1-249 --evidence evidence/phase1/tsk_p1_249_runtime_value_stabilization.json || exit 1'
+  - '[ID tsk_p1_249_work_item_01] [ID tsk_p1_249_work_item_02] [ID tsk_p1_249_work_item_03] [ID tsk_p1_249_work_item_04] test -x scripts/dev/pre_ci.sh && RUN_PHASE1_GATES=1 bash scripts/dev/pre_ci.sh || exit 1'
+evidence:
+  - path: evidence/phase1/tsk_p1_249_runtime_value_stabilization.json
+    must_include:
+      - task_id
+      - git_sha
+      - timestamp_utc
+      - status
+      - checks
+      - targeted_files
+      - command_outputs
+      - observed_paths
+      - observed_hashes
+      - execution_trace
+failure_modes:
+  - verify_agent_conformance evidence still emits live checked_at_utc or git_commit => FAIL
+  - pii_leakage_payloads evidence leaks /tmp roots => FAIL
+  - dotnet_lint_quality evidence still embeds raw build stdout => FAIL
+  - no_tx_migrations or openbao audit evidence still emit runtime-only fields => FAIL
+  - Evidence file missing => FAIL
+anti_patterns:
+  - Stripping fields without checking the evidence remains diagnostically useful
+  - Testing determinism without a commit-between-runs proof already in place
+must_read:
+  - AGENT_ENTRYPOINT.md
+  - docs/operations/AI_AGENT_OPERATION_MANUAL.md
+  - scripts/audit/verify_agent_conformance.sh
+  - scripts/audit/lint_pii_leakage_payloads.sh
+  - scripts/security/lint_dotnet_quality.sh
+implementation_plan: docs/plans/phase1/TSK-P1-249/PLAN.md
+implementation_log: docs/plans/phase1/TSK-P1-249/EXEC_LOG.md
+notes: >
+  This task closes the secondary deterministic gaps left after the git identity
+  clamp. It focuses only on evidence producers exercised by the local parity
+  pipeline so the repo can converge on a clean tree after pre_ci runs.
+client: antigravity
+assigned_agent: security_guardian
+model: gpt-5-codex

@@ -16,7 +16,7 @@ mkdir -p "$tmp_dir/scripts/lib" "$tmp_dir/evidence/phase1"
 cp "$ROOT/scripts/lib/evidence.sh" "$tmp_dir/scripts/lib/evidence.sh"
 
 set +e
-DOTNET_LINT_ROOT="$tmp_dir" "$SCRIPT"
+SYMPHONY_ENV=development DOTNET_LINT_ROOT="$tmp_dir" "$SCRIPT"
 rc=$?
 set -e
 

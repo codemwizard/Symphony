@@ -4,8 +4,6 @@
   "git_sha": "0000000000000000000000000000000000000000",
   "schema_fingerprint": "1f92363c69ba235e552a6aac05045062fc0097fc93cde3b89e76455b80628019",
   "status": "PASS",
-  "checked_files": [
-    "/home/mwiza/workspace/Symphony/tasks/TSK-P1-247/meta.yml"
-  ],
+  "checked_file_count": 1,
   "errors": []
 }

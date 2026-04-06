@@ -65,7 +65,7 @@ if [[ -n "$EVIDENCE_TARGET" ]]; then
 {
   "task_id": "RUNTIME_EXECUTION",
   "git_sha": "$(git rev-parse HEAD 2>/dev/null || echo "UNKNOWN")",
-  "timestamp_utc": "$(date -u +"%Y-%m-%dT%H:%M:%SZ")",
+  "timestamp_utc": "$([ "${SYMPHONY_EVIDENCE_DETERMINISTIC:-0}" = "1" ] && echo "1970-01-01T00:00:00Z" || date -u +%Y-%m-%dT%H:%M:%SZ)",
   "status": "PASS",
   "checks": {
     "execution_core_status": "PASS"

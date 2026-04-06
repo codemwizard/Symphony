@@ -1,0 +1,101 @@
+{
+  "check_id": "TSK-P1-248",
+  "task_id": "TSK-P1-248",
+  "timestamp_utc": "1970-01-01T00:00:00Z",
+  "git_sha": "0000000000000000000000000000000000000000",
+  "status": "PASS",
+  "checks": [
+    {
+      "check": "before_commit_helper_git_sha_clamped",
+      "pass": true,
+      "observed": "0000000000000000000000000000000000000000"
+    },
+    {
+      "check": "before_commit_helper_timestamp_clamped",
+      "pass": true,
+      "observed": "1970-01-01T00:00:00Z"
+    },
+    {
+      "check": "before_commit_signed_git_sha_clamped",
+      "pass": true,
+      "observed": "0000000000000000000000000000000000000000"
+    },
+    {
+      "check": "before_commit_signed_timestamp_clamped",
+      "pass": true,
+      "observed": "1970-01-01T00:00:00Z"
+    },
+    {
+      "check": "before_commit_run_id_clamped",
+      "pass": true,
+      "observed": "rem-0000000000000000"
+    },
+    {
+      "check": "after_commit_helper_git_sha_clamped",
+      "pass": true,
+      "observed": "0000000000000000000000000000000000000000"
+    },
+    {
+      "check": "after_commit_helper_timestamp_clamped",
+      "pass": true,
+      "observed": "1970-01-01T00:00:00Z"
+    },
+    {
+      "check": "after_commit_signed_git_sha_clamped",
+      "pass": true,
+      "observed": "0000000000000000000000000000000000000000"
+    },
+    {
+      "check": "after_commit_signed_timestamp_clamped",
+      "pass": true,
+      "observed": "1970-01-01T00:00:00Z"
+    },
+    {
+      "check": "after_commit_run_id_clamped",
+      "pass": true,
+      "observed": "rem-0000000000000000"
+    }
+  ],
+  "before_commit": {
+    "helper_git_sha": "0000000000000000000000000000000000000000",
+    "helper_timestamp_utc": "1970-01-01T00:00:00Z",
+    "signed_git_sha": "0000000000000000000000000000000000000000",
+    "signed_run_id": "rem-0000000000000000",
+    "signed_signature": "b209453f705400e465c3894bc1b2b298ce5f138742c5f4c71e191982457bacfa",
+    "signed_timestamp_utc": "1970-01-01T00:00:00Z",
+    "stage": "before_commit"
+  },
+  "after_commit": {
+    "helper_git_sha": "0000000000000000000000000000000000000000",
+    "helper_timestamp_utc": "1970-01-01T00:00:00Z",
+    "signed_git_sha": "0000000000000000000000000000000000000000",
+    "signed_run_id": "rem-0000000000000000",
+    "signed_signature": "b209453f705400e465c3894bc1b2b298ce5f138742c5f4c71e191982457bacfa",
+    "signed_timestamp_utc": "1970-01-01T00:00:00Z",
+    "stage": "after_commit"
+  },
+  "observed_paths": [
+    "scripts/lib/evidence.sh",
+    "scripts/audit/sign_evidence.py",
+    "scripts/dev/pre_ci.sh"
+  ],
+  "observed_hashes": {
+    "scripts/lib/evidence.sh": "53191b7195b2471462a1a02d96395b7db82bf4a497c9ec2eb0f311470b2f5c54",
+    "scripts/audit/sign_evidence.py": "07494773d7361922a7acb1dba842e5662eeacc72c7851df3e73869b97ee68f94",
+    "scripts/dev/pre_ci.sh": "0f51c39c23e0018568b205482fbc9406e6a487a1820aa824a8aa27fa90e57c43"
+  },
+  "command_outputs": [
+    "git worktree add --detach <tmp> HEAD",
+    "python3 scripts/audit/sign_evidence.py --write ...",
+    "git commit --allow-empty -m \"TSK-P1-248 deterministic proof commit\"",
+    "python3 scripts/audit/sign_evidence.py --write ..."
+  ],
+  "execution_trace": [
+    "create detached worktree",
+    "run deterministic bash helper probe",
+    "run deterministic signer probe",
+    "create empty commit to change HEAD",
+    "repeat probes and compare stable fields"
+  ],
+  "errors": []
+}

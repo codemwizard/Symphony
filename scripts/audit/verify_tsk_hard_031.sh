@@ -11,7 +11,7 @@ rg -q "collision_retry_count" "$M"
 rg -q "P7801" "$M"
 
 cat > "$O" <<JSON
-{"check_id":"TSK-HARD-031","task_id":"TSK-HARD-031","status":"PASS","pass":true,"registry_persistent":true,"strategy_types_supported":4,"retry_limit_policy_loaded":true,"collision_exhaustion_sqlstate":"P7801","pre_dispatch_registration_enforced":true,"timestamp_utc":"$(date -u +%Y-%m-%dT%H:%M:%SZ)","git_sha":"$([ "${SYMPHONY_EVIDENCE_DETERMINISTIC:-0}" = "1" ] && echo "0000000000000000000000000000000000000000" || git rev-parse HEAD)"}
+{"check_id":"TSK-HARD-031","task_id":"TSK-HARD-031","status":"PASS","pass":true,"registry_persistent":true,"strategy_types_supported":4,"retry_limit_policy_loaded":true,"collision_exhaustion_sqlstate":"P7801","pre_dispatch_registration_enforced":true,"timestamp_utc":"$([ "${SYMPHONY_EVIDENCE_DETERMINISTIC:-0}" = "1" ] && echo "1970-01-01T00:00:00Z" || date -u +%Y-%m-%dT%H:%M:%SZ)","git_sha":"$([ "${SYMPHONY_EVIDENCE_DETERMINISTIC:-0}" = "1" ] && echo "0000000000000000000000000000000000000000" || git rev-parse HEAD)"}
 JSON
 python3 - <<PY
 import json

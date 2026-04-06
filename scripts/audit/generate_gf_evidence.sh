@@ -25,7 +25,7 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 cd "$ROOT"
 
-TIMESTAMP=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+TIMESTAMP=$([ "${SYMPHONY_EVIDENCE_DETERMINISTIC:-0}" = "1" ] && echo "1970-01-01T00:00:00Z" || date -u +%Y-%m-%dT%H:%M:%SZ)
 GENERATED=0
 FAILED=0
 

@@ -29,7 +29,7 @@ EVIDENCE_DIR="$ROOT/evidence/phase0"
 EVIDENCE_OUT="$EVIDENCE_DIR/core_contract_gate.json"
 mkdir -p "$EVIDENCE_DIR"
 
-TIMESTAMP="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+TIMESTAMP="$([ "${SYMPHONY_EVIDENCE_DETERMINISTIC:-0}" = "1" ] && echo "1970-01-01T00:00:00Z" || date -u +%Y-%m-%dT%H:%M:%SZ)"
 GIT_SHA="$([ "${SYMPHONY_EVIDENCE_DETERMINISTIC:-0}" = "1" ] && echo "0000000000000000000000000000000000000000" || git rev-parse HEAD 2>/dev/null || echo 'unknown')"
 
 CHECK_FILTER=""

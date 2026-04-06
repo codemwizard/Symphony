@@ -11,7 +11,7 @@ if [[ "${PRE_CI_CONTEXT:-}" != "1" ]]; then
   echo "  Debug override: PRE_CI_CONTEXT=1 bash $(basename "${BASH_SOURCE[0]}")" >&2
   mkdir -p .toolchain/audit
   printf '%s rogue_execution attempted: %s\n' \
-    "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "${BASH_SOURCE[0]}" \
+    "$([ "${SYMPHONY_EVIDENCE_DETERMINISTIC:-0}" = "1" ] && echo "1970-01-01T00:00:00Z" || date -u +%Y-%m-%dT%H:%M:%SZ)" "${BASH_SOURCE[0]}" \
     >> .toolchain/audit/rogue_execution.log
   return 1 2>/dev/null || exit 1
 fi
@@ -145,7 +145,7 @@ fi
 source "$ROOT/scripts/lib/evidence.sh" 2>/dev/null || {
   git_sha() { git rev-parse HEAD 2>/dev/null || echo "unknown"; }
   schema_fingerprint() { echo "unknown"; }
-  evidence_now_utc() { date -u +%Y-%m-%dT%H:%M:%SZ; }
+  evidence_now_utc() { [ "${SYMPHONY_EVIDENCE_DETERMINISTIC:-0}" = "1" ] && echo "1970-01-01T00:00:00Z" || date -u +%Y-%m-%dT%H:%M:%SZ; }
 }
 
 TS_UTC="$(evidence_now_utc)"

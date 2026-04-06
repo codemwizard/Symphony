@@ -24,7 +24,7 @@ cat <<EOF
 {
   "task_id": "TSK-P1-239",
   "git_sha": "$([ "${SYMPHONY_EVIDENCE_DETERMINISTIC:-0}" = "1" ] && echo "0000000000000000000000000000000000000000" || git rev-parse HEAD 2>/dev/null || echo 'LOCAL')",
-  "timestamp_utc": "$(date -u +%Y-%m-%dT%H:%M:%SZ)",
+  "timestamp_utc": "$([ "${SYMPHONY_EVIDENCE_DETERMINISTIC:-0}" = "1" ] && echo "1970-01-01T00:00:00Z" || date -u +%Y-%m-%dT%H:%M:%SZ)",
   "status": "PASS",
   "checks": ["P1"],
   "observed_paths": ["tasks/TSK-P1-239/meta.yml", "docs/contracts/templates/PLAN_TEMPLATE.md", "docs/operations/TASK_CREATION_PROCESS.md"],

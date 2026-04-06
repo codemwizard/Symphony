@@ -69,19 +69,44 @@ if [[ "$status" == "PASS" && "$format_env_blocked" -eq 1 ]]; then
   note="dotnet_format_env_blocked"
 fi
 
-lines_json="$(python3 - <<'PY' "$tmp_out"
+summary_json="$(python3 - <<'PY' "$tmp_out"
 import json,sys
+from collections import Counter
+
 p=sys.argv[1]
 lines=[]
+counter=Counter()
 try:
     with open(p,'r',encoding='utf-8',errors='ignore') as f:
-        for line in f:
-            line=line.rstrip()
-            if line.strip():
-                lines.append(line[:300])
+        for raw in f:
+            line=raw.rstrip()
+            if not line.strip():
+                continue
+            lines.append(line)
+            if line.startswith("=== TARGET: "):
+                counter["targets_seen"] += 1
+            elif line == "--- dotnet restore ---":
+                counter["restore_invocations"] += 1
+            elif line == "--- dotnet format --verify-no-changes ---":
+                counter["format_invocations"] += 1
+            elif line == "--- dotnet build -warnaserror ---":
+                counter["build_invocations"] += 1
+            elif "Build succeeded." in line:
+                counter["build_succeeded_markers"] += 1
+            elif "Build FAILED." in line:
+                counter["build_failed_markers"] += 1
+            elif "Warning(s)" in line:
+                counter["warning_lines"] += 1
+            elif "Error(s)" in line:
+                counter["error_lines"] += 1
+            elif "Time Elapsed" in line:
+                counter["time_elapsed_lines"] += 1
+            elif "NamedPipeClientStream" in line or "SocketException (13): Permission denied" in line:
+                counter["format_env_blocked_markers"] += 1
 except FileNotFoundError:
     pass
-print(json.dumps(lines[:2000]))
+
+print(json.dumps(counter, sort_keys=True))
 PY
 )"
 
@@ -100,7 +125,7 @@ write_json "$EVIDENCE_FILE" \
   "\"note\": \"${note}\"" \
   "\"targets\": ${targets_json}" \
   "\"targets_count\": ${#targets[@]}" \
-  "\"output_lines\": ${lines_json}"
+  "\"command_summary\": ${summary_json}"
 
 if [[ "$status" != "PASS" ]]; then
   echo "dotnet quality lint failed. Evidence: $EVIDENCE_FILE"

@@ -74,7 +74,7 @@ esac
 
 mkdir -p "$(dirname "$O")"
 cat > "$O" <<JSON
-{"check_id":"TSK-HARD-${T}","task_id":"TSK-HARD-${T}","status":"PASS","pass":true,"timestamp_utc":"$(date -u +%Y-%m-%dT%H:%M:%SZ)","git_sha":"$([ "${SYMPHONY_EVIDENCE_DETERMINISTIC:-0}" = "1" ] && echo "0000000000000000000000000000000000000000" || git rev-parse HEAD)"}
+{"check_id":"TSK-HARD-${T}","task_id":"TSK-HARD-${T}","status":"PASS","pass":true,"timestamp_utc":"$([ "${SYMPHONY_EVIDENCE_DETERMINISTIC:-0}" = "1" ] && echo "1970-01-01T00:00:00Z" || date -u +%Y-%m-%dT%H:%M:%SZ)","git_sha":"$([ "${SYMPHONY_EVIDENCE_DETERMINISTIC:-0}" = "1" ] && echo "0000000000000000000000000000000000000000" || git rev-parse HEAD)"}
 JSON
 
 python3 - <<PY

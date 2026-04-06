@@ -48,7 +48,7 @@ cat << EOF > evidence/phase1/tsk_p1_243_guarded_execution_core.json
 {
   "task_id": "TSK-P1-243",
   "git_sha": "$([ "${SYMPHONY_EVIDENCE_DETERMINISTIC:-0}" = "1" ] && echo "0000000000000000000000000000000000000000" || git rev-parse HEAD)",
-  "timestamp_utc": "$(date -u +"%Y-%m-%dT%H:%M:%SZ")",
+  "timestamp_utc": "$([ "${SYMPHONY_EVIDENCE_DETERMINISTIC:-0}" = "1" ] && echo "1970-01-01T00:00:00Z" || date -u +%Y-%m-%dT%H:%M:%SZ)",
   "status": "PASS",
   "checks": {
     "N1_unsupported_mode": "PASS",

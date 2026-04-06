@@ -11,7 +11,7 @@ if [[ "${PRE_CI_CONTEXT:-}" != "1" ]]; then
   echo "  Debug override: PRE_CI_CONTEXT=1 bash $(basename "${BASH_SOURCE[0]}")" >&2
   mkdir -p .toolchain/audit
   printf '%s rogue_execution attempted: %s\n' \
-    "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "${BASH_SOURCE[0]}" \
+    "$([ "${SYMPHONY_EVIDENCE_DETERMINISTIC:-0}" = "1" ] && echo "1970-01-01T00:00:00Z" || date -u +%Y-%m-%dT%H:%M:%SZ)" "${BASH_SOURCE[0]}" \
     >> .toolchain/audit/rogue_execution.log
   exit 1
 fi
@@ -292,8 +292,16 @@ def main():
         "schema_fingerprint": os.environ.get("EVIDENCE_SCHEMA_FP"),
         "schema_version": "1.0",
         "status": "PASS" if not FAILURES else "FAIL",
-        "checked_at_utc": datetime.now(timezone.utc).isoformat(),
-        "git_commit": subprocess.check_output(["git", "rev-parse", "HEAD"], text=True).strip(),
+        "checked_at_utc": (
+            datetime.fromtimestamp(0, tz=timezone.utc).isoformat()
+            if os.environ.get("SYMPHONY_EVIDENCE_DETERMINISTIC") == "1"
+            else datetime.now(timezone.utc).isoformat()
+        ),
+        "git_commit": (
+            "0000000000000000000000000000000000000000"
+            if os.environ.get("SYMPHONY_EVIDENCE_DETERMINISTIC") == "1"
+            else subprocess.check_output(["git", "rev-parse", "HEAD"], text=True).strip()
+        ),
         "mode": mode,
         "canonical_docs": [
             {"path": str(doc), "exists": doc.exists(), "sha256": compute_hash(doc) if doc.exists() else None}

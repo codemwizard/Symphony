@@ -13,16 +13,16 @@ cat > "$W1/conflicting_truth_containment.json" <<JSON
 {"pass":true,"instruction_id":"inst-hard015","rail_a_response":"SUCCESS","rail_b_response":"FAILED","conflict_classification":"FINALITY_CONFLICT","containment_action":"HOLD_RELEASE"}
 JSON
 cat > "$W1/offline_safe_mode_block.json" <<JSON
-{"pass":true,"block_start":"$(date -u +%Y-%m-%dT%H:%M:%SZ)","reason":"SIGNING_SERVICE_UNAVAILABLE","evidence_gap_marker_ids":["gap-1"]}
+{"pass":true,"block_start":"$([ "${SYMPHONY_EVIDENCE_DETERMINISTIC:-0}" = "1" ] && echo "1970-01-01T00:00:00Z" || date -u +%Y-%m-%dT%H:%M:%SZ)","reason":"SIGNING_SERVICE_UNAVAILABLE","evidence_gap_marker_ids":["gap-1"]}
 JSON
 cat > "$W1/inquiry_exhausted_no_autofinalize.json" <<JSON
 {"pass":true,"instruction_id":"inst-hard012","inquiry_state":"EXHAUSTED","attempted_action":"AUTO_FINALIZE","outcome":"BLOCKED"}
 JSON
 cat > "$W1/finality_conflict_enum_confirmed.json" <<JSON
-{"pass":true,"confirmation_method":"DB_ENUM_QUERY","enum_value_confirmed":"FINALITY_CONFLICT","query_timestamp":"$(date -u +%Y-%m-%dT%H:%M:%SZ)"}
+{"pass":true,"confirmation_method":"DB_ENUM_QUERY","enum_value_confirmed":"FINALITY_CONFLICT","query_timestamp":"$([ "${SYMPHONY_EVIDENCE_DETERMINISTIC:-0}" = "1" ] && echo "1970-01-01T00:00:00Z" || date -u +%Y-%m-%dT%H:%M:%SZ)"}
 JSON
 cat > "$W1/circuit_breaker_suspension.json" <<JSON
-{"pass":true,"adapter_id":"adp-1","rail_id":"ZIPSS","trigger_threshold":0.2,"observed_rate":0.3,"suspension_timestamp":"$(date -u +%Y-%m-%dT%H:%M:%SZ)","policy_version_id":"v1.0.0","auto_recovery_possible":false}
+{"pass":true,"adapter_id":"adp-1","rail_id":"ZIPSS","trigger_threshold":0.2,"observed_rate":0.3,"suspension_timestamp":"$([ "${SYMPHONY_EVIDENCE_DETERMINISTIC:-0}" = "1" ] && echo "1970-01-01T00:00:00Z" || date -u +%Y-%m-%dT%H:%M:%SZ)","policy_version_id":"v1.0.0","auto_recovery_possible":false}
 JSON
 
 python3 - <<PY

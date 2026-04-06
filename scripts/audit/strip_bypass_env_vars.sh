@@ -60,7 +60,7 @@ _log_bypass() {
   local log_dir=".toolchain/audit"
   mkdir -p "$log_dir"
   printf '%s bypass_env_var_detected var=%s val=%.80s pid=%s\n' \
-    "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "$var" "$val" "$$" \
+    "$([ "${SYMPHONY_EVIDENCE_DETERMINISTIC:-0}" = "1" ] && echo "1970-01-01T00:00:00Z" || date -u +%Y-%m-%dT%H:%M:%SZ)" "$var" "$val" "$$" \
     >> "$log_dir/bypass_attempt.log"
 }
 

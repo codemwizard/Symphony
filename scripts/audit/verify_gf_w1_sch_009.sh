@@ -14,7 +14,7 @@ ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 TASK_ID="GF-W1-SCH-009"
 RUN_ID="$(date +%s)"
 GIT_SHA="$(git -C "$ROOT_DIR" rev-parse HEAD 2>/dev/null || echo 'unknown')"
-TIMESTAMP_UTC="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+TIMESTAMP_UTC="$([ "${SYMPHONY_EVIDENCE_DETERMINISTIC:-0}" = "1" ] && echo "1970-01-01T00:00:00Z" || date -u +%Y-%m-%dT%H:%M:%SZ)"
 EVIDENCE_PATH="$ROOT_DIR/evidence/phase1/gf_w1_sch_009.json"
 PRE_CI="$ROOT_DIR/scripts/dev/pre_ci.sh"
 

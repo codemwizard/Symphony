@@ -14,7 +14,7 @@ TASK_ID="ENF-001"
 
 RUN_ID="${SYMPHONY_RUN_ID:-}"
 GIT_SHA="$(git -C "$REPO_ROOT" rev-parse HEAD 2>/dev/null || echo 'unknown')"
-TIMESTAMP_UTC="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+TIMESTAMP_UTC="$([ "${SYMPHONY_EVIDENCE_DETERMINISTIC:-0}" = "1" ] && echo "1970-01-01T00:00:00Z" || date -u +%Y-%m-%dT%H:%M:%SZ)"
 
 failures=()
 checks=()
@@ -38,7 +38,7 @@ mkdir -p "$LOCKOUT_DIR"
 echo "DRD_LOCKED_SIGNATURE='ENF001_TEST'
 DRD_LOCKED_GATE_ID='test.gate'
 DRD_LOCKED_COUNT=1
-DRD_LOCKED_AT='$(date -u +%Y-%m-%dT%H:%M:%SZ)'
+DRD_LOCKED_AT='$([ "${SYMPHONY_EVIDENCE_DETERMINISTIC:-0}" = "1" ] && echo "1970-01-01T00:00:00Z" || date -u +%Y-%m-%dT%H:%M:%SZ)'
 DRD_SCAFFOLD_CMD='echo test'" > "$LOCKOUT_FILE"
 
 set +e

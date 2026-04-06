@@ -1,7 +1,7 @@
 {
   "check_id": "EVIDENCE-SCHEMA-VALIDATION",
-  "timestamp_utc": "1970-01-01T00:00:00Z",
-  "git_sha": "0000000000000000000000000000000000000000",
+  "timestamp_utc": "2026-04-06T11:25:00Z",
+  "git_sha": "f05a85b8633d48712cfcd7a214d0d779c0459e57",
   "schema_fingerprint": "1f92363c69ba235e552a6aac05045062fc0097fc93cde3b89e76455b80628019",
   "status": "PASS",
   "checked_dirs": [
@@ -138,6 +138,7 @@
     "/home/mwiza/workspace/Symphony/evidence/phase1/dotnet_lint_quality.json",
     "/home/mwiza/workspace/Symphony/evidence/phase1/evidence_pack_api_access_control.json",
     "/home/mwiza/workspace/Symphony/evidence/phase1/evidence_pack_api_contract.json",
+    "/home/mwiza/workspace/Symphony/evidence/phase1/evidence_store_mode_policy.json",
     "/home/mwiza/workspace/Symphony/evidence/phase1/exception_case_pack_completeness.json",
     "/home/mwiza/workspace/Symphony/evidence/phase1/exception_case_pack_generation.json",
     "/home/mwiza/workspace/Symphony/evidence/phase1/exception_case_pack_sample.json",
@@ -829,6 +830,10 @@
     },
     {
       "file": "/home/mwiza/workspace/Symphony/evidence/phase1/evidence_pack_api_contract.json",
+      "schema": "default"
+    },
+    {
+      "file": "/home/mwiza/workspace/Symphony/evidence/phase1/evidence_store_mode_policy.json",
       "schema": "default"
     },
     {

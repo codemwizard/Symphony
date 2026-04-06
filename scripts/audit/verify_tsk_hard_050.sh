@@ -4,7 +4,7 @@ R="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"; M="$R/schema/migrations
 rg -q "key_class_enum" "$M"; rg -q "EASK" "$M"; rg -q "PCSK" "$M"; rg -q "AAK" "$M"; rg -q "TRANSPORT_IDENTITY" "$M"
 rg -q "KEY_CLASS_UNAUTHORIZED" "$M"; rg -q "Key Class Taxonomy" "$R/docs/architecture/KEY_CLASS_TAXONOMY.md"
 cat > "$O" <<JSON
-{"check_id":"TSK-HARD-050","task_id":"TSK-HARD-050","status":"PASS","pass":true,"classes":["EASK","PCSK","AAK","TRANSPORT_IDENTITY"],"auth_matrix_runtime_enforced":true,"unauthorized_error_code":"P8101","timestamp_utc":"$(date -u +%Y-%m-%dT%H:%M:%SZ)","git_sha":"$([ "${SYMPHONY_EVIDENCE_DETERMINISTIC:-0}" = "1" ] && echo "0000000000000000000000000000000000000000" || git rev-parse HEAD)"}
+{"check_id":"TSK-HARD-050","task_id":"TSK-HARD-050","status":"PASS","pass":true,"classes":["EASK","PCSK","AAK","TRANSPORT_IDENTITY"],"auth_matrix_runtime_enforced":true,"unauthorized_error_code":"P8101","timestamp_utc":"$([ "${SYMPHONY_EVIDENCE_DETERMINISTIC:-0}" = "1" ] && echo "1970-01-01T00:00:00Z" || date -u +%Y-%m-%dT%H:%M:%SZ)","git_sha":"$([ "${SYMPHONY_EVIDENCE_DETERMINISTIC:-0}" = "1" ] && echo "0000000000000000000000000000000000000000" || git rev-parse HEAD)"}
 JSON
 python3 - <<PY
 import json

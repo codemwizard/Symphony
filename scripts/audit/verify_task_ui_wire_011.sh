@@ -7,7 +7,7 @@ cd "$ROOT_DIR"
 EVIDENCE_PATH="evidence/phase1/task_ui_wire_011_closeout.json"
 mkdir -p "$(dirname "$EVIDENCE_PATH")"
 CHECK_ID="TASK-UI-WIRE-011-CLOSEOUT"
-TIMESTAMP_UTC="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+TIMESTAMP_UTC="$([ "${SYMPHONY_EVIDENCE_DETERMINISTIC:-0}" = "1" ] && echo "1970-01-01T00:00:00Z" || date -u +%Y-%m-%dT%H:%M:%SZ)"
 GIT_SHA="$([ "${SYMPHONY_EVIDENCE_DETERMINISTIC:-0}" = "1" ] && echo "0000000000000000000000000000000000000000" || git rev-parse HEAD)"
 
 write_failure_evidence() {

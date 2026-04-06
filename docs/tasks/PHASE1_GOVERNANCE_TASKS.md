@@ -10,6 +10,8 @@ This index tracks governance rewrite tasks derived from `Symphony_Governance_Imp
 | TSK-P1-244 | SECURITY_GUARDIAN | planned | docs/plans/phase1/TSK-P1-244/PLAN.md | docs/plans/phase1/TSK-P1-244/EXEC_LOG.md |
 | TSK-P1-245 | SECURITY_GUARDIAN | planned | docs/plans/phase1/TSK-P1-245/PLAN.md | docs/plans/phase1/TSK-P1-245/EXEC_LOG.md |
 | TSK-P1-246 | QA_VERIFIER | planned | docs/plans/phase1/TSK-P1-246/PLAN.md | docs/plans/phase1/TSK-P1-246/EXEC_LOG.md |
+| TSK-P1-248 | SECURITY_GUARDIAN | planned | docs/plans/phase1/TSK-P1-248/PLAN.md | docs/plans/phase1/TSK-P1-248/EXEC_LOG.md |
+| TSK-P1-249 | SECURITY_GUARDIAN | planned | docs/plans/phase1/TSK-P1-249/PLAN.md | docs/plans/phase1/TSK-P1-249/EXEC_LOG.md |
 
 ## Runtime Integrity Wave Assignment
 
