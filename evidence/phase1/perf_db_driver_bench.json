@@ -1,32 +1,32 @@
 {
   "check_id": "PHASE1-PERF-DB-DRIVER-BENCH",
-  "timestamp_utc": "2026-03-09T11:29:27Z",
-  "git_sha": "ba00446fb5cdf29487d7f5faca90c4c39cbbe954",
-  "schema_fingerprint": "48e1f2462b2d811f14d424ac529ee731e692f992414abfdbc35c60170590957b",
+  "timestamp_utc": "1970-01-01T00:00:00Z",
+  "git_sha": "0000000000000000000000000000000000000000",
+  "schema_fingerprint": "1f92363c69ba235e552a6aac05045062fc0097fc93cde3b89e76455b80628019",
   "status": "PASS",
   "driver": "NpgsqlDataSource",
   "results": [
     {
       "name": "ingress_selftest",
       "exit_code": 0,
-      "elapsed_ms": 1899
+      "elapsed_ms": 1659
     },
     {
       "name": "evidence_pack_selftest",
       "exit_code": 0,
-      "elapsed_ms": 1798
+      "elapsed_ms": 1554
     },
     {
       "name": "case_pack_selftest",
       "exit_code": 0,
-      "elapsed_ms": 1793
+      "elapsed_ms": 1540
     }
   ],
   "summary": {
-    "total_elapsed_ms": 5490,
-    "avg_elapsed_ms": 1830,
-    "p50_ms": 1798,
-    "p95_ms": 1899,
-    "p99_ms": 1899
+    "total_elapsed_ms": 4753,
+    "avg_elapsed_ms": 1584,
+    "p50_ms": 1554,
+    "p95_ms": 1659,
+    "p99_ms": 1659
   }
 }

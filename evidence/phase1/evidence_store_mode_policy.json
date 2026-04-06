@@ -1,0 +1,22 @@
+{
+  "check_id": "PHASE1-EVIDENCE-STORE-MODE-POLICY",
+  "timestamp_utc": "1970-01-01T00:00:00Z",
+  "git_sha": "0000000000000000000000000000000000000000",
+  "schema_fingerprint": "1f92363c69ba235e552a6aac05045062fc0097fc93cde3b89e76455b80628019",
+  "status": "PASS",
+  "environment": "local",
+  "store_mode": "file",
+  "decision": "allow",
+  "reason": "allowed",
+  "allowed_modes": [
+    "file",
+    "db",
+    "db_psql",
+    "db_npgsql"
+  ],
+  "blocked_file_mode_environments": [
+    "staging",
+    "pilot",
+    "prod"
+  ]
+}

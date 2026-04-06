@@ -204,7 +204,7 @@ EVIDENCE_DIR="evidence/phase1"
 EVIDENCE_FILE="${EVIDENCE_DIR}/gf_w1_plt_001.json"
 mkdir -p "$EVIDENCE_DIR"
 
-GIT_SHA="$(git rev-parse HEAD 2>/dev/null || echo 'LOCAL')"
+GIT_SHA="$([ "${SYMPHONY_EVIDENCE_DETERMINISTIC:-0}" = "1" ] && echo "0000000000000000000000000000000000000000" || git rev-parse HEAD 2>/dev/null || echo 'LOCAL')"
 TIMESTAMP="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
 
 cat > "$EVIDENCE_FILE" <<EOJSON

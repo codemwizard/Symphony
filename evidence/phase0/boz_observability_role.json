@@ -69,7 +69,7 @@
   "dml_privileges_present": [],
   "errors": [],
   "gate_id": "INT-G23",
-  "git_sha": "ae27ed9b3887fe008d65e74c127cbebeb79ce99e",
+  "git_sha": "0000000000000000000000000000000000000000",
   "invariant_id": "INV-111",
   "missing_select": [],
   "ok": true,

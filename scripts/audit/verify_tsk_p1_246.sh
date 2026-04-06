@@ -51,7 +51,7 @@ bash "$ADV"
 cat << EOF > evidence/phase1/tsk_p1_246_adversarial_verifier_suite.json
 {
   "task_id": "TSK-P1-246",
-  "git_sha": "$(git rev-parse HEAD)",
+  "git_sha": "$([ "${SYMPHONY_EVIDENCE_DETERMINISTIC:-0}" = "1" ] && echo "0000000000000000000000000000000000000000" || git rev-parse HEAD)",
   "timestamp_utc": "$(date -u +"%Y-%m-%dT%H:%M:%SZ")",
   "status": "PASS",
   "checks": {

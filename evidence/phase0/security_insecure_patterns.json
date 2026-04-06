@@ -1,7 +1,7 @@
 {
   "check_id": "SEC-G10",
   "timestamp_utc": "1970-01-01T00:00:00Z",
-  "git_sha": "ae27ed9b3887fe008d65e74c127cbebeb79ce99e",
+  "git_sha": "0000000000000000000000000000000000000000",
   "schema_fingerprint": "1f92363c69ba235e552a6aac05045062fc0097fc93cde3b89e76455b80628019",
   "status": "PASS",
   "hit_count": 0,

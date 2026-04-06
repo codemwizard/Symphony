@@ -10,7 +10,7 @@ rg -q "P7901" "$M"
 rg -q "canonicalized_reference" "$M"
 
 cat > "$O" <<JSON
-{"check_id":"TSK-HARD-032","task_id":"TSK-HARD-032","status":"PASS","pass":true,"policy_max_length_loaded":true,"deterministic_canonicalization":true,"reference_length_error_code":"P7901","truncation_collision_detection":true,"timestamp_utc":"$(date -u +%Y-%m-%dT%H:%M:%SZ)","git_sha":"$(git rev-parse HEAD)"}
+{"check_id":"TSK-HARD-032","task_id":"TSK-HARD-032","status":"PASS","pass":true,"policy_max_length_loaded":true,"deterministic_canonicalization":true,"reference_length_error_code":"P7901","truncation_collision_detection":true,"timestamp_utc":"$(date -u +%Y-%m-%dT%H:%M:%SZ)","git_sha":"$([ "${SYMPHONY_EVIDENCE_DETERMINISTIC:-0}" = "1" ] && echo "0000000000000000000000000000000000000000" || git rev-parse HEAD)"}
 JSON
 python3 - <<PY
 import json

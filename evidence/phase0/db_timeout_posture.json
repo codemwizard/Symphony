@@ -1,7 +1,7 @@
 {
   "check_id": "DB-TIMEOUT-POSTURE",
   "error": "",
-  "git_sha": "ae27ed9b3887fe008d65e74c127cbebeb79ce99e",
+  "git_sha": "0000000000000000000000000000000000000000",
   "observed": {
     "deadlock_timeout_ms": 1000,
     "idle_in_transaction_session_timeout_ms": 60000,

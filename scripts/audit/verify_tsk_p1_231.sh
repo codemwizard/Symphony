@@ -74,7 +74,7 @@ else
     exit 1
 fi
 
-git_sha=$(git rev-parse HEAD || echo "UNKNOWN")
+git_sha=$([ "${SYMPHONY_EVIDENCE_DETERMINISTIC:-0}" = "1" ] && echo "0000000000000000000000000000000000000000" || git rev-parse HEAD || echo "UNKNOWN")
 timestamp=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
 
 cat << EOF > evidence/phase1/tsk_p1_231_scope_alignment.json

@@ -77,7 +77,7 @@ fi
 cat <<EOF
 {
   "task_id": "TSK-P1-240",
-  "git_sha": "$(git rev-parse HEAD 2>/dev/null || echo 'LOCAL')",
+  "git_sha": "$([ "${SYMPHONY_EVIDENCE_DETERMINISTIC:-0}" = "1" ] && echo "0000000000000000000000000000000000000000" || git rev-parse HEAD 2>/dev/null || echo 'LOCAL')",
   "timestamp_utc": "$(date -u +%Y-%m-%dT%H:%M:%SZ)",
   "status": "PASS",
   "checks": ["P1", "N1", "N2", "N3", "N4", "N5"],

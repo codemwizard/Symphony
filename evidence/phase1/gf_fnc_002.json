@@ -4,11 +4,11 @@
   "status": "PASS",
   "timestamp_utc": "1970-01-01T00:00:00Z",
   "generated_at": "1970-01-01T00:00:00+00:00",
-  "git_sha": "ae27ed9b3887fe008d65e74c127cbebeb79ce99e",
-  "pre_ci_run_id": "rem-ae27ed9b3887",
+  "git_sha": "1d6406aa2e0bf3a897f5e03a8e790a551f1d6fc9",
+  "pre_ci_run_id": "rem-1d6406aa2e0b",
   "source_file": "schema/migrations/0108_gf_fn_monitoring_ingestion.sql",
   "source_file_sha256": "e6b2666013077b1b62ef7759ac796ac4130e27450b8069eaabeb5dd24436682e",
   "command_output": "{\"probes\": [{\"probe\": \"query_monitoring_records\", \"status\": \"PASS\"},{\"probe\": \"record_monitoring_record\", \"status\": \"PASS\"},{\"probe\": \"validate_payload_against_schema\", \"status\": \"PASS\"},{\"probe\": \"get_monitoring_record_payload\", \"status\": \"PASS\"}]}",
-  "_signature": "a284caf3c6c3628d7c05f83c8bad44e3c8fbda28010a4ad739b52e8f308244de",
+  "_signature": "eed9962ab46c8b500a2392e354fa68774bcba62b6e7222e2689a9c697d8e8675",
   "_signing_version": "symphony-v1"
 }

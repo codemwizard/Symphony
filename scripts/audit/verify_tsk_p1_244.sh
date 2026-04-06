@@ -33,7 +33,7 @@ rm -f "$TMP_EVID"
 cat << EOF > evidence/phase1/tsk_p1_244_repository_filesystem_integrity.json
 {
   "task_id": "TSK-P1-244",
-  "git_sha": "$(git rev-parse HEAD)",
+  "git_sha": "$([ "${SYMPHONY_EVIDENCE_DETERMINISTIC:-0}" = "1" ] && echo "0000000000000000000000000000000000000000" || git rev-parse HEAD)",
   "timestamp_utc": "$(date -u +"%Y-%m-%dT%H:%M:%SZ")",
   "status": "PASS",
   "checks": {

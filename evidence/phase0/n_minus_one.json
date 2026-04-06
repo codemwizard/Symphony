@@ -1,7 +1,7 @@
 {
   "check_id": "DB-N-1-COMPAT",
   "curr_table_count": 122,
-  "git_sha": "ae27ed9b3887fe008d65e74c127cbebeb79ce99e",
+  "git_sha": "0000000000000000000000000000000000000000",
   "last_migration": "0114_grant_onboarding_tables_to_app_role.sql",
   "missing_columns": [],
   "missing_tables": [],

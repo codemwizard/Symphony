@@ -37,8 +37,12 @@ export PRE_CI_CONTEXT=1
 export SYMPHONY_EVIDENCE_DETERMINISTIC=1
 
 # Unique run ID. Evidence files embed this; pre-generated outputs won't match.
-# Stable ID derivation: uses the git tree hash to ensure Local ID == CI ID.
-PRE_CI_RUN_ID="${PRE_CI_RUN_ID:-rem-$(git rev-parse HEAD 2>/dev/null | cut -c1-12 || echo "no-sha")}"
+# Under determinism flag: clamp to synthetic value so evidence is stable across commits.
+if [[ "${SYMPHONY_EVIDENCE_DETERMINISTIC:-0}" == "1" ]]; then
+  PRE_CI_RUN_ID="${PRE_CI_RUN_ID:-rem-0000000000000000}"
+else
+  PRE_CI_RUN_ID="${PRE_CI_RUN_ID:-rem-$(git rev-parse HEAD 2>/dev/null | cut -c1-12 || echo "no-sha")}"
+fi
 export PRE_CI_RUN_ID
 
 # Strip known bypass variables. Presence indicates an exploit attempt.

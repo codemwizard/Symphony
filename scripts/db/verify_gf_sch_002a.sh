@@ -32,7 +32,7 @@ EXPECTED_HEAD="0098"
 failures=()
 add_failure() { failures+=("$1"); }
 
-git_sha="$(git rev-parse HEAD 2>/dev/null || echo "unknown")"
+git_sha="$([ "${SYMPHONY_EVIDENCE_DETERMINISTIC:-0}" = "1" ] && echo "0000000000000000000000000000000000000000" || git rev-parse HEAD 2>/dev/null || echo "unknown")"
 timestamp="$(date -u +"%Y-%m-%dT%H:%M:%SZ")"
 run_id="${SYMPHONY_RUN_ID:-}"
 

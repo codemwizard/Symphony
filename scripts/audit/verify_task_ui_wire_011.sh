@@ -8,7 +8,7 @@ EVIDENCE_PATH="evidence/phase1/task_ui_wire_011_closeout.json"
 mkdir -p "$(dirname "$EVIDENCE_PATH")"
 CHECK_ID="TASK-UI-WIRE-011-CLOSEOUT"
 TIMESTAMP_UTC="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
-GIT_SHA="$(git rev-parse HEAD)"
+GIT_SHA="$([ "${SYMPHONY_EVIDENCE_DETERMINISTIC:-0}" = "1" ] && echo "0000000000000000000000000000000000000000" || git rev-parse HEAD)"
 
 write_failure_evidence() {
   local error="$1"

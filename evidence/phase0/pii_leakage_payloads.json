@@ -24,12 +24,12 @@
   ],
   "findings": [],
   "gate_id": "SEC-G17",
-  "git_sha": "ae27ed9b3887fe008d65e74c127cbebeb79ce99e",
+  "git_sha": "0000000000000000000000000000000000000000",
   "invariant_id": "INV-112",
   "ok": true,
   "pattern_note": "PII keyword within 80 chars of regulated context keyword; allow via symphony:pii_ok marker",
   "roots": [
-    "/tmp/tmp.4OCMy8EErZ/src"
+    "/tmp/tmp.Lv1mjMtufa/src"
   ],
   "schema_fingerprint": "1f92363c69ba235e552a6aac05045062fc0097fc93cde3b89e76455b80628019",
   "status": "PASS",

@@ -49,7 +49,7 @@ payload = {
     "status": "PASS",
     "pass": True,
     "timestamp_utc": os.popen("date -u +%Y-%m-%dT%H:%M:%SZ").read().strip(),
-    "git_sha": os.popen("git rev-parse HEAD").read().strip(),
+    "git_sha": os.popen("[ "${SYMPHONY_EVIDENCE_DETERMINISTIC:-0}" = "1" ] && echo "0000000000000000000000000000000000000000" || git rev-parse HEAD").read().strip(),
     "details": {
         "invariant_count": len(blocks),
         "all_required_fields_present": True,

@@ -67,7 +67,7 @@ bash "$CORE" --mode repo-guard --repo-root "$ROOT_DIR" --evidence "$TMP_EVID"
 cat << EOF > evidence/phase1/tsk_p1_245_evidence_finalization.json
 {
   "task_id": "TSK-P1-245",
-  "git_sha": "$(git rev-parse HEAD)",
+  "git_sha": "$([ "${SYMPHONY_EVIDENCE_DETERMINISTIC:-0}" = "1" ] && echo "0000000000000000000000000000000000000000" || git rev-parse HEAD)",
   "timestamp_utc": "$(date -u +"%Y-%m-%dT%H:%M:%SZ")",
   "status": "PASS",
   "checks": {

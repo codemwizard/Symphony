@@ -20,7 +20,7 @@
     "signer_participant_id": "text"
   },
   "gate_id": "INT-G24",
-  "git_sha": "ae27ed9b3887fe008d65e74c127cbebeb79ce99e",
+  "git_sha": "0000000000000000000000000000000000000000",
   "index": {
     "definition": "CREATE INDEX idx_evidence_packs_anchor_ref ON public.evidence_packs USING btree (anchor_ref) WHERE (anchor_ref IS NOT NULL)",
     "name": "idx_evidence_packs_anchor_ref"

@@ -7,7 +7,7 @@
   "errors": [],
   "expected_columns": "next_attempt_at,lease_expires_at,created_at",
   "expected_index": "idx_payment_outbox_pending_due_claim",
-  "git_sha": "ae27ed9b3887fe008d65e74c127cbebeb79ce99e",
+  "git_sha": "0000000000000000000000000000000000000000",
   "index_columns": "next_attempt_at,lease_expires_at,created_at",
   "index_definition": "CREATE INDEX idx_payment_outbox_pending_due_claim ON public.payment_outbox_pending USING btree (next_attempt_at, lease_expires_at, created_at)",
   "index_name": "idx_payment_outbox_pending_due_claim",

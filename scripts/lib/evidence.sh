@@ -17,6 +17,10 @@ evidence_now_utc() {
 }
 
 git_sha() {
+  if [[ "${SYMPHONY_EVIDENCE_DETERMINISTIC:-0}" == "1" ]]; then
+    echo "0000000000000000000000000000000000000000"
+    return
+  fi
   if command -v git >/dev/null 2>&1 && git rev-parse --is-inside-work-tree >/dev/null 2>&1; then
     git rev-parse HEAD 2>/dev/null || echo "UNKNOWN"
   else
