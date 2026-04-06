@@ -4,7 +4,6 @@
   "git_sha": "0000000000000000000000000000000000000000",
   "schema_fingerprint": "1f92363c69ba235e552a6aac05045062fc0097fc93cde3b89e76455b80628019",
   "status": "PASS",
-  "audit_log_bytes": 41805658,
   "audit_log_present": true,
   "path": "/openbao/audit.log"
 }

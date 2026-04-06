@@ -31,6 +31,7 @@ Purpose: inventory repository scripts that mutate Git state or rely on Git state
 | `scripts/audit/verify_invariants_local.sh` | yes | partial | PASS | Local wrapper reads Git state and delegates to verifiers; no uncontained mutation path. |
 | `scripts/audit/verify_tsk_p1_062.sh` | yes | partial | PASS | Worktree hygiene verifier reads Git worktree registry and enforces no stale/prunable entries. |
 | `scripts/audit/verify_tsk_p1_076.sh` | yes | partial | PASS | Verifies installed hook files in `.git/hooks` against tracked `.githooks/*` sources after running the canonical hook installer. |
+| `scripts/audit/verify_tsk_p1_248.sh` | yes | partial | PASS | Uses an isolated detached worktree plus an empty commit to prove deterministic git identity clamping across a HEAD change without mutating the caller worktree. |
 | `scripts/audit/verify_tsk_p1_demo_020.sh` | yes | partial | PASS | Verifies the host-based demo runner's fetch/source-gate and single-active-run process controls by inspecting Git-sensitive orchestration surfaces without mutating caller refs. |
 | `scripts/audit/verify_tsk_p1_demo_028.sh` | yes | partial | PASS | Verifies the demo image-build flow against host-based deployment guidance by inspecting Git-tracked runtime and Docker surfaces without mutating caller refs. |
 | `scripts/audit/verify_tsk_p1_demo_030.sh` | yes | partial | PASS | Verifies the clean-branch task-line repair by checking local-main parity, canonical demo task identity, and repaired-branch approval scope without mutating caller refs. |

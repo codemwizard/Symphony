@@ -8,8 +8,8 @@
   "base_ref": "refs/remotes/origin/main",
   "head_ref": "HEAD",
   "merge_base": "d8b120262cd6e9647795af88b8be26d8f1310253",
-  "changed_file_count": 289,
-  "triggered_file_count": 101,
+  "changed_file_count": 366,
+  "triggered_file_count": 169,
   "trace_docs": [
     "docs/plans/phase1/REM-2026-04-06_filesystem-executable-bit-drift/EXEC_LOG.md",
     "docs/plans/phase1/REM-2026-04-06_filesystem-executable-bit-drift/PLAN.md",
@@ -18,7 +18,11 @@
     "docs/plans/phase1/REM-2026-04-06_pre_ci-phase1_db_verifiers/EXEC_LOG.md",
     "docs/plans/phase1/REM-2026-04-06_pre_ci-phase1_db_verifiers/PLAN.md",
     "docs/plans/phase1/TSK-P1-247/EXEC_LOG.md",
-    "docs/plans/phase1/TSK-P1-247/PLAN.md"
+    "docs/plans/phase1/TSK-P1-247/PLAN.md",
+    "docs/plans/phase1/TSK-P1-248/EXEC_LOG.md",
+    "docs/plans/phase1/TSK-P1-248/PLAN.md",
+    "docs/plans/phase1/TSK-P1-249/EXEC_LOG.md",
+    "docs/plans/phase1/TSK-P1-249/PLAN.md"
   ],
   "satisfying_docs": [
     "docs/plans/phase1/REM-2026-04-06_filesystem-executable-bit-drift/PLAN.md",
