@@ -2,13 +2,13 @@
   "check_id": "GF-W1-FNC-002",
   "task_id": "GF-W1-FNC-002",
   "status": "PASS",
-  "timestamp_utc": "2026-04-05T13:06:25Z",
-  "generated_at": "2026-04-05T13:06:25.256649+00:00",
-  "git_sha": "fe12dadd6fe2ac985daa9a0994ddf4a72ab21870",
-  "pre_ci_run_id": "rem-fe12dadd6fe2",
+  "timestamp_utc": "2026-04-05T18:22:05Z",
+  "generated_at": "2026-04-05T18:22:05.081421+00:00",
+  "git_sha": "2b627d1f744afd6dcf4613bc3921d5983c5cffbe",
+  "pre_ci_run_id": "rem-2b627d1f744a",
   "source_file": "schema/migrations/0108_gf_fn_monitoring_ingestion.sql",
   "source_file_sha256": "e6b2666013077b1b62ef7759ac796ac4130e27450b8069eaabeb5dd24436682e",
   "command_output": "{\"probes\": [{\"probe\": \"query_monitoring_records\", \"status\": \"PASS\"},{\"probe\": \"record_monitoring_record\", \"status\": \"PASS\"},{\"probe\": \"validate_payload_against_schema\", \"status\": \"PASS\"},{\"probe\": \"get_monitoring_record_payload\", \"status\": \"PASS\"}]}",
-  "_signature": "a9a5a985c8d283d9fdd027e22fbcb8c866f9d6e42df2e0e53cba637fcf16232e",
+  "_signature": "5ed0b5c205d3122ddb7984b8622a60c12d2be6c288ce34a50e1960f21f16de70",
   "_signing_version": "symphony-v1"
 }
