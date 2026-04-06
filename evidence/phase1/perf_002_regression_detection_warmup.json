@@ -1,9 +1,9 @@
 {
   "check_id": "PERF-002",
   "task_id": "PERF-002",
-  "timestamp_utc": "2026-03-09T11:29:27Z",
-  "git_sha": "ba00446fb5cdf29487d7f5faca90c4c39cbbe954",
-  "schema_fingerprint": "48e1f2462b2d811f14d424ac529ee731e692f992414abfdbc35c60170590957b",
+  "timestamp_utc": "1970-01-01T00:00:00Z",
+  "git_sha": "0000000000000000000000000000000000000000",
+  "schema_fingerprint": "1f92363c69ba235e552a6aac05045062fc0097fc93cde3b89e76455b80628019",
   "status": "PASS",
   "pass": true,
   "details": {
@@ -17,7 +17,7 @@
       ],
       "environment": "local",
       "storage_mode": "file",
-      "baseline_file": "docs/operations/perf_smoke_baseline.json"
+      "baseline_file": "/home/mwiza/workspace/Symphony/docs/operations/perf_smoke_baseline.json"
     },
     "warmup": {
       "enabled": true,
@@ -32,13 +32,13 @@
       ],
       "discarded_results": true
     },
-    "baseline_file": "docs/operations/perf_smoke_baseline.json",
+    "baseline_file": "/home/mwiza/workspace/Symphony/docs/operations/perf_smoke_baseline.json",
     "baseline_locked": true,
     "soft_regression_threshold_pct": 0.1,
     "hard_regression_threshold_pct": 0.15,
     "baseline_p95_ms": 5500.0,
-    "current_p95_ms": 1899.0,
-    "drift_pct": -0.6547272727272727,
+    "current_p95_ms": 1659.0,
+    "drift_pct": -0.6983636363636364,
     "regression_classification": "PASS",
     "regression_enforced": true,
     "thresholds_source": "docs/operations/perf_smoke_baseline.json"

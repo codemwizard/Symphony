@@ -8,7 +8,7 @@ rg -q "offline_safe_mode_windows" "$MIGRATION" || { echo missing_offline_windows
 rg -q "OFFLINE_SAFE_MODE_ACTIVE" "$MIGRATION" || { echo missing_offline_sqlstate >&2; exit 1; }
 rg -q "assert_offline_safe_mode_dispatch_allowed" "$MIGRATION" || { echo missing_offline_guard_function >&2; exit 1; }
 cat > "$OUT" <<JSON
-{"check_id":"TSK-HARD-094","task_id":"TSK-HARD-094","status":"PASS","pass":true,"offline_blocked":true,"dispatch_blocked_sqlstate":"P7501","gap_marker_created":true,"resign_linkage_established":true,"block_start":"$(date -u +%Y-%m-%dT%H:%M:%SZ)","block_end":"$(date -u +%Y-%m-%dT%H:%M:%SZ)"}
+{"check_id":"TSK-HARD-094","task_id":"TSK-HARD-094","status":"PASS","pass":true,"offline_blocked":true,"dispatch_blocked_sqlstate":"P7501","gap_marker_created":true,"resign_linkage_established":true,"block_start":"$([ "${SYMPHONY_EVIDENCE_DETERMINISTIC:-0}" = "1" ] && echo "1970-01-01T00:00:00Z" || date -u +%Y-%m-%dT%H:%M:%SZ)","block_end":"$([ "${SYMPHONY_EVIDENCE_DETERMINISTIC:-0}" = "1" ] && echo "1970-01-01T00:00:00Z" || date -u +%Y-%m-%dT%H:%M:%SZ)"}
 JSON
 python3 - <<PY
 import json

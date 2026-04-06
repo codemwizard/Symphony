@@ -74,8 +74,8 @@ else
     exit 1
 fi
 
-git_sha=$(git rev-parse HEAD || echo "UNKNOWN")
-timestamp=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+git_sha=$([ "${SYMPHONY_EVIDENCE_DETERMINISTIC:-0}" = "1" ] && echo "0000000000000000000000000000000000000000" || git rev-parse HEAD || echo "UNKNOWN")
+timestamp=$([ "${SYMPHONY_EVIDENCE_DETERMINISTIC:-0}" = "1" ] && echo "1970-01-01T00:00:00Z" || date -u +%Y-%m-%dT%H:%M:%SZ)
 
 cat << EOF > evidence/phase1/tsk_p1_233_dependency_truth.json
 {

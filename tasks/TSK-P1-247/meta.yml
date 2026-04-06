@@ -1,0 +1,50 @@
+schema_version: 1
+phase: '1'
+task_id: TSK-P1-247
+title: "Unify Deterministic Evidence Timestamps"
+owner_role: SECURITY_GUARDIAN
+status: "completed"
+depends_on: []
+touches:
+  - "scripts/dev/pre_ci.sh"
+  - "scripts/audit/sign_evidence.py"
+  - "scripts/audit/verify_tsk_p1_*.sh"
+  - "scripts/audit/verify_hier_*.sh"
+  - "scripts/audit/verify_human_*.sh"
+  - "scripts/audit/verify_invproc_*.sh"
+  - "evidence/phase1/tsk_p1_247_deterministic_timestamps.json"
+work:
+  - Modify `scripts/audit/sign_evidence.py` to honor `SYMPHONY_EVIDENCE_DETERMINISTIC` by clamping the timestamp to Unix Epoch Zero.
+  - Patch 18 standalone Track-3 bash verifiers to utilize `SYMPHONY_EVIDENCE_DETERMINISTIC` when constructing their internal `RUN_ID` and `EVIDENCE_TS`.
+  - Add a global `export SYMPHONY_EVIDENCE_DETERMINISTIC=1` to the peak of `scripts/dev/pre_ci.sh`.
+  - Create `scripts/audit/verify_tsk_p1_247.sh` to enforce the new determinism invariants across both tracks.
+acceptance_criteria:
+  - Running `sign_evidence.py --write` with `SYMPHONY_EVIDENCE_DETERMINISTIC=1` produces a file stamped with `1970-01-01T00:00:00Z`.
+  - All 18 Track-3 verifiers produce `standalone-1970` strings when prompted by the determinism flag.
+  - The `pre_ci.sh` harness successfully propagates the determinism flag to all child verifiers.
+  - The verification script `verify_tsk_p1_247.sh` passes successfully and emits signed evidence.
+verification:
+  - "bash scripts/audit/verify_tsk_p1_247.sh"
+  - "RUN_PHASE1_GATES=1 bash scripts/dev/pre_ci.sh"
+evidence:
+  - "evidence/phase1/tsk_p1_247_deterministic_timestamps.json"
+failure_modes:
+  - "pre_ci.sh fails to export determinism flag globally"
+  - "sign_evidence.py hardcodes execution time and ignores bash env"
+  - "standalone track 3 scripts hardcode dynamic date commands"
+anti_patterns:
+  - "Silent timestamp modifications inducing git drift post-pass"
+must_read:
+  - "AGENT_ENTRYPOINT.md"
+  - "docs/operations/AI_AGENT_OPERATION_MANUAL.md"
+  - "scripts/audit/sign_evidence.py"
+  - "scripts/dev/pre_ci.sh"
+implementation_plan: docs/plans/phase1/TSK-P1-247/PLAN.md
+implementation_log: docs/plans/phase1/TSK-P1-247/EXEC_LOG.md
+invariants:
+  - INV-001
+  - INV-004
+notes: Structural stabilization of the evidence pipeline for zero-drift pushes.
+client: antigravity
+assigned_agent: security_guardian
+model: gemini-2.0-pro-exp-02-05

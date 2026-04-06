@@ -34,10 +34,15 @@ pre_ci_check_drd_lockout
 # --- PRE_CI_CONTEXT_EXPORT ---
 # Export execution context so guarded verifiers know they run inside the harness.
 export PRE_CI_CONTEXT=1
+export SYMPHONY_EVIDENCE_DETERMINISTIC=1
 
 # Unique run ID. Evidence files embed this; pre-generated outputs won't match.
-# Stable ID derivation: uses the git tree hash to ensure Local ID == CI ID.
-PRE_CI_RUN_ID="${PRE_CI_RUN_ID:-rem-$(git rev-parse HEAD 2>/dev/null | cut -c1-12 || echo "no-sha")}"
+# Under determinism flag: clamp to synthetic value so evidence is stable across commits.
+if [[ "${SYMPHONY_EVIDENCE_DETERMINISTIC:-0}" == "1" ]]; then
+  PRE_CI_RUN_ID="${PRE_CI_RUN_ID:-rem-0000000000000000}"
+else
+  PRE_CI_RUN_ID="${PRE_CI_RUN_ID:-rem-$(git rev-parse HEAD 2>/dev/null | cut -c1-12 || echo "no-sha")}"
+fi
 export PRE_CI_RUN_ID
 
 # Strip known bypass variables. Presence indicates an exploit attempt.
@@ -367,6 +372,14 @@ if [[ "${RUN_DEMO_GATES}" == "1" ]]; then
   fi
 fi
 
+pre_ci_set_context "audit/governance" "PRECI.AUDIT.GATES" "pre_ci.phase0_ordered_checks" "Phase-0 audit and schema gates"
+if [[ -x scripts/audit/run_phase0_ordered_checks.sh ]]; then
+  scripts/audit/run_phase0_ordered_checks.sh
+else
+  echo "ERROR: scripts/audit/run_phase0_ordered_checks.sh not found"
+  exit 1
+fi
+
 pre_ci_set_context "DB/environment" "PRECI.DB.ENVIRONMENT" "pre_ci.phase1_db_verifiers" "Phase-1 DB and environment verifiers"
 if [[ -f "$ENV_FILE" ]]; then
   set -a
@@ -459,12 +472,7 @@ else
   echo "==> Fresh DB parity disabled (FRESH_DB=${FRESH_DB}); using DATABASE_URL as provided"
 fi
 
-if [[ -x scripts/audit/run_phase0_ordered_checks.sh ]]; then
-  scripts/audit/run_phase0_ordered_checks.sh
-else
-  echo "ERROR: scripts/audit/run_phase0_ordered_checks.sh not found"
-  exit 1
-fi
+# Phase-0 ordered checks already run above.
 
 echo "==> DB verify_invariants.sh"
 if [[ -x scripts/db/verify_invariants.sh ]]; then

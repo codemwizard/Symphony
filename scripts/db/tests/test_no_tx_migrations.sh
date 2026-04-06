@@ -98,8 +98,7 @@ out = {
   "status": "$status",
   "migration_applied": "$applied",
   "index_exists": "$index_exists",
-  "index_validity": "$index_validity",
-  "temp_db": "$TEMP_DB"
+  "index_validity": "$index_validity"
 }
 Path("$EVIDENCE_FILE").write_text(json.dumps(out, indent=2))
 PY

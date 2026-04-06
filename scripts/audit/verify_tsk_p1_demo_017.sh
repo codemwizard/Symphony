@@ -28,7 +28,7 @@ if [ -f "$ROOT_DIR/scripts/lib/evidence.sh" ]; then
 else
   git_sha() { git rev-parse HEAD 2>/dev/null || echo "unknown"; }
   schema_fingerprint() { echo "unknown"; }
-  evidence_now_utc() { date -u +%Y-%m-%dT%H:%M:%SZ; }
+  evidence_now_utc() { [ "${SYMPHONY_EVIDENCE_DETERMINISTIC:-0}" = "1" ] && echo "1970-01-01T00:00:00Z" || date -u +%Y-%m-%dT%H:%M:%SZ; }
 fi
 
 TS_UTC="$(evidence_now_utc)"

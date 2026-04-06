@@ -132,13 +132,19 @@ def cmd_write(args: argparse.Namespace) -> int:
         src_path.read_bytes() if src_path.exists() else args.source_file.encode("utf-8")
     ).hexdigest()
 
-    timestamp = datetime.now(timezone.utc)
+    if os.environ.get("SYMPHONY_EVIDENCE_DETERMINISTIC") == "1":
+        timestamp = datetime.fromtimestamp(0, tz=timezone.utc)
+    else:
+        timestamp = datetime.now(timezone.utc)
     timestamp_str = timestamp.strftime("%Y-%m-%dT%H:%M:%SZ")
 
-    try:
-        git_sha = subprocess.check_output(["git", "rev-parse", "HEAD"], stderr=subprocess.DEVNULL).decode("utf-8").strip()
-    except Exception:
-        git_sha = os.environ.get("EVIDENCE_GIT_SHA", "UNKNOWN")
+    if os.environ.get("SYMPHONY_EVIDENCE_DETERMINISTIC") == "1":
+        git_sha = "0000000000000000000000000000000000000000"
+    else:
+        try:
+            git_sha = subprocess.check_output(["git", "rev-parse", "HEAD"], stderr=subprocess.DEVNULL).decode("utf-8").strip()
+        except Exception:
+            git_sha = os.environ.get("EVIDENCE_GIT_SHA", "UNKNOWN")
 
     payload = {
         "check_id": args.task,

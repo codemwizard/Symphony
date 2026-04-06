@@ -1,19 +1,19 @@
 {
   "check_id": "PERF-001",
   "task_id": "PERF-001",
-  "timestamp_utc": "2026-03-09T11:29:05Z",
-  "git_sha": "ba00446fb5cdf29487d7f5faca90c4c39cbbe954",
-  "schema_fingerprint": "48e1f2462b2d811f14d424ac529ee731e692f992414abfdbc35c60170590957b",
+  "timestamp_utc": "1970-01-01T00:00:00Z",
+  "git_sha": "0000000000000000000000000000000000000000",
+  "schema_fingerprint": "1f92363c69ba235e552a6aac05045062fc0097fc93cde3b89e76455b80628019",
   "status": "PASS",
   "pass": true,
   "details": {
     "engine_metrics": {
-      "cpu_user_ms": 19740,
-      "cpu_sys_ms": 2390,
+      "cpu_user_ms": 19080,
+      "cpu_sys_ms": 2340,
       "gc_collections": 0,
       "db_query_count": 160,
-      "db_query_p95_ms": 1975.0,
-      "max_rss_kb": 162368
+      "db_query_p95_ms": 1612.0,
+      "max_rss_kb": 177036
     },
     "source_artifacts": {
       "perf_smoke_profile": "evidence/phase1/perf_smoke_profile.json",

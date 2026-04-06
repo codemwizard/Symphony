@@ -5,7 +5,7 @@ ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 MAP_PATH="$ROOT_DIR/docs/contracts/sqlstate_map.yml"
 SCHEMA_PATH="$ROOT_DIR/docs/contracts/sqlstate_map.schema.json"
 EVIDENCE_DIR="$ROOT_DIR/evidence/phase0"
-EVIDENCE_OUT="$EVIDENCE_DIR/sqlstate_map_drift.json"
+EVIDENCE_OUT="${EVIDENCE_OUT:-$EVIDENCE_DIR/sqlstate_map_drift.json}"
 
 mkdir -p "$EVIDENCE_DIR"
 source "$ROOT_DIR/scripts/lib/evidence.sh"

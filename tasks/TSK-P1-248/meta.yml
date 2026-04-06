@@ -1,0 +1,72 @@
+schema_version: 1
+phase: '1'
+task_id: TSK-P1-248
+title: Clamp git_sha and derived fields under SYMPHONY_EVIDENCE_DETERMINISTIC
+owner_role: SECURITY_GUARDIAN
+status: completed
+depends_on:
+  - TSK-P1-247
+touches:
+  - scripts/lib/evidence.sh
+  - scripts/audit/sign_evidence.py
+  - scripts/dev/pre_ci.sh
+  - scripts/audit/verify_tsk_p1_248.sh
+  - evidence/phase1/tsk_p1_248_git_sha_clamp.json
+  - tasks/TSK-P1-248/meta.yml
+invariants:
+  - INV-001
+  - INV-004
+work:
+  - '[ID tsk_p1_248_work_item_01] Verify shared evidence helpers clamp git_sha to 40 zeroes under deterministic mode.'
+  - '[ID tsk_p1_248_work_item_02] Verify sign_evidence.py emits the clamped git_sha under deterministic mode.'
+  - '[ID tsk_p1_248_work_item_03] Verify pre_ci.sh clamps PRE_CI_RUN_ID to rem-0000000000000000 under deterministic mode.'
+  - '[ID tsk_p1_248_work_item_04] Replace the placeholder verifier with a deterministic proof script that exercises a commit-between-runs cycle in an isolated worktree.'
+  - '[ID tsk_p1_248_work_item_05] Emit evidence proving git_sha, pre_ci_run_id, and signed evidence remain stable across a HEAD change.'
+acceptance_criteria:
+  - '[ID tsk_p1_248_work_item_01] scripts/lib/evidence.sh returns 0000000000000000000000000000000000000000 from git_sha() when SYMPHONY_EVIDENCE_DETERMINISTIC=1.'
+  - '[ID tsk_p1_248_work_item_02] scripts/audit/sign_evidence.py --write emits evidence containing the clamped git_sha, not a live commit hash, when deterministic mode is enabled.'
+  - '[ID tsk_p1_248_work_item_03] scripts/dev/pre_ci.sh exports PRE_CI_RUN_ID=rem-0000000000000000 when deterministic mode is enabled.'
+  - '[ID tsk_p1_248_work_item_04] bash scripts/audit/verify_tsk_p1_248.sh performs a commit-between-runs proof in an isolated worktree and fails if git_sha, pre_ci_run_id, or signed evidence drift.'
+  - '[ID tsk_p1_248_work_item_05] evidence/phase1/tsk_p1_248_git_sha_clamp.json records pass status plus before/after comparisons for bash helper, python signer, and run id.'
+verification:
+  - '[ID tsk_p1_248_work_item_01] [ID tsk_p1_248_work_item_02] [ID tsk_p1_248_work_item_03] [ID tsk_p1_248_work_item_04] [ID tsk_p1_248_work_item_05] test -x scripts/audit/verify_tsk_p1_248.sh && bash scripts/audit/verify_tsk_p1_248.sh || exit 1'
+  - '[ID tsk_p1_248_work_item_05] test -f evidence/phase1/tsk_p1_248_git_sha_clamp.json && cat evidence/phase1/tsk_p1_248_git_sha_clamp.json | tee /tmp/tsk_p1_248_evidence.log >/dev/null || exit 1'
+  - '[ID tsk_p1_248_work_item_05] test -f evidence/phase1/tsk_p1_248_git_sha_clamp.json && python3 scripts/audit/validate_evidence.py --task TSK-P1-248 --evidence evidence/phase1/tsk_p1_248_git_sha_clamp.json || exit 1'
+  - '[ID tsk_p1_248_work_item_01] [ID tsk_p1_248_work_item_02] [ID tsk_p1_248_work_item_03] test -x scripts/dev/pre_ci.sh && RUN_PHASE1_GATES=1 bash scripts/dev/pre_ci.sh || exit 1'
+evidence:
+  - path: evidence/phase1/tsk_p1_248_git_sha_clamp.json
+    must_include:
+      - task_id
+      - git_sha
+      - timestamp_utc
+      - status
+      - checks
+      - before_commit
+      - after_commit
+      - command_outputs
+      - observed_paths
+      - observed_hashes
+      - execution_trace
+failure_modes:
+  - evidence.sh git_sha() returns a live commit hash under deterministic mode => CRITICAL_FAIL
+  - sign_evidence.py emits a live commit hash under deterministic mode => CRITICAL_FAIL
+  - pre_ci.sh exports a live PRE_CI_RUN_ID under deterministic mode => FAIL
+  - verify_tsk_p1_248.sh skips the commit-between-runs proof => FAIL
+  - Evidence file missing => FAIL
+anti_patterns:
+  - Testing determinism without changing HEAD between runs
+must_read:
+  - AGENT_ENTRYPOINT.md
+  - docs/operations/AI_AGENT_OPERATION_MANUAL.md
+  - scripts/lib/evidence.sh
+  - scripts/audit/sign_evidence.py
+  - scripts/dev/pre_ci.sh
+implementation_plan: docs/plans/phase1/TSK-P1-248/PLAN.md
+implementation_log: docs/plans/phase1/TSK-P1-248/EXEC_LOG.md
+notes: >
+  This task closes the commit-sensitive git identity loop that makes evidence
+  drift after every commit. The verifier uses an isolated worktree so the proof
+  changes HEAD without mutating the user's working tree.
+client: antigravity
+assigned_agent: security_guardian
+model: gpt-5-codex

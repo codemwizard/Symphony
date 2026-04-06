@@ -194,7 +194,7 @@ fi
 # ── Clear mode: log then delete ──────────────────────────────────────────────
 mkdir -p "$(dirname "$CLEAR_LOG")"
 
-CLEARED_AT="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+CLEARED_AT="$([ "${SYMPHONY_EVIDENCE_DETERMINISTIC:-0}" = "1" ] && echo "1970-01-01T00:00:00Z" || date -u +%Y-%m-%dT%H:%M:%SZ)"
 GIT_SHA="$(git rev-parse --short HEAD 2>/dev/null || echo nogit)"
 
 python3 - "$CLEAR_LOG" "$LOCKED_SIG" "$LOCKED_COUNT" "$CLEARED_AT" \

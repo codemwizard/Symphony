@@ -49,6 +49,7 @@ _SOFT_BYPASS_VARS=(
   SKIP_POLICY_SEED
   KEEP_TEMP_DB
   CLEAN_EVIDENCE
+  PII_LINT_ROOTS
 )
 
 # ---------------------------------------------------------------------------
@@ -59,7 +60,7 @@ _log_bypass() {
   local log_dir=".toolchain/audit"
   mkdir -p "$log_dir"
   printf '%s bypass_env_var_detected var=%s val=%.80s pid=%s\n' \
-    "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "$var" "$val" "$$" \
+    "$([ "${SYMPHONY_EVIDENCE_DETERMINISTIC:-0}" = "1" ] && echo "1970-01-01T00:00:00Z" || date -u +%Y-%m-%dT%H:%M:%SZ)" "$var" "$val" "$$" \
     >> "$log_dir/bypass_attempt.log"
 }
 
@@ -116,6 +117,7 @@ export FORCE_PASS=0
 export SKIP_POLICY_SEED=0
 export KEEP_TEMP_DB=0
 export CLEAN_EVIDENCE=1
+export PII_LINT_ROOTS=""
 # Restore RUN_DEMO_GATES to the validated value (0 if it was invalid).
 export RUN_DEMO_GATES="${_rdg_val:-0}"
 if [[ "$_rdg_val" != "0" && "$_rdg_val" != "1" ]]; then

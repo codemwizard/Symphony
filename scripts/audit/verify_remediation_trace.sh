@@ -11,7 +11,7 @@ if [[ "${PRE_CI_CONTEXT:-}" != "1" ]]; then
   echo "  Debug override: PRE_CI_CONTEXT=1 bash $(basename "${BASH_SOURCE[0]}")" >&2
   mkdir -p .toolchain/audit
   printf '%s rogue_execution attempted: %s\n' \
-    "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "${BASH_SOURCE[0]}" \
+    "$([ "${SYMPHONY_EVIDENCE_DETERMINISTIC:-0}" = "1" ] && echo "1970-01-01T00:00:00Z" || date -u +%Y-%m-%dT%H:%M:%SZ)" "${BASH_SOURCE[0]}" \
     >> .toolchain/audit/rogue_execution.log
   exit 1
 fi
@@ -98,8 +98,8 @@ if not triggered_files:
         "base_ref": base_ref,
         "head_ref": head_ref,
         "merge_base": merge_base,
-        "changed_files": diff_changed,
-        "triggered_files": triggered_files,
+        "triggered_change_present": False,
+        "satisfying_docs": [],
     }
     evidence_out.write_text(json.dumps(out, indent=2) + "\n")
     raise SystemExit(0)
@@ -201,10 +201,10 @@ out = {
     "base_ref": base_ref,
     "head_ref": head_ref,
     "merge_base": merge_base,
-    "changed_files": diff_changed,
-    "triggered_files": triggered_files,
-    "trace_docs": trace_docs,
+    "triggered_change_present": True,
+    "triggered_prefixes": sorted({p.split("/", 1)[0] for p in triggered_files}),
     "satisfying_docs": satisfying_docs,
+    "satisfying_doc_parent": str(Path(satisfying_docs[0]).parent) if satisfying_docs else "",
     "errors": errors,
 }
 

@@ -1,6 +1,23 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+# --- PRE_CI_CONTEXT_GUARD ---
+# This script writes evidence and must run via pre_ci.sh or run_task.sh.
+# Direct execution bypasses the enforcement harness and is blocked.
+# Debugging override: PRE_CI_CONTEXT=1 bash <script>
+if [[ "${PRE_CI_CONTEXT:-}" != "1" ]]; then
+  echo "ERROR: $(basename "${BASH_SOURCE[0]}") must run via pre_ci.sh or run_task.sh" >&2
+  echo "  Direct execution blocked to protect evidence integrity." >&2
+  echo "  Debug override: PRE_CI_CONTEXT=1 bash $(basename "${BASH_SOURCE[0]}")" >&2
+  mkdir -p .toolchain/audit
+  printf '%s rogue_execution attempted: %s\n' \
+    "$([ "${SYMPHONY_EVIDENCE_DETERMINISTIC:-0}" = "1" ] && echo "1970-01-01T00:00:00Z" || date -u +%Y-%m-%dT%H:%M:%SZ)" "${BASH_SOURCE[0]}" \
+    >> .toolchain/audit/rogue_execution.log
+  return 1 2>/dev/null || exit 1
+fi
+# --- end PRE_CI_CONTEXT_GUARD ---
+
+
 ROOT_DIR="${ROOT_DIR:-$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)}"
 EVIDENCE_DIR="$ROOT_DIR/evidence/phase1"
 EVIDENCE_FILE="${EVIDENCE_FILE:-$EVIDENCE_DIR/human_governance_review_signoff.json}"
@@ -18,6 +35,7 @@ python3 <<'PY'
 import json
 import os
 import re
+import hashlib
 from pathlib import Path
 
 root = Path(os.environ['ROOT_DIR'])
@@ -101,18 +119,23 @@ except Exception as exc:
     errors.append(f'changed_files_probe_failed:{exc}')
 
 reviewed_files = sidecar.get('scope', {}).get('paths_changed', []) if sidecar else []
+reviewed_files = sorted(set(reviewed_files))
 # If the current branch diff does not match the approval branch (for example on
 # merged main or unrelated CI refs), validate against the metadata-declared scope.
 coverage_source = changed
+coverage_source_kind = 'git_diff_range'
 if metadata_review_scope:
-    current_branch_key = branch.replace('/', '-')
-    metadata_branch_key = metadata_branch.replace('/', '-') if metadata_branch else ''
-    if current_branch_key != metadata_branch_key or not changed:
-        coverage_source = metadata_review_scope
+    coverage_source = sorted(set(metadata_review_scope))
+    coverage_source_kind = 'approval_metadata_scope'
+else:
+    coverage_source = sorted(set(changed))
 
 missing_review_coverage = sorted(set(coverage_source) - set(reviewed_files)) if coverage_source else []
 if missing_review_coverage:
     errors.append('review_scope_missing_changed_files:' + ','.join(missing_review_coverage[:20]))
+
+review_scope_fingerprint = hashlib.sha256('\n'.join(reviewed_files).encode('utf-8')).hexdigest() if reviewed_files else ''
+coverage_source_fingerprint = hashlib.sha256('\n'.join(coverage_source).encode('utf-8')).hexdigest() if coverage_source else ''
 
 payload = {
     'check_id': 'TASK-OI-10',
@@ -126,9 +149,13 @@ payload = {
     'change_ref': f'branch/{branch}' if branch else None,
     'review_artifact_ref': str(approval_md.relative_to(root)) if approval_md else None,
     'review_sidecar_ref': str(approval_json.relative_to(root)) if approval_json else None,
-    'reviewed_files': reviewed_files,
-    'changed_files': changed,
-    'coverage_source_files': coverage_source,
+    'review_scope_count': len(reviewed_files),
+    'review_scope_fingerprint': review_scope_fingerprint,
+    'coverage_source_kind': coverage_source_kind,
+    'coverage_source_count': len(coverage_source),
+    'coverage_source_fingerprint': coverage_source_fingerprint,
+    'coverage_gap_count': len(missing_review_coverage),
+    'coverage_gap_sample': missing_review_coverage[:5],
     'errors': errors,
 }
 out.write_text(json.dumps(payload, indent=2) + '\n', encoding='utf-8')

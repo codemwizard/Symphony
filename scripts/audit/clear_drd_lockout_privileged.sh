@@ -15,7 +15,7 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 DRD_LOCKOUT_FILE="$ROOT/.toolchain/pre_ci_debug/drd_lockout.env"
 CLEAR_LOG="$ROOT/.toolchain/evidence_ack/reset_log.jsonl"
-CLEARED_AT="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+CLEARED_AT="$([ "${SYMPHONY_EVIDENCE_DETERMINISTIC:-0}" = "1" ] && echo "1970-01-01T00:00:00Z" || date -u +%Y-%m-%dT%H:%M:%SZ)"
 CALLER="${SUDO_USER:-${USER:-unknown}}"
 EXECUTOR="${USER:-unknown}"
 

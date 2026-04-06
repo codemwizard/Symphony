@@ -55,7 +55,7 @@ cat > "$BLOCKED_EVENT" <<JSON
   "policy_version_id": "$POLICY_VERSION_ID",
   "attempted_action": "AUTO_FINALIZE",
   "outcome": "BLOCKED",
-  "timestamp_utc": "$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+  "timestamp_utc": "$([ "${SYMPHONY_EVIDENCE_DETERMINISTIC:-0}" = "1" ] && echo "1970-01-01T00:00:00Z" || date -u +%Y-%m-%dT%H:%M:%SZ)"
 }
 JSON
 

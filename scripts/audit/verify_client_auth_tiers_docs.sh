@@ -90,7 +90,7 @@ git_sha() {
 }
 
 timestamp_utc() {
-  date -u +"%Y-%m-%dT%H:%M:%SZ"
+  [ "${SYMPHONY_EVIDENCE_DETERMINISTIC:-0}" = "1" ] && echo "1970-01-01T00:00:00Z" || date -u +%Y-%m-%dT%H:%M:%SZ
 }
 
 json_escape() {

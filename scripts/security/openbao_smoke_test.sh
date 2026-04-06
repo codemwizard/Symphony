@@ -83,7 +83,6 @@ out = {
   "git_sha": "${EVIDENCE_GIT_SHA}",
   "schema_fingerprint": "${EVIDENCE_SCHEMA_FP}",
   "status": "PASS" if "$AUDIT_PRESENT" == "true" else "FAIL",
-  "audit_log_bytes": int("$AUDIT_BYTES"),
   "audit_log_present": "$AUDIT_PRESENT" == "true",
   "path": "/openbao/audit.log"
 }

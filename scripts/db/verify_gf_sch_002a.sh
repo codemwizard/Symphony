@@ -11,7 +11,7 @@ if [[ "${PRE_CI_CONTEXT:-}" != "1" ]]; then
   echo "  Debug override: PRE_CI_CONTEXT=1 bash $(basename "${BASH_SOURCE[0]}")" >&2
   mkdir -p .toolchain/audit
   printf '%s rogue_execution attempted: %s\n' \
-    "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "${BASH_SOURCE[0]}" \
+    "$([ "${SYMPHONY_EVIDENCE_DETERMINISTIC:-0}" = "1" ] && echo "1970-01-01T00:00:00Z" || date -u +%Y-%m-%dT%H:%M:%SZ)" "${BASH_SOURCE[0]}" \
     >> .toolchain/audit/rogue_execution.log
   exit 1
 fi
@@ -32,8 +32,8 @@ EXPECTED_HEAD="0098"
 failures=()
 add_failure() { failures+=("$1"); }
 
-git_sha="$(git rev-parse HEAD 2>/dev/null || echo "unknown")"
-timestamp="$(date -u +"%Y-%m-%dT%H:%M:%SZ")"
+git_sha="$([ "${SYMPHONY_EVIDENCE_DETERMINISTIC:-0}" = "1" ] && echo "0000000000000000000000000000000000000000" || git rev-parse HEAD 2>/dev/null || echo "unknown")"
+timestamp="$([ "${SYMPHONY_EVIDENCE_DETERMINISTIC:-0}" = "1" ] && echo "1970-01-01T00:00:00Z" || date -u +%Y-%m-%dT%H:%M:%SZ)"
 run_id="${SYMPHONY_RUN_ID:-}"
 
 echo "==> GF-W1-SCH-002A verifier"

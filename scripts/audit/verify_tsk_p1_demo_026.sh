@@ -27,7 +27,7 @@ Path(evidence).parent.mkdir(parents=True, exist_ok=True)
 payload = {
     "check_id": "TSK-P1-DEMO-026-SERVER-SIDE-ADMIN-PROXY",
     "task_id": task_id,
-    "timestamp_utc": os.popen('date -u +%Y-%m-%dT%H:%M:%SZ').read().strip(),
+    "timestamp_utc": os.popen('[ "${SYMPHONY_EVIDENCE_DETERMINISTIC:-0}" = "1" ] && echo "1970-01-01T00:00:00Z" || date -u +%Y-%m-%dT%H:%M:%SZ).read().strip(),
     "git_sha": sha,
     "status": "PASS",
     "pass": True,

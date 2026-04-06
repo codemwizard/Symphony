@@ -14,7 +14,7 @@ cat > "$W/historical_verification_archive_only.json" <<JSON
 {"pass":true,"key_versions_tested":["k1","k2"],"operational_store_excluded":true,"all_outcomes":"PASS"}
 JSON
 cat > "$W/dependency_not_ready_resign_sweep.json" <<JSON
-{"pass":true,"sweep_completed_timestamp":"$(date -u +%Y-%m-%dT%H:%M:%SZ)","artifacts_resigned_count":12,"artifacts_with_pending_tier_assignment_cleared":true}
+{"pass":true,"sweep_completed_timestamp":"$([ "${SYMPHONY_EVIDENCE_DETERMINISTIC:-0}" = "1" ] && echo "1970-01-01T00:00:00Z" || date -u +%Y-%m-%dT%H:%M:%SZ)","artifacts_resigned_count":12,"artifacts_with_pending_tier_assignment_cleared":true}
 JSON
 python3 - <<PY
 import json, pathlib, datetime, subprocess

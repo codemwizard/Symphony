@@ -17,7 +17,7 @@ rg -q "RAIL_NATIVE_ALT_FIELD" "$DSL"
 rg -q "Enforcement schema" "$DOC"
 
 cat > "$O" <<JSON
-{"check_id":"TSK-HARD-030","task_id":"TSK-HARD-030","status":"PASS","pass":true,"dsl_schema_path":"evidence/schemas/hardening/reference_strategy_dsl.schema.json","strategy_types":["SUFFIX","DETERMINISTIC_ALIAS","RE_ENCODED_HASH_TOKEN","RAIL_NATIVE_ALT_FIELD"],"policy_versioned":true,"negative_path_named_error":true,"timestamp_utc":"$(date -u +%Y-%m-%dT%H:%M:%SZ)","git_sha":"$(git rev-parse HEAD)"}
+{"check_id":"TSK-HARD-030","task_id":"TSK-HARD-030","status":"PASS","pass":true,"dsl_schema_path":"evidence/schemas/hardening/reference_strategy_dsl.schema.json","strategy_types":["SUFFIX","DETERMINISTIC_ALIAS","RE_ENCODED_HASH_TOKEN","RAIL_NATIVE_ALT_FIELD"],"policy_versioned":true,"negative_path_named_error":true,"timestamp_utc":"$([ "${SYMPHONY_EVIDENCE_DETERMINISTIC:-0}" = "1" ] && echo "1970-01-01T00:00:00Z" || date -u +%Y-%m-%dT%H:%M:%SZ)","git_sha":"$([ "${SYMPHONY_EVIDENCE_DETERMINISTIC:-0}" = "1" ] && echo "0000000000000000000000000000000000000000" || git rev-parse HEAD)"}
 JSON
 python3 - <<PY
 import json

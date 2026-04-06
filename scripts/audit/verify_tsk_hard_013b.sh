@@ -8,7 +8,7 @@ rg -q "orphan_classification_enum" "$MIGRATION" || { echo missing_orphan_classif
 rg -q "classify_orphan_or_replay" "$MIGRATION" || { echo missing_orphan_replay_classifier >&2; exit 1; }
 rg -q "REPLAY_ATTEMPT" "$MIGRATION" || { echo missing_replay_classification >&2; exit 1; }
 cat > "$OUT" <<JSON
-{"check_id":"TSK-HARD-013B","task_id":"TSK-HARD-013B","status":"PASS","pass":true,"classifications":["LATE_CALLBACK","DUPLICATE_DISPATCH","UNKNOWN_REFERENCE","REPLAY_ATTEMPT"],"replay_rejected":true,"unknown_reference_rejected":true,"instruction_state_unchanged":true,"timestamp_utc":"$(date -u +%Y-%m-%dT%H:%M:%SZ)"}
+{"check_id":"TSK-HARD-013B","task_id":"TSK-HARD-013B","status":"PASS","pass":true,"classifications":["LATE_CALLBACK","DUPLICATE_DISPATCH","UNKNOWN_REFERENCE","REPLAY_ATTEMPT"],"replay_rejected":true,"unknown_reference_rejected":true,"instruction_state_unchanged":true,"timestamp_utc":"$([ "${SYMPHONY_EVIDENCE_DETERMINISTIC:-0}" = "1" ] && echo "1970-01-01T00:00:00Z" || date -u +%Y-%m-%dT%H:%M:%SZ)"}
 JSON
 python3 - <<PY
 import json

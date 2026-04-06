@@ -129,9 +129,6 @@ write_json "$EVIDENCE_FILE" \
   "\"schema_fingerprint\": \"${EVIDENCE_SCHEMA_FP}\"" \
   "\"status\": \"${status}\"" \
   "\"hit_count\": ${count}" \
-  "\"tracked_file_count\": ${#tracked_files[@]}" \
-  "\"existing_tracked_file_count\": ${#existing_tracked_files[@]}" \
-  "\"missing_tracked_file_count\": ${missing_tracked_files}" \
   "\"scan_error\": \"${scan_error}\"" \
   "\"hits\": ${hits_json}"
 
