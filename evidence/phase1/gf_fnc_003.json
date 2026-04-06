@@ -2,13 +2,13 @@
   "check_id": "GF-W1-FNC-003",
   "task_id": "GF-W1-FNC-003",
   "status": "PASS",
-  "timestamp_utc": "2026-04-05T18:22:05Z",
-  "generated_at": "2026-04-05T18:22:05.916362+00:00",
-  "git_sha": "2b627d1f744afd6dcf4613bc3921d5983c5cffbe",
-  "pre_ci_run_id": "rem-2b627d1f744a",
+  "timestamp_utc": "2026-04-06T01:58:45Z",
+  "generated_at": "2026-04-06T01:58:45.467438+00:00",
+  "git_sha": "e867df6c0998d00971cb844dcdc1889b8cd85c15",
+  "pre_ci_run_id": "rem-e867df6c0998",
   "source_file": "schema/migrations/0109_gf_fn_evidence_lineage.sql",
   "source_file_sha256": "b6440f453c17b68a7ff52f4dd099de148b3f32d5f2cb9f6a3160a7ffca56a9f6",
   "command_output": "{\"probes\": [{\"probe\": \"link_evidence_to_record\", \"status\": \"PASS\"},{\"probe\": \"get_evidence_node\", \"status\": \"PASS\"},{\"probe\": \"list_project_evidence\", \"status\": \"PASS\"},{\"probe\": \"attach_evidence\", \"status\": \"PASS\"},{\"probe\": \"query_evidence_lineage\", \"status\": \"PASS\"}]}",
-  "_signature": "7d1efc3149e420b3bf4df768b9ee5617c4ab5a4fd53c61d55041020a868c6370",
+  "_signature": "0f0a579c0f6e37068e4149e2b1cd242e3732777fd787540259fc45900642dbe3",
   "_signing_version": "symphony-v1"
 }

@@ -1,11 +1,11 @@
 {
   "check_id": "DB-NO-TX-MIGRATIONS",
-  "timestamp_utc": "2026-04-05T18:21:31Z",
-  "git_sha": "2b627d1f744afd6dcf4613bc3921d5983c5cffbe",
+  "timestamp_utc": "2026-04-06T01:58:09Z",
+  "git_sha": "e867df6c0998d00971cb844dcdc1889b8cd85c15",
   "schema_fingerprint": "1f92363c69ba235e552a6aac05045062fc0097fc93cde3b89e76455b80628019",
   "status": "PASS",
   "migration_applied": "t",
   "index_exists": "t",
   "index_validity": "idx_payment_outbox_pending_due_claim|true|true",
-  "temp_db": "symphony_test_no_tx_1775413291"
+  "temp_db": "symphony_test_no_tx_1775440689"
 }
