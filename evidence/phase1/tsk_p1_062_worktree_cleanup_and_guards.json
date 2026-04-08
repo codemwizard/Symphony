@@ -8,7 +8,7 @@
   "worktree_count": 1,
   "worktrees": [
     {
-      "worktree": "/home/mwiza/workspace/Symphony",
+      "worktree": "/home/mwiza/workspaces/Symphony-Demo/Symphony",
       "branch": "refs/heads/fix/demo-updates-and-evidence",
       "detached": false,
       "prunable": false

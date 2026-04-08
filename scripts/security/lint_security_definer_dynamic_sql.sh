@@ -64,9 +64,15 @@ for entry in "${matches[@]}"; do
   filtered+=("$entry")
 done
 
-printf '%s\n' "${filtered[@]}" | python3 - <<PY
+filtered_text=""
+if [[ ${#filtered[@]} -gt 0 ]]; then
+  filtered_text="$(printf '%s\n' "${filtered[@]}")"
+fi
+
+python3 - "$filtered_text" <<PY
 import json, sys
-lines = [ln.strip() for ln in sys.stdin.read().splitlines() if ln.strip()]
+text = sys.argv[1] if len(sys.argv) > 1 else ""
+lines = [ln.strip() for ln in text.splitlines() if ln.strip()]
 out = {
     "check_id": "SEC-SECDEF-DYNAMIC-SQL",
     "timestamp_utc": "${EVIDENCE_TS}",

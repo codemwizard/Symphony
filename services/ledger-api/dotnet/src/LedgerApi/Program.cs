@@ -1492,8 +1492,15 @@ app.MapGet("/api/admin/onboarding/status", async (HttpContext httpContext, Cance
 
 if (string.Equals(runtimeProfile, "pilot-demo", StringComparison.OrdinalIgnoreCase))
 {
-    await SeedDemoTenant(runtimeProfile, tenantRegistryStore, programmeStore, tenantOnboardingStore, dataSource, logger);
-    await SeedChungaWorkers(programmeStore, logger);
+    var actualTenantId = await SeedDemoTenant(runtimeProfile, tenantRegistryStore, programmeStore, tenantOnboardingStore, dataSource, logger);
+    if (actualTenantId.HasValue)
+    {
+        await SeedChungaWorkers(programmeStore, logger, actualTenantId.Value);
+    }
+    else
+    {
+        logger.LogWarning("Skipping worker seeding because tenant seeding did not complete successfully.");
+    }
     await SeedDemoInstructions(logger);
 }
 
@@ -1502,7 +1509,7 @@ static Guid CreateStableGuid(string input)
     return StableGuidHelper.CreateStableGuid(input);
 }
 
-async Task SeedDemoTenant(string rp, ITenantRegistryStore trs, IProgrammeStore ps, ITenantOnboardingStore tos, Npgsql.NpgsqlDataSource? ds, ILogger l)
+async Task<Guid?> SeedDemoTenant(string rp, ITenantRegistryStore trs, IProgrammeStore ps, ITenantOnboardingStore tos, Npgsql.NpgsqlDataSource? ds, ILogger l)
 {
     try
     {
@@ -1622,7 +1629,132 @@ async Task SeedDemoTenant(string rp, ITenantRegistryStore trs, IProgrammeStore p
                         l.LogWarning($"Failed to parse ProgrammeId {pidStr} as Guid during auto-seed.");
                     }
                 }
+
+                // Return the actual tenant ID that was created/retrieved from the database
+                return actualTenantId;
             }
+        }
+        else
+        {
+            // Tenant already exists in tenant_registry, but we need to ensure it's also in public.tenants
+            // and that the programme and legacy tables are seeded
+            l.LogInformation("Pilot Demo tenant already exists in tenant_registry. Ensuring programme and legacy tables are seeded...");
+
+            // Ensure the tenant is onboarded to public.tenants (idempotent operation)
+            try
+            {
+                await tos.OnboardAsync(new TenantOnboardingInput(
+                    tenantId, "Zambia Green MFI", "ZM", "enterprise", $"seed:{tenantId}"
+                ), CancellationToken.None);
+                l.LogInformation("Tenant onboarded to public.tenants.");
+            }
+            catch (Exception onboardEx)
+            {
+                l.LogWarning(onboardEx, "Tenant onboarding to public.tenants failed or already exists.");
+            }
+
+            // Ensure the programme exists
+            var progResult = await ps.CreateAsync(tenantId, "PGM-ZAMBIA-GRN-001", "GreenTech4CE · Solar Cluster A", default, true);
+            if (progResult.Success && progResult.Entry is not null)
+            {
+                var pidStr = progResult.Entry.ProgrammeId;
+                if (Guid.TryParse(pidStr, out var pidGuid))
+                {
+                    // Ensure programme is activated
+                    try
+                    {
+                        await ps.ActivateAsync(pidGuid, tenantId, default, true);
+                    }
+                    catch (Exception activateEx)
+                    {
+                        l.LogInformation(activateEx, "Programme activation skipped (may already be active).");
+                    }
+
+                    // Ensure policy is bound
+                    try
+                    {
+                        var bindResult = await ps.BindPolicyAsync(pidGuid, tenantId, "green_eq_v1", default, true);
+                        if (!bindResult.Success)
+                        {
+                            l.LogInformation($"Pilot Demo binding skipped: {bindResult.Error}");
+                        }
+                    }
+                    catch (Exception bindEx)
+                    {
+                        l.LogInformation(bindEx, "Pilot Demo binding ignored (already seeded).");
+                    }
+
+                    // Seed legacy escrow_accounts + programs tables (idempotent with ON CONFLICT DO NOTHING)
+                    if (ds is not null)
+                    {
+                        try
+                        {
+                            await using var legacyConn = await ds.OpenConnectionAsync(default);
+                            await using var legacyTx = await legacyConn.BeginTransactionAsync(default);
+
+                            // Set RLS context + bypass for superuser seeding
+                            await using var ctxCmd = legacyConn.CreateCommand();
+                            ctxCmd.Transaction = legacyTx;
+                            ctxCmd.CommandText = "SELECT set_config('app.bypass_rls', 'on', true)";
+                            await ctxCmd.ExecuteScalarAsync();
+
+                            await using var ctxCmd2 = legacyConn.CreateCommand();
+                            ctxCmd2.Transaction = legacyTx;
+                            ctxCmd2.CommandText = "SELECT set_config('app.current_tenant_id', @tid::text, true)";
+                            ctxCmd2.Parameters.AddWithValue("tid", tenantId);
+                            await ctxCmd2.ExecuteScalarAsync();
+
+                            // 1. Seed a placeholder escrow_account for the programme budget envelope
+                            await using var escrowCmd = legacyConn.CreateCommand();
+                            escrowCmd.Transaction = legacyTx;
+                            escrowCmd.CommandText = @"
+                                INSERT INTO public.escrow_accounts (
+                                    escrow_id, tenant_id, program_id, state,
+                                    authorized_amount_minor, currency_code,
+                                    authorization_expires_at, release_due_at
+                                ) VALUES (
+                                    @escrow_id, @tenant_id, NULL, 'AUTHORIZED',
+                                    1000000, 'ZMW',
+                                    NOW() + interval '365 days', NOW() + interval '730 days'
+                                ) ON CONFLICT (escrow_id) DO NOTHING;";
+                            escrowCmd.Parameters.AddWithValue("escrow_id", pidGuid);
+                            escrowCmd.Parameters.AddWithValue("tenant_id", tenantId);
+                            await escrowCmd.ExecuteNonQueryAsync();
+
+                            // 2. Seed the legacy public.programs row using the same UUID
+                            await using var progCmd = legacyConn.CreateCommand();
+                            progCmd.Transaction = legacyTx;
+                            progCmd.CommandText = @"
+                                INSERT INTO public.programs (
+                                    program_id, tenant_id, program_key, program_name,
+                                    status, program_escrow_id
+                                ) VALUES (
+                                    @program_id, @tenant_id, @program_key, @program_name,
+                                    'ACTIVE', @escrow_id
+                                ) ON CONFLICT (program_id) DO NOTHING;";
+                            progCmd.Parameters.AddWithValue("program_id", pidGuid);
+                            progCmd.Parameters.AddWithValue("tenant_id", tenantId);
+                            progCmd.Parameters.AddWithValue("program_key", "PGM-ZAMBIA-GRN-001");
+                            progCmd.Parameters.AddWithValue("program_name", "GreenTech4CE · Solar Cluster A");
+                            progCmd.Parameters.AddWithValue("escrow_id", pidGuid);
+                            await progCmd.ExecuteNonQueryAsync();
+
+                            await legacyTx.CommitAsync();
+                            l.LogInformation("Legacy escrow_accounts + programs seeded for programme {ProgrammeId}.", pidGuid);
+                        }
+                        catch (Exception legacyEx)
+                        {
+                            l.LogWarning(legacyEx, "Legacy escrow/programs seeding skipped (may already exist).");
+                        }
+                    }
+                }
+            }
+            else
+            {
+                l.LogInformation("Programme already exists or creation skipped.");
+            }
+
+            return tenantId;
         }
     }
     catch (Exception ex)
@@ -1636,22 +1768,17 @@ async Task SeedDemoTenant(string rp, ITenantRegistryStore trs, IProgrammeStore p
             l.LogWarning(ex, "Failed to auto-seed default Pilot Demo tenant.");
         }
     }
+
+    // Return null on failure
+    return null;
 }
 
-async Task SeedChungaWorkers(IProgrammeStore ps, ILogger l)
+async Task SeedChungaWorkers(IProgrammeStore ps, ILogger l, Guid actualTenantId)
 {
     try
     {
-        var uiTidStr = Environment.GetEnvironmentVariable("SYMPHONY_UI_TENANT_ID");
-        string DemoTenantId;
-        if (!Guid.TryParse(uiTidStr, out var tenantGuid))
-        {
-            DemoTenantId = CreateStableGuid("ten-zambiagrn").ToString();
-        }
-        else
-        {
-            DemoTenantId = tenantGuid.ToString();
-        }
+        // Use the actual tenant ID passed from SeedDemoTenant
+        var DemoTenantId = actualTenantId.ToString();
         const string PgmZambiaGrnKey = "PGM-ZAMBIA-GRN-001";
 
         // Resolve the actual program UUID from the database

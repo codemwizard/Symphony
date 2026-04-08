@@ -16,7 +16,7 @@ mkdir -p "$tmp_dir/scripts/lib" "$tmp_dir/evidence/phase1"
 cp "$ROOT/scripts/lib/evidence.sh" "$tmp_dir/scripts/lib/evidence.sh"
 
 set +e
-SYMPHONY_ENV=development DOTNET_LINT_ROOT="$tmp_dir" "$SCRIPT"
+SYMPHONY_ENV=development SKIP_DOTNET_QUALITY_LINT=0 DOTNET_LINT_ROOT="$tmp_dir" "$SCRIPT"
 rc=$?
 set -e
 
@@ -68,12 +68,44 @@ EOF
 chmod +x "$tmp_dir/project_timeout/fakebin/dotnet"
 
 set +e
-SYMPHONY_ENV=development PATH="$tmp_dir/project_timeout/fakebin:$PATH" DOTNET_LINT_ROOT="$tmp_dir/project_timeout" DOTNET_LINT_TIMEOUT_SEC=1 "$SCRIPT"
+SYMPHONY_ENV=development SKIP_DOTNET_QUALITY_LINT=0 PATH="$tmp_dir/project_timeout/fakebin:$PATH" DOTNET_LINT_ROOT="$tmp_dir/project_timeout" DOTNET_LINT_TIMEOUT_SEC=1 "$SCRIPT"
+rc=$?
+set -e
+
+# Local (non-CI) timeout should be treated as env_blocked (PASS)
+if [[ "$rc" -ne 0 ]]; then
+  echo "Expected pass when fake dotnet format times out locally; got rc=$rc" >&2
+  exit 1
+fi
+
+python3 - <<'PY' "$tmp_dir/project_timeout/evidence/phase1/dotnet_lint_quality.json"
+import json,sys
+data=json.load(open(sys.argv[1],encoding="utf-8"))
+if data.get("status") != "PASS":
+    raise SystemExit("local timeout status mismatch: expected PASS, got " + str(data.get("status")))
+if data.get("note") != "dotnet_format_env_blocked":
+    raise SystemExit("local timeout note mismatch: expected dotnet_format_env_blocked, got " + str(data.get("note")))
+if data.get("format_env_blocked") is not True:
+    raise SystemExit("local timeout env_blocked flag mismatch")
+if data.get("processed_targets_count") != 1:
+    raise SystemExit("local timeout processed target count mismatch")
+summary = data.get("command_summary", {})
+if summary.get("short_circuit_markers") != 1:
+    raise SystemExit("local timeout short-circuit marker missing")
+if summary.get("build_invocations", 0) != 0:
+    raise SystemExit("build invocation should be skipped after local timeout")
+print("timeout_ok")
+PY
+
+# CI-mode timeout: must hard-fail
+rm -f "$tmp_dir/project_timeout/evidence/phase1/dotnet_lint_quality.json"
+set +e
+SYMPHONY_ENV=development SKIP_DOTNET_QUALITY_LINT=0 GITHUB_ACTIONS=true PATH="$tmp_dir/project_timeout/fakebin:$PATH" DOTNET_LINT_ROOT="$tmp_dir/project_timeout" DOTNET_LINT_TIMEOUT_SEC=1 "$SCRIPT"
 rc=$?
 set -e
 
 if [[ "$rc" -eq 0 ]]; then
-  echo "Expected failure when fake dotnet format times out" >&2
+  echo "Expected failure when fake dotnet format times out in CI" >&2
   exit 1
 fi
 
@@ -81,17 +113,10 @@ python3 - <<'PY' "$tmp_dir/project_timeout/evidence/phase1/dotnet_lint_quality.j
 import json,sys
 data=json.load(open(sys.argv[1],encoding="utf-8"))
 if data.get("status") != "FAIL":
-    raise SystemExit("timeout status mismatch")
+    raise SystemExit("CI timeout status mismatch: expected FAIL, got " + str(data.get("status")))
 if data.get("note") != "dotnet_format_timeout":
-    raise SystemExit("timeout note mismatch")
-if data.get("processed_targets_count") != 1:
-    raise SystemExit("timeout processed target count mismatch")
-summary = data.get("command_summary", {})
-if summary.get("timeout_markers") != 1:
-    raise SystemExit("timeout marker missing")
-if summary.get("build_invocations", 0) != 0:
-    raise SystemExit("build invocation should be skipped after timeout")
-print("timeout_ok")
+    raise SystemExit("CI timeout note mismatch")
+print("ci_timeout_ok")
 PY
 
 mkdir -p "$tmp_dir/project_envblocked/scripts/lib" "$tmp_dir/project_envblocked/src" "$tmp_dir/project_envblocked/fakebin" "$tmp_dir/project_envblocked/evidence/phase1"
@@ -126,7 +151,7 @@ EOF
 chmod +x "$tmp_dir/project_envblocked/fakebin/dotnet"
 
 set +e
-SYMPHONY_ENV=development PATH="$tmp_dir/project_envblocked/fakebin:$PATH" DOTNET_LINT_ROOT="$tmp_dir/project_envblocked" "$SCRIPT"
+SYMPHONY_ENV=development SKIP_DOTNET_QUALITY_LINT=0 PATH="$tmp_dir/project_envblocked/fakebin:$PATH" DOTNET_LINT_ROOT="$tmp_dir/project_envblocked" "$SCRIPT"
 rc=$?
 set -e
 
@@ -152,6 +177,32 @@ if summary.get("short_circuit_markers") != 1:
 if summary.get("build_invocations", 0) != 0:
     raise SystemExit("build invocation should be skipped after env-blocked format")
 print("env_blocked_ok")
+PY
+
+# Test SKIP_DOTNET_QUALITY_LINT flag
+mkdir -p "$tmp_dir/project_skip/scripts/lib" "$tmp_dir/project_skip/evidence/phase1"
+cp "$ROOT/scripts/lib/evidence.sh" "$tmp_dir/project_skip/scripts/lib/evidence.sh"
+
+set +e
+SYMPHONY_ENV=development SKIP_DOTNET_QUALITY_LINT=1 DOTNET_LINT_ROOT="$tmp_dir/project_skip" "$SCRIPT"
+rc=$?
+set -e
+
+if [[ "$rc" -ne 0 ]]; then
+  echo "Expected pass when SKIP_DOTNET_QUALITY_LINT=1; got rc=$rc" >&2
+  exit 1
+fi
+
+python3 - <<'PY' "$tmp_dir/project_skip/evidence/phase1/dotnet_lint_quality.json"
+import json,sys
+data=json.load(open(sys.argv[1],encoding="utf-8"))
+if data.get("status") != "PASS":
+    raise SystemExit("skip flag status mismatch: expected PASS, got " + str(data.get("status")))
+if data.get("note") != "skipped_via_env_flag":
+    raise SystemExit("skip flag note mismatch: expected skipped_via_env_flag, got " + str(data.get("note")))
+if data.get("targets_count") != 0:
+    raise SystemExit("skip flag targets_count mismatch")
+print("skip_flag_ok")
 PY
 
 echo "test_lint_dotnet_quality.sh passed"

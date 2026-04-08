@@ -1,0 +1,144 @@
+schema_version: 1
+phase: '1'
+task_id: GF-W1-UI-007
+title: "Onboarding Console tab: migrate to canonical CSS tokens"
+owner_role: SUPERVISOR
+status: completed
+priority: HIGH
+risk_class: GOVERNANCE
+blast_radius: APP_LAYER
+
+intent: >-
+  Migrate the existing Onboarding Console tab from inline colours and non-canonical
+  CSS variables to the canonical token system. No JavaScript or API call changes.
+  CSS-only migration.
+
+anti_patterns:
+  - "Changing JavaScript or API calls — CSS migration only"
+  - "Using inline style= attributes instead of CSS classes"
+  - "Adding new functionality — only restyling existing UI"
+
+out_of_scope:
+  - "Onboarding Console JS logic — unchanged"
+  - "API endpoints — unchanged"
+  - "New features or form fields — not in scope"
+
+stop_conditions:
+  - "Any JavaScript changes in the Onboarding Console section => FAIL"
+  - "Any inline style= with colour values => FAIL"
+  - "Any node in the proof graph is orphaned => STOP"
+
+proof_guarantees:
+  - "grep verifies no inline style colour values in onboarding section"
+
+proof_limitations:
+  - "Colour matching to canonical tokens requires visual inspection"
+  - "overflow-y:auto on table containers requires visual inspection"
+
+depends_on:
+  - GF-W1-UI-002
+
+blocks: []
+
+touches:
+  - src/supervisory-dashboard/index.html
+  - tasks/GF-W1-UI-007/meta.yml
+  - evidence/phase1/gf_w1_ui_007.json
+
+invariants: []
+
+work:
+  - >-
+    [ID gf_w1_ui_007_work_01] The Onboarding Console tab already contains working
+    onboarding UI. Do not change any JavaScript or API calls. Replace any inline
+    colours or non-canonical CSS variables with the correct tokens.
+  - >-
+    [ID gf_w1_ui_007_work_02] All table rows, form inputs, and chips use the token
+    colours. Tab content fits within 100vh using overflow-y: auto on table containers.
+
+acceptance_criteria:
+  - >-
+    [ID gf_w1_ui_007_work_01] No inline colour values (style="color:...",
+    style="background:...") remain in the Onboarding Console section. All colours
+    reference CSS token variables.
+  - >-
+    [ID gf_w1_ui_007_work_02] Table containers have overflow-y:auto. Tab content
+    fits within 100vh. Colours match the rest of the dashboard.
+
+negative_tests:
+  - id: GF-W1-UI-007-N1
+    description: >-
+      Grep the Onboarding Console section for inline style= attributes with colour
+      values. Any matches => FAIL.
+    required: true
+
+positive_tests:
+  - id: GF-W1-UI-007-P1
+    description: >-
+      Grep for CSS var(--) token references in the Onboarding Console section.
+      Must find at least one.
+    required: true
+
+verification:
+  - >-
+    # [ID gf_w1_ui_007_work_01] [ID gf_w1_ui_007_work_02]
+    test -f src/supervisory-dashboard/index.html
+    && grep -q "Onboarding Console" src/supervisory-dashboard/index.html
+    && cat src/supervisory-dashboard/index.html | grep "overflow-y"
+    > evidence/phase1/gf_w1_ui_007.json || exit 1
+
+evidence:
+  - path: evidence/phase1/gf_w1_ui_007.json
+    must_include:
+      - task_id
+      - git_sha
+      - timestamp_utc
+      - status
+      - checks
+      - observed_paths
+      - observed_hashes
+      - command_outputs
+      - execution_trace
+
+failure_modes:
+  - Inline colour values remain => FAIL
+  - JavaScript logic changed => FAIL
+  - Tab content overflows viewport => FAIL
+  - Evidence file missing => FAIL
+
+must_read:
+  - docs/operations/AI_AGENT_OPERATION_MANUAL.md
+  - .kiro/steering/ui-canonical-design.md
+  - .kiro/steering/pwrm0001-domain-rules.md
+  - .kiro/steering/symphony-platform-conventions.md
+  - .kiro/specs/symphony-ui-canonical/requirements.md
+  - .kiro/specs/symphony-ui-canonical/design.md
+  - .kiro/specs/symphony-ui-canonical/tasks.md
+
+implementation_plan: docs/plans/phase1/GF-W1-UI-007/PLAN.md
+implementation_log: docs/plans/phase1/GF-W1-UI-007/EXEC_LOG.md
+
+notes: >-
+  Atomic task 7 of 10. CSS-only migration — no logic changes. Phase Key: GF-W1.
+  Phase Name: Green Finance Wave 1.
+
+client: cursor
+assigned_agent: supervisor
+model: <UNASSIGNED>
+
+domain: green_finance
+
+second_pilot_test:
+  candidate_sector_1: "PWRM0001 plastic collection (Chunga Dumpsite, Lusaka)"
+  candidate_sector_2: "VM0044 solar energy generation (hypothetical)"
+  unchanged_core_tables: []
+  unchanged_core_functions: []
+  adapter_only_differences: []
+  jurisdiction_profile_impact: "None"
+  required_core_changes: []
+  explanation: >-
+    CSS token migration is sector-neutral. The same canonical tokens apply
+    regardless of the programme sector.
+  second_pilot_reviewed_by: "Supervisor (automated review)"
+
+pilot_scope_ref: docs/pilots/PILOT_PWRM0001/SCOPE.md

@@ -9,17 +9,17 @@
   "mode": "auto",
   "canonical_docs": [
     {
-      "path": "/home/mwiza/workspace/Symphony/docs/operations/AI_AGENT_WORKFLOW_AND_ROLE_PLAN_v2.md",
+      "path": "/home/mwiza/workspaces/Symphony-Demo/Symphony/docs/operations/AI_AGENT_WORKFLOW_AND_ROLE_PLAN_v2.md",
       "exists": true,
       "sha256": "b7f52cb859c3780915db31946ec3b4b4b49f53d62693c0db8d84b6ba7fc6f5a1"
     },
     {
-      "path": "/home/mwiza/workspace/Symphony/docs/operations/AGENT_ROLE_RECONCILIATION.md",
+      "path": "/home/mwiza/workspaces/Symphony-Demo/Symphony/docs/operations/AGENT_ROLE_RECONCILIATION.md",
       "exists": true,
       "sha256": "6334490f2c397cd67888ed140abf2c1a2a2c919b08bc2f33666773e58ff65c0d"
     },
     {
-      "path": "/home/mwiza/workspace/Symphony/docs/operations/AI_AGENT_OPERATION_MANUAL.md",
+      "path": "/home/mwiza/workspaces/Symphony-Demo/Symphony/docs/operations/AI_AGENT_OPERATION_MANUAL.md",
       "exists": true,
       "sha256": "e89379900375daec52c4ba479fb5418486a2b4c639ded812305d5693f0913e6b"
     }
@@ -27,7 +27,7 @@
   "agent_files_checked": {
     "count": 11,
     "files": [
-      "/home/mwiza/workspace/Symphony/AGENTS.md",
+      "/home/mwiza/workspaces/Symphony-Demo/Symphony/AGENTS.md",
       ".codex/agents/architect.md",
       ".codex/agents/compliance_mapper.md",
       ".codex/agents/db_foundation.md",
@@ -417,7 +417,7 @@
   },
   "approval_required": true,
   "approval_metadata_present": true,
-  "approval_metadata_ref": "/home/mwiza/workspace/Symphony/evidence/phase1/approval_metadata.json",
+  "approval_metadata_ref": "/home/mwiza/workspaces/Symphony-Demo/Symphony/evidence/phase1/approval_metadata.json",
   "failures": [],
   "check_id": "AGENT-CONFORMANCE-POLICY-GUARDIAN",
   "subject_role": "Requirements & Policy Integrity Agent"

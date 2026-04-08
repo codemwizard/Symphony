@@ -9,6 +9,27 @@ References:
 
 ---
 
+methodology_adapter: PWRM0001
+no_new_neutral_tables_confirmed: true
+no_neutral_tables_altered_confirmed: true
+jurisdiction_profile: GLOBAL_SOUTH
+interpretation_pack_version: To be registered during pilot execution
+second_pilot_test_answer: >
+  YES. This design works unchanged for PWRM0001 plastic waste collection credits
+  (Global South) and VM0044 solar energy generation credits (Southeast Asia). Both
+  register an adapter via adapter_registrations with DML INSERT. Both use
+  methodology_versions for version tracking. Both use jurisdiction_profiles for
+  regional regulatory rules. Both use identical issue_asset_batch() and
+  retire_asset_batch() functions. Both go through the same confidence enforcement
+  gate. Neither requires any modification to Phase 0/1 schema, functions, or
+  lifecycle states. The only differences are adapter payload schemas (different
+  JSON structures in record_payload_json), verification checklists (different
+  methodology-specific checks), calculation engines (different methodology-specific
+  calculations), and jurisdiction profiles (different confidence thresholds and
+  requirements). All differences are expressed as adapter-level data, not core schema.
+
+---
+
 ## 1) Methodology Adapter
 
 **Adapter Code:** PWRM0001

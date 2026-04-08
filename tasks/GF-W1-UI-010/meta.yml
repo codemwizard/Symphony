@@ -1,0 +1,177 @@
+schema_version: 1
+phase: '1'
+task_id: GF-W1-UI-010
+title: End-to-end verification script
+owner_role: SUPERVISOR
+status: completed
+priority: HIGH
+risk_class: GOVERNANCE
+blast_radius: APP_LAYER
+
+intent: >-
+  Create scripts/dev/verify_ui_e2e.sh — a curl-only E2E script that submits a
+  complete WEIGHBRIDGE_RECORD through the real backend, verifies the monitoring
+  report updates, and confirms the supervisory reveal shows the correct artifact.
+  Four checks (A-D) must all PASS.
+
+anti_patterns:
+  - "Using Python or Node.js — curl only"
+  - "Mocking or stubbing backend responses"
+  - "Checking only HTTP status without verifying response body"
+
+out_of_scope:
+  - "UI visual testing — this is API-level E2E"
+  - "Browser automation — curl only"
+  - "Performance testing"
+
+stop_conditions:
+  - "Script uses anything other than curl for HTTP calls => FAIL"
+  - "Script does not write evidence JSON => FAIL"
+  - "Script exits 0 when any check fails => CRITICAL_FAIL"
+  - "Any node in the proof graph is orphaned => STOP"
+
+proof_guarantees:
+  - "script exists and is executable"
+  - "grep verifies curl is used for HTTP calls"
+  - "grep verifies evidence JSON is written"
+  - "grep verifies exit 1 on failure"
+
+proof_limitations:
+  - "E2E script runs against localhost only — does not verify production"
+  - "Requires LedgerAPI running on port 5001"
+
+depends_on:
+  - GF-W1-UI-006
+  - GF-W1-UI-009
+
+blocks: []
+
+touches:
+  - scripts/dev/verify_ui_e2e.sh
+  - evidence/phase1/ui_e2e_verification.json
+  - evidence/phase1/gf_w1_ui_010.json
+  - tasks/GF-W1-UI-010/meta.yml
+
+invariants: []
+
+work:
+  - >-
+    [ID gf_w1_ui_010_work_01] Create scripts/dev/verify_ui_e2e.sh using curl only
+    (no Python, no Node.js). Target a locally running LedgerAPI on port 5001. Set
+    env vars and prepare isolated test state.
+  - >-
+    [ID gf_w1_ui_010_work_02] Issue an evidence link token: POST /v1/evidence-links/issue
+    with WASTE_COLLECTOR, Chunga GPS, and a test instruction_id. Extract token.
+    Submit a WEIGHBRIDGE_RECORD: POST /v1/evidence-links/submit with token, GPS at
+    Chunga, and valid PET payload (gross=14.2, tare=1.8, net=12.4, collector_id from
+    worker seed).
+  - >-
+    [ID gf_w1_ui_010_work_03] Check A: Assert HTTP 202. Check B: Call
+    GET /pilot-demo/api/monitoring-report/PGM-ZAMBIA-GRN-001 and assert
+    plastic_totals_kg.PET > 0. Check C: Assert plastic_totals_kg.TOTAL > 0 AND
+    additionality delta > 0. Check D: Call GET /pilot-demo/api/reveal/PGM-ZAMBIA-GRN-001
+    and assert timeline contains entry with artifact_type: "WEIGHBRIDGE_RECORD".
+  - >-
+    [ID gf_w1_ui_010_work_04] Write evidence JSON to
+    evidence/phase1/ui_e2e_verification.json with checks A-D each showing "PASS"
+    or "FAIL". Exit 0 if all four checks pass, exit 1 if any fail with a clear
+    failure message per check.
+
+acceptance_criteria:
+  - >-
+    [ID gf_w1_ui_010_work_01] scripts/dev/verify_ui_e2e.sh exists and is executable.
+    Uses curl for all HTTP calls. No Python or Node.js.
+  - >-
+    [ID gf_w1_ui_010_work_02] Script issues a token and submits a valid
+    WEIGHBRIDGE_RECORD through the real backend.
+  - >-
+    [ID gf_w1_ui_010_work_03] Script performs all four checks (A: HTTP 202, B: PET > 0,
+    C: additionality > 0, D: WEIGHBRIDGE_RECORD in reveal).
+  - >-
+    [ID gf_w1_ui_010_work_04] Evidence JSON written with check results. Script exits 0
+    on all-PASS, exit 1 on any FAIL.
+
+negative_tests:
+  - id: GF-W1-UI-010-N1
+    description: >-
+      Grep the script for python, node, or npm commands. Must find zero matches.
+      curl only.
+    required: true
+
+positive_tests:
+  - id: GF-W1-UI-010-P1
+    description: >-
+      Grep the script for curl commands and evidence JSON path. Both must be present.
+    required: true
+
+verification:
+  - >-
+    # [ID gf_w1_ui_010_work_01] [ID gf_w1_ui_010_work_02]
+    # [ID gf_w1_ui_010_work_03] [ID gf_w1_ui_010_work_04]
+    test -x scripts/dev/verify_ui_e2e.sh
+    && grep -q "curl" scripts/dev/verify_ui_e2e.sh
+    && grep -q "ui_e2e_verification" scripts/dev/verify_ui_e2e.sh
+    && cat scripts/dev/verify_ui_e2e.sh | grep "WEIGHBRIDGE_RECORD"
+    > evidence/phase1/gf_w1_ui_010.json || exit 1
+  - >-
+    # [ID gf_w1_ui_010_work_01]
+    test -z "$(grep -E 'python|node |npm' scripts/dev/verify_ui_e2e.sh)"
+    || exit 1
+
+evidence:
+  - path: evidence/phase1/gf_w1_ui_010.json
+    must_include:
+      - task_id
+      - git_sha
+      - timestamp_utc
+      - status
+      - checks
+      - observed_paths
+      - observed_hashes
+      - command_outputs
+      - execution_trace
+
+failure_modes:
+  - Script exits 0 when a check fails => CRITICAL_FAIL
+  - Script uses non-curl HTTP tools => FAIL
+  - Evidence JSON not written => FAIL
+  - Evidence file missing => FAIL
+
+must_read:
+  - docs/operations/AI_AGENT_OPERATION_MANUAL.md
+  - .kiro/steering/ui-canonical-design.md
+  - .kiro/steering/pwrm0001-domain-rules.md
+  - .kiro/steering/symphony-platform-conventions.md
+  - .kiro/specs/symphony-ui-canonical/requirements.md
+  - .kiro/specs/symphony-ui-canonical/design.md
+  - .kiro/specs/symphony-ui-canonical/tasks.md
+
+implementation_plan: docs/plans/phase1/GF-W1-UI-010/PLAN.md
+implementation_log: docs/plans/phase1/GF-W1-UI-010/EXEC_LOG.md
+
+notes: >-
+  Atomic task 10 of 10. The capstone E2E verification. Depends on all UI tasks
+  being complete. Phase Key: GF-W1. Phase Name: Green Finance Wave 1.
+
+client: cursor
+assigned_agent: supervisor
+model: <UNASSIGNED>
+
+domain: green_finance
+
+second_pilot_test:
+  candidate_sector_1: "PWRM0001 plastic collection (Chunga Dumpsite, Lusaka)"
+  candidate_sector_2: "VM0044 solar energy generation (hypothetical)"
+  unchanged_core_tables: []
+  unchanged_core_functions: []
+  adapter_only_differences:
+    - "Payload shape: plastic fields → solar fields in structured_payload"
+    - "Monitoring report assertions: PET > 0 → kWh > 0"
+  jurisdiction_profile_impact: "None"
+  required_core_changes: []
+  explanation: >-
+    The E2E script structure (issue→submit→check monitoring→check reveal) is
+    sector-neutral. Only the payload shape and assertion field names change.
+  second_pilot_reviewed_by: "Supervisor (automated review)"
+
+pilot_scope_ref: docs/pilots/PILOT_PWRM0001/SCOPE.md

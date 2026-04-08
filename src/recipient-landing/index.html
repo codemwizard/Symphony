@@ -316,7 +316,7 @@ footer {
       <dt>Submitted At</dt><dd id="success-timestamp">—</dd>
     </dl>
     <p style="text-align:center;font-size:0.85rem;color:var(--text-muted);margin-top:12px;">
-      Your submission has been recorded. You may close this page.
+      Your evidence has been recorded and sealed.
     </p>
   </div>
 </div>
@@ -454,6 +454,22 @@ footer {
     return 'Lusaka';
   }
 
+  /* ── Distance calculator ───────────────────── */
+  function distanceMeters(lat1, lon1, lat2, lon2) {
+    var R = 6371e3; // metres
+    var φ1 = lat1 * Math.PI/180;
+    var φ2 = lat2 * Math.PI/180;
+    var Δφ = (lat2-lat1) * Math.PI/180;
+    var Δλ = (lon2-lon1) * Math.PI/180;
+
+    var a = Math.sin(Δφ/2) * Math.sin(Δφ/2) +
+            Math.cos(φ1) * Math.cos(φ2) *
+            Math.sin(Δλ/2) * Math.sin(Δλ/2);
+    var c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+
+    return R * c;
+  }
+
   /* ── Net weight auto-computation ────────────── */
   function updateNetWeight() {
     var g = parseFloat(grossWeightInput.value) || 0;
@@ -537,10 +553,21 @@ footer {
     navigator.geolocation.getCurrentPosition(
       function(pos) {
         gpsCoords = { latitude: pos.coords.latitude, longitude: pos.coords.longitude };
-        gpsBanner.innerHTML = '📍 GPS acquired: ' + pos.coords.latitude.toFixed(5) + ', ' + pos.coords.longitude.toFixed(5);
-        gpsBanner.style.borderColor = 'rgba(46,160,67,0.3)';
-        gpsBanner.style.color = 'var(--accent)';
-        gpsBanner.style.background = 'rgba(46,160,67,0.1)';
+        var dist = distanceMeters(pos.coords.latitude, pos.coords.longitude, -15.4167, 28.2833);
+        var distStr = Math.round(dist) + 'm from boundary';
+
+        if (dist <= 250) {
+          gpsBanner.innerHTML = 'Within collection zone ✓ (' + distStr + ')';
+          gpsBanner.style.borderColor = 'rgba(46,160,67,0.3)';
+          gpsBanner.style.color = 'var(--accent)';
+          gpsBanner.style.background = 'rgba(46,160,67,0.1)';
+        } else {
+          gpsBanner.innerHTML = 'Outside zone — ' + distStr + '. Submission may be rejected.';
+          gpsBanner.style.borderColor = 'rgba(210,153,34,0.3)';
+          gpsBanner.style.color = 'var(--warning)';
+          gpsBanner.style.background = 'rgba(210,153,34,0.1)';
+        }
+        
         progressFill.style.width = '80%';
         setStep('step-submit');
         btnSubmit.disabled = false;
@@ -597,7 +624,7 @@ footer {
     // Add structured_payload for WASTE_COLLECTOR (WEIGHBRIDGE_RECORD)
     if (ctx.submitter_class === 'WASTE_COLLECTOR') {
       payload.artifact_type = 'WEIGHBRIDGE_RECORD';
-      // net_weight_kg is for display/sanity only — backend recomputes from gross-tare
+      // display only — backend recomputes from gross-tare
       payload.structured_payload = {
         plastic_type: plasticTypeSelect.value,
         gross_weight_kg: parseFloat(grossWeightInput.value),

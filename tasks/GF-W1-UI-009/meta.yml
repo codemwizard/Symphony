@@ -1,0 +1,139 @@
+schema_version: 1
+phase: '1'
+task_id: GF-W1-UI-009
+title: Wire Program.cs to serve canonical recipient landing page
+owner_role: SUPERVISOR
+status: completed
+priority: HIGH
+risk_class: GOVERNANCE
+blast_radius: APP_LAYER
+
+intent: >-
+  Change the GET /pilot-demo/evidence-link route in Program.cs to serve the new
+  src/recipient-landing/index.html instead of index-2.html. One-line change.
+
+anti_patterns:
+  - "Making other changes to Program.cs — this is a one-line file path change only"
+  - "Creating new routes or controllers"
+
+out_of_scope:
+  - "Recipient landing page content — done in GF-W1-UI-008"
+  - "Backend logic — no changes"
+  - "Self-test runners — no changes"
+
+stop_conditions:
+  - "Program.cs still references index-2.html for evidence-link route => FAIL"
+  - "Any changes to Program.cs beyond the file path => FAIL"
+  - "Any node in the proof graph is orphaned => STOP"
+
+proof_guarantees:
+  - "grep verifies index.html (not index-2.html) is served for evidence-link route"
+
+proof_limitations:
+  - "Actual HTTP serving requires running the dotnet application"
+
+depends_on:
+  - GF-W1-UI-008
+
+blocks:
+  - GF-W1-UI-010
+
+touches:
+  - services/ledger-api/dotnet/src/LedgerApi/Program.cs
+  - tasks/GF-W1-UI-009/meta.yml
+  - evidence/phase1/gf_w1_ui_009.json
+
+invariants: []
+
+work:
+  - >-
+    [ID gf_w1_ui_009_work_01] Find the route GET /pilot-demo/evidence-link in
+    Program.cs. Change the file it serves from src/recipient-landing/index-2.html
+    to src/recipient-landing/index.html. No other changes to Program.cs.
+
+acceptance_criteria:
+  - >-
+    [ID gf_w1_ui_009_work_01] Program.cs serves src/recipient-landing/index.html
+    (not index-2.html) for GET /pilot-demo/evidence-link. No other lines changed.
+
+negative_tests:
+  - id: GF-W1-UI-009-N1
+    description: >-
+      Grep Program.cs for "index-2.html" in the evidence-link route context.
+      Must find zero matches. If index-2.html is still served => FAIL.
+    required: true
+
+positive_tests:
+  - id: GF-W1-UI-009-P1
+    description: >-
+      Grep Program.cs for the canonical "index.html" in the evidence-link route.
+      Must be present.
+    required: true
+
+verification:
+  - >-
+    # [ID gf_w1_ui_009_work_01]
+    test -f services/ledger-api/dotnet/src/LedgerApi/Program.cs
+    && grep -q "index.html" services/ledger-api/dotnet/src/LedgerApi/Program.cs
+    && cat services/ledger-api/dotnet/src/LedgerApi/Program.cs
+    | grep "evidence-link"
+    > evidence/phase1/gf_w1_ui_009.json || exit 1
+  - >-
+    # [ID gf_w1_ui_009_work_01]
+    test -z "$(grep 'index-2.html' services/ledger-api/dotnet/src/LedgerApi/Program.cs | grep 'evidence-link')"
+    || exit 1
+
+evidence:
+  - path: evidence/phase1/gf_w1_ui_009.json
+    must_include:
+      - task_id
+      - git_sha
+      - timestamp_utc
+      - status
+      - checks
+      - observed_paths
+      - observed_hashes
+      - command_outputs
+      - execution_trace
+
+failure_modes:
+  - Program.cs still serves index-2.html => FAIL
+  - Other Program.cs changes beyond file path => FAIL
+  - Evidence file missing => FAIL
+
+must_read:
+  - docs/operations/AI_AGENT_OPERATION_MANUAL.md
+  - .kiro/steering/ui-canonical-design.md
+  - .kiro/steering/pwrm0001-domain-rules.md
+  - .kiro/steering/symphony-platform-conventions.md
+  - .kiro/specs/symphony-ui-canonical/requirements.md
+  - .kiro/specs/symphony-ui-canonical/design.md
+  - .kiro/specs/symphony-ui-canonical/tasks.md
+
+implementation_plan: docs/plans/phase1/GF-W1-UI-009/PLAN.md
+implementation_log: docs/plans/phase1/GF-W1-UI-009/EXEC_LOG.md
+
+notes: >-
+  Atomic task 9 of 10. Minimal one-line change. Phase Key: GF-W1. Phase Name:
+  Green Finance Wave 1.
+
+client: cursor
+assigned_agent: supervisor
+model: <UNASSIGNED>
+
+domain: green_finance
+
+second_pilot_test:
+  candidate_sector_1: "PWRM0001 plastic collection (Chunga Dumpsite, Lusaka)"
+  candidate_sector_2: "VM0044 solar energy generation (hypothetical)"
+  unchanged_core_tables: []
+  unchanged_core_functions: []
+  adapter_only_differences: []
+  jurisdiction_profile_impact: "None"
+  required_core_changes: []
+  explanation: >-
+    File path change is sector-neutral. The same route serves the same landing
+    page regardless of sector.
+  second_pilot_reviewed_by: "Supervisor (automated review)"
+
+pilot_scope_ref: docs/pilots/PILOT_PWRM0001/SCOPE.md

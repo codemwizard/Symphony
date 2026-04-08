@@ -3,19 +3,22 @@
   "timestamp_utc": "1970-01-01T00:00:00Z",
   "git_sha": "0000000000000000000000000000000000000000",
   "schema_fingerprint": "1f92363c69ba235e552a6aac05045062fc0097fc93cde3b89e76455b80628019",
-  "status": "PASS",
+  "status": "FAIL",
   "task_id": "TSK-P1-217",
   "run_id": "standalone-19700101T000000Z",
   "checks": {
     "migration_exists": true,
     "tables_present": true,
-    "fk_constraints": true,
+    "fk_constraints": false,
     "rls_policies": true,
-    "lifecycle_enum": true,
+    "lifecycle_enum": false,
     "store_interfaces": true,
     "npgsql_implementations": true,
     "parameterized_queries": true,
     "build_compiles": true
   },
-  "errors": []
+  "errors": [
+    "missing_fk_to_tenant_registry",
+    "programme_lifecycle_enum_missing"
+  ]
 }

@@ -4,7 +4,7 @@
   "git_sha": "0000000000000000000000000000000000000000",
   "schema_fingerprint": "1f92363c69ba235e552a6aac05045062fc0097fc93cde3b89e76455b80628019",
   "status": "PASS",
-  "spec_file": "/home/mwiza/workspace/Symphony/schema/table_conventions.yml",
+  "spec_file": "/home/mwiza/workspaces/Symphony-Demo/Symphony/schema/table_conventions.yml",
   "tables_checked": [
     "public.billing_usage_events",
     "public.evidence_pack_items",

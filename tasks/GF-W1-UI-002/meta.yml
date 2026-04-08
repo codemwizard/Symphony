@@ -1,0 +1,158 @@
+schema_version: 1
+phase: '1'
+task_id: GF-W1-UI-002
+title: Add three-tab layout with Programme Health as default
+owner_role: SUPERVISOR
+status: completed
+priority: HIGH
+risk_class: GOVERNANCE
+blast_radius: APP_LAYER
+
+intent: >-
+  Create the three-tab navigation structure for the supervisory dashboard with
+  tabs labelled "Programme Health", "Monitoring Report", and "Onboarding Console".
+  Programme Health is the default active tab. Each tab shows only its content div.
+
+anti_patterns:
+  - "Adding content to tabs — this task only creates the tab switching mechanism"
+  - "Using inline styles instead of CSS token variables"
+  - "Creating separate HTML files for each tab"
+
+out_of_scope:
+  - "Tab content — KPI cards, tables, reports are in subsequent tasks"
+  - "Backend API calls — no wiring in this task"
+  - "Recipient landing page — separate task GF-W1-UI-008"
+
+stop_conditions:
+  - "More or fewer than 3 tabs exist => FAIL"
+  - "Tab labels do not match exactly => FAIL"
+  - "Multiple tab content divs visible simultaneously => CRITICAL_FAIL"
+  - "Any node in the proof graph is orphaned => STOP"
+
+proof_guarantees:
+  - "grep verifies exact tab label strings exist in HTML"
+  - "grep verifies Programme Health is default active tab"
+
+proof_limitations:
+  - "Tab switching behaviour requires manual browser testing — grep cannot verify JS toggle"
+  - "Layout shift detection requires visual inspection"
+
+depends_on:
+  - GF-W1-UI-001
+
+blocks:
+  - GF-W1-UI-003
+  - GF-W1-UI-006
+  - GF-W1-UI-007
+
+touches:
+  - src/supervisory-dashboard/index.html
+  - tasks/GF-W1-UI-002/meta.yml
+  - evidence/phase1/gf_w1_ui_002.json
+
+invariants: []
+
+work:
+  - >-
+    [ID gf_w1_ui_002_work_01] Ensure exactly three tabs labelled "Programme
+    Health", "Monitoring Report", "Onboarding Console".
+  - >-
+    [ID gf_w1_ui_002_work_02] Each tab click shows only that tab's div and hides
+    all others via CSS class toggle. Tab bar is position: sticky and does not scroll.
+  - >-
+    [ID gf_w1_ui_002_work_03] Programme Health tab is active by default on page
+    load. Active tab has a 2px bottom border in var(--bright).
+
+acceptance_criteria:
+  - >-
+    [ID gf_w1_ui_002_work_01] src/supervisory-dashboard/index.html contains exactly
+    three tab elements with text "Programme Health", "Monitoring Report", and
+    "Onboarding Console". No additional tabs exist.
+  - >-
+    [ID gf_w1_ui_002_work_02] Clicking a tab shows only that tab's content div.
+    Tab bar has position: sticky. No content from other tabs is visible.
+  - >-
+    [ID gf_w1_ui_002_work_03] On page load, "Programme Health" tab is the active
+    tab with 2px bottom border in var(--bright). Its content div is visible.
+
+negative_tests:
+  - id: GF-W1-UI-002-N1
+    description: >-
+      Grep for any fourth tab element or tab label that is not one of the three
+      canonical names. The grep must find zero matches.
+    required: true
+
+positive_tests:
+  - id: GF-W1-UI-002-P1
+    description: >-
+      Grep for all three tab labels in the HTML. All three must be present.
+    required: true
+
+verification:
+  - >-
+    # [ID gf_w1_ui_002_work_01] [ID gf_w1_ui_002_work_02] [ID gf_w1_ui_002_work_03]
+    test -f src/supervisory-dashboard/index.html
+    && grep -q "Programme Health" src/supervisory-dashboard/index.html
+    && grep -q "Monitoring Report" src/supervisory-dashboard/index.html
+    && grep -q "Onboarding Console" src/supervisory-dashboard/index.html
+    && cat src/supervisory-dashboard/index.html | grep "sticky"
+    > evidence/phase1/gf_w1_ui_002.json || exit 1
+
+evidence:
+  - path: evidence/phase1/gf_w1_ui_002.json
+    must_include:
+      - task_id
+      - git_sha
+      - timestamp_utc
+      - status
+      - checks
+      - observed_paths
+      - observed_hashes
+      - command_outputs
+      - execution_trace
+
+failure_modes:
+  - Tabs do not match the three canonical labels => FAIL
+  - Multiple content divs visible at once => CRITICAL_FAIL
+  - Programme Health not active by default => FAIL
+  - Tab bar scrolls with content => FAIL
+  - Evidence file missing => FAIL
+
+must_read:
+  - docs/operations/AI_AGENT_OPERATION_MANUAL.md
+  - .kiro/steering/ui-canonical-design.md
+  - .kiro/steering/pwrm0001-domain-rules.md
+  - .kiro/steering/symphony-platform-conventions.md
+  - .kiro/specs/symphony-ui-canonical/requirements.md
+  - .kiro/specs/symphony-ui-canonical/design.md
+  - .kiro/specs/symphony-ui-canonical/tasks.md
+
+implementation_plan: docs/plans/phase1/GF-W1-UI-002/PLAN.md
+implementation_log: docs/plans/phase1/GF-W1-UI-002/EXEC_LOG.md
+
+notes: >-
+  Atomic task 2 of 10. Creates the tab navigation shell that tasks 3-7 will
+  populate with content. Phase Key: GF-W1. Phase Name: Green Finance Wave 1.
+
+client: cursor
+assigned_agent: supervisor
+model: <UNASSIGNED>
+
+domain: green_finance
+
+second_pilot_test:
+  candidate_sector_1: "PWRM0001 plastic collection (Chunga Dumpsite, Lusaka)"
+  candidate_sector_2: "VM0044 solar energy generation (hypothetical)"
+  unchanged_core_tables: []
+  unchanged_core_functions: []
+  adapter_only_differences:
+    - "Tab labels are sector-neutral — Programme Health, Monitoring Report, Onboarding Console work for any sector"
+  jurisdiction_profile_impact: "None"
+  required_core_changes: []
+  explanation: >-
+    The three-tab layout is sector-neutral. Tab names describe functional areas
+    (health, monitoring, onboarding), not sector-specific concepts. No changes
+    needed for a solar energy pilot.
+  second_pilot_reviewed_by: "Supervisor (automated review)"
+
+pilot_scope_ref: docs/pilots/PILOT_PWRM0001/SCOPE.md

@@ -564,3 +564,155 @@ Covers reversal of rogue-agent damage from a failed Wave 5 attempt. Tasks provid
 - **Verification:** `bash scripts/db/run_migration_0095.sh`; `python3 scripts/db/lint_rls_born_secure.py schema/migrations/0095_*.sql`; `bash scripts/audit/verify_gf_rls_runtime.sh`; `bash tests/rls_runtime/test_rls_dual_policy_access.sh`; `bash scripts/db/verify_migration_bootstrap.sh`; `python3 scripts/audit/validate_evidence.py --task TSK-RLS-ARCH-001 --evidence evidence/phase1/rls_arch/tsk_rls_arch_001.json`
 - **Evidence:** `evidence/phase1/rls_arch/tsk_rls_arch_001.json`
 - **Failure Modes:** table with tenant_id not in rls_tables.yml => CRITICAL_FAIL; migration partially applied => CRITICAL_FAIL; adversarial test fails => CRITICAL_FAIL; lint passes manual policy => FAIL; evidence file missing => FAIL
+
+## Green Finance UI Canonical Rewrite
+
+### GF-W1-UI-001 — Implement Symphony UI Canonical Rewrite with financial meaning and additionality display
+- **Owner:** SUPERVISOR
+- **Priority:** HIGH
+- **Risk Class:** GOVERNANCE
+- **Blast Radius:** APP_LAYER
+- **Depends on:** `pilot-demo-seeding-fix`
+- **Blocks:** none
+- **Touches:** `src/supervisory-dashboard/index.html`, `src/recipient-landing/index.html`, `services/ledger-api/dotnet/src/LedgerApi/Program.cs`, `scripts/dev/verify_ui_e2e.sh`, `evidence/phase1/gf_w1_ui_001_canonical_rewrite.json`, `tasks/GF-W1-UI-001/meta.yml`, `.kiro/steering/ui-canonical-design.md`, `.kiro/specs/symphony-ui-canonical/requirements.md`, `.kiro/specs/symphony-ui-canonical/design.md`, `.kiro/specs/symphony-ui-canonical/tasks.md`
+- **Invariants:** `INV-GF-UI-001`, `INV-GF-UI-002`, `INV-GF-UI-003`, `INV-GF-UI-004`, `INV-GF-UI-005`
+- **Work:** Delete symphony_ui/ directory; establish canonical CSS tokens; implement three-tab layout (Programme Health, Monitoring Report, Onboarding Console); add KPI cards, disbursement status, activity table with tCO₂ columns; add instruction detail drawer with neighbourhood labels (never raw GPS); implement monitoring report with additionality row, benefit-sharing split, carbon credits; migrate onboarding console to canonical tokens; create canonical recipient landing page with 4-step flow; wire Program.cs to serve canonical landing page; create E2E verification script
+- **Acceptance Criteria:** All canonical CSS tokens present; three tabs work; Programme Health shows KPIs and activity table with tCO₂; drawer shows neighbourhood label, sequence, registry status; monitoring report shows additionality row, benefit-sharing, carbon credits; worker landing page 4-step flow works; E2E script exits 0 with all 4 checks (evidence HTTP 202, PET > 0, additionality > 0, WEIGHBRIDGE_RECORD in reveal); 15-second polling interval; no raw GPS coordinates in DOM; all financial values marked (indicative)
+- **Verification:** `bash scripts/dev/verify_ui_e2e.sh`; `grep -r "textContent.*latitude\|innerHTML.*longitude" src/supervisory-dashboard/index.html src/recipient-landing/index.html && exit 1 || exit 0`; `grep -rE "ZMW|tCO₂|credits" src/supervisory-dashboard/index.html src/recipient-landing/index.html | grep -v "(indicative)\|(est\.)" && exit 1 || exit 0`; `python3 scripts/audit/validate_evidence.py --task GF-W1-UI-001 --evidence evidence/phase1/gf_w1_ui_001_canonical_rewrite.json`; `RUN_PHASE1_GATES=1 bash scripts/dev/pre_ci.sh`
+- **Evidence:** `evidence/phase1/gf_w1_ui_001_canonical_rewrite.json`
+- **Failure Modes:** Raw GPS coordinates rendered in DOM => CRITICAL_FAIL; financial values without (indicative) qualifier => FAIL; additionality row missing => FAIL; benefit-sharing block missing or percentages don't sum to 100% => FAIL; symphony_ui/ still exists => FAIL; Program.cs still serves index-2.html => FAIL; E2E script exits non-zero => FAIL; evidence file missing => FAIL
+
+### GF-W1-UI-002 — Add three-tab layout with Programme Health as default
+- **Owner:** SUPERVISOR
+- **Priority:** HIGH
+- **Risk Class:** GOVERNANCE
+- **Blast Radius:** APP_LAYER
+- **Depends on:** `GF-W1-UI-001`
+- **Blocks:** `GF-W1-UI-003`, `GF-W1-UI-006`, `GF-W1-UI-007`
+- **Touches:** `src/supervisory-dashboard/index.html`, `tasks/GF-W1-UI-002/meta.yml`, `evidence/phase1/gf_w1_ui_002.json`
+- **Invariants:** none
+- **Work:** Create exactly three tabs labelled "Programme Health", "Monitoring Report", "Onboarding Console"; implement CSS class toggle to show/hide tab content; Programme Health active by default with 2px var(--bright) border
+- **Acceptance Criteria:** Three tab elements with exact labels; clicking a tab shows only its content; Programme Health active by default with 2px bottom border
+- **Verification:** grep for all three tab labels, sticky positioning; cat to evidence JSON
+- **Evidence:** `evidence/phase1/gf_w1_ui_002.json`
+- **Failure Modes:** Tabs do not match the three canonical labels => FAIL; Multiple content divs visible at once => CRITICAL_FAIL; Programme Health not active by default => FAIL; Tab bar scrolls with content => FAIL; Evidence file missing => FAIL
+
+### GF-W1-UI-003 — Programme Health tab: KPI row and disbursement status card
+- **Owner:** SUPERVISOR
+- **Priority:** HIGH
+- **Risk Class:** GOVERNANCE
+- **Blast Radius:** APP_LAYER
+- **Depends on:** `GF-W1-UI-002`
+- **Blocks:** `GF-W1-UI-004`
+- **Touches:** `src/supervisory-dashboard/index.html`, `tasks/GF-W1-UI-003/meta.yml`, `evidence/phase1/gf_w1_ui_003.json`
+- **Invariants:** `INV-GF-UI-001`
+- **Work:** Four KPI cards (Evidence Submissions, Exceptions, Complete, Completeness Rate); Disbursement Status card with dynamic red/green; wire to reveal endpoint
+- **Acceptance Criteria:** Four KPI cards with exact labels; disbursement card shows NOT AUTHORIZED (red) when < 100%, AUTHORIZED (green) when 100%; KPI numbers from reveal API
+- **Verification:** grep for KPI labels, NOT AUTHORIZED, reveal endpoint reference
+- **Evidence:** `evidence/phase1/gf_w1_ui_003.json`
+- **Failure Modes:** KPI labels do not match exactly => FAIL; Disbursement card does not switch red/green => CRITICAL_FAIL; KPI values hardcoded => FAIL; Cards exceed 40% viewport => FAIL; Evidence file missing => FAIL
+
+### GF-W1-UI-004 — Programme Health tab: Activity table with financial columns
+- **Owner:** SUPERVISOR
+- **Priority:** HIGH
+- **Risk Class:** GOVERNANCE
+- **Blast Radius:** APP_LAYER
+- **Depends on:** `GF-W1-UI-003`
+- **Blocks:** `GF-W1-UI-005`
+- **Touches:** `src/supervisory-dashboard/index.html`, `tasks/GF-W1-UI-004/meta.yml`, `evidence/phase1/gf_w1_ui_004.json`
+- **Invariants:** `INV-GF-UI-001`
+- **Work:** Activity table with flex:1 overflow-y:auto; columns: Instruction ID, Proof Type, Status, Net Weight, tCO₂ est., Time; tCO₂ uses 0.00048 constant; row click opens drawer
+- **Acceptance Criteria:** Table with all 6 columns and overflow-y:auto; tCO₂ uses 0.00048; status chips use canonical colours; row click calls instruction detail endpoint
+- **Verification:** grep for 0.00048, overflow-y, instructions detail endpoint
+- **Evidence:** `evidence/phase1/gf_w1_ui_004.json`
+- **Failure Modes:** tCO₂ constant is not 0.00048 => CRITICAL_FAIL; Table has no overflow => FAIL; Row click does not work => FAIL; Evidence file missing => FAIL
+
+### GF-W1-UI-005 — Instruction detail drawer with GPS, sequence, registry status, and weighbridge data
+- **Owner:** SUPERVISOR
+- **Priority:** HIGH
+- **Risk Class:** GOVERNANCE
+- **Blast Radius:** APP_LAYER
+- **Depends on:** `GF-W1-UI-004`
+- **Blocks:** none
+- **Touches:** `src/supervisory-dashboard/index.html`, `tasks/GF-W1-UI-005/meta.yml`, `evidence/phase1/gf_w1_ui_005.json`
+- **Invariants:** `INV-GF-UI-003`
+- **Work:** Slide-in drawer (38% width, fixed position, translateX animation); instruction metadata; GPS via resolveNeighbourhoodLabel (never raw coordinates); evidence completeness rows; weighbridge data with tCO₂
+- **Acceptance Criteria:** Drawer slides in; shows instruction ID, sequence, NOT ISSUED, PASS chips; GPS shows neighbourhood label only; four evidence completeness rows; weighbridge data with tCO₂
+- **Verification:** grep for resolveNeighbourhoodLabel, NOT ISSUED, translateX, WEIGHBRIDGE_RECORD; negative grep for raw coordinate DOM insertion
+- **Evidence:** `evidence/phase1/gf_w1_ui_005.json`
+- **Failure Modes:** Raw GPS coordinates rendered in DOM => CRITICAL_FAIL; resolveNeighbourhoodLabel not used => CRITICAL_FAIL; Drawer does not slide in => FAIL; Evidence completeness rows missing => FAIL; Evidence file missing => FAIL
+
+### GF-W1-UI-006 — Monitoring Report tab: full financial report display
+- **Owner:** SUPERVISOR
+- **Priority:** HIGH
+- **Risk Class:** GOVERNANCE
+- **Blast Radius:** APP_LAYER
+- **Depends on:** `GF-W1-UI-002`
+- **Blocks:** `GF-W1-UI-010`
+- **Touches:** `src/supervisory-dashboard/index.html`, `tasks/GF-W1-UI-006/meta.yml`, `evidence/phase1/gf_w1_ui_006.json`
+- **Invariants:** `INV-GF-UI-002`, `INV-GF-UI-004`, `INV-GF-UI-005`
+- **Work:** Disbursement banner; additionality row (Baseline: 0 kg | Actual: N kg | Additionality: +N kg); plastic totals table; tCO₂/credits row; benefit-sharing 50%/30%/20% split; ZGFT alignment chips; Generate Report button; wire to monitoring-report API with 0.00048, 150.0, {0.50, 0.30, 0.20}
+- **Acceptance Criteria:** Disbursement banner red/green; additionality row with baseline; plastic totals; tCO₂/credits with (indicative); benefit-sharing three rows with correct percentages; ZGFT chips green; constants match steering file
+- **Verification:** grep for Baseline, Additionality, Project Developer, indicative, 0.00048, monitoring-report endpoint, 50%/30%/20%
+- **Evidence:** `evidence/phase1/gf_w1_ui_006.json`
+- **Failure Modes:** Financial values without (indicative) qualifier => FAIL; Additionality row missing => FAIL; Benefit-sharing percentages don't sum to 100% => FAIL; Constants don't match steering file => CRITICAL_FAIL; Evidence file missing => FAIL
+
+### GF-W1-UI-007 — Onboarding Console tab: migrate to canonical CSS tokens
+- **Owner:** SUPERVISOR
+- **Priority:** HIGH
+- **Risk Class:** GOVERNANCE
+- **Blast Radius:** APP_LAYER
+- **Depends on:** `GF-W1-UI-002`
+- **Blocks:** none
+- **Touches:** `src/supervisory-dashboard/index.html`, `tasks/GF-W1-UI-007/meta.yml`, `evidence/phase1/gf_w1_ui_007.json`
+- **Invariants:** none
+- **Work:** Replace inline colours and non-canonical CSS variables with canonical tokens; ensure table containers use overflow-y:auto; CSS-only migration, no JS changes
+- **Acceptance Criteria:** No inline colour values remain in Onboarding Console; table containers have overflow-y:auto; colours match rest of dashboard
+- **Verification:** grep for Onboarding Console and overflow-y
+- **Evidence:** `evidence/phase1/gf_w1_ui_007.json`
+- **Failure Modes:** Inline colour values remain => FAIL; JavaScript logic changed => FAIL; Tab content overflows viewport => FAIL; Evidence file missing => FAIL
+
+### GF-W1-UI-008 — Create canonical recipient landing page
+- **Owner:** SUPERVISOR
+- **Priority:** HIGH
+- **Risk Class:** GOVERNANCE
+- **Blast Radius:** APP_LAYER
+- **Depends on:** `GF-W1-UI-001`
+- **Blocks:** `GF-W1-UI-009`
+- **Touches:** `src/recipient-landing/index.html`, `tasks/GF-W1-UI-008/meta.yml`, `evidence/phase1/gf_w1_ui_008.json`
+- **Invariants:** `INV-GF-UI-003`
+- **Work:** Create src/recipient-landing/index.html with 4-step flow: token validation, GPS capture, weighbridge form, receipt; define resolveNeighbourhoodLabel; net weight readonly with "display only — backend recomputes" comment; submit to /v1/evidence-links/submit
+- **Acceptance Criteria:** File exists with resolveNeighbourhoodLabel; no raw GPS in DOM; net weight readonly with display-only comment; submit calls correct endpoints; receipt shows "recorded and sealed"
+- **Verification:** grep for resolveNeighbourhoodLabel, display only, readonly, evidence-links/submit, recorded and sealed; negative grep for raw coordinates
+- **Evidence:** `evidence/phase1/gf_w1_ui_008.json`
+- **Failure Modes:** Raw GPS coordinates rendered in DOM => CRITICAL_FAIL; resolveNeighbourhoodLabel not defined => CRITICAL_FAIL; Net weight editable => FAIL; "display only" comment missing => FAIL; alert() or confirm() used => FAIL; Evidence file missing => FAIL
+
+### GF-W1-UI-009 — Wire Program.cs to serve canonical recipient landing page
+- **Owner:** SUPERVISOR
+- **Priority:** HIGH
+- **Risk Class:** GOVERNANCE
+- **Blast Radius:** APP_LAYER
+- **Depends on:** `GF-W1-UI-008`
+- **Blocks:** `GF-W1-UI-010`
+- **Touches:** `services/ledger-api/dotnet/src/LedgerApi/Program.cs`, `tasks/GF-W1-UI-009/meta.yml`, `evidence/phase1/gf_w1_ui_009.json`
+- **Invariants:** none
+- **Work:** Change GET /pilot-demo/evidence-link route to serve index.html instead of index-2.html; one-line change only
+- **Acceptance Criteria:** Program.cs serves index.html (not index-2.html) for evidence-link route; no other lines changed
+- **Verification:** grep for index.html and evidence-link; negative grep for index-2.html in evidence-link context
+- **Evidence:** `evidence/phase1/gf_w1_ui_009.json`
+- **Failure Modes:** Program.cs still serves index-2.html => FAIL; Other Program.cs changes beyond file path => FAIL; Evidence file missing => FAIL
+
+### GF-W1-UI-010 — End-to-end verification script
+- **Owner:** SUPERVISOR
+- **Priority:** HIGH
+- **Risk Class:** GOVERNANCE
+- **Blast Radius:** APP_LAYER
+- **Depends on:** `GF-W1-UI-006`, `GF-W1-UI-009`
+- **Blocks:** none
+- **Touches:** `scripts/dev/verify_ui_e2e.sh`, `evidence/phase1/ui_e2e_verification.json`, `evidence/phase1/gf_w1_ui_010.json`, `tasks/GF-W1-UI-010/meta.yml`
+- **Invariants:** none
+- **Work:** Create curl-only E2E script; issue evidence link token and submit WEIGHBRIDGE_RECORD; four checks (A: HTTP 202, B: PET > 0, C: additionality > 0, D: WEIGHBRIDGE_RECORD in reveal); write evidence JSON; exit 0 on all-PASS, exit 1 on any FAIL
+- **Acceptance Criteria:** Script exists and is executable; uses curl only; performs all four checks; writes evidence JSON; exits correctly
+- **Verification:** test -x and grep for curl, ui_e2e_verification, WEIGHBRIDGE_RECORD; negative grep for python/node/npm
+- **Evidence:** `evidence/phase1/gf_w1_ui_010.json`
+- **Failure Modes:** Script exits 0 when a check fails => CRITICAL_FAIL; Script uses non-curl HTTP tools => FAIL; Evidence JSON not written => FAIL; Evidence file missing => FAIL
