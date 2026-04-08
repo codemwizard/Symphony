@@ -157,7 +157,7 @@ failure_modes:
   - Raw GPS coordinates rendered in DOM => CRITICAL_FAIL
   - resolveNeighbourhoodLabel not defined => CRITICAL_FAIL
   - Net weight editable (not readonly) => FAIL
-  - "display only" comment missing => FAIL
+  - display only comment missing => FAIL
   - alert() or confirm() used => FAIL
   - Evidence file missing => FAIL
 

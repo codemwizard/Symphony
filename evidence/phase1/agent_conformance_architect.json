@@ -130,6 +130,7 @@
     "evidence/phase0/role_login_posture.json",
     "evidence/phase0/routing_fallback.json",
     "evidence/phase0/routing_fallback_validation.json",
+    "evidence/phase0/schema_hash.txt",
     "evidence/phase0/security_definer_dynamic_sql.json",
     "evidence/phase0/security_dotnet_deps_audit.json",
     "evidence/phase0/security_insecure_patterns.json",
@@ -202,6 +203,7 @@
     "evidence/phase1/pii_decoupling_runtime.json",
     "evidence/phase1/product_kpi_readiness_report.json",
     "evidence/phase1/proj_001_initial_projection_set.json",
+    "evidence/phase1/pwrm0001_monitoring_report.json",
     "evidence/phase1/rail_sequence_runtime.json",
     "evidence/phase1/rail_sequence_truth_anchor.json",
     "evidence/phase1/tsk_p1_061_git_containment_rule.json",
@@ -393,6 +395,7 @@
     "scripts/audit/verify_tsk_p1_demo_027.sh",
     "scripts/audit/verify_tsk_p1_demo_031.sh",
     "scripts/security/lint_dotnet_quality.sh",
+    "scripts/security/lint_security_definer_dynamic_sql.sh",
     "scripts/security/openbao_smoke_test.sh",
     "scripts/security/scan_secrets.sh",
     "scripts/security/tests/test_lint_dotnet_quality.sh"

@@ -27,7 +27,7 @@ errors=()
 
 echo "==> Verifying TSK-P1-217: Onboarding Control-Plane Persistence..."
 
-MIGRATION=$(find "$ROOT/schema/migrations" -name '*onboarding_control_plane*' -type f | head -1)
+MIGRATION=$(find "$ROOT/schema/migrations" -name '*onboarding_control_plane*' -type f | sort -V | head -1)
 STORES="$ROOT/services/ledger-api/dotnet/src/LedgerApi/Infrastructure/Stores.cs"
 CONTRACTS="$ROOT/services/ledger-api/dotnet/src/LedgerApi/Commands/CommandContracts.cs"
 AUTH="$ROOT/services/ledger-api/dotnet/src/LedgerApi/Security/ApiAuthorization.cs"

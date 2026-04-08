@@ -99,6 +99,23 @@ PORT=5098
 BASE_URL="http://127.0.0.1:$PORT"
 API_LOG="/tmp/ledger_api_214.log"
 SUPPLIER_ID="SUP-214-TEST"
+API_PID=""
+
+# Cleanup function to kill API on exit
+cleanup_api() {
+  if [[ -n "$API_PID" ]] && kill -0 "$API_PID" 2>/dev/null; then
+    echo "    Cleaning up API process $API_PID..."
+    kill "$API_PID" 2>/dev/null || true
+    wait "$API_PID" 2>/dev/null || true
+  fi
+  # Also kill any process using port 5098
+  pkill -9 -f "dotnet.*LedgerApi.*:$PORT" 2>/dev/null || true
+}
+trap cleanup_api EXIT
+
+# Kill any existing process on port 5098 before starting
+pkill -9 -f "dotnet.*LedgerApi.*:$PORT" 2>/dev/null || true
+sleep 1
 
 start_api() {
   export INGRESS_STORAGE_MODE="db_psql"
@@ -112,18 +129,35 @@ start_api() {
   export DATABASE_URL
   export ASPNETCORE_URLS="http://*:$PORT"
 
-  # Run daemonized
-  dotnet run --project "$ROOT/services/ledger-api/dotnet/src/LedgerApi/LedgerApi.csproj" --no-build --urls "http://*:$PORT" > "$API_LOG" 2>&1 &
+  # Run daemonized (build first, then run)
+  dotnet run --project "$ROOT/services/ledger-api/dotnet/src/LedgerApi/LedgerApi.csproj" --urls "http://*:$PORT" > "$API_LOG" 2>&1 &
   API_PID=$!
-  for i in {1..15}; do
-    if grep -q "Now listening" "$API_LOG"; then break; fi
+  
+  echo "    Waiting for API to start (PID: $API_PID)..."
+  for i in {1..60}; do
+    # Check if process died
+    if ! kill -0 $API_PID 2>/dev/null; then
+      echo "API process died during startup. Logs:"
+      cat "$API_LOG"
+      exit 1
+    fi
+    
+    # Check if API is listening (either by log message or by port check)
+    if grep -q "Now listening" "$API_LOG" 2>/dev/null || \
+       grep -q "Application started" "$API_LOG" 2>/dev/null || \
+       ss -tln | grep -q ":$PORT "; then
+      echo "    API is ready!"
+      sleep 2  # Give it a moment to fully initialize
+      break
+    fi
+    
+    if [ $i -eq 60 ]; then
+      echo "API did not start within 60 seconds. Logs:"
+      cat "$API_LOG"
+      exit 1
+    fi
     sleep 1
   done
-  if ! kill -0 $API_PID 2>/dev/null; then
-    echo "API failed to start. Logs:"
-    cat "$API_LOG"
-    exit 1
-  fi
 }
 
 echo "    Starting API for write phase..."

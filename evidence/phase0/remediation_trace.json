@@ -10,12 +10,14 @@
   "merge_base": "d8b120262cd6e9647795af88b8be26d8f1310253",
   "triggered_change_present": true,
   "triggered_prefixes": [
-    "scripts"
+    "docs",
+    "scripts",
+    "src"
   ],
   "satisfying_docs": [
-    "docs/plans/phase1/REM-2026-04-06_evidence-push-nonconvergence/PLAN.md",
-    "docs/plans/phase1/REM-2026-04-06_evidence-push-nonconvergence/EXEC_LOG.md"
+    "docs/plans/phase0/REM-2026-04-07_pre_ci-security_definer_search_path/PLAN.md",
+    "docs/plans/phase0/REM-2026-04-07_pre_ci-security_definer_search_path/EXEC_LOG.md"
   ],
-  "satisfying_doc_parent": "docs/plans/phase1/REM-2026-04-06_evidence-push-nonconvergence",
+  "satisfying_doc_parent": "docs/plans/phase0/REM-2026-04-07_pre_ci-security_definer_search_path",
   "errors": []
 }
