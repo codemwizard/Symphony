@@ -179,19 +179,19 @@ run_ci_db_parity_migration_probe() {
   role_pw_sql="${ci_password//\'/\'\'}"
 
   echo "==> CI DB parity migration probe (fresh DB as role '${ci_user}')"
-  docker exec "$DB_CONTAINER" psql -U "$POSTGRES_USER" -d postgres -v ON_ERROR_STOP=1 -X \
+  docker exec "$DB_CONTAINER" psql -h localhost -U "$POSTGRES_USER" -d postgres -v ON_ERROR_STOP=1 -X \
     -c "DO \$\$ BEGIN IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = '${ci_user}') THEN CREATE ROLE ${ci_user} LOGIN SUPERUSER CREATEDB CREATEROLE PASSWORD '${role_pw_sql}'; ELSE ALTER ROLE ${ci_user} LOGIN SUPERUSER CREATEDB CREATEROLE PASSWORD '${role_pw_sql}'; END IF; END \$\$;" >/dev/null
 
   ci_probe_db="symphony_ci_parity_probe_$(date -u +%Y%m%d%H%M%S)_$RANDOM"
   probe_db="$(echo "$ci_probe_db" | tr '[:upper:]' '[:lower:]' | tr -cd 'a-z0-9_')"
-  docker exec "$DB_CONTAINER" psql -U "$POSTGRES_USER" -d postgres -v ON_ERROR_STOP=1 -X \
+  docker exec "$DB_CONTAINER" psql -h localhost -U "$POSTGRES_USER" -d postgres -v ON_ERROR_STOP=1 -X \
     -c "CREATE DATABASE \"${probe_db}\" OWNER ${ci_user};" >/dev/null
 
   DATABASE_URL="postgres://${ci_user}:${ci_password}@localhost:${DB_HOST_PORT}/${probe_db}" scripts/db/migrate.sh >/dev/null
 
-  docker exec "$DB_CONTAINER" psql -U "$POSTGRES_USER" -d postgres -v ON_ERROR_STOP=1 -X \
+  docker exec "$DB_CONTAINER" psql -h localhost -U "$POSTGRES_USER" -d postgres -v ON_ERROR_STOP=1 -X \
     -c "SELECT pg_terminate_backend(pid) FROM pg_stat_activity WHERE datname = '${probe_db}' AND pid <> pg_backend_pid();" >/dev/null 2>&1 || true
-  docker exec "$DB_CONTAINER" psql -U "$POSTGRES_USER" -d postgres -v ON_ERROR_STOP=1 -X \
+  docker exec "$DB_CONTAINER" psql -h localhost -U "$POSTGRES_USER" -d postgres -v ON_ERROR_STOP=1 -X \
     -c "DROP DATABASE IF EXISTS \"${probe_db}\";" >/dev/null 2>&1 || true
 }
 
@@ -417,13 +417,13 @@ fi
 
 echo "==> Waiting for postgres container to be healthy"
 for i in {1..60}; do
-  if docker exec "$DB_CONTAINER" pg_isready -U "$POSTGRES_USER" -d "$POSTGRES_DB" >/dev/null 2>&1; then
+  if docker exec "$DB_CONTAINER" pg_isready -h localhost -U "$POSTGRES_USER" -d "$POSTGRES_DB" >/dev/null 2>&1; then
     break
   fi
   sleep 2
 done
 
-if ! docker exec "$DB_CONTAINER" pg_isready -U "$POSTGRES_USER" -d "$POSTGRES_DB" >/dev/null 2>&1; then
+if ! docker exec "$DB_CONTAINER" pg_isready -h localhost -U "$POSTGRES_USER" -d "$POSTGRES_DB" >/dev/null 2>&1; then
   echo "ERROR: postgres container not ready"
   exit 1
 fi
@@ -449,9 +449,9 @@ cleanup_temp_db() {
   fi
   echo "==> Dropping temp DB: ${TEMP_DB}"
   # terminate connections then drop
-  docker exec "$DB_CONTAINER" psql -U "$POSTGRES_USER" -d postgres -v ON_ERROR_STOP=1 -X \
+  docker exec "$DB_CONTAINER" psql -h localhost -U "$POSTGRES_USER" -d postgres -v ON_ERROR_STOP=1 -X \
     -c "SELECT pg_terminate_backend(pid) FROM pg_stat_activity WHERE datname = '${TEMP_DB}' AND pid <> pg_backend_pid();" >/dev/null 2>&1 || true
-  docker exec "$DB_CONTAINER" psql -U "$POSTGRES_USER" -d postgres -v ON_ERROR_STOP=1 -X \
+  docker exec "$DB_CONTAINER" psql -h localhost -U "$POSTGRES_USER" -d postgres -v ON_ERROR_STOP=1 -X \
     -c "DROP DATABASE IF EXISTS \"${TEMP_DB}\";" >/dev/null 2>&1 || true
 }
 trap cleanup_temp_db EXIT
@@ -463,11 +463,13 @@ if [[ "${FRESH_DB}" == "1" ]]; then
   rand="$RANDOM"
   base="symphony_pre_ci_${ts}_${rand}"
   TEMP_DB="$(echo "$base" | tr '[:upper:]' '[:lower:]' | tr -cd 'a-z0-9_')"
-  docker exec "$DB_CONTAINER" psql -U "$POSTGRES_USER" -d postgres -v ON_ERROR_STOP=1 -X \
+  docker exec "$DB_CONTAINER" psql -h localhost -U "$POSTGRES_USER" -d postgres -v ON_ERROR_STOP=1 -X \
     -c "CREATE DATABASE \"${TEMP_DB}\";" >/dev/null
   DATABASE_URL="postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@localhost:${DB_HOST_PORT}/${TEMP_DB}"
   export DATABASE_URL
   echo "   DATABASE_URL set to ephemeral DB: ${TEMP_DB}"
+  echo "   Running migrations on ephemeral DB..."
+  scripts/db/migrate.sh >/dev/null
 else
   echo "==> Fresh DB parity disabled (FRESH_DB=${FRESH_DB}); using DATABASE_URL as provided"
 fi
