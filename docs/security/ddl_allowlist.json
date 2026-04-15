@@ -724,7 +724,7 @@
     {
       "id": "DDL-ALLOW-0102",
       "migration": "schema/migrations/0115_add_supplier_type_to_registry.sql",
-      "statement_fingerprint": "ab694c613e686dab5e124911841846e6c06a81094ef071875f7fc8fcc8555a99",
+      "statement_fingerprint": "e575a1a7b59fb85539e7d72511b65d96fb994a14f7e748d8cc742cd34204e66f",
       "reason": "Pilot demo migration: adds nullable supplier_type column to non-hot supplier_registry table. Documented in exception_change-rule_ddl_2026-04-15.md (EXC-1000).",
       "expires_on": "2026-12-31",
       "reviewed_by": "security_guardian",
