@@ -1,0 +1,64 @@
+schema_version: 1
+phase: '1'
+task_id: TSK-P1-PLT-006
+title: "Fix Token Issuance payload and return sequence number in response"
+owner_role: ARCHITECT
+status: completed
+priority: HIGH
+risk_class: GOVERNANCE
+blast_radius: APP_LAYER
+intent: >-
+  The Token Issuance UI sends a 'proof_type' and 'supplier_id' that the backend
+  does not recognize in its current PilotDemoEvidenceLinkIssueRequest record.
+  Furthermore, the frontend expects a 'sequence' number in the response to show 
+  progress, which is currently missing. This task aligns the payload and 
+  injects the sequence number into the issuance response.
+anti_patterns:
+  - "Hardcoding the instruction_id or sequence in the frontend."
+  - "Ignoring the proof_type field entirely (must be mapped to artifact_type)."
+out_of_scope:
+  - "Changing the underlying cryptographic signing of the evidence token."
+stop_conditions:
+  - "If the response does not contain a valid integer for the sequence field."
+proof_guarantees:
+  - "Verification confirms that tokens appear in the SESSION TOKENS table with a sequence number."
+proof_limitations:
+  - "Does not verify the actual storage of the binary artifact (only the link record)."
+depends_on:
+  - TSK-P1-PLT-001
+touches:
+  - services/ledger-api/dotnet/src/LedgerApi/Program.cs
+  - src/symphony-pilot/token-issuance.html
+  - tasks/TSK-P1-PLT-006/meta.yml
+invariants:
+  - INV-GOV-PILOT-006
+work:
+  - "[ID TSK-P1-PLT-006_work_item_01] Update EvidenceLinkIssueHandler in Program.cs to return sequence_number."
+  - "[ID TSK-P1-PLT-006_work_item_02] Refactor issueToken() in token-issuance.html to match the PilotDemoEvidenceLinkIssueRequest structure."
+  - "[ID TSK-P1-PLT-006_work_item_03] Map proof_type to artifact_type and generate a unique instruction_id on the frontend."
+acceptance_criteria:
+  - "[ID TSK-P1-PLT-006_work_item_01] POST /pilot-demo/api/evidence-links/issue response contains 'sequence'."
+  - "[ID TSK-P1-PLT-006_work_item_02] UI '✓ Token issued' banner shows a real sequence number from the backend."
+negative_tests:
+  - id: TSK-P1-PLT-006-N1
+    description: "Issuing a token with an invalid programme_id must return 400."
+    required: true
+verification:
+  - "# [ID TSK-P1-PLT-006_work_item_01] curl -X POST http://localhost:5242/pilot-demo/api/evidence-links/issue -H 'Content-Type: application/json' -d '{\"program_id\": \"PGM-ZAMBIA-GRN-001\"}' | grep 'sequence' || exit 1"
+evidence:
+  - path: evidence/phase1/tsk_p1_plt_006.json
+    must_include:
+      - task_id
+      - git_sha
+      - status
+failure_modes:
+  - "Sequence remains 0 or null in response => FAIL"
+  - "Payload mismatch 400 error persists => FAIL"
+must_read:
+  - services/ledger-api/dotnet/src/LedgerApi/Program.cs (Line 563 and Line 600)
+  - src/symphony-pilot/token-issuance.html
+implementation_plan: docs/plans/phase1/TSK-P1-PLT-006/PLAN.md
+implementation_log: docs/plans/phase1/TSK-P1-PLT-006/EXEC_LOG.md
+client: cursor
+assigned_agent: architect
+model: <UNASSIGNED>

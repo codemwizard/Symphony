@@ -1,0 +1,492 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Symphony · Supervisory Dashboard</title>
+<link rel="stylesheet" href="_shared.css">
+<style>
+.layout { display:grid; grid-template-columns:320px 1fr 260px; height:calc(100vh - 81px); overflow:hidden; }
+.col { overflow-y:auto; border-right:1px solid var(--border); }
+.col:last-child { border-right:none; }
+.col-hdr { padding:14px 18px 10px; border-bottom:1px solid var(--border); position:sticky; top:0; background:var(--surface); z-index:10; }
+.col-hdr-label { font-family:var(--mono); font-size:7.5px; letter-spacing:0.35em; text-transform:uppercase; color:var(--gold); }
+.col-hdr-sub   { font-family:var(--mono); font-size:9px; color:var(--smoke); margin-top:3px; }
+
+/* Instruction rows */
+.ins-row { padding:12px 18px; border-bottom:1px solid rgba(61,184,90,0.05); cursor:pointer; transition:background 0.12s; }
+.ins-row:hover { background:rgba(61,184,90,0.04); }
+.ins-row.selected { background:rgba(201,168,76,0.06); border-left:3px solid var(--gold); }
+.ins-row-id { font-family:var(--mono); font-size:10px; color:var(--cream); }
+.ins-row-meta { font-family:var(--mono); font-size:9px; color:var(--smoke); margin-top:3px; display:flex; gap:8px; }
+
+/* Summary stats */
+.summary-row { display:grid; grid-template-columns:1fr 1fr; gap:10px; padding:14px 18px; border-bottom:1px solid var(--border); }
+
+/* Proof grid */
+.proof-grid { padding:16px 18px; }
+.proof-spec { display:flex; align-items:center; justify-content:space-between; padding:9px 0; border-bottom:1px solid rgba(61,184,90,0.05); }
+.proof-spec:last-child { border-bottom:none; }
+.proof-label { font-family:var(--mono); font-size:10px; color:var(--cream); }
+.proof-sub { font-family:var(--mono); font-size:8px; color:var(--smoke); margin-top:2px; }
+
+/* Exception row */
+.exc-row { padding:10px 14px; border-radius:3px; margin:0 12px 8px; background:rgba(176,48,32,0.05); border:1px solid rgba(176,48,32,0.15); }
+.exc-code { font-family:var(--mono); font-size:9px; color:var(--red-lt); }
+.exc-detail { font-family:var(--mono); font-size:9px; color:var(--smoke); margin-top:3px; }
+
+/* Right panel */
+.prog-summary { padding:16px 18px; border-bottom:1px solid var(--border); }
+.prog-name { font-family:var(--serif); font-size:14px; font-weight:700; color:var(--cream); margin-bottom:10px; }
+.completeness-row { display:flex; align-items:center; gap:8px; margin-bottom:7px; }
+.completeness-label { font-family:var(--mono); font-size:9px; color:var(--smoke); width:90px; flex-shrink:0; }
+.completeness-bar { flex:1; background:var(--panel); height:4px; border-radius:2px; overflow:hidden; }
+.completeness-fill { height:100%; border-radius:2px; }
+.completeness-fill.present { background:var(--bright); }
+.completeness-fill.missing { background:var(--dim); }
+.completeness-fill.failed  { background:var(--red); }
+
+/* Timeline */
+.tl-row { padding:9px 18px; border-bottom:1px solid rgba(61,184,90,0.05); display:flex; gap:10px; align-items:flex-start; cursor:pointer; transition:background 0.12s; }
+.tl-row:hover { background:rgba(61,184,90,0.03); }
+.tl-dot { width:7px; height:7px; border-radius:50%; margin-top:4px; flex-shrink:0; }
+.tl-dot.settled { background:var(--bright); }
+.tl-dot.hold, .tl-dot.missing { background:var(--amber); }
+.tl-dot.failed, .tl-dot.flagged { background:var(--red-lt); }
+.tl-id { font-family:var(--mono); font-size:10px; color:var(--cream); }
+.tl-time { font-family:var(--mono); font-size:8px; color:var(--smoke); }
+.tl-proofs { font-family:var(--mono); font-size:9px; }
+
+/* Detail drawer extras */
+.detail-section { margin-bottom:22px; }
+.detail-kv { display:flex; gap:10px; margin-bottom:6px; align-items:flex-start; }
+.detail-key { font-family:var(--mono); font-size:8px; letter-spacing:0.2em; text-transform:uppercase; color:var(--smoke); min-width:110px; padding-top:2px; }
+.detail-val { font-family:var(--mono); font-size:11px; color:var(--cream); word-break:break-all; }
+.artifact-card { background:var(--panel); border:1px solid var(--border); border-radius:3px; padding:10px 12px; margin-bottom:8px; }
+.artifact-type { font-family:var(--mono); font-size:9px; color:var(--gold-lt); margin-bottom:4px; }
+.artifact-ref  { font-family:var(--mono); font-size:9px; color:var(--smoke); word-break:break-all; }
+</style>
+</head>
+<body>
+
+<!-- TOPBAR -->
+<div class="topbar">
+  <div class="topbar-left">
+    <div class="logo">Sym<span>phony</span></div>
+    <span class="pill pill-gold">SUPERVISORY · READ-ONLY</span>
+    <span class="pill pill-green" id="live-badge">● LIVE</span>
+  </div>
+  <div class="topbar-right">
+    <span>TENANT: <span class="text-gold" id="tenant-display">—</span></span>
+    <span>PROG: <span class="text-gold" id="prog-display">—</span></span>
+    <span id="clock">—</span>
+  </div>
+</div>
+
+<!-- TABS -->
+<div class="tab-bar">
+  <a href="supervisory.html" class="tab active">Governed Disbursement</a>
+  <a href="workers.html"     class="tab">Worker Onboarding</a>
+  <a href="monitoring.html"  class="tab">Monitoring Report</a>
+  <a href="criteria.html"    class="tab">Pilot Criteria</a>
+  <a href="admin.html"       class="tab">Admin</a>
+</div>
+
+<!-- LAYOUT -->
+<div class="layout">
+
+  <!-- COL 1: INSTRUCTION LIST -->
+  <div class="col">
+    <div class="col-hdr">
+      <div class="col-hdr-label">Instructions</div>
+      <div class="col-hdr-sub" id="ins-count">Loading…</div>
+    </div>
+    <div id="ins-list"><div class="loading-row"><span class="spinner"></span>Fetching…</div></div>
+  </div>
+
+  <!-- COL 2: PROOF ROWS + EXCEPTIONS -->
+  <div class="col">
+    <div class="col-hdr">
+      <div class="col-hdr-label">Proof Verification</div>
+      <div class="col-hdr-sub" id="proof-subtitle">Select an instruction</div>
+    </div>
+    <div id="proof-area">
+      <div class="loading-row" style="color:var(--smoke);padding:32px 18px;">← Select an instruction to inspect its proof chain</div>
+    </div>
+  </div>
+
+  <!-- COL 3: PROGRAMME SUMMARY + TIMELINE -->
+  <div class="col">
+    <div class="col-hdr">
+      <div class="col-hdr-label">Programme Summary</div>
+    </div>
+    <div id="summary-area"><div class="loading-row"><span class="spinner"></span>Loading…</div></div>
+    <div class="col-hdr" style="top:auto;position:sticky;top:0;">
+      <div class="col-hdr-label">Timeline</div>
+    </div>
+    <div id="timeline-area"></div>
+  </div>
+</div>
+
+<!-- DETAIL DRAWER -->
+<div class="drawer-overlay" id="drawer-overlay" onclick="closeDrawer()"></div>
+<div class="drawer" id="detail-drawer">
+  <button class="drawer-close" onclick="closeDrawer()">✕</button>
+  <div id="drawer-content"></div>
+</div>
+
+<!-- TOAST AREA -->
+<div id="toast-area"></div>
+
+<script>
+const API = 'http://localhost:8080';
+let tenantId   = '';
+let programmeId = '';
+let revealData  = null;
+let selectedId  = null;
+
+/* ── CLOCK ── */
+function tick() { document.getElementById('clock').textContent = new Date().toUTCString().slice(5,25)+' UTC'; }
+setInterval(tick, 1000); tick();
+
+/* ── TOAST ── */
+function toast(msg, type='ok') {
+  const el = Object.assign(document.createElement('div'), { className:`toast toast-${type}`, textContent: msg });
+  document.getElementById('toast-area').appendChild(el);
+  setTimeout(()=>el.remove(), 4000);
+}
+
+/* ── FETCH CONTEXT FROM BACKEND ── */
+async function bootstrap() {
+  try {
+    const r = await fetch(`${API}/api/admin/onboarding/status`, {credentials:'include'});
+    if (!r.ok) throw new Error(r.status);
+    const d = await r.json();
+    // Use first active programme
+    const prog = (d.programmes||[]).find(p=>p.status==='ACTIVE' || p.programme_key) || (d.programmes||[])[0];
+    const ten  = (d.tenants||[])[0];
+    tenantId    = ten?.tenant_id  || '';
+    programmeId = prog?.programme_id || '';
+    document.getElementById('tenant-display').textContent  = ten?.tenant_key  || tenantId.slice(0,8)+'…';
+    document.getElementById('prog-display').textContent    = prog?.programme_key || programmeId.slice(0,8)+'…';
+    await loadReveal();
+  } catch(e) {
+    // Fallback to injected context if served by LedgerApi
+    const ctx = window.__SYMPHONY_UI_CONTEXT__;
+    if (ctx) {
+      tenantId    = ctx.tenantId || '';
+      programmeId = ctx.programId || '';
+      await loadReveal();
+    } else {
+      toast('Cannot reach backend — check SYMPHONY_RUNTIME_PROFILE=pilot-demo', 'err');
+      renderFallback();
+    }
+  }
+}
+
+async function loadReveal() {
+  if (!tenantId || !programmeId) return;
+  try {
+    const r = await fetch(`${API}/v1/supervisory/programmes/${encodeURIComponent(programmeId)}/reveal`, {
+      headers:{ 'x-tenant-id': tenantId, 'x-api-key': window.__SYMPHONY_UI_CONTEXT__?.apiKey||'' },
+      credentials:'include'
+    });
+    if (!r.ok) throw new Error(r.status);
+    revealData = await r.json();
+    renderAll();
+  } catch(e) {
+    toast(`Reveal API error: ${e.message}`, 'err');
+    renderFallback();
+  }
+}
+
+function renderFallback() {
+  // Use embedded fallback if available
+  const fb = window.__SYMPHONY_HYBRID_FALLBACK__;
+  if (fb && typeof fb === 'object') {
+    revealData = fb;
+    renderAll();
+  } else {
+    document.getElementById('ins-list').innerHTML = '<div class="loading-row" style="color:var(--red-lt)">⚠ Backend unavailable</div>';
+  }
+}
+
+/* ── RENDER ── */
+function renderAll() {
+  renderInstructionList();
+  renderSummary();
+  renderTimeline();
+}
+
+function renderInstructionList() {
+  const rows = revealData?.proof_rows || revealData?.timeline || [];
+  const count = rows.length;
+  document.getElementById('ins-count').textContent = `${count} instruction${count!==1?'s':''}`;
+
+  if (!count) {
+    document.getElementById('ins-list').innerHTML = '<div class="loading-row" style="color:var(--smoke)">No instructions found</div>';
+    return;
+  }
+
+  document.getElementById('ins-list').innerHTML = rows.map(row => {
+    const id     = row.instruction_id || row.id || '—';
+    const status = (row.status || row.proof_status || 'unknown').toLowerCase();
+    const proofs = row.present_count !== undefined ? `${row.present_count}/4 proofs` : (row.proofs || '');
+    const ack    = row.acknowledgement_state || '';
+    return `<div class="ins-row${selectedId===id?' selected':''}" onclick="selectInstruction('${id}')">
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <span class="ins-row-id">${id}</span>
+        <span class="status status-${status}">${status.toUpperCase()}</span>
+      </div>
+      <div class="ins-row-meta">
+        <span>${proofs}</span>
+        ${ack?`<span class="text-amber">${ack}</span>`:''}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function renderSummary() {
+  const s = revealData?.programme_summary || {};
+  const ec = revealData?.evidence_completeness || [];
+  const exc = revealData?.exception_log || [];
+  document.getElementById('prog-display').textContent = revealData?.program_id || programmeId;
+
+  const html = `
+    <div class="prog-summary">
+      <div class="prog-name">${revealData?.programme_summary ? 'Programme Overview' : 'Programme'}</div>
+      <div class="summary-row">
+        <div class="stat-tile"><div class="stat-label">Submissions</div><div class="stat-value green">${s.evidence_submissions??'—'}</div></div>
+        <div class="stat-tile"><div class="stat-label">Exceptions</div><div class="stat-value ${(s.exception_count||0)>0?'amber':'green'}">${s.exception_count??'—'}</div></div>
+      </div>
+      <div class="summary-row" style="border-bottom:none">
+        <div class="stat-tile"><div class="stat-label">Awaiting Ack</div><div class="stat-value amber">${s.awaiting_execution_count??'—'}</div></div>
+        <div class="stat-tile"><div class="stat-label">Escalated</div><div class="stat-value red">${s.escalated_count??'—'}</div></div>
+      </div>
+    </div>
+    <div class="col-hdr"><div class="col-hdr-label">Evidence Completeness</div></div>
+    <div style="padding:12px 18px">
+      ${ec.map(item=>{
+        const st = (item.status||'').toLowerCase();
+        const fill = st==='present'?100:0;
+        return `<div class="completeness-row">
+          <span class="completeness-label">${item.artifact_type||item.proof_type_id||'—'}</span>
+          <div class="completeness-bar"><div class="completeness-fill ${st}" style="width:${fill}%"></div></div>
+          <span class="status status-${st}" style="font-size:7px;padding:1px 5px;margin-left:6px">${st.toUpperCase()}</span>
+        </div>`;
+      }).join('')}
+    </div>
+    ${exc.length?`
+    <div class="col-hdr"><div class="col-hdr-label">Exception Log</div></div>
+    <div style="padding:12px 8px">
+      ${exc.map(e=>`<div class="exc-row">
+        <div class="exc-code">${e.error_code||e.type||'ERROR'}</div>
+        <div style="font-family:var(--mono);font-size:8px;color:var(--smoke);margin-top:2px">${e.instruction_id||''}</div>
+        <div class="exc-detail">${e.detail||''}</div>
+      </div>`).join('')}
+    </div>`:''}
+  `;
+  document.getElementById('summary-area').innerHTML = html;
+}
+
+function renderTimeline() {
+  const rows = revealData?.timeline || [];
+  if (!rows.length) { document.getElementById('timeline-area').innerHTML = '<div class="loading-row" style="color:var(--smoke)">No timeline events</div>'; return; }
+  document.getElementById('timeline-area').innerHTML = rows.map(r=>{
+    const st = (r.event_type||r.proof_status||r.status||'').toLowerCase();
+    const dot = ['settled','present','ok'].includes(st)?'settled':['hold','missing','pending'].includes(st)?'hold':'failed';
+    return `<div class="tl-row" onclick="selectInstruction('${r.instruction_id||r.id||''}')">
+      <div class="tl-dot ${dot}" style="margin-top:4px"></div>
+      <div style="flex:1;min-width:0">
+        <div class="tl-id" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${r.instruction_id||r.id||'—'}</div>
+        <div class="tl-time">${(r.observed_at_utc||'').slice(0,16)}</div>
+      </div>
+      <div class="tl-proofs text-${dot==='settled'?'bright':dot==='hold'?'amber':'red'}">${r.proofs||''}</div>
+    </div>`;
+  }).join('');
+}
+
+/* ── PROOF AREA ── */
+async function selectInstruction(id) {
+  selectedId = id;
+  renderInstructionList(); // re-highlight
+  document.getElementById('proof-subtitle').textContent = id;
+  document.getElementById('proof-area').innerHTML = '<div class="loading-row"><span class="spinner"></span>Loading proof chain…</div>';
+
+  // First try from already-loaded revealData.proof_rows
+  const rows = revealData?.proof_rows || [];
+  const cached = rows.find(r=>(r.instruction_id||r.id)===id);
+
+  if (cached) {
+    renderProofs(cached);
+    return;
+  }
+
+  // Fetch detail from API
+  try {
+    const r = await fetch(`${API}/v1/supervisory/instructions/${encodeURIComponent(id)}/detail`, {
+      headers:{ 'x-tenant-id': tenantId, 'x-api-key': window.__SYMPHONY_UI_CONTEXT__?.apiKey||'' },
+      credentials:'include'
+    });
+    if (!r.ok) throw new Error(r.status);
+    const d = await r.json();
+    renderProofDetail(d);
+  } catch(e) {
+    document.getElementById('proof-area').innerHTML = `<div class="alert alert-red" style="margin:16px">${e.message}</div>`;
+  }
+}
+
+function renderProofs(row) {
+  const proofs = row.proofs || [];
+  const html = `
+    <div class="proof-grid">
+      ${proofs.map(p=>{
+        const st = (p.status||'missing').toLowerCase();
+        return `<div class="proof-spec">
+          <div>
+            <div class="proof-label">${p.label||p.proof_type_id||'—'}</div>
+            <div class="proof-sub">${p.artifact_type||''} ${p.gps_result?'· GPS:'+p.gps_result:''} ${p.msisdn_result?'· MSISDN:'+p.msisdn_result:''}</div>
+            ${p.submitted_at_utc?`<div class="mono-xs">${p.submitted_at_utc.slice(0,16)}</div>`:''}
+          </div>
+          <span class="status status-${st}">${st.toUpperCase()}</span>
+        </div>`;
+      }).join('')}
+    </div>
+    <div style="padding:0 18px 16px">
+      <div class="mono-xs" style="margin-bottom:8px">STATUS: <span class="text-${getStatusColor(row.status)}">${row.status||'—'}</span></div>
+      ${row.acknowledgement_state?`<div class="mono-xs">ACK: ${row.acknowledgement_state}</div>`:''}
+      ${row.escalation_tier?`<div class="mono-xs text-amber">ESCALATION TIER: ${row.escalation_tier}</div>`:''}
+      <button class="btn btn-ghost btn-sm" style="margin-top:10px" onclick="openDetailDrawer('${row.instruction_id||row.id||''}')">Full Detail →</button>
+    </div>
+  `;
+  document.getElementById('proof-area').innerHTML = html;
+}
+
+function renderProofDetail(d) {
+  const proofs = d.proof_rows || d.proofs || [];
+  const artifacts = d.raw_artifacts || [];
+  const exceptions = d.exception_log || [];
+
+  document.getElementById('proof-area').innerHTML = `
+    <div class="proof-grid">
+      ${proofs.map(p=>{
+        const st=(p.status||'missing').toLowerCase();
+        return `<div class="proof-spec">
+          <div>
+            <div class="proof-label">${p.label||p.proof_type_id||'—'}</div>
+            <div class="proof-sub">${p.artifact_type||''}</div>
+          </div>
+          <span class="status status-${st}">${st.toUpperCase()}</span>
+        </div>`;
+      }).join('')}
+    </div>
+    ${artifacts.length?`
+    <div style="padding:0 18px 14px">
+      <div class="card-hdr" style="margin-bottom:10px">Raw Artifacts</div>
+      ${artifacts.map(a=>`<div class="artifact-card">
+        <div class="artifact-type">${a.artifact_type||'—'}</div>
+        <div class="artifact-ref">${a.artifact_ref||''}</div>
+        ${a.latitude?`<div class="mono-xs" style="margin-top:4px">GPS: ${a.latitude}, ${a.longitude}</div>`:''}
+      </div>`).join('')}
+    </div>`:''}
+    ${exceptions.length?`
+    <div style="padding:0 8px 14px">
+      ${exceptions.map(e=>`<div class="exc-row"><div class="exc-code">${e.error_code||'—'}</div></div>`).join('')}
+    </div>`:''}
+    <div style="padding:0 18px 14px">
+      <div class="mono-xs">ACK: <span class="text-${d.acknowledgement_state?'amber':'smoke'}">${d.acknowledgement_state||'N/A'}</span></div>
+    </div>
+  `;
+}
+
+function getStatusColor(s) {
+  s=(s||'').toLowerCase();
+  if(['settled','present','pass','active'].includes(s)) return 'bright';
+  if(['hold','missing','pending'].includes(s)) return 'amber';
+  return 'red';
+}
+
+/* ── FULL DETAIL DRAWER ── */
+async function openDetailDrawer(id) {
+  document.getElementById('drawer-overlay').classList.add('open');
+  document.getElementById('detail-drawer').classList.add('open');
+  document.getElementById('drawer-content').innerHTML = '<div class="loading-row"><span class="spinner"></span>Loading full detail…</div>';
+  try {
+    const r = await fetch(`${API}/v1/supervisory/instructions/${encodeURIComponent(id)}/detail`, {
+      headers:{ 'x-tenant-id': tenantId, 'x-api-key': window.__SYMPHONY_UI_CONTEXT__?.apiKey||'' },
+      credentials:'include'
+    });
+    if (!r.ok) throw new Error(r.status);
+    const d = await r.json();
+    renderDrawer(d);
+  } catch(e) {
+    document.getElementById('drawer-content').innerHTML = `<div class="alert alert-red">${e.message}</div>`;
+  }
+}
+
+function renderDrawer(d) {
+  const artifacts = d.raw_artifacts || [];
+  document.getElementById('drawer-content').innerHTML = `
+    <div style="margin-bottom:18px">
+      <div style="font-family:var(--mono);font-size:8px;letter-spacing:0.3em;text-transform:uppercase;color:var(--gold);margin-bottom:10px">Instruction Detail</div>
+      <div class="detail-kv"><span class="detail-key">Instruction</span><span class="detail-val">${d.instruction_id||'—'}</span></div>
+      <div class="detail-kv"><span class="detail-key">Programme</span><span class="detail-val">${d.program_id||'—'}</span></div>
+      <div class="detail-kv"><span class="detail-key">Status</span><span class="detail-val"><span class="status status-${(d.instruction_status||'').toLowerCase()}">${d.instruction_status||'—'}</span></span></div>
+      <div class="detail-kv"><span class="detail-key">Ack State</span><span class="detail-val">${d.acknowledgement_state||'N/A'}</span></div>
+      <div class="detail-kv"><span class="detail-key">Supervisor Interrupt</span><span class="detail-val">${d.supervisor_interrupt_state||'None'}</span></div>
+    </div>
+    <hr class="sep">
+    <div style="font-family:var(--mono);font-size:8px;letter-spacing:0.3em;text-transform:uppercase;color:var(--gold);margin-bottom:10px">Artifacts (${artifacts.length})</div>
+    ${artifacts.map(a=>`<div class="artifact-card">
+      <div class="artifact-type">${a.artifact_type||'—'}</div>
+      <div class="artifact-ref">${a.artifact_ref||''}</div>
+      ${a.submitter_class?`<div class="mono-xs" style="margin-top:4px">Submitter: ${a.submitter_class} · ${a.submitter_msisdn||''}</div>`:''}
+      ${a.latitude?`<div class="mono-xs">GPS: ${a.latitude}, ${a.longitude}</div>`:''}
+      ${a.submitted_at_utc?`<div class="mono-xs">${a.submitted_at_utc.slice(0,19)}</div>`:''}
+      ${a.structured_payload?`<div style="margin-top:8px;background:var(--bg);padding:8px;border-radius:3px;font-family:var(--mono);font-size:9px;color:var(--smoke);word-break:break-all">${JSON.stringify(a.structured_payload,null,2)}</div>`:''}
+    </div>`).join('')}
+    <hr class="sep">
+    <div style="font-family:var(--mono);font-size:8px;letter-spacing:0.3em;text-transform:uppercase;color:var(--gold);margin-bottom:10px">Proof Rows</div>
+    ${(d.proof_rows||[]).map(p=>{
+      const st=(p.status||'').toLowerCase();
+      return `<div class="proof-spec">
+        <div><div class="proof-label">${p.label||p.proof_type_id}</div><div class="proof-sub">${p.artifact_type||''}</div></div>
+        <span class="status status-${st}">${st.toUpperCase()}</span>
+      </div>`;
+    }).join('')}
+    <hr class="sep">
+    <div class="detail-kv"><span class="detail-key">Supplier Policy</span><span class="detail-val">${d.supplier_policy_context?.decision||'N/A'}</span></div>
+  `;
+}
+
+function closeDrawer() {
+  document.getElementById('drawer-overlay').classList.remove('open');
+  document.getElementById('detail-drawer').classList.remove('open');
+}
+
+/* ── EXPORT ── */
+async function triggerExport() {
+  if (!programmeId) { toast('No programme selected', 'warn'); return; }
+  toast('Generating monitoring report export…', 'ok');
+  try {
+    const r = await fetch(`${API}/v1/supervisory/programmes/${encodeURIComponent(programmeId)}/export`, {
+      method:'POST',
+      headers:{ 'x-tenant-id': tenantId, 'x-api-key': window.__SYMPHONY_UI_CONTEXT__?.apiKey||'' },
+      credentials:'include'
+    });
+    if (!r.ok) throw new Error(r.status);
+    const d = await r.json();
+    toast(`Export ready — fingerprint: ${(d.deterministic_fingerprint||'').slice(0,16)}…`, 'ok');
+    if (d.json_url) window.open(API+d.json_url, '_blank');
+  } catch(e) {
+    toast(`Export failed: ${e.message}`, 'err');
+  }
+}
+
+// Auto-refresh every 60 s
+setInterval(loadReveal, 60000);
+
+bootstrap();
+</script>
+</body>
+</html>

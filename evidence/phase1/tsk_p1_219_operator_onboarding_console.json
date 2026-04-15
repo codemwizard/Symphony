@@ -13,7 +13,9 @@
     "status_api_call": true,
     "no_admin_key_in_browser": true,
     "session_credentials": true,
-    "five_tabs": true
+    "five_tabs": true,
+    "worker_tokens_tab": true,
+    "worker_tokens_screen": true
   },
   "errors": []
 }

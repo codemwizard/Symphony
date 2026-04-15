@@ -1,0 +1,449 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Symphony · Worker Onboarding</title>
+<link rel="stylesheet" href="_shared.css">
+<style>
+.layout { display:grid; grid-template-columns:360px 1fr; height:calc(100vh - 81px); overflow:hidden; }
+.col { overflow-y:auto; border-right:1px solid var(--border); }
+.col:last-child { border-right:none; }
+.col-hdr { padding:14px 18px 10px; border-bottom:1px solid var(--border); position:sticky; top:0; background:var(--surface); z-index:10; }
+.col-hdr-label { font-family:var(--mono); font-size:7.5px; letter-spacing:0.35em; text-transform:uppercase; color:var(--gold); }
+
+/* Form panel */
+.form-section { padding:18px 20px; border-bottom:1px solid var(--border); }
+.form-section-title { font-family:var(--mono); font-size:8px; letter-spacing:0.3em; text-transform:uppercase; color:var(--gold); margin-bottom:16px; display:flex;align-items:center;gap:8px; }
+.inline-row { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+
+/* Worker registry */
+.worker-row {
+  padding:12px 18px; border-bottom:1px solid rgba(61,184,90,0.05);
+  display:flex; align-items:center; justify-content:space-between;
+  transition:background 0.12s;
+}
+.worker-row:hover { background:rgba(61,184,90,0.03); }
+.worker-name { font-family:var(--mono); font-size:11px; color:var(--cream); }
+.worker-meta { font-family:var(--mono); font-size:9px; color:var(--smoke); margin-top:2px; }
+.worker-actions { display:flex; gap:8px; align-items:center; }
+
+/* Token result */
+.token-box {
+  background:var(--panel); border:1px solid var(--border-md);
+  border-radius:3px; padding:14px; margin:0 20px 16px;
+  word-break:break-all;
+}
+.token-label { font-family:var(--mono); font-size:8px; letter-spacing:0.3em; text-transform:uppercase; color:var(--gold); margin-bottom:8px; }
+.token-value { font-family:var(--mono); font-size:10px; color:var(--bright); margin-bottom:10px; }
+.token-url   { font-family:var(--mono); font-size:10px; color:var(--smoke); word-break:break-all; }
+
+/* GPS zone indicator */
+.gps-zone {
+  display:flex; align-items:center; gap:10px;
+  background:rgba(61,184,90,0.05); border:1px solid rgba(61,184,90,0.12);
+  border-radius:3px; padding:10px 14px; margin-bottom:14px;
+}
+.gps-dot { width:8px; height:8px; border-radius:50%; background:var(--bright); flex-shrink:0; }
+.gps-text { font-family:var(--mono); font-size:10px; color:var(--smoke); }
+.gps-text strong { color:var(--cream); display:block; font-size:11px; margin-bottom:1px; }
+
+/* Tabs within panel */
+.inner-tabs { display:flex; border-bottom:1px solid var(--border); }
+.inner-tab {
+  font-family:var(--mono); font-size:8px; letter-spacing:0.2em; text-transform:uppercase;
+  padding:8px 14px; color:var(--smoke); cursor:pointer; border-bottom:2px solid transparent;
+}
+.inner-tab.active { color:var(--gold-lt); border-bottom-color:var(--bright); }
+.inner-panel { display:none; }
+.inner-panel.active { display:block; }
+</style>
+</head>
+<body>
+
+<!-- TOPBAR -->
+<div class="topbar">
+  <div class="topbar-left">
+    <div class="logo">Sym<span>phony</span></div>
+    <span class="pill pill-gold">WORKER ONBOARDING</span>
+  </div>
+  <div class="topbar-right">
+    <span>PROG: <span class="text-gold" id="prog-display">—</span></span>
+    <span id="clock">—</span>
+  </div>
+</div>
+
+<!-- TABS -->
+<div class="tab-bar">
+  <a href="supervisory.html" class="tab">Governed Disbursement</a>
+  <a href="workers.html"     class="tab active">Worker Onboarding</a>
+  <a href="monitoring.html"  class="tab">Monitoring Report</a>
+  <a href="criteria.html"    class="tab">Pilot Criteria</a>
+  <a href="admin.html"       class="tab">Admin</a>
+</div>
+
+<!-- LAYOUT -->
+<div class="layout">
+
+  <!-- COL 1: FORMS -->
+  <div class="col">
+
+    <!-- REGISTER WORKER -->
+    <div class="form-section">
+      <div class="form-section-title">⊕ Register Worker</div>
+      <div class="field">
+        <label>Worker Name</label>
+        <input id="w-name" placeholder="e.g. Mercy Banda" />
+      </div>
+      <div class="field">
+        <label>MSISDN (Mobile Number)</label>
+        <input id="w-msisdn" placeholder="+260971100001" />
+      </div>
+      <div class="field">
+        <label>Payout Target</label>
+        <input id="w-payout" placeholder="MMO:+260971100001" />
+      </div>
+      <div class="gps-zone">
+        <div class="gps-dot"></div>
+        <div class="gps-text">
+          <strong>Chunga Dumpsite, Lusaka</strong>
+          Lat −15.4167 · Lon 28.2833 · Zone radius 250 m
+        </div>
+      </div>
+      <button class="btn btn-primary btn-full" onclick="registerWorker()" id="reg-btn">Register Worker</button>
+      <div id="reg-result" style="margin-top:12px"></div>
+    </div>
+
+    <!-- ISSUE TOKEN -->
+    <div class="form-section">
+      <div class="form-section-title">⟡ Issue Evidence Link Token</div>
+      <div class="field">
+        <label>Worker / Supplier ID</label>
+        <input id="t-worker-id" placeholder="Paste supplier_id from registry" />
+      </div>
+      <div class="field">
+        <label>Submitter MSISDN</label>
+        <input id="t-msisdn" placeholder="+260971100001" />
+      </div>
+      <div class="field">
+        <label>Instruction ID</label>
+        <input id="t-ins-id" placeholder="e.g. CHG-2026-00001" />
+      </div>
+      <div class="field">
+        <label>Submitter Class</label>
+        <select id="t-class">
+          <option value="WASTE_COLLECTOR">WASTE_COLLECTOR</option>
+          <option value="FIELD_OFFICER">FIELD_OFFICER</option>
+          <option value="BORROWER">BORROWER</option>
+          <option value="VENDOR">VENDOR</option>
+        </select>
+      </div>
+      <div class="inline-row">
+        <div class="field">
+          <label>Expires (seconds)</label>
+          <input id="t-ttl" type="number" value="900" min="60" max="86400" />
+        </div>
+        <div class="field">
+          <label>Max Distance (m)</label>
+          <input id="t-dist" type="number" value="250" min="10" />
+        </div>
+      </div>
+      <div class="field">
+        <label>Programme ID</label>
+        <input id="t-prog-id" placeholder="auto-filled" />
+      </div>
+      <div class="field">
+        <label>Tenant ID</label>
+        <input id="t-tenant-id" placeholder="auto-filled" />
+      </div>
+      <button class="btn btn-gold btn-full" onclick="issueToken()" id="issue-btn">Issue Token</button>
+      <div id="token-result" style="margin-top:12px"></div>
+    </div>
+
+  </div>
+
+  <!-- COL 2: REGISTRY + ISSUED TOKENS -->
+  <div class="col">
+    <div class="inner-tabs">
+      <div class="inner-tab active" onclick="switchTab('registry')">Worker Registry</div>
+      <div class="inner-tab" onclick="switchTab('tokens')">Issued Tokens</div>
+      <div class="inner-tab" onclick="switchTab('allowlist')">Programme Allowlist</div>
+    </div>
+
+    <!-- REGISTRY -->
+    <div class="inner-panel active" id="tab-registry">
+      <div style="padding:12px 18px;display:flex;justify-content:space-between;align-items:center">
+        <span class="mono-xs" id="registry-count">Loading…</span>
+        <button class="btn btn-ghost btn-sm" onclick="loadRegistry()">↻ Refresh</button>
+      </div>
+      <div id="registry-list"><div class="loading-row"><span class="spinner"></span>Loading…</div></div>
+    </div>
+
+    <!-- TOKENS -->
+    <div class="inner-panel" id="tab-tokens">
+      <div style="padding:12px 18px;display:flex;justify-content:space-between;align-items:center">
+        <span class="mono-xs">Recently issued tokens (this session)</span>
+        <button class="btn btn-ghost btn-sm" onclick="clearTokenHistory()">Clear</button>
+      </div>
+      <div id="token-history"><div class="loading-row" style="color:var(--smoke)">No tokens issued yet</div></div>
+    </div>
+
+    <!-- ALLOWLIST -->
+    <div class="inner-panel" id="tab-allowlist">
+      <div style="padding:18px">
+        <div class="form-section-title">Add Worker to Programme Allowlist</div>
+        <div class="field">
+          <label>Supplier ID</label>
+          <input id="al-supplier-id" placeholder="Supplier UUID" />
+        </div>
+        <div class="field">
+          <label>Programme ID</label>
+          <input id="al-prog-id" placeholder="auto-filled" />
+        </div>
+        <div class="field">
+          <label>Tenant ID</label>
+          <input id="al-tenant-id" placeholder="auto-filled" />
+        </div>
+        <div style="display:flex;gap:10px;margin-bottom:14px">
+          <button class="btn btn-primary" onclick="upsertAllowlist(true)">Allow</button>
+          <button class="btn btn-danger" onclick="upsertAllowlist(false)">Revoke</button>
+        </div>
+        <div id="al-result"></div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- TOAST AREA -->
+<div id="toast-area"></div>
+
+<script>
+const API = 'http://localhost:8080';
+let tenantId = '', programmeId = '', supplierApiKey = '';
+const tokenHistory = [];
+
+function tick() { document.getElementById('clock').textContent = new Date().toUTCString().slice(5,25)+' UTC'; }
+setInterval(tick,1000); tick();
+
+function toast(msg, type='ok') {
+  const el = Object.assign(document.createElement('div'), {className:`toast toast-${type}`, textContent:msg});
+  document.getElementById('toast-area').appendChild(el);
+  setTimeout(()=>el.remove(), 4000);
+}
+
+function switchTab(name) {
+  document.querySelectorAll('.inner-tab').forEach((t,i)=>{ const tabs=['registry','tokens','allowlist']; t.classList.toggle('active', tabs[i]===name); });
+  document.querySelectorAll('.inner-panel').forEach(p=>p.classList.remove('active'));
+  document.getElementById(`tab-${name}`).classList.add('active');
+}
+
+async function bootstrap() {
+  try {
+    const r = await fetch(`${API}/api/admin/onboarding/status`, {credentials:'include'});
+    if (!r.ok) throw new Error(r.status);
+    const d = await r.json();
+    const prog = (d.programmes||[]).find(p=>p.status==='ACTIVE') || (d.programmes||[])[0];
+    const ten  = (d.tenants||[])[0];
+    tenantId    = ten?.tenant_id  || '';
+    programmeId = prog?.programme_id || '';
+    supplierApiKey = window.__SYMPHONY_UI_CONTEXT__?.apiKey || '';
+    document.getElementById('prog-display').textContent = prog?.programme_key || programmeId.slice(0,12)+'…';
+    document.getElementById('t-prog-id').value   = programmeId;
+    document.getElementById('t-tenant-id').value = tenantId;
+    document.getElementById('al-prog-id').value   = programmeId;
+    document.getElementById('al-tenant-id').value = tenantId;
+    await loadRegistry();
+  } catch(e) {
+    toast('Cannot reach backend', 'err');
+  }
+}
+
+async function loadRegistry() {
+  document.getElementById('registry-list').innerHTML = '<div class="loading-row"><span class="spinner"></span>Loading…</div>';
+  try {
+    const r = await fetch(`${API}/api/admin/onboarding/status`, {credentials:'include'});
+    if (!r.ok) throw new Error(r.status);
+    const d = await r.json();
+    // The status endpoint returns tenants+programmes. Suppliers are registered via /v1/admin/suppliers/upsert
+    // and visible via programme policy read. Show what we have.
+    const tenants = d.tenants || [];
+    const programmes = d.programmes || [];
+    document.getElementById('registry-count').textContent = `${tenants.length} tenant(s) · ${programmes.length} programme(s)`;
+    document.getElementById('registry-list').innerHTML = `
+      <div style="padding:12px 18px">
+        <div class="card-hdr" style="margin-bottom:10px">Tenants</div>
+        ${tenants.map(t=>`<div class="worker-row">
+          <div>
+            <div class="worker-name">${t.display_name||t.tenant_key||'—'}</div>
+            <div class="worker-meta">${t.tenant_id||''}</div>
+          </div>
+          <span class="status status-${(t.status||'').toLowerCase()}">${t.status||'—'}</span>
+        </div>`).join('')}
+        <div class="card-hdr" style="margin:14px 0 10px">Programmes</div>
+        ${programmes.map(p=>`<div class="worker-row">
+          <div>
+            <div class="worker-name">${p.display_name||p.programme_key||'—'}</div>
+            <div class="worker-meta">${p.programme_id||''}</div>
+          </div>
+          <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px">
+            <span class="status status-${(p.status||'').toLowerCase()}">${p.status||'—'}</span>
+            ${p.policy_code?`<span class="pill pill-gold" style="font-size:7px">${p.policy_code}</span>`:''}
+          </div>
+        </div>`).join('')}
+      </div>
+    `;
+  } catch(e) {
+    document.getElementById('registry-list').innerHTML = `<div class="alert alert-red" style="margin:14px">${e.message}</div>`;
+  }
+}
+
+async function registerWorker() {
+  const name   = document.getElementById('w-name').value.trim();
+  const msisdn = document.getElementById('w-msisdn').value.trim();
+  const payout = document.getElementById('w-payout').value.trim() || msisdn;
+  if (!name || !msisdn || !tenantId || !programmeId) { toast('Fill all required fields', 'warn'); return; }
+  const btn = document.getElementById('reg-btn');
+  btn.disabled = true; btn.textContent = 'Registering…';
+  try {
+    const supplierId = crypto.randomUUID();
+    const r = await fetch(`${API}/v1/admin/suppliers/upsert`, {
+      method:'POST',
+      headers:{'Content-Type':'application/json', 'x-admin-api-key': supplierApiKey},
+      credentials:'include',
+      body: JSON.stringify({
+        tenant_id: tenantId, supplier_id: supplierId,
+        supplier_name: name, payout_target: payout,
+        registered_latitude: -15.4167, registered_longitude: 28.2833,
+        active: true
+      })
+    });
+    const d = await r.json();
+    if (!r.ok) throw new Error(d.error_code || r.status);
+
+    // Auto-allowlist on PWRM programme
+    await fetch(`${API}/v1/admin/program-supplier-allowlist/upsert`, {
+      method:'POST',
+      headers:{'Content-Type':'application/json', 'x-admin-api-key': supplierApiKey},
+      credentials:'include',
+      body: JSON.stringify({ tenant_id: tenantId, program_id: programmeId, supplier_id: supplierId, allowed: true })
+    });
+
+    document.getElementById('reg-result').innerHTML = `
+      <div class="alert alert-green">
+        <span class="alert-icon">✓</span>
+        <div>
+          <div>Worker registered and allowlisted</div>
+          <div style="font-size:9px;margin-top:3px;color:var(--smoke)">ID: ${supplierId}</div>
+        </div>
+      </div>`;
+
+    // Auto-fill issue form
+    document.getElementById('t-worker-id').value = supplierId;
+    document.getElementById('t-msisdn').value = msisdn;
+    toast(`Worker ${name} registered`, 'ok');
+    loadRegistry();
+  } catch(e) {
+    document.getElementById('reg-result').innerHTML = `<div class="alert alert-red"><span class="alert-icon">✕</span>${e.message}</div>`;
+  } finally { btn.disabled=false; btn.textContent='Register Worker'; }
+}
+
+async function issueToken() {
+  const workerId  = document.getElementById('t-worker-id').value.trim();
+  const msisdn    = document.getElementById('t-msisdn').value.trim();
+  const insId     = document.getElementById('t-ins-id').value.trim() || `CHG-2026-${String(Date.now()).slice(-5)}`;
+  const cls       = document.getElementById('t-class').value;
+  const ttl       = parseInt(document.getElementById('t-ttl').value)||900;
+  const dist      = parseFloat(document.getElementById('t-dist').value)||250;
+  const progId    = document.getElementById('t-prog-id').value.trim() || programmeId;
+  const tenId     = document.getElementById('t-tenant-id').value.trim() || tenantId;
+  if (!msisdn||!progId||!tenId) { toast('MSISDN, programme, and tenant are required', 'warn'); return; }
+  const btn = document.getElementById('issue-btn');
+  btn.disabled=true; btn.textContent='Issuing…';
+  try {
+    const body = {
+      tenant_id: tenId, instruction_id: insId, program_id: progId,
+      submitter_class: cls, submitter_msisdn: msisdn,
+      expected_latitude: -15.4167, expected_longitude: 28.2833,
+      max_distance_meters: dist, expires_in_seconds: ttl
+    };
+    const r = await fetch(`${API}/v1/evidence-links/issue`, {
+      method:'POST',
+      headers:{'Content-Type':'application/json','x-admin-api-key':supplierApiKey},
+      credentials:'include',
+      body: JSON.stringify(body)
+    });
+    const d = await r.json();
+    if (!r.ok) throw new Error(d.error_code||JSON.stringify(d.errors)||r.status);
+
+    const landingUrl = `http://localhost:8080/pilot-demo/evidence-link#token=${d.token}`;
+    document.getElementById('token-result').innerHTML = `
+      <div class="token-box">
+        <div class="token-label">Token Issued ✓</div>
+        <div class="token-value">${(d.token||'').slice(0,40)}…</div>
+        <div class="token-url">Landing URL: <a href="${landingUrl}" target="_blank" style="color:var(--gold-lt)">${landingUrl.slice(0,60)}…</a></div>
+        <div style="display:flex;gap:8px;margin-top:10px">
+          <button class="btn btn-ghost btn-sm" onclick="copyToClipboard('${d.token||''}')">Copy Token</button>
+          <button class="btn btn-ghost btn-sm" onclick="copyToClipboard('${landingUrl}')">Copy URL</button>
+          <a href="${landingUrl}" target="_blank" class="btn btn-gold btn-sm" style="text-decoration:none">Open Landing Page →</a>
+        </div>
+      </div>`;
+
+    tokenHistory.unshift({...d, issuedAt: new Date().toISOString(), instructionId: insId, workerId, msisdn});
+    renderTokenHistory();
+    switchTab('tokens');
+    toast(`Token issued for ${insId}`, 'ok');
+  } catch(e) {
+    document.getElementById('token-result').innerHTML = `<div class="alert alert-red"><span class="alert-icon">✕</span>${e.message}</div>`;
+  } finally { btn.disabled=false; btn.textContent='Issue Token'; }
+}
+
+function renderTokenHistory() {
+  if (!tokenHistory.length) return;
+  document.getElementById('token-history').innerHTML = tokenHistory.map(t=>`
+    <div class="worker-row" style="flex-direction:column;align-items:flex-start;gap:4px">
+      <div style="display:flex;justify-content:space-between;width:100%;align-items:center">
+        <span class="worker-name">${t.instruction_id||t.instructionId||'—'}</span>
+        <span class="status status-issued">ISSUED</span>
+      </div>
+      <div class="worker-meta">${t.msisdn||''} · ${t.submitter_class||''}</div>
+      <div class="worker-meta">${t.issuedAt?.slice(0,16)||''} · Expires: ${t.expires_at_utc?.slice(0,16)||''}</div>
+      <div style="display:flex;gap:6px;margin-top:4px">
+        <button class="btn btn-ghost btn-sm" onclick="copyToClipboard('${t.token||''}')">Copy Token</button>
+        <a href="http://localhost:8080/pilot-demo/evidence-link#token=${t.token||''}" target="_blank" class="btn btn-ghost btn-sm" style="text-decoration:none">Open →</a>
+      </div>
+    </div>
+  `).join('');
+}
+
+function clearTokenHistory() { tokenHistory.length=0; document.getElementById('token-history').innerHTML='<div class="loading-row" style="color:var(--smoke)">Cleared</div>'; }
+
+async function upsertAllowlist(allowed) {
+  const supplierId = document.getElementById('al-supplier-id').value.trim();
+  const progId     = document.getElementById('al-prog-id').value.trim() || programmeId;
+  const tenId      = document.getElementById('al-tenant-id').value.trim() || tenantId;
+  if (!supplierId||!progId||!tenId) { toast('All fields required', 'warn'); return; }
+  try {
+    const r = await fetch(`${API}/v1/admin/program-supplier-allowlist/upsert`, {
+      method:'POST',
+      headers:{'Content-Type':'application/json','x-admin-api-key':supplierApiKey},
+      credentials:'include',
+      body: JSON.stringify({ tenant_id:tenId, program_id:progId, supplier_id:supplierId, allowed })
+    });
+    const d = await r.json();
+    if (!r.ok) throw new Error(d.error_code||r.status);
+    document.getElementById('al-result').innerHTML=`<div class="alert alert-green"><span class="alert-icon">✓</span>${allowed?'Allowlisted':'Revoked'} successfully</div>`;
+    toast(`Supplier ${allowed?'allowlisted':'revoked'}`, 'ok');
+  } catch(e) {
+    document.getElementById('al-result').innerHTML=`<div class="alert alert-red"><span class="alert-icon">✕</span>${e.message}</div>`;
+  }
+}
+
+function copyToClipboard(text) {
+  navigator.clipboard.writeText(text).then(()=>toast('Copied to clipboard', 'ok')).catch(()=>toast('Copy failed', 'warn'));
+}
+
+bootstrap();
+</script>
+</body>
+</html>

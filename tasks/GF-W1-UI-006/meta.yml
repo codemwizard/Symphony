@@ -1,197 +1,108 @@
 schema_version: 1
 phase: '1'
 task_id: GF-W1-UI-006
-title: "Monitoring Report tab: full financial report display"
-owner_role: SUPERVISOR
-status: completed
-priority: HIGH
+title: Implement token detail slide-out panel with security properties and usage history
+owner_role: ARCHITECT
+status: planned
+priority: NORMAL
 risk_class: GOVERNANCE
 blast_radius: APP_LAYER
-
 intent: >-
-  Implement the Monitoring Report tab with disbursement banner, additionality row,
-  plastic totals table, tCO₂/credits row, benefit-sharing three-way split, ZGFT
-  alignment chips, and Generate Report button. This is the primary financial
-  transparency view.
-
+  Implement token detail slide-out panel showing complete token information including
+  security properties (type, signature, TTL, GPS lock, single-use) and usage history.
+  This task provides operators with detailed token inspection capability while maintaining
+  the existing slideout UI pattern for consistency. The panel enables operators to verify
+  token properties and track usage without cluttering the main token list view.
 anti_patterns:
-  - "Using floating-point for currency instead of the steering file constants"
-  - "Omitting the (indicative) qualifier from financial values"
-  - "Hardcoding benefit-sharing percentages instead of using BENEFIT_SHARE constant"
-  - "Not showing additionality row or hiding it when baseline is zero"
-
-out_of_scope:
-  - "Programme Health tab — done in GF-W1-UI-003/004/005"
-  - "Onboarding Console — handled by GF-W1-UI-007"
-  - "E2E verification — handled by GF-W1-UI-010"
-
-stop_conditions:
-  - "Financial values displayed without (indicative) qualifier => FAIL"
-  - "Additionality row missing or baseline not explicitly shown => FAIL"
-  - "Benefit-sharing block missing or percentages don't sum to 100% => FAIL"
-  - "tCO₂ constant is not 0.00048 => CRITICAL_FAIL"
-  - "PRICE_PER_TCO2_ZMW is not 150.0 => CRITICAL_FAIL"
-  - "Any node in the proof graph is orphaned => STOP"
-
-proof_guarantees:
-  - "grep verifies additionality row text pattern exists"
-  - "grep verifies benefit-sharing labels with percentages"
-  - "grep verifies indicative qualifier presence"
-  - "grep verifies canonical constants 0.00048 and 150.0"
-
-proof_limitations:
-  - "Financial computation correctness requires live API and manual cross-check"
-  - "Visual layout (3 sections filling 100vh) requires browser inspection"
-  - "Generate Report button functionality requires manual testing"
-
+  - "Creating new slideout CSS class instead of using existing .slideout class"
+  - "Not displaying all security properties in the detail panel"
+  - "Showing Revoke button for already-revoked tokens"
+  - "Panel animation broken or not using .open class pattern"
 depends_on:
-  - GF-W1-UI-002
-
+  - GF-W1-UI-005
 blocks:
-  - GF-W1-UI-010
-
+  - GF-W1-UI-007
 touches:
   - src/supervisory-dashboard/index.html
-  - tasks/GF-W1-UI-006/meta.yml
   - evidence/phase1/gf_w1_ui_006.json
-
-invariants:
-  - INV-GF-UI-002
-  - INV-GF-UI-004
-  - INV-GF-UI-005
-
+  - tasks/GF-W1-UI-006/meta.yml
+invariants: []
 work:
-  - >-
-    [ID gf_w1_ui_006_work_01] Section 1 (~20%): Disbursement status banner (same
-    red/green logic as Task 3 but from monitoring report API).
-  - >-
-    [ID gf_w1_ui_006_work_02] Section 2 (~50%): (a) Additionality row: "Baseline:
-    0 kg | Actual: N kg | Additionality: +N kg ● GREEN". Always shown. Green chip
-    when actual > 0, amber when 0. (b) Plastic totals table: PET, HDPE, LDPE, PP,
-    PS, OTHER, TOTAL with kg values. (c) tCO₂ and credits row: "Estimated tCO₂: X
-    | Estimated Credits: X credits (1 credit = 1 tCO₂, indicative)".
-  - >-
-    [ID gf_w1_ui_006_work_03] Section 3 (~30%): (a) Benefit sharing block (always
-    shown, values "(indicative)"): "Project Developer (50%): ZMW X", "Community
-    (30%): ZMW X", "National Fund (20%): ZMW X". (b) Three ZGFT alignment chips
-    (green): "Pollution Prevention ✓", "Circular Economy ✓", "DNSH Declared ✓".
-    (c) "Generate Report" button with amber spinner while in-flight.
-  - >-
-    [ID gf_w1_ui_006_work_04] Wire to GET /pilot-demo/api/monitoring-report/{programId}
-    on tab load and button click. Use TCO2_PER_KG = 0.00048, PRICE_PER_TCO2_ZMW = 150.0,
-    BENEFIT_SHARE = {0.50, 0.30, 0.20} from steering file constants.
-
+  - '[ID gf_w1_ui_006_work_item_01] Create slide-out panel HTML structure with id="token-detail-panel" class="slideout"'
+  - '[ID gf_w1_ui_006_work_item_02] Implement showTokenDetail(tokenId) function finding token in recentTokens array, populating panel, adding .open class'
+  - '[ID gf_w1_ui_006_work_item_03] Add token details display sections showing issued, expires, status, security properties, usage'
+  - '[ID gf_w1_ui_006_work_item_04] Add Revoke Token button with onclick calling revokeToken(tokenId), hidden if token already revoked'
+  - '[ID gf_w1_ui_006_work_item_05] Add Close button with onclick removing .open class from panel'
 acceptance_criteria:
-  - >-
-    [ID gf_w1_ui_006_work_01] Disbursement banner shows red/green based on completeness
-    from monitoring report endpoint.
-  - >-
-    [ID gf_w1_ui_006_work_02] Additionality row shows "Baseline: 0 kg | Actual: N kg |
-    Additionality: +N kg". Plastic totals table shows all 6 types + TOTAL. tCO₂ and
-    credits row shows with (indicative) qualifier.
-  - >-
-    [ID gf_w1_ui_006_work_03] Benefit sharing shows three rows with 50%/30%/20% split,
-    all marked (indicative). ZGFT chips all green. Generate Report button works.
-  - >-
-    [ID gf_w1_ui_006_work_04] Data wired to monitoring-report API. Constants match
-    steering file exactly: 0.00048, 150.0, {0.50, 0.30, 0.20}.
-
+  - '[ID gf_w1_ui_006_work_item_01] Panel structure exists with .slideout class matching existing pattern'
+  - '[ID gf_w1_ui_006_work_item_02] showTokenDetail() opens panel with correct token data'
+  - '[ID gf_w1_ui_006_work_item_03] All token details including 5 security properties are displayed'
+  - '[ID gf_w1_ui_006_work_item_04] Revoke button is visible for non-revoked tokens, hidden for revoked'
+  - '[ID gf_w1_ui_006_work_item_05] Close button successfully closes panel'
 negative_tests:
   - id: GF-W1-UI-006-N1
     description: >-
-      Grep for financial value patterns (ZMW, tCO₂, credits) not followed by "(indicative)"
-      or "(est.)" within the monitoring report tab section. Any unqualified financial
-      value => FAIL.
+      Verify that Revoke button is NOT shown for already-revoked tokens. Test by opening
+      detail panel for a revoked token and confirming the Revoke button is hidden or disabled.
     required: true
-
+  - id: GF-W1-UI-006-N2
+    description: >-
+      Verify that panel uses existing .slideout class and does not create duplicate CSS.
+      Grep for new slideout class definitions and confirm none exist.
+    required: true
 positive_tests:
   - id: GF-W1-UI-006-P1
     description: >-
-      Grep for additionality row "Baseline" and benefit sharing "Project Developer (50%)"
-      text patterns. Both must be present.
+      Verify that token detail panel opens smoothly, displays all security properties,
+      and closes correctly when Close button is clicked.
     required: true
-
 verification:
-  - >-
-    # [ID gf_w1_ui_006_work_01] [ID gf_w1_ui_006_work_02]
-    # [ID gf_w1_ui_006_work_03] [ID gf_w1_ui_006_work_04]
-    test -f src/supervisory-dashboard/index.html
-    && grep -q "Baseline" src/supervisory-dashboard/index.html
-    && grep -q "Additionality" src/supervisory-dashboard/index.html
-    && grep -q "Project Developer" src/supervisory-dashboard/index.html
-    && grep -q "indicative" src/supervisory-dashboard/index.html
-    && grep -q "0.00048" src/supervisory-dashboard/index.html
-    && cat src/supervisory-dashboard/index.html | grep "monitoring-report"
-    > evidence/phase1/gf_w1_ui_006.json || exit 1
-  - >-
-    # [ID gf_w1_ui_006_work_03]
-    test -f src/supervisory-dashboard/index.html
-    && grep -q "50%" src/supervisory-dashboard/index.html
-    && grep -q "30%" src/supervisory-dashboard/index.html
-    && cat src/supervisory-dashboard/index.html | grep "20%"
-    || exit 1
-
+  - grep -q 'showTokenDetail' src/supervisory-dashboard/index.html || exit 1
+  - grep -q 'id="token-detail-panel"' src/supervisory-dashboard/index.html || exit 1
+  - grep -q 'class="slideout"' src/supervisory-dashboard/index.html || exit 1
+  - test -f evidence/phase1/gf_w1_ui_006.json || exit 1
 evidence:
   - path: evidence/phase1/gf_w1_ui_006.json
     must_include:
       - task_id
-      - git_sha
-      - timestamp_utc
+      - timestamp
       - status
+      - slideout_panel_created
+      - show_function_implemented
+      - token_details_displayed
+      - revoke_button_present
+      - close_button_present
+      - security_properties_count
       - checks
       - observed_paths
-      - observed_hashes
       - command_outputs
       - execution_trace
-      - additionality_row_verified
-      - benefit_sharing_verified
-
 failure_modes:
-  - Financial values without (indicative) qualifier => FAIL
-  - Additionality row missing => FAIL
-  - Benefit-sharing percentages don't sum to 100% => FAIL
-  - Constants don't match steering file => CRITICAL_FAIL
-  - Evidence file missing => FAIL
-
+  - "Panel does not use existing .slideout class => UI.DESIGN_VIOLATION => FAIL"
+  - "Security properties not all displayed => FUNCTIONAL.INCOMPLETE_TOKEN_INFO => FAIL"
+  - "Revoke button shown for revoked tokens => UI.INCORRECT_BUTTON_STATE => FAIL"
+  - "Panel animation broken => UI.ANIMATION_BROKEN => FAIL"
 must_read:
   - docs/operations/AI_AGENT_OPERATION_MANUAL.md
   - .kiro/steering/ui-canonical-design.md
   - .kiro/steering/pwrm0001-domain-rules.md
-  - .kiro/steering/symphony-platform-conventions.md
-  - .kiro/specs/symphony-ui-canonical/requirements.md
-  - .kiro/specs/symphony-ui-canonical/design.md
-  - .kiro/specs/symphony-ui-canonical/tasks.md
-
 implementation_plan: docs/plans/phase1/GF-W1-UI-006/PLAN.md
 implementation_log: docs/plans/phase1/GF-W1-UI-006/EXEC_LOG.md
-
 notes: >-
-  Atomic task 6 of 10. The primary financial transparency view. Enforces 3 invariants:
-  additionality display, benefit-sharing, and carbon credits unit of account.
-  Phase Key: GF-W1. Phase Name: Green Finance Wave 1.
-
-client: cursor
-assigned_agent: supervisor
-model: <UNASSIGNED>
-
+  This task implements token detail inspection using existing slideout pattern for UI
+  consistency. All 5 security properties are displayed to make token guarantees explicit.
+  Revoke button state is controlled by token.revoked flag. Phase: Green Finance Wave 1.
+  Domain: green_finance.
+client: kiro
+assigned_agent: architect
+model: claude-sonnet-4-20250514
 domain: green_finance
-
-second_pilot_test:
-  candidate_sector_1: "PWRM0001 plastic collection (Chunga Dumpsite, Lusaka)"
-  candidate_sector_2: "VM0044 solar energy generation (hypothetical)"
-  unchanged_core_tables: []
-  unchanged_core_functions: []
-  adapter_only_differences:
-    - "Plastic totals table becomes Energy totals table (kWh columns)"
-    - "tCO₂ conversion constant differs per methodology"
-    - "Unit labels: kg→kWh, but structure identical"
-  jurisdiction_profile_impact: "None — financial logic is methodology-driven not jurisdiction-driven"
-  required_core_changes: []
-  explanation: >-
-    The monitoring report structure (disbursement banner, additionality row, totals
-    table, tCO₂/credits, benefit-sharing, ZGFT chips) is sector-neutral. Only the
-    unit labels, type breakdown columns, and conversion constants change. The
-    benefit-sharing three-way split is methodology-agnostic.
-  second_pilot_reviewed_by: "Supervisor (automated review)"
-
+pilot: true
+second_pilot_test: >-
+  The token detail slide-out panel pattern works for any programme requiring detailed
+  token inspection. For PWRM0001 plastic collection, the panel shows waste collector
+  token details. For a hypothetical VM0044 solar energy programme, the panel would show
+  solar technician token details. The security properties display (type, signature, TTL,
+  GPS lock, single-use) and slideout animation are identical; only the token metadata
+  fields differ per programme. The Revoke button state logic is universal across programmes.
 pilot_scope_ref: docs/pilots/PILOT_PWRM0001/SCOPE.md

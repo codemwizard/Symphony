@@ -1,116 +1,112 @@
-# GF-W1-UI-003 PLAN — Programme Health tab: KPI row and disbursement status card
+# GF-W1-UI-003 Implementation Plan
 
-Task: GF-W1-UI-003
-Owner: SUPERVISOR
-Depends on: GF-W1-UI-002
-failure_signature: PHASE1.GREEN_FINANCE.GF-W1-UI-003.KPI_ROW_FAIL
-canonical_reference: docs/operations/AI_AGENT_OPERATION_MANUAL.md
-
----
+## Failure Signature
+`PHASE1.GF-W1.UI-003.WORKER_LOOKUP_FORM`
 
 ## Objective
 
-Add four KPI cards and a Disbursement Status card to the Programme Health tab, wired to the reveal API endpoint. When done, KPI numbers update from real API data and the disbursement card dynamically switches between red (NOT AUTHORIZED) and green (AUTHORIZED).
+Implement worker lookup form with real-time registry validation to ensure operators can verify worker identity before issuing tokens. This prevents token issuance to unregistered workers or workers with invalid supplier_type.
 
----
+## Architectural Context
+
+This task sits after GF-W1-UI-002 (tab structure). It adds the worker lookup form that validates phone numbers and fetches worker details from the registry. The form must enforce supplier_type=WORKER validation and display neighbourhood labels instead of raw GPS coordinates.
+
+**Anti-patterns to avoid:**
+- Skipping phone number format validation
+- Displaying raw GPS coordinates
+- Enabling token issuance button before worker validation
+- Not handling error states
 
 ## Pre-conditions
 
-- [ ] GF-W1-UI-002 is status=completed (three-tab layout exists)
-- [ ] This PLAN.md has been reviewed and approved
-
----
-
-## Must Read (MANDATORY — read in full before any code changes)
-
-1. `.kiro/steering/ui-canonical-design.md` — CSS tokens, financial meaning rules
-2. `.kiro/steering/pwrm0001-domain-rules.md` — Programme identity, proof types
-3. `.kiro/steering/symphony-platform-conventions.md` — Runtime profile, API patterns
-4. `.kiro/specs/symphony-ui-canonical/requirements.md` — Requirements 1.2, 1.3, 1.4
-5. `.kiro/specs/symphony-ui-canonical/design.md` — KPI row wireframe, disbursement logic
-6. `.kiro/specs/symphony-ui-canonical/tasks.md` — Task 3 verbatim instructions
-
----
+1. GF-W1-UI-002 (tab structure) is complete
+2. screen-worker-tokens exists with two-column layout
+3. GET /pilot-demo/api/workers/lookup endpoint is functional
+4. resolveNeighbourhoodLabel() function exists in codebase
 
 ## Files to Change
 
 | File | Action | Reason |
 |------|--------|--------|
-| `src/supervisory-dashboard/index.html` | MODIFY | Add KPI cards and disbursement card |
-| `tasks/GF-W1-UI-003/meta.yml` | MODIFY | Update status |
-| `evidence/phase1/gf_w1_ui_003.json` | CREATE | Evidence |
-
----
+| `src/supervisory-dashboard/index.html` | MODIFY | Add phone input, lookupWorker() function, worker details panel, error states, button |
+| `evidence/phase1/gf_w1_ui_003.json` | CREATE | Create evidence file documenting validation and API integration |
 
 ## Stop Conditions
 
-- **If KPI values are hardcoded** → STOP
-- **If disbursement card does not change colour** → STOP
-- **If any node in the proof graph is orphaned** → STOP
-
----
+1. Phone validation missing or accepts invalid format
+2. Raw GPS coordinates displayed anywhere
+3. Button enabled before worker validation completes
+4. supplier_type validation missing (accepts non-WORKER types)
+5. Error states not handled (no feedback for invalid workers)
 
 ## Implementation Steps
 
-### Step 1: KPI cards
-**What:** `[ID gf_w1_ui_003_work_01]` Four KPI cards in Programme Health div.
-**How:** Create cards with labels "Evidence Submissions", "Exceptions", "Complete", "Completeness Rate". Large number + small label pattern.
-**Done when:** All four labels present in HTML.
+### Step 1: Add Phone Number Input
+**Tracking ID:** W1  
+**What:** Add phone number input field with +260XXXXXXXXX format validation  
+**How:** Add `<input type="tel" id="worker-phone" pattern="\\+260[0-9]{9}" onblur="validatePhoneFormat()">` with validation function  
+**Done-when:** Input validates format on blur, shows error for invalid format
 
-### Step 2: Disbursement card
-**What:** `[ID gf_w1_ui_003_work_02]` Full-width Disbursement Status card with dynamic styling.
-**How:** `rate < 1.0` or `total_collections == 0` → red, text "NOT AUTHORIZED — Incomplete MRV (N%)". `rate == 1.0` and `total_collections > 0` → green, "AUTHORIZED".
-**Done when:** Both text patterns exist in HTML.
+### Step 2: Implement lookupWorker Function
+**Tracking ID:** W2  
+**What:** Implement lookupWorker() function calling GET /pilot-demo/api/workers/lookup  
+**How:** Add async function that fetches worker data, checks supplier_type=WORKER, calls resolveNeighbourhoodLabel() for GPS  
+**Done-when:** Function fetches worker data, validates supplier_type, returns neighbourhood label
 
-### Step 3: Wire to API
-**What:** `[ID gf_w1_ui_003_work_03]` Wire to reveal endpoint and fit in top 40% viewport.
-**How:** Extend `initDashboard()` to fetch and populate cards.
-**Done when:** API URL referenced in JS code.
+### Step 3: Add Worker Details Panel
+**Tracking ID:** W3  
+**What:** Add worker details display panel  
+**How:** Add div showing worker_id, supplier_type, status, neighbourhood label with green confirmation styling  
+**Done-when:** Panel displays all worker details with neighbourhood label (no raw coordinates)
 
-### Step 4: Emit evidence
-```bash
-# [ID gf_w1_ui_003_work_01] [ID gf_w1_ui_003_work_02] [ID gf_w1_ui_003_work_03]
-test -f src/supervisory-dashboard/index.html \
-  && grep -q "Evidence Submissions" src/supervisory-dashboard/index.html \
-  && grep -q "NOT AUTHORIZED" src/supervisory-dashboard/index.html \
-  && cat src/supervisory-dashboard/index.html | grep "reveal" \
-  > evidence/phase1/gf_w1_ui_003.json || exit 1
-```
+### Step 4: Implement Error States
+**Tracking ID:** W4  
+**What:** Implement error states for invalid workers  
+**How:** Add error message divs for: not registered (404), invalid supplier_type (!= WORKER), inactive status  
+**Done-when:** Each error state shows appropriate red error message
 
----
+### Step 5: Add Token Issuance Button
+**Tracking ID:** W5  
+**What:** Add Request Collection Token button (disabled by default)  
+**How:** Add `<button id="issue-token-btn" disabled onclick="issueToken()">Request Collection Token</button>`, enable only after valid worker confirmed  
+**Done-when:** Button is disabled until valid worker confirmed, enabled after confirmation
 
 ## Verification
 
-```bash
-# [ID gf_w1_ui_003_work_01] [ID gf_w1_ui_003_work_02] [ID gf_w1_ui_003_work_03]
-test -f src/supervisory-dashboard/index.html \
-  && grep -q "Evidence Submissions" src/supervisory-dashboard/index.html \
-  && grep -q "Completeness Rate" src/supervisory-dashboard/index.html \
-  && grep -q "NOT AUTHORIZED" src/supervisory-dashboard/index.html \
-  && grep -q "AUTHORIZED" src/supervisory-dashboard/index.html \
-  && cat src/supervisory-dashboard/index.html | grep "reveal" \
-  > evidence/phase1/gf_w1_ui_003.json || exit 1
-```
-
----
+| ID | Command | Purpose |
+|----|---------|---------|
+| V1 | `grep -q 'lookupWorker' src/supervisory-dashboard/index.html \|\| exit 1` | Confirm lookupWorker function exists |
+| V2 | `grep -q 'resolveNeighbourhoodLabel' src/supervisory-dashboard/index.html \|\| exit 1` | Confirm neighbourhood label function used |
+| V3 | `grep -q 'supplier_type.*WORKER' src/supervisory-dashboard/index.html \|\| exit 1` | Confirm supplier_type validation exists |
 
 ## Evidence Contract
 
-File: `evidence/phase1/gf_w1_ui_003.json`
-Required fields: task_id, git_sha, timestamp_utc, status, checks, observed_paths, observed_hashes, command_outputs, execution_trace
+The implementation MUST emit `evidence/phase1/gf_w1_ui_003.json` with these required fields:
 
----
+```json
+{
+  "task_id": "GF-W1-UI-003",
+  "timestamp": "ISO8601",
+  "phone_validation_implemented": true,
+  "lookup_api_integrated": true,
+  "worker_details_panel_present": true,
+  "error_states_handled": true,
+  "button_disabled_until_valid": true
+}
+```
 
 ## Rollback
 
-1. Revert: `git checkout HEAD -- src/supervisory-dashboard/index.html`
-2. Update status back to `planned`
+If implementation fails:
 
----
+1. Revert changes to `src/supervisory-dashboard/index.html` (remove phone input, lookupWorker function, worker details panel)
+2. Delete `evidence/phase1/gf_w1_ui_003.json`
 
-## Risk
+## Risk Assessment
 
 | Risk | Consequence | Mitigation |
 |------|-------------|------------|
-| KPI values hardcoded | FAIL | Code review for API wiring |
-| Disbursement doesn't switch | CRITICAL_FAIL | Manual browser test |
+| Phone validation missing | FUNCTIONAL.INVALID_INPUT_ACCEPTED | Test with invalid formats, ensure validation triggers |
+| Raw GPS coordinates displayed | UI.DESIGN_VIOLATION | Use resolveNeighbourhoodLabel() for all location displays |
+| Button enabled prematurely | FUNCTIONAL.PREMATURE_TOKEN_ISSUANCE | Test button state before and after worker validation |
+| supplier_type validation missing | SECURITY.INVALID_WORKER_TYPE_ACCEPTED | Explicitly check supplier_type === "WORKER" |

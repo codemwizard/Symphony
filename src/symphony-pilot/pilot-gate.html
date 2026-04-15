@@ -1,0 +1,571 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Symphony — Pilot Gate</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="_shared.css">
+  <style>
+    html, body { overflow: hidden; }
+    body { display: flex; flex-direction: column; height: 100vh; }
+
+    .main-container {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      position: relative;
+    }
+
+    /* Zone 1: Gate Status Banner */
+    .gate-status-zone { padding: 24px 40px; flex-shrink: 0; }
+    .gate-banner {
+      border-radius: 8px;
+      padding: 20px 28px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .gate-banner.pass { background: var(--green-bg); border: 1px solid var(--green); }
+    .gate-banner.fail { background: var(--red-bg); border: 1px solid var(--red); }
+    .gate-banner.pending { background: var(--amber-bg); border: 1px solid var(--amber); }
+
+    .gate-left { display: flex; align-items: center; gap: 16px; }
+    .gate-icon { width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; }
+    .gate-icon.pass { color: var(--green); }
+    .gate-icon.fail { color: var(--red); }
+    .gate-icon.pending { color: var(--amber); }
+
+    .gate-title { font-size: 28px; font-weight: 800; }
+    .gate-title.pass { color: var(--green); }
+    .gate-title.fail { color: var(--red); }
+    .gate-title.pending { color: var(--amber); }
+
+    .gate-right { text-align: right; display: flex; align-items: center; gap: 24px; }
+    .gate-meta { font-size: 15px; color: var(--muted); }
+    .gate-meta .timestamp { font-family: 'JetBrains Mono', monospace; font-size: 13px; margin-top: 4px; }
+
+    .refresh-btn {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      padding: 8px 14px;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      background: transparent;
+      color: var(--text);
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .refresh-btn:hover { border-color: var(--muted); background: rgba(255,255,255,0.03); }
+
+    /* Zone 2: Three Criteria Columns */
+    .criteria-zone {
+      padding: 0 40px;
+      flex: 1;
+      display: flex;
+      gap: 20px;
+      overflow: hidden;
+    }
+    .criteria-column {
+      flex: 1;
+      background: var(--surface);
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+    .column-header {
+      padding: 16px 20px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-shrink: 0;
+    }
+    .column-title { font-size: 16px; font-weight: 700; }
+    .column-badge {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 10px;
+      font-weight: 700;
+      padding: 4px 10px;
+      border-radius: 4px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    .column-badge.pass { background: var(--green-bg); color: var(--green); }
+    .column-badge.fail { background: var(--red-bg); color: var(--red); }
+    .column-badge.pending { background: var(--amber-bg); color: var(--amber); }
+
+    .column-content { flex: 1; overflow-y: auto; padding: 8px 0; }
+
+    .criterion-row {
+      padding: 12px 20px;
+      border-bottom: 1px solid rgba(255,255,255,0.05);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+    .criterion-row:hover { background: rgba(255,255,255,0.03); }
+    .criterion-row:last-child { border-bottom: none; }
+
+    .criterion-left { display: flex; align-items: center; gap: 12px; }
+    .status-icon {
+      width: 16px; height: 16px;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .status-icon.pass::before {
+      content: ''; width: 10px; height: 10px;
+      background: var(--green); border-radius: 50%;
+      display: block;
+    }
+    .status-icon.pending::before {
+      content: ''; width: 10px; height: 10px;
+      border: 2px solid var(--amber); border-radius: 50%;
+      display: block;
+    }
+    .status-icon.fail::before {
+      content: ''; width: 10px; height: 10px;
+      background: var(--red); transform: rotate(45deg);
+      display: block;
+    }
+    .criterion-name { font-size: 15px; }
+    .invariant-tag { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--muted); }
+
+    /* Zone 3: Detail Panel Overlay */
+    .detail-panel {
+      position: absolute;
+      top: 0; right: -400px;
+      width: 380px; height: 100%;
+      background: var(--surface);
+      border-left: 1px solid var(--border);
+      padding: 24px;
+      display: flex;
+      flex-direction: column;
+      transition: right 0.3s ease;
+      z-index: 100;
+    }
+    .detail-panel.open { right: 0; }
+
+    .detail-close {
+      position: absolute;
+      top: 20px; right: 20px;
+      width: 32px; height: 32px;
+      background: transparent;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      color: var(--muted);
+      cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 18px;
+      transition: all 0.2s;
+    }
+    .detail-close:hover { color: var(--text); border-color: var(--muted); }
+
+    .detail-title { font-size: 18px; font-weight: 700; margin-bottom: 12px; padding-right: 40px; }
+
+    .detail-status-chip {
+      display: inline-block;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px; font-weight: 700;
+      padding: 4px 12px; border-radius: 4px;
+      text-transform: uppercase; margin-bottom: 24px;
+    }
+    .detail-status-chip.pass { background: var(--green-bg); color: var(--green); }
+    .detail-status-chip.fail { background: var(--red-bg); color: var(--red); }
+    .detail-status-chip.pending { background: var(--amber-bg); color: var(--amber); }
+
+    .detail-rows { flex: 1; display: flex; flex-direction: column; gap: 16px; }
+    .detail-row { display: flex; flex-direction: column; gap: 4px; }
+    .detail-label {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px; font-weight: 600;
+      color: var(--muted); text-transform: uppercase; letter-spacing: 0.05em;
+    }
+    .detail-value { font-family: 'JetBrains Mono', monospace; font-size: 14px; color: var(--text); }
+
+    .verify-btn {
+      margin-top: auto;
+      padding: 14px;
+      border: 1px solid var(--green);
+      border-radius: 6px;
+      background: transparent;
+      color: var(--green);
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 12px; font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: flex; align-items: center; justify-content: center; gap: 8px;
+    }
+    .verify-btn:hover { background: var(--green-bg); }
+    .verify-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+
+    .spinner {
+      width: 14px; height: 14px;
+      border: 2px solid var(--green);
+      border-top-color: transparent;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .verify-result {
+      margin-top: 12px; padding: 10px;
+      border-radius: 6px; font-size: 13px; text-align: center;
+    }
+    .verify-result.success { background: var(--green-bg); color: var(--green); }
+    .verify-result.error { background: var(--red-bg); color: var(--red); }
+
+    /* Bottom Bar */
+    .bottom-bar {
+      padding: 16px 40px;
+      border-top: 1px solid var(--border);
+      display: flex; justify-content: space-between; align-items: center;
+      flex-shrink: 0;
+      background: var(--surface);
+    }
+    .last-poll { font-family: 'JetBrains Mono', monospace; font-size: 13px; color: var(--muted); }
+    .export-btn {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px; text-transform: uppercase; letter-spacing: 0.04em;
+      padding: 8px 14px;
+      border: 1px solid var(--border); border-radius: 6px;
+      background: transparent; color: var(--text);
+      cursor: pointer; transition: all 0.2s;
+    }
+    .export-btn:hover { border-color: var(--muted); }
+
+    .loading-state {
+      display: flex; align-items: center; justify-content: center;
+      height: 100%; color: var(--muted);
+    }
+
+    @media (max-width: 1100px) {
+      .criteria-zone { flex-direction: column; overflow-y: auto; }
+      .criteria-column { max-height: 400px; }
+    }
+    @media (max-width: 768px) {
+      .gate-status-zone { padding: 16px 20px; }
+      .gate-banner { flex-direction: column; gap: 16px; text-align: center; }
+      .gate-left { flex-direction: column; }
+      .gate-right { flex-direction: column; text-align: center; }
+      .criteria-zone { padding: 0 20px; }
+      .bottom-bar { padding: 12px 20px; flex-direction: column; gap: 12px; }
+      .detail-panel { width: 100%; right: -100%; }
+    }
+  </style>
+</head>
+<body>
+  <header class="topbar">
+    <div class="logo"><span class="logo-sym">Sym</span><span class="logo-phony">phony</span></div>
+    <div class="topbar-right">
+      <div class="topbar-title">Chunga Dumpsite · PWRM0001</div>
+      <div class="topbar-subtitle">Regulated by ZEMA / Bank of Zambia</div>
+    </div>
+  </header>
+
+  <nav class="tabbar">
+    <a class="tab" href="overview.html">Overview</a>
+    <a class="tab" href="program-health.html">Programme Health</a>
+    <a class="tab" href="monitoring-report.html">Monitoring Report</a>
+    <a class="tab" href="token-issuance.html">Token Issuance</a>
+    <a class="tab" href="instructions.html">Instructions</a>
+    <a class="tab" href="success-criteria.html">Success Criteria</a>
+    <a class="tab" href="onboarding.html">Onboarding</a>
+    <a class="tab active" href="pilot-gate.html">Pilot Gate</a>
+  </nav>
+
+  <div class="main-container">
+    <!-- Zone 1: Gate Status -->
+    <div class="gate-status-zone">
+      <div id="gate-banner" class="gate-banner pass">
+        <div class="gate-left">
+          <div class="gate-icon pass" id="gate-icon">
+            <svg width="40" height="40" viewBox="0 0 40 40" fill="none">
+              <circle cx="20" cy="20" r="18" stroke="currentColor" stroke-width="3"/>
+              <path d="M12 20L18 26L28 14" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </div>
+          <span class="gate-title pass" id="gate-title">PILOT GATE: PASS</span>
+        </div>
+        <div class="gate-right">
+          <div class="gate-meta">
+            <div id="gate-summary">All success criteria met</div>
+            <div class="timestamp" id="gate-timestamp">--</div>
+          </div>
+          <button class="refresh-btn" id="refresh-btn">REFRESH NOW</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Zone 2: Criteria Columns -->
+    <div class="criteria-zone">
+      <div class="criteria-column">
+        <div class="column-header">
+          <span class="column-title">TECHNICAL</span>
+          <span class="column-badge pass" id="tech-badge">ALL PASS</span>
+        </div>
+        <div class="column-content" id="technical-list">
+          <div class="loading-state">Loading...</div>
+        </div>
+      </div>
+
+      <div class="criteria-column">
+        <div class="column-header">
+          <span class="column-title">OPERATIONAL</span>
+          <span class="column-badge pass" id="ops-badge">ALL PASS</span>
+        </div>
+        <div class="column-content" id="operational-list">
+          <div class="loading-state">Loading...</div>
+        </div>
+      </div>
+
+      <div class="criteria-column">
+        <div class="column-header">
+          <span class="column-title">REGULATORY</span>
+          <span class="column-badge pass" id="reg-badge">ALL PASS</span>
+        </div>
+        <div class="column-content" id="regulatory-list">
+          <div class="loading-state">Loading...</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Zone 3: Detail Panel -->
+    <div class="detail-panel" id="detail-panel">
+      <button class="detail-close" id="detail-close">&times;</button>
+      <h2 class="detail-title" id="detail-title">Criterion Name</h2>
+      <span class="detail-status-chip pass" id="detail-status">PASS</span>
+      <div class="detail-rows">
+        <div class="detail-row">
+          <span class="detail-label">INVARIANTS</span>
+          <span class="detail-value" id="detail-invariants">--</span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">METHOD</span>
+          <span class="detail-value" id="detail-method">--</span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">FREQUENCY</span>
+          <span class="detail-value" id="detail-frequency">--</span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">LAST VERIFIED</span>
+          <span class="detail-value" id="detail-last-verified">--</span>
+        </div>
+      </div>
+      <button class="verify-btn" id="verify-btn">RUN VERIFICATION NOW</button>
+      <div class="verify-result" id="verify-result" style="display:none"></div>
+    </div>
+
+    <!-- Bottom Bar -->
+    <div class="bottom-bar">
+      <span class="last-poll">Last checked: <span id="last-poll-time">--</span></span>
+      <button class="export-btn" id="export-btn">EXPORT JSON REPORT</button>
+    </div>
+  </div>
+
+  <script>
+    let criteriaData = null;
+    let selectedCriterion = null;
+    let pollInterval = null;
+    let countdownInterval = null;
+    let nextCheckIn = 30;
+
+    function formatTime(isoString) {
+      return new Date(isoString).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+    }
+
+    function renderCriterionRow(criterion) {
+      const statusClass = criterion.status.toLowerCase();
+      const invariants = criterion.invariants && criterion.invariants.length > 0
+        ? criterion.invariants.join(', ')
+        : (criterion.detail || '—');
+      return `
+        <div class="criterion-row" data-id="${criterion.id}" onclick="openDetail('${criterion.id}')">
+          <div class="criterion-left">
+            <div class="status-icon ${statusClass}"></div>
+            <span class="criterion-name">${criterion.name}</span>
+          </div>
+          <span class="invariant-tag">${invariants}</span>
+        </div>
+      `;
+    }
+
+    function getColumnStatus(criteria) {
+      if (criteria.some(c => c.status === 'FAIL')) return { status: 'fail', label: 'ATTENTION REQUIRED' };
+      if (criteria.some(c => c.status === 'PENDING')) return { status: 'pending', label: 'PENDING' };
+      return { status: 'pass', label: 'ALL PASS' };
+    }
+
+    function updateGateBanner() {
+      if (!criteriaData) return;
+      const all = [...criteriaData.technical, ...criteriaData.operational, ...criteriaData.regulatory];
+      const failCount = all.filter(c => c.status === 'FAIL').length;
+      const pendingCount = all.filter(c => c.status === 'PENDING').length;
+
+      const banner = document.getElementById('gate-banner');
+      const icon = document.getElementById('gate-icon');
+      const title = document.getElementById('gate-title');
+      const summary = document.getElementById('gate-summary');
+      const timestamp = document.getElementById('gate-timestamp');
+
+      banner.classList.remove('pass', 'fail', 'pending');
+      icon.classList.remove('pass', 'fail', 'pending');
+      title.classList.remove('pass', 'fail', 'pending');
+
+      if (failCount > 0) {
+        banner.classList.add('fail'); icon.classList.add('fail'); title.classList.add('fail');
+        icon.innerHTML = `<svg width="40" height="40" viewBox="0 0 40 40" fill="none"><circle cx="20" cy="20" r="18" stroke="currentColor" stroke-width="3"/><path d="M14 14L26 26M26 14L14 26" stroke="currentColor" stroke-width="3" stroke-linecap="round"/></svg>`;
+        title.textContent = 'PILOT GATE: ATTENTION REQUIRED';
+        summary.textContent = `${failCount} criteria require attention`;
+      } else if (pendingCount > 0) {
+        banner.classList.add('pending'); icon.classList.add('pending'); title.classList.add('pending');
+        icon.innerHTML = `<svg width="40" height="40" viewBox="0 0 40 40" fill="none"><circle cx="20" cy="20" r="18" stroke="currentColor" stroke-width="3" stroke-dasharray="6 4"/></svg>`;
+        title.textContent = 'VERIFICATION IN PROGRESS';
+        summary.innerHTML = `${pendingCount} criteria pending · Next check in ${nextCheckIn}s`;
+      } else {
+        banner.classList.add('pass'); icon.classList.add('pass'); title.classList.add('pass');
+        icon.innerHTML = `<svg width="40" height="40" viewBox="0 0 40 40" fill="none"><circle cx="20" cy="20" r="18" stroke="currentColor" stroke-width="3"/><path d="M12 20L18 26L28 14" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+        title.textContent = 'PILOT GATE: PASS';
+        summary.textContent = `All ${all.length} success criteria met`;
+      }
+      timestamp.textContent = formatTime(criteriaData.lastVerified);
+    }
+
+    function renderColumns() {
+      if (!criteriaData) return;
+      const cols = [
+        { key: 'technical', listId: 'technical-list', badgeId: 'tech-badge' },
+        { key: 'operational', listId: 'operational-list', badgeId: 'ops-badge' },
+        { key: 'regulatory', listId: 'regulatory-list', badgeId: 'reg-badge' }
+      ];
+      cols.forEach(({ key, listId, badgeId }) => {
+        const colStatus = getColumnStatus(criteriaData[key]);
+        const badge = document.getElementById(badgeId);
+        badge.className = `column-badge ${colStatus.status}`;
+        badge.textContent = colStatus.label;
+        document.getElementById(listId).innerHTML = criteriaData[key].map(renderCriterionRow).join('');
+      });
+    }
+
+    function openDetail(criterionId) {
+      if (!criteriaData) return;
+      const all = [...criteriaData.technical, ...criteriaData.operational, ...criteriaData.regulatory];
+      selectedCriterion = all.find(c => c.id === criterionId);
+      if (!selectedCriterion) return;
+
+      const statusClass = selectedCriterion.status.toLowerCase();
+      document.getElementById('detail-title').textContent = selectedCriterion.name;
+
+      const statusChip = document.getElementById('detail-status');
+      statusChip.className = `detail-status-chip ${statusClass}`;
+      statusChip.textContent = selectedCriterion.status;
+
+      document.getElementById('detail-invariants').textContent =
+        selectedCriterion.invariants?.length > 0 ? selectedCriterion.invariants.join(', ') : '—';
+      document.getElementById('detail-method').textContent = selectedCriterion.method || '—';
+      document.getElementById('detail-frequency').textContent = selectedCriterion.frequency || '—';
+      document.getElementById('detail-last-verified').textContent = formatTime(selectedCriterion.lastVerified);
+      document.getElementById('verify-result').style.display = 'none';
+      document.getElementById('detail-panel').classList.add('open');
+    }
+
+    function closeDetail() {
+      document.getElementById('detail-panel').classList.remove('open');
+      selectedCriterion = null;
+    }
+
+    async function runVerification() {
+      if (!selectedCriterion) return;
+      const btn = document.getElementById('verify-btn');
+      const result = document.getElementById('verify-result');
+      btn.disabled = true;
+      btn.innerHTML = '<div class="spinner"></div> VERIFYING...';
+      result.style.display = 'none';
+      try {
+        const response = await fetch('/pilot-demo/api/pilot-success-criteria', {
+          method: 'POST',
+          credentials: 'include',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ criterionId: selectedCriterion.id })
+        });
+        const data = await response.json();
+        result.className = 'verify-result success';
+        result.textContent = `Verification passed at ${formatTime(data.verifiedAt)}`;
+        result.style.display = 'block';
+        selectedCriterion.status = data.status;
+        selectedCriterion.lastVerified = data.verifiedAt;
+        document.getElementById('detail-last-verified').textContent = formatTime(data.verifiedAt);
+        const statusChip = document.getElementById('detail-status');
+        statusChip.className = `detail-status-chip ${data.status.toLowerCase()}`;
+        statusChip.textContent = data.status;
+        renderColumns();
+        updateGateBanner();
+      } catch (error) {
+        result.className = 'verify-result error';
+        result.textContent = 'Verification failed. Please try again.';
+        result.style.display = 'block';
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = 'RUN VERIFICATION NOW';
+      }
+    }
+
+    function exportReport() {
+      if (!criteriaData) return;
+      const blob = new Blob([JSON.stringify({ ...criteriaData, exportedAt: new Date().toISOString() }, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url; a.download = `pilot_success_criteria_${Date.now()}.json`;
+      a.click(); URL.revokeObjectURL(url);
+    }
+
+    async function fetchCriteria() {
+      try {
+        const response = await fetch('/pilot-demo/api/pilot-success-criteria', { credentials: 'include' });
+        if (!response.ok) throw new Error('Failed to fetch');
+        criteriaData = await response.json();
+        renderColumns();
+        updateGateBanner();
+        document.getElementById('last-poll-time').textContent = formatTime(new Date().toISOString());
+      } catch (error) {
+        console.error('Error fetching criteria:', error);
+      }
+    }
+
+    function startPolling() {
+      fetchCriteria();
+      pollInterval = setInterval(fetchCriteria, 30000);
+      countdownInterval = setInterval(() => {
+        nextCheckIn--;
+        if (nextCheckIn <= 0) nextCheckIn = 30;
+        updateGateBanner();
+      }, 1000);
+    }
+
+    function stopPolling() {
+      if (pollInterval) clearInterval(pollInterval);
+      if (countdownInterval) clearInterval(countdownInterval);
+    }
+
+    document.addEventListener('visibilitychange', () => {
+      if (document.hidden) { stopPolling(); } else { nextCheckIn = 30; startPolling(); }
+    });
+
+    document.getElementById('detail-close').addEventListener('click', closeDetail);
+    document.getElementById('verify-btn').addEventListener('click', runVerification);
+    document.getElementById('refresh-btn').addEventListener('click', () => { nextCheckIn = 30; fetchCriteria(); });
+    document.getElementById('export-btn').addEventListener('click', exportReport);
+
+    document.addEventListener('DOMContentLoaded', startPolling);
+  </script>
+</body>
+</html>

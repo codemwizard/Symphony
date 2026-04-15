@@ -1,114 +1,112 @@
-# GF-W1-UI-009 PLAN — Wire Program.cs to serve canonical recipient landing page
+# GF-W1-UI-009 Implementation Plan
 
-Task: GF-W1-UI-009
-Owner: SUPERVISOR
-Depends on: GF-W1-UI-008
-failure_signature: PHASE1.GREEN_FINANCE.GF-W1-UI-009.PROGRAMCS_WIRING_FAIL
-canonical_reference: docs/operations/AI_AGENT_OPERATION_MANUAL.md
-
----
+## Failure Signature
+`PHASE1.GF-W1.UI-009.TOKEN_E2E_VERIFICATION`
 
 ## Objective
 
-Change the GET /pilot-demo/evidence-link route in Program.cs to serve the new
-`src/recipient-landing/index.html` instead of `index-2.html`. One-line file path change.
-No other modifications to Program.cs.
-
----
+Create end-to-end verification script testing complete worker token issuance lifecycle including issuance, submission, and security property enforcement.
 
 ## Pre-conditions
 
-- [ ] GF-W1-UI-008 is status=completed (canonical recipient landing page exists)
-- [ ] This PLAN.md has been reviewed and approved
-
----
-
-## Must Read (MANDATORY — read in full before any code changes)
-
-1. `.kiro/steering/ui-canonical-design.md` — Canonical file paths
-2. `.kiro/steering/pwrm0001-domain-rules.md` — Programme identity
-3. `.kiro/steering/symphony-platform-conventions.md` — Runtime profile, route conventions
-4. `.kiro/specs/symphony-ui-canonical/requirements.md` — Requirement 4.6
-5. `.kiro/specs/symphony-ui-canonical/design.md` — Route mapping
-6. `.kiro/specs/symphony-ui-canonical/tasks.md` — Task 9 verbatim instructions
-
----
+1. GF-W1-UI-004 (token issuance) is complete
+2. POST /pilot-demo/api/evidence-links/issue endpoint is functional
+3. Worker submission endpoint accepts tokens
+4. Supervisory reveal endpoint is functional
 
 ## Files to Change
 
 | File | Action | Reason |
 |------|--------|--------|
-| `services/ledger-api/dotnet/src/LedgerApi/Program.cs` | MODIFY | Change file path for evidence-link route |
-| `tasks/GF-W1-UI-009/meta.yml` | MODIFY | Update status to completed |
-| `evidence/phase1/gf_w1_ui_009.json` | CREATE | Evidence artifact |
-
----
+| `scripts/dev/verify_worker_token_issuance_e2e.sh` | CREATE | End-to-end verification script |
+| `evidence/phase1/worker_token_issuance_e2e.json` | CREATE | Evidence file |
+| `.toolchain/script_integrity/verifier_hashes.sha256` | MODIFY | Add hash for new script |
 
 ## Stop Conditions
 
-- **If Program.cs still references index-2.html for evidence-link route** → STOP
-- **If any changes to Program.cs beyond the file path** → STOP
-- **If any node in the proof graph is orphaned** → STOP
-
----
+1. Script only tests happy path (no negative tests)
+2. No evidence JSON emitted
+3. Hardcoded tokens used instead of fresh issuance
+4. Supervisory reveal not tested
+5. Script does not exit 1 on failure
 
 ## Implementation Steps
 
-### Step 1: Change file path
-**What:** `[ID gf_w1_ui_009_work_01]` Change file path in evidence-link route handler.
-**How:** Find `GET /pilot-demo/evidence-link` route. Change `index-2.html` to `index.html` in the file path. No other changes.
-**Done when:** `grep -q "index.html"` succeeds and `grep "index-2.html"` finds zero matches in evidence-link context.
+### Step 1: Create Script File
+**Tracking ID:** W1  
+**What:** Create scripts/dev/verify_worker_token_issuance_e2e.sh  
+**How:** Create executable shell script with shebang and set -eo pipefail  
+**Done-when:** Script file exists and is executable
 
-### Step 2: Emit evidence
-```bash
-# [ID gf_w1_ui_009_work_01]
-test -f services/ledger-api/dotnet/src/LedgerApi/Program.cs \
-  && grep -q "index.html" services/ledger-api/dotnet/src/LedgerApi/Program.cs \
-  && cat services/ledger-api/dotnet/src/LedgerApi/Program.cs \
-  | grep "evidence-link" \
-  > evidence/phase1/gf_w1_ui_009.json || exit 1
+### Step 2: Implement Token Issuance Test
+**Tracking ID:** W2  
+**What:** Implement token issuance test  
+**How:** Use curl to POST /pilot-demo/api/evidence-links/issue, verify HTTP 200, extract token  
+**Done-when:** Token issued successfully, token value extracted
 
-# [ID gf_w1_ui_009_work_01] — negative test
-test -z "$(grep 'index-2.html' services/ledger-api/dotnet/src/LedgerApi/Program.cs | grep 'evidence-link')" \
-  || exit 1
-```
+### Step 3: Implement Worker Submission Test
+**Tracking ID:** W3  
+**What:** Implement worker submission test using issued token  
+**How:** Use curl to POST WEIGHBRIDGE_RECORD with token in Authorization header, verify HTTP 202  
+**Done-when:** Submission succeeds with valid token
 
----
+### Step 4: Implement Expiry Test
+**Tracking ID:** W4  
+**What:** Implement expiry enforcement test  
+**How:** Issue token with 1-second TTL, wait 2 seconds, attempt submission, verify HTTP 401/403  
+**Done-when:** Expired token is rejected
+
+### Step 5: Implement Single-Use Test
+**Tracking ID:** W5  
+**What:** Implement single-use enforcement test  
+**How:** Submit with token once (succeeds), attempt second submission with same token, verify rejection  
+**Done-when:** Reused token is rejected
+
+### Step 6: Implement GPS Validation Test
+**Tracking ID:** W6  
+**What:** Implement GPS validation test  
+**How:** Submit with GPS coordinates outside 250m radius, verify rejection  
+**Done-when:** Out-of-radius submission is rejected
+
+### Step 7: Emit Evidence JSON
+**Tracking ID:** W7  
+**What:** Emit evidence JSON  
+**How:** Write JSON with all test results to evidence/phase1/worker_token_issuance_e2e.json  
+**Done-when:** Evidence file contains all required fields
 
 ## Verification
 
-```bash
-# [ID gf_w1_ui_009_work_01]
-test -f services/ledger-api/dotnet/src/LedgerApi/Program.cs \
-  && grep -q "index.html" services/ledger-api/dotnet/src/LedgerApi/Program.cs \
-  && cat services/ledger-api/dotnet/src/LedgerApi/Program.cs \
-  | grep "evidence-link" \
-  > evidence/phase1/gf_w1_ui_009.json || exit 1
-
-# [ID gf_w1_ui_009_work_01]
-test -z "$(grep 'index-2.html' services/ledger-api/dotnet/src/LedgerApi/Program.cs | grep 'evidence-link')" \
-  || exit 1
-```
-
----
+| ID | Command | Purpose |
+|----|---------|---------|
+| V1 | `test -x scripts/dev/verify_worker_token_issuance_e2e.sh \|\| exit 1` | Confirm script is executable |
+| V2 | `bash scripts/dev/verify_worker_token_issuance_e2e.sh \|\| exit 1` | Confirm script passes |
 
 ## Evidence Contract
 
-File: `evidence/phase1/gf_w1_ui_009.json`
-Required fields: task_id, git_sha, timestamp_utc, status, checks, observed_paths, observed_hashes, command_outputs, execution_trace
-
----
+```json
+{
+  "task_id": "GF-W1-UI-009",
+  "timestamp": "ISO8601",
+  "token_issuance_success": true,
+  "worker_submission_success": true,
+  "supervisory_reveal_confirmed": true,
+  "expiry_enforcement_confirmed": true,
+  "single_use_enforcement_confirmed": true,
+  "gps_validation_confirmed": true
+}
+```
 
 ## Rollback
 
-1. Revert: `git checkout HEAD -- services/ledger-api/dotnet/src/LedgerApi/Program.cs`
-2. Update status back to `planned`
+1. Delete `scripts/dev/verify_worker_token_issuance_e2e.sh`
+2. Delete `evidence/phase1/worker_token_issuance_e2e.json`
+3. Revert `.toolchain/script_integrity/verifier_hashes.sha256`
 
----
-
-## Risk
+## Risk Assessment
 
 | Risk | Consequence | Mitigation |
 |------|-------------|------------|
-| Still serves index-2.html | FAIL | Negative grep test |
-| Other Program.cs changes | FAIL | Diff check for scope |
+| Only happy path tested | GOVERNANCE.INCOMPLETE_VERIFICATION | Add negative tests for expiry, single-use, GPS |
+| No evidence JSON | GOVERNANCE.NO_AUDIT_TRAIL | Emit JSON with all test results |
+| Hardcoded tokens | FUNCTIONAL.STALE_TEST_DATA | Issue fresh tokens via API |
+| Supervisory reveal not tested | FUNCTIONAL.INCOMPLETE_E2E_TEST | Query reveal endpoint after submission |

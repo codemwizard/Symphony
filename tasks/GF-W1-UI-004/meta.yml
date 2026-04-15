@@ -1,159 +1,118 @@
 schema_version: 1
 phase: '1'
 task_id: GF-W1-UI-004
-title: "Programme Health tab: Activity table with financial columns"
-owner_role: SUPERVISOR
+title: Implement token issuance logic with security properties display and countdown timer
+owner_role: ARCHITECT
 status: completed
 priority: HIGH
-risk_class: GOVERNANCE
+risk_class: SECURITY
 blast_radius: APP_LAYER
-
 intent: >-
-  Add the activity table below the KPI rows showing instruction-level data with
-  financial columns (Net Weight, tCO₂ est.) and status chips. The table fills
-  remaining viewport height. Row click opens the instruction drawer (Task 5).
-
+  Implement the core token issuance workflow that calls the backend API, displays
+  token results with all security properties (type, signature, TTL, GPS lock, single-use),
+  generates worker landing URLs with token in hash fragment, and provides a countdown
+  timer for token expiry visibility. This task establishes the secure token delivery
+  mechanism that prevents token exposure in server logs while providing operators
+  with clear visibility into token lifecycle and security guarantees.
 anti_patterns:
-  - "Using SELECT * or unbounded queries"
-  - "Computing tCO₂ with floating-point instead of the canonical constant"
-  - "Table exceeding viewport — must use flex:1 and overflow-y:auto"
-
-out_of_scope:
-  - "Instruction drawer — handled by GF-W1-UI-005"
-  - "KPI cards — done in GF-W1-UI-003"
-  - "Monitoring report — handled by GF-W1-UI-006"
-
-stop_conditions:
-  - "tCO₂ computed with wrong constant (must be 0.00048) => CRITICAL_FAIL"
-  - "Table has no overflow-y:auto => FAIL"
-  - "Row click does not trigger drawer open => FAIL"
-  - "Any node in the proof graph is orphaned => STOP"
-
-proof_guarantees:
-  - "grep verifies tCO₂ column header and 0.00048 constant exist in HTML"
-  - "grep verifies overflow-y:auto on table container"
-  - "grep verifies row click handler references instruction detail endpoint"
-
-proof_limitations:
-  - "Column rendering and data population require live API"
-  - "Flex layout proportions require visual inspection"
-
+  - "Hardcoding token expiry instead of using API response expiry field"
+  - "Displaying raw GPS coordinates instead of neighbourhood labels"
+  - "Implementing countdown timer that does not update or does not show EXPIRED state"
+  - "Generating worker landing URL with token in query parameter instead of hash fragment"
 depends_on:
   - GF-W1-UI-003
-
 blocks:
   - GF-W1-UI-005
-
 touches:
   - src/supervisory-dashboard/index.html
-  - tasks/GF-W1-UI-004/meta.yml
   - evidence/phase1/gf_w1_ui_004.json
-
-invariants:
-  - INV-GF-UI-001
-
+  - tasks/GF-W1-UI-004/meta.yml
+invariants: []
 work:
-  - >-
-    [ID gf_w1_ui_004_work_01] Below the KPI rows, add a table filling remaining
-    viewport height (flex: 1; overflow-y: auto). Columns: Instruction ID | Proof
-    Type | Status | Net Weight | tCO₂ est. | Time.
-  - >-
-    [ID gf_w1_ui_004_work_02] Status chip: green=PRESENT, amber=PENDING, red=MISSING.
-    Net Weight: net_weight_kg + " kg" if WEIGHBRIDGE_RECORD, else "—". tCO₂ est.:
-    (net_weight_kg * 0.00048).toFixed(4) if weight present, else "—". Time:
-    observed_at_utc formatted as HH:mm local.
-  - >-
-    [ID gf_w1_ui_004_work_03] Row click calls GET /pilot-demo/api/instructions/{instructionId}/detail
-    and opens the drawer (Task 5).
-
+  - '[ID gf_w1_ui_004_work_item_01] Implement issueToken() function calling POST /pilot-demo/api/evidence-links/issue with worker_id'
+  - '[ID gf_w1_ui_004_work_item_02] Add token result panel displaying worker_id, expiry, neighbourhood label, radius'
+  - '[ID gf_w1_ui_004_work_item_03] Generate worker landing URL as /pilot-demo/worker-landing#token=${tokenValue}'
+  - '[ID gf_w1_ui_004_work_item_04] Add Copy Link button with navigator.clipboard.writeText() integration'
+  - '[ID gf_w1_ui_004_work_item_05] Add security properties panel showing type, signature, TTL, GPS lock, single-use'
+  - '[ID gf_w1_ui_004_work_item_06] Implement countdown timer with setInterval(1000) showing time remaining and EXPIRED state'
 acceptance_criteria:
-  - >-
-    [ID gf_w1_ui_004_work_01] Activity table exists below KPI rows with all 6 columns.
-    Table container has flex:1 and overflow-y:auto.
-  - >-
-    [ID gf_w1_ui_004_work_02] tCO₂ column uses constant 0.00048. Status chips use
-    canonical colours (--bright, --amber, --red). Weight shows "—" for non-weighbridge.
-  - >-
-    [ID gf_w1_ui_004_work_03] Clicking a row calls the instruction detail endpoint
-    and triggers drawer open.
-
+  - '[ID gf_w1_ui_004_work_item_01] issueToken() calls API with worker_id, receives token response, parses expiry from API'
+  - '[ID gf_w1_ui_004_work_item_02] Token result panel displays neighbourhood label using resolveNeighbourhoodLabel(), not raw GPS'
+  - '[ID gf_w1_ui_004_work_item_03] Worker landing URL has token in hash fragment, not query parameter'
+  - '[ID gf_w1_ui_004_work_item_04] Copy Link button successfully copies URL to clipboard and shows success message'
+  - '[ID gf_w1_ui_004_work_item_05] Security properties panel displays all 5 properties clearly'
+  - '[ID gf_w1_ui_004_work_item_06] Countdown timer updates every second and shows EXPIRED in red when time <= 0'
 negative_tests:
   - id: GF-W1-UI-004-N1
     description: >-
-      Grep for any tCO₂ computation that does not use 0.00048 as the constant.
-      Any other constant value => FAIL.
+      Verify that raw GPS coordinates are never displayed in the token result panel.
+      The neighbourhood label must be used instead. Grep for latitude/longitude display
+      patterns in the token result section and confirm none exist.
     required: true
-
+  - id: GF-W1-UI-004-N2
+    description: >-
+      Verify that token is placed in hash fragment, not query parameter. Worker landing
+      URL must be /pilot-demo/worker-landing#token=... not ?token=... to prevent token
+      exposure in server logs.
+    required: true
 positive_tests:
   - id: GF-W1-UI-004-P1
     description: >-
-      Grep for "tCO" column header and "0.00048" constant in the HTML file.
-      Both must be present.
+      Verify that issueToken() successfully calls the API, receives a token, and displays
+      all token details including security properties and countdown timer.
     required: true
-
 verification:
-  - >-
-    # [ID gf_w1_ui_004_work_01] [ID gf_w1_ui_004_work_02] [ID gf_w1_ui_004_work_03]
-    test -f src/supervisory-dashboard/index.html
-    && grep -q "0.00048" src/supervisory-dashboard/index.html
-    && grep -q "overflow-y" src/supervisory-dashboard/index.html
-    && cat src/supervisory-dashboard/index.html | grep "instructions.*detail"
-    > evidence/phase1/gf_w1_ui_004.json || exit 1
-
+  - grep -q 'issueToken' src/supervisory-dashboard/index.html || exit 1
+  - grep -q 'navigator.clipboard.writeText' src/supervisory-dashboard/index.html || exit 1
+  - grep -q 'setInterval.*1000' src/supervisory-dashboard/index.html || exit 1
+  - grep -q 'resolveNeighbourhoodLabel' src/supervisory-dashboard/index.html || exit 1
+  - test -f evidence/phase1/gf_w1_ui_004.json || exit 1
 evidence:
   - path: evidence/phase1/gf_w1_ui_004.json
     must_include:
       - task_id
-      - git_sha
-      - timestamp_utc
+      - timestamp
       - status
+      - token_issuance_api_integrated
+      - token_result_panel_present
+      - worker_landing_url_generated
+      - copy_link_functional
+      - security_properties_displayed
+      - countdown_timer_implemented
       - checks
       - observed_paths
-      - observed_hashes
       - command_outputs
       - execution_trace
-
 failure_modes:
-  - tCO₂ constant is not 0.00048 => CRITICAL_FAIL
-  - Table has no overflow => FAIL
-  - Row click does not work => FAIL
-  - Evidence file missing => FAIL
-
+  - "Token expiry hardcoded instead of from API response => FUNCTIONAL.INCORRECT_EXPIRY_TIME => FAIL"
+  - "Raw GPS coordinates displayed in token result => UI.DESIGN_VIOLATION => FAIL"
+  - "Countdown timer not updating every second => FUNCTIONAL.NO_EXPIRY_VISIBILITY => FAIL"
+  - "Worker landing URL format incorrect (token not in hash fragment) => FUNCTIONAL.TOKEN_UNUSABLE => FAIL"
+  - "Copy button not functional => FUNCTIONAL.NO_CLIPBOARD_INTEGRATION => FAIL"
 must_read:
   - docs/operations/AI_AGENT_OPERATION_MANUAL.md
   - .kiro/steering/ui-canonical-design.md
   - .kiro/steering/pwrm0001-domain-rules.md
-  - .kiro/steering/symphony-platform-conventions.md
-  - .kiro/specs/symphony-ui-canonical/requirements.md
-  - .kiro/specs/symphony-ui-canonical/design.md
-  - .kiro/specs/symphony-ui-canonical/tasks.md
-
+  - docs/operations/PILOT_DEMO_VIDEO_SCRIPT.md
 implementation_plan: docs/plans/phase1/GF-W1-UI-004/PLAN.md
 implementation_log: docs/plans/phase1/GF-W1-UI-004/EXEC_LOG.md
-
 notes: >-
-  Atomic task 4 of 10. Adds the activity table with financial meaning (tCO₂ column)
-  to the Programme Health tab. Phase Key: GF-W1. Phase Name: Green Finance Wave 1.
-
-client: cursor
-assigned_agent: supervisor
-model: <UNASSIGNED>
-
+  This task implements the core token issuance workflow. Token is placed in hash fragment
+  to prevent exposure in server logs. Countdown timer provides operators with clear visibility
+  into token lifecycle. Security properties panel makes token guarantees explicit. Neighbourhood
+  labels used throughout to comply with UI canonical design rules. Phase: Green Finance Wave 1.
+  Domain: green_finance.
+client: kiro
+assigned_agent: architect
+model: claude-sonnet-4-20250514
 domain: green_finance
-
-second_pilot_test:
-  candidate_sector_1: "PWRM0001 plastic collection (Chunga Dumpsite, Lusaka)"
-  candidate_sector_2: "VM0044 solar energy generation (hypothetical)"
-  unchanged_core_tables: []
-  unchanged_core_functions: []
-  adapter_only_differences:
-    - "Column label 'Net Weight' becomes 'Net kWh' for solar — only label changes"
-    - "tCO₂ conversion constant would differ per methodology but same structure"
-  jurisdiction_profile_impact: "None"
-  required_core_changes: []
-  explanation: >-
-    The activity table structure (ID, type, status, value, carbon estimate, time)
-    is sector-neutral. Only the unit labels and conversion constants differ.
-  second_pilot_reviewed_by: "Supervisor (automated review)"
-
+pilot: true
+second_pilot_test: >-
+  The token issuance pattern with security properties display works for any programme requiring
+  time-limited, single-use access tokens. For PWRM0001 plastic collection, tokens authorize
+  waste collectors to submit weighbridge records. For a hypothetical VM0044 solar energy programme,
+  tokens would authorize solar technicians to submit generation readings. The security properties
+  (type, signature, TTL, GPS lock, single-use) and countdown timer are identical; only the
+  artifact_type and submitter_class differ per programme. The hash fragment URL pattern prevents
+  token exposure in server logs regardless of programme type.
 pilot_scope_ref: docs/pilots/PILOT_PWRM0001/SCOPE.md

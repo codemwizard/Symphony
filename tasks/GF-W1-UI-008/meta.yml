@@ -1,205 +1,115 @@
 schema_version: 1
 phase: '1'
 task_id: GF-W1-UI-008
-title: Create canonical recipient landing page
-owner_role: SUPERVISOR
-status: completed
-priority: HIGH
-risk_class: GOVERNANCE
+title: Implement bulk token issuance with progress tracking and CSV export
+owner_role: ARCHITECT
+status: planned
+priority: NORMAL
+risk_class: PERFORMANCE
 blast_radius: APP_LAYER
-
 intent: >-
-  Create src/recipient-landing/index.html as the canonical worker submission page
-  with a 4-step flow: token validation, GPS capture, weighbridge form, and receipt.
-  Enforces GPS privacy via resolveNeighbourhoodLabel — raw coordinates never appear.
-
+  Implement optional bulk token issuance functionality for issuing tokens to multiple
+  workers simultaneously with progress tracking and CSV export. This task enables
+  operators to efficiently onboard multiple workers at once while maintaining sequential
+  issuance to avoid API rate limits. The CSV export provides operators with a shareable
+  record of issued tokens for distribution to workers.
 anti_patterns:
-  - "Displaying raw GPS coordinates in any DOM element"
-  - "Using geocoding API instead of resolveNeighbourhoodLabel"
-  - "Trusting browser arithmetic for net weight — comment: display only, backend recomputes"
-  - "Using alert() or confirm() — use inline banners"
-
-out_of_scope:
-  - "Backend API changes — all existing routes unchanged"
-  - "Program.cs wiring — handled by GF-W1-UI-009"
-  - "Supervisory dashboard — separate tasks"
-
-stop_conditions:
-  - "Raw GPS coordinates rendered in DOM => CRITICAL_FAIL, stop immediately"
-  - "resolveNeighbourhoodLabel function not defined in this file => CRITICAL_FAIL"
-  - "Net weight field is editable (must be readonly) => FAIL"
-  - "Missing // display only — backend recomputes comment on net weight => FAIL"
-  - "Any node in the proof graph is orphaned => STOP"
-
-proof_guarantees:
-  - "grep verifies resolveNeighbourhoodLabel function definition exists"
-  - "negative grep confirms no raw coordinate DOM insertion"
-  - "grep verifies readonly attribute on net weight input"
-  - "grep verifies 'display only' comment"
-
-proof_limitations:
-  - "GPS grep catches explicit patterns only — template literals not caught"
-  - "4-step flow navigation requires manual browser testing"
-  - "Error handling (400/422) requires live API testing"
-
+  - "Using parallel issuance instead of sequential (API rate limit risk)"
+  - "No progress indicator shown during bulk operation (no user feedback)"
+  - "CSV not generated or download not triggered automatically"
+  - "Partial failures not reported in summary (incomplete error reporting)"
 depends_on:
-  - GF-W1-UI-001
-
+  - GF-W1-UI-007
 blocks:
   - GF-W1-UI-009
-
 touches:
-  - src/recipient-landing/index.html
-  - tasks/GF-W1-UI-008/meta.yml
+  - src/supervisory-dashboard/index.html
   - evidence/phase1/gf_w1_ui_008.json
-
-invariants:
-  - INV-GF-UI-003
-
+  - tasks/GF-W1-UI-008/meta.yml
+invariants: []
 work:
-  - >-
-    [ID gf_w1_ui_008_work_01] Create src/recipient-landing/index.html as the canonical
-    file. Define resolveNeighbourhoodLabel function from the steering file.
-  - >-
-    [ID gf_w1_ui_008_work_02] Step 1 — Token validation: Read token from
-    window.location.hash. Call GET /api/public/evidence-links/context with
-    x-evidence-link-token header. Show role chip, zone via resolveNeighbourhoodLabel
-    (never raw coordinates), TTL countdown. On error: red error card. "Continue to
-    GPS Capture →" button.
-  - >-
-    [ID gf_w1_ui_008_work_03] Step 2 — GPS capture: Call navigator.geolocation.
-    getCurrentPosition(). Show neighbourhood label (never raw coordinates). Compute
-    Haversine distance from (-15.4167, 28.2833). ≤ 250m: green banner. > 250m: amber
-    banner. "Continue to Form →" advances regardless — server enforces.
-  - >-
-    [ID gf_w1_ui_008_work_04] Step 3 — Weighbridge form (WASTE_COLLECTOR only):
-    Plastic Type select (PET/HDPE/LDPE/PP/PS/OTHER). Gross Weight (kg) input.
-    Tare Weight (kg) input. Net Weight: readonly, computed as
-    (parseFloat(gross) - parseFloat(tare)).toFixed(2) with comment
-    "// display only — backend recomputes from gross-tare". Photo upload zone.
-    Collector ID readonly from token context. Submit Evidence button: upload photo
-    then POST /v1/evidence-links/submit. Handle 202, 400, 422 responses.
-  - >-
-    [ID gf_w1_ui_008_work_05] Step 4 — Receipt: Green full-card state. instruction_id
-    (monospace), sequence_number, submitted_at_utc. Text: "Your evidence has been
-    recorded and sealed."
-
+  - '[ID gf_w1_ui_008_work_item_01] Add Bulk Issue button next to single issuance form'
+  - '[ID gf_w1_ui_008_work_item_02] Create modal with textarea accepting comma-separated phone numbers'
+  - '[ID gf_w1_ui_008_work_item_03] Implement sequential token issuance looping through phone numbers with await on each issueToken() call'
+  - '[ID gf_w1_ui_008_work_item_04] Add progress indicator displaying "Issuing token X of Y..." updating after each issuance'
+  - '[ID gf_w1_ui_008_work_item_05] Generate CSV blob with phone, worker_id, token_url, status columns'
+  - '[ID gf_w1_ui_008_work_item_06] Show summary displaying total, success count, failed count with details'
 acceptance_criteria:
-  - >-
-    [ID gf_w1_ui_008_work_01] src/recipient-landing/index.html exists with
-    resolveNeighbourhoodLabel function definition matching steering file.
-  - >-
-    [ID gf_w1_ui_008_work_02] Step 1 shows role chip, zone label (not coordinates),
-    TTL countdown. Error state shows red card with error_code.
-  - >-
-    [ID gf_w1_ui_008_work_03] Step 2 shows neighbourhood label and zone check chip.
-    No raw coordinates in DOM.
-  - >-
-    [ID gf_w1_ui_008_work_04] Step 3 form has all required fields. Net weight is
-    readonly with "display only — backend recomputes" comment. Submit calls correct
-    endpoints. Error handling for 400 and 422 responses.
-  - >-
-    [ID gf_w1_ui_008_work_05] Step 4 shows instruction_id, sequence_number, and
-    confirmation text in green.
-
+  - '[ID gf_w1_ui_008_work_item_01] Bulk Issue button opens bulk issuance modal'
+  - '[ID gf_w1_ui_008_work_item_02] Modal displays with textarea and Submit button'
+  - '[ID gf_w1_ui_008_work_item_03] Tokens issued sequentially using await pattern, not Task.WhenAll or Promise.all'
+  - '[ID gf_w1_ui_008_work_item_04] Progress updates in real-time after each issuance'
+  - '[ID gf_w1_ui_008_work_item_05] CSV downloads automatically after completion'
+  - '[ID gf_w1_ui_008_work_item_06] Summary shows all results including failures'
 negative_tests:
   - id: GF-W1-UI-008-N1
     description: >-
-      Grep src/recipient-landing/index.html for raw coordinate rendering patterns.
-      The grep must find zero matches. If raw coordinates appear => CRITICAL_FAIL.
+      Verify that tokens are issued sequentially, not in parallel. Test by issuing
+      10 tokens and confirming they are issued one-by-one with await, not using
+      Promise.all or similar parallel patterns. Grep for Promise.all in bulk issuance
+      code and confirm it does not exist.
     required: true
   - id: GF-W1-UI-008-N2
     description: >-
-      Grep for alert() or confirm() calls. Must find zero matches.
+      Verify that partial failures are reported in summary. Test by providing a mix
+      of valid and invalid phone numbers and confirming the summary shows both success
+      and failure counts with details.
     required: true
-
 positive_tests:
   - id: GF-W1-UI-008-P1
     description: >-
-      Grep for resolveNeighbourhoodLabel function definition. Must be present.
+      Verify that bulk issuance successfully issues tokens to multiple workers,
+      displays progress, generates CSV, and shows summary.
     required: true
-  - id: GF-W1-UI-008-P2
-    description: >-
-      Grep for "display only" comment near net weight. Must be present.
-    required: true
-
 verification:
-  - >-
-    # [ID gf_w1_ui_008_work_01] [ID gf_w1_ui_008_work_02] [ID gf_w1_ui_008_work_03]
-    # [ID gf_w1_ui_008_work_04] [ID gf_w1_ui_008_work_05]
-    test -f src/recipient-landing/index.html
-    && grep -q "resolveNeighbourhoodLabel" src/recipient-landing/index.html
-    && grep -q "display only" src/recipient-landing/index.html
-    && grep -q "readonly" src/recipient-landing/index.html
-    && grep -q "evidence-links/submit" src/recipient-landing/index.html
-    && cat src/recipient-landing/index.html | grep "recorded and sealed"
-    > evidence/phase1/gf_w1_ui_008.json || exit 1
-  - >-
-    # [ID gf_w1_ui_008_work_02] [ID gf_w1_ui_008_work_03]
-    test -z "$(grep -E 'textContent.*latitude|innerHTML.*longitude' src/recipient-landing/index.html)"
-    || exit 1
-
+  - grep -q 'bulkIssue' src/supervisory-dashboard/index.html || exit 1
+  - grep -q 'text/csv' src/supervisory-dashboard/index.html || exit 1
+  - '! grep -q "Promise.all.*issueToken" src/supervisory-dashboard/index.html || exit 1'
+  - test -f evidence/phase1/gf_w1_ui_008.json || exit 1
 evidence:
   - path: evidence/phase1/gf_w1_ui_008.json
     must_include:
       - task_id
-      - git_sha
-      - timestamp_utc
+      - timestamp
       - status
+      - bulk_button_present
+      - modal_created
+      - sequential_issuance_implemented
+      - progress_indicator_present
+      - csv_export_implemented
+      - summary_displayed
+      - no_parallel_issuance_confirmed
       - checks
       - observed_paths
-      - observed_hashes
       - command_outputs
       - execution_trace
-      - gps_coordinate_check_passed
-
 failure_modes:
-  - Raw GPS coordinates rendered in DOM => CRITICAL_FAIL
-  - resolveNeighbourhoodLabel not defined => CRITICAL_FAIL
-  - Net weight editable (not readonly) => FAIL
-  - display only comment missing => FAIL
-  - alert() or confirm() used => FAIL
-  - Evidence file missing => FAIL
-
+  - "Parallel issuance used => FUNCTIONAL.API_RATE_LIMIT_EXCEEDED => FAIL"
+  - "No progress indicator => UI.NO_FEEDBACK_DURING_OPERATION => FAIL"
+  - "No CSV export => FUNCTIONAL.NO_EXPORT_CAPABILITY => FAIL"
+  - "Partial failures hidden => FUNCTIONAL.INCOMPLETE_ERROR_REPORTING => FAIL"
 must_read:
   - docs/operations/AI_AGENT_OPERATION_MANUAL.md
-  - docs/operations/AGENTIC_SDLC_PILOT_POLICY.md
   - .kiro/steering/ui-canonical-design.md
   - .kiro/steering/pwrm0001-domain-rules.md
-  - .kiro/steering/symphony-platform-conventions.md
-  - .kiro/specs/symphony-ui-canonical/requirements.md
-  - .kiro/specs/symphony-ui-canonical/design.md
-  - .kiro/specs/symphony-ui-canonical/tasks.md
-
 implementation_plan: docs/plans/phase1/GF-W1-UI-008/PLAN.md
 implementation_log: docs/plans/phase1/GF-W1-UI-008/EXEC_LOG.md
-
 notes: >-
-  Atomic task 8 of 10. Largest single task due to 4-step flow but all contained in
-  one file. Privacy-critical: GPS coordinate prohibition enforced.
-  Phase Key: GF-W1. Phase Name: Green Finance Wave 1.
-
-client: cursor
-assigned_agent: supervisor
-model: <UNASSIGNED>
-
+  This task implements bulk token issuance for efficient worker onboarding. Sequential
+  issuance prevents API rate limit issues. Progress indicator provides real-time feedback.
+  CSV export enables token distribution to workers. Summary reports all results including
+  partial failures. Phase: Green Finance Wave 1. Domain: green_finance.
+client: kiro
+assigned_agent: architect
+model: claude-sonnet-4-20250514
 domain: green_finance
-
-second_pilot_test:
-  candidate_sector_1: "PWRM0001 plastic collection (Chunga Dumpsite, Lusaka)"
-  candidate_sector_2: "VM0044 solar energy generation (hypothetical)"
-  unchanged_core_tables: []
-  unchanged_core_functions: []
-  adapter_only_differences:
-    - "submitter_class: WASTE_COLLECTOR vs SOLAR_OPERATOR drives form field rendering"
-    - "Form fields: plastic_type/weight → panel_id/capacity_kw"
-    - "Unit label: kg → kWh only label changes"
-  jurisdiction_profile_impact: "None — GPS privacy applies universally"
-  required_core_changes: []
-  explanation: >-
-    The 4-step flow (token→GPS→form→receipt) is sector-neutral. Only the form
-    fields in Step 3 differ per submitter_class. The GPS privacy guarantee and
-    the backend-recomputes pattern apply to all sectors.
-  second_pilot_reviewed_by: "Supervisor (automated review)"
-
+pilot: true
+second_pilot_test: >-
+  The bulk token issuance pattern with sequential processing works for any programme
+  requiring batch worker onboarding. For PWRM0001 plastic collection, operators can
+  issue tokens to multiple waste collectors at once. For a hypothetical VM0044 solar
+  energy programme, operators could issue tokens to multiple solar technicians at once.
+  The sequential issuance pattern, progress tracking, CSV export format, and summary
+  display are identical; only the worker_id format and CSV column headers differ per
+  programme. The rate limit protection is universal across programmes.
 pilot_scope_ref: docs/pilots/PILOT_PWRM0001/SCOPE.md

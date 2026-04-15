@@ -1,0 +1,18 @@
+Look at the project in New-Demo directory in root directory. This project is in Nextjs. Base all work only on files in this folder and the attached files. Do not look at anyother project folder for implementation or syling. I want you to extract the For all tabs that are being extracted, keep the theme and styling exactly as it is in the tabs.1. Extract the 5 tabs in symphony.html and create 5 separate html + css + JS pages that keep the functionality exactly as it is in the Nextjs project. Do not change the appearance or how any component works. Just cleanly extract and recreate in html, css and js.
+Instructions:
+1. Extract the tabs and save in src/symphony-pilot
+2. For the Pilot gate tab, do not use the content in the nextjs project. Use the pilot-gate.html that is already in the src/symphony/ directory. Make sure that the theme and styling is uniform with the other pages
+3. The following pages are already in the src/symphony directory. Make sure to add them to the navigation and make sure that they all conform to the same styling as the first 5 tabs that you just created:
+- overview.html
+- instructions.html
+- success-criteria.html
+4. The order of the tabs should be:
+overview - program health - monitoring report - token issuance - instructions - success criteria - onboarding - pilot gate
+
+5. Make sure that all the pages do not have the following problem:
+- the `#onboarding` section has `overflow: hidden` which prevents scrolling. I need to change it to allow vertical scrolling:
+- also need to update the tables grid to not require flex:1 which was causing height issues. Let me check that section:
+
+Fix the scrolling issue by changing `overflow: hidden` to `overflow-y: auto` on the `#onboarding` section, and adjust the tables grid to have a fixed `min-height` and `max-height` instead of using flex to fill remaining space. Now the entire tab will scroll vertically, allowing all forms and tables to be fully visible.
+The pages should adjust to vertical scrolling when screen is minimized
+

@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Symphony · Monitoring Report</title>
+<link rel="stylesheet" href="_shared.css">
+<style>
+.layout { display:grid; grid-template-columns:240px 1fr; height:calc(100vh - 81px); overflow:hidden; }
+.sidebar { border-right:1px solid var(--border); overflow-y:auto; }
+.main { overflow-y:auto; padding:24px 28px; }
+.col-hdr { padding:14px 18px 10px; border-bottom:1px solid var(--border); }
+.col-hdr-label { font-family:var(--mono); font-size:7.5px; letter-spacing:0.35em; text-transform:uppercase; color:var(--gold); }
+
+/* Plastic breakdown bars */
+.plastic-row { margin-bottom:14px; }
+.plastic-label { display:flex; justify-content:space-between; margin-bottom:5px; }
+.plastic-type  { font-family:var(--mono); font-size:11px; color:var(--cream); }
+.plastic-kg    { font-family:var(--mono); font-size:10px; color:var(--smoke); }
+.plastic-bar-wrap { background:var(--panel); border-radius:2px; height:6px; overflow:hidden; }
+.plastic-bar-fill { height:100%; border-radius:2px; transition:width 0.6s ease; }
+.bar-pet  { background:var(--bright); }
+.bar-hdpe { background:var(--gold); }
+.bar-ldpe { background:#7ab8ff; }
+.bar-pp   { background:var(--amber); }
+.bar-ps   { background:#cc88ff; }
+.bar-other{ background:var(--smoke); }
+
+/* Taxonomy cards */
+.taxonomy-grid { display:grid; grid-template-columns:1fr 1fr 1fr; gap:12px; margin-bottom:20px; }
+.tax-card {
+  background:var(--surface); border:1px solid var(--border);
+  border-radius:4px; padding:14px 16px;
+}
+.tax-icon { font-size:18px; margin-bottom:8px; }
+.tax-label { font-family:var(--mono); font-size:8px; letter-spacing:0.2em; text-transform:uppercase; color:var(--smoke); margin-bottom:6px; }
+.tax-value { font-family:var(--mono); font-size:11px; }
+
+/* Report controls */
+.report-controls { display:flex; gap:10px; align-items:center; margin-bottom:20px; flex-wrap:wrap; }
+
+/* Worker summary table */
+.worker-summary { font-family:var(--mono); font-size:10px; }
+
+/* Exception card */
+.exc-card { background:rgba(212,130,30,0.05); border:1px solid rgba(212,130,30,0.15); border-radius:3px; padding:12px; margin-bottom:8px; }
+.exc-card-id { font-size:10px; color:var(--amber-lt); margin-bottom:4px; }
+.exc-card-detail { font-size:9px; color:var(--smoke); }
+
+/* Side nav items */
+.nav-item { padding:9px 18px; border-bottom:1px solid rgba(61,184,90,0.05); cursor:pointer; transition:background 0.12s; }
+.nav-item:hover { background:rgba(61,184,90,0.04); }
+.nav-item.selected { background:rgba(201,168,76,0.06); border-left:3px solid var(--gold); }
+.nav-prog { font-family:var(--mono); font-size:10px; color:var(--cream); }
+.nav-meta  { font-family:var(--mono); font-size:8px; color:var(--smoke); margin-top:2px; }
+
+/* Raw JSON viewer */
+.json-viewer {
+  background:var(--panel); border:1px solid var(--border);
+  border-radius:3px; padding:14px; font-family:var(--mono);
+  font-size:9px; color:var(--smoke); overflow-x:auto;
+  white-space:pre; max-height:300px; overflow-y:auto;
+}
+
+/* ZGFT compliance table */
+.compliance-row { display:flex; align-items:center; gap:12px; padding:9px 0; border-bottom:1px solid rgba(61,184,90,0.05); }
+.compliance-row:last-child { border-bottom:none; }
+.compliance-check { font-family:var(--mono); font-size:18px; }
+.compliance-name  { font-family:var(--mono); font-size:10px; color:var(--cream); flex:1; }
+.compliance-note  { font-family:var(--mono); font-size:9px; color:var(--smoke); }
+</style>
+</head>
+<body>
+
+<!-- TOPBAR -->
+<div class="topbar">
+  <div class="topbar-left">
+    <div class="logo">Sym<span>phony</span></div>
+    <span class="pill pill-green">MONITORING REPORT</span>
+    <span class="pill pill-gold" id="report-status">Loading…</span>
+  </div>
+  <div class="topbar-right">
+    <span>METHODOLOGY: <span class="text-gold">PWRM0001</span></span>
+    <span id="clock">—</span>
+  </div>
+</div>
+
+<!-- TABS -->
+<div class="tab-bar">
+  <a href="supervisory.html" class="tab">Governed Disbursement</a>
+  <a href="workers.html"     class="tab">Worker Onboarding</a>
+  <a href="monitoring.html"  class="tab active">Monitoring Report</a>
+  <a href="criteria.html"    class="tab">Pilot Criteria</a>
+  <a href="admin.html"       class="tab">Admin</a>
+</div>
+
+<!-- LAYOUT -->
+<div class="layout">
+
+  <!-- SIDEBAR: programme selector -->
+  <div class="sidebar">
+    <div class="col-hdr"><div class="col-hdr-label">Programmes</div></div>
+    <div id="prog-nav"><div class="loading-row"><span class="spinner"></span>Loading…</div></div>
+  </div>
+
+  <!-- MAIN AREA -->
+  <div class="main">
+
+    <!-- CONTROLS -->
+    <div class="report-controls">
+      <button class="btn btn-gold" onclick="generateReport()" id="gen-btn">Generate Report</button>
+      <button class="btn btn-ghost" onclick="downloadReport()">⬇ Download JSON</button>
+      <button class="btn btn-ghost" onclick="refreshReport()">↻ Refresh</button>
+      <span class="mono-xs" id="report-ts">—</span>
+    </div>
+
+    <div id="report-area">
+      <div class="loading-row" style="color:var(--smoke)">Select a programme and click Generate Report</div>
+    </div>
+
+  </div>
+</div>
+
+<!-- TOAST AREA -->
+<div id="toast-area"></div>
+
+<script>
+const API = 'http://localhost:8080';
+let tenantId = '', programmeId = '', adminKey = '';
+let reportData = null;
+
+function tick() { document.getElementById('clock').textContent = new Date().toUTCString().slice(5,25)+' UTC'; }
+setInterval(tick,1000); tick();
+
+function toast(msg, type='ok') {
+  const el = Object.assign(document.createElement('div'), {className:`toast toast-${type}`, textContent:msg});
+  document.getElementById('toast-area').appendChild(el);
+  setTimeout(()=>el.remove(), 4000);
+}
+
+async function bootstrap() {
+  try {
+    const r = await fetch(`${API}/api/admin/onboarding/status`, {credentials:'include'});
+    if (!r.ok) throw new Error(r.status);
+    const d = await r.json();
+    adminKey = window.__SYMPHONY_UI_CONTEXT__?.apiKey||'';
+    const ten = (d.tenants||[])[0];
+    tenantId = ten?.tenant_id||'';
+    const progs = d.programmes||[];
+    renderProgNav(progs);
+    const active = progs.find(p=>p.status==='ACTIVE')||progs[0];
+    if (active) { programmeId = active.programme_id||''; selectProgramme(programmeId); }
+  } catch(e) { toast('Cannot reach backend', 'err'); }
+}
+
+function renderProgNav(progs) {
+  if (!progs.length) { document.getElementById('prog-nav').innerHTML='<div class="loading-row" style="color:var(--smoke)">No programmes found</div>'; return; }
+  document.getElementById('prog-nav').innerHTML = progs.map(p=>`
+    <div class="nav-item${p.programme_id===programmeId?' selected':''}" onclick="selectProgramme('${p.programme_id||''}')">
+      <div class="nav-prog">${p.programme_key||p.display_name||'—'}</div>
+      <div class="nav-meta">${p.display_name||''}</div>
+      <div class="nav-meta">${p.policy_code||''} · <span class="status status-${(p.status||'').toLowerCase()}" style="font-size:7px;padding:1px 4px">${p.status||'—'}</span></div>
+    </div>`).join('');
+}
+
+function selectProgramme(id) {
+  programmeId = id;
+  document.querySelectorAll('.nav-item').forEach(el=>el.classList.remove('selected'));
+  document.querySelector(`.nav-item[onclick*="${id}"]`)?.classList.add('selected');
+  generateReport();
+}
+
+async function generateReport() {
+  if (!programmeId) { toast('Select a programme first', 'warn'); return; }
+  const btn = document.getElementById('gen-btn');
+  btn.disabled=true; btn.textContent='Generating…';
+  document.getElementById('report-area').innerHTML='<div class="loading-row"><span class="spinner"></span>Generating monitoring report…</div>';
+  document.getElementById('report-status').textContent='Generating…';
+  try {
+    const r = await fetch(`${API}/pilot-demo/api/monitoring-report/${encodeURIComponent(programmeId)}`, {
+      headers:{'x-tenant-id': tenantId, 'x-api-key': adminKey},
+      credentials:'include'
+    });
+    if (!r.ok) throw new Error(await r.text()||r.status);
+    reportData = await r.json();
+    renderReport(reportData);
+    document.getElementById('report-status').textContent = 'READY';
+    document.getElementById('report-ts').textContent = `Generated: ${new Date().toUTCString().slice(5,22)}`;
+    toast('Report generated', 'ok');
+  } catch(e) {
+    // Try the standard export endpoint as fallback
+    try {
+      const r2 = await fetch(`${API}/v1/supervisory/programmes/${encodeURIComponent(programmeId)}/export`, {
+        method:'POST', headers:{'x-tenant-id':tenantId,'x-api-key':adminKey}, credentials:'include'
+      });
+      if (r2.ok) {
+        const d = await r2.json();
+        renderExportResult(d);
+        document.getElementById('report-status').textContent='EXPORT READY';
+        toast('Export generated via fallback', 'ok');
+      } else throw new Error(e.message);
+    } catch(e2) {
+      document.getElementById('report-area').innerHTML=`<div class="alert alert-red" style="margin-bottom:16px">Report generation failed: ${e.message}</div><div class="alert alert-amber"><span class="alert-icon">ℹ</span>Ensure SYMPHONY_RUNTIME_PROFILE=pilot-demo and the backend is running</div>`;
+      document.getElementById('report-status').textContent='ERROR';
+    }
+  } finally { btn.disabled=false; btn.textContent='Generate Report'; }
+}
+
+function renderReport(d) {
+  const plasticTotals = d.plastic_totals_kg || {};
+  const totalKg = plasticTotals.TOTAL || d.totalWeight || 0;
+  const maxKg = Math.max(...Object.entries(plasticTotals).filter(([k])=>k!=='TOTAL').map(([,v])=>v||0), 0.1);
+  const colors = {PET:'pet', HDPE:'hdpe', LDPE:'ldpe', PP:'pp', PS:'ps', OTHER:'other'};
+
+  const plasticRows = Object.entries(plasticTotals)
+    .filter(([k])=>k!=='TOTAL')
+    .map(([type, kg])=>{
+      const pct = Math.round((kg/maxKg)*100);
+      return `<div class="plastic-row">
+        <div class="plastic-label">
+          <span class="plastic-type">${type}</span>
+          <span class="plastic-kg">${(kg||0).toFixed(2)} kg</span>
+        </div>
+        <div class="plastic-bar-wrap"><div class="plastic-bar-fill bar-${(colors[type]||'other')}" style="width:${pct}%"></div></div>
+      </div>`;
+    }).join('');
+
+  // Fallback for old mock format
+  const plasticBreakdown = d.plasticBreakdown || [];
+  const fallbackRows = plasticBreakdown.map(({type,weight})=>{
+    const pct = Math.round((weight/(totalKg||1))*100);
+    return `<div class="plastic-row">
+      <div class="plastic-label"><span class="plastic-type">${type}</span><span class="plastic-kg">${weight} kg</span></div>
+      <div class="plastic-bar-wrap"><div class="plastic-bar-fill bar-${(colors[type]||'other')}" style="width:${pct}%"></div></div>
+    </div>`;
+  }).join('');
+
+  const completeness = d.proof_completeness_rate ?? d.completeness ?? null;
+  const zgft = d.zgft_waste_sector_alignment || {};
+  const workers = d.worker_summaries || [];
+  const exceptions = d.exception_summary || [];
+
+  document.getElementById('report-area').innerHTML = `
+
+    <!-- KPI ROW -->
+    <div class="three-col" style="margin-bottom:20px">
+      <div class="stat-tile">
+        <div class="stat-label">Total Collected</div>
+        <div class="stat-value green">${(d.total_collections||0).toLocaleString()}</div>
+        <div class="stat-sub">collection events</div>
+      </div>
+      <div class="stat-tile">
+        <div class="stat-label">Total Plastic (kg)</div>
+        <div class="stat-value gold">${(totalKg||0).toFixed(1)}</div>
+        <div class="stat-sub">all types combined</div>
+      </div>
+      <div class="stat-tile">
+        <div class="stat-label">Proof Completeness</div>
+        <div class="stat-value ${completeness>=0.9?'green':completeness>=0.7?'amber':'red'}">${completeness!==null?Math.round(completeness*100)+'%':'—'}</div>
+        <div class="stat-sub">${d.complete_collections??'—'} complete / ${d.incomplete_collections??'—'} incomplete</div>
+      </div>
+    </div>
+
+    <!-- PLASTIC BREAKDOWN -->
+    <div class="two-col" style="margin-bottom:20px;gap:20px">
+      <div class="card">
+        <div class="card-hdr">Plastic Type Breakdown</div>
+        ${plasticRows || fallbackRows || '<div class="text-muted mono-xs">No plastic data</div>'}
+        <hr class="sep">
+        <div style="display:flex;justify-content:space-between">
+          <span class="mono-xs">TOTAL</span>
+          <span class="mono-xs text-gold">${(totalKg||0).toFixed(2)} kg</span>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-hdr">ZGFT Waste Sector Taxonomy</div>
+        <div class="compliance-row">
+          <span class="compliance-check">${zgft.pollution_prevention||d.zgft_pollution_prevention?'✓':'✗'}</span>
+          <span class="compliance-name">Pollution Prevention</span>
+          <span class="compliance-note status status-${zgft.pollution_prevention||d.zgft_pollution_prevention?'pass':'fail'}" style="font-size:7px">${zgft.pollution_prevention||d.zgft_pollution_prevention?'ALIGNED':'MISALIGNED'}</span>
+        </div>
+        <div class="compliance-row">
+          <span class="compliance-check">${zgft.circular_economy||d.zgft_circular_economy?'✓':'✗'}</span>
+          <span class="compliance-name">Circular Economy</span>
+          <span class="compliance-note status status-${zgft.circular_economy||d.zgft_circular_economy?'pass':'fail'}" style="font-size:7px">${zgft.circular_economy||d.zgft_circular_economy?'ALIGNED':'MISALIGNED'}</span>
+        </div>
+        <div class="compliance-row">
+          <span class="compliance-check">${zgft.do_no_significant_harm_declared||d.zgft_dnsh_declared?'✓':'✗'}</span>
+          <span class="compliance-name">Do No Significant Harm (DNSH)</span>
+          <span class="compliance-note status status-${zgft.do_no_significant_harm_declared||d.zgft_dnsh_declared?'pass':'fail'}" style="font-size:7px">${zgft.do_no_significant_harm_declared||d.zgft_dnsh_declared?'DECLARED':'UNDECLARED'}</span>
+        </div>
+        <hr class="sep">
+        <div class="compliance-row">
+          <span class="compliance-check">${d.antiDoubleCountingActive?'✓':'○'}</span>
+          <span class="compliance-name">Anti-Double-Counting Active</span>
+          <span class="compliance-note status status-${d.antiDoubleCountingActive?'pass':'pending'}" style="font-size:7px">${d.antiDoubleCountingActive?'ACTIVE':'N/A'}</span>
+        </div>
+        <div class="compliance-row">
+          <span class="compliance-check">${d.registryIssued?'✓':'○'}</span>
+          <span class="compliance-name">Registry Issued</span>
+          <span class="compliance-note status status-${d.registryIssued?'pass':'pending'}" style="font-size:7px">${d.registryIssued?'ISSUED':d.correspondingAdjustment||'PENDING'}</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- WORKER SUMMARIES -->
+    ${workers.length?`
+    <div class="card" style="margin-bottom:20px">
+      <div class="card-hdr">Worker Summaries (${workers.length})</div>
+      <table class="tbl">
+        <thead><tr><th>Worker</th><th>Collections</th><th>PET kg</th><th>Total kg</th><th>Completeness</th></tr></thead>
+        <tbody>
+          ${workers.map(w=>`<tr>
+            <td>${w.worker_id||w.collector_id||'—'}</td>
+            <td>${w.collection_count||0}</td>
+            <td>${(w.plastic_totals_kg?.PET||0).toFixed(1)}</td>
+            <td>${(w.total_kg||0).toFixed(1)}</td>
+            <td><div class="progress-bar" style="width:80px"><div class="progress-fill" style="width:${Math.round((w.completeness_rate||0)*100)}%"></div></div></td>
+          </tr>`).join('')}
+        </tbody>
+      </table>
+    </div>`:d.worker_count?`
+    <div class="card" style="margin-bottom:20px">
+      <div class="card-hdr">Worker Count</div>
+      <div class="stat-value gold" style="font-size:32px">${d.worker_count}</div>
+      <div class="stat-sub">workers with recorded submissions</div>
+    </div>`:''}
+
+    <!-- EXCEPTIONS -->
+    ${exceptions.length?`
+    <div class="card" style="margin-bottom:20px">
+      <div class="card-hdr text-amber">Exceptions (${exceptions.length})</div>
+      ${exceptions.map(e=>`<div class="exc-card"><div class="exc-card-id">${e.instruction_id||'—'} · ${e.error_code||'—'}</div><div class="exc-card-detail">${e.detail||''}</div></div>`).join('')}
+    </div>`:`
+    <div class="card" style="margin-bottom:20px">
+      <div class="card-hdr">Exceptions</div>
+      <div class="loading-row" style="padding:8px 0;color:var(--bright)">✓ No exceptions recorded</div>
+    </div>`}
+
+    <!-- RAW JSON -->
+    <details style="margin-bottom:20px">
+      <summary class="btn btn-ghost btn-sm" style="cursor:pointer;list-style:none">Show Raw JSON</summary>
+      <div class="json-viewer" style="margin-top:8px">${JSON.stringify(d, null, 2)}</div>
+    </details>
+  `;
+}
+
+function renderExportResult(d) {
+  document.getElementById('report-area').innerHTML = `
+    <div class="alert alert-green" style="margin-bottom:16px"><span class="alert-icon">✓</span>Export generated via /v1/supervisory/programmes/.../export</div>
+    <div class="card">
+      <div class="card-hdr">Export Result</div>
+      <div class="detail-kv" style="display:flex;gap:10px;margin-bottom:6px"><span style="font-family:var(--mono);font-size:8px;color:var(--smoke);min-width:120px">Fingerprint</span><span class="mono-sm">${d.deterministic_fingerprint||'—'}</span></div>
+      <div class="detail-kv" style="display:flex;gap:10px;margin-bottom:6px"><span style="font-family:var(--mono);font-size:8px;color:var(--smoke);min-width:120px">Generated At</span><span class="mono-sm">${d.generated_at_utc||'—'}</span></div>
+      ${d.json_url?`<div style="margin-top:12px;display:flex;gap:8px"><a href="http://localhost:8080${d.json_url}" target="_blank" class="btn btn-ghost btn-sm" style="text-decoration:none">Open JSON →</a>${d.pdf_url?`<a href="http://localhost:8080${d.pdf_url}" target="_blank" class="btn btn-ghost btn-sm" style="text-decoration:none">Open PDF →</a>`:''}</div>`:''}
+    </div>`;
+}
+
+function refreshReport() { generateReport(); }
+
+function downloadReport() {
+  if (!reportData) { toast('Generate a report first', 'warn'); return; }
+  const blob = new Blob([JSON.stringify(reportData, null, 2)], {type:'application/json'});
+  const a = Object.assign(document.createElement('a'), {href:URL.createObjectURL(blob), download:`pwrm0001_monitoring_${Date.now()}.json`});
+  a.click(); URL.revokeObjectURL(a.href);
+  toast('Report downloaded', 'ok');
+}
+
+bootstrap();
+</script>
+</body>
+</html>

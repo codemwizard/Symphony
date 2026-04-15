@@ -1,0 +1,44 @@
+schema_version: 1
+phase: '1'
+task_id: TSK-P1-PLT-009A
+title: 'Backend: Cascading Alignment (Enforce sequence_number in EvidenceLinkIssueHandler)'
+owner_role: SECURITY_GUARDIAN
+status: completed
+depends_on: []
+touches:
+  - services/ledger-api/dotnet/src/LedgerApi/Commands/EvidenceLinkHandlers.cs
+  - scripts/audit/verify_tsk_p1_plt_009a.sh
+  - evidence/phase1/plt_009a_alignment.json
+  - tasks/TSK-P1-PLT-009A/meta.yml
+invariants:
+  - INV-GOV-CONTRACT-001
+work:
+  - '[ID tsk_p1_plt_009a_01] Update EvidenceLinkHandlers.cs to return sequence_number.'
+  - '[ID tsk_p1_plt_009a_02] Implement verifier scripts/audit/verify_tsk_p1_plt_009a.sh.'
+acceptance_criteria:
+  - '[ID tsk_p1_plt_009a_01] The /pilot-demo/api/evidence-links/issue response contains sequence_number.'
+  - '[ID tsk_p1_plt_009a_02] Verifier proves sequence_number presence in response body.'
+verification:
+  - '# [ID tsk_p1_plt_009a_01] [ID tsk_p1_plt_009a_02] test -x scripts/audit/verify_tsk_p1_plt_009a.sh && bash scripts/audit/verify_tsk_p1_plt_009a.sh > evidence/phase1/plt_009a_alignment.json || exit 1'
+evidence:
+  - path: evidence/phase1/plt_009a_alignment.json
+    must_include:
+      - task_id
+      - git_sha
+      - timestamp_utc
+      - status
+      - checks
+      - observed_paths
+      - observed_hashes
+      - command_outputs
+      - execution_trace
+failure_modes:
+  - 'Response remains unchanged => FAIL'
+  - 'Evidence file missing => FAIL'
+must_read:
+  - docs/operations/AI_AGENT_OPERATION_MANUAL.md
+implementation_plan: docs/plans/phase1/TSK-P1-PLT-009/PLAN_A.md
+implementation_log: docs/plans/phase1/TSK-P1-PLT-009/EXEC_LOG_A.md
+client: cursor
+assigned_agent: security_guardian
+model: claude-sonnet-4-20250514

@@ -1,145 +1,103 @@
-# GF-W1-UI-008 PLAN — Create canonical recipient landing page
+# GF-W1-UI-008 Implementation Plan
 
-Task: GF-W1-UI-008
-Owner: SUPERVISOR
-Depends on: GF-W1-UI-001
-failure_signature: PHASE1.GREEN_FINANCE.GF-W1-UI-008.RECIPIENT_LANDING_FAIL
-canonical_reference: docs/operations/AI_AGENT_OPERATION_MANUAL.md
-
----
+## Failure Signature
+`PHASE1.GF-W1.UI-008.BULK_TOKEN_ISSUANCE`
 
 ## Objective
 
-Create `src/recipient-landing/index.html` as the canonical worker submission page with a
-4-step flow: token validation, GPS capture, weighbridge form, and receipt. Enforces GPS
-privacy via resolveNeighbourhoodLabel — raw coordinates never appear in any DOM element.
-
----
+Implement optional bulk token issuance functionality for issuing tokens to multiple workers simultaneously with progress tracking and CSV export.
 
 ## Pre-conditions
 
-- [ ] GF-W1-UI-001 is status=completed (CSS baseline established)
-- [ ] This PLAN.md has been reviewed and approved
-
----
-
-## Must Read (MANDATORY — read in full before any code changes)
-
-1. `.kiro/steering/ui-canonical-design.md` — CSS tokens, resolveNeighbourhoodLabel function
-2. `.kiro/steering/pwrm0001-domain-rules.md` — GPS rules, payload shape, collector roles
-3. `.kiro/steering/symphony-platform-conventions.md` — Runtime profile, API patterns
-4. `.kiro/specs/symphony-ui-canonical/requirements.md` — Requirements 4.1–4.5
-5. `.kiro/specs/symphony-ui-canonical/design.md` — 4-step flow wireframe
-6. `.kiro/specs/symphony-ui-canonical/tasks.md` — Task 8 verbatim instructions
-7. `docs/operations/AGENTIC_SDLC_PILOT_POLICY.md` — Pilot containment
-
----
+1. GF-W1-UI-003 (worker lookup) is complete
+2. Token issuance API is functional
+3. Sequential issuance pattern is established
 
 ## Files to Change
 
 | File | Action | Reason |
 |------|--------|--------|
-| `src/recipient-landing/index.html` | CREATE | Canonical recipient landing page |
-| `tasks/GF-W1-UI-008/meta.yml` | MODIFY | Update status to completed |
-| `evidence/phase1/gf_w1_ui_008.json` | CREATE | Evidence artifact |
-
----
+| `src/supervisory-dashboard/index.html` | MODIFY | Add bulk button, modal, sequential issuance, progress indicator, CSV export, summary |
+| `evidence/phase1/gf_w1_ui_008.json` | CREATE | Evidence file |
 
 ## Stop Conditions
 
-- **If raw GPS coordinates rendered in DOM** → STOP (CRITICAL_FAIL, stop immediately)
-- **If resolveNeighbourhoodLabel function not defined in this file** → STOP (CRITICAL_FAIL)
-- **If Net weight field is editable (must be readonly)** → STOP
-- **If missing `// display only — backend recomputes` comment on net weight** → STOP
-- **If any node in the proof graph is orphaned** → STOP
-
----
+1. Parallel issuance used instead of sequential
+2. No progress indicator shown
+3. CSV not generated
+4. Partial failures not reported in summary
+5. Modal not dismissible
 
 ## Implementation Steps
 
-### Step 1: Create file with resolveNeighbourhoodLabel
-**What:** `[ID gf_w1_ui_008_work_01]` Create src/recipient-landing/index.html with resolveNeighbourhoodLabel.
-**How:** Define the function matching the steering file specification.
-**Done when:** File exists with resolveNeighbourhoodLabel function definition.
+### Step 1: Add Bulk Issue Button
+**Tracking ID:** W1  
+**What:** Add Bulk Issue button to main form  
+**How:** Add button next to single issuance form  
+**Done-when:** Button opens bulk issuance modal
 
-### Step 2: Token validation (Step 1 of flow)
-**What:** `[ID gf_w1_ui_008_work_02]` Read token from window.location.hash, call context endpoint.
-**How:** GET /api/public/evidence-links/context with x-evidence-link-token header. Show role chip, zone via resolveNeighbourhoodLabel, TTL countdown. Error: red card. "Continue to GPS Capture →" button.
-**Done when:** evidence-links/context endpoint referenced.
+### Step 2: Create Bulk Modal
+**Tracking ID:** W2  
+**What:** Create modal with textarea for phone numbers  
+**How:** Add modal with textarea accepting comma-separated phone numbers  
+**Done-when:** Modal displays with textarea and Submit button
 
-### Step 3: GPS capture (Step 2 of flow)
-**What:** `[ID gf_w1_ui_008_work_03]` GPS capture with neighbourhood label only.
-**How:** navigator.geolocation.getCurrentPosition(). Show neighbourhood label (never raw coordinates). Haversine distance ≤ 250m: green. > 250m: amber. "Continue to Form →".
-**Done when:** resolveNeighbourhoodLabel called after GPS capture. No raw coordinates in any element.
+### Step 3: Implement Sequential Issuance
+**Tracking ID:** W3  
+**What:** Implement sequential token issuance  
+**How:** Loop through phone numbers, await each issueToken() call  
+**Done-when:** Tokens issued one-by-one, not in parallel
 
-### Step 4: Weighbridge form (Step 3 of flow)
-**What:** `[ID gf_w1_ui_008_work_04]` WASTE_COLLECTOR form with readonly net weight.
-**How:** Plastic Type select. Gross/Tare weight inputs. Net Weight: readonly, `(gross - tare).toFixed(2)` with comment `// display only — backend recomputes from gross-tare`. Photo upload. Submit: upload then POST /v1/evidence-links/submit.
-**Done when:** "display only" comment present. readonly attribute on net weight. Submit endpoint referenced.
+### Step 4: Add Progress Indicator
+**Tracking ID:** W4  
+**What:** Add progress indicator  
+**How:** Display "Issuing token X of Y..." message updating after each issuance  
+**Done-when:** Progress updates in real-time
 
-### Step 5: Receipt (Step 4 of flow)
-**What:** `[ID gf_w1_ui_008_work_05]` Green receipt card with instruction details.
-**How:** instruction_id (monospace), sequence_number, submitted_at_utc. Text: "Your evidence has been recorded and sealed."
-**Done when:** "recorded and sealed" text present.
+### Step 5: Generate CSV Export
+**Tracking ID:** W5  
+**What:** Generate CSV file with token URLs  
+**How:** Create CSV blob with phone, worker_id, token_url, status columns  
+**Done-when:** CSV downloads automatically after completion
 
-### Step 6: Emit evidence
-```bash
-# [ID gf_w1_ui_008_work_01] [ID gf_w1_ui_008_work_02] [ID gf_w1_ui_008_work_03]
-# [ID gf_w1_ui_008_work_04] [ID gf_w1_ui_008_work_05]
-test -f src/recipient-landing/index.html \
-  && grep -q "resolveNeighbourhoodLabel" src/recipient-landing/index.html \
-  && grep -q "display only" src/recipient-landing/index.html \
-  && grep -q "readonly" src/recipient-landing/index.html \
-  && grep -q "evidence-links/submit" src/recipient-landing/index.html \
-  && cat src/recipient-landing/index.html | grep "recorded and sealed" \
-  > evidence/phase1/gf_w1_ui_008.json || exit 1
-
-# [ID gf_w1_ui_008_work_02] [ID gf_w1_ui_008_work_03]
-test -z "$(grep -E 'textContent.*latitude|innerHTML.*longitude' src/recipient-landing/index.html)" \
-  || exit 1
-```
-
----
+### Step 6: Show Summary
+**Tracking ID:** W6  
+**What:** Show summary of results  
+**How:** Display total, success count, failed count with details  
+**Done-when:** Summary shows all results clearly
 
 ## Verification
 
-```bash
-# [ID gf_w1_ui_008_work_01] [ID gf_w1_ui_008_work_02] [ID gf_w1_ui_008_work_03]
-# [ID gf_w1_ui_008_work_04] [ID gf_w1_ui_008_work_05]
-test -f src/recipient-landing/index.html \
-  && grep -q "resolveNeighbourhoodLabel" src/recipient-landing/index.html \
-  && grep -q "display only" src/recipient-landing/index.html \
-  && grep -q "readonly" src/recipient-landing/index.html \
-  && grep -q "evidence-links/submit" src/recipient-landing/index.html \
-  && cat src/recipient-landing/index.html | grep "recorded and sealed" \
-  > evidence/phase1/gf_w1_ui_008.json || exit 1
-
-# [ID gf_w1_ui_008_work_02] [ID gf_w1_ui_008_work_03]
-test -z "$(grep -E 'textContent.*latitude|innerHTML.*longitude' src/recipient-landing/index.html)" \
-  || exit 1
-```
-
----
+| ID | Command | Purpose |
+|----|---------|---------|
+| V1 | `grep -q 'bulkIssue' src/supervisory-dashboard/index.html \|\| exit 1` | Confirm bulk function exists |
+| V2 | `grep -q 'text/csv' src/supervisory-dashboard/index.html \|\| exit 1` | Confirm CSV export |
 
 ## Evidence Contract
 
-File: `evidence/phase1/gf_w1_ui_008.json`
-Required fields: task_id, git_sha, timestamp_utc, status, checks, observed_paths, observed_hashes, command_outputs, execution_trace, gps_coordinate_check_passed
-
----
+```json
+{
+  "task_id": "GF-W1-UI-008",
+  "timestamp": "ISO8601",
+  "bulk_button_present": true,
+  "modal_created": true,
+  "sequential_issuance_implemented": true,
+  "progress_indicator_present": true,
+  "csv_export_implemented": true,
+  "summary_displayed": true
+}
+```
 
 ## Rollback
 
-1. Delete: `rm src/recipient-landing/index.html`
-2. Update status back to `planned`
+1. Revert changes to `src/supervisory-dashboard/index.html`
+2. Delete `evidence/phase1/gf_w1_ui_008.json`
 
----
-
-## Risk
+## Risk Assessment
 
 | Risk | Consequence | Mitigation |
 |------|-------------|------------|
-| Raw GPS in DOM | CRITICAL_FAIL | Negative grep test |
-| resolveNeighbourhoodLabel missing | CRITICAL_FAIL | Positive grep test |
-| Net weight editable | FAIL | grep for readonly |
-| "display only" comment missing | FAIL | grep for "display only" |
+| Parallel issuance | FUNCTIONAL.API_RATE_LIMIT_EXCEEDED | Use sequential await pattern |
+| No progress | UI.NO_FEEDBACK_DURING_OPERATION | Update progress after each issuance |
+| No CSV | FUNCTIONAL.NO_EXPORT_CAPABILITY | Generate CSV blob and trigger download |
+| Partial failures hidden | FUNCTIONAL.INCOMPLETE_ERROR_REPORTING | Track and display all failures |

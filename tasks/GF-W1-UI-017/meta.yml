@@ -1,0 +1,106 @@
+schema_version: 1
+phase: '1'
+task_id: GF-W1-UI-017
+title: Implement criterion detail slide-out panel with verification controls
+owner_role: ARCHITECT
+status: planned
+priority: HIGH
+risk_class: GOVERNANCE
+blast_radius: APP_LAYER
+intent: >-
+  Implement criterion detail slide-out panel showing detailed information and "Run Verification Now"
+  button to enable stakeholders to drill into individual criterion details and trigger on-demand
+  verification. This panel displays criterion status, invariants, verification method, threshold,
+  last verified timestamp, and provides manual verification trigger capability.
+anti_patterns:
+  - "Creating new slide-out structure instead of reusing existing .slideout class"
+  - "Not implementing smooth slide-in animation from right"
+  - "Missing close button or not wiring it correctly"
+  - "Run Verification Now button not calling API"
+  - "Not displaying all required criterion details"
+depends_on:
+  - GF-W1-UI-016
+blocks:
+  - GF-W1-UI-018
+touches:
+  - src/supervisory-dashboard/index.html
+  - evidence/phase1/GF-W1-UI-017.json
+  - tasks/GF-W1-UI-017/meta.yml
+invariants: []
+work:
+  - '[ID gf_w1_ui_017_work_item_01] Create slide-out panel HTML structure reusing existing .slideout class'
+  - '[ID gf_w1_ui_017_work_item_02] Implement showCriterionDetail(criterionId) function'
+  - '[ID gf_w1_ui_017_work_item_03] Add criterion details display (status, invariants, verification method, threshold, last verified)'
+  - '[ID gf_w1_ui_017_work_item_04] Add Run Verification Now button with onclick handler'
+  - '[ID gf_w1_ui_017_work_item_05] Add Close button with onclick handler'
+  - '[ID gf_w1_ui_017_work_item_06] Implement runVerificationNow(criterionId) function calling API'
+acceptance_criteria:
+  - '[ID gf_w1_ui_017_work_item_01] Slide-out panel structure exists with .slideout class'
+  - '[ID gf_w1_ui_017_work_item_02] showCriterionDetail() opens panel with criterion data'
+  - '[ID gf_w1_ui_017_work_item_03] All criterion details are displayed correctly'
+  - '[ID gf_w1_ui_017_work_item_04] Run Verification Now button triggers API call'
+  - '[ID gf_w1_ui_017_work_item_05] Close button closes panel'
+  - '[ID gf_w1_ui_017_work_item_06] Panel slides in from right with smooth animation'
+negative_tests:
+  - id: GF-W1-UI-017-N1
+    description: >-
+      Verify that panel does not open if criterion ID is invalid.
+    required: true
+  - id: GF-W1-UI-017-N2
+    description: >-
+      Verify that Run Verification Now button does not proceed if API call fails.
+    required: true
+positive_tests:
+  - id: GF-W1-UI-017-P1
+    description: >-
+      Verify that panel opens correctly when criterion is clicked and displays all details.
+    required: true
+verification:
+  - grep -q 'showCriterionDetail' src/supervisory-dashboard/index.html || exit 1
+  - grep -q 'runVerificationNow' src/supervisory-dashboard/index.html || exit 1
+  - test -f evidence/phase1/GF-W1-UI-017.json || exit 1
+evidence:
+  - path: evidence/phase1/GF-W1-UI-017.json
+    must_include:
+      - task_id
+      - timestamp
+      - status
+      - slideout_panel_created
+      - show_criterion_detail_implemented
+      - criterion_details_displayed
+      - run_verification_button_wired
+      - close_button_wired
+      - run_verification_now_implemented
+      - checks
+      - observed_paths
+      - command_outputs
+      - execution_trace
+failure_modes:
+  - "New slide-out structure created instead of reusing .slideout => UI.DESIGN_VIOLATION => FAIL"
+  - "Slide-in animation missing => UI.DESIGN_VIOLATION => FAIL"
+  - "Close button not wired => FUNCTIONAL.NO_CLOSE_CONTROL => FAIL"
+  - "Run Verification Now not calling API => FUNCTIONAL.NO_VERIFICATION_TRIGGER => FAIL"
+  - "Criterion details incomplete => FUNCTIONAL.INCOMPLETE_DETAIL_DISPLAY => FAIL"
+must_read:
+  - docs/operations/AI_AGENT_OPERATION_MANUAL.md
+  - .kiro/steering/ui-canonical-design.md
+  - docs/operations/PILOT_DEMO_VIDEO_SCRIPT.md
+implementation_plan: docs/plans/phase1/GF-W1-UI-017/PLAN.md
+implementation_log: docs/plans/phase1/GF-W1-UI-017/EXEC_LOG.md
+notes: >-
+  This task implements the criterion detail slide-out panel. Reuses existing .slideout class
+  for consistency. Panel slides in from right with smooth animation. Run Verification Now button
+  calls API to trigger on-demand verification. Phase: Green Finance Wave 1. Domain: green_finance.
+client: kiro
+assigned_agent: architect
+model: claude-sonnet-4-20250514
+domain: green_finance
+pilot: true
+second_pilot_test: >-
+  The criterion detail slide-out panel pattern works for any programme requiring compliance dashboard.
+  For PWRM0001 plastic collection, the panel shows criterion details like append-only log integrity
+  status and verification method. For a hypothetical VM0044 solar energy programme, the panel would
+  show criterion details like energy meter data integrity status and verification method. The panel
+  structure, showCriterionDetail() function, detail display, Run Verification Now button, close button,
+  and slide-in animation are identical; only the criterion content differs per programme.
+pilot_scope_ref: docs/pilots/PILOT_PWRM0001/SCOPE.md

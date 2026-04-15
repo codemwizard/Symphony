@@ -298,6 +298,7 @@ else if (!tenantAllowlistConfigured)
 
 var repoRoot = EvidenceMeta.ResolveRepoRoot(Directory.GetCurrentDirectory());
 var supervisoryUiDir = Path.Combine(repoRoot, "src", "supervisory-dashboard");
+var symphonyPilotUiDir = Path.Combine(repoRoot, "src", "symphony-pilot");
 var recipientLandingUiDir = Path.Combine(repoRoot, "src", "recipient-landing");
 var legacySupervisoryUiEnabled = string.Equals(
     Environment.GetEnvironmentVariable("SYMPHONY_ENABLE_LEGACY_SUPERVISORY_UI"),
@@ -310,46 +311,7 @@ app.MapGet("/pilot-demo/supervisory", (HttpContext httpContext) =>
     {
         return Results.NotFound();
     }
-
-    var templatePath = Path.Combine(supervisoryUiDir, "index.html");
-    var fallbackPath = Path.Combine(supervisoryUiDir, "data", "supervisory_hybrid_fallback.json");
-    if (!File.Exists(templatePath) || !File.Exists(fallbackPath))
-    {
-        return Results.NotFound();
-    }
-
-    var html = File.ReadAllText(templatePath);
-    var fallbackJson = File.ReadAllText(fallbackPath);
-    var uiTenantId = Environment.GetEnvironmentVariable("SYMPHONY_UI_TENANT_ID");
-    if (string.IsNullOrWhiteSpace(uiTenantId))
-    {
-        uiTenantId = CreateStableGuid("ten-zambiagrn").ToString();
-    }
-
-    var contextJson = JsonSerializer.Serialize(new
-    {
-        dataMode = "HYBRID",
-        tenantId = uiTenantId,
-        apiKey = Environment.GetEnvironmentVariable("SYMPHONY_UI_API_KEY") ?? string.Empty
-    });
-
-    var adminKey = secrets.AdminApiKey.Trim();
-    if (!string.IsNullOrWhiteSpace(adminKey) && !string.IsNullOrWhiteSpace(uiTenantId))
-    {
-        httpContext.Response.Cookies.Append(PilotDemoOperatorCookieName, CreatePilotDemoOperatorCookie(uiTenantId, adminKey, TimeSpan.FromHours(8)), new CookieOptions
-        {
-            HttpOnly = true,
-            IsEssential = true,
-            SameSite = SameSiteMode.Strict,
-            Secure = httpContext.Request.IsHttps,
-            MaxAge = TimeSpan.FromHours(8),
-            Path = "/"
-        });
-    }
-
-    html = html.Replace("__SYMPHONY_UI_CONTEXT__", contextJson)
-               .Replace("__SYMPHONY_HYBRID_FALLBACK__", fallbackJson);
-    return Results.Content(html, "text/html; charset=utf-8");
+    return Results.Redirect("/pilot-demo/pilot/overview");
 });
 
 app.MapGet("/pilot-demo/supervisory-legacy", () =>
@@ -358,14 +320,7 @@ app.MapGet("/pilot-demo/supervisory-legacy", () =>
     {
         return Results.NotFound();
     }
-
-    var legacyPath = Path.Combine(supervisoryUiDir, "legacy.html");
-    if (!File.Exists(legacyPath))
-    {
-        return Results.NotFound();
-    }
-
-    return Results.Content(File.ReadAllText(legacyPath), "text/html; charset=utf-8");
+    return Results.Redirect("/pilot-demo/pilot/overview");
 });
 
 app.MapGet("/pilot-demo/evidence-link", (HttpContext httpContext) =>
@@ -382,6 +337,96 @@ app.MapGet("/pilot-demo/evidence-link", (HttpContext httpContext) =>
     }
 
     return Results.Content(File.ReadAllText(templatePath), "text/html; charset=utf-8");
+});
+
+// ── TSK-P1-PLT-001: Symphony Pilot UI — serve all pilot pages with operator cookie ──
+// Allowed pilot page names (no path traversal, explicit allowlist)
+var pilotPageAllowlist = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+{
+    "overview", "program-health", "monitoring-report", "token-issuance",
+    "instructions", "success-criteria", "onboarding", "pilot-gate"
+};
+
+app.MapGet("/pilot-demo/pilot/{pageName}", (HttpContext httpContext, string pageName) =>
+{
+    if (!string.Equals(runtimeProfile, "pilot-demo", StringComparison.OrdinalIgnoreCase))
+    {
+        return Results.NotFound();
+    }
+
+    // Sanitize: only allow known page names (no slashes, dots, or traversal)
+    if (string.IsNullOrWhiteSpace(pageName) || !pilotPageAllowlist.Contains(pageName))
+    {
+        return Results.NotFound();
+    }
+
+    var templatePath = Path.Combine(symphonyPilotUiDir, $"{pageName}.html");
+    if (!File.Exists(templatePath))
+    {
+        return Results.NotFound();
+    }
+
+    var html = File.ReadAllText(templatePath);
+
+    // Inject the operator cookie (same pattern as /pilot-demo/supervisory)
+    var uiTenantId = Environment.GetEnvironmentVariable("SYMPHONY_UI_TENANT_ID");
+    if (string.IsNullOrWhiteSpace(uiTenantId))
+    {
+        uiTenantId = CreateStableGuid("ten-zambiagrn").ToString();
+    }
+
+    var adminKey = secrets.AdminApiKey.Trim();
+    if (!string.IsNullOrWhiteSpace(adminKey) && !string.IsNullOrWhiteSpace(uiTenantId))
+    {
+        httpContext.Response.Cookies.Append(PilotDemoOperatorCookieName, CreatePilotDemoOperatorCookie(uiTenantId, adminKey, TimeSpan.FromHours(8)), new CookieOptions
+        {
+            HttpOnly = true,
+            IsEssential = true,
+            SameSite = SameSiteMode.Strict,
+            Secure = httpContext.Request.IsHttps,
+            MaxAge = TimeSpan.FromHours(8),
+            Path = "/"
+        });
+    }
+
+    // Rewrite relative _shared.css reference to absolute pilot asset path
+    html = html.Replace("href=\"_shared.css\"", "href=\"/pilot-demo/pilot/_shared.css\"");
+
+    // Rewrite tab navigation links: overview.html -> /pilot-demo/pilot/overview
+    foreach (var knownPage in pilotPageAllowlist)
+    {
+        html = html.Replace($"href=\"{knownPage}.html\"", $"href=\"/pilot-demo/pilot/{knownPage}\"");
+    }
+
+    return Results.Content(html, "text/html; charset=utf-8");
+});
+
+// Serve the pilot _shared.css (and any future static assets)
+app.MapGet("/pilot-demo/pilot/_shared.css", () =>
+{
+    if (!string.Equals(runtimeProfile, "pilot-demo", StringComparison.OrdinalIgnoreCase))
+    {
+        return Results.NotFound();
+    }
+
+    var cssPath = Path.Combine(symphonyPilotUiDir, "_shared.css");
+    if (!File.Exists(cssPath))
+    {
+        return Results.NotFound();
+    }
+
+    return Results.Content(File.ReadAllText(cssPath), "text/css; charset=utf-8");
+});
+
+// Convenience redirect: /pilot-demo/pilot -> /pilot-demo/pilot/overview
+app.MapGet("/pilot-demo/pilot", () =>
+{
+    if (!string.Equals(runtimeProfile, "pilot-demo", StringComparison.OrdinalIgnoreCase))
+    {
+        return Results.NotFound();
+    }
+
+    return Results.Redirect("/pilot-demo/pilot/overview");
 });
 
 app.MapGet("/health", async (CancellationToken cancellationToken) =>
@@ -602,6 +647,173 @@ app.MapPost("/pilot-demo/api/evidence-links/issue", async (PilotDemoEvidenceLink
 
     var result = await EvidenceLinkIssueHandler.HandleAsync(issueReq, logger, ct);
     return Results.Json(result.Body, statusCode: result.StatusCode);
+}).RequireRateLimiting("sensitive-endpoint");
+
+app.MapPost("/pilot-demo/api/workers/lookup", async (HttpContext ctx, CancellationToken ct) =>
+{
+    if (!string.Equals(runtimeProfile, "pilot-demo", StringComparison.OrdinalIgnoreCase))
+    {
+        return Results.NotFound();
+    }
+
+    // Read tenant_id from cookie (no explicit tenant_id in request body for this endpoint)
+    if (!TryValidatePilotDemoOperatorCookie(ctx, null, out var ec, out var errs))
+    {
+        return Results.Json(new { error_code = ec, errors = errs }, statusCode: StatusCodes.Status401Unauthorized);
+    }
+
+    // Extract tenant_id from validated cookie
+    var cookieValue = ctx.Request.Cookies[PilotDemoOperatorCookieName];
+    if (string.IsNullOrWhiteSpace(cookieValue))
+    {
+        return Results.Json(new { error_code = "PILOT_DEMO_OPERATOR_SESSION_REQUIRED" }, statusCode: StatusCodes.Status401Unauthorized);
+    }
+
+    var decoded = Encoding.UTF8.GetString(Convert.FromBase64String(cookieValue));
+    var parts = decoded.Split('|', StringSplitOptions.None);
+    var tenantId = parts[0].Trim();
+
+    // Read phone from JSON request body
+    string? phone = null;
+    try
+    {
+        using var reader = new StreamReader(ctx.Request.Body);
+        var body = await reader.ReadToEndAsync(ct);
+        var json = JsonDocument.Parse(body);
+        if (json.RootElement.TryGetProperty("phone", out var phoneElement))
+        {
+            phone = phoneElement.GetString();
+        }
+    }
+    catch
+    {
+        return Results.Json(new { error_code = "INVALID_REQUEST", errors = new[] { "Invalid JSON body" } }, statusCode: StatusCodes.Status400BadRequest);
+    }
+
+    if (string.IsNullOrWhiteSpace(phone))
+    {
+        return Results.Json(new { error_code = "INVALID_REQUEST", errors = new[] { "phone field is required" } }, statusCode: StatusCodes.Status400BadRequest);
+    }
+
+    // Look up worker by phone
+    var worker = await SupplierPolicyStore.GetSupplierByPhoneAsync(tenantId, phone);
+    if (worker is null)
+    {
+        return Results.Json(new { error_code = "WORKER_NOT_FOUND" }, statusCode: StatusCodes.Status404NotFound);
+    }
+
+    // Return worker data (use supplier_id as worker_id for frontend compatibility)
+    return Results.Json(new
+    {
+        worker_id = worker.supplier_id,
+        supplier_id = worker.supplier_id,
+        supplier_type = worker.supplier_type,
+        status = worker.active ? "ACTIVE" : "INACTIVE",
+        latitude = worker.registered_latitude,
+        longitude = worker.registered_longitude
+    }, statusCode: StatusCodes.Status200OK);
+}).RequireRateLimiting("sensitive-endpoint");
+
+app.MapGet("/pilot-demo/api/workers/list", async (HttpContext ctx, CancellationToken ct) =>
+{
+    if (!string.Equals(runtimeProfile, "pilot-demo", StringComparison.OrdinalIgnoreCase))
+    {
+        return Results.NotFound();
+    }
+
+    // Validate pilot-demo operator session
+    if (!TryValidatePilotDemoOperatorCookie(ctx, null, out var ec, out var errs))
+    {
+        return Results.Json(new { error_code = ec, errors = errs }, statusCode: StatusCodes.Status401Unauthorized);
+    }
+
+    // Extract tenant_id from validated cookie
+    var cookieValue = ctx.Request.Cookies[PilotDemoOperatorCookieName];
+    if (string.IsNullOrWhiteSpace(cookieValue))
+    {
+        return Results.Json(new { error_code = "PILOT_DEMO_OPERATOR_SESSION_REQUIRED" }, statusCode: StatusCodes.Status401Unauthorized);
+    }
+
+    var decoded = Encoding.UTF8.GetString(Convert.FromBase64String(cookieValue));
+    var parts = decoded.Split('|', StringSplitOptions.None);
+    var tenantId = parts[0].Trim();
+
+    // Fetch all workers for the tenant
+    var workers = await SupplierPolicyStore.GetSuppliersByTenantAsync(tenantId);
+    var filtered = workers.Where(w => w.supplier_type == "WORKER" && w.active)
+                          .Select(w => new { 
+                              worker_id = w.supplier_id, 
+                              name = w.supplier_name,
+                              phone = w.payout_target
+                           });
+
+    return Results.Json(filtered, statusCode: StatusCodes.Status200OK);
+}).RequireRateLimiting("sensitive-endpoint");
+
+app.MapPost("/pilot-demo/api/session/switch", async (PilotSessionSwitchRequest request, HttpContext ctx, CancellationToken ct) =>
+{
+    if (!string.Equals(runtimeProfile, "pilot-demo", StringComparison.OrdinalIgnoreCase))
+    {
+        return Results.NotFound();
+    }
+
+    var tenantId = request.tenant_id;
+    if (string.IsNullOrWhiteSpace(tenantId))
+    {
+        return Results.Json(new { error_code = "INVALID_REQUEST", errors = new[] { "tenant_id field is required" } }, statusCode: StatusCodes.Status400BadRequest);
+    }
+
+    var adminKey = secrets.AdminApiKey.Trim();
+    var expiresAtUnix = DateTimeOffset.UtcNow.AddHours(4).ToUnixTimeSeconds();
+    var signature = ComputePilotDemoSessionSignature(tenantId, expiresAtUnix, adminKey);
+    var cookieValue = Convert.ToBase64String(Encoding.UTF8.GetBytes($"{tenantId}|{expiresAtUnix}|{signature}"));
+
+    ctx.Response.Cookies.Append(PilotDemoOperatorCookieName, cookieValue, new CookieOptions
+    {
+        HttpOnly = true,
+        Secure = true,
+        SameSite = SameSiteMode.Strict,
+        Expires = DateTimeOffset.FromUnixTimeSeconds(expiresAtUnix),
+        Path = "/"
+    });
+
+    return Results.Json(new { success = true, tenant_id = tenantId }, statusCode: StatusCodes.Status200OK);
+}).RequireRateLimiting("sensitive-endpoint");
+
+app.MapDelete("/pilot-demo/api/evidence-links/revoke/{token_id}", async (string token_id, HttpContext ctx, CancellationToken ct) =>
+{
+    if (!string.Equals(runtimeProfile, "pilot-demo", StringComparison.OrdinalIgnoreCase))
+    {
+        return Results.NotFound();
+    }
+
+    // Validate pilot-demo operator session
+    if (!TryValidatePilotDemoOperatorCookie(ctx, null, out var ec, out var errs))
+    {
+        return Results.Json(new { error_code = ec, errors = errs }, statusCode: StatusCodes.Status401Unauthorized);
+    }
+
+    // Validate token_id format
+    if (string.IsNullOrWhiteSpace(token_id))
+    {
+        return Results.Json(new { error_code = "INVALID_REQUEST", errors = new[] { "token_id is required" } }, statusCode: StatusCodes.Status400BadRequest);
+    }
+
+    // Check if already revoked
+    if (RevokedTokensLog.IsRevoked(token_id))
+    {
+        return Results.Json(new { error_code = "ALREADY_REVOKED", message = "Token is already revoked" }, statusCode: StatusCodes.Status400BadRequest);
+    }
+
+    // Append to revoked tokens log
+    await RevokedTokensLog.AppendAsync(new
+    {
+        token_id = token_id,
+        revoked_at = DateTimeOffset.UtcNow,
+        revoked_by = "pilot-demo-operator"
+    }, ct);
+
+    return Results.Json(new { success = true, message = "Token revoked successfully" }, statusCode: StatusCodes.Status200OK);
 }).RequireRateLimiting("sensitive-endpoint");
 
 app.MapPost("/v1/evidence-links/submit", async (EvidenceLinkSubmitRequest request, HttpContext httpContext, CancellationToken cancellationToken) =>
@@ -976,6 +1188,21 @@ app.MapGet("/pilot-demo/api/pilot-success", (HttpContext httpContext) =>
     return Results.Json(result.Body, statusCode: result.StatusCode);
 }).RequireRateLimiting("sensitive-endpoint");
 
+// ── TSK-P1-PLT-003: Success Criteria shim for pilot UI (cookie auth) ──
+app.MapGet("/pilot-demo/api/pilot-success-criteria", (HttpContext httpContext) =>
+{
+    if (!string.Equals(runtimeProfile, "pilot-demo", StringComparison.OrdinalIgnoreCase))
+        return Results.NotFound();
+
+    if (!TryValidatePilotDemoOperatorCookie(httpContext, null, out var errorCode, out var errors))
+        return Results.Json(new { error_code = errorCode, errors },
+            statusCode: StatusCodes.Status401Unauthorized);
+
+    var rootDir = EvidenceMeta.ResolveRepoRoot(Directory.GetCurrentDirectory());
+    var result = PilotSuccessCriteriaReadModelHandler.Handle(rootDir);
+    return Results.Json(result.Body, statusCode: result.StatusCode);
+}).RequireRateLimiting("sensitive-endpoint");
+
 app.MapGet("/pilot-demo/api/monitoring-report/{programId}", async (
     string programId, HttpContext httpContext, CancellationToken cancellationToken) =>
 {
@@ -989,6 +1216,30 @@ app.MapGet("/pilot-demo/api/monitoring-report/{programId}", async (
     var rootDir = EvidenceMeta.ResolveRepoRoot(Directory.GetCurrentDirectory());
     var result = await Pwrm0001MonitoringReportHandler.HandleAsync(
         programId, rootDir, cancellationToken);
+    return Results.Json(result.Body, statusCode: result.StatusCode);
+}).RequireRateLimiting("sensitive-endpoint");
+
+// ── TSK-P1-PLT-002: Reveal API Shim for pilot UI ──
+app.MapGet("/pilot-demo/api/reveal/{programId}", (string programId, HttpContext httpContext) =>
+{
+    if (!string.Equals(runtimeProfile, "pilot-demo", StringComparison.OrdinalIgnoreCase))
+        return Results.NotFound();
+
+    if (!TryValidatePilotDemoOperatorCookie(httpContext, null, out var errorCode, out var errors))
+        return Results.Json(new { error_code = errorCode, errors },
+            statusCode: StatusCodes.Status401Unauthorized);
+
+    // Extract tenant_id from validated cookie
+    var cookieValue = httpContext.Request.Cookies[PilotDemoOperatorCookieName];
+    if (string.IsNullOrWhiteSpace(cookieValue))
+        return Results.Json(new { error_code = "PILOT_DEMO_OPERATOR_SESSION_REQUIRED" },
+            statusCode: StatusCodes.Status401Unauthorized);
+
+    var decoded = Encoding.UTF8.GetString(Convert.FromBase64String(cookieValue));
+    var parts = decoded.Split('|', StringSplitOptions.None);
+    var tenantId = parts[0].Trim();
+
+    var result = SupervisoryRevealReadModelHandler.Handle(tenantId, programId.Trim(), dataSource);
     return Results.Json(result.Body, statusCode: result.StatusCode);
 }).RequireRateLimiting("sensitive-endpoint");
 
@@ -1316,7 +1567,8 @@ app.MapPost("/api/admin/onboarding/suppliers", async (JsonElement body, HttpCont
     if (!body.TryGetProperty("payout_target", out var ptProp) || string.IsNullOrWhiteSpace(ptProp.GetString()))
         return Results.Json(new { error_code = "INVALID_REQUEST", errors = new[] { "payout_target is required" } }, statusCode: 400);
 
-    var success = await tenantRegistryStore.RegisterSupplierAsync(tenantId, supplierId.ToString(), snProp.GetString()!.Trim(), ptProp.GetString()!.Trim(), cancellationToken, bypassRls: true);
+    var supplierType = body.TryGetProperty("supplier_type", out var stProp) ? stProp.GetString() : null;
+    var success = await tenantRegistryStore.RegisterSupplierAsync(tenantId, supplierId.ToString(), snProp.GetString()!.Trim(), ptProp.GetString()!.Trim(), supplierType, cancellationToken, bypassRls: true);
     if (!success)
         return Results.Json(new { error_code = "SUPPLIER_CREATE_FAILED", errors = new[] { "supplier register failed" } }, statusCode: 503);
 
@@ -1493,9 +1745,9 @@ app.MapGet("/api/admin/onboarding/status", async (HttpContext httpContext, Cance
 if (string.Equals(runtimeProfile, "pilot-demo", StringComparison.OrdinalIgnoreCase))
 {
     var actualTenantId = await SeedDemoTenant(runtimeProfile, tenantRegistryStore, programmeStore, tenantOnboardingStore, dataSource, logger);
-    if (actualTenantId.HasValue)
+    if (actualTenantId.HasValue && dataSource is not null)
     {
-        await SeedChungaWorkers(programmeStore, logger, actualTenantId.Value);
+        await SeedChungaWorkers(programmeStore, logger, actualTenantId.Value, dataSource, CancellationToken.None);
     }
     else
     {
@@ -1773,13 +2025,26 @@ async Task<Guid?> SeedDemoTenant(string rp, ITenantRegistryStore trs, IProgramme
     return null;
 }
 
-async Task SeedChungaWorkers(IProgrammeStore ps, ILogger l, Guid actualTenantId)
+async Task SeedChungaWorkers(IProgrammeStore ps, ILogger l, Guid actualTenantId, NpgsqlDataSource dataSource, CancellationToken cancellationToken)
 {
     try
     {
         // Use the actual tenant ID passed from SeedDemoTenant
         var DemoTenantId = actualTenantId.ToString();
         const string PgmZambiaGrnKey = "PGM-ZAMBIA-GRN-001";
+
+        // Add verification query
+        await using var conn = await dataSource.OpenConnectionAsync(cancellationToken);
+        await using var cmd = conn.CreateCommand();
+        cmd.CommandText = "SELECT EXISTS(SELECT 1 FROM public.tenants WHERE tenant_id = @tid)";
+        cmd.Parameters.AddWithValue("tid", actualTenantId);
+        var exists = (bool)(await cmd.ExecuteScalarAsync(cancellationToken) ?? false);
+
+        if (!exists)
+        {
+            l.LogError("Tenant {TenantId} does not exist in public.tenants. Cannot seed workers.", actualTenantId);
+            return;
+        }
 
         // Resolve the actual program UUID from the database
         var pgms = await ps.ListAsync(Guid.Parse(DemoTenantId), default, true);
@@ -1789,6 +2054,14 @@ async Task SeedChungaWorkers(IProgrammeStore ps, ILogger l, Guid actualTenantId)
 
         var workerChunga001Id = CreateStableGuid("worker-chunga-001").ToString();
         var workerChunga002Id = CreateStableGuid("worker-chunga-002").ToString();
+
+        // Check if workers already exist before inserting
+        var existingWorker = await SupplierPolicyStore.GetSupplierAsync(DemoTenantId, workerChunga001Id);
+        if (existingWorker != null)
+        {
+            l.LogInformation("Worker {WorkerId} already exists. Skipping.", workerChunga001Id);
+            return;
+        }
 
         l.LogInformation("Auto-seeding Chunga workers for pilot demo...");
 

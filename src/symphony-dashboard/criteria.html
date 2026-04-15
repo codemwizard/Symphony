@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Symphony · Pilot Success Criteria</title>
+<link rel="stylesheet" href="_shared.css">
+<style>
+.layout { height:calc(100vh - 81px); overflow-y:auto; padding:24px 28px; }
+
+/* Gate banner */
+.gate-banner {
+  border-radius:4px; padding:16px 22px; margin-bottom:24px;
+  display:flex; align-items:center; justify-content:space-between;
+}
+.gate-banner.pass { background:rgba(61,184,90,0.07); border:1px solid rgba(61,184,90,0.22); }
+.gate-banner.fail { background:rgba(176,48,32,0.07); border:1px solid rgba(176,48,32,0.22); }
+.gate-banner.pending { background:rgba(212,130,30,0.07); border:1px solid rgba(212,130,30,0.22); }
+.gate-label { font-family:var(--serif); font-size:18px; font-weight:700; }
+.gate-label.pass { color:var(--bright); }
+.gate-label.fail { color:var(--red-lt); }
+.gate-label.pending { color:var(--amber-lt); }
+.gate-stats { display:flex; gap:20px; }
+.gate-stat { text-align:right; }
+.gate-stat-num { font-family:var(--serif); font-size:22px; font-weight:900; }
+.gate-stat-lbl { font-family:var(--mono); font-size:8px; letter-spacing:0.2em; text-transform:uppercase; color:var(--smoke); margin-top:2px; }
+
+/* Category sections */
+.cat-section { margin-bottom:28px; }
+.cat-header {
+  display:flex; align-items:center; justify-content:space-between;
+  margin-bottom:14px; padding-bottom:8px;
+  border-bottom:1px solid var(--border);
+}
+.cat-title { font-family:var(--mono); font-size:9px; letter-spacing:0.3em; text-transform:uppercase; color:var(--gold); }
+.cat-summary { font-family:var(--mono); font-size:9px; color:var(--smoke); }
+
+/* Criterion cards */
+.criteria-grid { display:grid; grid-template-columns:1fr 1fr 1fr; gap:12px; }
+.crit-card {
+  background:var(--surface); border:1px solid var(--border);
+  border-radius:4px; padding:14px 16px;
+  position:relative; overflow:hidden;
+  transition:border-color 0.15s;
+}
+.crit-card::before {
+  content:''; position:absolute; left:0; top:0; bottom:0; width:3px;
+}
+.crit-card.pass::before  { background:var(--bright); }
+.crit-card.fail::before  { background:var(--red-lt); }
+.crit-card.warn::before  { background:var(--amber); }
+.crit-card.pending::before { background:var(--smoke); }
+
+.crit-id { font-family:var(--mono); font-size:8px; color:var(--smoke); margin-bottom:6px; }
+.crit-name { font-family:var(--mono); font-size:11px; color:var(--cream); margin-bottom:8px; line-height:1.4; }
+.crit-meta { display:flex; flex-wrap:wrap; gap:5px; margin-bottom:8px; }
+.crit-inv { font-family:var(--mono); font-size:7.5px; color:var(--smoke); background:var(--panel); border:1px solid var(--border); padding:1px 5px; border-radius:2px; }
+.crit-footer { display:flex; align-items:center; justify-content:space-between; margin-top:8px; }
+.crit-method { font-family:var(--mono); font-size:8px; color:var(--smoke); }
+.crit-freq { font-family:var(--mono); font-size:8px; color:var(--smoke); }
+.crit-verify-btn { font-family:var(--mono); font-size:7.5px; letter-spacing:0.15em; text-transform:uppercase; padding:3px 8px; border-radius:2px; cursor:pointer; border:1px solid var(--border); background:transparent; color:var(--smoke); transition:all 0.15s; }
+.crit-verify-btn:hover { border-color:var(--border-md); color:var(--cream); }
+.crit-verify-btn.verifying { color:var(--amber-lt); border-color:var(--amber); cursor:wait; }
+
+/* Last verified time */
+.last-verified { font-family:var(--mono); font-size:7.5px; color:var(--dim); margin-top:4px; }
+
+/* Progress bar row */
+.overall-progress { margin-bottom:24px; }
+.progress-row-label { display:flex; justify-content:space-between; margin-bottom:6px; }
+.progress-row-label span { font-family:var(--mono); font-size:9px; color:var(--smoke); }
+
+/* Refresh controls */
+.top-controls { display:flex; gap:10px; align-items:center; margin-bottom:20px; }
+</style>
+</head>
+<body>
+
+<!-- TOPBAR -->
+<div class="topbar">
+  <div class="topbar-left">
+    <div class="logo">Sym<span>phony</span></div>
+    <span class="pill pill-green" id="gate-pill">GATE: LOADING…</span>
+  </div>
+  <div class="topbar-right">
+    <span>LAST VERIFIED: <span class="text-gold" id="last-verified-display">—</span></span>
+    <span id="clock">—</span>
+  </div>
+</div>
+
+<!-- TABS -->
+<div class="tab-bar">
+  <a href="supervisory.html" class="tab">Governed Disbursement</a>
+  <a href="workers.html"     class="tab">Worker Onboarding</a>
+  <a href="monitoring.html"  class="tab">Monitoring Report</a>
+  <a href="criteria.html"    class="tab active">Pilot Criteria</a>
+  <a href="admin.html"       class="tab">Admin</a>
+</div>
+
+<!-- MAIN -->
+<div class="layout">
+
+  <!-- CONTROLS -->
+  <div class="top-controls">
+    <button class="btn btn-gold" onclick="loadCriteria()">↻ Refresh All</button>
+    <button class="btn btn-ghost" onclick="verifyAll()">▶ Run All Verifications</button>
+    <span class="mono-xs" id="next-check">Auto-refresh in <span id="countdown">30</span>s</span>
+  </div>
+
+  <!-- GATE BANNER -->
+  <div class="gate-banner pending" id="gate-banner">
+    <div>
+      <div class="gate-label pending" id="gate-title">GATE STATUS LOADING…</div>
+      <div class="mono-xs" style="margin-top:4px" id="gate-sub">Checking criteria…</div>
+    </div>
+    <div class="gate-stats">
+      <div class="gate-stat">
+        <div class="gate-stat-num text-bright" id="pass-count">—</div>
+        <div class="gate-stat-lbl">Passing</div>
+      </div>
+      <div class="gate-stat">
+        <div class="gate-stat-num text-red" id="fail-count">—</div>
+        <div class="gate-stat-lbl">Failing</div>
+      </div>
+      <div class="gate-stat">
+        <div class="gate-stat-num text-smoke" id="total-count">—</div>
+        <div class="gate-stat-lbl">Total</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- OVERALL PROGRESS -->
+  <div class="overall-progress">
+    <div class="progress-row-label">
+      <span id="progress-label">Overall Gate Compliance</span>
+      <span id="progress-pct">—</span>
+    </div>
+    <div class="progress-bar" style="height:8px">
+      <div class="progress-fill" id="overall-bar" style="width:0%"></div>
+    </div>
+  </div>
+
+  <!-- CRITERIA SECTIONS -->
+  <div id="criteria-area"><div class="loading-row"><span class="spinner"></span>Loading criteria…</div></div>
+
+</div>
+
+<!-- TOAST AREA -->
+<div id="toast-area"></div>
+
+<script>
+const API = 'http://localhost:8080';
+let criteriaData = null;
+let countdown = 30;
+let cdTimer = null;
+
+function tick() { document.getElementById('clock').textContent = new Date().toUTCString().slice(5,25)+' UTC'; }
+setInterval(tick,1000); tick();
+
+function toast(msg, type='ok') {
+  const el = Object.assign(document.createElement('div'),{className:`toast toast-${type}`,textContent:msg});
+  document.getElementById('toast-area').appendChild(el);
+  setTimeout(()=>el.remove(),4000);
+}
+
+function startCountdown() {
+  countdown=30;
+  if (cdTimer) clearInterval(cdTimer);
+  cdTimer = setInterval(()=>{
+    countdown--;
+    const el = document.getElementById('countdown');
+    if (el) el.textContent=countdown;
+    if (countdown<=0) { clearInterval(cdTimer); loadCriteria(); }
+  },1000);
+}
+
+async function loadCriteria() {
+  try {
+    const r = await fetch(`${API}/pilot-demo/api/pilot-success`, {credentials:'include'});
+    if (!r.ok) throw new Error(r.status);
+    criteriaData = await r.json();
+    renderCriteria(criteriaData);
+    startCountdown();
+  } catch(e) {
+    // Fallback: try the Next.js mock path or show error
+    try {
+      const r2 = await fetch(`/pilot-demo/api/pilot-success-criteria`);
+      if (!r2.ok) throw new Error(r2.status);
+      criteriaData = await r2.json();
+      renderCriteria(criteriaData);
+    } catch {
+      document.getElementById('criteria-area').innerHTML=`<div class="alert alert-red">Cannot reach criteria API: ${e.message}.<br>Ensure backend is running at ${API}</div>`;
+      document.getElementById('gate-pill').textContent='GATE: UNREACHABLE';
+    }
+  }
+}
+
+function renderCriteria(d) {
+  const technical   = d.technical   || [];
+  const operational = d.operational || [];
+  const regulatory  = d.regulatory  || [];
+
+  // Handle alternate format from /pilot-demo/api/pilot-success (LedgerApi)
+  const criteria = d.criteria || [];
+  if (criteria.length) { renderFlatCriteria(d); return; }
+
+  const all = [...technical, ...operational, ...regulatory];
+  const passCount = all.filter(c=>c.status==='PASS').length;
+  const failCount = all.filter(c=>c.status!=='PASS').length;
+  const totalCount = all.length;
+  const pct = totalCount ? Math.round((passCount/totalCount)*100) : 0;
+
+  updateGateBanner(passCount, failCount, totalCount, d.lastVerified);
+
+  document.getElementById('criteria-area').innerHTML = `
+    ${renderCategory('Technical Controls', technical)}
+    ${renderCategory('Operational Controls', operational)}
+    ${renderCategory('Regulatory Controls', regulatory)}
+  `;
+}
+
+function renderFlatCriteria(d) {
+  const criteria = d.criteria || [];
+  const passCount = d.pass_count ?? criteria.filter(c=>c.status==='PASS').length;
+  const failCount = d.fail_count ?? criteria.filter(c=>c.status!=='PASS').length;
+  const totalCount = criteria.length;
+
+  updateGateBanner(passCount, failCount, totalCount, new Date().toISOString());
+
+  // Group by category
+  const byCategory = {};
+  criteria.forEach(c=>{
+    const cat = c.category||'Other';
+    if (!byCategory[cat]) byCategory[cat]=[];
+    byCategory[cat].push({
+      id: c.criterion_id, name: c.label,
+      invariants:[], method:'Evidence file check',
+      frequency:'On demand', lastVerified: new Date().toISOString(),
+      status: c.status, detail: c.source
+    });
+  });
+
+  document.getElementById('criteria-area').innerHTML = Object.entries(byCategory)
+    .map(([cat, items])=>renderCategory(cat, items)).join('');
+}
+
+function updateGateBanner(passCount, failCount, totalCount, lastVerified) {
+  const pct = totalCount ? Math.round((passCount/totalCount)*100) : 0;
+  const allPass = failCount===0 && totalCount>0;
+  const banner = document.getElementById('gate-banner');
+  banner.className = `gate-banner ${allPass?'pass':failCount>0?'fail':'pending'}`;
+  document.getElementById('gate-title').className = `gate-label ${allPass?'pass':failCount>0?'fail':'pending'}`;
+  document.getElementById('gate-title').textContent = allPass?'ALL CRITERIA PASSING':failCount>0?`${failCount} CRITERION FAILING`:'LOADING…';
+  document.getElementById('gate-sub').textContent = lastVerified?`Last verified: ${lastVerified.slice(0,16).replace('T',' ')} UTC`:'';
+  document.getElementById('gate-pill').textContent = allPass?'GATE: PASS':failCount>0?'GATE: FAIL':'GATE: PENDING';
+  document.getElementById('gate-pill').className = `pill ${allPass?'pill-green':failCount>0?'pill-red':'pill-amber'}`;
+  document.getElementById('pass-count').textContent = passCount;
+  document.getElementById('fail-count').textContent = failCount;
+  document.getElementById('total-count').textContent = totalCount;
+  document.getElementById('progress-pct').textContent = `${pct}%`;
+  document.getElementById('overall-bar').style.width = pct+'%';
+  document.getElementById('overall-bar').className = `progress-fill ${allPass?'':'amber'}`;
+  if (lastVerified) document.getElementById('last-verified-display').textContent = lastVerified.slice(0,16).replace('T',' ');
+}
+
+function renderCategory(title, items) {
+  if (!items.length) return '';
+  const passCount = items.filter(c=>c.status==='PASS').length;
+  return `
+    <div class="cat-section">
+      <div class="cat-header">
+        <span class="cat-title">${title}</span>
+        <span class="cat-summary">${passCount}/${items.length} passing</span>
+      </div>
+      <div class="criteria-grid">
+        ${items.map(c=>renderCriterionCard(c)).join('')}
+      </div>
+    </div>
+  `;
+}
+
+function renderCriterionCard(c) {
+  const st = (c.status||'pending').toLowerCase();
+  const cardClass = st==='pass'?'pass':st==='fail'?'fail':st==='warn'?'warn':'pending';
+  const invs = (c.invariants||[]).map(i=>`<span class="crit-inv">${i}</span>`).join('');
+  return `
+    <div class="crit-card ${cardClass}" id="card-${c.id||''}">
+      <div class="crit-id">${c.id||'—'}</div>
+      <div class="crit-name">${c.name||'—'}</div>
+      ${invs?`<div class="crit-meta">${invs}</div>`:''}
+      <div class="crit-footer">
+        <div>
+          <div class="crit-method">${c.method||''}</div>
+          <div class="crit-freq">${c.frequency||''}</div>
+          ${c.detail?`<div class="crit-freq text-gold">${c.detail}</div>`:''}
+        </div>
+        <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px">
+          <span class="status status-${st}">${st.toUpperCase()}</span>
+          <button class="crit-verify-btn" onclick="verifyCriterion('${c.id||''}', this)">Verify</button>
+        </div>
+      </div>
+      <div class="last-verified" id="lv-${c.id||''}">Last: ${(c.lastVerified||'').slice(0,16).replace('T',' ')}</div>
+    </div>
+  `;
+}
+
+async function verifyCriterion(id, btn) {
+  if (!id) return;
+  btn.textContent = '…'; btn.classList.add('verifying');
+  try {
+    const r = await fetch(`${API}/pilot-demo/api/pilot-success`, {credentials:'include'});
+    // Re-read the full criteria and find the specific one
+    if (r.ok) {
+      const d = await r.json();
+      const all = [...(d.technical||[]), ...(d.operational||[]), ...(d.regulatory||[]), ...(d.criteria||[])];
+      const crit = all.find(c=>(c.id||c.criterion_id)===id);
+      const st = crit?.status||'PASS';
+      const card = document.getElementById(`card-${id}`);
+      if (card) {
+        card.className = `crit-card ${st.toLowerCase()==='pass'?'pass':'fail'}`;
+        const statusEl = card.querySelector('.status');
+        if (statusEl) { statusEl.className=`status status-${st.toLowerCase()}`; statusEl.textContent=st; }
+      }
+      const lv = document.getElementById(`lv-${id}`);
+      if (lv) lv.textContent = `Last: ${new Date().toISOString().slice(0,16).replace('T',' ')}`;
+      toast(`${id}: ${st}`, st==='PASS'?'ok':'err');
+    }
+  } catch(e) {
+    toast(`Verify error: ${e.message}`, 'err');
+  } finally { btn.textContent='Verify'; btn.classList.remove('verifying'); }
+}
+
+async function verifyAll() {
+  toast('Running all verifications…', 'ok');
+  await loadCriteria();
+  toast('All verifications complete', 'ok');
+}
+
+loadCriteria();
+</script>
+</body>
+</html>

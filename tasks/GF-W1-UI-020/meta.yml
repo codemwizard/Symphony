@@ -1,0 +1,112 @@
+schema_version: 1
+phase: '1'
+task_id: GF-W1-UI-020
+title: Implement export report functionality for JSON and PDF formats with deterministic fingerprint
+owner_role: ARCHITECT
+status: planned
+priority: MEDIUM
+risk_class: GOVERNANCE
+blast_radius: APP_LAYER
+intent: >-
+  Implement export report functionality for JSON and PDF formats to enable stakeholders to
+  download compliance reports for offline review and audit purposes. JSON export is generated
+  client-side. PDF export calls backend endpoint. Both formats include deterministic SHA-256
+  fingerprint for tamper detection. Files are named with timestamp for easy identification.
+anti_patterns:
+  - "Missing deterministic fingerprint in exported files"
+  - "Not including timestamp in filename"
+  - "JSON export not generating valid JSON"
+  - "PDF export not calling backend endpoint"
+  - "Export modal missing format options"
+depends_on:
+  - GF-W1-UI-019
+blocks:
+  - GF-W1-UI-021
+touches:
+  - src/supervisory-dashboard/index.html
+  - services/ledger-api/dotnet/src/LedgerApi/Program.cs
+  - evidence/phase1/GF-W1-UI-020.json
+  - tasks/GF-W1-UI-020/meta.yml
+invariants: []
+work:
+  - '[ID gf_w1_ui_020_work_item_01] Add Export Report button click handler'
+  - '[ID gf_w1_ui_020_work_item_02] Create export modal with format options (JSON / PDF)'
+  - '[ID gf_w1_ui_020_work_item_03] Implement JSON export with client-side generation'
+  - '[ID gf_w1_ui_020_work_item_04] Implement PDF export calling backend endpoint'
+  - '[ID gf_w1_ui_020_work_item_05] Add deterministic SHA-256 fingerprint to both formats'
+  - '[ID gf_w1_ui_020_work_item_06] Add download functionality with timestamp-based filename'
+acceptance_criteria:
+  - '[ID gf_w1_ui_020_work_item_01] Export modal opens when Export Report button is clicked'
+  - '[ID gf_w1_ui_020_work_item_02] Modal shows format options (JSON / PDF)'
+  - '[ID gf_w1_ui_020_work_item_03] JSON export generates valid JSON file'
+  - '[ID gf_w1_ui_020_work_item_04] PDF export calls backend and downloads PDF'
+  - '[ID gf_w1_ui_020_work_item_05] Both formats include deterministic SHA-256 fingerprint'
+  - '[ID gf_w1_ui_020_work_item_06] Files are named with timestamp (e.g., pilot-success-criteria-2026-04-08T12-30-00.json)'
+negative_tests:
+  - id: GF-W1-UI-020-N1
+    description: >-
+      Verify that JSON export fails gracefully if criteria data is missing.
+    required: true
+  - id: GF-W1-UI-020-N2
+    description: >-
+      Verify that PDF export fails gracefully if backend endpoint is unavailable.
+    required: true
+positive_tests:
+  - id: GF-W1-UI-020-P1
+    description: >-
+      Verify that JSON export generates valid JSON with all criteria and fingerprint.
+    required: true
+  - id: GF-W1-UI-020-P2
+    description: >-
+      Verify that PDF export downloads valid PDF with all criteria and fingerprint.
+    required: true
+verification:
+  - grep -q 'exportReport' src/supervisory-dashboard/index.html || exit 1
+  - grep -q 'SHA-256' src/supervisory-dashboard/index.html || exit 1
+  - test -f evidence/phase1/GF-W1-UI-020.json || exit 1
+evidence:
+  - path: evidence/phase1/GF-W1-UI-020.json
+    must_include:
+      - task_id
+      - timestamp
+      - status
+      - export_button_handler_added
+      - export_modal_created
+      - json_export_implemented
+      - pdf_export_implemented
+      - fingerprint_added
+      - download_functionality_added
+      - checks
+      - observed_paths
+      - command_outputs
+      - execution_trace
+failure_modes:
+  - "Fingerprint missing => GOVERNANCE.NO_TAMPER_DETECTION => FAIL"
+  - "Timestamp not in filename => FUNCTIONAL.FILE_NAMING_UNCLEAR => FAIL"
+  - "JSON export invalid => FUNCTIONAL.INVALID_JSON => FAIL"
+  - "PDF export not calling backend => FUNCTIONAL.NO_PDF_GENERATION => FAIL"
+  - "Export modal missing format options => FUNCTIONAL.NO_FORMAT_CHOICE => FAIL"
+must_read:
+  - docs/operations/AI_AGENT_OPERATION_MANUAL.md
+  - .kiro/steering/ui-canonical-design.md
+  - docs/operations/PILOT_DEMO_VIDEO_SCRIPT.md
+implementation_plan: docs/plans/phase1/GF-W1-UI-020/PLAN.md
+implementation_log: docs/plans/phase1/GF-W1-UI-020/EXEC_LOG.md
+notes: >-
+  This task implements export report functionality for JSON and PDF formats. JSON export is
+  client-side. PDF export calls backend. Both include deterministic SHA-256 fingerprint for
+  tamper detection. Files are named with timestamp. Phase: Green Finance Wave 1.
+  Domain: green_finance.
+client: kiro
+assigned_agent: architect
+model: claude-sonnet-4-20250514
+domain: green_finance
+pilot: true
+second_pilot_test: >-
+  The export report functionality pattern works for any programme requiring compliance dashboard
+  with offline report capability. For PWRM0001 plastic collection, export includes criteria like
+  append-only log integrity and worker onboarding completeness. For a hypothetical VM0044 solar
+  energy programme, export would include criteria like energy meter data integrity and technician
+  certification validation. The export implementation (modal, JSON generation, PDF backend call,
+  fingerprint, filename with timestamp) is identical; only the criteria content differs per programme.
+pilot_scope_ref: docs/pilots/PILOT_PWRM0001/SCOPE.md

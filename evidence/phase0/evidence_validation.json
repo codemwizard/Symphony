@@ -1,14 +1,19 @@
 {
   "check_id": "EVIDENCE-SCHEMA-VALIDATION",
-  "timestamp_utc": "1970-01-01T00:00:00Z",
-  "git_sha": "0000000000000000000000000000000000000000",
+  "timestamp_utc": "2026-04-10T23:35:04Z",
+  "git_sha": "1e10b961de7ab2c93995591b37018b461e00206c",
   "schema_fingerprint": "1f92363c69ba235e552a6aac05045062fc0097fc93cde3b89e76455b80628019",
-  "status": "PASS",
+  "status": "FAIL",
   "checked_dirs": [
     "evidence/phase0",
     "evidence/phase1"
   ],
-  "checked_file_count": 307,
-  "schema_usage_count": 307,
-  "errors": []
+  "checked_file_count": 308,
+  "schema_usage_count": 308,
+  "errors": [
+    {
+      "file": "/home/mwiza/workspaces/Symphony-Demo/Symphony/evidence/phase1/gf_w1_ui_024_programme_extraction.json",
+      "error": "'check_id' is a required property\n\nFailed validating 'required' in schema:\n    {'$schema': 'http://json-schema.org/draft-07/schema#',\n     'additionalProperties': True,\n     'properties': {'check_id': {'minLength': 3, 'type': 'string'},\n                    'git_sha': {'minLength': 7, 'type': 'string'},\n                    'schema_fingerprint': {'type': 'string'},\n                    'status': {'enum': ['PASS', 'FAIL', 'SKIPPED'],\n                               'type': 'string'},\n                    'timestamp_utc': {'minLength': 1, 'type': 'string'}},\n     'required': ['check_id', 'timestamp_utc', 'git_sha', 'status'],\n     'type': 'object'}\n\nOn instance:\n    {'checks': [{'detail': 'programme-health.html exists',\n                 'id': 'gf_w1_ui_024_01',\n                 'status': 'PASS'},\n                {'detail': 'Inter font applied',\n                 'id': 'gf_w1_ui_024_02',\n                 'status': 'PASS'},\n                {'detail': 'index.html decoupled from screen-main',\n                 'id': 'gf_w1_ui_024_03',\n                 'status': 'PASS'}],\n     'command_outputs': 'Validation successful.',\n     'execution_trace': 'Executed standalone UI isolation checks.',\n     'git_sha': '1e10b961de7ab2c93995591b37018b461e00206c',\n     'observed_hashes': {'src/supervisory-dashboard/index.html': '7c3d0403a47cb226ea5c94614713e5dae712bca94ea3f3b57365709fd7e95ffe',\n                         'src/supervisory-dashboard/programme-health.html': '23856ab97a91e6f3c21d031d3f5ed070e6b6c0ab6be17e78e25389711b03451c'},\n     'observed_paths': ['src/supervisory-dashboard/programme-health.html',\n                        'src/supervisory-dashboard/index.html'],\n     'status': 'completed',\n     'task_id': 'GF-W1-UI-024',\n     'timestamp_utc': '2026-04-09T12:59:37Z'}"
+    }
+  ]
 }

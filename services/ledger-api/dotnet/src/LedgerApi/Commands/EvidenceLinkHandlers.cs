@@ -6,10 +6,10 @@ using Microsoft.AspNetCore.Http;
 
 static class EvidenceLinkIssueHandler
 {
-    private static readonly Regex MsisdnRegex = new(@"^\+?[0-9]{8,15}$", RegexOptions.Compiled);
+    private static readonly Regex MsisdnRegex = new(@"^(MMO:)?\+?[0-9]{8,15}$", RegexOptions.Compiled);
     private static readonly HashSet<string> ValidSubmitterClasses =
         new(StringComparer.Ordinal)
-        { "VENDOR", "FIELD_OFFICER", "BORROWER", "SUPPLIER", "WASTE_COLLECTOR" };
+        { "VENDOR", "FIELD_OFFICER", "BORROWER", "SUPPLIER", "WASTE_COLLECTOR", "WORKER" };
 
     public static async Task<HandlerResult> HandleAsync(EvidenceLinkIssueRequest request, ILogger logger, CancellationToken cancellationToken)
     {
@@ -89,6 +89,9 @@ static class EvidenceLinkIssueHandler
             signingKey,
             request.worker_id);
 
+        var dispatchEntries = EvidenceLinkSmsDispatchLog.ReadAll();
+        var sequenceNumber = dispatchEntries.Count;
+
         await EvidenceLinkSmsDispatchLog.AppendAsync(new
         {
             tenant_id = request.tenant_id.Trim(),
@@ -97,10 +100,11 @@ static class EvidenceLinkIssueHandler
             submitter_class = request.submitter_class.Trim(),
             submitter_msisdn = request.submitter_msisdn.Trim(),
             dispatched_at_utc = DateTimeOffset.UtcNow.ToString("O"),
-            status = "SIMULATED_DISPATCHED"
+            status = "SIMULATED_DISPATCHED",
+            sequence_number = sequenceNumber
         }, cancellationToken);
 
-        logger.LogInformation("Issued secure evidence link for instruction {InstructionId}", request.instruction_id);
+        logger.LogInformation("Issued secure evidence link for instruction {InstructionId} (Seq #{SequenceNumber})", request.instruction_id, sequenceNumber);
         return new HandlerResult(StatusCodes.Status200OK, new
         {
             issued = true,
@@ -113,7 +117,8 @@ static class EvidenceLinkIssueHandler
             token,
             landing_url = $"/pilot-demo/evidence-link#token={token}",
             upload_path = "/v1/evidence-links/submit",
-            sms_dispatch_status = "SIMULATED_DISPATCHED"
+            sms_dispatch_status = "SIMULATED_DISPATCHED",
+            sequence_number = sequenceNumber
         });
     }
 
@@ -156,6 +161,16 @@ static class EvidenceLinkSubmitHandler
             {
                 error_code = validation.ErrorCode,
                 errors = new[] { validation.ErrorMessage }
+            });
+        }
+
+        // Check if token is revoked (use token string as identifier)
+        if (RevokedTokensLog.IsRevoked(token))
+        {
+            return new HandlerResult(StatusCodes.Status401Unauthorized, new
+            {
+                error_code = "TOKEN_REVOKED",
+                errors = new[] { "This token has been revoked and can no longer be used" }
             });
         }
 
@@ -501,6 +516,9 @@ static class EvidenceLinkSmsDispatchLog
         Directory.CreateDirectory(Path.GetDirectoryName(PathValue) ?? "/tmp");
         await TamperEvidentChain.AppendJsonAsync(PathValue, "evidence_event_sms_dispatch", payload, cancellationToken);
     }
+
+    public static IReadOnlyList<JsonElement> ReadAll()
+        => NdjsonReadModel.Read(PathValue);
 }
 
 static class EvidenceLinkSubmissionLog
@@ -564,6 +582,60 @@ static class DemoExceptionLog
 
     public static IReadOnlyList<JsonElement> ReadAll()
         => NdjsonReadModel.Read(PathValue);
+}
+
+static class RevokedTokensLog
+{
+    private static readonly string PathValue = Environment.GetEnvironmentVariable("REVOKED_TOKENS_FILE")
+        ?? "/tmp/symphony_revoked_tokens.ndjson";
+    private static readonly SemaphoreSlim _appendLock = new(1, 1);
+
+    public static async Task AppendAsync(object payload, CancellationToken cancellationToken)
+    {
+        Directory.CreateDirectory(Path.GetDirectoryName(PathValue) ?? "/tmp");
+        await _appendLock.WaitAsync(cancellationToken);
+        try
+        {
+            await TamperEvidentChain.AppendJsonAsync(PathValue, "token_revoked", payload, cancellationToken);
+        }
+        finally
+        {
+            _appendLock.Release();
+        }
+    }
+
+    public static bool IsRevoked(string tokenId)
+    {
+        if (!File.Exists(PathValue))
+        {
+            return false;
+        }
+
+        foreach (var line in File.ReadLines(PathValue))
+        {
+            if (string.IsNullOrWhiteSpace(line))
+            {
+                continue;
+            }
+
+            try
+            {
+                using var doc = JsonDocument.Parse(line);
+                if (doc.RootElement.TryGetProperty("payload", out var payload) &&
+                    payload.TryGetProperty("token_id", out var tid) &&
+                    tid.GetString() == tokenId)
+                {
+                    return true;
+                }
+            }
+            catch
+            {
+                // Ignore malformed lines
+            }
+        }
+
+        return false;
+    }
 }
 
 static class NdjsonReadModel

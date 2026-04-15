@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Symphony — Overview</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="_shared.css">
+  <style>
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 20px;
+      margin-bottom: 24px;
+    }
+    .stat-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 20px;
+    }
+    .stat-card h3 {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--muted);
+      margin-bottom: 8px;
+    }
+    .stat-value {
+      font-family: 'Inter', sans-serif;
+      font-size: 28px;
+      font-weight: 800;
+      color: var(--green);
+    }
+    .stat-subtitle {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 12px;
+      color: var(--muted);
+      margin-top: 4px;
+    }
+    .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+    @media (max-width: 900px) { .two-col { grid-template-columns: 1fr; } }
+    .card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+      padding-bottom: 16px;
+      border-bottom: 1px solid var(--border);
+    }
+    .card-header h2 { font-size: 16px; font-weight: 700; }
+    .card-header a { color: var(--green); text-decoration: none; font-size: 13px; }
+    .card-header a:hover { text-decoration: underline; }
+    .compliance-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 12px 14px;
+      background: rgba(255,255,255,0.02);
+      border-radius: 6px;
+      margin-bottom: 8px;
+      font-size: 14px;
+    }
+    .compliance-item:last-child { margin-bottom: 0; }
+    .loading { text-align: center; padding: 40px; color: var(--muted); }
+    .error-msg {
+      background: var(--red-bg);
+      color: var(--red);
+      padding: 14px;
+      border-radius: 8px;
+      border: 1px solid var(--red);
+      margin-bottom: 16px;
+    }
+    tr:hover td { background: rgba(255,255,255,0.02); }
+    .badge-success { background: var(--green-bg); color: var(--green); }
+    .badge-warning { background: var(--amber-bg); color: var(--amber); }
+    .badge-pending { background: rgba(139,148,158,0.15); color: var(--muted); }
+  </style>
+</head>
+<body>
+  <header class="topbar">
+    <div class="logo"><span class="logo-sym">Sym</span><span class="logo-phony">phony</span></div>
+    <div class="topbar-right">
+      <div class="topbar-title">Chunga Dumpsite · PWRM0001</div>
+      <div class="topbar-subtitle">Regulated by ZEMA / Bank of Zambia</div>
+    </div>
+  </header>
+
+  <nav class="tabbar">
+    <a class="tab active" href="overview.html">Overview</a>
+    <a class="tab" href="program-health.html">Programme Health</a>
+    <a class="tab" href="monitoring-report.html">Monitoring Report</a>
+    <a class="tab" href="token-issuance.html">Token Issuance</a>
+    <a class="tab" href="instructions.html">Instructions</a>
+    <a class="tab" href="success-criteria.html">Success Criteria</a>
+    <a class="tab" href="onboarding.html">Onboarding</a>
+    <a class="tab" href="pilot-gate.html">Pilot Gate</a>
+  </nav>
+
+  <div class="page-content">
+    <div id="error-container"></div>
+
+    <div class="stats-grid" id="stats-grid">
+      <div class="loading">Loading statistics...</div>
+    </div>
+
+    <div class="two-col">
+      <div class="card">
+        <div class="card-header">
+          <h2>Recent Instructions</h2>
+          <a href="instructions.html">View All</a>
+        </div>
+        <div id="recent-instructions"><div class="loading">Loading...</div></div>
+      </div>
+      <div class="card">
+        <div class="card-header">
+          <h2>Compliance Status</h2>
+        </div>
+        <div id="compliance-status"><div class="loading">Loading...</div></div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const TCO2_PER_KG = 0.00048;
+    const PRICE_PER_TCO2_ZMW = 150.0;
+
+    function calculateCarbonValue(weightKg) {
+      const tco2 = weightKg * TCO2_PER_KG;
+      const valueZMW = tco2 * PRICE_PER_TCO2_ZMW;
+      return { tco2, valueZMW };
+    }
+
+    function formatCurrency(value) {
+      return new Intl.NumberFormat('en-ZM', { style: 'currency', currency: 'ZMW' }).format(value);
+    }
+
+    function showError(message) {
+      document.getElementById('error-container').innerHTML =
+        '<div class="error-msg">' + message + '</div>';
+    }
+
+    async function loadOverviewData() {
+      try {
+        const [revealRes, monitoringRes] = await Promise.all([
+          fetch('/pilot-demo/api/reveal/PGM-ZAMBIA-GRN-001', { credentials: 'include' }),
+          fetch('/pilot-demo/api/monitoring-report/PGM-ZAMBIA-GRN-001', { credentials: 'include' })
+        ]);
+
+        if (!revealRes.ok || !monitoringRes.ok) throw new Error('Failed to fetch data');
+
+        const revealData = await revealRes.json();
+        const monitoringData = await monitoringRes.json();
+
+        const totalWeight = monitoringData.totalWeight || 0;
+        const carbonValue = calculateCarbonValue(totalWeight);
+        const settledCount = (revealData.instructions || []).filter(i => i.status === 'SETTLED').length;
+        const holdCount = (revealData.instructions || []).filter(i => i.status === 'HOLD').length;
+
+        document.getElementById('stats-grid').innerHTML = `
+          <div class="stat-card">
+            <h3>Total Plastic Recovered</h3>
+            <div class="stat-value">${totalWeight.toLocaleString()} kg</div>
+            <div class="stat-subtitle">Verified and recorded</div>
+          </div>
+          <div class="stat-card">
+            <h3>Carbon Equivalent</h3>
+            <div class="stat-value">${carbonValue.tco2.toFixed(4)} tCO₂e</div>
+            <div class="stat-subtitle">@ ${TCO2_PER_KG} tCO₂/kg</div>
+          </div>
+          <div class="stat-card">
+            <h3>Indicative Value</h3>
+            <div class="stat-value" style="font-size:22px">${formatCurrency(carbonValue.valueZMW)}</div>
+            <div class="stat-subtitle">@ ${PRICE_PER_TCO2_ZMW} ZMW/tCO₂ (indicative)</div>
+          </div>
+          <div class="stat-card">
+            <h3>Instructions</h3>
+            <div class="stat-value">${settledCount + holdCount}</div>
+            <div class="stat-subtitle">${settledCount} settled, ${holdCount} on hold</div>
+          </div>
+        `;
+
+        const recentInstructions = (revealData.instructions || []).slice(0, 5);
+        if (recentInstructions.length > 0) {
+          document.getElementById('recent-instructions').innerHTML = `
+            <table>
+              <thead><tr><th>ID</th><th>Type</th><th>Status</th></tr></thead>
+              <tbody>
+                ${recentInstructions.map(inst => `
+                  <tr>
+                    <td class="mono-id">${inst.id}</td>
+                    <td style="font-size:14px">${inst.proofType.replace(/_/g, ' ')}</td>
+                    <td><span class="chip ${inst.status === 'SETTLED' ? 'chip-green' : 'chip-amber'}">${inst.status}</span></td>
+                  </tr>
+                `).join('')}
+              </tbody>
+            </table>
+          `;
+        } else {
+          document.getElementById('recent-instructions').innerHTML = '<p style="color:var(--muted)">No instructions found.</p>';
+        }
+
+        document.getElementById('compliance-status').innerHTML = `
+          <div class="compliance-item">
+            <span>ZGFT Pollution Prevention</span>
+            <span class="chip ${monitoringData.zgft_pollution_prevention ? 'chip-green' : 'chip-grey'}">${monitoringData.zgft_pollution_prevention ? 'Compliant' : 'Pending'}</span>
+          </div>
+          <div class="compliance-item">
+            <span>ZGFT Circular Economy</span>
+            <span class="chip ${monitoringData.zgft_circular_economy ? 'chip-green' : 'chip-grey'}">${monitoringData.zgft_circular_economy ? 'Compliant' : 'Pending'}</span>
+          </div>
+          <div class="compliance-item">
+            <span>DNSH Declaration</span>
+            <span class="chip ${monitoringData.zgft_dnsh_declared ? 'chip-green' : 'chip-grey'}">${monitoringData.zgft_dnsh_declared ? 'Declared' : 'Pending'}</span>
+          </div>
+          <div class="compliance-item">
+            <span>Anti-Double Counting</span>
+            <span class="chip ${monitoringData.antiDoubleCountingActive ? 'chip-green' : 'chip-amber'}">${monitoringData.antiDoubleCountingActive ? 'Active' : 'Inactive'}</span>
+          </div>
+          <div class="compliance-item">
+            <span>Corresponding Adjustment</span>
+            <span class="chip chip-amber">${monitoringData.correspondingAdjustment || 'PENDING'}</span>
+          </div>
+        `;
+
+      } catch (error) {
+        console.error('Error loading data:', error);
+        showError('Failed to load dashboard data. Please try again.');
+        document.getElementById('stats-grid').innerHTML = '';
+      }
+    }
+
+    document.addEventListener('DOMContentLoaded', loadOverviewData);
+  </script>
+</body>
+</html>

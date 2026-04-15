@@ -70,6 +70,16 @@ if [ "$TAB_COUNT" -lt 5 ]; then
   errors+=("insufficient_tabs:found_${TAB_COUNT}_need_5")
 fi
 
+# ─── 9. Worker tokens tab exists ───
+if ! grep -q "switchTab('worker-tokens'" "$DASHBOARD" 2>/dev/null; then
+  errors+=("worker_tokens_tab_missing")
+fi
+
+# ─── 10. Worker tokens screen exists ───
+if ! grep -q 'id="screen-worker-tokens"' "$DASHBOARD" 2>/dev/null; then
+  errors+=("worker_tokens_screen_missing")
+fi
+
 # ─── Emit evidence ───
 if [[ ${#errors[@]} -eq 0 ]]; then status="PASS"; else status="FAIL"; fi
 
@@ -99,6 +109,8 @@ payload = {
         "no_admin_key_in_browser": "admin_key_in_browser" not in errors and "admin_api_key_in_browser" not in errors,
         "session_credentials": "no_session_credentials" not in errors,
         "five_tabs": "insufficient_tabs" not in " ".join(errors),
+        "worker_tokens_tab": "worker_tokens_tab_missing" not in errors,
+        "worker_tokens_screen": "worker_tokens_screen_missing" not in errors,
     },
     "errors": errors
 }

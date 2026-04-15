@@ -1,0 +1,435 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Symphony — Token Issuance</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="_shared.css">
+  <style>
+    html, body { overflow-y: auto; height: auto; min-height: 100vh; }
+    body { display: flex; flex-direction: column; }
+    .screen-area { flex: 1; padding: 24px 40px; }
+
+    .ti-grid {
+      display: grid;
+      grid-template-columns: 400px 1fr;
+      gap: 24px;
+      height: 100%;
+    }
+
+    .ti-form-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 24px;
+      height: fit-content;
+    }
+    .ti-form-header { font-family: 'Inter', sans-serif; font-weight: 700; font-size: 18px; margin-bottom: 20px; }
+
+    .ti-field { margin-bottom: 16px; }
+    .ti-field-label {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--muted);
+      margin-bottom: 6px;
+      display: block;
+    }
+    .ti-select {
+      width: 100%;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 10px 14px;
+      font-family: 'Inter', sans-serif;
+      font-size: 15px;
+      color: var(--text);
+      appearance: none;
+      cursor: pointer;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%238b949e' d='M2.5 4.5l3.5 3.5 3.5-3.5'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 14px center;
+    }
+    .ti-select:focus { outline: none; border-color: var(--green); }
+
+    .ti-readonly-box {
+      width: 100%;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 10px 14px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 13px;
+      color: var(--green);
+    }
+
+    .ti-btn-issue {
+      width: 100%;
+      background: var(--green);
+      color: #fff;
+      font-family: 'Inter', sans-serif;
+      font-weight: 700;
+      font-size: 14px;
+      padding: 14px 20px;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: opacity 0.15s ease;
+      margin-top: 8px;
+    }
+    .ti-btn-issue:hover:not(:disabled) { opacity: 0.9; }
+    .ti-btn-issue:disabled { opacity: 0.4; cursor: not-allowed; }
+
+    .ti-status-banner {
+      margin-top: 16px;
+      padding: 12px 14px;
+      border-radius: 6px;
+      font-size: 14px;
+      display: none;
+    }
+    .ti-status-banner.success { display: block; background: var(--green-bg); border: 1px solid var(--green); color: var(--green); }
+    .ti-status-banner.error { display: block; background: var(--red-bg); border: 1px solid var(--red); color: var(--red); }
+
+    .ti-session-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      display: flex;
+      flex-direction: column;
+      min-height: 0;
+      overflow: hidden;
+    }
+    .ti-session-header { font-family: 'Inter', sans-serif; font-weight: 700; font-size: 18px; padding: 20px 24px; flex-shrink: 0; }
+    .ti-session-table-wrapper { flex: 1; overflow-y: auto; padding: 0 24px 20px; }
+
+    .ti-session-table { width: 100%; border-collapse: collapse; }
+    .ti-session-table th {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      font-weight: 400;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--muted);
+      text-align: left;
+      padding: 12px;
+      border-bottom: 1px solid var(--border);
+      position: sticky;
+      top: 0;
+      background: var(--surface);
+    }
+    .ti-session-table td { font-size: 14px; padding: 12px; border-bottom: 1px solid rgba(255,255,255,0.05); }
+
+    .ti-empty-state {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 200px;
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    @media (max-width: 900px) {
+      .ti-grid { grid-template-columns: 1fr; }
+      .ti-session-card { max-height: 400px; }
+    }
+    @media (max-width: 768px) {
+      .screen-area { padding: 20px; }
+    }
+  </style>
+</head>
+<body>
+  <header class="topbar">
+    <div class="logo"><span class="logo-sym">Sym</span><span class="logo-phony">phony</span></div>
+    <div class="topbar-right">
+      <div class="topbar-title">Chunga Dumpsite · PWRM0001</div>
+      <div class="topbar-subtitle">Regulated by ZEMA / Bank of Zambia</div>
+    </div>
+  </header>
+
+  <nav class="tabbar">
+    <a class="tab" href="overview.html">Overview</a>
+    <a class="tab" href="program-health.html">Programme Health</a>
+    <a class="tab" href="monitoring-report.html">Monitoring Report</a>
+    <a class="tab active" href="token-issuance.html">Token Issuance</a>
+    <a class="tab" href="instructions.html">Instructions</a>
+    <a class="tab" href="success-criteria.html">Success Criteria</a>
+    <a class="tab" href="onboarding.html">Onboarding</a>
+    <a class="tab" href="pilot-gate.html">Pilot Gate</a>
+  </nav>
+
+  <div class="screen-area">
+    <div class="ti-grid">
+      <!-- Left: Issue Token Form -->
+      <div class="ti-form-card">
+        <h2 class="ti-form-header">ISSUE EVIDENCE TOKEN</h2>
+
+        <div class="ti-field">
+          <label class="ti-field-label">Tenant</label>
+          <select id="ti-tenant-select" class="ti-select" onchange="onTenantChange()">
+            <option value="">Loading tenants...</option>
+          </select>
+        </div>
+
+        <div class="ti-field">
+          <label class="ti-field-label">Worker</label>
+          <select id="ti-worker-select" class="ti-select" onchange="updateIssueButtonState()" disabled>
+            <option value="">Select tenant first...</option>
+          </select>
+        </div>
+
+        <div class="ti-field">
+          <label class="ti-field-label">Programme</label>
+          <div class="ti-readonly-box">PGM-ZAMBIA-GRN-001</div>
+        </div>
+
+        <div class="ti-field">
+          <label class="ti-field-label">Proof Type</label>
+          <select id="ti-proof-select" class="ti-select" onchange="updateIssueButtonState()">
+            <option value="">Select proof type...</option>
+            <option value="WEIGHBRIDGE_RECORD">Weighbridge Collection Record</option>
+            <option value="COLLECTION_PHOTO">Field Collection Photo</option>
+            <option value="QUALITY_AUDIT_RECORD">Quality Audit Record</option>
+            <option value="TRANSFER_MANIFEST">Offtake Transfer Manifest</option>
+          </select>
+        </div>
+
+        <button id="ti-issue-btn" class="ti-btn-issue" disabled onclick="issueToken()">
+          ISSUE TOKEN &rarr;
+        </button>
+
+        <div id="ti-status-banner" class="ti-status-banner"></div>
+      </div>
+
+      <!-- Right: Session Tokens Table -->
+      <div class="ti-session-card">
+        <h2 class="ti-session-header">SESSION TOKENS</h2>
+        <div class="ti-session-table-wrapper">
+          <div id="ti-empty-state" class="ti-empty-state">No tokens issued this session</div>
+          <table id="ti-session-table" class="ti-session-table" style="display:none">
+            <thead>
+              <tr>
+                <th>Instruction ID</th>
+                <th>Worker</th>
+                <th>Proof Type</th>
+                <th>Issued</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody id="ti-session-body"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const sessionTokens = [];
+    let activeWorkers = [];
+    let availableTenants = [];
+
+    // TSK-P1-PLT-009C: Fetch tenants from onboarding status
+    async function fetchTenants() {
+      const select = document.getElementById('ti-tenant-select');
+      try {
+        const response = await fetch('/api/admin/onboarding/status', { credentials: 'include' });
+        if (!response.ok) throw new Error('Failed to fetch tenants');
+        const data = await response.json();
+        availableTenants = data.tenants || [];
+        
+        select.innerHTML = '<option value="">Select tenant...</option>' + 
+          availableTenants.map(t => `<option value="${t.tenant_id}">${t.display_name}</option>`).join('');
+      } catch (err) {
+        console.error(err);
+        select.innerHTML = '<option value="">Error loading tenants</option>';
+      }
+    }
+
+    // TSK-P1-PLT-009C: Context switching logic
+    async function onTenantChange() {
+      const tenantId = document.getElementById('ti-tenant-select').value;
+      const workerSelect = document.getElementById('ti-worker-select');
+      
+      if (!tenantId) {
+        workerSelect.innerHTML = '<option value="">Select tenant first...</option>';
+        workerSelect.disabled = true;
+        return;
+      }
+
+      workerSelect.innerHTML = '<option value="">Loading workers...</option>';
+      workerSelect.disabled = true;
+
+      try {
+        // Switch backend session
+        const switchResp = await fetch('/pilot-demo/api/session/switch', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify({ tenant_id: tenantId })
+        });
+        if (!switchResp.ok) throw new Error(`Failed to switch tenant context (${switchResp.status})`);
+
+        // Update header UI
+        const selectedTenant = availableTenants.find(t => t.tenant_id === tenantId);
+        if (selectedTenant) {
+          document.querySelector('.topbar-title').textContent = `${selectedTenant.display_name} · SIMULATION-MODE`;
+        }
+
+        await fetchWorkers();
+        workerSelect.disabled = false;
+      } catch (err) {
+        console.error(err);
+        workerSelect.innerHTML = '<option value="">Error switching context</option>';
+      }
+    }
+
+    // TSK-P1-PLT-009B: Fetch real workers from registry (now scoped by session)
+    async function fetchWorkers() {
+      const select = document.getElementById('ti-worker-select');
+      try {
+        const response = await fetch('/pilot-demo/api/workers/list', { credentials: 'include' });
+        if (!response.ok) throw new Error('Failed to fetch workers');
+        activeWorkers = await response.json();
+        
+        select.innerHTML = '<option value="">Select worker...</option>' + 
+          activeWorkers.map(w => `<option value="${w.worker_id}">${w.name} (${w.phone})</option>`).join('');
+      } catch (err) {
+        console.error(err);
+        select.innerHTML = '<option value="">Error loading workers</option>';
+      }
+    }
+
+    window.addEventListener('DOMContentLoaded', fetchTenants);
+
+    const TI_PROOF_TYPE_LABELS = {
+      'WEIGHBRIDGE_RECORD': 'Weighbridge Collection Record',
+      'COLLECTION_PHOTO': 'Field Collection Photo',
+      'QUALITY_AUDIT_RECORD': 'Quality Audit Record',
+      'TRANSFER_MANIFEST': 'Offtake Transfer Manifest'
+    };
+
+    function updateIssueButtonState() {
+      const worker = document.getElementById('ti-worker-select').value;
+      const proof = document.getElementById('ti-proof-select').value;
+      document.getElementById('ti-issue-btn').disabled = !(worker && proof);
+    }
+
+    async function issueToken() {
+      const workerSelect = document.getElementById('ti-worker-select');
+      const proofSelect = document.getElementById('ti-proof-select');
+      const issueBtn = document.getElementById('ti-issue-btn');
+      const statusBanner = document.getElementById('ti-status-banner');
+
+      const workerId = workerSelect.value;
+      const proofType = proofSelect.value;
+      if (!workerId || !proofType) return;
+
+      const workerObj = activeWorkers.find(w => w.worker_id === workerId);
+      const msisdn = workerObj ? workerObj.phone : '';
+
+      issueBtn.disabled = true;
+      issueBtn.textContent = 'ISSUING...';
+      statusBanner.className = 'ti-status-banner';
+      statusBanner.style.display = 'none';
+
+      // TSK-P1-PLT-006: Generate instruction_id client-side and map fields
+      const instructionId = 'INST-' + Date.now().toString(36).toUpperCase() + '-' + Math.random().toString(36).substring(2, 6).toUpperCase();
+
+      try {
+        const tenantId = document.getElementById('ti-tenant-select').value;
+        const response = await fetch('/pilot-demo/api/evidence-links/issue', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify({
+            tenant_id: tenantId,
+            worker_id: workerId,
+            instruction_id: instructionId,
+            program_id: 'PGM-ZAMBIA-GRN-001',
+            submitter_class: 'WORKER',
+            submitter_msisdn: msisdn,
+            artifact_type: proofType
+          })
+        });
+
+        const data = await response.json();
+        if (!response.ok) {
+          const errMsg = data.error_code || data.error || data.errors?.[0] || 'Failed to issue token';
+          throw new Error(errMsg);
+        }
+
+        const sequence = data.sequence_number || data.sequence || '—';
+        statusBanner.className = 'ti-status-banner success';
+        statusBanner.innerHTML = `✓ Token issued — <span class="mono-id">${data.instruction_id || instructionId}</span> · Seq #${sequence}`;
+
+        addSessionToken({
+          instructionId: data.instruction_id || instructionId,
+          worker: workerId,
+          proofType,
+          issuedAt: Date.now(),
+          status: 'ISSUED'
+        });
+
+        workerSelect.value = '';
+        proofSelect.value = '';
+      } catch (err) {
+        statusBanner.style.display = 'block';
+        statusBanner.className = 'ti-status-banner error';
+        statusBanner.innerHTML = `✗ ${err.message}`;
+      } finally {
+        issueBtn.disabled = false;
+        issueBtn.innerHTML = 'ISSUE TOKEN &rarr;';
+      }
+    }
+
+    function addSessionToken(token) {
+      sessionTokens.unshift(token);
+      renderSessionTokens();
+    }
+
+    function renderSessionTokens() {
+      const emptyState = document.getElementById('ti-empty-state');
+      const table = document.getElementById('ti-session-table');
+      const tbody = document.getElementById('ti-session-body');
+
+      if (sessionTokens.length === 0) {
+        emptyState.style.display = 'flex';
+        table.style.display = 'none';
+        return;
+      }
+
+      emptyState.style.display = 'none';
+      table.style.display = 'table';
+
+      tbody.innerHTML = sessionTokens.map(token => {
+        const relativeTime = getRelativeTime(token.issuedAt);
+        const statusClass = token.status === 'SUBMITTED' ? 'chip-green' : 'chip-amber';
+        const proofLabel = TI_PROOF_TYPE_LABELS[token.proofType] || token.proofType;
+        return `
+          <tr>
+            <td class="mono-id">${token.instructionId}</td>
+            <td>${(activeWorkers.find(w => w.worker_id === token.worker)?.name) || token.worker}</td>
+            <td>${proofLabel}</td>
+            <td>${relativeTime}</td>
+            <td><span class="chip ${statusClass}">${token.status}</span></td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    function getRelativeTime(timestamp) {
+      const diff = Math.floor((Date.now() - timestamp) / 1000);
+      if (diff < 5) return 'just now';
+      if (diff < 60) return `${diff}s ago`;
+      if (diff < 3600) return `${Math.floor(diff / 60)}m ago`;
+      if (diff < 86400) return `${Math.floor(diff / 3600)}h ago`;
+      return `${Math.floor(diff / 86400)}d ago`;
+    }
+
+    setInterval(() => { if (sessionTokens.length > 0) renderSessionTokens(); }, 30000);
+  </script>
+</body>
+</html>

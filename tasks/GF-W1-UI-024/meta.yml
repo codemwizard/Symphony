@@ -1,0 +1,42 @@
+schema_version: 1
+phase: '1'
+task_id: GF-W1-UI-024
+title: Extract Programme Health tab to standalone page and apply canonical design tokens
+owner_role: IMPLEMENTER
+status: completed
+depends_on: []
+touches:
+- src/supervisory-dashboard/index.html
+- src/supervisory-dashboard/programme-health.html
+- scripts/audit/verify_gf_w1_ui_024.sh
+- evidence/phase1/gf_w1_ui_024_programme_extraction.json
+- tasks/GF-W1-UI-024/meta.yml
+invariants:
+- INV-UI-001
+- INV-UI-002
+work:
+- "[ID gf_w1_ui_024_work_item_01] Create programme-health.html by extracting Programme Health SPA components."
+- "[ID gf_w1_ui_024_work_item_02] Refactor index.html to remove the extracted logic and apply window.location.href routing."
+- "[ID gf_w1_ui_024_work_item_03] Apply target Symphony-redesign.md variable styles and structural updates."
+acceptance_criteria:
+- "[ID gf_w1_ui_024_work_item_01] programme-health.html exists and incorporates fonts Inter and JetBrains Mono."
+- "[ID gf_w1_ui_024_work_item_02] index.html successfully lacks the screen-main markup and uses href routes to programme-health.html."
+- "[ID gf_w1_ui_024_work_item_03] Both files use proper HTML5 navigation semantics over internal toggles for Programme Health."
+verification:
+- '# [ID gf_w1_ui_024_work_item_01] [ID gf_w1_ui_024_work_item_02] [ID gf_w1_ui_024_work_item_03] test -x scripts/audit/verify_gf_w1_ui_024.sh && bash scripts/audit/verify_gf_w1_ui_024.sh > evidence/phase1/gf_w1_ui_024_programme_extraction.json || exit 1'
+evidence:
+- "{'path': 'evidence/phase1/gf_w1_ui_024_programme_extraction.json', 'must_include': ['task_id', 'git_sha', 'timestamp_utc', 'status', 'checks', 'observed_paths', 'observed_hashes', 'command_outputs', 'execution_trace']}"
+failure_modes:
+- The script fails to detect the extracted logic => CRITICAL_FAIL
+- index.html still contains screen-main => FAIL
+- programme-health.html uses incorrect fonts => FAIL
+- Evidence file missing => FAIL
+must_read:
+- docs/operations/AI_AGENT_OPERATION_MANUAL.md
+- Symphony-redesign.md
+implementation_plan: docs/plans/phase1/GF-W1-UI-024/PLAN.md
+implementation_log: docs/plans/phase1/GF-W1-UI-024/EXEC_LOG.md
+notes: 'Formalized backward-compliance wrapper executed.'
+client: cursor
+assigned_agent: implementer
+model: agent-v1

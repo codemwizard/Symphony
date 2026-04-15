@@ -1,158 +1,108 @@
 schema_version: 1
 phase: '1'
 task_id: GF-W1-UI-002
-title: Add three-tab layout with Programme Health as default
-owner_role: SUPERVISOR
+title: Add Worker Token Issuance tab structure with two-column layout and programme context
+owner_role: ARCHITECT
 status: completed
 priority: HIGH
 risk_class: GOVERNANCE
 blast_radius: APP_LAYER
-
 intent: >-
-  Create the three-tab navigation structure for the supervisory dashboard with
-  tabs labelled "Programme Health", "Monitoring Report", and "Onboarding Console".
-  Programme Health is the default active tab. Each tab shows only its content div.
-
+  Add the 4th tab "Worker Token Issuance" to the supervisory dashboard to enable operators
+  to generate evidence-link tokens for waste collectors as required by Act 2.1-2.2 of the
+  pilot demo video script. This task creates only the tab structure and two-column layout
+  placeholder, not the functional logic. Subsequent tasks will add the lookup form, issuance
+  logic, recent tokens list, and revocation functionality.
 anti_patterns:
-  - "Adding content to tabs — this task only creates the tab switching mechanism"
-  - "Using inline styles instead of CSS token variables"
-  - "Creating separate HTML files for each tab"
-
-out_of_scope:
-  - "Tab content — KPI cards, tables, reports are in subsequent tasks"
-  - "Backend API calls — no wiring in this task"
-  - "Recipient landing page — separate task GF-W1-UI-008"
-
-stop_conditions:
-  - "More or fewer than 3 tabs exist => FAIL"
-  - "Tab labels do not match exactly => FAIL"
-  - "Multiple tab content divs visible simultaneously => CRITICAL_FAIL"
-  - "Any node in the proof graph is orphaned => STOP"
-
-proof_guarantees:
-  - "grep verifies exact tab label strings exist in HTML"
-  - "grep verifies Programme Health is default active tab"
-
-proof_limitations:
-  - "Tab switching behaviour requires manual browser testing — grep cannot verify JS toggle"
-  - "Layout shift detection requires visual inspection"
-
+  - "Adding all token issuance logic in one massive task instead of breaking into focused tasks"
+  - "Hardcoding worker data instead of calling lookup API"
+  - "Displaying raw GPS coordinates instead of neighbourhood labels"
+  - "Creating new HTML files instead of adding to src/supervisory-dashboard/index.html"
 depends_on:
   - GF-W1-UI-001
-
 blocks:
   - GF-W1-UI-003
-  - GF-W1-UI-006
-  - GF-W1-UI-007
-
 touches:
   - src/supervisory-dashboard/index.html
-  - tasks/GF-W1-UI-002/meta.yml
+  - scripts/audit/verify_tsk_p1_219.sh
   - evidence/phase1/gf_w1_ui_002.json
-
+  - tasks/GF-W1-UI-002/meta.yml
 invariants: []
-
 work:
-  - >-
-    [ID gf_w1_ui_002_work_01] Ensure exactly three tabs labelled "Programme
-    Health", "Monitoring Report", "Onboarding Console".
-  - >-
-    [ID gf_w1_ui_002_work_02] Each tab click shows only that tab's div and hides
-    all others via CSS class toggle. Tab bar is position: sticky and does not scroll.
-  - >-
-    [ID gf_w1_ui_002_work_03] Programme Health tab is active by default on page
-    load. Active tab has a 2px bottom border in var(--bright).
-
+  - '[ID gf_w1_ui_002_work_item_01] Add Worker Token Issuance tab button to tab bar after Onboarding Console tab'
+  - '[ID gf_w1_ui_002_work_item_02] Create screen-worker-tokens div with .screen class after screen-s3'
+  - '[ID gf_w1_ui_002_work_item_03] Add two-column grid layout with grid-template-columns: 1fr 1fr and two child divs'
+  - '[ID gf_w1_ui_002_work_item_04] Add programme context display showing programme_id and location label at top'
+  - '[ID gf_w1_ui_002_work_item_05] Verify switchTab function handles new screen ID correctly'
 acceptance_criteria:
-  - >-
-    [ID gf_w1_ui_002_work_01] src/supervisory-dashboard/index.html contains exactly
-    three tab elements with text "Programme Health", "Monitoring Report", and
-    "Onboarding Console". No additional tabs exist.
-  - >-
-    [ID gf_w1_ui_002_work_02] Clicking a tab shows only that tab's content div.
-    Tab bar has position: sticky. No content from other tabs is visible.
-  - >-
-    [ID gf_w1_ui_002_work_03] On page load, "Programme Health" tab is the active
-    tab with 2px bottom border in var(--bright). Its content div is visible.
-
+  - '[ID gf_w1_ui_002_work_item_01] Tab bar shows 4 tabs with Worker Token Issuance as 4th tab'
+  - '[ID gf_w1_ui_002_work_item_02] screen-worker-tokens exists with .screen class'
+  - '[ID gf_w1_ui_002_work_item_03] Layout renders as two columns filling 100vh without scrollbar'
+  - '[ID gf_w1_ui_002_work_item_04] Programme context displays PGM-ZAMBIA-GRN-001 and Chunga Dumpsite, Lusaka'
+  - '[ID gf_w1_ui_002_work_item_05] Clicking tab switches to screen-worker-tokens, other screens hide'
 negative_tests:
   - id: GF-W1-UI-002-N1
     description: >-
-      Grep for any fourth tab element or tab label that is not one of the three
-      canonical names. The grep must find zero matches.
+      Verify that tab count is exactly 4, not 3 or 5. Run verify_tsk_p1_219.sh and
+      confirm it passes with tab count check.
     required: true
-
+  - id: GF-W1-UI-002-N2
+    description: >-
+      Verify that layout does not cause scrollbar. Test in browser and confirm 100vh
+      is filled without overflow.
+    required: true
 positive_tests:
   - id: GF-W1-UI-002-P1
     description: >-
-      Grep for all three tab labels in the HTML. All three must be present.
+      Verify that clicking Worker Token Issuance tab switches to screen-worker-tokens
+      and hides other screens.
     required: true
-
 verification:
-  - >-
-    # [ID gf_w1_ui_002_work_01] [ID gf_w1_ui_002_work_02] [ID gf_w1_ui_002_work_03]
-    test -f src/supervisory-dashboard/index.html
-    && grep -q "Programme Health" src/supervisory-dashboard/index.html
-    && grep -q "Monitoring Report" src/supervisory-dashboard/index.html
-    && grep -q "Onboarding Console" src/supervisory-dashboard/index.html
-    && cat src/supervisory-dashboard/index.html | grep "sticky"
-    > evidence/phase1/gf_w1_ui_002.json || exit 1
-
+  - grep -q 'screen-worker-tokens' src/supervisory-dashboard/index.html || exit 1
+  - grep -c 'onclick="switchTab' src/supervisory-dashboard/index.html | grep -q '^4$' || exit 1
+  - bash scripts/audit/verify_tsk_p1_219.sh || exit 1
+  - test -f evidence/phase1/gf_w1_ui_002.json || exit 1
 evidence:
   - path: evidence/phase1/gf_w1_ui_002.json
     must_include:
       - task_id
-      - git_sha
-      - timestamp_utc
+      - timestamp
       - status
+      - tab_count_is_4
+      - screen_worker_tokens_exists
+      - two_column_layout_present
+      - programme_context_displayed
       - checks
       - observed_paths
-      - observed_hashes
       - command_outputs
       - execution_trace
-
 failure_modes:
-  - Tabs do not match the three canonical labels => FAIL
-  - Multiple content divs visible at once => CRITICAL_FAIL
-  - Programme Health not active by default => FAIL
-  - Tab bar scrolls with content => FAIL
-  - Evidence file missing => FAIL
-
+  - "Tab count remains 3 instead of 4 => FUNCTIONAL.PILOT_DEMO_INCOMPLETE => FAIL"
+  - "screen-worker-tokens div does not exist => FUNCTIONAL.MISSING_SCREEN => FAIL"
+  - "Layout does not fill 100vh => UI.DESIGN_VIOLATION => FAIL"
+  - "Programme context hardcoded => FUNCTIONAL.CONTEXT_LOSS => FAIL"
+  - "verify_tsk_p1_219.sh fails => GOVERNANCE.VERIFIER_BROKEN => FAIL"
 must_read:
   - docs/operations/AI_AGENT_OPERATION_MANUAL.md
   - .kiro/steering/ui-canonical-design.md
   - .kiro/steering/pwrm0001-domain-rules.md
-  - .kiro/steering/symphony-platform-conventions.md
-  - .kiro/specs/symphony-ui-canonical/requirements.md
-  - .kiro/specs/symphony-ui-canonical/design.md
-  - .kiro/specs/symphony-ui-canonical/tasks.md
-
+  - docs/operations/PILOT_DEMO_VIDEO_SCRIPT.md
 implementation_plan: docs/plans/phase1/GF-W1-UI-002/PLAN.md
 implementation_log: docs/plans/phase1/GF-W1-UI-002/EXEC_LOG.md
-
 notes: >-
-  Atomic task 2 of 10. Creates the tab navigation shell that tasks 3-7 will
-  populate with content. Phase Key: GF-W1. Phase Name: Green Finance Wave 1.
-
-client: cursor
-assigned_agent: supervisor
-model: <UNASSIGNED>
-
+  This task creates the tab structure only, not the functional logic. Subsequent tasks
+  will add lookup form, issuance logic, recent tokens list, and revocation. Tab count
+  verifier updated from 3 to 4. Programme context uses neighbourhood label not raw GPS.
+  Phase: Green Finance Wave 1. Domain: green_finance.
+client: kiro
+assigned_agent: architect
+model: claude-sonnet-4-20250514
 domain: green_finance
-
-second_pilot_test:
-  candidate_sector_1: "PWRM0001 plastic collection (Chunga Dumpsite, Lusaka)"
-  candidate_sector_2: "VM0044 solar energy generation (hypothetical)"
-  unchanged_core_tables: []
-  unchanged_core_functions: []
-  adapter_only_differences:
-    - "Tab labels are sector-neutral — Programme Health, Monitoring Report, Onboarding Console work for any sector"
-  jurisdiction_profile_impact: "None"
-  required_core_changes: []
-  explanation: >-
-    The three-tab layout is sector-neutral. Tab names describe functional areas
-    (health, monitoring, onboarding), not sector-specific concepts. No changes
-    needed for a solar energy pilot.
-  second_pilot_reviewed_by: "Supervisor (automated review)"
-
+pilot: true
+second_pilot_test: >-
+  The tab structure pattern works for any programme requiring operator-facing token
+  management. For PWRM0001 plastic collection, the tab enables waste collector token
+  issuance. For a hypothetical VM0044 solar energy programme, the tab would enable
+  solar technician token issuance. The tab structure, two-column layout, and programme
+  context display are identical; only the tab label and programme_id differ per programme.
 pilot_scope_ref: docs/pilots/PILOT_PWRM0001/SCOPE.md

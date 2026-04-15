@@ -1,119 +1,104 @@
-# GF-W1-UI-004 PLAN — Programme Health tab: Activity table with financial columns
+# GF-W1-UI-004 Implementation Plan
 
-Task: GF-W1-UI-004
-Owner: SUPERVISOR
-Depends on: GF-W1-UI-003
-failure_signature: PHASE1.GREEN_FINANCE.GF-W1-UI-004.ACTIVITY_TABLE_FAIL
-canonical_reference: docs/operations/AI_AGENT_OPERATION_MANUAL.md
-
----
+## Failure Signature
+`PHASE1.GF-W1.UI-004.TOKEN_ISSUANCE_LOGIC`
 
 ## Objective
 
-Add the activity table below the KPI rows in the Programme Health tab. The table shows
-instruction-level data with financial columns (Net Weight, tCO₂ est.) and status chips.
-It fills remaining viewport height using flex:1 and overflow-y:auto. Row click opens
-the instruction drawer (Task 5). The tCO₂ column uses the canonical constant 0.00048.
-
----
+Implement token issuance logic that calls the backend API, displays token results with security properties, generates worker landing URLs, and provides a countdown timer for token expiry visibility.
 
 ## Pre-conditions
 
-- [ ] GF-W1-UI-003 is status=completed (KPI cards and disbursement card exist)
-- [ ] This PLAN.md has been reviewed and approved
-
----
-
-## Must Read (MANDATORY — read in full before any code changes)
-
-1. `.kiro/steering/ui-canonical-design.md` — CSS tokens, financial constants
-2. `.kiro/steering/pwrm0001-domain-rules.md` — Programme identity, proof types, tCO₂ constant
-3. `.kiro/steering/symphony-platform-conventions.md` — Runtime profile, API patterns
-4. `.kiro/specs/symphony-ui-canonical/requirements.md` — Requirements 1.5, 1.6
-5. `.kiro/specs/symphony-ui-canonical/design.md` — Activity table wireframe
-6. `.kiro/specs/symphony-ui-canonical/tasks.md` — Task 4 verbatim instructions
-
----
+1. GF-W1-UI-003 (worker lookup form) is complete
+2. Worker validation confirms supplier_type=WORKER
+3. POST /pilot-demo/api/evidence-links/issue endpoint is functional
 
 ## Files to Change
 
 | File | Action | Reason |
 |------|--------|--------|
-| `src/supervisory-dashboard/index.html` | MODIFY | Add activity table with financial columns |
-| `tasks/GF-W1-UI-004/meta.yml` | MODIFY | Update status to completed |
-| `evidence/phase1/gf_w1_ui_004.json` | CREATE | Evidence artifact |
-
----
+| `src/supervisory-dashboard/index.html` | MODIFY | Add issueToken(), token result panel, URL generation, copy button, security properties, countdown timer |
+| `evidence/phase1/gf_w1_ui_004.json` | CREATE | Evidence file |
 
 ## Stop Conditions
 
-- **If tCO₂ computed with wrong constant (must be 0.00048)** → STOP (CRITICAL_FAIL)
-- **If table has no overflow-y:auto** → STOP
-- **If row click does not trigger drawer open** → STOP
-- **If any node in the proof graph is orphaned** → STOP
-
----
+1. Token expiry hardcoded instead of from API response
+2. Raw GPS coordinates displayed in token result
+3. Countdown timer not implemented or not updating
+4. Worker landing URL format incorrect (token not in hash fragment)
+5. Copy button not functional
 
 ## Implementation Steps
 
-### Step 1: Create activity table
-**What:** `[ID gf_w1_ui_004_work_01]` Add table below KPI rows filling remaining viewport height.
-**How:** Create table with flex:1, overflow-y:auto. Columns: Instruction ID | Proof Type | Status | Net Weight | tCO₂ est. | Time.
-**Done when:** Table element exists with all 6 columns and overflow-y:auto.
+### Step 1: Implement issueToken Function
+**Tracking ID:** W1  
+**What:** Implement issueToken() calling POST /pilot-demo/api/evidence-links/issue  
+**How:** Add async function with fetch(), pass worker_id, handle response  
+**Done-when:** Function calls API, receives token, parses response
 
-### Step 2: Status chips and financial columns
-**What:** `[ID gf_w1_ui_004_work_02]` Implement status chips and financial column logic.
-**How:** Status chip: green=PRESENT, amber=PENDING, red=MISSING. Net Weight: `net_weight_kg + " kg"` if WEIGHBRIDGE_RECORD, else "—". tCO₂: `(net_weight_kg * 0.00048).toFixed(4)` if weight present, else "—". Time: `observed_at_utc` formatted as HH:mm local.
-**Done when:** 0.00048 constant appears in JS code, status chip colours reference canonical tokens.
+### Step 2: Add Token Result Panel
+**Tracking ID:** W2  
+**What:** Add token result display panel  
+**How:** Add div showing worker_id, expiry, neighbourhood label, radius  
+**Done-when:** Panel displays all token details with neighbourhood label
 
-### Step 3: Row click handler
-**What:** `[ID gf_w1_ui_004_work_03]` Wire row click to instruction detail endpoint.
-**How:** Row click calls `GET /pilot-demo/api/instructions/{instructionId}/detail` and opens the drawer (Task 5).
-**Done when:** Click handler references the instruction detail endpoint.
+### Step 3: Generate Worker Landing URL
+**Tracking ID:** W3  
+**What:** Generate worker landing page URL with token in hash fragment  
+**How:** Construct URL as `/pilot-demo/worker-landing#token=${tokenValue}`  
+**Done-when:** URL is correctly formatted with token in hash
 
-### Step 4: Emit evidence
-```bash
-# [ID gf_w1_ui_004_work_01] [ID gf_w1_ui_004_work_02] [ID gf_w1_ui_004_work_03]
-test -f src/supervisory-dashboard/index.html \
-  && grep -q "0.00048" src/supervisory-dashboard/index.html \
-  && grep -q "overflow-y" src/supervisory-dashboard/index.html \
-  && cat src/supervisory-dashboard/index.html | grep "instructions.*detail" \
-  > evidence/phase1/gf_w1_ui_004.json || exit 1
-```
+### Step 4: Add Copy Link Button
+**Tracking ID:** W4  
+**What:** Add Copy Link button with clipboard integration  
+**How:** Add button with onclick calling navigator.clipboard.writeText(url)  
+**Done-when:** Button copies URL to clipboard, shows success message
 
----
+### Step 5: Add Security Properties Panel
+**Tracking ID:** W5  
+**What:** Add security properties panel  
+**How:** Add div showing type, signature, TTL, GPS lock, single-use  
+**Done-when:** Panel displays all 5 security properties
+
+### Step 6: Implement Countdown Timer
+**Tracking ID:** W6  
+**What:** Implement countdown timer updating every second  
+**How:** Add setInterval(1000) calculating time remaining, show EXPIRED in red when <= 0  
+**Done-when:** Timer updates every second, shows EXPIRED when time runs out
 
 ## Verification
 
-```bash
-# [ID gf_w1_ui_004_work_01] [ID gf_w1_ui_004_work_02] [ID gf_w1_ui_004_work_03]
-test -f src/supervisory-dashboard/index.html \
-  && grep -q "0.00048" src/supervisory-dashboard/index.html \
-  && grep -q "overflow-y" src/supervisory-dashboard/index.html \
-  && cat src/supervisory-dashboard/index.html | grep "instructions.*detail" \
-  > evidence/phase1/gf_w1_ui_004.json || exit 1
-```
-
----
+| ID | Command | Purpose |
+|----|---------|---------|
+| V1 | `grep -q 'issueToken' src/supervisory-dashboard/index.html \|\| exit 1` | Confirm issueToken function exists |
+| V2 | `grep -q 'navigator.clipboard.writeText' src/supervisory-dashboard/index.html \|\| exit 1` | Confirm clipboard integration |
+| V3 | `grep -q 'setInterval.*1000' src/supervisory-dashboard/index.html \|\| exit 1` | Confirm countdown timer |
 
 ## Evidence Contract
 
-File: `evidence/phase1/gf_w1_ui_004.json`
-Required fields: task_id, git_sha, timestamp_utc, status, checks, observed_paths, observed_hashes, command_outputs, execution_trace
-
----
+```json
+{
+  "task_id": "GF-W1-UI-004",
+  "timestamp": "ISO8601",
+  "token_issuance_api_integrated": true,
+  "token_result_panel_present": true,
+  "worker_landing_url_generated": true,
+  "copy_link_functional": true,
+  "security_properties_displayed": true,
+  "countdown_timer_implemented": true
+}
+```
 
 ## Rollback
 
-1. Revert: `git checkout HEAD -- src/supervisory-dashboard/index.html`
-2. Update status back to `planned`
+1. Revert changes to `src/supervisory-dashboard/index.html`
+2. Delete `evidence/phase1/gf_w1_ui_004.json`
 
----
-
-## Risk
+## Risk Assessment
 
 | Risk | Consequence | Mitigation |
 |------|-------------|------------|
-| tCO₂ constant wrong | CRITICAL_FAIL | grep for 0.00048 |
-| Table overflows viewport | FAIL | grep for overflow-y:auto |
-| Row click broken | FAIL | grep for endpoint pattern |
+| Token expiry hardcoded | FUNCTIONAL.INCORRECT_EXPIRY_TIME | Use API response expiry field |
+| Raw GPS displayed | UI.DESIGN_VIOLATION | Use resolveNeighbourhoodLabel() |
+| Timer not updating | FUNCTIONAL.NO_EXPIRY_VISIBILITY | Test setInterval execution |
+| URL format incorrect | FUNCTIONAL.TOKEN_UNUSABLE | Test URL with worker landing page |

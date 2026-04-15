@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Symphony — Monitoring Report</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="_shared.css">
+  <style>
+    html, body { overflow: hidden; }
+    body { display: flex; flex-direction: column; height: 100vh; }
+    .screen-area { flex: 1; overflow: hidden; padding: 24px 40px; }
+
+    .mr-grid {
+      display: grid;
+      grid-template-columns: 60fr 40fr;
+      gap: 24px;
+      height: 100%;
+      overflow: hidden;
+    }
+    .mr-left-col { display: flex; flex-direction: column; gap: 20px; overflow-y: auto; }
+    .mr-right-col { display: flex; flex-direction: column; gap: 20px; overflow-y: auto; }
+
+    .mr-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 20px;
+      flex-shrink: 0;
+    }
+    .mr-card-label {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--muted);
+      margin-bottom: 16px;
+    }
+
+    .disbursement-banner {
+      height: 64px;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      padding: 0 24px;
+      font-family: 'Inter', sans-serif;
+      font-weight: 700;
+      font-size: 18px;
+      flex-shrink: 0;
+    }
+    .disbursement-banner.authorized { background: var(--green-bg); border: 1px solid var(--green); color: var(--green); }
+    .disbursement-banner.not-authorized { background: var(--red-bg); border: 1px solid var(--red); color: var(--red); }
+
+    .additionality-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 10px 0;
+      border-bottom: 1px solid rgba(255,255,255,0.05);
+    }
+    .additionality-row:last-of-type { border-bottom: none; }
+    .additionality-label { font-size: 14px; color: var(--muted); }
+    .additionality-value { font-size: 14px; color: var(--text); }
+    .additionality-value.bold { font-weight: 700; }
+    .additionality-value.muted { color: var(--muted); }
+    .additionality-conversion { font-size: 14px; color: var(--green); margin-top: 16px; }
+
+    .breakdown-table { width: 100%; border-collapse: collapse; }
+    .breakdown-table th {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      font-weight: 400;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--muted);
+      text-align: left;
+      padding: 10px 12px;
+      border-bottom: 1px solid var(--border);
+    }
+    .breakdown-table td { font-size: 14px; padding: 10px 12px; border-bottom: 1px solid rgba(255,255,255,0.05); }
+    .breakdown-table tr.total-row { background: rgba(255,255,255,0.03); }
+    .breakdown-table tr.total-row td { font-weight: 700; border-bottom: none; }
+
+    .zema-chips { display: flex; gap: 12px; flex-wrap: wrap; }
+    .zema-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      padding: 8px 14px;
+      border-radius: 6px;
+    }
+    .zema-chip.active { background: var(--green-bg); color: var(--green); }
+    .zema-chip.inactive { background: rgba(139,148,158,0.15); color: var(--muted); }
+
+    .benefit-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 10px 0;
+      font-size: 14px;
+    }
+    .benefit-row .stakeholder { flex: 1; }
+    .benefit-row .percentage { width: 60px; text-align: center; color: var(--muted); }
+    .benefit-row .amount { width: 140px; text-align: right; font-family: 'JetBrains Mono', monospace; font-size: 13px; }
+    .benefit-row.highlight .stakeholder, .benefit-row.highlight .amount { color: var(--gold); font-weight: 700; }
+    .benefit-total {
+      margin-top: 16px;
+      padding-top: 16px;
+      border-top: 1px solid var(--border);
+      display: flex;
+      justify-content: space-between;
+      font-size: 14px;
+    }
+    .benefit-total-value { font-family: 'JetBrains Mono', monospace; font-weight: 700; }
+
+    .article6-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 10px 0;
+      font-size: 14px;
+    }
+
+    .btn-generate {
+      width: 100%;
+      background: var(--green);
+      color: #fff;
+      font-family: 'Inter', sans-serif;
+      font-weight: 700;
+      font-size: 14px;
+      padding: 14px 20px;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: opacity 0.15s ease;
+      flex-shrink: 0;
+    }
+    .btn-generate:hover { opacity: 0.9; }
+    .btn-generate:disabled { opacity: 0.6; cursor: not-allowed; }
+
+    @media (max-width: 1100px) {
+      .mr-grid { grid-template-columns: 1fr; overflow-y: auto; }
+      .mr-left-col, .mr-right-col { overflow: visible; }
+    }
+    @media (max-width: 768px) {
+      .screen-area { padding: 20px; }
+    }
+  </style>
+</head>
+<body>
+  <header class="topbar">
+    <div class="logo"><span class="logo-sym">Sym</span><span class="logo-phony">phony</span></div>
+    <div class="topbar-right">
+      <div class="topbar-title">Chunga Dumpsite · PWRM0001</div>
+      <div class="topbar-subtitle">Regulated by ZEMA / Bank of Zambia</div>
+    </div>
+  </header>
+
+  <nav class="tabbar">
+    <a class="tab" href="overview.html">Overview</a>
+    <a class="tab" href="program-health.html">Programme Health</a>
+    <a class="tab active" href="monitoring-report.html">Monitoring Report</a>
+    <a class="tab" href="token-issuance.html">Token Issuance</a>
+    <a class="tab" href="instructions.html">Instructions</a>
+    <a class="tab" href="success-criteria.html">Success Criteria</a>
+    <a class="tab" href="onboarding.html">Onboarding</a>
+    <a class="tab" href="pilot-gate.html">Pilot Gate</a>
+  </nav>
+
+  <div class="screen-area">
+    <div class="mr-grid">
+      <!-- Left Column -->
+      <div class="mr-left-col">
+        <div id="mr-disbursement-banner" class="disbursement-banner not-authorized">Loading...</div>
+
+        <div class="mr-card">
+          <div class="mr-card-label">Additionality (PWRM0001)</div>
+          <div class="additionality-row">
+            <span class="additionality-label">Baseline</span>
+            <span class="additionality-value muted">0 kg</span>
+          </div>
+          <div class="additionality-row">
+            <span class="additionality-label">Actual</span>
+            <span class="additionality-value bold" id="mr-actual-kg">-- kg</span>
+          </div>
+          <div class="additionality-row">
+            <span class="additionality-label">Additionality</span>
+            <span style="display:flex;align-items:center;gap:12px">
+              <span class="additionality-value bold text-green" id="mr-additionality-kg">+-- kg</span>
+              <span class="chip chip-green" id="mr-eligible-chip">ELIGIBLE</span>
+            </span>
+          </div>
+          <div class="additionality-conversion" id="mr-conversion">&rarr; ~-- tCO₂  |  ~-- carbon credits (indicative)</div>
+        </div>
+
+        <div class="mr-card">
+          <div class="mr-card-label">Collection Breakdown by Type</div>
+          <table class="breakdown-table">
+            <thead>
+              <tr><th>Type</th><th>Net Weight</th><th>tCO₂ (est.)</th><th>Credits (est.)</th></tr>
+            </thead>
+            <tbody id="mr-breakdown-body">
+              <tr><td colspan="4" style="text-align:center;color:var(--muted)">Loading...</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="zema-chips" id="mr-zema-chips">
+          <span class="zema-chip inactive" id="zema-pollution">Pollution Prevention</span>
+          <span class="zema-chip inactive" id="zema-circular">Circular Economy</span>
+          <span class="zema-chip inactive" id="zema-dnsh">DNSH Declared</span>
+        </div>
+      </div>
+
+      <!-- Right Column -->
+      <div class="mr-right-col">
+        <div class="mr-card">
+          <div class="mr-card-label">Benefit Sharing — ZEMA SI 116</div>
+          <div class="benefit-row">
+            <span class="stakeholder">Project Developer</span>
+            <span class="percentage">50%</span>
+            <span class="amount" id="mr-share-developer">ZMW -- (indicative)</span>
+          </div>
+          <div class="benefit-row highlight">
+            <span class="stakeholder">Local Community</span>
+            <span class="percentage">30%</span>
+            <span class="amount" id="mr-share-community">ZMW -- (indicative)</span>
+          </div>
+          <div class="benefit-row">
+            <span class="stakeholder">National Carbon Fund</span>
+            <span class="percentage">20%</span>
+            <span class="amount" id="mr-share-fund">ZMW -- (indicative)</span>
+          </div>
+          <div class="benefit-total">
+            <span>Total Programme Value</span>
+            <span class="benefit-total-value" id="mr-total-value">ZMW -- (indicative)</span>
+          </div>
+        </div>
+
+        <div class="mr-card">
+          <div class="mr-card-label">Article 6 Readiness</div>
+          <div class="article6-row">
+            <span>Anti-Double Counting</span>
+            <span class="chip chip-green" id="mr-anti-double">ACTIVE</span>
+          </div>
+          <div class="article6-row">
+            <span>Registry Status</span>
+            <span class="chip chip-grey" id="mr-registry-status">NOT ISSUED</span>
+          </div>
+          <div class="article6-row">
+            <span>Corresponding Adjustment</span>
+            <span class="chip chip-amber" id="mr-corr-adj">PENDING</span>
+          </div>
+        </div>
+
+        <button class="btn-generate" id="mr-generate-btn" onclick="fetchMonitoringReport()">
+          GENERATE ZEMA MONITORING REPORT
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    async function fetchMonitoringReport() {
+      const btn = document.getElementById('mr-generate-btn');
+      btn.disabled = true;
+      btn.textContent = 'GENERATING...';
+      try {
+        const response = await fetch('/pilot-demo/api/monitoring-report/PGM-ZAMBIA-GRN-001', { credentials: 'include' });
+        if (!response.ok) throw new Error('API error');
+        const raw = await response.json();
+        // TSK-P1-PLT-004: Normalize backend response to UI-expected format
+        const data = normalizeMonitoringData(raw);
+        renderMonitoringReport(data);
+      } catch (err) {
+        console.error('Failed to fetch monitoring report:', err);
+      } finally {
+        btn.disabled = false;
+        btn.textContent = 'GENERATE ZEMA MONITORING REPORT';
+      }
+    }
+
+    // TSK-P1-PLT-004: Map backend snake_case nested response → UI flat camelCase
+    function normalizeMonitoringData(raw) {
+      const plasticTotals = raw.plastic_totals_kg || {};
+      const totalWeight = plasticTotals['TOTAL'] || 0;
+
+      // Convert dictionary to array for plasticBreakdown
+      const plasticBreakdown = Object.entries(plasticTotals)
+        .filter(([type]) => type !== 'TOTAL')
+        .map(([type, weight]) => ({ type, weight }));
+
+      // Flatten ZGFT compliance flags
+      const zgft = raw.zgft_waste_sector_alignment || {};
+
+      // Derive disbursement authorization from completeness rate
+      const completenessRate = raw.proof_completeness_rate || 0;
+
+      return {
+        totalWeight,
+        plasticBreakdown,
+        completeness: Math.round(completenessRate * 100),
+        disbursementAuthorized: completenessRate >= 1.0 && totalWeight > 0,
+        zgft_pollution_prevention: zgft.pollution_prevention || false,
+        zgft_circular_economy: zgft.circular_economy || false,
+        zgft_dnsh_declared: zgft.do_no_significant_harm_declared || false,
+        antiDoubleCountingActive: true,   // Deterministic for PWRM0001 pilot
+        registryIssued: false,            // Not yet issued in pilot phase
+        correspondingAdjustment: 'PENDING' // Awaiting Article 6 framework
+      };
+    }
+
+    function renderMonitoringReport(data) {
+      const banner = document.getElementById('mr-disbursement-banner');
+      const completeness = data.completeness || 0;
+      if (data.disbursementAuthorized) {
+        banner.className = 'disbursement-banner authorized';
+        banner.innerHTML = '✓  DISBURSEMENT AUTHORIZED — MRV Complete';
+      } else {
+        banner.className = 'disbursement-banner not-authorized';
+        banner.innerHTML = `⛔  NOT AUTHORIZED — Incomplete MRV (${completeness}%)`;
+      }
+
+      const totalKg = data.totalWeight || 0;
+      document.getElementById('mr-actual-kg').textContent = totalKg.toFixed(2) + ' kg';
+      document.getElementById('mr-additionality-kg').textContent = '+' + totalKg.toFixed(2) + ' kg';
+      const tco2 = totalKg * 0.002;
+      document.getElementById('mr-conversion').innerHTML =
+        `&rarr; ~${tco2.toFixed(2)} tCO₂  |  ~${tco2.toFixed(2)} carbon credits (indicative)`;
+
+      const eligibleChip = document.getElementById('mr-eligible-chip');
+      if (totalKg > 0) {
+        eligibleChip.className = 'chip chip-green';
+        eligibleChip.textContent = 'ELIGIBLE';
+      } else {
+        eligibleChip.className = 'chip chip-grey';
+        eligibleChip.textContent = 'NOT ELIGIBLE';
+      }
+
+      const breakdownBody = document.getElementById('mr-breakdown-body');
+      const breakdown = data.plasticBreakdown || [];
+      if (breakdown.length === 0) {
+        breakdownBody.innerHTML = `<tr><td colspan="4" style="text-align:center;color:var(--muted)">No data</td></tr>`;
+      } else {
+        let totalWeight = 0, totalTco2 = 0, totalCredits = 0;
+        const rows = breakdown.filter(item => item.weight > 0).map(item => {
+          const w = item.weight, t = w * 0.002, c = w * 0.002;
+          totalWeight += w; totalTco2 += t; totalCredits += c;
+          return `<tr><td>${item.type}</td><td>${w.toFixed(2)} kg</td><td>${t.toFixed(2)} (indicative)</td><td>${c.toFixed(2)} (indicative)</td></tr>`;
+        });
+        rows.push(`<tr class="total-row"><td>TOTAL</td><td>${totalWeight.toFixed(2)} kg</td><td>${totalTco2.toFixed(2)} (indicative)</td><td>${totalCredits.toFixed(2)} (indicative)</td></tr>`);
+        breakdownBody.innerHTML = rows.join('');
+      }
+
+      const setZema = (id, active, label) => {
+        const el = document.getElementById(id);
+        el.className = active ? 'zema-chip active' : 'zema-chip inactive';
+        el.innerHTML = active ? `● ${label} ✓` : `● ${label}`;
+      };
+      setZema('zema-pollution', data.zgft_pollution_prevention, 'Pollution Prevention');
+      setZema('zema-circular', data.zgft_circular_economy, 'Circular Economy');
+      setZema('zema-dnsh', data.zgft_dnsh_declared, 'DNSH Declared');
+
+      const totalZmw = totalKg * 0.00048 * 150;
+      document.getElementById('mr-share-developer').textContent = `ZMW ${(totalZmw * 0.50).toFixed(2)} (indicative)`;
+      document.getElementById('mr-share-community').textContent = `ZMW ${(totalZmw * 0.30).toFixed(2)} (indicative)`;
+      document.getElementById('mr-share-fund').textContent = `ZMW ${(totalZmw * 0.20).toFixed(2)} (indicative)`;
+      document.getElementById('mr-total-value').textContent = `ZMW ${totalZmw.toFixed(2)} (indicative)`;
+
+      const setChip = (id, condition, trueClass, trueText, falseClass, falseText) => {
+        const el = document.getElementById(id);
+        el.className = `chip ${condition ? trueClass : falseClass}`;
+        el.textContent = condition ? trueText : falseText;
+      };
+      setChip('mr-anti-double', data.antiDoubleCountingActive, 'chip-green', 'ACTIVE', 'chip-grey', 'INACTIVE');
+      setChip('mr-registry-status', data.registryIssued, 'chip-green', 'ISSUED', 'chip-grey', 'NOT ISSUED');
+
+      const corrAdj = document.getElementById('mr-corr-adj');
+      if (data.correspondingAdjustment === 'COMPLETE') {
+        corrAdj.className = 'chip chip-green'; corrAdj.textContent = 'COMPLETE';
+      } else if (data.correspondingAdjustment === 'PENDING') {
+        corrAdj.className = 'chip chip-amber'; corrAdj.textContent = 'PENDING';
+      } else {
+        corrAdj.className = 'chip chip-grey'; corrAdj.textContent = 'NOT STARTED';
+      }
+    }
+
+    fetchMonitoringReport();
+  </script>
+</body>
+</html>

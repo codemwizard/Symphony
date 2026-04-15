@@ -15,9 +15,9 @@
     "src"
   ],
   "satisfying_docs": [
-    "docs/plans/phase0/REM-2026-04-07_pre_ci-security_definer_search_path/PLAN.md",
-    "docs/plans/phase0/REM-2026-04-07_pre_ci-security_definer_search_path/EXEC_LOG.md"
+    "docs/plans/phase1/REM-2026-04-06_evidence-push-nonconvergence/PLAN.md",
+    "docs/plans/phase1/REM-2026-04-06_evidence-push-nonconvergence/EXEC_LOG.md"
   ],
-  "satisfying_doc_parent": "docs/plans/phase0/REM-2026-04-07_pre_ci-security_definer_search_path",
+  "satisfying_doc_parent": "docs/plans/phase1/REM-2026-04-06_evidence-push-nonconvergence",
   "errors": []
 }

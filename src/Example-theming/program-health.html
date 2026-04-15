@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Symphony — Programme Health</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="_shared.css">
+  <style>
+    /* This page uses a fixed-layout (no vertical scroll on outer) but inner areas scroll */
+    html, body { overflow: hidden; }
+    body { display: flex; flex-direction: column; height: 100vh; }
+
+    .screen-area { flex: 1; overflow: hidden; position: relative; }
+
+    /* KPI Ribbon */
+    .kpi-ribbon {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr 2fr;
+      gap: 20px;
+      padding: 24px 40px;
+      flex-shrink: 0;
+    }
+    .kpi-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 20px;
+    }
+    .kpi-card-label {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--muted);
+      margin-bottom: 8px;
+    }
+    .kpi-card-value {
+      font-family: 'Inter', sans-serif;
+      font-weight: 800;
+      font-size: 32px;
+      color: var(--text);
+    }
+    .kpi-card-sub { font-size: 12px; color: var(--muted); margin-top: 4px; }
+    .chip-lg {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 14px;
+      font-weight: 700;
+      border-radius: 6px;
+      padding: 8px 16px;
+    }
+    .chip-lg-green { background: var(--green); color: #fff; }
+    .chip-lg-red { background: var(--red); color: #fff; }
+
+    /* Main grid */
+    .main-grid {
+      display: grid;
+      grid-template-columns: 1fr 360px;
+      gap: 24px;
+      padding: 0 40px 24px;
+      flex: 1;
+      min-height: 0;
+    }
+    .ph-layout {
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+    }
+
+    /* Activity table card */
+    .activity-table-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      display: flex;
+      flex-direction: column;
+      min-height: 0;
+      flex: 1;
+    }
+    .activity-table-card h2 { padding: 20px 24px 0; margin-bottom: 16px; }
+    .activity-table-wrapper { flex: 1; overflow-y: auto; padding: 0 24px 20px; }
+    .activity-table { width: 100%; border-collapse: collapse; }
+    .activity-table th {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      font-weight: 400;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--muted);
+      text-align: left;
+      padding: 12px;
+      border-bottom: 1px solid var(--border);
+      position: sticky;
+      top: 0;
+      background: var(--surface);
+    }
+    .activity-table td { font-size: 14px; padding: 12px; border-bottom: 1px solid rgba(255,255,255,0.05); }
+    .activity-table tbody tr { cursor: pointer; transition: background 0.1s ease; }
+    .activity-table tbody tr:hover { background: rgba(255,255,255,0.03); }
+    .activity-table tbody tr.selected { background: rgba(46,160,67,0.1); }
+
+    /* Detail drawer */
+    .detail-drawer {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 24px;
+      overflow-y: auto;
+    }
+    .drawer-empty { display: flex; align-items: center; justify-content: center; height: 100%; color: var(--muted); font-size: 14px; text-align: center; }
+    .drawer-content { display: none; }
+    .drawer-content.visible { display: block; }
+    .drawer-field { margin-bottom: 16px; }
+    .drawer-field-label { font-family: 'JetBrains Mono', monospace; font-size: 11px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); margin-bottom: 4px; }
+    .drawer-field-value { font-size: 14px; color: var(--text); }
+    .drawer-divider { height: 1px; background: var(--border); margin: 20px 0; }
+    .evidence-row { display: flex; align-items: center; gap: 10px; padding: 8px 0; font-size: 14px; }
+    .evidence-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+    .evidence-dot.present { background: var(--green); }
+    .evidence-dot.absent { background: var(--muted); opacity: 0.4; }
+    .weight-section { margin-top: 20px; padding: 16px; background: rgba(46,160,67,0.08); border-radius: 6px; }
+    .plastic-badge { display: inline-block; background: var(--amber-bg); color: var(--amber); font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 700; text-transform: uppercase; padding: 4px 8px; border-radius: 4px; margin-bottom: 8px; }
+    .weight-value { font-size: 24px; font-weight: 800; color: var(--text); margin-bottom: 8px; }
+    .weight-conversion { font-size: 13px; color: var(--green); }
+
+    @media (max-width: 1200px) {
+      .kpi-ribbon { grid-template-columns: repeat(2, 1fr); }
+      .main-grid { grid-template-columns: 1fr; }
+      .detail-drawer { display: none; }
+    }
+    @media (max-width: 768px) {
+      .kpi-ribbon { grid-template-columns: 1fr; padding: 16px 20px; }
+      .main-grid { padding: 0 20px 20px; }
+    }
+  </style>
+</head>
+<body>
+  <header class="topbar">
+    <div class="logo"><span class="logo-sym">Sym</span><span class="logo-phony">phony</span></div>
+    <div class="topbar-right">
+      <div class="topbar-title">Chunga Dumpsite · PWRM0001</div>
+      <div class="topbar-subtitle">Regulated by ZEMA / Bank of Zambia</div>
+    </div>
+  </header>
+
+  <nav class="tabbar">
+    <a class="tab" href="overview.html">Overview</a>
+    <a class="tab active" href="program-health.html">Programme Health</a>
+    <a class="tab" href="monitoring-report.html">Monitoring Report</a>
+    <a class="tab" href="token-issuance.html">Token Issuance</a>
+    <a class="tab" href="instructions.html">Instructions</a>
+    <a class="tab" href="success-criteria.html">Success Criteria</a>
+    <a class="tab" href="onboarding.html">Onboarding</a>
+    <a class="tab" href="pilot-gate.html">Pilot Gate</a>
+  </nav>
+
+  <div class="screen-area">
+    <div class="ph-layout" style="display:flex; flex-direction:column; height:100%; overflow:hidden;">
+      <!-- KPI Ribbon -->
+      <div class="kpi-ribbon">
+        <div class="kpi-card">
+          <div class="kpi-card-label">Total Submissions</div>
+          <div class="kpi-card-value" id="kpi-submissions">--</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-card-label">Completeness</div>
+          <div class="kpi-card-value" id="kpi-completeness">--</div>
+          <div class="kpi-card-sub">of required proof types</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-card-label">Exceptions</div>
+          <div id="kpi-exceptions">--</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-card-label">Disbursement Status</div>
+          <div id="kpi-disbursement" style="margin-top:8px;">
+            <span class="chip-lg" style="background:var(--amber);color:#000">Loading...</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Main Grid -->
+      <div class="main-grid" style="flex:1; min-height:0; display:grid;">
+        <div class="activity-table-card">
+          <h2 class="card-heading">Activity</h2>
+          <div class="activity-table-wrapper">
+            <table class="activity-table">
+              <thead>
+                <tr>
+                  <th>Instruction ID</th>
+                  <th>Proof Type</th>
+                  <th>Status</th>
+                  <th>Weight</th>
+                </tr>
+              </thead>
+              <tbody id="activity-table-body">
+                <tr><td colspan="4" style="text-align:center;color:var(--muted);padding:40px">Loading...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="detail-drawer">
+          <div class="drawer-empty" id="drawer-empty">Select an instruction to inspect</div>
+          <div class="drawer-content" id="drawer-content">
+            <div class="drawer-field">
+              <div class="drawer-field-label">Instruction ID</div>
+              <div class="drawer-field-value mono-id" id="drawer-instruction-id">--</div>
+            </div>
+            <div class="drawer-field">
+              <div class="drawer-field-label">Sequence</div>
+              <div class="drawer-field-value" id="drawer-sequence">--</div>
+            </div>
+            <div class="drawer-field">
+              <div class="drawer-field-label">Registry Status</div>
+              <div id="drawer-registry-status">--</div>
+            </div>
+            <div class="drawer-field">
+              <div class="drawer-field-label">Duplicate Check</div>
+              <div id="drawer-duplicate-check">--</div>
+            </div>
+            <div class="drawer-field">
+              <div class="drawer-field-label">Zone</div>
+              <div id="drawer-zone">--</div>
+            </div>
+            <div class="drawer-divider"></div>
+            <div class="drawer-field-label" style="margin-bottom:12px">Evidence Checklist</div>
+            <div id="drawer-evidence"></div>
+            <div id="drawer-weight-section" class="weight-section" style="display:none">
+              <div class="plastic-badge" id="drawer-plastic-type">--</div>
+              <div class="weight-value" id="drawer-net-weight">--</div>
+              <div class="weight-conversion" id="drawer-conversion">--</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const PROOF_TYPE_LABELS = {
+      'WEIGHBRIDGE_RECORD': 'Weighbridge Collection Record',
+      'FIELD_PHOTO': 'Field Collection Photo',
+      'QUALITY_AUDIT': 'Quality Audit Record',
+      'OFFTAKE_MANIFEST': 'Offtake Transfer Manifest'
+    };
+    const REQUIRED_PROOF_TYPES = ['WEIGHBRIDGE_RECORD', 'FIELD_PHOTO', 'QUALITY_AUDIT', 'OFFTAKE_MANIFEST'];
+
+    let currentData = null;
+    let selectedInstructionId = null;
+
+    async function fetchProgrammeData() {
+      try {
+        const response = await fetch('/pilot-demo/api/reveal/PGM-ZAMBIA-GRN-001');
+        if (!response.ok) throw new Error('API error');
+        const data = await response.json();
+        currentData = data;
+        renderKPIs(data);
+        renderActivityTable(data);
+        if (selectedInstructionId) {
+          const instruction = data.instructions?.find(i => i.id === selectedInstructionId);
+          if (instruction) renderDrawer(instruction);
+        }
+      } catch (err) {
+        console.error('Failed to fetch programme data:', err);
+      }
+    }
+
+    function renderKPIs(data) {
+      const instructions = data.instructions || [];
+      const totalSubmissions = instructions.length;
+      const proofTypesPresent = new Set();
+      instructions.forEach(inst => { if (inst.proofType) proofTypesPresent.add(inst.proofType); });
+      const completeness = Math.round((proofTypesPresent.size / REQUIRED_PROOF_TYPES.length) * 100);
+      const exceptions = instructions.filter(i => i.status === 'FAILED' || i.flagged).length;
+
+      document.getElementById('kpi-submissions').textContent = totalSubmissions;
+      const completenessEl = document.getElementById('kpi-completeness');
+      completenessEl.textContent = completeness + '%';
+      completenessEl.style.color = completeness === 100 ? 'var(--green)' : 'var(--amber)';
+
+      const exceptionsEl = document.getElementById('kpi-exceptions');
+      exceptionsEl.innerHTML = exceptions > 0
+        ? `<span class="chip chip-red">${exceptions} FLAGGED</span>`
+        : `<span class="chip chip-green">CLEAR</span>`;
+
+      const disbursementEl = document.getElementById('kpi-disbursement');
+      const isAuthorized = completeness === 100 && totalSubmissions > 0;
+      if (isAuthorized) {
+        disbursementEl.innerHTML = `<span class="chip-lg chip-lg-green">AUTHORIZED</span>`;
+      } else {
+        disbursementEl.innerHTML = `
+          <span class="chip-lg chip-lg-red">NOT AUTHORIZED</span>
+          <div class="kpi-card-sub" style="margin-top:8px">Incomplete MRV — ${completeness}%</div>
+        `;
+      }
+    }
+
+    function renderActivityTable(data) {
+      const tbody = document.getElementById('activity-table-body');
+      const instructions = data.instructions || [];
+      if (instructions.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="4" style="text-align:center;color:var(--muted);padding:40px">No instructions found</td></tr>`;
+        return;
+      }
+      tbody.innerHTML = instructions.map(inst => {
+        const truncatedId = inst.id.length > 14 ? inst.id.substring(0, 14) + '...' : inst.id;
+        const proofLabel = PROOF_TYPE_LABELS[inst.proofType] || inst.proofType || '--';
+        const statusClass = inst.status === 'SETTLED' ? 'chip-green' : inst.status === 'HOLD' ? 'chip-amber' : 'chip-red';
+        const weight = inst.proofType === 'WEIGHBRIDGE_RECORD' && inst.netWeight ? `<strong>${inst.netWeight} kg</strong>` : '—';
+        const selectedClass = inst.id === selectedInstructionId ? 'selected' : '';
+        return `
+          <tr class="${selectedClass}" onclick="selectInstruction('${inst.id}', this)">
+            <td class="mono-id">${truncatedId}</td>
+            <td>${proofLabel}</td>
+            <td><span class="chip ${statusClass}">${inst.status || '--'}</span></td>
+            <td>${weight}</td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    function selectInstruction(instructionId, rowEl) {
+      selectedInstructionId = instructionId;
+      document.querySelectorAll('.activity-table tbody tr').forEach(r => r.classList.remove('selected'));
+      if (rowEl) rowEl.classList.add('selected');
+      const instruction = currentData?.instructions?.find(i => i.id === instructionId);
+      if (instruction) renderDrawer(instruction);
+    }
+
+    function renderDrawer(inst) {
+      document.getElementById('drawer-empty').style.display = 'none';
+      document.getElementById('drawer-content').classList.add('visible');
+      document.getElementById('drawer-instruction-id').textContent = inst.id;
+      document.getElementById('drawer-sequence').textContent = '#' + (inst.sequence || '--');
+
+      const registryEl = document.getElementById('drawer-registry-status');
+      registryEl.innerHTML = inst.registryIssued
+        ? `<span class="chip chip-green">ISSUED</span>`
+        : `<span class="chip chip-grey">NOT ISSUED</span>`;
+
+      const dupEl = document.getElementById('drawer-duplicate-check');
+      dupEl.innerHTML = (inst.duplicateCheck === 'PASS' || inst.duplicateCheck === true)
+        ? `<span style="color:var(--green)">PASS ✓</span>`
+        : `<span style="color:var(--red)">FAIL ✗</span>`;
+
+      const zoneEl = document.getElementById('drawer-zone');
+      if (inst.withinZone === true || inst.zoneValid === true) {
+        zoneEl.innerHTML = `<span style="color:var(--green)">Chunga Dumpsite, Lusaka — Within 250m ✓</span>`;
+      } else if (inst.withinZone === false || inst.zoneValid === false) {
+        zoneEl.innerHTML = `<span style="color:var(--red)">Outside zone boundary ✗</span>`;
+      } else {
+        zoneEl.innerHTML = `<span style="color:var(--muted)">Zone data unavailable</span>`;
+      }
+
+      const presentTypes = new Set();
+      if (currentData?.instructions) {
+        currentData.instructions.forEach(i => { if (i.proofType) presentTypes.add(i.proofType); });
+      }
+      document.getElementById('drawer-evidence').innerHTML = REQUIRED_PROOF_TYPES.map(type => {
+        const isPresent = presentTypes.has(type);
+        return `
+          <div class="evidence-row">
+            <span class="evidence-dot ${isPresent ? 'present' : 'absent'}"></span>
+            <span>${PROOF_TYPE_LABELS[type]}</span>
+          </div>
+        `;
+      }).join('');
+
+      const weightSection = document.getElementById('drawer-weight-section');
+      if (inst.proofType === 'WEIGHBRIDGE_RECORD' && inst.netWeight) {
+        weightSection.style.display = 'block';
+        document.getElementById('drawer-plastic-type').textContent = inst.plasticType || 'MIXED PLASTIC';
+        document.getElementById('drawer-net-weight').textContent = inst.netWeight + ' kg';
+        const tco2 = (inst.netWeight * 0.002).toFixed(2);
+        document.getElementById('drawer-conversion').textContent = `→ ~${tco2} tCO₂  |  ~${tco2} credits (indicative)`;
+      } else {
+        weightSection.style.display = 'none';
+      }
+    }
+
+    fetchProgrammeData();
+    setInterval(fetchProgrammeData, 15000);
+  </script>
+</body>
+</html>

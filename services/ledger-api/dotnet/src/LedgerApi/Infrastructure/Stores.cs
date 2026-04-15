@@ -1265,7 +1265,7 @@ RETURNING tenant_id::text, tenant_key, display_name, status, created_at, updated
             return TenantRegistryResult.Fail(StoreErrorMessages.PersistenceUnavailable);
         }
     }
-    public async Task<bool> RegisterSupplierAsync(Guid tenantId, string supplierId, string supplierName, string payoutTarget, CancellationToken cancellationToken, bool bypassRls = false)
+    public async Task<bool> RegisterSupplierAsync(Guid tenantId, string supplierId, string supplierName, string payoutTarget, string? supplierType, CancellationToken cancellationToken, bool bypassRls = false)
     {
         try
         {
@@ -1286,17 +1286,19 @@ RETURNING tenant_id::text, tenant_key, display_name, status, created_at, updated
 
             cmd.Parameters.Clear();
             cmd.CommandText = @"
-INSERT INTO public.supplier_registry (tenant_id, supplier_id, supplier_name, payout_target, active, updated_at_utc)
-VALUES (@tenant_id, @supplier_id, @supplier_name, @payout_target, true, timezone('UTC', now())::text)
+INSERT INTO public.supplier_registry (tenant_id, supplier_id, supplier_name, payout_target, supplier_type, active, updated_at_utc)
+VALUES (@tenant_id, @supplier_id, @supplier_name, @payout_target, @supplier_type, true, timezone('UTC', now())::text)
 ON CONFLICT (tenant_id, supplier_id) DO UPDATE SET
   supplier_name = EXCLUDED.supplier_name,
   payout_target = EXCLUDED.payout_target,
+  supplier_type = EXCLUDED.supplier_type,
   active = true,
   updated_at_utc = timezone('UTC', now())::text;";
             cmd.Parameters.AddWithValue("tenant_id", tenantId);
             cmd.Parameters.AddWithValue("supplier_id", supplierId);
             cmd.Parameters.AddWithValue("supplier_name", supplierName);
             cmd.Parameters.AddWithValue("payout_target", payoutTarget);
+            cmd.Parameters.AddWithValue("supplier_type", (object?)supplierType ?? DBNull.Value);
             await cmd.ExecuteNonQueryAsync(cancellationToken);
             await tx.CommitAsync(cancellationToken);
             return true;

@@ -1,0 +1,108 @@
+schema_version: 1
+phase: '1'
+task_id: GF-W1-UI-021
+title: Create end-to-end verification script for pilot success criteria endpoint
+owner_role: ARCHITECT
+status: planned
+priority: HIGH
+risk_class: GOVERNANCE
+blast_radius: APP_LAYER
+intent: >-
+  Create self-test script verifying the pilot success criteria endpoint returns valid data to
+  ensure the endpoint is accessible, returns correct structure, and includes all required criteria.
+  This script validates endpoint accessibility, response structure, category presence, criterion
+  fields, and at least one PASS per category. Emits evidence JSON for CI integration.
+anti_patterns:
+  - "Not testing endpoint accessibility"
+  - "Not validating response structure"
+  - "Not checking for all three categories"
+  - "Not verifying criterion required fields"
+  - "Not confirming at least one PASS per category"
+  - "Not emitting evidence JSON"
+depends_on:
+  - GF-W1-UI-020
+blocks:
+  - GF-W1-UI-022
+touches:
+  - scripts/dev/verify_pilot_success_criteria_e2e.sh
+  - evidence/phase1/pilot_success_criteria_e2e.json
+  - tasks/GF-W1-UI-021/meta.yml
+invariants: []
+work:
+  - '[ID gf_w1_ui_021_work_item_01] Create scripts/dev/verify_pilot_success_criteria_e2e.sh'
+  - '[ID gf_w1_ui_021_work_item_02] Implement endpoint accessibility test (GET /pilot-demo/api/pilot-success-criteria)'
+  - '[ID gf_w1_ui_021_work_item_03] Implement response validation (categories present, criteria valid)'
+  - '[ID gf_w1_ui_021_work_item_04] Implement status validation (at least one PASS per category)'
+  - '[ID gf_w1_ui_021_work_item_05] Emit evidence JSON to evidence/phase1/pilot_success_criteria_e2e.json'
+acceptance_criteria:
+  - '[ID gf_w1_ui_021_work_item_01] Script exists at scripts/dev/verify_pilot_success_criteria_e2e.sh'
+  - '[ID gf_w1_ui_021_work_item_02] Script calls pilot success criteria endpoint and verifies HTTP 200'
+  - '[ID gf_w1_ui_021_work_item_03] Script confirms response contains all three categories'
+  - '[ID gf_w1_ui_021_work_item_04] Script confirms each criterion has required fields (id, name, status, last_verified)'
+  - '[ID gf_w1_ui_021_work_item_05] Script confirms at least one criterion per category is PASS'
+  - '[ID gf_w1_ui_021_work_item_06] Script exits 0 only when all checks pass'
+negative_tests:
+  - id: GF-W1-UI-021-N1
+    description: >-
+      Verify that script exits non-zero if endpoint returns non-200 status.
+    required: true
+  - id: GF-W1-UI-021-N2
+    description: >-
+      Verify that script exits non-zero if response is missing required categories.
+    required: true
+positive_tests:
+  - id: GF-W1-UI-021-P1
+    description: >-
+      Verify that script exits 0 when endpoint returns valid response with all checks passing.
+    required: true
+verification:
+  - test -f scripts/dev/verify_pilot_success_criteria_e2e.sh || exit 1
+  - test -x scripts/dev/verify_pilot_success_criteria_e2e.sh || exit 1
+  - bash scripts/dev/verify_pilot_success_criteria_e2e.sh || exit 1
+evidence:
+  - path: evidence/phase1/pilot_success_criteria_e2e.json
+    must_include:
+      - task_id
+      - timestamp
+      - status
+      - endpoint_accessible
+      - response_structure_valid
+      - categories_present
+      - criteria_fields_valid
+      - at_least_one_pass_per_category
+      - checks
+      - observed_paths
+      - command_outputs
+      - execution_trace
+failure_modes:
+  - "Endpoint not accessible => FUNCTIONAL.ENDPOINT_UNAVAILABLE => FAIL"
+  - "Response structure invalid => FUNCTIONAL.INVALID_RESPONSE => FAIL"
+  - "Categories missing => FUNCTIONAL.INCOMPLETE_RESPONSE => FAIL"
+  - "Criterion fields missing => FUNCTIONAL.INCOMPLETE_CRITERIA => FAIL"
+  - "No PASS per category => FUNCTIONAL.NO_PASSING_CRITERIA => FAIL"
+  - "Evidence JSON not emitted => GOVERNANCE.NO_EVIDENCE => FAIL"
+must_read:
+  - docs/operations/AI_AGENT_OPERATION_MANUAL.md
+  - .kiro/steering/symphony-platform-conventions.md
+  - docs/operations/PILOT_DEMO_VIDEO_SCRIPT.md
+implementation_plan: docs/plans/phase1/GF-W1-UI-021/PLAN.md
+implementation_log: docs/plans/phase1/GF-W1-UI-021/EXEC_LOG.md
+notes: >-
+  This task creates end-to-end verification script for pilot success criteria endpoint. Script
+  validates endpoint accessibility, response structure, category presence, criterion fields, and
+  at least one PASS per category. Emits evidence JSON for CI integration. Phase: Green Finance Wave 1.
+  Domain: green_finance.
+client: kiro
+assigned_agent: architect
+model: claude-sonnet-4-20250514
+domain: green_finance
+pilot: true
+second_pilot_test: >-
+  The end-to-end verification script pattern works for any programme requiring compliance dashboard
+  with API endpoint validation. For PWRM0001 plastic collection, the script validates criteria like
+  append-only log integrity and worker onboarding completeness. For a hypothetical VM0044 solar energy
+  programme, the script would validate criteria like energy meter data integrity and technician
+  certification validation. The script structure (endpoint accessibility test, response validation,
+  category presence check, criterion field validation, PASS validation, evidence emission) is identical;
+  only the criteria being validated differ per programme.
+pilot_scope_ref: docs/pilots/PILOT_PWRM0001/SCOPE.md

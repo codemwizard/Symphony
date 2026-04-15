@@ -1,0 +1,21 @@
+{
+  "task_id": "TSK-P1-PLT-009B",
+  "git_sha": "1e10b961de7ab2c93995591b37018b461e00206c",
+  "timestamp_utc": "2026-04-12T22:07:23Z",
+  "status": "PASS",
+  "checks": [
+    { "id": "FRONTEND_INJECTION", "status": "PASS", "description": "Worker dropdown is dynamic" },
+    { "id": "BACKEND_LIST_API", "status": "PASS", "description": "List API exists and is scoped" },
+    { "id": "UI_ALIGNMENT", "status": "PASS", "description": "Worker name mapping logic implemented" }
+  ],
+  "observed_paths": [
+    "src/symphony-pilot/token-issuance.html",
+    "services/ledger-api/dotnet/src/LedgerApi/Program.cs"
+  ],
+  "observed_hashes": [
+    "f97254648e839782b422c19c2fb3fe3988515e07a7b2e3da7f199fee9e7c2fb3",
+    "45df377e842a366e494ab2ce9dd46435a94b7cd1cab1ca77832155c4708acf98"
+  ],
+  "command_outputs": "Grep verification of fetch and list endpoints successful",
+  "execution_trace": "Verified all components for TSK-P1-PLT-009B."
+}
