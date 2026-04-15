@@ -37,8 +37,8 @@ failure_modes:
   - 'Evidence file missing => FAIL'
 must_read:
   - docs/operations/AI_AGENT_OPERATION_MANUAL.md
-implementation_plan: docs/plans/phase1/TSK-P1-PLT-009/PLAN_A.md
-implementation_log: docs/plans/phase1/TSK-P1-PLT-009/EXEC_LOG_A.md
+implementation_plan: docs/plans/phase1/TSK-P1-PLT-009A/PLAN.md
+implementation_log: docs/plans/phase1/TSK-P1-PLT-009A/EXEC_LOG.md
 client: cursor
 assigned_agent: security_guardian
 model: claude-sonnet-4-20250514
