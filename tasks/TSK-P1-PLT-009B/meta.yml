@@ -1,0 +1,48 @@
+schema_version: 1
+phase: '1'
+task_id: TSK-P1-PLT-009B
+title: 'Frontend: Dependency Injection (Dynamic worker fetching & Programme alignment)'
+owner_role: SECURITY_GUARDIAN
+status: completed
+depends_on:
+  - TSK-P1-PLT-009A
+touches:
+  - src/symphony-pilot/token-issuance.html
+  - scripts/audit/verify_tsk_p1_plt_009b.sh
+  - evidence/phase1/plt_009b_frontend.json
+  - tasks/TSK-P1-PLT-009B/meta.yml
+invariants:
+  - INV-GOV-CONTRACT-002
+work:
+  - '[ID tsk_p1_plt_009b_01] Implement dynamic worker fetching in token-issuance.html.'
+  - '[ID tsk_p1_plt_009b_02] Align form submission keys with backend LedgerAPI.'
+  - '[ID tsk_p1_plt_009b_03] Implement verifier scripts/audit/verify_tsk_p1_plt_009b.sh.'
+acceptance_criteria:
+  - '[ID tsk_p1_plt_009b_01] Worker dropdown is populated from the backend lookup API.'
+  - '[ID tsk_p1_plt_009b_02] Form submission uses backend-aligned keys.'
+  - '[ID tsk_p1_plt_009b_03] Successful issuance displays the sequence number in the UI.'
+verification:
+  - '# [ID tsk_p1_plt_009b_01] [ID tsk_p1_plt_009b_02] [ID tsk_p1_plt_009b_03] test -x scripts/audit/verify_tsk_p1_plt_009b.sh && bash scripts/audit/verify_tsk_p1_plt_009b.sh > evidence/phase1/plt_009b_frontend.json || exit 1'
+evidence:
+  - path: evidence/phase1/plt_009b_frontend.json
+    must_include:
+      - task_id
+      - git_sha
+      - timestamp_utc
+      - status
+      - checks
+      - observed_paths
+      - observed_hashes
+      - command_outputs
+      - execution_trace
+failure_modes:
+  - 'Dropdown remains hardcoded => FAIL'
+  - 'Evidence file missing => FAIL'
+must_read:
+  - docs/operations/AI_AGENT_OPERATION_MANUAL.md
+implementation_plan: docs/plans/phase1/TSK-P1-PLT-009B/PLAN.md
+implementation_log: docs/plans/phase1/TSK-P1-PLT-009B/EXEC_LOG.md
+notes: This task implements dynamic worker fetching in the token issuance frontend. The implementation aligns form submission keys with the backend LedgerAPI to ensure proper data flow.
+client: cursor
+assigned_agent: security_guardian
+model: claude-sonnet-4-20250514

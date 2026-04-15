@@ -1,0 +1,15 @@
+{
+  "check_id": "TSK-P1-247",
+  "timestamp_utc": "1970-01-01T00:00:00Z",
+  "git_sha": "ae27ed9b3887fe008d65e74c127cbebeb79ce99e",
+  "schema_fingerprint": "1f92363c69ba235e552a6aac05045062fc0097fc93cde3b89e76455b80628019",
+  "status": "PASS",
+  "checks": {
+    "python_track_verified": true,
+    "harness_track_verified": true,
+    "standalone_track_verified": true
+  },
+  "verified_python_override": true,
+  "verified_track3_parity": true,
+  "errors": []
+}

@@ -2,10 +2,10 @@
 -- PostgreSQL database dump
 --
 
-\restrict o5ZNvC7uAxESTyGuhr3TZQuCu46w3Sxmr7eBCbqdkFOHfdUzf964781h4yotUQ1
+\restrict 23zspC6vEg2s0D35MJpoMxjh0YC02rQLTdGq24WpjjwXn8qkXl7iZaNnSzdMEVI
 
--- Dumped from database version 18.2 (Debian 18.2-1.pgdg13+1)
--- Dumped by pg_dump version 18.2 (Debian 18.2-1.pgdg13+1)
+-- Dumped from database version 18.3 (Debian 18.3-1.pgdg13+1)
+-- Dumped by pg_dump version 18.3 (Debian 18.3-1.pgdg13+1)
 
 SET statement_timeout = 0;
 SET lock_timeout = 0;
@@ -7072,7 +7072,8 @@ CREATE TABLE public.supplier_registry (
     registered_latitude numeric,
     registered_longitude numeric,
     active boolean DEFAULT true NOT NULL,
-    updated_at_utc text NOT NULL
+    updated_at_utc text NOT NULL,
+    supplier_type text
 );
 
 ALTER TABLE ONLY public.supplier_registry FORCE ROW LEVEL SECURITY;
@@ -11214,5 +11215,5 @@ ALTER TABLE public.verifier_registry ENABLE ROW LEVEL SECURITY;
 -- PostgreSQL database dump complete
 --
 
-\unrestrict o5ZNvC7uAxESTyGuhr3TZQuCu46w3Sxmr7eBCbqdkFOHfdUzf964781h4yotUQ1
+\unrestrict 23zspC6vEg2s0D35MJpoMxjh0YC02rQLTdGq24WpjjwXn8qkXl7iZaNnSzdMEVI
 

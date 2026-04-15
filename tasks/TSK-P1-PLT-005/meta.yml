@@ -1,0 +1,62 @@
+schema_version: 1
+phase: '1'
+task_id: TSK-P1-PLT-005
+title: "Align Onboarding frontend payloads with backend field names"
+owner_role: ARCHITECT
+status: completed
+priority: HIGH
+risk_class: GOVERNANCE
+blast_radius: APP_LAYER
+intent: >-
+  The Onboarding UI currently fails on all POST requests due to field name mismatches.
+  This task refactors the fetch calls in onboarding.html to use the correct
+  snake_case keys (e.g., supplier_name, payout_target) expected by Program.cs.
+anti_patterns:
+  - "Injecting untyped objects into the fetch body."
+  - "Using camelCase for fields where the backend handler uses snake_case."
+out_of_scope:
+  - "Modifying the validation logic inside the backend onboarding handlers."
+stop_conditions:
+  - "If the registration requests still return 400 Bad Request regarding missing fields."
+proof_guarantees:
+  - "Verification confirms that successful registrations are persisted in the DB."
+proof_limitations:
+  - "Does not verify the uniqueness constraints of the tenant keys."
+depends_on:
+  - TSK-P1-PLT-001
+touches:
+  - src/symphony-pilot/onboarding.html
+  - tasks/TSK-P1-PLT-005/meta.yml
+invariants:
+  - INV-GOV-PILOT-005
+work:
+  - "[ID TSK-P1-PLT-005_work_item_01] Refactor registerTenant() in onboarding.html to use tenant_key and display_name."
+  - "[ID TSK-P1-PLT-005_work_item_02] Refactor registerWorker() in onboarding.html to use tenant_id, supplier_name, and payout_target."
+  - "[ID TSK-P1-PLT-005_work_item_03] Ensure all onboarding fetch calls use credentials: 'include' for the operator cookie."
+acceptance_criteria:
+  - "[ID TSK-P1-PLT-005_work_item_01] Tenant registration returns 201 Created."
+  - "[ID TSK-P1-PLT-005_work_item_02] Worker registration returns 201 Created."
+negative_tests:
+  - id: TSK-P1-PLT-005-N1
+    description: "Submitting empty fields must trigger the UI's error banners."
+    required: true
+verification:
+  - "# [ID TSK-P1-PLT-005_work_item_01] (Manually) Register a test tenant in the UI and confirm it appears in the table."
+evidence:
+  - path: evidence/phase1/tsk_p1_plt_005.json
+    must_include:
+      - task_id
+      - status
+      - checks
+failure_modes:
+  - "Payload mismatch persists => FAIL"
+  - "Cookie not sent with request => FAIL (401)"
+must_read:
+  - services/ledger-api/dotnet/src/LedgerApi/Program.cs (Line 1305 onwards)
+  - src/symphony-pilot/onboarding.html
+implementation_plan: docs/plans/phase1/TSK-P1-PLT-005/PLAN.md
+implementation_log: docs/plans/phase1/TSK-P1-PLT-005/EXEC_LOG.md
+notes: This task fixes frontend-backend payload alignment for the onboarding flow. The implementation changes only the JavaScript fetch calls, not the backend validation logic.
+client: cursor
+assigned_agent: architect
+model: <UNASSIGNED>

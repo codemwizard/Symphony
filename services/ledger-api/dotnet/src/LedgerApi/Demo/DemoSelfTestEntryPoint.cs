@@ -28,7 +28,9 @@ public static class DemoSelfTestEntryPoint
             ["--self-test-worker-onboarding"] = (logger, ct) => WorkerOnboardingSelfTestRunner.RunAsync(logger, ct),
             ["--self-test-pwrm002-task4"] = (logger, ct) => Pwrm002Task4ValidationRunner.RunAsync(logger, ct),
             ["--self-test-weighbridge-capture"] = (logger, ct) => WeighbridgeCaptureSelfTestRunner.RunAsync(logger, ct),
-            ["--self-test-pwrm-monitoring-report"] = (logger, ct) => Pwrm0001MonitoringReportSelfTestRunner.RunAsync(logger, ct)
+            ["--self-test-pwrm-monitoring-report"] = (logger, ct) => Pwrm0001MonitoringReportSelfTestRunner.RunAsync(logger, ct),
+            ["--self-test-pilot-demo-seeding-bug"] = (logger, ct) => PilotDemoSeedingBugExplorationTest.RunAsync(logger, ct),
+            ["--self-test-pilot-demo-seeding-preservation"] = (logger, ct) => PilotDemoSeedingPreservationTest.RunAsync(logger, ct)
         };
 
     public static async Task<int?> TryRunAsync(string[] args, string runtimeProfile, ILogger logger, CancellationToken cancellationToken)

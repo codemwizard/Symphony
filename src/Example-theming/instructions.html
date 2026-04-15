@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Symphony — Instructions</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="_shared.css">
+  <style>
+    body { display: flex; flex-direction: column; min-height: 100vh; }
+
+    .summary-row {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+    .summary-item {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      padding: 20px;
+      border-radius: 8px;
+      text-align: center;
+    }
+    .summary-item .value {
+      font-size: 24px;
+      font-weight: 700;
+      color: var(--green);
+    }
+    .summary-item .label {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-top: 4px;
+    }
+    .indicative-val::after {
+      content: ' (indicative)';
+      font-size: 10px;
+      font-weight: 400;
+      color: var(--muted);
+    }
+
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 24px;
+      margin-bottom: 24px;
+    }
+    .card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+      padding-bottom: 16px;
+      border-bottom: 1px solid var(--border);
+    }
+    .card-header h2 { font-size: 16px; font-weight: 700; }
+
+    .toolbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+    .filter-group { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
+    .filter-group label { font-size: 13px; color: var(--muted); }
+
+    select {
+      padding: 8px 14px;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      font-size: 13px;
+      font-family: 'Inter', sans-serif;
+      background: var(--surface);
+      color: var(--text);
+    }
+    select:focus { outline: none; border-color: var(--green); }
+
+    .refresh-btn {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      padding: 10px 16px;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      background: transparent;
+      color: var(--text);
+      cursor: pointer;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      transition: all 0.2s;
+    }
+    .refresh-btn:hover { border-color: var(--muted); }
+
+    .table-container { overflow-x: auto; }
+    .inst-table { width: 100%; border-collapse: collapse; }
+    .inst-table th {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      font-weight: 400;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--muted);
+      text-align: left;
+      padding: 12px 14px;
+      border-bottom: 1px solid var(--border);
+      background: rgba(255,255,255,0.02);
+    }
+    .inst-table td { font-size: 14px; padding: 12px 14px; border-bottom: 1px solid rgba(255,255,255,0.05); }
+    .inst-table tbody tr:hover td { background: rgba(255,255,255,0.02); }
+    .weight-cell { font-weight: 600; color: var(--green); }
+    .check-icon { color: var(--green); }
+    .warning-icon { color: var(--amber); }
+
+    .loading { text-align: center; padding: 40px; color: var(--muted); }
+    .error-msg {
+      background: var(--red-bg);
+      color: var(--red);
+      padding: 14px;
+      border-radius: 8px;
+      border: 1px solid var(--red);
+      margin-bottom: 16px;
+    }
+  </style>
+</head>
+<body>
+  <header class="topbar">
+    <div class="logo"><span class="logo-sym">Sym</span><span class="logo-phony">phony</span></div>
+    <div class="topbar-right">
+      <div class="topbar-title">Chunga Dumpsite · PWRM0001</div>
+      <div class="topbar-subtitle">Regulated by ZEMA / Bank of Zambia</div>
+    </div>
+  </header>
+
+  <nav class="tabbar">
+    <a class="tab" href="overview.html">Overview</a>
+    <a class="tab" href="program-health.html">Programme Health</a>
+    <a class="tab" href="monitoring-report.html">Monitoring Report</a>
+    <a class="tab" href="token-issuance.html">Token Issuance</a>
+    <a class="tab active" href="instructions.html">Instructions</a>
+    <a class="tab" href="success-criteria.html">Success Criteria</a>
+    <a class="tab" href="onboarding.html">Onboarding</a>
+    <a class="tab" href="pilot-gate.html">Pilot Gate</a>
+  </nav>
+
+  <div class="page-content">
+    <div id="error-container"></div>
+
+    <div class="summary-row" id="summary-row">
+      <div class="loading">Loading summary...</div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <h2>Instructions Reveal</h2>
+        <button class="refresh-btn" onclick="refreshData()">REFRESH</button>
+      </div>
+
+      <div class="toolbar">
+        <div class="filter-group">
+          <label>Status:</label>
+          <select id="statusFilter" onchange="applyFilters()">
+            <option value="">All</option>
+            <option value="SETTLED">Settled</option>
+            <option value="HOLD">On Hold</option>
+          </select>
+          <label>Type:</label>
+          <select id="typeFilter" onchange="applyFilters()">
+            <option value="">All</option>
+            <option value="WEIGHBRIDGE_RECORD">Weighbridge Record</option>
+            <option value="FIELD_PHOTO">Field Photo</option>
+            <option value="QUALITY_AUDIT">Quality Audit</option>
+            <option value="OFFTAKE_MANIFEST">Offtake Manifest</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="table-container" id="instructions-table">
+        <div class="loading">Loading instructions...</div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const TCO2_PER_KG = 0.00048;
+    const PRICE_PER_TCO2_ZMW = 150.0;
+
+    function calculateCarbonValue(weightKg) {
+      const tco2 = weightKg * TCO2_PER_KG;
+      return { tco2, valueZMW: tco2 * PRICE_PER_TCO2_ZMW };
+    }
+
+    function formatCurrency(value) {
+      return new Intl.NumberFormat('en-ZM', { style: 'currency', currency: 'ZMW' }).format(value);
+    }
+
+    function resolveNeighbourhoodLabel(lat, lng) {
+      const zones = [
+        { name: 'Chunga Dumpsite Zone A', latMin: -15.42, latMax: -15.40, lngMin: 28.26, lngMax: 28.28 },
+        { name: 'Chunga Dumpsite Zone B', latMin: -15.44, latMax: -15.42, lngMin: 28.26, lngMax: 28.28 },
+        { name: 'Lusaka Central Collection', latMin: -15.43, latMax: -15.41, lngMin: 28.28, lngMax: 28.30 },
+        { name: 'Garden Compound', latMin: -15.45, latMax: -15.43, lngMin: 28.24, lngMax: 28.26 }
+      ];
+      for (const zone of zones) {
+        if (lat >= zone.latMin && lat <= zone.latMax && lng >= zone.lngMin && lng <= zone.lngMax) return zone.name;
+      }
+      return 'Authorized Collection Zone';
+    }
+
+    let allInstructions = [];
+
+    function showError(message) {
+      document.getElementById('error-container').innerHTML = `<div class="error-msg">${message}</div>`;
+    }
+
+    function applyFilters() {
+      const statusFilter = document.getElementById('statusFilter').value;
+      const typeFilter = document.getElementById('typeFilter').value;
+      let filtered = allInstructions;
+      if (statusFilter) filtered = filtered.filter(i => i.status === statusFilter);
+      if (typeFilter) filtered = filtered.filter(i => i.proofType === typeFilter);
+      renderInstructionsTable(filtered);
+    }
+
+    function renderInstructionsTable(instructions) {
+      if (instructions.length === 0) {
+        document.getElementById('instructions-table').innerHTML =
+          '<p style="color:var(--muted);text-align:center;padding:32px">No instructions match the current filters.</p>';
+        return;
+      }
+      document.getElementById('instructions-table').innerHTML = `
+        <table class="inst-table">
+          <thead>
+            <tr>
+              <th>Seq</th>
+              <th>Instruction ID</th>
+              <th>Proof Type</th>
+              <th>Weight (kg)</th>
+              <th>Carbon (tCO₂e)</th>
+              <th>Value (ZMW)</th>
+              <th>Zone</th>
+              <th>Duplicate Check</th>
+              <th>Registry</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${instructions.map(inst => {
+              const weight = inst.netWeight || 0;
+              const carbon = calculateCarbonValue(weight);
+              const zone = inst.lat && inst.lng
+                ? resolveNeighbourhoodLabel(inst.lat, inst.lng)
+                : (inst.withinZone ? 'Authorized Zone' : 'Unknown');
+              return `
+                <tr>
+                  <td class="mono-id">${inst.sequence}</td>
+                  <td class="mono-id">${inst.id}</td>
+                  <td style="font-size:13px">${inst.proofType.replace(/_/g, ' ')}</td>
+                  <td class="weight-cell">${weight > 0 ? weight.toLocaleString() : '-'}</td>
+                  <td class="mono-id">${weight > 0 ? carbon.tco2.toFixed(6) : '-'}</td>
+                  <td style="font-size:13px">${weight > 0 ? formatCurrency(carbon.valueZMW) + ' (indicative)' : '-'}</td>
+                  <td style="font-size:13px">${zone}</td>
+                  <td>
+                    <span class="${inst.duplicateCheck === 'PASS' ? 'check-icon' : 'warning-icon'}">
+                      ${inst.duplicateCheck === 'PASS' ? '✓' : '⚠'}
+                    </span>
+                    <span style="font-size:13px;margin-left:4px">${inst.duplicateCheck}</span>
+                  </td>
+                  <td><span class="chip ${inst.registryIssued ? 'chip-green' : 'chip-grey'}">${inst.registryIssued ? 'Issued' : 'Pending'}</span></td>
+                  <td><span class="chip ${inst.status === 'SETTLED' ? 'chip-green' : 'chip-amber'}">${inst.status}</span></td>
+                </tr>
+              `;
+            }).join('')}
+          </tbody>
+        </table>
+      `;
+    }
+
+    async function loadInstructions() {
+      try {
+        const response = await fetch('/pilot-demo/api/reveal/PGM-ZAMBIA-GRN-001', { credentials: 'include' });
+        if (!response.ok) throw new Error('Failed to fetch instructions');
+        const data = await response.json();
+        allInstructions = data.instructions || [];
+
+        const totalWeight = allInstructions.reduce((sum, i) => sum + (i.netWeight || 0), 0);
+        const totalCarbon = calculateCarbonValue(totalWeight);
+        const settledCount = allInstructions.filter(i => i.status === 'SETTLED').length;
+        const registryIssuedCount = allInstructions.filter(i => i.registryIssued).length;
+
+        document.getElementById('summary-row').innerHTML = `
+          <div class="summary-item">
+            <div class="value">${allInstructions.length}</div>
+            <div class="label">Total Instructions</div>
+          </div>
+          <div class="summary-item">
+            <div class="value">${settledCount}</div>
+            <div class="label">Settled</div>
+          </div>
+          <div class="summary-item">
+            <div class="value">${totalWeight.toLocaleString()} kg</div>
+            <div class="label">Total Weight</div>
+          </div>
+          <div class="summary-item">
+            <div class="value">${totalCarbon.tco2.toFixed(4)}</div>
+            <div class="label">tCO₂e</div>
+          </div>
+          <div class="summary-item">
+            <div class="value indicative-val">${formatCurrency(totalCarbon.valueZMW)}</div>
+            <div class="label">Est. Value</div>
+          </div>
+          <div class="summary-item">
+            <div class="value">${registryIssuedCount}</div>
+            <div class="label">Registry Issued</div>
+          </div>
+        `;
+
+        renderInstructionsTable(allInstructions);
+      } catch (error) {
+        console.error('Error loading instructions:', error);
+        showError('Failed to load instructions. Please try again.');
+      }
+    }
+
+    function refreshData() {
+      document.getElementById('instructions-table').innerHTML = '<div class="loading">Loading instructions...</div>';
+      loadInstructions();
+    }
+
+    document.addEventListener('DOMContentLoaded', loadInstructions);
+  </script>
+</body>
+</html>

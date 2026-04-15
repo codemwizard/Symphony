@@ -1,0 +1,105 @@
+schema_version: 1
+phase: '1'
+task_id: REM-2026-04-08-PII-LEAK
+title: Fix PII leakage in worker lookup endpoint by moving phone number to POST request body
+owner_role: SECURITY_GUARDIAN
+status: planned
+priority: CRITICAL
+risk_class: SECURITY
+blast_radius: APP_LAYER
+intent: >-
+  The worker lookup endpoint passes phone number as a URL query parameter, which violates
+  PII handling policy. Phone numbers in URL query parameters are logged in web server access
+  logs, cached by proxies, and may appear in referrer headers, creating compliance and security
+  risks. This task moves the phone number from URL to POST request body to eliminate the PII
+  leakage and unblock pre_ci passage.
+anti_patterns:
+  - "Leaving phone number in URL query parameter"
+  - "Not updating backend endpoint to accept POST"
+  - "Breaking worker lookup functionality"
+  - "Not testing all error scenarios"
+  - "Marking complete without PII lint passing"
+depends_on: []
+blocks: []
+touches:
+  - src/supervisory-dashboard/index.html
+  - services/ledger-api/dotnet/src/LedgerApi/Program.cs
+  - evidence/phase1/rem_2026_04_08_pii_leakage_worker_lookup.json
+  - tasks/REM-2026-04-08-PII-LEAK/meta.yml
+invariants:
+  - INV-112
+work:
+  - '[ID rem_pii_leak_work_item_01] Update frontend worker lookup to POST with JSON body containing phone number'
+  - '[ID rem_pii_leak_work_item_02] Update backend /pilot-demo/api/workers/lookup endpoint to accept POST with JSON body'
+  - '[ID rem_pii_leak_work_item_03] Verify PII leakage lint passes with no phone in URL'
+  - '[ID rem_pii_leak_work_item_04] Test worker lookup functionality for all scenarios (valid, invalid, wrong type, inactive)'
+  - '[ID rem_pii_leak_work_item_05] Run full pre_ci to confirm all gates pass'
+acceptance_criteria:
+  - '[ID rem_pii_leak_work_item_01] Frontend sends POST request with phone in JSON body, not URL query parameter'
+  - '[ID rem_pii_leak_work_item_02] Backend endpoint accepts POST and reads phone from request body'
+  - '[ID rem_pii_leak_work_item_03] PII leakage lint exits 0 with status PASS'
+  - '[ID rem_pii_leak_work_item_04] All worker lookup scenarios work correctly (valid, 404, wrong type, inactive)'
+  - '[ID rem_pii_leak_work_item_05] Full pre_ci passes with no PII leakage failures'
+negative_tests:
+  - id: REM-PII-LEAK-N1
+    description: >-
+      Verify that PII leakage lint fails if phone number is in URL query parameter.
+    required: true
+  - id: REM-PII-LEAK-N2
+    description: >-
+      Verify that worker lookup fails gracefully if backend endpoint not updated.
+    required: true
+positive_tests:
+  - id: REM-PII-LEAK-P1
+    description: >-
+      Verify that worker lookup succeeds for valid worker with phone in POST body.
+    required: true
+  - id: REM-PII-LEAK-P2
+    description: >-
+      Verify that PII leakage lint passes with phone in POST body.
+    required: true
+verification:
+  - grep -q 'method.*POST' src/supervisory-dashboard/index.html || exit 1
+  - grep -q 'Content-Type.*application/json' src/supervisory-dashboard/index.html || exit 1
+  - test ! -z "$(grep -v '/workers/lookup?phone=' src/supervisory-dashboard/index.html)" || exit 1
+  - grep -q 'MapPost.*workers/lookup' services/ledger-api/dotnet/src/LedgerApi/Program.cs || exit 1
+  - bash scripts/audit/lint_pii_leakage_payloads.sh || exit 1
+  - test -f evidence/phase0/pii_leakage_payloads.json || exit 1
+  - grep -q '"status".*"PASS"' evidence/phase0/pii_leakage_payloads.json || exit 1
+evidence:
+  - path: evidence/phase1/rem_2026_04_08_pii_leakage_worker_lookup.json
+    must_include:
+      - task_id
+      - timestamp
+      - git_sha
+      - status
+      - frontend_updated
+      - backend_updated
+      - pii_lint_passed
+      - worker_lookup_tested
+      - checks
+      - observed_paths
+      - command_outputs
+      - execution_trace
+failure_modes:
+  - "Phone number still in URL query parameter => SECURITY.PII_LEAKAGE => CRITICAL_FAIL"
+  - "Backend endpoint not updated => FUNCTIONAL.API_MISMATCH => FAIL"
+  - "Worker lookup functionality broken => FUNCTIONAL.WORKER_TOKEN_ISSUANCE_BLOCKED => FAIL"
+  - "PII leakage lint still fails => SECURITY.COMPLIANCE_VIOLATION => CRITICAL_FAIL"
+  - "Error handling broken => FUNCTIONAL.NO_ERROR_MESSAGES => FAIL"
+must_read:
+  - docs/operations/AI_AGENT_OPERATION_MANUAL.md
+  - scripts/audit/lint_pii_leakage_payloads.sh
+  - .kiro/steering/ui-canonical-design.md
+  - .kiro/steering/symphony-platform-conventions.md
+implementation_plan: docs/plans/phase1/REM-2026-04-08_pii_leakage_worker_lookup/PLAN.md
+implementation_log: docs/plans/phase1/REM-2026-04-08_pii_leakage_worker_lookup/EXEC_LOG.md
+notes: >-
+  This is a security remediation task addressing a pre-existing PII leakage violation
+  discovered during meta.yml schema fixes. The issue blocks all pre_ci runs and represents
+  a compliance risk. The fix moves phone number from URL query parameter to POST request
+  body. Worker lookup endpoint is only used in supervisory dashboard for token issuance.
+  No other endpoints or UI components are affected. Phase: Phase 1. Risk: SECURITY.
+client: kiro
+assigned_agent: security_guardian
+model: claude-sonnet-4-20250514

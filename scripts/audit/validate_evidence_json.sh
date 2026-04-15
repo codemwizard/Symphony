@@ -2,9 +2,9 @@
 set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
-PHASE0_DIR="$ROOT_DIR/evidence/phase0"
-PHASE1_DIR="$ROOT_DIR/evidence/phase1"
-OUT_FILE="$ROOT_DIR/evidence/phase0/evidence_schema_validation.json"
+PHASE0_DIR="${PHASE0_DIR:-$ROOT_DIR/evidence/phase0}"
+PHASE1_DIR="${PHASE1_DIR:-$ROOT_DIR/evidence/phase1}"
+OUT_FILE="${OUT_FILE:-$ROOT_DIR/evidence/phase0/evidence_schema_validation.json}"
 STRICT_MODE=0
 
 while [[ $# -gt 0 ]]; do
@@ -36,8 +36,11 @@ source "$ROOT_DIR/scripts/lib/evidence.sh"
 ensure_evidence_write_allowed "$OUT_FILE"
 EVIDENCE_TS="$(evidence_now_utc)"
 EVIDENCE_GIT_SHA="$(git_sha)"
+REL_PHASE0_DIR="${PHASE0_DIR#$ROOT_DIR/}"
+REL_PHASE1_DIR="${PHASE1_DIR#$ROOT_DIR/}"
+REL_OUT_FILE="${OUT_FILE#$ROOT_DIR/}"
 
-PHASE0_DIR="$PHASE0_DIR" PHASE1_DIR="$PHASE1_DIR" OUT_FILE="$OUT_FILE" STRICT_MODE="$STRICT_MODE" EVIDENCE_TS="$EVIDENCE_TS" EVIDENCE_GIT_SHA="$EVIDENCE_GIT_SHA" python3 - <<'PY'
+PHASE0_DIR="$PHASE0_DIR" PHASE1_DIR="$PHASE1_DIR" OUT_FILE="$OUT_FILE" STRICT_MODE="$STRICT_MODE" EVIDENCE_TS="$EVIDENCE_TS" EVIDENCE_GIT_SHA="$EVIDENCE_GIT_SHA" REL_PHASE0_DIR="$REL_PHASE0_DIR" REL_PHASE1_DIR="$REL_PHASE1_DIR" REL_OUT_FILE="$REL_OUT_FILE" python3 - <<'PY'
 import json
 import os
 from pathlib import Path
@@ -117,12 +120,12 @@ out_payload = {
     "invalid_files": invalid_files,
     "schema_version": "1.0",
     "inputs": {
-        "phase0_dir": str(phase_dirs[0]),
-        "phase1_dir": str(phase_dirs[1]),
+        "phase0_dir": os.environ["REL_PHASE0_DIR"],
+        "phase1_dir": os.environ["REL_PHASE1_DIR"],
         "strict": strict
     },
     "outputs": {
-        "report_path": os.environ["OUT_FILE"]
+        "report_path": os.environ["REL_OUT_FILE"]
     }
 }
 

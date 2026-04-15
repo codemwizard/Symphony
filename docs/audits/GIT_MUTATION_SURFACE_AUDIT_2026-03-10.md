@@ -31,6 +31,12 @@ Purpose: inventory repository scripts that mutate Git state or rely on Git state
 | `scripts/audit/verify_invariants_local.sh` | yes | partial | PASS | Local wrapper reads Git state and delegates to verifiers; no uncontained mutation path. |
 | `scripts/audit/verify_tsk_p1_062.sh` | yes | partial | PASS | Worktree hygiene verifier reads Git worktree registry and enforces no stale/prunable entries. |
 | `scripts/audit/verify_tsk_p1_076.sh` | yes | partial | PASS | Verifies installed hook files in `.git/hooks` against tracked `.githooks/*` sources after running the canonical hook installer. |
+| `scripts/audit/verify_tsk_p1_248.sh` | yes | partial | PASS | Uses an isolated detached worktree plus an empty commit to prove deterministic git identity clamping across a HEAD change without mutating the caller worktree. |
+| `scripts/audit/tests/test_verify_human_governance_review_signoff.sh` | yes | partial | PASS | Creates a synthetic adjacent-doc commit in a temporary repo snapshot to prove governance signoff evidence is stable across unrelated branch churn. |
+| `scripts/audit/tests/test_evidence_validation_stability.sh` | yes | partial | PASS | Creates a synthetic adjacent-doc commit in a temporary repo snapshot to prove validation-family evidence outputs are stable across unrelated branch churn. |
+| `scripts/audit/verify_tsk_p1_254.sh` | yes | partial | PASS | Uses an isolated temporary repo plus contained hook-disabled commits to inventory and rebaseline stale deterministic evidence without mutating the caller worktree. |
+| `scripts/audit/verify_tsk_p1_255.sh` | yes | partial | PASS | Uses an isolated temporary repo plus a commit-between-runs proof to validate pre-push fixed-point convergence without mutating the caller worktree. |
+| `scripts/audit/tests/test_zero_drift_pre_push.sh` | yes | partial | PASS | Exercises the commit-between-runs verifier in a temporary repo snapshot and asserts the fixed-point checks are present. |
 | `scripts/audit/verify_tsk_p1_demo_020.sh` | yes | partial | PASS | Verifies the host-based demo runner's fetch/source-gate and single-active-run process controls by inspecting Git-sensitive orchestration surfaces without mutating caller refs. |
 | `scripts/audit/verify_tsk_p1_demo_028.sh` | yes | partial | PASS | Verifies the demo image-build flow against host-based deployment guidance by inspecting Git-tracked runtime and Docker surfaces without mutating caller refs. |
 | `scripts/audit/verify_tsk_p1_demo_030.sh` | yes | partial | PASS | Verifies the clean-branch task-line repair by checking local-main parity, canonical demo task identity, and repaired-branch approval scope without mutating caller refs. |
@@ -45,6 +51,8 @@ Purpose: inventory repository scripts that mutate Git state or rely on Git state
 | `scripts/audit/reset_evidence_gate.sh` | yes | partial | PASS | Evidence gate reset helper; uses git reset strictly to restore evidence gate state in controlled remediation flows. No uncontained ref mutation path. |
 | `scripts/audit/verify_enf_003b.sh` | yes | partial | PASS | ENF-003B verifier; reads reset_evidence_gate.sh installation state via git reset check; no mutation of caller refs. |
 | `scripts/audit/verify_enf_005.sh` | yes | partial | PASS | ENF-005 verifier; checks DRD lockout sudo gate and casefile scaffolder via git reset pattern detection; read-only audit surface. |
+| `scripts/audit/verify_tsk_p1_plt_008.sh` | no | n/a | PASS | Reads git rev-parse HEAD for evidence; no Git mutation. |
+| `scripts/audit/verify_tsk_p1_plt_009b.sh` | no | n/a | PASS | Reads git rev-parse HEAD for evidence; no Git mutation. |
 
 ## Findings
 - The original containment failure class is now covered at both fixture and runner level.

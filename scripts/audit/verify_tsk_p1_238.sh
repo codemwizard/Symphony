@@ -41,8 +41,8 @@ if grep -Eq "^- TSK-P1-.*$" docs/tasks/RLS_ANTI_HALLUCINATION_EXECUTION_ORDER.md
 fi
 echo "✅ Backlog is deduplicated"
 
-git_sha="$(git rev-parse HEAD 2>/dev/null || echo 'unknown')"
-timestamp="$(date -u +"%Y-%m-%dT%H:%M:%SZ")"
+git_sha="$([ "${SYMPHONY_EVIDENCE_DETERMINISTIC:-0}" = "1" ] && echo "0000000000000000000000000000000000000000" || git rev-parse HEAD 2>/dev/null || echo 'unknown')"
+timestamp="$([ "${SYMPHONY_EVIDENCE_DETERMINISTIC:-0}" = "1" ] && echo "1970-01-01T00:00:00Z" || date -u +%Y-%m-%dT%H:%M:%SZ)"
 
 cat > "$EVIDENCE_FILE" <<EOF
 {

@@ -1,9 +1,9 @@
 {
   "check_id": "PERF-005",
   "task_id": "PERF-005",
-  "timestamp_utc": "2026-02-23T17:24:39Z",
-  "git_sha": "5e88756b721c485f7b17bd3884a88995af11f84c",
-  "schema_fingerprint": "472c540b81dcab3cb43980291595dd562a4f5ad2e7b2e98f6d832f740c0a1218",
+  "timestamp_utc": "1970-01-01T00:00:00Z",
+  "git_sha": "0000000000000000000000000000000000000000",
+  "schema_fingerprint": "1f92363c69ba235e552a6aac05045062fc0097fc93cde3b89e76455b80628019",
   "status": "PASS",
   "pass": true,
   "details": {
@@ -15,7 +15,7 @@
       {
         "rail": "ZM-NFS",
         "settlement_window_ms": 2500,
-        "observed_finality_ms": 1719,
+        "observed_finality_ms": 1659,
         "compliant": true,
         "measurement_truth": "simulated_finality_stub",
         "finality_source": "simulated_stub",
@@ -24,7 +24,7 @@
       {
         "rail": "ZM-MMO",
         "settlement_window_ms": 6000,
-        "observed_finality_ms": 2219,
+        "observed_finality_ms": 2159,
         "compliant": true,
         "measurement_truth": "simulated_finality_stub",
         "finality_source": "simulated_stub",

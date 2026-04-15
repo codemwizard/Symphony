@@ -1546,3 +1546,89 @@
     Application-layer enforcement alone is not acceptable — this constraint
     must exist in the DB function and be proven by negative test
     GF-W1-SCH-008-N1.
+
+# ─────────────────────────────────────────────────────────────────
+# SECTION: Green Finance UI Transparency Invariants (GF-W1-UI-001)
+# Status: roadmap — will be promoted to implemented when GF-W1-UI-001
+# verification scripts pass and are CI-wired.
+# ─────────────────────────────────────────────────────────────────
+
+- id: INV-170
+  aliases: ["I-GF-UI-FINMEAN-01", "INV-GF-UI-001"]
+  status: roadmap
+  severity: P1
+  title: "Financial meaning paired with every metric in supervisory dashboard"
+  owners: ["team-platform", "team-ui"]
+  sla_days: 14
+  enforcement: "scripts/dev/verify_ui_e2e.sh"
+  verification: >-
+    scripts/dev/verify_ui_e2e.sh; grep-based checks for tCO₂ and credits
+    columns in activity table and monitoring report; evidence/phase1/gf_w1_ui_001_canonical_rewrite.json
+  notes: >-
+    Every data point in the supervisory dashboard must show financial implication:
+    weight → tCO₂ estimate, completeness → disbursement status, totals → credits.
+    Introduced by GF-W1-UI-001.
+
+- id: INV-171
+  aliases: ["I-GF-UI-ADDITION-01", "INV-GF-UI-002"]
+  status: roadmap
+  severity: P1
+  title: "Additionality explicitly shown as baseline vs actual comparison"
+  owners: ["team-platform", "team-ui"]
+  sla_days: 14
+  enforcement: "scripts/dev/verify_ui_e2e.sh"
+  verification: >-
+    Browser/manual inspection: monitoring report tab must show
+    'Baseline: 0 kg | Actual: N kg | Additionality: +N kg' row;
+    evidence/phase1/gf_w1_ui_001_canonical_rewrite.json (additionality_row_verified: true)
+  notes: >-
+    Baseline comparison must be visible — never rely on operator inferring
+    additionality from totals alone. Introduced by GF-W1-UI-001.
+
+- id: INV-172
+  aliases: ["I-GF-UI-NOGPS-01", "INV-GF-UI-003"]
+  status: roadmap
+  severity: P0
+  title: "Raw GPS coordinates never rendered in DOM — neighbourhood labels only"
+  owners: ["team-platform", "team-security"]
+  sla_days: 7
+  enforcement: "grep -r 'textContent.*latitude\\|innerHTML.*longitude' src/supervisory-dashboard/index.html src/recipient-landing/index.html && exit 1 || exit 0"
+  verification: >-
+    Negative test GF-W1-UI-001-N1: grep for raw coordinate rendering patterns;
+    must exit non-zero (no matches found);
+    evidence/phase1/gf_w1_ui_001_canonical_rewrite.json (gps_coordinate_check_passed: true)
+  notes: >-
+    Privacy control. All GPS display must use resolveNeighbourhoodLabel().
+    CRITICAL_FAIL if raw coordinates appear. Introduced by GF-W1-UI-001.
+
+- id: INV-173
+  aliases: ["I-GF-UI-BENEFIT-01", "INV-GF-UI-004"]
+  status: roadmap
+  severity: P1
+  title: "Benefit-sharing three-way split always visible in monitoring report"
+  owners: ["team-platform", "team-ui"]
+  sla_days: 14
+  enforcement: "scripts/dev/verify_ui_e2e.sh"
+  verification: >-
+    Browser/manual inspection: monitoring report must show Project Developer (50%),
+    Community (30%), National Fund (20%) with ZMW values marked (indicative);
+    evidence/phase1/gf_w1_ui_001_canonical_rewrite.json (benefit_sharing_verified: true)
+  notes: >-
+    Three-way split (50%/30%/20%) must always be shown even when zero.
+    All values marked (indicative). Introduced by GF-W1-UI-001.
+
+- id: INV-174
+  aliases: ["I-GF-UI-CREDITS-01", "INV-GF-UI-005"]
+  status: roadmap
+  severity: P1
+  title: "Carbon credits as unit of account (1 credit = 1 tCO₂) displayed in UI"
+  owners: ["team-platform", "team-ui"]
+  sla_days: 14
+  enforcement: "scripts/dev/verify_ui_e2e.sh"
+  verification: >-
+    Browser/manual inspection: monitoring report must show
+    'Estimated Carbon Credits: X credits (1 credit = 1 tCO₂, indicative)';
+    evidence/phase1/gf_w1_ui_001_canonical_rewrite.json
+  notes: >-
+    Carbon credits must be shown as a unit of account with explicit
+    equivalence to tCO₂. All values (indicative). Introduced by GF-W1-UI-001.

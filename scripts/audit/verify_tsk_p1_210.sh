@@ -1,11 +1,28 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+# --- PRE_CI_CONTEXT_GUARD ---
+# This script writes evidence and must run via pre_ci.sh or run_task.sh.
+# Direct execution bypasses the enforcement harness and is blocked.
+# Debugging override: PRE_CI_CONTEXT=1 bash <script>
+if [[ "${PRE_CI_CONTEXT:-}" != "1" ]]; then
+  echo "ERROR: $(basename "${BASH_SOURCE[0]}") must run via pre_ci.sh or run_task.sh" >&2
+  echo "  Direct execution blocked to protect evidence integrity." >&2
+  echo "  Debug override: PRE_CI_CONTEXT=1 bash $(basename "${BASH_SOURCE[0]}")" >&2
+  mkdir -p .toolchain/audit
+  printf '%s rogue_execution attempted: %s\n' \
+    "$([ "${SYMPHONY_EVIDENCE_DETERMINISTIC:-0}" = "1" ] && echo "1970-01-01T00:00:00Z" || date -u +%Y-%m-%dT%H:%M:%SZ)" "${BASH_SOURCE[0]}" \
+    >> .toolchain/audit/rogue_execution.log
+  return 1 2>/dev/null || exit 1
+fi
+# --- end PRE_CI_CONTEXT_GUARD ---
+
+
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 CS_FILE="$ROOT/services/ledger-api/dotnet/src/LedgerApi/ReadModels/SupervisoryRevealReadModelHandler.cs"
 UI_FILE="$ROOT/src/supervisory-dashboard/index.html"
 EVIDENCE="$ROOT/evidence/phase1/tsk_p1_210_supervisory_optimization.json"
-RUN_ID="${SYMPHONY_RUN_ID:-standalone-$(date -u +%Y%m%dT%H%M%SZ)}"
+RUN_ID="${SYMPHONY_RUN_ID:-standalone-$([[ "${SYMPHONY_EVIDENCE_DETERMINISTIC:-0}" == "1" ]] && echo "19700101T000000Z" || date -u +%Y%m%dT%H%M%SZ)}"
 
 mkdir -p "$(dirname "$EVIDENCE")"
 

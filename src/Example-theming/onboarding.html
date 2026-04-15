@@ -1,0 +1,594 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Symphony — Onboarding</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="_shared.css">
+  <style>
+    /* Onboarding uses full vertical scroll — the key fix requested */
+    body { display: flex; flex-direction: column; min-height: 100vh; }
+    .ob-content {
+      flex: 1;
+      overflow-y: auto;
+      overflow-x: hidden;
+    }
+
+    /* Stats strip */
+    .ob-stats-strip {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 16px;
+      padding: 20px 40px;
+    }
+    .ob-stat-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 16px 20px;
+    }
+    .ob-stat-label {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--muted);
+      margin-bottom: 8px;
+    }
+    .ob-stat-value {
+      font-family: 'Inter', sans-serif;
+      font-weight: 800;
+      font-size: 28px;
+      color: var(--text);
+    }
+    .ob-stat-timestamp {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    /* Forms grid */
+    .ob-forms-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 20px;
+      padding: 0 40px;
+    }
+    .ob-form-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 20px;
+    }
+    .ob-form-header {
+      font-family: 'Inter', sans-serif;
+      font-weight: 700;
+      font-size: 16px;
+      margin-bottom: 16px;
+    }
+    .ob-field { margin-bottom: 14px; }
+    .ob-field-label {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--muted);
+      margin-bottom: 6px;
+      display: block;
+    }
+    .ob-input,
+    .ob-select {
+      width: 100%;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 10px 14px;
+      font-family: 'Inter', sans-serif;
+      font-size: 15px;
+      color: var(--text);
+    }
+    .ob-input::placeholder { color: var(--muted); }
+    .ob-input:focus, .ob-select:focus { outline: none; border-color: var(--green); }
+    .ob-select {
+      appearance: none;
+      cursor: pointer;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='https://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%238b949e' d='M2.5 4.5l3.5 3.5 3.5-3.5'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 14px center;
+    }
+
+    .ob-btn {
+      width: 100%;
+      font-family: 'Inter', sans-serif;
+      font-weight: 700;
+      font-size: 14px;
+      padding: 12px 16px;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: opacity 0.15s ease;
+    }
+    .ob-btn:hover:not(:disabled) { opacity: 0.9; }
+    .ob-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+    .ob-btn-primary { background: var(--green); color: #fff; border: none; }
+    .ob-btn-outline { background: transparent; color: var(--green); border: 1px solid var(--green); }
+    .ob-btn-row { display: flex; gap: 12px; }
+    .ob-btn-row .ob-btn { flex: 1; }
+
+    .ob-divider { height: 1px; background: var(--border); margin: 16px 0; }
+
+    .ob-status-banner {
+      margin-top: 12px;
+      padding: 10px 12px;
+      border-radius: 6px;
+      font-size: 13px;
+      display: none;
+    }
+    .ob-status-banner.success { display: block; background: var(--green-bg); border: 1px solid var(--green); color: var(--green); }
+    .ob-status-banner.error { display: block; background: var(--red-bg); border: 1px solid var(--red); color: var(--red); }
+
+    /* Tables grid — fixed height, no flex:1 height issues */
+    .ob-tables-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+      padding: 20px 40px 32px;
+    }
+    .ob-table-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      display: flex;
+      flex-direction: column;
+      min-height: 200px;
+      max-height: 340px;
+    }
+    .ob-table-header {
+      font-family: 'Inter', sans-serif;
+      font-weight: 700;
+      font-size: 16px;
+      padding: 16px 20px;
+      flex-shrink: 0;
+    }
+    .ob-table-wrapper {
+      overflow-y: auto;
+      padding: 0 20px 16px;
+    }
+    .ob-table { width: 100%; border-collapse: collapse; }
+    .ob-table th {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      font-weight: 400;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--muted);
+      text-align: left;
+      padding: 10px;
+      border-bottom: 1px solid var(--border);
+      position: sticky;
+      top: 0;
+      background: var(--surface);
+    }
+    .ob-table td { font-size: 14px; padding: 10px; border-bottom: 1px solid rgba(255,255,255,0.05); }
+
+    .ob-btn-sm {
+      font-family: 'Inter', sans-serif;
+      font-weight: 600;
+      font-size: 12px;
+      padding: 6px 12px;
+      border-radius: 4px;
+      cursor: pointer;
+      background: transparent;
+      color: var(--green);
+      border: 1px solid var(--green);
+      transition: opacity 0.15s ease;
+    }
+    .ob-btn-sm:hover { opacity: 0.8; }
+
+    @media (max-width: 1200px) {
+      .ob-stats-strip { grid-template-columns: repeat(2, 1fr); }
+      .ob-forms-grid { grid-template-columns: 1fr; }
+      .ob-tables-grid { grid-template-columns: 1fr; }
+    }
+    @media (max-width: 768px) {
+      .ob-stats-strip { grid-template-columns: 1fr; padding: 16px 20px; }
+      .ob-forms-grid { padding: 0 20px; }
+      .ob-tables-grid { padding: 16px 20px 24px; }
+    }
+  </style>
+</head>
+<body>
+  <header class="topbar">
+    <div class="logo"><span class="logo-sym">Sym</span><span class="logo-phony">phony</span></div>
+    <div class="topbar-right">
+      <div class="topbar-title">Chunga Dumpsite · PWRM0001</div>
+      <div class="topbar-subtitle">Regulated by ZEMA / Bank of Zambia</div>
+    </div>
+  </header>
+
+  <nav class="tabbar">
+    <a class="tab" href="overview.html">Overview</a>
+    <a class="tab" href="program-health.html">Programme Health</a>
+    <a class="tab" href="monitoring-report.html">Monitoring Report</a>
+    <a class="tab" href="token-issuance.html">Token Issuance</a>
+    <a class="tab" href="instructions.html">Instructions</a>
+    <a class="tab" href="success-criteria.html">Success Criteria</a>
+    <a class="tab active" href="onboarding.html">Onboarding</a>
+    <a class="tab" href="pilot-gate.html">Pilot Gate</a>
+  </nav>
+
+  <div class="ob-content">
+    <!-- Stats Strip -->
+    <div class="ob-stats-strip">
+      <div class="ob-stat-card">
+        <div class="ob-stat-label">Active Tenants</div>
+        <div class="ob-stat-value" id="ob-stat-tenants">--</div>
+      </div>
+      <div class="ob-stat-card">
+        <div class="ob-stat-label">Active Programmes</div>
+        <div class="ob-stat-value" id="ob-stat-programmes">--</div>
+      </div>
+      <div class="ob-stat-card">
+        <div class="ob-stat-label">Bound Policies</div>
+        <div class="ob-stat-value" id="ob-stat-policies">--</div>
+      </div>
+      <div class="ob-stat-card">
+        <div class="ob-stat-label">Last Sync</div>
+        <div class="ob-stat-timestamp" id="ob-stat-sync">--</div>
+      </div>
+    </div>
+
+    <!-- Forms Grid -->
+    <div class="ob-forms-grid">
+      <!-- Column 1: Tenant Registration -->
+      <div class="ob-form-card">
+        <h3 class="ob-form-header">REGISTER TENANT</h3>
+        <div class="ob-field">
+          <label class="ob-field-label">Tenant Key</label>
+          <input type="text" id="ob-tenant-key" class="ob-input" placeholder="e.g. chunga-coop">
+        </div>
+        <div class="ob-field">
+          <label class="ob-field-label">Display Name</label>
+          <input type="text" id="ob-tenant-name" class="ob-input" placeholder="e.g. Chunga Cooperative">
+        </div>
+        <button class="ob-btn ob-btn-primary" onclick="registerTenant()">REGISTER &rarr;</button>
+        <div id="ob-tenant-status" class="ob-status-banner"></div>
+      </div>
+
+      <!-- Column 2: Programme Setup -->
+      <div class="ob-form-card">
+        <h3 class="ob-form-header">PROGRAMME &amp; POLICY</h3>
+        <div class="ob-field">
+          <label class="ob-field-label">Tenant</label>
+          <select id="ob-prog-tenant" class="ob-select">
+            <option value="">Select tenant...</option>
+          </select>
+        </div>
+        <div class="ob-field">
+          <label class="ob-field-label">Programme Key</label>
+          <input type="text" id="ob-prog-key" class="ob-input" placeholder="e.g. PGM-ZAMBIA-GRN-002">
+        </div>
+        <div class="ob-field">
+          <label class="ob-field-label">Programme Name</label>
+          <input type="text" id="ob-prog-name" class="ob-input" placeholder="e.g. Lusaka Plastic Recovery">
+        </div>
+        <button class="ob-btn ob-btn-outline" onclick="createProgramme()">CREATE PROGRAMME &rarr;</button>
+
+        <div class="ob-divider"></div>
+
+        <div class="ob-field">
+          <label class="ob-field-label">Programme</label>
+          <select id="ob-policy-prog" class="ob-select">
+            <option value="">Select programme...</option>
+          </select>
+        </div>
+        <div class="ob-field">
+          <label class="ob-field-label">Policy Code</label>
+          <input type="text" id="ob-policy-code" class="ob-input" placeholder="e.g. PWRM0001">
+        </div>
+        <div class="ob-btn-row">
+          <button class="ob-btn ob-btn-outline" onclick="bindPolicy()">BIND POLICY</button>
+          <button class="ob-btn ob-btn-primary" id="ob-activate-btn" onclick="activateProgramme()" disabled>ACTIVATE &rarr;</button>
+        </div>
+        <div id="ob-prog-status" class="ob-status-banner"></div>
+      </div>
+
+      <!-- Column 3: Worker Registration -->
+      <div class="ob-form-card">
+        <h3 class="ob-form-header">REGISTER WORKER</h3>
+        <div class="ob-field">
+          <label class="ob-field-label">Tenant</label>
+          <select id="ob-worker-tenant" class="ob-select">
+            <option value="">Select tenant...</option>
+          </select>
+        </div>
+        <div class="ob-field">
+          <label class="ob-field-label">Worker Name</label>
+          <input type="text" id="ob-worker-name" class="ob-input" placeholder="e.g. John Banda">
+        </div>
+        <div class="ob-field">
+          <label class="ob-field-label">Payout Target</label>
+          <input type="text" id="ob-worker-payout" class="ob-input" placeholder="MMO:+260971100001">
+        </div>
+        <button class="ob-btn ob-btn-primary" onclick="registerWorker()">REGISTER WORKER &rarr;</button>
+        <div id="ob-worker-status" class="ob-status-banner"></div>
+      </div>
+    </div>
+
+    <!-- Tables Grid -->
+    <div class="ob-tables-grid">
+      <div class="ob-table-card">
+        <h3 class="ob-table-header">REGISTERED TENANTS</h3>
+        <div class="ob-table-wrapper">
+          <table class="ob-table">
+            <thead>
+              <tr><th>Key</th><th>Display Name</th><th>Status</th><th>Created</th></tr>
+            </thead>
+            <tbody id="ob-tenants-tbody">
+              <tr><td colspan="4" style="text-align:center;color:var(--muted)">Loading...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="ob-table-card">
+        <h3 class="ob-table-header">PROGRAMMES</h3>
+        <div class="ob-table-wrapper">
+          <table class="ob-table">
+            <thead>
+              <tr><th>Name</th><th>Tenant</th><th>Policy</th><th>Status</th><th>Action</th></tr>
+            </thead>
+            <tbody id="ob-programmes-tbody">
+              <tr><td colspan="5" style="text-align:center;color:var(--muted)">Loading...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let obTenants = [];
+    let obProgrammes = [];
+
+    async function fetchOnboardingStatus() {
+      try {
+        const response = await fetch('/api/admin/onboarding/status');
+        if (!response.ok) throw new Error('API error');
+        const data = await response.json();
+        obTenants = data.tenants || [];
+        obProgrammes = data.programmes || [];
+        renderOnboardingStats(data);
+        renderTenantsTable();
+        renderProgrammesTable();
+        populateTenantDropdowns();
+        populateProgrammeDropdowns();
+      } catch (err) {
+        console.error('Failed to fetch onboarding status:', err);
+      }
+    }
+
+    function renderOnboardingStats(data) {
+      document.getElementById('ob-stat-tenants').textContent = data.activeTenants || 0;
+      document.getElementById('ob-stat-programmes').textContent = data.activeProgrammes || 0;
+      document.getElementById('ob-stat-policies').textContent = data.boundPolicies || 0;
+      document.getElementById('ob-stat-sync').textContent = data.lastSync || '--';
+    }
+
+    function populateTenantDropdowns() {
+      ['ob-prog-tenant', 'ob-worker-tenant'].forEach(id => {
+        const select = document.getElementById(id);
+        const currentVal = select.value;
+        select.innerHTML = '<option value="">Select tenant...</option>';
+        obTenants.forEach(t => {
+          select.innerHTML += `<option value="${t.key}">${t.displayName}</option>`;
+        });
+        select.value = currentVal;
+      });
+    }
+
+    function populateProgrammeDropdowns() {
+      const select = document.getElementById('ob-policy-prog');
+      const currentVal = select.value;
+      select.innerHTML = '<option value="">Select programme...</option>';
+      obProgrammes.forEach(p => {
+        select.innerHTML += `<option value="${p.id}">${p.name}</option>`;
+      });
+      select.value = currentVal;
+      updateActivateButtonState();
+    }
+
+    function updateActivateButtonState() {
+      document.getElementById('ob-activate-btn').disabled = !document.getElementById('ob-policy-prog').value;
+    }
+
+    document.getElementById('ob-policy-prog')?.addEventListener('change', updateActivateButtonState);
+
+    function renderTenantsTable() {
+      const tbody = document.getElementById('ob-tenants-tbody');
+      if (obTenants.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;color:var(--muted)">No tenants registered</td></tr>';
+        return;
+      }
+      tbody.innerHTML = obTenants.map(t => `
+        <tr>
+          <td class="mono-id">${t.key}</td>
+          <td>${t.displayName}</td>
+          <td><span class="chip ${t.status === 'ACTIVE' ? 'chip-green' : 'chip-amber'}">${t.status}</span></td>
+          <td class="mono-id">${t.created || '--'}</td>
+        </tr>
+      `).join('');
+    }
+
+    function renderProgrammesTable() {
+      const tbody = document.getElementById('ob-programmes-tbody');
+      if (obProgrammes.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:var(--muted)">No programmes registered</td></tr>';
+        return;
+      }
+      tbody.innerHTML = obProgrammes.map(p => {
+        const statusClass = p.status === 'ACTIVE' ? 'chip-green' : p.status === 'PENDING' ? 'chip-amber' : 'chip-red';
+        const actionBtn = p.status === 'PENDING'
+          ? `<button class="ob-btn-sm" onclick="activateProgrammeById('${p.id}')">Activate</button>`
+          : '—';
+        return `
+          <tr>
+            <td>${p.name}</td>
+            <td>${p.tenant || '--'}</td>
+            <td class="mono-id">${p.policy || '—'}</td>
+            <td><span class="chip ${statusClass}">${p.status}</span></td>
+            <td>${actionBtn}</td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    async function registerTenant() {
+      const key = document.getElementById('ob-tenant-key').value.trim();
+      const displayName = document.getElementById('ob-tenant-name').value.trim();
+      const statusBanner = document.getElementById('ob-tenant-status');
+      if (!key || !displayName) {
+        statusBanner.className = 'ob-status-banner error';
+        statusBanner.textContent = 'All fields are required';
+        return;
+      }
+      statusBanner.className = 'ob-status-banner';
+      statusBanner.style.display = 'none';
+      try {
+        const response = await fetch('/api/admin/onboarding/tenants', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ key, displayName })
+        });
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.error || 'Failed to register tenant');
+        statusBanner.className = 'ob-status-banner success';
+        statusBanner.textContent = `Tenant "${displayName}" registered`;
+        document.getElementById('ob-tenant-key').value = '';
+        document.getElementById('ob-tenant-name').value = '';
+        fetchOnboardingStatus();
+      } catch (err) {
+        statusBanner.className = 'ob-status-banner error';
+        statusBanner.textContent = err.message;
+      }
+    }
+
+    async function createProgramme() {
+      const tenant = document.getElementById('ob-prog-tenant').value;
+      const key = document.getElementById('ob-prog-key').value.trim();
+      const name = document.getElementById('ob-prog-name').value.trim();
+      const statusBanner = document.getElementById('ob-prog-status');
+      if (!tenant || !key || !name) {
+        statusBanner.className = 'ob-status-banner error';
+        statusBanner.textContent = 'All fields are required';
+        return;
+      }
+      statusBanner.className = 'ob-status-banner'; statusBanner.style.display = 'none';
+      try {
+        const response = await fetch('/api/admin/onboarding/programmes', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ tenant, key, name })
+        });
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.error || 'Failed to create programme');
+        statusBanner.className = 'ob-status-banner success';
+        statusBanner.textContent = `Programme "${name}" created`;
+        document.getElementById('ob-prog-tenant').value = '';
+        document.getElementById('ob-prog-key').value = '';
+        document.getElementById('ob-prog-name').value = '';
+        fetchOnboardingStatus();
+      } catch (err) {
+        statusBanner.className = 'ob-status-banner error';
+        statusBanner.textContent = err.message;
+      }
+    }
+
+    async function bindPolicy() {
+      const programmeId = document.getElementById('ob-policy-prog').value;
+      const policyCode = document.getElementById('ob-policy-code').value.trim();
+      const statusBanner = document.getElementById('ob-prog-status');
+      if (!programmeId || !policyCode) {
+        statusBanner.className = 'ob-status-banner error';
+        statusBanner.textContent = 'Select programme and enter policy code';
+        return;
+      }
+      statusBanner.className = 'ob-status-banner'; statusBanner.style.display = 'none';
+      try {
+        const response = await fetch(`/api/admin/onboarding/programmes/${programmeId}/policy-binding`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ policyCode })
+        });
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.error || 'Failed to bind policy');
+        statusBanner.className = 'ob-status-banner success';
+        statusBanner.textContent = `Policy ${policyCode} bound`;
+        document.getElementById('ob-policy-code').value = '';
+        fetchOnboardingStatus();
+      } catch (err) {
+        statusBanner.className = 'ob-status-banner error';
+        statusBanner.textContent = err.message;
+      }
+    }
+
+    async function activateProgramme() {
+      const programmeId = document.getElementById('ob-policy-prog').value;
+      if (programmeId) await activateProgrammeById(programmeId);
+    }
+
+    async function activateProgrammeById(programmeId) {
+      const statusBanner = document.getElementById('ob-prog-status');
+      statusBanner.className = 'ob-status-banner'; statusBanner.style.display = 'none';
+      try {
+        const response = await fetch(`/api/admin/onboarding/programmes/${programmeId}/activate`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' }
+        });
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.error || 'Failed to activate programme');
+        statusBanner.className = 'ob-status-banner success';
+        statusBanner.textContent = 'Programme activated';
+        fetchOnboardingStatus();
+      } catch (err) {
+        statusBanner.className = 'ob-status-banner error';
+        statusBanner.textContent = err.message;
+      }
+    }
+
+    async function registerWorker() {
+      const tenant = document.getElementById('ob-worker-tenant').value;
+      const name = document.getElementById('ob-worker-name').value.trim();
+      const payoutTarget = document.getElementById('ob-worker-payout').value.trim();
+      const statusBanner = document.getElementById('ob-worker-status');
+      if (!tenant || !name || !payoutTarget) {
+        statusBanner.className = 'ob-status-banner error';
+        statusBanner.textContent = 'All fields are required';
+        return;
+      }
+      statusBanner.className = 'ob-status-banner'; statusBanner.style.display = 'none';
+      try {
+        const response = await fetch('/api/admin/onboarding/suppliers', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ tenant, name, payoutTarget, supplierType: 'WORKER' })
+        });
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.error || 'Failed to register worker');
+        statusBanner.className = 'ob-status-banner success';
+        statusBanner.textContent = `Worker "${name}" registered`;
+        document.getElementById('ob-worker-tenant').value = '';
+        document.getElementById('ob-worker-name').value = '';
+        document.getElementById('ob-worker-payout').value = '';
+      } catch (err) {
+        statusBanner.className = 'ob-status-banner error';
+        statusBanner.textContent = err.message;
+      }
+    }
+
+    fetchOnboardingStatus();
+  </script>
+</body>
+</html>

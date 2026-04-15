@@ -1,0 +1,66 @@
+schema_version: 1
+phase: '1'
+task_id: TSK-P1-251
+title: Stabilize remediation trace evidence against branch-diff churn
+owner_role: SECURITY_GUARDIAN
+status: completed
+depends_on:
+  - TSK-P1-249
+touches:
+  - scripts/audit/verify_remediation_trace.sh
+  - scripts/audit/tests/test_verify_remediation_trace.sh
+  - evidence/phase0/remediation_trace.json
+  - evidence/phase1/tsk_p1_251_remediation_trace_stability.json
+  - tasks/TSK-P1-251/meta.yml
+invariants:
+  - INV-001
+  - INV-004
+work:
+  - '[ID tsk_p1_251_work_item_01] Audit scripts/audit/verify_remediation_trace.sh and identify every payload field in evidence/phase0/remediation_trace.json that changes solely because the branch-local changed-file set changes.'
+  - '[ID tsk_p1_251_work_item_02] Replace unstable file-list-derived fields with deterministic summaries, counts, or canonicalized projections that remain stable for a committed tree.'
+  - '[ID tsk_p1_251_work_item_03] Add scripts/audit/tests/test_verify_remediation_trace.sh so repeated verifier runs against the same committed tree prove byte-stable remediation trace output.'
+  - '[ID tsk_p1_251_work_item_04] Emit evidence/phase1/tsk_p1_251_remediation_trace_stability.json recording the stabilized field inventory and the repeated-run equality proof.'
+acceptance_criteria:
+  - '[ID tsk_p1_251_work_item_01] remediation_trace evidence no longer changes solely because branch-local changed-file counts or file inventories fluctuate after adjacent implementation-only commits.'
+  - '[ID tsk_p1_251_work_item_02] Any retained remediation-trace inventories are canonicalized and deterministic for the same committed tree.'
+  - '[ID tsk_p1_251_work_item_03] bash scripts/audit/tests/test_verify_remediation_trace.sh demonstrates repeated-run byte stability for evidence/phase0/remediation_trace.json.'
+  - '[ID tsk_p1_251_work_item_04] evidence/phase1/tsk_p1_251_remediation_trace_stability.json records PASS status, compared outputs, observed paths, observed hashes, and execution trace.'
+verification:
+  - '[ID tsk_p1_251_work_item_01] [ID tsk_p1_251_work_item_02] [ID tsk_p1_251_work_item_03] [ID tsk_p1_251_work_item_04] test -x scripts/audit/tests/test_verify_remediation_trace.sh && SYMPHONY_ENV=development bash scripts/audit/tests/test_verify_remediation_trace.sh || exit 1'
+  - '[ID tsk_p1_251_work_item_04] test -f evidence/phase1/tsk_p1_251_remediation_trace_stability.json && cat evidence/phase1/tsk_p1_251_remediation_trace_stability.json | tee /tmp/tsk_p1_251_evidence.log >/dev/null || exit 1'
+  - '[ID tsk_p1_251_work_item_04] test -f evidence/phase1/tsk_p1_251_remediation_trace_stability.json && python3 scripts/audit/validate_evidence.py --task TSK-P1-251 --evidence evidence/phase1/tsk_p1_251_remediation_trace_stability.json || exit 1'
+  - '[ID tsk_p1_251_work_item_01] [ID tsk_p1_251_work_item_02] [ID tsk_p1_251_work_item_03] PRE_CI_CONTEXT=1 SYMPHONY_ENV=development test -x scripts/audit/verify_remediation_trace.sh && PRE_CI_CONTEXT=1 SYMPHONY_ENV=development bash scripts/audit/verify_remediation_trace.sh || exit 1'
+evidence:
+  - path: evidence/phase1/tsk_p1_251_remediation_trace_stability.json
+    must_include:
+      - task_id
+      - git_sha
+      - timestamp_utc
+      - status
+      - checks
+      - targeted_files
+      - command_outputs
+      - observed_paths
+      - observed_hashes
+      - execution_trace
+failure_modes:
+  - remediation_trace evidence still changes because branch-local changed-file metadata leaks through => FAIL
+  - retained remediation inventories are not canonicalized and continue to reorder across repeated runs => FAIL
+  - Evidence file missing => FAIL
+anti_patterns:
+  - Preserving full unstable file lists when a deterministic summary is sufficient
+  - Proving stability without comparing repeated verifier outputs on the same committed tree
+must_read:
+  - AGENT_ENTRYPOINT.md
+  - docs/operations/AI_AGENT_OPERATION_MANUAL.md
+  - docs/plans/phase1/REM-2026-04-06_evidence-push-nonconvergence/PLAN.md
+  - scripts/audit/verify_remediation_trace.sh
+implementation_plan: docs/plans/phase1/TSK-P1-251/PLAN.md
+implementation_log: docs/plans/phase1/TSK-P1-251/EXEC_LOG.md
+notes: >
+  This task removes one of the known branch-diff-sensitive governance evidence
+  surfaces so later rebaseline and fixed-point proof steps measure the real
+  remaining drift rather than a self-inflicted trace inventory change.
+client: antigravity
+assigned_agent: security_guardian
+model: gpt-5-codex

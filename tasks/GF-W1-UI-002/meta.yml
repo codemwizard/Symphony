@@ -1,0 +1,108 @@
+schema_version: 1
+phase: '1'
+task_id: GF-W1-UI-002
+title: Add Worker Token Issuance tab structure with two-column layout and programme context
+owner_role: ARCHITECT
+status: completed
+priority: HIGH
+risk_class: GOVERNANCE
+blast_radius: APP_LAYER
+intent: >-
+  Add the 4th tab "Worker Token Issuance" to the supervisory dashboard to enable operators
+  to generate evidence-link tokens for waste collectors as required by Act 2.1-2.2 of the
+  pilot demo video script. This task creates only the tab structure and two-column layout
+  placeholder, not the functional logic. Subsequent tasks will add the lookup form, issuance
+  logic, recent tokens list, and revocation functionality.
+anti_patterns:
+  - "Adding all token issuance logic in one massive task instead of breaking into focused tasks"
+  - "Hardcoding worker data instead of calling lookup API"
+  - "Displaying raw GPS coordinates instead of neighbourhood labels"
+  - "Creating new HTML files instead of adding to src/supervisory-dashboard/index.html"
+depends_on:
+  - GF-W1-UI-001
+blocks:
+  - GF-W1-UI-003
+touches:
+  - src/supervisory-dashboard/index.html
+  - scripts/audit/verify_tsk_p1_219.sh
+  - evidence/phase1/gf_w1_ui_002.json
+  - tasks/GF-W1-UI-002/meta.yml
+invariants: []
+work:
+  - '[ID gf_w1_ui_002_work_item_01] Add Worker Token Issuance tab button to tab bar after Onboarding Console tab'
+  - '[ID gf_w1_ui_002_work_item_02] Create screen-worker-tokens div with .screen class after screen-s3'
+  - '[ID gf_w1_ui_002_work_item_03] Add two-column grid layout with grid-template-columns: 1fr 1fr and two child divs'
+  - '[ID gf_w1_ui_002_work_item_04] Add programme context display showing programme_id and location label at top'
+  - '[ID gf_w1_ui_002_work_item_05] Verify switchTab function handles new screen ID correctly'
+acceptance_criteria:
+  - '[ID gf_w1_ui_002_work_item_01] Tab bar shows 4 tabs with Worker Token Issuance as 4th tab'
+  - '[ID gf_w1_ui_002_work_item_02] screen-worker-tokens exists with .screen class'
+  - '[ID gf_w1_ui_002_work_item_03] Layout renders as two columns filling 100vh without scrollbar'
+  - '[ID gf_w1_ui_002_work_item_04] Programme context displays PGM-ZAMBIA-GRN-001 and Chunga Dumpsite, Lusaka'
+  - '[ID gf_w1_ui_002_work_item_05] Clicking tab switches to screen-worker-tokens, other screens hide'
+negative_tests:
+  - id: GF-W1-UI-002-N1
+    description: >-
+      Verify that tab count is exactly 4, not 3 or 5. Run verify_tsk_p1_219.sh and
+      confirm it passes with tab count check.
+    required: true
+  - id: GF-W1-UI-002-N2
+    description: >-
+      Verify that layout does not cause scrollbar. Test in browser and confirm 100vh
+      is filled without overflow.
+    required: true
+positive_tests:
+  - id: GF-W1-UI-002-P1
+    description: >-
+      Verify that clicking Worker Token Issuance tab switches to screen-worker-tokens
+      and hides other screens.
+    required: true
+verification:
+  - grep -q 'screen-worker-tokens' src/supervisory-dashboard/index.html || exit 1
+  - grep -c 'onclick="switchTab' src/supervisory-dashboard/index.html | grep -q '^4$' || exit 1
+  - bash scripts/audit/verify_tsk_p1_219.sh || exit 1
+  - test -f evidence/phase1/gf_w1_ui_002.json || exit 1
+evidence:
+  - path: evidence/phase1/gf_w1_ui_002.json
+    must_include:
+      - task_id
+      - timestamp
+      - status
+      - tab_count_is_4
+      - screen_worker_tokens_exists
+      - two_column_layout_present
+      - programme_context_displayed
+      - checks
+      - observed_paths
+      - command_outputs
+      - execution_trace
+failure_modes:
+  - "Tab count remains 3 instead of 4 => FUNCTIONAL.PILOT_DEMO_INCOMPLETE => FAIL"
+  - "screen-worker-tokens div does not exist => FUNCTIONAL.MISSING_SCREEN => FAIL"
+  - "Layout does not fill 100vh => UI.DESIGN_VIOLATION => FAIL"
+  - "Programme context hardcoded => FUNCTIONAL.CONTEXT_LOSS => FAIL"
+  - "verify_tsk_p1_219.sh fails => GOVERNANCE.VERIFIER_BROKEN => FAIL"
+must_read:
+  - docs/operations/AI_AGENT_OPERATION_MANUAL.md
+  - .kiro/steering/ui-canonical-design.md
+  - .kiro/steering/pwrm0001-domain-rules.md
+  - docs/operations/PILOT_DEMO_VIDEO_SCRIPT.md
+implementation_plan: docs/plans/phase1/GF-W1-UI-002/PLAN.md
+implementation_log: docs/plans/phase1/GF-W1-UI-002/EXEC_LOG.md
+notes: >-
+  This task creates the tab structure only, not the functional logic. Subsequent tasks
+  will add lookup form, issuance logic, recent tokens list, and revocation. Tab count
+  verifier updated from 3 to 4. Programme context uses neighbourhood label not raw GPS.
+  Phase: Green Finance Wave 1. Domain: green_finance.
+client: kiro
+assigned_agent: architect
+model: claude-sonnet-4-20250514
+domain: green_finance
+pilot: true
+second_pilot_test: >-
+  The tab structure pattern works for any programme requiring operator-facing token
+  management. For PWRM0001 plastic collection, the tab enables waste collector token
+  issuance. For a hypothetical VM0044 solar energy programme, the tab would enable
+  solar technician token issuance. The tab structure, two-column layout, and programme
+  context display are identical; only the tab label and programme_id differ per programme.
+pilot_scope_ref: docs/pilots/PILOT_PWRM0001/SCOPE.md

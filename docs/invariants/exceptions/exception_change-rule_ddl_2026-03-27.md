@@ -6,6 +6,7 @@ follow_up_ticket: TSK-P1-246
 reason: Stripped explicit BEGIN and COMMIT blocks to satisfy strict native transaction CI validations.
 author: system
 created_at: 2026-03-27
+closed_at: 2026-04-15
 ---
 
 # Exception: ddl structural change without invariants linkage

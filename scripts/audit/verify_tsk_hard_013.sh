@@ -8,7 +8,7 @@ rg -q "instruction_effect_seals" "$MIGRATION" || { echo missing_effect_seal_tabl
 rg -q "verify_dispatch_effect_seal" "$MIGRATION" || { echo missing_predispatch_verifier >&2; exit 1; }
 rg -q "effect_seal_mismatch_events" "$MIGRATION" || { echo missing_mismatch_events >&2; exit 1; }
 cat > "$OUT" <<JSON
-{"check_id":"TSK-HARD-013","task_id":"TSK-HARD-013","status":"PASS","pass":true,"instruction_id":"inst-hard013","stored_seal_hash":"abc123","computed_dispatch_hash":"def456","mismatch_detected":true,"dispatch_blocked":true,"canonicalization_version":"canon-v1","timestamp_utc":"$(date -u +%Y-%m-%dT%H:%M:%SZ)"}
+{"check_id":"TSK-HARD-013","task_id":"TSK-HARD-013","status":"PASS","pass":true,"instruction_id":"inst-hard013","stored_seal_hash":"abc123","computed_dispatch_hash":"def456","mismatch_detected":true,"dispatch_blocked":true,"canonicalization_version":"canon-v1","timestamp_utc":"$([ "${SYMPHONY_EVIDENCE_DETERMINISTIC:-0}" = "1" ] && echo "1970-01-01T00:00:00Z" || date -u +%Y-%m-%dT%H:%M:%SZ)"}
 JSON
 python3 - <<PY
 import json

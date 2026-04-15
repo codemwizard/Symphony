@@ -1,0 +1,88 @@
+{
+  "check_id": "TSK-P1-249",
+  "task_id": "TSK-P1-249",
+  "timestamp_utc": "1970-01-01T00:00:00Z",
+  "git_sha": "0000000000000000000000000000000000000000",
+  "status": "PASS",
+  "checks": [
+    {
+      "check": "verify_agent_conformance_checked_at_clamped",
+      "pass": true
+    },
+    {
+      "check": "verify_agent_conformance_git_commit_clamped",
+      "pass": true
+    },
+    {
+      "check": "no_tx_migrations_does_not_emit_temp_db",
+      "pass": true
+    },
+    {
+      "check": "openbao_audit_does_not_emit_audit_log_bytes",
+      "pass": true
+    },
+    {
+      "check": "pii_lint_roots_do_not_leak_tmp",
+      "pass": true,
+      "observed": [
+        "src",
+        "packages",
+        "scripts",
+        "schema"
+      ]
+    },
+    {
+      "check": "pii_lint_git_sha_clamped",
+      "pass": true,
+      "observed": "0000000000000000000000000000000000000000"
+    },
+    {
+      "check": "dotnet_quality_omits_output_lines",
+      "pass": true
+    },
+    {
+      "check": "dotnet_quality_has_command_summary",
+      "pass": true,
+      "observed": []
+    },
+    {
+      "check": "dotnet_quality_git_sha_clamped",
+      "pass": true,
+      "observed": "0000000000000000000000000000000000000000"
+    }
+  ],
+  "targeted_files": [
+    "scripts/audit/verify_agent_conformance.sh",
+    "scripts/audit/lint_pii_leakage_payloads.sh",
+    "scripts/security/lint_dotnet_quality.sh",
+    "scripts/db/tests/test_no_tx_migrations.sh",
+    "scripts/security/openbao_smoke_test.sh"
+  ],
+  "observed_paths": [
+    "scripts/audit/verify_agent_conformance.sh",
+    "scripts/audit/lint_pii_leakage_payloads.sh",
+    "scripts/security/lint_dotnet_quality.sh",
+    "scripts/db/tests/test_no_tx_migrations.sh",
+    "scripts/security/openbao_smoke_test.sh",
+    "evidence/phase0/pii_leakage_payloads.json",
+    "tmp/dotnet_lint_quality.json"
+  ],
+  "observed_hashes": {
+    "scripts/audit/verify_agent_conformance.sh": "5556648dfe11cf9a7e1cf0d607dae194a617d7086a40651c8649cb98781b656f",
+    "scripts/audit/lint_pii_leakage_payloads.sh": "5b2f0f8f6daa2ddc13925e5237a818a082e40b74f73f71a5ceedc3f06545c03e",
+    "scripts/security/lint_dotnet_quality.sh": "008d324e2277c1645be6da071bffd48aed128c54f3308d648365f4d963a38f47",
+    "scripts/db/tests/test_no_tx_migrations.sh": "95a96619cfc49f3d2f0e24fbcdb80f6da052e584612d6b2ce4ff909fb4460f20",
+    "scripts/security/openbao_smoke_test.sh": "c32692442f0c2fbfc391b0044a8c89b193aaefa221d85e67fd085c80e8678341"
+  },
+  "command_outputs": [
+    "PII deterministic probe written to evidence/phase0/pii_leakage_payloads.json",
+    "dotnet deterministic probe written to temporary evidence/phase1/dotnet_lint_quality.json"
+  ],
+  "execution_trace": [
+    "run deterministic PII lint probe with overridden roots",
+    "run deterministic dotnet lint probe against empty root",
+    "inspect targeted source files for forbidden dynamic fields",
+    "inspect generated evidence for sanitized deterministic payloads"
+  ],
+  "errors": []
+}

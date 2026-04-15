@@ -1,0 +1,47 @@
+schema_version: 1
+phase: '1'
+task_id: TSK-P1-PLT-008
+title: Align Pilot Onboarding UI with Backend APIs
+owner_role: ARCHITECT
+status: completed
+depends_on:
+- TSK-P1-PLT-007
+touches:
+- src/symphony-pilot/onboarding.html
+- scripts/audit/verify_tsk_p1_plt_008.sh
+- docs/plans/phase1/TSK-P1-PLT-008/PLAN.md
+- docs/plans/phase1/TSK-P1-PLT-008/EXEC_LOG.md
+- docs/plans/phase1/TSK-P1-PLT-008/REM-L1-ONBOARDING.md
+- tasks/TSK-P1-PLT-008/meta.yml
+- evidence/phase1/tsk_p1_plt_008_ui_alignment.json
+invariants: []
+work:
+- '[ID tsk_p1_plt_008_work_item_01] Implement DRD Lite (REM-L1-ONBOARDING.md).'
+- '[ID tsk_p1_plt_008_work_item_02] Update onboarding.html rendering fields to match backend snake_case response payload keys.'
+- '[ID tsk_p1_plt_008_work_item_03] Update onboarding.html dropdown value parsing to store UUIDs rather than keys.'
+- '[ID tsk_p1_plt_008_work_item_04] Update bindPolicy and activateProgramme payloads to inject tenant_id.'
+- '[ID tsk_p1_plt_008_work_item_05] Write and execute automated verifier script.'
+acceptance_criteria:
+- '[ID tsk_p1_plt_008_work_item_01] DRD Lite artifact exists capturing the signal failure.'
+- '[ID tsk_p1_plt_008_work_item_02] renderTenantsTable maps to tenant_key, display_name, and created_at instead of camelCase undefined defaults.'
+- '[ID tsk_p1_plt_008_work_item_03] `<option>` sets explicitly reference tenant_id or programme_id as value/data attributes.'
+- '[ID tsk_p1_plt_008_work_item_04] The string `"tenant_id":` exactly matches within the POST/PUT stringification body for bind/activate API triggers.'
+- '[ID tsk_p1_plt_008_work_item_05] `verify_tsk_p1_plt_008.sh` passes and enforces regex rules for payload shape, producing proof JSON.'
+verification:
+- '# [ID tsk_p1_plt_008_work_item_01] [ID tsk_p1_plt_008_work_item_02] [ID tsk_p1_plt_008_work_item_03] [ID tsk_p1_plt_008_work_item_04] [ID tsk_p1_plt_008_work_item_05] test -x scripts/audit/verify_tsk_p1_plt_008.sh && bash scripts/audit/verify_tsk_p1_plt_008.sh > evidence/phase1/tsk_p1_plt_008_ui_alignment.json || exit 1'
+- '# [ID tsk_p1_plt_008_work_item_05] test -f evidence/phase1/tsk_p1_plt_008_ui_alignment.json && cat evidence/phase1/tsk_p1_plt_008_ui_alignment.json | grep "observed_hashes" || exit 1'
+evidence:
+- "{'path': 'evidence/phase1/tsk_p1_plt_008_ui_alignment.json', 'must_include': ['task_id', 'git_sha', 'timestamp_utc', 'status', 'checks', 'observed_paths', 'observed_hashes', 'command_outputs', 'execution_trace']}"
+failure_modes:
+- Evidence file missing => FAIL
+- Onboarding JS relies on undefined camelCase fields => CRITICAL_FAIL
+- Tenant ID not injected into activation payload => FAIL
+must_read:
+- docs/operations/AI_AGENT_OPERATION_MANUAL.md
+- docs/operations/TASK_CREATION_PROCESS.md
+implementation_plan: docs/plans/phase1/TSK-P1-PLT-008/PLAN.md
+implementation_log: docs/plans/phase1/TSK-P1-PLT-008/EXEC_LOG.md
+notes: 'DRD-driven bugfix for the pilot onboarding screen following verification test completions. Ensures the user payload aligns with .NET Minimal API extraction.'
+client: cursor
+assigned_agent: architect
+model: default

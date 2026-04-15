@@ -52,6 +52,25 @@ GUARDED_SCRIPTS=(
   scripts/audit/verify_remediation_artifact_freshness.sh
   scripts/audit/verify_task_meta_schema.sh
   scripts/audit/verify_task_plans_present.sh
+  scripts/audit/verify_tsk_p1_206.sh
+  scripts/audit/verify_tsk_p1_207.sh
+  scripts/audit/verify_tsk_p1_208.sh
+  scripts/audit/verify_tsk_p1_209.sh
+  scripts/audit/verify_tsk_p1_210.sh
+  scripts/audit/verify_tsk_p1_211.sh
+  scripts/audit/verify_tsk_p1_212.sh
+  scripts/audit/verify_tsk_p1_213.sh
+  scripts/audit/verify_tsk_p1_214.sh
+  scripts/audit/verify_tsk_p1_215.sh
+  scripts/audit/verify_tsk_p1_216.sh
+  scripts/audit/verify_tsk_p1_217.sh
+  scripts/audit/verify_tsk_p1_218.sh
+  scripts/audit/verify_tsk_p1_219.sh
+  scripts/audit/verify_tsk_p1_220.sh
+  scripts/audit/verify_tsk_p1_221.sh
+  scripts/audit/verify_tsk_p1_247.sh
+  scripts/audit/verify_human_governance_review_signoff.sh
+  scripts/audit/verify_invproc_06_ci_wiring_closeout.sh
   scripts/audit/sign_evidence.py
   scripts/audit/signed_evidence_enrollment.txt
 )
@@ -95,6 +114,8 @@ from pathlib import Path
 script_path = Path(sys.argv[1])
 marker = sys.argv[2]
 
+# Capture original mode to prevent permission drift [ID permission_remediation_work_item_03]
+original_mode = script_path.stat().st_mode
 lines = script_path.read_text(encoding="utf-8").splitlines(keepends=True)
 
 # Find insertion point: after the first 'set -' line.
@@ -131,6 +152,7 @@ lines.insert(insert_after, guard)
 tmp = script_path.with_suffix(".tmp")
 tmp.write_text("".join(lines), encoding="utf-8")
 tmp.replace(script_path)
+script_path.chmod(original_mode)
 print(f"  GUARDED: {script_path}")
 PY
 

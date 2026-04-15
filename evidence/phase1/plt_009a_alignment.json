@@ -1,0 +1,19 @@
+{
+  "check_id": "TSK-P1-PLT-009A",
+  "task_id": "TSK-P1-PLT-009A",
+  "git_sha": "1e10b961de7ab2c93995591b37018b461e00206c",
+  "timestamp_utc": "2026-04-12T22:07:23Z",
+  "status": "PASS",
+  "checks": [
+    { "id": "BACKEND_MAPPING", "status": "PASS", "description": "sequence_number injected into response" },
+    { "id": "LOG_READBACK", "status": "PASS", "description": "EvidenceLinkSmsDispatchLog.ReadAll() implemented" }
+  ],
+  "observed_paths": [
+    "services/ledger-api/dotnet/src/LedgerApi/Commands/EvidenceLinkHandlers.cs"
+  ],
+  "observed_hashes": [
+    "4d24096f3663fbd457a7f48539520443726f529d67212f872c956ac78ee24f53"
+  ],
+  "command_outputs": "Semantic grep passed",
+  "execution_trace": "Grep check for sequence_number mapping confirmed."
+}

@@ -1,0 +1,564 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Symphony · Admin</title>
+<link rel="stylesheet" href="_shared.css">
+<style>
+.layout { display:grid; grid-template-columns:260px 1fr; height:calc(100vh - 81px); overflow:hidden; }
+.sidebar { border-right:1px solid var(--border); overflow-y:auto; }
+.main { overflow-y:auto; padding:22px 26px; }
+.col-hdr { padding:14px 18px 10px; border-bottom:1px solid var(--border); }
+.col-hdr-label { font-family:var(--mono); font-size:7.5px; letter-spacing:0.35em; text-transform:uppercase; color:var(--gold); }
+.col-hdr-sub   { font-family:var(--mono); font-size:9px; color:var(--smoke); margin-top:3px; }
+
+/* Sidebar nav */
+.admin-nav-item {
+  padding:10px 18px; border-bottom:1px solid rgba(61,184,90,0.05);
+  cursor:pointer; transition:background 0.12s;
+  font-family:var(--mono); font-size:10px; color:var(--smoke);
+  display:flex; align-items:center; gap:9px;
+}
+.admin-nav-item:hover { background:rgba(61,184,90,0.04); color:var(--cream); }
+.admin-nav-item.active { background:rgba(201,168,76,0.06); border-left:3px solid var(--gold); color:var(--gold-lt); }
+.admin-nav-icon { font-size:12px; flex-shrink:0; }
+
+/* Status overview */
+.status-overview { margin-bottom:22px; }
+.overview-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:12px; margin-bottom:16px; }
+
+/* Record tables */
+.record-table-wrap { background:var(--surface); border:1px solid var(--border); border-radius:4px; overflow:hidden; margin-bottom:18px; }
+.record-table-hdr { padding:12px 16px; border-bottom:1px solid var(--border); display:flex; justify-content:space-between; align-items:center; }
+.record-table-hdr-label { font-family:var(--mono); font-size:7.5px; letter-spacing:0.3em; text-transform:uppercase; color:var(--gold); }
+
+/* Section panels */
+.admin-panel { display:none; }
+.admin-panel.active { display:block; }
+.section-hdr { font-family:var(--serif); font-size:16px; font-weight:700; color:var(--cream); margin-bottom:18px; display:flex; align-items:center; gap:10px; }
+
+/* Form cards */
+.form-card { background:var(--surface); border:1px solid var(--border); border-radius:4px; padding:20px; margin-bottom:18px; }
+.form-card-title { font-family:var(--mono); font-size:8px; letter-spacing:0.3em; text-transform:uppercase; color:var(--gold); margin-bottom:16px; }
+.inline-2 { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+.inline-3 { display:grid; grid-template-columns:1fr 1fr 1fr; gap:12px; }
+
+/* Steps */
+.step-badge { background:var(--gold); color:var(--bg); width:20px; height:20px; border-radius:50%; display:inline-flex; align-items:center; justify-content:center; font-family:var(--mono); font-size:9px; font-weight:700; flex-shrink:0; }
+
+/* Result boxes */
+.result-box { background:var(--panel); border:1px solid var(--border); border-radius:3px; padding:12px; margin-top:10px; font-family:var(--mono); font-size:9px; color:var(--smoke); word-break:break-all; }
+
+/* Health row */
+.health-row { display:flex; align-items:center; gap:12px; padding:10px 0; border-bottom:1px solid rgba(61,184,90,0.05); }
+.health-row:last-child { border-bottom:none; }
+.health-dot { width:8px; height:8px; border-radius:50%; flex-shrink:0; }
+.health-dot.ok   { background:var(--bright); }
+.health-dot.warn { background:var(--amber); }
+.health-dot.err  { background:var(--red-lt); }
+.health-label { font-family:var(--mono); font-size:11px; color:var(--cream); flex:1; }
+.health-value { font-family:var(--mono); font-size:9px; color:var(--smoke); }
+</style>
+</head>
+<body>
+
+<!-- TOPBAR -->
+<div class="topbar">
+  <div class="topbar-left">
+    <div class="logo">Sym<span>phony</span></div>
+    <span class="pill pill-gold">ADMIN CONSOLE</span>
+    <span class="pill pill-green" id="health-pill">HEALTH: CHECKING…</span>
+  </div>
+  <div class="topbar-right">
+    <span>API: <span class="text-gold">localhost:8080</span></span>
+    <span id="clock">—</span>
+  </div>
+</div>
+
+<!-- TABS -->
+<div class="tab-bar">
+  <a href="supervisory.html" class="tab">Governed Disbursement</a>
+  <a href="workers.html"     class="tab">Worker Onboarding</a>
+  <a href="monitoring.html"  class="tab">Monitoring Report</a>
+  <a href="criteria.html"    class="tab">Pilot Criteria</a>
+  <a href="admin.html"       class="tab active">Admin</a>
+</div>
+
+<!-- LAYOUT -->
+<div class="layout">
+
+  <!-- SIDEBAR -->
+  <div class="sidebar">
+    <div class="col-hdr"><div class="col-hdr-label">Admin Sections</div></div>
+    <div class="admin-nav-item active" onclick="showPanel('overview')"><span class="admin-nav-icon">◎</span> Overview</div>
+    <div class="admin-nav-item" onclick="showPanel('tenants')"><span class="admin-nav-icon">⊕</span> Register Tenant</div>
+    <div class="admin-nav-item" onclick="showPanel('programmes')"><span class="admin-nav-icon">⊡</span> Create Programme</div>
+    <div class="admin-nav-item" onclick="showPanel('policy')"><span class="admin-nav-icon">⊛</span> Bind Policy</div>
+    <div class="admin-nav-item" onclick="showPanel('suppliers')"><span class="admin-nav-icon">⊕</span> Register Supplier</div>
+    <div class="admin-nav-item" onclick="showPanel('health')"><span class="admin-nav-icon">♡</span> System Health</div>
+    <hr class="sep" style="margin:8px 0">
+    <div class="col-hdr"><div class="col-hdr-label" style="font-size:7px">Current State</div></div>
+    <div id="sidebar-state" style="padding:8px 4px"></div>
+  </div>
+
+  <!-- MAIN PANELS -->
+  <div class="main">
+
+    <!-- OVERVIEW -->
+    <div class="admin-panel active" id="panel-overview">
+      <div class="section-hdr">System Overview</div>
+      <div class="overview-grid">
+        <div class="stat-tile"><div class="stat-label">Tenants</div><div class="stat-value green" id="ov-tenants">—</div></div>
+        <div class="stat-tile"><div class="stat-label">Programmes</div><div class="stat-value gold" id="ov-programmes">—</div></div>
+        <div class="stat-tile"><div class="stat-label">Active Progs</div><div class="stat-value green" id="ov-active">—</div></div>
+        <div class="stat-tile"><div class="stat-label">Bound Policies</div><div class="stat-value amber" id="ov-policies">—</div></div>
+      </div>
+
+      <div class="record-table-wrap">
+        <div class="record-table-hdr">
+          <span class="record-table-hdr-label">Tenants</span>
+          <button class="btn btn-ghost btn-sm" onclick="loadOverview()">↻</button>
+        </div>
+        <table class="tbl" id="tenants-table">
+          <thead><tr><th>Key</th><th>Display Name</th><th>Status</th><th>Created</th><th></th></tr></thead>
+          <tbody id="tenants-body"><tr><td colspan="5" class="loading-row"><span class="spinner"></span>Loading…</td></tr></tbody>
+        </table>
+      </div>
+
+      <div class="record-table-wrap">
+        <div class="record-table-hdr">
+          <span class="record-table-hdr-label">Programmes</span>
+          <button class="btn btn-ghost btn-sm" onclick="loadOverview()">↻</button>
+        </div>
+        <table class="tbl" id="programmes-table">
+          <thead><tr><th>Key</th><th>Display Name</th><th>Policy</th><th>Status</th><th></th></tr></thead>
+          <tbody id="programmes-body"><tr><td colspan="5" class="loading-row"><span class="spinner"></span>Loading…</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- REGISTER TENANT -->
+    <div class="admin-panel" id="panel-tenants">
+      <div class="section-hdr"><span class="step-badge">1</span> Register Tenant</div>
+      <div class="form-card">
+        <div class="form-card-title">New Tenant</div>
+        <div class="inline-2">
+          <div class="field"><label>Display Name</label><input id="ten-name" placeholder="Zambia Green MFI" /></div>
+          <div class="field"><label>Tenant Key</label><input id="ten-key" placeholder="ten-zambiagrn" /></div>
+        </div>
+        <div class="inline-2">
+          <div class="field"><label>Jurisdiction Code</label>
+            <select id="ten-jurisdiction">
+              <option value="ZM">ZM — Zambia</option>
+              <option value="ZW">ZW — Zimbabwe</option>
+              <option value="MZ">MZ — Mozambique</option>
+              <option value="KE">KE — Kenya</option>
+              <option value="UG">UG — Uganda</option>
+            </select>
+          </div>
+          <div class="field"><label>Plan</label>
+            <select id="ten-plan"><option value="pilot">pilot</option><option value="standard">standard</option><option value="enterprise">enterprise</option></select>
+          </div>
+        </div>
+        <div class="field"><label>Tenant UUID (leave blank to auto-generate)</label><input id="ten-uuid" placeholder="optional — will be auto-generated" /></div>
+        <button class="btn btn-primary" onclick="registerTenant()" id="reg-ten-btn">Register Tenant</button>
+        <div id="reg-ten-result" class="result-box" style="display:none"></div>
+      </div>
+    </div>
+
+    <!-- CREATE PROGRAMME -->
+    <div class="admin-panel" id="panel-programmes">
+      <div class="section-hdr"><span class="step-badge">2</span> Create Programme</div>
+      <div class="form-card">
+        <div class="form-card-title">New Programme</div>
+        <div class="field"><label>Tenant ID (UUID)</label><input id="prog-tenant" placeholder="Paste from tenant registration" /></div>
+        <div class="inline-2">
+          <div class="field"><label>Programme Key</label><input id="prog-key" placeholder="PGM-ZAMBIA-GRN-001" /></div>
+          <div class="field"><label>Display Name</label><input id="prog-name" placeholder="Chunga Plastic Recovery" /></div>
+        </div>
+        <button class="btn btn-primary" onclick="createProgramme()" id="create-prog-btn">Create Programme</button>
+        <div id="create-prog-result" class="result-box" style="display:none"></div>
+      </div>
+      <div class="form-card" style="margin-top:0">
+        <div class="form-card-title">Activate Programme</div>
+        <div class="inline-2">
+          <div class="field"><label>Programme ID</label><input id="act-prog-id" placeholder="Programme UUID" /></div>
+          <div class="field"><label>Tenant ID</label><input id="act-tenant-id" placeholder="Tenant UUID" /></div>
+        </div>
+        <button class="btn btn-gold" onclick="activateProgramme()">Activate Programme</button>
+        <div id="act-result" class="result-box" style="display:none"></div>
+      </div>
+    </div>
+
+    <!-- BIND POLICY -->
+    <div class="admin-panel" id="panel-policy">
+      <div class="section-hdr"><span class="step-badge">3</span> Bind Policy to Programme</div>
+      <div class="form-card">
+        <div class="form-card-title">Policy Binding</div>
+        <div class="inline-2">
+          <div class="field"><label>Programme ID</label><input id="pol-prog-id" placeholder="Programme UUID" /></div>
+          <div class="field"><label>Tenant ID</label><input id="pol-tenant-id" placeholder="Tenant UUID" /></div>
+        </div>
+        <div class="field"><label>Policy Code</label>
+          <select id="pol-code">
+            <option value="green_eq_v1">green_eq_v1 — Green Equipment Pilot</option>
+            <option value="pwrm0001_v1">pwrm0001_v1 — PWRM0001 Plastic Waste</option>
+            <option value="vm0044_v1">vm0044_v1 — VM0044 Solar</option>
+          </select>
+        </div>
+        <button class="btn btn-primary" onclick="bindPolicy()" id="bind-pol-btn">Bind Policy</button>
+        <div id="bind-pol-result" class="result-box" style="display:none"></div>
+      </div>
+    </div>
+
+    <!-- REGISTER SUPPLIER -->
+    <div class="admin-panel" id="panel-suppliers">
+      <div class="section-hdr"><span class="step-badge">4</span> Register Supplier / Worker</div>
+      <div class="form-card">
+        <div class="form-card-title">Supplier Registration</div>
+        <div class="inline-2">
+          <div class="field"><label>Tenant ID</label><input id="sup-tenant" placeholder="Tenant UUID" /></div>
+          <div class="field"><label>Supplier Name</label><input id="sup-name" placeholder="Mercy Banda" /></div>
+        </div>
+        <div class="inline-2">
+          <div class="field"><label>Payout Target</label><input id="sup-payout" placeholder="MMO:+260971100001" /></div>
+          <div class="field"><label>Supplier ID (optional)</label><input id="sup-id" placeholder="auto-generated" /></div>
+        </div>
+        <div class="inline-2">
+          <div class="field"><label>Latitude (optional)</label><input id="sup-lat" type="number" step="any" placeholder="-15.4167" /></div>
+          <div class="field"><label>Longitude (optional)</label><input id="sup-lon" type="number" step="any" placeholder="28.2833" /></div>
+        </div>
+        <div class="field">
+          <label><input type="checkbox" id="sup-active" checked style="margin-right:6px;accent-color:var(--bright)"> Active</label>
+        </div>
+        <button class="btn btn-primary" onclick="registerSupplier()" id="reg-sup-btn">Register Supplier</button>
+        <div id="reg-sup-result" class="result-box" style="display:none"></div>
+      </div>
+      <div class="form-card" style="margin-top:0">
+        <div class="form-card-title">Programme Allowlist</div>
+        <div class="inline-3">
+          <div class="field"><label>Tenant ID</label><input id="al-tenant" placeholder="Tenant UUID" /></div>
+          <div class="field"><label>Programme ID</label><input id="al-prog" placeholder="Programme UUID" /></div>
+          <div class="field"><label>Supplier ID</label><input id="al-sup" placeholder="Supplier UUID" /></div>
+        </div>
+        <div style="display:flex;gap:10px">
+          <button class="btn btn-primary" onclick="upsertAllowlist(true)">Allow</button>
+          <button class="btn btn-danger"  onclick="upsertAllowlist(false)">Revoke</button>
+        </div>
+        <div id="al-result" class="result-box" style="display:none"></div>
+      </div>
+    </div>
+
+    <!-- SYSTEM HEALTH -->
+    <div class="admin-panel" id="panel-health">
+      <div class="section-hdr">System Health</div>
+      <div class="form-card">
+        <div class="form-card-title">API Connectivity</div>
+        <div id="health-checks"><div class="loading-row"><span class="spinner"></span>Running health checks…</div></div>
+        <button class="btn btn-ghost btn-sm" onclick="runHealthChecks()" style="margin-top:12px">↻ Re-check</button>
+      </div>
+      <div class="form-card">
+        <div class="form-card-title">Environment Info</div>
+        <div id="env-info" class="result-box"></div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- TOAST AREA -->
+<div id="toast-area"></div>
+
+<script>
+const API = 'http://localhost:8080';
+let adminKey = '';
+
+function tick() { document.getElementById('clock').textContent = new Date().toUTCString().slice(5,25)+' UTC'; }
+setInterval(tick,1000); tick();
+
+function toast(msg, type='ok') {
+  const el = Object.assign(document.createElement('div'),{className:`toast toast-${type}`,textContent:msg});
+  document.getElementById('toast-area').appendChild(el);
+  setTimeout(()=>el.remove(),4500);
+}
+
+function showPanel(name) {
+  document.querySelectorAll('.admin-panel').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.admin-nav-item').forEach(i=>i.classList.remove('active'));
+  document.getElementById(`panel-${name}`)?.classList.add('active');
+  document.querySelector(`.admin-nav-item[onclick*="${name}"]`)?.classList.add('active');
+  if (name==='health') runHealthChecks();
+  if (name==='overview') loadOverview();
+}
+
+function showResult(id, content, isError=false) {
+  const el = document.getElementById(id);
+  el.style.display='block';
+  el.innerHTML = content;
+  el.style.color = isError?'var(--red-lt)':'var(--bright)';
+}
+
+/* ── OVERVIEW ── */
+async function loadOverview() {
+  try {
+    const r = await fetch(`${API}/api/admin/onboarding/status`, {credentials:'include'});
+    if (!r.ok) throw new Error(r.status);
+    const d = await r.json();
+    adminKey = window.__SYMPHONY_UI_CONTEXT__?.apiKey||'';
+
+    const tenants = d.tenants||[];
+    const programmes = d.programmes||[];
+    const active = programmes.filter(p=>p.status==='ACTIVE').length;
+    const bound = programmes.filter(p=>p.policy_code).length;
+
+    document.getElementById('ov-tenants').textContent    = tenants.length;
+    document.getElementById('ov-programmes').textContent = programmes.length;
+    document.getElementById('ov-active').textContent     = active;
+    document.getElementById('ov-policies').textContent   = bound;
+
+    document.getElementById('tenants-body').innerHTML = tenants.length
+      ? tenants.map(t=>`<tr>
+          <td class="mono-sm">${t.tenant_key||'—'}</td>
+          <td>${t.display_name||'—'}</td>
+          <td><span class="status status-${(t.status||'').toLowerCase()}">${t.status||'—'}</span></td>
+          <td class="mono-xs">${(t.created_at||'').slice(0,10)}</td>
+          <td><button class="btn btn-ghost btn-sm" onclick="autofillTenant('${t.tenant_id||''}')">Use</button></td>
+        </tr>`).join('')
+      : '<tr><td colspan="5" class="text-muted mono-xs" style="padding:12px 10px">No tenants</td></tr>';
+
+    document.getElementById('programmes-body').innerHTML = programmes.length
+      ? programmes.map(p=>`<tr>
+          <td class="mono-sm">${p.programme_key||'—'}</td>
+          <td>${p.display_name||'—'}</td>
+          <td class="mono-xs">${p.policy_code||'—'}</td>
+          <td><span class="status status-${(p.status||'').toLowerCase()}">${p.status||'—'}</span></td>
+          <td style="display:flex;gap:5px">
+            ${p.status!=='ACTIVE'?`<button class="btn btn-ghost btn-sm" onclick="quickActivate('${p.programme_id||''}','${p.tenant_id||''}')">Activate</button>`:''}
+            <button class="btn btn-ghost btn-sm" onclick="autofillProgramme('${p.programme_id||''}','${p.tenant_id||''}')">Use</button>
+          </td>
+        </tr>`).join('')
+      : '<tr><td colspan="5" class="text-muted mono-xs" style="padding:12px 10px">No programmes</td></tr>';
+
+    // Update sidebar state
+    document.getElementById('sidebar-state').innerHTML = `
+      <div style="padding:6px 14px">
+        ${tenants.slice(0,3).map(t=>`<div class="mono-xs" style="margin-bottom:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="${t.tenant_id||''}">${t.tenant_key||'—'} <span class="status status-${(t.status||'').toLowerCase()}" style="font-size:6px;padding:0 3px">${t.status||''}</span></div>`).join('')}
+        <div class="mono-xs" style="margin-top:6px;color:var(--gold-dk)">PROGRAMMES</div>
+        ${programmes.slice(0,3).map(p=>`<div class="mono-xs" style="margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${p.programme_key||'—'} <span class="status status-${(p.status||'').toLowerCase()}" style="font-size:6px;padding:0 3px">${p.status||''}</span></div>`).join('')}
+      </div>`;
+
+  } catch(e) {
+    document.getElementById('tenants-body').innerHTML=`<tr><td colspan="5" style="padding:12px 10px;color:var(--red-lt);font-family:var(--mono);font-size:10px">${e.message}</td></tr>`;
+  }
+}
+
+function autofillTenant(id) {
+  ['ten-uuid','prog-tenant','act-tenant-id','pol-tenant-id','sup-tenant','al-tenant'].forEach(el=>{ const e=document.getElementById(el); if(e)e.value=id; });
+  toast('Tenant ID pasted to all forms', 'ok');
+}
+
+function autofillProgramme(progId, tenId) {
+  ['act-prog-id','pol-prog-id','al-prog'].forEach(el=>{ const e=document.getElementById(el); if(e)e.value=progId; });
+  if (tenId) ['act-tenant-id','pol-tenant-id','al-tenant'].forEach(el=>{ const e=document.getElementById(el); if(e)e.value=tenId; });
+  toast('Programme/Tenant IDs pasted to all forms', 'ok');
+}
+
+/* ── TENANT ── */
+async function registerTenant() {
+  const name = document.getElementById('ten-name').value.trim();
+  const key  = document.getElementById('ten-key').value.trim();
+  const jur  = document.getElementById('ten-jurisdiction').value;
+  const plan = document.getElementById('ten-plan').value;
+  const uuid = document.getElementById('ten-uuid').value.trim() || crypto.randomUUID();
+  if (!name||!key) { toast('Name and key required','warn'); return; }
+  const btn=document.getElementById('reg-ten-btn'); btn.disabled=true; btn.textContent='Registering…';
+  try {
+    const r = await fetch(`${API}/api/admin/onboarding/tenants`, {
+      method:'POST', headers:{'Content-Type':'application/json','x-admin-api-key':adminKey},
+      credentials:'include',
+      body:JSON.stringify({tenant_id:uuid, tenant_key:key, display_name:name, jurisdiction_code:jur, plan})
+    });
+    const d = await r.json();
+    if (!r.ok) throw new Error(d.error_code||JSON.stringify(d.errors)||r.status);
+    showResult('reg-ten-result', `Tenant registered\nID: ${d.tenant_id||uuid}\nKey: ${d.tenant_key||key}\nStatus: ${d.status||'ACTIVE'}`);
+    toast(`Tenant ${key} registered`, 'ok');
+    loadOverview();
+  } catch(e) { showResult('reg-ten-result', `ERROR: ${e.message}`, true); }
+  finally { btn.disabled=false; btn.textContent='Register Tenant'; }
+}
+
+/* ── PROGRAMME ── */
+async function createProgramme() {
+  const tenId = document.getElementById('prog-tenant').value.trim();
+  const key   = document.getElementById('prog-key').value.trim();
+  const name  = document.getElementById('prog-name').value.trim();
+  if (!tenId||!key||!name) { toast('All fields required','warn'); return; }
+  const btn=document.getElementById('create-prog-btn'); btn.disabled=true; btn.textContent='Creating…';
+  try {
+    const r = await fetch(`${API}/api/admin/onboarding/programmes`, {
+      method:'POST', headers:{'Content-Type':'application/json','x-admin-api-key':adminKey},
+      credentials:'include',
+      body:JSON.stringify({tenant_id:tenId, programme_key:key, display_name:name})
+    });
+    const d = await r.json();
+    if (!r.ok) throw new Error(d.error_code||JSON.stringify(d.errors)||r.status);
+    showResult('create-prog-result', `Programme created\nID: ${d.programme_id||''}\nKey: ${d.programme_key||key}\nStatus: ${d.status||'PENDING'}`);
+    document.getElementById('act-prog-id').value = d.programme_id||'';
+    document.getElementById('act-tenant-id').value = tenId;
+    toast(`Programme ${key} created`, 'ok');
+    loadOverview();
+  } catch(e) { showResult('create-prog-result', `ERROR: ${e.message}`, true); }
+  finally { btn.disabled=false; btn.textContent='Create Programme'; }
+}
+
+async function activateProgramme() {
+  const progId = document.getElementById('act-prog-id').value.trim();
+  const tenId  = document.getElementById('act-tenant-id').value.trim();
+  if (!progId||!tenId) { toast('Programme ID and Tenant ID required','warn'); return; }
+  try {
+    const r = await fetch(`${API}/api/admin/onboarding/programmes/${encodeURIComponent(progId)}/activate`, {
+      method:'PUT', headers:{'Content-Type':'application/json','x-admin-api-key':adminKey},
+      credentials:'include',
+      body:JSON.stringify({tenant_id:tenId})
+    });
+    const d = await r.json();
+    if (!r.ok) throw new Error(d.error_code||r.status);
+    showResult('act-result', `Programme activated\nStatus: ${d.status||'ACTIVE'}\nUpdated: ${d.updated_at||''}`);
+    document.getElementById('pol-prog-id').value = progId;
+    document.getElementById('pol-tenant-id').value = tenId;
+    toast('Programme activated', 'ok');
+    loadOverview();
+  } catch(e) { showResult('act-result', `ERROR: ${e.message}`, true); }
+}
+
+async function quickActivate(progId, tenId) {
+  try {
+    const r = await fetch(`${API}/api/admin/onboarding/programmes/${encodeURIComponent(progId)}/activate`, {
+      method:'PUT', headers:{'Content-Type':'application/json','x-admin-api-key':adminKey},
+      credentials:'include', body:JSON.stringify({tenant_id:tenId})
+    });
+    if (!r.ok) throw new Error((await r.json()).error_code||r.status);
+    toast(`Programme ${progId.slice(0,8)}… activated`, 'ok');
+    loadOverview();
+  } catch(e) { toast(`Activate failed: ${e.message}`, 'err'); }
+}
+
+/* ── POLICY ── */
+async function bindPolicy() {
+  const progId = document.getElementById('pol-prog-id').value.trim();
+  const tenId  = document.getElementById('pol-tenant-id').value.trim();
+  const code   = document.getElementById('pol-code').value;
+  if (!progId||!tenId||!code) { toast('All fields required','warn'); return; }
+  const btn=document.getElementById('bind-pol-btn'); btn.disabled=true; btn.textContent='Binding…';
+  try {
+    const r = await fetch(`${API}/api/admin/onboarding/programmes/${encodeURIComponent(progId)}/policy-binding`, {
+      method:'POST', headers:{'Content-Type':'application/json','x-admin-api-key':adminKey},
+      credentials:'include',
+      body:JSON.stringify({tenant_id:tenId, policy_code:code})
+    });
+    const d = await r.json();
+    if (!r.ok) throw new Error(d.error_code||r.status);
+    showResult('bind-pol-result', `Policy bound\nCode: ${d.policy_code||code}\nProgramme: ${d.programme_id||progId}\n${d.already_bound?'(already bound — idempotent)':''}`);
+    toast(`Policy ${code} bound`, 'ok');
+    loadOverview();
+  } catch(e) { showResult('bind-pol-result', `ERROR: ${e.message}`, true); }
+  finally { btn.disabled=false; btn.textContent='Bind Policy'; }
+}
+
+/* ── SUPPLIER ── */
+async function registerSupplier() {
+  const tenId  = document.getElementById('sup-tenant').value.trim();
+  const name   = document.getElementById('sup-name').value.trim();
+  const payout = document.getElementById('sup-payout').value.trim();
+  const supId  = document.getElementById('sup-id').value.trim() || crypto.randomUUID();
+  const lat    = document.getElementById('sup-lat').value ? parseFloat(document.getElementById('sup-lat').value) : null;
+  const lon    = document.getElementById('sup-lon').value ? parseFloat(document.getElementById('sup-lon').value) : null;
+  const active = document.getElementById('sup-active').checked;
+  if (!tenId||!name||!payout) { toast('Tenant, name, payout required','warn'); return; }
+  const btn=document.getElementById('reg-sup-btn'); btn.disabled=true; btn.textContent='Registering…';
+  try {
+    const r = await fetch(`${API}/v1/admin/suppliers/upsert`, {
+      method:'POST', headers:{'Content-Type':'application/json','x-admin-api-key':adminKey},
+      credentials:'include',
+      body:JSON.stringify({tenant_id:tenId, supplier_id:supId, supplier_name:name, payout_target:payout, registered_latitude:lat, registered_longitude:lon, active})
+    });
+    const d = await r.json();
+    if (!r.ok) throw new Error(d.error_code||JSON.stringify(d.errors)||r.status);
+    document.getElementById('sup-id').value = supId;
+    document.getElementById('al-sup').value = supId;
+    document.getElementById('al-tenant').value = tenId;
+    showResult('reg-sup-result', `Supplier registered\nID: ${d.supplier_id||supId}\nName: ${d.supplier_name||name}`);
+    toast(`Supplier ${name} registered`, 'ok');
+  } catch(e) { showResult('reg-sup-result', `ERROR: ${e.message}`, true); }
+  finally { btn.disabled=false; btn.textContent='Register Supplier'; }
+}
+
+async function upsertAllowlist(allowed) {
+  const tenId  = document.getElementById('al-tenant').value.trim();
+  const progId = document.getElementById('al-prog').value.trim();
+  const supId  = document.getElementById('al-sup').value.trim();
+  if (!tenId||!progId||!supId) { toast('All three fields required','warn'); return; }
+  try {
+    const r = await fetch(`${API}/v1/admin/program-supplier-allowlist/upsert`, {
+      method:'POST', headers:{'Content-Type':'application/json','x-admin-api-key':adminKey},
+      credentials:'include',
+      body:JSON.stringify({tenant_id:tenId, program_id:progId, supplier_id:supId, allowed})
+    });
+    const d = await r.json();
+    if (!r.ok) throw new Error(d.error_code||r.status);
+    showResult('al-result', `${allowed?'Allowlisted':'Revoked'}\nSupplier: ${supId}\nProgramme: ${progId}`);
+    toast(`Supplier ${allowed?'allowlisted':'revoked'}`, 'ok');
+  } catch(e) { showResult('al-result', `ERROR: ${e.message}`, true); }
+}
+
+/* ── HEALTH ── */
+async function runHealthChecks() {
+  document.getElementById('health-pill').textContent='HEALTH: CHECKING…';
+  const endpoints = [
+    {label:'Health',          url:`${API}/health`,                   method:'GET'},
+    {label:'Readiness',       url:`${API}/readyz`,                   method:'GET'},
+    {label:'Onboarding Status',url:`${API}/api/admin/onboarding/status`,method:'GET'},
+  ];
+  const results = await Promise.allSettled(endpoints.map(async ep=>{
+    const start=Date.now();
+    const r = await fetch(ep.url, {method:ep.method, credentials:'include'});
+    const ms=Date.now()-start;
+    const d = await r.json().catch(()=>({}));
+    return {...ep, status:r.ok?'ok':'err', code:r.status, ms, data:d};
+  }));
+
+  let allOk = true;
+  document.getElementById('health-checks').innerHTML = results.map(res=>{
+    const r = res.status==='fulfilled'?res.value:{...endpoints[0], status:'err', code:'NETWORK_ERR', ms:0, data:{}};
+    if (r.status!=='ok') allOk=false;
+    return `<div class="health-row">
+      <div class="health-dot ${r.status==='ok'?'ok':'err'}"></div>
+      <span class="health-label">${r.label}</span>
+      <span class="health-value">${r.code} · ${r.ms}ms</span>
+    </div>`;
+  }).join('');
+
+  // Show env info from health endpoint
+  const healthResult = results.find(r=>r.status==='fulfilled' && r.value.url.includes('/health'));
+  if (healthResult?.value?.data) {
+    const d = healthResult.value.data;
+    document.getElementById('env-info').textContent = JSON.stringify({
+      runtime_profile: d.runtime_profile,
+      env_profile: d.env_profile,
+      signing_key_present: d.signing_key_present,
+      tenant_allowlist_configured: d.tenant_allowlist_configured,
+      openbao_available: d.openbao_available,
+      git_sha: d.git_sha?.slice(0,12)
+    }, null, 2);
+  }
+
+  document.getElementById('health-pill').textContent = allOk?'HEALTH: OK':'HEALTH: DEGRADED';
+  document.getElementById('health-pill').className   = `pill ${allOk?'pill-green':'pill-red'}`;
+}
+
+loadOverview();
+runHealthChecks();
+</script>
+</body>
+</html>

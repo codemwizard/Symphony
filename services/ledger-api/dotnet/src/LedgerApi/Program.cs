@@ -298,6 +298,7 @@ else if (!tenantAllowlistConfigured)
 
 var repoRoot = EvidenceMeta.ResolveRepoRoot(Directory.GetCurrentDirectory());
 var supervisoryUiDir = Path.Combine(repoRoot, "src", "supervisory-dashboard");
+var symphonyPilotUiDir = Path.Combine(repoRoot, "src", "symphony-pilot");
 var recipientLandingUiDir = Path.Combine(repoRoot, "src", "recipient-landing");
 var legacySupervisoryUiEnabled = string.Equals(
     Environment.GetEnvironmentVariable("SYMPHONY_ENABLE_LEGACY_SUPERVISORY_UI"),
@@ -310,46 +311,7 @@ app.MapGet("/pilot-demo/supervisory", (HttpContext httpContext) =>
     {
         return Results.NotFound();
     }
-
-    var templatePath = Path.Combine(supervisoryUiDir, "index.html");
-    var fallbackPath = Path.Combine(supervisoryUiDir, "data", "supervisory_hybrid_fallback.json");
-    if (!File.Exists(templatePath) || !File.Exists(fallbackPath))
-    {
-        return Results.NotFound();
-    }
-
-    var html = File.ReadAllText(templatePath);
-    var fallbackJson = File.ReadAllText(fallbackPath);
-    var uiTenantId = Environment.GetEnvironmentVariable("SYMPHONY_UI_TENANT_ID");
-    if (string.IsNullOrWhiteSpace(uiTenantId))
-    {
-        uiTenantId = CreateStableGuid("ten-zambiagrn").ToString();
-    }
-
-    var contextJson = JsonSerializer.Serialize(new
-    {
-        dataMode = "HYBRID",
-        tenantId = uiTenantId,
-        apiKey = Environment.GetEnvironmentVariable("SYMPHONY_UI_API_KEY") ?? string.Empty
-    });
-
-    var adminKey = secrets.AdminApiKey.Trim();
-    if (!string.IsNullOrWhiteSpace(adminKey) && !string.IsNullOrWhiteSpace(uiTenantId))
-    {
-        httpContext.Response.Cookies.Append(PilotDemoOperatorCookieName, CreatePilotDemoOperatorCookie(uiTenantId, adminKey, TimeSpan.FromHours(8)), new CookieOptions
-        {
-            HttpOnly = true,
-            IsEssential = true,
-            SameSite = SameSiteMode.Strict,
-            Secure = httpContext.Request.IsHttps,
-            MaxAge = TimeSpan.FromHours(8),
-            Path = "/"
-        });
-    }
-
-    html = html.Replace("__SYMPHONY_UI_CONTEXT__", contextJson)
-               .Replace("__SYMPHONY_HYBRID_FALLBACK__", fallbackJson);
-    return Results.Content(html, "text/html; charset=utf-8");
+    return Results.Redirect("/pilot-demo/pilot/overview");
 });
 
 app.MapGet("/pilot-demo/supervisory-legacy", () =>
@@ -358,14 +320,7 @@ app.MapGet("/pilot-demo/supervisory-legacy", () =>
     {
         return Results.NotFound();
     }
-
-    var legacyPath = Path.Combine(supervisoryUiDir, "legacy.html");
-    if (!File.Exists(legacyPath))
-    {
-        return Results.NotFound();
-    }
-
-    return Results.Content(File.ReadAllText(legacyPath), "text/html; charset=utf-8");
+    return Results.Redirect("/pilot-demo/pilot/overview");
 });
 
 app.MapGet("/pilot-demo/evidence-link", (HttpContext httpContext) =>
@@ -382,6 +337,96 @@ app.MapGet("/pilot-demo/evidence-link", (HttpContext httpContext) =>
     }
 
     return Results.Content(File.ReadAllText(templatePath), "text/html; charset=utf-8");
+});
+
+// ── TSK-P1-PLT-001: Symphony Pilot UI — serve all pilot pages with operator cookie ──
+// Allowed pilot page names (no path traversal, explicit allowlist)
+var pilotPageAllowlist = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+{
+    "overview", "program-health", "monitoring-report", "token-issuance",
+    "instructions", "success-criteria", "onboarding", "pilot-gate"
+};
+
+app.MapGet("/pilot-demo/pilot/{pageName}", (HttpContext httpContext, string pageName) =>
+{
+    if (!string.Equals(runtimeProfile, "pilot-demo", StringComparison.OrdinalIgnoreCase))
+    {
+        return Results.NotFound();
+    }
+
+    // Sanitize: only allow known page names (no slashes, dots, or traversal)
+    if (string.IsNullOrWhiteSpace(pageName) || !pilotPageAllowlist.Contains(pageName))
+    {
+        return Results.NotFound();
+    }
+
+    var templatePath = Path.Combine(symphonyPilotUiDir, $"{pageName}.html");
+    if (!File.Exists(templatePath))
+    {
+        return Results.NotFound();
+    }
+
+    var html = File.ReadAllText(templatePath);
+
+    // Inject the operator cookie (same pattern as /pilot-demo/supervisory)
+    var uiTenantId = Environment.GetEnvironmentVariable("SYMPHONY_UI_TENANT_ID");
+    if (string.IsNullOrWhiteSpace(uiTenantId))
+    {
+        uiTenantId = CreateStableGuid("ten-zambiagrn").ToString();
+    }
+
+    var adminKey = secrets.AdminApiKey.Trim();
+    if (!string.IsNullOrWhiteSpace(adminKey) && !string.IsNullOrWhiteSpace(uiTenantId))
+    {
+        httpContext.Response.Cookies.Append(PilotDemoOperatorCookieName, CreatePilotDemoOperatorCookie(uiTenantId, adminKey, TimeSpan.FromHours(8)), new CookieOptions
+        {
+            HttpOnly = true,
+            IsEssential = true,
+            SameSite = SameSiteMode.Strict,
+            Secure = httpContext.Request.IsHttps,
+            MaxAge = TimeSpan.FromHours(8),
+            Path = "/"
+        });
+    }
+
+    // Rewrite relative _shared.css reference to absolute pilot asset path
+    html = html.Replace("href=\"_shared.css\"", "href=\"/pilot-demo/pilot/_shared.css\"");
+
+    // Rewrite tab navigation links: overview.html -> /pilot-demo/pilot/overview
+    foreach (var knownPage in pilotPageAllowlist)
+    {
+        html = html.Replace($"href=\"{knownPage}.html\"", $"href=\"/pilot-demo/pilot/{knownPage}\"");
+    }
+
+    return Results.Content(html, "text/html; charset=utf-8");
+});
+
+// Serve the pilot _shared.css (and any future static assets)
+app.MapGet("/pilot-demo/pilot/_shared.css", () =>
+{
+    if (!string.Equals(runtimeProfile, "pilot-demo", StringComparison.OrdinalIgnoreCase))
+    {
+        return Results.NotFound();
+    }
+
+    var cssPath = Path.Combine(symphonyPilotUiDir, "_shared.css");
+    if (!File.Exists(cssPath))
+    {
+        return Results.NotFound();
+    }
+
+    return Results.Content(File.ReadAllText(cssPath), "text/css; charset=utf-8");
+});
+
+// Convenience redirect: /pilot-demo/pilot -> /pilot-demo/pilot/overview
+app.MapGet("/pilot-demo/pilot", () =>
+{
+    if (!string.Equals(runtimeProfile, "pilot-demo", StringComparison.OrdinalIgnoreCase))
+    {
+        return Results.NotFound();
+    }
+
+    return Results.Redirect("/pilot-demo/pilot/overview");
 });
 
 app.MapGet("/health", async (CancellationToken cancellationToken) =>
@@ -602,6 +647,174 @@ app.MapPost("/pilot-demo/api/evidence-links/issue", async (PilotDemoEvidenceLink
 
     var result = await EvidenceLinkIssueHandler.HandleAsync(issueReq, logger, ct);
     return Results.Json(result.Body, statusCode: result.StatusCode);
+}).RequireRateLimiting("sensitive-endpoint");
+
+app.MapPost("/pilot-demo/api/workers/lookup", async (HttpContext ctx, CancellationToken ct) =>
+{
+    if (!string.Equals(runtimeProfile, "pilot-demo", StringComparison.OrdinalIgnoreCase))
+    {
+        return Results.NotFound();
+    }
+
+    // Read tenant_id from cookie (no explicit tenant_id in request body for this endpoint)
+    if (!TryValidatePilotDemoOperatorCookie(ctx, null, out var ec, out var errs))
+    {
+        return Results.Json(new { error_code = ec, errors = errs }, statusCode: StatusCodes.Status401Unauthorized);
+    }
+
+    // Extract tenant_id from validated cookie
+    var cookieValue = ctx.Request.Cookies[PilotDemoOperatorCookieName];
+    if (string.IsNullOrWhiteSpace(cookieValue))
+    {
+        return Results.Json(new { error_code = "PILOT_DEMO_OPERATOR_SESSION_REQUIRED" }, statusCode: StatusCodes.Status401Unauthorized);
+    }
+
+    var decoded = Encoding.UTF8.GetString(Convert.FromBase64String(cookieValue));
+    var parts = decoded.Split('|', StringSplitOptions.None);
+    var tenantId = parts[0].Trim();
+
+    // Read phone from JSON request body
+    string? phone = null;
+    try
+    {
+        using var reader = new StreamReader(ctx.Request.Body);
+        var body = await reader.ReadToEndAsync(ct);
+        var json = JsonDocument.Parse(body);
+        if (json.RootElement.TryGetProperty("phone", out var phoneElement))
+        {
+            phone = phoneElement.GetString();
+        }
+    }
+    catch
+    {
+        return Results.Json(new { error_code = "INVALID_REQUEST", errors = new[] { "Invalid JSON body" } }, statusCode: StatusCodes.Status400BadRequest);
+    }
+
+    if (string.IsNullOrWhiteSpace(phone))
+    {
+        return Results.Json(new { error_code = "INVALID_REQUEST", errors = new[] { "phone field is required" } }, statusCode: StatusCodes.Status400BadRequest);
+    }
+
+    // Look up worker by phone
+    var worker = await SupplierPolicyStore.GetSupplierByPhoneAsync(tenantId, phone);
+    if (worker is null)
+    {
+        return Results.Json(new { error_code = "WORKER_NOT_FOUND" }, statusCode: StatusCodes.Status404NotFound);
+    }
+
+    // Return worker data (use supplier_id as worker_id for frontend compatibility)
+    return Results.Json(new
+    {
+        worker_id = worker.supplier_id,
+        supplier_id = worker.supplier_id,
+        supplier_type = worker.supplier_type,
+        status = worker.active ? "ACTIVE" : "INACTIVE",
+        latitude = worker.registered_latitude,
+        longitude = worker.registered_longitude
+    }, statusCode: StatusCodes.Status200OK);
+}).RequireRateLimiting("sensitive-endpoint");
+
+app.MapGet("/pilot-demo/api/workers/list", async (HttpContext ctx, CancellationToken ct) =>
+{
+    if (!string.Equals(runtimeProfile, "pilot-demo", StringComparison.OrdinalIgnoreCase))
+    {
+        return Results.NotFound();
+    }
+
+    // Validate pilot-demo operator session
+    if (!TryValidatePilotDemoOperatorCookie(ctx, null, out var ec, out var errs))
+    {
+        return Results.Json(new { error_code = ec, errors = errs }, statusCode: StatusCodes.Status401Unauthorized);
+    }
+
+    // Extract tenant_id from validated cookie
+    var cookieValue = ctx.Request.Cookies[PilotDemoOperatorCookieName];
+    if (string.IsNullOrWhiteSpace(cookieValue))
+    {
+        return Results.Json(new { error_code = "PILOT_DEMO_OPERATOR_SESSION_REQUIRED" }, statusCode: StatusCodes.Status401Unauthorized);
+    }
+
+    var decoded = Encoding.UTF8.GetString(Convert.FromBase64String(cookieValue));
+    var parts = decoded.Split('|', StringSplitOptions.None);
+    var tenantId = parts[0].Trim();
+
+    // Fetch all workers for the tenant
+    var workers = await SupplierPolicyStore.GetSuppliersByTenantAsync(tenantId);
+    var filtered = workers.Where(w => w.supplier_type == "WORKER" && w.active)
+                          .Select(w => new
+                          {
+                              worker_id = w.supplier_id,
+                              name = w.supplier_name,
+                              phone = w.payout_target
+                          });
+
+    return Results.Json(filtered, statusCode: StatusCodes.Status200OK);
+}).RequireRateLimiting("sensitive-endpoint");
+
+app.MapPost("/pilot-demo/api/session/switch", async (PilotSessionSwitchRequest request, HttpContext ctx, CancellationToken ct) =>
+{
+    if (!string.Equals(runtimeProfile, "pilot-demo", StringComparison.OrdinalIgnoreCase))
+    {
+        return Results.NotFound();
+    }
+
+    var tenantId = request.tenant_id;
+    if (string.IsNullOrWhiteSpace(tenantId))
+    {
+        return Results.Json(new { error_code = "INVALID_REQUEST", errors = new[] { "tenant_id field is required" } }, statusCode: StatusCodes.Status400BadRequest);
+    }
+
+    var adminKey = secrets.AdminApiKey.Trim();
+    var expiresAtUnix = DateTimeOffset.UtcNow.AddHours(4).ToUnixTimeSeconds();
+    var signature = ComputePilotDemoSessionSignature(tenantId, expiresAtUnix, adminKey);
+    var cookieValue = Convert.ToBase64String(Encoding.UTF8.GetBytes($"{tenantId}|{expiresAtUnix}|{signature}"));
+
+    ctx.Response.Cookies.Append(PilotDemoOperatorCookieName, cookieValue, new CookieOptions
+    {
+        HttpOnly = true,
+        Secure = true,
+        SameSite = SameSiteMode.Strict,
+        Expires = DateTimeOffset.FromUnixTimeSeconds(expiresAtUnix),
+        Path = "/"
+    });
+
+    return Results.Json(new { success = true, tenant_id = tenantId }, statusCode: StatusCodes.Status200OK);
+}).RequireRateLimiting("sensitive-endpoint");
+
+app.MapDelete("/pilot-demo/api/evidence-links/revoke/{token_id}", async (string token_id, HttpContext ctx, CancellationToken ct) =>
+{
+    if (!string.Equals(runtimeProfile, "pilot-demo", StringComparison.OrdinalIgnoreCase))
+    {
+        return Results.NotFound();
+    }
+
+    // Validate pilot-demo operator session
+    if (!TryValidatePilotDemoOperatorCookie(ctx, null, out var ec, out var errs))
+    {
+        return Results.Json(new { error_code = ec, errors = errs }, statusCode: StatusCodes.Status401Unauthorized);
+    }
+
+    // Validate token_id format
+    if (string.IsNullOrWhiteSpace(token_id))
+    {
+        return Results.Json(new { error_code = "INVALID_REQUEST", errors = new[] { "token_id is required" } }, statusCode: StatusCodes.Status400BadRequest);
+    }
+
+    // Check if already revoked
+    if (RevokedTokensLog.IsRevoked(token_id))
+    {
+        return Results.Json(new { error_code = "ALREADY_REVOKED", message = "Token is already revoked" }, statusCode: StatusCodes.Status400BadRequest);
+    }
+
+    // Append to revoked tokens log
+    await RevokedTokensLog.AppendAsync(new
+    {
+        token_id = token_id,
+        revoked_at = DateTimeOffset.UtcNow,
+        revoked_by = "pilot-demo-operator"
+    }, ct);
+
+    return Results.Json(new { success = true, message = "Token revoked successfully" }, statusCode: StatusCodes.Status200OK);
 }).RequireRateLimiting("sensitive-endpoint");
 
 app.MapPost("/v1/evidence-links/submit", async (EvidenceLinkSubmitRequest request, HttpContext httpContext, CancellationToken cancellationToken) =>
@@ -976,6 +1189,21 @@ app.MapGet("/pilot-demo/api/pilot-success", (HttpContext httpContext) =>
     return Results.Json(result.Body, statusCode: result.StatusCode);
 }).RequireRateLimiting("sensitive-endpoint");
 
+// ── TSK-P1-PLT-003: Success Criteria shim for pilot UI (cookie auth) ──
+app.MapGet("/pilot-demo/api/pilot-success-criteria", (HttpContext httpContext) =>
+{
+    if (!string.Equals(runtimeProfile, "pilot-demo", StringComparison.OrdinalIgnoreCase))
+        return Results.NotFound();
+
+    if (!TryValidatePilotDemoOperatorCookie(httpContext, null, out var errorCode, out var errors))
+        return Results.Json(new { error_code = errorCode, errors },
+            statusCode: StatusCodes.Status401Unauthorized);
+
+    var rootDir = EvidenceMeta.ResolveRepoRoot(Directory.GetCurrentDirectory());
+    var result = PilotSuccessCriteriaReadModelHandler.Handle(rootDir);
+    return Results.Json(result.Body, statusCode: result.StatusCode);
+}).RequireRateLimiting("sensitive-endpoint");
+
 app.MapGet("/pilot-demo/api/monitoring-report/{programId}", async (
     string programId, HttpContext httpContext, CancellationToken cancellationToken) =>
 {
@@ -989,6 +1217,30 @@ app.MapGet("/pilot-demo/api/monitoring-report/{programId}", async (
     var rootDir = EvidenceMeta.ResolveRepoRoot(Directory.GetCurrentDirectory());
     var result = await Pwrm0001MonitoringReportHandler.HandleAsync(
         programId, rootDir, cancellationToken);
+    return Results.Json(result.Body, statusCode: result.StatusCode);
+}).RequireRateLimiting("sensitive-endpoint");
+
+// ── TSK-P1-PLT-002: Reveal API Shim for pilot UI ──
+app.MapGet("/pilot-demo/api/reveal/{programId}", (string programId, HttpContext httpContext) =>
+{
+    if (!string.Equals(runtimeProfile, "pilot-demo", StringComparison.OrdinalIgnoreCase))
+        return Results.NotFound();
+
+    if (!TryValidatePilotDemoOperatorCookie(httpContext, null, out var errorCode, out var errors))
+        return Results.Json(new { error_code = errorCode, errors },
+            statusCode: StatusCodes.Status401Unauthorized);
+
+    // Extract tenant_id from validated cookie
+    var cookieValue = httpContext.Request.Cookies[PilotDemoOperatorCookieName];
+    if (string.IsNullOrWhiteSpace(cookieValue))
+        return Results.Json(new { error_code = "PILOT_DEMO_OPERATOR_SESSION_REQUIRED" },
+            statusCode: StatusCodes.Status401Unauthorized);
+
+    var decoded = Encoding.UTF8.GetString(Convert.FromBase64String(cookieValue));
+    var parts = decoded.Split('|', StringSplitOptions.None);
+    var tenantId = parts[0].Trim();
+
+    var result = SupervisoryRevealReadModelHandler.Handle(tenantId, programId.Trim(), dataSource);
     return Results.Json(result.Body, statusCode: result.StatusCode);
 }).RequireRateLimiting("sensitive-endpoint");
 
@@ -1316,7 +1568,8 @@ app.MapPost("/api/admin/onboarding/suppliers", async (JsonElement body, HttpCont
     if (!body.TryGetProperty("payout_target", out var ptProp) || string.IsNullOrWhiteSpace(ptProp.GetString()))
         return Results.Json(new { error_code = "INVALID_REQUEST", errors = new[] { "payout_target is required" } }, statusCode: 400);
 
-    var success = await tenantRegistryStore.RegisterSupplierAsync(tenantId, supplierId.ToString(), snProp.GetString()!.Trim(), ptProp.GetString()!.Trim(), cancellationToken, bypassRls: true);
+    var supplierType = body.TryGetProperty("supplier_type", out var stProp) ? stProp.GetString() : null;
+    var success = await tenantRegistryStore.RegisterSupplierAsync(tenantId, supplierId.ToString(), snProp.GetString()!.Trim(), ptProp.GetString()!.Trim(), supplierType, cancellationToken, bypassRls: true);
     if (!success)
         return Results.Json(new { error_code = "SUPPLIER_CREATE_FAILED", errors = new[] { "supplier register failed" } }, statusCode: 503);
 
@@ -1492,8 +1745,15 @@ app.MapGet("/api/admin/onboarding/status", async (HttpContext httpContext, Cance
 
 if (string.Equals(runtimeProfile, "pilot-demo", StringComparison.OrdinalIgnoreCase))
 {
-    await SeedDemoTenant(runtimeProfile, tenantRegistryStore, programmeStore, logger);
-    await SeedChungaWorkers(logger);
+    var actualTenantId = await SeedDemoTenant(runtimeProfile, tenantRegistryStore, programmeStore, tenantOnboardingStore, dataSource, logger);
+    if (actualTenantId.HasValue && dataSource is not null)
+    {
+        await SeedChungaWorkers(programmeStore, logger, actualTenantId.Value, dataSource, CancellationToken.None);
+    }
+    else
+    {
+        logger.LogWarning("Skipping worker seeding because tenant seeding did not complete successfully.");
+    }
     await SeedDemoInstructions(logger);
 }
 
@@ -1502,7 +1762,7 @@ static Guid CreateStableGuid(string input)
     return StableGuidHelper.CreateStableGuid(input);
 }
 
-async Task SeedDemoTenant(string rp, ITenantRegistryStore trs, IProgrammeStore ps, ILogger l)
+async Task<Guid?> SeedDemoTenant(string rp, ITenantRegistryStore trs, IProgrammeStore ps, ITenantOnboardingStore tos, Npgsql.NpgsqlDataSource? ds, ILogger l)
 {
     try
     {
@@ -1522,6 +1782,12 @@ async Task SeedDemoTenant(string rp, ITenantRegistryStore trs, IProgrammeStore p
             {
                 // Use the actual tenant_id from the DB (may differ from computed one on ON CONFLICT)
                 var actualTenantId = Guid.Parse(tenantResult.Entry.TenantId);
+
+                // Seed the legacy tenants table to satisfy supplier_registry's foreign key constraint
+                await tos.OnboardAsync(new TenantOnboardingInput(
+                    actualTenantId, "Zambia Green MFI", "ZM", "enterprise", $"seed:{actualTenantId}"
+                ), CancellationToken.None);
+
                 var progResult = await ps.CreateAsync(actualTenantId, "PGM-ZAMBIA-GRN-001", "GreenTech4CE · Solar Cluster A", default, true);
                 if (progResult.Success && progResult.Entry is not null)
                 {
@@ -1545,13 +1811,203 @@ async Task SeedDemoTenant(string rp, ITenantRegistryStore trs, IProgrammeStore p
                         {
                             l.LogInformation($"Pilot Demo binding ignored (already seeded): {ex.Message}");
                         }
+
+                        // Seed legacy escrow_accounts + programs tables so that
+                        // program_supplier_allowlist FK constraints (→ public.programs → escrow_accounts) are satisfied
+                        if (ds is not null)
+                        {
+                            try
+                            {
+                                await using var legacyConn = await ds.OpenConnectionAsync(default);
+                                await using var legacyTx = await legacyConn.BeginTransactionAsync(default);
+
+                                // Set RLS context + bypass for superuser seeding
+                                await using var ctxCmd = legacyConn.CreateCommand();
+                                ctxCmd.Transaction = legacyTx;
+                                ctxCmd.CommandText = "SELECT set_config('app.bypass_rls', 'on', true)";
+                                await ctxCmd.ExecuteScalarAsync();
+
+                                await using var ctxCmd2 = legacyConn.CreateCommand();
+                                ctxCmd2.Transaction = legacyTx;
+                                ctxCmd2.CommandText = "SELECT set_config('app.current_tenant_id', @tid::text, true)";
+                                ctxCmd2.Parameters.AddWithValue("tid", actualTenantId);
+                                await ctxCmd2.ExecuteScalarAsync();
+
+                                // 1. Seed a placeholder escrow_account for the programme budget envelope
+                                await using var escrowCmd = legacyConn.CreateCommand();
+                                escrowCmd.Transaction = legacyTx;
+                                escrowCmd.CommandText = @"
+                                    INSERT INTO public.escrow_accounts (
+                                        escrow_id, tenant_id, program_id, state,
+                                        authorized_amount_minor, currency_code,
+                                        authorization_expires_at, release_due_at
+                                    ) VALUES (
+                                        @escrow_id, @tenant_id, NULL, 'AUTHORIZED',
+                                        1000000, 'ZMW',
+                                        NOW() + interval '365 days', NOW() + interval '730 days'
+                                    ) ON CONFLICT (escrow_id) DO NOTHING;";
+                                escrowCmd.Parameters.AddWithValue("escrow_id", pidGuid);
+                                escrowCmd.Parameters.AddWithValue("tenant_id", actualTenantId);
+                                await escrowCmd.ExecuteNonQueryAsync();
+
+                                // 2. Seed the legacy public.programs row using the same UUID
+                                await using var progCmd = legacyConn.CreateCommand();
+                                progCmd.Transaction = legacyTx;
+                                progCmd.CommandText = @"
+                                    INSERT INTO public.programs (
+                                        program_id, tenant_id, program_key, program_name,
+                                        status, program_escrow_id
+                                    ) VALUES (
+                                        @program_id, @tenant_id, @program_key, @program_name,
+                                        'ACTIVE', @escrow_id
+                                    ) ON CONFLICT (program_id) DO NOTHING;";
+                                progCmd.Parameters.AddWithValue("program_id", pidGuid);
+                                progCmd.Parameters.AddWithValue("tenant_id", actualTenantId);
+                                progCmd.Parameters.AddWithValue("program_key", "PGM-ZAMBIA-GRN-001");
+                                progCmd.Parameters.AddWithValue("program_name", "GreenTech4CE · Solar Cluster A");
+                                progCmd.Parameters.AddWithValue("escrow_id", pidGuid);
+                                await progCmd.ExecuteNonQueryAsync();
+
+                                await legacyTx.CommitAsync();
+                                l.LogInformation("Legacy escrow_accounts + programs seeded for programme {ProgrammeId}.", pidGuid);
+                            }
+                            catch (Exception legacyEx)
+                            {
+                                l.LogWarning(legacyEx, "Legacy escrow/programs seeding skipped (may already exist).");
+                            }
+                        }
                     }
                     else
                     {
                         l.LogWarning($"Failed to parse ProgrammeId {pidStr} as Guid during auto-seed.");
                     }
                 }
+
+                // Return the actual tenant ID that was created/retrieved from the database
+                return actualTenantId;
             }
+        }
+        else
+        {
+            // Tenant already exists in tenant_registry, but we need to ensure it's also in public.tenants
+            // and that the programme and legacy tables are seeded
+            l.LogInformation("Pilot Demo tenant already exists in tenant_registry. Ensuring programme and legacy tables are seeded...");
+
+            // Ensure the tenant is onboarded to public.tenants (idempotent operation)
+            try
+            {
+                await tos.OnboardAsync(new TenantOnboardingInput(
+                    tenantId, "Zambia Green MFI", "ZM", "enterprise", $"seed:{tenantId}"
+                ), CancellationToken.None);
+                l.LogInformation("Tenant onboarded to public.tenants.");
+            }
+            catch (Exception onboardEx)
+            {
+                l.LogWarning(onboardEx, "Tenant onboarding to public.tenants failed or already exists.");
+            }
+
+            // Ensure the programme exists
+            var progResult = await ps.CreateAsync(tenantId, "PGM-ZAMBIA-GRN-001", "GreenTech4CE · Solar Cluster A", default, true);
+            if (progResult.Success && progResult.Entry is not null)
+            {
+                var pidStr = progResult.Entry.ProgrammeId;
+                if (Guid.TryParse(pidStr, out var pidGuid))
+                {
+                    // Ensure programme is activated
+                    try
+                    {
+                        await ps.ActivateAsync(pidGuid, tenantId, default, true);
+                    }
+                    catch (Exception activateEx)
+                    {
+                        l.LogInformation(activateEx, "Programme activation skipped (may already be active).");
+                    }
+
+                    // Ensure policy is bound
+                    try
+                    {
+                        var bindResult = await ps.BindPolicyAsync(pidGuid, tenantId, "green_eq_v1", default, true);
+                        if (!bindResult.Success)
+                        {
+                            l.LogInformation($"Pilot Demo binding skipped: {bindResult.Error}");
+                        }
+                    }
+                    catch (Exception bindEx)
+                    {
+                        l.LogInformation(bindEx, "Pilot Demo binding ignored (already seeded).");
+                    }
+
+                    // Seed legacy escrow_accounts + programs tables (idempotent with ON CONFLICT DO NOTHING)
+                    if (ds is not null)
+                    {
+                        try
+                        {
+                            await using var legacyConn = await ds.OpenConnectionAsync(default);
+                            await using var legacyTx = await legacyConn.BeginTransactionAsync(default);
+
+                            // Set RLS context + bypass for superuser seeding
+                            await using var ctxCmd = legacyConn.CreateCommand();
+                            ctxCmd.Transaction = legacyTx;
+                            ctxCmd.CommandText = "SELECT set_config('app.bypass_rls', 'on', true)";
+                            await ctxCmd.ExecuteScalarAsync();
+
+                            await using var ctxCmd2 = legacyConn.CreateCommand();
+                            ctxCmd2.Transaction = legacyTx;
+                            ctxCmd2.CommandText = "SELECT set_config('app.current_tenant_id', @tid::text, true)";
+                            ctxCmd2.Parameters.AddWithValue("tid", tenantId);
+                            await ctxCmd2.ExecuteScalarAsync();
+
+                            // 1. Seed a placeholder escrow_account for the programme budget envelope
+                            await using var escrowCmd = legacyConn.CreateCommand();
+                            escrowCmd.Transaction = legacyTx;
+                            escrowCmd.CommandText = @"
+                                INSERT INTO public.escrow_accounts (
+                                    escrow_id, tenant_id, program_id, state,
+                                    authorized_amount_minor, currency_code,
+                                    authorization_expires_at, release_due_at
+                                ) VALUES (
+                                    @escrow_id, @tenant_id, NULL, 'AUTHORIZED',
+                                    1000000, 'ZMW',
+                                    NOW() + interval '365 days', NOW() + interval '730 days'
+                                ) ON CONFLICT (escrow_id) DO NOTHING;";
+                            escrowCmd.Parameters.AddWithValue("escrow_id", pidGuid);
+                            escrowCmd.Parameters.AddWithValue("tenant_id", tenantId);
+                            await escrowCmd.ExecuteNonQueryAsync();
+
+                            // 2. Seed the legacy public.programs row using the same UUID
+                            await using var progCmd = legacyConn.CreateCommand();
+                            progCmd.Transaction = legacyTx;
+                            progCmd.CommandText = @"
+                                INSERT INTO public.programs (
+                                    program_id, tenant_id, program_key, program_name,
+                                    status, program_escrow_id
+                                ) VALUES (
+                                    @program_id, @tenant_id, @program_key, @program_name,
+                                    'ACTIVE', @escrow_id
+                                ) ON CONFLICT (program_id) DO NOTHING;";
+                            progCmd.Parameters.AddWithValue("program_id", pidGuid);
+                            progCmd.Parameters.AddWithValue("tenant_id", tenantId);
+                            progCmd.Parameters.AddWithValue("program_key", "PGM-ZAMBIA-GRN-001");
+                            progCmd.Parameters.AddWithValue("program_name", "GreenTech4CE · Solar Cluster A");
+                            progCmd.Parameters.AddWithValue("escrow_id", pidGuid);
+                            await progCmd.ExecuteNonQueryAsync();
+
+                            await legacyTx.CommitAsync();
+                            l.LogInformation("Legacy escrow_accounts + programs seeded for programme {ProgrammeId}.", pidGuid);
+                        }
+                        catch (Exception legacyEx)
+                        {
+                            l.LogWarning(legacyEx, "Legacy escrow/programs seeding skipped (may already exist).");
+                        }
+                    }
+                }
+            }
+            else
+            {
+                l.LogInformation("Programme already exists or creation skipped.");
+            }
+
+            return tenantId;
         }
     }
     catch (Exception ex)
@@ -1565,17 +2021,48 @@ async Task SeedDemoTenant(string rp, ITenantRegistryStore trs, IProgrammeStore p
             l.LogWarning(ex, "Failed to auto-seed default Pilot Demo tenant.");
         }
     }
+
+    // Return null on failure
+    return null;
 }
 
-async Task SeedChungaWorkers(ILogger l)
+async Task SeedChungaWorkers(IProgrammeStore ps, ILogger l, Guid actualTenantId, NpgsqlDataSource dataSource, CancellationToken cancellationToken)
 {
     try
     {
-        const string DemoTenantId = "11111111-1111-1111-1111-111111111111";
-        const string PgmZambiaGrn = "PGM-ZAMBIA-GRN-001";
+        // Use the actual tenant ID passed from SeedDemoTenant
+        var DemoTenantId = actualTenantId.ToString();
+        const string PgmZambiaGrnKey = "PGM-ZAMBIA-GRN-001";
+
+        // Add verification query
+        await using var conn = await dataSource.OpenConnectionAsync(cancellationToken);
+        await using var cmd = conn.CreateCommand();
+        cmd.CommandText = "SELECT EXISTS(SELECT 1 FROM public.tenants WHERE tenant_id = @tid)";
+        cmd.Parameters.AddWithValue("tid", actualTenantId);
+        var exists = (bool)(await cmd.ExecuteScalarAsync(cancellationToken) ?? false);
+
+        if (!exists)
+        {
+            l.LogError("Tenant {TenantId} does not exist in public.tenants. Cannot seed workers.", actualTenantId);
+            return;
+        }
+
+        // Resolve the actual program UUID from the database
+        var pgms = await ps.ListAsync(Guid.Parse(DemoTenantId), default, true);
+        var targetPgm = pgms.FirstOrDefault(p => string.Equals(p.ProgrammeKey, PgmZambiaGrnKey, StringComparison.Ordinal));
+        var PgmZambiaGrnId = targetPgm?.ProgrammeId ?? Guid.Empty.ToString();
+
 
         var workerChunga001Id = CreateStableGuid("worker-chunga-001").ToString();
         var workerChunga002Id = CreateStableGuid("worker-chunga-002").ToString();
+
+        // Check if workers already exist before inserting
+        var existingWorker = await SupplierPolicyStore.GetSupplierAsync(DemoTenantId, workerChunga001Id);
+        if (existingWorker != null)
+        {
+            l.LogInformation("Worker {WorkerId} already exists. Skipping.", workerChunga001Id);
+            return;
+        }
 
         l.LogInformation("Auto-seeding Chunga workers for pilot demo...");
 
@@ -1590,9 +2077,9 @@ async Task SeedChungaWorkers(ILogger l)
             supplier_type: "WORKER"));
 
         await ProgramSupplierAllowlistUpsertHandler.HandleAsync(
-            new ProgramSupplierAllowlistUpsertRequest(DemoTenantId, PgmZambiaGrn, workerChunga001Id, true));
+            new ProgramSupplierAllowlistUpsertRequest(DemoTenantId, PgmZambiaGrnId, workerChunga001Id, true));
         await ProgramSupplierAllowlistUpsertHandler.HandleAsync(
-            new ProgramSupplierAllowlistUpsertRequest(DemoTenantId, PgmZambiaGrn, workerChunga002Id, true));
+            new ProgramSupplierAllowlistUpsertRequest(DemoTenantId, PgmZambiaGrnId, workerChunga002Id, true));
 
         l.LogInformation("Successfully auto-seeded Chunga workers.");
     }

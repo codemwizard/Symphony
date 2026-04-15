@@ -202,7 +202,7 @@ interface ITenantRegistryStore
     Task<TenantRegistryEntry?> GetAsync(Guid tenantId, CancellationToken cancellationToken, bool bypassRls = false);
     Task<IReadOnlyList<TenantRegistryEntry>> ListAsync(CancellationToken cancellationToken, bool bypassRls = false);
     Task<TenantRegistryResult> UpsertAsync(Guid tenantId, string tenantKey, string displayName, CancellationToken cancellationToken, bool bypassRls = false);
-    Task<bool> RegisterSupplierAsync(Guid tenantId, string supplierId, string supplierName, string payoutTarget, CancellationToken cancellationToken, bool bypassRls = false);
+    Task<bool> RegisterSupplierAsync(Guid tenantId, string supplierId, string supplierName, string payoutTarget, string? supplierType, CancellationToken cancellationToken, bool bypassRls = false);
 }
 
 record ProgrammeEntry(
@@ -231,3 +231,5 @@ interface IProgrammeStore
     Task<ProgrammeResult> SuspendAsync(Guid programmeId, Guid tenantId, CancellationToken cancellationToken, bool bypassRls = false);
     Task<ProgrammeResult> BindPolicyAsync(Guid programmeId, Guid tenantId, string policyCode, CancellationToken cancellationToken, bool bypassRls = false);
 }
+
+record PilotSessionSwitchRequest(string tenant_id);

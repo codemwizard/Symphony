@@ -1,16 +1,33 @@
 #!/usr/bin/env bash
 set -eo pipefail
 
+# --- PRE_CI_CONTEXT_GUARD ---
+# This script writes evidence and must run via pre_ci.sh or run_task.sh.
+# Direct execution bypasses the enforcement harness and is blocked.
+# Debugging override: PRE_CI_CONTEXT=1 bash <script>
+if [[ "${PRE_CI_CONTEXT:-}" != "1" ]]; then
+  echo "ERROR: $(basename "${BASH_SOURCE[0]}") must run via pre_ci.sh or run_task.sh" >&2
+  echo "  Direct execution blocked to protect evidence integrity." >&2
+  echo "  Debug override: PRE_CI_CONTEXT=1 bash $(basename "${BASH_SOURCE[0]}")" >&2
+  mkdir -p .toolchain/audit
+  printf '%s rogue_execution attempted: %s\n' \
+    "$([ "${SYMPHONY_EVIDENCE_DETERMINISTIC:-0}" = "1" ] && echo "1970-01-01T00:00:00Z" || date -u +%Y-%m-%dT%H:%M:%SZ)" "${BASH_SOURCE[0]}" \
+    >> .toolchain/audit/rogue_execution.log
+  return 1 2>/dev/null || exit 1
+fi
+# --- end PRE_CI_CONTEXT_GUARD ---
+
+
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 EVIDENCE="$ROOT/evidence/phase1/tsk_p1_217_onboarding_control_plane.json"
-RUN_ID="${SYMPHONY_RUN_ID:-standalone-$(date -u +%Y%m%dT%H%M%SZ)}"
+RUN_ID="${SYMPHONY_RUN_ID:-standalone-$([[ "${SYMPHONY_EVIDENCE_DETERMINISTIC:-0}" == "1" ]] && echo "19700101T000000Z" || date -u +%Y%m%dT%H%M%SZ)}"
 
 mkdir -p "$(dirname "$EVIDENCE")"
 errors=()
 
 echo "==> Verifying TSK-P1-217: Onboarding Control-Plane Persistence..."
 
-MIGRATION=$(find "$ROOT/schema/migrations" -name '*onboarding_control_plane*' -type f | head -1)
+MIGRATION=$(find "$ROOT/schema/migrations" -name '*onboarding_control_plane*' -type f | sort -V | head -1)
 STORES="$ROOT/services/ledger-api/dotnet/src/LedgerApi/Infrastructure/Stores.cs"
 CONTRACTS="$ROOT/services/ledger-api/dotnet/src/LedgerApi/Commands/CommandContracts.cs"
 AUTH="$ROOT/services/ledger-api/dotnet/src/LedgerApi/Security/ApiAuthorization.cs"
@@ -86,7 +103,7 @@ fi
 source "$ROOT/scripts/lib/evidence.sh" 2>/dev/null || {
   git_sha() { git rev-parse HEAD 2>/dev/null || echo "unknown"; }
   schema_fingerprint() { echo "unknown"; }
-  evidence_now_utc() { date -u +%Y-%m-%dT%H:%M:%SZ; }
+  evidence_now_utc() { [ "${SYMPHONY_EVIDENCE_DETERMINISTIC:-0}" = "1" ] && echo "1970-01-01T00:00:00Z" || date -u +%Y-%m-%dT%H:%M:%SZ; }
 }
 
 TS_UTC="$(evidence_now_utc)"

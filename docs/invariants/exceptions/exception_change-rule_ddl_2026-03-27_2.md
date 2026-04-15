@@ -6,6 +6,7 @@ follow_up_ticket: GF-W1-SCH-002A
 reason: Auto-generated: structural change detected; invariants linkage missing in commit.
 author: system
 created_at: 2026-03-27
+closed_at: 2026-04-15
 ---
 
 # Exception: ddl structural change without invariants linkage

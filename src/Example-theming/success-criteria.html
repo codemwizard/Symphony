@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Symphony — Success Criteria</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="_shared.css">
+  <style>
+    body { display: flex; flex-direction: column; min-height: 100vh; }
+
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 24px;
+      margin-bottom: 24px;
+    }
+    .card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+      padding-bottom: 16px;
+      border-bottom: 1px solid var(--border);
+    }
+    .card-header h2 { font-size: 16px; font-weight: 700; }
+
+    .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-bottom: 24px; }
+    @media (max-width: 768px) { .two-col { grid-template-columns: 1fr; } }
+
+    .progress-ring {
+      width: 150px; height: 150px;
+      margin: 0 auto;
+      position: relative;
+    }
+    .progress-ring svg { transform: rotate(-90deg); }
+    .progress-ring circle { fill: none; stroke-width: 12; }
+    .progress-ring .bg { stroke: var(--border); }
+    .progress-ring .progress-arc { stroke: var(--green); stroke-linecap: round; transition: stroke-dashoffset 0.5s ease; }
+    .progress-ring .percentage {
+      position: absolute; top: 50%; left: 50%;
+      transform: translate(-50%, -50%);
+      font-size: 2rem; font-weight: 700; color: var(--green);
+    }
+    .programme-info { text-align: center; margin-top: 16px; }
+    .programme-info .name { font-weight: 600; font-size: 15px; }
+    .programme-info .dates { font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--muted); margin-top: 4px; }
+
+    .milestone-timeline { position: relative; padding-left: 32px; }
+    .milestone-timeline::before {
+      content: ''; position: absolute; left: 8px; top: 0; bottom: 0;
+      width: 2px; background: var(--border);
+    }
+    .milestone-item { position: relative; padding-bottom: 24px; }
+    .milestone-item:last-child { padding-bottom: 0; }
+    .milestone-item::before {
+      content: ''; position: absolute; left: -24px; top: 4px;
+      width: 14px; height: 14px; border-radius: 50%;
+      background: var(--surface); border: 3px solid var(--border);
+    }
+    .milestone-item.completed::before { background: var(--green); border-color: var(--green); }
+    .milestone-item.in-progress::before { background: var(--amber); border-color: var(--amber); }
+    .milestone-item .ms-name { font-weight: 600; font-size: 14px; }
+    .milestone-item .ms-date { font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--muted); margin-top: 4px; }
+
+    .summary-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+    .summary-item {
+      background: rgba(255,255,255,0.02);
+      border: 1px solid var(--border);
+      padding: 16px;
+      border-radius: 8px;
+      text-align: center;
+    }
+    .summary-item .value { font-size: 24px; font-weight: 700; color: var(--green); }
+    .summary-item .label {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 10px; color: var(--muted);
+      text-transform: uppercase; letter-spacing: 0.05em; margin-top: 4px;
+    }
+
+    .category-tag {
+      font-size: 9px; padding: 3px 8px;
+      background: var(--green); color: white;
+      border-radius: 4px; text-transform: uppercase;
+      letter-spacing: 0.05em; font-weight: 600;
+    }
+
+    .criteria-item {
+      background: rgba(255,255,255,0.02);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 20px;
+      margin-bottom: 16px;
+    }
+    .criteria-item:last-child { margin-bottom: 0; }
+    .criteria-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 12px;
+    }
+    .criteria-header h3 { font-size: 15px; font-weight: 600; margin-top: 8px; }
+    .criteria-desc { font-size: 13px; color: var(--muted); margin-bottom: 14px; }
+    .criteria-progress { display: flex; align-items: center; gap: 16px; }
+    .criteria-progress .bar {
+      flex: 1; height: 8px; background: var(--border);
+      border-radius: 4px; overflow: hidden;
+    }
+    .criteria-progress .bar .fill { height: 100%; border-radius: 4px; transition: width 0.3s ease; }
+    .fill.achieved { background: var(--green); }
+    .fill.on-track { background: var(--blue); }
+    .fill.in-progress { background: var(--amber); }
+    .fill.at-risk { background: var(--red); }
+    .criteria-progress .values {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 13px; white-space: nowrap; color: var(--muted);
+    }
+
+    .loading { text-align: center; padding: 40px; color: var(--muted); }
+    .error-msg {
+      background: var(--red-bg); color: var(--red);
+      padding: 14px; border-radius: 8px;
+      border: 1px solid var(--red); margin-bottom: 16px;
+    }
+  </style>
+</head>
+<body>
+  <header class="topbar">
+    <div class="logo"><span class="logo-sym">Sym</span><span class="logo-phony">phony</span></div>
+    <div class="topbar-right">
+      <div class="topbar-title">Chunga Dumpsite · PWRM0001</div>
+      <div class="topbar-subtitle">Regulated by ZEMA / Bank of Zambia</div>
+    </div>
+  </header>
+
+  <nav class="tabbar">
+    <a class="tab" href="overview.html">Overview</a>
+    <a class="tab" href="program-health.html">Programme Health</a>
+    <a class="tab" href="monitoring-report.html">Monitoring Report</a>
+    <a class="tab" href="token-issuance.html">Token Issuance</a>
+    <a class="tab" href="instructions.html">Instructions</a>
+    <a class="tab active" href="success-criteria.html">Success Criteria</a>
+    <a class="tab" href="onboarding.html">Onboarding</a>
+    <a class="tab" href="pilot-gate.html">Pilot Gate</a>
+  </nav>
+
+  <div class="page-content">
+    <div id="error-container"></div>
+
+    <div class="two-col">
+      <div class="card">
+        <div class="card-header">
+          <h2>Overall Progress</h2>
+          <span class="chip chip-amber" id="riskLevel">--</span>
+        </div>
+        <div id="overall-progress"><div class="loading">Loading...</div></div>
+      </div>
+
+      <div class="card">
+        <div class="card-header"><h2>Key Milestones</h2></div>
+        <div id="milestones"><div class="loading">Loading...</div></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header"><h2>Success Criteria Tracking</h2></div>
+      <div class="summary-grid" id="criteria-summary">
+        <div class="loading">Loading...</div>
+      </div>
+      <div id="criteria-list"><div class="loading">Loading criteria...</div></div>
+    </div>
+  </div>
+
+  <script>
+    function showError(message) {
+      document.getElementById('error-container').innerHTML = `<div class="error-msg">${message}</div>`;
+    }
+
+    function getStatusClass(status) {
+      return { ACHIEVED: 'achieved', ON_TRACK: 'on-track', IN_PROGRESS: 'in-progress', AT_RISK: 'at-risk' }[status] || 'in-progress';
+    }
+
+    function getStatusChipClass(status) {
+      return { ACHIEVED: 'chip-green', ON_TRACK: 'chip-green', IN_PROGRESS: 'chip-amber', AT_RISK: 'chip-red' }[status] || 'chip-grey';
+    }
+
+    async function loadSuccessCriteria() {
+      try {
+        const response = await fetch('/pilot-demo/api/pilot-success-criteria', { credentials: 'include' });
+        if (!response.ok) throw new Error('Failed to fetch success criteria');
+        const data = await response.json();
+
+        // Risk level chip
+        const riskEl = document.getElementById('riskLevel');
+        riskEl.textContent = 'Risk: ' + (data.riskLevel || 'N/A');
+        riskEl.className = 'chip ' + (data.riskLevel === 'LOW' ? 'chip-green' : data.riskLevel === 'MEDIUM' ? 'chip-amber' : 'chip-red');
+
+        // Overall progress ring
+        const progress = data.overallProgress || 0;
+        const circumference = 2 * Math.PI * 60;
+        const offset = circumference - (progress / 100) * circumference;
+        document.getElementById('overall-progress').innerHTML = `
+          <div class="progress-ring">
+            <svg width="150" height="150">
+              <circle class="bg" cx="75" cy="75" r="60"></circle>
+              <circle class="progress-arc" cx="75" cy="75" r="60"
+                stroke-dasharray="${circumference}"
+                stroke-dashoffset="${offset}"></circle>
+            </svg>
+            <div class="percentage">${progress}%</div>
+          </div>
+          <div class="programme-info">
+            <p class="name">${data.programmeName || 'Programme'}</p>
+            <p class="dates">${data.startDate || '--'} — ${data.targetEndDate || '--'}</p>
+          </div>
+        `;
+
+        // Milestones
+        const milestones = data.milestones || [];
+        if (milestones.length > 0) {
+          document.getElementById('milestones').innerHTML = `
+            <div class="milestone-timeline">
+              ${milestones.map(m => `
+                <div class="milestone-item ${m.status === 'COMPLETED' ? 'completed' : m.status === 'IN_PROGRESS' ? 'in-progress' : ''}">
+                  <div class="ms-name">${m.name}</div>
+                  <div class="ms-date">Target: ${m.targetDate}${m.completedDate ? ' · Completed: ' + m.completedDate : ''}</div>
+                  <span class="chip ${m.status === 'COMPLETED' ? 'chip-green' : m.status === 'IN_PROGRESS' ? 'chip-amber' : 'chip-grey'}" style="margin-top:8px;display:inline-block">
+                    ${m.status.replace(/_/g, ' ')}
+                  </span>
+                </div>
+              `).join('')}
+            </div>
+          `;
+        } else {
+          document.getElementById('milestones').innerHTML = '<p style="color:var(--muted)">No milestones defined.</p>';
+        }
+
+        // Criteria summary counts
+        const criteria = data.criteria || [];
+        const counts = { ACHIEVED: 0, ON_TRACK: 0, IN_PROGRESS: 0, AT_RISK: 0 };
+        criteria.forEach(c => { if (counts[c.status] !== undefined) counts[c.status]++; });
+
+        document.getElementById('criteria-summary').innerHTML = `
+          <div class="summary-item"><div class="value">${criteria.length}</div><div class="label">Total</div></div>
+          <div class="summary-item"><div class="value" style="color:var(--green)">${counts.ACHIEVED}</div><div class="label">Achieved</div></div>
+          <div class="summary-item"><div class="value" style="color:var(--blue)">${counts.ON_TRACK}</div><div class="label">On Track</div></div>
+          <div class="summary-item"><div class="value" style="color:var(--amber)">${counts.IN_PROGRESS}</div><div class="label">In Progress</div></div>
+          <div class="summary-item"><div class="value" style="color:var(--red)">${counts.AT_RISK}</div><div class="label">At Risk</div></div>
+        `;
+
+        // Criteria list
+        if (criteria.length > 0) {
+          document.getElementById('criteria-list').innerHTML = criteria.map(c => {
+            const progressPct = c.target > 0 ? Math.min((c.current / c.target) * 100, 100) : 0;
+            return `
+              <div class="criteria-item">
+                <div class="criteria-header">
+                  <div>
+                    <span class="category-tag">${c.category}</span>
+                    <h3>${c.name}</h3>
+                  </div>
+                  <span class="chip ${getStatusChipClass(c.status)}">${c.status.replace(/_/g, ' ')}</span>
+                </div>
+                <p class="criteria-desc">${c.description}</p>
+                <div class="criteria-progress">
+                  <div class="bar">
+                    <div class="fill ${getStatusClass(c.status)}" style="width:${progressPct}%"></div>
+                  </div>
+                  <div class="values"><strong style="color:var(--text)">${c.current}</strong> / ${c.target} ${c.unit}</div>
+                </div>
+              </div>
+            `;
+          }).join('');
+        } else {
+          document.getElementById('criteria-list').innerHTML = '<p style="color:var(--muted)">No success criteria defined.</p>';
+        }
+
+      } catch (error) {
+        console.error('Error loading success criteria:', error);
+        showError('Failed to load success criteria. Please try again.');
+      }
+    }
+
+    document.addEventListener('DOMContentLoaded', loadSuccessCriteria);
+  </script>
+</body>
+</html>

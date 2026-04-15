@@ -1,0 +1,69 @@
+schema_version: 1
+phase: '1'
+task_id: TSK-P1-253
+title: Stabilize evidence validation and schema validation outputs for fixed-point convergence
+owner_role: SECURITY_GUARDIAN
+status: completed
+depends_on:
+  - TSK-P1-251
+  - TSK-P1-252
+touches:
+  - scripts/audit/validate_evidence.py
+  - scripts/audit/tests/test_evidence_validation_stability.sh
+  - evidence/phase0/evidence_validation.json
+  - evidence/phase0/evidence_schema_validation.json
+  - evidence/phase0/sqlstate_map_drift.json
+  - evidence/phase1/tsk_p1_253_validation_output_stability.json
+  - tasks/TSK-P1-253/meta.yml
+invariants:
+  - INV-001
+  - INV-004
+work:
+  - '[ID tsk_p1_253_work_item_01] Audit the validation-family emitters and identify every unstable inventory or runtime-sensitive field driving drift in evidence_validation.json, evidence_schema_validation.json, and sqlstate_map_drift.json.'
+  - '[ID tsk_p1_253_work_item_02] Replace unstable checked-files-style inventories with deterministic counts, fingerprints, or canonicalized summaries while preserving downstream enforcement meaning.'
+  - '[ID tsk_p1_253_work_item_03] Add scripts/audit/tests/test_evidence_validation_stability.sh to prove validation-family outputs are byte-stable for the same committed tree.'
+  - '[ID tsk_p1_253_work_item_04] Emit evidence/phase1/tsk_p1_253_validation_output_stability.json recording the stabilized field inventory, observed paths, hashes, and repeated-run proof.'
+acceptance_criteria:
+  - '[ID tsk_p1_253_work_item_01] evidence/phase0/evidence_validation.json, evidence/phase0/evidence_schema_validation.json, and evidence/phase0/sqlstate_map_drift.json no longer drift because of unstable inventory payloads.'
+  - '[ID tsk_p1_253_work_item_02] No unchecked checked-files-style large inventory remains unless it is explicitly required and canonicalized.'
+  - '[ID tsk_p1_253_work_item_03] bash scripts/audit/tests/test_evidence_validation_stability.sh proves byte-stable repeated-run validation outputs for the same committed tree.'
+  - '[ID tsk_p1_253_work_item_04] evidence/phase1/tsk_p1_253_validation_output_stability.json records PASS status, targeted files, command outputs, observed paths, observed hashes, and execution trace.'
+verification:
+  - '[ID tsk_p1_253_work_item_01] [ID tsk_p1_253_work_item_02] [ID tsk_p1_253_work_item_03] [ID tsk_p1_253_work_item_04] test -x scripts/audit/tests/test_evidence_validation_stability.sh && SYMPHONY_ENV=development bash scripts/audit/tests/test_evidence_validation_stability.sh || exit 1'
+  - '[ID tsk_p1_253_work_item_04] test -f evidence/phase1/tsk_p1_253_validation_output_stability.json && cat evidence/phase1/tsk_p1_253_validation_output_stability.json | tee /tmp/tsk_p1_253_evidence.log >/dev/null || exit 1'
+  - '[ID tsk_p1_253_work_item_04] test -f evidence/phase1/tsk_p1_253_validation_output_stability.json && python3 scripts/audit/validate_evidence.py --task TSK-P1-253 --evidence evidence/phase1/tsk_p1_253_validation_output_stability.json || exit 1'
+  - '[ID tsk_p1_253_work_item_01] [ID tsk_p1_253_work_item_02] [ID tsk_p1_253_work_item_03] PRE_CI_CONTEXT=1 test -x scripts/audit/validate_evidence.py && PRE_CI_CONTEXT=1 python3 scripts/audit/validate_evidence.py || exit 1'
+evidence:
+  - path: evidence/phase1/tsk_p1_253_validation_output_stability.json
+    must_include:
+      - task_id
+      - git_sha
+      - timestamp_utc
+      - status
+      - checks
+      - targeted_files
+      - command_outputs
+      - observed_paths
+      - observed_hashes
+      - execution_trace
+failure_modes:
+  - validation-family evidence still exposes unstable checked-files-style inventories => FAIL
+  - validation outputs lose enforcement meaning because summaries are under-specified => FAIL
+  - Evidence file missing => FAIL
+anti_patterns:
+  - Replacing unstable validation inventories with summaries that are too weak to explain failures
+  - Verifying only one validation output while leaving sibling outputs unstable
+must_read:
+  - AGENT_ENTRYPOINT.md
+  - docs/operations/AI_AGENT_OPERATION_MANUAL.md
+  - docs/plans/phase1/REM-2026-04-06_evidence-push-nonconvergence/PLAN.md
+  - scripts/audit/validate_evidence.py
+implementation_plan: docs/plans/phase1/TSK-P1-253/PLAN.md
+implementation_log: docs/plans/phase1/TSK-P1-253/EXEC_LOG.md
+notes: >
+  This task closes the validation-family drift surfaces after the higher-churn
+  governance producers are stabilized so the remaining rebaseline work measures
+  true stale artifacts rather than ongoing validation inventory movement.
+client: antigravity
+assigned_agent: security_guardian
+model: gpt-5-codex

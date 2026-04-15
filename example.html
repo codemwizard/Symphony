@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Symphony · Carbon Oversight</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&family=JetBrains+Mono&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #05080a; --surface: #0d1117; --border: #30363d;
+            --text: #e6edf3; --accent: #2ea043; --gold: #d29922;
+            --font-main: 'Inter', sans-serif; --font-mono: 'JetBrains Mono', monospace;
+        }
+        body { font-family: var(--font-main); background: var(--bg); color: var(--text); margin: 0; overflow: hidden; }
+        
+        /* High-Visibility Header */
+        .header { 
+            padding: 20px 40px; background: var(--surface); border-bottom: 1px solid var(--border);
+            display: flex; justify-content: space-between; align-items: center;
+        }
+        .logo { font-size: 24px; font-weight: 800; letter-spacing: -1px; }
+        .logo span { color: var(--accent); }
+
+        /* KPI Ribbon - Presentation Sizes */
+        .kpi-ribbon { 
+            display: grid; grid-template-columns: repeat(4, 1fr); 
+            gap: 20px; padding: 25px 40px; background: #0d1117;
+        }
+        .kpi-card { 
+            padding: 20px; border: 1px solid var(--border); border-radius: 8px; 
+            background: rgba(255,255,255,0.03);
+        }
+        .kpi-label { font-family: var(--font-mono); font-size: 12px; color: var(--gold); text-transform: uppercase; margin-bottom: 8px; }
+        .kpi-value { font-size: 32px; font-weight: 700; }
+
+        /* Main View */
+        .main-grid { display: grid; grid-template-columns: 1fr 380px; gap: 25px; padding: 0 40px; height: 60vh; }
+        
+        .table-container { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; overflow-y: auto; }
+        table { width: 100%; border-collapse: collapse; text-align: left; }
+        th { padding: 15px; font-family: var(--font-mono); font-size: 11px; border-bottom: 1px solid var(--border); color: #8b949e; }
+        td { padding: 18px 15px; border-bottom: 1px solid rgba(255,255,255,0.05); font-size: 16px; }
+        
+        /* Right Panel: Carbon Logic */
+        .side-panel { display: flex; flex-direction: column; gap: 20px; }
+        .panel-card { padding: 20px; background: var(--surface); border: 1px solid var(--border); border-radius: 12px; }
+        .status-tag { display: inline-block; padding: 4px 12px; border-radius: 4px; font-size: 12px; font-weight: 700; background: var(--accent); color: white; }
+
+        .benefit-row { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid var(--border); font-size: 14px; }
+        .benefit-pct { font-family: var(--font-mono); color: var(--gold); }
+    </style>
+</head>
+<body>
+
+<div class="header">
+    <div class="logo">Sym<span>phony</span></div>
+    <div style="text-align: right">
+        <div style="font-size: 18px; font-weight: 600;">Chunga Dumpsite · PWRM0001</div>
+        <div style="font-size: 12px; color: #8b949e;">Regulated by ZEMA / Bank of Zambia</div>
+    </div>
+</div>
+
+<div class="kpi-ribbon">
+    <div class="kpi-card">
+        <div class="kpi-label">Verified Waste</div>
+        <div class="kpi-value" id="total-weight">0.00 kg</div>
+    </div>
+    <div class="kpi-card">
+        <div class="kpi-label">CO2e Offset (Est)</div>
+        <div class="kpi-value">0.05 t</div>
+    </div>
+    <div class="kpi-card">
+        <div class="kpi-label">MRV Status</div>
+        <div class="status-tag">PRE-VALIDATION ✅</div>
+    </div>
+    <div class="kpi-card">
+        <div class="kpi-label">Additionality</div>
+        <div class="kpi-value" style="color: var(--accent)">LOCKED</div>
+    </div>
+</div>
+
+<div class="main-grid">
+    <div class="table-container">
+        <table>
+            <thead>
+                <tr>
+                    <th>INSTRUCTION ID</th>
+                    <th>COLLECTOR</th>
+                    <th>MATERIAL</th>
+                    <th>NET WEIGHT</th>
+                    <th>GPS AUTH</th>
+                </tr>
+            </thead>
+            <tbody id="timelineRows">
+                </tbody>
+        </table>
+    </div>
+
+    <div class="side-panel">
+        <div class="panel-card">
+            <div class="kpi-label">Benefit Sharing (ZEMA SI 116)</div>
+            <div class="benefit-row"><span>Project Developer</span> <span class="benefit-pct">50%</span></div>
+            <div class="benefit-row"><span>Local Community</span> <span class="benefit-pct">30%</span></div>
+            <div class="benefit-row"><span>National Carbon Fund</span> <span class="benefit-pct">20%</span></div>
+        </div>
+        
+        <div class="panel-card">
+            <div class="kpi-label">Compliance Checks</div>
+            <div style="font-size: 13px; line-height: 2;">
+                ✅ Additionality Enforced (Baseline: 0)<br>
+                ✅ GPS Boundary: Chunga (250m)<br>
+                ✅ Non-Custodial: Evidence only<br>
+                ✅ Anti-Double Counting: Active
+            </div>
+        </div>
+
+        <button onclick="generateReport()" style="width: 100%; padding: 15px; background: var(--accent); color: white; border: none; border-radius: 8px; font-weight: 700; cursor: pointer;">
+            GENERATE ZEMA MONITORING REPORT
+        </button>
+    </div>
+</div>
+
+<script>
+    async function updateDashboard() {
+        const res = await fetch('/pilot-demo/api/monitoring-report/PGM-ZAMBIA-GRN-001');
+        const data = await res.json();
+        
+        document.getElementById('total-weight').textContent = `${data.plastic_totals_kg.TOTAL.toFixed(2)} kg`;
+        
+        const tbody = document.getElementById('timelineRows');
+        tbody.innerHTML = data.instructions.map(ins => `
+            <tr>
+                <td style="font-family: monospace;">${ins.instruction_id.substring(0,12)}...</td>
+                <td>${ins.worker_id}</td>
+                <td><span style="color: var(--gold)">${ins.plastic_type}</span></td>
+                <td><strong>${ins.net_weight_kg} kg</strong></td>
+                <td style="color: var(--accent)">✅ PASS</td>
+            </tr>
+        `).join('');
+    }
+
+    function generateReport() {
+        window.open('/pilot-demo/api/monitoring-report/PGM-ZAMBIA-GRN-001');
+    }
+
+    setInterval(updateDashboard, 5000);
+    updateDashboard();
+</script>
+</body>
+</html>

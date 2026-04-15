@@ -1,0 +1,68 @@
+schema_version: 1
+phase: '1'
+task_id: TSK-P1-PLT-007
+title: "Create E2E smoke test script for Pilot Integration verification"
+owner_role: ARCHITECT
+status: completed
+priority: HIGH
+risk_class: GOVERNANCE
+blast_radius: PROJECT
+intent: >-
+  To provide a final mechanical gate for the Pilot integration.
+  This task creates an automated E2E script that verifies all 6 previous
+  remediations (Auth, Reveal, Success, Monitoring, Onboarding, Issuance).
+anti_patterns:
+  - "Relying on manual browser testing only for PR approval."
+  - "Hardcoding 'PASS' in evidence without actually running the API checks."
+out_of_scope:
+  - "Unit testing the individual handlers (covered in PLT-001-006)."
+stop_conditions:
+  - "If the smoke test script reports a failure in the Issuance sequence check."
+proof_guarantees:
+  - "Verification confirms that the full pilot flow is reachable and mechanically correct."
+proof_limitations:
+  - "Does not verify the visual rendering of the HTML/CSS."
+depends_on:
+  - TSK-P1-PLT-001
+  - TSK-P1-PLT-002
+  - TSK-P1-PLT-003
+  - TSK-P1-PLT-004
+  - TSK-P1-PLT-005
+  - TSK-P1-PLT-006
+touches:
+  - scripts/audit/verify_pilot_integration.sh
+  - tasks/TSK-P1-PLT-007/meta.yml
+invariants:
+  - INV-GOV-PILOT-007
+work:
+  - "[ID TSK-P1-PLT-007_work_item_01] Create the verify_pilot_integration.sh script in scripts/audit/."
+  - "[ID TSK-P1-PLT-007_work_item_02] Implement the sequential health check flow: Auth -> Onboard -> Issue -> Monitor."
+  - "[ID TSK-P1-PLT-007_work_item_03] Wire the script to produce a JSON evidence artifact with current Git SHA."
+acceptance_criteria:
+  - "[ID TSK-P1-PLT-007_work_item_01] verify_pilot_integration.sh exists and is executable."
+  - "[ID TSK-P1-PLT-007_work_item_03] Running the script produces 100% PASS result against a running LedgerApi."
+negative_tests:
+  - id: TSK-P1-PLT-007-N1
+    description: "The script must exit 1 and fail the build if any pilot endpoint returns 401 or 500."
+    required: true
+verification:
+  - "# [ID TSK-P1-PLT-007_work_item_01] scripts/audit/verify_pilot_integration.sh --smoke-test || exit 1"
+evidence:
+  - path: evidence/phase1/pilot_integration_e2e.json
+    must_include:
+      - task_id
+      - git_sha
+      - status
+      - checks
+failure_modes:
+  - "Script hangs due to unreachable LedgerApi => FAIL"
+  - "Artifact missing the required 'checks' array => FAIL"
+must_read:
+  - docs/operations/AI_AGENT_OPERATION_MANUAL.md
+  - scripts/audit/verify_gf_w1_ui_024.sh (as template)
+implementation_plan: docs/plans/phase1/TSK-P1-PLT-007/PLAN.md
+implementation_log: docs/plans/phase1/TSK-P1-PLT-007/EXEC_LOG.md
+notes: This task provides a mechanical E2E gate for the entire pilot integration. The script verifies all previous tasks in sequence and produces a single evidence artifact.
+client: cursor
+assigned_agent: architect
+model: <UNASSIGNED>

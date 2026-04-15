@@ -1,10 +1,10 @@
 {
   "check_id": "DB-TABLE-CONVENTIONS",
-  "timestamp_utc": "2026-04-04T23:02:15Z",
-  "git_sha": "bb5b69e48fdc970ab4d746fac4f5fa5f58eedd61",
-  "schema_fingerprint": "1f92363c69ba235e552a6aac05045062fc0097fc93cde3b89e76455b80628019",
+  "timestamp_utc": "1970-01-01T00:00:00Z",
+  "git_sha": "0000000000000000000000000000000000000000",
+  "schema_fingerprint": "aaf9f9460480d6fb69b86a860aa77aaa7e4ac21fbf2fcb14f43fea99702f17c3",
   "status": "PASS",
-  "spec_file": "/home/mwiza/workspace/Symphony/schema/table_conventions.yml",
+  "spec_file": "/home/mwiza/workspaces/Symphony-Demo/Symphony/schema/table_conventions.yml",
   "tables_checked": [
     "public.billing_usage_events",
     "public.evidence_pack_items",

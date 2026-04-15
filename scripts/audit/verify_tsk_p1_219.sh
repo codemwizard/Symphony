@@ -1,9 +1,26 @@
 #!/usr/bin/env bash
 set -eo pipefail
 
+# --- PRE_CI_CONTEXT_GUARD ---
+# This script writes evidence and must run via pre_ci.sh or run_task.sh.
+# Direct execution bypasses the enforcement harness and is blocked.
+# Debugging override: PRE_CI_CONTEXT=1 bash <script>
+if [[ "${PRE_CI_CONTEXT:-}" != "1" ]]; then
+  echo "ERROR: $(basename "${BASH_SOURCE[0]}") must run via pre_ci.sh or run_task.sh" >&2
+  echo "  Direct execution blocked to protect evidence integrity." >&2
+  echo "  Debug override: PRE_CI_CONTEXT=1 bash $(basename "${BASH_SOURCE[0]}")" >&2
+  mkdir -p .toolchain/audit
+  printf '%s rogue_execution attempted: %s\n' \
+    "$([ "${SYMPHONY_EVIDENCE_DETERMINISTIC:-0}" = "1" ] && echo "1970-01-01T00:00:00Z" || date -u +%Y-%m-%dT%H:%M:%SZ)" "${BASH_SOURCE[0]}" \
+    >> .toolchain/audit/rogue_execution.log
+  return 1 2>/dev/null || exit 1
+fi
+# --- end PRE_CI_CONTEXT_GUARD ---
+
+
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 EVIDENCE="$ROOT/evidence/phase1/tsk_p1_219_operator_onboarding_console.json"
-RUN_ID="${SYMPHONY_RUN_ID:-standalone-$(date -u +%Y%m%dT%H%M%SZ)}"
+RUN_ID="${SYMPHONY_RUN_ID:-standalone-$([[ "${SYMPHONY_EVIDENCE_DETERMINISTIC:-0}" == "1" ]] && echo "19700101T000000Z" || date -u +%Y%m%dT%H%M%SZ)}"
 
 mkdir -p "$(dirname "$EVIDENCE")"
 errors=()
@@ -53,13 +70,23 @@ if [ "$TAB_COUNT" -lt 5 ]; then
   errors+=("insufficient_tabs:found_${TAB_COUNT}_need_5")
 fi
 
+# ─── 9. Worker tokens tab exists ───
+if ! grep -q "switchTab('worker-tokens'" "$DASHBOARD" 2>/dev/null; then
+  errors+=("worker_tokens_tab_missing")
+fi
+
+# ─── 10. Worker tokens screen exists ───
+if ! grep -q 'id="screen-worker-tokens"' "$DASHBOARD" 2>/dev/null; then
+  errors+=("worker_tokens_screen_missing")
+fi
+
 # ─── Emit evidence ───
 if [[ ${#errors[@]} -eq 0 ]]; then status="PASS"; else status="FAIL"; fi
 
 source "$ROOT/scripts/lib/evidence.sh" 2>/dev/null || {
   git_sha() { git rev-parse HEAD 2>/dev/null || echo "unknown"; }
   schema_fingerprint() { echo "unknown"; }
-  evidence_now_utc() { date -u +%Y-%m-%dT%H:%M:%SZ; }
+  evidence_now_utc() { [ "${SYMPHONY_EVIDENCE_DETERMINISTIC:-0}" = "1" ] && echo "1970-01-01T00:00:00Z" || date -u +%Y-%m-%dT%H:%M:%SZ; }
 }
 
 python3 - <<PY "$EVIDENCE" "$RUN_ID" "$status" "$(evidence_now_utc)" "$(git_sha)" "$(schema_fingerprint)" "$(IFS=,; echo "${errors[*]:-}")"
@@ -82,6 +109,8 @@ payload = {
         "no_admin_key_in_browser": "admin_key_in_browser" not in errors and "admin_api_key_in_browser" not in errors,
         "session_credentials": "no_session_credentials" not in errors,
         "five_tabs": "insufficient_tabs" not in " ".join(errors),
+        "worker_tokens_tab": "worker_tokens_tab_missing" not in errors,
+        "worker_tokens_screen": "worker_tokens_screen_missing" not in errors,
     },
     "errors": errors
 }

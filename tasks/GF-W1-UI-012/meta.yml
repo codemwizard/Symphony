@@ -1,0 +1,94 @@
+schema_version: 1
+phase: '1'
+task_id: GF-W1-UI-012
+title: Add Pilot Success Criteria tab structure with single-column layout and category placeholders
+owner_role: ARCHITECT
+status: planned
+priority: HIGH
+risk_class: GOVERNANCE
+blast_radius: APP_LAYER
+intent: >-
+  Add the 5th and final tab "Pilot Success Criteria" to the supervisory dashboard to enable
+  stakeholders to view real-time validation of Symphony's compliance posture as required by
+  Act 4.1-4.3 of the pilot demo video script. This task creates only the tab structure and
+  single-column layout placeholder, not the functional logic.
+anti_patterns:
+  - "Adding all criteria logic in one massive task instead of breaking into focused tasks"
+  - "Hardcoding criteria data instead of fetching from API"
+  - "Creating new HTML files instead of adding to src/supervisory-dashboard/index.html"
+depends_on:
+  - GF-W1-UI-011
+blocks:
+  - GF-W1-UI-013
+touches:
+  - src/supervisory-dashboard/index.html
+  - evidence/phase1/gf_w1_ui_012.json
+  - tasks/GF-W1-UI-012/meta.yml
+invariants: []
+work:
+  - '[ID gf_w1_ui_012_work_item_01] Add Pilot Success Criteria tab button to tab bar after Worker Token Issuance tab'
+  - '[ID gf_w1_ui_012_work_item_02] Create screen-s6 div with .screen class after screen-worker-tokens'
+  - '[ID gf_w1_ui_012_work_item_03] Implement single-column layout with three category section placeholders'
+  - '[ID gf_w1_ui_012_work_item_04] Add overall pilot gate status card placeholder at top'
+  - '[ID gf_w1_ui_012_work_item_05] Wire switchTab function to handle screen-s6'
+acceptance_criteria:
+  - '[ID gf_w1_ui_012_work_item_01] Tab bar shows 5 tabs with Pilot Success Criteria as 5th tab'
+  - '[ID gf_w1_ui_012_work_item_02] screen-s6 exists with .screen class'
+  - '[ID gf_w1_ui_012_work_item_03] Layout renders as single column filling 100vh without scrollbar'
+  - '[ID gf_w1_ui_012_work_item_04] Three category placeholders exist (technical, operational, regulatory)'
+  - '[ID gf_w1_ui_012_work_item_05] Gate status placeholder exists at top'
+negative_tests:
+  - id: GF-W1-UI-012-N1
+    description: >-
+      Verify tab count is exactly 5, not 4 or 6.
+    required: true
+positive_tests:
+  - id: GF-W1-UI-012-P1
+    description: >-
+      Verify clicking Pilot Success Criteria tab switches to screen-s6 and hides other screens.
+    required: true
+verification:
+  - grep -q 'screen-s6' src/supervisory-dashboard/index.html || exit 1
+  - grep -c 'onclick="switchTab' src/supervisory-dashboard/index.html | grep -q '^5$' || exit 1
+  - test -f evidence/phase1/gf_w1_ui_012.json || exit 1
+evidence:
+  - path: evidence/phase1/gf_w1_ui_012.json
+    must_include:
+      - task_id
+      - timestamp
+      - status
+      - tab_count_is_5
+      - screen_s6_exists
+      - single_column_layout_present
+      - three_category_placeholders_present
+      - gate_status_placeholder_present
+      - checks
+      - observed_paths
+      - command_outputs
+      - execution_trace
+failure_modes:
+  - "Tab count remains 4 instead of 5 => FUNCTIONAL.PILOT_DEMO_INCOMPLETE => FAIL"
+  - "screen-s6 div does not exist => FUNCTIONAL.MISSING_SCREEN => FAIL"
+  - "Layout does not fill 100vh => UI.DESIGN_VIOLATION => FAIL"
+  - "Category placeholders missing => FUNCTIONAL.INCOMPLETE_STRUCTURE => FAIL"
+must_read:
+  - docs/operations/AI_AGENT_OPERATION_MANUAL.md
+  - .kiro/steering/ui-canonical-design.md
+  - docs/operations/PILOT_DEMO_VIDEO_SCRIPT.md
+implementation_plan: docs/plans/phase1/GF-W1-UI-012/PLAN.md
+implementation_log: docs/plans/phase1/GF-W1-UI-012/EXEC_LOG.md
+notes: >-
+  This task creates the tab structure only, not the functional logic. Subsequent tasks
+  will add overall gate status, technical criteria, operational criteria, and regulatory criteria.
+  Phase: Green Finance Wave 1. Domain: green_finance.
+client: kiro
+assigned_agent: architect
+model: claude-sonnet-4-20250514
+domain: green_finance
+pilot: true
+second_pilot_test: >-
+  The tab structure pattern works for any programme requiring compliance dashboard. For PWRM0001
+  plastic collection, the tab shows pilot success criteria. For a hypothetical VM0044 solar energy
+  programme, the tab would show programme compliance criteria. The tab structure, single-column
+  layout, and category placeholders are identical; only the criteria content differs per programme.
+pilot_scope_ref: docs/pilots/PILOT_PWRM0001/SCOPE.md

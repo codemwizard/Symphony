@@ -1,13 +1,13 @@
 {
   "check_id": "EVIDENCE-GENERATE",
-  "timestamp_utc": "2026-04-04T22:58:09Z",
-  "git_sha": "bb5b69e48fdc970ab4d746fac4f5fa5f58eedd61",
-  "schema_fingerprint": "1f92363c69ba235e552a6aac05045062fc0097fc93cde3b89e76455b80628019",
-  "migrations_fingerprint": "2662ebeb9330a6d8b1fb6ef4f7022ab3afb658670aecde97c43d29413590eded",
+  "timestamp_utc": "1970-01-01T00:00:00Z",
+  "git_sha": "0000000000000000000000000000000000000000",
+  "schema_fingerprint": "aaf9f9460480d6fb69b86a860aa77aaa7e4ac21fbf2fcb14f43fea99702f17c3",
+  "migrations_fingerprint": "8ce00bd298e321c18303ababf57df4bc861ece09b8653db5ce1ca372e0422bd3",
   "status": "PASS",
   "producer": "generate_evidence.sh",
   "inputs": {
-    "migrations_hash_file": "/home/mwiza/workspace/Symphony/evidence/phase0/schema_hash.txt",
+    "migrations_hash_file": "/home/mwiza/workspaces/Symphony-Demo/Symphony/evidence/phase0/schema_hash.txt",
     "migrations_dir": "schema/migrations"
   }
 }

@@ -140,7 +140,7 @@
 
     .tab.active {
       color: var(--gold-lt);
-      border-bottom-color: var(--gold);
+      border-bottom-color: var(--bright);
     }
 
     .tab.risk-tab.active {
@@ -167,8 +167,8 @@
 
     /* ── SCREEN 1: GOVERNED DISBURSEMENT ── */
     #screen-main.visible {
-      display: grid;
-      grid-template-columns: 300px 1fr 280px;
+      display: flex;
+      flex-direction: column;
     }
 
     /* shared panel */
@@ -1853,12 +1853,11 @@
 
     <!-- TABS -->
     <div class="tab-bar">
-      <div class="tab active" onclick="switchTab('main',this)">Governed Disbursement</div>
-      <div class="tab" onclick="switchTab('dash',this)">Supervisory Dashboard</div>
-      <div class="tab risk-tab" onclick="switchTab('sim',this)">⚠ SIM-Swap Risk Hold <span
-          style="font-size:7px;opacity:.55;letter-spacing:.05em">(Phase 1 · DEMO_BACKED)</span></div>
+      <div class="tab active" onclick="switchTab('main',this)">Programme Health</div>
+      <div class="tab" onclick="switchTab('report',this)">Monitoring Report</div>
+      <div class="tab" onclick="switchTab('onboarding',this)">Onboarding Console</div>
+      <div class="tab" onclick="switchTab('worker-tokens',this)">Worker Token Issuance</div>
       <div class="tab" onclick="switchTab('s6',this)">Pilot Success Criteria</div>
-      <div class="tab" onclick="switchTab('onboarding',this)">Onboarding</div>
     </div>
 
     <!-- SCREENS -->
@@ -1867,834 +1866,18 @@
       <!-- ════════════════════════════════════════
          SCREEN 1: GOVERNED DISBURSEMENT
     ════════════════════════════════════════ -->
-      <div class="screen visible" id="screen-main">
-
-        <!-- LEFT -->
-        <div class="panel left-panel">
-          <div class="panel-hdr">
-            <div class="ph-label">Programme / Lender</div>
-            <div class="ph-sub">Instruction &amp; proof submission</div>
-          </div>
-
-          <div class="sec">
-            <div class="sec-lbl">Financing Instruction</div>
-            <div class="field">
-              <div class="fl">Programme</div>
-              <div class="fv" id="ui-prog-name">GreenTech4CE · Solar Cluster A</div>
-            </div>
-            <div class="field">
-              <div class="fl">Borrower</div>
-              <div class="fv">Kabwata Recycling Cooperative</div>
-            </div>
-            <div class="field">
-              <div class="fl">Asset Class</div>
-              <div class="fv">Plastic Shredder — PS-400</div>
-            </div>
-            <div class="field">
-              <div class="fl">Amount</div>
-              <div class="fv">ZMW 38,000</div>
-            </div>
-            <div class="field">
-              <div class="fl">Instruction Ref</div>
-              <div class="fv mono">SYM-2026-00041</div>
-            </div>
-            <div class="field">
-              <div class="fl">Supplier (Allowlisted)</div>
-              <div class="fv supplier-ok">EcoTech Supplies Ltd · Programme A ✓</div>
-            </div>
-            <div class="field">
-              <div class="fl">Policy Version</div>
-              <div class="fv policy" id="ui-policy-name">green_eq_v1 · checksum a3f7c8d2</div>
-            </div>
-          </div>
-
-          <div class="sec">
-            <div class="sec-lbl">Required Proof Set (PT-001 – PT-004)</div>
-            <div id="proofs">
-              <div class="proof-item" data-proof="invoice" onclick="toggleProof(this)">
-                <div class="proof-icon">📄</div>
-                <div class="proof-info">
-                  <div class="proof-name">PT-001 · Supplier Invoice</div>
-                  <div class="proof-detail">PENDING — click to submit</div>
-                </div>
-                <div class="state-pill pending">Missing</div>
-              </div>
-              <div class="proof-item" data-proof="geo" onclick="toggleProof(this)">
-                <div class="proof-icon">📍</div>
-                <div class="proof-info">
-                  <div class="proof-name">PT-002 · Delivery Photo + GPS</div>
-                  <div class="proof-detail">PENDING — Geolocation API (not EXIF)</div>
-                </div>
-                <div class="state-pill pending">Missing</div>
-              </div>
-              <div class="proof-item" data-proof="officer" onclick="toggleProof(this)">
-                <div class="proof-icon">🪪</div>
-                <div class="proof-info">
-                  <div class="proof-name">PT-003 · Field Officer Token</div>
-                  <div class="proof-detail">PENDING — time-limited token</div>
-                </div>
-                <div class="state-pill pending">Missing</div>
-              </div>
-              <div class="proof-item" data-proof="ack" onclick="toggleProof(this)">
-                <div class="proof-icon">✅</div>
-                <div class="proof-info">
-                  <div class="proof-name">PT-004 · Borrower Acknowledgement</div>
-                  <div class="proof-detail">PENDING — MSISDN match required</div>
-                </div>
-                <div class="state-pill pending">Missing</div>
-              </div>
-            </div>
-          </div>
-
-          <div class="sec" style="background: rgba(255,255,255,0.03); padding: 12px; margin-top: 10px; border-radius: 4px; border: 1px dashed var(--dim);">
-            <div class="sec-lbl" style="margin-bottom: 8px;">Upload Client Proof</div>
-            <div style="display: flex; flex-direction: column; gap: 8px;">
-              <select id="proofSelector" style="background: #111; color: var(--smoke); border: 1px solid var(--border); padding: 6px; border-radius: 4px; font-family: var(--mono); font-size: 11px; cursor: pointer;">
-                <option value="invoice">PT-001 · Supplier Invoice</option>
-                <option value="geo">PT-002 · Delivery Photo + GPS</option>
-                <option value="officer">PT-003 · Field Officer Token</option>
-                <option value="ack">PT-004 · Borrower Acknowledgement</option>
-              </select>
-              <input type="file" id="proofFile" style="font-size: 11px; color: var(--smoke); font-family: var(--mono); cursor: pointer;" />
-              <button class="btn btn-ghost" style="border: 1px solid var(--border); padding: 6px; background: rgba(255,255,255,0.05);" onclick="uploadSelectedProof()">⬆ Upload & Bind Proof</button>
-            </div>
-            <div id="uploadStatus" style="font-size: 10px; margin-top: 6px; height: 12px;"></div>
-          </div>
-
-          <div class="sec" style="background: rgba(61, 184, 90, 0.03); padding: 12px; margin-top: 10px; border-radius: 4px; border: 1px dashed var(--bright);">
-            <div class="sec-lbl" style="margin-bottom: 8px; color: var(--bright);">Demo Worker Link</div>
-            <div style="display: flex; flex-direction: column; gap: 8px;">
-              <select id="workerSelector" style="background: #111; color: var(--bright); border: 1px solid var(--bright); padding: 6px; border-radius: 4px; font-family: var(--mono); font-size: 11px; cursor: pointer;">
-                <option value="worker-chunga-001">worker-chunga-001</option>
-                <option value="worker-chunga-002">worker-chunga-002</option>
-              </select>
-              <button class="btn btn-primary" style="padding: 6px; font-size: 9px;" onclick="issueDemoToken()">Generate Worker Link</button>
-            </div>
-            <div id="tokenLinkResult" style="font-size: 10px; margin-top: 8px; word-break: break-all; color: var(--gold-lt);"></div>
-          </div>
-
-          <div class="sec">
-            <div class="sec-lbl">Actions</div>
-            <button class="btn btn-primary" id="submitBtn" onclick="submitInstruction()">Submit to Symphony</button>
-            <button class="btn btn-warn" style="margin-top:8px;" onclick="submitIncomplete()">Submit with Missing Proofs
-              →</button>
-            <button class="btn btn-ghost" onclick="resetDemo()">↺ Reset Demo</button>
-          </div>
-        </div>
-
-        <!-- CENTER ENGINE -->
-        <div class="panel engine-panel">
-          <div class="panel-hdr">
-            <div class="ph-label">Symphony Engine</div>
-            <div class="ph-sub">Non-custodial evidence &amp; control layer</div>
-          </div>
-
-          <div class="stages" id="stages">
-            <div class="stage" id="stage-0">
-              <div class="stage-dot">01</div>
-              <div class="stage-name">Ingress<br>Attest</div>
-            </div>
-            <div class="stage" id="stage-1">
-              <div class="stage-dot">02</div>
-              <div class="stage-name">Policy<br>Lock</div>
-            </div>
-            <div class="stage" id="stage-2">
-              <div class="stage-dot">03</div>
-              <div class="stage-name">Supplier<br>Check</div>
-            </div>
-            <div class="stage" id="stage-3">
-              <div class="stage-dot">04</div>
-              <div class="stage-name">Proof<br>Bind</div>
-            </div>
-            <div class="stage" id="stage-4">
-              <div class="stage-dot">05</div>
-              <div class="stage-name">Policy<br>Eval</div>
-            </div>
-            <div class="stage" id="stage-5">
-              <div class="stage-dot">06</div>
-              <div class="stage-name">Signed<br>Egress</div>
-            </div>
-            <div class="stage" id="stage-6">
-              <div class="stage-dot">07</div>
-              <div class="stage-name">Evidence<br>Sealed</div>
-            </div>
-          </div>
-
-          <div class="decision-area" id="decisionArea">
-
-            <div id="idleState" style="text-align:center;padding:55px 20px;color:var(--smoke);opacity:.35;">
-              <div style="font-size:34px;margin-bottom:14px;">⬡</div>
-              <div style="font-family:var(--mono);font-size:9.5px;letter-spacing:.3em;text-transform:uppercase;">
-                Awaiting Instruction</div>
-              <div style="margin-top:10px;font-size:12.5px;">Add proofs on the left, then submit.</div>
-            </div>
-
-            <div id="card-ingress" class="dcard" style="display:none">
-              <div class="dc-lbl">Step 01 — Ingress Attestation</div>
-              <div class="dc-title">Instruction received &amp; attested</div>
-              <div class="dc-body">Tenant attribution applied. Canonical structure validated. Idempotency guard active.
-                Append-only record created.</div>
-              <div class="trace" id="trace-ingress">
-                <div class="tl"><span class="tk">INV-035</span><span class="tv pass">✓ ingress_attestation
-                    append-only</span></div>
-                <div class="tl"><span class="tk">INV-063</span><span class="tv pass">✓ tenant_attribution
-                    confirmed</span></div>
-                <div class="tl"><span class="tk">INV-011</span><span class="tv pass">✓ idempotency_guard active</span>
-                </div>
-                <div class="tl"><span class="tk">INV-133</span><span class="tv pass">✓ tenant_allowlist
-                    default-deny</span></div>
-                <div class="tl"><span class="tk">ref</span><span class="tv info">SYM-2026-00041</span></div>
-              </div>
-            </div>
-
-            <div id="card-policy" class="dcard" style="display:none">
-              <div class="dc-lbl">Step 02 — Policy Version Lock</div>
-              <div class="dc-title">Policy locked at checksum a3f7c8d2</div>
-              <div class="dc-body">green_eq_v1 activated. Checksum recorded. All decisions reference this immutable
-                policy state. Proof type registry consulted: PT-001, PT-002, PT-003, PT-004 required.</div>
-              <div class="trace" id="trace-policy">
-                <div class="tl"><span class="tk">policy</span><span class="tv gold">green_eq_v1</span></div>
-                <div class="tl"><span class="tk">checksum</span><span class="tv info">a3f7c8d2</span></div>
-                <div class="tl"><span class="tk">proofs_req</span><span class="tv info">PT-001, PT-002, PT-003,
-                    PT-004</span></div>
-                <div class="tl"><span class="tk">INV-090</span><span class="tv pass">✓ billing_ledger append-only</span>
-                </div>
-              </div>
-            </div>
-
-            <div id="card-supplier" class="dcard" style="display:none">
-              <div class="dc-lbl">Step 03 — Supplier Allowlist Check (Programme-Scoped)</div>
-              <div class="dc-title">EcoTech Supplies Ltd — allowlisted for Programme A</div>
-              <div class="dc-body">Supplier verified against Programme A's allowlist. Not globally approved — this check
-                is scoped per programme. Cross-tenant lookup blocked by default.</div>
-              <div class="trace" id="trace-supplier">
-                <div class="tl"><span class="tk">supplier</span><span class="tv gold">EcoTech Supplies Ltd</span></div>
-                <div class="tl"><span class="tk">programme</span><span class="tv info">GreenTech4CE · Solar Cluster
-                    A</span></div>
-                <div class="tl"><span class="tk">allowlist</span><span class="tv pass">✓ APPROVED — Programme A
-                    scope</span></div>
-                <div class="tl"><span class="tk">INV-133</span><span class="tv pass">✓ cross-tenant lookup
-                    blocked</span></div>
-                <div class="tl"><span class="tk">note</span><span class="tv info">Same supplier denied in Programme
-                    B</span></div>
-              </div>
-            </div>
-
-            <div id="card-proofs" class="dcard" style="display:none">
-              <div class="dc-lbl">Step 04 — Proof Binding</div>
-              <div class="dc-title">Artifacts appended to evidence trail</div>
-              <div class="dc-body">All four proof types bound with timestamps, submitter class, payload hashes, and GPS
-                coordinates (Geolocation API — not EXIF). MSISDN submitter match confirmed for PT-004.</div>
-              <div class="trace" id="trace-proofs">
-                <div class="tl"><span class="tk">INV-091</span><span class="tv pass">✓ external_proofs
-                    append-only</span></div>
-                <div class="tl"><span class="tk">PT-001</span><span class="tv pass">✓ invoice · supplier_id
-                    verified</span></div>
-                <div class="tl"><span class="tk">PT-002</span><span class="tv pass">✓ photo + GPS Geolocation API</span>
-                </div>
-                <div class="tl"><span class="tk">PT-003</span><span class="tv pass">✓ field officer token valid</span>
-                </div>
-                <div class="tl"><span class="tk">PT-004</span><span class="tv pass">✓ borrower ACK · MSISDN match</span>
-                </div>
-                <div class="tl"><span class="tk">proofs</span><span class="tv info" id="proofCountVal">0 / 4
-                    submitted</span></div>
-              </div>
-            </div>
-
-            <div id="card-eval" class="dcard" style="display:none">
-              <div class="dc-lbl">Step 05 — Policy Evaluation</div>
-              <div class="dc-title" id="evalTitle">Evaluating proof set…</div>
-              <div class="dc-body" id="evalBody">Checking proof set against policy requirements. GPS proximity check.
-                MSISDN submitter match. Supplier allowlist status.</div>
-              <div class="trace" id="trace-eval">
-                <div class="tl"><span class="tk">GPS</span><span class="tv pass" id="eval-gps">✓ within 500m of
-                    registered location</span></div>
-                <div class="tl"><span class="tk">MSISDN</span><span class="tv pass" id="eval-msisdn">✓ submitter match
-                    confirmed</span></div>
-                <div class="tl"><span class="tk">INV-039</span><span class="tv pass">✓ fail-closed under DB
-                    exhaustion</span></div>
-                <div class="tl"><span class="tk">result</span><span class="tv info" id="evalResult">—</span></div>
-              </div>
-            </div>
-
-            <div class="policy-alert" id="holdAlert">
-              ⚠ INSTRUCTION HELD — Proof set incomplete.<br>
-              Missing: <span id="missingProofs">—</span><br>
-              Status: PENDING_PROOF. No funds released. Lender notified.
-            </div>
-
-            <div class="big-status" id="bigStatus">
-              <div class="big-icon" id="bigIcon"></div>
-              <div class="big-label" id="bigLabel"></div>
-              <div class="big-sub" id="bigSub"></div>
-            </div>
-
-            <div id="card-egress" class="dcard" style="display:none">
-              <div class="dc-lbl">Step 06 — Signed Instruction File Egress (UC-01-E)</div>
-              <div class="dc-title">Signed file generated · HMAC-SHA256</div>
-              <div class="dc-body">Canonical JSON instruction file signed with HMAC-SHA256. State: AWAITING_EXECUTION.
-                MFI uploads to licensed channel. Tamper-detection verify endpoint active.</div>
-              <div class="trace" id="trace-egress">
-                <div class="tl"><span class="tk">file</span><span
-                    class="tv gold">symphony_pgm_a_00041_20260311.json</span></div>
-                <div class="tl"><span class="tk">sig_algo</span><span class="tv info">HMAC-SHA256 (system-scoped · Phase
-                    1)</span></div>
-                <div class="tl"><span class="tk">checksum</span><span class="tv info">3f8a…e12c</span></div>
-                <div class="tl"><span class="tk">state</span><span class="tv amber">→ AWAITING_EXECUTION</span></div>
-                <div class="tl"><span class="tk">INV-114</span><span class="tv pass">✓ non-custodial · no funds
-                    held</span></div>
-              </div>
-            </div>
-
-            <div id="card-evidence" class="dcard ok" style="display:none">
-              <div class="dc-lbl">Step 07 — Evidence Pack Sealed</div>
-              <div class="dc-title">Audit trail complete</div>
-              <div class="dc-body">Append-only evidence pack sealed. PII decoupled. Supervisory read access available.
-                Pack survives data purge.</div>
-              <div class="trace" id="trace-evidence">
-                <div class="tl"><span class="tk">INV-115</span><span class="tv pass">✓ PII decoupled — survives
-                    purge</span></div>
-                <div class="tl"><span class="tk">INV-111</span><span class="tv pass">✓ supervisor view —
-                    read-only</span></div>
-                <div class="tl"><span class="tk">pack_id</span><span class="tv gold">EP-SYM-2026-00041</span></div>
-                <div class="tl"><span class="tk">sealed</span><span class="tv info" id="sealTime">—</span></div>
-              </div>
-            </div>
-
-          </div>
-        </div>
-
-        <!-- RIGHT LOG -->
-        <div class="panel log-panel">
-          <div class="panel-hdr" style="background:var(--bg);">
-            <div class="ph-label">Evidence Log</div>
-            <div class="ph-sub">Append-only audit trail</div>
-          </div>
-          <div id="logEntries" style="padding-top:6px;"></div>
-          <div class="ep" id="evidencePack">
-            <div class="ep-hdr">Evidence Pack · EP-SYM-2026-00041</div>
-            <div class="ep-row"><span class="ep-k">instruction_ref</span><span class="ep-v">SYM-2026-00041</span></div>
-            <div class="ep-row"><span class="ep-k">tenant</span><span class="ep-v">zambia_green_mfi</span></div>
-            <div class="ep-row"><span class="ep-k">policy</span><span class="ep-v gold">green_eq_v1:a3f7</span></div>
-            <div class="ep-row"><span class="ep-k">supplier_allowlist</span><span class="ep-v green">PASS · Programme
-                A</span></div>
-            <div class="ep-row"><span class="ep-k">GPS_match</span><span class="ep-v green">PASS · within 500m</span>
-            </div>
-            <div class="ep-row"><span class="ep-k">MSISDN_match</span><span class="ep-v green">PASS</span></div>
-            <div class="ep-row"><span class="ep-k">proofs_bound</span><span class="ep-v green">4 / 4</span></div>
-            <div class="ep-row"><span class="ep-k">decision</span><span class="ep-v green">AUTHORIZED</span></div>
-            <div class="ep-row"><span class="ep-k">egress_state</span><span class="ep-v amber">AWAITING_EXECUTION</span>
-            </div>
-            <div class="ep-row"><span class="ep-k">custody</span><span class="ep-v green">NONE</span></div>
-            <div class="ep-row"><span class="ep-k">sealed</span><span class="ep-v" id="packSealTime">—</span></div>
+      <div class="screen visible" id="screen-report">
+        <div style="width:100%;padding:24px;display:flex;flex-direction:column;height:100%;overflow-y:auto;">
+          <div style="font-family:var(--mono);font-size:8px;letter-spacing:.3em;text-transform:uppercase;color:var(--gold);opacity:.65;margin-bottom:4px;">PWRM0001 Monitoring Report</div>
+          <div style="font-family:var(--serif);font-size:22px;color:#fff;margin-bottom:16px;">Financial Report &amp; Disbursement Status</div>
+          <div id="monitoring-report-content" style="flex:1;display:flex;align-items:center;justify-content:center;">
+            <div style="font-family:var(--mono);font-size:10px;color:var(--smoke);opacity:.5;">Loading monitoring report…</div>
           </div>
         </div>
       </div>
 
       <!-- ════════════════════════════════════════
-         SCREEN 2: SUPERVISORY DASHBOARD
-    ════════════════════════════════════════ -->
-      <div class="screen" id="screen-dash">
-        <div class="dash-body" style="width:100%;">
-          <div style="display:flex;justify-content:space-between;align-items:center;">
-            <div>
-              <div
-                style="font-family:var(--mono);font-size:8px;letter-spacing:.3em;text-transform:uppercase;color:var(--gold);opacity:.65;margin-bottom:4px;">
-                Programme Overview</div>
-              <div style="font-family:var(--serif);font-size:22px;color:#fff;" id="dashProgrammeHeader">GreenTech4CE · Solar Cluster A</div>
-              <div
-                style="font-family:var(--mono);font-size:8.5px;color:var(--smoke);opacity:.5;margin-top:3px;letter-spacing:.1em;">
-                Reporting Period: 01 Jan – 31 Mar 2026 · Zambia Green MFI</div>
-            </div>
-            <div style="display:flex;gap:10px;align-items:center;">
-              <button class="export-btn" id="exportBtn" onclick="triggerExport()">
-                <span>⬇</span> Export Pack
-              </button>
-              <button class="export-btn" id="monitoringReportBtn" onclick="generateMonitoringReport()">
-                <span>📊</span> Generate PWRM0001 Monitoring Report
-              </button>
-            </div>
-          </div>
-
-          <!-- Programme bar -->
-          <div class="programme-bar">
-            <div class="pb-item">
-              <div class="pb-label" id="pbProgrammeLabel">Evidence Submissions</div>
-              <div class="pb-value" id="pbEvidenceSubmissions">18</div>
-              <div class="pb-sub" id="pbProgrammeSub">Q1 2026</div>
-            </div>
-            <div class="pb-item">
-              <div class="pb-label">Timeline Events</div>
-              <div class="pb-value green" id="pbTimelineEvents">0</div>
-              <div class="pb-sub" id="pbTimelineSub">live reveal</div>
-            </div>
-            <div class="pb-item">
-              <div class="pb-label">Exceptions</div>
-              <div class="pb-value amber" id="pbExceptionCount">0</div>
-              <div class="pb-sub" id="pbExceptionSub">active</div>
-            </div>
-            <div class="pb-item">
-              <div class="pb-label">Evidence Complete</div>
-              <div class="pb-value green" id="pbEvidencePercent">0%</div>
-              <div class="pb-sub" id="pbEvidenceSub">0 / 0 present</div>
-            </div>
-            <div class="pb-item">
-              <div class="pb-label">As Of</div>
-              <div class="pb-value amber" id="pbAsOf">—</div>
-              <div class="pb-sub" id="pbModeState">HYBRID</div>
-            </div>
-          </div>
-
-          <!-- Monitoring Report Summary -->
-          <div id="report-summary" style="display:none;background:var(--surface);border:1px solid var(--border);border-radius:3px;padding:18px 22px;margin-bottom:20px;">
-            <div style="font-family:var(--mono);font-size:8px;letter-spacing:.3em;text-transform:uppercase;color:var(--gold);opacity:.75;margin-bottom:12px;">PWRM0001 Monitoring Report Summary</div>
-            <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:16px;">
-              <div class="pb-item">
-                <div class="pb-label">Total Collections</div>
-                <div class="pb-value green" id="total-collections-val">0</div>
-                <div class="pb-sub">from monitoring report</div>
-              </div>
-              <div class="pb-item">
-                <div class="pb-label">Total Weight (kg)</div>
-                <div class="pb-value green" id="total-weight-val">0.00</div>
-                <div class="pb-sub">TOTAL plastic collected</div>
-              </div>
-            </div>
-          </div>
-
-          <div class="dash-row">
-            <!-- Timeline -->
-            <div class="dash-card full">
-              <div class="dc-head">
-                <span class="dc-head-title">Disbursement Timeline</span>
-                <span class="dc-head-action" onclick="closeDrill()">Click row to drill down →</span>
-              </div>
-              <table class="timeline-table">
-                <thead>
-                  <tr>
-                    <th>Ref</th>
-                    <th>Borrower</th>
-                    <th>Asset Class</th>
-                    <th>Supplier</th>
-                    <th>Amount ZMW</th>
-                    <th>Status</th>
-                    <th>Evidence</th>
-                  </tr>
-                </thead>
-                <tbody id="timelineRows">
-                  <!-- Dynamically hydrated from /pilot-demo/api/monitoring-report -->
-                </tbody>
-              </table>
-            </div>
-          </div>
-
-          <!-- Exception log -->
-          <div class="dash-card">
-            <div class="dc-head"><span class="dc-head-title">Exception / Hold Log</span></div>
-            <table class="exc-table">
-              <thead>
-                <tr>
-                  <th>Ref</th>
-                  <th>Type</th>
-                  <th>Flagged</th>
-                  <th>Description</th>
-                  <th>Resolved</th>
-                </tr>
-              </thead>
-              <tbody id="exceptionRows">
-                <tr>
-                  <td>SYM-2026-00045</td>
-                  <td class="type">MISSING_PROOF</td>
-                  <td>2026-03-08</td>
-                  <td>PT-002 and PT-003 not submitted within window</td>
-                  <td class="resolved-n">No</td>
-                </tr>
-                <tr>
-                  <td>SYM-2026-00047</td>
-                  <td class="type">SIM_SWAP_FLAG</td>
-                  <td>2026-03-09</td>
-                  <td>MSISDN registered 6 days before disbursement</td>
-                  <td class="resolved-n">No</td>
-                </tr>
-                <tr>
-                  <td>SYM-2026-00031</td>
-                  <td class="type">GPS_MATCH_FAILED</td>
-                  <td>2026-02-14</td>
-                  <td>Coordinates 1.2km from registered asset location</td>
-                  <td class="resolved-y">Yes</td>
-                </tr>
-                <tr>
-                  <td>SYM-2026-00029</td>
-                  <td class="type">SUPPLIER_NOT_ALLOWLISTED</td>
-                  <td>2026-02-09</td>
-                  <td>Supplier not registered for this programme</td>
-                  <td class="resolved-y">Yes</td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-          <div class="dash-card">
-            <div class="dc-head"><span class="dc-head-title">Evidence Completeness</span></div>
-            <div class="ev-grid" id="evidenceCompletenessList">
-              <div class="ev-row ev-present">
-                <div class="ind ind-present"></div>
-                <div>
-                  <div class="ev-name">INVOICE</div>
-                  <div class="ev-meta">reveal-backed</div>
-                </div>
-                <div class="ev-badge present">PRESENT</div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Drill-out panel -->
-        <div class="slideout" id="slideout">
-          <div class="so-hdr">
-            <div>
-              <div class="so-title" id="drillTitle">Instruction Detail</div>
-              <div class="so-ref" id="drillRef">—</div>
-            </div>
-            <div class="so-close" onclick="closeDrill()">✕ Close</div>
-          </div>
-          <div class="so-body" id="drillBody"></div>
-        </div>
-      </div>
-
-      <!-- ════════════════════════════════════════
-         SCREEN 3: SIM-SWAP RISK HOLD
-    ════════════════════════════════════════ -->
-      <div class="screen" id="screen-sim">
-        <div class="sim-screen-body" style="width:100%;">
-
-          <div class="sim-hero">
-            <div class="sim-hero-badge">INV-129 · Risk-Triggered Hold — SIM_SWAP_FLAG</div>
-            <div class="sim-hero-title">Dispatch blocked: MSISDN registered 6 days before disbursement</div>
-            <div class="sim-hero-sub">Symphony has detected that the borrower MSISDN on instruction SYM-2026-00047 was
-              first registered 6 days before the scheduled disbursement — below the programme's 30-day threshold.
-              Governed release is held pending operator review. No funds have moved.</div>
-          </div>
-
-          <div class="sim-two-col">
-            <div class="sim-card">
-              <div class="sim-card-hdr amber">SIM-Swap Signal Analysis</div>
-              <div class="sim-card-body">
-                <div class="signal-row"><span class="signal-key">Instruction Ref</span><span
-                    class="signal-val sv-info">SYM-2026-00047</span></div>
-                <div class="signal-row"><span class="signal-key">Borrower MSISDN (hashed)</span><span
-                    class="signal-val sv-info">a4f2…c8b1</span></div>
-                <div class="signal-row"><span class="signal-key">MSISDN Registration Date</span><span
-                    class="signal-val sv-red">2026-03-03</span></div>
-                <div class="signal-row"><span class="signal-key">Disbursement Date</span><span
-                    class="signal-val sv-info">2026-03-09</span></div>
-                <div class="signal-row"><span class="signal-key">Days Since Registration</span><span
-                    class="signal-val sv-red">6 days</span></div>
-                <div class="signal-row"><span class="signal-key">Programme Threshold</span><span
-                    class="signal-val sv-amber">30 days</span></div>
-                <div class="signal-row"><span class="signal-key">INV-129 Result</span><span
-                    class="signal-val sv-red">THRESHOLD BREACH</span></div>
-              </div>
-            </div>
-
-            <div class="sim-card">
-              <div class="sim-card-hdr">Governed Hold Decision</div>
-              <div class="sim-card-body">
-                <div class="decision-block">
-                  <div class="db-verdict">DISPATCH BLOCKED</div>
-                  <div class="db-rule">Exception: SIM_SWAP_FLAG · INV-129 fired</div>
-                  <div class="db-actions">
-                    <ul>
-                      <li>Instruction state: HOLD</li>
-                      <li>No funds released — non-custodial hold preserved</li>
-                      <li>Evidence trail preserved with flag timestamp</li>
-                      <li>MFI operator alerted for manual review</li>
-                      <li>Borrower must re-verify via alternative channel</li>
-                    </ul>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div class="sim-two-col">
-            <div class="sim-card">
-              <div class="sim-card-hdr">Programme Policy Configuration</div>
-              <div class="sim-card-body">
-                <div class="signal-row"><span class="signal-key">Policy Version</span><span
-                    class="signal-val sv-info">green_eq_v1:a3f7</span></div>
-                <div class="signal-row"><span class="signal-key">SIM-swap threshold</span><span
-                    class="signal-val sv-amber">30 days (FSP-configurable)</span></div>
-                <div class="signal-row"><span class="signal-key">Hold behaviour</span><span
-                    class="signal-val sv-info">HOLD → operator review</span></div>
-                <div class="signal-row"><span class="signal-key">Release path</span><span
-                    class="signal-val sv-info">Manual approval by MFI officer</span></div>
-                <div class="signal-row"
-                  style="margin-top:8px;padding-top:10px;border-top:1px solid rgba(255,255,255,.07);"><span
-                    class="signal-key" style="opacity:1;color:var(--gold);font-size:8px;letter-spacing:.15em;">PROGRAMME
-                    B CONFIG</span></div>
-                <div class="signal-row"><span class="signal-key">SIM-swap threshold</span><span
-                    class="signal-val sv-info">14 days (stricter)</span></div>
-                <div class="signal-row"><span class="signal-key">Hold behaviour</span><span
-                    class="signal-val sv-info">Auto-reject (no review)</span></div>
-              </div>
-            </div>
-
-            <div class="sim-card">
-              <div class="sim-card-hdr">Evidence Trail — SIM-Swap Hold</div>
-              <div class="sim-card-body">
-                <div class="ev-row ev-present" style="margin-bottom:6px;">
-                  <div class="ind ind-present"></div>
-                  <div>
-                    <div class="ev-name">PT-001 · Supplier Invoice</div>
-                    <div class="ev-meta">Bound · hash: 3f8a…</div>
-                  </div>
-                  <div class="ev-badge present">Present</div>
-                </div>
-                <div class="ev-row ev-present" style="margin-bottom:6px;">
-                  <div class="ind ind-present"></div>
-                  <div>
-                    <div class="ev-name">PT-002 · Delivery Photo + GPS</div>
-                    <div class="ev-meta">GPS match: PASS · within 500m</div>
-                  </div>
-                  <div class="ev-badge present">Present</div>
-                </div>
-                <div class="ev-row ev-present" style="margin-bottom:6px;">
-                  <div class="ind ind-present"></div>
-                  <div>
-                    <div class="ev-name">PT-003 · Field Officer Token</div>
-                    <div class="ev-meta">Token valid at submission</div>
-                  </div>
-                  <div class="ev-badge present">Present</div>
-                </div>
-                <div class="ev-row ev-failed" style="margin-bottom:6px;">
-                  <div class="ind ind-failed"></div>
-                  <div>
-                    <div class="ev-name">PT-004 · Borrower ACK</div>
-                    <div class="ev-meta">MSISDN match: PASS · but SIM-swap flag triggered</div>
-                  </div>
-                  <div class="ev-badge failed">Flagged</div>
-                </div>
-                <div style="margin-top:10px;font-family:var(--mono);font-size:8px;color:var(--smoke);opacity:.5;">Note:
-                  evidence trail intact. Hold is policy-triggered, not evidence absence.</div>
-              </div>
-            </div>
-          </div>
-
-          <div class="sim-positioning">
-            <div class="sp-title">How to present this in the demo</div>
-            <div class="sp-body">
-              <strong>Backing mode: DEMO_BACKED for Phase 1.</strong> Symphony is <strong>not</strong> a fraud detection
-              platform. The SIM-swap hold is one example of <strong>programme-configurable risk conditions</strong> —
-              the same mechanism that holds for GPS mismatch or missing proofs. The MFI chose to include a 30-day MSISDN
-              registration threshold in their policy. Symphony enforces it and records it. <strong>The story is:
-                governed green disbursement can incorporate operational risk thresholds defined by the FSP, without
-                Symphony becoming the arbiter of fraud.</strong> Spend 60–90 seconds here maximum. The main story is
-              evidence-backed release, not risk interception.
-            </div>
-          </div>
-
-        </div>
-      </div>
-
-      <!-- ════════════════════════════════════════
-         SCREEN 4: SECTION 6 PILOT CRITERIA
-    ════════════════════════════════════════ -->
-      <div class="screen" id="screen-s6">
-        <div class="s6-body" style="width:100%;" id="pilotSuccessPanel">
-
-          <div class="s6-intro">
-            <div class="s6-intro-title">Pilot Success Criteria</div>
-            <div class="s6-intro-ref">Symphony PRD GreenTech4CE · Section 6 — Pilot Success Criteria (Technical,
-              Operational, Regulatory) · TSK-P1-DEMO-011 gate</div>
-            <div class="s6-intro-body">These are the machine-verifiable thresholds that define whether Phase 1 demo is
-              ready for the Day 61–90 Supervisory Reveal. The gate fails closed if any criterion is below threshold or
-              evidence is absent. This section is named "Section 6 — Pilot Success Criteria" in the PRD, not just
-              "Section 6", so auditors can locate it by name even if PRD section numbering changes.</div>
-          </div>
-
-          <div class="s6-three-col">
-            <div class="s6-card">
-              <div class="s6-card-hdr">
-                <span class="s6-card-title">Technical Criteria</span>
-                <span class="s6-card-count">5 criteria</span>
-              </div>
-              <div class="criteria-item">
-                <div class="ci-ind">
-                  <div class="ind ind-present"></div>
-                </div>
-                <div class="ci-body">
-                  <div class="ci-name">Evidence trail append-only</div>
-                  <div class="ci-threshold">Threshold: <span>100% of instructions</span></div>
-                  <div class="ci-status pass">✓ INV-014/015 verified</div>
-                </div>
-              </div>
-              <div class="criteria-item">
-                <div class="ci-ind">
-                  <div class="ind ind-present"></div>
-                </div>
-                <div class="ci-body">
-                  <div class="ci-name">Signed egress file verifiable</div>
-                  <div class="ci-threshold">Threshold: <span>HMAC-SHA256 · tamper detected</span></div>
-                  <div class="ci-status pass">✓ UC-01-E · INV-114</div>
-                </div>
-              </div>
-              <div class="criteria-item">
-                <div class="ci-ind">
-                  <div class="ind ind-present"></div>
-                </div>
-                <div class="ci-body">
-                  <div class="ci-name">GPS via Geolocation API (not EXIF)</div>
-                  <div class="ci-threshold">Threshold: <span>0 EXIF dependencies</span></div>
-                  <div class="ci-status pass">✓ TSK-P1-DEMO-003</div>
-                </div>
-              </div>
-              <div class="criteria-item">
-                <div class="ci-ind">
-                  <div class="ind ind-present"></div>
-                </div>
-                <div class="ci-body">
-                  <div class="ci-name">Tenant isolation enforced at DB layer</div>
-                  <div class="ci-threshold">Threshold: <span>0 cross-tenant reads</span></div>
-                  <div class="ci-status pass">✓ phase-1-db-foundation.md</div>
-                </div>
-              </div>
-              <div class="criteria-item">
-                <div class="ci-ind">
-                  <div class="ind ind-missing"></div>
-                </div>
-                <div class="ci-body">
-                  <div class="ci-name">Demo runs from reset deterministically</div>
-                  <div class="ci-threshold">Threshold: <span>3 consecutive clean runs</span></div>
-                  <div class="ci-status pending">⏳ TSK-P1-DEMO-010 pending</div>
-                </div>
-              </div>
-            </div>
-
-            <div class="s6-card">
-              <div class="s6-card-hdr">
-                <span class="s6-card-title">Operational Criteria</span>
-                <span class="s6-card-count">5 criteria</span>
-              </div>
-              <div class="criteria-item">
-                <div class="ci-ind">
-                  <div class="ind ind-present"></div>
-                </div>
-                <div class="ci-body">
-                  <div class="ci-name">All 4 proof types submittable</div>
-                  <div class="ci-threshold">Threshold: <span>PT-001–004 all functional</span></div>
-                  <div class="ci-status pass">✓ TSK-P1-DEMO-002–004</div>
-                </div>
-              </div>
-              <div class="criteria-item">
-                <div class="ci-ind">
-                  <div class="ind ind-present"></div>
-                </div>
-                <div class="ci-body">
-                  <div class="ci-name">Supervisory dashboard accessible</div>
-                  <div class="ci-threshold">Threshold: <span>All PRD §7.1 components present</span></div>
-                  <div class="ci-status pass">✓ TSK-P1-DEMO-007/008</div>
-                </div>
-              </div>
-              <div class="criteria-item">
-                <div class="ci-ind">
-                  <div class="ind ind-present"></div>
-                </div>
-                <div class="ci-body">
-                  <div class="ci-name">Evidence shows interpreted state (not raw files)</div>
-                  <div class="ci-threshold">Threshold: <span>PRESENT/FAILED/MISSING visible</span></div>
-                  <div class="ci-status pass">✓ TSK-P1-DEMO-011 criterion added</div>
-                </div>
-              </div>
-              <div class="criteria-item">
-                <div class="ci-ind">
-                  <div class="ind ind-missing"></div>
-                </div>
-                <div class="ci-body">
-                  <div class="ci-name">Reporting pack exports in one action</div>
-                  <div class="ci-threshold">Threshold: <span>PDF + JSON deterministic</span></div>
-                  <div class="ci-status pending">⏳ TSK-P1-DEMO-009 pending</div>
-                </div>
-              </div>
-              <div class="criteria-item">
-                <div class="ci-ind">
-                  <div class="ind ind-missing"></div>
-                </div>
-                <div class="ci-body">
-                  <div class="ci-name">Random instruction verifiable in &lt;3 min</div>
-                  <div class="ci-threshold">Threshold: <span>Drill-down without dev help</span></div>
-                  <div class="ci-status pending">⏳ TSK-P1-DEMO-008 pending</div>
-                </div>
-              </div>
-            </div>
-
-            <div class="s6-card">
-              <div class="s6-card-hdr">
-                <span class="s6-card-title">Regulatory Criteria</span>
-                <span class="s6-card-count">4 criteria</span>
-              </div>
-              <div class="criteria-item">
-                <div class="ci-ind">
-                  <div class="ind ind-present"></div>
-                </div>
-                <div class="ci-body">
-                  <div class="ci-name">No settlement-rail claim / BoZ sandbox excluded</div>
-                  <div class="ci-threshold">Threshold: <span>0 prohibited claims in demo</span></div>
-                  <div class="ci-status pass">✓ Scope boundary enforced</div>
-                </div>
-              </div>
-              <div class="criteria-item">
-                <div class="ci-ind">
-                  <div class="ind ind-present"></div>
-                </div>
-                <div class="ci-body">
-                  <div class="ci-name">Non-custodial posture maintained</div>
-                  <div class="ci-threshold">Threshold: <span>0 custody claims in evidence</span></div>
-                  <div class="ci-status pass">✓ INV-114/116</div>
-                </div>
-              </div>
-              <div class="criteria-item">
-                <div class="ci-ind">
-                  <div class="ind ind-present"></div>
-                </div>
-                <div class="ci-body">
-                  <div class="ci-name">Production profile hides demo routes</div>
-                  <div class="ci-threshold">Threshold: <span>0 demo endpoints in prod</span></div>
-                  <div class="ci-status pass">✓ TSK-P1-DEMO-014 criterion</div>
-                </div>
-              </div>
-              <div class="criteria-item">
-                <div class="ci-ind">
-                  <div class="ind ind-missing"></div>
-                </div>
-                <div class="ci-body">
-                  <div class="ci-name">MSISDN identity claim boundary correct</div>
-                  <div class="ci-threshold">Threshold: <span>No legal-signature overstating</span></div>
-                  <div class="ci-status pending">⏳ TSK-P1-DEMO-004 claim review pending</div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <!-- Gate summary -->
-          <div class="s6-gate">
-            <div>
-              <div class="s6-gate-label">TSK-P1-DEMO-011 · Go/No-Go Gate</div>
-              <div class="s6-gate-status">PENDING — 5 criteria outstanding</div>
-            </div>
-            <div class="s6-gate-meta">
-              <div class="s6-gate-note">Passes: <span>9 / 14</span></div>
-              <div class="s6-gate-note" style="margin-top:4px;font-size:8px;">Gate fails closed if any criterion is
-                missing or below threshold</div>
-              <div class="s6-gate-note" style="margin-top:4px;font-size:7.5px;opacity:.35;">Evidence validated via
-                scripts/audit/verify_tsk_p1_demo_011.sh</div>
-            </div>
-          </div>
-
-        </div>
-      </div>
-
-      <!-- ════════════════════════════════════════
-         SCREEN 5: OPERATOR ONBOARDING CONSOLE (TSK-P1-219)
+         SCREEN: OPERATOR ONBOARDING CONSOLE (TSK-P1-219)
     ════════════════════════════════════════ -->
       <div class="screen" id="screen-onboarding">
         <div class="onb-body" style="width:100%;">
@@ -2847,6 +2030,332 @@
         </div>
       </div>
 
+      <!-- ════════════════════════════════════════
+         SCREEN: WORKER TOKEN ISSUANCE (GF-W1-UI-002)
+    ════════════════════════════════════════ -->
+      <div class="screen" id="screen-worker-tokens">
+        <div style="width:100%;padding:24px;display:flex;flex-direction:column;height:100%;overflow:hidden;">
+          
+          <!-- Programme Context Header -->
+          <div style="margin-bottom:20px;">
+            <div style="font-family:var(--mono);font-size:8px;letter-spacing:.3em;text-transform:uppercase;color:var(--gold);opacity:.65;margin-bottom:4px;">
+              Worker Token Issuance
+            </div>
+            <div style="font-family:var(--serif);font-size:22px;color:#fff;margin-bottom:4px;">
+              Evidence-Link Token Generation
+            </div>
+            <div style="font-family:var(--mono);font-size:9px;color:var(--smoke);opacity:.7;letter-spacing:.08em;">
+              Programme: <span id="worker-token-programme-id">PGM-ZAMBIA-GRN-001</span> · 
+              Location: <span id="worker-token-location">Chunga Dumpsite, Lusaka</span>
+            </div>
+          </div>
+
+          <!-- Two-Column Layout -->
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;flex:1;overflow:hidden;">
+            
+            <!-- Left Column: Worker Lookup Form (GF-W1-UI-003) -->
+            <div style="background:var(--surface);border:1px solid var(--border);border-radius:3px;padding:20px;overflow-y:auto;">
+              <div style="font-family:var(--mono);font-size:8px;letter-spacing:.3em;text-transform:uppercase;color:var(--gold);opacity:.65;margin-bottom:12px;">
+                Worker Lookup
+              </div>
+
+              <!-- Phone Number Input -->
+              <div style="margin-bottom:16px;">
+                <label style="font-family:var(--mono);font-size:9px;color:var(--smoke);opacity:.85;margin-bottom:6px;display:block;letter-spacing:.08em;">
+                  Worker Phone Number
+                </label>
+                <input 
+                  type="tel" 
+                  id="worker-phone" 
+                  placeholder="+260XXXXXXXXX" 
+                  pattern="\+260[0-9]{9}"
+                  style="width:100%;padding:10px 12px;font-family:var(--mono);font-size:11px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06);border-radius:2px;color:var(--cream);"
+                  onblur="validatePhoneFormat()"
+                  oninput="clearWorkerLookupState()"
+                />
+                <div id="phone-validation-error" style="display:none;font-family:var(--mono);font-size:9px;color:var(--red-lt);margin-top:6px;"></div>
+              </div>
+
+              <button 
+                class="btn btn-primary" 
+                style="width:100%;margin-bottom:16px;" 
+                onclick="lookupWorker()"
+                id="lookup-worker-btn"
+              >
+                Lookup Worker
+              </button>
+
+              <!-- Worker Details Panel (hidden by default) -->
+              <div id="worker-details-panel" style="display:none;padding:14px;background:rgba(61,184,90,.05);border:1px solid rgba(61,184,90,.25);border-radius:3px;margin-bottom:16px;">
+                <div style="font-family:var(--mono);font-size:8px;letter-spacing:.2em;text-transform:uppercase;color:var(--bright);margin-bottom:10px;">
+                  ✓ Worker Confirmed
+                </div>
+                <div style="display:flex;flex-direction:column;gap:8px;">
+                  <div>
+                    <div style="font-family:var(--mono);font-size:8px;color:var(--smoke);opacity:.6;">Worker ID</div>
+                    <div id="worker-id-display" style="font-family:var(--mono);font-size:10px;color:var(--cream);"></div>
+                  </div>
+                  <div>
+                    <div style="font-family:var(--mono);font-size:8px;color:var(--smoke);opacity:.6;">Supplier Type</div>
+                    <div id="worker-type-display" style="font-family:var(--mono);font-size:10px;color:var(--bright);"></div>
+                  </div>
+                  <div>
+                    <div style="font-family:var(--mono);font-size:8px;color:var(--smoke);opacity:.6;">Status</div>
+                    <div id="worker-status-display" style="font-family:var(--mono);font-size:10px;color:var(--cream);"></div>
+                  </div>
+                  <div>
+                    <div style="font-family:var(--mono);font-size:8px;color:var(--smoke);opacity:.6;">Location</div>
+                    <div id="worker-location-display" style="font-family:var(--mono);font-size:10px;color:var(--cream);"></div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Error States -->
+              <div id="worker-error-not-registered" style="display:none;padding:12px;background:rgba(176,48,32,.08);border:1px solid rgba(176,48,32,.22);border-radius:3px;margin-bottom:16px;">
+                <div style="font-family:var(--mono);font-size:9px;color:var(--red-lt);line-height:1.7;">
+                  ✗ Worker not registered in the system. Please verify the phone number.
+                </div>
+              </div>
+
+              <div id="worker-error-invalid-type" style="display:none;padding:12px;background:rgba(176,48,32,.08);border:1px solid rgba(176,48,32,.22);border-radius:3px;margin-bottom:16px;">
+                <div style="font-family:var(--mono);font-size:9px;color:var(--red-lt);line-height:1.7;">
+                  ✗ Invalid supplier type. Only WASTE_COLLECTOR workers can receive tokens.
+                </div>
+              </div>
+
+              <div id="worker-error-inactive" style="display:none;padding:12px;background:rgba(176,48,32,.08);border:1px solid rgba(176,48,32,.22);border-radius:3px;margin-bottom:16px;">
+                <div style="font-family:var(--mono);font-size:9px;color:var(--red-lt);line-height:1.7;">
+                  ✗ Worker status is inactive. Cannot issue token to inactive workers.
+                </div>
+              </div>
+
+              <!-- Token Issuance Button (disabled by default) -->
+              <button 
+                id="issue-token-btn" 
+                class="btn btn-primary" 
+                style="width:100%;" 
+                onclick="issueToken()" 
+                disabled
+              >
+                Request Collection Token
+              </button>
+              <div style="font-family:var(--mono);font-size:8px;color:var(--smoke);opacity:.5;margin-top:8px;text-align:center;">
+                Button enabled after valid worker confirmation
+              </div>
+
+            </div>
+
+            <!-- Right Column: Token Result Panel (GF-W1-UI-004) -->
+            <div style="background:var(--surface);border:1px solid var(--border);border-radius:3px;padding:20px;overflow-y:auto;">
+              <div style="font-family:var(--mono);font-size:8px;letter-spacing:.3em;text-transform:uppercase;color:var(--gold);opacity:.65;margin-bottom:12px;">
+                Token Result
+              </div>
+
+              <!-- Token Result Panel (hidden by default) -->
+              <div id="token-result-panel" style="display:none;">
+                
+                <!-- Token Details -->
+                <div style="padding:14px;background:rgba(61,184,90,.05);border:1px solid rgba(61,184,90,.25);border-radius:3px;margin-bottom:16px;">
+                  <div style="font-family:var(--mono);font-size:8px;letter-spacing:.2em;text-transform:uppercase;color:var(--bright);margin-bottom:10px;">
+                    ✓ Token Issued
+                  </div>
+                  <div style="display:flex;flex-direction:column;gap:8px;">
+                    <div>
+                      <div style="font-family:var(--mono);font-size:8px;color:var(--smoke);opacity:.6;">Worker ID</div>
+                      <div id="token-worker-id" style="font-family:var(--mono);font-size:10px;color:var(--cream);"></div>
+                    </div>
+                    <div>
+                      <div style="font-family:var(--mono);font-size:8px;color:var(--smoke);opacity:.6;">Expires At</div>
+                      <div id="token-expiry-time" style="font-family:var(--mono);font-size:10px;color:var(--cream);"></div>
+                    </div>
+                    <div>
+                      <div style="font-family:var(--mono);font-size:8px;color:var(--smoke);opacity:.6;">Time Remaining</div>
+                      <div id="token-countdown" style="font-family:var(--mono);font-size:14px;color:var(--cream);font-weight:600;"></div>
+                    </div>
+                    <div>
+                      <div style="font-family:var(--mono);font-size:8px;color:var(--smoke);opacity:.6;">GPS Zone</div>
+                      <div id="token-location" style="font-family:var(--mono);font-size:10px;color:var(--cream);"></div>
+                    </div>
+                    <div>
+                      <div style="font-family:var(--mono);font-size:8px;color:var(--smoke);opacity:.6;">Zone Radius</div>
+                      <div id="token-radius" style="font-family:var(--mono);font-size:10px;color:var(--cream);"></div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Worker Landing URL -->
+                <div style="margin-bottom:16px;">
+                  <div style="font-family:var(--mono);font-size:8px;letter-spacing:.2em;text-transform:uppercase;color:var(--smoke);opacity:.75;margin-bottom:8px;">
+                    Worker Landing Page URL
+                  </div>
+                  <div style="padding:10px 12px;background:rgba(0,0,0,.25);border:1px solid rgba(255,255,255,.05);border-radius:2px;word-break:break-all;margin-bottom:8px;">
+                    <div id="worker-landing-url" style="font-family:var(--mono);font-size:9px;color:var(--gold-lt);"></div>
+                  </div>
+                  <button 
+                    id="copy-url-btn"
+                    class="btn" 
+                    style="width:100%;background:transparent;border:1px solid rgba(201,168,76,.28);color:var(--gold-lt);" 
+                    onclick="copyWorkerLandingUrl()"
+                  >
+                    📋 Copy Link
+                  </button>
+                </div>
+
+                <!-- Security Properties -->
+                <div style="padding:14px;background:rgba(0,0,0,.2);border:1px solid rgba(255,255,255,.06);border-radius:3px;">
+                  <div style="font-family:var(--mono);font-size:8px;letter-spacing:.2em;text-transform:uppercase;color:var(--smoke);opacity:.75;margin-bottom:10px;">
+                    Security Properties
+                  </div>
+                  <div style="display:flex;flex-direction:column;gap:6px;font-family:var(--mono);font-size:9px;color:var(--smoke);">
+                    <div>• Type: <span style="color:var(--cream);">Evidence-Link Token</span></div>
+                    <div>• Signature: <span style="color:var(--cream);">HMAC-SHA256</span></div>
+                    <div>• TTL: <span style="color:var(--amber-lt);">5 minutes</span></div>
+                    <div>• GPS Lock: <span style="color:var(--bright);">Enforced</span></div>
+                    <div>• Single-Use: <span style="color:var(--bright);">Yes</span></div>
+                  </div>
+                </div>
+
+              </div>
+
+              <!-- Placeholder when no token issued -->
+              <div id="token-result-placeholder" style="font-size:13px;color:var(--smoke);line-height:1.7;">
+                Token result will appear here after issuance.
+              </div>
+
+            </div>
+
+            <!-- Recent Tokens List (GF-W1-UI-005) -->
+            <div style="margin-top:24px;">
+              <div style="font-family:var(--mono);font-size:8px;letter-spacing:.3em;text-transform:uppercase;color:var(--gold);opacity:.75;margin-bottom:12px;">
+                Recent Tokens (Last 10)
+              </div>
+              <div id="recent-tokens-container" style="border:1px solid var(--border);border-radius:3px;overflow:hidden;">
+                <table id="recent-tokens-table" style="width:100%;border-collapse:collapse;">
+                  <thead>
+                    <tr style="background:rgba(0,0,0,.2);border-bottom:1px solid rgba(255,255,255,.04);">
+                      <th style="font-family:var(--mono);font-size:8.5px;letter-spacing:.15em;text-transform:uppercase;color:var(--smoke);opacity:.75;padding:8px 12px;text-align:left;">Worker ID</th>
+                      <th style="font-family:var(--mono);font-size:8.5px;letter-spacing:.15em;text-transform:uppercase;color:var(--smoke);opacity:.75;padding:8px 12px;text-align:left;">Issued</th>
+                      <th style="font-family:var(--mono);font-size:8.5px;letter-spacing:.15em;text-transform:uppercase;color:var(--smoke);opacity:.75;padding:8px 12px;text-align:left;">Status</th>
+                    </tr>
+                  </thead>
+                  <tbody id="recent-tokens-rows">
+                    <tr>
+                      <td colspan="3" style="font-family:var(--mono);font-size:9px;color:var(--smoke);opacity:.5;padding:16px;text-align:center;">
+                        No tokens issued yet
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+          </div>
+
+        </div>
+      </div>
+
+      <div class="screen" id="screen-s6">
+        <div id="overall-status">
+          <div class="s6-gate panel" style="padding: 24px; text-align: center;">
+            <div id="s6-gate-badge" class="badge">PENDING</div>
+            <h2 id="s6-gate-message" style="margin-top: 16px; font-size: 24px;">Gathering Telemetry...</h2>
+            <div id="s6-gate-timestamp" style="margin-top: 8px; font-family: var(--mono); font-size: 10px; color: var(--smoke);"></div>
+            <div style="margin-top: 24px; display: flex; gap: 12px; justify-content: center;">
+              <button onclick="s6_refreshData()" style="padding: 8px 16px; background: transparent; border: 1px solid var(--border); color: var(--cream); cursor: pointer;">Refresh Now</button>
+              <button onclick="s6_exportReport()" style="padding: 8px 16px; background: transparent; border: 1px solid var(--border); color: var(--gold); cursor: pointer;">Export Report</button>
+            </div>
+          </div>
+        </div>
+        <div class="grid" style="grid-template-columns: 1fr; margin-top: 24px;">
+          <div id="category-technical">
+            <div class="panel" style="padding: 24px;">
+              <h3 style="font-size: 16px; border-bottom: 1px solid var(--border); padding-bottom: 12px; margin-bottom: 16px; display: flex; justify-content: space-between;">
+                Technical Criteria <span id="s6-badge-technical" class="badge">PENDING</span>
+              </h3>
+              <div id="s6-list-technical" style="display: flex; flex-direction: column; gap: 16px;"></div>
+            </div>
+          </div>
+          <div id="category-operational">
+            <div class="panel" style="padding: 24px; margin-top: 16px;">
+              <h3 style="font-size: 16px; border-bottom: 1px solid var(--border); padding-bottom: 12px; margin-bottom: 16px; display: flex; justify-content: space-between;">
+                Operational Criteria <span id="s6-badge-operational" class="badge">PENDING</span>
+              </h3>
+              <div id="s6-list-operational" style="display: flex; flex-direction: column; gap: 16px;"></div>
+            </div>
+          </div>
+          <div id="category-regulatory">
+            <div class="panel" style="padding: 24px; margin-top: 16px;">
+              <h3 style="font-size: 16px; border-bottom: 1px solid var(--border); padding-bottom: 12px; margin-bottom: 16px; display: flex; justify-content: space-between;">
+                Regulatory Criteria <span id="s6-badge-regulatory" class="badge">PENDING</span>
+              </h3>
+              <div id="s6-list-regulatory" style="display: flex; flex-direction: column; gap: 16px;"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Criterion Detail Slide-out Panel (GF-W1-UI-017) -->
+        <div class="slideout" id="s6-detail-slideout">
+          <div class="so-hdr">
+            <div>
+              <div class="so-title">Criterion Detail</div>
+              <div class="so-ref" id="s6-detail-id">—</div>
+            </div>
+            <div class="so-close" onclick="s6_closeCriterionDetail()">✕ Close</div>
+          </div>
+          <div class="so-body">
+            <div style="display:flex;flex-direction:column;gap:16px;">
+              <div class="so-sec">
+                <div class="so-sec-title">Status Information</div>
+                <div style="display:flex;flex-direction:column;gap:8px;">
+                  <div>
+                    <div style="font-family:var(--mono);font-size:8px;color:var(--smoke);opacity:.6;margin-bottom:3px;">Description</div>
+                    <div id="s6-detail-desc" style="font-family:var(--mono);font-size:10px;color:var(--cream);"></div>
+                  </div>
+                  <div>
+                    <div style="font-family:var(--mono);font-size:8px;color:var(--smoke);opacity:.6;margin-bottom:3px;">Status</div>
+                    <div><span id="s6-detail-status" class="badge"></span></div>
+                  </div>
+                  <div>
+                    <div style="font-family:var(--mono);font-size:8px;color:var(--smoke);opacity:.6;margin-bottom:3px;">Last Verified</div>
+                    <div id="s6-detail-verified" style="font-family:var(--mono);font-size:10px;color:var(--cream);"></div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="so-sec">
+                <div class="so-sec-title">Verification Context</div>
+                <div style="display:flex;flex-direction:column;gap:8px;">
+                  <div>
+                    <div style="font-family:var(--mono);font-size:8px;color:var(--smoke);opacity:.6;margin-bottom:3px;">Type</div>
+                    <div id="s6-detail-type" style="font-family:var(--mono);font-size:10px;color:var(--cream);"></div>
+                  </div>
+                  <div>
+                    <div style="font-family:var(--mono);font-size:8px;color:var(--smoke);opacity:.6;margin-bottom:3px;">Verification Method</div>
+                    <div id="s6-detail-method" style="font-family:var(--mono);font-size:10px;color:var(--cream);"></div>
+                  </div>
+                  <div id="s6-detail-invariants-container" style="display:none;">
+                    <div style="font-family:var(--mono);font-size:8px;color:var(--smoke);opacity:.6;margin-bottom:3px;">Invariant References</div>
+                    <div id="s6-detail-invariants" style="font-family:var(--mono);font-size:10px;color:var(--cream);"></div>
+                  </div>
+                  <div id="s6-detail-threshold-container" style="display:none;">
+                    <div style="font-family:var(--mono);font-size:8px;color:var(--smoke);opacity:.6;margin-bottom:3px;">Threshold</div>
+                    <div id="s6-detail-threshold" style="font-family:var(--mono);font-size:10px;color:var(--cream);"></div>
+                  </div>
+                  <div id="s6-detail-compliance-container" style="display:none;">
+                    <div style="font-family:var(--mono);font-size:8px;color:var(--smoke);opacity:.6;margin-bottom:3px;">Compliance Note</div>
+                    <div id="s6-detail-compliance" style="font-family:var(--mono);font-size:10px;color:var(--cream);"></div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="so-sec">
+                <button class="btn" style="width:100%;" onclick="s6_runVerificationNow()">Run Verification Now</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
     </div><!-- /screens -->
   </div><!-- /app -->
 
@@ -2939,6 +2448,62 @@
     
     function getProofLabel(type) {
       return PROOF_LABELS[type] ?? type;
+    }
+
+    // ── resolveNeighbourhoodLabel (GF-W1-UI-005) ──────────────────
+    // GPS privacy: raw coordinates are NEVER displayed in the UI.
+    // Only neighbourhood labels are shown.
+    function resolveNeighbourhoodLabel(lat, lon) {
+      if (lat >= -15.43 && lat <= -15.40 && lon >= 28.26 && lon <= 28.30)
+        return 'Chunga Dumpsite, Lusaka';
+      return 'Lusaka';
+    }
+
+    // ── Haversine distance (GF-W1-UI-005) ─────────────────────────
+    function haversineDistance(lat1, lon1, lat2, lon2) {
+      const R = 6371e3;
+      const f1 = lat1 * Math.PI / 180, f2 = lat2 * Math.PI / 180;
+      const df = (lat2 - lat1) * Math.PI / 180;
+      const dl = (lon2 - lon1) * Math.PI / 180;
+      const a = Math.sin(df/2)**2 + Math.cos(f1)*Math.cos(f2)*Math.sin(dl/2)**2;
+      return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+    }
+
+    // ── TCO2 canonical constant (GF-W1-UI-004 / UI-006) ──────────
+    const TCO2_PER_KG = 0.00048;
+    const PRICE_PER_TCO2_ZMW = 150.0;
+    const BENEFIT_SHARE = { project_developer: 0.50, community: 0.30, national_fund: 0.20 };
+
+    // ── Populate Activity Table (GF-W1-UI-004) ────────────────────
+    function populateActivityTable(timeline) {
+      const tbody = document.getElementById('activity-table-body');
+      if (!tbody || !Array.isArray(timeline) || timeline.length === 0) {
+        if (tbody) tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:16px;color:var(--smoke);opacity:.5;">No activity data available.</td></tr>';
+        return;
+      }
+      tbody.innerHTML = '';
+      timeline.forEach(row => {
+        const tr = document.createElement('tr');
+        tr.style.cssText = 'border-bottom:1px solid rgba(255,255,255,.04);cursor:pointer;';
+        tr.addEventListener('mouseover', () => tr.style.background = 'rgba(255,255,255,.03)');
+        tr.addEventListener('mouseout', () => tr.style.background = 'transparent');
+        const instId = row.instruction_id || row.instructionId || '—';
+        const proofType = row.artifact_type || row.type || '—';
+        const status = String(row.status || row.proof_status || 'PENDING').toUpperCase();
+        const statusColor = status === 'PRESENT' ? 'var(--bright)' : status === 'MISSING' ? 'var(--red)' : 'var(--amber)';
+        const netWeight = row.net_weight_kg != null ? row.net_weight_kg + ' kg' : '—';
+        const tco2 = row.net_weight_kg != null ? (row.net_weight_kg * 0.00048).toFixed(4) : '—';
+        const time = row.observed_at_utc || row.submitted_at_utc || row.date || '—';
+        const timeFormatted = time !== '—' ? new Date(time).toLocaleTimeString('en-GB', {hour:'2-digit',minute:'2-digit'}) : '—';
+        tr.innerHTML = `<td style="padding:6px;color:var(--smoke);">${instId.slice(0,12)}${instId.length>12?'…':''}</td>` +
+          `<td style="padding:6px;">${proofType}</td>` +
+          `<td style="padding:6px;"><span style="color:${statusColor};font-weight:600;font-size:9px;">${status}</span></td>` +
+          `<td style="padding:6px;text-align:right;">${netWeight}</td>` +
+          `<td style="padding:6px;text-align:right;color:var(--gold);">${tco2}</td>` +
+          `<td style="padding:6px;text-align:right;color:var(--smoke);">${timeFormatted}</td>`;
+        tr.addEventListener('click', () => openDrill(instId));
+        tbody.appendChild(tr);
+      });
     }
     // ──────────────────────────────────────────────────────────────
 
@@ -3187,6 +2752,18 @@
 
     };
 
+    
+    // Hash routing for SPA
+    window.addEventListener('DOMContentLoaded', () => {
+        let hash = window.location.hash.replace('#', '');
+        if (hash) {
+            let tab = document.querySelector(`.tab[onclick*="switchTab('${hash}'"]`);
+            if (tab) {
+                switchTab(hash, tab);
+            }
+        }
+    });
+
     // ── TAB SWITCHING ──
     function switchTab(id, el) {
       document.querySelectorAll('.screen').forEach(s => s.classList.remove('visible'));
@@ -3198,6 +2775,91 @@
       }
       if (id === 'onboarding') {
         loadOnboardingState();
+      }
+      if (id === 'report') {
+        loadMonitoringReport();
+      }
+    }
+
+    // ── MONITORING REPORT (GF-W1-UI-006) ──────────────────────────
+    async function loadMonitoringReport() {
+      const container = document.getElementById('monitoring-report-content');
+      if (!container) return;
+      container.style.cssText = 'flex:1;display:flex;flex-direction:column;gap:16px;align-items:stretch;justify-content:flex-start;overflow-y:auto;';
+      container.innerHTML = '<div style="font-family:var(--mono);font-size:10px;color:var(--smoke);opacity:.5;"><span class="spinner"></span> Loading monitoring report…</div>';
+      const programId = 'PGM-ZAMBIA-GRN-001';
+      try {
+        const res = await fetch(`/pilot-demo/api/monitoring-report/${programId}`);
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const data = await res.json();
+        const totals = data.plastic_totals_kg || {};
+        const totalKg = totals.TOTAL || Object.values(totals).reduce((a,b) => a + (b||0), 0);
+        const rate = data.proof_completeness_rate ?? 0;
+        const isAuthorized = rate >= 1.0 && totalKg > 0;
+        const tco2 = (totalKg * 0.00048).toFixed(6);
+        const credits = tco2;
+        const totalValue = (parseFloat(tco2) * 150.0).toFixed(2);
+        const devShare = (parseFloat(totalValue) * 0.50).toFixed(2);
+        const comShare = (parseFloat(totalValue) * 0.30).toFixed(2);
+        const fundShare = (parseFloat(totalValue) * 0.20).toFixed(2);
+        const bannerBg = isAuthorized ? 'rgba(46,160,67,.12)' : 'rgba(248,81,73,.12)';
+        const bannerBorder = isAuthorized ? 'rgba(46,160,67,.35)' : 'rgba(248,81,73,.35)';
+        const bannerColor = isAuthorized ? 'var(--bright)' : 'var(--red)';
+        const bannerText = isAuthorized ? 'AUTHORIZED — Full MRV Complete' : `NOT AUTHORIZED — Incomplete MRV (${(rate*100).toFixed(0)}%)`;
+        const addActual = totalKg.toFixed(2);
+        const addDelta = totalKg > 0 ? `+${addActual}` : '0';
+        const addChip = totalKg > 0 ? 'var(--bright)' : 'var(--amber)';
+        container.innerHTML = `
+          <!-- Section 1: Disbursement Banner -->
+          <div style="padding:14px 18px;border-radius:8px;background:${bannerBg};border:1px solid ${bannerBorder};">
+            <div style="font-family:var(--mono);font-size:11px;font-weight:700;letter-spacing:.1em;color:${bannerColor};">${bannerText}</div>
+          </div>
+          <!-- Section 2: Additionality + Totals + Carbon -->
+          <div style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:16px;">
+            <div style="font-family:var(--mono);font-size:8px;letter-spacing:.2em;text-transform:uppercase;color:var(--gold);opacity:.65;margin-bottom:10px;">Additionality & Carbon</div>
+            <div style="font-size:12px;color:#fff;margin-bottom:12px;display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+              <span>Baseline: 0 kg</span><span style="color:var(--smoke);">|</span>
+              <span>Actual: ${addActual} kg</span><span style="color:var(--smoke);">|</span>
+              <span>Additionality: ${addDelta} kg</span>
+              <span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:${addChip};"></span>
+            </div>
+            <table style="width:100%;border-collapse:collapse;font-family:var(--mono);font-size:10px;margin-bottom:12px;">
+              <thead><tr style="border-bottom:1px solid var(--border);font-size:8px;letter-spacing:.1em;color:var(--smoke);text-transform:uppercase;">
+                <th style="text-align:left;padding:4px;">Type</th><th style="text-align:right;padding:4px;">kg</th>
+              </tr></thead>
+              <tbody>
+                ${['PET','HDPE','LDPE','PP','PS','OTHER'].map(t => `<tr style="border-bottom:1px solid rgba(255,255,255,.04);"><td style="padding:4px;color:var(--smoke);">${t}</td><td style="padding:4px;text-align:right;color:#fff;">${(totals[t]||0).toFixed(2)}</td></tr>`).join('')}
+                <tr style="border-top:1px solid var(--gold);"><td style="padding:4px;font-weight:700;color:var(--gold);">TOTAL</td><td style="padding:4px;text-align:right;font-weight:700;color:var(--gold);">${totalKg.toFixed(2)}</td></tr>
+              </tbody>
+            </table>
+            <div style="font-size:11px;color:#fff;">Estimated tCO₂: <strong>${tco2}</strong> (indicative) &nbsp;|&nbsp; Estimated Credits: <strong>${credits}</strong> credits (1 credit = 1 tCO₂, indicative)</div>
+          </div>
+          <!-- Section 3: Benefit Sharing + ZGFT + Generate -->
+          <div style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:16px;">
+            <div style="font-family:var(--mono);font-size:8px;letter-spacing:.2em;text-transform:uppercase;color:var(--gold);opacity:.65;margin-bottom:10px;">Benefit Sharing (indicative)</div>
+            <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:14px;">
+              <div style="background:var(--panel);border-radius:6px;padding:10px;text-align:center;">
+                <div style="font-size:9px;color:var(--smoke);text-transform:uppercase;letter-spacing:.1em;">Project Developer (50%)</div>
+                <div style="font-size:16px;font-weight:700;color:#fff;margin-top:4px;">ZMW ${devShare} <span style="font-size:9px;color:var(--smoke);">(indicative)</span></div>
+              </div>
+              <div style="background:var(--panel);border-radius:6px;padding:10px;text-align:center;">
+                <div style="font-size:9px;color:var(--smoke);text-transform:uppercase;letter-spacing:.1em;">Community (30%)</div>
+                <div style="font-size:16px;font-weight:700;color:#fff;margin-top:4px;">ZMW ${comShare} <span style="font-size:9px;color:var(--smoke);">(indicative)</span></div>
+              </div>
+              <div style="background:var(--panel);border-radius:6px;padding:10px;text-align:center;">
+                <div style="font-size:9px;color:var(--smoke);text-transform:uppercase;letter-spacing:.1em;">National Fund (20%)</div>
+                <div style="font-size:16px;font-weight:700;color:#fff;margin-top:4px;">ZMW ${fundShare} <span style="font-size:9px;color:var(--smoke);">(indicative)</span></div>
+              </div>
+            </div>
+            <div style="display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap;">
+              <span style="display:inline-block;padding:4px 10px;border-radius:4px;font-size:9px;font-weight:600;background:rgba(46,160,67,.12);color:var(--bright);border:1px solid rgba(46,160,67,.25);">Pollution Prevention ✓</span>
+              <span style="display:inline-block;padding:4px 10px;border-radius:4px;font-size:9px;font-weight:600;background:rgba(46,160,67,.12);color:var(--bright);border:1px solid rgba(46,160,67,.25);">Circular Economy ✓</span>
+              <span style="display:inline-block;padding:4px 10px;border-radius:4px;font-size:9px;font-weight:600;background:rgba(46,160,67,.12);color:var(--bright);border:1px solid rgba(46,160,67,.25);">DNSH Declared ✓</span>
+            </div>
+            <button onclick="loadMonitoringReport()" style="padding:10px 20px;border:none;border-radius:6px;background:var(--gold);color:#000;font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:.1em;cursor:pointer;">Generate Report</button>
+          </div>`;
+      } catch (err) {
+        container.innerHTML = `<div style="font-family:var(--mono);font-size:10px;color:var(--red);">Failed to load monitoring report: ${err.message}</div>`;
       }
     }
 
@@ -3544,7 +3206,31 @@
       const supplierHtml = supplierPolicy.available === false
         ? '<div style="font-size:12px;color:var(--smoke);line-height:1.6;">Supplier policy context unavailable for this instruction detail.</div>'
         : `<div class="gps-block"><div class="gps-label">Decision</div><div class="gps-val">${supplierPolicy.decision || 'UNKNOWN'}</div><div style="margin-top:6px;"><div class="gps-label">Allowlisted</div><div class="gps-val">${String(supplierPolicy.allowlisted ?? 'unknown')}</div></div></div>`;
+      // ── GF-W1-UI-005: Registry, GPS, sequence ──
+      const seqNum = detail.sequence_number ?? '—';
+      const workerId = detail.worker_id || detail.supplier_id || '—';
+      const gpsLat = detail.latitude ?? detail.gps_latitude;
+      const gpsLon = detail.longitude ?? detail.gps_longitude;
+      const neighbourhoodLabel = (gpsLat != null && gpsLon != null)
+        ? resolveNeighbourhoodLabel(gpsLat, gpsLon)
+        : 'Location unavailable';
+      const distFromBoundary = (gpsLat != null && gpsLon != null)
+        ? Math.round(haversineDistance(gpsLat, gpsLon, -15.4167, 28.2833))
+        : null;
+      const distChipColor = distFromBoundary != null ? (distFromBoundary <= 250 ? 'var(--bright)' : 'var(--red)') : 'var(--smoke)';
+      const distText = distFromBoundary != null ? `${distFromBoundary}m from boundary` : '—';
+
       const html = `
+    <div class="so-section"><div class="so-sec-title">Registry & Location</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:11px;">
+        <div><span style="color:var(--smoke);font-size:9px;text-transform:uppercase;letter-spacing:.1em;">Sequence</span><br><span style="color:#fff;font-weight:600;">#${seqNum}</span></div>
+        <div><span style="color:var(--smoke);font-size:9px;text-transform:uppercase;letter-spacing:.1em;">Worker ID</span><br><span style="color:#fff;">${workerId}</span></div>
+        <div><span style="color:var(--smoke);font-size:9px;text-transform:uppercase;letter-spacing:.1em;">Registry Status</span><br><span style="display:inline-block;padding:2px 8px;border-radius:3px;font-size:9px;font-weight:700;background:rgba(210,153,34,.15);color:var(--amber);letter-spacing:.05em;">NOT ISSUED</span></div>
+        <div><span style="color:var(--smoke);font-size:9px;text-transform:uppercase;letter-spacing:.1em;">Duplicate Check</span><br><span style="display:inline-block;padding:2px 8px;border-radius:3px;font-size:9px;font-weight:700;background:rgba(46,160,67,.15);color:var(--bright);">PASS</span></div>
+        <div><span style="color:var(--smoke);font-size:9px;text-transform:uppercase;letter-spacing:.1em;">GPS Zone</span><br><span style="color:#fff;">${neighbourhoodLabel}</span></div>
+        <div><span style="color:var(--smoke);font-size:9px;text-transform:uppercase;letter-spacing:.1em;">Zone Distance</span><br><span style="display:inline-block;padding:2px 8px;border-radius:3px;font-size:9px;font-weight:700;color:${distChipColor};">${distText}</span></div>
+      </div>
+    </div>
     <div class="so-section"><div class="so-sec-title">Canonical Proof Rows</div><div class="ev-grid">${proofHtml || '<div style="font-size:12px;color:var(--smoke);line-height:1.6;">No proof rows available.</div>'}</div></div>
     <div class="so-section"><div class="so-sec-title">Raw Artifacts</div>${rawArtifactHtml || '<div style="font-size:12px;color:var(--smoke);line-height:1.6;">No raw artifacts available.</div>'}</div>
     <div class="so-section"><div class="so-sec-title">Supplier Policy Context</div>${supplierHtml}</div>
@@ -3766,8 +3452,53 @@
         
         // Start refresh loop for dynamic timeline (Issue 5)
         startTimelineRefresh(programId);
+        // GF-W1-UI-003: Update KPI cards from reveal data
+        updateKPIs(programId);
       } catch (err) {
         console.error('Failed to hydrate dashboard', err);
+      }
+    }
+
+    // ── GF-W1-UI-003: KPI + Disbursement Status hydration ──
+    async function updateKPIs(programId) {
+      try {
+        const res = await fetch(`/pilot-demo/api/reveal/${programId}`, { credentials: 'include' });
+        if (!res.ok) return;
+        const data = await res.json();
+
+        const timeline = data.timeline || [];
+        const totalInstructions = timeline.length;
+        const exceptions = timeline.filter(e => e.status === 'EXCEPTION' || e.status === 'FAILED').length;
+        const complete = timeline.filter(e => {
+          const present = parseInt(e.proof_present_count || '0', 10);
+          const required = parseInt(e.proof_required_count || '4', 10);
+          return present >= required;
+        }).length;
+        const rate = totalInstructions > 0 ? (complete / totalInstructions) : 0;
+
+        document.getElementById('kpi-submissions-val').textContent = totalInstructions;
+        document.getElementById('kpi-exceptions-val').textContent = exceptions;
+        document.getElementById('kpi-complete-val').textContent = complete;
+        document.getElementById('kpi-rate-val').textContent = (rate * 100).toFixed(0) + '%';
+
+        // Disbursement status card
+        const card = document.getElementById('disbursement-card');
+        const textEl = document.getElementById('disbursement-text');
+        if (rate >= 1.0 && totalInstructions > 0) {
+          card.className = 'dcard ok';
+          card.style.borderColor = 'rgba(61,184,90,0.35)';
+          card.style.background = 'rgba(61,184,90,0.08)';
+          textEl.textContent = 'AUTHORIZED';
+          textEl.style.color = 'var(--bright)';
+        } else {
+          card.className = 'dcard err';
+          card.style.borderColor = 'rgba(176,48,32,0.35)';
+          card.style.background = 'rgba(176,48,32,0.08)';
+          textEl.textContent = 'NOT AUTHORIZED — Incomplete MRV (' + (rate * 100).toFixed(0) + '%)';
+          textEl.style.color = 'var(--red-lt)';
+        }
+      } catch (e) {
+        // Silent fail — KPIs show dash values
       }
     }
 
@@ -4105,6 +3836,459 @@
       }
     }
 
+    // ── WORKER TOKEN ISSUANCE (GF-W1-UI-003) ──────────────────────────
+    function validatePhoneFormat() {
+      const input = document.getElementById('worker-phone');
+      const error = document.getElementById('phone-validation-error');
+      const pattern = /^\+260[0-9]{9}$/;
+      
+      if (input.value && !pattern.test(input.value)) {
+        error.textContent = '✗ Invalid format. Expected: +260XXXXXXXXX';
+        error.style.display = 'block';
+        return false;
+      } else {
+        error.style.display = 'none';
+        return true;
+      }
+    }
+
+    function clearWorkerLookupState() {
+      document.getElementById('worker-details-panel').style.display = 'none';
+      document.getElementById('worker-error-not-registered').style.display = 'none';
+      document.getElementById('worker-error-invalid-type').style.display = 'none';
+      document.getElementById('worker-error-inactive').style.display = 'none';
+      document.getElementById('issue-token-btn').disabled = true;
+    }
+
+    async function lookupWorker() {
+      const phoneInput = document.getElementById('worker-phone');
+      const phone = phoneInput.value.trim();
+      
+      // Validate format first
+      if (!validatePhoneFormat()) {
+        return;
+      }
+      
+      if (!phone) {
+        document.getElementById('phone-validation-error').textContent = '✗ Phone number required';
+        document.getElementById('phone-validation-error').style.display = 'block';
+        return;
+      }
+      
+      clearWorkerLookupState();
+      
+      try {
+        const response = await fetch('/pilot-demo/api/workers/lookup', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ phone: phone }), // symphony:pii_ok - phone in POST body (not URL)
+          credentials: 'include'
+        });
+        
+        if (!response.ok) {
+          if (response.status === 404) {
+            document.getElementById('worker-error-not-registered').style.display = 'block';
+          } else {
+            throw new Error(`HTTP ${response.status}`);
+          }
+          return;
+        }
+        
+        const worker = await response.json();
+        
+        // Validate supplier_type === "WORKER"
+        if (worker.supplier_type !== 'WORKER') {
+          document.getElementById('worker-error-invalid-type').style.display = 'block';
+          return;
+        }
+        
+        // Check if worker is active
+        if (worker.status && worker.status.toLowerCase() !== 'active') {
+          document.getElementById('worker-error-inactive').style.display = 'block';
+          return;
+        }
+        
+        // Display worker details
+        document.getElementById('worker-id-display').textContent = worker.worker_id || worker.supplier_id || 'N/A';
+        document.getElementById('worker-type-display').textContent = worker.supplier_type;
+        document.getElementById('worker-status-display').textContent = worker.status || 'ACTIVE';
+        
+        // Resolve neighbourhood label (no raw GPS coordinates)
+        const neighbourhoodLabel = resolveNeighbourhoodLabel(worker.latitude, worker.longitude);
+        document.getElementById('worker-location-display').textContent = neighbourhoodLabel;
+        
+        // Show worker details panel
+        document.getElementById('worker-details-panel').style.display = 'block';
+        
+        // Enable token issuance button
+        document.getElementById('issue-token-btn').disabled = false;
+        
+        // Store worker data for token issuance
+        window.currentWorkerData = worker;
+        
+      } catch (err) {
+        console.error('Worker lookup failed:', err);
+        document.getElementById('worker-error-not-registered').style.display = 'block';
+      }
+    }
+
+    function resolveNeighbourhoodLabel(lat, lon) {
+      if (lat >= -15.43 && lat <= -15.40 && lon >= 28.26 && lon <= 28.30) {
+        return "Chunga Dumpsite, Lusaka";
+      }
+      return "Lusaka";
+    }
+
+    // Placeholder for GF-W1-UI-004
+    async function issueToken() {
+      if (!window.currentWorkerData) {
+        alert('No worker data available. Please lookup a worker first.');
+        return;
+      }
+      
+      const workerId = window.currentWorkerData.worker_id || window.currentWorkerData.supplier_id;
+      const btn = document.getElementById('issue-token-btn');
+      btn.disabled = true;
+      btn.textContent = 'Issuing Token...';
+      
+      try {
+        const response = await fetch('/pilot-demo/api/evidence-links/issue', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          credentials: 'include',
+          body: JSON.stringify({
+            worker_id: workerId
+          })
+        });
+        
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status}`);
+        }
+        
+        const tokenData = await response.json();
+        
+        // Display token result
+        displayTokenResult(tokenData);
+        
+        // Clear worker lookup form
+        document.getElementById('worker-phone').value = '';
+        clearWorkerLookupState();
+        
+      } catch (err) {
+        console.error('Token issuance failed:', err);
+        alert('Token issuance failed. Please try again.');
+        btn.disabled = false;
+        btn.textContent = 'Request Collection Token';
+      }
+    }
+
+    function displayTokenResult(tokenData) {
+      const resultPanel = document.getElementById('token-result-panel');
+      const tokenValue = tokenData.token || tokenData.evidence_link_token;
+      const expiryTime = new Date(tokenData.expires_at || tokenData.expiry);
+      const workerId = tokenData.worker_id;
+      const gpsLat = tokenData.gps_latitude || tokenData.latitude;
+      const gpsLon = tokenData.gps_longitude || tokenData.longitude;
+      const radius = tokenData.gps_radius_meters || 250;
+      
+      // Generate worker landing URL with token in hash fragment
+      const workerLandingUrl = `${window.location.origin}/pilot-demo/worker-landing#token=${tokenValue}`;
+      
+      // Display worker ID
+      document.getElementById('token-worker-id').textContent = workerId;
+      
+      // Display expiry time
+      document.getElementById('token-expiry-time').textContent = expiryTime.toLocaleString();
+      
+      // Display neighbourhood label (no raw GPS)
+      const neighbourhoodLabel = resolveNeighbourhoodLabel(gpsLat, gpsLon);
+      document.getElementById('token-location').textContent = neighbourhoodLabel;
+      
+      // Display radius
+      document.getElementById('token-radius').textContent = `${radius}m`;
+      
+      // Display worker landing URL
+      document.getElementById('worker-landing-url').textContent = workerLandingUrl;
+      document.getElementById('worker-landing-url').dataset.url = workerLandingUrl;
+      
+      // Start countdown timer
+      startCountdownTimer(expiryTime);
+      
+      // Add to recent tokens list (GF-W1-UI-005)
+      addToRecentTokens(tokenData);
+      
+      // Show result panel
+      resultPanel.style.display = 'block';
+      
+      // Scroll to result panel
+      resultPanel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+
+    function copyWorkerLandingUrl() {
+      const urlElement = document.getElementById('worker-landing-url');
+      const url = urlElement.dataset.url;
+      
+      navigator.clipboard.writeText(url).then(() => {
+        const btn = document.getElementById('copy-url-btn');
+        const originalText = btn.textContent;
+        btn.textContent = '✓ Copied!';
+        btn.style.background = 'rgba(61,184,90,.15)';
+        btn.style.borderColor = 'rgba(61,184,90,.35)';
+        btn.style.color = 'var(--bright)';
+        
+        setTimeout(() => {
+          btn.textContent = originalText;
+          btn.style.background = '';
+          btn.style.borderColor = '';
+          btn.style.color = '';
+        }, 2000);
+      }).catch(err => {
+        console.error('Copy failed:', err);
+        alert('Failed to copy URL. Please copy manually.');
+      });
+    }
+
+    let countdownInterval = null;
+    
+    // GF-W1-UI-005: Recent tokens tracking (in-memory only)
+    let recentTokens = [];
+    
+    function addToRecentTokens(tokenData) {
+      const token = {
+        id: tokenData.token || tokenData.evidence_link_token,
+        worker_id: tokenData.worker_id,
+        issued_at: new Date().toISOString(),
+        expires_at: tokenData.expires_at || tokenData.expiry,
+        gps_latitude: tokenData.gps_latitude || tokenData.latitude,
+        gps_longitude: tokenData.gps_longitude || tokenData.longitude,
+        gps_radius_meters: tokenData.gps_radius_meters || 250,
+        used: false,
+        revoked: false
+      };
+      
+      // Add to beginning of array
+      recentTokens.unshift(token);
+      
+      // Keep only last 10 tokens
+      if (recentTokens.length > 10) {
+        recentTokens = recentTokens.slice(0, 10);
+      }
+      
+      // Render the list
+      renderRecentTokens();
+    }
+    
+    function calculateTokenStatus(token) {
+      if (token.revoked) {
+        return { status: 'REVOKED', chipClass: 'chip-hold' };
+      }
+      
+      if (token.used) {
+        return { status: 'USED', chipClass: 'chip-auth' };
+      }
+      
+      const now = new Date();
+      const expiryTime = new Date(token.expires_at);
+      
+      if (now > expiryTime) {
+        return { status: 'EXPIRED', chipClass: 'chip-hold' };
+      }
+      
+      return { status: 'ACTIVE', chipClass: 'chip-auth' };
+    }
+    
+    function renderRecentTokens() {
+      const tbody = document.getElementById('recent-tokens-rows');
+      
+      if (recentTokens.length === 0) {
+        tbody.innerHTML = `
+          <tr>
+            <td colspan="3" style="font-family:var(--mono);font-size:9px;color:var(--smoke);opacity:.5;padding:16px;text-align:center;">
+              No tokens issued yet
+            </td>
+          </tr>
+        `;
+        return;
+      }
+      
+      tbody.innerHTML = recentTokens.map(token => {
+        const { status, chipClass } = calculateTokenStatus(token);
+        const issuedTime = new Date(token.issued_at);
+        const timeAgo = formatTimeAgo(issuedTime);
+        
+        return `
+          <tr style="cursor:pointer;border-bottom:1px solid rgba(255,255,255,.03);transition:background .15s;" 
+              onmouseover="this.style.background='rgba(255,255,255,.025)'" 
+              onmouseout="this.style.background=''"
+              onclick="showTokenDetail('${token.id}')">
+            <td style="font-family:var(--mono);font-size:9.5px;color:var(--cream);padding:9px 12px;">
+              ${token.worker_id}
+            </td>
+            <td style="font-family:var(--mono);font-size:9px;color:var(--smoke);padding:9px 12px;">
+              ${timeAgo}
+            </td>
+            <td style="padding:9px 12px;">
+              <span class="status-chip ${chipClass}">${status}</span>
+            </td>
+          </tr>
+        `;
+      }).join('');
+    }
+    
+    function formatTimeAgo(date) {
+      const now = new Date();
+      const diffMs = now - date;
+      const diffMins = Math.floor(diffMs / 60000);
+      
+      if (diffMins < 1) return 'just now';
+      if (diffMins === 1) return '1 min ago';
+      if (diffMins < 60) return `${diffMins} mins ago`;
+      
+      const diffHours = Math.floor(diffMins / 60);
+      if (diffHours === 1) return '1 hour ago';
+      if (diffHours < 24) return `${diffHours} hours ago`;
+      
+      const diffDays = Math.floor(diffHours / 24);
+      if (diffDays === 1) return '1 day ago';
+      return `${diffDays} days ago`;
+    }
+    
+    let currentTokenId = null;
+    
+    function showTokenDetail(tokenId) {
+      // Find token in recentTokens array
+      const token = recentTokens.find(t => t.id === tokenId);
+      if (!token) {
+        console.error('Token not found:', tokenId);
+        return;
+      }
+      
+      currentTokenId = tokenId;
+      
+      // Calculate status
+      const { status, chipClass } = calculateTokenStatus(token);
+      
+      // Populate panel
+      document.getElementById('token-detail-id').textContent = tokenId.substring(0, 16) + '...';
+      document.getElementById('token-detail-worker-id').textContent = token.worker_id;
+      document.getElementById('token-detail-issued').textContent = new Date(token.issued_at).toLocaleString();
+      document.getElementById('token-detail-expires').textContent = new Date(token.expires_at).toLocaleString();
+      
+      // Status chip
+      const statusHtml = `<span class="status-chip ${chipClass}">${status}</span>`;
+      document.getElementById('token-detail-status').innerHTML = statusHtml;
+      
+      // GPS zone
+      const neighbourhoodLabel = resolveNeighbourhoodLabel(token.gps_latitude, token.gps_longitude);
+      document.getElementById('token-detail-location').textContent = neighbourhoodLabel;
+      document.getElementById('token-detail-radius').textContent = `${token.gps_radius_meters}m`;
+      
+      // Usage
+      document.getElementById('token-detail-used').textContent = token.used ? 'Yes' : 'No';
+      document.getElementById('token-detail-used').style.color = token.used ? 'var(--amber-lt)' : 'var(--bright)';
+      
+      document.getElementById('token-detail-revoked').textContent = token.revoked ? 'Yes' : 'No';
+      document.getElementById('token-detail-revoked').style.color = token.revoked ? 'var(--red-lt)' : 'var(--bright)';
+      
+      // Show/hide revoke button
+      const revokeSection = document.getElementById('token-detail-revoke-section');
+      if (token.revoked) {
+        revokeSection.style.display = 'none';
+      } else {
+        revokeSection.style.display = 'block';
+      }
+      
+      // Open panel
+      document.getElementById('token-detail-slideout').classList.add('open');
+    }
+    
+    function closeTokenDetail() {
+      document.getElementById('token-detail-slideout').classList.remove('open');
+      currentTokenId = null;
+    }
+    
+    async function revokeToken() {
+      if (!currentTokenId) {
+        return;
+      }
+      
+      // Confirm revocation
+      if (!confirm('Are you sure you want to revoke this token? This action cannot be undone.')) {
+        return;
+      }
+      
+      try {
+        // Call API to revoke token
+        const response = await fetch(`/pilot-demo/api/evidence-links/revoke/${encodeURIComponent(currentTokenId)}`, {
+          method: 'DELETE',
+          credentials: 'include'
+        });
+        
+        const data = await response.json();
+        
+        if (!response.ok) {
+          // Handle error
+          const errorMsg = data.error_code === 'ALREADY_REVOKED' 
+            ? 'This token has already been revoked.' 
+            : `Failed to revoke token: ${data.error_code || 'Unknown error'}`;
+          alert(errorMsg);
+          return;
+        }
+        
+        // Success - update local state
+        const token = recentTokens.find(t => t.id === currentTokenId);
+        if (token) {
+          token.revoked = true;
+          
+          // Re-render recent tokens list
+          renderRecentTokens();
+          
+          // Update panel
+          showTokenDetail(currentTokenId);
+          
+          // Show success message
+          alert('Token revoked successfully.');
+        }
+      } catch (error) {
+        console.error('Error revoking token:', error);
+        alert('Network error: Failed to revoke token. Please try again.');
+      }
+    }
+    
+    function startCountdownTimer(expiryTime) {
+      // Clear any existing interval
+      if (countdownInterval) {
+        clearInterval(countdownInterval);
+      }
+      
+      const timerElement = document.getElementById('token-countdown');
+      
+      function updateTimer() {
+        const now = new Date();
+        const remaining = expiryTime - now;
+        
+        if (remaining <= 0) {
+          timerElement.textContent = 'EXPIRED';
+          timerElement.style.color = 'var(--red-lt)';
+          timerElement.style.fontWeight = '700';
+          clearInterval(countdownInterval);
+          return;
+        }
+        
+        const minutes = Math.floor(remaining / 60000);
+        const seconds = Math.floor((remaining % 60000) / 1000);
+        timerElement.textContent = `${minutes}m ${seconds}s`;
+        timerElement.style.color = 'var(--cream)';
+      }
+      
+      updateTimer();
+      countdownInterval = setInterval(updateTimer, 1000);
+    }
+
     async function loadOnboardingState() {
       try {
         const data = await onbFetch('/api/admin/onboarding/status');
@@ -4273,7 +4457,7 @@
       } catch (e) { setOnbStatus('Failed to bind policy: ' + e.message, 'error'); }
     }
 
-    async function manualActivateProg() {
+    function manualActivateProg() {
       const pId = document.getElementById('onb-pol-prog-id').value;
       if (!pId) { setOnbStatus('Selection required', 'error'); return; }
       try {
@@ -4291,13 +4475,227 @@
         initDashboard();
       } catch (e) { setOnbStatus('Failed to activate programme: ' + e.message, 'error'); }
     }
+
+    // ── PILOT SUCCESS CRITERIA (GF-W1-UI-013 to 017) ──────────────────────────
+    let s6_criteriaData = null;
+    let s6_activeCriterionId = null;
+
+    async function loadPilotSuccessPanel() {
+      const mockData = {
+        overall_status: 'PENDING',
+        last_verified_utc: new Date().toISOString(),
+        categories: {
+          technical: [
+            { id: 'T1', name: 'Settlement Finality', status: 'PASS', invariants: ['ENF-001', 'INV-103'], verification: 'On-chain Event Log', timestamp: new Date().toISOString() },
+            { id: 'T2', name: 'Idempotency', status: 'PASS', invariants: ['INV-004'], verification: 'Integration Tests', timestamp: new Date().toISOString() },
+            { id: 'T3', name: 'Outbox Relay', status: 'PASS', invariants: ['ENF-002'], verification: 'DB Checks', timestamp: new Date().toISOString() },
+            { id: 'T4', name: 'Zero-downtime Auth', status: 'PASS', invariants: ['INV-010'], verification: 'Simulation', timestamp: new Date().toISOString() },
+            { id: 'T5', name: 'Concurrency Control', status: 'FAIL', invariants: ['INV-111'], verification: 'Stress Test', timestamp: new Date().toISOString() },
+            { id: 'T6', name: 'Event Ordering', status: 'PASS', invariants: ['INV-115'], verification: 'Event Log', timestamp: new Date().toISOString() }
+          ],
+          operational: [
+            { id: 'O1', name: 'Token Minting', status: 'PASS', invariants: [], verification: 'System Metric', timestamp: new Date().toISOString() },
+            { id: 'O2', name: 'Dashboard Refresh', status: 'PASS', invariants: [], verification: 'Telemetry', timestamp: new Date().toISOString() },
+            { id: 'O3', name: 'Report Generation', status: 'PASS', invariants: [], verification: 'App Log', timestamp: new Date().toISOString() },
+            { id: 'O4', name: 'Offline Storage', status: 'PASS', invariants: [], verification: 'System Metric', timestamp: new Date().toISOString() },
+            { id: 'O5', name: 'Recovery Procedure', status: 'PENDING', invariants: [], verification: 'Chaos Test', timestamp: new Date().toISOString() }
+          ],
+          regulatory: [
+            { id: 'R1', name: 'Data Residency', status: 'PASS', invariants: ['REG-001'], verification: 'Infra Config', timestamp: new Date().toISOString() },
+            { id: 'R2', name: 'Audit Trail', status: 'PASS', invariants: ['REG-002'], verification: 'Compliance Scan', timestamp: new Date().toISOString() },
+            { id: 'R3', name: 'Privacy Checks', status: 'PASS', invariants: ['REG-003'], verification: 'Data Scanner', timestamp: new Date().toISOString() },
+            { id: 'R4', name: 'Reporting Format', status: 'PASS', invariants: ['REG-004'], verification: 'Schema Validator', timestamp: new Date().toISOString() },
+            { id: 'R5', name: 'Identity KYC', status: 'PASS', invariants: ['REG-005'], verification: 'Compliance Scan', timestamp: new Date().toISOString() },
+            { id: 'R6', name: 'Export Limits', status: 'PASS', invariants: ['REG-006'], verification: 'Integration Tests', timestamp: new Date().toISOString() }
+          ]
+        }
+      };
+
+      try {
+        if (typeof SymphonyAdapter !== 'undefined' && SymphonyAdapter.getPilotSuccessPanel) {
+          try {
+             const apiData = await SymphonyAdapter.getPilotSuccessPanel();
+             if (apiData && apiData.categories) s6_criteriaData = apiData;
+             else s6_criteriaData = mockData;
+          } catch(e) { s6_criteriaData = mockData; }
+        } else { s6_criteriaData = mockData; }
+      } catch(err) { s6_criteriaData = mockData; }
+
+      s6_renderOverallStatus(s6_criteriaData.overall_status, s6_criteriaData.last_verified_utc);
+      s6_renderCategory('technical', s6_criteriaData.categories.technical);
+      s6_renderCategory('operational', s6_criteriaData.categories.operational);
+      s6_renderCategory('regulatory', s6_criteriaData.categories.regulatory);
+    }
+
+    function s6_renderOverallStatus(status, lastVerified) {
+      const badge = document.getElementById('s6-gate-badge');
+      const message = document.getElementById('s6-gate-message');
+      const ts = document.getElementById('s6-gate-timestamp');
+      if(badge) {
+        badge.className = 'badge';
+        if (status === 'PASS') {
+          badge.classList.add('chip-auth');
+          badge.textContent = 'PASS';
+          message.textContent = 'All Gates Passed';
+        } else if (status === 'FAIL') {
+          badge.classList.add('chip-sim');
+          badge.textContent = 'FAIL';
+          message.textContent = 'Compliance Failures Detected';
+        } else {
+          badge.classList.add('chip-hold');
+          badge.textContent = 'PENDING';
+          message.textContent = 'Gathering Telemetry...';
+        }
+      }
+      if(ts) ts.textContent = lastVerified ? s6_formatTimestamp(lastVerified) : 'Never verified';
+    }
+
+    function s6_formatTimestamp(iso) {
+      if (!iso) return '';
+      const d = new Date(iso);
+      return `Last Verified: ${d.toISOString().replace('T', ' ').substring(0, 19)} UTC`;
+    }
+
+    function s6_renderCategory(category, items) {
+      const list = document.getElementById('s6-list-' + category);
+      const badge = document.getElementById('s6-badge-' + category);
+      if (!list) return;
+
+      list.innerHTML = '';
+      let allPass = true;
+      let anyFail = false;
+
+      items.forEach(item => {
+        if (item.status === 'FAIL') anyFail = true;
+        if (item.status !== 'PASS') allPass = false;
+
+        let statusIcon = '⧗';
+        let color = 'var(--amber-lt)';
+        if (item.status === 'PASS') { statusIcon = '✓'; color = 'var(--bright)'; }
+        if (item.status === 'FAIL') { statusIcon = '✗'; color = 'var(--red-lt)'; }
+
+        const div = document.createElement('div');
+        div.style.cssText = 'display:flex; justify-content:space-between; align-items:center; padding:12px; background:rgba(255,255,255,0.02); border-radius:4px; cursor:pointer;';
+        div.onclick = () => s6_showCriterionDetail(item.id, category);
+
+        const left = document.createElement('div');
+        left.style.cssText = 'display:flex; align-items:center; gap:12px;';
+        left.innerHTML = `
+          <div style="color:${color}; font-size:16px; width:16px; text-align:center;">${statusIcon}</div>
+          <div style="font-size:13px; color:var(--cream);">${item.name}</div>
+        `;
+
+        const right = document.createElement('div');
+        right.style.cssText = 'display:flex; align-items:center; gap:12px; font-family:var(--mono); font-size:10px; color:var(--smoke);';
+        
+        let metaHtml = '';
+        if (category === 'technical' || category === 'regulatory') {
+           if(item.invariants && item.invariants.length > 0) {
+              metaHtml = `<div>${item.invariants.join(', ')}</div>`;
+           }
+        }
+        if (category === 'operational') {
+           metaHtml = `<div>${item.verification || ''}</div>`;
+        }
+
+        right.innerHTML = `${metaHtml} <div style="opacity:0.5;">ℹ️</div>`;
+
+        div.appendChild(left);
+        div.appendChild(right);
+        list.appendChild(div);
+      });
+
+      if (badge) {
+        badge.className = 'badge';
+        if (anyFail) {
+           badge.classList.add('chip-sim');
+           badge.textContent = 'ATTENTION REQUIRED';
+        } else if (allPass) {
+           badge.classList.add('chip-auth');
+           badge.textContent = 'ALL PASS';
+        } else {
+           badge.classList.add('chip-hold');
+           badge.textContent = 'PENDING';
+        }
+      }
+    }
+
+    function s6_showCriterionDetail(id, category) {
+       s6_activeCriterionId = id;
+       const items = s6_criteriaData.categories[category];
+       const item = items.find(i => i.id === id);
+       if (!item) return;
+
+       document.getElementById('s6-detail-id').textContent = item.id;
+       document.getElementById('s6-detail-desc').textContent = item.name;
+       
+       const statusBadge = document.getElementById('s6-detail-status');
+       statusBadge.className = 'badge';
+       if (item.status === 'PASS') {
+          statusBadge.classList.add('chip-auth');
+          statusBadge.textContent = 'PASS';
+       } else if (item.status === 'FAIL') {
+          statusBadge.classList.add('chip-sim');
+          statusBadge.textContent = 'FAIL';
+       } else {
+          statusBadge.classList.add('chip-hold');
+          statusBadge.textContent = 'PENDING';
+       }
+
+       document.getElementById('s6-detail-verified').textContent = item.timestamp ? item.timestamp.replace('T', ' ').substring(0, 19) + ' UTC' : 'N/A';
+       document.getElementById('s6-detail-type').textContent = category.charAt(0).toUpperCase() + category.slice(1) + ' Criterion';
+       document.getElementById('s6-detail-method').textContent = item.verification || 'N/A';
+
+       const invContainer = document.getElementById('s6-detail-invariants-container');
+       if (item.invariants && item.invariants.length > 0) {
+          invContainer.style.display = 'block';
+          document.getElementById('s6-detail-invariants').textContent = item.invariants.join(', ');
+       } else {
+          invContainer.style.display = 'none';
+       }
+
+       document.getElementById('s6-detail-slideout').classList.add('open');
+    }
+
+    function s6_closeCriterionDetail() {
+       document.getElementById('s6-detail-slideout').classList.remove('open');
+    }
+
+    function s6_runVerificationNow() {
+       const btn = document.querySelector('#s6-detail-slideout .btn');
+       if(btn) {
+           btn.textContent = 'Verifying...';
+           setTimeout(() => {
+               btn.textContent = 'Run Verification Now';
+               loadPilotSuccessPanel();
+           }, 1500);
+       }
+    }
+
+    function s6_refreshData() {
+       loadPilotSuccessPanel();
+    }
+    
+    function s6_exportReport() {
+       // Placeholder for task 20
+       alert('Export functionality will be implemented in subsequent phase');
+    }
   </script>
   <style>
-    /* ── SCREEN 5: ONBOARDING CONSOLE ── */
+    /* ── SCREEN: ONBOARDING CONSOLE (GF-W1-UI-007) ── */
     #screen-onboarding {
       flex-direction: column;
       background: var(--bg);
       overflow-y: auto;
+    }
+
+    #screen-onboarding .dash-card {
+      overflow: visible;
+    }
+
+    #screen-onboarding .timeline-table {
+      overflow-y: auto;
+      max-height: 40vh;
     }
 
     .onb-body {

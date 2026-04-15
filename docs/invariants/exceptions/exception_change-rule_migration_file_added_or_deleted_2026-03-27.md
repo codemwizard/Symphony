@@ -6,6 +6,7 @@ follow_up_ticket: TSK-P1-246
 reason: Synchronizing native DB schemas and resolving orphaned schemas from wave 2.
 author: system
 created_at: 2026-03-27
+closed_at: 2026-04-15
 ---
 
 # Exception: migration_file_added_or_deleted structural change without invariants linkage

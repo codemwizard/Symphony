@@ -64,7 +64,7 @@ sha = subprocess.check_output(['git','rev-parse','HEAD'], text=True).strip()
 payload = {
     'check_id': 'TASK-UI-WIRE-006-INSTRUCTION-DETAIL',
     'task_id': task_id,
-    'timestamp_utc': os.popen('date -u +%Y-%m-%dT%H:%M:%SZ').read().strip(),
+    'timestamp_utc': os.popen('[ "${SYMPHONY_EVIDENCE_DETERMINISTIC:-0}" = "1" ] && echo "1970-01-01T00:00:00Z" || date -u +%Y-%m-%dT%H:%M:%SZ).read().strip(),
     'git_sha': sha,
     'status': 'PASS' if not missing_top and len(raw_artifacts) >= 4 and {'PT-001','PT-002','PT-003','PT-004'}.issubset(proof_types) else 'FAIL',
     'pass': not missing_top and len(raw_artifacts) >= 4 and {'PT-001','PT-002','PT-003','PT-004'}.issubset(proof_types),

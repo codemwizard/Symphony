@@ -8,8 +8,8 @@ set -euo pipefail
 
 TASK_ID="GF-W1-REM-002"
 RUN_ID="$(date +%s)"
-GIT_SHA="$(git rev-parse HEAD 2>/dev/null || echo 'unknown')"
-TIMESTAMP_UTC="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+GIT_SHA="$([ "${SYMPHONY_EVIDENCE_DETERMINISTIC:-0}" = "1" ] && echo "0000000000000000000000000000000000000000" || git rev-parse HEAD 2>/dev/null || echo 'unknown')"
+TIMESTAMP_UTC="$([ "${SYMPHONY_EVIDENCE_DETERMINISTIC:-0}" = "1" ] && echo "1970-01-01T00:00:00Z" || date -u +%Y-%m-%dT%H:%M:%SZ)"
 EVIDENCE_PATH="evidence/phase1/gf_w1_rem_002.json"
 
 META_FILES=(

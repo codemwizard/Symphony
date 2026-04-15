@@ -223,7 +223,7 @@ out = {
     "git_sha": os.environ.get("EVIDENCE_GIT_SHA"),
     "schema_fingerprint": os.environ.get("EVIDENCE_SCHEMA_FP"),
     "status": status,
-    "checked_files": checked,
+    "checked_file_count": len(checked),
     "errors": errors,
 }
 

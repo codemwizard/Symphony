@@ -116,7 +116,7 @@ out = {
     "schema_fingerprint": fp,
     "status": status,
     "control_planes_file": str(cp_file),
-    "scripts_scanned": scanned,
+    "script_count": len(scanned),
     "violation_count": len(violations),
     "violations": violations,
     "annotations": {

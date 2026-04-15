@@ -62,3 +62,4 @@ This ADR remains the authoritative governance reference for baseline change chec
 - 2026-03-21: Baseline regenerated after Wave F onboarding control plane RLS hardening (0077).
 - 2026-03-27: Baseline regenerated after scrubbing orphaned Wave 2 configuration components (0085-0094).
 - 2026-04-01: Baseline regenerated after Green Finance Wave 1 DB verifier integration (0097-0114).
+- 2026-04-15: Baseline regenerated using generate_baseline_snapshot.sh to sync with migration 0115 (supplier_type column added to supplier_registry table).

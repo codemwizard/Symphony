@@ -2,6 +2,7 @@ using System.Collections.Concurrent;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
+using System.Linq;
 using Microsoft.AspNetCore.Http;
 
 sealed record SupplierRegistryEntry(
@@ -134,11 +135,11 @@ static class SupplierPolicyStore
                 await using var cmd = conn.CreateCommand();
                 cmd.Transaction = tx;
                 cmd.CommandText = @"
-                    SELECT supplier_name, payout_target, registered_latitude, registered_longitude, active, updated_at_utc
+                    SELECT supplier_id, payout_target, registered_latitude, registered_longitude, active, updated_at_utc, supplier_type
                     FROM public.supplier_registry
-                    WHERE tenant_id = $1 AND supplier_id = $2";
-                cmd.Parameters.AddWithValue(Guid.Parse(tenantId));
-                cmd.Parameters.AddWithValue(supplierId);
+                    WHERE tenant_id = @tenant_id AND supplier_id = @supplier_id";
+                cmd.Parameters.AddWithValue("tenant_id", Guid.Parse(tenantId));
+                cmd.Parameters.AddWithValue("supplier_id", supplierId);
                 await using var reader = await cmd.ExecuteReaderAsync();
                 if (await reader.ReadAsync())
                 {
@@ -150,7 +151,7 @@ static class SupplierPolicyStore
                         registered_latitude: reader.IsDBNull(2) ? null : reader.GetDecimal(2),
                         registered_longitude: reader.IsDBNull(3) ? null : reader.GetDecimal(3),
                         active: reader.GetBoolean(4),
-                        supplier_type: null,  // DB column not yet added; will be null for now
+                        supplier_type: reader.IsDBNull(6) ? null : reader.GetString(6),
                         updated_at_utc: reader.GetString(5)
                     );
                     SupplierRegistry[$"{tenantId}:{supplierId}"] = loaded;
@@ -213,6 +214,134 @@ static class SupplierPolicyStore
             }
         }
         return false;
+    }
+
+    public static async Task<SupplierRegistryEntry?> GetSupplierByPhoneAsync(string tenantId, string phone)
+    {
+        // Search in-memory registry first
+        foreach (var kvp in SupplierRegistry)
+        {
+            if (kvp.Key.StartsWith($"{tenantId}:", StringComparison.Ordinal) &&
+                string.Equals(kvp.Value.payout_target, phone, StringComparison.Ordinal))
+            {
+                return kvp.Value;
+            }
+        }
+
+        // Search database if available
+        if (_dataSource is not null)
+        {
+            await using var conn = await _dataSource.OpenConnectionAsync();
+            await using var tx = await conn.BeginTransactionAsync();
+            try
+            {
+                await using var contextCmd = conn.CreateCommand();
+                contextCmd.Transaction = tx;
+                contextCmd.CommandText = "SELECT set_config('app.current_tenant_id', $1::text, true)";
+                contextCmd.Parameters.AddWithValue(tenantId);
+                await contextCmd.ExecuteScalarAsync();
+
+                await using var cmd = conn.CreateCommand();
+                cmd.Transaction = tx;
+                cmd.CommandText = @"
+                    SELECT supplier_id, supplier_name, payout_target, registered_latitude, registered_longitude, active, updated_at_utc
+                    FROM public.supplier_registry
+                    WHERE tenant_id = $1 AND payout_target = $2";
+                cmd.Parameters.AddWithValue(Guid.Parse(tenantId));
+                cmd.Parameters.AddWithValue(phone);
+                await using var reader = await cmd.ExecuteReaderAsync();
+                if (await reader.ReadAsync())
+                {
+                    var loaded = new SupplierRegistryEntry(
+                        tenant_id: tenantId,
+                        supplier_id: reader.GetString(0),
+                        supplier_name: reader.GetString(1),
+                        payout_target: reader.GetString(2),
+                        registered_latitude: reader.IsDBNull(3) ? null : reader.GetDecimal(3),
+                        registered_longitude: reader.IsDBNull(4) ? null : reader.GetDecimal(4),
+                        active: reader.GetBoolean(5),
+                        supplier_type: null,  // DB column not yet added; will be null for now
+                        updated_at_utc: reader.GetString(6)
+                    );
+                    SupplierRegistry[$"{tenantId}:{loaded.supplier_id}"] = loaded;
+                    await reader.DisposeAsync();
+                    await tx.CommitAsync();
+                    return loaded;
+                }
+                await reader.DisposeAsync();
+                await tx.CommitAsync();
+            }
+            catch
+            {
+                await tx.RollbackAsync();
+                throw;
+            }
+        }
+        return null;
+    }
+
+    public static async Task<IReadOnlyList<SupplierRegistryEntry>> GetSuppliersByTenantAsync(string tenantId)
+    {
+        var result = new List<SupplierRegistryEntry>();
+        // Add from cache
+        foreach (var kvp in SupplierRegistry)
+        {
+            if (kvp.Key.StartsWith($"{tenantId}:", StringComparison.Ordinal))
+            {
+                result.Add(kvp.Value);
+            }
+        }
+
+        // Add from DB (union by supplier_id to avoid duplicates)
+        if (_dataSource is not null)
+        {
+            await using var conn = await _dataSource.OpenConnectionAsync();
+            await using var tx = await conn.BeginTransactionAsync();
+            try
+            {
+                await using var contextCmd = conn.CreateCommand();
+                contextCmd.Transaction = tx;
+                contextCmd.CommandText = "SELECT set_config('app.current_tenant_id', $1::text, true)";
+                contextCmd.Parameters.AddWithValue(tenantId);
+                await contextCmd.ExecuteScalarAsync();
+
+                await using var cmd = conn.CreateCommand();
+                cmd.Transaction = tx;
+                cmd.CommandText = @"
+                    SELECT supplier_id, supplier_name, payout_target, registered_latitude, registered_longitude, active, updated_at_utc, supplier_type
+                    FROM public.supplier_registry
+                    WHERE tenant_id = $1";
+                cmd.Parameters.AddWithValue(Guid.Parse(tenantId));
+                {
+                    await using var reader = await cmd.ExecuteReaderAsync();
+                    while (await reader.ReadAsync())
+                    {
+                        var id = reader.GetString(0);
+                        if (result.Any(r => r.supplier_id == id)) continue;
+
+                        var loaded = new SupplierRegistryEntry(
+                            tenant_id: tenantId,
+                            supplier_id: id,
+                            supplier_name: reader.GetString(1),
+                            payout_target: reader.GetString(2),
+                            registered_latitude: reader.IsDBNull(3) ? null : reader.GetDecimal(3),
+                            registered_longitude: reader.IsDBNull(4) ? null : reader.GetDecimal(4),
+                            active: reader.GetBoolean(5),
+                            supplier_type: reader.IsDBNull(7) ? null : reader.GetString(7),
+                            updated_at_utc: reader.GetString(6)
+                        );
+                        result.Add(loaded);
+                    }
+                }
+                await tx.CommitAsync();
+            }
+            catch
+            {
+                await tx.RollbackAsync();
+                throw;
+            }
+        }
+        return result;
     }
 }
 

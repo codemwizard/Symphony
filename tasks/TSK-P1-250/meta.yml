@@ -1,0 +1,65 @@
+schema_version: 1
+phase: '1'
+task_id: TSK-P1-250
+title: Stabilize dotnet lint quality execution so pre_ci reaches a reliable terminal state
+owner_role: SECURITY_GUARDIAN
+status: completed
+depends_on:
+  - TSK-P1-249
+touches:
+  - scripts/security/lint_dotnet_quality.sh
+  - scripts/security/tests/test_lint_dotnet_quality.sh
+  - evidence/phase1/tsk_p1_250_dotnet_lint_runtime_stability.json
+  - tasks/TSK-P1-250/meta.yml
+invariants:
+  - INV-001
+  - INV-004
+work:
+  - '[ID tsk_p1_250_work_item_01] Audit the exact dotnet format invocation path in scripts/security/lint_dotnet_quality.sh and isolate why the stage can prevent pre_ci from reaching a reliable terminal state.'
+  - '[ID tsk_p1_250_work_item_02] Replace any remaining timing-sensitive or raw stdout evidence fields in lint_dotnet_quality.sh with deterministic summary fields that remain diagnostically useful.'
+  - '[ID tsk_p1_250_work_item_03] Add bounded execution behavior and focused regression coverage in scripts/security/tests/test_lint_dotnet_quality.sh so the verifier proves the gate completes and emits stable evidence.'
+  - '[ID tsk_p1_250_work_item_04] Emit evidence/phase1/tsk_p1_250_dotnet_lint_runtime_stability.json recording completion, summaries, observed paths, and command outputs for the stabilized gate.'
+acceptance_criteria:
+  - '[ID tsk_p1_250_work_item_01] scripts/security/lint_dotnet_quality.sh reaches a terminal pass or fail state during local pre_ci execution instead of hanging indefinitely in dotnet format.'
+  - '[ID tsk_p1_250_work_item_02] dotnet lint quality evidence omits raw timing-sensitive build stdout and retains only deterministic summary fields.'
+  - '[ID tsk_p1_250_work_item_03] bash scripts/security/tests/test_lint_dotnet_quality.sh proves the gate completes and the emitted evidence shape is stable.'
+  - '[ID tsk_p1_250_work_item_04] evidence/phase1/tsk_p1_250_dotnet_lint_runtime_stability.json records PASS status plus observed paths, observed hashes, command outputs, and execution trace.'
+verification:
+  - '[ID tsk_p1_250_work_item_01] [ID tsk_p1_250_work_item_02] [ID tsk_p1_250_work_item_03] [ID tsk_p1_250_work_item_04] test -x scripts/security/tests/test_lint_dotnet_quality.sh && SYMPHONY_ENV=development bash scripts/security/tests/test_lint_dotnet_quality.sh || exit 1'
+  - '[ID tsk_p1_250_work_item_04] test -f evidence/phase1/tsk_p1_250_dotnet_lint_runtime_stability.json && cat evidence/phase1/tsk_p1_250_dotnet_lint_runtime_stability.json | tee /tmp/tsk_p1_250_evidence.log >/dev/null || exit 1'
+  - '[ID tsk_p1_250_work_item_04] test -f evidence/phase1/tsk_p1_250_dotnet_lint_runtime_stability.json && python3 scripts/audit/validate_evidence.py --task TSK-P1-250 --evidence evidence/phase1/tsk_p1_250_dotnet_lint_runtime_stability.json || exit 1'
+  - '[ID tsk_p1_250_work_item_01] [ID tsk_p1_250_work_item_02] [ID tsk_p1_250_work_item_03] PRE_CI_CONTEXT=1 SYMPHONY_ENV=development test -x scripts/security/lint_dotnet_quality.sh && PRE_CI_CONTEXT=1 SYMPHONY_ENV=development bash scripts/security/lint_dotnet_quality.sh || exit 1'
+evidence:
+  - path: evidence/phase1/tsk_p1_250_dotnet_lint_runtime_stability.json
+    must_include:
+      - task_id
+      - git_sha
+      - timestamp_utc
+      - status
+      - checks
+      - targeted_files
+      - command_outputs
+      - observed_paths
+      - observed_hashes
+      - execution_trace
+failure_modes:
+  - dotnet format remains unbounded and prevents pre_ci terminal-state completion => FAIL
+  - dotnet lint evidence still embeds raw timing-sensitive stdout => FAIL
+  - Evidence file missing => FAIL
+anti_patterns:
+  - Treating a long-running gate as acceptable without bounding or explaining it
+  - Stripping all diagnostic content from evidence instead of replacing unstable payloads with stable summaries
+must_read:
+  - AGENT_ENTRYPOINT.md
+  - docs/operations/AI_AGENT_OPERATION_MANUAL.md
+  - docs/plans/phase1/REM-2026-04-06_evidence-push-nonconvergence/PLAN.md
+  - scripts/security/lint_dotnet_quality.sh
+implementation_plan: docs/plans/phase1/TSK-P1-250/PLAN.md
+implementation_log: docs/plans/phase1/TSK-P1-250/EXEC_LOG.md
+notes: >
+  This task isolates the terminal-state problem in the dotnet lint gate so the
+  evidence pipeline can reach a trustworthy end-of-run state before final
+  convergence is proven.
+client: antigravity
+assigned_agent: security_guardian
+model: gpt-5-codex

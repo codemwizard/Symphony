@@ -53,7 +53,7 @@ cat > "$EVIDENCE_FILE" <<EOF
   "task": "RLS-001",
   "status": "FROZEN",
   "git_sha": "$GIT_SHA",
-  "timestamp_utc": "$(date -u +'%Y-%m-%dT%H:%M:%SZ')",
+  "timestamp_utc": "$([ "${SYMPHONY_EVIDENCE_DETERMINISTIC:-0}" = "1" ] && echo "1970-01-01T00:00:00Z" || date -u +%Y-%m-%dT%H:%M:%SZ)",
   "metrics": {
     "yaml_tables_declared": $YAML_COUNT,
     "db_config_tables_registered": $TABLE_COUNT,
