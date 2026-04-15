@@ -7068,11 +7068,11 @@ CREATE TABLE public.supplier_registry (
     tenant_id uuid NOT NULL,
     supplier_id text NOT NULL,
     supplier_name text NOT NULL,
+    supplier_type text,
     payout_target text NOT NULL,
     registered_latitude numeric,
     registered_longitude numeric,
     active boolean DEFAULT true NOT NULL,
-    supplier_type text,
     updated_at_utc text NOT NULL
 );
 
