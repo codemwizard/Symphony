@@ -2,7 +2,7 @@
   "check_id": "GIT-DIFF-SEMANTICS",
   "timestamp_utc": "1970-01-01T00:00:00Z",
   "git_sha": "0000000000000000000000000000000000000000",
-  "schema_fingerprint": "1f92363c69ba235e552a6aac05045062fc0097fc93cde3b89e76455b80628019",
+  "schema_fingerprint": "aaf9f9460480d6fb69b86a860aa77aaa7e4ac21fbf2fcb14f43fea99702f17c3",
   "status": "PASS",
   "diff_mode": "range",
   "base_ref": "refs/remotes/origin/main",

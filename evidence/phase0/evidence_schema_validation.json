@@ -5,7 +5,7 @@
   "git_sha": "0000000000000000000000000000000000000000",
   "status": "PASS",
   "pass": true,
-  "count_valid": 309,
+  "count_valid": 312,
   "count_invalid": 0,
   "invalid_files": [],
   "schema_version": "1.0",

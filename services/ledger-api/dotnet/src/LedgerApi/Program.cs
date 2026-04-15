@@ -741,11 +741,12 @@ app.MapGet("/pilot-demo/api/workers/list", async (HttpContext ctx, CancellationT
     // Fetch all workers for the tenant
     var workers = await SupplierPolicyStore.GetSuppliersByTenantAsync(tenantId);
     var filtered = workers.Where(w => w.supplier_type == "WORKER" && w.active)
-                          .Select(w => new { 
-                              worker_id = w.supplier_id, 
+                          .Select(w => new
+                          {
+                              worker_id = w.supplier_id,
                               name = w.supplier_name,
                               phone = w.payout_target
-                           });
+                          });
 
     return Results.Json(filtered, statusCode: StatusCodes.Status200OK);
 }).RequireRateLimiting("sensitive-endpoint");

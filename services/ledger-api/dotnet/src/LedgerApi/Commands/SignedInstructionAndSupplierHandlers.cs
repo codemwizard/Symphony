@@ -221,7 +221,7 @@ static class SupplierPolicyStore
         // Search in-memory registry first
         foreach (var kvp in SupplierRegistry)
         {
-            if (kvp.Key.StartsWith($"{tenantId}:", StringComparison.Ordinal) && 
+            if (kvp.Key.StartsWith($"{tenantId}:", StringComparison.Ordinal) &&
                 string.Equals(kvp.Value.payout_target, phone, StringComparison.Ordinal))
             {
                 return kvp.Value;
