@@ -11,13 +11,14 @@
   "triggered_change_present": true,
   "triggered_prefixes": [
     "docs",
+    "schema",
     "scripts",
     "src"
   ],
   "satisfying_docs": [
-    "docs/plans/phase1/REM-2026-04-06_evidence-push-nonconvergence/PLAN.md",
-    "docs/plans/phase1/REM-2026-04-06_evidence-push-nonconvergence/EXEC_LOG.md"
+    "docs/plans/phase1/REM-2026-03-14_demo-030-final-summary-fix/PLAN.md",
+    "docs/plans/phase1/REM-2026-03-14_demo-030-final-summary-fix/EXEC_LOG.md"
   ],
-  "satisfying_doc_parent": "docs/plans/phase1/REM-2026-04-06_evidence-push-nonconvergence",
+  "satisfying_doc_parent": "docs/plans/phase1/REM-2026-03-14_demo-030-final-summary-fix",
   "errors": []
 }
