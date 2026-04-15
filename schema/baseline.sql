@@ -6390,6 +6390,7 @@ CREATE TABLE public.supplier_registry (
     registered_latitude numeric,
     registered_longitude numeric,
     active boolean DEFAULT true NOT NULL,
+    supplier_type text,
     updated_at_utc text NOT NULL
 );
 
