@@ -53,10 +53,10 @@ final_status: PASS
 - Migration adds nullable supplier_type column to non-hot supplier_registry table
 - Migration is already documented in exception_change-rule_ddl_2026-04-15.md (EXC-1000)
 - Applied fix: Added DDL-ALLOW-0102 entry to docs/security/ddl_allowlist.json
-- Initial fingerprint calculation was incorrect
-- Corrected statement fingerprint: e575a1a7b59fb85539e7d72511b65d96fb994a14f7e748d8cc742cd34204e66f
+- Initial fingerprint calculations were incorrect (full statement vs line content)
+- Corrected statement fingerprint: 07eb999eb3b91571ec846778c83d596cf56877f6a7d64122e6c9446826b9a710 (line-content only)
 
 ### Verification
 
-- Corrected allowlist entry with proper fingerprint and metadata
+- Corrected allowlist entry with proper line-content fingerprint and metadata
 - Ready to commit changes, clear DRD lockout, and re-run pre_ci.sh

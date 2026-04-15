@@ -30,7 +30,7 @@ The lint_ddl_lock_risk.sh script flags ALTER TABLE as a risky DDL pattern. Howev
 ### Fix Applied
 Added DDL-ALLOW-0102 entry to docs/security/ddl_allowlist.json with:
 - migration: schema/migrations/0115_add_supplier_type_to_registry.sql
-- statement_fingerprint: e575a1a7b59fb85539e7d72511b65d96fb994a14f7e748d8cc742cd34204e66f (corrected)
+- statement_fingerprint: 07eb999eb3b91571ec846778c83d596cf56877f6a7d64122e6c9446826b9a710 (line-content only, not full statement)
 - reason: Pilot demo migration adding nullable column to non-hot table, documented in EXC-1000
 - expires_on: 2026-12-31
 - reviewed_by: security_guardian
