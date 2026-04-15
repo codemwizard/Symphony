@@ -6,35 +6,35 @@ failure_signature: PRECI.AUDIT.GATES
 
 origin_gate_id: pre_ci.phase0_ordered_checks
 repro_command: SKIP_DOTNET_QUALITY_LINT=1 scripts/dev/pre_ci.sh
-verification_commands_run: scripts/security/lint_ddl_lock_risk.sh
+verification_commands_run: scripts/audit/verify_tsk_p1_063.sh
 final_status: PASS
-root_cause: DDL lock risk lint (SEC-DDL-LOCK-RISK) flagged ALTER TABLE statement in pilot demo migration 0115. The migration adds a nullable supplier_type column to non-hot supplier_registry table and is documented in exception_change-rule_ddl_2026-04-15.md (EXC-1000).
+root_cause: TSK-P1-063 Git mutation surface audit failed because two pilot task verification scripts (verify_tsk_p1_plt_008.sh and verify_tsk_p1_plt_009b.sh) use git rev-parse HEAD but are not documented in the Git mutation surface audit doc.
 
 ## Scope
 - Record the failing layer, root cause, and fix sequence for this remediation.
 
 ## Initial Hypotheses
-- DDL lock risk lint flagging ALTER TABLE in migration 0115
+- TSK-P1-063 Git audit flagging scripts that use Git commands
 
 ## Root Cause Analysis
 
 ### Failure Details
-- Check: SEC-DDL-LOCK-RISK (DDL lock risk lint)
-- Error: ALTER TABLE statement flagged in schema/migrations/0115_add_supplier_type_to_registry.sql:4
-- Statement: ALTER TABLE public.supplier_registry ADD COLUMN IF NOT EXISTS supplier_type TEXT
-- NONCONVERGENCE_COUNT: 4 consecutive failures
+- Check: TSK-P1-063 (mutable Git script audit)
+- Error: Two scripts missing from Git mutation surface audit doc:
+  - scripts/audit/verify_tsk_p1_plt_008.sh
+  - scripts/audit/verify_tsk_p1_plt_009b.sh
+- NONCONVERGENCE_COUNT: 7 consecutive failures
 
 ### Investigation
-The lint_ddl_lock_risk.sh script flags ALTER TABLE as a risky DDL pattern. However, this migration is for a pilot demo that adds a nullable column to a non-hot table (supplier_registry). The migration is already documented in exception_change-rule_ddl_2026-04-15.md with exception ID EXC-1000. The script includes an allowlist mechanism via docs/security/ddl_allowlist.json for exactly this scenario.
+The verify_tsk_p1_063.sh script scans scripts/ and .githooks/ for Git mutation patterns and verifies they are documented in docs/audits/GIT_MUTATION_SURFACE_AUDIT_2026-03-10.md. The two missing scripts use `git rev-parse HEAD` to read the current git SHA for evidence generation, but they are read-only Git operations (no ref mutation). They should be classified as:
+- mutates: no (read-only Git operations)
+- contains: no (no Git plumbing scrubbing or repository identity assertion)
+- status: PASS (safe read-only Git usage)
 
 ### Fix Applied
-Added DDL-ALLOW-0102 entry to docs/security/ddl_allowlist.json with:
-- migration: schema/migrations/0115_add_supplier_type_to_registry.sql
-- statement_fingerprint: 07eb999eb3b91571ec846778c83d596cf56877f6a7d64122e6c9446826b9a710 (line-content only, not full statement)
-- reason: Pilot demo migration adding nullable column to non-hot table, documented in EXC-1000
-- expires_on: 2026-12-31
-- reviewed_by: security_guardian
-- approved_at: 2026-04-15
+Added two entries to docs/audits/GIT_MUTATION_SURFACE_AUDIT_2026-03-10.md:
+- scripts/audit/verify_tsk_p1_plt_008.sh: no | n/a | PASS | Reads git rev-parse HEAD for evidence; no Git mutation.
+- scripts/audit/verify_tsk_p1_plt_009b.sh: no | n/a | PASS | Reads git rev-parse HEAD for evidence; no Git mutation.
 
 ## Solution Summary
-Added pilot demo migration 0115 to DDL allowlist. The ALTER TABLE statement adds a nullable supplier_type column to the non-hot supplier_registry table and is already documented with proper exception metadata.
+Added two pilot task verification scripts to the Git mutation surface audit doc. Both scripts use read-only Git operations (git rev-parse HEAD) for evidence generation and do not mutate refs, so they are classified as PASS with no mutation or containment requirements.
