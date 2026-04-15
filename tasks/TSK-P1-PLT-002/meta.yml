@@ -60,6 +60,7 @@ must_read:
   - services/ledger-api/dotnet/src/LedgerApi/ReadModels/SupervisoryRevealReadModelHandler.cs
 implementation_plan: docs/plans/phase1/TSK-P1-PLT-002/PLAN.md
 implementation_log: docs/plans/phase1/TSK-P1-PLT-002/EXEC_LOG.md
+notes: This task provides a pilot-specific shim around the admin reveal endpoint. The implementation reuses the existing SupervisoryRevealReadModelHandler logic but adds operator cookie authentication. This avoids duplicating business logic while providing pilot demo access.
 client: cursor
 assigned_agent: architect
 model: <UNASSIGNED>

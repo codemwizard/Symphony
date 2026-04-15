@@ -62,6 +62,7 @@ must_read:
   - scripts/audit/verify_gf_w1_ui_024.sh (as template)
 implementation_plan: docs/plans/phase1/TSK-P1-PLT-007/PLAN.md
 implementation_log: docs/plans/phase1/TSK-P1-PLT-007/EXEC_LOG.md
+notes: This task provides a mechanical E2E gate for the entire pilot integration. The script verifies all previous tasks in sequence and produces a single evidence artifact.
 client: cursor
 assigned_agent: architect
 model: <UNASSIGNED>

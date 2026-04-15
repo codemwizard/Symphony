@@ -59,6 +59,7 @@ must_read:
   - scripts/dev/generate_programme_reporting_pack.sh
 implementation_plan: docs/plans/phase1/TSK-P1-PLT-004/PLAN.md
 implementation_log: docs/plans/phase1/TSK-P1-PLT-004/EXEC_LOG.md
+notes: This task aligns the monitoring report UI with the backend ReadModel structure. The export trigger is a shim that calls the existing bash script rather than reimplementing PDF generation logic.
 client: cursor
 assigned_agent: architect
 model: <UNASSIGNED>

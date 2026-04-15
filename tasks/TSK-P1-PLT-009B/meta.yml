@@ -42,6 +42,7 @@ must_read:
   - docs/operations/AI_AGENT_OPERATION_MANUAL.md
 implementation_plan: docs/plans/phase1/TSK-P1-PLT-009B/PLAN.md
 implementation_log: docs/plans/phase1/TSK-P1-PLT-009B/EXEC_LOG.md
+notes: This task implements dynamic worker fetching in the token issuance frontend. The implementation aligns form submission keys with the backend LedgerAPI to ensure proper data flow.
 client: cursor
 assigned_agent: security_guardian
 model: claude-sonnet-4-20250514

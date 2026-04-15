@@ -39,6 +39,7 @@ must_read:
   - docs/operations/AI_AGENT_OPERATION_MANUAL.md
 implementation_plan: docs/plans/phase1/TSK-P1-PLT-009A/PLAN.md
 implementation_log: docs/plans/phase1/TSK-P1-PLT-009A/EXEC_LOG.md
+notes: This task adds sequence_number injection to the token issuance backend response. The implementation uses the existing EvidenceLinkSmsDispatchLog lookup mechanism to ensure deterministic sequence tracking.
 client: cursor
 assigned_agent: security_guardian
 model: claude-sonnet-4-20250514

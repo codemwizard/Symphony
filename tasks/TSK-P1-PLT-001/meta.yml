@@ -59,6 +59,7 @@ must_read:
   - services/ledger-api/dotnet/src/LedgerApi/Program.cs
 implementation_plan: docs/plans/phase1/TSK-P1-PLT-001/PLAN.md
 implementation_log: docs/plans/phase1/TSK-P1-PLT-001/EXEC_LOG.md
+notes: This task is foundational for pilot demo authentication. All subsequent pilot API tasks depend on the operator cookie being correctly injected. The implementation uses static file serving via Program.cs rather than static file middleware to ensure the authentication context is available.
 client: cursor
 assigned_agent: architect
 model: <UNASSIGNED>

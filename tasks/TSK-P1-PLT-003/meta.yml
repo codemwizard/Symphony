@@ -56,6 +56,7 @@ must_read:
   - src/symphony-pilot/success-criteria.html
 implementation_plan: docs/plans/phase1/TSK-P1-PLT-003/PLAN.md
 implementation_log: docs/plans/phase1/TSK-P1-PLT-003/EXEC_LOG.md
+notes: This task provides deterministic KPI data for the pilot success criteria UI. The implementation uses a static mapping rather than dynamic database queries to ensure consistent demo behavior across runs.
 client: cursor
 assigned_agent: architect
 model: <UNASSIGNED>

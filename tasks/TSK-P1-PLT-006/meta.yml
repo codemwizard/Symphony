@@ -59,6 +59,7 @@ must_read:
   - src/symphony-pilot/token-issuance.html
 implementation_plan: docs/plans/phase1/TSK-P1-PLT-006/PLAN.md
 implementation_log: docs/plans/phase1/TSK-P1-PLT-006/EXEC_LOG.md
+notes: This task aligns the token issuance payload structure and adds sequence number tracking. The sequence number is injected by the backend to prevent frontend manipulation of issuance order.
 client: cursor
 assigned_agent: architect
 model: <UNASSIGNED>
