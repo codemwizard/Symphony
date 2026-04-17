@@ -2,7 +2,7 @@
   "check_id": "TSK-P1-216",
   "timestamp_utc": "1970-01-01T00:00:00Z",
   "git_sha": "0000000000000000000000000000000000000000",
-  "schema_fingerprint": "aaf9f9460480d6fb69b86a860aa77aaa7e4ac21fbf2fcb14f43fea99702f17c3",
+  "schema_fingerprint": "1fdf05c50ee35492913d64677c55a8be0165181fe89fe8350dbd8df92094fa14",
   "status": "PASS",
   "task_id": "TSK-P1-216",
   "run_id": "standalone-19700101T000000Z",

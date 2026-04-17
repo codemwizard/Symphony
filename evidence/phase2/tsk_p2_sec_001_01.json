@@ -1,0 +1,34 @@
+{
+  "task_id": "TSK-P2-SEC-001-01",
+  "git_sha": "3b31224ac32b5d2c530fd33c134ab7022e08c908",
+  "timestamp_utc": "2026-04-17T07:07:32Z",
+  "status": "PASS",
+  "checks": [
+    {"name": "verifier_exists", "status": "true"},
+    {"name": "grep_pattern_correct", "status": "true"},
+    {"name": "verifier_passes", "status": "true"},
+    {"name": "inv_130_implemented", "status": "true"}
+  ],
+  "verifier_path": "scripts/security/verify_supervisor_bind_localhost.sh",
+  "inv_130_status": "implemented",
+  "observed_paths": [
+  "scripts/security/verify_supervisor_bind_localhost.sh",
+  "supervisor_api/server.py",
+  "docs/invariants/INVARIANTS_MANIFEST.yml"
+],
+  "observed_hashes": [
+  "acd81c3609e46926a16ba2067c650695ff89e8b0bf5c5b06f0ec86f467b4ec38",
+  "81cb8ec5550a1e08d6a02aecc6f09c616c85d4da7c1e2dedd97bd56798b63dac"
+],
+  "command_outputs": [
+  "grep_pattern_correct: PASS",
+  "verifier_passes: PASS",
+  "inv_130_status: implemented"
+],
+  "execution_trace": [
+  {"step": "check_verifier_exists", "status": "true"},
+  {"step": "check_grep_pattern", "status": "true"},
+  {"step": "run_verifier", "status": "true"},
+  {"step": "check_inv_130_status", "status": "true"}
+]
+}

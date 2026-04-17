@@ -1,0 +1,147 @@
+schema_version: 1
+phase: '2'
+task_id: TSK-P2-PREAUTH-005-00
+title: "Create PLAN.md and verify alignment for state_transitions"
+owner_role: DB_FOUNDATION
+status: planned
+priority: HIGH
+risk_class: GOVERNANCE
+blast_radius: DOCS_ONLY
+
+intent: >-
+  This task creates the PLAN.md for the state_transitions and state_current tables plus 6 trigger functions.
+  Without a verified plan, the schema changes lack architectural documentation and
+  verification trace, creating risk of incomplete or incorrect implementation of
+  state machine enforcement (highest risk area).
+
+anti_patterns:
+  - "Creating PLAN.md after implementation has started"
+  - "Writing PLAN.md without explicit tracking IDs for work items"
+  - "Omitting stop conditions or proof limitations"
+
+out_of_scope:
+  - "Actual migration writing (deferred to TSK-P2-PREAUTH-005-01)"
+  - "Trigger implementation (deferred to TSK-P2-PREAUTH-005-03 through 005-08)"
+  - "Application layer changes"
+
+stop_conditions:
+  - "If verify_plan_semantic_alignment.py fails with orphaned nodes"
+  - "If the plan lacks explicit verifier specifications"
+  - "If the plan lacks negative test definitions"
+
+proof_guarantees:
+  - "PLAN.md exists at docs/plans/phase2/TSK-P2-PREAUTH-005-00/PLAN.md"
+  - "PLAN.md passes verify_plan_semantic_alignment.py validation"
+
+proof_limitations:
+  - "Cannot verify that the plan content is technically correct without implementation"
+  - "Cannot verify that the triggers will actually enforce state machine correctly"
+
+depends_on:
+  - TSK-P2-PREAUTH-003-02
+  - TSK-P2-PREAUTH-004-02
+blocks:
+  - TSK-P2-PREAUTH-005-01
+
+touches:
+  - docs/plans/phase2/TSK-P2-PREAUTH-005-00/PLAN.md
+  - tasks/TSK-P2-PREAUTH-005-00/meta.yml
+
+invariants: []
+
+work:
+  - >-
+    [ID tsk_p2_preauth_005_00_work_item_01] Create PLAN.md at docs/plans/phase2/TSK-P2-PREAUTH-005-00/PLAN.md
+    from PLAN_TEMPLATE.md with objective, architectural context, pre-conditions, files to change,
+    stop conditions, implementation steps, verification, evidence contract, rollback, and risk sections.
+  - >-
+    [ID tsk_p2_preauth_005_00_work_item_02] Document the state_transitions table requirements including
+    columns: transition_id UUID PRIMARY KEY, project_id UUID NOT NULL, from_state VARCHAR NOT NULL,
+    to_state VARCHAR NOT NULL, transition_timestamp TIMESTAMPTZ NOT NULL, execution_id UUID,
+    policy_decision_id UUID, signature TEXT, and indexes on project_id and transition_timestamp.
+  - >-
+    [ID tsk_p2_preauth_005_00_work_item_03] Document the state_current table requirements including
+    columns: project_id UUID PRIMARY KEY, current_state VARCHAR NOT NULL, state_since TIMESTAMPTZ NOT NULL.
+  - >-
+    [ID tsk_p2_preauth_005_00_work_item_04] Document the 6 trigger functions: enforce_transition_state_rules(),
+    enforce_transition_authority(), enforce_transition_signature(), enforce_execution_binding(),
+    deny_state_transitions_mutation(), update_current_state().
+  - >-
+    [ID tsk_p2_preauth_005_00_work_item_05] Run verify_plan_semantic_alignment.py to validate
+    proof graph integrity: python3 scripts/audit/verify_plan_semantic_alignment.py
+    --plan docs/plans/phase2/TSK-P2-PREAUTH-005-00/PLAN.md --meta tasks/TSK-P2-PREAUTH-005-00/meta.yml
+
+acceptance_criteria:
+  - >-
+    [ID tsk_p2_preauth_005_00_work_item_01] PLAN.md exists at docs/plans/phase2/TSK-P2-PREAUTH-005-00/PLAN.md
+    and contains all required sections.
+  - >-
+    [ID tsk_p2_preauth_005_00_work_item_02] PLAN.md documents state_transitions table with required columns.
+  - >-
+    [ID tsk_p2_preauth_005_00_work_item_03] PLAN.md documents state_current table.
+  - >-
+    [ID tsk_p2_preauth_005_00_work_item_04] PLAN.md documents all 6 trigger functions.
+  - >-
+    [ID tsk_p2_preauth_005_00_work_item_05] verify_plan_semantic_alignment.py exits 0 with
+    NO_ORPHANS=true and GRAPH_CONNECTED=true.
+
+negative_tests:
+  - id: TSK-P2-PREAUTH-005-00-N1
+    description: >-
+      Verify that verify_plan_semantic_alignment.py fails on a plan with orphaned work items
+      (missing acceptance criteria mapping).
+    required: true
+
+positive_tests: []
+
+verification:
+  - >-
+    # [ID tsk_p2_preauth_005_00_work_item_01]
+    test -f docs/plans/phase2/TSK-P2-PREAUTH-005-00/PLAN.md || exit 1
+  - >-
+    # [ID tsk_p2_preauth_005_00_work_item_02]
+    grep -q "state_transitions" docs/plans/phase2/TSK-P2-PREAUTH-005-00/PLAN.md || exit 1
+  - >-
+    # [ID tsk_p2_preauth_005_00_work_item_03]
+    grep -q "state_current" docs/plans/phase2/TSK-P2-PREAUTH-005-00/PLAN.md || exit 1
+  - >-
+    # [ID tsk_p2_preauth_005_00_work_item_04]
+    grep -q "enforce_transition_state_rules" docs/plans/phase2/TSK-P2-PREAUTH-005-00/PLAN.md || exit 1
+  - >-
+    # [ID tsk_p2_preauth_005_00_work_item_05]
+    python3 scripts/audit/verify_plan_semantic_alignment.py --plan docs/plans/phase2/TSK-P2-PREAUTH-005-00/PLAN.md --meta tasks/TSK-P2-PREAUTH-005-00/meta.yml || exit 1
+
+evidence:
+  - path: evidence/phase2/tsk_p2_preauth_005_00.json
+    must_include:
+      - task_id
+      - git_sha
+      - timestamp_utc
+      - status
+      - checks
+      - plan_path
+      - graph_validation_enabled
+      - no_orphans
+      - graph_connected
+
+failure_modes:
+  - "PLAN.md missing => CRITICAL_FAIL"
+  - "verify_plan_semantic_alignment.py fails => FAIL"
+  - "PLAN lacks trigger documentation => FAIL_REVIEW"
+
+must_read:
+  - docs/operations/AI_AGENT_OPERATION_MANUAL.md
+  - docs/operations/TASK_CREATION_PROCESS.md
+  - docs/contracts/templates/PLAN_TEMPLATE.md
+  - docs/plans/phase2/ATOMIC_TASK_BREAKDOWN_PLAN.md
+
+implementation_plan: docs/plans/phase2/TSK-P2-PREAUTH-005-00/PLAN.md
+implementation_log: docs/plans/phase2/TSK-P2-PREAUTH-005-00/EXEC_LOG.md
+
+notes: >-
+  This task depends on TSK-P2-PREAUTH-003-02 and TSK-P2-PREAUTH-004-02 and blocks TSK-P2-PREAUTH-005-01.
+  This is the HIGHEST RISK area - state machine + trigger layer. Phase Key: PRE-PHASE2. Phase Name: Pre-Phase 2 Implementation.
+
+client: cursor
+assigned_agent: db_foundation
+model: <UNASSIGNED>

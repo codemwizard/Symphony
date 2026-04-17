@@ -1,0 +1,57 @@
+schema_version: 1
+phase: '1'
+task_id: TSK-P1-TEN-RDY
+title: 'Tenant Readiness Middleware: Fix 503-before-403 ordering and dynamic tenant initialization'
+owner_role: SECURITY_GUARDIAN
+status: completed
+depends_on: []
+touches:
+  - services/ledger-api/dotnet/src/LedgerApi/Security/ITenantReadinessProbe.cs
+  - services/ledger-api/dotnet/src/LedgerApi/Security/TenantReadinessMiddleware.cs
+  - services/ledger-api/dotnet/src/LedgerApi/Security/TenantReadinessMiddlewareTests.cs
+  - services/ledger-api/dotnet/src/LedgerApi/Security/ApiAuthorization.cs
+  - services/ledger-api/dotnet/src/LedgerApi/Program.cs
+  - services/ledger-api/dotnet/src/LedgerApi/Demo/DemoSelfTestEntryPoint.cs
+  - scripts/audit/test_tenant_allowlist_deny_all.sh
+  - tasks/TSK-P1-TEN-RDY/meta.yml
+invariants:
+  - INV-GOV-CONTRACT-001
+work:
+  - '[ID tsk_p1_ten_rdy_01] Create ITenantReadinessProbe interface with EnvVar and Database implementations.'
+  - '[ID tsk_p1_ten_rdy_02] Create TenantReadinessMiddleware enforcing 503 before 403.'
+  - '[ID tsk_p1_ten_rdy_03] Wire probe and middleware into Program.cs, update health endpoints.'
+  - '[ID tsk_p1_ten_rdy_04] Update ApiAuthorization.cs with ReadinessProbe fallback.'
+  - '[ID tsk_p1_ten_rdy_05] Fix test_tenant_allowlist_deny_all.sh for deterministic profile.'
+  - '[ID tsk_p1_ten_rdy_06] Create 12 unit tests and register in self-test entry point.'
+acceptance_criteria:
+  - '[ID tsk_p1_ten_rdy_01] Production uses EnvVarTenantReadinessProbe, pilot-demo uses DatabaseTenantReadinessProbe.'
+  - '[ID tsk_p1_ten_rdy_02] Requests to /v1/* return 503 when tenant system is unconfigured, before any auth check.'
+  - '[ID tsk_p1_ten_rdy_03] /health endpoint reports tenant_allowlist_configured from the readiness probe.'
+  - '[ID tsk_p1_ten_rdy_04] AuthorizeTenantScope falls through for pilot-demo when DB probe is ready.'
+  - '[ID tsk_p1_ten_rdy_05] test_tenant_allowlist_deny_all.sh passes with both checks PASS.'
+  - '[ID tsk_p1_ten_rdy_06] All 12 unit tests pass.'
+verification:
+  - '# [ID tsk_p1_ten_rdy_all] dotnet build --no-restore 2>&1 | grep -E "error|Build succeeded"'
+evidence:
+  - path: evidence/security_remediation/r_002_tenant_allowlist.json
+    must_include:
+      - task_id
+      - git_sha
+      - timestamp_utc
+      - status
+      - checks
+failure_modes:
+  - 'Request returns 403 instead of 503 when unconfigured => FAIL'
+  - 'Health endpoint reports tenant_allowlist_configured=true when unconfigured => FAIL'
+  - 'Production code depends on DatabaseTenantReadinessProbe => FAIL'
+must_read:
+  - docs/operations/AI_AGENT_OPERATION_MANUAL.md
+implementation_plan: docs/plans/phase1/TSK-P1-TEN-RDY/PLAN.md
+implementation_log: docs/plans/phase1/TSK-P1-TEN-RDY/EXEC_LOG.md
+notes: >
+  This task fixes the middleware ordering bug where admin auth (403) ran before
+  tenant readiness (503). Introduces ITenantReadinessProbe abstraction with
+  profile-aware implementations. Production code has zero dependency on pilot-demo.
+client: cursor
+assigned_agent: security_guardian
+model: claude-opus-4-20250514

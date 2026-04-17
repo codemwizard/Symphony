@@ -1,0 +1,103 @@
+schema_version: 1
+phase: '2'
+task_id: TSK-P2-REG-003-01
+title: Install PostGIS extension
+owner_role: DB_FOUNDATION
+status: planned
+priority: HIGH
+risk_class: INFRASTRUCTURE
+blast_radius: DB_SCHEMA
+intent: Install PostGIS extension in the public schema to enable spatial data operations
+  for DNSH and K13 compliance checks.
+anti_patterns:
+- Declaring implemented without a running enforcement script
+- Writing the negative test after the fix is declared done
+- Marking completed when only the happy path is tested
+out_of_scope:
+- PostGIS spatial tables (handled in subsequent tasks)
+stop_conditions:
+- If PostGIS extension is not installed in public schema
+- If PostGIS_version() returns null
+proof_guarantees:
+- PostGIS extension is installed in public schema
+- PostGIS_version() returns non-null value
+proof_limitations:
+- Does not verify PostGIS functionality beyond version check
+depends_on:
+- TSK-P2-REG-003-00
+blocks:
+- TSK-P2-REG-003-02
+touches:
+- schema/migrations/0125_postgis_extension.sql
+- scripts/db/verify_tsk_p2_reg_003_01.sh
+- tasks/TSK-P2-REG-003-01/meta.yml
+invariants: []
+work:
+  - >-
+    [ID tsk_p2_reg_003_01_work_item_01] Write migration 0125 at schema/migrations/0125_postgis_extension.sql with CREATE EXTENSION IF NOT EXISTS postgis SCHEMA public
+  - >-
+    [ID tsk_p2_reg_003_01_work_item_02] Add verification to migration SELECT PostGIS_version() to confirm extension is loaded
+  - >-
+    [ID tsk_p2_reg_003_01_work_item_03] Write verify_tsk_p2_reg_003_01.sh that runs psql -c "SELECT PostGIS_version()" | grep -v '(0 rows)'
+  - >-
+    [ID tsk_p2_reg_003_01_work_item_04] Run verify_tsk_p2_reg_003_01.sh to confirm PostGIS is installed
+  - >-
+    [ID tsk_p2_reg_003_01_work_item_05] Run scripts/dev/pre_ci.sh to ensure conformance
+acceptance_criteria:
+  - >-
+    [ID tsk_p2_reg_003_01_work_item_01] [ID tsk_p2_reg_003_01_work_item_02] [ID tsk_p2_reg_003_01_work_item_03] [ID tsk_p2_reg_003_01_work_item_04] [ID tsk_p2_reg_003_01_work_item_05] [ID tsk_p2_reg_003_01_ac_01] Migration 0125 exists
+  - >-
+    [ID tsk_p2_reg_003_01_work_item_01] [ID tsk_p2_reg_003_01_work_item_02] [ID tsk_p2_reg_003_01_work_item_03] [ID tsk_p2_reg_003_01_work_item_04] [ID tsk_p2_reg_003_01_work_item_05] [ID tsk_p2_reg_003_01_ac_02] PostGIS extension is installed in public schema
+  - >-
+    [ID tsk_p2_reg_003_01_work_item_01] [ID tsk_p2_reg_003_01_work_item_02] [ID tsk_p2_reg_003_01_work_item_03] [ID tsk_p2_reg_003_01_work_item_04] [ID tsk_p2_reg_003_01_work_item_05] [ID tsk_p2_reg_003_01_ac_03] PostGIS_version() returns non-null value
+  - >-
+    [ID tsk_p2_reg_003_01_work_item_01] [ID tsk_p2_reg_003_01_work_item_02] [ID tsk_p2_reg_003_01_work_item_03] [ID tsk_p2_reg_003_01_work_item_04] [ID tsk_p2_reg_003_01_work_item_05] [ID tsk_p2_reg_003_01_ac_04] pre_ci.sh passes
+negative_tests:
+- id: tsk_p2_reg_003_01_neg_01
+  description: Verification fails if PostGIS is not installed
+  required: true
+- id: tsk_p2_reg_003_01_neg_02
+  description: Verification fails if PostGIS_version() returns null
+  required: true
+positive_tests:
+- id: tsk_p2_reg_003_01_pos_01
+  description: Verification passes when PostGIS is installed
+  required: false
+verification:
+  - >-
+    # [ID tsk_p2_reg_003_01_work_item_01] [ID tsk_p2_reg_003_01_work_item_02] [ID tsk_p2_reg_003_01_work_item_03] [ID tsk_p2_reg_003_01_work_item_04] [ID tsk_p2_reg_003_01_work_item_05] [ID tsk_p2_reg_003_01_ac_01] [ID tsk_p2_reg_003_01_ac_02] [ID tsk_p2_reg_003_01_ac_03] [ID tsk_p2_reg_003_01_ac_04]
+    bash scripts/db/verify_tsk_p2_reg_003_01.sh
+  - >-
+    # [ID tsk_p2_reg_003_01_work_item_01] [ID tsk_p2_reg_003_01_work_item_02] [ID tsk_p2_reg_003_01_work_item_03] [ID tsk_p2_reg_003_01_work_item_04] [ID tsk_p2_reg_003_01_work_item_05] [ID tsk_p2_reg_003_01_ac_01] [ID tsk_p2_reg_003_01_ac_02] [ID tsk_p2_reg_003_01_ac_03] [ID tsk_p2_reg_003_01_ac_04]
+    python3 scripts/audit/validate_evidence.py --task TSK-P2-REG-003-01 --evidence evidence/phase2/tsk_p2_reg_003_01.json
+  - >-
+    # [ID tsk_p2_reg_003_01_work_item_01] [ID tsk_p2_reg_003_01_work_item_02] [ID tsk_p2_reg_003_01_work_item_03] [ID tsk_p2_reg_003_01_work_item_04] [ID tsk_p2_reg_003_01_work_item_05] [ID tsk_p2_reg_003_01_ac_01] [ID tsk_p2_reg_003_01_ac_02] [ID tsk_p2_reg_003_01_ac_03] [ID tsk_p2_reg_003_01_ac_04]
+    bash scripts/dev/pre_ci.sh
+evidence:
+- path: evidence/phase2/tsk_p2_reg_003_01.json
+  must_include:
+  - task_id
+  - git_sha
+  - timestamp_utc
+  - status
+  - checks
+  - postgis_installed
+  - postgis_version
+  - observed_paths
+  - observed_hashes
+  - command_outputs
+  - execution_trace
+failure_modes:
+- PostGIS not available in database => CRITICAL_FAIL
+- Extension creation fails => FAIL
+- Evidence file missing => CRITICAL_FAIL
+must_read:
+- docs/operations/AI_AGENT_OPERATION_MANUAL.md
+- docs/operations/TASK_CREATION_PROCESS.md
+- docs/plans/phase2/ATOMIC_TASK_BREAKDOWN_PLAN.md
+implementation_plan: docs/plans/phase2/TSK-P2-REG-003-01/PLAN.md
+implementation_log: docs/plans/phase2/TSK-P2-REG-003-01/EXEC_LOG.md
+notes: Task scaffolding completed per TASK_CREATION_PROCESS.md
+client: codex_ide
+assigned_agent: DB_FOUNDATION
+model: <UNASSIGNED>

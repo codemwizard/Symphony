@@ -1,0 +1,491 @@
+dag_version: 1
+project: symphony
+scope: pre-phase2-atomic-breakdown
+defaults:
+  runner: orchestrator
+  fail_fast: true
+nodes:
+# STAGE 0-PRE — BLOCKING ADR
+- id: TSK-P2-PREAUTH-000
+  stage: 0-pre-adr
+  title: "ADR: Spatial Capability Model (DOCS_ONLY)"
+  depends_on: []
+  kind: task
+
+# STAGE 0-PARALLEL — Independent Schema Tasks
+- id: TSK-P2-PREAUTH-001-00
+  stage: 0-parallel
+  title: Create PLAN.md and verify alignment for interpretation_packs
+  depends_on:
+  - TSK-P2-CCG-001-01
+  kind: task
+- id: TSK-P2-PREAUTH-001-01
+  stage: 0-parallel
+  title: Create interpretation_packs table with temporal uniqueness
+  depends_on:
+  - TSK-P2-PREAUTH-001-00
+  kind: task
+- id: TSK-P2-PREAUTH-001-02
+  stage: 0-parallel
+  title: Implement resolve_interpretation_pack() function with exact signature
+  depends_on:
+  - TSK-P2-PREAUTH-001-01
+  kind: task
+
+- id: TSK-P2-PREAUTH-002-00
+  stage: 0-parallel
+  title: Create PLAN.md and verify alignment for factor_registry
+  depends_on:
+  - TSK-P2-CCG-001-01
+  kind: task
+- id: TSK-P2-PREAUTH-002-01
+  stage: 0-parallel
+  title: Create factor_registry table
+  depends_on:
+  - TSK-P2-PREAUTH-002-00
+  kind: task
+- id: TSK-P2-PREAUTH-002-02
+  stage: 0-parallel
+  title: Create unit_conversions table
+  depends_on:
+  - TSK-P2-PREAUTH-002-01
+  kind: task
+
+# STAGE 0-SEC — Security Invariant Promotions
+- id: TSK-P2-SEC-001-00
+  stage: 0-sec
+  title: Create PLAN.md and verify alignment for INV-130
+  depends_on: []
+  kind: task
+- id: TSK-P2-SEC-001-01
+  stage: 0-sec
+  title: Fix verifier scope and promote INV-130
+  depends_on:
+  - TSK-P2-SEC-001-00
+  kind: task
+
+- id: TSK-P2-SEC-002-00
+  stage: 0-sec
+  title: Create PLAN.md and verify alignment for INV-131
+  depends_on: []
+  kind: task
+- id: TSK-P2-SEC-002-01
+  stage: 0-sec
+  title: Run live service test and promote INV-131
+  depends_on:
+  - TSK-P2-SEC-002-00
+  kind: task
+
+- id: TSK-P2-SEC-003-00
+  stage: 0-sec
+  title: Create PLAN.md and verify alignment for INV-132
+  depends_on: []
+  kind: task
+- id: TSK-P2-SEC-003-01
+  stage: 0-sec
+  title: Verify fail-closed behavior and promote INV-132
+  depends_on:
+  - TSK-P2-SEC-003-00
+  kind: task
+
+- id: TSK-P2-SEC-004-00
+  stage: 0-sec
+  title: Create PLAN.md and verify alignment for INV-133
+  depends_on: []
+  kind: task
+- id: TSK-P2-SEC-004-01
+  stage: 0-sec
+  title: Verify default-deny and promote INV-133
+  depends_on:
+  - TSK-P2-SEC-004-00
+  kind: task
+
+# STAGE 0-CCG — Core Contract Gate
+- id: TSK-P2-CCG-001-00
+  stage: 0-ccg
+  title: Create PLAN.md and verify alignment for core contract gate
+  depends_on:
+  - TSK-P2-SEC-001-01
+  - TSK-P2-SEC-002-01
+  - TSK-P2-SEC-003-01
+  - TSK-P2-SEC-004-01
+  kind: task
+- id: TSK-P2-CCG-001-01
+  stage: 0-ccg
+  title: Run gate and promote INV-159/160/161/166
+  depends_on:
+  - TSK-P2-CCG-001-00
+  kind: task
+- id: checkpoint/CCG
+  stage: 0-ccg
+  title: "Checkpoint CCG — core contract gate complete"
+  kind: checkpoint
+  depends_on:
+  - TSK-P2-CCG-001-01
+
+# STAGE 1 — Execution Truth Anchor
+- id: TSK-P2-PREAUTH-003-00
+  stage: 1-execution-truth
+  title: Create PLAN.md and verify alignment for execution_records
+  depends_on:
+  - TSK-P2-PREAUTH-001-02
+  - TSK-P2-PREAUTH-002-02
+  kind: task
+- id: TSK-P2-PREAUTH-003-01
+  stage: 1-execution-truth
+  title: Create execution_records table
+  depends_on:
+  - TSK-P2-PREAUTH-003-00
+  kind: task
+- id: TSK-P2-PREAUTH-003-02
+  stage: 1-execution-truth
+  title: Add interpretation_version_id FK to execution_records
+  depends_on:
+  - TSK-P2-PREAUTH-003-01
+  kind: task
+- id: checkpoint/EXEC-TRUTH
+  stage: 1-execution-truth
+  title: "Checkpoint EXEC-TRUTH — execution truth anchor complete"
+  kind: checkpoint
+  depends_on:
+  - TSK-P2-PREAUTH-003-02
+
+# STAGE 2 — Authority Binding
+- id: TSK-P2-PREAUTH-004-00
+  stage: 2-authority-binding
+  title: Create PLAN.md and verify alignment for policy_decisions
+  depends_on:
+  - TSK-P2-PREAUTH-003-02
+  kind: task
+- id: TSK-P2-PREAUTH-004-01
+  stage: 2-authority-binding
+  title: Create policy_decisions table
+  depends_on:
+  - TSK-P2-PREAUTH-004-00
+  kind: task
+- id: TSK-P2-PREAUTH-004-02
+  stage: 2-authority-binding
+  title: Create state_rules table
+  depends_on:
+  - TSK-P2-PREAUTH-004-01
+  kind: task
+- id: checkpoint/AUTH-BIND
+  stage: 2-authority-binding
+  title: "Checkpoint AUTH-BIND — authority binding complete"
+  kind: checkpoint
+  depends_on:
+  - TSK-P2-PREAUTH-004-02
+
+# STAGE 3 — State Machine + Trigger Layer (HIGHEST RISK)
+- id: TSK-P2-PREAUTH-005-00
+  stage: 3-state-machine
+  title: Create PLAN.md and verify alignment for state_transitions
+  depends_on:
+  - TSK-P2-PREAUTH-003-02
+  - TSK-P2-PREAUTH-004-02
+  kind: task
+- id: TSK-P2-PREAUTH-005-01
+  stage: 3-state-machine
+  title: Create state_transitions table
+  depends_on:
+  - TSK-P2-PREAUTH-005-00
+  kind: task
+- id: TSK-P2-PREAUTH-005-02
+  stage: 3-state-machine
+  title: Create state_current table
+  depends_on:
+  - TSK-P2-PREAUTH-005-01
+  kind: task
+- id: TSK-P2-PREAUTH-005-03
+  stage: 3-state-machine
+  title: Implement enforce_transition_state_rules() trigger
+  depends_on:
+  - TSK-P2-PREAUTH-005-02
+  kind: task
+- id: TSK-P2-PREAUTH-005-04
+  stage: 3-state-machine
+  title: Implement enforce_transition_authority() trigger
+  depends_on:
+  - TSK-P2-PREAUTH-005-03
+  kind: task
+- id: TSK-P2-PREAUTH-005-05
+  stage: 3-state-machine
+  title: Implement enforce_transition_signature() trigger
+  depends_on:
+  - TSK-P2-PREAUTH-005-04
+  kind: task
+- id: TSK-P2-PREAUTH-005-06
+  stage: 3-state-machine
+  title: Implement enforce_execution_binding() trigger
+  depends_on:
+  - TSK-P2-PREAUTH-005-05
+  kind: task
+- id: TSK-P2-PREAUTH-005-07
+  stage: 3-state-machine
+  title: Implement deny_state_transitions_mutation() trigger
+  depends_on:
+  - TSK-P2-PREAUTH-005-06
+  kind: task
+- id: TSK-P2-PREAUTH-005-08
+  stage: 3-state-machine
+  title: Implement update_current_state() trigger
+  depends_on:
+  - TSK-P2-PREAUTH-005-07
+  kind: task
+- id: checkpoint/STATE-MACHINE
+  stage: 3-state-machine
+  title: "Checkpoint STATE-MACHINE — state machine + trigger layer complete"
+  kind: checkpoint
+  depends_on:
+  - TSK-P2-PREAUTH-005-08
+
+# STAGE 4 — Data Authority Cross-Layer Contract
+- id: TSK-P2-PREAUTH-006A-00
+  stage: 4-data-authority
+  title: Create PLAN.md and verify alignment for data_authority ENUM
+  depends_on:
+  - TSK-P2-PREAUTH-005-08
+  kind: task
+- id: TSK-P2-PREAUTH-006A-01
+  stage: 4-data-authority
+  title: Create data_authority_level ENUM type
+  depends_on:
+  - TSK-P2-PREAUTH-006A-00
+  kind: task
+- id: TSK-P2-PREAUTH-006A-02
+  stage: 4-data-authority
+  title: Add data_authority columns to monitoring_records
+  depends_on:
+  - TSK-P2-PREAUTH-006A-01
+  kind: task
+- id: TSK-P2-PREAUTH-006A-03
+  stage: 4-data-authority
+  title: Add data_authority columns to asset_batches
+  depends_on:
+  - TSK-P2-PREAUTH-006A-02
+  kind: task
+- id: TSK-P2-PREAUTH-006A-04
+  stage: 4-data-authority
+  title: Add data_authority columns to state_transitions
+  depends_on:
+  - TSK-P2-PREAUTH-006A-03
+  kind: task
+
+- id: TSK-P2-PREAUTH-006B-00
+  stage: 4-data-authority
+  title: Create PLAN.md and verify alignment for derive+enforce triggers
+  depends_on:
+  - TSK-P2-PREAUTH-006A-04
+  kind: task
+- id: TSK-P2-PREAUTH-006B-01
+  stage: 4-data-authority
+  title: Implement derive_data_authority() trigger
+  depends_on:
+  - TSK-P2-PREAUTH-006B-00
+  kind: task
+- id: TSK-P2-PREAUTH-006B-02
+  stage: 4-data-authority
+  title: Implement enforce_data_authority_integrity() trigger
+  depends_on:
+  - TSK-P2-PREAUTH-006B-01
+  kind: task
+- id: TSK-P2-PREAUTH-006B-03
+  stage: 4-data-authority
+  title: Write verifier with exact SQL patterns and trigger ordering
+  depends_on:
+  - TSK-P2-PREAUTH-006B-02
+  kind: task
+- id: TSK-P2-PREAUTH-006B-04
+  stage: 4-data-authority
+  title: Update MIGRATION_HEAD
+  depends_on:
+  - TSK-P2-PREAUTH-006B-03
+  kind: task
+
+- id: TSK-P2-PREAUTH-006C-00
+  stage: 4-data-authority
+  title: Create PLAN.md and verify alignment for C# read model marking
+  depends_on:
+  - TSK-P2-PREAUTH-006B-04
+  kind: task
+- id: TSK-P2-PREAUTH-006C-01
+  stage: 4-data-authority
+  title: Add data_authority fields to Pwrm0001MonitoringReportHandler.cs
+  depends_on:
+  - TSK-P2-PREAUTH-006C-00
+  kind: task
+- id: TSK-P2-PREAUTH-006C-02
+  stage: 4-data-authority
+  title: Add data_authority fields to SupervisoryRevealReadModelHandler.cs
+  depends_on:
+  - TSK-P2-PREAUTH-006C-01
+  kind: task
+- id: TSK-P2-PREAUTH-006C-03
+  stage: 4-data-authority
+  title: Live API validation
+  depends_on:
+  - TSK-P2-PREAUTH-006C-02
+  kind: task
+- id: checkpoint/DATA-AUTH
+  stage: 4-data-authority
+  title: "Checkpoint DATA-AUTH — data authority cross-layer contract complete"
+  kind: checkpoint
+  depends_on:
+  - TSK-P2-PREAUTH-006C-03
+
+# STAGE 5 — Invariant Registration + CI Wiring
+- id: TSK-P2-PREAUTH-007-00
+  stage: 5-invariant-registration
+  title: Create PLAN.md and verify alignment for INV registration
+  depends_on:
+  - TSK-P2-PREAUTH-001-02
+  - TSK-P2-PREAUTH-005-08
+  - TSK-P2-PREAUTH-006C-03
+  kind: task
+- id: TSK-P2-PREAUTH-007-01
+  stage: 5-invariant-registration
+  title: Runtime INV ID assignment
+  depends_on:
+  - TSK-P2-PREAUTH-007-00
+  kind: task
+- id: TSK-P2-PREAUTH-007-02
+  stage: 5-invariant-registration
+  title: Register INV-175 (data_authority_enforced)
+  depends_on:
+  - TSK-P2-PREAUTH-007-01
+  kind: task
+- id: TSK-P2-PREAUTH-007-03
+  stage: 5-invariant-registration
+  title: Register INV-176 (state_machine_enforced)
+  depends_on:
+  - TSK-P2-PREAUTH-007-02
+  kind: task
+- id: TSK-P2-PREAUTH-007-04
+  stage: 5-invariant-registration
+  title: Register INV-177 (phase1_boundary_marked)
+  depends_on:
+  - TSK-P2-PREAUTH-007-03
+  kind: task
+- id: TSK-P2-PREAUTH-007-05
+  stage: 5-invariant-registration
+  title: Promote INV-165/167 and wire pre_ci.sh
+  depends_on:
+  - TSK-P2-PREAUTH-007-04
+  kind: task
+- id: checkpoint/INV-REG
+  stage: 5-invariant-registration
+  title: "Checkpoint INV-REG — invariant registration + CI wiring complete"
+  kind: checkpoint
+  depends_on:
+  - TSK-P2-PREAUTH-007-05
+
+# STAGE 6 — Regulatory Extensions
+- id: TSK-P2-REG-001-00
+  stage: 6-regulatory-extensions
+  title: Create PLAN.md and verify alignment for statutory_levy_registry
+  depends_on:
+  - TSK-P2-PREAUTH-007-05
+  kind: task
+- id: TSK-P2-REG-001-01
+  stage: 6-regulatory-extensions
+  title: Create statutory_levy_registry table
+  depends_on:
+  - TSK-P2-REG-001-00
+  kind: task
+- id: TSK-P2-REG-001-02
+  stage: 6-regulatory-extensions
+  title: Add append-only trigger and privileges for statutory_levy_registry
+  depends_on:
+  - TSK-P2-REG-001-01
+  kind: task
+
+- id: TSK-P2-REG-002-00
+  stage: 6-regulatory-extensions
+  title: Create PLAN.md and verify alignment for exchange_rate_audit_log
+  depends_on:
+  - TSK-P2-PREAUTH-007-05
+  kind: task
+- id: TSK-P2-REG-002-01
+  stage: 6-regulatory-extensions
+  title: Create exchange_rate_audit_log table
+  depends_on:
+  - TSK-P2-REG-002-00
+  kind: task
+- id: TSK-P2-REG-002-02
+  stage: 6-regulatory-extensions
+  title: Add append-only trigger and privileges for exchange_rate_audit_log
+  depends_on:
+  - TSK-P2-REG-002-01
+  kind: task
+
+- id: TSK-P2-REG-004-00
+  stage: 6-regulatory-extensions
+  title: Create PLAN.md and verify alignment for INV-169 promotion
+  depends_on:
+  - TSK-P2-PREAUTH-007-05
+  kind: task
+- id: TSK-P2-REG-004-01
+  stage: 6-regulatory-extensions
+  title: Verify function exists and promote INV-169
+  depends_on:
+  - TSK-P2-REG-004-00
+  kind: task
+
+- id: TSK-P2-REG-003-00
+  stage: 6-regulatory-extensions
+  title: Create PLAN.md and verify alignment for PostGIS spatial gate
+  depends_on:
+  - TSK-P2-PREAUTH-000
+  - TSK-P2-PREAUTH-007-05
+  - TSK-P2-REG-001-02
+  - TSK-P2-REG-002-02
+  - TSK-P2-REG-004-01
+  kind: task
+- id: TSK-P2-REG-003-01
+  stage: 6-regulatory-extensions
+  title: Install PostGIS extension
+  depends_on:
+  - TSK-P2-REG-003-00
+  kind: task
+- id: TSK-P2-REG-003-02
+  stage: 6-regulatory-extensions
+  title: Create protected_areas table
+  depends_on:
+  - TSK-P2-REG-003-01
+  kind: task
+- id: TSK-P2-REG-003-03
+  stage: 6-regulatory-extensions
+  title: Create project_boundaries table
+  depends_on:
+  - TSK-P2-REG-003-02
+  kind: task
+- id: TSK-P2-REG-003-04
+  stage: 6-regulatory-extensions
+  title: Add taxonomy_aligned column to projects (before K13 trigger)
+  depends_on:
+  - TSK-P2-REG-003-03
+  kind: task
+- id: TSK-P2-REG-003-05
+  stage: 6-regulatory-extensions
+  title: Implement enforce_dns_harm() trigger
+  depends_on:
+  - TSK-P2-REG-003-04
+  kind: task
+- id: TSK-P2-REG-003-06
+  stage: 6-regulatory-extensions
+  title: Implement enforce_k13_taxonomy_alignment() trigger
+  depends_on:
+  - TSK-P2-REG-003-05
+  kind: task
+- id: TSK-P2-REG-003-07
+  stage: 6-regulatory-extensions
+  title: Register INV-178 and update MIGRATION_HEAD
+  depends_on:
+  - TSK-P2-REG-003-06
+  kind: task
+- id: checkpoint/PRE-PHASE2-COMPLETE
+  stage: 6-regulatory-extensions
+  title: "Checkpoint PRE-PHASE2-COMPLETE — all pre-Phase 2 atomic tasks complete"
+  kind: checkpoint
+  depends_on:
+  - TSK-P2-REG-003-07

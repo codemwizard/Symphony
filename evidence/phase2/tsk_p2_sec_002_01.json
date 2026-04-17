@@ -1,0 +1,32 @@
+{
+  "task_id": "TSK-P2-SEC-002-01",
+  "git_sha": "3b31224ac32b5d2c530fd33c134ab7022e08c908",
+  "timestamp_utc": "2026-04-17T07:20:24Z",
+  "status": "PASS",
+  "checks": [
+    {"name": "verifier_exists", "status": "true"},
+    {"name": "verifier_passes", "status": "true"},
+    {"name": "inv_131_implemented", "status": "true"}
+  ],
+  "verifier_path": "scripts/audit/test_admin_endpoints_require_key.sh",
+  "inv_131_status": "implemented",
+  "observed_paths": [
+  "scripts/audit/test_admin_endpoints_require_key.sh",
+  "services/ledger-api/dotnet/src/LedgerApi/Program.cs",
+  "docs/invariants/INVARIANTS_MANIFEST.yml"
+],
+  "observed_hashes": [
+  "c65a20dccba3c73b59ebc199147ed88c16d07329dacd37f0d3ab46ef2283a23a",
+  "03c3e3f3a41bb5b895bd38c6c0950596adab38749d4b4950d1317141acc44062",
+  "0ab09099a9ab0a0c478ea9ed54cdad655e9197685b78d208d766d6274c9cd386"
+],
+  "command_outputs": [
+  "verifier_passes: PASS",
+  "inv_131_status: implemented"
+],
+  "execution_trace": [
+  {"step": "check_verifier_exists", "status": "true"},
+  {"step": "run_verifier", "status": "true"},
+  {"step": "check_inv_131_status", "status": "true"}
+]
+}

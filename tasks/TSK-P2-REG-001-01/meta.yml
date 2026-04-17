@@ -1,0 +1,105 @@
+schema_version: 1
+phase: '2'
+task_id: TSK-P2-REG-001-01
+title: Create statutory_levy_registry table
+owner_role: DB_FOUNDATION
+status: planned
+priority: HIGH
+risk_class: INTEGRITY
+blast_radius: DB_SCHEMA
+intent: Create the statutory_levy_registry table with temporal uniqueness constraints
+  to track statutory levy rates over time.
+anti_patterns:
+- Declaring implemented without a running enforcement script
+- Writing the negative test after the fix is declared done
+- Marking completed when only the happy path is tested
+out_of_scope:
+- Append-only trigger and privileges (handled in TSK-P2-REG-001-02)
+stop_conditions:
+- If statutory_levy_registry table does not exist
+- If UNIQUE constraint on (levy_code, jurisdiction_code, effective_from) is missing
+proof_guarantees:
+- Table exists with correct schema and UNIQUE constraint
+proof_limitations:
+- Does not verify data correctness, only schema structure
+depends_on:
+- TSK-P2-REG-001-00
+blocks:
+- TSK-P2-REG-001-02
+touches:
+- schema/migrations/0125_statutory_levy_registry.sql
+- schema/migrations/MIGRATION_HEAD
+- scripts/db/verify_tsk_p2_reg_001_01.sh
+- tasks/TSK-P2-REG-001-01/meta.yml
+invariants: []
+work:
+  - >-
+    [ID tsk_p2_reg_001_01_work_item_01] Write migration 0125 at schema/migrations/0125_statutory_levy_registry.sql creating statutory_levy_registry table with columns and UNIQUE constraint
+  - >-
+    [ID tsk_p2_reg_001_01_work_item_02] Add GRANT SELECT ON statutory_levy_registry TO symphony_command and GRANT ALL ON statutory_levy_registry TO symphony_control after REVOKE ALL FROM PUBLIC
+  - >-
+    [ID tsk_p2_reg_001_01_work_item_03] Write verify_tsk_p2_reg_001_01.sh that runs psql to verify table exists and UNIQUE constraint is present
+  - >-
+    [ID tsk_p2_reg_001_01_work_item_04] Run verify_tsk_p2_reg_001_01.sh to confirm migration is successful
+  - >-
+    [ID tsk_p2_reg_001_01_work_item_05] Run scripts/dev/pre_ci.sh to ensure conformance
+acceptance_criteria:
+  - >-
+    [ID tsk_p2_reg_001_01_work_item_01] [ID tsk_p2_reg_001_01_work_item_02] [ID tsk_p2_reg_001_01_work_item_03] [ID tsk_p2_reg_001_01_work_item_04] [ID tsk_p2_reg_001_01_work_item_05] [ID tsk_p2_reg_001_01_ac_01] Migration 0125 for statutory_levy_registry exists
+  - >-
+    [ID tsk_p2_reg_001_01_work_item_01] [ID tsk_p2_reg_001_01_work_item_02] [ID tsk_p2_reg_001_01_work_item_03] [ID tsk_p2_reg_001_01_work_item_04] [ID tsk_p2_reg_001_01_work_item_05] [ID tsk_p2_reg_001_01_ac_02] statutory_levy_registry table exists in database
+  - >-
+    [ID tsk_p2_reg_001_01_work_item_01] [ID tsk_p2_reg_001_01_work_item_02] [ID tsk_p2_reg_001_01_work_item_03] [ID tsk_p2_reg_001_01_work_item_04] [ID tsk_p2_reg_001_01_work_item_05] [ID tsk_p2_reg_001_01_ac_03] UNIQUE constraint on (levy_code, jurisdiction_code, effective_from) exists
+  - >-
+    [ID tsk_p2_reg_001_01_work_item_01] [ID tsk_p2_reg_001_01_work_item_02] [ID tsk_p2_reg_001_01_work_item_03] [ID tsk_p2_reg_001_01_work_item_04] [ID tsk_p2_reg_001_01_work_item_05] [ID tsk_p2_reg_001_01_ac_04] pre_ci.sh passes
+negative_tests:
+- id: tsk_p2_reg_001_01_neg_01
+  description: Verification fails if table does not exist
+  required: true
+- id: tsk_p2_reg_001_01_neg_02
+  description: Verification fails if UNIQUE constraint is missing
+  required: true
+positive_tests:
+- id: tsk_p2_reg_001_01_pos_01
+  description: Verification passes when table and constraint exist
+  required: false
+verification:
+- >-
+  # [ID tsk_p2_reg_001_01_work_item_01] [ID tsk_p2_reg_001_01_work_item_02] [ID tsk_p2_reg_001_01_work_item_03] [ID tsk_p2_reg_001_01_work_item_04] [ID tsk_p2_reg_001_01_work_item_05] [ID tsk_p2_reg_001_01_ac_01] [ID tsk_p2_reg_001_01_ac_02] [ID tsk_p2_reg_001_01_ac_03] [ID tsk_p2_reg_001_01_ac_04]
+  bash scripts/db/verify_tsk_p2_reg_001_01.sh
+- >-
+  # [ID tsk_p2_reg_001_01_work_item_01] [ID tsk_p2_reg_001_01_work_item_02] [ID tsk_p2_reg_001_01_work_item_03] [ID tsk_p2_reg_001_01_work_item_04] [ID tsk_p2_reg_001_01_work_item_05] [ID tsk_p2_reg_001_01_ac_01] [ID tsk_p2_reg_001_01_ac_02] [ID tsk_p2_reg_001_01_ac_03] [ID tsk_p2_reg_001_01_ac_04]
+  python3 scripts/audit/validate_evidence.py --task TSK-P2-REG-001-01 --evidence evidence/phase2/tsk_p2_reg_001_01.json
+- >-
+  # [ID tsk_p2_reg_001_01_work_item_01] [ID tsk_p2_reg_001_01_work_item_02] [ID tsk_p2_reg_001_01_work_item_03] [ID tsk_p2_reg_001_01_work_item_04] [ID tsk_p2_reg_001_01_work_item_05] [ID tsk_p2_reg_001_01_ac_01] [ID tsk_p2_reg_001_01_ac_02] [ID tsk_p2_reg_001_01_ac_03] [ID tsk_p2_reg_001_01_ac_04]
+  bash scripts/dev/pre_ci.sh
+evidence:
+- path: evidence/phase2/tsk_p2_reg_001_01.json
+  must_include:
+  - task_id
+  - git_sha
+  - timestamp_utc
+  - status
+  - checks
+  - table_exists
+  - unique_constraint_present
+  - migration_head
+  - observed_paths
+  - observed_hashes
+  - command_outputs
+  - execution_trace
+failure_modes:
+- Migration syntax error => CRITICAL_FAIL
+- UNIQUE constraint incorrect => FAIL
+- Evidence file missing => CRITICAL_FAIL
+must_read:
+- docs/operations/AI_AGENT_OPERATION_MANUAL.md
+- docs/operations/TASK_CREATION_PROCESS.md
+- docs/plans/phase2/ATOMIC_TASK_BREAKDOWN_PLAN.md
+- AGENTS.md
+implementation_plan: docs/plans/phase2/TSK-P2-REG-001-01/PLAN.md
+implementation_log: docs/plans/phase2/TSK-P2-REG-001-01/EXEC_LOG.md
+notes: Task scaffolding completed per TASK_CREATION_PROCESS.md
+client: codex_ide
+assigned_agent: DB_FOUNDATION
+model: <UNASSIGNED>

@@ -1,0 +1,143 @@
+schema_version: 1
+phase: '2'
+task_id: TSK-P2-PREAUTH-001-02
+title: "Implement resolve_interpretation_pack() function with exact signature"
+owner_role: DB_FOUNDATION
+status: planned
+priority: HIGH
+risk_class: INTEGRITY
+blast_radius: DB_SCHEMA
+
+intent: >-
+  This task implements the resolve_interpretation_pack() function with exact signature
+  to resolve the correct interpretation pack for a given project and effective timestamp.
+  Without this function, the system cannot determine which interpretation pack applies
+  at a given time, creating risk of incorrect policy application.
+
+anti_patterns:
+  - "Implementing the function without the exact signature"
+  - "Writing the function without SECURITY DEFINER and hardened search_path"
+  - "Writing the verifier after the function is created"
+
+out_of_scope:
+  - "Adding interpretation_version_id FK to execution_records (deferred to TSK-P2-PREAUTH-003-02)"
+  - "Application layer changes"
+  - "Data migration"
+
+stop_conditions:
+  - "If function does not have exact signature: FUNCTION resolve_interpretation_pack(p_project_id UUID, p_effective_at TIMESTAMPTZ) RETURNS UUID"
+  - "If function is not SECURITY DEFINER with hardened search_path"
+  - "If verifier does not check for exact function signature in pg_proc"
+
+proof_guarantees:
+  - "Function exists with exact signature in pg_proc"
+  - "Function is SECURITY DEFINER with prosecdef=true"
+  - "Verifier script exits 0 and emits evidence"
+
+proof_limitations:
+  - "Cannot verify that the function logic is correct for all edge cases"
+  - "Cannot verify that the function will perform well at scale"
+
+depends_on:
+  - TSK-P2-PREAUTH-001-01
+blocks:
+  - TSK-P2-PREAUTH-003-00
+
+touches:
+  - schema/migrations/0116_create_interpretation_packs.sql
+  - scripts/db/verify_tsk_p2_preauth_001_02.sh
+  - tasks/TSK-P2-PREAUTH-001-02/meta.yml
+
+invariants: []
+
+work:
+  - >-
+    [ID tsk_p2_preauth_001_02_work_item_01] Add resolve_interpretation_pack() function to migration 0116
+    with exact signature: FUNCTION resolve_interpretation_pack(p_project_id UUID, p_effective_at TIMESTAMPTZ) RETURNS UUID.
+    Function must be SECURITY DEFINER with SET search_path = pg_catalog, public.
+  - >-
+    [ID tsk_p2_preauth_001_02_work_item_02] Implement function logic to select interpretation_pack_id from
+    interpretation_packs where project_id = p_project_id AND effective_from <= p_effective_at AND
+    (effective_to IS NULL OR effective_to > p_effective_at) ORDER BY effective_from DESC LIMIT 1.
+  - >-
+    [ID tsk_p2_preauth_001_02_work_item_03] Write verify_tsk_p2_preauth_001_02.sh that runs psql to verify
+    function exists with exact signature and is SECURITY DEFINER.
+  - >-
+    [ID tsk_p2_preauth_001_02_work_item_04] Run verify_tsk_p2_preauth_001_02.sh to confirm function is created correctly.
+
+acceptance_criteria:
+  - >-
+    [ID tsk_p2_preauth_001_02_work_item_01] Function exists with exact signature in pg_proc.
+  - >-
+    [ID tsk_p2_preauth_001_02_work_item_01] Function is SECURITY DEFINER with prosecdef=true.
+  - >-
+    [ID tsk_p2_preauth_001_02_work_item_02] Function logic implements temporal resolution query:
+    SELECT interpretation_pack_id FROM interpretation_packs WHERE project_id = p_project_id
+    AND effective_from <= p_effective_at AND (effective_to IS NULL OR effective_to > p_effective_at)
+    ORDER BY effective_from DESC LIMIT 1.
+  - >-
+    [ID tsk_p2_preauth_001_02_work_item_03] verify_tsk_p2_preauth_001_02.sh exists and checks for function signature.
+  - >-
+    [ID tsk_p2_preauth_001_02_work_item_04] verify_tsk_p2_preauth_001_02.sh exits 0.
+
+negative_tests:
+  - id: TSK-P2-PREAUTH-001-02-N1
+    description: >-
+      Verify that verify_tsk_p2_preauth_001_02.sh exits non-zero when function does not exist
+      or has incorrect signature.
+    required: true
+
+positive_tests:
+  - id: TSK-P2-PREAUTH-001-02-P1
+    description: >-
+      Verify that verify_tsk_p2_preauth_001_02.sh exits 0 when function exists with exact signature.
+    required: false
+
+verification:
+  - >-
+    # [ID tsk_p2_preauth_001_02_work_item_01] [ID tsk_p2_preauth_001_02_work_item_02]
+    # [ID tsk_p2_preauth_001_02_work_item_03] [ID tsk_p2_preauth_001_02_work_item_04]
+    test -x scripts/db/verify_tsk_p2_preauth_001_02.sh && bash scripts/db/verify_tsk_p2_preauth_001_02.sh > evidence/phase2/tsk_p2_preauth_001_02.json || exit 1
+  - >-
+    # [ID tsk_p2_preauth_001_02_work_item_01]
+    psql -c "SELECT 1 FROM pg_proc WHERE proname='resolve_interpretation_pack' AND prorettype='uuid'::regtype" | grep -q '1 row' || exit 1
+  - >-
+    # [ID tsk_p2_preauth_001_02_work_item_04]
+    test -f evidence/phase2/tsk_p2_preauth_001_02.json || exit 1
+  - >-
+    python3 scripts/audit/validate_evidence.py --task TSK-P2-PREAUTH-001-02 --evidence evidence/phase2/tsk_p2_preauth_001_02.json || exit 1
+  - >-
+    RUN_PHASE2_GATES=1 bash scripts/dev/pre_ci.sh || exit 1
+
+evidence:
+  - path: evidence/phase2/tsk_p2_preauth_001_02.json
+    must_include:
+      - task_id
+      - git_sha
+      - timestamp_utc
+      - status
+      - checks
+      - function_exists
+      - function_signature_correct
+      - security_definer_present
+
+failure_modes:
+  - "Function does not exist => CRITICAL_FAIL"
+  - "Function has incorrect signature => CRITICAL_FAIL"
+  - "Function not SECURITY DEFINER => FAIL"
+  - "Evidence file missing => FAIL"
+
+must_read:
+  - docs/operations/AI_AGENT_OPERATION_MANUAL.md
+  - docs/operations/TASK_CREATION_PROCESS.md
+  - docs/plans/phase2/ATOMIC_TASK_BREAKDOWN_PLAN.md
+
+implementation_plan: docs/plans/phase2/TSK-P2-PREAUTH-001-02/PLAN.md
+implementation_log: docs/plans/phase2/TSK-P2-PREAUTH-001-02/EXEC_LOG.md
+
+notes: >-
+  This task blocks TSK-P2-PREAUTH-003-00. Phase Key: PRE-PHASE2. Phase Name: Pre-Phase 2 Implementation.
+
+client: cursor
+assigned_agent: db_foundation
+model: <UNASSIGNED>

@@ -1,0 +1,121 @@
+schema_version: 1
+phase: '2'
+task_id: TSK-P2-REG-003-02
+title: Create protected_areas table
+owner_role: DB_FOUNDATION
+status: planned
+priority: HIGH
+risk_class: INTEGRITY
+blast_radius: DB_SCHEMA
+intent: Create the protected_areas table with PostGIS geometry to store versioned
+  protected area polygons for DNSH compliance checking.
+anti_patterns:
+- Declaring implemented without a running enforcement script
+- Writing the negative test after the fix is declared done
+- Marking completed when only the happy path is tested
+out_of_scope:
+- PostGIS extension (handled in TSK-P2-REG-003-01)
+stop_conditions:
+- If protected_areas table does not exist
+- If geom column is not geometry(POLYGON, 4326) NOT NULL
+- If source_version_id FK to factor_registry is missing
+- If GIST index on geom is missing
+- If append-only trigger is missing
+proof_guarantees:
+- Table exists with correct geometry type and FK
+- GIST index exists on geom column
+- Append-only trigger is attached
+proof_limitations:
+- Does not verify geometry correctness or trigger execution
+depends_on:
+- TSK-P2-REG-003-01
+blocks:
+- TSK-P2-REG-003-03
+touches:
+- schema/migrations/0125_protected_areas.sql
+- scripts/db/verify_tsk_p2_reg_003_02.sh
+- tasks/TSK-P2-REG-003-02/meta.yml
+invariants: []
+work:
+  - >-
+    [ID tsk_p2_reg_003_02_work_item_01] Write migration 0125 at schema/migrations/0125_protected_areas.sql creating protected_areas table with columns and FK
+  - >-
+    [ID tsk_p2_reg_003_02_work_item_02] Add CREATE INDEX idx_protected_areas_geom ON protected_areas USING GIST (geom) to migration
+  - >-
+    [ID tsk_p2_reg_003_02_work_item_03] Add trigger function to migration that raises GF055 on any UPDATE or DELETE attempt on protected_areas table
+  - >-
+    [ID tsk_p2_reg_003_02_work_item_04] Add GRANT SELECT ON protected_areas TO symphony_command and GRANT ALL ON protected_areas TO symphony_control after REVOKE ALL FROM PUBLIC
+  - >-
+    [ID tsk_p2_reg_003_02_work_item_05] Write verify_tsk_p2_reg_003_02.sh that runs psql to verify table exists, geom is geometry type, and index exists
+  - >-
+    [ID tsk_p2_reg_003_02_work_item_06] Run verify_tsk_p2_reg_003_02.sh to confirm migration is successful
+  - >-
+    [ID tsk_p2_reg_003_02_work_item_07] Run scripts/dev/pre_ci.sh to ensure conformance
+acceptance_criteria:
+  - >-
+    [ID tsk_p2_reg_003_02_work_item_01] [ID tsk_p2_reg_003_02_work_item_02] [ID tsk_p2_reg_003_02_work_item_03] [ID tsk_p2_reg_003_02_work_item_04] [ID tsk_p2_reg_003_02_work_item_05] [ID tsk_p2_reg_003_02_work_item_06] [ID tsk_p2_reg_003_02_work_item_07] [ID tsk_p2_reg_003_02_ac_01] Migration 0125 for protected_areas exists
+  - >-
+    [ID tsk_p2_reg_003_02_work_item_01] [ID tsk_p2_reg_003_02_work_item_02] [ID tsk_p2_reg_003_02_work_item_03] [ID tsk_p2_reg_003_02_work_item_04] [ID tsk_p2_reg_003_02_work_item_05] [ID tsk_p2_reg_003_02_work_item_06] [ID tsk_p2_reg_003_02_work_item_07] [ID tsk_p2_reg_003_02_ac_02] protected_areas table exists in database
+  - >-
+    [ID tsk_p2_reg_003_02_work_item_01] [ID tsk_p2_reg_003_02_work_item_02] [ID tsk_p2_reg_003_02_work_item_03] [ID tsk_p2_reg_003_02_work_item_04] [ID tsk_p2_reg_003_02_work_item_05] [ID tsk_p2_reg_003_02_work_item_06] [ID tsk_p2_reg_003_02_work_item_07] [ID tsk_p2_reg_003_02_ac_03] geom column is geometry(POLYGON, 4326) NOT NULL
+  - >-
+    [ID tsk_p2_reg_003_02_work_item_01] [ID tsk_p2_reg_003_02_work_item_02] [ID tsk_p2_reg_003_02_work_item_03] [ID tsk_p2_reg_003_02_work_item_04] [ID tsk_p2_reg_003_02_work_item_05] [ID tsk_p2_reg_003_02_work_item_06] [ID tsk_p2_reg_003_02_work_item_07] [ID tsk_p2_reg_003_02_ac_04] source_version_id references factor_registry(factor_id)
+  - >-
+    [ID tsk_p2_reg_003_02_work_item_01] [ID tsk_p2_reg_003_02_work_item_02] [ID tsk_p2_reg_003_02_work_item_03] [ID tsk_p2_reg_003_02_work_item_04] [ID tsk_p2_reg_003_02_work_item_05] [ID tsk_p2_reg_003_02_work_item_06] [ID tsk_p2_reg_003_02_work_item_07] [ID tsk_p2_reg_003_02_ac_05] GIST index on geom exists
+  - >-
+    [ID tsk_p2_reg_003_02_work_item_01] [ID tsk_p2_reg_003_02_work_item_02] [ID tsk_p2_reg_003_02_work_item_03] [ID tsk_p2_reg_003_02_work_item_04] [ID tsk_p2_reg_003_02_work_item_05] [ID tsk_p2_reg_003_02_work_item_06] [ID tsk_p2_reg_003_02_work_item_07] [ID tsk_p2_reg_003_02_ac_06] Append-only trigger raises GF055
+  - >-
+    [ID tsk_p2_reg_003_02_work_item_01] [ID tsk_p2_reg_003_02_work_item_02] [ID tsk_p2_reg_003_02_work_item_03] [ID tsk_p2_reg_003_02_work_item_04] [ID tsk_p2_reg_003_02_work_item_05] [ID tsk_p2_reg_003_02_work_item_06] [ID tsk_p2_reg_003_02_work_item_07] [ID tsk_p2_reg_003_02_ac_07] pre_ci.sh passes
+negative_tests:
+- id: tsk_p2_reg_003_02_neg_01
+  description: Verification fails if table does not exist
+  required: true
+- id: tsk_p2_reg_003_02_neg_02
+  description: Verification fails if geom is not geometry type
+  required: true
+positive_tests:
+- id: tsk_p2_reg_003_02_pos_01
+  description: Verification passes when table and geometry are correct
+  required: false
+verification:
+  - >-
+    # [ID tsk_p2_reg_003_02_work_item_01] [ID tsk_p2_reg_003_02_work_item_02] [ID tsk_p2_reg_003_02_work_item_03] [ID tsk_p2_reg_003_02_work_item_04] [ID tsk_p2_reg_003_02_work_item_05] [ID tsk_p2_reg_003_02_work_item_06] [ID tsk_p2_reg_003_02_work_item_07] [ID tsk_p2_reg_003_02_ac_01] [ID tsk_p2_reg_003_02_ac_02] [ID tsk_p2_reg_003_02_ac_03] [ID tsk_p2_reg_003_02_ac_04] [ID tsk_p2_reg_003_02_ac_05] [ID tsk_p2_reg_003_02_ac_06] [ID tsk_p2_reg_003_02_ac_07]
+    bash scripts/db/verify_tsk_p2_reg_003_02.sh
+  - >-
+    # [ID tsk_p2_reg_003_02_work_item_01] [ID tsk_p2_reg_003_02_work_item_02] [ID tsk_p2_reg_003_02_work_item_03] [ID tsk_p2_reg_003_02_work_item_04] [ID tsk_p2_reg_003_02_work_item_05] [ID tsk_p2_reg_003_02_work_item_06] [ID tsk_p2_reg_003_02_work_item_07] [ID tsk_p2_reg_003_02_ac_01] [ID tsk_p2_reg_003_02_ac_02] [ID tsk_p2_reg_003_02_ac_03] [ID tsk_p2_reg_003_02_ac_04] [ID tsk_p2_reg_003_02_ac_05] [ID tsk_p2_reg_003_02_ac_06] [ID tsk_p2_reg_003_02_ac_07]
+    python3 scripts/audit/validate_evidence.py --task TSK-P2-REG-003-02 --evidence evidence/phase2/tsk_p2_reg_003_02.json
+  - >-
+    # [ID tsk_p2_reg_003_02_work_item_01] [ID tsk_p2_reg_003_02_work_item_02] [ID tsk_p2_reg_003_02_work_item_03] [ID tsk_p2_reg_003_02_work_item_04] [ID tsk_p2_reg_003_02_work_item_05] [ID tsk_p2_reg_003_02_work_item_06] [ID tsk_p2_reg_003_02_work_item_07] [ID tsk_p2_reg_003_02_ac_01] [ID tsk_p2_reg_003_02_ac_02] [ID tsk_p2_reg_003_02_ac_03] [ID tsk_p2_reg_003_02_ac_04] [ID tsk_p2_reg_003_02_ac_05] [ID tsk_p2_reg_003_02_ac_06] [ID tsk_p2_reg_003_02_ac_07]
+    bash scripts/dev/pre_ci.sh
+evidence:
+- path: evidence/phase2/tsk_p2_reg_003_02.json
+  must_include:
+  - task_id
+  - git_sha
+  - timestamp_utc
+  - status
+  - checks
+  - table_exists
+  - geometry_type_correct
+  - gist_index_exists
+  - append_only_trigger
+  - observed_paths
+  - observed_hashes
+  - command_outputs
+  - execution_trace
+failure_modes:
+- PostGIS not installed => CRITICAL_FAIL
+- FK to factor_registry fails => FAIL
+- Geometry type incorrect => FAIL
+- Evidence file missing => CRITICAL_FAIL
+must_read:
+- docs/operations/AI_AGENT_OPERATION_MANUAL.md
+- docs/operations/TASK_CREATION_PROCESS.md
+- docs/plans/phase2/ATOMIC_TASK_BREAKDOWN_PLAN.md
+- AGENTS.md
+implementation_plan: docs/plans/phase2/TSK-P2-REG-003-02/PLAN.md
+implementation_log: docs/plans/phase2/TSK-P2-REG-003-02/EXEC_LOG.md
+notes: Task scaffolding completed per TASK_CREATION_PROCESS.md
+client: codex_ide
+assigned_agent: DB_FOUNDATION
+model: <UNASSIGNED>

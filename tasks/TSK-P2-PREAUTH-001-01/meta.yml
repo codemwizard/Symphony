@@ -1,0 +1,138 @@
+schema_version: 1
+phase: '2'
+task_id: TSK-P2-PREAUTH-001-01
+title: "Create interpretation_packs table with temporal uniqueness"
+owner_role: DB_FOUNDATION
+status: planned
+priority: HIGH
+risk_class: INTEGRITY
+blast_radius: DB_SCHEMA
+
+intent: >-
+  This task creates the interpretation_packs table with temporal uniqueness constraints.
+  Without this table, the system cannot track interpretation pack versions over time,
+  creating risk of inconsistent policy application across different time periods.
+
+anti_patterns:
+  - "Creating the table without temporal uniqueness constraints"
+  - "Writing the migration without touching MIGRATION_HEAD"
+  - "Writing the verifier after the migration is applied"
+
+out_of_scope:
+  - "resolve_interpretation_pack() function implementation (deferred to TSK-P2-PREAUTH-001-02)"
+  - "Data migration or backfill"
+  - "Application layer changes"
+
+stop_conditions:
+  - "If migration 0116 does not create interpretation_packs table"
+  - "If temporal uniqueness constraint is missing"
+  - "If MIGRATION_HEAD is not updated to 0116"
+
+proof_guarantees:
+  - "Migration 0116 creates interpretation_packs table with temporal uniqueness"
+  - "MIGRATION_HEAD contains 0116"
+  - "Verifier script exits 0 and emits evidence"
+
+proof_limitations:
+  - "Cannot verify that the temporal uniqueness logic is correct for all edge cases"
+  - "Cannot verify that the table will perform well at scale"
+
+depends_on:
+  - TSK-P2-PREAUTH-001-00
+blocks:
+  - TSK-P2-PREAUTH-001-02
+
+touches:
+  - schema/migrations/0116_create_interpretation_packs.sql
+  - schema/migrations/MIGRATION_HEAD
+  - scripts/db/verify_tsk_p2_preauth_001_01.sh
+  - tasks/TSK-P2-PREAUTH-001-01/meta.yml
+
+invariants: []
+
+work:
+  - >-
+    [ID tsk_p2_preauth_001_01_work_item_01] Write migration 0116 at schema/migrations/0116_create_interpretation_packs.sql
+    creating interpretation_packs table with columns: interpretation_pack_id UUID PRIMARY KEY,
+    project_id UUID NOT NULL, interpretation_pack_id UUID NOT NULL, effective_from TIMESTAMPTZ NOT NULL,
+    effective_to TIMESTAMPTZ, and UNIQUE constraint on (project_id, interpretation_pack_id, effective_from).
+  - >-
+    [ID tsk_p2_preauth_001_01_work_item_02] Update MIGRATION_HEAD to 0116: echo 0116 > schema/migrations/MIGRATION_HEAD.
+  - >-
+    [ID tsk_p2_preauth_001_01_work_item_03] Write verify_tsk_p2_preauth_001_01.sh that runs psql to verify
+    table exists and temporal uniqueness constraint is present.
+  - >-
+    [ID tsk_p2_preauth_001_01_work_item_04] Run verify_tsk_p2_preauth_001_01.sh to confirm migration is successful.
+
+acceptance_criteria:
+  - >-
+    [ID tsk_p2_preauth_001_01_work_item_01] Migration 0116 creates interpretation_packs table.
+  - >-
+    [ID tsk_p2_preauth_001_01_work_item_02] MIGRATION_HEAD contains 0116.
+  - >-
+    [ID tsk_p2_preauth_001_01_work_item_03] verify_tsk_p2_preauth_001_01.sh exists and checks for table existence.
+  - >-
+    [ID tsk_p2_preauth_001_01_work_item_04] verify_tsk_p2_preauth_001_01.sh exits 0.
+
+negative_tests:
+  - id: TSK-P2-PREAUTH-001-01-N1
+    description: >-
+      Verify that verify_tsk_p2_preauth_001_01.sh exits non-zero when interpretation_packs table
+      does not exist.
+    required: true
+
+positive_tests:
+  - id: TSK-P2-PREAUTH-001-01-P1
+    description: >-
+      Verify that verify_tsk_p2_preauth_001_01.sh exits 0 when interpretation_packs table
+      exists with temporal uniqueness constraint.
+    required: false
+
+verification:
+  - >-
+    # [ID tsk_p2_preauth_001_01_work_item_01] [ID tsk_p2_preauth_001_01_work_item_02]
+    # [ID tsk_p2_preauth_001_01_work_item_03] [ID tsk_p2_preauth_001_01_work_item_04]
+    test -x scripts/db/verify_tsk_p2_preauth_001_01.sh && bash scripts/db/verify_tsk_p2_preauth_001_01.sh > evidence/phase2/tsk_p2_preauth_001_01.json || exit 1
+  - >-
+    # [ID tsk_p2_preauth_001_01_work_item_02]
+    test $(cat schema/migrations/MIGRATION_HEAD) = "0116" || exit 1
+  - >-
+    # [ID tsk_p2_preauth_001_01_work_item_04]
+    test -f evidence/phase2/tsk_p2_preauth_001_01.json || exit 1
+  - >-
+    python3 scripts/audit/validate_evidence.py --task TSK-P2-PREAUTH-001-01 --evidence evidence/phase2/tsk_p2_preauth_001_01.json || exit 1
+  - >-
+    RUN_PHASE2_GATES=1 bash scripts/dev/pre_ci.sh || exit 1
+
+evidence:
+  - path: evidence/phase2/tsk_p2_preauth_001_01.json
+    must_include:
+      - task_id
+      - git_sha
+      - timestamp_utc
+      - status
+      - checks
+      - table_exists
+      - temporal_uniqueness_present
+      - migration_head
+
+failure_modes:
+  - "Migration does not create table => CRITICAL_FAIL"
+  - "Temporal uniqueness constraint missing => CRITICAL_FAIL"
+  - "MIGRATION_HEAD not updated => FAIL"
+  - "Evidence file missing => FAIL"
+
+must_read:
+  - docs/operations/AI_AGENT_OPERATION_MANUAL.md
+  - docs/operations/TASK_CREATION_PROCESS.md
+  - docs/plans/phase2/ATOMIC_TASK_BREAKDOWN_PLAN.md
+
+implementation_plan: docs/plans/phase2/TSK-P2-PREAUTH-001-01/PLAN.md
+implementation_log: docs/plans/phase2/TSK-P2-PREAUTH-001-01/EXEC_LOG.md
+
+notes: >-
+  This task blocks TSK-P2-PREAUTH-001-02. Phase Key: PRE-PHASE2. Phase Name: Pre-Phase 2 Implementation.
+
+client: cursor
+assigned_agent: db_foundation
+model: <UNASSIGNED>

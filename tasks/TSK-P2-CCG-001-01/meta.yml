@@ -1,0 +1,142 @@
+schema_version: 1
+phase: '2'
+task_id: TSK-P2-CCG-001-01
+title: Run gate and promote INV-159/160/161/166
+owner_role: INVARIANTS_CURATOR
+status: completed
+priority: HIGH
+risk_class: GOVERNANCE
+blast_radius: CI_GATES
+intent: This task runs the core contract gate and promotes INV-159 (neutrality), INV-160
+  (adapter-boundary), INV-161 (function-names), and INV-166 (payload-neutrality) to
+  implemented status. Without this verification, the core contract may violate neutrality
+  or adapter boundaries, creating architectural debt.
+anti_patterns:
+- Promoting invariants to implemented without running the gate
+- Assuming the gate passes without actual execution
+- Writing the verifier after marking invariants as implemented
+out_of_scope:
+- Changing core contract logic implementation (deferred to separate task if needed)
+- Modifying other invariants
+- Database schema changes
+stop_conditions:
+- If verify_core_contract_gate.sh does not exit 0
+- If any of INV-159, INV-160, INV-161, INV-166 status is not updated to implemented
+- If the gate is skipped or mocked
+proof_guarantees:
+- verify_core_contract_gate.sh exits 0 with all sub-checks passing
+- 'INV-159, INV-160, INV-161, INV-166 in INVARIANTS_MANIFEST.yml have status: implemented'
+- Verifier script exists and emits evidence
+proof_limitations:
+- Cannot verify that all core contract violations are caught by the gate
+- Cannot verify that neutrality cannot be violated through other means
+depends_on:
+- TSK-P2-CCG-001-00
+blocks:
+- TSK-P2-PREAUTH-001-00
+- TSK-P2-PREAUTH-002-00
+touches:
+- docs/invariants/INVARIANTS_MANIFEST.yml
+- scripts/audit/verify_tsk_p2_ccg_001_01.sh
+- tasks/TSK-P2-CCG-001-01/meta.yml
+invariants:
+- INV-159
+- INV-160
+- INV-161
+- INV-166
+work:
+- '[ID tsk_p2_ccg_001_01_work_item_01] Run verify_core_contract_gate.sh with all sub-checks:
+  neutrality, adapter-boundary, function-names, payload-neutrality.'
+- '[ID tsk_p2_ccg_001_01_work_item_02] Update INV-159 in INVARIANTS_MANIFEST.yml with
+  status: implemented, enforcement_location, and verification_command.'
+- '[ID tsk_p2_ccg_001_01_work_item_03] Update INV-160 in INVARIANTS_MANIFEST.yml with
+  status: implemented, enforcement_location, and verification_command.'
+- '[ID tsk_p2_ccg_001_01_work_item_04] Update INV-161 in INVARIANTS_MANIFEST.yml with
+  status: implemented, enforcement_location, and verification_command.'
+- '[ID tsk_p2_ccg_001_01_work_item_05] Update INV-166 in INVARIANTS_MANIFEST.yml with
+  status: implemented, enforcement_location, and verification_command.'
+- '[ID tsk_p2_ccg_001_01_work_item_06] Write verify_tsk_p2_ccg_001_01.sh that runs
+  the verifier and emits evidence.'
+acceptance_criteria:
+- >-
+  [ID tsk_p2_ccg_001_01_work_item_01] [ID tsk_p2_ccg_001_01_ac_01] verify_core_contract_gate.sh exits 0.
+- >-
+  [ID tsk_p2_ccg_001_01_work_item_02] [ID tsk_p2_ccg_001_01_ac_02] INV-159 in INVARIANTS_MANIFEST.yml has status: implemented.
+- >-
+  [ID tsk_p2_ccg_001_01_work_item_03] [ID tsk_p2_ccg_001_01_ac_03] INV-160 in INVARIANTS_MANIFEST.yml has status: implemented.
+- >-
+  [ID tsk_p2_ccg_001_01_work_item_04] [ID tsk_p2_ccg_001_01_ac_04] INV-161 in INVARIANTS_MANIFEST.yml has status: implemented.
+- >-
+  [ID tsk_p2_ccg_001_01_work_item_05] [ID tsk_p2_ccg_001_01_ac_05] INV-166 in INVARIANTS_MANIFEST.yml has status: implemented.
+- >-
+  [ID tsk_p2_ccg_001_01_work_item_06] [ID tsk_p2_ccg_001_01_ac_06] verify_tsk_p2_ccg_001_01.sh exists and exits 0.
+negative_tests:
+- id: TSK-P2-CCG-001-01-N1
+  description: Create temp file /tmp/symphony_ccg_test_$$.sql with adapter-specific
+    SQL and verify that verify_core_contract_gate.sh exits non-zero. Clean up with
+    trap.
+  required: true
+positive_tests:
+- id: TSK-P2-CCG-001-01-P1
+  description: Create temp file with neutral SQL and verify that verify_core_contract_gate.sh
+    exits 0.
+  required: false
+verification:
+  - >-
+    # [ID tsk_p2_ccg_001_01_work_item_01] [ID tsk_p2_ccg_001_01_work_item_02] [ID tsk_p2_ccg_001_01_work_item_03] [ID tsk_p2_ccg_001_01_work_item_04] [ID tsk_p2_ccg_001_01_work_item_05] [ID tsk_p2_ccg_001_01_work_item_06] [ID tsk_p2_ccg_001_01_ac_01] [ID tsk_p2_ccg_001_01_ac_02] [ID tsk_p2_ccg_001_01_ac_03] [ID tsk_p2_ccg_001_01_ac_04] [ID tsk_p2_ccg_001_01_ac_05] [ID tsk_p2_ccg_001_01_ac_06]
+    bash scripts/audit/verify_core_contract_gate.sh || exit 1
+  - >-
+    # [ID tsk_p2_ccg_001_01_work_item_01] [ID tsk_p2_ccg_001_01_work_item_02] [ID tsk_p2_ccg_001_01_work_item_03] [ID tsk_p2_ccg_001_01_work_item_04] [ID tsk_p2_ccg_001_01_work_item_05] [ID tsk_p2_ccg_001_01_work_item_06] [ID tsk_p2_ccg_001_01_ac_01] [ID tsk_p2_ccg_001_01_ac_02] [ID tsk_p2_ccg_001_01_ac_03] [ID tsk_p2_ccg_001_01_ac_04] [ID tsk_p2_ccg_001_01_ac_05] [ID tsk_p2_ccg_001_01_ac_06]
+    grep -A 5 'id: INV-159' docs/invariants/INVARIANTS_MANIFEST.yml | grep -q 'status: implemented' || exit 1
+  - >-
+    # [ID tsk_p2_ccg_001_01_work_item_01] [ID tsk_p2_ccg_001_01_work_item_02] [ID tsk_p2_ccg_001_01_work_item_03] [ID tsk_p2_ccg_001_01_work_item_04] [ID tsk_p2_ccg_001_01_work_item_05] [ID tsk_p2_ccg_001_01_work_item_06] [ID tsk_p2_ccg_001_01_ac_01] [ID tsk_p2_ccg_001_01_ac_02] [ID tsk_p2_ccg_001_01_ac_03] [ID tsk_p2_ccg_001_01_ac_04] [ID tsk_p2_ccg_001_01_ac_05] [ID tsk_p2_ccg_001_01_ac_06]
+    grep -A 5 'id: INV-160' docs/invariants/INVARIANTS_MANIFEST.yml | grep -q 'status: implemented' || exit 1
+  - >-
+    # [ID tsk_p2_ccg_001_01_work_item_01] [ID tsk_p2_ccg_001_01_work_item_02] [ID tsk_p2_ccg_001_01_work_item_03] [ID tsk_p2_ccg_001_01_work_item_04] [ID tsk_p2_ccg_001_01_work_item_05] [ID tsk_p2_ccg_001_01_work_item_06] [ID tsk_p2_ccg_001_01_ac_01] [ID tsk_p2_ccg_001_01_ac_02] [ID tsk_p2_ccg_001_01_ac_03] [ID tsk_p2_ccg_001_01_ac_04] [ID tsk_p2_ccg_001_01_ac_05] [ID tsk_p2_ccg_001_01_ac_06]
+    grep -A 5 'id: INV-161' docs/invariants/INVARIANTS_MANIFEST.yml | grep -q 'status: implemented' || exit 1
+  - >-
+    # [ID tsk_p2_ccg_001_01_work_item_01] [ID tsk_p2_ccg_001_01_work_item_02] [ID tsk_p2_ccg_001_01_work_item_03] [ID tsk_p2_ccg_001_01_work_item_04] [ID tsk_p2_ccg_001_01_work_item_05] [ID tsk_p2_ccg_001_01_work_item_06] [ID tsk_p2_ccg_001_01_ac_01] [ID tsk_p2_ccg_001_01_ac_02] [ID tsk_p2_ccg_001_01_ac_03] [ID tsk_p2_ccg_001_01_ac_04] [ID tsk_p2_ccg_001_01_ac_05] [ID tsk_p2_ccg_001_01_ac_06]
+    grep -A 5 'id: INV-166' docs/invariants/INVARIANTS_MANIFEST.yml | grep -q 'status: implemented' || exit 1
+  - >-
+    # [ID tsk_p2_ccg_001_01_work_item_01] [ID tsk_p2_ccg_001_01_work_item_02] [ID tsk_p2_ccg_001_01_work_item_03] [ID tsk_p2_ccg_001_01_work_item_04] [ID tsk_p2_ccg_001_01_work_item_05] [ID tsk_p2_ccg_001_01_work_item_06] [ID tsk_p2_ccg_001_01_ac_01] [ID tsk_p2_ccg_001_01_ac_02] [ID tsk_p2_ccg_001_01_ac_03] [ID tsk_p2_ccg_001_01_ac_04] [ID tsk_p2_ccg_001_01_ac_05] [ID tsk_p2_ccg_001_01_ac_06]
+    test -x scripts/audit/verify_tsk_p2_ccg_001_01.sh &&
+    bash scripts/audit/verify_tsk_p2_ccg_001_01.sh &&
+    test -f evidence/phase2/tsk_p2_ccg_001_01.json || exit 1
+  - >-
+    # [ID tsk_p2_ccg_001_01_work_item_01] [ID tsk_p2_ccg_001_01_work_item_02] [ID tsk_p2_ccg_001_01_work_item_03] [ID tsk_p2_ccg_001_01_work_item_04] [ID tsk_p2_ccg_001_01_work_item_05] [ID tsk_p2_ccg_001_01_work_item_06] [ID tsk_p2_ccg_001_01_ac_01] [ID tsk_p2_ccg_001_01_ac_02] [ID tsk_p2_ccg_001_01_ac_03] [ID tsk_p2_ccg_001_01_ac_04] [ID tsk_p2_ccg_001_01_ac_05] [ID tsk_p2_ccg_001_01_ac_06]
+    python3 scripts/audit/validate_evidence.py --task TSK-P2-CCG-001-01 --evidence evidence/phase2/tsk_p2_ccg_001_01.json || exit 1
+  - >-
+    # [ID tsk_p2_ccg_001_01_work_item_01] [ID tsk_p2_ccg_001_01_work_item_02] [ID tsk_p2_ccg_001_01_work_item_03] [ID tsk_p2_ccg_001_01_work_item_04] [ID tsk_p2_ccg_001_01_work_item_05] [ID tsk_p2_ccg_001_01_work_item_06] [ID tsk_p2_ccg_001_01_ac_01] [ID tsk_p2_ccg_001_01_ac_02] [ID tsk_p2_ccg_001_01_ac_03] [ID tsk_p2_ccg_001_01_ac_04] [ID tsk_p2_ccg_001_01_ac_05] [ID tsk_p2_ccg_001_01_ac_06]
+    bash scripts/dev/pre_ci.sh || exit 1
+evidence:
+- path: evidence/phase2/tsk_p2_ccg_001_01.json
+  must_include:
+  - task_id
+  - git_sha
+  - timestamp_utc
+  - status
+  - checks
+  - inv_159_status
+  - inv_160_status
+  - inv_161_status
+  - inv_166_status
+  - observed_paths
+  - observed_hashes
+  - command_outputs
+  - execution_trace
+failure_modes:
+- Core contract gate fails => CRITICAL_FAIL
+- Any invariant not promoted to implemented => FAIL
+- Evidence file missing => FAIL
+must_read:
+- docs/operations/AI_AGENT_OPERATION_MANUAL.md
+- docs/operations/TASK_CREATION_PROCESS.md
+- docs/invariants/INVARIANTS_MANIFEST.yml
+- docs/plans/phase2/ATOMIC_TASK_BREAKDOWN_PLAN.md
+implementation_plan: docs/plans/phase2/TSK-P2-CCG-001-01/PLAN.md
+implementation_log: docs/plans/phase2/TSK-P2-CCG-001-01/EXEC_LOG.md
+notes: 'This task blocks TSK-P2-PREAUTH-001-00 and TSK-P2-PREAUTH-002-00. Phase Key:
+  PRE-PHASE2. Phase Name: Pre-Phase 2 Implementation.'
+client: cursor
+assigned_agent: invariants_curator
+model: <UNASSIGNED>

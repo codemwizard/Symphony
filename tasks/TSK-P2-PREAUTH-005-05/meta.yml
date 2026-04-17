@@ -1,0 +1,134 @@
+schema_version: 1
+phase: '2'
+task_id: TSK-P2-PREAUTH-005-05
+title: "Implement enforce_transition_signature() trigger"
+owner_role: DB_FOUNDATION
+status: planned
+priority: HIGH
+risk_class: INTEGRITY
+blast_radius: DB_SCHEMA
+
+intent: >-
+  This task implements the enforce_transition_signature() trigger function to verify signature
+  is present for signed transitions. Without this trigger, unsigned authoritative transitions
+  can occur, creating risk of non-repudiable state changes.
+
+anti_patterns:
+  - "Implementing trigger without SECURITY DEFINER and hardened search_path"
+  - "Attaching trigger without BEFORE INSERT OR UPDATE"
+  - "Writing the verifier after the trigger is created"
+
+out_of_scope:
+  - "Other trigger implementations (deferred to TSK-P2-PREAUTH-005-06 through 005-08)"
+  - "Application layer changes"
+
+stop_conditions:
+  - "If function does not exist in pg_proc with exact name"
+  - "If function is not SECURITY DEFINER with prosecdef=true"
+  - "If trigger is not attached as BEFORE INSERT OR UPDATE on state_transitions"
+
+proof_guarantees:
+  - "Function exists in pg_proc with exact name"
+  - "Function is SECURITY DEFINER with prosecdef=true"
+  - "Trigger is attached as BEFORE INSERT OR UPDATE on state_transitions"
+  - "Verifier script exits 0 and emits evidence"
+
+proof_limitations:
+  - "Cannot verify that the trigger logic is correct for all edge cases"
+  - "Cannot verify that the trigger will not cause performance issues"
+
+depends_on:
+  - TSK-P2-PREAUTH-005-04
+blocks:
+  - TSK-P2-PREAUTH-005-06
+
+touches:
+  - schema/migrations/0120_create_state_transitions.sql
+  - scripts/db/verify_tsk_p2_preauth_005_05.sh
+  - tasks/TSK-P2-PREAUTH-005-05/meta.yml
+
+invariants: []
+
+work:
+  - >-
+    [ID tsk_p2_preauth_005_05_work_item_01] Add enforce_transition_signature() function to migration 0120
+    as SECURITY DEFINER with SET search_path = pg_catalog, public. Function verifies signature
+    is present for signed transitions and raises GF034 if missing.
+  - >-
+    [ID tsk_p2_preauth_005_05_work_item_02] Attach function as BEFORE INSERT OR UPDATE trigger on
+    state_transitions table.
+  - >-
+    [ID tsk_p2_preauth_005_05_work_item_03] Write verify_tsk_p2_preauth_005_05.sh that runs psql to verify
+    function exists with exact name, is SECURITY DEFINER, and trigger is attached.
+  - >-
+    [ID tsk_p2_preauth_005_05_work_item_04] Run verify_tsk_p2_preauth_005_05.sh to confirm trigger is created correctly.
+
+acceptance_criteria:
+  - >-
+    [ID tsk_p2_preauth_005_05_work_item_01] Function exists in pg_proc with exact name.
+  - >-
+    [ID tsk_p2_preauth_005_05_work_item_01] Function is SECURITY DEFINER with prosecdef=true.
+  - >-
+    [ID tsk_p2_preauth_005_05_work_item_02] Trigger is attached as BEFORE INSERT OR UPDATE on state_transitions.
+  - >-
+    [ID tsk_p2_preauth_005_05_work_item_03] verify_tsk_p2_preauth_005_05.sh exists and checks for function and trigger.
+  - >-
+    [ID tsk_p2_preauth_005_05_work_item_04] verify_tsk_p2_preauth_005_05.sh exits 0.
+
+negative_tests:
+  - id: TSK-P2-PREAUTH-005-05-N1
+    description: >-
+      Verify that verify_tsk_p2_preauth_005_05.sh exits non-zero when function does not exist
+      or trigger is not attached.
+    required: true
+
+positive_tests:
+  - id: TSK-P2-PREAUTH-005-05-P1
+    description: >-
+      Verify that verify_tsk_p2_preauth_005_05.sh exits 0 when function exists and trigger is attached.
+    required: false
+
+verification:
+  - >-
+    # [ID tsk_p2_preauth_005_05_work_item_01] [ID tsk_p2_preauth_005_05_work_item_02]
+    # [ID tsk_p2_preauth_005_05_work_item_03] [ID tsk_p2_preauth_005_05_work_item_04]
+    test -x scripts/db/verify_tsk_p2_preauth_005_05.sh && bash scripts/db/verify_tsk_p2_preauth_005_05.sh > evidence/phase2/tsk_p2_preauth_005_05.json || exit 1
+  - >-
+    # [ID tsk_p2_preauth_005_05_work_item_01]
+    psql -c "SELECT 1 FROM pg_proc WHERE proname='enforce_transition_signature'" | grep -q '1 row' || exit 1
+  - >-
+    # [ID tsk_p2_preauth_005_05_work_item_04]
+    test -f evidence/phase2/tsk_p2_preauth_005_05.json || exit 1
+
+evidence:
+  - path: evidence/phase2/tsk_p2_preauth_005_05.json
+    must_include:
+      - task_id
+      - git_sha
+      - timestamp_utc
+      - status
+      - checks
+      - function_exists
+      - security_definer_present
+      - trigger_attached
+
+failure_modes:
+  - "Function does not exist => CRITICAL_FAIL"
+  - "Function not SECURITY DEFINER => FAIL"
+  - "Trigger not attached => CRITICAL_FAIL"
+  - "Evidence file missing => FAIL"
+
+must_read:
+  - docs/operations/AI_AGENT_OPERATION_MANUAL.md
+  - docs/operations/TASK_CREATION_PROCESS.md
+  - docs/plans/phase2/ATOMIC_TASK_BREAKDOWN_PLAN.md
+
+implementation_plan: docs/plans/phase2/TSK-P2-PREAUTH-005-05/PLAN.md
+implementation_log: docs/plans/phase2/TSK-P2-PREAUTH-005-05/EXEC_LOG.md
+
+notes: >-
+  This task blocks TSK-P2-PREAUTH-005-06. Phase Key: PRE-PHASE2. Phase Name: Pre-Phase 2 Implementation.
+
+client: cursor
+assigned_agent: db_foundation
+model: <UNASSIGNED>

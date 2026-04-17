@@ -1046,7 +1046,7 @@
 
 - id: INV-132
   aliases: ["SEC-003", "I-SEC-09"]
-  status: roadmap
+  status: implemented
   severity: P0
   title: "Fail-closed on missing secrets (signing keys)"
   owners: ["team-security"]
@@ -1055,7 +1055,7 @@
 
 - id: INV-133
   aliases: ["SEC-004", "I-SEC-10"]
-  status: roadmap
+  status: implemented
   severity: P0
   title: "Tenant allowlist default-deny"
   owners: ["team-security"]
@@ -1338,7 +1338,7 @@
 
 - id: INV-159
   aliases: ["I-PILOT-NEUTRAL-01"]
-  status: roadmap
+  status: implemented
   severity: P0
   title: "Phase 0/1 schema contains no sector or methodology nouns (platform neutrality)"
   owners: ["team-platform", "team-db"]
@@ -1356,7 +1356,7 @@
 
 - id: INV-160
   aliases: ["I-PILOT-ADAPT-01"]
-  status: roadmap
+  status: implemented
   severity: P0
   title: "All pilot methodology logic is registered as a Phase 2 adapter, not embedded in Phase 0/1"
   owners: ["team-platform"]
@@ -1374,7 +1374,7 @@
 
 - id: INV-161
   aliases: ["I-PILOT-VERB-01"]
-  status: roadmap
+  status: implemented
   severity: P0
   title: "Phase 0/1 functions use generic platform verbs only — no sector-encoded function names"
   owners: ["team-db", "team-platform"]
@@ -1468,7 +1468,7 @@
 
 - id: INV-166
   aliases: ["I-PILOT-PAYLOAD-01"]
-  status: roadmap
+  status: implemented
   severity: P0
   title: "Core functions do not interpret sector-specific payload field names"
   owners: ["team-db", "team-platform"]

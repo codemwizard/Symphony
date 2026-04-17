@@ -1,0 +1,126 @@
+schema_version: 1
+phase: '2'
+task_id: TSK-P2-PREAUTH-000
+title: "Author and merge ADR for Spatial Capability Model"
+owner_role: ARCHITECT
+status: completed
+priority: HIGH
+risk_class: GOVERNANCE
+blast_radius: DOCS_ONLY
+
+intent: >-
+  This task creates the Architecture Decision Record (ADR) for the Spatial Capability Model
+  before any PostGIS implementation begins. Without this ADR, the spatial feature lacks
+  canonical design documentation, creating risk of architectural drift and inconsistent
+  implementation across regulatory extensions.
+
+anti_patterns:
+  - "Declaring the ADR complete without human review and signoff"
+  - "Writing the ADR after implementation has already started"
+  - "Using vague language in the ADR that allows multiple interpretations"
+
+out_of_scope:
+  - "Actual PostGIS implementation (deferred to TSK-P2-REG-003)"
+  - "Migration writing or database changes"
+  - "Code changes to application layer"
+
+stop_conditions:
+  - "If the ADR lacks explicit trade-off analysis between spatial approaches"
+  - "If the ADR does not reference the specific EU Taxonomy K13 and DNSH requirements"
+  - "If the ADR lacks clear boundary definitions for protected areas vs project boundaries"
+
+proof_guarantees:
+  - "ADR file exists at docs/decisions/ with required sections: context, decision, consequences"
+  - "ADR is referenced in ATOMIC_TASK_BREAKDOWN_PLAN.md as blocking TSK-P2-REG-003"
+
+proof_limitations:
+  - "Cannot verify that the ADR content is technically correct without human domain expertise"
+  - "Cannot verify that the ADR aligns with future regulatory changes not yet known"
+
+depends_on: []
+blocks:
+  - TSK-P2-REG-003-00
+
+touches:
+  - docs/decisions/adr-spatial-capability-model.md
+  - tasks/TSK-P2-PREAUTH-000/meta.yml
+
+invariants: []
+
+work:
+  - >-
+    [ID tsk_p2_preauth_000_work_item_01] Create ADR file at docs/decisions/adr-spatial-capability-model.md
+    with context, decision, and consequences sections following ADR template.
+  - >-
+    [ID tsk_p2_preauth_000_work_item_02] Document spatial capability model requirements including
+    PostGIS extension usage, geometry types (POLYGON, 4326), and protected area overlap detection.
+  - >-
+    [ID tsk_p2_preauth_000_work_item_03] Document EU Taxonomy K13 taxonomy alignment requirements
+    and DNSH (Do No Significant Harm) spatial checks in the ADR.
+  - >-
+    [ID tsk_p2_preauth_000_work_item_04] Document trade-offs between different spatial approaches
+    (e.g., PostGIS vs custom geometry handling) with justification for selected approach.
+
+acceptance_criteria:
+  - >-
+    [ID tsk_p2_preauth_000_work_item_01] ADR file exists at docs/decisions/adr-spatial-capability-model.md
+    and is readable.
+  - >-
+    [ID tsk_p2_preauth_000_work_item_02] ADR contains explicit PostGIS extension reference and
+    geometry type specifications (POLYGON, 4326).
+  - >-
+    [ID tsk_p2_preauth_000_work_item_03] ADR contains EU Taxonomy K13 and DNSH requirements
+    documented with clear spatial check definitions.
+  - >-
+    [ID tsk_p2_preauth_000_work_item_04] ADR contains trade-off analysis section with justification
+    for selected spatial approach.
+
+negative_tests:
+  - id: TSK-P2-PREAUTH-000-N1
+    description: >-
+      Verify that the ADR file does not exist before this task runs. The verifier should fail
+      if the file already exists, indicating the task may have been run out of order.
+    required: true
+
+positive_tests: []
+
+verification:
+  - >-
+    test -f docs/decisions/adr-spatial-capability-model.md || exit 1
+  - >-
+    grep -q "PostGIS" docs/decisions/adr-spatial-capability-model.md &&
+    grep -q "POLYGON" docs/decisions/adr-spatial-capability-model.md &&
+    grep -q "4326" docs/decisions/adr-spatial-capability-model.md || exit 1
+  - >-
+    grep -q "K13" docs/decisions/adr-spatial-capability-model.md &&
+    grep -q "DNSH" docs/decisions/adr-spatial-capability-model.md || exit 1
+  - >-
+    grep -q "trade-off" docs/decisions/adr-spatial-capability-model.md || exit 1
+  - >-
+    bash scripts/audit/verify_tsk_p2_preauth_000.sh || exit 1
+
+evidence:
+  - evidence/phase2/tsk_p2_preauth_000.json
+
+failure_modes:
+  - "ADR file missing after task completion => CRITICAL_FAIL"
+  - "ADR lacks PostGIS or geometry specifications => FAIL"
+  - "ADR lacks K13 or DNSH requirements => FAIL"
+  - "ADR lacks trade-off analysis => FAIL_REVIEW"
+
+must_read:
+  - docs/operations/AI_AGENT_OPERATION_MANUAL.md
+  - docs/operations/TASK_CREATION_PROCESS.md
+  - docs/plans/phase2/ATOMIC_TASK_BREAKDOWN_PLAN.md
+
+implementation_plan: docs/plans/phase2/TSK-P2-PREAUTH-000/PLAN.md
+implementation_log: docs/plans/phase2/TSK-P2-PREAUTH-000/EXEC_LOG.md
+
+notes: >-
+  This is a DOCS_ONLY task that must complete before TSK-P2-REG-003 can begin.
+  The ADR provides the canonical design reference for all PostGIS spatial work.
+  Phase Key: PRE-PHASE2. Phase Name: Pre-Phase 2 Implementation.
+
+client: cursor
+assigned_agent: architect
+model: claude-opus-4-20250514

@@ -1,734 +1,743 @@
 {
-  "version": 1,
-  "entries": [
-    {
-      "id": "DDL-ALLOW-0001",
-      "migration": "schema/migrations/0017_ingress_tenant_attribution.sql",
-      "statement_fingerprint": "1aaf332fe2df87f4f425c5d8bbd289dc1aff6799600a2e3b849c8436c3515730",
-      "reason": "Phase-0 tenant attribution (type conversion for tenant_id)",
-      "expires_on": "2026-12-31",
-      "reviewed_by": "security_guardian",
-      "approved_at": "2026-02-05"
-    },
-    {
-      "id": "DDL-ALLOW-0002",
-      "migration": "schema/migrations/0017_ingress_tenant_attribution.sql",
-      "statement_fingerprint": "f64200154c302d45280a7003a3eb7da36509441d71a1fd0fd1190225b112b6a5",
-      "reason": "Phase-0 tenant attribution (tenant_id NOT NULL on ingress)",
-      "expires_on": "2026-12-31",
-      "reviewed_by": "security_guardian",
-      "approved_at": "2026-02-05"
-    },
-    {
-      "id": "DDL-ALLOW-0003",
-      "migration": "schema/migrations/0017_ingress_tenant_attribution.sql",
-      "statement_fingerprint": "b1633786b4b13786accfd36ea99dfbc949f2e2c400e03a9921a48a8ca9adebc8",
-      "reason": "Phase-0 tenant attribution columns on ingress attestations",
-      "expires_on": "2026-12-31",
-      "reviewed_by": "security_guardian",
-      "approved_at": "2026-02-05"
-    },
-    {
-      "id": "DDL-ALLOW-0004",
-      "migration": "schema/migrations/0018_outbox_tenant_attribution.sql",
-      "statement_fingerprint": "35643800773556eef8c5e42dd7727309f163a01224914f55ae609c927c006526",
-      "reason": "Phase-0 expand-first tenant_id on outbox_pending",
-      "expires_on": "2026-12-31",
-      "reviewed_by": "security_guardian",
-      "approved_at": "2026-02-05"
-    },
-    {
-      "id": "DDL-ALLOW-0005",
-      "migration": "schema/migrations/0018_outbox_tenant_attribution.sql",
-      "statement_fingerprint": "917b6186750016583c5a5a4c9c4b8f2a783aef53ba701f901e292a260549278d",
-      "reason": "Phase-0 expand-first tenant/member on outbox_attempts",
-      "expires_on": "2026-12-31",
-      "reviewed_by": "security_guardian",
-      "approved_at": "2026-02-05"
-    },
-    {
-      "id": "DDL-ALLOW-0006",
-      "migration": "schema/migrations/0017_ingress_tenant_attribution.sql",
-      "statement_fingerprint": "adefba95e50c238d1dad178364d1518f9ef33a8d5da263268abed740caa6ca78",
-      "reason": "Line-level lock-risk lint allowlist for ingress ALTER TABLE",
-      "expires_on": "2026-12-31",
-      "reviewed_by": "security_guardian",
-      "approved_at": "2026-02-05"
-    },
-    {
-      "id": "DDL-ALLOW-0007",
-      "migration": "schema/migrations/0018_outbox_tenant_attribution.sql",
-      "statement_fingerprint": "51082d1f8ac574df036d305d6b88fba1e48d27f9c07fb6b7d74896d5c7a696da",
-      "reason": "Line-level lock-risk lint allowlist for outbox_pending ALTER TABLE",
-      "expires_on": "2026-12-31",
-      "reviewed_by": "security_guardian",
-      "approved_at": "2026-02-05"
-    },
-    {
-      "id": "DDL-ALLOW-0008",
-      "migration": "schema/migrations/0018_outbox_tenant_attribution.sql",
-      "statement_fingerprint": "3ae717510d0e2d98601b8e32969bd9f4e26aa4cdc1728a3e61a95d6baa9e8d51",
-      "reason": "Line-level lock-risk lint allowlist for outbox_attempts ALTER TABLE",
-      "expires_on": "2026-12-31",
-      "reviewed_by": "security_guardian",
-      "approved_at": "2026-02-05"
-    },
-    {
-      "id": "DDL-ALLOW-0009",
-      "migration": "schema/migrations/0020_business_foundation_hooks.sql",
-      "statement_fingerprint": "95b0aebe4b955ad4865b3ec970986c23a52798da5a3def8c4835cd3a5b1c9828",
-      "reason": "Phase-0 correlation stitching columns on outbox_pending (expand-first)",
-      "expires_on": "2026-12-31",
-      "reviewed_by": "security_guardian",
-      "approved_at": "2026-02-06"
-    },
-    {
-      "id": "DDL-ALLOW-0010",
-      "migration": "schema/migrations/0020_business_foundation_hooks.sql",
-      "statement_fingerprint": "27ad1e207c441a98e89ba818a2de47433a1e0ae4136fff0ef3523146ba5cd134",
-      "reason": "Phase-0 correlation stitching columns on outbox_attempts (expand-first)",
-      "expires_on": "2026-12-31",
-      "reviewed_by": "security_guardian",
-      "approved_at": "2026-02-06"
-    },
-    {
-      "id": "DDL-ALLOW-0011",
-      "migration": "schema/migrations/0020_business_foundation_hooks.sql",
-      "statement_fingerprint": "712a5e10b077749a927ce98e5f086573c033eecdcb47e71e1eeaefb3fba3009a",
-      "reason": "Phase-0 tenant hierarchy expansion via ALTER TABLE tenants",
-      "expires_on": "2026-12-31",
-      "reviewed_by": "security_guardian",
-      "approved_at": "2026-02-06"
-    },
-    {
-      "id": "DDL-ALLOW-0012",
-      "migration": "schema/migrations/0023_evidence_packs_signing_anchoring_hooks.sql",
-      "statement_fingerprint": "0aaa5f64063823903f2c31fd111b31fc9ed747255a35d7dc2964af3c6b8be887",
-      "reason": "Phase-0 expand-first: add signing/anchoring columns to evidence_packs (ALTER TABLE)",
-      "expires_on": "2026-12-31",
-      "reviewed_by": "security_guardian",
-      "approved_at": "2026-02-07"
-    },
-    {
-      "id": "DDL-ALLOW-0013",
-      "migration": "schema/migrations/0024_business_tables_privilege_hygiene_and_usage_event_conventions.sql",
-      "statement_fingerprint": "40842715172a7b0fd9943995e1c2e21fecc70ccbc603b73e8c8a7032ba384f69",
-      "reason": "Phase-0 expand-first: add convention columns to billing_usage_events (ALTER TABLE)",
-      "expires_on": "2026-12-31",
-      "reviewed_by": "security_guardian",
-      "approved_at": "2026-02-07"
-    },
-    {
-      "id": "DDL-ALLOW-0014",
-      "migration": "schema/migrations/0026_business_foundation_delta_tightening.sql",
-      "statement_fingerprint": "5bdb6a4fdce7811f570aacb24bf2b4155be850308573fb3bd664a40bb40a1d0a",
-      "reason": "Phase-0 expand-first: add billable client stable key + new-row-only constraints/triggers (ALTER TABLE billable_clients) for auditably billable hooks.",
-      "expires_on": "2026-12-31",
-      "reviewed_by": "boz_auditor",
-      "approved_at": "2026-02-09"
-    },
-    {
-      "id": "DDL-ALLOW-0015",
-      "migration": "schema/migrations/0026_business_foundation_delta_tightening.sql",
-      "statement_fingerprint": "93b2bc3b87d78e06faafb4bd287cb12f873da199ea8731a2bd6f5217d408ff7c",
-      "reason": "Phase-0 expand-first: add external_proofs direct billability attribution columns + derived attribution trigger (ALTER TABLE external_proofs).",
-      "expires_on": "2026-12-31",
-      "reviewed_by": "boz_auditor",
-      "approved_at": "2026-02-09"
-    },
-    {
-      "id": "DDL-ALLOW-0016",
-      "migration": "schema/migrations/0026_business_foundation_delta_tightening.sql",
-      "statement_fingerprint": "b6ae0d8f8e73086420ba8c086d14e65b02ce2f888c8c23109d05a3224312cf2a",
-      "reason": "Phase-0 expand-first: new-row-only correlation_id non-null check on payment_outbox_pending (hot table). NOT VALID + idempotent DO block reduces migration risk; allowlisted for Phase-0 tightening.",
-      "expires_on": "2026-12-31",
-      "reviewed_by": "boz_auditor",
-      "approved_at": "2026-02-09"
-    },
-    {
-      "id": "DDL-ALLOW-0017",
-      "migration": "schema/migrations/0026_business_foundation_delta_tightening.sql",
-      "statement_fingerprint": "ab760cc86fcd0c0eee5c09e98c2630ead9325a7f2af30b63d7dcc53c4937a3a2",
-      "reason": "Phase-0 expand-first: new-row-only correlation_id non-null check on payment_outbox_attempts (hot table). NOT VALID + idempotent DO block reduces migration risk; allowlisted for Phase-0 tightening.",
-      "expires_on": "2026-12-31",
-      "reviewed_by": "boz_auditor",
-      "approved_at": "2026-02-09"
-    },
-    {
-      "id": "DDL-ALLOW-0018",
-      "migration": "schema/migrations/0028_instruction_finality_enforcement.sql",
-      "statement_fingerprint": "fd2ecd8c25437dc407fbc87251ffba86e750776e6e407f53ad1216a6abf024c7",
-      "reason": "Phase-1 finality ledger migration uses idempotent ALTER TABLE in DO block to attach self-reference reversal FK.",
-      "expires_on": "2026-12-31",
-      "reviewed_by": "security_guardian",
-      "approved_at": "2026-02-13"
-    },
-    {
-      "id": "DDL-ALLOW-0019",
-      "migration": "schema/migrations/0029_pii_decoupling_and_purge_hooks.sql",
-      "statement_fingerprint": "4e894fd7cf52dc8a9a47f945d495132243f261b4ef91651961eb9be570d055a1",
-      "reason": "Phase-1 pii vault migration uses idempotent ALTER TABLE in DO block to attach purge request FK.",
-      "expires_on": "2026-12-31",
-      "reviewed_by": "security_guardian",
-      "approved_at": "2026-02-13"
-    },
-    {
-      "id": "DDL-ALLOW-0020",
-      "migration": "schema/migrations/0031_rail_sequence_truth_anchor_continuity.sql",
-      "statement_fingerprint": "40d6edb713aed31321ec50ea6c34dc69047dc4905113defa013d2cfe227e75ad",
-      "reason": "Phase-1 rail truth-anchor migration uses idempotent ALTER TABLE in DO block to attach attempt FK.",
-      "expires_on": "2026-12-31",
-      "reviewed_by": "security_guardian",
-      "approved_at": "2026-02-13"
-    },
-    {
-      "id": "DDL-ALLOW-0021",
-      "migration": "schema/migrations/0039_levy_period_regex_hardening.sql",
-      "statement_fingerprint": "3ff75f44da8e2bb40942f8156fee9655e222c5a63f4f1d9815caead3d9fa1a01",
-      "reason": "Phase-0 levy regex hardening: replace ambiguous period pattern check with canonical [0-9] class on levy_calculation_records.",
-      "expires_on": "2026-12-31",
-      "reviewed_by": "security_guardian",
-      "approved_at": "2026-02-23"
-    },
-    {
-      "id": "DDL-ALLOW-0022",
-      "migration": "schema/migrations/0039_levy_period_regex_hardening.sql",
-      "statement_fingerprint": "632cc3f6a0cdfc8405ce46c06bae32a47a437889f31afa57c1ff06ff77e51240",
-      "reason": "Phase-0 levy regex hardening: replace ambiguous period pattern check with canonical [0-9] class on levy_remittance_periods.",
-      "expires_on": "2026-12-31",
-      "reviewed_by": "security_guardian",
-      "approved_at": "2026-02-23"
-    },
-    {
-      "id": "DDL-ALLOW-0023",
-      "migration": "schema/migrations/0041_kyc_provider_registry_drop_conflicting_uniqueness.sql",
-      "statement_fingerprint": "052070826bdd3b24a02e7815c964a4e8f1cb0db511172991cdff7cf4e329986b",
-      "reason": "Phase-0 KYC follow-up: drop conflicting full uniqueness to preserve provider version-window history while retaining partial active uniqueness.",
-      "expires_on": "2026-12-31",
-      "reviewed_by": "security_guardian",
-      "approved_at": "2026-02-23"
-    },
-    {
-      "id": "DDL-ALLOW-0024",
-      "migration": "schema/migrations/0043_payment_outbox_pending_kyc_hold_hook.sql",
-      "statement_fingerprint": "449b668f21f42c201495411cfa47ce9c4fb50c83ad0d1daaf5344a9e9e1f28e5",
-      "reason": "Phase-0 KYC expand-first hook: nullable kyc_hold column on outbox hot table for Phase-2 routing gate activation.",
-      "expires_on": "2026-12-31",
-      "reviewed_by": "security_guardian",
-      "approved_at": "2026-02-23"
-    },
-    {
-      "id": "DDL-ALLOW-0025",
-      "migration": "schema/migrations/0054_hier_008_member_device_events_sim_swap_type.sql",
-      "statement_fingerprint": "bb703afca25a2a4e3b9024de8f9846482a963f42023b7c0991033f3cb92fc3de",
-      "reason": "Phase-1 HIER-008 expands member_device_events check constraints to admit SIM_SWAP_DETECTED; ALTER TABLE applies to non-hot hierarchy table.",
-      "expires_on": "2026-12-31",
-      "reviewed_by": "security_guardian",
-      "approved_at": "2026-02-25"
-    },
-    {
-      "id": "DDL-ALLOW-0026",
-      "migration": "schema/migrations/0057_hier_010_program_migration_contract_alignment.sql",
-      "statement_fingerprint": "8b44ad002678d7a4eb417058d25cf7c56893fee5cdf22d0b984d5077f1cd2ed1",
-      "reason": "Phase-1 HIER-010 requires contract-alignment ALTER TABLE operations on non-hot program_migration_events to add new_member_id/created_at and nullable reason semantics.",
-      "expires_on": "2026-12-31",
-      "reviewed_by": "security_guardian",
-      "approved_at": "2026-02-25"
-    },
-    {
-      "id": "DDL-ALLOW-0027",
-      "migration": "schema/migrations/0058_hier_011_supervisor_access_mechanisms.sql",
-      "statement_fingerprint": "72b5a808d5316d87f58837cbb2ae3e9c474e4f37f9b7525014677decb7ce7701",
-      "reason": "Phase-1 HIER-011 extends supervisor approval queue with hold/approval metadata and self-approval guard support on a non-hot control-plane table.",
-      "expires_on": "2026-12-31",
-      "reviewed_by": "security_guardian",
-      "approved_at": "2026-02-25"
-    },
-    {
-      "id": "DDL-ALLOW-0028",
-      "migration": "schema/migrations/0059_ten_002_rls_tenant_isolation.sql",
-      "statement_fingerprint": "3ed7053638665ccb42b0688d3d9a4df865b6a10322c79ecf84ca5072fd2f7715",
-      "reason": "Phase-1 TEN-002 uses dynamic ALTER TABLE to enable RLS across every tenant-scoped table discovered from catalog metadata.",
-      "expires_on": "2026-12-31",
-      "reviewed_by": "security_guardian",
-      "approved_at": "2026-02-25"
-    },
-    {
-      "id": "DDL-ALLOW-0029",
-      "migration": "schema/migrations/0059_ten_002_rls_tenant_isolation.sql",
-      "statement_fingerprint": "6ff80bceb08476d625c6b1c16f8db2a3900c0bb5409ebbc5d236c66517730d61",
-      "reason": "Phase-1 TEN-002 uses dynamic ALTER TABLE to force RLS across every tenant-scoped table discovered from catalog metadata.",
-      "expires_on": "2026-12-31",
-      "reviewed_by": "security_guardian",
-      "approved_at": "2026-02-25"
-    },
-    {
-      "id": "DDL-ALLOW-0030",
-      "migration": "schema/migrations/0074_billable_clients_client_key_constraint.sql",
-      "statement_fingerprint": "f5f04bea9bef85e006ce296202da0fc1b4f0a9275e5f780dd9f356e7b43bb993",
-      "reason": "TSK-P1-211: Safe drop of obsolete partial index on non-hot table",
-      "expires_on": "2027-01-01",
-      "reviewed_by": "architect",
-      "approved_at": "2026-03-16"
-    },
-    {
-      "id": "DDL-ALLOW-0031",
-      "migration": "schema/migrations/0075_supplier_registry_and_programme_allowlist.sql",
-      "statement_fingerprint": "d8b82a9183513093fb000b1a89702177f1c9a2f771dc27f1b02195470569206c",
-      "reason": "TSK-P1-214: Enabling RLS on new non-hot table",
-      "expires_on": "2027-01-01",
-      "reviewed_by": "architect",
-      "approved_at": "2026-03-16"
-    },
-    {
-      "id": "DDL-ALLOW-0032",
-      "migration": "schema/migrations/0075_supplier_registry_and_programme_allowlist.sql",
-      "statement_fingerprint": "7d4eac55635ca8229a6b6fa611d32365d1dad7a42b04c63c479dc030bfa417c5",
-      "reason": "TSK-P1-214: Forcing RLS on new non-hot table",
-      "expires_on": "2027-01-01",
-      "reviewed_by": "architect",
-      "approved_at": "2026-03-16"
-    },
-    {
-      "id": "DDL-ALLOW-0033",
-      "migration": "schema/migrations/0075_supplier_registry_and_programme_allowlist.sql",
-      "statement_fingerprint": "42a590cea6ad20ede0bdf52195071f31fb0aec3931a7bd94f22112d2631a20f3",
-      "reason": "TSK-P1-214: Enabling RLS on new non-hot table",
-      "expires_on": "2027-01-01",
-      "reviewed_by": "architect",
-      "approved_at": "2026-03-16"
-    },
-    {
-      "id": "DDL-ALLOW-0034",
-      "migration": "schema/migrations/0075_supplier_registry_and_programme_allowlist.sql",
-      "statement_fingerprint": "a457fd64067b93f75bd16d0b94d719f5a6bbe7773f486e5346f8bc215f8a52df",
-      "reason": "TSK-P1-214: Forcing RLS on new non-hot table",
-      "expires_on": "2027-01-01",
-      "reviewed_by": "architect",
-      "approved_at": "2026-03-16"
-    },
-    {
-      "id": "DDL-ALLOW-0056",
-      "migration": "schema/migrations/0076_onboarding_control_plane.sql",
-      "statement_fingerprint": "76cec637881d5ab0b3005e5095595ca69986564ef3c8b7b63e552ec79c12d25b",
-      "reason": "Wave 2 Onboarding control plane (tenant_registry RLS)",
-      "expires_on": "2026-12-31",
-      "reviewed_by": "security_guardian",
-      "approved_at": "2026-03-16"
-    },
-    {
-      "id": "DDL-ALLOW-0057",
-      "migration": "schema/migrations/0076_onboarding_control_plane.sql",
-      "statement_fingerprint": "65f0b6d53646db6903ee1f4e7f159dd9f97e326be1ca4ec0a3fa26a7595f3602",
-      "reason": "Wave 2 Onboarding control plane (tenant_registry RLS force)",
-      "expires_on": "2026-12-31",
-      "reviewed_by": "security_guardian",
-      "approved_at": "2026-03-16"
-    },
-    {
-      "id": "DDL-ALLOW-0058",
-      "migration": "schema/migrations/0076_onboarding_control_plane.sql",
-      "statement_fingerprint": "005095426be6c145aba32ee2f483ab8966f741a92f2ddda24c9f9f1454960e16",
-      "reason": "Wave 2 Onboarding control plane (programme_registry RLS)",
-      "expires_on": "2026-12-31",
-      "reviewed_by": "security_guardian",
-      "approved_at": "2026-03-16"
-    },
-    {
-      "id": "DDL-ALLOW-0059",
-      "migration": "schema/migrations/0076_onboarding_control_plane.sql",
-      "statement_fingerprint": "bedb0472f81334cb66a7fbac01bbf9ea9766cb17bf0ba1cd6d44bc60314d9a1e",
-      "reason": "Wave 2 Onboarding control plane (programme_registry RLS force)",
-      "expires_on": "2026-12-31",
-      "reviewed_by": "security_guardian",
-      "approved_at": "2026-03-16"
-    },
-    {
-      "id": "DDL-ALLOW-0060",
-      "migration": "schema/migrations/0076_onboarding_control_plane.sql",
-      "statement_fingerprint": "f31e03cc2b8d8684883b70d685e6a416ee19ec284549741fdf455be0bad4a492",
-      "reason": "Wave 2 Onboarding control plane (programme_policy_binding RLS)",
-      "expires_on": "2026-12-31",
-      "reviewed_by": "security_guardian",
-      "approved_at": "2026-03-16"
-    },
-    {
-      "id": "DDL-ALLOW-0061",
-      "migration": "schema/migrations/0076_onboarding_control_plane.sql",
-      "statement_fingerprint": "29c3cb0da9d7791b859a514f322bb4ff8438c9b20a62935527831c43de7ccac8",
-      "reason": "Wave 2 Onboarding control plane (programme_policy_binding RLS force)",
-      "expires_on": "2026-12-31",
-      "reviewed_by": "security_guardian",
-      "approved_at": "2026-03-16"
-    },
-    {
-      "id": "DDL-ALLOW-0062",
-      "migration": "schema/migrations/0093_gf_fn_verifier_read_token.sql",
-      "statement_fingerprint": "a00b61bea6e49bac3463970a966b2b1a1de456561f63f6df5fdae22ca58dd87d",
-      "reason": "Wave 1 Green Finance RLS enforcement (safe non-hot tables)",
-      "expires_on": "2026-12-31",
-      "reviewed_by": "security_guardian",
-      "approved_at": "2026-03-26"
-    },
-    {
-      "id": "DDL-ALLOW-0063",
-      "migration": "schema/migrations/0093_gf_fn_verifier_read_token.sql",
-      "statement_fingerprint": "8f0e409a641e23692b7dd706c54fdcab5a1c872649164575bab98a6eaf6a12a5",
-      "reason": "Wave 1 Green Finance RLS enforcement (safe non-hot tables)",
-      "expires_on": "2026-12-31",
-      "reviewed_by": "security_guardian",
-      "approved_at": "2026-03-26"
-    },
-    {
-      "id": "DDL-ALLOW-0064",
-      "migration": "schema/migrations/0083_gf_evidence_lineage.sql",
-      "statement_fingerprint": "8430ac10e7ac99009b05b05efb13f695d9090398807c2aa0873a41dd575ad716",
-      "reason": "Wave 1 Green Finance RLS enforcement (safe non-hot tables)",
-      "expires_on": "2026-12-31",
-      "reviewed_by": "security_guardian",
-      "approved_at": "2026-03-26"
-    },
-    {
-      "id": "DDL-ALLOW-0065",
-      "migration": "schema/migrations/0083_gf_evidence_lineage.sql",
-      "statement_fingerprint": "71fe1dfb2893d9dc9a8a68f5a1cdea22f02cecef45e0d73880e60141916aa720",
-      "reason": "Wave 1 Green Finance RLS enforcement (safe non-hot tables)",
-      "expires_on": "2026-12-31",
-      "reviewed_by": "security_guardian",
-      "approved_at": "2026-03-26"
-    },
-    {
-      "id": "DDL-ALLOW-0066",
-      "migration": "schema/migrations/0083_gf_evidence_lineage.sql",
-      "statement_fingerprint": "4f1ea51ad1bfd6d779b001143cc4e5c910741f435302d74b95b8c58563d33d68",
-      "reason": "Wave 1 Green Finance RLS enforcement (safe non-hot tables)",
-      "expires_on": "2026-12-31",
-      "reviewed_by": "security_guardian",
-      "approved_at": "2026-03-26"
-    },
-    {
-      "id": "DDL-ALLOW-0067",
-      "migration": "schema/migrations/0083_gf_evidence_lineage.sql",
-      "statement_fingerprint": "abf2d153881d5488a43b3812ead7789a7e9da604ab155fc2bddf35226afa78c7",
-      "reason": "Wave 1 Green Finance RLS enforcement (safe non-hot tables)",
-      "expires_on": "2026-12-31",
-      "reviewed_by": "security_guardian",
-      "approved_at": "2026-03-26"
-    },
-    {
-      "id": "DDL-ALLOW-0068",
-      "migration": "schema/migrations/0091_gf_fn_regulatory_transitions.sql",
-      "statement_fingerprint": "c71435dc65093b321bee07f0999f82f7b955098a8bc03040245f23bbcbc2b513",
-      "reason": "Wave 1 Green Finance RLS enforcement (safe non-hot tables)",
-      "expires_on": "2026-12-31",
-      "reviewed_by": "security_guardian",
-      "approved_at": "2026-03-26"
-    },
-    {
-      "id": "DDL-ALLOW-0069",
-      "migration": "schema/migrations/0091_gf_fn_regulatory_transitions.sql",
-      "statement_fingerprint": "ff4e1cb8c2c11cfb242f526ba2dedc54562631e118de6560c50105cc7dac19cb",
-      "reason": "Wave 1 Green Finance RLS enforcement (safe non-hot tables)",
-      "expires_on": "2026-12-31",
-      "reviewed_by": "security_guardian",
-      "approved_at": "2026-03-26"
-    },
-    {
-      "id": "DDL-ALLOW-0070",
-      "migration": "schema/migrations/0080_gf_adapter_registrations.sql",
-      "statement_fingerprint": "9294893674d54bffa6bf817be25f6afd368181cdb54fde9c8f8fe6d9898397d4",
-      "reason": "Wave 1 Green Finance RLS enforcement (safe non-hot tables)",
-      "expires_on": "2026-12-31",
-      "reviewed_by": "security_guardian",
-      "approved_at": "2026-03-26"
-    },
-    {
-      "id": "DDL-ALLOW-0071",
-      "migration": "schema/migrations/0080_gf_adapter_registrations.sql",
-      "statement_fingerprint": "8df4113f2413b30a983dcfe180a33a2bb8ce9be7d40023a1da12f4c1a0194b1b",
-      "reason": "Wave 1 Green Finance RLS enforcement (safe non-hot tables)",
-      "expires_on": "2026-12-31",
-      "reviewed_by": "security_guardian",
-      "approved_at": "2026-03-26"
-    },
-    {
-      "id": "DDL-ALLOW-0072",
-      "migration": "schema/migrations/0095_rls_dual_policy_architecture.sql",
-      "statement_fingerprint": "ade78bec5db9449490f7de9948f93828cf24fc8d20faabb403104cb9ed799d18",
-      "reason": "Wave 1 Green Finance RLS enforcement (safe non-hot tables)",
-      "expires_on": "2026-12-31",
-      "reviewed_by": "security_guardian",
-      "approved_at": "2026-03-26"
-    },
-    {
-      "id": "DDL-ALLOW-0073",
-      "migration": "schema/migrations/0095_rls_dual_policy_architecture.sql",
-      "statement_fingerprint": "d01494ed2f639d465722b6701b2384ef9dd395508e2b91b16ca66de61f3bd889",
-      "reason": "Wave 1 Green Finance RLS enforcement (safe non-hot tables)",
-      "expires_on": "2026-12-31",
-      "reviewed_by": "security_guardian",
-      "approved_at": "2026-03-26"
-    },
-    {
-      "id": "DDL-ALLOW-0074",
-      "migration": "schema/migrations/0095_rls_dual_policy_architecture.sql",
-      "statement_fingerprint": "ade78bec5db9449490f7de9948f93828cf24fc8d20faabb403104cb9ed799d18",
-      "reason": "Wave 1 Green Finance RLS enforcement (safe non-hot tables)",
-      "expires_on": "2026-12-31",
-      "reviewed_by": "security_guardian",
-      "approved_at": "2026-03-26"
-    },
-    {
-      "id": "DDL-ALLOW-0075",
-      "migration": "schema/migrations/0095_rls_dual_policy_architecture.sql",
-      "statement_fingerprint": "d01494ed2f639d465722b6701b2384ef9dd395508e2b91b16ca66de61f3bd889",
-      "reason": "Wave 1 Green Finance RLS enforcement (safe non-hot tables)",
-      "expires_on": "2026-12-31",
-      "reviewed_by": "security_guardian",
-      "approved_at": "2026-03-26"
-    },
-    {
-      "id": "DDL-ALLOW-0076",
-      "migration": "schema/migrations/0081_gf_interpretation_packs.sql",
-      "statement_fingerprint": "894db6799ff85fb79c92fd43f86e1eb98db4ddc95790d54b4025cec76136a96a",
-      "reason": "Wave 1 Green Finance RLS enforcement (safe non-hot tables)",
-      "expires_on": "2026-12-31",
-      "reviewed_by": "security_guardian",
-      "approved_at": "2026-03-26"
-    },
-    {
-      "id": "DDL-ALLOW-0077",
-      "migration": "schema/migrations/0081_gf_interpretation_packs.sql",
-      "statement_fingerprint": "bf9da4066219e2c45fa5eb44bbf11ac5fe9a897ab3fec21ac7f506e4f9cd05bb",
-      "reason": "Wave 1 Green Finance RLS enforcement (safe non-hot tables)",
-      "expires_on": "2026-12-31",
-      "reviewed_by": "security_guardian",
-      "approved_at": "2026-03-26"
-    },
-    {
-      "id": "DDL-ALLOW-0078",
-      "migration": "schema/migrations/0086_gf_jurisdiction_profiles.sql",
-      "statement_fingerprint": "af946f785c22de18a4a0896438a6b0ed56235d1b3a01bdb499473e8e48f775bb",
-      "reason": "Wave 1 Green Finance RLS enforcement (safe non-hot tables)",
-      "expires_on": "2026-12-31",
-      "reviewed_by": "security_guardian",
-      "approved_at": "2026-03-26"
-    },
-    {
-      "id": "DDL-ALLOW-0079",
-      "migration": "schema/migrations/0086_gf_jurisdiction_profiles.sql",
-      "statement_fingerprint": "d2112390d2ccc2a56fefac66610d843a6bf50b3ff08e0bbbfdb21d775d6d933f",
-      "reason": "Wave 1 Green Finance RLS enforcement (safe non-hot tables)",
-      "expires_on": "2026-12-31",
-      "reviewed_by": "security_guardian",
-      "approved_at": "2026-03-26"
-    },
-    {
-      "id": "DDL-ALLOW-0080",
-      "migration": "schema/migrations/0086_gf_jurisdiction_profiles.sql",
-      "statement_fingerprint": "14ee2b3d683bf3667459cc59833a350e83f9025495b7c6bf5399cec51114a598",
-      "reason": "Wave 1 Green Finance RLS enforcement (safe non-hot tables)",
-      "expires_on": "2026-12-31",
-      "reviewed_by": "security_guardian",
-      "approved_at": "2026-03-26"
-    },
-    {
-      "id": "DDL-ALLOW-0081",
-      "migration": "schema/migrations/0086_gf_jurisdiction_profiles.sql",
-      "statement_fingerprint": "8b617f3960b7d40f96c1ff560984243dbe3457bbf3a319a3c2f1b840d6dc9f12",
-      "reason": "Wave 1 Green Finance RLS enforcement (safe non-hot tables)",
-      "expires_on": "2026-12-31",
-      "reviewed_by": "security_guardian",
-      "approved_at": "2026-03-26"
-    },
-    {
-      "id": "DDL-ALLOW-0082",
-      "migration": "schema/migrations/0085_gf_regulatory_plane.sql",
-      "statement_fingerprint": "8437edf1c7e88f28c2a1447dcd681517565c8a4f55474ff19da28635655cbaff",
-      "reason": "Wave 1 Green Finance RLS enforcement (safe non-hot tables)",
-      "expires_on": "2026-12-31",
-      "reviewed_by": "security_guardian",
-      "approved_at": "2026-03-26"
-    },
-    {
-      "id": "DDL-ALLOW-0083",
-      "migration": "schema/migrations/0085_gf_regulatory_plane.sql",
-      "statement_fingerprint": "f9dd88913838c10d858e4d45754a1bcbef5ea88fde2fa514b8a9a6e13bf40f24",
-      "reason": "Wave 1 Green Finance RLS enforcement (safe non-hot tables)",
-      "expires_on": "2026-12-31",
-      "reviewed_by": "security_guardian",
-      "approved_at": "2026-03-26"
-    },
-    {
-      "id": "DDL-ALLOW-0084",
-      "migration": "schema/migrations/0085_gf_regulatory_plane.sql",
-      "statement_fingerprint": "eb94f771f949211284cf191707a8ed874faa71ff917dc3182e5e615489365b7f",
-      "reason": "Wave 1 Green Finance RLS enforcement (safe non-hot tables)",
-      "expires_on": "2026-12-31",
-      "reviewed_by": "security_guardian",
-      "approved_at": "2026-03-26"
-    },
-    {
-      "id": "DDL-ALLOW-0085",
-      "migration": "schema/migrations/0085_gf_regulatory_plane.sql",
-      "statement_fingerprint": "ed105452b1c0f2527e27d0670cd1021c7e0e510c738be8576edc0f5708992725",
-      "reason": "Wave 1 Green Finance RLS enforcement (safe non-hot tables)",
-      "expires_on": "2026-12-31",
-      "reviewed_by": "security_guardian",
-      "approved_at": "2026-03-26"
-    },
-    {
-      "id": "DDL-ALLOW-0086",
-      "migration": "schema/migrations/0082_gf_monitoring_records.sql",
-      "statement_fingerprint": "19bfba896d115978ed25ab6f27d559529fb1ae3c0deda9c43980a5041019279b",
-      "reason": "Wave 1 Green Finance RLS enforcement (safe non-hot tables)",
-      "expires_on": "2026-12-31",
-      "reviewed_by": "security_guardian",
-      "approved_at": "2026-03-26"
-    },
-    {
-      "id": "DDL-ALLOW-0087",
-      "migration": "schema/migrations/0082_gf_monitoring_records.sql",
-      "statement_fingerprint": "7ec64b9f38196ac8551673fef46a3aed2fa8cc3d18063574736827c690776b1b",
-      "reason": "Wave 1 Green Finance RLS enforcement (safe non-hot tables)",
-      "expires_on": "2026-12-31",
-      "reviewed_by": "security_guardian",
-      "approved_at": "2026-03-26"
-    },
-    {
-      "id": "DDL-ALLOW-0088",
-      "migration": "schema/migrations/0087_gf_verifier_registry.sql",
-      "statement_fingerprint": "4f814d1799ee552ffdc8250e231985e096d116490f1194b8ea188d6e54c69aec",
-      "reason": "Wave 1 Green Finance RLS enforcement (safe non-hot tables)",
-      "expires_on": "2026-12-31",
-      "reviewed_by": "security_guardian",
-      "approved_at": "2026-03-26"
-    },
-    {
-      "id": "DDL-ALLOW-0089",
-      "migration": "schema/migrations/0087_gf_verifier_registry.sql",
-      "statement_fingerprint": "72c4e4070cb8e540c34c8ea96666cf2bc3d706b60b26ead4974c97232d0bf3e5",
-      "reason": "Wave 1 Green Finance RLS enforcement (safe non-hot tables)",
-      "expires_on": "2026-12-31",
-      "reviewed_by": "security_guardian",
-      "approved_at": "2026-03-26"
-    },
-    {
-      "id": "DDL-ALLOW-0090",
-      "migration": "schema/migrations/0087_gf_verifier_registry.sql",
-      "statement_fingerprint": "ec1e78629b806a830163e5a9a366269bcc512b9f46ac61057cee3ecccd9ec47c",
-      "reason": "Wave 1 Green Finance RLS enforcement (safe non-hot tables)",
-      "expires_on": "2026-12-31",
-      "reviewed_by": "security_guardian",
-      "approved_at": "2026-03-26"
-    },
-    {
-      "id": "DDL-ALLOW-0091",
-      "migration": "schema/migrations/0087_gf_verifier_registry.sql",
-      "statement_fingerprint": "94f018a2e24a032901300bd2dd67a47465b21c0ca6c92aaecf78b1d8f343b623",
-      "reason": "Wave 1 Green Finance RLS enforcement (safe non-hot tables)",
-      "expires_on": "2026-12-31",
-      "reviewed_by": "security_guardian",
-      "approved_at": "2026-03-26"
-    },
-    {
-      "id": "DDL-ALLOW-0092",
-      "migration": "schema/migrations/0084_gf_asset_lifecycle.sql",
-      "statement_fingerprint": "62fdc9b915baf9a244fdad42c61fc2229f4e088581be75bc9836d09d9be52f25",
-      "reason": "Wave 1 Green Finance RLS enforcement (safe non-hot tables)",
-      "expires_on": "2026-12-31",
-      "reviewed_by": "security_guardian",
-      "approved_at": "2026-03-26"
-    },
-    {
-      "id": "DDL-ALLOW-0093",
-      "migration": "schema/migrations/0084_gf_asset_lifecycle.sql",
-      "statement_fingerprint": "e9b4c9384244b2ff405301561bb9e168e291ee6d016ac3ce634e15c81191a3f8",
-      "reason": "Wave 1 Green Finance RLS enforcement (safe non-hot tables)",
-      "expires_on": "2026-12-31",
-      "reviewed_by": "security_guardian",
-      "approved_at": "2026-03-26"
-    },
-    {
-      "id": "DDL-ALLOW-0094",
-      "migration": "schema/migrations/0084_gf_asset_lifecycle.sql",
-      "statement_fingerprint": "4ebb677d6777653fa97d2a0d5c7c35d99361fb5f80a32db59d004505555624d2",
-      "reason": "Wave 1 Green Finance RLS enforcement (safe non-hot tables)",
-      "expires_on": "2026-12-31",
-      "reviewed_by": "security_guardian",
-      "approved_at": "2026-03-26"
-    },
-    {
-      "id": "DDL-ALLOW-0095",
-      "migration": "schema/migrations/0084_gf_asset_lifecycle.sql",
-      "statement_fingerprint": "8a733f1a3e8036f3c2363096de3f645bfe6aadcd40515780daa8bffee9de6ad0",
-      "reason": "Wave 1 Green Finance RLS enforcement (safe non-hot tables)",
-      "expires_on": "2026-12-31",
-      "reviewed_by": "security_guardian",
-      "approved_at": "2026-03-26"
-    },
-    {
-      "id": "DDL-ALLOW-0096",
-      "migration": "schema/migrations/0084_gf_asset_lifecycle.sql",
-      "statement_fingerprint": "d81111c82e2e1996cc63a63829eb7077d4616065d5e6726d9d9a983444b9f179",
-      "reason": "Wave 1 Green Finance RLS enforcement (safe non-hot tables)",
-      "expires_on": "2026-12-31",
-      "reviewed_by": "security_guardian",
-      "approved_at": "2026-03-26"
-    },
-    {
-      "id": "DDL-ALLOW-0097",
-      "migration": "schema/migrations/0084_gf_asset_lifecycle.sql",
-      "statement_fingerprint": "eb17210e4d5c1892d742abeeefe58428d518a9646c74ec9d509e826ba25e1b60",
-      "reason": "Wave 1 Green Finance RLS enforcement (safe non-hot tables)",
-      "expires_on": "2026-12-31",
-      "reviewed_by": "security_guardian",
-      "approved_at": "2026-03-26"
-    },
-    {
-      "id": "DDL-ALLOW-0098",
-      "migration": "schema/migrations/0097_gf_projects.sql",
-      "statement_fingerprint": "98682c28e014d8df6c758ef84b026edd7073e9ddfae504af48180f5904892a1f",
-      "reason": "Wave 2 Foundation Domain RLS enforcement",
-      "expires_on": "2026-12-31",
-      "reviewed_by": "security_guardian",
-      "approved_at": "2026-03-27"
-    },
-    {
-      "id": "DDL-ALLOW-0099",
-      "migration": "schema/migrations/0097_gf_projects.sql",
-      "statement_fingerprint": "456fa3bc265ccc0453f5c1377e6fe09a335bab80f3b020ed75089dc679a6f5c6",
-      "reason": "Wave 2 Foundation Domain RLS enforcement",
-      "expires_on": "2026-12-31",
-      "reviewed_by": "security_guardian",
-      "approved_at": "2026-03-27"
-    },
-    {
-      "id": "DDL-ALLOW-0100",
-      "migration": "schema/migrations/0098_gf_methodology_versions.sql",
-      "statement_fingerprint": "1a8853f98798e00c867b42c471264438ff8ab3b945873de691f1a0c43492281b",
-      "reason": "Wave 2 Foundation Domain RLS enforcement",
-      "expires_on": "2026-12-31",
-      "reviewed_by": "security_guardian",
-      "approved_at": "2026-03-27"
-    },
-    {
-      "id": "DDL-ALLOW-0101",
-      "migration": "schema/migrations/0098_gf_methodology_versions.sql",
-      "statement_fingerprint": "968bc5a973fc7e737d57b6da786e54730651db60e3e8c3dd70c18fa1e138ecf6",
-      "reason": "Wave 2 Foundation Domain RLS enforcement",
-      "expires_on": "2026-12-31",
-      "reviewed_by": "security_guardian",
-      "approved_at": "2026-03-27"
-    },
-    {
-      "id": "DDL-ALLOW-0102",
-      "migration": "schema/migrations/0115_add_supplier_type_to_registry.sql",
-      "statement_fingerprint": "07eb999eb3b91571ec846778c83d596cf56877f6a7d64122e6c9446826b9a710",
-      "reason": "Pilot demo migration: adds nullable supplier_type column to non-hot supplier_registry table. Documented in exception_change-rule_ddl_2026-04-15.md (EXC-1000).",
-      "expires_on": "2026-12-31",
-      "reviewed_by": "security_guardian",
-      "approved_at": "2026-04-15"
-    }
-  ]
+    "version": 1,
+    "entries": [
+        {
+            "id": "DDL-ALLOW-0001",
+            "migration": "schema/migrations/0017_ingress_tenant_attribution.sql",
+            "statement_fingerprint": "1aaf332fe2df87f4f425c5d8bbd289dc1aff6799600a2e3b849c8436c3515730",
+            "reason": "Phase-0 tenant attribution (type conversion for tenant_id)",
+            "expires_on": "2026-12-31",
+            "reviewed_by": "security_guardian",
+            "approved_at": "2026-02-05"
+        },
+        {
+            "id": "DDL-ALLOW-0002",
+            "migration": "schema/migrations/0017_ingress_tenant_attribution.sql",
+            "statement_fingerprint": "f64200154c302d45280a7003a3eb7da36509441d71a1fd0fd1190225b112b6a5",
+            "reason": "Phase-0 tenant attribution (tenant_id NOT NULL on ingress)",
+            "expires_on": "2026-12-31",
+            "reviewed_by": "security_guardian",
+            "approved_at": "2026-02-05"
+        },
+        {
+            "id": "DDL-ALLOW-0003",
+            "migration": "schema/migrations/0017_ingress_tenant_attribution.sql",
+            "statement_fingerprint": "b1633786b4b13786accfd36ea99dfbc949f2e2c400e03a9921a48a8ca9adebc8",
+            "reason": "Phase-0 tenant attribution columns on ingress attestations",
+            "expires_on": "2026-12-31",
+            "reviewed_by": "security_guardian",
+            "approved_at": "2026-02-05"
+        },
+        {
+            "id": "DDL-ALLOW-0004",
+            "migration": "schema/migrations/0018_outbox_tenant_attribution.sql",
+            "statement_fingerprint": "35643800773556eef8c5e42dd7727309f163a01224914f55ae609c927c006526",
+            "reason": "Phase-0 expand-first tenant_id on outbox_pending",
+            "expires_on": "2026-12-31",
+            "reviewed_by": "security_guardian",
+            "approved_at": "2026-02-05"
+        },
+        {
+            "id": "DDL-ALLOW-0005",
+            "migration": "schema/migrations/0018_outbox_tenant_attribution.sql",
+            "statement_fingerprint": "917b6186750016583c5a5a4c9c4b8f2a783aef53ba701f901e292a260549278d",
+            "reason": "Phase-0 expand-first tenant/member on outbox_attempts",
+            "expires_on": "2026-12-31",
+            "reviewed_by": "security_guardian",
+            "approved_at": "2026-02-05"
+        },
+        {
+            "id": "DDL-ALLOW-0006",
+            "migration": "schema/migrations/0017_ingress_tenant_attribution.sql",
+            "statement_fingerprint": "adefba95e50c238d1dad178364d1518f9ef33a8d5da263268abed740caa6ca78",
+            "reason": "Line-level lock-risk lint allowlist for ingress ALTER TABLE",
+            "expires_on": "2026-12-31",
+            "reviewed_by": "security_guardian",
+            "approved_at": "2026-02-05"
+        },
+        {
+            "id": "DDL-ALLOW-0007",
+            "migration": "schema/migrations/0018_outbox_tenant_attribution.sql",
+            "statement_fingerprint": "51082d1f8ac574df036d305d6b88fba1e48d27f9c07fb6b7d74896d5c7a696da",
+            "reason": "Line-level lock-risk lint allowlist for outbox_pending ALTER TABLE",
+            "expires_on": "2026-12-31",
+            "reviewed_by": "security_guardian",
+            "approved_at": "2026-02-05"
+        },
+        {
+            "id": "DDL-ALLOW-0008",
+            "migration": "schema/migrations/0018_outbox_tenant_attribution.sql",
+            "statement_fingerprint": "3ae717510d0e2d98601b8e32969bd9f4e26aa4cdc1728a3e61a95d6baa9e8d51",
+            "reason": "Line-level lock-risk lint allowlist for outbox_attempts ALTER TABLE",
+            "expires_on": "2026-12-31",
+            "reviewed_by": "security_guardian",
+            "approved_at": "2026-02-05"
+        },
+        {
+            "id": "DDL-ALLOW-0009",
+            "migration": "schema/migrations/0020_business_foundation_hooks.sql",
+            "statement_fingerprint": "95b0aebe4b955ad4865b3ec970986c23a52798da5a3def8c4835cd3a5b1c9828",
+            "reason": "Phase-0 correlation stitching columns on outbox_pending (expand-first)",
+            "expires_on": "2026-12-31",
+            "reviewed_by": "security_guardian",
+            "approved_at": "2026-02-06"
+        },
+        {
+            "id": "DDL-ALLOW-0010",
+            "migration": "schema/migrations/0020_business_foundation_hooks.sql",
+            "statement_fingerprint": "27ad1e207c441a98e89ba818a2de47433a1e0ae4136fff0ef3523146ba5cd134",
+            "reason": "Phase-0 correlation stitching columns on outbox_attempts (expand-first)",
+            "expires_on": "2026-12-31",
+            "reviewed_by": "security_guardian",
+            "approved_at": "2026-02-06"
+        },
+        {
+            "id": "DDL-ALLOW-0011",
+            "migration": "schema/migrations/0020_business_foundation_hooks.sql",
+            "statement_fingerprint": "712a5e10b077749a927ce98e5f086573c033eecdcb47e71e1eeaefb3fba3009a",
+            "reason": "Phase-0 tenant hierarchy expansion via ALTER TABLE tenants",
+            "expires_on": "2026-12-31",
+            "reviewed_by": "security_guardian",
+            "approved_at": "2026-02-06"
+        },
+        {
+            "id": "DDL-ALLOW-0012",
+            "migration": "schema/migrations/0023_evidence_packs_signing_anchoring_hooks.sql",
+            "statement_fingerprint": "0aaa5f64063823903f2c31fd111b31fc9ed747255a35d7dc2964af3c6b8be887",
+            "reason": "Phase-0 expand-first: add signing/anchoring columns to evidence_packs (ALTER TABLE)",
+            "expires_on": "2026-12-31",
+            "reviewed_by": "security_guardian",
+            "approved_at": "2026-02-07"
+        },
+        {
+            "id": "DDL-ALLOW-0013",
+            "migration": "schema/migrations/0024_business_tables_privilege_hygiene_and_usage_event_conventions.sql",
+            "statement_fingerprint": "40842715172a7b0fd9943995e1c2e21fecc70ccbc603b73e8c8a7032ba384f69",
+            "reason": "Phase-0 expand-first: add convention columns to billing_usage_events (ALTER TABLE)",
+            "expires_on": "2026-12-31",
+            "reviewed_by": "security_guardian",
+            "approved_at": "2026-02-07"
+        },
+        {
+            "id": "DDL-ALLOW-0014",
+            "migration": "schema/migrations/0026_business_foundation_delta_tightening.sql",
+            "statement_fingerprint": "5bdb6a4fdce7811f570aacb24bf2b4155be850308573fb3bd664a40bb40a1d0a",
+            "reason": "Phase-0 expand-first: add billable client stable key + new-row-only constraints/triggers (ALTER TABLE billable_clients) for auditably billable hooks.",
+            "expires_on": "2026-12-31",
+            "reviewed_by": "boz_auditor",
+            "approved_at": "2026-02-09"
+        },
+        {
+            "id": "DDL-ALLOW-0015",
+            "migration": "schema/migrations/0026_business_foundation_delta_tightening.sql",
+            "statement_fingerprint": "93b2bc3b87d78e06faafb4bd287cb12f873da199ea8731a2bd6f5217d408ff7c",
+            "reason": "Phase-0 expand-first: add external_proofs direct billability attribution columns + derived attribution trigger (ALTER TABLE external_proofs).",
+            "expires_on": "2026-12-31",
+            "reviewed_by": "boz_auditor",
+            "approved_at": "2026-02-09"
+        },
+        {
+            "id": "DDL-ALLOW-0016",
+            "migration": "schema/migrations/0026_business_foundation_delta_tightening.sql",
+            "statement_fingerprint": "b6ae0d8f8e73086420ba8c086d14e65b02ce2f888c8c23109d05a3224312cf2a",
+            "reason": "Phase-0 expand-first: new-row-only correlation_id non-null check on payment_outbox_pending (hot table). NOT VALID + idempotent DO block reduces migration risk; allowlisted for Phase-0 tightening.",
+            "expires_on": "2026-12-31",
+            "reviewed_by": "boz_auditor",
+            "approved_at": "2026-02-09"
+        },
+        {
+            "id": "DDL-ALLOW-0017",
+            "migration": "schema/migrations/0026_business_foundation_delta_tightening.sql",
+            "statement_fingerprint": "ab760cc86fcd0c0eee5c09e98c2630ead9325a7f2af30b63d7dcc53c4937a3a2",
+            "reason": "Phase-0 expand-first: new-row-only correlation_id non-null check on payment_outbox_attempts (hot table). NOT VALID + idempotent DO block reduces migration risk; allowlisted for Phase-0 tightening.",
+            "expires_on": "2026-12-31",
+            "reviewed_by": "boz_auditor",
+            "approved_at": "2026-02-09"
+        },
+        {
+            "id": "DDL-ALLOW-0018",
+            "migration": "schema/migrations/0028_instruction_finality_enforcement.sql",
+            "statement_fingerprint": "fd2ecd8c25437dc407fbc87251ffba86e750776e6e407f53ad1216a6abf024c7",
+            "reason": "Phase-1 finality ledger migration uses idempotent ALTER TABLE in DO block to attach self-reference reversal FK.",
+            "expires_on": "2026-12-31",
+            "reviewed_by": "security_guardian",
+            "approved_at": "2026-02-13"
+        },
+        {
+            "id": "DDL-ALLOW-0019",
+            "migration": "schema/migrations/0029_pii_decoupling_and_purge_hooks.sql",
+            "statement_fingerprint": "4e894fd7cf52dc8a9a47f945d495132243f261b4ef91651961eb9be570d055a1",
+            "reason": "Phase-1 pii vault migration uses idempotent ALTER TABLE in DO block to attach purge request FK.",
+            "expires_on": "2026-12-31",
+            "reviewed_by": "security_guardian",
+            "approved_at": "2026-02-13"
+        },
+        {
+            "id": "DDL-ALLOW-0020",
+            "migration": "schema/migrations/0031_rail_sequence_truth_anchor_continuity.sql",
+            "statement_fingerprint": "40d6edb713aed31321ec50ea6c34dc69047dc4905113defa013d2cfe227e75ad",
+            "reason": "Phase-1 rail truth-anchor migration uses idempotent ALTER TABLE in DO block to attach attempt FK.",
+            "expires_on": "2026-12-31",
+            "reviewed_by": "security_guardian",
+            "approved_at": "2026-02-13"
+        },
+        {
+            "id": "DDL-ALLOW-0021",
+            "migration": "schema/migrations/0039_levy_period_regex_hardening.sql",
+            "statement_fingerprint": "3ff75f44da8e2bb40942f8156fee9655e222c5a63f4f1d9815caead3d9fa1a01",
+            "reason": "Phase-0 levy regex hardening: replace ambiguous period pattern check with canonical [0-9] class on levy_calculation_records.",
+            "expires_on": "2026-12-31",
+            "reviewed_by": "security_guardian",
+            "approved_at": "2026-02-23"
+        },
+        {
+            "id": "DDL-ALLOW-0022",
+            "migration": "schema/migrations/0039_levy_period_regex_hardening.sql",
+            "statement_fingerprint": "632cc3f6a0cdfc8405ce46c06bae32a47a437889f31afa57c1ff06ff77e51240",
+            "reason": "Phase-0 levy regex hardening: replace ambiguous period pattern check with canonical [0-9] class on levy_remittance_periods.",
+            "expires_on": "2026-12-31",
+            "reviewed_by": "security_guardian",
+            "approved_at": "2026-02-23"
+        },
+        {
+            "id": "DDL-ALLOW-0023",
+            "migration": "schema/migrations/0041_kyc_provider_registry_drop_conflicting_uniqueness.sql",
+            "statement_fingerprint": "052070826bdd3b24a02e7815c964a4e8f1cb0db511172991cdff7cf4e329986b",
+            "reason": "Phase-0 KYC follow-up: drop conflicting full uniqueness to preserve provider version-window history while retaining partial active uniqueness.",
+            "expires_on": "2026-12-31",
+            "reviewed_by": "security_guardian",
+            "approved_at": "2026-02-23"
+        },
+        {
+            "id": "DDL-ALLOW-0024",
+            "migration": "schema/migrations/0043_payment_outbox_pending_kyc_hold_hook.sql",
+            "statement_fingerprint": "449b668f21f42c201495411cfa47ce9c4fb50c83ad0d1daaf5344a9e9e1f28e5",
+            "reason": "Phase-0 KYC expand-first hook: nullable kyc_hold column on outbox hot table for Phase-2 routing gate activation.",
+            "expires_on": "2026-12-31",
+            "reviewed_by": "security_guardian",
+            "approved_at": "2026-02-23"
+        },
+        {
+            "id": "DDL-ALLOW-0025",
+            "migration": "schema/migrations/0054_hier_008_member_device_events_sim_swap_type.sql",
+            "statement_fingerprint": "bb703afca25a2a4e3b9024de8f9846482a963f42023b7c0991033f3cb92fc3de",
+            "reason": "Phase-1 HIER-008 expands member_device_events check constraints to admit SIM_SWAP_DETECTED; ALTER TABLE applies to non-hot hierarchy table.",
+            "expires_on": "2026-12-31",
+            "reviewed_by": "security_guardian",
+            "approved_at": "2026-02-25"
+        },
+        {
+            "id": "DDL-ALLOW-0026",
+            "migration": "schema/migrations/0057_hier_010_program_migration_contract_alignment.sql",
+            "statement_fingerprint": "8b44ad002678d7a4eb417058d25cf7c56893fee5cdf22d0b984d5077f1cd2ed1",
+            "reason": "Phase-1 HIER-010 requires contract-alignment ALTER TABLE operations on non-hot program_migration_events to add new_member_id/created_at and nullable reason semantics.",
+            "expires_on": "2026-12-31",
+            "reviewed_by": "security_guardian",
+            "approved_at": "2026-02-25"
+        },
+        {
+            "id": "DDL-ALLOW-0027",
+            "migration": "schema/migrations/0058_hier_011_supervisor_access_mechanisms.sql",
+            "statement_fingerprint": "72b5a808d5316d87f58837cbb2ae3e9c474e4f37f9b7525014677decb7ce7701",
+            "reason": "Phase-1 HIER-011 extends supervisor approval queue with hold/approval metadata and self-approval guard support on a non-hot control-plane table.",
+            "expires_on": "2026-12-31",
+            "reviewed_by": "security_guardian",
+            "approved_at": "2026-02-25"
+        },
+        {
+            "id": "DDL-ALLOW-0028",
+            "migration": "schema/migrations/0059_ten_002_rls_tenant_isolation.sql",
+            "statement_fingerprint": "3ed7053638665ccb42b0688d3d9a4df865b6a10322c79ecf84ca5072fd2f7715",
+            "reason": "Phase-1 TEN-002 uses dynamic ALTER TABLE to enable RLS across every tenant-scoped table discovered from catalog metadata.",
+            "expires_on": "2026-12-31",
+            "reviewed_by": "security_guardian",
+            "approved_at": "2026-02-25"
+        },
+        {
+            "id": "DDL-ALLOW-0029",
+            "migration": "schema/migrations/0059_ten_002_rls_tenant_isolation.sql",
+            "statement_fingerprint": "6ff80bceb08476d625c6b1c16f8db2a3900c0bb5409ebbc5d236c66517730d61",
+            "reason": "Phase-1 TEN-002 uses dynamic ALTER TABLE to force RLS across every tenant-scoped table discovered from catalog metadata.",
+            "expires_on": "2026-12-31",
+            "reviewed_by": "security_guardian",
+            "approved_at": "2026-02-25"
+        },
+        {
+            "id": "DDL-ALLOW-0030",
+            "migration": "schema/migrations/0074_billable_clients_client_key_constraint.sql",
+            "statement_fingerprint": "f5f04bea9bef85e006ce296202da0fc1b4f0a9275e5f780dd9f356e7b43bb993",
+            "reason": "TSK-P1-211: Safe drop of obsolete partial index on non-hot table",
+            "expires_on": "2027-01-01",
+            "reviewed_by": "architect",
+            "approved_at": "2026-03-16"
+        },
+        {
+            "id": "DDL-ALLOW-0031",
+            "migration": "schema/migrations/0075_supplier_registry_and_programme_allowlist.sql",
+            "statement_fingerprint": "d8b82a9183513093fb000b1a89702177f1c9a2f771dc27f1b02195470569206c",
+            "reason": "TSK-P1-214: Enabling RLS on new non-hot table",
+            "expires_on": "2027-01-01",
+            "reviewed_by": "architect",
+            "approved_at": "2026-03-16"
+        },
+        {
+            "id": "DDL-ALLOW-0032",
+            "migration": "schema/migrations/0075_supplier_registry_and_programme_allowlist.sql",
+            "statement_fingerprint": "7d4eac55635ca8229a6b6fa611d32365d1dad7a42b04c63c479dc030bfa417c5",
+            "reason": "TSK-P1-214: Forcing RLS on new non-hot table",
+            "expires_on": "2027-01-01",
+            "reviewed_by": "architect",
+            "approved_at": "2026-03-16"
+        },
+        {
+            "id": "DDL-ALLOW-0033",
+            "migration": "schema/migrations/0075_supplier_registry_and_programme_allowlist.sql",
+            "statement_fingerprint": "42a590cea6ad20ede0bdf52195071f31fb0aec3931a7bd94f22112d2631a20f3",
+            "reason": "TSK-P1-214: Enabling RLS on new non-hot table",
+            "expires_on": "2027-01-01",
+            "reviewed_by": "architect",
+            "approved_at": "2026-03-16"
+        },
+        {
+            "id": "DDL-ALLOW-0034",
+            "migration": "schema/migrations/0075_supplier_registry_and_programme_allowlist.sql",
+            "statement_fingerprint": "a457fd64067b93f75bd16d0b94d719f5a6bbe7773f486e5346f8bc215f8a52df",
+            "reason": "TSK-P1-214: Forcing RLS on new non-hot table",
+            "expires_on": "2027-01-01",
+            "reviewed_by": "architect",
+            "approved_at": "2026-03-16"
+        },
+        {
+            "id": "DDL-ALLOW-0056",
+            "migration": "schema/migrations/0076_onboarding_control_plane.sql",
+            "statement_fingerprint": "76cec637881d5ab0b3005e5095595ca69986564ef3c8b7b63e552ec79c12d25b",
+            "reason": "Wave 2 Onboarding control plane (tenant_registry RLS)",
+            "expires_on": "2026-12-31",
+            "reviewed_by": "security_guardian",
+            "approved_at": "2026-03-16"
+        },
+        {
+            "id": "DDL-ALLOW-0057",
+            "migration": "schema/migrations/0076_onboarding_control_plane.sql",
+            "statement_fingerprint": "65f0b6d53646db6903ee1f4e7f159dd9f97e326be1ca4ec0a3fa26a7595f3602",
+            "reason": "Wave 2 Onboarding control plane (tenant_registry RLS force)",
+            "expires_on": "2026-12-31",
+            "reviewed_by": "security_guardian",
+            "approved_at": "2026-03-16"
+        },
+        {
+            "id": "DDL-ALLOW-0058",
+            "migration": "schema/migrations/0076_onboarding_control_plane.sql",
+            "statement_fingerprint": "005095426be6c145aba32ee2f483ab8966f741a92f2ddda24c9f9f1454960e16",
+            "reason": "Wave 2 Onboarding control plane (programme_registry RLS)",
+            "expires_on": "2026-12-31",
+            "reviewed_by": "security_guardian",
+            "approved_at": "2026-03-16"
+        },
+        {
+            "id": "DDL-ALLOW-0059",
+            "migration": "schema/migrations/0076_onboarding_control_plane.sql",
+            "statement_fingerprint": "bedb0472f81334cb66a7fbac01bbf9ea9766cb17bf0ba1cd6d44bc60314d9a1e",
+            "reason": "Wave 2 Onboarding control plane (programme_registry RLS force)",
+            "expires_on": "2026-12-31",
+            "reviewed_by": "security_guardian",
+            "approved_at": "2026-03-16"
+        },
+        {
+            "id": "DDL-ALLOW-0060",
+            "migration": "schema/migrations/0076_onboarding_control_plane.sql",
+            "statement_fingerprint": "f31e03cc2b8d8684883b70d685e6a416ee19ec284549741fdf455be0bad4a492",
+            "reason": "Wave 2 Onboarding control plane (programme_policy_binding RLS)",
+            "expires_on": "2026-12-31",
+            "reviewed_by": "security_guardian",
+            "approved_at": "2026-03-16"
+        },
+        {
+            "id": "DDL-ALLOW-0061",
+            "migration": "schema/migrations/0076_onboarding_control_plane.sql",
+            "statement_fingerprint": "29c3cb0da9d7791b859a514f322bb4ff8438c9b20a62935527831c43de7ccac8",
+            "reason": "Wave 2 Onboarding control plane (programme_policy_binding RLS force)",
+            "expires_on": "2026-12-31",
+            "reviewed_by": "security_guardian",
+            "approved_at": "2026-03-16"
+        },
+        {
+            "id": "DDL-ALLOW-0062",
+            "migration": "schema/migrations/0093_gf_fn_verifier_read_token.sql",
+            "statement_fingerprint": "a00b61bea6e49bac3463970a966b2b1a1de456561f63f6df5fdae22ca58dd87d",
+            "reason": "Wave 1 Green Finance RLS enforcement (safe non-hot tables)",
+            "expires_on": "2026-12-31",
+            "reviewed_by": "security_guardian",
+            "approved_at": "2026-03-26"
+        },
+        {
+            "id": "DDL-ALLOW-0063",
+            "migration": "schema/migrations/0093_gf_fn_verifier_read_token.sql",
+            "statement_fingerprint": "8f0e409a641e23692b7dd706c54fdcab5a1c872649164575bab98a6eaf6a12a5",
+            "reason": "Wave 1 Green Finance RLS enforcement (safe non-hot tables)",
+            "expires_on": "2026-12-31",
+            "reviewed_by": "security_guardian",
+            "approved_at": "2026-03-26"
+        },
+        {
+            "id": "DDL-ALLOW-0064",
+            "migration": "schema/migrations/0083_gf_evidence_lineage.sql",
+            "statement_fingerprint": "8430ac10e7ac99009b05b05efb13f695d9090398807c2aa0873a41dd575ad716",
+            "reason": "Wave 1 Green Finance RLS enforcement (safe non-hot tables)",
+            "expires_on": "2026-12-31",
+            "reviewed_by": "security_guardian",
+            "approved_at": "2026-03-26"
+        },
+        {
+            "id": "DDL-ALLOW-0065",
+            "migration": "schema/migrations/0083_gf_evidence_lineage.sql",
+            "statement_fingerprint": "71fe1dfb2893d9dc9a8a68f5a1cdea22f02cecef45e0d73880e60141916aa720",
+            "reason": "Wave 1 Green Finance RLS enforcement (safe non-hot tables)",
+            "expires_on": "2026-12-31",
+            "reviewed_by": "security_guardian",
+            "approved_at": "2026-03-26"
+        },
+        {
+            "id": "DDL-ALLOW-0066",
+            "migration": "schema/migrations/0083_gf_evidence_lineage.sql",
+            "statement_fingerprint": "4f1ea51ad1bfd6d779b001143cc4e5c910741f435302d74b95b8c58563d33d68",
+            "reason": "Wave 1 Green Finance RLS enforcement (safe non-hot tables)",
+            "expires_on": "2026-12-31",
+            "reviewed_by": "security_guardian",
+            "approved_at": "2026-03-26"
+        },
+        {
+            "id": "DDL-ALLOW-0067",
+            "migration": "schema/migrations/0083_gf_evidence_lineage.sql",
+            "statement_fingerprint": "abf2d153881d5488a43b3812ead7789a7e9da604ab155fc2bddf35226afa78c7",
+            "reason": "Wave 1 Green Finance RLS enforcement (safe non-hot tables)",
+            "expires_on": "2026-12-31",
+            "reviewed_by": "security_guardian",
+            "approved_at": "2026-03-26"
+        },
+        {
+            "id": "DDL-ALLOW-0068",
+            "migration": "schema/migrations/0091_gf_fn_regulatory_transitions.sql",
+            "statement_fingerprint": "c71435dc65093b321bee07f0999f82f7b955098a8bc03040245f23bbcbc2b513",
+            "reason": "Wave 1 Green Finance RLS enforcement (safe non-hot tables)",
+            "expires_on": "2026-12-31",
+            "reviewed_by": "security_guardian",
+            "approved_at": "2026-03-26"
+        },
+        {
+            "id": "DDL-ALLOW-0069",
+            "migration": "schema/migrations/0091_gf_fn_regulatory_transitions.sql",
+            "statement_fingerprint": "ff4e1cb8c2c11cfb242f526ba2dedc54562631e118de6560c50105cc7dac19cb",
+            "reason": "Wave 1 Green Finance RLS enforcement (safe non-hot tables)",
+            "expires_on": "2026-12-31",
+            "reviewed_by": "security_guardian",
+            "approved_at": "2026-03-26"
+        },
+        {
+            "id": "DDL-ALLOW-0070",
+            "migration": "schema/migrations/0080_gf_adapter_registrations.sql",
+            "statement_fingerprint": "9294893674d54bffa6bf817be25f6afd368181cdb54fde9c8f8fe6d9898397d4",
+            "reason": "Wave 1 Green Finance RLS enforcement (safe non-hot tables)",
+            "expires_on": "2026-12-31",
+            "reviewed_by": "security_guardian",
+            "approved_at": "2026-03-26"
+        },
+        {
+            "id": "DDL-ALLOW-0071",
+            "migration": "schema/migrations/0080_gf_adapter_registrations.sql",
+            "statement_fingerprint": "8df4113f2413b30a983dcfe180a33a2bb8ce9be7d40023a1da12f4c1a0194b1b",
+            "reason": "Wave 1 Green Finance RLS enforcement (safe non-hot tables)",
+            "expires_on": "2026-12-31",
+            "reviewed_by": "security_guardian",
+            "approved_at": "2026-03-26"
+        },
+        {
+            "id": "DDL-ALLOW-0072",
+            "migration": "schema/migrations/0095_rls_dual_policy_architecture.sql",
+            "statement_fingerprint": "ade78bec5db9449490f7de9948f93828cf24fc8d20faabb403104cb9ed799d18",
+            "reason": "Wave 1 Green Finance RLS enforcement (safe non-hot tables)",
+            "expires_on": "2026-12-31",
+            "reviewed_by": "security_guardian",
+            "approved_at": "2026-03-26"
+        },
+        {
+            "id": "DDL-ALLOW-0073",
+            "migration": "schema/migrations/0095_rls_dual_policy_architecture.sql",
+            "statement_fingerprint": "d01494ed2f639d465722b6701b2384ef9dd395508e2b91b16ca66de61f3bd889",
+            "reason": "Wave 1 Green Finance RLS enforcement (safe non-hot tables)",
+            "expires_on": "2026-12-31",
+            "reviewed_by": "security_guardian",
+            "approved_at": "2026-03-26"
+        },
+        {
+            "id": "DDL-ALLOW-0074",
+            "migration": "schema/migrations/0095_rls_dual_policy_architecture.sql",
+            "statement_fingerprint": "ade78bec5db9449490f7de9948f93828cf24fc8d20faabb403104cb9ed799d18",
+            "reason": "Wave 1 Green Finance RLS enforcement (safe non-hot tables)",
+            "expires_on": "2026-12-31",
+            "reviewed_by": "security_guardian",
+            "approved_at": "2026-03-26"
+        },
+        {
+            "id": "DDL-ALLOW-0075",
+            "migration": "schema/migrations/0095_rls_dual_policy_architecture.sql",
+            "statement_fingerprint": "d01494ed2f639d465722b6701b2384ef9dd395508e2b91b16ca66de61f3bd889",
+            "reason": "Wave 1 Green Finance RLS enforcement (safe non-hot tables)",
+            "expires_on": "2026-12-31",
+            "reviewed_by": "security_guardian",
+            "approved_at": "2026-03-26"
+        },
+        {
+            "id": "DDL-ALLOW-0076",
+            "migration": "schema/migrations/0081_gf_interpretation_packs.sql",
+            "statement_fingerprint": "894db6799ff85fb79c92fd43f86e1eb98db4ddc95790d54b4025cec76136a96a",
+            "reason": "Wave 1 Green Finance RLS enforcement (safe non-hot tables)",
+            "expires_on": "2026-12-31",
+            "reviewed_by": "security_guardian",
+            "approved_at": "2026-03-26"
+        },
+        {
+            "id": "DDL-ALLOW-0077",
+            "migration": "schema/migrations/0081_gf_interpretation_packs.sql",
+            "statement_fingerprint": "bf9da4066219e2c45fa5eb44bbf11ac5fe9a897ab3fec21ac7f506e4f9cd05bb",
+            "reason": "Wave 1 Green Finance RLS enforcement (safe non-hot tables)",
+            "expires_on": "2026-12-31",
+            "reviewed_by": "security_guardian",
+            "approved_at": "2026-03-26"
+        },
+        {
+            "id": "DDL-ALLOW-0078",
+            "migration": "schema/migrations/0086_gf_jurisdiction_profiles.sql",
+            "statement_fingerprint": "af946f785c22de18a4a0896438a6b0ed56235d1b3a01bdb499473e8e48f775bb",
+            "reason": "Wave 1 Green Finance RLS enforcement (safe non-hot tables)",
+            "expires_on": "2026-12-31",
+            "reviewed_by": "security_guardian",
+            "approved_at": "2026-03-26"
+        },
+        {
+            "id": "DDL-ALLOW-0079",
+            "migration": "schema/migrations/0086_gf_jurisdiction_profiles.sql",
+            "statement_fingerprint": "d2112390d2ccc2a56fefac66610d843a6bf50b3ff08e0bbbfdb21d775d6d933f",
+            "reason": "Wave 1 Green Finance RLS enforcement (safe non-hot tables)",
+            "expires_on": "2026-12-31",
+            "reviewed_by": "security_guardian",
+            "approved_at": "2026-03-26"
+        },
+        {
+            "id": "DDL-ALLOW-0080",
+            "migration": "schema/migrations/0086_gf_jurisdiction_profiles.sql",
+            "statement_fingerprint": "14ee2b3d683bf3667459cc59833a350e83f9025495b7c6bf5399cec51114a598",
+            "reason": "Wave 1 Green Finance RLS enforcement (safe non-hot tables)",
+            "expires_on": "2026-12-31",
+            "reviewed_by": "security_guardian",
+            "approved_at": "2026-03-26"
+        },
+        {
+            "id": "DDL-ALLOW-0081",
+            "migration": "schema/migrations/0086_gf_jurisdiction_profiles.sql",
+            "statement_fingerprint": "8b617f3960b7d40f96c1ff560984243dbe3457bbf3a319a3c2f1b840d6dc9f12",
+            "reason": "Wave 1 Green Finance RLS enforcement (safe non-hot tables)",
+            "expires_on": "2026-12-31",
+            "reviewed_by": "security_guardian",
+            "approved_at": "2026-03-26"
+        },
+        {
+            "id": "DDL-ALLOW-0082",
+            "migration": "schema/migrations/0085_gf_regulatory_plane.sql",
+            "statement_fingerprint": "8437edf1c7e88f28c2a1447dcd681517565c8a4f55474ff19da28635655cbaff",
+            "reason": "Wave 1 Green Finance RLS enforcement (safe non-hot tables)",
+            "expires_on": "2026-12-31",
+            "reviewed_by": "security_guardian",
+            "approved_at": "2026-03-26"
+        },
+        {
+            "id": "DDL-ALLOW-0083",
+            "migration": "schema/migrations/0085_gf_regulatory_plane.sql",
+            "statement_fingerprint": "f9dd88913838c10d858e4d45754a1bcbef5ea88fde2fa514b8a9a6e13bf40f24",
+            "reason": "Wave 1 Green Finance RLS enforcement (safe non-hot tables)",
+            "expires_on": "2026-12-31",
+            "reviewed_by": "security_guardian",
+            "approved_at": "2026-03-26"
+        },
+        {
+            "id": "DDL-ALLOW-0084",
+            "migration": "schema/migrations/0085_gf_regulatory_plane.sql",
+            "statement_fingerprint": "eb94f771f949211284cf191707a8ed874faa71ff917dc3182e5e615489365b7f",
+            "reason": "Wave 1 Green Finance RLS enforcement (safe non-hot tables)",
+            "expires_on": "2026-12-31",
+            "reviewed_by": "security_guardian",
+            "approved_at": "2026-03-26"
+        },
+        {
+            "id": "DDL-ALLOW-0085",
+            "migration": "schema/migrations/0085_gf_regulatory_plane.sql",
+            "statement_fingerprint": "ed105452b1c0f2527e27d0670cd1021c7e0e510c738be8576edc0f5708992725",
+            "reason": "Wave 1 Green Finance RLS enforcement (safe non-hot tables)",
+            "expires_on": "2026-12-31",
+            "reviewed_by": "security_guardian",
+            "approved_at": "2026-03-26"
+        },
+        {
+            "id": "DDL-ALLOW-0086",
+            "migration": "schema/migrations/0082_gf_monitoring_records.sql",
+            "statement_fingerprint": "19bfba896d115978ed25ab6f27d559529fb1ae3c0deda9c43980a5041019279b",
+            "reason": "Wave 1 Green Finance RLS enforcement (safe non-hot tables)",
+            "expires_on": "2026-12-31",
+            "reviewed_by": "security_guardian",
+            "approved_at": "2026-03-26"
+        },
+        {
+            "id": "DDL-ALLOW-0087",
+            "migration": "schema/migrations/0082_gf_monitoring_records.sql",
+            "statement_fingerprint": "7ec64b9f38196ac8551673fef46a3aed2fa8cc3d18063574736827c690776b1b",
+            "reason": "Wave 1 Green Finance RLS enforcement (safe non-hot tables)",
+            "expires_on": "2026-12-31",
+            "reviewed_by": "security_guardian",
+            "approved_at": "2026-03-26"
+        },
+        {
+            "id": "DDL-ALLOW-0088",
+            "migration": "schema/migrations/0087_gf_verifier_registry.sql",
+            "statement_fingerprint": "4f814d1799ee552ffdc8250e231985e096d116490f1194b8ea188d6e54c69aec",
+            "reason": "Wave 1 Green Finance RLS enforcement (safe non-hot tables)",
+            "expires_on": "2026-12-31",
+            "reviewed_by": "security_guardian",
+            "approved_at": "2026-03-26"
+        },
+        {
+            "id": "DDL-ALLOW-0089",
+            "migration": "schema/migrations/0087_gf_verifier_registry.sql",
+            "statement_fingerprint": "72c4e4070cb8e540c34c8ea96666cf2bc3d706b60b26ead4974c97232d0bf3e5",
+            "reason": "Wave 1 Green Finance RLS enforcement (safe non-hot tables)",
+            "expires_on": "2026-12-31",
+            "reviewed_by": "security_guardian",
+            "approved_at": "2026-03-26"
+        },
+        {
+            "id": "DDL-ALLOW-0090",
+            "migration": "schema/migrations/0087_gf_verifier_registry.sql",
+            "statement_fingerprint": "ec1e78629b806a830163e5a9a366269bcc512b9f46ac61057cee3ecccd9ec47c",
+            "reason": "Wave 1 Green Finance RLS enforcement (safe non-hot tables)",
+            "expires_on": "2026-12-31",
+            "reviewed_by": "security_guardian",
+            "approved_at": "2026-03-26"
+        },
+        {
+            "id": "DDL-ALLOW-0091",
+            "migration": "schema/migrations/0087_gf_verifier_registry.sql",
+            "statement_fingerprint": "94f018a2e24a032901300bd2dd67a47465b21c0ca6c92aaecf78b1d8f343b623",
+            "reason": "Wave 1 Green Finance RLS enforcement (safe non-hot tables)",
+            "expires_on": "2026-12-31",
+            "reviewed_by": "security_guardian",
+            "approved_at": "2026-03-26"
+        },
+        {
+            "id": "DDL-ALLOW-0092",
+            "migration": "schema/migrations/0084_gf_asset_lifecycle.sql",
+            "statement_fingerprint": "62fdc9b915baf9a244fdad42c61fc2229f4e088581be75bc9836d09d9be52f25",
+            "reason": "Wave 1 Green Finance RLS enforcement (safe non-hot tables)",
+            "expires_on": "2026-12-31",
+            "reviewed_by": "security_guardian",
+            "approved_at": "2026-03-26"
+        },
+        {
+            "id": "DDL-ALLOW-0093",
+            "migration": "schema/migrations/0084_gf_asset_lifecycle.sql",
+            "statement_fingerprint": "e9b4c9384244b2ff405301561bb9e168e291ee6d016ac3ce634e15c81191a3f8",
+            "reason": "Wave 1 Green Finance RLS enforcement (safe non-hot tables)",
+            "expires_on": "2026-12-31",
+            "reviewed_by": "security_guardian",
+            "approved_at": "2026-03-26"
+        },
+        {
+            "id": "DDL-ALLOW-0094",
+            "migration": "schema/migrations/0084_gf_asset_lifecycle.sql",
+            "statement_fingerprint": "4ebb677d6777653fa97d2a0d5c7c35d99361fb5f80a32db59d004505555624d2",
+            "reason": "Wave 1 Green Finance RLS enforcement (safe non-hot tables)",
+            "expires_on": "2026-12-31",
+            "reviewed_by": "security_guardian",
+            "approved_at": "2026-03-26"
+        },
+        {
+            "id": "DDL-ALLOW-0095",
+            "migration": "schema/migrations/0084_gf_asset_lifecycle.sql",
+            "statement_fingerprint": "8a733f1a3e8036f3c2363096de3f645bfe6aadcd40515780daa8bffee9de6ad0",
+            "reason": "Wave 1 Green Finance RLS enforcement (safe non-hot tables)",
+            "expires_on": "2026-12-31",
+            "reviewed_by": "security_guardian",
+            "approved_at": "2026-03-26"
+        },
+        {
+            "id": "DDL-ALLOW-0096",
+            "migration": "schema/migrations/0084_gf_asset_lifecycle.sql",
+            "statement_fingerprint": "d81111c82e2e1996cc63a63829eb7077d4616065d5e6726d9d9a983444b9f179",
+            "reason": "Wave 1 Green Finance RLS enforcement (safe non-hot tables)",
+            "expires_on": "2026-12-31",
+            "reviewed_by": "security_guardian",
+            "approved_at": "2026-03-26"
+        },
+        {
+            "id": "DDL-ALLOW-0097",
+            "migration": "schema/migrations/0084_gf_asset_lifecycle.sql",
+            "statement_fingerprint": "eb17210e4d5c1892d742abeeefe58428d518a9646c74ec9d509e826ba25e1b60",
+            "reason": "Wave 1 Green Finance RLS enforcement (safe non-hot tables)",
+            "expires_on": "2026-12-31",
+            "reviewed_by": "security_guardian",
+            "approved_at": "2026-03-26"
+        },
+        {
+            "id": "DDL-ALLOW-0098",
+            "migration": "schema/migrations/0097_gf_projects.sql",
+            "statement_fingerprint": "98682c28e014d8df6c758ef84b026edd7073e9ddfae504af48180f5904892a1f",
+            "reason": "Wave 2 Foundation Domain RLS enforcement",
+            "expires_on": "2026-12-31",
+            "reviewed_by": "security_guardian",
+            "approved_at": "2026-03-27"
+        },
+        {
+            "id": "DDL-ALLOW-0099",
+            "migration": "schema/migrations/0097_gf_projects.sql",
+            "statement_fingerprint": "456fa3bc265ccc0453f5c1377e6fe09a335bab80f3b020ed75089dc679a6f5c6",
+            "reason": "Wave 2 Foundation Domain RLS enforcement",
+            "expires_on": "2026-12-31",
+            "reviewed_by": "security_guardian",
+            "approved_at": "2026-03-27"
+        },
+        {
+            "id": "DDL-ALLOW-0100",
+            "migration": "schema/migrations/0098_gf_methodology_versions.sql",
+            "statement_fingerprint": "1a8853f98798e00c867b42c471264438ff8ab3b945873de691f1a0c43492281b",
+            "reason": "Wave 2 Foundation Domain RLS enforcement",
+            "expires_on": "2026-12-31",
+            "reviewed_by": "security_guardian",
+            "approved_at": "2026-03-27"
+        },
+        {
+            "id": "DDL-ALLOW-0101",
+            "migration": "schema/migrations/0098_gf_methodology_versions.sql",
+            "statement_fingerprint": "968bc5a973fc7e737d57b6da786e54730651db60e3e8c3dd70c18fa1e138ecf6",
+            "reason": "Wave 2 Foundation Domain RLS enforcement",
+            "expires_on": "2026-12-31",
+            "reviewed_by": "security_guardian",
+            "approved_at": "2026-03-27"
+        },
+        {
+            "id": "DDL-ALLOW-0102",
+            "migration": "schema/migrations/0115_add_supplier_type_to_registry.sql",
+            "statement_fingerprint": "07eb999eb3b91571ec846778c83d596cf56877f6a7d64122e6c9446826b9a710",
+            "reason": "Pilot demo migration: adds nullable supplier_type column to non-hot supplier_registry table. Documented in exception_change-rule_ddl_2026-04-15.md (EXC-1000).",
+            "expires_on": "2026-12-31",
+            "reviewed_by": "security_guardian",
+            "approved_at": "2026-04-15"
+        },
+        {
+            "id": "DDL-ALLOW-0103",
+            "migration": "schema/migrations/0116_create_interpretation_packs.sql",
+            "statement_fingerprint": "4086e7dd2127ff7750f9e9a71edb09e81c4acbd1f70d1d1c18be1269570de199",
+            "reason": "TSK-OPS-DRD-008: Idempotent ALTER TABLE ADD COLUMN inside DO block for temporal columns on interpretation_packs (created by 0102). Non-hot table, wrapped in IF NOT EXISTS check.",
+            "expires_on": "2026-12-31",
+            "reviewed_by": "security_guardian",
+            "approved_at": "2026-04-17"
+        }
+    ]
 }

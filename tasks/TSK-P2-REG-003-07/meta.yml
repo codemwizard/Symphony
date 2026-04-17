@@ -1,0 +1,105 @@
+schema_version: 1
+phase: '2'
+task_id: TSK-P2-REG-003-07
+title: Register INV-178 and update MIGRATION_HEAD
+owner_role: INVARIANTS_CURATOR
+status: planned
+priority: HIGH
+risk_class: GOVERNANCE
+blast_radius: GOVERNANCE
+intent: Register INV-178 for Project DNSH spatial check enforcement and update MIGRATION_HEAD
+  to 0125 to complete the PostGIS spatial tables implementation.
+anti_patterns:
+- Declaring implemented without a running enforcement script
+- Writing the negative test after the fix is declared done
+- Marking completed when only the happy path is tested
+out_of_scope:
+- PostGIS extension, tables, or triggers (handled in previous tasks)
+stop_conditions:
+- If INV-178 does not exist in INVARIANTS_MANIFEST.yml
+- If INV-178 status is not implemented
+- If INV-178 severity is not P0
+- If MIGRATION_HEAD is not updated to 0125
+proof_guarantees:
+- INV-178 exists in INVARIANTS_MANIFEST.yml with correct status
+- MIGRATION_HEAD is updated to 0125
+proof_limitations:
+- Does not verify invariant enforcement at runtime
+depends_on:
+- TSK-P2-REG-003-06
+blocks: []
+touches:
+- docs/invariants/INVARIANTS_MANIFEST.yml
+- schema/migrations/MIGRATION_HEAD
+- scripts/db/verify_tsk_p2_reg_003_07.sh
+- tasks/TSK-P2-REG-003-07/meta.yml
+invariants: []
+work:
+  - >-
+    [ID tsk_p2_reg_003_07_work_item_01] Add INV-178 to docs/invariants/INVARIANTS_MANIFEST.yml with title: Project DNSH spatial check is DB-enforced via PostGIS with versioned dataset and execution binding and status: implemented
+  - >-
+    [ID tsk_p2_reg_003_07_work_item_02] Write verify_tsk_p2_reg_003_07.sh that runs grep to verify INV-178 is in INVARIANTS_MANIFEST.yml with status implemented
+  - >-
+    [ID tsk_p2_reg_003_07_work_item_03] Run verify_tsk_p2_reg_003_07.sh to confirm INV-178 is registered
+  - >-
+    [ID tsk_p2_reg_003_07_work_item_04] Run scripts/dev/pre_ci.sh to ensure conformance
+acceptance_criteria:
+  - >-
+    [ID tsk_p2_reg_003_07_work_item_01] [ID tsk_p2_reg_003_07_work_item_02] [ID tsk_p2_reg_003_07_work_item_03] [ID tsk_p2_reg_003_07_work_item_04] [ID tsk_p2_reg_003_07_ac_01] INV-178 is in INVARIANTS_MANIFEST.yml
+  - >-
+    [ID tsk_p2_reg_003_07_work_item_01] [ID tsk_p2_reg_003_07_work_item_02] [ID tsk_p2_reg_003_07_work_item_03] [ID tsk_p2_reg_003_07_work_item_04] [ID tsk_p2_reg_003_07_ac_02] INV-178 status is implemented
+  - >-
+    [ID tsk_p2_reg_003_07_work_item_01] [ID tsk_p2_reg_003_07_work_item_02] [ID tsk_p2_reg_003_07_work_item_03] [ID tsk_p2_reg_003_07_work_item_04] [ID tsk_p2_reg_003_07_ac_03] INV-178 title is correct
+  - >-
+    [ID tsk_p2_reg_003_07_work_item_01] [ID tsk_p2_reg_003_07_work_item_02] [ID tsk_p2_reg_003_07_work_item_03] [ID tsk_p2_reg_003_07_work_item_04] [ID tsk_p2_reg_003_07_ac_04] pre_ci.sh passes
+negative_tests:
+- id: tsk_p2_reg_003_07_neg_01
+  description: Verification fails if INV-178 is missing
+  required: true
+- id: tsk_p2_reg_003_07_neg_02
+  description: Verification fails if MIGRATION_HEAD is not 0125
+  required: true
+positive_tests:
+- id: tsk_p2_reg_003_07_pos_01
+  description: Verification passes when INV-178 is registered and MIGRATION_HEAD is
+    correct
+  required: false
+verification:
+  - >-
+    # [ID tsk_p2_reg_003_07_work_item_01] [ID tsk_p2_reg_003_07_work_item_02] [ID tsk_p2_reg_003_07_work_item_03] [ID tsk_p2_reg_003_07_work_item_04] [ID tsk_p2_reg_003_07_ac_01] [ID tsk_p2_reg_003_07_ac_02] [ID tsk_p2_reg_003_07_ac_03] [ID tsk_p2_reg_003_07_ac_04]
+    bash scripts/db/verify_tsk_p2_reg_003_07.sh
+  - >-
+    # [ID tsk_p2_reg_003_07_work_item_01] [ID tsk_p2_reg_003_07_work_item_02] [ID tsk_p2_reg_003_07_work_item_03] [ID tsk_p2_reg_003_07_work_item_04] [ID tsk_p2_reg_003_07_ac_01] [ID tsk_p2_reg_003_07_ac_02] [ID tsk_p2_reg_003_07_ac_03] [ID tsk_p2_reg_003_07_ac_04]
+    python3 scripts/audit/validate_evidence.py --task TSK-P2-REG-003-07 --evidence evidence/phase2/tsk_p2_reg_003_07.json
+  - >-
+    # [ID tsk_p2_reg_003_07_work_item_01] [ID tsk_p2_reg_003_07_work_item_02] [ID tsk_p2_reg_003_07_work_item_03] [ID tsk_p2_reg_003_07_work_item_04] [ID tsk_p2_reg_003_07_ac_01] [ID tsk_p2_reg_003_07_ac_02] [ID tsk_p2_reg_003_07_ac_03] [ID tsk_p2_reg_003_07_ac_04]
+    bash scripts/dev/pre_ci.sh
+evidence:
+- path: evidence/phase2/tsk_p2_reg_003_07.json
+  must_include:
+  - task_id
+  - git_sha
+  - timestamp_utc
+  - status
+  - checks
+  - inv_178_registered
+  - inv_178_status
+  - migration_head
+  - observed_paths
+  - observed_hashes
+  - command_outputs
+  - execution_trace
+failure_modes:
+- INV-178 not added to INVARIANTS_MANIFEST.yml => FAIL
+- MIGRATION_HEAD not updated => FAIL
+- Evidence file missing => CRITICAL_FAIL
+must_read:
+- docs/operations/AI_AGENT_OPERATION_MANUAL.md
+- docs/operations/TASK_CREATION_PROCESS.md
+- docs/plans/phase2/ATOMIC_TASK_BREAKDOWN_PLAN.md
+implementation_plan: docs/plans/phase2/TSK-P2-REG-003-07/PLAN.md
+implementation_log: docs/plans/phase2/TSK-P2-REG-003-07/EXEC_LOG.md
+notes: Task scaffolding completed per TASK_CREATION_PROCESS.md
+client: codex_ide
+assigned_agent: INVARIANTS_CURATOR
+model: <UNASSIGNED>

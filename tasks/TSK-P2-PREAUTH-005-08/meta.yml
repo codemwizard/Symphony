@@ -1,0 +1,135 @@
+schema_version: 1
+phase: '2'
+task_id: TSK-P2-PREAUTH-005-08
+title: "Implement update_current_state() trigger"
+owner_role: DB_FOUNDATION
+status: planned
+priority: HIGH
+risk_class: INTEGRITY
+blast_radius: DB_SCHEMA
+
+intent: >-
+  This task implements the update_current_state() trigger function to maintain state_current
+  table on state transitions. Without this trigger, state_current becomes stale, creating risk
+  of incorrect current state queries.
+
+anti_patterns:
+  - "Implementing trigger without SECURITY DEFINER and hardened search_path"
+  - "Attaching trigger without AFTER INSERT OR UPDATE"
+  - "Writing the verifier after the trigger is created"
+
+out_of_scope:
+  - "Application layer changes"
+  - "Data migration"
+
+stop_conditions:
+  - "If function does not exist in pg_proc with exact name"
+  - "If function is not SECURITY DEFINER with prosecdef=true"
+  - "If trigger is not attached as AFTER INSERT OR UPDATE on state_transitions"
+
+proof_guarantees:
+  - "Function exists in pg_proc with exact name"
+  - "Function is SECURITY DEFINER with prosecdef=true"
+  - "Trigger is attached as AFTER INSERT OR UPDATE on state_transitions"
+  - "Verifier script exits 0 and emits evidence"
+
+proof_limitations:
+  - "Cannot verify that the trigger logic is correct for all edge cases"
+  - "Cannot verify that the trigger will not cause performance issues"
+
+depends_on:
+  - TSK-P2-PREAUTH-005-07
+blocks:
+  - TSK-P2-PREAUTH-006A-00
+
+touches:
+  - schema/migrations/0120_create_state_transitions.sql
+  - scripts/db/verify_tsk_p2_preauth_005_08.sh
+  - tasks/TSK-P2-PREAUTH-005-08/meta.yml
+
+invariants: []
+
+work:
+  - >-
+    [ID tsk_p2_preauth_005_08_work_item_01] Add update_current_state() function to migration 0120
+    as SECURITY DEFINER with SET search_path = pg_catalog, public. Function inserts or updates
+    state_current table with project_id, to_state, and transition_timestamp.
+  - >-
+    [ID tsk_p2_preauth_005_08_work_item_02] Attach function as AFTER INSERT OR UPDATE trigger on
+    state_transitions table.
+  - >-
+    [ID tsk_p2_preauth_005_08_work_item_03] Write verify_tsk_p2_preauth_005_08.sh that runs psql to verify
+    function exists with exact name, is SECURITY DEFINER, and trigger is attached.
+  - >-
+    [ID tsk_p2_preauth_005_08_work_item_04] Run verify_tsk_p2_preauth_005_08.sh to confirm trigger is created correctly.
+
+acceptance_criteria:
+  - >-
+    [ID tsk_p2_preauth_005_08_work_item_01] Function exists in pg_proc with exact name.
+  - >-
+    [ID tsk_p2_preauth_005_08_work_item_01] Function is SECURITY DEFINER with prosecdef=true.
+  - >-
+    [ID tsk_p2_preauth_005_08_work_item_02] Trigger is attached as AFTER INSERT OR UPDATE on state_transitions.
+  - >-
+    [ID tsk_p2_preauth_005_08_work_item_03] verify_tsk_p2_preauth_005_08.sh exists and checks for function and trigger.
+  - >-
+    [ID tsk_p2_preauth_005_08_work_item_04] verify_tsk_p2_preauth_005_08.sh exits 0.
+
+negative_tests:
+  - id: TSK-P2-PREAUTH-005-08-N1
+    description: >-
+      Verify that verify_tsk_p2_preauth_005_08.sh exits non-zero when function does not exist
+      or trigger is not attached.
+    required: true
+
+positive_tests:
+  - id: TSK-P2-PREAUTH-005-08-P1
+    description: >-
+      Verify that verify_tsk_p2_preauth_005_08.sh exits 0 when function exists and trigger is attached.
+    required: false
+
+verification:
+  - >-
+    # [ID tsk_p2_preauth_005_08_work_item_01] [ID tsk_p2_preauth_005_08_work_item_02]
+    # [ID tsk_p2_preauth_005_08_work_item_03] [ID tsk_p2_preauth_005_08_work_item_04]
+    test -x scripts/db/verify_tsk_p2_preauth_005_08.sh && bash scripts/db/verify_tsk_p2_preauth_005_08.sh > evidence/phase2/tsk_p2_preauth_005_08.json || exit 1
+  - >-
+    # [ID tsk_p2_preauth_005_08_work_item_01]
+    psql -c "SELECT 1 FROM pg_proc WHERE proname='update_current_state'" | grep -q '1 row' || exit 1
+  - >-
+    # [ID tsk_p2_preauth_005_08_work_item_04]
+    test -f evidence/phase2/tsk_p2_preauth_005_08.json || exit 1
+
+evidence:
+  - path: evidence/phase2/tsk_p2_preauth_005_08.json
+    must_include:
+      - task_id
+      - git_sha
+      - timestamp_utc
+      - status
+      - checks
+      - function_exists
+      - security_definer_present
+      - trigger_attached
+
+failure_modes:
+  - "Function does not exist => CRITICAL_FAIL"
+  - "Function not SECURITY DEFINER => FAIL"
+  - "Trigger not attached => CRITICAL_FAIL"
+  - "Evidence file missing => FAIL"
+
+must_read:
+  - docs/operations/AI_AGENT_OPERATION_MANUAL.md
+  - docs/operations/TASK_CREATION_PROCESS.md
+  - docs/plans/phase2/ATOMIC_TASK_BREAKDOWN_PLAN.md
+
+implementation_plan: docs/plans/phase2/TSK-P2-PREAUTH-005-08/PLAN.md
+implementation_log: docs/plans/phase2/TSK-P2-PREAUTH-005-08/EXEC_LOG.md
+
+notes: >-
+  This task blocks TSK-P2-PREAUTH-006A-00. This completes the state machine + trigger layer (HIGHEST RISK).
+  Phase Key: PRE-PHASE2. Phase Name: Pre-Phase 2 Implementation.
+
+client: cursor
+assigned_agent: db_foundation
+model: <UNASSIGNED>

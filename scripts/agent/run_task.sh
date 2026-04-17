@@ -5,11 +5,13 @@ ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 cd "$ROOT"
 
 TASK_ID="${1:-}"
+SKIP_BOOTSTRAP="${2:-}"
 if [[ -z "$TASK_ID" ]]; then
-  echo "Usage: scripts/agent/run_task.sh <TASK_ID>" >&2
+  echo "Usage: scripts/agent/run_task.sh <TASK_ID> [--skip-bootstrap]" >&2
   exit 2
 fi
 export TASK_ID
+export SKIP_BOOTSTRAP
 
 # ENF-001: DRD lockout gate
 # Inserted by _staging/symphony-enforcement-v2/enf-001-run-task-drd-gate/apply.sh
@@ -83,6 +85,7 @@ trap 'rm -f "$TMP_ENV"' EXIT
 
 META_PATH="$META" python3 - <<'PY' >"$TMP_ENV"
 import os
+import re
 import shlex
 from pathlib import Path
 import yaml  # type: ignore
@@ -135,7 +138,10 @@ def normalize_checks(x, field):
     out = []
     for idx, item in enumerate(x):
         if isinstance(item, str):
-            cmd = item.strip()
+            # Strip [ID ...] annotation tags (may appear inline or as # comments)
+            cmd = re.sub(r'\[ID [^\]]*\]\s*', '', item)
+            cmd = re.sub(r'#\s*\[ID [^\]]*\]\s*', '', cmd)
+            cmd = cmd.strip()
             if not cmd:
                 raise SystemExit(f"ERROR: '{field}' contains empty command at index {idx}")
             out.append({"name": f"{field}_{idx+1}", "cmd": cmd, "retries": 0})
@@ -163,9 +169,17 @@ def normalize_list(x, field):
         x = [x]
     if not x:
         return []
-    if not isinstance(x, list) or not all(isinstance(i, str) and i.strip() for i in x):
-        raise SystemExit(f"ERROR: '{field}' must be a string or list of strings")
-    return [i.strip() for i in x]
+    if not isinstance(x, list):
+        raise SystemExit(f"ERROR: '{field}' must be a string or list")
+    out = []
+    for i in x:
+        if isinstance(i, str) and i.strip():
+            out.append(i.strip())
+        elif isinstance(i, dict) and "path" in i:
+            out.append(str(i["path"]).strip())
+        else:
+            raise SystemExit(f"ERROR: '{field}' items must be strings or dicts with 'path' key")
+    return out
 
 verification_checks = normalize_checks(verification, "verification")
 evidence_list = normalize_list(evidence, "evidence")
@@ -310,7 +324,11 @@ fi
 
 hr
 echo "==> Running deterministic bootstrap gates"
-bash scripts/agent/bootstrap.sh
+if [[ "${SKIP_BOOTSTRAP:-}" == "--skip-bootstrap" ]]; then
+  echo "SKIP: bootstrap.sh (--skip-bootstrap flag set)"
+else
+  bash scripts/agent/bootstrap.sh
+fi
 
 hr
 echo "==> Running verification checks (structured JSONL results)"

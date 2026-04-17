@@ -1,0 +1,100 @@
+schema_version: 1
+phase: '2'
+task_id: TSK-P2-REG-003-04
+title: Add taxonomy_aligned column to projects
+owner_role: DB_FOUNDATION
+status: planned
+priority: HIGH
+risk_class: INTEGRITY
+blast_radius: DB_SCHEMA
+intent: Add taxonomy_aligned column to projects table. This MUST be completed BEFORE
+  the K13 trigger implementation to ensure column exists for trigger logic.
+anti_patterns:
+- Declaring implemented without a running enforcement script
+- Writing the negative test after the fix is declared done
+- Marking completed when only the happy path is tested
+out_of_scope:
+- K13 trigger implementation (handled in TSK-P2-REG-003-06)
+stop_conditions:
+- If taxonomy_aligned column does not exist in projects table
+- If taxonomy_aligned is not BOOLEAN NOT NULL DEFAULT false
+proof_guarantees:
+- Column exists in projects table with correct type and default
+proof_limitations:
+- Does not verify column usage in application logic
+depends_on:
+- TSK-P2-REG-003-03
+blocks:
+- TSK-P2-REG-003-05
+touches:
+- schema/migrations/0125_taxonomy_aligned.sql
+- scripts/db/verify_tsk_p2_reg_003_04.sh
+- tasks/TSK-P2-REG-003-04/meta.yml
+invariants: []
+work:
+  - >-
+    [ID tsk_p2_reg_003_04_work_item_01] Write migration 0125 at schema/migrations/0125_taxonomy_aligned.sql adding taxonomy_aligned BOOLEAN NOT NULL DEFAULT false to projects table
+  - >-
+    [ID tsk_p2_reg_003_04_work_item_02] Write verify_tsk_p2_reg_003_04.sh that runs psql to verify taxonomy_aligned column exists and has correct defaults
+  - >-
+    [ID tsk_p2_reg_003_04_work_item_03] Run verify_tsk_p2_reg_003_04.sh to confirm migration is successful
+  - >-
+    [ID tsk_p2_reg_003_04_work_item_04] Run scripts/dev/pre_ci.sh to ensure conformance
+acceptance_criteria:
+  - >-
+    [ID tsk_p2_reg_003_04_work_item_01] [ID tsk_p2_reg_003_04_work_item_02] [ID tsk_p2_reg_003_04_work_item_03] [ID tsk_p2_reg_003_04_work_item_04] [ID tsk_p2_reg_003_04_ac_01] Migration 0125 for taxonomy_aligned exists
+  - >-
+    [ID tsk_p2_reg_003_04_work_item_01] [ID tsk_p2_reg_003_04_work_item_02] [ID tsk_p2_reg_003_04_work_item_03] [ID tsk_p2_reg_003_04_work_item_04] [ID tsk_p2_reg_003_04_ac_02] taxonomy_aligned column exists in projects table
+  - >-
+    [ID tsk_p2_reg_003_04_work_item_01] [ID tsk_p2_reg_003_04_work_item_02] [ID tsk_p2_reg_003_04_work_item_03] [ID tsk_p2_reg_003_04_work_item_04] [ID tsk_p2_reg_003_04_ac_03] taxonomy_aligned is BOOLEAN NOT NULL DEFAULT false
+  - >-
+    [ID tsk_p2_reg_003_04_work_item_01] [ID tsk_p2_reg_003_04_work_item_02] [ID tsk_p2_reg_003_04_work_item_03] [ID tsk_p2_reg_003_04_work_item_04] [ID tsk_p2_reg_003_04_ac_04] pre_ci.sh passes
+negative_tests:
+- id: tsk_p2_reg_003_04_neg_01
+  description: Verification fails if column does not exist
+  required: true
+- id: tsk_p2_reg_003_04_neg_02
+  description: Verification fails if column type is incorrect
+  required: true
+positive_tests:
+- id: tsk_p2_reg_003_04_pos_01
+  description: Verification passes when column exists with correct type
+  required: false
+verification:
+  - >-
+    # [ID tsk_p2_reg_003_04_work_item_01] [ID tsk_p2_reg_003_04_work_item_02] [ID tsk_p2_reg_003_04_work_item_03] [ID tsk_p2_reg_003_04_work_item_04] [ID tsk_p2_reg_003_04_ac_01] [ID tsk_p2_reg_003_04_ac_02] [ID tsk_p2_reg_003_04_ac_03] [ID tsk_p2_reg_003_04_ac_04]
+    bash scripts/db/verify_tsk_p2_reg_003_04.sh
+  - >-
+    # [ID tsk_p2_reg_003_04_work_item_01] [ID tsk_p2_reg_003_04_work_item_02] [ID tsk_p2_reg_003_04_work_item_03] [ID tsk_p2_reg_003_04_work_item_04] [ID tsk_p2_reg_003_04_ac_01] [ID tsk_p2_reg_003_04_ac_02] [ID tsk_p2_reg_003_04_ac_03] [ID tsk_p2_reg_003_04_ac_04]
+    python3 scripts/audit/validate_evidence.py --task TSK-P2-REG-003-04 --evidence evidence/phase2/tsk_p2_reg_003_04.json
+  - >-
+    # [ID tsk_p2_reg_003_04_work_item_01] [ID tsk_p2_reg_003_04_work_item_02] [ID tsk_p2_reg_003_04_work_item_03] [ID tsk_p2_reg_003_04_work_item_04] [ID tsk_p2_reg_003_04_ac_01] [ID tsk_p2_reg_003_04_ac_02] [ID tsk_p2_reg_003_04_ac_03] [ID tsk_p2_reg_003_04_ac_04]
+    bash scripts/dev/pre_ci.sh
+evidence:
+- path: evidence/phase2/tsk_p2_reg_003_04.json
+  must_include:
+  - task_id
+  - git_sha
+  - timestamp_utc
+  - status
+  - checks
+  - column_exists
+  - column_type_correct
+  - observed_paths
+  - observed_hashes
+  - command_outputs
+  - execution_trace
+failure_modes:
+- Column addition fails => FAIL
+- Migration order incorrect => CRITICAL_FAIL
+- Evidence file missing => CRITICAL_FAIL
+must_read:
+- docs/operations/AI_AGENT_OPERATION_MANUAL.md
+- docs/operations/TASK_CREATION_PROCESS.md
+- docs/plans/phase2/ATOMIC_TASK_BREAKDOWN_PLAN.md
+implementation_plan: docs/plans/phase2/TSK-P2-REG-003-04/PLAN.md
+implementation_log: docs/plans/phase2/TSK-P2-REG-003-04/EXEC_LOG.md
+notes: Task scaffolding completed per TASK_CREATION_PROCESS.md
+client: codex_ide
+assigned_agent: DB_FOUNDATION
+model: <UNASSIGNED>

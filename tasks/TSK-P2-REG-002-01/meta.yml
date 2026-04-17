@@ -1,0 +1,102 @@
+schema_version: 1
+phase: '2'
+task_id: TSK-P2-REG-002-01
+title: Create exchange_rate_audit_log table
+owner_role: DB_FOUNDATION
+status: planned
+priority: HIGH
+risk_class: INTEGRITY
+blast_radius: DB_SCHEMA
+intent: Create the exchange_rate_audit_log table with high-precision rate tracking
+  for financial audit compliance.
+anti_patterns:
+- Declaring implemented without a running enforcement script
+- Writing the negative test after the fix is declared done
+- Marking completed when only the happy path is tested
+out_of_scope:
+- Append-only trigger and privileges (handled in TSK-P2-REG-002-02)
+stop_conditions:
+- If exchange_rate_audit_log table does not exist
+- If rate_value column is not NUMERIC(18,8)
+proof_guarantees:
+- Table exists with correct schema and precision
+proof_limitations:
+- Does not verify data correctness, only schema structure
+depends_on:
+- TSK-P2-REG-002-00
+blocks:
+- TSK-P2-REG-002-02
+touches:
+- schema/migrations/0124_create_exchange_rate_audit_log.sql
+- schema/migrations/MIGRATION_HEAD
+- scripts/db/verify_tsk_p2_reg_002_01.sh
+- tasks/TSK-P2-REG-002-01/meta.yml
+invariants: []
+work:
+  - >-
+    [ID tsk_p2_reg_002_01_work_item_01] Write migration 0125 at schema/migrations/0125_exchange_rate_audit_log.sql creating exchange_rate_audit_log table with columns and FK
+  - >-
+    [ID tsk_p2_reg_002_01_work_item_02] Write verify_tsk_p2_reg_002_01.sh that runs psql to verify table exists and FK is present
+  - >-
+    [ID tsk_p2_reg_002_01_work_item_03] Run verify_tsk_p2_reg_002_01.sh to confirm migration is successful
+  - >-
+    [ID tsk_p2_reg_002_01_work_item_04] Run scripts/dev/pre_ci.sh to ensure conformance
+acceptance_criteria:
+  - >-
+    [ID tsk_p2_reg_002_01_work_item_01] [ID tsk_p2_reg_002_01_work_item_02] [ID tsk_p2_reg_002_01_work_item_03] [ID tsk_p2_reg_002_01_work_item_04] [ID tsk_p2_reg_002_01_ac_01] Migration 0125 for exchange_rate_audit_log exists
+  - >-
+    [ID tsk_p2_reg_002_01_work_item_01] [ID tsk_p2_reg_002_01_work_item_02] [ID tsk_p2_reg_002_01_work_item_03] [ID tsk_p2_reg_002_01_work_item_04] [ID tsk_p2_reg_002_01_ac_02] exchange_rate_audit_log table exists in database
+  - >-
+    [ID tsk_p2_reg_002_01_work_item_01] [ID tsk_p2_reg_002_01_work_item_02] [ID tsk_p2_reg_002_01_work_item_03] [ID tsk_p2_reg_002_01_work_item_04] [ID tsk_p2_reg_002_01_ac_03] rate_value is NUMERIC(18,8) NOT NULL
+  - >-
+    [ID tsk_p2_reg_002_01_work_item_01] [ID tsk_p2_reg_002_01_work_item_02] [ID tsk_p2_reg_002_01_work_item_03] [ID tsk_p2_reg_002_01_work_item_04] [ID tsk_p2_reg_002_01_ac_04] pre_ci.sh passes
+negative_tests:
+- id: tsk_p2_reg_002_01_neg_01
+  description: Verification fails if table does not exist
+  required: true
+- id: tsk_p2_reg_002_01_neg_02
+  description: Verification fails if rate_value is not NUMERIC(18,8)
+  required: true
+positive_tests:
+- id: tsk_p2_reg_002_01_pos_01
+  description: Verification passes when table and precision are correct
+  required: false
+verification:
+  - >-
+    # [ID tsk_p2_reg_002_01_work_item_01] [ID tsk_p2_reg_002_01_work_item_02] [ID tsk_p2_reg_002_01_work_item_03] [ID tsk_p2_reg_002_01_work_item_04] [ID tsk_p2_reg_002_01_ac_01] [ID tsk_p2_reg_002_01_ac_02] [ID tsk_p2_reg_002_01_ac_03] [ID tsk_p2_reg_002_01_ac_04]
+    bash scripts/db/verify_tsk_p2_reg_002_01.sh
+  - >-
+    # [ID tsk_p2_reg_002_01_work_item_01] [ID tsk_p2_reg_002_01_work_item_02] [ID tsk_p2_reg_002_01_work_item_03] [ID tsk_p2_reg_002_01_work_item_04] [ID tsk_p2_reg_002_01_ac_01] [ID tsk_p2_reg_002_01_ac_02] [ID tsk_p2_reg_002_01_ac_03] [ID tsk_p2_reg_002_01_ac_04]
+    python3 scripts/audit/validate_evidence.py --task TSK-P2-REG-002-01 --evidence evidence/phase2/tsk_p2_reg_002_01.json
+  - >-
+    # [ID tsk_p2_reg_002_01_work_item_01] [ID tsk_p2_reg_002_01_work_item_02] [ID tsk_p2_reg_002_01_work_item_03] [ID tsk_p2_reg_002_01_work_item_04] [ID tsk_p2_reg_002_01_ac_01] [ID tsk_p2_reg_002_01_ac_02] [ID tsk_p2_reg_002_01_ac_03] [ID tsk_p2_reg_002_01_ac_04]
+    bash scripts/dev/pre_ci.sh
+evidence:
+- path: evidence/phase2/tsk_p2_reg_002_01.json
+  must_include:
+  - task_id
+  - git_sha
+  - timestamp_utc
+  - status
+  - checks
+  - table_exists
+  - precision_correct
+  - migration_head
+  - observed_paths
+  - observed_hashes
+  - command_outputs
+  - execution_trace
+failure_modes:
+- Migration syntax error => CRITICAL_FAIL
+- Precision incorrect => FAIL
+- Evidence file missing => CRITICAL_FAIL
+must_read:
+- docs/operations/AI_AGENT_OPERATION_MANUAL.md
+- docs/operations/TASK_CREATION_PROCESS.md
+- docs/plans/phase2/ATOMIC_TASK_BREAKDOWN_PLAN.md
+implementation_plan: docs/plans/phase2/TSK-P2-REG-002-01/PLAN.md
+implementation_log: docs/plans/phase2/TSK-P2-REG-002-01/EXEC_LOG.md
+notes: Task scaffolding completed per TASK_CREATION_PROCESS.md
+client: codex_ide
+assigned_agent: DB_FOUNDATION
+model: <UNASSIGNED>

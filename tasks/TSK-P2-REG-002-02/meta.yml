@@ -1,0 +1,96 @@
+schema_version: 1
+phase: '2'
+task_id: TSK-P2-REG-002-02
+title: Add append-only trigger and privileges to exchange_rate_audit_log
+owner_role: DB_FOUNDATION
+status: planned
+priority: HIGH
+risk_class: SECURITY
+blast_radius: DB_SCHEMA
+intent: Add append-only trigger and revoke-first privileges to exchange_rate_audit_log
+  table to ensure data immutability and proper access control.
+anti_patterns:
+- Declaring implemented without a running enforcement script
+- Writing the negative test after the fix is declared done
+- Marking completed when only the happy path is tested
+out_of_scope:
+- Table creation (handled in TSK-P2-REG-002-01)
+stop_conditions:
+- If append-only trigger is not attached to exchange_rate_audit_log
+- If trigger does not raise GF051 on UPDATE or DELETE
+- If privileges are not revoke-first
+proof_guarantees:
+- Trigger exists with SECURITY DEFINER and hardened search_path
+- Privileges are revoke-first
+proof_limitations:
+- Does not verify trigger execution at runtime
+depends_on:
+- TSK-P2-REG-002-01
+blocks: []
+touches:
+- schema/migrations/0124_create_exchange_rate_audit_log.sql
+- scripts/db/verify_tsk_p2_reg_002_02.sh
+- tasks/TSK-P2-REG-002-02/meta.yml
+invariants: []
+work:
+  - >-
+    [ID tsk_p2_reg_002_02_work_item_01] Add append-only trigger to migration 0124
+acceptance_criteria:
+  - >-
+    [ID tsk_p2_reg_002_02_work_item_01] [ID tsk_p2_reg_002_02_work_item_02] [ID tsk_p2_reg_002_02_work_item_03] [ID tsk_p2_reg_002_02_work_item_04] [ID tsk_p2_reg_002_02_ac_01] Migration 0125 for append-only trigger exists
+  - >-
+    [ID tsk_p2_reg_002_02_work_item_01] [ID tsk_p2_reg_002_02_work_item_02] [ID tsk_p2_reg_002_02_work_item_03] [ID tsk_p2_reg_002_02_work_item_04] [ID tsk_p2_reg_002_02_ac_02] Append-only trigger is attached to exchange_rate_audit_log
+  - >-
+    [ID tsk_p2_reg_002_02_work_item_01] [ID tsk_p2_reg_002_02_work_item_02] [ID tsk_p2_reg_002_02_work_item_03] [ID tsk_p2_reg_002_02_work_item_04] [ID tsk_p2_reg_002_02_ac_03] Trigger raises GF056 on UPDATE or DELETE
+  - >-
+    [ID tsk_p2_reg_002_02_work_item_01] [ID tsk_p2_reg_002_02_work_item_02] [ID tsk_p2_reg_002_02_work_item_03] [ID tsk_p2_reg_002_02_work_item_04] [ID tsk_p2_reg_002_02_ac_04] pre_ci.sh passes
+negative_tests:
+- id: tsk_p2_reg_002_02_neg_01
+  description: Verification fails if trigger is missing
+  required: true
+- id: tsk_p2_reg_002_02_neg_02
+  description: Verification fails if privileges are incorrect
+  required: true
+positive_tests:
+- id: tsk_p2_reg_002_02_pos_01
+  description: Verification passes when trigger and privileges are correct
+  required: false
+verification:
+  - >-
+    # [ID tsk_p2_reg_002_02_work_item_01] [ID tsk_p2_reg_002_02_work_item_02] [ID tsk_p2_reg_002_02_work_item_03] [ID tsk_p2_reg_002_02_work_item_04] [ID tsk_p2_reg_002_02_ac_01] [ID tsk_p2_reg_002_02_ac_02] [ID tsk_p2_reg_002_02_ac_03] [ID tsk_p2_reg_002_02_ac_04]
+    bash scripts/db/verify_tsk_p2_reg_002_02.sh
+  - >-
+    # [ID tsk_p2_reg_002_02_work_item_01] [ID tsk_p2_reg_002_02_work_item_02] [ID tsk_p2_reg_002_02_work_item_03] [ID tsk_p2_reg_002_02_work_item_04] [ID tsk_p2_reg_002_02_ac_01] [ID tsk_p2_reg_002_02_ac_02] [ID tsk_p2_reg_002_02_ac_03] [ID tsk_p2_reg_002_02_ac_04]
+    python3 scripts/audit/validate_evidence.py --task TSK-P2-REG-002-02 --evidence evidence/phase2/tsk_p2_reg_002_02.json
+  - >-
+    # [ID tsk_p2_reg_002_02_work_item_01] [ID tsk_p2_reg_002_02_work_item_02] [ID tsk_p2_reg_002_02_work_item_03] [ID tsk_p2_reg_002_02_work_item_04] [ID tsk_p2_reg_002_02_ac_01] [ID tsk_p2_reg_002_02_ac_02] [ID tsk_p2_reg_002_02_ac_03] [ID tsk_p2_reg_002_02_ac_04]
+    bash scripts/dev/pre_ci.sh
+evidence:
+- path: evidence/phase2/tsk_p2_reg_002_02.json
+  must_include:
+  - task_id
+  - git_sha
+  - timestamp_utc
+  - status
+  - checks
+  - trigger_exists
+  - privileges_correct
+  - observed_paths
+  - observed_hashes
+  - command_outputs
+  - execution_trace
+failure_modes:
+- Trigger not SECURITY DEFINER => CRITICAL_FAIL
+- Privileges not revoke-first => FAIL
+- Evidence file missing => CRITICAL_FAIL
+must_read:
+- docs/operations/AI_AGENT_OPERATION_MANUAL.md
+- docs/operations/TASK_CREATION_PROCESS.md
+- docs/plans/phase2/ATOMIC_TASK_BREAKDOWN_PLAN.md
+- AGENTS.md
+implementation_plan: docs/plans/phase2/TSK-P2-REG-002-02/PLAN.md
+implementation_log: docs/plans/phase2/TSK-P2-REG-002-02/EXEC_LOG.md
+notes: Task scaffolding completed per TASK_CREATION_PROCESS.md
+client: codex_ide
+assigned_agent: DB_FOUNDATION
+model: <UNASSIGNED>

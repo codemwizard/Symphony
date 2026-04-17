@@ -1,0 +1,32 @@
+{
+  "task_id": "TSK-P2-SEC-003-01",
+  "git_sha": "3b31224ac32b5d2c530fd33c134ab7022e08c908",
+  "timestamp_utc": "2026-04-17T09:14:30Z",
+  "status": "PASS",
+  "checks": [
+    {"name": "verifier_exists", "status": "true"},
+    {"name": "verifier_passes", "status": "true"},
+    {"name": "inv_132_implemented", "status": "true"}
+  ],
+  "verifier_path": "scripts/audit/test_missing_signing_key_fails_closed.sh",
+  "inv_132_status": "implemented",
+  "observed_paths": [
+  "scripts/audit/test_missing_signing_key_fails_closed.sh",
+  "services/ledger-api/dotnet/src/LedgerApi/Program.cs",
+  "docs/invariants/INVARIANTS_MANIFEST.yml"
+],
+  "observed_hashes": [
+  "077bcd4b82ffdf8a8dad792b33348797a59e2a11d2678747b9cf94a5a618884f",
+  "03c3e3f3a41bb5b895bd38c6c0950596adab38749d4b4950d1317141acc44062",
+  "7ae58aef09676b141caa0e3bd7373fe8b0f0bfaeb6021eed88624a62fa43ee94"
+],
+  "command_outputs": [
+  "verifier_passes: PASS",
+  "inv_132_status: implemented"
+],
+  "execution_trace": [
+  {"step": "check_verifier_exists", "status": "true"},
+  {"step": "run_verifier", "status": "true"},
+  {"step": "check_inv_132_status", "status": "true"}
+]
+}

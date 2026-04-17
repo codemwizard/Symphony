@@ -1,0 +1,125 @@
+schema_version: 1
+phase: '2'
+task_id: TSK-P2-REG-003-03
+title: Create project_boundaries table
+owner_role: DB_FOUNDATION
+status: planned
+priority: HIGH
+risk_class: INTEGRITY
+blast_radius: DB_SCHEMA
+intent: Create the project_boundaries table with PostGIS geometry to store project
+  boundary polygons with execution binding for DNSH and K13 compliance.
+anti_patterns:
+- Declaring implemented without a running enforcement script
+- Writing the negative test after the fix is declared done
+- Marking completed when only the happy path is tested
+out_of_scope:
+- PostGIS extension or protected_areas table (handled in previous tasks)
+stop_conditions:
+- If project_boundaries table does not exist
+- If geom column is not geometry(POLYGON, 4326) NOT NULL
+- If dns_check_version_id FK to protected_areas is missing
+- If spatial_check_execution_id FK to execution_records is missing
+- If GIST index on geom is missing
+- If append-only trigger is missing
+proof_guarantees:
+- Table exists with correct geometry type and FKs
+- GIST index exists on geom column
+- Append-only trigger is attached
+proof_limitations:
+- Does not verify geometry correctness or trigger execution
+depends_on:
+- TSK-P2-REG-003-02
+blocks:
+- TSK-P2-REG-003-04
+touches:
+- schema/migrations/0125_project_boundaries.sql
+- scripts/db/verify_tsk_p2_reg_003_03.sh
+- tasks/TSK-P2-REG-003-03/meta.yml
+invariants: []
+work:
+  - >-
+    [ID tsk_p2_reg_003_03_work_item_01] Write migration 0125 at schema/migrations/0125_project_boundaries.sql creating project_boundaries table with columns and FKs
+  - >-
+    [ID tsk_p2_reg_003_03_work_item_02] Add CREATE INDEX idx_project_boundaries_geom ON project_boundaries USING GIST (geom) to migration
+  - >-
+    [ID tsk_p2_reg_003_03_work_item_03] Add trigger function to migration that raises GF055 on any UPDATE or DELETE attempt on project_boundaries table
+  - >-
+    [ID tsk_p2_reg_003_03_work_item_04] Add GRANT SELECT ON project_boundaries TO symphony_command and GRANT ALL ON project_boundaries TO symphony_control after REVOKE ALL FROM PUBLIC
+  - >-
+    [ID tsk_p2_reg_003_03_work_item_05] Write verify_tsk_p2_reg_003_03.sh that runs psql to verify table exists, geom is geometry type, and index exists
+  - >-
+    [ID tsk_p2_reg_003_03_work_item_06] Run verify_tsk_p2_reg_003_03.sh to confirm migration is successful
+  - >-
+    [ID tsk_p2_reg_003_03_work_item_07] Run scripts/dev/pre_ci.sh to ensure conformance
+acceptance_criteria:
+  - >-
+    [ID tsk_p2_reg_003_03_work_item_01] [ID tsk_p2_reg_003_03_work_item_02] [ID tsk_p2_reg_003_03_work_item_03] [ID tsk_p2_reg_003_03_work_item_04] [ID tsk_p2_reg_003_03_work_item_05] [ID tsk_p2_reg_003_03_work_item_06] [ID tsk_p2_reg_003_03_work_item_07] [ID tsk_p2_reg_003_03_ac_01] Migration 0125 for project_boundaries exists
+  - >-
+    [ID tsk_p2_reg_003_03_work_item_01] [ID tsk_p2_reg_003_03_work_item_02] [ID tsk_p2_reg_003_03_work_item_03] [ID tsk_p2_reg_003_03_work_item_04] [ID tsk_p2_reg_003_03_work_item_05] [ID tsk_p2_reg_003_03_work_item_06] [ID tsk_p2_reg_003_03_work_item_07] [ID tsk_p2_reg_003_03_ac_02] project_boundaries table exists in database
+  - >-
+    [ID tsk_p2_reg_003_03_work_item_01] [ID tsk_p2_reg_003_03_work_item_02] [ID tsk_p2_reg_003_03_work_item_03] [ID tsk_p2_reg_003_03_work_item_04] [ID tsk_p2_reg_003_03_work_item_05] [ID tsk_p2_reg_003_03_work_item_06] [ID tsk_p2_reg_003_03_work_item_07] [ID tsk_p2_reg_003_03_ac_03] geom column is geometry(POLYGON, 4326) NOT NULL
+  - >-
+    [ID tsk_p2_reg_003_03_work_item_01] [ID tsk_p2_reg_003_03_work_item_02] [ID tsk_p2_reg_003_03_work_item_03] [ID tsk_p2_reg_003_03_work_item_04] [ID tsk_p2_reg_003_03_work_item_05] [ID tsk_p2_reg_003_03_work_item_06] [ID tsk_p2_reg_003_03_work_item_07] [ID tsk_p2_reg_003_03_ac_04] dns_check_version_id references protected_areas(area_id)
+  - >-
+    [ID tsk_p2_reg_003_03_work_item_01] [ID tsk_p2_reg_003_03_work_item_02] [ID tsk_p2_reg_003_03_work_item_03] [ID tsk_p2_reg_003_03_work_item_04] [ID tsk_p2_reg_003_03_work_item_05] [ID tsk_p2_reg_003_03_work_item_06] [ID tsk_p2_reg_003_03_work_item_07] [ID tsk_p2_reg_003_03_ac_05] spatial_check_execution_id references execution_records(execution_id)
+  - >-
+    [ID tsk_p2_reg_003_03_work_item_01] [ID tsk_p2_reg_003_03_work_item_02] [ID tsk_p2_reg_003_03_work_item_03] [ID tsk_p2_reg_003_03_work_item_04] [ID tsk_p2_reg_003_03_work_item_05] [ID tsk_p2_reg_003_03_work_item_06] [ID tsk_p2_reg_003_03_work_item_07] [ID tsk_p2_reg_003_03_ac_06] GIST index on geom exists
+  - >-
+    [ID tsk_p2_reg_003_03_work_item_01] [ID tsk_p2_reg_003_03_work_item_02] [ID tsk_p2_reg_003_03_work_item_03] [ID tsk_p2_reg_003_03_work_item_04] [ID tsk_p2_reg_003_03_work_item_05] [ID tsk_p2_reg_003_03_work_item_06] [ID tsk_p2_reg_003_03_work_item_07] [ID tsk_p2_reg_003_03_ac_07] Append-only trigger raises GF055
+  - >-
+    [ID tsk_p2_reg_003_03_work_item_01] [ID tsk_p2_reg_003_03_work_item_02] [ID tsk_p2_reg_003_03_work_item_03] [ID tsk_p2_reg_003_03_work_item_04] [ID tsk_p2_reg_003_03_work_item_05] [ID tsk_p2_reg_003_03_work_item_06] [ID tsk_p2_reg_003_03_work_item_07] [ID tsk_p2_reg_003_03_ac_08] pre_ci.sh passes
+negative_tests:
+- id: tsk_p2_reg_003_03_neg_01
+  description: Verification fails if table does not exist
+  required: true
+- id: tsk_p2_reg_003_03_neg_02
+  description: Verification fails if FKs are incorrect
+  required: true
+positive_tests:
+- id: tsk_p2_reg_003_03_pos_01
+  description: Verification passes when table and FKs are correct
+  required: false
+verification:
+  - >-
+    # [ID tsk_p2_reg_003_03_work_item_01] [ID tsk_p2_reg_003_03_work_item_02] [ID tsk_p2_reg_003_03_work_item_03] [ID tsk_p2_reg_003_03_work_item_04] [ID tsk_p2_reg_003_03_work_item_05] [ID tsk_p2_reg_003_03_work_item_06] [ID tsk_p2_reg_003_03_work_item_07] [ID tsk_p2_reg_003_03_ac_01] [ID tsk_p2_reg_003_03_ac_02] [ID tsk_p2_reg_003_03_ac_03] [ID tsk_p2_reg_003_03_ac_04] [ID tsk_p2_reg_003_03_ac_05] [ID tsk_p2_reg_003_03_ac_06] [ID tsk_p2_reg_003_03_ac_07] [ID tsk_p2_reg_003_03_ac_08]
+    bash scripts/db/verify_tsk_p2_reg_003_03.sh
+  - >-
+    # [ID tsk_p2_reg_003_03_work_item_01] [ID tsk_p2_reg_003_03_work_item_02] [ID tsk_p2_reg_003_03_work_item_03] [ID tsk_p2_reg_003_03_work_item_04] [ID tsk_p2_reg_003_03_work_item_05] [ID tsk_p2_reg_003_03_work_item_06] [ID tsk_p2_reg_003_03_work_item_07] [ID tsk_p2_reg_003_03_ac_01] [ID tsk_p2_reg_003_03_ac_02] [ID tsk_p2_reg_003_03_ac_03] [ID tsk_p2_reg_003_03_ac_04] [ID tsk_p2_reg_003_03_ac_05] [ID tsk_p2_reg_003_03_ac_06] [ID tsk_p2_reg_003_03_ac_07] [ID tsk_p2_reg_003_03_ac_08]
+    python3 scripts/audit/validate_evidence.py --task TSK-P2-REG-003-03 --evidence evidence/phase2/tsk_p2_reg_003_03.json
+  - >-
+    # [ID tsk_p2_reg_003_03_work_item_01] [ID tsk_p2_reg_003_03_work_item_02] [ID tsk_p2_reg_003_03_work_item_03] [ID tsk_p2_reg_003_03_work_item_04] [ID tsk_p2_reg_003_03_work_item_05] [ID tsk_p2_reg_003_03_work_item_06] [ID tsk_p2_reg_003_03_work_item_07] [ID tsk_p2_reg_003_03_ac_01] [ID tsk_p2_reg_003_03_ac_02] [ID tsk_p2_reg_003_03_ac_03] [ID tsk_p2_reg_003_03_ac_04] [ID tsk_p2_reg_003_03_ac_05] [ID tsk_p2_reg_003_03_ac_06] [ID tsk_p2_reg_003_03_ac_07] [ID tsk_p2_reg_003_03_ac_08]
+    bash scripts/dev/pre_ci.sh
+evidence:
+- path: evidence/phase2/tsk_p2_reg_003_03.json
+  must_include:
+  - task_id
+  - git_sha
+  - timestamp_utc
+  - status
+  - checks
+  - table_exists
+  - geometry_type_correct
+  - foreign_keys_correct
+  - gist_index_exists
+  - append_only_trigger
+  - observed_paths
+  - observed_hashes
+  - command_outputs
+  - execution_trace
+failure_modes:
+- FK to protected_areas fails => CRITICAL_FAIL
+- FK to execution_records fails => CRITICAL_FAIL
+- Geometry type incorrect => FAIL
+- Evidence file missing => CRITICAL_FAIL
+must_read:
+- docs/operations/AI_AGENT_OPERATION_MANUAL.md
+- docs/operations/TASK_CREATION_PROCESS.md
+- docs/plans/phase2/ATOMIC_TASK_BREAKDOWN_PLAN.md
+- AGENTS.md
+implementation_plan: docs/plans/phase2/TSK-P2-REG-003-03/PLAN.md
+implementation_log: docs/plans/phase2/TSK-P2-REG-003-03/EXEC_LOG.md
+notes: Task scaffolding completed per TASK_CREATION_PROCESS.md
+client: codex_ide
+assigned_agent: DB_FOUNDATION
+model: <UNASSIGNED>

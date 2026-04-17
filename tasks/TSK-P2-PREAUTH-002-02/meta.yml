@@ -1,0 +1,125 @@
+schema_version: 1
+phase: '2'
+task_id: TSK-P2-PREAUTH-002-02
+title: "Create unit_conversions table"
+owner_role: DB_FOUNDATION
+status: planned
+priority: HIGH
+risk_class: INTEGRITY
+blast_radius: DB_SCHEMA
+
+intent: >-
+  This task creates the unit_conversions table to track unit conversion factors with
+  unique (from_unit, to_unit) pairs. Without this table, the system cannot manage
+  unit conversions, creating risk of incorrect calculations.
+
+anti_patterns:
+  - "Creating the table without UNIQUE constraint on (from_unit, to_unit)"
+  - "Writing the migration without touching MIGRATION_HEAD"
+  - "Writing the verifier after the migration is applied"
+
+out_of_scope:
+  - "Data migration or backfill"
+  - "Application layer changes"
+  - "Conversion function implementation"
+
+stop_conditions:
+  - "If migration 0117 does not create unit_conversions table"
+  - "If UNIQUE constraint on (from_unit, to_unit) is missing"
+  - "If MIGRATION_HEAD is not updated to 0117"
+
+proof_guarantees:
+  - "Migration 0117 creates unit_conversions table"
+  - "UNIQUE constraint on (from_unit, to_unit) is present"
+  - "Verifier script exits 0 and emits evidence"
+
+proof_limitations:
+  - "Cannot verify that the conversion factors are mathematically correct"
+  - "Cannot verify that the table will perform well at scale"
+
+depends_on:
+  - TSK-P2-PREAUTH-002-01
+blocks: []
+
+touches:
+  - schema/migrations/0117_create_factor_registry.sql
+  - schema/migrations/MIGRATION_HEAD
+  - scripts/db/verify_tsk_p2_preauth_002_02.sh
+  - tasks/TSK-P2-PREAUTH-002-02/meta.yml
+
+invariants: []
+
+work:
+  - >-
+    [ID tsk_p2_preauth_002_02_work_item_01] Add unit_conversions table to migration 0117 with columns:
+    conversion_id UUID PRIMARY KEY, from_unit VARCHAR NOT NULL, to_unit VARCHAR NOT NULL,
+    conversion_factor NUMERIC NOT NULL, and UNIQUE constraint on (from_unit, to_unit).
+  - >-
+    [ID tsk_p2_preauth_002_02_work_item_02] Write verify_tsk_p2_preauth_002_02.sh that runs psql to verify
+    table exists and UNIQUE constraint on (from_unit, to_unit) is present.
+  - >-
+    [ID tsk_p2_preauth_002_02_work_item_03] Run verify_tsk_p2_preauth_002_02.sh to confirm migration is successful.
+
+acceptance_criteria:
+  - >-
+    [ID tsk_p2_preauth_002_02_work_item_01] Migration 0117 creates unit_conversions table.
+  - >-
+    [ID tsk_p2_preauth_002_02_work_item_02] verify_tsk_p2_preauth_002_02.sh exists and checks for table existence.
+  - >-
+    [ID tsk_p2_preauth_002_02_work_item_03] verify_tsk_p2_preauth_002_02.sh exits 0.
+
+negative_tests:
+  - id: TSK-P2-PREAUTH-002-02-N1
+    description: >-
+      Verify that verify_tsk_p2_preauth_002_02.sh exits non-zero when unit_conversions table does not exist.
+    required: true
+
+positive_tests:
+  - id: TSK-P2-PREAUTH-002-02-P1
+    description: >-
+      Verify that verify_tsk_p2_preauth_002_02.sh exits 0 when unit_conversions table exists with UNIQUE constraint.
+    required: false
+
+verification:
+  - >-
+    # [ID tsk_p2_preauth_002_02_work_item_01] [ID tsk_p2_preauth_002_02_work_item_02]
+    # [ID tsk_p2_preauth_002_02_work_item_03]
+    test -x scripts/db/verify_tsk_p2_preauth_002_02.sh && bash scripts/db/verify_tsk_p2_preauth_002_02.sh > evidence/phase2/tsk_p2_preauth_002_02.json || exit 1
+  - >-
+    # [ID tsk_p2_preauth_002_02_work_item_03]
+    test -f evidence/phase2/tsk_p2_preauth_002_02.json || exit 1
+  - >-
+    python3 scripts/audit/validate_evidence.py --task TSK-P2-PREAUTH-002-02 --evidence evidence/phase2/tsk_p2_preauth_002_02.json || exit 1
+  - >-
+    RUN_PHASE2_GATES=1 bash scripts/dev/pre_ci.sh || exit 1
+
+evidence:
+  - path: evidence/phase2/tsk_p2_preauth_002_02.json
+    must_include:
+      - task_id
+      - git_sha
+      - timestamp_utc
+      - status
+      - checks
+      - table_exists
+      - unique_constraint_present
+
+failure_modes:
+  - "Migration does not create table => CRITICAL_FAIL"
+  - "UNIQUE constraint missing => CRITICAL_FAIL"
+  - "Evidence file missing => FAIL"
+
+must_read:
+  - docs/operations/AI_AGENT_OPERATION_MANUAL.md
+  - docs/operations/TASK_CREATION_PROCESS.md
+  - docs/plans/phase2/ATOMIC_TASK_BREAKDOWN_PLAN.md
+
+implementation_plan: docs/plans/phase2/TSK-P2-PREAUTH-002-02/PLAN.md
+implementation_log: docs/plans/phase2/TSK-P2-PREAUTH-002-02/EXEC_LOG.md
+
+notes: >-
+  Phase Key: PRE-PHASE2. Phase Name: Pre-Phase 2 Implementation.
+
+client: cursor
+assigned_agent: db_foundation
+model: <UNASSIGNED>

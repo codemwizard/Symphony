@@ -1,0 +1,121 @@
+schema_version: 1
+phase: '2'
+task_id: TSK-P2-PREAUTH-004-02
+title: "Create state_rules table"
+owner_role: DB_FOUNDATION
+status: planned
+priority: HIGH
+risk_class: INTEGRITY
+blast_radius: DB_SCHEMA
+
+intent: >-
+  This task creates the state_rules table to define state transition rules with conditions.
+  Without this table, the system cannot enforce state machine rules, creating risk of
+  invalid state transitions.
+
+anti_patterns:
+  - "Creating the table without UNIQUE constraint on (from_state, to_state)"
+  - "Writing the migration without touching MIGRATION_HEAD"
+  - "Writing the verifier after the migration is applied"
+
+out_of_scope:
+  - "Data migration or backfill"
+  - "Application layer changes"
+  - "Trigger implementation"
+
+stop_conditions:
+  - "If migration does not create state_rules table"
+  - "If UNIQUE constraint on (from_state, to_state) is missing"
+  - "If MIGRATION_HEAD is not updated"
+
+proof_guarantees:
+  - "Migration creates state_rules table"
+  - "UNIQUE constraint on (from_state, to_state) is present"
+  - "Verifier script exits 0 and emits evidence"
+
+proof_limitations:
+  - "Cannot verify that the rule conditions are logically correct"
+  - "Cannot verify that the table will perform well at scale"
+
+depends_on:
+  - TSK-P2-PREAUTH-004-01
+blocks:
+  - TSK-P2-PREAUTH-005-00
+
+touches:
+  - schema/migrations/0119_create_policy_decisions.sql
+  - scripts/db/verify_tsk_p2_preauth_004_02.sh
+  - tasks/TSK-P2-PREAUTH-004-02/meta.yml
+
+invariants: []
+
+work:
+  - >-
+    [ID tsk_p2_preauth_004_02_work_item_01] Add state_rules table to migration 0119 with columns:
+    state_rule_id UUID PRIMARY KEY, from_state VARCHAR NOT NULL, to_state VARCHAR NOT NULL,
+    rule_condition TEXT NOT NULL, and UNIQUE constraint on (from_state, to_state).
+  - >-
+    [ID tsk_p2_preauth_004_02_work_item_02] Write verify_tsk_p2_preauth_004_02.sh that runs psql to verify
+    table exists and UNIQUE constraint is present.
+  - >-
+    [ID tsk_p2_preauth_004_02_work_item_03] Run verify_tsk_p2_preauth_004_02.sh to confirm migration is successful.
+
+acceptance_criteria:
+  - >-
+    [ID tsk_p2_preauth_004_02_work_item_01] Migration creates state_rules table with UNIQUE constraint.
+  - >-
+    [ID tsk_p2_preauth_004_02_work_item_02] verify_tsk_p2_preauth_004_02.sh exists and checks for table and constraint.
+  - >-
+    [ID tsk_p2_preauth_004_02_work_item_03] verify_tsk_p2_preauth_004_02.sh exits 0.
+
+negative_tests:
+  - id: TSK-P2-PREAUTH-004-02-N1
+    description: >-
+      Verify that verify_tsk_p2_preauth_004_02.sh exits non-zero when state_rules table does not exist.
+    required: true
+
+positive_tests:
+  - id: TSK-P2-PREAUTH-004-02-P1
+    description: >-
+      Verify that verify_tsk_p2_preauth_004_02.sh exits 0 when state_rules table exists with UNIQUE constraint.
+    required: false
+
+verification:
+  - >-
+    # [ID tsk_p2_preauth_004_02_work_item_01] [ID tsk_p2_preauth_004_02_work_item_02]
+    # [ID tsk_p2_preauth_004_02_work_item_03]
+    test -x scripts/db/verify_tsk_p2_preauth_004_02.sh && bash scripts/db/verify_tsk_p2_preauth_004_02.sh > evidence/phase2/tsk_p2_preauth_004_02.json || exit 1
+  - >-
+    # [ID tsk_p2_preauth_004_02_work_item_03]
+    test -f evidence/phase2/tsk_p2_preauth_004_02.json || exit 1
+
+evidence:
+  - path: evidence/phase2/tsk_p2_preauth_004_02.json
+    must_include:
+      - task_id
+      - git_sha
+      - timestamp_utc
+      - status
+      - checks
+      - table_exists
+      - unique_constraint_present
+
+failure_modes:
+  - "Table not created => CRITICAL_FAIL"
+  - "UNIQUE constraint missing => CRITICAL_FAIL"
+  - "Evidence file missing => FAIL"
+
+must_read:
+  - docs/operations/AI_AGENT_OPERATION_MANUAL.md
+  - docs/operations/TASK_CREATION_PROCESS.md
+  - docs/plans/phase2/ATOMIC_TASK_BREAKDOWN_PLAN.md
+
+implementation_plan: docs/plans/phase2/TSK-P2-PREAUTH-004-02/PLAN.md
+implementation_log: docs/plans/phase2/TSK-P2-PREAUTH-004-02/EXEC_LOG.md
+
+notes: >-
+  This task blocks TSK-P2-PREAUTH-005-00. Phase Key: PRE-PHASE2. Phase Name: Pre-Phase 2 Implementation.
+
+client: cursor
+assigned_agent: db_foundation
+model: <UNASSIGNED>

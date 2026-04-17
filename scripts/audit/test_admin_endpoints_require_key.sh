@@ -6,6 +6,7 @@ set -euo pipefail
 # It verifies that AuthorizeAdminTenantOnboarding enforces the key structurally.
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
+API_AUTHORIZATION_CS="$ROOT_DIR/services/ledger-api/dotnet/src/LedgerApi/Security/ApiAuthorization.cs"
 PROGRAM_CS="$ROOT_DIR/services/ledger-api/dotnet/src/LedgerApi/Program.cs"
 
 status="PASS"
@@ -25,8 +26,8 @@ fi
 
 # --- Negative Test 2: Missing ADMIN_API_KEY must return 503 ---
 echo -n "  [N2] Missing ADMIN_API_KEY returns 503... "
-if grep -qE 'AUTHZ_CONFIG_MISSING' "$PROGRAM_CS" 2>/dev/null \
-  && grep -qE 'ADMIN_API_KEY must be configured' "$PROGRAM_CS" 2>/dev/null; then
+if grep -qE 'AUTHZ_CONFIG_MISSING' "$API_AUTHORIZATION_CS" 2>/dev/null \
+  && grep -qE 'ADMIN_API_KEY must be configured' "$API_AUTHORIZATION_CS" 2>/dev/null; then
   echo "PASS"
 else
   echo "FAIL"
@@ -37,7 +38,7 @@ fi
 # --- Positive Test 1: SecureEquals is used for key comparison ---
 echo -n "  [P1] SecureEquals used for admin key comparison... "
 # The AuthorizeAdminTenantOnboarding method must call SecureEquals
-if grep -A 30 'AuthorizeAdminTenantOnboarding' "$PROGRAM_CS" | grep -q 'SecureEquals'; then
+if grep -A 30 'AuthorizeAdminTenantOnboarding' "$API_AUTHORIZATION_CS" | grep -q 'SecureEquals'; then
   echo "PASS"
 else
   echo "FAIL"
