@@ -9,7 +9,7 @@
   "worktrees": [
     {
       "worktree": "/home/mwiza/workspaces/Symphony-Demo/Symphony",
-      "branch": "refs/heads/fix/demo-updates-and-evidence",
+      "branch": "refs/heads/fix/pre-phase-2-fixes_and_cleanup",
       "detached": false,
       "prunable": false
     }

@@ -7,18 +7,17 @@
   "diff_mode": "range",
   "base_ref": "refs/remotes/origin/main",
   "head_ref": "HEAD",
-  "merge_base": "d8b120262cd6e9647795af88b8be26d8f1310253",
+  "merge_base": "3b31224ac32b5d2c530fd33c134ab7022e08c908",
   "triggered_change_present": true,
   "triggered_prefixes": [
     "docs",
     "schema",
-    "scripts",
-    "src"
+    "scripts"
   ],
   "satisfying_docs": [
-    "docs/plans/phase1/REM-2026-03-14_demo-030-final-summary-fix/PLAN.md",
-    "docs/plans/phase1/REM-2026-03-14_demo-030-final-summary-fix/EXEC_LOG.md"
+    "docs/plans/phase1/TSK-P1-TEN-RDY/PLAN.md",
+    "docs/plans/phase1/TSK-P1-TEN-RDY/EXEC_LOG.md"
   ],
-  "satisfying_doc_parent": "docs/plans/phase1/REM-2026-03-14_demo-030-final-summary-fix",
+  "satisfying_doc_parent": "docs/plans/phase1/TSK-P1-TEN-RDY",
   "errors": []
 }

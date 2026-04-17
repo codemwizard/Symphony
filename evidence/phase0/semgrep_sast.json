@@ -4,7 +4,7 @@
   "git_sha": "0000000000000000000000000000000000000000",
   "schema_fingerprint": "aaf9f9460480d6fb69b86a860aa77aaa7e4ac21fbf2fcb14f43fea99702f17c3",
   "status": "PASS",
-  "semgrep_version": "1.150.0",
+  "semgrep_version": "1.159.0",
   "scanned_roots": [
     "src",
     "packages",

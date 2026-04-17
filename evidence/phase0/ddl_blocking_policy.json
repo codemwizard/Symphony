@@ -1,7 +1,7 @@
 {
   "check_id": "SEC-DDL-BLOCKING-POLICY",
-  "timestamp_utc": "1970-01-01T00:00:00Z",
-  "git_sha": "0000000000000000000000000000000000000000",
+  "timestamp_utc": "2026-04-17T17:34:29Z",
+  "git_sha": "419647e6494f1a235780513a23123714c0c2856d",
   "schema_fingerprint": "aaf9f9460480d6fb69b86a860aa77aaa7e4ac21fbf2fcb14f43fea99702f17c3",
   "status": "PASS",
   "violations": [],

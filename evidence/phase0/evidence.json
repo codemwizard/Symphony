@@ -3,7 +3,7 @@
   "timestamp_utc": "1970-01-01T00:00:00Z",
   "git_sha": "0000000000000000000000000000000000000000",
   "schema_fingerprint": "aaf9f9460480d6fb69b86a860aa77aaa7e4ac21fbf2fcb14f43fea99702f17c3",
-  "migrations_fingerprint": "8ce00bd298e321c18303ababf57df4bc861ece09b8653db5ce1ca372e0422bd3",
+  "migrations_fingerprint": "3555d5cfdd9ef90ffd9367dde07ef3c8bd0b0b0775fdd64cfb596cb9cc8a25ec",
   "status": "PASS",
   "producer": "generate_evidence.sh",
   "inputs": {
