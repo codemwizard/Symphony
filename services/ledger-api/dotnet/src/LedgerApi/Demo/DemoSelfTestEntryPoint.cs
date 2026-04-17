@@ -30,7 +30,15 @@ public static class DemoSelfTestEntryPoint
             ["--self-test-weighbridge-capture"] = (logger, ct) => WeighbridgeCaptureSelfTestRunner.RunAsync(logger, ct),
             ["--self-test-pwrm-monitoring-report"] = (logger, ct) => Pwrm0001MonitoringReportSelfTestRunner.RunAsync(logger, ct),
             ["--self-test-pilot-demo-seeding-bug"] = (logger, ct) => PilotDemoSeedingBugExplorationTest.RunAsync(logger, ct),
-            ["--self-test-pilot-demo-seeding-preservation"] = (logger, ct) => PilotDemoSeedingPreservationTest.RunAsync(logger, ct)
+            ["--self-test-pilot-demo-seeding-preservation"] = (logger, ct) => PilotDemoSeedingPreservationTest.RunAsync(logger, ct),
+            ["--self-test-tenant-readiness"] = async (logger, ct) =>
+            {
+                logger.LogInformation("Running TenantReadinessMiddleware unit tests...");
+                var (passed, failed, failures) = await TenantReadinessMiddlewareTests.RunAllAsync();
+                logger.LogInformation("TenantReadinessMiddleware tests: {Passed} passed, {Failed} failed", passed, failed);
+                foreach (var f in failures) logger.LogError("{Failure}", f);
+                return failed == 0 ? 0 : 1;
+            }
         };
 
     public static async Task<int?> TryRunAsync(string[] args, string runtimeProfile, ILogger logger, CancellationToken cancellationToken)

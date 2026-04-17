@@ -9,6 +9,11 @@ using Symphony.LedgerApi.Infrastructure;
 
 static class ApiAuthorization
 {
+    // TSK-P1-TEN-RDY: Optional readiness probe for profiles that use DB-backed tenant
+    // registration (pilot-demo). When set, AuthorizeTenantScope accepts requests if the
+    // probe reports ready, even when SYMPHONY_KNOWN_TENANTS is empty.
+    // Production code NEVER sets this — production uses the env var exclusively.
+    internal static ITenantReadinessProbe? ReadinessProbe { get; set; }
     public static HandlerResult? AuthorizeIngressWrite(HttpContext httpContext, IngressRequest request, RuntimeSecrets secrets)
     {
         if (httpContext.Request.Query.ContainsKey("token"))
@@ -108,9 +113,16 @@ static class ApiAuthorization
 
         if (!tenantAllowlistConfigured)
         {
+            // If a readiness probe is configured (pilot-demo) and reports ready,
+            // tenants are managed by the database rather than the env var.
+            // Production code never sets ReadinessProbe, so this path is never taken.
+            if (ReadinessProbe is not null && ReadinessProbe.IsReady)
+            {
+                return null;
+            }
+
             return new HandlerResult(StatusCodes.Status503ServiceUnavailable, new
             {
-                // Note: The /health endpoint structure might omit 'ack' but for ingress consistency we carry it or just omit where unneeded.
                 // The verification script only checks HTTP 503 and error_code='TENANT_ALLOWLIST_UNCONFIGURED'.
                 error_code = "TENANT_ALLOWLIST_UNCONFIGURED",
                 errors = new[] { "tenant allowlist not configured" }

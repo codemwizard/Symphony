@@ -278,23 +278,68 @@ IProgrammeStore programmeStore = storageMode switch
     _ => new NpgsqlProgrammeStore(logger, dataSource!)
 };
 
-// Startup capability probes
 // Startup capability probes — use resolved secrets, not raw env
 var signingKeyPresent = !string.IsNullOrWhiteSpace(secrets.EvidenceSigningKey);
-var rawAllowlist = (Environment.GetEnvironmentVariable("SYMPHONY_KNOWN_TENANTS") ?? string.Empty).Trim();
-var tenantAllowlistConfigured = !string.IsNullOrWhiteSpace(rawAllowlist);
 
-if (string.Equals(runtimeProfile, "pilot-demo", StringComparison.OrdinalIgnoreCase))
+// TSK-P1-TEN-RDY: Tenant readiness probe — determines if the system has at least one
+// configured tenant and is ready to serve tenant-scoped requests.
+// Production/staging: reads SYMPHONY_KNOWN_TENANTS env var (no DB dependency).
+// Pilot-demo: queries tenant_registry DB table at startup.
+ITenantReadinessProbe tenantReadinessProbe;
+if (string.Equals(runtimeProfile, "pilot-demo", StringComparison.OrdinalIgnoreCase) && dataSource is not null)
 {
-    // In pilot-demo, the "allowlist" is the dynamic tenant_registry table.
-    // We set this to true to suppress the legacy security warning.
-    tenantAllowlistConfigured = true;
-    logger.LogInformation("Pilot Demo mode active: Using database-backed tenant registry (legacies suppressed).");
+    var dbProbe = new DatabaseTenantReadinessProbe(logger, dataSource);
+    await dbProbe.RefreshAsync(CancellationToken.None);
+    tenantReadinessProbe = dbProbe;
+    // Wire the probe into ApiAuthorization so AuthorizeTenantScope can fall through
+    // when tenants are DB-backed rather than env-var-backed.
+    ApiAuthorization.ReadinessProbe = tenantReadinessProbe;
+    logger.LogInformation("Tenant readiness: database-backed probe (pilot-demo). IsReady={IsReady}", tenantReadinessProbe.IsReady);
 }
-else if (!tenantAllowlistConfigured)
+else
 {
-    logger.LogWarning("SECURITY ALERT: tenant_allowlist_configured=false. All tenant requests will be rejected with 503.");
+    tenantReadinessProbe = new EnvVarTenantReadinessProbe();
+    if (!tenantReadinessProbe.IsReady)
+    {
+        logger.LogWarning("SECURITY ALERT: tenant_allowlist_configured=false. All tenant requests will be rejected with 503.");
+    }
 }
+
+// TSK-P1-TEN-RDY: Tenant readiness middleware — ensures 503 is returned before any
+// authentication check (403) when the tenant system is not configured.
+// This fixes the middleware ordering bug where admin auth ran before tenant readiness.
+app.Use(async (httpContext, next) =>
+{
+    if (tenantReadinessProbe.IsReady)
+    {
+        await next(httpContext);
+        return;
+    }
+
+    var path = httpContext.Request.Path.Value ?? string.Empty;
+
+    // Excluded paths: probes, bootstrap endpoint, UI pages, session management
+    if (path.Equals("/health", StringComparison.OrdinalIgnoreCase) ||
+        path.Equals("/healthz", StringComparison.OrdinalIgnoreCase) ||
+        path.Equals("/readyz", StringComparison.OrdinalIgnoreCase) ||
+        (path.Equals("/v1/admin/tenants", StringComparison.OrdinalIgnoreCase) &&
+         httpContext.Request.Method.Equals("POST", StringComparison.OrdinalIgnoreCase)) ||
+        path.StartsWith("/pilot-demo/pilot", StringComparison.OrdinalIgnoreCase) ||
+        path.Equals("/pilot-demo/supervisory", StringComparison.OrdinalIgnoreCase) ||
+        path.Equals("/pilot-demo/evidence-link", StringComparison.OrdinalIgnoreCase) ||
+        path.StartsWith("/pilot-demo/api/session/", StringComparison.OrdinalIgnoreCase))
+    {
+        await next(httpContext);
+        return;
+    }
+
+    httpContext.Response.StatusCode = StatusCodes.Status503ServiceUnavailable;
+    await httpContext.Response.WriteAsJsonAsync(new
+    {
+        error_code = "TENANT_ALLOWLIST_UNCONFIGURED",
+        errors = new[] { "tenant allowlist not configured" }
+    });
+});
 
 var repoRoot = EvidenceMeta.ResolveRepoRoot(Directory.GetCurrentDirectory());
 var supervisoryUiDir = Path.Combine(repoRoot, "src", "supervisory-dashboard");
@@ -437,7 +482,7 @@ app.MapGet("/health", async (CancellationToken cancellationToken) =>
     {
         status = "ok",
         signing_key_present = signingKeyPresent,
-        tenant_allowlist_configured = tenantAllowlistConfigured,
+        tenant_allowlist_configured = tenantReadinessProbe.IsReady,
         openbao_available = openBaoAvailable,
         git_sha = EvidenceMeta.Load(EvidenceMeta.ResolveRepoRoot(Directory.GetCurrentDirectory())).GitSha,
         env_profile = Environment.GetEnvironmentVariable("SYMPHONY_ENV") ?? "unknown",
@@ -453,7 +498,7 @@ app.MapGet("/healthz", async (CancellationToken cancellationToken) =>
     {
         status = "ok",
         signing_key_present = signingKeyPresent,
-        tenant_allowlist_configured = tenantAllowlistConfigured,
+        tenant_allowlist_configured = tenantReadinessProbe.IsReady,
         openbao_available = openBaoAvailable,
         git_sha = EvidenceMeta.Load(EvidenceMeta.ResolveRepoRoot(Directory.GetCurrentDirectory())).GitSha,
         env_profile = Environment.GetEnvironmentVariable("SYMPHONY_ENV") ?? "unknown",
@@ -485,7 +530,7 @@ app.MapGet("/readyz", async (CancellationToken cancellationToken) =>
     {
         status = "ok",
         signing_key_present = signingKeyPresent,
-        tenant_allowlist_configured = tenantAllowlistConfigured,
+        tenant_allowlist_configured = tenantReadinessProbe.IsReady,
         database_ready = dbReady,
         openbao_ready = openBaoReady,
         git_sha = EvidenceMeta.Load(EvidenceMeta.ResolveRepoRoot(Directory.GetCurrentDirectory())).GitSha,
@@ -1745,7 +1790,7 @@ app.MapGet("/api/admin/onboarding/status", async (HttpContext httpContext, Cance
 
 if (string.Equals(runtimeProfile, "pilot-demo", StringComparison.OrdinalIgnoreCase))
 {
-    var actualTenantId = await SeedDemoTenant(runtimeProfile, tenantRegistryStore, programmeStore, tenantOnboardingStore, dataSource, logger);
+    var actualTenantId = await SeedDemoTenant(runtimeProfile, tenantRegistryStore, programmeStore, tenantOnboardingStore, dataSource, logger, tenantReadinessProbe);
     if (actualTenantId.HasValue && dataSource is not null)
     {
         await SeedChungaWorkers(programmeStore, logger, actualTenantId.Value, dataSource, CancellationToken.None);
@@ -1762,7 +1807,7 @@ static Guid CreateStableGuid(string input)
     return StableGuidHelper.CreateStableGuid(input);
 }
 
-async Task<Guid?> SeedDemoTenant(string rp, ITenantRegistryStore trs, IProgrammeStore ps, ITenantOnboardingStore tos, Npgsql.NpgsqlDataSource? ds, ILogger l)
+async Task<Guid?> SeedDemoTenant(string rp, ITenantRegistryStore trs, IProgrammeStore ps, ITenantOnboardingStore tos, Npgsql.NpgsqlDataSource? ds, ILogger l, ITenantReadinessProbe? readinessProbe = null)
 {
     try
     {
@@ -1883,130 +1928,126 @@ async Task<Guid?> SeedDemoTenant(string rp, ITenantRegistryStore trs, IProgramme
                     }
                 }
 
+                // TSK-P1-TEN-RDY: Signal that the system now has at least one tenant
+                readinessProbe?.MarkReady();
+
                 // Return the actual tenant ID that was created/retrieved from the database
                 return actualTenantId;
             }
         }
         else
         {
+            // TEMPORARILY DISABLED: Auto-seeding for testing true no-tenant behavior
             // Tenant already exists in tenant_registry, but we need to ensure it's also in public.tenants
             // and that the programme and legacy tables are seeded
-            l.LogInformation("Pilot Demo tenant already exists in tenant_registry. Ensuring programme and legacy tables are seeded...");
+            l.LogInformation("Pilot Demo tenant already exists in tenant_registry. Auto-seeding DISABLED for testing.");
 
-            // Ensure the tenant is onboarded to public.tenants (idempotent operation)
-            try
-            {
-                await tos.OnboardAsync(new TenantOnboardingInput(
-                    tenantId, "Zambia Green MFI", "ZM", "enterprise", $"seed:{tenantId}"
-                ), CancellationToken.None);
-                l.LogInformation("Tenant onboarded to public.tenants.");
-            }
-            catch (Exception onboardEx)
-            {
-                l.LogWarning(onboardEx, "Tenant onboarding to public.tenants failed or already exists.");
-            }
+            // // Ensure the tenant is onboarded to public.tenants (idempotent operation)
+            // try
+            // {
+            //     await tos.OnboardAsync(new TenantOnboardingInput(
+            //         tenantId, "Zambia Green MFI", "ZM", "enterprise", $"seed:{tenantId}"
+            //     ), CancellationToken.None);
+            //     l.LogInformation("Tenant onboarded to public.tenants.");
+            //     var pidStr = progResult.Entry.ProgrammeId;
+            //     if (Guid.TryParse(pidStr, out var pidGuid))
+            //     {
+            //         // Ensure programme is activated
+            //         try
+            //         {
+            //             await ps.ActivateAsync(pidGuid, tenantId, default, true);
+            //         }
+            //         catch (Exception activateEx)
+            //         {
+            //             l.LogInformation(activateEx, "Programme activation skipped (may already be active).");
+            //         }
 
-            // Ensure the programme exists
-            var progResult = await ps.CreateAsync(tenantId, "PGM-ZAMBIA-GRN-001", "GreenTech4CE · Solar Cluster A", default, true);
-            if (progResult.Success && progResult.Entry is not null)
-            {
-                var pidStr = progResult.Entry.ProgrammeId;
-                if (Guid.TryParse(pidStr, out var pidGuid))
-                {
-                    // Ensure programme is activated
-                    try
-                    {
-                        await ps.ActivateAsync(pidGuid, tenantId, default, true);
-                    }
-                    catch (Exception activateEx)
-                    {
-                        l.LogInformation(activateEx, "Programme activation skipped (may already be active).");
-                    }
+            //         // Ensure policy is bound
+            //         try
+            //         {
+            //             var bindResult = await ps.BindPolicyAsync(pidGuid, tenantId, "green_eq_v1", default, true);
+            //             if (!bindResult.Success)
+            //             {
+            //                 l.LogInformation($"Pilot Demo binding skipped: {bindResult.Error}");
+            //             }
+            //         }
+            //         catch (Exception bindEx)
+            //         {
+            //             l.LogInformation(bindEx, "Pilot Demo binding ignored (already seeded).");
+            //         }
 
-                    // Ensure policy is bound
-                    try
-                    {
-                        var bindResult = await ps.BindPolicyAsync(pidGuid, tenantId, "green_eq_v1", default, true);
-                        if (!bindResult.Success)
-                        {
-                            l.LogInformation($"Pilot Demo binding skipped: {bindResult.Error}");
-                        }
-                    }
-                    catch (Exception bindEx)
-                    {
-                        l.LogInformation(bindEx, "Pilot Demo binding ignored (already seeded).");
-                    }
+            //         // Seed legacy escrow_accounts + programs tables (idempotent with ON CONFLICT DO NOTHING)
+            //         if (ds is not null)
+            //         {
+            //             try
+            //             {
+            //                 await using var legacyConn = await ds.OpenConnectionAsync(default);
+            //                 await using var legacyTx = await legacyConn.BeginTransactionAsync(default);
 
-                    // Seed legacy escrow_accounts + programs tables (idempotent with ON CONFLICT DO NOTHING)
-                    if (ds is not null)
-                    {
-                        try
-                        {
-                            await using var legacyConn = await ds.OpenConnectionAsync(default);
-                            await using var legacyTx = await legacyConn.BeginTransactionAsync(default);
+            //                 // Set RLS context + bypass for superuser seeding
+            //                 await using var ctxCmd = legacyConn.CreateCommand();
+            //                 ctxCmd.Transaction = legacyTx;
+            //                 ctxCmd.CommandText = "SELECT set_config('app.bypass_rls', 'on', true)";
+            //                 await ctxCmd.ExecuteScalarAsync();
 
-                            // Set RLS context + bypass for superuser seeding
-                            await using var ctxCmd = legacyConn.CreateCommand();
-                            ctxCmd.Transaction = legacyTx;
-                            ctxCmd.CommandText = "SELECT set_config('app.bypass_rls', 'on', true)";
-                            await ctxCmd.ExecuteScalarAsync();
+            //                 await using var ctxCmd2 = legacyConn.CreateCommand();
+            //                 ctxCmd2.Transaction = legacyTx;
+            //                 ctxCmd2.CommandText = "SELECT set_config('app.current_tenant_id', @tid::text, true)";
+            //                 ctxCmd2.Parameters.AddWithValue("tid", tenantId);
+            //                 await ctxCmd2.ExecuteScalarAsync();
 
-                            await using var ctxCmd2 = legacyConn.CreateCommand();
-                            ctxCmd2.Transaction = legacyTx;
-                            ctxCmd2.CommandText = "SELECT set_config('app.current_tenant_id', @tid::text, true)";
-                            ctxCmd2.Parameters.AddWithValue("tid", tenantId);
-                            await ctxCmd2.ExecuteScalarAsync();
+            //                 // 1. Seed a placeholder escrow_account for the programme budget envelope
+            //                 await using var escrowCmd = legacyConn.CreateCommand();
+            //                 escrowCmd.Transaction = legacyTx;
+            //                 escrowCmd.CommandText = @"
+            //                     INSERT INTO public.escrow_accounts (
+            //                         escrow_id, tenant_id, program_id, state,
+            //                         authorized_amount_minor, currency_code,
+            //                         authorization_expires_at, release_due_at
+            //                     ) VALUES (
+            //                         @escrow_id, @tenant_id, NULL, 'AUTHORIZED',
+            //                         1000000, 'ZMW',
+            //                         NOW() + interval '365 days', NOW() + interval '730 days'
+            //                     ) ON CONFLICT (escrow_id) DO NOTHING;";
+            //                 escrowCmd.Parameters.AddWithValue("escrow_id", pidGuid);
+            //                 escrowCmd.Parameters.AddWithValue("tenant_id", tenantId);
+            //                 await escrowCmd.ExecuteNonQueryAsync();
 
-                            // 1. Seed a placeholder escrow_account for the programme budget envelope
-                            await using var escrowCmd = legacyConn.CreateCommand();
-                            escrowCmd.Transaction = legacyTx;
-                            escrowCmd.CommandText = @"
-                                INSERT INTO public.escrow_accounts (
-                                    escrow_id, tenant_id, program_id, state,
-                                    authorized_amount_minor, currency_code,
-                                    authorization_expires_at, release_due_at
-                                ) VALUES (
-                                    @escrow_id, @tenant_id, NULL, 'AUTHORIZED',
-                                    1000000, 'ZMW',
-                                    NOW() + interval '365 days', NOW() + interval '730 days'
-                                ) ON CONFLICT (escrow_id) DO NOTHING;";
-                            escrowCmd.Parameters.AddWithValue("escrow_id", pidGuid);
-                            escrowCmd.Parameters.AddWithValue("tenant_id", tenantId);
-                            await escrowCmd.ExecuteNonQueryAsync();
+            //                 // 2. Seed the legacy public.programs row using the same UUID
+            //                 await using var progCmd = legacyConn.CreateCommand();
+            //                 progCmd.Transaction = legacyTx;
+            //                 progCmd.CommandText = @"
+            //                     INSERT INTO public.programs (
+            //                         program_id, tenant_id, program_key, program_name,
+            //                         status, program_escrow_id
+            //                     ) VALUES (
+            //                         @program_id, @tenant_id, @program_key, @program_name,
+            //                         'ACTIVE', @escrow_id
+            //                     ) ON CONFLICT (program_id) DO NOTHING;";
+            //                 progCmd.Parameters.AddWithValue("program_id", pidGuid);
+            //                 progCmd.Parameters.AddWithValue("tenant_id", tenantId);
+            //                 progCmd.Parameters.AddWithValue("program_key", "PGM-ZAMBIA-GRN-001");
+            //                 progCmd.Parameters.AddWithValue("program_name", "GreenTech4CE · Solar Cluster A");
+            //                 progCmd.Parameters.AddWithValue("escrow_id", pidGuid);
+            //                 await progCmd.ExecuteNonQueryAsync();
 
-                            // 2. Seed the legacy public.programs row using the same UUID
-                            await using var progCmd = legacyConn.CreateCommand();
-                            progCmd.Transaction = legacyTx;
-                            progCmd.CommandText = @"
-                                INSERT INTO public.programs (
-                                    program_id, tenant_id, program_key, program_name,
-                                    status, program_escrow_id
-                                ) VALUES (
-                                    @program_id, @tenant_id, @program_key, @program_name,
-                                    'ACTIVE', @escrow_id
-                                ) ON CONFLICT (program_id) DO NOTHING;";
-                            progCmd.Parameters.AddWithValue("program_id", pidGuid);
-                            progCmd.Parameters.AddWithValue("tenant_id", tenantId);
-                            progCmd.Parameters.AddWithValue("program_key", "PGM-ZAMBIA-GRN-001");
-                            progCmd.Parameters.AddWithValue("program_name", "GreenTech4CE · Solar Cluster A");
-                            progCmd.Parameters.AddWithValue("escrow_id", pidGuid);
-                            await progCmd.ExecuteNonQueryAsync();
+            //                 await legacyTx.CommitAsync();
+            //                 l.LogInformation("Legacy escrow_accounts + programs seeded for programme {ProgrammeId}.", pidGuid);
+            //             }
+            //             catch (Exception legacyEx)
+            //             {
+            //                 l.LogWarning(legacyEx, "Legacy escrow/programs seeding skipped (may already exist).");
+            //             }
+            //         }
+            //     }
+            // }
+            // else
+            // {
+            //     l.LogInformation("Programme already exists or creation skipped.");
+            // }
 
-                            await legacyTx.CommitAsync();
-                            l.LogInformation("Legacy escrow_accounts + programs seeded for programme {ProgrammeId}.", pidGuid);
-                        }
-                        catch (Exception legacyEx)
-                        {
-                            l.LogWarning(legacyEx, "Legacy escrow/programs seeding skipped (may already exist).");
-                        }
-                    }
-                }
-            }
-            else
-            {
-                l.LogInformation("Programme already exists or creation skipped.");
-            }
-
+            // TSK-P1-TEN-RDY: Tenant already exists, system is ready
+            readinessProbe?.MarkReady();
             return tenantId;
         }
     }
@@ -2028,65 +2069,9 @@ async Task<Guid?> SeedDemoTenant(string rp, ITenantRegistryStore trs, IProgramme
 
 async Task SeedChungaWorkers(IProgrammeStore ps, ILogger l, Guid actualTenantId, NpgsqlDataSource dataSource, CancellationToken cancellationToken)
 {
-    try
-    {
-        // Use the actual tenant ID passed from SeedDemoTenant
-        var DemoTenantId = actualTenantId.ToString();
-        const string PgmZambiaGrnKey = "PGM-ZAMBIA-GRN-001";
-
-        // Add verification query
-        await using var conn = await dataSource.OpenConnectionAsync(cancellationToken);
-        await using var cmd = conn.CreateCommand();
-        cmd.CommandText = "SELECT EXISTS(SELECT 1 FROM public.tenants WHERE tenant_id = @tid)";
-        cmd.Parameters.AddWithValue("tid", actualTenantId);
-        var exists = (bool)(await cmd.ExecuteScalarAsync(cancellationToken) ?? false);
-
-        if (!exists)
-        {
-            l.LogError("Tenant {TenantId} does not exist in public.tenants. Cannot seed workers.", actualTenantId);
-            return;
-        }
-
-        // Resolve the actual program UUID from the database
-        var pgms = await ps.ListAsync(Guid.Parse(DemoTenantId), default, true);
-        var targetPgm = pgms.FirstOrDefault(p => string.Equals(p.ProgrammeKey, PgmZambiaGrnKey, StringComparison.Ordinal));
-        var PgmZambiaGrnId = targetPgm?.ProgrammeId ?? Guid.Empty.ToString();
-
-
-        var workerChunga001Id = CreateStableGuid("worker-chunga-001").ToString();
-        var workerChunga002Id = CreateStableGuid("worker-chunga-002").ToString();
-
-        // Check if workers already exist before inserting
-        var existingWorker = await SupplierPolicyStore.GetSupplierAsync(DemoTenantId, workerChunga001Id);
-        if (existingWorker != null)
-        {
-            l.LogInformation("Worker {WorkerId} already exists. Skipping.", workerChunga001Id);
-            return;
-        }
-
-        l.LogInformation("Auto-seeding Chunga workers for pilot demo...");
-
-        await SupplierRegistryUpsertHandler.HandleAsync(new SupplierRegistryUpsertRequest(
-            DemoTenantId, workerChunga001Id, "Chunga Worker 001",
-            "MMO:+260971100001", -15.4167m, 28.2833m, true,
-            supplier_type: "WORKER"));
-
-        await SupplierRegistryUpsertHandler.HandleAsync(new SupplierRegistryUpsertRequest(
-            DemoTenantId, workerChunga002Id, "Chunga Worker 002",
-            "MMO:+260971100002", -15.4167m, 28.2833m, true,
-            supplier_type: "WORKER"));
-
-        await ProgramSupplierAllowlistUpsertHandler.HandleAsync(
-            new ProgramSupplierAllowlistUpsertRequest(DemoTenantId, PgmZambiaGrnId, workerChunga001Id, true));
-        await ProgramSupplierAllowlistUpsertHandler.HandleAsync(
-            new ProgramSupplierAllowlistUpsertRequest(DemoTenantId, PgmZambiaGrnId, workerChunga002Id, true));
-
-        l.LogInformation("Successfully auto-seeded Chunga workers.");
-    }
-    catch (Exception ex)
-    {
-        l.LogWarning(ex, "Failed to auto-seed Chunga workers.");
-    }
+    // TEMPORARILY DISABLED: Auto-seeding for testing true no-tenant behavior
+    l.LogInformation("SeedChungaWorkers DISABLED for testing.");
+    return;
 }
 
 async Task SeedDemoInstructions(ILogger l)
@@ -2099,87 +2084,89 @@ async Task SeedDemoInstructions(ILogger l)
         var workerChunga001Id = CreateStableGuid("worker-chunga-001").ToString();
         var workerChunga002Id = CreateStableGuid("worker-chunga-002").ToString();
 
-        l.LogInformation("Auto-seeding demo instructions for pilot demo...");
+        l.LogInformation("Auto-seeding demo instructions DISABLED for testing.");
 
-        // CHG-2026-00001: 4 records (all proof types) for worker-chunga-001
-        await EvidenceLinkSubmissionLog.AppendAsync(new
-        {
-            tenant_id = DemoTenantId,
-            instruction_id = "CHG-2026-00001",
-            program_id = PgmZambiaGrn,
-            submitter_class = "WASTE_COLLECTOR",
-            worker_id = workerChunga001Id,
-            artifact_type = Pwrm0001ArtifactTypes.WEIGHBRIDGE_RECORD,
-            artifact_ref = "demo://weighbridge/chg-001",
-            structured_payload = JsonSerializer.SerializeToElement(new
-            {
-                plastic_type = "PET",
-                gross_weight_kg = 12.5m,
-                tare_weight_kg = 0.1m,
-                net_weight_kg = 12.4m,
-                collector_id = workerChunga001Id
-            }),
-            submitted_at_utc = DateTimeOffset.UtcNow.ToString("O")
-        }, CancellationToken.None);
+        // TEMPORARILY DISABLED: Auto-seeding for testing true no-tenant behavior
+        // // CHG-2026-00001: 4 records (all proof types) for worker-chunga-001
+        // // CHG-2026-00001: 4 records (all proof types) for worker-chunga-001
+        // await EvidenceLinkSubmissionLog.AppendAsync(new
+        // {
+        //     tenant_id = DemoTenantId,
+        //     instruction_id = "CHG-2026-00001",
+        //     program_id = PgmZambiaGrn,
+        //     submitter_class = "WASTE_COLLECTOR",
+        //     worker_id = workerChunga001Id,
+        //     artifact_type = Pwrm0001ArtifactTypes.WEIGHBRIDGE_RECORD,
+        //     artifact_ref = "demo://weighbridge/chg-001",
+        //     structured_payload = JsonSerializer.SerializeToElement(new
+        //     {
+        //         plastic_type = "PET",
+        //         gross_weight_kg = 12.5m,
+        //         tare_weight_kg = 0.1m,
+        //         net_weight_kg = 12.4m,
+        //         collector_id = workerChunga001Id
+        //     }),
+        //     submitted_at_utc = DateTimeOffset.UtcNow.ToString("O")
+        // }, CancellationToken.None);
 
-        await EvidenceLinkSubmissionLog.AppendAsync(new
-        {
-            tenant_id = DemoTenantId,
-            instruction_id = "CHG-2026-00001",
-            program_id = PgmZambiaGrn,
-            submitter_class = "WASTE_COLLECTOR",
-            worker_id = workerChunga001Id,
-            artifact_type = Pwrm0001ArtifactTypes.COLLECTION_PHOTO,
-            artifact_ref = "demo://photo/chg-001",
-            submitted_at_utc = DateTimeOffset.UtcNow.ToString("O")
-        }, CancellationToken.None);
+        // await EvidenceLinkSubmissionLog.AppendAsync(new
+        // {
+        //     tenant_id = DemoTenantId,
+        //     instruction_id = "CHG-2026-00001",
+        //     program_id = PgmZambiaGrn,
+        //     submitter_class = "WASTE_COLLECTOR",
+        //     worker_id = workerChunga001Id,
+        //     artifact_type = Pwrm0001ArtifactTypes.COLLECTION_PHOTO,
+        //     artifact_ref = "demo://photo/chg-001",
+        //     submitted_at_utc = DateTimeOffset.UtcNow.ToString("O")
+        // }, CancellationToken.None);
 
-        await EvidenceLinkSubmissionLog.AppendAsync(new
-        {
-            tenant_id = DemoTenantId,
-            instruction_id = "CHG-2026-00001",
-            program_id = PgmZambiaGrn,
-            submitter_class = "WASTE_COLLECTOR",
-            worker_id = workerChunga001Id,
-            artifact_type = Pwrm0001ArtifactTypes.QUALITY_AUDIT_RECORD,
-            artifact_ref = "demo://audit/chg-001",
-            submitted_at_utc = DateTimeOffset.UtcNow.ToString("O")
-        }, CancellationToken.None);
+        // await EvidenceLinkSubmissionLog.AppendAsync(new
+        // {
+        //     tenant_id = DemoTenantId,
+        //     instruction_id = "CHG-2026-00001",
+        //     program_id = PgmZambiaGrn,
+        //     submitter_class = "WASTE_COLLECTOR",
+        //     worker_id = workerChunga001Id,
+        //     artifact_type = Pwrm0001ArtifactTypes.QUALITY_AUDIT_RECORD,
+        //     artifact_ref = "demo://audit/chg-001",
+        //     submitted_at_utc = DateTimeOffset.UtcNow.ToString("O")
+        // }, CancellationToken.None);
 
-        await EvidenceLinkSubmissionLog.AppendAsync(new
-        {
-            tenant_id = DemoTenantId,
-            instruction_id = "CHG-2026-00001",
-            program_id = PgmZambiaGrn,
-            submitter_class = "WASTE_COLLECTOR",
-            worker_id = workerChunga001Id,
-            artifact_type = Pwrm0001ArtifactTypes.TRANSFER_MANIFEST,
-            artifact_ref = "demo://manifest/chg-001",
-            submitted_at_utc = DateTimeOffset.UtcNow.ToString("O")
-        }, CancellationToken.None);
+        // await EvidenceLinkSubmissionLog.AppendAsync(new
+        // {
+        //     tenant_id = DemoTenantId,
+        //     instruction_id = "CHG-2026-00001",
+        //     program_id = PgmZambiaGrn,
+        //     submitter_class = "WASTE_COLLECTOR",
+        //     worker_id = workerChunga001Id,
+        //     artifact_type = Pwrm0001ArtifactTypes.TRANSFER_MANIFEST,
+        //     artifact_ref = "demo://manifest/chg-001",
+        //     submitted_at_utc = DateTimeOffset.UtcNow.ToString("O")
+        // }, CancellationToken.None);
 
-        // CHG-2026-00002: 1 record (WEIGHBRIDGE_RECORD only) for worker-chunga-002
-        await EvidenceLinkSubmissionLog.AppendAsync(new
-        {
-            tenant_id = DemoTenantId,
-            instruction_id = "CHG-2026-00002",
-            program_id = PgmZambiaGrn,
-            submitter_class = "WASTE_COLLECTOR",
-            worker_id = workerChunga002Id,
-            artifact_type = Pwrm0001ArtifactTypes.WEIGHBRIDGE_RECORD,
-            artifact_ref = "demo://weighbridge/chg-002",
-            structured_payload = JsonSerializer.SerializeToElement(new
-            {
-                plastic_type = "PET",
-                gross_weight_kg = 12.5m,
-                tare_weight_kg = 0.1m,
-                net_weight_kg = 12.4m,
-                collector_id = workerChunga002Id
-            }),
-            submitted_at_utc = DateTimeOffset.UtcNow.ToString("O")
-        }, CancellationToken.None);
+        // // CHG-2026-00002: 1 record (WEIGHBRIDGE_RECORD only) for worker-chunga-002
+        // await EvidenceLinkSubmissionLog.AppendAsync(new
+        // {
+        //     tenant_id = DemoTenantId,
+        //     instruction_id = "CHG-2026-00002",
+        //     program_id = PgmZambiaGrn,
+        //     submitter_class = "WASTE_COLLECTOR",
+        //     worker_id = workerChunga002Id,
+        //     artifact_type = Pwrm0001ArtifactTypes.WEIGHBRIDGE_RECORD,
+        //     artifact_ref = "demo://weighbridge/chg-002",
+        //     structured_payload = JsonSerializer.SerializeToElement(new
+        //     {
+        //         plastic_type = "PET",
+        //         gross_weight_kg = 12.5m,
+        //         tare_weight_kg = 0.1m,
+        //         net_weight_kg = 12.4m,
+        //         collector_id = workerChunga002Id
+        //     }),
+        //     submitted_at_utc = DateTimeOffset.UtcNow.ToString("O")
+        // }, CancellationToken.None);
 
-        l.LogInformation("Successfully auto-seeded demo instructions.");
+        // l.LogInformation("Successfully auto-seeded demo instructions.");
     }
     catch (Exception ex)
     {

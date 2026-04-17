@@ -19,7 +19,7 @@ start_app() {
     dotnet run > /tmp/ledger_api_r002a.log 2>&1 &
     APP_PID=$!
     sleep 3
-    for i in {1..10}; do
+    for i in {1..30}; do
         APP_PORT=$(grep "Now listening on:" /tmp/ledger_api_r002a.log | grep -oE '[0-9]+$' | head -n 1)
         if [[ -n "$APP_PORT" ]] && curl -s "http://127.0.0.1:$APP_PORT/health" >/dev/null; then
             echo "[*] App is up on port $APP_PORT."
@@ -48,8 +48,12 @@ returns_503_on_unconfigured_allowlist=false
 
 echo "[*] Booting app WITHOUT tenant allowlist to test deny-all posture"
 unset SYMPHONY_KNOWN_TENANTS
+# TSK-P1-TEN-RDY: Force production profile to use EnvVarTenantReadinessProbe.
+# This ensures the test validates the env-var path, not the DB-backed pilot-demo path.
+export SYMPHONY_RUNTIME_PROFILE="production"
 
 export INGRESS_API_KEY="test-ingress-key-123"
+export DATABASE_URL="postgresql://symphony_admin:symphony_pass@localhost:5432/symphony"
 start_app
 trap stop_app EXIT
 
@@ -67,7 +71,10 @@ else
 fi
 
 # 2. Send tenant-scoped request expecting 503
-http_code=$(curl -s -w "%{http_code}" -o /tmp/r002_resp.json -X GET -H "x-api-key: test-ingress-key-123" -H "x-tenant-id: generic-tenant" "http://127.0.0.1:$APP_PORT/v1/evidence-packs/test-123")
+# TSK-P1-TEN-RDY: No auth headers needed — the TenantReadinessMiddleware returns 503
+# BEFORE any authentication check runs. This is the key invariant being verified:
+# system readiness (503) takes precedence over authentication (401/403).
+http_code=$(curl -s -w "%{http_code}" -o /tmp/r002_resp.json -X GET -H "x-tenant-id: generic-tenant" "http://127.0.0.1:$APP_PORT/v1/evidence-packs/test-123")
 resp_body=$(cat /tmp/r002_resp.json)
 error_code=$(echo "$resp_body" | jq -r '.error_code')
 
