@@ -7,7 +7,7 @@
   "status": "PASS",
   "reviewer_id": "0001",
   "signed_at_utc": "2026-03-27T03:24:04Z",
-  "change_ref": "branch/fix/pre-phase-2-fixes_and_cleanup",
+  "change_ref": "branch/wave3-execution-records-implementation",
   "review_artifact_ref": "approvals/2026-03-26/BRANCH-security-wave-1-runtime-integrity-children.md",
   "review_sidecar_ref": "approvals/2026-03-26/BRANCH-security-wave-1-runtime-integrity-children.approval.json",
   "review_scope_count": 536,

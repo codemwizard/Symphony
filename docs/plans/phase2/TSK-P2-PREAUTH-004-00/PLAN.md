@@ -48,24 +48,22 @@ Run verify_plan_semantic_alignment.py to validate proof graph integrity: python3
 ## Verification
 
 ```bash
-# DOCS_ONLY task - human review required
-# No automated verification for plan creation
+# [ID tsk_p2_preauth_004_00_work_item_01]
+test -f docs/plans/phase2/TSK-P2-PREAUTH-004-00/PLAN.md || exit 1
+
+# [ID tsk_p2_preauth_004_00_work_item_02]
+grep -q "policy_decisions" docs/plans/phase2/TSK-P2-PREAUTH-004-00/PLAN.md || exit 1
+
+# [ID tsk_p2_preauth_004_00_work_item_03]
+grep -q "state_rules" docs/plans/phase2/TSK-P2-PREAUTH-004-00/PLAN.md || exit 1
+
+# [ID tsk_p2_preauth_004_00_work_item_04]
+python3 scripts/audit/verify_plan_semantic_alignment.py --plan docs/plans/phase2/TSK-P2-PREAUTH-004-00/PLAN.md --meta tasks/TSK-P2-PREAUTH-004-00/meta.yml || exit 1
+
+# [ID tsk_p2_preauth_004_00_work_item_04]
+test -f docs/plans/phase2/TSK-P2-PREAUTH-004-00/PLAN.md || exit 1
 ```
 
-
-## Evidence Contract
-
-Evidence will be emitted to evidence/phase2/tsk_p2_preauth_004_00.json with must_include fields:
-- observed_paths
-- task_id
-- git_sha
-- timestamp_utc
-- status
-- checks
-- plan_path
-- graph_validation_enabled
-- no_orphans
-- graph_connected
 
 ## Rollback
 

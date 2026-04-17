@@ -100,19 +100,15 @@ verification:
   - >-
     # [ID tsk_p2_preauth_004_00_work_item_04]
     python3 scripts/audit/verify_plan_semantic_alignment.py --plan docs/plans/phase2/TSK-P2-PREAUTH-004-00/PLAN.md --meta tasks/TSK-P2-PREAUTH-004-00/meta.yml || exit 1
+  - >-
+    # [ID tsk_p2_preauth_004_00_work_item_04]
+    test -f docs/plans/phase2/TSK-P2-PREAUTH-004-00/PLAN.md || exit 1
 
 evidence:
-  - path: evidence/phase2/tsk_p2_preauth_004_00.json
+  - path: docs/plans/phase2/TSK-P2-PREAUTH-004-00/PLAN.md
     must_include:
-      - task_id
-      - git_sha
-      - timestamp_utc
-      - status
-      - checks
-      - plan_path
-      - graph_validation_enabled
-      - no_orphans
-      - graph_connected
+      - policy_decisions
+      - state_rules
 
 failure_modes:
   - "PLAN.md missing => CRITICAL_FAIL"

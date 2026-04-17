@@ -4,20 +4,11 @@
   "git_sha": "0000000000000000000000000000000000000000",
   "schema_fingerprint": "1fdf05c50ee35492913d64677c55a8be0165181fe89fe8350dbd8df92094fa14",
   "status": "PASS",
+  "reason": "no_production_affecting_changes",
   "diff_mode": "range",
   "base_ref": "refs/remotes/origin/main",
   "head_ref": "HEAD",
-  "merge_base": "3b31224ac32b5d2c530fd33c134ab7022e08c908",
-  "triggered_change_present": true,
-  "triggered_prefixes": [
-    "docs",
-    "schema",
-    "scripts"
-  ],
-  "satisfying_docs": [
-    "docs/plans/phase1/TSK-P1-TEN-RDY/PLAN.md",
-    "docs/plans/phase1/TSK-P1-TEN-RDY/EXEC_LOG.md"
-  ],
-  "satisfying_doc_parent": "docs/plans/phase1/TSK-P1-TEN-RDY",
-  "errors": []
+  "merge_base": "8b9e060e43864267b603128db7b4942a885b6faa",
+  "triggered_change_present": false,
+  "satisfying_docs": []
 }
