@@ -107,6 +107,8 @@ _Generated from `docs/invariants/INVARIANTS_MANIFEST.yml` (do not edit by hand).
 | INV-127 | P1 | Escrow state machine is enforced with atomic transitions and expiry semantics | ["team-db", "team-platform"] | scripts/db/verify_tsk_p1_esc_001.sh --evidence evidence/phase1/tsk_p1_esc_001__escrow_state_machine_atomic_reservation_semantics.json; evidence/phase1/tsk_p1_esc_001__escrow_state_machine_atomic_reservation_semantics.json |
 | INV-128 | P1 | Escrow reservations are ceiling-enforced and tenant-isolated under concurrency | ["team-db", "team-platform"] | scripts/db/verify_tsk_p1_esc_002.sh --evidence evidence/phase1/tsk_p1_esc_002__escrow_invariants_cross_tenant_protections.json; evidence/phase1/tsk_p1_esc_002__escrow_invariants_cross_tenant_protections.json |
 | INV-129 | P1 | SIM-swap alerts are derived deterministically with formula-version traceability | ["team-db", "team-platform"] | scripts/db/verify_hier_008_sim_swap_alerts.sh; evidence/phase1/hier_008_sim_swap_alerts.json |
+| INV-132 | P0 | Fail-closed on missing secrets (signing keys) | ["team-security"] | scripts/security/scan_secrets.sh |
+| INV-133 | P0 | Tenant allowlist default-deny | ["team-security"] | scripts/audit/test_tenant_allowlist_deny_all.sh |
 | INV-134 | P1 | Dependency vulnerability audit gate is fail-closed and evidenced | ["team-security"] | scripts/security/dotnet_dependency_audit.sh (CI-wired via .github/workflows/invariants.yml) |
 | INV-135 | P1 | No backward calls across protected runtime boundaries | ["team-platform", "team-security"] | scripts/audit/verify_no_backward_calls.sh; evidence/phase1/no_backward_calls.json |
 | INV-136 | P1 | Atomic ownership registry is explicit and enforced | ["team-db", "team-architecture"] | scripts/db/verify_ou_ownership_registry.sh; evidence/phase1/ou_ownership_registry.json |
@@ -127,3 +129,7 @@ _Generated from `docs/invariants/INVARIANTS_MANIFEST.yml` (do not edit by hand).
 | INV-156 | P2 | Sprint 5 ledger work remains gated from external trust-surface decisions | ["team-architecture", "team-platform"] | scripts/audit/verify_s5_gate_001.sh; evidence/phase2/s5_gate_001_boundary_approval.json |
 | INV-157 | P2 | Internal ledger model is append-only, explicit, and tenant-bound | ["team-db", "team-architecture"] | scripts/audit/verify_ledger_internal_model.sh; evidence/phase2/ledger_001_internal_model.json |
 | INV-158 | P2 | Internal ledger proof jobs are deterministic, idempotent, and tenant-safe | ["team-db", "team-platform"] | scripts/db/verify_ledger_zero_sum.sh; scripts/db/verify_posting_idempotency.sh; scripts/db/verify_no_cross_tenant_postings.sh; evidence/phase2/ledger_002_internal_proof_jobs.json; evidence/phase2/ledger_002_posting_idempotency.json; evidence/phase2/ledger_002_tenant_scope_checks.json |
+| INV-159 | P0 | Phase 0/1 schema contains no sector or methodology nouns (platform neutrality) | ["team-platform", "team-db"] | >- |
+| INV-160 | P0 | All pilot methodology logic is registered as a Phase 2 adapter, not embedded in Phase 0/1 | ["team-platform"] | >- |
+| INV-161 | P0 | Phase 0/1 functions use generic platform verbs only — no sector-encoded function names | ["team-db", "team-platform"] | >- |
+| INV-166 | P0 | Core functions do not interpret sector-specific payload field names | ["team-db", "team-platform"] | >- |
