@@ -1,0 +1,144 @@
+schema_version: 1
+phase: '2'
+task_id: TSK-P2-PREAUTH-007-05
+title: "Register INV-174 append-only state transitions and INV-175 execution binding"
+owner_role: INVARIANTS_CURATOR
+status: planned
+priority: HIGH
+risk_class: GOVERNANCE
+blast_radius: DOCS_ONLY
+
+intent: >-
+  This task registers INV-174 for append-only state transitions and INV-175 for execution binding
+  requirement. Without these invariants, state transition immutability and execution binding
+  are not governed, creating risk of audit trail corruption and non-reproducible calculations.
+
+anti_patterns:
+  - "Registering invariants without verification_command"
+  - "Using incorrect enforcement_location"
+  - "Writing the verifier after registration"
+
+out_of_scope:
+  - "Verifier implementation"
+  - "Database schema changes"
+
+stop_conditions:
+  - "If INV-174 or INV-175 are not added to INVARIANTS_MANIFEST.yml"
+  - "If status is not set to draft"
+  - "If enforcement_location is not set to schema/migrations/0120"
+
+proof_guarantees:
+  - "INV-174 exists in INVARIANTS_MANIFEST.yml"
+  - "INV-175 exists in INVARIANTS_MANIFEST.yml"
+  - "Both invariants have status: draft"
+  - "Both invariants have enforcement_location: schema/migrations/0120"
+  - "Both invariants have verification_command"
+  - "Verifier script exits 0 and emits evidence"
+
+proof_limitations:
+  - "Cannot verify that the invariants will be correctly enforced"
+  - "Cannot verify that the verification commands are correct"
+
+depends_on:
+  - TSK-P2-PREAUTH-007-04
+blocks:
+  - TSK-P2-REG-001-00
+
+touches:
+  - docs/invariants/INVARIANTS_MANIFEST.yml
+  - scripts/audit/verify_tsk_p2_preauth_007_05.sh
+  - tasks/TSK-P2-PREAUTH-007-05/meta.yml
+
+invariants:
+  - INV-174
+  - INV-175
+
+work:
+  - >-
+    [ID tsk_p2_preauth_007_05_work_item_01] Add INV-174 to INVARIANTS_MANIFEST.yml with:
+    id: INV-174, title: append-only state transitions, status: draft,
+    enforcement_location: schema/migrations/0120, verification_command: grep -E 'deny_state_transitions_mutation.*BEFORE.*UPDATE.*OR.*DELETE.*state_transitions' schema/migrations/0120.
+  - >-
+    [ID tsk_p2_preauth_007_05_work_item_02] Add INV-175 to INVARIANTS_MANIFEST.yml with:
+    id: INV-175, title: execution binding requirement, status: draft,
+    enforcement_location: schema/migrations/0120, verification_command: grep -E 'enforce_execution_binding.*BEFORE.*INSERT.*OR.*UPDATE.*state_transitions' schema/migrations/0120.
+  - >-
+    [ID tsk_p2_preauth_007_05_work_item_03] Write verify_tsk_p2_preauth_007_05.sh that runs grep to verify
+    INV-174 and INV-175 exist in INVARIANTS_MANIFEST.yml with correct fields.
+  - >-
+    [ID tsk_p2_preauth_007_05_work_item_04] Run verify_tsk_p2_preauth_007_05.sh to confirm invariants are registered correctly.
+
+acceptance_criteria:
+  - >-
+    [ID tsk_p2_preauth_007_05_work_item_01] INV-174 exists in INVARIANTS_MANIFEST.yml.
+  - >-
+    [ID tsk_p2_preauth_007_05_work_item_02] INV-175 exists in INVARIANTS_MANIFEST.yml.
+  - >-
+    [ID tsk_p2_preauth_007_05_work_item_01] INV-174 has status: draft.
+  - >-
+    [ID tsk_p2_preauth_007_05_work_item_02] INV-175 has status: draft.
+  - >-
+    [ID tsk_p2_preauth_007_05_work_item_03] verify_tsk_p2_preauth_007_05.sh exists and checks for invariants.
+  - >-
+    [ID tsk_p2_preauth_007_05_work_item_04] verify_tsk_p2_preauth_007_05.sh exits 0.
+
+negative_tests:
+  - id: TSK-P2-PREAUTH-007-05-N1
+    description: >-
+      Verify that verify_tsk_p2_preauth_007_05.sh exits non-zero when INV-174 or INV-175 does not exist in INVARIANTS_MANIFEST.yml.
+    required: true
+
+positive_tests:
+  - id: TSK-P2-PREAUTH-007-05-P1
+    description: >-
+      Verify that verify_tsk_p2_preauth_007_05.sh exits 0 when both invariants exist with correct fields.
+    required: false
+
+verification:
+  - >-
+    # [ID tsk_p2_preauth_007_05_work_item_01] [ID tsk_p2_preauth_007_05_work_item_02]
+    # [ID tsk_p2_preauth_007_05_work_item_03] [ID tsk_p2_preauth_007_05_work_item_04]
+    test -x scripts/audit/verify_tsk_p2_preauth_007_05.sh && bash scripts/audit/verify_tsk_p2_preauth_007_05.sh > evidence/phase2/tsk_p2_preauth_007_05.json || exit 1
+  - >-
+    grep -A 5 "id: INV-174" docs/invariants/INVARIANTS_MANIFEST.yml | grep -q "status: draft" &&
+    grep -A 5 "id: INV-174" docs/invariants/INVARIANTS_MANIFEST.yml | grep -q "enforcement_location" || exit 1
+  - >-
+    grep -A 5 "id: INV-175" docs/invariants/INVARIANTS_MANIFEST.yml | grep -q "status: draft" &&
+    grep -A 5 "id: INV-175" docs/invariants/INVARIANTS_MANIFEST.yml | grep -q "enforcement_location" || exit 1
+  - >-
+    # [ID tsk_p2_preauth_007_05_work_item_04]
+    test -f evidence/phase2/tsk_p2_preauth_007_05.json || exit 1
+
+evidence:
+  - path: evidence/phase2/tsk_p2_preauth_007_05.json
+    must_include:
+      - task_id
+      - git_sha
+      - timestamp_utc
+      - status
+      - checks
+      - inv_174_registered
+      - inv_175_registered
+      - both_status_draft
+
+failure_modes:
+  - "INV-174 not registered => CRITICAL_FAIL"
+  - "INV-175 not registered => CRITICAL_FAIL"
+  - "Either status not draft => FAIL"
+  - "Evidence file missing => FAIL"
+
+must_read:
+  - docs/operations/AI_AGENT_OPERATION_MANUAL.md
+  - docs/operations/TASK_CREATION_PROCESS.md
+  - docs/invariants/INVARIANTS_MANIFEST.yml
+  - docs/plans/phase2/ATOMIC_TASK_BREAKDOWN_PLAN.md
+
+implementation_plan: docs/plans/phase2/TSK-P2-PREAUTH-007-05/PLAN.md
+implementation_log: docs/plans/phase2/TSK-P2-PREAUTH-007-05/EXEC_LOG.md
+
+notes: >-
+  This task blocks TSK-P2-REG-001-00. Phase Key: PRE-PHASE2. Phase Name: Pre-Phase 2 Implementation.
+
+client: cursor
+assigned_agent: invariants_curator
+model: <UNASSIGNED>

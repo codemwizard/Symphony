@@ -1,0 +1,126 @@
+schema_version: 1
+phase: '2'
+task_id: TSK-P2-PREAUTH-006C-01
+title: "Add DataAuthorityLevel enum to C# codebase"
+owner_role: ARCHITECT
+status: planned
+priority: HIGH
+risk_class: INTEGRITY
+blast_radius: APP_LAYER
+
+intent: >-
+  This task adds the DataAuthorityLevel enum to the C# codebase with values matching the DB ENUM.
+  Without this enum, the C# layer cannot represent data authority levels, creating risk of
+  type mismatches between DB and application layer.
+
+anti_patterns:
+  - "Adding enum without all required values"
+  - "Using different naming convention than DB ENUM"
+  - "Writing the verifier after the code is written"
+
+out_of_scope:
+  - "Adding properties to read models (deferred to TSK-P2-PREAUTH-006C-02)"
+  - "Database schema changes"
+
+stop_conditions:
+  - "If DataAuthorityLevel enum does not exist in C# codebase"
+  - "If enum values do not match DB ENUM values"
+  - "If enum is not in correct namespace"
+
+proof_guarantees:
+  - "DataAuthorityLevel enum exists in C# codebase"
+  - "Enum has all 7 values matching DB ENUM"
+  - "Verifier script exits 0 and emits evidence"
+
+proof_limitations:
+  - "Cannot verify that the enum values are semantically correct"
+  - "Cannot verify that the enum will work for all future use cases"
+
+depends_on:
+  - TSK-P2-PREAUTH-006C-00
+blocks:
+  - TSK-P2-PREAUTH-006C-02
+
+touches:
+  - src/Symphony/Core/DataAuthorityLevel.cs
+  - scripts/audit/verify_tsk_p2_preauth_006c_01.sh
+  - tasks/TSK-P2-PREAUTH-006C-01/meta.yml
+
+invariants: []
+
+work:
+  - >-
+    [ID tsk_p2_preauth_006c_01_work_item_01] Create DataAuthorityLevel enum at src/Symphony/Core/DataAuthorityLevel.cs
+    with values: Phase1IndicativeOnly, NonReproducible, DerivedUnverified, PolicyBoundUnsigned,
+    AuthoritativeSigned, Superseded, Invalidated.
+  - >-
+    [ID tsk_p2_preauth_006c_01_work_item_02] Write verify_tsk_p2_preauth_006c_01.sh that runs grep to verify
+    enum exists and contains all 7 values.
+  - >-
+    [ID tsk_p2_preauth_006c_01_work_item_03] Run verify_tsk_p2_preauth_006c_01.sh to confirm enum is created correctly.
+
+acceptance_criteria:
+  - >-
+    [ID tsk_p2_preauth_006c_01_work_item_01] DataAuthorityLevel enum exists in C# codebase.
+  - >-
+    [ID tsk_p2_preauth_006c_01_work_item_01] Enum has all 7 values matching DB ENUM.
+  - >-
+    [ID tsk_p2_preauth_006c_01_work_item_02] verify_tsk_p2_preauth_006c_01.sh exists and checks for enum.
+  - >-
+    [ID tsk_p2_preauth_006c_01_work_item_03] verify_tsk_p2_preauth_006c_01.sh exits 0.
+
+negative_tests:
+  - id: TSK-P2-PREAUTH-006C-01-N1
+    description: >-
+      Verify that verify_tsk_p2_preauth_006c_01.sh exits non-zero when DataAuthorityLevel enum does not exist.
+    required: true
+
+positive_tests:
+  - id: TSK-P2-PREAUTH-006C-01-P1
+    description: >-
+      Verify that verify_tsk_p2_preauth_006c_01.sh exits 0 when enum exists with all 7 values.
+    required: false
+
+verification:
+  - >-
+    # [ID tsk_p2_preauth_006c_01_work_item_01] [ID tsk_p2_preauth_006c_01_work_item_02]
+    # [ID tsk_p2_preauth_006c_01_work_item_03]
+    test -x scripts/audit/verify_tsk_p2_preauth_006c_01.sh && bash scripts/audit/verify_tsk_p2_preauth_006c_01.sh > evidence/phase2/tsk_p2_preauth_006c_01.json || exit 1
+  - >-
+    test -f src/Symphony/Core/DataAuthorityLevel.cs &&
+    grep -q "Phase1IndicativeOnly" src/Symphony/Core/DataAuthorityLevel.cs &&
+    grep -q "AuthoritativeSigned" src/Symphony/Core/DataAuthorityLevel.cs || exit 1
+  - >-
+    # [ID tsk_p2_preauth_006c_01_work_item_03]
+    test -f evidence/phase2/tsk_p2_preauth_006c_01.json || exit 1
+
+evidence:
+  - path: evidence/phase2/tsk_p2_preauth_006c_01.json
+    must_include:
+      - task_id
+      - git_sha
+      - timestamp_utc
+      - status
+      - checks
+      - enum_exists
+      - enum_values_present
+
+failure_modes:
+  - "Enum not created => CRITICAL_FAIL"
+  - "Enum values missing => CRITICAL_FAIL"
+  - "Evidence file missing => FAIL"
+
+must_read:
+  - docs/operations/AI_AGENT_OPERATION_MANUAL.md
+  - docs/operations/TASK_CREATION_PROCESS.md
+  - docs/plans/phase2/ATOMIC_TASK_BREAKDOWN_PLAN.md
+
+implementation_plan: docs/plans/phase2/TSK-P2-PREAUTH-006C-01/PLAN.md
+implementation_log: docs/plans/phase2/TSK-P2-PREAUTH-006C-01/EXEC_LOG.md
+
+notes: >-
+  This task blocks TSK-P2-PREAUTH-006C-02. Phase Key: PRE-PHASE2. Phase Name: Pre-Phase 2 Implementation.
+
+client: cursor
+assigned_agent: architect
+model: <UNASSIGNED>

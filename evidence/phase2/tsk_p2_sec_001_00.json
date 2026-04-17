@@ -1,0 +1,23 @@
+{
+  "task_id": "TSK-P2-SEC-001-00",
+  "run_id": "3b31224a-20260417T014821Z",
+  "git_sha": "3b31224a",
+  "timestamp_utc": "20260417T014821Z",
+  "status": "PASS",
+  "checks": [
+    "plan_exists",
+    "plan_dir_exists"
+  ],
+  "plan_path": "docs/plans/phase2/TSK-P2-SEC-001-00/PLAN.md",
+  "graph_validation_enabled": true,
+  "no_orphans": true,
+  "graph_connected": true,
+  "observed_paths": [
+    "docs/plans/phase2/TSK-P2-SEC-001-00/PLAN.md"
+  ],
+  "observed_hashes": {},
+  "command_outputs": {},
+  "execution_trace": [
+    "emit_plan_evidence.sh"
+  ]
+}

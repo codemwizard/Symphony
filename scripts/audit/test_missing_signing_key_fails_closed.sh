@@ -48,8 +48,6 @@ declare -a checks=()
 status="PASS"
 hardcoded_fallbacks_found=0
 fails_closed_without_key=true
-signing_capable_at_startup=false
-signing_endpoint_returns_503_when_key_missing=false
 
 echo "[*] Checking for hardcoded string literals: 'dev-signing-key'"
 lit_count=$(rg --vimgrep 'dev-signing-key|phase1-reg-.*-dev-signing-key' "$REPO_ROOT/services/ledger-api/dotnet/src/LedgerApi/Program.cs" | wc -l)
@@ -72,42 +70,53 @@ else
 fi
 
 echo "[*] Booting app WITHOUT signing keys to test fail-closed posture"
+# In hardened profile, app must fail to start if signing key is missing from OpenBao
+# First, delete the signing key from OpenBao to simulate missing secret
+if [[ -f "/tmp/symphony_openbao/secrets.env" ]]; then
+    source /tmp/symphony_openbao/secrets.env
+fi
+curl -s -X DELETE -H "X-Vault-Token: root" "http://127.0.0.1:8200/v1/kv/data/symphony/secrets/signing" >/dev/null 2>&1
+
+# Source OpenBao secrets to provide required BAO_ROLE_ID and BAO_SECRET_ID
+if [[ -f "/tmp/symphony_openbao/secrets.env" ]]; then
+    source /tmp/symphony_openbao/secrets.env
+fi
+# Unset signing key environment variables so app must read from OpenBao (where we deleted it)
 unset EVIDENCE_SIGNING_KEY
 unset EVIDENCE_SIGNING_KEY_ID
 
 export INGRESS_API_KEY="test-ingress-key-123"
 export SYMPHONY_KNOWN_TENANTS="known-tenant-r001"
-start_app
-trap stop_app EXIT
+export DATABASE_URL="postgresql://symphony_admin:symphony_pass@localhost:5432/symphony"
 
-# 1. Probe the startup posture via combined /health
-health_resp=$(curl -s -f "http://127.0.0.1:$APP_PORT/health")
-health_resp_escaped=$(echo "$health_resp" | jq -R -s -c '.')
-is_present=$(echo "$health_resp" | jq -r '.signing_key_present')
+# Try to start the app - it should fail to start (fail-closed behavior)
+echo "[*] Attempting to start LedgerApi without signing key..."
+cd "$REPO_ROOT/services/ledger-api/dotnet/src/LedgerApi"
+dotnet run > /tmp/ledger_api_r001_nokey.log 2>&1 &
+APP_PID=$!
+sleep 15
 
-if [[ "$is_present" == "false" ]]; then
-    checks+=("{\"id\":\"verify-startup-posture-false\",\"description\":\"Verify health endpoint advertises signing_key_present=false\",\"status\":\"PASS\",\"details\":{\"raw_response\":$health_resp_escaped}}")
-else
-    status="FAIL"
-    signing_capable_at_startup=true
-    checks+=("{\"id\":\"verify-startup-posture-false\",\"description\":\"Verify health endpoint advertises signing_key_present=false\",\"status\":\"FAIL\",\"details\":{\"raw_response\":$health_resp_escaped}}")
-fi
-
-# 2. Probe the physical endpoint mapping to 503
-http_code=$(curl -s -w "%{http_code}" -o /tmp/r001_resp.json -X GET -H "x-api-key: test-ingress-key-123" -H "x-tenant-id: known-tenant-r001" "http://127.0.0.1:$APP_PORT/v1/regulatory/reports/daily?date=2026-03-01")
-resp_body=$(cat /tmp/r001_resp.json)
-error_code=$(echo "$resp_body" | jq -r '.error_code')
-
-if [[ "$http_code" == "503" && "$error_code" == "SIGNING_CAPABILITY_MISSING" ]]; then
-    signing_endpoint_returns_503_when_key_missing=true
-    checks+=("{\"id\":\"verify-endpoint-503\",\"description\":\"Verify regulatory endpoint returns 503 exactly\",\"status\":\"PASS\",\"details\":{\"http_code\":503,\"error_code\":\"$error_code\"}}")
+# Check if app failed to start (correct fail-closed behavior)
+if grep -q "Required hardened secret 'EVIDENCE_SIGNING_KEY' not found" /tmp/ledger_api_r001_nokey.log 2>/dev/null; then
+    fails_closed_without_key=true
+    checks+=("{\"id\":\"verify-fail-closed-startup\",\"description\":\"Verify app fails to start when signing key is missing from OpenBao\",\"status\":\"PASS\",\"details\":{\"reason\":\"App correctly refused to start without signing key\"}}")
+    # Clean up the failed process
+    kill "$APP_PID" 2>/dev/null || true
+    wait "$APP_PID" 2>/dev/null || true
 else
     status="FAIL"
     fails_closed_without_key=false
-    checks+=("{\"id\":\"verify-endpoint-503\",\"description\":\"Verify regulatory endpoint returns 503 exactly\",\"status\":\"FAIL\",\"details\":{\"http_code\":\"$http_code\",\"error_code\":\"$error_code\",\"body\":\"$resp_body\"}}")
+    checks+=("{\"id\":\"verify-fail-closed-startup\",\"description\":\"Verify app fails to start when signing key is missing from OpenBao\",\"status\":\"FAIL\",\"details\":{\"reason\":\"App started without signing key - should have failed closed\"}}")
+    # Clean up the process if it somehow started
+    kill "$APP_PID" 2>/dev/null || true
+    wait "$APP_PID" 2>/dev/null || true
 fi
 
-stop_app
+# Re-bootstrap the signing key for cleanup
+echo "[*] Re-bootstrapping signing key for cleanup..."
+EVIDENCE_KEY=$(openssl rand -hex 32)
+EVIDENCE_KEY_ID="evidence-signing-key-v1"
+docker exec -e BAO_ADDR="http://127.0.0.1:8200" -e BAO_TOKEN="root" symphony-openbao bao kv put kv/symphony/secrets/signing evidence_signing_key="$EVIDENCE_KEY" evidence_signing_key_id="$EVIDENCE_KEY_ID" >/dev/null 2>&1
 
 # Formatting the JSON arrays inside the main evidence writer function
 checks_json="["$(IFS=,; echo "${checks[*]}")"]"
@@ -121,9 +130,7 @@ cat <<EOF > "$EVIDENCE_FILE"
   "status": "$status",
   "checks": $checks_json,
   "hardcoded_fallbacks_found": $hardcoded_fallbacks_found,
-  "fails_closed_without_key": $fails_closed_without_key,
-  "signing_capable_at_startup": $signing_capable_at_startup,
-  "signing_endpoint_returns_503_when_key_missing": $signing_endpoint_returns_503_when_key_missing
+  "fails_closed_without_key": $fails_closed_without_key
 }
 EOF
 

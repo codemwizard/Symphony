@@ -1,0 +1,107 @@
+schema_version: 1
+phase: '2'
+task_id: TSK-P2-SEC-003-00
+title: Create PLAN.md and verify alignment for INV-132
+owner_role: SECURITY_GUARDIAN
+status: completed
+priority: HIGH
+risk_class: SECURITY
+blast_radius: DOCS_ONLY
+intent: This task creates the PLAN.md for INV-132 (fail-closed behavior) promotion.
+  Without a verified plan, the security invariant promotion lacks architectural documentation
+  and verification trace, creating risk of incomplete or incorrect implementation.
+anti_patterns:
+- Creating PLAN.md after implementation has started
+- Writing PLAN.md without explicit tracking IDs for work items
+- Omitting stop conditions or proof limitations
+out_of_scope:
+- Actual verifier fixes or INV-132 promotion (deferred to TSK-P2-SEC-003-01)
+- Code changes to fail-closed logic
+- Migration writing
+stop_conditions:
+- If verify_plan_semantic_alignment.py fails with orphaned nodes
+- If the plan lacks explicit verifier specifications
+- If the plan lacks negative test definitions
+proof_guarantees:
+- PLAN.md exists at docs/plans/phase2/TSK-P2-SEC-003-00/PLAN.md
+- PLAN.md passes verify_plan_semantic_alignment.py validation
+proof_limitations:
+- Cannot verify that the plan content is technically correct without implementation
+- Cannot verify that the verifier will actually detect the vulnerability
+depends_on: []
+blocks:
+- TSK-P2-SEC-003-01
+touches:
+- docs/plans/phase2/TSK-P2-SEC-003-00/PLAN.md
+- tasks/TSK-P2-SEC-003-00/meta.yml
+invariants:
+- INV-132
+work:
+- '[ID tsk_p2_sec_003_00_work_item_01] Create PLAN.md at docs/plans/phase2/TSK-P2-SEC-003-00/PLAN.md
+  from PLAN_TEMPLATE.md with objective, architectural context, pre-conditions, files
+  to change, stop conditions, implementation steps, verification, evidence contract,
+  and risk sections.'
+- '[ID tsk_p2_sec_003_00_work_item_02] Document the INV-132 promotion requirements
+  including scan_secrets.sh and test_missing_signing_key_fails_closed.sh execution.'
+- '[ID tsk_p2_sec_003_00_work_item_03] Run verify_plan_semantic_alignment.py to validate
+  proof graph integrity: python3 scripts/audit/verify_plan_semantic_alignment.py --plan
+  docs/plans/phase2/TSK-P2-SEC-003-00/PLAN.md --meta tasks/TSK-P2-SEC-003-00/meta.yml'
+acceptance_criteria:
+- >-
+  [ID tsk_p2_sec_003_00_work_item_01] [ID tsk_p2_sec_003_00_ac_01] PLAN.md exists at docs/plans/phase2/TSK-P2-SEC-003-00/PLAN.md and contains all required sections.
+- >-
+  [ID tsk_p2_sec_003_00_work_item_02] [ID tsk_p2_sec_003_00_ac_02] PLAN.md documents scan_secrets.sh and test_missing_signing_key_fails_closed.sh execution.
+- >-
+  [ID tsk_p2_sec_003_00_work_item_03] [ID tsk_p2_sec_003_00_ac_03] verify_plan_semantic_alignment.py exits 0 with NO_ORPHANS=true and GRAPH_CONNECTED=true.
+negative_tests:
+- id: TSK-P2-SEC-003-00-N1
+  description: Verify that verify_plan_semantic_alignment.py fails on a plan with
+    orphaned work items (missing acceptance criteria mapping).
+  required: true
+positive_tests: []
+verification:
+  - >-
+    # [ID tsk_p2_sec_003_00_work_item_01] [ID tsk_p2_sec_003_00_ac_01]
+    test -f docs/plans/phase2/TSK-P2-SEC-003-00/PLAN.md || exit 1
+  - >-
+    # [ID tsk_p2_sec_003_00_work_item_02] [ID tsk_p2_sec_003_00_ac_02]
+    grep -q 'grep' docs/plans/phase2/TSK-P2-SEC-003-00/PLAN.md || exit 1
+  - >-
+    # [ID tsk_p2_sec_003_00_work_item_03] [ID tsk_p2_sec_003_00_ac_03]
+    python3 scripts/audit/verify_plan_semantic_alignment.py --plan docs/plans/phase2/TSK-P2-SEC-003-00/PLAN.md --meta tasks/TSK-P2-SEC-003-00/meta.yml || exit 1
+  - >-
+    python3 scripts/audit/validate_evidence.py --task TSK-P2-SEC-003-00 --evidence evidence/phase2/tsk_p2_sec_003_00.json || exit 1
+  - >-
+    bash scripts/dev/pre_ci.sh || exit 1
+evidence:
+- path: evidence/phase2/tsk_p2_sec_003_00.json
+  must_include:
+  - task_id
+  - git_sha
+  - timestamp_utc
+  - status
+  - checks
+  - plan_path
+  - graph_validation_enabled
+  - no_orphans
+  - graph_connected
+  - observed_paths
+  - observed_hashes
+  - command_outputs
+  - execution_trace
+failure_modes:
+- PLAN.md missing => CRITICAL_FAIL
+- verify_plan_semantic_alignment.py fails => FAIL
+- PLAN lacks fail-closed test documentation => FAIL_REVIEW
+must_read:
+- docs/operations/AI_AGENT_OPERATION_MANUAL.md
+- docs/operations/TASK_CREATION_PROCESS.md
+- docs/contracts/templates/PLAN_TEMPLATE.md
+- docs/plans/phase2/ATOMIC_TASK_BREAKDOWN_PLAN.md
+implementation_plan: docs/plans/phase2/TSK-P2-SEC-003-00/PLAN.md
+implementation_log: docs/plans/phase2/TSK-P2-SEC-003-00/EXEC_LOG.md
+notes: 'This is a PLAN.md creation task that must complete before TSK-P2-SEC-003-01
+  can begin. Phase Key: PRE-PHASE2. Phase Name: Pre-Phase 2 Implementation.'
+client: cursor
+assigned_agent: security_guardian
+model: <UNASSIGNED>

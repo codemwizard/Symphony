@@ -1,0 +1,143 @@
+schema_version: 1
+phase: '2'
+task_id: TSK-P2-PREAUTH-006C-03
+title: "Add DataAuthority and AuditGrade to AssetBatch and StateTransition read models"
+owner_role: ARCHITECT
+status: planned
+priority: HIGH
+risk_class: INTEGRITY
+blast_radius: APP_LAYER
+
+intent: >-
+  This task adds DataAuthority and AuditGrade properties to the AssetBatch and StateTransition
+  read models. Without these properties, the C# layer cannot track data authority for these
+  entities, creating risk of non-auditable data usage.
+
+anti_patterns:
+  - "Adding properties without appropriate defaults"
+  - "Using different type than DB column"
+  - "Writing the verifier after the code is written"
+
+out_of_scope:
+  - "Database schema changes"
+  - "Other read model changes"
+
+stop_conditions:
+  - "If DataAuthority property is not added to AssetBatch"
+  - "If DataAuthority property is not added to StateTransition"
+  - "If properties do not have appropriate types"
+
+proof_guarantees:
+  - "DataAuthority property exists in AssetBatch read model"
+  - "DataAuthority property exists in StateTransition read model"
+  - "AuditGrade property exists in both read models"
+  - "Verifier script exits 0 and emits evidence"
+
+proof_limitations:
+  - "Cannot verify that the properties are semantically correct"
+  - "Cannot verify that the properties will work for all use cases"
+
+depends_on:
+  - TSK-P2-PREAUTH-006C-02
+blocks:
+  - TSK-P2-PREAUTH-007-00
+
+touches:
+  - src/Symphony/Models/AssetBatch.cs
+  - src/Symphony/Models/StateTransition.cs
+  - scripts/audit/verify_tsk_p2_preauth_006c_03.sh
+  - tasks/TSK-P2-PREAUTH-006C-03/meta.yml
+
+invariants: []
+
+work:
+  - >-
+    [ID tsk_p2_preauth_006c_03_work_item_01] Add DataAuthority property of type DataAuthorityLevel
+    to AssetBatch read model with default Phase1IndicativeOnly.
+  - >-
+    [ID tsk_p2_preauth_006c_03_work_item_02] Add AuditGrade property of type bool to AssetBatch
+    read model with default false.
+  - >-
+    [ID tsk_p2_preauth_006c_03_work_item_03] Add DataAuthority property of type DataAuthorityLevel
+    to StateTransition read model with default NonReproducible.
+  - >-
+    [ID tsk_p2_preauth_006c_03_work_item_04] Add AuditGrade property of type bool to StateTransition
+    read model with default false.
+  - >-
+    [ID tsk_p2_preauth_006c_03_work_item_05] Write verify_tsk_p2_preauth_006c_03.sh that runs grep to verify
+    properties exist and have correct types.
+  - >-
+    [ID tsk_p2_preauth_006c_03_work_item_06] Run verify_tsk_p2_preauth_006c_03.sh to confirm properties are added correctly.
+
+acceptance_criteria:
+  - >-
+    [ID tsk_p2_preauth_006c_03_work_item_01] DataAuthority property exists in AssetBatch.
+  - >-
+    [ID tsk_p2_preauth_006c_03_work_item_02] AuditGrade property exists in AssetBatch.
+  - >-
+    [ID tsk_p2_preauth_006c_03_work_item_03] DataAuthority property exists in StateTransition.
+  - >-
+    [ID tsk_p2_preauth_006c_03_work_item_04] AuditGrade property exists in StateTransition.
+  - >-
+    [ID tsk_p2_preauth_006c_03_work_item_05] verify_tsk_p2_preauth_006c_03.sh exists and checks for properties.
+  - >-
+    [ID tsk_p2_preauth_006c_03_work_item_06] verify_tsk_p2_preauth_006c_03.sh exits 0.
+
+negative_tests:
+  - id: TSK-P2-PREAUTH-006C-03-N1
+    description: >-
+      Verify that verify_tsk_p2_preauth_006c_03.sh exits non-zero when DataAuthority property does not exist in AssetBatch.
+    required: true
+
+positive_tests:
+  - id: TSK-P2-PREAUTH-006C-03-P1
+    description: >-
+      Verify that verify_tsk_p2_preauth_006c_03.sh exits 0 when properties exist with correct types.
+    required: false
+
+verification:
+  - >-
+    # [ID tsk_p2_preauth_006c_03_work_item_01] [ID tsk_p2_preauth_006c_03_work_item_02]
+    # [ID tsk_p2_preauth_006c_03_work_item_03] [ID tsk_p2_preauth_006c_03_work_item_04]
+    # [ID tsk_p2_preauth_006c_03_work_item_05] [ID tsk_p2_preauth_006c_03_work_item_06]
+    test -x scripts/audit/verify_tsk_p2_preauth_006c_03.sh && bash scripts/audit/verify_tsk_p2_preauth_006c_03.sh > evidence/phase2/tsk_p2_preauth_006c_03.json || exit 1
+  - >-
+    # [ID tsk_p2_preauth_006c_03_work_item_01]
+    grep -q "DataAuthority" src/Symphony/Models/AssetBatch.cs || exit 1
+  - >-
+    # [ID tsk_p2_preauth_006c_03_work_item_03]
+    grep -q "DataAuthority" src/Symphony/Models/StateTransition.cs || exit 1
+  - >-
+    # [ID tsk_p2_preauth_006c_03_work_item_06]
+    test -f evidence/phase2/tsk_p2_preauth_006c_03.json || exit 1
+
+evidence:
+  - path: evidence/phase2/tsk_p2_preauth_006c_03.json
+    must_include:
+      - task_id
+      - git_sha
+      - timestamp_utc
+      - status
+      - checks
+      - data_authority_in_asset_batch
+      - data_authority_in_state_transition
+
+failure_modes:
+  - "DataAuthority property not added to AssetBatch => CRITICAL_FAIL"
+  - "DataAuthority property not added to StateTransition => CRITICAL_FAIL"
+  - "Evidence file missing => FAIL"
+
+must_read:
+  - docs/operations/AI_AGENT_OPERATION_MANUAL.md
+  - docs/operations/TASK_CREATION_PROCESS.md
+  - docs/plans/phase2/ATOMIC_TASK_BREAKDOWN_PLAN.md
+
+implementation_plan: docs/plans/phase2/TSK-P2-PREAUTH-006C-03/PLAN.md
+implementation_log: docs/plans/phase2/TSK-P2-PREAUTH-006C-03/EXEC_LOG.md
+
+notes: >-
+  This task blocks TSK-P2-PREAUTH-007-00. Phase Key: PRE-PHASE2. Phase Name: Pre-Phase 2 Implementation.
+
+client: cursor
+assigned_agent: architect
+model: <UNASSIGNED>

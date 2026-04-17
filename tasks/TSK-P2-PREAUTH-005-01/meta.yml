@@ -1,0 +1,132 @@
+schema_version: 1
+phase: '2'
+task_id: TSK-P2-PREAUTH-005-01
+title: "Create state_transitions table"
+owner_role: DB_FOUNDATION
+status: planned
+priority: HIGH
+risk_class: INTEGRITY
+blast_radius: DB_SCHEMA
+
+intent: >-
+  This task creates the state_transitions table to track all state transitions with execution binding.
+  Without this table, the system cannot record state transitions, creating risk of
+  non-auditable state changes and lost execution context.
+
+anti_patterns:
+  - "Creating the table without required indexes"
+  - "Writing the migration without touching MIGRATION_HEAD"
+  - "Writing the verifier after the migration is applied"
+
+out_of_scope:
+  - "state_current table creation (deferred to TSK-P2-PREAUTH-005-02)"
+  - "Trigger implementation (deferred to TSK-P2-PREAUTH-005-03 through 005-08)"
+  - "Application layer changes"
+
+stop_conditions:
+  - "If migration 0120 does not create state_transitions table"
+  - "If required indexes are missing"
+  - "If MIGRATION_HEAD is not updated to 0120"
+
+proof_guarantees:
+  - "Migration 0120 creates state_transitions table"
+  - "Indexes on project_id and transition_timestamp are present"
+  - "Verifier script exits 0 and emits evidence"
+
+proof_limitations:
+  - "Cannot verify that the table structure is optimal for all use cases"
+  - "Cannot verify that the table will perform well at scale"
+
+depends_on:
+  - TSK-P2-PREAUTH-005-00
+blocks:
+  - TSK-P2-PREAUTH-005-02
+
+touches:
+  - schema/migrations/0120_create_state_transitions.sql
+  - schema/migrations/MIGRATION_HEAD
+  - scripts/db/verify_tsk_p2_preauth_005_01.sh
+  - tasks/TSK-P2-PREAUTH-005-01/meta.yml
+
+invariants: []
+
+work:
+  - >-
+    [ID tsk_p2_preauth_005_01_work_item_01] Write migration 0120 at schema/migrations/0120_create_state_transitions.sql
+    creating state_transitions table with columns: transition_id UUID PRIMARY KEY, project_id UUID NOT NULL,
+    from_state VARCHAR NOT NULL, to_state VARCHAR NOT NULL, transition_timestamp TIMESTAMPTZ NOT NULL,
+    execution_id UUID, policy_decision_id UUID, signature TEXT, and indexes on project_id and transition_timestamp.
+  - >-
+    [ID tsk_p2_preauth_005_01_work_item_02] Update MIGRATION_HEAD to 0120: echo 0120 > schema/migrations/MIGRATION_HEAD.
+  - >-
+    [ID tsk_p2_preauth_005_01_work_item_03] Write verify_tsk_p2_preauth_005_01.sh that runs psql to verify
+    table exists and indexes are present.
+  - >-
+    [ID tsk_p2_preauth_005_01_work_item_04] Run verify_tsk_p2_preauth_005_01.sh to confirm migration is successful.
+
+acceptance_criteria:
+  - >-
+    [ID tsk_p2_preauth_005_01_work_item_01] Migration 0120 creates state_transitions table.
+  - >-
+    [ID tsk_p2_preauth_005_01_work_item_02] MIGRATION_HEAD contains 0120.
+  - >-
+    [ID tsk_p2_preauth_005_01_work_item_03] verify_tsk_p2_preauth_005_01.sh exists and checks for table existence.
+  - >-
+    [ID tsk_p2_preauth_005_01_work_item_04] verify_tsk_p2_preauth_005_01.sh exits 0.
+
+negative_tests:
+  - id: TSK-P2-PREAUTH-005-01-N1
+    description: >-
+      Verify that verify_tsk_p2_preauth_005_01.sh exits non-zero when state_transitions table does not exist.
+    required: true
+
+positive_tests:
+  - id: TSK-P2-PREAUTH-005-01-P1
+    description: >-
+      Verify that verify_tsk_p2_preauth_005_01.sh exits 0 when state_transitions table exists with indexes.
+    required: false
+
+verification:
+  - >-
+    # [ID tsk_p2_preauth_005_01_work_item_01] [ID tsk_p2_preauth_005_01_work_item_02]
+    # [ID tsk_p2_preauth_005_01_work_item_03] [ID tsk_p2_preauth_005_01_work_item_04]
+    test -x scripts/db/verify_tsk_p2_preauth_005_01.sh && bash scripts/db/verify_tsk_p2_preauth_005_01.sh > evidence/phase2/tsk_p2_preauth_005_01.json || exit 1
+  - >-
+    # [ID tsk_p2_preauth_005_01_work_item_02]
+    test $(cat schema/migrations/MIGRATION_HEAD) = "0120" || exit 1
+  - >-
+    # [ID tsk_p2_preauth_005_01_work_item_04]
+    test -f evidence/phase2/tsk_p2_preauth_005_01.json || exit 1
+
+evidence:
+  - path: evidence/phase2/tsk_p2_preauth_005_01.json
+    must_include:
+      - task_id
+      - git_sha
+      - timestamp_utc
+      - status
+      - checks
+      - table_exists
+      - indexes_present
+      - migration_head
+
+failure_modes:
+  - "Migration does not create table => CRITICAL_FAIL"
+  - "Indexes missing => CRITICAL_FAIL"
+  - "MIGRATION_HEAD not updated => FAIL"
+  - "Evidence file missing => FAIL"
+
+must_read:
+  - docs/operations/AI_AGENT_OPERATION_MANUAL.md
+  - docs/operations/TASK_CREATION_PROCESS.md
+  - docs/plans/phase2/ATOMIC_TASK_BREAKDOWN_PLAN.md
+
+implementation_plan: docs/plans/phase2/TSK-P2-PREAUTH-005-01/PLAN.md
+implementation_log: docs/plans/phase2/TSK-P2-PREAUTH-005-01/EXEC_LOG.md
+
+notes: >-
+  This task blocks TSK-P2-PREAUTH-005-02. Phase Key: PRE-PHASE2. Phase Name: Pre-Phase 2 Implementation.
+
+client: cursor
+assigned_agent: db_foundation
+model: <UNASSIGNED>

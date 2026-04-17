@@ -1,0 +1,120 @@
+schema_version: 1
+phase: '2'
+task_id: TSK-P2-PREAUTH-003-02
+title: "Add interpretation_version_id FK to execution_records"
+owner_role: DB_FOUNDATION
+status: planned
+priority: HIGH
+risk_class: INTEGRITY
+blast_radius: DB_SCHEMA
+
+intent: >-
+  This task adds interpretation_version_id foreign key to execution_records table to bind
+  executions to interpretation packs. Without this FK, executions cannot be linked to
+    interpretation versions, creating risk of non-reproducible calculations.
+
+anti_patterns:
+  - "Adding FK without ON DELETE behavior specified"
+  - "Writing the migration without touching MIGRATION_HEAD"
+  - "Writing the verifier after the migration is applied"
+
+out_of_scope:
+  - "Data migration or backfill"
+  - "Application layer changes"
+  - "Additional FKs"
+
+stop_conditions:
+  - "If migration does not add interpretation_version_id column"
+  - "If FK constraint to interpretation_packs is missing"
+  - "If MIGRATION_HEAD is not updated"
+
+proof_guarantees:
+  - "Migration adds interpretation_version_id column"
+  - "FK constraint to interpretation_packs is present"
+  - "Verifier script exits 0 and emits evidence"
+
+proof_limitations:
+  - "Cannot verify that the FK cascade behavior is correct for all scenarios"
+  - "Cannot verify that existing data is compatible"
+
+depends_on:
+  - TSK-P2-PREAUTH-003-01
+blocks:
+  - TSK-P2-PREAUTH-004-00
+
+touches:
+  - schema/migrations/0118_create_execution_records.sql
+  - scripts/db/verify_tsk_p2_preauth_003_02.sh
+  - tasks/TSK-P2-PREAUTH-003-02/meta.yml
+
+invariants: []
+
+work:
+  - >-
+    [ID tsk_p2_preauth_003_02_work_item_01] Add interpretation_version_id column to migration 0118:
+    ALTER TABLE execution_records ADD COLUMN interpretation_version_id UUID REFERENCES interpretation_packs(interpretation_pack_id).
+  - >-
+    [ID tsk_p2_preauth_003_02_work_item_02] Write verify_tsk_p2_preauth_003_02.sh that runs psql to verify
+    column exists and FK constraint is present.
+  - >-
+    [ID tsk_p2_preauth_003_02_work_item_03] Run verify_tsk_p2_preauth_003_02.sh to confirm migration is successful.
+
+acceptance_criteria:
+  - >-
+    [ID tsk_p2_preauth_003_02_work_item_01] Migration adds interpretation_version_id column with FK.
+  - >-
+    [ID tsk_p2_preauth_003_02_work_item_02] verify_tsk_p2_preauth_003_02.sh exists and checks for column and FK.
+  - >-
+    [ID tsk_p2_preauth_003_02_work_item_03] verify_tsk_p2_preauth_003_02.sh exits 0.
+
+negative_tests:
+  - id: TSK-P2-PREAUTH-003-02-N1
+    description: >-
+      Verify that verify_tsk_p2_preauth_003_02.sh exits non-zero when interpretation_version_id column does not exist.
+    required: true
+
+positive_tests:
+  - id: TSK-P2-PREAUTH-003-02-P1
+    description: >-
+      Verify that verify_tsk_p2_preauth_003_02.sh exits 0 when interpretation_version_id column exists with FK.
+    required: false
+
+verification:
+  - >-
+    # [ID tsk_p2_preauth_003_02_work_item_01] [ID tsk_p2_preauth_003_02_work_item_02]
+    # [ID tsk_p2_preauth_003_02_work_item_03]
+    test -x scripts/db/verify_tsk_p2_preauth_003_02.sh && bash scripts/db/verify_tsk_p2_preauth_003_02.sh > evidence/phase2/tsk_p2_preauth_003_02.json || exit 1
+  - >-
+    # [ID tsk_p2_preauth_003_02_work_item_03]
+    test -f evidence/phase2/tsk_p2_preauth_003_02.json || exit 1
+
+evidence:
+  - path: evidence/phase2/tsk_p2_preauth_003_02.json
+    must_include:
+      - task_id
+      - git_sha
+      - timestamp_utc
+      - status
+      - checks
+      - column_exists
+      - fk_constraint_present
+
+failure_modes:
+  - "Column not added => CRITICAL_FAIL"
+  - "FK constraint missing => CRITICAL_FAIL"
+  - "Evidence file missing => FAIL"
+
+must_read:
+  - docs/operations/AI_AGENT_OPERATION_MANUAL.md
+  - docs/operations/TASK_CREATION_PROCESS.md
+  - docs/plans/phase2/ATOMIC_TASK_BREAKDOWN_PLAN.md
+
+implementation_plan: docs/plans/phase2/TSK-P2-PREAUTH-003-02/PLAN.md
+implementation_log: docs/plans/phase2/TSK-P2-PREAUTH-003-02/EXEC_LOG.md
+
+notes: >-
+  This task blocks TSK-P2-PREAUTH-004-00. Phase Key: PRE-PHASE2. Phase Name: Pre-Phase 2 Implementation.
+
+client: cursor
+assigned_agent: db_foundation
+model: <UNASSIGNED>

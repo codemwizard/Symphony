@@ -1,0 +1,26 @@
+{
+  "task_id": "TSK-P2-PREAUTH-000",
+  "run_id": "3b31224a-20260417T014812Z",
+  "timestamp_utc": "2026-04-17T01:48:13Z",
+  "status": "PASS",
+  "checks": [
+    {"name": "adr_file_exists", "status": "PASS"},
+    {"name": "postgis_specified", "status": "PASS"},
+    {"name": "polygon_specified", "status": "PASS"},
+    {"name": "srid_4326_specified", "status": "PASS"},
+    {"name": "k13_documented", "status": "PASS"},
+    {"name": "dnsh_documented", "status": "PASS"},
+    {"name": "trade_off_analysis_present", "status": "PASS"}
+  ],
+  "adr_path": "docs/decisions/adr-spatial-capability-model.md",
+  "postgis_specified": true,
+  "geometry_types": ["POLYGON"],
+  "srid": 4326,
+  "k13_documented": true,
+  "dnsh_documented": true,
+  "trade_off_analysis_present": true,
+  "observed_paths": ["docs/decisions/adr-spatial-capability-model.md"],
+  "observed_hashes": ["4b7e5d6ebda6bbd59319a98ced40736d3832f011c12a43cf06e97bde92f7d121"],
+  "command_outputs": ["10"],
+  "execution_trace": ["verify_tsk_p2_preauth_000.sh executed at 2026-04-17T01:48:13Z"]
+}

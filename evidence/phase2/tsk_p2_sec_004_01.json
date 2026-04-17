@@ -1,0 +1,32 @@
+{
+  "task_id": "TSK-P2-SEC-004-01",
+  "git_sha": "3b31224ac32b5d2c530fd33c134ab7022e08c908",
+  "timestamp_utc": "2026-04-17T11:14:46Z",
+  "status": "PASS",
+  "checks": [
+    {"name": "verifier_exists", "status": "true"},
+    {"name": "verifier_passes", "status": "true"},
+    {"name": "inv_133_implemented", "status": "true"}
+  ],
+  "verifier_path": "scripts/audit/test_tenant_allowlist_deny_all.sh",
+  "inv_133_status": "implemented",
+  "observed_paths": [
+  "scripts/audit/test_tenant_allowlist_deny_all.sh",
+  "services/ledger-api/dotnet/src/LedgerApi/Program.cs",
+  "docs/invariants/INVARIANTS_MANIFEST.yml"
+],
+  "observed_hashes": [
+  "132c191476c42a61661a514b9e1a9d0d47cfe424ad05ff467098c06cf9b544a9",
+  "7f3a57a3fa404c8ff911b899bb9a9ce7736c173c4d837b76e4ee895f0ccdeb34",
+  "b81f6dee723f325bf97c7962a1e21fae5b17709e7abd9ba267c2f1d6190a9e54"
+],
+  "command_outputs": [
+  "verifier_passes: PASS",
+  "inv_133_status: implemented"
+],
+  "execution_trace": [
+  {"step": "check_verifier_exists", "status": "true"},
+  {"step": "run_verifier", "status": "true"},
+  {"step": "check_inv_133_status", "status": "true"}
+]
+}

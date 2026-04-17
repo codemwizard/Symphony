@@ -1,0 +1,118 @@
+schema_version: 1
+phase: '2'
+task_id: TSK-P2-SEC-003-01
+title: Verify fail-closed behavior and promote INV-132
+owner_role: SECURITY_GUARDIAN
+status: completed
+priority: HIGH
+risk_class: SECURITY
+blast_radius: CI_GATES
+intent: This task runs the fail-closed behavior tests for INV-132 and promotes the
+  invariant to implemented status. Without this verification, the system may fail-open
+  on missing signing keys or secrets, creating security vulnerabilities.
+anti_patterns:
+- Promoting INV-132 to implemented without running fail-closed tests
+- Assuming the tests pass without actual execution
+- Writing the verifier after marking the invariant as implemented
+out_of_scope:
+- Changing fail-closed logic implementation (deferred to separate task if needed)
+- Modifying other security verifiers
+- Database schema changes
+stop_conditions:
+- If scan_secrets.sh does not exit 0
+- If test_missing_signing_key_fails_closed.sh does not exit 0
+- If INV-132 status is not updated to implemented
+proof_guarantees:
+- scan_secrets.sh exits 0
+- test_missing_signing_key_fails_closed.sh exits 0
+- 'INV-132 in INVARIANTS_MANIFEST.yml has status: implemented'
+- Verifier script exists and emits evidence
+proof_limitations:
+- Cannot verify that all fail-closed scenarios are covered
+- Cannot verify that fail-closed behavior cannot be bypassed
+depends_on:
+- TSK-P2-SEC-003-00
+blocks:
+- TSK-P2-CCG-001-00
+touches:
+- docs/invariants/INVARIANTS_MANIFEST.yml
+- scripts/audit/verify_tsk_p2_sec_003_01.sh
+- tasks/TSK-P2-SEC-003-01/meta.yml
+invariants:
+- INV-132
+work:
+- '[ID tsk_p2_sec_003_01_work_item_01] Run scan_secrets.sh to verify secrets scanning
+  is functional.'
+- '[ID tsk_p2_sec_003_01_work_item_02] Run test_missing_signing_key_fails_closed.sh
+  to verify system fails closed when signing key is missing.'
+- '[ID tsk_p2_sec_003_01_work_item_03] Update INV-132 in INVARIANTS_MANIFEST.yml with
+  status: implemented, enforcement_location, and verification_command.'
+- '[ID tsk_p2_sec_003_01_work_item_04] Write verify_tsk_p2_sec_003_01.sh that runs
+  the verifiers and emits evidence.'
+acceptance_criteria:
+- >-
+  [ID tsk_p2_sec_003_01_work_item_01] [ID tsk_p2_sec_003_01_ac_01] scan_secrets.sh exits 0.
+- >-
+  [ID tsk_p2_sec_003_01_work_item_02] [ID tsk_p2_sec_003_01_ac_02] test_missing_signing_key_fails_closed.sh exits 0.
+- >-
+  [ID tsk_p2_sec_003_01_work_item_03] [ID tsk_p2_sec_003_01_ac_03] INV-132 in INVARIANTS_MANIFEST.yml has status: implemented.
+- >-
+  [ID tsk_p2_sec_003_01_work_item_04] [ID tsk_p2_sec_003_01_ac_04] verify_tsk_p2_sec_003_01.sh exists and exits 0.
+negative_tests:
+- id: TSK-P2-SEC-003-01-N1
+  description: Verify that test_missing_signing_key_fails_closed.sh exits non-zero
+    when system is configured to fail-open on missing signing key.
+  required: true
+positive_tests:
+- id: TSK-P2-SEC-003-01-P1
+  description: Verify that test_missing_signing_key_fails_closed.sh exits 0 when system
+    is configured to fail-closed on missing signing key.
+  required: false
+verification:
+  - >-
+    # [ID tsk_p2_sec_003_01_work_item_01] [ID tsk_p2_sec_003_01_work_item_02] [ID tsk_p2_sec_003_01_work_item_03] [ID tsk_p2_sec_003_01_work_item_04] [ID tsk_p2_sec_003_01_ac_01] [ID tsk_p2_sec_003_01_ac_02] [ID tsk_p2_sec_003_01_ac_03] [ID tsk_p2_sec_003_01_ac_04]
+    bash scripts/security/scan_secrets.sh || exit 1
+  - >-
+    # [ID tsk_p2_sec_003_01_work_item_01] [ID tsk_p2_sec_003_01_work_item_02] [ID tsk_p2_sec_003_01_work_item_03] [ID tsk_p2_sec_003_01_work_item_04] [ID tsk_p2_sec_003_01_ac_01] [ID tsk_p2_sec_003_01_ac_02] [ID tsk_p2_sec_003_01_ac_03] [ID tsk_p2_sec_003_01_ac_04]
+    bash scripts/audit/test_missing_signing_key_fails_closed.sh || exit 1
+  - >-
+    # [ID tsk_p2_sec_003_01_work_item_01] [ID tsk_p2_sec_003_01_work_item_02] [ID tsk_p2_sec_003_01_work_item_03] [ID tsk_p2_sec_003_01_work_item_04] [ID tsk_p2_sec_003_01_ac_01] [ID tsk_p2_sec_003_01_ac_02] [ID tsk_p2_sec_003_01_ac_03] [ID tsk_p2_sec_003_01_ac_04]
+    grep -A 5 'id: INV-132' docs/invariants/INVARIANTS_MANIFEST.yml | grep -q 'status: implemented' || exit 1
+  - >-
+    # [ID tsk_p2_sec_003_01_work_item_01] [ID tsk_p2_sec_003_01_work_item_02] [ID tsk_p2_sec_003_01_work_item_03] [ID tsk_p2_sec_003_01_work_item_04] [ID tsk_p2_sec_003_01_ac_01] [ID tsk_p2_sec_003_01_ac_02] [ID tsk_p2_sec_003_01_ac_03] [ID tsk_p2_sec_003_01_ac_04]
+    test -x scripts/audit/verify_tsk_p2_sec_003_01.sh && bash scripts/audit/verify_tsk_p2_sec_003_01.sh && test -f evidence/phase2/tsk_p2_sec_003_01.json || exit 1
+  - >-
+    # [ID tsk_p2_sec_003_01_work_item_01] [ID tsk_p2_sec_003_01_work_item_02] [ID tsk_p2_sec_003_01_work_item_03] [ID tsk_p2_sec_003_01_work_item_04] [ID tsk_p2_sec_003_01_ac_01] [ID tsk_p2_sec_003_01_ac_02] [ID tsk_p2_sec_003_01_ac_03] [ID tsk_p2_sec_003_01_ac_04]
+    python3 scripts/audit/validate_evidence.py --task TSK-P2-SEC-003-01 --evidence evidence/phase2/tsk_p2_sec_003_01.json || exit 1
+  - >-
+    # [ID tsk_p2_sec_003_01_work_item_01] [ID tsk_p2_sec_003_01_work_item_02] [ID tsk_p2_sec_003_01_work_item_03] [ID tsk_p2_sec_003_01_work_item_04] [ID tsk_p2_sec_003_01_ac_01] [ID tsk_p2_sec_003_01_ac_02] [ID tsk_p2_sec_003_01_ac_03] [ID tsk_p2_sec_003_01_ac_04]
+    bash scripts/dev/pre_ci.sh || exit 1
+evidence:
+- path: evidence/phase2/tsk_p2_sec_003_01.json
+  must_include:
+  - task_id
+  - git_sha
+  - timestamp_utc
+  - status
+  - checks
+  - inv_132_status
+  - observed_paths
+  - observed_hashes
+  - command_outputs
+  - execution_trace
+failure_modes:
+- Fail-closed tests fail => CRITICAL_FAIL
+- INV-132 not promoted to implemented => FAIL
+- Evidence file missing => FAIL
+must_read:
+- docs/operations/AI_AGENT_OPERATION_MANUAL.md
+- docs/operations/TASK_CREATION_PROCESS.md
+- docs/invariants/INVARIANTS_MANIFEST.yml
+- docs/plans/phase2/ATOMIC_TASK_BREAKDOWN_PLAN.md
+implementation_plan: docs/plans/phase2/TSK-P2-SEC-003-01/PLAN.md
+implementation_log: docs/plans/phase2/TSK-P2-SEC-003-01/EXEC_LOG.md
+notes: 'This task blocks TSK-P2-CCG-001-00. Phase Key: PRE-PHASE2. Phase Name: Pre-Phase
+  2 Implementation.'
+client: cursor
+assigned_agent: security_guardian
+model: <UNASSIGNED>

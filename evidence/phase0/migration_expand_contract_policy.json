@@ -2,7 +2,7 @@
   "check_id": "DB-EXPAND-CONTRACT-POLICY",
   "timestamp_utc": "1970-01-01T00:00:00Z",
   "git_sha": "0000000000000000000000000000000000000000",
-  "schema_fingerprint": "aaf9f9460480d6fb69b86a860aa77aaa7e4ac21fbf2fcb14f43fea99702f17c3",
+  "schema_fingerprint": "1fdf05c50ee35492913d64677c55a8be0165181fe89fe8350dbd8df92094fa14",
   "status": "PASS",
   "scanned_files": [
     "0001_init.sql",
@@ -105,7 +105,9 @@
     "0113_gf_fn_confidence_enforcement.sql",
     "0114_gf_fn_asset_lifecycle.sql",
     "0114_grant_onboarding_tables_to_app_role.sql",
-    "0115_add_supplier_type_to_registry.sql"
+    "0115_add_supplier_type_to_registry.sql",
+    "0116_create_interpretation_packs.sql",
+    "0117_create_factor_registry.sql"
   ],
   "violation_count": 0,
   "violations": [],
