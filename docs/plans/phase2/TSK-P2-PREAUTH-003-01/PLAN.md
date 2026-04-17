@@ -6,6 +6,10 @@
 **Blocks:** TSK-P2-PREAUTH-003-02
 **failure_signature**: PHASE2.PREAUTH.TSK-P2-PREAUTH-003-01.MIGRATION_FAIL
 **canonical_reference**: docs/operations/AI_AGENT_OPERATION_MANUAL.md
+**origin_task_id**: TSK-P2-PREAUTH-003-01
+**repro_command**: bash scripts/db/verify_tsk_p2_preauth_003_01.sh
+**verification_commands_run**: bash scripts/db/verify_tsk_p2_preauth_003_01.sh
+**final_status**: PASS
 
 ## Objective
 
