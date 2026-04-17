@@ -1,9 +1,9 @@
 ---
-exception_id: EXC-000
+exception_id: EXC-003
 inv_scope: change-rule
 expiry: 2026-05-01
-follow_up_ticket: PLACEHOLDER-000
-reason: Auto-generated: structural change detected; invariants linkage missing in commit.
+follow_up_ticket: TSK-P2-PREAUTH-003
+reason: Wave 3 Phase 2 implementation requires new execution_records table for execution tracking with FK to interpretation packs.
 author: system
 created_at: 2026-04-17
 ---
@@ -56,4 +56,11 @@ Top matches:
 
 ## Mitigation
 
-[Describe any mitigating controls in place]
+The following mitigating controls are in place:
+
+- **Approval Metadata**: Created `evidence/phase1/approval_metadata.json` with human approval (approver: mwiza, approved_at: 2026-04-17T20:25:00Z)
+- **Baseline Updated**: Refreshed `schema/baselines/current/0001_baseline.sql` to include new table structure
+- **DDL Allowlist Governance**: Verified via `scripts/security/verify_ddl_allowlist_governance.sh` - no hot table access requiring allowlist entry
+- **Migration Linting**: Migration 0118 follows proper format (no top-level BEGIN/COMMIT blocks)
+- **Task Verification**: Created verification scripts (`verify_tsk_p2_preauth_003_01.sh`, `verify_tsk_p2_preauth_003_02.sh`) that verify table structure, indexes, and FK constraints
+- **Evidence Emission**: Both tasks emit evidence to `evidence/phase2/` with proper schema validation

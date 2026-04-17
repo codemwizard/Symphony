@@ -8,7 +8,8 @@
       "schema/migrations/0118_create_execution_records.sql",
       "schema/migrations/MIGRATION_HEAD",
       "evidence/phase2/tsk_p2_preauth_003_01.json",
-      "evidence/phase2/tsk_p2_preauth_003_02.json"
+      "evidence/phase2/tsk_p2_preauth_003_02.json",
+      "docs/invariants/exceptions/exception_change-rule_ddl_2026-04-17_3.md"
     ]
   },
   "ai": {
