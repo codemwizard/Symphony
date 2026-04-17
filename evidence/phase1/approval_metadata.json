@@ -13,7 +13,7 @@
     ]
   },
   "ai": {
-    "ai_prompt_hash": "wave3-implementation-hash-placeholder",
+    "ai_prompt_hash": "6c588ba0f1458ae57f8d5efa351bb12d2d104da720b6c0d7cf98bc1c248ab2d5",
     "model_id": "claude-sonnet",
     "client": "cursor_codex",
     "session_id": "wave3-execution-records-implementation"
