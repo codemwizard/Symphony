@@ -25,3 +25,75 @@ rows:
     verifier: "scripts/db/verify_ledger_zero_sum.sh"
     evidence_path: "evidence/phase2/ledger_002_internal_proof_jobs.json"
     notes: "Internal ledger proofs must be deterministic, idempotent, and tenant-safe under fail-closed verification."
+
+  - invariant_id: "TSK-P2-PREAUTH-005-00"
+    status: "planned"
+    required: true
+    gate_id: "INT-G30"
+    verifier: "scripts/agent/run_task.sh TSK-P2-PREAUTH-005-00 --skip-bootstrap"
+    evidence_path: "docs/plans/phase2/TSK-P2-PREAUTH-005-00/PLAN.md"
+    notes: "State machine enforcement layer PLAN creation task."
+
+  - invariant_id: "TSK-P2-PREAUTH-005-01"
+    status: "planned"
+    required: true
+    gate_id: "INT-G30"
+    verifier: "scripts/db/verify_tsk_p2_preauth_005_01.sh"
+    evidence_path: "evidence/phase2/tsk_p2_preauth_005_01.json"
+    notes: "Create state_transitions table with indexes."
+
+  - invariant_id: "TSK-P2-PREAUTH-005-02"
+    status: "planned"
+    required: true
+    gate_id: "INT-G30"
+    verifier: "scripts/db/verify_tsk_p2_preauth_005_02.sh"
+    evidence_path: "evidence/phase2/tsk_p2_preauth_005_02.json"
+    notes: "Create state_current table with PRIMARY KEY."
+
+  - invariant_id: "TSK-P2-PREAUTH-005-03"
+    status: "planned"
+    required: true
+    gate_id: "INT-G30"
+    verifier: "scripts/db/verify_tsk_p2_preauth_005_03.sh"
+    evidence_path: "evidence/phase2/tsk_p2_preauth_005_03.json"
+    notes: "Implement enforce_transition_state_rules() trigger."
+
+  - invariant_id: "TSK-P2-PREAUTH-005-04"
+    status: "planned"
+    required: true
+    gate_id: "INT-G30"
+    verifier: "scripts/db/verify_tsk_p2_preauth_005_04.sh"
+    evidence_path: "evidence/phase2/tsk_p2_preauth_005_04.json"
+    notes: "Implement enforce_transition_authority() trigger."
+
+  - invariant_id: "TSK-P2-PREAUTH-005-05"
+    status: "planned"
+    required: true
+    gate_id: "INT-G30"
+    verifier: "scripts/db/verify_tsk_p2_preauth_005_05.sh"
+    evidence_path: "evidence/phase2/tsk_p2_preauth_005_05.json"
+    notes: "Implement enforce_transition_signature() trigger."
+
+  - invariant_id: "TSK-P2-PREAUTH-005-06"
+    status: "planned"
+    required: true
+    gate_id: "INT-G30"
+    verifier: "scripts/db/verify_tsk_p2_preauth_005_06.sh"
+    evidence_path: "evidence/phase2/tsk_p2_preauth_005_06.json"
+    notes: "Implement enforce_execution_binding() trigger."
+
+  - invariant_id: "TSK-P2-PREAUTH-005-07"
+    status: "planned"
+    required: true
+    gate_id: "INT-G30"
+    verifier: "scripts/db/verify_tsk_p2_preauth_005_07.sh"
+    evidence_path: "evidence/phase2/tsk_p2_preauth_005_07.json"
+    notes: "Implement deny_state_transitions_mutation() trigger."
+
+  - invariant_id: "TSK-P2-PREAUTH-005-08"
+    status: "planned"
+    required: true
+    gate_id: "INT-G30"
+    verifier: "scripts/db/verify_tsk_p2_preauth_005_08.sh"
+    evidence_path: "evidence/phase2/tsk_p2_preauth_005_08.json"
+    notes: "Implement update_current_state() trigger."

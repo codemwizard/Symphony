@@ -287,6 +287,8 @@
         RAISE EXCEPTION 'CONF003: Insufficient confidence for issuance. Required: %, Actual: %. Batch: %',
         RAISE EXCEPTION 'DELETE not allowed on authority_decisions (append-only ledger)'
         RAISE EXCEPTION 'DELETE not allowed on gf_verifier_read_tokens (append-only ledger)'
+        RAISE EXCEPTION 'GF036: state_transitions table is append-only, DELETE not allowed';
+        RAISE EXCEPTION 'GF036: state_transitions table is append-only, UPDATE not allowed';
         RAISE EXCEPTION 'Invalid edge type: %', p_edge_type USING ERRCODE = 'GF017';
         RAISE EXCEPTION 'Invalid evidence class: %; must be one of %',
         RAISE EXCEPTION 'Invalid subject type: %', p_subject_type USING ERRCODE = 'GF013';
@@ -385,6 +387,9 @@
         RAISE EXCEPTION 'regulatory authority not found' USING ERRCODE = 'GF014';
         RAISE EXCEPTION 'retired_quantity exceeds remaining: requested=%, remaining=%',
         RAISE EXCEPTION 'source evidence node not found' USING ERRCODE = 'GF019';
+        RAISE NOTICE 'Transition authority check: policy_decision_id is NULL';
+        RAISE NOTICE 'Transition execution binding check: execution_id is NULL';
+        RAISE NOTICE 'Transition signature check: signature is NULL';
         RETURN NEW;
         RETURN false;
         RETURN true;
@@ -416,6 +421,7 @@
         claimed_by = NULL, lease_token = NULL, lease_expires_at = NULL
         containment_action = EXCLUDED.containment_action;
         contradiction_timestamp = EXCLUDED.contradiction_timestamp,
+        current_state = EXCLUDED.current_state,
         decided_at = NOW(),
         decided_at = NOW(),
         decided_at = NOW(),
@@ -517,6 +523,7 @@
         scoped_tables, expires_at
         sequence_id,
         source_node_id,
+        state_since = EXCLUDED.state_since;
         status = 'PENDING_SUPERVISOR_APPROVAL',
         status = 'PENDING_SUPERVISOR_APPROVAL',
         strategy_used, collision_count, outcome, policy_version_id
@@ -1315,6 +1322,8 @@
     ADD CONSTRAINT sim_swap_alerts_source_event_id_fkey FOREIGN KEY (source_event_id) REFERENCES public.member_device_events(event_id) ON DELETE RESTRICT;
     ADD CONSTRAINT sim_swap_alerts_source_event_id_key UNIQUE (source_event_id);
     ADD CONSTRAINT sim_swap_alerts_tenant_id_fkey FOREIGN KEY (tenant_id) REFERENCES public.tenants(tenant_id) ON DELETE RESTRICT;
+    ADD CONSTRAINT state_current_pkey PRIMARY KEY (project_id);
+    ADD CONSTRAINT state_transitions_pkey PRIMARY KEY (transition_id);
     ADD CONSTRAINT supervisor_access_policies_pkey PRIMARY KEY (scope);
     ADD CONSTRAINT supervisor_approval_queue_pkey PRIMARY KEY (instruction_id);
     ADD CONSTRAINT supervisor_approval_queue_program_id_fkey FOREIGN KEY (program_id) REFERENCES public.programs(program_id) ON DELETE RESTRICT;
@@ -1383,6 +1392,12 @@
     AND state = 'approved'
     AND status = 'PENDING_SUPERVISOR_APPROVAL'
     AND timeout_at <= p_now;
+    AS $$
+    AS $$
+    AS $$
+    AS $$
+    AS $$
+    AS $$
     AS $$
     AS $$
     AS $$
@@ -1789,6 +1804,11 @@
     END IF;
     END IF;
     END IF;
+    END IF;
+    END IF;
+    END IF;
+    END IF;
+    END IF;
     END LOOP;
     END,
     END;
@@ -1827,6 +1847,9 @@
     IF EXISTS (
     IF FOUND THEN
     IF FOUND THEN
+    IF NEW.execution_id IS NULL THEN
+    IF NEW.policy_decision_id IS NULL THEN
+    IF NEW.signature IS NULL THEN
     IF NOT (p_edge_type = ANY(v_valid_edge_types)) THEN
     IF NOT (p_evidence_class = ANY(v_valid_classes)) THEN
     IF NOT (p_subject_type = ANY(v_valid_subject_types)) THEN
@@ -1838,7 +1861,9 @@
     IF NOT v_payload_valid THEN
     IF TG_OP = 'DELETE' THEN
     IF TG_OP = 'DELETE' THEN
+    IF TG_OP = 'DELETE' THEN
     IF TG_OP = 'UPDATE' OR TG_OP = 'DELETE' THEN
+    IF TG_OP = 'UPDATE' THEN
     IF TG_OP = 'UPDATE' THEN
     IF TG_OP = 'UPDATE' THEN
     IF TG_OP IN ('UPDATE', 'DELETE') THEN
@@ -1976,6 +2001,7 @@
     INSERT INTO public.program_migration_events(
     INSERT INTO public.projects (tenant_id, name, status)
     INSERT INTO retirement_events (
+    INSERT INTO state_current (project_id, current_state, state_since)
     INTO derived_billable_client_id
     INTO derived_tenant_id
     INTO existing_attempt
@@ -2105,6 +2131,12 @@
     LANGUAGE plpgsql SECURITY DEFINER
     LANGUAGE plpgsql SECURITY DEFINER
     LANGUAGE plpgsql SECURITY DEFINER
+    LANGUAGE plpgsql SECURITY DEFINER
+    LANGUAGE plpgsql SECURITY DEFINER
+    LANGUAGE plpgsql SECURITY DEFINER
+    LANGUAGE plpgsql SECURITY DEFINER
+    LANGUAGE plpgsql SECURITY DEFINER
+    LANGUAGE plpgsql SECURITY DEFINER
     LANGUAGE plpgsql STABLE
     LANGUAGE sql
     LANGUAGE sql SECURITY DEFINER
@@ -2138,6 +2170,7 @@
     NULL,
     NULLIF(current_setting('symphony.outbox_retry_ceiling', true), '')::int,
     ON CONFLICT (participant_id)
+    ON CONFLICT (project_id) DO UPDATE SET
     ON CONFLICT (tenant_id, person_id, from_program_id, to_program_id) DO NOTHING;
     ON DELETE TO public.kyc_retention_policy DO INSTEAD NOTHING;
     ON UPDATE TO public.kyc_retention_policy DO INSTEAD NOTHING;
@@ -2263,7 +2296,14 @@
     RAISE EXCEPTION USING ERRCODE='P8402', MESSAGE='RATE_LIMIT_BREACH_BLOCKED';
     RAISE EXCEPTION USING ERRCODE='P8403', MESSAGE='RETRACTION_SECONDARY_APPROVAL_REQUIRED';
     RAISE EXCEPTION USING ERRCODE='P8404', MESSAGE='PII_PRESENT_IN_PENALTY_DEFENSE_PACK';
+    RAISE NOTICE 'Transition state rules check: % -> %', NEW.from_state, NEW.to_state;
     RETURN 'EXHAUSTED';
+    RETURN NEW;
+    RETURN NEW;
+    RETURN NEW;
+    RETURN NEW;
+    RETURN NEW;
+    RETURN NEW;
     RETURN NEW;
     RETURN NEW;
     RETURN NEW;
@@ -2482,6 +2522,12 @@
     SET search_path TO 'pg_catalog', 'public'
     SET search_path TO 'pg_catalog', 'public'
     SET search_path TO 'pg_catalog', 'public'
+    SET search_path TO 'pg_catalog', 'public'
+    SET search_path TO 'pg_catalog', 'public'
+    SET search_path TO 'pg_catalog', 'public'
+    SET search_path TO 'pg_catalog', 'public'
+    SET search_path TO 'pg_catalog', 'public'
+    SET search_path TO 'pg_catalog', 'public'
     SET state = EXCLUDED.state,
     SET status = 'APPROVED',
     SET status = 'APPROVED',
@@ -2499,6 +2545,7 @@
     USING ERRCODE = 'P0001';
     USING ERRCODE = 'P0001';
     USING ERRCODE = 'P7004';
+    VALUES (NEW.project_id, NEW.to_state, NEW.transition_timestamp)
     VALUES (p_instruction_id, v_existing_hash, v_hash);
     VALUES (p_instruction_id, v_stored_hash, v_computed_hash);
     VALUES (p_participant_id, 2)
@@ -2835,6 +2882,7 @@
     currency_code text NOT NULL,
     currency_code text NOT NULL,
     current_hash text NOT NULL,
+    current_state character varying NOT NULL,
     current_user,
     db_access boolean NOT NULL,
     deactivated_at timestamp with time zone,
@@ -2927,6 +2975,7 @@
     evidence_path text,
     evidence_ref text NOT NULL,
     execution_id uuid DEFAULT gen_random_uuid() NOT NULL,
+    execution_id uuid,
     execution_timestamp timestamp with time zone DEFAULT now() NOT NULL,
     existing_attempt RECORD;
     existing_pending RECORD;
@@ -2959,6 +3008,7 @@
     formula_version_id,
     from_program_id uuid NOT NULL,
     from_program_id,
+    from_state character varying NOT NULL,
     from_unit character varying NOT NULL,
     gap_marker_id text NOT NULL,
     generated_at timestamp with time zone DEFAULT now() NOT NULL
@@ -3291,6 +3341,7 @@
     placeholder_ref text NOT NULL,
     policy_bundle_id uuid DEFAULT gen_random_uuid() NOT NULL,
     policy_code text NOT NULL,
+    policy_decision_id uuid,
     policy_id text NOT NULL,
     policy_id uuid DEFAULT gen_random_uuid() NOT NULL,
     policy_json jsonb NOT NULL,
@@ -3325,6 +3376,8 @@
     programme_id uuid NOT NULL,
     programme_key text NOT NULL,
     project_id uuid DEFAULT public.uuid_v7_or_random() NOT NULL,
+    project_id uuid NOT NULL,
+    project_id uuid NOT NULL,
     project_id uuid NOT NULL,
     project_id uuid NOT NULL,
     project_id uuid NOT NULL,
@@ -3488,6 +3541,7 @@
     sequence_id bigint NOT NULL,
     severity text NOT NULL,
     sign_event_id uuid DEFAULT gen_random_uuid() NOT NULL,
+    signature text
     signature text,
     signature_alg text,
     signature_hash text,
@@ -3521,6 +3575,7 @@
     state text DEFAULT 'CREATED'::text NOT NULL,
     state text DEFAULT 'PENDING'::text NOT NULL,
     state text NOT NULL,
+    state_since timestamp with time zone DEFAULT now() NOT NULL
     status character varying DEFAULT 'pending'::character varying NOT NULL,
     status public.policy_version_status DEFAULT 'ACTIVE'::public.policy_version_status NOT NULL,
     status text DEFAULT 'ACTIVE'::text NOT NULL,
@@ -3632,6 +3687,7 @@
     timeout_at timestamp with time zone NOT NULL,
     to_program_id uuid NOT NULL,
     to_program_id,
+    to_state character varying NOT NULL,
     to_unit character varying NOT NULL,
     token_hash text NOT NULL,
     token_hash text NOT NULL,
@@ -3643,6 +3699,8 @@
     token_value text NOT NULL,
     total_artifacts integer NOT NULL,
     tpin_hash bytea,
+    transition_id uuid DEFAULT gen_random_uuid() NOT NULL,
+    transition_timestamp timestamp with time zone DEFAULT now() NOT NULL,
     trigger_reason text,
     trigger_threshold numeric(8,6) NOT NULL,
     truncation_applied boolean NOT NULL,
@@ -4763,7 +4821,15 @@ $$;
 $$;
 $$;
 $$;
+$$;
+$$;
+$$;
+$$;
+$$;
+$$;
 )
+);
+);
 );
 );
 );
@@ -5196,6 +5262,8 @@ ALTER TABLE ONLY public.sim_swap_alerts
 ALTER TABLE ONLY public.sim_swap_alerts
 ALTER TABLE ONLY public.sim_swap_alerts
 ALTER TABLE ONLY public.sim_swap_alerts FORCE ROW LEVEL SECURITY;
+ALTER TABLE ONLY public.state_current
+ALTER TABLE ONLY public.state_transitions
 ALTER TABLE ONLY public.supervisor_access_policies
 ALTER TABLE ONLY public.supervisor_approval_queue
 ALTER TABLE ONLY public.supervisor_approval_queue
@@ -5396,6 +5464,12 @@ BEGIN
 BEGIN
 BEGIN
 BEGIN
+BEGIN
+BEGIN
+BEGIN
+BEGIN
+BEGIN
+BEGIN
 CREATE FUNCTION public.acknowledge_inquiry_response(p_instruction_id text, p_policy_version_id text) RETURNS public.inquiry_state_enum
 CREATE FUNCTION public.activate_policy_bundle(p_policy_bundle_id uuid) RETURNS void
 CREATE FUNCTION public.activate_project(p_tenant_id uuid, p_project_id uuid) RETURNS TABLE(project_id uuid, status text)
@@ -5440,13 +5514,18 @@ CREATE FUNCTION public.deny_outbox_attempts_mutation() RETURNS trigger
 CREATE FUNCTION public.deny_pii_vault_mutation() RETURNS trigger
 CREATE FUNCTION public.deny_revocation_mutation() RETURNS trigger
 CREATE FUNCTION public.deny_sim_swap_alerts_mutation() RETURNS trigger
+CREATE FUNCTION public.deny_state_transitions_mutation() RETURNS trigger
 CREATE FUNCTION public.derive_sim_swap_alert(p_event_id uuid) RETURNS uuid
 CREATE FUNCTION public.enforce_adjustment_terminal_immutability() RETURNS trigger
 CREATE FUNCTION public.enforce_confidence_before_issuance() RETURNS trigger
+CREATE FUNCTION public.enforce_execution_binding() RETURNS trigger
 CREATE FUNCTION public.enforce_instruction_reversal_source() RETURNS trigger
 CREATE FUNCTION public.enforce_internal_ledger_posting_context() RETURNS trigger
 CREATE FUNCTION public.enforce_member_tenant_match() RETURNS trigger
 CREATE FUNCTION public.enforce_settlement_acknowledgement() RETURNS trigger
+CREATE FUNCTION public.enforce_transition_authority() RETURNS trigger
+CREATE FUNCTION public.enforce_transition_signature() RETURNS trigger
+CREATE FUNCTION public.enforce_transition_state_rules() RETURNS trigger
 CREATE FUNCTION public.enqueue_payment_outbox(p_instruction_id text, p_participant_id text, p_idempotency_key text, p_rail_type text, p_payload jsonb) RETURNS TABLE(outbox_id uuid, sequence_id bigint, created_at timestamp with time zone, state text)
 CREATE FUNCTION public.ensure_anchor_sync_operation(p_pack_id uuid, p_anchor_provider text DEFAULT 'GENERIC'::text) RETURNS uuid
 CREATE FUNCTION public.escalate_missing_acknowledgement(p_instruction_id text, p_program_id uuid, p_policy_version_id text, p_actor text DEFAULT 'system'::text, p_reason text DEFAULT 'missing_acknowledgement'::text, p_timeout_minutes integer DEFAULT 30) RETURNS void
@@ -5513,6 +5592,7 @@ CREATE FUNCTION public.touch_persons_updated_at() RETURNS trigger
 CREATE FUNCTION public.touch_programs_updated_at() RETURNS trigger
 CREATE FUNCTION public.transition_asset_status(p_tenant_id uuid, p_subject_id uuid, p_to_status text) RETURNS void
 CREATE FUNCTION public.transition_escrow_state(p_escrow_id uuid, p_to_state text, p_actor_id text DEFAULT 'system'::text, p_reason text DEFAULT NULL::text, p_metadata jsonb DEFAULT '{}'::jsonb, p_now timestamp with time zone DEFAULT now()) RETURNS TABLE(escrow_id uuid, previous_state text, new_state text, event_id uuid)
+CREATE FUNCTION public.update_current_state() RETURNS trigger
 CREATE FUNCTION public.uuid_strategy() RETURNS text
 CREATE FUNCTION public.uuid_v7_or_random() RETURNS uuid
 CREATE FUNCTION public.validate_confidence_score(p_asset_batch_id uuid) RETURNS TABLE(confidence_score numeric, required_threshold numeric, decision_count integer, approved_count integer, is_sufficient boolean)
@@ -5607,6 +5687,8 @@ CREATE INDEX idx_regulatory_checkpoints_jurisdiction ON public.regulatory_checkp
 CREATE INDEX idx_retirement_events_batch_id ON public.retirement_events USING btree (asset_batch_id);
 CREATE INDEX idx_retirement_events_tenant_id ON public.retirement_events USING btree (tenant_id);
 CREATE INDEX idx_sim_swap_alerts_tenant_member_derived ON public.sim_swap_alerts USING btree (tenant_id, member_id, derived_at DESC);
+CREATE INDEX idx_state_transitions_project_id ON public.state_transitions USING btree (project_id);
+CREATE INDEX idx_state_transitions_transition_timestamp ON public.state_transitions USING btree (transition_timestamp);
 CREATE INDEX idx_supervisor_approval_queue_status_timeout ON public.supervisor_approval_queue USING btree (status, timeout_at);
 CREATE INDEX idx_supervisor_audit_tokens_program_expires ON public.supervisor_audit_tokens USING btree (program_id, expires_at DESC);
 CREATE INDEX idx_supervisor_interrupt_audit_events_instruction_recorded ON public.supervisor_interrupt_audit_events USING btree (instruction_id, recorded_at DESC);
@@ -5790,6 +5872,8 @@ CREATE TABLE public.signing_audit_log (
 CREATE TABLE public.signing_authorization_matrix (
 CREATE TABLE public.signing_throughput_runs (
 CREATE TABLE public.sim_swap_alerts (
+CREATE TABLE public.state_current (
+CREATE TABLE public.state_transitions (
 CREATE TABLE public.supervisor_access_policies (
 CREATE TABLE public.supervisor_approval_queue (
 CREATE TABLE public.supervisor_audit_tokens (
@@ -5806,6 +5890,12 @@ CREATE TRIGGER adapter_registrations_append_only BEFORE DELETE OR UPDATE ON publ
 CREATE TRIGGER asset_lifecycle_confidence_enforcement BEFORE INSERT ON public.asset_lifecycle_events FOR EACH ROW EXECUTE FUNCTION public.enforce_confidence_before_issuance();
 CREATE TRIGGER authority_decisions_append_only BEFORE DELETE OR UPDATE ON public.authority_decisions FOR EACH ROW EXECUTE FUNCTION public.authority_decisions_append_only();
 CREATE TRIGGER gf_verifier_read_tokens_append_only BEFORE DELETE OR UPDATE ON public.gf_verifier_read_tokens FOR EACH ROW EXECUTE FUNCTION public.gf_verifier_read_tokens_append_only();
+CREATE TRIGGER tr_deny_state_transitions_mutation BEFORE DELETE OR UPDATE ON public.state_transitions FOR EACH ROW EXECUTE FUNCTION public.deny_state_transitions_mutation();
+CREATE TRIGGER tr_enforce_execution_binding BEFORE INSERT OR UPDATE ON public.state_transitions FOR EACH ROW EXECUTE FUNCTION public.enforce_execution_binding();
+CREATE TRIGGER tr_enforce_transition_authority BEFORE INSERT OR UPDATE ON public.state_transitions FOR EACH ROW EXECUTE FUNCTION public.enforce_transition_authority();
+CREATE TRIGGER tr_enforce_transition_signature BEFORE INSERT OR UPDATE ON public.state_transitions FOR EACH ROW EXECUTE FUNCTION public.enforce_transition_signature();
+CREATE TRIGGER tr_enforce_transition_state_rules BEFORE INSERT OR UPDATE ON public.state_transitions FOR EACH ROW EXECUTE FUNCTION public.enforce_transition_state_rules();
+CREATE TRIGGER tr_update_current_state AFTER INSERT ON public.state_transitions FOR EACH ROW EXECUTE FUNCTION public.update_current_state();
 CREATE TRIGGER trg_adjustment_terminal_immutability BEFORE UPDATE ON public.adjustment_instructions FOR EACH ROW EXECUTE FUNCTION public.enforce_adjustment_terminal_immutability();
 CREATE TRIGGER trg_anchor_dispatched_outbox_attempt AFTER INSERT ON public.payment_outbox_attempts FOR EACH ROW EXECUTE FUNCTION public.anchor_dispatched_outbox_attempt();
 CREATE TRIGGER trg_block_active_reference_policy_updates BEFORE UPDATE ON public.reference_strategy_policy_versions FOR EACH ROW EXECUTE FUNCTION public.block_active_reference_policy_updates();
@@ -5936,6 +6026,12 @@ DECLARE
 DECLARE
 DECLARE
 DECLARE
+END;
+END;
+END;
+END;
+END;
+END;
 END;
 END;
 END;

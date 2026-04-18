@@ -1,10 +1,10 @@
-# TSK-P2-PREAUTH-005-08: Implement update_current_state() trigger
+# TSK-P2-PREAUTH-005-08 PLAN — Implement update_current_state() trigger
 
-**Task:** TSK-P2-PREAUTH-005-08
-**Owner:** DB_FOUNDATION
-**Depends on:** TSK-P2-PREAUTH-005-07
-**Blocks:** TSK-P2-PREAUTH-006A-00
-**Failure Signature**: Function not created or not SECURITY DEFINER => CRITICAL_FAIL
+Task: TSK-P2-PREAUTH-005-08
+Owner: DB_FOUNDATION
+Depends on: TSK-P2-PREAUTH-005-07
+failure_signature: PRE-PHASE2.PREAUTH.TSK-P2-PREAUTH-005-08.TRIGGER_FAIL
+canonical_reference: docs/operations/AI_AGENT_OPERATION_MANUAL.md
 
 ## Objective
 
@@ -28,35 +28,53 @@ The update_current_state() function inserts or updates state_current table with 
 
 ## Stop Conditions
 
-- If function does not exist in pg_proc with exact name
-- If function is not SECURITY DEFINER with prosecdef=true
-- If trigger is not attached as AFTER INSERT OR UPDATE on state_transitions
+- **If any node in the proof graph is orphaned** -> STOP
+- **If any verifier lacks a symbolic failure obligation (`|| exit 1`)** -> STOP
+- **If evidence is static or self-declared instead of derived** -> STOP
+- **If verification does not inspect real system state (self-referential)** -> STOP
+- **If ≥3 weak signals (subjective wording like 'ensure' or 'appropriate') are detected without hard failing** -> STOP
 
 ## Implementation Steps
 
-### [ID tsk_p2_preauth_005_08_work_item_01] Add update_current_state() function to migration 0120
-Add update_current_state() function to migration 0120 as SECURITY DEFINER with SET search_path = pg_catalog, public. Function inserts or updates state_current table with project_id, to_state, and transition_timestamp.
+### Step 1: Add update_current_state() function to migration 0120
+**What:** `[ID tsk_p2_preauth_005_08_work_item_01]` Add update_current_state() function to migration 0120
+**How:** Modify schema/migrations/0120_create_state_transitions.sql to add function as SECURITY DEFINER with SET search_path = pg_catalog, public. Function inserts or updates state_current table with project_id, to_state, and transition_timestamp
+**Done when:** Migration file contains update_current_state() function definition
 
-### [ID tsk_p2_preauth_005_08_work_item_02] Attach function as AFTER INSERT OR UPDATE trigger on state_transitions
-Attach function as AFTER INSERT OR UPDATE trigger on state_transitions table.
+### Step 2: Attach function as AFTER INSERT OR UPDATE trigger on state_transitions
+**What:** `[ID tsk_p2_preauth_005_08_work_item_02]` Attach function as trigger
+**How:** Add CREATE TRIGGER statement to attach function as AFTER INSERT OR UPDATE on state_transitions table
+**Done when:** Migration file contains trigger attachment statement
 
-### [ID tsk_p2_preauth_005_08_work_item_03] Write verification script
-Write verify_tsk_p2_preauth_005_08.sh that runs psql to verify function exists with exact name, is SECURITY DEFINER, and trigger is attached.
+### Step 3: Write verification script
+**What:** `[ID tsk_p2_preauth_005_08_work_item_03]` Create verify_tsk_p2_preauth_005_08.sh
+**How:** Write bash script that runs psql to verify function exists with exact name, is SECURITY DEFINER, and trigger is attached
+**Done when:** Verification script exists at scripts/db/verify_tsk_p2_preauth_005_08.sh
 
-### [ID tsk_p2_preauth_005_08_work_item_04] Run verification script
-Run verify_tsk_p2_preauth_005_08.sh to confirm trigger is created correctly.
+### Step 4: Write the Negative Test Constraints
+<!-- This step is mandatory for all tasks.
+     The negative test must fail against the unfixed code and pass against the fixed code.
+     Do not write it after the fix. Write it before, prove it catches the problem. -->
+**What:** `[ID tsk_p2_preauth_005_08_work_item_04]` Implement the negative test for update_current_state() trigger
+**How:** Define execution failure test (TSK-P2-PREAUTH-005-08-N1) that simulates missing function or incorrect SECURITY DEFINER setting. Feed bad schema state into the verification logic and ensure it is explicitly rejected.
+**Done when:** The verification script exits non-zero against unfixed/dummy schema (missing function or wrong security), and exits 0 against the target implementation.
+
+### Step 5: Run verification script
+**What:** `[ID tsk_p2_preauth_005_08_work_item_05]` Execute verification script
+**How:** Run: bash scripts/db/verify_tsk_p2_preauth_005_08.sh
+**Done when:** Script exits 0 and emits evidence to evidence/phase2/tsk_p2_preauth_005_08.json
 
 ## Verification
 
 ```bash
 # [ID tsk_p2_preauth_005_08_work_item_01] [ID tsk_p2_preauth_005_08_work_item_02]
-# [ID tsk_p2_preauth_005_08_work_item_03] [ID tsk_p2_preauth_005_08_work_item_04]
+# [ID tsk_p2_preauth_005_08_work_item_03] [ID tsk_p2_preauth_005_08_work_item_04] [ID tsk_p2_preauth_005_08_work_item_05]
 test -x scripts/db/verify_tsk_p2_preauth_005_08.sh && bash scripts/db/verify_tsk_p2_preauth_005_08.sh > evidence/phase2/tsk_p2_preauth_005_08.json || exit 1
 
 # [ID tsk_p2_preauth_005_08_work_item_01]
 psql -c "SELECT 1 FROM pg_proc WHERE proname='update_current_state'" | grep -q '1 row' || exit 1
 
-# [ID tsk_p2_preauth_005_08_work_item_04]
+# [ID tsk_p2_preauth_005_08_work_item_05]
 test -f evidence/phase2/tsk_p2_preauth_005_08.json || exit 1
 ```
 
@@ -90,3 +108,12 @@ git checkout schema/migrations/0120_create_state_transitions.sql
 ## Approval
 
 This task modifies database schema with SECURITY DEFINER trigger (HIGHEST RISK area). Requires human review before merge. This completes the state machine + trigger layer.
+
+## Anti-Drift Cheating Limits
+
+After implementing this task, the following attack surfaces remain open:
+- No verification that state_current table stays in sync with state_transitions during concurrent operations
+- No protection against trigger being disabled or dropped after deployment
+- No verification that upsert logic handles all edge cases (presence check only)
+
+These will be addressed in future waves with application-layer validation and concurrency testing.

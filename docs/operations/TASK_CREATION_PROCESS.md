@@ -116,6 +116,23 @@ Every task must:
 - Include a **failure mode** explicitly stating: `Evidence file missing`
 - Ensure the verification command **writes** the declared evidence (not just checks text)
 
+**Database Connection Pattern for Verification Scripts:**
+When creating verification scripts that connect to the database (e.g., using psql), the script MUST use the `DATABASE_URL` environment variable instead of relying on default Unix socket connections. This ensures scripts work consistently across different database environments (local dev, ephemeral CI containers, etc.).
+
+**Pattern:**
+```bash
+# Use DATABASE_URL in all psql commands
+TABLE_EXISTS=$(psql "$DATABASE_URL" -tAc "SELECT 1 FROM information_schema.tables WHERE table_name = 'my_table';")
+```
+
+**Do NOT use:**
+```bash
+# Avoid - this relies on Unix socket and will fail in ephemeral environments
+TABLE_EXISTS=$(psql -tAc "SELECT 1 FROM information_schema.tables WHERE table_name = 'my_table';")
+```
+
+The agent creating the task must ensure verification scripts follow this pattern by default.
+
 Execution-readiness guard:
 - Schema-valid is not execution-ready.
 - Tasks with empty `acceptance_criteria`, shallow verification blocks, phase/path mismatches, or intent-marker filler in `work` must not start implementation.

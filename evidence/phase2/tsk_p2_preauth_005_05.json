@@ -1,0 +1,12 @@
+{
+  "task_id": "TSK-P2-PREAUTH-005-05",
+  "git_sha": "ae35dfa69bd9350f2d52ebe81a1b8db7cac9aeb9",
+  "timestamp_utc": "2026-04-18T10:43:37Z",
+  "status": "success",
+  "checks": {
+    "function_exists": true,
+    "security_definer_present": true,
+    "trigger_attached": true,
+    "negative_test_TSK-P2-PREAUTH-005-05-N1": "pass"
+  }
+}

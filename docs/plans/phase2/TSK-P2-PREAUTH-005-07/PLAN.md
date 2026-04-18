@@ -1,10 +1,10 @@
-# TSK-P2-PREAUTH-005-07: Implement deny_state_transitions_mutation() trigger
+# TSK-P2-PREAUTH-005-07 PLAN — Implement deny_state_transitions_mutation() trigger
 
-**Task:** TSK-P2-PREAUTH-005-07
-**Owner:** DB_FOUNDATION
-**Depends on:** TSK-P2-PREAUTH-005-06
-**Blocks:** TSK-P2-PREAUTH-005-08
-**Failure Signature**: Function not created or not SECURITY DEFINER => CRITICAL_FAIL
+Task: TSK-P2-PREAUTH-005-07
+Owner: DB_FOUNDATION
+Depends on: TSK-P2-PREAUTH-005-06
+failure_signature: PRE-PHASE2.PREAUTH.TSK-P2-PREAUTH-005-07.TRIGGER_FAIL
+canonical_reference: docs/operations/AI_AGENT_OPERATION_MANUAL.md
 
 ## Objective
 
@@ -28,35 +28,53 @@ The deny_state_transitions_mutation() function raises GF036 on any UPDATE or DEL
 
 ## Stop Conditions
 
-- If function does not exist in pg_proc with exact name
-- If function is not SECURITY DEFINER with prosecdef=true
-- If trigger is not attached as BEFORE UPDATE OR DELETE on state_transitions
+- **If any node in the proof graph is orphaned** -> STOP
+- **If any verifier lacks a symbolic failure obligation (`|| exit 1`)** -> STOP
+- **If evidence is static or self-declared instead of derived** -> STOP
+- **If verification does not inspect real system state (self-referential)** -> STOP
+- **If ≥3 weak signals (subjective wording like 'ensure' or 'appropriate') are detected without hard failing** -> STOP
 
 ## Implementation Steps
 
-### [ID tsk_p2_preauth_005_07_work_item_01] Add deny_state_transitions_mutation() function to migration 0120
-Add deny_state_transitions_mutation() function to migration 0120 as SECURITY DEFINER with SET search_path = pg_catalog, public. Function raises GF036 on any UPDATE or DELETE attempt to enforce append-only behavior.
+### Step 1: Add deny_state_transitions_mutation() function to migration 0120
+**What:** `[ID tsk_p2_preauth_005_07_work_item_01]` Add deny_state_transitions_mutation() function to migration 0120
+**How:** Modify schema/migrations/0120_create_state_transitions.sql to add function as SECURITY DEFINER with SET search_path = pg_catalog, public. Function raises GF036 on any UPDATE or DELETE attempt to enforce append-only behavior
+**Done when:** Migration file contains deny_state_transitions_mutation() function definition
 
-### [ID tsk_p2_preauth_005_07_work_item_02] Attach function as BEFORE UPDATE OR DELETE trigger on state_transitions
-Attach function as BEFORE UPDATE OR DELETE trigger on state_transitions table.
+### Step 2: Attach function as BEFORE UPDATE OR DELETE trigger on state_transitions
+**What:** `[ID tsk_p2_preauth_005_07_work_item_02]` Attach function as trigger
+**How:** Add CREATE TRIGGER statement to attach function as BEFORE UPDATE OR DELETE on state_transitions table
+**Done when:** Migration file contains trigger attachment statement
 
-### [ID tsk_p2_preauth_005_07_work_item_03] Write verification script
-Write verify_tsk_p2_preauth_005_07.sh that runs psql to verify function exists with exact name, is SECURITY DEFINER, and trigger is attached.
+### Step 3: Write verification script
+**What:** `[ID tsk_p2_preauth_005_07_work_item_03]` Create verify_tsk_p2_preauth_005_07.sh
+**How:** Write bash script that runs psql to verify function exists with exact name, is SECURITY DEFINER, and trigger is attached
+**Done when:** Verification script exists at scripts/db/verify_tsk_p2_preauth_005_07.sh
 
-### [ID tsk_p2_preauth_005_07_work_item_04] Run verification script
-Run verify_tsk_p2_preauth_005_07.sh to confirm trigger is created correctly.
+### Step 4: Write the Negative Test Constraints
+<!-- This step is mandatory for all tasks.
+     The negative test must fail against the unfixed code and pass against the fixed code.
+     Do not write it after the fix. Write it before, prove it catches the problem. -->
+**What:** `[ID tsk_p2_preauth_005_07_work_item_04]` Implement the negative test for deny_state_transitions_mutation() trigger
+**How:** Define execution failure test (TSK-P2-PREAUTH-005-07-N1) that simulates missing function or incorrect SECURITY DEFINER setting. Feed bad schema state into the verification logic and ensure it is explicitly rejected.
+**Done when:** The verification script exits non-zero against unfixed/dummy schema (missing function or wrong security), and exits 0 against the target implementation.
+
+### Step 5: Run verification script
+**What:** `[ID tsk_p2_preauth_005_07_work_item_05]` Execute verification script
+**How:** Run: bash scripts/db/verify_tsk_p2_preauth_005_07.sh
+**Done when:** Script exits 0 and emits evidence to evidence/phase2/tsk_p2_preauth_005_07.json
 
 ## Verification
 
 ```bash
 # [ID tsk_p2_preauth_005_07_work_item_01] [ID tsk_p2_preauth_005_07_work_item_02]
-# [ID tsk_p2_preauth_005_07_work_item_03] [ID tsk_p2_preauth_005_07_work_item_04]
+# [ID tsk_p2_preauth_005_07_work_item_03] [ID tsk_p2_preauth_005_07_work_item_04] [ID tsk_p2_preauth_005_07_work_item_05]
 test -x scripts/db/verify_tsk_p2_preauth_005_07.sh && bash scripts/db/verify_tsk_p2_preauth_005_07.sh > evidence/phase2/tsk_p2_preauth_005_07.json || exit 1
 
 # [ID tsk_p2_preauth_005_07_work_item_01]
 psql -c "SELECT 1 FROM pg_proc WHERE proname='deny_state_transitions_mutation'" | grep -q '1 row' || exit 1
 
-# [ID tsk_p2_preauth_005_07_work_item_04]
+# [ID tsk_p2_preauth_005_07_work_item_05]
 test -f evidence/phase2/tsk_p2_preauth_005_07.json || exit 1
 ```
 
@@ -89,3 +107,12 @@ git checkout schema/migrations/0120_create_state_transitions.sql
 ## Approval
 
 This task modifies database schema with SECURITY DEFINER trigger (HIGHEST RISK area). Requires human review before merge.
+
+## Anti-Drift Cheating Limits
+
+After implementing this task, the following attack surfaces remain open:
+- No verification that trigger actually prevents UPDATE/DELETE (presence check only)
+- No protection against trigger being disabled or dropped after deployment
+- No verification that append-only behavior is enforced at application layer
+
+These will be addressed in future waves with application-layer guards and runtime monitoring.

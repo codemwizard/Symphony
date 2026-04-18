@@ -20,6 +20,15 @@ This index tracks Phase 2 regulatory compliance tasks derived from `docs/plans/p
 | TSK-P2-REG-003-05 | DB_FOUNDATION | planned | docs/plans/phase2/TSK-P2-REG-003-05/PLAN.md | docs/plans/phase2/TSK-P2-REG-003-05/EXEC_LOG.md |
 | TSK-P2-REG-003-06 | DB_FOUNDATION | planned | docs/plans/phase2/TSK-P2-REG-003-06/PLAN.md | docs/plans/phase2/TSK-P2-REG-003-06/EXEC_LOG.md |
 | TSK-P2-REG-003-07 | INVARIANTS_CURATOR | planned | docs/plans/phase2/TSK-P2-REG-003-07/PLAN.md | docs/plans/phase2/TSK-P2-REG-003-07/EXEC_LOG.md |
+| TSK-P2-PREAUTH-005-00 | DB_FOUNDATION | planned | docs/plans/phase2/TSK-P2-PREAUTH-005-00/PLAN.md | docs/plans/phase2/TSK-P2-PREAUTH-005-00/EXEC_LOG.md |
+| TSK-P2-PREAUTH-005-01 | DB_FOUNDATION | planned | docs/plans/phase2/TSK-P2-PREAUTH-005-01/PLAN.md | docs/plans/phase2/TSK-P2-PREAUTH-005-01/EXEC_LOG.md |
+| TSK-P2-PREAUTH-005-02 | DB_FOUNDATION | planned | docs/plans/phase2/TSK-P2-PREAUTH-005-02/PLAN.md | docs/plans/phase2/TSK-P2-PREAUTH-005-02/EXEC_LOG.md |
+| TSK-P2-PREAUTH-005-03 | DB_FOUNDATION | planned | docs/plans/phase2/TSK-P2-PREAUTH-005-03/PLAN.md | docs/plans/phase2/TSK-P2-PREAUTH-005-03/EXEC_LOG.md |
+| TSK-P2-PREAUTH-005-04 | DB_FOUNDATION | planned | docs/plans/phase2/TSK-P2-PREAUTH-005-04/PLAN.md | docs/plans/phase2/TSK-P2-PREAUTH-005-04/EXEC_LOG.md |
+| TSK-P2-PREAUTH-005-05 | DB_FOUNDATION | planned | docs/plans/phase2/TSK-P2-PREAUTH-005-05/PLAN.md | docs/plans/phase2/TSK-P2-PREAUTH-005-05/EXEC_LOG.md |
+| TSK-P2-PREAUTH-005-06 | DB_FOUNDATION | planned | docs/plans/phase2/TSK-P2-PREAUTH-005-06/PLAN.md | docs/plans/phase2/TSK-P2-PREAUTH-005-06/EXEC_LOG.md |
+| TSK-P2-PREAUTH-005-07 | DB_FOUNDATION | planned | docs/plans/phase2/TSK-P2-PREAUTH-005-07/PLAN.md | docs/plans/phase2/TSK-P2-PREAUTH-005-07/EXEC_LOG.md |
+| TSK-P2-PREAUTH-005-08 | DB_FOUNDATION | planned | docs/plans/phase2/TSK-P2-PREAUTH-005-08/PLAN.md | docs/plans/phase2/TSK-P2-PREAUTH-005-08/EXEC_LOG.md |
 
 ## Wave Verification Rule
 
@@ -40,3 +49,6 @@ Tasks for installing PostGIS extension and creating spatial tables (protected_ar
 
 ### Invariant Promotion (TSK-P2-REG-004-*)
 Tasks for verifying check_reg26_separation() function and promoting INV-169 to implemented status.
+
+### State Machine Enforcement (TSK-P2-PREAUTH-005-*)
+Tasks for creating state machine enforcement layer with state_transitions and state_current tables, plus trigger functions for transition authority, signature, execution binding, and state update rules.

@@ -1,0 +1,13 @@
+{
+  "task_id": "TSK-P2-PREAUTH-005-01",
+  "git_sha": "ae35dfa69bd9350f2d52ebe81a1b8db7cac9aeb9",
+  "timestamp_utc": "2026-04-18T10:42:58Z",
+  "status": "success",
+  "checks": {
+    "table_exists": true,
+    "idx_project_id_exists": true,
+    "idx_timestamp_exists": true,
+    "migration_head": "0120",
+    "negative_test_TSK-P2-PREAUTH-005-01-N1": "pass"
+  }
+}
