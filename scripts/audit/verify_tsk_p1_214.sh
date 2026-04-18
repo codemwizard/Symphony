@@ -129,6 +129,7 @@ start_api() {
   export DATABASE_URL
   export ASPNETCORE_URLS="http://*:$PORT"
 
+  rm -f "$API_LOG"
   # Run daemonized (build first, then run)
   dotnet run --project "$ROOT/services/ledger-api/dotnet/src/LedgerApi/LedgerApi.csproj" --urls "http://*:$PORT" > "$API_LOG" 2>&1 &
   API_PID=$!
@@ -196,6 +197,8 @@ fi
 echo "    Shutting down API..."
 kill $API_PID || true
 wait $API_PID 2>/dev/null || true
+pkill -9 -f "dotnet.*LedgerApi.*:$PORT" 2>/dev/null || true
+while ss -tln | grep -q ":$PORT "; do sleep 0.5; done
 
 echo "    Restarting API for read phase..."
 start_api
@@ -220,6 +223,8 @@ fi
 echo "    Shutting down API..."
 kill $API_PID || true
 wait $API_PID 2>/dev/null || true
+pkill -9 -f "dotnet.*LedgerApi.*:$PORT" 2>/dev/null || true
+while ss -tln | grep -q ":$PORT "; do sleep 0.5; done
 
 # 3. No fallback file mentions
 if grep -q "SUPPLIER_REGISTRY_PATH" "$ROOT/docs/operations/SYMPHONY_DEMO_DEPLOYMENT_GUIDE.md" 2>/dev/null; then

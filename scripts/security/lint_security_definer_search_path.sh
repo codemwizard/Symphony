@@ -20,11 +20,11 @@ while IFS= read -r -d '' file; do
     context="$(sed -n "${start},${lineno}p" "$file")"
 
     # Only enforce if context suggests this SECURITY DEFINER is in a function definition/change.
-    if echo "$context" | grep -Eq "CREATE( OR REPLACE)? FUNCTION|ALTER FUNCTION"; then
+    if echo "$context" | grep -E "CREATE( OR REPLACE)? FUNCTION|ALTER FUNCTION" > /dev/null; then
       # Now require the hardening directive in nearby lines (same vicinity).
       # This catches: "... SECURITY DEFINER SET search_path = pg_catalog, public"
       near="$(sed -n "${start},$((lineno+25))p" "$file")"
-      if ! echo "$near" | grep -q "SET search_path = pg_catalog, public"; then
+      if ! echo "$near" | grep "SET search_path = pg_catalog, public" > /dev/null; then
         echo "ERROR: $file:$lineno has SECURITY DEFINER near CREATE/ALTER FUNCTION without safe search_path"
         violations=$((violations + 1))
       fi

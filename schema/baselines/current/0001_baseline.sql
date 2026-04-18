@@ -2,7 +2,7 @@
 -- PostgreSQL database dump
 --
 
-\restrict ce1Vyv3T5wzkGqqcBkLUen5fbu94lAsZWJ0ZSjGdgenrzljUlvDUWNdaBsuyh8s
+\restrict Tc6GW2B7uc6hjAyqA7kIghEvPfeM5HZJN2DdRveR9prCQQJaswtLbLSFpo8w2nE
 
 -- Dumped from database version 18.3 (Debian 18.3-1.pgdg13+1)
 -- Dumped by pg_dump version 18.3 (Debian 18.3-1.pgdg13+1)
@@ -3993,6 +3993,30 @@ $$;
 
 
 --
+-- Name: resolve_interpretation_pack(uuid, timestamp with time zone); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.resolve_interpretation_pack(p_project_id uuid, p_effective_at timestamp with time zone) RETURNS uuid
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO 'pg_catalog', 'public'
+    AS $$
+DECLARE
+    v_interpretation_pack_id UUID;
+BEGIN
+    SELECT interpretation_pack_id INTO v_interpretation_pack_id
+    FROM public.interpretation_packs
+    WHERE project_id = p_project_id
+      AND effective_from <= p_effective_at
+      AND (effective_to IS NULL OR effective_to > p_effective_at)
+    ORDER BY effective_from DESC
+    LIMIT 1;
+
+    RETURN v_interpretation_pack_id;
+END;
+$$;
+
+
+--
 -- Name: resolve_missing_acknowledgement_interrupt(text, text, text, text); Type: FUNCTION; Schema: public; Owner: -
 --
 
@@ -5680,6 +5704,19 @@ ALTER TABLE ONLY public.external_proofs FORCE ROW LEVEL SECURITY;
 
 
 --
+-- Name: factor_registry; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.factor_registry (
+    factor_id uuid DEFAULT gen_random_uuid() NOT NULL,
+    factor_code character varying NOT NULL,
+    factor_name character varying NOT NULL,
+    unit character varying NOT NULL,
+    created_at timestamp with time zone DEFAULT now()
+);
+
+
+--
 -- Name: gf_verifier_read_tokens; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -5934,7 +5971,11 @@ CREATE TABLE public.interpretation_packs (
     jurisdiction_code text NOT NULL,
     pack_type text NOT NULL,
     pack_payload_json jsonb DEFAULT '{}'::jsonb NOT NULL,
-    created_at timestamp with time zone DEFAULT now() NOT NULL
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    project_id uuid,
+    interpretation_pack_code uuid,
+    effective_from timestamp with time zone,
+    effective_to timestamp with time zone
 );
 
 ALTER TABLE ONLY public.interpretation_packs FORCE ROW LEVEL SECURITY;
@@ -7179,6 +7220,19 @@ ALTER TABLE ONLY public.tenants FORCE ROW LEVEL SECURITY;
 
 
 --
+-- Name: unit_conversions; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.unit_conversions (
+    conversion_id uuid DEFAULT gen_random_uuid() NOT NULL,
+    from_unit character varying NOT NULL,
+    to_unit character varying NOT NULL,
+    conversion_factor numeric NOT NULL,
+    created_at timestamp with time zone DEFAULT now()
+);
+
+
+--
 -- Name: verifier_project_assignments; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -7602,6 +7656,14 @@ ALTER TABLE ONLY public.external_proofs
 
 ALTER TABLE public.external_proofs
     ADD CONSTRAINT external_proofs_tenant_required_new_rows_chk CHECK ((tenant_id IS NOT NULL)) NOT VALID;
+
+
+--
+-- Name: factor_registry factor_registry_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.factor_registry
+    ADD CONSTRAINT factor_registry_pkey PRIMARY KEY (factor_id);
 
 
 --
@@ -8501,6 +8563,38 @@ ALTER TABLE ONLY public.tenants
 
 
 --
+-- Name: factor_registry unique_factor_code; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.factor_registry
+    ADD CONSTRAINT unique_factor_code UNIQUE (factor_code);
+
+
+--
+-- Name: interpretation_packs unique_interpretation_per_project_time; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.interpretation_packs
+    ADD CONSTRAINT unique_interpretation_per_project_time UNIQUE (project_id, interpretation_pack_code, effective_from);
+
+
+--
+-- Name: unit_conversions unique_unit_pair; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.unit_conversions
+    ADD CONSTRAINT unique_unit_pair UNIQUE (from_unit, to_unit);
+
+
+--
+-- Name: unit_conversions unit_conversions_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.unit_conversions
+    ADD CONSTRAINT unit_conversions_pkey PRIMARY KEY (conversion_id);
+
+
+--
 -- Name: payment_outbox_attempts ux_attempts_outbox_attempt_no; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -8822,6 +8916,20 @@ CREATE INDEX idx_external_proofs_attestation_id ON public.external_proofs USING 
 
 
 --
+-- Name: idx_factor_registry_code; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_factor_registry_code ON public.factor_registry USING btree (factor_code);
+
+
+--
+-- Name: idx_factor_registry_unit; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_factor_registry_unit ON public.factor_registry USING btree (unit);
+
+
+--
 -- Name: idx_gf_verifier_read_tokens_expires; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -8920,10 +9028,24 @@ CREATE INDEX idx_internal_ledger_postings_journal ON public.internal_ledger_post
 
 
 --
+-- Name: idx_interpretation_packs_code; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_interpretation_packs_code ON public.interpretation_packs USING btree (interpretation_pack_code);
+
+
+--
 -- Name: idx_interpretation_packs_jurisdiction; Type: INDEX; Schema: public; Owner: -
 --
 
 CREATE INDEX idx_interpretation_packs_jurisdiction ON public.interpretation_packs USING btree (jurisdiction_code);
+
+
+--
+-- Name: idx_interpretation_packs_project_time; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_interpretation_packs_project_time ON public.interpretation_packs USING btree (project_id, effective_from DESC, effective_to);
 
 
 --
@@ -9239,6 +9361,27 @@ CREATE INDEX idx_tenants_parent_tenant_id ON public.tenants USING btree (parent_
 --
 
 CREATE INDEX idx_tenants_status ON public.tenants USING btree (status);
+
+
+--
+-- Name: idx_unit_conversions_from; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_unit_conversions_from ON public.unit_conversions USING btree (from_unit);
+
+
+--
+-- Name: idx_unit_conversions_pair; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_unit_conversions_pair ON public.unit_conversions USING btree (from_unit, to_unit);
+
+
+--
+-- Name: idx_unit_conversions_to; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_unit_conversions_to ON public.unit_conversions USING btree (to_unit);
 
 
 --
@@ -9893,7 +10036,7 @@ ALTER TABLE ONLY public.dispatch_reference_registry
 --
 
 ALTER TABLE ONLY public.escrow_accounts
-    ADD CONSTRAINT escrow_accounts_tenant_id_fkey FOREIGN KEY (tenant_id) REFERENCES public.tenants(tenant_id) ON DELETE CASCADE;
+    ADD CONSTRAINT escrow_accounts_tenant_id_fkey FOREIGN KEY (tenant_id) REFERENCES public.tenants(tenant_id) ON DELETE RESTRICT;
 
 
 --
@@ -10509,7 +10652,7 @@ ALTER TABLE ONLY public.programme_registry
 --
 
 ALTER TABLE ONLY public.programs
-    ADD CONSTRAINT programs_program_escrow_id_fkey FOREIGN KEY (program_escrow_id) REFERENCES public.escrow_accounts(escrow_id) ON DELETE CASCADE;
+    ADD CONSTRAINT programs_program_escrow_id_fkey FOREIGN KEY (program_escrow_id) REFERENCES public.escrow_accounts(escrow_id) ON DELETE RESTRICT;
 
 
 --
@@ -10517,7 +10660,7 @@ ALTER TABLE ONLY public.programs
 --
 
 ALTER TABLE ONLY public.programs
-    ADD CONSTRAINT programs_tenant_id_fkey FOREIGN KEY (tenant_id) REFERENCES public.tenants(tenant_id) ON DELETE CASCADE;
+    ADD CONSTRAINT programs_tenant_id_fkey FOREIGN KEY (tenant_id) REFERENCES public.tenants(tenant_id) ON DELETE RESTRICT;
 
 
 --
@@ -11266,5 +11409,5 @@ ALTER TABLE public.verifier_registry ENABLE ROW LEVEL SECURITY;
 -- PostgreSQL database dump complete
 --
 
-\unrestrict ce1Vyv3T5wzkGqqcBkLUen5fbu94lAsZWJ0ZSjGdgenrzljUlvDUWNdaBsuyh8s
+\unrestrict Tc6GW2B7uc6hjAyqA7kIghEvPfeM5HZJN2DdRveR9prCQQJaswtLbLSFpo8w2nE
 

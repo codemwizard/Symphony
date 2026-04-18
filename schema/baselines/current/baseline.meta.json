@@ -2,9 +2,9 @@
   "baseline_date": "2026-04-18",
   "baseline_path": "/home/mwiza/workspaces/Symphony-Demo/Symphony/schema/baselines/2026-04-18/0001_baseline.sql",
   "baseline_cutoff": "0118_create_execution_records.sql",
-  "normalized_schema_sha256": "53f37fcae99ca5edc5027dcd3b4586beccee27cf290a08a501c16de2b5dbe0bc",
+  "normalized_schema_sha256": "398cc616c82a836df00455f77b57977b88f5e7d73621e87027176ad280de86e1",
   "pg_dump_version": "pg_dump (PostgreSQL) 18.3 (Debian 18.3-1.pgdg13+1)",
   "pg_server_version": "18.3 (Debian 18.3-1.pgdg13+1)",
   "dump_source": "container:symphony-postgres",
-  "generated_at_utc": "2026-04-18T01:20:27.060472+00:00"
+  "generated_at_utc": "2026-04-18T03:10:49.955376+00:00"
 }

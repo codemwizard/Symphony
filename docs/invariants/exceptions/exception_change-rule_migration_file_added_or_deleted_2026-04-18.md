@@ -1,9 +1,9 @@
 ---
-exception_id: EXC-000
+exception_id: EXC-004
 inv_scope: change-rule
-expiry: 2026-05-02
-follow_up_ticket: PLACEHOLDER-000
-reason: Auto-generated: structural change detected; invariants linkage missing in commit.
+expiry: 2026-05-18
+follow_up_ticket: TSK-P2-PREAUTH-003
+reason: This exception covers the baseline refresh for Wave 3 Phase 2 implementation. The dated baseline snapshot at schema/baselines/2026-04-18/ was added to include migration 0118 (execution_records table with interpretation_version_id FK). The baseline governance policy requires baseline refresh when migrations are added to maintain consistency between baseline and current schema. This is a baseline refresh operation, not a new independent schema change - the schema content is derived from the existing migrations 0001-0118.
 author: system
 created_at: 2026-04-18
 ---

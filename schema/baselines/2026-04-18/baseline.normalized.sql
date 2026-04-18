@@ -597,6 +597,7 @@
       ) VALUES (
       ) VALUES (
       );
+      AND (effective_to IS NULL OR effective_to > p_effective_at)
       AND (o.lease_expires_at IS NULL OR o.lease_expires_at <= clock_timestamp())
       AND (p_adjustment_id IS NULL OR r.adjustment_id = p_adjustment_id)
       AND (r.allocated_reference = p_reference OR r.canonicalized_reference = p_reference)
@@ -604,6 +605,7 @@
       AND e.from_program_id = p_from_program_id
       AND e.person_id = p_person_id
       AND e.to_program_id = p_to_program_id
+      AND effective_from <= p_effective_at
       AND ia.participant_id = p_participant_id
       AND ia.tenant_id = p_tenant_id
       AND m.entity_id = p_entity_id
@@ -1111,7 +1113,7 @@
     ADD CONSTRAINT dispatch_reference_registry_ref_unique UNIQUE (rail_id, allocated_reference);
     ADD CONSTRAINT effect_seal_mismatch_events_pkey PRIMARY KEY (event_id);
     ADD CONSTRAINT escrow_accounts_pkey PRIMARY KEY (escrow_id);
-    ADD CONSTRAINT escrow_accounts_tenant_id_fkey FOREIGN KEY (tenant_id) REFERENCES public.tenants(tenant_id) ON DELETE CASCADE;
+    ADD CONSTRAINT escrow_accounts_tenant_id_fkey FOREIGN KEY (tenant_id) REFERENCES public.tenants(tenant_id) ON DELETE RESTRICT;
     ADD CONSTRAINT escrow_envelopes_escrow_id_fkey FOREIGN KEY (escrow_id) REFERENCES public.escrow_accounts(escrow_id) ON DELETE RESTRICT;
     ADD CONSTRAINT escrow_envelopes_pkey PRIMARY KEY (escrow_id);
     ADD CONSTRAINT escrow_envelopes_tenant_id_fkey FOREIGN KEY (tenant_id) REFERENCES public.tenants(tenant_id) ON DELETE RESTRICT;
@@ -1149,6 +1151,7 @@
     ADD CONSTRAINT external_proofs_subject_member_fk FOREIGN KEY (subject_member_id) REFERENCES public.tenant_members(member_id) NOT VALID;
     ADD CONSTRAINT external_proofs_tenant_fk FOREIGN KEY (tenant_id) REFERENCES public.tenants(tenant_id) NOT VALID;
     ADD CONSTRAINT external_proofs_tenant_required_new_rows_chk CHECK ((tenant_id IS NOT NULL)) NOT VALID;
+    ADD CONSTRAINT factor_registry_pkey PRIMARY KEY (factor_id);
     ADD CONSTRAINT gf_verifier_read_tokens_pkey PRIMARY KEY (token_id);
     ADD CONSTRAINT gf_verifier_read_tokens_project_id_fkey FOREIGN KEY (project_id) REFERENCES public.projects(project_id) ON DELETE RESTRICT;
     ADD CONSTRAINT gf_verifier_read_tokens_tenant_id_fkey FOREIGN KEY (tenant_id) REFERENCES public.tenants(tenant_id) ON DELETE RESTRICT;
@@ -1270,8 +1273,8 @@
     ADD CONSTRAINT programme_registry_tenant_id_fkey FOREIGN KEY (tenant_id) REFERENCES public.tenant_registry(tenant_id);
     ADD CONSTRAINT programme_registry_tenant_id_programme_key_key UNIQUE (tenant_id, programme_key);
     ADD CONSTRAINT programs_pkey PRIMARY KEY (program_id);
-    ADD CONSTRAINT programs_program_escrow_id_fkey FOREIGN KEY (program_escrow_id) REFERENCES public.escrow_accounts(escrow_id) ON DELETE CASCADE;
-    ADD CONSTRAINT programs_tenant_id_fkey FOREIGN KEY (tenant_id) REFERENCES public.tenants(tenant_id) ON DELETE CASCADE;
+    ADD CONSTRAINT programs_program_escrow_id_fkey FOREIGN KEY (program_escrow_id) REFERENCES public.escrow_accounts(escrow_id) ON DELETE RESTRICT;
+    ADD CONSTRAINT programs_tenant_id_fkey FOREIGN KEY (tenant_id) REFERENCES public.tenants(tenant_id) ON DELETE RESTRICT;
     ADD CONSTRAINT programs_tenant_id_program_escrow_id_key UNIQUE (tenant_id, program_escrow_id);
     ADD CONSTRAINT programs_tenant_id_program_key_key UNIQUE (tenant_id, program_key);
     ADD CONSTRAINT projects_pkey PRIMARY KEY (project_id);
@@ -1336,6 +1339,10 @@
     ADD CONSTRAINT tenants_parent_tenant_fk FOREIGN KEY (parent_tenant_id) REFERENCES public.tenants(tenant_id) NOT VALID;
     ADD CONSTRAINT tenants_pkey PRIMARY KEY (tenant_id);
     ADD CONSTRAINT tenants_tenant_key_key UNIQUE (tenant_key);
+    ADD CONSTRAINT unique_factor_code UNIQUE (factor_code);
+    ADD CONSTRAINT unique_interpretation_per_project_time UNIQUE (project_id, interpretation_pack_code, effective_from);
+    ADD CONSTRAINT unique_unit_pair UNIQUE (from_unit, to_unit);
+    ADD CONSTRAINT unit_conversions_pkey PRIMARY KEY (conversion_id);
     ADD CONSTRAINT ux_attempts_outbox_attempt_no UNIQUE (outbox_id, attempt_no);
     ADD CONSTRAINT ux_billable_clients_client_key UNIQUE (client_key);
     ADD CONSTRAINT ux_evidence_pack_items_pack_hash UNIQUE (pack_id, artifact_hash);
@@ -1376,6 +1383,7 @@
     AND state = 'approved'
     AND status = 'PENDING_SUPERVISOR_APPROVAL'
     AND timeout_at <= p_now;
+    AS $$
     AS $$
     AS $$
     AS $$
@@ -1802,6 +1810,7 @@
     FROM public.ingress_attestations ia
     FROM public.ingress_attestations ia
     FROM public.internal_ledger_postings
+    FROM public.interpretation_packs
     FROM public.member_devices md
     FROM public.members m
     FROM public.persons pe
@@ -2095,6 +2104,7 @@
     LANGUAGE plpgsql SECURITY DEFINER
     LANGUAGE plpgsql SECURITY DEFINER
     LANGUAGE plpgsql SECURITY DEFINER
+    LANGUAGE plpgsql SECURITY DEFINER
     LANGUAGE plpgsql STABLE
     LANGUAGE sql
     LANGUAGE sql SECURITY DEFINER
@@ -2103,6 +2113,7 @@
     LANGUAGE sql STABLE
     LANGUAGE sql STABLE SECURITY DEFINER
     LIMIT 1
+    LIMIT 1;
     LIMIT 1;
     LIMIT 1;
     LOOP
@@ -2133,6 +2144,7 @@
     OR (v_row.state = 'AUTHORIZED' AND v_to_state IN ('RELEASE_REQUESTED', 'CANCELED', 'EXPIRED'))
     OR (v_row.state = 'RELEASE_REQUESTED' AND v_to_state IN ('RELEASED', 'CANCELED', 'EXPIRED'))
     ORDER BY a.claimed_at DESC
+    ORDER BY effective_from DESC
     ORDER BY o.updated_at, o.created_at
     PERFORM pg_advisory_xact_lock(
     PERFORM pg_notify('symphony_outbox', '');
@@ -2292,6 +2304,7 @@
     RETURN v_evidence_node_id;
     RETURN v_existing;
     RETURN v_hash;
+    RETURN v_interpretation_pack_id;
     RETURN v_lifecycle_event_id;
     RETURN v_monitoring_record_id;
     RETURN v_payload;
@@ -2344,6 +2357,7 @@
     SELECT en.evidence_node_id,
     SELECT en.tenant_id INTO v_source_tenant
     SELECT en.tenant_id INTO v_target_tenant
+    SELECT interpretation_pack_id INTO v_interpretation_pack_id
     SELECT lcr.lifecycle_checkpoint_rule_id,
     SELECT mr.monitoring_record_id,
     SELECT mr.record_payload_json
@@ -2373,6 +2387,7 @@
     SET inquiry_state = 'AWAITING_EXECUTION',
     SET program_id = EXCLUDED.program_id,
     SET program_id = EXCLUDED.program_id,
+    SET search_path TO 'pg_catalog', 'public'
     SET search_path TO 'pg_catalog', 'public'
     SET search_path TO 'pg_catalog', 'public'
     SET search_path TO 'pg_catalog', 'public'
@@ -2514,6 +2529,7 @@
     WHERE pack_id = p_pack_id;
     WHERE pe.person_id = p_person_id
     WHERE pr.program_id = p_program_id
+    WHERE project_id = p_project_id
     WHERE r.rail_id = p_rail_id
     WHERE s.source_event_id = v_event.event_id;
     ];
@@ -2715,6 +2731,8 @@
     contains_raw_pii boolean DEFAULT false NOT NULL,
     contradiction_timestamp timestamp with time zone,
     contradiction_timestamp, containment_action
+    conversion_factor numeric NOT NULL,
+    conversion_id uuid DEFAULT gen_random_uuid() NOT NULL,
     correlation_id uuid,
     correlation_id uuid,
     correlation_id uuid,
@@ -2723,6 +2741,8 @@
     correlation_id uuid,
     count(DISTINCT person_id) AS unique_beneficiaries
     created_at
+    created_at timestamp with time zone DEFAULT now()
+    created_at timestamp with time zone DEFAULT now()
     created_at timestamp with time zone DEFAULT now() NOT NULL
     created_at timestamp with time zone DEFAULT now() NOT NULL
     created_at timestamp with time zone DEFAULT now() NOT NULL
@@ -2743,7 +2763,7 @@
     created_at timestamp with time zone DEFAULT now() NOT NULL
     created_at timestamp with time zone DEFAULT now() NOT NULL
     created_at timestamp with time zone DEFAULT now() NOT NULL
-    created_at timestamp with time zone DEFAULT now() NOT NULL
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
     created_at timestamp with time zone DEFAULT now() NOT NULL,
     created_at timestamp with time zone DEFAULT now() NOT NULL,
     created_at timestamp with time zone DEFAULT now() NOT NULL,
@@ -2859,7 +2879,9 @@
     edge_type text NOT NULL,
     effect_seal_hash text NOT NULL,
     effective_from date NOT NULL,
+    effective_from timestamp with time zone,
     effective_to date,
+    effective_to timestamp with time zone
     endpoint text NOT NULL,
     enrolled_at timestamp with time zone DEFAULT now() NOT NULL,
     enrolled_at,
@@ -2915,6 +2937,9 @@
     expires_at timestamp with time zone,
     expires_at timestamp with time zone,
     exportable boolean DEFAULT false NOT NULL,
+    factor_code character varying NOT NULL,
+    factor_id uuid DEFAULT gen_random_uuid() NOT NULL,
+    factor_name character varying NOT NULL,
     fallback_posture text NOT NULL,
     filed_at timestamp with time zone,
     filing_deadline date,
@@ -2934,6 +2959,7 @@
     formula_version_id,
     from_program_id uuid NOT NULL,
     from_program_id,
+    from_unit character varying NOT NULL,
     gap_marker_id text NOT NULL,
     generated_at timestamp with time zone DEFAULT now() NOT NULL
     generated_at timestamp with time zone DEFAULT now() NOT NULL
@@ -3000,6 +3026,7 @@
     instruction_state_at_arrival text CONSTRAINT orphaned_attestation_landin_instruction_state_at_arriv_not_null NOT NULL,
     instruction_state_at_arrival,
     instruction_state_at_arrival,
+    interpretation_pack_code uuid,
     interpretation_pack_id uuid DEFAULT public.uuid_v7_or_random() NOT NULL,
     interpretation_version_id uuid,
     interval_seconds integer NOT NULL,
@@ -3304,6 +3331,7 @@
     project_id uuid NOT NULL,
     project_id uuid NOT NULL,
     project_id uuid NOT NULL,
+    project_id uuid,
     projection_payload jsonb NOT NULL,
     projection_payload jsonb NOT NULL,
     projection_version text DEFAULT 'phase1-cqrs-v1'::text NOT NULL
@@ -3604,6 +3632,7 @@
     timeout_at timestamp with time zone NOT NULL,
     to_program_id uuid NOT NULL,
     to_program_id,
+    to_unit character varying NOT NULL,
     token_hash text NOT NULL,
     token_hash text NOT NULL,
     token_id uuid DEFAULT gen_random_uuid() NOT NULL,
@@ -3618,6 +3647,7 @@
     trigger_threshold numeric(8,6) NOT NULL,
     truncation_applied boolean NOT NULL,
     trust_chain_ref text,
+    unit character varying NOT NULL,
     units text NOT NULL,
     unsigned_reason text
     unsigned_reason text,
@@ -3683,6 +3713,7 @@
     v_from_status := NEW.event_payload_json->>'from_status';
     v_idempotency_key TEXT; v_rail_type TEXT; v_payload JSONB;
     v_instruction_id TEXT; v_participant_id TEXT; v_sequence_id BIGINT;
+    v_interpretation_pack_id UUID;
     v_jurisdiction_code       TEXT;
     v_lifecycle_event_id UUID;
     v_methodology_scope JSONB;
@@ -4731,7 +4762,10 @@ $$;
 $$;
 $$;
 $$;
+$$;
 )
+);
+);
 );
 );
 );
@@ -4968,6 +5002,8 @@ ALTER TABLE ONLY public.external_proofs
 ALTER TABLE ONLY public.external_proofs
 ALTER TABLE ONLY public.external_proofs
 ALTER TABLE ONLY public.external_proofs FORCE ROW LEVEL SECURITY;
+ALTER TABLE ONLY public.factor_registry
+ALTER TABLE ONLY public.factor_registry
 ALTER TABLE ONLY public.gf_verifier_read_tokens
 ALTER TABLE ONLY public.gf_verifier_read_tokens
 ALTER TABLE ONLY public.gf_verifier_read_tokens
@@ -5000,6 +5036,7 @@ ALTER TABLE ONLY public.internal_ledger_journals
 ALTER TABLE ONLY public.internal_ledger_postings
 ALTER TABLE ONLY public.internal_ledger_postings
 ALTER TABLE ONLY public.internal_ledger_postings
+ALTER TABLE ONLY public.interpretation_packs
 ALTER TABLE ONLY public.interpretation_packs
 ALTER TABLE ONLY public.interpretation_packs FORCE ROW LEVEL SECURITY;
 ALTER TABLE ONLY public.jurisdiction_profiles
@@ -5187,6 +5224,8 @@ ALTER TABLE ONLY public.tenants
 ALTER TABLE ONLY public.tenants
 ALTER TABLE ONLY public.tenants
 ALTER TABLE ONLY public.tenants FORCE ROW LEVEL SECURITY;
+ALTER TABLE ONLY public.unit_conversions
+ALTER TABLE ONLY public.unit_conversions
 ALTER TABLE ONLY public.verifier_project_assignments
 ALTER TABLE ONLY public.verifier_project_assignments
 ALTER TABLE ONLY public.verifier_project_assignments
@@ -5244,6 +5283,7 @@ ALTER TABLE public.tenants
 ALTER TABLE public.tenants ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.verifier_project_assignments ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.verifier_registry ENABLE ROW LEVEL SECURITY;
+BEGIN
 BEGIN
 BEGIN
 BEGIN
@@ -5452,6 +5492,7 @@ CREATE FUNCTION public.release_escrow(p_escrow_id uuid, p_actor_id text DEFAULT 
 CREATE FUNCTION public.repair_expired_anchor_sync_leases(p_worker_id text DEFAULT 'anchor_repair'::text) RETURNS integer
 CREATE FUNCTION public.repair_expired_leases(p_batch_size integer, p_worker_id text) RETURNS TABLE(outbox_id uuid, attempt_no integer)
 CREATE FUNCTION public.request_pii_purge(p_subject_token text, p_requested_by text, p_request_reason text) RETURNS uuid
+CREATE FUNCTION public.resolve_interpretation_pack(p_project_id uuid, p_effective_at timestamp with time zone) RETURNS uuid
 CREATE FUNCTION public.resolve_missing_acknowledgement_interrupt(p_instruction_id text, p_action text, p_actor text, p_reason text DEFAULT NULL::text) RETURNS public.inquiry_state_enum
 CREATE FUNCTION public.resolve_reference_strategy(p_rail_id text) RETURNS TABLE(strategy_type public.reference_strategy_type_enum, rail_id text, max_length integer, nonce_retry_limit integer, collision_action text, policy_version_id text)
 CREATE FUNCTION public.retire_asset_batch(p_tenant_id uuid, p_asset_batch_id uuid, p_retirement_reason text, p_interpretation_pack_id uuid, p_quantity numeric DEFAULT NULL::numeric) RETURNS uuid
@@ -5513,6 +5554,8 @@ CREATE INDEX idx_execution_records_interpretation_version_id ON public.execution
 CREATE INDEX idx_execution_records_project_id ON public.execution_records USING btree (project_id);
 CREATE INDEX idx_execution_records_timestamp ON public.execution_records USING btree (execution_timestamp);
 CREATE INDEX idx_external_proofs_attestation_id ON public.external_proofs USING btree (attestation_id);
+CREATE INDEX idx_factor_registry_code ON public.factor_registry USING btree (factor_code);
+CREATE INDEX idx_factor_registry_unit ON public.factor_registry USING btree (unit);
 CREATE INDEX idx_gf_verifier_read_tokens_expires ON public.gf_verifier_read_tokens USING btree (expires_at);
 CREATE INDEX idx_gf_verifier_read_tokens_hash ON public.gf_verifier_read_tokens USING btree (token_hash);
 CREATE INDEX idx_gf_verifier_read_tokens_project ON public.gf_verifier_read_tokens USING btree (project_id);
@@ -5527,7 +5570,9 @@ CREATE INDEX idx_ingress_attestations_tenant_correlation ON public.ingress_attes
 CREATE INDEX idx_ingress_attestations_tenant_received ON public.ingress_attestations USING btree (tenant_id, received_at) WHERE (tenant_id IS NOT NULL);
 CREATE INDEX idx_instruction_settlement_finality_participant_finalized ON public.instruction_settlement_finality USING btree (participant_id, finalized_at DESC);
 CREATE INDEX idx_internal_ledger_postings_journal ON public.internal_ledger_postings USING btree (journal_id, direction);
+CREATE INDEX idx_interpretation_packs_code ON public.interpretation_packs USING btree (interpretation_pack_code);
 CREATE INDEX idx_interpretation_packs_jurisdiction ON public.interpretation_packs USING btree (jurisdiction_code);
+CREATE INDEX idx_interpretation_packs_project_time ON public.interpretation_packs USING btree (project_id, effective_from DESC, effective_to);
 CREATE INDEX idx_jurisdiction_profiles_jurisdiction ON public.jurisdiction_profiles USING btree (jurisdiction_code);
 CREATE INDEX idx_lifecycle_checkpoint_rules_jurisdiction ON public.lifecycle_checkpoint_rules USING btree (jurisdiction_code);
 CREATE INDEX idx_malformed_quarantine_adapter_rail_time ON public.malformed_quarantine_store USING btree (adapter_id, rail_id, capture_timestamp DESC);
@@ -5571,6 +5616,9 @@ CREATE INDEX idx_tenant_members_tenant ON public.tenant_members USING btree (ten
 CREATE INDEX idx_tenants_billable_client_id ON public.tenants USING btree (billable_client_id);
 CREATE INDEX idx_tenants_parent_tenant_id ON public.tenants USING btree (parent_tenant_id);
 CREATE INDEX idx_tenants_status ON public.tenants USING btree (status);
+CREATE INDEX idx_unit_conversions_from ON public.unit_conversions USING btree (from_unit);
+CREATE INDEX idx_unit_conversions_pair ON public.unit_conversions USING btree (from_unit, to_unit);
+CREATE INDEX idx_unit_conversions_to ON public.unit_conversions USING btree (to_unit);
 CREATE INDEX idx_verifier_project_assignments_project ON public.verifier_project_assignments USING btree (project_id);
 CREATE INDEX idx_verifier_project_assignments_verifier ON public.verifier_project_assignments USING btree (verifier_id);
 CREATE INDEX idx_verifier_registry_jurisdiction ON public.verifier_registry USING btree (jurisdiction_code);
@@ -5667,6 +5715,7 @@ CREATE TABLE public.evidence_pack_items (
 CREATE TABLE public.evidence_packs (
 CREATE TABLE public.execution_records (
 CREATE TABLE public.external_proofs (
+CREATE TABLE public.factor_registry (
 CREATE TABLE public.gf_verifier_read_tokens (
 CREATE TABLE public.global_rate_limit_policies (
 CREATE TABLE public.historical_verification_runs (
@@ -5750,6 +5799,7 @@ CREATE TABLE public.tenant_clients (
 CREATE TABLE public.tenant_members (
 CREATE TABLE public.tenant_registry (
 CREATE TABLE public.tenants (
+CREATE TABLE public.unit_conversions (
 CREATE TABLE public.verifier_project_assignments (
 CREATE TABLE public.verifier_registry (
 CREATE TRIGGER adapter_registrations_append_only BEFORE DELETE OR UPDATE ON public.adapter_registrations FOR EACH ROW EXECUTE FUNCTION public.adapter_registrations_append_only_trigger();
@@ -5885,6 +5935,8 @@ DECLARE
 DECLARE
 DECLARE
 DECLARE
+DECLARE
+END;
 END;
 END;
 END;
