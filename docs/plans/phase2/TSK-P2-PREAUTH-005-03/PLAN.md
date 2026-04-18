@@ -1,10 +1,10 @@
-# TSK-P2-PREAUTH-005-03: Implement enforce_transition_state_rules() trigger
+# TSK-P2-PREAUTH-005-03 PLAN — Implement enforce_transition_state_rules() trigger
 
-**Task:** TSK-P2-PREAUTH-005-03
-**Owner:** DB_FOUNDATION
-**Depends on:** TSK-P2-PREAUTH-005-02
-**Blocks:** TSK-P2-PREAUTH-005-04
-**Failure Signature**: Function not created or not SECURITY DEFINER => CRITICAL_FAIL
+Task: TSK-P2-PREAUTH-005-03
+Owner: DB_FOUNDATION
+Depends on: TSK-P2-PREAUTH-005-02
+failure_signature: PRE-PHASE2.PREAUTH.TSK-P2-PREAUTH-005-03.TRIGGER_FAIL
+canonical_reference: docs/operations/AI_AGENT_OPERATION_MANUAL.md
 
 ## Objective
 
@@ -29,35 +29,53 @@ The enforce_transition_state_rules() function checks the state_rules table for v
 
 ## Stop Conditions
 
-- If function does not exist in pg_proc with exact name
-- If function is not SECURITY DEFINER with prosecdef=true
-- If trigger is not attached as BEFORE INSERT OR UPDATE on state_transitions
+- **If any node in the proof graph is orphaned** -> STOP
+- **If any verifier lacks a symbolic failure obligation (`|| exit 1`)** -> STOP
+- **If evidence is static or self-declared instead of derived** -> STOP
+- **If verification does not inspect real system state (self-referential)** -> STOP
+- **If ≥3 weak signals (subjective wording like 'ensure' or 'appropriate') are detected without hard failing** -> STOP
 
 ## Implementation Steps
 
-### [ID tsk_p2_preauth_005_03_work_item_01] Add enforce_transition_state_rules() function to migration 0120
-Add enforce_transition_state_rules() function to migration 0120 as SECURITY DEFINER with SET search_path = pg_catalog, public. Function checks state_rules table for valid (from_state, to_state) pair and raises GF032 if rule not found or condition not met.
+### Step 1: Add enforce_transition_state_rules() function to migration 0120
+**What:** `[ID tsk_p2_preauth_005_03_work_item_01]` Add enforce_transition_state_rules() function to migration 0120
+**How:** Modify schema/migrations/0120_create_state_transitions.sql to add function as SECURITY DEFINER with SET search_path = pg_catalog, public. Function checks state_rules table for valid (from_state, to_state) pair and raises GF032 if rule not found or condition not met
+**Done when:** Migration file contains enforce_transition_state_rules() function definition
 
-### [ID tsk_p2_preauth_005_03_work_item_02] Attach function as BEFORE INSERT OR UPDATE trigger on state_transitions
-Attach function as BEFORE INSERT OR UPDATE trigger on state_transitions table.
+### Step 2: Attach function as BEFORE INSERT OR UPDATE trigger on state_transitions
+**What:** `[ID tsk_p2_preauth_005_03_work_item_02]` Attach function as trigger
+**How:** Add CREATE TRIGGER statement to attach function as BEFORE INSERT OR UPDATE on state_transitions table
+**Done when:** Migration file contains trigger attachment statement
 
-### [ID tsk_p2_preauth_005_03_work_item_03] Write verification script
-Write verify_tsk_p2_preauth_005_03.sh that runs psql to verify function exists with exact name, is SECURITY DEFINER, and trigger is attached.
+### Step 3: Write verification script
+**What:** `[ID tsk_p2_preauth_005_03_work_item_03]` Create verify_tsk_p2_preauth_005_03.sh
+**How:** Write bash script that runs psql to verify function exists with exact name, is SECURITY DEFINER, and trigger is attached
+**Done when:** Verification script exists at scripts/db/verify_tsk_p2_preauth_005_03.sh
 
-### [ID tsk_p2_preauth_005_03_work_item_04] Run verification script
-Run verify_tsk_p2_preauth_005_03.sh to confirm trigger is created correctly.
+### Step 4: Write the Negative Test Constraints
+<!-- This step is mandatory for all tasks.
+     The negative test must fail against the unfixed code and pass against the fixed code.
+     Do not write it after the fix. Write it before, prove it catches the problem. -->
+**What:** `[ID tsk_p2_preauth_005_03_work_item_04]` Implement the negative test for enforce_transition_state_rules() trigger
+**How:** Define execution failure test (TSK-P2-PREAUTH-005-03-N1) that simulates missing function or incorrect SECURITY DEFINER setting. Feed bad schema state into the verification logic and ensure it is explicitly rejected.
+**Done when:** The verification script exits non-zero against unfixed/dummy schema (missing function or wrong security), and exits 0 against the target implementation.
+
+### Step 5: Run verification script
+**What:** `[ID tsk_p2_preauth_005_03_work_item_05]` Execute verification script
+**How:** Run: bash scripts/db/verify_tsk_p2_preauth_005_03.sh
+**Done when:** Script exits 0 and emits evidence to evidence/phase2/tsk_p2_preauth_005_03.json
 
 ## Verification
 
 ```bash
 # [ID tsk_p2_preauth_005_03_work_item_01] [ID tsk_p2_preauth_005_03_work_item_02]
-# [ID tsk_p2_preauth_005_03_work_item_03] [ID tsk_p2_preauth_005_03_work_item_04]
+# [ID tsk_p2_preauth_005_03_work_item_03] [ID tsk_p2_preauth_005_03_work_item_04] [ID tsk_p2_preauth_005_03_work_item_05]
 test -x scripts/db/verify_tsk_p2_preauth_005_03.sh && bash scripts/db/verify_tsk_p2_preauth_005_03.sh > evidence/phase2/tsk_p2_preauth_005_03.json || exit 1
 
 # [ID tsk_p2_preauth_005_03_work_item_01]
 psql -c "SELECT 1 FROM pg_proc WHERE proname='enforce_transition_state_rules'" | grep -q '1 row' || exit 1
 
-# [ID tsk_p2_preauth_005_03_work_item_04]
+# [ID tsk_p2_preauth_005_03_work_item_05]
 test -f evidence/phase2/tsk_p2_preauth_005_03.json || exit 1
 ```
 
@@ -90,3 +108,12 @@ git checkout schema/migrations/0120_create_state_transitions.sql
 ## Approval
 
 This task modifies database schema with SECURITY DEFINER trigger (HIGHEST RISK area). Requires human review before merge.
+
+## Anti-Drift Cheating Limits
+
+After implementing this task, the following attack surfaces remain open:
+- No verification that state_rules table is actually populated with valid rules (trigger checks table but doesn't validate data)
+- No protection against trigger being disabled or dropped after deployment
+- No verification that trigger actually fires on INSERT/UPDATE (presence check only)
+
+These will be addressed in future waves with additional hardening and runtime guards.

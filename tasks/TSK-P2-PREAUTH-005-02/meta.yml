@@ -85,6 +85,9 @@ verification:
     # [ID tsk_p2_preauth_005_02_work_item_03]
     test -x scripts/db/verify_tsk_p2_preauth_005_02.sh && bash scripts/db/verify_tsk_p2_preauth_005_02.sh > evidence/phase2/tsk_p2_preauth_005_02.json || exit 1
   - >-
+    # [ID tsk_p2_preauth_005_02_work_item_01]
+    test -f schema/migrations/0120_create_state_transitions.sql || exit 1
+  - >-
     # [ID tsk_p2_preauth_005_02_work_item_03]
     test -f evidence/phase2/tsk_p2_preauth_005_02.json || exit 1
 

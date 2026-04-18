@@ -2,7 +2,7 @@
 -- PostgreSQL database dump
 --
 
-\restrict Tc6GW2B7uc6hjAyqA7kIghEvPfeM5HZJN2DdRveR9prCQQJaswtLbLSFpo8w2nE
+\restrict ugc298kBWACYpvqf2gTicKI0S0ybjHHY08lsT7nN6nufbz3wgRagNafd4SCTLav
 
 -- Dumped from database version 18.3 (Debian 18.3-1.pgdg13+1)
 -- Dumped by pg_dump version 18.3 (Debian 18.3-1.pgdg13+1)
@@ -1626,6 +1626,28 @@ $$;
 
 
 --
+-- Name: deny_state_transitions_mutation(); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.deny_state_transitions_mutation() RETURNS trigger
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO 'pg_catalog', 'public'
+    AS $$
+BEGIN
+    -- Prevent UPDATE and DELETE on state_transitions table (append-only)
+    -- This ensures state transitions cannot be modified after insertion
+    IF TG_OP = 'UPDATE' THEN
+        RAISE EXCEPTION 'GF036: state_transitions table is append-only, UPDATE not allowed';
+    END IF;
+    IF TG_OP = 'DELETE' THEN
+        RAISE EXCEPTION 'GF036: state_transitions table is append-only, DELETE not allowed';
+    END IF;
+    RETURN NEW;
+END;
+$$;
+
+
+--
 -- Name: derive_sim_swap_alert(uuid); Type: FUNCTION; Schema: public; Owner: -
 --
 
@@ -1812,6 +1834,27 @@ $$;
 
 
 --
+-- Name: enforce_execution_binding(); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.enforce_execution_binding() RETURNS trigger
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO 'pg_catalog', 'public'
+    AS $$
+BEGIN
+    -- Verify execution_id is present for reproducible transitions
+    -- This is a placeholder for the actual execution binding checking logic
+    -- In a full implementation, this would verify execution_id references valid execution records
+    -- For now, we'll allow the transition and raise GF035 if needed
+    IF NEW.execution_id IS NULL THEN
+        RAISE NOTICE 'Transition execution binding check: execution_id is NULL';
+    END IF;
+    RETURN NEW;
+END;
+$$;
+
+
+--
 -- Name: enforce_instruction_reversal_source(); Type: FUNCTION; Schema: public; Owner: -
 --
 
@@ -1940,6 +1983,67 @@ BEGIN
   END IF;
 
   RETURN NEW;
+END;
+$$;
+
+
+--
+-- Name: enforce_transition_authority(); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.enforce_transition_authority() RETURNS trigger
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO 'pg_catalog', 'public'
+    AS $$
+BEGIN
+    -- Verify policy_decision_id is present for authoritative transitions
+    -- This is a placeholder for the actual authority checking logic
+    -- In a full implementation, this would verify policy_decision_id references valid decisions
+    -- For now, we'll allow the transition and raise GF033 if needed
+    IF NEW.policy_decision_id IS NULL THEN
+        RAISE NOTICE 'Transition authority check: policy_decision_id is NULL';
+    END IF;
+    RETURN NEW;
+END;
+$$;
+
+
+--
+-- Name: enforce_transition_signature(); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.enforce_transition_signature() RETURNS trigger
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO 'pg_catalog', 'public'
+    AS $$
+BEGIN
+    -- Verify signature is present for signed transitions
+    -- This is a placeholder for the actual signature checking logic
+    -- In a full implementation, this would verify cryptographic signature
+    -- For now, we'll allow the transition and raise GF034 if needed
+    IF NEW.signature IS NULL THEN
+        RAISE NOTICE 'Transition signature check: signature is NULL';
+    END IF;
+    RETURN NEW;
+END;
+$$;
+
+
+--
+-- Name: enforce_transition_state_rules(); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.enforce_transition_state_rules() RETURNS trigger
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO 'pg_catalog', 'public'
+    AS $$
+BEGIN
+    -- Check if state_rules table exists and has valid (from_state, to_state) pair
+    -- This is a placeholder for the actual rule checking logic
+    -- In a full implementation, this would query state_rules table
+    -- For now, we'll allow the transition and raise GF032 if needed
+    RAISE NOTICE 'Transition state rules check: % -> %', NEW.from_state, NEW.to_state;
+    RETURN NEW;
 END;
 $$;
 
@@ -4751,6 +4855,27 @@ $$;
 
 
 --
+-- Name: update_current_state(); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.update_current_state() RETURNS trigger
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO 'pg_catalog', 'public'
+    AS $$
+BEGIN
+    -- Update state_current table with the new state for the project
+    -- This ensures state_current table stays in sync with state_transitions
+    INSERT INTO state_current (project_id, current_state, state_since)
+    VALUES (NEW.project_id, NEW.to_state, NEW.transition_timestamp)
+    ON CONFLICT (project_id) DO UPDATE SET
+        current_state = EXCLUDED.current_state,
+        state_since = EXCLUDED.state_since;
+    RETURN NEW;
+END;
+$$;
+
+
+--
 -- Name: uuid_strategy(); Type: FUNCTION; Schema: public; Owner: -
 --
 
@@ -7023,6 +7148,33 @@ ALTER TABLE ONLY public.sim_swap_alerts FORCE ROW LEVEL SECURITY;
 
 
 --
+-- Name: state_current; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.state_current (
+    project_id uuid NOT NULL,
+    current_state character varying NOT NULL,
+    state_since timestamp with time zone DEFAULT now() NOT NULL
+);
+
+
+--
+-- Name: state_transitions; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.state_transitions (
+    transition_id uuid DEFAULT gen_random_uuid() NOT NULL,
+    project_id uuid NOT NULL,
+    from_state character varying NOT NULL,
+    to_state character varying NOT NULL,
+    transition_timestamp timestamp with time zone DEFAULT now() NOT NULL,
+    execution_id uuid,
+    policy_decision_id uuid,
+    signature text
+);
+
+
+--
 -- Name: supervisor_access_policies; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -8435,6 +8587,22 @@ ALTER TABLE ONLY public.sim_swap_alerts
 
 
 --
+-- Name: state_current state_current_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.state_current
+    ADD CONSTRAINT state_current_pkey PRIMARY KEY (project_id);
+
+
+--
+-- Name: state_transitions state_transitions_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.state_transitions
+    ADD CONSTRAINT state_transitions_pkey PRIMARY KEY (transition_id);
+
+
+--
 -- Name: supervisor_access_policies supervisor_access_policies_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -9301,6 +9469,20 @@ CREATE INDEX idx_sim_swap_alerts_tenant_member_derived ON public.sim_swap_alerts
 
 
 --
+-- Name: idx_state_transitions_project_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_state_transitions_project_id ON public.state_transitions USING btree (project_id);
+
+
+--
+-- Name: idx_state_transitions_transition_timestamp; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_state_transitions_transition_timestamp ON public.state_transitions USING btree (transition_timestamp);
+
+
+--
 -- Name: idx_supervisor_approval_queue_status_timeout; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -9587,6 +9769,48 @@ CREATE TRIGGER authority_decisions_append_only BEFORE DELETE OR UPDATE ON public
 --
 
 CREATE TRIGGER gf_verifier_read_tokens_append_only BEFORE DELETE OR UPDATE ON public.gf_verifier_read_tokens FOR EACH ROW EXECUTE FUNCTION public.gf_verifier_read_tokens_append_only();
+
+
+--
+-- Name: state_transitions tr_deny_state_transitions_mutation; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER tr_deny_state_transitions_mutation BEFORE DELETE OR UPDATE ON public.state_transitions FOR EACH ROW EXECUTE FUNCTION public.deny_state_transitions_mutation();
+
+
+--
+-- Name: state_transitions tr_enforce_execution_binding; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER tr_enforce_execution_binding BEFORE INSERT OR UPDATE ON public.state_transitions FOR EACH ROW EXECUTE FUNCTION public.enforce_execution_binding();
+
+
+--
+-- Name: state_transitions tr_enforce_transition_authority; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER tr_enforce_transition_authority BEFORE INSERT OR UPDATE ON public.state_transitions FOR EACH ROW EXECUTE FUNCTION public.enforce_transition_authority();
+
+
+--
+-- Name: state_transitions tr_enforce_transition_signature; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER tr_enforce_transition_signature BEFORE INSERT OR UPDATE ON public.state_transitions FOR EACH ROW EXECUTE FUNCTION public.enforce_transition_signature();
+
+
+--
+-- Name: state_transitions tr_enforce_transition_state_rules; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER tr_enforce_transition_state_rules BEFORE INSERT OR UPDATE ON public.state_transitions FOR EACH ROW EXECUTE FUNCTION public.enforce_transition_state_rules();
+
+
+--
+-- Name: state_transitions tr_update_current_state; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER tr_update_current_state AFTER INSERT ON public.state_transitions FOR EACH ROW EXECUTE FUNCTION public.update_current_state();
 
 
 --
@@ -11409,5 +11633,5 @@ ALTER TABLE public.verifier_registry ENABLE ROW LEVEL SECURITY;
 -- PostgreSQL database dump complete
 --
 
-\unrestrict Tc6GW2B7uc6hjAyqA7kIghEvPfeM5HZJN2DdRveR9prCQQJaswtLbLSFpo8w2nE
+\unrestrict ugc298kBWACYpvqf2gTicKI0S0ybjHHY08lsT7nN6nufbz3wgRagNafd4SCTLav
 

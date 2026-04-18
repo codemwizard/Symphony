@@ -1,6 +1,6 @@
-# Execution Log for $task
+# Execution Log for TSK-P2-PREAUTH-005-00
 
-**Task:** $task
+**Task:** TSK-P2-PREAUTH-005-00
 **Status:** planned
 
 ## Execution History

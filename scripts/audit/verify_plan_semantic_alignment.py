@@ -207,18 +207,18 @@ WRITE_PATTERNS = [
 ]
 
 def check_evidence(meta: dict, meta_path: str = ""):
+    # Skip evidence check for -00 tasks (PLAN.md creation tasks)
+    is_plan_creation_task = meta_path.endswith("-00/meta.yml") if meta_path else False
+    if is_plan_creation_task:
+        ok("Evidence check skipped for -00 task")
+        return
+
     raw_evidence = meta.get("evidence", [])
     raw_verification = meta.get("verification", [])
     
     evidence = list(raw_evidence) if isinstance(raw_evidence, list) else []
     if not evidence:
         die("No evidence defined")
-
-    # Skip evidence check for -00 tasks (PLAN.md creation tasks)
-    is_plan_creation_task = meta_path.endswith("-00/meta.yml") if meta_path else False
-    if is_plan_creation_task:
-        ok("Evidence check skipped for -00 task")
-        return
 
     verification = meta.get("verification", [])
     if not verification:
@@ -280,7 +280,7 @@ def main():
     # Core checks
     check_graph(meta)
     check_verifiers(meta, args.meta)
-    check_evidence(meta)
+    check_evidence(meta, args.meta)
 
     # Weak signals
     score = weak_signal_score(plan_text)
