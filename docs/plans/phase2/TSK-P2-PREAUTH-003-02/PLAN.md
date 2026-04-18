@@ -4,7 +4,8 @@
 **Owner:** DB_FOUNDATION
 **Depends on:** TSK-P2-PREAUTH-003-01
 **Blocks:** TSK-P2-PREAUTH-004-00
-**Failure Signature**: FK not added or missing => CRITICAL_FAIL
+**failure_signature**: PHASE2.PREAUTH.TSK-P2-PREAUTH-003-02.FK_FAIL
+**canonical_reference**: docs/operations/AI_AGENT_OPERATION_MANUAL.md
 
 ## Objective
 

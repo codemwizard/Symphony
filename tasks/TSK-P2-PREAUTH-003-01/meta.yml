@@ -96,6 +96,12 @@ verification:
   - >-
     # [ID tsk_p2_preauth_003_01_work_item_04]
     test -f evidence/phase2/tsk_p2_preauth_003_01.json || exit 1
+  - >-
+    # [ID tsk_p2_preauth_003_01_work_item_04]
+    python3 scripts/audit/validate_evidence.py --task TSK-P2-PREAUTH-003-01 --evidence evidence/phase2/tsk_p2_preauth_003_01.json || exit 1
+  - >-
+    # [ID tsk_p2_preauth_003_01_work_item_04]
+    RUN_PHASE1_GATES=1 bash scripts/dev/pre_ci.sh || exit 1
 
 evidence:
   - path: evidence/phase2/tsk_p2_preauth_003_01.json

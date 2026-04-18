@@ -7,12 +7,7 @@
   "status": "PASS",
   "base_ref": "refs/remotes/origin/main",
   "head_ref": "HEAD",
-  "triggered_files": [
-    "scripts/audit/test_tenant_allowlist_deny_all.sh"
-  ],
-  "freshness_docs": [
-    "docs/plans/phase1/TSK-P1-TEN-RDY/EXEC_LOG.md",
-    "docs/plans/phase1/TSK-P1-TEN-RDY/PLAN.md"
-  ],
+  "triggered_files": [],
+  "freshness_docs": [],
   "failures": []
 }

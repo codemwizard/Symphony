@@ -4,7 +4,8 @@
 **Owner:** DB_FOUNDATION
 **Depends on:** TSK-P2-PREAUTH-003-00
 **Blocks:** TSK-P2-PREAUTH-003-02
-**Failure Signature**: Migration fails or MIGRATION_HEAD not updated => CRITICAL_FAIL
+**failure_signature**: PHASE2.PREAUTH.TSK-P2-PREAUTH-003-01.MIGRATION_FAIL
+**canonical_reference**: docs/operations/AI_AGENT_OPERATION_MANUAL.md
 
 ## Objective
 

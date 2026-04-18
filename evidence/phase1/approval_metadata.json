@@ -1,49 +1,28 @@
 {
   "schema_version": "1.0",
-  "generated_at_utc": "2026-03-27T03:24:04Z",
-  "git_commit": "PENDING_COMMIT",
+  "generated_at_utc": "2026-04-17T20:16:00Z",
+  "git_commit": "8b9e060e43864267b603128db7b4942a885b6faa",
   "change_scope": {
     "regulated_surfaces_touched": true,
     "paths_changed": [
-      "approvals/2026-03-26/BRANCH-security-wave-1-runtime-integrity-children.md",
-      "approvals/2026-03-26/BRANCH-security-wave-1-runtime-integrity-children.approval.json",
-      "evidence/phase1/approval_metadata.json",
-      "docs/plans/phase1/REM-2026-03-27_gf-wave1-migration-graph-wrong-diagnosis-rollback/PLAN.md",
-      "docs/plans/phase1/REM-2026-03-27_gf-wave1-migration-graph-wrong-diagnosis-rollback/EXEC_LOG.md",
-      "tasks/GF-W1-SCH-002A/meta.yml",
-      "docs/plans/phase0/GF-W1-SCH-002A/PLAN.md",
-      "docs/plans/phase0/GF-W1-SCH-002A/EXEC_LOG.md",
-      "tasks/GF-W1-GOV-005A/meta.yml",
-      "docs/plans/phase0/GF-W1-GOV-005A/PLAN.md",
-      "docs/plans/phase0/GF-W1-GOV-005A/EXEC_LOG.md",
-      "tasks/GF-W1-SCH-003/meta.yml",
-      "docs/plans/phase0/GF-W1-SCH-003/PLAN.md",
-      "docs/plans/phase0/GF-W1-SCH-003/EXEC_LOG.md",
-      "tasks/GF-W1-SCH-004/meta.yml",
-      "docs/plans/phase0/GF-W1-SCH-004/PLAN.md",
-      "docs/plans/phase0/GF-W1-SCH-004/EXEC_LOG.md",
-      "tasks/GF-W1-SCH-005/meta.yml",
-      "docs/plans/phase0/GF-W1-SCH-005/PLAN.md",
-      "docs/plans/phase0/GF-W1-SCH-005/EXEC_LOG.md",
-      "tasks/GF-W1-SCH-008/meta.yml",
-      "tasks/GF-W1-PLT-001/meta.yml",
-      "docs/tasks/PHASE0_TASKS.md",
-      "docs/plans/GFW1_IMPLEMENTATION_PLAN_CORRECTED.md",
-      "docs/plans/WAVE1_DAG.md",
-      "docs/plans/wave1_dag.yml"
+      "schema/migrations/0118_create_execution_records.sql",
+      "schema/migrations/MIGRATION_HEAD",
+      "evidence/phase2/tsk_p2_preauth_003_01.json",
+      "evidence/phase2/tsk_p2_preauth_003_02.json",
+      "docs/invariants/exceptions/exception_change-rule_ddl_2026-04-17_3.md"
     ]
   },
   "ai": {
-    "ai_prompt_hash": "c37a8200dd45f0543444e714ffba2d7d8b87addb90aaae74213b326cc9fbdd61",
-    "model_id": "gpt-5-codex",
-    "client": "codex_cli",
-    "session_id": "security-wave-1-runtime-integrity-children"
+    "ai_prompt_hash": "wave3-implementation-hash-placeholder",
+    "model_id": "claude-sonnet",
+    "client": "cursor_codex",
+    "session_id": "wave3-execution-records-implementation"
   },
   "human_approval": {
-    "approver_id": "0001",
-    "approval_artifact_ref": "approvals/2026-03-26/BRANCH-security-wave-1-runtime-integrity-children.md",
-    "change_reason": "Refresh branch approval truth for the Green Finance wrong-diagnosis rollback and replacement task-pack creation wave on security/wave-1-runtime-integrity-children.",
-    "approved_at_utc": "2026-03-27T03:24:04Z"
+    "approver_id": "mwiza",
+    "approval_artifact_ref": "approvals/2026-04-17/wave3-execution-records-implementation.md",
+    "change_reason": "Wave 3 implementation: Create execution_records table with interpretation_version_id FK to bind executions to interpretation packs",
+    "approved_at_utc": "2026-04-17T20:25:00Z"
   },
-  "notes": "Architect-refreshed approval metadata for regulated remediation and corrective task-pack creation. Full pre_ci signoff remains pending later implementation work."
+  "notes": "Wave 3 Phase 2 implementation for TSK-P2-PREAUTH-003-00/01/02. Requires human approval for regulated surface changes to schema/migrations and evidence paths."
 }

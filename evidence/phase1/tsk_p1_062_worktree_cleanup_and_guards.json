@@ -9,7 +9,7 @@
   "worktrees": [
     {
       "worktree": "/home/mwiza/workspaces/Symphony-Demo/Symphony",
-      "branch": "refs/heads/fix/pre-phase-2-fixes_and_cleanup",
+      "branch": "refs/heads/wave3-execution-records-implementation",
       "detached": false,
       "prunable": false
     }

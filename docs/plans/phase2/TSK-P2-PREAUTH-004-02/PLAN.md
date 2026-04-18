@@ -4,7 +4,8 @@
 **Owner:** DB_FOUNDATION
 **Depends on:** TSK-P2-PREAUTH-004-01
 **Blocks:** TSK-P2-PREAUTH-005-00
-**Failure Signature**: Table not created or UNIQUE constraint missing => CRITICAL_FAIL
+**failure_signature**: PHASE2.PREAUTH.TSK-P2-PREAUTH-004-02.TABLE_FAIL
+**canonical_reference**: docs/operations/AI_AGENT_OPERATION_MANUAL.md
 
 ## Objective
 
