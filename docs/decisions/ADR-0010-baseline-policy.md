@@ -64,3 +64,4 @@ This ADR remains the authoritative governance reference for baseline change chec
 - 2026-04-01: Baseline regenerated after Green Finance Wave 1 DB verifier integration (0097-0114).
 - 2026-04-15: Baseline regenerated using generate_baseline_snapshot.sh to sync with migration 0115 (supplier_type column added to supplier_registry table).
 - 2026-04-17: Baseline regenerated after TSK-OPS-DRD-008 compliance rewrite of migration 0116 (ALTER TABLE with temporal columns on interpretation_packs, resolve_interpretation_pack SECURITY DEFINER function with REVOKE/GRANT posture) and inclusion of migration 0117 (factor_registry).
+- 2026-04-18: Baseline regenerated after Wave 3 Phase 2 implementation adding execution_records table with interpretation_version_id FK to bind executions to interpretation packs (migration 0118).
