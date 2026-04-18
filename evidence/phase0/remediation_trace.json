@@ -2,13 +2,22 @@
   "check_id": "REMEDIATION-TRACE",
   "timestamp_utc": "1970-01-01T00:00:00Z",
   "git_sha": "0000000000000000000000000000000000000000",
-  "schema_fingerprint": "1fdf05c50ee35492913d64677c55a8be0165181fe89fe8350dbd8df92094fa14",
+  "schema_fingerprint": "e9f9ee33755f7f9ea332282cb585e1b9fbb8ba94456a672d42fbc88fd2d701a8",
   "status": "PASS",
-  "reason": "no_production_affecting_changes",
   "diff_mode": "range",
   "base_ref": "refs/remotes/origin/main",
   "head_ref": "HEAD",
   "merge_base": "8b9e060e43864267b603128db7b4942a885b6faa",
-  "triggered_change_present": false,
-  "satisfying_docs": []
+  "triggered_change_present": true,
+  "triggered_prefixes": [
+    "docs",
+    "schema",
+    "scripts"
+  ],
+  "satisfying_docs": [
+    "docs/plans/phase2/TSK-P2-PREAUTH-003-00/PLAN.md",
+    "docs/plans/phase2/TSK-P2-PREAUTH-003-00/EXEC_LOG.md"
+  ],
+  "satisfying_doc_parent": "docs/plans/phase2/TSK-P2-PREAUTH-003-00",
+  "errors": []
 }

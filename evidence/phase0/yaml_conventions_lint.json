@@ -2,8 +2,8 @@
   "check_id": "YAML-CONVENTIONS",
   "timestamp_utc": "1970-01-01T00:00:00Z",
   "git_sha": "0000000000000000000000000000000000000000",
-  "schema_fingerprint": "1fdf05c50ee35492913d64677c55a8be0165181fe89fe8350dbd8df92094fa14",
+  "schema_fingerprint": "e9f9ee33755f7f9ea332282cb585e1b9fbb8ba94456a672d42fbc88fd2d701a8",
   "status": "PASS",
-  "checked_file_count": 0,
+  "checked_file_count": 6,
   "errors": []
 }

@@ -1,5 +1,5 @@
 # Symphony verifier script integrity manifest
-# Generated: 2026-04-06T15:05:06Z
+# Generated: 2026-04-18T04:10:23Z
 # Regenerate: bash _staging/symphony-enforcement-v2/execution-confinement/apply_execution_confinement.sh
 #
 5d2c89391beb18396a1e7a3761a2fc4adf3627922b40ba9ae55b755bcef0a62d  scripts/db/verify_gf_sch_001.sh
@@ -24,7 +24,7 @@ be01c78f1d3deff749beacd85a9afed1586c2ab9555fc1eeddbfa6a32160507d  scripts/audit/
 5fb9ddb9b06470e5980b9ffd5a9680474f9deec27492a04f9b25a68bed019691  scripts/audit/verify_tsk_p1_211.sh
 58025103269003f501d305b89e3d53601815c508e0e424833397f1f0b7baf6d1  scripts/audit/verify_tsk_p1_212.sh
 6c06e1cd168aa7dfcb41ef27f73e2a2e21339368e6ad8fd22dda298ecf90c95b  scripts/audit/verify_tsk_p1_213.sh
-a3ad9eead16e715f619fdc624810fd1227671f0309793e37443ce670af0401d7  scripts/audit/verify_tsk_p1_214.sh
+c6864cb2d3dff5830b4d62d822e0ee1ff3d8382b3826091da17c0205889741eb  scripts/audit/verify_tsk_p1_214.sh
 2c2271a6e669a818798aed655599fd406ff2737e47ef9a440519ee1276aa75f8  scripts/audit/verify_tsk_p1_215.sh
 a01a7c6c1b3d4ded2989749844736b9aa878b3a2a5561e980d28504245670f19  scripts/audit/verify_tsk_p1_216.sh
 72a3d456fd3b3f9a794f6d0fc14ad79fdd88599d3703cce1e49bec6bb334fea3  scripts/audit/verify_tsk_p1_217.sh
@@ -37,4 +37,3 @@ f4945d82fc22f2782b81abf70f16ed8cd17b72ff06d8b5884262950b7253e497  scripts/audit/
 1fdabade8b880c15b4a762676541b933612cfb9872f0421ccc91c00946179c86  scripts/audit/verify_invproc_06_ci_wiring_closeout.sh
 07494773d7361922a7acb1dba842e5662eeacc72c7851df3e73869b97ee68f94  scripts/audit/sign_evidence.py
 b3bc14c971c886634730c7076ce95b62d4aaa8021c37327c0772cd011f252972  scripts/audit/signed_evidence_enrollment.txt
-6ce4ac32dc9b817580582c39f1d05cc86859d57c106f628f12f1a42189951a27  scripts/dev/verify_worker_token_issuance_e2e.sh

@@ -1,7 +1,7 @@
 ---
 exception_id: EXC-20260404-DEMO-031
 inv_scope: change-rule
-expiry: 2026-04-18
+expiry: 2026-05-18
 follow_up_ticket: TSK-P1-DEMO-031
 reason: Migration 0114 grants SELECT/INSERT/UPDATE on onboarding control-plane tables to symphony_app_role to unblock the Pilot Demo seeding workflow. The structural change was committed alongside the task but without inline INV-### linkage.
 author: supervisor

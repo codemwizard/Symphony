@@ -2,7 +2,7 @@
 -- PostgreSQL database dump
 --
 
-\restrict 5CcpZCtwrUc0as8GwJ1lVmZ8WePdsa6lom3AFXIjQUhLtAxjb2Xz0RRcadov6JW
+\restrict Tc6GW2B7uc6hjAyqA7kIghEvPfeM5HZJN2DdRveR9prCQQJaswtLbLSFpo8w2nE
 
 -- Dumped from database version 18.3 (Debian 18.3-1.pgdg13+1)
 -- Dumped by pg_dump version 18.3 (Debian 18.3-1.pgdg13+1)
@@ -20,21 +20,14 @@ SET client_min_messages = warning;
 SET row_security = off;
 
 --
--- Name: pgcrypto; Type: EXTENSION; Schema: -; Owner: -
+-- Name: public; Type: SCHEMA; Schema: -; Owner: -
 --
 
-CREATE EXTENSION IF NOT EXISTS pgcrypto WITH SCHEMA public;
-
-
---
--- Name: EXTENSION pgcrypto; Type: COMMENT; Schema: -; Owner: 
---
-
-COMMENT ON EXTENSION pgcrypto IS 'cryptographic functions';
+CREATE SCHEMA public;
 
 
 --
--- Name: adjustment_state_enum; Type: TYPE; Schema: public; Owner: symphony_admin
+-- Name: adjustment_state_enum; Type: TYPE; Schema: public; Owner: -
 --
 
 CREATE TYPE public.adjustment_state_enum AS ENUM (
@@ -48,10 +41,8 @@ CREATE TYPE public.adjustment_state_enum AS ENUM (
 );
 
 
-ALTER TYPE public.adjustment_state_enum OWNER TO symphony_admin;
-
 --
--- Name: finality_resolution_state_enum; Type: TYPE; Schema: public; Owner: symphony_admin
+-- Name: finality_resolution_state_enum; Type: TYPE; Schema: public; Owner: -
 --
 
 CREATE TYPE public.finality_resolution_state_enum AS ENUM (
@@ -61,10 +52,8 @@ CREATE TYPE public.finality_resolution_state_enum AS ENUM (
 );
 
 
-ALTER TYPE public.finality_resolution_state_enum OWNER TO symphony_admin;
-
 --
--- Name: finality_signal_status_enum; Type: TYPE; Schema: public; Owner: symphony_admin
+-- Name: finality_signal_status_enum; Type: TYPE; Schema: public; Owner: -
 --
 
 CREATE TYPE public.finality_signal_status_enum AS ENUM (
@@ -74,10 +63,8 @@ CREATE TYPE public.finality_signal_status_enum AS ENUM (
 );
 
 
-ALTER TYPE public.finality_signal_status_enum OWNER TO symphony_admin;
-
 --
--- Name: inquiry_state_enum; Type: TYPE; Schema: public; Owner: symphony_admin
+-- Name: inquiry_state_enum; Type: TYPE; Schema: public; Owner: -
 --
 
 CREATE TYPE public.inquiry_state_enum AS ENUM (
@@ -90,10 +77,8 @@ CREATE TYPE public.inquiry_state_enum AS ENUM (
 );
 
 
-ALTER TYPE public.inquiry_state_enum OWNER TO symphony_admin;
-
 --
--- Name: key_class_enum; Type: TYPE; Schema: public; Owner: symphony_admin
+-- Name: key_class_enum; Type: TYPE; Schema: public; Owner: -
 --
 
 CREATE TYPE public.key_class_enum AS ENUM (
@@ -104,10 +89,8 @@ CREATE TYPE public.key_class_enum AS ENUM (
 );
 
 
-ALTER TYPE public.key_class_enum OWNER TO symphony_admin;
-
 --
--- Name: orphan_classification_enum; Type: TYPE; Schema: public; Owner: symphony_admin
+-- Name: orphan_classification_enum; Type: TYPE; Schema: public; Owner: -
 --
 
 CREATE TYPE public.orphan_classification_enum AS ENUM (
@@ -118,10 +101,8 @@ CREATE TYPE public.orphan_classification_enum AS ENUM (
 );
 
 
-ALTER TYPE public.orphan_classification_enum OWNER TO symphony_admin;
-
 --
--- Name: outbox_attempt_state; Type: TYPE; Schema: public; Owner: symphony_admin
+-- Name: outbox_attempt_state; Type: TYPE; Schema: public; Owner: -
 --
 
 CREATE TYPE public.outbox_attempt_state AS ENUM (
@@ -133,10 +114,8 @@ CREATE TYPE public.outbox_attempt_state AS ENUM (
 );
 
 
-ALTER TYPE public.outbox_attempt_state OWNER TO symphony_admin;
-
 --
--- Name: policy_bundle_state_enum; Type: TYPE; Schema: public; Owner: symphony_admin
+-- Name: policy_bundle_state_enum; Type: TYPE; Schema: public; Owner: -
 --
 
 CREATE TYPE public.policy_bundle_state_enum AS ENUM (
@@ -146,10 +125,8 @@ CREATE TYPE public.policy_bundle_state_enum AS ENUM (
 );
 
 
-ALTER TYPE public.policy_bundle_state_enum OWNER TO symphony_admin;
-
 --
--- Name: policy_version_status; Type: TYPE; Schema: public; Owner: symphony_admin
+-- Name: policy_version_status; Type: TYPE; Schema: public; Owner: -
 --
 
 CREATE TYPE public.policy_version_status AS ENUM (
@@ -159,10 +136,8 @@ CREATE TYPE public.policy_version_status AS ENUM (
 );
 
 
-ALTER TYPE public.policy_version_status OWNER TO symphony_admin;
-
 --
--- Name: quarantine_classification_enum; Type: TYPE; Schema: public; Owner: symphony_admin
+-- Name: quarantine_classification_enum; Type: TYPE; Schema: public; Owner: -
 --
 
 CREATE TYPE public.quarantine_classification_enum AS ENUM (
@@ -173,10 +148,8 @@ CREATE TYPE public.quarantine_classification_enum AS ENUM (
 );
 
 
-ALTER TYPE public.quarantine_classification_enum OWNER TO symphony_admin;
-
 --
--- Name: reference_strategy_type_enum; Type: TYPE; Schema: public; Owner: symphony_admin
+-- Name: reference_strategy_type_enum; Type: TYPE; Schema: public; Owner: -
 --
 
 CREATE TYPE public.reference_strategy_type_enum AS ENUM (
@@ -187,10 +160,8 @@ CREATE TYPE public.reference_strategy_type_enum AS ENUM (
 );
 
 
-ALTER TYPE public.reference_strategy_type_enum OWNER TO symphony_admin;
-
 --
--- Name: acknowledge_inquiry_response(text, text); Type: FUNCTION; Schema: public; Owner: symphony_admin
+-- Name: acknowledge_inquiry_response(text, text); Type: FUNCTION; Schema: public; Owner: -
 --
 
 CREATE FUNCTION public.acknowledge_inquiry_response(p_instruction_id text, p_policy_version_id text) RETURNS public.inquiry_state_enum
@@ -223,17 +194,8 @@ END;
 $$;
 
 
-ALTER FUNCTION public.acknowledge_inquiry_response(p_instruction_id text, p_policy_version_id text) OWNER TO symphony_admin;
-
 --
--- Name: FUNCTION acknowledge_inquiry_response(p_instruction_id text, p_policy_version_id text); Type: COMMENT; Schema: public; Owner: symphony_admin
---
-
-COMMENT ON FUNCTION public.acknowledge_inquiry_response(p_instruction_id text, p_policy_version_id text) IS 'TSK-HARD-012: allows only SENT -> ACKNOWLEDGED transition.';
-
-
---
--- Name: activate_policy_bundle(uuid); Type: FUNCTION; Schema: public; Owner: symphony_admin
+-- Name: activate_policy_bundle(uuid); Type: FUNCTION; Schema: public; Owner: -
 --
 
 CREATE FUNCTION public.activate_policy_bundle(p_policy_bundle_id uuid) RETURNS void
@@ -254,10 +216,8 @@ END;
 $$;
 
 
-ALTER FUNCTION public.activate_policy_bundle(p_policy_bundle_id uuid) OWNER TO symphony_admin;
-
 --
--- Name: activate_project(uuid, uuid); Type: FUNCTION; Schema: public; Owner: symphony_admin
+-- Name: activate_project(uuid, uuid); Type: FUNCTION; Schema: public; Owner: -
 --
 
 CREATE FUNCTION public.activate_project(p_tenant_id uuid, p_project_id uuid) RETURNS TABLE(project_id uuid, status text)
@@ -312,10 +272,8 @@ END;
 $$;
 
 
-ALTER FUNCTION public.activate_project(p_tenant_id uuid, p_project_id uuid) OWNER TO symphony_admin;
-
 --
--- Name: adapter_registrations_append_only_trigger(); Type: FUNCTION; Schema: public; Owner: symphony_admin
+-- Name: adapter_registrations_append_only_trigger(); Type: FUNCTION; Schema: public; Owner: -
 --
 
 CREATE FUNCTION public.adapter_registrations_append_only_trigger() RETURNS trigger
@@ -332,10 +290,8 @@ END;
 $$;
 
 
-ALTER FUNCTION public.adapter_registrations_append_only_trigger() OWNER TO symphony_admin;
-
 --
--- Name: allocate_dispatch_reference(uuid, uuid, text, text); Type: FUNCTION; Schema: public; Owner: symphony_admin
+-- Name: allocate_dispatch_reference(uuid, uuid, text, text); Type: FUNCTION; Schema: public; Owner: -
 --
 
 CREATE FUNCTION public.allocate_dispatch_reference(p_instruction_id uuid, p_adjustment_id uuid, p_parent_reference text, p_rail_id text) RETURNS TABLE(registry_id uuid, allocated_reference text, canonicalized_reference text, strategy_used public.reference_strategy_type_enum, policy_version_id text, collision_retry_count integer)
@@ -417,10 +373,8 @@ END;
 $$;
 
 
-ALTER FUNCTION public.allocate_dispatch_reference(p_instruction_id uuid, p_adjustment_id uuid, p_parent_reference text, p_rail_id text) OWNER TO symphony_admin;
-
 --
--- Name: anchor_dispatched_outbox_attempt(); Type: FUNCTION; Schema: public; Owner: symphony_admin
+-- Name: anchor_dispatched_outbox_attempt(); Type: FUNCTION; Schema: public; Owner: -
 --
 
 CREATE FUNCTION public.anchor_dispatched_outbox_attempt() RETURNS trigger
@@ -467,10 +421,8 @@ END;
 $$;
 
 
-ALTER FUNCTION public.anchor_dispatched_outbox_attempt() OWNER TO symphony_admin;
-
 --
--- Name: apply_finality_signals(text, text, public.finality_signal_status_enum, text, public.finality_signal_status_enum); Type: FUNCTION; Schema: public; Owner: symphony_admin
+-- Name: apply_finality_signals(text, text, public.finality_signal_status_enum, text, public.finality_signal_status_enum); Type: FUNCTION; Schema: public; Owner: -
 --
 
 CREATE FUNCTION public.apply_finality_signals(p_instruction_id text, p_rail_a_id text, p_rail_a_status public.finality_signal_status_enum, p_rail_b_id text, p_rail_b_status public.finality_signal_status_enum) RETURNS public.finality_resolution_state_enum
@@ -513,10 +465,8 @@ END;
 $$;
 
 
-ALTER FUNCTION public.apply_finality_signals(p_instruction_id text, p_rail_a_id text, p_rail_a_status public.finality_signal_status_enum, p_rail_b_id text, p_rail_b_status public.finality_signal_status_enum) OWNER TO symphony_admin;
-
 --
--- Name: apply_inquiry_attempt(text, text, integer); Type: FUNCTION; Schema: public; Owner: symphony_admin
+-- Name: apply_inquiry_attempt(text, text, integer); Type: FUNCTION; Schema: public; Owner: -
 --
 
 CREATE FUNCTION public.apply_inquiry_attempt(p_instruction_id text, p_policy_version_id text, p_max_attempts integer) RETURNS public.inquiry_state_enum
@@ -568,17 +518,8 @@ END;
 $$;
 
 
-ALTER FUNCTION public.apply_inquiry_attempt(p_instruction_id text, p_policy_version_id text, p_max_attempts integer) OWNER TO symphony_admin;
-
 --
--- Name: FUNCTION apply_inquiry_attempt(p_instruction_id text, p_policy_version_id text, p_max_attempts integer); Type: COMMENT; Schema: public; Owner: symphony_admin
---
-
-COMMENT ON FUNCTION public.apply_inquiry_attempt(p_instruction_id text, p_policy_version_id text, p_max_attempts integer) IS 'TSK-HARD-012: applies one inquiry attempt using policy-resolved max_attempts; transitions SENT/EXHAUSTED.';
-
-
---
--- Name: assert_adjustment_execution_allowed(uuid, public.adjustment_state_enum, text); Type: FUNCTION; Schema: public; Owner: symphony_admin
+-- Name: assert_adjustment_execution_allowed(uuid, public.adjustment_state_enum, text); Type: FUNCTION; Schema: public; Owner: -
 --
 
 CREATE FUNCTION public.assert_adjustment_execution_allowed(p_adjustment_id uuid, p_current_state public.adjustment_state_enum, p_freeze_flag_type text DEFAULT NULL::text) RETURNS void
@@ -596,10 +537,8 @@ END;
 $$;
 
 
-ALTER FUNCTION public.assert_adjustment_execution_allowed(p_adjustment_id uuid, p_current_state public.adjustment_state_enum, p_freeze_flag_type text) OWNER TO symphony_admin;
-
 --
--- Name: assert_canonicalization_version_exists(text); Type: FUNCTION; Schema: public; Owner: symphony_admin
+-- Name: assert_canonicalization_version_exists(text); Type: FUNCTION; Schema: public; Owner: -
 --
 
 CREATE FUNCTION public.assert_canonicalization_version_exists(p_version text) RETURNS void
@@ -614,10 +553,8 @@ END;
 $$;
 
 
-ALTER FUNCTION public.assert_canonicalization_version_exists(p_version text) OWNER TO symphony_admin;
-
 --
--- Name: assert_hsm_fail_closed(boolean); Type: FUNCTION; Schema: public; Owner: symphony_admin
+-- Name: assert_hsm_fail_closed(boolean); Type: FUNCTION; Schema: public; Owner: -
 --
 
 CREATE FUNCTION public.assert_hsm_fail_closed(p_should_block boolean) RETURNS void
@@ -632,10 +569,8 @@ END;
 $$;
 
 
-ALTER FUNCTION public.assert_hsm_fail_closed(p_should_block boolean) OWNER TO symphony_admin;
-
 --
--- Name: assert_key_class_authorized(text, public.key_class_enum); Type: FUNCTION; Schema: public; Owner: symphony_admin
+-- Name: assert_key_class_authorized(text, public.key_class_enum); Type: FUNCTION; Schema: public; Owner: -
 --
 
 CREATE FUNCTION public.assert_key_class_authorized(p_caller_id text, p_key_class public.key_class_enum) RETURNS void
@@ -658,10 +593,8 @@ END;
 $$;
 
 
-ALTER FUNCTION public.assert_key_class_authorized(p_caller_id text, p_key_class public.key_class_enum) OWNER TO symphony_admin;
-
 --
--- Name: assert_offline_safe_mode_dispatch_allowed(text, text, boolean); Type: FUNCTION; Schema: public; Owner: symphony_admin
+-- Name: assert_offline_safe_mode_dispatch_allowed(text, text, boolean); Type: FUNCTION; Schema: public; Owner: -
 --
 
 CREATE FUNCTION public.assert_offline_safe_mode_dispatch_allowed(p_reason text, p_policy_version_id text, p_is_offline boolean) RETURNS void
@@ -678,10 +611,8 @@ END;
 $$;
 
 
-ALTER FUNCTION public.assert_offline_safe_mode_dispatch_allowed(p_reason text, p_policy_version_id text, p_is_offline boolean) OWNER TO symphony_admin;
-
 --
--- Name: assert_pii_absent_from_penalty_pack(boolean); Type: FUNCTION; Schema: public; Owner: symphony_admin
+-- Name: assert_pii_absent_from_penalty_pack(boolean); Type: FUNCTION; Schema: public; Owner: -
 --
 
 CREATE FUNCTION public.assert_pii_absent_from_penalty_pack(p_contains_raw_pii boolean) RETURNS void
@@ -696,10 +627,8 @@ END;
 $$;
 
 
-ALTER FUNCTION public.assert_pii_absent_from_penalty_pack(p_contains_raw_pii boolean) OWNER TO symphony_admin;
-
 --
--- Name: assert_rate_limit_blocked(boolean); Type: FUNCTION; Schema: public; Owner: symphony_admin
+-- Name: assert_rate_limit_blocked(boolean); Type: FUNCTION; Schema: public; Owner: -
 --
 
 CREATE FUNCTION public.assert_rate_limit_blocked(p_blocked boolean) RETURNS void
@@ -714,10 +643,8 @@ END;
 $$;
 
 
-ALTER FUNCTION public.assert_rate_limit_blocked(p_blocked boolean) OWNER TO symphony_admin;
-
 --
--- Name: assert_reference_registered(text, text, uuid, uuid); Type: FUNCTION; Schema: public; Owner: symphony_admin
+-- Name: assert_reference_registered(text, text, uuid, uuid); Type: FUNCTION; Schema: public; Owner: -
 --
 
 CREATE FUNCTION public.assert_reference_registered(p_rail_id text, p_reference text, p_instruction_id uuid, p_adjustment_id uuid DEFAULT NULL::uuid) RETURNS void
@@ -750,10 +677,8 @@ END;
 $$;
 
 
-ALTER FUNCTION public.assert_reference_registered(p_rail_id text, p_reference text, p_instruction_id uuid, p_adjustment_id uuid) OWNER TO symphony_admin;
-
 --
--- Name: assert_secondary_retraction_approval(boolean); Type: FUNCTION; Schema: public; Owner: symphony_admin
+-- Name: assert_secondary_retraction_approval(boolean); Type: FUNCTION; Schema: public; Owner: -
 --
 
 CREATE FUNCTION public.assert_secondary_retraction_approval(p_ok boolean) RETURNS void
@@ -768,10 +693,8 @@ END;
 $$;
 
 
-ALTER FUNCTION public.assert_secondary_retraction_approval(p_ok boolean) OWNER TO symphony_admin;
-
 --
--- Name: attach_evidence(uuid, uuid, text, text, text, uuid, jsonb); Type: FUNCTION; Schema: public; Owner: symphony_admin
+-- Name: attach_evidence(uuid, uuid, text, text, text, uuid, jsonb); Type: FUNCTION; Schema: public; Owner: -
 --
 
 CREATE FUNCTION public.attach_evidence(p_tenant_id uuid, p_project_id uuid, p_evidence_class text, p_document_type text, p_target_record_type text, p_target_record_id uuid, p_node_payload_json jsonb DEFAULT '{}'::jsonb) RETURNS uuid
@@ -886,10 +809,8 @@ END;
 $$;
 
 
-ALTER FUNCTION public.attach_evidence(p_tenant_id uuid, p_project_id uuid, p_evidence_class text, p_document_type text, p_target_record_type text, p_target_record_id uuid, p_node_payload_json jsonb) OWNER TO symphony_admin;
-
 --
--- Name: attempt_lifecycle_transition(uuid, text, uuid, text, text, text); Type: FUNCTION; Schema: public; Owner: symphony_admin
+-- Name: attempt_lifecycle_transition(uuid, text, uuid, text, text, text); Type: FUNCTION; Schema: public; Owner: -
 --
 
 CREATE FUNCTION public.attempt_lifecycle_transition(p_tenant_id uuid, p_subject_type text, p_subject_id uuid, p_from_status text, p_to_status text, p_jurisdiction_code text DEFAULT NULL::text) RETURNS text
@@ -962,10 +883,8 @@ END;
 $$;
 
 
-ALTER FUNCTION public.attempt_lifecycle_transition(p_tenant_id uuid, p_subject_type text, p_subject_id uuid, p_from_status text, p_to_status text, p_jurisdiction_code text) OWNER TO symphony_admin;
-
 --
--- Name: authority_decisions_append_only(); Type: FUNCTION; Schema: public; Owner: symphony_admin
+-- Name: authority_decisions_append_only(); Type: FUNCTION; Schema: public; Owner: -
 --
 
 CREATE FUNCTION public.authority_decisions_append_only() RETURNS trigger
@@ -986,10 +905,8 @@ END;
 $$;
 
 
-ALTER FUNCTION public.authority_decisions_append_only() OWNER TO symphony_admin;
-
 --
--- Name: authorize_escrow_reservation(uuid, bigint, text, text, jsonb); Type: FUNCTION; Schema: public; Owner: symphony_admin
+-- Name: authorize_escrow_reservation(uuid, bigint, text, text, jsonb); Type: FUNCTION; Schema: public; Owner: -
 --
 
 CREATE FUNCTION public.authorize_escrow_reservation(p_program_escrow_id uuid, p_amount_minor bigint, p_actor_id text DEFAULT 'system'::text, p_reason text DEFAULT NULL::text, p_metadata jsonb DEFAULT '{}'::jsonb) RETURNS uuid
@@ -1058,17 +975,8 @@ END;
 $$;
 
 
-ALTER FUNCTION public.authorize_escrow_reservation(p_program_escrow_id uuid, p_amount_minor bigint, p_actor_id text, p_reason text, p_metadata jsonb) OWNER TO symphony_admin;
-
 --
--- Name: FUNCTION authorize_escrow_reservation(p_program_escrow_id uuid, p_amount_minor bigint, p_actor_id text, p_reason text, p_metadata jsonb); Type: COMMENT; Schema: public; Owner: symphony_admin
---
-
-COMMENT ON FUNCTION public.authorize_escrow_reservation(p_program_escrow_id uuid, p_amount_minor bigint, p_actor_id text, p_reason text, p_metadata jsonb) IS 'Phase-1 reservation primitive: locks escrow_envelopes row FOR UPDATE and fails closed if reservation would exceed ceiling.';
-
-
---
--- Name: block_active_reference_policy_updates(); Type: FUNCTION; Schema: public; Owner: symphony_admin
+-- Name: block_active_reference_policy_updates(); Type: FUNCTION; Schema: public; Owner: -
 --
 
 CREATE FUNCTION public.block_active_reference_policy_updates() RETURNS trigger
@@ -1103,10 +1011,8 @@ END;
 $$;
 
 
-ALTER FUNCTION public.block_active_reference_policy_updates() OWNER TO symphony_admin;
-
 --
--- Name: bump_participant_outbox_seq(text); Type: FUNCTION; Schema: public; Owner: symphony_admin
+-- Name: bump_participant_outbox_seq(text); Type: FUNCTION; Schema: public; Owner: -
 --
 
 CREATE FUNCTION public.bump_participant_outbox_seq(p_participant_id text) RETURNS bigint
@@ -1128,10 +1034,8 @@ CREATE FUNCTION public.bump_participant_outbox_seq(p_participant_id text) RETURN
 $$;
 
 
-ALTER FUNCTION public.bump_participant_outbox_seq(p_participant_id text) OWNER TO symphony_admin;
-
 --
--- Name: canonicalize_reference_for_rail(text, text); Type: FUNCTION; Schema: public; Owner: symphony_admin
+-- Name: canonicalize_reference_for_rail(text, text); Type: FUNCTION; Schema: public; Owner: -
 --
 
 CREATE FUNCTION public.canonicalize_reference_for_rail(p_allocated_reference text, p_rail_id text) RETURNS text
@@ -1154,10 +1058,8 @@ END;
 $$;
 
 
-ALTER FUNCTION public.canonicalize_reference_for_rail(p_allocated_reference text, p_rail_id text) OWNER TO symphony_admin;
-
 --
--- Name: check_reg26_separation(uuid, uuid, text); Type: FUNCTION; Schema: public; Owner: symphony_admin
+-- Name: check_reg26_separation(uuid, uuid, text); Type: FUNCTION; Schema: public; Owner: -
 --
 
 CREATE FUNCTION public.check_reg26_separation(p_verifier_id uuid, p_project_id uuid, p_requested_role text) RETURNS void
@@ -1182,10 +1084,8 @@ END;
 $$;
 
 
-ALTER FUNCTION public.check_reg26_separation(p_verifier_id uuid, p_project_id uuid, p_requested_role text) OWNER TO symphony_admin;
-
 --
--- Name: claim_anchor_sync_operation(text, integer); Type: FUNCTION; Schema: public; Owner: symphony_admin
+-- Name: claim_anchor_sync_operation(text, integer); Type: FUNCTION; Schema: public; Owner: -
 --
 
 CREATE FUNCTION public.claim_anchor_sync_operation(p_worker_id text, p_lease_seconds integer DEFAULT 30) RETURNS TABLE(operation_id uuid, pack_id uuid, lease_token uuid, state text, attempt_count integer)
@@ -1226,10 +1126,8 @@ END;
 $$;
 
 
-ALTER FUNCTION public.claim_anchor_sync_operation(p_worker_id text, p_lease_seconds integer) OWNER TO symphony_admin;
-
 --
--- Name: claim_outbox_batch(integer, text, integer); Type: FUNCTION; Schema: public; Owner: symphony_admin
+-- Name: claim_outbox_batch(integer, text, integer); Type: FUNCTION; Schema: public; Owner: -
 --
 
 CREATE FUNCTION public.claim_outbox_batch(p_batch_size integer, p_worker_id text, p_lease_seconds integer) RETURNS TABLE(outbox_id uuid, instruction_id text, participant_id text, sequence_id bigint, idempotency_key text, rail_type text, payload jsonb, attempt_count integer, lease_token uuid, lease_expires_at timestamp with time zone)
@@ -1269,10 +1167,8 @@ WITH due AS (
  $$;
 
 
-ALTER FUNCTION public.claim_outbox_batch(p_batch_size integer, p_worker_id text, p_lease_seconds integer) OWNER TO symphony_admin;
-
 --
--- Name: classify_orphan_or_replay(text, text, boolean, boolean, boolean, boolean); Type: FUNCTION; Schema: public; Owner: symphony_admin
+-- Name: classify_orphan_or_replay(text, text, boolean, boolean, boolean, boolean); Type: FUNCTION; Schema: public; Owner: -
 --
 
 CREATE FUNCTION public.classify_orphan_or_replay(p_instruction_id text, p_event_fingerprint text, p_is_late_callback boolean, p_is_duplicate_dispatch boolean, p_has_unknown_reference boolean, p_is_replay boolean) RETURNS public.orphan_classification_enum
@@ -1319,10 +1215,8 @@ END;
 $$;
 
 
-ALTER FUNCTION public.classify_orphan_or_replay(p_instruction_id text, p_event_fingerprint text, p_is_late_callback boolean, p_is_duplicate_dispatch boolean, p_has_unknown_reference boolean, p_is_replay boolean) OWNER TO symphony_admin;
-
 --
--- Name: cleanup_expired_verifier_tokens(); Type: FUNCTION; Schema: public; Owner: symphony_admin
+-- Name: cleanup_expired_verifier_tokens(); Type: FUNCTION; Schema: public; Owner: -
 --
 
 CREATE FUNCTION public.cleanup_expired_verifier_tokens() RETURNS integer
@@ -1344,10 +1238,8 @@ END;
 $$;
 
 
-ALTER FUNCTION public.cleanup_expired_verifier_tokens() OWNER TO symphony_admin;
-
 --
--- Name: complete_anchor_sync_operation(uuid, uuid, text); Type: FUNCTION; Schema: public; Owner: symphony_admin
+-- Name: complete_anchor_sync_operation(uuid, uuid, text); Type: FUNCTION; Schema: public; Owner: -
 --
 
 CREATE FUNCTION public.complete_anchor_sync_operation(p_operation_id uuid, p_lease_token uuid, p_worker_id text) RETURNS void
@@ -1386,10 +1278,8 @@ END;
 $$;
 
 
-ALTER FUNCTION public.complete_anchor_sync_operation(p_operation_id uuid, p_lease_token uuid, p_worker_id text) OWNER TO symphony_admin;
-
 --
--- Name: complete_outbox_attempt(uuid, uuid, text, public.outbox_attempt_state, text, text, text, text, integer, integer); Type: FUNCTION; Schema: public; Owner: symphony_admin
+-- Name: complete_outbox_attempt(uuid, uuid, text, public.outbox_attempt_state, text, text, text, text, integer, integer); Type: FUNCTION; Schema: public; Owner: -
 --
 
 CREATE FUNCTION public.complete_outbox_attempt(p_outbox_id uuid, p_lease_token uuid, p_worker_id text, p_state public.outbox_attempt_state, p_rail_reference text DEFAULT NULL::text, p_rail_code text DEFAULT NULL::text, p_error_code text DEFAULT NULL::text, p_error_message text DEFAULT NULL::text, p_latency_ms integer DEFAULT NULL::integer, p_retry_delay_seconds integer DEFAULT 1) RETURNS TABLE(attempt_no integer, state public.outbox_attempt_state)
@@ -1453,10 +1343,8 @@ CREATE FUNCTION public.complete_outbox_attempt(p_outbox_id uuid, p_lease_token u
 $$;
 
 
-ALTER FUNCTION public.complete_outbox_attempt(p_outbox_id uuid, p_lease_token uuid, p_worker_id text, p_state public.outbox_attempt_state, p_rail_reference text, p_rail_code text, p_error_code text, p_error_message text, p_latency_ms integer, p_retry_delay_seconds integer) OWNER TO symphony_admin;
-
 --
--- Name: compute_effect_seal_hash(text, jsonb, text); Type: FUNCTION; Schema: public; Owner: symphony_admin
+-- Name: compute_effect_seal_hash(text, jsonb, text); Type: FUNCTION; Schema: public; Owner: -
 --
 
 CREATE FUNCTION public.compute_effect_seal_hash(p_instruction_id text, p_payload jsonb, p_canonicalization_version text) RETURNS text
@@ -1472,10 +1360,8 @@ END;
 $$;
 
 
-ALTER FUNCTION public.compute_effect_seal_hash(p_instruction_id text, p_payload jsonb, p_canonicalization_version text) OWNER TO symphony_admin;
-
 --
--- Name: create_internal_ledger_journal(uuid, text, text, text, jsonb, text); Type: FUNCTION; Schema: public; Owner: symphony_admin
+-- Name: create_internal_ledger_journal(uuid, text, text, text, jsonb, text); Type: FUNCTION; Schema: public; Owner: -
 --
 
 CREATE FUNCTION public.create_internal_ledger_journal(p_tenant_id uuid, p_idempotency_key text, p_journal_type text, p_currency_code text, p_postings jsonb, p_reference_id text DEFAULT NULL::text) RETURNS uuid
@@ -1535,10 +1421,8 @@ END;
 $$;
 
 
-ALTER FUNCTION public.create_internal_ledger_journal(p_tenant_id uuid, p_idempotency_key text, p_journal_type text, p_currency_code text, p_postings jsonb, p_reference_id text) OWNER TO symphony_admin;
-
 --
--- Name: current_jurisdiction_code_or_null(); Type: FUNCTION; Schema: public; Owner: symphony_admin
+-- Name: current_jurisdiction_code_or_null(); Type: FUNCTION; Schema: public; Owner: -
 --
 
 CREATE FUNCTION public.current_jurisdiction_code_or_null() RETURNS text
@@ -1549,10 +1433,8 @@ CREATE FUNCTION public.current_jurisdiction_code_or_null() RETURNS text
 $$;
 
 
-ALTER FUNCTION public.current_jurisdiction_code_or_null() OWNER TO symphony_admin;
-
 --
--- Name: current_tenant_id_or_null(); Type: FUNCTION; Schema: public; Owner: symphony_admin
+-- Name: current_tenant_id_or_null(); Type: FUNCTION; Schema: public; Owner: -
 --
 
 CREATE FUNCTION public.current_tenant_id_or_null() RETURNS uuid
@@ -1575,17 +1457,8 @@ END;
 $$;
 
 
-ALTER FUNCTION public.current_tenant_id_or_null() OWNER TO symphony_admin;
-
 --
--- Name: FUNCTION current_tenant_id_or_null(); Type: COMMENT; Schema: public; Owner: symphony_admin
---
-
-COMMENT ON FUNCTION public.current_tenant_id_or_null() IS 'Returns app.current_tenant_id::uuid when set and valid; NULL otherwise (fail-closed for tenant RLS).';
-
-
---
--- Name: decide_supervisor_approval(text, text, text, text); Type: FUNCTION; Schema: public; Owner: symphony_admin
+-- Name: decide_supervisor_approval(text, text, text, text); Type: FUNCTION; Schema: public; Owner: -
 --
 
 CREATE FUNCTION public.decide_supervisor_approval(p_instruction_id text, p_decision text, p_actor text, p_reason text DEFAULT NULL::text) RETURNS void
@@ -1629,10 +1502,8 @@ END;
 $$;
 
 
-ALTER FUNCTION public.decide_supervisor_approval(p_instruction_id text, p_decision text, p_actor text, p_reason text) OWNER TO symphony_admin;
-
 --
--- Name: deny_append_only_mutation(); Type: FUNCTION; Schema: public; Owner: symphony_admin
+-- Name: deny_append_only_mutation(); Type: FUNCTION; Schema: public; Owner: -
 --
 
 CREATE FUNCTION public.deny_append_only_mutation() RETURNS trigger
@@ -1645,10 +1516,8 @@ CREATE FUNCTION public.deny_append_only_mutation() RETURNS trigger
 $$;
 
 
-ALTER FUNCTION public.deny_append_only_mutation() OWNER TO symphony_admin;
-
 --
--- Name: deny_final_instruction_mutation(); Type: FUNCTION; Schema: public; Owner: symphony_admin
+-- Name: deny_final_instruction_mutation(); Type: FUNCTION; Schema: public; Owner: -
 --
 
 CREATE FUNCTION public.deny_final_instruction_mutation() RETURNS trigger
@@ -1664,10 +1533,8 @@ END;
 $$;
 
 
-ALTER FUNCTION public.deny_final_instruction_mutation() OWNER TO symphony_admin;
-
 --
--- Name: deny_ingress_attestations_mutation(); Type: FUNCTION; Schema: public; Owner: symphony_admin
+-- Name: deny_ingress_attestations_mutation(); Type: FUNCTION; Schema: public; Owner: -
 --
 
 CREATE FUNCTION public.deny_ingress_attestations_mutation() RETURNS trigger
@@ -1680,10 +1547,8 @@ CREATE FUNCTION public.deny_ingress_attestations_mutation() RETURNS trigger
 $$;
 
 
-ALTER FUNCTION public.deny_ingress_attestations_mutation() OWNER TO symphony_admin;
-
 --
--- Name: deny_member_device_events_mutation(); Type: FUNCTION; Schema: public; Owner: symphony_admin
+-- Name: deny_member_device_events_mutation(); Type: FUNCTION; Schema: public; Owner: -
 --
 
 CREATE FUNCTION public.deny_member_device_events_mutation() RETURNS trigger
@@ -1696,10 +1561,8 @@ END;
 $$;
 
 
-ALTER FUNCTION public.deny_member_device_events_mutation() OWNER TO symphony_admin;
-
 --
--- Name: deny_outbox_attempts_mutation(); Type: FUNCTION; Schema: public; Owner: symphony_admin
+-- Name: deny_outbox_attempts_mutation(); Type: FUNCTION; Schema: public; Owner: -
 --
 
 CREATE FUNCTION public.deny_outbox_attempts_mutation() RETURNS trigger
@@ -1712,10 +1575,8 @@ CREATE FUNCTION public.deny_outbox_attempts_mutation() RETURNS trigger
 $$;
 
 
-ALTER FUNCTION public.deny_outbox_attempts_mutation() OWNER TO symphony_admin;
-
 --
--- Name: deny_pii_vault_mutation(); Type: FUNCTION; Schema: public; Owner: symphony_admin
+-- Name: deny_pii_vault_mutation(); Type: FUNCTION; Schema: public; Owner: -
 --
 
 CREATE FUNCTION public.deny_pii_vault_mutation() RETURNS trigger
@@ -1736,10 +1597,8 @@ END;
 $$;
 
 
-ALTER FUNCTION public.deny_pii_vault_mutation() OWNER TO symphony_admin;
-
 --
--- Name: deny_revocation_mutation(); Type: FUNCTION; Schema: public; Owner: symphony_admin
+-- Name: deny_revocation_mutation(); Type: FUNCTION; Schema: public; Owner: -
 --
 
 CREATE FUNCTION public.deny_revocation_mutation() RETURNS trigger
@@ -1752,10 +1611,8 @@ CREATE FUNCTION public.deny_revocation_mutation() RETURNS trigger
 $$;
 
 
-ALTER FUNCTION public.deny_revocation_mutation() OWNER TO symphony_admin;
-
 --
--- Name: deny_sim_swap_alerts_mutation(); Type: FUNCTION; Schema: public; Owner: symphony_admin
+-- Name: deny_sim_swap_alerts_mutation(); Type: FUNCTION; Schema: public; Owner: -
 --
 
 CREATE FUNCTION public.deny_sim_swap_alerts_mutation() RETURNS trigger
@@ -1768,10 +1625,8 @@ END;
 $$;
 
 
-ALTER FUNCTION public.deny_sim_swap_alerts_mutation() OWNER TO symphony_admin;
-
 --
--- Name: derive_sim_swap_alert(uuid); Type: FUNCTION; Schema: public; Owner: symphony_admin
+-- Name: derive_sim_swap_alert(uuid); Type: FUNCTION; Schema: public; Owner: -
 --
 
 CREATE FUNCTION public.derive_sim_swap_alert(p_event_id uuid) RETURNS uuid
@@ -1861,10 +1716,8 @@ END;
 $$;
 
 
-ALTER FUNCTION public.derive_sim_swap_alert(p_event_id uuid) OWNER TO symphony_admin;
-
 --
--- Name: enforce_adjustment_terminal_immutability(); Type: FUNCTION; Schema: public; Owner: symphony_admin
+-- Name: enforce_adjustment_terminal_immutability(); Type: FUNCTION; Schema: public; Owner: -
 --
 
 CREATE FUNCTION public.enforce_adjustment_terminal_immutability() RETURNS trigger
@@ -1880,10 +1733,8 @@ END;
 $$;
 
 
-ALTER FUNCTION public.enforce_adjustment_terminal_immutability() OWNER TO symphony_admin;
-
 --
--- Name: enforce_confidence_before_issuance(); Type: FUNCTION; Schema: public; Owner: symphony_admin
+-- Name: enforce_confidence_before_issuance(); Type: FUNCTION; Schema: public; Owner: -
 --
 
 CREATE FUNCTION public.enforce_confidence_before_issuance() RETURNS trigger
@@ -1960,10 +1811,8 @@ END;
 $$;
 
 
-ALTER FUNCTION public.enforce_confidence_before_issuance() OWNER TO symphony_admin;
-
 --
--- Name: enforce_instruction_reversal_source(); Type: FUNCTION; Schema: public; Owner: symphony_admin
+-- Name: enforce_instruction_reversal_source(); Type: FUNCTION; Schema: public; Owner: -
 --
 
 CREATE FUNCTION public.enforce_instruction_reversal_source() RETURNS trigger
@@ -2002,10 +1851,8 @@ END;
 $$;
 
 
-ALTER FUNCTION public.enforce_instruction_reversal_source() OWNER TO symphony_admin;
-
 --
--- Name: enforce_internal_ledger_posting_context(); Type: FUNCTION; Schema: public; Owner: symphony_admin
+-- Name: enforce_internal_ledger_posting_context(); Type: FUNCTION; Schema: public; Owner: -
 --
 
 CREATE FUNCTION public.enforce_internal_ledger_posting_context() RETURNS trigger
@@ -2041,10 +1888,8 @@ END;
 $$;
 
 
-ALTER FUNCTION public.enforce_internal_ledger_posting_context() OWNER TO symphony_admin;
-
 --
--- Name: enforce_member_tenant_match(); Type: FUNCTION; Schema: public; Owner: symphony_admin
+-- Name: enforce_member_tenant_match(); Type: FUNCTION; Schema: public; Owner: -
 --
 
 CREATE FUNCTION public.enforce_member_tenant_match() RETURNS trigger
@@ -2081,10 +1926,8 @@ END;
 $$;
 
 
-ALTER FUNCTION public.enforce_member_tenant_match() OWNER TO symphony_admin;
-
 --
--- Name: enforce_settlement_acknowledgement(); Type: FUNCTION; Schema: public; Owner: symphony_admin
+-- Name: enforce_settlement_acknowledgement(); Type: FUNCTION; Schema: public; Owner: -
 --
 
 CREATE FUNCTION public.enforce_settlement_acknowledgement() RETURNS trigger
@@ -2101,17 +1944,8 @@ END;
 $$;
 
 
-ALTER FUNCTION public.enforce_settlement_acknowledgement() OWNER TO symphony_admin;
-
 --
--- Name: FUNCTION enforce_settlement_acknowledgement(); Type: COMMENT; Schema: public; Owner: symphony_admin
---
-
-COMMENT ON FUNCTION public.enforce_settlement_acknowledgement() IS 'TSK-P1-INT-004: wires acknowledgement guard into settlement writes so SETTLED records fail closed until ACKNOWLEDGED.';
-
-
---
--- Name: enqueue_payment_outbox(text, text, text, text, jsonb); Type: FUNCTION; Schema: public; Owner: symphony_admin
+-- Name: enqueue_payment_outbox(text, text, text, text, jsonb); Type: FUNCTION; Schema: public; Owner: -
 --
 
 CREATE FUNCTION public.enqueue_payment_outbox(p_instruction_id text, p_participant_id text, p_idempotency_key text, p_rail_type text, p_payload jsonb) RETURNS TABLE(outbox_id uuid, sequence_id bigint, created_at timestamp with time zone, state text)
@@ -2195,10 +2029,8 @@ CREATE FUNCTION public.enqueue_payment_outbox(p_instruction_id text, p_participa
 $$;
 
 
-ALTER FUNCTION public.enqueue_payment_outbox(p_instruction_id text, p_participant_id text, p_idempotency_key text, p_rail_type text, p_payload jsonb) OWNER TO symphony_admin;
-
 --
--- Name: ensure_anchor_sync_operation(uuid, text); Type: FUNCTION; Schema: public; Owner: symphony_admin
+-- Name: ensure_anchor_sync_operation(uuid, text); Type: FUNCTION; Schema: public; Owner: -
 --
 
 CREATE FUNCTION public.ensure_anchor_sync_operation(p_pack_id uuid, p_anchor_provider text DEFAULT 'GENERIC'::text) RETURNS uuid
@@ -2227,10 +2059,8 @@ END;
 $$;
 
 
-ALTER FUNCTION public.ensure_anchor_sync_operation(p_pack_id uuid, p_anchor_provider text) OWNER TO symphony_admin;
-
 --
--- Name: escalate_missing_acknowledgement(text, uuid, text, text, text, integer); Type: FUNCTION; Schema: public; Owner: symphony_admin
+-- Name: escalate_missing_acknowledgement(text, uuid, text, text, text, integer); Type: FUNCTION; Schema: public; Owner: -
 --
 
 CREATE FUNCTION public.escalate_missing_acknowledgement(p_instruction_id text, p_program_id uuid, p_policy_version_id text, p_actor text DEFAULT 'system'::text, p_reason text DEFAULT 'missing_acknowledgement'::text, p_timeout_minutes integer DEFAULT 30) RETURNS void
@@ -2285,17 +2115,8 @@ END;
 $$;
 
 
-ALTER FUNCTION public.escalate_missing_acknowledgement(p_instruction_id text, p_program_id uuid, p_policy_version_id text, p_actor text, p_reason text, p_timeout_minutes integer) OWNER TO symphony_admin;
-
 --
--- Name: FUNCTION escalate_missing_acknowledgement(p_instruction_id text, p_program_id uuid, p_policy_version_id text, p_actor text, p_reason text, p_timeout_minutes integer); Type: COMMENT; Schema: public; Owner: symphony_admin
---
-
-COMMENT ON FUNCTION public.escalate_missing_acknowledgement(p_instruction_id text, p_program_id uuid, p_policy_version_id text, p_actor text, p_reason text, p_timeout_minutes integer) IS 'TSK-P1-INT-004: reuses supervisor_approval_queue for missing-ack Tier-3 interrupt escalation and writes append-only audit events.';
-
-
---
--- Name: evaluate_adjustment_ceiling(uuid, numeric); Type: FUNCTION; Schema: public; Owner: symphony_admin
+-- Name: evaluate_adjustment_ceiling(uuid, numeric); Type: FUNCTION; Schema: public; Owner: -
 --
 
 CREATE FUNCTION public.evaluate_adjustment_ceiling(p_adjustment_id uuid, p_parent_instruction_value numeric) RETURNS void
@@ -2320,10 +2141,8 @@ END;
 $$;
 
 
-ALTER FUNCTION public.evaluate_adjustment_ceiling(p_adjustment_id uuid, p_parent_instruction_value numeric) OWNER TO symphony_admin;
-
 --
--- Name: evaluate_circuit_breaker(text, text, numeric, numeric, integer, text); Type: FUNCTION; Schema: public; Owner: symphony_admin
+-- Name: evaluate_circuit_breaker(text, text, numeric, numeric, integer, text); Type: FUNCTION; Schema: public; Owner: -
 --
 
 CREATE FUNCTION public.evaluate_circuit_breaker(p_adapter_id text, p_rail_id text, p_trigger_threshold numeric, p_observed_rate numeric, p_window_seconds integer, p_policy_version_id text) RETURNS text
@@ -2362,10 +2181,8 @@ END;
 $$;
 
 
-ALTER FUNCTION public.evaluate_circuit_breaker(p_adapter_id text, p_rail_id text, p_trigger_threshold numeric, p_observed_rate numeric, p_window_seconds integer, p_policy_version_id text) OWNER TO symphony_admin;
-
 --
--- Name: execute_pii_purge(uuid, text); Type: FUNCTION; Schema: public; Owner: symphony_admin
+-- Name: execute_pii_purge(uuid, text); Type: FUNCTION; Schema: public; Owner: -
 --
 
 CREATE FUNCTION public.execute_pii_purge(p_purge_request_id uuid, p_executor text) RETURNS TABLE(purge_request_id uuid, rows_affected integer, already_purged boolean)
@@ -2428,10 +2245,8 @@ END;
 $$;
 
 
-ALTER FUNCTION public.execute_pii_purge(p_purge_request_id uuid, p_executor text) OWNER TO symphony_admin;
-
 --
--- Name: expire_escrows(timestamp with time zone, text); Type: FUNCTION; Schema: public; Owner: symphony_admin
+-- Name: expire_escrows(timestamp with time zone, text); Type: FUNCTION; Schema: public; Owner: -
 --
 
 CREATE FUNCTION public.expire_escrows(p_now timestamp with time zone DEFAULT now(), p_actor_id text DEFAULT 'escrow_expiry_worker'::text) RETURNS integer
@@ -2466,17 +2281,8 @@ END;
 $$;
 
 
-ALTER FUNCTION public.expire_escrows(p_now timestamp with time zone, p_actor_id text) OWNER TO symphony_admin;
-
 --
--- Name: FUNCTION expire_escrows(p_now timestamp with time zone, p_actor_id text); Type: COMMENT; Schema: public; Owner: symphony_admin
---
-
-COMMENT ON FUNCTION public.expire_escrows(p_now timestamp with time zone, p_actor_id text) IS 'Expires CREATED/AUTHORIZED/RELEASE_REQUESTED escrows when configured windows elapse.';
-
-
---
--- Name: expire_supervisor_approvals(timestamp with time zone); Type: FUNCTION; Schema: public; Owner: symphony_admin
+-- Name: expire_supervisor_approvals(timestamp with time zone); Type: FUNCTION; Schema: public; Owner: -
 --
 
 CREATE FUNCTION public.expire_supervisor_approvals(p_now timestamp with time zone DEFAULT now()) RETURNS integer
@@ -2500,10 +2306,8 @@ END;
 $$;
 
 
-ALTER FUNCTION public.expire_supervisor_approvals(p_now timestamp with time zone) OWNER TO symphony_admin;
-
 --
--- Name: get_checkpoint_requirements(text); Type: FUNCTION; Schema: public; Owner: symphony_admin
+-- Name: get_checkpoint_requirements(text); Type: FUNCTION; Schema: public; Owner: -
 --
 
 CREATE FUNCTION public.get_checkpoint_requirements(p_jurisdiction_code text) RETURNS TABLE(lifecycle_checkpoint_rule_id uuid, regulatory_checkpoint_id uuid, rule_type text, rule_payload_json jsonb)
@@ -2523,10 +2327,8 @@ END;
 $$;
 
 
-ALTER FUNCTION public.get_checkpoint_requirements(p_jurisdiction_code text) OWNER TO symphony_admin;
-
 --
--- Name: get_evidence_node(uuid, uuid); Type: FUNCTION; Schema: public; Owner: symphony_admin
+-- Name: get_evidence_node(uuid, uuid); Type: FUNCTION; Schema: public; Owner: -
 --
 
 CREATE FUNCTION public.get_evidence_node(p_tenant_id uuid, p_evidence_node_id uuid) RETURNS TABLE(evidence_node_id uuid, project_id uuid, monitoring_record_id uuid, node_type text, node_payload_json jsonb, created_at timestamp with time zone)
@@ -2548,10 +2350,8 @@ END;
 $$;
 
 
-ALTER FUNCTION public.get_evidence_node(p_tenant_id uuid, p_evidence_node_id uuid) OWNER TO symphony_admin;
-
 --
--- Name: get_monitoring_record_payload(uuid, uuid); Type: FUNCTION; Schema: public; Owner: symphony_admin
+-- Name: get_monitoring_record_payload(uuid, uuid); Type: FUNCTION; Schema: public; Owner: -
 --
 
 CREATE FUNCTION public.get_monitoring_record_payload(p_tenant_id uuid, p_monitoring_record_id uuid) RETURNS jsonb
@@ -2579,10 +2379,8 @@ END;
 $$;
 
 
-ALTER FUNCTION public.get_monitoring_record_payload(p_tenant_id uuid, p_monitoring_record_id uuid) OWNER TO symphony_admin;
-
 --
--- Name: gf_verifier_read_tokens_append_only(); Type: FUNCTION; Schema: public; Owner: symphony_admin
+-- Name: gf_verifier_read_tokens_append_only(); Type: FUNCTION; Schema: public; Owner: -
 --
 
 CREATE FUNCTION public.gf_verifier_read_tokens_append_only() RETURNS trigger
@@ -2611,10 +2409,8 @@ END;
 $$;
 
 
-ALTER FUNCTION public.gf_verifier_read_tokens_append_only() OWNER TO symphony_admin;
-
 --
--- Name: gf_verifier_tables_append_only(); Type: FUNCTION; Schema: public; Owner: symphony_admin
+-- Name: gf_verifier_tables_append_only(); Type: FUNCTION; Schema: public; Owner: -
 --
 
 CREATE FUNCTION public.gf_verifier_tables_append_only() RETURNS trigger
@@ -2631,10 +2427,8 @@ END;
 $$;
 
 
-ALTER FUNCTION public.gf_verifier_tables_append_only() OWNER TO symphony_admin;
-
 --
--- Name: guard_auto_finalize_when_inquiry_exhausted(text); Type: FUNCTION; Schema: public; Owner: symphony_admin
+-- Name: guard_auto_finalize_when_inquiry_exhausted(text); Type: FUNCTION; Schema: public; Owner: -
 --
 
 CREATE FUNCTION public.guard_auto_finalize_when_inquiry_exhausted(p_instruction_id text) RETURNS void
@@ -2655,17 +2449,8 @@ END;
 $$;
 
 
-ALTER FUNCTION public.guard_auto_finalize_when_inquiry_exhausted(p_instruction_id text) OWNER TO symphony_admin;
-
 --
--- Name: FUNCTION guard_auto_finalize_when_inquiry_exhausted(p_instruction_id text); Type: COMMENT; Schema: public; Owner: symphony_admin
---
-
-COMMENT ON FUNCTION public.guard_auto_finalize_when_inquiry_exhausted(p_instruction_id text) IS 'TSK-HARD-012: fail-closed guard for auto-finalization while inquiry is EXHAUSTED (P7301).';
-
-
---
--- Name: guard_settlement_requires_acknowledgement(text); Type: FUNCTION; Schema: public; Owner: symphony_admin
+-- Name: guard_settlement_requires_acknowledgement(text); Type: FUNCTION; Schema: public; Owner: -
 --
 
 CREATE FUNCTION public.guard_settlement_requires_acknowledgement(p_instruction_id text) RETURNS void
@@ -2686,17 +2471,8 @@ END;
 $$;
 
 
-ALTER FUNCTION public.guard_settlement_requires_acknowledgement(p_instruction_id text) OWNER TO symphony_admin;
-
 --
--- Name: FUNCTION guard_settlement_requires_acknowledgement(p_instruction_id text); Type: COMMENT; Schema: public; Owner: symphony_admin
---
-
-COMMENT ON FUNCTION public.guard_settlement_requires_acknowledgement(p_instruction_id text) IS 'TSK-P1-INT-004: fail-closed settlement guard requiring explicit acknowledgement state.';
-
-
---
--- Name: issue_adjustment(text, text, numeric, text, text); Type: FUNCTION; Schema: public; Owner: symphony_admin
+-- Name: issue_adjustment(text, text, numeric, text, text); Type: FUNCTION; Schema: public; Owner: -
 --
 
 CREATE FUNCTION public.issue_adjustment(p_parent_instruction_id text, p_adjustment_type text, p_adjustment_value numeric, p_policy_version_id text, p_justification text DEFAULT NULL::text) RETURNS uuid
@@ -2720,10 +2496,8 @@ END;
 $$;
 
 
-ALTER FUNCTION public.issue_adjustment(p_parent_instruction_id text, p_adjustment_type text, p_adjustment_value numeric, p_policy_version_id text, p_justification text) OWNER TO symphony_admin;
-
 --
--- Name: issue_adjustment_with_recipient(text, text); Type: FUNCTION; Schema: public; Owner: symphony_admin
+-- Name: issue_adjustment_with_recipient(text, text); Type: FUNCTION; Schema: public; Owner: -
 --
 
 CREATE FUNCTION public.issue_adjustment_with_recipient(p_parent_instruction_id text, p_recipient text) RETURNS uuid
@@ -2736,10 +2510,8 @@ END;
 $$;
 
 
-ALTER FUNCTION public.issue_adjustment_with_recipient(p_parent_instruction_id text, p_recipient text) OWNER TO symphony_admin;
-
 --
--- Name: issue_asset_batch(uuid, uuid, uuid, uuid, uuid, text, numeric, text, jsonb); Type: FUNCTION; Schema: public; Owner: symphony_admin
+-- Name: issue_asset_batch(uuid, uuid, uuid, uuid, uuid, text, numeric, text, jsonb); Type: FUNCTION; Schema: public; Owner: -
 --
 
 CREATE FUNCTION public.issue_asset_batch(p_tenant_id uuid, p_project_id uuid, p_methodology_version_id uuid, p_adapter_registration_id uuid, p_interpretation_pack_id uuid, p_asset_type text, p_quantity numeric, p_unit text, p_metadata_json jsonb DEFAULT '{}'::jsonb) RETURNS uuid
@@ -2871,10 +2643,8 @@ END;
 $$;
 
 
-ALTER FUNCTION public.issue_asset_batch(p_tenant_id uuid, p_project_id uuid, p_methodology_version_id uuid, p_adapter_registration_id uuid, p_interpretation_pack_id uuid, p_asset_type text, p_quantity numeric, p_unit text, p_metadata_json jsonb) OWNER TO symphony_admin;
-
 --
--- Name: issue_verifier_read_token(uuid, uuid, uuid, integer, jsonb); Type: FUNCTION; Schema: public; Owner: symphony_admin
+-- Name: issue_verifier_read_token(uuid, uuid, uuid, integer, jsonb); Type: FUNCTION; Schema: public; Owner: -
 --
 
 CREATE FUNCTION public.issue_verifier_read_token(p_tenant_id uuid, p_verifier_id uuid, p_project_id uuid, p_ttl_hours integer DEFAULT 720, p_scoped_tables jsonb DEFAULT '["evidence_nodes", "monitoring_records", "asset_batches", "verification_cases"]'::jsonb) RETURNS TABLE(token_id uuid, token_secret text, expires_at timestamp with time zone)
@@ -2942,10 +2712,8 @@ END;
 $$;
 
 
-ALTER FUNCTION public.issue_verifier_read_token(p_tenant_id uuid, p_verifier_id uuid, p_project_id uuid, p_ttl_hours integer, p_scoped_tables jsonb) OWNER TO symphony_admin;
-
 --
--- Name: link_evidence_to_record(uuid, uuid, uuid, text); Type: FUNCTION; Schema: public; Owner: symphony_admin
+-- Name: link_evidence_to_record(uuid, uuid, uuid, text); Type: FUNCTION; Schema: public; Owner: -
 --
 
 CREATE FUNCTION public.link_evidence_to_record(p_tenant_id uuid, p_evidence_node_id uuid, p_target_evidence_node_id uuid, p_edge_type text) RETURNS uuid
@@ -3028,10 +2796,8 @@ END;
 $$;
 
 
-ALTER FUNCTION public.link_evidence_to_record(p_tenant_id uuid, p_evidence_node_id uuid, p_target_evidence_node_id uuid, p_edge_type text) OWNER TO symphony_admin;
-
 --
--- Name: list_project_asset_batches(uuid, uuid); Type: FUNCTION; Schema: public; Owner: symphony_admin
+-- Name: list_project_asset_batches(uuid, uuid); Type: FUNCTION; Schema: public; Owner: -
 --
 
 CREATE FUNCTION public.list_project_asset_batches(p_tenant_id uuid, p_project_id uuid) RETURNS TABLE(asset_batch_id uuid, batch_type text, quantity numeric, status text, total_retired numeric, remaining_quantity numeric, created_at timestamp with time zone)
@@ -3061,10 +2827,8 @@ END;
 $$;
 
 
-ALTER FUNCTION public.list_project_asset_batches(p_tenant_id uuid, p_project_id uuid) OWNER TO symphony_admin;
-
 --
--- Name: list_project_evidence(uuid, uuid); Type: FUNCTION; Schema: public; Owner: symphony_admin
+-- Name: list_project_evidence(uuid, uuid); Type: FUNCTION; Schema: public; Owner: -
 --
 
 CREATE FUNCTION public.list_project_evidence(p_tenant_id uuid, p_project_id uuid) RETURNS TABLE(evidence_node_id uuid, node_type text, monitoring_record_id uuid, created_at timestamp with time zone)
@@ -3085,10 +2849,8 @@ END;
 $$;
 
 
-ALTER FUNCTION public.list_project_evidence(p_tenant_id uuid, p_project_id uuid) OWNER TO symphony_admin;
-
 --
--- Name: list_tenant_projects(uuid); Type: FUNCTION; Schema: public; Owner: symphony_admin
+-- Name: list_tenant_projects(uuid); Type: FUNCTION; Schema: public; Owner: -
 --
 
 CREATE FUNCTION public.list_tenant_projects(p_tenant_id uuid) RETURNS TABLE(project_id uuid, name text, status text, created_at timestamp with time zone)
@@ -3105,10 +2867,8 @@ END;
 $$;
 
 
-ALTER FUNCTION public.list_tenant_projects(p_tenant_id uuid) OWNER TO symphony_admin;
-
 --
--- Name: list_verifier_tokens(uuid, uuid); Type: FUNCTION; Schema: public; Owner: symphony_admin
+-- Name: list_verifier_tokens(uuid, uuid); Type: FUNCTION; Schema: public; Owner: -
 --
 
 CREATE FUNCTION public.list_verifier_tokens(p_tenant_id uuid, p_verifier_id uuid) RETURNS TABLE(token_id uuid, project_id uuid, scoped_tables jsonb, issued_at timestamp with time zone, expires_at timestamp with time zone, revoked_at timestamp with time zone, is_valid boolean)
@@ -3135,10 +2895,8 @@ END;
 $$;
 
 
-ALTER FUNCTION public.list_verifier_tokens(p_tenant_id uuid, p_verifier_id uuid) OWNER TO symphony_admin;
-
 --
--- Name: mark_anchor_sync_anchored(uuid, uuid, text, text, text); Type: FUNCTION; Schema: public; Owner: symphony_admin
+-- Name: mark_anchor_sync_anchored(uuid, uuid, text, text, text); Type: FUNCTION; Schema: public; Owner: -
 --
 
 CREATE FUNCTION public.mark_anchor_sync_anchored(p_operation_id uuid, p_lease_token uuid, p_worker_id text, p_anchor_ref text, p_anchor_type text DEFAULT 'HYBRID_SYNC'::text) RETURNS void
@@ -3181,10 +2939,8 @@ END;
 $$;
 
 
-ALTER FUNCTION public.mark_anchor_sync_anchored(p_operation_id uuid, p_lease_token uuid, p_worker_id text, p_anchor_ref text, p_anchor_type text) OWNER TO symphony_admin;
-
 --
--- Name: mark_instruction_awaiting_execution(text, uuid, text, text); Type: FUNCTION; Schema: public; Owner: symphony_admin
+-- Name: mark_instruction_awaiting_execution(text, uuid, text, text); Type: FUNCTION; Schema: public; Owner: -
 --
 
 CREATE FUNCTION public.mark_instruction_awaiting_execution(p_instruction_id text, p_program_id uuid, p_policy_version_id text, p_actor text DEFAULT 'system'::text) RETURNS public.inquiry_state_enum
@@ -3206,17 +2962,8 @@ END;
 $$;
 
 
-ALTER FUNCTION public.mark_instruction_awaiting_execution(p_instruction_id text, p_program_id uuid, p_policy_version_id text, p_actor text) OWNER TO symphony_admin;
-
 --
--- Name: FUNCTION mark_instruction_awaiting_execution(p_instruction_id text, p_program_id uuid, p_policy_version_id text, p_actor text); Type: COMMENT; Schema: public; Owner: symphony_admin
---
-
-COMMENT ON FUNCTION public.mark_instruction_awaiting_execution(p_instruction_id text, p_program_id uuid, p_policy_version_id text, p_actor text) IS 'TSK-P1-INT-004: records post-egress pre-ack lifecycle as AWAITING_EXECUTION.';
-
-
---
--- Name: migrate_person_to_program(uuid, uuid, uuid, uuid, uuid, text); Type: FUNCTION; Schema: public; Owner: symphony_admin
+-- Name: migrate_person_to_program(uuid, uuid, uuid, uuid, uuid, text); Type: FUNCTION; Schema: public; Owner: -
 --
 
 CREATE FUNCTION public.migrate_person_to_program(p_tenant_id uuid, p_person_id uuid, p_from_program_id uuid, p_to_program_id uuid, p_new_entity_id uuid, p_reason text DEFAULT NULL::text) RETURNS uuid
@@ -3364,17 +3111,8 @@ END;
 $$;
 
 
-ALTER FUNCTION public.migrate_person_to_program(p_tenant_id uuid, p_person_id uuid, p_from_program_id uuid, p_to_program_id uuid, p_new_entity_id uuid, p_reason text) OWNER TO symphony_admin;
-
 --
--- Name: FUNCTION migrate_person_to_program(p_tenant_id uuid, p_person_id uuid, p_from_program_id uuid, p_to_program_id uuid, p_new_entity_id uuid, p_reason text); Type: COMMENT; Schema: public; Owner: symphony_admin
---
-
-COMMENT ON FUNCTION public.migrate_person_to_program(p_tenant_id uuid, p_person_id uuid, p_from_program_id uuid, p_to_program_id uuid, p_new_entity_id uuid, p_reason text) IS 'Phase-1 migration function: additive member migration with duplicate-call SQLSTATE 23505.';
-
-
---
--- Name: migrate_person_to_program(uuid, uuid, uuid, uuid, text, text, text); Type: FUNCTION; Schema: public; Owner: symphony_admin
+-- Name: migrate_person_to_program(uuid, uuid, uuid, uuid, text, text, text); Type: FUNCTION; Schema: public; Owner: -
 --
 
 CREATE FUNCTION public.migrate_person_to_program(p_tenant_id uuid, p_person_id uuid, p_from_program_id uuid, p_to_program_id uuid, p_migrated_by text DEFAULT CURRENT_USER, p_reason text DEFAULT 'program_migration'::text, p_formula_key text DEFAULT 'TIER1_DETERMINISTIC_DEFAULT'::text) RETURNS uuid
@@ -3522,10 +3260,8 @@ END;
 $$;
 
 
-ALTER FUNCTION public.migrate_person_to_program(p_tenant_id uuid, p_person_id uuid, p_from_program_id uuid, p_to_program_id uuid, p_migrated_by text, p_reason text, p_formula_key text) OWNER TO symphony_admin;
-
 --
--- Name: outbox_retry_ceiling(); Type: FUNCTION; Schema: public; Owner: symphony_admin
+-- Name: outbox_retry_ceiling(); Type: FUNCTION; Schema: public; Owner: -
 --
 
 CREATE FUNCTION public.outbox_retry_ceiling() RETURNS integer
@@ -3538,17 +3274,8 @@ CREATE FUNCTION public.outbox_retry_ceiling() RETURNS integer
 $$;
 
 
-ALTER FUNCTION public.outbox_retry_ceiling() OWNER TO symphony_admin;
-
 --
--- Name: FUNCTION outbox_retry_ceiling(); Type: COMMENT; Schema: public; Owner: symphony_admin
---
-
-COMMENT ON FUNCTION public.outbox_retry_ceiling() IS 'Returns the configured retry ceiling (symphony.outbox_retry_ceiling) or default 20.';
-
-
---
--- Name: quarantine_malformed_response(text, text, public.quarantine_classification_enum, text, integer, text); Type: FUNCTION; Schema: public; Owner: symphony_admin
+-- Name: quarantine_malformed_response(text, text, public.quarantine_classification_enum, text, integer, text); Type: FUNCTION; Schema: public; Owner: -
 --
 
 CREATE FUNCTION public.quarantine_malformed_response(p_adapter_id text, p_rail_id text, p_classification public.quarantine_classification_enum, p_payload text, p_truncate_kb integer, p_policy_version_id text) RETURNS uuid
@@ -3581,10 +3308,8 @@ END;
 $$;
 
 
-ALTER FUNCTION public.quarantine_malformed_response(p_adapter_id text, p_rail_id text, p_classification public.quarantine_classification_enum, p_payload text, p_truncate_kb integer, p_policy_version_id text) OWNER TO symphony_admin;
-
 --
--- Name: query_asset_batch(uuid, uuid); Type: FUNCTION; Schema: public; Owner: symphony_admin
+-- Name: query_asset_batch(uuid, uuid); Type: FUNCTION; Schema: public; Owner: -
 --
 
 CREATE FUNCTION public.query_asset_batch(p_tenant_id uuid, p_asset_batch_id uuid) RETURNS TABLE(asset_batch_id uuid, project_id uuid, batch_type text, quantity numeric, status text, total_retired numeric, remaining_quantity numeric, created_at timestamp with time zone)
@@ -3615,10 +3340,8 @@ END;
 $$;
 
 
-ALTER FUNCTION public.query_asset_batch(p_tenant_id uuid, p_asset_batch_id uuid) OWNER TO symphony_admin;
-
 --
--- Name: query_authority_decisions(text, uuid); Type: FUNCTION; Schema: public; Owner: symphony_admin
+-- Name: query_authority_decisions(text, uuid); Type: FUNCTION; Schema: public; Owner: -
 --
 
 CREATE FUNCTION public.query_authority_decisions(p_jurisdiction_code text, p_subject_id uuid DEFAULT NULL::uuid) RETURNS TABLE(authority_decision_id uuid, regulatory_authority_id uuid, decision_type text, decision_outcome text, subject_type text, subject_id text, from_status text, to_status text, created_at timestamp with time zone)
@@ -3645,10 +3368,8 @@ END;
 $$;
 
 
-ALTER FUNCTION public.query_authority_decisions(p_jurisdiction_code text, p_subject_id uuid) OWNER TO symphony_admin;
-
 --
--- Name: query_evidence_lineage(uuid, uuid); Type: FUNCTION; Schema: public; Owner: symphony_admin
+-- Name: query_evidence_lineage(uuid, uuid); Type: FUNCTION; Schema: public; Owner: -
 --
 
 CREATE FUNCTION public.query_evidence_lineage(p_tenant_id uuid, p_project_id uuid) RETURNS TABLE(evidence_node_id uuid, node_type text, monitoring_record_id uuid, evidence_edge_id uuid, source_node_id uuid, target_node_id uuid, edge_type text)
@@ -3675,10 +3396,8 @@ END;
 $$;
 
 
-ALTER FUNCTION public.query_evidence_lineage(p_tenant_id uuid, p_project_id uuid) OWNER TO symphony_admin;
-
 --
--- Name: query_monitoring_records(uuid, uuid, text); Type: FUNCTION; Schema: public; Owner: symphony_admin
+-- Name: query_monitoring_records(uuid, uuid, text); Type: FUNCTION; Schema: public; Owner: -
 --
 
 CREATE FUNCTION public.query_monitoring_records(p_tenant_id uuid, p_project_id uuid, p_record_type text DEFAULT NULL::text) RETURNS TABLE(monitoring_record_id uuid, project_id uuid, record_type text, record_payload_json jsonb, created_at timestamp with time zone)
@@ -3708,10 +3427,8 @@ END;
 $$;
 
 
-ALTER FUNCTION public.query_monitoring_records(p_tenant_id uuid, p_project_id uuid, p_record_type text) OWNER TO symphony_admin;
-
 --
--- Name: query_project_details(uuid, uuid); Type: FUNCTION; Schema: public; Owner: symphony_admin
+-- Name: query_project_details(uuid, uuid); Type: FUNCTION; Schema: public; Owner: -
 --
 
 CREATE FUNCTION public.query_project_details(p_tenant_id uuid, p_project_id uuid) RETURNS TABLE(project_id uuid, name text, status text, created_at timestamp with time zone)
@@ -3728,10 +3445,8 @@ END;
 $$;
 
 
-ALTER FUNCTION public.query_project_details(p_tenant_id uuid, p_project_id uuid) OWNER TO symphony_admin;
-
 --
--- Name: record_asset_lifecycle_event(uuid, uuid, text, jsonb); Type: FUNCTION; Schema: public; Owner: symphony_admin
+-- Name: record_asset_lifecycle_event(uuid, uuid, text, jsonb); Type: FUNCTION; Schema: public; Owner: -
 --
 
 CREATE FUNCTION public.record_asset_lifecycle_event(p_tenant_id uuid, p_asset_batch_id uuid, p_event_type text, p_event_payload jsonb DEFAULT '{}'::jsonb) RETURNS uuid
@@ -3763,10 +3478,8 @@ END;
 $$;
 
 
-ALTER FUNCTION public.record_asset_lifecycle_event(p_tenant_id uuid, p_asset_batch_id uuid, p_event_type text, p_event_payload jsonb) OWNER TO symphony_admin;
-
 --
--- Name: record_authority_decision(uuid, text, text, text, text, uuid, text, text, uuid, jsonb); Type: FUNCTION; Schema: public; Owner: symphony_admin
+-- Name: record_authority_decision(uuid, text, text, text, text, uuid, text, text, uuid, jsonb); Type: FUNCTION; Schema: public; Owner: -
 --
 
 CREATE FUNCTION public.record_authority_decision(p_regulatory_authority_id uuid, p_jurisdiction_code text, p_decision_type text, p_decision_outcome text, p_subject_type text, p_subject_id uuid, p_from_status text, p_to_status text, p_interpretation_pack_id uuid DEFAULT NULL::uuid, p_decision_payload_json jsonb DEFAULT '{}'::jsonb) RETURNS uuid
@@ -3878,10 +3591,8 @@ END;
 $$;
 
 
-ALTER FUNCTION public.record_authority_decision(p_regulatory_authority_id uuid, p_jurisdiction_code text, p_decision_type text, p_decision_outcome text, p_subject_type text, p_subject_id uuid, p_from_status text, p_to_status text, p_interpretation_pack_id uuid, p_decision_payload_json jsonb) OWNER TO symphony_admin;
-
 --
--- Name: record_late_callback(text, jsonb, text, text); Type: FUNCTION; Schema: public; Owner: symphony_admin
+-- Name: record_late_callback(text, jsonb, text, text); Type: FUNCTION; Schema: public; Owner: -
 --
 
 CREATE FUNCTION public.record_late_callback(p_instruction_id text, p_payload jsonb, p_state_at_arrival text, p_fingerprint text) RETURNS uuid
@@ -3911,10 +3622,8 @@ END;
 $$;
 
 
-ALTER FUNCTION public.record_late_callback(p_instruction_id text, p_payload jsonb, p_state_at_arrival text, p_fingerprint text) OWNER TO symphony_admin;
-
 --
--- Name: record_mmo_reality_control(text, text, text, text, text, text); Type: FUNCTION; Schema: public; Owner: symphony_admin
+-- Name: record_mmo_reality_control(text, text, text, text, text, text); Type: FUNCTION; Schema: public; Owner: -
 --
 
 CREATE FUNCTION public.record_mmo_reality_control(p_instruction_id text, p_scenario_type text, p_fallback_posture text, p_policy_version_id text, p_behavior_profile text, p_evidence_artifact_type text) RETURNS uuid
@@ -3941,10 +3650,8 @@ END;
 $$;
 
 
-ALTER FUNCTION public.record_mmo_reality_control(p_instruction_id text, p_scenario_type text, p_fallback_posture text, p_policy_version_id text, p_behavior_profile text, p_evidence_artifact_type text) OWNER TO symphony_admin;
-
 --
--- Name: record_monitoring_record(uuid, uuid, text, jsonb, uuid, timestamp with time zone, uuid); Type: FUNCTION; Schema: public; Owner: symphony_admin
+-- Name: record_monitoring_record(uuid, uuid, text, jsonb, uuid, timestamp with time zone, uuid); Type: FUNCTION; Schema: public; Owner: -
 --
 
 CREATE FUNCTION public.record_monitoring_record(p_tenant_id uuid, p_project_id uuid, p_record_type text, p_record_payload_json jsonb, p_methodology_version_id uuid DEFAULT NULL::uuid, p_event_timestamp timestamp with time zone DEFAULT NULL::timestamp with time zone, p_payload_schema_reference_id uuid DEFAULT NULL::uuid) RETURNS uuid
@@ -4066,10 +3773,8 @@ END;
 $$;
 
 
-ALTER FUNCTION public.record_monitoring_record(p_tenant_id uuid, p_project_id uuid, p_record_type text, p_record_payload_json jsonb, p_methodology_version_id uuid, p_event_timestamp timestamp with time zone, p_payload_schema_reference_id uuid) OWNER TO symphony_admin;
-
 --
--- Name: register_project(uuid, text, text, uuid); Type: FUNCTION; Schema: public; Owner: symphony_admin
+-- Name: register_project(uuid, text, text, uuid); Type: FUNCTION; Schema: public; Owner: -
 --
 
 CREATE FUNCTION public.register_project(p_tenant_id uuid, p_project_name text, p_jurisdiction_code text, p_methodology_version_id uuid) RETURNS TABLE(project_id uuid, status text)
@@ -4133,10 +3838,8 @@ END;
 $$;
 
 
-ALTER FUNCTION public.register_project(p_tenant_id uuid, p_project_name text, p_jurisdiction_code text, p_methodology_version_id uuid) OWNER TO symphony_admin;
-
 --
--- Name: release_escrow(uuid, text, text, jsonb); Type: FUNCTION; Schema: public; Owner: symphony_admin
+-- Name: release_escrow(uuid, text, text, jsonb); Type: FUNCTION; Schema: public; Owner: -
 --
 
 CREATE FUNCTION public.release_escrow(p_escrow_id uuid, p_actor_id text DEFAULT 'system'::text, p_reason text DEFAULT NULL::text, p_metadata jsonb DEFAULT '{}'::jsonb) RETURNS uuid
@@ -4162,17 +3865,8 @@ END;
 $$;
 
 
-ALTER FUNCTION public.release_escrow(p_escrow_id uuid, p_actor_id text, p_reason text, p_metadata jsonb) OWNER TO symphony_admin;
-
 --
--- Name: FUNCTION release_escrow(p_escrow_id uuid, p_actor_id text, p_reason text, p_metadata jsonb); Type: COMMENT; Schema: public; Owner: symphony_admin
---
-
-COMMENT ON FUNCTION public.release_escrow(p_escrow_id uuid, p_actor_id text, p_reason text, p_metadata jsonb) IS 'Non-custodial release primitive: emits RELEASED event + state transition; does not move funds.';
-
-
---
--- Name: repair_expired_anchor_sync_leases(text); Type: FUNCTION; Schema: public; Owner: symphony_admin
+-- Name: repair_expired_anchor_sync_leases(text); Type: FUNCTION; Schema: public; Owner: -
 --
 
 CREATE FUNCTION public.repair_expired_anchor_sync_leases(p_worker_id text DEFAULT 'anchor_repair'::text) RETURNS integer
@@ -4197,10 +3891,8 @@ END;
 $$;
 
 
-ALTER FUNCTION public.repair_expired_anchor_sync_leases(p_worker_id text) OWNER TO symphony_admin;
-
 --
--- Name: repair_expired_leases(integer, text); Type: FUNCTION; Schema: public; Owner: symphony_admin
+-- Name: repair_expired_leases(integer, text); Type: FUNCTION; Schema: public; Owner: -
 --
 
 CREATE FUNCTION public.repair_expired_leases(p_batch_size integer, p_worker_id text) RETURNS TABLE(outbox_id uuid, attempt_no integer)
@@ -4262,10 +3954,8 @@ CREATE FUNCTION public.repair_expired_leases(p_batch_size integer, p_worker_id t
 $$;
 
 
-ALTER FUNCTION public.repair_expired_leases(p_batch_size integer, p_worker_id text) OWNER TO symphony_admin;
-
 --
--- Name: request_pii_purge(text, text, text); Type: FUNCTION; Schema: public; Owner: symphony_admin
+-- Name: request_pii_purge(text, text, text); Type: FUNCTION; Schema: public; Owner: -
 --
 
 CREATE FUNCTION public.request_pii_purge(p_subject_token text, p_requested_by text, p_request_reason text) RETURNS uuid
@@ -4302,10 +3992,32 @@ END;
 $$;
 
 
-ALTER FUNCTION public.request_pii_purge(p_subject_token text, p_requested_by text, p_request_reason text) OWNER TO symphony_admin;
+--
+-- Name: resolve_interpretation_pack(uuid, timestamp with time zone); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.resolve_interpretation_pack(p_project_id uuid, p_effective_at timestamp with time zone) RETURNS uuid
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO 'pg_catalog', 'public'
+    AS $$
+DECLARE
+    v_interpretation_pack_id UUID;
+BEGIN
+    SELECT interpretation_pack_id INTO v_interpretation_pack_id
+    FROM public.interpretation_packs
+    WHERE project_id = p_project_id
+      AND effective_from <= p_effective_at
+      AND (effective_to IS NULL OR effective_to > p_effective_at)
+    ORDER BY effective_from DESC
+    LIMIT 1;
+
+    RETURN v_interpretation_pack_id;
+END;
+$$;
+
 
 --
--- Name: resolve_missing_acknowledgement_interrupt(text, text, text, text); Type: FUNCTION; Schema: public; Owner: symphony_admin
+-- Name: resolve_missing_acknowledgement_interrupt(text, text, text, text); Type: FUNCTION; Schema: public; Owner: -
 --
 
 CREATE FUNCTION public.resolve_missing_acknowledgement_interrupt(p_instruction_id text, p_action text, p_actor text, p_reason text DEFAULT NULL::text) RETURNS public.inquiry_state_enum
@@ -4410,17 +4122,8 @@ END;
 $$;
 
 
-ALTER FUNCTION public.resolve_missing_acknowledgement_interrupt(p_instruction_id text, p_action text, p_actor text, p_reason text) OWNER TO symphony_admin;
-
 --
--- Name: FUNCTION resolve_missing_acknowledgement_interrupt(p_instruction_id text, p_action text, p_actor text, p_reason text); Type: COMMENT; Schema: public; Owner: symphony_admin
---
-
-COMMENT ON FUNCTION public.resolve_missing_acknowledgement_interrupt(p_instruction_id text, p_action text, p_actor text, p_reason text) IS 'TSK-P1-INT-004: supports ACKNOWLEDGE, RESUME, and RESET interrupt actions with append-only audit evidence; RESET returns to AWAITING_EXECUTION only.';
-
-
---
--- Name: resolve_reference_strategy(text); Type: FUNCTION; Schema: public; Owner: symphony_admin
+-- Name: resolve_reference_strategy(text); Type: FUNCTION; Schema: public; Owner: -
 --
 
 CREATE FUNCTION public.resolve_reference_strategy(p_rail_id text) RETURNS TABLE(strategy_type public.reference_strategy_type_enum, rail_id text, max_length integer, nonce_retry_limit integer, collision_action text, policy_version_id text)
@@ -4460,10 +4163,8 @@ END;
 $$;
 
 
-ALTER FUNCTION public.resolve_reference_strategy(p_rail_id text) OWNER TO symphony_admin;
-
 --
--- Name: retire_asset_batch(uuid, uuid, text, uuid, numeric); Type: FUNCTION; Schema: public; Owner: symphony_admin
+-- Name: retire_asset_batch(uuid, uuid, text, uuid, numeric); Type: FUNCTION; Schema: public; Owner: -
 --
 
 CREATE FUNCTION public.retire_asset_batch(p_tenant_id uuid, p_asset_batch_id uuid, p_retirement_reason text, p_interpretation_pack_id uuid, p_quantity numeric DEFAULT NULL::numeric) RETURNS uuid
@@ -4568,10 +4269,8 @@ END;
 $$;
 
 
-ALTER FUNCTION public.retire_asset_batch(p_tenant_id uuid, p_asset_batch_id uuid, p_retirement_reason text, p_interpretation_pack_id uuid, p_quantity numeric) OWNER TO symphony_admin;
-
 --
--- Name: revoke_verifier_read_token(uuid, uuid, text); Type: FUNCTION; Schema: public; Owner: symphony_admin
+-- Name: revoke_verifier_read_token(uuid, uuid, text); Type: FUNCTION; Schema: public; Owner: -
 --
 
 CREATE FUNCTION public.revoke_verifier_read_token(p_tenant_id uuid, p_token_id uuid, p_reason text DEFAULT 'manual_revocation'::text) RETURNS void
@@ -4596,10 +4295,8 @@ END;
 $$;
 
 
-ALTER FUNCTION public.revoke_verifier_read_token(p_tenant_id uuid, p_token_id uuid, p_reason text) OWNER TO symphony_admin;
-
 --
--- Name: set_correlation_id_if_null(); Type: FUNCTION; Schema: public; Owner: symphony_admin
+-- Name: set_correlation_id_if_null(); Type: FUNCTION; Schema: public; Owner: -
 --
 
 CREATE FUNCTION public.set_correlation_id_if_null() RETURNS trigger
@@ -4614,10 +4311,8 @@ END;
 $$;
 
 
-ALTER FUNCTION public.set_correlation_id_if_null() OWNER TO symphony_admin;
-
 --
--- Name: set_external_proofs_attribution(); Type: FUNCTION; Schema: public; Owner: symphony_admin
+-- Name: set_external_proofs_attribution(); Type: FUNCTION; Schema: public; Owner: -
 --
 
 CREATE FUNCTION public.set_external_proofs_attribution() RETURNS trigger
@@ -4666,10 +4361,8 @@ END;
 $$;
 
 
-ALTER FUNCTION public.set_external_proofs_attribution() OWNER TO symphony_admin;
-
 --
--- Name: sign_digest_hsm_enforced(text, text, public.key_class_enum, text, text, text, text); Type: FUNCTION; Schema: public; Owner: symphony_admin
+-- Name: sign_digest_hsm_enforced(text, text, public.key_class_enum, text, text, text, text); Type: FUNCTION; Schema: public; Owner: -
 --
 
 CREATE FUNCTION public.sign_digest_hsm_enforced(p_caller_id text, p_key_id text, p_key_class public.key_class_enum, p_artifact_type text, p_digest_hash text, p_signing_path text DEFAULT 'HSM'::text, p_assurance_tier text DEFAULT 'HSM_BACKED'::text) RETURNS uuid
@@ -4700,10 +4393,8 @@ END;
 $$;
 
 
-ALTER FUNCTION public.sign_digest_hsm_enforced(p_caller_id text, p_key_id text, p_key_class public.key_class_enum, p_artifact_type text, p_digest_hash text, p_signing_path text, p_assurance_tier text) OWNER TO symphony_admin;
-
 --
--- Name: store_effect_seal(text, jsonb, text, text); Type: FUNCTION; Schema: public; Owner: symphony_admin
+-- Name: store_effect_seal(text, jsonb, text, text); Type: FUNCTION; Schema: public; Owner: -
 --
 
 CREATE FUNCTION public.store_effect_seal(p_instruction_id text, p_payload jsonb, p_canonicalization_version text, p_policy_version_id text) RETURNS text
@@ -4745,10 +4436,8 @@ END;
 $$;
 
 
-ALTER FUNCTION public.store_effect_seal(p_instruction_id text, p_payload jsonb, p_canonicalization_version text, p_policy_version_id text) OWNER TO symphony_admin;
-
 --
--- Name: submit_for_supervisor_approval(text); Type: FUNCTION; Schema: public; Owner: symphony_admin
+-- Name: submit_for_supervisor_approval(text); Type: FUNCTION; Schema: public; Owner: -
 --
 
 CREATE FUNCTION public.submit_for_supervisor_approval(p_instruction_id text) RETURNS void
@@ -4773,10 +4462,8 @@ END;
 $$;
 
 
-ALTER FUNCTION public.submit_for_supervisor_approval(p_instruction_id text) OWNER TO symphony_admin;
-
 --
--- Name: submit_for_supervisor_approval(text, uuid, integer); Type: FUNCTION; Schema: public; Owner: symphony_admin
+-- Name: submit_for_supervisor_approval(text, uuid, integer); Type: FUNCTION; Schema: public; Owner: -
 --
 
 CREATE FUNCTION public.submit_for_supervisor_approval(p_instruction_id text, p_program_id uuid, p_timeout_minutes integer DEFAULT 30) RETURNS void
@@ -4807,10 +4494,8 @@ END;
 $$;
 
 
-ALTER FUNCTION public.submit_for_supervisor_approval(p_instruction_id text, p_program_id uuid, p_timeout_minutes integer) OWNER TO symphony_admin;
-
 --
--- Name: submit_for_supervisor_approval(text, uuid, integer, text, text); Type: FUNCTION; Schema: public; Owner: symphony_admin
+-- Name: submit_for_supervisor_approval(text, uuid, integer, text, text); Type: FUNCTION; Schema: public; Owner: -
 --
 
 CREATE FUNCTION public.submit_for_supervisor_approval(p_instruction_id text, p_program_id uuid, p_timeout_minutes integer DEFAULT 30, p_held_reason text DEFAULT NULL::text, p_submitted_by text DEFAULT NULL::text) RETURNS void
@@ -4858,10 +4543,8 @@ END;
 $$;
 
 
-ALTER FUNCTION public.submit_for_supervisor_approval(p_instruction_id text, p_program_id uuid, p_timeout_minutes integer, p_held_reason text, p_submitted_by text) OWNER TO symphony_admin;
-
 --
--- Name: touch_anchor_sync_updated_at(); Type: FUNCTION; Schema: public; Owner: symphony_admin
+-- Name: touch_anchor_sync_updated_at(); Type: FUNCTION; Schema: public; Owner: -
 --
 
 CREATE FUNCTION public.touch_anchor_sync_updated_at() RETURNS trigger
@@ -4874,10 +4557,8 @@ END;
 $$;
 
 
-ALTER FUNCTION public.touch_anchor_sync_updated_at() OWNER TO symphony_admin;
-
 --
--- Name: touch_escrow_envelopes_updated_at(); Type: FUNCTION; Schema: public; Owner: symphony_admin
+-- Name: touch_escrow_envelopes_updated_at(); Type: FUNCTION; Schema: public; Owner: -
 --
 
 CREATE FUNCTION public.touch_escrow_envelopes_updated_at() RETURNS trigger
@@ -4890,10 +4571,8 @@ END;
 $$;
 
 
-ALTER FUNCTION public.touch_escrow_envelopes_updated_at() OWNER TO symphony_admin;
-
 --
--- Name: touch_escrow_updated_at(); Type: FUNCTION; Schema: public; Owner: symphony_admin
+-- Name: touch_escrow_updated_at(); Type: FUNCTION; Schema: public; Owner: -
 --
 
 CREATE FUNCTION public.touch_escrow_updated_at() RETURNS trigger
@@ -4906,10 +4585,8 @@ END;
 $$;
 
 
-ALTER FUNCTION public.touch_escrow_updated_at() OWNER TO symphony_admin;
-
 --
--- Name: touch_inquiry_state_updated_at(); Type: FUNCTION; Schema: public; Owner: symphony_admin
+-- Name: touch_inquiry_state_updated_at(); Type: FUNCTION; Schema: public; Owner: -
 --
 
 CREATE FUNCTION public.touch_inquiry_state_updated_at() RETURNS trigger
@@ -4922,10 +4599,8 @@ END;
 $$;
 
 
-ALTER FUNCTION public.touch_inquiry_state_updated_at() OWNER TO symphony_admin;
-
 --
--- Name: touch_members_updated_at(); Type: FUNCTION; Schema: public; Owner: symphony_admin
+-- Name: touch_members_updated_at(); Type: FUNCTION; Schema: public; Owner: -
 --
 
 CREATE FUNCTION public.touch_members_updated_at() RETURNS trigger
@@ -4938,10 +4613,8 @@ END;
 $$;
 
 
-ALTER FUNCTION public.touch_members_updated_at() OWNER TO symphony_admin;
-
 --
--- Name: touch_persons_updated_at(); Type: FUNCTION; Schema: public; Owner: symphony_admin
+-- Name: touch_persons_updated_at(); Type: FUNCTION; Schema: public; Owner: -
 --
 
 CREATE FUNCTION public.touch_persons_updated_at() RETURNS trigger
@@ -4954,10 +4627,8 @@ END;
 $$;
 
 
-ALTER FUNCTION public.touch_persons_updated_at() OWNER TO symphony_admin;
-
 --
--- Name: touch_programs_updated_at(); Type: FUNCTION; Schema: public; Owner: symphony_admin
+-- Name: touch_programs_updated_at(); Type: FUNCTION; Schema: public; Owner: -
 --
 
 CREATE FUNCTION public.touch_programs_updated_at() RETURNS trigger
@@ -4970,10 +4641,8 @@ END;
 $$;
 
 
-ALTER FUNCTION public.touch_programs_updated_at() OWNER TO symphony_admin;
-
 --
--- Name: transition_asset_status(uuid, uuid, text); Type: FUNCTION; Schema: public; Owner: symphony_admin
+-- Name: transition_asset_status(uuid, uuid, text); Type: FUNCTION; Schema: public; Owner: -
 --
 
 CREATE FUNCTION public.transition_asset_status(p_tenant_id uuid, p_subject_id uuid, p_to_status text) RETURNS void
@@ -5008,10 +4677,8 @@ END;
 $$;
 
 
-ALTER FUNCTION public.transition_asset_status(p_tenant_id uuid, p_subject_id uuid, p_to_status text) OWNER TO symphony_admin;
-
 --
--- Name: transition_escrow_state(uuid, text, text, text, jsonb, timestamp with time zone); Type: FUNCTION; Schema: public; Owner: symphony_admin
+-- Name: transition_escrow_state(uuid, text, text, text, jsonb, timestamp with time zone); Type: FUNCTION; Schema: public; Owner: -
 --
 
 CREATE FUNCTION public.transition_escrow_state(p_escrow_id uuid, p_to_state text, p_actor_id text DEFAULT 'system'::text, p_reason text DEFAULT NULL::text, p_metadata jsonb DEFAULT '{}'::jsonb, p_now timestamp with time zone DEFAULT now()) RETURNS TABLE(escrow_id uuid, previous_state text, new_state text, event_id uuid)
@@ -5083,17 +4750,8 @@ END;
 $$;
 
 
-ALTER FUNCTION public.transition_escrow_state(p_escrow_id uuid, p_to_state text, p_actor_id text, p_reason text, p_metadata jsonb, p_now timestamp with time zone) OWNER TO symphony_admin;
-
 --
--- Name: FUNCTION transition_escrow_state(p_escrow_id uuid, p_to_state text, p_actor_id text, p_reason text, p_metadata jsonb, p_now timestamp with time zone); Type: COMMENT; Schema: public; Owner: symphony_admin
---
-
-COMMENT ON FUNCTION public.transition_escrow_state(p_escrow_id uuid, p_to_state text, p_actor_id text, p_reason text, p_metadata jsonb, p_now timestamp with time zone) IS 'Canonical escrow state machine transition gate for Phase-1.';
-
-
---
--- Name: uuid_strategy(); Type: FUNCTION; Schema: public; Owner: symphony_admin
+-- Name: uuid_strategy(); Type: FUNCTION; Schema: public; Owner: -
 --
 
 CREATE FUNCTION public.uuid_strategy() RETURNS text
@@ -5106,17 +4764,8 @@ CREATE FUNCTION public.uuid_strategy() RETURNS text
 $$;
 
 
-ALTER FUNCTION public.uuid_strategy() OWNER TO symphony_admin;
-
 --
--- Name: FUNCTION uuid_strategy(); Type: COMMENT; Schema: public; Owner: symphony_admin
---
-
-COMMENT ON FUNCTION public.uuid_strategy() IS 'Reports which UUID strategy is active (uuidv7 vs gen_random_uuid).';
-
-
---
--- Name: uuid_v7_or_random(); Type: FUNCTION; Schema: public; Owner: symphony_admin
+-- Name: uuid_v7_or_random(); Type: FUNCTION; Schema: public; Owner: -
 --
 
 CREATE FUNCTION public.uuid_v7_or_random() RETURNS uuid
@@ -5126,17 +4775,8 @@ CREATE FUNCTION public.uuid_v7_or_random() RETURNS uuid
         $$;
 
 
-ALTER FUNCTION public.uuid_v7_or_random() OWNER TO symphony_admin;
-
 --
--- Name: FUNCTION uuid_v7_or_random(); Type: COMMENT; Schema: public; Owner: symphony_admin
---
-
-COMMENT ON FUNCTION public.uuid_v7_or_random() IS 'UUID generator chosen at migration-time: uuidv7() if available, else pgcrypto gen_random_uuid().';
-
-
---
--- Name: validate_confidence_score(uuid); Type: FUNCTION; Schema: public; Owner: symphony_admin
+-- Name: validate_confidence_score(uuid); Type: FUNCTION; Schema: public; Owner: -
 --
 
 CREATE FUNCTION public.validate_confidence_score(p_asset_batch_id uuid) RETURNS TABLE(confidence_score numeric, required_threshold numeric, decision_count integer, approved_count integer, is_sufficient boolean)
@@ -5179,10 +4819,8 @@ END;
 $$;
 
 
-ALTER FUNCTION public.validate_confidence_score(p_asset_batch_id uuid) OWNER TO symphony_admin;
-
 --
--- Name: validate_payload_against_schema(jsonb, uuid); Type: FUNCTION; Schema: public; Owner: symphony_admin
+-- Name: validate_payload_against_schema(jsonb, uuid); Type: FUNCTION; Schema: public; Owner: -
 --
 
 CREATE FUNCTION public.validate_payload_against_schema(p_payload jsonb, p_payload_schema_reference_id uuid) RETURNS boolean
@@ -5213,10 +4851,8 @@ END;
 $$;
 
 
-ALTER FUNCTION public.validate_payload_against_schema(p_payload jsonb, p_payload_schema_reference_id uuid) OWNER TO symphony_admin;
-
 --
--- Name: verify_dispatch_effect_seal(text, jsonb); Type: FUNCTION; Schema: public; Owner: symphony_admin
+-- Name: verify_dispatch_effect_seal(text, jsonb); Type: FUNCTION; Schema: public; Owner: -
 --
 
 CREATE FUNCTION public.verify_dispatch_effect_seal(p_instruction_id text, p_outbound_payload jsonb) RETURNS void
@@ -5248,10 +4884,8 @@ END;
 $$;
 
 
-ALTER FUNCTION public.verify_dispatch_effect_seal(p_instruction_id text, p_outbound_payload jsonb) OWNER TO symphony_admin;
-
 --
--- Name: verify_instruction_hierarchy(text, uuid, text, uuid, uuid, uuid, text); Type: FUNCTION; Schema: public; Owner: symphony_admin
+-- Name: verify_instruction_hierarchy(text, uuid, text, uuid, uuid, uuid, text); Type: FUNCTION; Schema: public; Owner: -
 --
 
 CREATE FUNCTION public.verify_instruction_hierarchy(p_instruction_id text, p_tenant_id uuid, p_participant_id text, p_program_id uuid, p_entity_id uuid, p_member_id uuid, p_device_id text) RETURNS boolean
@@ -5318,17 +4952,8 @@ END;
 $$;
 
 
-ALTER FUNCTION public.verify_instruction_hierarchy(p_instruction_id text, p_tenant_id uuid, p_participant_id text, p_program_id uuid, p_entity_id uuid, p_member_id uuid, p_device_id text) OWNER TO symphony_admin;
-
 --
--- Name: FUNCTION verify_instruction_hierarchy(p_instruction_id text, p_tenant_id uuid, p_participant_id text, p_program_id uuid, p_entity_id uuid, p_member_id uuid, p_device_id text); Type: COMMENT; Schema: public; Owner: symphony_admin
---
-
-COMMENT ON FUNCTION public.verify_instruction_hierarchy(p_instruction_id text, p_tenant_id uuid, p_participant_id text, p_program_id uuid, p_entity_id uuid, p_member_id uuid, p_device_id text) IS 'Phase-1 hierarchy guard with deterministic SQLSTATE mapping P7299-P7303 for declared link failures.';
-
-
---
--- Name: verify_internal_ledger_journal_balance(uuid); Type: FUNCTION; Schema: public; Owner: symphony_admin
+-- Name: verify_internal_ledger_journal_balance(uuid); Type: FUNCTION; Schema: public; Owner: -
 --
 
 CREATE FUNCTION public.verify_internal_ledger_journal_balance(p_journal_id uuid) RETURNS boolean
@@ -5354,10 +4979,8 @@ CREATE FUNCTION public.verify_internal_ledger_journal_balance(p_journal_id uuid)
 $$;
 
 
-ALTER FUNCTION public.verify_internal_ledger_journal_balance(p_journal_id uuid) OWNER TO symphony_admin;
-
 --
--- Name: verify_merkle_leaf(uuid, integer, text); Type: FUNCTION; Schema: public; Owner: symphony_admin
+-- Name: verify_merkle_leaf(uuid, integer, text); Type: FUNCTION; Schema: public; Owner: -
 --
 
 CREATE FUNCTION public.verify_merkle_leaf(p_batch_id uuid, p_leaf_index integer, p_expected_leaf_hash text) RETURNS boolean
@@ -5388,10 +5011,8 @@ END;
 $$;
 
 
-ALTER FUNCTION public.verify_merkle_leaf(p_batch_id uuid, p_leaf_index integer, p_expected_leaf_hash text) OWNER TO symphony_admin;
-
 --
--- Name: verify_policy_bundle_runtime(uuid); Type: FUNCTION; Schema: public; Owner: symphony_admin
+-- Name: verify_policy_bundle_runtime(uuid); Type: FUNCTION; Schema: public; Owner: -
 --
 
 CREATE FUNCTION public.verify_policy_bundle_runtime(p_policy_bundle_id uuid) RETURNS void
@@ -5409,10 +5030,8 @@ END;
 $$;
 
 
-ALTER FUNCTION public.verify_policy_bundle_runtime(p_policy_bundle_id uuid) OWNER TO symphony_admin;
-
 --
--- Name: verify_verifier_read_token(text, uuid); Type: FUNCTION; Schema: public; Owner: symphony_admin
+-- Name: verify_verifier_read_token(text, uuid); Type: FUNCTION; Schema: public; Owner: -
 --
 
 CREATE FUNCTION public.verify_verifier_read_token(p_token_hash text, p_project_id uuid) RETURNS TABLE(token_id uuid, verifier_id uuid, scoped_tables jsonb, expires_at timestamp with time zone)
@@ -5439,14 +5058,12 @@ END;
 $$;
 
 
-ALTER FUNCTION public.verify_verifier_read_token(p_token_hash text, p_project_id uuid) OWNER TO symphony_admin;
-
 SET default_tablespace = '';
 
 SET default_table_access_method = heap;
 
 --
--- Name: adapter_circuit_breakers; Type: TABLE; Schema: public; Owner: symphony_admin
+-- Name: adapter_circuit_breakers; Type: TABLE; Schema: public; Owner: -
 --
 
 CREATE TABLE public.adapter_circuit_breakers (
@@ -5464,10 +5081,8 @@ CREATE TABLE public.adapter_circuit_breakers (
 );
 
 
-ALTER TABLE public.adapter_circuit_breakers OWNER TO symphony_admin;
-
 --
--- Name: adapter_registrations; Type: TABLE; Schema: public; Owner: symphony_admin
+-- Name: adapter_registrations; Type: TABLE; Schema: public; Owner: -
 --
 
 CREATE TABLE public.adapter_registrations (
@@ -5496,10 +5111,8 @@ CREATE TABLE public.adapter_registrations (
 ALTER TABLE ONLY public.adapter_registrations FORCE ROW LEVEL SECURITY;
 
 
-ALTER TABLE public.adapter_registrations OWNER TO symphony_admin;
-
 --
--- Name: adjustment_approval_stages; Type: TABLE; Schema: public; Owner: symphony_admin
+-- Name: adjustment_approval_stages; Type: TABLE; Schema: public; Owner: -
 --
 
 CREATE TABLE public.adjustment_approval_stages (
@@ -5513,10 +5126,8 @@ CREATE TABLE public.adjustment_approval_stages (
 );
 
 
-ALTER TABLE public.adjustment_approval_stages OWNER TO symphony_admin;
-
 --
--- Name: adjustment_approvals; Type: TABLE; Schema: public; Owner: symphony_admin
+-- Name: adjustment_approvals; Type: TABLE; Schema: public; Owner: -
 --
 
 CREATE TABLE public.adjustment_approvals (
@@ -5531,10 +5142,8 @@ CREATE TABLE public.adjustment_approvals (
 );
 
 
-ALTER TABLE public.adjustment_approvals OWNER TO symphony_admin;
-
 --
--- Name: adjustment_execution_attempts; Type: TABLE; Schema: public; Owner: symphony_admin
+-- Name: adjustment_execution_attempts; Type: TABLE; Schema: public; Owner: -
 --
 
 CREATE TABLE public.adjustment_execution_attempts (
@@ -5548,10 +5157,8 @@ CREATE TABLE public.adjustment_execution_attempts (
 );
 
 
-ALTER TABLE public.adjustment_execution_attempts OWNER TO symphony_admin;
-
 --
--- Name: adjustment_freeze_flags; Type: TABLE; Schema: public; Owner: symphony_admin
+-- Name: adjustment_freeze_flags; Type: TABLE; Schema: public; Owner: -
 --
 
 CREATE TABLE public.adjustment_freeze_flags (
@@ -5565,10 +5172,8 @@ CREATE TABLE public.adjustment_freeze_flags (
 );
 
 
-ALTER TABLE public.adjustment_freeze_flags OWNER TO symphony_admin;
-
 --
--- Name: adjustment_instructions; Type: TABLE; Schema: public; Owner: symphony_admin
+-- Name: adjustment_instructions; Type: TABLE; Schema: public; Owner: -
 --
 
 CREATE TABLE public.adjustment_instructions (
@@ -5584,10 +5189,8 @@ CREATE TABLE public.adjustment_instructions (
 );
 
 
-ALTER TABLE public.adjustment_instructions OWNER TO symphony_admin;
-
 --
--- Name: anchor_backfill_jobs; Type: TABLE; Schema: public; Owner: symphony_admin
+-- Name: anchor_backfill_jobs; Type: TABLE; Schema: public; Owner: -
 --
 
 CREATE TABLE public.anchor_backfill_jobs (
@@ -5603,10 +5206,8 @@ CREATE TABLE public.anchor_backfill_jobs (
 );
 
 
-ALTER TABLE public.anchor_backfill_jobs OWNER TO symphony_admin;
-
 --
--- Name: anchor_sync_operations; Type: TABLE; Schema: public; Owner: symphony_admin
+-- Name: anchor_sync_operations; Type: TABLE; Schema: public; Owner: -
 --
 
 CREATE TABLE public.anchor_sync_operations (
@@ -5629,10 +5230,8 @@ CREATE TABLE public.anchor_sync_operations (
 );
 
 
-ALTER TABLE public.anchor_sync_operations OWNER TO symphony_admin;
-
 --
--- Name: archive_verification_runs; Type: TABLE; Schema: public; Owner: symphony_admin
+-- Name: archive_verification_runs; Type: TABLE; Schema: public; Owner: -
 --
 
 CREATE TABLE public.archive_verification_runs (
@@ -5649,10 +5248,8 @@ CREATE TABLE public.archive_verification_runs (
 );
 
 
-ALTER TABLE public.archive_verification_runs OWNER TO symphony_admin;
-
 --
--- Name: artifact_signing_batch_items; Type: TABLE; Schema: public; Owner: symphony_admin
+-- Name: artifact_signing_batch_items; Type: TABLE; Schema: public; Owner: -
 --
 
 CREATE TABLE public.artifact_signing_batch_items (
@@ -5665,10 +5262,8 @@ CREATE TABLE public.artifact_signing_batch_items (
 );
 
 
-ALTER TABLE public.artifact_signing_batch_items OWNER TO symphony_admin;
-
 --
--- Name: artifact_signing_batches; Type: TABLE; Schema: public; Owner: symphony_admin
+-- Name: artifact_signing_batches; Type: TABLE; Schema: public; Owner: -
 --
 
 CREATE TABLE public.artifact_signing_batches (
@@ -5682,10 +5277,8 @@ CREATE TABLE public.artifact_signing_batches (
 );
 
 
-ALTER TABLE public.artifact_signing_batches OWNER TO symphony_admin;
-
 --
--- Name: asset_batches; Type: TABLE; Schema: public; Owner: symphony_admin
+-- Name: asset_batches; Type: TABLE; Schema: public; Owner: -
 --
 
 CREATE TABLE public.asset_batches (
@@ -5703,10 +5296,8 @@ CREATE TABLE public.asset_batches (
 ALTER TABLE ONLY public.asset_batches FORCE ROW LEVEL SECURITY;
 
 
-ALTER TABLE public.asset_batches OWNER TO symphony_admin;
-
 --
--- Name: asset_lifecycle_events; Type: TABLE; Schema: public; Owner: symphony_admin
+-- Name: asset_lifecycle_events; Type: TABLE; Schema: public; Owner: -
 --
 
 CREATE TABLE public.asset_lifecycle_events (
@@ -5721,10 +5312,8 @@ CREATE TABLE public.asset_lifecycle_events (
 ALTER TABLE ONLY public.asset_lifecycle_events FORCE ROW LEVEL SECURITY;
 
 
-ALTER TABLE public.asset_lifecycle_events OWNER TO symphony_admin;
-
 --
--- Name: audit_tamper_evident_chains; Type: TABLE; Schema: public; Owner: symphony_admin
+-- Name: audit_tamper_evident_chains; Type: TABLE; Schema: public; Owner: -
 --
 
 CREATE TABLE public.audit_tamper_evident_chains (
@@ -5736,10 +5325,8 @@ CREATE TABLE public.audit_tamper_evident_chains (
 );
 
 
-ALTER TABLE public.audit_tamper_evident_chains OWNER TO symphony_admin;
-
 --
--- Name: authority_decisions; Type: TABLE; Schema: public; Owner: symphony_admin
+-- Name: authority_decisions; Type: TABLE; Schema: public; Owner: -
 --
 
 CREATE TABLE public.authority_decisions (
@@ -5754,10 +5341,8 @@ CREATE TABLE public.authority_decisions (
 ALTER TABLE ONLY public.authority_decisions FORCE ROW LEVEL SECURITY;
 
 
-ALTER TABLE public.authority_decisions OWNER TO symphony_admin;
-
 --
--- Name: billable_clients; Type: TABLE; Schema: public; Owner: symphony_admin
+-- Name: billable_clients; Type: TABLE; Schema: public; Owner: -
 --
 
 CREATE TABLE public.billable_clients (
@@ -5773,10 +5358,8 @@ CREATE TABLE public.billable_clients (
 );
 
 
-ALTER TABLE public.billable_clients OWNER TO symphony_admin;
-
 --
--- Name: billing_usage_events; Type: TABLE; Schema: public; Owner: symphony_admin
+-- Name: billing_usage_events; Type: TABLE; Schema: public; Owner: -
 --
 
 CREATE TABLE public.billing_usage_events (
@@ -5804,10 +5387,8 @@ CREATE TABLE public.billing_usage_events (
 ALTER TABLE ONLY public.billing_usage_events FORCE ROW LEVEL SECURITY;
 
 
-ALTER TABLE public.billing_usage_events OWNER TO symphony_admin;
-
 --
--- Name: boz_operational_scenario_runs; Type: TABLE; Schema: public; Owner: symphony_admin
+-- Name: boz_operational_scenario_runs; Type: TABLE; Schema: public; Owner: -
 --
 
 CREATE TABLE public.boz_operational_scenario_runs (
@@ -5820,10 +5401,8 @@ CREATE TABLE public.boz_operational_scenario_runs (
 );
 
 
-ALTER TABLE public.boz_operational_scenario_runs OWNER TO symphony_admin;
-
 --
--- Name: canonicalization_archive_snapshots; Type: TABLE; Schema: public; Owner: symphony_admin
+-- Name: canonicalization_archive_snapshots; Type: TABLE; Schema: public; Owner: -
 --
 
 CREATE TABLE public.canonicalization_archive_snapshots (
@@ -5835,10 +5414,8 @@ CREATE TABLE public.canonicalization_archive_snapshots (
 );
 
 
-ALTER TABLE public.canonicalization_archive_snapshots OWNER TO symphony_admin;
-
 --
--- Name: canonicalization_registry; Type: TABLE; Schema: public; Owner: symphony_admin
+-- Name: canonicalization_registry; Type: TABLE; Schema: public; Owner: -
 --
 
 CREATE TABLE public.canonicalization_registry (
@@ -5852,10 +5429,8 @@ CREATE TABLE public.canonicalization_registry (
 );
 
 
-ALTER TABLE public.canonicalization_registry OWNER TO symphony_admin;
-
 --
--- Name: dispatch_reference_collision_events; Type: TABLE; Schema: public; Owner: symphony_admin
+-- Name: dispatch_reference_collision_events; Type: TABLE; Schema: public; Owner: -
 --
 
 CREATE TABLE public.dispatch_reference_collision_events (
@@ -5874,10 +5449,8 @@ CREATE TABLE public.dispatch_reference_collision_events (
 );
 
 
-ALTER TABLE public.dispatch_reference_collision_events OWNER TO symphony_admin;
-
 --
--- Name: dispatch_reference_registry; Type: TABLE; Schema: public; Owner: symphony_admin
+-- Name: dispatch_reference_registry; Type: TABLE; Schema: public; Owner: -
 --
 
 CREATE TABLE public.dispatch_reference_registry (
@@ -5896,10 +5469,8 @@ CREATE TABLE public.dispatch_reference_registry (
 );
 
 
-ALTER TABLE public.dispatch_reference_registry OWNER TO symphony_admin;
-
 --
--- Name: effect_seal_mismatch_events; Type: TABLE; Schema: public; Owner: symphony_admin
+-- Name: effect_seal_mismatch_events; Type: TABLE; Schema: public; Owner: -
 --
 
 CREATE TABLE public.effect_seal_mismatch_events (
@@ -5913,10 +5484,8 @@ CREATE TABLE public.effect_seal_mismatch_events (
 );
 
 
-ALTER TABLE public.effect_seal_mismatch_events OWNER TO symphony_admin;
-
 --
--- Name: escrow_accounts; Type: TABLE; Schema: public; Owner: symphony_admin
+-- Name: escrow_accounts; Type: TABLE; Schema: public; Owner: -
 --
 
 CREATE TABLE public.escrow_accounts (
@@ -5941,17 +5510,8 @@ CREATE TABLE public.escrow_accounts (
 ALTER TABLE ONLY public.escrow_accounts FORCE ROW LEVEL SECURITY;
 
 
-ALTER TABLE public.escrow_accounts OWNER TO symphony_admin;
-
 --
--- Name: TABLE escrow_accounts; Type: COMMENT; Schema: public; Owner: symphony_admin
---
-
-COMMENT ON TABLE public.escrow_accounts IS 'Phase-1 escrow reservation model. Non-custodial: stores authorization and release state only.';
-
-
---
--- Name: escrow_envelopes; Type: TABLE; Schema: public; Owner: symphony_admin
+-- Name: escrow_envelopes; Type: TABLE; Schema: public; Owner: -
 --
 
 CREATE TABLE public.escrow_envelopes (
@@ -5969,17 +5529,8 @@ CREATE TABLE public.escrow_envelopes (
 ALTER TABLE ONLY public.escrow_envelopes FORCE ROW LEVEL SECURITY;
 
 
-ALTER TABLE public.escrow_envelopes OWNER TO symphony_admin;
-
 --
--- Name: TABLE escrow_envelopes; Type: COMMENT; Schema: public; Owner: symphony_admin
---
-
-COMMENT ON TABLE public.escrow_envelopes IS 'Phase-1 budget envelope balance row. Locked FOR UPDATE by authorize_escrow_reservation() to prevent oversubscription.';
-
-
---
--- Name: escrow_events; Type: TABLE; Schema: public; Owner: symphony_admin
+-- Name: escrow_events; Type: TABLE; Schema: public; Owner: -
 --
 
 CREATE TABLE public.escrow_events (
@@ -5997,10 +5548,8 @@ CREATE TABLE public.escrow_events (
 ALTER TABLE ONLY public.escrow_events FORCE ROW LEVEL SECURITY;
 
 
-ALTER TABLE public.escrow_events OWNER TO symphony_admin;
-
 --
--- Name: escrow_reservations; Type: TABLE; Schema: public; Owner: symphony_admin
+-- Name: escrow_reservations; Type: TABLE; Schema: public; Owner: -
 --
 
 CREATE TABLE public.escrow_reservations (
@@ -6019,17 +5568,8 @@ CREATE TABLE public.escrow_reservations (
 ALTER TABLE ONLY public.escrow_reservations FORCE ROW LEVEL SECURITY;
 
 
-ALTER TABLE public.escrow_reservations OWNER TO symphony_admin;
-
 --
--- Name: TABLE escrow_reservations; Type: COMMENT; Schema: public; Owner: symphony_admin
---
-
-COMMENT ON TABLE public.escrow_reservations IS 'Phase-1 reservation ledger: append-only record of successful ceiling-checked reservations.';
-
-
---
--- Name: escrow_summary_projection; Type: TABLE; Schema: public; Owner: symphony_admin
+-- Name: escrow_summary_projection; Type: TABLE; Schema: public; Owner: -
 --
 
 CREATE TABLE public.escrow_summary_projection (
@@ -6044,10 +5584,8 @@ CREATE TABLE public.escrow_summary_projection (
 );
 
 
-ALTER TABLE public.escrow_summary_projection OWNER TO symphony_admin;
-
 --
--- Name: evidence_bundle_projection; Type: TABLE; Schema: public; Owner: symphony_admin
+-- Name: evidence_bundle_projection; Type: TABLE; Schema: public; Owner: -
 --
 
 CREATE TABLE public.evidence_bundle_projection (
@@ -6059,10 +5597,8 @@ CREATE TABLE public.evidence_bundle_projection (
 );
 
 
-ALTER TABLE public.evidence_bundle_projection OWNER TO symphony_admin;
-
 --
--- Name: evidence_edges; Type: TABLE; Schema: public; Owner: symphony_admin
+-- Name: evidence_edges; Type: TABLE; Schema: public; Owner: -
 --
 
 CREATE TABLE public.evidence_edges (
@@ -6078,10 +5614,8 @@ CREATE TABLE public.evidence_edges (
 ALTER TABLE ONLY public.evidence_edges FORCE ROW LEVEL SECURITY;
 
 
-ALTER TABLE public.evidence_edges OWNER TO symphony_admin;
-
 --
--- Name: evidence_nodes; Type: TABLE; Schema: public; Owner: symphony_admin
+-- Name: evidence_nodes; Type: TABLE; Schema: public; Owner: -
 --
 
 CREATE TABLE public.evidence_nodes (
@@ -6097,10 +5631,8 @@ CREATE TABLE public.evidence_nodes (
 ALTER TABLE ONLY public.evidence_nodes FORCE ROW LEVEL SECURITY;
 
 
-ALTER TABLE public.evidence_nodes OWNER TO symphony_admin;
-
 --
--- Name: evidence_pack_items; Type: TABLE; Schema: public; Owner: symphony_admin
+-- Name: evidence_pack_items; Type: TABLE; Schema: public; Owner: -
 --
 
 CREATE TABLE public.evidence_pack_items (
@@ -6113,10 +5645,8 @@ CREATE TABLE public.evidence_pack_items (
 );
 
 
-ALTER TABLE public.evidence_pack_items OWNER TO symphony_admin;
-
 --
--- Name: evidence_packs; Type: TABLE; Schema: public; Owner: symphony_admin
+-- Name: evidence_packs; Type: TABLE; Schema: public; Owner: -
 --
 
 CREATE TABLE public.evidence_packs (
@@ -6136,10 +5666,8 @@ CREATE TABLE public.evidence_packs (
 );
 
 
-ALTER TABLE public.evidence_packs OWNER TO symphony_admin;
-
 --
--- Name: execution_records; Type: TABLE; Schema: public; Owner: symphony
+-- Name: execution_records; Type: TABLE; Schema: public; Owner: -
 --
 
 CREATE TABLE public.execution_records (
@@ -6152,10 +5680,8 @@ CREATE TABLE public.execution_records (
 );
 
 
-ALTER TABLE public.execution_records OWNER TO symphony;
-
 --
--- Name: external_proofs; Type: TABLE; Schema: public; Owner: symphony_admin
+-- Name: external_proofs; Type: TABLE; Schema: public; Owner: -
 --
 
 CREATE TABLE public.external_proofs (
@@ -6177,10 +5703,21 @@ CREATE TABLE public.external_proofs (
 ALTER TABLE ONLY public.external_proofs FORCE ROW LEVEL SECURITY;
 
 
-ALTER TABLE public.external_proofs OWNER TO symphony_admin;
+--
+-- Name: factor_registry; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.factor_registry (
+    factor_id uuid DEFAULT gen_random_uuid() NOT NULL,
+    factor_code character varying NOT NULL,
+    factor_name character varying NOT NULL,
+    unit character varying NOT NULL,
+    created_at timestamp with time zone DEFAULT now()
+);
+
 
 --
--- Name: gf_verifier_read_tokens; Type: TABLE; Schema: public; Owner: symphony_admin
+-- Name: gf_verifier_read_tokens; Type: TABLE; Schema: public; Owner: -
 --
 
 CREATE TABLE public.gf_verifier_read_tokens (
@@ -6200,10 +5737,8 @@ CREATE TABLE public.gf_verifier_read_tokens (
 ALTER TABLE ONLY public.gf_verifier_read_tokens FORCE ROW LEVEL SECURITY;
 
 
-ALTER TABLE public.gf_verifier_read_tokens OWNER TO symphony_admin;
-
 --
--- Name: global_rate_limit_policies; Type: TABLE; Schema: public; Owner: symphony_admin
+-- Name: global_rate_limit_policies; Type: TABLE; Schema: public; Owner: -
 --
 
 CREATE TABLE public.global_rate_limit_policies (
@@ -6217,10 +5752,8 @@ CREATE TABLE public.global_rate_limit_policies (
 );
 
 
-ALTER TABLE public.global_rate_limit_policies OWNER TO symphony_admin;
-
 --
--- Name: historical_verification_runs; Type: TABLE; Schema: public; Owner: symphony_admin
+-- Name: historical_verification_runs; Type: TABLE; Schema: public; Owner: -
 --
 
 CREATE TABLE public.historical_verification_runs (
@@ -6235,10 +5768,8 @@ CREATE TABLE public.historical_verification_runs (
 );
 
 
-ALTER TABLE public.historical_verification_runs OWNER TO symphony_admin;
-
 --
--- Name: hsm_fail_closed_events; Type: TABLE; Schema: public; Owner: symphony_admin
+-- Name: hsm_fail_closed_events; Type: TABLE; Schema: public; Owner: -
 --
 
 CREATE TABLE public.hsm_fail_closed_events (
@@ -6250,10 +5781,8 @@ CREATE TABLE public.hsm_fail_closed_events (
 );
 
 
-ALTER TABLE public.hsm_fail_closed_events OWNER TO symphony_admin;
-
 --
--- Name: incident_case_projection; Type: TABLE; Schema: public; Owner: symphony_admin
+-- Name: incident_case_projection; Type: TABLE; Schema: public; Owner: -
 --
 
 CREATE TABLE public.incident_case_projection (
@@ -6266,10 +5795,8 @@ CREATE TABLE public.incident_case_projection (
 );
 
 
-ALTER TABLE public.incident_case_projection OWNER TO symphony_admin;
-
 --
--- Name: incident_events; Type: TABLE; Schema: public; Owner: symphony_admin
+-- Name: incident_events; Type: TABLE; Schema: public; Owner: -
 --
 
 CREATE TABLE public.incident_events (
@@ -6281,10 +5808,8 @@ CREATE TABLE public.incident_events (
 );
 
 
-ALTER TABLE public.incident_events OWNER TO symphony_admin;
-
 --
--- Name: ingress_attestations; Type: TABLE; Schema: public; Owner: symphony_admin
+-- Name: ingress_attestations; Type: TABLE; Schema: public; Owner: -
 --
 
 CREATE TABLE public.ingress_attestations (
@@ -6311,17 +5836,8 @@ CREATE TABLE public.ingress_attestations (
 ALTER TABLE ONLY public.ingress_attestations FORCE ROW LEVEL SECURITY;
 
 
-ALTER TABLE public.ingress_attestations OWNER TO symphony_admin;
-
 --
--- Name: COLUMN ingress_attestations.levy_applicable; Type: COMMENT; Schema: public; Owner: symphony_admin
---
-
-COMMENT ON COLUMN public.ingress_attestations.levy_applicable IS 'Phase-0 structural hook. NULL until Phase-2 MMO Levy classification logic sets this field. TRUE = instruction is subject to MMO levy under the applicable jurisdiction statutory rate. FALSE = exempt. NULL = not yet classified. DO NOT read or write this column in application runtime until Phase-2.';
-
-
---
--- Name: inquiry_state_machine; Type: TABLE; Schema: public; Owner: symphony_admin
+-- Name: inquiry_state_machine; Type: TABLE; Schema: public; Owner: -
 --
 
 CREATE TABLE public.inquiry_state_machine (
@@ -6335,10 +5851,8 @@ CREATE TABLE public.inquiry_state_machine (
 );
 
 
-ALTER TABLE public.inquiry_state_machine OWNER TO symphony_admin;
-
 --
--- Name: instruction_effect_seals; Type: TABLE; Schema: public; Owner: symphony_admin
+-- Name: instruction_effect_seals; Type: TABLE; Schema: public; Owner: -
 --
 
 CREATE TABLE public.instruction_effect_seals (
@@ -6350,10 +5864,8 @@ CREATE TABLE public.instruction_effect_seals (
 );
 
 
-ALTER TABLE public.instruction_effect_seals OWNER TO symphony_admin;
-
 --
--- Name: instruction_finality_conflicts; Type: TABLE; Schema: public; Owner: symphony_admin
+-- Name: instruction_finality_conflicts; Type: TABLE; Schema: public; Owner: -
 --
 
 CREATE TABLE public.instruction_finality_conflicts (
@@ -6370,10 +5882,8 @@ CREATE TABLE public.instruction_finality_conflicts (
 );
 
 
-ALTER TABLE public.instruction_finality_conflicts OWNER TO symphony_admin;
-
 --
--- Name: instruction_settlement_finality; Type: TABLE; Schema: public; Owner: symphony_admin
+-- Name: instruction_settlement_finality; Type: TABLE; Schema: public; Owner: -
 --
 
 CREATE TABLE public.instruction_settlement_finality (
@@ -6395,10 +5905,8 @@ CREATE TABLE public.instruction_settlement_finality (
 );
 
 
-ALTER TABLE public.instruction_settlement_finality OWNER TO symphony_admin;
-
 --
--- Name: instruction_status_projection; Type: TABLE; Schema: public; Owner: symphony_admin
+-- Name: instruction_status_projection; Type: TABLE; Schema: public; Owner: -
 --
 
 CREATE TABLE public.instruction_status_projection (
@@ -6418,10 +5926,8 @@ CREATE TABLE public.instruction_status_projection (
 );
 
 
-ALTER TABLE public.instruction_status_projection OWNER TO symphony_admin;
-
 --
--- Name: internal_ledger_journals; Type: TABLE; Schema: public; Owner: symphony_admin
+-- Name: internal_ledger_journals; Type: TABLE; Schema: public; Owner: -
 --
 
 CREATE TABLE public.internal_ledger_journals (
@@ -6437,10 +5943,8 @@ CREATE TABLE public.internal_ledger_journals (
 );
 
 
-ALTER TABLE public.internal_ledger_journals OWNER TO symphony_admin;
-
 --
--- Name: internal_ledger_postings; Type: TABLE; Schema: public; Owner: symphony_admin
+-- Name: internal_ledger_postings; Type: TABLE; Schema: public; Owner: -
 --
 
 CREATE TABLE public.internal_ledger_postings (
@@ -6458,10 +5962,8 @@ CREATE TABLE public.internal_ledger_postings (
 );
 
 
-ALTER TABLE public.internal_ledger_postings OWNER TO symphony_admin;
-
 --
--- Name: interpretation_packs; Type: TABLE; Schema: public; Owner: symphony_admin
+-- Name: interpretation_packs; Type: TABLE; Schema: public; Owner: -
 --
 
 CREATE TABLE public.interpretation_packs (
@@ -6469,16 +5971,18 @@ CREATE TABLE public.interpretation_packs (
     jurisdiction_code text NOT NULL,
     pack_type text NOT NULL,
     pack_payload_json jsonb DEFAULT '{}'::jsonb NOT NULL,
-    created_at timestamp with time zone DEFAULT now() NOT NULL
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    project_id uuid,
+    interpretation_pack_code uuid,
+    effective_from timestamp with time zone,
+    effective_to timestamp with time zone
 );
 
 ALTER TABLE ONLY public.interpretation_packs FORCE ROW LEVEL SECURITY;
 
 
-ALTER TABLE public.interpretation_packs OWNER TO symphony_admin;
-
 --
--- Name: jurisdiction_profiles; Type: TABLE; Schema: public; Owner: symphony_admin
+-- Name: jurisdiction_profiles; Type: TABLE; Schema: public; Owner: -
 --
 
 CREATE TABLE public.jurisdiction_profiles (
@@ -6492,10 +5996,8 @@ CREATE TABLE public.jurisdiction_profiles (
 ALTER TABLE ONLY public.jurisdiction_profiles FORCE ROW LEVEL SECURITY;
 
 
-ALTER TABLE public.jurisdiction_profiles OWNER TO symphony_admin;
-
 --
--- Name: key_rotation_drills; Type: TABLE; Schema: public; Owner: symphony_admin
+-- Name: key_rotation_drills; Type: TABLE; Schema: public; Owner: -
 --
 
 CREATE TABLE public.key_rotation_drills (
@@ -6515,10 +6017,8 @@ CREATE TABLE public.key_rotation_drills (
 );
 
 
-ALTER TABLE public.key_rotation_drills OWNER TO symphony_admin;
-
 --
--- Name: kyc_provider_registry; Type: TABLE; Schema: public; Owner: symphony_admin
+-- Name: kyc_provider_registry; Type: TABLE; Schema: public; Owner: -
 --
 
 CREATE TABLE public.kyc_provider_registry (
@@ -6539,31 +6039,8 @@ CREATE TABLE public.kyc_provider_registry (
 );
 
 
-ALTER TABLE public.kyc_provider_registry OWNER TO symphony_admin;
-
 --
--- Name: TABLE kyc_provider_registry; Type: COMMENT; Schema: public; Owner: symphony_admin
---
-
-COMMENT ON TABLE public.kyc_provider_registry IS 'Phase-0 structural hook. Registry of licensed external KYC providers whose verification hashes Symphony accepts. Symphony never calls providers directly. Phase-2 populates rows once Compliance confirms which providers are BoZ-recognised. DO NOT read this table in application runtime until Phase-2.';
-
-
---
--- Name: COLUMN kyc_provider_registry.public_key_pem; Type: COMMENT; Schema: public; Owner: symphony_admin
---
-
-COMMENT ON COLUMN public.kyc_provider_registry.public_key_pem IS 'Phase-0 hook: nullable. Provider public key for verifying hash signatures. Phase-2 will enforce NOT NULL and validate key format on insert. Confirm exact key format (Ed25519 vs ECDSA) with provider before Phase-2 population.';
-
-
---
--- Name: COLUMN kyc_provider_registry.signing_algorithm; Type: COMMENT; Schema: public; Owner: symphony_admin
---
-
-COMMENT ON COLUMN public.kyc_provider_registry.signing_algorithm IS 'Phase-0 hook: TEXT, no constraint. Phase-2 will add CHECK enforcing accepted values: Ed25519, ECDSA-P256, HMAC-SHA256.';
-
-
---
--- Name: kyc_retention_policy; Type: TABLE; Schema: public; Owner: symphony_admin
+-- Name: kyc_retention_policy; Type: TABLE; Schema: public; Owner: -
 --
 
 CREATE TABLE public.kyc_retention_policy (
@@ -6580,17 +6057,8 @@ CREATE TABLE public.kyc_retention_policy (
 );
 
 
-ALTER TABLE public.kyc_retention_policy OWNER TO symphony_admin;
-
 --
--- Name: TABLE kyc_retention_policy; Type: COMMENT; Schema: public; Owner: symphony_admin
---
-
-COMMENT ON TABLE public.kyc_retention_policy IS 'Phase-0 governance declaration. Immutable registry of KYC evidence retention policies by jurisdiction and retention class. Append-only: UPDATE and DELETE are rejected by rules. The Zambia FIC Act row is seeded in Phase-0 because the 10-year obligation is a confirmed statutory fact.';
-
-
---
--- Name: kyc_verification_records; Type: TABLE; Schema: public; Owner: symphony_admin
+-- Name: kyc_verification_records; Type: TABLE; Schema: public; Owner: -
 --
 
 CREATE TABLE public.kyc_verification_records (
@@ -6616,31 +6084,8 @@ CREATE TABLE public.kyc_verification_records (
 );
 
 
-ALTER TABLE public.kyc_verification_records OWNER TO symphony_admin;
-
 --
--- Name: TABLE kyc_verification_records; Type: COMMENT; Schema: public; Owner: symphony_admin
---
-
-COMMENT ON TABLE public.kyc_verification_records IS 'Phase-0 structural hook. Anchors cryptographic evidence that an external KYC provider verified a Symphony member identity. Symphony never holds raw identity documents. Retention class: FIC_AML_CUSTOMER_ID (10 years). Phase-2 KYC hash bridge endpoint writes to this table.';
-
-
---
--- Name: COLUMN kyc_verification_records.verification_hash; Type: COMMENT; Schema: public; Owner: symphony_admin
---
-
-COMMENT ON COLUMN public.kyc_verification_records.verification_hash IS 'Provider-signed hash of the verification outcome. Symphony stores the hash as evidence, not identity documents.';
-
-
---
--- Name: COLUMN kyc_verification_records.retention_class; Type: COMMENT; Schema: public; Owner: symphony_admin
---
-
-COMMENT ON COLUMN public.kyc_verification_records.retention_class IS 'Retention class enforced at schema level. Must be FIC_AML_CUSTOMER_ID.';
-
-
---
--- Name: levy_calculation_records; Type: TABLE; Schema: public; Owner: symphony_admin
+-- Name: levy_calculation_records; Type: TABLE; Schema: public; Owner: -
 --
 
 CREATE TABLE public.levy_calculation_records (
@@ -6666,24 +6111,8 @@ CREATE TABLE public.levy_calculation_records (
 );
 
 
-ALTER TABLE public.levy_calculation_records OWNER TO symphony_admin;
-
 --
--- Name: TABLE levy_calculation_records; Type: COMMENT; Schema: public; Owner: symphony_admin
---
-
-COMMENT ON TABLE public.levy_calculation_records IS 'Phase-0 structural hook. Phase-2 MMO Levy calculation engine writes one row per levy-applicable instruction. Empty in Phase-0 and Phase-1. DO NOT write to this table until Phase-2 calculation logic is gated.';
-
-
---
--- Name: COLUMN levy_calculation_records.levy_status; Type: COMMENT; Schema: public; Owner: symphony_admin
---
-
-COMMENT ON COLUMN public.levy_calculation_records.levy_status IS 'Phase-0 hook: TEXT with no constraint. Phase-2 will add CHECK constraint enforcing valid lifecycle values: CALCULATED, BATCHED, REMITTED, DISPUTED.';
-
-
---
--- Name: levy_rates; Type: TABLE; Schema: public; Owner: symphony_admin
+-- Name: levy_rates; Type: TABLE; Schema: public; Owner: -
 --
 
 CREATE TABLE public.levy_rates (
@@ -6704,31 +6133,8 @@ CREATE TABLE public.levy_rates (
 );
 
 
-ALTER TABLE public.levy_rates OWNER TO symphony_admin;
-
 --
--- Name: TABLE levy_rates; Type: COMMENT; Schema: public; Owner: symphony_admin
---
-
-COMMENT ON TABLE public.levy_rates IS 'Phase-0 structural hook. Versioned registry of statutory MMO levy rates by jurisdiction. Populated in Phase-2 once Compliance confirms exact statutory values. DO NOT read this table in application runtime until Phase-2.';
-
-
---
--- Name: COLUMN levy_rates.rate_bps; Type: COMMENT; Schema: public; Owner: symphony_admin
---
-
-COMMENT ON COLUMN public.levy_rates.rate_bps IS 'Rate in basis points. 20 = 0.20%. Zambia MMO Levy 2023 = 20 bps.';
-
-
---
--- Name: COLUMN levy_rates.cap_amount_minor; Type: COMMENT; Schema: public; Owner: symphony_admin
---
-
-COMMENT ON COLUMN public.levy_rates.cap_amount_minor IS 'Per-transaction cap in smallest currency unit (e.g. ngwee). NULL = no cap. Confirm exact ZMW cap with Compliance Counsel before Phase-2 population.';
-
-
---
--- Name: levy_remittance_periods; Type: TABLE; Schema: public; Owner: symphony_admin
+-- Name: levy_remittance_periods; Type: TABLE; Schema: public; Owner: -
 --
 
 CREATE TABLE public.levy_remittance_periods (
@@ -6748,31 +6154,8 @@ CREATE TABLE public.levy_remittance_periods (
 );
 
 
-ALTER TABLE public.levy_remittance_periods OWNER TO symphony_admin;
-
 --
--- Name: TABLE levy_remittance_periods; Type: COMMENT; Schema: public; Owner: symphony_admin
---
-
-COMMENT ON TABLE public.levy_remittance_periods IS 'Phase-0 structural hook. ZRA monthly MMO levy return period registry. Empty in Phase-0 and Phase-1. Phase-2 populates rows and links levy_calculation_records to periods via reporting_period = period_code. DO NOT create period rows or file returns until Phase-2 ZRA integration is gated.';
-
-
---
--- Name: COLUMN levy_remittance_periods.filing_deadline; Type: COMMENT; Schema: public; Owner: symphony_admin
---
-
-COMMENT ON COLUMN public.levy_remittance_periods.filing_deadline IS 'Phase-0 hook: nullable. ZRA statutory deadline for monthly levy returns is expected to be the last working day of the following month. Confirm exact rule with Compliance Counsel before Phase-2 population.';
-
-
---
--- Name: COLUMN levy_remittance_periods.period_status; Type: COMMENT; Schema: public; Owner: symphony_admin
---
-
-COMMENT ON COLUMN public.levy_remittance_periods.period_status IS 'Phase-0 hook: TEXT with no constraint. Phase-2 will add CHECK enforcing lifecycle values: OPEN, CALCULATING, FILED, ACCEPTED, DISPUTED.';
-
-
---
--- Name: lifecycle_checkpoint_rules; Type: TABLE; Schema: public; Owner: symphony_admin
+-- Name: lifecycle_checkpoint_rules; Type: TABLE; Schema: public; Owner: -
 --
 
 CREATE TABLE public.lifecycle_checkpoint_rules (
@@ -6787,10 +6170,8 @@ CREATE TABLE public.lifecycle_checkpoint_rules (
 ALTER TABLE ONLY public.lifecycle_checkpoint_rules FORCE ROW LEVEL SECURITY;
 
 
-ALTER TABLE public.lifecycle_checkpoint_rules OWNER TO symphony_admin;
-
 --
--- Name: malformed_quarantine_store; Type: TABLE; Schema: public; Owner: symphony_admin
+-- Name: malformed_quarantine_store; Type: TABLE; Schema: public; Owner: -
 --
 
 CREATE TABLE public.malformed_quarantine_store (
@@ -6806,10 +6187,8 @@ CREATE TABLE public.malformed_quarantine_store (
 );
 
 
-ALTER TABLE public.malformed_quarantine_store OWNER TO symphony_admin;
-
 --
--- Name: member_device_events; Type: TABLE; Schema: public; Owner: symphony_admin
+-- Name: member_device_events; Type: TABLE; Schema: public; Owner: -
 --
 
 CREATE TABLE public.member_device_events (
@@ -6830,17 +6209,8 @@ CREATE TABLE public.member_device_events (
 ALTER TABLE ONLY public.member_device_events FORCE ROW LEVEL SECURITY;
 
 
-ALTER TABLE public.member_device_events OWNER TO symphony_admin;
-
 --
--- Name: TABLE member_device_events; Type: COMMENT; Schema: public; Owner: symphony_admin
---
-
-COMMENT ON TABLE public.member_device_events IS 'Phase-1 append-only member device event stream anchored to ingress attestations and tenant/member scope.';
-
-
---
--- Name: member_devices; Type: TABLE; Schema: public; Owner: symphony_admin
+-- Name: member_devices; Type: TABLE; Schema: public; Owner: -
 --
 
 CREATE TABLE public.member_devices (
@@ -6856,17 +6226,8 @@ CREATE TABLE public.member_devices (
 ALTER TABLE ONLY public.member_devices FORCE ROW LEVEL SECURITY;
 
 
-ALTER TABLE public.member_devices OWNER TO symphony_admin;
-
 --
--- Name: TABLE member_devices; Type: COMMENT; Schema: public; Owner: symphony_admin
---
-
-COMMENT ON TABLE public.member_devices IS 'Phase-1 device distribution mapping: tenant-denormalized member device anchors with active lookups and optional ICCID hash.';
-
-
---
--- Name: members; Type: TABLE; Schema: public; Owner: symphony_admin
+-- Name: members; Type: TABLE; Schema: public; Owner: -
 --
 
 CREATE TABLE public.members (
@@ -6890,17 +6251,8 @@ CREATE TABLE public.members (
 ALTER TABLE ONLY public.members FORCE ROW LEVEL SECURITY;
 
 
-ALTER TABLE public.members OWNER TO symphony_admin;
-
 --
--- Name: TABLE members; Type: COMMENT; Schema: public; Owner: symphony_admin
---
-
-COMMENT ON TABLE public.members IS 'Phase-1 membership enrollment: program-scoped rows that link tenant_members/persons to programs with ceilings and KYC posture.';
-
-
---
--- Name: methodology_versions; Type: TABLE; Schema: public; Owner: symphony_admin
+-- Name: methodology_versions; Type: TABLE; Schema: public; Owner: -
 --
 
 CREATE TABLE public.methodology_versions (
@@ -6916,10 +6268,8 @@ CREATE TABLE public.methodology_versions (
 ALTER TABLE ONLY public.methodology_versions FORCE ROW LEVEL SECURITY;
 
 
-ALTER TABLE public.methodology_versions OWNER TO symphony_admin;
-
 --
--- Name: mmo_reality_control_events; Type: TABLE; Schema: public; Owner: symphony_admin
+-- Name: mmo_reality_control_events; Type: TABLE; Schema: public; Owner: -
 --
 
 CREATE TABLE public.mmo_reality_control_events (
@@ -6934,10 +6284,8 @@ CREATE TABLE public.mmo_reality_control_events (
 );
 
 
-ALTER TABLE public.mmo_reality_control_events OWNER TO symphony_admin;
-
 --
--- Name: monitoring_records; Type: TABLE; Schema: public; Owner: symphony_admin
+-- Name: monitoring_records; Type: TABLE; Schema: public; Owner: -
 --
 
 CREATE TABLE public.monitoring_records (
@@ -6952,10 +6300,8 @@ CREATE TABLE public.monitoring_records (
 ALTER TABLE ONLY public.monitoring_records FORCE ROW LEVEL SECURITY;
 
 
-ALTER TABLE public.monitoring_records OWNER TO symphony_admin;
-
 --
--- Name: offline_safe_mode_windows; Type: TABLE; Schema: public; Owner: symphony_admin
+-- Name: offline_safe_mode_windows; Type: TABLE; Schema: public; Owner: -
 --
 
 CREATE TABLE public.offline_safe_mode_windows (
@@ -6969,10 +6315,8 @@ CREATE TABLE public.offline_safe_mode_windows (
 );
 
 
-ALTER TABLE public.offline_safe_mode_windows OWNER TO symphony_admin;
-
 --
--- Name: orphaned_attestation_landing_zone; Type: TABLE; Schema: public; Owner: symphony_admin
+-- Name: orphaned_attestation_landing_zone; Type: TABLE; Schema: public; Owner: -
 --
 
 CREATE TABLE public.orphaned_attestation_landing_zone (
@@ -6987,10 +6331,8 @@ CREATE TABLE public.orphaned_attestation_landing_zone (
 );
 
 
-ALTER TABLE public.orphaned_attestation_landing_zone OWNER TO symphony_admin;
-
 --
--- Name: participant_outbox_sequences; Type: TABLE; Schema: public; Owner: symphony_admin
+-- Name: participant_outbox_sequences; Type: TABLE; Schema: public; Owner: -
 --
 
 CREATE TABLE public.participant_outbox_sequences (
@@ -7000,10 +6342,8 @@ CREATE TABLE public.participant_outbox_sequences (
 );
 
 
-ALTER TABLE public.participant_outbox_sequences OWNER TO symphony_admin;
-
 --
--- Name: participants; Type: TABLE; Schema: public; Owner: symphony_admin
+-- Name: participants; Type: TABLE; Schema: public; Owner: -
 --
 
 CREATE TABLE public.participants (
@@ -7017,10 +6357,8 @@ CREATE TABLE public.participants (
 );
 
 
-ALTER TABLE public.participants OWNER TO symphony_admin;
-
 --
--- Name: payment_outbox_attempts; Type: TABLE; Schema: public; Owner: symphony_admin
+-- Name: payment_outbox_attempts; Type: TABLE; Schema: public; Owner: -
 --
 
 CREATE TABLE public.payment_outbox_attempts (
@@ -7057,17 +6395,8 @@ CREATE TABLE public.payment_outbox_attempts (
 ALTER TABLE ONLY public.payment_outbox_attempts FORCE ROW LEVEL SECURITY;
 
 
-ALTER TABLE public.payment_outbox_attempts OWNER TO symphony_admin;
-
 --
--- Name: TABLE payment_outbox_attempts; Type: COMMENT; Schema: public; Owner: symphony_admin
---
-
-COMMENT ON TABLE public.payment_outbox_attempts IS 'Append-only outbox attempt ledger (authoritative status history). No UPDATE/DELETE.';
-
-
---
--- Name: payment_outbox_pending; Type: TABLE; Schema: public; Owner: symphony_admin
+-- Name: payment_outbox_pending; Type: TABLE; Schema: public; Owner: -
 --
 
 CREATE TABLE public.payment_outbox_pending (
@@ -7098,38 +6427,8 @@ WITH (fillfactor='80');
 ALTER TABLE ONLY public.payment_outbox_pending FORCE ROW LEVEL SECURITY;
 
 
-ALTER TABLE public.payment_outbox_pending OWNER TO symphony_admin;
-
 --
--- Name: TABLE payment_outbox_pending; Type: COMMENT; Schema: public; Owner: symphony_admin
---
-
-COMMENT ON TABLE public.payment_outbox_pending IS 'Active hot queue for payment instructions waiting for dispatch or retry.';
-
-
---
--- Name: COLUMN payment_outbox_pending.attempt_count; Type: COMMENT; Schema: public; Owner: symphony_admin
---
-
-COMMENT ON COLUMN public.payment_outbox_pending.attempt_count IS 'Total number of attempts made so far (used for backoff).';
-
-
---
--- Name: COLUMN payment_outbox_pending.lease_token; Type: COMMENT; Schema: public; Owner: symphony_admin
---
-
-COMMENT ON COLUMN public.payment_outbox_pending.lease_token IS 'Random UUID token proving ownership of the claim (fencing token).';
-
-
---
--- Name: COLUMN payment_outbox_pending.kyc_hold; Type: COMMENT; Schema: public; Owner: symphony_admin
---
-
-COMMENT ON COLUMN public.payment_outbox_pending.kyc_hold IS 'Phase-0 structural hook. NULL until Phase-2 KYC-gated routing logic sets this field. TRUE = instruction is held pending beneficiary KYC verification. FALSE = KYC gate passed, instruction may proceed. NULL = KYC gate not yet evaluated (pre-Phase-2 state for all rows). DO NOT read or write this column in application runtime until Phase-2. When TRUE, Phase-2 exception engine opens a KYC_HOLD exception record.';
-
-
---
--- Name: penalty_defense_packs; Type: TABLE; Schema: public; Owner: symphony_admin
+-- Name: penalty_defense_packs; Type: TABLE; Schema: public; Owner: -
 --
 
 CREATE TABLE public.penalty_defense_packs (
@@ -7141,10 +6440,8 @@ CREATE TABLE public.penalty_defense_packs (
 );
 
 
-ALTER TABLE public.penalty_defense_packs OWNER TO symphony_admin;
-
 --
--- Name: persons; Type: TABLE; Schema: public; Owner: symphony_admin
+-- Name: persons; Type: TABLE; Schema: public; Owner: -
 --
 
 CREATE TABLE public.persons (
@@ -7160,17 +6457,8 @@ CREATE TABLE public.persons (
 ALTER TABLE ONLY public.persons FORCE ROW LEVEL SECURITY;
 
 
-ALTER TABLE public.persons OWNER TO symphony_admin;
-
 --
--- Name: TABLE persons; Type: COMMENT; Schema: public; Owner: symphony_admin
---
-
-COMMENT ON TABLE public.persons IS 'Phase-1 person envelope: tenant-scoped pseudonymous identity with hashed reference and status gating.';
-
-
---
--- Name: pii_erased_subject_placeholders; Type: TABLE; Schema: public; Owner: symphony_admin
+-- Name: pii_erased_subject_placeholders; Type: TABLE; Schema: public; Owner: -
 --
 
 CREATE TABLE public.pii_erased_subject_placeholders (
@@ -7182,10 +6470,8 @@ CREATE TABLE public.pii_erased_subject_placeholders (
 );
 
 
-ALTER TABLE public.pii_erased_subject_placeholders OWNER TO symphony_admin;
-
 --
--- Name: pii_erasure_journal; Type: TABLE; Schema: public; Owner: symphony_admin
+-- Name: pii_erasure_journal; Type: TABLE; Schema: public; Owner: -
 --
 
 CREATE TABLE public.pii_erasure_journal (
@@ -7199,10 +6485,8 @@ CREATE TABLE public.pii_erasure_journal (
 );
 
 
-ALTER TABLE public.pii_erasure_journal OWNER TO symphony_admin;
-
 --
--- Name: pii_purge_events; Type: TABLE; Schema: public; Owner: symphony_admin
+-- Name: pii_purge_events; Type: TABLE; Schema: public; Owner: -
 --
 
 CREATE TABLE public.pii_purge_events (
@@ -7217,10 +6501,8 @@ CREATE TABLE public.pii_purge_events (
 );
 
 
-ALTER TABLE public.pii_purge_events OWNER TO symphony_admin;
-
 --
--- Name: pii_purge_requests; Type: TABLE; Schema: public; Owner: symphony_admin
+-- Name: pii_purge_requests; Type: TABLE; Schema: public; Owner: -
 --
 
 CREATE TABLE public.pii_purge_requests (
@@ -7232,10 +6514,8 @@ CREATE TABLE public.pii_purge_requests (
 );
 
 
-ALTER TABLE public.pii_purge_requests OWNER TO symphony_admin;
-
 --
--- Name: pii_tokenization_registry; Type: TABLE; Schema: public; Owner: symphony_admin
+-- Name: pii_tokenization_registry; Type: TABLE; Schema: public; Owner: -
 --
 
 CREATE TABLE public.pii_tokenization_registry (
@@ -7247,10 +6527,8 @@ CREATE TABLE public.pii_tokenization_registry (
 );
 
 
-ALTER TABLE public.pii_tokenization_registry OWNER TO symphony_admin;
-
 --
--- Name: pii_vault_records; Type: TABLE; Schema: public; Owner: symphony_admin
+-- Name: pii_vault_records; Type: TABLE; Schema: public; Owner: -
 --
 
 CREATE TABLE public.pii_vault_records (
@@ -7265,10 +6543,8 @@ CREATE TABLE public.pii_vault_records (
 );
 
 
-ALTER TABLE public.pii_vault_records OWNER TO symphony_admin;
-
 --
--- Name: policy_bundles; Type: TABLE; Schema: public; Owner: symphony_admin
+-- Name: policy_bundles; Type: TABLE; Schema: public; Owner: -
 --
 
 CREATE TABLE public.policy_bundles (
@@ -7286,10 +6562,8 @@ CREATE TABLE public.policy_bundles (
 );
 
 
-ALTER TABLE public.policy_bundles OWNER TO symphony_admin;
-
 --
--- Name: policy_versions; Type: TABLE; Schema: public; Owner: symphony_admin
+-- Name: policy_versions; Type: TABLE; Schema: public; Owner: -
 --
 
 CREATE TABLE public.policy_versions (
@@ -7306,17 +6580,8 @@ CREATE TABLE public.policy_versions (
 );
 
 
-ALTER TABLE public.policy_versions OWNER TO symphony_admin;
-
 --
--- Name: TABLE policy_versions; Type: COMMENT; Schema: public; Owner: symphony_admin
---
-
-COMMENT ON TABLE public.policy_versions IS 'Boot-critical policy version ledger. Current runtime expects is_active=true row; future supports rotation with GRACE.';
-
-
---
--- Name: program_member_summary_projection; Type: TABLE; Schema: public; Owner: symphony_admin
+-- Name: program_member_summary_projection; Type: TABLE; Schema: public; Owner: -
 --
 
 CREATE TABLE public.program_member_summary_projection (
@@ -7329,10 +6594,8 @@ CREATE TABLE public.program_member_summary_projection (
 );
 
 
-ALTER TABLE public.program_member_summary_projection OWNER TO symphony_admin;
-
 --
--- Name: program_migration_events; Type: TABLE; Schema: public; Owner: symphony_admin
+-- Name: program_migration_events; Type: TABLE; Schema: public; Owner: -
 --
 
 CREATE TABLE public.program_migration_events (
@@ -7354,10 +6617,8 @@ CREATE TABLE public.program_migration_events (
 ALTER TABLE ONLY public.program_migration_events FORCE ROW LEVEL SECURITY;
 
 
-ALTER TABLE public.program_migration_events OWNER TO symphony_admin;
-
 --
--- Name: program_supplier_allowlist; Type: TABLE; Schema: public; Owner: symphony_admin
+-- Name: program_supplier_allowlist; Type: TABLE; Schema: public; Owner: -
 --
 
 CREATE TABLE public.program_supplier_allowlist (
@@ -7371,10 +6632,8 @@ CREATE TABLE public.program_supplier_allowlist (
 ALTER TABLE ONLY public.program_supplier_allowlist FORCE ROW LEVEL SECURITY;
 
 
-ALTER TABLE public.program_supplier_allowlist OWNER TO symphony_admin;
-
 --
--- Name: programme_policy_binding; Type: TABLE; Schema: public; Owner: symphony_admin
+-- Name: programme_policy_binding; Type: TABLE; Schema: public; Owner: -
 --
 
 CREATE TABLE public.programme_policy_binding (
@@ -7390,10 +6649,8 @@ CREATE TABLE public.programme_policy_binding (
 ALTER TABLE ONLY public.programme_policy_binding FORCE ROW LEVEL SECURITY;
 
 
-ALTER TABLE public.programme_policy_binding OWNER TO symphony_admin;
-
 --
--- Name: programme_registry; Type: TABLE; Schema: public; Owner: symphony_admin
+-- Name: programme_registry; Type: TABLE; Schema: public; Owner: -
 --
 
 CREATE TABLE public.programme_registry (
@@ -7410,10 +6667,8 @@ CREATE TABLE public.programme_registry (
 ALTER TABLE ONLY public.programme_registry FORCE ROW LEVEL SECURITY;
 
 
-ALTER TABLE public.programme_registry OWNER TO symphony_admin;
-
 --
--- Name: programs; Type: TABLE; Schema: public; Owner: symphony_admin
+-- Name: programs; Type: TABLE; Schema: public; Owner: -
 --
 
 CREATE TABLE public.programs (
@@ -7431,17 +6686,8 @@ CREATE TABLE public.programs (
 ALTER TABLE ONLY public.programs FORCE ROW LEVEL SECURITY;
 
 
-ALTER TABLE public.programs OWNER TO symphony_admin;
-
 --
--- Name: TABLE programs; Type: COMMENT; Schema: public; Owner: symphony_admin
---
-
-COMMENT ON TABLE public.programs IS 'Phase-1 program registry. Binds each program to a single budget envelope escrow_id (program_escrow_id).';
-
-
---
--- Name: projects; Type: TABLE; Schema: public; Owner: symphony_admin
+-- Name: projects; Type: TABLE; Schema: public; Owner: -
 --
 
 CREATE TABLE public.projects (
@@ -7456,10 +6702,8 @@ CREATE TABLE public.projects (
 ALTER TABLE ONLY public.projects FORCE ROW LEVEL SECURITY;
 
 
-ALTER TABLE public.projects OWNER TO symphony_admin;
-
 --
--- Name: proof_pack_batch_leaves; Type: TABLE; Schema: public; Owner: symphony_admin
+-- Name: proof_pack_batch_leaves; Type: TABLE; Schema: public; Owner: -
 --
 
 CREATE TABLE public.proof_pack_batch_leaves (
@@ -7473,10 +6717,8 @@ CREATE TABLE public.proof_pack_batch_leaves (
 );
 
 
-ALTER TABLE public.proof_pack_batch_leaves OWNER TO symphony_admin;
-
 --
--- Name: proof_pack_batches; Type: TABLE; Schema: public; Owner: symphony_admin
+-- Name: proof_pack_batches; Type: TABLE; Schema: public; Owner: -
 --
 
 CREATE TABLE public.proof_pack_batches (
@@ -7489,10 +6731,8 @@ CREATE TABLE public.proof_pack_batches (
 );
 
 
-ALTER TABLE public.proof_pack_batches OWNER TO symphony_admin;
-
 --
--- Name: rail_dispatch_truth_anchor; Type: TABLE; Schema: public; Owner: symphony_admin
+-- Name: rail_dispatch_truth_anchor; Type: TABLE; Schema: public; Owner: -
 --
 
 CREATE TABLE public.rail_dispatch_truth_anchor (
@@ -7510,10 +6750,8 @@ CREATE TABLE public.rail_dispatch_truth_anchor (
 );
 
 
-ALTER TABLE public.rail_dispatch_truth_anchor OWNER TO symphony_admin;
-
 --
--- Name: redaction_audit_events; Type: TABLE; Schema: public; Owner: symphony_admin
+-- Name: redaction_audit_events; Type: TABLE; Schema: public; Owner: -
 --
 
 CREATE TABLE public.redaction_audit_events (
@@ -7526,10 +6764,8 @@ CREATE TABLE public.redaction_audit_events (
 );
 
 
-ALTER TABLE public.redaction_audit_events OWNER TO symphony_admin;
-
 --
--- Name: reference_strategy_policy_versions; Type: TABLE; Schema: public; Owner: symphony_admin
+-- Name: reference_strategy_policy_versions; Type: TABLE; Schema: public; Owner: -
 --
 
 CREATE TABLE public.reference_strategy_policy_versions (
@@ -7546,10 +6782,8 @@ CREATE TABLE public.reference_strategy_policy_versions (
 );
 
 
-ALTER TABLE public.reference_strategy_policy_versions OWNER TO symphony_admin;
-
 --
--- Name: regulatory_authorities; Type: TABLE; Schema: public; Owner: symphony_admin
+-- Name: regulatory_authorities; Type: TABLE; Schema: public; Owner: -
 --
 
 CREATE TABLE public.regulatory_authorities (
@@ -7563,10 +6797,8 @@ CREATE TABLE public.regulatory_authorities (
 ALTER TABLE ONLY public.regulatory_authorities FORCE ROW LEVEL SECURITY;
 
 
-ALTER TABLE public.regulatory_authorities OWNER TO symphony_admin;
-
 --
--- Name: regulatory_checkpoints; Type: TABLE; Schema: public; Owner: symphony_admin
+-- Name: regulatory_checkpoints; Type: TABLE; Schema: public; Owner: -
 --
 
 CREATE TABLE public.regulatory_checkpoints (
@@ -7581,10 +6813,8 @@ CREATE TABLE public.regulatory_checkpoints (
 ALTER TABLE ONLY public.regulatory_checkpoints FORCE ROW LEVEL SECURITY;
 
 
-ALTER TABLE public.regulatory_checkpoints OWNER TO symphony_admin;
-
 --
--- Name: regulatory_incidents; Type: TABLE; Schema: public; Owner: symphony_admin
+-- Name: regulatory_incidents; Type: TABLE; Schema: public; Owner: -
 --
 
 CREATE TABLE public.regulatory_incidents (
@@ -7603,10 +6833,8 @@ CREATE TABLE public.regulatory_incidents (
 );
 
 
-ALTER TABLE public.regulatory_incidents OWNER TO symphony_admin;
-
 --
--- Name: regulatory_report_submission_attempts; Type: TABLE; Schema: public; Owner: symphony_admin
+-- Name: regulatory_report_submission_attempts; Type: TABLE; Schema: public; Owner: -
 --
 
 CREATE TABLE public.regulatory_report_submission_attempts (
@@ -7619,10 +6847,8 @@ CREATE TABLE public.regulatory_report_submission_attempts (
 );
 
 
-ALTER TABLE public.regulatory_report_submission_attempts OWNER TO symphony_admin;
-
 --
--- Name: regulatory_retraction_approvals; Type: TABLE; Schema: public; Owner: symphony_admin
+-- Name: regulatory_retraction_approvals; Type: TABLE; Schema: public; Owner: -
 --
 
 CREATE TABLE public.regulatory_retraction_approvals (
@@ -7634,10 +6860,8 @@ CREATE TABLE public.regulatory_retraction_approvals (
 );
 
 
-ALTER TABLE public.regulatory_retraction_approvals OWNER TO symphony_admin;
-
 --
--- Name: resign_sweeps; Type: TABLE; Schema: public; Owner: symphony_admin
+-- Name: resign_sweeps; Type: TABLE; Schema: public; Owner: -
 --
 
 CREATE TABLE public.resign_sweeps (
@@ -7650,10 +6874,8 @@ CREATE TABLE public.resign_sweeps (
 );
 
 
-ALTER TABLE public.resign_sweeps OWNER TO symphony_admin;
-
 --
--- Name: retirement_events; Type: TABLE; Schema: public; Owner: symphony_admin
+-- Name: retirement_events; Type: TABLE; Schema: public; Owner: -
 --
 
 CREATE TABLE public.retirement_events (
@@ -7669,10 +6891,8 @@ CREATE TABLE public.retirement_events (
 ALTER TABLE ONLY public.retirement_events FORCE ROW LEVEL SECURITY;
 
 
-ALTER TABLE public.retirement_events OWNER TO symphony_admin;
-
 --
--- Name: revoked_client_certs; Type: TABLE; Schema: public; Owner: symphony_admin
+-- Name: revoked_client_certs; Type: TABLE; Schema: public; Owner: -
 --
 
 CREATE TABLE public.revoked_client_certs (
@@ -7684,10 +6904,8 @@ CREATE TABLE public.revoked_client_certs (
 );
 
 
-ALTER TABLE public.revoked_client_certs OWNER TO symphony_admin;
-
 --
--- Name: revoked_tokens; Type: TABLE; Schema: public; Owner: symphony_admin
+-- Name: revoked_tokens; Type: TABLE; Schema: public; Owner: -
 --
 
 CREATE TABLE public.revoked_tokens (
@@ -7699,10 +6917,8 @@ CREATE TABLE public.revoked_tokens (
 );
 
 
-ALTER TABLE public.revoked_tokens OWNER TO symphony_admin;
-
 --
--- Name: risk_formula_versions; Type: TABLE; Schema: public; Owner: symphony_admin
+-- Name: risk_formula_versions; Type: TABLE; Schema: public; Owner: -
 --
 
 CREATE TABLE public.risk_formula_versions (
@@ -7717,10 +6933,8 @@ CREATE TABLE public.risk_formula_versions (
 );
 
 
-ALTER TABLE public.risk_formula_versions OWNER TO symphony_admin;
-
 --
--- Name: schema_migrations; Type: TABLE; Schema: public; Owner: symphony_admin
+-- Name: schema_migrations; Type: TABLE; Schema: public; Owner: -
 --
 
 CREATE TABLE public.schema_migrations (
@@ -7730,10 +6944,8 @@ CREATE TABLE public.schema_migrations (
 );
 
 
-ALTER TABLE public.schema_migrations OWNER TO symphony_admin;
-
 --
--- Name: signing_audit_log; Type: TABLE; Schema: public; Owner: symphony_admin
+-- Name: signing_audit_log; Type: TABLE; Schema: public; Owner: -
 --
 
 CREATE TABLE public.signing_audit_log (
@@ -7755,10 +6967,8 @@ CREATE TABLE public.signing_audit_log (
 );
 
 
-ALTER TABLE public.signing_audit_log OWNER TO symphony_admin;
-
 --
--- Name: signing_authorization_matrix; Type: TABLE; Schema: public; Owner: symphony_admin
+-- Name: signing_authorization_matrix; Type: TABLE; Schema: public; Owner: -
 --
 
 CREATE TABLE public.signing_authorization_matrix (
@@ -7773,10 +6983,8 @@ CREATE TABLE public.signing_authorization_matrix (
 );
 
 
-ALTER TABLE public.signing_authorization_matrix OWNER TO symphony_admin;
-
 --
--- Name: signing_throughput_runs; Type: TABLE; Schema: public; Owner: symphony_admin
+-- Name: signing_throughput_runs; Type: TABLE; Schema: public; Owner: -
 --
 
 CREATE TABLE public.signing_throughput_runs (
@@ -7792,10 +7000,8 @@ CREATE TABLE public.signing_throughput_runs (
 );
 
 
-ALTER TABLE public.signing_throughput_runs OWNER TO symphony_admin;
-
 --
--- Name: sim_swap_alerts; Type: TABLE; Schema: public; Owner: symphony_admin
+-- Name: sim_swap_alerts; Type: TABLE; Schema: public; Owner: -
 --
 
 CREATE TABLE public.sim_swap_alerts (
@@ -7816,17 +7022,8 @@ CREATE TABLE public.sim_swap_alerts (
 ALTER TABLE ONLY public.sim_swap_alerts FORCE ROW LEVEL SECURITY;
 
 
-ALTER TABLE public.sim_swap_alerts OWNER TO symphony_admin;
-
 --
--- Name: TABLE sim_swap_alerts; Type: COMMENT; Schema: public; Owner: symphony_admin
---
-
-COMMENT ON TABLE public.sim_swap_alerts IS 'Phase-1 append-only SIM swap alerts derived from member_device_events with formula-version traceability.';
-
-
---
--- Name: supervisor_access_policies; Type: TABLE; Schema: public; Owner: symphony_admin
+-- Name: supervisor_access_policies; Type: TABLE; Schema: public; Owner: -
 --
 
 CREATE TABLE public.supervisor_access_policies (
@@ -7844,10 +7041,8 @@ CREATE TABLE public.supervisor_access_policies (
 );
 
 
-ALTER TABLE public.supervisor_access_policies OWNER TO symphony_admin;
-
 --
--- Name: supervisor_approval_queue; Type: TABLE; Schema: public; Owner: symphony_admin
+-- Name: supervisor_approval_queue; Type: TABLE; Schema: public; Owner: -
 --
 
 CREATE TABLE public.supervisor_approval_queue (
@@ -7870,10 +7065,8 @@ CREATE TABLE public.supervisor_approval_queue (
 );
 
 
-ALTER TABLE public.supervisor_approval_queue OWNER TO symphony_admin;
-
 --
--- Name: supervisor_audit_member_device_events; Type: VIEW; Schema: public; Owner: symphony_admin
+-- Name: supervisor_audit_member_device_events; Type: VIEW; Schema: public; Owner: -
 --
 
 CREATE VIEW public.supervisor_audit_member_device_events AS
@@ -7887,10 +7080,8 @@ CREATE VIEW public.supervisor_audit_member_device_events AS
      JOIN public.members m ON ((m.member_id = e.member_id)));
 
 
-ALTER VIEW public.supervisor_audit_member_device_events OWNER TO symphony_admin;
-
 --
--- Name: supervisor_audit_tokens; Type: TABLE; Schema: public; Owner: symphony_admin
+-- Name: supervisor_audit_tokens; Type: TABLE; Schema: public; Owner: -
 --
 
 CREATE TABLE public.supervisor_audit_tokens (
@@ -7906,10 +7097,8 @@ CREATE TABLE public.supervisor_audit_tokens (
 );
 
 
-ALTER TABLE public.supervisor_audit_tokens OWNER TO symphony_admin;
-
 --
--- Name: supervisor_interrupt_audit_events; Type: TABLE; Schema: public; Owner: symphony_admin
+-- Name: supervisor_interrupt_audit_events; Type: TABLE; Schema: public; Owner: -
 --
 
 CREATE TABLE public.supervisor_interrupt_audit_events (
@@ -7926,10 +7115,8 @@ CREATE TABLE public.supervisor_interrupt_audit_events (
 );
 
 
-ALTER TABLE public.supervisor_interrupt_audit_events OWNER TO symphony_admin;
-
 --
--- Name: supplier_registry; Type: TABLE; Schema: public; Owner: symphony_admin
+-- Name: supplier_registry; Type: TABLE; Schema: public; Owner: -
 --
 
 CREATE TABLE public.supplier_registry (
@@ -7947,10 +7134,8 @@ CREATE TABLE public.supplier_registry (
 ALTER TABLE ONLY public.supplier_registry FORCE ROW LEVEL SECURITY;
 
 
-ALTER TABLE public.supplier_registry OWNER TO symphony_admin;
-
 --
--- Name: tenant_clients; Type: TABLE; Schema: public; Owner: symphony_admin
+-- Name: tenant_clients; Type: TABLE; Schema: public; Owner: -
 --
 
 CREATE TABLE public.tenant_clients (
@@ -7966,10 +7151,8 @@ CREATE TABLE public.tenant_clients (
 ALTER TABLE ONLY public.tenant_clients FORCE ROW LEVEL SECURITY;
 
 
-ALTER TABLE public.tenant_clients OWNER TO symphony_admin;
-
 --
--- Name: tenant_members; Type: TABLE; Schema: public; Owner: symphony_admin
+-- Name: tenant_members; Type: TABLE; Schema: public; Owner: -
 --
 
 CREATE TABLE public.tenant_members (
@@ -7986,10 +7169,8 @@ CREATE TABLE public.tenant_members (
 ALTER TABLE ONLY public.tenant_members FORCE ROW LEVEL SECURITY;
 
 
-ALTER TABLE public.tenant_members OWNER TO symphony_admin;
-
 --
--- Name: tenant_program_year_unique_beneficiaries; Type: VIEW; Schema: public; Owner: symphony_admin
+-- Name: tenant_program_year_unique_beneficiaries; Type: VIEW; Schema: public; Owner: -
 --
 
 CREATE VIEW public.tenant_program_year_unique_beneficiaries AS
@@ -8000,10 +7181,8 @@ CREATE VIEW public.tenant_program_year_unique_beneficiaries AS
   GROUP BY tenant_id, (EXTRACT(year FROM enrolled_at));
 
 
-ALTER VIEW public.tenant_program_year_unique_beneficiaries OWNER TO symphony_admin;
-
 --
--- Name: tenant_registry; Type: TABLE; Schema: public; Owner: symphony_admin
+-- Name: tenant_registry; Type: TABLE; Schema: public; Owner: -
 --
 
 CREATE TABLE public.tenant_registry (
@@ -8020,10 +7199,8 @@ CREATE TABLE public.tenant_registry (
 ALTER TABLE ONLY public.tenant_registry FORCE ROW LEVEL SECURITY;
 
 
-ALTER TABLE public.tenant_registry OWNER TO symphony_admin;
-
 --
--- Name: tenants; Type: TABLE; Schema: public; Owner: symphony_admin
+-- Name: tenants; Type: TABLE; Schema: public; Owner: -
 --
 
 CREATE TABLE public.tenants (
@@ -8042,10 +7219,21 @@ CREATE TABLE public.tenants (
 ALTER TABLE ONLY public.tenants FORCE ROW LEVEL SECURITY;
 
 
-ALTER TABLE public.tenants OWNER TO symphony_admin;
+--
+-- Name: unit_conversions; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.unit_conversions (
+    conversion_id uuid DEFAULT gen_random_uuid() NOT NULL,
+    from_unit character varying NOT NULL,
+    to_unit character varying NOT NULL,
+    conversion_factor numeric NOT NULL,
+    created_at timestamp with time zone DEFAULT now()
+);
+
 
 --
--- Name: verifier_project_assignments; Type: TABLE; Schema: public; Owner: symphony_admin
+-- Name: verifier_project_assignments; Type: TABLE; Schema: public; Owner: -
 --
 
 CREATE TABLE public.verifier_project_assignments (
@@ -8060,10 +7248,8 @@ CREATE TABLE public.verifier_project_assignments (
 ALTER TABLE ONLY public.verifier_project_assignments FORCE ROW LEVEL SECURITY;
 
 
-ALTER TABLE public.verifier_project_assignments OWNER TO symphony_admin;
-
 --
--- Name: verifier_registry; Type: TABLE; Schema: public; Owner: symphony_admin
+-- Name: verifier_registry; Type: TABLE; Schema: public; Owner: -
 --
 
 CREATE TABLE public.verifier_registry (
@@ -8088,10 +7274,8 @@ CREATE TABLE public.verifier_registry (
 ALTER TABLE ONLY public.verifier_registry FORCE ROW LEVEL SECURITY;
 
 
-ALTER TABLE public.verifier_registry OWNER TO symphony_admin;
-
 --
--- Name: adapter_circuit_breakers adapter_circuit_breakers_pkey; Type: CONSTRAINT; Schema: public; Owner: symphony_admin
+-- Name: adapter_circuit_breakers adapter_circuit_breakers_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.adapter_circuit_breakers
@@ -8099,7 +7283,7 @@ ALTER TABLE ONLY public.adapter_circuit_breakers
 
 
 --
--- Name: adapter_registrations adapter_registration_unique; Type: CONSTRAINT; Schema: public; Owner: symphony_admin
+-- Name: adapter_registrations adapter_registration_unique; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.adapter_registrations
@@ -8107,7 +7291,7 @@ ALTER TABLE ONLY public.adapter_registrations
 
 
 --
--- Name: adapter_registrations adapter_registrations_pkey; Type: CONSTRAINT; Schema: public; Owner: symphony_admin
+-- Name: adapter_registrations adapter_registrations_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.adapter_registrations
@@ -8115,7 +7299,7 @@ ALTER TABLE ONLY public.adapter_registrations
 
 
 --
--- Name: adjustment_approval_stages adjustment_approval_stages_pkey; Type: CONSTRAINT; Schema: public; Owner: symphony_admin
+-- Name: adjustment_approval_stages adjustment_approval_stages_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.adjustment_approval_stages
@@ -8123,7 +7307,7 @@ ALTER TABLE ONLY public.adjustment_approval_stages
 
 
 --
--- Name: adjustment_approvals adjustment_approvals_pkey; Type: CONSTRAINT; Schema: public; Owner: symphony_admin
+-- Name: adjustment_approvals adjustment_approvals_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.adjustment_approvals
@@ -8131,7 +7315,7 @@ ALTER TABLE ONLY public.adjustment_approvals
 
 
 --
--- Name: adjustment_approvals adjustment_approvals_stage_id_approver_id_key; Type: CONSTRAINT; Schema: public; Owner: symphony_admin
+-- Name: adjustment_approvals adjustment_approvals_stage_id_approver_id_key; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.adjustment_approvals
@@ -8139,7 +7323,7 @@ ALTER TABLE ONLY public.adjustment_approvals
 
 
 --
--- Name: adjustment_execution_attempts adjustment_execution_attempts_adjustment_id_idempotency_key_key; Type: CONSTRAINT; Schema: public; Owner: symphony_admin
+-- Name: adjustment_execution_attempts adjustment_execution_attempts_adjustment_id_idempotency_key_key; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.adjustment_execution_attempts
@@ -8147,7 +7331,7 @@ ALTER TABLE ONLY public.adjustment_execution_attempts
 
 
 --
--- Name: adjustment_execution_attempts adjustment_execution_attempts_pkey; Type: CONSTRAINT; Schema: public; Owner: symphony_admin
+-- Name: adjustment_execution_attempts adjustment_execution_attempts_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.adjustment_execution_attempts
@@ -8155,7 +7339,7 @@ ALTER TABLE ONLY public.adjustment_execution_attempts
 
 
 --
--- Name: adjustment_freeze_flags adjustment_freeze_flags_pkey; Type: CONSTRAINT; Schema: public; Owner: symphony_admin
+-- Name: adjustment_freeze_flags adjustment_freeze_flags_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.adjustment_freeze_flags
@@ -8163,7 +7347,7 @@ ALTER TABLE ONLY public.adjustment_freeze_flags
 
 
 --
--- Name: adjustment_instructions adjustment_instructions_pkey; Type: CONSTRAINT; Schema: public; Owner: symphony_admin
+-- Name: adjustment_instructions adjustment_instructions_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.adjustment_instructions
@@ -8171,7 +7355,7 @@ ALTER TABLE ONLY public.adjustment_instructions
 
 
 --
--- Name: anchor_backfill_jobs anchor_backfill_jobs_pkey; Type: CONSTRAINT; Schema: public; Owner: symphony_admin
+-- Name: anchor_backfill_jobs anchor_backfill_jobs_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.anchor_backfill_jobs
@@ -8179,7 +7363,7 @@ ALTER TABLE ONLY public.anchor_backfill_jobs
 
 
 --
--- Name: anchor_sync_operations anchor_sync_operations_pack_id_key; Type: CONSTRAINT; Schema: public; Owner: symphony_admin
+-- Name: anchor_sync_operations anchor_sync_operations_pack_id_key; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.anchor_sync_operations
@@ -8187,7 +7371,7 @@ ALTER TABLE ONLY public.anchor_sync_operations
 
 
 --
--- Name: anchor_sync_operations anchor_sync_operations_pkey; Type: CONSTRAINT; Schema: public; Owner: symphony_admin
+-- Name: anchor_sync_operations anchor_sync_operations_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.anchor_sync_operations
@@ -8195,7 +7379,7 @@ ALTER TABLE ONLY public.anchor_sync_operations
 
 
 --
--- Name: archive_verification_runs archive_verification_runs_pkey; Type: CONSTRAINT; Schema: public; Owner: symphony_admin
+-- Name: archive_verification_runs archive_verification_runs_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.archive_verification_runs
@@ -8203,7 +7387,7 @@ ALTER TABLE ONLY public.archive_verification_runs
 
 
 --
--- Name: artifact_signing_batch_items artifact_signing_batch_items_batch_id_leaf_index_key; Type: CONSTRAINT; Schema: public; Owner: symphony_admin
+-- Name: artifact_signing_batch_items artifact_signing_batch_items_batch_id_leaf_index_key; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.artifact_signing_batch_items
@@ -8211,7 +7395,7 @@ ALTER TABLE ONLY public.artifact_signing_batch_items
 
 
 --
--- Name: artifact_signing_batch_items artifact_signing_batch_items_pkey; Type: CONSTRAINT; Schema: public; Owner: symphony_admin
+-- Name: artifact_signing_batch_items artifact_signing_batch_items_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.artifact_signing_batch_items
@@ -8219,7 +7403,7 @@ ALTER TABLE ONLY public.artifact_signing_batch_items
 
 
 --
--- Name: artifact_signing_batches artifact_signing_batches_pkey; Type: CONSTRAINT; Schema: public; Owner: symphony_admin
+-- Name: artifact_signing_batches artifact_signing_batches_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.artifact_signing_batches
@@ -8227,7 +7411,7 @@ ALTER TABLE ONLY public.artifact_signing_batches
 
 
 --
--- Name: asset_batches asset_batches_pkey; Type: CONSTRAINT; Schema: public; Owner: symphony_admin
+-- Name: asset_batches asset_batches_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.asset_batches
@@ -8235,7 +7419,7 @@ ALTER TABLE ONLY public.asset_batches
 
 
 --
--- Name: asset_lifecycle_events asset_lifecycle_events_pkey; Type: CONSTRAINT; Schema: public; Owner: symphony_admin
+-- Name: asset_lifecycle_events asset_lifecycle_events_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.asset_lifecycle_events
@@ -8243,7 +7427,7 @@ ALTER TABLE ONLY public.asset_lifecycle_events
 
 
 --
--- Name: audit_tamper_evident_chains audit_tamper_evident_chains_pkey; Type: CONSTRAINT; Schema: public; Owner: symphony_admin
+-- Name: audit_tamper_evident_chains audit_tamper_evident_chains_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.audit_tamper_evident_chains
@@ -8251,7 +7435,7 @@ ALTER TABLE ONLY public.audit_tamper_evident_chains
 
 
 --
--- Name: authority_decisions authority_decisions_pkey; Type: CONSTRAINT; Schema: public; Owner: symphony_admin
+-- Name: authority_decisions authority_decisions_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.authority_decisions
@@ -8259,7 +7443,7 @@ ALTER TABLE ONLY public.authority_decisions
 
 
 --
--- Name: billable_clients billable_clients_client_key_required_new_rows_chk; Type: CHECK CONSTRAINT; Schema: public; Owner: symphony_admin
+-- Name: billable_clients billable_clients_client_key_required_new_rows_chk; Type: CHECK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE public.billable_clients
@@ -8267,7 +7451,7 @@ ALTER TABLE public.billable_clients
 
 
 --
--- Name: billable_clients billable_clients_pkey; Type: CONSTRAINT; Schema: public; Owner: symphony_admin
+-- Name: billable_clients billable_clients_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.billable_clients
@@ -8275,7 +7459,7 @@ ALTER TABLE ONLY public.billable_clients
 
 
 --
--- Name: billing_usage_events billing_usage_events_pkey; Type: CONSTRAINT; Schema: public; Owner: symphony_admin
+-- Name: billing_usage_events billing_usage_events_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.billing_usage_events
@@ -8283,7 +7467,7 @@ ALTER TABLE ONLY public.billing_usage_events
 
 
 --
--- Name: boz_operational_scenario_runs boz_operational_scenario_runs_pkey; Type: CONSTRAINT; Schema: public; Owner: symphony_admin
+-- Name: boz_operational_scenario_runs boz_operational_scenario_runs_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.boz_operational_scenario_runs
@@ -8291,7 +7475,7 @@ ALTER TABLE ONLY public.boz_operational_scenario_runs
 
 
 --
--- Name: canonicalization_archive_snapshots canonicalization_archive_snap_canonicalization_version_snap_key; Type: CONSTRAINT; Schema: public; Owner: symphony_admin
+-- Name: canonicalization_archive_snapshots canonicalization_archive_snap_canonicalization_version_snap_key; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.canonicalization_archive_snapshots
@@ -8299,7 +7483,7 @@ ALTER TABLE ONLY public.canonicalization_archive_snapshots
 
 
 --
--- Name: canonicalization_archive_snapshots canonicalization_archive_snapshots_pkey; Type: CONSTRAINT; Schema: public; Owner: symphony_admin
+-- Name: canonicalization_archive_snapshots canonicalization_archive_snapshots_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.canonicalization_archive_snapshots
@@ -8307,7 +7491,7 @@ ALTER TABLE ONLY public.canonicalization_archive_snapshots
 
 
 --
--- Name: canonicalization_registry canonicalization_registry_pkey; Type: CONSTRAINT; Schema: public; Owner: symphony_admin
+-- Name: canonicalization_registry canonicalization_registry_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.canonicalization_registry
@@ -8315,7 +7499,7 @@ ALTER TABLE ONLY public.canonicalization_registry
 
 
 --
--- Name: dispatch_reference_collision_events dispatch_reference_collision_events_pkey; Type: CONSTRAINT; Schema: public; Owner: symphony_admin
+-- Name: dispatch_reference_collision_events dispatch_reference_collision_events_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.dispatch_reference_collision_events
@@ -8323,7 +7507,7 @@ ALTER TABLE ONLY public.dispatch_reference_collision_events
 
 
 --
--- Name: dispatch_reference_registry dispatch_reference_registry_canon_unique; Type: CONSTRAINT; Schema: public; Owner: symphony_admin
+-- Name: dispatch_reference_registry dispatch_reference_registry_canon_unique; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.dispatch_reference_registry
@@ -8331,7 +7515,7 @@ ALTER TABLE ONLY public.dispatch_reference_registry
 
 
 --
--- Name: dispatch_reference_registry dispatch_reference_registry_pkey; Type: CONSTRAINT; Schema: public; Owner: symphony_admin
+-- Name: dispatch_reference_registry dispatch_reference_registry_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.dispatch_reference_registry
@@ -8339,7 +7523,7 @@ ALTER TABLE ONLY public.dispatch_reference_registry
 
 
 --
--- Name: dispatch_reference_registry dispatch_reference_registry_ref_unique; Type: CONSTRAINT; Schema: public; Owner: symphony_admin
+-- Name: dispatch_reference_registry dispatch_reference_registry_ref_unique; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.dispatch_reference_registry
@@ -8347,7 +7531,7 @@ ALTER TABLE ONLY public.dispatch_reference_registry
 
 
 --
--- Name: effect_seal_mismatch_events effect_seal_mismatch_events_pkey; Type: CONSTRAINT; Schema: public; Owner: symphony_admin
+-- Name: effect_seal_mismatch_events effect_seal_mismatch_events_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.effect_seal_mismatch_events
@@ -8355,7 +7539,7 @@ ALTER TABLE ONLY public.effect_seal_mismatch_events
 
 
 --
--- Name: escrow_accounts escrow_accounts_pkey; Type: CONSTRAINT; Schema: public; Owner: symphony_admin
+-- Name: escrow_accounts escrow_accounts_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.escrow_accounts
@@ -8363,7 +7547,7 @@ ALTER TABLE ONLY public.escrow_accounts
 
 
 --
--- Name: escrow_envelopes escrow_envelopes_pkey; Type: CONSTRAINT; Schema: public; Owner: symphony_admin
+-- Name: escrow_envelopes escrow_envelopes_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.escrow_envelopes
@@ -8371,7 +7555,7 @@ ALTER TABLE ONLY public.escrow_envelopes
 
 
 --
--- Name: escrow_events escrow_events_pkey; Type: CONSTRAINT; Schema: public; Owner: symphony_admin
+-- Name: escrow_events escrow_events_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.escrow_events
@@ -8379,7 +7563,7 @@ ALTER TABLE ONLY public.escrow_events
 
 
 --
--- Name: escrow_reservations escrow_reservations_pkey; Type: CONSTRAINT; Schema: public; Owner: symphony_admin
+-- Name: escrow_reservations escrow_reservations_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.escrow_reservations
@@ -8387,7 +7571,7 @@ ALTER TABLE ONLY public.escrow_reservations
 
 
 --
--- Name: escrow_reservations escrow_reservations_program_escrow_id_reservation_escrow_id_key; Type: CONSTRAINT; Schema: public; Owner: symphony_admin
+-- Name: escrow_reservations escrow_reservations_program_escrow_id_reservation_escrow_id_key; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.escrow_reservations
@@ -8395,7 +7579,7 @@ ALTER TABLE ONLY public.escrow_reservations
 
 
 --
--- Name: escrow_summary_projection escrow_summary_projection_pkey; Type: CONSTRAINT; Schema: public; Owner: symphony_admin
+-- Name: escrow_summary_projection escrow_summary_projection_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.escrow_summary_projection
@@ -8403,7 +7587,7 @@ ALTER TABLE ONLY public.escrow_summary_projection
 
 
 --
--- Name: evidence_bundle_projection evidence_bundle_projection_pkey; Type: CONSTRAINT; Schema: public; Owner: symphony_admin
+-- Name: evidence_bundle_projection evidence_bundle_projection_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.evidence_bundle_projection
@@ -8411,7 +7595,7 @@ ALTER TABLE ONLY public.evidence_bundle_projection
 
 
 --
--- Name: evidence_edges evidence_edges_pkey; Type: CONSTRAINT; Schema: public; Owner: symphony_admin
+-- Name: evidence_edges evidence_edges_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.evidence_edges
@@ -8419,7 +7603,7 @@ ALTER TABLE ONLY public.evidence_edges
 
 
 --
--- Name: evidence_nodes evidence_nodes_pkey; Type: CONSTRAINT; Schema: public; Owner: symphony_admin
+-- Name: evidence_nodes evidence_nodes_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.evidence_nodes
@@ -8427,7 +7611,7 @@ ALTER TABLE ONLY public.evidence_nodes
 
 
 --
--- Name: evidence_pack_items evidence_pack_items_pkey; Type: CONSTRAINT; Schema: public; Owner: symphony_admin
+-- Name: evidence_pack_items evidence_pack_items_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.evidence_pack_items
@@ -8435,7 +7619,7 @@ ALTER TABLE ONLY public.evidence_pack_items
 
 
 --
--- Name: evidence_packs evidence_packs_pkey; Type: CONSTRAINT; Schema: public; Owner: symphony_admin
+-- Name: evidence_packs evidence_packs_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.evidence_packs
@@ -8443,7 +7627,7 @@ ALTER TABLE ONLY public.evidence_packs
 
 
 --
--- Name: execution_records execution_records_pkey; Type: CONSTRAINT; Schema: public; Owner: symphony
+-- Name: execution_records execution_records_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.execution_records
@@ -8451,7 +7635,7 @@ ALTER TABLE ONLY public.execution_records
 
 
 --
--- Name: external_proofs external_proofs_billable_client_required_new_rows_chk; Type: CHECK CONSTRAINT; Schema: public; Owner: symphony_admin
+-- Name: external_proofs external_proofs_billable_client_required_new_rows_chk; Type: CHECK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE public.external_proofs
@@ -8459,7 +7643,7 @@ ALTER TABLE public.external_proofs
 
 
 --
--- Name: external_proofs external_proofs_pkey; Type: CONSTRAINT; Schema: public; Owner: symphony_admin
+-- Name: external_proofs external_proofs_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.external_proofs
@@ -8467,7 +7651,7 @@ ALTER TABLE ONLY public.external_proofs
 
 
 --
--- Name: external_proofs external_proofs_tenant_required_new_rows_chk; Type: CHECK CONSTRAINT; Schema: public; Owner: symphony_admin
+-- Name: external_proofs external_proofs_tenant_required_new_rows_chk; Type: CHECK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE public.external_proofs
@@ -8475,7 +7659,15 @@ ALTER TABLE public.external_proofs
 
 
 --
--- Name: gf_verifier_read_tokens gf_verifier_read_tokens_pkey; Type: CONSTRAINT; Schema: public; Owner: symphony_admin
+-- Name: factor_registry factor_registry_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.factor_registry
+    ADD CONSTRAINT factor_registry_pkey PRIMARY KEY (factor_id);
+
+
+--
+-- Name: gf_verifier_read_tokens gf_verifier_read_tokens_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.gf_verifier_read_tokens
@@ -8483,7 +7675,7 @@ ALTER TABLE ONLY public.gf_verifier_read_tokens
 
 
 --
--- Name: global_rate_limit_policies global_rate_limit_policies_pkey; Type: CONSTRAINT; Schema: public; Owner: symphony_admin
+-- Name: global_rate_limit_policies global_rate_limit_policies_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.global_rate_limit_policies
@@ -8491,7 +7683,7 @@ ALTER TABLE ONLY public.global_rate_limit_policies
 
 
 --
--- Name: historical_verification_runs historical_verification_runs_pkey; Type: CONSTRAINT; Schema: public; Owner: symphony_admin
+-- Name: historical_verification_runs historical_verification_runs_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.historical_verification_runs
@@ -8499,7 +7691,7 @@ ALTER TABLE ONLY public.historical_verification_runs
 
 
 --
--- Name: hsm_fail_closed_events hsm_fail_closed_events_pkey; Type: CONSTRAINT; Schema: public; Owner: symphony_admin
+-- Name: hsm_fail_closed_events hsm_fail_closed_events_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.hsm_fail_closed_events
@@ -8507,7 +7699,7 @@ ALTER TABLE ONLY public.hsm_fail_closed_events
 
 
 --
--- Name: incident_case_projection incident_case_projection_pkey; Type: CONSTRAINT; Schema: public; Owner: symphony_admin
+-- Name: incident_case_projection incident_case_projection_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.incident_case_projection
@@ -8515,7 +7707,7 @@ ALTER TABLE ONLY public.incident_case_projection
 
 
 --
--- Name: incident_events incident_events_pkey; Type: CONSTRAINT; Schema: public; Owner: symphony_admin
+-- Name: incident_events incident_events_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.incident_events
@@ -8523,7 +7715,7 @@ ALTER TABLE ONLY public.incident_events
 
 
 --
--- Name: ingress_attestations ingress_attestations_correlation_required_new_rows_chk; Type: CHECK CONSTRAINT; Schema: public; Owner: symphony_admin
+-- Name: ingress_attestations ingress_attestations_correlation_required_new_rows_chk; Type: CHECK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE public.ingress_attestations
@@ -8531,7 +7723,7 @@ ALTER TABLE public.ingress_attestations
 
 
 --
--- Name: ingress_attestations ingress_attestations_pkey; Type: CONSTRAINT; Schema: public; Owner: symphony_admin
+-- Name: ingress_attestations ingress_attestations_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.ingress_attestations
@@ -8539,7 +7731,7 @@ ALTER TABLE ONLY public.ingress_attestations
 
 
 --
--- Name: inquiry_state_machine inquiry_state_machine_pkey; Type: CONSTRAINT; Schema: public; Owner: symphony_admin
+-- Name: inquiry_state_machine inquiry_state_machine_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.inquiry_state_machine
@@ -8547,7 +7739,7 @@ ALTER TABLE ONLY public.inquiry_state_machine
 
 
 --
--- Name: instruction_effect_seals instruction_effect_seals_pkey; Type: CONSTRAINT; Schema: public; Owner: symphony_admin
+-- Name: instruction_effect_seals instruction_effect_seals_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.instruction_effect_seals
@@ -8555,7 +7747,7 @@ ALTER TABLE ONLY public.instruction_effect_seals
 
 
 --
--- Name: instruction_finality_conflicts instruction_finality_conflicts_pkey; Type: CONSTRAINT; Schema: public; Owner: symphony_admin
+-- Name: instruction_finality_conflicts instruction_finality_conflicts_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.instruction_finality_conflicts
@@ -8563,7 +7755,7 @@ ALTER TABLE ONLY public.instruction_finality_conflicts
 
 
 --
--- Name: instruction_settlement_finality instruction_settlement_finality_pkey; Type: CONSTRAINT; Schema: public; Owner: symphony_admin
+-- Name: instruction_settlement_finality instruction_settlement_finality_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.instruction_settlement_finality
@@ -8571,7 +7763,7 @@ ALTER TABLE ONLY public.instruction_settlement_finality
 
 
 --
--- Name: instruction_status_projection instruction_status_projection_pkey; Type: CONSTRAINT; Schema: public; Owner: symphony_admin
+-- Name: instruction_status_projection instruction_status_projection_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.instruction_status_projection
@@ -8579,7 +7771,7 @@ ALTER TABLE ONLY public.instruction_status_projection
 
 
 --
--- Name: internal_ledger_journals internal_ledger_journals_pkey; Type: CONSTRAINT; Schema: public; Owner: symphony_admin
+-- Name: internal_ledger_journals internal_ledger_journals_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.internal_ledger_journals
@@ -8587,7 +7779,7 @@ ALTER TABLE ONLY public.internal_ledger_journals
 
 
 --
--- Name: internal_ledger_journals internal_ledger_journals_tenant_id_idempotency_key_key; Type: CONSTRAINT; Schema: public; Owner: symphony_admin
+-- Name: internal_ledger_journals internal_ledger_journals_tenant_id_idempotency_key_key; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.internal_ledger_journals
@@ -8595,7 +7787,7 @@ ALTER TABLE ONLY public.internal_ledger_journals
 
 
 --
--- Name: internal_ledger_postings internal_ledger_postings_pkey; Type: CONSTRAINT; Schema: public; Owner: symphony_admin
+-- Name: internal_ledger_postings internal_ledger_postings_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.internal_ledger_postings
@@ -8603,7 +7795,7 @@ ALTER TABLE ONLY public.internal_ledger_postings
 
 
 --
--- Name: interpretation_packs interpretation_packs_pkey; Type: CONSTRAINT; Schema: public; Owner: symphony_admin
+-- Name: interpretation_packs interpretation_packs_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.interpretation_packs
@@ -8611,7 +7803,7 @@ ALTER TABLE ONLY public.interpretation_packs
 
 
 --
--- Name: jurisdiction_profiles jurisdiction_profiles_pkey; Type: CONSTRAINT; Schema: public; Owner: symphony_admin
+-- Name: jurisdiction_profiles jurisdiction_profiles_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.jurisdiction_profiles
@@ -8619,7 +7811,7 @@ ALTER TABLE ONLY public.jurisdiction_profiles
 
 
 --
--- Name: key_rotation_drills key_rotation_drills_pkey; Type: CONSTRAINT; Schema: public; Owner: symphony_admin
+-- Name: key_rotation_drills key_rotation_drills_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.key_rotation_drills
@@ -8627,7 +7819,7 @@ ALTER TABLE ONLY public.key_rotation_drills
 
 
 --
--- Name: kyc_provider_registry kyc_provider_registry_pkey; Type: CONSTRAINT; Schema: public; Owner: symphony_admin
+-- Name: kyc_provider_registry kyc_provider_registry_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.kyc_provider_registry
@@ -8635,7 +7827,7 @@ ALTER TABLE ONLY public.kyc_provider_registry
 
 
 --
--- Name: kyc_provider_registry kyc_provider_unique_code; Type: CONSTRAINT; Schema: public; Owner: symphony_admin
+-- Name: kyc_provider_registry kyc_provider_unique_code; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.kyc_provider_registry
@@ -8643,7 +7835,7 @@ ALTER TABLE ONLY public.kyc_provider_registry
 
 
 --
--- Name: kyc_retention_policy kyc_retention_policy_pkey; Type: CONSTRAINT; Schema: public; Owner: symphony_admin
+-- Name: kyc_retention_policy kyc_retention_policy_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.kyc_retention_policy
@@ -8651,7 +7843,7 @@ ALTER TABLE ONLY public.kyc_retention_policy
 
 
 --
--- Name: kyc_retention_policy kyc_retention_unique_active_class; Type: CONSTRAINT; Schema: public; Owner: symphony_admin
+-- Name: kyc_retention_policy kyc_retention_unique_active_class; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.kyc_retention_policy
@@ -8659,7 +7851,7 @@ ALTER TABLE ONLY public.kyc_retention_policy
 
 
 --
--- Name: kyc_verification_records kyc_verification_records_pkey; Type: CONSTRAINT; Schema: public; Owner: symphony_admin
+-- Name: kyc_verification_records kyc_verification_records_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.kyc_verification_records
@@ -8667,7 +7859,7 @@ ALTER TABLE ONLY public.kyc_verification_records
 
 
 --
--- Name: levy_calculation_records levy_calculation_one_per_instruction; Type: CONSTRAINT; Schema: public; Owner: symphony_admin
+-- Name: levy_calculation_records levy_calculation_one_per_instruction; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.levy_calculation_records
@@ -8675,7 +7867,7 @@ ALTER TABLE ONLY public.levy_calculation_records
 
 
 --
--- Name: levy_calculation_records levy_calculation_records_pkey; Type: CONSTRAINT; Schema: public; Owner: symphony_admin
+-- Name: levy_calculation_records levy_calculation_records_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.levy_calculation_records
@@ -8683,7 +7875,7 @@ ALTER TABLE ONLY public.levy_calculation_records
 
 
 --
--- Name: levy_remittance_periods levy_periods_unique_period_jurisdiction; Type: CONSTRAINT; Schema: public; Owner: symphony_admin
+-- Name: levy_remittance_periods levy_periods_unique_period_jurisdiction; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.levy_remittance_periods
@@ -8691,7 +7883,7 @@ ALTER TABLE ONLY public.levy_remittance_periods
 
 
 --
--- Name: levy_rates levy_rates_pkey; Type: CONSTRAINT; Schema: public; Owner: symphony_admin
+-- Name: levy_rates levy_rates_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.levy_rates
@@ -8699,7 +7891,7 @@ ALTER TABLE ONLY public.levy_rates
 
 
 --
--- Name: levy_remittance_periods levy_remittance_periods_pkey; Type: CONSTRAINT; Schema: public; Owner: symphony_admin
+-- Name: levy_remittance_periods levy_remittance_periods_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.levy_remittance_periods
@@ -8707,7 +7899,7 @@ ALTER TABLE ONLY public.levy_remittance_periods
 
 
 --
--- Name: lifecycle_checkpoint_rules lifecycle_checkpoint_rules_pkey; Type: CONSTRAINT; Schema: public; Owner: symphony_admin
+-- Name: lifecycle_checkpoint_rules lifecycle_checkpoint_rules_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.lifecycle_checkpoint_rules
@@ -8715,7 +7907,7 @@ ALTER TABLE ONLY public.lifecycle_checkpoint_rules
 
 
 --
--- Name: malformed_quarantine_store malformed_quarantine_store_pkey; Type: CONSTRAINT; Schema: public; Owner: symphony_admin
+-- Name: malformed_quarantine_store malformed_quarantine_store_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.malformed_quarantine_store
@@ -8723,7 +7915,7 @@ ALTER TABLE ONLY public.malformed_quarantine_store
 
 
 --
--- Name: member_device_events member_device_events_pkey; Type: CONSTRAINT; Schema: public; Owner: symphony_admin
+-- Name: member_device_events member_device_events_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.member_device_events
@@ -8731,7 +7923,7 @@ ALTER TABLE ONLY public.member_device_events
 
 
 --
--- Name: member_devices member_devices_pkey; Type: CONSTRAINT; Schema: public; Owner: symphony_admin
+-- Name: member_devices member_devices_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.member_devices
@@ -8739,7 +7931,7 @@ ALTER TABLE ONLY public.member_devices
 
 
 --
--- Name: members members_pkey; Type: CONSTRAINT; Schema: public; Owner: symphony_admin
+-- Name: members members_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.members
@@ -8747,7 +7939,7 @@ ALTER TABLE ONLY public.members
 
 
 --
--- Name: members members_tenant_id_member_ref_hash_key; Type: CONSTRAINT; Schema: public; Owner: symphony_admin
+-- Name: members members_tenant_id_member_ref_hash_key; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.members
@@ -8755,7 +7947,7 @@ ALTER TABLE ONLY public.members
 
 
 --
--- Name: members members_tenant_id_person_id_entity_id_key; Type: CONSTRAINT; Schema: public; Owner: symphony_admin
+-- Name: members members_tenant_id_person_id_entity_id_key; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.members
@@ -8763,7 +7955,7 @@ ALTER TABLE ONLY public.members
 
 
 --
--- Name: methodology_versions methodology_versions_pkey; Type: CONSTRAINT; Schema: public; Owner: symphony_admin
+-- Name: methodology_versions methodology_versions_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.methodology_versions
@@ -8771,7 +7963,7 @@ ALTER TABLE ONLY public.methodology_versions
 
 
 --
--- Name: mmo_reality_control_events mmo_reality_control_events_pkey; Type: CONSTRAINT; Schema: public; Owner: symphony_admin
+-- Name: mmo_reality_control_events mmo_reality_control_events_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.mmo_reality_control_events
@@ -8779,7 +7971,7 @@ ALTER TABLE ONLY public.mmo_reality_control_events
 
 
 --
--- Name: monitoring_records monitoring_records_pkey; Type: CONSTRAINT; Schema: public; Owner: symphony_admin
+-- Name: monitoring_records monitoring_records_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.monitoring_records
@@ -8787,7 +7979,7 @@ ALTER TABLE ONLY public.monitoring_records
 
 
 --
--- Name: offline_safe_mode_windows offline_safe_mode_windows_pkey; Type: CONSTRAINT; Schema: public; Owner: symphony_admin
+-- Name: offline_safe_mode_windows offline_safe_mode_windows_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.offline_safe_mode_windows
@@ -8795,7 +7987,7 @@ ALTER TABLE ONLY public.offline_safe_mode_windows
 
 
 --
--- Name: orphaned_attestation_landing_zone orphaned_attestation_landing_zone_pkey; Type: CONSTRAINT; Schema: public; Owner: symphony_admin
+-- Name: orphaned_attestation_landing_zone orphaned_attestation_landing_zone_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.orphaned_attestation_landing_zone
@@ -8803,7 +7995,7 @@ ALTER TABLE ONLY public.orphaned_attestation_landing_zone
 
 
 --
--- Name: participant_outbox_sequences participant_outbox_sequences_pkey; Type: CONSTRAINT; Schema: public; Owner: symphony_admin
+-- Name: participant_outbox_sequences participant_outbox_sequences_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.participant_outbox_sequences
@@ -8811,7 +8003,7 @@ ALTER TABLE ONLY public.participant_outbox_sequences
 
 
 --
--- Name: participants participants_pkey; Type: CONSTRAINT; Schema: public; Owner: symphony_admin
+-- Name: participants participants_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.participants
@@ -8819,7 +8011,7 @@ ALTER TABLE ONLY public.participants
 
 
 --
--- Name: payment_outbox_attempts payment_outbox_attempts_correlation_required_new_rows_chk; Type: CHECK CONSTRAINT; Schema: public; Owner: symphony_admin
+-- Name: payment_outbox_attempts payment_outbox_attempts_correlation_required_new_rows_chk; Type: CHECK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE public.payment_outbox_attempts
@@ -8827,7 +8019,7 @@ ALTER TABLE public.payment_outbox_attempts
 
 
 --
--- Name: payment_outbox_attempts payment_outbox_attempts_pkey; Type: CONSTRAINT; Schema: public; Owner: symphony_admin
+-- Name: payment_outbox_attempts payment_outbox_attempts_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.payment_outbox_attempts
@@ -8835,7 +8027,7 @@ ALTER TABLE ONLY public.payment_outbox_attempts
 
 
 --
--- Name: payment_outbox_pending payment_outbox_pending_correlation_required_new_rows_chk; Type: CHECK CONSTRAINT; Schema: public; Owner: symphony_admin
+-- Name: payment_outbox_pending payment_outbox_pending_correlation_required_new_rows_chk; Type: CHECK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE public.payment_outbox_pending
@@ -8843,7 +8035,7 @@ ALTER TABLE public.payment_outbox_pending
 
 
 --
--- Name: payment_outbox_pending payment_outbox_pending_pkey; Type: CONSTRAINT; Schema: public; Owner: symphony_admin
+-- Name: payment_outbox_pending payment_outbox_pending_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.payment_outbox_pending
@@ -8851,7 +8043,7 @@ ALTER TABLE ONLY public.payment_outbox_pending
 
 
 --
--- Name: penalty_defense_packs penalty_defense_packs_pkey; Type: CONSTRAINT; Schema: public; Owner: symphony_admin
+-- Name: penalty_defense_packs penalty_defense_packs_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.penalty_defense_packs
@@ -8859,7 +8051,7 @@ ALTER TABLE ONLY public.penalty_defense_packs
 
 
 --
--- Name: persons persons_pkey; Type: CONSTRAINT; Schema: public; Owner: symphony_admin
+-- Name: persons persons_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.persons
@@ -8867,7 +8059,7 @@ ALTER TABLE ONLY public.persons
 
 
 --
--- Name: pii_erased_subject_placeholders pii_erased_subject_placeholders_pkey; Type: CONSTRAINT; Schema: public; Owner: symphony_admin
+-- Name: pii_erased_subject_placeholders pii_erased_subject_placeholders_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.pii_erased_subject_placeholders
@@ -8875,7 +8067,7 @@ ALTER TABLE ONLY public.pii_erased_subject_placeholders
 
 
 --
--- Name: pii_erased_subject_placeholders pii_erased_subject_placeholders_placeholder_ref_key; Type: CONSTRAINT; Schema: public; Owner: symphony_admin
+-- Name: pii_erased_subject_placeholders pii_erased_subject_placeholders_placeholder_ref_key; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.pii_erased_subject_placeholders
@@ -8883,7 +8075,7 @@ ALTER TABLE ONLY public.pii_erased_subject_placeholders
 
 
 --
--- Name: pii_erasure_journal pii_erasure_journal_pkey; Type: CONSTRAINT; Schema: public; Owner: symphony_admin
+-- Name: pii_erasure_journal pii_erasure_journal_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.pii_erasure_journal
@@ -8891,7 +8083,7 @@ ALTER TABLE ONLY public.pii_erasure_journal
 
 
 --
--- Name: pii_purge_events pii_purge_events_pkey; Type: CONSTRAINT; Schema: public; Owner: symphony_admin
+-- Name: pii_purge_events pii_purge_events_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.pii_purge_events
@@ -8899,7 +8091,7 @@ ALTER TABLE ONLY public.pii_purge_events
 
 
 --
--- Name: pii_purge_requests pii_purge_requests_pkey; Type: CONSTRAINT; Schema: public; Owner: symphony_admin
+-- Name: pii_purge_requests pii_purge_requests_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.pii_purge_requests
@@ -8907,7 +8099,7 @@ ALTER TABLE ONLY public.pii_purge_requests
 
 
 --
--- Name: pii_tokenization_registry pii_tokenization_registry_pkey; Type: CONSTRAINT; Schema: public; Owner: symphony_admin
+-- Name: pii_tokenization_registry pii_tokenization_registry_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.pii_tokenization_registry
@@ -8915,7 +8107,7 @@ ALTER TABLE ONLY public.pii_tokenization_registry
 
 
 --
--- Name: pii_tokenization_registry pii_tokenization_registry_token_value_key; Type: CONSTRAINT; Schema: public; Owner: symphony_admin
+-- Name: pii_tokenization_registry pii_tokenization_registry_token_value_key; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.pii_tokenization_registry
@@ -8923,7 +8115,7 @@ ALTER TABLE ONLY public.pii_tokenization_registry
 
 
 --
--- Name: pii_vault_records pii_vault_records_pkey; Type: CONSTRAINT; Schema: public; Owner: symphony_admin
+-- Name: pii_vault_records pii_vault_records_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.pii_vault_records
@@ -8931,7 +8123,7 @@ ALTER TABLE ONLY public.pii_vault_records
 
 
 --
--- Name: policy_bundles policy_bundles_pkey; Type: CONSTRAINT; Schema: public; Owner: symphony_admin
+-- Name: policy_bundles policy_bundles_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.policy_bundles
@@ -8939,7 +8131,7 @@ ALTER TABLE ONLY public.policy_bundles
 
 
 --
--- Name: policy_bundles policy_bundles_policy_id_policy_version_key; Type: CONSTRAINT; Schema: public; Owner: symphony_admin
+-- Name: policy_bundles policy_bundles_policy_id_policy_version_key; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.policy_bundles
@@ -8947,7 +8139,7 @@ ALTER TABLE ONLY public.policy_bundles
 
 
 --
--- Name: policy_versions policy_versions_pkey; Type: CONSTRAINT; Schema: public; Owner: symphony_admin
+-- Name: policy_versions policy_versions_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.policy_versions
@@ -8955,7 +8147,7 @@ ALTER TABLE ONLY public.policy_versions
 
 
 --
--- Name: program_member_summary_projection program_member_summary_projection_pkey; Type: CONSTRAINT; Schema: public; Owner: symphony_admin
+-- Name: program_member_summary_projection program_member_summary_projection_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.program_member_summary_projection
@@ -8963,7 +8155,7 @@ ALTER TABLE ONLY public.program_member_summary_projection
 
 
 --
--- Name: program_migration_events program_migration_events_pkey; Type: CONSTRAINT; Schema: public; Owner: symphony_admin
+-- Name: program_migration_events program_migration_events_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.program_migration_events
@@ -8971,7 +8163,7 @@ ALTER TABLE ONLY public.program_migration_events
 
 
 --
--- Name: program_supplier_allowlist program_supplier_allowlist_pkey; Type: CONSTRAINT; Schema: public; Owner: symphony_admin
+-- Name: program_supplier_allowlist program_supplier_allowlist_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.program_supplier_allowlist
@@ -8979,7 +8171,7 @@ ALTER TABLE ONLY public.program_supplier_allowlist
 
 
 --
--- Name: programme_policy_binding programme_policy_binding_pkey; Type: CONSTRAINT; Schema: public; Owner: symphony_admin
+-- Name: programme_policy_binding programme_policy_binding_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.programme_policy_binding
@@ -8987,7 +8179,7 @@ ALTER TABLE ONLY public.programme_policy_binding
 
 
 --
--- Name: programme_policy_binding programme_policy_binding_programme_id_is_active_key; Type: CONSTRAINT; Schema: public; Owner: symphony_admin
+-- Name: programme_policy_binding programme_policy_binding_programme_id_is_active_key; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.programme_policy_binding
@@ -8995,7 +8187,7 @@ ALTER TABLE ONLY public.programme_policy_binding
 
 
 --
--- Name: programme_registry programme_registry_pkey; Type: CONSTRAINT; Schema: public; Owner: symphony_admin
+-- Name: programme_registry programme_registry_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.programme_registry
@@ -9003,7 +8195,7 @@ ALTER TABLE ONLY public.programme_registry
 
 
 --
--- Name: programme_registry programme_registry_tenant_id_programme_key_key; Type: CONSTRAINT; Schema: public; Owner: symphony_admin
+-- Name: programme_registry programme_registry_tenant_id_programme_key_key; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.programme_registry
@@ -9011,7 +8203,7 @@ ALTER TABLE ONLY public.programme_registry
 
 
 --
--- Name: programs programs_pkey; Type: CONSTRAINT; Schema: public; Owner: symphony_admin
+-- Name: programs programs_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.programs
@@ -9019,7 +8211,7 @@ ALTER TABLE ONLY public.programs
 
 
 --
--- Name: programs programs_tenant_id_program_escrow_id_key; Type: CONSTRAINT; Schema: public; Owner: symphony_admin
+-- Name: programs programs_tenant_id_program_escrow_id_key; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.programs
@@ -9027,7 +8219,7 @@ ALTER TABLE ONLY public.programs
 
 
 --
--- Name: programs programs_tenant_id_program_key_key; Type: CONSTRAINT; Schema: public; Owner: symphony_admin
+-- Name: programs programs_tenant_id_program_key_key; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.programs
@@ -9035,7 +8227,7 @@ ALTER TABLE ONLY public.programs
 
 
 --
--- Name: projects projects_pkey; Type: CONSTRAINT; Schema: public; Owner: symphony_admin
+-- Name: projects projects_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.projects
@@ -9043,7 +8235,7 @@ ALTER TABLE ONLY public.projects
 
 
 --
--- Name: proof_pack_batch_leaves proof_pack_batch_leaves_batch_id_leaf_index_key; Type: CONSTRAINT; Schema: public; Owner: symphony_admin
+-- Name: proof_pack_batch_leaves proof_pack_batch_leaves_batch_id_leaf_index_key; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.proof_pack_batch_leaves
@@ -9051,7 +8243,7 @@ ALTER TABLE ONLY public.proof_pack_batch_leaves
 
 
 --
--- Name: proof_pack_batch_leaves proof_pack_batch_leaves_pkey; Type: CONSTRAINT; Schema: public; Owner: symphony_admin
+-- Name: proof_pack_batch_leaves proof_pack_batch_leaves_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.proof_pack_batch_leaves
@@ -9059,7 +8251,7 @@ ALTER TABLE ONLY public.proof_pack_batch_leaves
 
 
 --
--- Name: proof_pack_batches proof_pack_batches_pkey; Type: CONSTRAINT; Schema: public; Owner: symphony_admin
+-- Name: proof_pack_batches proof_pack_batches_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.proof_pack_batches
@@ -9067,7 +8259,7 @@ ALTER TABLE ONLY public.proof_pack_batches
 
 
 --
--- Name: rail_dispatch_truth_anchor rail_dispatch_truth_anchor_pkey; Type: CONSTRAINT; Schema: public; Owner: symphony_admin
+-- Name: rail_dispatch_truth_anchor rail_dispatch_truth_anchor_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.rail_dispatch_truth_anchor
@@ -9075,7 +8267,7 @@ ALTER TABLE ONLY public.rail_dispatch_truth_anchor
 
 
 --
--- Name: redaction_audit_events redaction_audit_events_pkey; Type: CONSTRAINT; Schema: public; Owner: symphony_admin
+-- Name: redaction_audit_events redaction_audit_events_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.redaction_audit_events
@@ -9083,7 +8275,7 @@ ALTER TABLE ONLY public.redaction_audit_events
 
 
 --
--- Name: reference_strategy_policy_versions reference_strategy_policy_versions_pkey; Type: CONSTRAINT; Schema: public; Owner: symphony_admin
+-- Name: reference_strategy_policy_versions reference_strategy_policy_versions_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.reference_strategy_policy_versions
@@ -9091,7 +8283,7 @@ ALTER TABLE ONLY public.reference_strategy_policy_versions
 
 
 --
--- Name: regulatory_authorities regulatory_authorities_pkey; Type: CONSTRAINT; Schema: public; Owner: symphony_admin
+-- Name: regulatory_authorities regulatory_authorities_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.regulatory_authorities
@@ -9099,7 +8291,7 @@ ALTER TABLE ONLY public.regulatory_authorities
 
 
 --
--- Name: regulatory_checkpoints regulatory_checkpoints_pkey; Type: CONSTRAINT; Schema: public; Owner: symphony_admin
+-- Name: regulatory_checkpoints regulatory_checkpoints_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.regulatory_checkpoints
@@ -9107,7 +8299,7 @@ ALTER TABLE ONLY public.regulatory_checkpoints
 
 
 --
--- Name: regulatory_incidents regulatory_incidents_pkey; Type: CONSTRAINT; Schema: public; Owner: symphony_admin
+-- Name: regulatory_incidents regulatory_incidents_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.regulatory_incidents
@@ -9115,7 +8307,7 @@ ALTER TABLE ONLY public.regulatory_incidents
 
 
 --
--- Name: regulatory_report_submission_attempts regulatory_report_submission_attempts_pkey; Type: CONSTRAINT; Schema: public; Owner: symphony_admin
+-- Name: regulatory_report_submission_attempts regulatory_report_submission_attempts_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.regulatory_report_submission_attempts
@@ -9123,7 +8315,7 @@ ALTER TABLE ONLY public.regulatory_report_submission_attempts
 
 
 --
--- Name: regulatory_retraction_approvals regulatory_retraction_approva_report_id_approver_role_appro_key; Type: CONSTRAINT; Schema: public; Owner: symphony_admin
+-- Name: regulatory_retraction_approvals regulatory_retraction_approva_report_id_approver_role_appro_key; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.regulatory_retraction_approvals
@@ -9131,7 +8323,7 @@ ALTER TABLE ONLY public.regulatory_retraction_approvals
 
 
 --
--- Name: regulatory_retraction_approvals regulatory_retraction_approvals_pkey; Type: CONSTRAINT; Schema: public; Owner: symphony_admin
+-- Name: regulatory_retraction_approvals regulatory_retraction_approvals_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.regulatory_retraction_approvals
@@ -9139,7 +8331,7 @@ ALTER TABLE ONLY public.regulatory_retraction_approvals
 
 
 --
--- Name: resign_sweeps resign_sweeps_pkey; Type: CONSTRAINT; Schema: public; Owner: symphony_admin
+-- Name: resign_sweeps resign_sweeps_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.resign_sweeps
@@ -9147,7 +8339,7 @@ ALTER TABLE ONLY public.resign_sweeps
 
 
 --
--- Name: retirement_events retirement_events_pkey; Type: CONSTRAINT; Schema: public; Owner: symphony_admin
+-- Name: retirement_events retirement_events_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.retirement_events
@@ -9155,7 +8347,7 @@ ALTER TABLE ONLY public.retirement_events
 
 
 --
--- Name: revoked_client_certs revoked_client_certs_pkey; Type: CONSTRAINT; Schema: public; Owner: symphony_admin
+-- Name: revoked_client_certs revoked_client_certs_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.revoked_client_certs
@@ -9163,7 +8355,7 @@ ALTER TABLE ONLY public.revoked_client_certs
 
 
 --
--- Name: revoked_tokens revoked_tokens_pkey; Type: CONSTRAINT; Schema: public; Owner: symphony_admin
+-- Name: revoked_tokens revoked_tokens_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.revoked_tokens
@@ -9171,7 +8363,7 @@ ALTER TABLE ONLY public.revoked_tokens
 
 
 --
--- Name: risk_formula_versions risk_formula_versions_formula_key_key; Type: CONSTRAINT; Schema: public; Owner: symphony_admin
+-- Name: risk_formula_versions risk_formula_versions_formula_key_key; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.risk_formula_versions
@@ -9179,7 +8371,7 @@ ALTER TABLE ONLY public.risk_formula_versions
 
 
 --
--- Name: risk_formula_versions risk_formula_versions_pkey; Type: CONSTRAINT; Schema: public; Owner: symphony_admin
+-- Name: risk_formula_versions risk_formula_versions_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.risk_formula_versions
@@ -9187,7 +8379,7 @@ ALTER TABLE ONLY public.risk_formula_versions
 
 
 --
--- Name: schema_migrations schema_migrations_pkey; Type: CONSTRAINT; Schema: public; Owner: symphony_admin
+-- Name: schema_migrations schema_migrations_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.schema_migrations
@@ -9195,7 +8387,7 @@ ALTER TABLE ONLY public.schema_migrations
 
 
 --
--- Name: signing_audit_log signing_audit_log_pkey; Type: CONSTRAINT; Schema: public; Owner: symphony_admin
+-- Name: signing_audit_log signing_audit_log_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.signing_audit_log
@@ -9203,7 +8395,7 @@ ALTER TABLE ONLY public.signing_audit_log
 
 
 --
--- Name: signing_authorization_matrix signing_authorization_matrix_caller_id_key_class_key; Type: CONSTRAINT; Schema: public; Owner: symphony_admin
+-- Name: signing_authorization_matrix signing_authorization_matrix_caller_id_key_class_key; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.signing_authorization_matrix
@@ -9211,7 +8403,7 @@ ALTER TABLE ONLY public.signing_authorization_matrix
 
 
 --
--- Name: signing_authorization_matrix signing_authorization_matrix_pkey; Type: CONSTRAINT; Schema: public; Owner: symphony_admin
+-- Name: signing_authorization_matrix signing_authorization_matrix_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.signing_authorization_matrix
@@ -9219,7 +8411,7 @@ ALTER TABLE ONLY public.signing_authorization_matrix
 
 
 --
--- Name: signing_throughput_runs signing_throughput_runs_pkey; Type: CONSTRAINT; Schema: public; Owner: symphony_admin
+-- Name: signing_throughput_runs signing_throughput_runs_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.signing_throughput_runs
@@ -9227,7 +8419,7 @@ ALTER TABLE ONLY public.signing_throughput_runs
 
 
 --
--- Name: sim_swap_alerts sim_swap_alerts_pkey; Type: CONSTRAINT; Schema: public; Owner: symphony_admin
+-- Name: sim_swap_alerts sim_swap_alerts_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.sim_swap_alerts
@@ -9235,7 +8427,7 @@ ALTER TABLE ONLY public.sim_swap_alerts
 
 
 --
--- Name: sim_swap_alerts sim_swap_alerts_source_event_id_key; Type: CONSTRAINT; Schema: public; Owner: symphony_admin
+-- Name: sim_swap_alerts sim_swap_alerts_source_event_id_key; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.sim_swap_alerts
@@ -9243,7 +8435,7 @@ ALTER TABLE ONLY public.sim_swap_alerts
 
 
 --
--- Name: supervisor_access_policies supervisor_access_policies_pkey; Type: CONSTRAINT; Schema: public; Owner: symphony_admin
+-- Name: supervisor_access_policies supervisor_access_policies_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.supervisor_access_policies
@@ -9251,7 +8443,7 @@ ALTER TABLE ONLY public.supervisor_access_policies
 
 
 --
--- Name: supervisor_approval_queue supervisor_approval_queue_pkey; Type: CONSTRAINT; Schema: public; Owner: symphony_admin
+-- Name: supervisor_approval_queue supervisor_approval_queue_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.supervisor_approval_queue
@@ -9259,7 +8451,7 @@ ALTER TABLE ONLY public.supervisor_approval_queue
 
 
 --
--- Name: supervisor_audit_tokens supervisor_audit_tokens_pkey; Type: CONSTRAINT; Schema: public; Owner: symphony_admin
+-- Name: supervisor_audit_tokens supervisor_audit_tokens_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.supervisor_audit_tokens
@@ -9267,7 +8459,7 @@ ALTER TABLE ONLY public.supervisor_audit_tokens
 
 
 --
--- Name: supervisor_audit_tokens supervisor_audit_tokens_token_hash_key; Type: CONSTRAINT; Schema: public; Owner: symphony_admin
+-- Name: supervisor_audit_tokens supervisor_audit_tokens_token_hash_key; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.supervisor_audit_tokens
@@ -9275,7 +8467,7 @@ ALTER TABLE ONLY public.supervisor_audit_tokens
 
 
 --
--- Name: supervisor_interrupt_audit_events supervisor_interrupt_audit_events_pkey; Type: CONSTRAINT; Schema: public; Owner: symphony_admin
+-- Name: supervisor_interrupt_audit_events supervisor_interrupt_audit_events_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.supervisor_interrupt_audit_events
@@ -9283,7 +8475,7 @@ ALTER TABLE ONLY public.supervisor_interrupt_audit_events
 
 
 --
--- Name: supplier_registry supplier_registry_pkey; Type: CONSTRAINT; Schema: public; Owner: symphony_admin
+-- Name: supplier_registry supplier_registry_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.supplier_registry
@@ -9291,7 +8483,7 @@ ALTER TABLE ONLY public.supplier_registry
 
 
 --
--- Name: tenant_clients tenant_clients_pkey; Type: CONSTRAINT; Schema: public; Owner: symphony_admin
+-- Name: tenant_clients tenant_clients_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.tenant_clients
@@ -9299,7 +8491,7 @@ ALTER TABLE ONLY public.tenant_clients
 
 
 --
--- Name: tenant_clients tenant_clients_tenant_id_client_key_key; Type: CONSTRAINT; Schema: public; Owner: symphony_admin
+-- Name: tenant_clients tenant_clients_tenant_id_client_key_key; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.tenant_clients
@@ -9307,7 +8499,7 @@ ALTER TABLE ONLY public.tenant_clients
 
 
 --
--- Name: tenant_members tenant_members_pkey; Type: CONSTRAINT; Schema: public; Owner: symphony_admin
+-- Name: tenant_members tenant_members_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.tenant_members
@@ -9315,7 +8507,7 @@ ALTER TABLE ONLY public.tenant_members
 
 
 --
--- Name: tenant_members tenant_members_tenant_id_member_ref_key; Type: CONSTRAINT; Schema: public; Owner: symphony_admin
+-- Name: tenant_members tenant_members_tenant_id_member_ref_key; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.tenant_members
@@ -9323,7 +8515,7 @@ ALTER TABLE ONLY public.tenant_members
 
 
 --
--- Name: tenant_registry tenant_registry_pkey; Type: CONSTRAINT; Schema: public; Owner: symphony_admin
+-- Name: tenant_registry tenant_registry_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.tenant_registry
@@ -9331,7 +8523,7 @@ ALTER TABLE ONLY public.tenant_registry
 
 
 --
--- Name: tenant_registry tenant_registry_tenant_id_key; Type: CONSTRAINT; Schema: public; Owner: symphony_admin
+-- Name: tenant_registry tenant_registry_tenant_id_key; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.tenant_registry
@@ -9339,7 +8531,7 @@ ALTER TABLE ONLY public.tenant_registry
 
 
 --
--- Name: tenant_registry tenant_registry_tenant_key_key; Type: CONSTRAINT; Schema: public; Owner: symphony_admin
+-- Name: tenant_registry tenant_registry_tenant_key_key; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.tenant_registry
@@ -9347,7 +8539,7 @@ ALTER TABLE ONLY public.tenant_registry
 
 
 --
--- Name: tenants tenants_billable_client_required_new_rows_chk; Type: CHECK CONSTRAINT; Schema: public; Owner: symphony_admin
+-- Name: tenants tenants_billable_client_required_new_rows_chk; Type: CHECK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE public.tenants
@@ -9355,7 +8547,7 @@ ALTER TABLE public.tenants
 
 
 --
--- Name: tenants tenants_pkey; Type: CONSTRAINT; Schema: public; Owner: symphony_admin
+-- Name: tenants tenants_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.tenants
@@ -9363,7 +8555,7 @@ ALTER TABLE ONLY public.tenants
 
 
 --
--- Name: tenants tenants_tenant_key_key; Type: CONSTRAINT; Schema: public; Owner: symphony_admin
+-- Name: tenants tenants_tenant_key_key; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.tenants
@@ -9371,7 +8563,39 @@ ALTER TABLE ONLY public.tenants
 
 
 --
--- Name: payment_outbox_attempts ux_attempts_outbox_attempt_no; Type: CONSTRAINT; Schema: public; Owner: symphony_admin
+-- Name: factor_registry unique_factor_code; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.factor_registry
+    ADD CONSTRAINT unique_factor_code UNIQUE (factor_code);
+
+
+--
+-- Name: interpretation_packs unique_interpretation_per_project_time; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.interpretation_packs
+    ADD CONSTRAINT unique_interpretation_per_project_time UNIQUE (project_id, interpretation_pack_code, effective_from);
+
+
+--
+-- Name: unit_conversions unique_unit_pair; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.unit_conversions
+    ADD CONSTRAINT unique_unit_pair UNIQUE (from_unit, to_unit);
+
+
+--
+-- Name: unit_conversions unit_conversions_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.unit_conversions
+    ADD CONSTRAINT unit_conversions_pkey PRIMARY KEY (conversion_id);
+
+
+--
+-- Name: payment_outbox_attempts ux_attempts_outbox_attempt_no; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.payment_outbox_attempts
@@ -9379,7 +8603,7 @@ ALTER TABLE ONLY public.payment_outbox_attempts
 
 
 --
--- Name: billable_clients ux_billable_clients_client_key; Type: CONSTRAINT; Schema: public; Owner: symphony_admin
+-- Name: billable_clients ux_billable_clients_client_key; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.billable_clients
@@ -9387,7 +8611,7 @@ ALTER TABLE ONLY public.billable_clients
 
 
 --
--- Name: evidence_pack_items ux_evidence_pack_items_pack_hash; Type: CONSTRAINT; Schema: public; Owner: symphony_admin
+-- Name: evidence_pack_items ux_evidence_pack_items_pack_hash; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.evidence_pack_items
@@ -9395,7 +8619,7 @@ ALTER TABLE ONLY public.evidence_pack_items
 
 
 --
--- Name: instruction_settlement_finality ux_instruction_settlement_finality_instruction; Type: CONSTRAINT; Schema: public; Owner: symphony_admin
+-- Name: instruction_settlement_finality ux_instruction_settlement_finality_instruction; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.instruction_settlement_finality
@@ -9403,7 +8627,7 @@ ALTER TABLE ONLY public.instruction_settlement_finality
 
 
 --
--- Name: payment_outbox_pending ux_pending_idempotency; Type: CONSTRAINT; Schema: public; Owner: symphony_admin
+-- Name: payment_outbox_pending ux_pending_idempotency; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.payment_outbox_pending
@@ -9411,7 +8635,7 @@ ALTER TABLE ONLY public.payment_outbox_pending
 
 
 --
--- Name: payment_outbox_pending ux_pending_participant_sequence; Type: CONSTRAINT; Schema: public; Owner: symphony_admin
+-- Name: payment_outbox_pending ux_pending_participant_sequence; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.payment_outbox_pending
@@ -9419,7 +8643,7 @@ ALTER TABLE ONLY public.payment_outbox_pending
 
 
 --
--- Name: pii_purge_events ux_pii_purge_events_request_event; Type: CONSTRAINT; Schema: public; Owner: symphony_admin
+-- Name: pii_purge_events ux_pii_purge_events_request_event; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.pii_purge_events
@@ -9427,7 +8651,7 @@ ALTER TABLE ONLY public.pii_purge_events
 
 
 --
--- Name: pii_vault_records ux_pii_vault_records_subject_token; Type: CONSTRAINT; Schema: public; Owner: symphony_admin
+-- Name: pii_vault_records ux_pii_vault_records_subject_token; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.pii_vault_records
@@ -9435,7 +8659,7 @@ ALTER TABLE ONLY public.pii_vault_records
 
 
 --
--- Name: rail_dispatch_truth_anchor ux_rail_truth_anchor_attempt_id; Type: CONSTRAINT; Schema: public; Owner: symphony_admin
+-- Name: rail_dispatch_truth_anchor ux_rail_truth_anchor_attempt_id; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.rail_dispatch_truth_anchor
@@ -9443,7 +8667,7 @@ ALTER TABLE ONLY public.rail_dispatch_truth_anchor
 
 
 --
--- Name: rail_dispatch_truth_anchor ux_rail_truth_anchor_sequence_scope; Type: CONSTRAINT; Schema: public; Owner: symphony_admin
+-- Name: rail_dispatch_truth_anchor ux_rail_truth_anchor_sequence_scope; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.rail_dispatch_truth_anchor
@@ -9451,7 +8675,7 @@ ALTER TABLE ONLY public.rail_dispatch_truth_anchor
 
 
 --
--- Name: verifier_project_assignments verifier_project_assignments_pkey; Type: CONSTRAINT; Schema: public; Owner: symphony_admin
+-- Name: verifier_project_assignments verifier_project_assignments_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.verifier_project_assignments
@@ -9459,7 +8683,7 @@ ALTER TABLE ONLY public.verifier_project_assignments
 
 
 --
--- Name: verifier_project_assignments verifier_project_role_unique; Type: CONSTRAINT; Schema: public; Owner: symphony_admin
+-- Name: verifier_project_assignments verifier_project_role_unique; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.verifier_project_assignments
@@ -9467,7 +8691,7 @@ ALTER TABLE ONLY public.verifier_project_assignments
 
 
 --
--- Name: verifier_registry verifier_registry_pkey; Type: CONSTRAINT; Schema: public; Owner: symphony_admin
+-- Name: verifier_registry verifier_registry_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.verifier_registry
@@ -9475,805 +8699,854 @@ ALTER TABLE ONLY public.verifier_registry
 
 
 --
--- Name: idx_adapter_registrations_adapter_code; Type: INDEX; Schema: public; Owner: symphony_admin
+-- Name: idx_adapter_registrations_adapter_code; Type: INDEX; Schema: public; Owner: -
 --
 
 CREATE INDEX idx_adapter_registrations_adapter_code ON public.adapter_registrations USING btree (adapter_code);
 
 
 --
--- Name: idx_adapter_registrations_methodology; Type: INDEX; Schema: public; Owner: symphony_admin
+-- Name: idx_adapter_registrations_methodology; Type: INDEX; Schema: public; Owner: -
 --
 
 CREATE INDEX idx_adapter_registrations_methodology ON public.adapter_registrations USING btree (methodology_code, methodology_authority);
 
 
 --
--- Name: idx_adapter_registrations_tenant_id; Type: INDEX; Schema: public; Owner: symphony_admin
+-- Name: idx_adapter_registrations_tenant_id; Type: INDEX; Schema: public; Owner: -
 --
 
 CREATE INDEX idx_adapter_registrations_tenant_id ON public.adapter_registrations USING btree (tenant_id);
 
 
 --
--- Name: idx_anchor_sync_operations_state_due; Type: INDEX; Schema: public; Owner: symphony_admin
+-- Name: idx_anchor_sync_operations_state_due; Type: INDEX; Schema: public; Owner: -
 --
 
 CREATE INDEX idx_anchor_sync_operations_state_due ON public.anchor_sync_operations USING btree (state, lease_expires_at, updated_at);
 
 
 --
--- Name: idx_asset_batches_project_id; Type: INDEX; Schema: public; Owner: symphony_admin
+-- Name: idx_asset_batches_project_id; Type: INDEX; Schema: public; Owner: -
 --
 
 CREATE INDEX idx_asset_batches_project_id ON public.asset_batches USING btree (project_id);
 
 
 --
--- Name: idx_asset_batches_tenant_id; Type: INDEX; Schema: public; Owner: symphony_admin
+-- Name: idx_asset_batches_tenant_id; Type: INDEX; Schema: public; Owner: -
 --
 
 CREATE INDEX idx_asset_batches_tenant_id ON public.asset_batches USING btree (tenant_id);
 
 
 --
--- Name: idx_asset_lifecycle_events_batch_id; Type: INDEX; Schema: public; Owner: symphony_admin
+-- Name: idx_asset_lifecycle_events_batch_id; Type: INDEX; Schema: public; Owner: -
 --
 
 CREATE INDEX idx_asset_lifecycle_events_batch_id ON public.asset_lifecycle_events USING btree (asset_batch_id);
 
 
 --
--- Name: idx_asset_lifecycle_events_tenant_id; Type: INDEX; Schema: public; Owner: symphony_admin
+-- Name: idx_asset_lifecycle_events_tenant_id; Type: INDEX; Schema: public; Owner: -
 --
 
 CREATE INDEX idx_asset_lifecycle_events_tenant_id ON public.asset_lifecycle_events USING btree (tenant_id);
 
 
 --
--- Name: idx_attempts_instruction_idempotency; Type: INDEX; Schema: public; Owner: symphony_admin
+-- Name: idx_attempts_instruction_idempotency; Type: INDEX; Schema: public; Owner: -
 --
 
 CREATE INDEX idx_attempts_instruction_idempotency ON public.payment_outbox_attempts USING btree (instruction_id, idempotency_key);
 
 
 --
--- Name: idx_attempts_outbox_id; Type: INDEX; Schema: public; Owner: symphony_admin
+-- Name: idx_attempts_outbox_id; Type: INDEX; Schema: public; Owner: -
 --
 
 CREATE INDEX idx_attempts_outbox_id ON public.payment_outbox_attempts USING btree (outbox_id);
 
 
 --
--- Name: idx_authority_decisions_jurisdiction; Type: INDEX; Schema: public; Owner: symphony_admin
+-- Name: idx_authority_decisions_jurisdiction; Type: INDEX; Schema: public; Owner: -
 --
 
 CREATE INDEX idx_authority_decisions_jurisdiction ON public.authority_decisions USING btree (jurisdiction_code);
 
 
 --
--- Name: idx_billing_usage_events_correlation_id; Type: INDEX; Schema: public; Owner: symphony_admin
+-- Name: idx_billing_usage_events_correlation_id; Type: INDEX; Schema: public; Owner: -
 --
 
 CREATE INDEX idx_billing_usage_events_correlation_id ON public.billing_usage_events USING btree (correlation_id);
 
 
 --
--- Name: idx_dispatch_reference_collision_events_instruction; Type: INDEX; Schema: public; Owner: symphony_admin
+-- Name: idx_dispatch_reference_collision_events_instruction; Type: INDEX; Schema: public; Owner: -
 --
 
 CREATE INDEX idx_dispatch_reference_collision_events_instruction ON public.dispatch_reference_collision_events USING btree (instruction_id, created_at DESC);
 
 
 --
--- Name: idx_dispatch_reference_registry_adjustment; Type: INDEX; Schema: public; Owner: symphony_admin
+-- Name: idx_dispatch_reference_registry_adjustment; Type: INDEX; Schema: public; Owner: -
 --
 
 CREATE INDEX idx_dispatch_reference_registry_adjustment ON public.dispatch_reference_registry USING btree (adjustment_id, allocation_timestamp DESC);
 
 
 --
--- Name: idx_dispatch_reference_registry_instruction; Type: INDEX; Schema: public; Owner: symphony_admin
+-- Name: idx_dispatch_reference_registry_instruction; Type: INDEX; Schema: public; Owner: -
 --
 
 CREATE INDEX idx_dispatch_reference_registry_instruction ON public.dispatch_reference_registry USING btree (instruction_id, allocation_timestamp DESC);
 
 
 --
--- Name: idx_escrow_accounts_program; Type: INDEX; Schema: public; Owner: symphony_admin
+-- Name: idx_escrow_accounts_program; Type: INDEX; Schema: public; Owner: -
 --
 
 CREATE INDEX idx_escrow_accounts_program ON public.escrow_accounts USING btree (program_id) WHERE (program_id IS NOT NULL);
 
 
 --
--- Name: idx_escrow_accounts_tenant_state; Type: INDEX; Schema: public; Owner: symphony_admin
+-- Name: idx_escrow_accounts_tenant_state; Type: INDEX; Schema: public; Owner: -
 --
 
 CREATE INDEX idx_escrow_accounts_tenant_state ON public.escrow_accounts USING btree (tenant_id, state, authorization_expires_at, release_due_at);
 
 
 --
--- Name: idx_escrow_envelopes_tenant; Type: INDEX; Schema: public; Owner: symphony_admin
+-- Name: idx_escrow_envelopes_tenant; Type: INDEX; Schema: public; Owner: -
 --
 
 CREATE INDEX idx_escrow_envelopes_tenant ON public.escrow_envelopes USING btree (tenant_id);
 
 
 --
--- Name: idx_escrow_events_escrow_created; Type: INDEX; Schema: public; Owner: symphony_admin
+-- Name: idx_escrow_events_escrow_created; Type: INDEX; Schema: public; Owner: -
 --
 
 CREATE INDEX idx_escrow_events_escrow_created ON public.escrow_events USING btree (escrow_id, created_at);
 
 
 --
--- Name: idx_escrow_reservations_tenant_program; Type: INDEX; Schema: public; Owner: symphony_admin
+-- Name: idx_escrow_reservations_tenant_program; Type: INDEX; Schema: public; Owner: -
 --
 
 CREATE INDEX idx_escrow_reservations_tenant_program ON public.escrow_reservations USING btree (tenant_id, program_escrow_id, created_at);
 
 
 --
--- Name: idx_evidence_edges_source; Type: INDEX; Schema: public; Owner: symphony_admin
+-- Name: idx_evidence_edges_source; Type: INDEX; Schema: public; Owner: -
 --
 
 CREATE INDEX idx_evidence_edges_source ON public.evidence_edges USING btree (source_node_id);
 
 
 --
--- Name: idx_evidence_edges_target; Type: INDEX; Schema: public; Owner: symphony_admin
+-- Name: idx_evidence_edges_target; Type: INDEX; Schema: public; Owner: -
 --
 
 CREATE INDEX idx_evidence_edges_target ON public.evidence_edges USING btree (target_node_id);
 
 
 --
--- Name: idx_evidence_edges_tenant_id; Type: INDEX; Schema: public; Owner: symphony_admin
+-- Name: idx_evidence_edges_tenant_id; Type: INDEX; Schema: public; Owner: -
 --
 
 CREATE INDEX idx_evidence_edges_tenant_id ON public.evidence_edges USING btree (tenant_id);
 
 
 --
--- Name: idx_evidence_nodes_project_id; Type: INDEX; Schema: public; Owner: symphony_admin
+-- Name: idx_evidence_nodes_project_id; Type: INDEX; Schema: public; Owner: -
 --
 
 CREATE INDEX idx_evidence_nodes_project_id ON public.evidence_nodes USING btree (project_id);
 
 
 --
--- Name: idx_evidence_nodes_tenant_id; Type: INDEX; Schema: public; Owner: symphony_admin
+-- Name: idx_evidence_nodes_tenant_id; Type: INDEX; Schema: public; Owner: -
 --
 
 CREATE INDEX idx_evidence_nodes_tenant_id ON public.evidence_nodes USING btree (tenant_id);
 
 
 --
--- Name: idx_evidence_packs_anchor_ref; Type: INDEX; Schema: public; Owner: symphony_admin
+-- Name: idx_evidence_packs_anchor_ref; Type: INDEX; Schema: public; Owner: -
 --
 
 CREATE INDEX idx_evidence_packs_anchor_ref ON public.evidence_packs USING btree (anchor_ref) WHERE (anchor_ref IS NOT NULL);
 
 
 --
--- Name: idx_evidence_packs_correlation_id; Type: INDEX; Schema: public; Owner: symphony_admin
+-- Name: idx_evidence_packs_correlation_id; Type: INDEX; Schema: public; Owner: -
 --
 
 CREATE INDEX idx_evidence_packs_correlation_id ON public.evidence_packs USING btree (correlation_id);
 
 
 --
--- Name: idx_execution_records_interpretation_version_id; Type: INDEX; Schema: public; Owner: symphony
+-- Name: idx_execution_records_interpretation_version_id; Type: INDEX; Schema: public; Owner: -
 --
 
 CREATE INDEX idx_execution_records_interpretation_version_id ON public.execution_records USING btree (interpretation_version_id);
 
 
 --
--- Name: idx_execution_records_project_id; Type: INDEX; Schema: public; Owner: symphony
+-- Name: idx_execution_records_project_id; Type: INDEX; Schema: public; Owner: -
 --
 
 CREATE INDEX idx_execution_records_project_id ON public.execution_records USING btree (project_id);
 
 
 --
--- Name: idx_execution_records_timestamp; Type: INDEX; Schema: public; Owner: symphony
+-- Name: idx_execution_records_timestamp; Type: INDEX; Schema: public; Owner: -
 --
 
 CREATE INDEX idx_execution_records_timestamp ON public.execution_records USING btree (execution_timestamp);
 
 
 --
--- Name: idx_external_proofs_attestation_id; Type: INDEX; Schema: public; Owner: symphony_admin
+-- Name: idx_external_proofs_attestation_id; Type: INDEX; Schema: public; Owner: -
 --
 
 CREATE INDEX idx_external_proofs_attestation_id ON public.external_proofs USING btree (attestation_id);
 
 
 --
--- Name: idx_gf_verifier_read_tokens_expires; Type: INDEX; Schema: public; Owner: symphony_admin
+-- Name: idx_factor_registry_code; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_factor_registry_code ON public.factor_registry USING btree (factor_code);
+
+
+--
+-- Name: idx_factor_registry_unit; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_factor_registry_unit ON public.factor_registry USING btree (unit);
+
+
+--
+-- Name: idx_gf_verifier_read_tokens_expires; Type: INDEX; Schema: public; Owner: -
 --
 
 CREATE INDEX idx_gf_verifier_read_tokens_expires ON public.gf_verifier_read_tokens USING btree (expires_at);
 
 
 --
--- Name: idx_gf_verifier_read_tokens_hash; Type: INDEX; Schema: public; Owner: symphony_admin
+-- Name: idx_gf_verifier_read_tokens_hash; Type: INDEX; Schema: public; Owner: -
 --
 
 CREATE INDEX idx_gf_verifier_read_tokens_hash ON public.gf_verifier_read_tokens USING btree (token_hash);
 
 
 --
--- Name: idx_gf_verifier_read_tokens_project; Type: INDEX; Schema: public; Owner: symphony_admin
+-- Name: idx_gf_verifier_read_tokens_project; Type: INDEX; Schema: public; Owner: -
 --
 
 CREATE INDEX idx_gf_verifier_read_tokens_project ON public.gf_verifier_read_tokens USING btree (project_id);
 
 
 --
--- Name: idx_gf_verifier_read_tokens_tenant; Type: INDEX; Schema: public; Owner: symphony_admin
+-- Name: idx_gf_verifier_read_tokens_tenant; Type: INDEX; Schema: public; Owner: -
 --
 
 CREATE INDEX idx_gf_verifier_read_tokens_tenant ON public.gf_verifier_read_tokens USING btree (tenant_id);
 
 
 --
--- Name: idx_gf_verifier_read_tokens_verifier; Type: INDEX; Schema: public; Owner: symphony_admin
+-- Name: idx_gf_verifier_read_tokens_verifier; Type: INDEX; Schema: public; Owner: -
 --
 
 CREATE INDEX idx_gf_verifier_read_tokens_verifier ON public.gf_verifier_read_tokens USING btree (verifier_id);
 
 
 --
--- Name: idx_ingress_attestations_cert_fpr; Type: INDEX; Schema: public; Owner: symphony_admin
+-- Name: idx_ingress_attestations_cert_fpr; Type: INDEX; Schema: public; Owner: -
 --
 
 CREATE INDEX idx_ingress_attestations_cert_fpr ON public.ingress_attestations USING btree (cert_fingerprint_sha256) WHERE (cert_fingerprint_sha256 IS NOT NULL);
 
 
 --
--- Name: idx_ingress_attestations_correlation_id; Type: INDEX; Schema: public; Owner: symphony_admin
+-- Name: idx_ingress_attestations_correlation_id; Type: INDEX; Schema: public; Owner: -
 --
 
 CREATE INDEX idx_ingress_attestations_correlation_id ON public.ingress_attestations USING btree (correlation_id) WHERE (correlation_id IS NOT NULL);
 
 
 --
--- Name: idx_ingress_attestations_instruction; Type: INDEX; Schema: public; Owner: symphony_admin
+-- Name: idx_ingress_attestations_instruction; Type: INDEX; Schema: public; Owner: -
 --
 
 CREATE INDEX idx_ingress_attestations_instruction ON public.ingress_attestations USING btree (instruction_id);
 
 
 --
--- Name: idx_ingress_attestations_member_received; Type: INDEX; Schema: public; Owner: symphony_admin
+-- Name: idx_ingress_attestations_member_received; Type: INDEX; Schema: public; Owner: -
 --
 
 CREATE INDEX idx_ingress_attestations_member_received ON public.ingress_attestations USING btree (member_id, received_at) WHERE (member_id IS NOT NULL);
 
 
 --
--- Name: idx_ingress_attestations_received_at; Type: INDEX; Schema: public; Owner: symphony_admin
+-- Name: idx_ingress_attestations_received_at; Type: INDEX; Schema: public; Owner: -
 --
 
 CREATE INDEX idx_ingress_attestations_received_at ON public.ingress_attestations USING btree (received_at);
 
 
 --
--- Name: idx_ingress_attestations_tenant_correlation; Type: INDEX; Schema: public; Owner: symphony_admin
+-- Name: idx_ingress_attestations_tenant_correlation; Type: INDEX; Schema: public; Owner: -
 --
 
 CREATE INDEX idx_ingress_attestations_tenant_correlation ON public.ingress_attestations USING btree (tenant_id, correlation_id) WHERE (correlation_id IS NOT NULL);
 
 
 --
--- Name: idx_ingress_attestations_tenant_received; Type: INDEX; Schema: public; Owner: symphony_admin
+-- Name: idx_ingress_attestations_tenant_received; Type: INDEX; Schema: public; Owner: -
 --
 
 CREATE INDEX idx_ingress_attestations_tenant_received ON public.ingress_attestations USING btree (tenant_id, received_at) WHERE (tenant_id IS NOT NULL);
 
 
 --
--- Name: idx_instruction_settlement_finality_participant_finalized; Type: INDEX; Schema: public; Owner: symphony_admin
+-- Name: idx_instruction_settlement_finality_participant_finalized; Type: INDEX; Schema: public; Owner: -
 --
 
 CREATE INDEX idx_instruction_settlement_finality_participant_finalized ON public.instruction_settlement_finality USING btree (participant_id, finalized_at DESC);
 
 
 --
--- Name: idx_internal_ledger_postings_journal; Type: INDEX; Schema: public; Owner: symphony_admin
+-- Name: idx_internal_ledger_postings_journal; Type: INDEX; Schema: public; Owner: -
 --
 
 CREATE INDEX idx_internal_ledger_postings_journal ON public.internal_ledger_postings USING btree (journal_id, direction);
 
 
 --
--- Name: idx_interpretation_packs_jurisdiction; Type: INDEX; Schema: public; Owner: symphony_admin
+-- Name: idx_interpretation_packs_code; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_interpretation_packs_code ON public.interpretation_packs USING btree (interpretation_pack_code);
+
+
+--
+-- Name: idx_interpretation_packs_jurisdiction; Type: INDEX; Schema: public; Owner: -
 --
 
 CREATE INDEX idx_interpretation_packs_jurisdiction ON public.interpretation_packs USING btree (jurisdiction_code);
 
 
 --
--- Name: idx_jurisdiction_profiles_jurisdiction; Type: INDEX; Schema: public; Owner: symphony_admin
+-- Name: idx_interpretation_packs_project_time; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_interpretation_packs_project_time ON public.interpretation_packs USING btree (project_id, effective_from DESC, effective_to);
+
+
+--
+-- Name: idx_jurisdiction_profiles_jurisdiction; Type: INDEX; Schema: public; Owner: -
 --
 
 CREATE INDEX idx_jurisdiction_profiles_jurisdiction ON public.jurisdiction_profiles USING btree (jurisdiction_code);
 
 
 --
--- Name: idx_lifecycle_checkpoint_rules_jurisdiction; Type: INDEX; Schema: public; Owner: symphony_admin
+-- Name: idx_lifecycle_checkpoint_rules_jurisdiction; Type: INDEX; Schema: public; Owner: -
 --
 
 CREATE INDEX idx_lifecycle_checkpoint_rules_jurisdiction ON public.lifecycle_checkpoint_rules USING btree (jurisdiction_code);
 
 
 --
--- Name: idx_malformed_quarantine_adapter_rail_time; Type: INDEX; Schema: public; Owner: symphony_admin
+-- Name: idx_malformed_quarantine_adapter_rail_time; Type: INDEX; Schema: public; Owner: -
 --
 
 CREATE INDEX idx_malformed_quarantine_adapter_rail_time ON public.malformed_quarantine_store USING btree (adapter_id, rail_id, capture_timestamp DESC);
 
 
 --
--- Name: idx_member_device_events_instruction; Type: INDEX; Schema: public; Owner: symphony_admin
+-- Name: idx_member_device_events_instruction; Type: INDEX; Schema: public; Owner: -
 --
 
 CREATE INDEX idx_member_device_events_instruction ON public.member_device_events USING btree (instruction_id);
 
 
 --
--- Name: idx_member_device_events_tenant_member_observed; Type: INDEX; Schema: public; Owner: symphony_admin
+-- Name: idx_member_device_events_tenant_member_observed; Type: INDEX; Schema: public; Owner: -
 --
 
 CREATE INDEX idx_member_device_events_tenant_member_observed ON public.member_device_events USING btree (tenant_id, member_id, observed_at DESC);
 
 
 --
--- Name: idx_member_devices_active_device; Type: INDEX; Schema: public; Owner: symphony_admin
+-- Name: idx_member_devices_active_device; Type: INDEX; Schema: public; Owner: -
 --
 
 CREATE INDEX idx_member_devices_active_device ON public.member_devices USING btree (tenant_id, device_id_hash) WHERE (status = 'ACTIVE'::text);
 
 
 --
--- Name: idx_member_devices_active_iccid; Type: INDEX; Schema: public; Owner: symphony_admin
+-- Name: idx_member_devices_active_iccid; Type: INDEX; Schema: public; Owner: -
 --
 
 CREATE INDEX idx_member_devices_active_iccid ON public.member_devices USING btree (tenant_id, iccid_hash) WHERE ((iccid_hash IS NOT NULL) AND (status = 'ACTIVE'::text));
 
 
 --
--- Name: idx_member_devices_tenant_member; Type: INDEX; Schema: public; Owner: symphony_admin
+-- Name: idx_member_devices_tenant_member; Type: INDEX; Schema: public; Owner: -
 --
 
 CREATE INDEX idx_member_devices_tenant_member ON public.member_devices USING btree (tenant_id, member_id);
 
 
 --
--- Name: idx_members_entity_active; Type: INDEX; Schema: public; Owner: symphony_admin
+-- Name: idx_members_entity_active; Type: INDEX; Schema: public; Owner: -
 --
 
 CREATE INDEX idx_members_entity_active ON public.members USING btree (tenant_id, entity_id, status) WHERE (status = 'ACTIVE'::text);
 
 
 --
--- Name: idx_members_entity_member_ref_active; Type: INDEX; Schema: public; Owner: symphony_admin
+-- Name: idx_members_entity_member_ref_active; Type: INDEX; Schema: public; Owner: -
 --
 
 CREATE INDEX idx_members_entity_member_ref_active ON public.members USING btree (tenant_id, entity_id, member_ref_hash) WHERE (status = 'ACTIVE'::text);
 
 
 --
--- Name: idx_members_tenant_member; Type: INDEX; Schema: public; Owner: symphony_admin
+-- Name: idx_members_tenant_member; Type: INDEX; Schema: public; Owner: -
 --
 
 CREATE INDEX idx_members_tenant_member ON public.members USING btree (tenant_id, member_id);
 
 
 --
--- Name: idx_members_tenant_member_ref; Type: INDEX; Schema: public; Owner: symphony_admin
+-- Name: idx_members_tenant_member_ref; Type: INDEX; Schema: public; Owner: -
 --
 
 CREATE INDEX idx_members_tenant_member_ref ON public.members USING btree (tenant_id, member_ref_hash);
 
 
 --
--- Name: idx_methodology_versions_tenant_id; Type: INDEX; Schema: public; Owner: symphony_admin
+-- Name: idx_methodology_versions_tenant_id; Type: INDEX; Schema: public; Owner: -
 --
 
 CREATE INDEX idx_methodology_versions_tenant_id ON public.methodology_versions USING btree (tenant_id);
 
 
 --
--- Name: idx_monitoring_records_project_id; Type: INDEX; Schema: public; Owner: symphony_admin
+-- Name: idx_monitoring_records_project_id; Type: INDEX; Schema: public; Owner: -
 --
 
 CREATE INDEX idx_monitoring_records_project_id ON public.monitoring_records USING btree (project_id);
 
 
 --
--- Name: idx_monitoring_records_tenant_id; Type: INDEX; Schema: public; Owner: symphony_admin
+-- Name: idx_monitoring_records_tenant_id; Type: INDEX; Schema: public; Owner: -
 --
 
 CREATE INDEX idx_monitoring_records_tenant_id ON public.monitoring_records USING btree (tenant_id);
 
 
 --
--- Name: idx_orphan_lz_instruction_arrival; Type: INDEX; Schema: public; Owner: symphony_admin
+-- Name: idx_orphan_lz_instruction_arrival; Type: INDEX; Schema: public; Owner: -
 --
 
 CREATE INDEX idx_orphan_lz_instruction_arrival ON public.orphaned_attestation_landing_zone USING btree (instruction_id, arrival_timestamp DESC);
 
 
 --
--- Name: idx_payment_outbox_attempts_correlation_id; Type: INDEX; Schema: public; Owner: symphony_admin
+-- Name: idx_payment_outbox_attempts_correlation_id; Type: INDEX; Schema: public; Owner: -
 --
 
 CREATE INDEX idx_payment_outbox_attempts_correlation_id ON public.payment_outbox_attempts USING btree (correlation_id) WHERE (correlation_id IS NOT NULL);
 
 
 --
--- Name: idx_payment_outbox_attempts_tenant_correlation; Type: INDEX; Schema: public; Owner: symphony_admin
+-- Name: idx_payment_outbox_attempts_tenant_correlation; Type: INDEX; Schema: public; Owner: -
 --
 
 CREATE INDEX idx_payment_outbox_attempts_tenant_correlation ON public.payment_outbox_attempts USING btree (tenant_id, correlation_id) WHERE (correlation_id IS NOT NULL);
 
 
 --
--- Name: idx_payment_outbox_pending_correlation_id; Type: INDEX; Schema: public; Owner: symphony_admin
+-- Name: idx_payment_outbox_pending_correlation_id; Type: INDEX; Schema: public; Owner: -
 --
 
 CREATE INDEX idx_payment_outbox_pending_correlation_id ON public.payment_outbox_pending USING btree (correlation_id) WHERE (correlation_id IS NOT NULL);
 
 
 --
--- Name: idx_payment_outbox_pending_due_claim; Type: INDEX; Schema: public; Owner: symphony_admin
+-- Name: idx_payment_outbox_pending_due_claim; Type: INDEX; Schema: public; Owner: -
 --
 
 CREATE INDEX idx_payment_outbox_pending_due_claim ON public.payment_outbox_pending USING btree (next_attempt_at, lease_expires_at, created_at);
 
 
 --
--- Name: idx_payment_outbox_pending_tenant_correlation; Type: INDEX; Schema: public; Owner: symphony_admin
+-- Name: idx_payment_outbox_pending_tenant_correlation; Type: INDEX; Schema: public; Owner: -
 --
 
 CREATE INDEX idx_payment_outbox_pending_tenant_correlation ON public.payment_outbox_pending USING btree (tenant_id, correlation_id) WHERE (correlation_id IS NOT NULL);
 
 
 --
--- Name: idx_payment_outbox_pending_tenant_due; Type: INDEX; Schema: public; Owner: symphony_admin
+-- Name: idx_payment_outbox_pending_tenant_due; Type: INDEX; Schema: public; Owner: -
 --
 
 CREATE INDEX idx_payment_outbox_pending_tenant_due ON public.payment_outbox_pending USING btree (tenant_id, next_attempt_at) WHERE (tenant_id IS NOT NULL);
 
 
 --
--- Name: idx_persons_tenant_ref; Type: INDEX; Schema: public; Owner: symphony_admin
+-- Name: idx_persons_tenant_ref; Type: INDEX; Schema: public; Owner: -
 --
 
 CREATE UNIQUE INDEX idx_persons_tenant_ref ON public.persons USING btree (tenant_id, person_ref_hash);
 
 
 --
--- Name: idx_pii_purge_requests_subject_requested; Type: INDEX; Schema: public; Owner: symphony_admin
+-- Name: idx_pii_purge_requests_subject_requested; Type: INDEX; Schema: public; Owner: -
 --
 
 CREATE INDEX idx_pii_purge_requests_subject_requested ON public.pii_purge_requests USING btree (subject_token, requested_at DESC);
 
 
 --
--- Name: idx_policy_versions_is_active; Type: INDEX; Schema: public; Owner: symphony_admin
+-- Name: idx_policy_versions_is_active; Type: INDEX; Schema: public; Owner: -
 --
 
 CREATE INDEX idx_policy_versions_is_active ON public.policy_versions USING btree (is_active) WHERE (is_active = true);
 
 
 --
--- Name: idx_program_migration_events_tenant_person; Type: INDEX; Schema: public; Owner: symphony_admin
+-- Name: idx_program_migration_events_tenant_person; Type: INDEX; Schema: public; Owner: -
 --
 
 CREATE INDEX idx_program_migration_events_tenant_person ON public.program_migration_events USING btree (tenant_id, person_id, migrated_at DESC);
 
 
 --
--- Name: idx_program_migration_events_tenant_time; Type: INDEX; Schema: public; Owner: symphony_admin
+-- Name: idx_program_migration_events_tenant_time; Type: INDEX; Schema: public; Owner: -
 --
 
 CREATE INDEX idx_program_migration_events_tenant_time ON public.program_migration_events USING btree (tenant_id, migrated_at DESC);
 
 
 --
--- Name: idx_programs_tenant_status; Type: INDEX; Schema: public; Owner: symphony_admin
+-- Name: idx_programs_tenant_status; Type: INDEX; Schema: public; Owner: -
 --
 
 CREATE INDEX idx_programs_tenant_status ON public.programs USING btree (tenant_id, status);
 
 
 --
--- Name: idx_projects_tenant_id; Type: INDEX; Schema: public; Owner: symphony_admin
+-- Name: idx_projects_tenant_id; Type: INDEX; Schema: public; Owner: -
 --
 
 CREATE INDEX idx_projects_tenant_id ON public.projects USING btree (tenant_id);
 
 
 --
--- Name: idx_rail_truth_anchor_participant_anchored; Type: INDEX; Schema: public; Owner: symphony_admin
+-- Name: idx_rail_truth_anchor_participant_anchored; Type: INDEX; Schema: public; Owner: -
 --
 
 CREATE INDEX idx_rail_truth_anchor_participant_anchored ON public.rail_dispatch_truth_anchor USING btree (rail_participant_id, anchored_at DESC);
 
 
 --
--- Name: idx_reference_strategy_policy_active; Type: INDEX; Schema: public; Owner: symphony_admin
+-- Name: idx_reference_strategy_policy_active; Type: INDEX; Schema: public; Owner: -
 --
 
 CREATE UNIQUE INDEX idx_reference_strategy_policy_active ON public.reference_strategy_policy_versions USING btree (version_status) WHERE (version_status = 'ACTIVE'::text);
 
 
 --
--- Name: idx_regulatory_authorities_jurisdiction; Type: INDEX; Schema: public; Owner: symphony_admin
+-- Name: idx_regulatory_authorities_jurisdiction; Type: INDEX; Schema: public; Owner: -
 --
 
 CREATE INDEX idx_regulatory_authorities_jurisdiction ON public.regulatory_authorities USING btree (jurisdiction_code);
 
 
 --
--- Name: idx_regulatory_checkpoints_jurisdiction; Type: INDEX; Schema: public; Owner: symphony_admin
+-- Name: idx_regulatory_checkpoints_jurisdiction; Type: INDEX; Schema: public; Owner: -
 --
 
 CREATE INDEX idx_regulatory_checkpoints_jurisdiction ON public.regulatory_checkpoints USING btree (jurisdiction_code);
 
 
 --
--- Name: idx_retirement_events_batch_id; Type: INDEX; Schema: public; Owner: symphony_admin
+-- Name: idx_retirement_events_batch_id; Type: INDEX; Schema: public; Owner: -
 --
 
 CREATE INDEX idx_retirement_events_batch_id ON public.retirement_events USING btree (asset_batch_id);
 
 
 --
--- Name: idx_retirement_events_tenant_id; Type: INDEX; Schema: public; Owner: symphony_admin
+-- Name: idx_retirement_events_tenant_id; Type: INDEX; Schema: public; Owner: -
 --
 
 CREATE INDEX idx_retirement_events_tenant_id ON public.retirement_events USING btree (tenant_id);
 
 
 --
--- Name: idx_sim_swap_alerts_tenant_member_derived; Type: INDEX; Schema: public; Owner: symphony_admin
+-- Name: idx_sim_swap_alerts_tenant_member_derived; Type: INDEX; Schema: public; Owner: -
 --
 
 CREATE INDEX idx_sim_swap_alerts_tenant_member_derived ON public.sim_swap_alerts USING btree (tenant_id, member_id, derived_at DESC);
 
 
 --
--- Name: idx_supervisor_approval_queue_status_timeout; Type: INDEX; Schema: public; Owner: symphony_admin
+-- Name: idx_supervisor_approval_queue_status_timeout; Type: INDEX; Schema: public; Owner: -
 --
 
 CREATE INDEX idx_supervisor_approval_queue_status_timeout ON public.supervisor_approval_queue USING btree (status, timeout_at);
 
 
 --
--- Name: idx_supervisor_audit_tokens_program_expires; Type: INDEX; Schema: public; Owner: symphony_admin
+-- Name: idx_supervisor_audit_tokens_program_expires; Type: INDEX; Schema: public; Owner: -
 --
 
 CREATE INDEX idx_supervisor_audit_tokens_program_expires ON public.supervisor_audit_tokens USING btree (program_id, expires_at DESC);
 
 
 --
--- Name: idx_supervisor_interrupt_audit_events_instruction_recorded; Type: INDEX; Schema: public; Owner: symphony_admin
+-- Name: idx_supervisor_interrupt_audit_events_instruction_recorded; Type: INDEX; Schema: public; Owner: -
 --
 
 CREATE INDEX idx_supervisor_interrupt_audit_events_instruction_recorded ON public.supervisor_interrupt_audit_events USING btree (instruction_id, recorded_at DESC);
 
 
 --
--- Name: idx_tenant_clients_tenant; Type: INDEX; Schema: public; Owner: symphony_admin
+-- Name: idx_tenant_clients_tenant; Type: INDEX; Schema: public; Owner: -
 --
 
 CREATE INDEX idx_tenant_clients_tenant ON public.tenant_clients USING btree (tenant_id);
 
 
 --
--- Name: idx_tenant_members_status; Type: INDEX; Schema: public; Owner: symphony_admin
+-- Name: idx_tenant_members_status; Type: INDEX; Schema: public; Owner: -
 --
 
 CREATE INDEX idx_tenant_members_status ON public.tenant_members USING btree (status);
 
 
 --
--- Name: idx_tenant_members_tenant; Type: INDEX; Schema: public; Owner: symphony_admin
+-- Name: idx_tenant_members_tenant; Type: INDEX; Schema: public; Owner: -
 --
 
 CREATE INDEX idx_tenant_members_tenant ON public.tenant_members USING btree (tenant_id);
 
 
 --
--- Name: idx_tenants_billable_client_id; Type: INDEX; Schema: public; Owner: symphony_admin
+-- Name: idx_tenants_billable_client_id; Type: INDEX; Schema: public; Owner: -
 --
 
 CREATE INDEX idx_tenants_billable_client_id ON public.tenants USING btree (billable_client_id);
 
 
 --
--- Name: idx_tenants_parent_tenant_id; Type: INDEX; Schema: public; Owner: symphony_admin
+-- Name: idx_tenants_parent_tenant_id; Type: INDEX; Schema: public; Owner: -
 --
 
 CREATE INDEX idx_tenants_parent_tenant_id ON public.tenants USING btree (parent_tenant_id);
 
 
 --
--- Name: idx_tenants_status; Type: INDEX; Schema: public; Owner: symphony_admin
+-- Name: idx_tenants_status; Type: INDEX; Schema: public; Owner: -
 --
 
 CREATE INDEX idx_tenants_status ON public.tenants USING btree (status);
 
 
 --
--- Name: idx_verifier_project_assignments_project; Type: INDEX; Schema: public; Owner: symphony_admin
+-- Name: idx_unit_conversions_from; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_unit_conversions_from ON public.unit_conversions USING btree (from_unit);
+
+
+--
+-- Name: idx_unit_conversions_pair; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_unit_conversions_pair ON public.unit_conversions USING btree (from_unit, to_unit);
+
+
+--
+-- Name: idx_unit_conversions_to; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_unit_conversions_to ON public.unit_conversions USING btree (to_unit);
+
+
+--
+-- Name: idx_verifier_project_assignments_project; Type: INDEX; Schema: public; Owner: -
 --
 
 CREATE INDEX idx_verifier_project_assignments_project ON public.verifier_project_assignments USING btree (project_id);
 
 
 --
--- Name: idx_verifier_project_assignments_verifier; Type: INDEX; Schema: public; Owner: symphony_admin
+-- Name: idx_verifier_project_assignments_verifier; Type: INDEX; Schema: public; Owner: -
 --
 
 CREATE INDEX idx_verifier_project_assignments_verifier ON public.verifier_project_assignments USING btree (verifier_id);
 
 
 --
--- Name: idx_verifier_registry_jurisdiction; Type: INDEX; Schema: public; Owner: symphony_admin
+-- Name: idx_verifier_registry_jurisdiction; Type: INDEX; Schema: public; Owner: -
 --
 
 CREATE INDEX idx_verifier_registry_jurisdiction ON public.verifier_registry USING btree (jurisdiction_code);
 
 
 --
--- Name: idx_verifier_registry_tenant_id; Type: INDEX; Schema: public; Owner: symphony_admin
+-- Name: idx_verifier_registry_tenant_id; Type: INDEX; Schema: public; Owner: -
 --
 
 CREATE INDEX idx_verifier_registry_tenant_id ON public.verifier_registry USING btree (tenant_id);
 
 
 --
--- Name: ix_incident_events_incident_created; Type: INDEX; Schema: public; Owner: symphony_admin
+-- Name: ix_incident_events_incident_created; Type: INDEX; Schema: public; Owner: -
 --
 
 CREATE INDEX ix_incident_events_incident_created ON public.incident_events USING btree (incident_id, created_at);
 
 
 --
--- Name: ix_regulatory_incidents_tenant_detected; Type: INDEX; Schema: public; Owner: symphony_admin
+-- Name: ix_regulatory_incidents_tenant_detected; Type: INDEX; Schema: public; Owner: -
 --
 
 CREATE INDEX ix_regulatory_incidents_tenant_detected ON public.regulatory_incidents USING btree (tenant_id, detected_at DESC);
 
 
 --
--- Name: kyc_provider_active_idx; Type: INDEX; Schema: public; Owner: symphony_admin
+-- Name: kyc_provider_active_idx; Type: INDEX; Schema: public; Owner: -
 --
 
 CREATE UNIQUE INDEX kyc_provider_active_idx ON public.kyc_provider_registry USING btree (jurisdiction_code, provider_code) WHERE ((active_to IS NULL) AND (is_active IS NOT FALSE));
 
 
 --
--- Name: kyc_provider_jurisdiction_idx; Type: INDEX; Schema: public; Owner: symphony_admin
+-- Name: kyc_provider_jurisdiction_idx; Type: INDEX; Schema: public; Owner: -
 --
 
 CREATE INDEX kyc_provider_jurisdiction_idx ON public.kyc_provider_registry USING btree (jurisdiction_code, active_from DESC);
 
 
 --
--- Name: kyc_verification_jurisdiction_outcome_idx; Type: INDEX; Schema: public; Owner: symphony_admin
+-- Name: kyc_verification_jurisdiction_outcome_idx; Type: INDEX; Schema: public; Owner: -
 --
 
 CREATE INDEX kyc_verification_jurisdiction_outcome_idx ON public.kyc_verification_records USING btree (jurisdiction_code, outcome) WHERE (outcome IS NOT NULL);
 
 
 --
--- Name: kyc_verification_member_idx; Type: INDEX; Schema: public; Owner: symphony_admin
+-- Name: kyc_verification_member_idx; Type: INDEX; Schema: public; Owner: -
 --
 
 CREATE INDEX kyc_verification_member_idx ON public.kyc_verification_records USING btree (member_id, anchored_at DESC);
 
 
 --
--- Name: kyc_verification_provider_idx; Type: INDEX; Schema: public; Owner: symphony_admin
+-- Name: kyc_verification_provider_idx; Type: INDEX; Schema: public; Owner: -
 --
 
 CREATE INDEX kyc_verification_provider_idx ON public.kyc_verification_records USING btree (provider_id) WHERE (provider_id IS NOT NULL);
 
 
 --
--- Name: levy_calc_reporting_period_idx; Type: INDEX; Schema: public; Owner: symphony_admin
+-- Name: levy_calc_reporting_period_idx; Type: INDEX; Schema: public; Owner: -
 --
 
 CREATE INDEX levy_calc_reporting_period_idx ON public.levy_calculation_records USING btree (reporting_period, jurisdiction_code) WHERE (reporting_period IS NOT NULL);
 
 
 --
--- Name: levy_calc_status_idx; Type: INDEX; Schema: public; Owner: symphony_admin
+-- Name: levy_calc_status_idx; Type: INDEX; Schema: public; Owner: -
 --
 
 CREATE INDEX levy_calc_status_idx ON public.levy_calculation_records USING btree (levy_status) WHERE (levy_status IS NOT NULL);
 
 
 --
--- Name: levy_periods_jurisdiction_idx; Type: INDEX; Schema: public; Owner: symphony_admin
+-- Name: levy_periods_jurisdiction_idx; Type: INDEX; Schema: public; Owner: -
 --
 
 CREATE INDEX levy_periods_jurisdiction_idx ON public.levy_remittance_periods USING btree (jurisdiction_code, period_start DESC);
 
 
 --
--- Name: levy_periods_status_idx; Type: INDEX; Schema: public; Owner: symphony_admin
+-- Name: levy_periods_status_idx; Type: INDEX; Schema: public; Owner: -
 --
 
 CREATE INDEX levy_periods_status_idx ON public.levy_remittance_periods USING btree (period_status) WHERE (period_status IS NOT NULL);
 
 
 --
--- Name: levy_rates_jurisdiction_date_idx; Type: INDEX; Schema: public; Owner: symphony_admin
+-- Name: levy_rates_jurisdiction_date_idx; Type: INDEX; Schema: public; Owner: -
 --
 
 CREATE INDEX levy_rates_jurisdiction_date_idx ON public.levy_rates USING btree (jurisdiction_code, effective_from DESC);
 
 
 --
--- Name: levy_rates_one_active_per_jurisdiction; Type: INDEX; Schema: public; Owner: symphony_admin
+-- Name: levy_rates_one_active_per_jurisdiction; Type: INDEX; Schema: public; Owner: -
 --
 
 CREATE UNIQUE INDEX levy_rates_one_active_per_jurisdiction ON public.levy_rates USING btree (jurisdiction_code) WHERE (effective_to IS NULL);
 
 
 --
--- Name: ux_billing_usage_events_idempotency; Type: INDEX; Schema: public; Owner: symphony_admin
+-- Name: ux_billing_usage_events_idempotency; Type: INDEX; Schema: public; Owner: -
 --
 
 CREATE UNIQUE INDEX ux_billing_usage_events_idempotency ON public.billing_usage_events USING btree (billable_client_id, idempotency_key) WHERE (idempotency_key IS NOT NULL);
 
 
 --
--- Name: ux_ingress_attestations_tenant_instruction; Type: INDEX; Schema: public; Owner: symphony_admin
+-- Name: ux_ingress_attestations_tenant_instruction; Type: INDEX; Schema: public; Owner: -
 --
 
 CREATE UNIQUE INDEX ux_ingress_attestations_tenant_instruction ON public.ingress_attestations USING btree (tenant_id, instruction_id);
 
 
 --
--- Name: ux_instruction_settlement_finality_one_reversal_per_original; Type: INDEX; Schema: public; Owner: symphony_admin
+-- Name: ux_instruction_settlement_finality_one_reversal_per_original; Type: INDEX; Schema: public; Owner: -
 --
 
 CREATE UNIQUE INDEX ux_instruction_settlement_finality_one_reversal_per_original ON public.instruction_settlement_finality USING btree (reversal_of_instruction_id) WHERE (reversal_of_instruction_id IS NOT NULL);
 
 
 --
--- Name: ux_outbox_attempts_one_terminal_per_outbox; Type: INDEX; Schema: public; Owner: symphony_admin
+-- Name: ux_outbox_attempts_one_terminal_per_outbox; Type: INDEX; Schema: public; Owner: -
 --
 
 CREATE UNIQUE INDEX ux_outbox_attempts_one_terminal_per_outbox ON public.payment_outbox_attempts USING btree (outbox_id) WHERE (state = ANY (ARRAY['DISPATCHED'::public.outbox_attempt_state, 'FAILED'::public.outbox_attempt_state]));
 
 
 --
--- Name: ux_policy_versions_single_active; Type: INDEX; Schema: public; Owner: symphony_admin
+-- Name: ux_policy_versions_single_active; Type: INDEX; Schema: public; Owner: -
 --
 
 CREATE UNIQUE INDEX ux_policy_versions_single_active ON public.policy_versions USING btree ((1)) WHERE (status = 'ACTIVE'::public.policy_version_status);
 
 
 --
--- Name: ux_program_migration_events_deterministic; Type: INDEX; Schema: public; Owner: symphony_admin
+-- Name: ux_program_migration_events_deterministic; Type: INDEX; Schema: public; Owner: -
 --
 
 CREATE UNIQUE INDEX ux_program_migration_events_deterministic ON public.program_migration_events USING btree (tenant_id, person_id, from_program_id, to_program_id);
 
 
 --
--- Name: kyc_retention_policy kyc_retention_policy_no_delete; Type: RULE; Schema: public; Owner: symphony_admin
+-- Name: kyc_retention_policy kyc_retention_policy_no_delete; Type: RULE; Schema: public; Owner: -
 --
 
 CREATE RULE kyc_retention_policy_no_delete AS
@@ -10281,7 +9554,7 @@ CREATE RULE kyc_retention_policy_no_delete AS
 
 
 --
--- Name: kyc_retention_policy kyc_retention_policy_no_update; Type: RULE; Schema: public; Owner: symphony_admin
+-- Name: kyc_retention_policy kyc_retention_policy_no_update; Type: RULE; Schema: public; Owner: -
 --
 
 CREATE RULE kyc_retention_policy_no_update AS
@@ -10289,308 +9562,301 @@ CREATE RULE kyc_retention_policy_no_update AS
 
 
 --
--- Name: RULE kyc_retention_policy_no_update ON kyc_retention_policy; Type: COMMENT; Schema: public; Owner: symphony_admin
---
-
-COMMENT ON RULE kyc_retention_policy_no_update ON public.kyc_retention_policy IS 'Immutability enforcement. KYC retention policies are statutory facts. To supersede a policy, add a new row with updated parameters.';
-
-
---
--- Name: adapter_registrations adapter_registrations_append_only; Type: TRIGGER; Schema: public; Owner: symphony_admin
+-- Name: adapter_registrations adapter_registrations_append_only; Type: TRIGGER; Schema: public; Owner: -
 --
 
 CREATE TRIGGER adapter_registrations_append_only BEFORE DELETE OR UPDATE ON public.adapter_registrations FOR EACH ROW EXECUTE FUNCTION public.adapter_registrations_append_only_trigger();
 
 
 --
--- Name: asset_lifecycle_events asset_lifecycle_confidence_enforcement; Type: TRIGGER; Schema: public; Owner: symphony_admin
+-- Name: asset_lifecycle_events asset_lifecycle_confidence_enforcement; Type: TRIGGER; Schema: public; Owner: -
 --
 
 CREATE TRIGGER asset_lifecycle_confidence_enforcement BEFORE INSERT ON public.asset_lifecycle_events FOR EACH ROW EXECUTE FUNCTION public.enforce_confidence_before_issuance();
 
 
 --
--- Name: authority_decisions authority_decisions_append_only; Type: TRIGGER; Schema: public; Owner: symphony_admin
+-- Name: authority_decisions authority_decisions_append_only; Type: TRIGGER; Schema: public; Owner: -
 --
 
 CREATE TRIGGER authority_decisions_append_only BEFORE DELETE OR UPDATE ON public.authority_decisions FOR EACH ROW EXECUTE FUNCTION public.authority_decisions_append_only();
 
 
 --
--- Name: gf_verifier_read_tokens gf_verifier_read_tokens_append_only; Type: TRIGGER; Schema: public; Owner: symphony_admin
+-- Name: gf_verifier_read_tokens gf_verifier_read_tokens_append_only; Type: TRIGGER; Schema: public; Owner: -
 --
 
 CREATE TRIGGER gf_verifier_read_tokens_append_only BEFORE DELETE OR UPDATE ON public.gf_verifier_read_tokens FOR EACH ROW EXECUTE FUNCTION public.gf_verifier_read_tokens_append_only();
 
 
 --
--- Name: adjustment_instructions trg_adjustment_terminal_immutability; Type: TRIGGER; Schema: public; Owner: symphony_admin
+-- Name: adjustment_instructions trg_adjustment_terminal_immutability; Type: TRIGGER; Schema: public; Owner: -
 --
 
 CREATE TRIGGER trg_adjustment_terminal_immutability BEFORE UPDATE ON public.adjustment_instructions FOR EACH ROW EXECUTE FUNCTION public.enforce_adjustment_terminal_immutability();
 
 
 --
--- Name: payment_outbox_attempts trg_anchor_dispatched_outbox_attempt; Type: TRIGGER; Schema: public; Owner: symphony_admin
+-- Name: payment_outbox_attempts trg_anchor_dispatched_outbox_attempt; Type: TRIGGER; Schema: public; Owner: -
 --
 
 CREATE TRIGGER trg_anchor_dispatched_outbox_attempt AFTER INSERT ON public.payment_outbox_attempts FOR EACH ROW EXECUTE FUNCTION public.anchor_dispatched_outbox_attempt();
 
 
 --
--- Name: reference_strategy_policy_versions trg_block_active_reference_policy_updates; Type: TRIGGER; Schema: public; Owner: symphony_admin
+-- Name: reference_strategy_policy_versions trg_block_active_reference_policy_updates; Type: TRIGGER; Schema: public; Owner: -
 --
 
 CREATE TRIGGER trg_block_active_reference_policy_updates BEFORE UPDATE ON public.reference_strategy_policy_versions FOR EACH ROW EXECUTE FUNCTION public.block_active_reference_policy_updates();
 
 
 --
--- Name: billing_usage_events trg_deny_billing_usage_events_mutation; Type: TRIGGER; Schema: public; Owner: symphony_admin
+-- Name: billing_usage_events trg_deny_billing_usage_events_mutation; Type: TRIGGER; Schema: public; Owner: -
 --
 
 CREATE TRIGGER trg_deny_billing_usage_events_mutation BEFORE DELETE OR UPDATE ON public.billing_usage_events FOR EACH ROW EXECUTE FUNCTION public.deny_append_only_mutation();
 
 
 --
--- Name: escrow_events trg_deny_escrow_events_mutation; Type: TRIGGER; Schema: public; Owner: symphony_admin
+-- Name: escrow_events trg_deny_escrow_events_mutation; Type: TRIGGER; Schema: public; Owner: -
 --
 
 CREATE TRIGGER trg_deny_escrow_events_mutation BEFORE DELETE OR UPDATE ON public.escrow_events FOR EACH ROW EXECUTE FUNCTION public.deny_append_only_mutation();
 
 
 --
--- Name: evidence_pack_items trg_deny_evidence_pack_items_mutation; Type: TRIGGER; Schema: public; Owner: symphony_admin
+-- Name: evidence_pack_items trg_deny_evidence_pack_items_mutation; Type: TRIGGER; Schema: public; Owner: -
 --
 
 CREATE TRIGGER trg_deny_evidence_pack_items_mutation BEFORE DELETE OR UPDATE ON public.evidence_pack_items FOR EACH ROW EXECUTE FUNCTION public.deny_append_only_mutation();
 
 
 --
--- Name: evidence_packs trg_deny_evidence_packs_mutation; Type: TRIGGER; Schema: public; Owner: symphony_admin
+-- Name: evidence_packs trg_deny_evidence_packs_mutation; Type: TRIGGER; Schema: public; Owner: -
 --
 
 CREATE TRIGGER trg_deny_evidence_packs_mutation BEFORE DELETE OR UPDATE ON public.evidence_packs FOR EACH ROW EXECUTE FUNCTION public.deny_append_only_mutation();
 
 
 --
--- Name: external_proofs trg_deny_external_proofs_mutation; Type: TRIGGER; Schema: public; Owner: symphony_admin
+-- Name: external_proofs trg_deny_external_proofs_mutation; Type: TRIGGER; Schema: public; Owner: -
 --
 
 CREATE TRIGGER trg_deny_external_proofs_mutation BEFORE DELETE OR UPDATE ON public.external_proofs FOR EACH ROW EXECUTE FUNCTION public.deny_append_only_mutation();
 
 
 --
--- Name: instruction_settlement_finality trg_deny_final_instruction_mutation; Type: TRIGGER; Schema: public; Owner: symphony_admin
+-- Name: instruction_settlement_finality trg_deny_final_instruction_mutation; Type: TRIGGER; Schema: public; Owner: -
 --
 
 CREATE TRIGGER trg_deny_final_instruction_mutation BEFORE DELETE OR UPDATE ON public.instruction_settlement_finality FOR EACH ROW EXECUTE FUNCTION public.deny_final_instruction_mutation();
 
 
 --
--- Name: ingress_attestations trg_deny_ingress_attestations_mutation; Type: TRIGGER; Schema: public; Owner: symphony_admin
+-- Name: ingress_attestations trg_deny_ingress_attestations_mutation; Type: TRIGGER; Schema: public; Owner: -
 --
 
 CREATE TRIGGER trg_deny_ingress_attestations_mutation BEFORE DELETE OR UPDATE ON public.ingress_attestations FOR EACH ROW EXECUTE FUNCTION public.deny_ingress_attestations_mutation();
 
 
 --
--- Name: internal_ledger_journals trg_deny_internal_ledger_journals_mutation; Type: TRIGGER; Schema: public; Owner: symphony_admin
+-- Name: internal_ledger_journals trg_deny_internal_ledger_journals_mutation; Type: TRIGGER; Schema: public; Owner: -
 --
 
 CREATE TRIGGER trg_deny_internal_ledger_journals_mutation BEFORE DELETE OR UPDATE ON public.internal_ledger_journals FOR EACH ROW EXECUTE FUNCTION public.deny_append_only_mutation();
 
 
 --
--- Name: internal_ledger_postings trg_deny_internal_ledger_postings_mutation; Type: TRIGGER; Schema: public; Owner: symphony_admin
+-- Name: internal_ledger_postings trg_deny_internal_ledger_postings_mutation; Type: TRIGGER; Schema: public; Owner: -
 --
 
 CREATE TRIGGER trg_deny_internal_ledger_postings_mutation BEFORE DELETE OR UPDATE ON public.internal_ledger_postings FOR EACH ROW EXECUTE FUNCTION public.deny_append_only_mutation();
 
 
 --
--- Name: member_device_events trg_deny_member_device_events_mutation; Type: TRIGGER; Schema: public; Owner: symphony_admin
+-- Name: member_device_events trg_deny_member_device_events_mutation; Type: TRIGGER; Schema: public; Owner: -
 --
 
 CREATE TRIGGER trg_deny_member_device_events_mutation BEFORE DELETE OR UPDATE ON public.member_device_events FOR EACH ROW EXECUTE FUNCTION public.deny_member_device_events_mutation();
 
 
 --
--- Name: payment_outbox_attempts trg_deny_outbox_attempts_mutation; Type: TRIGGER; Schema: public; Owner: symphony_admin
+-- Name: payment_outbox_attempts trg_deny_outbox_attempts_mutation; Type: TRIGGER; Schema: public; Owner: -
 --
 
 CREATE TRIGGER trg_deny_outbox_attempts_mutation BEFORE DELETE OR UPDATE ON public.payment_outbox_attempts FOR EACH ROW EXECUTE FUNCTION public.deny_outbox_attempts_mutation();
 
 
 --
--- Name: pii_purge_events trg_deny_pii_purge_events_mutation; Type: TRIGGER; Schema: public; Owner: symphony_admin
+-- Name: pii_purge_events trg_deny_pii_purge_events_mutation; Type: TRIGGER; Schema: public; Owner: -
 --
 
 CREATE TRIGGER trg_deny_pii_purge_events_mutation BEFORE DELETE OR UPDATE ON public.pii_purge_events FOR EACH ROW EXECUTE FUNCTION public.deny_append_only_mutation();
 
 
 --
--- Name: pii_purge_requests trg_deny_pii_purge_requests_mutation; Type: TRIGGER; Schema: public; Owner: symphony_admin
+-- Name: pii_purge_requests trg_deny_pii_purge_requests_mutation; Type: TRIGGER; Schema: public; Owner: -
 --
 
 CREATE TRIGGER trg_deny_pii_purge_requests_mutation BEFORE DELETE OR UPDATE ON public.pii_purge_requests FOR EACH ROW EXECUTE FUNCTION public.deny_append_only_mutation();
 
 
 --
--- Name: pii_vault_records trg_deny_pii_vault_mutation; Type: TRIGGER; Schema: public; Owner: symphony_admin
+-- Name: pii_vault_records trg_deny_pii_vault_mutation; Type: TRIGGER; Schema: public; Owner: -
 --
 
 CREATE TRIGGER trg_deny_pii_vault_mutation BEFORE DELETE OR UPDATE ON public.pii_vault_records FOR EACH ROW EXECUTE FUNCTION public.deny_pii_vault_mutation();
 
 
 --
--- Name: rail_dispatch_truth_anchor trg_deny_rail_dispatch_truth_anchor_mutation; Type: TRIGGER; Schema: public; Owner: symphony_admin
+-- Name: rail_dispatch_truth_anchor trg_deny_rail_dispatch_truth_anchor_mutation; Type: TRIGGER; Schema: public; Owner: -
 --
 
 CREATE TRIGGER trg_deny_rail_dispatch_truth_anchor_mutation BEFORE DELETE OR UPDATE ON public.rail_dispatch_truth_anchor FOR EACH ROW EXECUTE FUNCTION public.deny_append_only_mutation();
 
 
 --
--- Name: revoked_client_certs trg_deny_revoked_client_certs_mutation; Type: TRIGGER; Schema: public; Owner: symphony_admin
+-- Name: revoked_client_certs trg_deny_revoked_client_certs_mutation; Type: TRIGGER; Schema: public; Owner: -
 --
 
 CREATE TRIGGER trg_deny_revoked_client_certs_mutation BEFORE DELETE OR UPDATE ON public.revoked_client_certs FOR EACH ROW EXECUTE FUNCTION public.deny_revocation_mutation();
 
 
 --
--- Name: revoked_tokens trg_deny_revoked_tokens_mutation; Type: TRIGGER; Schema: public; Owner: symphony_admin
+-- Name: revoked_tokens trg_deny_revoked_tokens_mutation; Type: TRIGGER; Schema: public; Owner: -
 --
 
 CREATE TRIGGER trg_deny_revoked_tokens_mutation BEFORE DELETE OR UPDATE ON public.revoked_tokens FOR EACH ROW EXECUTE FUNCTION public.deny_revocation_mutation();
 
 
 --
--- Name: sim_swap_alerts trg_deny_sim_swap_alerts_mutation; Type: TRIGGER; Schema: public; Owner: symphony_admin
+-- Name: sim_swap_alerts trg_deny_sim_swap_alerts_mutation; Type: TRIGGER; Schema: public; Owner: -
 --
 
 CREATE TRIGGER trg_deny_sim_swap_alerts_mutation BEFORE DELETE OR UPDATE ON public.sim_swap_alerts FOR EACH ROW EXECUTE FUNCTION public.deny_sim_swap_alerts_mutation();
 
 
 --
--- Name: instruction_settlement_finality trg_enforce_instruction_reversal_source; Type: TRIGGER; Schema: public; Owner: symphony_admin
+-- Name: instruction_settlement_finality trg_enforce_instruction_reversal_source; Type: TRIGGER; Schema: public; Owner: -
 --
 
 CREATE TRIGGER trg_enforce_instruction_reversal_source BEFORE INSERT ON public.instruction_settlement_finality FOR EACH ROW EXECUTE FUNCTION public.enforce_instruction_reversal_source();
 
 
 --
--- Name: internal_ledger_postings trg_enforce_internal_ledger_posting_context; Type: TRIGGER; Schema: public; Owner: symphony_admin
+-- Name: internal_ledger_postings trg_enforce_internal_ledger_posting_context; Type: TRIGGER; Schema: public; Owner: -
 --
 
 CREATE TRIGGER trg_enforce_internal_ledger_posting_context BEFORE INSERT OR UPDATE ON public.internal_ledger_postings FOR EACH ROW EXECUTE FUNCTION public.enforce_internal_ledger_posting_context();
 
 
 --
--- Name: instruction_settlement_finality trg_enforce_settlement_acknowledgement; Type: TRIGGER; Schema: public; Owner: symphony_admin
+-- Name: instruction_settlement_finality trg_enforce_settlement_acknowledgement; Type: TRIGGER; Schema: public; Owner: -
 --
 
 CREATE TRIGGER trg_enforce_settlement_acknowledgement BEFORE INSERT ON public.instruction_settlement_finality FOR EACH ROW EXECUTE FUNCTION public.enforce_settlement_acknowledgement();
 
 
 --
--- Name: ingress_attestations trg_ingress_member_tenant_match; Type: TRIGGER; Schema: public; Owner: symphony_admin
+-- Name: ingress_attestations trg_ingress_member_tenant_match; Type: TRIGGER; Schema: public; Owner: -
 --
 
 CREATE TRIGGER trg_ingress_member_tenant_match BEFORE INSERT ON public.ingress_attestations FOR EACH ROW EXECUTE FUNCTION public.enforce_member_tenant_match();
 
 
 --
--- Name: ingress_attestations trg_set_corr_id_ingress_attestations; Type: TRIGGER; Schema: public; Owner: symphony_admin
+-- Name: ingress_attestations trg_set_corr_id_ingress_attestations; Type: TRIGGER; Schema: public; Owner: -
 --
 
 CREATE TRIGGER trg_set_corr_id_ingress_attestations BEFORE INSERT ON public.ingress_attestations FOR EACH ROW EXECUTE FUNCTION public.set_correlation_id_if_null();
 
 
 --
--- Name: payment_outbox_attempts trg_set_corr_id_payment_outbox_attempts; Type: TRIGGER; Schema: public; Owner: symphony_admin
+-- Name: payment_outbox_attempts trg_set_corr_id_payment_outbox_attempts; Type: TRIGGER; Schema: public; Owner: -
 --
 
 CREATE TRIGGER trg_set_corr_id_payment_outbox_attempts BEFORE INSERT ON public.payment_outbox_attempts FOR EACH ROW EXECUTE FUNCTION public.set_correlation_id_if_null();
 
 
 --
--- Name: payment_outbox_pending trg_set_corr_id_payment_outbox_pending; Type: TRIGGER; Schema: public; Owner: symphony_admin
+-- Name: payment_outbox_pending trg_set_corr_id_payment_outbox_pending; Type: TRIGGER; Schema: public; Owner: -
 --
 
 CREATE TRIGGER trg_set_corr_id_payment_outbox_pending BEFORE INSERT ON public.payment_outbox_pending FOR EACH ROW EXECUTE FUNCTION public.set_correlation_id_if_null();
 
 
 --
--- Name: external_proofs trg_set_external_proofs_attribution; Type: TRIGGER; Schema: public; Owner: symphony_admin
+-- Name: external_proofs trg_set_external_proofs_attribution; Type: TRIGGER; Schema: public; Owner: -
 --
 
 CREATE TRIGGER trg_set_external_proofs_attribution BEFORE INSERT ON public.external_proofs FOR EACH ROW EXECUTE FUNCTION public.set_external_proofs_attribution();
 
 
 --
--- Name: anchor_sync_operations trg_touch_anchor_sync_updated_at; Type: TRIGGER; Schema: public; Owner: symphony_admin
+-- Name: anchor_sync_operations trg_touch_anchor_sync_updated_at; Type: TRIGGER; Schema: public; Owner: -
 --
 
 CREATE TRIGGER trg_touch_anchor_sync_updated_at BEFORE UPDATE ON public.anchor_sync_operations FOR EACH ROW EXECUTE FUNCTION public.touch_anchor_sync_updated_at();
 
 
 --
--- Name: escrow_envelopes trg_touch_escrow_envelopes_updated_at; Type: TRIGGER; Schema: public; Owner: symphony_admin
+-- Name: escrow_envelopes trg_touch_escrow_envelopes_updated_at; Type: TRIGGER; Schema: public; Owner: -
 --
 
 CREATE TRIGGER trg_touch_escrow_envelopes_updated_at BEFORE UPDATE ON public.escrow_envelopes FOR EACH ROW EXECUTE FUNCTION public.touch_escrow_envelopes_updated_at();
 
 
 --
--- Name: escrow_accounts trg_touch_escrow_updated_at; Type: TRIGGER; Schema: public; Owner: symphony_admin
+-- Name: escrow_accounts trg_touch_escrow_updated_at; Type: TRIGGER; Schema: public; Owner: -
 --
 
 CREATE TRIGGER trg_touch_escrow_updated_at BEFORE UPDATE ON public.escrow_accounts FOR EACH ROW EXECUTE FUNCTION public.touch_escrow_updated_at();
 
 
 --
--- Name: inquiry_state_machine trg_touch_inquiry_state_machine_updated_at; Type: TRIGGER; Schema: public; Owner: symphony_admin
+-- Name: inquiry_state_machine trg_touch_inquiry_state_machine_updated_at; Type: TRIGGER; Schema: public; Owner: -
 --
 
 CREATE TRIGGER trg_touch_inquiry_state_machine_updated_at BEFORE UPDATE ON public.inquiry_state_machine FOR EACH ROW EXECUTE FUNCTION public.touch_inquiry_state_updated_at();
 
 
 --
--- Name: members trg_touch_members_updated_at; Type: TRIGGER; Schema: public; Owner: symphony_admin
+-- Name: members trg_touch_members_updated_at; Type: TRIGGER; Schema: public; Owner: -
 --
 
 CREATE TRIGGER trg_touch_members_updated_at BEFORE INSERT OR UPDATE ON public.members FOR EACH ROW EXECUTE FUNCTION public.touch_members_updated_at();
 
 
 --
--- Name: persons trg_touch_persons_updated_at; Type: TRIGGER; Schema: public; Owner: symphony_admin
+-- Name: persons trg_touch_persons_updated_at; Type: TRIGGER; Schema: public; Owner: -
 --
 
 CREATE TRIGGER trg_touch_persons_updated_at BEFORE UPDATE ON public.persons FOR EACH ROW EXECUTE FUNCTION public.touch_persons_updated_at();
 
 
 --
--- Name: programs trg_touch_programs_updated_at; Type: TRIGGER; Schema: public; Owner: symphony_admin
+-- Name: programs trg_touch_programs_updated_at; Type: TRIGGER; Schema: public; Owner: -
 --
 
 CREATE TRIGGER trg_touch_programs_updated_at BEFORE UPDATE ON public.programs FOR EACH ROW EXECUTE FUNCTION public.touch_programs_updated_at();
 
 
 --
--- Name: verifier_project_assignments verifier_project_assignments_no_mutate; Type: TRIGGER; Schema: public; Owner: symphony_admin
+-- Name: verifier_project_assignments verifier_project_assignments_no_mutate; Type: TRIGGER; Schema: public; Owner: -
 --
 
 CREATE TRIGGER verifier_project_assignments_no_mutate BEFORE DELETE OR UPDATE ON public.verifier_project_assignments FOR EACH ROW EXECUTE FUNCTION public.gf_verifier_tables_append_only();
 
 
 --
--- Name: verifier_registry verifier_registry_no_mutate; Type: TRIGGER; Schema: public; Owner: symphony_admin
+-- Name: verifier_registry verifier_registry_no_mutate; Type: TRIGGER; Schema: public; Owner: -
 --
 
 CREATE TRIGGER verifier_registry_no_mutate BEFORE DELETE OR UPDATE ON public.verifier_registry FOR EACH ROW EXECUTE FUNCTION public.gf_verifier_tables_append_only();
 
 
 --
--- Name: adapter_registrations adapter_registrations_tenant_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: symphony_admin
+-- Name: adapter_registrations adapter_registrations_tenant_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.adapter_registrations
@@ -10598,7 +9864,7 @@ ALTER TABLE ONLY public.adapter_registrations
 
 
 --
--- Name: adjustment_approval_stages adjustment_approval_stages_adjustment_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: symphony_admin
+-- Name: adjustment_approval_stages adjustment_approval_stages_adjustment_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.adjustment_approval_stages
@@ -10606,7 +9872,7 @@ ALTER TABLE ONLY public.adjustment_approval_stages
 
 
 --
--- Name: adjustment_approvals adjustment_approvals_stage_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: symphony_admin
+-- Name: adjustment_approvals adjustment_approvals_stage_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.adjustment_approvals
@@ -10614,7 +9880,7 @@ ALTER TABLE ONLY public.adjustment_approvals
 
 
 --
--- Name: adjustment_execution_attempts adjustment_execution_attempts_adjustment_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: symphony_admin
+-- Name: adjustment_execution_attempts adjustment_execution_attempts_adjustment_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.adjustment_execution_attempts
@@ -10622,7 +9888,7 @@ ALTER TABLE ONLY public.adjustment_execution_attempts
 
 
 --
--- Name: adjustment_freeze_flags adjustment_freeze_flags_adjustment_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: symphony_admin
+-- Name: adjustment_freeze_flags adjustment_freeze_flags_adjustment_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.adjustment_freeze_flags
@@ -10630,7 +9896,7 @@ ALTER TABLE ONLY public.adjustment_freeze_flags
 
 
 --
--- Name: adjustment_instructions adjustment_parent_fk; Type: FK CONSTRAINT; Schema: public; Owner: symphony_admin
+-- Name: adjustment_instructions adjustment_parent_fk; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.adjustment_instructions
@@ -10638,7 +9904,7 @@ ALTER TABLE ONLY public.adjustment_instructions
 
 
 --
--- Name: anchor_sync_operations anchor_sync_operations_pack_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: symphony_admin
+-- Name: anchor_sync_operations anchor_sync_operations_pack_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.anchor_sync_operations
@@ -10646,7 +9912,7 @@ ALTER TABLE ONLY public.anchor_sync_operations
 
 
 --
--- Name: artifact_signing_batch_items artifact_signing_batch_items_batch_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: symphony_admin
+-- Name: artifact_signing_batch_items artifact_signing_batch_items_batch_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.artifact_signing_batch_items
@@ -10654,7 +9920,7 @@ ALTER TABLE ONLY public.artifact_signing_batch_items
 
 
 --
--- Name: asset_batches asset_batches_project_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: symphony_admin
+-- Name: asset_batches asset_batches_project_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.asset_batches
@@ -10662,7 +9928,7 @@ ALTER TABLE ONLY public.asset_batches
 
 
 --
--- Name: asset_batches asset_batches_tenant_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: symphony_admin
+-- Name: asset_batches asset_batches_tenant_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.asset_batches
@@ -10670,7 +9936,7 @@ ALTER TABLE ONLY public.asset_batches
 
 
 --
--- Name: asset_lifecycle_events asset_lifecycle_events_asset_batch_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: symphony_admin
+-- Name: asset_lifecycle_events asset_lifecycle_events_asset_batch_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.asset_lifecycle_events
@@ -10678,7 +9944,7 @@ ALTER TABLE ONLY public.asset_lifecycle_events
 
 
 --
--- Name: asset_lifecycle_events asset_lifecycle_events_tenant_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: symphony_admin
+-- Name: asset_lifecycle_events asset_lifecycle_events_tenant_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.asset_lifecycle_events
@@ -10686,7 +9952,7 @@ ALTER TABLE ONLY public.asset_lifecycle_events
 
 
 --
--- Name: authority_decisions authority_decisions_regulatory_authority_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: symphony_admin
+-- Name: authority_decisions authority_decisions_regulatory_authority_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.authority_decisions
@@ -10694,7 +9960,7 @@ ALTER TABLE ONLY public.authority_decisions
 
 
 --
--- Name: billing_usage_events billing_usage_events_billable_client_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: symphony_admin
+-- Name: billing_usage_events billing_usage_events_billable_client_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.billing_usage_events
@@ -10702,7 +9968,7 @@ ALTER TABLE ONLY public.billing_usage_events
 
 
 --
--- Name: billing_usage_events billing_usage_events_client_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: symphony_admin
+-- Name: billing_usage_events billing_usage_events_client_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.billing_usage_events
@@ -10710,7 +9976,7 @@ ALTER TABLE ONLY public.billing_usage_events
 
 
 --
--- Name: billing_usage_events billing_usage_events_subject_client_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: symphony_admin
+-- Name: billing_usage_events billing_usage_events_subject_client_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.billing_usage_events
@@ -10718,7 +9984,7 @@ ALTER TABLE ONLY public.billing_usage_events
 
 
 --
--- Name: billing_usage_events billing_usage_events_subject_member_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: symphony_admin
+-- Name: billing_usage_events billing_usage_events_subject_member_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.billing_usage_events
@@ -10726,7 +9992,7 @@ ALTER TABLE ONLY public.billing_usage_events
 
 
 --
--- Name: billing_usage_events billing_usage_events_tenant_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: symphony_admin
+-- Name: billing_usage_events billing_usage_events_tenant_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.billing_usage_events
@@ -10734,7 +10000,7 @@ ALTER TABLE ONLY public.billing_usage_events
 
 
 --
--- Name: canonicalization_archive_snapshots canonicalization_archive_snapshot_canonicalization_version_fkey; Type: FK CONSTRAINT; Schema: public; Owner: symphony_admin
+-- Name: canonicalization_archive_snapshots canonicalization_archive_snapshot_canonicalization_version_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.canonicalization_archive_snapshots
@@ -10742,7 +10008,7 @@ ALTER TABLE ONLY public.canonicalization_archive_snapshots
 
 
 --
--- Name: dispatch_reference_collision_events dispatch_reference_collision_events_adjustment_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: symphony_admin
+-- Name: dispatch_reference_collision_events dispatch_reference_collision_events_adjustment_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.dispatch_reference_collision_events
@@ -10750,7 +10016,7 @@ ALTER TABLE ONLY public.dispatch_reference_collision_events
 
 
 --
--- Name: dispatch_reference_registry dispatch_reference_registry_adjustment_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: symphony_admin
+-- Name: dispatch_reference_registry dispatch_reference_registry_adjustment_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.dispatch_reference_registry
@@ -10758,7 +10024,7 @@ ALTER TABLE ONLY public.dispatch_reference_registry
 
 
 --
--- Name: dispatch_reference_registry dispatch_reference_registry_policy_version_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: symphony_admin
+-- Name: dispatch_reference_registry dispatch_reference_registry_policy_version_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.dispatch_reference_registry
@@ -10766,15 +10032,15 @@ ALTER TABLE ONLY public.dispatch_reference_registry
 
 
 --
--- Name: escrow_accounts escrow_accounts_tenant_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: symphony_admin
+-- Name: escrow_accounts escrow_accounts_tenant_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.escrow_accounts
-    ADD CONSTRAINT escrow_accounts_tenant_id_fkey FOREIGN KEY (tenant_id) REFERENCES public.tenants(tenant_id) ON DELETE CASCADE;
+    ADD CONSTRAINT escrow_accounts_tenant_id_fkey FOREIGN KEY (tenant_id) REFERENCES public.tenants(tenant_id) ON DELETE RESTRICT;
 
 
 --
--- Name: escrow_envelopes escrow_envelopes_escrow_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: symphony_admin
+-- Name: escrow_envelopes escrow_envelopes_escrow_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.escrow_envelopes
@@ -10782,7 +10048,7 @@ ALTER TABLE ONLY public.escrow_envelopes
 
 
 --
--- Name: escrow_envelopes escrow_envelopes_tenant_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: symphony_admin
+-- Name: escrow_envelopes escrow_envelopes_tenant_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.escrow_envelopes
@@ -10790,7 +10056,7 @@ ALTER TABLE ONLY public.escrow_envelopes
 
 
 --
--- Name: escrow_events escrow_events_escrow_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: symphony_admin
+-- Name: escrow_events escrow_events_escrow_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.escrow_events
@@ -10798,7 +10064,7 @@ ALTER TABLE ONLY public.escrow_events
 
 
 --
--- Name: escrow_events escrow_events_tenant_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: symphony_admin
+-- Name: escrow_events escrow_events_tenant_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.escrow_events
@@ -10806,7 +10072,7 @@ ALTER TABLE ONLY public.escrow_events
 
 
 --
--- Name: escrow_reservations escrow_reservations_program_escrow_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: symphony_admin
+-- Name: escrow_reservations escrow_reservations_program_escrow_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.escrow_reservations
@@ -10814,7 +10080,7 @@ ALTER TABLE ONLY public.escrow_reservations
 
 
 --
--- Name: escrow_reservations escrow_reservations_reservation_escrow_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: symphony_admin
+-- Name: escrow_reservations escrow_reservations_reservation_escrow_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.escrow_reservations
@@ -10822,7 +10088,7 @@ ALTER TABLE ONLY public.escrow_reservations
 
 
 --
--- Name: escrow_reservations escrow_reservations_tenant_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: symphony_admin
+-- Name: escrow_reservations escrow_reservations_tenant_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.escrow_reservations
@@ -10830,7 +10096,7 @@ ALTER TABLE ONLY public.escrow_reservations
 
 
 --
--- Name: escrow_summary_projection escrow_summary_projection_escrow_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: symphony_admin
+-- Name: escrow_summary_projection escrow_summary_projection_escrow_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.escrow_summary_projection
@@ -10838,7 +10104,7 @@ ALTER TABLE ONLY public.escrow_summary_projection
 
 
 --
--- Name: escrow_summary_projection escrow_summary_projection_program_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: symphony_admin
+-- Name: escrow_summary_projection escrow_summary_projection_program_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.escrow_summary_projection
@@ -10846,7 +10112,7 @@ ALTER TABLE ONLY public.escrow_summary_projection
 
 
 --
--- Name: escrow_summary_projection escrow_summary_projection_tenant_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: symphony_admin
+-- Name: escrow_summary_projection escrow_summary_projection_tenant_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.escrow_summary_projection
@@ -10854,7 +10120,7 @@ ALTER TABLE ONLY public.escrow_summary_projection
 
 
 --
--- Name: evidence_bundle_projection evidence_bundle_projection_tenant_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: symphony_admin
+-- Name: evidence_bundle_projection evidence_bundle_projection_tenant_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.evidence_bundle_projection
@@ -10862,7 +10128,7 @@ ALTER TABLE ONLY public.evidence_bundle_projection
 
 
 --
--- Name: evidence_edges evidence_edges_source_node_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: symphony_admin
+-- Name: evidence_edges evidence_edges_source_node_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.evidence_edges
@@ -10870,7 +10136,7 @@ ALTER TABLE ONLY public.evidence_edges
 
 
 --
--- Name: evidence_edges evidence_edges_target_node_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: symphony_admin
+-- Name: evidence_edges evidence_edges_target_node_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.evidence_edges
@@ -10878,7 +10144,7 @@ ALTER TABLE ONLY public.evidence_edges
 
 
 --
--- Name: evidence_edges evidence_edges_tenant_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: symphony_admin
+-- Name: evidence_edges evidence_edges_tenant_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.evidence_edges
@@ -10886,7 +10152,7 @@ ALTER TABLE ONLY public.evidence_edges
 
 
 --
--- Name: evidence_nodes evidence_nodes_monitoring_record_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: symphony_admin
+-- Name: evidence_nodes evidence_nodes_monitoring_record_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.evidence_nodes
@@ -10894,7 +10160,7 @@ ALTER TABLE ONLY public.evidence_nodes
 
 
 --
--- Name: evidence_nodes evidence_nodes_project_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: symphony_admin
+-- Name: evidence_nodes evidence_nodes_project_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.evidence_nodes
@@ -10902,7 +10168,7 @@ ALTER TABLE ONLY public.evidence_nodes
 
 
 --
--- Name: evidence_nodes evidence_nodes_tenant_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: symphony_admin
+-- Name: evidence_nodes evidence_nodes_tenant_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.evidence_nodes
@@ -10910,7 +10176,7 @@ ALTER TABLE ONLY public.evidence_nodes
 
 
 --
--- Name: evidence_pack_items evidence_pack_items_pack_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: symphony_admin
+-- Name: evidence_pack_items evidence_pack_items_pack_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.evidence_pack_items
@@ -10918,7 +10184,7 @@ ALTER TABLE ONLY public.evidence_pack_items
 
 
 --
--- Name: execution_records execution_records_interpretation_version_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: symphony
+-- Name: execution_records execution_records_interpretation_version_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.execution_records
@@ -10926,7 +10192,7 @@ ALTER TABLE ONLY public.execution_records
 
 
 --
--- Name: external_proofs external_proofs_attestation_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: symphony_admin
+-- Name: external_proofs external_proofs_attestation_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.external_proofs
@@ -10934,7 +10200,7 @@ ALTER TABLE ONLY public.external_proofs
 
 
 --
--- Name: external_proofs external_proofs_billable_client_fk; Type: FK CONSTRAINT; Schema: public; Owner: symphony_admin
+-- Name: external_proofs external_proofs_billable_client_fk; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.external_proofs
@@ -10942,7 +10208,7 @@ ALTER TABLE ONLY public.external_proofs
 
 
 --
--- Name: external_proofs external_proofs_subject_member_fk; Type: FK CONSTRAINT; Schema: public; Owner: symphony_admin
+-- Name: external_proofs external_proofs_subject_member_fk; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.external_proofs
@@ -10950,7 +10216,7 @@ ALTER TABLE ONLY public.external_proofs
 
 
 --
--- Name: external_proofs external_proofs_tenant_fk; Type: FK CONSTRAINT; Schema: public; Owner: symphony_admin
+-- Name: external_proofs external_proofs_tenant_fk; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.external_proofs
@@ -10958,7 +10224,7 @@ ALTER TABLE ONLY public.external_proofs
 
 
 --
--- Name: gf_verifier_read_tokens gf_verifier_read_tokens_project_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: symphony_admin
+-- Name: gf_verifier_read_tokens gf_verifier_read_tokens_project_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.gf_verifier_read_tokens
@@ -10966,7 +10232,7 @@ ALTER TABLE ONLY public.gf_verifier_read_tokens
 
 
 --
--- Name: gf_verifier_read_tokens gf_verifier_read_tokens_tenant_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: symphony_admin
+-- Name: gf_verifier_read_tokens gf_verifier_read_tokens_tenant_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.gf_verifier_read_tokens
@@ -10974,7 +10240,7 @@ ALTER TABLE ONLY public.gf_verifier_read_tokens
 
 
 --
--- Name: gf_verifier_read_tokens gf_verifier_read_tokens_verifier_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: symphony_admin
+-- Name: gf_verifier_read_tokens gf_verifier_read_tokens_verifier_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.gf_verifier_read_tokens
@@ -10982,7 +10248,7 @@ ALTER TABLE ONLY public.gf_verifier_read_tokens
 
 
 --
--- Name: incident_case_projection incident_case_projection_incident_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: symphony_admin
+-- Name: incident_case_projection incident_case_projection_incident_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.incident_case_projection
@@ -10990,7 +10256,7 @@ ALTER TABLE ONLY public.incident_case_projection
 
 
 --
--- Name: incident_case_projection incident_case_projection_tenant_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: symphony_admin
+-- Name: incident_case_projection incident_case_projection_tenant_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.incident_case_projection
@@ -10998,7 +10264,7 @@ ALTER TABLE ONLY public.incident_case_projection
 
 
 --
--- Name: incident_events incident_events_incident_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: symphony_admin
+-- Name: incident_events incident_events_incident_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.incident_events
@@ -11006,7 +10272,7 @@ ALTER TABLE ONLY public.incident_events
 
 
 --
--- Name: ingress_attestations ingress_attestations_client_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: symphony_admin
+-- Name: ingress_attestations ingress_attestations_client_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.ingress_attestations
@@ -11014,7 +10280,7 @@ ALTER TABLE ONLY public.ingress_attestations
 
 
 --
--- Name: ingress_attestations ingress_attestations_member_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: symphony_admin
+-- Name: ingress_attestations ingress_attestations_member_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.ingress_attestations
@@ -11022,7 +10288,7 @@ ALTER TABLE ONLY public.ingress_attestations
 
 
 --
--- Name: instruction_settlement_finality instruction_settlement_finality_reversal_fk; Type: FK CONSTRAINT; Schema: public; Owner: symphony_admin
+-- Name: instruction_settlement_finality instruction_settlement_finality_reversal_fk; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.instruction_settlement_finality
@@ -11030,7 +10296,7 @@ ALTER TABLE ONLY public.instruction_settlement_finality
 
 
 --
--- Name: instruction_status_projection instruction_status_projection_attestation_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: symphony_admin
+-- Name: instruction_status_projection instruction_status_projection_attestation_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.instruction_status_projection
@@ -11038,7 +10304,7 @@ ALTER TABLE ONLY public.instruction_status_projection
 
 
 --
--- Name: instruction_status_projection instruction_status_projection_tenant_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: symphony_admin
+-- Name: instruction_status_projection instruction_status_projection_tenant_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.instruction_status_projection
@@ -11046,7 +10312,7 @@ ALTER TABLE ONLY public.instruction_status_projection
 
 
 --
--- Name: internal_ledger_journals internal_ledger_journals_tenant_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: symphony_admin
+-- Name: internal_ledger_journals internal_ledger_journals_tenant_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.internal_ledger_journals
@@ -11054,7 +10320,7 @@ ALTER TABLE ONLY public.internal_ledger_journals
 
 
 --
--- Name: internal_ledger_postings internal_ledger_postings_journal_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: symphony_admin
+-- Name: internal_ledger_postings internal_ledger_postings_journal_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.internal_ledger_postings
@@ -11062,7 +10328,7 @@ ALTER TABLE ONLY public.internal_ledger_postings
 
 
 --
--- Name: internal_ledger_postings internal_ledger_postings_tenant_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: symphony_admin
+-- Name: internal_ledger_postings internal_ledger_postings_tenant_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.internal_ledger_postings
@@ -11070,7 +10336,7 @@ ALTER TABLE ONLY public.internal_ledger_postings
 
 
 --
--- Name: kyc_verification_records kyc_verification_records_member_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: symphony_admin
+-- Name: kyc_verification_records kyc_verification_records_member_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.kyc_verification_records
@@ -11078,7 +10344,7 @@ ALTER TABLE ONLY public.kyc_verification_records
 
 
 --
--- Name: kyc_verification_records kyc_verification_records_provider_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: symphony_admin
+-- Name: kyc_verification_records kyc_verification_records_provider_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.kyc_verification_records
@@ -11086,7 +10352,7 @@ ALTER TABLE ONLY public.kyc_verification_records
 
 
 --
--- Name: levy_calculation_records levy_calculation_records_instruction_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: symphony_admin
+-- Name: levy_calculation_records levy_calculation_records_instruction_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.levy_calculation_records
@@ -11094,7 +10360,7 @@ ALTER TABLE ONLY public.levy_calculation_records
 
 
 --
--- Name: levy_calculation_records levy_calculation_records_levy_rate_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: symphony_admin
+-- Name: levy_calculation_records levy_calculation_records_levy_rate_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.levy_calculation_records
@@ -11102,7 +10368,7 @@ ALTER TABLE ONLY public.levy_calculation_records
 
 
 --
--- Name: lifecycle_checkpoint_rules lifecycle_checkpoint_rules_regulatory_checkpoint_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: symphony_admin
+-- Name: lifecycle_checkpoint_rules lifecycle_checkpoint_rules_regulatory_checkpoint_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.lifecycle_checkpoint_rules
@@ -11110,7 +10376,7 @@ ALTER TABLE ONLY public.lifecycle_checkpoint_rules
 
 
 --
--- Name: member_device_events member_device_events_ingress_fk; Type: FK CONSTRAINT; Schema: public; Owner: symphony_admin
+-- Name: member_device_events member_device_events_ingress_fk; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.member_device_events
@@ -11118,7 +10384,7 @@ ALTER TABLE ONLY public.member_device_events
 
 
 --
--- Name: member_device_events member_device_events_member_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: symphony_admin
+-- Name: member_device_events member_device_events_member_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.member_device_events
@@ -11126,7 +10392,7 @@ ALTER TABLE ONLY public.member_device_events
 
 
 --
--- Name: member_devices member_devices_member_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: symphony_admin
+-- Name: member_devices member_devices_member_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.member_devices
@@ -11134,7 +10400,7 @@ ALTER TABLE ONLY public.member_devices
 
 
 --
--- Name: member_devices member_devices_tenant_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: symphony_admin
+-- Name: member_devices member_devices_tenant_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.member_devices
@@ -11142,7 +10408,7 @@ ALTER TABLE ONLY public.member_devices
 
 
 --
--- Name: members members_entity_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: symphony_admin
+-- Name: members members_entity_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.members
@@ -11150,7 +10416,7 @@ ALTER TABLE ONLY public.members
 
 
 --
--- Name: members members_person_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: symphony_admin
+-- Name: members members_person_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.members
@@ -11158,7 +10424,7 @@ ALTER TABLE ONLY public.members
 
 
 --
--- Name: members members_tenant_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: symphony_admin
+-- Name: members members_tenant_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.members
@@ -11166,7 +10432,7 @@ ALTER TABLE ONLY public.members
 
 
 --
--- Name: members members_tenant_member_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: symphony_admin
+-- Name: members members_tenant_member_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.members
@@ -11174,7 +10440,7 @@ ALTER TABLE ONLY public.members
 
 
 --
--- Name: methodology_versions methodology_versions_adapter_registration_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: symphony_admin
+-- Name: methodology_versions methodology_versions_adapter_registration_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.methodology_versions
@@ -11182,7 +10448,7 @@ ALTER TABLE ONLY public.methodology_versions
 
 
 --
--- Name: methodology_versions methodology_versions_tenant_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: symphony_admin
+-- Name: methodology_versions methodology_versions_tenant_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.methodology_versions
@@ -11190,7 +10456,7 @@ ALTER TABLE ONLY public.methodology_versions
 
 
 --
--- Name: monitoring_records monitoring_records_project_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: symphony_admin
+-- Name: monitoring_records monitoring_records_project_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.monitoring_records
@@ -11198,7 +10464,7 @@ ALTER TABLE ONLY public.monitoring_records
 
 
 --
--- Name: monitoring_records monitoring_records_tenant_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: symphony_admin
+-- Name: monitoring_records monitoring_records_tenant_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.monitoring_records
@@ -11206,7 +10472,7 @@ ALTER TABLE ONLY public.monitoring_records
 
 
 --
--- Name: payment_outbox_attempts payment_outbox_attempts_member_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: symphony_admin
+-- Name: payment_outbox_attempts payment_outbox_attempts_member_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.payment_outbox_attempts
@@ -11214,7 +10480,7 @@ ALTER TABLE ONLY public.payment_outbox_attempts
 
 
 --
--- Name: payment_outbox_attempts payment_outbox_attempts_tenant_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: symphony_admin
+-- Name: payment_outbox_attempts payment_outbox_attempts_tenant_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.payment_outbox_attempts
@@ -11222,7 +10488,7 @@ ALTER TABLE ONLY public.payment_outbox_attempts
 
 
 --
--- Name: payment_outbox_pending payment_outbox_pending_tenant_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: symphony_admin
+-- Name: payment_outbox_pending payment_outbox_pending_tenant_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.payment_outbox_pending
@@ -11230,7 +10496,7 @@ ALTER TABLE ONLY public.payment_outbox_pending
 
 
 --
--- Name: penalty_defense_packs penalty_defense_packs_submission_attempt_ref_fkey; Type: FK CONSTRAINT; Schema: public; Owner: symphony_admin
+-- Name: penalty_defense_packs penalty_defense_packs_submission_attempt_ref_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.penalty_defense_packs
@@ -11238,7 +10504,7 @@ ALTER TABLE ONLY public.penalty_defense_packs
 
 
 --
--- Name: persons persons_tenant_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: symphony_admin
+-- Name: persons persons_tenant_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.persons
@@ -11246,7 +10512,7 @@ ALTER TABLE ONLY public.persons
 
 
 --
--- Name: pii_purge_events pii_purge_events_purge_request_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: symphony_admin
+-- Name: pii_purge_events pii_purge_events_purge_request_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.pii_purge_events
@@ -11254,7 +10520,7 @@ ALTER TABLE ONLY public.pii_purge_events
 
 
 --
--- Name: pii_vault_records pii_vault_records_purge_request_fk; Type: FK CONSTRAINT; Schema: public; Owner: symphony_admin
+-- Name: pii_vault_records pii_vault_records_purge_request_fk; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.pii_vault_records
@@ -11262,7 +10528,7 @@ ALTER TABLE ONLY public.pii_vault_records
 
 
 --
--- Name: program_member_summary_projection program_member_summary_projection_program_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: symphony_admin
+-- Name: program_member_summary_projection program_member_summary_projection_program_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.program_member_summary_projection
@@ -11270,7 +10536,7 @@ ALTER TABLE ONLY public.program_member_summary_projection
 
 
 --
--- Name: program_member_summary_projection program_member_summary_projection_tenant_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: symphony_admin
+-- Name: program_member_summary_projection program_member_summary_projection_tenant_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.program_member_summary_projection
@@ -11278,7 +10544,7 @@ ALTER TABLE ONLY public.program_member_summary_projection
 
 
 --
--- Name: program_migration_events program_migration_events_formula_version_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: symphony_admin
+-- Name: program_migration_events program_migration_events_formula_version_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.program_migration_events
@@ -11286,7 +10552,7 @@ ALTER TABLE ONLY public.program_migration_events
 
 
 --
--- Name: program_migration_events program_migration_events_from_program_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: symphony_admin
+-- Name: program_migration_events program_migration_events_from_program_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.program_migration_events
@@ -11294,7 +10560,7 @@ ALTER TABLE ONLY public.program_migration_events
 
 
 --
--- Name: program_migration_events program_migration_events_migrated_member_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: symphony_admin
+-- Name: program_migration_events program_migration_events_migrated_member_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.program_migration_events
@@ -11302,7 +10568,7 @@ ALTER TABLE ONLY public.program_migration_events
 
 
 --
--- Name: program_migration_events program_migration_events_new_member_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: symphony_admin
+-- Name: program_migration_events program_migration_events_new_member_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.program_migration_events
@@ -11310,7 +10576,7 @@ ALTER TABLE ONLY public.program_migration_events
 
 
 --
--- Name: program_migration_events program_migration_events_person_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: symphony_admin
+-- Name: program_migration_events program_migration_events_person_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.program_migration_events
@@ -11318,7 +10584,7 @@ ALTER TABLE ONLY public.program_migration_events
 
 
 --
--- Name: program_migration_events program_migration_events_tenant_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: symphony_admin
+-- Name: program_migration_events program_migration_events_tenant_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.program_migration_events
@@ -11326,7 +10592,7 @@ ALTER TABLE ONLY public.program_migration_events
 
 
 --
--- Name: program_migration_events program_migration_events_to_program_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: symphony_admin
+-- Name: program_migration_events program_migration_events_to_program_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.program_migration_events
@@ -11334,7 +10600,7 @@ ALTER TABLE ONLY public.program_migration_events
 
 
 --
--- Name: program_supplier_allowlist program_supplier_allowlist_program_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: symphony_admin
+-- Name: program_supplier_allowlist program_supplier_allowlist_program_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.program_supplier_allowlist
@@ -11342,7 +10608,7 @@ ALTER TABLE ONLY public.program_supplier_allowlist
 
 
 --
--- Name: program_supplier_allowlist program_supplier_allowlist_tenant_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: symphony_admin
+-- Name: program_supplier_allowlist program_supplier_allowlist_tenant_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.program_supplier_allowlist
@@ -11350,7 +10616,7 @@ ALTER TABLE ONLY public.program_supplier_allowlist
 
 
 --
--- Name: program_supplier_allowlist program_supplier_allowlist_tenant_id_supplier_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: symphony_admin
+-- Name: program_supplier_allowlist program_supplier_allowlist_tenant_id_supplier_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.program_supplier_allowlist
@@ -11358,7 +10624,7 @@ ALTER TABLE ONLY public.program_supplier_allowlist
 
 
 --
--- Name: programme_policy_binding programme_policy_binding_programme_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: symphony_admin
+-- Name: programme_policy_binding programme_policy_binding_programme_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.programme_policy_binding
@@ -11366,7 +10632,7 @@ ALTER TABLE ONLY public.programme_policy_binding
 
 
 --
--- Name: programme_policy_binding programme_policy_binding_tenant_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: symphony_admin
+-- Name: programme_policy_binding programme_policy_binding_tenant_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.programme_policy_binding
@@ -11374,7 +10640,7 @@ ALTER TABLE ONLY public.programme_policy_binding
 
 
 --
--- Name: programme_registry programme_registry_tenant_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: symphony_admin
+-- Name: programme_registry programme_registry_tenant_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.programme_registry
@@ -11382,23 +10648,23 @@ ALTER TABLE ONLY public.programme_registry
 
 
 --
--- Name: programs programs_program_escrow_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: symphony_admin
+-- Name: programs programs_program_escrow_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.programs
-    ADD CONSTRAINT programs_program_escrow_id_fkey FOREIGN KEY (program_escrow_id) REFERENCES public.escrow_accounts(escrow_id) ON DELETE CASCADE;
+    ADD CONSTRAINT programs_program_escrow_id_fkey FOREIGN KEY (program_escrow_id) REFERENCES public.escrow_accounts(escrow_id) ON DELETE RESTRICT;
 
 
 --
--- Name: programs programs_tenant_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: symphony_admin
+-- Name: programs programs_tenant_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.programs
-    ADD CONSTRAINT programs_tenant_id_fkey FOREIGN KEY (tenant_id) REFERENCES public.tenants(tenant_id) ON DELETE CASCADE;
+    ADD CONSTRAINT programs_tenant_id_fkey FOREIGN KEY (tenant_id) REFERENCES public.tenants(tenant_id) ON DELETE RESTRICT;
 
 
 --
--- Name: projects projects_tenant_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: symphony_admin
+-- Name: projects projects_tenant_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.projects
@@ -11406,7 +10672,7 @@ ALTER TABLE ONLY public.projects
 
 
 --
--- Name: proof_pack_batch_leaves proof_pack_batch_leaves_batch_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: symphony_admin
+-- Name: proof_pack_batch_leaves proof_pack_batch_leaves_batch_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.proof_pack_batch_leaves
@@ -11414,7 +10680,7 @@ ALTER TABLE ONLY public.proof_pack_batch_leaves
 
 
 --
--- Name: proof_pack_batches proof_pack_batches_canonicalization_version_fkey; Type: FK CONSTRAINT; Schema: public; Owner: symphony_admin
+-- Name: proof_pack_batches proof_pack_batches_canonicalization_version_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.proof_pack_batches
@@ -11422,7 +10688,7 @@ ALTER TABLE ONLY public.proof_pack_batches
 
 
 --
--- Name: rail_dispatch_truth_anchor rail_truth_anchor_attempt_fk; Type: FK CONSTRAINT; Schema: public; Owner: symphony_admin
+-- Name: rail_dispatch_truth_anchor rail_truth_anchor_attempt_fk; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.rail_dispatch_truth_anchor
@@ -11430,7 +10696,7 @@ ALTER TABLE ONLY public.rail_dispatch_truth_anchor
 
 
 --
--- Name: regulatory_checkpoints regulatory_checkpoints_regulatory_authority_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: symphony_admin
+-- Name: regulatory_checkpoints regulatory_checkpoints_regulatory_authority_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.regulatory_checkpoints
@@ -11438,7 +10704,7 @@ ALTER TABLE ONLY public.regulatory_checkpoints
 
 
 --
--- Name: regulatory_incidents regulatory_incidents_tenant_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: symphony_admin
+-- Name: regulatory_incidents regulatory_incidents_tenant_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.regulatory_incidents
@@ -11446,7 +10712,7 @@ ALTER TABLE ONLY public.regulatory_incidents
 
 
 --
--- Name: retirement_events retirement_events_asset_batch_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: symphony_admin
+-- Name: retirement_events retirement_events_asset_batch_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.retirement_events
@@ -11454,7 +10720,7 @@ ALTER TABLE ONLY public.retirement_events
 
 
 --
--- Name: retirement_events retirement_events_tenant_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: symphony_admin
+-- Name: retirement_events retirement_events_tenant_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.retirement_events
@@ -11462,7 +10728,7 @@ ALTER TABLE ONLY public.retirement_events
 
 
 --
--- Name: sim_swap_alerts sim_swap_alerts_formula_version_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: symphony_admin
+-- Name: sim_swap_alerts sim_swap_alerts_formula_version_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.sim_swap_alerts
@@ -11470,7 +10736,7 @@ ALTER TABLE ONLY public.sim_swap_alerts
 
 
 --
--- Name: sim_swap_alerts sim_swap_alerts_member_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: symphony_admin
+-- Name: sim_swap_alerts sim_swap_alerts_member_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.sim_swap_alerts
@@ -11478,7 +10744,7 @@ ALTER TABLE ONLY public.sim_swap_alerts
 
 
 --
--- Name: sim_swap_alerts sim_swap_alerts_source_event_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: symphony_admin
+-- Name: sim_swap_alerts sim_swap_alerts_source_event_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.sim_swap_alerts
@@ -11486,7 +10752,7 @@ ALTER TABLE ONLY public.sim_swap_alerts
 
 
 --
--- Name: sim_swap_alerts sim_swap_alerts_tenant_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: symphony_admin
+-- Name: sim_swap_alerts sim_swap_alerts_tenant_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.sim_swap_alerts
@@ -11494,7 +10760,7 @@ ALTER TABLE ONLY public.sim_swap_alerts
 
 
 --
--- Name: supervisor_approval_queue supervisor_approval_queue_program_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: symphony_admin
+-- Name: supervisor_approval_queue supervisor_approval_queue_program_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.supervisor_approval_queue
@@ -11502,7 +10768,7 @@ ALTER TABLE ONLY public.supervisor_approval_queue
 
 
 --
--- Name: supervisor_audit_tokens supervisor_audit_tokens_program_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: symphony_admin
+-- Name: supervisor_audit_tokens supervisor_audit_tokens_program_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.supervisor_audit_tokens
@@ -11510,7 +10776,7 @@ ALTER TABLE ONLY public.supervisor_audit_tokens
 
 
 --
--- Name: supervisor_interrupt_audit_events supervisor_interrupt_audit_events_program_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: symphony_admin
+-- Name: supervisor_interrupt_audit_events supervisor_interrupt_audit_events_program_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.supervisor_interrupt_audit_events
@@ -11518,7 +10784,7 @@ ALTER TABLE ONLY public.supervisor_interrupt_audit_events
 
 
 --
--- Name: supplier_registry supplier_registry_tenant_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: symphony_admin
+-- Name: supplier_registry supplier_registry_tenant_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.supplier_registry
@@ -11526,7 +10792,7 @@ ALTER TABLE ONLY public.supplier_registry
 
 
 --
--- Name: tenant_clients tenant_clients_tenant_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: symphony_admin
+-- Name: tenant_clients tenant_clients_tenant_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.tenant_clients
@@ -11534,7 +10800,7 @@ ALTER TABLE ONLY public.tenant_clients
 
 
 --
--- Name: tenant_members tenant_members_tenant_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: symphony_admin
+-- Name: tenant_members tenant_members_tenant_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.tenant_members
@@ -11542,7 +10808,7 @@ ALTER TABLE ONLY public.tenant_members
 
 
 --
--- Name: tenants tenants_billable_client_fk; Type: FK CONSTRAINT; Schema: public; Owner: symphony_admin
+-- Name: tenants tenants_billable_client_fk; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.tenants
@@ -11550,7 +10816,7 @@ ALTER TABLE ONLY public.tenants
 
 
 --
--- Name: tenants tenants_parent_tenant_fk; Type: FK CONSTRAINT; Schema: public; Owner: symphony_admin
+-- Name: tenants tenants_parent_tenant_fk; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.tenants
@@ -11558,7 +10824,7 @@ ALTER TABLE ONLY public.tenants
 
 
 --
--- Name: verifier_project_assignments verifier_project_assignments_project_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: symphony_admin
+-- Name: verifier_project_assignments verifier_project_assignments_project_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.verifier_project_assignments
@@ -11566,7 +10832,7 @@ ALTER TABLE ONLY public.verifier_project_assignments
 
 
 --
--- Name: verifier_project_assignments verifier_project_assignments_verifier_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: symphony_admin
+-- Name: verifier_project_assignments verifier_project_assignments_verifier_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.verifier_project_assignments
@@ -11574,7 +10840,7 @@ ALTER TABLE ONLY public.verifier_project_assignments
 
 
 --
--- Name: verifier_registry verifier_registry_tenant_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: symphony_admin
+-- Name: verifier_registry verifier_registry_tenant_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.verifier_registry
@@ -11582,274 +10848,274 @@ ALTER TABLE ONLY public.verifier_registry
 
 
 --
--- Name: adapter_registrations; Type: ROW SECURITY; Schema: public; Owner: symphony_admin
+-- Name: adapter_registrations; Type: ROW SECURITY; Schema: public; Owner: -
 --
 
 ALTER TABLE public.adapter_registrations ENABLE ROW LEVEL SECURITY;
 
 --
--- Name: asset_batches; Type: ROW SECURITY; Schema: public; Owner: symphony_admin
+-- Name: asset_batches; Type: ROW SECURITY; Schema: public; Owner: -
 --
 
 ALTER TABLE public.asset_batches ENABLE ROW LEVEL SECURITY;
 
 --
--- Name: asset_lifecycle_events; Type: ROW SECURITY; Schema: public; Owner: symphony_admin
+-- Name: asset_lifecycle_events; Type: ROW SECURITY; Schema: public; Owner: -
 --
 
 ALTER TABLE public.asset_lifecycle_events ENABLE ROW LEVEL SECURITY;
 
 --
--- Name: authority_decisions; Type: ROW SECURITY; Schema: public; Owner: symphony_admin
+-- Name: authority_decisions; Type: ROW SECURITY; Schema: public; Owner: -
 --
 
 ALTER TABLE public.authority_decisions ENABLE ROW LEVEL SECURITY;
 
 --
--- Name: authority_decisions authority_decisions_jurisdiction_access; Type: POLICY; Schema: public; Owner: symphony_admin
+-- Name: authority_decisions authority_decisions_jurisdiction_access; Type: POLICY; Schema: public; Owner: -
 --
 
 CREATE POLICY authority_decisions_jurisdiction_access ON public.authority_decisions USING ((jurisdiction_code = public.current_jurisdiction_code_or_null())) WITH CHECK ((jurisdiction_code = public.current_jurisdiction_code_or_null()));
 
 
 --
--- Name: billing_usage_events; Type: ROW SECURITY; Schema: public; Owner: symphony_admin
+-- Name: billing_usage_events; Type: ROW SECURITY; Schema: public; Owner: -
 --
 
 ALTER TABLE public.billing_usage_events ENABLE ROW LEVEL SECURITY;
 
 --
--- Name: escrow_accounts; Type: ROW SECURITY; Schema: public; Owner: symphony_admin
+-- Name: escrow_accounts; Type: ROW SECURITY; Schema: public; Owner: -
 --
 
 ALTER TABLE public.escrow_accounts ENABLE ROW LEVEL SECURITY;
 
 --
--- Name: escrow_envelopes; Type: ROW SECURITY; Schema: public; Owner: symphony_admin
+-- Name: escrow_envelopes; Type: ROW SECURITY; Schema: public; Owner: -
 --
 
 ALTER TABLE public.escrow_envelopes ENABLE ROW LEVEL SECURITY;
 
 --
--- Name: escrow_events; Type: ROW SECURITY; Schema: public; Owner: symphony_admin
+-- Name: escrow_events; Type: ROW SECURITY; Schema: public; Owner: -
 --
 
 ALTER TABLE public.escrow_events ENABLE ROW LEVEL SECURITY;
 
 --
--- Name: escrow_reservations; Type: ROW SECURITY; Schema: public; Owner: symphony_admin
+-- Name: escrow_reservations; Type: ROW SECURITY; Schema: public; Owner: -
 --
 
 ALTER TABLE public.escrow_reservations ENABLE ROW LEVEL SECURITY;
 
 --
--- Name: evidence_edges; Type: ROW SECURITY; Schema: public; Owner: symphony_admin
+-- Name: evidence_edges; Type: ROW SECURITY; Schema: public; Owner: -
 --
 
 ALTER TABLE public.evidence_edges ENABLE ROW LEVEL SECURITY;
 
 --
--- Name: evidence_nodes; Type: ROW SECURITY; Schema: public; Owner: symphony_admin
+-- Name: evidence_nodes; Type: ROW SECURITY; Schema: public; Owner: -
 --
 
 ALTER TABLE public.evidence_nodes ENABLE ROW LEVEL SECURITY;
 
 --
--- Name: external_proofs; Type: ROW SECURITY; Schema: public; Owner: symphony_admin
+-- Name: external_proofs; Type: ROW SECURITY; Schema: public; Owner: -
 --
 
 ALTER TABLE public.external_proofs ENABLE ROW LEVEL SECURITY;
 
 --
--- Name: gf_verifier_read_tokens; Type: ROW SECURITY; Schema: public; Owner: symphony_admin
+-- Name: gf_verifier_read_tokens; Type: ROW SECURITY; Schema: public; Owner: -
 --
 
 ALTER TABLE public.gf_verifier_read_tokens ENABLE ROW LEVEL SECURITY;
 
 --
--- Name: gf_verifier_read_tokens gf_verifier_read_tokens_tenant_isolation; Type: POLICY; Schema: public; Owner: symphony_admin
+-- Name: gf_verifier_read_tokens gf_verifier_read_tokens_tenant_isolation; Type: POLICY; Schema: public; Owner: -
 --
 
 CREATE POLICY gf_verifier_read_tokens_tenant_isolation ON public.gf_verifier_read_tokens USING ((tenant_id = public.current_tenant_id_or_null())) WITH CHECK ((tenant_id = public.current_tenant_id_or_null()));
 
 
 --
--- Name: ingress_attestations; Type: ROW SECURITY; Schema: public; Owner: symphony_admin
+-- Name: ingress_attestations; Type: ROW SECURITY; Schema: public; Owner: -
 --
 
 ALTER TABLE public.ingress_attestations ENABLE ROW LEVEL SECURITY;
 
 --
--- Name: interpretation_packs; Type: ROW SECURITY; Schema: public; Owner: symphony_admin
+-- Name: interpretation_packs; Type: ROW SECURITY; Schema: public; Owner: -
 --
 
 ALTER TABLE public.interpretation_packs ENABLE ROW LEVEL SECURITY;
 
 --
--- Name: jurisdiction_profiles; Type: ROW SECURITY; Schema: public; Owner: symphony_admin
+-- Name: jurisdiction_profiles; Type: ROW SECURITY; Schema: public; Owner: -
 --
 
 ALTER TABLE public.jurisdiction_profiles ENABLE ROW LEVEL SECURITY;
 
 --
--- Name: lifecycle_checkpoint_rules; Type: ROW SECURITY; Schema: public; Owner: symphony_admin
+-- Name: lifecycle_checkpoint_rules; Type: ROW SECURITY; Schema: public; Owner: -
 --
 
 ALTER TABLE public.lifecycle_checkpoint_rules ENABLE ROW LEVEL SECURITY;
 
 --
--- Name: member_device_events; Type: ROW SECURITY; Schema: public; Owner: symphony_admin
+-- Name: member_device_events; Type: ROW SECURITY; Schema: public; Owner: -
 --
 
 ALTER TABLE public.member_device_events ENABLE ROW LEVEL SECURITY;
 
 --
--- Name: member_devices; Type: ROW SECURITY; Schema: public; Owner: symphony_admin
+-- Name: member_devices; Type: ROW SECURITY; Schema: public; Owner: -
 --
 
 ALTER TABLE public.member_devices ENABLE ROW LEVEL SECURITY;
 
 --
--- Name: members; Type: ROW SECURITY; Schema: public; Owner: symphony_admin
+-- Name: members; Type: ROW SECURITY; Schema: public; Owner: -
 --
 
 ALTER TABLE public.members ENABLE ROW LEVEL SECURITY;
 
 --
--- Name: methodology_versions; Type: ROW SECURITY; Schema: public; Owner: symphony_admin
+-- Name: methodology_versions; Type: ROW SECURITY; Schema: public; Owner: -
 --
 
 ALTER TABLE public.methodology_versions ENABLE ROW LEVEL SECURITY;
 
 --
--- Name: monitoring_records; Type: ROW SECURITY; Schema: public; Owner: symphony_admin
+-- Name: monitoring_records; Type: ROW SECURITY; Schema: public; Owner: -
 --
 
 ALTER TABLE public.monitoring_records ENABLE ROW LEVEL SECURITY;
 
 --
--- Name: payment_outbox_attempts; Type: ROW SECURITY; Schema: public; Owner: symphony_admin
+-- Name: payment_outbox_attempts; Type: ROW SECURITY; Schema: public; Owner: -
 --
 
 ALTER TABLE public.payment_outbox_attempts ENABLE ROW LEVEL SECURITY;
 
 --
--- Name: payment_outbox_pending; Type: ROW SECURITY; Schema: public; Owner: symphony_admin
+-- Name: payment_outbox_pending; Type: ROW SECURITY; Schema: public; Owner: -
 --
 
 ALTER TABLE public.payment_outbox_pending ENABLE ROW LEVEL SECURITY;
 
 --
--- Name: persons; Type: ROW SECURITY; Schema: public; Owner: symphony_admin
+-- Name: persons; Type: ROW SECURITY; Schema: public; Owner: -
 --
 
 ALTER TABLE public.persons ENABLE ROW LEVEL SECURITY;
 
 --
--- Name: program_migration_events; Type: ROW SECURITY; Schema: public; Owner: symphony_admin
+-- Name: program_migration_events; Type: ROW SECURITY; Schema: public; Owner: -
 --
 
 ALTER TABLE public.program_migration_events ENABLE ROW LEVEL SECURITY;
 
 --
--- Name: program_supplier_allowlist; Type: ROW SECURITY; Schema: public; Owner: symphony_admin
+-- Name: program_supplier_allowlist; Type: ROW SECURITY; Schema: public; Owner: -
 --
 
 ALTER TABLE public.program_supplier_allowlist ENABLE ROW LEVEL SECURITY;
 
 --
--- Name: programme_policy_binding; Type: ROW SECURITY; Schema: public; Owner: symphony_admin
+-- Name: programme_policy_binding; Type: ROW SECURITY; Schema: public; Owner: -
 --
 
 ALTER TABLE public.programme_policy_binding ENABLE ROW LEVEL SECURITY;
 
 --
--- Name: programme_registry; Type: ROW SECURITY; Schema: public; Owner: symphony_admin
+-- Name: programme_registry; Type: ROW SECURITY; Schema: public; Owner: -
 --
 
 ALTER TABLE public.programme_registry ENABLE ROW LEVEL SECURITY;
 
 --
--- Name: programs; Type: ROW SECURITY; Schema: public; Owner: symphony_admin
+-- Name: programs; Type: ROW SECURITY; Schema: public; Owner: -
 --
 
 ALTER TABLE public.programs ENABLE ROW LEVEL SECURITY;
 
 --
--- Name: projects; Type: ROW SECURITY; Schema: public; Owner: symphony_admin
+-- Name: projects; Type: ROW SECURITY; Schema: public; Owner: -
 --
 
 ALTER TABLE public.projects ENABLE ROW LEVEL SECURITY;
 
 --
--- Name: regulatory_authorities; Type: ROW SECURITY; Schema: public; Owner: symphony_admin
+-- Name: regulatory_authorities; Type: ROW SECURITY; Schema: public; Owner: -
 --
 
 ALTER TABLE public.regulatory_authorities ENABLE ROW LEVEL SECURITY;
 
 --
--- Name: regulatory_checkpoints; Type: ROW SECURITY; Schema: public; Owner: symphony_admin
+-- Name: regulatory_checkpoints; Type: ROW SECURITY; Schema: public; Owner: -
 --
 
 ALTER TABLE public.regulatory_checkpoints ENABLE ROW LEVEL SECURITY;
 
 --
--- Name: retirement_events; Type: ROW SECURITY; Schema: public; Owner: symphony_admin
+-- Name: retirement_events; Type: ROW SECURITY; Schema: public; Owner: -
 --
 
 ALTER TABLE public.retirement_events ENABLE ROW LEVEL SECURITY;
 
 --
--- Name: interpretation_packs rls_jurisdiction_isolation_interpretation_packs; Type: POLICY; Schema: public; Owner: symphony_admin
+-- Name: interpretation_packs rls_jurisdiction_isolation_interpretation_packs; Type: POLICY; Schema: public; Owner: -
 --
 
 CREATE POLICY rls_jurisdiction_isolation_interpretation_packs ON public.interpretation_packs USING ((jurisdiction_code = public.current_jurisdiction_code_or_null())) WITH CHECK ((jurisdiction_code = public.current_jurisdiction_code_or_null()));
 
 
 --
--- Name: jurisdiction_profiles rls_jurisdiction_isolation_jurisdiction_profiles; Type: POLICY; Schema: public; Owner: symphony_admin
+-- Name: jurisdiction_profiles rls_jurisdiction_isolation_jurisdiction_profiles; Type: POLICY; Schema: public; Owner: -
 --
 
 CREATE POLICY rls_jurisdiction_isolation_jurisdiction_profiles ON public.jurisdiction_profiles USING ((jurisdiction_code = public.current_jurisdiction_code_or_null())) WITH CHECK ((jurisdiction_code = public.current_jurisdiction_code_or_null()));
 
 
 --
--- Name: lifecycle_checkpoint_rules rls_jurisdiction_isolation_lifecycle_checkpoint_rules; Type: POLICY; Schema: public; Owner: symphony_admin
+-- Name: lifecycle_checkpoint_rules rls_jurisdiction_isolation_lifecycle_checkpoint_rules; Type: POLICY; Schema: public; Owner: -
 --
 
 CREATE POLICY rls_jurisdiction_isolation_lifecycle_checkpoint_rules ON public.lifecycle_checkpoint_rules USING ((jurisdiction_code = public.current_jurisdiction_code_or_null())) WITH CHECK ((jurisdiction_code = public.current_jurisdiction_code_or_null()));
 
 
 --
--- Name: regulatory_authorities rls_jurisdiction_isolation_regulatory_authorities; Type: POLICY; Schema: public; Owner: symphony_admin
+-- Name: regulatory_authorities rls_jurisdiction_isolation_regulatory_authorities; Type: POLICY; Schema: public; Owner: -
 --
 
 CREATE POLICY rls_jurisdiction_isolation_regulatory_authorities ON public.regulatory_authorities USING ((jurisdiction_code = public.current_jurisdiction_code_or_null())) WITH CHECK ((jurisdiction_code = public.current_jurisdiction_code_or_null()));
 
 
 --
--- Name: regulatory_checkpoints rls_jurisdiction_isolation_regulatory_checkpoints; Type: POLICY; Schema: public; Owner: symphony_admin
+-- Name: regulatory_checkpoints rls_jurisdiction_isolation_regulatory_checkpoints; Type: POLICY; Schema: public; Owner: -
 --
 
 CREATE POLICY rls_jurisdiction_isolation_regulatory_checkpoints ON public.regulatory_checkpoints USING ((jurisdiction_code = public.current_jurisdiction_code_or_null())) WITH CHECK ((jurisdiction_code = public.current_jurisdiction_code_or_null()));
 
 
 --
--- Name: adapter_registrations rls_tenant_isolation_adapter_registrations; Type: POLICY; Schema: public; Owner: symphony_admin
+-- Name: adapter_registrations rls_tenant_isolation_adapter_registrations; Type: POLICY; Schema: public; Owner: -
 --
 
 CREATE POLICY rls_tenant_isolation_adapter_registrations ON public.adapter_registrations USING ((tenant_id = public.current_tenant_id_or_null())) WITH CHECK ((tenant_id = public.current_tenant_id_or_null()));
 
 
 --
--- Name: asset_batches rls_tenant_isolation_asset_batches; Type: POLICY; Schema: public; Owner: symphony_admin
+-- Name: asset_batches rls_tenant_isolation_asset_batches; Type: POLICY; Schema: public; Owner: -
 --
 
 CREATE POLICY rls_tenant_isolation_asset_batches ON public.asset_batches USING ((tenant_id = public.current_tenant_id_or_null())) WITH CHECK ((tenant_id = public.current_tenant_id_or_null()));
 
 
 --
--- Name: asset_lifecycle_events rls_tenant_isolation_asset_lifecycle_events; Type: POLICY; Schema: public; Owner: symphony_admin
+-- Name: asset_lifecycle_events rls_tenant_isolation_asset_lifecycle_events; Type: POLICY; Schema: public; Owner: -
 --
 
 CREATE POLICY rls_tenant_isolation_asset_lifecycle_events ON public.asset_lifecycle_events USING ((EXISTS ( SELECT 1
@@ -11860,42 +11126,42 @@ CREATE POLICY rls_tenant_isolation_asset_lifecycle_events ON public.asset_lifecy
 
 
 --
--- Name: billing_usage_events rls_tenant_isolation_billing_usage_events; Type: POLICY; Schema: public; Owner: symphony_admin
+-- Name: billing_usage_events rls_tenant_isolation_billing_usage_events; Type: POLICY; Schema: public; Owner: -
 --
 
 CREATE POLICY rls_tenant_isolation_billing_usage_events ON public.billing_usage_events AS RESTRICTIVE USING ((tenant_id = public.current_tenant_id_or_null())) WITH CHECK ((tenant_id = public.current_tenant_id_or_null()));
 
 
 --
--- Name: escrow_accounts rls_tenant_isolation_escrow_accounts; Type: POLICY; Schema: public; Owner: symphony_admin
+-- Name: escrow_accounts rls_tenant_isolation_escrow_accounts; Type: POLICY; Schema: public; Owner: -
 --
 
 CREATE POLICY rls_tenant_isolation_escrow_accounts ON public.escrow_accounts AS RESTRICTIVE USING ((tenant_id = public.current_tenant_id_or_null())) WITH CHECK ((tenant_id = public.current_tenant_id_or_null()));
 
 
 --
--- Name: escrow_envelopes rls_tenant_isolation_escrow_envelopes; Type: POLICY; Schema: public; Owner: symphony_admin
+-- Name: escrow_envelopes rls_tenant_isolation_escrow_envelopes; Type: POLICY; Schema: public; Owner: -
 --
 
 CREATE POLICY rls_tenant_isolation_escrow_envelopes ON public.escrow_envelopes AS RESTRICTIVE USING ((tenant_id = public.current_tenant_id_or_null())) WITH CHECK ((tenant_id = public.current_tenant_id_or_null()));
 
 
 --
--- Name: escrow_events rls_tenant_isolation_escrow_events; Type: POLICY; Schema: public; Owner: symphony_admin
+-- Name: escrow_events rls_tenant_isolation_escrow_events; Type: POLICY; Schema: public; Owner: -
 --
 
 CREATE POLICY rls_tenant_isolation_escrow_events ON public.escrow_events AS RESTRICTIVE USING ((tenant_id = public.current_tenant_id_or_null())) WITH CHECK ((tenant_id = public.current_tenant_id_or_null()));
 
 
 --
--- Name: escrow_reservations rls_tenant_isolation_escrow_reservations; Type: POLICY; Schema: public; Owner: symphony_admin
+-- Name: escrow_reservations rls_tenant_isolation_escrow_reservations; Type: POLICY; Schema: public; Owner: -
 --
 
 CREATE POLICY rls_tenant_isolation_escrow_reservations ON public.escrow_reservations AS RESTRICTIVE USING ((tenant_id = public.current_tenant_id_or_null())) WITH CHECK ((tenant_id = public.current_tenant_id_or_null()));
 
 
 --
--- Name: evidence_edges rls_tenant_isolation_evidence_edges; Type: POLICY; Schema: public; Owner: symphony_admin
+-- Name: evidence_edges rls_tenant_isolation_evidence_edges; Type: POLICY; Schema: public; Owner: -
 --
 
 CREATE POLICY rls_tenant_isolation_evidence_edges ON public.evidence_edges USING ((EXISTS ( SELECT 1
@@ -11906,175 +11172,175 @@ CREATE POLICY rls_tenant_isolation_evidence_edges ON public.evidence_edges USING
 
 
 --
--- Name: evidence_nodes rls_tenant_isolation_evidence_nodes; Type: POLICY; Schema: public; Owner: symphony_admin
+-- Name: evidence_nodes rls_tenant_isolation_evidence_nodes; Type: POLICY; Schema: public; Owner: -
 --
 
 CREATE POLICY rls_tenant_isolation_evidence_nodes ON public.evidence_nodes USING ((tenant_id = public.current_tenant_id_or_null())) WITH CHECK ((tenant_id = public.current_tenant_id_or_null()));
 
 
 --
--- Name: external_proofs rls_tenant_isolation_external_proofs; Type: POLICY; Schema: public; Owner: symphony_admin
+-- Name: external_proofs rls_tenant_isolation_external_proofs; Type: POLICY; Schema: public; Owner: -
 --
 
 CREATE POLICY rls_tenant_isolation_external_proofs ON public.external_proofs AS RESTRICTIVE USING ((tenant_id = public.current_tenant_id_or_null())) WITH CHECK ((tenant_id = public.current_tenant_id_or_null()));
 
 
 --
--- Name: ingress_attestations rls_tenant_isolation_ingress_attestations; Type: POLICY; Schema: public; Owner: symphony_admin
+-- Name: ingress_attestations rls_tenant_isolation_ingress_attestations; Type: POLICY; Schema: public; Owner: -
 --
 
 CREATE POLICY rls_tenant_isolation_ingress_attestations ON public.ingress_attestations AS RESTRICTIVE USING ((tenant_id = public.current_tenant_id_or_null())) WITH CHECK ((tenant_id = public.current_tenant_id_or_null()));
 
 
 --
--- Name: member_device_events rls_tenant_isolation_member_device_events; Type: POLICY; Schema: public; Owner: symphony_admin
+-- Name: member_device_events rls_tenant_isolation_member_device_events; Type: POLICY; Schema: public; Owner: -
 --
 
 CREATE POLICY rls_tenant_isolation_member_device_events ON public.member_device_events AS RESTRICTIVE USING ((tenant_id = public.current_tenant_id_or_null())) WITH CHECK ((tenant_id = public.current_tenant_id_or_null()));
 
 
 --
--- Name: member_devices rls_tenant_isolation_member_devices; Type: POLICY; Schema: public; Owner: symphony_admin
+-- Name: member_devices rls_tenant_isolation_member_devices; Type: POLICY; Schema: public; Owner: -
 --
 
 CREATE POLICY rls_tenant_isolation_member_devices ON public.member_devices AS RESTRICTIVE USING ((tenant_id = public.current_tenant_id_or_null())) WITH CHECK ((tenant_id = public.current_tenant_id_or_null()));
 
 
 --
--- Name: members rls_tenant_isolation_members; Type: POLICY; Schema: public; Owner: symphony_admin
+-- Name: members rls_tenant_isolation_members; Type: POLICY; Schema: public; Owner: -
 --
 
 CREATE POLICY rls_tenant_isolation_members ON public.members AS RESTRICTIVE USING ((tenant_id = public.current_tenant_id_or_null())) WITH CHECK ((tenant_id = public.current_tenant_id_or_null()));
 
 
 --
--- Name: methodology_versions rls_tenant_isolation_methodology_versions; Type: POLICY; Schema: public; Owner: symphony_admin
+-- Name: methodology_versions rls_tenant_isolation_methodology_versions; Type: POLICY; Schema: public; Owner: -
 --
 
 CREATE POLICY rls_tenant_isolation_methodology_versions ON public.methodology_versions USING ((tenant_id = public.current_tenant_id_or_null())) WITH CHECK ((tenant_id = public.current_tenant_id_or_null()));
 
 
 --
--- Name: monitoring_records rls_tenant_isolation_monitoring_records; Type: POLICY; Schema: public; Owner: symphony_admin
+-- Name: monitoring_records rls_tenant_isolation_monitoring_records; Type: POLICY; Schema: public; Owner: -
 --
 
 CREATE POLICY rls_tenant_isolation_monitoring_records ON public.monitoring_records USING ((tenant_id = public.current_tenant_id_or_null())) WITH CHECK ((tenant_id = public.current_tenant_id_or_null()));
 
 
 --
--- Name: payment_outbox_attempts rls_tenant_isolation_payment_outbox_attempts; Type: POLICY; Schema: public; Owner: symphony_admin
+-- Name: payment_outbox_attempts rls_tenant_isolation_payment_outbox_attempts; Type: POLICY; Schema: public; Owner: -
 --
 
 CREATE POLICY rls_tenant_isolation_payment_outbox_attempts ON public.payment_outbox_attempts AS RESTRICTIVE USING ((tenant_id = public.current_tenant_id_or_null())) WITH CHECK ((tenant_id = public.current_tenant_id_or_null()));
 
 
 --
--- Name: payment_outbox_pending rls_tenant_isolation_payment_outbox_pending; Type: POLICY; Schema: public; Owner: symphony_admin
+-- Name: payment_outbox_pending rls_tenant_isolation_payment_outbox_pending; Type: POLICY; Schema: public; Owner: -
 --
 
 CREATE POLICY rls_tenant_isolation_payment_outbox_pending ON public.payment_outbox_pending AS RESTRICTIVE USING ((tenant_id = public.current_tenant_id_or_null())) WITH CHECK ((tenant_id = public.current_tenant_id_or_null()));
 
 
 --
--- Name: persons rls_tenant_isolation_persons; Type: POLICY; Schema: public; Owner: symphony_admin
+-- Name: persons rls_tenant_isolation_persons; Type: POLICY; Schema: public; Owner: -
 --
 
 CREATE POLICY rls_tenant_isolation_persons ON public.persons AS RESTRICTIVE USING ((tenant_id = public.current_tenant_id_or_null())) WITH CHECK ((tenant_id = public.current_tenant_id_or_null()));
 
 
 --
--- Name: program_migration_events rls_tenant_isolation_program_migration_events; Type: POLICY; Schema: public; Owner: symphony_admin
+-- Name: program_migration_events rls_tenant_isolation_program_migration_events; Type: POLICY; Schema: public; Owner: -
 --
 
 CREATE POLICY rls_tenant_isolation_program_migration_events ON public.program_migration_events AS RESTRICTIVE USING ((tenant_id = public.current_tenant_id_or_null())) WITH CHECK ((tenant_id = public.current_tenant_id_or_null()));
 
 
 --
--- Name: program_supplier_allowlist rls_tenant_isolation_program_supplier_allowlist; Type: POLICY; Schema: public; Owner: symphony_admin
+-- Name: program_supplier_allowlist rls_tenant_isolation_program_supplier_allowlist; Type: POLICY; Schema: public; Owner: -
 --
 
 CREATE POLICY rls_tenant_isolation_program_supplier_allowlist ON public.program_supplier_allowlist AS RESTRICTIVE USING ((tenant_id = public.current_tenant_id_or_null())) WITH CHECK ((tenant_id = public.current_tenant_id_or_null()));
 
 
 --
--- Name: programme_policy_binding rls_tenant_isolation_programme_policy_binding; Type: POLICY; Schema: public; Owner: symphony_admin
+-- Name: programme_policy_binding rls_tenant_isolation_programme_policy_binding; Type: POLICY; Schema: public; Owner: -
 --
 
 CREATE POLICY rls_tenant_isolation_programme_policy_binding ON public.programme_policy_binding USING (((tenant_id = (NULLIF(current_setting('app.current_tenant_id'::text, true), ''::text))::uuid) OR (current_setting('app.bypass_rls'::text, true) = 'on'::text)));
 
 
 --
--- Name: programme_registry rls_tenant_isolation_programme_registry; Type: POLICY; Schema: public; Owner: symphony_admin
+-- Name: programme_registry rls_tenant_isolation_programme_registry; Type: POLICY; Schema: public; Owner: -
 --
 
 CREATE POLICY rls_tenant_isolation_programme_registry ON public.programme_registry USING (((tenant_id = (NULLIF(current_setting('app.current_tenant_id'::text, true), ''::text))::uuid) OR (current_setting('app.bypass_rls'::text, true) = 'on'::text)));
 
 
 --
--- Name: programs rls_tenant_isolation_programs; Type: POLICY; Schema: public; Owner: symphony_admin
+-- Name: programs rls_tenant_isolation_programs; Type: POLICY; Schema: public; Owner: -
 --
 
 CREATE POLICY rls_tenant_isolation_programs ON public.programs AS RESTRICTIVE USING ((tenant_id = public.current_tenant_id_or_null())) WITH CHECK ((tenant_id = public.current_tenant_id_or_null()));
 
 
 --
--- Name: projects rls_tenant_isolation_projects; Type: POLICY; Schema: public; Owner: symphony_admin
+-- Name: projects rls_tenant_isolation_projects; Type: POLICY; Schema: public; Owner: -
 --
 
 CREATE POLICY rls_tenant_isolation_projects ON public.projects USING ((tenant_id = public.current_tenant_id_or_null())) WITH CHECK ((tenant_id = public.current_tenant_id_or_null()));
 
 
 --
--- Name: retirement_events rls_tenant_isolation_retirement_events; Type: POLICY; Schema: public; Owner: symphony_admin
+-- Name: retirement_events rls_tenant_isolation_retirement_events; Type: POLICY; Schema: public; Owner: -
 --
 
 CREATE POLICY rls_tenant_isolation_retirement_events ON public.retirement_events USING ((tenant_id = public.current_tenant_id_or_null())) WITH CHECK ((tenant_id = public.current_tenant_id_or_null()));
 
 
 --
--- Name: sim_swap_alerts rls_tenant_isolation_sim_swap_alerts; Type: POLICY; Schema: public; Owner: symphony_admin
+-- Name: sim_swap_alerts rls_tenant_isolation_sim_swap_alerts; Type: POLICY; Schema: public; Owner: -
 --
 
 CREATE POLICY rls_tenant_isolation_sim_swap_alerts ON public.sim_swap_alerts AS RESTRICTIVE USING ((tenant_id = public.current_tenant_id_or_null())) WITH CHECK ((tenant_id = public.current_tenant_id_or_null()));
 
 
 --
--- Name: supplier_registry rls_tenant_isolation_supplier_registry; Type: POLICY; Schema: public; Owner: symphony_admin
+-- Name: supplier_registry rls_tenant_isolation_supplier_registry; Type: POLICY; Schema: public; Owner: -
 --
 
 CREATE POLICY rls_tenant_isolation_supplier_registry ON public.supplier_registry AS RESTRICTIVE USING ((tenant_id = public.current_tenant_id_or_null())) WITH CHECK ((tenant_id = public.current_tenant_id_or_null()));
 
 
 --
--- Name: tenant_clients rls_tenant_isolation_tenant_clients; Type: POLICY; Schema: public; Owner: symphony_admin
+-- Name: tenant_clients rls_tenant_isolation_tenant_clients; Type: POLICY; Schema: public; Owner: -
 --
 
 CREATE POLICY rls_tenant_isolation_tenant_clients ON public.tenant_clients AS RESTRICTIVE USING ((tenant_id = public.current_tenant_id_or_null())) WITH CHECK ((tenant_id = public.current_tenant_id_or_null()));
 
 
 --
--- Name: tenant_members rls_tenant_isolation_tenant_members; Type: POLICY; Schema: public; Owner: symphony_admin
+-- Name: tenant_members rls_tenant_isolation_tenant_members; Type: POLICY; Schema: public; Owner: -
 --
 
 CREATE POLICY rls_tenant_isolation_tenant_members ON public.tenant_members AS RESTRICTIVE USING ((tenant_id = public.current_tenant_id_or_null())) WITH CHECK ((tenant_id = public.current_tenant_id_or_null()));
 
 
 --
--- Name: tenant_registry rls_tenant_isolation_tenant_registry; Type: POLICY; Schema: public; Owner: symphony_admin
+-- Name: tenant_registry rls_tenant_isolation_tenant_registry; Type: POLICY; Schema: public; Owner: -
 --
 
 CREATE POLICY rls_tenant_isolation_tenant_registry ON public.tenant_registry USING (((tenant_id = (NULLIF(current_setting('app.current_tenant_id'::text, true), ''::text))::uuid) OR (current_setting('app.bypass_rls'::text, true) = 'on'::text)));
 
 
 --
--- Name: tenants rls_tenant_isolation_tenants; Type: POLICY; Schema: public; Owner: symphony_admin
+-- Name: tenants rls_tenant_isolation_tenants; Type: POLICY; Schema: public; Owner: -
 --
 
 CREATE POLICY rls_tenant_isolation_tenants ON public.tenants AS RESTRICTIVE USING ((tenant_id = public.current_tenant_id_or_null())) WITH CHECK ((tenant_id = public.current_tenant_id_or_null()));
 
 
 --
--- Name: verifier_project_assignments rls_tenant_isolation_verifier_project_assignments; Type: POLICY; Schema: public; Owner: symphony_admin
+-- Name: verifier_project_assignments rls_tenant_isolation_verifier_project_assignments; Type: POLICY; Schema: public; Owner: -
 --
 
 CREATE POLICY rls_tenant_isolation_verifier_project_assignments ON public.verifier_project_assignments USING ((EXISTS ( SELECT 1
@@ -12085,838 +11351,63 @@ CREATE POLICY rls_tenant_isolation_verifier_project_assignments ON public.verifi
 
 
 --
--- Name: verifier_registry rls_tenant_isolation_verifier_registry; Type: POLICY; Schema: public; Owner: symphony_admin
+-- Name: verifier_registry rls_tenant_isolation_verifier_registry; Type: POLICY; Schema: public; Owner: -
 --
 
 CREATE POLICY rls_tenant_isolation_verifier_registry ON public.verifier_registry USING ((tenant_id = public.current_tenant_id_or_null())) WITH CHECK ((tenant_id = public.current_tenant_id_or_null()));
 
 
 --
--- Name: sim_swap_alerts; Type: ROW SECURITY; Schema: public; Owner: symphony_admin
+-- Name: sim_swap_alerts; Type: ROW SECURITY; Schema: public; Owner: -
 --
 
 ALTER TABLE public.sim_swap_alerts ENABLE ROW LEVEL SECURITY;
 
 --
--- Name: supplier_registry; Type: ROW SECURITY; Schema: public; Owner: symphony_admin
+-- Name: supplier_registry; Type: ROW SECURITY; Schema: public; Owner: -
 --
 
 ALTER TABLE public.supplier_registry ENABLE ROW LEVEL SECURITY;
 
 --
--- Name: tenant_clients; Type: ROW SECURITY; Schema: public; Owner: symphony_admin
+-- Name: tenant_clients; Type: ROW SECURITY; Schema: public; Owner: -
 --
 
 ALTER TABLE public.tenant_clients ENABLE ROW LEVEL SECURITY;
 
 --
--- Name: tenant_members; Type: ROW SECURITY; Schema: public; Owner: symphony_admin
+-- Name: tenant_members; Type: ROW SECURITY; Schema: public; Owner: -
 --
 
 ALTER TABLE public.tenant_members ENABLE ROW LEVEL SECURITY;
 
 --
--- Name: tenant_registry; Type: ROW SECURITY; Schema: public; Owner: symphony_admin
+-- Name: tenant_registry; Type: ROW SECURITY; Schema: public; Owner: -
 --
 
 ALTER TABLE public.tenant_registry ENABLE ROW LEVEL SECURITY;
 
 --
--- Name: tenants; Type: ROW SECURITY; Schema: public; Owner: symphony_admin
+-- Name: tenants; Type: ROW SECURITY; Schema: public; Owner: -
 --
 
 ALTER TABLE public.tenants ENABLE ROW LEVEL SECURITY;
 
 --
--- Name: verifier_project_assignments; Type: ROW SECURITY; Schema: public; Owner: symphony_admin
+-- Name: verifier_project_assignments; Type: ROW SECURITY; Schema: public; Owner: -
 --
 
 ALTER TABLE public.verifier_project_assignments ENABLE ROW LEVEL SECURITY;
 
 --
--- Name: verifier_registry; Type: ROW SECURITY; Schema: public; Owner: symphony_admin
+-- Name: verifier_registry; Type: ROW SECURITY; Schema: public; Owner: -
 --
 
 ALTER TABLE public.verifier_registry ENABLE ROW LEVEL SECURITY;
 
 --
--- Name: SCHEMA public; Type: ACL; Schema: -; Owner: pg_database_owner
---
-
-GRANT USAGE ON SCHEMA public TO symphony_ingest;
-GRANT USAGE ON SCHEMA public TO symphony_executor;
-GRANT USAGE ON SCHEMA public TO symphony_control;
-GRANT USAGE ON SCHEMA public TO symphony_readonly;
-GRANT USAGE ON SCHEMA public TO symphony_auditor;
-GRANT USAGE ON SCHEMA public TO test_user;
-GRANT USAGE ON SCHEMA public TO boz_auditor;
-GRANT USAGE ON SCHEMA public TO symphony_command;
-GRANT USAGE ON SCHEMA public TO symphony_query;
-
-
---
--- Name: FUNCTION acknowledge_inquiry_response(p_instruction_id text, p_policy_version_id text); Type: ACL; Schema: public; Owner: symphony_admin
---
-
-REVOKE ALL ON FUNCTION public.acknowledge_inquiry_response(p_instruction_id text, p_policy_version_id text) FROM PUBLIC;
-
-
---
--- Name: FUNCTION activate_project(p_tenant_id uuid, p_project_id uuid); Type: ACL; Schema: public; Owner: symphony_admin
---
-
-GRANT ALL ON FUNCTION public.activate_project(p_tenant_id uuid, p_project_id uuid) TO symphony_command;
-
-
---
--- Name: FUNCTION apply_finality_signals(p_instruction_id text, p_rail_a_id text, p_rail_a_status public.finality_signal_status_enum, p_rail_b_id text, p_rail_b_status public.finality_signal_status_enum); Type: ACL; Schema: public; Owner: symphony_admin
---
-
-REVOKE ALL ON FUNCTION public.apply_finality_signals(p_instruction_id text, p_rail_a_id text, p_rail_a_status public.finality_signal_status_enum, p_rail_b_id text, p_rail_b_status public.finality_signal_status_enum) FROM PUBLIC;
-
-
---
--- Name: FUNCTION apply_inquiry_attempt(p_instruction_id text, p_policy_version_id text, p_max_attempts integer); Type: ACL; Schema: public; Owner: symphony_admin
---
-
-REVOKE ALL ON FUNCTION public.apply_inquiry_attempt(p_instruction_id text, p_policy_version_id text, p_max_attempts integer) FROM PUBLIC;
-
-
---
--- Name: FUNCTION assert_offline_safe_mode_dispatch_allowed(p_reason text, p_policy_version_id text, p_is_offline boolean); Type: ACL; Schema: public; Owner: symphony_admin
---
-
-REVOKE ALL ON FUNCTION public.assert_offline_safe_mode_dispatch_allowed(p_reason text, p_policy_version_id text, p_is_offline boolean) FROM PUBLIC;
-
-
---
--- Name: FUNCTION attach_evidence(p_tenant_id uuid, p_project_id uuid, p_evidence_class text, p_document_type text, p_target_record_type text, p_target_record_id uuid, p_node_payload_json jsonb); Type: ACL; Schema: public; Owner: symphony_admin
---
-
-GRANT ALL ON FUNCTION public.attach_evidence(p_tenant_id uuid, p_project_id uuid, p_evidence_class text, p_document_type text, p_target_record_type text, p_target_record_id uuid, p_node_payload_json jsonb) TO symphony_command;
-
-
---
--- Name: FUNCTION attempt_lifecycle_transition(p_tenant_id uuid, p_subject_type text, p_subject_id uuid, p_from_status text, p_to_status text, p_jurisdiction_code text); Type: ACL; Schema: public; Owner: symphony_admin
---
-
-GRANT ALL ON FUNCTION public.attempt_lifecycle_transition(p_tenant_id uuid, p_subject_type text, p_subject_id uuid, p_from_status text, p_to_status text, p_jurisdiction_code text) TO symphony_command;
-
-
---
--- Name: FUNCTION check_reg26_separation(p_verifier_id uuid, p_project_id uuid, p_requested_role text); Type: ACL; Schema: public; Owner: symphony_admin
---
-
-REVOKE ALL ON FUNCTION public.check_reg26_separation(p_verifier_id uuid, p_project_id uuid, p_requested_role text) FROM PUBLIC;
-GRANT ALL ON FUNCTION public.check_reg26_separation(p_verifier_id uuid, p_project_id uuid, p_requested_role text) TO symphony_command;
-GRANT ALL ON FUNCTION public.check_reg26_separation(p_verifier_id uuid, p_project_id uuid, p_requested_role text) TO symphony_control;
-
-
---
--- Name: FUNCTION claim_outbox_batch(p_batch_size integer, p_worker_id text, p_lease_seconds integer); Type: ACL; Schema: public; Owner: symphony_admin
---
-
-GRANT ALL ON FUNCTION public.claim_outbox_batch(p_batch_size integer, p_worker_id text, p_lease_seconds integer) TO symphony_executor;
-GRANT ALL ON FUNCTION public.claim_outbox_batch(p_batch_size integer, p_worker_id text, p_lease_seconds integer) TO symphony_control;
-GRANT ALL ON FUNCTION public.claim_outbox_batch(p_batch_size integer, p_worker_id text, p_lease_seconds integer) TO test_user;
-
-
---
--- Name: FUNCTION classify_orphan_or_replay(p_instruction_id text, p_event_fingerprint text, p_is_late_callback boolean, p_is_duplicate_dispatch boolean, p_has_unknown_reference boolean, p_is_replay boolean); Type: ACL; Schema: public; Owner: symphony_admin
---
-
-REVOKE ALL ON FUNCTION public.classify_orphan_or_replay(p_instruction_id text, p_event_fingerprint text, p_is_late_callback boolean, p_is_duplicate_dispatch boolean, p_has_unknown_reference boolean, p_is_replay boolean) FROM PUBLIC;
-
-
---
--- Name: FUNCTION cleanup_expired_verifier_tokens(); Type: ACL; Schema: public; Owner: symphony_admin
---
-
-GRANT ALL ON FUNCTION public.cleanup_expired_verifier_tokens() TO symphony_command;
-
-
---
--- Name: FUNCTION complete_outbox_attempt(p_outbox_id uuid, p_lease_token uuid, p_worker_id text, p_state public.outbox_attempt_state, p_rail_reference text, p_rail_code text, p_error_code text, p_error_message text, p_latency_ms integer, p_retry_delay_seconds integer); Type: ACL; Schema: public; Owner: symphony_admin
---
-
-GRANT ALL ON FUNCTION public.complete_outbox_attempt(p_outbox_id uuid, p_lease_token uuid, p_worker_id text, p_state public.outbox_attempt_state, p_rail_reference text, p_rail_code text, p_error_code text, p_error_message text, p_latency_ms integer, p_retry_delay_seconds integer) TO symphony_executor;
-GRANT ALL ON FUNCTION public.complete_outbox_attempt(p_outbox_id uuid, p_lease_token uuid, p_worker_id text, p_state public.outbox_attempt_state, p_rail_reference text, p_rail_code text, p_error_code text, p_error_message text, p_latency_ms integer, p_retry_delay_seconds integer) TO symphony_control;
-GRANT ALL ON FUNCTION public.complete_outbox_attempt(p_outbox_id uuid, p_lease_token uuid, p_worker_id text, p_state public.outbox_attempt_state, p_rail_reference text, p_rail_code text, p_error_code text, p_error_message text, p_latency_ms integer, p_retry_delay_seconds integer) TO test_user;
-
-
---
--- Name: FUNCTION compute_effect_seal_hash(p_instruction_id text, p_payload jsonb, p_canonicalization_version text); Type: ACL; Schema: public; Owner: symphony_admin
---
-
-REVOKE ALL ON FUNCTION public.compute_effect_seal_hash(p_instruction_id text, p_payload jsonb, p_canonicalization_version text) FROM PUBLIC;
-
-
---
--- Name: FUNCTION create_internal_ledger_journal(p_tenant_id uuid, p_idempotency_key text, p_journal_type text, p_currency_code text, p_postings jsonb, p_reference_id text); Type: ACL; Schema: public; Owner: symphony_admin
---
-
-REVOKE ALL ON FUNCTION public.create_internal_ledger_journal(p_tenant_id uuid, p_idempotency_key text, p_journal_type text, p_currency_code text, p_postings jsonb, p_reference_id text) FROM PUBLIC;
-
-
---
--- Name: FUNCTION current_jurisdiction_code_or_null(); Type: ACL; Schema: public; Owner: symphony_admin
---
-
-REVOKE ALL ON FUNCTION public.current_jurisdiction_code_or_null() FROM PUBLIC;
-GRANT ALL ON FUNCTION public.current_jurisdiction_code_or_null() TO symphony_command;
-GRANT ALL ON FUNCTION public.current_jurisdiction_code_or_null() TO symphony_control;
-
-
---
--- Name: FUNCTION enforce_confidence_before_issuance(); Type: ACL; Schema: public; Owner: symphony_admin
---
-
-GRANT ALL ON FUNCTION public.enforce_confidence_before_issuance() TO symphony_command;
-
-
---
--- Name: FUNCTION enforce_internal_ledger_posting_context(); Type: ACL; Schema: public; Owner: symphony_admin
---
-
-REVOKE ALL ON FUNCTION public.enforce_internal_ledger_posting_context() FROM PUBLIC;
-
-
---
--- Name: FUNCTION enforce_settlement_acknowledgement(); Type: ACL; Schema: public; Owner: symphony_admin
---
-
-REVOKE ALL ON FUNCTION public.enforce_settlement_acknowledgement() FROM PUBLIC;
-
-
---
--- Name: FUNCTION enqueue_payment_outbox(p_instruction_id text, p_participant_id text, p_idempotency_key text, p_rail_type text, p_payload jsonb); Type: ACL; Schema: public; Owner: symphony_admin
---
-
-GRANT ALL ON FUNCTION public.enqueue_payment_outbox(p_instruction_id text, p_participant_id text, p_idempotency_key text, p_rail_type text, p_payload jsonb) TO symphony_ingest;
-GRANT ALL ON FUNCTION public.enqueue_payment_outbox(p_instruction_id text, p_participant_id text, p_idempotency_key text, p_rail_type text, p_payload jsonb) TO symphony_control;
-GRANT ALL ON FUNCTION public.enqueue_payment_outbox(p_instruction_id text, p_participant_id text, p_idempotency_key text, p_rail_type text, p_payload jsonb) TO test_user;
-
-
---
--- Name: FUNCTION escalate_missing_acknowledgement(p_instruction_id text, p_program_id uuid, p_policy_version_id text, p_actor text, p_reason text, p_timeout_minutes integer); Type: ACL; Schema: public; Owner: symphony_admin
---
-
-REVOKE ALL ON FUNCTION public.escalate_missing_acknowledgement(p_instruction_id text, p_program_id uuid, p_policy_version_id text, p_actor text, p_reason text, p_timeout_minutes integer) FROM PUBLIC;
-
-
---
--- Name: FUNCTION evaluate_circuit_breaker(p_adapter_id text, p_rail_id text, p_trigger_threshold numeric, p_observed_rate numeric, p_window_seconds integer, p_policy_version_id text); Type: ACL; Schema: public; Owner: symphony_admin
---
-
-REVOKE ALL ON FUNCTION public.evaluate_circuit_breaker(p_adapter_id text, p_rail_id text, p_trigger_threshold numeric, p_observed_rate numeric, p_window_seconds integer, p_policy_version_id text) FROM PUBLIC;
-
-
---
--- Name: FUNCTION get_checkpoint_requirements(p_jurisdiction_code text); Type: ACL; Schema: public; Owner: symphony_admin
---
-
-GRANT ALL ON FUNCTION public.get_checkpoint_requirements(p_jurisdiction_code text) TO symphony_command;
-
-
---
--- Name: FUNCTION get_evidence_node(p_tenant_id uuid, p_evidence_node_id uuid); Type: ACL; Schema: public; Owner: symphony_admin
---
-
-GRANT ALL ON FUNCTION public.get_evidence_node(p_tenant_id uuid, p_evidence_node_id uuid) TO symphony_command;
-
-
---
--- Name: FUNCTION get_monitoring_record_payload(p_tenant_id uuid, p_monitoring_record_id uuid); Type: ACL; Schema: public; Owner: symphony_admin
---
-
-GRANT ALL ON FUNCTION public.get_monitoring_record_payload(p_tenant_id uuid, p_monitoring_record_id uuid) TO symphony_command;
-
-
---
--- Name: FUNCTION guard_auto_finalize_when_inquiry_exhausted(p_instruction_id text); Type: ACL; Schema: public; Owner: symphony_admin
---
-
-REVOKE ALL ON FUNCTION public.guard_auto_finalize_when_inquiry_exhausted(p_instruction_id text) FROM PUBLIC;
-
-
---
--- Name: FUNCTION guard_settlement_requires_acknowledgement(p_instruction_id text); Type: ACL; Schema: public; Owner: symphony_admin
---
-
-REVOKE ALL ON FUNCTION public.guard_settlement_requires_acknowledgement(p_instruction_id text) FROM PUBLIC;
-
-
---
--- Name: FUNCTION issue_asset_batch(p_tenant_id uuid, p_project_id uuid, p_methodology_version_id uuid, p_adapter_registration_id uuid, p_interpretation_pack_id uuid, p_asset_type text, p_quantity numeric, p_unit text, p_metadata_json jsonb); Type: ACL; Schema: public; Owner: symphony_admin
---
-
-GRANT ALL ON FUNCTION public.issue_asset_batch(p_tenant_id uuid, p_project_id uuid, p_methodology_version_id uuid, p_adapter_registration_id uuid, p_interpretation_pack_id uuid, p_asset_type text, p_quantity numeric, p_unit text, p_metadata_json jsonb) TO symphony_command;
-
-
---
--- Name: FUNCTION issue_verifier_read_token(p_tenant_id uuid, p_verifier_id uuid, p_project_id uuid, p_ttl_hours integer, p_scoped_tables jsonb); Type: ACL; Schema: public; Owner: symphony_admin
---
-
-GRANT ALL ON FUNCTION public.issue_verifier_read_token(p_tenant_id uuid, p_verifier_id uuid, p_project_id uuid, p_ttl_hours integer, p_scoped_tables jsonb) TO symphony_command;
-
-
---
--- Name: FUNCTION link_evidence_to_record(p_tenant_id uuid, p_evidence_node_id uuid, p_target_evidence_node_id uuid, p_edge_type text); Type: ACL; Schema: public; Owner: symphony_admin
---
-
-GRANT ALL ON FUNCTION public.link_evidence_to_record(p_tenant_id uuid, p_evidence_node_id uuid, p_target_evidence_node_id uuid, p_edge_type text) TO symphony_command;
-
-
---
--- Name: FUNCTION list_project_asset_batches(p_tenant_id uuid, p_project_id uuid); Type: ACL; Schema: public; Owner: symphony_admin
---
-
-GRANT ALL ON FUNCTION public.list_project_asset_batches(p_tenant_id uuid, p_project_id uuid) TO symphony_command;
-
-
---
--- Name: FUNCTION list_project_evidence(p_tenant_id uuid, p_project_id uuid); Type: ACL; Schema: public; Owner: symphony_admin
---
-
-GRANT ALL ON FUNCTION public.list_project_evidence(p_tenant_id uuid, p_project_id uuid) TO symphony_command;
-
-
---
--- Name: FUNCTION list_tenant_projects(p_tenant_id uuid); Type: ACL; Schema: public; Owner: symphony_admin
---
-
-GRANT ALL ON FUNCTION public.list_tenant_projects(p_tenant_id uuid) TO symphony_command;
-
-
---
--- Name: FUNCTION list_verifier_tokens(p_tenant_id uuid, p_verifier_id uuid); Type: ACL; Schema: public; Owner: symphony_admin
---
-
-GRANT ALL ON FUNCTION public.list_verifier_tokens(p_tenant_id uuid, p_verifier_id uuid) TO symphony_command;
-
-
---
--- Name: FUNCTION mark_instruction_awaiting_execution(p_instruction_id text, p_program_id uuid, p_policy_version_id text, p_actor text); Type: ACL; Schema: public; Owner: symphony_admin
---
-
-REVOKE ALL ON FUNCTION public.mark_instruction_awaiting_execution(p_instruction_id text, p_program_id uuid, p_policy_version_id text, p_actor text) FROM PUBLIC;
-
-
---
--- Name: FUNCTION quarantine_malformed_response(p_adapter_id text, p_rail_id text, p_classification public.quarantine_classification_enum, p_payload text, p_truncate_kb integer, p_policy_version_id text); Type: ACL; Schema: public; Owner: symphony_admin
---
-
-REVOKE ALL ON FUNCTION public.quarantine_malformed_response(p_adapter_id text, p_rail_id text, p_classification public.quarantine_classification_enum, p_payload text, p_truncate_kb integer, p_policy_version_id text) FROM PUBLIC;
-
-
---
--- Name: FUNCTION query_asset_batch(p_tenant_id uuid, p_asset_batch_id uuid); Type: ACL; Schema: public; Owner: symphony_admin
---
-
-GRANT ALL ON FUNCTION public.query_asset_batch(p_tenant_id uuid, p_asset_batch_id uuid) TO symphony_command;
-
-
---
--- Name: FUNCTION query_authority_decisions(p_jurisdiction_code text, p_subject_id uuid); Type: ACL; Schema: public; Owner: symphony_admin
---
-
-GRANT ALL ON FUNCTION public.query_authority_decisions(p_jurisdiction_code text, p_subject_id uuid) TO symphony_command;
-
-
---
--- Name: FUNCTION query_evidence_lineage(p_tenant_id uuid, p_project_id uuid); Type: ACL; Schema: public; Owner: symphony_admin
---
-
-GRANT ALL ON FUNCTION public.query_evidence_lineage(p_tenant_id uuid, p_project_id uuid) TO symphony_command;
-
-
---
--- Name: FUNCTION query_monitoring_records(p_tenant_id uuid, p_project_id uuid, p_record_type text); Type: ACL; Schema: public; Owner: symphony_admin
---
-
-GRANT ALL ON FUNCTION public.query_monitoring_records(p_tenant_id uuid, p_project_id uuid, p_record_type text) TO symphony_command;
-
-
---
--- Name: FUNCTION query_project_details(p_tenant_id uuid, p_project_id uuid); Type: ACL; Schema: public; Owner: symphony_admin
---
-
-GRANT ALL ON FUNCTION public.query_project_details(p_tenant_id uuid, p_project_id uuid) TO symphony_command;
-
-
---
--- Name: FUNCTION record_asset_lifecycle_event(p_tenant_id uuid, p_asset_batch_id uuid, p_event_type text, p_event_payload jsonb); Type: ACL; Schema: public; Owner: symphony_admin
---
-
-GRANT ALL ON FUNCTION public.record_asset_lifecycle_event(p_tenant_id uuid, p_asset_batch_id uuid, p_event_type text, p_event_payload jsonb) TO symphony_command;
-
-
---
--- Name: FUNCTION record_authority_decision(p_regulatory_authority_id uuid, p_jurisdiction_code text, p_decision_type text, p_decision_outcome text, p_subject_type text, p_subject_id uuid, p_from_status text, p_to_status text, p_interpretation_pack_id uuid, p_decision_payload_json jsonb); Type: ACL; Schema: public; Owner: symphony_admin
---
-
-GRANT ALL ON FUNCTION public.record_authority_decision(p_regulatory_authority_id uuid, p_jurisdiction_code text, p_decision_type text, p_decision_outcome text, p_subject_type text, p_subject_id uuid, p_from_status text, p_to_status text, p_interpretation_pack_id uuid, p_decision_payload_json jsonb) TO symphony_command;
-
-
---
--- Name: FUNCTION record_late_callback(p_instruction_id text, p_payload jsonb, p_state_at_arrival text, p_fingerprint text); Type: ACL; Schema: public; Owner: symphony_admin
---
-
-REVOKE ALL ON FUNCTION public.record_late_callback(p_instruction_id text, p_payload jsonb, p_state_at_arrival text, p_fingerprint text) FROM PUBLIC;
-
-
---
--- Name: FUNCTION record_mmo_reality_control(p_instruction_id text, p_scenario_type text, p_fallback_posture text, p_policy_version_id text, p_behavior_profile text, p_evidence_artifact_type text); Type: ACL; Schema: public; Owner: symphony_admin
---
-
-REVOKE ALL ON FUNCTION public.record_mmo_reality_control(p_instruction_id text, p_scenario_type text, p_fallback_posture text, p_policy_version_id text, p_behavior_profile text, p_evidence_artifact_type text) FROM PUBLIC;
-
-
---
--- Name: FUNCTION record_monitoring_record(p_tenant_id uuid, p_project_id uuid, p_record_type text, p_record_payload_json jsonb, p_methodology_version_id uuid, p_event_timestamp timestamp with time zone, p_payload_schema_reference_id uuid); Type: ACL; Schema: public; Owner: symphony_admin
---
-
-GRANT ALL ON FUNCTION public.record_monitoring_record(p_tenant_id uuid, p_project_id uuid, p_record_type text, p_record_payload_json jsonb, p_methodology_version_id uuid, p_event_timestamp timestamp with time zone, p_payload_schema_reference_id uuid) TO symphony_command;
-
-
---
--- Name: FUNCTION register_project(p_tenant_id uuid, p_project_name text, p_jurisdiction_code text, p_methodology_version_id uuid); Type: ACL; Schema: public; Owner: symphony_admin
---
-
-GRANT ALL ON FUNCTION public.register_project(p_tenant_id uuid, p_project_name text, p_jurisdiction_code text, p_methodology_version_id uuid) TO symphony_command;
-
-
---
--- Name: FUNCTION repair_expired_leases(p_batch_size integer, p_worker_id text); Type: ACL; Schema: public; Owner: symphony_admin
---
-
-GRANT ALL ON FUNCTION public.repair_expired_leases(p_batch_size integer, p_worker_id text) TO symphony_executor;
-GRANT ALL ON FUNCTION public.repair_expired_leases(p_batch_size integer, p_worker_id text) TO symphony_control;
-GRANT ALL ON FUNCTION public.repair_expired_leases(p_batch_size integer, p_worker_id text) TO test_user;
-
-
---
--- Name: FUNCTION resolve_missing_acknowledgement_interrupt(p_instruction_id text, p_action text, p_actor text, p_reason text); Type: ACL; Schema: public; Owner: symphony_admin
---
-
-REVOKE ALL ON FUNCTION public.resolve_missing_acknowledgement_interrupt(p_instruction_id text, p_action text, p_actor text, p_reason text) FROM PUBLIC;
-
-
---
--- Name: FUNCTION retire_asset_batch(p_tenant_id uuid, p_asset_batch_id uuid, p_retirement_reason text, p_interpretation_pack_id uuid, p_quantity numeric); Type: ACL; Schema: public; Owner: symphony_admin
---
-
-GRANT ALL ON FUNCTION public.retire_asset_batch(p_tenant_id uuid, p_asset_batch_id uuid, p_retirement_reason text, p_interpretation_pack_id uuid, p_quantity numeric) TO symphony_command;
-
-
---
--- Name: FUNCTION revoke_verifier_read_token(p_tenant_id uuid, p_token_id uuid, p_reason text); Type: ACL; Schema: public; Owner: symphony_admin
---
-
-GRANT ALL ON FUNCTION public.revoke_verifier_read_token(p_tenant_id uuid, p_token_id uuid, p_reason text) TO symphony_command;
-
-
---
--- Name: FUNCTION store_effect_seal(p_instruction_id text, p_payload jsonb, p_canonicalization_version text, p_policy_version_id text); Type: ACL; Schema: public; Owner: symphony_admin
---
-
-REVOKE ALL ON FUNCTION public.store_effect_seal(p_instruction_id text, p_payload jsonb, p_canonicalization_version text, p_policy_version_id text) FROM PUBLIC;
-
-
---
--- Name: FUNCTION transition_asset_status(p_tenant_id uuid, p_subject_id uuid, p_to_status text); Type: ACL; Schema: public; Owner: symphony_admin
---
-
-GRANT ALL ON FUNCTION public.transition_asset_status(p_tenant_id uuid, p_subject_id uuid, p_to_status text) TO symphony_command;
-
-
---
--- Name: FUNCTION uuid_v7_or_random(); Type: ACL; Schema: public; Owner: symphony_admin
---
-
-GRANT ALL ON FUNCTION public.uuid_v7_or_random() TO symphony_ingest;
-GRANT ALL ON FUNCTION public.uuid_v7_or_random() TO symphony_executor;
-GRANT ALL ON FUNCTION public.uuid_v7_or_random() TO symphony_control;
-GRANT ALL ON FUNCTION public.uuid_v7_or_random() TO symphony_readonly;
-GRANT ALL ON FUNCTION public.uuid_v7_or_random() TO symphony_auditor;
-GRANT ALL ON FUNCTION public.uuid_v7_or_random() TO test_user;
-
-
---
--- Name: FUNCTION validate_confidence_score(p_asset_batch_id uuid); Type: ACL; Schema: public; Owner: symphony_admin
---
-
-GRANT ALL ON FUNCTION public.validate_confidence_score(p_asset_batch_id uuid) TO symphony_command;
-
-
---
--- Name: FUNCTION validate_payload_against_schema(p_payload jsonb, p_payload_schema_reference_id uuid); Type: ACL; Schema: public; Owner: symphony_admin
---
-
-GRANT ALL ON FUNCTION public.validate_payload_against_schema(p_payload jsonb, p_payload_schema_reference_id uuid) TO symphony_command;
-
-
---
--- Name: FUNCTION verify_dispatch_effect_seal(p_instruction_id text, p_outbound_payload jsonb); Type: ACL; Schema: public; Owner: symphony_admin
---
-
-REVOKE ALL ON FUNCTION public.verify_dispatch_effect_seal(p_instruction_id text, p_outbound_payload jsonb) FROM PUBLIC;
-
-
---
--- Name: FUNCTION verify_internal_ledger_journal_balance(p_journal_id uuid); Type: ACL; Schema: public; Owner: symphony_admin
---
-
-REVOKE ALL ON FUNCTION public.verify_internal_ledger_journal_balance(p_journal_id uuid) FROM PUBLIC;
-
-
---
--- Name: FUNCTION verify_verifier_read_token(p_token_hash text, p_project_id uuid); Type: ACL; Schema: public; Owner: symphony_admin
---
-
-GRANT ALL ON FUNCTION public.verify_verifier_read_token(p_token_hash text, p_project_id uuid) TO symphony_command;
-
-
---
--- Name: TABLE adapter_registrations; Type: ACL; Schema: public; Owner: symphony_admin
---
-
-GRANT SELECT,INSERT ON TABLE public.adapter_registrations TO symphony_command;
-GRANT ALL ON TABLE public.adapter_registrations TO symphony_control;
-
-
---
--- Name: TABLE asset_batches; Type: ACL; Schema: public; Owner: symphony_admin
---
-
-GRANT SELECT,INSERT ON TABLE public.asset_batches TO symphony_command;
-GRANT ALL ON TABLE public.asset_batches TO symphony_control;
-
-
---
--- Name: TABLE asset_lifecycle_events; Type: ACL; Schema: public; Owner: symphony_admin
---
-
-GRANT SELECT,INSERT ON TABLE public.asset_lifecycle_events TO symphony_command;
-GRANT ALL ON TABLE public.asset_lifecycle_events TO symphony_control;
-
-
---
--- Name: TABLE authority_decisions; Type: ACL; Schema: public; Owner: symphony_admin
---
-
-GRANT SELECT,INSERT ON TABLE public.authority_decisions TO symphony_command;
-GRANT ALL ON TABLE public.authority_decisions TO symphony_control;
-
-
---
--- Name: TABLE billable_clients; Type: ACL; Schema: public; Owner: symphony_admin
---
-
-GRANT SELECT ON TABLE public.billable_clients TO boz_auditor;
-
-
---
--- Name: TABLE billing_usage_events; Type: ACL; Schema: public; Owner: symphony_admin
---
-
-GRANT SELECT ON TABLE public.billing_usage_events TO boz_auditor;
-
-
---
--- Name: TABLE escrow_summary_projection; Type: ACL; Schema: public; Owner: symphony_admin
---
-
-GRANT SELECT,INSERT,UPDATE ON TABLE public.escrow_summary_projection TO symphony_command;
-GRANT SELECT,INSERT,UPDATE ON TABLE public.escrow_summary_projection TO symphony_control;
-GRANT SELECT,INSERT,UPDATE ON TABLE public.escrow_summary_projection TO test_user;
-GRANT SELECT ON TABLE public.escrow_summary_projection TO symphony_query;
-GRANT SELECT ON TABLE public.escrow_summary_projection TO symphony_readonly;
-GRANT SELECT ON TABLE public.escrow_summary_projection TO symphony_auditor;
-
-
---
--- Name: TABLE evidence_bundle_projection; Type: ACL; Schema: public; Owner: symphony_admin
---
-
-GRANT SELECT,INSERT,UPDATE ON TABLE public.evidence_bundle_projection TO symphony_command;
-GRANT SELECT,INSERT,UPDATE ON TABLE public.evidence_bundle_projection TO symphony_control;
-GRANT SELECT,INSERT,UPDATE ON TABLE public.evidence_bundle_projection TO test_user;
-GRANT SELECT ON TABLE public.evidence_bundle_projection TO symphony_query;
-GRANT SELECT ON TABLE public.evidence_bundle_projection TO symphony_readonly;
-GRANT SELECT ON TABLE public.evidence_bundle_projection TO symphony_auditor;
-
-
---
--- Name: TABLE evidence_edges; Type: ACL; Schema: public; Owner: symphony_admin
---
-
-GRANT SELECT,INSERT ON TABLE public.evidence_edges TO symphony_command;
-GRANT ALL ON TABLE public.evidence_edges TO symphony_control;
-
-
---
--- Name: TABLE evidence_nodes; Type: ACL; Schema: public; Owner: symphony_admin
---
-
-GRANT SELECT,INSERT ON TABLE public.evidence_nodes TO symphony_command;
-GRANT ALL ON TABLE public.evidence_nodes TO symphony_control;
-
-
---
--- Name: TABLE evidence_pack_items; Type: ACL; Schema: public; Owner: symphony_admin
---
-
-GRANT SELECT ON TABLE public.evidence_pack_items TO boz_auditor;
-
-
---
--- Name: TABLE evidence_packs; Type: ACL; Schema: public; Owner: symphony_admin
---
-
-GRANT SELECT ON TABLE public.evidence_packs TO boz_auditor;
-
-
---
--- Name: TABLE external_proofs; Type: ACL; Schema: public; Owner: symphony_admin
---
-
-GRANT SELECT ON TABLE public.external_proofs TO boz_auditor;
-
-
---
--- Name: TABLE gf_verifier_read_tokens; Type: ACL; Schema: public; Owner: symphony_admin
---
-
-GRANT SELECT,INSERT ON TABLE public.gf_verifier_read_tokens TO symphony_command;
-GRANT ALL ON TABLE public.gf_verifier_read_tokens TO symphony_control;
-
-
---
--- Name: TABLE incident_case_projection; Type: ACL; Schema: public; Owner: symphony_admin
---
-
-GRANT SELECT,INSERT,UPDATE ON TABLE public.incident_case_projection TO symphony_command;
-GRANT SELECT,INSERT,UPDATE ON TABLE public.incident_case_projection TO symphony_control;
-GRANT SELECT,INSERT,UPDATE ON TABLE public.incident_case_projection TO test_user;
-GRANT SELECT ON TABLE public.incident_case_projection TO symphony_query;
-GRANT SELECT ON TABLE public.incident_case_projection TO symphony_readonly;
-GRANT SELECT ON TABLE public.incident_case_projection TO symphony_auditor;
-
-
---
--- Name: TABLE instruction_settlement_finality; Type: ACL; Schema: public; Owner: symphony_admin
---
-
-GRANT SELECT ON TABLE public.instruction_settlement_finality TO symphony_readonly;
-
-
---
--- Name: TABLE instruction_status_projection; Type: ACL; Schema: public; Owner: symphony_admin
---
-
-GRANT SELECT,INSERT,UPDATE ON TABLE public.instruction_status_projection TO symphony_command;
-GRANT SELECT,INSERT,UPDATE ON TABLE public.instruction_status_projection TO symphony_control;
-GRANT SELECT,INSERT,UPDATE ON TABLE public.instruction_status_projection TO test_user;
-GRANT SELECT ON TABLE public.instruction_status_projection TO symphony_query;
-GRANT SELECT ON TABLE public.instruction_status_projection TO symphony_readonly;
-GRANT SELECT ON TABLE public.instruction_status_projection TO symphony_auditor;
-
-
---
--- Name: TABLE interpretation_packs; Type: ACL; Schema: public; Owner: symphony_admin
---
-
-GRANT SELECT,INSERT ON TABLE public.interpretation_packs TO symphony_command;
-GRANT ALL ON TABLE public.interpretation_packs TO symphony_control;
-
-
---
--- Name: TABLE jurisdiction_profiles; Type: ACL; Schema: public; Owner: symphony_admin
---
-
-GRANT SELECT,INSERT ON TABLE public.jurisdiction_profiles TO symphony_command;
-GRANT ALL ON TABLE public.jurisdiction_profiles TO symphony_control;
-
-
---
--- Name: TABLE lifecycle_checkpoint_rules; Type: ACL; Schema: public; Owner: symphony_admin
---
-
-GRANT SELECT,INSERT ON TABLE public.lifecycle_checkpoint_rules TO symphony_command;
-GRANT ALL ON TABLE public.lifecycle_checkpoint_rules TO symphony_control;
-
-
---
--- Name: TABLE methodology_versions; Type: ACL; Schema: public; Owner: symphony_admin
---
-
-GRANT SELECT,INSERT,UPDATE ON TABLE public.methodology_versions TO symphony_command;
-GRANT ALL ON TABLE public.methodology_versions TO symphony_control;
-
-
---
--- Name: TABLE monitoring_records; Type: ACL; Schema: public; Owner: symphony_admin
---
-
-GRANT SELECT,INSERT ON TABLE public.monitoring_records TO symphony_command;
-GRANT ALL ON TABLE public.monitoring_records TO symphony_control;
-
-
---
--- Name: TABLE participant_outbox_sequences; Type: ACL; Schema: public; Owner: symphony_admin
---
-
-GRANT ALL ON TABLE public.participant_outbox_sequences TO symphony_control;
-
-
---
--- Name: TABLE participants; Type: ACL; Schema: public; Owner: symphony_admin
---
-
-GRANT SELECT ON TABLE public.participants TO boz_auditor;
-
-
---
--- Name: TABLE payment_outbox_attempts; Type: ACL; Schema: public; Owner: symphony_admin
---
-
-GRANT SELECT,INSERT ON TABLE public.payment_outbox_attempts TO symphony_control;
-GRANT SELECT ON TABLE public.payment_outbox_attempts TO symphony_readonly;
-GRANT SELECT ON TABLE public.payment_outbox_attempts TO symphony_auditor;
-GRANT SELECT ON TABLE public.payment_outbox_attempts TO boz_auditor;
-
-
---
--- Name: TABLE payment_outbox_pending; Type: ACL; Schema: public; Owner: symphony_admin
---
-
-GRANT ALL ON TABLE public.payment_outbox_pending TO symphony_control;
-GRANT SELECT ON TABLE public.payment_outbox_pending TO symphony_readonly;
-GRANT SELECT ON TABLE public.payment_outbox_pending TO symphony_auditor;
-GRANT SELECT ON TABLE public.payment_outbox_pending TO boz_auditor;
-
-
---
--- Name: TABLE pii_purge_events; Type: ACL; Schema: public; Owner: symphony_admin
---
-
-GRANT SELECT ON TABLE public.pii_purge_events TO symphony_readonly;
-
-
---
--- Name: TABLE pii_purge_requests; Type: ACL; Schema: public; Owner: symphony_admin
---
-
-GRANT SELECT ON TABLE public.pii_purge_requests TO symphony_readonly;
-
-
---
--- Name: TABLE pii_vault_records; Type: ACL; Schema: public; Owner: symphony_admin
---
-
-GRANT SELECT ON TABLE public.pii_vault_records TO symphony_readonly;
-
-
---
--- Name: TABLE program_member_summary_projection; Type: ACL; Schema: public; Owner: symphony_admin
---
-
-GRANT SELECT,INSERT,UPDATE ON TABLE public.program_member_summary_projection TO symphony_command;
-GRANT SELECT,INSERT,UPDATE ON TABLE public.program_member_summary_projection TO symphony_control;
-GRANT SELECT,INSERT,UPDATE ON TABLE public.program_member_summary_projection TO test_user;
-GRANT SELECT ON TABLE public.program_member_summary_projection TO symphony_query;
-GRANT SELECT ON TABLE public.program_member_summary_projection TO symphony_readonly;
-GRANT SELECT ON TABLE public.program_member_summary_projection TO symphony_auditor;
-
-
---
--- Name: TABLE programme_policy_binding; Type: ACL; Schema: public; Owner: symphony_admin
---
-
-GRANT SELECT,INSERT,UPDATE ON TABLE public.programme_policy_binding TO symphony_app_role;
-
-
---
--- Name: TABLE programme_registry; Type: ACL; Schema: public; Owner: symphony_admin
---
-
-GRANT SELECT,INSERT,UPDATE ON TABLE public.programme_registry TO symphony_app_role;
-
-
---
--- Name: TABLE projects; Type: ACL; Schema: public; Owner: symphony_admin
---
-
-GRANT SELECT,INSERT,UPDATE ON TABLE public.projects TO symphony_command;
-GRANT ALL ON TABLE public.projects TO symphony_control;
-
-
---
--- Name: TABLE rail_dispatch_truth_anchor; Type: ACL; Schema: public; Owner: symphony_admin
---
-
-GRANT SELECT ON TABLE public.rail_dispatch_truth_anchor TO symphony_readonly;
-
-
---
--- Name: TABLE regulatory_authorities; Type: ACL; Schema: public; Owner: symphony_admin
---
-
-GRANT SELECT,INSERT ON TABLE public.regulatory_authorities TO symphony_command;
-GRANT ALL ON TABLE public.regulatory_authorities TO symphony_control;
-
-
---
--- Name: TABLE regulatory_checkpoints; Type: ACL; Schema: public; Owner: symphony_admin
---
-
-GRANT SELECT,INSERT ON TABLE public.regulatory_checkpoints TO symphony_command;
-GRANT ALL ON TABLE public.regulatory_checkpoints TO symphony_control;
-
-
---
--- Name: TABLE retirement_events; Type: ACL; Schema: public; Owner: symphony_admin
---
-
-GRANT SELECT,INSERT ON TABLE public.retirement_events TO symphony_command;
-GRANT ALL ON TABLE public.retirement_events TO symphony_control;
-
-
---
--- Name: TABLE supplier_registry; Type: ACL; Schema: public; Owner: symphony_admin
---
-
-GRANT SELECT,INSERT,UPDATE ON TABLE public.supplier_registry TO symphony_command;
-GRANT ALL ON TABLE public.supplier_registry TO symphony_control;
-
-
---
--- Name: TABLE tenant_registry; Type: ACL; Schema: public; Owner: symphony_admin
---
-
-GRANT SELECT,INSERT,UPDATE ON TABLE public.tenant_registry TO symphony_app_role;
-
-
---
--- Name: TABLE verifier_project_assignments; Type: ACL; Schema: public; Owner: symphony_admin
---
-
-GRANT SELECT,INSERT ON TABLE public.verifier_project_assignments TO symphony_command;
-GRANT ALL ON TABLE public.verifier_project_assignments TO symphony_control;
-
-
---
--- Name: TABLE verifier_registry; Type: ACL; Schema: public; Owner: symphony_admin
---
-
-GRANT SELECT,INSERT ON TABLE public.verifier_registry TO symphony_command;
-GRANT ALL ON TABLE public.verifier_registry TO symphony_control;
-
-
---
 -- PostgreSQL database dump complete
 --
 
-\unrestrict 5CcpZCtwrUc0as8GwJ1lVmZ8WePdsa6lom3AFXIjQUhLtAxjb2Xz0RRcadov6JW
+\unrestrict Tc6GW2B7uc6hjAyqA7kIghEvPfeM5HZJN2DdRveR9prCQQJaswtLbLSFpo8w2nE
 

@@ -46,3 +46,7 @@ The following regulated surfaces are modified:
 - **Approval Artifact:** approvals/2026-04-17/wave3-execution-records-implementation.md
 - **Change Reason:** Wave 3 implementation: Create execution_records table with interpretation_version_id FK to bind executions to interpretation packs
 - **Approved At:** 2026-04-17T20:25:00Z
+
+## 8. Cross-References (Machine-Readable)
+
+Approval Sidecar JSON: approvals/2026-04-17/wave3-execution-records-implementation.approval.json

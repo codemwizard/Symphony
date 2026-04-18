@@ -3,11 +3,24 @@
   "task_id": "TSK-P1-073",
   "timestamp_utc": "1970-01-01T00:00:00Z",
   "git_sha": "0000000000000000000000000000000000000000",
-  "schema_fingerprint": "1fdf05c50ee35492913d64677c55a8be0165181fe89fe8350dbd8df92094fa14",
+  "schema_fingerprint": "e9f9ee33755f7f9ea332282cb585e1b9fbb8ba94456a672d42fbc88fd2d701a8",
   "status": "PASS",
   "base_ref": "refs/remotes/origin/main",
   "head_ref": "HEAD",
   "triggered_files": [],
-  "freshness_docs": [],
+  "freshness_docs": [
+    "docs/plans/phase2/TSK-P2-PREAUTH-003-00/EXEC_LOG.md",
+    "docs/plans/phase2/TSK-P2-PREAUTH-003-00/PLAN.md",
+    "docs/plans/phase2/TSK-P2-PREAUTH-003-01/EXEC_LOG.md",
+    "docs/plans/phase2/TSK-P2-PREAUTH-003-01/PLAN.md",
+    "docs/plans/phase2/TSK-P2-PREAUTH-003-02/EXEC_LOG.md",
+    "docs/plans/phase2/TSK-P2-PREAUTH-003-02/PLAN.md",
+    "docs/plans/phase2/TSK-P2-PREAUTH-004-00/EXEC_LOG.md",
+    "docs/plans/phase2/TSK-P2-PREAUTH-004-00/PLAN.md",
+    "docs/plans/phase2/TSK-P2-PREAUTH-004-01/EXEC_LOG.md",
+    "docs/plans/phase2/TSK-P2-PREAUTH-004-01/PLAN.md",
+    "docs/plans/phase2/TSK-P2-PREAUTH-004-02/EXEC_LOG.md",
+    "docs/plans/phase2/TSK-P2-PREAUTH-004-02/PLAN.md"
+  ],
   "failures": []
 }
