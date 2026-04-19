@@ -765,6 +765,15 @@
             "expires_on": "2026-12-31",
             "reviewed_by": "db_foundation",
             "approved_at": "2026-04-18"
+        },
+        {
+            "id": "DDL-ALLOW-0107",
+            "migration_file": "schema/migrations/0128_taxonomy_aligned.sql",
+            "statement_fingerprint": "alter table public.projects add column taxonomy_aligned boolean",
+            "reason": "Wave 8 regulatory extension: adds taxonomy_aligned column for K13 taxonomy alignment checking. Follows expand/contract pattern: add as nullable, backfill, then add NOT NULL constraint.",
+            "expiration_date": "2026-06-01",
+            "reviewer": "mwiza",
+            "approval_date": "2026-04-19"
         }
     ]
 }
