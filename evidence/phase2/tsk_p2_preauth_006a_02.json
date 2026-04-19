@@ -1,0 +1,16 @@
+{
+  "task_id": "TSK-P2-PREAUTH-006A-02",
+  "git_sha": "160decf2c98af7e3950969cec1afda0c8f710a70",
+  "timestamp_utc": "2026-04-18T16:17:14Z",
+  "status": "success",
+  "checks": {
+    "data_authority_exists": true,
+    "audit_grade_exists": true,
+    "authority_explanation_exists": true,
+    "data_authority_default": "'phase1_indicative_only'::data_authority_level",
+    "audit_grade_default": "false",
+    "authority_explanation_default": "'Phase 1 data - no execution binding'::text"
+  },
+  "columns_exist": true,
+  "defaults_applied": true
+}

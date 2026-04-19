@@ -1,7 +1,7 @@
 schema_version: 1
 phase: '2'
 task_id: TSK-P2-PREAUTH-007-05
-title: "Register INV-174 append-only state transitions and INV-175 execution binding"
+title: "Promote INV-165/167 and wire pre_ci.sh"
 owner_role: INVARIANTS_CURATOR
 status: planned
 priority: HIGH
@@ -9,104 +9,119 @@ risk_class: GOVERNANCE
 blast_radius: DOCS_ONLY
 
 intent: >-
-  This task registers INV-174 for append-only state transitions and INV-175 for execution binding
-  requirement. Without these invariants, state transition immutability and execution binding
-  are not governed, creating risk of audit trail corruption and non-reproducible calculations.
+  This task promotes INV-165 and INV-167 to implemented status in INVARIANTS_MANIFEST.yml
+  and wires verify_tsk_p2_preauth_006a.sh, verify_tsk_p2_preauth_005_08.sh, verify_tsk_p2_preauth_006c.sh
+  into pre_ci.sh. This completes the invariant registration and CI wiring gate.
 
 anti_patterns:
-  - "Registering invariants without verification_command"
-  - "Using incorrect enforcement_location"
-  - "Writing the verifier after registration"
+  - "Promoting invariant without verification"
+  - "Wiring verifier without testing"
+  - "Modifying pre_ci.sh without CI validation"
 
 out_of_scope:
-  - "Verifier implementation"
-  - "Database schema changes"
+  - "New invariant registration"
 
 stop_conditions:
-  - "If INV-174 or INV-175 are not added to INVARIANTS_MANIFEST.yml"
-  - "If status is not set to draft"
-  - "If enforcement_location is not set to schema/migrations/0120"
+  - "If INV-165 or INV-167 are not promoted to implemented"
+  - "If pre_ci.sh does not include all three verifiers"
 
 proof_guarantees:
-  - "INV-174 exists in INVARIANTS_MANIFEST.yml"
-  - "INV-175 exists in INVARIANTS_MANIFEST.yml"
-  - "Both invariants have status: draft"
-  - "Both invariants have enforcement_location: schema/migrations/0120"
-  - "Both invariants have verification_command"
+  - "INV-165 has status: implemented"
+  - "INV-167 has status: implemented"
+  - "pre_ci.sh includes verify_tsk_p2_preauth_006a.sh"
+  - "pre_ci.sh includes verify_tsk_p2_preauth_005_08.sh"
+  - "pre_ci.sh includes verify_tsk_p2_preauth_006c.sh"
   - "Verifier script exits 0 and emits evidence"
 
 proof_limitations:
-  - "Cannot verify that the invariants will be correctly enforced"
-  - "Cannot verify that the verification commands are correct"
+  - "Cannot verify that promoted invariants will be correctly enforced"
+  - "Cannot verify that pre_ci.sh wiring will pass CI"
 
 depends_on:
   - TSK-P2-PREAUTH-007-04
 blocks:
   - TSK-P2-REG-001-00
+  - TSK-P2-REG-002-00
+  - TSK-P2-REG-004-00
 
 touches:
   - docs/invariants/INVARIANTS_MANIFEST.yml
+  - scripts/dev/pre_ci.sh
   - scripts/audit/verify_tsk_p2_preauth_007_05.sh
   - tasks/TSK-P2-PREAUTH-007-05/meta.yml
 
 invariants:
-  - INV-174
-  - INV-175
+  - INV-165
+  - INV-167
 
 work:
   - >-
-    [ID tsk_p2_preauth_007_05_work_item_01] Add INV-174 to INVARIANTS_MANIFEST.yml with:
-    id: INV-174, title: append-only state transitions, status: draft,
-    enforcement_location: schema/migrations/0120, verification_command: grep -E 'deny_state_transitions_mutation.*BEFORE.*UPDATE.*OR.*DELETE.*state_transitions' schema/migrations/0120.
+    [ID tsk_p2_preauth_007_05_work_item_01] Update INV-165 status to implemented in INVARIANTS_MANIFEST.yml.
   - >-
-    [ID tsk_p2_preauth_007_05_work_item_02] Add INV-175 to INVARIANTS_MANIFEST.yml with:
-    id: INV-175, title: execution binding requirement, status: draft,
-    enforcement_location: schema/migrations/0120, verification_command: grep -E 'enforce_execution_binding.*BEFORE.*INSERT.*OR.*UPDATE.*state_transitions' schema/migrations/0120.
+    [ID tsk_p2_preauth_007_05_work_item_02] Update INV-167 status to implemented in INVARIANTS_MANIFEST.yml.
   - >-
-    [ID tsk_p2_preauth_007_05_work_item_03] Write verify_tsk_p2_preauth_007_05.sh that runs grep to verify
-    INV-174 and INV-175 exist in INVARIANTS_MANIFEST.yml with correct fields.
+    [ID tsk_p2_preauth_007_05_work_item_03] Verify pre_ci.sh includes verify_tsk_p2_preauth_006a.sh.
   - >-
-    [ID tsk_p2_preauth_007_05_work_item_04] Run verify_tsk_p2_preauth_007_05.sh to confirm invariants are registered correctly.
+    [ID tsk_p2_preauth_007_05_work_item_04] Verify pre_ci.sh includes verify_tsk_p2_preauth_005_08.sh.
+  - >-
+    [ID tsk_p2_preauth_007_05_work_item_05] Verify pre_ci.sh includes verify_tsk_p2_preauth_006c.sh.
+  - >-
+    [ID tsk_p2_preauth_007_05_work_item_06] Write verify_tsk_p2_preauth_007_05.sh that verifies all above changes.
+  - >-
+    [ID tsk_p2_preauth_007_05_work_item_07] Run verify_tsk_p2_preauth_007_05.sh to confirm changes are correct.
 
 acceptance_criteria:
   - >-
-    [ID tsk_p2_preauth_007_05_work_item_01] INV-174 exists in INVARIANTS_MANIFEST.yml.
+    [ID tsk_p2_preauth_007_05_work_item_01] INV-165 has status: implemented.
   - >-
-    [ID tsk_p2_preauth_007_05_work_item_02] INV-175 exists in INVARIANTS_MANIFEST.yml.
+    [ID tsk_p2_preauth_007_05_work_item_02] INV-167 has status: implemented.
   - >-
-    [ID tsk_p2_preauth_007_05_work_item_01] INV-174 has status: draft.
+    [ID tsk_p2_preauth_007_05_work_item_03] pre_ci.sh includes verify_tsk_p2_preauth_006a.sh.
   - >-
-    [ID tsk_p2_preauth_007_05_work_item_02] INV-175 has status: draft.
+    [ID tsk_p2_preauth_007_05_work_item_04] pre_ci.sh includes verify_tsk_p2_preauth_005_08.sh.
   - >-
-    [ID tsk_p2_preauth_007_05_work_item_03] verify_tsk_p2_preauth_007_05.sh exists and checks for invariants.
+    [ID tsk_p2_preauth_007_05_work_item_05] pre_ci.sh includes verify_tsk_p2_preauth_006c.sh.
   - >-
-    [ID tsk_p2_preauth_007_05_work_item_04] verify_tsk_p2_preauth_007_05.sh exits 0.
+    [ID tsk_p2_preauth_007_05_work_item_06] verify_tsk_p2_preauth_007_05.sh exists and checks all changes.
+  - >-
+    [ID tsk_p2_preauth_007_05_work_item_07] verify_tsk_p2_preauth_007_05.sh exits 0.
 
 negative_tests:
   - id: TSK-P2-PREAUTH-007-05-N1
     description: >-
-      Verify that verify_tsk_p2_preauth_007_05.sh exits non-zero when INV-174 or INV-175 does not exist in INVARIANTS_MANIFEST.yml.
+      Verify that verify_tsk_p2_preauth_007_05.sh exits non-zero when INV-165 or INV-167 are not promoted to implemented.
     required: true
 
 positive_tests:
   - id: TSK-P2-PREAUTH-007-05-P1
     description: >-
-      Verify that verify_tsk_p2_preauth_007_05.sh exits 0 when both invariants exist with correct fields.
+      Verify that verify_tsk_p2_preauth_007_05.sh exits 0 when INV-165/167 are promoted and pre_ci.sh includes all verifiers.
     required: false
 
 verification:
   - >-
     # [ID tsk_p2_preauth_007_05_work_item_01] [ID tsk_p2_preauth_007_05_work_item_02]
     # [ID tsk_p2_preauth_007_05_work_item_03] [ID tsk_p2_preauth_007_05_work_item_04]
+    # [ID tsk_p2_preauth_007_05_work_item_05] [ID tsk_p2_preauth_007_05_work_item_06]
+    # [ID tsk_p2_preauth_007_05_work_item_07]
     test -x scripts/audit/verify_tsk_p2_preauth_007_05.sh && bash scripts/audit/verify_tsk_p2_preauth_007_05.sh > evidence/phase2/tsk_p2_preauth_007_05.json || exit 1
   - >-
-    grep -A 5 "id: INV-174" docs/invariants/INVARIANTS_MANIFEST.yml | grep -q "status: draft" &&
-    grep -A 5 "id: INV-174" docs/invariants/INVARIANTS_MANIFEST.yml | grep -q "enforcement_location" || exit 1
+    # [ID tsk_p2_preauth_007_05_work_item_01]
+    grep -A 5 "id: INV-165" docs/invariants/INVARIANTS_MANIFEST.yml | grep -q "status: implemented" || exit 1
   - >-
-    grep -A 5 "id: INV-175" docs/invariants/INVARIANTS_MANIFEST.yml | grep -q "status: draft" &&
-    grep -A 5 "id: INV-175" docs/invariants/INVARIANTS_MANIFEST.yml | grep -q "enforcement_location" || exit 1
+    # [ID tsk_p2_preauth_007_05_work_item_02]
+    grep -A 5 "id: INV-167" docs/invariants/INVARIANTS_MANIFEST.yml | grep -q "status: implemented" || exit 1
+  - >-
+    # [ID tsk_p2_preauth_007_05_work_item_03]
+    grep -q "verify_tsk_p2_preauth_006a.sh" scripts/dev/pre_ci.sh || exit 1
   - >-
     # [ID tsk_p2_preauth_007_05_work_item_04]
+    grep -q "verify_tsk_p2_preauth_005_08.sh" scripts/dev/pre_ci.sh || exit 1
+  - >-
+    # [ID tsk_p2_preauth_007_05_work_item_05]
+    grep -q "verify_tsk_p2_preauth_006c.sh" scripts/dev/pre_ci.sh || exit 1
+  - >-
+    # [ID tsk_p2_preauth_007_05_work_item_07]
     test -f evidence/phase2/tsk_p2_preauth_007_05.json || exit 1
 
 evidence:
@@ -117,14 +132,14 @@ evidence:
       - timestamp_utc
       - status
       - checks
-      - inv_174_registered
-      - inv_175_registered
-      - both_status_draft
+      - inv_165_status_implemented
+      - inv_167_status_implemented
+      - pre_ci_wired
 
 failure_modes:
-  - "INV-174 not registered => CRITICAL_FAIL"
-  - "INV-175 not registered => CRITICAL_FAIL"
-  - "Either status not draft => FAIL"
+  - "INV-165 not promoted => CRITICAL_FAIL"
+  - "INV-167 not promoted => CRITICAL_FAIL"
+  - "pre_ci.sh missing verifiers => FAIL"
   - "Evidence file missing => FAIL"
 
 must_read:

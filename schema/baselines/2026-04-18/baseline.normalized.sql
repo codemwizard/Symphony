@@ -5,6 +5,11 @@
                         (v_confidence >= v_threshold AND v_approved > 0);
                    (ad.decision_payload_json->>'confidence_score')::NUMERIC
                 'Regulation 26 violation: validator cannot verify the same project (verifier_id=%, project_id=%)',
+                NEW.audit_grade := true;
+                NEW.authority_explanation := 'Execution binding with signature';
+                NEW.authority_explanation := 'Execution binding without signature';
+                NEW.data_authority := 'authoritative_signed';
+                NEW.data_authority := 'policy_bound_unsigned';
                 USING ERRCODE = 'GF001';
                 USING ERRCODE = 'GF001';
                 USING ERRCODE = 'GF003';
@@ -61,12 +66,35 @@
             'to_status', 'ISSUED',
             'to_status', CASE WHEN (v_total_retired + v_retire_qty) >= v_batch_quantity
             'unit', p_unit,
+            (NEW.data_authority = 'invalidated')
+            (NEW.data_authority = 'invalidated')
+            (NEW.data_authority = 'invalidated')
+            (OLD.data_authority = 'authoritative_signed' AND NEW.data_authority = 'superseded') OR
+            (OLD.data_authority = 'authoritative_signed' AND NEW.data_authority = 'superseded') OR
+            (OLD.data_authority = 'authoritative_signed' AND NEW.data_authority = 'superseded') OR
+            (OLD.data_authority = 'derived_unverified' AND NEW.data_authority IN ('policy_bound_unsigned', 'authoritative_signed')) OR
+            (OLD.data_authority = 'derived_unverified' AND NEW.data_authority IN ('policy_bound_unsigned', 'authoritative_signed')) OR
+            (OLD.data_authority = 'derived_unverified' AND NEW.data_authority IN ('policy_bound_unsigned', 'authoritative_signed')) OR
+            (OLD.data_authority = 'non_reproducible' AND NEW.data_authority IN ('derived_unverified', 'policy_bound_unsigned', 'authoritative_signed')) OR
+            (OLD.data_authority = 'non_reproducible' AND NEW.data_authority IN ('derived_unverified', 'policy_bound_unsigned', 'authoritative_signed')) OR
+            (OLD.data_authority = 'non_reproducible' AND NEW.data_authority IN ('derived_unverified', 'policy_bound_unsigned', 'authoritative_signed')) OR
+            (OLD.data_authority = 'phase1_indicative_only' AND NEW.data_authority IN ('derived_unverified', 'policy_bound_unsigned', 'authoritative_signed')) OR
+            (OLD.data_authority = 'phase1_indicative_only' AND NEW.data_authority IN ('derived_unverified', 'policy_bound_unsigned', 'authoritative_signed')) OR
+            (OLD.data_authority = 'policy_bound_unsigned' AND NEW.data_authority = 'authoritative_signed') OR
+            (OLD.data_authority = 'policy_bound_unsigned' AND NEW.data_authority = 'authoritative_signed') OR
+            (OLD.data_authority = 'policy_bound_unsigned' AND NEW.data_authority = 'authoritative_signed') OR
             AND ee.tenant_id      = en.tenant_id
+            ELSE
+            END IF;
+            IF NEW.signature IS NOT NULL THEN
             NEW.asset_batch_id
             NEW.asset_batch_id
             NULL;
             OR (ad.decision_payload_json->>'subject_id')::UUID = p_subject_id)
             RAISE EXCEPTION
+            RAISE EXCEPTION 'GF037: Invalid data_authority transition from % to %', OLD.data_authority, NEW.data_authority;
+            RAISE EXCEPTION 'GF037: Invalid data_authority transition from % to %', OLD.data_authority, NEW.data_authority;
+            RAISE EXCEPTION 'GF037: Invalid data_authority transition from % to %', OLD.data_authority, NEW.data_authority;
             RAISE EXCEPTION 'Issuance blocked: % unsatisfied REQUIRED checkpoints for ACTIVE->ISSUED transition',
             RAISE EXCEPTION 'UPDATE not allowed on immutable columns of gf_verifier_read_tokens'
             RAISE EXCEPTION 'interpretation_pack_id not found or jurisdiction mismatch'
@@ -233,6 +261,9 @@
         ) THEN
         ) THEN
         ) THEN
+        ) THEN
+        ) THEN
+        ) THEN
         ) VALUES (
         ) VALUES (
         ) VALUES (
@@ -257,8 +288,16 @@
         END IF;
         END IF;
         END IF;
+        END IF;
+        END IF;
+        END IF;
+        END IF;
         FROM payment_outbox_pending p
         IF EXISTS (
+        IF NEW.execution_id IS NOT NULL THEN
+        IF NOT (
+        IF NOT (
+        IF NOT (
         IF NOT EXISTS (
         IF NOT EXISTS (
         IF NOT EXISTS (
@@ -1009,14 +1048,21 @@
     'ZOMBIE_REQUEUE'
     'active'
     'approved',
+    'authoritative_signed',
     'blocked_legal_hold'
     'cooling_off',
     'denied',
+    'derived_unverified',
     'draft',
     'eligible_execute',
     'executed',
+    'invalidated'
+    'non_reproducible',
     'pending_approval',
+    'phase1_indicative_only',
+    'policy_bound_unsigned',
     'requested',
+    'superseded',
     'v1', 'signing-service-v1', 'trust-chain-main',
     (EXTRACT(year FROM enrolled_at))::integer AS program_year,
     (s->>'max_length')::integer,
@@ -1525,6 +1571,10 @@
     AS $$
     AS $$
     AS $$
+    AS $$
+    AS $$
+    AS $$
+    AS $$
     BEGIN
     BEGIN
     CASE WHEN v_state='FINALITY_CONFLICT' THEN 'HOLD_RELEASE' ELSE NULL END
@@ -1809,6 +1859,10 @@
     END IF;
     END IF;
     END IF;
+    END IF;
+    END IF;
+    END IF;
+    END IF;
     END LOOP;
     END,
     END;
@@ -1862,6 +1916,10 @@
     IF TG_OP = 'DELETE' THEN
     IF TG_OP = 'DELETE' THEN
     IF TG_OP = 'DELETE' THEN
+    IF TG_OP = 'INSERT' OR (TG_OP = 'UPDATE' AND (OLD.execution_id IS DISTINCT FROM NEW.execution_id OR OLD.signature IS DISTINCT FROM NEW.signature)) THEN
+    IF TG_OP = 'UPDATE' AND OLD.data_authority IS DISTINCT FROM NEW.data_authority THEN
+    IF TG_OP = 'UPDATE' AND OLD.data_authority IS DISTINCT FROM NEW.data_authority THEN
+    IF TG_OP = 'UPDATE' AND OLD.data_authority IS DISTINCT FROM NEW.data_authority THEN
     IF TG_OP = 'UPDATE' OR TG_OP = 'DELETE' THEN
     IF TG_OP = 'UPDATE' THEN
     IF TG_OP = 'UPDATE' THEN
@@ -2137,6 +2195,10 @@
     LANGUAGE plpgsql SECURITY DEFINER
     LANGUAGE plpgsql SECURITY DEFINER
     LANGUAGE plpgsql SECURITY DEFINER
+    LANGUAGE plpgsql SECURITY DEFINER
+    LANGUAGE plpgsql SECURITY DEFINER
+    LANGUAGE plpgsql SECURITY DEFINER
+    LANGUAGE plpgsql SECURITY DEFINER
     LANGUAGE plpgsql STABLE
     LANGUAGE sql
     LANGUAGE sql SECURITY DEFINER
@@ -2312,6 +2374,10 @@
     RETURN NEW;
     RETURN NEW;
     RETURN NEW;
+    RETURN NEW;
+    RETURN NEW;
+    RETURN NEW;
+    RETURN NEW;
     RETURN NULL;
     RETURN NULL;
     RETURN NULL;
@@ -2427,6 +2493,10 @@
     SET inquiry_state = 'AWAITING_EXECUTION',
     SET program_id = EXCLUDED.program_id,
     SET program_id = EXCLUDED.program_id,
+    SET search_path TO 'pg_catalog', 'public'
+    SET search_path TO 'pg_catalog', 'public'
+    SET search_path TO 'pg_catalog', 'public'
+    SET search_path TO 'pg_catalog', 'public'
     SET search_path TO 'pg_catalog', 'public'
     SET search_path TO 'pg_catalog', 'public'
     SET search_path TO 'pg_catalog', 'public'
@@ -2692,7 +2762,13 @@
     attestation_id uuid NOT NULL,
     attestation_id uuid NOT NULL,
     attestation_timestamp timestamp with time zone DEFAULT now() NOT NULL,
+    audit_grade boolean NOT NULL,
+    audit_grade boolean NOT NULL,
+    audit_grade boolean NOT NULL,
     authority_decision_id uuid DEFAULT public.uuid_v7_or_random() NOT NULL,
+    authority_explanation text NOT NULL
+    authority_explanation text NOT NULL
+    authority_explanation text NOT NULL,
     authority_name text NOT NULL,
     authority_reference text NOT NULL,
     authority_type text NOT NULL,
@@ -2809,7 +2885,7 @@
     created_at timestamp with time zone DEFAULT now() NOT NULL
     created_at timestamp with time zone DEFAULT now() NOT NULL
     created_at timestamp with time zone DEFAULT now() NOT NULL
-    created_at timestamp with time zone DEFAULT now() NOT NULL
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
     created_at timestamp with time zone DEFAULT now() NOT NULL,
     created_at timestamp with time zone DEFAULT now() NOT NULL,
     created_at timestamp with time zone DEFAULT now() NOT NULL,
@@ -2884,6 +2960,9 @@
     current_hash text NOT NULL,
     current_state character varying NOT NULL,
     current_user,
+    data_authority public.data_authority_level NOT NULL,
+    data_authority public.data_authority_level NOT NULL,
+    data_authority public.data_authority_level NOT NULL,
     db_access boolean NOT NULL,
     deactivated_at timestamp with time zone,
     deactivation_reason text,
@@ -3541,7 +3620,7 @@
     sequence_id bigint NOT NULL,
     severity text NOT NULL,
     sign_event_id uuid DEFAULT gen_random_uuid() NOT NULL,
-    signature text
+    signature text,
     signature text,
     signature_alg text,
     signature_hash text,
@@ -4827,7 +4906,12 @@ $$;
 $$;
 $$;
 $$;
+$$;
+$$;
+$$;
+$$;
 )
+);
 );
 );
 );
@@ -5470,6 +5554,10 @@ BEGIN
 BEGIN
 BEGIN
 BEGIN
+BEGIN
+BEGIN
+BEGIN
+BEGIN
 CREATE FUNCTION public.acknowledge_inquiry_response(p_instruction_id text, p_policy_version_id text) RETURNS public.inquiry_state_enum
 CREATE FUNCTION public.activate_policy_bundle(p_policy_bundle_id uuid) RETURNS void
 CREATE FUNCTION public.activate_project(p_tenant_id uuid, p_project_id uuid) RETURNS TABLE(project_id uuid, status text)
@@ -5517,12 +5605,15 @@ CREATE FUNCTION public.deny_sim_swap_alerts_mutation() RETURNS trigger
 CREATE FUNCTION public.deny_state_transitions_mutation() RETURNS trigger
 CREATE FUNCTION public.derive_sim_swap_alert(p_event_id uuid) RETURNS uuid
 CREATE FUNCTION public.enforce_adjustment_terminal_immutability() RETURNS trigger
+CREATE FUNCTION public.enforce_asset_batch_authority() RETURNS trigger
 CREATE FUNCTION public.enforce_confidence_before_issuance() RETURNS trigger
 CREATE FUNCTION public.enforce_execution_binding() RETURNS trigger
 CREATE FUNCTION public.enforce_instruction_reversal_source() RETURNS trigger
 CREATE FUNCTION public.enforce_internal_ledger_posting_context() RETURNS trigger
 CREATE FUNCTION public.enforce_member_tenant_match() RETURNS trigger
+CREATE FUNCTION public.enforce_monitoring_authority() RETURNS trigger
 CREATE FUNCTION public.enforce_settlement_acknowledgement() RETURNS trigger
+CREATE FUNCTION public.enforce_state_transition_authority() RETURNS trigger
 CREATE FUNCTION public.enforce_transition_authority() RETURNS trigger
 CREATE FUNCTION public.enforce_transition_signature() RETURNS trigger
 CREATE FUNCTION public.enforce_transition_state_rules() RETURNS trigger
@@ -5593,6 +5684,7 @@ CREATE FUNCTION public.touch_programs_updated_at() RETURNS trigger
 CREATE FUNCTION public.transition_asset_status(p_tenant_id uuid, p_subject_id uuid, p_to_status text) RETURNS void
 CREATE FUNCTION public.transition_escrow_state(p_escrow_id uuid, p_to_state text, p_actor_id text DEFAULT 'system'::text, p_reason text DEFAULT NULL::text, p_metadata jsonb DEFAULT '{}'::jsonb, p_now timestamp with time zone DEFAULT now()) RETURNS TABLE(escrow_id uuid, previous_state text, new_state text, event_id uuid)
 CREATE FUNCTION public.update_current_state() RETURNS trigger
+CREATE FUNCTION public.upgrade_authority_on_execution_binding() RETURNS trigger
 CREATE FUNCTION public.uuid_strategy() RETURNS text
 CREATE FUNCTION public.uuid_v7_or_random() RETURNS uuid
 CREATE FUNCTION public.validate_confidence_score(p_asset_batch_id uuid) RETURNS TABLE(confidence_score numeric, required_threshold numeric, decision_count integer, approved_count integer, is_sufficient boolean)
@@ -5917,9 +6009,12 @@ CREATE TRIGGER trg_deny_rail_dispatch_truth_anchor_mutation BEFORE DELETE OR UPD
 CREATE TRIGGER trg_deny_revoked_client_certs_mutation BEFORE DELETE OR UPDATE ON public.revoked_client_certs FOR EACH ROW EXECUTE FUNCTION public.deny_revocation_mutation();
 CREATE TRIGGER trg_deny_revoked_tokens_mutation BEFORE DELETE OR UPDATE ON public.revoked_tokens FOR EACH ROW EXECUTE FUNCTION public.deny_revocation_mutation();
 CREATE TRIGGER trg_deny_sim_swap_alerts_mutation BEFORE DELETE OR UPDATE ON public.sim_swap_alerts FOR EACH ROW EXECUTE FUNCTION public.deny_sim_swap_alerts_mutation();
+CREATE TRIGGER trg_enforce_asset_batch_authority BEFORE INSERT OR UPDATE ON public.asset_batches FOR EACH ROW EXECUTE FUNCTION public.enforce_asset_batch_authority();
 CREATE TRIGGER trg_enforce_instruction_reversal_source BEFORE INSERT ON public.instruction_settlement_finality FOR EACH ROW EXECUTE FUNCTION public.enforce_instruction_reversal_source();
 CREATE TRIGGER trg_enforce_internal_ledger_posting_context BEFORE INSERT OR UPDATE ON public.internal_ledger_postings FOR EACH ROW EXECUTE FUNCTION public.enforce_internal_ledger_posting_context();
+CREATE TRIGGER trg_enforce_monitoring_authority BEFORE INSERT OR UPDATE ON public.monitoring_records FOR EACH ROW EXECUTE FUNCTION public.enforce_monitoring_authority();
 CREATE TRIGGER trg_enforce_settlement_acknowledgement BEFORE INSERT ON public.instruction_settlement_finality FOR EACH ROW EXECUTE FUNCTION public.enforce_settlement_acknowledgement();
+CREATE TRIGGER trg_enforce_state_transition_authority BEFORE INSERT OR UPDATE ON public.state_transitions FOR EACH ROW EXECUTE FUNCTION public.enforce_state_transition_authority();
 CREATE TRIGGER trg_ingress_member_tenant_match BEFORE INSERT ON public.ingress_attestations FOR EACH ROW EXECUTE FUNCTION public.enforce_member_tenant_match();
 CREATE TRIGGER trg_set_corr_id_ingress_attestations BEFORE INSERT ON public.ingress_attestations FOR EACH ROW EXECUTE FUNCTION public.set_correlation_id_if_null();
 CREATE TRIGGER trg_set_corr_id_payment_outbox_attempts BEFORE INSERT ON public.payment_outbox_attempts FOR EACH ROW EXECUTE FUNCTION public.set_correlation_id_if_null();
@@ -5932,9 +6027,11 @@ CREATE TRIGGER trg_touch_inquiry_state_machine_updated_at BEFORE UPDATE ON publi
 CREATE TRIGGER trg_touch_members_updated_at BEFORE INSERT OR UPDATE ON public.members FOR EACH ROW EXECUTE FUNCTION public.touch_members_updated_at();
 CREATE TRIGGER trg_touch_persons_updated_at BEFORE UPDATE ON public.persons FOR EACH ROW EXECUTE FUNCTION public.touch_persons_updated_at();
 CREATE TRIGGER trg_touch_programs_updated_at BEFORE UPDATE ON public.programs FOR EACH ROW EXECUTE FUNCTION public.touch_programs_updated_at();
+CREATE TRIGGER trg_upgrade_authority_on_execution_binding BEFORE INSERT OR UPDATE ON public.state_transitions FOR EACH ROW EXECUTE FUNCTION public.upgrade_authority_on_execution_binding();
 CREATE TRIGGER verifier_project_assignments_no_mutate BEFORE DELETE OR UPDATE ON public.verifier_project_assignments FOR EACH ROW EXECUTE FUNCTION public.gf_verifier_tables_append_only();
 CREATE TRIGGER verifier_registry_no_mutate BEFORE DELETE OR UPDATE ON public.verifier_registry FOR EACH ROW EXECUTE FUNCTION public.gf_verifier_tables_append_only();
 CREATE TYPE public.adjustment_state_enum AS ENUM (
+CREATE TYPE public.data_authority_level AS ENUM (
 CREATE TYPE public.finality_resolution_state_enum AS ENUM (
 CREATE TYPE public.finality_signal_status_enum AS ENUM (
 CREATE TYPE public.inquiry_state_enum AS ENUM (
@@ -6026,6 +6123,10 @@ DECLARE
 DECLARE
 DECLARE
 DECLARE
+END;
+END;
+END;
+END;
 END;
 END;
 END;

@@ -9,10 +9,12 @@ risk_class: GOVERNANCE
 blast_radius: DOCS_ONLY
 
 intent: >-
-  This task creates the PLAN.md for registering 6 new invariants (INV-170 through INV-175)
-  for the pre-phase2 implementation. Without a verified plan, the invariant registration
-  lacks architectural documentation and verification trace, creating risk of incomplete
-  or incorrect implementation of governance coverage.
+  This task creates the PLAN.md for registering INV-175 (data_authority_enforced),
+  INV-176 (state_machine_enforced), INV-177 (phase1_boundary_marked), promoting
+  INV-165/167 to implemented status, and wiring new verifier scripts into pre_ci.sh.
+  Without a verified plan, the invariant registration and CI wiring lacks architectural
+  documentation and verification trace, creating risk of incomplete or incorrect
+  implementation of governance coverage.
 
 anti_patterns:
   - "Creating PLAN.md after implementation has started"
@@ -53,14 +55,15 @@ work:
     from PLAN_TEMPLATE.md with objective, architectural context, pre-conditions, files to change,
     stop conditions, implementation steps, verification, evidence contract, rollback, and risk sections.
   - >-
-    [ID tsk_p2_preauth_007_00_work_item_02] Document registering INV-170 (interpretation_pack temporal uniqueness),
-    INV-171 (execution truth anchoring), INV-172 (state machine enforcement), INV-173 (data authority contract),
-    INV-174 (append-only state transitions), INV-175 (execution binding requirement).
+    [ID tsk_p2_preauth_007_00_work_item_02] Document registering INV-175 (data_authority_enforced),
+    INV-176 (state_machine_enforced), INV-177 (phase1_boundary_marked).
   - >-
-    [ID tsk_p2_preauth_007_00_work_item_03] Document adding entries to INVARIANTS_MANIFEST.yml with
-    status: draft, enforcement_location, and verification_command for each invariant.
+    [ID tsk_p2_preauth_007_00_work_item_03] Document promoting INV-165/167 to implemented status.
   - >-
-    [ID tsk_p2_preauth_007_00_work_item_04] Run verify_plan_semantic_alignment.py to validate
+    [ID tsk_p2_preauth_007_00_work_item_04] Document wiring verify_tsk_p2_preauth_006a.sh,
+    verify_tsk_p2_preauth_005_08.sh, verify_tsk_p2_preauth_006c.sh into pre_ci.sh.
+  - >-
+    [ID tsk_p2_preauth_007_00_work_item_05] Run verify_plan_semantic_alignment.py to validate
     proof graph integrity: python3 scripts/audit/verify_plan_semantic_alignment.py
     --plan docs/plans/phase2/TSK-P2-PREAUTH-007-00/PLAN.md --meta tasks/TSK-P2-PREAUTH-007-00/meta.yml
 
@@ -69,11 +72,13 @@ acceptance_criteria:
     [ID tsk_p2_preauth_007_00_work_item_01] PLAN.md exists at docs/plans/phase2/TSK-P2-PREAUTH-007-00/PLAN.md
     and contains all required sections.
   - >-
-    [ID tsk_p2_preauth_007_00_work_item_02] PLAN.md documents all 6 invariants with descriptions.
+    [ID tsk_p2_preauth_007_00_work_item_02] PLAN.md documents INV-175/176/177 registration.
   - >-
-    [ID tsk_p2_preauth_007_00_work_item_03] PLAN.md documents INVARIANTS_MANIFEST.yml updates.
+    [ID tsk_p2_preauth_007_00_work_item_03] PLAN.md documents INV-165/167 promotion.
   - >-
-    [ID tsk_p2_preauth_007_00_work_item_04] verify_plan_semantic_alignment.py exits 0 with
+    [ID tsk_p2_preauth_007_00_work_item_04] PLAN.md documents pre_ci.sh wiring.
+  - >-
+    [ID tsk_p2_preauth_007_00_work_item_05] verify_plan_semantic_alignment.py exits 0 with
     NO_ORPHANS=true and GRAPH_CONNECTED=true.
 
 negative_tests:
@@ -90,13 +95,23 @@ verification:
     # [ID tsk_p2_preauth_007_00_work_item_01]
     test -f docs/plans/phase2/TSK-P2-PREAUTH-007-00/PLAN.md || exit 1
   - >-
-    grep -q "INV-170" docs/plans/phase2/TSK-P2-PREAUTH-007-00/PLAN.md &&
-    grep -q "INV-175" docs/plans/phase2/TSK-P2-PREAUTH-007-00/PLAN.md || exit 1
+    # [ID tsk_p2_preauth_007_00_work_item_02]
+    grep -q "INV-175" docs/plans/phase2/TSK-P2-PREAUTH-007-00/PLAN.md &&
+    grep -q "INV-176" docs/plans/phase2/TSK-P2-PREAUTH-007-00/PLAN.md &&
+    grep -q "INV-177" docs/plans/phase2/TSK-P2-PREAUTH-007-00/PLAN.md || exit 1
   - >-
     # [ID tsk_p2_preauth_007_00_work_item_03]
-    grep -q "INVARIANTS_MANIFEST.yml" docs/plans/phase2/TSK-P2-PREAUTH-007-00/PLAN.md || exit 1
+    grep -q "INV-165" docs/plans/phase2/TSK-P2-PREAUTH-007-00/PLAN.md &&
+    grep -q "INV-167" docs/plans/phase2/TSK-P2-PREAUTH-007-00/PLAN.md &&
+    grep -q "implemented" docs/plans/phase2/TSK-P2-PREAUTH-007-00/PLAN.md || exit 1
   - >-
     # [ID tsk_p2_preauth_007_00_work_item_04]
+    grep -q "pre_ci.sh" docs/plans/phase2/TSK-P2-PREAUTH-007-00/PLAN.md &&
+    grep -q "verify_tsk_p2_preauth_006a.sh" docs/plans/phase2/TSK-P2-PREAUTH-007-00/PLAN.md &&
+    grep -q "verify_tsk_p2_preauth_005_08.sh" docs/plans/phase2/TSK-P2-PREAUTH-007-00/PLAN.md &&
+    grep -q "verify_tsk_p2_preauth_006c.sh" docs/plans/phase2/TSK-P2-PREAUTH-007-00/PLAN.md || exit 1
+  - >-
+    # [ID tsk_p2_preauth_007_00_work_item_05]
     python3 scripts/audit/verify_plan_semantic_alignment.py --plan docs/plans/phase2/TSK-P2-PREAUTH-007-00/PLAN.md --meta tasks/TSK-P2-PREAUTH-007-00/meta.yml || exit 1
 
 evidence:
