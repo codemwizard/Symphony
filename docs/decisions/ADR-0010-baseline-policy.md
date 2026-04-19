@@ -68,3 +68,4 @@ This ADR remains the authoritative governance reference for baseline change chec
 - 2026-04-18: Baseline regenerated from fresh database using migrate.sh to ensure parity with pre_ci verification process and fix schema_migrations consistency (migration 0118 was missing from schema_migrations in main DB).
 - 2026-04-18: Baseline regenerated after manually inserting migration 0118 into main database schema_migrations table to fix consistency; baseline now matches both main DB and pre_ci fresh DB verification.
 - 2026-04-19: Baseline regenerated after Phase-2 data authority enforcement migrations (0121, 0122).
+- 2026-04-19: Baseline regenerated after statutory levy, exchange rate audit, and postgis taxonomy migrations (0123-0130).
