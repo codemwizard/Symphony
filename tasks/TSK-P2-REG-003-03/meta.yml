@@ -3,7 +3,7 @@ phase: '2'
 task_id: TSK-P2-REG-003-03
 title: Create project_boundaries table
 owner_role: DB_FOUNDATION
-status: planned
+status: completed
 priority: HIGH
 risk_class: INTEGRITY
 blast_radius: DB_SCHEMA
@@ -33,13 +33,13 @@ depends_on:
 blocks:
 - TSK-P2-REG-003-04
 touches:
-- schema/migrations/0125_project_boundaries.sql
+- schema/migrations/0127_project_boundaries.sql
 - scripts/db/verify_tsk_p2_reg_003_03.sh
 - tasks/TSK-P2-REG-003-03/meta.yml
 invariants: []
 work:
   - >-
-    [ID tsk_p2_reg_003_03_work_item_01] Write migration 0125 at schema/migrations/0125_project_boundaries.sql creating project_boundaries table with columns and FKs
+    [ID tsk_p2_reg_003_03_work_item_01] Write migration 0127 at schema/migrations/0127_project_boundaries.sql creating project_boundaries table with columns and FKs
   - >-
     [ID tsk_p2_reg_003_03_work_item_02] Add CREATE INDEX idx_project_boundaries_geom ON project_boundaries USING GIST (geom) to migration
   - >-
@@ -54,7 +54,7 @@ work:
     [ID tsk_p2_reg_003_03_work_item_07] Run scripts/dev/pre_ci.sh to ensure conformance
 acceptance_criteria:
   - >-
-    [ID tsk_p2_reg_003_03_work_item_01] [ID tsk_p2_reg_003_03_work_item_02] [ID tsk_p2_reg_003_03_work_item_03] [ID tsk_p2_reg_003_03_work_item_04] [ID tsk_p2_reg_003_03_work_item_05] [ID tsk_p2_reg_003_03_work_item_06] [ID tsk_p2_reg_003_03_work_item_07] [ID tsk_p2_reg_003_03_ac_01] Migration 0125 for project_boundaries exists
+    [ID tsk_p2_reg_003_03_work_item_01] [ID tsk_p2_reg_003_03_work_item_02] [ID tsk_p2_reg_003_03_work_item_03] [ID tsk_p2_reg_003_03_work_item_04] [ID tsk_p2_reg_003_03_work_item_05] [ID tsk_p2_reg_003_03_work_item_06] [ID tsk_p2_reg_003_03_work_item_07] [ID tsk_p2_reg_003_03_ac_01] Migration 0127 for project_boundaries exists
   - >-
     [ID tsk_p2_reg_003_03_work_item_01] [ID tsk_p2_reg_003_03_work_item_02] [ID tsk_p2_reg_003_03_work_item_03] [ID tsk_p2_reg_003_03_work_item_04] [ID tsk_p2_reg_003_03_work_item_05] [ID tsk_p2_reg_003_03_work_item_06] [ID tsk_p2_reg_003_03_work_item_07] [ID tsk_p2_reg_003_03_ac_02] project_boundaries table exists in database
   - >-
@@ -83,13 +83,13 @@ positive_tests:
 verification:
   - >-
     # [ID tsk_p2_reg_003_03_work_item_01] [ID tsk_p2_reg_003_03_work_item_02] [ID tsk_p2_reg_003_03_work_item_03] [ID tsk_p2_reg_003_03_work_item_04] [ID tsk_p2_reg_003_03_work_item_05] [ID tsk_p2_reg_003_03_work_item_06] [ID tsk_p2_reg_003_03_work_item_07] [ID tsk_p2_reg_003_03_ac_01] [ID tsk_p2_reg_003_03_ac_02] [ID tsk_p2_reg_003_03_ac_03] [ID tsk_p2_reg_003_03_ac_04] [ID tsk_p2_reg_003_03_ac_05] [ID tsk_p2_reg_003_03_ac_06] [ID tsk_p2_reg_003_03_ac_07] [ID tsk_p2_reg_003_03_ac_08]
-    bash scripts/db/verify_tsk_p2_reg_003_03.sh
+    test -x scripts/db/verify_tsk_p2_reg_003_03.sh && bash scripts/db/verify_tsk_p2_reg_003_03.sh > evidence/phase2/tsk_p2_reg_003_03.json || exit 1
   - >-
     # [ID tsk_p2_reg_003_03_work_item_01] [ID tsk_p2_reg_003_03_work_item_02] [ID tsk_p2_reg_003_03_work_item_03] [ID tsk_p2_reg_003_03_work_item_04] [ID tsk_p2_reg_003_03_work_item_05] [ID tsk_p2_reg_003_03_work_item_06] [ID tsk_p2_reg_003_03_work_item_07] [ID tsk_p2_reg_003_03_ac_01] [ID tsk_p2_reg_003_03_ac_02] [ID tsk_p2_reg_003_03_ac_03] [ID tsk_p2_reg_003_03_ac_04] [ID tsk_p2_reg_003_03_ac_05] [ID tsk_p2_reg_003_03_ac_06] [ID tsk_p2_reg_003_03_ac_07] [ID tsk_p2_reg_003_03_ac_08]
-    python3 scripts/audit/validate_evidence.py --task TSK-P2-REG-003-03 --evidence evidence/phase2/tsk_p2_reg_003_03.json
+    python3 scripts/audit/validate_evidence.py --task TSK-P2-REG-003-03 --evidence evidence/phase2/tsk_p2_reg_003_03.json || exit 1
   - >-
     # [ID tsk_p2_reg_003_03_work_item_01] [ID tsk_p2_reg_003_03_work_item_02] [ID tsk_p2_reg_003_03_work_item_03] [ID tsk_p2_reg_003_03_work_item_04] [ID tsk_p2_reg_003_03_work_item_05] [ID tsk_p2_reg_003_03_work_item_06] [ID tsk_p2_reg_003_03_work_item_07] [ID tsk_p2_reg_003_03_ac_01] [ID tsk_p2_reg_003_03_ac_02] [ID tsk_p2_reg_003_03_ac_03] [ID tsk_p2_reg_003_03_ac_04] [ID tsk_p2_reg_003_03_ac_05] [ID tsk_p2_reg_003_03_ac_06] [ID tsk_p2_reg_003_03_ac_07] [ID tsk_p2_reg_003_03_ac_08]
-    bash scripts/dev/pre_ci.sh
+    bash scripts/dev/pre_ci.sh || exit 1
 evidence:
 - path: evidence/phase2/tsk_p2_reg_003_03.json
   must_include:
@@ -115,6 +115,7 @@ failure_modes:
 must_read:
 - docs/operations/AI_AGENT_OPERATION_MANUAL.md
 - docs/operations/TASK_CREATION_PROCESS.md
+- docs/operations/SYMPHONY_TASK_IMPLEMENTATION_PROCESS.md
 - docs/plans/phase2/ATOMIC_TASK_BREAKDOWN_PLAN.md
 - AGENTS.md
 implementation_plan: docs/plans/phase2/TSK-P2-REG-003-03/PLAN.md

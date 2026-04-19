@@ -3,7 +3,7 @@ phase: '2'
 task_id: TSK-P2-REG-003-06
 title: Implement enforce_k13_taxonomy_alignment() trigger
 owner_role: DB_FOUNDATION
-status: planned
+status: completed
 priority: HIGH
 risk_class: SECURITY
 blast_radius: DB_SCHEMA
@@ -30,13 +30,13 @@ depends_on:
 blocks:
 - TSK-P2-REG-003-07
 touches:
-- schema/migrations/0125_k13_trigger.sql
+- schema/migrations/0130_k13_taxonomy_alignment_trigger.sql
 - scripts/db/verify_tsk_p2_reg_003_06.sh
 - tasks/TSK-P2-REG-003-06/meta.yml
 invariants: []
 work:
   - >-
-    [ID tsk_p2_reg_003_06_work_item_01] Write migration 0125 at schema/migrations/0125_k13_trigger.sql with SECURITY DEFINER trigger function that raises GF060 when taxonomy_aligned requires spatial_check_execution_id
+    [ID tsk_p2_reg_003_06_work_item_01] Write migration 0130 at schema/migrations/0130_k13_taxonomy_alignment_trigger.sql with SECURITY DEFINER trigger function that raises GF060 when taxonomy_aligned requires spatial_check_execution_id
   - >-
     [ID tsk_p2_reg_003_06_work_item_02] Add SET search_path = pg_catalog, public to trigger function
   - >-
@@ -49,7 +49,7 @@ work:
     [ID tsk_p2_reg_003_06_work_item_06] Run scripts/dev/pre_ci.sh to ensure conformance
 acceptance_criteria:
   - >-
-    [ID tsk_p2_reg_003_06_work_item_01] [ID tsk_p2_reg_003_06_work_item_02] [ID tsk_p2_reg_003_06_work_item_03] [ID tsk_p2_reg_003_06_work_item_04] [ID tsk_p2_reg_003_06_work_item_05] [ID tsk_p2_reg_003_06_work_item_06] [ID tsk_p2_reg_003_06_ac_01] Migration 0125 for enforce_k13_taxonomy_alignment() trigger exists
+    [ID tsk_p2_reg_003_06_work_item_01] [ID tsk_p2_reg_003_06_work_item_02] [ID tsk_p2_reg_003_06_work_item_03] [ID tsk_p2_reg_003_06_work_item_04] [ID tsk_p2_reg_003_06_work_item_05] [ID tsk_p2_reg_003_06_work_item_06] [ID tsk_p2_reg_003_06_ac_01] Migration 0130 for enforce_k13_taxonomy_alignment() trigger exists
   - >-
     [ID tsk_p2_reg_003_06_work_item_01] [ID tsk_p2_reg_003_06_work_item_02] [ID tsk_p2_reg_003_06_work_item_03] [ID tsk_p2_reg_003_06_work_item_04] [ID tsk_p2_reg_003_06_work_item_05] [ID tsk_p2_reg_003_06_work_item_06] [ID tsk_p2_reg_003_06_ac_02] enforce_k13_taxonomy_alignment() function exists with SECURITY DEFINER
   - >-
@@ -72,13 +72,13 @@ positive_tests:
 verification:
   - >-
     # [ID tsk_p2_reg_003_06_work_item_01] [ID tsk_p2_reg_003_06_work_item_02] [ID tsk_p2_reg_003_06_work_item_03] [ID tsk_p2_reg_003_06_work_item_04] [ID tsk_p2_reg_003_06_work_item_05] [ID tsk_p2_reg_003_06_work_item_06] [ID tsk_p2_reg_003_06_ac_01] [ID tsk_p2_reg_003_06_ac_02] [ID tsk_p2_reg_003_06_ac_03] [ID tsk_p2_reg_003_06_ac_04] [ID tsk_p2_reg_003_06_ac_05]
-    bash scripts/db/verify_tsk_p2_reg_003_06.sh
+    test -x scripts/db/verify_tsk_p2_reg_003_06.sh && bash scripts/db/verify_tsk_p2_reg_003_06.sh > evidence/phase2/tsk_p2_reg_003_06.json || exit 1
   - >-
     # [ID tsk_p2_reg_003_06_work_item_01] [ID tsk_p2_reg_003_06_work_item_02] [ID tsk_p2_reg_003_06_work_item_03] [ID tsk_p2_reg_003_06_work_item_04] [ID tsk_p2_reg_003_06_work_item_05] [ID tsk_p2_reg_003_06_work_item_06] [ID tsk_p2_reg_003_06_ac_01] [ID tsk_p2_reg_003_06_ac_02] [ID tsk_p2_reg_003_06_ac_03] [ID tsk_p2_reg_003_06_ac_04] [ID tsk_p2_reg_003_06_ac_05]
-    python3 scripts/audit/validate_evidence.py --task TSK-P2-REG-003-06 --evidence evidence/phase2/tsk_p2_reg_003_06.json
+    python3 scripts/audit/validate_evidence.py --task TSK-P2-REG-003-06 --evidence evidence/phase2/tsk_p2_reg_003_06.json || exit 1
   - >-
     # [ID tsk_p2_reg_003_06_work_item_01] [ID tsk_p2_reg_003_06_work_item_02] [ID tsk_p2_reg_003_06_work_item_03] [ID tsk_p2_reg_003_06_work_item_04] [ID tsk_p2_reg_003_06_work_item_05] [ID tsk_p2_reg_003_06_work_item_06] [ID tsk_p2_reg_003_06_ac_01] [ID tsk_p2_reg_003_06_ac_02] [ID tsk_p2_reg_003_06_ac_03] [ID tsk_p2_reg_003_06_ac_04] [ID tsk_p2_reg_003_06_ac_05]
-    bash scripts/dev/pre_ci.sh
+    bash scripts/dev/pre_ci.sh || exit 1
 evidence:
 - path: evidence/phase2/tsk_p2_reg_003_06.json
   must_include:
@@ -102,6 +102,7 @@ failure_modes:
 must_read:
 - docs/operations/AI_AGENT_OPERATION_MANUAL.md
 - docs/operations/TASK_CREATION_PROCESS.md
+- docs/operations/SYMPHONY_TASK_IMPLEMENTATION_PROCESS.md
 - docs/plans/phase2/ATOMIC_TASK_BREAKDOWN_PLAN.md
 - AGENTS.md
 implementation_plan: docs/plans/phase2/TSK-P2-REG-003-06/PLAN.md

@@ -1,10 +1,10 @@
 # TSK-P2-REG-002-01: Create exchange_rate_audit_log table
 
-**Task:** TSK-P2-REG-002-01
-**Owner:** DB_FOUNDATION
-**Depends on:** TSK-P2-REG-002-00
-**Blocks:** TSK-P2-REG-002-02
-**Failure Signature**: Table not created or precision incorrect => CRITICAL_FAIL
+Task: TSK-P2-REG-002-01
+Owner: DB_FOUNDATION
+Depends on: TSK-P2-REG-002-00
+failure_signature: PRE-PHASE2.REG.TSK-P2-REG-002-01.TABLE_OR_PRECISION_INCORRECT
+canonical_reference: docs/operations/AI_AGENT_OPERATION_MANUAL.md
 
 ## Objective
 
@@ -29,6 +29,11 @@ The exchange_rate_audit_log table stores exchange rates with NUMERIC(18,8) preci
 
 ## Stop Conditions
 
+- **If any node in the proof graph is orphaned** -> STOP
+- **If any verifier lacks a symbolic failure obligation (`|| exit 1`)** -> STOP
+- **If evidence is static or self-declared instead of derived** -> STOP
+- **If verification does not inspect real system state (self-referential)** -> STOP
+- **If ≥3 weak signals (subjective wording like 'ensure' or 'appropriate') are detected without hard failing** -> STOP
 - If exchange_rate_audit_log table does not exist
 - If rate_value column is not NUMERIC(18,8)
 - If MIGRATION_HEAD is not updated to 0124

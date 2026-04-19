@@ -1,10 +1,10 @@
 # TSK-P2-REG-003-04: Add taxonomy_aligned column to projects
 
-**Task:** TSK-P2-REG-003-04
-**Owner:** DB_FOUNDATION
-**Depends on:** TSK-P2-REG-003-03
-**Blocks:** TSK-P2-REG-003-05
-**Failure Signature**: Column not added or type incorrect => CRITICAL_FAIL
+Task: TSK-P2-REG-003-04
+Owner: DB_FOUNDATION
+Depends on: TSK-P2-REG-003-03
+failure_signature: PRE-PHASE2.REG.TSK-P2-REG-003-04.COLUMN_OR_TYPE_INCORRECT
+canonical_reference: docs/operations/AI_AGENT_OPERATION_MANUAL.md
 
 ## Objective
 
@@ -28,6 +28,11 @@ The taxonomy_aligned column is a BOOLEAN flag indicating EU Taxonomy K13 alignme
 
 ## Stop Conditions
 
+- **If any node in the proof graph is orphaned** -> STOP
+- **If any verifier lacks a symbolic failure obligation (`|| exit 1`)** -> STOP
+- **If evidence is static or self-declared instead of derived** -> STOP
+- **If verification does not inspect real system state (self-referential)** -> STOP
+- **If ≥3 weak signals (subjective wording like 'ensure' or 'appropriate') are detected without hard failing** -> STOP
 - If taxonomy_aligned column does not exist in projects table
 - If taxonomy_aligned is not BOOLEAN NOT NULL DEFAULT false
 

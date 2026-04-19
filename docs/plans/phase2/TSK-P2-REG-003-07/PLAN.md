@@ -1,10 +1,10 @@
 # TSK-P2-REG-003-07: Register INV-178 and update MIGRATION_HEAD
 
-**Task:** TSK-P2-REG-003-07
-**Owner:** INVARIANTS_CURATOR
-**Depends on:** TSK-P2-REG-003-06
-**Blocks: []
-**Failure Signature**: INV-178 not registered or MIGRATION_HEAD not updated => CRITICAL_FAIL
+Task: TSK-P2-REG-003-07
+Owner: INVARIANTS_CURATOR
+Depends on: TSK-P2-REG-003-06
+failure_signature: PRE-PHASE2.REG.TSK-P2-REG-003-07.INV178_OR_MIGRATION_HEAD_NOT_UPDATED
+canonical_reference: docs/operations/AI_AGENT_OPERATION_MANUAL.md
 
 ## Objective
 
@@ -29,6 +29,11 @@ INV-178 enforces that project DNSH spatial checks are DB-enforced via PostGIS wi
 
 ## Stop Conditions
 
+- **If any node in the proof graph is orphaned** -> STOP
+- **If any verifier lacks a symbolic failure obligation (`|| exit 1`)** -> STOP
+- **If evidence is static or self-declared instead of derived** -> STOP
+- **If verification does not inspect real system state (self-referential)** -> STOP
+- **If ≥3 weak signals (subjective wording like 'ensure' or 'appropriate') are detected without hard failing** -> STOP
 - If INV-178 does not exist in INVARIANTS_MANIFEST.yml
 - If INV-178 status is not implemented
 - If INV-178 severity is not P0

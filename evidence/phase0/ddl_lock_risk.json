@@ -116,6 +116,8 @@
     "DDL-ALLOW-0082:/home/mwiza/workspaces/Symphony-Demo/Symphony/schema/migrations/0102_gf_regulatory_plane.sql:47:ALTER TABLE public.regulatory_authorities ENABLE ROW LEVEL SECURITY;",
     "DDL-ALLOW-0083:/home/mwiza/workspaces/Symphony-Demo/Symphony/schema/migrations/0102_gf_regulatory_plane.sql:48:ALTER TABLE public.regulatory_authorities FORCE ROW LEVEL SECURITY;",
     "DDL-ALLOW-0098:/home/mwiza/workspaces/Symphony-Demo/Symphony/schema/migrations/0097_gf_projects.sql:16:ALTER TABLE public.projects ENABLE ROW LEVEL SECURITY;",
-    "DDL-ALLOW-0099:/home/mwiza/workspaces/Symphony-Demo/Symphony/schema/migrations/0097_gf_projects.sql:17:ALTER TABLE public.projects FORCE ROW LEVEL SECURITY;"
+    "DDL-ALLOW-0099:/home/mwiza/workspaces/Symphony-Demo/Symphony/schema/migrations/0097_gf_projects.sql:17:ALTER TABLE public.projects FORCE ROW LEVEL SECURITY;",
+    "DDL-ALLOW-0107:/home/mwiza/workspaces/Symphony-Demo/Symphony/schema/migrations/0128_taxonomy_aligned.sql:5:ALTER TABLE public.projects ADD COLUMN taxonomy_aligned BOOLEAN;",
+    "DDL-ALLOW-0108:/home/mwiza/workspaces/Symphony-Demo/Symphony/schema/migrations/0128_taxonomy_aligned.sql:13:ALTER TABLE public.projects ALTER COLUMN taxonomy_aligned SET NOT NULL;"
   ]
 }

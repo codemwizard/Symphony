@@ -1,10 +1,10 @@
 # TSK-P2-REG-004-01: Verify function exists and promote INV-169
 
-**Task:** TSK-P2-REG-004-01
-**Owner:** INVARIANTS_CURATOR
-**Depends on:** TSK-P2-REG-004-00
-**Blocks: []
-**Failure Signature**: Function not found or INV-169 not promoted => CRITICAL_FAIL
+Task: TSK-P2-REG-004-01
+Owner: INVARIANTS_CURATOR
+Depends on: TSK-P2-REG-004-00
+failure_signature: PRE-PHASE2.REG.TSK-P2-REG-004-01.FUNCTION_OR_INV169_NOT_PROMOTED
+canonical_reference: docs/operations/AI_AGENT_OPERATION_MANUAL.md
 
 ## Objective
 
@@ -28,6 +28,11 @@ INV-169 enforces REG26 separation via check_reg26_separation() function. This ta
 
 ## Stop Conditions
 
+- **If any node in the proof graph is orphaned** -> STOP
+- **If any verifier lacks a symbolic failure obligation (`|| exit 1`)** -> STOP
+- **If evidence is static or self-declared instead of derived** -> STOP
+- **If verification does not inspect real system state (self-referential)** -> STOP
+- **If ≥3 weak signals (subjective wording like 'ensure' or 'appropriate') are detected without hard failing** -> STOP
 - If check_reg26_separation() function does not exist in pg_proc
 - If verify_gf_sch_008.sh fails
 - If INV-169 status is not updated to implemented

@@ -3,7 +3,7 @@ phase: '2'
 task_id: TSK-P2-REG-002-01
 title: Create exchange_rate_audit_log table
 owner_role: DB_FOUNDATION
-status: planned
+status: completed
 priority: HIGH
 risk_class: INTEGRITY
 blast_radius: DB_SCHEMA
@@ -34,7 +34,7 @@ touches:
 invariants: []
 work:
   - >-
-    [ID tsk_p2_reg_002_01_work_item_01] Write migration 0125 at schema/migrations/0125_exchange_rate_audit_log.sql creating exchange_rate_audit_log table with columns and FK
+    [ID tsk_p2_reg_002_01_work_item_01] Write migration 0124 at schema/migrations/0124_create_exchange_rate_audit_log.sql creating exchange_rate_audit_log table with columns and UNIQUE constraint
   - >-
     [ID tsk_p2_reg_002_01_work_item_02] Write verify_tsk_p2_reg_002_01.sh that runs psql to verify table exists and FK is present
   - >-
@@ -43,7 +43,7 @@ work:
     [ID tsk_p2_reg_002_01_work_item_04] Run scripts/dev/pre_ci.sh to ensure conformance
 acceptance_criteria:
   - >-
-    [ID tsk_p2_reg_002_01_work_item_01] [ID tsk_p2_reg_002_01_work_item_02] [ID tsk_p2_reg_002_01_work_item_03] [ID tsk_p2_reg_002_01_work_item_04] [ID tsk_p2_reg_002_01_ac_01] Migration 0125 for exchange_rate_audit_log exists
+    [ID tsk_p2_reg_002_01_work_item_01] [ID tsk_p2_reg_002_01_work_item_02] [ID tsk_p2_reg_002_01_work_item_03] [ID tsk_p2_reg_002_01_work_item_04] [ID tsk_p2_reg_002_01_ac_01] Migration 0124 for exchange_rate_audit_log exists
   - >-
     [ID tsk_p2_reg_002_01_work_item_01] [ID tsk_p2_reg_002_01_work_item_02] [ID tsk_p2_reg_002_01_work_item_03] [ID tsk_p2_reg_002_01_work_item_04] [ID tsk_p2_reg_002_01_ac_02] exchange_rate_audit_log table exists in database
   - >-
@@ -64,13 +64,13 @@ positive_tests:
 verification:
   - >-
     # [ID tsk_p2_reg_002_01_work_item_01] [ID tsk_p2_reg_002_01_work_item_02] [ID tsk_p2_reg_002_01_work_item_03] [ID tsk_p2_reg_002_01_work_item_04] [ID tsk_p2_reg_002_01_ac_01] [ID tsk_p2_reg_002_01_ac_02] [ID tsk_p2_reg_002_01_ac_03] [ID tsk_p2_reg_002_01_ac_04]
-    bash scripts/db/verify_tsk_p2_reg_002_01.sh
+    test -x scripts/db/verify_tsk_p2_reg_002_01.sh && bash scripts/db/verify_tsk_p2_reg_002_01.sh > evidence/phase2/tsk_p2_reg_002_01.json || exit 1
   - >-
     # [ID tsk_p2_reg_002_01_work_item_01] [ID tsk_p2_reg_002_01_work_item_02] [ID tsk_p2_reg_002_01_work_item_03] [ID tsk_p2_reg_002_01_work_item_04] [ID tsk_p2_reg_002_01_ac_01] [ID tsk_p2_reg_002_01_ac_02] [ID tsk_p2_reg_002_01_ac_03] [ID tsk_p2_reg_002_01_ac_04]
-    python3 scripts/audit/validate_evidence.py --task TSK-P2-REG-002-01 --evidence evidence/phase2/tsk_p2_reg_002_01.json
+    python3 scripts/audit/validate_evidence.py --task TSK-P2-REG-002-01 --evidence evidence/phase2/tsk_p2_reg_002_01.json || exit 1
   - >-
     # [ID tsk_p2_reg_002_01_work_item_01] [ID tsk_p2_reg_002_01_work_item_02] [ID tsk_p2_reg_002_01_work_item_03] [ID tsk_p2_reg_002_01_work_item_04] [ID tsk_p2_reg_002_01_ac_01] [ID tsk_p2_reg_002_01_ac_02] [ID tsk_p2_reg_002_01_ac_03] [ID tsk_p2_reg_002_01_ac_04]
-    bash scripts/dev/pre_ci.sh
+    bash scripts/dev/pre_ci.sh || exit 1
 evidence:
 - path: evidence/phase2/tsk_p2_reg_002_01.json
   must_include:
@@ -93,6 +93,7 @@ failure_modes:
 must_read:
 - docs/operations/AI_AGENT_OPERATION_MANUAL.md
 - docs/operations/TASK_CREATION_PROCESS.md
+- docs/operations/SYMPHONY_TASK_IMPLEMENTATION_PROCESS.md
 - docs/plans/phase2/ATOMIC_TASK_BREAKDOWN_PLAN.md
 implementation_plan: docs/plans/phase2/TSK-P2-REG-002-01/PLAN.md
 implementation_log: docs/plans/phase2/TSK-P2-REG-002-01/EXEC_LOG.md

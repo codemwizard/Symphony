@@ -1,10 +1,10 @@
 # TSK-P2-REG-003-06: Implement enforce_k13_taxonomy_alignment() trigger
 
-**Task:** TSK-P2-REG-003-06
-**Owner:** DB_FOUNDATION
-**Depends on:** TSK-P2-REG-003-05
-**Blocks:** TSK-P2-REG-003-07
-**Failure Signature**: Trigger missing or not SECURITY DEFINER => CRITICAL_FAIL
+Task: TSK-P2-REG-003-06
+Owner: DB_FOUNDATION
+Depends on: TSK-P2-REG-003-05
+failure_signature: PRE-PHASE2.REG.TSK-P2-REG-003-06.TRIGGER_OR_SECURITY_DEFINER_INCORRECT
+canonical_reference: docs/operations/AI_AGENT_OPERATION_MANUAL.md
 
 ## Objective
 
@@ -29,6 +29,11 @@ The enforce_k13_taxonomy_alignment() trigger enforces that when taxonomy_aligned
 
 ## Stop Conditions
 
+- **If any node in the proof graph is orphaned** -> STOP
+- **If any verifier lacks a symbolic failure obligation (`|| exit 1`)** -> STOP
+- **If evidence is static or self-declared instead of derived** -> STOP
+- **If verification does not inspect real system state (self-referential)** -> STOP
+- **If ≥3 weak signals (subjective wording like 'ensure' or 'appropriate') are detected without hard failing** -> STOP
 - If enforce_k13_taxonomy_alignment() function does not exist in pg_proc
 - If function is not SECURITY DEFINER with hardened search_path
 - If trigger is not attached as BEFORE INSERT OR UPDATE on projects

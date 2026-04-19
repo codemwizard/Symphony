@@ -3,7 +3,7 @@ phase: '2'
 task_id: TSK-P2-REG-001-01
 title: Create statutory_levy_registry table
 owner_role: DB_FOUNDATION
-status: planned
+status: completed
 priority: HIGH
 risk_class: INTEGRITY
 blast_radius: DB_SCHEMA
@@ -27,14 +27,14 @@ depends_on:
 blocks:
 - TSK-P2-REG-001-02
 touches:
-- schema/migrations/0125_statutory_levy_registry.sql
+- schema/migrations/0123_create_statutory_levy_registry.sql
 - schema/migrations/MIGRATION_HEAD
 - scripts/db/verify_tsk_p2_reg_001_01.sh
 - tasks/TSK-P2-REG-001-01/meta.yml
 invariants: []
 work:
   - >-
-    [ID tsk_p2_reg_001_01_work_item_01] Write migration 0125 at schema/migrations/0125_statutory_levy_registry.sql creating statutory_levy_registry table with columns and UNIQUE constraint
+    [ID tsk_p2_reg_001_01_work_item_01] Write migration 0123 at schema/migrations/0123_create_statutory_levy_registry.sql creating statutory_levy_registry table with columns and UNIQUE constraint
   - >-
     [ID tsk_p2_reg_001_01_work_item_02] Add GRANT SELECT ON statutory_levy_registry TO symphony_command and GRANT ALL ON statutory_levy_registry TO symphony_control after REVOKE ALL FROM PUBLIC
   - >-
@@ -66,13 +66,13 @@ positive_tests:
 verification:
 - >-
   # [ID tsk_p2_reg_001_01_work_item_01] [ID tsk_p2_reg_001_01_work_item_02] [ID tsk_p2_reg_001_01_work_item_03] [ID tsk_p2_reg_001_01_work_item_04] [ID tsk_p2_reg_001_01_work_item_05] [ID tsk_p2_reg_001_01_ac_01] [ID tsk_p2_reg_001_01_ac_02] [ID tsk_p2_reg_001_01_ac_03] [ID tsk_p2_reg_001_01_ac_04]
-  bash scripts/db/verify_tsk_p2_reg_001_01.sh
+  test -x scripts/db/verify_tsk_p2_reg_001_01.sh && bash scripts/db/verify_tsk_p2_reg_001_01.sh > evidence/phase2/tsk_p2_reg_001_01.json || exit 1
 - >-
   # [ID tsk_p2_reg_001_01_work_item_01] [ID tsk_p2_reg_001_01_work_item_02] [ID tsk_p2_reg_001_01_work_item_03] [ID tsk_p2_reg_001_01_work_item_04] [ID tsk_p2_reg_001_01_work_item_05] [ID tsk_p2_reg_001_01_ac_01] [ID tsk_p2_reg_001_01_ac_02] [ID tsk_p2_reg_001_01_ac_03] [ID tsk_p2_reg_001_01_ac_04]
-  python3 scripts/audit/validate_evidence.py --task TSK-P2-REG-001-01 --evidence evidence/phase2/tsk_p2_reg_001_01.json
+  python3 scripts/audit/validate_evidence.py --task TSK-P2-REG-001-01 --evidence evidence/phase2/tsk_p2_reg_001_01.json || exit 1
 - >-
   # [ID tsk_p2_reg_001_01_work_item_01] [ID tsk_p2_reg_001_01_work_item_02] [ID tsk_p2_reg_001_01_work_item_03] [ID tsk_p2_reg_001_01_work_item_04] [ID tsk_p2_reg_001_01_work_item_05] [ID tsk_p2_reg_001_01_ac_01] [ID tsk_p2_reg_001_01_ac_02] [ID tsk_p2_reg_001_01_ac_03] [ID tsk_p2_reg_001_01_ac_04]
-  bash scripts/dev/pre_ci.sh
+  bash scripts/dev/pre_ci.sh || exit 1
 evidence:
 - path: evidence/phase2/tsk_p2_reg_001_01.json
   must_include:
@@ -95,6 +95,7 @@ failure_modes:
 must_read:
 - docs/operations/AI_AGENT_OPERATION_MANUAL.md
 - docs/operations/TASK_CREATION_PROCESS.md
+- docs/operations/SYMPHONY_TASK_IMPLEMENTATION_PROCESS.md
 - docs/plans/phase2/ATOMIC_TASK_BREAKDOWN_PLAN.md
 - AGENTS.md
 implementation_plan: docs/plans/phase2/TSK-P2-REG-001-01/PLAN.md

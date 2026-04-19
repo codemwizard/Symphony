@@ -1,10 +1,10 @@
 # TSK-P2-REG-002-02: Add append-only trigger and privileges to exchange_rate_audit_log
 
-**Task:** TSK-P2-REG-002-02
-**Owner:** DB_FOUNDATION
-**Depends on:** TSK-P2-REG-002-01
-**Blocks: []
-**Failure Signature**: Trigger missing or privileges incorrect => CRITICAL_FAIL
+Task: TSK-P2-REG-002-02
+Owner: DB_FOUNDATION
+Depends on: TSK-P2-REG-002-01
+failure_signature: PRE-PHASE2.REG.TSK-P2-REG-002-02.TRIGGER_OR_PRIVILEGES_INCORRECT
+canonical_reference: docs/operations/AI_AGENT_OPERATION_MANUAL.md
 
 ## Objective
 
@@ -28,6 +28,11 @@ Append-only trigger raises GF051 on any UPDATE or DELETE attempt on exchange_rat
 
 ## Stop Conditions
 
+- **If any node in the proof graph is orphaned** -> STOP
+- **If any verifier lacks a symbolic failure obligation (`|| exit 1`)** -> STOP
+- **If evidence is static or self-declared instead of derived** -> STOP
+- **If verification does not inspect real system state (self-referential)** -> STOP
+- **If ≥3 weak signals (subjective wording like 'ensure' or 'appropriate') are detected without hard failing** -> STOP
 - If append-only trigger is not attached to exchange_rate_audit_log
 - If trigger does not raise GF051 on UPDATE or DELETE
 - If privileges are not revoke-first

@@ -1,10 +1,10 @@
 # TSK-P2-REG-003-02: Create protected_areas table
 
-**Task:** TSK-P2-REG-003-02
-**Owner:** DB_FOUNDATION
-**Depends on:** TSK-P2-REG-003-01
-**Blocks:** TSK-P2-REG-003-03
-**Failure Signature**: Table not created or geometry incorrect => CRITICAL_FAIL
+Task: TSK-P2-REG-003-02
+Owner: DB_FOUNDATION
+Depends on: TSK-P2-REG-003-01
+failure_signature: PRE-PHASE2.REG.TSK-P2-REG-003-02.TABLE_OR_GEOMETRY_INCORRECT
+canonical_reference: docs/operations/AI_AGENT_OPERATION_MANUAL.md
 
 ## Objective
 
@@ -28,6 +28,11 @@ The protected_areas table stores protected area polygons with versioning via sou
 
 ## Stop Conditions
 
+- **If any node in the proof graph is orphaned** -> STOP
+- **If any verifier lacks a symbolic failure obligation (`|| exit 1`)** -> STOP
+- **If evidence is static or self-declared instead of derived** -> STOP
+- **If verification does not inspect real system state (self-referential)** -> STOP
+- **If ≥3 weak signals (subjective wording like 'ensure' or 'appropriate') are detected without hard failing** -> STOP
 - If protected_areas table does not exist
 - If geom column is not geometry(POLYGON, 4326) NOT NULL
 - If source_version_id FK to factor_registry is missing

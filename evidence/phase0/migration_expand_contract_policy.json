@@ -1,7 +1,7 @@
 {
   "check_id": "DB-EXPAND-CONTRACT-POLICY",
-  "timestamp_utc": "1970-01-01T00:00:00Z",
-  "git_sha": "0000000000000000000000000000000000000000",
+  "timestamp_utc": "2026-04-19T13:24:14Z",
+  "git_sha": "3609a470c8835f2118aa332135f0ba9720fe6440",
   "schema_fingerprint": "885e676b35291c1961b34745508c21b4017523a451528b9727c861eaf5be4e60",
   "status": "PASS",
   "scanned_files": [
@@ -111,17 +111,31 @@
     "0118_create_execution_records.sql",
     "0120_create_state_transitions.sql",
     "0121_create_data_authority_enum.sql",
-    "0122_create_data_authority_triggers.sql"
+    "0122_create_data_authority_triggers.sql",
+    "0123_create_statutory_levy_registry.sql",
+    "0124_create_exchange_rate_audit_log.sql",
+    "0125_postgis_extension.sql",
+    "0126_protected_areas.sql",
+    "0127_project_boundaries.sql",
+    "0128_taxonomy_aligned.sql",
+    "0129_enforce_dns_harm_trigger.sql",
+    "0130_k13_taxonomy_alignment_trigger.sql"
   ],
   "violation_count": 0,
   "violations": [],
-  "allowlisted_count": 1,
+  "allowlisted_count": 2,
   "allowlisted": [
     {
       "file": "0020_business_foundation_hooks.sql",
       "lineno": 164,
       "kind": "add_column_not_null",
       "line": "ADD COLUMN IF NOT EXISTS signatures JSONB NOT NULL DEFAULT '[]'::jsonb,"
+    },
+    {
+      "file": "0128_taxonomy_aligned.sql",
+      "lineno": 13,
+      "kind": "alter_set_not_null",
+      "line": "ALTER TABLE public.projects ALTER COLUMN taxonomy_aligned SET NOT NULL;"
     }
   ],
   "notes": [

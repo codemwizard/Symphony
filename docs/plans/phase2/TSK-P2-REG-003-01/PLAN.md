@@ -1,10 +1,10 @@
 # TSK-P2-REG-003-01: Install PostGIS extension
 
-**Task:** TSK-P2-REG-003-01
-**Owner:** DB_FOUNDATION
-**Depends on:** TSK-P2-REG-003-00
-**Blocks:** TSK-P2-REG-003-02
-**Failure Signature**: PostGIS not installed => CRITICAL_FAIL
+Task: TSK-P2-REG-003-01
+Owner: DB_FOUNDATION
+Depends on: TSK-P2-REG-003-00
+failure_signature: PRE-PHASE2.REG.TSK-P2-REG-003-01.POSTGIS_NOT_INSTALLED
+canonical_reference: docs/operations/AI_AGENT_OPERATION_MANUAL.md
 
 ## Objective
 
@@ -28,6 +28,11 @@ PostGIS extension provides geometry types and spatial functions required for DNS
 
 ## Stop Conditions
 
+- **If any node in the proof graph is orphaned** -> STOP
+- **If any verifier lacks a symbolic failure obligation (`|| exit 1`)** -> STOP
+- **If evidence is static or self-declared instead of derived** -> STOP
+- **If verification does not inspect real system state (self-referential)** -> STOP
+- **If ≥3 weak signals (subjective wording like 'ensure' or 'appropriate') are detected without hard failing** -> STOP
 - If PostGIS extension is not installed in public schema
 - If PostGIS_version() returns null
 

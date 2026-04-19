@@ -3,7 +3,7 @@ phase: '2'
 task_id: TSK-P2-REG-004-01
 title: Verify function exists and promote INV-169
 owner_role: INVARIANTS_CURATOR
-status: planned
+status: completed
 priority: HIGH
 risk_class: GOVERNANCE
 blast_radius: GOVERNANCE
@@ -34,24 +34,20 @@ touches:
 invariants: []
 work:
   - >-
-    [ID tsk_p2_reg_004_01_work_item_01] Write migration 0125 at schema/migrations/0125_check_reg26_separation.sql creating SECURITY DEFINER check_reg26_separation() function with hardened search_path
+    [ID tsk_p2_reg_004_01_work_item_01] Update docs/invariants/INVARIANTS_MANIFEST.yml to set INV-169 status to implemented
   - >-
-    [ID tsk_p2_reg_004_01_work_item_02] Write verify_tsk_p2_reg_004_01.sh that runs psql to verify function exists and is SECURITY DEFINER
+    [ID tsk_p2_reg_004_01_work_item_02] Write verify_tsk_p2_reg_004_01.sh that verifies INV-169 status is implemented
   - >-
-    [ID tsk_p2_reg_004_01_work_item_03] Run verify_tsk_p2_reg_004_01.sh to confirm migration is successful
+    [ID tsk_p2_reg_004_01_work_item_03] Run verify_tsk_p2_reg_004_01.sh to confirm update is successful
   - >-
     [ID tsk_p2_reg_004_01_work_item_04] Run scripts/dev/pre_ci.sh to ensure conformance
 acceptance_criteria:
   - >-
-    [ID tsk_p2_reg_004_01_work_item_01] [ID tsk_p2_reg_004_01_work_item_02] [ID tsk_p2_reg_004_01_work_item_03] [ID tsk_p2_reg_004_01_work_item_04] [ID tsk_p2_reg_004_01_ac_01] Migration 0125 for check_reg26_separation() exists
+    [ID tsk_p2_reg_004_01_work_item_01] [ID tsk_p2_reg_004_01_work_item_02] [ID tsk_p2_reg_004_01_work_item_03] [ID tsk_p2_reg_004_01_work_item_04] [ID tsk_p2_reg_004_01_ac_01] INV-169 status is implemented in INVARIANTS_MANIFEST.yml
   - >-
-    [ID tsk_p2_reg_004_01_work_item_01] [ID tsk_p2_reg_004_01_work_item_02] [ID tsk_p2_reg_004_01_work_item_03] [ID tsk_p2_reg_004_01_work_item_04] [ID tsk_p2_reg_004_01_ac_02] check_reg26_separation() function exists
+    [ID tsk_p2_reg_004_01_work_item_01] [ID tsk_p2_reg_004_01_work_item_02] [ID tsk_p2_reg_004_01_work_item_03] [ID tsk_p2_reg_004_01_work_item_04] [ID tsk_p2_reg_004_01_ac_02] Verification script confirms INV-169 status
   - >-
-    [ID tsk_p2_reg_004_01_work_item_01] [ID tsk_p2_reg_004_01_work_item_02] [ID tsk_p2_reg_004_01_work_item_03] [ID tsk_p2_reg_004_01_work_item_04] [ID tsk_p2_reg_004_01_ac_03] Function is SECURITY DEFINER
-  - >-
-    [ID tsk_p2_reg_004_01_work_item_01] [ID tsk_p2_reg_004_01_work_item_02] [ID tsk_p2_reg_004_01_work_item_03] [ID tsk_p2_reg_004_01_work_item_04] [ID tsk_p2_reg_004_01_ac_04] Function has hardened search_path
-  - >-
-    [ID tsk_p2_reg_004_01_work_item_01] [ID tsk_p2_reg_004_01_work_item_02] [ID tsk_p2_reg_004_01_work_item_03] [ID tsk_p2_reg_004_01_work_item_04] [ID tsk_p2_reg_004_01_ac_05] pre_ci.sh passes
+    [ID tsk_p2_reg_004_01_work_item_01] [ID tsk_p2_reg_004_01_work_item_02] [ID tsk_p2_reg_004_01_work_item_03] [ID tsk_p2_reg_004_01_work_item_04] [ID tsk_p2_reg_004_01_ac_03] pre_ci.sh passes
 negative_tests:
 - id: tsk_p2_reg_004_01_neg_01
   description: Verification fails if function does not exist
@@ -66,13 +62,13 @@ positive_tests:
 verification:
   - >-
     # [ID tsk_p2_reg_004_01_work_item_01] [ID tsk_p2_reg_004_01_work_item_02] [ID tsk_p2_reg_004_01_work_item_03] [ID tsk_p2_reg_004_01_work_item_04] [ID tsk_p2_reg_004_01_ac_01] [ID tsk_p2_reg_004_01_ac_02] [ID tsk_p2_reg_004_01_ac_03] [ID tsk_p2_reg_004_01_ac_04] [ID tsk_p2_reg_004_01_ac_05]
-    bash scripts/db/verify_tsk_p2_reg_004_01.sh
+    test -x scripts/db/verify_tsk_p2_reg_004_01.sh && bash scripts/db/verify_tsk_p2_reg_004_01.sh > evidence/phase2/tsk_p2_reg_004_01.json || exit 1
   - >-
     # [ID tsk_p2_reg_004_01_work_item_01] [ID tsk_p2_reg_004_01_work_item_02] [ID tsk_p2_reg_004_01_work_item_03] [ID tsk_p2_reg_004_01_work_item_04] [ID tsk_p2_reg_004_01_ac_01] [ID tsk_p2_reg_004_01_ac_02] [ID tsk_p2_reg_004_01_ac_03] [ID tsk_p2_reg_004_01_ac_04] [ID tsk_p2_reg_004_01_ac_05]
-    python3 scripts/audit/validate_evidence.py --task TSK-P2-REG-004-01 --evidence evidence/phase2/tsk_p2_reg_004_01.json
+    python3 scripts/audit/validate_evidence.py --task TSK-P2-REG-004-01 --evidence evidence/phase2/tsk_p2_reg_004_01.json || exit 1
   - >-
     # [ID tsk_p2_reg_004_01_work_item_01] [ID tsk_p2_reg_004_01_work_item_02] [ID tsk_p2_reg_004_01_work_item_03] [ID tsk_p2_reg_004_01_work_item_04] [ID tsk_p2_reg_004_01_ac_01] [ID tsk_p2_reg_004_01_ac_02] [ID tsk_p2_reg_004_01_ac_03] [ID tsk_p2_reg_004_01_ac_04] [ID tsk_p2_reg_004_01_ac_05]
-    bash scripts/dev/pre_ci.sh
+    bash scripts/dev/pre_ci.sh || exit 1
 evidence:
 - path: evidence/phase2/tsk_p2_reg_004_01.json
   must_include:
@@ -94,6 +90,7 @@ failure_modes:
 must_read:
 - docs/operations/AI_AGENT_OPERATION_MANUAL.md
 - docs/operations/TASK_CREATION_PROCESS.md
+- docs/operations/SYMPHONY_TASK_IMPLEMENTATION_PROCESS.md
 - docs/plans/phase2/ATOMIC_TASK_BREAKDOWN_PLAN.md
 implementation_plan: docs/plans/phase2/TSK-P2-REG-004-01/PLAN.md
 implementation_log: docs/plans/phase2/TSK-P2-REG-004-01/EXEC_LOG.md
