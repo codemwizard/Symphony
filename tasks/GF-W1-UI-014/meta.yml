@@ -7,100 +7,94 @@ status: planned
 priority: HIGH
 risk_class: GOVERNANCE
 blast_radius: APP_LAYER
-intent: >-
-  Implement technical criteria section showing 6 criteria with status indicators and invariant
-  references to enable stakeholders to view real-time validation of Symphony's technical compliance
-  posture. This section displays criteria such as append-only log integrity, RLS enforcement,
-  and SECURITY DEFINER hardening with color-coded status indicators and clickable detail access.
+intent: Implement technical criteria section showing 6 criteria with status indicators and invariant references to enable
+  stakeholders to view real-time validation of Symphony's technical compliance posture. This section displays criteria such
+  as append-only log integrity, RLS enforcement, and SECURITY DEFINER hardening with color-coded status indicators and clickable
+  detail access.
 anti_patterns:
-  - "Hardcoding criterion statuses instead of fetching from API"
-  - "Missing invariant ID display for criteria"
-  - "Status indicators not color-coded according to UI canonical design rules"
-  - "Criteria not clickable for detail access"
-  - "Category badge missing or not computed from criteria statuses"
+- Hardcoding criterion statuses instead of fetching from API
+- Missing invariant ID display for criteria
+- Status indicators not color-coded according to UI canonical design rules
+- Criteria not clickable for detail access
+- Category badge missing or not computed from criteria statuses
 depends_on:
-  - GF-W1-UI-013
+- GF-W1-UI-013
 blocks:
-  - GF-W1-UI-015
+- GF-W1-UI-015
 touches:
-  - src/supervisory-dashboard/index.html
-  - evidence/phase1/gf_w1_ui_014.json
-  - tasks/GF-W1-UI-014/meta.yml
+- src/supervisory-dashboard/index.html
+- evidence/phase1/gf_w1_ui_014.json
+- tasks/GF-W1-UI-014/meta.yml
 invariants: []
 work:
-  - '[ID gf_w1_ui_014_work_item_01] Add technical criteria card HTML structure in category-technical placeholder'
-  - '[ID gf_w1_ui_014_work_item_02] Implement renderCategory(categoryType, categoryData) function'
-  - '[ID gf_w1_ui_014_work_item_03] Add criterion rows with status indicators using ✓ ⧗ ✗ symbols with green/amber/red colors'
-  - '[ID gf_w1_ui_014_work_item_04] Add invariant ID display for each criterion from criterion data'
-  - '[ID gf_w1_ui_014_work_item_05] Add click handler to criterion rows calling showCriterionDetail(id)'
-  - '[ID gf_w1_ui_014_work_item_06] Add category status badge showing ALL PASS (green) or ATTENTION REQUIRED (red)'
+- '[ID gf_w1_ui_014_work_item_01] Add technical criteria card HTML structure in category-technical placeholder'
+- '[ID gf_w1_ui_014_work_item_02] Implement renderCategory(categoryType, categoryData) function'
+- '[ID gf_w1_ui_014_work_item_03] Add criterion rows with status indicators using ✓ ⧗ ✗ symbols with green/amber/red colors'
+- '[ID gf_w1_ui_014_work_item_04] Add invariant ID display for each criterion from criterion data'
+- '[ID gf_w1_ui_014_work_item_05] Add click handler to criterion rows calling showCriterionDetail(id)'
+- '[ID gf_w1_ui_014_work_item_06] Add category status badge showing ALL PASS (green) or ATTENTION REQUIRED (red)'
 acceptance_criteria:
-  - '[ID gf_w1_ui_014_work_item_01] Technical criteria card structure exists in category-technical div'
-  - '[ID gf_w1_ui_014_work_item_02] renderCategory() generates criterion rows from data correctly'
-  - '[ID gf_w1_ui_014_work_item_03] Status indicators display with correct symbols and colors (green/amber/red)'
-  - '[ID gf_w1_ui_014_work_item_04] Invariant IDs are visible for applicable criteria'
-  - '[ID gf_w1_ui_014_work_item_05] Clicking criterion row opens detail panel'
-  - '[ID gf_w1_ui_014_work_item_06] Category badge shows correct status based on criteria'
+- '[ID gf_w1_ui_014_work_item_01] Technical criteria card structure exists in category-technical div'
+- '[ID gf_w1_ui_014_work_item_02] renderCategory() generates criterion rows from data correctly'
+- '[ID gf_w1_ui_014_work_item_03] Status indicators display with correct symbols and colors (green/amber/red)'
+- '[ID gf_w1_ui_014_work_item_04] Invariant IDs are visible for applicable criteria'
+- '[ID gf_w1_ui_014_work_item_05] Clicking criterion row opens detail panel'
+- '[ID gf_w1_ui_014_work_item_06] Category badge shows correct status based on criteria'
 negative_tests:
-  - id: GF-W1-UI-014-N1
-    description: >-
-      Verify that criterion statuses are not hardcoded but fetched from API data.
-    required: true
-  - id: GF-W1-UI-014-N2
-    description: >-
-      Verify that invariant IDs are displayed from criterion data, not hardcoded.
-    required: true
+- id: GF-W1-UI-014-N1
+  description: Verify that criterion statuses are not hardcoded but fetched from API data.
+  required: true
+- id: GF-W1-UI-014-N2
+  description: Verify that invariant IDs are displayed from criterion data, not hardcoded.
+  required: true
 positive_tests:
-  - id: GF-W1-UI-014-P1
-    description: >-
-      Verify that technical criteria section displays correctly with all 6 criteria.
-    required: true
+- id: GF-W1-UI-014-P1
+  description: Verify that technical criteria section displays correctly with all 6 criteria.
+  required: true
 verification:
-  - grep -q 'renderCategory' src/supervisory-dashboard/index.html || exit 1
-  - grep -q 'category-technical' src/supervisory-dashboard/index.html || exit 1
-  - test -f evidence/phase1/gf_w1_ui_014.json || exit 1
+- grep -q 'renderCategory' src/supervisory-dashboard/index.html || exit 1
+- grep -q 'category-technical' src/supervisory-dashboard/index.html || exit 1
+- test -f evidence/phase1/gf_w1_ui_014.json || exit 1
 evidence:
-  - path: evidence/phase1/gf_w1_ui_014.json
-    must_include:
-      - task_id
-      - timestamp
-      - status
-      - technical_criteria_card_created
-      - render_category_function_implemented
-      - criterion_rows_with_status_indicators
-      - invariant_ids_displayed
-      - click_handler_wired
-      - category_badge_present
-      - checks
-      - observed_paths
-      - command_outputs
-      - execution_trace
+- path: evidence/phase1/gf_w1_ui_014.json
+  must_include:
+  - task_id
+  - timestamp
+  - status
+  - technical_criteria_card_created
+  - render_category_function_implemented
+  - criterion_rows_with_status_indicators
+  - invariant_ids_displayed
+  - click_handler_wired
+  - category_badge_present
+  - checks
+  - observed_paths
+  - command_outputs
+  - execution_trace
 failure_modes:
-  - "Criterion statuses hardcoded => FUNCTIONAL.STALE_STATUS_DISPLAY => FAIL"
-  - "Invariant IDs missing => GOVERNANCE.INCOMPLETE_AUDIT_TRAIL => FAIL"
-  - "Status indicators not color-coded => UI.DESIGN_VIOLATION => FAIL"
-  - "Criteria not clickable => FUNCTIONAL.NO_DETAIL_ACCESS => FAIL"
-  - "Category badge missing => FUNCTIONAL.INCOMPLETE_STATUS_SUMMARY => FAIL"
+- Criterion statuses hardcoded => FUNCTIONAL.STALE_STATUS_DISPLAY => FAIL
+- Invariant IDs missing => GOVERNANCE.INCOMPLETE_AUDIT_TRAIL => FAIL
+- Status indicators not color-coded => UI.DESIGN_VIOLATION => FAIL
+- Criteria not clickable => FUNCTIONAL.NO_DETAIL_ACCESS => FAIL
+- Category badge missing => FUNCTIONAL.INCOMPLETE_STATUS_SUMMARY => FAIL
 must_read:
-  - docs/operations/AI_AGENT_OPERATION_MANUAL.md
-  - .kiro/steering/ui-canonical-design.md
-  - docs/operations/PILOT_DEMO_VIDEO_SCRIPT.md
+- docs/operations/AI_AGENT_OPERATION_MANUAL.md
+- .kiro/steering/ui-canonical-design.md
+- docs/operations/PILOT_DEMO_VIDEO_SCRIPT.md
+- docs/operations/AGENTIC_SDLC_PILOT_POLICY.md
 implementation_plan: docs/plans/phase1/GF-W1-UI-014/PLAN.md
 implementation_log: docs/plans/phase1/GF-W1-UI-014/EXEC_LOG.md
-notes: >-
-  This task implements the technical criteria section with 6 criteria. Criterion statuses
-  and invariant IDs are fetched from API data, not hardcoded. Color-coded status indicators
-  follow UI canonical design rules. Phase: Green Finance Wave 1. Domain: green_finance.
+notes: 'This task implements the technical criteria section with 6 criteria. Criterion statuses and invariant IDs are fetched
+  from API data, not hardcoded. Color-coded status indicators follow UI canonical design rules. Phase: Green Finance Wave
+  1. Domain: green_finance.'
 client: kiro
 assigned_agent: architect
 model: claude-sonnet-4-20250514
 domain: green_finance
 pilot: true
-second_pilot_test: >-
-  The technical criteria section pattern works for any programme requiring compliance dashboard.
-  For PWRM0001 plastic collection, the section shows technical criteria like append-only log
-  integrity and RLS enforcement. For a hypothetical VM0044 solar energy programme, the section
-  would show technical criteria like energy meter data integrity and generation record validation.
-  The section structure, renderCategory() function, status indicators, invariant ID display,
-  click handlers, and category badge are identical; only the criteria content differs per programme.
+second_pilot_test: The technical criteria section pattern works for any programme requiring compliance dashboard. For PWRM0001
+  plastic collection, the section shows technical criteria like append-only log integrity and RLS enforcement. For a hypothetical
+  VM0044 solar energy programme, the section would show technical criteria like energy meter data integrity and generation
+  record validation. The section structure, renderCategory() function, status indicators, invariant ID display, click handlers,
+  and category badge are identical; only the criteria content differs per programme.
 pilot_scope_ref: docs/pilots/PILOT_PWRM0001/SCOPE.md

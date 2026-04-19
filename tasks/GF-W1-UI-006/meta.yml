@@ -7,102 +7,97 @@ status: planned
 priority: NORMAL
 risk_class: GOVERNANCE
 blast_radius: APP_LAYER
-intent: >-
-  Implement token detail slide-out panel showing complete token information including
-  security properties (type, signature, TTL, GPS lock, single-use) and usage history.
-  This task provides operators with detailed token inspection capability while maintaining
-  the existing slideout UI pattern for consistency. The panel enables operators to verify
-  token properties and track usage without cluttering the main token list view.
+intent: Implement token detail slide-out panel showing complete token information including security properties (type, signature,
+  TTL, GPS lock, single-use) and usage history. This task provides operators with detailed token inspection capability while
+  maintaining the existing slideout UI pattern for consistency. The panel enables operators to verify token properties and
+  track usage without cluttering the main token list view.
 anti_patterns:
-  - "Creating new slideout CSS class instead of using existing .slideout class"
-  - "Not displaying all security properties in the detail panel"
-  - "Showing Revoke button for already-revoked tokens"
-  - "Panel animation broken or not using .open class pattern"
+- Creating new slideout CSS class instead of using existing .slideout class
+- Not displaying all security properties in the detail panel
+- Showing Revoke button for already-revoked tokens
+- Panel animation broken or not using .open class pattern
 depends_on:
-  - GF-W1-UI-005
+- GF-W1-UI-005
 blocks:
-  - GF-W1-UI-007
+- GF-W1-UI-007
 touches:
-  - src/supervisory-dashboard/index.html
-  - evidence/phase1/gf_w1_ui_006.json
-  - tasks/GF-W1-UI-006/meta.yml
+- src/supervisory-dashboard/index.html
+- evidence/phase1/gf_w1_ui_006.json
+- tasks/GF-W1-UI-006/meta.yml
 invariants: []
 work:
-  - '[ID gf_w1_ui_006_work_item_01] Create slide-out panel HTML structure with id="token-detail-panel" class="slideout"'
-  - '[ID gf_w1_ui_006_work_item_02] Implement showTokenDetail(tokenId) function finding token in recentTokens array, populating panel, adding .open class'
-  - '[ID gf_w1_ui_006_work_item_03] Add token details display sections showing issued, expires, status, security properties, usage'
-  - '[ID gf_w1_ui_006_work_item_04] Add Revoke Token button with onclick calling revokeToken(tokenId), hidden if token already revoked'
-  - '[ID gf_w1_ui_006_work_item_05] Add Close button with onclick removing .open class from panel'
+- '[ID gf_w1_ui_006_work_item_01] Create slide-out panel HTML structure with id="token-detail-panel" class="slideout"'
+- '[ID gf_w1_ui_006_work_item_02] Implement showTokenDetail(tokenId) function finding token in recentTokens array, populating
+  panel, adding .open class'
+- '[ID gf_w1_ui_006_work_item_03] Add token details display sections showing issued, expires, status, security properties,
+  usage'
+- '[ID gf_w1_ui_006_work_item_04] Add Revoke Token button with onclick calling revokeToken(tokenId), hidden if token already
+  revoked'
+- '[ID gf_w1_ui_006_work_item_05] Add Close button with onclick removing .open class from panel'
 acceptance_criteria:
-  - '[ID gf_w1_ui_006_work_item_01] Panel structure exists with .slideout class matching existing pattern'
-  - '[ID gf_w1_ui_006_work_item_02] showTokenDetail() opens panel with correct token data'
-  - '[ID gf_w1_ui_006_work_item_03] All token details including 5 security properties are displayed'
-  - '[ID gf_w1_ui_006_work_item_04] Revoke button is visible for non-revoked tokens, hidden for revoked'
-  - '[ID gf_w1_ui_006_work_item_05] Close button successfully closes panel'
+- '[ID gf_w1_ui_006_work_item_01] Panel structure exists with .slideout class matching existing pattern'
+- '[ID gf_w1_ui_006_work_item_02] showTokenDetail() opens panel with correct token data'
+- '[ID gf_w1_ui_006_work_item_03] All token details including 5 security properties are displayed'
+- '[ID gf_w1_ui_006_work_item_04] Revoke button is visible for non-revoked tokens, hidden for revoked'
+- '[ID gf_w1_ui_006_work_item_05] Close button successfully closes panel'
 negative_tests:
-  - id: GF-W1-UI-006-N1
-    description: >-
-      Verify that Revoke button is NOT shown for already-revoked tokens. Test by opening
-      detail panel for a revoked token and confirming the Revoke button is hidden or disabled.
-    required: true
-  - id: GF-W1-UI-006-N2
-    description: >-
-      Verify that panel uses existing .slideout class and does not create duplicate CSS.
-      Grep for new slideout class definitions and confirm none exist.
-    required: true
+- id: GF-W1-UI-006-N1
+  description: Verify that Revoke button is NOT shown for already-revoked tokens. Test by opening detail panel for a revoked
+    token and confirming the Revoke button is hidden or disabled.
+  required: true
+- id: GF-W1-UI-006-N2
+  description: Verify that panel uses existing .slideout class and does not create duplicate CSS. Grep for new slideout class
+    definitions and confirm none exist.
+  required: true
 positive_tests:
-  - id: GF-W1-UI-006-P1
-    description: >-
-      Verify that token detail panel opens smoothly, displays all security properties,
-      and closes correctly when Close button is clicked.
-    required: true
+- id: GF-W1-UI-006-P1
+  description: Verify that token detail panel opens smoothly, displays all security properties, and closes correctly when
+    Close button is clicked.
+  required: true
 verification:
-  - grep -q 'showTokenDetail' src/supervisory-dashboard/index.html || exit 1
-  - grep -q 'id="token-detail-panel"' src/supervisory-dashboard/index.html || exit 1
-  - grep -q 'class="slideout"' src/supervisory-dashboard/index.html || exit 1
-  - test -f evidence/phase1/gf_w1_ui_006.json || exit 1
+- grep -q 'showTokenDetail' src/supervisory-dashboard/index.html || exit 1
+- grep -q 'id="token-detail-panel"' src/supervisory-dashboard/index.html || exit 1
+- grep -q 'class="slideout"' src/supervisory-dashboard/index.html || exit 1
+- test -f evidence/phase1/gf_w1_ui_006.json || exit 1
 evidence:
-  - path: evidence/phase1/gf_w1_ui_006.json
-    must_include:
-      - task_id
-      - timestamp
-      - status
-      - slideout_panel_created
-      - show_function_implemented
-      - token_details_displayed
-      - revoke_button_present
-      - close_button_present
-      - security_properties_count
-      - checks
-      - observed_paths
-      - command_outputs
-      - execution_trace
+- path: evidence/phase1/gf_w1_ui_006.json
+  must_include:
+  - task_id
+  - timestamp
+  - status
+  - slideout_panel_created
+  - show_function_implemented
+  - token_details_displayed
+  - revoke_button_present
+  - close_button_present
+  - security_properties_count
+  - checks
+  - observed_paths
+  - command_outputs
+  - execution_trace
 failure_modes:
-  - "Panel does not use existing .slideout class => UI.DESIGN_VIOLATION => FAIL"
-  - "Security properties not all displayed => FUNCTIONAL.INCOMPLETE_TOKEN_INFO => FAIL"
-  - "Revoke button shown for revoked tokens => UI.INCORRECT_BUTTON_STATE => FAIL"
-  - "Panel animation broken => UI.ANIMATION_BROKEN => FAIL"
+- Panel does not use existing .slideout class => UI.DESIGN_VIOLATION => FAIL
+- Security properties not all displayed => FUNCTIONAL.INCOMPLETE_TOKEN_INFO => FAIL
+- Revoke button shown for revoked tokens => UI.INCORRECT_BUTTON_STATE => FAIL
+- Panel animation broken => UI.ANIMATION_BROKEN => FAIL
 must_read:
-  - docs/operations/AI_AGENT_OPERATION_MANUAL.md
-  - .kiro/steering/ui-canonical-design.md
-  - .kiro/steering/pwrm0001-domain-rules.md
+- docs/operations/AI_AGENT_OPERATION_MANUAL.md
+- .kiro/steering/ui-canonical-design.md
+- .kiro/steering/pwrm0001-domain-rules.md
+- docs/operations/AGENTIC_SDLC_PILOT_POLICY.md
 implementation_plan: docs/plans/phase1/GF-W1-UI-006/PLAN.md
 implementation_log: docs/plans/phase1/GF-W1-UI-006/EXEC_LOG.md
-notes: >-
-  This task implements token detail inspection using existing slideout pattern for UI
-  consistency. All 5 security properties are displayed to make token guarantees explicit.
-  Revoke button state is controlled by token.revoked flag. Phase: Green Finance Wave 1.
-  Domain: green_finance.
+notes: 'This task implements token detail inspection using existing slideout pattern for UI consistency. All 5 security properties
+  are displayed to make token guarantees explicit. Revoke button state is controlled by token.revoked flag. Phase: Green Finance
+  Wave 1. Domain: green_finance.'
 client: kiro
 assigned_agent: architect
 model: claude-sonnet-4-20250514
 domain: green_finance
 pilot: true
-second_pilot_test: >-
-  The token detail slide-out panel pattern works for any programme requiring detailed
-  token inspection. For PWRM0001 plastic collection, the panel shows waste collector
-  token details. For a hypothetical VM0044 solar energy programme, the panel would show
-  solar technician token details. The security properties display (type, signature, TTL,
-  GPS lock, single-use) and slideout animation are identical; only the token metadata
-  fields differ per programme. The Revoke button state logic is universal across programmes.
+second_pilot_test: The token detail slide-out panel pattern works for any programme requiring detailed token inspection. For
+  PWRM0001 plastic collection, the panel shows waste collector token details. For a hypothetical VM0044 solar energy programme,
+  the panel would show solar technician token details. The security properties display (type, signature, TTL, GPS lock, single-use)
+  and slideout animation are identical; only the token metadata fields differ per programme. The Revoke button state logic
+  is universal across programmes.
 pilot_scope_ref: docs/pilots/PILOT_PWRM0001/SCOPE.md

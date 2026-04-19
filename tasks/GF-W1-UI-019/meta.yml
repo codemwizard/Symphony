@@ -7,97 +7,90 @@ status: planned
 priority: MEDIUM
 risk_class: GOVERNANCE
 blast_radius: APP_LAYER
-intent: >-
-  Implement auto-refresh polling that fetches criteria data every 30 seconds when tab is active
-  to ensure stakeholders see up-to-date compliance posture without manual refresh. Polling stops
-  when tab is deactivated to reduce unnecessary backend load. Changed criteria show subtle flash
-  animation to draw attention to status updates.
+intent: Implement auto-refresh polling that fetches criteria data every 30 seconds when tab is active to ensure stakeholders
+  see up-to-date compliance posture without manual refresh. Polling stops when tab is deactivated to reduce unnecessary backend
+  load. Changed criteria show subtle flash animation to draw attention to status updates.
 anti_patterns:
-  - "Polling continues when tab is not active causing unnecessary backend load"
-  - "Missing flash animation on changed criteria"
-  - "Not checking tab visibility before polling"
-  - "Polling interval too short causing excessive backend load"
-  - "Not stopping polling when tab is deactivated"
+- Polling continues when tab is not active causing unnecessary backend load
+- Missing flash animation on changed criteria
+- Not checking tab visibility before polling
+- Polling interval too short causing excessive backend load
+- Not stopping polling when tab is deactivated
 depends_on:
-  - GF-W1-UI-018
+- GF-W1-UI-018
 blocks:
-  - GF-W1-UI-020
+- GF-W1-UI-020
 touches:
-  - src/supervisory-dashboard/index.html
-  - evidence/phase1/GF-W1-UI-019.json
-  - tasks/GF-W1-UI-019/meta.yml
+- src/supervisory-dashboard/index.html
+- evidence/phase1/GF-W1-UI-019.json
+- tasks/GF-W1-UI-019/meta.yml
 invariants: []
 work:
-  - '[ID gf_w1_ui_019_work_item_01] Implement startPolling() function with 30-second setInterval'
-  - '[ID gf_w1_ui_019_work_item_02] Implement stopPolling() function with clearInterval'
-  - '[ID gf_w1_ui_019_work_item_03] Add tab visibility check (only poll when tab is active)'
-  - '[ID gf_w1_ui_019_work_item_04] Add subtle flash animation CSS for changed criteria'
-  - '[ID gf_w1_ui_019_work_item_05] Wire polling to tab switch events (start on activate, stop on deactivate)'
+- '[ID gf_w1_ui_019_work_item_01] Implement startPolling() function with 30-second setInterval'
+- '[ID gf_w1_ui_019_work_item_02] Implement stopPolling() function with clearInterval'
+- '[ID gf_w1_ui_019_work_item_03] Add tab visibility check (only poll when tab is active)'
+- '[ID gf_w1_ui_019_work_item_04] Add subtle flash animation CSS for changed criteria'
+- '[ID gf_w1_ui_019_work_item_05] Wire polling to tab switch events (start on activate, stop on deactivate)'
 acceptance_criteria:
-  - '[ID gf_w1_ui_019_work_item_01] Polling starts when Pilot Success Criteria tab is activated'
-  - '[ID gf_w1_ui_019_work_item_02] Polling stops when tab is deactivated'
-  - '[ID gf_w1_ui_019_work_item_03] Criteria data refreshes every 30 seconds when tab is active'
-  - '[ID gf_w1_ui_019_work_item_04] Changed criteria show flash animation'
-  - '[ID gf_w1_ui_019_work_item_05] No polling occurs when tab is not visible'
+- '[ID gf_w1_ui_019_work_item_01] Polling starts when Pilot Success Criteria tab is activated'
+- '[ID gf_w1_ui_019_work_item_02] Polling stops when tab is deactivated'
+- '[ID gf_w1_ui_019_work_item_03] Criteria data refreshes every 30 seconds when tab is active'
+- '[ID gf_w1_ui_019_work_item_04] Changed criteria show flash animation'
+- '[ID gf_w1_ui_019_work_item_05] No polling occurs when tab is not visible'
 negative_tests:
-  - id: GF-W1-UI-019-N1
-    description: >-
-      Verify that polling does not continue when tab is deactivated.
-    required: true
-  - id: GF-W1-UI-019-N2
-    description: >-
-      Verify that polling interval is not shorter than 30 seconds.
-    required: true
+- id: GF-W1-UI-019-N1
+  description: Verify that polling does not continue when tab is deactivated.
+  required: true
+- id: GF-W1-UI-019-N2
+  description: Verify that polling interval is not shorter than 30 seconds.
+  required: true
 positive_tests:
-  - id: GF-W1-UI-019-P1
-    description: >-
-      Verify that polling starts when tab is activated and stops when deactivated.
-    required: true
+- id: GF-W1-UI-019-P1
+  description: Verify that polling starts when tab is activated and stops when deactivated.
+  required: true
 verification:
-  - grep -q 'startPolling' src/supervisory-dashboard/index.html || exit 1
-  - grep -q 'stopPolling' src/supervisory-dashboard/index.html || exit 1
-  - test -f evidence/phase1/GF-W1-UI-019.json || exit 1
+- grep -q 'startPolling' src/supervisory-dashboard/index.html || exit 1
+- grep -q 'stopPolling' src/supervisory-dashboard/index.html || exit 1
+- test -f evidence/phase1/GF-W1-UI-019.json || exit 1
 evidence:
-  - path: evidence/phase1/GF-W1-UI-019.json
-    must_include:
-      - task_id
-      - timestamp
-      - status
-      - start_polling_implemented
-      - stop_polling_implemented
-      - tab_visibility_check_added
-      - flash_animation_added
-      - polling_wired_to_tab_switch
-      - checks
-      - observed_paths
-      - command_outputs
-      - execution_trace
+- path: evidence/phase1/GF-W1-UI-019.json
+  must_include:
+  - task_id
+  - timestamp
+  - status
+  - start_polling_implemented
+  - stop_polling_implemented
+  - tab_visibility_check_added
+  - flash_animation_added
+  - polling_wired_to_tab_switch
+  - checks
+  - observed_paths
+  - command_outputs
+  - execution_trace
 failure_modes:
-  - "Polling continues when tab inactive => PERFORMANCE.EXCESSIVE_BACKEND_LOAD => FAIL"
-  - "Flash animation missing => UI.NO_CHANGE_INDICATOR => FAIL"
-  - "Tab visibility not checked => PERFORMANCE.UNNECESSARY_POLLING => FAIL"
-  - "Polling interval too short => PERFORMANCE.EXCESSIVE_BACKEND_LOAD => FAIL"
-  - "Polling not stopped on deactivate => PERFORMANCE.RESOURCE_LEAK => FAIL"
+- Polling continues when tab inactive => PERFORMANCE.EXCESSIVE_BACKEND_LOAD => FAIL
+- Flash animation missing => UI.NO_CHANGE_INDICATOR => FAIL
+- Tab visibility not checked => PERFORMANCE.UNNECESSARY_POLLING => FAIL
+- Polling interval too short => PERFORMANCE.EXCESSIVE_BACKEND_LOAD => FAIL
+- Polling not stopped on deactivate => PERFORMANCE.RESOURCE_LEAK => FAIL
 must_read:
-  - docs/operations/AI_AGENT_OPERATION_MANUAL.md
-  - .kiro/steering/ui-canonical-design.md
-  - docs/operations/PILOT_DEMO_VIDEO_SCRIPT.md
+- docs/operations/AI_AGENT_OPERATION_MANUAL.md
+- .kiro/steering/ui-canonical-design.md
+- docs/operations/PILOT_DEMO_VIDEO_SCRIPT.md
+- docs/operations/AGENTIC_SDLC_PILOT_POLICY.md
 implementation_plan: docs/plans/phase1/GF-W1-UI-019/PLAN.md
 implementation_log: docs/plans/phase1/GF-W1-UI-019/EXEC_LOG.md
-notes: >-
-  This task implements auto-refresh polling with 30-second interval. Polling only occurs when
-  tab is active to reduce backend load. Changed criteria show flash animation. Polling is wired
-  to tab switch events. Phase: Green Finance Wave 1. Domain: green_finance.
+notes: 'This task implements auto-refresh polling with 30-second interval. Polling only occurs when tab is active to reduce
+  backend load. Changed criteria show flash animation. Polling is wired to tab switch events. Phase: Green Finance Wave 1.
+  Domain: green_finance.'
 client: kiro
 assigned_agent: architect
 model: claude-sonnet-4-20250514
 domain: green_finance
 pilot: true
-second_pilot_test: >-
-  The auto-refresh polling pattern works for any programme requiring compliance dashboard with
-  real-time updates. For PWRM0001 plastic collection, polling refreshes criteria like append-only
-  log integrity status. For a hypothetical VM0044 solar energy programme, polling would refresh
-  criteria like energy meter data integrity status. The polling implementation (startPolling,
-  stopPolling, tab visibility check, flash animation, tab switch wiring) is identical; only the
-  criteria being refreshed differ per programme.
+second_pilot_test: The auto-refresh polling pattern works for any programme requiring compliance dashboard with real-time
+  updates. For PWRM0001 plastic collection, polling refreshes criteria like append-only log integrity status. For a hypothetical
+  VM0044 solar energy programme, polling would refresh criteria like energy meter data integrity status. The polling implementation
+  (startPolling, stopPolling, tab visibility check, flash animation, tab switch wiring) is identical; only the criteria being
+  refreshed differ per programme.
 pilot_scope_ref: docs/pilots/PILOT_PWRM0001/SCOPE.md

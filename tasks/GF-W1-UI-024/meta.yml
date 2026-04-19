@@ -15,17 +15,28 @@ invariants:
 - INV-UI-001
 - INV-UI-002
 work:
-- "[ID gf_w1_ui_024_work_item_01] Create programme-health.html by extracting Programme Health SPA components."
-- "[ID gf_w1_ui_024_work_item_02] Refactor index.html to remove the extracted logic and apply window.location.href routing."
-- "[ID gf_w1_ui_024_work_item_03] Apply target Symphony-redesign.md variable styles and structural updates."
+- '[ID gf_w1_ui_024_work_item_01] Create programme-health.html by extracting Programme Health SPA components.'
+- '[ID gf_w1_ui_024_work_item_02] Refactor index.html to remove the extracted logic and apply window.location.href routing.'
+- '[ID gf_w1_ui_024_work_item_03] Apply target Symphony-redesign.md variable styles and structural updates.'
 acceptance_criteria:
-- "[ID gf_w1_ui_024_work_item_01] programme-health.html exists and incorporates fonts Inter and JetBrains Mono."
-- "[ID gf_w1_ui_024_work_item_02] index.html successfully lacks the screen-main markup and uses href routes to programme-health.html."
-- "[ID gf_w1_ui_024_work_item_03] Both files use proper HTML5 navigation semantics over internal toggles for Programme Health."
+- '[ID gf_w1_ui_024_work_item_01] programme-health.html exists and incorporates fonts Inter and JetBrains Mono.'
+- '[ID gf_w1_ui_024_work_item_02] index.html successfully lacks the screen-main markup and uses href routes to programme-health.html.'
+- '[ID gf_w1_ui_024_work_item_03] Both files use proper HTML5 navigation semantics over internal toggles for Programme Health.'
 verification:
-- '# [ID gf_w1_ui_024_work_item_01] [ID gf_w1_ui_024_work_item_02] [ID gf_w1_ui_024_work_item_03] test -x scripts/audit/verify_gf_w1_ui_024.sh && bash scripts/audit/verify_gf_w1_ui_024.sh > evidence/phase1/gf_w1_ui_024_programme_extraction.json || exit 1'
+- '# [ID gf_w1_ui_024_work_item_01] [ID gf_w1_ui_024_work_item_02] [ID gf_w1_ui_024_work_item_03] test -x scripts/audit/verify_gf_w1_ui_024.sh
+  && bash scripts/audit/verify_gf_w1_ui_024.sh > evidence/phase1/gf_w1_ui_024_programme_extraction.json || exit 1'
 evidence:
-- "{'path': 'evidence/phase1/gf_w1_ui_024_programme_extraction.json', 'must_include': ['task_id', 'git_sha', 'timestamp_utc', 'status', 'checks', 'observed_paths', 'observed_hashes', 'command_outputs', 'execution_trace']}"
+- path: evidence/phase1/gf_w1_ui_024_programme_extraction.json
+  must_include:
+  - task_id
+  - git_sha
+  - timestamp_utc
+  - status
+  - checks
+  - observed_paths
+  - observed_hashes
+  - command_outputs
+  - execution_trace
 failure_modes:
 - The script fails to detect the extracted logic => CRITICAL_FAIL
 - index.html still contains screen-main => FAIL
@@ -34,9 +45,42 @@ failure_modes:
 must_read:
 - docs/operations/AI_AGENT_OPERATION_MANUAL.md
 - Symphony-redesign.md
+- docs/operations/AGENTIC_SDLC_PILOT_POLICY.md
 implementation_plan: docs/plans/phase1/GF-W1-UI-024/PLAN.md
 implementation_log: docs/plans/phase1/GF-W1-UI-024/EXEC_LOG.md
-notes: 'Formalized backward-compliance wrapper executed.'
+notes: Formalized backward-compliance wrapper executed.
 client: cursor
 assigned_agent: implementer
 model: agent-v1
+intent: Extract the Programme Health tab from the main supervisory dashboard into a standalone programme-health.html page,
+  applying the canonical Symphony design tokens (Inter and JetBrains Mono fonts, CSS variables from the redesign spec). The
+  index.html is refactored to use window.location.href routing instead of internal tab toggles, and the extracted page uses
+  proper HTML5 navigation semantics. This separation improves maintainability and aligns with the multi-page architecture
+  pattern established for the supervisory dashboard.
+anti_patterns:
+- Leaving the screen-main markup in index.html after extraction to programme-health.html
+- Using internal toggles or JavaScript tab switching instead of proper HTML5 navigation with href routing
+- Applying non-canonical fonts or CSS variables that conflict with Symphony-redesign.md specifications
+negative_tests:
+- id: GF-W1-UI-024-N1
+  description: index.html must not contain the screen-main markup after extraction. grep for screen-main in index.html must
+    return zero matches.
+  required: true
+domain: green_finance
+pilot: true
+second_pilot_test:
+  candidate_sector_1: PWRM0001 plastic waste recovery (Chunga Dumpsite, Lusaka)
+  candidate_sector_2: VM0044 solar energy generation (hypothetical)
+  unchanged_core_tables: []
+  unchanged_core_functions: []
+  adapter_only_differences:
+  - Programme Health page layout and KPI labels are sector-neutral — they display generic metrics (total projects, active
+    batches, completion rates) not sector-specific data
+  jurisdiction_profile_impact: None — page extraction is a structural UI refactor with no jurisdiction logic
+  required_core_changes: []
+  explanation: The Programme Health page extraction is a purely structural refactoring of the supervisory dashboard. The page
+    displays aggregated programme metrics that are sector-neutral (project counts, batch statuses, completion percentages).
+    The same extracted page layout works identically for PWRM0001 plastic collection and VM0044 solar energy programmes without
+    any modification.
+  second_pilot_reviewed_by: ARCHITECT
+pilot_scope_ref: docs/pilots/PILOT_PWRM0001/SCOPE.md

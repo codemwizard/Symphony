@@ -7,100 +7,92 @@ status: planned
 priority: HIGH
 risk_class: GOVERNANCE
 blast_radius: APP_LAYER
-intent: >-
-  Implement the pilot success criteria API endpoint that returns all criteria with statuses to
-  enable the UI to display real-time compliance posture. This endpoint verifies technical,
-  operational, and regulatory criteria and returns JSON response with all criteria and statuses.
-  Includes 30-second caching to reduce backend load.
+intent: Implement the pilot success criteria API endpoint that returns all criteria with statuses to enable the UI to display
+  real-time compliance posture. This endpoint verifies technical, operational, and regulatory criteria and returns JSON response
+  with all criteria and statuses. Includes 30-second caching to reduce backend load.
 anti_patterns:
-  - "Hardcoding criteria statuses instead of computing from actual system state"
-  - "Missing caching causing excessive backend load"
-  - "Not returning all required fields per criterion"
-  - "Not accessible via pilot-demo session cookie"
-  - "Response not following canonical JSON structure"
+- Hardcoding criteria statuses instead of computing from actual system state
+- Missing caching causing excessive backend load
+- Not returning all required fields per criterion
+- Not accessible via pilot-demo session cookie
+- Response not following canonical JSON structure
 depends_on:
-  - GF-W1-UI-017
+- GF-W1-UI-017
 blocks:
-  - GF-W1-UI-019
+- GF-W1-UI-019
 touches:
-  - services/ledger-api/dotnet/src/LedgerApi/Program.cs
-  - evidence/phase1/GF-W1-UI-018.json
-  - tasks/GF-W1-UI-018/meta.yml
+- services/ledger-api/dotnet/src/LedgerApi/Program.cs
+- evidence/phase1/GF-W1-UI-018.json
+- tasks/GF-W1-UI-018/meta.yml
 invariants: []
 work:
-  - '[ID gf_w1_ui_018_work_item_01] Create GET /pilot-demo/api/pilot-success-criteria endpoint handler'
-  - '[ID gf_w1_ui_018_work_item_02] Implement technical criteria verification logic'
-  - '[ID gf_w1_ui_018_work_item_03] Implement operational criteria verification logic'
-  - '[ID gf_w1_ui_018_work_item_04] Implement regulatory criteria verification logic'
-  - '[ID gf_w1_ui_018_work_item_05] Return JSON response with all criteria and statuses'
-  - '[ID gf_w1_ui_018_work_item_06] Add 30-second TTL caching using MemoryCache'
+- '[ID gf_w1_ui_018_work_item_01] Create GET /pilot-demo/api/pilot-success-criteria endpoint handler'
+- '[ID gf_w1_ui_018_work_item_02] Implement technical criteria verification logic'
+- '[ID gf_w1_ui_018_work_item_03] Implement operational criteria verification logic'
+- '[ID gf_w1_ui_018_work_item_04] Implement regulatory criteria verification logic'
+- '[ID gf_w1_ui_018_work_item_05] Return JSON response with all criteria and statuses'
+- '[ID gf_w1_ui_018_work_item_06] Add 30-second TTL caching using MemoryCache'
 acceptance_criteria:
-  - '[ID gf_w1_ui_018_work_item_01] Endpoint returns HTTP 200 with valid JSON'
-  - '[ID gf_w1_ui_018_work_item_02] Response includes technical category with all criteria'
-  - '[ID gf_w1_ui_018_work_item_03] Response includes operational category with all criteria'
-  - '[ID gf_w1_ui_018_work_item_04] Response includes regulatory category with all criteria'
-  - '[ID gf_w1_ui_018_work_item_05] Each criterion has required fields (id, name, status, last_verified)'
-  - '[ID gf_w1_ui_018_work_item_06] Response is cached for 30 seconds'
+- '[ID gf_w1_ui_018_work_item_01] Endpoint returns HTTP 200 with valid JSON'
+- '[ID gf_w1_ui_018_work_item_02] Response includes technical category with all criteria'
+- '[ID gf_w1_ui_018_work_item_03] Response includes operational category with all criteria'
+- '[ID gf_w1_ui_018_work_item_04] Response includes regulatory category with all criteria'
+- '[ID gf_w1_ui_018_work_item_05] Each criterion has required fields (id, name, status, last_verified)'
+- '[ID gf_w1_ui_018_work_item_06] Response is cached for 30 seconds'
 negative_tests:
-  - id: GF-W1-UI-018-N1
-    description: >-
-      Verify that endpoint returns 401 if pilot-demo session cookie is missing.
-    required: true
-  - id: GF-W1-UI-018-N2
-    description: >-
-      Verify that criteria statuses are computed from actual system state, not hardcoded.
-    required: true
+- id: GF-W1-UI-018-N1
+  description: Verify that endpoint returns 401 if pilot-demo session cookie is missing.
+  required: true
+- id: GF-W1-UI-018-N2
+  description: Verify that criteria statuses are computed from actual system state, not hardcoded.
+  required: true
 positive_tests:
-  - id: GF-W1-UI-018-P1
-    description: >-
-      Verify that endpoint returns HTTP 200 with all three categories and all criteria.
-    required: true
+- id: GF-W1-UI-018-P1
+  description: Verify that endpoint returns HTTP 200 with all three categories and all criteria.
+  required: true
 verification:
-  - grep -q 'pilot-success-criteria' services/ledger-api/dotnet/src/LedgerApi/Program.cs || exit 1
-  - test -f evidence/phase1/GF-W1-UI-018.json || exit 1
+- grep -q 'pilot-success-criteria' services/ledger-api/dotnet/src/LedgerApi/Program.cs || exit 1
+- test -f evidence/phase1/GF-W1-UI-018.json || exit 1
 evidence:
-  - path: evidence/phase1/GF-W1-UI-018.json
-    must_include:
-      - task_id
-      - timestamp
-      - status
-      - endpoint_created
-      - technical_criteria_verification_implemented
-      - operational_criteria_verification_implemented
-      - regulatory_criteria_verification_implemented
-      - json_response_structure_correct
-      - caching_implemented
-      - checks
-      - observed_paths
-      - command_outputs
-      - execution_trace
+- path: evidence/phase1/GF-W1-UI-018.json
+  must_include:
+  - task_id
+  - timestamp
+  - status
+  - endpoint_created
+  - technical_criteria_verification_implemented
+  - operational_criteria_verification_implemented
+  - regulatory_criteria_verification_implemented
+  - json_response_structure_correct
+  - caching_implemented
+  - checks
+  - observed_paths
+  - command_outputs
+  - execution_trace
 failure_modes:
-  - "Criteria statuses hardcoded => FUNCTIONAL.STALE_STATUS_DISPLAY => FAIL"
-  - "Caching missing => PERFORMANCE.EXCESSIVE_BACKEND_LOAD => FAIL"
-  - "Required fields missing => FUNCTIONAL.INCOMPLETE_RESPONSE => FAIL"
-  - "Not accessible via session cookie => SECURITY.UNAUTHORIZED_ACCESS => FAIL"
-  - "Response structure incorrect => FUNCTIONAL.INVALID_JSON => FAIL"
+- Criteria statuses hardcoded => FUNCTIONAL.STALE_STATUS_DISPLAY => FAIL
+- Caching missing => PERFORMANCE.EXCESSIVE_BACKEND_LOAD => FAIL
+- Required fields missing => FUNCTIONAL.INCOMPLETE_RESPONSE => FAIL
+- Not accessible via session cookie => SECURITY.UNAUTHORIZED_ACCESS => FAIL
+- Response structure incorrect => FUNCTIONAL.INVALID_JSON => FAIL
 must_read:
-  - docs/operations/AI_AGENT_OPERATION_MANUAL.md
-  - .kiro/steering/symphony-platform-conventions.md
-  - docs/operations/PILOT_DEMO_VIDEO_SCRIPT.md
+- docs/operations/AI_AGENT_OPERATION_MANUAL.md
+- .kiro/steering/symphony-platform-conventions.md
+- docs/operations/PILOT_DEMO_VIDEO_SCRIPT.md
+- docs/operations/AGENTIC_SDLC_PILOT_POLICY.md
 implementation_plan: docs/plans/phase1/GF-W1-UI-018/PLAN.md
 implementation_log: docs/plans/phase1/GF-W1-UI-018/EXEC_LOG.md
-notes: >-
-  This task implements the backend API endpoint for pilot success criteria. Criteria statuses
-  are computed from actual system state, not hardcoded. 30-second caching reduces backend load.
-  Endpoint is accessible via pilot-demo session cookie. Phase: Green Finance Wave 1.
-  Domain: green_finance.
+notes: 'This task implements the backend API endpoint for pilot success criteria. Criteria statuses are computed from actual
+  system state, not hardcoded. 30-second caching reduces backend load. Endpoint is accessible via pilot-demo session cookie.
+  Phase: Green Finance Wave 1. Domain: green_finance.'
 client: kiro
 assigned_agent: architect
 model: claude-sonnet-4-20250514
 domain: green_finance
 pilot: true
-second_pilot_test: >-
-  The pilot success criteria API endpoint pattern works for any programme requiring compliance
-  dashboard. For PWRM0001 plastic collection, the endpoint returns criteria like append-only log
-  integrity and worker onboarding completeness. For a hypothetical VM0044 solar energy programme,
-  the endpoint would return criteria like energy meter data integrity and technician certification
-  validation. The endpoint structure, verification logic pattern, JSON response format, and caching
+second_pilot_test: The pilot success criteria API endpoint pattern works for any programme requiring compliance dashboard.
+  For PWRM0001 plastic collection, the endpoint returns criteria like append-only log integrity and worker onboarding completeness.
+  For a hypothetical VM0044 solar energy programme, the endpoint would return criteria like energy meter data integrity and
+  technician certification validation. The endpoint structure, verification logic pattern, JSON response format, and caching
   are identical; only the criteria content and verification logic differ per programme.
 pilot_scope_ref: docs/pilots/PILOT_PWRM0001/SCOPE.md

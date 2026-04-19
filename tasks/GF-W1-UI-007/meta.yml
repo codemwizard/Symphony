@@ -7,103 +7,93 @@ status: planned
 priority: HIGH
 risk_class: SECURITY
 blast_radius: APP_LAYER
-intent: >-
-  Implement token revocation with confirmation dialog and API integration to allow
-  operators to immediately invalidate compromised tokens. This task establishes the
-  emergency token invalidation mechanism that prevents unauthorized submissions while
-  requiring explicit operator confirmation to prevent accidental revocations. The
-  revocation updates both backend state and local UI state for immediate feedback.
+intent: Implement token revocation with confirmation dialog and API integration to allow operators to immediately invalidate
+  compromised tokens. This task establishes the emergency token invalidation mechanism that prevents unauthorized submissions
+  while requiring explicit operator confirmation to prevent accidental revocations. The revocation updates both backend state
+  and local UI state for immediate feedback.
 anti_patterns:
-  - "No confirmation dialog shown before revocation (accidental revocation risk)"
-  - "Local token status not updated after successful revocation (stale UI state)"
-  - "Recent tokens list not refreshed after revocation (stale data display)"
-  - "Allowing duplicate revocation attempts on already-revoked tokens"
+- No confirmation dialog shown before revocation (accidental revocation risk)
+- Local token status not updated after successful revocation (stale UI state)
+- Recent tokens list not refreshed after revocation (stale data display)
+- Allowing duplicate revocation attempts on already-revoked tokens
 depends_on:
-  - GF-W1-UI-006
+- GF-W1-UI-006
 blocks:
-  - GF-W1-UI-008
+- GF-W1-UI-008
 touches:
-  - src/supervisory-dashboard/index.html
-  - evidence/phase1/gf_w1_ui_007.json
-  - tasks/GF-W1-UI-007/meta.yml
+- src/supervisory-dashboard/index.html
+- evidence/phase1/gf_w1_ui_007.json
+- tasks/GF-W1-UI-007/meta.yml
 invariants: []
 work:
-  - '[ID gf_w1_ui_007_work_item_01] Implement revokeToken(tokenId) function calling DELETE /pilot-demo/api/evidence-links/revoke/{token_id}'
-  - '[ID gf_w1_ui_007_work_item_02] Add confirmation dialog with confirm() showing "Are you sure? This cannot be undone."'
-  - '[ID gf_w1_ui_007_work_item_03] Update local token status to REVOKED in recentTokens array on success'
-  - '[ID gf_w1_ui_007_work_item_04] Refresh recent tokens list by calling renderRecentTokens() after status update'
-  - '[ID gf_w1_ui_007_work_item_05] Show success message "Token revoked successfully" or error message based on API response'
+- '[ID gf_w1_ui_007_work_item_01] Implement revokeToken(tokenId) function calling DELETE /pilot-demo/api/evidence-links/revoke/{token_id}'
+- '[ID gf_w1_ui_007_work_item_02] Add confirmation dialog with confirm() showing "Are you sure? This cannot be undone."'
+- '[ID gf_w1_ui_007_work_item_03] Update local token status to REVOKED in recentTokens array on success'
+- '[ID gf_w1_ui_007_work_item_04] Refresh recent tokens list by calling renderRecentTokens() after status update'
+- '[ID gf_w1_ui_007_work_item_05] Show success message "Token revoked successfully" or error message based on API response'
 acceptance_criteria:
-  - '[ID gf_w1_ui_007_work_item_01] revokeToken() calls DELETE API endpoint and handles response'
-  - '[ID gf_w1_ui_007_work_item_02] Confirmation dialog shows before API call, revocation proceeds only if confirmed'
-  - '[ID gf_w1_ui_007_work_item_03] Token status updated to REVOKED in recentTokens array on success'
-  - '[ID gf_w1_ui_007_work_item_04] Recent tokens list re-renders with REVOKED badge'
-  - '[ID gf_w1_ui_007_work_item_05] Success/error messages display appropriately'
+- '[ID gf_w1_ui_007_work_item_01] revokeToken() calls DELETE API endpoint and handles response'
+- '[ID gf_w1_ui_007_work_item_02] Confirmation dialog shows before API call, revocation proceeds only if confirmed'
+- '[ID gf_w1_ui_007_work_item_03] Token status updated to REVOKED in recentTokens array on success'
+- '[ID gf_w1_ui_007_work_item_04] Recent tokens list re-renders with REVOKED badge'
+- '[ID gf_w1_ui_007_work_item_05] Success/error messages display appropriately'
 negative_tests:
-  - id: GF-W1-UI-007-N1
-    description: >-
-      Verify that revocation cannot proceed without confirmation. Test by canceling
-      the confirmation dialog and confirming the API call is NOT made.
-    required: true
-  - id: GF-W1-UI-007-N2
-    description: >-
-      Verify that already-revoked tokens cannot be revoked again. Test by attempting
-      to revoke a token that is already in REVOKED status and confirming the button
-      is disabled or hidden.
-    required: true
+- id: GF-W1-UI-007-N1
+  description: Verify that revocation cannot proceed without confirmation. Test by canceling the confirmation dialog and confirming
+    the API call is NOT made.
+  required: true
+- id: GF-W1-UI-007-N2
+  description: Verify that already-revoked tokens cannot be revoked again. Test by attempting to revoke a token that is already
+    in REVOKED status and confirming the button is disabled or hidden.
+  required: true
 positive_tests:
-  - id: GF-W1-UI-007-P1
-    description: >-
-      Verify that successful revocation updates both backend and local UI state,
-      displays success message, and refreshes the recent tokens list.
-    required: true
+- id: GF-W1-UI-007-P1
+  description: Verify that successful revocation updates both backend and local UI state, displays success message, and refreshes
+    the recent tokens list.
+  required: true
 verification:
-  - grep -q 'revokeToken' src/supervisory-dashboard/index.html || exit 1
-  - grep -q 'confirm.*revoke' src/supervisory-dashboard/index.html || exit 1
-  - grep -q '/api/evidence-links/revoke' src/supervisory-dashboard/index.html || exit 1
-  - test -f evidence/phase1/gf_w1_ui_007.json || exit 1
+- grep -q 'revokeToken' src/supervisory-dashboard/index.html || exit 1
+- grep -q 'confirm.*revoke' src/supervisory-dashboard/index.html || exit 1
+- grep -q '/api/evidence-links/revoke' src/supervisory-dashboard/index.html || exit 1
+- test -f evidence/phase1/gf_w1_ui_007.json || exit 1
 evidence:
-  - path: evidence/phase1/gf_w1_ui_007.json
-    must_include:
-      - task_id
-      - timestamp
-      - status
-      - revoke_function_implemented
-      - confirmation_dialog_present
-      - local_status_update_implemented
-      - list_refresh_implemented
-      - success_error_messages_present
-      - checks
-      - observed_paths
-      - command_outputs
-      - execution_trace
+- path: evidence/phase1/gf_w1_ui_007.json
+  must_include:
+  - task_id
+  - timestamp
+  - status
+  - revoke_function_implemented
+  - confirmation_dialog_present
+  - local_status_update_implemented
+  - list_refresh_implemented
+  - success_error_messages_present
+  - checks
+  - observed_paths
+  - command_outputs
+  - execution_trace
 failure_modes:
-  - "No confirmation dialog => SECURITY.ACCIDENTAL_REVOCATION => CRITICAL_FAIL"
-  - "Local status not updated => FUNCTIONAL.STALE_STATUS_DISPLAY => FAIL"
-  - "List not refreshed => UI.STALE_DATA_DISPLAY => FAIL"
-  - "Duplicate revocations allowed => FUNCTIONAL.DUPLICATE_REVOCATION_ATTEMPTS => FAIL"
+- No confirmation dialog => SECURITY.ACCIDENTAL_REVOCATION => CRITICAL_FAIL
+- Local status not updated => FUNCTIONAL.STALE_STATUS_DISPLAY => FAIL
+- List not refreshed => UI.STALE_DATA_DISPLAY => FAIL
+- Duplicate revocations allowed => FUNCTIONAL.DUPLICATE_REVOCATION_ATTEMPTS => FAIL
 must_read:
-  - docs/operations/AI_AGENT_OPERATION_MANUAL.md
-  - .kiro/steering/ui-canonical-design.md
-  - .kiro/steering/pwrm0001-domain-rules.md
+- docs/operations/AI_AGENT_OPERATION_MANUAL.md
+- .kiro/steering/ui-canonical-design.md
+- .kiro/steering/pwrm0001-domain-rules.md
+- docs/operations/AGENTIC_SDLC_PILOT_POLICY.md
 implementation_plan: docs/plans/phase1/GF-W1-UI-007/PLAN.md
 implementation_log: docs/plans/phase1/GF-W1-UI-007/EXEC_LOG.md
-notes: >-
-  This task implements emergency token invalidation with confirmation to prevent accidental
-  revocations. Both backend and local UI state are updated for immediate feedback. Recent
-  tokens list is refreshed to show REVOKED status. Duplicate revocations are prevented by
-  disabling button for already-revoked tokens. Phase: Green Finance Wave 1. Domain: green_finance.
+notes: 'This task implements emergency token invalidation with confirmation to prevent accidental revocations. Both backend
+  and local UI state are updated for immediate feedback. Recent tokens list is refreshed to show REVOKED status. Duplicate
+  revocations are prevented by disabling button for already-revoked tokens. Phase: Green Finance Wave 1. Domain: green_finance.'
 client: kiro
 assigned_agent: architect
 model: claude-sonnet-4-20250514
 domain: green_finance
 pilot: true
-second_pilot_test: >-
-  The token revocation pattern with confirmation dialog works for any programme requiring
-  emergency token invalidation. For PWRM0001 plastic collection, operators can revoke
-  compromised waste collector tokens. For a hypothetical VM0044 solar energy programme,
-  operators could revoke compromised solar technician tokens. The confirmation dialog,
-  API integration, local state update, and list refresh logic are identical; only the
-  API endpoint path differs per programme. The accidental revocation prevention is
-  universal across programmes.
+second_pilot_test: The token revocation pattern with confirmation dialog works for any programme requiring emergency token
+  invalidation. For PWRM0001 plastic collection, operators can revoke compromised waste collector tokens. For a hypothetical
+  VM0044 solar energy programme, operators could revoke compromised solar technician tokens. The confirmation dialog, API
+  integration, local state update, and list refresh logic are identical; only the API endpoint path differs per programme.
+  The accidental revocation prevention is universal across programmes.
 pilot_scope_ref: docs/pilots/PILOT_PWRM0001/SCOPE.md

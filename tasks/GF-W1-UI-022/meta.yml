@@ -7,101 +7,93 @@ status: planned
 priority: HIGH
 risk_class: GOVERNANCE
 blast_radius: CI_GATES
-intent: >-
-  Update the TSK-P1-219 verifier to expect 5 tabs (final count) and verify screen-s6 existence
-  to ensure the Pilot Success Criteria tab is properly integrated into the supervisory dashboard.
-  This verifier checks tab count, s6 tab existence, and screen-s6 screen existence. Updates
-  evidence JSON schema and script integrity hash.
+intent: Update the TSK-P1-219 verifier to expect 5 tabs (final count) and verify screen-s6 existence to ensure the Pilot Success
+  Criteria tab is properly integrated into the supervisory dashboard. This verifier checks tab count, s6 tab existence, and
+  screen-s6 screen existence. Updates evidence JSON schema and script integrity hash.
 anti_patterns:
-  - "Not updating tab count check from 4 to 5"
-  - "Not checking for s6 tab specifically"
-  - "Not checking for screen-s6 screen"
-  - "Not updating evidence JSON schema"
-  - "Not updating script integrity hash"
+- Not updating tab count check from 4 to 5
+- Not checking for s6 tab specifically
+- Not checking for screen-s6 screen
+- Not updating evidence JSON schema
+- Not updating script integrity hash
 depends_on:
-  - GF-W1-UI-021
+- GF-W1-UI-021
 blocks:
-  - GF-W1-UI-023
+- GF-W1-UI-023
 touches:
-  - scripts/audit/verify_tsk_p1_219.sh
-  - .toolchain/script_integrity/verifier_hashes.sha256
-  - evidence/phase1/tsk_p1_219.json
-  - tasks/GF-W1-UI-022/meta.yml
+- scripts/audit/verify_tsk_p1_219.sh
+- .toolchain/script_integrity/verifier_hashes.sha256
+- evidence/phase1/tsk_p1_219.json
+- tasks/GF-W1-UI-022/meta.yml
 invariants: []
 work:
-  - '[ID gf_w1_ui_022_work_item_01] Update scripts/audit/verify_tsk_p1_219.sh tab count check (4 → 5)'
-  - '[ID gf_w1_ui_022_work_item_02] Add check for s6 tab existence'
-  - '[ID gf_w1_ui_022_work_item_03] Add check for screen-s6 screen existence'
-  - '[ID gf_w1_ui_022_work_item_04] Update evidence JSON schema to include new checks'
-  - '[ID gf_w1_ui_022_work_item_05] Update .toolchain/script_integrity/verifier_hashes.sha256'
+- '[ID gf_w1_ui_022_work_item_01] Update scripts/audit/verify_tsk_p1_219.sh tab count check (4 → 5)'
+- '[ID gf_w1_ui_022_work_item_02] Add check for s6 tab existence'
+- '[ID gf_w1_ui_022_work_item_03] Add check for screen-s6 screen existence'
+- '[ID gf_w1_ui_022_work_item_04] Update evidence JSON schema to include new checks'
+- '[ID gf_w1_ui_022_work_item_05] Update .toolchain/script_integrity/verifier_hashes.sha256'
 acceptance_criteria:
-  - '[ID gf_w1_ui_022_work_item_01] Verifier passes when 5 tabs exist'
-  - '[ID gf_w1_ui_022_work_item_02] Verifier checks for s6 tab specifically'
-  - '[ID gf_w1_ui_022_work_item_03] Verifier checks for screen-s6 screen'
-  - '[ID gf_w1_ui_022_work_item_04] Evidence JSON includes new checks (s6_tab_exists, screen_s6_exists)'
-  - '[ID gf_w1_ui_022_work_item_05] Script integrity hash is updated'
+- '[ID gf_w1_ui_022_work_item_01] Verifier passes when 5 tabs exist'
+- '[ID gf_w1_ui_022_work_item_02] Verifier checks for s6 tab specifically'
+- '[ID gf_w1_ui_022_work_item_03] Verifier checks for screen-s6 screen'
+- '[ID gf_w1_ui_022_work_item_04] Evidence JSON includes new checks (s6_tab_exists, screen_s6_exists)'
+- '[ID gf_w1_ui_022_work_item_05] Script integrity hash is updated'
 negative_tests:
-  - id: GF-W1-UI-022-N1
-    description: >-
-      Verify that verifier fails if tab count is not 5.
-    required: true
-  - id: GF-W1-UI-022-N2
-    description: >-
-      Verify that verifier fails if s6 tab does not exist.
-    required: true
-  - id: GF-W1-UI-022-N3
-    description: >-
-      Verify that verifier fails if screen-s6 screen does not exist.
-    required: true
+- id: GF-W1-UI-022-N1
+  description: Verify that verifier fails if tab count is not 5.
+  required: true
+- id: GF-W1-UI-022-N2
+  description: Verify that verifier fails if s6 tab does not exist.
+  required: true
+- id: GF-W1-UI-022-N3
+  description: Verify that verifier fails if screen-s6 screen does not exist.
+  required: true
 positive_tests:
-  - id: GF-W1-UI-022-P1
-    description: >-
-      Verify that verifier passes when 5 tabs exist with s6 tab and screen-s6 screen.
-    required: true
+- id: GF-W1-UI-022-P1
+  description: Verify that verifier passes when 5 tabs exist with s6 tab and screen-s6 screen.
+  required: true
 verification:
-  - bash scripts/audit/verify_tsk_p1_219.sh || exit 1
-  - grep -q 'tab_count.*5' scripts/audit/verify_tsk_p1_219.sh || exit 1
-  - grep -q 's6_tab_exists' scripts/audit/verify_tsk_p1_219.sh || exit 1
-  - grep -q 'screen_s6_exists' scripts/audit/verify_tsk_p1_219.sh || exit 1
+- bash scripts/audit/verify_tsk_p1_219.sh || exit 1
+- grep -q 'tab_count.*5' scripts/audit/verify_tsk_p1_219.sh || exit 1
+- grep -q 's6_tab_exists' scripts/audit/verify_tsk_p1_219.sh || exit 1
+- grep -q 'screen_s6_exists' scripts/audit/verify_tsk_p1_219.sh || exit 1
 evidence:
-  - path: evidence/phase1/tsk_p1_219.json
-    must_include:
-      - task_id
-      - timestamp
-      - status
-      - tab_count
-      - s6_tab_exists
-      - screen_s6_exists
-      - checks
-      - observed_paths
-      - command_outputs
-      - execution_trace
+- path: evidence/phase1/tsk_p1_219.json
+  must_include:
+  - task_id
+  - timestamp
+  - status
+  - tab_count
+  - s6_tab_exists
+  - screen_s6_exists
+  - checks
+  - observed_paths
+  - command_outputs
+  - execution_trace
 failure_modes:
-  - "Tab count not updated => GOVERNANCE.VERIFIER_OUTDATED => FAIL"
-  - "s6 tab check missing => GOVERNANCE.INCOMPLETE_VERIFICATION => FAIL"
-  - "screen-s6 check missing => GOVERNANCE.INCOMPLETE_VERIFICATION => FAIL"
-  - "Evidence schema not updated => GOVERNANCE.INCOMPLETE_EVIDENCE => FAIL"
-  - "Script integrity hash not updated => SECURITY.HASH_MISMATCH => FAIL"
+- Tab count not updated => GOVERNANCE.VERIFIER_OUTDATED => FAIL
+- s6 tab check missing => GOVERNANCE.INCOMPLETE_VERIFICATION => FAIL
+- screen-s6 check missing => GOVERNANCE.INCOMPLETE_VERIFICATION => FAIL
+- Evidence schema not updated => GOVERNANCE.INCOMPLETE_EVIDENCE => FAIL
+- Script integrity hash not updated => SECURITY.HASH_MISMATCH => FAIL
 must_read:
-  - docs/operations/AI_AGENT_OPERATION_MANUAL.md
-  - .kiro/steering/ui-canonical-design.md
-  - docs/operations/PILOT_DEMO_VIDEO_SCRIPT.md
+- docs/operations/AI_AGENT_OPERATION_MANUAL.md
+- .kiro/steering/ui-canonical-design.md
+- docs/operations/PILOT_DEMO_VIDEO_SCRIPT.md
+- docs/operations/AGENTIC_SDLC_PILOT_POLICY.md
 implementation_plan: docs/plans/phase1/GF-W1-UI-022/PLAN.md
 implementation_log: docs/plans/phase1/GF-W1-UI-022/EXEC_LOG.md
-notes: >-
-  This task updates TSK-P1-219 verifier to expect 5 tabs and verify screen-s6 existence. Tab count
-  check is updated from 4 to 5. New checks for s6 tab and screen-s6 screen are added. Evidence JSON
-  schema is updated. Script integrity hash is updated. Phase: Green Finance Wave 1. Domain: green_finance.
+notes: 'This task updates TSK-P1-219 verifier to expect 5 tabs and verify screen-s6 existence. Tab count check is updated
+  from 4 to 5. New checks for s6 tab and screen-s6 screen are added. Evidence JSON schema is updated. Script integrity hash
+  is updated. Phase: Green Finance Wave 1. Domain: green_finance.'
 client: kiro
 assigned_agent: architect
 model: claude-sonnet-4-20250514
 domain: green_finance
 pilot: true
-second_pilot_test: >-
-  The verifier update pattern works for any programme requiring compliance dashboard with tab count
-  validation. For PWRM0001 plastic collection, the verifier checks for 5 tabs including Pilot Success
-  Criteria. For a hypothetical VM0044 solar energy programme, the verifier would check for programme-specific
-  tab count. The verifier structure (tab count check, specific tab existence check, screen existence check,
-  evidence schema update, script integrity hash update) is identical; only the tab count and tab names
-  differ per programme.
+second_pilot_test: The verifier update pattern works for any programme requiring compliance dashboard with tab count validation.
+  For PWRM0001 plastic collection, the verifier checks for 5 tabs including Pilot Success Criteria. For a hypothetical VM0044
+  solar energy programme, the verifier would check for programme-specific tab count. The verifier structure (tab count check,
+  specific tab existence check, screen existence check, evidence schema update, script integrity hash update) is identical;
+  only the tab count and tab names differ per programme.
 pilot_scope_ref: docs/pilots/PILOT_PWRM0001/SCOPE.md

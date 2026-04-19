@@ -7,116 +7,109 @@ status: planned
 priority: CRITICAL
 risk_class: GOVERNANCE
 blast_radius: CI_GATES
-intent: >-
-  Create end-to-end verification script testing complete worker token issuance lifecycle
-  including issuance, submission, and security property enforcement (expiry, single-use,
-  GPS validation). This task establishes the automated verification gate that proves
-  the token system enforces all security guarantees end-to-end, not just in isolated
-  components. The script must test both happy path and negative cases to prevent
-  governance theater.
+intent: Create end-to-end verification script testing complete worker token issuance lifecycle including issuance, submission,
+  and security property enforcement (expiry, single-use, GPS validation). This task establishes the automated verification
+  gate that proves the token system enforces all security guarantees end-to-end, not just in isolated components. The script
+  must test both happy path and negative cases to prevent governance theater.
 anti_patterns:
-  - "Script only tests happy path without negative tests (governance theater)"
-  - "No evidence JSON emitted (no audit trail)"
-  - "Using hardcoded tokens instead of fresh issuance (stale test data)"
-  - "Supervisory reveal not tested (incomplete E2E verification)"
+- Script only tests happy path without negative tests (governance theater)
+- No evidence JSON emitted (no audit trail)
+- Using hardcoded tokens instead of fresh issuance (stale test data)
+- Supervisory reveal not tested (incomplete E2E verification)
 depends_on:
-  - GF-W1-UI-008
+- GF-W1-UI-008
 blocks:
-  - GF-W1-UI-010
+- GF-W1-UI-010
 touches:
-  - scripts/dev/verify_worker_token_issuance_e2e.sh
-  - evidence/phase1/worker_token_issuance_e2e.json
-  - .toolchain/script_integrity/verifier_hashes.sha256
-  - tasks/GF-W1-UI-009/meta.yml
+- scripts/dev/verify_worker_token_issuance_e2e.sh
+- evidence/phase1/worker_token_issuance_e2e.json
+- .toolchain/script_integrity/verifier_hashes.sha256
+- tasks/GF-W1-UI-009/meta.yml
 invariants: []
 work:
-  - '[ID gf_w1_ui_009_work_item_01] Create scripts/dev/verify_worker_token_issuance_e2e.sh with shebang and set -eo pipefail'
-  - '[ID gf_w1_ui_009_work_item_02] Implement token issuance test using curl POST /pilot-demo/api/evidence-links/issue, verify HTTP 200, extract token'
-  - '[ID gf_w1_ui_009_work_item_03] Implement worker submission test using curl POST WEIGHBRIDGE_RECORD with token in Authorization header, verify HTTP 202'
-  - '[ID gf_w1_ui_009_work_item_04] Implement expiry enforcement test issuing token with 1-second TTL, waiting 2 seconds, attempting submission, verifying HTTP 401/403'
-  - '[ID gf_w1_ui_009_work_item_05] Implement single-use enforcement test submitting with token once (succeeds), attempting second submission with same token, verifying rejection'
-  - '[ID gf_w1_ui_009_work_item_06] Implement GPS validation test submitting with GPS coordinates outside 250m radius, verifying rejection'
-  - '[ID gf_w1_ui_009_work_item_07] Emit evidence JSON with all test results to evidence/phase1/worker_token_issuance_e2e.json'
+- '[ID gf_w1_ui_009_work_item_01] Create scripts/dev/verify_worker_token_issuance_e2e.sh with shebang and set -eo pipefail'
+- '[ID gf_w1_ui_009_work_item_02] Implement token issuance test using curl POST /pilot-demo/api/evidence-links/issue, verify
+  HTTP 200, extract token'
+- '[ID gf_w1_ui_009_work_item_03] Implement worker submission test using curl POST WEIGHBRIDGE_RECORD with token in Authorization
+  header, verify HTTP 202'
+- '[ID gf_w1_ui_009_work_item_04] Implement expiry enforcement test issuing token with 1-second TTL, waiting 2 seconds, attempting
+  submission, verifying HTTP 401/403'
+- '[ID gf_w1_ui_009_work_item_05] Implement single-use enforcement test submitting with token once (succeeds), attempting
+  second submission with same token, verifying rejection'
+- '[ID gf_w1_ui_009_work_item_06] Implement GPS validation test submitting with GPS coordinates outside 250m radius, verifying
+  rejection'
+- '[ID gf_w1_ui_009_work_item_07] Emit evidence JSON with all test results to evidence/phase1/worker_token_issuance_e2e.json'
 acceptance_criteria:
-  - '[ID gf_w1_ui_009_work_item_01] Script file exists, is executable, has shebang and set -eo pipefail'
-  - '[ID gf_w1_ui_009_work_item_02] Token issuance test succeeds, token value extracted'
-  - '[ID gf_w1_ui_009_work_item_03] Worker submission test succeeds with valid token'
-  - '[ID gf_w1_ui_009_work_item_04] Expired token is rejected with HTTP 401/403'
-  - '[ID gf_w1_ui_009_work_item_05] Reused token is rejected'
-  - '[ID gf_w1_ui_009_work_item_06] Out-of-radius submission is rejected'
-  - '[ID gf_w1_ui_009_work_item_07] Evidence file contains all required fields with PASS status'
+- '[ID gf_w1_ui_009_work_item_01] Script file exists, is executable, has shebang and set -eo pipefail'
+- '[ID gf_w1_ui_009_work_item_02] Token issuance test succeeds, token value extracted'
+- '[ID gf_w1_ui_009_work_item_03] Worker submission test succeeds with valid token'
+- '[ID gf_w1_ui_009_work_item_04] Expired token is rejected with HTTP 401/403'
+- '[ID gf_w1_ui_009_work_item_05] Reused token is rejected'
+- '[ID gf_w1_ui_009_work_item_06] Out-of-radius submission is rejected'
+- '[ID gf_w1_ui_009_work_item_07] Evidence file contains all required fields with PASS status'
 negative_tests:
-  - id: GF-W1-UI-009-N1
-    description: >-
-      Verify that expired tokens are rejected. Issue a token with 1-second TTL,
-      wait 2 seconds, attempt submission, and confirm HTTP 401 or 403 response.
-    required: true
-  - id: GF-W1-UI-009-N2
-    description: >-
-      Verify that single-use enforcement works. Submit with a token once (succeeds),
-      attempt second submission with same token, and confirm rejection.
-    required: true
-  - id: GF-W1-UI-009-N3
-    description: >-
-      Verify that GPS validation works. Submit with GPS coordinates outside 250m
-      radius and confirm rejection.
-    required: true
+- id: GF-W1-UI-009-N1
+  description: Verify that expired tokens are rejected. Issue a token with 1-second TTL, wait 2 seconds, attempt submission,
+    and confirm HTTP 401 or 403 response.
+  required: true
+- id: GF-W1-UI-009-N2
+  description: Verify that single-use enforcement works. Submit with a token once (succeeds), attempt second submission with
+    same token, and confirm rejection.
+  required: true
+- id: GF-W1-UI-009-N3
+  description: Verify that GPS validation works. Submit with GPS coordinates outside 250m radius and confirm rejection.
+  required: true
 positive_tests:
-  - id: GF-W1-UI-009-P1
-    description: >-
-      Verify that complete E2E flow works: issue token, submit with valid token,
-      query supervisory reveal endpoint, and confirm submission appears.
-    required: true
+- id: GF-W1-UI-009-P1
+  description: 'Verify that complete E2E flow works: issue token, submit with valid token, query supervisory reveal endpoint,
+    and confirm submission appears.'
+  required: true
 verification:
-  - test -x scripts/dev/verify_worker_token_issuance_e2e.sh || exit 1
-  - bash scripts/dev/verify_worker_token_issuance_e2e.sh || exit 1
-  - test -f evidence/phase1/worker_token_issuance_e2e.json || exit 1
-  - grep -q '"status".*"PASS"' evidence/phase1/worker_token_issuance_e2e.json || exit 1
+- test -x scripts/dev/verify_worker_token_issuance_e2e.sh || exit 1
+- bash scripts/dev/verify_worker_token_issuance_e2e.sh || exit 1
+- test -f evidence/phase1/worker_token_issuance_e2e.json || exit 1
+- grep -q '"status".*"PASS"' evidence/phase1/worker_token_issuance_e2e.json || exit 1
 evidence:
-  - path: evidence/phase1/worker_token_issuance_e2e.json
-    must_include:
-      - task_id
-      - timestamp
-      - status
-      - token_issuance_success
-      - worker_submission_success
-      - supervisory_reveal_confirmed
-      - expiry_enforcement_confirmed
-      - single_use_enforcement_confirmed
-      - gps_validation_confirmed
-      - checks
-      - command_outputs
-      - execution_trace
+- path: evidence/phase1/worker_token_issuance_e2e.json
+  must_include:
+  - task_id
+  - timestamp
+  - status
+  - token_issuance_success
+  - worker_submission_success
+  - supervisory_reveal_confirmed
+  - expiry_enforcement_confirmed
+  - single_use_enforcement_confirmed
+  - gps_validation_confirmed
+  - checks
+  - command_outputs
+  - execution_trace
 failure_modes:
-  - "Script only tests happy path => GOVERNANCE.INCOMPLETE_VERIFICATION => CRITICAL_FAIL"
-  - "No evidence JSON emitted => GOVERNANCE.NO_AUDIT_TRAIL => FAIL"
-  - "Using hardcoded tokens => FUNCTIONAL.STALE_TEST_DATA => FAIL"
-  - "Supervisory reveal not tested => FUNCTIONAL.INCOMPLETE_E2E_TEST => FAIL"
-  - "Script does not exit 1 on failure => CI.GATE_BROKEN => CRITICAL_FAIL"
+- Script only tests happy path => GOVERNANCE.INCOMPLETE_VERIFICATION => CRITICAL_FAIL
+- No evidence JSON emitted => GOVERNANCE.NO_AUDIT_TRAIL => FAIL
+- Using hardcoded tokens => FUNCTIONAL.STALE_TEST_DATA => FAIL
+- Supervisory reveal not tested => FUNCTIONAL.INCOMPLETE_E2E_TEST => FAIL
+- Script does not exit 1 on failure => CI.GATE_BROKEN => CRITICAL_FAIL
 must_read:
-  - docs/operations/AI_AGENT_OPERATION_MANUAL.md
-  - .kiro/steering/ui-canonical-design.md
-  - .kiro/steering/pwrm0001-domain-rules.md
-  - .kiro/steering/symphony-platform-conventions.md
+- docs/operations/AI_AGENT_OPERATION_MANUAL.md
+- .kiro/steering/ui-canonical-design.md
+- .kiro/steering/pwrm0001-domain-rules.md
+- .kiro/steering/symphony-platform-conventions.md
+- docs/operations/AGENTIC_SDLC_PILOT_POLICY.md
 implementation_plan: docs/plans/phase1/GF-W1-UI-009/PLAN.md
 implementation_log: docs/plans/phase1/GF-W1-UI-009/EXEC_LOG.md
-notes: >-
-  This task implements E2E verification gate for token system. Script tests both happy
-  path and negative cases (expiry, single-use, GPS) to prevent governance theater. Fresh
-  tokens are issued via API for each test run. Supervisory reveal is queried to confirm
-  submission appears. Evidence JSON provides audit trail. Script exits 1 on any failure
-  to fail CI. Phase: Green Finance Wave 1. Domain: green_finance.
+notes: 'This task implements E2E verification gate for token system. Script tests both happy path and negative cases (expiry,
+  single-use, GPS) to prevent governance theater. Fresh tokens are issued via API for each test run. Supervisory reveal is
+  queried to confirm submission appears. Evidence JSON provides audit trail. Script exits 1 on any failure to fail CI. Phase:
+  Green Finance Wave 1. Domain: green_finance.'
 client: kiro
 assigned_agent: architect
 model: claude-sonnet-4-20250514
 domain: green_finance
 pilot: true
-second_pilot_test: >-
-  The E2E verification script pattern works for any programme requiring token lifecycle
-  testing. For PWRM0001 plastic collection, the script tests waste collector token
-  issuance and submission. For a hypothetical VM0044 solar energy programme, the script
-  would test solar technician token issuance and submission. The test structure (issuance,
-  submission, expiry, single-use, GPS validation) is identical; only the API endpoints,
-  artifact_type, and GPS radius differ per programme. The evidence JSON schema and
-  CI gate pattern are universal across programmes.
+second_pilot_test: The E2E verification script pattern works for any programme requiring token lifecycle testing. For PWRM0001
+  plastic collection, the script tests waste collector token issuance and submission. For a hypothetical VM0044 solar energy
+  programme, the script would test solar technician token issuance and submission. The test structure (issuance, submission,
+  expiry, single-use, GPS validation) is identical; only the API endpoints, artifact_type, and GPS radius differ per programme.
+  The evidence JSON schema and CI gate pattern are universal across programmes.
 pilot_scope_ref: docs/pilots/PILOT_PWRM0001/SCOPE.md

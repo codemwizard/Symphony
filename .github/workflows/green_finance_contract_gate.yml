@@ -102,7 +102,7 @@ jobs:
 
     - name: Run task meta schema verifier
       run: |
-        bash scripts/audit/verify_task_meta_schema.sh --mode strict --scope changed
+        PRE_CI_CONTEXT=1 bash scripts/audit/verify_task_meta_schema.sh --mode strict --scope changed
 
     - name: Upload task meta evidence
       uses: actions/upload-artifact@v4

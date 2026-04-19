@@ -7,109 +7,99 @@ status: planned
 priority: NORMAL
 risk_class: PERFORMANCE
 blast_radius: APP_LAYER
-intent: >-
-  Implement optional bulk token issuance functionality for issuing tokens to multiple
-  workers simultaneously with progress tracking and CSV export. This task enables
-  operators to efficiently onboard multiple workers at once while maintaining sequential
-  issuance to avoid API rate limits. The CSV export provides operators with a shareable
-  record of issued tokens for distribution to workers.
+intent: Implement optional bulk token issuance functionality for issuing tokens to multiple workers simultaneously with progress
+  tracking and CSV export. This task enables operators to efficiently onboard multiple workers at once while maintaining sequential
+  issuance to avoid API rate limits. The CSV export provides operators with a shareable record of issued tokens for distribution
+  to workers.
 anti_patterns:
-  - "Using parallel issuance instead of sequential (API rate limit risk)"
-  - "No progress indicator shown during bulk operation (no user feedback)"
-  - "CSV not generated or download not triggered automatically"
-  - "Partial failures not reported in summary (incomplete error reporting)"
+- Using parallel issuance instead of sequential (API rate limit risk)
+- No progress indicator shown during bulk operation (no user feedback)
+- CSV not generated or download not triggered automatically
+- Partial failures not reported in summary (incomplete error reporting)
 depends_on:
-  - GF-W1-UI-007
+- GF-W1-UI-007
 blocks:
-  - GF-W1-UI-009
+- GF-W1-UI-009
 touches:
-  - src/supervisory-dashboard/index.html
-  - evidence/phase1/gf_w1_ui_008.json
-  - tasks/GF-W1-UI-008/meta.yml
+- src/supervisory-dashboard/index.html
+- evidence/phase1/gf_w1_ui_008.json
+- tasks/GF-W1-UI-008/meta.yml
 invariants: []
 work:
-  - '[ID gf_w1_ui_008_work_item_01] Add Bulk Issue button next to single issuance form'
-  - '[ID gf_w1_ui_008_work_item_02] Create modal with textarea accepting comma-separated phone numbers'
-  - '[ID gf_w1_ui_008_work_item_03] Implement sequential token issuance looping through phone numbers with await on each issueToken() call'
-  - '[ID gf_w1_ui_008_work_item_04] Add progress indicator displaying "Issuing token X of Y..." updating after each issuance'
-  - '[ID gf_w1_ui_008_work_item_05] Generate CSV blob with phone, worker_id, token_url, status columns'
-  - '[ID gf_w1_ui_008_work_item_06] Show summary displaying total, success count, failed count with details'
+- '[ID gf_w1_ui_008_work_item_01] Add Bulk Issue button next to single issuance form'
+- '[ID gf_w1_ui_008_work_item_02] Create modal with textarea accepting comma-separated phone numbers'
+- '[ID gf_w1_ui_008_work_item_03] Implement sequential token issuance looping through phone numbers with await on each issueToken()
+  call'
+- '[ID gf_w1_ui_008_work_item_04] Add progress indicator displaying "Issuing token X of Y..." updating after each issuance'
+- '[ID gf_w1_ui_008_work_item_05] Generate CSV blob with phone, worker_id, token_url, status columns'
+- '[ID gf_w1_ui_008_work_item_06] Show summary displaying total, success count, failed count with details'
 acceptance_criteria:
-  - '[ID gf_w1_ui_008_work_item_01] Bulk Issue button opens bulk issuance modal'
-  - '[ID gf_w1_ui_008_work_item_02] Modal displays with textarea and Submit button'
-  - '[ID gf_w1_ui_008_work_item_03] Tokens issued sequentially using await pattern, not Task.WhenAll or Promise.all'
-  - '[ID gf_w1_ui_008_work_item_04] Progress updates in real-time after each issuance'
-  - '[ID gf_w1_ui_008_work_item_05] CSV downloads automatically after completion'
-  - '[ID gf_w1_ui_008_work_item_06] Summary shows all results including failures'
+- '[ID gf_w1_ui_008_work_item_01] Bulk Issue button opens bulk issuance modal'
+- '[ID gf_w1_ui_008_work_item_02] Modal displays with textarea and Submit button'
+- '[ID gf_w1_ui_008_work_item_03] Tokens issued sequentially using await pattern, not Task.WhenAll or Promise.all'
+- '[ID gf_w1_ui_008_work_item_04] Progress updates in real-time after each issuance'
+- '[ID gf_w1_ui_008_work_item_05] CSV downloads automatically after completion'
+- '[ID gf_w1_ui_008_work_item_06] Summary shows all results including failures'
 negative_tests:
-  - id: GF-W1-UI-008-N1
-    description: >-
-      Verify that tokens are issued sequentially, not in parallel. Test by issuing
-      10 tokens and confirming they are issued one-by-one with await, not using
-      Promise.all or similar parallel patterns. Grep for Promise.all in bulk issuance
-      code and confirm it does not exist.
-    required: true
-  - id: GF-W1-UI-008-N2
-    description: >-
-      Verify that partial failures are reported in summary. Test by providing a mix
-      of valid and invalid phone numbers and confirming the summary shows both success
-      and failure counts with details.
-    required: true
+- id: GF-W1-UI-008-N1
+  description: Verify that tokens are issued sequentially, not in parallel. Test by issuing 10 tokens and confirming they
+    are issued one-by-one with await, not using Promise.all or similar parallel patterns. Grep for Promise.all in bulk issuance
+    code and confirm it does not exist.
+  required: true
+- id: GF-W1-UI-008-N2
+  description: Verify that partial failures are reported in summary. Test by providing a mix of valid and invalid phone numbers
+    and confirming the summary shows both success and failure counts with details.
+  required: true
 positive_tests:
-  - id: GF-W1-UI-008-P1
-    description: >-
-      Verify that bulk issuance successfully issues tokens to multiple workers,
-      displays progress, generates CSV, and shows summary.
-    required: true
+- id: GF-W1-UI-008-P1
+  description: Verify that bulk issuance successfully issues tokens to multiple workers, displays progress, generates CSV,
+    and shows summary.
+  required: true
 verification:
-  - grep -q 'bulkIssue' src/supervisory-dashboard/index.html || exit 1
-  - grep -q 'text/csv' src/supervisory-dashboard/index.html || exit 1
-  - '! grep -q "Promise.all.*issueToken" src/supervisory-dashboard/index.html || exit 1'
-  - test -f evidence/phase1/gf_w1_ui_008.json || exit 1
+- grep -q 'bulkIssue' src/supervisory-dashboard/index.html || exit 1
+- grep -q 'text/csv' src/supervisory-dashboard/index.html || exit 1
+- '! grep -q "Promise.all.*issueToken" src/supervisory-dashboard/index.html || exit 1'
+- test -f evidence/phase1/gf_w1_ui_008.json || exit 1
 evidence:
-  - path: evidence/phase1/gf_w1_ui_008.json
-    must_include:
-      - task_id
-      - timestamp
-      - status
-      - bulk_button_present
-      - modal_created
-      - sequential_issuance_implemented
-      - progress_indicator_present
-      - csv_export_implemented
-      - summary_displayed
-      - no_parallel_issuance_confirmed
-      - checks
-      - observed_paths
-      - command_outputs
-      - execution_trace
+- path: evidence/phase1/gf_w1_ui_008.json
+  must_include:
+  - task_id
+  - timestamp
+  - status
+  - bulk_button_present
+  - modal_created
+  - sequential_issuance_implemented
+  - progress_indicator_present
+  - csv_export_implemented
+  - summary_displayed
+  - no_parallel_issuance_confirmed
+  - checks
+  - observed_paths
+  - command_outputs
+  - execution_trace
 failure_modes:
-  - "Parallel issuance used => FUNCTIONAL.API_RATE_LIMIT_EXCEEDED => FAIL"
-  - "No progress indicator => UI.NO_FEEDBACK_DURING_OPERATION => FAIL"
-  - "No CSV export => FUNCTIONAL.NO_EXPORT_CAPABILITY => FAIL"
-  - "Partial failures hidden => FUNCTIONAL.INCOMPLETE_ERROR_REPORTING => FAIL"
+- Parallel issuance used => FUNCTIONAL.API_RATE_LIMIT_EXCEEDED => FAIL
+- No progress indicator => UI.NO_FEEDBACK_DURING_OPERATION => FAIL
+- No CSV export => FUNCTIONAL.NO_EXPORT_CAPABILITY => FAIL
+- Partial failures hidden => FUNCTIONAL.INCOMPLETE_ERROR_REPORTING => FAIL
 must_read:
-  - docs/operations/AI_AGENT_OPERATION_MANUAL.md
-  - .kiro/steering/ui-canonical-design.md
-  - .kiro/steering/pwrm0001-domain-rules.md
+- docs/operations/AI_AGENT_OPERATION_MANUAL.md
+- .kiro/steering/ui-canonical-design.md
+- .kiro/steering/pwrm0001-domain-rules.md
+- docs/operations/AGENTIC_SDLC_PILOT_POLICY.md
 implementation_plan: docs/plans/phase1/GF-W1-UI-008/PLAN.md
 implementation_log: docs/plans/phase1/GF-W1-UI-008/EXEC_LOG.md
-notes: >-
-  This task implements bulk token issuance for efficient worker onboarding. Sequential
-  issuance prevents API rate limit issues. Progress indicator provides real-time feedback.
-  CSV export enables token distribution to workers. Summary reports all results including
-  partial failures. Phase: Green Finance Wave 1. Domain: green_finance.
+notes: 'This task implements bulk token issuance for efficient worker onboarding. Sequential issuance prevents API rate limit
+  issues. Progress indicator provides real-time feedback. CSV export enables token distribution to workers. Summary reports
+  all results including partial failures. Phase: Green Finance Wave 1. Domain: green_finance.'
 client: kiro
 assigned_agent: architect
 model: claude-sonnet-4-20250514
 domain: green_finance
 pilot: true
-second_pilot_test: >-
-  The bulk token issuance pattern with sequential processing works for any programme
-  requiring batch worker onboarding. For PWRM0001 plastic collection, operators can
-  issue tokens to multiple waste collectors at once. For a hypothetical VM0044 solar
-  energy programme, operators could issue tokens to multiple solar technicians at once.
-  The sequential issuance pattern, progress tracking, CSV export format, and summary
-  display are identical; only the worker_id format and CSV column headers differ per
-  programme. The rate limit protection is universal across programmes.
+second_pilot_test: The bulk token issuance pattern with sequential processing works for any programme requiring batch worker
+  onboarding. For PWRM0001 plastic collection, operators can issue tokens to multiple waste collectors at once. For a hypothetical
+  VM0044 solar energy programme, operators could issue tokens to multiple solar technicians at once. The sequential issuance
+  pattern, progress tracking, CSV export format, and summary display are identical; only the worker_id format and CSV column
+  headers differ per programme. The rate limit protection is universal across programmes.
 pilot_scope_ref: docs/pilots/PILOT_PWRM0001/SCOPE.md
