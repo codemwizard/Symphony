@@ -1,7 +1,7 @@
 {
   "timestamp_utc": "1970-01-01T00:00:00Z",
   "git_sha": "0000000000000000000000000000000000000000",
-  "schema_fingerprint": "e9f9ee33755f7f9ea332282cb585e1b9fbb8ba94456a672d42fbc88fd2d701a8",
+  "schema_fingerprint": "885e676b35291c1961b34745508c21b4017523a451528b9727c861eaf5be4e60",
   "schema_version": "1.0",
   "status": "PASS",
   "checked_at_utc": "1970-01-01T00:00:00+00:00",
@@ -61,30 +61,8 @@
       "8. Cross-References (Machine-Readable)"
     ]
   },
-  "regulated_surface_changes_detected": true,
-  "regulated_surface_changed_paths": [
-    "evidence/phase0/baseline_governance.json",
-    "evidence/phase0/ddl_allowlist_governance.json",
-    "evidence/phase0/evidence.json",
-    "evidence/phase0/remediation_trace.json",
-    "evidence/phase0/schema_hash.txt",
-    "evidence/phase0/sqlstate_map_drift.json",
-    "evidence/phase0/structural_doc_linkage.json",
-    "evidence/phase0/yaml_conventions_lint.json",
-    "evidence/phase1/agent_conformance_architect.json",
-    "evidence/phase1/agent_conformance_implementer.json",
-    "evidence/phase1/agent_conformance_policy_guardian.json",
-    "evidence/phase1/approval_metadata.json",
-    "evidence/phase1/git_diff_semantics.json",
-    "evidence/phase1/human_governance_review_signoff.json",
-    "evidence/phase1/tsk_p1_062_worktree_cleanup_and_guards.json",
-    "evidence/phase1/tsk_p1_073_remediation_artifact_freshness.json",
-    "evidence/phase2/tsk_p2_preauth_003_01.json",
-    "evidence/phase2/tsk_p2_preauth_003_02.json",
-    "evidence/security_remediation/r_026_run_task_strict_enforcement.json",
-    "schema/migrations/0118_create_execution_records.sql",
-    "schema/migrations/MIGRATION_HEAD"
-  ],
+  "regulated_surface_changes_detected": false,
+  "regulated_surface_changed_paths": [],
   "regulated_surface_rule_source": "docs/operations/REGULATED_SURFACE_PATHS.yml",
   "regulated_surface_patterns": [
     "schema/migrations/**",
@@ -101,9 +79,9 @@
     "mode": "range",
     "base_ref": "refs/remotes/origin/main",
     "head_ref": "HEAD",
-    "merge_base": "8b9e060e43864267b603128db7b4942a885b6faa"
+    "merge_base": "160decf2c98af7e3950969cec1afda0c8f710a70"
   },
-  "approval_required": true,
+  "approval_required": false,
   "approval_metadata_present": true,
   "approval_metadata_ref": "/home/mwiza/workspaces/Symphony-Demo/Symphony/evidence/phase1/approval_metadata.json",
   "failures": [],
