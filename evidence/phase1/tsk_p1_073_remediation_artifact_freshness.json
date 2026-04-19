@@ -9,6 +9,8 @@
   "head_ref": "HEAD",
   "triggered_files": [],
   "freshness_docs": [
+    "docs/plans/phase1/REM-2026-04-19_pre_ci-phase1_db_verifiers/EXEC_LOG.md",
+    "docs/plans/phase1/REM-2026-04-19_pre_ci-phase1_db_verifiers/PLAN.md",
     "docs/plans/phase1/REM-2026-04-19_wave8_invariants_docs/EXEC_LOG.md",
     "docs/plans/phase1/REM-2026-04-19_wave8_invariants_docs/PLAN.md",
     "docs/plans/phase2/TSK-P2-REG-001-00/EXEC_LOG.md",

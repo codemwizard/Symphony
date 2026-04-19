@@ -15,9 +15,9 @@
     "scripts"
   ],
   "satisfying_docs": [
-    "docs/plans/phase1/REM-2026-04-19_wave8_invariants_docs/PLAN.md",
-    "docs/plans/phase1/REM-2026-04-19_wave8_invariants_docs/EXEC_LOG.md"
+    "docs/plans/phase1/REM-2026-04-19_pre_ci-phase1_db_verifiers/PLAN.md",
+    "docs/plans/phase1/REM-2026-04-19_pre_ci-phase1_db_verifiers/EXEC_LOG.md"
   ],
-  "satisfying_doc_parent": "docs/plans/phase1/REM-2026-04-19_wave8_invariants_docs",
+  "satisfying_doc_parent": "docs/plans/phase1/REM-2026-04-19_pre_ci-phase1_db_verifiers",
   "errors": []
 }

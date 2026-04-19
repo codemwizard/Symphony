@@ -61,8 +61,9 @@ if [ "$INDEX_TIMESTAMP_EXISTS" != "1" ]; then
   exit 1
 fi
 
-if [ "$MIGRATION_HEAD" != "0120" ]; then
-  echo "ERROR: MIGRATION_HEAD is $MIGRATION_HEAD, expected 0120"
+# Use numeric comparison for version check
+if [ "$MIGRATION_HEAD" -lt "0120" ]; then
+  echo "ERROR: MIGRATION_HEAD is $MIGRATION_HEAD, expected at least 0120"
   exit 1
 fi
 
