@@ -4,5 +4,5 @@
   "git_sha": "0000000000000000000000000000000000000000",
   "schema_fingerprint": "885e676b35291c1961b34745508c21b4017523a451528b9727c861eaf5be4e60",
   "status": "PASS",
-  "structural_change": false
+  "structural_change": true
 }

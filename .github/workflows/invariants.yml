@@ -179,16 +179,16 @@ jobs:
         run: |
           chmod +x scripts/audit/verify_agent_conformance.sh
           chmod +x scripts/audit/verify_agent_conformance_spec.sh
-          scripts/audit/verify_agent_conformance.sh
-          scripts/audit/verify_agent_conformance_spec.sh
+          PRE_CI_CONTEXT=1 scripts/audit/verify_agent_conformance.sh
+          PRE_CI_CONTEXT=1 scripts/audit/verify_agent_conformance_spec.sh
 
       - name: Verify governance review and closeout wiring
         if: github.event_name != 'schedule'
         run: |
           chmod +x scripts/audit/verify_invproc_06_ci_wiring_closeout.sh
           chmod +x scripts/audit/verify_human_governance_review_signoff.sh
-          scripts/audit/verify_invproc_06_ci_wiring_closeout.sh
-          scripts/audit/verify_human_governance_review_signoff.sh
+          PRE_CI_CONTEXT=1 scripts/audit/verify_invproc_06_ci_wiring_closeout.sh
+          PRE_CI_CONTEXT=1 scripts/audit/verify_human_governance_review_signoff.sh
 
       - name: Phase-0 ordered checks
         if: github.event_name != 'schedule'
