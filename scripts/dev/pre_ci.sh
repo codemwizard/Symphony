@@ -663,6 +663,28 @@ else
   exit 1
 fi
 
+echo "==> Phase-2 pre-auth invariant verifiers (Wave 7)"
+if [[ -x scripts/db/verify_tsk_p2_preauth_006a_01.sh ]]; then
+  PGHOST=localhost PGPORT=5432 PGUSER=symphony_admin PGPASSWORD=symphony_pass PGDATABASE=symphony scripts/db/verify_tsk_p2_preauth_006a_01.sh
+else
+  echo "ERROR: scripts/db/verify_tsk_p2_preauth_006a_01.sh not found"
+  exit 1
+fi
+
+if [[ -x scripts/db/verify_tsk_p2_preauth_005_08.sh ]]; then
+  PGHOST=localhost PGPORT=5432 PGUSER=symphony_admin PGPASSWORD=symphony_pass PGDATABASE=symphony scripts/db/verify_tsk_p2_preauth_005_08.sh
+else
+  echo "ERROR: scripts/db/verify_tsk_p2_preauth_005_08.sh not found"
+  exit 1
+fi
+
+if [[ -x scripts/audit/verify_tsk_p2_preauth_006c_03.sh ]]; then
+  scripts/audit/verify_tsk_p2_preauth_006c_03.sh
+else
+  echo "ERROR: scripts/audit/verify_tsk_p2_preauth_006c_03.sh not found"
+  exit 1
+fi
+
 if [[ "${RUN_DEMO_GATES}" == "1" ]] && [[ -x scripts/audit/verify_phase1_demo_proof_pack.sh ]]; then
   echo "==> Phase-1 regulator/tier-1 demo-proof pack verification"
   scripts/audit/verify_phase1_demo_proof_pack.sh
