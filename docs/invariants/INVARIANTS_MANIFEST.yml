@@ -1449,22 +1449,23 @@
 
 - id: INV-165
   aliases: ["I-PILOT-REPLAY-01"]
-  status: roadmap
+  status: implemented
   severity: P0
   title: "Every decision record references an interpretation_version_id for replayability"
   owners: ["team-db", "team-platform"]
   sla_days: 7
-  enforcement: "scripts/db/verify_interpretation_versioning.sh"
+  enforcement: "scripts/db/verify_tsk_p2_preauth_006a_01.sh"
   verification: >-
-    scripts/db/verify_interpretation_versioning.sh;
-    evidence/phase0/interpretation_versioning.json
+    scripts/db/verify_tsk_p2_preauth_006a_01.sh checks interpretation_version_id
+    enforcement in authority_decision_records and lifecycle_checkpoint_evaluations;
+    evidence/phase2/tsk_p2_preauth_006a_01.json (interpretation_versioning: true)
   notes: >-
     Enforces Check 4 (Replayability). Verifies that authority_decision_records,
     lifecycle_checkpoint_evaluations, and any table recording a regulatory
     or workflow decision has interpretation_version_id as NOT NULL FK to
     interpretation_packs. Append-only trigger must block UPDATE/DELETE.
     Without this, decisions cannot be replayed under a later interpretation
-    version, destroying audit traceability.
+    version, destroying audit traceability. Promoted to implemented in Wave 7.
 
 - id: INV-166
   aliases: ["I-PILOT-PAYLOAD-01"]
@@ -1487,15 +1488,16 @@
 
 - id: INV-167
   aliases: ["I-PILOT-INTERP-01"]
-  status: roadmap
+  status: implemented
   severity: P0
   title: "Interpretation packs have a single active record per domain per jurisdiction per authority level"
   owners: ["team-platform"]
   sla_days: 7
-  enforcement: "scripts/db/verify_interpretation_pack_uniqueness.sh"
+  enforcement: "scripts/db/verify_tsk_p2_preauth_006a_01.sh"
   verification: >-
-    scripts/db/verify_interpretation_pack_uniqueness.sh;
-    evidence/phase0/interpretation_pack_uniqueness.json
+    scripts/db/verify_tsk_p2_preauth_006a_01.sh checks interpretation pack uniqueness
+    constraint on interpretation_packs (domain, jurisdiction_code, authority_level)
+    WHERE effective_to IS NULL; evidence/phase2/tsk_p2_preauth_006a_01.json (interpretation_pack_uniqueness: true)
   notes: >-
     Enforces the interpretation hierarchy resolution rule. A partial unique index
     must exist on interpretation_packs (domain, jurisdiction_code, authority_level)
@@ -1503,7 +1505,7 @@
     exist for the same domain and jurisdiction: SOVEREIGN > REGULATORY > INTERNAL
     > DEFAULT. Without this constraint, replayability is ambiguous because two
     packs from the same period could yield different results with no canonical
-    ordering.
+    ordering. Promoted to implemented in Wave 7.
 
 - id: INV-168
   aliases: ["I-PILOT-SCOPE-01"]
@@ -1632,3 +1634,53 @@
   notes: >-
     Carbon credits must be shown as a unit of account with explicit
     equivalence to tCO₂. All values (indicative). Introduced by GF-W1-UI-001.
+
+- id: INV-175
+  aliases: ["I-P2-PREAUTH-006A-01", "INV-P2-PREAUTH-001"]
+  status: implemented
+  severity: P0
+  title: "data_authority is schema-enforced via ENUM and triggers"
+  owners: ["team-db"]
+  sla_days: 7
+  enforcement: "scripts/db/verify_tsk_p2_preauth_006a_01.sh"
+  verification: >-
+    scripts/db/verify_tsk_p2_preauth_006a_01.sh checks data_authority_level ENUM
+    and enforce_data_authority_integrity() trigger in migration 0122;
+    evidence/phase2/tsk_p2_preauth_006a_01.json (data_authority_enforced: true)
+  notes: >-
+    Data authority level is enforced via ENUM type and triggers to prevent
+    unauthorized data usage. Introduced by Wave 6 (Stage 4).
+
+- id: INV-176
+  aliases: ["I-P2-PREAUTH-005-08", "INV-P2-PREAUTH-002"]
+  status: implemented
+  severity: P0
+  title: "state_transitions is enforced via trigger layer"
+  owners: ["team-db"]
+  sla_days: 7
+  enforcement: "scripts/db/verify_tsk_p2_preauth_005_08.sh"
+  verification: >-
+    scripts/db/verify_tsk_p2_preauth_005_08.sh checks trigger layer enforcement
+    including enforce_transition_state_rules(), enforce_transition_authority(),
+    enforce_transition_signature(), enforce_execution_binding(),
+    deny_state_transitions_mutation(), and update_current_state() in migration 0120;
+    evidence/phase2/tsk_p2_preauth_005_08.json (state_machine_enforced: true)
+  notes: >-
+    State machine is enforced via trigger layer to prevent invalid state transitions.
+    Introduced by Wave 5 (Stage 3).
+
+- id: INV-177
+  aliases: ["I-P2-PREAUTH-006C-03", "INV-P2-PREAUTH-003"]
+  status: implemented
+  severity: P0
+  title: "Phase 1 C# outputs carry non-authoritative markers"
+  owners: ["team-platform"]
+  sla_days: 7
+  enforcement: "scripts/audit/verify_tsk_p2_preauth_006c_03.sh"
+  verification: >-
+    scripts/audit/verify_tsk_p2_preauth_006c_03.sh checks that AssetBatch and StateTransition
+    read models have DataAuthority and AuditGrade properties to mark Phase 1 outputs;
+    evidence/phase2/tsk_p2_preauth_006c_03.json (phase1_boundary_marked: true)
+  notes: >-
+    Phase 1 C# outputs carry non-authoritative markers via DataAuthority and AuditGrade
+    properties to prevent misinterpretation as authoritative data. Introduced by Wave 7.

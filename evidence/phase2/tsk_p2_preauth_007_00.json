@@ -1,0 +1,43 @@
+{
+  "task_id": "TSK-P2-PREAUTH-007-00",
+  "git_sha": "f86dad518cc3419538fbf62f712b227db96ada4c",
+  "timestamp_utc": "2026-04-19T06:23:53Z",
+  "status": "PASS",
+  "checks": [
+    {
+      "id": "tsk_p2_preauth_007_00_work_item_01",
+      "description": "PLAN.md exists",
+      "result": "PASS"
+    },
+    {
+      "id": "tsk_p2_preauth_007_00_work_item_02",
+      "description": "PLAN.md documents INV-175/176/177 registration",
+      "result": "PASS"
+    },
+    {
+      "id": "tsk_p2_preauth_007_00_work_item_03",
+      "description": "PLAN.md documents INV-165/167 promotion",
+      "result": "PASS"
+    },
+    {
+      "id": "tsk_p2_preauth_007_00_work_item_04",
+      "description": "PLAN.md documents pre_ci.sh wiring",
+      "result": "PASS"
+    },
+    {
+      "id": "tsk_p2_preauth_007_00_work_item_05",
+      "description": "verify_plan_semantic_alignment.py validation",
+      "result": "PASS",
+      "details": {
+        "graph_validation_enabled": true,
+        "no_orphans": true,
+        "graph_connected": true,
+        "weak_signal_score": 0
+      }
+    }
+  ],
+  "plan_path": "docs/plans/phase2/TSK-P2-PREAUTH-007-00/PLAN.md",
+  "graph_validation_enabled": true,
+  "no_orphans": true,
+  "graph_connected": true
+}
