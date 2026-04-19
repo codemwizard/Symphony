@@ -35,18 +35,19 @@ else
     exit 1
 fi
 
-# Check 3: MIGRATION_HEAD updated to 0117
+# Check 3: MIGRATION_HEAD updated to at least 0117
 echo "Checking MIGRATION_HEAD..."
 MIGRATION_HEAD=$(cat schema/migrations/MIGRATION_HEAD)
-if [ "$MIGRATION_HEAD" = "0117" ]; then
-    echo "✓ MIGRATION_HEAD is 0117"
+# Use numeric comparison for version check
+if [ "$MIGRATION_HEAD" -ge "0117" ]; then
+    echo "✓ MIGRATION_HEAD is at least 0117 (current: $MIGRATION_HEAD)"
 else
-    echo "✗ MIGRATION_HEAD is not 0117 (current: $MIGRATION_HEAD)"
-    echo '{"task_id":"'"$TASK_ID"'","git_sha":"'"$GIT_SHA"'","timestamp_utc":"'"$TIMESTAMP_UTC"'","status":"FAIL","checks":[{"name":"migration_head","status":"FAIL","message":"MIGRATION_HEAD is not 0117"}]}' > "$EVIDENCE_FILE"
+    echo "✗ MIGRATION_HEAD is less than 0117 (current: $MIGRATION_HEAD)"
+    echo '{"task_id":"'"$TASK_ID"'","git_sha":"'"$GIT_SHA"'","timestamp_utc":"'"$TIMESTAMP_UTC"'","status":"FAIL","checks":[{"name":"migration_head","status":"FAIL","message":"MIGRATION_HEAD is less than 0117"}]}' > "$EVIDENCE_FILE"
     exit 1
 fi
 
 # All checks passed
-echo '{"task_id":"'"$TASK_ID"'","git_sha":"'"$GIT_SHA"'","timestamp_utc":"'"$TIMESTAMP_UTC"'","status":"PASS","checks":[{"name":"table_exists","status":"PASS"},{"name":"unique_constraint_present","status":"PASS"},{"name":"migration_head","status":"PASS"}],"table_exists":true,"unique_constraint_present":true,"migration_head":"0117"}' > "$EVIDENCE_FILE"
+echo '{"task_id":"'"$TASK_ID"'","git_sha":"'"$GIT_SHA"'","timestamp_utc":"'"$TIMESTAMP_UTC"'","status":"PASS","checks":[{"name":"table_exists","status":"PASS"},{"name":"unique_constraint_present","status":"PASS"},{"name":"migration_head","status":"PASS"}],"table_exists":true,"unique_constraint_present":true,"migration_head":"'"$MIGRATION_HEAD"'"}' > "$EVIDENCE_FILE"
 
 echo "All checks passed for TSK-P2-PREAUTH-002-01"

@@ -49,12 +49,13 @@ echo "PASS: Index idx_execution_records_project_id exists"
 
 # Check MIGRATION_HEAD
 MIGRATION_HEAD=$(cat schema/migrations/MIGRATION_HEAD | tr -d '\n')
-if [ "$MIGRATION_HEAD" != "0118" ]; then
-    echo "FAIL: MIGRATION_HEAD is $MIGRATION_HEAD, expected 0118"
+# Use numeric comparison for version check
+if [ "$MIGRATION_HEAD" -lt "0118" ]; then
+    echo "FAIL: MIGRATION_HEAD is $MIGRATION_HEAD, expected at least 0118"
     exit 1
 fi
 
-echo "PASS: MIGRATION_HEAD is 0118"
+echo "PASS: MIGRATION_HEAD is at least 0118 (current: $MIGRATION_HEAD)"
 
 # Emit evidence
 mkdir -p evidence/phase2
@@ -68,7 +69,7 @@ cat > evidence/phase2/tsk_p2_preauth_003_01.json << EOF
     "table_exists": true,
     "all_columns_present": true,
     "index_present": true,
-    "migration_head": "0118"
+    "migration_head": "$MIGRATION_HEAD"
   }
 }
 EOF

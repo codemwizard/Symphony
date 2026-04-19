@@ -3,7 +3,7 @@ phase: '2'
 task_id: TSK-P2-REG-003-05
 title: Implement enforce_dns_harm() trigger
 owner_role: DB_FOUNDATION
-status: planned
+status: completed
 priority: HIGH
 risk_class: SECURITY
 blast_radius: DB_SCHEMA
@@ -30,13 +30,13 @@ depends_on:
 blocks:
 - TSK-P2-REG-003-06
 touches:
-- schema/migrations/0125_dns_harm_trigger.sql
+- schema/migrations/0129_enforce_dns_harm_trigger.sql
 - scripts/db/verify_tsk_p2_reg_003_05.sh
 - tasks/TSK-P2-REG-003-05/meta.yml
 invariants: []
 work:
   - >-
-    [ID tsk_p2_reg_003_05_work_item_01] Write migration 0125 at schema/migrations/0125_enforce_dns_harm_trigger.sql with SECURITY DEFINER trigger function that raises GF057 on DNSH violation
+    [ID tsk_p2_reg_003_05_work_item_01] Write migration 0129 at schema/migrations/0129_enforce_dns_harm_trigger.sql with SECURITY DEFINER trigger function that raises GF057 on DNSH violation
   - >-
     [ID tsk_p2_reg_003_05_work_item_02] Add SET search_path = pg_catalog, public to trigger function
   - >-
@@ -49,7 +49,7 @@ work:
     [ID tsk_p2_reg_003_05_work_item_06] Run scripts/dev/pre_ci.sh to ensure conformance
 acceptance_criteria:
   - >-
-    [ID tsk_p2_reg_003_05_work_item_01] [ID tsk_p2_reg_003_05_work_item_02] [ID tsk_p2_reg_003_05_work_item_03] [ID tsk_p2_reg_003_05_work_item_04] [ID tsk_p2_reg_003_05_work_item_05] [ID tsk_p2_reg_003_05_work_item_06] [ID tsk_p2_reg_003_05_ac_01] Migration 0125 for enforce_dns_harm() trigger exists
+    [ID tsk_p2_reg_003_05_work_item_01] [ID tsk_p2_reg_003_05_work_item_02] [ID tsk_p2_reg_003_05_work_item_03] [ID tsk_p2_reg_003_05_work_item_04] [ID tsk_p2_reg_003_05_work_item_05] [ID tsk_p2_reg_003_05_work_item_06] [ID tsk_p2_reg_003_05_ac_01] Migration 0129 for enforce_dns_harm() trigger exists
   - >-
     [ID tsk_p2_reg_003_05_work_item_01] [ID tsk_p2_reg_003_05_work_item_02] [ID tsk_p2_reg_003_05_work_item_03] [ID tsk_p2_reg_003_05_work_item_04] [ID tsk_p2_reg_003_05_work_item_05] [ID tsk_p2_reg_003_05_work_item_06] [ID tsk_p2_reg_003_05_ac_02] enforce_dns_harm() function exists with SECURITY DEFINER
   - >-
@@ -72,13 +72,13 @@ positive_tests:
 verification:
   - >-
     # [ID tsk_p2_reg_003_05_work_item_01] [ID tsk_p2_reg_003_05_work_item_02] [ID tsk_p2_reg_003_05_work_item_03] [ID tsk_p2_reg_003_05_work_item_04] [ID tsk_p2_reg_003_05_work_item_05] [ID tsk_p2_reg_003_05_work_item_06] [ID tsk_p2_reg_003_05_ac_01] [ID tsk_p2_reg_003_05_ac_02] [ID tsk_p2_reg_003_05_ac_03] [ID tsk_p2_reg_003_05_ac_04] [ID tsk_p2_reg_003_05_ac_05]
-    bash scripts/db/verify_tsk_p2_reg_003_05.sh
+    test -x scripts/db/verify_tsk_p2_reg_003_05.sh && bash scripts/db/verify_tsk_p2_reg_003_05.sh > evidence/phase2/tsk_p2_reg_003_05.json || exit 1
   - >-
     # [ID tsk_p2_reg_003_05_work_item_01] [ID tsk_p2_reg_003_05_work_item_02] [ID tsk_p2_reg_003_05_work_item_03] [ID tsk_p2_reg_003_05_work_item_04] [ID tsk_p2_reg_003_05_work_item_05] [ID tsk_p2_reg_003_05_work_item_06] [ID tsk_p2_reg_003_05_ac_01] [ID tsk_p2_reg_003_05_ac_02] [ID tsk_p2_reg_003_05_ac_03] [ID tsk_p2_reg_003_05_ac_04] [ID tsk_p2_reg_003_05_ac_05]
-    python3 scripts/audit/validate_evidence.py --task TSK-P2-REG-003-05 --evidence evidence/phase2/tsk_p2_reg_003_05.json
+    python3 scripts/audit/validate_evidence.py --task TSK-P2-REG-003-05 --evidence evidence/phase2/tsk_p2_reg_003_05.json || exit 1
   - >-
     # [ID tsk_p2_reg_003_05_work_item_01] [ID tsk_p2_reg_003_05_work_item_02] [ID tsk_p2_reg_003_05_work_item_03] [ID tsk_p2_reg_003_05_work_item_04] [ID tsk_p2_reg_003_05_work_item_05] [ID tsk_p2_reg_003_05_work_item_06] [ID tsk_p2_reg_003_05_ac_01] [ID tsk_p2_reg_003_05_ac_02] [ID tsk_p2_reg_003_05_ac_03] [ID tsk_p2_reg_003_05_ac_04] [ID tsk_p2_reg_003_05_ac_05]
-    bash scripts/dev/pre_ci.sh
+    bash scripts/dev/pre_ci.sh || exit 1
 evidence:
 - path: evidence/phase2/tsk_p2_reg_003_05.json
   must_include:
@@ -101,6 +101,7 @@ failure_modes:
 must_read:
 - docs/operations/AI_AGENT_OPERATION_MANUAL.md
 - docs/operations/TASK_CREATION_PROCESS.md
+- docs/operations/SYMPHONY_TASK_IMPLEMENTATION_PROCESS.md
 - docs/plans/phase2/ATOMIC_TASK_BREAKDOWN_PLAN.md
 - AGENTS.md
 implementation_plan: docs/plans/phase2/TSK-P2-REG-003-05/PLAN.md

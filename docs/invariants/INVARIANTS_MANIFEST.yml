@@ -1530,7 +1530,7 @@
 
 - id: INV-169
   aliases: ["I-GF-REG26-01"]
-  status: roadmap
+  status: implemented
   severity: P0
   title: "Regulation 26 separation of duties: validator cannot verify the same project — DB-enforced"
   owners: ["team-db", "team-platform", "team-security"]
@@ -1541,6 +1541,20 @@
     evidence/phase0/gf_sch_008.json
   notes: >-
     Enforces S.I. No. 5 of 2026 Regulation 26 at the DB layer.
+
+- id: INV-178
+  aliases: ["I-GF-REG-003-07"]
+  status: implemented
+  severity: P0
+  title: "Project DNSH spatial check is DB-enforced via PostGIS with versioned dataset and execution binding"
+  owners: ["team-db", "team-platform", "team-security"]
+  sla_days: 7
+  enforcement: "scripts/db/verify_tsk_p2_reg_003_05.sh"
+  verification: >-
+    scripts/db/verify_tsk_p2_reg_003_05.sh;
+    evidence/phase2/tsk_p2_reg_003_05.json
+  notes: >-
+    Enforces DNSH (Do No Significant Harm) compliance using PostGIS spatial functions to prevent project boundaries from intersecting protected areas.
     check_reg26_separation(p_verifier_id, p_project_id, p_requested_role)
     raises SQLSTATE GF001 if a verifier who validated a project attempts
     to verify the same project. This function is called by

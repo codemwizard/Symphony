@@ -2,7 +2,7 @@
 -- PostgreSQL database dump
 --
 
-\restrict HzmYGlJtjshmLrVWmzhlggLxcPI6cf5bqQO4HQWQ5xpsEIBpuQpkh8ZajXcv5Ll
+\restrict uyRTeDkIaCW7u8AQcDtFNAT70IfOliW1yDmh4cKBtfJLoGeAhnyNaB9YqTH1yYM
 
 -- Dumped from database version 18.3 (Debian 18.3-1.pgdg13+1)
 -- Dumped by pg_dump version 18.3 (Debian 18.3-1.pgdg13+1)
@@ -1881,6 +1881,28 @@ $$;
 
 
 --
+-- Name: enforce_dns_harm(); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.enforce_dns_harm() RETURNS trigger
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO 'pg_catalog', 'public'
+    AS $$
+BEGIN
+    -- Check if the new or updated project boundary intersects any protected area
+    IF EXISTS (
+        SELECT 1
+        FROM public.protected_areas pa
+        WHERE ST_Intersects(NEW.geom, pa.geom)
+    ) THEN
+        RAISE EXCEPTION 'GF057: DNSH violation: project boundary intersects protected area' USING ERRCODE = 'GF057';
+    END IF;
+    RETURN NEW;
+END;
+$$;
+
+
+--
 -- Name: enforce_execution_binding(); Type: FUNCTION; Schema: public; Owner: -
 --
 
@@ -1974,6 +1996,25 @@ BEGIN
   END IF;
 
   RETURN NEW;
+END;
+$$;
+
+
+--
+-- Name: enforce_k13_taxonomy_alignment(); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.enforce_k13_taxonomy_alignment() RETURNS trigger
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO 'pg_catalog', 'public'
+    AS $$
+BEGIN
+    -- If taxonomy_aligned is true, spatial_check_execution_id must not be null
+    IF NEW.taxonomy_aligned = true AND NEW.spatial_check_execution_id IS NULL THEN
+        RAISE EXCEPTION 'GF060: K13 violation: taxonomy_aligned=true requires spatial_check_execution_id' USING ERRCODE = 'GF060';
+    END IF;
+    
+    RETURN NEW;
 END;
 $$;
 
@@ -2391,6 +2432,21 @@ BEGIN
   END IF;
 
   RETURN v_state;
+END;
+$$;
+
+
+--
+-- Name: exchange_rate_audit_log_append_only(); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.exchange_rate_audit_log_append_only() RETURNS trigger
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO 'pg_catalog', 'public'
+    AS $$
+BEGIN
+    RAISE EXCEPTION 'GF051: exchange_rate_audit_log is append-only, UPDATE/DELETE not allowed' USING ERRCODE = 'GF051';
+    RETURN NULL;
 END;
 $$;
 
@@ -3485,6 +3541,36 @@ CREATE FUNCTION public.outbox_retry_ceiling() RETURNS integer
     NULLIF(current_setting('symphony.outbox_retry_ceiling', true), '')::int,
     20
   );
+$$;
+
+
+--
+-- Name: project_boundaries_append_only(); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.project_boundaries_append_only() RETURNS trigger
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO 'pg_catalog', 'public'
+    AS $$
+BEGIN
+    RAISE EXCEPTION 'GF055: project_boundaries is append-only, UPDATE/DELETE not allowed' USING ERRCODE = 'GF055';
+    RETURN NULL;
+END;
+$$;
+
+
+--
+-- Name: protected_areas_append_only(); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.protected_areas_append_only() RETURNS trigger
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO 'pg_catalog', 'public'
+    AS $$
+BEGIN
+    RAISE EXCEPTION 'GF055: protected_areas is append-only, UPDATE/DELETE not allowed' USING ERRCODE = 'GF055';
+    RETURN NULL;
+END;
 $$;
 
 
@@ -4603,6 +4689,21 @@ BEGIN
   ) RETURNING sign_event_id INTO v_event_id;
 
   RETURN v_event_id;
+END;
+$$;
+
+
+--
+-- Name: statutory_levy_registry_append_only(); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.statutory_levy_registry_append_only() RETURNS trigger
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO 'pg_catalog', 'public'
+    AS $$
+BEGIN
+    RAISE EXCEPTION 'GF050: statutory_levy_registry is append-only, UPDATE/DELETE not allowed' USING ERRCODE = 'GF050';
+    RETURN NULL;
 END;
 $$;
 
@@ -5933,6 +6034,19 @@ CREATE TABLE public.evidence_packs (
 
 
 --
+-- Name: exchange_rate_audit_log; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.exchange_rate_audit_log (
+    audit_id uuid DEFAULT gen_random_uuid() NOT NULL,
+    from_currency character varying NOT NULL,
+    to_currency character varying NOT NULL,
+    rate_value numeric(18,8) NOT NULL,
+    effective_from timestamp with time zone NOT NULL
+);
+
+
+--
 -- Name: execution_records; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -6956,6 +7070,19 @@ ALTER TABLE ONLY public.programs FORCE ROW LEVEL SECURITY;
 
 
 --
+-- Name: project_boundaries; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.project_boundaries (
+    boundary_id uuid DEFAULT gen_random_uuid() NOT NULL,
+    dns_check_version_id uuid NOT NULL,
+    spatial_check_execution_id uuid NOT NULL,
+    geom public.geometry(Polygon,4326) NOT NULL,
+    effective_from timestamp with time zone NOT NULL
+);
+
+
+--
 -- Name: projects; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -6965,6 +7092,7 @@ CREATE TABLE public.projects (
     name text NOT NULL,
     status text NOT NULL,
     created_at timestamp with time zone DEFAULT now() NOT NULL,
+    taxonomy_aligned boolean NOT NULL,
     CONSTRAINT projects_status_check CHECK ((status = ANY (ARRAY['DRAFT'::text, 'ACTIVE'::text, 'SUSPENDED'::text, 'RETIRED'::text])))
 );
 
@@ -6997,6 +7125,18 @@ CREATE TABLE public.proof_pack_batches (
     canonicalization_version text NOT NULL,
     published_at timestamp with time zone DEFAULT now() NOT NULL,
     CONSTRAINT proof_pack_batches_leaf_count_check CHECK ((leaf_count > 0))
+);
+
+
+--
+-- Name: protected_areas; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.protected_areas (
+    protected_area_id uuid DEFAULT gen_random_uuid() NOT NULL,
+    source_version_id uuid NOT NULL,
+    geom public.geometry(Polygon,4326) NOT NULL,
+    effective_from timestamp with time zone NOT NULL
 );
 
 
@@ -7318,6 +7458,20 @@ CREATE TABLE public.state_transitions (
     data_authority public.data_authority_level NOT NULL,
     audit_grade boolean NOT NULL,
     authority_explanation text NOT NULL
+);
+
+
+--
+-- Name: statutory_levy_registry; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.statutory_levy_registry (
+    levy_id uuid DEFAULT gen_random_uuid() NOT NULL,
+    levy_code character varying NOT NULL,
+    jurisdiction_code character varying NOT NULL,
+    effective_from timestamp with time zone NOT NULL,
+    effective_to timestamp with time zone,
+    rate_value numeric NOT NULL
 );
 
 
@@ -7926,6 +8080,22 @@ ALTER TABLE ONLY public.evidence_packs
 
 
 --
+-- Name: exchange_rate_audit_log exchange_rate_audit_log_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.exchange_rate_audit_log
+    ADD CONSTRAINT exchange_rate_audit_log_pkey PRIMARY KEY (audit_id);
+
+
+--
+-- Name: exchange_rate_audit_log exchange_rate_audit_log_unique_period; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.exchange_rate_audit_log
+    ADD CONSTRAINT exchange_rate_audit_log_unique_period UNIQUE (from_currency, to_currency, effective_from);
+
+
+--
 -- Name: execution_records execution_records_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -8526,6 +8696,14 @@ ALTER TABLE ONLY public.programs
 
 
 --
+-- Name: project_boundaries project_boundaries_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.project_boundaries
+    ADD CONSTRAINT project_boundaries_pkey PRIMARY KEY (boundary_id);
+
+
+--
 -- Name: projects projects_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -8555,6 +8733,14 @@ ALTER TABLE ONLY public.proof_pack_batch_leaves
 
 ALTER TABLE ONLY public.proof_pack_batches
     ADD CONSTRAINT proof_pack_batches_pkey PRIMARY KEY (batch_id);
+
+
+--
+-- Name: protected_areas protected_areas_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.protected_areas
+    ADD CONSTRAINT protected_areas_pkey PRIMARY KEY (protected_area_id);
 
 
 --
@@ -8747,6 +8933,22 @@ ALTER TABLE ONLY public.state_current
 
 ALTER TABLE ONLY public.state_transitions
     ADD CONSTRAINT state_transitions_pkey PRIMARY KEY (transition_id);
+
+
+--
+-- Name: statutory_levy_registry statutory_levy_registry_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.statutory_levy_registry
+    ADD CONSTRAINT statutory_levy_registry_pkey PRIMARY KEY (levy_id);
+
+
+--
+-- Name: statutory_levy_registry statutory_levy_registry_unique_period; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.statutory_levy_registry
+    ADD CONSTRAINT statutory_levy_registry_unique_period UNIQUE (levy_code, jurisdiction_code, effective_from);
 
 
 --
@@ -9560,10 +9762,24 @@ CREATE INDEX idx_programs_tenant_status ON public.programs USING btree (tenant_i
 
 
 --
+-- Name: idx_project_boundaries_geom; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_project_boundaries_geom ON public.project_boundaries USING gist (geom);
+
+
+--
 -- Name: idx_projects_tenant_id; Type: INDEX; Schema: public; Owner: -
 --
 
 CREATE INDEX idx_projects_tenant_id ON public.projects USING btree (tenant_id);
+
+
+--
+-- Name: idx_protected_areas_geom; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_protected_areas_geom ON public.protected_areas USING gist (geom);
 
 
 --
@@ -9912,10 +10128,52 @@ CREATE TRIGGER authority_decisions_append_only BEFORE DELETE OR UPDATE ON public
 
 
 --
+-- Name: project_boundaries enforce_dns_harm_trigger; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER enforce_dns_harm_trigger BEFORE INSERT OR UPDATE ON public.project_boundaries FOR EACH ROW EXECUTE FUNCTION public.enforce_dns_harm();
+
+
+--
+-- Name: projects enforce_k13_taxonomy_alignment_trigger; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER enforce_k13_taxonomy_alignment_trigger BEFORE INSERT OR UPDATE ON public.projects FOR EACH ROW EXECUTE FUNCTION public.enforce_k13_taxonomy_alignment();
+
+
+--
+-- Name: exchange_rate_audit_log exchange_rate_audit_log_append_only_trigger; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER exchange_rate_audit_log_append_only_trigger BEFORE DELETE OR UPDATE ON public.exchange_rate_audit_log FOR EACH ROW EXECUTE FUNCTION public.exchange_rate_audit_log_append_only();
+
+
+--
 -- Name: gf_verifier_read_tokens gf_verifier_read_tokens_append_only; Type: TRIGGER; Schema: public; Owner: -
 --
 
 CREATE TRIGGER gf_verifier_read_tokens_append_only BEFORE DELETE OR UPDATE ON public.gf_verifier_read_tokens FOR EACH ROW EXECUTE FUNCTION public.gf_verifier_read_tokens_append_only();
+
+
+--
+-- Name: project_boundaries project_boundaries_append_only_trigger; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER project_boundaries_append_only_trigger BEFORE DELETE OR UPDATE ON public.project_boundaries FOR EACH ROW EXECUTE FUNCTION public.project_boundaries_append_only();
+
+
+--
+-- Name: protected_areas protected_areas_append_only_trigger; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER protected_areas_append_only_trigger BEFORE DELETE OR UPDATE ON public.protected_areas FOR EACH ROW EXECUTE FUNCTION public.protected_areas_append_only();
+
+
+--
+-- Name: statutory_levy_registry statutory_levy_registry_append_only_trigger; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER statutory_levy_registry_append_only_trigger BEFORE DELETE OR UPDATE ON public.statutory_levy_registry FOR EACH ROW EXECUTE FUNCTION public.statutory_levy_registry_append_only();
 
 
 --
@@ -11063,6 +11321,22 @@ ALTER TABLE ONLY public.programs
 
 
 --
+-- Name: project_boundaries project_boundaries_fk_execution_records; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.project_boundaries
+    ADD CONSTRAINT project_boundaries_fk_execution_records FOREIGN KEY (spatial_check_execution_id) REFERENCES public.execution_records(execution_id);
+
+
+--
+-- Name: project_boundaries project_boundaries_fk_protected_areas; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.project_boundaries
+    ADD CONSTRAINT project_boundaries_fk_protected_areas FOREIGN KEY (dns_check_version_id) REFERENCES public.protected_areas(protected_area_id);
+
+
+--
 -- Name: projects projects_tenant_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -11084,6 +11358,14 @@ ALTER TABLE ONLY public.proof_pack_batch_leaves
 
 ALTER TABLE ONLY public.proof_pack_batches
     ADD CONSTRAINT proof_pack_batches_canonicalization_version_fkey FOREIGN KEY (canonicalization_version) REFERENCES public.canonicalization_registry(canonicalization_version) ON DELETE RESTRICT;
+
+
+--
+-- Name: protected_areas protected_areas_fk_source_version; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.protected_areas
+    ADD CONSTRAINT protected_areas_fk_source_version FOREIGN KEY (source_version_id) REFERENCES public.factor_registry(factor_id);
 
 
 --
@@ -11808,5 +12090,5 @@ ALTER TABLE public.verifier_registry ENABLE ROW LEVEL SECURITY;
 -- PostgreSQL database dump complete
 --
 
-\unrestrict HzmYGlJtjshmLrVWmzhlggLxcPI6cf5bqQO4HQWQ5xpsEIBpuQpkh8ZajXcv5Ll
+\unrestrict uyRTeDkIaCW7u8AQcDtFNAT70IfOliW1yDmh4cKBtfJLoGeAhnyNaB9YqTH1yYM
 

@@ -1,10 +1,10 @@
 # TSK-P2-REG-003-03: Create project_boundaries table
 
-**Task:** TSK-P2-REG-003-03
-**Owner:** DB_FOUNDATION
-**Depends on:** TSK-P2-REG-003-02
-**Blocks:** TSK-P2-REG-003-04
-**Failure Signature**: Table not created or FKs incorrect => CRITICAL_FAIL
+Task: TSK-P2-REG-003-03
+Owner: DB_FOUNDATION
+Depends on: TSK-P2-REG-003-02
+failure_signature: PRE-PHASE2.REG.TSK-P2-REG-003-03.TABLE_OR_FKS_INCORRECT
+canonical_reference: docs/operations/AI_AGENT_OPERATION_MANUAL.md
 
 ## Objective
 
@@ -28,6 +28,11 @@ The project_boundaries table stores project boundary polygons with execution bin
 
 ## Stop Conditions
 
+- **If any node in the proof graph is orphaned** -> STOP
+- **If any verifier lacks a symbolic failure obligation (`|| exit 1`)** -> STOP
+- **If evidence is static or self-declared instead of derived** -> STOP
+- **If verification does not inspect real system state (self-referential)** -> STOP
+- **If ≥3 weak signals (subjective wording like 'ensure' or 'appropriate') are detected without hard failing** -> STOP
 - If project_boundaries table does not exist
 - If geom column is not geometry(POLYGON, 4326) NOT NULL
 - If dns_check_version_id FK to protected_areas is missing

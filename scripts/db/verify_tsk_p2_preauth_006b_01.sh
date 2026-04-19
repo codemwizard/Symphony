@@ -57,8 +57,9 @@ if [ "$TRIGGER_EXISTS" != "1" ]; then
   exit 1
 fi
 
-if [ "$MIGRATION_HEAD" != "0122" ]; then
-  echo "FAIL: MIGRATION_HEAD is $MIGRATION_HEAD, expected 0122"
+# Use numeric comparison for version check
+if [ "$MIGRATION_HEAD" -lt "0122" ]; then
+  echo "FAIL: MIGRATION_HEAD is $MIGRATION_HEAD, expected at least 0122"
   exit 1
 fi
 

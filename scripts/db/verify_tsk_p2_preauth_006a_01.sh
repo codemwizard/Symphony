@@ -47,8 +47,9 @@ if [ "$VALUES_COUNT" != "7" ]; then
   exit 1
 fi
 
-if [ "$MIGRATION_HEAD" != "0121" ]; then
-  echo "FAIL: MIGRATION_HEAD is $MIGRATION_HEAD, expected 0121"
+# Use numeric comparison for version check
+if [ "$MIGRATION_HEAD" -lt "0121" ]; then
+  echo "FAIL: MIGRATION_HEAD is $MIGRATION_HEAD, expected at least 0121"
   exit 1
 fi
 

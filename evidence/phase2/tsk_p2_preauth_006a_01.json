@@ -1,14 +1,14 @@
 {
   "task_id": "TSK-P2-PREAUTH-006A-01",
-  "git_sha": "160decf2c98af7e3950969cec1afda0c8f710a70",
-  "timestamp_utc": "2026-04-18T16:14:49Z",
+  "git_sha": "407e32ada63017c9242d544dbbd1ca60d9bf230a",
+  "timestamp_utc": "2026-04-19T15:20:39Z",
   "status": "success",
   "checks": {
     "enum_exists": true,
     "enum_values_present": true,
-    "migration_head": "0121"
+    "migration_head": "0130"
   },
   "enum_exists": true,
   "enum_values_present": true,
-  "migration_head": "0121"
+  "migration_head": "0130"
 }

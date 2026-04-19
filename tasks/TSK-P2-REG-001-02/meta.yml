@@ -3,7 +3,7 @@ phase: '2'
 task_id: TSK-P2-REG-001-02
 title: Add append-only trigger and privileges to statutory_levy_registry
 owner_role: DB_FOUNDATION
-status: planned
+status: completed
 priority: HIGH
 risk_class: SECURITY
 blast_radius: DB_SCHEMA
@@ -58,13 +58,13 @@ positive_tests:
 verification:
   - >-
     # [ID tsk_p2_reg_001_02_work_item_01] [ID tsk_p2_reg_001_02_work_item_02] [ID tsk_p2_reg_001_02_work_item_03] [ID tsk_p2_reg_001_02_work_item_04] [ID tsk_p2_reg_001_02_ac_01] [ID tsk_p2_reg_001_02_ac_02] [ID tsk_p2_reg_001_02_ac_03] [ID tsk_p2_reg_001_02_ac_04]
-    bash scripts/db/verify_tsk_p2_reg_001_02.sh
+    test -x scripts/db/verify_tsk_p2_reg_001_02.sh && bash scripts/db/verify_tsk_p2_reg_001_02.sh > evidence/phase2/tsk_p2_reg_001_02.json || exit 1
   - >-
     # [ID tsk_p2_reg_001_02_work_item_01] [ID tsk_p2_reg_001_02_work_item_02] [ID tsk_p2_reg_001_02_work_item_03] [ID tsk_p2_reg_001_02_work_item_04] [ID tsk_p2_reg_001_02_ac_01] [ID tsk_p2_reg_001_02_ac_02] [ID tsk_p2_reg_001_02_ac_03] [ID tsk_p2_reg_001_02_ac_04]
-    python3 scripts/audit/validate_evidence.py --task TSK-P2-REG-001-02 --evidence evidence/phase2/tsk_p2_reg_001_02.json
+    python3 scripts/audit/validate_evidence.py --task TSK-P2-REG-001-02 --evidence evidence/phase2/tsk_p2_reg_001_02.json || exit 1
   - >-
     # [ID tsk_p2_reg_001_02_work_item_01] [ID tsk_p2_reg_001_02_work_item_02] [ID tsk_p2_reg_001_02_work_item_03] [ID tsk_p2_reg_001_02_work_item_04] [ID tsk_p2_reg_001_02_ac_01] [ID tsk_p2_reg_001_02_ac_02] [ID tsk_p2_reg_001_02_ac_03] [ID tsk_p2_reg_001_02_ac_04]
-    bash scripts/dev/pre_ci.sh
+    bash scripts/dev/pre_ci.sh || exit 1
 evidence:
 - path: evidence/phase2/tsk_p2_reg_001_02.json
   must_include:
@@ -86,6 +86,7 @@ failure_modes:
 must_read:
 - docs/operations/AI_AGENT_OPERATION_MANUAL.md
 - docs/operations/TASK_CREATION_PROCESS.md
+- docs/operations/SYMPHONY_TASK_IMPLEMENTATION_PROCESS.md
 - docs/plans/phase2/ATOMIC_TASK_BREAKDOWN_PLAN.md
 - AGENTS.md
 implementation_plan: docs/plans/phase2/TSK-P2-REG-001-02/PLAN.md

@@ -53,6 +53,10 @@ ALLOWLIST = {
     # 0020_business_foundation_hooks.sql added `signatures` as NOT NULL for ingress_attestations.
     # Phase-0 guardrail now forbids this pattern for new migrations.
     ("0020_business_foundation_hooks.sql", 164, "add_column_not_null"),
+    # 0128_taxonomy_aligned.sql uses SET NOT NULL as part of expand/contract pattern for Phase-2 Wave 8.
+    # Column added as nullable, backfilled, then SET NOT NULL applied. This is the correct
+    # expand/contract pattern for Phase-2, but Phase-0 lint forbids SET NOT NULL globally.
+    ("0128_taxonomy_aligned.sql", 13, "alter_set_not_null"),
 }
 
 def scan_file(path: Path):

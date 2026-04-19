@@ -1,0 +1,35 @@
+{
+  "task_id": "TSK-P2-REG-002-01",
+  "git_sha": "955bb8df54740ba1badf35f09f356f67b228a67f",
+  "timestamp_utc": "2026-04-19T08:46:14Z",
+  "status": "passed",
+  "checks": [
+    {
+      "check_id": "migration_file_exists",
+      "status": "pass"
+    },
+    {
+      "check_id": "migration_head_correct",
+      "status": "pass"
+    },
+    {
+      "check_id": "table_definition_present",
+      "status": "pass"
+    },
+    {
+      "check_id": "precision_correct",
+      "status": "pass"
+    },
+    {
+      "check_id": "unique_constraint_present",
+      "status": "pass"
+    },
+    {
+      "check_id": "revoke_first_privileges",
+      "status": "pass"
+    }
+  ],
+  "table_exists": true,
+  "precision_correct": true,
+  "migration_head": "0124"
+}

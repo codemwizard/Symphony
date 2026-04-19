@@ -1,0 +1,30 @@
+{
+  "task_id": "TSK-P2-REG-003-01",
+  "git_sha": "955bb8df54740ba1badf35f09f356f67b228a67f",
+  "timestamp_utc": "2026-04-19T08:52:08Z",
+  "status": "passed",
+  "checks": [
+    {
+      "check_id": "migration_file_exists",
+      "status": "pass"
+    },
+    {
+      "check_id": "migration_head_correct",
+      "status": "pass"
+    },
+    {
+      "check_id": "postgis_extension_command",
+      "status": "pass"
+    },
+    {
+      "check_id": "schema_public",
+      "status": "pass"
+    },
+    {
+      "check_id": "postgis_version_check",
+      "status": "pass"
+    }
+  ],
+  "postgis_installed": true,
+  "migration_head": "0125"
+}

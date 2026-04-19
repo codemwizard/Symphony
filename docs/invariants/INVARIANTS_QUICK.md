@@ -132,4 +132,11 @@ _Generated from `docs/invariants/INVARIANTS_MANIFEST.yml` (do not edit by hand).
 | INV-159 | P0 | Phase 0/1 schema contains no sector or methodology nouns (platform neutrality) | ["team-platform", "team-db"] | >- |
 | INV-160 | P0 | All pilot methodology logic is registered as a Phase 2 adapter, not embedded in Phase 0/1 | ["team-platform"] | >- |
 | INV-161 | P0 | Phase 0/1 functions use generic platform verbs only — no sector-encoded function names | ["team-db", "team-platform"] | >- |
+| INV-165 | P0 | Every decision record references an interpretation_version_id for replayability | ["team-db", "team-platform"] | >- |
 | INV-166 | P0 | Core functions do not interpret sector-specific payload field names | ["team-db", "team-platform"] | >- |
+| INV-167 | P0 | Interpretation packs have a single active record per domain per jurisdiction per authority level | ["team-platform"] | >- |
+| INV-169 | P0 | Regulation 26 separation of duties: validator cannot verify the same project — DB-enforced | ["team-db", "team-platform", "team-security"] | >- |
+| INV-175 | P0 | data_authority is schema-enforced via ENUM and triggers | ["team-db"] | >- |
+| INV-176 | P0 | state_transitions is enforced via trigger layer | ["team-db"] | >- |
+| INV-177 | P0 | Phase 1 C# outputs carry non-authoritative markers | ["team-platform"] | >- |
+| INV-178 | P0 | Project DNSH spatial check is DB-enforced via PostGIS with versioned dataset and execution binding | ["team-db", "team-platform", "team-security"] | >- |

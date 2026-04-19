@@ -45,6 +45,11 @@
 | Zero Trust | Continuous verification (security) | Security | SEC-G06 | CI toolchain pinned | ci_toolchain.json |
 | ISO 27001/27002 | Schema DAG structural determinism | Integrity | INT-G28 | V4/V5 explicit DAG dependency closure and anchored pre-flight governance routing | wave1_dag.yml, WAVE1_DAG.md |
 | NIST CSF / NIST 800-53 | Phase-1 GF-W1 Topological DAG Integrity | Integrity | INT-G28 | V5 DAG structurally confines schema topologies to explicit minimal bounds and enforces strict REMEDIATION_ROOT checks locally blocking chronological mutations. | WAVE1_DAG.md, wave1_dag.yml |
+| EU Taxonomy / Green Finance | DNSH (Do No Significant Harm) spatial checks | Integrity | INT-G28 | PostGIS-based spatial intersection check between project_boundaries and protected_areas with trigger enforcement (SQLSTATE GF057) | tsk_p2_reg_003_07.json, INV-178 |
+| EU Taxonomy / Green Finance | K13 taxonomy alignment enforcement | Integrity | INT-G28 | DB trigger enforces K13 taxonomy alignment check on projects with SQLSTATE GF060 | tsk_p2_reg_003_06.json |
+| EU Taxonomy / Green Finance | Regulation 26 separation of duties | Integrity | INT-G28 | DB-enforced validator/project separation to prevent self-verification (INV-169) | gf_sch_008.json |
+| EU Taxonomy / Green Finance | Statutory levy registry compliance | Integrity | INT-G28 | Regulatory table for statutory levy tracking with UNIQUE constraints and audit trail | tsk_p2_reg_001_01.json, tsk_p2_reg_001_02.json |
+| EU Taxonomy / Green Finance | Jurisdictional regulations registry | Integrity | INT-G28 | Multi-jurisdiction regulatory framework storage with registrant linkage | tsk_p2_reg_002_01.json, tsk_p2_reg_002_02.json |
 
 ## Notes
 - Control-plane gates (SEC/INT) are the authoritative enforcement points for Phase-0.

@@ -1,10 +1,10 @@
-# TSK-P2-REG-003-00: Create PLAN.md and verify alignment for PostGIS spatial tables
+# TSK-P2-REG-003-00 PLAN — Create PLAN.md and verify alignment for PostGIS spatial tables
 
-**Task:** TSK-P2-REG-003-00
-**Owner:** DB_FOUNDATION
-**Depends on:** TSK-P2-PREAUTH-000, TSK-P2-PREAUTH-007-05, TSK-P2-REG-001-02, TSK-P2-REG-002-02, TSK-P2-REG-004-01
-**Blocks:** TSK-P2-REG-003-01
-**Failure Signature**: PLAN.md missing or verification fails => CRITICAL_FAIL
+Task: TSK-P2-REG-003-00
+Owner: DB_FOUNDATION
+Depends on: TSK-P2-PREAUTH-000, TSK-P2-PREAUTH-007-05, TSK-P2-REG-001-02, TSK-P2-REG-002-02, TSK-P2-REG-004-01
+failure_signature: PRE-PHASE2.REG.TSK-P2-REG-003-00.PLAN_CREATION_FAIL
+canonical_reference: docs/operations/AI_AGENT_OPERATION_MANUAL.md
 
 ## Objective
 
@@ -31,9 +31,11 @@ PostGIS spatial tables enable DNSH and K13 compliance checks via geometry operat
 
 ## Stop Conditions
 
-- If verify_plan_semantic_alignment.py fails with orphaned nodes
-- If the plan lacks explicit verifier specifications
-- If the plan lacks negative test definitions
+- **If any node in the proof graph is orphaned** -> STOP
+- **If any verifier lacks a symbolic failure obligation (`|| exit 1`)** -> STOP
+- **If evidence is static or self-declared instead of derived** -> STOP
+- **If verification does not inspect real system state (self-referential)** -> STOP
+- **If ≥3 weak signals (subjective wording like 'ensure' or 'appropriate') are detected without hard failing** -> STOP
 
 ## Implementation Steps
 
@@ -68,11 +70,11 @@ Run verify_plan_semantic_alignment.py to validate proof graph integrity: python3
 
 ```bash
 # [ID tsk_p2_reg_003_00_work_item_01] [ID tsk_p2_reg_003_00_work_item_02] [ID tsk_p2_reg_003_00_work_item_03] [ID tsk_p2_reg_003_00_ac_01] [ID tsk_p2_reg_003_00_ac_02]
-python3 scripts/audit/verify_plan_semantic_alignment.py --meta tasks/TSK-P2-REG-003-00/meta.yml
+python3 scripts/audit/verify_plan_semantic_alignment.py --plan docs/plans/phase2/TSK-P2-REG-003-00/PLAN.md --meta tasks/TSK-P2-REG-003-00/meta.yml || exit 1
 # [ID tsk_p2_reg_003_00_work_item_01] [ID tsk_p2_reg_003_00_work_item_02] [ID tsk_p2_reg_003_00_work_item_03] [ID tsk_p2_reg_003_00_ac_01] [ID tsk_p2_reg_003_00_ac_02]
-python3 scripts/audit/validate_evidence.py --task TSK-P2-REG-003-00 --evidence evidence/phase2/tsk_p2_reg_003_00.json
+python3 scripts/audit/validate_evidence.py --task TSK-P2-REG-003-00 --evidence evidence/phase2/tsk_p2_reg_003_00.json || exit 1
 # [ID tsk_p2_reg_003_00_work_item_01] [ID tsk_p2_reg_003_00_work_item_02] [ID tsk_p2_reg_003_00_work_item_03] [ID tsk_p2_reg_003_00_ac_01] [ID tsk_p2_reg_003_00_ac_02]
-bash scripts/dev/pre_ci.sh
+bash scripts/dev/pre_ci.sh || exit 1
 ```
 
 ## Evidence Contract
