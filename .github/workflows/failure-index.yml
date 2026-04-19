@@ -12,7 +12,8 @@
 name: Rebuild Failure Index
 
 on:
-  push:
+  pull_request:
+    branches: [ main ]
     paths:
       - 'docs/plans/**/PLAN.md'
       - 'docs/plans/**/EXEC_LOG.md'
@@ -30,8 +31,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
         with:
-          # Use the branch that triggered the push so we commit back to it.
-          ref: ${{ github.head_ref || github.ref_name }}
+          ref: ${{ github.event.pull_request.head.ref }}
 
       - name: Set up Python
         uses: actions/setup-python@v5
@@ -50,6 +50,7 @@ jobs:
       - name: Commit updated index
         uses: stefanzweifel/git-auto-commit-action@v5
         with:
+          branch: ${{ github.event.pull_request.head.ref }}
           commit_message: "chore: rebuild failure index [skip ci]"
           file_pattern: docs/operations/failure_index.md
           commit_user_name: "Symphony CI"
