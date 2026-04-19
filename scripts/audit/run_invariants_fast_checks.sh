@@ -213,7 +213,7 @@ fi
 echo ""
 echo "==> Invariant process CI/closeout wiring verification"
 if [[ -x "scripts/audit/verify_invproc_06_ci_wiring_closeout.sh" || -f "scripts/audit/verify_invproc_06_ci_wiring_closeout.sh" ]]; then
-  run scripts/audit/verify_invproc_06_ci_wiring_closeout.sh
+  run env PRE_CI_CONTEXT=1 scripts/audit/verify_invproc_06_ci_wiring_closeout.sh
 else
   echo "ERROR: scripts/audit/verify_invproc_06_ci_wiring_closeout.sh not found"
   exit 1
@@ -222,7 +222,7 @@ fi
 echo ""
 echo "==> Human governance review signoff verification"
 if [[ -x "scripts/audit/verify_human_governance_review_signoff.sh" || -f "scripts/audit/verify_human_governance_review_signoff.sh" ]]; then
-  run scripts/audit/verify_human_governance_review_signoff.sh
+  run env PRE_CI_CONTEXT=1 scripts/audit/verify_human_governance_review_signoff.sh
 else
   echo "ERROR: scripts/audit/verify_human_governance_review_signoff.sh not found"
   exit 1
@@ -330,7 +330,7 @@ fi
 echo ""
 echo "==> TSK-P1-073 remediation artifact freshness verification"
 if [[ -x "scripts/audit/verify_tsk_p1_073.sh" || -f "scripts/audit/verify_tsk_p1_073.sh" ]]; then
-  run bash scripts/audit/verify_tsk_p1_073.sh
+  run env PRE_CI_CONTEXT=1 bash scripts/audit/verify_tsk_p1_073.sh
 else
   echo "ERROR: scripts/audit/verify_tsk_p1_073.sh not found"
   exit 1
@@ -422,7 +422,7 @@ fi
 echo ""
 echo "==> Remediation trace gate (production-affecting changes)"
 if [[ -x "scripts/audit/verify_remediation_trace.sh" || -f "scripts/audit/verify_remediation_trace.sh" ]]; then
-  run bash scripts/audit/verify_remediation_trace.sh
+  run env PRE_CI_CONTEXT=1 bash scripts/audit/verify_remediation_trace.sh
 else
   echo "ERROR: scripts/audit/verify_remediation_trace.sh not found"
   exit 1

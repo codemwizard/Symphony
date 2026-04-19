@@ -1,13 +1,13 @@
 {
   "check_id": "BASELINE-GOVERNANCE",
-  "timestamp_utc": "2026-04-19T02:16:59Z",
-  "git_sha": "ae1891107640497dbf9a4d5435e5992dec989b0e",
+  "timestamp_utc": "2026-04-19T02:37:27Z",
+  "git_sha": "85bb72e81a17f1767e44c22738bfd62dafdfb2b6",
   "schema_fingerprint": "885e676b35291c1961b34745508c21b4017523a451528b9727c861eaf5be4e60",
-  "status": "FAIL",
+  "status": "PASS",
   "baseline_changed": true,
   "migration_changed": true,
-  "adr_changed": false,
-  "reason": "baseline changed without required migration + ADR update",
+  "adr_changed": true,
+  "reason": "",
   "base_ref": "refs/remotes/origin/main",
   "head_ref": "HEAD"
 }
