@@ -68,7 +68,7 @@ EOF
 chmod +x "$tmp_dir/project_timeout/fakebin/dotnet"
 
 set +e
-SYMPHONY_ENV=development SKIP_DOTNET_QUALITY_LINT=0 PATH="$tmp_dir/project_timeout/fakebin:$PATH" DOTNET_LINT_ROOT="$tmp_dir/project_timeout" DOTNET_LINT_TIMEOUT_SEC=1 "$SCRIPT"
+SYMPHONY_ENV=development SKIP_DOTNET_QUALITY_LINT=0 GITHUB_ACTIONS= PATH="$tmp_dir/project_timeout/fakebin:$PATH" DOTNET_LINT_ROOT="$tmp_dir/project_timeout" DOTNET_LINT_TIMEOUT_SEC=1 "$SCRIPT"
 rc=$?
 set -e
 
@@ -151,7 +151,7 @@ EOF
 chmod +x "$tmp_dir/project_envblocked/fakebin/dotnet"
 
 set +e
-SYMPHONY_ENV=development SKIP_DOTNET_QUALITY_LINT=0 PATH="$tmp_dir/project_envblocked/fakebin:$PATH" DOTNET_LINT_ROOT="$tmp_dir/project_envblocked" "$SCRIPT"
+SYMPHONY_ENV=development SKIP_DOTNET_QUALITY_LINT=0 GITHUB_ACTIONS= PATH="$tmp_dir/project_envblocked/fakebin:$PATH" DOTNET_LINT_ROOT="$tmp_dir/project_envblocked" "$SCRIPT"
 rc=$?
 set -e
 

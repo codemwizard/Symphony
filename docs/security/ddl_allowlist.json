@@ -738,6 +738,33 @@
             "expires_on": "2026-12-31",
             "reviewed_by": "security_guardian",
             "approved_at": "2026-04-17"
+        },
+        {
+            "id": "DDL-ALLOW-0104",
+            "migration": "schema/migrations/0121_create_data_authority_enum.sql",
+            "statement_fingerprint": "e967170e526b502f5b433bd224ac0ec06b3c86fc3dcc148ee4959f47d3a1c8f7",
+            "reason": "Wave 6 data authority tracking: ALTER TABLE on monitoring_records (expand/contract pattern). Non-hot table.",
+            "expires_on": "2026-12-31",
+            "reviewed_by": "db_foundation",
+            "approved_at": "2026-04-18"
+        },
+        {
+            "id": "DDL-ALLOW-0105",
+            "migration": "schema/migrations/0121_create_data_authority_enum.sql",
+            "statement_fingerprint": "f999ad9c41a6935f151286a0f553208561d084c30748cc70b8e13a0357b1ad14",
+            "reason": "Wave 6 data authority tracking: ALTER TABLE on asset_batches (expand/contract pattern). Non-hot table.",
+            "expires_on": "2026-12-31",
+            "reviewed_by": "db_foundation",
+            "approved_at": "2026-04-18"
+        },
+        {
+            "id": "DDL-ALLOW-0106",
+            "migration": "schema/migrations/0121_create_data_authority_enum.sql",
+            "statement_fingerprint": "a3e54cd583baf21f85109d86fb08030bc7e36a591d60dbb062fcfb0c56f4fea2",
+            "reason": "Wave 6 data authority tracking: ALTER TABLE on state_transitions (expand/contract pattern). Non-hot table.",
+            "expires_on": "2026-12-31",
+            "reviewed_by": "db_foundation",
+            "approved_at": "2026-04-18"
         }
     ]
 }

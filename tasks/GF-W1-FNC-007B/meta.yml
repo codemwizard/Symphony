@@ -1,21 +1,18 @@
 schema_version: 1
 phase: '1'
 task_id: GF-W1-FNC-007B
-title: Wire issuance gate verifying script into CI so that bypassed schemas cannot
-  mint.
+title: Wire issuance gate verifying script into CI so that bypassed schemas cannot mint.
 owner_role: Security Guardian Agent
 status: completed
 priority: HIGH
 risk_class: GOVERNANCE
 blast_radius: CI_GATES
-intent: Establishes the CI-level enforcement hook for the confidence gate deployed
-  in 007A.  This ensures that even if a future migration accidentally removes the
-  DB-level trigger,  the CI pipeline will natively fail before allowing non-compliant
-  code to merge.
+intent: Establishes the CI-level enforcement hook for the confidence gate deployed in 007A.  This ensures that even if a future
+  migration accidentally removes the DB-level trigger,  the CI pipeline will natively fail before allowing non-compliant code
+  to merge.
 anti_patterns:
 - Declaring implemented without a functional verification shell.
-- Writing verifiers that do not structurally enforce the presence of the 007A check
-  constraint.
+- Writing verifiers that do not structurally enforce the presence of the 007A check constraint.
 - Implementing schema changes in this task. (Must be handled in 007A by DB Foundation)
 out_of_scope:
 - Modifying core tables or creating migrations.
@@ -41,36 +38,43 @@ invariants:
 work:
 - '[ID GF-W1-FNC-007B] Draft the PLAN.md logic for GF-W1-FNC-007B.'
 - '[ID GF-W1-FNC-007B] Implement the CI hook changes in scripts/dev/pre_ci.sh.'
-- '[ID GF-W1-FNC-007B] Implement verify_gf_fnc_007b.sh to rigorously assert the
-  changes.'
+- '[ID GF-W1-FNC-007B] Implement verify_gf_fnc_007b.sh to rigorously assert the changes.'
 acceptance_criteria:
 - '[ID GF-W1-FNC-007B] verify_gf_fnc_007b.sh exits 0.'
 - '[ID GF-W1-FNC-007B] Evidence artifact validates via validate_evidence.py.'
 - '[ID GF-W1-FNC-007B] pre_ci.sh passes cleanly over the new modifications.'
 negative_tests:
 - id: GF-W1-FNC-007B-N1
-  description: Missing CI wiring should be rejected gracefully by the verification
-    script.
+  description: Missing CI wiring should be rejected gracefully by the verification script.
   required: true
 positive_tests:
 - id: GF-W1-FNC-007B-P1
   description: Fully wired invariants execute without panic.
   required: true
 verification:
-- '[ID GF-W1-FNC-007B] bash scripts/dev/pre_ci.sh | grep -q ''.'' >> evidence/phase1/gf_w1_fnc_007b.json
-  || exit 1'
-- '[ID GF-W1-FNC-007B] bash scripts/audit/verify_gf_fnc_007b.sh | grep -q ''.''
-  >> evidence/phase1/gf_w1_fnc_007b.json || exit 1'
-- '[ID GF-W1-FNC-007B] python3 scripts/audit/validate_evidence.py --task GF-W1-FNC-007B
-  --evidence evidence/phase1/gf_w1_fnc_007b.json | grep PASS >> evidence/phase1/gf_w1_fnc_007b.json
-  || exit 1'
+- '[ID GF-W1-FNC-007B] bash scripts/dev/pre_ci.sh | grep -q ''.'' >> evidence/phase1/gf_w1_fnc_007b.json || exit 1'
+- '[ID GF-W1-FNC-007B] bash scripts/audit/verify_gf_fnc_007b.sh | grep -q ''.'' >> evidence/phase1/gf_w1_fnc_007b.json ||
+  exit 1'
+- '[ID GF-W1-FNC-007B] python3 scripts/audit/validate_evidence.py --task GF-W1-FNC-007B --evidence evidence/phase1/gf_w1_fnc_007b.json
+  | grep PASS >> evidence/phase1/gf_w1_fnc_007b.json || exit 1'
 evidence:
-- evidence/phase1/gf_w1_fnc_007b.json
+- path: evidence/phase1/gf_w1_fnc_007b.json
+  must_include:
+  - task_id
+  - git_sha
+  - timestamp_utc
+  - status
+  - observed_paths
+  - observed_hashes
+  - command_outputs
+  - execution_trace
+  - ci_gate_wired
+  - confidence_check_enforced_in_pipeline
 failure_modes:
-  - "Evidence file missing"
-  - Evidence file missing => FAIL
-  - Verification script panics or exits > 0 => FAIL
-  - Wiring CI bypasses => CRITICAL_FAIL
+- Evidence file missing
+- Evidence file missing => FAIL
+- Verification script panics or exits > 0 => FAIL
+- Wiring CI bypasses => CRITICAL_FAIL
 must_read:
 - docs/operations/AI_AGENT_OPERATION_MANUAL.md
 - docs/operations/AGENTIC_SDLC_PILOT_POLICY.md
@@ -78,8 +82,7 @@ must_read:
 - docs/operations/AGENT_GUARDRAILS_GREEN_FINANCE.md
 implementation_plan: docs/plans/phase1/GF-W1-FNC-007B/PLAN.md
 implementation_log: docs/plans/phase1/GF-W1-FNC-007B/EXEC_LOG.md
-notes: Scaffolded mechanically to satisfy the DAG sequence rules for Wave 6. Split
-  from 007 to preserve pipeline boundaries.
+notes: Scaffolded mechanically to satisfy the DAG sequence rules for Wave 6. Split from 007 to preserve pipeline boundaries.
 client: internal
 assigned_agent: Security Guardian Agent
 model: <UNASSIGNED>
@@ -96,8 +99,7 @@ second_pilot_test:
   - CI hooks execute universally against all payloads.
   jurisdiction_profile_impact: None expected.
   required_core_changes: []
-  explanation: The CI integration ensures the database check constraint from 007A
-    physically exists. This is entirely infrastructural and agnostic, protecting plastic
-    collection and solar energy payloads equally.
+  explanation: The CI integration ensures the database check constraint from 007A physically exists. This is entirely infrastructural
+    and agnostic, protecting plastic collection and solar energy payloads equally.
   second_pilot_reviewed_by: ARCHITECT_AGENT
 pilot_scope_ref: not_applicable

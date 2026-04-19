@@ -7,98 +7,90 @@ status: planned
 priority: HIGH
 risk_class: GOVERNANCE
 blast_radius: APP_LAYER
-intent: >-
-  The complete worker token issuance flow must be tested end-to-end in a browser to ensure
-  all UI components work together correctly. Without integration testing, UI bugs, timing
-  issues, or interaction problems could go undetected. This task performs manual integration
-  testing of the complete flow from worker lookup through token issuance, revocation, and expiry.
+intent: The complete worker token issuance flow must be tested end-to-end in a browser to ensure all UI components work together
+  correctly. Without integration testing, UI bugs, timing issues, or interaction problems could go undetected. This task performs
+  manual integration testing of the complete flow from worker lookup through token issuance, revocation, and expiry.
 anti_patterns:
-  - "Testing only happy path without error states and edge cases"
-  - "Not testing countdown timer accuracy"
-  - "Not testing token expiry enforcement by waiting for expiry"
-  - "Not documenting test results in evidence file"
+- Testing only happy path without error states and edge cases
+- Not testing countdown timer accuracy
+- Not testing token expiry enforcement by waiting for expiry
+- Not documenting test results in evidence file
 depends_on:
-  - GF-W1-UI-010
+- GF-W1-UI-010
 blocks:
-  - GF-W1-UI-012
+- GF-W1-UI-012
 touches:
-  - evidence/phase1/gf_w1_ui_011_integration_test_results.json
-  - tasks/GF-W1-UI-011/meta.yml
+- evidence/phase1/gf_w1_ui_011_integration_test_results.json
+- tasks/GF-W1-UI-011/meta.yml
 invariants: []
 work:
-  - '[ID gf_w1_ui_011_work_item_01] Test token issuance for valid worker (worker-chunga-001)'
-  - '[ID gf_w1_ui_011_work_item_02] Test token issuance for invalid worker (not registered, wrong type, inactive)'
-  - '[ID gf_w1_ui_011_work_item_03] Test worker landing page with issued token'
-  - '[ID gf_w1_ui_011_work_item_04] Test token expiry (wait 5 minutes and verify EXPIRED status)'
-  - '[ID gf_w1_ui_011_work_item_05] Test token revocation (revoke token and verify REVOKED status)'
-  - '[ID gf_w1_ui_011_work_item_06] Test recent tokens list updates correctly'
-  - '[ID gf_w1_ui_011_work_item_07] Test countdown timer accuracy (verify it updates every second)'
+- '[ID gf_w1_ui_011_work_item_01] Test token issuance for valid worker (worker-chunga-001)'
+- '[ID gf_w1_ui_011_work_item_02] Test token issuance for invalid worker (not registered, wrong type, inactive)'
+- '[ID gf_w1_ui_011_work_item_03] Test worker landing page with issued token'
+- '[ID gf_w1_ui_011_work_item_04] Test token expiry (wait 5 minutes and verify EXPIRED status)'
+- '[ID gf_w1_ui_011_work_item_05] Test token revocation (revoke token and verify REVOKED status)'
+- '[ID gf_w1_ui_011_work_item_06] Test recent tokens list updates correctly'
+- '[ID gf_w1_ui_011_work_item_07] Test countdown timer accuracy (verify it updates every second)'
 acceptance_criteria:
-  - '[ID gf_w1_ui_011_work_item_01] Token issuance succeeds for valid WORKER type worker'
-  - '[ID gf_w1_ui_011_work_item_02] Token issuance fails appropriately for invalid workers with clear error messages'
-  - '[ID gf_w1_ui_011_work_item_03] Worker landing page loads with token and allows submission'
-  - '[ID gf_w1_ui_011_work_item_04] Token shows EXPIRED status after expiry time passes'
-  - '[ID gf_w1_ui_011_work_item_05] Token revocation updates status to REVOKED immediately'
-  - '[ID gf_w1_ui_011_work_item_06] Recent tokens list updates when new token is issued'
-  - '[ID gf_w1_ui_011_work_item_07] Countdown timer updates every second and shows correct time remaining'
+- '[ID gf_w1_ui_011_work_item_01] Token issuance succeeds for valid WORKER type worker'
+- '[ID gf_w1_ui_011_work_item_02] Token issuance fails appropriately for invalid workers with clear error messages'
+- '[ID gf_w1_ui_011_work_item_03] Worker landing page loads with token and allows submission'
+- '[ID gf_w1_ui_011_work_item_04] Token shows EXPIRED status after expiry time passes'
+- '[ID gf_w1_ui_011_work_item_05] Token revocation updates status to REVOKED immediately'
+- '[ID gf_w1_ui_011_work_item_06] Recent tokens list updates when new token is issued'
+- '[ID gf_w1_ui_011_work_item_07] Countdown timer updates every second and shows correct time remaining'
 negative_tests:
-  - id: GF-W1-UI-011-N1
-    description: >-
-      Attempt token issuance for worker with supplier_type != WORKER and verify rejection
-      with appropriate error message.
-    required: true
-  - id: GF-W1-UI-011-N2
-    description: >-
-      Attempt to use expired token and verify rejection.
-    required: true
+- id: GF-W1-UI-011-N1
+  description: Attempt token issuance for worker with supplier_type != WORKER and verify rejection with appropriate error
+    message.
+  required: true
+- id: GF-W1-UI-011-N2
+  description: Attempt to use expired token and verify rejection.
+  required: true
 positive_tests:
-  - id: GF-W1-UI-011-P1
-    description: >-
-      Verify complete happy path from worker lookup through token issuance and submission.
-    required: true
+- id: GF-W1-UI-011-P1
+  description: Verify complete happy path from worker lookup through token issuance and submission.
+  required: true
 verification:
-  - test -f evidence/phase1/gf_w1_ui_011_integration_test_results.json || exit 1
+- test -f evidence/phase1/gf_w1_ui_011_integration_test_results.json || exit 1
 evidence:
-  - path: evidence/phase1/gf_w1_ui_011_integration_test_results.json
-    must_include:
-      - task_id
-      - timestamp
-      - status
-      - valid_worker_issuance_tested
-      - invalid_worker_errors_tested
-      - worker_landing_page_tested
-      - token_expiry_tested
-      - token_revocation_tested
-      - recent_tokens_list_tested
-      - countdown_timer_tested
-      - checks
-      - observed_paths
-      - command_outputs
-      - execution_trace
+- path: evidence/phase1/gf_w1_ui_011_integration_test_results.json
+  must_include:
+  - task_id
+  - timestamp
+  - status
+  - valid_worker_issuance_tested
+  - invalid_worker_errors_tested
+  - worker_landing_page_tested
+  - token_expiry_tested
+  - token_revocation_tested
+  - recent_tokens_list_tested
+  - countdown_timer_tested
+  - checks
+  - observed_paths
+  - command_outputs
+  - execution_trace
 failure_modes:
-  - "Only happy path tested => GOVERNANCE.INCOMPLETE_TESTING => FAIL"
-  - "Timer accuracy not verified => FUNCTIONAL.TIMER_DRIFT_UNDETECTED => FAIL"
-  - "Expiry not tested => FUNCTIONAL.EXPIRY_ENFORCEMENT_UNVERIFIED => FAIL"
-  - "Test results not documented => GOVERNANCE.NO_TEST_EVIDENCE => FAIL"
+- Only happy path tested => GOVERNANCE.INCOMPLETE_TESTING => FAIL
+- Timer accuracy not verified => FUNCTIONAL.TIMER_DRIFT_UNDETECTED => FAIL
+- Expiry not tested => FUNCTIONAL.EXPIRY_ENFORCEMENT_UNVERIFIED => FAIL
+- Test results not documented => GOVERNANCE.NO_TEST_EVIDENCE => FAIL
 must_read:
-  - docs/operations/AI_AGENT_OPERATION_MANUAL.md
-  - .kiro/steering/ui-canonical-design.md
-  - .kiro/steering/pwrm0001-domain-rules.md
+- docs/operations/AI_AGENT_OPERATION_MANUAL.md
+- .kiro/steering/ui-canonical-design.md
+- .kiro/steering/pwrm0001-domain-rules.md
+- docs/operations/AGENTIC_SDLC_PILOT_POLICY.md
 implementation_plan: docs/plans/phase1/GF-W1-UI-011/PLAN.md
 implementation_log: docs/plans/phase1/GF-W1-UI-011/EXEC_LOG.md
-notes: >-
-  This task performs manual integration testing of the complete worker token issuance flow.
-  All test scenarios must be documented in evidence file. Phase: Green Finance Wave 1.
-  Domain: green_finance.
+notes: 'This task performs manual integration testing of the complete worker token issuance flow. All test scenarios must
+  be documented in evidence file. Phase: Green Finance Wave 1. Domain: green_finance.'
 client: kiro
 assigned_agent: architect
 model: claude-sonnet-4-20250514
 domain: green_finance
 pilot: true
-second_pilot_test: >-
-  The integration testing pattern works for any programme requiring end-to-end UI flow validation.
-  For PWRM0001 plastic collection, the test validates waste collector token issuance flow.
-  For a hypothetical VM0044 solar energy programme, the test would validate solar technician
-  token issuance flow. The test structure (valid/invalid scenarios, expiry, revocation, list updates,
-  timer accuracy) is identical; only the worker type and artifact type differ per programme.
+second_pilot_test: The integration testing pattern works for any programme requiring end-to-end UI flow validation. For PWRM0001
+  plastic collection, the test validates waste collector token issuance flow. For a hypothetical VM0044 solar energy programme,
+  the test would validate solar technician token issuance flow. The test structure (valid/invalid scenarios, expiry, revocation,
+  list updates, timer accuracy) is identical; only the worker type and artifact type differ per programme.
 pilot_scope_ref: docs/pilots/PILOT_PWRM0001/SCOPE.md

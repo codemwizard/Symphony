@@ -2,7 +2,7 @@
 -- PostgreSQL database dump
 --
 
-\restrict ugc298kBWACYpvqf2gTicKI0S0ybjHHY08lsT7nN6nufbz3wgRagNafd4SCTLav
+\restrict HzmYGlJtjshmLrVWmzhlggLxcPI6cf5bqQO4HQWQ5xpsEIBpuQpkh8ZajXcv5Ll
 
 -- Dumped from database version 18.3 (Debian 18.3-1.pgdg13+1)
 -- Dumped by pg_dump version 18.3 (Debian 18.3-1.pgdg13+1)
@@ -38,6 +38,21 @@ CREATE TYPE public.adjustment_state_enum AS ENUM (
     'executed',
     'denied',
     'blocked_legal_hold'
+);
+
+
+--
+-- Name: data_authority_level; Type: TYPE; Schema: public; Owner: -
+--
+
+CREATE TYPE public.data_authority_level AS ENUM (
+    'phase1_indicative_only',
+    'non_reproducible',
+    'derived_unverified',
+    'policy_bound_unsigned',
+    'authoritative_signed',
+    'superseded',
+    'invalidated'
 );
 
 
@@ -1756,6 +1771,38 @@ $$;
 
 
 --
+-- Name: enforce_asset_batch_authority(); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.enforce_asset_batch_authority() RETURNS trigger
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO 'pg_catalog', 'public'
+    AS $$
+BEGIN
+    -- Validate data_authority transitions
+    IF TG_OP = 'UPDATE' AND OLD.data_authority IS DISTINCT FROM NEW.data_authority THEN
+        -- Only allow specific transitions
+        IF NOT (
+            -- Allow upgrade from lower to higher authority
+            (OLD.data_authority = 'phase1_indicative_only' AND NEW.data_authority IN ('derived_unverified', 'policy_bound_unsigned', 'authoritative_signed')) OR
+            (OLD.data_authority = 'non_reproducible' AND NEW.data_authority IN ('derived_unverified', 'policy_bound_unsigned', 'authoritative_signed')) OR
+            (OLD.data_authority = 'derived_unverified' AND NEW.data_authority IN ('policy_bound_unsigned', 'authoritative_signed')) OR
+            (OLD.data_authority = 'policy_bound_unsigned' AND NEW.data_authority = 'authoritative_signed') OR
+            -- Allow downgrade for supersession
+            (OLD.data_authority = 'authoritative_signed' AND NEW.data_authority = 'superseded') OR
+            -- Allow invalidation
+            (NEW.data_authority = 'invalidated')
+        ) THEN
+            RAISE EXCEPTION 'GF037: Invalid data_authority transition from % to %', OLD.data_authority, NEW.data_authority;
+        END IF;
+    END IF;
+    
+    RETURN NEW;
+END;
+$$;
+
+
+--
 -- Name: enforce_confidence_before_issuance(); Type: FUNCTION; Schema: public; Owner: -
 --
 
@@ -1970,6 +2017,38 @@ $$;
 
 
 --
+-- Name: enforce_monitoring_authority(); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.enforce_monitoring_authority() RETURNS trigger
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO 'pg_catalog', 'public'
+    AS $$
+BEGIN
+    -- Validate data_authority transitions
+    IF TG_OP = 'UPDATE' AND OLD.data_authority IS DISTINCT FROM NEW.data_authority THEN
+        -- Only allow specific transitions
+        IF NOT (
+            -- Allow upgrade from lower to higher authority
+            (OLD.data_authority = 'phase1_indicative_only' AND NEW.data_authority IN ('derived_unverified', 'policy_bound_unsigned', 'authoritative_signed')) OR
+            (OLD.data_authority = 'non_reproducible' AND NEW.data_authority IN ('derived_unverified', 'policy_bound_unsigned', 'authoritative_signed')) OR
+            (OLD.data_authority = 'derived_unverified' AND NEW.data_authority IN ('policy_bound_unsigned', 'authoritative_signed')) OR
+            (OLD.data_authority = 'policy_bound_unsigned' AND NEW.data_authority = 'authoritative_signed') OR
+            -- Allow downgrade for supersession
+            (OLD.data_authority = 'authoritative_signed' AND NEW.data_authority = 'superseded') OR
+            -- Allow invalidation
+            (NEW.data_authority = 'invalidated')
+        ) THEN
+            RAISE EXCEPTION 'GF037: Invalid data_authority transition from % to %', OLD.data_authority, NEW.data_authority;
+        END IF;
+    END IF;
+    
+    RETURN NEW;
+END;
+$$;
+
+
+--
 -- Name: enforce_settlement_acknowledgement(); Type: FUNCTION; Schema: public; Owner: -
 --
 
@@ -1983,6 +2062,37 @@ BEGIN
   END IF;
 
   RETURN NEW;
+END;
+$$;
+
+
+--
+-- Name: enforce_state_transition_authority(); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.enforce_state_transition_authority() RETURNS trigger
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO 'pg_catalog', 'public'
+    AS $$
+BEGIN
+    -- Validate data_authority transitions
+    IF TG_OP = 'UPDATE' AND OLD.data_authority IS DISTINCT FROM NEW.data_authority THEN
+        -- Only allow specific transitions
+        IF NOT (
+            -- Allow upgrade from lower to higher authority
+            (OLD.data_authority = 'non_reproducible' AND NEW.data_authority IN ('derived_unverified', 'policy_bound_unsigned', 'authoritative_signed')) OR
+            (OLD.data_authority = 'derived_unverified' AND NEW.data_authority IN ('policy_bound_unsigned', 'authoritative_signed')) OR
+            (OLD.data_authority = 'policy_bound_unsigned' AND NEW.data_authority = 'authoritative_signed') OR
+            -- Allow downgrade for supersession
+            (OLD.data_authority = 'authoritative_signed' AND NEW.data_authority = 'superseded') OR
+            -- Allow invalidation
+            (NEW.data_authority = 'invalidated')
+        ) THEN
+            RAISE EXCEPTION 'GF037: Invalid data_authority transition from % to %', OLD.data_authority, NEW.data_authority;
+        END IF;
+    END IF;
+    
+    RETURN NEW;
 END;
 $$;
 
@@ -4876,6 +4986,34 @@ $$;
 
 
 --
+-- Name: upgrade_authority_on_execution_binding(); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.upgrade_authority_on_execution_binding() RETURNS trigger
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO 'pg_catalog', 'public'
+    AS $$
+BEGIN
+    -- Upgrade data_authority when execution_id is present
+    IF TG_OP = 'INSERT' OR (TG_OP = 'UPDATE' AND (OLD.execution_id IS DISTINCT FROM NEW.execution_id OR OLD.signature IS DISTINCT FROM NEW.signature)) THEN
+        IF NEW.execution_id IS NOT NULL THEN
+            IF NEW.signature IS NOT NULL THEN
+                NEW.data_authority := 'authoritative_signed';
+                NEW.audit_grade := true;
+                NEW.authority_explanation := 'Execution binding with signature';
+            ELSE
+                NEW.data_authority := 'policy_bound_unsigned';
+                NEW.authority_explanation := 'Execution binding without signature';
+            END IF;
+        END IF;
+    END IF;
+    
+    RETURN NEW;
+END;
+$$;
+
+
+--
 -- Name: uuid_strategy(); Type: FUNCTION; Schema: public; Owner: -
 --
 
@@ -5414,6 +5552,9 @@ CREATE TABLE public.asset_batches (
     quantity numeric NOT NULL,
     status text NOT NULL,
     created_at timestamp with time zone DEFAULT now() NOT NULL,
+    data_authority public.data_authority_level NOT NULL,
+    audit_grade boolean NOT NULL,
+    authority_explanation text NOT NULL,
     CONSTRAINT asset_batches_quantity_check CHECK ((quantity > (0)::numeric)),
     CONSTRAINT asset_batches_status_check CHECK ((status = ANY (ARRAY['PENDING'::text, 'ACTIVE'::text, 'RETIRED'::text, 'CANCELLED'::text])))
 );
@@ -6419,7 +6560,10 @@ CREATE TABLE public.monitoring_records (
     project_id uuid NOT NULL,
     record_type text NOT NULL,
     record_payload_json jsonb DEFAULT '{}'::jsonb NOT NULL,
-    created_at timestamp with time zone DEFAULT now() NOT NULL
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    data_authority public.data_authority_level NOT NULL,
+    audit_grade boolean NOT NULL,
+    authority_explanation text NOT NULL
 );
 
 ALTER TABLE ONLY public.monitoring_records FORCE ROW LEVEL SECURITY;
@@ -7170,7 +7314,10 @@ CREATE TABLE public.state_transitions (
     transition_timestamp timestamp with time zone DEFAULT now() NOT NULL,
     execution_id uuid,
     policy_decision_id uuid,
-    signature text
+    signature text,
+    data_authority public.data_authority_level NOT NULL,
+    audit_grade boolean NOT NULL,
+    authority_explanation text NOT NULL
 );
 
 
@@ -9961,6 +10108,13 @@ CREATE TRIGGER trg_deny_sim_swap_alerts_mutation BEFORE DELETE OR UPDATE ON publ
 
 
 --
+-- Name: asset_batches trg_enforce_asset_batch_authority; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER trg_enforce_asset_batch_authority BEFORE INSERT OR UPDATE ON public.asset_batches FOR EACH ROW EXECUTE FUNCTION public.enforce_asset_batch_authority();
+
+
+--
 -- Name: instruction_settlement_finality trg_enforce_instruction_reversal_source; Type: TRIGGER; Schema: public; Owner: -
 --
 
@@ -9975,10 +10129,24 @@ CREATE TRIGGER trg_enforce_internal_ledger_posting_context BEFORE INSERT OR UPDA
 
 
 --
+-- Name: monitoring_records trg_enforce_monitoring_authority; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER trg_enforce_monitoring_authority BEFORE INSERT OR UPDATE ON public.monitoring_records FOR EACH ROW EXECUTE FUNCTION public.enforce_monitoring_authority();
+
+
+--
 -- Name: instruction_settlement_finality trg_enforce_settlement_acknowledgement; Type: TRIGGER; Schema: public; Owner: -
 --
 
 CREATE TRIGGER trg_enforce_settlement_acknowledgement BEFORE INSERT ON public.instruction_settlement_finality FOR EACH ROW EXECUTE FUNCTION public.enforce_settlement_acknowledgement();
+
+
+--
+-- Name: state_transitions trg_enforce_state_transition_authority; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER trg_enforce_state_transition_authority BEFORE INSERT OR UPDATE ON public.state_transitions FOR EACH ROW EXECUTE FUNCTION public.enforce_state_transition_authority();
 
 
 --
@@ -10063,6 +10231,13 @@ CREATE TRIGGER trg_touch_persons_updated_at BEFORE UPDATE ON public.persons FOR 
 --
 
 CREATE TRIGGER trg_touch_programs_updated_at BEFORE UPDATE ON public.programs FOR EACH ROW EXECUTE FUNCTION public.touch_programs_updated_at();
+
+
+--
+-- Name: state_transitions trg_upgrade_authority_on_execution_binding; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER trg_upgrade_authority_on_execution_binding BEFORE INSERT OR UPDATE ON public.state_transitions FOR EACH ROW EXECUTE FUNCTION public.upgrade_authority_on_execution_binding();
 
 
 --
@@ -11633,5 +11808,5 @@ ALTER TABLE public.verifier_registry ENABLE ROW LEVEL SECURITY;
 -- PostgreSQL database dump complete
 --
 
-\unrestrict ugc298kBWACYpvqf2gTicKI0S0ybjHHY08lsT7nN6nufbz3wgRagNafd4SCTLav
+\unrestrict HzmYGlJtjshmLrVWmzhlggLxcPI6cf5bqQO4HQWQ5xpsEIBpuQpkh8ZajXcv5Ll
 

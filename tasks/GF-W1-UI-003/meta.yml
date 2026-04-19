@@ -5,68 +5,86 @@ title: Implement worker lookup form with registry validation and supplier_type e
 owner_role: ARCHITECT
 status: completed
 depends_on:
-  - GF-W1-UI-002
+- GF-W1-UI-002
 touches:
-  - src/supervisory-dashboard/index.html
-  - evidence/phase1/gf_w1_ui_003.json
-  - tasks/GF-W1-UI-003/meta.yml
+- src/supervisory-dashboard/index.html
+- evidence/phase1/gf_w1_ui_003.json
+- tasks/GF-W1-UI-003/meta.yml
 invariants: []
 work:
-  - '[ID gf_w1_ui_003_work_item_01] Add phone number input with +260XXXXXXXXX format validation'
-  - '[ID gf_w1_ui_003_work_item_02] Implement lookupWorker() function calling GET /pilot-demo/api/workers/lookup'
-  - '[ID gf_w1_ui_003_work_item_03] Add worker details panel with worker_id, supplier_type, status, neighbourhood label'
-  - '[ID gf_w1_ui_003_work_item_04] Implement error states for not registered, invalid type, inactive status'
-  - '[ID gf_w1_ui_003_work_item_05] Add Request Collection Token button disabled until valid worker confirmed'
+- '[ID gf_w1_ui_003_work_item_01] Add phone number input with +260XXXXXXXXX format validation'
+- '[ID gf_w1_ui_003_work_item_02] Implement lookupWorker() function calling GET /pilot-demo/api/workers/lookup'
+- '[ID gf_w1_ui_003_work_item_03] Add worker details panel with worker_id, supplier_type, status, neighbourhood label'
+- '[ID gf_w1_ui_003_work_item_04] Implement error states for not registered, invalid type, inactive status'
+- '[ID gf_w1_ui_003_work_item_05] Add Request Collection Token button disabled until valid worker confirmed'
 acceptance_criteria:
-  - '[ID gf_w1_ui_003_work_item_01] Phone input validates format on blur and shows error for invalid format'
-  - '[ID gf_w1_ui_003_work_item_02] lookupWorker() fetches worker data and validates supplier_type equals WORKER'
-  - '[ID gf_w1_ui_003_work_item_03] Worker details panel displays neighbourhood label not raw GPS coordinates'
-  - '[ID gf_w1_ui_003_work_item_04] Each error state shows appropriate red error message'
-  - '[ID gf_w1_ui_003_work_item_05] Button is disabled until valid WORKER type worker is confirmed'
+- '[ID gf_w1_ui_003_work_item_01] Phone input validates format on blur and shows error for invalid format'
+- '[ID gf_w1_ui_003_work_item_02] lookupWorker() fetches worker data and validates supplier_type equals WORKER'
+- '[ID gf_w1_ui_003_work_item_03] Worker details panel displays neighbourhood label not raw GPS coordinates'
+- '[ID gf_w1_ui_003_work_item_04] Each error state shows appropriate red error message'
+- '[ID gf_w1_ui_003_work_item_05] Button is disabled until valid WORKER type worker is confirmed'
 verification:
-  - 'grep -q "lookupWorker" src/supervisory-dashboard/index.html || exit 1'
-  - 'grep -q "resolveNeighbourhoodLabel" src/supervisory-dashboard/index.html || exit 1'
-  - 'grep -q "supplier_type.*WORKER" src/supervisory-dashboard/index.html || exit 1'
-  - 'test -f evidence/phase1/gf_w1_ui_003.json || exit 1'
+- grep -q "lookupWorker" src/supervisory-dashboard/index.html || exit 1
+- grep -q "resolveNeighbourhoodLabel" src/supervisory-dashboard/index.html || exit 1
+- grep -q "supplier_type.*WORKER" src/supervisory-dashboard/index.html || exit 1
+- test -f evidence/phase1/gf_w1_ui_003.json || exit 1
 evidence:
-  - path: evidence/phase1/gf_w1_ui_003.json
-    must_include:
-      - task_id
-      - timestamp
-      - status
-      - phone_validation_implemented
-      - lookup_api_integrated
-      - worker_details_panel_present
-      - error_states_handled
-      - button_disabled_until_valid
-      - checks
-      - observed_paths
-      - command_outputs
-      - execution_trace
+- path: evidence/phase1/gf_w1_ui_003.json
+  must_include:
+  - task_id
+  - timestamp
+  - status
+  - phone_validation_implemented
+  - lookup_api_integrated
+  - worker_details_panel_present
+  - error_states_handled
+  - button_disabled_until_valid
+  - checks
+  - observed_paths
+  - command_outputs
+  - execution_trace
 failure_modes:
-  - Phone validation missing or accepts invalid format => FAIL
-  - Raw GPS coordinates displayed anywhere => FAIL
-  - Button enabled before worker validation completes => FAIL
-  - supplier_type validation missing => CRITICAL_FAIL
-  - Error states not handled => FAIL
+- Phone validation missing or accepts invalid format => FAIL
+- Raw GPS coordinates displayed anywhere => FAIL
+- Button enabled before worker validation completes => FAIL
+- supplier_type validation missing => CRITICAL_FAIL
+- Error states not handled => FAIL
 must_read:
-  - docs/operations/AI_AGENT_OPERATION_MANUAL.md
-  - .kiro/steering/ui-canonical-design.md
-  - .kiro/steering/pwrm0001-domain-rules.md
-  - docs/operations/PILOT_DEMO_VIDEO_SCRIPT.md
+- docs/operations/AI_AGENT_OPERATION_MANUAL.md
+- .kiro/steering/ui-canonical-design.md
+- .kiro/steering/pwrm0001-domain-rules.md
+- docs/operations/PILOT_DEMO_VIDEO_SCRIPT.md
+- docs/operations/AGENTIC_SDLC_PILOT_POLICY.md
 implementation_plan: docs/plans/phase1/GF-W1-UI-003/PLAN.md
 implementation_log: docs/plans/phase1/GF-W1-UI-003/EXEC_LOG.md
-notes: 'This task implements worker validation before token issuance. supplier_type=WORKER enforcement prevents token issuance to non-waste-collector suppliers. Neighbourhood labels used throughout to comply with UI canonical design rules. Phase: Green Finance Wave 1. Domain: green_finance.'
+notes: 'This task implements worker validation before token issuance. supplier_type=WORKER enforcement prevents token issuance
+  to non-waste-collector suppliers. Neighbourhood labels used throughout to comply with UI canonical design rules. Phase:
+  Green Finance Wave 1. Domain: green_finance.'
 client: kiro
 assigned_agent: architect
 model: claude-sonnet-4-20250514
 domain: green_finance
 pilot: true
-second_pilot_test: >-
-  The worker lookup pattern with supplier_type validation works for any programme requiring
-  field operator verification. For PWRM0001 plastic collection, supplier_type=WORKER identifies
-  waste collectors. For a hypothetical VM0044 solar energy programme, supplier_type=TECHNICIAN
-  would identify solar panel installers. The validation logic (check supplier_type matches
-  expected role) and error states (not registered, invalid type, inactive) are identical;
-  only the expected supplier_type value differs per programme.
+second_pilot_test: The worker lookup pattern with supplier_type validation works for any programme requiring field operator
+  verification. For PWRM0001 plastic collection, supplier_type=WORKER identifies waste collectors. For a hypothetical VM0044
+  solar energy programme, supplier_type=TECHNICIAN would identify solar panel installers. The validation logic (check supplier_type
+  matches expected role) and error states (not registered, invalid type, inactive) are identical; only the expected supplier_type
+  value differs per programme.
 pilot_scope_ref: docs/pilots/PILOT_PWRM0001/SCOPE.md
+intent: Implement the worker lookup form with phone number validation, registry API integration, and supplier_type=WORKER
+  enforcement. The form prevents token issuance to non-waste-collector suppliers by validating the worker exists in the registry,
+  is active, and holds the correct supplier_type before enabling the Request Collection Token button. Neighbourhood labels
+  are displayed instead of raw GPS coordinates to comply with UI canonical design rules.
+anti_patterns:
+- Displaying raw GPS coordinates instead of neighbourhood labels
+- Allowing token issuance without validating supplier_type equals WORKER
+- Enabling the Request Collection Token button before worker validation completes
+negative_tests:
+- id: GF-W1-UI-003-N1
+  description: Looking up a phone number that is not registered in the worker registry must display a red error message and
+    keep the Request Collection Token button disabled.
+  required: true
+- id: GF-W1-UI-003-N2
+  description: Looking up a registered supplier whose supplier_type is not WORKER must display a supplier type mismatch error
+    and keep the button disabled.
+  required: true

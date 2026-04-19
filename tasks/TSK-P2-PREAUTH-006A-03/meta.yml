@@ -3,7 +3,7 @@ phase: '2'
 task_id: TSK-P2-PREAUTH-006A-03
 title: "Add data_authority columns to asset_batches"
 owner_role: DB_FOUNDATION
-status: planned
+status: completed
 priority: HIGH
 risk_class: INTEGRITY
 blast_radius: DB_SCHEMA
@@ -91,6 +91,9 @@ verification:
     # [ID tsk_p2_preauth_006a_03_work_item_01] [ID tsk_p2_preauth_006a_03_work_item_02]
     # [ID tsk_p2_preauth_006a_03_work_item_03] [ID tsk_p2_preauth_006a_03_work_item_04]
     test -x scripts/db/verify_tsk_p2_preauth_006a_03.sh && bash scripts/db/verify_tsk_p2_preauth_006a_03.sh > evidence/phase2/tsk_p2_preauth_006a_03.json || exit 1
+  - >-
+    # [ID tsk_p2_preauth_006a_03_work_item_01]
+    psql -c "\d asset_batches" | grep -q "data_authority" || exit 1
   - >-
     # [ID tsk_p2_preauth_006a_03_work_item_04]
     test -f evidence/phase2/tsk_p2_preauth_006a_03.json || exit 1

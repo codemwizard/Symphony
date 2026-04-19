@@ -1,145 +1,116 @@
 schema_version: 1
 phase: '1'
 task_id: GF-W1-REM-001
-title: "Correct stale migration number references in Wave 5 pre_ci verifier stubs so that Wave 5 implementation can be verified against the right migration files"
+title: Correct stale migration number references in Wave 5 pre_ci verifier stubs so that Wave 5 implementation can be verified
+  against the right migration files
 owner_role: DB Foundation Agent
 status: completed
 priority: HIGH
 risk_class: GOVERNANCE
 blast_radius: CI_GATES
-
-intent: >-
-  A rogue agent attempted Wave 5 implementation and inserted stale migration numbers
-  (0088-0093) into the 6 pre_ci Wave 5 verifier stub scripts. These numbers fall in
-  a reserved gap before the GF schema tables (0097-0106) and are structurally impossible
-  as function migration slots since functions cannot precede the tables they depend on.
-  All 6 stubs must reference the correct post-0106 slot numbers (0107-0112). Until
-  corrected, every Wave 5 function task will point to non-existent migration files and
-  pre_ci will never be able to verify Wave 5 work correctly.
-
+intent: A rogue agent attempted Wave 5 implementation and inserted stale migration numbers (0088-0093) into the 6 pre_ci Wave
+  5 verifier stub scripts. These numbers fall in a reserved gap before the GF schema tables (0097-0106) and are structurally
+  impossible as function migration slots since functions cannot precede the tables they depend on. All 6 stubs must reference
+  the correct post-0106 slot numbers (0107-0112). Until corrected, every Wave 5 function task will point to non-existent migration
+  files and pre_ci will never be able to verify Wave 5 work correctly.
 anti_patterns:
-  - Accepting the 0088-0093 refs as valid without grep verification
-  - Creating a stub verifier that exits 0 without checking the actual migration refs
-  - Marking complete before emitting evidence with stubs_checked and stale_refs_found fields
-
+- Accepting the 0088-0093 refs as valid without grep verification
+- Creating a stub verifier that exits 0 without checking the actual migration refs
+- Marking complete before emitting evidence with stubs_checked and stale_refs_found fields
 out_of_scope:
-  - Creating the actual Wave 5 migration SQL files
-  - Modifying any migration SQL content
-  - Changing verification logic beyond the migration filename references
-
+- Creating the actual Wave 5 migration SQL files
+- Modifying any migration SQL content
+- Changing verification logic beyond the migration filename references
 stop_conditions:
-  - If any stub contains logic that must specifically reference 0088-0093 for a non-rogue reason — stop and escalate before overwriting
-
+- If any stub contains logic that must specifically reference 0088-0093 for a non-rogue reason — stop and escalate before
+  overwriting
 proof_guarantees:
-  - grep confirms zero stale 0088-0093 refs in all 6 stubs after task implementation
-  - Each stub exits 0 with PENDING output confirming pre-implementation state
-
+- grep confirms zero stale 0088-0093 refs in all 6 stubs after task implementation
+- Each stub exits 0 with PENDING output confirming pre-implementation state
 proof_limitations:
-  - Does not verify correctness of the actual Wave 5 function implementations
-  - Does not confirm that 0107-0112 migration files will exist at the correct schema position
-
+- Does not verify correctness of the actual Wave 5 function implementations
+- Does not confirm that 0107-0112 migration files will exist at the correct schema position
 depends_on: []
-
 blocks:
-  - GF-W1-FNC-001
-  - GF-W1-FNC-002
-  - GF-W1-FNC-003
-  - GF-W1-FNC-004
-  - GF-W1-FNC-005
-  - GF-W1-FNC-006
-
+- GF-W1-FNC-001
+- GF-W1-FNC-002
+- GF-W1-FNC-003
+- GF-W1-FNC-004
+- GF-W1-FNC-005
+- GF-W1-FNC-006
 touches:
-  - tasks/GF-W1-REM-001/meta.yml
-  - docs/plans/phase1/GF-W1-REM-001/PLAN.md
-  - docs/plans/phase1/GF-W1-REM-001/EXEC_LOG.md
-  - scripts/db/verify_gf_fnc_001.sh
-  - scripts/db/verify_gf_fnc_002.sh
-  - scripts/db/verify_gf_fnc_003.sh
-  - scripts/db/verify_gf_fnc_004.sh
-  - scripts/db/verify_gf_fnc_005.sh
-  - scripts/db/verify_gf_fnc_006.sh
-  - scripts/db/verify_gf_w1_rem_001.sh
-  - evidence/phase1/gf_w1_rem_001.json
-
+- tasks/GF-W1-REM-001/meta.yml
+- docs/plans/phase1/GF-W1-REM-001/PLAN.md
+- docs/plans/phase1/GF-W1-REM-001/EXEC_LOG.md
+- scripts/db/verify_gf_fnc_001.sh
+- scripts/db/verify_gf_fnc_002.sh
+- scripts/db/verify_gf_fnc_003.sh
+- scripts/db/verify_gf_fnc_004.sh
+- scripts/db/verify_gf_fnc_005.sh
+- scripts/db/verify_gf_fnc_006.sh
+- scripts/db/verify_gf_w1_rem_001.sh
+- evidence/phase1/gf_w1_rem_001.json
 invariants:
-  - INV-GF-001
-
+- INV-GF-001
 work:
-  - >-
-    [ID GF-W1-REM-001] For each of the 6 stubs (verify_gf_fnc_001.sh through
-    verify_gf_fnc_006.sh), grep for patterns matching 008[89]_ or 009[0-3]_; if any
-    match is found, replace the stale number with the correct post-0106 slot number
-    per the mapping: 0088->0107, 0089->0108, 0090->0109, 0091->0110, 0092->0111, 0093->0112.
-  - >-
-    [ID GF-W1-REM-001] Run each stub individually and confirm it exits 0 with a
-    PENDING message (the migration file does not yet exist, which is the correct
-    pre-implementation state).
-  - >-
-    [ID GF-W1-REM-001] Run verify_gf_w1_rem_001.sh to emit evidence/phase1/gf_w1_rem_001.json
-    with status PASS and stale_refs_found equal to 0.
-
+- '[ID GF-W1-REM-001] For each of the 6 stubs (verify_gf_fnc_001.sh through verify_gf_fnc_006.sh), grep for patterns matching
+  008[89]_ or 009[0-3]_; if any match is found, replace the stale number with the correct post-0106 slot number per the mapping:
+  0088->0107, 0089->0108, 0090->0109, 0091->0110, 0092->0111, 0093->0112.'
+- '[ID GF-W1-REM-001] Run each stub individually and confirm it exits 0 with a PENDING message (the migration file does not
+  yet exist, which is the correct pre-implementation state).'
+- '[ID GF-W1-REM-001] Run verify_gf_w1_rem_001.sh to emit evidence/phase1/gf_w1_rem_001.json with status PASS and stale_refs_found
+  equal to 0.'
 acceptance_criteria:
-  - >-
-    [ID GF-W1-REM-001] grep -E "008[89]_|009[0-3]_" scripts/db/verify_gf_fnc_{001..006}.sh
-    returns no matches and exits non-zero.
-  - >-
-    [ID GF-W1-REM-001] Each of the 6 stubs exits 0 when run, printing a PENDING line
-    that names the correct 0107-0112 migration file.
-  - >-
-    [ID GF-W1-REM-001] bash scripts/db/verify_gf_w1_rem_001.sh exits 0 and
-    evidence/phase1/gf_w1_rem_001.json contains status=PASS and stale_refs_found=0.
-
+- '[ID GF-W1-REM-001] grep -E "008[89]_|009[0-3]_" scripts/db/verify_gf_fnc_{001..006}.sh returns no matches and exits non-zero.'
+- '[ID GF-W1-REM-001] Each of the 6 stubs exits 0 when run, printing a PENDING line that names the correct 0107-0112 migration
+  file.'
+- '[ID GF-W1-REM-001] bash scripts/db/verify_gf_w1_rem_001.sh exits 0 and evidence/phase1/gf_w1_rem_001.json contains status=PASS
+  and stale_refs_found=0.'
 negative_tests:
-  - id: GF-W1-REM-001-N1
-    description: >-
-      A verifier stub that still contains the string "0088_gf_fn_project_registration"
-      must cause verify_gf_w1_rem_001.sh to exit 1 with a FAIL message naming the
-      offending stub.
-    required: true
-
+- id: GF-W1-REM-001-N1
+  description: A verifier stub that still contains the string "0088_gf_fn_project_registration" must cause verify_gf_w1_rem_001.sh
+    to exit 1 with a FAIL message naming the offending stub.
+  required: true
 positive_tests:
-  - id: GF-W1-REM-001-P1
-    description: >-
-      All 6 stubs with correct 0107-0112 refs cause verify_gf_w1_rem_001.sh to
-      exit 0 with PASS and emit a valid evidence JSON.
-    required: false
-
+- id: GF-W1-REM-001-P1
+  description: All 6 stubs with correct 0107-0112 refs cause verify_gf_w1_rem_001.sh to exit 0 with PASS and emit a valid
+    evidence JSON.
+  required: false
 verification:
-  - bash scripts/db/verify_gf_w1_rem_001.sh
-  - python3 scripts/audit/validate_evidence.py --task GF-W1-REM-001 --evidence evidence/phase1/gf_w1_rem_001.json
-  - bash scripts/dev/pre_ci.sh
-
+- bash scripts/db/verify_gf_w1_rem_001.sh
+- python3 scripts/audit/validate_evidence.py --task GF-W1-REM-001 --evidence evidence/phase1/gf_w1_rem_001.json
+- bash scripts/dev/pre_ci.sh
 evidence:
-  - path: evidence/phase1/gf_w1_rem_001.json
-    must_include:
-      - task_id
-      - git_sha
-      - timestamp_utc
-      - status
-      - stubs_checked
-      - stale_refs_found
-      - stubs_pending_verified
-
+- path: evidence/phase1/gf_w1_rem_001.json
+  must_include:
+  - task_id
+  - git_sha
+  - timestamp_utc
+  - status
+  - stubs_checked
+  - stale_refs_found
+  - stubs_pending_verified
 failure_modes:
-  - "Any stale 0088-0093 ref remaining in a stub after task close => FAIL"
-  - "Evidence file missing or stale_refs_found > 0 in evidence => FAIL"
-  - "Task marked completed without running verify_gf_w1_rem_001.sh => BLOCKED"
-
+- Any stale 0088-0093 ref remaining in a stub after task close => FAIL
+- Evidence file missing or stale_refs_found > 0 in evidence => FAIL
+- Task marked completed without running verify_gf_w1_rem_001.sh => BLOCKED
 must_read:
-  - docs/operations/AI_AGENT_OPERATION_MANUAL.md
-  - docs/operations/AGENTIC_SDLC_PILOT_POLICY.md
-  - AGENT_ENTRYPOINT.md
-
+- docs/operations/AI_AGENT_OPERATION_MANUAL.md
+- docs/operations/AGENTIC_SDLC_PILOT_POLICY.md
+- AGENT_ENTRYPOINT.md
 implementation_plan: docs/plans/phase1/GF-W1-REM-001/PLAN.md
 implementation_log: docs/plans/phase1/GF-W1-REM-001/EXEC_LOG.md
-
-notes: >-
-  This task provides governance coverage for stub corrections already applied without
-  approval in a prior session. The verifier confirms the correct final state.
-  Migration number mapping: 0088->0107 (project_registration), 0089->0108
-  (monitoring_ingestion), 0090->0109 (evidence_lineage), 0091->0110
-  (regulatory_transitions), 0092->0111 (asset_lifecycle), 0093->0112 (verifier_read_token).
-
+notes: 'This task provides governance coverage for stub corrections already applied without approval in a prior session. The
+  verifier confirms the correct final state. Migration number mapping: 0088->0107 (project_registration), 0089->0108 (monitoring_ingestion),
+  0090->0109 (evidence_lineage), 0091->0110 (regulatory_transitions), 0092->0111 (asset_lifecycle), 0093->0112 (verifier_read_token).'
 client: codex_ide
 assigned_agent: db_foundation
 model: <UNASSIGNED>
+second_pilot_test: 'This remediation task corrects stale migration number references in Wave 5 verifier stub scripts. The
+  correction is purely textual — replacing wrong slot numbers (0088-0093) with the correct post-0106 numbers (0107-0112).
+  This operation is entirely sector-agnostic: the same stale-ref correction applies regardless of whether the downstream functions
+  serve plastic waste recovery (PWRM0001) or solar energy generation (VM0044). No domain-specific logic, schema, or adapter
+  is touched.'
+pilot_scope_ref: not_applicable
+domain: green_finance
+pilot: false

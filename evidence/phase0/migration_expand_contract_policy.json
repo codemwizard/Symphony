@@ -2,7 +2,7 @@
   "check_id": "DB-EXPAND-CONTRACT-POLICY",
   "timestamp_utc": "1970-01-01T00:00:00Z",
   "git_sha": "0000000000000000000000000000000000000000",
-  "schema_fingerprint": "e9f9ee33755f7f9ea332282cb585e1b9fbb8ba94456a672d42fbc88fd2d701a8",
+  "schema_fingerprint": "885e676b35291c1961b34745508c21b4017523a451528b9727c861eaf5be4e60",
   "status": "PASS",
   "scanned_files": [
     "0001_init.sql",
@@ -108,7 +108,10 @@
     "0115_add_supplier_type_to_registry.sql",
     "0116_create_interpretation_packs.sql",
     "0117_create_factor_registry.sql",
-    "0118_create_execution_records.sql"
+    "0118_create_execution_records.sql",
+    "0120_create_state_transitions.sql",
+    "0121_create_data_authority_enum.sql",
+    "0122_create_data_authority_triggers.sql"
   ],
   "violation_count": 0,
   "violations": [],

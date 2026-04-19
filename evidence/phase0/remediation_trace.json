@@ -1,23 +1,24 @@
 {
   "check_id": "REMEDIATION-TRACE",
-  "timestamp_utc": "1970-01-01T00:00:00Z",
-  "git_sha": "0000000000000000000000000000000000000000",
-  "schema_fingerprint": "e9f9ee33755f7f9ea332282cb585e1b9fbb8ba94456a672d42fbc88fd2d701a8",
+  "timestamp_utc": "2026-04-19T02:37:24Z",
+  "git_sha": "85bb72e81a17f1767e44c22738bfd62dafdfb2b6",
+  "schema_fingerprint": "885e676b35291c1961b34745508c21b4017523a451528b9727c861eaf5be4e60",
   "status": "PASS",
   "diff_mode": "range",
   "base_ref": "refs/remotes/origin/main",
   "head_ref": "HEAD",
-  "merge_base": "8b9e060e43864267b603128db7b4942a885b6faa",
+  "merge_base": "160decf2c98af7e3950969cec1afda0c8f710a70",
   "triggered_change_present": true,
   "triggered_prefixes": [
+    ".github",
     "docs",
     "schema",
     "scripts"
   ],
   "satisfying_docs": [
-    "docs/plans/phase2/TSK-P2-PREAUTH-003-00/PLAN.md",
-    "docs/plans/phase2/TSK-P2-PREAUTH-003-00/EXEC_LOG.md"
+    "docs/plans/phase1/REM-2026-04-18_pre_ci-verify_task_plans_present/PLAN.md",
+    "docs/plans/phase1/REM-2026-04-18_pre_ci-verify_task_plans_present/EXEC_LOG.md"
   ],
-  "satisfying_doc_parent": "docs/plans/phase2/TSK-P2-PREAUTH-003-00",
+  "satisfying_doc_parent": "docs/plans/phase1/REM-2026-04-18_pre_ci-verify_task_plans_present",
   "errors": []
 }

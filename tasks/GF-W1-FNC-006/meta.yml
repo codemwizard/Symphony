@@ -1,16 +1,14 @@
 schema_version: 1
 phase: '1'
 task_id: GF-W1-FNC-006
-title: Implement issue_verifier_read_token so that third parties can independently
-  verify proofs.
+title: Implement issue_verifier_read_token so that third parties can independently verify proofs.
 owner_role: DB Foundation Agent
 status: completed
 priority: HIGH
 risk_class: GOVERNANCE
 blast_radius: DB_SCHEMA
-intent: Provides auditors with cryptographically secure, time-bound read tokens allowing
-  them to access the ledger state and raw evidence files without gaining permanent
-  or broad table-level permissions.
+intent: Provides auditors with cryptographically secure, time-bound read tokens allowing them to access the ledger state and
+  raw evidence files without gaining permanent or broad table-level permissions.
 anti_patterns:
 - Declaring implemented without a functional verification shell.
 - Writing functions that bypass RLS by lacking SECURITY DEFINER hardening.
@@ -46,28 +44,36 @@ acceptance_criteria:
 - '[ID GF-W1-FNC-006] pre_ci.sh passes cleanly over the new modifications.'
 negative_tests:
 - id: GF-W1-FNC-006-N1
-  description: Attempting to read evidence with an expired or structurally invalid
-    token must be blocked by RLS.
+  description: Attempting to read evidence with an expired or structurally invalid token must be blocked by RLS.
   required: true
 positive_tests:
 - id: GF-W1-FNC-006-P1
   description: Valid execution parameters construct expected row state without panic.
   required: true
 verification:
-- '[ID GF-W1-FNC-006] bash scripts/dev/pre_ci.sh | grep -q ''.'' >> evidence/phase1/gf_w1_fnc_006.json
-  || exit 1'
-- '[ID GF-W1-FNC-006] bash scripts/audit/verify_gf_fnc_006.sh | grep -q ''.'' >>
-  evidence/phase1/gf_w1_fnc_006.json || exit 1'
-- '[ID GF-W1-FNC-006] python3 scripts/audit/validate_evidence.py --task GF-W1-FNC-006
-  --evidence evidence/phase1/gf_w1_fnc_006.json | grep PASS >> evidence/phase1/gf_w1_fnc_006.json
-  || exit 1'
+- '[ID GF-W1-FNC-006] bash scripts/dev/pre_ci.sh | grep -q ''.'' >> evidence/phase1/gf_w1_fnc_006.json || exit 1'
+- '[ID GF-W1-FNC-006] bash scripts/audit/verify_gf_fnc_006.sh | grep -q ''.'' >> evidence/phase1/gf_w1_fnc_006.json || exit
+  1'
+- '[ID GF-W1-FNC-006] python3 scripts/audit/validate_evidence.py --task GF-W1-FNC-006 --evidence evidence/phase1/gf_w1_fnc_006.json
+  | grep PASS >> evidence/phase1/gf_w1_fnc_006.json || exit 1'
 evidence:
-- evidence/phase1/gf_w1_fnc_006.json
+- path: evidence/phase1/gf_w1_fnc_006.json
+  must_include:
+  - task_id
+  - git_sha
+  - timestamp_utc
+  - status
+  - observed_paths
+  - observed_hashes
+  - command_outputs
+  - execution_trace
+  - issue_verifier_read_token_verified
+  - expired_token_rejection_verified
 failure_modes:
-  - "Evidence file missing"
-  - Evidence file missing => FAIL
-  - Verification script panics or exits > 0 => FAIL
-  - Creating schema bypasses => CRITICAL_FAIL
+- Evidence file missing
+- Evidence file missing => FAIL
+- Verification script panics or exits > 0 => FAIL
+- Creating schema bypasses => CRITICAL_FAIL
 must_read:
 - docs/operations/AI_AGENT_OPERATION_MANUAL.md
 - docs/operations/AGENTIC_SDLC_PILOT_POLICY.md
@@ -92,8 +98,7 @@ second_pilot_test:
   - Audit parameters mapping to standard variables.
   jurisdiction_profile_impact: None expected.
   required_core_changes: []
-  explanation: The token issuing capability does not inspect the contents of the batch
-    it grants access to. Whether the batch is plastic or solar credits, the token
-    generation uses identical cryptographic constraints and RLS scopes.
+  explanation: The token issuing capability does not inspect the contents of the batch it grants access to. Whether the batch
+    is plastic or solar credits, the token generation uses identical cryptographic constraints and RLS scopes.
   second_pilot_reviewed_by: ARCHITECT_AGENT
 pilot_scope_ref: not_applicable

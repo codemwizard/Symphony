@@ -1,8 +1,7 @@
 schema_version: 1
 phase: '0'
 task_id: GF-W1-SCH-007
-title: Wire Phase 0 GF schema closeout verifier so all schema verifiers are gated
-  by a single aggregated check
+title: Wire Phase 0 GF schema closeout verifier so all schema verifiers are gated by a single aggregated check
 owner_role: DB_FOUNDATION
 status: completed
 priority: HIGH
@@ -10,10 +9,9 @@ risk_class: INTEGRITY
 blast_radius: DOCS_ONLY
 domain: green_finance
 pilot: false
-intent: After SCH-002A through SCH-006 are complete, a single aggregated closeout
-  verifier must run all prior GF schema verifiers in DAG order and fail if any one
-  fails. This ensures SCH-008 and Phase 1 functions cannot start against a partially
-  verified schema. No new migration is introduced by this task.
+intent: After SCH-002A through SCH-006 are complete, a single aggregated closeout verifier must run all prior GF schema verifiers
+  in DAG order and fail if any one fails. This ensures SCH-008 and Phase 1 functions cannot start against a partially verified
+  schema. No new migration is introduced by this task.
 anti_patterns:
 - Creating a closeout script that only runs some of the GF verifiers
 - Allowing the closeout script to exit 0 when any individual verifier exits non-zero
@@ -23,11 +21,11 @@ out_of_scope:
 - Changes to individual verifier scripts already created by prior tasks
 - Any file outside scripts/db/ and evidence/phase0/
 stop_conditions:
-- "If closeout script passes when any individual verifier exits non-zero \u2192 STOP"
-- "If any migration SQL is created in this task \u2192 STOP (scope violation)"
+- If closeout script passes when any individual verifier exits non-zero → STOP
+- If any migration SQL is created in this task → STOP (scope violation)
 proof_guarantees:
-- Closeout script invokes verify_gf_sch_002a.sh, verify_gf_monitoring_records.sh,
-  verify_gf_evidence_lineage.sh, verify_gf_asset_lifecycle.sh, and verify_gf_regulatory_plane.sh
+- Closeout script invokes verify_gf_sch_002a.sh, verify_gf_monitoring_records.sh, verify_gf_evidence_lineage.sh, verify_gf_asset_lifecycle.sh,
+  and verify_gf_regulatory_plane.sh
 - Closeout script exits non-zero if any sub-verifier fails
 - Evidence artifact records all_verifiers_pass and individual verifier exit codes
 proof_limitations:
@@ -44,36 +42,33 @@ touches:
 invariants:
 - INV-SCHEMA-OWNERSHIP-001
 work:
-- '[ID GF-W1-SCH-007] [ID gf_w1_sch_007_wi01] Create scripts/db/verify_gf_schema_closeout.sh:
-  invoke verify_gf_sch_002a.sh, verify_gf_monitoring_records.sh, verify_gf_evidence_lineage.sh,
-  verify_gf_asset_lifecycle.sh, verify_gf_regulatory_plane.sh in order; exit non-zero
-  if any fails; emit evidence/phase0/gf_schema_closeout.json with all_verifiers_pass
-  and individual exit codes.'
+- '[ID GF-W1-SCH-007] [ID gf_w1_sch_007_wi01] Create scripts/db/verify_gf_schema_closeout.sh that invokes verify_gf_sch_002a.sh,
+  verify_gf_monitoring_records.sh, verify_gf_evidence_lineage.sh, verify_gf_asset_lifecycle.sh, and verify_gf_regulatory_plane.sh
+  in DAG order.'
+- '[ID GF-W1-SCH-007] [ID gf_w1_sch_007_wi02] Implement fail-closed aggregation logic: exit non-zero immediately if any individual
+  sub-verifier exits non-zero, preventing downstream tasks from starting against a partially verified schema.'
+- '[ID GF-W1-SCH-007] [ID gf_w1_sch_007_wi03] Emit evidence/phase0/gf_schema_closeout.json with all_verifiers_pass boolean,
+  individual verifier exit codes, task_id, git_sha, timestamp_utc, and execution_trace fields.'
 acceptance_criteria:
-- '[ID GF-W1-SCH-007] [ID gf_w1_sch_007_wi01] verify_gf_schema_closeout.sh exits 0
-  and evidence/phase0/gf_schema_closeout.json contains all_verifiers_pass=true when
-  all five sub-verifiers pass.'
-- '[ID GF-W1-SCH-007] [ID gf_w1_sch_007_wi01] verify_gf_schema_closeout.sh exits non-zero
-  and evidence/phase0/gf_schema_closeout.json contains all_verifiers_pass=false when
-  any one sub-verifier exits non-zero.'
+- '[ID GF-W1-SCH-007] [ID gf_w1_sch_007_wi01] verify_gf_schema_closeout.sh exits 0 and evidence/phase0/gf_schema_closeout.json
+  contains all_verifiers_pass=true when all five sub-verifiers pass.'
+- '[ID GF-W1-SCH-007] [ID gf_w1_sch_007_wi01] verify_gf_schema_closeout.sh exits non-zero and evidence/phase0/gf_schema_closeout.json
+  contains all_verifiers_pass=false when any one sub-verifier exits non-zero.'
 negative_tests:
 - id: GF-W1-SCH-007-N1
-  description: When verify_gf_monitoring_records.sh is replaced with a stub that exits
-    1, verify_gf_schema_closeout.sh must exit non-zero and set all_verifiers_pass=false
-    in the evidence JSON.
+  description: When verify_gf_monitoring_records.sh is replaced with a stub that exits 1, verify_gf_schema_closeout.sh must
+    exit non-zero and set all_verifiers_pass=false in the evidence JSON.
   required: true
 positive_tests:
 - id: GF-W1-SCH-007-P1
-  description: When all five sub-verifier stubs exit 0, verify_gf_schema_closeout.sh
-    must exit 0 and set all_verifiers_pass=true.
+  description: When all five sub-verifier stubs exit 0, verify_gf_schema_closeout.sh must exit 0 and set all_verifiers_pass=true.
   required: false
 verification:
-- '[ID GF-W1-SCH-007] bash scripts/dev/pre_ci.sh | grep -q ''.'' >> evidence/phase1/gf_w1_sch_007.json
-  || exit 1'
-- '[ID GF-W1-SCH-007] [ID gf_w1_sch_007_wi01] bash scripts/db/verify_gf_schema_closeout.sh
-  && test -f evidence/phase0/gf_schema_closeout.json > /dev/null || exit 1'
-- '[ID GF-W1-SCH-007] [ID gf_w1_sch_007_wi01] grep -q ''"all_verifiers_pass"'' evidence/phase0/gf_schema_closeout.json
+- '[ID GF-W1-SCH-007] bash scripts/dev/pre_ci.sh | grep -q ''.'' >> evidence/phase1/gf_w1_sch_007.json || exit 1'
+- '[ID GF-W1-SCH-007] [ID gf_w1_sch_007_wi01] bash scripts/db/verify_gf_schema_closeout.sh && test -f evidence/phase0/gf_schema_closeout.json
   > /dev/null || exit 1'
+- '[ID GF-W1-SCH-007] [ID gf_w1_sch_007_wi01] grep -q ''"all_verifiers_pass"'' evidence/phase0/gf_schema_closeout.json > /dev/null
+  || exit 1'
 evidence:
 - path: evidence/phase0/gf_schema_closeout.json
   must_include:
@@ -90,10 +85,9 @@ evidence:
   - verifier_results
   - failures
 failure_modes:
-- "Evidence file missing \u2192 BLOCKED (GF-W1-SCH-008 cannot start)"
-- "Closeout exits 0 when any sub-verifier fails \u2192 CRITICAL_FAIL (downstream tasks\
-  \ run against broken schema)"
-- "Script omits one or more GF schema verifiers \u2192 FAIL_REVIEW"
+- Evidence file missing → BLOCKED (GF-W1-SCH-008 cannot start)
+- Closeout exits 0 when any sub-verifier fails → CRITICAL_FAIL (downstream tasks run against broken schema)
+- Script omits one or more GF schema verifiers → FAIL_REVIEW
 must_read:
 - docs/operations/AI_AGENT_OPERATION_MANUAL.md
 - docs/operations/AGENTIC_SDLC_PILOT_POLICY.md
@@ -101,9 +95,8 @@ must_read:
 - docs/plans/phase0/GF-W1-SCH-007/PLAN.md
 implementation_plan: docs/plans/phase0/GF-W1-SCH-007/PLAN.md
 implementation_log: docs/plans/phase0/GF-W1-SCH-007/EXEC_LOG.md
-notes: This is a CI-wiring-only task. blast_radius is DOCS_ONLY because no schema
-  migration is created. The closeout script is a shell orchestrator that calls existing
-  verifier scripts; it does not duplicate their logic.
+notes: This is a CI-wiring-only task. blast_radius is DOCS_ONLY because no schema migration is created. The closeout script
+  is a shell orchestrator that calls existing verifier scripts; it does not duplicate their logic.
 client: codex_cli
 assigned_agent: db_foundation_agent
 model: <UNASSIGNED>
@@ -123,12 +116,11 @@ second_pilot_test:
   - current_jurisdiction_code_or_null
   adapter_only_differences:
   - 'No adapter-specific differences: closeout script is sector-agnostic'
-  jurisdiction_profile_impact: "Not applicable \u2014 closeout script orchestrates\
-    \ existing verifiers. No jurisdiction-specific logic introduced."
+  jurisdiction_profile_impact: Not applicable — closeout script orchestrates existing verifiers. No jurisdiction-specific
+    logic introduced.
   required_core_changes: []
-  explanation: The closeout verifier is a pure orchestration script that calls the
-    five prior GF schema verifiers in DAG order. It contains no sector-specific logic.
-    Both PWRM0001 and VM0044 would pass through the same closeout gate without modification,
+  explanation: The closeout verifier is a pure orchestration script that calls the five prior GF schema verifiers in DAG order.
+    It contains no sector-specific logic. Both PWRM0001 and VM0044 would pass through the same closeout gate without modification,
     as the underlying verifiers are sector-agnostic structural checks on schema objects.
   second_pilot_reviewed_by: DB_FOUNDATION
 pilot_scope_ref: not_applicable

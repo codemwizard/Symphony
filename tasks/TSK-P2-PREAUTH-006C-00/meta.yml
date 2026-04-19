@@ -3,7 +3,7 @@ phase: '2'
 task_id: TSK-P2-PREAUTH-006C-00
 title: "Create PLAN.md and verify alignment for C# read model marking"
 owner_role: ARCHITECT
-status: planned
+status: completed
 priority: HIGH
 risk_class: GOVERNANCE
 blast_radius: DOCS_ONLY
@@ -89,9 +89,11 @@ verification:
     # [ID tsk_p2_preauth_006c_00_work_item_01]
     test -f docs/plans/phase2/TSK-P2-PREAUTH-006C-00/PLAN.md || exit 1
   - >-
+    # [ID tsk_p2_preauth_006c_00_work_item_02]
     grep -q "DataAuthorityLevel" docs/plans/phase2/TSK-P2-PREAUTH-006C-00/PLAN.md &&
     grep -q "Phase1IndicativeOnly" docs/plans/phase2/TSK-P2-PREAUTH-006C-00/PLAN.md || exit 1
   - >-
+    # [ID tsk_p2_preauth_006c_00_work_item_03]
     grep -q "MonitoringRecord" docs/plans/phase2/TSK-P2-PREAUTH-006C-00/PLAN.md &&
     grep -q "AssetBatch" docs/plans/phase2/TSK-P2-PREAUTH-006C-00/PLAN.md &&
     grep -q "StateTransition" docs/plans/phase2/TSK-P2-PREAUTH-006C-00/PLAN.md || exit 1

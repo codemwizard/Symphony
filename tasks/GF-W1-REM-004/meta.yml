@@ -1,128 +1,97 @@
 schema_version: 1
 phase: '1'
 task_id: GF-W1-REM-004
-title: "Remove rogue verify_gf_w1_fnc_007b references from GF-W1-FNC-007B task meta.yml so the task contract names the canonical verifier script"
+title: Remove rogue verify_gf_w1_fnc_007b references from GF-W1-FNC-007B task meta.yml so the task contract names the canonical
+  verifier script
 owner_role: Security Guardian Agent
 status: completed
 priority: HIGH
 risk_class: GOVERNANCE
 blast_radius: DOCS_ONLY
-
-intent: >-
-  The GF-W1-FNC-007B task meta.yml references "verify_gf_w1_fnc_007b.sh" in its
-  touches:, work:, acceptance_criteria:, and verification: fields — a naming pattern
-  used exclusively by the rogue agent across all its fake verifiers. The canonical
-  convention for this repo uses verify_gf_fnc_007b.sh (no w1_ infix). Leaving the
-  rogue name in the contract means any implementing Security Guardian agent will create
-  or reference the wrong script, the CI gate will point to a non-standard path, and
-  the task will never pass scope enforcement checks.
-
+intent: 'The GF-W1-FNC-007B task meta.yml references "verify_gf_w1_fnc_007b.sh" in its touches:, work:, acceptance_criteria:,
+  and verification: fields — a naming pattern used exclusively by the rogue agent across all its fake verifiers. The canonical
+  convention for this repo uses verify_gf_fnc_007b.sh (no w1_ infix). Leaving the rogue name in the contract means any implementing
+  Security Guardian agent will create or reference the wrong script, the CI gate will point to a non-standard path, and the
+  task will never pass scope enforcement checks.'
 anti_patterns:
-  - "Updating only the touches: field and leaving work: or acceptance_criteria: stale"
-  - Accepting the w1_ infix as an intentional naming difference without confirmation
-  - Marking complete before confirming zero verify_gf_w1_fnc_007b refs via grep
-
+- 'Updating only the touches: field and leaving work: or acceptance_criteria: stale'
+- Accepting the w1_ infix as an intentional naming difference without confirmation
+- Marking complete before confirming zero verify_gf_w1_fnc_007b refs via grep
 out_of_scope:
-  - Creating the verify_gf_fnc_007b.sh script itself (that is GF-W1-FNC-007B implementation)
-  - Modifying any functional acceptance criteria beyond fixing the script name
-  - Touching any meta.yml other than tasks/GF-W1-FNC-007B/meta.yml
-
+- Creating the verify_gf_fnc_007b.sh script itself (that is GF-W1-FNC-007B implementation)
+- Modifying any functional acceptance criteria beyond fixing the script name
+- Touching any meta.yml other than tasks/GF-W1-FNC-007B/meta.yml
 stop_conditions:
-  - If there is a legitimate reason for the w1_ infix in 007B that differs from the
-    rogue pattern — stop and confirm with human before overwriting
-
+- If there is a legitimate reason for the w1_ infix in 007B that differs from the rogue pattern — stop and confirm with human
+  before overwriting
 proof_guarantees:
-  - grep confirms zero verify_gf_w1_fnc_007b refs in tasks/GF-W1-FNC-007B/meta.yml
-  - All 4 occurrences replaced with verify_gf_fnc_007b
-
+- grep confirms zero verify_gf_w1_fnc_007b refs in tasks/GF-W1-FNC-007B/meta.yml
+- All 4 occurrences replaced with verify_gf_fnc_007b
 proof_limitations:
-  - Does not verify that scripts/audit/verify_gf_fnc_007b.sh exists or is correctly implemented
-  - Does not validate the full FNC-007B meta.yml schema
-
+- Does not verify that scripts/audit/verify_gf_fnc_007b.sh exists or is correctly implemented
+- Does not validate the full FNC-007B meta.yml schema
 depends_on: []
-
 blocks:
-  - GF-W1-FNC-007B
-
+- GF-W1-FNC-007B
 touches:
-  - tasks/GF-W1-REM-004/meta.yml
-  - docs/plans/phase1/GF-W1-REM-004/PLAN.md
-  - docs/plans/phase1/GF-W1-REM-004/EXEC_LOG.md
-  - tasks/GF-W1-FNC-007B/meta.yml
-  - scripts/audit/verify_gf_w1_rem_004.sh
-  - evidence/phase1/gf_w1_rem_004.json
-
+- tasks/GF-W1-REM-004/meta.yml
+- docs/plans/phase1/GF-W1-REM-004/PLAN.md
+- docs/plans/phase1/GF-W1-REM-004/EXEC_LOG.md
+- tasks/GF-W1-FNC-007B/meta.yml
+- scripts/audit/verify_gf_w1_rem_004.sh
+- evidence/phase1/gf_w1_rem_004.json
 invariants:
-  - INV-GF-001
-
+- INV-GF-001
 work:
-  - >-
-    [ID GF-W1-REM-004] In tasks/GF-W1-FNC-007B/meta.yml, replace all 4 occurrences
-    of "verify_gf_w1_fnc_007b" with "verify_gf_fnc_007b" (affects touches:, work:,
-    acceptance_criteria:, and verification: fields).
-  - >-
-    [ID GF-W1-REM-004] Confirm via grep that zero verify_gf_w1_fnc_007b refs remain
-    in tasks/GF-W1-FNC-007B/meta.yml.
-  - >-
-    [ID GF-W1-REM-004] Run verify_gf_w1_rem_004.sh to emit evidence/phase1/gf_w1_rem_004.json
-    with status PASS.
-
+- '[ID GF-W1-REM-004] In tasks/GF-W1-FNC-007B/meta.yml, replace all 4 occurrences of "verify_gf_w1_fnc_007b" with "verify_gf_fnc_007b"
+  (affects touches:, work:, acceptance_criteria:, and verification: fields).'
+- '[ID GF-W1-REM-004] Confirm via grep that zero verify_gf_w1_fnc_007b refs remain in tasks/GF-W1-FNC-007B/meta.yml.'
+- '[ID GF-W1-REM-004] Run verify_gf_w1_rem_004.sh to emit evidence/phase1/gf_w1_rem_004.json with status PASS.'
 acceptance_criteria:
-  - >-
-    [ID GF-W1-REM-004] grep for "verify_gf_w1_fnc_007b" in tasks/GF-W1-FNC-007B/meta.yml
-    returns zero matches.
-  - >-
-    [ID GF-W1-REM-004] bash scripts/audit/verify_gf_w1_rem_004.sh exits 0 and
-    evidence/phase1/gf_w1_rem_004.json contains status=PASS and stale_refs_found=0.
-
+- '[ID GF-W1-REM-004] grep for "verify_gf_w1_fnc_007b" in tasks/GF-W1-FNC-007B/meta.yml returns zero matches.'
+- '[ID GF-W1-REM-004] bash scripts/audit/verify_gf_w1_rem_004.sh exits 0 and evidence/phase1/gf_w1_rem_004.json contains status=PASS
+  and stale_refs_found=0.'
 negative_tests:
-  - id: GF-W1-REM-004-N1
-    description: >-
-      tasks/GF-W1-FNC-007B/meta.yml still containing "verify_gf_w1_fnc_007b.sh" in
-      the touches: field must cause verify_gf_w1_rem_004.sh to exit 1 with a FAIL
-      message citing the offending field.
-    required: true
-
+- id: GF-W1-REM-004-N1
+  description: 'tasks/GF-W1-FNC-007B/meta.yml still containing "verify_gf_w1_fnc_007b.sh" in the touches: field must cause
+    verify_gf_w1_rem_004.sh to exit 1 with a FAIL message citing the offending field.'
+  required: true
 positive_tests:
-  - id: GF-W1-REM-004-P1
-    description: >-
-      tasks/GF-W1-FNC-007B/meta.yml with all rogue refs replaced causes
-      verify_gf_w1_rem_004.sh to exit 0 PASS and emit a valid evidence JSON.
-    required: false
-
+- id: GF-W1-REM-004-P1
+  description: tasks/GF-W1-FNC-007B/meta.yml with all rogue refs replaced causes verify_gf_w1_rem_004.sh to exit 0 PASS and
+    emit a valid evidence JSON.
+  required: false
 verification:
-  - bash scripts/audit/verify_gf_w1_rem_004.sh
-  - python3 scripts/audit/validate_evidence.py --task GF-W1-REM-004 --evidence evidence/phase1/gf_w1_rem_004.json
-  - bash scripts/dev/pre_ci.sh
-
+- bash scripts/audit/verify_gf_w1_rem_004.sh
+- python3 scripts/audit/validate_evidence.py --task GF-W1-REM-004 --evidence evidence/phase1/gf_w1_rem_004.json
+- bash scripts/dev/pre_ci.sh
 evidence:
-  - path: evidence/phase1/gf_w1_rem_004.json
-    must_include:
-      - task_id
-      - git_sha
-      - timestamp_utc
-      - status
-      - files_checked
-      - stale_refs_found
-
+- path: evidence/phase1/gf_w1_rem_004.json
+  must_include:
+  - task_id
+  - git_sha
+  - timestamp_utc
+  - status
+  - files_checked
+  - stale_refs_found
 failure_modes:
-  - "Any verify_gf_w1_fnc_007b ref remaining in FNC-007B meta.yml => FAIL"
-  - "Evidence file missing or stale_refs_found > 0 in evidence => FAIL"
-  - "Task marked completed without running verify_gf_w1_rem_004.sh => BLOCKED"
-
+- Any verify_gf_w1_fnc_007b ref remaining in FNC-007B meta.yml => FAIL
+- Evidence file missing or stale_refs_found > 0 in evidence => FAIL
+- Task marked completed without running verify_gf_w1_rem_004.sh => BLOCKED
 must_read:
-  - docs/operations/AI_AGENT_OPERATION_MANUAL.md
-  - docs/operations/AGENTIC_SDLC_PILOT_POLICY.md
-  - AGENT_ENTRYPOINT.md
-
+- docs/operations/AI_AGENT_OPERATION_MANUAL.md
+- docs/operations/AGENTIC_SDLC_PILOT_POLICY.md
+- AGENT_ENTRYPOINT.md
 implementation_plan: docs/plans/phase1/GF-W1-REM-004/PLAN.md
 implementation_log: docs/plans/phase1/GF-W1-REM-004/EXEC_LOG.md
-
-notes: >-
-  GF-W1-FNC-007B is a Security Guardian task (wires the issuance CI gate). Its meta.yml
-  is therefore owned by Security Guardian. The scripts/audit/ path prefix on the verifier
-  name is intentional — 007B's gate belongs in audit/, not scripts/db/.
-
+notes: GF-W1-FNC-007B is a Security Guardian task (wires the issuance CI gate). Its meta.yml is therefore owned by Security
+  Guardian. The scripts/audit/ path prefix on the verifier name is intentional — 007B's gate belongs in audit/, not scripts/db/.
 client: codex_ide
 assigned_agent: security_guardian
 model: <UNASSIGNED>
+second_pilot_test: 'This remediation task replaces the rogue verify_gf_w1_fnc_007b references with the canonical verify_gf_fnc_007b
+  in the FNC-007B meta.yml. The correction is a pure text substitution affecting 4 occurrences of a script name. This is entirely
+  sector-agnostic: the CI gate verifier name is structural infrastructure, not domain-specific to PWRM0001 or any other sector.'
+pilot_scope_ref: not_applicable
+domain: green_finance
+pilot: false

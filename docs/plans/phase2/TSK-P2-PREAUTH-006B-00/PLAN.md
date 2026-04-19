@@ -1,10 +1,10 @@
-# TSK-P2-PREAUTH-006B-00: Create PLAN.md and verify alignment for data authority triggers
+# TSK-P2-PREAUTH-006B-00 PLAN — Create PLAN.md and verify alignment for data authority triggers
 
-**Task:** TSK-P2-PREAUTH-006B-00
-**Owner:** DB_FOUNDATION
-**Depends on:** TSK-P2-PREAUTH-006A-04
-**Blocks:** TSK-P2-PREAUTH-006B-01
-**Failure Signature**: PLAN.md missing or verification fails => CRITICAL_FAIL
+Task: TSK-P2-PREAUTH-006B-00
+Owner: DB_FOUNDATION
+Depends on: TSK-P2-PREAUTH-006A-04
+failure_signature: PRE-PHASE2.PREAUTH.TSK-P2-PREAUTH-006B-00.PLAN_CREATION_FAIL
+canonical_reference: docs/operations/AI_AGENT_OPERATION_MANUAL.md
 
 ## Objective
 
@@ -28,9 +28,11 @@ The 5 data authority trigger functions enforce data authority constraints across
 
 ## Stop Conditions
 
-- If verify_plan_semantic_alignment.py fails with orphaned nodes
-- If the plan lacks explicit verifier specifications
-- If the plan lacks negative test definitions
+- **If any node in the proof graph is orphaned** -> STOP
+- **If any verifier lacks a symbolic failure obligation (`|| exit 1`)** -> STOP
+- **If evidence is static or self-declared instead of derived** -> STOP
+- **If verification does not inspect real system state (self-referential)** -> STOP
+- **If ≥3 weak signals (subjective wording like 'ensure' or 'appropriate') are detected without hard failing** -> STOP
 
 ## Implementation Steps
 
@@ -49,8 +51,20 @@ Run verify_plan_semantic_alignment.py to validate proof graph integrity: python3
 ## Verification
 
 ```bash
-# DOCS_ONLY task - human review required
-# No automated verification for plan creation
+# [ID tsk_p2_preauth_006b_00_work_item_01]
+test -f docs/plans/phase2/TSK-P2-PREAUTH-006B-00/PLAN.md || exit 1
+
+# [ID tsk_p2_preauth_006b_00_work_item_02]
+grep -q "enforce_monitoring_authority" docs/plans/phase2/TSK-P2-PREAUTH-006B-00/PLAN.md &&
+grep -q "enforce_asset_batch_authority" docs/plans/phase2/TSK-P2-PREAUTH-006B-00/PLAN.md &&
+grep -q "enforce_state_transition_authority" docs/plans/phase2/TSK-P2-PREAUTH-006B-00/PLAN.md || exit 1
+
+# [ID tsk_p2_preauth_006b_00_work_item_03]
+grep -q "trigger attachment points" docs/plans/phase2/TSK-P2-PREAUTH-006B-00/PLAN.md &&
+grep -q "BEFORE INSERT OR UPDATE" docs/plans/phase2/TSK-P2-PREAUTH-006B-00/PLAN.md || exit 1
+
+# [ID tsk_p2_preauth_006b_00_work_item_04]
+python3 scripts/audit/verify_plan_semantic_alignment.py --plan docs/plans/phase2/TSK-P2-PREAUTH-006B-00/PLAN.md --meta tasks/TSK-P2-PREAUTH-006B-00/meta.yml || exit 1
 ```
 
 

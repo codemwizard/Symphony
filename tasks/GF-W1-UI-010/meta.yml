@@ -7,102 +7,92 @@ status: planned
 priority: NORMAL
 risk_class: GOVERNANCE
 blast_radius: CI_GATES
-intent: >-
-  Update TSK-P1-219 verifier to expect 4 tabs instead of 3 and add specific checks
-  for worker-tokens tab and screen. This task ensures the governance gate correctly
-  validates the new Worker Token Issuance tab structure added in GF-W1-UI-002. The
-  verifier must be updated to prevent false failures when the dashboard has 4 tabs
-  as designed.
+intent: Update TSK-P1-219 verifier to expect 4 tabs instead of 3 and add specific checks for worker-tokens tab and screen.
+  This task ensures the governance gate correctly validates the new Worker Token Issuance tab structure added in GF-W1-UI-002.
+  The verifier must be updated to prevent false failures when the dashboard has 4 tabs as designed.
 anti_patterns:
-  - "Leaving tab count check at 3 instead of updating to 4"
-  - "Not adding specific checks for worker-tokens tab and screen existence"
-  - "Not updating evidence schema to include new check results"
-  - "Not updating verifier hash after modification"
+- Leaving tab count check at 3 instead of updating to 4
+- Not adding specific checks for worker-tokens tab and screen existence
+- Not updating evidence schema to include new check results
+- Not updating verifier hash after modification
 depends_on:
-  - GF-W1-UI-009
+- GF-W1-UI-009
 blocks:
-  - GF-W1-UI-011
+- GF-W1-UI-011
 touches:
-  - scripts/audit/verify_tsk_p1_219.sh
-  - .toolchain/script_integrity/verifier_hashes.sha256
-  - evidence/phase1/gf_w1_ui_010.json
-  - tasks/GF-W1-UI-010/meta.yml
+- scripts/audit/verify_tsk_p1_219.sh
+- .toolchain/script_integrity/verifier_hashes.sha256
+- evidence/phase1/gf_w1_ui_010.json
+- tasks/GF-W1-UI-010/meta.yml
 invariants: []
 work:
-  - '[ID gf_w1_ui_010_work_item_01] Update tab count check from -lt 3 to -lt 4 in verify_tsk_p1_219.sh'
-  - '[ID gf_w1_ui_010_work_item_02] Add grep check for switchTab(''worker-tokens'' in dashboard file'
-  - '[ID gf_w1_ui_010_work_item_03] Add grep check for id="screen-worker-tokens" in dashboard file'
-  - '[ID gf_w1_ui_010_work_item_04] Update evidence JSON schema adding worker_tokens_tab and worker_tokens_screen boolean fields'
-  - '[ID gf_w1_ui_010_work_item_05] Update verifier hash in verifier_hashes.sha256 using sha256sum'
+- '[ID gf_w1_ui_010_work_item_01] Update tab count check from -lt 3 to -lt 4 in verify_tsk_p1_219.sh'
+- '[ID gf_w1_ui_010_work_item_02] Add grep check for switchTab(''worker-tokens'' in dashboard file'
+- '[ID gf_w1_ui_010_work_item_03] Add grep check for id="screen-worker-tokens" in dashboard file'
+- '[ID gf_w1_ui_010_work_item_04] Update evidence JSON schema adding worker_tokens_tab and worker_tokens_screen boolean fields'
+- '[ID gf_w1_ui_010_work_item_05] Update verifier hash in verifier_hashes.sha256 using sha256sum'
 acceptance_criteria:
-  - '[ID gf_w1_ui_010_work_item_01] Verifier requires minimum 4 tabs'
-  - '[ID gf_w1_ui_010_work_item_02] Verifier confirms worker-tokens tab exists'
-  - '[ID gf_w1_ui_010_work_item_03] Verifier confirms screen-worker-tokens exists'
-  - '[ID gf_w1_ui_010_work_item_04] Evidence includes new check results'
-  - '[ID gf_w1_ui_010_work_item_05] Hash file contains new hash for verifier'
+- '[ID gf_w1_ui_010_work_item_01] Verifier requires minimum 4 tabs'
+- '[ID gf_w1_ui_010_work_item_02] Verifier confirms worker-tokens tab exists'
+- '[ID gf_w1_ui_010_work_item_03] Verifier confirms screen-worker-tokens exists'
+- '[ID gf_w1_ui_010_work_item_04] Evidence includes new check results'
+- '[ID gf_w1_ui_010_work_item_05] Hash file contains new hash for verifier'
 negative_tests:
-  - id: GF-W1-UI-010-N1
-    description: >-
-      Verify that verifier fails when dashboard has only 3 tabs. Test by temporarily
-      removing worker-tokens tab and confirming verifier exits non-zero.
-    required: true
-  - id: GF-W1-UI-010-N2
-    description: >-
-      Verify that verifier fails when worker-tokens tab is missing. Test by removing
-      the tab button and confirming verifier detects the absence.
-    required: true
+- id: GF-W1-UI-010-N1
+  description: Verify that verifier fails when dashboard has only 3 tabs. Test by temporarily removing worker-tokens tab and
+    confirming verifier exits non-zero.
+  required: true
+- id: GF-W1-UI-010-N2
+  description: Verify that verifier fails when worker-tokens tab is missing. Test by removing the tab button and confirming
+    verifier detects the absence.
+  required: true
 positive_tests:
-  - id: GF-W1-UI-010-P1
-    description: >-
-      Verify that verifier passes when dashboard has 4 tabs including worker-tokens
-      tab and screen-worker-tokens screen.
-    required: true
+- id: GF-W1-UI-010-P1
+  description: Verify that verifier passes when dashboard has 4 tabs including worker-tokens tab and screen-worker-tokens
+    screen.
+  required: true
 verification:
-  - grep -q 'TAB_COUNT.*-lt 4' scripts/audit/verify_tsk_p1_219.sh || exit 1
-  - grep -q "switchTab('worker-tokens'" scripts/audit/verify_tsk_p1_219.sh || exit 1
-  - bash scripts/audit/verify_tsk_p1_219.sh || exit 1
-  - test -f evidence/phase1/gf_w1_ui_010.json || exit 1
+- grep -q 'TAB_COUNT.*-lt 4' scripts/audit/verify_tsk_p1_219.sh || exit 1
+- grep -q "switchTab('worker-tokens'" scripts/audit/verify_tsk_p1_219.sh || exit 1
+- bash scripts/audit/verify_tsk_p1_219.sh || exit 1
+- test -f evidence/phase1/gf_w1_ui_010.json || exit 1
 evidence:
-  - path: evidence/phase1/gf_w1_ui_010.json
-    must_include:
-      - task_id
-      - timestamp
-      - status
-      - tab_count_check_updated
-      - worker_tokens_tab_check_added
-      - worker_tokens_screen_check_added
-      - evidence_schema_updated
-      - verifier_hash_updated
-      - checks
-      - observed_paths
-      - command_outputs
-      - execution_trace
+- path: evidence/phase1/gf_w1_ui_010.json
+  must_include:
+  - task_id
+  - timestamp
+  - status
+  - tab_count_check_updated
+  - worker_tokens_tab_check_added
+  - worker_tokens_screen_check_added
+  - evidence_schema_updated
+  - verifier_hash_updated
+  - checks
+  - observed_paths
+  - command_outputs
+  - execution_trace
 failure_modes:
-  - "Tab count check not updated => GOVERNANCE.VERIFIER_FAILS_INCORRECTLY => FAIL"
-  - "Specific checks missing => GOVERNANCE.INCOMPLETE_VERIFICATION => FAIL"
-  - "Evidence schema stale => GOVERNANCE.STALE_EVIDENCE_FORMAT => FAIL"
-  - "Hash not updated => SECURITY.INTEGRITY_CHECK_FAILS => FAIL"
+- Tab count check not updated => GOVERNANCE.VERIFIER_FAILS_INCORRECTLY => FAIL
+- Specific checks missing => GOVERNANCE.INCOMPLETE_VERIFICATION => FAIL
+- Evidence schema stale => GOVERNANCE.STALE_EVIDENCE_FORMAT => FAIL
+- Hash not updated => SECURITY.INTEGRITY_CHECK_FAILS => FAIL
 must_read:
-  - docs/operations/AI_AGENT_OPERATION_MANUAL.md
-  - .kiro/steering/ui-canonical-design.md
-  - .kiro/steering/pwrm0001-domain-rules.md
+- docs/operations/AI_AGENT_OPERATION_MANUAL.md
+- .kiro/steering/ui-canonical-design.md
+- .kiro/steering/pwrm0001-domain-rules.md
+- docs/operations/AGENTIC_SDLC_PILOT_POLICY.md
 implementation_plan: docs/plans/phase1/GF-W1-UI-010/PLAN.md
 implementation_log: docs/plans/phase1/GF-W1-UI-010/EXEC_LOG.md
-notes: >-
-  This task updates the governance gate to correctly validate 4 tabs. The verifier
-  must check for worker-tokens tab and screen existence to prevent false failures.
-  Evidence schema is updated to include new check results. Verifier hash is updated
-  after modification. Phase: Green Finance Wave 1. Domain: green_finance.
+notes: 'This task updates the governance gate to correctly validate 4 tabs. The verifier must check for worker-tokens tab
+  and screen existence to prevent false failures. Evidence schema is updated to include new check results. Verifier hash is
+  updated after modification. Phase: Green Finance Wave 1. Domain: green_finance.'
 client: kiro
 assigned_agent: architect
 model: claude-sonnet-4-20250514
 domain: green_finance
 pilot: true
-second_pilot_test: >-
-  The verifier update pattern works for any programme requiring tab count validation.
-  For PWRM0001 plastic collection, the verifier checks for 4 tabs including worker-tokens.
-  For a hypothetical VM0044 solar energy programme, the verifier would check for 4 tabs
-  including technician-tokens. The tab count check logic and evidence schema are identical;
-  only the specific tab ID being checked differs per programme. The hash update process
-  is universal across programmes.
+second_pilot_test: The verifier update pattern works for any programme requiring tab count validation. For PWRM0001 plastic
+  collection, the verifier checks for 4 tabs including worker-tokens. For a hypothetical VM0044 solar energy programme, the
+  verifier would check for 4 tabs including technician-tokens. The tab count check logic and evidence schema are identical;
+  only the specific tab ID being checked differs per programme. The hash update process is universal across programmes.
 pilot_scope_ref: docs/pilots/PILOT_PWRM0001/SCOPE.md

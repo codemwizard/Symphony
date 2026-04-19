@@ -252,26 +252,9 @@ Whenever standard DDL operations (`CREATE`, `ALTER`, `DROP`) are introduced into
 3. The `pre_ci.sh` script stops the process to ensure no blind schema changes are pushed without the architect intentionally logging it via `generate_baseline_snapshot.sh`
 4. This is a governance enforcement mechanism to maintain auditability of all schema changes
 
-**Path A: Check for REGEN_BASELINE flag (Preferred)**
+**Path A: Manual Regeneration (Preferred)**
 
-Before manual regeneration, check whether `pre_ci.sh` supports an auto-regenerate flag:
-
-```bash
-grep -n "REGEN_BASELINE\|regen_baseline\|generate_baseline\|baseline drift" scripts/dev/pre_ci.sh | head -30
-```
-
-If the script contains something like `REGEN_BASELINE=1`, use that:
-```bash
-REGEN_BASELINE=1 bash scripts/dev/pre_ci.sh
-```
-
-This will recreate the ephemeral DB, apply all migrations, run `generate_baseline_snapshot.sh`, and continue with the rest of the gate.
-
-If the flag doesn't exist, proceed to Path B.
-
-**Path B: Manual Regeneration (General Case)**
-
-The agent MUST follow one of these scenarios:
+Since `pre_ci.sh` does not currently support a `REGEN_BASELINE` flag, manual regeneration is the standard approach. The agent MUST follow one of these scenarios:
 
 **Situation A: You maintain a local development database**
 If you normally run a local Symphony database stack (e.g., via `docker-compose` or local Postgres):
@@ -348,6 +331,62 @@ If you don't run a local developer DB and rely completely on CI/automated script
    git add schema/baselines/current/baseline.meta.json
    git add schema/baselines/$(date +%Y-%m-%d)/
    ```
+
+**Path B: Alternative Method (Optional)**
+
+If you prefer to leverage `pre_ci.sh`'s ephemeral database provisioning instead of manually managing a database, you can use this alternative approach:
+
+1. **Temporarily skip baseline drift check** in `scripts/db/verify_invariants.sh`:
+   ```bash
+   # Comment out or skip the check_baseline_drift.sh call
+   # "$SCRIPT_DIR/check_baseline_drift.sh"
+   ```
+
+2. **Run pre_ci.sh to create fresh DB and apply migrations**:
+   ```bash
+   SKIP_DOTNET_QUALITY_LINT=1 bash scripts/dev/pre_ci.sh
+   ```
+
+3. **Create a fresh database for baseline regeneration**:
+   ```bash
+   set -a && source infra/docker/.env && set +a
+   export DATABASE_URL="postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@localhost:5432/symphony_pre_ci_baseline"
+   docker exec $(docker ps --format '{{.Names}}' | grep -E 'postgres' | head -n 1) psql -h localhost -U "$POSTGRES_USER" -d postgres -v ON_ERROR_STOP=1 -X -c "DROP DATABASE IF EXISTS symphony_pre_ci_baseline;"
+   docker exec $(docker ps --format '{{.Names}}' | grep -E 'postgres' | head -n 1) psql -h localhost -U "$POSTGRES_USER" -d postgres -v ON_ERROR_STOP=1 -X -c "CREATE DATABASE symphony_pre_ci_baseline OWNER ${POSTGRES_USER};"
+   bash scripts/db/migrate.sh
+   ```
+
+4. **Regenerate baseline from fresh DB state**:
+   ```bash
+   bash scripts/db/generate_baseline_snapshot.sh
+   ```
+
+5. **Clean up temporary database**:
+   ```bash
+   docker exec $(docker ps --format '{{.Names}}' | grep -E 'postgres' | head -n 1) psql -h localhost -U "$POSTGRES_USER" -d postgres -v ON_ERROR_STOP=1 -X -c "DROP DATABASE IF EXISTS symphony_pre_ci_baseline;"
+   ```
+
+6. **Re-enable baseline drift check** in `scripts/db/verify_invariants.sh`:
+   ```bash
+   # Uncomment the check_baseline_drift.sh call
+   "$SCRIPT_DIR/check_baseline_drift.sh"
+   ```
+
+7. **Re-run pre_ci.sh to verify**:
+   ```bash
+   SKIP_DOTNET_QUALITY_LINT=1 bash scripts/dev/pre_ci.sh
+   ```
+
+8. **Stage the baseline changes** (complete set):
+   ```bash
+   git add schema/baseline.sql
+   git add schema/baselines/current/0001_baseline.sql
+   git add schema/baselines/current/baseline.cutoff
+   git add schema/baselines/current/baseline.meta.json
+   git add schema/baselines/$(date +%Y-%m-%d)/
+   ```
+
+**Note**: This method is more complex and involves temporarily modifying verification scripts. Path A (Manual Regeneration) is preferred for its simplicity and direct approach.
 
 **Post-Regeneration Steps (Baseline Governance)**
 

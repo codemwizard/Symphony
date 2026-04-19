@@ -11,6 +11,7 @@ infra/docker/.env
 # Development & Tools
 .vscode/
 .idea/
+.toolchain/
 
 # Audit & Legacy (Optional, typically archived)
 archive/

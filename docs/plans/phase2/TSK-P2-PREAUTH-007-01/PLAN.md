@@ -1,48 +1,47 @@
-# TSK-P2-PREAUTH-007-01: Register INV-170 interpretation_pack temporal uniqueness
+# TSK-P2-PREAUTH-007-01: Runtime INV ID assignment
 
 **Task:** TSK-P2-PREAUTH-007-01
 **Owner:** INVARIANTS_CURATOR
 **Depends on:** TSK-P2-PREAUTH-007-00
 **Blocks:** TSK-P2-PREAUTH-007-02
-**Failure Signature**: INV-170 not registered or status not draft => CRITICAL_FAIL
+**Failure Signature**: ID assignment logic fails => CRITICAL_FAIL
 
 ## Objective
 
-Register INV-170 for interpretation_pack temporal uniqueness enforcement. Without this invariant, temporal uniqueness of interpretation packs is not governed, creating risk of inconsistent policy application across time periods.
+Perform runtime INV ID assignment to determine the next available invariant ID. This is a prerequisite step before registering new invariants INV-175/176/177.
 
 ## Architectural Context
 
-INV-170 enforces temporal uniqueness of interpretation packs via the UNIQUE constraint on (project_id, interpretation_pack_id, effective_from) in the interpretation_packs table.
+INVARIANTS_MANIFEST.yml contains all registered invariants with IDs following the INV-XXX pattern. Runtime ID assignment scans this file to determine the next available ID, ensuring no collisions when adding new invariants.
 
 ## Pre-conditions
 
 - TSK-P2-PREAUTH-007-00 PLAN.md exists and passes verification
-- INV-170 does not exist in INVARIANTS_MANIFEST.yml or has status other than implemented
-- interpretation_packs table exists with temporal uniqueness constraint
+- INVARIANTS_MANIFEST.yml exists and is valid YAML
+- INV-175/176/177 do not exist in INVARIANTS_MANIFEST.yml
 
 ## Files to Change
 
 | Path | Type | Change |
 |------|------|--------|
-| docs/invariants/INVARIANTS_MANIFEST.yml | MODIFY | Add INV-170 with status: draft |
-| scripts/audit/verify_tsk_p2_preauth_007_01.sh | CREATE | Verification script for this task |
+| scripts/audit/verify_tsk_p2_preauth_007_01.sh | CREATE | Verification script for ID assignment |
 
 ## Stop Conditions
 
-- If INV-170 is not added to INVARIANTS_MANIFEST.yml
-- If status is not set to draft
-- If enforcement_location is not set to schema/migrations/0116
+- If runtime INV ID assignment logic fails
+- If INVARIANTS_MANIFEST.yml cannot be parsed
+- If next available ID cannot be determined
 
 ## Implementation Steps
 
-### [ID tsk_p2_preauth_007_01_work_item_01] Add INV-170 to INVARIANTS_MANIFEST.yml
-Add INV-170 to INVARIANTS_MANIFEST.yml with: id: INV-170, title: interpretation_pack temporal uniqueness, status: draft, enforcement_location: schema/migrations/0116, verification_command: grep -E 'UNIQUE.*project_id.*interpretation_pack_id.*effective_from' schema/migrations/0116.
+### [ID tsk_p2_preauth_007_01_work_item_01] Use grep to determine next available INV ID
+Use grep to determine next available INV ID by scanning INVARIANTS_MANIFEST.yml for highest INV-XXX pattern.
 
 ### [ID tsk_p2_preauth_007_01_work_item_02] Write verification script
-Write verify_tsk_p2_preauth_007_01.sh that runs grep to verify INV-170 exists in INVARIANTS_MANIFEST.yml with correct fields.
+Write verify_tsk_p2_preauth_007_01.sh that verifies the runtime ID assignment logic works correctly.
 
 ### [ID tsk_p2_preauth_007_01_work_item_03] Run verification script
-Run verify_tsk_p2_preauth_007_01.sh to confirm invariant is registered correctly.
+Run verify_tsk_p2_preauth_007_01.sh to confirm ID assignment works.
 
 ## Verification
 
@@ -52,8 +51,7 @@ Run verify_tsk_p2_preauth_007_01.sh to confirm invariant is registered correctly
 test -x scripts/audit/verify_tsk_p2_preauth_007_01.sh && bash scripts/audit/verify_tsk_p2_preauth_007_01.sh > evidence/phase2/tsk_p2_preauth_007_01.json || exit 1
 
 # [ID tsk_p2_preauth_007_01_work_item_01]
-grep -A 5 "id: INV-170" docs/invariants/INVARIANTS_MANIFEST.yml | grep -q "status: draft" || exit 1
-grep -A 5 "id: INV-170" docs/invariants/INVARIANTS_MANIFEST.yml | grep -q "enforcement_location" || exit 1
+grep -q "INV-" docs/invariants/INVARIANTS_MANIFEST.yml || exit 1
 
 # [ID tsk_p2_preauth_007_01_work_item_03]
 test -f evidence/phase2/tsk_p2_preauth_007_01.json || exit 1

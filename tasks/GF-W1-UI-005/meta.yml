@@ -7,105 +7,96 @@ status: planned
 priority: NORMAL
 risk_class: GOVERNANCE
 blast_radius: APP_LAYER
-intent: >-
-  Implement recent tokens list showing last 10 issued tokens with dynamic status calculation
-  (ACTIVE/EXPIRED/USED/REVOKED) and expiry display to provide operators with token issuance
-  history visibility. This task establishes the in-memory token tracking mechanism that allows
-  operators to monitor token lifecycle without persistent storage, maintaining security while
+intent: Implement recent tokens list showing last 10 issued tokens with dynamic status calculation (ACTIVE/EXPIRED/USED/REVOKED)
+  and expiry display to provide operators with token issuance history visibility. This task establishes the in-memory token
+  tracking mechanism that allows operators to monitor token lifecycle without persistent storage, maintaining security while
   providing operational visibility during the session.
 anti_patterns:
-  - "Storing tokens in localStorage or any persistent storage (must be in-memory only)"
-  - "Hardcoding status instead of calculating dynamically from expiry/usage/revoked flags"
-  - "Displaying more than 10 tokens in the list"
-  - "Not color-coding status chips according to UI canonical design rules"
+- Storing tokens in localStorage or any persistent storage (must be in-memory only)
+- Hardcoding status instead of calculating dynamically from expiry/usage/revoked flags
+- Displaying more than 10 tokens in the list
+- Not color-coding status chips according to UI canonical design rules
 depends_on:
-  - GF-W1-UI-004
+- GF-W1-UI-004
 blocks:
-  - GF-W1-UI-006
+- GF-W1-UI-006
 touches:
-  - src/supervisory-dashboard/index.html
-  - evidence/phase1/gf_w1_ui_005.json
-  - tasks/GF-W1-UI-005/meta.yml
+- src/supervisory-dashboard/index.html
+- evidence/phase1/gf_w1_ui_005.json
+- tasks/GF-W1-UI-005/meta.yml
 invariants: []
 work:
-  - '[ID gf_w1_ui_005_work_item_01] Create in-memory recentTokens array at top of script section'
-  - '[ID gf_w1_ui_005_work_item_02] Implement addToRecentTokens() function that unshifts new token, slices to 10 items, calls renderRecentTokens()'
-  - '[ID gf_w1_ui_005_work_item_03] Implement renderRecentTokens() function generating table rows for each token'
-  - '[ID gf_w1_ui_005_work_item_04] Add status calculation logic checking expiry time, usage flag, revoked flag to determine ACTIVE/EXPIRED/USED/REVOKED'
-  - '[ID gf_w1_ui_005_work_item_05] Add click handler to table rows calling showTokenDetail(tokenId)'
+- '[ID gf_w1_ui_005_work_item_01] Create in-memory recentTokens array at top of script section'
+- '[ID gf_w1_ui_005_work_item_02] Implement addToRecentTokens() function that unshifts new token, slices to 10 items, calls
+  renderRecentTokens()'
+- '[ID gf_w1_ui_005_work_item_03] Implement renderRecentTokens() function generating table rows for each token'
+- '[ID gf_w1_ui_005_work_item_04] Add status calculation logic checking expiry time, usage flag, revoked flag to determine
+  ACTIVE/EXPIRED/USED/REVOKED'
+- '[ID gf_w1_ui_005_work_item_05] Add click handler to table rows calling showTokenDetail(tokenId)'
 acceptance_criteria:
-  - '[ID gf_w1_ui_005_work_item_01] recentTokens array exists as in-memory variable, not in localStorage'
-  - '[ID gf_w1_ui_005_work_item_02] addToRecentTokens() maintains 10-item limit and triggers render'
-  - '[ID gf_w1_ui_005_work_item_03] renderRecentTokens() displays table with worker_id, expiry, status chip'
-  - '[ID gf_w1_ui_005_work_item_04] Status is calculated dynamically based on current time and token state'
-  - '[ID gf_w1_ui_005_work_item_05] Clicking row opens token detail panel'
+- '[ID gf_w1_ui_005_work_item_01] recentTokens array exists as in-memory variable, not in localStorage'
+- '[ID gf_w1_ui_005_work_item_02] addToRecentTokens() maintains 10-item limit and triggers render'
+- '[ID gf_w1_ui_005_work_item_03] renderRecentTokens() displays table with worker_id, expiry, status chip'
+- '[ID gf_w1_ui_005_work_item_04] Status is calculated dynamically based on current time and token state'
+- '[ID gf_w1_ui_005_work_item_05] Clicking row opens token detail panel'
 negative_tests:
-  - id: GF-W1-UI-005-N1
-    description: >-
-      Verify that tokens are NOT stored in localStorage or any persistent storage.
-      Grep for localStorage.setItem patterns in the token management code and confirm
-      none exist. Tokens must be in-memory only for security.
-    required: true
-  - id: GF-W1-UI-005-N2
-    description: >-
-      Verify that list never displays more than 10 tokens. Test by issuing 15 tokens
-      and confirming only the 10 most recent are displayed.
-    required: true
+- id: GF-W1-UI-005-N1
+  description: Verify that tokens are NOT stored in localStorage or any persistent storage. Grep for localStorage.setItem
+    patterns in the token management code and confirm none exist. Tokens must be in-memory only for security.
+  required: true
+- id: GF-W1-UI-005-N2
+  description: Verify that list never displays more than 10 tokens. Test by issuing 15 tokens and confirming only the 10 most
+    recent are displayed.
+  required: true
 positive_tests:
-  - id: GF-W1-UI-005-P1
-    description: >-
-      Verify that recent tokens list displays correctly with dynamic status calculation
-      and color-coded status chips.
-    required: true
+- id: GF-W1-UI-005-P1
+  description: Verify that recent tokens list displays correctly with dynamic status calculation and color-coded status chips.
+  required: true
 verification:
-  - grep -q 'recentTokens.*\[\]' src/supervisory-dashboard/index.html || exit 1
-  - grep -q 'renderRecentTokens' src/supervisory-dashboard/index.html || exit 1
-  - grep -q 'addToRecentTokens' src/supervisory-dashboard/index.html || exit 1
-  - '! grep -q "localStorage.*token" src/supervisory-dashboard/index.html || exit 1'
-  - test -f evidence/phase1/gf_w1_ui_005.json || exit 1
+- grep -q 'recentTokens.*\[\]' src/supervisory-dashboard/index.html || exit 1
+- grep -q 'renderRecentTokens' src/supervisory-dashboard/index.html || exit 1
+- grep -q 'addToRecentTokens' src/supervisory-dashboard/index.html || exit 1
+- '! grep -q "localStorage.*token" src/supervisory-dashboard/index.html || exit 1'
+- test -f evidence/phase1/gf_w1_ui_005.json || exit 1
 evidence:
-  - path: evidence/phase1/gf_w1_ui_005.json
-    must_include:
-      - task_id
-      - timestamp
-      - status
-      - recent_tokens_array_created
-      - add_function_implemented
-      - render_function_implemented
-      - status_calculation_logic_present
-      - click_handler_wired
-      - no_persistent_storage_confirmed
-      - checks
-      - observed_paths
-      - command_outputs
-      - execution_trace
+- path: evidence/phase1/gf_w1_ui_005.json
+  must_include:
+  - task_id
+  - timestamp
+  - status
+  - recent_tokens_array_created
+  - add_function_implemented
+  - render_function_implemented
+  - status_calculation_logic_present
+  - click_handler_wired
+  - no_persistent_storage_confirmed
+  - checks
+  - observed_paths
+  - command_outputs
+  - execution_trace
 failure_modes:
-  - "Tokens stored in localStorage => SECURITY.PERSISTENT_TOKEN_STORAGE => CRITICAL_FAIL"
-  - "Status not calculated dynamically => FUNCTIONAL.INCORRECT_STATUS_DISPLAY => FAIL"
-  - "More than 10 tokens displayed => UI.DESIGN_VIOLATION => FAIL"
-  - "Status chips not color-coded => UI.DESIGN_VIOLATION => FAIL"
+- Tokens stored in localStorage => SECURITY.PERSISTENT_TOKEN_STORAGE => CRITICAL_FAIL
+- Status not calculated dynamically => FUNCTIONAL.INCORRECT_STATUS_DISPLAY => FAIL
+- More than 10 tokens displayed => UI.DESIGN_VIOLATION => FAIL
+- Status chips not color-coded => UI.DESIGN_VIOLATION => FAIL
 must_read:
-  - docs/operations/AI_AGENT_OPERATION_MANUAL.md
-  - .kiro/steering/ui-canonical-design.md
-  - .kiro/steering/pwrm0001-domain-rules.md
+- docs/operations/AI_AGENT_OPERATION_MANUAL.md
+- .kiro/steering/ui-canonical-design.md
+- .kiro/steering/pwrm0001-domain-rules.md
+- docs/operations/AGENTIC_SDLC_PILOT_POLICY.md
 implementation_plan: docs/plans/phase1/GF-W1-UI-005/PLAN.md
 implementation_log: docs/plans/phase1/GF-W1-UI-005/EXEC_LOG.md
-notes: >-
-  This task implements in-memory token tracking for operational visibility. Tokens are
-  never persisted to localStorage for security. Status is calculated dynamically to reflect
-  current token state. 10-item limit prevents UI clutter. Color-coded status chips follow
-  UI canonical design rules. Phase: Green Finance Wave 1. Domain: green_finance.
+notes: 'This task implements in-memory token tracking for operational visibility. Tokens are never persisted to localStorage
+  for security. Status is calculated dynamically to reflect current token state. 10-item limit prevents UI clutter. Color-coded
+  status chips follow UI canonical design rules. Phase: Green Finance Wave 1. Domain: green_finance.'
 client: kiro
 assigned_agent: architect
 model: claude-sonnet-4-20250514
 domain: green_finance
 pilot: true
-second_pilot_test: >-
-  The recent tokens list pattern with dynamic status calculation works for any programme
-  requiring session-based token tracking. For PWRM0001 plastic collection, the list shows
-  tokens issued to waste collectors. For a hypothetical VM0044 solar energy programme, the
-  list would show tokens issued to solar technicians. The status calculation logic
-  (ACTIVE/EXPIRED/USED/REVOKED) and 10-item limit are identical; only the worker_id display
-  format differs per programme. The in-memory storage pattern prevents token persistence
-  regardless of programme type.
+second_pilot_test: The recent tokens list pattern with dynamic status calculation works for any programme requiring session-based
+  token tracking. For PWRM0001 plastic collection, the list shows tokens issued to waste collectors. For a hypothetical VM0044
+  solar energy programme, the list would show tokens issued to solar technicians. The status calculation logic (ACTIVE/EXPIRED/USED/REVOKED)
+  and 10-item limit are identical; only the worker_id display format differs per programme. The in-memory storage pattern
+  prevents token persistence regardless of programme type.
 pilot_scope_ref: docs/pilots/PILOT_PWRM0001/SCOPE.md

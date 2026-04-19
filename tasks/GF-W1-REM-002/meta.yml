@@ -1,145 +1,116 @@
 schema_version: 1
 phase: '1'
 task_id: GF-W1-REM-002
-title: "Remove rogue migration names and fake verifier references from GF-W1-FNC-001 through GF-W1-FNC-007A task meta.yml files so that task contracts accurately reflect the correct implementation targets"
+title: Remove rogue migration names and fake verifier references from GF-W1-FNC-001 through GF-W1-FNC-007A task meta.yml files
+  so that task contracts accurately reflect the correct implementation targets
 owner_role: Architect
 status: completed
 priority: HIGH
 risk_class: GOVERNANCE
 blast_radius: DOCS_ONLY
-
-intent: >-
-  The rogue agent poisoned the touches:, work:, acceptance_criteria:, and verification:
-  fields in seven GF Wave 1 functional task meta.yml files with wrong migration filenames
-  (e.g. 0107_gf_register_activate_project.sql instead of 0107_gf_fn_project_registration.sql)
-  and wrong verifier names (verify_gf_w1_fnc_*.sh instead of verify_gf_fnc_*.sh).
-  These meta.yml files are the governance contracts for Wave 5 implementation. If they
-  contain wrong filenames the task readiness checker and scope enforcement will block or
-  mislead any implementing agent. All seven must be corrected to name the canonical
-  migration files and the pre_ci-registered verifier scripts.
-
+intent: 'The rogue agent poisoned the touches:, work:, acceptance_criteria:, and verification: fields in seven GF Wave 1 functional
+  task meta.yml files with wrong migration filenames (e.g. 0107_gf_register_activate_project.sql instead of 0107_gf_fn_project_registration.sql)
+  and wrong verifier names (verify_gf_w1_fnc_*.sh instead of verify_gf_fnc_*.sh). These meta.yml files are the governance
+  contracts for Wave 5 implementation. If they contain wrong filenames the task readiness checker and scope enforcement will
+  block or mislead any implementing agent. All seven must be corrected to name the canonical migration files and the pre_ci-registered
+  verifier scripts.'
 anti_patterns:
-  - Accepting rogue migration names as valid without grep verification
-  - "Updating only the touches: field and leaving work: or acceptance_criteria: stale"
-  - Marking complete without emitting evidence
-
+- Accepting rogue migration names as valid without grep verification
+- 'Updating only the touches: field and leaving work: or acceptance_criteria: stale'
+- Marking complete without emitting evidence
 out_of_scope:
-  - Modifying the GF-W1-FNC-007B meta.yml (owned by Security Guardian — see GF-W1-REM-004)
-  - Changing any functional acceptance criteria beyond fixing the filename references
-  - Modifying migration SQL content
-
+- Modifying the GF-W1-FNC-007B meta.yml (owned by Security Guardian — see GF-W1-REM-004)
+- Changing any functional acceptance criteria beyond fixing the filename references
+- Modifying migration SQL content
 stop_conditions:
-  - If a meta.yml references a migration filename that cannot be mapped to the canonical
-    correct name — stop and escalate before overwriting
-
+- If a meta.yml references a migration filename that cannot be mapped to the canonical correct name — stop and escalate before
+  overwriting
 proof_guarantees:
-  - grep confirms zero rogue migration names or verify_gf_w1_fnc_* refs in all 7 meta.yml files
-  - Each meta.yml touches: lists the correct canonical migration filename per the mapping table
-
+- grep confirms zero rogue migration names or verify_gf_w1_fnc_* refs in all 7 meta.yml files
+- Each meta.yml touches: lists the correct canonical migration filename per the mapping table
 proof_limitations:
-  - Does not verify that the listed migration files actually exist or are correctly implemented
-  - Does not validate the full meta.yml schema — only the affected filename fields
-
+- Does not verify that the listed migration files actually exist or are correctly implemented
+- Does not validate the full meta.yml schema — only the affected filename fields
 depends_on: []
-
 blocks:
-  - GF-W1-FNC-001
-  - GF-W1-FNC-002
-  - GF-W1-FNC-003
-  - GF-W1-FNC-004
-  - GF-W1-FNC-005
-  - GF-W1-FNC-006
-  - GF-W1-FNC-007A
-  - GF-W1-REM-003
-
+- GF-W1-FNC-001
+- GF-W1-FNC-002
+- GF-W1-FNC-003
+- GF-W1-FNC-004
+- GF-W1-FNC-005
+- GF-W1-FNC-006
+- GF-W1-FNC-007A
+- GF-W1-REM-003
 touches:
-  - tasks/GF-W1-REM-002/meta.yml
-  - docs/plans/phase1/GF-W1-REM-002/PLAN.md
-  - docs/plans/phase1/GF-W1-REM-002/EXEC_LOG.md
-  - tasks/GF-W1-FNC-001/meta.yml
-  - tasks/GF-W1-FNC-002/meta.yml
-  - tasks/GF-W1-FNC-003/meta.yml
-  - tasks/GF-W1-FNC-004/meta.yml
-  - tasks/GF-W1-FNC-005/meta.yml
-  - tasks/GF-W1-FNC-006/meta.yml
-  - tasks/GF-W1-FNC-007A/meta.yml
-  - scripts/audit/verify_gf_w1_rem_002.sh
-  - evidence/phase1/gf_w1_rem_002.json
-
+- tasks/GF-W1-REM-002/meta.yml
+- docs/plans/phase1/GF-W1-REM-002/PLAN.md
+- docs/plans/phase1/GF-W1-REM-002/EXEC_LOG.md
+- tasks/GF-W1-FNC-001/meta.yml
+- tasks/GF-W1-FNC-002/meta.yml
+- tasks/GF-W1-FNC-003/meta.yml
+- tasks/GF-W1-FNC-004/meta.yml
+- tasks/GF-W1-FNC-005/meta.yml
+- tasks/GF-W1-FNC-006/meta.yml
+- tasks/GF-W1-FNC-007A/meta.yml
+- scripts/audit/verify_gf_w1_rem_002.sh
+- evidence/phase1/gf_w1_rem_002.json
 invariants:
-  - INV-GF-001
-
+- INV-GF-001
 work:
-  - >-
-    [ID GF-W1-REM-002] For each of the 7 meta.yml files (FNC-001 through FNC-007A),
-    grep for rogue patterns: verify_gf_w1_fnc_00[1-7], 0107_gf_register,
-    0108_gf_record_monitoring, 0109_gf_attach, 0110_gf_authority, 0084_gf_asset,
-    0086_gf_verifier, 0104_gf_confidence. If any match is found, replace with the
-    correct canonical filename per the migration mapping table.
-  - >-
-    [ID GF-W1-REM-002] Verify that each corrected meta.yml touches: block lists
-    the canonical migration file and the pre_ci-registered verifier
-    (scripts/db/verify_gf_fnc_*.sh or scripts/audit/verify_gf_fnc_007a.sh).
-  - >-
-    [ID GF-W1-REM-002] Run verify_gf_w1_rem_002.sh to emit evidence/phase1/gf_w1_rem_002.json
-    with status PASS and stale_refs_found equal to 0.
-
+- '[ID GF-W1-REM-002] For each of the 7 meta.yml files (FNC-001 through FNC-007A), grep for rogue patterns: verify_gf_w1_fnc_00[1-7],
+  0107_gf_register, 0108_gf_record_monitoring, 0109_gf_attach, 0110_gf_authority, 0084_gf_asset, 0086_gf_verifier, 0104_gf_confidence.
+  If any match is found, replace with the correct canonical filename per the migration mapping table.'
+- '[ID GF-W1-REM-002] Verify that each corrected meta.yml touches: block lists the canonical migration file and the pre_ci-registered
+  verifier (scripts/db/verify_gf_fnc_*.sh or scripts/audit/verify_gf_fnc_007a.sh).'
+- '[ID GF-W1-REM-002] Run verify_gf_w1_rem_002.sh to emit evidence/phase1/gf_w1_rem_002.json with status PASS and stale_refs_found
+  equal to 0.'
 acceptance_criteria:
-  - >-
-    [ID GF-W1-REM-002] grep for rogue patterns across all 7 meta.yml files returns
-    zero matches and exits non-zero.
-  - >-
-    [ID GF-W1-REM-002] bash scripts/audit/verify_gf_w1_rem_002.sh exits 0 and
-    evidence/phase1/gf_w1_rem_002.json contains status=PASS and stale_refs_found=0.
-
+- '[ID GF-W1-REM-002] grep for rogue patterns across all 7 meta.yml files returns zero matches and exits non-zero.'
+- '[ID GF-W1-REM-002] bash scripts/audit/verify_gf_w1_rem_002.sh exits 0 and evidence/phase1/gf_w1_rem_002.json contains status=PASS
+  and stale_refs_found=0.'
 negative_tests:
-  - id: GF-W1-REM-002-N1
-    description: >-
-      A meta.yml still containing the string "verify_gf_w1_fnc_002.sh" must cause
-      verify_gf_w1_rem_002.sh to exit 1 with a FAIL message naming the offending file.
-    required: true
-
+- id: GF-W1-REM-002-N1
+  description: A meta.yml still containing the string "verify_gf_w1_fnc_002.sh" must cause verify_gf_w1_rem_002.sh to exit
+    1 with a FAIL message naming the offending file.
+  required: true
 positive_tests:
-  - id: GF-W1-REM-002-P1
-    description: >-
-      All 7 meta.yml files with rogue refs cleared cause verify_gf_w1_rem_002.sh to
-      exit 0 PASS and emit a valid evidence JSON.
-    required: false
-
+- id: GF-W1-REM-002-P1
+  description: All 7 meta.yml files with rogue refs cleared cause verify_gf_w1_rem_002.sh to exit 0 PASS and emit a valid
+    evidence JSON.
+  required: false
 verification:
-  - bash scripts/audit/verify_gf_w1_rem_002.sh
-  - python3 scripts/audit/validate_evidence.py --task GF-W1-REM-002 --evidence evidence/phase1/gf_w1_rem_002.json
-  - bash scripts/dev/pre_ci.sh
-
+- bash scripts/audit/verify_gf_w1_rem_002.sh
+- python3 scripts/audit/validate_evidence.py --task GF-W1-REM-002 --evidence evidence/phase1/gf_w1_rem_002.json
+- bash scripts/dev/pre_ci.sh
 evidence:
-  - path: evidence/phase1/gf_w1_rem_002.json
-    must_include:
-      - task_id
-      - git_sha
-      - timestamp_utc
-      - status
-      - files_checked
-      - stale_refs_found
-      - files_audited
-
+- path: evidence/phase1/gf_w1_rem_002.json
+  must_include:
+  - task_id
+  - git_sha
+  - timestamp_utc
+  - status
+  - files_checked
+  - stale_refs_found
+  - files_audited
 failure_modes:
-  - "Any rogue migration name or verify_gf_w1_fnc_* ref remaining in a meta.yml => FAIL"
-  - "Evidence file missing or stale_refs_found > 0 in evidence => FAIL"
-  - "Task marked completed without running verify_gf_w1_rem_002.sh => BLOCKED"
-
+- Any rogue migration name or verify_gf_w1_fnc_* ref remaining in a meta.yml => FAIL
+- Evidence file missing or stale_refs_found > 0 in evidence => FAIL
+- Task marked completed without running verify_gf_w1_rem_002.sh => BLOCKED
 must_read:
-  - docs/operations/AI_AGENT_OPERATION_MANUAL.md
-  - docs/operations/AGENTIC_SDLC_PILOT_POLICY.md
-  - AGENT_ENTRYPOINT.md
-
+- docs/operations/AI_AGENT_OPERATION_MANUAL.md
+- docs/operations/AGENTIC_SDLC_PILOT_POLICY.md
+- AGENT_ENTRYPOINT.md
 implementation_plan: docs/plans/phase1/GF-W1-REM-002/PLAN.md
 implementation_log: docs/plans/phase1/GF-W1-REM-002/EXEC_LOG.md
-
-notes: >-
-  Provides governance coverage for meta.yml corrections already applied without approval.
-  The verifier confirms the correct final state. GF-W1-FNC-007B is intentionally excluded
-  (Security Guardian task — covered by GF-W1-REM-004).
-
+notes: Provides governance coverage for meta.yml corrections already applied without approval. The verifier confirms the correct
+  final state. GF-W1-FNC-007B is intentionally excluded (Security Guardian task — covered by GF-W1-REM-004).
 client: codex_ide
 assigned_agent: architect
 model: <UNASSIGNED>
+second_pilot_test: 'This remediation task replaces rogue migration filenames and fake verifier references in seven GF-W1-FNC
+  task meta.yml files. The corrections are purely governance metadata changes — fixing wrong filenames to canonical ones.
+  The operation is sector-agnostic: the same filename corrections apply identically regardless of whether the downstream functions
+  serve PWRM0001 plastic collection or VM0044 solar energy. No domain-specific logic is modified.'
+pilot_scope_ref: not_applicable
+domain: green_finance
+pilot: false

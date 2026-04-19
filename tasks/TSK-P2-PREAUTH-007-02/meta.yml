@@ -1,7 +1,7 @@
 schema_version: 1
 phase: '2'
 task_id: TSK-P2-PREAUTH-007-02
-title: "Register INV-171 execution truth anchoring"
+title: "Register INV-175 (data_authority_enforced)"
 owner_role: INVARIANTS_CURATOR
 status: planned
 priority: HIGH
@@ -9,9 +9,9 @@ risk_class: GOVERNANCE
 blast_radius: DOCS_ONLY
 
 intent: >-
-  This task registers INV-171 for execution truth anchoring via interpretation_version_id FK.
-  Without this invariant, execution truth anchoring is not governed, creating risk of
-  non-reproducible calculations.
+  This task registers INV-175 for data_authority_enforced via ENUM and triggers.
+  Without this invariant, data authority enforcement is not governed, creating risk of
+  non-auditable data usage.
 
 anti_patterns:
   - "Registering invariant without verification_command"
@@ -19,19 +19,19 @@ anti_patterns:
   - "Writing the verifier after registration"
 
 out_of_scope:
-  - "Other invariant registrations (deferred to TSK-P2-PREAUTH-007-03 through 007-05)"
+  - "Other invariant registrations (deferred to TSK-P2-PREAUTH-007-03 through 007-04)"
   - "Verifier implementation"
 
 stop_conditions:
-  - "If INV-171 is not added to INVARIANTS_MANIFEST.yml"
-  - "If status is not set to draft"
-  - "If enforcement_location is not set to schema/migrations/0118"
+  - "If INV-175 is not added to INVARIANTS_MANIFEST.yml"
+  - "If status is not set to implemented"
+  - "If enforcement is not set to scripts/db/verify_tsk_p2_preauth_006a.sh"
 
 proof_guarantees:
-  - "INV-171 exists in INVARIANTS_MANIFEST.yml"
-  - "INV-171 has status: draft"
-  - "INV-171 has enforcement_location: schema/migrations/0118"
-  - "INV-171 has verification_command"
+  - "INV-175 exists in INVARIANTS_MANIFEST.yml"
+  - "INV-175 has status: implemented"
+  - "INV-175 has enforcement: scripts/db/verify_tsk_p2_preauth_006a.sh"
+  - "INV-175 has severity: P0"
   - "Verifier script exits 0 and emits evidence"
 
 proof_limitations:
@@ -49,41 +49,41 @@ touches:
   - tasks/TSK-P2-PREAUTH-007-02/meta.yml
 
 invariants:
-  - INV-171
+  - INV-175
 
 work:
   - >-
-    [ID tsk_p2_preauth_007_02_work_item_01] Add INV-171 to INVARIANTS_MANIFEST.yml with:
-    id: INV-171, title: execution truth anchoring, status: draft,
-    enforcement_location: schema/migrations/0118, verification_command: grep -E 'interpretation_version_id.*REFERENCES.*interpretation_packs' schema/migrations/0118.
+    [ID tsk_p2_preauth_007_02_work_item_01] Add INV-175 to INVARIANTS_MANIFEST.yml with:
+    id: INV-175, title: 'data_authority is schema-enforced via ENUM and triggers',
+    status: implemented, severity: P0, enforcement: scripts/db/verify_tsk_p2_preauth_006a.sh.
   - >-
-    [ID tsk_p2_preauth_007_02_work_item_02] Write verify_tsk_p2_preauth_007_02.sh that runs grep to verify
-    INV-171 exists in INVARIANTS_MANIFEST.yml with correct fields.
+    [ID tsk_p2_preauth_007_02_work_item_02] Write verify_tsk_p2_preauth_007_02.sh that runs
+    verify_tsk_p2_preauth_006a.sh to verify INV-175 enforcement.
   - >-
     [ID tsk_p2_preauth_007_02_work_item_03] Run verify_tsk_p2_preauth_007_02.sh to confirm invariant is registered correctly.
 
 acceptance_criteria:
   - >-
-    [ID tsk_p2_preauth_007_02_work_item_01] INV-171 exists in INVARIANTS_MANIFEST.yml.
+    [ID tsk_p2_preauth_007_02_work_item_01] INV-175 exists in INVARIANTS_MANIFEST.yml.
   - >-
-    [ID tsk_p2_preauth_007_02_work_item_01] INV-171 has status: draft.
+    [ID tsk_p2_preauth_007_02_work_item_01] INV-175 has status: implemented.
   - >-
-    [ID tsk_p2_preauth_007_02_work_item_01] INV-171 has enforcement_location: schema/migrations/0118.
+    [ID tsk_p2_preauth_007_02_work_item_01] INV-175 has enforcement: scripts/db/verify_tsk_p2_preauth_006a.sh.
   - >-
-    [ID tsk_p2_preauth_007_02_work_item_02] verify_tsk_p2_preauth_007_02.sh exists and checks for invariant.
+    [ID tsk_p2_preauth_007_02_work_item_02] verify_tsk_p2_preauth_007_02.sh exists and checks invariant.
   - >-
     [ID tsk_p2_preauth_007_02_work_item_03] verify_tsk_p2_preauth_007_02.sh exits 0.
 
 negative_tests:
   - id: TSK-P2-PREAUTH-007-02-N1
     description: >-
-      Verify that verify_tsk_p2_preauth_007_02.sh exits non-zero when INV-171 does not exist in INVARIANTS_MANIFEST.yml.
+      Verify that verify_tsk_p2_preauth_007_02.sh exits non-zero when INV-175 does not exist in INVARIANTS_MANIFEST.yml.
     required: true
 
 positive_tests:
   - id: TSK-P2-PREAUTH-007-02-P1
     description: >-
-      Verify that verify_tsk_p2_preauth_007_02.sh exits 0 when INV-171 exists with correct fields.
+      Verify that verify_tsk_p2_preauth_007_02.sh exits 0 when INV-175 exists with correct fields.
     required: false
 
 verification:
@@ -92,8 +92,9 @@ verification:
     # [ID tsk_p2_preauth_007_02_work_item_03]
     test -x scripts/audit/verify_tsk_p2_preauth_007_02.sh && bash scripts/audit/verify_tsk_p2_preauth_007_02.sh > evidence/phase2/tsk_p2_preauth_007_02.json || exit 1
   - >-
-    grep -A 5 "id: INV-171" docs/invariants/INVARIANTS_MANIFEST.yml | grep -q "status: draft" &&
-    grep -A 5 "id: INV-171" docs/invariants/INVARIANTS_MANIFEST.yml | grep -q "enforcement_location" || exit 1
+    # [ID tsk_p2_preauth_007_02_work_item_01]
+    grep -A 5 "id: INV-175" docs/invariants/INVARIANTS_MANIFEST.yml | grep -q "status: implemented" &&
+    grep -A 5 "id: INV-175" docs/invariants/INVARIANTS_MANIFEST.yml | grep -q "enforcement" || exit 1
   - >-
     # [ID tsk_p2_preauth_007_02_work_item_03]
     test -f evidence/phase2/tsk_p2_preauth_007_02.json || exit 1
@@ -106,12 +107,12 @@ evidence:
       - timestamp_utc
       - status
       - checks
-      - inv_171_registered
-      - inv_171_status_draft
+      - inv_175_registered
+      - inv_175_status_implemented
 
 failure_modes:
-  - "INV-171 not registered => CRITICAL_FAIL"
-  - "INV-171 status not draft => FAIL"
+  - "INV-175 not registered => CRITICAL_FAIL"
+  - "INV-175 status not implemented => FAIL"
   - "Evidence file missing => FAIL"
 
 must_read:

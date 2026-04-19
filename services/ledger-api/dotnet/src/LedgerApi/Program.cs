@@ -2078,11 +2078,11 @@ async Task SeedDemoInstructions(ILogger l)
 {
     try
     {
-        const string DemoTenantId = "11111111-1111-1111-1111-111111111111";
-        const string PgmZambiaGrn = "PGM-ZAMBIA-GRN-001";
+        // const string DemoTenantId = "11111111-1111-1111-1111-111111111111";  // Unused while seeding is disabled
+        // const string PgmZambiaGrn = "PGM-ZAMBIA-GRN-001";                   // Unused while seeding is disabled
 
-        var workerChunga001Id = CreateStableGuid("worker-chunga-001").ToString();
-        var workerChunga002Id = CreateStableGuid("worker-chunga-002").ToString();
+        // var workerChunga001Id = CreateStableGuid("worker-chunga-001").ToString();  // Unused while seeding is disabled
+        // var workerChunga002Id = CreateStableGuid("worker-chunga-002").ToString();  // Unused while seeding is disabled
 
         l.LogInformation("Auto-seeding demo instructions DISABLED for testing.");
 

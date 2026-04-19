@@ -1,10 +1,10 @@
 {
   "baseline_date": "2026-04-18",
   "baseline_path": "/home/mwiza/workspaces/Symphony-Demo/Symphony/schema/baselines/2026-04-18/0001_baseline.sql",
-  "baseline_cutoff": "0120_create_state_transitions.sql",
-  "normalized_schema_sha256": "e9a5ca9b72b9968cb19d1c2c163b2b0256d569b5332c570a15360e4f16d7e3c3",
+  "baseline_cutoff": "0122_create_data_authority_triggers.sql",
+  "normalized_schema_sha256": "47d40bf97a01e63c8186b30cf17b175f4f71deb4ae05d048798a8b6ce478e190",
   "pg_dump_version": "pg_dump (PostgreSQL) 18.3 (Debian 18.3-1.pgdg13+1)",
   "pg_server_version": "18.3 (Debian 18.3-1.pgdg13+1)",
   "dump_source": "container:symphony-postgres",
-  "generated_at_utc": "2026-04-18T10:24:57.973114+00:00"
+  "generated_at_utc": "2026-04-18T22:42:23.955806+00:00"
 }
