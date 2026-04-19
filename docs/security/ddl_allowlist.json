@@ -768,12 +768,21 @@
         },
         {
             "id": "DDL-ALLOW-0107",
-            "migration_file": "schema/migrations/0128_taxonomy_aligned.sql",
-            "statement_fingerprint": "alter table public.projects add column taxonomy_aligned boolean",
+            "migration": "schema/migrations/0128_taxonomy_aligned.sql",
+            "statement_fingerprint": "9431c4c28b03c36694ede3a17a9ec5b1904efb76f7f5157c876d46b6d97d02fa",
             "reason": "Wave 8 regulatory extension: adds taxonomy_aligned column for K13 taxonomy alignment checking. Follows expand/contract pattern: add as nullable, backfill, then add NOT NULL constraint.",
-            "expiration_date": "2026-06-01",
-            "reviewer": "mwiza",
-            "approval_date": "2026-04-19"
+            "expires_on": "2026-06-01",
+            "reviewed_by": "mwiza",
+            "approved_at": "2026-04-19"
+        },
+        {
+            "id": "DDL-ALLOW-0108",
+            "migration": "schema/migrations/0128_taxonomy_aligned.sql",
+            "statement_fingerprint": "e84c15f1574dd5844bec9af1d173b8ab0954d18b1b1b41e9dc0461e96616b11f",
+            "reason": "Wave 8 regulatory extension: SET NOT NULL constraint on taxonomy_aligned column after backfill. Part of expand/contract pattern.",
+            "expires_on": "2026-06-01",
+            "reviewed_by": "mwiza",
+            "approved_at": "2026-04-19"
         }
     ]
 }
