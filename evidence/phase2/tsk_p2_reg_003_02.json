@@ -1,0 +1,48 @@
+{
+  "task_id": "TSK-P2-REG-003-02",
+  "git_sha": "955bb8df54740ba1badf35f09f356f67b228a67f",
+  "timestamp_utc": "2026-04-19T08:55:09Z",
+  "status": "passed",
+  "checks": [
+    {
+      "check_id": "migration_file_exists",
+      "status": "pass"
+    },
+    {
+      "check_id": "migration_head_correct",
+      "status": "pass"
+    },
+    {
+      "check_id": "table_definition_present",
+      "status": "pass"
+    },
+    {
+      "check_id": "geometry_type_correct",
+      "status": "pass"
+    },
+    {
+      "check_id": "gist_index_exists",
+      "status": "pass"
+    },
+    {
+      "check_id": "append_only_trigger",
+      "status": "pass"
+    },
+    {
+      "check_id": "revoke_first_privileges",
+      "status": "pass"
+    }
+  ],
+  "table_exists": true,
+  "geometry_type_correct": true,
+  "gist_index_exists": true,
+  "append_only_trigger": true,
+  "migration_head": "0126",
+  "observed_paths": [
+    "schema/migrations/0126_protected_areas.sql",
+    "schema/migrations/MIGRATION_HEAD"
+  ],
+  "observed_hashes": {},
+  "command_outputs": [],
+  "execution_trace": []
+}

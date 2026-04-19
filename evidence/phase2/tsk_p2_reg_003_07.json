@@ -1,0 +1,32 @@
+{
+  "task_id": "TSK-P2-REG-003-07",
+  "git_sha": "955bb8df54740ba1badf35f09f356f67b228a67f",
+  "timestamp_utc": "2026-04-19T09:07:01Z",
+  "status": "passed",
+  "checks": [
+    {
+      "check_id": "inv_178_exists",
+      "status": "pass"
+    },
+    {
+      "check_id": "inv_178_implemented",
+      "status": "pass"
+    },
+    {
+      "check_id": "inv_178_severity_p0",
+      "status": "pass"
+    },
+    {
+      "check_id": "inv_178_title_correct",
+      "status": "pass"
+    }
+  ],
+  "inv_178_registered": true,
+  "inv_178_status": "implemented",
+  "observed_paths": [
+    "docs/invariants/INVARIANTS_MANIFEST.yml"
+  ],
+  "observed_hashes": {},
+  "command_outputs": [],
+  "execution_trace": []
+}

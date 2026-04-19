@@ -1,0 +1,47 @@
+{
+  "task_id": "TSK-P2-REG-003-06",
+  "git_sha": "955bb8df54740ba1badf35f09f356f67b228a67f",
+  "timestamp_utc": "2026-04-19T09:04:05Z",
+  "status": "passed",
+  "checks": [
+    {
+      "check_id": "migration_file_exists",
+      "status": "pass"
+    },
+    {
+      "check_id": "migration_head_correct",
+      "status": "pass"
+    },
+    {
+      "check_id": "function_definition_present",
+      "status": "pass"
+    },
+    {
+      "check_id": "security_definer",
+      "status": "pass"
+    },
+    {
+      "check_id": "hardened_search_path",
+      "status": "pass"
+    },
+    {
+      "check_id": "gf060_error_code",
+      "status": "pass"
+    },
+    {
+      "check_id": "trigger_attached",
+      "status": "pass"
+    }
+  ],
+  "function_exists": true,
+  "security_definer": true,
+  "trigger_attached": true,
+  "migration_head": "0130",
+  "observed_paths": [
+    "schema/migrations/0130_k13_taxonomy_alignment_trigger.sql",
+    "schema/migrations/MIGRATION_HEAD"
+  ],
+  "observed_hashes": {},
+  "command_outputs": [],
+  "execution_trace": []
+}
