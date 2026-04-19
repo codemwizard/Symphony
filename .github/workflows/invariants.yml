@@ -172,7 +172,7 @@ jobs:
         if: github.event_name != 'schedule'
         run: |
           chmod +x scripts/audit/verify_task_plans_present.sh
-          scripts/audit/verify_task_plans_present.sh
+          PRE_CI_CONTEXT=1 scripts/audit/verify_task_plans_present.sh
 
       - name: Verify agent conformance
         if: github.event_name != 'schedule'
