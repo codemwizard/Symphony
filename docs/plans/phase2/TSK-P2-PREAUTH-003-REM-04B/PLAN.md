@@ -43,8 +43,7 @@ The three surfaces must agree on the enforcement/verification pointers; divergen
 |------|--------|--------|
 | `docs/architecture/THREAT_MODEL.md` | MODIFY | Append `execution-record tamper` threat entry referencing INV-EXEC-TRUTH-001 |
 | `docs/architecture/COMPLIANCE_MAP.md` | MODIFY | Append audit-control row referencing INV-EXEC-TRUTH-001 |
-| `scripts/audit/verify_invariant_exec_truth_001_security_docs.sh` | CREATE | Grep-based verifier emitting evidence JSON |
-| `evidence/phase2/tsk_p2_preauth_003_rem_04b.json` | CREATE | Emitted by the security-docs verifier |
+| `evidence/phase2/tsk_p2_preauth_003_rem_04b.json` | CREATE | Emitted by the security-docs verifier (verifier script authored by REM-04 under INVARIANTS_CURATOR) |
 | `tasks/TSK-P2-PREAUTH-003-REM-04B/meta.yml` | CREATE | Task meta |
 | `docs/plans/phase2/TSK-P2-PREAUTH-003-REM-04B/PLAN.md` | CREATE | This document |
 | `docs/plans/phase2/TSK-P2-PREAUTH-003-REM-04B/EXEC_LOG.md` | CREATE | Append-only record |
@@ -53,6 +52,7 @@ The three surfaces must agree on the enforcement/verification pointers; divergen
 - `docs/invariants/**` (INVARIANTS_CURATOR only, covered by REM-04).
 - `scripts/db/**` (DB_FOUNDATION only).
 - `scripts/dev/pre_ci.sh` and `scripts/audit/run_invariants_fast_checks.sh` (CI wiring is REM-05B).
+- `scripts/audit/**` (INVARIANTS_CURATOR / SECURITY_GUARDIAN territory; verifier script authored by REM-04).
 
 ---
 
@@ -60,7 +60,7 @@ The three surfaces must agree on the enforcement/verification pointers; divergen
 
 - `docs/invariants/INVARIANTS_MANIFEST.yml` lacks the INV-EXEC-TRUTH-001 block — STOP, REM-04 has not landed.
 - `scripts/db/verify_execution_truth_anchor.sh` is missing — STOP, REM-05 has not landed.
-- Edit lands in `docs/invariants/**` or `scripts/db/**` — STOP (path-authority violation).
+- Edit lands in `docs/invariants/**`, `scripts/db/**`, or `scripts/audit/**` — STOP (path-authority violation; `scripts/audit/**` is INVARIANTS_CURATOR / SECURITY_GUARDIAN territory, not ARCHITECT).
 - Threat entry references a lifecycle / retry / state-machine threat — STOP, that is the lifecycle REM's surface, not Wave 3.
 
 ---
@@ -86,16 +86,9 @@ The three surfaces must agree on the enforcement/verification pointers; divergen
 
 **Acceptance:** `grep -q 'INV-EXEC-TRUTH-001' docs/architecture/COMPLIANCE_MAP.md` returns 0.
 
-### Step 3: Author the security-docs verifier
+### Step 3: Run the security-docs verifier (authored by REM-04)
 
-**What:** `[ID tsk_p2_preauth_003_rem_04b_work_item_03]` Create `scripts/audit/verify_invariant_exec_truth_001_security_docs.sh`:
-
-1. `#!/usr/bin/env bash` + `set -Eeuo pipefail`.
-2. Assert both files exist.
-3. Grep for `execution-record tamper` and `INV-EXEC-TRUTH-001` in THREAT_MODEL.md.
-4. Grep for `INV-EXEC-TRUTH-001` in COMPLIANCE_MAP.md.
-5. Emit `evidence/phase2/tsk_p2_preauth_003_rem_04b.json` with `task_id`, `git_sha`, `timestamp_utc`, `status`, `checks`, `observed_paths`, `observed_hashes` (SHA-256 of each surface), `command_outputs` (grep results), `execution_trace`, `threat_model_present` (bool), `compliance_map_present` (bool).
-6. Exit 0 iff both booleans are true.
+**What:** The verifier script `scripts/audit/verify_invariant_exec_truth_001_security_docs.sh` is authored by REM-04 (INVARIANTS_CURATOR) because `scripts/audit/**` is outside ARCHITECT's allowed paths per AGENTS.md. REM-04B's responsibility is to ensure the docs/architecture/** surfaces are populated so the verifier passes.
 
 **Acceptance:** `PRE_CI_CONTEXT=1 bash scripts/audit/verify_invariant_exec_truth_001_security_docs.sh` exits 0 and the evidence JSON parses with `jq -e '.status == "PASS"'`.
 

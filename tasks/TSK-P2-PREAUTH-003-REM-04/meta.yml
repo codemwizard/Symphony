@@ -60,6 +60,7 @@ touches:
   - docs/invariants/INVARIANTS_MANIFEST.yml
   - docs/invariants/INVARIANTS_IMPLEMENTED.md
   - scripts/audit/verify_invariant_exec_truth_001_registration.sh
+  - scripts/audit/verify_invariant_exec_truth_001_security_docs.sh
   - evidence/phase2/tsk_p2_preauth_003_rem_04.json
   - tasks/TSK-P2-PREAUTH-003-REM-04/meta.yml
   - docs/plans/phase2/TSK-P2-PREAUTH-003-REM-04/PLAN.md
@@ -79,6 +80,13 @@ work:
     that confirms the manifest block exists, enforcement path resolves to a file on disk, verification path resolves to an evidence JSON whose
     run_id is not older than the latest git HEAD SHA in the evidence file, and emits evidence/phase2/tsk_p2_preauth_003_rem_04.json
     carrying manifest_present, enforcement_path_resolves, verification_evidence_fresh proof fields.
+  - >-
+    [ID tsk_p2_preauth_003_rem_04_work_item_03] Author scripts/audit/verify_invariant_exec_truth_001_security_docs.sh
+    that greps for 'execution-record tamper' and 'INV-EXEC-TRUTH-001' in docs/architecture/THREAT_MODEL.md and for 'INV-EXEC-TRUTH-001' in
+    docs/architecture/COMPLIANCE_MAP.md. Emit evidence/phase2/tsk_p2_preauth_003_rem_04b.json carrying
+    task_id, git_sha, timestamp_utc, status, checks, observed_paths, observed_hashes, command_outputs,
+    execution_trace, threat_model_present, compliance_map_present. This work item was moved from REM-04B
+    because scripts/audit/** is in INVARIANTS_CURATOR's allowed paths (AGENTS.md:35) but not ARCHITECT's.
 
 acceptance_criteria:
   - >-

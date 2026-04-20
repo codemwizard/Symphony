@@ -43,5 +43,20 @@ remediation_casefile: docs/plans/remediation/REM-2026-04-20_execution-truth-anch
   - `scripts/agent/verify_task_meta_schema.sh --mode strict`
   - `scripts/agent/verify_task_pack_readiness.sh --task TSK-P2-PREAUTH-003-REM-04B`
 
+### 2026-04-20T12:00:00Z — Path-authority fix: verifier script moved to REM-04
+
+- Trigger: Devin Review bug catcher flagged that `scripts/audit/verify_invariant_exec_truth_001_security_docs.sh`
+  is under `scripts/audit/**`, which is not in ARCHITECT's allowed paths per AGENTS.md:55.
+  INVARIANTS_CURATOR (AGENTS.md:35) and SECURITY_GUARDIAN (AGENTS.md:41) own `scripts/audit/**`.
+- Resolution: moved work_item_03 (verifier script authorship) from REM-04B to REM-04
+  (INVARIANTS_CURATOR). REM-04B retains only the two docs/architecture/** documentation
+  work items (threat entry + compliance row). The verifier is authored by REM-04 and
+  consumed by REM-04B at verification time.
+- Updated: `tasks/TSK-P2-PREAUTH-003-REM-04B/meta.yml` (removed script from touches/work),
+  `tasks/TSK-P2-PREAUTH-003-REM-04/meta.yml` (added script to touches/work),
+  `docs/plans/phase2/TSK-P2-PREAUTH-003-REM-04B/PLAN.md` (Step 3 rewritten, Files-to-Change updated),
+  `docs/plans/phase2/TSK-P2-PREAUTH-003-REM-04/PLAN.md` (Step 3 added, Files-to-Change updated),
+  this EXEC_LOG.
+
 verification_commands_run: []
 final_status: planned

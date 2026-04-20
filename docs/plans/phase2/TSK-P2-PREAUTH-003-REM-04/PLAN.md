@@ -38,6 +38,7 @@ Per the operation manual and the invariants curator role (`AGENTS.md` §Invarian
 | `docs/invariants/INVARIANTS_MANIFEST.yml` | MODIFY (append) | New INV-EXEC-TRUTH-001 block |
 | `docs/invariants/INVARIANTS_IMPLEMENTED.md` | MODIFY (append) | Row for new invariant |
 | `scripts/audit/verify_invariant_exec_truth_001_registration.sh` | CREATE | Registration verifier |
+| `scripts/audit/verify_invariant_exec_truth_001_security_docs.sh` | CREATE | Security-docs verifier (moved from REM-04B; `scripts/audit/**` is INVARIANTS_CURATOR territory per AGENTS.md) |
 | `evidence/phase2/tsk_p2_preauth_003_rem_04.json` | CREATE | Evidence emitted by registration verifier |
 | `tasks/TSK-P2-PREAUTH-003-REM-04/meta.yml` | MODIFY | Status progression |
 | `docs/plans/phase2/TSK-P2-PREAUTH-003-REM-04/PLAN.md` | CREATE | This document |
@@ -107,7 +108,20 @@ Then append to `docs/invariants/INVARIANTS_IMPLEMENTED.md` a row in the table fo
 
 **Done when:** Verifier exits 0 against the populated governance surface and the three boolean fields are all true.
 
-### Step 3: Emit evidence
+### Step 3: Author the security-docs verifier (for REM-04B)
+
+**What:** `[ID tsk_p2_preauth_003_rem_04_work_item_03]` Create `scripts/audit/verify_invariant_exec_truth_001_security_docs.sh`. This verifier is authored here (INVARIANTS_CURATOR) because `scripts/audit/**` is in INVARIANTS_CURATOR's allowed paths per AGENTS.md but not in ARCHITECT's. REM-04B (ARCHITECT) populates the `docs/architecture/**` surfaces; this task authors the verifier that checks them. The verifier must:
+
+1. `#!/usr/bin/env bash` + `set -Eeuo pipefail`.
+2. Assert both `docs/architecture/THREAT_MODEL.md` and `docs/architecture/COMPLIANCE_MAP.md` exist.
+3. Grep for `execution-record tamper` and `INV-EXEC-TRUTH-001` in THREAT_MODEL.md.
+4. Grep for `INV-EXEC-TRUTH-001` in COMPLIANCE_MAP.md.
+5. Emit `evidence/phase2/tsk_p2_preauth_003_rem_04b.json` with `task_id`, `git_sha`, `timestamp_utc`, `status`, `checks`, `observed_paths`, `observed_hashes` (SHA-256 of each surface), `command_outputs` (grep results), `execution_trace`, `threat_model_present` (bool), `compliance_map_present` (bool).
+6. Exit 0 iff both booleans are true.
+
+**Done when:** `test -x scripts/audit/verify_invariant_exec_truth_001_security_docs.sh` exits 0.
+
+### Step 4: Emit evidence
 
 Run `PRE_CI_CONTEXT=1 bash scripts/audit/verify_invariant_exec_truth_001_registration.sh` and verify its output JSON lands at the declared path with the required fields.
 

@@ -56,7 +56,6 @@ blocks:
 touches:
   - docs/architecture/THREAT_MODEL.md
   - docs/architecture/COMPLIANCE_MAP.md
-  - scripts/audit/verify_invariant_exec_truth_001_security_docs.sh
   - evidence/phase2/tsk_p2_preauth_003_rem_04b.json
   - tasks/TSK-P2-PREAUTH-003-REM-04B/meta.yml
   - docs/plans/phase2/TSK-P2-PREAUTH-003-REM-04B/PLAN.md
@@ -74,12 +73,6 @@ work:
   - >-
     [ID tsk_p2_preauth_003_rem_04b_work_item_02] Append a compliance row to docs/architecture/COMPLIANCE_MAP.md
     mapping at least one external audit control (SOC2 CC7.2 or local regulator equivalent) to INV-EXEC-TRUTH-001.
-  - >-
-    [ID tsk_p2_preauth_003_rem_04b_work_item_03] Author scripts/audit/verify_invariant_exec_truth_001_security_docs.sh
-    that greps for 'execution-record tamper' and 'INV-EXEC-TRUTH-001' in docs/architecture/THREAT_MODEL.md and for 'INV-EXEC-TRUTH-001' in
-    docs/architecture/COMPLIANCE_MAP.md. Emit evidence/phase2/tsk_p2_preauth_003_rem_04b.json carrying
-    task_id, git_sha, timestamp_utc, status, checks, observed_paths, observed_hashes, command_outputs,
-    execution_trace, threat_model_present, compliance_map_present.
 
 acceptance_criteria:
   - >-
@@ -87,7 +80,7 @@ acceptance_criteria:
   - >-
     [ID tsk_p2_preauth_003_rem_04b_work_item_02] grep -q 'INV-EXEC-TRUTH-001' docs/architecture/COMPLIANCE_MAP.md.
   - >-
-    [ID tsk_p2_preauth_003_rem_04b_work_item_03] PRE_CI_CONTEXT=1 bash scripts/audit/verify_invariant_exec_truth_001_security_docs.sh exits 0 and evidence file carries threat_model_present=true and compliance_map_present=true.
+    [ID tsk_p2_preauth_003_rem_04b_work_item_01] [ID tsk_p2_preauth_003_rem_04b_work_item_02] PRE_CI_CONTEXT=1 bash scripts/audit/verify_invariant_exec_truth_001_security_docs.sh (authored by REM-04 under INVARIANTS_CURATOR) exits 0 and evidence file carries threat_model_present=true and compliance_map_present=true.
 
 negative_tests:
   - id: TSK-P2-PREAUTH-003-REM-04B-N1
@@ -113,10 +106,10 @@ verification:
     # [ID tsk_p2_preauth_003_rem_04b_work_item_02] COMPLIANCE_MAP.md references INV-EXEC-TRUTH-001.
     test -f docs/architecture/COMPLIANCE_MAP.md && grep -q 'INV-EXEC-TRUTH-001' docs/architecture/COMPLIANCE_MAP.md || exit 1
   - >-
-    # [ID tsk_p2_preauth_003_rem_04b_work_item_03] Registration verifier exists and exits 0.
+    # [ID tsk_p2_preauth_003_rem_04b_work_item_01] [ID tsk_p2_preauth_003_rem_04b_work_item_02] Registration verifier (authored by REM-04, INVARIANTS_CURATOR) exists and exits 0.
     test -x scripts/audit/verify_invariant_exec_truth_001_security_docs.sh && PRE_CI_CONTEXT=1 bash scripts/audit/verify_invariant_exec_truth_001_security_docs.sh || exit 1
   - >-
-    # [ID tsk_p2_preauth_003_rem_04b_work_item_03] Evidence file evidence/phase2/tsk_p2_preauth_003_rem_04b.json carries required proof fields.
+    # [ID tsk_p2_preauth_003_rem_04b_work_item_01] [ID tsk_p2_preauth_003_rem_04b_work_item_02] Evidence file evidence/phase2/tsk_p2_preauth_003_rem_04b.json carries required proof fields.
     test -f evidence/phase2/tsk_p2_preauth_003_rem_04b.json && grep -q 'threat_model_present' evidence/phase2/tsk_p2_preauth_003_rem_04b.json && grep -q 'compliance_map_present' evidence/phase2/tsk_p2_preauth_003_rem_04b.json || exit 1
 
 evidence:
