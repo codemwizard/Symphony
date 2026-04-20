@@ -1,0 +1,52 @@
+{
+  "task_id": "TSK-P2-PREAUTH-003-REM-05",
+  "git_sha": "2e7092a21c7600a2c3938d96ae9a417e2d798bc8",
+  "timestamp_utc": "2026-04-20T16:52:22Z",
+  "status": "PASS",
+  "checks": [
+  {"name":"not_null_enforced","result":"pass","observed":5,"expected":5},
+  {"name":"unique_enforced","result":"pass","constraint":"execution_records_determinism_unique"},
+  {"name":"fk_verified","result":"pass","target":"interpretation_packs"},
+  {"name":"append_only_enforced","result":"pass","tgtype":27},
+  {"name":"temporal_binding_enforced","result":"pass","tgtype":7},
+  {"name":"security_definer_hardened","result":"pass","functions":2},
+  {"name":"search_path_hardened","result":"pass","value":"pg_catalog, public"},
+  {"name":"behavioural_temporal_binding_probe","result":"pass","sqlstate":"GF058"}
+],
+  "observed_paths": [
+    "schema/migrations/0131_execution_records_determinism_columns.sql",
+    "schema/migrations/0132_execution_records_determinism_constraints.sql",
+    "schema/migrations/0133_execution_records_triggers.sql",
+    "schema/migrations/MIGRATION_HEAD",
+    "scripts/db/verify_execution_truth_anchor.sh"
+  ],
+  "observed_hashes": {
+    "migration_0131_sha256": "5faa757a8e5d39befda569217e2bde6189c75084311379f8dadd403b9208361a",
+    "migration_0132_sha256": "50457cb0c90b543e4ced0ddbc6822d0b22d92690343f742e726084f8b8abaee3",
+    "migration_0133_sha256": "cf59659f9f6ef3d094406b5aa71fd6bd2266e10344f64412a23954884513730c",
+    "migration_head_sha256": "d3ec34f92d39a5f461bb2a91c80c08192b6132861072c2022ea3fd4da2440cfd",
+    "verifier_sha256": "3d5bdb9bebeb5a284bc9a89e181e235fc8328da97fa157c4b86b9753a2772a51"
+  },
+  "command_outputs": {
+    "not_null_rows": "input_hash\ninterpretation_version_id\noutput_hash\nruntime_version\ntenant_id",
+    "unique_row": "execution_records_determinism_unique|UNIQUE (input_hash, interpretation_version_id, runtime_version)",
+    "fk_row": "execution_records_interpretation_version_id_fkey|interpretation_packs",
+    "append_only_trigger_row": "execution_records_append_only_trigger|27",
+    "temporal_binding_trigger_row": "execution_records_temporal_binding_trigger|7",
+    "security_definer_rows": "enforce_execution_interpretation_temporal_binding|true|search_path=pg_catalog, public\nexecution_records_append_only|true|search_path=pg_catalog, public",
+    "behavioural_probe_stderr_tail": "ERROR:  GF058: GF058: execution_records.interpretation_version_id temporal mismatch; expected pack resolved at execution_timestamp\nCONTEXT:  PL/pgSQL function enforce_execution_interpretation_temporal_binding() line 9 at RAISE\nLOCATION:  exec_stmt_raise, pl_exec.c:3909"
+  },
+  "execution_trace": {
+    "start_utc": "2026-04-20T16:52:22.280Z",
+    "end_utc": "2026-04-20T16:52:22.579Z"
+  },
+  "not_null_enforced": true,
+  "fk_verified": true,
+  "unique_enforced": true,
+  "append_only_enforced": true,
+  "temporal_binding_enforced": true,
+  "columns_verified": ["input_hash","output_hash","runtime_version","tenant_id","interpretation_version_id"],
+  "verification_tool_version": "3d5bdb9bebeb5a284bc9a89e181e235fc8328da97fa157c4b86b9753a2772a51",
+  "verification_input_snapshot": "7b972647cb521dbe1e57b87e1d8e086e3f27642da573c09e9f72581dd8d95579",
+  "verification_run_hash": "503a4ed780ecad8819c895b0741ead558d078d7fea5bfc6956b27c17206ea52e"
+}
