@@ -62,6 +62,7 @@ proof_limitations:
 
 depends_on:
   - TSK-P2-PREAUTH-004-00
+  - TSK-P2-PREAUTH-004-01
 
 blocks:
   - TSK-P2-PREAUTH-004-03

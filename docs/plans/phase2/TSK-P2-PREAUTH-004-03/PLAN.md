@@ -38,13 +38,17 @@ Without 004-03, a row in `policy_decisions` is just a self-declared hash. With 0
 
 1. **Cryptographic binding.** This task's verifier recomputes `sha256(canonical_json(decision_payload))` and asserts byte-equality with the stored `decision_hash`. Mismatch is a verifier failure (V4). This makes `decision_hash` load-bearing at verify time, not just at insert time.
 
-2. **Entity context.** The enforcement function SELECTs the row, then asserts `entity_type` and `entity_id` match the corresponding fields inside the canonical payload. The verifier also asserts the row's `entity_id` matches the `entity_id` of the bound `execution_records` row. Cross-entity replay is blocked in two places (DB function + verifier) because the two surfaces protect against different threats: the DB function is invoked at transition time, the verifier is invoked at audit time.
+2. **Entity context.** The 004-00 contract at line 189 requires that a decision's `entity_type`/`entity_id` match *the transition's entity*. On Wave 4 today, `execution_records` does NOT carry `entity_type`/`entity_id` columns (verified across migrations 0118, 0131, 0132, 0133); the entity identity for a transition is declared inside the `policy_decisions.decision_payload` canonical JSON. The enforcement function therefore binds in three places that are all implementable today: (a) the `policy_decisions` row must exist, (b) its `execution_id` must equal `p_execution_id` (FK + equality), (c) its `entity_type`/`entity_id` column values must match the corresponding fields inside the canonical payload — so any post-insert tampering that bypassed the append-only trigger would be detected at transition-apply time. The verifier additionally recomputes `sha256(canonical_json(decision_payload))` and rejects on mismatch (V4). Together with `UNIQUE (execution_id, decision_type)` on `policy_decisions` (004-01), this forecloses the cross-entity replay path that runs through `policy_decisions` itself.
 
 3. **Rule priority.** Not in this task. Lives on `state_rules` (004-02).
 
 ### Signature authenticity gap (declared)
 
 Signature authenticity verification (`ed25519_verify(signature, decision_hash, public_key)`) requires a public-key resolution layer that does not exist in Wave 4. This task declares the gap as a named `proof_limitation` and leaves `signature` column validation at format-only. A future wave that lands the key table will extend this verifier with the missing step.
+
+### Execution-side entity binding gap (declared)
+
+`execution_records` does not yet carry `entity_type`/`entity_id` columns. End-to-end cross-entity-replay protection at *decision INSERT* time (i.e. a trigger that rejects a new `policy_decisions` row whose entity does not match the entity of its bound execution) requires those columns to exist. Until a follow-up task extends `execution_records` with `entity_type TEXT NOT NULL` + `entity_id UUID NOT NULL` (expand-only) and adds a coherence CHECK/trigger on `policy_decisions` insert, cross-entity replay is guarded by the three layers `enforce_authority_transition_binding` *does* implement today: (a) FK + equality on `execution_id`, (b) column-vs-payload match inside `policy_decisions`, (c) `UNIQUE (execution_id, decision_type)` limiting how many decisions can attach to a given execution. This task declares the remaining gap as a named `proof_limitation`; it does not silently close it by querying columns that do not exist.
 
 ---
 
@@ -53,7 +57,7 @@ Signature authenticity verification (`ed25519_verify(signature, decision_hash, p
 - [ ] `TSK-P2-PREAUTH-004-00`, `TSK-P2-PREAUTH-004-01`, `TSK-P2-PREAUTH-004-02` are all merged.
 - [ ] `schema/migrations/MIGRATION_HEAD` reads `0135` at the start of this task.
 - [ ] `public.policy_decisions` and `public.state_rules` exist.
-- [ ] `public.execution_records` has `entity_type` and `entity_id` populated on every row that represents an authority-bearing transition (or the verifier tolerates rows that lack these fields as "not authority-bearing" and skips them with a recorded count).
+- [ ] `public.execution_records` is the table defined by migration `0118_create_execution_records.sql` plus 0131/0132/0133 (no `entity_type`/`entity_id` columns at this point). The enforcement function MUST NOT query those columns on `execution_records`; see the "Execution-side entity binding gap (declared)" section above.
 
 ---
 
@@ -99,14 +103,14 @@ SECURITY DEFINER
 SET search_path = pg_catalog, public
 AS $$
 DECLARE
-  v_pd_execution_id  uuid;
-  v_pd_entity_type   text;
-  v_pd_entity_id     uuid;
-  v_er_entity_type   text;
-  v_er_entity_id     uuid;
-  v_payload_entity_type text;
-  v_payload_entity_id   uuid;
+  v_pd_execution_id      uuid;
+  v_pd_entity_type       text;
+  v_pd_entity_id         uuid;
+  v_payload_entity_type  text;
+  v_payload_entity_id    uuid;
+  v_er_exists            boolean;
 BEGIN
+  -- Step 1: resolve the policy_decisions row. If absent, reject.
   SELECT execution_id, entity_type, entity_id
     INTO v_pd_execution_id, v_pd_entity_type, v_pd_entity_id
     FROM public.policy_decisions
@@ -118,26 +122,31 @@ BEGIN
       MESSAGE = format('authority_transition_binding: no policy_decision row for policy_decision_id=%s', p_policy_decision_id);
   END IF;
 
-  SELECT entity_type, entity_id
-    INTO v_er_entity_type, v_er_entity_id
-    FROM public.execution_records
-    WHERE execution_id = p_execution_id;
+  -- Step 2: confirm the execution_records row exists. execution_records does NOT
+  -- carry entity_type/entity_id on Wave 4 (see "Execution-side entity binding gap"
+  -- in the PLAN); existence-only is the strongest check implementable here.
+  SELECT EXISTS (
+    SELECT 1 FROM public.execution_records WHERE execution_id = p_execution_id
+  ) INTO v_er_exists;
 
-  IF NOT FOUND THEN
+  IF NOT v_er_exists THEN
     RAISE EXCEPTION USING
       ERRCODE = 'P0002',
       MESSAGE = format('authority_transition_binding: no execution_records row for execution_id=%s', p_execution_id);
   END IF;
 
+  -- Step 3: the decision's execution_id must equal the transition's execution_id.
+  -- FK on policy_decisions.execution_id already binds the decision to AN execution;
+  -- this equality ensures it is binding to THIS execution.
   IF v_pd_execution_id IS DISTINCT FROM p_execution_id THEN
     RAISE EXCEPTION USING
       ERRCODE = '22023',
       MESSAGE = 'authority_transition_binding: execution_id mismatch';
   END IF;
 
-  -- Canonical payload entity fields live inside the payload JSON attached to the
-  -- policy_decisions row (set_on insert by the adapter). The function resolves
-  -- them via a repo-standard accessor and asserts column-vs-payload match.
+  -- Step 4: the decision's entity_type/entity_id COLUMNS must match the
+  -- entity_type/entity_id FIELDS inside the canonical payload. This blocks
+  -- post-insert tampering of the entity columns without changing decision_hash.
   SELECT p.entity_type, p.entity_id
     INTO v_payload_entity_type, v_payload_entity_id
     FROM public.policy_decisions_payload_view p
@@ -153,7 +162,7 @@ END;
 $$;
 ```
 
-`policy_decisions_payload_view` is a repo-standard helper view that projects `entity_type` and `entity_id` from the canonical payload JSON; its definition lands in the same migration 0136 file or is referenced from a Wave-3 helper view if one already exists. If the view is missing at implement time, the implementer adds its definition to 0136 with the same SECURITY DEFINER hardening posture as the function. The view is read-only.
+`policy_decisions_payload_view` is a repo-standard helper view that projects `entity_type` and `entity_id` from the canonical payload JSON on `policy_decisions`; its definition lands in the same migration `0136` file or is referenced from an existing helper view. The view is read-only. Note: the function does NOT query `entity_type`/`entity_id` on `execution_records` — those columns do not exist on Wave 4 (see "Execution-side entity binding gap (declared)").
 
 ---
 
@@ -163,8 +172,8 @@ The verifier runs four scenarios. Every scenario must produce a deterministic ou
 
 | Scenario | Setup | Action | Expected | Proof recorded in evidence |
 |---|---|---|---|---|
-| V1 (positive) | Insert one `execution_records` row with `entity_type=E`, `entity_id=X`. Insert one `policy_decisions` row bound to that execution with `entity_type=E`, `entity_id=X`, and `decision_hash = sha256(canonical_json(payload))`. | Call `enforce_authority_transition_binding(execution_id, policy_decision_id)`. | No exception. | `scenarios_passed` includes `V1`. |
-| V2 (cross-entity reject) | Insert an `execution_records` row with `entity_id=X`. Insert a `policy_decisions` row bound to that execution but with `entity_id=Y`. | Call the function. | `RAISE EXCEPTION ... ERRCODE = '22023'`. | `scenarios_passed` includes `V2`; the raised SQLSTATE is recorded in `command_outputs`. |
+| V1 (positive) | Insert one `execution_records` row using the Wave-3 column contract (no `entity_type`/`entity_id` required; `execution_records` does not carry them). Insert one `policy_decisions` row bound to that execution where (a) column `entity_type=E` and column `entity_id=X`, (b) the canonical `decision_payload` contains `entity_type=E` and `entity_id=X`, (c) `decision_hash = sha256(canonical_json(payload))`. | Call `enforce_authority_transition_binding(execution_id, policy_decision_id)`. | No exception. | `scenarios_passed` includes `V1`. |
+| V2 (column-vs-payload mismatch reject) | Insert an `execution_records` row. Insert a `policy_decisions` row where column `entity_id=Y` but the canonical `decision_payload.entity_id=X` (same row, diverging column and payload entity identities — models post-insert tampering or a bad-actor caller that bypassed the insert-time path). | Call `enforce_authority_transition_binding(execution_id, policy_decision_id)`. | `RAISE EXCEPTION ... ERRCODE = '22023'` with message `authority_transition_binding: entity_type or entity_id mismatch with payload`. | `scenarios_passed` includes `V2`; the raised SQLSTATE is recorded in `command_outputs`. |
 | V3 (missing decision reject) | Do not insert a `policy_decisions` row. | Call the function with a random uuid as `p_policy_decision_id`. | `RAISE EXCEPTION ... ERRCODE = 'P0002'`. | `scenarios_passed` includes `V3`. |
 | V4 (hash mismatch reject) | Insert a `policy_decisions` row whose stored `decision_hash` is `sha256("tamper")` while the true `sha256(canonical_json(payload))` differs. | Verifier recomputes `sha256(canonical_json(payload))` from the row and compares against stored `decision_hash`. | Recompute mismatches stored; verifier records V4 passed. | `scenarios_passed` includes `V4`; both hashes are recorded (`observed_hashes`). |
 
@@ -200,6 +209,7 @@ Append a new entry:
     path: evidence/phase2/tsk_p2_preauth_004_03.json
   proof_limitations:
     - "Signature authenticity is not verified (public-key resolution deferred to a later wave)"
+    - "Cross-entity-replay protection at decision INSERT time is deferred; execution_records does not yet carry entity_type/entity_id columns, so insert-time coherence between policy_decisions.entity_* and execution_records.entity_* cannot be enforced. Transition-apply time is guarded by FK+equality on execution_id, column-vs-payload match, hash recompute, and UNIQUE (execution_id, decision_type)."
   status: planned
 ```
 
