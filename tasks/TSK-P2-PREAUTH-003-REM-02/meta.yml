@@ -1,0 +1,181 @@
+schema_version: 1
+phase: '2'
+task_id: TSK-P2-PREAUTH-003-REM-02
+title: "Tighten execution_records determinism columns: backfill + SET NOT NULL (5 columns) + UNIQUE (input_hash, interpretation_version_id, runtime_version) + FK NOT NULL via forward migration 0132"
+owner_role: DB_FOUNDATION
+status: planned
+priority: CRITICAL
+risk_class: INTEGRITY
+blast_radius: DB_SCHEMA
+
+intent: >-
+  Contract phase of the expand/contract migration pair. After REM-01 adds the
+  four determinism columns as NULLABLE, this task runs a precondition
+  backfill check, then tightens input_hash, output_hash, runtime_version,
+  tenant_id, and interpretation_version_id to NOT NULL, and adds UNIQUE
+  (input_hash, interpretation_version_id, runtime_version) as the determinism
+  anchor. Forward-only migration 0132. No edit to 0118 or 0131.
+
+anti_patterns:
+  - "Skipping backfill precondition check and going straight to SET NOT NULL"
+  - "Editing 0118 or 0131 instead of authoring forward 0132"
+  - "Collapsing backfill + SET NOT NULL + UNIQUE into a single non-idempotent DO block"
+  - "Adding UNIQUE over execution_id (already the PK; would be redundant and mask the determinism claim)"
+
+out_of_scope:
+  - "Adding the determinism columns themselves (belongs to REM-01)"
+  - "Append-only trigger (belongs to REM-03)"
+  - "Temporal-binding trigger (belongs to REM-03)"
+  - "Invariant registration (belongs to REM-04)"
+  - "CI wiring (belongs to REM-05B)"
+  - "adapter_invocation_id retry key (deferred to REM-2026-04-20_execution-lifecycle)"
+  - "Mutable state machine / execution_state enum (deferred to lifecycle casefile)"
+
+stop_conditions:
+  - "If precondition query SELECT COUNT(*) FROM execution_records WHERE any new column IS NULL returns > 0 on second run (two-strike rule -> REM-02b opens)"
+  - "If migration 0132 alters 0118 or 0131"
+  - "If UNIQUE constraint is placed on execution_id instead of the determinism tuple"
+  - "If FK target is not interpretation_packs(interpretation_pack_id)"
+  - "If verifier lacks || exit 1 on any assertion"
+
+proof_guarantees:
+  - "pg_attribute.attnotnull = true for input_hash, output_hash, runtime_version, tenant_id, interpretation_version_id on execution_records"
+  - "pg_constraint.conname includes execution_records_determinism_unique of contype=u over (input_hash, interpretation_version_id, runtime_version)"
+  - "INSERT with NULL in any of the five tightened columns raises 23502 (NOT NULL violation)"
+  - "INSERT duplicating (input_hash, interpretation_version_id, runtime_version) raises 23505 (unique violation)"
+
+proof_limitations:
+  - "FK target column remains interpretation_packs(interpretation_pack_id); child column is historically named interpretation_version_id. Documented as naming quirk in INV-EXEC-TRUTH-001 notes."
+  - "Backfill policy: expected COUNT(*) of NULLs = 0 because 0118 contained no real execution data. If > 0, migration aborts and REM-02b opens."
+
+depends_on:
+  - TSK-P2-PREAUTH-003-REM-01
+
+blocks:
+  - TSK-P2-PREAUTH-003-REM-03
+
+touches:
+  - schema/migrations/0132_execution_records_determinism_constraints.sql
+  - schema/migrations/MIGRATION_HEAD
+  - scripts/db/backfill_execution_records_determinism.sql
+  - scripts/db/verify_execution_records_determinism_constraints.sh
+  - scripts/db/tests/test_execution_records_determinism_constraints_negative.sh
+  - evidence/phase2/tsk_p2_preauth_003_rem_02.json
+  - tasks/TSK-P2-PREAUTH-003-REM-02/meta.yml
+  - docs/plans/phase2/TSK-P2-PREAUTH-003-REM-02/PLAN.md
+  - docs/plans/phase2/TSK-P2-PREAUTH-003-REM-02/EXEC_LOG.md
+
+invariants: []
+
+work:
+  - >-
+    [ID tsk_p2_preauth_003_rem_02_work_item_01] Author scripts/db/backfill_execution_records_determinism.sql,
+    an idempotent backfill script whose first statement is a precondition assertion that aborts
+    when COUNT(*) of execution_records rows with any new column NULL exceeds the allowed threshold (0).
+    Second pass failure triggers the two-strike DRD lockout and forks to REM-02b.
+  - >-
+    [ID tsk_p2_preauth_003_rem_02_work_item_02] Author schema/migrations/0132_execution_records_determinism_constraints.sql
+    that runs the backfill precondition, then five ALTER COLUMN ... SET NOT NULL statements
+    (input_hash, output_hash, runtime_version, tenant_id, interpretation_version_id),
+    then ADD CONSTRAINT execution_records_determinism_unique UNIQUE (input_hash, interpretation_version_id, runtime_version).
+    Advance MIGRATION_HEAD from 0131 to 0132.
+  - >-
+    [ID tsk_p2_preauth_003_rem_02_work_item_03] Author scripts/db/verify_execution_records_determinism_constraints.sh
+    that queries pg_attribute for attnotnull on the five columns and pg_constraint for the UNIQUE constraint by name and column set, drives the three negative tests via psql returning expected SQLSTATE codes (23502, 23505), and emits evidence/phase2/tsk_p2_preauth_003_rem_02.json.
+
+acceptance_criteria:
+  - >-
+    [ID tsk_p2_preauth_003_rem_02_work_item_01] scripts/db/backfill_execution_records_determinism.sql exists, is idempotent, and aborts with a named SQLSTATE when NULL-row count > 0.
+  - >-
+    [ID tsk_p2_preauth_003_rem_02_work_item_02] schema/migrations/0132_execution_records_determinism_constraints.sql exists, advances MIGRATION_HEAD to 0132, contains 5 SET NOT NULL statements and one ADD CONSTRAINT UNIQUE on the determinism tuple.
+  - >-
+    [ID tsk_p2_preauth_003_rem_02_work_item_03] bash scripts/db/verify_execution_records_determinism_constraints.sh exits 0 on a database where 0132 is applied, writes evidence/phase2/tsk_p2_preauth_003_rem_02.json, and drives the three negative tests to their expected SQLSTATE outcomes.
+
+negative_tests:
+  - id: TSK-P2-PREAUTH-003-REM-02-N1
+    description: >-
+      INSERT INTO execution_records with NULL in input_hash raises SQLSTATE 23502 and the verifier captures it.
+    required: true
+  - id: TSK-P2-PREAUTH-003-REM-02-N2
+    description: >-
+      INSERT INTO execution_records with NULL in interpretation_version_id raises SQLSTATE 23502 and the verifier captures it.
+    required: true
+  - id: TSK-P2-PREAUTH-003-REM-02-N3
+    description: >-
+      Duplicate INSERT of the same (input_hash, interpretation_version_id, runtime_version) tuple raises SQLSTATE 23505 and the verifier captures it.
+    required: true
+  - id: TSK-P2-PREAUTH-003-REM-02-N4
+    description: >-
+      Attempting to run migration 0132 against a database with existing NULL-carrying rows aborts with the backfill precondition message before any SET NOT NULL runs.
+    required: true
+
+positive_tests:
+  - id: TSK-P2-PREAUTH-003-REM-02-P1
+    description: >-
+      Against a database with 0132 applied and zero NULLs, the verifier exits 0 and writes evidence with status=PASS and not_null_enforced=true, unique_enforced=true, fk_not_null_enforced=true.
+    required: true
+
+verification:
+  - >-
+    # [ID tsk_p2_preauth_003_rem_02_work_item_03] Run the verifier and emit evidence.
+    test -x scripts/db/verify_execution_records_determinism_constraints.sh && bash scripts/db/verify_execution_records_determinism_constraints.sh > evidence/phase2/tsk_p2_preauth_003_rem_02.json || exit 1
+  - >-
+    # [ID tsk_p2_preauth_003_rem_02_work_item_01] Confirm backfill script exists and references the precondition guard.
+    test -f scripts/db/backfill_execution_records_determinism.sql && grep -q 'precondition' scripts/db/backfill_execution_records_determinism.sql || exit 1
+  - >-
+    # [ID tsk_p2_preauth_003_rem_02_work_item_02] Confirm the 0132 migration file exists and carries SET NOT NULL and UNIQUE.
+    test -f schema/migrations/0132_execution_records_determinism_constraints.sql && grep -q 'SET NOT NULL' schema/migrations/0132_execution_records_determinism_constraints.sql && grep -q 'execution_records_determinism_unique' schema/migrations/0132_execution_records_determinism_constraints.sql || exit 1
+  - >-
+    # [ID tsk_p2_preauth_003_rem_02_work_item_02] Confirm MIGRATION_HEAD advanced to 0132.
+    test -f schema/migrations/MIGRATION_HEAD && grep -Fxq '0132' schema/migrations/MIGRATION_HEAD || exit 1
+  - >-
+    # [ID tsk_p2_preauth_003_rem_02_work_item_03] Confirm evidence file carries the determinism-enforced proof fields.
+    test -f evidence/phase2/tsk_p2_preauth_003_rem_02.json && cat evidence/phase2/tsk_p2_preauth_003_rem_02.json | grep -q 'unique_enforced' || exit 1
+  - >-
+    # [ID tsk_p2_preauth_003_rem_02_work_item_01] [ID tsk_p2_preauth_003_rem_02_work_item_02] [ID tsk_p2_preauth_003_rem_02_work_item_03]
+    RUN_PHASE1_GATES=1 bash scripts/dev/pre_ci.sh || exit 1
+
+evidence:
+  - path: evidence/phase2/tsk_p2_preauth_003_rem_02.json
+    must_include:
+      - task_id
+      - git_sha
+      - timestamp_utc
+      - status
+      - checks
+      - observed_paths
+      - observed_hashes
+      - command_outputs
+      - execution_trace
+      - not_null_enforced
+      - unique_enforced
+      - fk_not_null_enforced
+      - backfill_null_count
+      - negative_test_sqlstates
+
+failure_modes:
+  - "Backfill precondition succeeds the first run but fails on re-run => two-strike DRD lockout, REM-02b opens"
+  - "UNIQUE placed over execution_id instead of determinism tuple => FAIL (masks determinism claim)"
+  - "SET NOT NULL runs before backfill completes => CRITICAL_FAIL (would corrupt rows)"
+  - "FK target altered to a non-existent column => CRITICAL_FAIL"
+  - "Evidence JSON missing negative_test_sqlstates => FAIL"
+
+must_read:
+  - docs/operations/AI_AGENT_OPERATION_MANUAL.md
+  - docs/operations/REMEDIATION_TRACE_WORKFLOW.md
+  - docs/invariants/INVARIANTS_QUICK.md
+  - docs/plans/remediation/REM-2026-04-20_execution-truth-anchor/PLAN.md
+  - tasks/TSK-P2-PREAUTH-003-REM-01/meta.yml
+
+implementation_plan: docs/plans/phase2/TSK-P2-PREAUTH-003-REM-02/PLAN.md
+implementation_log: docs/plans/phase2/TSK-P2-PREAUTH-003-REM-02/EXEC_LOG.md
+
+notes: >-
+  Contract phase. Depends on REM-01 expand phase. Two-strike rule: if backfill
+  precondition returns COUNT > 0 on a second attempt, DRD lockout forks to REM-02b
+  which performs deep-dive backfill. FK target remains interpretation_packs(interpretation_pack_id)
+  per user Q2 option (a); child column name is historically interpretation_version_id.
+
+client: cursor
+assigned_agent: db_foundation
+model: <UNASSIGNED>
