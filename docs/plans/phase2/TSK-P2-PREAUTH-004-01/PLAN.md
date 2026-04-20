@@ -3,7 +3,7 @@
 Task: TSK-P2-PREAUTH-004-01
 Owner: DB_FOUNDATION
 Depends on: TSK-P2-PREAUTH-004-00
-Blocks: TSK-P2-PREAUTH-004-03
+Blocks: TSK-P2-PREAUTH-004-02, TSK-P2-PREAUTH-004-03
 failure_signature: PHASE2.PREAUTH.POLICY_DECISIONS.SCHEMA_MISSING
 canonical_reference: docs/operations/AI_AGENT_OPERATION_MANUAL.md
 wave_reference: Wave 4 — Authority Binding
@@ -180,7 +180,7 @@ Evidence is emitted only by the verifier. Hand-editing the JSON is a FAIL_REVIEW
 | N4 | Insert with `execution_id` that does not exist in `execution_records` | `23503` (FK) |
 | N5 | `UPDATE` of an existing row | Raised by `enforce_policy_decisions_append_only` |
 
-All five must be exercised by `scripts/db/tests/test_policy_decisions_negative.sh`. Harness exits 0 only if every insert is rejected.
+All five must be exercised by `scripts/db/tests/test_policy_decisions_negative.sh`. Harness exits 0 only if every insert or update is rejected.
 
 ---
 

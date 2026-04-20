@@ -112,7 +112,7 @@ work:
     [ID tsk_p2_preauth_004_01_work_item_05] Author scripts/db/tests/test_policy_decisions_negative.sh
     that exercises the five contracted negative paths (insert without execution_id, insert without signature,
     insert with wrong-length decision_hash, insert with non-existent execution_id, UPDATE of an existing row)
-    and exits 0 only if all five inserts are rejected by the database.
+    and exits 0 only if all five operations (four inserts and one update) are rejected by the database.
 
 acceptance_criteria:
   - >-
