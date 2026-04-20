@@ -10,12 +10,14 @@ blast_radius: POLICY_SURFACE
 
 intent: >-
   Declare INV-EXEC-TRUTH-001 as an implemented invariant in
-  docs/invariants/INVARIANTS_MANIFEST.yml, the implemented registry,
-  threat model, and compliance map — but only after REM-05 produces
-  fresh verifier evidence covering append-only, temporal binding,
+  docs/invariants/INVARIANTS_MANIFEST.yml and the implemented registry
+  (docs/invariants/INVARIANTS_IMPLEMENTED.md) — but only after REM-05
+  produces fresh verifier evidence covering append-only, temporal binding,
   determinism UNIQUE, NOT NULL on five columns, and verifier-integrity
   fields. If REM-05 evidence is absent or stale, this task blocks
-  itself and remains in status=planned.
+  itself and remains in status=planned. Threat-model and compliance-map
+  registration is owned by the sibling task REM-04B (SECURITY_GUARDIAN)
+  per AGENTS.md path authority and is explicitly out of scope here.
 
 anti_patterns:
   - "Flipping invariant status to implemented before REM-05 evidence lands"
