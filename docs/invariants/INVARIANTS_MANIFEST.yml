@@ -1699,8 +1699,8 @@
     Phase 1 C# outputs carry non-authoritative markers via DataAuthority and AuditGrade
     properties to prevent misinterpretation as authoritative data. Introduced by Wave 7.
 
-- id: INV-EXEC-TRUTH-001
-  aliases: ["I-EXEC-TRUTH-01"]
+- id: INV-179
+  aliases: ["I-EXEC-TRUTH-01", "INV-EXEC-TRUTH-001"]
   status: implemented
   severity: P0
   title: "Execution records are append-only, deterministically keyed, and temporally bound to an interpretation pack active at execution_timestamp"

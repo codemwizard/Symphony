@@ -29,7 +29,7 @@
     "compliance_map_present=true",
     "compliance_map_references_evidence=true"
   ],
-  "git_sha": "af5a1f278994d618987da78082a0e71fb731ef41",
+  "git_sha": "c5886aa82fc877711437667cd637104ae63059b0",
   "observed_hashes": {
     "compliance_map": "28bb55f9fe6e829338044f548b6b206d1cdd1b2a997d20d254272006b7353c82",
     "threat_model": "13ef9a05b8fdbc822bb59ad24e53757c39307d42506b46b26c2e416a2f2923b0"
@@ -42,5 +42,5 @@
   "task_id": "TSK-P2-PREAUTH-003-REM-04B",
   "threat_model_present": true,
   "threat_model_references_verifier": true,
-  "timestamp_utc": "2026-04-20T17:04:34Z"
+  "timestamp_utc": "2026-04-20T17:13:51Z"
 }

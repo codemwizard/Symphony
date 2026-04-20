@@ -28,12 +28,12 @@
     "enforcement_path_resolves=true",
     "verification_evidence_fresh=true"
   ],
-  "git_sha": "af5a1f278994d618987da78082a0e71fb731ef41",
+  "git_sha": "c5886aa82fc877711437667cd637104ae63059b0",
   "manifest_present": true,
   "observed_hashes": {
     "enforcement": "3d5bdb9bebeb5a284bc9a89e181e235fc8328da97fa157c4b86b9753a2772a51",
     "implemented_registry": "7a5b8d747b51233931587be1a0cbfe790c8e5143cc537ff09a9ad8adc511969f",
-    "manifest": "50e1cfe2df467a83a2f8b904c79592164a354255ec4045be05f866dd07b68798",
+    "manifest": "2f3a8d497f04e63ffe4aaf06a673c76fecc5a6c6b6b693a0cdef9fee9490ff36",
     "upstream_evidence": "617d0aea8c844917ff86ac1d88d151ba6919e37a9599829d0d9a03714187f733"
   },
   "observed_paths": {
@@ -44,7 +44,7 @@
   },
   "status": "PASS",
   "task_id": "TSK-P2-PREAUTH-003-REM-04",
-  "timestamp_utc": "2026-04-20T17:04:35Z",
+  "timestamp_utc": "2026-04-20T17:13:49Z",
   "upstream_evidence_hash": "617d0aea8c844917ff86ac1d88d151ba6919e37a9599829d0d9a03714187f733",
   "verification_evidence_fresh": true
 }

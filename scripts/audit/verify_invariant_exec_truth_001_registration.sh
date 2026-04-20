@@ -60,7 +60,10 @@ with open(sys.argv[1]) as fh:
 if not isinstance(docs, list):
     sys.exit(2)
 for block in docs:
-    if isinstance(block, dict) and block.get("id") == "INV-EXEC-TRUTH-001":
+    if not isinstance(block, dict):
+        continue
+    aliases = block.get("aliases") or []
+    if block.get("id") == "INV-EXEC-TRUTH-001" or "INV-EXEC-TRUTH-001" in aliases:
         if block.get("status") == "implemented":
             sys.exit(0)
         sys.exit(3)
