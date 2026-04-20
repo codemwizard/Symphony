@@ -2,6 +2,7 @@
 
 **Task:** TSK-P2-PREAUTH-003-01
 **Status:** completed
+**Plan:** docs/plans/phase2/TSK-P2-PREAUTH-003-01/PLAN.md
 
 failure_signature: PHASE2.PREAUTH.TSK-P2-PREAUTH-003-01.MIGRATION_FAIL
 origin_task_id: TSK-P2-PREAUTH-003-01
@@ -22,3 +23,7 @@ final_status: PASS
 ## Notes
 
 Migration 0118 creates execution_records table with indexes on project_id and execution_timestamp. Verification script confirms table structure and indexes.
+
+## Final Summary
+
+Task TSK-P2-PREAUTH-003-01 is complete. Migration `schema/migrations/0118_create_execution_records.sql` created the `execution_records` table with the `project_id` and `execution_timestamp` indexes mandated by the acceptance criteria; MIGRATION_HEAD was advanced to 0118 at the time of landing. Determinism columns (input_hash, output_hash, runtime_version, tenant_id, NOT NULL interpretation_version_id, append-only + temporal-binding triggers) were added forward-only via migrations 0131/0132/0133 under the Wave 3-R REM series (PR #188) without editing 0118 — consistent with the AGENTS.md forward-only invariant.

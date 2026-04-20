@@ -2,6 +2,7 @@
 
 **Task:** TSK-P2-PREAUTH-003-02
 **Status:** completed
+**Plan:** docs/plans/phase2/TSK-P2-PREAUTH-003-02/PLAN.md
 
 failure_signature: PHASE2.PREAUTH.TSK-P2-PREAUTH-003-02.FK_FAIL
 origin_task_id: TSK-P2-PREAUTH-003-02
@@ -21,3 +22,7 @@ final_status: PASS
 ## Notes
 
 Migration 0118 updated to add interpretation_version_id FK to execution_records, binding executions to interpretation_packs for reproducibility. Verification script confirms column and FK constraint.
+
+## Final Summary
+
+Task TSK-P2-PREAUTH-003-02 is complete. The `interpretation_version_id` column on `execution_records` was delivered as part of migration `schema/migrations/0118_create_execution_records.sql` with a foreign key to `interpretation_packs.interpretation_pack_id` (ON DELETE RESTRICT), satisfying the FK acceptance criterion. The column was tightened to NOT NULL in migration 0132 via the Wave 3-R REM-02 remediation (PR #188), and temporal binding between execution_records and interpretation_packs is enforced at trigger level by migration 0133 (GF058). No edit to 0118 was performed — all hardening was forward-only.
