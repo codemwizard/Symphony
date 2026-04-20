@@ -1,7 +1,7 @@
 # TSK-P2-PREAUTH-003-REM-05 PLAN — Integrity verifier + CI wiring + self-certifying evidence
 
 Task: TSK-P2-PREAUTH-003-REM-05
-Owner: SECURITY_GUARDIAN
+Owner: DB_FOUNDATION
 Depends on: TSK-P2-PREAUTH-003-REM-03
 failure_signature: PHASE2.PREAUTH.EXECUTION_RECORDS.VERIFIER_MISSING
 canonical_reference: docs/operations/AI_AGENT_OPERATION_MANUAL.md
@@ -11,7 +11,9 @@ remediation_casefile: docs/plans/remediation/REM-2026-04-20_execution-truth-anch
 
 ## Objective
 
-Produce `scripts/db/verify_execution_truth_anchor.sh`: a single integrity verifier that inspects seven proof surfaces (5x NOT NULL + 1x UNIQUE + 1x FK + 2x trigger = 9 primitive assertions, grouped) and emits a self-certifying evidence JSON carrying `verification_tool_version`, `verification_input_snapshot`, `verification_run_hash`. Wire the verifier into `scripts/dev/pre_ci.sh` and `scripts/audit/run_invariants_fast_checks.sh`. A smoke harness drives seven degradation scenarios to prove the verifier is not fail-open.
+Produce `scripts/db/verify_execution_truth_anchor.sh`: a single integrity verifier that inspects seven proof surfaces (5x NOT NULL + 1x UNIQUE + 1x FK + 2x trigger = 9 primitive assertions, grouped) and emits a self-certifying evidence JSON carrying `verification_tool_version`, `verification_input_snapshot`, `verification_run_hash`. A smoke harness drives seven degradation scenarios to prove the verifier is not fail-open.
+
+CI wiring (invoking this verifier from `scripts/dev/pre_ci.sh` and `scripts/audit/run_invariants_fast_checks.sh`) is owned by `TSK-P2-PREAUTH-003-REM-05B` under the SECURITY_GUARDIAN path authority per AGENTS.md. That is deliberately split from this task so every work item falls under a single owner role.
 
 ---
 
@@ -35,8 +37,6 @@ Every prior REM task (REM-01, REM-02, REM-03) ships its own per-gate verifier. T
 | File | Action | Reason |
 |------|--------|--------|
 | `scripts/db/verify_execution_truth_anchor.sh` | CREATE | The anchor verifier |
-| `scripts/dev/pre_ci.sh` | MODIFY | Add verifier invocation with `|| exit 1` |
-| `scripts/audit/run_invariants_fast_checks.sh` | MODIFY | Add verifier to fast-check array |
 | `scripts/db/tests/test_execution_truth_anchor_smoke.sh` | CREATE | Degradation harness |
 | `evidence/phase2/tsk_p2_preauth_003_rem_05.json` | CREATE | Evidence emitted by verifier |
 | `tasks/TSK-P2-PREAUTH-003-REM-05/meta.yml` | MODIFY | Status progression |
@@ -49,10 +49,9 @@ Every prior REM task (REM-01, REM-02, REM-03) ships its own per-gate verifier. T
 
 - Verifier exits 0 on any degraded state -> STOP.
 - Evidence omits any of the three verifier-integrity fields -> STOP.
-- `pre_ci.sh` invocation guarded by `|| true` instead of `|| exit 1` -> STOP.
-- `run_invariants_fast_checks.sh` missing the verifier -> STOP.
 - Verifier not executable -> STOP.
 - Verifier re-implements sub-checks from REM-01/02/03 instead of delegating to live DB state -> STOP.
+- Any edit lands in `scripts/dev/pre_ci.sh` or `scripts/audit/**` -> STOP (path-authority violation; that scope belongs to REM-05B).
 
 ---
 
@@ -76,27 +75,9 @@ Every prior REM task (REM-01, REM-02, REM-03) ships its own per-gate verifier. T
 
 **Done when:** `test -x scripts/db/verify_execution_truth_anchor.sh` exits 0 and, against a 0133-applied database, the verifier exits 0 and the emitted JSON contains literal strings `verification_tool_version`, `verification_input_snapshot`, `verification_run_hash`.
 
-### Step 2: Wire CI gates
+### Step 2: Author the degradation smoke harness
 
-**What:** `[ID tsk_p2_preauth_003_rem_05_work_item_02]`
-
-- `scripts/dev/pre_ci.sh`: insert the invocation at the schema-invariants gate (after the existing `run_invariants_fast_checks.sh` call, before the Phase 1 gate) with a `guard_block` sentinel comment so the insertion is idempotent:
-
-  ```bash
-  # >>> INV-EXEC-TRUTH-001 gate [TSK-P2-PREAUTH-003-REM-05]
-  bash scripts/db/verify_execution_truth_anchor.sh > evidence/phase2/tsk_p2_preauth_003_rem_05.json || exit 1
-  # <<< INV-EXEC-TRUTH-001 gate
-  ```
-
-- `scripts/audit/run_invariants_fast_checks.sh`: add the same invocation to its fast-check sequence with the same sentinel guard. The fast-check path is allowed to short-circuit on first failure (`|| exit 1`).
-
-Both edits are grep-idempotent: a second run of this task must not duplicate the lines.
-
-**Done when:** `grep -q 'verify_execution_truth_anchor.sh' scripts/dev/pre_ci.sh` and `grep -q 'verify_execution_truth_anchor.sh' scripts/audit/run_invariants_fast_checks.sh` both exit 0, and neither file contains a duplicated invocation.
-
-### Step 3: Author the degradation smoke harness
-
-**What:** `[ID tsk_p2_preauth_003_rem_05_work_item_03]` Create `scripts/db/tests/test_execution_truth_anchor_smoke.sh`. The harness runs seven scenarios against a disposable test database, each executed inside a transaction that is rolled back afterwards:
+**What:** `[ID tsk_p2_preauth_003_rem_05_work_item_02]` Create `scripts/db/tests/test_execution_truth_anchor_smoke.sh`. The harness runs seven scenarios against a disposable test database, each executed inside a transaction that is rolled back afterwards:
 
 | # | Degradation | Expected bool |
 |---|---|---|
@@ -112,7 +93,7 @@ For each scenario, the harness invokes the verifier and asserts exit code != 0. 
 
 **Done when:** The harness exits 0 on a properly-migrated database.
 
-### Step 4: Emit evidence
+### Step 3: Emit evidence
 
 Run the verifier and confirm evidence lands at `evidence/phase2/tsk_p2_preauth_003_rem_05.json` with status=PASS and all three integrity fields populated.
 
@@ -122,22 +103,13 @@ Run the verifier and confirm evidence lands at `evidence/phase2/tsk_p2_preauth_0
 
 ```bash
 # [ID tsk_p2_preauth_003_rem_05_work_item_01] Run the integrity verifier and emit evidence.
-test -x scripts/db/verify_execution_truth_anchor.sh && bash scripts/db/verify_execution_truth_anchor.sh > evidence/phase2/tsk_p2_preauth_003_rem_05.json || exit 1
+test -x scripts/db/verify_execution_truth_anchor.sh && PRE_CI_CONTEXT=1 bash scripts/db/verify_execution_truth_anchor.sh || exit 1
 
-# [ID tsk_p2_preauth_003_rem_05_work_item_02] Confirm pre_ci.sh wires the verifier with || exit 1.
-test -f scripts/dev/pre_ci.sh && grep -q 'verify_execution_truth_anchor.sh' scripts/dev/pre_ci.sh || exit 1
-
-# [ID tsk_p2_preauth_003_rem_05_work_item_02] Confirm run_invariants_fast_checks.sh includes the verifier.
-test -f scripts/audit/run_invariants_fast_checks.sh && grep -q 'verify_execution_truth_anchor.sh' scripts/audit/run_invariants_fast_checks.sh || exit 1
-
-# [ID tsk_p2_preauth_003_rem_05_work_item_03] Confirm the smoke harness exists for degradation negative tests.
+# [ID tsk_p2_preauth_003_rem_05_work_item_02] Confirm the smoke harness exists for degradation negative tests.
 test -x scripts/db/tests/test_execution_truth_anchor_smoke.sh || exit 1
 
 # [ID tsk_p2_preauth_003_rem_05_work_item_01] Confirm evidence contains all three verifier-integrity fields.
-test -f evidence/phase2/tsk_p2_preauth_003_rem_05.json && cat evidence/phase2/tsk_p2_preauth_003_rem_05.json | grep -q 'verification_tool_version' && cat evidence/phase2/tsk_p2_preauth_003_rem_05.json | grep -q 'verification_input_snapshot' && cat evidence/phase2/tsk_p2_preauth_003_rem_05.json | grep -q 'verification_run_hash' || exit 1
-
-# [ID tsk_p2_preauth_003_rem_05_work_item_01] [ID tsk_p2_preauth_003_rem_05_work_item_02] [ID tsk_p2_preauth_003_rem_05_work_item_03]
-RUN_PHASE1_GATES=1 bash scripts/dev/pre_ci.sh || exit 1
+test -f evidence/phase2/tsk_p2_preauth_003_rem_05.json && grep -q 'verification_tool_version' evidence/phase2/tsk_p2_preauth_003_rem_05.json && grep -q 'verification_input_snapshot' evidence/phase2/tsk_p2_preauth_003_rem_05.json && grep -q 'verification_run_hash' evidence/phase2/tsk_p2_preauth_003_rem_05.json || exit 1
 ```
 
 ---
@@ -166,8 +138,8 @@ Required fields:
 
 ## Rollback
 
-1. Revert `scripts/dev/pre_ci.sh` and `scripts/audit/run_invariants_fast_checks.sh` to remove the invocation.
-2. Remove the verifier and the smoke harness.
+1. Remove the verifier and the smoke harness.
+2. CI-wiring rollback (scripts/dev/pre_ci.sh + scripts/audit/run_invariants_fast_checks.sh) is owned by REM-05B.
 3. Flip INV-EXEC-TRUTH-001 to `in_progress` (REM-04 revert).
 4. File exception in `docs/security/EXCEPTION_REGISTER.yml`.
 

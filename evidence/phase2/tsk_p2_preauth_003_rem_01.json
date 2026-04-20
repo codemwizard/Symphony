@@ -1,0 +1,39 @@
+{
+  "checks": {
+    "column_types_match": "PASS",
+    "columns_exist": "PASS",
+    "migration_file_present": "PASS",
+    "migration_head_advanced": "PASS"
+  },
+  "columns_added": [
+    "input_hash",
+    "output_hash",
+    "runtime_version",
+    "tenant_id"
+  ],
+  "command_outputs": {
+    "information_schema.columns": "queried for execution_records in public schema"
+  },
+  "execution_trace": [
+    "step_01_query_information_schema",
+    "step_02_check_migration_head",
+    "step_03_check_migration_file_exists",
+    "step_04_hash_artifacts"
+  ],
+  "fail_reasons": [],
+  "git_sha": "a6dce883f3b7509f3c6e238efe02856378bc96dc",
+  "migration_head_value": "0131",
+  "observed_hashes": {
+    "schema/migrations/0131_execution_records_determinism_columns.sql": "c494cff4807ca9f9f44ee9317b7df06a392a89976b11551aa0f72bcfb202ee93",
+    "schema/migrations/MIGRATION_HEAD": "0476d10d5e11e3b43327ecf57eddfce13c9b2e319d35da83ce413c0fad7260a0",
+    "scripts/db/verify_execution_records_determinism_columns.sh": "7552ab93f15c564d75611929536507cad4af172ff081e40f7f4eb580b3928e7b"
+  },
+  "observed_paths": [
+    "schema/migrations/0131_execution_records_determinism_columns.sql",
+    "schema/migrations/MIGRATION_HEAD",
+    "scripts/db/verify_execution_records_determinism_columns.sh"
+  ],
+  "status": "PASS",
+  "task_id": "TSK-P2-PREAUTH-003-REM-01",
+  "timestamp_utc": "2026-04-20T10:19:40Z"
+}
