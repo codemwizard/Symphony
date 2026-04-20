@@ -783,6 +783,96 @@
             "expires_on": "2026-06-01",
             "reviewed_by": "mwiza",
             "approved_at": "2026-04-19"
+        },
+        {
+            "id": "DDL-ALLOW-0109",
+            "migration": "schema/migrations/0131_execution_records_determinism_columns.sql",
+            "statement_fingerprint": "090a7a205b576333b81a535b5ac467fd1fe2f34b07e4cc791734a4ce125ffaef",
+            "reason": "REM-01 expand: ADD COLUMN IF NOT EXISTS input_hash (INV-EXEC-TRUTH-001)",
+            "expires_on": "2026-12-31",
+            "reviewed_by": "security_guardian",
+            "approved_at": "2026-04-20"
+        },
+        {
+            "id": "DDL-ALLOW-0110",
+            "migration": "schema/migrations/0131_execution_records_determinism_columns.sql",
+            "statement_fingerprint": "71cd11ee398be6324129d6d6680f8d1b2dcf7eb838915821f1dc930f1a400e20",
+            "reason": "REM-01 expand: ADD COLUMN IF NOT EXISTS output_hash (INV-EXEC-TRUTH-001)",
+            "expires_on": "2026-12-31",
+            "reviewed_by": "security_guardian",
+            "approved_at": "2026-04-20"
+        },
+        {
+            "id": "DDL-ALLOW-0111",
+            "migration": "schema/migrations/0131_execution_records_determinism_columns.sql",
+            "statement_fingerprint": "928a9401de86b8c7f11de4507f96edd65d398895c4e6ed358508dfffec7778b4",
+            "reason": "REM-01 expand: ADD COLUMN IF NOT EXISTS runtime_version (INV-EXEC-TRUTH-001)",
+            "expires_on": "2026-12-31",
+            "reviewed_by": "security_guardian",
+            "approved_at": "2026-04-20"
+        },
+        {
+            "id": "DDL-ALLOW-0112",
+            "migration": "schema/migrations/0131_execution_records_determinism_columns.sql",
+            "statement_fingerprint": "816b71ea8b143a048a57f4ed18f0e9fea5fa6e69f7114c575a74897108c00d53",
+            "reason": "REM-01 expand: ADD COLUMN IF NOT EXISTS tenant_id (INV-EXEC-TRUTH-001)",
+            "expires_on": "2026-12-31",
+            "reviewed_by": "security_guardian",
+            "approved_at": "2026-04-20"
+        },
+        {
+            "id": "DDL-ALLOW-0113",
+            "migration": "schema/migrations/0132_execution_records_determinism_constraints.sql",
+            "statement_fingerprint": "e24f30d6af8d80dc92ec6f9bdd5a04c8a00a92daf8b4a5a347c02cee0addd4c7",
+            "reason": "REM-02 contract: ALTER COLUMN input_hash SET NOT NULL (INV-EXEC-TRUTH-001)",
+            "expires_on": "2026-12-31",
+            "reviewed_by": "security_guardian",
+            "approved_at": "2026-04-20"
+        },
+        {
+            "id": "DDL-ALLOW-0114",
+            "migration": "schema/migrations/0132_execution_records_determinism_constraints.sql",
+            "statement_fingerprint": "fcbea2cafd270093bdc55a3c0cbf4ded4112b3dbe9c34d1a021b60866b5f453a",
+            "reason": "REM-02 contract: ALTER COLUMN output_hash SET NOT NULL (INV-EXEC-TRUTH-001)",
+            "expires_on": "2026-12-31",
+            "reviewed_by": "security_guardian",
+            "approved_at": "2026-04-20"
+        },
+        {
+            "id": "DDL-ALLOW-0115",
+            "migration": "schema/migrations/0132_execution_records_determinism_constraints.sql",
+            "statement_fingerprint": "8aaa83415ef5e89df377440043f120070a9befcdae5a564b16bd78da0e21adcf",
+            "reason": "REM-02 contract: ALTER COLUMN runtime_version SET NOT NULL (INV-EXEC-TRUTH-001)",
+            "expires_on": "2026-12-31",
+            "reviewed_by": "security_guardian",
+            "approved_at": "2026-04-20"
+        },
+        {
+            "id": "DDL-ALLOW-0116",
+            "migration": "schema/migrations/0132_execution_records_determinism_constraints.sql",
+            "statement_fingerprint": "06344b90514c342ff3bba6c4441f2fb09a1d095563b5996c9f00fddc76358c87",
+            "reason": "REM-02 contract: ALTER COLUMN tenant_id SET NOT NULL (INV-EXEC-TRUTH-001)",
+            "expires_on": "2026-12-31",
+            "reviewed_by": "security_guardian",
+            "approved_at": "2026-04-20"
+        },
+        {
+            "id": "DDL-ALLOW-0117",
+            "migration": "schema/migrations/0132_execution_records_determinism_constraints.sql",
+            "statement_fingerprint": "de61fd40334a121bb3425f05734a12cd98146188ef1556dbbe1bc58e81bf7683",
+            "reason": "REM-02 contract: ALTER COLUMN interpretation_version_id SET NOT NULL (INV-EXEC-TRUTH-001)",
+            "expires_on": "2026-12-31",
+            "reviewed_by": "security_guardian",
+            "approved_at": "2026-04-20"
+        },
+        {
+            "id": "DDL-ALLOW-0118",
+            "migration": "schema/migrations/0132_execution_records_determinism_constraints.sql",
+            "statement_fingerprint": "670e2789175b16cea39e96ce1cc637db4dde1a6d4a08749fdeb94e10dcb019df",
+            "reason": "REM-02 contract: ADD CONSTRAINT execution_records_determinism_unique (INV-EXEC-TRUTH-001)",
+            "expires_on": "2026-12-31",
+            "reviewed_by": "security_guardian",
+            "approved_at": "2026-04-20"
         }
     ]
 }
