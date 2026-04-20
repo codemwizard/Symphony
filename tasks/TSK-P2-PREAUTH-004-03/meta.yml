@@ -20,24 +20,27 @@ intent: >-
   (SET search_path = pg_catalog, public). It resolves the policy_decisions row,
   confirms the execution_records row exists (execution_records does not yet
   carry entity_type/entity_id columns on Wave 4 — this is declared as a named
-  proof_limitation), asserts policy_decisions.execution_id = p_execution_id,
-  and asserts that policy_decisions.entity_type/entity_id column values match
-  the corresponding fields inside the canonical decision_payload, raising
-  SQLSTATE 22023 or P0002 on mismatch. The verifier
-  scripts/db/verify_authority_transition_binding.sh exercises positive and
-  negative cases (V1 valid binding accepted; V2 column-vs-payload entity
-  mismatch rejected; V3 non-existent policy_decision_id rejected; V4
-  decision_hash recompute mismatch rejected) and emits
-  evidence/phase2/tsk_p2_preauth_004_03.json. Signature authenticity and
-  insert-time cross-entity coherence are both deferred and declared as named
-  proof_limitations.
+  proof_limitation), and asserts policy_decisions.execution_id = p_execution_id,
+  raising SQLSTATE 22023 or P0002 on mismatch. Migration 0136 contains only
+  this function — no helper view, no helper function, no other DDL. Entity-
+  tampering detection is delegated to the verifier's hash-recompute step
+  because decision_payload is reconstructed from the policy_decisions row
+  (per 004-00 contract item 2), so an independent column-vs-payload
+  comparison inside the function would be tautological. The verifier
+  scripts/db/verify_authority_transition_binding.sh exercises three scenarios
+  (V1 valid binding accepted; V2 non-existent policy_decision_id rejected;
+  V3 decision_hash recompute mismatch rejected by the verifier script, which
+  also subsumes entity-column tampering because payload is row-derived) and
+  emits evidence/phase2/tsk_p2_preauth_004_03.json. Signature authenticity
+  and insert-time cross-entity coherence are both deferred and declared as
+  named proof_limitations.
 
 anti_patterns:
   - "Editing applied migrations (0001-0135) instead of authoring a new forward migration 0136"
   - "Implementing the enforcement function without SECURITY DEFINER + SET search_path = pg_catalog, public hardening (AGENTS.md hard constraint)"
   - "Marking INV-AUTH-TRANSITION-BINDING-01 status=implemented without emitted evidence from verify_authority_transition_binding.sh"
   - "Silently skipping decision_hash recompute in the verifier (failing open)"
-  - "Silently skipping the entity_type/entity_id column-vs-payload match in the verifier (tampering-at-rest passes undetected)"
+  - "Declaring any DDL in migration 0136 beyond the enforce_authority_transition_binding function itself (no helper view, no helper function — payload is row-derived, so an in-function column-vs-payload check would be tautological)"
   - "Claiming signature authenticity verification while the public-key resolution layer does not exist (fabricated proof)"
   - "Scope creep into Wave 5 state-machine wiring or re-authoring policy_decisions / state_rules"
 
@@ -51,27 +54,28 @@ out_of_scope:
 stop_conditions:
   - "If migration 0136 authors the enforcement function without SECURITY DEFINER or without SET search_path = pg_catalog, public"
   - "If the verifier does not recompute sha256(canonical_json(decision_payload)) and compare byte-equal with the stored decision_hash"
-  - "If the enforcement function or verifier does not assert policy_decisions (entity_type, entity_id) column values match the corresponding fields in the canonical decision_payload"
+  - "If migration 0136 contains any DDL beyond the enforce_authority_transition_binding function (no helper view, no helper function)"
   - "If INV-AUTH-TRANSITION-BINDING-01 is marked status=implemented without evidence/phase2/tsk_p2_preauth_004_03.json existing and containing status=PASS"
   - "If schema/migrations/MIGRATION_HEAD is not advanced from 0135 to 0136"
   - "If any ALTER TABLE targets an applied migration (0001-0135)"
   - "If the verifier lacks a failure path (|| exit 1, set -e, or grep || exit pattern)"
-  - "If any of the four contracted verifier scenarios (V1 positive, V2 column-vs-payload mismatch reject, V3 missing-decision reject, V4 hash-mismatch reject) is omitted"
+  - "If any of the three contracted verifier scenarios (V1 positive, V2 missing-decision reject, V3 hash-mismatch reject) is omitted"
 
 proof_guarantees:
   - "INV-AUTH-TRANSITION-BINDING-01 appears in docs/invariants/INVARIANTS_MANIFEST.yml with enforcement, verification, and evidence paths pinned"
   - "INV-AUTH-TRANSITION-BINDING-01 appears in docs/invariants/INVARIANTS_IMPLEMENTED.md with status=implemented only when evidence is fresh"
   - "Migration 0136 creates public.enforce_authority_transition_binding(uuid, uuid) with SECURITY DEFINER and SET search_path = pg_catalog, public"
   - "pg_proc returns exactly one function named enforce_authority_transition_binding with prosecdef=true and proconfig containing search_path=pg_catalog,public"
-  - "Verifier exercises V1 (valid binding accepted), V2 (policy_decisions column-vs-payload entity mismatch rejected with SQLSTATE 22023), V3 (missing decision rejected with SQLSTATE P0002), V4 (decision_hash recompute mismatch rejected by the verifier) and exits 0 only when all four outcomes match expectation"
+  - "Verifier exercises V1 (valid binding accepted), V2 (missing decision rejected with SQLSTATE P0002), V3 (decision_hash recompute mismatch rejected by the verifier script) and exits 0 only when all three outcomes match expectation"
+  - "Migration 0136 contains exactly one DDL object: CREATE OR REPLACE FUNCTION public.enforce_authority_transition_binding; no helper view, no helper function, no other DDL"
   - "schema/migrations/MIGRATION_HEAD equals exactly 0136 after application"
   - "Migrations 0001-0135 are byte-identical to their pre-004-03 state"
 
 proof_limitations:
-  - "Signature authenticity is NOT verified. The verifier validates structural binding (FK + execution_id equality + policy_decisions column-vs-payload entity match + hash recompute) but does not verify Ed25519 signatures because public-key resolution for declared_by is deferred to a later wave. This limitation is declared explicitly, not silently"
-  - "Insert-time cross-entity coherence between policy_decisions and execution_records is NOT enforced. execution_records does not yet carry entity_type/entity_id columns on Wave 4 (verified across migrations 0118, 0131, 0132, 0133), so a trigger that rejects a new policy_decisions row whose entity does not match its execution's entity cannot be written until a follow-up task extends execution_records with those columns. Transition-apply time is guarded by FK+equality on execution_id, policy_decisions column-vs-payload match, hash recompute, and UNIQUE (execution_id, decision_type)"
+  - "Signature authenticity is NOT verified. The verifier validates structural binding (FK + execution_id equality + existence of execution_records + decision_hash recompute) but does not verify Ed25519 signatures because public-key resolution for declared_by is deferred to a later wave. This limitation is declared explicitly, not silently"
+  - "Insert-time cross-entity coherence between policy_decisions and execution_records is NOT enforced. execution_records does not yet carry entity_type/entity_id columns on Wave 4 (verified across migrations 0118, 0131, 0132, 0133), so a trigger that rejects a new policy_decisions row whose entity does not match its execution's entity cannot be written until a follow-up task extends execution_records with those columns. Verify-time protection rests on three layers: (a) FK+equality on execution_id plus existence check on execution_records, (b) hash recompute which subsumes entity-column tampering because decision_payload is row-derived, (c) UNIQUE (execution_id, decision_type)"
   - "The enforcement function can only be invoked from whichever trigger or code path the Wave 5 state machine attaches it to. This task installs the function; attachment to a specific trigger point on an authority-bearing transition table is Wave 5's responsibility and is tracked as a follow-up"
-  - "decision_hash recompute requires a canonical_json implementation. This task uses a pg-level JSONB-to-canonical-string function (declared in migration 0136 as _canonical_json_v1) that implements RFC 8785 JCS for the subset of payload types decision_payload is permitted to contain. Support for arbitrary nested types is out of scope"
+  - "decision_hash recompute requires a canonical_json implementation. This task performs the recompute inside the verifier script (bash + jq / python) rather than via a pg-level helper, because the canonical-JSON serialisation is consumed only at verify time and migration 0136 is constrained to contain exactly the enforce_authority_transition_binding function (no helper view, no helper function). RFC 8785 JCS is applied to the subset of payload types decision_payload is permitted to contain; support for arbitrary nested types is out of scope"
 
 depends_on:
   - TSK-P2-PREAUTH-004-00
@@ -104,10 +108,10 @@ work:
     (via SELECT EXISTS) without querying entity columns, since execution_records does not carry entity_type/entity_id on Wave 4; if
     absent RAISE EXCEPTION with SQLSTATE 'P0002' and message 'authority_transition_binding: no execution_records row for execution_id=%'.
     It asserts policy_decisions.execution_id = p_execution_id; on mismatch RAISE EXCEPTION with SQLSTATE '22023' and
-    message 'authority_transition_binding: execution_id mismatch'. It asserts policy_decisions.entity_type and policy_decisions.entity_id
-    column values match the corresponding fields inside the canonical decision_payload (resolved via public.policy_decisions_payload_view);
-    on mismatch RAISE EXCEPTION with SQLSTATE '22023' and message 'authority_transition_binding: entity_type or entity_id mismatch with payload'.
-    Migration file contains no other DDL and makes no change to migrations 0001-0135.
+    message 'authority_transition_binding: execution_id mismatch'. The function does NOT perform an in-function column-vs-payload
+    comparison, because decision_payload is reconstructed from the same policy_decisions columns per the 004-00 contract and
+    such a comparison would be tautological; entity-tampering detection is handled by the verifier's hash-recompute step (V3).
+    Migration file contains no other DDL (no helper view, no helper function) and makes no change to migrations 0001-0135.
   - >-
     [ID tsk_p2_preauth_004_03_work_item_02] Update schema/migrations/MIGRATION_HEAD by writing the exact token 0136
     (no trailing whitespace drift) so the migration-ordering gate treats 0136 as head.
@@ -118,16 +122,16 @@ work:
     with status=planned initially; flip to status=implemented only after evidence/phase2/tsk_p2_preauth_004_03.json exists with status=PASS.
   - >-
     [ID tsk_p2_preauth_004_03_work_item_04] Author scripts/db/verify_authority_transition_binding.sh that connects to DATABASE_URL,
-    exercises four scenarios, and writes evidence/phase2/tsk_p2_preauth_004_03.json with task_id, git_sha, timestamp_utc, status,
+    exercises three scenarios, and writes evidence/phase2/tsk_p2_preauth_004_03.json with task_id, git_sha, timestamp_utc, status,
     checks, observed_paths, observed_hashes, command_outputs, execution_trace, scenarios_run, scenarios_passed, proof_limitations.
     Scenario V1: insert an execution_records row using the Wave-3 column contract; insert a policy_decisions row bound to that execution where the
-    entity_type/entity_id COLUMN values equal the entity_type/entity_id FIELDS inside decision_payload and the stored decision_hash equals
-    sha256(canonical_json(decision_payload)); call enforce_authority_transition_binding; expect no exception. Scenario V2: insert an execution_records
-    row; insert a policy_decisions row where the entity_id COLUMN value differs from the entity_id FIELD inside decision_payload (models post-insert
-    tampering); call the function; expect RAISE with SQLSTATE 22023 and message 'authority_transition_binding: entity_type or entity_id mismatch with
-    payload'. Scenario V3: call the function with a policy_decision_id that does not exist; expect RAISE with SQLSTATE P0002. Scenario V4: insert a
+    entity_type/entity_id COLUMN values equal the entity_type/entity_id FIELDS inside the canonical decision_payload reconstructed from the row
+    and the stored decision_hash equals sha256(canonical_json(decision_payload)); call enforce_authority_transition_binding; expect no exception.
+    Scenario V2: call the function with a policy_decision_id that does not exist; expect RAISE with SQLSTATE P0002. Scenario V3: insert a
     policy_decisions row whose stored decision_hash does not match sha256(canonical_json(decision_payload)) recomputed from the row; the verifier
-    (not the DB function) recomputes and rejects, exiting non-zero for V4 if the mismatch is not detected.
+    (not the DB function) recomputes and rejects, exiting non-zero for V3 if the mismatch is not detected. V3 subsumes entity-column tampering
+    because decision_payload is row-derived: tampering any payload-contributing column (entity_type, entity_id, execution_id, decision_type,
+    authority_scope, declared_by, issued_at) breaks the stored decision_hash against the recomputed value.
 
 acceptance_criteria:
   - >-
@@ -141,40 +145,35 @@ acceptance_criteria:
     and grep confirms docs/invariants/INVARIANTS_IMPLEMENTED.md contains the literal token INV-AUTH-TRANSITION-BINDING-01.
   - >-
     [ID tsk_p2_preauth_004_03_work_item_04] bash scripts/db/verify_authority_transition_binding.sh exits 0 against a database that has 0136 applied,
-    and writes evidence/phase2/tsk_p2_preauth_004_03.json with status=PASS and scenarios_passed containing V1, V2, V3, V4.
+    and writes evidence/phase2/tsk_p2_preauth_004_03.json with status=PASS and scenarios_passed containing V1, V2, V3.
 
 negative_tests:
   - id: TSK-P2-PREAUTH-004-03-V2
     description: >-
-      Insert a policy_decisions row whose entity_id COLUMN value differs from the entity_id FIELD inside the canonical decision_payload
-      (models post-insert tampering of the entity columns without rehashing the payload; execution_records carries no entity columns on
-      Wave 4 so the mismatch is defined against the payload rather than against execution_records); call
-      enforce_authority_transition_binding and expect RAISE EXCEPTION with SQLSTATE 22023 and message
-      'authority_transition_binding: entity_type or entity_id mismatch with payload'. Verifier records V2 as passed when the exception fires.
+      Call enforce_authority_transition_binding(p_execution_id, p_policy_decision_id) with a policy_decision_id that does not exist;
+      expect RAISE EXCEPTION with SQLSTATE P0002. Verifier records V2 as passed when the exception fires.
     required: true
   - id: TSK-P2-PREAUTH-004-03-V3
     description: >-
-      Call enforce_authority_transition_binding(p_execution_id, p_policy_decision_id) with a policy_decision_id that does not exist;
-      expect RAISE EXCEPTION with SQLSTATE P0002. Verifier records V3 as passed when the exception fires.
-    required: true
-  - id: TSK-P2-PREAUTH-004-03-V4
-    description: >-
       Insert a policy_decisions row whose stored decision_hash does not match sha256(canonical_json(decision_payload))
-      recomputed from the row by the verifier script; verifier records V4 as passed when the mismatch is detected and exits non-zero.
+      recomputed from the row by the verifier script (bash + jq / python, not a DB helper); verifier records V3 as passed
+      when the mismatch is detected and exits non-zero. This scenario also subsumes post-insert tampering of entity_type /
+      entity_id columns, because decision_payload is row-derived and tampering any payload-contributing column breaks
+      the recomputed hash.
     required: true
 
 positive_tests:
   - id: TSK-P2-PREAUTH-004-03-V1
     description: >-
       Insert an execution_records row (Wave-3 column contract; no entity_type/entity_id columns required) and a policy_decisions row
-      whose (a) entity_type/entity_id COLUMN values match the entity_type/entity_id FIELDS inside the canonical decision_payload and
-      (b) stored decision_hash equals sha256(canonical_json(decision_payload)); call enforce_authority_transition_binding and
-      expect no exception. Verifier records V1 as passed.
+      whose (a) entity_type/entity_id COLUMN values match the entity_type/entity_id FIELDS inside the canonical decision_payload
+      reconstructed from the row and (b) stored decision_hash equals sha256(canonical_json(decision_payload)); call
+      enforce_authority_transition_binding and expect no exception. Verifier records V1 as passed.
     required: true
 
 verification:
   - >-
-    # [ID tsk_p2_preauth_004_03_work_item_04] Run the binding verifier and emit evidence covering V1, V2, V3, V4.
+    # [ID tsk_p2_preauth_004_03_work_item_04] Run the binding verifier and emit evidence covering V1, V2, V3.
     test -x scripts/db/verify_authority_transition_binding.sh && bash scripts/db/verify_authority_transition_binding.sh > evidence/phase2/tsk_p2_preauth_004_03.json || exit 1
   - >-
     # [ID tsk_p2_preauth_004_03_work_item_01] Confirm migration 0136 installs the enforcement function with SECURITY DEFINER hardening and the contracted SQLSTATE codes.
@@ -186,8 +185,8 @@ verification:
     # [ID tsk_p2_preauth_004_03_work_item_03] Confirm the invariant is registered in both manifest and implemented registries.
     test -f docs/invariants/INVARIANTS_MANIFEST.yml && grep -q 'INV-AUTH-TRANSITION-BINDING-01' docs/invariants/INVARIANTS_MANIFEST.yml && test -f docs/invariants/INVARIANTS_IMPLEMENTED.md && grep -q 'INV-AUTH-TRANSITION-BINDING-01' docs/invariants/INVARIANTS_IMPLEMENTED.md || exit 1
   - >-
-    # [ID tsk_p2_preauth_004_03_work_item_04] Confirm the evidence JSON carries all four scenario outcomes and the declared proof_limitations.
-    test -f evidence/phase2/tsk_p2_preauth_004_03.json && grep -q 'scenarios_passed' evidence/phase2/tsk_p2_preauth_004_03.json && grep -q 'V1' evidence/phase2/tsk_p2_preauth_004_03.json && grep -q 'V2' evidence/phase2/tsk_p2_preauth_004_03.json && grep -q 'V3' evidence/phase2/tsk_p2_preauth_004_03.json && grep -q 'V4' evidence/phase2/tsk_p2_preauth_004_03.json && grep -q 'proof_limitations' evidence/phase2/tsk_p2_preauth_004_03.json || exit 1
+    # [ID tsk_p2_preauth_004_03_work_item_04] Confirm the evidence JSON carries all three scenario outcomes and the declared proof_limitations.
+    test -f evidence/phase2/tsk_p2_preauth_004_03.json && grep -q 'scenarios_passed' evidence/phase2/tsk_p2_preauth_004_03.json && grep -q 'V1' evidence/phase2/tsk_p2_preauth_004_03.json && grep -q 'V2' evidence/phase2/tsk_p2_preauth_004_03.json && grep -q 'V3' evidence/phase2/tsk_p2_preauth_004_03.json && grep -q 'proof_limitations' evidence/phase2/tsk_p2_preauth_004_03.json || exit 1
 
 evidence:
   - path: evidence/phase2/tsk_p2_preauth_004_03.json
@@ -207,13 +206,13 @@ evidence:
 
 failure_modes:
   - "Enforcement function missing SECURITY DEFINER or SET search_path = pg_catalog, public => CRITICAL_FAIL (AGENTS.md hardening)"
-  - "Enforcement function does not assert policy_decisions entity_type/entity_id column values match the canonical payload fields => CRITICAL_FAIL (tampering-at-rest of entity columns passes undetected)"
-  - "Verifier skips decision_hash recompute step => CRITICAL_FAIL (failing open on hash integrity)"
+  - "Migration 0136 contains DDL beyond the enforce_authority_transition_binding function (helper view, helper function, or any other CREATE / ALTER) => FAIL_REVIEW (violates the SINGLE_INVARIANT scope and introduces tautological checks)"
+  - "Verifier skips decision_hash recompute step => CRITICAL_FAIL (failing open on hash integrity, and silently dropping the entity-tampering guard which V3 subsumes)"
   - "Invariant marked status=implemented without fresh evidence/phase2/tsk_p2_preauth_004_03.json => FAIL (stale-evidence precondition)"
   - "ALTER statement targets an applied migration (0001-0135) => CRITICAL_FAIL"
   - "Migration 0136 applied but MIGRATION_HEAD still reads 0135 => FAIL"
   - "Verifier claims signature authenticity is validated while public-key resolution layer is absent => CRITICAL_FAIL (fabricated proof)"
-  - "Any of V1, V2, V3, V4 omitted from the verifier => FAIL_REVIEW"
+  - "Any of V1, V2, V3 omitted from the verifier => FAIL_REVIEW"
 
 must_read:
   - docs/operations/AI_AGENT_OPERATION_MANUAL.md

@@ -7,7 +7,7 @@
   "status": "PASS",
   "reviewer_id": "mwiza",
   "signed_at_utc": "2026-04-17T20:25:00Z",
-  "change_ref": "branch/wave8-regulatory-extensions",
+  "change_ref": "branch/devin/1776714902-wave4-004-00",
   "review_artifact_ref": "approvals/2026-04-17/wave3-execution-records-implementation.md",
   "review_sidecar_ref": "approvals/2026-04-17/wave3-execution-records-implementation.approval.json",
   "review_scope_count": 7,

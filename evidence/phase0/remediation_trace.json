@@ -4,20 +4,11 @@
   "git_sha": "0000000000000000000000000000000000000000",
   "schema_fingerprint": "06545fe3f538515080117719d8d8bd0acb0136101bc7d7d61a37f052481dc898",
   "status": "PASS",
+  "reason": "no_production_affecting_changes",
   "diff_mode": "range",
   "base_ref": "refs/remotes/origin/main",
   "head_ref": "HEAD",
-  "merge_base": "955bb8df54740ba1badf35f09f356f67b228a67f",
-  "triggered_change_present": true,
-  "triggered_prefixes": [
-    "docs",
-    "schema",
-    "scripts"
-  ],
-  "satisfying_docs": [
-    "docs/plans/phase1/REM-2026-04-19_pre_ci-phase1_db_verifiers/PLAN.md",
-    "docs/plans/phase1/REM-2026-04-19_pre_ci-phase1_db_verifiers/EXEC_LOG.md"
-  ],
-  "satisfying_doc_parent": "docs/plans/phase1/REM-2026-04-19_pre_ci-phase1_db_verifiers",
-  "errors": []
+  "merge_base": "87ba14f06791b6971eb973812afd0a0078cfc75c",
+  "triggered_change_present": false,
+  "satisfying_docs": []
 }

@@ -6,12 +6,12 @@
   "status": "PASS",
   "violations": [],
   "allowlist_hits": [
-    "DDL-ALLOW-0009:0020_business_foundation_hooks.sql",
-    "DDL-ALLOW-0010:0020_business_foundation_hooks.sql",
-    "DDL-ALLOW-0016:0026_business_foundation_delta_tightening.sql",
-    "DDL-ALLOW-0017:0026_business_foundation_delta_tightening.sql",
     "DDL-ALLOW-0004:0018_outbox_tenant_attribution.sql",
     "DDL-ALLOW-0005:0018_outbox_tenant_attribution.sql",
+    "DDL-ALLOW-0016:0026_business_foundation_delta_tightening.sql",
+    "DDL-ALLOW-0017:0026_business_foundation_delta_tightening.sql",
+    "DDL-ALLOW-0009:0020_business_foundation_hooks.sql",
+    "DDL-ALLOW-0010:0020_business_foundation_hooks.sql",
     "DDL-ALLOW-0024:0043_payment_outbox_pending_kyc_hold_hook.sql"
   ]
 }

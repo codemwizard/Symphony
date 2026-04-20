@@ -8,8 +8,8 @@
   "worktree_count": 1,
   "worktrees": [
     {
-      "worktree": "/home/mwiza/workspaces/Symphony-Demo/Symphony",
-      "branch": "refs/heads/wave8-regulatory-extensions",
+      "worktree": "/home/ubuntu/Symphony",
+      "branch": "refs/heads/devin/1776714902-wave4-004-00",
       "detached": false,
       "prunable": false
     }

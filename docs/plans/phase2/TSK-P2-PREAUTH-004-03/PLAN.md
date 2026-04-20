@@ -36,9 +36,9 @@ Without 004-03, a row in `policy_decisions` is just a self-declared hash. With 0
 
 ### How the three Wave 4 audit fixes close
 
-1. **Cryptographic binding.** This task's verifier recomputes `sha256(canonical_json(decision_payload))` and asserts byte-equality with the stored `decision_hash`. Mismatch is a verifier failure (V4). This makes `decision_hash` load-bearing at verify time, not just at insert time.
+1. **Cryptographic binding.** The verifier recomputes `sha256(canonical_json(decision_payload))` from the `policy_decisions` row (the canonical payload is reconstructed from its columns per the 004-00 contract, *Invariant verifier protocol* item 2: "Reconstruct `decision_payload` from the `policy_decisions` row") and asserts byte-equality with the stored `decision_hash`. Mismatch is a verifier failure (V3). This makes `decision_hash` load-bearing at verify time — any post-insert tampering of any payload-bearing column (including `entity_type` or `entity_id`) breaks the recomputed hash.
 
-2. **Entity context.** The 004-00 contract at line 189 requires that a decision's `entity_type`/`entity_id` match *the transition's entity*. On Wave 4 today, `execution_records` does NOT carry `entity_type`/`entity_id` columns (verified across migrations 0118, 0131, 0132, 0133); the entity identity for a transition is declared inside the `policy_decisions.decision_payload` canonical JSON. The enforcement function therefore binds in three places that are all implementable today: (a) the `policy_decisions` row must exist, (b) its `execution_id` must equal `p_execution_id` (FK + equality), (c) its `entity_type`/`entity_id` column values must match the corresponding fields inside the canonical payload — so any post-insert tampering that bypassed the append-only trigger would be detected at transition-apply time. The verifier additionally recomputes `sha256(canonical_json(decision_payload))` and rejects on mismatch (V4). Together with `UNIQUE (execution_id, decision_type)` on `policy_decisions` (004-01), this forecloses the cross-entity replay path that runs through `policy_decisions` itself.
+2. **Entity context.** The 004-00 contract requires that a decision's `entity_type`/`entity_id` match *the transition's entity*. On Wave 4 today, `execution_records` does NOT carry `entity_type`/`entity_id` columns (verified across migrations 0118, 0131, 0132, 0133); the entity identity for a transition is declared on the `policy_decisions` row (columns, from which the canonical payload is deterministically reconstructed). The enforcement function therefore binds in three places that are all implementable today: (a) the `policy_decisions` row must exist, (b) the `execution_records` row must exist, (c) `policy_decisions.execution_id` must equal `p_execution_id` (FK-plus-equality ensures it is binding to THIS execution, not merely AN execution). Because `decision_payload` is reconstructed from the same columns that carry `entity_type`/`entity_id`, an independent column-vs-payload comparison inside the function is tautological; entity-tampering detection is therefore delegated to the verifier's hash-recompute step (V3), where tampering any payload-contributing column produces a hash mismatch. Together with `UNIQUE (execution_id, decision_type)` on `policy_decisions` (004-01), this forecloses the cross-entity replay path that runs through `policy_decisions` itself at verify time. Insert-time cross-entity coherence remains deferred — see "Execution-side entity binding gap (declared)" below.
 
 3. **Rule priority.** Not in this task. Lives on `state_rules` (004-02).
 
@@ -48,7 +48,7 @@ Signature authenticity verification (`ed25519_verify(signature, decision_hash, p
 
 ### Execution-side entity binding gap (declared)
 
-`execution_records` does not yet carry `entity_type`/`entity_id` columns. End-to-end cross-entity-replay protection at *decision INSERT* time (i.e. a trigger that rejects a new `policy_decisions` row whose entity does not match the entity of its bound execution) requires those columns to exist. Until a follow-up task extends `execution_records` with `entity_type TEXT NOT NULL` + `entity_id UUID NOT NULL` (expand-only) and adds a coherence CHECK/trigger on `policy_decisions` insert, cross-entity replay is guarded by the three layers `enforce_authority_transition_binding` *does* implement today: (a) FK + equality on `execution_id`, (b) column-vs-payload match inside `policy_decisions`, (c) `UNIQUE (execution_id, decision_type)` limiting how many decisions can attach to a given execution. This task declares the remaining gap as a named `proof_limitation`; it does not silently close it by querying columns that do not exist.
+`execution_records` does not yet carry `entity_type`/`entity_id` columns. End-to-end cross-entity-replay protection at *decision INSERT* time (i.e. a trigger that rejects a new `policy_decisions` row whose entity does not match the entity of its bound execution) requires those columns to exist. Until a follow-up task extends `execution_records` with `entity_type TEXT NOT NULL` + `entity_id UUID NOT NULL` (expand-only) and adds a coherence CHECK/trigger on `policy_decisions` insert, cross-entity replay is guarded at verify time by the three layers this task *does* implement today: (a) `enforce_authority_transition_binding` FK + equality on `execution_id` plus existence check on `execution_records`, (b) the verifier's hash-recompute step (V3), which detects post-insert tampering of any payload-contributing column including `entity_type` / `entity_id` because `decision_payload` is row-derived, (c) `UNIQUE (execution_id, decision_type)` on `policy_decisions` limiting how many decisions can attach to a given execution. This task declares the remaining insert-time gap as a named `proof_limitation`; it does not silently close it by querying columns that do not exist.
 
 ---
 
@@ -104,15 +104,11 @@ SET search_path = pg_catalog, public
 AS $$
 DECLARE
   v_pd_execution_id      uuid;
-  v_pd_entity_type       text;
-  v_pd_entity_id         uuid;
-  v_payload_entity_type  text;
-  v_payload_entity_id    uuid;
   v_er_exists            boolean;
 BEGIN
   -- Step 1: resolve the policy_decisions row. If absent, reject.
-  SELECT execution_id, entity_type, entity_id
-    INTO v_pd_execution_id, v_pd_entity_type, v_pd_entity_id
+  SELECT execution_id
+    INTO v_pd_execution_id
     FROM public.policy_decisions
     WHERE policy_decision_id = p_policy_decision_id;
 
@@ -143,43 +139,27 @@ BEGIN
       ERRCODE = '22023',
       MESSAGE = 'authority_transition_binding: execution_id mismatch';
   END IF;
-
-  -- Step 4: the decision's entity_type/entity_id COLUMNS must match the
-  -- entity_type/entity_id FIELDS inside the canonical payload. This blocks
-  -- post-insert tampering of the entity columns without changing decision_hash.
-  SELECT p.entity_type, p.entity_id
-    INTO v_payload_entity_type, v_payload_entity_id
-    FROM public.policy_decisions_payload_view p
-    WHERE p.policy_decision_id = p_policy_decision_id;
-
-  IF v_payload_entity_type IS DISTINCT FROM v_pd_entity_type
-     OR v_payload_entity_id   IS DISTINCT FROM v_pd_entity_id THEN
-    RAISE EXCEPTION USING
-      ERRCODE = '22023',
-      MESSAGE = 'authority_transition_binding: entity_type or entity_id mismatch with payload';
-  END IF;
 END;
 $$;
 ```
 
-`policy_decisions_payload_view` is a repo-standard helper view that projects `entity_type` and `entity_id` from the canonical payload JSON on `policy_decisions`; its definition lands in the same migration `0136` file or is referenced from an existing helper view. The view is read-only. Note: the function does NOT query `entity_type`/`entity_id` on `execution_records` — those columns do not exist on Wave 4 (see "Execution-side entity binding gap (declared)").
+Migration 0136 installs this function ONLY — no helper view, no helper function, no other DDL. Entity-tampering detection is performed by the verifier's hash-recompute step (V3), which recomputes `sha256(canonical_json(decision_payload))` in the verifier script (bash + `jq` / python) from the row's columns; tampering any payload-contributing column (`entity_type`, `entity_id`, `execution_id`, `decision_type`, `authority_scope`, `declared_by`, `issued_at`) breaks the recomputed hash. A `policy_decisions_payload_view` is therefore not needed on Wave 4, because `decision_payload` is row-derived per the 004-00 contract and an independent column-vs-payload comparison inside the function would be tautological.
 
 ---
 
 ## Verifier Contract (authoritative for `scripts/db/verify_authority_transition_binding.sh`)
 
-The verifier runs four scenarios. Every scenario must produce a deterministic outcome.
+The verifier runs three scenarios. Every scenario must produce a deterministic outcome.
 
 | Scenario | Setup | Action | Expected | Proof recorded in evidence |
 |---|---|---|---|---|
-| V1 (positive) | Insert one `execution_records` row using the Wave-3 column contract (no `entity_type`/`entity_id` required; `execution_records` does not carry them). Insert one `policy_decisions` row bound to that execution where (a) column `entity_type=E` and column `entity_id=X`, (b) the canonical `decision_payload` contains `entity_type=E` and `entity_id=X`, (c) `decision_hash = sha256(canonical_json(payload))`. | Call `enforce_authority_transition_binding(execution_id, policy_decision_id)`. | No exception. | `scenarios_passed` includes `V1`. |
-| V2 (column-vs-payload mismatch reject) | Insert an `execution_records` row. Insert a `policy_decisions` row where column `entity_id=Y` but the canonical `decision_payload.entity_id=X` (same row, diverging column and payload entity identities — models post-insert tampering or a bad-actor caller that bypassed the insert-time path). | Call `enforce_authority_transition_binding(execution_id, policy_decision_id)`. | `RAISE EXCEPTION ... ERRCODE = '22023'` with message `authority_transition_binding: entity_type or entity_id mismatch with payload`. | `scenarios_passed` includes `V2`; the raised SQLSTATE is recorded in `command_outputs`. |
-| V3 (missing decision reject) | Do not insert a `policy_decisions` row. | Call the function with a random uuid as `p_policy_decision_id`. | `RAISE EXCEPTION ... ERRCODE = 'P0002'`. | `scenarios_passed` includes `V3`. |
-| V4 (hash mismatch reject) | Insert a `policy_decisions` row whose stored `decision_hash` is `sha256("tamper")` while the true `sha256(canonical_json(payload))` differs. | Verifier recomputes `sha256(canonical_json(payload))` from the row and compares against stored `decision_hash`. | Recompute mismatches stored; verifier records V4 passed. | `scenarios_passed` includes `V4`; both hashes are recorded (`observed_hashes`). |
+| V1 (positive) | Insert one `execution_records` row using the Wave-3 column contract (no `entity_type`/`entity_id` required; `execution_records` does not carry them). Insert one `policy_decisions` row bound to that execution where (a) column `entity_type=E` and column `entity_id=X`, (b) the canonical `decision_payload` reconstructed from the row contains `entity_type=E` and `entity_id=X`, (c) `decision_hash = sha256(canonical_json(payload))`. | Call `enforce_authority_transition_binding(execution_id, policy_decision_id)`. | No exception. | `scenarios_passed` includes `V1`. |
+| V2 (missing decision reject) | Do not insert a `policy_decisions` row. | Call the function with a random uuid as `p_policy_decision_id`. | `RAISE EXCEPTION ... ERRCODE = 'P0002'`. | `scenarios_passed` includes `V2`; the raised SQLSTATE is recorded in `command_outputs`. |
+| V3 (hash mismatch reject) | Insert a `policy_decisions` row whose stored `decision_hash` is `sha256("tamper")` while the true `sha256(canonical_json(payload))` reconstructed from the row differs. Because the canonical payload is reconstructed from the same columns that carry `entity_type`/`entity_id`, this scenario also subsumes post-insert tampering of the entity columns: tampering any payload-contributing column breaks the stored `decision_hash` against the recomputed value. | Verifier recomputes `sha256(canonical_json(payload))` from the row and compares against stored `decision_hash`. | Recompute mismatches stored; verifier records V3 passed. | `scenarios_passed` includes `V3`; both hashes are recorded (`observed_hashes`). |
 
-Verifier emits `evidence/phase2/tsk_p2_preauth_004_03.json` with `status=PASS` if and only if all four scenarios produce their expected outcomes. Any deviation flips `status=FAIL` and the verifier exits non-zero.
+Verifier emits `evidence/phase2/tsk_p2_preauth_004_03.json` with `status=PASS` if and only if all three scenarios produce their expected outcomes. Any deviation flips `status=FAIL` and the verifier exits non-zero.
 
-Verifier must use savepoints so V1–V4 can run against the same database without polluting state. Verifier must `set -euo pipefail` at the top and use `|| exit 1` on every `psql` invocation whose failure is not itself the scenario's expected outcome.
+Verifier must use savepoints so V1–V3 can run against the same database without polluting state. Verifier must `set -euo pipefail` at the top and use `|| exit 1` on every `psql` invocation whose failure is not itself the scenario's expected outcome.
 
 ---
 
@@ -223,7 +203,7 @@ Append a row: `| INV-AUTH-TRANSITION-BINDING-01 | Wave 4 | planned | evidence/ph
 
 ### Step 1: Author migration 0136 with the enforcement function
 
-- [ID tsk_p2_preauth_004_03_work_item_01] Create `schema/migrations/0136_enforce_authority_transition_binding.sql` with the function above. SECURITY DEFINER. `SET search_path = pg_catalog, public`. No `BEGIN;` / `COMMIT;` (B5). No other DDL.
+- [ID tsk_p2_preauth_004_03_work_item_01] Create `schema/migrations/0136_enforce_authority_transition_binding.sql` with the function above. SECURITY DEFINER. `SET search_path = pg_catalog, public`. No `BEGIN;` / `COMMIT;` (B5). No other DDL — the migration contains exactly one `CREATE OR REPLACE FUNCTION` for `public.enforce_authority_transition_binding`. No helper view, no helper function.
 - **Done when:** `grep -q 'CREATE OR REPLACE FUNCTION public.enforce_authority_transition_binding' schema/migrations/0136_enforce_authority_transition_binding.sql && grep -q 'SECURITY DEFINER' schema/migrations/0136_enforce_authority_transition_binding.sql && grep -q 'SET search_path = pg_catalog, public' schema/migrations/0136_enforce_authority_transition_binding.sql && grep -q "'22023'" schema/migrations/0136_enforce_authority_transition_binding.sql && grep -q "'P0002'" schema/migrations/0136_enforce_authority_transition_binding.sql` exits 0.
 
 ### Step 2: Advance MIGRATION_HEAD
@@ -238,8 +218,8 @@ Append a row: `| INV-AUTH-TRANSITION-BINDING-01 | Wave 4 | planned | evidence/ph
 
 ### Step 4: Author the verifier
 
-- [ID tsk_p2_preauth_004_03_work_item_04] Create `scripts/db/verify_authority_transition_binding.sh` that runs V1, V2, V3, V4 as described in the Verifier Contract section. Verifier writes `evidence/phase2/tsk_p2_preauth_004_03.json` with the required fields.
-- **Done when:** `bash scripts/db/verify_authority_transition_binding.sh` exits 0 and `jq -e '.status=="PASS" and (.scenarios_passed | index("V1")) and (.scenarios_passed | index("V2")) and (.scenarios_passed | index("V3")) and (.scenarios_passed | index("V4"))' evidence/phase2/tsk_p2_preauth_004_03.json` exits 0.
+- [ID tsk_p2_preauth_004_03_work_item_04] Create `scripts/db/verify_authority_transition_binding.sh` that runs V1, V2, V3 as described in the Verifier Contract section. Verifier writes `evidence/phase2/tsk_p2_preauth_004_03.json` with the required fields. V3 (hash recompute) is performed by the verifier script (bash + `jq` / python) — not by a pg-level helper function — because the canonical-JSON serialisation is consumed only at verify time.
+- **Done when:** `bash scripts/db/verify_authority_transition_binding.sh` exits 0 and `jq -e '.status=="PASS" and (.scenarios_passed | index("V1")) and (.scenarios_passed | index("V2")) and (.scenarios_passed | index("V3"))' evidence/phase2/tsk_p2_preauth_004_03.json` exits 0.
 
 ---
 
@@ -249,7 +229,7 @@ Append a row: `| INV-AUTH-TRANSITION-BINDING-01 | Wave 4 | planned | evidence/ph
 - [ID tsk_p2_preauth_004_03_work_item_01] `test -f schema/migrations/0136_enforce_authority_transition_binding.sql && grep -q 'CREATE OR REPLACE FUNCTION public.enforce_authority_transition_binding' schema/migrations/0136_enforce_authority_transition_binding.sql && grep -q 'SECURITY DEFINER' schema/migrations/0136_enforce_authority_transition_binding.sql && grep -q 'SET search_path = pg_catalog, public' schema/migrations/0136_enforce_authority_transition_binding.sql && grep -q "'22023'" schema/migrations/0136_enforce_authority_transition_binding.sql && grep -q "'P0002'" schema/migrations/0136_enforce_authority_transition_binding.sql || exit 1`
 - [ID tsk_p2_preauth_004_03_work_item_02] `test -f schema/migrations/MIGRATION_HEAD && grep -Fxq '0136' schema/migrations/MIGRATION_HEAD || exit 1`
 - [ID tsk_p2_preauth_004_03_work_item_03] `test -f docs/invariants/INVARIANTS_MANIFEST.yml && grep -q 'INV-AUTH-TRANSITION-BINDING-01' docs/invariants/INVARIANTS_MANIFEST.yml && test -f docs/invariants/INVARIANTS_IMPLEMENTED.md && grep -q 'INV-AUTH-TRANSITION-BINDING-01' docs/invariants/INVARIANTS_IMPLEMENTED.md || exit 1`
-- [ID tsk_p2_preauth_004_03_work_item_04] `test -f evidence/phase2/tsk_p2_preauth_004_03.json && grep -q 'scenarios_passed' evidence/phase2/tsk_p2_preauth_004_03.json && grep -q 'V1' evidence/phase2/tsk_p2_preauth_004_03.json && grep -q 'V2' evidence/phase2/tsk_p2_preauth_004_03.json && grep -q 'V3' evidence/phase2/tsk_p2_preauth_004_03.json && grep -q 'V4' evidence/phase2/tsk_p2_preauth_004_03.json && grep -q 'proof_limitations' evidence/phase2/tsk_p2_preauth_004_03.json || exit 1`
+- [ID tsk_p2_preauth_004_03_work_item_04] `test -f evidence/phase2/tsk_p2_preauth_004_03.json && grep -q 'scenarios_passed' evidence/phase2/tsk_p2_preauth_004_03.json && grep -q 'V1' evidence/phase2/tsk_p2_preauth_004_03.json && grep -q 'V2' evidence/phase2/tsk_p2_preauth_004_03.json && grep -q 'V3' evidence/phase2/tsk_p2_preauth_004_03.json && grep -q 'proof_limitations' evidence/phase2/tsk_p2_preauth_004_03.json || exit 1`
 
 ---
 
@@ -268,18 +248,18 @@ Evidence is emitted only by the verifier. `proof_limitations` MUST include the s
 | Mode | Severity |
 |---|---|
 | Function missing SECURITY DEFINER / `SET search_path` | CRITICAL_FAIL |
-| Function does not assert entity_type/entity_id match payload | CRITICAL_FAIL |
+| Migration 0136 contains DDL beyond the `enforce_authority_transition_binding` function (e.g. helper view, helper function) | FAIL_REVIEW |
 | Verifier skips decision_hash recompute | CRITICAL_FAIL |
 | Invariant marked implemented without fresh evidence | FAIL |
 | ALTER targets applied migration | CRITICAL_FAIL |
 | Verifier claims signature authenticity without public-key layer | CRITICAL_FAIL |
-| Any of V1/V2/V3/V4 omitted | FAIL_REVIEW |
+| Any of V1/V2/V3 omitted | FAIL_REVIEW |
 
 ---
 
 ## Rollback
 
-Forward-only. Rollback is a new migration that drops the function (and view, if introduced here). Do not edit 0136 after merge.
+Forward-only. Rollback is a new migration that drops the `enforce_authority_transition_binding` function. Do not edit 0136 after merge.
 
 ---
 
@@ -287,8 +267,7 @@ Forward-only. Rollback is a new migration that drops the function (and view, if 
 
 | Risk | Mitigation |
 |---|---|
-| Function fails open on missing payload view | Function's final assertion uses `IS DISTINCT FROM` with explicit `NOT FOUND` on the row lookup; missing payload means the row lookup fails, not a silent pass |
-| Verifier tolerates V4 by treating mismatch as success | V4 is contracted in PLAN, meta, and evidence; harness exits non-zero if V4 is not recorded |
+| Verifier tolerates V3 by treating mismatch as success | V3 is contracted in PLAN, meta, and evidence; harness exits non-zero if V3 is not recorded |
 | Signature verification claimed without key layer | `proof_limitations` is mandatory; verifier writes it literally; stop_conditions flags as CRITICAL_FAIL if the claim appears |
 | Migration ordering gate breaks | MIGRATION_HEAD advance is its own work item with explicit verification |
 
