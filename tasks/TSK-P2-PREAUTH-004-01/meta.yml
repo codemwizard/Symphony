@@ -69,6 +69,7 @@ depends_on:
   - TSK-P2-PREAUTH-004-00
 
 blocks:
+  - TSK-P2-PREAUTH-004-02
   - TSK-P2-PREAUTH-004-03
 
 touches:
