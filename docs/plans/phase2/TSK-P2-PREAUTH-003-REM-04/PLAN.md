@@ -2,7 +2,7 @@
 
 Task: TSK-P2-PREAUTH-003-REM-04
 Owner: INVARIANTS_CURATOR
-Depends on: TSK-P2-PREAUTH-003-REM-05
+Depends on: TSK-P2-PREAUTH-003-REM-05B
 failure_signature: PHASE2.PREAUTH.EXECUTION_RECORDS.INVARIANT_UNREGISTERED
 canonical_reference: docs/operations/AI_AGENT_OPERATION_MANUAL.md
 remediation_casefile: docs/plans/remediation/REM-2026-04-20_execution-truth-anchor/PLAN.md
@@ -25,7 +25,7 @@ Per the operation manual and the invariants curator role (`AGENTS.md` §Invarian
 
 ## Pre-conditions
 
-- [ ] `TSK-P2-PREAUTH-003-REM-05` is `status=completed` and `evidence/phase2/tsk_p2_preauth_003_rem_05.json` exists.
+- [ ] `TSK-P2-PREAUTH-003-REM-05B` is `status=completed` (CI wiring landed in `scripts/dev/pre_ci.sh` + `scripts/audit/run_invariants_fast_checks.sh`) and `evidence/phase2/tsk_p2_preauth_003_rem_05.json` exists (emitted upstream by REM-05).
 - [ ] `scripts/db/verify_execution_truth_anchor.sh` exists and is executable.
 - [ ] The upstream evidence JSON's embedded `git_sha` matches or descends from the current HEAD of the working branch (freshness gate).
 
