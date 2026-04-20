@@ -3,7 +3,7 @@ phase: '2'
 task_id: TSK-P2-PREAUTH-003-REM-01
 title: "Add nullable determinism columns (input_hash, output_hash, runtime_version, tenant_id) to execution_records via forward migration 0131 so that REM-02 can tighten them to NOT NULL"
 owner_role: DB_FOUNDATION
-status: planned
+status: completed
 priority: CRITICAL
 risk_class: INTEGRITY
 blast_radius: DB_SCHEMA
