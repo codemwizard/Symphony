@@ -1709,8 +1709,8 @@
   enforcement: "scripts/db/verify_execution_truth_anchor.sh"
   verification: >-
     scripts/db/verify_execution_truth_anchor.sh inspects eight proof surfaces on
-    public.execution_records: five NOT NULL columns (interpretation_version_id,
-    input_hash, runtime_version, signature_key_class, adapter_id), UNIQUE
+    public.execution_records: five NOT NULL columns (input_hash, output_hash,
+    runtime_version, tenant_id, interpretation_version_id), UNIQUE
     determinism constraint (execution_records_determinism_unique), FK to
     public.interpretation_packs(interpretation_pack_id), append-only trigger
     enforce_execution_records_append_only (raises GF056 on UPDATE/DELETE),
