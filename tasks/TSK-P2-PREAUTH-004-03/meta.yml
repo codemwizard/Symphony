@@ -159,9 +159,10 @@ negative_tests:
     description: >-
       Insert a policy_decisions row whose stored decision_hash does not match sha256(canonical_json(decision_payload))
       recomputed from the row by the verifier script (bash + jq / python, not a DB helper); verifier records V3 as passed
-      when the mismatch is detected and exits non-zero. This scenario also subsumes post-insert tampering of entity_type /
-      entity_id columns, because decision_payload is row-derived and tampering any payload-contributing column breaks
-      the recomputed hash.
+      when the mismatch is detected. Harness exits non-zero if the mismatch is NOT detected (i.e. if the recomputed and
+      stored hashes compare equal when the row was seeded to diverge). This scenario also subsumes post-insert tampering of
+      entity_type / entity_id columns, because decision_payload is row-derived and tampering any payload-contributing
+      column breaks the recomputed hash.
     required: true
 
 positive_tests:
