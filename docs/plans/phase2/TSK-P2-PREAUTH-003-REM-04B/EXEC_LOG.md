@@ -2,7 +2,7 @@
 
 Task: TSK-P2-PREAUTH-003-REM-04B
 Owner: ARCHITECT
-Status: planned
+Status: completed
 failure_signature: PHASE2.PREAUTH.EXECUTION_RECORDS.SECURITY_DOCS_UNREGISTERED
 origin_task_id: TSK-P2-PREAUTH-003-REM-04
 repro_command: bash scripts/audit/verify_invariant_exec_truth_001_security_docs.sh
@@ -58,5 +58,42 @@ remediation_casefile: docs/plans/remediation/REM-2026-04-20_execution-truth-anch
   `docs/plans/phase2/TSK-P2-PREAUTH-003-REM-04/PLAN.md` (Step 3 added, Files-to-Change updated),
   this EXEC_LOG.
 
-verification_commands_run: []
-final_status: planned
+### 2026-04-20T08:30:00Z — IMPLEMENT-TASK: threat model + compliance map rows appended
+
+- Branch: `devin/1776702476-wave3-implementation` (off `origin/main@220a991c`).
+- Appended an `execution-record tamper` sub-section (assets, actors, attack
+  vectors, mitigation, verifier, evidence pointer, scope limitation) to
+  `docs/architecture/THREAT_MODEL.md` after the Phase-2 Wave 8 entry.
+- Appended two mapping rows to `docs/architecture/COMPLIANCE_MAP.md` under
+  the primary mapping table: SOC2 CC7.2 (System Monitoring) and
+  ISO 27001/27002 A.12.4 (Logging and monitoring). Both rows reference
+  `INV-EXEC-TRUTH-001`, `scripts/db/verify_execution_truth_anchor.sh`, and
+  the evidence file `evidence/phase2/tsk_p2_preauth_003_rem_05.json`
+  authored by REM-05.
+- Appended a dated Notes entry (2026-04-20) summarising the registration
+  and the explicit three-layer-separation scope constraint (execution-truth
+  only; lifecycle / retry / invocation-identity remain with the separate
+  lifecycle REM).
+- Path authority: all edits confined to `docs/architecture/**` per AGENTS.md.
+  No `docs/invariants/**` edits (REM-04 territory). No `scripts/audit/**`
+  edits (verifier authorship belongs to REM-04 per 2026-04-20T12:00:00Z
+  entry above). No `docs/security/**` edits (not owned by any REM-2026-04-20
+  task).
+- Evidence emission (`evidence/phase2/tsk_p2_preauth_003_rem_04b.json`) is
+  performed by `scripts/audit/verify_invariant_exec_truth_001_security_docs.sh`
+  authored under REM-04 (INVARIANTS_CURATOR). REM-04B does not touch that
+  script or that evidence file; it only populates the two `docs/architecture/**`
+  surfaces that the REM-04 verifier reads.
+- Acceptance greps locally pass:
+  `grep -q 'execution-record tamper' docs/architecture/THREAT_MODEL.md` ✓
+  `grep -q 'INV-EXEC-TRUTH-001' docs/architecture/THREAT_MODEL.md` ✓
+  `grep -q 'INV-EXEC-TRUTH-001' docs/architecture/COMPLIANCE_MAP.md` ✓
+- Flipped `meta.yml` and this `EXEC_LOG.md` from `status: planned` →
+  `status: completed`. Final evidence JSON will be emitted by REM-04's
+  verifier in the following commit.
+
+verification_commands_run:
+  - "grep -q 'execution-record tamper' docs/architecture/THREAT_MODEL.md"
+  - "grep -q 'INV-EXEC-TRUTH-001' docs/architecture/THREAT_MODEL.md"
+  - "grep -q 'INV-EXEC-TRUTH-001' docs/architecture/COMPLIANCE_MAP.md"
+final_status: completed
