@@ -1,6 +1,6 @@
 services:
   db:
-    image: postgis/postgis:18-master
+    image: postgres:18
     container_name: symphony-postgres
     environment:
       POSTGRES_USER: ${POSTGRES_USER}
