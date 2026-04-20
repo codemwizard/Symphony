@@ -52,6 +52,7 @@ This is the contract half of the INV-097 expand/contract pair. Enforcement canno
 - **UNIQUE placed on `execution_id`** -> STOP (redundant with PK, drops determinism claim).
 - **SET NOT NULL runs before backfill precondition passes** -> STOP.
 - **Any ALTER targets 0118 or 0131** -> STOP.
+- **Migration 0132 contains `\i` to include external scripts** -> STOP (`scripts/db/migrate.sh` checksums only the migration file; external includes bypass the immutability gate).
 - **Verifier lacks `|| exit 1` on any check** -> STOP.
 - **FK target is anything other than `interpretation_packs(interpretation_pack_id)`** -> STOP.
 
@@ -61,7 +62,9 @@ This is the contract half of the INV-097 expand/contract pair. Enforcement canno
 
 ### Step 1: Author backfill script
 
-**What:** `[ID tsk_p2_preauth_003_rem_02_work_item_01]` Create `scripts/db/backfill_execution_records_determinism.sql`. The script is idempotent: it first runs the precondition assertion (`DO $$ BEGIN IF (SELECT COUNT(*) ...) > 0 THEN RAISE EXCEPTION 'GF059: execution_records determinism backfill precondition failed - NULL rows present' USING ERRCODE = 'GF059'; END IF; END $$;`). `GF059` is the next unused code in the GF05x range: `GF050`/`GF051` are append-only triggers on the statutory/exchange ledgers (migrations 0123/0124), `GF055` is the append-only trigger on `protected_areas` + `project_boundaries` (0126/0127), `GF056` and `GF058` are reserved by REM-03 for the execution_records append-only and temporal-binding triggers, `GF057` is the DNSH trigger in migration 0129, and `GF060` is the K13 taxonomy trigger in migration 0130. Using `GF059` keeps backfill-precondition failures distinguishable from every existing and reserved SQLSTATE. If the precondition passes, the script is a no-op on row data. If it fails twice, DRD lockout forks to REM-02b.
+**What:** `[ID tsk_p2_preauth_003_rem_02_work_item_01]` Create `scripts/db/backfill_execution_records_determinism.sql` as a standalone convenience script for manual runs. The script is idempotent: it first runs the precondition assertion (`DO $$ BEGIN IF (SELECT COUNT(*) ...) > 0 THEN RAISE EXCEPTION 'GF059: execution_records determinism backfill precondition failed - NULL rows present' USING ERRCODE = 'GF059'; END IF; END $$;`). `GF059` is the next unused code in the GF05x range: `GF050`/`GF051` are append-only triggers on the statutory/exchange ledgers (migrations 0123/0124), `GF055` is the append-only trigger on `protected_areas` + `project_boundaries` (0126/0127), `GF056` and `GF058` are reserved by REM-03 for the execution_records append-only and temporal-binding triggers, `GF057` is the DNSH trigger in migration 0129, and `GF060` is the K13 taxonomy trigger in migration 0130. Using `GF059` keeps backfill-precondition failures distinguishable from every existing and reserved SQLSTATE. If the precondition passes, the script is a no-op on row data. If it fails twice, DRD lockout forks to REM-02b.
+
+**Important:** The migration file (Step 2) must **inline** this precondition SQL rather than using `\i` to include this script. `scripts/db/migrate.sh` checksums only the migration file itself (`migrate.sh:107`); an external `\i` target would make the effective migration silently mutable without triggering the immutability gate. No existing migration 0001–0130 uses `\i`. The standalone script exists for manual precondition checks outside the migration runner.
 
 **Done when:** `test -f scripts/db/backfill_execution_records_determinism.sql && grep -q 'precondition' scripts/db/backfill_execution_records_determinism.sql` exits 0.
 
@@ -76,8 +79,25 @@ This is the contract half of the INV-097 expand/contract pair. Enforcement canno
 --
 -- Do NOT add top-level BEGIN/COMMIT. scripts/db/migrate.sh wraps every
 -- migration file in its own transaction (see migrate.sh:158-166).
+--
+-- Do NOT use \i to include external scripts. scripts/db/migrate.sh checksums
+-- only this file (migrate.sh:107); an external \i target could be silently
+-- modified after application without triggering the immutability gate.
+-- The precondition SQL is inlined here for checksum integrity.
 
-\i scripts/db/backfill_execution_records_determinism.sql
+-- Backfill precondition: abort if any row has NULLs in the determinism columns.
+-- ERRCODE GF059 is reserved for this precondition (see REM-02 PLAN Step 1).
+DO $$ BEGIN
+  IF (SELECT COUNT(*) FROM public.execution_records
+      WHERE input_hash IS NULL
+         OR output_hash IS NULL
+         OR runtime_version IS NULL
+         OR tenant_id IS NULL
+         OR interpretation_version_id IS NULL) > 0 THEN
+    RAISE EXCEPTION 'GF059: execution_records determinism backfill precondition failed - NULL rows present'
+      USING ERRCODE = 'GF059';
+  END IF;
+END $$;
 
 ALTER TABLE public.execution_records ALTER COLUMN input_hash              SET NOT NULL;
 ALTER TABLE public.execution_records ALTER COLUMN output_hash             SET NOT NULL;

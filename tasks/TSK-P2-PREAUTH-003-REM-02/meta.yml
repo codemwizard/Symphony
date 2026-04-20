@@ -21,6 +21,7 @@ anti_patterns:
   - "Editing 0118 or 0131 instead of authoring forward 0132"
   - "Collapsing backfill + SET NOT NULL + UNIQUE into a single non-idempotent DO block"
   - "Adding UNIQUE over execution_id (already the PK; would be redundant and mask the determinism claim)"
+  - "Using \\i to include external scripts in the migration file (migrate.sh checksums only the migration file; external includes bypass the immutability gate)"
 
 out_of_scope:
   - "Adding the determinism columns themselves (belongs to REM-01)"
@@ -37,6 +38,7 @@ stop_conditions:
   - "If UNIQUE constraint is placed on execution_id instead of the determinism tuple"
   - "If FK target is not interpretation_packs(interpretation_pack_id)"
   - "If verifier lacks || exit 1 on any assertion"
+  - "If migration 0132 contains \\i to include external scripts (checksum bypass — inline all SQL)"
 
 proof_guarantees:
   - "pg_attribute.attnotnull = true for input_hash, output_hash, runtime_version, tenant_id, interpretation_version_id on execution_records"
@@ -75,8 +77,10 @@ work:
     Second pass failure triggers the two-strike DRD lockout and forks to REM-02b.
   - >-
     [ID tsk_p2_preauth_003_rem_02_work_item_02] Author schema/migrations/0132_execution_records_determinism_constraints.sql
-    that runs the backfill precondition, then five ALTER COLUMN ... SET NOT NULL statements
-    (input_hash, output_hash, runtime_version, tenant_id, interpretation_version_id),
+    that inlines the backfill precondition DO block (do NOT use \i to include external scripts —
+    scripts/db/migrate.sh checksums only the migration file itself at migrate.sh:107, so an external
+    \i target would make the effective migration silently mutable), then five ALTER COLUMN ... SET NOT NULL
+    statements (input_hash, output_hash, runtime_version, tenant_id, interpretation_version_id),
     then ADD CONSTRAINT execution_records_determinism_unique UNIQUE (input_hash, interpretation_version_id, runtime_version).
     Advance MIGRATION_HEAD from 0131 to 0132.
   - >-
