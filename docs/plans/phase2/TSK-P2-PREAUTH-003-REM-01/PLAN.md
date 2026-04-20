@@ -37,6 +37,7 @@ This task is one half of an expand/contract migration pair mandated by INV-097. 
 | `schema/migrations/0131_execution_records_determinism_columns.sql` | CREATE | Forward migration adding four nullable determinism columns |
 | `schema/migrations/MIGRATION_HEAD` | MODIFY | Advance from 0130 to 0131 |
 | `scripts/db/verify_execution_records_determinism_columns.sh` | CREATE | Proof-carrying verifier that inspects live schema |
+| `scripts/db/tests/test_execution_records_determinism_columns_negative.sh` | CREATE | Negative-test harness N1/N2 driving the verifier to expected non-zero exits |
 | `evidence/phase2/tsk_p2_preauth_003_rem_01.json` | CREATE | Evidence emitted by the verifier |
 | `tasks/TSK-P2-PREAUTH-003-REM-01/meta.yml` | MODIFY | Status transitions planned -> ready -> in-progress -> completed |
 | `docs/plans/phase2/TSK-P2-PREAUTH-003-REM-01/PLAN.md` | CREATE | This document |
@@ -69,8 +70,11 @@ Any file modified that is not on this list => FAIL_REVIEW.
 -- Migration 0131: execution_records determinism columns (expand phase)
 -- Task: TSK-P2-PREAUTH-003-REM-01
 -- Casefile: REM-2026-04-20_execution-truth-anchor
-
-BEGIN;
+--
+-- Do NOT add top-level BEGIN/COMMIT. scripts/db/migrate.sh wraps every
+-- migration file in its own transaction (see migrate.sh:158-166); a
+-- top-level COMMIT inside this file would prematurely close the outer
+-- transaction and leave the schema_migrations INSERT unprotected.
 
 ALTER TABLE public.execution_records ADD COLUMN IF NOT EXISTS input_hash       TEXT;
 ALTER TABLE public.execution_records ADD COLUMN IF NOT EXISTS output_hash      TEXT;
@@ -81,8 +85,6 @@ COMMENT ON COLUMN public.execution_records.input_hash      IS 'Canonicalised inp
 COMMENT ON COLUMN public.execution_records.output_hash     IS 'Canonicalised output payload SHA-256. Tightened to NOT NULL by REM-02.';
 COMMENT ON COLUMN public.execution_records.runtime_version IS 'Adapter runtime version string. Tightened to NOT NULL by REM-02.';
 COMMENT ON COLUMN public.execution_records.tenant_id       IS 'Tenant scope for multi-tenant audit isolation. Tightened to NOT NULL by REM-02.';
-
-COMMIT;
 ```
 
 **Done when:** `test -f schema/migrations/0131_execution_records_determinism_columns.sql && grep -q 'execution_records' schema/migrations/0131_execution_records_determinism_columns.sql` exits 0.

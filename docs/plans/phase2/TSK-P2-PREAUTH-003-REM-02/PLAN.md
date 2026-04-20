@@ -73,8 +73,9 @@ This is the contract half of the INV-097 expand/contract pair. Enforcement canno
 -- Migration 0132: execution_records determinism constraints (contract phase)
 -- Task: TSK-P2-PREAUTH-003-REM-02
 -- Casefile: REM-2026-04-20_execution-truth-anchor
-
-BEGIN;
+--
+-- Do NOT add top-level BEGIN/COMMIT. scripts/db/migrate.sh wraps every
+-- migration file in its own transaction (see migrate.sh:158-166).
 
 \i scripts/db/backfill_execution_records_determinism.sql
 
@@ -87,8 +88,6 @@ ALTER TABLE public.execution_records ALTER COLUMN interpretation_version_id SET 
 ALTER TABLE public.execution_records
   ADD CONSTRAINT execution_records_determinism_unique
   UNIQUE (input_hash, interpretation_version_id, runtime_version);
-
-COMMIT;
 ```
 
 Then advance `schema/migrations/MIGRATION_HEAD` to `0132`.

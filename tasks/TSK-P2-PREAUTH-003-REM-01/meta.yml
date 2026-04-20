@@ -28,7 +28,7 @@ out_of_scope:
   - "FK NOT NULL on interpretation_version_id (belongs to REM-02)"
   - "Append-only trigger (belongs to REM-03)"
   - "Invariant registration (belongs to REM-04)"
-  - "CI wiring (belongs to REM-05)"
+  - "CI wiring (belongs to REM-05B)"
   - "Adding adapter_id, instruction_id, methodology_version, factor_set_version, conversion_version, rounding_precision, execution_state, retry_count, failure_reason"
 
 stop_conditions:
@@ -57,6 +57,7 @@ touches:
   - schema/migrations/0131_execution_records_determinism_columns.sql
   - schema/migrations/MIGRATION_HEAD
   - scripts/db/verify_execution_records_determinism_columns.sh
+  - scripts/db/tests/test_execution_records_determinism_columns_negative.sh
   - evidence/phase2/tsk_p2_preauth_003_rem_01.json
   - tasks/TSK-P2-PREAUTH-003-REM-01/meta.yml
   - docs/plans/phase2/TSK-P2-PREAUTH-003-REM-01/PLAN.md

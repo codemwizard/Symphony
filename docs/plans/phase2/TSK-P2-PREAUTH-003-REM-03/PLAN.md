@@ -74,8 +74,9 @@ Splitting the enforcement into two triggers with two functions preserves single-
 -- Migration 0133: execution_records triggers (append-only + temporal binding)
 -- Task: TSK-P2-PREAUTH-003-REM-03
 -- Casefile: REM-2026-04-20_execution-truth-anchor
-
-BEGIN;
+--
+-- Do NOT add top-level BEGIN/COMMIT. scripts/db/migrate.sh wraps every
+-- migration file in its own transaction (see migrate.sh:158-166).
 
 -- Append-only enforcement (mirror of project_boundaries_append_only from 0127)
 CREATE OR REPLACE FUNCTION public.execution_records_append_only()
@@ -117,8 +118,6 @@ BEFORE INSERT ON public.execution_records
 FOR EACH ROW EXECUTE FUNCTION public.enforce_execution_interpretation_temporal_binding();
 
 REVOKE ALL ON FUNCTION public.enforce_execution_interpretation_temporal_binding() FROM PUBLIC;
-
-COMMIT;
 ```
 
 Then advance `schema/migrations/MIGRATION_HEAD` to `0133`.

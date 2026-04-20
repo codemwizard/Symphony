@@ -27,7 +27,7 @@ out_of_scope:
   - "Append-only trigger (belongs to REM-03)"
   - "Temporal-binding trigger (belongs to REM-03)"
   - "Invariant registration (belongs to REM-04)"
-  - "CI wiring (belongs to REM-05)"
+  - "CI wiring (belongs to REM-05B)"
   - "adapter_invocation_id retry key (deferred to REM-2026-04-20_execution-lifecycle)"
   - "Mutable state machine / execution_state enum (deferred to lifecycle casefile)"
 
