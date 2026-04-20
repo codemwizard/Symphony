@@ -80,12 +80,16 @@ else
 fi
 
 # ---------------------------------------------------------------------------
-# Check 2: implemented_registry_present — row referencing INV-EXEC-TRUTH-001
-# appears in INVARIANTS_IMPLEMENTED.md and points at the anchor verifier.
+# Check 2: implemented_registry_present — row referencing the invariant
+# (canonical id INV-179 and/or the semantic aliases I-EXEC-TRUTH-01 /
+# INV-EXEC-TRUTH-001) appears in INVARIANTS_IMPLEMENTED.md and points at
+# the anchor verifier. The registry table uses INV-179 | I-EXEC-TRUTH-01
+# per phase1_enforced_invariants convention (id | alias); accepting any
+# of the three identifiers keeps the check alias-agnostic.
 # ---------------------------------------------------------------------------
 IMPLEMENTED_REGISTRY_PRESENT=false
 if [[ -f "$IMPLEMENTED" ]]; then
-  if grep -q 'INV-EXEC-TRUTH-001' "$IMPLEMENTED" \
+  if grep -Eq 'INV-179|I-EXEC-TRUTH-01|INV-EXEC-TRUTH-001' "$IMPLEMENTED" \
      && grep -q 'scripts/db/verify_execution_truth_anchor.sh' "$IMPLEMENTED"; then
     IMPLEMENTED_REGISTRY_PRESENT=true
     record "implemented_registry_present" true "row references anchor verifier"
