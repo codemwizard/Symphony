@@ -39,7 +39,7 @@ Append-only. Do not retroactively rewrite entries.
   - **REM-05 (DB_FOUNDATION)** retains verifier authorship in `scripts/db/verify_execution_truth_anchor.sh` + evidence emission.
   - **REM-05B (SECURITY_GUARDIAN)** — NEW — owns CI wiring in `scripts/dev/pre_ci.sh` and `scripts/audit/run_invariants_fast_checks.sh`.
   - **REM-04 (INVARIANTS_CURATOR)** narrowed to `docs/invariants/INVARIANTS_MANIFEST.yml` + `docs/invariants/INVARIANTS_IMPLEMENTED.md`.
-  - **REM-04B (SECURITY_GUARDIAN)** — NEW — owns `docs/security/THREAT_MODEL.md` + `docs/security/COMPLIANCE_MAP.md`.
+  - **REM-04B** — NEW — owns the threat-model + compliance-map surfaces. (See 2026-04-20T10:50:00Z entry below: owner_role was corrected from SECURITY_GUARDIAN to ARCHITECT, and file paths from `docs/security/**` to `docs/architecture/**`.)
 - **Revised DAG:** REM-01 → REM-02 → REM-03 → REM-05 → REM-05B → REM-04 → REM-04B → `checkpoint/EXEC-TRUTH-REM`. Registered in `docs/tasks/phase2_pre_atomic_dag.yml` stage `1-execution-truth-remediation` and `docs/tasks/PHASE2_TASKS.md` Wave 3-R.
 - **Total derived tasks after split:** seven (REM-01, REM-02, REM-03, REM-04, REM-04B, REM-05, REM-05B). Supersedes the "REM-01..05" count recorded in the 2026-04-20T00:00:00Z opening entry.
 

@@ -192,7 +192,7 @@ nodes:
   kind: task
 - id: TSK-P2-PREAUTH-003-REM-04B
   stage: 1-execution-truth-remediation
-  title: Register INV-EXEC-TRUTH-001 in docs/security/THREAT_MODEL.md and docs/security/COMPLIANCE_MAP.md (SECURITY_GUARDIAN)
+  title: Register INV-EXEC-TRUTH-001 in docs/architecture/THREAT_MODEL.md and docs/architecture/COMPLIANCE_MAP.md (ARCHITECT)
   depends_on:
   - TSK-P2-PREAUTH-003-REM-04
   kind: task

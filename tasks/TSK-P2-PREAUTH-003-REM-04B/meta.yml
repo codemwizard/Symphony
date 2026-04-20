@@ -1,8 +1,8 @@
 schema_version: 1
 phase: '2'
 task_id: TSK-P2-PREAUTH-003-REM-04B
-title: "Register INV-EXEC-TRUTH-001 in docs/security/THREAT_MODEL.md and docs/security/COMPLIANCE_MAP.md under SECURITY_GUARDIAN path authority"
-owner_role: SECURITY_GUARDIAN
+title: "Register INV-EXEC-TRUTH-001 in docs/architecture/THREAT_MODEL.md and docs/architecture/COMPLIANCE_MAP.md under ARCHITECT path authority"
+owner_role: ARCHITECT
 status: planned
 priority: HIGH
 risk_class: GOVERNANCE
@@ -10,17 +10,20 @@ blast_radius: POLICY_SURFACE
 
 intent: >-
   Extend the INV-EXEC-TRUTH-001 registration surface from REM-04 into the
-  Security Guardian's docs/security/** territory. Add a threat entry for
-  execution-record tamper to docs/security/THREAT_MODEL.md and a compliance
-  row to docs/security/COMPLIANCE_MAP.md. This task exists as a path-authority
-  -correct split of REM-04 per Devin Review finding
-  BUG_pr-review-job-c4fc938f95fc4692ac528a10081cda97_0002:
-  docs/security/** is outside INVARIANTS_CURATOR's allowed paths in AGENTS.md
-  and belongs to SECURITY_GUARDIAN.
+  Architect's docs/architecture/** territory. Add a threat entry for
+  execution-record tamper to docs/architecture/THREAT_MODEL.md and a compliance
+  row to docs/architecture/COMPLIANCE_MAP.md. This task exists as a
+  role-separation split of REM-04 per Devin Review findings
+  BUG_pr-review-job-c4fc938f95fc4692ac528a10081cda97_0002 (original split)
+  and BUG_pr-review-job-108a9b4113194ec09d57c8e6c3986cd1_0001 (path
+  correction from docs/security/** to docs/architecture/**, the path where
+  THREAT_MODEL.md and COMPLIANCE_MAP.md actually live; ARCHITECT owns
+  docs/architecture/** per AGENTS.md).
 
 anti_patterns:
   - "Editing docs/invariants/** (belongs to REM-04, INVARIANTS_CURATOR)"
-  - "Editing scripts/db/** or schema/** (out of SECURITY_GUARDIAN path authority)"
+  - "Editing scripts/db/** or schema/** (out of ARCHITECT path authority)"
+  - "Editing docs/security/** (outside ARCHITECT path authority; the canonical threat model and compliance map live under docs/architecture/**)"
   - "Declaring coverage of lifecycle state, retry, or failure semantics"
   - "Introducing new threat entries unrelated to the execution_records anchor"
 
@@ -36,8 +39,8 @@ stop_conditions:
   - "If COMPLIANCE_MAP.md row omits a resolvable control reference"
 
 proof_guarantees:
-  - "docs/security/THREAT_MODEL.md contains a threat entry titled 'execution-record tamper' referencing INV-EXEC-TRUTH-001"
-  - "docs/security/COMPLIANCE_MAP.md contains at least one row mapping an audit control (e.g. SOC2 CC7.2) to INV-EXEC-TRUTH-001"
+  - "docs/architecture/THREAT_MODEL.md contains a threat entry titled 'execution-record tamper' referencing INV-EXEC-TRUTH-001"
+  - "docs/architecture/COMPLIANCE_MAP.md contains at least one row mapping an audit control (e.g. SOC2 CC7.2) to INV-EXEC-TRUTH-001"
   - "Registration verifier emits evidence with threat_model_present=true and compliance_map_present=true"
 
 proof_limitations:
@@ -51,8 +54,8 @@ blocks:
   - checkpoint/EXEC-TRUTH-REM
 
 touches:
-  - docs/security/THREAT_MODEL.md
-  - docs/security/COMPLIANCE_MAP.md
+  - docs/architecture/THREAT_MODEL.md
+  - docs/architecture/COMPLIANCE_MAP.md
   - scripts/audit/verify_invariant_exec_truth_001_security_docs.sh
   - evidence/phase2/tsk_p2_preauth_003_rem_04b.json
   - tasks/TSK-P2-PREAUTH-003-REM-04B/meta.yml
@@ -64,25 +67,25 @@ invariants: []
 work:
   - >-
     [ID tsk_p2_preauth_003_rem_04b_work_item_01] Append a threat entry titled 'execution-record tamper' to
-    docs/security/THREAT_MODEL.md with assets = execution_records.*,
+    docs/architecture/THREAT_MODEL.md with assets = execution_records.*,
     attack vectors = UPDATE/DELETE after INSERT and retroactive temporal rebinding,
     mitigation = INV-EXEC-TRUTH-001 (append-only trigger + temporal-binding trigger + NOT NULL + UNIQUE determinism).
     Reference scripts/db/verify_execution_truth_anchor.sh as the verifier.
   - >-
-    [ID tsk_p2_preauth_003_rem_04b_work_item_02] Append a compliance row to docs/security/COMPLIANCE_MAP.md
+    [ID tsk_p2_preauth_003_rem_04b_work_item_02] Append a compliance row to docs/architecture/COMPLIANCE_MAP.md
     mapping at least one external audit control (SOC2 CC7.2 or local regulator equivalent) to INV-EXEC-TRUTH-001.
   - >-
     [ID tsk_p2_preauth_003_rem_04b_work_item_03] Author scripts/audit/verify_invariant_exec_truth_001_security_docs.sh
-    that greps for 'execution-record tamper' and 'INV-EXEC-TRUTH-001' in THREAT_MODEL.md and for 'INV-EXEC-TRUTH-001' in
-    COMPLIANCE_MAP.md. Emit evidence/phase2/tsk_p2_preauth_003_rem_04b.json carrying
+    that greps for 'execution-record tamper' and 'INV-EXEC-TRUTH-001' in docs/architecture/THREAT_MODEL.md and for 'INV-EXEC-TRUTH-001' in
+    docs/architecture/COMPLIANCE_MAP.md. Emit evidence/phase2/tsk_p2_preauth_003_rem_04b.json carrying
     task_id, git_sha, timestamp_utc, status, checks, observed_paths, observed_hashes, command_outputs,
     execution_trace, threat_model_present, compliance_map_present.
 
 acceptance_criteria:
   - >-
-    [ID tsk_p2_preauth_003_rem_04b_work_item_01] grep -q 'execution-record tamper' docs/security/THREAT_MODEL.md AND grep -q 'INV-EXEC-TRUTH-001' docs/security/THREAT_MODEL.md.
+    [ID tsk_p2_preauth_003_rem_04b_work_item_01] grep -q 'execution-record tamper' docs/architecture/THREAT_MODEL.md AND grep -q 'INV-EXEC-TRUTH-001' docs/architecture/THREAT_MODEL.md.
   - >-
-    [ID tsk_p2_preauth_003_rem_04b_work_item_02] grep -q 'INV-EXEC-TRUTH-001' docs/security/COMPLIANCE_MAP.md.
+    [ID tsk_p2_preauth_003_rem_04b_work_item_02] grep -q 'INV-EXEC-TRUTH-001' docs/architecture/COMPLIANCE_MAP.md.
   - >-
     [ID tsk_p2_preauth_003_rem_04b_work_item_03] PRE_CI_CONTEXT=1 bash scripts/audit/verify_invariant_exec_truth_001_security_docs.sh exits 0 and evidence file carries threat_model_present=true and compliance_map_present=true.
 
@@ -105,10 +108,10 @@ positive_tests:
 verification:
   - >-
     # [ID tsk_p2_preauth_003_rem_04b_work_item_01] THREAT_MODEL.md carries the execution-record tamper entry linked to INV-EXEC-TRUTH-001.
-    test -f docs/security/THREAT_MODEL.md && grep -q 'execution-record tamper' docs/security/THREAT_MODEL.md && grep -q 'INV-EXEC-TRUTH-001' docs/security/THREAT_MODEL.md || exit 1
+    test -f docs/architecture/THREAT_MODEL.md && grep -q 'execution-record tamper' docs/architecture/THREAT_MODEL.md && grep -q 'INV-EXEC-TRUTH-001' docs/architecture/THREAT_MODEL.md || exit 1
   - >-
     # [ID tsk_p2_preauth_003_rem_04b_work_item_02] COMPLIANCE_MAP.md references INV-EXEC-TRUTH-001.
-    test -f docs/security/COMPLIANCE_MAP.md && grep -q 'INV-EXEC-TRUTH-001' docs/security/COMPLIANCE_MAP.md || exit 1
+    test -f docs/architecture/COMPLIANCE_MAP.md && grep -q 'INV-EXEC-TRUTH-001' docs/architecture/COMPLIANCE_MAP.md || exit 1
   - >-
     # [ID tsk_p2_preauth_003_rem_04b_work_item_03] Registration verifier exists and exits 0.
     test -x scripts/audit/verify_invariant_exec_truth_001_security_docs.sh && PRE_CI_CONTEXT=1 bash scripts/audit/verify_invariant_exec_truth_001_security_docs.sh || exit 1
@@ -132,15 +135,15 @@ evidence:
       - compliance_map_present
 
 failure_modes:
-  - "THREAT_MODEL.md reference missing => FAIL"
-  - "COMPLIANCE_MAP.md reference missing => FAIL"
-  - "Task silently edits docs/invariants/** or scripts/db/** => PATH_AUTHORITY_VIOLATION"
+  - "docs/architecture/THREAT_MODEL.md reference missing => FAIL"
+  - "docs/architecture/COMPLIANCE_MAP.md reference missing => FAIL"
+  - "Task silently edits docs/invariants/**, docs/security/**, or scripts/db/** => PATH_AUTHORITY_VIOLATION"
 
 must_read:
   - AGENTS.md
   - docs/operations/AI_AGENT_OPERATION_MANUAL.md
-  - docs/security/THREAT_MODEL.md
-  - docs/security/COMPLIANCE_MAP.md
+  - docs/architecture/THREAT_MODEL.md
+  - docs/architecture/COMPLIANCE_MAP.md
   - docs/plans/phase2/TSK-P2-PREAUTH-003-REM-04/PLAN.md
   - docs/plans/remediation/REM-2026-04-20_execution-truth-anchor/PLAN.md
 
@@ -151,8 +154,12 @@ notes: >-
   Split from TSK-P2-PREAUTH-003-REM-04 on 2026-04-20 in response to
   Devin Review comment BUG_pr-review-job-c4fc938f95fc4692ac528a10081cda97_0002
   so that every work item falls under the owner role's AGENTS.md path authority.
-  INVARIANTS_CURATOR owns docs/invariants/**; SECURITY_GUARDIAN owns docs/security/**.
+  The original split mistakenly placed the canonical threat model and
+  compliance map under docs/security/**; Devin Review comment
+  BUG_pr-review-job-108a9b4113194ec09d57c8e6c3986cd1_0001 corrected this to
+  docs/architecture/**, which is ARCHITECT's path authority per AGENTS.md.
+  INVARIANTS_CURATOR owns docs/invariants/**; ARCHITECT owns docs/architecture/**.
 
 client: cursor
-assigned_agent: security_guardian
+assigned_agent: architect
 model: <UNASSIGNED>

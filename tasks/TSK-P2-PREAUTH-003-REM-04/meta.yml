@@ -25,12 +25,12 @@ anti_patterns:
   - "Declaring a verification_command that is not in the repo"
   - "Silently widening invariant scope (e.g. claiming coverage over lifecycle state)"
   - "Merging this invariant with INV-175 (data_authority) — different scope"
-  - "Touching docs/security/** (out of INVARIANTS_CURATOR path authority; see REM-04B)"
+  - "Touching docs/architecture/** or docs/security/** (threat-model / compliance-map surfaces are owned by REM-04B, ARCHITECT)"
 
 out_of_scope:
   - "Creating/modifying the verifier (belongs to REM-05)"
   - "Altering schema or triggers (belongs to REM-01/02/03)"
-  - "Editing docs/security/THREAT_MODEL.md or docs/security/COMPLIANCE_MAP.md (belongs to REM-04B, SECURITY_GUARDIAN)"
+  - "Editing docs/architecture/THREAT_MODEL.md or docs/architecture/COMPLIANCE_MAP.md (belongs to REM-04B, ARCHITECT)"
   - "Lifecycle / retry / execution_state invariants (owned by REM-2026-04-20_execution-lifecycle)"
 
 stop_conditions:
@@ -42,7 +42,7 @@ stop_conditions:
 proof_guarantees:
   - "docs/invariants/INVARIANTS_MANIFEST.yml contains a block id=INV-EXEC-TRUTH-001 with status=implemented, severity=P0, enforcement referencing scripts/db/verify_execution_truth_anchor.sh, and verification referencing evidence/phase2/tsk_p2_preauth_003_rem_05.json"
   - "docs/invariants/INVARIANTS_IMPLEMENTED.md lists INV-EXEC-TRUTH-001 with the same enforcement and verification pointers"
-  - "docs/security/** references to INV-EXEC-TRUTH-001 are owned by REM-04B (SECURITY_GUARDIAN) and verified there"
+  - "docs/architecture/** references to INV-EXEC-TRUTH-001 (THREAT_MODEL.md + COMPLIANCE_MAP.md) are owned by REM-04B (ARCHITECT) and verified there"
 
 proof_limitations:
   - "This task performs no DB DDL and no verifier execution; it is a governance surface task. Enforcement lives in REM-03 / REM-05."
@@ -137,7 +137,7 @@ failure_modes:
   - "Upstream evidence evidence/phase2/tsk_p2_preauth_003_rem_05.json missing => FAIL (task blocks, status stays planned)"
   - "enforcement_location path does not exist on disk => FAIL"
   - "INVARIANTS_MANIFEST.yml fails YAML parse after append => CRITICAL_FAIL"
-  - "Task silently edits docs/security/** => PATH_AUTHORITY_VIOLATION (see REM-04B)"
+  - "Task silently edits docs/architecture/** or docs/security/** => PATH_AUTHORITY_VIOLATION (see REM-04B)"
 
 must_read:
   - AGENTS.md
