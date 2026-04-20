@@ -94,6 +94,7 @@ touches:
   - tasks/TSK-P2-PREAUTH-004-03/meta.yml
   - docs/plans/phase2/TSK-P2-PREAUTH-004-03/PLAN.md
   - docs/plans/phase2/TSK-P2-PREAUTH-004-03/EXEC_LOG.md
+  - docs/tasks/phase2_pre_atomic_dag.yml
 
 invariants:
   - INV-AUTH-TRANSITION-BINDING-01

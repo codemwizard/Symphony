@@ -74,6 +74,7 @@ Signature authenticity verification (`ed25519_verify(signature, decision_hash, p
 | `tasks/TSK-P2-PREAUTH-004-03/meta.yml` | CREATE | This task's meta per Task Creation Process §2 Step 4. |
 | `docs/plans/phase2/TSK-P2-PREAUTH-004-03/PLAN.md` | CREATE | This document. |
 | `docs/plans/phase2/TSK-P2-PREAUTH-004-03/EXEC_LOG.md` | CREATE | Log the task authorship. |
+| `docs/tasks/phase2_pre_atomic_dag.yml` | MODIFY | Add node `TSK-P2-PREAUTH-004-03` under stage `2-authority-binding` with `depends_on: [TSK-P2-PREAUTH-004-00, TSK-P2-PREAUTH-004-01, TSK-P2-PREAUTH-004-02]`, and extend `checkpoint/AUTH-BIND.depends_on` to include `TSK-P2-PREAUTH-004-03` so Wave 4 is only considered complete once the binding invariant is registered. |
 
 Any file modified that is not on this list => FAIL_REVIEW.
 
