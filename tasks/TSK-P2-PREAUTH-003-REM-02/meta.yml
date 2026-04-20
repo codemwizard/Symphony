@@ -3,7 +3,7 @@ phase: '2'
 task_id: TSK-P2-PREAUTH-003-REM-02
 title: "Tighten execution_records determinism columns: backfill + SET NOT NULL (5 columns) + UNIQUE (input_hash, interpretation_version_id, runtime_version) + FK NOT NULL via forward migration 0132"
 owner_role: DB_FOUNDATION
-status: planned
+status: completed
 priority: CRITICAL
 risk_class: INTEGRITY
 blast_radius: DB_SCHEMA

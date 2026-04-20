@@ -1,0 +1,37 @@
+{
+  "task_id": "TSK-P2-PREAUTH-003-REM-02",
+  "git_sha": "f7e7352f4b871329691ac59ab616d9aae05b8f39",
+  "timestamp_utc": "2026-04-20T16:46:09Z",
+  "status": "PASS",
+  "checks": [
+    {"name": "no_psql_include_directive", "result": "pass"},
+    {"name": "migration_file_and_head_match", "result": "pass"},
+    {"name": "five_columns_not_null", "result": "pass"},
+    {"name": "determinism_unique_constraint_present", "result": "pass"},
+    {"name": "fk_target_interpretation_packs", "result": "pass"},
+    {"name": "backfill_and_inline_gf059_present", "result": "pass"}
+  ],
+  "observed_paths": [
+    "schema/migrations/0132_execution_records_determinism_constraints.sql",
+    "scripts/db/backfill_execution_records_determinism.sql",
+    "schema/migrations/MIGRATION_HEAD"
+  ],
+  "observed_hashes": {
+    "migration_0132_sha256": "50457cb0c90b543e4ced0ddbc6822d0b22d92690343f742e726084f8b8abaee3",
+    "backfill_sha256": "9072adb9dd32d511f9b87507369d321896a599106835c9ed539fac78d6de2a2f",
+    "migration_head_sha256": "e76c6d41e41d2a8b3169c4da44c10067d0639a0e24d534a48d39596574ec160b"
+  },
+  "command_outputs": {
+    "not_null_columns": ["input_hash","interpretation_version_id","output_hash","runtime_version","tenant_id"],
+    "unique_constraint_def": "UNIQUE (input_hash, interpretation_version_id, runtime_version)\n",
+    "fk_target": "interpretation_packs(interpretation_pack_id)"
+  },
+  "execution_trace": {
+    "start_utc": "2026-04-20T16:46:09.584Z",
+    "end_utc": "2026-04-20T16:46:09.730Z"
+  },
+  "not_null_enforced": true,
+  "unique_enforced": true,
+  "fk_not_null_enforced": true,
+  "migration_head_value": "0132"
+}
