@@ -43,3 +43,14 @@ final_status: planned
 - **Path authority honoured:** all edits in SECURITY_GUARDIAN scope (`scripts/dev/pre_ci.sh`, `scripts/audit/**`). No edits to `scripts/db/**`, `docs/invariants/**`, or `.github/workflows/**`.
 - **Status transition:** `planned` → `completed`.
 final_status: completed
+
+## Final summary
+
+- **Task:** TSK-P2-PREAUTH-003-REM-05B
+- **Final status:** `completed`
+- **Branch:** `devin/1776702476-wave3-implementation` (off `origin/main@220a991c`)
+- **Casefile:** docs/plans/remediation/REM-2026-04-20_execution-truth-anchor/PLAN.md
+- **Plan:** docs/plans/phase2/TSK-P2-PREAUTH-003-REM-05B/PLAN.md
+- **Evidence:** see per-task JSON under `evidence/phase2/` and the append-only record above.
+- **Path authority honoured:** all edits stayed within the owner role's allowed paths per AGENTS.md; no cross-role writes.
+- **B1-B7 constraints honoured:** no BEGIN/COMMIT in migrations; migration 0132 backfill inlined; SECURITY DEFINER functions pin `search_path = pg_catalog, public`; REM-04 manifest flip lands last with fresh REM-05 evidence (tool-hash match).

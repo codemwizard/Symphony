@@ -30,3 +30,14 @@ Append-only. Do not retroactively rewrite entries.
 - **Evidence emitted:** `evidence/phase2/tsk_p2_preauth_003_rem_03.json` with `status: PASS`, `negative_test_sqlstates: ["GF056","GF058"]`, `search_path_hardened: true`, `trigger_definer_functions: [append_only, temporal_binding]`.
 - **Status transition:** `planned` → `completed` (per meta.yml work items 1–3).
 - **Bug-fix constraints honoured:** B1 (fresh branch off main@220a991c), B5 (no BEGIN/COMMIT in migration file), SECURITY DEFINER hardening via `SET search_path = pg_catalog, public`.
+
+## Final summary
+
+- **Task:** TSK-P2-PREAUTH-003-REM-03
+- **Final status:** `completed`
+- **Branch:** `devin/1776702476-wave3-implementation` (off `origin/main@220a991c`)
+- **Casefile:** docs/plans/remediation/REM-2026-04-20_execution-truth-anchor/PLAN.md
+- **Plan:** docs/plans/phase2/TSK-P2-PREAUTH-003-REM-03/PLAN.md
+- **Evidence:** see per-task JSON under `evidence/phase2/` and the append-only record above.
+- **Path authority honoured:** all edits stayed within the owner role's allowed paths per AGENTS.md; no cross-role writes.
+- **B1-B7 constraints honoured:** no BEGIN/COMMIT in migrations; migration 0132 backfill inlined; SECURITY DEFINER functions pin `search_path = pg_catalog, public`; REM-04 manifest flip lands last with fresh REM-05 evidence (tool-hash match).

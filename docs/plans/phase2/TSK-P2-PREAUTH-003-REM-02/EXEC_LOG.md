@@ -31,3 +31,14 @@ Append-only. Do not retroactively rewrite entries.
 - **Evidence:** `evidence/phase2/tsk_p2_preauth_003_rem_02.json` emitted with `checks`, `observed_paths`, `observed_hashes`, `command_outputs.not_null_columns`, `command_outputs.unique_constraint_def`, `command_outputs.fk_target`, `not_null_enforced`, `unique_enforced`, `fk_not_null_enforced`.
 - **Status transition:** `planned` → `completed`.
 - **Bug-fix constraints honoured:** B5 (no BEGIN/COMMIT in migration), B6 (GF059 DO block inlined, no `\i`).
+
+## Final summary
+
+- **Task:** TSK-P2-PREAUTH-003-REM-02
+- **Final status:** `completed`
+- **Branch:** `devin/1776702476-wave3-implementation` (off `origin/main@220a991c`)
+- **Casefile:** docs/plans/remediation/REM-2026-04-20_execution-truth-anchor/PLAN.md
+- **Plan:** docs/plans/phase2/TSK-P2-PREAUTH-003-REM-02/PLAN.md
+- **Evidence:** see per-task JSON under `evidence/phase2/` and the append-only record above.
+- **Path authority honoured:** all edits stayed within the owner role's allowed paths per AGENTS.md; no cross-role writes.
+- **B1-B7 constraints honoured:** no BEGIN/COMMIT in migrations; migration 0132 backfill inlined; SECURITY DEFINER functions pin `search_path = pg_catalog, public`; REM-04 manifest flip lands last with fresh REM-05 evidence (tool-hash match).
