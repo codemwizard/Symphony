@@ -1,0 +1,163 @@
+schema_version: 1
+phase: '2'
+task_id: TSK-P2-PREAUTH-003-REM-01
+title: "Add nullable determinism columns (input_hash, output_hash, runtime_version, tenant_id) to execution_records via forward migration 0131 so that REM-02 can tighten them to NOT NULL"
+owner_role: DB_FOUNDATION
+status: planned
+priority: CRITICAL
+risk_class: INTEGRITY
+blast_radius: DB_SCHEMA
+
+intent: >-
+  Migration 0118 produced execution_records without determinism columns, so
+  replayability and tamper-detection are impossible. This task is the expand
+  phase of an expand/contract pair: it adds input_hash, output_hash,
+  runtime_version, and tenant_id as NULLABLE on the applied 0118 table via a
+  new forward migration 0131. REM-02 is the contract phase. No edit to 0118 is
+  permitted (AGENTS.md forward-only hard constraint).
+
+anti_patterns:
+  - "Editing the applied migration 0118 instead of authoring a forward migration 0131"
+  - "Adding NOT NULL in the same migration that adds the columns, before backfill"
+  - "Introducing runtime DDL from application code"
+  - "Writing the verifier after the migration is applied"
+
+out_of_scope:
+  - "NOT NULL tightening (belongs to REM-02)"
+  - "UNIQUE constraint on determinism tuple (belongs to REM-02)"
+  - "FK NOT NULL on interpretation_version_id (belongs to REM-02)"
+  - "Append-only trigger (belongs to REM-03)"
+  - "Invariant registration (belongs to REM-04)"
+  - "CI wiring (belongs to REM-05)"
+  - "Adding adapter_id, instruction_id, methodology_version, factor_set_version, conversion_version, rounding_precision, execution_state, retry_count, failure_reason"
+
+stop_conditions:
+  - "If migration 0131 does not add all four columns as NULLABLE TEXT or UUID"
+  - "If schema/migrations/MIGRATION_HEAD is not advanced from 0130 to 0131"
+  - "If any ALTER TABLE statement targets migration file 0118_create_execution_records.sql"
+  - "If runtime DDL is introduced anywhere in src/ or packages/"
+  - "If verifier lacks a failure path (no || exit 1)"
+
+proof_guarantees:
+  - "information_schema.columns returns input_hash, output_hash, runtime_version, tenant_id for table execution_records"
+  - "schema/migrations/MIGRATION_HEAD equals exactly 0131 after application"
+  - "Migration 0118 content is byte-identical to its pre-REM state (git diff shows no change)"
+
+proof_limitations:
+  - "NOT NULL enforcement is deferred to REM-02"
+  - "Column data types are validated at schema level only; semantic content (SHA-256 length, UUID validity) is enforced by application-layer adapters, not this migration"
+
+depends_on:
+  - TSK-P2-PREAUTH-003-02
+
+blocks:
+  - TSK-P2-PREAUTH-003-REM-02
+
+touches:
+  - schema/migrations/0131_execution_records_determinism_columns.sql
+  - schema/migrations/MIGRATION_HEAD
+  - scripts/db/verify_execution_records_determinism_columns.sh
+  - evidence/phase2/tsk_p2_preauth_003_rem_01.json
+  - tasks/TSK-P2-PREAUTH-003-REM-01/meta.yml
+  - docs/plans/phase2/TSK-P2-PREAUTH-003-REM-01/PLAN.md
+  - docs/plans/phase2/TSK-P2-PREAUTH-003-REM-01/EXEC_LOG.md
+
+invariants: []
+
+work:
+  - >-
+    [ID tsk_p2_preauth_003_rem_01_work_item_01] Author schema/migrations/0131_execution_records_determinism_columns.sql
+    containing four ALTER TABLE public.execution_records ADD COLUMN IF NOT EXISTS statements: input_hash TEXT, output_hash TEXT, runtime_version TEXT, tenant_id UUID.
+    The migration performs no other DDL and makes no change to 0118.
+  - >-
+    [ID tsk_p2_preauth_003_rem_01_work_item_02] Update schema/migrations/MIGRATION_HEAD
+    by writing the exact string 0131 (no newline drift) so Symphony's migration ordering gate treats 0131 as head.
+  - >-
+    [ID tsk_p2_preauth_003_rem_01_work_item_03] Author scripts/db/verify_execution_records_determinism_columns.sh
+    that connects to DATABASE_URL, queries information_schema.columns for the four column names, asserts each present and of the declared data_type, and writes evidence/phase2/tsk_p2_preauth_003_rem_01.json
+    containing task_id, git_sha, timestamp_utc, status, checks, observed_paths, observed_hashes, command_outputs, execution_trace, columns_added, migration_head_value. Include a negative test that the verifier exits non-zero when any of the four columns is absent.
+
+acceptance_criteria:
+  - >-
+    [ID tsk_p2_preauth_003_rem_01_work_item_01] The file schema/migrations/0131_execution_records_determinism_columns.sql
+    exists, is a new file, and its content contains four ADD COLUMN statements for input_hash, output_hash, runtime_version, tenant_id on public.execution_records.
+  - >-
+    [ID tsk_p2_preauth_003_rem_01_work_item_02] The file schema/migrations/MIGRATION_HEAD
+    contains the exact token 0131 (equality check, not substring).
+  - >-
+    [ID tsk_p2_preauth_003_rem_01_work_item_03] bash scripts/db/verify_execution_records_determinism_columns.sh
+    exits 0 against a database that has 0131 applied, and writes evidence/phase2/tsk_p2_preauth_003_rem_01.json with the required fields.
+
+negative_tests:
+  - id: TSK-P2-PREAUTH-003-REM-01-N1
+    description: >-
+      Run scripts/db/verify_execution_records_determinism_columns.sh against a database where only three of the four determinism columns exist; the verifier exits non-zero and writes no evidence JSON with status=PASS.
+    required: true
+  - id: TSK-P2-PREAUTH-003-REM-01-N2
+    description: >-
+      Attempt to apply migration 0131 when MIGRATION_HEAD still reads 0130; ordering gate at scripts/audit/verify_migration_head.sh returns non-zero before verifier even runs.
+    required: true
+
+positive_tests:
+  - id: TSK-P2-PREAUTH-003-REM-01-P1
+    description: >-
+      Run scripts/db/verify_execution_records_determinism_columns.sh against a database where 0131 is applied and all four determinism columns exist NULLABLE; verifier exits 0 and emits evidence with status=PASS.
+    required: true
+
+verification:
+  - >-
+    # [ID tsk_p2_preauth_003_rem_01_work_item_03] Run the verifier and emit evidence.
+    test -x scripts/db/verify_execution_records_determinism_columns.sh && bash scripts/db/verify_execution_records_determinism_columns.sh > evidence/phase2/tsk_p2_preauth_003_rem_01.json || exit 1
+  - >-
+    # [ID tsk_p2_preauth_003_rem_01_work_item_01] Confirm the 0131 migration file exists and touches execution_records.
+    test -f schema/migrations/0131_execution_records_determinism_columns.sql && grep -q 'execution_records' schema/migrations/0131_execution_records_determinism_columns.sql || exit 1
+  - >-
+    # [ID tsk_p2_preauth_003_rem_01_work_item_02] Confirm MIGRATION_HEAD advanced to 0131.
+    test -f schema/migrations/MIGRATION_HEAD && grep -Fxq '0131' schema/migrations/MIGRATION_HEAD || exit 1
+  - >-
+    # [ID tsk_p2_preauth_003_rem_01_work_item_03] Confirm evidence file contains the observed_hashes proof-carrying field.
+    test -f evidence/phase2/tsk_p2_preauth_003_rem_01.json && cat evidence/phase2/tsk_p2_preauth_003_rem_01.json | grep -q 'observed_hashes' || exit 1
+  - >-
+    # [ID tsk_p2_preauth_003_rem_01_work_item_01] [ID tsk_p2_preauth_003_rem_01_work_item_02] [ID tsk_p2_preauth_003_rem_01_work_item_03]
+    RUN_PHASE1_GATES=1 bash scripts/dev/pre_ci.sh || exit 1
+
+evidence:
+  - path: evidence/phase2/tsk_p2_preauth_003_rem_01.json
+    must_include:
+      - task_id
+      - git_sha
+      - timestamp_utc
+      - status
+      - checks
+      - observed_paths
+      - observed_hashes
+      - command_outputs
+      - execution_trace
+      - columns_added
+      - migration_head_value
+
+failure_modes:
+  - "Any ALTER statement targets 0118_create_execution_records.sql => CRITICAL_FAIL"
+  - "Migration 0131 applied but MIGRATION_HEAD still reads 0130 => FAIL"
+  - "Column added with NOT NULL in 0131 before backfill => FAIL (violates expand/contract discipline, belongs to REM-02)"
+  - "Runtime DDL introduced in src/ or packages/ => CRITICAL_FAIL"
+  - "Evidence JSON missing observed_hashes or execution_trace => FAIL"
+
+must_read:
+  - docs/operations/AI_AGENT_OPERATION_MANUAL.md
+  - docs/operations/REMEDIATION_TRACE_WORKFLOW.md
+  - docs/invariants/INVARIANTS_QUICK.md
+  - docs/invariants/INVARIANTS_IMPLEMENTED.md
+  - docs/plans/remediation/REM-2026-04-20_execution-truth-anchor/PLAN.md
+
+implementation_plan: docs/plans/phase2/TSK-P2-PREAUTH-003-REM-01/PLAN.md
+implementation_log: docs/plans/phase2/TSK-P2-PREAUTH-003-REM-01/EXEC_LOG.md
+
+notes: >-
+  Expand phase of expand/contract pair (INV-097 discipline). Pairs with REM-02 which
+  performs the contract phase (NOT NULL + UNIQUE + FK NOT NULL). Migration 0131 is intentionally
+  non-destructive. This task produced from DRD casefile REM-2026-04-20_execution-truth-anchor.
+
+client: cursor
+assigned_agent: db_foundation
+model: <UNASSIGNED>

@@ -1,0 +1,199 @@
+schema_version: 1
+phase: '2'
+task_id: TSK-P2-PREAUTH-003-REM-05
+title: "Author single integrity verifier scripts/db/verify_execution_truth_anchor.sh, wire it into pre_ci.sh and run_invariants_fast_checks.sh, and emit self-certifying evidence"
+owner_role: SECURITY_GUARDIAN
+status: planned
+priority: CRITICAL
+risk_class: INTEGRITY
+blast_radius: CI_GATES
+
+intent: >-
+  Produce the single integrity verifier that closes INV-EXEC-TRUTH-001: it
+  inspects pg_attribute NOT NULL flags, pg_constraint for FK + UNIQUE,
+  pg_trigger for append-only and temporal-binding triggers, and pg_proc for
+  SECURITY DEFINER search_path hardening. It drives the negative tests authored
+  in REM-02 and REM-03. It emits self-certifying evidence that carries
+  verification_tool_version (verifier SHA-256), verification_input_snapshot
+  (SHA-256 of canonicalised DB state inputs), and verification_run_hash
+  (SHA-256 of the two plus the check results). Finally, wire the verifier into
+  scripts/dev/pre_ci.sh and scripts/audit/run_invariants_fast_checks.sh.
+
+anti_patterns:
+  - "Writing a verifier that echoes PASS without inspecting live DB state"
+  - "Emitting evidence that is not content-hashed and can therefore be spoofed"
+  - "Wiring into pre_ci.sh without a non-zero exit on failure (fail-open)"
+  - "Calling psql without setting DATABASE_URL or failing fast when it is unset"
+  - "Re-implementing the sub-verifiers from REM-01/02/03 inline instead of delegating"
+
+out_of_scope:
+  - "Changing execution_records schema (belongs to REM-01/02)"
+  - "Changing triggers (belongs to REM-03)"
+  - "Registering the invariant (belongs to REM-04)"
+  - "Adapter lifecycle / retry / failure-state (deferred to REM-2026-04-20_execution-lifecycle)"
+
+stop_conditions:
+  - "If verifier exits 0 on a database that lacks any of the five NOT NULL, the UNIQUE, or either trigger"
+  - "If verifier emits evidence missing any of verification_tool_version, verification_input_snapshot, verification_run_hash"
+  - "If pre_ci.sh is edited such that the verifier is invoked behind an unconditional || true (fail-open)"
+  - "If run_invariants_fast_checks.sh is edited such that the verifier is not inside its fast-check array"
+  - "If verifier is not executable (chmod bit)"
+
+proof_guarantees:
+  - "scripts/db/verify_execution_truth_anchor.sh exists, is executable, and on a 0133-applied database exits 0"
+  - "On a database missing any single enforcement surface (pick any of the 7 proof points), the verifier exits non-zero"
+  - "scripts/dev/pre_ci.sh contains exactly one invocation of scripts/db/verify_execution_truth_anchor.sh guarded by || exit 1"
+  - "scripts/audit/run_invariants_fast_checks.sh contains exactly one invocation of scripts/db/verify_execution_truth_anchor.sh guarded by || exit 1"
+  - "Evidence JSON carries verification_tool_version, verification_input_snapshot, verification_run_hash"
+
+proof_limitations:
+  - "Self-certification is tamper-evident, not tamper-proof: a compromised verifier can emit consistent lies. Mitigated by pinning verification_tool_version SHA-256 in INVARIANTS_MANIFEST.yml so CI can cross-check the pinned hash."
+  - "run_invariants_fast_checks.sh must be invoked by CI; this task does not itself verify GitHub Actions YAML beyond the existing pre_ci.sh gate."
+
+depends_on:
+  - TSK-P2-PREAUTH-003-REM-03
+
+blocks:
+  - TSK-P2-PREAUTH-003-REM-04
+
+touches:
+  - scripts/db/verify_execution_truth_anchor.sh
+  - scripts/audit/run_invariants_fast_checks.sh
+  - scripts/dev/pre_ci.sh
+  - scripts/db/tests/test_execution_truth_anchor_smoke.sh
+  - evidence/phase2/tsk_p2_preauth_003_rem_05.json
+  - tasks/TSK-P2-PREAUTH-003-REM-05/meta.yml
+  - docs/plans/phase2/TSK-P2-PREAUTH-003-REM-05/PLAN.md
+  - docs/plans/phase2/TSK-P2-PREAUTH-003-REM-05/EXEC_LOG.md
+
+invariants: []
+
+work:
+  - >-
+    [ID tsk_p2_preauth_003_rem_05_work_item_01] Author scripts/db/verify_execution_truth_anchor.sh
+    as a single integrity verifier that inspects pg_attribute.attnotnull for five columns,
+    pg_constraint for execution_records_determinism_unique and the FK to interpretation_packs(interpretation_pack_id),
+    pg_trigger for execution_records_append_only_trigger (BEFORE UPDATE OR DELETE) and
+    execution_records_temporal_binding_trigger (BEFORE INSERT), and pg_proc.proconfig for SET search_path = pg_catalog, public
+    on both SECURITY DEFINER functions. Every assertion guarded by || exit 1. Emit
+    evidence/phase2/tsk_p2_preauth_003_rem_05.json carrying task_id, git_sha, timestamp_utc, status,
+    checks, observed_paths, observed_hashes, command_outputs, execution_trace, not_null_enforced,
+    fk_verified, unique_enforced, append_only_enforced, temporal_binding_enforced, columns_verified,
+    plus the three verifier-integrity fields verification_tool_version, verification_input_snapshot,
+    verification_run_hash.
+  - >-
+    [ID tsk_p2_preauth_003_rem_05_work_item_02] Edit scripts/dev/pre_ci.sh to invoke the new verifier
+    at the schema-invariants gate position (between the existing run_invariants_fast_checks.sh call
+    and the Phase 1 gate, with || exit 1). Edit scripts/audit/run_invariants_fast_checks.sh to add the
+    verifier to its fast-check array so that an early failure short-circuits the fast path.
+    Both edits are idempotent: re-running the task does not duplicate the invocation lines.
+  - >-
+    [ID tsk_p2_preauth_003_rem_05_work_item_03] Author scripts/db/tests/test_execution_truth_anchor_smoke.sh
+    that drives the verifier against a deliberately degraded database state (one of the 7 proof surfaces
+    disabled per run) and asserts the verifier exits non-zero for each degradation. This is the
+    negative-test harness that proves the verifier is not fail-open.
+
+acceptance_criteria:
+  - >-
+    [ID tsk_p2_preauth_003_rem_05_work_item_01] scripts/db/verify_execution_truth_anchor.sh exists, is executable, and against a database where migrations 0131+0132+0133 are applied exits 0 and emits evidence/phase2/tsk_p2_preauth_003_rem_05.json carrying all nine standard + three verifier-integrity fields.
+  - >-
+    [ID tsk_p2_preauth_003_rem_05_work_item_02] scripts/dev/pre_ci.sh contains a line invoking scripts/db/verify_execution_truth_anchor.sh guarded by || exit 1, and scripts/audit/run_invariants_fast_checks.sh contains the same verifier in its fast-check sequence.
+  - >-
+    [ID tsk_p2_preauth_003_rem_05_work_item_03] scripts/db/tests/test_execution_truth_anchor_smoke.sh exits 0 (its success case drives the verifier to exit non-zero across seven degradation scenarios).
+
+negative_tests:
+  - id: TSK-P2-PREAUTH-003-REM-05-N1
+    description: >-
+      Run verifier against a database where the append-only trigger has been dropped; verifier exits non-zero and evidence carries append_only_enforced=false.
+    required: true
+  - id: TSK-P2-PREAUTH-003-REM-05-N2
+    description: >-
+      Run verifier against a database where the temporal-binding trigger has been dropped; verifier exits non-zero and evidence carries temporal_binding_enforced=false.
+    required: true
+  - id: TSK-P2-PREAUTH-003-REM-05-N3
+    description: >-
+      Run verifier against a database where interpretation_version_id is set nullable via a manual ALTER; verifier exits non-zero and evidence carries not_null_enforced=false.
+    required: true
+  - id: TSK-P2-PREAUTH-003-REM-05-N4
+    description: >-
+      Run verifier against a database where the UNIQUE (input_hash, interpretation_version_id, runtime_version) constraint has been dropped; verifier exits non-zero and evidence carries unique_enforced=false.
+    required: true
+  - id: TSK-P2-PREAUTH-003-REM-05-N5
+    description: >-
+      Tamper with the verifier binary (change one byte) and run it; the emitted verification_tool_version hash changes, and downstream REM-04 registration verifier detects the drift.
+    required: true
+
+positive_tests:
+  - id: TSK-P2-PREAUTH-003-REM-05-P1
+    description: >-
+      Run verifier against a fully-migrated 0133-applied database; verifier exits 0 and emits evidence with status=PASS, every proof bool set true, and the three verifier-integrity fields populated with non-empty SHA-256 strings.
+    required: true
+
+verification:
+  - >-
+    # [ID tsk_p2_preauth_003_rem_05_work_item_01] Run the integrity verifier and emit evidence.
+    test -x scripts/db/verify_execution_truth_anchor.sh && bash scripts/db/verify_execution_truth_anchor.sh > evidence/phase2/tsk_p2_preauth_003_rem_05.json || exit 1
+  - >-
+    # [ID tsk_p2_preauth_003_rem_05_work_item_02] Confirm pre_ci.sh wires the verifier with || exit 1.
+    test -f scripts/dev/pre_ci.sh && grep -q 'verify_execution_truth_anchor.sh' scripts/dev/pre_ci.sh || exit 1
+  - >-
+    # [ID tsk_p2_preauth_003_rem_05_work_item_02] Confirm run_invariants_fast_checks.sh includes the verifier.
+    test -f scripts/audit/run_invariants_fast_checks.sh && grep -q 'verify_execution_truth_anchor.sh' scripts/audit/run_invariants_fast_checks.sh || exit 1
+  - >-
+    # [ID tsk_p2_preauth_003_rem_05_work_item_03] Confirm the smoke harness exists for degradation negative tests.
+    test -x scripts/db/tests/test_execution_truth_anchor_smoke.sh || exit 1
+  - >-
+    # [ID tsk_p2_preauth_003_rem_05_work_item_01] Confirm evidence contains all three verifier-integrity fields.
+    test -f evidence/phase2/tsk_p2_preauth_003_rem_05.json && cat evidence/phase2/tsk_p2_preauth_003_rem_05.json | grep -q 'verification_tool_version' && cat evidence/phase2/tsk_p2_preauth_003_rem_05.json | grep -q 'verification_input_snapshot' && cat evidence/phase2/tsk_p2_preauth_003_rem_05.json | grep -q 'verification_run_hash' || exit 1
+  - >-
+    # [ID tsk_p2_preauth_003_rem_05_work_item_01] [ID tsk_p2_preauth_003_rem_05_work_item_02] [ID tsk_p2_preauth_003_rem_05_work_item_03]
+    RUN_PHASE1_GATES=1 bash scripts/dev/pre_ci.sh || exit 1
+
+evidence:
+  - path: evidence/phase2/tsk_p2_preauth_003_rem_05.json
+    must_include:
+      - task_id
+      - git_sha
+      - timestamp_utc
+      - status
+      - checks
+      - observed_paths
+      - observed_hashes
+      - command_outputs
+      - execution_trace
+      - not_null_enforced
+      - fk_verified
+      - unique_enforced
+      - append_only_enforced
+      - temporal_binding_enforced
+      - columns_verified
+      - verification_tool_version
+      - verification_input_snapshot
+      - verification_run_hash
+
+failure_modes:
+  - "Verifier exits 0 on degraded state => CRITICAL_FAIL (fail-open defeats entire remediation)"
+  - "Evidence omits any of the three verifier-integrity fields => FAIL"
+  - "pre_ci.sh invokes verifier behind an unconditional || true => CRITICAL_FAIL (fail-open CI)"
+  - "run_invariants_fast_checks.sh invocation missing => FAIL (CI fast path misses the anchor)"
+  - "Verifier re-implements sub-checks redundantly with REM-01/02/03 verifiers, drifting logic => FAIL_REVIEW"
+
+must_read:
+  - docs/operations/AI_AGENT_OPERATION_MANUAL.md
+  - docs/invariants/INVARIANTS_QUICK.md
+  - scripts/dev/pre_ci.sh
+  - scripts/audit/run_invariants_fast_checks.sh
+  - docs/plans/remediation/REM-2026-04-20_execution-truth-anchor/PLAN.md
+
+implementation_plan: docs/plans/phase2/TSK-P2-PREAUTH-003-REM-05/PLAN.md
+implementation_log: docs/plans/phase2/TSK-P2-PREAUTH-003-REM-05/EXEC_LOG.md
+
+notes: >-
+  This verifier is what INV-EXEC-TRUTH-001.enforcement points at once REM-04 flips the manifest.
+  Self-certification via the three verifier-integrity fields is the only defence against a
+  silently compromised verifier. The smoke harness in work_item_03 exercises each of the seven
+  proof surfaces independently to guarantee no fail-open regression.
+
+client: cursor
+assigned_agent: security_guardian
+model: <UNASSIGNED>

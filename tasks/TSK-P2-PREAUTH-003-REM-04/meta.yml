@@ -1,0 +1,173 @@
+schema_version: 1
+phase: '2'
+task_id: TSK-P2-PREAUTH-003-REM-04
+title: "Register invariant INV-EXEC-TRUTH-001 in INVARIANTS_MANIFEST.yml and supporting governance documents after REM-05 evidence proves enforcement at the DB layer"
+owner_role: INVARIANTS_CURATOR
+status: planned
+priority: CRITICAL
+risk_class: GOVERNANCE
+blast_radius: POLICY_SURFACE
+
+intent: >-
+  Declare INV-EXEC-TRUTH-001 as an implemented invariant in
+  docs/invariants/INVARIANTS_MANIFEST.yml, the implemented registry,
+  threat model, and compliance map — but only after REM-05 produces
+  fresh verifier evidence covering append-only, temporal binding,
+  determinism UNIQUE, NOT NULL on five columns, and verifier-integrity
+  fields. If REM-05 evidence is absent or stale, this task blocks
+  itself and remains in status=planned.
+
+anti_patterns:
+  - "Flipping invariant status to implemented before REM-05 evidence lands"
+  - "Declaring enforcement_location as a file that does not exist"
+  - "Declaring a verification_command that is not in the repo"
+  - "Silently widening invariant scope (e.g. claiming coverage over lifecycle state)"
+  - "Merging this invariant with INV-175 (data_authority) — different scope"
+
+out_of_scope:
+  - "Creating/modifying the verifier (belongs to REM-05)"
+  - "Altering schema or triggers (belongs to REM-01/02/03)"
+  - "Lifecycle / retry / execution_state invariants (owned by REM-2026-04-20_execution-lifecycle)"
+
+stop_conditions:
+  - "If evidence/phase2/tsk_p2_preauth_003_rem_05.json is missing or stale (run_id older than the latest git HEAD SHA present in the file)"
+  - "If enforcement_location path does not exist on disk"
+  - "If verification_command is not a runnable script in the repo"
+  - "If INVARIANTS_MANIFEST.yml parse fails after the append"
+
+proof_guarantees:
+  - "docs/invariants/INVARIANTS_MANIFEST.yml contains a block id=INV-EXEC-TRUTH-001 with status=implemented, severity=P0, enforcement referencing scripts/db/verify_execution_truth_anchor.sh, and verification referencing evidence/phase2/tsk_p2_preauth_003_rem_05.json"
+  - "docs/invariants/INVARIANTS_IMPLEMENTED.md lists INV-EXEC-TRUTH-001 with the same enforcement and verification pointers"
+  - "docs/security/THREAT_MODEL.md contains a threat entry execution-record tamper mapped to INV-EXEC-TRUTH-001"
+  - "docs/security/COMPLIANCE_MAP.md maps at least one audit control to INV-EXEC-TRUTH-001"
+
+proof_limitations:
+  - "This task performs no DB DDL and no verifier execution; it is a governance surface task. Enforcement lives in REM-03 / REM-05."
+  - "INVARIANTS_MANIFEST.yml is YAML-parsed, not schema-validated at the YAML level beyond the existing invariants schema script; manifest-schema evolution is out of scope."
+
+depends_on:
+  - TSK-P2-PREAUTH-003-REM-05
+
+blocks:
+  - checkpoint/EXEC-TRUTH-REM
+
+touches:
+  - docs/invariants/INVARIANTS_MANIFEST.yml
+  - docs/invariants/INVARIANTS_IMPLEMENTED.md
+  - docs/security/THREAT_MODEL.md
+  - docs/security/COMPLIANCE_MAP.md
+  - scripts/audit/verify_invariant_exec_truth_001_registration.sh
+  - evidence/phase2/tsk_p2_preauth_003_rem_04.json
+  - tasks/TSK-P2-PREAUTH-003-REM-04/meta.yml
+  - docs/plans/phase2/TSK-P2-PREAUTH-003-REM-04/PLAN.md
+  - docs/plans/phase2/TSK-P2-PREAUTH-003-REM-04/EXEC_LOG.md
+
+invariants:
+  - INV-EXEC-TRUTH-001
+
+work:
+  - >-
+    [ID tsk_p2_preauth_003_rem_04_work_item_01] Append the INV-EXEC-TRUTH-001 block to docs/invariants/INVARIANTS_MANIFEST.yml
+    with id, aliases, status=implemented, severity=P0, title, owners, sla_days, enforcement
+    (scripts/db/verify_execution_truth_anchor.sh), and verification (evidence/phase2/tsk_p2_preauth_003_rem_05.json).
+    Append a matching row to docs/invariants/INVARIANTS_IMPLEMENTED.md.
+  - >-
+    [ID tsk_p2_preauth_003_rem_04_work_item_02] Add a threat entry titled execution-record tamper to docs/security/THREAT_MODEL.md
+    with assets = execution_records.*, attack vectors = UPDATE/DELETE/temporal-drift, mitigation = INV-EXEC-TRUTH-001.
+    Add a compliance row to docs/security/COMPLIANCE_MAP.md mapping at least one external audit control (e.g. SOC2 CC7.2 or equivalent) to INV-EXEC-TRUTH-001.
+  - >-
+    [ID tsk_p2_preauth_003_rem_04_work_item_03] Author scripts/audit/verify_invariant_exec_truth_001_registration.sh
+    that confirms the manifest block exists, enforcement path resolves to a file on disk, verification path resolves to an evidence JSON whose
+    run_id is not older than the latest git HEAD SHA in the evidence file, and emits evidence/phase2/tsk_p2_preauth_003_rem_04.json
+    carrying manifest_present, enforcement_path_resolves, verification_evidence_fresh proof fields.
+
+acceptance_criteria:
+  - >-
+    [ID tsk_p2_preauth_003_rem_04_work_item_01] docs/invariants/INVARIANTS_MANIFEST.yml parses as YAML and contains a block whose id equals INV-EXEC-TRUTH-001 with status set to implemented; docs/invariants/INVARIANTS_IMPLEMENTED.md contains a row mentioning INV-EXEC-TRUTH-001.
+  - >-
+    [ID tsk_p2_preauth_003_rem_04_work_item_02] docs/security/THREAT_MODEL.md contains a threat entry referencing execution-record tamper and INV-EXEC-TRUTH-001; docs/security/COMPLIANCE_MAP.md contains a row referencing INV-EXEC-TRUTH-001.
+  - >-
+    [ID tsk_p2_preauth_003_rem_04_work_item_03] bash scripts/audit/verify_invariant_exec_truth_001_registration.sh exits 0 and writes evidence/phase2/tsk_p2_preauth_003_rem_04.json with manifest_present=true, enforcement_path_resolves=true, verification_evidence_fresh=true.
+
+negative_tests:
+  - id: TSK-P2-PREAUTH-003-REM-04-N1
+    description: >-
+      Remove evidence/phase2/tsk_p2_preauth_003_rem_05.json and re-run scripts/audit/verify_invariant_exec_truth_001_registration.sh; it exits non-zero with verification_evidence_fresh=false.
+    required: true
+  - id: TSK-P2-PREAUTH-003-REM-04-N2
+    description: >-
+      Edit enforcement in the manifest to point at a non-existent script path and re-run the registration verifier; it exits non-zero with enforcement_path_resolves=false.
+    required: true
+
+positive_tests:
+  - id: TSK-P2-PREAUTH-003-REM-04-P1
+    description: >-
+      After REM-05 evidence is in place and enforcement_location resolves, the registration verifier exits 0 and emits evidence with status=PASS and all three fresh fields true.
+    required: true
+
+verification:
+  - >-
+    # [ID tsk_p2_preauth_003_rem_04_work_item_03] Run the registration verifier and emit evidence.
+    test -x scripts/audit/verify_invariant_exec_truth_001_registration.sh && bash scripts/audit/verify_invariant_exec_truth_001_registration.sh > evidence/phase2/tsk_p2_preauth_003_rem_04.json || exit 1
+  - >-
+    # [ID tsk_p2_preauth_003_rem_04_work_item_01] Confirm manifest contains INV-EXEC-TRUTH-001 block.
+    test -f docs/invariants/INVARIANTS_MANIFEST.yml && grep -q 'INV-EXEC-TRUTH-001' docs/invariants/INVARIANTS_MANIFEST.yml || exit 1
+  - >-
+    # [ID tsk_p2_preauth_003_rem_04_work_item_01] Confirm implemented registry lists INV-EXEC-TRUTH-001.
+    test -f docs/invariants/INVARIANTS_IMPLEMENTED.md && grep -q 'INV-EXEC-TRUTH-001' docs/invariants/INVARIANTS_IMPLEMENTED.md || exit 1
+  - >-
+    # [ID tsk_p2_preauth_003_rem_04_work_item_02] Confirm threat model carries the execution-record tamper entry.
+    test -f docs/security/THREAT_MODEL.md && grep -q 'execution-record tamper' docs/security/THREAT_MODEL.md && grep -q 'INV-EXEC-TRUTH-001' docs/security/THREAT_MODEL.md || exit 1
+  - >-
+    # [ID tsk_p2_preauth_003_rem_04_work_item_02] Confirm compliance map references INV-EXEC-TRUTH-001.
+    test -f docs/security/COMPLIANCE_MAP.md && grep -q 'INV-EXEC-TRUTH-001' docs/security/COMPLIANCE_MAP.md || exit 1
+  - >-
+    # [ID tsk_p2_preauth_003_rem_04_work_item_03] Confirm evidence file carries the manifest_present proof field.
+    test -f evidence/phase2/tsk_p2_preauth_003_rem_04.json && cat evidence/phase2/tsk_p2_preauth_003_rem_04.json | grep -q 'manifest_present' || exit 1
+  - >-
+    # [ID tsk_p2_preauth_003_rem_04_work_item_01] [ID tsk_p2_preauth_003_rem_04_work_item_02] [ID tsk_p2_preauth_003_rem_04_work_item_03]
+    RUN_PHASE1_GATES=1 bash scripts/dev/pre_ci.sh || exit 1
+
+evidence:
+  - path: evidence/phase2/tsk_p2_preauth_003_rem_04.json
+    must_include:
+      - task_id
+      - git_sha
+      - timestamp_utc
+      - status
+      - checks
+      - observed_paths
+      - observed_hashes
+      - command_outputs
+      - execution_trace
+      - manifest_present
+      - enforcement_path_resolves
+      - verification_evidence_fresh
+      - upstream_evidence_hash
+
+failure_modes:
+  - "Upstream evidence evidence/phase2/tsk_p2_preauth_003_rem_05.json missing => FAIL (task blocks, status stays planned)"
+  - "enforcement_location path does not exist on disk => FAIL"
+  - "INVARIANTS_MANIFEST.yml fails YAML parse after append => CRITICAL_FAIL"
+  - "Threat model or compliance map omits INV-EXEC-TRUTH-001 reference => FAIL"
+
+must_read:
+  - docs/operations/AI_AGENT_OPERATION_MANUAL.md
+  - docs/invariants/INVARIANTS_MANIFEST.yml
+  - docs/invariants/INVARIANTS_IMPLEMENTED.md
+  - docs/security/THREAT_MODEL.md
+  - docs/security/COMPLIANCE_MAP.md
+  - docs/plans/remediation/REM-2026-04-20_execution-truth-anchor/PLAN.md
+
+implementation_plan: docs/plans/phase2/TSK-P2-PREAUTH-003-REM-04/PLAN.md
+implementation_log: docs/plans/phase2/TSK-P2-PREAUTH-003-REM-04/EXEC_LOG.md
+
+notes: >-
+  Fail-closed sequencing: this task depends on REM-05, not the other way around. INV-EXEC-TRUTH-001
+  flips to status=implemented only after REM-05 emits fresh verifier evidence. FK target is
+  interpretation_packs(interpretation_pack_id) per user Q2 option (a); child column naming is
+  historical (interpretation_version_id) and documented in the invariant block notes.
+
+client: cursor
+assigned_agent: invariants_curator
+model: <UNASSIGNED>
