@@ -8,7 +8,7 @@
 # Single-integrity verifier closing INV-EXEC-TRUTH-001. Inspects seven proof
 # surfaces on live DB state (no re-implementation of REM-01/02/03 logic):
 #   1. NOT NULL on 5 determinism columns         -> not_null_enforced
-#   2. UNIQUE(input_hash, interp_vid, runtime)   -> unique_enforced
+#   2. UNIQUE(tenant_id, input_hash, interp_vid, runtime) -> unique_enforced
 #   3. FK interpretation_version_id              -> fk_verified
 #   4. Append-only trigger (BEFORE UPDATE|DELETE)-> append_only_enforced
 #   5. Temporal-binding trigger (BEFORE INSERT)  -> temporal_binding_enforced

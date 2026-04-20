@@ -5,7 +5,7 @@
 --
 -- Contract phase of the expand/contract pair. Tightens the four columns
 -- added by 0131 plus the legacy-nullable interpretation_version_id to
--- NOT NULL, and adds the determinism UNIQUE over (input_hash,
+-- NOT NULL, and adds the determinism UNIQUE over (tenant_id, input_hash,
 -- interpretation_version_id, runtime_version). The backfill precondition
 -- DO block is INLINED (B6 — do NOT use \i; scripts/db/migrate.sh
 -- checksums only this file, so an external include would silently bypass

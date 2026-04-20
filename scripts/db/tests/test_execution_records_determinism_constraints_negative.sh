@@ -5,8 +5,9 @@
 #
 # N1: INSERT with input_hash      = NULL -> SQLSTATE 23502 (NOT NULL)
 # N2: INSERT with runtime_version = NULL -> SQLSTATE 23502
-# N3: Two INSERTs sharing the same (input_hash, interpretation_version_id,
-#     runtime_version) -> SQLSTATE 23505 (unique_violation)
+# N3: Two INSERTs sharing the same (tenant_id, input_hash,
+#     interpretation_version_id, runtime_version) within one tenant
+#     -> SQLSTATE 23505 (unique_violation)
 #
 # PostgreSQL firing order on INSERT is: BEFORE-row triggers → NOT NULL →
 # CHECK → UNIQUE/FK. After migration 0133 installs the BEFORE INSERT

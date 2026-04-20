@@ -1713,7 +1713,8 @@
     runtime_version, tenant_id, interpretation_version_id), UNIQUE
     determinism constraint (execution_records_determinism_unique), FK to
     public.interpretation_packs(interpretation_pack_id), append-only trigger
-    enforce_execution_records_append_only (raises GF056 on UPDATE/DELETE),
+    execution_records_append_only bound via execution_records_append_only_trigger
+    (raises GF056 on UPDATE/DELETE),
     temporal-binding trigger enforce_execution_interpretation_temporal_binding
     (raises GF058 on INSERT when interpretation_version_id does not resolve to
     the pack active at execution_timestamp), SECURITY DEFINER hardening on both
