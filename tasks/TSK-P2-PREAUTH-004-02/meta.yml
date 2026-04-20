@@ -1,7 +1,7 @@
 schema_version: 1
 phase: '2'
 task_id: TSK-P2-PREAUTH-004-02
-title: "Create state_rules table"
+title: "Create state_rules table (migration 0135) with rule_priority INT NOT NULL DEFAULT 0 and a deterministic tiebreaker so that rule selection is a total order under replay"
 owner_role: DB_FOUNDATION
 status: planned
 priority: HIGH
@@ -9,91 +9,161 @@ risk_class: INTEGRITY
 blast_radius: DB_SCHEMA
 
 intent: >-
-  This task creates the state_rules table to define state transition rules with conditions.
-  Without this table, the system cannot enforce state machine rules, creating risk of
-  invalid state transitions.
+  Materialise the state_rules table exactly as the Wave 4 contract
+  (docs/plans/phase2/TSK-P2-PREAUTH-004-00/PLAN.md, section state_rules Schema)
+  pins it: 7 columns with rule_priority INT NOT NULL DEFAULT 0, UNIQUE on
+  (from_state, to_state, required_decision_type), and INDEX on
+  (from_state, rule_priority DESC). Rule selection (consumed by the Wave 5
+  state machine, out of scope here) is a total order: higher rule_priority
+  wins, and on equal priority the lexicographically smaller state_rule_id
+  UUID wins. This eliminates the deadlock defect in the original Wave 4
+  draft where two equally-valid rules could both apply to a single transition
+  with no deterministic answer. policy_decisions (004-01) and the
+  authority-transition binding invariant (004-03) are out of scope.
 
 anti_patterns:
-  - "Creating the table without UNIQUE constraint on (from_state, to_state)"
-  - "Writing the migration without touching MIGRATION_HEAD"
-  - "Writing the verifier after the migration is applied"
+  - "Editing any applied migration (0001-0134) instead of authoring a new forward migration 0135"
+  - "Adding a CHECK that forbids negative rule_priority values (explicit deny rules may use negative priority)"
+  - "Introducing runtime DDL from application code"
+  - "Omitting rule_priority, making it nullable, or choosing a default other than 0"
+  - "Omitting the UNIQUE (from_state, to_state, required_decision_type) constraint, which would reopen duplicate-rule ambiguity"
+  - "Authoring the verifier after the migration is applied"
+  - "Scope creep into rule-selection runtime logic, policy_decisions, or invariant registration"
 
 out_of_scope:
-  - "Data migration or backfill"
-  - "Application layer changes"
-  - "Trigger implementation"
+  - "policy_decisions table creation (belongs to TSK-P2-PREAUTH-004-01)"
+  - "INV-AUTH-TRANSITION-BINDING-01 enforcement, verifier, registration (belongs to TSK-P2-PREAUTH-004-03)"
+  - "Wave 5 state-machine rule-selection runtime logic (reads state_rules, not in this task)"
+  - "Application-layer seeding of rule rows"
+  - "Rule expiration, versioning, or soft-delete semantics"
 
 stop_conditions:
-  - "If migration does not create state_rules table"
-  - "If UNIQUE constraint on (from_state, to_state) is missing"
-  - "If MIGRATION_HEAD is not updated"
+  - "If migration 0135 lacks any of the 7 columns specified in docs/plans/phase2/TSK-P2-PREAUTH-004-00/PLAN.md (state_rules Schema)"
+  - "If rule_priority is omitted, nullable, has a non-zero default, or is constrained to non-negative values"
+  - "If UNIQUE (from_state, to_state, required_decision_type) is missing"
+  - "If schema/migrations/MIGRATION_HEAD is not advanced from 0134 to 0135"
+  - "If any ALTER TABLE statement targets a previously applied migration file"
+  - "If runtime DDL is introduced anywhere in src/ or packages/"
+  - "If verifier lacks a failure path (no || exit 1)"
+  - "If any of the three negative tests listed in acceptance_criteria is omitted"
 
 proof_guarantees:
-  - "Migration creates state_rules table"
-  - "UNIQUE constraint on (from_state, to_state) is present"
-  - "Verifier script exits 0 and emits evidence"
+  - "information_schema.columns returns all 7 contracted columns for public.state_rules with the declared types and NOT NULL posture"
+  - "information_schema.table_constraints returns the PRIMARY KEY on state_rule_id and the UNIQUE (from_state, to_state, required_decision_type)"
+  - "information_schema.columns returns rule_priority with data_type integer, is_nullable NO, and column_default 0"
+  - "pg_indexes returns idx_state_rules_from_priority on (from_state, rule_priority DESC)"
+  - "schema/migrations/MIGRATION_HEAD equals exactly 0135 after application"
+  - "Migrations 0001-0134 are byte-identical to their pre-004-02 state"
+  - "Negative-test harness exercises all three failure paths in acceptance_criteria and each exits non-zero except N3 which MUST succeed"
 
 proof_limitations:
-  - "Cannot verify that the rule conditions are logically correct"
-  - "Cannot verify that the table will perform well at scale"
+  - "Rule-selection runtime logic that applies the priority+UUID tiebreak is owned by Wave 5 and is NOT implemented or verified here. This task only proves the data model permits a total order; it does not prove the state machine uses it"
+  - "Duplicate-rule detection at insert time is enforced only by the UNIQUE constraint on (from_state, to_state, required_decision_type); two rows with the same transition and required_decision_type but different rule_priority values are correctly rejected, but two rows with different decision types still compete at selection time - that is the intended shape of state_rules, not a bug"
 
 depends_on:
-  - TSK-P2-PREAUTH-004-01
+  - TSK-P2-PREAUTH-004-00
+
 blocks:
-  - TSK-P2-PREAUTH-005-00
+  - TSK-P2-PREAUTH-004-03
 
 touches:
-  - schema/migrations/0119_create_policy_decisions.sql
-  - scripts/db/verify_tsk_p2_preauth_004_02.sh
+  - schema/migrations/0135_state_rules.sql
+  - schema/migrations/MIGRATION_HEAD
+  - scripts/db/verify_state_rules_schema.sh
+  - scripts/db/tests/test_state_rules_negative.sh
+  - evidence/phase2/tsk_p2_preauth_004_02.json
   - tasks/TSK-P2-PREAUTH-004-02/meta.yml
+  - docs/plans/phase2/TSK-P2-PREAUTH-004-02/PLAN.md
+  - docs/plans/phase2/TSK-P2-PREAUTH-004-02/EXEC_LOG.md
 
 invariants: []
 
 work:
   - >-
-    [ID tsk_p2_preauth_004_02_work_item_01] Add state_rules table to migration 0119 with columns:
-    state_rule_id UUID PRIMARY KEY, from_state VARCHAR NOT NULL, to_state VARCHAR NOT NULL,
-    rule_condition TEXT NOT NULL, and UNIQUE constraint on (from_state, to_state).
+    [ID tsk_p2_preauth_004_02_work_item_01] Author schema/migrations/0135_state_rules.sql
+    containing a single CREATE TABLE public.state_rules with the 7 columns (state_rule_id UUID PRIMARY KEY,
+    from_state TEXT NOT NULL, to_state TEXT NOT NULL, required_decision_type TEXT NOT NULL,
+    allowed BOOLEAN NOT NULL, rule_priority INT NOT NULL DEFAULT 0, created_at TIMESTAMPTZ NOT NULL DEFAULT now()),
+    PRIMARY KEY on state_rule_id, UNIQUE (from_state, to_state, required_decision_type),
+    and CREATE INDEX idx_state_rules_from_priority on (from_state, rule_priority DESC).
+    The migration performs no other DDL and makes no change to migrations 0001-0134.
   - >-
-    [ID tsk_p2_preauth_004_02_work_item_02] Write verify_tsk_p2_preauth_004_02.sh that runs psql to verify
-    table exists and UNIQUE constraint is present.
+    [ID tsk_p2_preauth_004_02_work_item_02] Update schema/migrations/MIGRATION_HEAD
+    by writing the exact token 0135 (no trailing whitespace drift) so the migration-ordering gate treats 0135 as head.
   - >-
-    [ID tsk_p2_preauth_004_02_work_item_03] Run verify_tsk_p2_preauth_004_02.sh to confirm migration is successful.
+    [ID tsk_p2_preauth_004_02_work_item_03] Author scripts/db/verify_state_rules_schema.sh
+    that connects to DATABASE_URL, queries information_schema.columns, information_schema.table_constraints,
+    and pg_indexes, asserts the 7 columns with the declared types and NOT NULL posture,
+    asserts rule_priority column_default is exactly 0 and is_nullable is NO, asserts the PRIMARY KEY + UNIQUE,
+    asserts the presence of idx_state_rules_from_priority with the DESC ordering on rule_priority,
+    and writes evidence/phase2/tsk_p2_preauth_004_02.json containing task_id, git_sha, timestamp_utc, status,
+    checks, observed_paths, observed_hashes, command_outputs, execution_trace, columns_present,
+    constraints_present, indexes_present, migration_head_value.
+  - >-
+    [ID tsk_p2_preauth_004_02_work_item_04] Author scripts/db/tests/test_state_rules_negative.sh
+    that exercises three contracted paths: N1 (insert without required_decision_type: expect SQLSTATE 23502 rejection),
+    N2 (duplicate (from_state, to_state, required_decision_type): expect SQLSTATE 23505 rejection),
+    N3 (insert with rule_priority = -1: expect SUCCESS because negative priorities are valid for explicit deny rules -
+    the test asserts the row is committed, the absence of this row after rollback is a harness failure).
+    Harness exits 0 only when N1 and N2 are rejected AND N3 is accepted.
 
 acceptance_criteria:
   - >-
-    [ID tsk_p2_preauth_004_02_work_item_01] Migration creates state_rules table with UNIQUE constraint.
+    [ID tsk_p2_preauth_004_02_work_item_01] The file schema/migrations/0135_state_rules.sql exists,
+    is a new file, and grep confirms it contains CREATE TABLE public.state_rules, the column names
+    state_rule_id, from_state, to_state, required_decision_type, allowed, rule_priority, created_at,
+    the literal token 'rule_priority INT NOT NULL DEFAULT 0', and the UNIQUE (from_state, to_state, required_decision_type) constraint.
   - >-
-    [ID tsk_p2_preauth_004_02_work_item_02] verify_tsk_p2_preauth_004_02.sh exists and checks for table and constraint.
+    [ID tsk_p2_preauth_004_02_work_item_02] The file schema/migrations/MIGRATION_HEAD contains the exact token 0135
+    (equality check, not substring).
   - >-
-    [ID tsk_p2_preauth_004_02_work_item_03] verify_tsk_p2_preauth_004_02.sh exits 0.
+    [ID tsk_p2_preauth_004_02_work_item_03] bash scripts/db/verify_state_rules_schema.sh exits 0 against
+    a database that has 0135 applied, and writes evidence/phase2/tsk_p2_preauth_004_02.json with the required fields
+    and with column_default of rule_priority recorded as exactly 0.
+  - >-
+    [ID tsk_p2_preauth_004_02_work_item_04] bash scripts/db/tests/test_state_rules_negative.sh exits 0
+    against a database that has 0135 applied; harness proves N1 and N2 are rejected and N3 (negative priority) is accepted.
 
 negative_tests:
   - id: TSK-P2-PREAUTH-004-02-N1
     description: >-
-      Verify that verify_tsk_p2_preauth_004_02.sh exits non-zero when state_rules table does not exist.
+      Insert a row with required_decision_type NULL; INSERT is rejected with SQLSTATE 23502.
+      test_state_rules_negative.sh records this and exits non-zero if the insert succeeds.
+    required: true
+  - id: TSK-P2-PREAUTH-004-02-N2
+    description: >-
+      Insert two rows with identical (from_state, to_state, required_decision_type) tuples; second INSERT is rejected
+      with SQLSTATE 23505. Harness fails if second insert succeeds.
+    required: true
+  - id: TSK-P2-PREAUTH-004-02-N3
+    description: >-
+      Insert a row with rule_priority = -1 (explicit deny rule); INSERT MUST succeed. Harness fails if the insert is rejected.
+      This test is a negative-guard against the anti-pattern of adding a CHECK (rule_priority >= 0).
     required: true
 
 positive_tests:
   - id: TSK-P2-PREAUTH-004-02-P1
     description: >-
-      Verify that verify_tsk_p2_preauth_004_02.sh exits 0 when state_rules table exists with UNIQUE constraint.
-    required: false
+      Run scripts/db/verify_state_rules_schema.sh against a database where 0135 is applied; verifier exits 0
+      and emits evidence/phase2/tsk_p2_preauth_004_02.json with status=PASS.
+    required: true
 
 verification:
   - >-
-    # [ID tsk_p2_preauth_004_02_work_item_01] [ID tsk_p2_preauth_004_02_work_item_02]
-    # [ID tsk_p2_preauth_004_02_work_item_03]
-    test -x scripts/db/verify_tsk_p2_preauth_004_02.sh && bash scripts/db/verify_tsk_p2_preauth_004_02.sh > evidence/phase2/tsk_p2_preauth_004_02.json || exit 1
+    # [ID tsk_p2_preauth_004_02_work_item_03] Run the schema verifier and emit evidence.
+    test -x scripts/db/verify_state_rules_schema.sh && bash scripts/db/verify_state_rules_schema.sh > evidence/phase2/tsk_p2_preauth_004_02.json || exit 1
   - >-
-    # [ID tsk_p2_preauth_004_02_work_item_03]
-    test -f evidence/phase2/tsk_p2_preauth_004_02.json || exit 1
+    # [ID tsk_p2_preauth_004_02_work_item_01] Confirm migration 0135 exists and contains the contracted columns + rule_priority default.
+    test -f schema/migrations/0135_state_rules.sql && grep -q 'CREATE TABLE public.state_rules' schema/migrations/0135_state_rules.sql && grep -q 'rule_priority INT NOT NULL DEFAULT 0' schema/migrations/0135_state_rules.sql && grep -q 'UNIQUE (from_state, to_state, required_decision_type)' schema/migrations/0135_state_rules.sql || exit 1
   - >-
-    # [ID tsk_p2_preauth_004_02_work_item_03]
-    python3 scripts/audit/validate_evidence.py --task TSK-P2-PREAUTH-004-02 --evidence evidence/phase2/tsk_p2_preauth_004_02.json || exit 1
+    # [ID tsk_p2_preauth_004_02_work_item_02] Confirm MIGRATION_HEAD advanced to 0135.
+    test -f schema/migrations/MIGRATION_HEAD && grep -Fxq '0135' schema/migrations/MIGRATION_HEAD || exit 1
   - >-
-    # [ID tsk_p2_preauth_004_02_work_item_03]
-    RUN_PHASE1_GATES=1 bash scripts/dev/pre_ci.sh || exit 1
+    # [ID tsk_p2_preauth_004_02_work_item_04] Run the negative-test harness (N1, N2 reject; N3 accept).
+    test -x scripts/db/tests/test_state_rules_negative.sh && bash scripts/db/tests/test_state_rules_negative.sh || exit 1
+  - >-
+    # [ID tsk_p2_preauth_004_02_work_item_03] Confirm the evidence JSON carries observed_hashes and has a recorded migration_head_value.
+    test -f evidence/phase2/tsk_p2_preauth_004_02.json && grep -q 'observed_hashes' evidence/phase2/tsk_p2_preauth_004_02.json && grep -q 'migration_head_value' evidence/phase2/tsk_p2_preauth_004_02.json || exit 1
 
 evidence:
   - path: evidence/phase2/tsk_p2_preauth_004_02.json
@@ -103,24 +173,44 @@ evidence:
       - timestamp_utc
       - status
       - checks
-      - table_exists
-      - unique_constraint_present
+      - observed_paths
+      - observed_hashes
+      - command_outputs
+      - execution_trace
+      - columns_present
+      - constraints_present
+      - indexes_present
+      - migration_head_value
 
 failure_modes:
-  - "Table not created => CRITICAL_FAIL"
-  - "UNIQUE constraint missing => CRITICAL_FAIL"
-  - "Evidence file missing => FAIL"
+  - "Any ALTER statement targets an applied migration (0001-0134) => CRITICAL_FAIL"
+  - "Migration 0135 applied but MIGRATION_HEAD still reads 0134 => FAIL"
+  - "rule_priority missing, nullable, or with a default other than 0 => CRITICAL_FAIL (reopens deadlock defect)"
+  - "CHECK (rule_priority >= 0) added => FAIL (breaks explicit deny rules)"
+  - "UNIQUE (from_state, to_state, required_decision_type) missing => CRITICAL_FAIL (duplicate rule ambiguity)"
+  - "Index on (from_state, rule_priority DESC) missing => FAIL (rule-lookup path is O(n))"
+  - "Runtime DDL in src/ or packages/ => CRITICAL_FAIL"
+  - "Evidence JSON missing observed_hashes or execution_trace => FAIL"
+  - "Any of the three contracted negative tests omitted => FAIL_REVIEW"
 
 must_read:
   - docs/operations/AI_AGENT_OPERATION_MANUAL.md
-  - docs/operations/TASK_CREATION_PROCESS.md
-  - docs/plans/phase2/ATOMIC_TASK_BREAKDOWN_PLAN.md
+  - docs/plans/phase2/TSK-P2-PREAUTH-004-00/PLAN.md
+  - docs/invariants/INVARIANTS_QUICK.md
+  - docs/invariants/INVARIANTS_IMPLEMENTED.md
+  - AGENTS.md
 
 implementation_plan: docs/plans/phase2/TSK-P2-PREAUTH-004-02/PLAN.md
 implementation_log: docs/plans/phase2/TSK-P2-PREAUTH-004-02/EXEC_LOG.md
 
 notes: >-
-  This task blocks TSK-P2-PREAUTH-005-00. Phase Key: PRE-PHASE2. Phase Name: Pre-Phase 2 Implementation.
+  SINGLE_TABLE scope. Migration 0135 expands the Wave 4 schema by exactly one
+  table. rule_priority is deliberately INT (not INT2 / SMALLINT) because the
+  priority space needs headroom for deny rules at large negative values and
+  override rules at large positive values; the repo uses INT consistently for
+  priority columns (e.g., outbox attempts, queue tasks). The DESC ordering in
+  the index matches the selection contract: higher priority wins, so the
+  scan can stop at the first matching row.
 
 client: cursor
 assigned_agent: db_foundation
