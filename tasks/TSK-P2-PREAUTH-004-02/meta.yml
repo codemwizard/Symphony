@@ -66,6 +66,7 @@ depends_on:
 
 blocks:
   - TSK-P2-PREAUTH-004-03
+  - TSK-P2-PREAUTH-005-00
 
 touches:
   - schema/migrations/0135_state_rules.sql

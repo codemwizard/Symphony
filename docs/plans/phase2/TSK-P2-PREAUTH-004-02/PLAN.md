@@ -3,7 +3,7 @@
 Task: TSK-P2-PREAUTH-004-02
 Owner: DB_FOUNDATION
 Depends on: TSK-P2-PREAUTH-004-00, TSK-P2-PREAUTH-004-01
-Blocks: TSK-P2-PREAUTH-004-03
+Blocks: TSK-P2-PREAUTH-004-03, TSK-P2-PREAUTH-005-00
 failure_signature: PHASE2.PREAUTH.STATE_RULES.SCHEMA_MISSING
 canonical_reference: docs/operations/AI_AGENT_OPERATION_MANUAL.md
 wave_reference: Wave 4 — Authority Binding
