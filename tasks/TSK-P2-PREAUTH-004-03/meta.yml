@@ -131,7 +131,9 @@ work:
     policy_decisions row whose stored decision_hash does not match sha256(canonical_json(decision_payload)) recomputed from the row; the verifier
     (not the DB function) recomputes and rejects, exiting non-zero for V3 if the mismatch is not detected. V3 subsumes entity-column tampering
     because decision_payload is row-derived: tampering any payload-contributing column (entity_type, entity_id, execution_id, decision_type,
-    authority_scope, declared_by, issued_at) breaks the stored decision_hash against the recomputed value.
+    authority_scope, declared_by, signed_at — the column whose value is
+    serialised into the `issued_at` payload field per the 004-00 contract)
+    breaks the stored decision_hash against the recomputed value.
 
 acceptance_criteria:
   - >-

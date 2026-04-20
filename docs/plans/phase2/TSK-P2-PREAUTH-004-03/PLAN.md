@@ -18,7 +18,7 @@ final_status: PLANNED
 
 Seal the Wave 4 cryptographic truth anchor by installing invariant `INV-AUTH-TRANSITION-BINDING-01` exactly as the Wave 4 contract (`docs/plans/phase2/TSK-P2-PREAUTH-004-00/PLAN.md`, section *Authority-Transition Binding Invariant*) pins it. The invariant states: **any authority-bearing state transition applied via `execution_records` MUST reference, in the transition payload, exactly one `policy_decisions.policy_decision_id` whose `entity_type`, `entity_id`, and `execution_id` match the transition's entity and execution. Transitions lacking this reference, or referencing a decision bound to a different entity or execution, are rejected.**
 
-This task authors the enforcement function, installs it in migration `0136`, registers the invariant in the manifest and implemented registries, authors the verifier that exercises four scenarios (one positive, three negative), and emits evidence. It does not wire the function into a Wave 5 trigger point (that is Wave 5's responsibility) and does not verify signature authenticity (public-key resolution is a later wave; this limitation is declared explicitly).
+This task authors the enforcement function, installs it in migration `0136`, registers the invariant in the manifest and implemented registries, authors the verifier that exercises three scenarios (one positive, two negative), and emits evidence. It does not wire the function into a Wave 5 trigger point (that is Wave 5's responsibility) and does not verify signature authenticity (public-key resolution is a later wave; this limitation is declared explicitly).
 
 ---
 
@@ -69,7 +69,7 @@ Signature authenticity verification (`ed25519_verify(signature, decision_hash, p
 | `schema/migrations/MIGRATION_HEAD` | MODIFY | Advance head from `0135` to `0136`. |
 | `docs/invariants/INVARIANTS_MANIFEST.yml` | MODIFY | Register `INV-AUTH-TRANSITION-BINDING-01` with enforcement, verification, and evidence paths. |
 | `docs/invariants/INVARIANTS_IMPLEMENTED.md` | MODIFY | Append a row for `INV-AUTH-TRANSITION-BINDING-01`; status starts as `planned` and flips to `implemented` only after fresh evidence. |
-| `scripts/db/verify_authority_transition_binding.sh` | CREATE | Exercises V1, V2, V3, V4; emits evidence. |
+| `scripts/db/verify_authority_transition_binding.sh` | CREATE | Exercises V1, V2, V3; emits evidence. |
 | `evidence/phase2/tsk_p2_preauth_004_03.json` | CREATE | Emitted by the verifier. |
 | `tasks/TSK-P2-PREAUTH-004-03/meta.yml` | CREATE | This task's meta per Task Creation Process §2 Step 4. |
 | `docs/plans/phase2/TSK-P2-PREAUTH-004-03/PLAN.md` | CREATE | This document. |
@@ -86,7 +86,7 @@ Any file modified that is not on this list => FAIL_REVIEW.
 - **If the verifier does not assert `(entity_type, entity_id)` columns match payload** → STOP (cross-entity replay passes).
 - **If the invariant is marked `status=implemented` without fresh `evidence/phase2/tsk_p2_preauth_004_03.json` (`run_id` or `git_sha` not matching HEAD)** → STOP.
 - **If any `ALTER TABLE` targets an applied migration (0001-0135)** → STOP.
-- **If any of V1, V2, V3, V4 is omitted** → STOP.
+- **If any of V1, V2, V3 is omitted** → STOP.
 
 ---
 
@@ -143,7 +143,7 @@ END;
 $$;
 ```
 
-Migration 0136 installs this function ONLY — no helper view, no helper function, no other DDL. Entity-tampering detection is performed by the verifier's hash-recompute step (V3), which recomputes `sha256(canonical_json(decision_payload))` in the verifier script (bash + `jq` / python) from the row's columns; tampering any payload-contributing column (`entity_type`, `entity_id`, `execution_id`, `decision_type`, `authority_scope`, `declared_by`, `issued_at`) breaks the recomputed hash. A `policy_decisions_payload_view` is therefore not needed on Wave 4, because `decision_payload` is row-derived per the 004-00 contract and an independent column-vs-payload comparison inside the function would be tautological.
+Migration 0136 installs this function ONLY — no helper view, no helper function, no other DDL. Entity-tampering detection is performed by the verifier's hash-recompute step (V3), which recomputes `sha256(canonical_json(decision_payload))` in the verifier script (bash + `jq` / python) from the row's columns; tampering any payload-contributing column (`entity_type`, `entity_id`, `execution_id`, `decision_type`, `authority_scope`, `declared_by`, `signed_at` — the column whose value is serialised into the `issued_at` payload field per the 004-00 contract) breaks the recomputed hash. A `policy_decisions_payload_view` is therefore not needed on Wave 4, because `decision_payload` is row-derived per the 004-00 contract and an independent column-vs-payload comparison inside the function would be tautological.
 
 ---
 
