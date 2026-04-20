@@ -1698,3 +1698,42 @@
   notes: >-
     Phase 1 C# outputs carry non-authoritative markers via DataAuthority and AuditGrade
     properties to prevent misinterpretation as authoritative data. Introduced by Wave 7.
+
+- id: INV-EXEC-TRUTH-001
+  aliases: ["I-EXEC-TRUTH-01"]
+  status: implemented
+  severity: P0
+  title: "Execution records are append-only, deterministically keyed, and temporally bound to an interpretation pack active at execution_timestamp"
+  owners: ["team-db", "team-platform", "team-invariants"]
+  sla_days: 7
+  enforcement: "scripts/db/verify_execution_truth_anchor.sh"
+  verification: >-
+    scripts/db/verify_execution_truth_anchor.sh inspects eight proof surfaces on
+    public.execution_records: five NOT NULL columns (interpretation_version_id,
+    input_hash, runtime_version, signature_key_class, adapter_id), UNIQUE
+    determinism constraint (execution_records_determinism_unique), FK to
+    public.interpretation_packs(interpretation_pack_id), append-only trigger
+    enforce_execution_records_append_only (raises GF056 on UPDATE/DELETE),
+    temporal-binding trigger enforce_execution_interpretation_temporal_binding
+    (raises GF058 on INSERT when interpretation_version_id does not resolve to
+    the pack active at execution_timestamp), SECURITY DEFINER hardening on both
+    trigger functions, pinned search_path = pg_catalog, public on both, and a
+    behavioural probe that proves GF058 rejects a mismatched binding. Emits
+    evidence/phase2/tsk_p2_preauth_003_rem_05.json with self-certifying
+    verification_tool_version, verification_input_snapshot, and
+    verification_run_hash (SHA-256 over tool || input || checks).
+  evidence:
+    - "evidence/phase2/tsk_p2_preauth_003_rem_05.json"
+    - "evidence/phase2/tsk_p2_preauth_003_rem_04.json"
+    - "evidence/phase2/tsk_p2_preauth_003_rem_04b.json"
+  threat_model_ref: "docs/architecture/THREAT_MODEL.md#execution-record-tamper"
+  compliance_map_ref: "docs/architecture/COMPLIANCE_MAP.md"
+  notes: >-
+    Phase-2 Wave 3 execution truth anchor. Migrations 0131/0132/0133 land the
+    expand → contract → triggers sequence. Scope is strictly the append-only
+    execution-truth layer (Layer 1 of the three-layer separation model):
+    execution-attempt lifecycle state, retry semantics, and adapter invocation
+    identity are owned by REM-2026-04-20_execution-lifecycle and MUST NOT
+    touch execution_records. Child column naming (interpretation_version_id)
+    is retained for historical compatibility; FK target is
+    interpretation_packs(interpretation_pack_id).
