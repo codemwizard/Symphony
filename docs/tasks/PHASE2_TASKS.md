@@ -28,7 +28,7 @@ Forward-only remediation of gaps left by TSK-P2-PREAUTH-003-01/-02. Migrations 0
 | TSK-P2-PREAUTH-004-00 | DB_FOUNDATION | planned | docs/plans/phase2/TSK-P2-PREAUTH-004-00/PLAN.md | docs/plans/phase2/TSK-P2-PREAUTH-004-00/EXEC_LOG.md |
 | TSK-P2-PREAUTH-004-01 | DB_FOUNDATION | planned | docs/plans/phase2/TSK-P2-PREAUTH-004-01/PLAN.md | docs/plans/phase2/TSK-P2-PREAUTH-004-01/EXEC_LOG.md |
 | TSK-P2-PREAUTH-004-02 | DB_FOUNDATION | planned | docs/plans/phase2/TSK-P2-PREAUTH-004-02/PLAN.md | docs/plans/phase2/TSK-P2-PREAUTH-004-02/EXEC_LOG.md |
-| TSK-P2-PREAUTH-004-03 | DB_FOUNDATION | planned | docs/plans/phase2/TSK-P2-PREAUTH-004-03/PLAN.md | docs/plans/phase2/TSK-P2-PREAUTH-004-03/EXEC_LOG.md |
+| TSK-P2-PREAUTH-004-03 | INVARIANTS_CURATOR | planned | docs/plans/phase2/TSK-P2-PREAUTH-004-03/PLAN.md | docs/plans/phase2/TSK-P2-PREAUTH-004-03/EXEC_LOG.md |
 
 ## Wave 5 - State Machine + Trigger Layer
 
