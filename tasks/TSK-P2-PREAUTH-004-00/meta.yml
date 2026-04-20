@@ -1,7 +1,7 @@
 schema_version: 1
 phase: '2'
 task_id: TSK-P2-PREAUTH-004-00
-title: "Create PLAN.md and verify alignment for policy_decisions"
+title: "Author Wave 4 authority-binding contract (policy_decisions + state_rules + invariant) and prove semantic alignment before any schema work"
 owner_role: DB_FOUNDATION
 status: planned
 priority: HIGH
@@ -9,125 +9,197 @@ risk_class: GOVERNANCE
 blast_radius: DOCS_ONLY
 
 intent: >-
-  This task creates the PLAN.md for the policy_decisions and state_rules tables.
-  Without a verified plan, the schema changes lack architectural documentation and
-  verification trace, creating risk of incomplete or incorrect implementation of
-  authority binding.
+  Wave 3 closed execution truth; Wave 4 must close authority binding. The
+  previous Wave 4 draft was hollow: decision_hash/signature had no algorithm,
+  policy_decisions had no entity context, and state_rules had no priority
+  tiebreaker. This task authors the Wave 4 contract PLAN.md that pins
+  sha256(canonical_json(payload)) + Ed25519 cryptography, adds entity_type +
+  entity_id to prevent cross-entity replay, and adds rule_priority INT NOT NULL
+  DEFAULT 0 with a deterministic tiebreak to prevent transition deadlocks.
+  No SQL is written here; 004-01, 004-02, 004-03 inherit this contract.
 
 anti_patterns:
-  - "Creating PLAN.md after implementation has started"
-  - "Writing PLAN.md without explicit tracking IDs for work items"
-  - "Omitting stop conditions or proof limitations"
+  - "Writing any SQL migration for policy_decisions or state_rules in this task"
+  - "Leaving decision_hash undefined as an opaque string instead of sha256(canonical_json(payload))"
+  - "Documenting policy_decisions without entity_type and entity_id columns (cross-entity replay surface)"
+  - "Documenting state_rules without rule_priority or without a deterministic tiebreak rule"
+  - "Marking this PLAN complete while verify_plan_semantic_alignment.py exits non-zero"
+  - "Editing the meta.yml or PLAN.md of 004-01, 004-02, or 004-03 inside this CREATE-TASK scope"
 
 out_of_scope:
-  - "Actual migration writing (deferred to TSK-P2-PREAUTH-004-01)"
-  - "Data migration or backfill"
-  - "Application layer changes"
+  - "Authoring the policy_decisions migration (belongs to TSK-P2-PREAUTH-004-01)"
+  - "Authoring the state_rules migration (belongs to TSK-P2-PREAUTH-004-02)"
+  - "Authoring the authority-transition binding invariant verifier (belongs to TSK-P2-PREAUTH-004-03)"
+  - "Runtime key management, key rotation, or public-key resolution for signature verification (future wave)"
+  - "Modifying any Wave 3 artefact (execution_records schema, verifiers, evidence)"
+  - "Touching 004-01 / 004-02 / 004-03 task packs"
 
 stop_conditions:
-  - "If verify_plan_semantic_alignment.py fails with orphaned nodes"
-  - "If the plan lacks explicit verifier specifications"
-  - "If the plan lacks negative test definitions"
+  - "If any SQL migration file is authored by this task"
+  - "If any verifier script is authored by this task"
+  - "If the PLAN documents decision_hash without specifying sha256 and canonical_json"
+  - "If the PLAN documents policy_decisions without both entity_type and entity_id columns"
+  - "If the PLAN documents state_rules without rule_priority INT NOT NULL DEFAULT 0"
+  - "If the PLAN omits INV-AUTH-TRANSITION-BINDING-01 declaration"
+  - "If verify_plan_semantic_alignment.py exits non-zero"
+  - "If weak-signal score reported by verify_plan_semantic_alignment.py is >= 3"
 
 proof_guarantees:
   - "PLAN.md exists at docs/plans/phase2/TSK-P2-PREAUTH-004-00/PLAN.md"
-  - "PLAN.md passes verify_plan_semantic_alignment.py validation"
+  - "PLAN.md contains the literal string sha256(canonical_json pinning the hash algorithm"
+  - "PLAN.md contains the literal string ed25519 pinning the signature scheme"
+  - "PLAN.md contains the tokens entity_type and entity_id in the policy_decisions schema section"
+  - "PLAN.md contains the token rule_priority in the state_rules schema section"
+  - "PLAN.md declares invariant id INV-AUTH-TRANSITION-BINDING-01"
+  - "verify_plan_semantic_alignment.py exits 0 against this PLAN and meta"
 
 proof_limitations:
-  - "Cannot verify that the plan content is technically correct without implementation"
-  - "Cannot verify that the migrations will actually create the correct schema"
+  - "This PLAN proves the contract exists, not that 004-01/02/03 will implement it faithfully; enforcement lives in their packs and verifiers"
+  - "Signature authenticity (public-key resolution) is deferred; 004-03's verifier validates structural binding only until a later wave lands key management"
+  - "Canonical JSON serialisation conformance to RFC 8785 is a convention pinned in the PLAN text; byte-level conformance is enforced by 004-03's verifier, not this task"
 
 depends_on:
   - TSK-P2-PREAUTH-003-02
+
 blocks:
   - TSK-P2-PREAUTH-004-01
+  - TSK-P2-PREAUTH-004-02
+  - TSK-P2-PREAUTH-004-03
 
 touches:
   - docs/plans/phase2/TSK-P2-PREAUTH-004-00/PLAN.md
+  - docs/plans/phase2/TSK-P2-PREAUTH-004-00/EXEC_LOG.md
   - tasks/TSK-P2-PREAUTH-004-00/meta.yml
+  - docs/tasks/PHASE2_TASKS.md
 
 invariants: []
 
 work:
   - >-
-    [ID tsk_p2_preauth_004_00_work_item_01] Create PLAN.md at docs/plans/phase2/TSK-P2-PREAUTH-004-00/PLAN.md
-    from PLAN_TEMPLATE.md with objective, architectural context, pre-conditions, files to change,
-    stop conditions, implementation steps, verification, evidence contract, rollback, and risk sections.
+    [ID tsk_p2_preauth_004_00_work_item_01] Author the Cryptographic Contract section of PLAN.md
+    pinning decision_hash = sha256(canonical_json(decision_payload)) and signature = ed25519_sign(decision_hash, private_key),
+    including the verifier recompute rule that rejects on hash or signature mismatch.
   - >-
-    [ID tsk_p2_preauth_004_00_work_item_02] Document the policy_decisions table requirements including
-    columns: policy_decision_id UUID PRIMARY KEY, project_id UUID NOT NULL, decision_type VARCHAR NOT NULL,
-    decision_timestamp TIMESTAMPTZ NOT NULL, and indexes on project_id.
+    [ID tsk_p2_preauth_004_00_work_item_02] Author the policy_decisions Schema section of PLAN.md
+    with 11 columns including execution_id UUID NOT NULL REFERENCES execution_records(execution_id),
+    entity_type TEXT NOT NULL, entity_id UUID NOT NULL, decision_hash TEXT NOT NULL, signature TEXT NOT NULL,
+    plus the append-only trigger contract and five mandatory negative tests.
   - >-
-    [ID tsk_p2_preauth_004_00_work_item_03] Document the state_rules table requirements including
-    columns: state_rule_id UUID PRIMARY KEY, from_state VARCHAR NOT NULL, to_state VARCHAR NOT NULL,
-    rule_condition TEXT NOT NULL, and UNIQUE constraint on (from_state, to_state).
+    [ID tsk_p2_preauth_004_00_work_item_03] Author the state_rules Schema section of PLAN.md
+    including rule_priority INT NOT NULL DEFAULT 0 and the deterministic tiebreak rule
+    (lower state_rule_id UUID wins on equal priority).
   - >-
-    [ID tsk_p2_preauth_004_00_work_item_04] Run verify_plan_semantic_alignment.py to validate
-    proof graph integrity: python3 scripts/audit/verify_plan_semantic_alignment.py
-    --plan docs/plans/phase2/TSK-P2-PREAUTH-004-00/PLAN.md --meta tasks/TSK-P2-PREAUTH-004-00/meta.yml
+    [ID tsk_p2_preauth_004_00_work_item_04] Author the Authority-Transition Binding Invariant section of PLAN.md
+    declaring invariant id INV-AUTH-TRANSITION-BINDING-01, its statement, enforcement location,
+    verification location, proof guarantees, and proof limitations that 004-03 must adopt verbatim.
+  - >-
+    [ID tsk_p2_preauth_004_00_work_item_05] Run python3 scripts/audit/verify_plan_semantic_alignment.py
+    against docs/plans/phase2/TSK-P2-PREAUTH-004-00/PLAN.md and tasks/TSK-P2-PREAUTH-004-00/meta.yml
+    and confirm exit 0 with Proof graph integrity PASSED.
 
 acceptance_criteria:
   - >-
-    [ID tsk_p2_preauth_004_00_work_item_01] PLAN.md exists at docs/plans/phase2/TSK-P2-PREAUTH-004-00/PLAN.md
-    and contains all required sections.
+    [ID tsk_p2_preauth_004_00_work_item_01] docs/plans/phase2/TSK-P2-PREAUTH-004-00/PLAN.md exists
+    and contains the literal strings sha256(canonical_json and ed25519 in the Cryptographic Contract section.
   - >-
-    [ID tsk_p2_preauth_004_00_work_item_02] PLAN.md documents policy_decisions table with required columns.
+    [ID tsk_p2_preauth_004_00_work_item_02] docs/plans/phase2/TSK-P2-PREAUTH-004-00/PLAN.md documents
+    the policy_decisions schema with the tokens entity_type, entity_id, decision_hash, signature, and execution_id.
   - >-
-    [ID tsk_p2_preauth_004_00_work_item_03] PLAN.md documents state_rules table with UNIQUE constraint.
+    [ID tsk_p2_preauth_004_00_work_item_03] docs/plans/phase2/TSK-P2-PREAUTH-004-00/PLAN.md documents
+    the state_rules schema including the token rule_priority.
   - >-
-    [ID tsk_p2_preauth_004_00_work_item_04] verify_plan_semantic_alignment.py exits 0 with
-    NO_ORPHANS=true and GRAPH_CONNECTED=true.
+    [ID tsk_p2_preauth_004_00_work_item_04] docs/plans/phase2/TSK-P2-PREAUTH-004-00/PLAN.md declares
+    invariant id INV-AUTH-TRANSITION-BINDING-01 with its statement and verifier contract.
+  - >-
+    [ID tsk_p2_preauth_004_00_work_item_05] python3 scripts/audit/verify_plan_semantic_alignment.py
+    --plan docs/plans/phase2/TSK-P2-PREAUTH-004-00/PLAN.md --meta tasks/TSK-P2-PREAUTH-004-00/meta.yml exits 0.
 
 negative_tests:
   - id: TSK-P2-PREAUTH-004-00-N1
     description: >-
-      Verify that verify_plan_semantic_alignment.py fails on a plan with orphaned work items
-      (missing acceptance criteria mapping).
+      Remove the string sha256(canonical_json from PLAN.md and rerun verification;
+      the cryptographic-contract grep check exits non-zero.
+    required: true
+  - id: TSK-P2-PREAUTH-004-00-N2
+    description: >-
+      Remove the token entity_id from the policy_decisions schema table in PLAN.md and rerun verification;
+      the entity-binding grep check exits non-zero.
+    required: true
+  - id: TSK-P2-PREAUTH-004-00-N3
+    description: >-
+      Remove the token rule_priority from the state_rules schema section of PLAN.md and rerun verification;
+      the state-rules grep check exits non-zero.
+    required: true
+  - id: TSK-P2-PREAUTH-004-00-N4
+    description: >-
+      Drop an [ID] tag from a work item in meta.yml (breaking the work -> acceptance -> verification graph)
+      and rerun verify_plan_semantic_alignment.py; the scanner exits non-zero with a graph error.
     required: true
 
-positive_tests: []
+positive_tests:
+  - id: TSK-P2-PREAUTH-004-00-P1
+    description: >-
+      Run python3 scripts/audit/verify_plan_semantic_alignment.py against the unmodified PLAN.md and meta.yml;
+      the scanner exits 0 and prints Proof graph integrity PASSED.
+    required: true
 
 verification:
   - >-
-    # [ID tsk_p2_preauth_004_00_work_item_01]
-    test -f docs/plans/phase2/TSK-P2-PREAUTH-004-00/PLAN.md || exit 1
+    # [ID tsk_p2_preauth_004_00_work_item_01] Cryptographic contract present
+    test -f docs/plans/phase2/TSK-P2-PREAUTH-004-00/PLAN.md && grep -q 'sha256(canonical_json' docs/plans/phase2/TSK-P2-PREAUTH-004-00/PLAN.md && grep -q 'ed25519' docs/plans/phase2/TSK-P2-PREAUTH-004-00/PLAN.md || exit 1
   - >-
-    # [ID tsk_p2_preauth_004_00_work_item_02]
-    grep -q "policy_decisions" docs/plans/phase2/TSK-P2-PREAUTH-004-00/PLAN.md || exit 1
+    # [ID tsk_p2_preauth_004_00_work_item_02] policy_decisions schema with entity binding
+    grep -q 'policy_decisions' docs/plans/phase2/TSK-P2-PREAUTH-004-00/PLAN.md && grep -q 'entity_type' docs/plans/phase2/TSK-P2-PREAUTH-004-00/PLAN.md && grep -q 'entity_id' docs/plans/phase2/TSK-P2-PREAUTH-004-00/PLAN.md && grep -q 'decision_hash' docs/plans/phase2/TSK-P2-PREAUTH-004-00/PLAN.md && grep -q 'signature' docs/plans/phase2/TSK-P2-PREAUTH-004-00/PLAN.md || exit 1
   - >-
-    # [ID tsk_p2_preauth_004_00_work_item_03]
-    grep -q "state_rules" docs/plans/phase2/TSK-P2-PREAUTH-004-00/PLAN.md || exit 1
+    # [ID tsk_p2_preauth_004_00_work_item_03] state_rules schema with rule_priority
+    grep -q 'state_rules' docs/plans/phase2/TSK-P2-PREAUTH-004-00/PLAN.md && grep -q 'rule_priority' docs/plans/phase2/TSK-P2-PREAUTH-004-00/PLAN.md || exit 1
   - >-
-    # [ID tsk_p2_preauth_004_00_work_item_04]
+    # [ID tsk_p2_preauth_004_00_work_item_04] Authority-transition binding invariant declared
+    grep -q 'INV-AUTH-TRANSITION-BINDING-01' docs/plans/phase2/TSK-P2-PREAUTH-004-00/PLAN.md || exit 1
+  - >-
+    # [ID tsk_p2_preauth_004_00_work_item_05] Proof graph integrity via semantic alignment scanner
     python3 scripts/audit/verify_plan_semantic_alignment.py --plan docs/plans/phase2/TSK-P2-PREAUTH-004-00/PLAN.md --meta tasks/TSK-P2-PREAUTH-004-00/meta.yml || exit 1
-  - >-
-    # [ID tsk_p2_preauth_004_00_work_item_04]
-    test -f docs/plans/phase2/TSK-P2-PREAUTH-004-00/PLAN.md || exit 1
 
 evidence:
   - path: docs/plans/phase2/TSK-P2-PREAUTH-004-00/PLAN.md
     must_include:
       - policy_decisions
       - state_rules
+      - sha256(canonical_json
+      - ed25519
+      - entity_type
+      - entity_id
+      - rule_priority
+      - INV-AUTH-TRANSITION-BINDING-01
 
 failure_modes:
   - "PLAN.md missing => CRITICAL_FAIL"
-  - "verify_plan_semantic_alignment.py fails => FAIL"
-  - "PLAN lacks table documentation => FAIL_REVIEW"
+  - "verify_plan_semantic_alignment.py exits non-zero => FAIL"
+  - "Cryptographic contract section absent or algorithm unspecified => FAIL_REVIEW (audit-theatre)"
+  - "policy_decisions schema missing entity_type or entity_id => CRITICAL_FAIL (cross-entity replay surface)"
+  - "state_rules schema missing rule_priority => FAIL_REVIEW (rule-selection non-determinism)"
+  - "INV-AUTH-TRANSITION-BINDING-01 not declared in PLAN => BLOCKED (004-03 cannot cite a missing id)"
+  - "Any SQL migration or verifier script authored in this task => FAIL_REVIEW (scope violation)"
 
 must_read:
   - docs/operations/AI_AGENT_OPERATION_MANUAL.md
   - docs/operations/TASK_CREATION_PROCESS.md
-  - docs/contracts/templates/PLAN_TEMPLATE.md
-  - docs/plans/phase2/ATOMIC_TASK_BREAKDOWN_PLAN.md
+  - docs/operations/AGENT_PROMPT_ROUTER.md
+  - docs/invariants/INVARIANTS_QUICK.md
+  - docs/plans/phase2/TSK-P2-PREAUTH-003-02/PLAN.md
+  - docs/plans/remediation/REM-2026-04-20_execution-truth-anchor/PLAN.md
 
 implementation_plan: docs/plans/phase2/TSK-P2-PREAUTH-004-00/PLAN.md
 implementation_log: docs/plans/phase2/TSK-P2-PREAUTH-004-00/EXEC_LOG.md
 
 notes: >-
-  This task depends on TSK-P2-PREAUTH-003-02 and blocks TSK-P2-PREAUTH-004-01.
-  Phase Key: PRE-PHASE2. Phase Name: Pre-Phase 2 Implementation.
+  First task in Wave 4 (Authority Binding). DOCS_ONLY by contract. The three
+  audit fixes baked into this PLAN (sha256(canonical_json) crypto, entity_type
+  + entity_id binding, rule_priority tiebreak) are mandatory for 004-01/02/03
+  and are referenced by literal grep in their future verifiers. Task count
+  updated from old implicit scope of 3 to rewritten scope of 4; the additional
+  task is TSK-P2-PREAUTH-004-03 (authority-transition binding invariant).
 
-client: cursor
+client: codex_cli
 assigned_agent: db_foundation
 model: <UNASSIGNED>

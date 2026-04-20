@@ -28,6 +28,7 @@ Forward-only remediation of gaps left by TSK-P2-PREAUTH-003-01/-02. Migrations 0
 | TSK-P2-PREAUTH-004-00 | DB_FOUNDATION | planned | docs/plans/phase2/TSK-P2-PREAUTH-004-00/PLAN.md | docs/plans/phase2/TSK-P2-PREAUTH-004-00/EXEC_LOG.md |
 | TSK-P2-PREAUTH-004-01 | DB_FOUNDATION | planned | docs/plans/phase2/TSK-P2-PREAUTH-004-01/PLAN.md | docs/plans/phase2/TSK-P2-PREAUTH-004-01/EXEC_LOG.md |
 | TSK-P2-PREAUTH-004-02 | DB_FOUNDATION | planned | docs/plans/phase2/TSK-P2-PREAUTH-004-02/PLAN.md | docs/plans/phase2/TSK-P2-PREAUTH-004-02/EXEC_LOG.md |
+| TSK-P2-PREAUTH-004-03 | DB_FOUNDATION | planned | docs/plans/phase2/TSK-P2-PREAUTH-004-03/PLAN.md | docs/plans/phase2/TSK-P2-PREAUTH-004-03/EXEC_LOG.md |
 
 ## Wave 5 - State Machine + Trigger Layer
 
@@ -102,9 +103,9 @@ Forward-only remediation of gaps left by TSK-P2-PREAUTH-003-01/-02. Migrations 0
 
 ## Coverage Summary
 
-- Wave 4 tasks indexed: 3
+- Wave 4 tasks indexed: 4
 - Wave 5 tasks indexed: 9
 - Wave 6 tasks indexed: 14
 - Wave 7 tasks indexed: 6
 - Wave 8 tasks indexed: 16
-- Total Wave 4-8 task packs indexed: 48
+- Total Wave 4-8 task packs indexed: 49
