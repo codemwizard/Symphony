@@ -1,0 +1,42 @@
+{
+  "task_id": "TSK-P2-PREAUTH-003-REM-05B",
+  "git_sha": "b0891b16145548afa04078ef498f824610fab435",
+  "timestamp_utc": "2026-04-20T16:55:04Z",
+  "status": "PASS",
+  "checks": [
+    {"name":"anchor_verifier_present","result":"pass","path":"scripts/db/verify_execution_truth_anchor.sh"},
+    {"name":"pre_ci_invocation_exactly_one","result":"pass","observed":1,"expected":1},
+    {"name":"pre_ci_fail_closed_guard","result":"pass","pattern":"|| exit 1"},
+    {"name":"fast_check_registered","result":"pass","observed":1,"expected_min":1},
+    {"name":"pre_ci_shell_syntax","result":"pass"},
+    {"name":"fast_check_shell_syntax","result":"pass"},
+    {"name":"set_e_posture_preserved","result":"pass"}
+  ],
+  "observed_paths": [
+    "scripts/dev/pre_ci.sh",
+    "scripts/audit/run_invariants_fast_checks.sh",
+    "scripts/db/verify_execution_truth_anchor.sh",
+    "scripts/audit/verify_rem_05b_ci_wiring.sh"
+  ],
+  "observed_hashes": {
+    "pre_ci_sha256":            "d38dc4356f46a45278f191fcb1442537789a9cd111ac54b20894fedf5908bdee",
+    "fast_check_sha256":        "0cf0f71095062ff4b0926eea1d106f9ba47846888783ee8ac9ac079fd2503c61",
+    "anchor_verifier_sha256":   "3d5bdb9bebeb5a284bc9a89e181e235fc8328da97fa157c4b86b9753a2772a51",
+    "this_verifier_sha256":     "a462e07f551cbb307d5a0525f051b8286368b5c0110662361a98c581d9afda87"
+  },
+  "command_outputs": {
+    "pre_ci_invocation_lines": "493:  scripts/db/verify_execution_truth_anchor.sh || exit 1",
+    "fast_check_lines":        "67:  \"scripts/db/verify_execution_truth_anchor.sh\""
+  },
+  "execution_trace": {
+    "completed_utc": "2026-04-20T16:55:04Z"
+  },
+  "pre_ci_invocation_count": 1,
+  "fast_check_reference_count": 1,
+  "fail_closed_guard_present": true,
+  "path_authority_respected": {
+    "edits_scoped_to_security_guardian": true,
+    "no_edits_under_scripts_db": true,
+    "no_edits_under_docs_invariants": true
+  }
+}

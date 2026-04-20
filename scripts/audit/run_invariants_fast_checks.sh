@@ -62,6 +62,9 @@ SHELL_SCRIPTS=(
   "scripts/audit/record_invariants_exception.sh"
   "scripts/audit/verify_exception_template.sh"
   "scripts/audit/verify_invariants_local.sh"
+  # INV-EXEC-TRUTH-001 anchor verifier (REM-05B wiring): fail the no-DB
+  # fast gate if the script is deleted or syntactically broken.
+  "scripts/db/verify_execution_truth_anchor.sh"
 )
 for f in "${SHELL_SCRIPTS[@]}"; do
   if [[ -f "$f" ]]; then
