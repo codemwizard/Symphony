@@ -108,7 +108,7 @@ negative_tests:
     required: true
   - id: TSK-P2-PREAUTH-003-REM-05-N4
     description: >-
-      Run verifier against a database where the UNIQUE (input_hash, interpretation_version_id, runtime_version) constraint has been dropped; verifier exits non-zero and evidence carries unique_enforced=false.
+      Run verifier against a database where the UNIQUE (tenant_id, input_hash, interpretation_version_id, runtime_version) constraint has been dropped; verifier exits non-zero and evidence carries unique_enforced=false.
     required: true
   - id: TSK-P2-PREAUTH-003-REM-05-N5
     description: >-

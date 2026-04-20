@@ -11,7 +11,7 @@ remediation_casefile: docs/plans/remediation/REM-2026-04-20_execution-truth-anch
 
 ## Objective
 
-Tighten the four determinism columns added by REM-01 plus the legacy nullable `interpretation_version_id` into a determinism-enforcing shape: five `SET NOT NULL` statements and one `UNIQUE(input_hash, interpretation_version_id, runtime_version)` constraint, gated behind an idempotent backfill precondition. Forward migration 0132. Three negative SQLSTATE tests (23502 x2, 23505 x1) prove the enforcement is real. No edit to 0118 or 0131.
+Tighten the four determinism columns added by REM-01 plus the legacy nullable `interpretation_version_id` into a determinism-enforcing shape: five `SET NOT NULL` statements and one `UNIQUE(tenant_id, input_hash, interpretation_version_id, runtime_version)` constraint (tenant-scoped to preserve multi-tenant audit isolation), gated behind an idempotent backfill precondition. Forward migration 0132. Three negative SQLSTATE tests (23502 x2, 23505 x1) prove the enforcement is real. No edit to 0118 or 0131.
 
 ---
 
@@ -107,7 +107,7 @@ ALTER TABLE public.execution_records ALTER COLUMN interpretation_version_id SET 
 
 ALTER TABLE public.execution_records
   ADD CONSTRAINT execution_records_determinism_unique
-  UNIQUE (input_hash, interpretation_version_id, runtime_version);
+  UNIQUE (tenant_id, input_hash, interpretation_version_id, runtime_version);
 ```
 
 Then advance `schema/migrations/MIGRATION_HEAD` to `0132`.
@@ -120,7 +120,7 @@ Then advance `schema/migrations/MIGRATION_HEAD` to `0132`.
 
 - N1: INSERT with `input_hash = NULL`, assert `SQLSTATE = 23502`.
 - N2: INSERT with `interpretation_version_id = NULL`, assert `SQLSTATE = 23502`.
-- N3: INSERT twice with identical `(input_hash, interpretation_version_id, runtime_version)`, assert the second raises `SQLSTATE = 23505`.
+- N3: INSERT twice with identical `(tenant_id, input_hash, interpretation_version_id, runtime_version)`, assert the second raises `SQLSTATE = 23505`.
 
 Each assertion is a `|| exit 1` line against `psql --set ON_ERROR_STOP=off -v ...`.
 

@@ -66,7 +66,7 @@ run_scenario "1/not_null_drop" \
 # Scenario 2: drop UNIQUE determinism constraint
 run_scenario "2/unique_drop" \
     "ALTER TABLE public.execution_records DROP CONSTRAINT execution_records_determinism_unique;" \
-    "ALTER TABLE public.execution_records ADD CONSTRAINT execution_records_determinism_unique UNIQUE (input_hash, interpretation_version_id, runtime_version);"
+    "ALTER TABLE public.execution_records ADD CONSTRAINT execution_records_determinism_unique UNIQUE (tenant_id, input_hash, interpretation_version_id, runtime_version);"
 
 # Scenario 3: drop FK to interpretation_packs
 run_scenario "3/fk_drop" \

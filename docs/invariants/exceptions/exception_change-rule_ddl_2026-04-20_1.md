@@ -12,7 +12,7 @@ created_at: 2026-04-20
 
 ## Reason
 
-Migration `0132_execution_records_determinism_constraints.sql` is the contract half of the expand/contract pair implementing INV-EXEC-TRUTH-001. It performs five `ALTER COLUMN ... SET NOT NULL` and adds `execution_records_determinism_unique UNIQUE (input_hash, interpretation_version_id, runtime_version)`. Per REM-04's stop_conditions, the invariant status may not flip to `implemented` until REM-05 evidence exists (B4 constraint carried from PR #187 merge cycle). This exception covers the gap between structural change (this commit) and invariant registration (REM-04, later in the same PR).
+Migration `0132_execution_records_determinism_constraints.sql` is the contract half of the expand/contract pair implementing INV-EXEC-TRUTH-001. It performs five `ALTER COLUMN ... SET NOT NULL` and adds `execution_records_determinism_unique UNIQUE (tenant_id, input_hash, interpretation_version_id, runtime_version)` (tenant-scoped to preserve multi-tenant audit isolation). Per REM-04's stop_conditions, the invariant status may not flip to `implemented` until REM-05 evidence exists (B4 constraint carried from PR #187 merge cycle). This exception covers the gap between structural change (this commit) and invariant registration (REM-04, later in the same PR).
 
 ## Evidence
 

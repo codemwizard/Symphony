@@ -29,7 +29,7 @@
   },
   "command_outputs": {
     "not_null_rows": "input_hash\ninterpretation_version_id\noutput_hash\nruntime_version\ntenant_id",
-    "unique_row": "execution_records_determinism_unique|UNIQUE (input_hash, interpretation_version_id, runtime_version)",
+    "unique_row": "execution_records_determinism_unique|UNIQUE (tenant_id, input_hash, interpretation_version_id, runtime_version)",
     "fk_row": "execution_records_interpretation_version_id_fkey|interpretation_packs",
     "append_only_trigger_row": "execution_records_append_only_trigger|27",
     "temporal_binding_trigger_row": "execution_records_temporal_binding_trigger|7",

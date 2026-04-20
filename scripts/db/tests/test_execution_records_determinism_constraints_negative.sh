@@ -90,7 +90,7 @@ INSERT INTO public.execution_records
     (project_id, execution_timestamp, interpretation_version_id, input_hash, output_hash, runtime_version, tenant_id)
 VALUES ('$PROJECT_ID', '$TS', '$PACK_ID', 'in_n2', 'out_n2', NULL, '$TENANT_ID');"
 
-echo "==> N3: duplicate (input_hash, interpretation_version_id, runtime_version)"
+echo "==> N3: duplicate (tenant_id, input_hash, interpretation_version_id, runtime_version) within a tenant"
 SEED_IN="seed_$(date +%s%N)"
 
 psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -c "

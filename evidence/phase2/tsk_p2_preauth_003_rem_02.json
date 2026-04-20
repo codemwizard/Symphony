@@ -23,7 +23,7 @@
   },
   "command_outputs": {
     "not_null_columns": ["input_hash","interpretation_version_id","output_hash","runtime_version","tenant_id"],
-    "unique_constraint_def": "UNIQUE (input_hash, interpretation_version_id, runtime_version)\n",
+    "unique_constraint_def": "UNIQUE (tenant_id, input_hash, interpretation_version_id, runtime_version)\n",
     "fk_target": "interpretation_packs(interpretation_pack_id)"
   },
   "execution_trace": {

@@ -20,7 +20,7 @@ Append-only. Do not retroactively rewrite entries.
 - **Branch:** `devin/1776702476-wave3-implementation`
 - **Files authored:**
   - `scripts/db/backfill_execution_records_determinism.sql` — standalone idempotent precondition (GF059 SQLSTATE)
-  - `schema/migrations/0132_execution_records_determinism_constraints.sql` — inlined GF059 DO block (no `\i` per B6), five SET NOT NULL, UNIQUE(input_hash, interpretation_version_id, runtime_version)
+  - `schema/migrations/0132_execution_records_determinism_constraints.sql` — inlined GF059 DO block (no `\i` per B6), five SET NOT NULL, UNIQUE(tenant_id, input_hash, interpretation_version_id, runtime_version) — tenant-scoped for multi-tenant audit isolation
   - `schema/migrations/MIGRATION_HEAD` — advanced to `0132`
   - `scripts/db/verify_execution_records_determinism_constraints.sh` — 6-check verifier, emits evidence with not_null_enforced/unique_enforced/fk_not_null_enforced fields
   - `scripts/db/tests/test_execution_records_determinism_constraints_negative.sh` — N1+N2 SQLSTATE 23502, N3 SQLSTATE 23505 (skipped when no seeded interpretation_pack available; UNIQUE still catalog-verified)

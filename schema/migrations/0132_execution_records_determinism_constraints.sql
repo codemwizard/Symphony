@@ -43,9 +43,13 @@ ALTER TABLE public.execution_records ALTER COLUMN interpretation_version_id SET 
 
 -- ─── Step 3: UNIQUE determinism anchor ────────────────────────────────
 -- NOT over execution_id (already PK); UNIQUE is the determinism claim.
+-- tenant_id is the leading column to preserve multi-tenant audit isolation:
+-- two tenants executing the same deterministic tuple are distinct events,
+-- not duplicates. This matches the codebase-wide convention that every
+-- UNIQUE on a tenant-bound table includes tenant_id.
 ALTER TABLE public.execution_records
     ADD CONSTRAINT execution_records_determinism_unique
-    UNIQUE (input_hash, interpretation_version_id, runtime_version);
+    UNIQUE (tenant_id, input_hash, interpretation_version_id, runtime_version);
 
 COMMENT ON CONSTRAINT execution_records_determinism_unique ON public.execution_records
-    IS 'INV-EXEC-TRUTH-001 determinism anchor: identical (input_hash, interpretation_version_id, runtime_version) is forbidden.';
+    IS 'INV-EXEC-TRUTH-001 determinism anchor (tenant-scoped): identical (tenant_id, input_hash, interpretation_version_id, runtime_version) is forbidden within the same tenant. Tenant boundary preserves multi-tenant audit isolation.';

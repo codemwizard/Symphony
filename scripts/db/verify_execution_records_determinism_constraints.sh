@@ -50,7 +50,7 @@ for col in "${EXPECTED_NN[@]}"; do
   echo "$NOT_NULL_RAW" | grep -Fxq "$col" || { echo "ERR: column $col is not NOT NULL" >&2; exit 1; }
 done
 
-# Check 3: UNIQUE constraint on (input_hash, interpretation_version_id, runtime_version)
+# Check 3: UNIQUE constraint on (tenant_id, input_hash, interpretation_version_id, runtime_version)
 UNIQUE_DEF="$(psql "$DATABASE_URL" -qAt -c "
 SELECT pg_get_constraintdef(c.oid)
 FROM pg_constraint c
@@ -59,6 +59,7 @@ WHERE t.relname = 'execution_records'
   AND c.conname = 'execution_records_determinism_unique'
   AND c.contype = 'u';")"
 [[ -n "$UNIQUE_DEF" ]] || { echo "ERR: execution_records_determinism_unique missing" >&2; exit 1; }
+echo "$UNIQUE_DEF" | grep -q "tenant_id" || { echo "ERR: UNIQUE does not include tenant_id (multi-tenant audit isolation)" >&2; exit 1; }
 echo "$UNIQUE_DEF" | grep -q "input_hash" || { echo "ERR: UNIQUE does not include input_hash" >&2; exit 1; }
 echo "$UNIQUE_DEF" | grep -q "interpretation_version_id" || { echo "ERR: UNIQUE does not include interpretation_version_id" >&2; exit 1; }
 echo "$UNIQUE_DEF" | grep -q "runtime_version" || { echo "ERR: UNIQUE does not include runtime_version" >&2; exit 1; }

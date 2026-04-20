@@ -64,6 +64,7 @@ WHERE conrelid='public.execution_records'::regclass
   AND contype='u'
   AND conname='execution_records_determinism_unique';")"
 [[ -n "$UNIQUE_ROW" ]] || fail "UNIQUE execution_records_determinism_unique missing"
+echo "$UNIQUE_ROW" | grep -q 'tenant_id'                 || fail "UNIQUE missing tenant_id (multi-tenant audit isolation)"
 echo "$UNIQUE_ROW" | grep -q 'input_hash'                || fail "UNIQUE missing input_hash"
 echo "$UNIQUE_ROW" | grep -q 'interpretation_version_id' || fail "UNIQUE missing interpretation_version_id"
 echo "$UNIQUE_ROW" | grep -q 'runtime_version'           || fail "UNIQUE missing runtime_version"
