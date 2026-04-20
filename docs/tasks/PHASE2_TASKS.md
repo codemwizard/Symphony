@@ -7,6 +7,20 @@ This index tracks the extracted Wave 4-8 Phase 2 task packs derived from these c
 
 Status in this index reflects task-pack planning/extraction readiness, not a claim that production code is already implemented. See `docs/plans/phase2/WAVES4-8_TASK_PACK_ASSESSMENT.md` for the current gap assessment.
 
+## Wave 3-R - Execution Truth Anchor Remediation (REM-2026-04-20_execution-truth-anchor)
+
+Forward-only remediation of gaps left by TSK-P2-PREAUTH-003-01/-02. Migrations 0131/0132/0133. No edit to 0118. Sibling stub `REM-2026-04-20_execution-lifecycle` opened under an explicit non-interference boundary — see `docs/plans/remediation/REM-2026-04-20_execution-lifecycle/PLAN.md`.
+
+| Task ID | Owner Role | Status | Plan | Log |
+|---|---|---|---|---|
+| TSK-P2-PREAUTH-003-REM-01 | DB_FOUNDATION | planned | docs/plans/phase2/TSK-P2-PREAUTH-003-REM-01/PLAN.md | docs/plans/phase2/TSK-P2-PREAUTH-003-REM-01/EXEC_LOG.md |
+| TSK-P2-PREAUTH-003-REM-02 | DB_FOUNDATION | planned | docs/plans/phase2/TSK-P2-PREAUTH-003-REM-02/PLAN.md | docs/plans/phase2/TSK-P2-PREAUTH-003-REM-02/EXEC_LOG.md |
+| TSK-P2-PREAUTH-003-REM-03 | DB_FOUNDATION | planned | docs/plans/phase2/TSK-P2-PREAUTH-003-REM-03/PLAN.md | docs/plans/phase2/TSK-P2-PREAUTH-003-REM-03/EXEC_LOG.md |
+| TSK-P2-PREAUTH-003-REM-05 | DB_FOUNDATION | planned | docs/plans/phase2/TSK-P2-PREAUTH-003-REM-05/PLAN.md | docs/plans/phase2/TSK-P2-PREAUTH-003-REM-05/EXEC_LOG.md |
+| TSK-P2-PREAUTH-003-REM-05B | SECURITY_GUARDIAN | planned | docs/plans/phase2/TSK-P2-PREAUTH-003-REM-05B/PLAN.md | docs/plans/phase2/TSK-P2-PREAUTH-003-REM-05B/EXEC_LOG.md |
+| TSK-P2-PREAUTH-003-REM-04 | INVARIANTS_CURATOR | planned | docs/plans/phase2/TSK-P2-PREAUTH-003-REM-04/PLAN.md | docs/plans/phase2/TSK-P2-PREAUTH-003-REM-04/EXEC_LOG.md |
+| TSK-P2-PREAUTH-003-REM-04B | ARCHITECT | planned | docs/plans/phase2/TSK-P2-PREAUTH-003-REM-04B/PLAN.md | docs/plans/phase2/TSK-P2-PREAUTH-003-REM-04B/EXEC_LOG.md |
+
 ## Wave 4 - Authority Binding
 
 | Task ID | Owner Role | Status | Plan | Log |

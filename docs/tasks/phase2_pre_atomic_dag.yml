@@ -150,6 +150,59 @@ nodes:
   depends_on:
   - TSK-P2-PREAUTH-003-02
 
+# STAGE 1-R — Execution Truth Anchor REMEDIATION (REM-2026-04-20_execution-truth-anchor)
+# Closes the five gaps left by TSK-P2-PREAUTH-003-01/-02 (NOT NULL, determinism
+# columns, append-only trigger, temporal binding, UNIQUE, invariant + verifier).
+# Forward-only migrations 0131/0132/0133. No edit to 0118.
+- id: TSK-P2-PREAUTH-003-REM-01
+  stage: 1-execution-truth-remediation
+  title: Add nullable determinism columns to execution_records via migration 0131 (expand phase)
+  depends_on:
+  - TSK-P2-PREAUTH-003-02
+  kind: task
+- id: TSK-P2-PREAUTH-003-REM-02
+  stage: 1-execution-truth-remediation
+  title: Backfill + SET NOT NULL x5 + UNIQUE determinism tuple via migration 0132 (contract phase)
+  depends_on:
+  - TSK-P2-PREAUTH-003-REM-01
+  kind: task
+- id: TSK-P2-PREAUTH-003-REM-03
+  stage: 1-execution-truth-remediation
+  title: Install append-only trigger and INSERT-time temporal-binding trigger via migration 0133
+  depends_on:
+  - TSK-P2-PREAUTH-003-REM-02
+  kind: task
+- id: TSK-P2-PREAUTH-003-REM-05
+  stage: 1-execution-truth-remediation
+  title: Author scripts/db/verify_execution_truth_anchor.sh with self-certifying evidence plus degradation smoke harness (DB_FOUNDATION)
+  depends_on:
+  - TSK-P2-PREAUTH-003-REM-03
+  kind: task
+- id: TSK-P2-PREAUTH-003-REM-05B
+  stage: 1-execution-truth-remediation
+  title: Wire verify_execution_truth_anchor.sh into scripts/dev/pre_ci.sh and scripts/audit/run_invariants_fast_checks.sh (SECURITY_GUARDIAN)
+  depends_on:
+  - TSK-P2-PREAUTH-003-REM-05
+  kind: task
+- id: TSK-P2-PREAUTH-003-REM-04
+  stage: 1-execution-truth-remediation
+  title: Register INV-EXEC-TRUTH-001 in docs/invariants/INVARIANTS_MANIFEST.yml + INVARIANTS_IMPLEMENTED.md after REM-05 evidence validates (INVARIANTS_CURATOR)
+  depends_on:
+  - TSK-P2-PREAUTH-003-REM-05B
+  kind: task
+- id: TSK-P2-PREAUTH-003-REM-04B
+  stage: 1-execution-truth-remediation
+  title: Register INV-EXEC-TRUTH-001 in docs/architecture/THREAT_MODEL.md and docs/architecture/COMPLIANCE_MAP.md (ARCHITECT)
+  depends_on:
+  - TSK-P2-PREAUTH-003-REM-04
+  kind: task
+- id: checkpoint/EXEC-TRUTH-REM
+  stage: 1-execution-truth-remediation
+  title: "Checkpoint EXEC-TRUTH-REM — execution truth anchor remediation complete (INV-EXEC-TRUTH-001 implemented)"
+  kind: checkpoint
+  depends_on:
+  - TSK-P2-PREAUTH-003-REM-04B
+
 # STAGE 2 — Authority Binding
 - id: TSK-P2-PREAUTH-004-00
   stage: 2-authority-binding

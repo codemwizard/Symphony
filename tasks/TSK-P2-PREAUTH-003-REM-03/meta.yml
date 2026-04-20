@@ -1,0 +1,187 @@
+schema_version: 1
+phase: '2'
+task_id: TSK-P2-PREAUTH-003-REM-03
+title: "Install execution_records append-only trigger and INSERT-time temporal-binding trigger via forward migration 0133"
+owner_role: DB_FOUNDATION
+status: planned
+priority: CRITICAL
+risk_class: INTEGRITY
+blast_radius: DB_SCHEMA
+
+intent: >-
+  Lock execution_records into append-only semantics (mirroring the
+  project_boundaries pattern at 0127 lines 30-42) and enforce temporal binding
+  of interpretation_version_id at INSERT time by requiring the caller-supplied
+  value to match resolve_interpretation_pack(project_id, execution_timestamp).
+  Forward migration 0133 installs two BEFORE triggers and their SECURITY
+  DEFINER functions with hardened search_path. No edit to 0118/0131/0132.
+
+anti_patterns:
+  - "BEFORE INSERT trigger that mutates row values instead of raising (would silently rewrite history)"
+  - "SECURITY DEFINER function without SET search_path = pg_catalog, public"
+  - "Trigger that allows UPDATE OR DELETE from a privileged role"
+  - "Attaching both append-only and temporal-binding checks to a single function (violates single-responsibility and complicates rollback)"
+  - "Enforcing temporal binding in application code instead of at the DB trigger layer"
+
+out_of_scope:
+  - "Adding determinism columns or constraints (belongs to REM-01/REM-02)"
+  - "Invariant registration (belongs to REM-04)"
+  - "Full verifier wiring (belongs to REM-05)"
+  - "Lifecycle / retry / failure-state semantics (deferred to REM-2026-04-20_execution-lifecycle)"
+  - "Removing the existing status VARCHAR column from 0118 (out of scope; lifecycle casefile owns)"
+
+stop_conditions:
+  - "If append-only trigger is attached as AFTER instead of BEFORE"
+  - "If temporal-binding function is not SECURITY DEFINER or omits SET search_path = pg_catalog, public"
+  - "If UPDATE/DELETE negative tests do not return the declared GF056 errcode"
+  - "If temporal mismatch negative test does not return the declared GF058 errcode"
+  - "If migration 0133 alters 0118/0131/0132"
+  - "If verifier omits || exit 1 on any assertion"
+
+proof_guarantees:
+  - "pg_trigger.tgname = execution_records_append_only_trigger with tgtype flagging BEFORE + ROW + UPDATE + DELETE"
+  - "pg_trigger.tgname = execution_records_temporal_binding_trigger with tgtype flagging BEFORE + ROW + INSERT"
+  - "pg_proc.proconfig contains search_path=pg_catalog, public for both trigger functions"
+  - "UPDATE execution_records or DELETE FROM execution_records raises SQLSTATE GF056"
+  - "INSERT with interpretation_version_id that does not match resolve_interpretation_pack(project_id, execution_timestamp) raises SQLSTATE GF058"
+
+proof_limitations:
+  - "The temporal trigger delegates to resolve_interpretation_pack() introduced by 0116; behavioural correctness of that function itself is validated by INV-165 coverage, not this task."
+  - "This task does not register an invariant; REM-04 flips INV-EXEC-TRUTH-001 to implemented only after REM-05 captures fresh evidence from both triggers."
+
+depends_on:
+  - TSK-P2-PREAUTH-003-REM-02
+
+blocks:
+  - TSK-P2-PREAUTH-003-REM-05
+
+touches:
+  - schema/migrations/0133_execution_records_triggers.sql
+  - schema/migrations/MIGRATION_HEAD
+  - scripts/db/verify_execution_records_triggers.sh
+  - scripts/db/tests/test_execution_records_append_only_negative.sh
+  - scripts/db/tests/test_execution_records_temporal_binding_negative.sh
+  - evidence/phase2/tsk_p2_preauth_003_rem_03.json
+  - tasks/TSK-P2-PREAUTH-003-REM-03/meta.yml
+  - docs/plans/phase2/TSK-P2-PREAUTH-003-REM-03/PLAN.md
+  - docs/plans/phase2/TSK-P2-PREAUTH-003-REM-03/EXEC_LOG.md
+
+invariants: []
+
+work:
+  - >-
+    [ID tsk_p2_preauth_003_rem_03_work_item_01] Author schema/migrations/0133_execution_records_triggers.sql
+    defining two SECURITY DEFINER trigger functions with SET search_path = pg_catalog, public:
+    public.execution_records_append_only() that raises GF056 on UPDATE or DELETE, and
+    public.enforce_execution_interpretation_temporal_binding() that raises GF058 when the
+    caller-supplied interpretation_version_id does not equal resolve_interpretation_pack(NEW.project_id, NEW.execution_timestamp).
+    Attach them as execution_records_append_only_trigger (BEFORE UPDATE OR DELETE) and
+    execution_records_temporal_binding_trigger (BEFORE INSERT). Revoke EXECUTE on both
+    functions from PUBLIC. Advance MIGRATION_HEAD from 0132 to 0133.
+  - >-
+    [ID tsk_p2_preauth_003_rem_03_work_item_02] Author scripts/db/tests/test_execution_records_append_only_negative.sh
+    that drives UPDATE execution_records SET status='x' and DELETE FROM execution_records via psql against a
+    transaction that is then ROLLBACKed, and asserts each returns SQLSTATE GF056.
+    Author scripts/db/tests/test_execution_records_temporal_binding_negative.sh that INSERTs a row whose
+    interpretation_version_id is set to a value different from resolve_interpretation_pack(project_id, execution_timestamp),
+    and asserts SQLSTATE GF058.
+  - >-
+    [ID tsk_p2_preauth_003_rem_03_work_item_03] Author scripts/db/verify_execution_records_triggers.sh
+    that queries pg_trigger and pg_proc for the two triggers and their search_path config, drives the three
+    negative tests, and emits evidence/phase2/tsk_p2_preauth_003_rem_03.json with triggers_installed,
+    search_path_hardened, negative_test_sqlstates fields.
+
+acceptance_criteria:
+  - >-
+    [ID tsk_p2_preauth_003_rem_03_work_item_01] schema/migrations/0133_execution_records_triggers.sql exists, contains two CREATE TRIGGER statements naming execution_records_append_only_trigger and execution_records_temporal_binding_trigger, both BEFORE, on execution_records, and MIGRATION_HEAD reads 0133.
+  - >-
+    [ID tsk_p2_preauth_003_rem_03_work_item_02] Both negative-test helpers exist under scripts/db/tests/ and each returns exit 0 when the forbidden operation returns the declared SQLSTATE (GF056, GF058).
+  - >-
+    [ID tsk_p2_preauth_003_rem_03_work_item_03] bash scripts/db/verify_execution_records_triggers.sh exits 0 against a 0133-applied database and writes evidence/phase2/tsk_p2_preauth_003_rem_03.json containing triggers_installed=true, search_path_hardened=true, and negative_test_sqlstates with the expected three values.
+
+negative_tests:
+  - id: TSK-P2-PREAUTH-003-REM-03-N1
+    description: >-
+      UPDATE public.execution_records SET status='x' WHERE execution_id = <any> raises SQLSTATE GF056 before touching any row.
+    required: true
+  - id: TSK-P2-PREAUTH-003-REM-03-N2
+    description: >-
+      DELETE FROM public.execution_records WHERE execution_id = <any> raises SQLSTATE GF056 before touching any row.
+    required: true
+  - id: TSK-P2-PREAUTH-003-REM-03-N3
+    description: >-
+      INSERT INTO public.execution_records (... , interpretation_version_id, execution_timestamp, project_id, ...) where the supplied interpretation_version_id does not equal resolve_interpretation_pack(project_id, execution_timestamp) raises SQLSTATE GF058 before the row is persisted.
+    required: true
+
+positive_tests:
+  - id: TSK-P2-PREAUTH-003-REM-03-P1
+    description: >-
+      INSERT INTO execution_records with interpretation_version_id equal to resolve_interpretation_pack(project_id, execution_timestamp) is accepted (the trigger passes), and an immediate SELECT returns the row exactly as inserted.
+    required: true
+
+verification:
+  - >-
+    # [ID tsk_p2_preauth_003_rem_03_work_item_03] Run the triggers verifier and emit evidence.
+    test -x scripts/db/verify_execution_records_triggers.sh && bash scripts/db/verify_execution_records_triggers.sh > evidence/phase2/tsk_p2_preauth_003_rem_03.json || exit 1
+  - >-
+    # [ID tsk_p2_preauth_003_rem_03_work_item_01] Confirm migration 0133 exists and names both triggers.
+    test -f schema/migrations/0133_execution_records_triggers.sql && grep -q 'execution_records_append_only_trigger' schema/migrations/0133_execution_records_triggers.sql && grep -q 'execution_records_temporal_binding_trigger' schema/migrations/0133_execution_records_triggers.sql || exit 1
+  - >-
+    # [ID tsk_p2_preauth_003_rem_03_work_item_01] Confirm migration 0133 hardens search_path in SECURITY DEFINER function bodies.
+    test -f schema/migrations/0133_execution_records_triggers.sql && grep -q 'SET search_path = pg_catalog, public' schema/migrations/0133_execution_records_triggers.sql || exit 1
+  - >-
+    # [ID tsk_p2_preauth_003_rem_03_work_item_01] Confirm MIGRATION_HEAD advanced to 0133.
+    test -f schema/migrations/MIGRATION_HEAD && grep -Fxq '0133' schema/migrations/MIGRATION_HEAD || exit 1
+  - >-
+    # [ID tsk_p2_preauth_003_rem_03_work_item_02] Confirm both negative-test helpers exist.
+    test -x scripts/db/tests/test_execution_records_append_only_negative.sh && test -x scripts/db/tests/test_execution_records_temporal_binding_negative.sh || exit 1
+  - >-
+    # [ID tsk_p2_preauth_003_rem_03_work_item_03] Confirm evidence file carries the triggers_installed proof field.
+    test -f evidence/phase2/tsk_p2_preauth_003_rem_03.json && cat evidence/phase2/tsk_p2_preauth_003_rem_03.json | grep -q 'triggers_installed' || exit 1
+  - >-
+    # [ID tsk_p2_preauth_003_rem_03_work_item_01] [ID tsk_p2_preauth_003_rem_03_work_item_02] [ID tsk_p2_preauth_003_rem_03_work_item_03]
+    RUN_PHASE1_GATES=1 bash scripts/dev/pre_ci.sh || exit 1
+
+evidence:
+  - path: evidence/phase2/tsk_p2_preauth_003_rem_03.json
+    must_include:
+      - task_id
+      - git_sha
+      - timestamp_utc
+      - status
+      - checks
+      - observed_paths
+      - observed_hashes
+      - command_outputs
+      - execution_trace
+      - triggers_installed
+      - search_path_hardened
+      - negative_test_sqlstates
+      - trigger_definer_functions
+
+failure_modes:
+  - "Append-only trigger attached as AFTER => FAIL (row already mutated when trigger fires)"
+  - "SECURITY DEFINER function missing SET search_path => CRITICAL_FAIL (privilege-escalation surface)"
+  - "EXECUTE on trigger function not revoked from PUBLIC => FAIL"
+  - "Temporal-binding trigger allows any interpretation_version_id => CRITICAL_FAIL (defeats gap H6)"
+  - "Negative tests do not return the declared SQLSTATE => FAIL"
+
+must_read:
+  - docs/operations/AI_AGENT_OPERATION_MANUAL.md
+  - docs/invariants/INVARIANTS_QUICK.md
+  - schema/migrations/0127_project_boundaries.sql
+  - schema/migrations/0116_create_interpretation_packs.sql
+  - docs/plans/remediation/REM-2026-04-20_execution-truth-anchor/PLAN.md
+
+implementation_plan: docs/plans/phase2/TSK-P2-PREAUTH-003-REM-03/PLAN.md
+implementation_log: docs/plans/phase2/TSK-P2-PREAUTH-003-REM-03/EXEC_LOG.md
+
+notes: >-
+  Append-only trigger mirrors the exact pattern from migration 0127 lines 30-42
+  (project_boundaries_append_only) — no creative drift. Temporal-binding trigger delegates to
+  resolve_interpretation_pack() function created by migration 0116 lines 60-81.
+  Two separate functions per single-responsibility; a single-function fusion is an anti-pattern.
+
+client: cursor
+assigned_agent: db_foundation
+model: <UNASSIGNED>
