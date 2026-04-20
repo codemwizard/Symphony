@@ -82,13 +82,13 @@ TSK-P2-PREAUTH-003-02 (Wave 3 terminal)
                                 └── REM-05 (verifier + smoke harness — DB_FOUNDATION)
                                         └── REM-05B (CI wiring into pre_ci.sh + run_invariants_fast_checks.sh — SECURITY_GUARDIAN)
                                                 └── REM-04 (register INV-EXEC-TRUTH-001 in docs/invariants/** — INVARIANTS_CURATOR, fail-closed on REM-05 evidence)
-                                                        └── REM-04B (register INV-EXEC-TRUTH-001 in docs/security/** — SECURITY_GUARDIAN)
+                                                        └── REM-04B (register INV-EXEC-TRUTH-001 in docs/architecture/** — ARCHITECT)
                                                                 └── checkpoint/EXEC-TRUTH-REM
 ```
 
 Fail-closed sequencing: REM-04 only flips `INV-EXEC-TRUTH-001` status to `implemented` after REM-05 produces fresh verifier evidence carrying all integrity fields, and only after REM-05B wires the verifier into the CI gates. REM-04B registers the security-review surfaces once REM-04 has published the manifest block. If any upstream evidence is missing or stale, the downstream task blocks.
 
-Path-authority rationale: Devin Review flagged that bundling verifier authorship (scripts/db/**) with CI wiring (scripts/dev/pre_ci.sh + scripts/audit/**) in a single task violated AGENTS.md because those surfaces belong to different owner roles. Similarly, bundling docs/invariants/** with docs/security/** crossed the INVARIANTS_CURATOR ↔ SECURITY_GUARDIAN boundary. Splitting REM-05 → REM-05 + REM-05B and REM-04 → REM-04 + REM-04B keeps every work item under one owner role.
+Path-authority rationale: Devin Review flagged that bundling verifier authorship (scripts/db/**) with CI wiring (scripts/dev/pre_ci.sh + scripts/audit/**) in a single task violated AGENTS.md because those surfaces belong to different owner roles. Similarly, bundling the docs/invariants/** registry with the docs/architecture/** threat-model + compliance-map surfaces crossed the INVARIANTS_CURATOR ↔ ARCHITECT boundary. Splitting REM-05 → REM-05 + REM-05B and REM-04 → REM-04 + REM-04B keeps every work item under one owner role. (REM-04B was initially authored against `docs/security/**` under SECURITY_GUARDIAN; Devin Review `BUG_pr-review-job-108a9b4113194ec09d57c8e6c3986cd1_0001` corrected the paths to `docs/architecture/**` where THREAT_MODEL.md and COMPLIANCE_MAP.md actually live, and the owner to ARCHITECT — see the REM-04B EXEC_LOG path-correction entry.)
 
 Two-strike non-convergence trigger (per debug-remediation-policy §Severity Model): if REM-02 pre-condition (`SELECT COUNT(*) FROM execution_records WHERE any_new_column IS NULL` == 0 after backfill) fails on a second consecutive run, DRD lockout fires and `REM-02b` (backfill deep-dive) is opened automatically.
 

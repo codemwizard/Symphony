@@ -13,7 +13,7 @@ remediation_casefile: docs/plans/remediation/REM-2026-04-20_execution-truth-anch
 
 Register `INV-EXEC-TRUTH-001` in `docs/invariants/INVARIANTS_MANIFEST.yml` with `status=implemented` and add a matching row to `docs/invariants/INVARIANTS_IMPLEMENTED.md`. Registration is fail-closed: it only proceeds when REM-05 evidence is present and fresh; otherwise the registration verifier exits non-zero and this task's status stays `planned`.
 
-Security-review surfaces under `docs/security/**` (THREAT_MODEL.md threat entry and COMPLIANCE_MAP.md control row) are owned by SECURITY_GUARDIAN and registered via the sibling task `TSK-P2-PREAUTH-003-REM-04B` per the AGENTS.md path-authority split. REM-04B blocks the `checkpoint/EXEC-TRUTH-REM` checkpoint.
+Threat-model and compliance-map surfaces under `docs/architecture/**` (THREAT_MODEL.md threat entry and COMPLIANCE_MAP.md control row) are owned by ARCHITECT and registered via the sibling task `TSK-P2-PREAUTH-003-REM-04B` per the AGENTS.md path-authority split. REM-04B blocks the `checkpoint/EXEC-TRUTH-REM` checkpoint.
 
 ---
 
@@ -51,7 +51,7 @@ Per the operation manual and the invariants curator role (`AGENTS.md` §Invarian
 - Upstream evidence `run_id` older than the working-branch HEAD SHA at the time this task runs -> STOP.
 - `enforcement_location` path resolves to nothing -> STOP.
 - `INVARIANTS_MANIFEST.yml` fails YAML parse after append -> STOP.
-- Any edit lands in `docs/security/**` -> STOP (path-authority violation; that scope belongs to REM-04B).
+- Any edit lands in `docs/architecture/**` -> STOP (path-authority violation; the threat-model + compliance-map surfaces belong to REM-04B, ARCHITECT). `docs/security/**` is not in scope for any REM-2026-04-20 task and must not be touched from this task.
 
 ---
 
@@ -148,8 +148,8 @@ Required fields:
 
 1. Remove the INV-EXEC-TRUTH-001 block from `INVARIANTS_MANIFEST.yml` (or flip status to `in_progress`).
 2. Remove the row from `INVARIANTS_IMPLEMENTED.md`.
-3. Security-surface rollback (docs/security/**) is owned by REM-04B.
-4. File exception in `docs/security/EXCEPTION_REGISTER.yml`.
+3. Threat-model + compliance-map rollback (docs/architecture/**) is owned by REM-04B.
+4. File exception in `docs/invariants/EXCEPTION_REGISTER.yml` (INVARIANTS_CURATOR surface); do not write exceptions into `docs/security/**`, which is outside this task's authority.
 
 ---
 

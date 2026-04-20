@@ -121,7 +121,7 @@ Status must be `PASS` only if both wiring assertions hold.
 
 - Authoring the verifier (REM-05, DB_FOUNDATION).
 - Invariant manifest registration (REM-04, INVARIANTS_CURATOR).
-- `docs/security/**` registration (REM-04B, SECURITY_GUARDIAN).
+- `docs/architecture/**` registration (REM-04B, ARCHITECT).
 - Lifecycle / retry / execution_state (deferred to REM-2026-04-20_execution-lifecycle).
 
 ---

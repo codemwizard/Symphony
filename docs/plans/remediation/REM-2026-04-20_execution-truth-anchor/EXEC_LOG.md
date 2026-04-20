@@ -53,7 +53,7 @@ Append-only. Do not retroactively rewrite entries.
 - REM-05 acceptance + evidence path (verifier PASS under `DATABASE_URL`)
 - REM-05B acceptance + evidence path (pre_ci.sh + run_invariants_fast_checks.sh invoke the verifier and fail closed)
 - REM-04 acceptance + evidence path (INV-EXEC-TRUTH-001 status flipped to `implemented` in `docs/invariants/**`)
-- REM-04B acceptance + evidence path (threat-model + compliance-map rows registered in `docs/security/**`)
+- REM-04B acceptance + evidence path (threat-model + compliance-map rows registered in `docs/architecture/**`)
 - `final_status: closed` once all seven tasks report `status: completed` and `checkpoint/EXEC-TRUTH-REM` clears.
 
 Do not close this casefile until all seven derived tasks' evidence files validate under `scripts/audit/validate_evidence.py` **and** `scripts/dev/pre_ci.sh` returns 0.

@@ -19,7 +19,7 @@ Forward-only remediation of gaps left by TSK-P2-PREAUTH-003-01/-02. Migrations 0
 | TSK-P2-PREAUTH-003-REM-05 | DB_FOUNDATION | planned | docs/plans/phase2/TSK-P2-PREAUTH-003-REM-05/PLAN.md | docs/plans/phase2/TSK-P2-PREAUTH-003-REM-05/EXEC_LOG.md |
 | TSK-P2-PREAUTH-003-REM-05B | SECURITY_GUARDIAN | planned | docs/plans/phase2/TSK-P2-PREAUTH-003-REM-05B/PLAN.md | docs/plans/phase2/TSK-P2-PREAUTH-003-REM-05B/EXEC_LOG.md |
 | TSK-P2-PREAUTH-003-REM-04 | INVARIANTS_CURATOR | planned | docs/plans/phase2/TSK-P2-PREAUTH-003-REM-04/PLAN.md | docs/plans/phase2/TSK-P2-PREAUTH-003-REM-04/EXEC_LOG.md |
-| TSK-P2-PREAUTH-003-REM-04B | SECURITY_GUARDIAN | planned | docs/plans/phase2/TSK-P2-PREAUTH-003-REM-04B/PLAN.md | docs/plans/phase2/TSK-P2-PREAUTH-003-REM-04B/EXEC_LOG.md |
+| TSK-P2-PREAUTH-003-REM-04B | ARCHITECT | planned | docs/plans/phase2/TSK-P2-PREAUTH-003-REM-04B/PLAN.md | docs/plans/phase2/TSK-P2-PREAUTH-003-REM-04B/EXEC_LOG.md |
 
 ## Wave 4 - Authority Binding
 

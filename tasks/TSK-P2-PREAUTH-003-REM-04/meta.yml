@@ -16,8 +16,9 @@ intent: >-
   determinism UNIQUE, NOT NULL on five columns, and verifier-integrity
   fields. If REM-05 evidence is absent or stale, this task blocks
   itself and remains in status=planned. Threat-model and compliance-map
-  registration is owned by the sibling task REM-04B (SECURITY_GUARDIAN)
-  per AGENTS.md path authority and is explicitly out of scope here.
+  registration is owned by the sibling task REM-04B (ARCHITECT, which
+  owns docs/architecture/** per AGENTS.md) and is explicitly out of
+  scope here.
 
 anti_patterns:
   - "Flipping invariant status to implemented before REM-05 evidence lands"
@@ -25,7 +26,8 @@ anti_patterns:
   - "Declaring a verification_command that is not in the repo"
   - "Silently widening invariant scope (e.g. claiming coverage over lifecycle state)"
   - "Merging this invariant with INV-175 (data_authority) — different scope"
-  - "Touching docs/architecture/** or docs/security/** (threat-model / compliance-map surfaces are owned by REM-04B, ARCHITECT)"
+  - "Touching docs/architecture/** (threat-model + compliance-map surfaces are owned by REM-04B, ARCHITECT)"
+  - "Touching docs/security/** (outside the scope of every REM-2026-04-20 task; the canonical threat model + compliance map live under docs/architecture/**)"
 
 out_of_scope:
   - "Creating/modifying the verifier (belongs to REM-05)"
@@ -137,7 +139,8 @@ failure_modes:
   - "Upstream evidence evidence/phase2/tsk_p2_preauth_003_rem_05.json missing => FAIL (task blocks, status stays planned)"
   - "enforcement_location path does not exist on disk => FAIL"
   - "INVARIANTS_MANIFEST.yml fails YAML parse after append => CRITICAL_FAIL"
-  - "Task silently edits docs/architecture/** or docs/security/** => PATH_AUTHORITY_VIOLATION (see REM-04B)"
+  - "Task silently edits docs/architecture/** => PATH_AUTHORITY_VIOLATION (REM-04B, ARCHITECT)"
+  - "Task silently edits docs/security/** => OUT_OF_SCOPE (no REM-2026-04-20 task owns docs/security/**)"
 
 must_read:
   - AGENTS.md
