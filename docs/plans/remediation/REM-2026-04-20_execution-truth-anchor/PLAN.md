@@ -66,7 +66,7 @@ Out of scope (explicit proof limitations):
 | H1 | `execution_records.interpretation_version_id` is nullable and carries no enforced FK-not-null contract | `schema/migrations/0118_create_execution_records.sql` line 11 | REM-02 |
 | H2 | Determinism columns (`input_hash`, `output_hash`, `runtime_version`, `tenant_id`) are absent, so row replay is impossible | Same migration; no ALTER in 0119-0130 touches execution_records | REM-01 (expand) + REM-02 (contract) |
 | H3 | No `BEFORE UPDATE OR DELETE` trigger; rows are mutable | `grep execution_records schema/migrations/*.sql` returns no trigger | REM-03 |
-| H4 | No `UNIQUE(input_hash, interpretation_version_id, runtime_version)` determinism anchor; same input can yield multiple truths | Same migration; no ADD CONSTRAINT UNIQUE in 0119-0130 | REM-02 |
+| H4 | No `UNIQUE(tenant_id, input_hash, interpretation_version_id, runtime_version)` determinism anchor; same input can yield multiple truths within a tenant | Same migration; no ADD CONSTRAINT UNIQUE in 0119-0130 | REM-02 |
 | H5 | No `INV-EXEC-*` invariant registered; no integrity verifier; INV-175 covers a different scope (data_authority enum) | `docs/invariants/INVARIANTS_MANIFEST.yml` lines 1651-1668 | REM-04 + REM-05 |
 | H6 | No temporal-binding enforcement; callers may pass a retroactively-resolved `interpretation_version_id` | Function `resolve_interpretation_pack(project_id, as_of)` exists (0116) but is not enforced at INSERT time on execution_records | REM-03 (second trigger) |
 

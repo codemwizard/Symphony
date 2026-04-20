@@ -3,7 +3,7 @@ phase: '2'
 task_id: TSK-P2-PREAUTH-003-REM-05
 title: "Author single integrity verifier scripts/db/verify_execution_truth_anchor.sh and degradation-smoke harness with self-certifying evidence"
 owner_role: DB_FOUNDATION
-status: planned
+status: completed
 priority: CRITICAL
 risk_class: INTEGRITY
 blast_radius: CI_GATES
@@ -108,7 +108,7 @@ negative_tests:
     required: true
   - id: TSK-P2-PREAUTH-003-REM-05-N4
     description: >-
-      Run verifier against a database where the UNIQUE (input_hash, interpretation_version_id, runtime_version) constraint has been dropped; verifier exits non-zero and evidence carries unique_enforced=false.
+      Run verifier against a database where the UNIQUE (tenant_id, input_hash, interpretation_version_id, runtime_version) constraint has been dropped; verifier exits non-zero and evidence carries unique_enforced=false.
     required: true
   - id: TSK-P2-PREAUTH-003-REM-05-N5
     description: >-

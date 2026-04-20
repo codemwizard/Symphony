@@ -140,3 +140,4 @@ _Generated from `docs/invariants/INVARIANTS_MANIFEST.yml` (do not edit by hand).
 | INV-176 | P0 | state_transitions is enforced via trigger layer | ["team-db"] | >- |
 | INV-177 | P0 | Phase 1 C# outputs carry non-authoritative markers | ["team-platform"] | >- |
 | INV-178 | P0 | Project DNSH spatial check is DB-enforced via PostGIS with versioned dataset and execution binding | ["team-db", "team-platform", "team-security"] | >- |
+| INV-179 | P0 | Execution records are append-only, deterministically keyed, and temporally bound to an interpretation pack active at execution_timestamp | ["team-db", "team-platform", "team-invariants"] | >- |

@@ -62,12 +62,28 @@ SHELL_SCRIPTS=(
   "scripts/audit/record_invariants_exception.sh"
   "scripts/audit/verify_exception_template.sh"
   "scripts/audit/verify_invariants_local.sh"
+  # INV-EXEC-TRUTH-001 anchor verifier (REM-05B wiring): fail the no-DB
+  # fast gate if the script is syntactically broken. Deletion detection
+  # is enforced separately below (the loop's `[[ -f ]]` guard silently
+  # skips missing files).
+  "scripts/db/verify_execution_truth_anchor.sh"
 )
 for f in "${SHELL_SCRIPTS[@]}"; do
   if [[ -f "$f" ]]; then
     run bash -n "$f"
   fi
 done
+
+# INV-EXEC-TRUTH-001 anchor verifier deletion detection (REM-05B wiring).
+# Fail the no-DB fast gate if the script is missing entirely. The syntax
+# loop above silently skips missing files, so enforce presence here.
+# `set -euo pipefail` is in effect (line 2); there is no global FAIL
+# accumulator, so a direct `exit 1` matches the existing fail-closed
+# pattern used elsewhere in this script.
+if [[ ! -f scripts/db/verify_execution_truth_anchor.sh ]]; then
+  echo "ERROR: INV-EXEC-TRUTH-001 anchor verifier missing at scripts/db/verify_execution_truth_anchor.sh (REM-05 surface)" >&2
+  exit 1
+fi
 
 # ---- 2) Python syntax checks ----
 echo ""

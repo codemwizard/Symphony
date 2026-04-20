@@ -1,0 +1,46 @@
+{
+  "checks": {
+    "compliance_map_present": {
+      "detail": "INV-EXEC-TRUTH-001 present in compliance map",
+      "passed": true
+    },
+    "compliance_map_references_evidence": {
+      "detail": "references evidence/phase2/tsk_p2_preauth_003_rem_05.json",
+      "passed": true
+    },
+    "threat_model_present": {
+      "detail": "execution-record tamper entry + INV-EXEC-TRUTH-001 present",
+      "passed": true
+    },
+    "threat_model_references_verifier": {
+      "detail": "references scripts/db/verify_execution_truth_anchor.sh",
+      "passed": true
+    }
+  },
+  "command_outputs": {
+    "compliance_map_exists": true,
+    "threat_model_exists": true
+  },
+  "compliance_map_present": true,
+  "compliance_map_references_evidence": true,
+  "execution_trace": [
+    "threat_model_present=true",
+    "threat_model_references_verifier=true",
+    "compliance_map_present=true",
+    "compliance_map_references_evidence=true"
+  ],
+  "git_sha": "c5886aa82fc877711437667cd637104ae63059b0",
+  "observed_hashes": {
+    "compliance_map": "28bb55f9fe6e829338044f548b6b206d1cdd1b2a997d20d254272006b7353c82",
+    "threat_model": "13ef9a05b8fdbc822bb59ad24e53757c39307d42506b46b26c2e416a2f2923b0"
+  },
+  "observed_paths": {
+    "compliance_map": "/home/ubuntu/Symphony/docs/architecture/COMPLIANCE_MAP.md",
+    "threat_model": "/home/ubuntu/Symphony/docs/architecture/THREAT_MODEL.md"
+  },
+  "status": "PASS",
+  "task_id": "TSK-P2-PREAUTH-003-REM-04B",
+  "threat_model_present": true,
+  "threat_model_references_verifier": true,
+  "timestamp_utc": "2026-04-20T17:13:51Z"
+}

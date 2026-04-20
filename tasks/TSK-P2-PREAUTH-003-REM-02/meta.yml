@@ -1,9 +1,9 @@
 schema_version: 1
 phase: '2'
 task_id: TSK-P2-PREAUTH-003-REM-02
-title: "Tighten execution_records determinism columns: backfill + SET NOT NULL (5 columns) + UNIQUE (input_hash, interpretation_version_id, runtime_version) + FK NOT NULL via forward migration 0132"
+title: "Tighten execution_records determinism columns: backfill + SET NOT NULL (5 columns) + UNIQUE (tenant_id, input_hash, interpretation_version_id, runtime_version) + FK NOT NULL via forward migration 0132"
 owner_role: DB_FOUNDATION
-status: planned
+status: completed
 priority: CRITICAL
 risk_class: INTEGRITY
 blast_radius: DB_SCHEMA
@@ -13,8 +13,10 @@ intent: >-
   four determinism columns as NULLABLE, this task runs a precondition
   backfill check, then tightens input_hash, output_hash, runtime_version,
   tenant_id, and interpretation_version_id to NOT NULL, and adds UNIQUE
-  (input_hash, interpretation_version_id, runtime_version) as the determinism
-  anchor. Forward-only migration 0132. No edit to 0118 or 0131.
+  (tenant_id, input_hash, interpretation_version_id, runtime_version) as the
+  tenant-scoped determinism anchor (preserves multi-tenant audit isolation so
+  two tenants can independently record identical determinism tuples without
+  cross-tenant 23505 collisions). Forward-only migration 0132. No edit to 0118 or 0131.
 
 anti_patterns:
   - "Skipping backfill precondition check and going straight to SET NOT NULL"
@@ -42,9 +44,9 @@ stop_conditions:
 
 proof_guarantees:
   - "pg_attribute.attnotnull = true for input_hash, output_hash, runtime_version, tenant_id, interpretation_version_id on execution_records"
-  - "pg_constraint.conname includes execution_records_determinism_unique of contype=u over (input_hash, interpretation_version_id, runtime_version)"
+  - "pg_constraint.conname includes execution_records_determinism_unique of contype=u over (tenant_id, input_hash, interpretation_version_id, runtime_version)"
   - "INSERT with NULL in any of the five tightened columns raises 23502 (NOT NULL violation)"
-  - "INSERT duplicating (input_hash, interpretation_version_id, runtime_version) raises 23505 (unique violation)"
+  - "INSERT duplicating (tenant_id, input_hash, interpretation_version_id, runtime_version) within a single tenant raises 23505 (unique violation); two tenants with identical downstream tuples are distinct events and do not collide"
 
 proof_limitations:
   - "FK target column remains interpretation_packs(interpretation_pack_id); child column is historically named interpretation_version_id. Documented as naming quirk in INV-EXEC-TRUTH-001 notes."
@@ -81,7 +83,7 @@ work:
     scripts/db/migrate.sh checksums only the migration file itself at migrate.sh:107, so an external
     \i target would make the effective migration silently mutable), then five ALTER COLUMN ... SET NOT NULL
     statements (input_hash, output_hash, runtime_version, tenant_id, interpretation_version_id),
-    then ADD CONSTRAINT execution_records_determinism_unique UNIQUE (input_hash, interpretation_version_id, runtime_version).
+    then ADD CONSTRAINT execution_records_determinism_unique UNIQUE (tenant_id, input_hash, interpretation_version_id, runtime_version).
     Advance MIGRATION_HEAD from 0131 to 0132.
   - >-
     [ID tsk_p2_preauth_003_rem_02_work_item_03] Author scripts/db/verify_execution_records_determinism_constraints.sh
@@ -106,7 +108,7 @@ negative_tests:
     required: true
   - id: TSK-P2-PREAUTH-003-REM-02-N3
     description: >-
-      Duplicate INSERT of the same (input_hash, interpretation_version_id, runtime_version) tuple raises SQLSTATE 23505 and the verifier captures it.
+      Duplicate INSERT of the same (tenant_id, input_hash, interpretation_version_id, runtime_version) tuple within a single tenant raises SQLSTATE 23505 and the verifier captures it.
     required: true
   - id: TSK-P2-PREAUTH-003-REM-02-N4
     description: >-

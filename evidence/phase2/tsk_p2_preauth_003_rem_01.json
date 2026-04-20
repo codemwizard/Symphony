@@ -1,0 +1,31 @@
+{
+  "task_id": "TSK-P2-PREAUTH-003-REM-01",
+  "git_sha": "220a991c9c88469ca1f6117979e617fd99f62c50",
+  "timestamp_utc": "2026-04-20T16:40:49Z",
+  "status": "PASS",
+  "checks": [
+    {"name": "migration_file_exists", "result": "pass"},
+    {"name": "migration_head_equals_0131", "result": "pass"},
+    {"name": "determinism_columns_present", "result": "pass"},
+    {"name": "migration_0118_unchanged", "result": "pass"}
+  ],
+  "observed_paths": [
+    "schema/migrations/0131_execution_records_determinism_columns.sql",
+    "schema/migrations/MIGRATION_HEAD",
+    "schema/migrations/0118_create_execution_records.sql"
+  ],
+  "observed_hashes": {
+    "migration_0131_sha256": "5faa757a8e5d39befda569217e2bde6189c75084311379f8dadd403b9208361a",
+    "migration_head_sha256": "0476d10d5e11e3b43327ecf57eddfce13c9b2e319d35da83ce413c0fad7260a0",
+    "migration_0118_sha256": "9717621cdb20a902b9e434bd0edc0771c7248ec12a018baade13b7f425104122"
+  },
+  "command_outputs": {
+    "information_schema_columns": ["input_hash","output_hash","runtime_version","tenant_id"]
+  },
+  "execution_trace": {
+    "start_utc": "2026-04-20T16:40:49.762Z",
+    "end_utc": "2026-04-20T16:40:49.839Z"
+  },
+  "columns_added": ["input_hash", "output_hash", "runtime_version", "tenant_id"],
+  "migration_head_value": "0131"
+}

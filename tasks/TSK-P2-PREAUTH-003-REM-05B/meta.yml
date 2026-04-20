@@ -3,7 +3,7 @@ phase: '2'
 task_id: TSK-P2-PREAUTH-003-REM-05B
 title: "Wire scripts/db/verify_execution_truth_anchor.sh into scripts/dev/pre_ci.sh and scripts/audit/run_invariants_fast_checks.sh with fail-closed exit semantics"
 owner_role: SECURITY_GUARDIAN
-status: planned
+status: completed
 priority: CRITICAL
 risk_class: INTEGRITY
 blast_radius: CI_GATES

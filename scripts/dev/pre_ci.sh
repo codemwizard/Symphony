@@ -488,6 +488,14 @@ else
   exit 1
 fi
 
+echo "==> execution_records truth-anchor integrity (INV-EXEC-TRUTH-001) [REM-05B]"
+if [[ -x scripts/db/verify_execution_truth_anchor.sh ]]; then
+  scripts/db/verify_execution_truth_anchor.sh || exit 1
+else
+  echo "ERROR: scripts/db/verify_execution_truth_anchor.sh not found or not executable"
+  exit 1
+fi
+
 echo "==> Phase-0 levy rates structural hook verification (TSK-P0-LEVY-001)"
 if [[ -x scripts/db/verify_levy_rates_hook.sh ]]; then
   scripts/db/verify_levy_rates_hook.sh

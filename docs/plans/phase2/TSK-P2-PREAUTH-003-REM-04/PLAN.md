@@ -75,7 +75,7 @@ Per the operation manual and the invariants curator role (`AGENTS.md` §Invarian
     scripts/db/verify_execution_truth_anchor.sh inspects pg_attribute for NOT NULL
     on interpretation_version_id, input_hash, output_hash, runtime_version, tenant_id;
     pg_constraint for execution_records_determinism_unique UNIQUE
-    (input_hash, interpretation_version_id, runtime_version) and FK to
+    (tenant_id, input_hash, interpretation_version_id, runtime_version) and FK to
     interpretation_packs(interpretation_pack_id); pg_trigger for
     execution_records_append_only_trigger (BEFORE UPDATE OR DELETE) and
     execution_records_temporal_binding_trigger (BEFORE INSERT);
