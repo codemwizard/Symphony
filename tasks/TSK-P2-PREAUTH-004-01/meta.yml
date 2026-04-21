@@ -1,7 +1,7 @@
 schema_version: 1
 phase: '2'
 task_id: TSK-P2-PREAUTH-004-01
-title: "Create policy_decisions table"
+title: "Create policy_decisions table (migration 0134) as the Wave 4 cryptographic truth anchor row type: append-only, entity-bound, hash- and signature-committed"
 owner_role: DB_FOUNDATION
 status: planned
 priority: HIGH
@@ -9,99 +9,210 @@ risk_class: INTEGRITY
 blast_radius: DB_SCHEMA
 
 intent: >-
-  This task creates the policy_decisions table to track policy decisions with timestamps.
-  Without this table, the system cannot record policy decisions, creating risk of
-  non-auditable policy application.
+  Materialise the policy_decisions table exactly as the Wave 4 contract
+  (docs/plans/phase2/TSK-P2-PREAUTH-004-00/PLAN.md) pins it: 11 columns with
+  decision_hash = sha256(canonical_json(decision_payload)) as a 64-hex string,
+  signature = ed25519_sign(decision_hash, private_key) as a 128-hex string,
+  entity_type TEXT NOT NULL and entity_id UUID NOT NULL to block cross-entity
+  replay, FK to execution_records(execution_id), UNIQUE on
+  (execution_id, decision_type), indexes on (entity_type, entity_id) and
+  (declared_by), and an append-only trigger enforce_policy_decisions_append_only
+  that blocks UPDATE and DELETE on existing rows. Migration 0134 is the expand
+  phase for this row type; no subsequent contract phase is required because
+  every column lands NOT NULL in the same migration (no backfill) and the
+  append-only trigger is installed in the same migration. State_rules (004-02)
+  and the authority-transition binding invariant (004-03) are out of scope.
 
 anti_patterns:
-  - "Creating the table without required indexes"
-  - "Writing the migration without touching MIGRATION_HEAD"
-  - "Writing the verifier after the migration is applied"
+  - "Editing any applied migration (0001-0133) instead of authoring a new forward migration 0134"
+  - "Storing decision_hash as bytea or hashing at application write time without the CHECK (~ '^[0-9a-f]{64}$') regex that pins the column to canonical-JSON sha256 hex output"
+  - "Introducing runtime DDL from application code (AGENTS.md hard constraint)"
+  - "Omitting entity_type or entity_id, or making either nullable, which would reopen cross-entity replay"
+  - "Authoring the verifier after the migration is applied"
+  - "Scope creep into state_rules, invariant registration, Wave 5 state-machine wiring, or signature-authenticity verification"
 
 out_of_scope:
-  - "state_rules table creation (deferred to TSK-P2-PREAUTH-004-02)"
-  - "Data migration or backfill"
-  - "Application layer changes"
+  - "state_rules table creation (belongs to TSK-P2-PREAUTH-004-02)"
+  - "INV-AUTH-TRANSITION-BINDING-01 enforcement function, trigger, verifier, registration (belongs to TSK-P2-PREAUTH-004-03)"
+  - "Public-key resolution for declared_by and signature-authenticity verification (deferred to a later wave)"
+  - "Wave 5 state-machine rule-selection logic that consumes policy_decisions at runtime"
+  - "Application-layer adapters that canonicalise and hash decision_payload"
 
 stop_conditions:
-  - "If migration 0119 does not create policy_decisions table"
-  - "If required indexes are missing"
-  - "If MIGRATION_HEAD is not updated to 0119"
+  - "If migration 0134 lacks any of the 11 columns specified in docs/plans/phase2/TSK-P2-PREAUTH-004-00/PLAN.md (policy_decisions Schema)"
+  - "If decision_hash column lacks CHECK (decision_hash ~ '^[0-9a-f]{64}$')"
+  - "If signature column lacks CHECK (signature ~ '^[0-9a-f]{128}$')"
+  - "If entity_type or entity_id is omitted or nullable"
+  - "If UNIQUE (execution_id, decision_type) is missing"
+  - "If FK execution_id REFERENCES execution_records(execution_id) is missing"
+  - "If enforce_policy_decisions_append_only trigger is missing or allows UPDATE or DELETE of existing rows"
+  - "If enforce_policy_decisions_append_only function is not declared SECURITY DEFINER SET search_path = pg_catalog, public (mirrors 0133; required by AGENTS.md)"
+  - "If enforce_policy_decisions_append_only raises any SQLSTATE other than GF061 (e.g. 23514, which would collide with the CHECK violations on decision_hash and signature)"
+  - "If REVOKE ALL ON FUNCTION public.enforce_policy_decisions_append_only() FROM PUBLIC is omitted from migration 0134"
+  - "If schema/migrations/MIGRATION_HEAD is not advanced from 0133 to 0134"
+  - "If any ALTER TABLE statement targets a previously applied migration file"
+  - "If runtime DDL is introduced anywhere in src/ or packages/"
+  - "If verifier lacks a failure path (no || exit 1)"
+  - "If any of the six negative tests (N1-N6) listed in acceptance_criteria is omitted"
+  - "If N5 or N6 assertion does not check SQLSTATE = 'GF061' explicitly (mere failure is insufficient; CHECK violations also fail)"
 
 proof_guarantees:
-  - "Migration 0119 creates policy_decisions table"
-  - "Index on project_id is present"
-  - "Verifier script exits 0 and emits evidence"
+  - "information_schema.columns returns all 11 contracted columns for public.policy_decisions with the declared types and NOT NULL where specified"
+  - "information_schema.table_constraints returns the PRIMARY KEY on policy_decision_id, the UNIQUE (execution_id, decision_type), the FK to execution_records(execution_id), and the CHECK on decision_hash and signature regex"
+  - "pg_trigger returns enforce_policy_decisions_append_only on policy_decisions for UPDATE and DELETE"
+  - "pg_proc returns prosecdef=true and proconfig containing search_path=pg_catalog, public for public.enforce_policy_decisions_append_only (mirrors 0133 hardening)"
+  - "enforce_policy_decisions_append_only raises SQLSTATE GF061 (distinct from 23514 CHECK violations on the same table) with message prefix 'GF061: policy_decisions is append-only'"
+  - "schema/migrations/MIGRATION_HEAD equals exactly 0134 after application"
+  - "Migrations 0001-0133 are byte-identical to their pre-004-01 state (git diff shows no change)"
+  - "Negative-test harness exercises all six failure paths (N1-N6) in acceptance_criteria and each exits non-zero with the contracted SQLSTATE"
 
 proof_limitations:
-  - "Cannot verify that the table structure is optimal for all use cases"
-  - "Cannot verify that the table will perform well at scale"
+  - "Signature authenticity is not verified in this task. decision_hash regex proves format only; cryptographic canonicalisation and Ed25519 signature verification are deferred to 004-03"
+  - "Public-key resolution for declared_by is out of scope and will be declared as a named proof_limitation in 004-03's PLAN"
+  - "Column-level CHECK regex validates hex shape only; that the hex is the actual sha256 of the canonical payload is an application-layer invariant that 004-03 verifies on row insert via the authority-transition binding"
 
 depends_on:
   - TSK-P2-PREAUTH-004-00
+
 blocks:
   - TSK-P2-PREAUTH-004-02
+  - TSK-P2-PREAUTH-004-03
 
 touches:
-  - schema/migrations/0119_create_policy_decisions.sql
+  - schema/migrations/0134_policy_decisions.sql
   - schema/migrations/MIGRATION_HEAD
-  - scripts/db/verify_tsk_p2_preauth_004_01.sh
+  - scripts/db/verify_policy_decisions_schema.sh
+  - scripts/db/tests/test_policy_decisions_negative.sh
+  - evidence/phase2/tsk_p2_preauth_004_01.json
   - tasks/TSK-P2-PREAUTH-004-01/meta.yml
+  - docs/plans/phase2/TSK-P2-PREAUTH-004-01/PLAN.md
+  - docs/plans/phase2/TSK-P2-PREAUTH-004-01/EXEC_LOG.md
 
 invariants: []
 
 work:
   - >-
-    [ID tsk_p2_preauth_004_01_work_item_01] Write migration 0119 at schema/migrations/0119_create_policy_decisions.sql
-    creating policy_decisions table with columns: policy_decision_id UUID PRIMARY KEY, project_id UUID NOT NULL,
-    decision_type VARCHAR NOT NULL, decision_timestamp TIMESTAMPTZ NOT NULL, and index on project_id.
+    [ID tsk_p2_preauth_004_01_work_item_01] Author schema/migrations/0134_policy_decisions.sql
+    containing a single CREATE TABLE public.policy_decisions with the 11 columns, PRIMARY KEY on policy_decision_id,
+    UNIQUE (execution_id, decision_type), FK execution_id REFERENCES public.execution_records(execution_id),
+    CHECK (decision_hash ~ '^[0-9a-f]{64}$'), CHECK (signature ~ '^[0-9a-f]{128}$'),
+    CREATE INDEX on (entity_type, entity_id), CREATE INDEX on (declared_by).
+    The migration performs no other DDL and makes no change to migrations 0001-0133.
   - >-
-    [ID tsk_p2_preauth_004_01_work_item_02] Update MIGRATION_HEAD to 0119: echo 0119 > schema/migrations/MIGRATION_HEAD.
+    [ID tsk_p2_preauth_004_01_work_item_02] In the same migration 0134 file, install
+    the enforce_policy_decisions_append_only trigger that blocks UPDATE and DELETE
+    on existing rows. The trigger function MUST raise SQLSTATE 'GF061' (the next free
+    code in the Wave 3/4 GF-prefix sequence; MUST NOT be 23514, which would collide
+    with the CHECK violations on decision_hash and signature on the same table) with
+    the literal message 'GF061: policy_decisions is append-only, UPDATE/DELETE not allowed'.
+    The function MUST be declared SECURITY DEFINER SET search_path = pg_catalog, public
+    (mirrors 0133 hardening per AGENTS.md). The migration MUST follow the function
+    with REVOKE ALL ON FUNCTION public.enforce_policy_decisions_append_only() FROM PUBLIC.
+    Trigger attaches to public.policy_decisions BEFORE UPDATE OR DELETE FOR EACH ROW.
+    Canonical reference pattern: schema/migrations/0133_execution_records_triggers.sql
+    (GF056 on execution_records).
   - >-
-    [ID tsk_p2_preauth_004_01_work_item_03] Write verify_tsk_p2_preauth_004_01.sh that runs psql to verify
-    table exists and index is present.
+    [ID tsk_p2_preauth_004_01_work_item_03] Update schema/migrations/MIGRATION_HEAD
+    by writing the exact token 0134 (no trailing newline drift) so the migration-ordering gate treats 0134 as head.
   - >-
-    [ID tsk_p2_preauth_004_01_work_item_04] Run verify_tsk_p2_preauth_004_01.sh to confirm migration is successful.
+    [ID tsk_p2_preauth_004_01_work_item_04] Author scripts/db/verify_policy_decisions_schema.sh
+    that connects to DATABASE_URL, queries information_schema.columns, information_schema.table_constraints,
+    pg_trigger, and pg_proc, asserts the 11 columns with their types and NOT NULL posture, the PK + UNIQUE + FK + CHECK constraints,
+    the append-only trigger for UPDATE and DELETE, and the security posture of the append-only function
+    (pg_proc.prosecdef = true AND pg_proc.proconfig contains 'search_path=pg_catalog, public'),
+    and writes evidence/phase2/tsk_p2_preauth_004_01.json containing task_id, git_sha, timestamp_utc, status,
+    checks, observed_paths, observed_hashes, command_outputs, execution_trace, columns_present,
+    constraints_present, triggers_present, function_security_posture, migration_head_value.
+  - >-
+    [ID tsk_p2_preauth_004_01_work_item_05] Author scripts/db/tests/test_policy_decisions_negative.sh
+    that exercises the six contracted negative paths (N1 insert without execution_id, N2 insert without signature,
+    N3 insert with wrong-length decision_hash, N4 insert with non-existent execution_id, N5 UPDATE of an existing row,
+    N6 DELETE of an existing row). The harness exits 0 only if all six operations (four inserts, one update, one delete)
+    are rejected by the database with the contracted SQLSTATE. N5 and N6 MUST assert SQLSTATE = 'GF061' (not merely
+    that the mutation failed; 23514 CHECK violations on the same table would also fail).
 
 acceptance_criteria:
   - >-
-    [ID tsk_p2_preauth_004_01_work_item_01] Migration 0119 creates policy_decisions table.
+    [ID tsk_p2_preauth_004_01_work_item_01] The file schema/migrations/0134_policy_decisions.sql exists,
+    is a new file, and grep confirms it contains CREATE TABLE public.policy_decisions, the column names
+    policy_decision_id, execution_id, decision_type, authority_scope, declared_by, entity_type, entity_id,
+    decision_hash, signature, signed_at, created_at, and the CHECK regex tokens '^[0-9a-f]{64}$' and '^[0-9a-f]{128}$'.
   - >-
-    [ID tsk_p2_preauth_004_01_work_item_02] MIGRATION_HEAD contains 0119.
+    [ID tsk_p2_preauth_004_01_work_item_02] grep confirms schema/migrations/0134_policy_decisions.sql
+    contains the token enforce_policy_decisions_append_only, the phrase BEFORE UPDATE OR DELETE on public.policy_decisions,
+    the literal tokens ERRCODE = 'GF061', SECURITY DEFINER, and search_path = pg_catalog, public, and the statement
+    REVOKE ALL ON FUNCTION public.enforce_policy_decisions_append_only().
   - >-
-    [ID tsk_p2_preauth_004_01_work_item_03] verify_tsk_p2_preauth_004_01.sh exists and checks for table existence.
+    [ID tsk_p2_preauth_004_01_work_item_03] The file schema/migrations/MIGRATION_HEAD contains the exact token 0134
+    (equality check, not substring).
   - >-
-    [ID tsk_p2_preauth_004_01_work_item_04] verify_tsk_p2_preauth_004_01.sh exits 0.
+    [ID tsk_p2_preauth_004_01_work_item_04] bash scripts/db/verify_policy_decisions_schema.sh exits 0 against
+    a database that has 0134 applied, and writes evidence/phase2/tsk_p2_preauth_004_01.json with the required fields.
+  - >-
+    [ID tsk_p2_preauth_004_01_work_item_05] bash scripts/db/tests/test_policy_decisions_negative.sh exits 0
+    against a database that has 0134 applied, proving all six contracted negative paths are rejected.
 
 negative_tests:
   - id: TSK-P2-PREAUTH-004-01-N1
     description: >-
-      Verify that verify_tsk_p2_preauth_004_01.sh exits non-zero when policy_decisions table does not exist.
+      Insert a row into policy_decisions with execution_id NULL; the INSERT is rejected with SQLSTATE 23502
+      and no row is written. test_policy_decisions_negative.sh records this path and exits non-zero if the insert succeeds.
+    required: true
+  - id: TSK-P2-PREAUTH-004-01-N2
+    description: >-
+      Insert a row with signature NULL; the INSERT is rejected with SQLSTATE 23502. Harness fails if insert succeeds.
+    required: true
+  - id: TSK-P2-PREAUTH-004-01-N3
+    description: >-
+      Insert a row with decision_hash of length 63 or containing non-hex characters; the INSERT is rejected
+      with SQLSTATE 23514 (CHECK violation). Harness fails if insert succeeds.
+    required: true
+  - id: TSK-P2-PREAUTH-004-01-N4
+    description: >-
+      Insert a row whose execution_id does not exist in execution_records; the INSERT is rejected with SQLSTATE 23503
+      (FK violation). Harness fails if insert succeeds.
+    required: true
+  - id: TSK-P2-PREAUTH-004-01-N5
+    description: >-
+      UPDATE an existing policy_decisions row; the UPDATE is rejected by enforce_policy_decisions_append_only
+      with SQLSTATE = 'GF061' and message prefix 'GF061: policy_decisions is append-only'. Harness fails if the UPDATE
+      succeeds, reports zero rows affected without raising, or raises any SQLSTATE other than GF061 (e.g. 23514).
+    required: true
+  - id: TSK-P2-PREAUTH-004-01-N6
+    description: >-
+      DELETE an existing policy_decisions row; the DELETE is rejected by enforce_policy_decisions_append_only
+      with SQLSTATE = 'GF061' and message prefix 'GF061: policy_decisions is append-only'. Harness fails if the DELETE
+      succeeds, reports zero rows affected without raising, or raises any SQLSTATE other than GF061 (e.g. 23514).
+      This test is the contracted guard that BEFORE DELETE coverage of the append-only trigger is real, not assumed.
     required: true
 
 positive_tests:
   - id: TSK-P2-PREAUTH-004-01-P1
     description: >-
-      Verify that verify_tsk_p2_preauth_004_01.sh exits 0 when policy_decisions table exists with index.
-    required: false
+      Run scripts/db/verify_policy_decisions_schema.sh against a database where 0134 is applied; verifier exits 0
+      and emits evidence/phase2/tsk_p2_preauth_004_01.json with status=PASS and all observed_paths and observed_hashes
+      fields populated.
+    required: true
 
 verification:
   - >-
-    # [ID tsk_p2_preauth_004_01_work_item_01] [ID tsk_p2_preauth_004_01_work_item_02]
-    # [ID tsk_p2_preauth_004_01_work_item_03] [ID tsk_p2_preauth_004_01_work_item_04]
-    test -x scripts/db/verify_tsk_p2_preauth_004_01.sh && bash scripts/db/verify_tsk_p2_preauth_004_01.sh > evidence/phase2/tsk_p2_preauth_004_01.json || exit 1
+    # [ID tsk_p2_preauth_004_01_work_item_04] Run the schema verifier and emit evidence.
+    test -x scripts/db/verify_policy_decisions_schema.sh && bash scripts/db/verify_policy_decisions_schema.sh > evidence/phase2/tsk_p2_preauth_004_01.json || exit 1
   - >-
-    # [ID tsk_p2_preauth_004_01_work_item_02]
-    test $(cat schema/migrations/MIGRATION_HEAD) = "0119" || exit 1
+    # [ID tsk_p2_preauth_004_01_work_item_01] Confirm migration 0134 exists and contains the contracted columns and checks.
+    test -f schema/migrations/0134_policy_decisions.sql && grep -q 'CREATE TABLE public.policy_decisions' schema/migrations/0134_policy_decisions.sql && grep -q 'entity_type' schema/migrations/0134_policy_decisions.sql && grep -q 'entity_id' schema/migrations/0134_policy_decisions.sql && grep -q "'\^\[0-9a-f\]{64}\$'" schema/migrations/0134_policy_decisions.sql || exit 1
   - >-
-    # [ID tsk_p2_preauth_004_01_work_item_04]
-    test -f evidence/phase2/tsk_p2_preauth_004_01.json || exit 1
+    # [ID tsk_p2_preauth_004_01_work_item_02] Confirm the append-only trigger is installed with SECURITY DEFINER hardening and GF061 ERRCODE in the same migration file.
+    grep -q 'enforce_policy_decisions_append_only' schema/migrations/0134_policy_decisions.sql && grep -q 'BEFORE UPDATE OR DELETE' schema/migrations/0134_policy_decisions.sql && grep -q "ERRCODE = 'GF061'" schema/migrations/0134_policy_decisions.sql && grep -q 'SECURITY DEFINER' schema/migrations/0134_policy_decisions.sql && grep -q 'search_path = pg_catalog, public' schema/migrations/0134_policy_decisions.sql && grep -q 'REVOKE ALL ON FUNCTION public.enforce_policy_decisions_append_only' schema/migrations/0134_policy_decisions.sql || exit 1
   - >-
-    # [ID tsk_p2_preauth_004_01_work_item_04]
-    python3 scripts/audit/validate_evidence.py --task TSK-P2-PREAUTH-004-01 --evidence evidence/phase2/tsk_p2_preauth_004_01.json || exit 1
+    # [ID tsk_p2_preauth_004_01_work_item_03] Confirm MIGRATION_HEAD advanced to 0134.
+    test -f schema/migrations/MIGRATION_HEAD && grep -Fxq '0134' schema/migrations/MIGRATION_HEAD || exit 1
   - >-
-    # [ID tsk_p2_preauth_004_01_work_item_04]
-    RUN_PHASE1_GATES=1 bash scripts/dev/pre_ci.sh || exit 1
+    # [ID tsk_p2_preauth_004_01_work_item_05] Run the negative-test harness and confirm all six contracted rejections fire.
+    test -x scripts/db/tests/test_policy_decisions_negative.sh && bash scripts/db/tests/test_policy_decisions_negative.sh || exit 1
+  - >-
+    # [ID tsk_p2_preauth_004_01_work_item_04] Confirm the evidence JSON carries observed_hashes and has a recorded migration_head_value.
+    test -f evidence/phase2/tsk_p2_preauth_004_01.json && grep -q 'observed_hashes' evidence/phase2/tsk_p2_preauth_004_01.json && grep -q 'migration_head_value' evidence/phase2/tsk_p2_preauth_004_01.json || exit 1
 
 evidence:
   - path: evidence/phase2/tsk_p2_preauth_004_01.json
@@ -111,26 +222,46 @@ evidence:
       - timestamp_utc
       - status
       - checks
-      - table_exists
-      - index_present
-      - migration_head
+      - observed_paths
+      - observed_hashes
+      - command_outputs
+      - execution_trace
+      - columns_present
+      - constraints_present
+      - triggers_present
+      - function_security_posture
+      - migration_head_value
 
 failure_modes:
-  - "Migration does not create table => CRITICAL_FAIL"
-  - "Index missing => CRITICAL_FAIL"
-  - "MIGRATION_HEAD not updated => FAIL"
-  - "Evidence file missing => FAIL"
+  - "Any ALTER statement targets an applied migration (0001-0133) => CRITICAL_FAIL"
+  - "Migration 0134 applied but MIGRATION_HEAD still reads 0133 => FAIL"
+  - "entity_type or entity_id missing or nullable => CRITICAL_FAIL (reopens cross-entity replay)"
+  - "decision_hash or signature CHECK regex absent or wrong => FAIL"
+  - "enforce_policy_decisions_append_only missing or does not cover DELETE => CRITICAL_FAIL (ledger mutability)"
+  - "enforce_policy_decisions_append_only not SECURITY DEFINER with search_path = pg_catalog, public => CRITICAL_FAIL (AGENTS.md hardening; deviation from 0133 pattern)"
+  - "enforce_policy_decisions_append_only raises SQLSTATE other than GF061 (e.g. 23514) => CRITICAL_FAIL (collides with CHECK violations on same table; negative tests cannot differentiate N3 from N5/N6)"
+  - "REVOKE ALL ON FUNCTION public.enforce_policy_decisions_append_only() FROM PUBLIC omitted => FAIL (revoke-first posture)"
+  - "Runtime DDL introduced in src/ or packages/ => CRITICAL_FAIL"
+  - "Evidence JSON missing observed_hashes, execution_trace, or function_security_posture => FAIL"
+  - "Any of the six negative tests (N1-N6) is omitted from the harness, or N5/N6 do not assert SQLSTATE = 'GF061' => FAIL_REVIEW"
 
 must_read:
   - docs/operations/AI_AGENT_OPERATION_MANUAL.md
-  - docs/operations/TASK_CREATION_PROCESS.md
-  - docs/plans/phase2/ATOMIC_TASK_BREAKDOWN_PLAN.md
+  - docs/plans/phase2/TSK-P2-PREAUTH-004-00/PLAN.md
+  - docs/invariants/INVARIANTS_QUICK.md
+  - docs/invariants/INVARIANTS_IMPLEMENTED.md
+  - AGENTS.md
 
 implementation_plan: docs/plans/phase2/TSK-P2-PREAUTH-004-01/PLAN.md
 implementation_log: docs/plans/phase2/TSK-P2-PREAUTH-004-01/EXEC_LOG.md
 
 notes: >-
-  This task blocks TSK-P2-PREAUTH-004-02. Phase Key: PRE-PHASE2. Phase Name: Pre-Phase 2 Implementation.
+  SINGLE_TABLE scope by contract. Migration 0134 expands the Wave 4 schema by
+  exactly one table; no contract phase is required because no backfill is
+  needed (the table is empty at create time) and the append-only trigger ships
+  in the same migration so ledger semantics exist from row zero. The Wave 4
+  cryptographic truth anchor is the combination of this task's append-only
+  row type and 004-03's binding invariant; neither is sufficient alone.
 
 client: cursor
 assigned_agent: db_foundation

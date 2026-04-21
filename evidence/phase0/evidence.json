@@ -3,11 +3,11 @@
   "timestamp_utc": "1970-01-01T00:00:00Z",
   "git_sha": "0000000000000000000000000000000000000000",
   "schema_fingerprint": "06545fe3f538515080117719d8d8bd0acb0136101bc7d7d61a37f052481dc898",
-  "migrations_fingerprint": "9a9802f47c632e2d7142b6e7dbf2d8e943c6c1c34fe901e50e2f9ceee396c656",
+  "migrations_fingerprint": "0f363a85c05882f97917cf24c14fdf525e82b45907cd91e01e57bb8edfaca7ef",
   "status": "PASS",
   "producer": "generate_evidence.sh",
   "inputs": {
-    "migrations_hash_file": "/home/mwiza/workspaces/Symphony-Demo/Symphony/evidence/phase0/schema_hash.txt",
+    "migrations_hash_file": "/home/ubuntu/Symphony/evidence/phase0/schema_hash.txt",
     "migrations_dir": "schema/migrations"
   }
 }
