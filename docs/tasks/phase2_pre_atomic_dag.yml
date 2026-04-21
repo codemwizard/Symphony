@@ -220,6 +220,7 @@ nodes:
   stage: 2-authority-binding
   title: Create state_rules table
   depends_on:
+  - TSK-P2-PREAUTH-004-00
   - TSK-P2-PREAUTH-004-01
   kind: task
 - id: TSK-P2-PREAUTH-004-03
