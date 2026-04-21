@@ -6,7 +6,7 @@
   "status": "PASS",
   "errors": [],
   "warnings": [
-    "runner_missing:/home/ubuntu/Symphony/scripts/audit/run_governance_fast_checks.sh"
+    "runner_missing:/home/ubuntu/repos/Symphony/scripts/audit/run_governance_fast_checks.sh"
   ],
   "gate_count": 54
 }
