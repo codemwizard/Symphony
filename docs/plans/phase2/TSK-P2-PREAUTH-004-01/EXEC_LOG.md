@@ -4,7 +4,7 @@ Task: TSK-P2-PREAUTH-004-01
 Status: planned
 Plan: docs/plans/phase2/TSK-P2-PREAUTH-004-01/PLAN.md
 
-failure_signature: PHASE2.PREAUTH.POLICY_DECISIONS_SCHEMA.CONTRACT_MISSING
+failure_signature: PHASE2.PREAUTH.POLICY_DECISIONS.SCHEMA_MISSING
 origin_task_id: TSK-P2-PREAUTH-004-01
 repro_command: python3 scripts/audit/verify_plan_semantic_alignment.py --plan docs/plans/phase2/TSK-P2-PREAUTH-004-01/PLAN.md --meta tasks/TSK-P2-PREAUTH-004-01/meta.yml
 verification_commands_run: python3 scripts/audit/verify_plan_semantic_alignment.py --plan docs/plans/phase2/TSK-P2-PREAUTH-004-01/PLAN.md --meta tasks/TSK-P2-PREAUTH-004-01/meta.yml

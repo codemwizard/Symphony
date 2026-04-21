@@ -150,7 +150,7 @@ acceptance_criteria:
     a database that has 0134 applied, and writes evidence/phase2/tsk_p2_preauth_004_01.json with the required fields.
   - >-
     [ID tsk_p2_preauth_004_01_work_item_05] bash scripts/db/tests/test_policy_decisions_negative.sh exits 0
-    against a database that has 0134 applied, proving all five contracted negative paths are rejected.
+    against a database that has 0134 applied, proving all six contracted negative paths are rejected.
 
 negative_tests:
   - id: TSK-P2-PREAUTH-004-01-N1
@@ -208,7 +208,7 @@ verification:
     # [ID tsk_p2_preauth_004_01_work_item_03] Confirm MIGRATION_HEAD advanced to 0134.
     test -f schema/migrations/MIGRATION_HEAD && grep -Fxq '0134' schema/migrations/MIGRATION_HEAD || exit 1
   - >-
-    # [ID tsk_p2_preauth_004_01_work_item_05] Run the negative-test harness and confirm all five contracted rejections fire.
+    # [ID tsk_p2_preauth_004_01_work_item_05] Run the negative-test harness and confirm all six contracted rejections fire.
     test -x scripts/db/tests/test_policy_decisions_negative.sh && bash scripts/db/tests/test_policy_decisions_negative.sh || exit 1
   - >-
     # [ID tsk_p2_preauth_004_01_work_item_04] Confirm the evidence JSON carries observed_hashes and has a recorded migration_head_value.

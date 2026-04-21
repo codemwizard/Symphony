@@ -52,7 +52,7 @@ The three audit fixes from Wave-4-for-Devin.md land in this task as follows:
 | `schema/migrations/0134_policy_decisions.sql` | CREATE | Materialise the table, constraints, indexes, and append-only trigger. |
 | `schema/migrations/MIGRATION_HEAD` | MODIFY | Advance head from `0133` to `0134`. |
 | `scripts/db/verify_policy_decisions_schema.sh` | CREATE | DB-shape verifier that proves the 11 columns, the constraints, the indexes, and the trigger are present; emits evidence JSON. |
-| `scripts/db/tests/test_policy_decisions_negative.sh` | CREATE | Negative-test harness that proves each of the five contracted rejection paths fires. |
+| `scripts/db/tests/test_policy_decisions_negative.sh` | CREATE | Negative-test harness that proves each of the six contracted rejection paths fires. |
 | `evidence/phase2/tsk_p2_preauth_004_01.json` | CREATE | Emitted by the verifier; not hand-authored. |
 | `tasks/TSK-P2-PREAUTH-004-01/meta.yml` | MODIFY | Populate full meta per Task Creation Process §2 Step 4 to match this PLAN. |
 | `docs/plans/phase2/TSK-P2-PREAUTH-004-01/PLAN.md` | CREATE/REWRITE | This document. |
