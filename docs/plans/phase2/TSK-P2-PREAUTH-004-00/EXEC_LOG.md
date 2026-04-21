@@ -27,7 +27,7 @@ final_status: COMPLETED
 - Cryptographic contract pinned verbatim so that 004-01's schema verifier and 004-03's invariant verifier can grep for `sha256(canonical_json` and `ed25519` as literal invariants of the Wave 4 contract.
 - Public-key resolution for signature verification is declared as a proof limitation, not a silent bypass.
 
-## final_summary
+## final summary
 -- Wave 4 authority-binding contract documented with cryptographic requirements (sha256 canonical JSON, Ed25519 signatures), entity context binding (entity_type, entity_id), and rule priority total order.
 -- Contract serves as canonical reference for downstream tasks 004-01 (policy_decisions DDL), 004-02 (state_rules DDL), and 004-03 (invariant enforcement).
 -- verify_plan_semantic_alignment.py passed with proof graph integrity and verifier integrity checks.

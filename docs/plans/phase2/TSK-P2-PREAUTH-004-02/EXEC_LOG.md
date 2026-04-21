@@ -25,7 +25,7 @@ final_status: COMPLETED
 
 Task scaffolding completed. Migration 0135 creates state_rules table with rule_priority for deterministic tiebreaking as per Wave 4 contract.
 
-## final_summary
+## final summary
 -- state_rules table created via migration 0135 with rule_priority INT NOT NULL DEFAULT 0 for total order and deterministic tiebreaking.
 -- UNIQUE constraint on (rule_name, rule_type) prevents duplicate rules.
 -- Schema verification script verify_state_rules_schema.sh checks columns, constraints, index, and MIGRATION_HEAD.

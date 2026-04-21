@@ -26,7 +26,7 @@ final_status: COMPLETED
 | 2026-04-21T00:00:00Z | verify_authority_transition_binding.sh authored | Verifier script with V1, V2, V3 scenarios created |
 | 2026-04-21T00:00:00Z | Task status updated to completed | All implementation artifacts created |
 
-## final_summary
+## final summary
 -- INV-AUTH-TRANSITION-BINDING-01 invariant installed via migration 0136 with enforce_authority_transition_binding function.
 -- Function enforces FK+equality on execution_id, existence check on execution_records, and policy_decisions row resolution.
 -- SECURITY DEFINER hardening with SET search_path = pg_catalog, public applied per AGENTS.md.
