@@ -1,0 +1,106 @@
+schema_version: 1
+phase: '2'
+task_id: REM-2026-04-21_entity-binding-structural-enforcement
+title: "Create Wave 5 casefile for structural entity binding to upgrade cryptographic-only enforcement to structural enforcement before Wave 5 ships"
+owner_role: ARCHITECT
+status: planned
+priority: HIGH
+risk_class: ARCHITECTURE
+blast_radius: DOCS
+
+intent: >
+  Create a remediation casefile to upgrade cryptographic-only entity binding to structural enforcement before Wave 5 ships.
+  This casefile documents the architectural risk in Wave 4's policy_decisions table and defines candidate
+  approaches for structural enforcement to be implemented in Wave 5. The casefile does not implement
+  the structural binding itself, only documents the risk and candidate approaches.
+
+depends_on:
+  - TSK-P2-PREAUTH-004-01
+
+blocks:
+  - TSK-P2-PREAUTH-005-00
+
+touches:
+  - docs/plans/phase2/REM-2026-04-21_entity-binding-structural-enforcement/PLAN.md
+  - tasks/REM-2026-04-21_entity-binding-structural-enforcement/meta.yml
+  - docs/plans/phase2/REM-2026-04-21_entity-binding-structural-enforcement/EXEC_LOG.md
+  - docs/tasks/PHASE2_TASKS.md
+
+invariants: []
+
+out_of_scope:
+  - Implementing the structural entity binding itself (this task only creates the casefile)
+  - Modifying execution_records schema
+  - Modifying policy_decisions schema
+  - Choosing which approach to implement (that decision is for Wave 5)
+
+stop_conditions:
+  - Casefile PLAN.md created with required sections
+  - Meta.yml populated with all required fields
+  - Execution log created
+  - Task registered in PHASE2_TASKS.md
+  - verify_plan_semantic_alignment.py passes
+
+proof_guarantees:
+  - Casefile exists at specified path
+  - Casefile contains two candidate approaches (a) and (b)
+  - Casefile includes Wave 5 timing rationale
+  - Meta.yml passes schema validation
+  - Meta.yml passes pack readiness validation
+
+proof_limitations:
+  - Does not verify that the chosen approach will actually work
+  - Does not verify that Wave 5 will implement the casefile
+  - Does not prevent the casefile from being ignored in Wave 5
+
+work:
+  - '[ID rem_entity_binding_01] Create casefile PLAN.md at docs/plans/phase2/REM-2026-04-21_entity-binding-structural-enforcement/PLAN.md with required sections including mission, constraints, verification commands, approval references, evidence paths, out_of_scope, stop_conditions, proof_guarantees, proof_limitations'
+  - '[ID rem_entity_binding_02] Populate meta.yml with all required fields per TASK_CREATION_PROCESS.md Step 4, including anti-drift fields (out_of_scope, stop_conditions, proof_guarantees, proof_limitations), ID-tagged work items, acceptance criteria, verification commands, evidence paths, failure modes'
+  - '[ID rem_entity_binding_03] Create execution log at docs/plans/phase2/REM-2026-04-21_entity-binding-structural-enforcement/EXEC_LOG.md with empty execution history table'
+  - '[ID rem_entity_binding_04] Register task in docs/tasks/PHASE2_TASKS.md with required fields (task id, title, owner, depends on, touches, invariants, work, acceptance criteria, verification, evidence, failure modes)'
+  - '[ID rem_entity_binding_05] Run verify_task_meta_schema.sh and ensure it passes with no errors'
+  - '[ID rem_entity_binding_06] Run verify_task_pack_readiness.sh and ensure it passes with status=ready'
+
+acceptance_criteria:
+  - '[ID rem_entity_binding_01] Casefile PLAN.md exists at docs/plans/phase2/REM-2026-04-21_entity-binding-structural-enforcement/PLAN.md with required sections: Objective, Architectural Context, Candidate Approaches (a) and (b), Risk rationale for Wave 5 timing'
+  - '[ID rem_entity_binding_02] Meta.yml at tasks/REM-2026-04-21_entity-binding-structural-enforcement/meta.yml contains all required fields per TASK_CREATION_PROCESS.md Step 4 including anti-drift fields: out_of_scope (4 items), stop_conditions (5 items), proof_guarantees (5 items), proof_limitations (3 items)'
+  - '[ID rem_entity_binding_03] Execution log exists at docs/plans/phase2/REM-2026-04-21_entity-binding-structural-enforcement/EXEC_LOG.md with empty execution history table structure'
+  - '[ID rem_entity_binding_04] Task is registered in docs/tasks/PHASE2_TASKS.md under Wave 4 section with plan and log paths'
+  - '[ID rem_entity_binding_05] verify_task_meta_schema.sh passes with no errors, confirming meta.yml schema is valid and all required fields are present'
+  - '[ID rem_entity_binding_06] verify_task_pack_readiness.sh passes with status=ready, confirming task pack is ready for implementation'
+
+verification:
+  - '# [ID rem_entity_binding_01] test -f docs/plans/phase2/REM-2026-04-21_entity-binding-structural-enforcement/PLAN.md && grep -q "## Objective" docs/plans/phase2/REM-2026-04-21_entity-binding-structural-enforcement/PLAN.md && grep -q "## Architectural Context" docs/plans/phase2/REM-2026-04-21_entity-binding-structural-enforcement/PLAN.md && grep -q "## Candidate Approaches" docs/plans/phase2/REM-2026-04-21_entity-binding-structural-enforcement/PLAN.md && grep -q "Approach (a)" docs/plans/phase2/REM-2026-04-21_entity-binding-structural-enforcement/PLAN.md && grep -q "Approach (b)" docs/plans/phase2/REM-2026-04-21_entity-binding-structural-enforcement/PLAN.md || exit 1'
+  - '# [ID rem_entity_binding_02] test -f tasks/REM-2026-04-21_entity-binding-structural-enforcement/meta.yml && grep -q "out_of_scope" tasks/REM-2026-04-21_entity-binding-structural-enforcement/meta.yml && grep -q "stop_conditions" tasks/REM-2026-04-21_entity-binding-structural-enforcement/meta.yml && grep -q "proof_guarantees" tasks/REM-2026-04-21_entity-binding-structural-enforcement/meta.yml && grep -q "proof_limitations" tasks/REM-2026-04-21_entity-binding-structural-enforcement/meta.yml && grep -q "schema_version" tasks/REM-2026-04-21_entity-binding-structural-enforcement/meta.yml && grep -q "phase" tasks/REM-2026-04-21_entity-binding-structural-enforcement/meta.yml && grep -q "task_id" tasks/REM-2026-04-21_entity-binding-structural-enforcement/meta.yml || exit 1'
+  - '# [ID rem_entity_binding_03] test -f docs/plans/phase2/REM-2026-04-21_entity-binding-structural-enforcement/EXEC_LOG.md && grep -q "## Execution History" docs/plans/phase2/REM-2026-04-21_entity-binding-structural-enforcement/EXEC_LOG.md || exit 1'
+  - '# [ID rem_entity_binding_04] grep -q "REM-2026-04-21_entity-binding-structural-enforcement" docs/tasks/PHASE2_TASKS.md && grep -q "docs/plans/phase2/REM-2026-04-21_entity-binding-structural-enforcement/PLAN.md" docs/tasks/PHASE2_TASKS.md || exit 1'
+  - '# [ID rem_entity_binding_05] PRE_CI_CONTEXT=1 bash scripts/audit/verify_task_meta_schema.sh --mode strict --allow-legacy || exit 1'
+  - '# [ID rem_entity_binding_06] bash scripts/audit/verify_task_pack_readiness.sh --task REM-2026-04-21_entity-binding-structural-enforcement || exit 1'
+
+evidence: []
+
+failure_modes:
+  - verify_plan_semantic_alignment.py fails => CRITICAL_FAIL
+  - verify_task_meta_schema.sh fails => CRITICAL_FAIL
+  - verify_task_pack_readiness.sh fails => CRITICAL_FAIL
+  - Casefile missing required sections => FAIL
+  - Anti-drift fields missing => FAIL
+  - Task not registered in index => FAIL
+
+must_read:
+  - docs/operations/AI_AGENT_OPERATION_MANUAL.md
+  - docs/operations/TASK_CREATION_PROCESS.md
+  - docs/operations/AGENT_PROMPT_ROUTER.md
+
+implementation_plan: docs/plans/phase2/REM-2026-04-21_entity-binding-structural-enforcement/PLAN.md
+implementation_log: docs/plans/phase2/REM-2026-04-21_entity-binding-structural-enforcement/EXEC_LOG.md
+
+notes: >
+  This task creates a Wave 5 casefile for structural entity binding. Wave 5's state machine will call
+  enforce_authority_transition_binding(uuid, uuid). For this call to be structurally safe (not cryptographic-only),
+  execution_records must carry entity_type/entity_id columns by Wave 5. Deferring to Wave 6 extends the
+  accepted-risk window by an entire wave with no architectural justification.
+
+client: cursor
+assigned_agent: architect
+model: <UNASSIGNED>

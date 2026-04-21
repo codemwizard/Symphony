@@ -951,12 +951,31 @@
   severity: P1
   title: "Regulatory timing compliance gate is deterministic and evidence-backed per rail policy"
   owners: ["team-platform", "team-invariants"]
-  sla_days: 30
-  enforcement: "scripts/perf/verify_perf_005.sh"
-  verification: "scripts/perf/verify_perf_005.sh --evidence evidence/phase1/perf_005__regulatory_timing_compliance_gate.json; evidence/phase1/perf_005__regulatory_timing_compliance_gate.json"
-  notes: >
-    Computes settlement-window compliance percentage from deterministic Phase-1 perf smoke inputs and
-    fails closed when rails exceed policy windows.
+  verification: "scripts/audit/verify_perf_004_regulatory_timing_compliance_gate.sh; evidence/phase1/perf_004__regulatory_timing_compliance_gate.json"
+
+- id: INV-138
+  aliases: ["I-AUTH-TRANSITION-BINDING-01"]
+  status: implemented
+  severity: P1
+  title: "Authority transition binding enforces policy decision reference and execution ID equality"
+  wave: 4
+  statement: >-
+    Any authority-bearing state transition applied via execution_records
+    MUST reference, in the transition payload, exactly one
+    policy_decisions.policy_decision_id whose entity_type, entity_id,
+    and execution_id match the transition's entity and execution.
+    Transitions lacking this reference, or referencing a decision bound
+    to a different entity or execution, are rejected.
+  owners: ["team-platform", "team-invariants"]
+  enforcement:
+    function: public.enforce_authority_transition_binding(uuid, uuid)
+    migration: schema/migrations/0136_enforce_authority_transition_binding.sql
+  verification: "scripts/db/verify_authority_transition_binding.sh; evidence/phase2/tsk_p2_preauth_004_03.json"
+  evidence:
+    path: evidence/phase2/tsk_p2_preauth_004_03.json
+  proof_limitations:
+    - "Signature authenticity is not verified (public-key resolution deferred to a later wave)"
+    - "Cross-entity-replay protection at decision INSERT time is deferred; execution_records does not yet carry entity_type/entity_id columns, so insert-time coherence between policy_decisions.entity_* and execution_records.entity_* cannot be enforced. Transition-apply time is guarded by FK+equality on execution_id, column-vs-payload match, hash recompute, and UNIQUE (execution_id, decision_type)."
 
 - id: INV-125
   aliases: ["I-PERF-FINALITY-SEAM-STUB-01"]

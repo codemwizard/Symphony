@@ -3,7 +3,7 @@ phase: '2'
 task_id: TSK-P2-PREAUTH-004-02
 title: "Create state_rules table (migration 0135) with rule_priority INT NOT NULL DEFAULT 0 and a deterministic tiebreaker so that rule selection is a total order under replay"
 owner_role: DB_FOUNDATION
-status: planned
+status: completed
 priority: HIGH
 risk_class: INTEGRITY
 blast_radius: DB_SCHEMA

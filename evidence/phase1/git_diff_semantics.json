@@ -7,7 +7,7 @@
   "diff_mode": "range",
   "base_ref": "refs/remotes/origin/main",
   "head_ref": "HEAD",
-  "merge_base": "87ba14f06791b6971eb973812afd0a0078cfc75c",
+  "merge_base": "ec9c0359153674f33a8166753b91021052c1e0ad",
   "critical_scripts": [
     "scripts/audit/enforce_change_rule.sh",
     "scripts/audit/verify_baseline_change_governance.sh",

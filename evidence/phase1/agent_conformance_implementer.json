@@ -61,8 +61,25 @@
       "8. Cross-References (Machine-Readable)"
     ]
   },
-  "regulated_surface_changes_detected": false,
-  "regulated_surface_changed_paths": [],
+  "regulated_surface_changes_detected": true,
+  "regulated_surface_changed_paths": [
+    "evidence/phase0/evidence.json",
+    "evidence/phase0/remediation_trace.json",
+    "evidence/phase0/schema_hash.txt",
+    "evidence/phase0/task_plans_present.json",
+    "evidence/phase0/tsk_clean_001__task_metadata_truth_pass.json",
+    "evidence/phase0/yaml_conventions_lint.json",
+    "evidence/phase1/agent_conformance_architect.json",
+    "evidence/phase1/agent_conformance_implementer.json",
+    "evidence/phase1/agent_conformance_policy_guardian.json",
+    "evidence/phase1/dotnet_lint_quality.json",
+    "evidence/phase1/git_diff_semantics.json",
+    "evidence/phase1/tsk_p1_073_remediation_artifact_freshness.json",
+    "evidence/security_remediation/r_026_run_task_strict_enforcement.json",
+    "schema/migrations/0135_state_rules.sql",
+    "schema/migrations/0136_enforce_authority_transition_binding.sql",
+    "schema/migrations/MIGRATION_HEAD"
+  ],
   "regulated_surface_rule_source": "docs/operations/REGULATED_SURFACE_PATHS.yml",
   "regulated_surface_patterns": [
     "schema/migrations/**",
@@ -79,7 +96,7 @@
     "mode": "range",
     "base_ref": "refs/remotes/origin/main",
     "head_ref": "HEAD",
-    "merge_base": "87ba14f06791b6971eb973812afd0a0078cfc75c"
+    "merge_base": "ec9c0359153674f33a8166753b91021052c1e0ad"
   },
   "approval_required": false,
   "approval_metadata_present": true,

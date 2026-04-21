@@ -3,7 +3,7 @@ phase: '2'
 task_id: TSK-P2-PREAUTH-004-03
 title: "Register and enforce INV-AUTH-TRANSITION-BINDING-01: bind every authority-bearing execution_records transition to exactly one policy_decisions row whose entity and execution match"
 owner_role: INVARIANTS_CURATOR
-status: planned
+status: completed
 priority: HIGH
 risk_class: GOVERNANCE
 blast_radius: SINGLE_INVARIANT
@@ -37,7 +37,7 @@ intent: >-
 
 anti_patterns:
   - "Editing applied migrations (0001-0135) instead of authoring a new forward migration 0136"
-  - "Implementing the enforcement function without SECURITY DEFINER + SET search_path = pg_catalog, public hardening (AGENTS.md hard constraint)"
+  - "Implementing the enforcement function without SECURITY DEFINER + SET search_path = pg_catalog, public hardening (AGENTS.md hard constraint)"   
   - "Marking INV-AUTH-TRANSITION-BINDING-01 status=implemented without emitted evidence from verify_authority_transition_binding.sh"
   - "Silently skipping decision_hash recompute in the verifier (failing open)"
   - "Declaring any DDL in migration 0136 beyond the enforce_authority_transition_binding function itself (no helper view, no helper function — payload is row-derived, so an in-function column-vs-payload check would be tautological)"
