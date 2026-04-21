@@ -7,7 +7,7 @@
   "diff_mode": "range",
   "base_ref": "refs/remotes/origin/main",
   "head_ref": "HEAD",
-  "merge_base": "955bb8df54740ba1badf35f09f356f67b228a67f",
+  "merge_base": "ec9c0359153674f33a8166753b91021052c1e0ad",
   "triggered_change_present": true,
   "triggered_prefixes": [
     "docs",
@@ -15,9 +15,9 @@
     "scripts"
   ],
   "satisfying_docs": [
-    "docs/plans/phase1/REM-2026-04-19_pre_ci-phase1_db_verifiers/PLAN.md",
-    "docs/plans/phase1/REM-2026-04-19_pre_ci-phase1_db_verifiers/EXEC_LOG.md"
+    "docs/plans/phase2/REM-2026-04-21_entity-binding-structural-enforcement/PLAN.md",
+    "docs/plans/phase2/REM-2026-04-21_entity-binding-structural-enforcement/EXEC_LOG.md"
   ],
-  "satisfying_doc_parent": "docs/plans/phase1/REM-2026-04-19_pre_ci-phase1_db_verifiers",
+  "satisfying_doc_parent": "docs/plans/phase2/REM-2026-04-21_entity-binding-structural-enforcement",
   "errors": []
 }

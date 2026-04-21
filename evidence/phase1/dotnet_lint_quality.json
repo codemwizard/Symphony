@@ -2,13 +2,13 @@
   "check_id": "SEC-G18",
   "timestamp_utc": "1970-01-01T00:00:00Z",
   "git_sha": "0000000000000000000000000000000000000000",
-  "schema_fingerprint": "0000000000000000000000000000000000000000000000000000000000000000",
-  "status": "PASS",
-  "note": "skipped_via_env_flag",
-  "targets": [],
-  "targets_count": 0,
-  "processed_targets_count": 0,
-  "timeout_seconds": 0,
+  "schema_fingerprint": "06545fe3f538515080117719d8d8bd0acb0136101bc7d7d61a37f052481dc898",
+  "status": "FAIL",
+  "note": "dotnet_format_failed",
+  "targets": ["services/executor-worker/dotnet/src/ExecutorWorker/ExecutorWorker.csproj", "services/ledger-api/dotnet/src/LedgerApi.DemoHost/LedgerApi.DemoHost.csproj", "services/ledger-api/dotnet/src/LedgerApi/LedgerApi.csproj", "services/ledger-api/dotnet/tests/LedgerApi.Tests/LedgerApi.Tests.csproj"],
+  "targets_count": 4,
+  "processed_targets_count": 2,
+  "timeout_seconds": 60,
   "format_env_blocked": false,
-  "command_summary": {}
+  "command_summary": {"build_invocations": 1, "build_succeeded_markers": 1, "error_lines": 1, "format_invocations": 2, "restore_invocations": 2, "targets_seen": 2, "time_elapsed_lines": 1, "warning_lines": 1}
 }
