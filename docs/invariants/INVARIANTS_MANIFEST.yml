@@ -972,13 +972,6 @@
     - "Signature authenticity is not verified (public-key resolution deferred to a later wave)"
     - "Cross-entity-replay protection at decision INSERT time is deferred; execution_records does not yet carry entity_type/entity_id columns, so insert-time coherence between policy_decisions.entity_* and execution_records.entity_* cannot be enforced. Transition-apply time is guarded by FK+equality on execution_id, column-vs-payload match, hash recompute, and UNIQUE (execution_id, decision_type)."
   status: planned
-  owners: ["team-platform", "team-invariants"]
-  sla_days: 30
-  enforcement: "scripts/perf/verify_perf_005.sh"
-  verification: "scripts/perf/verify_perf_005.sh --evidence evidence/phase1/perf_005__regulatory_timing_compliance_gate.json; evidence/phase1/perf_005__regulatory_timing_compliance_gate.json"
-  notes: >
-    Computes settlement-window compliance percentage from deterministic Phase-1 perf smoke inputs and
-    fails closed when rails exceed policy windows.
 
 - id: INV-125
   aliases: ["I-PERF-FINALITY-SEAM-STUB-01"]
