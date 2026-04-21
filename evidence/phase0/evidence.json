@@ -7,7 +7,7 @@
   "status": "PASS",
   "producer": "generate_evidence.sh",
   "inputs": {
-    "migrations_hash_file": "/home/mwiza/workspaces/Symphony-Demo/Symphony/evidence/phase0/schema_hash.txt",
+    "migrations_hash_file": "/home/ubuntu/Symphony/evidence/phase0/schema_hash.txt",
     "migrations_dir": "schema/migrations"
   }
 }

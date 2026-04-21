@@ -16,7 +16,7 @@
   ],
   "agent_role_rows": [
     {
-      "path": "/home/mwiza/workspaces/Symphony-Demo/Symphony/AGENTS.md",
+      "path": "/home/ubuntu/Symphony/AGENTS.md",
       "role": "Supervisor",
       "valid": true
     },

@@ -1,10 +1,10 @@
-# Execution Log for TSK-P2-PREAUTH-004-02
+# TSK-P2-PREAUTH-004-02 — EXEC_LOG
 
 Task: TSK-P2-PREAUTH-004-02
 Status: completed
 Plan: docs/plans/phase2/TSK-P2-PREAUTH-004-02/PLAN.md
 
-failure_signature: PHASE2.PREAUTH.TSK-P2-PREAUTH-004-02.FK_FAIL
+failure_signature: PHASE2.PREAUTH.STATE_RULES.SCHEMA_MISSING
 origin_task_id: TSK-P2-PREAUTH-004-02
 repro_command: bash scripts/db/verify_state_rules_schema.sh
 verification_commands_run: bash scripts/db/verify_state_rules_schema.sh
