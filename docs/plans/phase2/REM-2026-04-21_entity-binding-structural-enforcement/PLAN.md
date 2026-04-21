@@ -1,6 +1,10 @@
 ---
 failure_signature: P2.REM.entity-binding-structural-enforcement.architectural-risk
 canonical_reference: docs/operations/AI_AGENT_OPERATION_MANUAL.md
+origin_task_id: REM-2026-04-21_entity-binding-structural-enforcement
+repro_command: bash scripts/audit/verify_remediation_trace.sh
+verification_commands_run: bash scripts/audit/verify_remediation_trace.sh
+final_status: PLANNED
 ---
 
 # REM-2026-04-21_entity-binding-structural-enforcement PLAN — Wave 5 Structural Entity Binding Casefile
