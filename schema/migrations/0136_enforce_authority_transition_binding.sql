@@ -25,7 +25,7 @@ BEGIN
   IF NOT FOUND THEN
     RAISE EXCEPTION USING
       ERRCODE = 'P0002',
-      MESSAGE = format('authority_transition_binding: no policy_decision row for policy_decision_id=%s', p_policy_decision_id);
+      MESSAGE = 'authority_transition_binding: no policy_decision row for policy_decision_id';
   END IF;
 
   -- Step 2: confirm the execution_records row exists. execution_records does NOT
@@ -38,7 +38,7 @@ BEGIN
   IF NOT v_er_exists THEN
     RAISE EXCEPTION USING
       ERRCODE = 'P0002',
-      MESSAGE = format('authority_transition_binding: no execution_records row for execution_id=%s', p_execution_id);
+      MESSAGE = 'authority_transition_binding: no execution_records row for execution_id';
   END IF;
 
   -- Step 3: the decision's execution_id must equal the transition's execution_id.
