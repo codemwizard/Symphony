@@ -3,7 +3,7 @@ phase: '2'
 task_id: TSK-P2-PREAUTH-004-02
 title: "Create state_rules table"
 owner_role: DB_FOUNDATION
-status: planned
+status: completed
 priority: HIGH
 risk_class: INTEGRITY
 blast_radius: DB_SCHEMA
