@@ -67,6 +67,12 @@ SHELL_SCRIPTS=(
   # is enforced separately below (the loop's `[[ -f ]]` guard silently
   # skips missing files).
   "scripts/db/verify_execution_truth_anchor.sh"
+  # TSK-P2-PREAUTH-004-01 (Wave 4 policy_decisions): fail the no-DB fast gate
+  # if either the schema verifier or the negative-test harness is syntactically
+  # broken. DB-backed assertions (columns, constraints, trigger, security
+  # posture, N1-N6) still run under scripts/dev/pre_ci.sh with DATABASE_URL.
+  "scripts/db/verify_policy_decisions_schema.sh"
+  "scripts/db/tests/test_policy_decisions_negative.sh"
 )
 for f in "${SHELL_SCRIPTS[@]}"; do
   if [[ -f "$f" ]]; then

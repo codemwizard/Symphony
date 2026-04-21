@@ -3,7 +3,7 @@ phase: '2'
 task_id: TSK-P2-PREAUTH-004-01
 title: "Create policy_decisions table (migration 0134) as the Wave 4 cryptographic truth anchor row type: append-only, entity-bound, hash- and signature-committed"
 owner_role: DB_FOUNDATION
-status: planned
+status: implemented
 priority: HIGH
 risk_class: INTEGRITY
 blast_radius: DB_SCHEMA
