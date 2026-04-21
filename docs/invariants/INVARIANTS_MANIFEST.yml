@@ -950,8 +950,14 @@
   status: implemented
   severity: P1
   title: "Regulatory timing compliance gate is deterministic and evidence-backed per rail policy"
+  owners: ["team-platform", "team-invariants"]
+  verification: "scripts/audit/verify_perf_004_regulatory_timing_compliance_gate.sh; evidence/phase1/perf_004__regulatory_timing_compliance_gate.json"
 
-- id: INV-AUTH-TRANSITION-BINDING-01
+- id: INV-138
+  aliases: ["I-AUTH-TRANSITION-BINDING-01"]
+  status: implemented
+  severity: P1
+  title: "Authority transition binding enforces policy decision reference and execution ID equality"
   wave: 4
   statement: >-
     Any authority-bearing state transition applied via execution_records
@@ -960,18 +966,16 @@
     and execution_id match the transition's entity and execution.
     Transitions lacking this reference, or referencing a decision bound
     to a different entity or execution, are rejected.
-  owner: INVARIANTS_CURATOR
+  owners: ["team-platform", "team-invariants"]
   enforcement:
     function: public.enforce_authority_transition_binding(uuid, uuid)
     migration: schema/migrations/0136_enforce_authority_transition_binding.sql
-  verification:
-    script: scripts/db/verify_authority_transition_binding.sh
+  verification: "scripts/db/verify_authority_transition_binding.sh; evidence/phase2/tsk_p2_preauth_004_03.json"
   evidence:
     path: evidence/phase2/tsk_p2_preauth_004_03.json
   proof_limitations:
     - "Signature authenticity is not verified (public-key resolution deferred to a later wave)"
     - "Cross-entity-replay protection at decision INSERT time is deferred; execution_records does not yet carry entity_type/entity_id columns, so insert-time coherence between policy_decisions.entity_* and execution_records.entity_* cannot be enforced. Transition-apply time is guarded by FK+equality on execution_id, column-vs-payload match, hash recompute, and UNIQUE (execution_id, decision_type)."
-  status: planned
 
 - id: INV-125
   aliases: ["I-PERF-FINALITY-SEAM-STUB-01"]
