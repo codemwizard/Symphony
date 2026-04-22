@@ -951,7 +951,10 @@
   severity: P1
   title: "Regulatory timing compliance gate is deterministic and evidence-backed per rail policy"
   owners: ["team-platform", "team-invariants"]
+  sla_days: 30
+  enforcement: "scripts/audit/verify_perf_004_regulatory_timing_compliance_gate.sh"
   verification: "scripts/audit/verify_perf_004_regulatory_timing_compliance_gate.sh; evidence/phase1/perf_004__regulatory_timing_compliance_gate.json"
+  notes: ""
 
 - id: INV-138
   aliases: ["I-AUTH-TRANSITION-BINDING-01"]

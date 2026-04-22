@@ -133,10 +133,10 @@ fi
 # Check 7: Verify MIGRATION_HEAD
 echo "Checking MIGRATION_HEAD..."
 MIGRATION_HEAD=$(cat schema/migrations/MIGRATION_HEAD 2>/dev/null || echo "")
-if [ "$MIGRATION_HEAD" = "0135" ]; then
-  add_check "migration_head" "PASS" "MIGRATION_HEAD is 0135"
+if [ "$MIGRATION_HEAD" = "0136" ]; then
+  add_check "migration_head" "PASS" "MIGRATION_HEAD is 0136"
 else
-  add_check "migration_head" "FAIL" "MIGRATION_HEAD is $MIGRATION_HEAD, expected 0135"
+  add_check "migration_head" "FAIL" "MIGRATION_HEAD is $MIGRATION_HEAD, expected 0136"
   jq '.status = "FAIL"' "$EVIDENCE_PATH" > "${EVIDENCE_PATH}.tmp" && mv "${EVIDENCE_PATH}.tmp" "$EVIDENCE_PATH"
   exit 1
 fi

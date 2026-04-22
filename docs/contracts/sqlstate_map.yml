@@ -29,6 +29,12 @@
       "meaning": "append-only table mutation attempted",
       "retryable": false
     },
+    "P0002": {
+      "class": "B",
+      "subsystem": "authority_binding",
+      "meaning": "referenced row not found during authority-transition binding enforcement (missing policy_decision or execution_records row)",
+      "retryable": false
+    },
     "P7001": {
       "class": "C",
       "subsystem": "platform",
