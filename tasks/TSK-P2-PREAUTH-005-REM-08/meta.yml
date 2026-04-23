@@ -1,0 +1,90 @@
+schema_version: "1.0"
+phase: "2"
+task_id: TSK-P2-PREAUTH-005-REM-08
+title: Change enforce_execution_binding trigger to RAISE EXCEPTION
+owner_role: DB_FOUNDATION
+status: planned
+priority: critical
+risk_class: high
+blast_radius: schema_core
+
+depends_on:
+  - TSK-P2-PREAUTH-005-REM-07
+
+touches:
+  - schema/migrations/0142_create_enforce_execution_binding.sql
+  - scripts/db/verify_tsk_p2_preauth_005_rem_08.sh
+  - evidence/phase2/TSK-P2-PREAUTH-005-REM-08.json
+  - tasks/TSK-P2-PREAUTH-005-REM-08/meta.yml
+
+must_read:
+  - docs/operations/AI_AGENT_OPERATION_MANUAL.md
+  - docs/operations/TASK_CREATION_PROCESS.md
+  - docs/operations/REGULATED_SURFACE_PATHS.yml
+  - docs/operations/REMEDIATION_TRACE_WORKFLOW.md
+  - Wave-5-for-Devin.md
+
+anti_patterns:
+  - using_raise_notice_in_critical_triggers
+  - editing_migrations_without_approval_metadata
+  - missing_remediation_trace_markers
+  - behavioral_negative_tests_missing
+
+out_of_scope:
+  - adding transition_hash column (deferred to REM-09)
+  - generic entity model (deferred to REM-11)
+
+stop_conditions:
+  - JOIN logic not added to trigger
+  - MIGRATION_HEAD not updated
+  - approval metadata not created before editing migration
+  - behavioral negative test not implemented
+
+work:
+  - "[ID rem_08_work_01] Create approval artifact before editing migration"
+  - "[ID rem_08_work_02] Change enforce_execution_binding() from RAISE NOTICE to RAISE EXCEPTION in migration 0142"
+  - "[ID rem_08_work_03] Write verification script that checks trigger uses RAISE EXCEPTION"
+  - "[ID rem_08_work_04] Write behavioral negative test that transition without execution_id is rejected"
+  - "[ID rem_08_work_05] Run verification script"
+  - "[ID rem_08_work_06] Update EXEC_LOG.md with remediation markers"
+
+acceptance_criteria:
+  - "[ID rem_08_work_01] Stage A approval artifact created and passes schema validation"
+  - "[ID rem_08_work_02] enforce_execution_binding() uses RAISE EXCEPTION not RAISE NOTICE"
+  - "[ID rem_08_work_03] Verification script exists and uses DATABASE_URL"
+  - "[ID rem_08_work_04] Behavioral negative test confirms transitions without execution_id are rejected with exception"
+  - "[ID rem_08_work_05] Verification script exits 0"
+  - "[ID rem_08_work_06] EXEC_LOG.md contains required remediation trace markers"
+
+negative_tests:
+  - "[ID rem_08_nt_01] INSERT without execution_id must fail with RAISE EXCEPTION"
+
+verification:
+  - "[ID rem_08_work_01] test -f approvals/$(date +%Y-%m-%d)/BRANCH-*.approval.json && python3 -m json.tool < approvals/$(date +%Y-%m-%d)/BRANCH-*.approval.json > /dev/null || exit 1"
+  - "[ID rem_08_work_02] psql \"$DATABASE_URL\" -c \"SELECT prosrc FROM pg_proc WHERE proname = 'enforce_execution_binding'\" | grep -q 'RAISE EXCEPTION' || exit 1"
+  - "[ID rem_08_work_03] [ID rem_08_work_05] test -x scripts/db/verify_tsk_p2_preauth_005_rem_08.sh && bash scripts/db/verify_tsk_p2_preauth_005_rem_08.sh > evidence/phase2/TSK-P2-PREAUTH-005-REM-08.json || exit 1"
+  - "[ID rem_08_work_04] grep -q 'behavioral_negative_test' evidence/phase2/TSK-P2-PREAUTH-005-REM-08.json || exit 1"
+  - "[ID rem_08_work_05] test -f evidence/phase2/TSK-P2-PREAUTH-005-REM-08.json || exit 1"
+  - "[ID rem_08_work_06] grep -q 'failure_signature' docs/plans/phase2/TSK-P2-PREAUTH-005-REM-08/EXEC_LOG.md && grep -q 'origin_task_id' docs/plans/phase2/TSK-P2-PREAUTH-005-REM-08/EXEC_LOG.md && grep -q 'repro_command' docs/plans/phase2/TSK-P2-PREAUTH-005-REM-08/EXEC_LOG.md && grep -q 'verification_commands_run' docs/plans/phase2/TSK-P2-PREAUTH-005-REM-08/EXEC_LOG.md && grep -q 'final_status' docs/plans/phase2/TSK-P2-PREAUTH-005-REM-08/EXEC_LOG.md || exit 1"
+
+failure_modes:
+  - JOIN_LOGIC_NOT_ADDED
+  - MIGRATION_HEAD_NOT_UPDATED
+  - APPROVAL_METADATA_MISSING
+  - REMEDIATION_TRACE_MARKERS_MISSING
+  - BEHAVIORAL_NEGATIVE_TEST_MISSING
+  - Evidence file missing
+
+evidence:
+  - path: evidence/phase2/TSK-P2-PREAUTH-005-REM-08.json
+    must_include:
+      - task_id
+      - git_sha
+      - timestamp_utc
+      - status
+      - checks
+      - raise_exception_verified
+      - behavioral_negative_test_results
+
+implementation_plan: docs/plans/phase2/TSK-P2-PREAUTH-005-REM-08/PLAN.md
+implementation_log: docs/plans/phase2/TSK-P2-PREAUTH-005-REM-08/EXEC_LOG.md

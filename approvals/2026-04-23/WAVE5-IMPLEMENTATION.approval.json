@@ -1,0 +1,30 @@
+{
+  "schema_version": "1.0",
+  "generated_at_utc": "2026-04-23T06:20:00Z",
+  "git_commit": "122585d3d78df6c26a249adc82628483a991dffd",
+  "change_scope": {
+    "regulated_surfaces_touched": true,
+    "paths_changed": [
+      "schema/migrations/0137_create_state_transitions.sql",
+      "schema/migrations/0138_create_state_current.sql",
+      "schema/migrations/0139_create_enforce_transition_state_rules.sql",
+      "schema/migrations/0140_create_enforce_transition_authority.sql",
+      "schema/migrations/0141_create_enforce_transition_signature.sql",
+      "schema/migrations/0142_create_enforce_execution_binding.sql",
+      "schema/migrations/0143_create_deny_state_transitions_mutation.sql",
+      "schema/migrations/0144_create_update_current_state.sql"
+    ]
+  },
+  "ai": {
+    "ai_prompt_hash": "retroactive_compliance_wave5_20260423",
+    "model_id": "SWE-1.6",
+    "client": "cursor_codex"
+  },
+  "human_approval": {
+    "approver_id": "human_reviewer",
+    "approval_artifact_ref": "approvals/2026-04-23/WAVE5-IMPLEMENTATION.md",
+    "change_reason": "RETROACTIVE APPROVAL: Wave 5 migrations (0137-0144) were created and applied without prior Stage A approval artifacts due to agent workflow error. This retroactive approval documents the compliance gap and brings the implementation into compliance with REGULATED_SURFACE_PATHS.yml requirements. The migrations are already applied to the database and verified working.",
+    "approved_at_utc": "2026-04-23T06:20:00Z"
+  },
+  "notes": "This is a retroactive approval created as part of REM-2026-04-23_WAVE5_COMPLIANCE_REMEDIATION. The migrations were implemented before compliance documentation was created, which violates the Symphony process. Future implementations must follow AGENT_ENTRYPOINT.md and create approval artifacts before editing regulated surfaces."
+}

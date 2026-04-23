@@ -1,0 +1,276 @@
+schema_version: 1
+phase: '2'
+task_id: TSK-P2-PREAUTH-005-CLEANUP
+title: "Wave 5 Baseline Reconciliation - Delete monolith 0120 and update task plans"
+owner_role: DB_FOUNDATION
+status: planned
+priority: CRITICAL
+risk_class: GOVERNANCE
+blast_radius: DOCS_AND_CONFIG
+
+intent: >-
+  This task performs baseline reconciliation before Wave 5 implementation. The existing migration 0120
+  is a monolith containing all Wave 5 work (state_transitions, state_current, and 6 trigger functions),
+  which violates atomic task principles. This task deletes the monolith and updates all Wave 5 task
+  plans and metadata to target new migration sequence (0137-0144), enabling proper atomic implementation.
+
+anti_patterns:
+  - "Leaving placeholder RAISE NOTICE stubs in production migrations"
+  - "Violating forward-only migration principle by editing applied migrations"
+  - "Implementing monolith migrations that span multiple atomic tasks"
+
+out_of_scope:
+  - Actual Wave 5 implementation (deferred to 005-01 through 005-08)
+  - Remediation task implementation (deferred to REM-01 through REM-11)
+  - Database migration execution (this is config-only cleanup)
+
+stop_conditions:
+  - "If schema/migrations/0120_create_state_transitions.sql is not found"
+  - "If any Wave 5 task PLAN.md or meta.yml file is missing"
+  - "If updates would break dependency chain integrity"
+
+proof_guarantees:
+  - "Monolith migration 0120 is deleted"
+  - "All 9 Wave 5 task PLAN.md files reference correct new migration numbers"
+  - "All 9 Wave 5 task meta.yml files reference correct new migration numbers"
+  - "All 11 remediation task files reference correct new migration numbers"
+  - "Dependency chain is preserved and updated"
+
+proof_limitations:
+  - "Cannot verify that the new migration sequence will work until implementation"
+  - "Cannot verify that placeholder logic is removed until implementation runs"
+
+depends_on: []
+blocks:
+  - TSK-P2-PREAUTH-005-01
+  - TSK-P2-PREAUTH-005-02
+  - TSK-P2-PREAUTH-005-03
+  - TSK-P2-PREAUTH-005-04
+  - TSK-P2-PREAUTH-005-05
+  - TSK-P2-PREAUTH-005-06
+  - TSK-P2-PREAUTH-005-07
+  - TSK-P2-PREAUTH-005-08
+  - TSK-P2-PREAUTH-005-REM-01
+  - TSK-P2-PREAUTH-005-REM-02
+  - TSK-P2-PREAUTH-005-REM-03
+  - TSK-P2-PREAUTH-005-REM-04
+  - TSK-P2-PREAUTH-005-REM-05
+  - TSK-P2-PREAUTH-005-REM-06
+  - TSK-P2-PREAUTH-005-REM-07
+  - TSK-P2-PREAUTH-005-REM-08
+  - TSK-P2-PREAUTH-005-REM-09
+  - TSK-P2-PREAUTH-005-REM-10
+  - TSK-P2-PREAUTH-005-REM-11
+
+touches:
+  - schema/migrations/0120_create_state_transitions.sql
+  - scripts/db/verify_tsk_p2_preauth_005_01.sh
+  - tasks/TSK-P2-PREAUTH-005-01/meta.yml
+  - tasks/TSK-P2-PREAUTH-005-02/meta.yml
+  - tasks/TSK-P2-PREAUTH-005-03/meta.yml
+  - tasks/TSK-P2-PREAUTH-005-04/meta.yml
+  - tasks/TSK-P2-PREAUTH-005-05/meta.yml
+  - tasks/TSK-P2-PREAUTH-005-06/meta.yml
+  - tasks/TSK-P2-PREAUTH-005-07/meta.yml
+  - tasks/TSK-P2-PREAUTH-005-08/meta.yml
+  - docs/plans/phase2/TSK-P2-PREAUTH-005-01/PLAN.md
+  - docs/plans/phase2/TSK-P2-PREAUTH-005-02/PLAN.md
+  - docs/plans/phase2/TSK-P2-PREAUTH-005-03/PLAN.md
+  - docs/plans/phase2/TSK-P2-PREAUTH-005-04/PLAN.md
+  - docs/plans/phase2/TSK-P2-PREAUTH-005-05/PLAN.md
+  - docs/plans/phase2/TSK-P2-PREAUTH-005-06/PLAN.md
+  - docs/plans/phase2/TSK-P2-PREAUTH-005-07/PLAN.md
+  - docs/plans/phase2/TSK-P2-PREAUTH-005-08/PLAN.md
+  - docs/plans/phase2/TSK-P2-PREAUTH-005-REM-01/PLAN.md
+  - docs/plans/phase2/TSK-P2-PREAUTH-005-REM-02/PLAN.md
+  - docs/plans/phase2/TSK-P2-PREAUTH-005-REM-03/PLAN.md
+  - docs/plans/phase2/TSK-P2-PREAUTH-005-REM-04/PLAN.md
+  - docs/plans/phase2/TSK-P2-PREAUTH-005-REM-05/PLAN.md
+  - docs/plans/phase2/TSK-P2-PREAUTH-005-REM-06/PLAN.md
+  - docs/plans/phase2/TSK-P2-PREAUTH-005-REM-07/PLAN.md
+  - docs/plans/phase2/TSK-P2-PREAUTH-005-REM-08/PLAN.md
+  - docs/plans/phase2/TSK-P2-PREAUTH-005-REM-09/PLAN.md
+  - docs/plans/phase2/TSK-P2-PREAUTH-005-REM-10/PLAN.md
+  - docs/plans/phase2/TSK-P2-PREAUTH-005-REM-11/PLAN.md
+  - tasks/TSK-P2-PREAUTH-005-CLEANUP/meta.yml
+
+invariants: []
+
+work:
+  - >-
+    [ID tsk_p2_preauth_005_cleanup_work_item_01] Delete monolith migration 0120:
+    rm schema/migrations/0120_create_state_transitions.sql
+  - >-
+    [ID tsk_p2_preauth_005_cleanup_work_item_02] Delete stale verification script:
+    rm scripts/db/verify_tsk_p2_preauth_005_01.sh
+  - >-
+    [ID tsk_p2_preauth_005_cleanup_work_item_03] Update TSK-P2-PREAUTH-005-01 PLAN.md:
+    Change migration 0120 to 0137, update MIGRATION_HEAD check to 0137
+  - >-
+    [ID tsk_p2_preauth_005_cleanup_work_item_04] Update TSK-P2-PREAUTH-005-01 meta.yml:
+    Update touches to reference 0137_create_state_transitions.sql, update verification MIGRATION_HEAD check
+  - >-
+    [ID tsk_p2_preauth_005_cleanup_work_item_05] Update TSK-P2-PREAUTH-005-02 PLAN.md:
+    Change migration 0120 to 0138, update MIGRATION_HEAD check to 0138
+  - >-
+    [ID tsk_p2_preauth_005_cleanup_work_item_06] Update TSK-P2-PREAUTH-005-02 meta.yml:
+    Update touches to reference 0138_create_state_current.sql, update verification MIGRATION_HEAD check
+  - >-
+    [ID tsk_p2_preauth_005_cleanup_work_item_07] Update TSK-P2-PREAUTH-005-03 PLAN.md:
+    Change migration 0120 to 0139_create_enforce_transition_state_rules.sql
+  - >-
+    [ID tsk_p2_preauth_005_cleanup_work_item_08] Update TSK-P2-PREAUTH-005-03 meta.yml:
+    Update touches to reference 0139
+  - >-
+    [ID tsk_p2_preauth_005_cleanup_work_item_09] Update TSK-P2-PREAUTH-005-04 PLAN.md:
+    Change migration 0120 to 0140_create_enforce_transition_authority.sql
+  - >-
+    [ID tsk_p2_preauth_005_cleanup_work_item_10] Update TSK-P2-PREAUTH-005-04 meta.yml:
+    Update touches to reference 0140
+  - >-
+    [ID tsk_p2_preauth_005_cleanup_work_item_11] Update TSK-P2-PREAUTH-005-05 PLAN.md:
+    Change migration 0120 to 0141_create_enforce_transition_signature.sql
+  - >-
+    [ID tsk_p2_preauth_005_cleanup_work_item_12] Update TSK-P2-PREAUTH-005-05 meta.yml:
+    Update touches to reference 0141
+  - >-
+    [ID tsk_p2_preauth_005_cleanup_work_item_13] Update TSK-P2-PREAUTH-005-06 PLAN.md:
+    Change migration 0120 to 0142_create_enforce_execution_binding.sql
+  - >-
+    [ID tsk_p2_preauth_005_cleanup_work_item_14] Update TSK-P2-PREAUTH-005-06 meta.yml:
+    Update touches to reference 0142
+  - >-
+    [ID tsk_p2_preauth_005_cleanup_work_item_15] Update TSK-P2-PREAUTH-005-07 PLAN.md:
+    Change migration 0120 to 0143_create_deny_state_transitions_mutation.sql
+  - >-
+    [ID tsk_p2_preauth_005_cleanup_work_item_16] Update TSK-P2-PREAUTH-005-07 meta.yml:
+    Update touches to reference 0143
+  - >-
+    [ID tsk_p2_preauth_005_cleanup_work_item_17] Update TSK-P2-PREAUTH-005-08 PLAN.md:
+    Change migration 0120 to 0144_create_update_current_state.sql
+  - >-
+    [ID tsk_p2_preauth_005_cleanup_work_item_18] Update TSK-P2-PREAUTH-005-08 meta.yml:
+    Update touches to reference 0144
+  - >-
+    [ID tsk_p2_preauth_005_cleanup_work_item_19] Update remediation task PLAN.md files (REM-01 through REM-11):
+    Change target migration references from 0120 to appropriate new migration numbers
+  - >-
+    [ID tsk_p2_preauth_005_cleanup_work_item_20] Verify dependency chain integrity:
+    Ensure all tasks have correct depends_on and blocks references
+
+acceptance_criteria:
+  - >-
+    [ID tsk_p2_preauth_005_cleanup_work_item_01] schema/migrations/0120_create_state_transitions.sql is deleted
+  - >-
+    [ID tsk_p2_preauth_005_cleanup_work_item_02] scripts/db/verify_tsk_p2_preauth_005_01.sh is deleted
+  - >-
+    [ID tsk_p2_preauth_005_cleanup_work_item_03] TSK-P2-PREAUTH-005-01 PLAN.md references migration 0137
+  - >-
+    [ID tsk_p2_preauth_005_cleanup_work_item_04] TSK-P2-PREAUTH-005-01 meta.yml references 0137_create_state_transitions.sql
+  - >-
+    [ID tsk_p2_preauth_005_cleanup_work_item_05] TSK-P2-PREAUTH-005-02 PLAN.md references migration 0138
+  - >-
+    [ID tsk_p2_preauth_005_cleanup_work_item_06] TSK-P2-PREAUTH-005-02 meta.yml references 0138_create_state_current.sql
+  - >-
+    [ID tsk_p2_preauth_005_cleanup_work_item_07] TSK-P2-PREAUTH-005-03 PLAN.md references migration 0139
+  - >-
+    [ID tsk_p2_preauth_005_cleanup_work_item_08] TSK-P2-PREAUTH-005-03 meta.yml references 0139
+  - >-
+    [ID tsk_p2_preauth_005_cleanup_work_item_09] TSK-P2-PREAUTH-005-04 PLAN.md references migration 0140
+  - >-
+    [ID tsk_p2_preauth_005_cleanup_work_item_10] TSK-P2-PREAUTH-005-04 meta.yml references 0140
+  - >-
+    [ID tsk_p2_preauth_005_cleanup_work_item_11] TSK-P2-PREAUTH-005-05 PLAN.md references migration 0141
+  - >-
+    [ID tsk_p2_preauth_005_cleanup_work_item_12] TSK-P2-PREAUTH-005-05 meta.yml references 0141
+  - >-
+    [ID tsk_p2_preauth_005_cleanup_work_item_13] TSK-P2-PREAUTH-005-06 PLAN.md references migration 0142
+  - >-
+    [ID tsk_p2_preauth_005_cleanup_work_item_14] TSK-P2-PREAUTH-005-06 meta.yml references 0142
+  - >-
+    [ID tsk_p2_preauth_005_cleanup_work_item_15] TSK-P2-PREAUTH-005-07 PLAN.md references migration 0143
+  - >-
+    [ID tsk_p2_preauth_005_cleanup_work_item_16] TSK-P2-PREAUTH-005-07 meta.yml references 0143
+  - >-
+    [ID tsk_p2_preauth_005_cleanup_work_item_17] TSK-P2-PREAUTH-005-08 PLAN.md references migration 0144
+  - >-
+    [ID tsk_p2_preauth_005_cleanup_work_item_18] TSK-P2-PREAUTH-005-08 meta.yml references 0144
+  - >-
+    [ID tsk_p2_preauth_005_cleanup_work_item_19] All remediation task PLAN.md files reference correct new migration numbers
+  - >-
+    [ID tsk_p2_preauth_005_cleanup_work_item_20] Dependency chain is preserved and correct
+
+negative_tests:
+  - id: TSK-P2-PREAUTH-005-CLEANUP-N1
+    description: >-
+      Verify that cleanup fails if 0120 migration does not exist (prevents accidental double-deletion)
+    required: true
+
+positive_tests:
+  - id: TSK-P2-PREAUTH-005-CLEANUP-P1
+    description: >-
+      Verify that after cleanup, no Wave 5 task references migration 0120
+    required: true
+
+verification:
+  - >-
+    # [ID tsk_p2_preauth_005_cleanup_work_item_01]
+    test ! -f schema/migrations/0120_create_state_transitions.sql || exit 1
+  - >-
+    # [ID tsk_p2_preauth_005_cleanup_work_item_02]
+    test ! -f scripts/db/verify_tsk_p2_preauth_005_01.sh || exit 1
+  - >-
+    # [ID tsk_p2_preauth_005_cleanup_work_item_03] [ID tsk_p2_preauth_005_cleanup_work_item_05]
+    grep -q "0137" docs/plans/phase2/TSK-P2-PREAUTH-005-01/PLAN.md || exit 1
+    grep -q "0138" docs/plans/phase2/TSK-P2-PREAUTH-005-02/PLAN.md || exit 1
+  - >-
+    # [ID tsk_p2_preauth_005_cleanup_work_item_04] [ID tsk_p2_preauth_005_cleanup_work_item_06]
+    grep -q "0137_create_state_transitions.sql" tasks/TSK-P2-PREAUTH-005-01/meta.yml || exit 1
+    grep -q "0138_create_state_current.sql" tasks/TSK-P2-PREAUTH-005-02/meta.yml || exit 1
+  - >-
+    # [ID tsk_p2_preauth_005_cleanup_work_item_19]
+    ! grep -r "0120_create_state_transitions.sql" docs/plans/phase2/TSK-P2-PREAUTH-005-REM-*/PLAN.md || exit 1
+  - >-
+    # [ID tsk_p2_preauth_005_cleanup_work_item_20]
+    grep -q "TSK-P2-PREAUTH-005-01" tasks/TSK-P2-PREAUTH-005-02/meta.yml || exit 1
+
+evidence:
+  - path: evidence/phase2/tsk_p2_preauth_005_cleanup.json
+    must_include:
+      - task_id
+      - git_sha
+      - timestamp_utc
+      - status
+      - checks
+      - monolith_deleted
+      - verification_script_deleted
+      - plans_updated
+      - meta_updated
+      - remediation_updated
+
+failure_modes:
+  - "Monolith not deleted => CRITICAL_FAIL"
+  - "Plans not updated => CRITICAL_FAIL"
+  - "Meta files not updated => CRITICAL_FAIL"
+  - "Dependency chain broken => CRITICAL_FAIL"
+
+must_read:
+  - docs/operations/AI_AGENT_OPERATION_MANUAL.md
+  - docs/operations/TASK_CREATION_PROCESS.md
+
+implementation_plan: docs/plans/phase2/TSK-P2-PREAUTH-005-CLEANUP/PLAN.md
+implementation_log: docs/plans/phase2/TSK-P2-PREAUTH-005-CLEANUP/EXEC_LOG.md
+
+notes: >-
+  This is a CRITICAL governance task that must complete before any Wave 5 implementation.
+  It establishes the correct atomic migration sequence and removes placeholder stubs.
+  Phase Key: PRE-PHASE2. Phase Name: Pre-Phase 2 Implementation.
+  
+  EXECUTED OUT OF SEQUENCE: This task was executed AFTER Wave 5 implementation was completed, which is incorrect.
+  The cleanup work (deleting monolith 0120, updating references to 0137-0144) was completed successfully.
+  Task marked as "completed" because all work items were implemented. The out-of-sequence execution is a process
+  violation documented in REM-2026-04-23_WAVE5_COMPLIANCE_REMEDIATION.
+
+client: cursor
+assigned_agent: db_foundation
+model: <UNASSIGNED>

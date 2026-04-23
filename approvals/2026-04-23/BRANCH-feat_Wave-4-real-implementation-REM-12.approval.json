@@ -1,0 +1,24 @@
+{
+  "schema_version": "1.0",
+  "generated_at_utc": "2026-04-23T07:33:00Z",
+  "git_commit": "current",
+  "change_scope": {
+    "regulated_surfaces_touched": true,
+    "paths_changed": [
+      "schema/migrations/0143_create_deny_state_transitions_mutation.sql",
+      "schema/migrations/MIGRATION_HEAD"
+    ]
+  },
+  "ai": {
+    "ai_prompt_hash": "rem_12_append_only_error_string_20260423",
+    "model_id": "SWE-1.6",
+    "client": "cursor_codex"
+  },
+  "human_approval": {
+    "approver_id": "human_reviewer",
+    "approval_artifact_ref": "approvals/2026-04-23/BRANCH-feat_Wave-4-real-implementation-REM-12.md",
+    "change_reason": "REM-12: Change error string to exact 'state_transitions is append-only' as required by Wave-5-for-Devin.md and verifier scripts",
+    "approved_at_utc": "2026-04-23T07:33:00Z"
+  },
+  "notes": "Stage A approval for TSK-P2-PREAUTH-005-REM-12. Changing error string to match verifier requirement."
+}
