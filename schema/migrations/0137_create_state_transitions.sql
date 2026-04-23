@@ -4,6 +4,22 @@
 -- Remediations applied: REM-01, REM-02, REM-03, REM-09, REM-11
 -- REM-03: Replaced weak constraint with strong hash-based idempotency constraint
 
+-- Create data_authority_level ENUM type if not exists
+DO $$
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'data_authority_level') THEN
+        CREATE TYPE public.data_authority_level AS ENUM (
+            'phase1_indicative_only',
+            'non_reproducible',
+            'derived_unverified',
+            'policy_bound_unsigned',
+            'authoritative_signed',
+            'superseded',
+            'invalidated'
+        );
+    END IF;
+END $$;
+
 CREATE TABLE state_transitions (
     transition_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     project_id UUID NOT NULL,
@@ -16,6 +32,9 @@ CREATE TABLE state_transitions (
     policy_decision_id UUID NOT NULL,
     signature TEXT,
     transition_hash TEXT NOT NULL,
+    data_authority public.data_authority_level NOT NULL DEFAULT 'non_reproducible',
+    audit_grade BOOLEAN NOT NULL DEFAULT false,
+    authority_explanation TEXT NOT NULL DEFAULT 'No execution context recorded',
     CONSTRAINT unique_entity_hash UNIQUE (entity_type, entity_id, transition_hash)
 );
 
