@@ -1,12 +1,12 @@
-schema_version: "1.0"
-phase: "2"
+schema_version: 1
+phase: '2'
 task_id: TSK-P2-PREAUTH-005-REM-06
 title: Change enforce_transition_state_rules trigger to RAISE EXCEPTION
 owner_role: DB_FOUNDATION
 status: planned
-priority: critical
-risk_class: high
-blast_radius: schema_core
+priority: HIGH
+risk_class: INTEGRITY
+blast_radius: DB_SCHEMA
 
 depends_on:
   - TSK-P2-PREAUTH-005-REM-03
@@ -16,6 +16,8 @@ touches:
   - scripts/db/verify_tsk_p2_preauth_005_rem_06.sh
   - evidence/phase2/TSK-P2-PREAUTH-005-REM-06.json
   - tasks/TSK-P2-PREAUTH-005-REM-06/meta.yml
+
+invariants: []
 
 must_read:
   - docs/operations/AI_AGENT_OPERATION_MANUAL.md
@@ -87,3 +89,11 @@ evidence:
 
 implementation_plan: docs/plans/phase2/TSK-P2-PREAUTH-005-REM-06/PLAN.md
 implementation_log: docs/plans/phase2/TSK-P2-PREAUTH-005-REM-06/EXEC_LOG.md
+
+notes: >-
+  Remediation task for Wave 5. Adds state_rules validation JOIN logic to enforce_transition_state_rules trigger.
+  Phase Key: PRE-PHASE2. Phase Name: Pre-Phase 2 Implementation.
+
+client: cursor
+assigned_agent: db_foundation
+model: <UNASSIGNED>

@@ -1,12 +1,12 @@
-schema_version: "1.0"
-phase: "2"
+schema_version: 1
+phase: '2'
 task_id: TSK-P2-PREAUTH-005-REM-11
 title: Rename trigger to trg_06_update_current for explicit ordering
 owner_role: DB_FOUNDATION
 status: planned
-priority: critical
-risk_class: high
-blast_radius: schema_core
+priority: HIGH
+risk_class: INTEGRITY
+blast_radius: DB_SCHEMA
 
 depends_on:
   - TSK-P2-PREAUTH-005-REM-10
@@ -17,6 +17,8 @@ touches:
   - scripts/db/verify_tsk_p2_preauth_005_rem_11.sh
   - evidence/phase2/TSK-P2-PREAUTH-005-REM-11.json
   - tasks/TSK-P2-PREAUTH-005-REM-11/meta.yml
+
+invariants: []
 
 must_read:
   - docs/operations/AI_AGENT_OPERATION_MANUAL.md
@@ -86,3 +88,11 @@ evidence:
 
 implementation_plan: docs/plans/phase2/TSK-P2-PREAUTH-005-REM-11/PLAN.md
 implementation_log: docs/plans/phase2/TSK-P2-PREAUTH-005-REM-11/EXEC_LOG.md
+
+notes: >-
+  Remediation task for Wave 5. Fixes PK to (entity_type, entity_id) for generic entity model and renames trigger for explicit ordering.
+  Phase Key: PRE-PHASE2. Phase Name: Pre-Phase 2 Implementation.
+
+client: cursor
+assigned_agent: db_foundation
+model: <UNASSIGNED>

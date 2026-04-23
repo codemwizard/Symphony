@@ -1,22 +1,24 @@
-schema_version: "1.0"
-phase: "2"
+schema_version: 1
+phase: '2'
 task_id: TSK-P2-PREAUTH-005-REM-12
 title: Fix append-only error string to match verifier requirement
 owner_role: DB_FOUNDATION
 status: planned
-priority: critical
-risk_class: high
-blast_radius: schema_core
+priority: HIGH
+risk_class: INTEGRITY
+blast_radius: DB_SCHEMA
 
 depends_on:
   - TSK-P2-PREAUTH-005-REM-11
 
 touches:
-  - schema/migrations/0139_create_deny_state_transitions_mutation.sql
+  - schema/migrations/0143_create_deny_state_transitions_mutation.sql
   - schema/migrations/MIGRATION_HEAD
   - scripts/db/verify_tsk_p2_preauth_005_rem_12.sh
   - evidence/phase2/TSK-P2-PREAUTH-005-REM-12.json
   - tasks/TSK-P2-PREAUTH-005-REM-12/meta.yml
+
+invariants: []
 
 must_read:
   - docs/operations/AI_AGENT_OPERATION_MANUAL.md
@@ -97,3 +99,11 @@ evidence:
 
 implementation_plan: docs/plans/phase2/TSK-P2-PREAUTH-005-REM-12/PLAN.md
 implementation_log: docs/plans/phase2/TSK-P2-PREAUTH-005-REM-12/EXEC_LOG.md
+
+notes: >-
+  Remediation task for Wave 5. Fixes error string to exact 'state_transitions is append-only' for verifier compliance.
+  Phase Key: PRE-PHASE2. Phase Name: Pre-Phase 2 Implementation.
+
+client: cursor
+assigned_agent: db_foundation
+model: <UNASSIGNED>
