@@ -1,0 +1,9 @@
+schema_version: "1.0"
+phase: PRE-PHASE2
+status: planned
+priority: critical
+risk_class: high
+task_id: TSK-P2-W6-REM-03
+title: "Unified Integrity Triggers"
+implementation_plan: docs/plans/phase2/TSK-P2-W6-REM-03/PLAN.md
+implementation_log: docs/plans/phase2/TSK-P2-W6-REM-03/EXEC_LOG.md

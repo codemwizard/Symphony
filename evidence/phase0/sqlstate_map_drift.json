@@ -7,9 +7,10 @@
   "details": {
     "missing_codes": [],
     "invalid_entries": [],
-    "scanned_files": 924,
+    "scanned_files": 953,
     "found_codes": [
       "P0001",
+      "P0002",
       "P7001",
       "P7002",
       "P7003",

@@ -4,9 +4,9 @@
   "git_sha": "0000000000000000000000000000000000000000",
   "schema_fingerprint": "06545fe3f538515080117719d8d8bd0acb0136101bc7d7d61a37f052481dc898",
   "status": "PASS",
-  "baseline_changed": true,
+  "baseline_changed": false,
   "migration_changed": true,
-  "adr_changed": true,
+  "adr_changed": false,
   "reason": "",
   "base_ref": "refs/remotes/origin/main",
   "head_ref": "HEAD"

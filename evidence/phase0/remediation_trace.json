@@ -15,9 +15,9 @@
     "scripts"
   ],
   "satisfying_docs": [
-    "docs/plans/phase2/REM-2026-04-21_entity-binding-structural-enforcement/PLAN.md",
-    "docs/plans/phase2/REM-2026-04-21_entity-binding-structural-enforcement/EXEC_LOG.md"
+    "docs/plans/phase1/REM-2026-04-21_pre_ci-phase0_ordered_checks/PLAN.md",
+    "docs/plans/phase1/REM-2026-04-21_pre_ci-phase0_ordered_checks/EXEC_LOG.md"
   ],
-  "satisfying_doc_parent": "docs/plans/phase2/REM-2026-04-21_entity-binding-structural-enforcement",
+  "satisfying_doc_parent": "docs/plans/phase1/REM-2026-04-21_pre_ci-phase0_ordered_checks",
   "errors": []
 }

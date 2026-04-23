@@ -9,7 +9,7 @@
   "worktrees": [
     {
       "worktree": "/home/mwiza/workspaces/Symphony-Demo/Symphony",
-      "branch": "refs/heads/wave8-regulatory-extensions",
+      "branch": "refs/heads/feat/Wave-4-real-implementation",
       "detached": false,
       "prunable": false
     }
