@@ -1,0 +1,14 @@
+{
+  "task_id": "TSK-P2-PREAUTH-004-03",
+  "git_sha": "b9aacc7a66bd5712825a9f19d898c781288ead90",
+  "timestamp_utc": "2026-04-23T12:37:16Z",
+  "status": "FAIL",
+  "scenarios_passed": [
+    {
+      "scenario": "V1",
+      "result": "FAIL",
+      "output": "Could not create savepoint: psql: error: connection to server on socket \"/var/run/postgresql/.s.PGSQL.5432\" failed: FATAL:  database \"mwiza\" does not exist\nFAILED"
+    }
+  ],
+  "command_outputs": []
+}

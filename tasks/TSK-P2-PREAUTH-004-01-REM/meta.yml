@@ -1,0 +1,186 @@
+schema_version: 1
+phase: '2'
+task_id: TSK-P2-PREAUTH-004-01-REM
+title: Create verifier script for policy_decisions table and update 004-01 task metadata to align with 0134 migration contract
+owner_role: DB_FOUNDATION
+status: planned
+priority: HIGH
+risk_class: INTEGRITY
+blast_radius: DB_SCHEMA
+
+intent: >-
+  Wave 4 audit identified that TSK-P2-PREAUTH-004-01 metadata references migration 0119 (4 columns) instead of the actual 0134 migration (11 columns).
+  This task creates a verifier script built from the 0134 contract and updates the 004-01 task metadata to reflect the hardened implementation.
+  Without this fix, the task metadata is out of sync with the actual migration, creating governance drift risk.
+
+anti_patterns:
+  - "Copying verifier from Wave4/ staging directory (contains regressions)"
+  - "Updating meta.yml without running verify_task_meta_schema.sh"
+  - "Missing remediation trace markers in EXEC_LOG.md"
+
+out_of_scope:
+  - "Modifying migration 0134 (already hardened)"
+  - "Creating new migrations"
+  - "Application layer changes"
+
+stop_conditions:
+  - "If migration 0134 contract changes during implementation"
+  - "If verify_task_meta_schema.sh fails on updated meta.yml"
+  - "If verifier script does not use DATABASE_URL"
+
+proof_guarantees:
+  - "Verifier script validates all 11 columns from 0134 contract"
+  - "meta.yml references migration 0134, not 0119"
+  - "EXEC_LOG.md contains all 5 remediation trace markers"
+
+proof_limitations:
+  - "Cannot verify that policy_decisions table will perform well at scale"
+  - "Cannot verify signature authenticity (deferred to later wave)"
+
+depends_on:
+  - TSK-P2-PREAUTH-004-01
+blocks:
+  - TSK-P2-PREAUTH-004-03-DAG
+
+touches:
+  - scripts/db/verify_policy_decisions_schema.sh
+  - tasks/TSK-P2-PREAUTH-004-01/meta.yml
+  - docs/plans/phase2/TSK-P2-PREAUTH-004-01/PLAN.md
+  - docs/plans/phase2/TSK-P2-PREAUTH-004-01/EXEC_LOG.md
+  - evidence/phase2/tsk_p2_preauth_004_01.json
+  - tasks/TSK-P2-PREAUTH-004-01-REM/meta.yml
+
+deliverable_files:
+  - scripts/db/verify_policy_decisions_schema.sh
+  - tasks/TSK-P2-PREAUTH-004-01/meta.yml
+  - docs/plans/phase2/TSK-P2-PREAUTH-004-01/PLAN.md
+  - docs/plans/phase2/TSK-P2-PREAUTH-004-01/EXEC_LOG.md
+  - docs/plans/phase2/TSK-P2-PREAUTH-004-01-REM/PLAN.md
+  - docs/plans/phase2/TSK-P2-PREAUTH-004-01-REM/EXEC_LOG.md
+
+invariants:
+  - INV-138
+
+regulated_surface_compliance:
+  enabled: false
+  approval_workflow: none
+  stage_a_required_before_edit: false
+  regulated_paths: []
+  must_read: []
+
+remediation_trace_compliance:
+  enabled: true
+  required_markers:
+    - failure_signature
+    - origin_task_id
+    - repro_command
+    - verification_commands_run
+    - final_status
+  marker_location: EXEC_LOG.md
+  append_only: true
+  markers_required_at_edit: true
+  must_read:
+    - docs/operations/REMEDIATION_TRACE_WORKFLOW.md
+
+database_connection:
+  enabled: true
+  connection_string_format: "postgresql://<user>:<password>@<host>:<port>/<database>"
+  example_connection_string: "postgresql://symphony_admin:symphony_pass@localhost:5432/symphony"
+  container_name: symphony-postgres
+  database_url_env_var: DATABASE_URL
+  setup_command: "export DATABASE_URL=\"postgresql://symphony_admin:symphony_pass@localhost:5432/symphony\""
+
+migration_dependencies:
+  enabled: true
+  required_migrations:
+    - "0134": "create_policy_decisions table (hardened, 11 columns)"
+    - "0118": "create_execution_records table (dependency for FK)"
+  table_dependencies:
+    - execution_records: "0118"
+  verification_step: "Confirm execution_records table exists in migration 0118"
+
+work:
+  - '[ID tsk_p2_preauth_004_01_rem_01] Create verify_policy_decisions_schema.sh at scripts/db/verify_policy_decisions_schema.sh with 12 structural checks (C1-C12) and 5 negative tests (N1-N5) per 0134 migration contract. Script must use DATABASE_URL environment variable for all psql commands.'
+  - '[ID tsk_p2_preauth_004_01_rem_02] Update tasks/TSK-P2-PREAUTH-004-01/meta.yml: status→completed, migration ref→0134_create_policy_decisions.sql, column list→all 11 per locked contract, negative tests→all 5 enumerated (N1-N5), verifier→verify_policy_decisions_schema.sh, evidence path→tsk_p2_preauth_004_01.json, invariants→INV-138, regulated_surface_compliance.enabled→true, remediation_trace_compliance.enabled→true, database_connection.enabled→true, migration_dependencies.enabled→true with table_dependencies: execution_records from 0118.'
+
+acceptance_criteria:
+  - '[ID tsk_p2_preauth_004_01_rem_01] Verifier script exists, is executable, uses DATABASE_URL for all psql commands, emits JSON evidence to evidence/phase2/tsk_p2_preauth_004_01.json with required fields.'
+  - '[ID tsk_p2_preauth_004_01_rem_02] meta.yml passes verify_task_meta_schema.sh --mode strict, references migration 0134, contains all 11 columns, 5 negative tests, invariants=[INV-138].'
+
+negative_tests:
+  - id: TSK-P2-PREAUTH-004-01-REM-N1
+    description: >-
+      Verify that verify_policy_decisions_schema.sh exits non-zero when policy_decisions table does not exist.
+    required: true
+  - id: TSK-P2-PREAUTH-004-01-REM-N2
+    description: >-
+      Verify that verify_policy_decisions_schema.sh exits non-zero when decision_hash CHECK constraint is missing.
+    required: true
+  - id: TSK-P2-PREAUTH-004-01-REM-N3
+    description: >-
+      Verify that verify_policy_decisions_schema.sh exits non-zero when append-only trigger is missing.
+    required: true
+  - id: TSK-P2-PREAUTH-004-01-REM-N4
+    description: >-
+      Verify that INSERT with NULL execution_id fails with NOT NULL violation.
+    required: true
+  - id: TSK-P2-PREAUTH-004-01-REM-N5
+    description: >-
+      Verify that UPDATE existing row fails with trigger ERRCODE GF060.
+    required: true
+
+positive_tests:
+  - id: TSK-P2-PREAUTH-004-01-REM-P1
+    description: >-
+      Verify that verify_policy_decisions_schema.sh exits 0 when all 12 structural checks pass and 5 negative tests fail as expected.
+    required: false
+
+verification:
+  - >-
+    # [ID tsk_p2_preauth_004_01_rem_01]
+    test -x scripts/db/verify_policy_decisions_schema.sh && bash scripts/db/verify_policy_decisions_schema.sh > evidence/phase2/tsk_p2_preauth_004_01.json || exit 1
+  - >-
+    # [ID tsk_p2_preauth_004_01_rem_01] [ID tsk_p2_preauth_004_01_rem_02]
+    python3 scripts/audit/validate_evidence.py --task TSK-P2-PREAUTH-004-01 --evidence evidence/phase2/tsk_p2_preauth_004_01.json || exit 1
+  - >-
+    # [ID tsk_p2_preauth_004_01_rem_02]
+    bash scripts/audit/verify_task_meta_schema.sh --mode strict --allow-legacy || exit 1
+
+evidence:
+  - path: evidence/phase2/tsk_p2_preauth_004_01.json
+    must_include:
+      - task_id
+      - git_sha
+      - timestamp_utc
+      - status
+      - pass_count
+      - fail_count
+      - checks
+      - column_contract_source
+
+failure_modes:
+  - "Verifier script does not use DATABASE_URL => CRITICAL_FAIL"
+  - "meta.yml fails verify_task_meta_schema.sh => FAIL"
+  - "PLAN.md does not reference 0134 contract => FAIL"
+  - "EXEC_LOG.md missing remediation trace markers => FAIL"
+  - "Evidence file missing => FAIL"
+
+must_read:
+  - docs/operations/AI_AGENT_OPERATION_MANUAL.md
+  - docs/operations/TASK_CREATION_PROCESS.md
+  - docs/operations/WAVE5_TASK_CREATION_LESSONS_LEARNED.md
+  - docs/operations/REMEDIATION_TRACE_WORKFLOW.md
+  - schema/migrations/0134_create_policy_decisions.sql
+
+implementation_plan: docs/plans/phase2/TSK-P2-PREAUTH-004-01-REM/PLAN.md
+implementation_log: docs/plans/phase2/TSK-P2-PREAUTH-004-01-REM/EXEC_LOG.md
+
+notes: >-
+  This is a post-integration reconciliation task. Migration 0134 already exists and is hardened on the Wave 5 branch.
+  The task metadata in 004-01 was never updated to reflect the actual implementation, creating governance drift.
+  This task aligns the metadata with reality without modifying the migration itself.
+  Phase Key: W4-REM. Phase Name: Wave 4 Authority Binding Remediation.
+
+client: cursor
+assigned_agent: db_foundation
+model: <UNASSIGNED>

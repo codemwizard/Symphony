@@ -1,0 +1,51 @@
+schema_version: "1.0"
+phase: PRE-PHASE2
+task_id: TSK-P2-PREAUTH-004-01
+title: Create policy_decisions table with full authority binding
+status: planned
+
+priority: critical
+risk_class: high
+blast_radius: schema_core
+
+depends_on:
+  - TSK-P2-PREAUTH-004-00
+
+touches:
+  - schema/migrations/0134_policy_decisions.sql
+  - scripts/audit/verify_policy_decisions_schema.sh
+  - evidence/phase2/tsk_p2_preauth_004_01.json
+
+implementation_plan: docs/plans/phase2/TSK-P2-PREAUTH-004-01/PLAN.md
+implementation_log: docs/plans/phase2/TSK-P2-PREAUTH-004-01/EXEC_LOG.md
+
+acceptance_criteria:
+  - policy_decisions table exists with required columns
+  - execution_id FK enforced
+  - entity_type/entity_id present
+  - decision_hash/signature NOT NULL
+  - UNIQUE(execution_id, decision_type) enforced
+
+negative_tests:
+  - insert without execution_id must fail
+  - insert without signature must fail
+  - insert without entity_id must fail
+
+verification:
+  - psql -c "\d policy_decisions" | grep -q "execution_id" || exit 1
+  - psql -c "\d policy_decisions" | grep -q "entity_type" || exit 1
+  - psql -c "SELECT 1 FROM information_schema.table_constraints WHERE table_name='policy_decisions' AND constraint_type='FOREIGN KEY';" | grep -q "1" || exit 1
+  - bash scripts/audit/verify_policy_decisions_schema.sh || exit 1
+  - python3 scripts/audit/validate_evidence.py --task TSK-P2-PREAUTH-004-01 --evidence evidence/phase2/tsk_p2_preauth_004_01.json || exit 1
+  - RUN_PHASE1_GATES=1 bash scripts/dev/pre_ci.sh || exit 1
+
+failure_modes:
+  - FK_MISSING
+  - ENTITY_BINDING_MISSING
+  - NULL_SIGNATURE_ALLOWED
+  - UNIQUE_CONSTRAINT_MISSING
+
+stop_conditions:
+  - migration applied
+  - verifier passes
+  - evidence file generated

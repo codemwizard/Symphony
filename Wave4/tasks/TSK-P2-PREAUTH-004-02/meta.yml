@@ -1,0 +1,31 @@
+schema_version: "1.0"
+phase: PRE-PHASE2
+task_id: TSK-P2-PREAUTH-004-02
+title: Create state_rules table with deterministic priority
+status: planned
+
+priority: critical
+risk_class: high
+blast_radius: schema_core
+
+depends_on:
+  - TSK-P2-PREAUTH-004-01
+
+touches:
+  - schema/migrations/0135_state_rules.sql
+
+acceptance_criteria:
+  - rule_priority exists
+  - UNIQUE(entity_type, from_state, to_state) enforced
+
+negative_tests:
+  - duplicate rule must fail
+
+verification:
+  - psql -c "\d state_rules" | grep -q "rule_priority" || exit 1
+  - python3 scripts/audit/validate_evidence.py --task TSK-P2-PREAUTH-004-02 --evidence evidence/phase2/tsk_p2_preauth_004_02.json || exit 1
+  - RUN_PHASE1_GATES=1 bash scripts/dev/pre_ci.sh || exit 1
+
+failure_modes:
+  - UNIQUE_RULE_MISSING
+  - PRIORITY_MISSING
