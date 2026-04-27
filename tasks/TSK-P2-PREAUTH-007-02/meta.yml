@@ -3,7 +3,7 @@ phase: '2'
 task_id: TSK-P2-PREAUTH-007-02
 title: "Register INV-175 (data_authority_enforced)"
 owner_role: INVARIANTS_CURATOR
-status: revoked
+status: completed
 priority: HIGH
 risk_class: GOVERNANCE
 blast_radius: DOCS_ONLY
