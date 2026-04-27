@@ -1,5 +1,10 @@
 # Execution Log: TSK-P2-W6-REM-17a
 
+**failure_signature**: P2.W6-REM.MISSING_WAVE6_COLUMNS.INVARIANT_GAP
+**origin_task_id**: TSK-P2-W6-REM-17a
+**repro_command**: `psql -c "\d state_transitions" | grep interpretation_version_id` (not found)
+**plan_reference**: docs/plans/phase2/TSK-P2-W6-REM-17a/PLAN.md
+
 ## Initial State
 - Task `TSK-P2-W6-REM-17a` is in-progress.
 - Scaffolded meta.yml, PLAN.md, and this EXEC_LOG.md.

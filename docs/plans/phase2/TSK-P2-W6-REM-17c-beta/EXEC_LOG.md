@@ -1,5 +1,9 @@
 # Execution Log: TSK-P2-W6-REM-17c-beta
 
+**failure_signature**: P2.W6-REM.POLICY_DECISIONS_PROJECT_ID_NULL.SCHEMA_WEAKNESS
+**origin_task_id**: TSK-P2-W6-REM-17b-beta
+**plan_reference**: docs/plans/phase2/TSK-P2-W6-REM-17c-beta/PLAN.md
+
 ## Initial State
 - Task `TSK-P2-W6-REM-17c-beta` is in-progress.
 

@@ -1,5 +1,10 @@
 # Execution Log: TSK-P2-W6-REM-17b-alpha
 
+**failure_signature**: P2.W6-REM.INTERPRETATION_VERSION_ID_NULL.INVARIANT_GAP
+**origin_task_id**: TSK-P2-W6-REM-17a (schema expand created the column)
+**repro_command**: `psql -c "SELECT count(*) FROM state_transitions WHERE interpretation_version_id IS NULL;"` (returns row count > 0 before backfill)
+**plan_reference**: docs/plans/phase2/TSK-P2-W6-REM-17b-alpha/PLAN.md
+
 ## Initial State
 - Task `TSK-P2-W6-REM-17b-alpha` is in-progress.
 
