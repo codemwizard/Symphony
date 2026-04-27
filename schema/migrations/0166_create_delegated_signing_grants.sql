@@ -3,23 +3,25 @@
 -- Description: Create delegated_signing_grants table to satisfy the non-masquerade invariant
 -- Work Item: tsk_p2_preauth_007_09_work_item_01
 
--- Drop table if exists (for idempotent migration)
-DROP TABLE IF EXISTS delegated_signing_grants CASCADE;
-
--- Create delegated_signing_grants table to map actor scope to payload
-CREATE TABLE delegated_signing_grants (
-    id BIGSERIAL PRIMARY KEY,
-    grant_id VARCHAR(100) NOT NULL UNIQUE,
-    actor_id VARCHAR(100) NOT NULL,
-    scope JSONB NOT NULL,
-    payload_hash VARCHAR(64) NOT NULL,
-    granted_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    expires_at TIMESTAMPTZ NOT NULL,
-    is_active BOOLEAN NOT NULL DEFAULT TRUE,
-    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    CONSTRAINT expires_after_granted CHECK (expires_at > granted_at),
-    CONSTRAINT payload_hash_format CHECK (payload_hash ~ '^[a-f0-9]{64}$')
-);
+-- Create delegated_signing_grants table to map actor scope to payload (idempotent)
+DO $$
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schema = 'public' AND table_name = 'delegated_signing_grants') THEN
+        CREATE TABLE delegated_signing_grants (
+            id BIGSERIAL PRIMARY KEY,
+            grant_id VARCHAR(100) NOT NULL UNIQUE,
+            actor_id VARCHAR(100) NOT NULL,
+            scope JSONB NOT NULL,
+            payload_hash VARCHAR(64) NOT NULL,
+            granted_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+            expires_at TIMESTAMPTZ NOT NULL,
+            is_active BOOLEAN NOT NULL DEFAULT TRUE,
+            created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+            CONSTRAINT expires_after_granted CHECK (expires_at > granted_at),
+            CONSTRAINT payload_hash_format CHECK (payload_hash ~ '^[a-f0-9]{64}$')
+        );
+    END IF;
+END $$;
 
 -- Create indexes for performance
 CREATE INDEX idx_delegated_signing_grants_actor_id ON delegated_signing_grants(actor_id);

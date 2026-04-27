@@ -9,5 +9,5 @@ repro_command: scripts/dev/pre_ci.sh
 verification_commands_run: pending
 final_status: OPEN
 
-- created_at_utc: 2026-04-27T21:35:25Z
+- created_at_utc: 2026-04-27T21:53:41Z
 - action: remediation casefile scaffold created

@@ -3,21 +3,23 @@
 -- Description: Create public_keys_registry table with temporal validity constraints
 -- Work Item: tsk_p2_preauth_007_08_work_item_01
 
--- Drop table if exists (for idempotent migration)
-DROP TABLE IF EXISTS public_keys_registry CASCADE;
-
--- Create public_keys_registry table with temporal validity constraints
-CREATE TABLE public_keys_registry (
-    id BIGSERIAL PRIMARY KEY,
-    key_id VARCHAR(100) NOT NULL UNIQUE,
-    actor_id VARCHAR(100) NOT NULL,
-    public_key TEXT NOT NULL,
-    key_type VARCHAR(50) NOT NULL CHECK (key_type IN ('RSA', 'ECDSA', 'ED25519')),
-    valid_from TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    valid_until TIMESTAMPTZ NOT NULL,
-    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    CONSTRAINT valid_until_after_valid_from CHECK (valid_until > valid_from)
-);
+-- Create public_keys_registry table with temporal validity constraints (idempotent)
+DO $$
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schema = 'public' AND table_name = 'public_keys_registry') THEN
+        CREATE TABLE public_keys_registry (
+            id BIGSERIAL PRIMARY KEY,
+            key_id VARCHAR(100) NOT NULL UNIQUE,
+            actor_id VARCHAR(100) NOT NULL,
+            public_key TEXT NOT NULL,
+            key_type VARCHAR(50) NOT NULL CHECK (key_type IN ('RSA', 'ECDSA', 'ED25519')),
+            valid_from TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+            valid_until TIMESTAMPTZ NOT NULL,
+            created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+            CONSTRAINT valid_until_after_valid_from CHECK (valid_until > valid_from)
+        );
+    END IF;
+END $$;
 
 -- Create exclusion constraint to prevent overlapping temporal bounds for the same actor
 CREATE EXTENSION IF NOT EXISTS btree_gist;
