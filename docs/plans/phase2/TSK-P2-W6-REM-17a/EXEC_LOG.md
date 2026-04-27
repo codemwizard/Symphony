@@ -16,3 +16,6 @@
 - Authored migration `0157_add_project_id_to_policy_decisions.sql` — adds nullable uuid column to `policy_decisions`.
 - Both columns verified as `uuid`, `nullable=YES`, with no defaults.
 - Evidence captured to `evidence/phase2/tsk_p2_w6_rem_17a.json`.
+
+## Final Summary
+Task TSK-P2-W6-REM-17a successfully added Wave 6 columns to enable interpretation tracking. Authored migrations 0156 (interpretation_version_id on state_transitions) and 0157 (project_id on policy_decisions). Both columns verified as uuid, nullable, with no defaults. Evidence generated. This closes Gap G-02 from Wave 6 Gap Analysis.

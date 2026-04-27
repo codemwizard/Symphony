@@ -28,3 +28,6 @@ export DATABASE_URL="postgresql://symphony_admin:symphony_pass@localhost:55432/s
 bash scripts/audit/verify_tsk_p2_preauth_007_07.sh > evidence/phase2/tsk_p2_preauth_007_07.json
 ```
 **final_status**: PASS (verified against live DB)
+
+## Final Summary
+Task TSK-P2-PREAUTH-007-07 successfully implemented registry supersession constraints (migration 0164). Added NOT NULL constraints on superseded_by_id and superseded_at to enforce linear supersession chains in the invariant_registry. Verifier confirms constraints exist and are enforced. Evidence generated and baseline regenerated. This closes gaps in invariant governance by preventing circular or incomplete supersession relationships.

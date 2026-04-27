@@ -1,5 +1,10 @@
 # Execution Log: TSK-P2-W6-REM-15
 
+**failure_signature**: P2.W6-REM.K13_SQLSTATE_COLLISION.INVARIANT_GAP
+**origin_task_id**: TSK-P2-PREAUTH-006A-01 (or Wave 4 Migration 0130 gap)
+**repro_command**: `grep "GF060" schema/migrations/0130_k13_taxonomy_alignment_trigger.sql` (found collision)
+**plan_reference**: docs/plans/phase2/TSK-P2-W6-REM-15/PLAN.md
+
 ## Initial State
 - Task `TSK-P2-W6-REM-15` is planned.
 - Scaffolded meta.yml, PLAN.md, and this EXEC_LOG.md.
@@ -15,3 +20,6 @@
 - Fixed the `0155_reassign_k13_sqlstate_gf061.sql` migration to successfully compile and raise `GF061` despite the underlying table missing the `spatial_check_execution_id` column yet.
 - Updated `verify_tsk_p2_w6_rem_15.sh` behavioral tests to ensure the valid compilation and the correct `GF061` output upon a violative UPDATE.
 - Executed migration and verifier in the ephemeral db to capture verified `tsk_p2_w6_rem_15.json` evidence.
+
+## Final Summary
+Task TSK-P2-W6-REM-15 successfully fixed K13 SQLSTATE collision issue. Updated migration 0155 to correctly assign GF061 to spatial_check failures. Verifier confirms migration compiles and raises GF061 on violative UPDATEs. Evidence generated. This resolves SQLSTATE collision between Wave 4 and Wave 5 taxonomies.

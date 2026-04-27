@@ -1,5 +1,10 @@
 # Execution Log: TSK-P2-W6-REM-16a
 
+**failure_signature**: P2.W6-REM.CONTRACT_DOCUMENTS_NOT_IN_CANONICAL_PATH.INVARIANT_GAP
+**origin_task_id**: TSK-P2-W6-REM-16a
+**repro_command**: `ls docs/contracts/ED25519_SIGNING_CONTRACT.md` (Not found)
+**plan_reference**: docs/plans/phase2/TSK-P2-W6-REM-16a/PLAN.md
+
 ## Initial State
 - Task `TSK-P2-W6-REM-16a` is in-progress.
 - Scaffolded meta.yml, PLAN.md, and this EXEC_LOG.md.
@@ -16,3 +21,6 @@
 - Updated `Canonical-Reference` headers to reflect their actual paths.
 - Verified absence of placeholders (`TODO`, `FIXME`, `TBD`, `PLACEHOLDER`, `XXX`).
 - Scanned and validated evidence correctly generated as `tsk_p2_w6_rem_16a.json`.
+
+## Final Summary
+Task TSK-P2-W6-REM-16a successfully moved contract documents to canonical directories. Moved 4 documents (ED25519_SIGNING_CONTRACT.md, TRANSITION_HASH_CONTRACT.md, DATA_AUTHORITY_DERIVATION_SPEC.md, DATA_AUTHORITY_SYSTEM_DESIGN.md) to docs/contracts/. Updated Canonical-Reference headers to reflect actual paths. Verified absence of placeholders. Evidence generated. This establishes canonical contract documentation locations for Wave 6.

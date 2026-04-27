@@ -14,3 +14,6 @@
 - Followed assert-mutate-reconcile contract.
 - Temporarily disabled `policy_decisions_append_only_trigger` for mutation.
 - Verified 0 null values remain and all values match execution_records.project_id.
+
+## Final Summary
+Task TSK-P2-W6-REM-17b-beta successfully backfilled project_id column in policy_decisions. Authored migration 0160 following assert-mutate-reconcile contract. Temporarily disabled policy_decisions_append_only_trigger for mutation. Verified 0 null values remain and all values match execution_records.project_id. Evidence generated.

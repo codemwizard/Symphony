@@ -14,3 +14,6 @@
 - Identified 19 legacy test fixtures that performed manual inserts without a project_id.
 - Surgically patched all 19 fixtures to preserve the constraint without breaking CI.
 - Schema verified: project_id is NOT NULL.
+
+## Final Summary
+Task TSK-P2-W6-REM-17c-beta successfully enforced NOT NULL constraint on project_id in policy_decisions. Authored migration 0161. Identified 19 legacy test fixtures performing manual inserts without project_id. Surgically patched all 19 fixtures to preserve constraint without breaking CI. Schema verified: project_id is NOT NULL. Evidence generated.

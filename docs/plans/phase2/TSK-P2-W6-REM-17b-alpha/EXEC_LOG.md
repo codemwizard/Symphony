@@ -16,3 +16,6 @@
 - Migration applied: CARDINALITY OK (0 ambiguous), BACKFILL OK (0 rows updated — table empty, vacuous pass).
 - Trigger re-enabled confirmed (`tgenabled=O`).
 - Evidence captured to `evidence/phase2/tsk_p2_w6_rem_17b_alpha.json`.
+
+## Final Summary
+Task TSK-P2-W6-REM-17b-alpha successfully backfilled interpretation_version_id column. Authored migration 0158 with three-phase assert→mutate→reconcile contract. Temporarily disabled bd_01_deny_state_transitions_mutation trigger during UPDATE, re-enabled immediately after. Migration applied with CARDINALITY OK (0 ambiguous) and BACKFILL OK (0 rows updated - table empty). Trigger re-enabled confirmed. Evidence generated.
