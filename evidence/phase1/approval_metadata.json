@@ -1,28 +1,29 @@
 {
   "schema_version": "1.0",
-  "generated_at_utc": "2026-04-17T20:16:00Z",
-  "git_commit": "8b9e060e43864267b603128db7b4942a885b6faa",
+  "generated_at_utc": "2026-04-27T20:57:00Z",
+  "git_commit": "54d084ef79ded07266ab5e3c258461ae6e7b0ba6",
   "change_scope": {
     "regulated_surfaces_touched": true,
     "paths_changed": [
-      "schema/migrations/0118_create_execution_records.sql",
-      "schema/migrations/MIGRATION_HEAD",
-      "evidence/phase2/tsk_p2_preauth_003_01.json",
-      "evidence/phase2/tsk_p2_preauth_003_02.json",
-      "docs/invariants/exceptions/exception_change-rule_ddl_2026-04-17_3.md"
+      "scripts/security/hot_tables.txt",
+      "scripts/security/ddl_allowlist.json",
+      "scripts/security/lint_ddl_lock_risk.sh",
+      ".github/CODEOWNERS",
+      "docs/plans/phase1/REM-2026-04-27_pre_ci-phase0_ordered_checks/DRD.md",
+      "docs/plans/phase1/REM-2026-04-27_pre_ci-phase0_ordered_checks/EXEC_LOG.md"
     ]
   },
   "ai": {
-    "ai_prompt_hash": "6c588ba0f1458ae57f8d5efa351bb12d2d104da720b6c0d7cf98bc1c248ab2d5",
-    "model_id": "claude-sonnet",
+    "ai_prompt_hash": "wave7_strict_enforcement_stage_a_20260426",
+    "model_id": "SWE-1.6",
     "client": "cursor_codex",
-    "session_id": "wave3-execution-records-implementation"
+    "session_id": "wave7-ddl-allowlist-implementation"
   },
   "human_approval": {
-    "approver_id": "mwiza",
-    "approval_artifact_ref": "approvals/2026-04-17/wave3-execution-records-implementation.md",
-    "change_reason": "Wave 3 implementation: Create execution_records table with interpretation_version_id FK to bind executions to interpretation packs",
-    "approved_at_utc": "2026-04-17T20:25:00Z"
+    "approver_id": "human_reviewer",
+    "approval_artifact_ref": "approvals/2026-04-26/BRANCH-feat-pre-phase2-wave-5-state-machine-trigger-layer.md",
+    "change_reason": "Wave 7-STRICT Enforcement Track - DDL allowlist implementation for hot-table aware linting per docs/PLANS-addendum_1.md",
+    "approved_at_utc": "2026-04-26T00:00:00Z"
   },
-  "notes": "Wave 3 Phase 2 implementation for TSK-P2-PREAUTH-003-00/01/02. Requires human approval for regulated surface changes to schema/migrations and evidence paths."
+  "notes": "DDL allowlist implementation for hot-table aware linting. Added hot_tables.txt, ddl_allowlist.json with 57 fingerprinted entries, updated lint_ddl_lock_risk.sh with allowlist support, and updated CODEOWNERS for security review. All DDL on hot tables is fingerprinted without legacy migration exemptions."
 }

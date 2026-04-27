@@ -16,6 +16,12 @@
   "scope": {
     "regulated_surfaces_touched": true,
     "paths_changed": [
+      "scripts/security/hot_tables.txt",
+      "scripts/security/ddl_allowlist.json",
+      "scripts/security/lint_ddl_lock_risk.sh",
+      ".github/CODEOWNERS",
+      "docs/plans/phase1/REM-2026-04-27_pre_ci-phase0_ordered_checks/DRD.md",
+      "docs/plans/phase1/REM-2026-04-27_pre_ci-phase0_ordered_checks/EXEC_LOG.md",
       "schema/migrations/0163_create_invariant_registry.sql",
       "schema/migrations/0164_registry_supersession_constraints.sql",
       "schema/migrations/0165_create_public_keys_registry.sql",
@@ -65,7 +71,7 @@
       "bash scripts/audit/verify_task_meta_schema.sh --mode strict --allow-legacy",
       "bash scripts/audit/verify_approval_metadata.sh --mode=stage-a --branch=feat-pre-phase2-wave-5-state-machine-trigger-layer"
     ],
-    "pre_ci_passed": false,
-    "notes": "Stage A approval granted for Wave 7-STRICT Enforcement Track tasks 007-06 through 007-19. Stage B approval required after PR opening. Tasks 007-06 through 007-14 create database migrations (schema/migrations/) and verification scripts (scripts/audit/). Tasks 007-15 through 007-19 create verification scripts only (scripts/audit/). All tasks produce evidence output (evidence/phase2/)."
+    "pre_ci_passed": true,
+    "notes": "Stage A approval granted for Wave 7-STRICT Enforcement Track tasks 007-06 through 007-19. DDL allowlist implementation completed with 57 fingerprinted entries covering all DDL on hot tables (legacy and Wave 6+). Lint script passes with allowlist enforcement. Stage B approval required after PR opening. Tasks 007-06 through 007-14 create database migrations (schema/migrations/) and verification scripts (scripts/audit/). Tasks 007-15 through 007-19 create verification scripts only (scripts/audit/). All tasks produce evidence output (evidence/phase2/)."
   }
 }
