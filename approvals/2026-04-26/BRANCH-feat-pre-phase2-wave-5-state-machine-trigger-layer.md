@@ -6,7 +6,7 @@
 
 ## 8. Cross-References (Machine-Readable)
 
-- **Approval Sidecar**: approvals/2026-04-26/BRANCH-feat-pre-phase2-wave-5-state-machine-trigger-layer.approval.json
+Approval Sidecar JSON: approvals/2026-04-26/BRANCH-feat-pre-phase2-wave-5-state-machine-trigger-layer.approval.json
 - **Approval Metadata**: evidence/phase1/approval_metadata.json
 - **Branch**: feat/pre-phase2-wave-5-state-machine-trigger-layer
 - **Approver ID**: human_reviewer

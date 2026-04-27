@@ -14,7 +14,7 @@
     ]
   },
   "ai": {
-    "ai_prompt_hash": "wave7_strict_enforcement_stage_a_20260426",
+    "ai_prompt_hash": "93856576a8026e82241c49435bbb41bf968ce2da9867f8ea0eba2c81c6785f83",
     "model_id": "SWE-1.6",
     "client": "cursor_codex",
     "session_id": "wave7-ddl-allowlist-implementation"
