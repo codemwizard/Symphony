@@ -3,186 +3,458 @@
   "description": "Fingerprinted allowlist for DDL operations on hot tables. Per docs/PLANS-addendum_1.md.",
   "entries": [
     {
+      "migration_file": "0101_gf_asset_lifecycle.sql",
+      "line_number": 33,
+      "statement_fingerprint": "ea43a8d3dde00f0c062e30bc25db51a7f9428e45d870745e3e2b18cc96ec419a",
+      "reason": "DDL on hot table: 0101_gf_asset_lifecycle.sql:33",
+      "expires_on": "2026-12-31",
+      "sunset_migration_id": null
+    },
+    {
+      "migration_file": "0101_gf_asset_lifecycle.sql",
+      "line_number": 34,
+      "statement_fingerprint": "4c8c10937891d92e5288ec59594886904aeadaf0d44a4ad3310db1d604630d65",
+      "reason": "DDL on hot table: 0101_gf_asset_lifecycle.sql:34",
+      "expires_on": "2026-12-31",
+      "sunset_migration_id": null
+    },
+    {
+      "migration_file": "0101_gf_asset_lifecycle.sql",
+      "line_number": 41,
+      "statement_fingerprint": "62fdc9b915baf9a244fdad42c61fc2229f4e088581be75bc9836d09d9be52f25",
+      "reason": "DDL on hot table: 0101_gf_asset_lifecycle.sql:41",
+      "expires_on": "2026-12-31",
+      "sunset_migration_id": null
+    },
+    {
+      "migration_file": "0101_gf_asset_lifecycle.sql",
+      "line_number": 42,
+      "statement_fingerprint": "e9b4c9384244b2ff405301561bb9e168e291ee6d016ac3ce634e15c81191a3f8",
+      "reason": "DDL on hot table: 0101_gf_asset_lifecycle.sql:42",
+      "expires_on": "2026-12-31",
+      "sunset_migration_id": null
+    },
+    {
       "migration_file": "0158_backfill_interpretation_version_id.sql",
       "line_number": 27,
-      "statement_fingerprint": "placeholder_sha256",
-      "reason": "Trigger disable required for interpretation_version_id backfill operation",
+      "statement_fingerprint": "86f8ce5d1c026f1445d9efd6f16e8f6817e5d8f00ed96a8d6008102632cb468c",
+      "reason": "DDL on hot table: 0158_backfill_interpretation_version_id.sql:27",
       "expires_on": "2026-12-31",
       "sunset_migration_id": null
     },
     {
       "migration_file": "0158_backfill_interpretation_version_id.sql",
       "line_number": 64,
-      "statement_fingerprint": "placeholder_sha256",
-      "reason": "Trigger re-enable after interpretation_version_id backfill completion",
+      "statement_fingerprint": "56759b66d4341d7cd13ef3b306167121d5dc9bacbc9b0ce0e43db252fa17b314",
+      "reason": "DDL on hot table: 0158_backfill_interpretation_version_id.sql:64",
+      "expires_on": "2026-12-31",
+      "sunset_migration_id": null
+    },
+    {
+      "migration_file": "0150_fix_state_current_fk_restrict.sql",
+      "line_number": 8,
+      "statement_fingerprint": "a4e33298655e151c866a6fae1ec5b91b014cb838314e0b94af86add56376de43",
+      "reason": "DDL on hot table: 0150_fix_state_current_fk_restrict.sql:8",
+      "expires_on": "2026-12-31",
+      "sunset_migration_id": null
+    },
+    {
+      "migration_file": "0150_fix_state_current_fk_restrict.sql",
+      "line_number": 11,
+      "statement_fingerprint": "61518d01b7e08c31ba629e0c1037cc84a2bee2ae80d8742608af29beb209d4d5",
+      "reason": "DDL on hot table: 0150_fix_state_current_fk_restrict.sql:11",
       "expires_on": "2026-12-31",
       "sunset_migration_id": null
     },
     {
       "migration_file": "0154_enforce_last_transition_id_not_null.sql",
       "line_number": 21,
-      "statement_fingerprint": "placeholder_sha256",
-      "reason": "NOT NULL constraint enforcement on state_current.last_transition_id after backfill",
+      "statement_fingerprint": "03750b8c4690081d0d4b6c94a0c14692be10e2ff0101af06466e0e2a2883ce3a",
+      "reason": "DDL on hot table: 0154_enforce_last_transition_id_not_null.sql:21",
+      "expires_on": "2026-12-31",
+      "sunset_migration_id": null
+    },
+    {
+      "migration_file": "0147_add_fks_to_state_transitions.sql",
+      "line_number": 20,
+      "statement_fingerprint": "a3e54cd583baf21f85109d86fb08030bc7e36a591d60dbb062fcfb0c56f4fea2",
+      "reason": "DDL on hot table: 0147_add_fks_to_state_transitions.sql:20",
+      "expires_on": "2026-12-31",
+      "sunset_migration_id": null
+    },
+    {
+      "migration_file": "0074_billable_clients_client_key_constraint.sql",
+      "line_number": 4,
+      "statement_fingerprint": "f5f04bea9bef85e006ce296202da0fc1b4f0a9275e5f780dd9f356e7b43bb993",
+      "reason": "DDL on hot table: 0074_billable_clients_client_key_constraint.sql:4",
       "expires_on": "2026-12-31",
       "sunset_migration_id": null
     },
     {
       "migration_file": "0168_attestation_seam_schema.sql",
       "line_number": 32,
-      "statement_fingerprint": "placeholder_sha256",
-      "reason": "Adding columns to asset_batches for attestation seam",
-      "expires_on": "2026-12-31",
-      "sunset_migration_id": null
-    },
-    {
-      "migration_file": "0168_attestation_seam_schema.sql",
-      "line_number": 48,
-      "statement_fingerprint": "placeholder_sha256",
-      "reason": "Adding columns to asset_batches for attestation seam",
-      "expires_on": "2026-12-31",
-      "sunset_migration_id": null
-    },
-    {
-      "migration_file": "0168_attestation_seam_schema.sql",
-      "line_number": 62,
-      "statement_fingerprint": "placeholder_sha256",
-      "reason": "Adding columns to asset_batches for attestation seam",
+      "statement_fingerprint": "0ee591181512af5830436b3481f996c9dea98c02c34151c9b6afe76b99e14d33",
+      "reason": "DDL on hot table: 0168_attestation_seam_schema.sql:32",
       "expires_on": "2026-12-31",
       "sunset_migration_id": null
     },
     {
       "migration_file": "0161_enforce_policy_decisions_project_id_not_null.sql",
       "line_number": 18,
-      "statement_fingerprint": "placeholder_sha256",
-      "reason": "NOT NULL constraint enforcement on policy_decisions.project_id after backfill",
-      "expires_on": "2026-12-31",
-      "sunset_migration_id": null
-    },
-    {
-      "migration_file": "0170_attestation_anti_replay.sql",
-      "line_number": 18,
-      "statement_fingerprint": "placeholder_sha256",
-      "reason": "Adding columns to asset_batches for anti-replay protection",
-      "expires_on": "2026-12-31",
-      "sunset_migration_id": null
-    },
-    {
-      "migration_file": "0170_attestation_anti_replay.sql",
-      "line_number": 32,
-      "statement_fingerprint": "placeholder_sha256",
-      "reason": "Adding columns to asset_batches for anti-replay protection",
+      "statement_fingerprint": "f7375a982892ca7da243b7c0a7cbb13fa01d5767fc47a705854e72afdd4e6f4e",
+      "reason": "DDL on hot table: 0161_enforce_policy_decisions_project_id_not_null.sql:18",
       "expires_on": "2026-12-31",
       "sunset_migration_id": null
     },
     {
       "migration_file": "0159_enforce_interpretation_version_id_not_null.sql",
       "line_number": 12,
-      "statement_fingerprint": "placeholder_sha256",
-      "reason": "NOT NULL constraint enforcement on state_transitions.interpretation_version_id after backfill",
+      "statement_fingerprint": "36acfad0b0ef422cde14bf94a1cc619558f2975fd501312f03765ad1ad03af08",
+      "reason": "DDL on hot table: 0159_enforce_interpretation_version_id_not_null.sql:12",
       "expires_on": "2026-12-31",
       "sunset_migration_id": null
     },
     {
       "migration_file": "0157_add_project_id_to_policy_decisions.sql",
       "line_number": 5,
-      "statement_fingerprint": "placeholder_sha256",
-      "reason": "Adding nullable project_id column to policy_decisions for Wave 6 interpretation tracking",
+      "statement_fingerprint": "003a444c5a582776fd955e6df205a8fe66aed6084194e31f8947b7114598654e",
+      "reason": "DDL on hot table: 0157_add_project_id_to_policy_decisions.sql:5",
       "expires_on": "2026-12-31",
       "sunset_migration_id": null
     },
     {
-      "migration_file": "0164_registry_supersession_constraints.sql",
-      "line_number": 27,
-      "statement_fingerprint": "placeholder_sha256",
-      "reason": "Adding constraint to invariant_registry for supersession tracking",
+      "migration_file": "0121_create_data_authority_enum.sql",
+      "line_number": 21,
+      "statement_fingerprint": "e967170e526b502f5b433bd224ac0ec06b3c86fc3dcc148ee4959f47d3a1c8f7",
+      "reason": "DDL on hot table: 0121_create_data_authority_enum.sql:21",
+      "expires_on": "2026-12-31",
+      "sunset_migration_id": null
+    },
+    {
+      "migration_file": "0121_create_data_authority_enum.sql",
+      "line_number": 26,
+      "statement_fingerprint": "f999ad9c41a6935f151286a0f553208561d084c30748cc70b8e13a0357b1ad14",
+      "reason": "DDL on hot table: 0121_create_data_authority_enum.sql:26",
       "expires_on": "2026-12-31",
       "sunset_migration_id": null
     },
     {
       "migration_file": "0160_backfill_policy_decisions_project_id.sql",
       "line_number": 24,
-      "statement_fingerprint": "placeholder_sha256",
-      "reason": "Trigger disable required for policy_decisions.project_id backfill",
+      "statement_fingerprint": "3d972c463bf8ca42f1067bcab970b7e088bd146ce1e9221890b18b7fe99dcddb",
+      "reason": "DDL on hot table: 0160_backfill_policy_decisions_project_id.sql:24",
       "expires_on": "2026-12-31",
       "sunset_migration_id": null
     },
     {
       "migration_file": "0160_backfill_policy_decisions_project_id.sql",
       "line_number": 34,
-      "statement_fingerprint": "placeholder_sha256",
-      "reason": "Trigger re-enable after policy_decisions.project_id backfill",
+      "statement_fingerprint": "ca89d6c971a91cb1572f050449ea71f6d820c4cdfc510e7ed701d890b1906209",
+      "reason": "DDL on hot table: 0160_backfill_policy_decisions_project_id.sql:34",
+      "expires_on": "2026-12-31",
+      "sunset_migration_id": null
+    },
+    {
+      "migration_file": "0099_gf_monitoring_records.sql",
+      "line_number": 14,
+      "statement_fingerprint": "67ef286799cdf935ade844ba51f083a665205dd0e79d8d86787268bfce7c1a44",
+      "reason": "DDL on hot table: 0099_gf_monitoring_records.sql:14",
+      "expires_on": "2026-12-31",
+      "sunset_migration_id": null
+    },
+    {
+      "migration_file": "0099_gf_monitoring_records.sql",
+      "line_number": 15,
+      "statement_fingerprint": "cc95e0990262412e17545b7105755d63514b3bc12e614641bf47be3f7845e190",
+      "reason": "DDL on hot table: 0099_gf_monitoring_records.sql:15",
+      "expires_on": "2026-12-31",
+      "sunset_migration_id": null
+    },
+    {
+      "migration_file": "0099_gf_monitoring_records.sql",
+      "line_number": 18,
+      "statement_fingerprint": "19bfba896d115978ed25ab6f27d559529fb1ae3c0deda9c43980a5041019279b",
+      "reason": "DDL on hot table: 0099_gf_monitoring_records.sql:18",
+      "expires_on": "2026-12-31",
+      "sunset_migration_id": null
+    },
+    {
+      "migration_file": "0099_gf_monitoring_records.sql",
+      "line_number": 19,
+      "statement_fingerprint": "7ec64b9f38196ac8551673fef46a3aed2fa8cc3d18063574736827c690776b1b",
+      "reason": "DDL on hot table: 0099_gf_monitoring_records.sql:19",
+      "expires_on": "2026-12-31",
+      "sunset_migration_id": null
+    },
+    {
+      "migration_file": "0138_create_state_current.sql",
+      "line_number": 19,
+      "statement_fingerprint": "15c7a6f959855c4d0037c37f0a03c7532b910ece0ee40e0ccf79690f3f67d4a3",
+      "reason": "DDL on hot table: 0138_create_state_current.sql:19",
+      "expires_on": "2026-12-31",
+      "sunset_migration_id": null
+    },
+    {
+      "migration_file": "0118_create_execution_records.sql",
+      "line_number": 16,
+      "statement_fingerprint": "709b7053b70686c7ac0feb8796918ab9f34e5a4906752d36c239a1a5d5f1349c",
+      "reason": "DDL on hot table: 0118_create_execution_records.sql:16",
+      "expires_on": "2026-12-31",
+      "sunset_migration_id": null
+    },
+    {
+      "migration_file": "0118_create_execution_records.sql",
+      "line_number": 19,
+      "statement_fingerprint": "17790c50ac4de6d73f6421992aa082c2353e7825878950aba1be3998cd699848",
+      "reason": "DDL on hot table: 0118_create_execution_records.sql:19",
+      "expires_on": "2026-12-31",
+      "sunset_migration_id": null
+    },
+    {
+      "migration_file": "0118_create_execution_records.sql",
+      "line_number": 22,
+      "statement_fingerprint": "297cf352d9656822f0696925dac82c8f71780dc979716df0bb27309f5dea9ab9",
+      "reason": "DDL on hot table: 0118_create_execution_records.sql:22",
+      "expires_on": "2026-12-31",
+      "sunset_migration_id": null
+    },
+    {
+      "migration_file": "0132_execution_records_determinism_constraints.sql",
+      "line_number": 38,
+      "statement_fingerprint": "e24f30d6af8d80dc92ec6f9bdd5a04c8a00a92daf8b4a5a347c02cee0addd4c7",
+      "reason": "DDL on hot table: 0132_execution_records_determinism_constraints.sql:38",
+      "expires_on": "2026-12-31",
+      "sunset_migration_id": null
+    },
+    {
+      "migration_file": "0132_execution_records_determinism_constraints.sql",
+      "line_number": 39,
+      "statement_fingerprint": "fcbea2cafd270093bdc55a3c0cbf4ded4112b3dbe9c34d1a021b60866b5f453a",
+      "reason": "DDL on hot table: 0132_execution_records_determinism_constraints.sql:39",
+      "expires_on": "2026-12-31",
+      "sunset_migration_id": null
+    },
+    {
+      "migration_file": "0132_execution_records_determinism_constraints.sql",
+      "line_number": 40,
+      "statement_fingerprint": "8aaa83415ef5e89df377440043f120070a9befcdae5a564b16bd78da0e21adcf",
+      "reason": "DDL on hot table: 0132_execution_records_determinism_constraints.sql:40",
+      "expires_on": "2026-12-31",
+      "sunset_migration_id": null
+    },
+    {
+      "migration_file": "0132_execution_records_determinism_constraints.sql",
+      "line_number": 41,
+      "statement_fingerprint": "06344b90514c342ff3bba6c4441f2fb09a1d095563b5996c9f00fddc76358c87",
+      "reason": "DDL on hot table: 0132_execution_records_determinism_constraints.sql:41",
+      "expires_on": "2026-12-31",
+      "sunset_migration_id": null
+    },
+    {
+      "migration_file": "0132_execution_records_determinism_constraints.sql",
+      "line_number": 42,
+      "statement_fingerprint": "de61fd40334a121bb3425f05734a12cd98146188ef1556dbbe1bc58e81bf7683",
+      "reason": "DDL on hot table: 0132_execution_records_determinism_constraints.sql:42",
+      "expires_on": "2026-12-31",
+      "sunset_migration_id": null
+    },
+    {
+      "migration_file": "0132_execution_records_determinism_constraints.sql",
+      "line_number": 50,
+      "statement_fingerprint": "670e2789175b16cea39e96ce1cc637db4dde1a6d4a08749fdeb94e10dcb019df",
+      "reason": "DDL on hot table: 0132_execution_records_determinism_constraints.sql:50",
+      "expires_on": "2026-12-31",
+      "sunset_migration_id": null
+    },
+    {
+      "migration_file": "0137_create_state_transitions.sql",
+      "line_number": 42,
+      "statement_fingerprint": "fdbc03a4429660c71d4d696c39bc5e596c7a9cac86a429409bf00d3a7d7b9225",
+      "reason": "DDL on hot table: 0137_create_state_transitions.sql:42",
+      "expires_on": "2026-12-31",
+      "sunset_migration_id": null
+    },
+    {
+      "migration_file": "0137_create_state_transitions.sql",
+      "line_number": 43,
+      "statement_fingerprint": "865a18b5fd6700bb13ff9faff083655d309e2302d0eb51c5e1ba55012fbf4ec3",
+      "reason": "DDL on hot table: 0137_create_state_transitions.sql:43",
+      "expires_on": "2026-12-31",
+      "sunset_migration_id": null
+    },
+    {
+      "migration_file": "0137_create_state_transitions.sql",
+      "line_number": 44,
+      "statement_fingerprint": "5f8df34da397e2e414756bfd2e19521b6bf4ba0cb3a178277097875e03fd0bd8",
+      "reason": "DDL on hot table: 0137_create_state_transitions.sql:44",
+      "expires_on": "2026-12-31",
+      "sunset_migration_id": null
+    },
+    {
+      "migration_file": "0131_execution_records_determinism_columns.sql",
+      "line_number": 15,
+      "statement_fingerprint": "090a7a205b576333b81a535b5ac467fd1fe2f34b07e4cc791734a4ce125ffaef",
+      "reason": "DDL on hot table: 0131_execution_records_determinism_columns.sql:15",
+      "expires_on": "2026-12-31",
+      "sunset_migration_id": null
+    },
+    {
+      "migration_file": "0131_execution_records_determinism_columns.sql",
+      "line_number": 16,
+      "statement_fingerprint": "71cd11ee398be6324129d6d6680f8d1b2dcf7eb838915821f1dc930f1a400e20",
+      "reason": "DDL on hot table: 0131_execution_records_determinism_columns.sql:16",
+      "expires_on": "2026-12-31",
+      "sunset_migration_id": null
+    },
+    {
+      "migration_file": "0131_execution_records_determinism_columns.sql",
+      "line_number": 17,
+      "statement_fingerprint": "928a9401de86b8c7f11de4507f96edd65d398895c4e6ed358508dfffec7778b4",
+      "reason": "DDL on hot table: 0131_execution_records_determinism_columns.sql:17",
+      "expires_on": "2026-12-31",
+      "sunset_migration_id": null
+    },
+    {
+      "migration_file": "0131_execution_records_determinism_columns.sql",
+      "line_number": 18,
+      "statement_fingerprint": "816b71ea8b143a048a57f4ed18f0e9fea5fa6e69f7114c575a74897108c00d53",
+      "reason": "DDL on hot table: 0131_execution_records_determinism_columns.sql:18",
       "expires_on": "2026-12-31",
       "sunset_migration_id": null
     },
     {
       "migration_file": "0169_add_phase1_boundary_markers.sql",
       "line_number": 18,
-      "statement_fingerprint": "placeholder_sha256",
-      "reason": "Adding columns to monitoring_records for Phase 1 boundary markers",
-      "expires_on": "2026-12-31",
-      "sunset_migration_id": null
-    },
-    {
-      "migration_file": "0169_add_phase1_boundary_markers.sql",
-      "line_number": 33,
-      "statement_fingerprint": "placeholder_sha256",
-      "reason": "Adding columns to monitoring_records for Phase 1 boundary markers",
-      "expires_on": "2026-12-31",
-      "sunset_migration_id": null
-    },
-    {
-      "migration_file": "0171_attestation_kill_switch_gate.sql",
-      "line_number": 18,
-      "statement_fingerprint": "placeholder_sha256",
-      "reason": "Adding columns to asset_batches for kill switch gate",
-      "expires_on": "2026-12-31",
-      "sunset_migration_id": null
-    },
-    {
-      "migration_file": "0171_attestation_kill_switch_gate.sql",
-      "line_number": 24,
-      "statement_fingerprint": "placeholder_sha256",
-      "reason": "Adding constraint to asset_batches for kill switch gate",
-      "expires_on": "2026-12-31",
-      "sunset_migration_id": null
-    },
-    {
-      "migration_file": "0171_attestation_kill_switch_gate.sql",
-      "line_number": 27,
-      "statement_fingerprint": "placeholder_sha256",
-      "reason": "Adding constraint to asset_batches for kill switch gate",
-      "expires_on": "2026-12-31",
-      "sunset_migration_id": null
-    },
-    {
-      "migration_file": "0171_attestation_kill_switch_gate.sql",
-      "line_number": 29,
-      "statement_fingerprint": "placeholder_sha256",
-      "reason": "Adding constraint to asset_batches for kill switch gate",
-      "expires_on": "2026-12-31",
-      "sunset_migration_id": null
-    },
-    {
-      "migration_file": "0171_attestation_kill_switch_gate.sql",
-      "line_number": 33,
-      "statement_fingerprint": "placeholder_sha256",
-      "reason": "Adding constraint to asset_batches for kill switch gate",
-      "expires_on": "2026-12-31",
-      "sunset_migration_id": null
-    },
-    {
-      "migration_file": "0171_attestation_kill_switch_gate.sql",
-      "line_number": 35,
-      "statement_fingerprint": "placeholder_sha256",
-      "reason": "Adding constraint to asset_batches for kill switch gate",
+      "statement_fingerprint": "b3e0cd829a029f1c3c17907db4ea7e5bae1794c8b95c2f709faa8c444169d61a",
+      "reason": "DDL on hot table: 0169_add_phase1_boundary_markers.sql:18",
       "expires_on": "2026-12-31",
       "sunset_migration_id": null
     },
     {
       "migration_file": "0165_create_public_keys_registry.sql",
       "line_number": 24,
-      "statement_fingerprint": "placeholder_sha256",
-      "reason": "Creating public_keys_registry table",
+      "statement_fingerprint": "30cdb9e16f007273b3fe8123aca87d09b627bfcb87934323ddcc342ae7e1c5c1",
+      "reason": "DDL on hot table: 0165_create_public_keys_registry.sql:24",
+      "expires_on": "2026-12-31",
+      "sunset_migration_id": null
+    },
+    {
+      "migration_file": "0165_create_public_keys_registry.sql",
+      "line_number": 32,
+      "statement_fingerprint": "71152d7045e75c5524381376f702e734cfa8384f685cefb1dca4a54a9879037b",
+      "reason": "DDL on hot table: 0165_create_public_keys_registry.sql:32",
+      "expires_on": "2026-12-31",
+      "sunset_migration_id": null
+    },
+    {
+      "migration_file": "0165_create_public_keys_registry.sql",
+      "line_number": 33,
+      "statement_fingerprint": "b39712aff667e4eee9bb9bf5c6900a9d3e7d05322586ba1139097da0d32f3db9",
+      "reason": "DDL on hot table: 0165_create_public_keys_registry.sql:33",
+      "expires_on": "2026-12-31",
+      "sunset_migration_id": null
+    },
+    {
+      "migration_file": "0165_create_public_keys_registry.sql",
+      "line_number": 34,
+      "statement_fingerprint": "398c06bbbef25739cf799a2267d35cc60ff2e7375620a09ce08c185bbc60a0bf",
+      "reason": "DDL on hot table: 0165_create_public_keys_registry.sql:34",
+      "expires_on": "2026-12-31",
+      "sunset_migration_id": null
+    },
+    {
+      "migration_file": "0151_verify_not_null_state_current.sql",
+      "line_number": 13,
+      "statement_fingerprint": "318f9d22973528ddaf1a46aaa8ec34e6ac59124fcbbbf95d9fd9fdb8d7521e75",
+      "reason": "DDL on hot table: 0151_verify_not_null_state_current.sql:13",
+      "expires_on": "2026-12-31",
+      "sunset_migration_id": null
+    },
+    {
+      "migration_file": "0101_gf_asset_lifecycle.sql",
+      "line_number": 35,
+      "statement_fingerprint": "6e349a61b13b6fb6b981eedc9f592b0cd1d67942be5588ba5102a686a33c4224",
+      "reason": "DDL on hot table: CREATE INDEX without CONCURRENTLY on hot table: asset_batches",
+      "expires_on": "2026-12-31",
+      "sunset_migration_id": null
+    },
+    {
+      "migration_file": "0101_gf_asset_lifecycle.sql",
+      "line_number": 36,
+      "statement_fingerprint": "fc3b3a1ad0d871a51ea800473c12d8dca7689a4aa0d9aee8cdf8b0512453d99a",
+      "reason": "DDL on hot table: CREATE INDEX without CONCURRENTLY on hot table: asset_batches",
+      "expires_on": "2026-12-31",
+      "sunset_migration_id": null
+    },
+    {
+      "migration_file": "0101_gf_asset_lifecycle.sql",
+      "line_number": 37,
+      "statement_fingerprint": "87da05a4db54996c6b0e7cfa7de706d3c05bb280deea742037b4237b468fbc6e",
+      "reason": "DDL on hot table: CREATE INDEX without CONCURRENTLY on hot table: asset_batches",
+      "expires_on": "2026-12-31",
+      "sunset_migration_id": null
+    },
+    {
+      "migration_file": "0101_gf_asset_lifecycle.sql",
+      "line_number": 38,
+      "statement_fingerprint": "abf6cfd764f434b00737f4e9c39f243d056baa81b60b1f18c8afacd73d4762fc",
+      "reason": "DDL on hot table: CREATE INDEX without CONCURRENTLY on hot table: asset_batches",
+      "expires_on": "2026-12-31",
+      "sunset_migration_id": null
+    },
+    {
+      "migration_file": "0101_gf_asset_lifecycle.sql",
+      "line_number": 49,
+      "statement_fingerprint": "4ebb677d6777653fa97d2a0d5c7c35d99361fb5f80a32db59d004505555624d2",
+      "reason": "DDL on hot table: CREATE INDEX without CONCURRENTLY on hot table: asset_batches",
+      "expires_on": "2026-12-31",
+      "sunset_migration_id": null
+    },
+    {
+      "migration_file": "0101_gf_asset_lifecycle.sql",
+      "line_number": 50,
+      "statement_fingerprint": "8a733f1a3e8036f3c2363096de3f645bfe6aadcd40515780daa8bffee9de6ad0",
+      "reason": "DDL on hot table: CREATE INDEX without CONCURRENTLY on hot table: asset_batches",
+      "expires_on": "2026-12-31",
+      "sunset_migration_id": null
+    },
+    {
+      "migration_file": "0101_gf_asset_lifecycle.sql",
+      "line_number": 65,
+      "statement_fingerprint": "d81111c82e2e1996cc63a63829eb7077d4616065d5e6726d9d9a983444b9f179",
+      "reason": "DDL on hot table: CREATE INDEX without CONCURRENTLY on hot table: asset_batches",
+      "expires_on": "2026-12-31",
+      "sunset_migration_id": null
+    },
+    {
+      "migration_file": "0101_gf_asset_lifecycle.sql",
+      "line_number": 66,
+      "statement_fingerprint": "eb17210e4d5c1892d742abeeefe58428d518a9646c74ec9d509e826ba25e1b60",
+      "reason": "DDL on hot table: CREATE INDEX without CONCURRENTLY on hot table: asset_batches",
+      "expires_on": "2026-12-31",
+      "sunset_migration_id": null
+    },
+    {
+      "migration_file": "0134_create_policy_decisions.sql",
+      "line_number": 46,
+      "statement_fingerprint": "93a3a72a37ec2963515ef6f261c180aa9e9f04fb5aea88f65eb33d6a147e9794",
+      "reason": "DDL on hot table: CREATE INDEX without CONCURRENTLY on hot table: policy_decisions",
+      "expires_on": "2026-12-31",
+      "sunset_migration_id": null
+    },
+    {
+      "migration_file": "0134_create_policy_decisions.sql",
+      "line_number": 49,
+      "statement_fingerprint": "7d2ada05ca19a0668c0d3063c2a0506201b7e6c1591a55b9787a9b0232db0192",
+      "reason": "DDL on hot table: CREATE INDEX without CONCURRENTLY on hot table: policy_decisions",
+      "expires_on": "2026-12-31",
+      "sunset_migration_id": null
+    },
+    {
+      "migration_file": "0138_create_state_current.sql",
+      "line_number": 18,
+      "statement_fingerprint": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "reason": "DDL on hot table: CREATE INDEX without CONCURRENTLY on hot table: state_current",
       "expires_on": "2026-12-31",
       "sunset_migration_id": null
     }

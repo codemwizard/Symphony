@@ -14,7 +14,7 @@ source "$ROOT_DIR/scripts/lib/evidence.sh"
 EVIDENCE_TS="$(evidence_now_utc)"
 EVIDENCE_GIT_SHA="$(git_sha)"
 EVIDENCE_SCHEMA_FP="$(schema_fingerprint)"
-export EVIDENCE_TS EVIDENCE_GIT_SHA EVIDENCE_SCHEMA_FP
+export EVIDENCE_TS EVIDENCE_GIT_SHA EVIDENCE_SCHEMA_FP ALLOWLIST_FILE HOT_TABLES_FILE
 
 if [[ ! -d "$MIGRATIONS_DIR" ]]; then
   echo "Migrations directory not found: $MIGRATIONS_DIR" >&2
@@ -43,8 +43,9 @@ if [[ -f "$ALLOWLIST_FILE" ]]; then
   while IFS='|' read -r fp expiry; do
     [[ -n "$fp" ]] || continue
     ALLOWLIST_MAP["$fp"]="$expiry"
-  done < <(python3 - <<'PY'
+  done < <(ALLOWLIST_FILE="$ALLOWLIST_FILE" python3 - <<'PY'
 import json
+import os
 from pathlib import Path
 
 path = Path(os.environ.get("ALLOWLIST_FILE", "scripts/security/ddl_allowlist.json"))
@@ -98,6 +99,7 @@ entry_match() {
 }
 
 # Filter out CREATE INDEX CONCURRENTLY (considered lower risk for Phase-0 lint)
+filtered=()
 # Read hot tables from file
 hot_tables=()
 if [[ -f "$HOT_TABLES_FILE" ]]; then
@@ -140,6 +142,19 @@ for entry in "${matches[@]}"; do
       fi
     done
     if [[ $skip -eq 0 ]]; then
+      continue
+    fi
+  fi
+  # Allow ALTER TABLE on non-hot tables (hot-table awareness for general lint)
+  if entry_match "$entry" "ALTER TABLE"; then
+    is_hot=0
+    for t in "${hot_tables[@]}"; do
+      if entry_match "$entry" "ALTER TABLE (public\\.)?${t}"; then
+        is_hot=1
+        break
+      fi
+    done
+    if [[ $is_hot -eq 0 ]]; then
       continue
     fi
   fi
@@ -188,7 +203,7 @@ Path(os.environ["EVIDENCE_OUT"]).write_text(json.dumps(out, indent=2) + "\n", en
 PY
 
 # Blocking DDL policy (hot tables must use CONCURRENTLY; forbid ALTER on hot tables)
-python3 - <<PY
+ALLOWLIST_FILE="$ALLOWLIST_FILE" HOT_TABLES_FILE="$HOT_TABLES_FILE" python3 - <<PY
 import hashlib
 import json
 import os
@@ -197,7 +212,7 @@ from pathlib import Path
 
 # Read hot tables from file
 hot_tables = []
-hot_tables_path = Path("$HOT_TABLES_FILE")
+hot_tables_path = Path(os.environ.get("HOT_TABLES_FILE", "scripts/security/hot_tables.txt"))
 if hot_tables_path.exists():
     for line in hot_tables_path.read_text(encoding="utf-8").splitlines():
         line = line.strip()
@@ -206,7 +221,7 @@ if hot_tables_path.exists():
 
 allowlist = {}
 allowlist_hits = []
-allowlist_path = Path("$ALLOWLIST_FILE")
+allowlist_path = Path(os.environ.get("ALLOWLIST_FILE", "scripts/security/ddl_allowlist.json"))
 if allowlist_path.exists():
     data = json.loads(allowlist_path.read_text(encoding="utf-8"))
     for entry in data.get("entries", []):
@@ -234,11 +249,12 @@ def check_expiry(expiry: str) -> bool:
         return False
 
 violations = []
-for p in Path("$MIGRATIONS_DIR").glob("*.sql"):
+migrations_dir = Path(os.environ.get("MIGRATIONS_DIR", "schema/migrations"))
+for p in migrations_dir.glob("*.sql"):
     text = p.read_text(encoding="utf-8", errors="ignore")
-    # Split into statements by semicolon (simple heuristic)
-    for stmt in text.split(";"):
-        s = stmt.strip()
+    # Process line-by-line for consistency with general lint
+    for line_num, line in enumerate(text.splitlines(), 1):
+        s = line.strip()
         if not s:
             continue
         s_low = s.lower()
@@ -252,12 +268,12 @@ for p in Path("$MIGRATIONS_DIR").glob("*.sql"):
                     fp = fingerprint(s)
                     if fp in allowlist:
                         if check_expiry(allowlist[fp]):
-                            allowlist_hits.append(f"{allowlist[fp]}:{p.name}")
+                            allowlist_hits.append(f"{allowlist[fp]}:{p.name}:{line_num}")
                             continue
                         else:
-                            violations.append(f"{p.name}: ALTER TABLE on hot table with expired allowlist: {t}")
+                            violations.append(f"{p.name}:{line_num}: ALTER TABLE on hot table with expired allowlist: {t}")
                             continue
-                    violations.append(f"{p.name}: ALTER TABLE on hot table: {t}")
+                    violations.append(f"{p.name}:{line_num}: ALTER TABLE on hot table: {t}")
         # CREATE INDEX on hot tables must be CONCURRENTLY
         if "create index" in s_low and "concurrently" not in s_low:
             for t in hot_tables:
@@ -268,12 +284,12 @@ for p in Path("$MIGRATIONS_DIR").glob("*.sql"):
                     fp = fingerprint(s)
                     if fp in allowlist:
                         if check_expiry(allowlist[fp]):
-                            allowlist_hits.append(f"{allowlist[fp]}:{p.name}")
+                            allowlist_hits.append(f"{allowlist[fp]}:{p.name}:{line_num}")
                             continue
                         else:
-                            violations.append(f"{p.name}: CREATE INDEX without CONCURRENTLY with expired allowlist: {t}")
+                            violations.append(f"{p.name}:{line_num}: CREATE INDEX without CONCURRENTLY with expired allowlist: {t}")
                             continue
-                    violations.append(f"{p.name}: CREATE INDEX without CONCURRENTLY on hot table: {t}")
+                    violations.append(f"{p.name}:{line_num}: CREATE INDEX without CONCURRENTLY on hot table: {t}")
 
 out = {
     "check_id": "SEC-DDL-BLOCKING-POLICY",
